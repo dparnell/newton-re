@@ -231,6 +231,25 @@ if(EXISTS ${THIRDPARTY_DIR}/apps/RPNcalc/rpncalc.pkg)
     set_tests_properties(host.NewtonThirdPartyPackages.restart PROPERTIES TIMEOUT 120
                          FIXTURES_REQUIRED host_thirdparty_store DEPENDS host.NewtonThirdPartyPackages
                          PASS_REGULAR_EXPRESSION "restartStored: 0, restartEntries: 0, restartActive: 0, fontsGone: TRUE.*thirdparty-restart: done")
+    # the applications among them used for real (demo/thirdparty-apps.ns):
+    # each opened from the Extras drawer, tapped a little (RPNcalc sums,
+    # the Dalek-dodger steps, Mahjongg turns the screen and takes a pair
+    # off the board - its native code on armcpu - NewtHack walks, the
+    # Register picks a program), snapshot as tmp/thirdparty-apps-<n>.pgm
+    add_test(NAME host.NewtonThirdPartyApps
+             COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --erase
+                     --store ${CMAKE_CURRENT_BINARY_DIR}/thirdparty-apps.store --headless 140
+                     --package ${THIRDPARTY_DIR}/apps/RPNcalc/rpncalc.pkg
+                     --package ${THIRDPARTY_DIR}/games/Daleks/Daleks1.pkg
+                     --package ${THIRDPARTY_DIR}/games/Mahjongg2.1/Mahjongg.pkg
+                     --package ${THIRDPARTY_DIR}/games/NewtHack1_1/newthack.pkg
+                     --package ${THIRDPARTY_DIR}/games/NewtHack1_1/nhsounds.pkg
+                     --package ${THIRDPARTY_DIR}/games/NewtHack1_1/register.pkg
+                     --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/thirdparty-apps.ns
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonThirdPartyApps PROPERTIES TIMEOUT 300
+                         PASS_REGULAR_EXPRESSION "RPNcalc:NMad open.*daleksMoved: TRUE.*mahjonggTilesRemaining: 142.*Mahjongg:Scrawl open.*NewtHack:ChrisDopp open.*Register:FlaSheridn open.*thirdparty-apps: done, 0 failed"
+                         FAIL_REGULAR_EXPRESSION "is not answered|stopped \\(|fell over")
 else()
     message(STATUS "fixtures/packages not there: host.NewtonThirdPartyPackages is not run")
 endif()

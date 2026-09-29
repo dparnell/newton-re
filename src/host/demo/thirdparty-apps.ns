@@ -1,0 +1,174 @@
+// The third-party applications in fixtures/packages used for real: each is
+// installed by `newton --package`, opened by a tap on its icon in the
+// Extras drawer, tapped a little, snapshot and closed again.  What fails is
+// printed (and NEWTON_TRACE_MISSING / NEWTON_TRACE_EXCEPTIONS say where it
+// came from).  Run by ctest host.NewtonThirdPartyApps (src/host/
+// CMakeLists.txt, which lists the packages).
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 --erase \
+//       --store tmp/thirdparty-apps.store --headless 120 \
+//       --package fixtures/packages/apps/RPNcalc/rpncalc.pkg \
+//       --package fixtures/packages/games/Daleks/Daleks1.pkg \
+//       --package fixtures/packages/games/Mahjongg2.1/Mahjongg.pkg \
+//       --package fixtures/packages/games/NewtHack1_1/newthack.pkg \
+//       --package fixtures/packages/games/NewtHack1_1/nhsounds.pkg \
+//       --package fixtures/packages/games/NewtHack1_1/register.pkg \
+//       --script src/host/demo/thirdparty-apps.ns
+//
+// Each application: its app symbol, where its icon is in the Extras drawer
+// (Unfiled Icons, after the built-in ones, once the Notepad is the backdrop), and what is done once it is
+// open - a list of [x, y] taps, each followed by a pause of a second or so
+// ([wait, ms] waits longer; a function is called instead, and can tap for
+// itself).  The snapshots are tmp/thirdparty-apps-<n>.pgm.
+
+apps := [
+	{sym: '|RPNcalc:NMad|, icon: [32, 350],
+	 taps: [[149, 187], [102, 272], [175, 187], [233, 272]]},			// 7 Enter 8 +
+	{sym: '|Daleks:Avarice|, icon: [95, 350],
+	 taps: [func() daleksHuman := GetRoot().|Daleks:Avarice|.gameView.gameBoard.human,
+	        [230, 60], [230, 60],										// two steps towards the human's right
+	        func() Print({daleksMoved: GetRoot().|Daleks:Avarice|.gameView.gameBoard.human <> daleksHuman,
+	                      daleksHuman: GetRoot().|Daleks:Avarice|.gameView.gameBoard.human})]},
+	{sym: '|Mahjongg:Scrawl|, icon: [156, 350],
+	 taps: [['wait, 4000], [228, 272], ['wait, 9000],				// Rotate (the board wants a landscape screen)
+	        func() mahjonggPair := call findPair with (),
+	        func() call tapTile with (mahjonggPair[0]),
+	        func() call tapTile with (mahjonggPair[1]),
+	        func() Print({mahjonggTilesRemaining: GetRoot().|Mahjongg:Scrawl|.tilesRemaining})]},
+	{sym: '|NewtHack:ChrisDopp|, icon: [218, 350],
+	 taps: [['wait, 3000], [229, 293], ['wait, 8000], [200, 300], ['wait, 3000], [230, 290], ['wait, 3000]]},
+	{sym: '|Register:FlaSheridn|, icon: [280, 350],
+	 taps: [[70, 33], ['wait, 2000], [100, 255], ['wait, 1500]]}];		// the Program picker: Mahjongg
+
+failures := [];
+portrait := GetOrientation();		// (2 on the MP2x00: its screen is taller than wide)
+index := 0;
+taps := nil;
+current := nil;
+
+tap := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
+
+// Mahjongg: two free tiles of one kind, found by asking the game itself
+// (its validToTap), and a tap in the middle of each, which the game takes
+// off the board (tilesRemaining 144 -> 142); a tile's bounds are in the
+// application's view, which is at the screen's origin.  The board wants a
+// landscape screen: the game says so and offers to turn it, which is taken
+// (and the screen turned back for the next application)
+mahjonggPair := nil;
+daleksHuman := nil;
+findPair := func()
+	begin
+		local app := GetRoot().|Mahjongg:Scrawl|;
+		local pair := nil;
+		for i := 0 to Length(app.tiles) - 1 do
+			if not pair and app.tiles[i].visible and app:validToTap(i) then
+				for j := i + 1 to Length(app.tiles) - 1 do
+					if not pair and app.tiles[j].visible and app.tiles[j].type = app.tiles[i].type and app:validToTap(j) then
+						pair := [i, j];
+		Print({mahjonggPair: pair});
+		pair
+	end;
+tapTile := func(i)
+	begin
+		local b := GetRoot().|Mahjongg:Scrawl|.tiles[i].bounds;
+		call tap with ((b.left + b.right) div 2, (b.top + b.bottom) div 2);
+	end;
+
+tapNext := func()
+	begin
+		if Length(taps) > 0 then
+			begin
+				local t := taps[0];
+				ArrayRemoveCount(taps, 0, 1);
+				if IsFunction(t) then
+					begin
+						try
+							call t with ()
+						onexception |evt.ex| do
+							AddArraySlot(failures, current.sym & ": " & CurrentException().name);
+						AddDelayedCall(tapNext, nil, 1200);
+					end
+				else if t[0] = 'wait then
+					AddDelayedCall(tapNext, nil, t[1])
+				else
+					begin
+						try
+							call tap with (t[0], t[1])
+						onexception |evt.ex| do
+							AddArraySlot(failures, current.sym & ": tap " & t[0] & "," & t[1] & ": " & CurrentException().name);
+						AddDelayedCall(tapNext, nil, 1200);
+					end;
+			end
+		else
+			begin
+				ScreenSnapshot("tmp/thirdparty-apps-" & NumberStr(index) & ".pgm");
+				local app := GetRoot().(current.sym);
+				local open := app and app.viewCObject;
+				Print("thirdparty-apps: " & current.sym & (if open then " open" else " not open"));
+				if not open then
+					AddArraySlot(failures, current.sym & ": not open");
+				try
+					if open then app:Close()
+				onexception |evt.ex| do
+					AddArraySlot(failures, current.sym & ": close: " & CurrentException().name);
+				index := index + 1;
+				AddDelayedCall(next, nil, 1500);
+			end;
+	end;
+
+next := func()
+	begin
+		if index < Length(apps) then
+			begin
+				current := apps[index];
+				Print("thirdparty-apps: " & current.sym);
+				try
+					begin
+						if GetOrientation() <> portrait then SetScreenOrientation(portrait);	// (after Mahjongg's Rotate)
+						GetRoot().extrasDrawer:Open();
+						AddDelayedCall(func() begin
+								try
+									call tap with (current.icon[0], current.icon[1])
+								onexception |evt.ex| do
+									AddArraySlot(failures, current.sym & ": the icon: " & CurrentException().name);
+								taps := Clone(current.taps);
+								AddDelayedCall(tapNext, nil, 2500);
+							end, nil, 1500);
+					end
+				onexception |evt.ex| do
+					AddArraySlot(failures, current.sym & ": the Extras drawer: " & CurrentException().name);
+			end
+		else
+			begin
+				foreach failure in failures do Print("thirdparty-apps: FAILED " & failure);
+				Print("thirdparty-apps: done, " & NumberStr(Length(failures)) & " failed");
+			end;
+	end;
+
+// the Setup assistant a fresh machine starts with, walked through first
+// (as open-apps.ns does), so that it is not left behind the applications
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
+page := 0;
+nextPage := func()
+	begin
+		page := page + 1;
+		if page < 10 then
+			begin
+				call tap with (293, 468);			// Continue
+				AddDelayedCall(nextPage, nil, 1800);
+			end
+		else
+			call tap with (297, 468);			// Done, on "Congratulations"
+	end;
+AddDelayedCall(func() begin
+		call tap with (293, 468);				// past "Welcome"
+		AddDelayedCall(func() begin
+				call tap with (200, 150);			// the caret into the First line
+				foreach c in name do call typeKey with (c);
+				AddDelayedCall(nextPage, nil, 1500);
+			end, nil, 2000);
+	end, nil, 3000);
+
+AddDelayedCall(next, nil, 30000);
+Print("thirdparty-apps: the script is loaded");
