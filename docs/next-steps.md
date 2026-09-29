@@ -119,8 +119,7 @@ worked through.  What could come next (not ranked; the owner chooses):
   `TXNewtStreamFactory` (a compressed large binary for a stream above 4K)
   and `RotTiledBitmap` (only a fax page reaches it, so it still waits on
   the comms stack).
-- **The text engine**: `protoTXView` works; the clipboard, text on a
-  store, the ruler bar and pages are left (below).
+- **Text engine: finished** (2026-09-29; below).
 - **Drawing speed**: the blitter and the lines work a pixel at a time
   through region scan conversion, which is why a busy screen redraws
   slowly on the host.  A faster blitter with identical output is host
@@ -229,21 +228,17 @@ The NOT YET sweep of 2026-09-29 left 20 genuine gaps (40 comments before):
 
 ### The text engine
 
-`protoTXView` works (2026-09-29): the engine from `TXArray` up to `TXView`
-(class 108, made by `BuildView`) with the containers, the undoable edit
-commands and all 39 `protoTXView` methods (`docs/text/README.md`; demo
-`src/host/demo/txview.ns`, ctest `host.NewtonTXView`).  A protoTXView's
-page is the view's height unless `SetGeometry` gives one - ROM
-behaviour: text below it is never drawn.  Round 5 added the clipboard
-(Copy, Cut, Paste), drag and drop, the scrub and caret gestures, the text
-kept on a store (`SetStore`, `TXVBOChars`, the stream factory's
-large-binary side) and the ruler bar (`ShowRuler`, `TXRulerUI`);
-`txview.ns` exercises all of it.  Left: pagination only - the page frames
-and their drawing (`TXPageFrames`, `TXNewtPageFrames`), the multi-frame
-and page formatters (`TXMultiFrameFormatter`, `TXPageFormatter`,
-0x002413e0-0x00242a2c), `SetGeometry`'s paginate, `GetCountPages` and
-what `InsertPageBreak` does to the layout.  (A small mark of a scrub's ink
-is left on screen after its poof - `txview-4.pgm` - not yet looked into.)
+Finished (2026-09-29; `docs/text/README.md`): every TX/Textension function
+in the ROM is cited and all 39 `protoTXView` methods are bound, pages and
+page breaks included (`txview.ns`, `txpages.ns`; ctests
+`host.NewtonTXView`, `host.NewtonTXPages`).  Nothing in the ROM itself
+uses protoTXView (`analysis/protousers.py`), so the demos and host tests
+are the check.  ROM bug kept and visible: with three or more pages in
+view, the edit note (room for two) overflows into `gTXParagCtrlChars` and
+the pages after the second do not redraw properly after an edit.  Left
+open nearby: `StrokeCentral::UpdateCompressGroup`, the last NOT YET in
+`TRootView::PostDraw`, and the inker task itself (`TInker`/`TLiveInker`),
+which would retire the host's inking in `StrokeTime`.
 
 ## The natives still unanswered
 

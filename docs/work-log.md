@@ -9,6 +9,27 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: the text engine, round 6 - pages; finished
+
+- Pagination (`e3d153b`): `TXPageFrames` (a frame per page, rows of
+  `fColumns`, a 5-pixel gutter), `TXMultiFrameFormatter`/`TXPageFormatter`
+  (lines moved between pages after each edit; several functions read from
+  the assembly), page breaks (a character 10 ends its page, the table of
+  breaks kept and streamed), `TXNewtPageFrames::Draw`, `GetCountPages`.
+  ROM bug kept: the edit note has room for two pages, the display records
+  every page in view, so with three or more showing it overflows into
+  `gTXParagCtrlChars` (the globals kept in the ROM's order so it fails the
+  same way).  `txpages.ns`, `host.NewtonTXPages`.
+- The mark left after a scrub (`0e50447`) was the caret; behind it a host
+  bug: live ink was drawn into the screen's pixel memory where the ROM's
+  inker ORs it onto the display only, so the caret's saved bits put
+  scrubbed ink back.  Live ink now goes to a scratch map ORed onto the
+  display (the host screen driver honours `srcOr`); `TRootView::PostDraw`,
+  `TController::UpdateInk` and `CleanupStrayInk` redraw ink still waiting
+  to be read.
+- `analysis/protousers.py` (`4e1fc6d`, `0eb34da`): protoTXView has no
+  users in the ROM or its packages.  Stale NOT YETs removed (`bda15b6`).
+
 ## 2026-09-29: the text engine, round 5 - clipboard, gestures, text on a store, the ruler bar
 
 - The clipboard and drag and drop (`04db04e`): Copy makes a clipping of
