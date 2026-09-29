@@ -10,10 +10,8 @@
 	are in frames/RichString.cpp, beside the class they work on; they are
 	registered here with the rest.
 
-	NOT YET RECONSTRUCTED: the ink word counts the length functions
-	answer as for plain text, the number parser TNumberParser
-	(StringToNumber reads with the C library), the international number
-	formats (FormattedNumberStr) and StripDiacriticals.
+	NOT YET RECONSTRUCTED: the number parser TNumberParser (StringToNumber
+	reads with the C library).
 */
 
 #include "Frames.h"
@@ -517,22 +515,42 @@ FStrReplace(RefArg /*rcvr*/, RefArg str, RefArg substr, RefArg replacement, RefA
 
 
 // ROM 0x001fe6c4 FGetChar
-// The character at index (an ink word's ink: NOT YET, the ink character).
+// The character at index; at an ink character, a copy of the ink word it
+// stands for.
 Ref
 FGetChar(RefArg /*rcvr*/, RefArg str, RefArg index)
 {
 	TRichString s(str);
-	return MAKECHAR(s.GetChar(RINT(index)));
+	ULong at = RINT(index);
+	UniChar c = s.GetChar(at);
+	if (c == kInkChar)
+		return s.CloneInkWordNo(s.InkWordNoAtOffset(at));
+	return MAKECHAR(c);
 }
 
 
 // ROM 0x001fe750 FSetChar
-// The character at index replaced (by an ink word: NOT YET).
+// The character at index replaced: by a character, or by an ink word -
+// spliced in as a rich string of one character (the paragraph's 0xf701,
+// the word its style), which MakeRichString turns into the string's own
+// ink character.  Anything else changes nothing.  ==> the string.
 Ref
 FSetChar(RefArg /*rcvr*/, RefArg str, RefArg index, RefArg c)
 {
 	TRichString s(str);
-	s.SetChar(RINT(index), CharOf(c));
+	if (ISCHAR(c))
+		s.SetChar(RINT(index), RCHAR(c));
+	else if (IsInkWord(c))
+	{
+		UniChar one[2] = { kParagraphInkChar, 0 };
+		RefVar text(MakeString(one));
+		RefVar styles(AllocateArray(RSSYMstyles, 2));
+		SetArraySlot(styles, 0, RefVar(MAKEINT(1)));
+		SetArraySlot(styles, 1, c);
+		RefVar rich(MakeRichString(text, styles, false));
+		TRichString replacement(rich);
+		s.MungeRange(RINT(index), 1, &replacement, 0, 1);
+	}
 	return str;
 }
 
@@ -701,13 +719,20 @@ FIsValidString(RefArg /*rcvr*/, RefArg str)
 
 
 // ROM 0x001feb90 FStripDiacriticals
-// NOT YET RECONSTRUCTED: StripDiacriticalsText's table; the string is
-// answered as it is.
+// The string's diacriticals taken off in place (the 'unicode frame's
+// table, InitUnicode; the Latin-1 fallback without it).  ==> the string.
+// The ROM does not check it was given a string (TObjectPtr's data is
+// simply taken); the host keeps its check, which only turns a crash into
+// an error.
 Ref
 FStripDiacriticals(RefArg /*rcvr*/, RefArg str)
 {
 	if (!IsString(str))
 		ThrowBadTypeWithFrameData(kNSErrNotAString, str);
+	LockRef(str);
+	UniChar* text = (UniChar*) BinaryData(str);
+	NoDiacriticsText(text, Ustrlen(text));
+	UnlockRef(str);
 	return str;
 }
 

@@ -9,12 +9,12 @@
 				functions "in builtins.c").
 
 	Reconstructed from the MP2x00 US ROM (0x0031416c-0x0031661c); each
-	function cites its origin.  NOT YET RECONSTRUCTED: TRichString (strings
-	with ink runs), through which the ROM's StrMunger edits; here a string
-	is its UniChars up to the terminating 0.
+	function cites its origin.  StrMunger edits through TRichString
+	(RichString.h), so a string's ink words move with their characters.
 */
 
 #include "Interpreter.h"
+#include "RichString.h"
 #include "NativeFunctions.h"
 #include "RSSymbols.h"
 #include "Frames.h"
@@ -138,8 +138,9 @@ BinaryMunger(RefArg a1, long a1start, long a1count, RefArg a2, long a2start, lon
 
 
 // ROM 0x0031416c StrMunger__FRC6RefVarlT2T1N22
-// The same for the characters of strings (counts in characters, the
-// terminating 0 kept).
+// The same for the characters of strings (counts in characters), through
+// TRichString: the lengths are the texts', and an ink word's blob moves
+// with the character that stands for it (MungeRange), s2 nil deleting.
 void
 StrMunger(RefArg s1, long s1start, long s1count, RefArg s2, long s2start, long s2count)
 {
@@ -151,7 +152,8 @@ StrMunger(RefArg s1, long s1start, long s1count, RefArg s2, long s2start, long s
 		ThrowExFramesWithBadValue(kNSErrObjectsNotDistinct, s1);
 	if ((ObjectFlags(s1) & kObjReadOnly) != 0)
 		ThrowExFramesWithBadValue(kNSErrObjectReadOnly, s1);
-	long s1length = Length(s1) / (long) sizeof(UniChar) - 1;
+	TRichString r1(s1);
+	long s1length = r1.Length();
 	if (s1count == -1)
 		s1count = s1length - s1start;
 	if (s1start < 0)
@@ -162,34 +164,24 @@ StrMunger(RefArg s1, long s1start, long s1count, RefArg s2, long s2start, long s
 		s1count = 0;
 	else if (s1count > s1length - s1start)
 		s1count = s1length - s1start;
-	long s2length = 0;
 	if ((Ref) s2 == NILREF)
-		s2start = s2count = 0;
-	else
 	{
-		s2length = Length(s2) / (long) sizeof(UniChar) - 1;
-		if (s2count == -1)
-			s2count = s2length - s2start;
-		if (s2start < 0)
-			s2start = 0;
-		else if (s2start > s2length)
-			s2start = s2length;
-		if (s2count < 0)
-			s2count = 0;
-		else if (s2count > s2length - s2start)
-			s2count = s2length - s2start;
+		r1.DeleteRange(s1start, s1count);
+		return;
 	}
-	long delta = s2count - s1count;
-	if (delta > 0)
-		SetLength(s1, (s1length + delta + 1) * sizeof(UniChar));
-	UniChar* text1 = (UniChar*) BinaryData(s1);
-	UniChar* text2 = ((Ref) s2 == NILREF) ? nil : (UniChar*) BinaryData(s2);
-	if (delta != 0)
-		memmove(text1 + s1start + s2count, text1 + s1start + s1count, (s1length - s1start - s1count + 1) * sizeof(UniChar));
-	if (s2count != 0)
-		memmove(text1 + s1start, text2 + s2start, s2count * sizeof(UniChar));
-	if (delta < 0)
-		SetLength(s1, (s1length + delta + 1) * sizeof(UniChar));
+	TRichString r2(s2);
+	long s2length = r2.Length();
+	if (s2count == -1)
+		s2count = s2length - s2start;
+	if (s2start < 0)
+		s2start = 0;
+	else if (s2start > s2length)
+		s2start = s2length;
+	if (s2count < 0)
+		s2count = 0;
+	else if (s2count > s2length - s2start)
+		s2count = s2length - s2start;
+	r1.MungeRange(s1start, s1count, &r2, s2start, s2count);
 }
 
 

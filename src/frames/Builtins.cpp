@@ -23,6 +23,7 @@
 #include "REPTranslators.h"
 #include "Compiler.h"
 #include "Unicode.h"
+#include "RichString.h"		// FAref/FSetAref read strings through TRichString
 #include "RSSymbols.h"
 #include "NSErrors.h"
 #include "OSErrors.h"
@@ -209,8 +210,9 @@ FReal(RefArg /*rcvr*/, RefArg a)
 
 
 // numbers compared: integers as such, else as doubles; characters by code;
-// strings by their characters (NOT YET RECONSTRUCTED: TRichString's
-// comparison); anything else is an error.  Answers <0, 0, >0.
+// strings through TRichString::CompareSubStringCommon (the sort table's
+// collation, not the codes; ink words by their data) as FLessThan and the
+// rest do it; anything else is an error.  Answers <0, 0, >0.
 static long
 CompareForOrder(RefArg a, RefArg b)
 {
@@ -230,15 +232,8 @@ CompareForOrder(RefArg a, RefArg b)
 	}
 	if (IsString(a) && IsString(b))
 	{
-		const UniChar* sa = GetCString(a);
-		const UniChar* sb = GetCString(b);
-		for (long i = 0; ; i++)
-		{
-			if (sa[i] != sb[i])
-				return sa[i] < sb[i] ? -1 : 1;
-			if (sa[i] == 0)
-				return 0;
-		}
+		TRichString sa(a), sb(b);
+		return sa.CompareSubStringCommon(sb, 0, -1, false);
 	}
 	Throw(exFrames, (void*) kNSErrBadArgs, nil);
 	return 0;
@@ -746,8 +741,10 @@ ThrowOutOfBounds(RefArg obj, long index)
 
 
 // ROM 0x002b639c FAref
-// An array's slot or a string's character.  NOT YET RECONSTRUCTED:
-// TRichString (ink in strings) - the characters are the UniChars.
+// An array's slot or a string's character - read through TRichString, so
+// a rich string's bound is its text's length (not the binary's, which
+// carries the ink after the text) and an ink word answers its ink
+// character.
 Ref
 FAref(RefArg /*rcvr*/, RefArg obj, RefArg index)
 {
@@ -757,10 +754,10 @@ FAref(RefArg /*rcvr*/, RefArg obj, RefArg index)
 	{
 		if (!IsString(obj))
 			ThrowBadTypeWithFrameData(kNSErrNotAnArrayOrString, obj);
-		long length = Length(obj) / 2 - 1;
-		if (i < 0 || i >= length)
+		TRichString s(obj);
+		if (i < 0 || (ULong) i >= (ULong) s.Length())
 			ThrowOutOfBounds(obj, i);
-		return MAKECHAR(((UniChar*) BinaryData(obj))[i]);
+		return MAKECHAR(s.GetChar(i));
 	}
 	if ((flags & kObjFrame) != 0)
 		ThrowBadTypeWithFrameData(kNSErrNotAnArrayOrString, obj);
@@ -769,6 +766,11 @@ FAref(RefArg /*rcvr*/, RefArg obj, RefArg index)
 
 
 // ROM 0x002b6508 FSetAref
+// An array's slot or a string's character set - a string through
+// TRichString (its text's length the bound; a character over an ink word
+// goes in through MungeRange).  Unlike the interpreter's setAref, a 0 is
+// never taken as cutting the string: storing 0 or the ink character is an
+// error (evt.ex.fr.intrp -48815, {errorCode, value}).
 Ref
 FSetAref(RefArg /*rcvr*/, RefArg obj, RefArg index, RefArg value)
 {
@@ -778,18 +780,24 @@ FSetAref(RefArg /*rcvr*/, RefArg obj, RefArg index, RefArg value)
 	{
 		if (!IsString(obj))
 			ThrowBadTypeWithFrameData(kNSErrNotAnArrayOrString, obj);
-		long length = Length(obj) / 2 - 1;
-		if (i < 0 || i >= length)
+		TRichString s(obj);
+		if (i < 0 || (ULong) i >= (ULong) s.Length())
 			ThrowOutOfBounds(obj, i);
 		UniChar c = RCHAR(value);
-		if (c == 0)
-			SetLength(obj, (i + 1) * 2);
-		else
-			((UniChar*) BinaryData(obj))[i] = c;
+		if (c == 0 || c == kInkChar)
+		{
+			RefVar data(AllocateFrame());
+			SetFrameSlot(data, RSSYMerrorcode, RefVar(MAKEINT(kNSErrBadCharForString)));
+			SetFrameSlot(data, RSSYMvalue, value);
+			ThrowRefException(exInterpreterWithFrameData, data);
+		}
+		s.SetChar(i, c);
 		return value;
 	}
+	// ROM QUIRK kept: for a frame the error names the index as the bad
+	// value, not the frame
 	if ((flags & kObjFrame) != 0)
-		ThrowBadTypeWithFrameData(kNSErrNotAnArrayOrString, obj);
+		ThrowBadTypeWithFrameData(kNSErrNotAnArrayOrString, index);
 	SetArraySlotRef(obj, i, value);
 	return value;
 }

@@ -118,6 +118,12 @@ TestUnicodeTables()
 	UniChar e[2] = { 0xe9, 0 };
 	UppercaseNoDiacriticsText(e, 1);
 	EXPECT(e[0] == 'E');
+	// StripDiacriticals: in place, over the same table
+	UniChar accented[5] = { 0xe9, 't', 0xe9, 0xe4, 0 };
+	RefVar strip(MakeString(accented));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(SYMBOL("accented")), strip);
+	EXPECT_STRING("StripDiacriticals(accented)", "etea");
+	EXPECT(StringEquals(strip, "etea"));
 	EXPECT(UToUpper(0xe9) == 0xc9 && UToLower(0xc9) == 0xe9 && ToggleCase('a') == 'A' && ToggleCase('A') == 'a' && ToggleCase('1') == '1');
 	EXPECT(IsAlphabet(0xe4) && IsAlphabet(0xdf) && !IsAlphabet('1') && !IsAlphabet(0x2022));
 	// the break table: what ends a word (not '_', as the ROM has it)
@@ -244,6 +250,51 @@ TestRichStringInk()
 	EXPECT(sf.CompareSubStringCommon(sm, 0, -1, false) == 0);
 	EXPECT(sf.CompareSubStringCommon(ss, 0, -1, false) < 0);
 	EXPECT(ss.CompareSubStringCommon(sf, 0, -1, false) > 0);
+
+	// a rich string read and written as NewtonScript reads it: through
+	// TRichString, so its bound is its text (5), not the binary, which
+	// carries the ink after the text
+	RefVar rs(MakeInkString("a#b#c", two, 2));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(SYMBOL("rs")), rs);
+	EXPECT_CHAR("aref(rs, 4)", 'c');
+	EXPECT_CHAR("aref(rs, 1)", kInkChar);
+	EXPECT_THROWS("aref(rs, 5)", kNSErrOutOfBounds);
+	EXPECT_CHAR("rs[1]", kInkChar);					// the interpreter's aref too
+	// GetChar at an ink character: a copy of the word
+	RefVar got(Eval("GetChar(rs, 3)"));
+	EXPECT(IsInkWord(got) && Length(got) == 2 && memcmp(BinaryData(got), "BB", 2) == 0);
+	// SetChar with an ink word: spliced in as one character with its blob
+	Eval("SetChar(rs, 0, GetChar(rs, 1))");
+	TRichString after(rs);
+	EXPECT(InkTextIs(after, "##b#c") && after.NumInkWords() == 3 && after.Verify() == 0);
+	RefVar firstWord(after.CloneInkWordNo(0));
+	EXPECT(Length(firstWord) == 4 && memcmp(BinaryData(firstWord), "AAAA", 4) == 0);
+	// ... with something else: nothing changes
+	Eval("SetChar(rs, 2, 7)");
+	EXPECT(InkTextIs(TRichString(rs), "##b#c"));
+	// a character over an ink word takes the ink out with it
+	Eval("SetChar(rs, 0, $z)");
+	TRichString replaced(rs);
+	EXPECT(InkTextIs(replaced, "z#b#c") && replaced.NumInkWords() == 2);
+	// setAref may not store 0 or the ink character
+	EXPECT_THROWS("setAref(rs, 2, $\\u0000)", kNSErrBadCharForString);
+	EXPECT_THROWS("setAref(rs, 2, $\\uF700)", kNSErrBadCharForString);
+	EXPECT_THROWS("rs[2] := $\\uF700", kNSErrBadCharForString);
+	Eval("setAref(rs, 2, $y)");
+	EXPECT(InkTextIs(TRichString(rs), "z#y#c"));
+
+	// StrMunger edits through TRichString: the ink moves with its character
+	RefVar munged(MakeInkString("a#b#c", two, 2));
+	StrMunger(munged, 0, 1, RefVar(MakeString("xy")), 0, -1);
+	TRichString m(munged);
+	EXPECT(InkTextIs(m, "xy#b#c") && m.NumInkWords() == 2 && m.Verify() == 0);
+	RefVar secondWord(m.CloneInkWordNo(1));
+	EXPECT(Length(secondWord) == 2 && memcmp(BinaryData(secondWord), "BB", 2) == 0);
+	StrMunger(munged, 2, 2, RefVar(NILREF), 0, 0);			// the first word and "b" out
+	TRichString m2(munged);
+	EXPECT(InkTextIs(m2, "xy#c") && m2.NumInkWords() == 1 && m2.Verify() == 0);
+	StrMunger(munged, 0, -1, RefVar(MakeString("plain")), 0, -1);	// all of it: plain again
+	EXPECT(StringEquals(munged, "plain") && TRichString(munged).Format() == kRichStringFormatPlain);
 }
 
 
@@ -666,6 +717,13 @@ TestBinaries()
 static void
 TestComparisons()
 {
+	// strings are ordered as the machine collates them (TRichString::
+	// CompareSubStringCommon over the sort table), not by their codes:
+	// 'a' (97) comes before 'B' (66), and case alone makes no order
+	EXPECT_TRUE("\"a\" < \"B\"");
+	EXPECT_TRUE("\"apple\" < \"Banana\"");
+	EXPECT_NIL("\"a\" < \"A\"");
+	EXPECT_TRUE("\"a\" <= \"A\" and \"A\" >= \"a\"");
 	EXPECT_TRUE("UnorderedOrGreater(2, 1)");
 	EXPECT_NIL("UnorderedOrGreater(1, 2)");
 	EXPECT_TRUE("UnorderedOrGreater(2.5, 1)");

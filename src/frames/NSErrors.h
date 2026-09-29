@@ -75,6 +75,7 @@
 #define kNSErrUndefinedMethod			(ERRBASE_FRAMES - 809)
 #define kNSErrNoProtoForResend			(ERRBASE_FRAMES - 810)	// inherited: the implementor has no _proto
 #define kNSErrNilContext				(ERRBASE_FRAMES - 811)	// a variable of NILREF (the ROM's -0xbeab)
+#define kNSErrBadCharForString			(ERRBASE_FRAMES - 815)	// setAref of 0 or 0xF700 into a string where it may not go (the ROM's -0xbeaf; {errorCode, value})
 // host: a ROM native function whose implementation is not reconstructed yet
 #define kNSErrNativeNotReconstructed	(ERRBASE_FRAMES - 899)
 

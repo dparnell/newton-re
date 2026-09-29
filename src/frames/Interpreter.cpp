@@ -27,6 +27,7 @@
 #include "OSErrors.h"
 #include "NewtonMemory.h"
 #include "NewtonExceptions.h"
+#include "RichString.h"		// aref/setAref read strings through TRichString
 
 #include "host/TaskRuntime.h"
 
@@ -1350,8 +1351,10 @@ TInterpreter::SlowRun(long baseDepth)
 					{
 						if (!IsInstance(arg1, RSSYMstring))
 							ThrowBadTypeWithFrameData(kNSErrNotAnArrayOrString, arg1);
-						// NOT YET RECONSTRUCTED: TRichString (ink in strings); the characters are the UniChars
-						long length = Length(arg1) / 2 - 1;
+						// read through TRichString (0x002f3628): a rich string's
+						// bound is its text's length, not the binary's
+						TRichString s(arg1);
+						long length = s.Length();
 						if (index < 0 || index >= length)
 						{
 							if (!fLocalsOnStack && index == length)
@@ -1360,7 +1363,7 @@ TInterpreter::SlowRun(long baseDepth)
 								ThrowOutOfBoundsException(arg1, index);
 						}
 						else
-							TOP() = MAKECHAR(((UniChar*) BinaryData(arg1))[index]);
+							TOP() = MAKECHAR(s.GetChar(index));
 					}
 					else if ((flags & kObjFrame) != 0)
 						ThrowBadTypeWithFrameData(kNSErrNotAnArrayOrString, arg1);
@@ -1383,21 +1386,34 @@ TInterpreter::SlowRun(long baseDepth)
 					{
 						if (!IsInstance(arg1, RSSYMstring))
 							ThrowBadTypeWithFrameData(kNSErrNotAnArrayOrString, arg1);
-						long length = Length(arg1) / 2 - 1;
+						// read and written through TRichString (0x002f3800): a
+						// character goes in with SetChar (an ink word's through
+						// MungeRange); a 0 cuts the string there with StrMunger -
+						// which a 1.x function may do, storing the terminator -
+						// unless the locals are on the stack; the ink character
+						// itself may never be stored
+						TRichString s(arg1);
+						long length = s.Length();
 						if (index < 0 || index >= length)
 						{
 							if (index != length || fLocalsOnStack || RCHAR(arg3) != 0)
 								ThrowOutOfBoundsException(arg1, index);
-							// (a 1.x function may store the terminating 0: the string shrinks to it)
-							SetLength(arg1, (index + 1) * 2);
+							StrMunger(arg1, index, -1, RefVar(NILREF), 0, -1);
 						}
 						else
 						{
 							UniChar c = RCHAR(arg3);
-							if (c == 0)
-								SetLength(arg1, (index + 1) * 2);
+							if (c != 0 && c != kInkChar)
+								s.SetChar(index, c);
+							else if (fLocalsOnStack || c != 0)
+							{
+								RefVar data(AllocateFrame());
+								SetFrameSlot(data, RSSYMerrorcode, RefVar(MAKEINT(kNSErrBadCharForString)));
+								SetFrameSlot(data, RSSYMvalue, arg3);
+								ThrowRefException(exInterpreterWithFrameData, data);
+							}
 							else
-								((UniChar*) BinaryData(arg1))[index] = c;
+								StrMunger(arg1, index, -1, RefVar(NILREF), 0, -1);
 						}
 					}
 					else if ((flags & kObjFrame) != 0)
