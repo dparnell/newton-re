@@ -28,9 +28,10 @@ set_tests_properties(host.ScaledMapDemo PROPERTIES TIMEOUT 120 PASS_REGULAR_EXPR
 # paths: src/intl/Locale.h would be found for the C library's <locale.h>
 # on a case-insensitive file system, and the Windows headers do not mix
 # with the DDK's)
-add_library(host_window STATIC win32/HostWindow.cpp)
+# (and the loudspeaker, win32/HostAudio.cpp: waveOut, the same reasons)
+add_library(host_window STATIC win32/HostWindow.cpp win32/HostAudio.cpp)
 if(WIN32)
-    target_link_libraries(host_window PUBLIC user32 gdi32 shell32)
+    target_link_libraries(host_window PUBLIC user32 gdi32 shell32 winmm)
 endif()
 add_executable(newton newton.cpp HostKeyboard.cpp HostPackages.cpp HostHeapCheck.cpp)
 target_link_libraries(newton PRIVATE newt host_views host_window hal_host_sound)

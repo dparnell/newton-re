@@ -37,6 +37,7 @@
 #include "HostScreen.h"
 #include "HostKeyboard.h"
 #include "win32/HostWindow.h"
+#include "win32/HostAudio.h"
 #include "UserBoot.h"
 #include "UserTasks.h"
 #include "os600/kernel/Boot.h"
@@ -255,11 +256,16 @@ main(int argc, char** argv)
 	gNewtHostPreMain = HostInstallPackageGlobal;
 	NewtInstallUserMain();
 	gHostKernelServicesTask = KernelServices;
-	// the sound hardware (hal/host/HostSoundDriver.h): the null backend,
-	// which keeps what was played, for now
-	HostInstallSoundDriver(nil);
+	// the sound hardware (hal/host/HostSoundDriver.h): with a window, the
+	// loudspeaker (win32/HostAudio.h); headless, or with no audio device,
+	// the null backend, which keeps what was played
+	static const HostSoundBackend kLoudspeaker = { HostAudioPlay };
+	Boolean loud = gWindowed && HostAudioOpen(kHostSoundRate);
+	HostInstallSoundDriver(loud ? &kLoudspeaker : nil);
 	OsBoot();
 	HostWindowStop();
+	if (loud)
+		HostAudioClose();
 	long played = 0;
 	HostSoundCaptured(&played);
 	if (played > 0)
