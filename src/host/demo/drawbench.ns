@@ -1,0 +1,63 @@
+// A drawing benchmark: the screens a user brings up most, each drawn
+// several times, timed.  After the Setup walk (common.ns) the Names,
+// Dates and Extras drawer are opened and closed in turn, the whole screen
+// redrawn each time (RefreshViews), the Notepad scrolled a page down and
+// back, the screen redrawn whole with the Extras drawer over the Notepad;
+// each is done `rounds` times and both the processor time it took
+// (HostCPUTime, milliseconds - the work) and the wall time (ticks,
+// sixtieths of a second, which include the open and close animations'
+// own pacing) printed, with the totals.  (docs/qd/README.md's "Drawing
+// speed" has the numbers before and after the fast paths.)
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//       --erase --store tmp/drawbench.store --headless 600 --script src/host/demo/drawbench.ns
+//
+// NEWTON_QD_SLOW=1 draws through the pixel-at-a-time blitter instead of the
+// fast paths (qd/Draw.h), which is how the two are compared.
+
+HostInclude("common.ns");
+
+name := [2, 0, 45, 34, 14, 37];
+rounds := 5;
+total := 0;
+totalCPU := 0;
+
+// each step: its name and what it does once (the screen drawn after it)
+steps := [
+	['names, func() begin GetRoot().cardfile:Open(); RefreshViews(); GetRoot().cardfile:Close(); RefreshViews(); end],
+	['dates, func() begin GetRoot().calendar:Open(); RefreshViews(); GetRoot().calendar:Close(); RefreshViews(); end],
+	['extras, func() begin GetRoot().extrasDrawer:Open(); RefreshViews(); GetRoot().extrasDrawer:Close(); RefreshViews(); end],
+	['scroll, func() begin
+		call tapAt with (305, 474); RefreshViews();		// the scroll arrows: down a page
+		call tapAt with (305, 462); RefreshViews();		// and up again
+	  end],
+	['redraw, func() begin GetRoot():Dirty(); RefreshViews(); end],
+	['busy, func() begin										// the Extras drawer over the Notepad, redrawn whole
+		GetRoot().extrasDrawer:Open();
+		for k := 1 to 4 do begin GetRoot():Dirty(); RefreshViews(); end;
+		GetRoot().extrasDrawer:Close(); RefreshViews();
+	  end]];
+
+runStep := func(i) begin
+	if i >= Length(steps) then begin
+		Print("drawbench: total " & NumberStr(totalCPU) & " ms of processor, " & NumberStr(total) & " ticks");
+		Print("drawbench: done");
+		HostQuit();
+		return nil;
+	end;
+	local step := steps[i];
+	local start := Ticks();
+	local startCPU := HostCPUTime();
+	try
+		for r := 1 to rounds do call step[1] with ()
+	onexception |evt.ex| do
+		Print("drawbench: " & step[0] & " threw " & CurrentException().name);
+	local took := Ticks() - start;
+	local cpu := HostCPUTime() - startCPU;
+	total := total + took;
+	totalCPU := totalCPU + cpu;
+	Print("drawbench: " & step[0] & " " & NumberStr(cpu) & " ms of processor, " & NumberStr(took) & " ticks for " & NumberStr(rounds));
+	AddDelayedCall(func() call runStep with (i + 1), nil, 500);
+end;
+
+call walkSetup with (name, func() AddDelayedCall(func() call runStep with (0), nil, 2000));

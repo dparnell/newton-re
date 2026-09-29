@@ -44,3 +44,11 @@ add_executable(test_ScrollRect test_ScrollRect.cpp)
 target_link_libraries(test_ScrollRect PRIVATE qd)
 add_test(NAME qd.ScrollRect COMMAND test_ScrollRect)
 set_tests_properties(qd.ScrollRect PROPERTIES TIMEOUT 120)
+
+# the fast blitter against the slow one it replaced (qd/Draw.h:
+# SetQDSlowBlitter): random scenes in every verb, mode and depth, drawn
+# both ways and compared byte for byte
+add_executable(test_Blitter test_Blitter.cpp)
+target_link_libraries(test_Blitter PRIVATE qd)
+add_test(NAME qd.Blitter COMMAND test_Blitter)
+set_tests_properties(qd.Blitter PROPERTIES TIMEOUT 300)

@@ -4,7 +4,9 @@
 	Contains:	Drawing rectangles and regions, and the blitter.
 
 	Reconstructed from the MP2x00 US ROM; each function cites its origin.
-	The blitter is written a pixel at a time (Draw.h says why); the ROM's
+	The blitter is written a row at a time (BlitPixelsFast), with the
+	pixel-at-a-time version it replaced kept as the oracle (BlitPixelsSlow,
+	NEWTON_QD_SLOW; qd/tests/test_Blitter.cpp compares them); the ROM's
 	transfer semantics - the source inverted for the notSrc/notPat modes,
 	copy, or (a non-white gray source pixel replacing the destination's),
 	xor and bic - are kept, as is the clipping: the destination rectangle
@@ -22,6 +24,7 @@ extern const unsigned char	kDepthPixelsPerWordMask[33];
 #include "Screen.h"
 #include "FixedMath.h"
 #include "OSErrors.h"
+#include <stdlib.h>
 #include <string.h>
 
 
@@ -66,8 +69,12 @@ Transfer(long op, long dst, long src, long maxValue)
 // pattern's when mode has patCopy's bit), each pixel passed by the masks
 // (any number of scan states, nil for none); the source read a row ahead
 // when it is the destination map, and bottom up when it lies above.
+//
+// This is the oracle: a pixel at a time through GetPixel/SetPixel and
+// PatternPixel, as the blitter was first written.  BlitPixelsFast below
+// draws the same pixels.
 static void
-BlitPixels(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRect, const Rect* clipped, long mode, PatternHandle pattern, RgnState** masks, long maskCount, long* row)
+BlitPixelsSlow(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRect, const Rect* clipped, long mode, PatternHandle pattern, RgnState** masks, long maskCount, long* row)
 {
 	long depth = PixelMapDepth(dst);
 	long maxValue = (1 << depth) - 1;
@@ -112,6 +119,224 @@ BlitPixels(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRec
 				SetPixel(dst, x, y, Transfer(op, GetPixel(dst, x, y), row[i], maxValue));
 		}
 	}
+}
+
+
+// A pixel of a big-endian row at a bit offset, as GetPixel reads it and
+// SetPixel writes it (depths 1, 2, 4 and 8).
+static inline long
+RowPixel(const unsigned char* row, long bit, long depth)
+{
+	if (depth == 8)
+		return row[bit >> 3];
+	return (row[bit >> 3] >> (8 - depth - (bit & 7))) & ((1 << depth) - 1);
+}
+
+
+static inline void
+SetRowPixel(unsigned char* row, long bit, long depth, long value)
+{
+	if (depth == 8)
+	{
+		row[bit >> 3] = (unsigned char) value;
+		return;
+	}
+	long shift = 8 - depth - (bit & 7);
+	long mask = ((1 << depth) - 1) << shift;
+	row[bit >> 3] = (unsigned char) ((row[bit >> 3] & ~mask) | ((value << shift) & mask));
+}
+
+
+// Host: BlitPixelsSlow's pixels, a row at a time.  The maps' bits, depths
+// and origins, the pattern and its alignment are looked up once rather
+// than for every pixel; a row's source values are read along the row with
+// the bit offset stepped; the masks are ANDed into one visibility row; and
+// the common cases - every pixel of the row visible, or a run of them, in
+// copy mode at the same depth - are written a byte at a time.  Everything
+// else is written pixel by pixel through the same Transfer.
+// DEVIATION (performance): the ROM's own BB* routines are word-at-a-time
+// assembly; this reproduces BlitPixelsSlow's output bit for bit
+// (qd/tests/test_Blitter.cpp).
+static void
+BlitPixelsFast(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRect, const Rect* clipped, long mode, PatternHandle pattern, RgnState** masks, long maskCount, long* row)
+{
+	long depth = PixelMapDepth(dst);
+	long maxValue = (1 << depth) - 1;
+	long op = mode & 3;
+	Boolean invert = (mode & 4) != 0;
+	Boolean usePattern = (mode & 8) != 0;
+	long srcDepth = usePattern ? depth : PixelMapDepth(src);
+	long dh = srcRect->left - dstRect->left;
+	long dv = srcRect->top - dstRect->top;
+	long width = clipped->right - clipped->left;
+	if (width <= 0 || clipped->top >= clipped->bottom || row == nil)
+		return;
+	Boolean sameBits = !usePattern && GetPixelMapBits(src) == GetPixelMapBits(dst);
+	Boolean upward = sameBits && dv < 0;
+	long y = upward ? clipped->bottom - 1 : clipped->top;
+	long yEnd = upward ? clipped->top - 1 : clipped->bottom;
+	long yStep = upward ? -1 : 1;
+
+	unsigned char* dstBits = (unsigned char*) GetPixelMapBits(dst);
+	long dstRowBytes = dst->rowBytes;
+	long dstBit0 = (clipped->left - dst->bounds.left) * depth;
+	const unsigned char* srcBits = nil;
+	long srcRowBytes = 0;
+	long srcBit0 = 0;
+	if (!usePattern)
+	{
+		srcBits = (const unsigned char*) GetPixelMapBits(src);
+		srcRowBytes = src->rowBytes;
+		srcBit0 = (clipped->left + dh - src->bounds.left) * srcDepth;
+	}
+	const PixelMap* pm = usePattern ? *pattern : nil;
+	const unsigned char* patBits = nil;
+	long patWidth = 0, patHeight = 0, patDepth = 0, patRowBytes = 0;
+	Point align = { 0, 0 };
+	if (usePattern)
+	{
+		patBits = (const unsigned char*) GetPixelMapBits(pm);
+		patWidth = pm->bounds.right - pm->bounds.left;
+		patHeight = pm->bounds.bottom - pm->bounds.top;
+		patDepth = PixelMapDepth(pm);
+		patRowBytes = pm->rowBytes;
+		align = GetCurrentPort()->patAlign;
+	}
+	// one byte per pixel of the row: whether the masks let it through
+	unsigned char visibleRow[1024];
+	unsigned char* visible = (width <= (long) sizeof(visibleRow)) ? visibleRow : (unsigned char*) QDNewTempPtr(width);
+	if (visible == nil)
+		return;
+
+	for (; y != yEnd; y += yStep)
+	{
+		// the source row (read in full first: it may overlap the destination row)
+		if (usePattern)
+		{
+			const unsigned char* prow = patBits + ((((y + align.v) % patHeight) + patHeight) % patHeight) * patRowBytes;
+			long px = (((clipped->left + align.h) % patWidth) + patWidth) % patWidth;
+			for (long i = 0; i < width; i++)
+			{
+				long value = RowPixel(prow, px * patDepth, patDepth);
+				if (patDepth != depth)
+					value = value ? maxValue : 0;
+				row[i] = invert ? value ^ maxValue : value;
+				if (++px == patWidth)
+					px = 0;
+			}
+		}
+		else
+		{
+			const unsigned char* srow = srcBits + (y + dv - src->bounds.top) * srcRowBytes;
+			long bit = srcBit0;
+			if (srcDepth == depth)
+			{
+				for (long i = 0; i < width; i++, bit += srcDepth)
+				{
+					long value = RowPixel(srow, bit, srcDepth);
+					row[i] = invert ? value ^ maxValue : value;
+				}
+			}
+			else
+			{
+				for (long i = 0; i < width; i++, bit += srcDepth)
+				{
+					long value = ConvertDepth(RowPixel(srow, bit, srcDepth), srcDepth, depth);
+					row[i] = invert ? value ^ maxValue : value;
+				}
+			}
+		}
+
+		// the masks, ANDed
+		Boolean allVisible = true;
+		if (maskCount > 0)
+		{
+			for (long m = 0; m < maskCount; m++)
+				SeekRgn(masks[m], y);
+			memset(visible, 1, width);
+			for (long m = 0; m < maskCount; m++)
+			{
+				const ULong32* scan = masks[m]->fScan;
+				long mdepth = masks[m]->fDepth;
+				long bit = (clipped->left - masks[m]->fOrigin) * mdepth;
+				for (long i = 0; i < width; i++, bit += mdepth)
+					if (!(scan[bit >> 5] & (0x80000000u >> (bit & 31))))
+						visible[i] = 0;
+			}
+			for (long i = 0; i < width && allVisible; i++)
+				if (!visible[i])
+					allVisible = false;
+		}
+
+		// the destination row
+		unsigned char* drow = dstBits + (y - dst->bounds.top) * dstRowBytes;
+		long bit = dstBit0;
+		if (op == 0 && allVisible && depth < 8)
+		{
+			// copy, every pixel: whole bytes packed, the partial ones at the ends merged
+			long perByte = 8 / depth;
+			long i = 0;
+			for (; i < width && (bit & 7) != 0; i++, bit += depth)
+				SetRowPixel(drow, bit, depth, row[i]);
+			for (; i + perByte <= width; i += perByte, bit += 8)
+			{
+				unsigned long b = 0;
+				for (long k = 0; k < perByte; k++)
+					b = (b << depth) | (row[i + k] & maxValue);
+				drow[bit >> 3] = (unsigned char) b;
+			}
+			for (; i < width; i++, bit += depth)
+				SetRowPixel(drow, bit, depth, row[i]);
+		}
+		else if (op == 0 && allVisible)
+		{
+			for (long i = 0; i < width; i++, bit += depth)
+				SetRowPixel(drow, bit, depth, row[i]);
+		}
+		else
+		{
+			for (long i = 0; i < width; i++, bit += depth)
+				if (allVisible || visible[i])
+					SetRowPixel(drow, bit, depth, Transfer(op, RowPixel(drow, bit, depth), row[i], maxValue));
+		}
+	}
+	if (visible != visibleRow)
+		QDDisposeTempPtr(visible);
+}
+
+
+static Boolean	gQDSlow = false;
+static Boolean	gQDSlowRead = false;
+
+void
+SetQDSlowBlitter(Boolean slow)
+{
+	gQDSlow = slow;
+	gQDSlowRead = true;
+}
+
+
+Boolean
+QDSlowBlitter(void)
+{
+	if (!gQDSlowRead)
+	{
+		const char* env = getenv("NEWTON_QD_SLOW");
+		gQDSlow = env != nil && *env != 0 && *env != '0';
+		gQDSlowRead = true;
+	}
+	return gQDSlow;
+}
+
+
+// the blitter, the fast way or the oracle's
+static void
+BlitPixels(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRect, const Rect* clipped, long mode, PatternHandle pattern, RgnState** masks, long maskCount, long* row)
+{
+	if (QDSlowBlitter())
+		BlitPixelsSlow(src, dst, srcRect, dstRect, clipped, mode, pattern, masks, maskCount, row);
+	else
+		BlitPixelsFast(src, dst, srcRect, dstRect, clipped, mode, pattern, masks, maskCount, row);
 }
 
 

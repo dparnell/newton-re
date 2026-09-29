@@ -105,6 +105,9 @@ struct HostExceptionPointers
 typedef long (__stdcall *HostExceptionFilter)(HostExceptionPointers*);
 __declspec(dllimport) HostExceptionFilter __stdcall SetUnhandledExceptionFilter(HostExceptionFilter filter);
 __declspec(dllimport) void* __stdcall GetModuleHandleA(const char* name);
+__declspec(dllimport) void* __stdcall GetCurrentProcess(void);
+__declspec(dllimport) int __stdcall GetProcessTimes(void* process, unsigned long long* creation, unsigned long long* exit,
+													 unsigned long long* kernel, unsigned long long* user);
 }
 #include <stdlib.h>
 #include <string.h>
@@ -202,6 +205,20 @@ FHostInclude(RefArg /*rcvr*/, RefArg name)
 }
 
 
+// HostCPUTime(): the milliseconds of processor time the program has used,
+// in the kernel and out of it - what a benchmark measures the work by,
+// the wall clock being taken up as well by the animations' and the
+// scripts' own waits (src/host/demo/drawbench.ns)
+static Ref
+FHostCPUTime(RefArg /*rcvr*/)
+{
+	unsigned long long creation, exited, kernel, user;
+	if (!GetProcessTimes(GetCurrentProcess(), &creation, &exited, &kernel, &user))
+		return NILREF;
+	return MAKEINT((long) ((kernel + user) / 10000));		// (hundreds of nanoseconds)
+}
+
+
 // PreMain's host hook: the program's globals (HostQuit among them), and the
 // host's link for the Newton Internet Enabler (comms/host/HostLink.h: it
 // waits for the NIE)
@@ -210,6 +227,7 @@ NewtonPreMain(void)
 {
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostQuit")), RefVar(MakeCFunction((void*) FHostQuit, 0, nil)));
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostInclude")), RefVar(MakeCFunction((void*) FHostInclude, 1, nil)));
+	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostCPUTime")), RefVar(MakeCFunction((void*) FHostCPUTime, 0, nil)));
 	HostInstallPackageGlobal();
 	HostLinkStart();
 }

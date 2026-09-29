@@ -23,8 +23,8 @@
 
 	The ROM's blitter (RgnBlt 0x00343228, BitBlt 0x002ac9c8 and the BB*
 	routines) works a word at a time in the map's depth; the host works a
-	pixel at a time with the same results (DEVIATION: the code, not the
-	pixels).  NOT YET RECONSTRUCTED: lines, ovals, round rectangles, arcs,
+	row at a time with the same results (DEVIATION, for speed: the code,
+	not the pixels - SetQDSlowBlitter below).  NOT YET RECONSTRUCTED: lines, ovals, round rectangles, arcs,
 	polygons, pictures, text, StretchBits (CopyBits between rectangles of
 	different sizes), the screen locking around a blit (QDStartDrawing).
 
@@ -72,6 +72,15 @@ void	StdBits(PixelMap* src, Rect* srcRect, Rect* dstRect, long mode, RgnHandle m
 void	StretchBits(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRect, long mode, RgnHandle clip1, RgnHandle clip2, RgnHandle mask);
 void	RgnBlt(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRect, long mode, PatternHandle pattern, RgnHandle clip1, RgnHandle clip2, RgnHandle clip3);
 void	BitBlt(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRect, long mode, PatternHandle pattern);
+
+// The host's blitter has two ways of drawing the same pixels: the fast one
+// (the rows worked out in place, the pixel maps' bits addressed directly)
+// and the slow one it was first written as, a pixel at a time through
+// GetPixel/SetPixel - kept as the oracle the fast one is checked against
+// (qd/tests/test_Blitter.cpp draws every case both ways and compares).
+// NEWTON_QD_SLOW=1 in the environment makes the slow one the default.
+void	SetQDSlowBlitter(Boolean slow);
+Boolean	QDSlowBlitter(void);
 
 // The inker's line: the segment from one pen sample to the next, drawn
 // straight into a pixel map (the screen's, when none is named) without a
