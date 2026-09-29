@@ -4454,22 +4454,20 @@ TView::DejustifyBounds(Rect* bounds)
 
 // ROM 0x002652a4 RecalcBounds__5TViewFv
 // The bounds set again from the template's viewBounds (after the parent
-// moved or changed size); a template without a proper viewBounds keeps
-// the children's recalculated instead... the ROM recalculates the children
-// when the frame does not convert, then sets the bounds regardless.
+// moved or changed size) - when it converts to a rectangle - and then the
+// children's recalculated in their turn, whatever the view's own did: a
+// view moved by its parent carries its whole subtree with it (Mahjongg's
+// tiles-remaining box and its digits, after the screen is turned).
 void
 TView::RecalcBounds(void)
 {
 	RefVar bounds(GetProto(RSSYMviewbounds));
 	Rect r;
-	if (!FromObject(bounds, r))
-	{
-		TViewLoop loop(fChildren);
-		for (TView* child = loop.Next(); child != nil; child = loop.Next())
-			child->RecalcBounds();
-		SetRect(&r, 0, 0, 0, 0);
-	}
-	SetBounds(r);
+	if (FromObject(bounds, r))
+		SetBounds(r);
+	TViewLoop loop(fChildren);
+	for (TView* child = loop.Next(); child != nil; child = loop.Next())
+		child->RecalcBounds();
 }
 
 
