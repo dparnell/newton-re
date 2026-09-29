@@ -1,0 +1,49 @@
+ESPAÑOL
+
+APPLE COMPUTER, INC 
+CONTRATO DE LICENCIA PARA NEWTON SOFTWARE
+
+ROGAMOS LEA DETENIDAMENTE EL PRESENTE CONTRATO DE LICENCIA DE SOFTWARE (EN ADELANTE DENOMINADO, "LICENCIA") ANTES DE PULSAR EL BOTON "ACEPTO" INDICADO A CONTINUACION. LA PULSACION DEL BOTON "ACEPTO" SUPONDRA SU ACEPTACION A QUEDAR SOMETIDO A LOS TERMINOS Y CONDICIONES DE ESTA LICENCIA. EN EL SUPUESTO DE QUE VD. NO ESTE DE ACUERDO CON LOS TERMINOS DE LA LICENCIA, NO PULSE EL BOTON "ACEPTO".
+
+1. Licencia. Apple Computer, Inc. (en adelante denominado "Apple") le otorga a Vd. la licencia (pero no le transfieren la propiedad), para utilizar el software y los tipos que acompañan la presente Licencia, sea en diskette, en memoria de lectura ("rom") o en cualquier otro soporte (denominados en adelante el "Software Apple"). Vd. es propietario del disquette en el cual están grabado el Software Apple, pero Apple y/o el/los Licenciador(es) de Apple conservan la titularidad sobre el Software Apple. Su uso del Software Apple es sujeto a esta Licencia. 
+
+2. Usos permitidos y limitaciones. La presente Licencia le autoriza a Vd. a instalar y utilizar el Apple Software en un único Producto Newton (tambien denominado en adelante como un "ordenador"), al mismo tiempo. Esta Licencia no le permite disponer del Apple Software en más de un ordenador al mismo tiempo. Vd. podrá realizar una copia del Apple Software en formato legible por ordenador a efectos de copia de seguridad únicamente. La copia de seguridad deberá incluir toda la información relativa a derechos de autor contenida en el original.  Vd. no podrá decompilar, invertir, desensamblar, modificar, alquilar, arrendar, distribuir crear productos derivados del Software Apple o transmitir el Apple Software a través de red, salvo que ello sea expresamente permitido por la legislación imperativa aplicable o por la presente Licencia. No obstante, Vd. podrá transmitir a terceros los derechos derivados de la presente Licencia, a condición de que también transmita la documentación conexa, la presente Licencia y una copia del Software Apple a un tercero que acepte los términos y condiciones de esta Licencia y de que se destruyan cualesquiera otras copias del Software Apple que obren en su poder. Sus derechos derivados de la presente Licencia quedarán automáticamente extinguidos, sin necesidad de notificación de Apple, si Vd. incumple cualquier término o condición de la presente Licencia.
+
+3. Licencia Limitada sobre los Soportes (en su caso). Apple garantiza que los soportes en los cuales está grabado el Software Apple carecen de defectos sobre materiales y mano de obra en circunstancias normales de uso y durante un plazo de noventa (90) días desde el momento de la adquisición inicial al por menor. Su único derecho bajo este apartado será, a opción de Apple, el reembolso del precio de compra del producto que contenía el Software Apple o la sustitución del Software Apple que será devuelto a Apple o a un representante autorizado de Apple con una copia del recibo. ESTA GARANTÍA LIMITADA Y CUALESQUIERA GARANTÍAS IMPLÍCITAS Y/O CONDICIONES RELATIVAS A LOS SOPORTES, INCLUYENDO GARANTÍAS IMPLÍCITAS Y/O CONDICIONES DE COMERCIABILIDAD O CALIDAD SATISFACTORIA E IDONEIDAD PARA UN FIN DETERMINADO ESTÁN LIMITADAS A LA DURACIÓN DE NOVENTA (90) DÍAS DESDE LA FECHA DE ADQUISICIÓN AL POR MENOR. ALGUNAS LEGISLACIONES NO PERMITEN LAS LIMITACIONES RESPECTO A LA DURACIÓN DE LAS GARANTÍAS IMPLÍCITAS, POR LO CUAL EN DICHO CASO ESTA LIMITACIÓN PODRÍA NO SER DE APLICACIÓN A VD. LA GARANTÍA LIMITADA PREVISTA EN ESTE APARTADO ES EXCLUSIVA Y SUSTITUYE A CUALESQUIERA OTRAS, SEAN VERBALES O ESCRITAS, EXPRESAS O IMPLÍCITAS. APPLE EXCLUYE EXPRESAMENTE TODAS LAS OTRAS GARANTÍAS. ESTA GARANTÍA LIMITADA LE CONFIERE DERECHOS ESPECÍFICOS. VD. PUEDE TAMBIÉN TENER OTROS DERECHOS EN FUNCIÓN DEL DERECHO IMPERATIVO APLICABLE. 
+
+4. Exclusión de Garantía en relación con el Software Apple. Vd. reconoce y acepta expresamente que el uso del Software Apple se realiza a su exclusivo riesgo. El Software Apple se suministra TAL Y COMO SE PRESENTA, sin garantía de ninguna clase y Apple y/o su(s) Licenciador(es) (a los efectos de las estipulaciones 4 y 5, Apple y el/los Licenciador(es) de Apple se denominarán de forma conjunta como “Apple”) EXCLUYEN EXPRESAMENTE TODAS LAS GARANTÍAS Y/O CONDICIONES, EXPRESAS O IMPLÍCITAS, INCLUYENDO, CON CARÁCTER MERAMENTE ENUNCIATIVO Y NO LIMITATIVO, LAS GARANTÍAS Y/O CONDICIONES DE COMERCIABILIDAD O CALIDAD SATISFACTORIA E IDONEIDAD PARA UN FIN DETERMINADO Y NO INFRACCIÓN DE DERECHOS DE TERCEROS. APPLE NO GARANTIZA QUE LAS FUNCIONES CONTENIDAS EN EL SOFTWARE APPLE SATISFAGAN SUS NECESIDADES NI QUE EL SOFTWARE APPLE FUNCIONE ININTERRUMPIDAMENTE O SIN ERRORES O QUE LOS DEFECTOS DEL SOFTWARE APPLE SERÁN CORREGIDOS. ASIMISMO, APPLE NO GARANTIZA NI FORMULA DECLARACIÓN ALGUNA RELATIVA A LA UTILIZACIÓN O A LOS RESULTADOS DE LA UTILIZACIÓN DEL SOFTWARE APPLE O DE LA DOCUMENTACIÓN EN CUANTO A LA INEXISTENCIA DE ERRORES, EXACTITUD, FIABILIDAD U OTROS. NINGUNA INFORMACIÓN O ASESORAMIENTO ESCRITO O VERBAL FACILITADOS POR APPLE O POR UN REPRESENTANTE AUTORIZADO DE APPLE CONSTITUIRÁN GARANTÍA ALGUNA Y NO AUMENTARÁN EN MODO ALGUNO EL ÁMBITO DE LA PRESENTE GARANTÍA. EN EL SUPUESTO DE QUE EL SOFTWARE APPLE RESULTARA SER DEFECTUOSO, VD. (Y NO APPLE NI UN REPRESENTANTE AUTORIZADO DE APPLE) ASUMIRÁ EL COSTE ÍNTEGRO DE TODOS LOS SERVICIOS, REPARACIONES Y CORRECCIONES NECESARIOS. HABIDA CUENTA DE QUE LA NORMATIVA IMPERATIVA DE ALGUNOS PAÍSES NO PERMITE LA EXCLUSIÓN DE GARANTÍAS IMPLÍCITAS, LA ANTERIOR EXCLUSIÓN PUEDE NO SERLE APLICABLE. LOS TÉRMINOS DE LA PRESENTE EXCLUSIÓN DE GARANTÍA NO AFECTAN O PERJUDICAN LOS DERECHOS LEGALMENTE PREVISTOS DE LOS CONSUMIDORES QUE ADQUIERAN PRODUCTOS APPLE EN FORMA DISTINTA A LA REALIZADA EN EL CURSO DE UNA ACTIVIDAD EMPRESARIAL, NI LIMITAN O EXCLUYEN CUALQUIER RESPONSABILIDAD POR FALLECIMIENTO O LESIÓN FÍSICA CAUSADOS POR NEGLIGENCIA DE APPLE.
+
+5.  Restricciones a la exportación.- Vd. no podrá utilizar o, de otra forma, exportar o reexportar, el Software Apple, salvo en la forma autorizada por el derecho de los Estados Unidos y las leyes del país en el cual se obtuvo el Software Apple. En particular, pero sin estar limitado a ello, el Software Apple no podrá ser exportado o reexportado (i) a ningún país que haya sido objeto de embargo por parte de los EE.UU. (o a ningún nacional o residente de ese país), (ii) a nadie que figure en la lista  de Ciudadanos Especialmente Designados del Departamento del Tesoro de EE.UU. o en la Tabla de Ordenes de Denegación del Departamento de Comercio de EE.UU. Al utilizar el Software Apple Vd. manifiesta y garantiza que no está situado, no está bajo contro o no es nacional de ninguno de tales países o no figura en ninguna de tales listas. 
+
+6.  Utilización por la Administración como Usuario Final.  Si el Software Apple es suministrado a la Administración de los Estados Unidos, el Software Apple se calificará como "restricted computer software" previsto en la cláusula 52.227-19 del FAR. Los derechos de la Administración de los Estados Unidos sobre el Software Apple serán los definidos en la cláusula 52.227-19 del FAR.
+
+7.  Ley aplicable e independencia de las estipulaciones.- En el supuesto de existir una filial de Apple en el país en el cual fue adquirida la Licencia de Software Apple, esta licencia se regirá por el derecho de dicho país. En caso contrario, la presente Licencia se regirá por las leyes de los Estados Unidos y del Estado de California. Si por cualquier razón un tribunal competente declarara no exigible cualquier disposición de la presente Licencia o parte de la misma, el resto de la presente Licencia conservará plena vigencia y efecto. 
+
+8. Contrato Integro. La presente Licencia constituye el acuerdo completo entre las partes respecto a la utilización del Software Apple y sustituye todos los acuerdos anteriores o contemporáneos relativos a esta materia. La presente Licencia únicamente podrá ser modificada mediante acuerdo escrito firmado por los representantes legales de las partes.
+
+
+
+APPLE COMPUTER, INC.
+LISTA DE FILIALES EN VENTAS INTERNACIONALES.
+
+PAIS                                   FILIAL
+
+Canadá                                      Apple Canada Inc.
+Sudáfrica                                  Apple Computer (Proprietary) Limited
+Reino Unido                            Apple Computer (UK) Limited
+Suecia, Noruega, Dinamarca   Apple Computer AB
+Suiza                                        Apple Computer AG (SA) (Ltd.)
+Taiwán                                     Apple Computer Asia, Inc.
+Países Bajos, Bélgica              Apple Computer Benelux B.V.
+Brasil                                      Apple Computer Brasil Ltda.
+España                                    Apple Computer España, S.A.
+Francia                                    Apple Computer  France, S.A.R.L.
+Austria                                     Apple Computer Gesellschaft m.b.H.
+Alemania                                  Apple Computer GmbH
+Hong Kong                             Apple Computer International Ltd.
+Irlanda                                     Apple Computer (UK) Limited
+Méjico                                      Apple Computer Mexico, S.A. de C.V.
+Italia                                         Apple Computer S.p.A.
+Singapur                                  Apple Computer South Asia Pte Ltd
+Japón                                        Apple Japan, Inc.
+E0010

@@ -1,0 +1,52 @@
+FRANCAIS
+
+Apple Computer, Inc. 
+Contrat de Licence Logiciel Newton
+
+LISEZ SOIGNEUSEMENT CE CONTRAT DE LICENCE LOGICIEL (“LICENCE”) AVANT DE CLIQUER SUR LE BOUTON “ACCEPTE”. EN CLIQUANT SUR LE BOUTON “ACCEPTE” VOUS ACCEPTEZ D'ÊTRE LIÉ PAR LES TERMES DE CETTE LICENCE. SI VOUS N'ÊTES PAS D'ACCORD AVEC LESDITS TERMES, NE CLIQUER PAS SUR “ACCEPTE”.
+
+1.	Licence.  Apple Computer, Inc.("Apple") vous concède une licence sur, et en aucun cas ne vend, le logiciel et les fontes accompagnant la présente Licence, qu'ils soient sur disquette, sur mémoire morte (ROM) ou sur tout autre support (le "Logiciel Apple"). Vous êtes propriétaire du support sur lequel le Logiciel Apple est enregistré mais Apple et/ou les Concédant(s) d'Apple restent propriétaire(s) du Logiciel Apple. Le Logiciel Apple contenu dans l'emballage ainsi que les copies, que la présente Licence vous autorise à réaliser, sont régis par les termes de la présente Licence.
+
+2.	Utilisations Permises et Limitations. La présente Licence vous autorise à installer et utiliser le Logiciel Apple sur un seul "Produit Newton" (c'est-à-dire, pour les besoins de la présente Licence, un produit portant le logo Newton d'Apple). La présente licence n'autorise pas le fonctionnement du Logiciel Apple sur plus d'un Produit Newton à la fois. Vous pouvez réaliser une seule copie du Logiciel Apple en langage machine aux fins exclusives de sauvegarde. La copie de sauvegarde doit impérativement reproduire les informations relatives au droit d'auteur figurant sur l'original. Sauf et dans les limites où la loi ou la présente Licence l'autorise, vous ne pouvez pas décompiler, désosser, désassembler, modifier, louer, prêter, diffuser, créer des produits dérivés du Logiciel Apple ou transmettre le Logiciel Apple par un réseau. Toutefois, vous pouvez tranférer les droits qui vous sont concédés par la présente  Licence, sous réserve que vous transferiez la documentation y afférent, la présente Licence et une copie du Logiciel Apple  à un tiers qui s'engage à accepter d'être lié par les termes et conditions de la présente Licence et que vous détruisiez toutes les copies du Logiciel Apple en votre possession. La présente Licence sera résiliée immédiatement et de plein droit, sans notification préalable de la part d'Apple, si vous ne vous conformez pas à l'une quelconque de ses dispositions.  
+
+3. Garantie des Supports (le cas échéant). Apple garantit les supports sur lesquels le Logiciel Apple est enregistré contre tout vice de matière et de main d'oeuvre, sous condition d'une utilisation normale, pendant une période de quatre-vingt-dix (90) jours à compter de la date d'achat initiale. Votre seul recours, au titre du présent article se limite, et ceci au choix d'Apple, soit au remboursement du prix du produit contenant le Logiciel Apple, soit au remplacement du Logiciel Apple, lorsqu'il est retourné à Apple ou à un représentant autorisé d'Apple avec une copie de la facture. Cette limitation de garantie et toutes garanties implicites concernant le support y compris Les garanties implicites de qualitE marchande et d'adEquation à un usage particulier SONT limitEeS à une durEe de quatre-vingt-dix (90) jours à compter de la date d'achat INITIALE. CERTAINES LEGISLATIONS NE PERMETTENT PAS DE LIMITER LA DUREE D'UNE GARANTIE IMPLICITE, IL EST DONC POSSIBLE QUE LA LIMITATION MENTIONNEE CI-DESSUS NE S'APPLIQUE PAS A VOUS. Cette limitation de garantie telle qu'exprimEe ci-dessus est exclusive de toute autre GARANTIE quelle que soit SA forme, orale, Ecrite, expresse ou tacite. Apple exclut expressement l'application de toute autre garantie. CETTE GARANTIE VOUS DONNE DES DROITS SPECIFIQUES. VOUS POUVEZ EGALEMENT AVOIR D'AUTRES DROITS QUI VARIENT SELON LES LEGISLATIONS. 
+
+La disposition qui suit n'est applicable que pour la France : l'application de la présente garantie ne pourra vous priver de vos droits à la garantie légale (en cas de défauts ou de vices cachés).
+
+4. Exclusion de Garantie sur le Logiciel Apple. Vous reconnaissez et admettez expressément que l'utilisation du Logiciel Apple est à vos risques et périls. Le Logiciel Apple est fourni “TEL QUEL” sans garantie d'aucune sorte, et Apple et le(s) concédant(s) d'Apple (aux fins des dispositions des paragraphes 4 et 5, l'expression “Apple” désigne collectivement Apple et le(s) concédant(s) d'Apple) EXCLUENT EXPRESSEMENT TOUTE GARANTIE, EXPLICITE OU IMPLICITE, Y COMPRIS DE FACON NON LIMITATIVE LES GARANTIES IMPLICITES DE QUALITE MARCHANDE ET D'ADEQUATION A UN USAGE PARTICULIER ET TOUTE GARANTIE DE NON-CONTREFACON. APPLE NE GARANTIT PAS QUE LES FONCTIONS CONTENUES DANS LE LOGICIEL APPLE CORRESPONDRONT A VOS BESOINS OU QUE LE FONCTIONNEMENT DU LOGICIEL APPLE SERA ININTERROMPU, EXEMPT D'ERREUR OU QUE TOUT DEFAUT DU LOGICIEL APPLE SERA CORRIGE. DE PLUS, APPLE NE GARANTIT PAS NI NE FAIT AUCUNE DECLARATION CONCERNANT L'UTILISATION OU LES RESULTATS DE L'UTILISATION DU LOGICIEL APPLE OU DE LA DOCUMENTATION Y AFFERENT EN CE QUI CONCERNE LEUR EXACTITUDE, FIABILITE OU AUTREMENT. AUCUNE INFORMATION OU AUCUN CONSEIL, COMMUNIQUES VERBALEMENT OU PAR ECRIT PAR APPLE OU PAR UN DE SES REPRESENTANTS AUTORISES NE POURRA CREER UNE GARANTIE OU AUGMENTER DE QUELQUE MANIERE QUE CE SOIT L'ETENDUE DE LA PRESENTE GARANTIE. SI LE LOGICIEL APPLE S’AVERAIT DEFECTUEUX, VOUS ASSUMERIEZ SEUL (ET NON PAS APPLE NI UN REPRESENTANT AUTORISE D'APPLE) LE COUT TOTAL DE TOUT ENTRETIEN, REPARATION OU MODIFICATION NECESSAIRE. CERTAINES LEGISLATIONS NE PERMETTENT PAS L'EXCLUSION DE GARANTIES IMPLICITES, IL EST DONC POSSIBLE QUE L'EXCLUSION MENTIONNEE CI-DESSUS NE S'APPLIQUE PAS A VOUS.
+
+La disposition suivante n'est applicable que pour la France : les présentes ne pourraient vous priver de vos droits à la garantie légale (en cas de défauts ou de vices cachés), dans la mesure où elle trouverait à s'appliquer.
+
+5.	Engagement Relatif aux Exportations.  Vous ne pouvez pas utiliser ou autrement exporter ou réexporter le Logiciel Apple sauf autorisation par les lois des Etats-Unis et les lois du pays dans lequel vous avez obtenu le Logiciel Apple. En particulier mais sans limitation, le Logiciel Apple ne peut être exporté ou réexporté (i) dans tout pays soumis à embargo des Etats-Unis (ou à tout résident ou ressortissant de ce pays) ou (ii) à toute personne figurant sur la liste "Specially Designated Nationals" du Ministère des Finances des Etats-Unis ou sur le classement "Table of Denial Orders" du Ministère du Commerce des Etats-Unis. En utilisant le Logiciel Apple, vous déclarez et garantissez que vous n'êtes pas situé, sous le contrôle de, ou ressortissant ou résident d'un pays spécifié ci-dessus ou inscrit sur les listes mentionnées ci-dessus.
+
+6.	Gouvernement des Etats-Unis. Si le Logiciel Apple est fourni au Gouvernement des Etats-Unis, le Logiciel Apple est classé "restricted computer software" tel que ce terme est défini dans la clause 52.227-19 du FAR. Les droits du Gouvernement des Etats-Unis sur le Logiciel Apple sont définis par la clause 52.227-19 du FAR.
+
+7.	Loi Applicable et Divisibilité du Contrat. Si une filiale Apple est présente dans le pays où vous avez obtenu la licence du Logiciel Apple, la présente Licence sera régie par la loi du pays dans lequel la filiale est installée. Dans le cas contraire, la présente Licence sera régie par  les lois des Etats-Unis et de l'Etat de Californie. Si pour une quelconque raison, un tribunal ayant juridiction juge qu'une disposition de la présente Licence est inapplicable, en totalité ou en partie, les autres dispositions de la présente Licence resteront entièrement applicables.
+
+8.	Entente Complète.  Cette Licence constitue l'intégralité de l'accord entre les parties concernant l'utilisation du Logiciel Apple et remplace toutes les propositions ou accords antérieurs ou actuels, écrit ou verbal, à ce sujet.  Aucune modification de cette Licence n'aura quelque effet à moins d'être stipulée par écrit et signée par un représentant dûment autorisé d'Apple.
+
+
+Apple Computer, Inc.
+Liste des Filiales
+
+Pays						Filiales
+
+Canada					Apple Canada Inc.
+Afrique du Sud				Apple Computer (Proprietary) Limited
+Royaume Uni					Apple Computer (UK) Limited
+Suède, Norvège, Danemark, Finlande	Apple Computer AB
+Suisse						Apple Computer AG (SA) (Ltd.)
+Taiwan					Apple Computer Asia, Inc.
+Pays Bas, Belgique				Apple Computer Benelux B.V.
+Brésil						Apple Computer Brasil Ltda.
+Espagne					Apple Computer Espana, S.A.
+France					Apple Computer France S.A.R.L.
+Autriche					Apple Computer Gesellschaft m.b.H.
+Allemagne					Apple Computer GmbH
+Hong Kong					Apple Computer International Ltd
+Irlande					Apple Computer (UK) Limited
+Mexique					Apple Computer Mexico, S.A. de C.V.
+Italie						Apple Computer S.p.A.
+Singapour					Apple Computer South Asia Pte Ltd
+Japon						Apple Japan, Inc.
+E0010

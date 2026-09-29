@@ -1,0 +1,89 @@
+Newton Internet Enabler (NIE) 2.0
+TCP/IP software for the Newton platform.
+
+This ReadMe contains important late-breaking information which was not included in the printed manual.  Please read this file carefully.
+
+ReadMe Contents
+• About NIE 2.0
+• Limitations of NIE 2.0
+• Contents of the distribution
+• Installation notes
+• Known Issues with NIE 2.0
+
+About NIE 2.0
+NIE is TCP/IP software for Newton devices.  NIE 2.0 represents a major upgrade and includes several important new features:
+
+• Ethernet PC Card support
+• Support for both AppleTalk and TCP/IP over ethernet
+• Support for TCP/IP tunneled in AppleTalk
+• Support for DHCP and MacIP servers
+• Support for multiple DNS servers
+• Improved modem and serial connection features
+     • re-dialing of phone numbers
+     • multiple phone numbers for a single location
+     • login script activity window
+     • logout scripts
+     • advanced serial connection options (PC Card slot, port speed, etc.)
+
+
+Limitations of NIE 2.0
+• NIE 2.0 will only work on Newton 2.1 based devices, specifically:
+     • Newton MessagePad 2000 and follow-on products
+     • Apple eMate 300 and follow-on products
+• NIE 2.0 will not work on MessagePad 130 or earlier devices.
+• NIE 2.0 will not work with "combo" cards (dual function PC Cards, e.g. modem & ethernet cards).
+• In order to use ethernet connections, you must have both a supported ethernet PC card and a Newton driver for this card.  At the time of this writing, only Farallon has a PC card available for Newton devices.  Many vendors have expressed interest in writing drivers for Newton devices.  Check the Newton web site for the latest list of compatible ethernet PC Cards.  
+
+Software Distribution Contents
+This distribution includes several files:
+
+Notes & Documentation
+• NIE_RDME.TXT- The file you are reading
+• NIE20_UG.PDF - The NIE 2.0 User’s Manual
+• An NIE end-user license in multiple languages
+
+Required Packages
+• INETSTUP.PKG
+• INETENBL.PKG
+
+Modem-Serial Support
+• MODMSUP.PKG
+• ISPTMPLT.PKG
+
+LocalTalk Support
+• LOCTSUP.PKG
+
+Ethernet Support
+• NEWTDEV.PKG
+• ENETSUP.PKG
+• NOTE:  To use ethernet, you’ll need a supported Ethernet PC card and a device driver for this card.
+
+Installation Notes
+IMPORTANT:  NIE 2.0 will convert and delete your existing 1.0 and 1.1 Internet Setups.  Before you install NIE 2.0, it's important that you read through these instructions!
+
+Before installing NIE 2.0:
+1 - Backup your Newton device.
+2 - Remove NIE 1.0 or 1.1 (if it's installed)
+     • Internet Setup - in the Setup folder of the Extras Drawer
+     • Internet Enabler - in the Extensions folder of the Extras Drawer
+     • ISP Templates - in the Extensions folder of the Extras Drawer
+3 - Free up additional storage.  The extra functionality of NIE 2.0 comes at the price of additional storage.  Depending on what features you require, you may need up to three times the storage space of NIE 1.x.
+
+Installing NIE 2.0:
+1 - Use any Newton package installation program (e.g. Newton Connection Utilities).
+2 - Install the "Required Packages" first.
+3 - Install other packages as necessary (see the sub-folders).
+4 - If you install ethernet support, it is important that you install the "NEWTDEV.PKG" before you install the Farallon driver.
+
+Read the NIE User Manual for more information on installing NIE 2.0.
+
+
+Known Issues with NIE 2.0
+
+1 - If you are using AppleTalk over an ethernet connection and attempt to initiate an AppleTalk connection when the ethernet card is not inserted, you will get an error.  Either reinsert the ethernet card or change your AppleTalk preferences to use the LocalTalk connection.
+
+2 - When using TCP/IP applications that send large amounts of data (on the order of 1 megabyte or more), you may experience failed data transfers.  Breaking the data up into smaller chunks should allow you to send the data.
+
+3 - Applications that use undocumented NIE 1.1 APIs may have problems closing or opening a network connection after the device has been put to sleep.  Resetting the unit will fix the problem.
+
+-Updated 10/8/97

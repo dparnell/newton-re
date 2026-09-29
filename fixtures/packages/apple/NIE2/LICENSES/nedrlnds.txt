@@ -1,0 +1,49 @@
+NEDERLANDS
+
+Apple Computer, Inc. Newton software-licentie
+
+LEES DEZE SOFTWARE-LICENTIE-OVEREENKOMST ("LICENTIE") AANDACHTIG DOOR VOORDAT U OP DE KNOP “JA” DRUKT. DOOR OP DE KNOP “JA” TE DRUKKEN, VERKLAART U ZICH AKKOORD MET DE VOORWAARDEN VAN DEZE LICENTIE. INDIEN U NIET AKKOORD GAAT MET DE VOORWAARDEN VAN DEZE LICENTIE, DIENT U NIET OP DE KNOP “JA” TE DRUKKEN.
+
+1. Licentie. De programmatuur en de fonts bij deze licentie, hetzij op schijf, in “read only”-geheugen of op enig ander medium (de "Apple programmatuur"), worden aan u in licentie gegeven, niet verkocht door Apple Computer, Inc. of Apple's lokale dochteronderneming, indien van toepassing ("Apple"). De media welke de Apple programmatuur bevatten zijn uw eigendom, doch Apple en/of Apple's Licentiegever(s) behouden het eigendomsrecht met betrekking tot de Apple programmatuur. Deze licentie is van toepassing op de Apple programmatuur in dit pakket en op eventuele kopieën die u krachtens deze licentie maakt.
+
+2. Toegestaan gebruik en beperkingen. Krachtens deze licentie is het u toegestaan om de Apple programmatuur op één enkel Newton produkt te installeren en te gebruiken. Het is niet toegestaan de Apple programmatuur op meer dan één Newton produkt tegelijk te installeren en/of te gebruiken. Het is u toegestaan één kopie te maken van de Apple programmatuur in een voor machine leesbare vorm, uitsluitend voor back-up doeleinden. U dient op deze kopie de volledige auteursrechtvermelding en alle andere mededelingen betreffende het eigensdomsrecht welke op het origineel vermeld zijn, over te nemen. Behalve voor zover toegestaan ingevolge de van toepassing zijnde wetgeving en deze licentie is het u niet toegestaan de Apple programmatuur te decompileren, van ontwerp te herleiden, te ontmantelen, aan te passen, te (doen) verhuren, in gebruik te (doen) geven, te verspreiden, geheel of gedeeltelijk van de Apple programmatuur afgeleide werken te creëren of de Apple programmatuur te verzenden via een netwerk. Het is u echter wel toegestaan om uw rechten en verplichtingen ingevolge deze Licentie-overeenkomst over te dragen, mits u de bijbehorende documentatie, deze licentie en een kopie van de Apple programmatuur overdraagt aan een derde die zich akkoord verklaart met de voorwaarden van deze licentie, en mits u alle eventuele kopieën van de Apple programmatuur die in uw bezit zijn vernietigt. Uw rechten ingevolge deze licentie vervallen automatisch zonder voorafgaande kennisgeving van Apple indien u een van de voorwaarden van de licentie niet nakomt.
+ 
+3. Beperkte garantie op media (voorzover van toepassing). Apple garandeert dat de media welke de Apple programmatuur bevatten bij normaal gebruik gedurende een periode van negentig (90) dagen na de oorspronkelijke datum van aankoop in de detailhandel, vrij zijn van materiaal- en fabrikagefouten. U kunt krachtens deze paragraaf uitsluitend aanspraak maken, naar keuze van Apple, op terugbetaling van de aankoopprijs van het produkt dat de Apple programmatuur bevat of op vervanging van de Apple programmatuur, mits deze vergezeld van een kopie van het bewijs van aankoop aan Apple of een door Apple geautoriseerde vertegenwoordiger wordt geretourneerd. DEZE BEPERKTE GARANTIE EN ELKE IMPLICIETE GARANTIE OP DE MEDIA, INCLUSIEF DE IMPLICIETE GARANTIE VAN VERHANDELBAARHEID EN GESCHIKTHEID VOOR EEN BEPAALD DOEL, IS BEPERKT TOT EEN PERIODE VAN NEGENTIG (90) DAGEN NA DE OORSPRONKELIJKE DATUM VAN AANKOOP IN DE DETAILHANDEL. IN BEPAALDE RECHTSGEBIEDEN IS BEPERKING VAN DE DUUR VAN EEN IMPLICIETE GARANTIE NIET TOEGESTAAN, WAARDOOR DE BOVENSTAANDE UITSLUITING VOOR U MOGELIJK NIET VAN TOEPASSING IS. DE HIER BESCHREVEN BEPERKTE GARANTIE IS EXCLUSIEF EN KOMT IN DE PLAATS VAN ALLE ANDERE GARANTIES, HETZIJ MONDELING OF SCHRIFTELIJK, HETZIJ EXPLICIET OF IMPLICIET. APPLE SLUIT UITDRUKKELIJK ALLE ANDERE GARANTIES UIT. DEZE BEPERKTE GARANTIE GEEFT U SPECIFIEKE JURIDISCHE RECHTEN. BOVENDIEN KUNNEN AFHANKELIJK VAN HET RECHTSGEBIED ANDERE RECHTEN GELDEN.
+
+4. Geen garantie op Apple programmatuur. U erkent en aanvaardt uitdrukkelijk dat gebruik van de Apple programmatuur uitsluitend voor uw eigen risico is. De Apple programmatuur wordt "IN DE STAAT WAARIN DEZE OP HET MOMENT VAN AANKOOP VERKEERT" (op "as is"-basis) en zonder enige garantie geleverd en Apple en Apple's licentiegever(s) (voor het doel van paragraaf 4 en 5 hierna gezamenlijk te noemen "Apple") SLUITEN HIERBIJ UITDRUKKELIJK ALLE GARANTIE UIT, EXPLICIET OF IMPLICIET, DAARONDER BEGREPEN DOCH NIET BEPERKT TOT ALLE DENKBARE GARANTIES VAN VERHANDELBAARHEID, VOLDOENDE KWALITEIT, GESCHIKTHEID VOOR EEN BEPAALD DOEL EN NAVOLGING VAN AUTEURSRECHTEN VAN DERDEN. APPLE GARANDEERT NIET DAT DE FUNCTIES WELKE IN DE APPLE PROGRAMMATUUR ZIJN VERVAT AAN UW EISEN ZULLEN VOLDOEN OF DAT MET DE APPLE PROGRAMMATUUR ONONDERBROKEN OF FOUTLOOS ZAL KUNNEN WORDEN GEWERKT OF DAT GEBREKEN IN DE APPLE PROGRAMMATUUR GECORRIGEERD ZULLEN WORDEN. VERDER VERLEENT APPLE GEEN GARANTIES BETREFFENDE HET GEBRUIK OF DE RESULTATEN VAN HET GEBRUIK VAN DE APPLE PROGRAMMATUUR OF DE BIJBEHORENDE DOCUMENTATIE TERZAKE VAN CORRECTHEID, NAUWKEURIGHEID, BETROUWBAARHEID OF ANDERSZINS. GEEN ENKELE MONDELINGE OF SCHRIFTELIJKE INFORMATIE OF KENNISGEVING VAN DE ZIJDE VAN APPLE OF EEN DOOR APPLE GEAUTORISEERDE VERTEGENWOORDIGER KAN EEN GARANTIE INHOUDEN OF DE OMVANG VAN DEZE GARANTIE UITBREIDEN. MOCHT DE APPLE PROGRAMMATUUR GEBREKEN VERTONEN, DAN KOMEN ALLE KOSTEN VAN ALLE NOODZAKELIJKE REVISIE, HERSTEL OF CORRECTIE VOOR UW REKENING (EN NIET VOOR DIE VAN APPLE OF EEN DOOR APPLE GEAUTORISEERDE VERTEGENWOORDIGER). IN BEPAALDE RECHTSGEBIEDEN IS UITSLUITING VAN IMPLICIETE GARANTIES NIET TOEGESTAAN, WAARDOOR DE BOVENSTAANDE UITSLUITING VOOR U MOGELIJK NIET VAN TOEPASSING IS. DE BOVENSTAANDE BEPALINGEN VORMEN GEEN AANTASTING VAN OF DOEN GEEN AFBREUK AAN DE WETTELIJKE RECHTEN VAN CONSUMENTEN DIE EEN APPLE PRODUKT AANSCHAFFEN VOOR ANDERE DAN ZAKELIJKE DOELEINDEN. OOK HOUDEN DEZE BEPALINGEN GEEN BEPERKING OF UITSLUITING IN VAN ENIGE AANSPRAKELIJKHEID VOOR DOOD OF PERSOONLIJK LETSEL VEROORZAAKT DOOR ONACHTZAAMHEID VAN DE KANT VAN APPLE.
+
+5. Bepaling betreffende de Amerikaanse exportwetten. Bepaling betreffende de Amerikaanse exportwetten. Het is u niet toegestaan de Apple programmatuur te gebruiken of anderszins te exporteren of te herexporteren behalve voor zover toegestaan krachtens de wetten van de Verenigde Staten en van het rechtsgebied waarin u de Apple programmatuur hebt verkregen. In het bijzonder, maar zonder beperking, is het u niet toegestaan de Apple programmatuur te exporteren of te herexporteren (i) naar (een staatsburger of ingezetene van) een land waarvoor door de Verenigde Staten een embargo is ingesteld of (ii) enige persoon die voorkomt op de door het U.S. Treasury Department samengestelde lijst van “Specially Designated Nationals” of op de door het U.S. Department of Commerce samengestelde “Table of Denial Orders”. Door de Apple programmatuur te gebruiken, verklaart u dat u zich niet bevindt in, onder controle staat van of staatsburger of ingezetene bent van een dergelijk land of op een van de bovengenoemde lijsten voorkomt.
+
+6. Eindgebruikers binnen de Amerikaanse overheid. Indien de Apple programmatuur wordt geleverd aan de Amerikaanse overheid, wordt de Apple programmatuur aangemerkt als “restricted computer software” zoals omschreven in paragraaf 52.227-19 van de FAR. De rechten van de Amerikaanse overheid met betrekking tot de Apple programmatuur zullen zijn als omschreven in paragraaf 52.227-19 van de
+FAR.
+
+7. Toepasselijk recht en deelbaarheid. Indien in het land waar de Apple Software-licentie werd verkregen, een lokale dochteronderneming van Apple Computer Inc. aanwezig is, zal deze licentie onderworpen zijn aan het lokale recht. Indien geen lokale dochteronderneming aanwezig is, zal deze licentie onderworpen zijn aan de wetten van de Verenigde Staten en de staat Californië. In het geval dat enige bepaling van deze overeenkomst of een gedeelte daarvan door een bevoegde rechter nietig geacht zal worden, zullen de overige bepalingen van de licentie onverkort van kracht blijven.
+
+8. Volledige overeenkomst. Deze licentie vormt de volledige overeenkomst tussen partijen met betrekking tot het gebruik van de Apple programmatuur en gaat uit boven alle voorgaande of gelijktijdige overeenkomsten betreffende dit onderwerp. Aanpassingen of wijzigingen van deze Licentie-overeenkomst zijn slechts geldig voorzover deze zijn opgesteld in schriftelijke vorm en zijn ondertekend door Apple.
+
+
+APPLE COMPUTER, INC. 
+INTERNATIONALE VERKOOPKANTOREN
+
+LAND 		DOCHTERONDERNEMING
+
+Brazilië		Apple Computer Brasil Ltda.
+Canada		Apple Canada Inc.
+Duitsland		Apple Computer GmbH
+Frankrijk		Apple Computer France S.A.R.L.
+Hong Kong		Apple Computer International Ltd
+Ierland		Apple Computer (UK) Limited
+Italië			Apple Computer S.p.A.
+Japan			Apple Japan, Inc.
+Mexico		Apple Computer Mexico, S.A. de C.V.
+Nederland, België	Apple Computer Benelux B.V.
+Oostenrijk		Apple Computer Gesellschaft m.b.H.
+Singapore		Apple Computer South Asia Pte Ltd
+Spanje		Apple Computer España, S.A.
+Suid-Afrika		Apple Computer (Proprietary) Limited
+Taiwan		Apple Computer Asia, Inc.
+Verenigd Koninkrijk	Apple Computer (UK) Limited
+Zweden, Noorwegen, 
+Denemarken		Apple Computer AB
+Zwitserland		Apple Computer AG (SA) (Ltd.)
+E0010

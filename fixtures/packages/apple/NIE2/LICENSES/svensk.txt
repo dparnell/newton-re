@@ -1,0 +1,51 @@
+SVENSK
+
+Apple Computer, Inc.
+Licensavtal för Newton Programprodukt
+
+LÄS DETTA LICENSAVTAL NOGGRANT INNAN DU TRYCKER PÅ KNAPPEN ”GODKÄNNS”. GENOM ATT TRYCKA PÅ KNAPPEN ”GODKÄNNS” SAMTYCKER DU TILL OCH BLIR AUTOMATISKT BUNDEN AV VILLKOREN I DETTA LICENSAVTAL. OM DU INTE SAMTYCKER TILL DESSA VILLKOR, SKALL DU INTE TRYCKA PÅ KNAPPEN ”GODKÄNNS”.
+
+1. Licens. Samtlig programvara som levereras med detta licensavtal, på diskett, ROM eller annat medium, liksom tillhörig användardokumentation och typsnitt, (nedan ”Programprodukten”) säljs ej utan licensieras till Dig av Apple Computer Inc. eller Apple Computer Inc.s lokala dotterbolag om sådant finnes (nedan ”Apple”).Du äger det media på vilket Programprodukten finns tillgänglig men Apple, eller Apples licensgivare, behåller  äganderätten till Programprodukten.Du äger det medium på vilken Programprodukten är lagrad, men Apple, eller Apples licensgivare behåller alltid äganderätten till Programprodukten. 
+
+2. Tillåten användning och restriktioner. Denna licens ger Dig rätt att installera och använda Programprodukten på högst en ”Newton Produkt” åt gången (”Newton Produkt” definieras i denna licens som produkter som bär Apples Newton logotyp). Denna licens tillåter inte att Programprodukten existerar på mer än en Newton Produkt åt gången. Du får också göra en säkerhetskopia av Programprodukten i maskinläsbar form. Denna kopia måste dock återge alla upplysningar om upphovsrätt och all information om sekretess och äganderätt som finns på originalet.
+
+Du får inte, på annat sätt än som uttryckligen tillåts av gällande tvingande lagstiftning och detta licensavtal,  dekompilera, dekonstruera, bryta ner, förändra , hyra ut, leasa, låna ut,  distribuera, eller på annat sätt reducera Programprodukten till en för människor förnimbar eller begriplig form  eller överföra Programprodukten från en dator till en annan via ett nätverk.  Du äger rätt att överlåta Dina rättigheter enligt detta licensavtal under förutsättning att  Du även överlåter tillhörande dokumentation, detta licensavtal samt en kopia av Programprodukten, och att den part Du överlåter till accepterar bestämmelserna i detta licensavtal, samt att Du förstör samtliga kopior av Programprodukten Du har i Din besittning. Dina rättigheter enligt detta licensavtal kommer automatiskt, utan varsel från Apple, att upphöra om Du bryter mot bestämmelserna i detta licensavtal.
+
+3. Begränsad garanti för medium (om tillämpligt).  Apple garanterar att det medium på vilket Apple Programprodukten är lagrat vid normal användning är fritt från defekter i material och utförande under en period av nittio (90) dagar från det första slutanvändarinköpet. Apples enda skyldighet i enlighet med denna garanti skall vara att, efter eget skön, antingen återbetala köpeskillingen för produkten som innehöll Apple Programprodukten eller att leverera en ny Apple Programprodukt, under förutsättning att dessa återlämnas till Apple eller till en av Apple auktoriserad representant tillsammans med kopia på inköpskvitto. ALLA EGENSKAPER ELLER GARANTIER SOM UNDERFÖRSTÅTT KAN ANSES TILLFÖRSÄKRADE MEDIA INKLUSIVE EGENSKAPEN ATT VARA FUNKTIONELLT OCH ÄNDAMÅLSENLIGT, BEGRÄNSAS HÄRMED I TIDEN TILL EN PERIOD AV NITTIO (90) DAGAR FRÅN LEVERANS. DENNA GARANTI SKALL INTE TOLKAS SOM EN INSKRÄNKNING AV DE RÄTTIGHETER SOM KAN TILLKOMMA DIG ENLIGT TVINGANDE TILLÄMPLIG LAGSTIFTNING. APPLE FRISKRIVER SIG HÄRIGENOM UTTRYCKLIGEN FRÅN ALLT ÖVRIGT ANSVAR FÖR APPLE PROGRAMPRODUKTEN. 
+
+4. Ingen garanti för Apple Programprodukten.  All användning av Apple Programprodukten sker på egen risk. Apple Programprodukten, tillhandahålls i befintligt skick och utan några som helst garantier. Apple och Apples Licensgivare (i denna punkt 4 och punkt 5 nedan kollektivt benämnda ”Apple”) FRISKRIVER SIG HÄRIGENOM FRÅN ALLA, SÅVÄL UTTRYCKLIGA SOM UNDERFÖRSTÅDDA, GARANTIER, SÅLEDES OCKSÅ UNDERFÖRSTÅDDA GARANTIER AVSEENDE KVALITET, FUNKTIONALITET OCH ÄNDAMÅLSENLIGHET FÖR VISST SPECIFIKT SYFTE. APPLE LÄMNAR VIDARE INTE NÅGRA GARANTIER ATT APPLE PROGRAMPRODUKTEN INTE INKRÄKTAR PÅ ANNANS IMMATERIELLA RÄTTIGHETER. APPLE KAN EJ HELLER GARANTERA ATT APPLE PROGRAMPRODUKTEN UPPFYLLER DINA FÖRVÄNTNINGAR, ÄR FELFRI ELLER KAN ANVÄNDAS UTAN AVBROTT ELLER ATT FEL OCH BRISTER I APPLE PROGRAMPRODUKTEN KOMMER ATT ÅTGÄRDAS. APPLE GER INGA GARANTIER VAD GÄLLER ANVÄNDNING ELLER RESULTATET AV ANVÄNDNINGEN AV APPLE PROGRAMPRODUKTEN OCH DOKUMENTATIONEN, DESS PÅLITLIGHET, NOGGRANNHET, ELLER ÖVRIGA EGENSKAPER. DENNA BEGRÄNSADE GARANTI KAN EJ UTÖKAS GENOM MUNTLIGA ELLER SKRIFTLIGA UTSAGOR FRÅN VARE SIG APPLE ELLER APPLES REPRESENTANTER. OM APPLE PROGRAMPRODUKTEN SKULLE VARA FELAKTIG ELLER BRISTFÄLLIG FRISKRIVER SIG APPLE FRÅN ALLA KOSTNADER FÖR SERVICE, REPARATION ELLER ANNAT AVHJÄLPANDE. I HÄNDELSE AV ATT DENNA BESTÄMMELSE STRIDER MOT TVINGANDE LAG ÄR BESTÄMMELSEN I DENNA DEL EJ TILLÄMPLIG. DENNA FRISKRIVNING SKALL HELLER INTE ANSES BEGRÄNSA APPLES ANSVAR FÖR DÖDSFALL ELLER PERSONSKADA PÅ GRUND AV APPLES VÅRDSLÖSHET.
+
+5. Försäkran avseende export. Försäkran avseende export. Du har inte rätt att exportera eller vidareexportera Apple Programprodukten förutom på sådant sätt som är i enlighet med gällande exportlagstiftning i USA och gällande lagstiftning i det land där Apple Programprodukten förvärvades. I synnerhet (dock inte begränsat till) gäller att Apple Programprodukten inte får exporteras eller vidareexporteras till i) något av de länder som lyder under USAs embargo (eller till en medborgare eller innevånare i sådant land), eller ii) någon som anges på US Treasury Departments lista över sk Specially Designated Nationals eller US Department of Commerces sk Table of Denial Orders. Genom att använda Apple Programprodukten försäkrar Du att Du inte bor i, lyder under, är medborgare eller bosatt i något sådant land eller finns upptagen på någon av de ovan angivna listorna.
+
+6. Amerikanska statliga slutanvändare.  Om Programprodukten distribueras till amerikansk statlig myndighet är Programprodukten klassificerad som " restricted computer software" som denna term definieras i punkt 52.227-19 av FAR. Den amerikanska myndighetens rättigheter till programprodukten kommer i detta fall att regleras av punkt 52.227-19 av FAR.
+
+7. Gällande lag och genomförbarhet. Om det finns ett dotterbolag till Apple i det land där denna Programprodukt (licens) förvärvades, skall detta lands lag tillämpas på denna licens. I annat fall skall USAs och delstaten Kaliforniens lagstiftning tillämpas. För den händelse att något villkor i detta licensavtal av domstol eller administrativ myndighet inte bedöms giltigt eller verkställbart, skall övriga delar av avtalet ändock gälla fullt ut och tolkas på sådant sätt som skulle gällt om den exkluderade delen av avtalet gällde. 
+
+8. Fullständigt avtal. Detta licensavtal innehåller allt som avtalats mellan parterna med avseende på användningen av Programprodukten och ersätter samtliga tidigare skriftliga eller muntliga avtal, utfästelser eller överenskommelser parterna emellan. Ändring i detta licensavtal kan endast ske genom särskild upprättad och av behörig representant för Apple undertecknad handling.
+
+APPLE COMPUTER, INC. 
+INTERNATIONELLA DOTTERBOLAG
+
+
+LAND                                                DOTTERBOLAG
+
+Canada                                              Apple Canada Inc.
+South Africa                                    Apple Computer (Proprietary) Limited
+United Kingdom                            	Apple Computer (UK) Limited
+Sweden, Norway, Denmark, 
+Finland                                             Apple Computer AB
+Switzerland                                     Apple Computer AG (SA) (Ltd.)
+Taiwan                                             Apple Computer Asia, Inc.
+Netherlands, Belgium                  	Apple Computer Benelux B.V.
+Brazil                                                Apple Computer Brasil Ltda.
+Spain                                                Apple Computer Espana, S.A.
+France                                               Apple Computer France S.A.R.L.
+Austria                                            Apple Computer Gesellschaft m.b.H.
+Germany                                         Apple Computer GmbH
+Hong Kong                                     Apple Computer International Ltd
+Ireland                                             Apple Computer (UK) Limited
+Mexico                                             Apple Computer Mexico, S.A. de C.V.
+Italy                                                   Apple Computer S.p.A.
+Singapore                                        Apple Computer South Asia Pte Ltd
+Japan                                                Apple Japan, Inc.
+E0010

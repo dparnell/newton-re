@@ -1,0 +1,48 @@
+DEUTSCH
+
+Apple Computer, Inc. 
+Newton Software Lizenzvertrag
+
+BITTE LESEN SIE DIESEN LIZENZVERTRAG SORGFÄLTIG DURCH, BEVOR SIE auf den NACHSTEHENDEN "JA"-Knopf klicken. WENN SIE auf den "JA"-Knopf klicken UND/ODER DIE SOFTWARE HERUNTERLADEN UND/ODER BENUTZEN, ERKLÄREN SIE DAMIT IHR EINVERSTÄNDNIS MIT DEN BESTIMMUNGEN DES FOLGENDEN LIZENZVERTRAGES. EINER GESONDERTEN MITTEILUNG AN APPLE BEDARF ES NICHT. WENN SIE MIT DEM LIZENZVERTRAG NICHT EINVERSTANDEN SIND, klicken SiE NICHT auf den NACHSTEHENDEN "JA"-Knopf. SIE SIND DANN NICHT BERECHTIGT, DIE SOFTWARE HERUNTERZULADEN UND/ODER BENUTZEN.
+
+1.	Lizenz. Lizenzgeber ist die Apple Computer Inc., Cupertino, Kalifornien, USA. Wenn diese jedoch in dem Land, in dem Sie die Lizenz erworben haben, eine Tochtergesellschaft hat, so ist diese Tochtergesellschaft Lizenzgeber. Der Lizenzgeber erteilt Ihnen hiermit das Recht zur Benutzung der beigefügten Software einschließlich der Zeichensätze (im folgenden “Apple-Software”), unabhängig davon, ob diese auf einer Diskette, einer CD ROM, einer Karte oder einem anderen Datenträger gespeichert ist. Alle sonstigen Rechte an der Apple-Software bleiben vorbehalten. Auch alle Kopien der Apple-Software unterliegen dieser Vereinbarung.
+
+2.	Nutzung und Beschränkungen:  Der Lizenzgeber erteilt Ihnen hiermit das Recht zur Installation und Benutzung der Apple-Software auf einem Newton - Produkt, d.h. auf  einem Produkt, das das Newton - Logo der Apple Computer, Inc. ,trägt;  Sie sind also nicht berechtigt, die Apple-Software auf mehreren Newton - Produkten gleichzeitig zu speichern. Sie sind ferner berechtigt, eine maschinenlesbare Kopie der Apple-Software für Sicherungszwecke erstellen, sofern Sie auf jeder Sicherungskopie der Apple-Software die Urheber- und sonstigen Schutzrechtshinweise aufzunehmen, die auf dem Original enthalten waren.  Alle sonstigen Rechte an der Apple-Software bleiben vorbehalten. Sie dürfen die Apple-Software einem Dritten nur dann verkaufen oder überlassen, wenn dieser alle Rechte und Pflichten aus diesem Lizenzvertrag an Ihrer Stelle übernimmt und Sie die in Ihrem Besitz befindliche Kopien der Apple-Software zerstören. Sie verpflichten sich, es zu unterlassen, die Apple-Software (i) zu dekompilieren, zurückzuentwickeln, zu disassemblieren oder in sonstiger Weise in eine für Personen wahrnehmbare Form zu bringen, (ii) zu modifizieren, zu adaptieren, zu übersetzen, von der Apple-Software ganz oder teilweise abgeleitete Werke zu erstellen, oder (iii) zu verkaufen oder Dritten auf sonstige Weise unentgeltlich oder gegen Bezahlung zum Gebrauch zu überlassen, soweit dies nicht nach diesem Vertrag oder zwingenden gesetzlichen Vorschriften gestattet ist. Sollten Sie diese Einschränkungen nicht beachten, sind Sie nicht mehr berechtigt, die Apple-Software zu benutzen, auch wenn der Lizenzgeber diesen Vertrag noch nicht gekündigt haben sollte. 
+
+3.	Gewährleistung. Fehler in der Apple-Software können nicht ausgeschlossen werden. Der Lizenzgeber übernimmt eine Gewährleistung nur im Rahmen der gesetzlichen Vorschriften. Es gilt eine Verjährungsfrist von sechs Monaten ab Lieferung der Apple-Software. Die Gewährleistung erfolgt ausschließlich nach Wahl des Lizenzgebers durch Nachbesserung oder Ersatzlieferung. Bleiben Nachbesserung und/oder Ersatzlieferung erfolglos, können Sie nach Ihrer Wahl Herabsetzung der Lizenzgebühr oder die Rückgängigmachung des Vertrages verlangen. Für Apple-Software, die geändert, erweitert oder beschädigt wurde, wird keine Gewähr übernommen, es sei denn, daß die Änderung, Erweiterung oder Beschädigung für den Mangel nicht ursächlich war. 
+
+4.	Schadenersatz. Eine vertragliche oder außervertragliche Schadensersatzpflicht seitens des Lizenzgebers sowie seiner Angestellten und Beauftragten besteht nur, sofern der Schaden auf grobe Fahrlässigkeit oder Vorsatz zurückzuführen ist. Eine weitergehende zwingende gesetzliche Haftung bleibt unberührt. Die Haftung des Lizenzgebers ist auf die Vermögensnachteile begrenzt, die er bei Abschluß des Vertrages als mögliche Folge der Vertragsverletzung hätte voraussehen müssen, es sei denn, daß der Schaden auf grobe Fahrlässigkeit eines Organs oder eines leitenden Angestellten des Lizenzgebers oder auf Vorsatz zurückzuführen ist. Für den Verlust von Daten wird keinesfalls gehaftet, es sei denn, daß dieser Verlust durch regelmäßige - im kaufmännischen Geschäftsverkehr tägliche - Sicherung der Daten in maschinenlesbarer Form nicht hätte vermieden werden können. Ferner wird keinesfalls für Schäden gehaftet, die durch sonstige Fehlleistungen der Apple-Software entstanden sind und die durch regelmäßige, zeitnahe Überprüfungen der bearbeiteten Vorgänge hätte vermeiden werden können. Soweit Schadensersatzansprüche nicht nach den gesetzlichen Vorschriften früher verjähren, verjähren sie - mit Ausnahme von Ansprüchen aus unerlaubter Handlung und nach dem Produkthaftungsgesetz - spätestens mit dem Ablauf von zwei Jahren ab Erbringung der mangelhaften Leistung. 
+
+5.	Export. Sie stehen dafür ein, daß die Apple-Software nur unter Beachtung aller anwendbaren Exportbestimmungen des Landes, in dem Sie die Apple-Software  erhalten haben, und der Vereinigten Staaten von Amerika ausgeführt wird. Insbesondere darf die Apple-Software nicht (i) in ein Land exportiert oder reexportiert  werden, über das die Vereinigten Staaten ein Embargo verhängt haben, oder einem Staatsangehörigen oder Bewohner eines solchen Landes überlassen werden oder (ii) einer Person überlassen werden, die auf der Liste der Specially Designated Nationals des U.S. Treasury Department oder dem Table of Denial Orders des U.S. Department of Commerce verzeichnet sind. Indem Sie die Apple-Software benutzen, erklären Sie, daß Sie weder in einem dieser Länder wohnhaft sind noch seiner Kontrolle unterliegen noch ein Staatsangehöriger oder Bewohner eines dieser Länder sind noch auf einer der vorstehend erwähnten Listen genannt werden.
+
+6.	US-Behörden. Wenn die Apple-Software für Behörden der Vereinigten Staaten von Amerika  erworben wird, gilt sie als "restricted computer software"  nach Maßgabe der Bestimmung Nr. 52.227-19 der FAR. Die Rechte der Behörden der Vereinigten Staaten von Amerika an der Apple - Software  werden in der Bestimmung Nr. 52.227-19 der FAR geregelt.
+
+7.	Anwendbares Recht und Teilnichtigkeit. Wenn die Apple Computer Inc. in dem Land, in dem Sie die Lizenz erhalten haben, eine Tochtergesellschaft hat, unterliegt dieser Lizenzvertrag dem Recht dieses Landes. Andernfalls unterliegt dieser Lizenzvertrag dem Recht der Vereinigten Staaten von Amerika und kalifornischem Recht. Die Unwirksamkeit einzelner Bestimmungen berührt die Wirksamkeit des Vertrages im übrigen nicht.
+
+8.	Vollständigkeit. Dieser Lizenzvertrag enthält die gesamte Vereinbarung zwischen den Parteien in Bezug auf die Lizenz und tritt an die Stelle aller diesbezüglichen früheren mündlichen oder schriftlichen Vereinbarungen. Änderungen und Ergänzungen dieses Vertrages sind schriftlich niederzulegen. 
+
+APPLE COMPUTER, INC. 
+LISTE DER TOCHTERGESELLSCHAFTEN
+
+
+LAND 	TOCHTERGESELLSCHAFT
+
+Brasilien	Apple Computer Brasil Ltda.
+Deutschland 	Apple Computer GmbH
+Frankreich 	Apple Computer France S.A.R.L.
+Hong Kong 	Apple Computer International Ltd
+Irland 	Apple Computer (UK) Limited
+Italien	Apple Computer S.p.A.
+Japan	Apple Japan, Inc.
+Kanada	Apple Canada Inc.
+Mexiko 	Apple Computer México, S.A. de C.V.
+Niederlande, Belgien	Apple Computer Benelux B.V.
+Österreich	Apple Computer Gesellschaft m.b.H.
+Schweden, Norwegen, Dänemark	Apple Computer AB
+Schweiz 	Apple Computer AG (SA) (Ltd.)
+Singapur	Apple Computer South Asia Pte Ltd
+Spanien	Apple Computer España, S.A.
+Südafrika	Apple Computer (Proprietary) Limited
+Taiwan 	Apple Computer Asia, Inc.
+Vereinigtes Königreich		Apple Computer (UK) Limited
+E0010
