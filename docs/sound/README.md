@@ -426,12 +426,45 @@ records 9600 samples and plays them back unchanged, and records through
 `TSoundPowerHandler` stops everything and powers the hardware down on the
 machine's power-off event.
 
+## The byte order of samples (`SampleWords.h`)
+
+A sound's 16-bit samples are persistent - a recording is kept in a soup
+entry, beamed and backed up, and a package's sound is in its bytes - so,
+by the project's rule for persistent formats, they are big-endian in
+memory on every host, as the ROM keeps them: in a frame's samples binary,
+in a codec's buffers and in the server's DMA buffers.  Everything that
+works on a sample as a number goes through `GetSampleWord`/`PutSampleWord`
+(the converters, both resamplers - `GetSample`/`PutSample` - `MixLin16`,
+the IMA and mu-law codecs, the DTMF synthesiser), which on the ARM are
+its plain halfword loads and stores.  The one place they meet the host's
+byte order is the host sound driver, which swaps a buffer as it hands it
+to the loudspeaker or takes it from the microphone.  `test_PlaySound`
+keeps a recording in a soup entry, finds the entry's samples big-endian,
+and plays it back unchanged; the unit tests put their signals into
+memory order first (`tests/SampleOrder.h`).
+
+## The host's microphone and the Sound Recorder
+
+`host/win32/HostAudio.cpp` has the microphone beside the loudspeaker: the
+waveIn device captures into a ring of buffers all the time it is open, and
+`HostMicrophoneRecord` - the driver's `record` backend in the windowed
+`newton` - hands over the oldest samples that have arrived (silence for
+what has not, so it never waits).  Headless, `newton --microphone-tone HZ`
+gives the null backend's microphone a sine instead, and newton says at the
+end how much of what was played was that tone.
+
+`src/host/demo/recorder.ns` (ctest `host.NewtonRecorder`) drives the
+Sound Recorder through its own buttons - Rec, two seconds, Stop, Play -
+and checks its status line at each step and that the playback is the
+tone.  The Sound Recorder records through `TGSMCodec` (the GSM 06.10
+full-rate coder, the Toast library - `gsm_create`, `gsm_encode`,
+`Gsm_Coder` ... at 0x002a85f8-0x00347000), which is NOT YET: meanwhile the
+block has no codec and the samples are recorded and played as they are.
+
 ## Not yet
 
-`TGSMCodec`; a host microphone (waveIn) - the loudspeaker is waveOut, the
-microphone the null backend's test signal; the Sound Recorder's own
-recording, not yet driven through its buttons in a demo (it opens in the
-open-apps smoke); and `NewWiredPtr` (memory), for which the DMA buffers
-fall back on `NewPtr`.  16-bit samples in a binary are kept in the host's
-byte order (the recording is played back as it was recorded); a ROM
-package's 16-bit sound would be big-endian.
+`TGSMCodec` and the GSM 06.10 coder under it - reachable: the Sound
+Recorder records with it; `NewWiredPtr` (memory), for which the DMA
+buffers fall back on `NewPtr`.  `TMacintalkCodec` (speech) is not in the
+ROM either, so a string played as a sound plays its bytes, as on the
+machine.
