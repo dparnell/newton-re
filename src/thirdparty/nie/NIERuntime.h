@@ -64,4 +64,18 @@ Ref		NIEAref(RefArg obj, RefArg index);
 // a - b, as the native code does it: integers inline, else FSubtract.
 Ref		NIESubtract(RefArg a, RefArg b);
 
+// a = b and a > b as the native code tests them: integers inline, else
+// FEqual/FGreaterThan (true unless they answer nil).
+bool		NIEEqual(RefArg a, RefArg b);
+bool		NIEGreaterThan(RefArg a, RefArg b);
+
+// An assignment to a variable that is not a local (SetVariableOrGlobal).
+void		NIESetVariable(RefArg env, RefArg symbol, RefArg value);
+
+// `try body onexception |evt.ex| do ...`: the body run with the
+// interpreter's stacks saved, put back if anything is thrown; an evt.ex
+// exception (or one under it) is caught - answering true - and anything else
+// goes on to the next handler.
+bool		NIETryEvtEx(void (*body)(void*), void* data);
+
 #endif

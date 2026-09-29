@@ -25,7 +25,9 @@ RegisterNIENatives(void)
 	REGISTER(0x8004, NIEQueueIsEmpty, 1, "QueueTemplate.IsEmpty");
 	REGISTER(0x8670, NIETrimSeparator, 2, "(0x14535)");
 	REGISTER(0xd4cc, NIEDoEventCheck, 2, "_proto.DoEvent_Check");
+	REGISTER(0xd5e4, NIEPeriodicViewIdleScript, 1, "PeriodicTemplate.viewIdleScript");
 	REGISTER(0xdbdc, NIEPeriodicViewSetupDoneScript, 1, "PeriodicTemplate.viewSetupDoneScript");
+	REGISTER(0xde38, NIEKillPeriodicEvent, 2, "_proto.KillPeriodicEvent");
 	REGISTER(0xe43c, NIEEngineViewIdleScript, 1, "EngineTemplate.viewIdleScript");
 	REGISTER(0xe65c, NIEMCollectAncestorStates, 3, "_proto.MCollectAncestorStates");
 	REGISTER(0xe808, NIEMCollectAncestorEvents, 4, "_proto.MCollectAncestorEvents");

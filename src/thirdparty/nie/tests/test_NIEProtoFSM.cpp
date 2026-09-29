@@ -227,6 +227,62 @@ TestEvents(void)
 }
 
 
+static void
+TestPeriodic(void)
+{
+	static const char* const kIdle[] = { "evt.ex", "unique", "event", "params", "fsm", "DoUniqueEvent", "DoEvent",
+		"occurrences", "delay" };
+	static const char* const kCheck[] = { "fsm_private_context" };
+	static const char* const kKill[] = { "protoFSM:KillPeriodicEvent", "DoEvent_Check", "engineView", "ChildViewFrames",
+		"IsArray", "=", "event", "LFetch", "RemoveStepView" };
+
+	// the periodic view posts its event and counts it
+	RefVar view(Eval("{unique: nil, event: 'tick, params: 'pp, occurrences: 2, delay: 60, "
+		"fsm: {DoEvent: func(e, p) posted := [e, p], DoUniqueEvent: func(e, p) uposted := [e, p]}}"));
+	SetFrameSlot(view, RefVar(Sym("viewIdleScript")), RefVar(NativeFunction(0xd5e4, 0, kIdle, 9)));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Sym("pview")), view);
+	Eval("posted := nil; uposted := nil");
+	EXPECT(RINT(Eval("pview:viewIdleScript()")) == 60);
+	EXPECT(EQRef(Eval("posted[0]"), Sym("tick")));
+	EXPECT(EQRef(Eval("posted[1]"), Sym("pp")));
+	EXPECT(RINT(Eval("pview.occurrences")) == 1);
+	EXPECT(ISNIL(Eval("pview:viewIdleScript()")));		// the last occurrence
+	EXPECT(RINT(Eval("pview.occurrences")) == 0);
+
+	// unique: the event is posted only when it is not already pending
+	Eval("pview.unique := 'unique; pview.occurrences := 5; posted := nil");
+	EXPECT(RINT(Eval("pview:viewIdleScript()")) == 60);
+	EXPECT(ISNIL(Eval("posted")));
+	EXPECT(EQRef(Eval("uposted[0]"), Sym("tick")));
+
+	// an evt.ex exception while posting is swallowed
+	Eval("pview.fsm := {DoUniqueEvent: func(e, p) Throw('|evt.ex.msg|, \"boom\")}");
+	EXPECT(RINT(Eval("pview:viewIdleScript()")) == 60);
+	// and one while counting leaves the script answering nil
+	Eval("pview.occurrences := 'many");
+	EXPECT(ISNIL(Eval("pview:viewIdleScript()")));
+
+	// KillPeriodicEvent: the engine view's child posting the event removed
+	SetFrameSlot(RefVar(GetGFunctionFrame()), RefVar(Sym("RemoveStepView")),
+		RefVar(Eval("func(parent, child) begin removed := [parent, child]; 'removed end")));
+	RefVar machine(Eval("{fsm_private_context: {engineView: {name: 'engine, "
+		"ChildViewFrames: func() [{event: 'a}, {event: 'b}]}}}"));
+	SetFrameSlot(machine, RefVar(Sym("DoEvent_Check")), RefVar(NativeFunction(0xd4cc, 1, kCheck, 1)));
+	SetFrameSlot(machine, RefVar(Sym("KillPeriodicEvent")), RefVar(NativeFunction(0xde38, 1, kKill, 9)));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Sym("machine")), machine);
+	Eval("removed := nil");
+	EXPECT(EQRef(Eval("machine:KillPeriodicEvent('b)"), Sym("removed")));
+	EXPECT(EQRef(Eval("removed[0].name"), Sym("engine")));
+	EXPECT(EQRef(Eval("removed[1].event"), Sym("b")));
+	Eval("removed := nil");
+	EXPECT(ISNIL(Eval("machine:KillPeriodicEvent('z)")));
+	EXPECT(ISNIL(Eval("removed")));
+	// an engine view with no children: nothing
+	Eval("machine.fsm_private_context.engineView := {}");
+	EXPECT(ISNIL(Eval("machine:KillPeriodicEvent('a)")));
+}
+
+
 int
 main()
 {
@@ -261,6 +317,7 @@ main()
 		TestQueue();
 		TestEngine();
 		TestEvents();
+		TestPeriodic();
 	}
 	newton_catch_all
 	{

@@ -37,6 +37,10 @@ Ref		NIEDoUniqueEvent(RefArg rcvr, RefArg event, RefArg params, RefArg closure);
 Ref		NIEPeriodicViewSetupDoneScript(RefArg rcvr, RefArg closure);
 Ref		NIETrimSeparator(RefArg rcvr, RefArg s, RefArg closure);
 
+// periodic events (ProtoFSMPeriodic.cpp)
+Ref		NIEPeriodicViewIdleScript(RefArg rcvr, RefArg closure);
+Ref		NIEKillPeriodicEvent(RefArg rcvr, RefArg event, RefArg closure);
+
 void	RegisterNIENatives(void);
 
 #endif

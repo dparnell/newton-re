@@ -218,6 +218,17 @@ def main(argv=None) -> int:
             continue
         _, binary, n, off, length = rows[0]
         print("%s (%#x): %d args, %d bytes" % (held.get(ref, name), ref, n, length))
+        # the literals: the closure's _literals slot (the native code's
+        # literal i is the word at +i*4 of that array's slots)
+        closure = pkg.slots(ref)[3]
+        if pkg.is_ptr(closure) and pkg.flags(closure) & 3 == 3:
+            for tag, value in pkg.frame_slots(closure):
+                if tag == "_literals" and pkg.is_ptr(value):
+                    for i, lit in enumerate(pkg.slots(value)):
+                        extra = ""
+                        if pkg.is_ptr(lit) and pkg.flags(lit) & 3 == 1 and pkg.symname(lit) is None:
+                            extra = " = [" + ", ".join(pkg.describe(x) for x in pkg.slots(lit)) + "]"
+                        print("  literal %d: %s%s" % (i, pkg.describe(lit), extra))
         pkgdisasm.disassemble(pkg.data(binary), off, off + length)
     return 0
 

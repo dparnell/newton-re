@@ -9,9 +9,15 @@
 #include "ObjectHeap.h"
 #include "NSErrors.h"
 #include "Frames.h"
+#include "NewtonExceptions.h"
 
 Ref FAref(RefArg rcvr, RefArg obj, RefArg index);		// frames/Builtins.cpp
 Ref FSubtract(RefArg rcvr, RefArg a, RefArg b);		// frames/Builtins.cpp
+Ref FEqual(RefArg rcvr, RefArg a, RefArg b);			// frames/Builtins.cpp
+Ref FGreaterThan(RefArg rcvr, RefArg a, RefArg b);	// frames/Builtins.cpp
+void IncrementCurrentStackPos(void);				// frames/ObjectHeap.cpp
+void DecrementCurrentStackPos(void);
+void ClearRefHandles(void);
 
 
 Ref
@@ -93,4 +99,65 @@ NIESubtract(RefArg a, RefArg b)
 	if (ISINT(a) && ISINT(b))
 		return MAKEINT((long) ((ULong) RINT(a) - (ULong) RINT(b)));
 	return FSubtract(RefVar(), a, b);
+}
+
+
+// NIE inetenbl.pkg part 1 +0x1ba0 (=)
+// Two integers compare as words; anything else (either not an integer)
+// through FEqual.
+bool
+NIEEqual(RefArg a, RefArg b)
+{
+	if (ISINT(a) && ISINT(b))
+		return (Ref) a == (Ref) b;
+	return NOTNIL(FEqual(RefVar(), a, b));
+}
+
+
+// NIE inetenbl.pkg part 1 +0x1af0 (>)
+bool
+NIEGreaterThan(RefArg a, RefArg b)
+{
+	if (ISINT(a) && ISINT(b))
+		return RINT(a) > RINT(b);
+	return NOTNIL(FGreaterThan(RefVar(), a, b));
+}
+
+
+// NIE inetenbl.pkg part 1 +0x1794 (set variable)
+void
+NIESetVariable(RefArg env, RefArg symbol, RefArg value)
+{
+	SetVariableOrGlobal(env, symbol, value, 1);
+}
+
+
+// (inline in each function that has a try: GetStackStateBlock,
+// IncrementCurrentStackPos, setjmp, AddExceptionHandler; on a throw
+// DecrementCurrentStackPos, ClearRefHandles, ResetStackStateBlock, and
+// Subexception against the handler's name, which the code keeps inline)
+bool
+NIETryEvtEx(void (*body)(void*), void* data)
+{
+	bool caught = false;
+	StackState* state = GetStackStateBlock();
+	IncrementCurrentStackPos();
+	newton_try
+	{
+		body(data);
+		DecrementCurrentStackPos();
+		DisposeStackStateBlock(state);
+	}
+	newton_catch_all
+	{
+		DecrementCurrentStackPos();
+		ClearRefHandles();
+		ResetStack(*state);
+		DisposeStackStateBlock(state);
+		if (!Subexception(_info.exception.name, "evt.ex"))
+			rethrow;
+		caught = true;
+	}
+	end_try;
+	return caught;
 }
