@@ -26,7 +26,10 @@ with each function's kind; --refs NAME lists every NewtonScript function
 whose literals include the symbol NAME (who calls a native, or sends a
 message, by that name), each named by the frame slot that holds it; --binary-classes counts the object area's
 binary objects by class, with their lengths (the formats an import has to
-translate for the host: frames/ObjectAreaImport.cpp).  An object is named by the ROM's Ref symbol
+translate for the host: frames/ObjectAreaImport.cpp); --census counts the
+object area's objects by kind, with their bytes, and how many are shared
+(referenced from more than one slot) or referenced from no other object
+(the ROM-free track's extraction plan: docs/rom-free/README.md).  An object is named by the ROM's Ref symbol
 (Rfoo or foo, whose word holds the ref), a built-in function's name, or
 0x address of the ref (a magic pointer is resolved through
 gROMMagicPointerTable); a function to disassemble may also be object.slot,
@@ -359,6 +362,9 @@ def main(argv=None) -> int:
     ap.add_argument("--binary-classes", action="store_true",
                     help="count the object area's binary objects by class (with their lengths) - which "
                          "formats an import has to translate for the host")
+    ap.add_argument("--census", action="store_true",
+                    help="count the object area's objects by kind (frame, array, symbol, binary) with their "
+                         "bytes, and the shared and unreferenced ones")
     ap.add_argument("--refs", action="append", default=[],
                     help="list the NewtonScript functions whose literals include this symbol - "
                          "which ROM scripts call a native or send a message by that name")
@@ -431,6 +437,28 @@ def main(argv=None) -> int:
             ls = sorted(lengths)
             shown = ", ".join(str(x) for x in ls[:6]) + (" ..." if len(ls) > 6 else "")
             out.append("%-24s %6d  lengths %s" % (cname, n, shown))
+    if args.census:
+        kinds, sizes, referenced = {}, {}, {}
+        objs = list(objects(rom))
+        inside = set(objs)
+        for ref in objs:
+            f = rom.flags(ref)
+            kind = ("symbol" if rom.symname(ref) is not None else
+                    "frame" if f & 3 == 3 else "array" if f & 1 else "binary")
+            kinds[kind] = kinds.get(kind, 0) + 1
+            sizes[kind] = sizes.get(kind, 0) + rom.size(ref)
+            if f & 1:
+                for r in rom.slots(ref) + [rom.cls(ref)]:
+                    if r in inside:
+                        referenced[r] = referenced.get(r, 0) + 1
+            elif rom.cls(ref) in inside:
+                referenced[rom.cls(ref)] = referenced.get(rom.cls(ref), 0) + 1
+        out.append("%d objects, %d bytes" % (len(objs), sum(sizes.values())))
+        for kind in ("frame", "array", "symbol", "binary"):
+            out.append("%-8s %6d  %8d bytes" % (kind, kinds.get(kind, 0), sizes.get(kind, 0)))
+        out.append("shared (referenced from more than one slot): %d" % sum(1 for n in referenced.values() if n > 1))
+        out.append("referenced from no object (roots: magic pointers, the ROM's C code): %d"
+                   % sum(1 for r in objs if r not in referenced))
     if args.refs:
         for holder, fn, name in sorted(script_refs(rom, args.refs)):
             out.append("%-24s %-60s %#x" % (name, holder, fn))
