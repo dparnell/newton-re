@@ -1412,6 +1412,47 @@ GetStorePSSInfo(const TStore* /*store*/)
 }
 
 
+// ROM 0x00155a20 GetCardSlotStores__FiPP6TStore
+// The stores on the card in a socket: up to four, the PSS manager's records
+// of that socket (0x1fc bytes a socket, 0x50 a store) read in order and the
+// ones with a store put in stores.  ==> how many; none for a socket number
+// the manager has no record of.
+//
+// DEVIATION: TPSSManager is NOT YET RECONSTRUCTED (see GetStorePSSInfo), so
+// it has no sockets and every socket answers none - as the ROM does for a
+// socket number past gPSSManager's count.
+long
+GetCardSlotStores(int socket, TStore** stores)
+{
+	(void) socket;
+	(void) stores;
+	return 0;
+}
+
+
+// ROM 0x0035561c FGetCardSlotStores
+// GetCardSlotStores(socket): the store frames of the stores on the card in
+// that socket - an array, or nil when there are none (a store that is not
+// registered is left out).
+Ref
+FGetCardSlotStores(RefArg /*rcvr*/, RefArg socket)
+{
+	TStore* stores[4];
+	long count = GetCardSlotStores((int) RINT(socket), stores);
+	if (count == 0)
+		return NILREF;
+	RefVar result(AllocateArray(RSSYMarray, 0));
+	RefVar storeObject;
+	for (long i = 0; i < count; i++)
+	{
+		storeObject = ToObject(stores[i]);
+		if (NOTNIL(storeObject))
+			AddArraySlot(result, storeObject);
+	}
+	return Length(result) == 0 ? NILREF : (Ref) result;
+}
+
+
 // ROM 0x0035559c FGetStoreCardSlot
 // store:CardSlot(): the socket the store's card is in, nil when the PSS
 // manager does not know the store (on the host: always).

@@ -138,6 +138,8 @@ struct StorePSSInfo
 	ULong32		fCardType;			// +0x30  the card's type, four characters
 };
 const StorePSSInfo*	GetStorePSSInfo(const TStore* store);	// ROM 0x001559bc GetStorePSSInfo__FPC6TStore (DEVIATION: always nil - TPSSManager is NOT YET)
+long	GetCardSlotStores(int socket, TStore** stores);								// ROM 0x00155a20 GetCardSlotStores__FiPP6TStore
+Ref		FGetCardSlotStores(RefArg rcvr, RefArg socket);								// ROM 0x0035561c FGetCardSlotStores
 Ref		StoreGetCardSlot(RefArg rcvr);											// FGetStoreCardSlot
 Ref		StoreGetCardType(RefArg rcvr);											// FGetStoreCardType
 

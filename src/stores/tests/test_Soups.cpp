@@ -1264,6 +1264,8 @@ TestPasswords()
 	EXPECT(size == (long) sizeof(StoreRootData) && root.fExtra == 0);
 	RemoveTStore(store);
 	store->Delete();
+	// no card sockets on the host: no socket has stores
+	EXPECT(ISNIL(Eval("GetCardSlotStores(0)")) && ISNIL(FGetCardSlotStores(RefVar(NILREF), RefVar(MAKEINT(1)))));
 }
 
 
