@@ -39,6 +39,12 @@ AddDelayedCall(func() begin
                 foreach kid in kids do
                   if kid.text and StrPos(kid.text, "scrubbing", 0) then found := true;
                 call check with ("one is the page's text", found);
+                // (the book functions are methods of Copperfield's proto)
+                local reader := {_proto: GetRoot().copperfield, isbn: "GECKO!HDI?", curRendering: 0};
+                local items := reader:PageContents(1);
+                call check with ("PageContents: the first page's items", Length(items) >= 1 and IsFrame(items[0]) and items[0].data);
+                reader:ZoomView(tt.contentArea, tt, 5, true);
+                call check with ("ZoomView", true);
                 Print("books-help: done, " & NumberStr(failures) & " failed");
               end, nil, 2000);
           end, nil, 1500);

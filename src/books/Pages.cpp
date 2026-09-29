@@ -22,6 +22,7 @@
 
 Ref		FCloseX(RefArg rcvr);			// views/ViewNatives.cpp: view:Close()
 Ref		BookTitle(RefArg rcvr);			// Librarian.cpp
+void	ZoomRect(Rect* from, Rect* to, long steps, Boolean zoomIn);	// qd/ZoomRect.cpp (ROM 0x003404e0)
 
 const ULong kTextBlock = 'TEXT';
 const ULong kPictBlock = 'PICT';
@@ -335,8 +336,8 @@ MakeBlockView(RefArg blocks, RefArg mungeScript, ULong index, Boolean printing)
 			RefVar scrolleeBounds(AllocateFrame());
 			SetFrameSlot(scrollee, RSSYM_proto, RefVar(Rcanonicalscrollee));
 			SetFrameSlot(scrollee, RSSYMicon, data);
-			SetFrameSlot(scrolleeBounds, RSSYMtop, RefVar(MAKEINT(0)));
-			SetFrameSlot(scrolleeBounds, RSSYMleft, RefVar(MAKEINT(0)));
+			SetFrameSlot(scrolleeBounds, RSSYMtop, RefVar(TRUEREF));		// (the ROM: Ref 1, not nil)
+			SetFrameSlot(scrolleeBounds, RSSYMleft, RefVar(TRUEREF));		// (the ROM: Ref 1, not nil)
 			SetFrameSlot(scrolleeBounds, RSSYMbottom, RefVar(MAKEINT((short) (r.bottom - r.top))));
 			SetFrameSlot(scrolleeBounds, RSSYMright, RefVar(MAKEINT((short) (r.right - r.left))));
 			SetFrameSlot(scrollee, RSSYMviewbounds, scrolleeBounds);
@@ -344,8 +345,8 @@ MakeBlockView(RefArg blocks, RefArg mungeScript, ULong index, Boolean printing)
 			RefVar children(AllocateArray(RSSYMviewchildren, 0));
 			AddArraySlot(children, scrollee);
 			RefVar dataBounds(AllocateFrame());
-			SetFrameSlot(dataBounds, RSSYMtop, RefVar(MAKEINT(0)));
-			SetFrameSlot(dataBounds, RSSYMleft, RefVar(MAKEINT(0)));
+			SetFrameSlot(dataBounds, RSSYMtop, RefVar(TRUEREF));		// (the ROM: Ref 1, not nil)
+			SetFrameSlot(dataBounds, RSSYMleft, RefVar(TRUEREF));		// (the ROM: Ref 1, not nil)
 			SetFrameSlot(dataBounds, RSSYMbottom, RefVar(MAKEINT((short) (pict.bottom - pict.top))));
 			SetFrameSlot(dataBounds, RSSYMright, RefVar(MAKEINT((short) (pict.right - pict.left))));
 			SetFrameSlot(scrollee, RSSYMdatabounds, dataBounds);
@@ -435,11 +436,11 @@ PageTurnTo(RefArg reader, ULong page, Boolean turnAway)
 		SetFrameSlot(frame, RSSYMpagenumber, RefVar(MAKEINT(page)));
 		RefVar size(TLibrarian::gLibrarian->PageSize(reader));
 		viewBounds = AllocateFrame();
-		SetFrameSlot(viewBounds, RSSYMtop, RefVar(MAKEINT(0)));
+		SetFrameSlot(viewBounds, RSSYMtop, RefVar(TRUEREF));		// (the ROM: Ref 1, not nil)
 		SetFrameSlot(viewBounds, RSSYMbottom, RefVar(GetFrameSlotRef(size, RSSYMbottom)));
 		if ((page & 1) == 0)
 		{
-			SetFrameSlot(viewBounds, RSSYMleft, RefVar(MAKEINT(0)));
+			SetFrameSlot(viewBounds, RSSYMleft, RefVar(TRUEREF));		// (the ROM: Ref 1, not nil)
 			SetFrameSlot(viewBounds, RSSYMright, RefVar(GetFrameSlotRef(size, RSSYMright)));
 		}
 		else
@@ -500,7 +501,7 @@ PageTurnTo(RefArg reader, ULong page, Boolean turnAway)
 				short bottom = (short) ((p[4] << 8) | p[5]);
 				short right = (short) ((p[6] << 8) | p[7]);
 				viewBounds = AllocateFrame();
-				SetFrameSlot(viewBounds, RSSYMtop, RefVar(MAKEINT(0)));
+				SetFrameSlot(viewBounds, RSSYMtop, RefVar(TRUEREF));		// (the ROM: Ref 1, not nil)
 				long x = (240 - (short) (right - left)) / 2;
 				SetFrameSlot(viewBounds, RSSYMleft, RefVar(MAKEINT(x)));
 				SetFrameSlot(viewBounds, RSSYMbottom, RefVar(MAKEINT((short) (bottom - top))));
@@ -627,6 +628,59 @@ AddToContentArea(RefArg rcvr, RefArg templ)
 }
 
 
+// ROM 0x00166544 PageContents
+// reader:PageContents(page) - the content items a page shows, each once.
+Ref
+PageContents(RefArg rcvr, RefArg pageArg)
+{
+	RefVar block;
+	RefVar page(TLibrarian::gLibrarian->GetPageN(RINT(pageArg), rcvr));
+	RefVar blocks(GetFrameSlotRef(page, RSSYMblocks));
+	long count = Length(blocks);
+	RefVar items(MakeArray(0));
+	for (long i = 0; i < count; i++)
+	{
+		block = GetArraySlotRef(blocks, i);
+		FSetAdd(RefVar(), items, RefVar(GetFrameSlotRef(block, RSSYMitem)), RefVar(TRUEREF));		// (the ROM: Ref 1, not nil)
+	}
+	return items;
+}
+
+
+// ROM 0x001666a4 PageScroll
+// reader:ScrollPage(delta) - the reader turned delta pages on (0: the
+// current page again); nothing past either end.
+Ref
+PageScroll(RefArg rcvr, RefArg delta)
+{
+	ULong count = TLibrarian::gLibrarian->CountPages(rcvr);
+	ULong page = TLibrarian::gLibrarian->CurrentPage(rcvr);
+	if (RINT(delta) != 0)
+	{
+		page = RINT(delta) + page;
+		if (count < page)
+			return TRUEREF;
+		if (page == 0)
+			return TRUEREF;
+	}
+	PageTurnToSpread(rcvr, page);
+	return TRUEREF;
+}
+
+
+// ROM 0x00164c88 ZoomView
+// ZoomView(fromView, toView, steps, zoomIn) - the zooming rectangles
+// drawn from one view's bounds to the other's (ZoomRect).
+Ref
+ZoomView(RefArg rcvr, RefArg fromView, RefArg toView, RefArg steps, RefArg zoomIn)
+{
+	Rect from = GetView(rcvr, fromView)->viewBounds;
+	Rect to = GetView(rcvr, toView)->viewBounds;
+	ZoomRect(&from, &to, RINT(steps), NOTNIL(zoomIn));
+	return TRUEREF;
+}
+
+
 // ROM 0x00164c4c TurnToPage
 // reader:TurnToPage(page)
 Ref
@@ -703,4 +757,7 @@ RegisterPageNatives(void)
 	RegisterNativeFunction("AddToContentArea", (void*) AddToContentArea, 1);
 	RegisterNativeFunction("TurnToPage", (void*) TurnToPage, 1);
 	RegisterNativeFunction("HiliteBlock", (void*) HiliteBlock, 3);
+	RegisterNativeFunction("PageContents", (void*) PageContents, 1);
+	RegisterNativeFunction("PageScroll", (void*) PageScroll, 1);
+	RegisterNativeFunction("ZoomView", (void*) ZoomView, 4);
 }
