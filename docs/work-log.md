@@ -9,6 +9,21 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: comms, round 8 - the whole protoFSM, and an oracle
+
+- The printer `f` (0x14649, 15 KB) re-expressed, so all 19 of the NIE's
+  protoFSM natives are host code: `ObjectToString({a: 1, b: "x", c: [2,
+  'y], d: {_parent: 'hidden}, e: nil})` gives `{<1> a: +1, b: "x", c:
+  [<2> +2, 'y], d: {<3> _parent: <ignored>}, e: nil}` - the + on a
+  positive number is the NIE's own (e5047e4).
+- `test_NIEProtoFSM` runs every group of checks first on the package's
+  own ARM code through `src/armcpu` with nothing registered, then on the
+  re-expressions: the queue group agrees; the others wait on three ROM
+  entries armcpu does not answer yet, so that phase is advisory
+  (05c78ba).
+- Host bug fixed on the way: `NEWTON_TRACE_EXCEPTIONS` recursed without
+  end when printing the thrown data itself threw (ab28683).
+
 ## 2026-09-29: the ARM interpreter, round 2
 
 - NewtHack's five-argument native runs (ctest `armcpu.NewtHack`,

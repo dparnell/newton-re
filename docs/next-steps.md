@@ -128,46 +128,28 @@ worked through.  What could come next (not ranked; the owner chooses):
   part handler with a real book (Copperfield has only read the help book
   under another ISBN).  The rest of the reader is its NewtonScript side,
   which runs as it is.
-- **The comms stack**: being worked (2026-09-29; `docs/comms/README.md`).
-  Networking goes to the host's own TCP/IP stack through host
-  implementations of the NIE's services (`inet`, `ictl`, `dnst`) - the
-  owner's decision; no TCP/IP stack is written or emulated.  M0 and M1
-  done: options, buffer lists, `TCommTool`, the comm manager, the host TCP
-  tool over `hal/host/HostSockets.h`; `CMStartService` with the `inet`
-  service hands back an open tool that echoes through a local server.
-  M2 and M3 done: the endpoint, and protoBasicEndpoint
-  (`comms/NewScriptEndpoint.h`) talking TCP through the host -
-  `src/host/demo/echo.ns`, ctest `host.NewtonEcho`, `newton --tcp-echo
-  port`.  M4: `dnst` done (`comms/host/HostDNSTool.h`, ctest
-  `host.NewtonDNS`; the NIE's `dnsq`/`rrcd` protocol read with
-  `analysis/pkgns.py`; a record name the NIE asks for with no room is
-  cut short until the ROM call its own tool makes room with - part 10
-  +0x4604 - is identified; since fixed, it is `InsertVarOptionAt`).  Also done: the `'frame` form (the
-  flatteners), all ten translators, protoStreamingEndpoint
-  (`comms/StreamingEndpoint.h`, ctest `host.NewtonStream`).  The NIE's
-  own scripts (`InetStartUp`, `DNSGetAddressFromName`, `InetGrabLink`)
-  stop at its protoFSM engine, 19 NTK native-compiled functions
-  (`pkgns.py --natives`).  The owner's decision (2026-09-29): the NIE's
-  native functions are re-expressed as host code, looked up by package
-  and function, and other packages' native code falls back on an ARM
-  interpreter.  The seam is in (`frames/PackageNatives.h`: host
-  re-expressions keyed by code length, FNV-1a hash and offset, then
-  `SetPackageNativeFallback`, then an error).  The NIE's protoFSM: 18
-  of its 19 native functions re-expressed in `src/thirdparty/nie/`
-  (ctest `thirdparty.NIEProtoFSM`); being done now: the object printer
-  `f` (0x14649, 15 KB), then a cross-check of each re-expression against
-  the ARM interpreter running the original.  The ARM
-  interpreter is in (`src/armcpu/`, `docs/armcpu/README.md`: Mahjongg's
-  native functions run and it deals, ctests `armcpu.Mahjongg`,
-  `armcpu.NewtHack`, `armcpu.PackageNativeCPU`); left there: frames in a
-  code binary, and protocol parts through the CPU - no fixture needs them
-  yet (every protocol part among the fixtures is the NIE's), so take them
-  up when a non-NIE driver or comms-tool package arrives.  Then `InetStartUp`/`DNSGetAddressFromName` end to end,
-  `ictl` read by running the NIE's link state machine, the modem
-  navigator.  The rest of comms (CCL,
-  AppleTalk, IR, NTK, the desktop connection - which the test server's
-  link, the IR sniffing, `SuckPackageFromEndPoint` and fax reception wait
-  on) comes after.
+- **The comms stack**: being worked (`docs/comms/README.md`; the rounds
+  so far are in `docs/work-log.md`).  Networking goes to the host's own
+  TCP/IP stack - the owner's decision; no TCP/IP stack is written or
+  emulated.  Done: the comm tool and manager over `hal/host/HostSockets.h`,
+  the endpoint, protoBasicEndpoint and protoStreamingEndpoint (ctests
+  `host.NewtonEcho`, `host.NewtonStream`), all ten translators, the NIE's
+  `inet` and `dnst` services as host services (`host.NewtonDNS`), and the
+  NIE's protoFSM engine - its 19 native-compiled functions re-expressed
+  as host code in `src/thirdparty/nie/` (`thirdparty.NIEProtoFSM`).
+  Package native code: the owner's decision is host re-expressions for
+  the NIE and the ARM interpreter (`src/armcpu/`) as the fallback for
+  other packages, both behind `frames/PackageNatives.h`.
+  Next: `InetStartUp`/`DNSGetAddressFromName` run end to end from the
+  NIE's own scripts; `ictl` (link control), read by running the NIE's
+  link state machine; the modem navigator.  `test_NIEProtoFSM` also runs
+  each check on the package's own ARM code (advisory until armcpu answers
+  `SetupSend`, `SetLexScope`, `AllocateFrameWithMap`).  armcpu left:
+  frames in a code binary, and protocol parts through the CPU - no
+  fixture needs them yet (every protocol part among the fixtures is the
+  NIE's).  The rest of comms (CCL, AppleTalk, IR, NTK, the desktop
+  connection - which the test server's link, the IR sniffing,
+  `SuckPackageFromEndPoint` and fax reception wait on) comes after.
 - **Now reachable over the large binaries**: the text engine's
   `TXNewtStreamFactory` (a compressed large binary for a stream above 4K)
   and `RotTiledBitmap` (only a fax page reaches it, so it still waits on
