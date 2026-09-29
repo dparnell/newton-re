@@ -1890,9 +1890,11 @@ StackTrace(void)
 }
 
 
-// Tracing and breakpoints print through the REP's translator, which is
-// not reconstructed yet (TInterpreter::Trace... at 0x00333560-0x00334000,
-// HandleBreakPoints 0x002af1e0).  NOT YET RECONSTRUCTED.
+// Tracing (vars.trace) and breakpoints: NOT YET RECONSTRUCTED -
+// TInterpreter::Trace... at 0x00333560-0x00334000 and HandleBreakPoints
+// 0x002af1e0, which print through the REP's out translator (Printer.cpp,
+// there now).  Only a developer's settings reach them; until then a trace
+// or a breakpoint does nothing.
 void TInterpreter::HandleBreakPoints(void) { }
 void TInterpreter::SetBreakPoints(RefArg breakPoints) { gFramesBreakPoints = breakPoints; }
 void TInterpreter::EnableBreakPoints(Boolean enable) { gFramesBreakPointsEnabled = enable; }

@@ -375,10 +375,13 @@ four-byte trailer; one that loses all its ink loses the trailer and is
 plain again.  `CompareSubStringCommon` compares a range with
 `CompareUnicodeText`, handing it `CompareInkProc` so that two ink words
 are compared by their bytes rather than collating as the character that
-stands for them.  NOT YET: the ink words' structure in `Verify`, and
-`GetLengthsAndDataInRange`/`MakeParagraphTextSlot`/
-`MakeParagraphStylesSlot`, which make a paragraph's text and styles out
-of a string of mixed ink and text.
+stands for them; `GetLengthsAndDataInRange`/`MakeParagraphTextSlot`/
+`MakeParagraphStylesSlot` make a paragraph's text and styles out of a
+string of mixed ink and text.  The string functions read and write
+through it as the ROM's do - `aref`/`setAref`, `GetChar`/`SetChar`,
+`StrMunger`, the comparisons (collated by the sort tables: `"a" < "B"`) -
+and `Stringer` (the `&` operator) carries each string's ink across
+(`DoStringerStuff`).  NOT YET: the ink words' structure in `Verify`.
 `StringNatives.cpp` has the string functions over it - `StrLen`,
 `StrConcat`, `SubStr`, `StrEqual`/`StrExactCompare`/`StrCompare`,
 `BeginsWith`/`EndsWith`, `Upcase`/`Downcase`/`Capitalize`/`CapitalizeWords`
@@ -637,7 +640,7 @@ objects are imported - `Runicode`, the magic pointer @283, is the ROM's
   `StrCapitalizeWords` and `FindWordsInString` (space and the punctuation
   below `0`, `:`-`@`, and some of the high characters; not `_`).
 
-NOT YET: the sort tables (`TSortTables`, `gSortTables`).  `test_Strings`
+The sort tables go to `gSortTables` (`SortTables.h`).  `test_Strings`
 converts Mac Roman each way, cases and un-accents text, and asks the
 break table.
 
@@ -666,9 +669,8 @@ built-in functions) and `PrintWellKnownObject`; the natives `StackTrace`,
 `SetDebugMode`, `BreakLoop` (a nested REP in the receiver's context, run by
 `REPBreakLoop`/`BreakLoop` until `ExitBreakLoop` sets the done flag),
 `Write`, `Load` (`ParseFile`) and `stats`.  `TInterpreter::GetLocalFromStack`,
-`SetLocalOnStack` and `GetSelfFromStack` go through it.  NOT YET
-RECONSTRUCTED: `TNSDebugAPI::Return` (unwinding to a call), `NTKStackTrace`,
-`Uriah` (the heap dump).  `test_Printer` inspects the stack from a native
+`SetLocalOnStack` and `GetSelfFromStack` go through it.  `Uriah` is the heap dump
+(below); NOT YET RECONSTRUCTED: `NTKStackTrace`.  `test_Printer` inspects the stack from a native
 and checks the trace.
 
 ## The compiler (`Compiler.cpp`, `Parser.cpp`, `Lexer.cpp`)
@@ -736,26 +738,29 @@ function kinds, the errors, `ParseFile` and the `Compile` native.
 
 ## Not yet
 
-The interpreter's FastRun1 (the inlined, trace-free copy of SlowRun),
-tracing and breakpoints (`TInterpreter::Trace...`, `HandleBreakPoints`),
-running 1.x CodeBlocks and binary natives, the natives not bound yet
-(261 of the 869 are) (`Sleep`, printing, stores, views, ...),
-`TRichString`'s ink (`MakeRichString`, `StripInk`, the ink words in
-`MungeRange`; the mungers treat strings as plain UniChars), the Unicode
-case, break and sort tables (`UppercaseText`, `IsDelimiter`,
-`CompareUnicodeText`), `TNumberParser` and the number formats,
-the interpreter's `GetTaskStackInfo`, `TNSDebugAPI::Return`, `NTKStackTrace`
-and `Uriah`, the Hammer, serial and NTK translators, the
-compiler's rich-string ink in `Stringer` and the encoding of source
-text (`IsFirstByteOf2Byte`), `TCompiler::Simplify` (nothing in this ROM);
-then the object system's: stores
-(`FollowFaultBlock`, `FIsValid`, large binaries, `NoTouchObjectPtr`'s
-large-object check), the Unicode encoders (`MakeString` and `Intern` widen
-and narrow bytes as they are), `AllocateCObjectBinary`'s procedure table,
-the heap dump `Uriah` (the printer), the REx magic pointer tables
-(`InitRExMagicPointerTables`), the frames function profiler hooks in
-`GC`, and what `InitObjects` starts around the interpreter:
-`InitPrinter`, `MakeEntryCache`, the package store part handler.
+What is left of the frames library, from the sweep of its NOT YET
+comments (each says where it is and why in the source).  Reachable from
+ordinary scripts: `TNumberParser` - `StringToNumber` reads with `strtod`,
+not the locale's separators; a store's own sort table (`GetSortID` of a
+store answers nil, as the ROM's does for want of one); and the aggregate
+and pointer types of `UnmarshalValue` beyond `'struct`.  Reachable only
+from a developer's settings or tools: tracing and breakpoints
+(`TInterpreter::Trace...`, `HandleBreakPoints` - the printer they print
+through is here now), `NTKStackTrace` (over the NTK connection), the task's
+stack limits for the debugger (`GetTaskStackInfo`), the frames function
+profiler's hooks in `GC`.  Not reachable, or reached another way:
+FastRun1 (the open-coded copy of SlowRun, which computes the same thing),
+the interpreter's proto caches (`GetProtoVariable` walks the chain each
+time: a matter of speed), a native whose code is ARM code in a binary (a
+host limit), `IsFirstByteOf2Byte` (a two-byte script, not in the US ROM),
+and the ink words' own structure in `TRichString::Verify`.
+
+The heap dump is here: `Uriah` (`gPrintMaps`, `gUriahROM`,
+`gUriahPrintArrays`, `gUriahSaveOutput` as the ROM has them) and
+`UriahBinaryObjects`, and `gVerboseGC` reports each collection through
+the REP before the dump.  `TNSDebugAPI::Return` was never written in the
+ROM: it throws -48215, "not implemented".  `vars.breakOnThrows` enters the
+break loop once per exception name (`gDeveloperNotified`).
 
 ## An integer is thirty bits, however wide the host's word is
 

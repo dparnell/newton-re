@@ -8,9 +8,8 @@
 				table installed into utility/Unicode.h's converters and case
 				functions.  The ROM does it in TNewtWorld::MainConstructor
 				after InitObjects; the host in InitObjects, when the ROM's
-				objects are there (nothing without them).  NOT YET
-				RECONSTRUCTED: the sort tables (TSortTables, the 'sortTables
-				array).
+				objects are there (nothing without them).  The frame's
+				'sortTables array goes to gSortTables (frames/SortTables.h).
 
 	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */

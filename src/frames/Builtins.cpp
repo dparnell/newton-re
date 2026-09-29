@@ -11,10 +11,11 @@
 
 	Reconstructed from the MP2x00 US ROM (0x002b5018-0x002ba02c mostly);
 	each function cites its origin.  A native function takes the receiver
-	then its arguments and answers a Ref.  NOT YET RECONSTRUCTED here: the
-	string functions (TRichString: strings with ink), Stringer, the printer
-	(Print, Write), the REP's break loop, random numbers, Compile, the soup
-	entry functions.
+	then its arguments and answers a Ref.  The rest of the built-ins live
+	with what they work on: the string functions over TRichString
+	(StringNatives.cpp), Stringer and the printer (Printer.cpp), the REP's
+	break loop (REPTranslators.cpp), Compile
+	(Compiler.cpp) and the soup entry functions (stores/).
 */
 
 #include "Random.h"

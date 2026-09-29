@@ -925,8 +925,10 @@ FaultCheckObjectPtr(Ref obj)
 
 // ROM 0x0031de40 NoTouchObjectPtr__FlPi
 // ObjectPtr for FIsValid: the pointer without reading anything from a
-// store.  NOT YET RECONSTRUCTED: the large-object check (ROMDomainBase/Size
-// and the large object address test) - answers *isLargeObject = 0.
+// store.  DEVIATION: the ROM also asks whether the pointer lies in the ROM
+// domain's large-object space (ROMDomainBase/Size and the large object
+// address test); the host imports the packages' objects into areas of
+// its own, so nothing is ever there and *isLargeObject is always 0.
 ObjHeader*
 NoTouchObjectPtr(Ref obj, int* isLargeObject)
 {

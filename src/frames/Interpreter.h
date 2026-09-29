@@ -252,7 +252,7 @@ public:
 	Ref			GetSelfFromStack(RefArg frameIndex);
 	void		StackTrace(void);
 
-	// tracing and breakpoints (NOT YET RECONSTRUCTED: the printer)
+	// tracing and breakpoints (NOT YET RECONSTRUCTED: see Interpreter.cpp)
 	void		HandleBreakPoints(void);
 	void		SetBreakPoints(RefArg breakPoints);
 	void		EnableBreakPoints(Boolean enable);

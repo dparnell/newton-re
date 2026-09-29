@@ -15,6 +15,7 @@
 #include "NSErrors.h"
 #include "OSErrors.h"
 #include "NewtonMemory.h"
+#include "REPTranslators.h"		// gREPout, where the verbose report goes
 
 #include <stdio.h>
 
@@ -340,8 +341,8 @@ TObjectHeap::SweepAndCompact(void)
 // Mark from the RefHandle table, the roots and the DIY markers; the symbol
 // table root is marked last, after GCTWA has dropped the symbols nothing
 // else reached.  NOT YET RECONSTRUCTED: the frames function profiler's
-// hooks around the collection (gFramesFunctionProfilingEnabled), and the
-// verbose report goes to stderr rather than gREPout.
+// hooks around the collection (gFramesFunctionProfilingEnabled).  The
+// verbose report (gVerboseGC) goes to the REP's out translator.
 void
 TObjectHeap::GC(void)
 {
@@ -355,7 +356,7 @@ TObjectHeap::GC(void)
 	if (gVerboseGC)
 	{
 		Statistics(&freeSpace, &largestFree);
-		fprintf(stderr, "[ GC! start %ld/%ld...", (long) freeSpace, (long) largestFree);
+		gREPout->Print("[ GC! start %ld/%ld...", (long) freeSpace, (long) largestFree);
 	}
 	Boolean symbolTableIsRoot = false;
 	fWeakChain = nil;
@@ -399,7 +400,7 @@ TObjectHeap::GC(void)
 	if (gVerboseGC)
 	{
 		Statistics(&freeSpace, &largestFree);
-		fprintf(stderr, "finish %ld/%ld ]\n", (long) freeSpace, (long) largestFree);
+		gREPout->Print("finish %ld/%ld ]\r", (long) freeSpace, (long) largestFree);
 		Uriah();
 	}
 }

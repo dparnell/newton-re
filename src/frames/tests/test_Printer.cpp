@@ -466,10 +466,18 @@ TestDebugAPI()
 		snprintf(expected, sizeof(expected), "free %d, largest %d,", (int) freeSpace, (int) largestFree);
 		EXPECT(strstr(dump, expected) != nil);
 	}
+	// gVerboseGC: the collection reported through the REP, then the dump
+	gVerboseGC = 1;
+	GC();
+	gVerboseGC = 0;
+	{
+		const char* report = Printed();
+		EXPECT(strncmp(report, "[ GC! start ", 12) == 0 && strstr(report, "...finish ") != nil && strstr(report, " ]") != nil && strstr(report, "total ") != nil);
+	}
 	Eval("UriahBinaryObjects(nil)");
 	{
 		const char* dump = Printed();
-		EXPECT(strncmp(dump, "Summary of sizes of binary objects:", 35) == 0 && strstr(dump, "\rstring: ") != nil && strstr(dump, "\rsymbol: ") != nil);
+		EXPECT(strncmp(dump, "Summary of sizes of binary objects:", 35) == 0 && strstr(dump, "\nstring: ") != nil && strstr(dump, "\nsymbol: ") != nil);
 	}
 	// TNSDebugAPI::Return: never implemented, it throws -48215
 	{

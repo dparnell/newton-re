@@ -2212,8 +2212,9 @@ IsReal(RefArg ref)
 	Strings and reals
 	Strings are binaries of class string holding UniChars with a terminating
 	0 (utility/Unicode.h has the UniChar functions and the conversions,
-	whose encoding tables are NOT YET RECONSTRUCTED - characters are
-	widened and narrowed as they are).
+	whose encoding tables InitUnicode installs from the ROM's 'unicode
+	frame - without the ROM's objects characters are widened and narrowed
+	as they are).
 ------------------------------------------------------------------------------- */
 
 // ROM 0x0031c1e4 MakeString__FPCc
@@ -2567,9 +2568,10 @@ InitMagicPointerTables(void)
 // ROM 0x0031c608 InitObjects__Fv
 // The heap (its size from InternalRAMInfo in the ROM, gObjectHeapSize
 // here), the global frames, symbols, the printer, classes and the
-// interpreter.  NOT YET RECONSTRUCTED: the union soup entry cache
-// (MakeEntryCache) and the package store's part handler (TPackageStore,
-// TPackageStorePartHandler).
+// interpreter.  The ROM ends with InitQueries (the union soup entry cache,
+// the store lists, the package store's part handler through
+// InitPackageSoups); here that is the stores library's, above this one,
+// so a host calls InitQueries after InitObjects (stores/Soups.h).
 void
 InitObjects(void)
 {
