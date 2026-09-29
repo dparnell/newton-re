@@ -268,6 +268,15 @@ struct CodecState
 	long			fState;				// +0x44
 };
 
+// What an input channel's or compressor's node keeps (8 bytes): the same
+// first two words as a CodecState, which is what GetNodeRefCount and
+// GetCodec read - a compressor's CodecState being the channel's own.
+struct RecordState
+{
+	long			fRefCount;			// +0x00
+	TSoundCodec*	fCodec;				// +0x04
+};
+
 // the codec channel's own flags (+0x1e4)
 enum
 {
@@ -293,6 +302,10 @@ public:
 
 	static void			MainEventLoop(TCodecChannel** channel);					// ROM 0x001e480c MainEventLoop__13TCodecChannelSFPP13TCodecChannel
 	void				DecompressLoop(void);									// ROM 0x001e4cd0 DecompressLoop__13TCodecChannelFv
+	void				CompressLoop(void);										// ROM 0x001e5558 CompressLoop__13TCodecChannelFv
+	long				EmptyDMABuffer(ChannelNode* node, ULong* size, SoundBlock* block);	// ROM 0x001e57c4 EmptyDMABuffer__13TCodecChannelFP11ChannelNodePUlP10SoundBlock
+	void*				GetRecordState(ChannelNode* node);						// ROM 0x001e45fc GetRecordState__13TCodecChannelFP11ChannelNode
+	void				SetRecordState(ChannelNode* node, void* state);			// ROM 0x001e461c SetRecordState__13TCodecChannelFP11ChannelNodeP11RecordState
 	NewtonErr			InitNode(ChannelNode* node);							// ROM 0x001e494c InitNode__13TCodecChannelFP11ChannelNode
 	long				InitCodecNodes(ChannelNode* node);						// ROM 0x001e4ab4 InitCodecNodes__13TCodecChannelFP11ChannelNode
 	long				DeleteCodecNodes(ChannelNode* node);					// ROM 0x001e4c40 DeleteCodecNodes__13TCodecChannelFP11ChannelNode
@@ -386,6 +399,18 @@ public:
 	NewtonErr			OpenDecompressorChannel(ULong* id, ULong outputId);		// ROM 0x001e96b4 OpenDecompressorChannel__12TSoundServerFPUlUl
 	void				StartDecompressor(long device);							// ROM 0x001e9790 StartDecompressor__12TSoundServerFi
 	void				StopDecompressor(long hardware);						// ROM 0x001e9794 StopDecompressor__12TSoundServerFi
+	NewtonErr			OpenInputChannel(ULong* id, ULong device);				// ROM 0x001e91fc OpenInputChannel__12TSoundServerFPUlUl
+	Boolean				AllInputChannelsEmpty(void);							// ROM 0x001e92c8 AllInputChannelsEmpty__12TSoundServerFv
+	void				StartInput(long device);								// ROM 0x001e9308 StartInput__12TSoundServerFi
+	void				StopInput(long hardware);								// ROM 0x001e93a4 StopInput__12TSoundServerFi
+	void				ScheduleInputBuffer(long count);						// ROM 0x001e9410 ScheduleInputBuffer__12TSoundServerFi
+	ULong				EmptyDMABuffer(long count);								// ROM 0x001e948c EmptyDMABuffer__12TSoundServerFi
+	long				SetInputVolume(long gain);								// ROM 0x001e9610 SetInputVolume__12TSoundServerFl
+	long				SetInputDevice(ULong id, long device);					// ROM 0x001e9674 SetInputDevice__12TSoundServerFUll
+	NewtonErr			OpenCompressorChannel(ULong* id, ULong inputId);		// ROM 0x001e97dc OpenCompressorChannel__12TSoundServerFPUlUl
+	void				StartCompressor(long device);							// ROM 0x001e98b8 StartCompressor__12TSoundServerFi
+	static long			SoundInputIH(void* server);								// ROM 0x001e98bc SoundInputIH__12TSoundServerFv
+	void				StopCompressor(long hardware);							// ROM 0x001e9924 StopCompressor__12TSoundServerFi
 
 	TSoundIntMessage*	fOutputIntMessage;		// +0x70
 	TSoundIntMessage*	fInputIntMessage;		// +0x74
@@ -401,6 +426,8 @@ public:
 	TSoundChannel*		fInputChannels;			// +0xdc
 	void*				fInputBuffer[2];		// +0xe0
 	long				fInputSize[2];			// +0xe8
+	long				fInputIndex;			// +0xf0  the buffer emptied next
+	Boolean				fInputSkip;				// +0xf4  a buffer to throw away (the interrupts fell behind)
 	TSoundChannel*		fDecompressorChannels;	// +0xf8
 	TSoundChannel*		fCompressorChannels;	// +0xfc
 	long				fVolume;				// +0x100

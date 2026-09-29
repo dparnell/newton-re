@@ -65,6 +65,8 @@ static short*	gClickLinear = nil;		// its samples as 16-bit linear
 static const char* const	kIMASource = (const char*) 1;
 static const long			kIMASamples = 21600 / 64 * 64;
 static short*				gIMAExpected = nil;
+static const char* const	kRecordSource = (const char*) 2;
+static const char* const	kIMACheckSource = (const char*) 3;
 
 static long
 PlayIMA(void)
@@ -93,6 +95,22 @@ PlayIMA(void)
 	return NOTNIL(result) ? 1 : 0;
 }
 
+// recording: the null backend's microphone plays kRecordSamples of a
+// tone; a protoSoundChannel with direction 'record fills a frame's
+// samples from it, plainly and through TIMACodec
+static const long	kRecordSamples = 64 * 150;		// (9600: under half a second)
+static short		gRecordSource[kRecordSamples];
+static long			gRecordBinaries = 0;
+
+static void
+MakeRecordBuffers(void)
+{
+	RefVar globals(gVarFrame);
+	SetFrameSlot(globals, RefVar(MakeSymbol("recBuffer")), RefVar(AllocateBinary(RSSYMsamples, kRecordSamples * 2)));
+	SetFrameSlot(globals, RefVar(MakeSymbol("recIMA")), RefVar(AllocateBinary(RSSYMsamples, kRecordSamples / kIMABlockSize * kIMABlockBytes)));
+	gRecordBinaries = 1;
+}
+
 // 'host/'play: PlaySoundSync(click) in the world; 1 when it came back
 struct TPlayEvent : public TAEvent
 {
@@ -108,7 +126,27 @@ public:
 		play->fResult = 0;
 		newton_try
 		{
-			if (play->fSource == kIMASource)
+			if (play->fSource == kIMACheckSource)
+			{
+				RefVar coded(GetFrameSlotRef(gVarFrame, RefVar(MakeSymbol("recIMA"))));
+				long bytes = kRecordSamples / kIMABlockSize * kIMABlockBytes;
+				signed char* expected = new signed char[bytes];
+				IMAState state;
+				CompressIMA(gRecordSource, expected, kRecordSamples, &state, 1, 0);
+				long same = 0;
+				for (long i = 0; i < bytes; i++)
+					if (((const signed char*) BinaryData(coded))[i] == expected[i])
+						same++;
+				printf("recorded through TIMACodec: %ld coded bytes of %ld as CompressIMA makes them\n", same, bytes);
+				play->fResult = (same == bytes) ? 1 : 0;
+				delete[] expected;
+			}
+			else if (play->fSource == kRecordSource)
+			{
+				MakeRecordBuffers();
+				play->fResult = 1;
+			}
+			else if (play->fSource == kIMASource)
 				play->fResult = PlayIMA();
 			else if (play->fSource == nil)
 			{
@@ -253,6 +291,68 @@ Scenario(void)
 	printf("IMA: %ld samples played of %ld\n", count, kIMASamples);
 	EXPECT(count == kIMASamples);
 	EXPECT(gIMAExpected != nil && played != nil && memcmp(played, gIMAExpected, kIMASamples * sizeof(short)) == 0);
+
+	// recording, plain: 16-bit samples at the hardware's rate, so what is
+	// recorded is the source itself
+	for (long i = 0; i < kRecordSamples; i++)
+		gRecordSource[i] = (short) (9000.0 * sin(i * 0.05) + 3000.0 * sin(i * 0.31));
+	HostSoundSetSource(gRecordSource, kRecordSamples);
+	EXPECT(Send(newtPort, kRecordSource) == 1);
+	EXPECT(Send(newtPort,
+		"begin "
+		"  GetRoot().rec := {state: nil}; "
+		"  local ch := {_proto: vars.protoSoundChannel, direction: 'record}; "
+		"  ch:Open(); "
+		"  local snd := {sndFrameType: 'simpleSound, samples: vars.recBuffer, compressionType: 6, dataType: 16, samplingRate: 21600, "
+		"    callback: func(state, error) begin GetRoot().rec.state := state; GetRoot().rec.error := error end}; "
+		"  ch:Schedule(snd); "
+		"  ch:Start(true); "
+		"  GetRoot().rec.chan := ch; GetRoot().rec.snd := snd; "
+		"  1 "
+		"end") == 1);
+	Sleep(1000 * kMilliseconds);
+	EXPECT(Send(newtPort,
+		"begin "
+		"  local r := GetRoot().rec; "
+		"  r.chan:Close(); "
+		"  if r.state = 0 and r.error = 0 then 1 else 0 "
+		"end") == 1);
+	// ...and played back: the same samples come out
+	HostSoundClearCapture();
+	EXPECT(Send(newtPort, "begin PlaySoundSync(GetRoot().rec.snd); 1 end") == 1);
+	WaitForSilence();
+	played = HostSoundCaptured(&count);
+	long same = 0;
+	for (long i = 0; i < count && i < kRecordSamples; i++)
+		if (played[i] == gRecordSource[i])
+			same++;
+	printf("recorded and played back: %ld samples, %ld the same as the source\n", count, same);
+	EXPECT(count == kRecordSamples && same == kRecordSamples);
+
+	// recording through the IMA compressor: the coded bytes are what
+	// CompressIMA makes of the source
+	HostSoundSetSource(gRecordSource, kRecordSamples);
+	EXPECT(Send(newtPort,
+		"begin "
+		"  GetRoot().rec := {state: nil}; "
+		"  local ch := {_proto: vars.protoSoundChannel, direction: 'record}; "
+		"  ch:Open(); "
+		"  local snd := {sndFrameType: 'codec, codecName: \"TIMACodec\", samples: vars.recIMA, compressionType: 6, dataType: 16, "
+		"    samplingRate: 21600, bufferSize: 4096, bufferCount: 4, "
+		"    callback: func(state, error) begin GetRoot().rec.state := state; GetRoot().rec.error := error end}; "
+		"  ch:Schedule(snd); "
+		"  ch:Start(true); "
+		"  GetRoot().rec.chan := ch; "
+		"  1 "
+		"end") == 1);
+	Sleep(1500 * kMilliseconds);
+	EXPECT(Send(newtPort,
+		"begin "
+		"  local r := GetRoot().rec; "
+		"  r.chan:Close(); "
+		"  if r.state = 0 and r.error = 0 then 1 else 0 "
+		"end") == 1);
+	EXPECT(Send(newtPort, kIMACheckSource) == 1);
 
 	// a channel of the script's own, and its callback
 	HostSoundClearCapture();

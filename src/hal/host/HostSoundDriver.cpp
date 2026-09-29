@@ -12,7 +12,7 @@
 #include <string.h>
 
 PROTOCOL_IMPL_SOURCE_MACRO(PMainSoundDriver)
-PROTOCOL_CLASSINFO(PMainSoundDriver, "PSoundDriver", "SoundOutput\0\0", 0, 0, nil)
+PROTOCOL_CLASSINFO(PMainSoundDriver, "PSoundDriver", "SoundOutput\0\0SoundInput\0\0", 0, 0, nil)
 
 const long	kHostSoundRate = 21600;
 
@@ -46,7 +46,28 @@ CapturePlay(const short* samples, long count)
 	gCapturedCount += count;
 }
 
-static const HostSoundBackend	gNullBackend = { CapturePlay };
+static const short*	gSource = nil;
+static long			gSourceCount = 0;
+static long			gSourceAt = 0;
+
+static void
+SourceRecord(short* samples, long count)
+{
+	for (long i = 0; i < count; i++)
+		samples[i] = (gSourceAt < gSourceCount) ? gSource[gSourceAt++] : 0;
+}
+
+
+void
+HostSoundSetSource(const short* samples, long count)
+{
+	gSource = samples;
+	gSourceCount = count;
+	gSourceAt = 0;
+}
+
+
+static const HostSoundBackend	gNullBackend = { CapturePlay, SourceRecord };
 
 
 const short*
@@ -97,11 +118,40 @@ SoundDeliver(void)
 }
 
 
+// The input's: a buffer filled.
+static Boolean
+RecordDeadline(Int64* when)
+{
+	PMainSoundDriver* driver = gHostSoundDriver;
+	if (driver == nil || !driver->fRecording)
+		return false;
+	*when = driver->fInEnd;
+	return true;
+}
+
+
+static void
+RecordDeliver(void)
+{
+	PMainSoundDriver* driver = gHostSoundDriver;
+	if (driver == nil || !driver->fRecording)
+		return;
+	driver->fRecording = false;
+	driver->fInQueue[0] = driver->fInQueue[1];
+	driver->fInQueueSize[0] = driver->fInQueueSize[1];
+	driver->fInQueue[1] = -1;
+	driver->fInQueued--;
+	driver->StartRecording();
+	driver->InputIntHandlerDispatcher();
+}
+
+
 static void
 RegisterHostSoundDriver(void)
 {
 	PMainSoundDriver::ClassInfo()->Register();
 	HostRegisterInterruptSource(SoundDeadline, SoundDeliver);
+	HostRegisterInterruptSource(RecordDeadline, RecordDeliver);
 }
 
 
@@ -135,6 +185,17 @@ PMainSoundDriver::New()
 	fEnd.hi = 0;
 	fEnd.lo = 0;
 	fVolume = 0;
+	fInBuffer[0] = fInBuffer[1] = 0;
+	fInBufferSize[0] = fInBufferSize[1] = 0;
+	fInQueue[0] = fInQueue[1] = -1;
+	fInQueueSize[0] = fInQueueSize[1] = 0;
+	fInQueued = 0;
+	fInRunning = false;
+	fInPowered = false;
+	fRecording = false;
+	fInEnd.hi = 0;
+	fInEnd.lo = 0;
+	fInGain = 0x80;
 	if (gHostSoundBackend == nil)
 		gHostSoundBackend = &gNullBackend;
 	gHostSoundDriver = this;
@@ -184,8 +245,12 @@ PMainSoundDriver::SetOutputBuffers(VAddr buffer1, ULong size1, VAddr buffer2, UL
 
 
 NewtonErr
-PMainSoundDriver::SetInputBuffers(VAddr, ULong, VAddr, ULong)
+PMainSoundDriver::SetInputBuffers(VAddr buffer1, ULong size1, VAddr buffer2, ULong size2)
 {
+	fInBuffer[0] = buffer1;
+	fInBufferSize[0] = size1;
+	fInBuffer[1] = buffer2;
+	fInBufferSize[1] = size2;
 	return noErr;
 }
 
@@ -212,10 +277,42 @@ PMainSoundDriver::ScheduleOutputBuffer(ULong which, ULong size)
 }
 
 
+// A buffer to fill, behind the one filling.
 NewtonErr
-PMainSoundDriver::ScheduleInputBuffer(ULong, ULong)
+PMainSoundDriver::ScheduleInputBuffer(ULong which, ULong size)
 {
+	if (size == 0)
+		return noErr;
+	if (fInQueued == 2)
+		fInQueued = 1;
+	fInQueue[fInQueued] = which & 1;
+	fInQueueSize[fInQueued] = size;
+	fInQueued++;
+	if (fInRunning && !fRecording)
+		StartRecording();
 	return noErr;
+}
+
+
+// The buffer at the head of the queue filled, as the hardware would fill
+// it over the time it takes: the samples are taken from the backend now,
+// and the interrupt falls due when the last of them would have arrived.
+void
+PMainSoundDriver::StartRecording(void)
+{
+	if (fInQueued == 0)
+		return;
+	long which = fInQueue[0];
+	long samples = fInQueueSize[0] / 2;
+	short* buffer = (short*) fInBuffer[which];
+	if (gHostSoundBackend->record != nil)
+		gHostSoundBackend->record(buffer, samples);
+	else
+		memset(buffer, 0, samples * sizeof(short));
+	GetClock(&fInEnd);
+	Int64 length = { 0, (ULong) (((long long) samples * kSeconds) / kHostSoundRate) };
+	CompAdd(&length, &fInEnd);
+	fRecording = true;
 }
 
 
@@ -236,8 +333,8 @@ PMainSoundDriver::StartPlaying(void)
 
 void		PMainSoundDriver::PowerOutputOn(long)	{ fPowered = true; }
 void		PMainSoundDriver::PowerOutputOff(void)	{ fPowered = false; }
-void		PMainSoundDriver::PowerInputOn(long)	{ }
-void		PMainSoundDriver::PowerInputOff(void)	{ }
+void		PMainSoundDriver::PowerInputOn(long)	{ fInPowered = true; }
+void		PMainSoundDriver::PowerInputOff(void)	{ fInPowered = false; }
 
 
 // The first buffer started; answers 1 - "schedule the other one too" - when
@@ -253,10 +350,14 @@ PMainSoundDriver::StartOutput(void)
 }
 
 
+// The input started on the buffers scheduled.
 NewtonErr
 PMainSoundDriver::StartInput(void)
 {
-	return -1;
+	fInRunning = true;
+	if (!fRecording)
+		StartRecording();
+	return noErr;
 }
 
 
@@ -279,17 +380,25 @@ PMainSoundDriver::StopOutput(void)
 }
 
 
-NewtonErr	PMainSoundDriver::StopInput(void)			{ return noErr; }
+NewtonErr
+PMainSoundDriver::StopInput(void)
+{
+	fInRunning = false;
+	fRecording = false;
+	fInQueued = 0;
+	fInQueue[0] = fInQueue[1] = -1;
+	return noErr;
+}
 Boolean		PMainSoundDriver::OutputIsEnabled(void)		{ return fRunning; }
-Boolean		PMainSoundDriver::InputIsEnabled(void)		{ return false; }
+Boolean		PMainSoundDriver::InputIsEnabled(void)		{ return fInRunning; }
 Boolean		PMainSoundDriver::OutputIsRunning(void)		{ return fRunning; }
-Boolean		PMainSoundDriver::InputIsRunning(void)		{ return false; }
+Boolean		PMainSoundDriver::InputIsRunning(void)		{ return fInRunning; }
 VAddr		PMainSoundDriver::CurrentOutputPtr(void)	{ return fPlaying ? fBuffer[fQueue[0]] : 0; }
 VAddr		PMainSoundDriver::CurrentInputPtr(void)		{ return 0; }
 void		PMainSoundDriver::OutputVolume(long decibels)	{ fVolume = decibels; }
 long		PMainSoundDriver::OutputVolume(void)		{ return fVolume; }
-void		PMainSoundDriver::InputVolume(long)			{ }
-long		PMainSoundDriver::InputVolume(void)			{ return 0; }
+void		PMainSoundDriver::InputVolume(long gain)	{ fInGain = gain; }
+long		PMainSoundDriver::InputVolume(void)			{ return fInGain; }
 void		PMainSoundDriver::EnableExtSoundSource(long)	{ }
 void		PMainSoundDriver::DisableExtSoundSource(long)	{ }
 long		PMainSoundDriver::OutputIntHandler(void)	{ return noErr; }

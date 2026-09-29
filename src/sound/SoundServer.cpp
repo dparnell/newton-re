@@ -773,8 +773,9 @@ TCodecChannel::ReleaseNode(ChannelNode* node)
 		DeleteCodecNodes(node);
 		SetCodecState(node, nil);
 	}
-	// NOT YET RECONSTRUCTED: the record state an input node has (the ROM
-	// deletes it here; SetRecordState is never called yet)
+	void* recordState = GetRecordState(node);
+	if (recordState != nil)
+		delete (RecordState*) recordState;
 	long result = TSoundChannel::FreeNode(node, codecState->fError, codecState->fState);
 	if (codecState->fUsers == 0)
 		delete codecState;
@@ -907,14 +908,168 @@ TCodecChannel::Start(TUMsgToken* token)
 
 
 // ROM 0x001e480c MainEventLoop__13TCodecChannelSFPP13TCodecChannel
-// The 'codc task: a decompressor decompresses (a compressor compresses -
-// CompressLoop, NOT YET RECONSTRUCTED), and the task ends.
+// The 'codc task: a decompressor decompresses, a compressor compresses,
+// and the task ends.
 void
 TCodecChannel::MainEventLoop(TCodecChannel** channel)
 {
 	TCodecChannel* self = *channel;
 	if ((self->fFlags & kSndChannelDecompressor) != 0)
 		self->DecompressLoop();
+	else if ((self->fFlags & kSndChannelCompressor) != 0)
+		self->CompressLoop();
+}
+
+
+// ROM 0x001e45fc GetRecordState__13TCodecChannelFP11ChannelNode
+// An input channel's or compressor's node keeps its RecordState where a
+// decompressor's keeps its CodecState.
+void*
+TCodecChannel::GetRecordState(ChannelNode* node)
+{
+	if ((fFlags & kSndChannelInput) != 0 || (fFlags & kSndChannelCompressor) != 0)
+		return node->fCodecState;
+	return nil;
+}
+
+
+// ROM 0x001e461c SetRecordState__13TCodecChannelFP11ChannelNodeP11RecordState
+void
+TCodecChannel::SetRecordState(ChannelNode* node, void* state)
+{
+	if ((fFlags & kSndChannelInput) != 0 || (fFlags & kSndChannelCompressor) != 0)
+		node->fCodecState = state;
+}
+
+
+// ROM 0x001e5558 CompressLoop__13TCodecChannelFv
+// Recording through a codec: every buffer handed to the input channel to
+// be filled, the input channel started and kept running; then, as each
+// buffer comes back full, it is run through the codec into the node's
+// data (EmptyDMABuffer) and handed back to be filled again.  A node the
+// codec has filled moves on (GetNextNode); a Stop, or an error, ends it,
+// and the input channel is stopped.
+void
+TCodecChannel::CompressLoop(void)
+{
+	UChar failed = false;
+	ULong size;
+	SoundBlock block;
+	fLock.Acquire(kWaitOnBlock);
+	fCodecFlags &= ~kCodecStarted;
+	ChannelNode* node = fNodes;
+	if (node != nil)
+	{
+		CodecState* codecState = GetCodecState(node);
+		memcpy(&block, &node->fData, sizeof(block));
+		for (ULong i = 0; i < codecState->fBufferCount; i++)
+		{
+			codecState->fIndex = i;
+			if (GetNodeBuffer(node, nil) != noErr
+			 || ScheduleDMA(node, codecState->fBufferSize, &block) != noErr)
+			{
+				failed = true;
+				goto done;
+			}
+		}
+		codecState->fIndex = 0;
+		SendStart();
+		fOutputChannel->fFlags |= kSndChannelKeepRunning;
+		for (;;)
+		{
+			node = fNodes;
+			if (node == nil || (fCodecFlags & kCodecAbort) != 0)
+				goto done;
+			if (WaitForNextBuffer(0) != noErr)
+			{
+				failed = true;
+				goto done;
+			}
+			TSoundChannel* input = fOutputChannel;
+			if ((input->fFlags & kSndChannelRunning) != 0 && input->fNodes != nil
+			 && (input->fFlags & kSndChannelPaused) == 0)
+			{
+				if (EmptyDMABuffer(node, &size, &block) != noErr)
+				{
+					failed = true;
+					goto done;
+				}
+				node = fNodes;
+				codecState = GetCodecState(node);
+			}
+			if ((fCodecFlags & kCodecAbort) != 0)
+				break;
+			if (fNodes == nil)
+				fOutputChannel->fFlags &= ~kSndChannelKeepRunning;
+			else
+			{
+				memcpy(&block, &node->fData, sizeof(block));
+				if (ScheduleDMA(node, codecState->fBufferSize, &block) != noErr)
+				{
+					failed = true;
+					goto done;
+				}
+				if (++codecState->fIndex >= codecState->fBufferCount)
+					codecState->fIndex = 0;
+			}
+			if (codecState != nil && codecState->fDone && (fCodecFlags & kCodecAbort) == 0)
+			{
+				codecState->fDone = false;
+				GetNextNode();
+			}
+		}
+		fStoppedNodeId = node->fNodeId;
+		fStoppedPosition = node->fPosition;
+		fCodecFlags |= kCodecStopped;
+	}
+done:
+	fOutputChannel->Stop(nil, noErr);
+	Abort(failed);
+	fLock.Release();
+	fCodecFlags = 0;
+	fOutstanding = 0;
+}
+
+
+// ROM 0x001e57c4 EmptyDMABuffer__13TCodecChannelFP11ChannelNodePUlP10SoundBlock
+// The buffer just filled by the input channel run through the codec into
+// the node (fDone when the codec took less than all of it, or says the
+// node is full); what the node could not take goes on into the next one.
+long
+TCodecChannel::EmptyDMABuffer(ChannelNode* node, ULong* size, SoundBlock* block)
+{
+	CodecState* codecState = GetCodecState(node);
+	TSoundCodec* codec = GetCodec(node);
+	ULong coded = 0;
+	void* buffer;
+	CodecBlock codecBlock;
+	long err = GetNodeBuffer(node, &buffer);
+	if (err != noErr)
+		return err;
+	*size = codecState->fBufferSize;
+	ConvertCodecBlock(block, &codecBlock);
+	err = SafeCodecConsume(codec, buffer, size, &coded, &codecBlock);
+	if (err != noErr)
+		return err;
+	node->fPosition += coded;
+	codecState->fDone = (*size < codecState->fBufferSize || codec->BufferCompleted());
+	if (*size < codecState->fBufferSize && (node = GetNextNode()) != nil)
+	{
+		CodecState* nextState = GetCodecState(node);
+		codec = GetCodec(node);
+		ULong rest = nextState->fBufferSize - *size;
+		buffer = (char*) buffer + *size;
+		err = SafeCodecConsume(codec, buffer, &rest, &coded, &codecBlock);
+		if (err != noErr)
+			return err;
+		node->fPosition += coded;
+		ULong taken = *size;
+		*size = taken + rest;
+		nextState->fDone = (taken + rest < nextState->fBufferSize || codec->BufferCompleted());
+	}
+	if (*size != 0)
+		ConvertCodecBlock(&codecBlock, block);
+	return noErr;
 }
 
 
@@ -1090,7 +1245,13 @@ TCodecChannel::InitNode(ChannelNode* node)
 		codecState->fIndex = 0;
 		codecState->fDone = false;
 	}
-	// NOT YET RECONSTRUCTED: an input channel's or compressor's RecordState
+	if ((fFlags & kSndChannelInput) != 0 || (fFlags & kSndChannelCompressor) != 0)
+	{
+		RecordState* recordState = new RecordState;
+		if (recordState == nil)
+			return MemError();
+		SetRecordState(node, recordState);
+	}
 	SetNodeRefCount(node, 0);
 	codecState->fUsers++;
 	TSoundCodec* codec = (TSoundCodec*) node->fCodec;
@@ -1450,7 +1611,17 @@ TSoundServerHandler::AEHandlerProc(TUMsgToken* token, ULong* /*size*/, TAEvent* 
 	}
 	if (command == kSndInputDone)
 	{
-		// NOT YET RECONSTRUCTED: EmptyDMABuffer and the input side
+		long count = Swap((ULong*) &server->fInputIntMessage->fEvent.fCount, 0);
+		ULong which = server->EmptyDMABuffer(count);
+		if (gSndDriver->InputIsRunning() && server->fInputSize[which] == 0)
+		{
+			gSndDriver->StopInput();
+			gSndDriver->PowerInputOff();
+			server->fInputIntMessage->fMessage.Abort();
+			server->fInputIntMessage->fEvent.fCount = 0;
+			return;
+		}
+		gSndDriver->ScheduleInputBuffer(which, kDMABufferSize);
 		return;
 	}
 	if (command == 0xffffffff)
@@ -1528,10 +1699,18 @@ TSoundServerHandler::AEHandlerProc(TUMsgToken* token, ULong* /*size*/, TAEvent* 
 	case kSndGetVolume:
 		reply.fUnknown10 = gSndDriver->OutputVolume();
 		break;
-	case kSndOpenInput:				// NOT YET RECONSTRUCTED: the input side
+	case kSndOpenInput:
+		reply.fError = server->OpenInputChannel(&reply.fChannel, value);
+		break;
 	case kSndSetInputGain:
+		reply.fError = server->SetInputVolume(value);
+		break;
 	case kSndSetInputDevice:
+		reply.fError = server->SetInputDevice(request->fChannel, value);
+		break;
 	case kSndOpenCompressor:
+		reply.fError = server->OpenCompressorChannel(&reply.fChannel, value);
+		break;
 	default:
 		reply.fError = kSndErrGeneric;
 		break;
@@ -1561,6 +1740,8 @@ TSoundServer::TSoundServer()
 	fInputChannels = nil;
 	fInputBuffer[0] = fInputBuffer[1] = nil;
 	fInputSize[0] = fInputSize[1] = 0;
+	fInputIndex = 0;
+	fInputSkip = false;
 	fDecompressorChannels = nil;
 	fCompressorChannels = nil;
 	fVolume = 0;
@@ -1627,7 +1808,7 @@ TSoundServer::MainConstructor()
 			return MemError();
 		gSndDriver->SetInputBuffers((VAddr) fInputBuffer[0], kDMABufferSize, (VAddr) fInputBuffer[1], kDMABufferSize);
 	}
-	gSndDriver->SetInputCallbackProc(nil, this);		// (the ROM: SoundInputIH - NOT YET)
+	gSndDriver->SetInputCallbackProc(SoundInputIH, this);
 	gSndDriver->PowerOutputOff();
 	gSndDriver->PowerInputOff();
 	err = fHandler.Init(this);
@@ -1732,11 +1913,11 @@ TSoundServer::StartChannel(ULong id, TUMsgToken* token)
 			if ((kind & kSndChannelOutput) != 0)
 				StartOutput(channel->fDevice);
 			else if ((kind & kSndChannelInput) != 0)
-				;		// NOT YET RECONSTRUCTED: StartInput
+				StartInput(channel->fDevice);
 			else if ((kind & kSndChannelDecompressor) != 0)
 				StartDecompressor(channel->fDevice);
 			else if ((kind & kSndChannelCompressor) != 0)
-				;		// NOT YET RECONSTRUCTED: StartCompressor
+				StartCompressor(channel->fDevice);
 		}
 	}
 	if (codec != nil)
@@ -1791,8 +1972,12 @@ TSoundServer::StopChannel(ULong id, TUSoundNodeReply* reply)
 	if (channel == nil)
 		return kSndErrNoChannel;
 	channel->Stop(reply, kSndErrNoChannel);
-	// NOT YET RECONSTRUCTED: the input side (AllInputChannelsEmpty, the
-	// input stopped and powered off)
+	if (((channel->fFlags & kSndChannelInput) != 0 || (channel->fFlags & kSndChannelCompressor) != 0)
+	 && AllInputChannelsEmpty())
+	{
+		gSndDriver->StopInput();
+		gSndDriver->PowerInputOff();
+	}
 	return noErr;
 }
 
@@ -1838,7 +2023,7 @@ TSoundServer::FindChannel(ULong id)
 void
 TSoundServer::StopAll(void)
 {
-	// NOT YET RECONSTRUCTED: StopCompressor
+	StopCompressor(1);
 	StopDecompressor(1);
 	StopOutput(1);
 	for (TSoundChannel* channel = fInputChannels; channel != nil; channel = channel->fNext)
@@ -2117,4 +2302,210 @@ MixLin16(void* dst, void* src, long count)
 			sum = -0x8000;
 		d[i] = (short) sum;
 	}
+}
+
+
+/*------------------------------------------------------------------------------
+	T S o u n d S e r v e r   -   i n p u t
+	The mirror of output: the driver fills the two input buffers in turn,
+	its interrupt (SoundInputIH) says one is full, and EmptyDMABuffer hands
+	it to every running input channel (TDMAChannel::Consume into their
+	nodes).  A compressor sits on an input channel as a decompressor sits
+	on an output one.
+------------------------------------------------------------------------------*/
+
+// ROM 0x001e91fc OpenInputChannel__12TSoundServerFPUlUl
+NewtonErr
+TSoundServer::OpenInputChannel(ULong* id, ULong device)
+{
+	if (gSndDriver->ClassInfo()->GetCapability("SoundInput") == nil)
+		return kSndErrBadFormat;
+	*id = 0;
+	TSoundDriverInfo info;
+	info.fUnknown00 = 1;
+	gSndDriver->GetSoundHardwareInfo(&info);
+	TDMAChannel* channel = new TDMAChannel(UniqueId(), info);
+	if (channel == nil)
+		return MemError();
+	channel->fFlags |= kSndChannelInput;
+	channel->fNext = fInputChannels;
+	channel->fDevice = device;
+	fInputChannels = channel;
+	*id = channel->fId;
+	return noErr;
+}
+
+
+// ROM 0x001e92c8 AllInputChannelsEmpty__12TSoundServerFv
+Boolean
+TSoundServer::AllInputChannelsEmpty(void)
+{
+	for (TSoundChannel* channel = fInputChannels; channel != nil; channel = channel->fNext)
+		if (channel->IsActive())
+			return false;
+	return true;
+}
+
+
+// ROM 0x001e9308 StartInput__12TSoundServerFi
+// When the hardware is not already recording and some channel wants
+// sound: the buffer whose turn it is given to the driver, the input
+// powered and started, and the other buffer queued behind it.
+void
+TSoundServer::StartInput(long device)
+{
+	if (gSndDriver->InputIsRunning())
+		return;
+	if (AllInputChannelsEmpty())
+		return;
+	fInputIntMessage->fMessage.Abort();
+	fInputIntMessage->fEvent.fCount = 0;
+	fInputSkip = false;
+	gSndDriver->ScheduleInputBuffer(fInputIndex, kDMABufferSize);
+	gSndDriver->PowerInputOn(device);
+	if (!gSndDriver->InputIsEnabled())
+		gSndDriver->StartInput();
+	gSndDriver->ScheduleInputBuffer(1 - fInputIndex, kDMABufferSize);
+}
+
+
+// ROM 0x001e93a4 StopInput__12TSoundServerFi
+void
+TSoundServer::StopInput(long hardware)
+{
+	for (TSoundChannel* channel = fInputChannels; channel != nil; channel = channel->fNext)
+		channel->Stop(nil, kSndErrStopped);
+	if (hardware != 0)
+	{
+		gSndDriver->StopInput();
+		gSndDriver->PowerInputOff();
+	}
+}
+
+
+// ROM 0x001e9410 ScheduleInputBuffer__12TSoundServerFi
+// A full buffer emptied and given back to the driver - unless nobody
+// wanted it, when the input is turned off.
+void
+TSoundServer::ScheduleInputBuffer(long count)
+{
+	ULong which = EmptyDMABuffer(count);
+	if (gSndDriver->InputIsRunning() && fInputSize[which] == 0)
+	{
+		gSndDriver->StopInput();
+		gSndDriver->PowerInputOff();
+		fInputIntMessage->fMessage.Abort();
+		fInputIntMessage->fEvent.fCount = 0;
+		return;
+	}
+	gSndDriver->ScheduleInputBuffer(which, kDMABufferSize);
+}
+
+
+// ROM 0x001e948c EmptyDMABuffer__12TSoundServerFi
+// The buffer whose turn it is handed to every running, unpaused input
+// channel; its size says whether anyone took any (or a channel is kept
+// running).  count is how many buffers the interrupts said were full: more
+// than one and the next is thrown away, the machine having fallen behind.
+// ==> the buffer emptied.
+ULong
+TSoundServer::EmptyDMABuffer(long count)
+{
+	long samples = (((TDMAChannel*) fInputChannels)->fHardwareBits == 16) ? 0x750 : 0xea0;
+	Boolean taken = false;
+	long which = fInputIndex;
+	fInputSize[which] = samples;
+	void* buffer = fInputBuffer[which];
+	for (TSoundChannel* c = fInputChannels; c != nil; c = c->fNext)
+	{
+		if ((c->fFlags & kSndChannelRunning) != 0 && c->fNodes != nil
+		 && (c->fFlags & kSndChannelPaused) == 0 && !fInputSkip)
+		{
+			long n = samples;
+			((TDMAChannel*) c)->Consume(buffer, &n);
+			if (n > 0)
+				taken = true;
+		}
+		if ((c->fFlags & kSndChannelKeepRunning) != 0)
+			taken = true;
+	}
+	if (!taken)
+		fInputSize[which] = 0;
+	fInputSkip = count > 1;
+	fInputIndex = 1 - fInputIndex;
+	return which;
+}
+
+
+// ROM 0x001e9610 SetInputVolume__12TSoundServerFl
+long
+TSoundServer::SetInputVolume(long gain)
+{
+	if (gSndDriver->ClassInfo()->GetCapability("SoundInput") == nil)
+		return kSndErrBadFormat;
+	if (gSndDriver->InputVolume() != gain)
+		gSndDriver->InputVolume(gain);
+	return noErr;
+}
+
+
+// ROM 0x001e9674 SetInputDevice__12TSoundServerFUll
+// ROM BUG kept: the channel is not looked for before it is written to.
+long
+TSoundServer::SetInputDevice(ULong id, long device)
+{
+	FindChannel(id)->fDevice = device;
+	return noErr;
+}
+
+
+// ROM 0x001e97dc OpenCompressorChannel__12TSoundServerFPUlUl
+// A codec channel fed by the input channel given, at the front of the
+// compressors.
+NewtonErr
+TSoundServer::OpenCompressorChannel(ULong* id, ULong inputId)
+{
+	if (gSndDriver->ClassInfo()->GetCapability("SoundInput") == nil)
+		return kSndErrBadFormat;
+	*id = 0;
+	TSoundDriverInfo info;
+	info.fUnknown00 = 1;
+	gSndDriver->GetSoundHardwareInfo(&info);
+	TCodecChannel* channel = new TCodecChannel(UniqueId(), info);
+	if (channel == nil)
+		return MemError();
+	channel->fFlags |= kSndChannelCompressor;
+	channel->fOutputChannelId = inputId;
+	channel->fNext = fCompressorChannels;
+	channel->fOutputChannel = FindChannel(inputId);
+	fCompressorChannels = channel;
+	*id = channel->fId;
+	return noErr;
+}
+
+
+// ROM 0x001e98b8 StartCompressor__12TSoundServerFi
+void
+TSoundServer::StartCompressor(long /*device*/)
+{ }
+
+
+// ROM 0x001e98bc SoundInputIH__12TSoundServerFv
+// The driver's input interrupt: one more buffer full, and the server told.
+long
+TSoundServer::SoundInputIH(void* refCon)
+{
+	TSoundServer* server = (TSoundServer*) refCon;
+	server->fInputIntMessage->fEvent.fCount++;
+	return SendForInterrupt(gSndPort, server->fInputIntMessage->fMessage.GetMsgId(), 0,
+							&server->fInputIntMessage->fEvent, sizeof(TSoundIntEvent), 0x04000000, 0, nil, false);
+}
+
+
+// ROM 0x001e9924 StopCompressor__12TSoundServerFi
+void
+TSoundServer::StopCompressor(long /*hardware*/)
+{
+	for (TSoundChannel* channel = fCompressorChannels; channel != nil; channel = channel->fNext)
+		channel->Stop(nil, kSndErrStopped);
 }

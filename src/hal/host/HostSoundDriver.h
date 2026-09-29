@@ -4,7 +4,7 @@
 	Contains:	PMainSoundDriver: the host's sound hardware, the PSoundDriver
 				(sound/SoundDriver.h) the sound server finds first.
 
-				It is output only ("SoundOutput"), 16-bit linear samples at
+				It has output and input ("SoundOutput", "SoundInput"), 16-bit linear samples at
 				21600 a second - the MP2x00's top rate, so ROM sounds are
 				resampled exactly as they were on the machine.  The server's
 				two DMA buffers are played in the order they are scheduled;
@@ -69,6 +69,7 @@ public:
 	long		InputIntHandler(void);
 
 	void		StartPlaying(void);
+	void		StartRecording(void);
 
 	VAddr		fBuffer[2];
 	ULong		fBufferSize[2];
@@ -80,6 +81,17 @@ public:
 	Boolean		fPlaying;			// fQueue[0] is playing, and ends at fEnd
 	Int64		fEnd;
 	long		fVolume;			// 16.16 decibels
+
+	VAddr		fInBuffer[2];		// the input's, as the output's
+	ULong		fInBufferSize[2];
+	long		fInQueue[2];
+	ULong		fInQueueSize[2];
+	long		fInQueued;
+	Boolean		fInRunning;
+	Boolean		fInPowered;
+	Boolean		fRecording;			// fInQueue[0] is filling, and is full at fInEnd
+	Int64		fInEnd;
+	long		fInGain;
 };
 
 
@@ -88,6 +100,7 @@ public:
 struct HostSoundBackend
 {
 	void	(*play)(const short* samples, long count);
+	void	(*record)(short* samples, long count);		// nil: silence
 };
 
 // The host program's side: the driver registered for InitializeSound to
@@ -98,6 +111,10 @@ void	HostInstallSoundDriver(const HostSoundBackend* backend);
 // The null backend's capture: every sample played since the last clear.
 const short*	HostSoundCaptured(long* count);
 void			HostSoundClearCapture(void);
+
+// The null backend's microphone: these samples, then silence (the array
+// must outlast the recording).
+void			HostSoundSetSource(const short* samples, long count);
 
 extern const long	kHostSoundRate;		// 21600
 

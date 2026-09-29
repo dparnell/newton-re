@@ -448,7 +448,7 @@ LocalSoundChannel(RefArg rcvr)
 
 // ROM 0x001e67e8 FSoundOpen
 // Open(): a channel for output (or input, when the frame's direction is
-// 'input) on the frame's device, or the user configuration's; an input
+// 'record) on the frame's device, or the user configuration's; an input
 // channel gets the frame's gain, or the configuration's.
 static Ref
 FSoundOpen(RefArg rcvr)
@@ -457,7 +457,7 @@ FSoundOpen(RefArg rcvr)
 	if (MemError() != noErr)
 		ThrowSoundErr(MemError());
 	long device = 0;
-	Boolean input = EQRef(RefVar(GetProtoVariable(rcvr, RSSYMdirection, nil)), RSSYMinput);
+	Boolean input = EQRef(RefVar(GetProtoVariable(rcvr, RSSYMdirection, nil)), RSSYMrecord);
 	RefVar value(GetProtoVariable(rcvr, input ? RSSYMinputdevice : RSSYMoutputdevice, nil));
 	if (ISINT(value))
 		device = RVALUE(value);
@@ -523,7 +523,7 @@ static Ref
 FSoundStart(RefArg rcvr, RefArg async)
 {
 	TFrameSoundChannel* channel = LocalSoundChannel(rcvr);
-	Boolean input = EQRef(RefVar(GetProtoVariable(rcvr, RSSYMdirection, nil)), RSSYMinput);
+	Boolean input = EQRef(RefVar(GetProtoVariable(rcvr, RSSYMdirection, nil)), RSSYMrecord);
 	if (input && ISNIL(async))
 		ThrowSoundErr(ERRBASE_SOUND);
 	NewtonErr err = channel->Start(NOTNIL(async));
