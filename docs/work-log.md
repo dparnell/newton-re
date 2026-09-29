@@ -9,6 +9,36 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: packages round 6 - segments, the progress callback, compressed large objects; packages closed
+
+- `store:RestoreSegmentedPackage(soup, keys)` over `CPackageArchivalPipe`
+  (`packages/PackageArchivalPipe.h`, `10c38f9`): a buffer pipe over a soup
+  of chunk entries (each 4K a `PackageEntry` binary, the entries' unique
+  ids the keys).  Host bug found on the way: `CBufferPipe::ResetRead` left
+  out the ROM's `Seek(0, end)`, so a fresh read buffer looked full of
+  whatever its block held and the first read returned it;
+  `test_Pipes` had asserted the old behaviour.  The end-to-end test had to
+  go into a booted demo (ctest `host.NewtonSegmented`): the ROM's own
+  `RegisterNewPackage` wants the booted machine's globals, and it refuses
+  a package whose name the store already has, so the demo takes Formulas2
+  off the store before restoring it from its chunks.
+- The progress callback, `TLOCallback` (`stores/LargeObjects.h`,
+  `4663bea`): a record, not a class - the function to call, the script's
+  function and info frame, the frequency - made by `AllocatePackage` and
+  told by `TPackageIterator::Store` as a package streams in.  The first
+  call only makes the info frame.
+- `LODefCreateFromComp`/`FillChunkArrayCompressed` (`56bb4ce`): a large
+  object made again from `LODefaultBackup`'s compressed stream, so a VBO
+  through NSOF written with `SetCompressLargeBinaries` reads back.
+- XIP packages measured and recorded, not started: about 11 KB at
+  0x00277d54-0x0027aa00, standing on the ROM domain manager's page
+  faulting.
+- Packages closed: `docs/packages/README.md` has a Status table of what
+  is left and what each waits on; `docs/next-steps.md`'s plan moved into
+  this log (below).  31 of 32 package natives answered.
+- ctest 125/125; coverage 12453 citations, 0 bad, 7251 of 16671 (43.49%);
+  natives 1041 of 1326 (78.5%); open-apps: only the Sound Recorder fails.
+
 ## 2026-09-29: packages round 5 - 1.x packages, TPixelMapCompander, SuckPackageOffDeskTop
 
 - **The 1.x packages** (`c3bf661`; `StorePackageNatives.cpp`): the
@@ -1643,6 +1673,87 @@ it names things (the xr types are its `X_...` codes, `LOW/STD/XR_NAMES.H`:
 super-uplinear to super-underlinear) and says what a function is for,
 and where the ROM and the port disagree with it, the ROM's disassembly
 decides.  The FillSHR slip showed up as exactly such a disagreement.
+
+## Finishing packages, as planned in next-steps.md (2026-09-29)
+
+The plan `docs/next-steps.md` carried while packages were finished,
+with each item's outcome as it was recorded there, moved here verbatim
+when the last reachable pieces were done (each round also has its own
+entry above).  Its heading is demoted one level.
+
+### Now: finishing packages
+
+The owner asked (2026-09-29) to finish packages (`docs/packages/README.md`).
+Sized with `analysis/callgraph.py build/MP2x00US <roots>` (functions not
+yet done below the roots, and their bytes; a lower bound - indirect calls
+are not seen).  In order, what a third-party package and the ROM's own
+need first:
+
+1. ~~**Units**~~ - DONE (2026-09-29, `packages/Units.h`,
+   `docs/packages/README.md`'s "Units"; `test_Units`, ctest
+   `host.NewtonUnits`): the export and import tables, the pending
+   imports, `ResolveImportRef` over the host's `RelocateImportRefs`,
+   `InitRExMagicPointerTables`, and the six unit natives; the ROM's five
+   exporting parts register their seven units at boot.  With it
+   `BackupPatchPackage` (nil) and `RestorePatchPackage` (0).  Left of it:
+   `GetEntryFromLargeObjectVAddr` (a package's store entry, which the
+   `client` slots of `CurrentImports`/`PendingImports` would carry - nil
+   until packages are on a store, (5)).
+2. ~~**The `'dict` and `'comm` part handlers**~~ - DONE (2026-09-29,
+   `recognition/DictPartHandler.h`, `packages/FramePartHandler.h`'s
+   `TCommPartHandler`; `docs/packages/README.md`): registered at boot in
+   the ROM's order ('form, 'dict, 'auto, 'comm - 'book waits on (7)).
+   Tested at the function level (`test_Dictionaries`, `test_Units`); no
+   package with either part was to hand to install whole.
+3. ~~**Streamed sources**~~ - DONE (2026-09-29, `packages/PackageLoader.h`,
+   `PartPipe.h`; `docs/packages/README.md`'s "Streamed sources";
+   `test_PackageManager`'s `TestStreamed`): `TPackageLoader`, the 'pipe'
+   world (`TPipeApp`, `TPipeEventHandler`), `CPartPipe` and the manager's
+   stream branches.  A streamed frames part is one flattened (NSOF)
+   object, so an ordinary .pkg cannot be streamed - `newton --package`
+   stays on the memory path.  Its endpoint side (`TEndpointPipe`,
+   `SuckPackageFromEndpoint`) waits on the comms area.
+4. ~~**Large binaries on a store**~~ - DONE (2026-09-29; the
+   large-object layer `stores/LargeObjects.h`, the large binaries
+   `stores/LargeBinaries.h`, the ephemerals `stores/Ephemerals.h`;
+   `docs/stores/README.md`'s "Large objects" and "Large binaries";
+   `test_LargeObjects`, `test_LargeBinaries`, ctest `host.NewtonVBO`).
+   `TPixelMapCompander`, a store bitmap's default compander, is DONE too
+   (2026-09-29, `stores/PixelMapCompander.cpp`: LZ over row-delta
+   filtered pages).  Still NOT YET of the object layer: `TLrgObjStore`,
+   objects made from compressed streams (`LODefCreateFromComp`), the
+   backup progress callback (`TLOCallback`).
+5. ~~**Packages on a store**~~ - DONE (2026-09-29, `packages/StorePackages.h`,
+   `StorePackageNatives.cpp`, `stores/PackageObjects.cpp`;
+   `docs/packages/README.md`'s "Packages on a store"; `test_PackageManager`'s
+   `TestOnStore`, ctest `host.NewtonPackageStore`): `newton --store f
+   --package x.pkg` stores the package (store:SuckPackageFromBinary) and
+   the next boot activates it again.  Left of it: relocating a page to a
+   base (`RelocateFramesInPage`, not needed on the host), XIP packages,
+   the progress callback, `LODefCreateFromComp`, a card's 'stor event
+   (`StorageCardInserted`/`MountStore`), `RestoreSegmentedPackage` over
+   `CPackageArchivalPipe` (11 functions, about 1.5 KB at 0x0010d190-
+   0x0010d9xx: a package restored from its segments), `SuckPackageFromEndpoint`
+   (comms), `StopFrameSound`.  `SuckPackageOffDeskTop` is DONE (2026-09-29,
+   over `utility/StdioPipe.h`'s `CStdioPipe` - the host's own files).  (The failure under
+   `NEWTON_HEAPCHECK` was a host runtime bug, fixed 2026-09-29: a task
+   switched out on its way back from a system call lost the call's answer
+   - `docs/work-log.md`; ctest `host.NewtonPackageStoreSlow`.)
+6. ~~**1.x packages**~~ - DONE (2026-09-29, `StorePackageNatives.cpp`,
+   `docs/packages/README.md`'s "The 1.x packages"; ctest `host.NewtonOneX`):
+   `Activate1.XPackage`, `DeActivate1.XPackage`, `Remove1.XPackage`,
+   `1.XPackageToVBO`, the store's package directory and the 1.x
+   `NewPackage`.  `GetCardReinsertionInfo` (a card's patch package) is
+   NOT YET.
+7. **The `'book` part handler** over the book reader - the handler and
+   `TLibrarian::BookAvailable`/`BookRemoved` are 11 functions, 5.6 KB, but
+   they stand on the book reader itself (`TLibrarian`, 49 methods; the
+   19 `books` natives), a subsystem of its own.  The ROM's help book is
+   refused for want of it.
+8. **Protocol parts' class info** - a `'code`-kind part is raw ARM code
+   registering protocol implementations (the ROM's ScreenBuffer and
+   ScreenDrivers packages).  The host cannot run it; recorded, not ported
+   (the host has its own screen driver).
 
 ## Earlier work (as recorded in next-steps.md before 2026-09-27)
 

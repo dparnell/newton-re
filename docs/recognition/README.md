@@ -24,10 +24,10 @@ Notepad (`write.ns`, `cursive.ns`, `numbers.ns`, `shapes.ns`,
 What is left, and why:
 
 * **Reachable, still to do** (found by the NOT YET sweep of 2026-09-29;
-  `docs/next-steps.md` lists them with addresses): seven prototype
-  methods (`PenPos`, `GetAlternatives`, `Extract`, `HandleUnit`,
-  `HandleRawInk`, `LookupCompletions`, `VoteOnWordUnit` - recognition's
-  natives are 118 of 125, not all), `ValidateWord`'s dictionary and symbol
+  `docs/next-steps.md` lists them with addresses): six prototype
+  methods (`GetAlternatives`, `Extract`, `HandleUnit`, `HandleRawInk`,
+  `LookupCompletions`, `VoteOnWordUnit` - recognition's natives are 119
+  of 125, not all), `ValidateWord`'s dictionary and symbol
   checks, `FindBaseline`'s first path over `low_level`,
   `TWRecognizer::EndInkStrokeGroup`'s body, and the arbiter's
   `ArbitrateGraphicsWords` and the shape half of `ArbitrateEarly`.

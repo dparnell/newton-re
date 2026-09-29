@@ -11,12 +11,12 @@ the way are all in `docs/work-log.md`.
 
 ## State at 2026-09-29
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 121/121
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 125/125
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-- `analysis/coverage.py build/MP2x00US --check`: 12400 citations, 0 bad;
-  7211 of 16671 functions (43.25%).
-- `analysis/natives.py --unbound`: 1021 of the ROM's 1326 natives
-  answered (77.0%; built-ins 790 of 869, prototype methods 231 of 457).
+- `analysis/coverage.py build/MP2x00US --check`: 12453 citations, 0 bad;
+  7251 of 16671 functions (43.49%).
+- `analysis/natives.py --unbound`: 1041 of the ROM's 1326 natives
+  answered (78.5%; built-ins 805 of 869, prototype methods 236 of 457).
 
 ## What works
 
@@ -65,95 +65,38 @@ the way are all in `docs/work-log.md`.
   strokes, and the test agent runs a test manager on the machine
   (`src/host/demo/journal.ns`, `testagent.ns`; `docs/testing/README.md`).
 
-## Now: finishing packages
+## Packages: finished for what the host can reach
 
-The owner asked (2026-09-29) to finish packages (`docs/packages/README.md`).
-Sized with `analysis/callgraph.py build/MP2x00US <roots>` (functions not
-yet done below the roots, and their bytes; a lower bound - indirect calls
-are not seen).  In order, what a third-party package and the ROM's own
-need first:
-
-1. ~~**Units**~~ - DONE (2026-09-29, `packages/Units.h`,
-   `docs/packages/README.md`'s "Units"; `test_Units`, ctest
-   `host.NewtonUnits`): the export and import tables, the pending
-   imports, `ResolveImportRef` over the host's `RelocateImportRefs`,
-   `InitRExMagicPointerTables`, and the six unit natives; the ROM's five
-   exporting parts register their seven units at boot.  With it
-   `BackupPatchPackage` (nil) and `RestorePatchPackage` (0).  Left of it:
-   `GetEntryFromLargeObjectVAddr` (a package's store entry, which the
-   `client` slots of `CurrentImports`/`PendingImports` would carry - nil
-   until packages are on a store, (5)).
-2. ~~**The `'dict` and `'comm` part handlers**~~ - DONE (2026-09-29,
-   `recognition/DictPartHandler.h`, `packages/FramePartHandler.h`'s
-   `TCommPartHandler`; `docs/packages/README.md`): registered at boot in
-   the ROM's order ('form, 'dict, 'auto, 'comm - 'book waits on (7)).
-   Tested at the function level (`test_Dictionaries`, `test_Units`); no
-   package with either part was to hand to install whole.
-3. ~~**Streamed sources**~~ - DONE (2026-09-29, `packages/PackageLoader.h`,
-   `PartPipe.h`; `docs/packages/README.md`'s "Streamed sources";
-   `test_PackageManager`'s `TestStreamed`): `TPackageLoader`, the 'pipe'
-   world (`TPipeApp`, `TPipeEventHandler`), `CPartPipe` and the manager's
-   stream branches.  A streamed frames part is one flattened (NSOF)
-   object, so an ordinary .pkg cannot be streamed - `newton --package`
-   stays on the memory path.  Its endpoint side (`TEndpointPipe`,
-   `SuckPackageFromEndpoint`) waits on the comms area.
-4. ~~**Large binaries on a store**~~ - DONE (2026-09-29; the
-   large-object layer `stores/LargeObjects.h`, the large binaries
-   `stores/LargeBinaries.h`, the ephemerals `stores/Ephemerals.h`;
-   `docs/stores/README.md`'s "Large objects" and "Large binaries";
-   `test_LargeObjects`, `test_LargeBinaries`, ctest `host.NewtonVBO`).
-   `TPixelMapCompander`, a store bitmap's default compander, is DONE too
-   (2026-09-29, `stores/PixelMapCompander.cpp`: LZ over row-delta
-   filtered pages).  Still NOT YET of the object layer: `TLrgObjStore`,
-   objects made from compressed streams (`LODefCreateFromComp`), the
-   backup progress callback (`TLOCallback`).
-5. ~~**Packages on a store**~~ - DONE (2026-09-29, `packages/StorePackages.h`,
-   `StorePackageNatives.cpp`, `stores/PackageObjects.cpp`;
-   `docs/packages/README.md`'s "Packages on a store"; `test_PackageManager`'s
-   `TestOnStore`, ctest `host.NewtonPackageStore`): `newton --store f
-   --package x.pkg` stores the package (store:SuckPackageFromBinary) and
-   the next boot activates it again.  Left of it: relocating a page to a
-   base (`RelocateFramesInPage`, not needed on the host), XIP packages,
-   the progress callback, `LODefCreateFromComp`, a card's 'stor event
-   (`StorageCardInserted`/`MountStore`), `RestoreSegmentedPackage` over
-   `CPackageArchivalPipe` (11 functions, about 1.5 KB at 0x0010d190-
-   0x0010d9xx: a package restored from its segments), `SuckPackageFromEndpoint`
-   (comms), `StopFrameSound`.  `SuckPackageOffDeskTop` is DONE (2026-09-29,
-   over `utility/StdioPipe.h`'s `CStdioPipe` - the host's own files).  (The failure under
-   `NEWTON_HEAPCHECK` was a host runtime bug, fixed 2026-09-29: a task
-   switched out on its way back from a system call lost the call's answer
-   - `docs/work-log.md`; ctest `host.NewtonPackageStoreSlow`.)
-6. ~~**1.x packages**~~ - DONE (2026-09-29, `StorePackageNatives.cpp`,
-   `docs/packages/README.md`'s "The 1.x packages"; ctest `host.NewtonOneX`):
-   `Activate1.XPackage`, `DeActivate1.XPackage`, `Remove1.XPackage`,
-   `1.XPackageToVBO`, the store's package directory and the 1.x
-   `NewPackage`.  `GetCardReinsertionInfo` (a card's patch package) is
-   NOT YET.
-7. **The `'book` part handler** over the book reader - the handler and
-   `TLibrarian::BookAvailable`/`BookRemoved` are 11 functions, 5.6 KB, but
-   they stand on the book reader itself (`TLibrarian`, 49 methods; the
-   19 `books` natives), a subsystem of its own.  The ROM's help book is
-   refused for want of it.
-8. **Protocol parts' class info** - a `'code`-kind part is raw ARM code
-   registering protocol implementations (the ROM's ScreenBuffer and
-   ScreenDrivers packages).  The host cannot run it; recorded, not ported
-   (the host has its own screen driver).
+Done (2026-09-27 to 2026-09-29; `docs/packages/README.md`'s "Status"
+table says what is left and what each piece waits on; the plan as it
+was worked through is in `docs/work-log.md`): 31 of the 32 package
+natives answered.  Left: the `'book` handler (the book reader),
+`SuckPackageFromEndPoint` (comms), a protocol part's class info (raw
+ARM), a card's `'stor` event and `GetCardReinsertionInfo` (PCMCIA),
+`StopFrameSound` (the sound server), XIP packages (the ROM domain
+manager's page faulting, about 11 KB).
 
 ## Candidates for the next piece of work
 
 The owner's order - the package manager, host package loading, the
-recognition system, the testing system - has been worked through.  What
-could come next (not ranked; the owner chooses):
+recognition system, the testing system, finishing packages - has been
+worked through.  What could come next (not ranked; the owner chooses):
 
 - **The sound server**: `TSoundServer`/`TSoundChannel`, the codec and DMA
   channels, and a host audio driver behind `hal/` - the Sound Recorder
   (the one built-in application that does not open: `FSoundOpen`), the pen
-  clicks, alarms and button sounds.  The codecs are done
-  (`docs/sound/README.md`).
+  clicks, alarms and button sounds, and packages' `StopFrameSound`.  The
+  codecs are done (`docs/sound/README.md`).
+- **The book reader** (`TLibrarian`, 49 methods; 19 unanswered `books`
+  natives) - the Newton's books and the help book, and with it the
+  `'book` part handler (the ROM's help book is refused for want of it).
 - **The comms stack**: 120 unanswered natives - endpoints, CCL, AppleTalk,
   IR, NTK and the desktop connection.  The test server's link, the IR
-  sniffing and fax reception (the only real source of the fax-page bitmaps
-  `RotTiledBitmap` turns) wait on it.
+  sniffing, `SuckPackageFromEndPoint` and fax reception (the only real
+  source of the fax-page bitmaps `RotTiledBitmap` turns) wait on it.
+- **The recognition gaps** listed under "Recognition" below (seven
+  methods, `ValidateWord`'s questions, `FindBaseline`'s first path, the
+  arbiter's graphics words).
 - **Now reachable over the large binaries**: the text engine's
   `TXNewtStreamFactory` (a compressed large binary for a stream above 4K)
   and `RotTiledBitmap` (only a fax page reaches it, so it still waits on
@@ -178,10 +121,11 @@ could come next (not ranked; the owner chooses):
 **Complete for what the built-in fields reach** (2026-09-28;
 `docs/recognition/README.md`'s "Status: complete").  The NOT YET sweep of
 2026-09-29 (`06c17ba`: 107 comments to 59, all genuine) found natives
-misfiled under frames: recognition is **118 of 125**, and it turned up
-gaps in code that is otherwise done.  **Left to do, reachable now:**
+misfiled under frames: recognition is **119 of 125** (`PenPos` answered
+since, with the packages on a store), and it turned up gaps in code that
+is otherwise done.  **Left to do, reachable now:**
 
-- **Seven methods**: `PenPos` 0x001a0be0, `GetAlternatives` (FGetAlternates
+- **Six methods**: `GetAlternatives` (FGetAlternates
   0x00078a00) and `Extract` (FExtractRange 0x00079bd8) of the correction
   info, `HandleUnit` 0x000af800, `HandleRawInk` 0x00171140,
   `LookupCompletions` 0x0013f6e0, `VoteOnWordUnit` 0x001ee6f0
@@ -306,21 +250,20 @@ Out of the U.S. ROM's reach, hardware, or waiting on another area:
 
 `python tools/newton-rom/analysis/natives.py --unbound` lists them by
 area (`--csv` for a table, `--sizes build/MP2x00US` for the cheapest work
-inside an area).  At 2026-09-28:
+inside an area).  At 2026-09-29:
 
 | area | how many | what is under them |
 |---|---|---|
 | comms | 120 | endpoints, CCL, AppleTalk (the `...Zone...` natives are AppleTalk's), IR, NTK, the desktop connection |
-| frames | 97 | natives.py's catch-all: a handful each across many areas |
-| packages | 2 | RestoreSegmentedPackage (CPackageArchivalPipe), SuckPackageFromEndPoint (comms) |
+| frames | 95 | natives.py's catch-all: a handful each across many areas |
 | books | 19 | the book reader and newspapers (`TLibrarian`) |
 | views | 12 | |
 | sound | 8 | the sound server |
-| system | 7 | |
 | testing, intl | 6 each | testing: the serial debugging, Uriah, the IR sniffing |
-| qd | 5 | |
-| stores | 4 | large binaries on a store, store passwords |
-| recognition | 7 | methods of the unit and correction-info protos (above) |
+| recognition, system | 6 each | recognition: methods of the unit and correction-info protos (above) |
+| qd | 4 | |
+| stores | 2 | store passwords |
+| packages | 1 | SuckPackageFromEndPoint (comms) |
 | assist | 0 | all answered |
 
 The areas whose machinery exists are worth sweeping with `--ready`.
