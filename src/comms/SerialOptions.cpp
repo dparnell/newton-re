@@ -246,3 +246,69 @@ TCMOSerialBytesAvailable::TCMOSerialBytesAvailable()
 	SetLength(OPTION_DATA_LENGTH(TCMOSerialBytesAvailable));
 	fBytesAvailable = 0;
 }
+
+
+/*------------------------------------------------------------------------------
+	The slow IR options (Sharp IR, comms/SharpIRTool.h)
+------------------------------------------------------------------------------*/
+
+// ROM 0x001de0a8 __ct__22TCMOSlowIRProtocolTypeFv
+// 'irpt: negotiating, 9600 bps.
+TCMOSlowIRProtocolType::TCMOSlowIRProtocolType()
+	: TOption(kOptionType)
+{
+	SetLabel(kCMOSlowIRProtocolType);
+	SetLength(OPTION_DATA_LENGTH(TCMOSlowIRProtocolType));
+	protocol = irUsingNegotiateIR;
+	options = irUsing9600;
+}
+
+
+// ROM 0x001de104 __ct__15TCMOSlowIRStatsFv
+TCMOSlowIRStats::TCMOSlowIRStats()
+	: TOption(kOptionType)
+{
+	SetLabel(kCMOSlowIRStats);
+	SetLength(OPTION_DATA_LENGTH(TCMOSlowIRStats));
+	dataPacketsIn = 0;
+	dataPacketsOut = 0;
+	dataRetries = 0;
+	checkSumErrs = 0;
+	falseStarts = 0;
+	serialErrs = 0;
+	protocolErrs = 0;
+}
+
+
+// ROM 0x001de170 __ct__15TCMOSlowIRSniffFv
+TCMOSlowIRSniff::TCMOSlowIRSniff()
+	: TOption(kOptionType)
+{
+	SetLabel(kCMOSlowIRSniff);
+	SetLength(OPTION_DATA_LENGTH(TCMOSlowIRSniff));
+	sniffEnable = true;
+}
+
+
+// ROM 0x001de1c4 __ct__17TCMOSlowIRBitBangFv
+// A bit a millisecond, once.  (The DDK says bit banging defaults on; the
+// ROM's default is off.)
+TCMOSlowIRBitBang::TCMOSlowIRBitBang()
+	: TOption(kOptionType)
+{
+	SetLabel(kCMOSlowIRBitBang);
+	SetLength(OPTION_DATA_LENGTH(TCMOSlowIRBitBang));
+	bitTime = 1000;
+	count = 1;
+	enableBitBangIR = false;
+}
+
+
+// ROM 0x001de294 __ct__17TCMOSlowIRConnectFv
+TCMOSlowIRConnect::TCMOSlowIRConnect()
+	: TOption(kOptionType)
+{
+	SetLabel(kCMOSlowIRConnect);
+	SetLength(OPTION_DATA_LENGTH(TCMOSlowIRConnect));
+	connectOptions = 0;
+}

@@ -41,6 +41,12 @@ add_executable(test_V42bis test_V42bis.cpp)
 target_link_libraries(test_V42bis PRIVATE comms_serial os600_kernel os600_user)
 add_test(NAME comms.V42bisRoundTrip COMMAND test_V42bis)
 
+# Sharp IR between two host IR chips over a socket (beaming layer 2)
+add_executable(test_SharpIR test_SharpIR.cpp)
+target_link_libraries(test_SharpIR PRIVATE comms_serial hal_host_serial os600_kernel os600_user)
+add_test(NAME comms.SharpIR COMMAND test_SharpIR)
+set_tests_properties(comms.SharpIR PROPERTIES TIMEOUT 120)
+
 # MNP against the desktop end in tools/dock/mnp.py (which runs the program)
 add_executable(test_MNP test_MNP.cpp)
 target_link_libraries(test_MNP PRIVATE comms_serial hal_host_serial os600_kernel os600_user)

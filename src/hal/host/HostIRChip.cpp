@@ -127,6 +127,26 @@ PROTOCOL_CLASSINFO(THostIRChip, "TSerialChip", "v2.0", 0x30000, 0, nil)
 
 static THostIRChip*	gIRChips[kMaxIRChips];
 static THostIRChip*	gInstalledIRChip = nil;
+static int			gTraceIR = -1;			// NEWTON_TRACE_IR: what each chip sends, hears and loses
+
+
+static bool
+TraceIR(void)
+{
+	if (gTraceIR < 0)
+		gTraceIR = getenv("NEWTON_TRACE_IR") != nil;
+	return gTraceIR != 0;
+}
+
+
+static int
+ChipIndex(THostIRChip* chip)
+{
+	for (int i = 0; i < kMaxIRChips; i++)
+		if (gIRChips[i] == chip)
+			return i;
+	return -1;
+}
 
 
 THostIRChip*
@@ -276,10 +296,14 @@ NewtonErr			THostIRChip::Init(TCardSocket*, TCardHandler*, UByte*)	{ return -1; 
 void				THostIRChip::CardRemoved()							{ }
 
 
+// The Voyager's IR channel's (0x1001e3) bar the TV remote: output wants
+// configuring (half duplex - ConfigureForOutput is only called when this
+// says so), all-sent, the error byte with each.
 SerialFeatures
 THostIRChip::GetFeatures()
 {
-	return kSerFeatureDefaults | kSerFeatureVersion2 | kSerFeatureAllSent;
+	return kSerFeatureDefaults | kSerFeatureVersion2 | kSerFeatureAllSent | kSerFeatureTxConfigNeeded
+		 | kSerFeatureGetErrByte | kSerFeatureWaitForAllSent;
 }
 
 
@@ -495,7 +519,14 @@ THostIRChip::Poll(void)
 			}
 			fHalfRecord = false;
 			if (!Hears(fHalfModulation))
+			{
+				if (TraceIR())
+					printf("[ir %d] lost %02x (%s%s%s%s)\n", ChipIndex(this), records[i], fTool == nil ? "unclaimed " : "",
+						fPowered ? "" : "off ", fReceiving ? "" : "transmitting ", fHalfModulation == kWireIrDA ? "IrDA" : "ASK");
 				continue;
+			}
+			if (TraceIR())
+				printf("[ir %d] heard %02x\n", ChipIndex(this), records[i]);
 			if (fLinkConfig & kSerIRLinkCfg_AutoRx)
 				fLinkStatus = (fHalfModulation == kWireIrDA) ? kSerIRLinkSts_IRDADetect : 0;
 			if (fRxCount < kRxSize)
@@ -509,6 +540,13 @@ THostIRChip::Poll(void)
 	{
 		size_t sent = 0;
 		HostSocketSend(fPeer, fWire, fWireCount, &sent);
+		if (TraceIR())
+		{
+			printf("[ir %d] sent", ChipIndex(this));
+			for (size_t i = 1; i < sent; i += 2)
+				printf(" %02x", fWire[i]);
+			printf("\n");
+		}
 		memmove(fWire, fWire + sent, fWireCount - sent);
 		fWireCount -= sent;
 	}
@@ -544,11 +582,9 @@ void
 THostIRChip::Deliver(void)
 {
 	Poll();
-	if (fTool == nil || !fIntEnabled)
-	{
+	if (fTool == nil)
 		fRxHead = fRxCount = fRxReady = 0;		// (heard by nobody)
-	}
-	else
+	else if (fIntEnabled)
 	{
 		Pace();
 		for (long n = 0; fTool != nil && fRxReady > 0 && fHandlers.RxCAvailIntHandler != nil && n < kRxSize; n++)

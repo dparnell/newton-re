@@ -46,6 +46,12 @@ static const HostOptionLayout kLayouts[] =
 	{ kCMOSerialBytesAvailable,		"u" },
 	{ kCMOFramingParms,				"bbbbb" },
 	{ kCMOFramedAsyncStats,			"u" },
+	// slow IR (SerialOptions.h; comms/SharpIRTool.h)
+	{ kCMOSlowIRProtocolType,		"uu" },
+	{ kCMOSlowIRStats,				"uuuuuuu" },
+	{ kCMOSlowIRSniff,				"b" },
+	{ kCMOSlowIRBitBang,			"uwb" },
+	{ kCMOSlowIRConnect,			"u" },
 	// MNP (MNPOptions.h; 'mnps' is also the MNP service's name, which is
 	// never rewritten)
 	{ kCMOMNPAllocate,				"b" },
