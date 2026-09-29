@@ -11,6 +11,7 @@
 		newtonscript [--rom <image>] [--heap <bytes>] [--display <w>x<h>[x<depth>]] [-e <source>] [file.ns ...]
 		newtonscript [--rom <image>] --roundtrip <records> <results>
 		newtonscript [--rom <image>] --compile-records <records> <output>
+		newtonscript --ima-expand <ima blocks> <pcm> | --ima-compress <pcm> <ima blocks>
 
 	Each file is loaded with ParseFile (each form compiled and run, as the
 	NTK loads a text file); -e compiles and runs a string; with no files
@@ -39,6 +40,11 @@
 	own, a result line per function (host/NSRoundTrip.cpp).
 	--compile-records compiles such records and writes each function in the
 	notation of the ROM object source, for romsrc.py's builder.
+
+	--ima-expand / --ima-compress run the ROM's IMA/DVI ADPCM codec
+	(sound/IMACodec.h) over a file: the Newton's IMA blocks to raw
+	big-endian 16-bit PCM and back (host/IMATool.cpp), which is how
+	romsrc.py turns a compressed sound into a WAV file and back.
 */
 
 #include "Frames.h"
@@ -78,6 +84,8 @@ FROMConstant(RefArg /*rcvr*/, RefArg name)
 
 int		RunRoundTrip(const char* inputPath, const char* outputPath);		// NSRoundTrip.cpp
 int		RunCompileRecords(const char* inputPath, const char* outputPath);	// NSRoundTrip.cpp
+int		RunIMAExpand(const char* inPath, const char* outPath);				// IMATool.cpp
+int		RunIMACompress(const char* inPath, const char* outPath);			// IMATool.cpp
 
 
 static int
@@ -103,6 +111,11 @@ main(int argc, char** argv)
 	const char* compileIn = nil;
 	const char* compileOut = nil;
 	int first = 1;
+	// (the codec needs nothing of the object system)
+	if (argc == 4 && strcmp(argv[1], "--ima-expand") == 0)
+		return RunIMAExpand(argv[2], argv[3]);
+	if (argc == 4 && strcmp(argv[1], "--ima-compress") == 0)
+		return RunIMACompress(argv[2], argv[3]);
 	while (first < argc && argv[first][0] == '-' && argv[first][1] == '-')
 	{
 		if ((strcmp(argv[first], "--rom") == 0 || strcmp(argv[first], "--objects") == 0) && first + 1 < argc)

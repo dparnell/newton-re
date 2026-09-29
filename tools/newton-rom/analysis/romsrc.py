@@ -85,6 +85,11 @@ constructors of its own):
                     or 'cbits bitmap: its rows a grayscale PNG (black the
                     Newton's set pixels), its 16-byte header (a FramBitmap:
                     qd/Pictures.h) in hex, its bits per pixel
+    imasound('samples, "resources/samples/addr.wav")   the samples of an
+                    IMA/DVI ADPCM sound (codecName "TIMACodec"), as 16-bit
+                    PCM; compressed on build by the ROM's own codec
+                    (newtonscript --ima-compress), which gives back the ROM's
+                    bytes for every one the ROM has
     sound('samples, "resources/samples/addr.wav")   the samples of a
                     simple sound (8-bit, uncompressed: offset binary, as a
                     WAV file's 8-bit samples are); the sampling rate stays
@@ -330,6 +335,7 @@ class Extractor:
 		self.layout_extra = {}			# object -> extra manifest fields
 		self.functions = set(nd.rom_functions(rom, None if self.main else self.objs))
 		self.simple_sounds = self.find_simple_sounds()
+		self.ima_sounds = self.find_ima_sounds()
 		self.undecompiled = []			# (function, why): the ones kept as bytecode
 		self.odd_gaps = {}				# object -> the bytes after it, when they are not the pad byte
 		self.newtonscript = newtonscript
@@ -518,6 +524,54 @@ class Extractor:
 		os.remove(records)
 		os.remove(compiled)
 		return sources
+
+	def find_ima_sounds(self):
+		"""The samples of the IMA/DVI ADPCM sounds (codecName "TIMACodec"),
+		with their frame's sampling rate."""
+		rom = self.rom
+		found = {}
+		for o in self.objs:
+			if rom.flags(o) & 3 != 3:
+				continue
+			slots = dict(rom.frame_slots(o))
+			codec = slots.get("codecName")
+			if codec is None or not rom.is_ptr(codec) or rom.flags(codec) & 1 or "samples" not in slots:
+				continue
+			if rom.data(codec)[:-2].decode("utf-16-be", "replace") != "TIMACodec":
+				continue
+			rate = slots.get("samplingRate")
+			hz = 22026
+			if rom.is_ptr(rate) and rom.symname(rom.cls(rate)) == "fixed":
+				hz = struct.unpack(">i", rom.data(rate))[0] / 65536
+			elif rate is not None and rate & 3 == 0:
+				hz = rate >> 2
+			found[slots["samples"]] = max(1, int(round(hz)))
+		return found
+
+	def ima_pcm(self, data):
+		"""A compressed sound's samples as 16-bit PCM (big-endian) by the ROM's
+		codec, when compressing them again gives back these very bytes."""
+		if self.newtonscript is None:
+			return None
+		import tempfile
+		work = tempfile.mkdtemp(prefix="romsrc-ima")
+		try:
+			paths = [os.path.join(work, n) for n in ("in.ima", "out.pcm", "again.ima")]
+			with open(paths[0], "wb") as f:
+				f.write(data)
+			exe = nd.newtonscript_path(self.newtonscript)
+			if subprocess.run([exe, "--ima-expand", paths[0], paths[1]]).returncode != 0:
+				return None
+			if subprocess.run([exe, "--ima-compress", paths[1], paths[2]]).returncode != 0:
+				return None
+			with open(paths[2], "rb") as f:
+				if f.read() != data:
+					return None
+			with open(paths[1], "rb") as f:
+				return f.read()
+		finally:
+			import shutil
+			shutil.rmtree(work, ignore_errors=True)
 
 	def find_simple_sounds(self):
 		"""The samples of the simple sounds (8-bit, uncompressed), with their
@@ -748,6 +802,17 @@ class Extractor:
 				w.setframerate(self.simple_sounds[o])
 				w.writeframes(data)
 			return "sound(%s, \"%s\")" % (self.value(cls, path + "^"), rel)
+		if o in self.ima_sounds and not self.in_function:
+			pcm = self.ima_pcm(data)
+			if pcm is not None:
+				rel = "resources/%s/%x.wav" % (folder, o)
+				os.makedirs(os.path.join(self.out, os.path.dirname(rel)), exist_ok=True)
+				with wave.open(os.path.join(self.out, rel), "wb") as w:
+					w.setnchannels(1)
+					w.setsampwidth(2)
+					w.setframerate(self.ima_sounds[o])
+					w.writeframes(struct.pack("<%dh" % (len(pcm) // 2), *struct.unpack(">%dh" % (len(pcm) // 2), pcm)))
+				return "imasound(%s, \"%s\")" % (self.value(cls, path + "^"), rel)
 		if cname == "picture" and not self.in_function:
 			rel = "resources/%s/%x.pict" % (folder, o)
 			os.makedirs(os.path.join(self.out, os.path.dirname(rel)), exist_ok=True)
@@ -921,6 +986,41 @@ def bitmap_bytes(header, depth, rows):
 	return bytes(out)
 
 
+NEWTONSCRIPT = None					# (set by the builder: the host tool the IMA sounds are compressed with)
+
+
+def ima_compress(path):
+	"""A WAV file as an IMA/DVI ADPCM sound's samples: its samples as 16-bit
+	mono (an 8-bit or stereo edit brought to that), padded with silence to
+	whole blocks of 0x40, compressed by the ROM's own codec (newtonscript
+	--ima-compress, sound/IMACodec.h's CompressIMA)."""
+	with wave.open(path, "rb") as w:
+		channels, width, count = w.getnchannels(), w.getsampwidth(), w.getnframes()
+		frames = w.readframes(count)
+	samples = []
+	step = channels * width
+	for i in range(0, len(frames) - step + 1, step):
+		total = 0
+		for c in range(channels):
+			sample = frames[i + c * width:i + (c + 1) * width]
+			total += (sample[0] - 128) << 8 if width == 1 else int.from_bytes(sample[-2:], "little", signed=True)
+		samples.append(total // channels)
+	samples += [0] * (-len(samples) % 0x40)
+	import tempfile
+	import shutil
+	work = tempfile.mkdtemp(prefix="romsrc-ima")
+	try:
+		pcm, ima = os.path.join(work, "in.pcm"), os.path.join(work, "out.ima")
+		with open(pcm, "wb") as f:
+			f.write(struct.pack(">%dh" % len(samples), *samples))
+		if NEWTONSCRIPT is None or subprocess.run([nd.newtonscript_path(NEWTONSCRIPT), "--ima-compress", pcm, ima]).returncode != 0:
+			raise ValueError("%s: an IMA sound needs the builder's --newtonscript to compress it" % path)
+		with open(ima, "rb") as f:
+			return f.read()
+	finally:
+		shutil.rmtree(work, ignore_errors=True)
+
+
 def wav_samples(path):
 	"""A WAV file's samples as a simple sound's: 8-bit offset binary, one
 	channel.  The extractor's own files are read as they are; another
@@ -1068,7 +1168,7 @@ class Reader:
 		if kind == "name" and text in ("nil", "true"):
 			self.take()
 			return Imm(2 if text == "nil" else 0x1a)
-		if kind == "name" and text in ("real", "string", "binary", "array", "map", "bytes", "function", "bitmap", "sound", "pict", "same") \
+		if kind == "name" and text in ("real", "string", "binary", "array", "map", "bytes", "function", "bitmap", "sound", "pict", "same", "imasound") \
 				and self.toks[self.i + 1][1] == "(":
 			self.take()
 			self.take("(")
@@ -1076,7 +1176,7 @@ class Reader:
 			while self.peek()[1] != ")":
 				if text in ("real",) and self.peek()[0] == "number":
 					args.append(float(self.take()[1]))
-				elif text in ("string", "binary", "bytes", "function", "bitmap", "sound", "pict", "same") and self.peek()[0] == "string":
+				elif text in ("string", "binary", "bytes", "function", "bitmap", "sound", "pict", "same", "imasound") and self.peek()[0] == "string":
 					args.append(self.take()[1])
 				elif text == "bitmap" and self.peek()[0] == "number":
 					args.append(self.take()[1])
@@ -1100,6 +1200,8 @@ class Reader:
 					return Obj("binary", args[0], data=f.read()[PICT_HEADER:])
 			if text == "sound":
 				return Obj("binary", args[0], data=wav_samples(os.path.join(self.root, args[1][1:-1])))
+			if text == "imasound":
+				return Obj("binary", args[0], data=ima_compress(os.path.join(self.root, args[1][1:-1])))
 			if text == "bitmap":
 				cls, rel, header, depth = args[0], args[1][1:-1], bytes.fromhex(args[2][1:-1]), int(args[3])
 				width, height, levels = png.read_gray(os.path.join(self.root, rel), depth)
@@ -1150,6 +1252,9 @@ class Builder:
 		know goes at the end), rather than at the layout's addresses."""
 		self.src = src
 		self.newtonscript = newtonscript
+		global NEWTONSCRIPT
+		if newtonscript is not None:
+			NEWTONSCRIPT = newtonscript
 		self.relayout = relayout
 		self.new_base = base				# (relayout: where the area now starts - a package part that has moved)
 		self.relocations = []			# (the ROM's ref, the ref now) for every object that moved

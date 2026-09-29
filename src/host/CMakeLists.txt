@@ -9,7 +9,7 @@ add_library(host_views STATIC HostViews.cpp HostNatives.cpp HostStores.cpp Facto
 target_link_libraries(host_views PUBLIC frames comms_script comms_dock thirdparty_nie views recognition pcmcia sound system stores packages intl intl_meetings assist hal_host_display hal_host_tablet)
 target_include_directories(host_views PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_executable(newtonscript newtonscript.cpp NSRoundTrip.cpp)
+add_executable(newtonscript newtonscript.cpp NSRoundTrip.cpp IMATool.cpp)
 target_link_libraries(newtonscript PRIVATE host_views)
 target_compile_definitions(newtonscript PRIVATE "NEWTON_DEFAULT_ROM_IMAGE=\"${NEWTON_ROM_IMAGE}\"")
 

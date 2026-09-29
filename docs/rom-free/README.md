@@ -190,15 +190,22 @@ reported as the decompiler's was.
      are in the tree; the third is a literal inside a function.
    - An edited WAV of 16 bits or two channels is brought down to 8-bit
      mono by the builder.
-   - The other 31 stay `.bin`, and this is deliberate:
-     - 12 are IMA ADPCM in the Newton's own blocks (0x40 samples with a
-       big-endian header, `sound/IMACodec.h`). A WAV holds IMA ADPCM in
-       blocks of its own, so decoding and encoding again would not give
-       the same bytes. They can become an editable WAV once the builder
-       compresses a sound with `sound/IMACodec.h`, accepting new bytes
-       for an edited sound.
-     - 19 are `TDTMFCodec` parameters: the ring tones as tone sequences,
-       50 bytes each. That is a table, not sampled sound.
+   - **The 12 IMA/DVI ADPCM sounds are WAV files too.** They are the
+     frames with `codecName "TIMACodec"`, in the Newton's own blocks: 0x40
+     samples with a big-endian header, `sound/IMACodec.h`.
+     - The extractor expands each with the ROM's own codec (`newtonscript
+       --ima-expand`, `ExpandIMA`) into a 16-bit PCM WAV. It keeps that
+       only if compressing it again (`--ima-compress`, `CompressIMA`)
+       gives back the very bytes, and all 12 do.
+     - They are written `imasound('samples, "...wav")`. The builder
+       compresses the WAV with the same codec as it builds, bringing an
+       8-bit or stereo edit to 16-bit mono and padding it with silence to
+       whole blocks.
+     - An edited sound gets new bytes, compressed as the Newton would
+       have compressed it.
+     - `host/IMATool.cpp` is the tool.
+   - 19 stay `.bin`: `TDTMFCodec` parameters, the ring tones as tone
+     sequences, 50 bytes each. That is a table, not sampled sound.
 5. **Pictures and fonts. Done.**
    - The 7 QuickDraw pictures (version 1, opcode 0x1101) are `.pict`
      files: 512 bytes of nought, then the picture, which is the form a
@@ -258,7 +265,7 @@ The tree holds:
 - 5480 functions in `functions/`;
 - the 8336 maps in `maps.ns`;
 - `layout.tsv`, one line per object, and the aliases;
-- the resources: 525 PNGs, 2 WAVs, 7 PICTs, 13 fonts, and 99 `.bin`
+- the resources: 525 PNGs, 14 WAVs, 7 PICTs, 13 fonts, and 87 `.bin`
   files (the compressed sounds, the ring tones' parameters, the tables and
   a few small shapes).
 
