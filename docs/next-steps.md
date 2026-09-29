@@ -11,12 +11,14 @@ the way are all in `docs/work-log.md`.
 
 ## State at 2026-09-29
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 125/125
+- `cmake --build build/host` clean, `ctest --test-dir build/host` 130/130
   (`intl.Dates` fails about one run in ten: it reads the real clock).
-- `analysis/coverage.py build/MP2x00US --check`: 12453 citations, 0 bad;
-  7251 of 16671 functions (43.49%).
-- `analysis/natives.py --unbound`: 1041 of the ROM's 1326 natives
-  answered (78.5%; built-ins 805 of 869, prototype methods 236 of 457).
+  Several agents work in parallel, each building in its own directory
+  under `tmp/`; the counts here are refreshed as each reports.
+- `analysis/coverage.py build/MP2x00US --check`: 12648 citations, 0 bad;
+  7415 of 16671 functions (44.48%).
+- `analysis/natives.py --unbound`: 1060 of the ROM's 1326 natives
+  answered (79.9%); recognition 125 of 125.
 
 ## What works
 
