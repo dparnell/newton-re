@@ -14,11 +14,11 @@
 				HostOptionFromDevice rewrites an option of a class listed
 				here from the device's layout into the host's, word by
 				word; HostOptionToDevice does the reverse for an option
-				given back to a script.  An option of any other class is
-				left as it is (its bytes are the same either way, or its
-				class is not yet listed - add it to the table in
-				HostOptionLayouts.cpp).  Not in the ROM: the MessagePad's
-				bytes are its classes.
+				given back to a script.  Every option class the host
+				constructs is listed (test_HostOptionLayouts checks each
+				listing against its class's size); an option no table lists
+				is passed on as it is, and said so on stderr.  Not in the
+				ROM: the MessagePad's bytes are its classes.
 */
 
 #ifndef __COMMS_HOSTOPTIONLAYOUTS_H
@@ -28,9 +28,20 @@
 #include "OptionArray.h"
 #endif
 
-// The option in the host's layout: the same option (unchanged, or not
-// listed), or a new Ptr in its place (the old one disposed).  nil when
-// there was no memory (the old one disposed as well).
+// an option class's fields, device-layout order (HostOptionLayouts.cpp)
+struct HostOptionLayout
+{
+	ULong		fLabel;
+	const char*	fFields;
+};
+
+const HostOptionLayout*	HostOptionLayoutFor(ULong label);		// nil: not listed
+size_t		HostOptionLayoutSize(const HostOptionLayout* layout, Boolean host);	// the data's size either way
+
+// The option in the host's layout: the same option (unchanged: a service,
+// or not listed - which is said on stderr, once a label), or a new Ptr in
+// its place (the old one disposed).  nil when there was no memory (the old
+// one disposed as well).
 TOption*	HostOptionFromDevice(TOption* option);
 
 // The option's data in the device's layout, written to data (room for
