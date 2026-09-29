@@ -9,6 +9,27 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-30: the docking session, and the ROM's DES
+
+- `utility/DES.h` (628b899): the ROM's DES - the key schedule, the
+  rounds, the nonce calls, `DESCharToKey` - tables from romtable.py.  It
+  is not standard DES (each key half is shifted one bit left before PC1,
+  so the published vectors do not match), so `utility.DES` checks it
+  against the ROM's own `DESEncodeNonce`/`DESDecodeNonce`/`DESCharToKey`
+  run on the ARM interpreter over the ROM image (26 blocks, 7
+  passwords).  `DESCharToKey`'s OR quirk kept as a ROM BUG
+  (`docs/curiosities.md`).  `tools/dock/newtondes.py` is the desktop's
+  copy.
+- The docking session (3afbdea): Connect's 'dock' branch - 'dock',
+  'name', 'dinf'/'ninf', 'wicn', 'stim', the password exchange - and
+  `DoConnection`'s command loop through `ProcessCommand`: packages,
+  session kinds ('ssyn', 'rrst', 'rins', 'dsnc'), 'stme', 'stim',
+  'wicn', 'opca'/'opdn', 'cvbo', 'helo', 'dres', 'unkn', protocol
+  extensions; `ReadRef`/`WriteRef` over NSOF; `ConnRetryPassword`,
+  `DESCreatePasswordKey`.  `dock.py --session` docks with the empty
+  password and loads a package in the session (ctest
+  `host.NewtonDockSession`).
+
 ## 2026-09-30: the desktop connection loads a package end to end
 
 - `host.NewtonDock` (01c53cf): `dock.ns` sets the Connection app's

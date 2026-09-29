@@ -179,9 +179,12 @@ worked through.  What could come next (not ranked; the owner chooses):
   natives, `newton --serial-port` (default 3679) starting the serial port
   and services at boot (`host.NewtonDocker`); a package loads end to end
   through the Connection app's autodock (`host.NewtonDock` over
-  `tools/dock/dock.py`).  Next: the 'dock' session (`ReadInitiateDocking`,
-  `WriteNewtonName`, dinf/wicn/stim, the password exchange, then
-  `ProcessCommand`'s commands) so NCX can dock.  `test_NIEProtoFSM` also runs
+  `tools/dock/dock.py`); a docking session's handshake and password
+  exchange are in and load packages (`host.NewtonDockSession`).  Next:
+  `ProcessCommand`'s store, soup, entry and cursor commands ('gsto',
+  SetCurrentStore, soup info and ids, entries, the RemoteQuery cursors)
+  that a sync or backup needs - answered 'unkn' until then - then the
+  package list ('gpin'), the keyboard passthrough and the slips.  `test_NIEProtoFSM` also runs
   each check on the package's own ARM code through armcpu, and the two
   agree (2ae6d73).  armcpu left: frames in a code binary; protocol parts
   through the CPU - no fixture needs them yet (every protocol part among
