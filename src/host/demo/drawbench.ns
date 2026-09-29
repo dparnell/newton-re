@@ -3,7 +3,7 @@
 // Dates and Extras drawer are opened and closed in turn, the whole screen
 // redrawn each time (RefreshViews), the Notepad scrolled a page down and
 // back, the screen redrawn whole with the Extras drawer over the Notepad;
-// each is done `rounds` times and both the processor time it took
+// each is done `rounds` (20) times and both the processor time it took
 // (HostCPUTime, milliseconds - the work) and the wall time (ticks,
 // sixtieths of a second, which include the open and close animations'
 // own pacing) printed, with the totals.  (docs/qd/README.md's "Drawing
@@ -18,7 +18,7 @@
 HostInclude("common.ns");
 
 name := [2, 0, 45, 34, 14, 37];
-rounds := 5;
+rounds := 20;
 total := 0;
 totalCPU := 0;
 
