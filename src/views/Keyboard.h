@@ -130,6 +130,7 @@ long		FindKeyCommandInArray(RefArg commands, UniChar ch, ULong modifiers, long* 
 Ref			FindKeyCommand(TView* view, UniChar ch, ULong modifiers);	// ROM 0x0030f2b0 FindKeyCommand__FP5TViewUsUl (modifiers: the parameter's bits)
 Ref			SendKeyMessage(TView* view, RefArg message);			// ROM 0x0030f54c SendKeyMessage__FP5TViewRC6RefVar
 Boolean		UserVisibleChar(UniChar c);								// ROM 0x0030f6c8 UserVisibleChar__FUs - one a menu could show
+ULong		KeyCommandModifiers(RefArg command);					// ROM 0x0030f0f4 KeyCommandModifiers__FRC6RefVar - the command's modifier bits (& 0x3e000000)
 UniChar		GetDisplayCmdChar(RefArg command);						// ROM 0x0030f700 GetDisplayCmdChar__FRC6RefVar - showChar, else char; 0 for one nobody could read
 Boolean		AlreadyInCommandArray(RefArg commands, RefArg command);	// ROM 0x0030fa70 AlreadyInCommandArray__FRC6RefVarT1
 Ref			GatherKeyCommands(TView* view);							// ROM 0x0030fbac GatherKeyCommands__FP5TView - every command in force at the view

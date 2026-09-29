@@ -216,9 +216,13 @@ FSyncScrollX(RefArg rcvr, RefArg items, RefArg index, RefArg direction)
 }
 
 
+void	RegisterKeyHelpSlipNatives(void);		// KeyHelpSlip.cpp
+
+
 void
 RegisterViewExtraNatives(void)
 {
+	RegisterKeyHelpSlipNatives();
 	RegisterNativeFunction("FSyncScrollX", (void*) FSyncScrollX, 3);
 	RegisterNativeFunction("FDisplaySplashGraphic", (void*) FDisplaySplashGraphic, 1);
 	RegisterNativeFunction("FGrayShrink", (void*) FGrayShrink, 2);

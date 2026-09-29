@@ -390,7 +390,7 @@ CountOnes(ULong n)
 
 // ROM 0x0030f0f4 KeyCommandModifiers__FRC6RefVar
 // The modifiers a key command frame asks for, in the parameter's bits.
-static ULong
+ULong
 KeyCommandModifiers(RefArg command)
 {
 	Ref modifiers = GetFrameSlotRef(command, RSSYMmodifiers);

@@ -24,6 +24,7 @@ add_library(views STATIC
     FontNatives.cpp
     ViewExtraNatives.cpp
     SplashScreen.cpp
+    KeyHelpSlip.cpp
     TextView.cpp
     PictureView.cpp
     DataView.cpp

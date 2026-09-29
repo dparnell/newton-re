@@ -196,3 +196,10 @@ endif()
 add_test(NAME host.NewtonVBO COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 5 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/vbo.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonVBO PROPERTIES TIMEOUT 120
                      PASS_REGULAR_EXPRESSION "bitsVBO: TRUE,[^}]*compander: \"TPixelMapCompander\",[^}]*onStore: TRUE,[^}]*rowbytes: 8.*namedCompander: \"TLZStoreCompander\".*vbo: done")
+
+# the key-help slip (views/KeyHelpSlip.cpp): opened over the boot's first
+# screen, its groups laid out and drawn, the display photographed into the
+# build directory (keyhelp.pgm; needs the ROM image)
+add_test(NAME host.NewtonKeyHelp COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 20 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/keyhelp.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(host.NewtonKeyHelp PROPERTIES TIMEOUT 120
+                     PASS_REGULAR_EXPRESSION "keyhelp: open.*numcols 2, lineHeight 13.*groups 4.*keyhelp: Editing.*keyhelp: snapshot")
