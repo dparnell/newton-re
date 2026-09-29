@@ -14,11 +14,10 @@ the way are all in `docs/work-log.md`.
 - A full `ctest` in a parallel agent's build: 209 of 209 (`intl.Dates`
   fails about one run in ten: it reads the real clock).  Several agents
   work in parallel, each building in its own directory under `tmp/`.
-- `analysis/coverage.py build/MP2x00US --check`: 15657 citations, 0 bad;
-  10165 of 16671 functions (60.97%).
-- `analysis/natives.py --unbound`: 1231 of the ROM's 1326 natives
-  answered (92.8%); only comms' are left (its own 89, the AppleTalk
-  `*Zone*` four and IR sniffing).  `instance:Dispatch` works only on a
+- `analysis/coverage.py build/MP2x00US --check`: 16138 citations, 0 bad;
+  10572 of 16671 functions (63.42%).
+- `analysis/natives.py --unbound`: only comms' are left (comms 102 of
+  147, the AppleTalk `*Zone*` four and IR sniffing).  `instance:Dispatch` works only on a
   monitor protocol (a host protocol's methods need numbered thunks, NOT
   YET); the card server (`TCardServer`, the PSS manager's sockets) is
   behind `UnmountCard` and `GetCardSlotStores`.
@@ -203,9 +202,11 @@ worked through.  What could come next (not ranked; the owner chooses):
   over Sharp IR (`host.NewtonBeam`) and the default path, probe then IrDA
   (`host.NewtonBeamIrDA`).  **The NTK inspector** connects over the host
   serial port (`comms/NTK.h`, `tools/ntk/inspector.py`, ctest
-  `host.NewtonNTK`).  Next in comms: the 42 older endpoint natives
-  (`CI*`); later the NTK's AppleTalk/ADSP connection and the Hammer
-  translators, AppleTalk, the online services, the TV remote, CCL.
+  `host.NewtonNTK`); protoEndpoint, the 1.x endpoint, too
+  (`comms/ScriptEndpoint.h`, `host.NewtonProtoEndpoint`).  Left in comms:
+  the CF* natives (about 2.3 KB), the CCL modem scripts, AppleTalk/NBP
+  and ADSP (with the NTK's ADSP connection), the Hammer translators,
+  eWorld (EW*), the TV remote.
   The livelock between `TPMIterator::Init`'s semaphore and `TForkWorld`'s
   mutex was the host runtime's, fixed (12e55a2; ctest
   `host.NewtonDockGetPackages`).  `test_NIEProtoFSM` also runs

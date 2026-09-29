@@ -86,6 +86,29 @@ bugs and ROM bugs found on the way.
   `layout.tsv` manifest, and `rombuild.py` proved by a byte-identical
   rebuild of the area.
 
+## 2026-09-30: protoEndpoint, the 1.x endpoint
+
+- `comms/ScriptEndpoint.h` (b6feda84): `TScriptEndpointClient`
+  (0x00067440-0x0006b5c0), protoEndpoint's C++ side, and the 41 CI
+  natives - 1.x option frames, synchronous Connect/Listen then
+  asynchronous, output through a 1024-byte window with Yield, input specs
+  by byteCount, endCharacter or end of packet; `comms/ModemOptions.h`
+  ('mdo ', `SetDialingOptionsFromPrefs`); `CNullPipe`.
+  `src/host/demo/protoendpoint.ns` (ctest `host.NewtonProtoEndpoint`)
+  echoes through `--tcp-echo`.  In NewtonScript `$
+` is a carriage
+  return (13), which an endCharacter test must match.
+- ROM bugs kept: a raw-binary option's bytes are copied from the option
+  frame, not its data; the dialing option's five switches get the Ref's
+  low byte (true and nil both true); `CIJustListen` passes the options as
+  Listen's address; the destructor tests the frame against 0, not nil;
+  startCCL sets gCCLState a second time instead of clearing it;
+  `AEHandlerProc` gives the exceptionHandler MAKEINT(data) whatever the
+  data is.
+- Host bug fixed: `TSerialEndpoint::HandlePutReply` did not give the
+  client the count of bytes sent (the ROM copies `fPutBytesCount`), so a
+  client counting its output never saw it drain.
+
 ## 2026-09-30: the NTK inspector
 
 - `comms/NTK.h` (library `comms_ntk`; aceda234, 4885defe): the task-safe
