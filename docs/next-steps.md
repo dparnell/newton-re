@@ -78,63 +78,18 @@ ARM), a card's `'stor` event and `GetCardReinsertionInfo` (PCMCIA),
 `StopFrameSound` (the sound server), XIP packages (the ROM domain
 manager's page faulting, about 11 KB).
 
-## Now: finishing pictures
+## Pictures: finished
 
-The owner asked (2026-09-29) for the pictures to be finished.  What the
-machine's own pictures use was measured first
-(`analysis/pictures.py build/MP2x00US`, which walks every 'picture in
-the ROM and the extension's packages opcode by opcode): 30 pictures, and
-between them only bitmaps (BitsRect/PackBitsRect), clip regions,
-comments, the pen size and short lines - all of which `DrawPicture`
-already plays.  Text, curves, paths and pixel patterns only ever appear
-in pictures the machine *records* itself: `MakePict` (the ROM's one
-caller is the credits' `creditPict`, `MakeText` shapes recorded into a
-picture) over `OpenPicture`/`ClosePicture` and the recording branches of
-every standard proc.  So the order is recording first, then what
-recording produces.  Sizes are `callgraph.py` lower bounds (not done):
-
-1. DONE (`3ef412d`) **Recording**: `OpenPicture` (788 B), `ClosePicture`, `KillPicture`,
-   `PutPicOpcode`/`Byte`/`Word`/`Long`/`Rect`/`Point`/`Data`/`Rgn`,
-   `PutPicVerb` (the pen, patterns and oval size written only when they
-   changed), `PutPicPat`/`PutPixPat`/`PutPat1Data`/`PutPixMap`/
-   `PutColorTable`, `CheckPic` (the clip region), `EqualPat`, and the
-   recording branches of `StdRect`, `StdRRect`, `StdOval`, `StdArc`,
-   `StdPoly`, `StdRgn`, `StdLine`, `StdBits`, `StdComment` - about 2.5 KB
-   plus the branches.  Test: a picture recorded and played back to the
-   same pixels.
-2. DONE (`be66d0e`; the text objects' other operations and scaled
-   drawing NOT YET) **Text in pictures**: playing it (`DrawPicText`, `TextCleanup`,
-   `NewText`, `CallDrawText`, `DisposeText`, `InvalCachedTextInfo` - 1 KB)
-   and recording it (`StdText`'s `DoPutText` 2.5 KB, `UpdateLayoutState`).
-3. DONE (`64a793c`) **`MakePict`** (`FMakePict`, `CommonMakePict`,
-   `SetStandAloneBoundsInViewsRecursively`) - the credits' picture made
-   and drawn.
-4. DONE (`3f1d0f8`) **Curves and paths**: drawn and recorded (`MapCurve`/`CallCurve`/
-   `StdCurve`/`DrawCurve`/`FrCurve`/`GetCurveBounds`/`OffsetCurve`/
-   `ScaleCurve`/`PutPicCurve`/`EqualCurve`; `MapPaths`/`CallPaths`/
-   `StdPaths`/`DrawPaths`/`FrPaths`/`FramePath` and the path walker/
-   `GetPathsBounds`/`OffsetPaths`/`ScalePaths`/`PutPicPaths`) - about 3 KB.
-5. DONE (`a2f0ceb`) **Pixel patterns of type 1**: `ConvertPixPat` (340 B) and its
-   converters.
-6. The neighbours a picture draws through: arcs of less than a full turn
-   (`Shapes.cpp` - DONE, `fd38560`) and italic (`Text.h` - DONE,
-   `cdfd8c8`).
-7. DONE (round 3) **`TQDScaler`** (0x00196018-0x001973c8, about 5 KB): a picture (or
-   any drawing) under a transform that scales.
-8. DONE (round 4: `6ed07c2`, `fb762cc`, `e622a1b`, `0734071`, `0e10570`)
-   **The ROM's own blitting of pictures and text**: `StretchBits` whole
-   (`SetupConversion`, the `Combine*`, 33 row stretchers, the blit modes
-   under region masks - now at the port's depth, as the ROM makes them);
-   text composed a style run at a time into a slab and stretched
-   (`DrText`/`DrTextChunk`, with outline and shadow, the broken underline,
-   gray text through `MakeGrayText` and a font spec's `color`);
-   `CalcTextBounds`; `DrawShapeScaled` for bitmaps not at 72 dpi; a
-   `colorData` entry chosen and its colour table made a gray table.
-
-Pictures are finished.  Left, and recorded as NOT YET where they lie:
-`TGrayShrink` (the view protocol that shrinks an anti-aliased one-bit ink
-word into grays - the ordinary stretch stands in, as on a ROM with no
-implementation registered), a text object's layout numbers (0x400) and
+Done (2026-09-29; `docs/qd/README.md`; the plan as it was worked through is
+in `docs/work-log.md`): recording pictures (`OpenPicture`/`ClosePicture`
+and every standard proc's recording branch), text, curves, paths and type 1
+pixel patterns played and recorded, `MakePict` and the credits picture,
+`TQDScaler` with scaled text, and the ROM's own blitting of pictures and
+text (`StretchBits` whole, text composed a style run at a time into a slab
+and stretched, `CalcTextBounds`, `DrawShapeScaled`).  Left, recorded as
+NOT YET where they lie: `TGrayShrink` (the view protocol that shrinks an
+anti-aliased ink word into grays - the ordinary stretch stands in, as on a
+ROM with none registered), a text object's layout numbers (0x400) and
 `TextArrow` (0x2000), `ZoomRect`, a `MakeBitmap` kept on a store.
 
 ## Candidates for the next piece of work
