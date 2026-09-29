@@ -137,6 +137,27 @@ ImportPackagePart(Ptr data, PartInfo* info, Boolean* inROMImage)
 }
 
 
+// DEVIATION (part of the one above: the host imports a part's objects
+// before it can use them, where the ROM reads them where they lie): a part
+// may be asked about before it is installed - the Extras drawer's
+// HandleNewPackage reads GetPkgRefInfo(pkgRef).parts as soon as a package
+// is stored, before it is activated - so an area imported for that is kept
+// and used again when the part is installed, rather than imported twice
+// (which would leave the drawer's entries pointing at a copy the package's
+// removal never takes away).
+TImportedObjectArea*
+FindOrImportPackagePart(Ptr data, PartInfo* info, Boolean* inROMImage)
+{
+	TImportedObjectArea* area = FindFramesPart((const void*) data);
+	if (area == nil)
+		return ImportPackagePart(data, info, inROMImage);
+	ULong imageSize = 0;
+	const char* rom = (const char*) ROMImageBase(&imageSize);
+	*inROMImage = rom != nil && data >= rom && data < rom + imageSize;
+	return area;
+}
+
+
 /*------------------------------------------------------------------------------
 	T F r a m e P a r t H a n d l e r
 ------------------------------------------------------------------------------*/
@@ -184,7 +205,7 @@ TFramePartHandler::Install(const PartId& partId, SourceType sourceType, PartInfo
 		else
 		{
 			Boolean inROM = false;
-			area = ImportPackagePart(data, partInfo, &inROM);
+			area = FindOrImportPackagePart(data, partInfo, &inROM);
 			if (area == nil)
 				return kError_Bad_Package;
 			frame = FramePartToplevelFrame(area->fArea);

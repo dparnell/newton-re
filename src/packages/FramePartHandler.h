@@ -124,6 +124,9 @@ public:
 // *inROMImage whether it is one of the ROM's.  (The 'dict part handler's
 // part is one too.)
 TImportedObjectArea*	ImportPackagePart(Ptr data, PartInfo* info, Boolean* inROMImage);
+// host: the part's area if it has been imported already (GetPkgRefInfo asks
+// for a part's frame before the part is installed), else imported now
+TImportedObjectArea*	FindOrImportPackagePart(Ptr data, PartInfo* info, Boolean* inROMImage);
 
 // the part described to NewtonScript and handed to (taken from) the
 // global InstallPart (RemovePart); an evt.ex.fr becomes its error

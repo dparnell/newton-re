@@ -39,6 +39,7 @@
 #include "Unicode.h"			// ConvertFromUnicode
 #include <stdint.h>
 #include "FramesPart.h"
+#include "FramePartHandler.h"	// FindOrImportPackagePart
 #include "Frames.h"
 #include "ObjectHeap.h"
 #include "Interpreter.h"
@@ -607,7 +608,17 @@ GetPkgInfoFromVAddr(ULong address)
 			}
 			else if (part.kind == kFrames)
 			{
+				// DEVIATION: the ROM answers the part's top-level frame where
+				// it lies; the host imports the part first, if nothing has
+				// (FramePartHandler.h's FindOrImportPackagePart: the Extras
+				// drawer asks before the package is activated).  A streamed
+				// part is one flattened object, not a run of them.
 				TImportedObjectArea* area = FindFramesPart((const void*) part.data);
+				if (area == nil && !part.compressed)
+				{
+					Boolean inROM = false;
+					area = FindOrImportPackagePart((Ptr) part.data, &part, &inROM);
+				}
 				if (area != nil)
 					what = FramePartToplevelFrame(area->fArea);
 				if (ISNIL(partType))
