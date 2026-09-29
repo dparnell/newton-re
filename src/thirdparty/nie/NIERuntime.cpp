@@ -11,6 +11,7 @@
 #include "Frames.h"
 
 Ref FAref(RefArg rcvr, RefArg obj, RefArg index);		// frames/Builtins.cpp
+Ref FSubtract(RefArg rcvr, RefArg a, RefArg b);		// frames/Builtins.cpp
 
 
 Ref
@@ -33,6 +34,16 @@ NIEEnvironment(RefArg closure)
 		SetArraySlotRef(env, 2, interpreter->GetImplementor());
 	}
 	return env;
+}
+
+
+Ref
+NIESelf(RefArg closure)
+{
+	TInterpreter* interpreter = GetGInterpreter();
+	if (interpreter->IsSend())
+		return interpreter->GetReceiver();
+	return GetArraySlotRef(closure, 1);
 }
 
 
@@ -70,4 +81,16 @@ Ref
 NIEAref(RefArg obj, RefArg index)
 {
 	return FAref(RefVar(), obj, index);
+}
+
+
+// NIE inetenbl.pkg part 1 +0x1c68 (subtract)
+// Two integers are subtracted as Refs (the tag bits cancel), wrapping as
+// the ARM does; anything else goes to FSubtract.
+Ref
+NIESubtract(RefArg a, RefArg b)
+{
+	if (ISINT(a) && ISINT(b))
+		return MAKEINT((long) ((ULong) RINT(a) - (ULong) RINT(b)));
+	return FSubtract(RefVar(), a, b);
 }

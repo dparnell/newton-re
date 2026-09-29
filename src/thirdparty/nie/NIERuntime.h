@@ -47,6 +47,10 @@ Ref		NIELiteral(RefArg closure, long i);
 // implementor put in when it was sent a message.
 Ref		NIEEnvironment(RefArg closure);
 
+// `self` in a native function: the receiver when it was sent a message,
+// else its closure's _parent.
+Ref		NIESelf(RefArg closure);
+
 // A variable found in the environment, then among the globals (else
 // "undefined variable", kNSErrUndefinedVariable with the symbol).
 Ref		NIEFindVariable(RefArg env, RefArg symbol);
@@ -56,5 +60,8 @@ Ref		NIEGlobalFunction(RefArg symbol);
 
 // aref, as the native code does it (FAref).
 Ref		NIEAref(RefArg obj, RefArg index);
+
+// a - b, as the native code does it: integers inline, else FSubtract.
+Ref		NIESubtract(RefArg a, RefArg b);
 
 #endif

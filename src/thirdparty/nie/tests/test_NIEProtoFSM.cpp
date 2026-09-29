@@ -140,6 +140,93 @@ TestEngine(void)
 }
 
 
+// a function's literal i replaced by the value of some NewtonScript
+static void
+SetLiteral(RefArg fn, long i, const char* source)
+{
+	RefVar closure(GetArraySlot(fn, 3));
+	SetArraySlot(RefVar(GetFrameSlot(closure, RefVar(Sym("_literals")))), i, RefVar(Eval(source)));
+}
+
+
+static void
+TestEvents(void)
+{
+	static const char* const kCheck[] = { "fsm_private_context" };
+	static const char* const kQueue[] = { "queue" };
+	static const char* const kDoEvent[] = { "protoFSM:DoEvent", "DoEvent_Check", "pendingEventQueue", "EnQueue",
+		"pendingParamsQueue", "busy", "engineView", "SetupIdle", "turtle", "Array", "AddDelayedSend" };
+	static const char* const kUnique[] = { "protoFSM:DoUniqueEvent", "DoEvent_Check", "path", "=", "LSearch", "DoEvent" };
+	static const char* const kSetupDone[] = { "delay", "SetupIdle" };
+	static const char* const kTrim[] = { "sep", "EndsWith", "StrLen", "StrMunger" };
+
+	// AddDelayedSend recorded rather than done
+	SetFrameSlot(RefVar(GetGFunctionFrame()), RefVar(Sym("AddDelayedSend")),
+		RefVar(Eval("func(v, m, a, d) begin sent := [v, m, a, d]; nil end")));
+	Eval("sent := nil");
+
+	RefVar events(Eval("{queue: []}"));
+	RefVar params(Eval("{queue: []}"));
+	SetFrameSlot(events, RefVar(Sym("EnQueue")), RefVar(NativeFunction(0x7dc0, 1, kQueue, 1)));
+	SetFrameSlot(params, RefVar(Sym("EnQueue")), RefVar(NativeFunction(0x7dc0, 1, kQueue, 1)));
+	RefVar ctx(Eval("{busy: nil, engineView: 'theView, turtle: 'theTurtle}"));
+	SetFrameSlot(ctx, RefVar(Sym("pendingEventQueue")), events);
+	SetFrameSlot(ctx, RefVar(Sym("pendingParamsQueue")), params);
+	RefVar fsm(Eval("{}"));
+	SetFrameSlot(fsm, RefVar(Sym("fsm_private_context")), ctx);
+	SetFrameSlot(fsm, RefVar(Sym("DoEvent_Check")), RefVar(NativeFunction(0xd4cc, 1, kCheck, 1)));
+	SetFrameSlot(fsm, RefVar(Sym("DoEvent")), RefVar(NativeFunction(0x29ec, 2, kDoEvent, 11)));
+	RefVar unique(NativeFunction(0xe9f0, 2, kUnique, 6));
+	SetLiteral(unique, 2, "'pendingEventQueue.queue");
+	SetFrameSlot(fsm, RefVar(Sym("DoUniqueEvent")), unique);
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Sym("fsm")), fsm);
+
+	// the first event queues and wakes the engine
+	EXPECT(ISNIL(Eval("fsm:DoEvent('go, 'p1)")));
+	EXPECT(NOTNIL(Eval("fsm.fsm_private_context.busy")));
+	EXPECT(EQRef(Eval("fsm.fsm_private_context.pendingEventQueue.queue[0]"), Sym("go")));
+	EXPECT(EQRef(Eval("fsm.fsm_private_context.pendingParamsQueue.queue[0]"), Sym("p1")));
+	EXPECT(EQRef(Eval("sent[0]"), Sym("theView")));
+	EXPECT(EQRef(Eval("sent[1]"), Sym("SetupIdle")));
+	EXPECT(EQRef(Eval("ClassOf(sent[2])"), Sym("Array")));
+	EXPECT(EQRef(Eval("sent[2][0]"), Sym("theTurtle")));
+	EXPECT(RINT(Eval("sent[3]")) == 1);
+
+	// a second, while the engine is busy, only queues
+	Eval("sent := nil");
+	Eval("fsm:DoEvent('stop, 'p2)");
+	EXPECT(ISNIL(Eval("sent")));
+	EXPECT(RINT(Eval("Length(fsm.fsm_private_context.pendingEventQueue.queue)")) == 2);
+
+	// DoUniqueEvent: not an event already pending
+	EXPECT(ISNIL(Eval("fsm:DoUniqueEvent('go, 'p3)")));
+	EXPECT(RINT(Eval("Length(fsm.fsm_private_context.pendingEventQueue.queue)")) == 2);
+	Eval("fsm:DoUniqueEvent('new, 'p4)");
+	EXPECT(RINT(Eval("Length(fsm.fsm_private_context.pendingEventQueue.queue)")) == 3);
+	EXPECT(EQRef(Eval("fsm.fsm_private_context.pendingParamsQueue.queue[2]"), Sym("p4")));
+
+	// no context: nothing done
+	RefVar dead(Eval("{fsm_private_context: nil}"));
+	SetFrameSlot(dead, RefVar(Sym("DoEvent_Check")), RefVar(NativeFunction(0xd4cc, 1, kCheck, 1)));
+	SetFrameSlot(dead, RefVar(Sym("DoEvent")), RefVar(NativeFunction(0x29ec, 2, kDoEvent, 11)));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Sym("dead")), dead);
+	EXPECT(ISNIL(Eval("dead:DoEvent('go, nil)")));
+
+	// the periodic view's setup: :SetupIdle(delay)
+	RefVar periodic(Eval("{delay: 5, SetupIdle: func(d) d * 2}"));
+	SetFrameSlot(periodic, RefVar(Sym("viewSetupDoneScript")), RefVar(NativeFunction(0xdbdc, 0, kSetupDone, 2)));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Sym("periodic")), periodic);
+	EXPECT(RINT(Eval("periodic:viewSetupDoneScript()")) == 10);
+
+	// the trailing separator taken off
+	RefVar trim(NativeFunction(0x8670, 1, kTrim, 4));
+	SetLiteral(trim, 0, "\", \"");
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Sym("trim")), trim);
+	EXPECT(NOTNIL(Eval("StrEqual(call trim with (\"a: 1, b: 2, \"), \"a: 1, b: 2\")")));
+	EXPECT(NOTNIL(Eval("StrEqual(call trim with (\"abc\"), \"abc\")")));
+}
+
+
 int
 main()
 {
@@ -173,6 +260,7 @@ main()
 	{
 		TestQueue();
 		TestEngine();
+		TestEvents();
 	}
 	newton_catch_all
 	{
