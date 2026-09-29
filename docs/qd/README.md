@@ -305,7 +305,7 @@ the widths font's metrics scaled from `head`'s units per em
 metrics and bitmap).  The faces the data lacks are synthesised through
 the style table at 0x00377324 (three bytes per face bit: an adjustment
 index, the amount, the extra width): bold smears a pixel right and
-widens by one, italic shears (NOT YET drawn), underline takes an offset
+widens by one, italic shears, underline takes an offset
 and thickness, outline and shadow widen; superscript and subscript take
 four fifths of the size and shift the baseline by three eighths of the
 ascent.  `GetStyleFontInfo` 0x002bc17c answers ascent, descent, leading
@@ -374,6 +374,16 @@ apart, a box of no width or height taking the text's; the vertical bits
 move the box down by the room left.  The NewtonScript `TextBox` is here.
 `StyledStrTruncate` 0x001ecf64 (the NewtonScript `StrTruncate` and
 `StyledStrTruncate`) cuts a string to a width with an ellipsis.
+Italic that a family has no strike for is synthesised as the ROM's
+`DrTextChunk` 0x0035c788 shears the one-bit slab it composes a run in:
+the slab's bottom row stays and each row above it moves right by another
+`fStyleAdjust[1]` (8) sixteenths of a pixel, the whole pixels of the
+running sum taken - a row k rows up moves `(k * 8) >> 4`.  The slab ends
+below the baseline by `minAfterBL` and then by `minAfterBL` again (or by
+the underline's reach, if that is lower), so even the baseline row is
+moved: espy 12's is three pixels over (`test_Text`'s `TestItalic`).  The
+host moves each glyph row of the region it draws by as much.
+
 NOT YET: ink words, scaled glyphs, tabs.
 
 ### Text objects (`src/qd/TextObject.h`)

@@ -91,7 +91,7 @@ bugs and ROM bugs found on the way.
   Built in `tmp/build-text` (in parallel with other agents); ctest there
   130/130, open-apps only the Sound Recorder.
 
-## 2026-09-29: pictures round 2 - curves, paths, pixel patterns, arcs
+## 2026-09-29: pictures round 2 - curves, paths, pixel patterns, arcs, italic
 
 - Curves and paths (`3f1d0f8`, `qd/Curves.h`, `qd/Paths.h`): the verbs,
   `StdCurve`/`StdPaths` recording and drawing, `FrCurve`'s five halvings,
@@ -108,7 +108,10 @@ bugs and ROM bugs found on the way.
   pattern comes back a shade out for some grays - the ROM's own round
   trip through `PutColorTable`'s ramp and `RGBtoGray`.
 - Arcs of less than a full turn (`fd38560`): `DrawArc`'s row loop, each
-  row cut by the lines at the two angles.  The open-apps smoke still
+  row cut by the lines at the two angles.
+- Italic (`cdfd8c8`): each glyph row moved right as `DrTextChunk` shears
+  its slab, from a slab bottom that lies below the descent by the descent
+  again - so the baseline row itself moves.  The open-apps smoke still
   opens everything but the Sound Recorder, and the World Clock's map
   still draws.
 

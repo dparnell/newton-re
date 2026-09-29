@@ -117,7 +117,8 @@ recording produces.  Sizes are `callgraph.py` lower bounds (not done):
 5. DONE (`a2f0ceb`) **Pixel patterns of type 1**: `ConvertPixPat` (340 B) and its
    converters.
 6. The neighbours a picture draws through: arcs of less than a full turn
-   (`Shapes.cpp` - DONE, `fd38560`) and italic (`Text.h`).
+   (`Shapes.cpp` - DONE, `fd38560`) and italic (`Text.h` - DONE,
+   `cdfd8c8`).
 7. **`TQDScaler`** (0x00196018-0x001973c8, about 5 KB): a picture (or
    any drawing) under a transform that scales.
 
