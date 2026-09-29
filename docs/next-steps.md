@@ -270,15 +270,18 @@ Done so far: `TXOffset`/`TXOffsetRange` (the ROM's two-word TXOffset is
 formatters (`TXFrameFormatter`, `TXMonoFrameFormatter`, `gFramesEditInfo`)
 and `TXFormatter`, over QuickDraw's text-object questions
 (`qd/TextObject.h`: `CharToPoint`, `PointToChar`, `GetTextObjField`).
-NOT YET in layer 4: the paginated side (`TXMultiFrameFormatter`,
-`TXPageFrames`, `TXPageFormatter`, 0x002413e0-0x00242a2c).  Next: layer
-5, `TXDisplay`/`TXNewtDisplay` and `TXHilite`/`TXNewtHilite`; then
-`Textension` and the edit commands, and `TXView` with its natives and a
-demo.  Open in `qd/`: `ScrollRect` (0x00340378, for `TXScrollRect`),
-`DoTextOnce` ignoring the options' +0x14 selector (9: text-object flag
-0x40000; 10: the options discarded), and `FindWordBreaks` with no
-line-break table (a fitted length ending exactly at a word's end breaks
-the line one word early; the text tests work round it).
+Then (round 3): layer 5 and the core of layer 6 - `TXDisplay` and
+`TXHilite` over the new `qd/ScrollRect.h` (and `TXScrollRect`), and
+`Textension` (a document assembled from its handlers; `ReplaceRange`,
+`KeyDown`, the pending run, restyling); `test_TXDisplay` draws, taps,
+selects, drags, scrolls and types.  NOT YET: the containers
+(`TXContainer`, `TXStdContainer`, `TXLocalContainer`,
+`TXPrivateContainer`) and the undoable commands (`TXCommand` and its
+subclasses); `TXNewtDisplay`/`TXNewtHilite`/`TXNewtPen`; `TXView` and the
+39 natives; the paginated side of layer 4 (`TXMultiFrameFormatter`,
+`TXPageFrames`, `TXPageFormatter`, 0x002413e0-0x00242a2c); the global flag
+of `TXHilite::GetHiliteRgn` (waits on QuickDraw's `LocalToGlobal`).  The
+line-break table and `DoTextOnce`'s selector are in `qd/` now (ef99232).
 
 ## The natives still unanswered
 
