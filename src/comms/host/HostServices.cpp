@@ -8,6 +8,7 @@
 
 #include "HostServices.h"
 #include "HostTCPTool.h"
+#include "HostDNSTool.h"
 #include "CommManager.h"
 #include "NewtErrors.h"
 
@@ -51,8 +52,41 @@ THostInetService::DoneStarting(TAEvent* event, ULong size, TServiceInfo* service
 }
 
 
+PROTOCOL_IMPL_SOURCE_MACRO(THostDNSService)
+PROTOCOL_CLASSINFO(THostDNSService, "TCMService", "serv\0dnst\0\0", 0, 0, nil)
+
+THostDNSService*
+THostDNSService::New()
+{
+	return this;
+}
+
+void
+THostDNSService::Delete()
+{
+}
+
+// As the inet service's, over the DNS tool.
+NewtonErr
+THostDNSService::Start(TOptionArray* options, ULong serviceId, TServiceInfo* serviceInfo)
+{
+	THostDNSTool tool(serviceId);
+	NewtonErr err = StartCommTool(&tool, serviceId, serviceInfo);
+	if (err == noErr)
+		err = OpenCommTool(serviceInfo->GetPortId(), options, this);
+	return err;
+}
+
+NewtonErr
+THostDNSService::DoneStarting(TAEvent* event, ULong size, TServiceInfo* serviceInfo)
+{
+	return ((TCommToolReply*) event)->fResult;
+}
+
+
 void
 RegisterHostCommServices(void)
 {
 	THostInetService::ClassInfo()->Register();
+	THostDNSService::ClassInfo()->Register();
 }

@@ -122,6 +122,61 @@ header; everything big-endian):
 Part 4 is `PInetToolCE` (an endpoint's connection end) and part 10 is
 `TDNSTool` (`pkgdisasm.py --list`, `classinfo.py --package`).
 
+### The DNS service
+
+The NIE's scripts look names up through its *domain manager*, a state
+machine in `inetenbl.pkg`'s NewtonScript (read with
+`tools/newton-rom/analysis/pkgns.py fixtures/packages/apple/NIE2/REGPKGS/inetenbl.pkg --disasm ...`):
+
+* **connect.action** (0x37a0d) instantiates a protoBasicEndpoint with a
+  `'sid '` service option whose template data is `["dnst", 0]`
+  (`['struct, ['array, 'char, 4], 'ulong]` - the service and a port of
+  nought, which the comm manager fills in), `ilid` (the link id, a
+  `'ulong`), `ddom` (the default domain, a C string, "." when the link has
+  none) and a `dnic` (a server's address, a `'ulong` of four bytes) per
+  DNS server; it reads the port back out of the `'sid '` option.
+* **ProcessNextQuery.action** (0x38369) sends each query as an option
+  request (`endpoint:Option`, op code 1024, opGetCurrent) of one `dnsq` -
+  `["dnst", 0, queryID, address, type, nameLength, name]` by
+  `['struct, ['array, 'char, 4], 'ulong x 5, ['array, 'char, 0]]` - and
+  four `rrcd` records, `[0, 0, [0,0,0,0], [0,0,0,0], 0, 0, "", ""]` by
+  `['struct, 'short, 'short, ['array, 'byte, 4] x 2, 'ulong, 'ulong, ['array, 'char, 0] x 2]`.
+* **fCompletionSpec_Option.completionScript** (0x3874d) takes the `dnsq`'s
+  second word as the result (non-zero: the query failed), and
+  **ProcessQuerySuccess.MAddCacheEntry** (0x38cdd) reads each record whose
+  `result` is nil as the target address (3rd), the result address (4th),
+  the target name (7th) and the result name (8th), the 2nd short saying how
+  long to cache it (nought: fifteen minutes).
+
+The query types are the DNS's own (`TDNSTool`, part 10 +0x1390: 12 a
+name, 15 a mail exchanger, 0x40, anything else an address); the tool's
+option handler (part 10 +0x2b88) takes `ddom`, `dnic` and `ilid` and
+answers a `dnsq` later, writing its result into the query's second word
+(+0x2c58); records it has no answer for are marked processed with a result
+of -2 (+0x173c).  A name that is not found is -60791 (the NIE's error
+table, 0x43e3d: "The host name you requested wasn't located").
+
+The host's `THostDNSService` (`serv` = `dnst`) starts a `THostDNSTool`
+(`comms/host/HostDNSTool.h`) that answers the query at once through the
+host's resolver (`HostResolveName`, `HostResolveAddress`): an address
+query fills a record per address (target name the query's name), a name
+query one record (the result name).  NOT YET: the names in a record - the
+NIE asks with empty strings, which leave a name three bytes, and its own
+tool makes room through a call not yet identified (part 10 +0x4604, the
+NTK glue into the ROM); the host writes what fits.  The script's `'sid '`
+data is the device's two big-endian longs; the translators turn it into
+the host's `TCMOServiceIdentifier` and back (DEVIATION).  Demo:
+`src/host/demo/dns.ns`, ctest `host.NewtonDNS`.
+
+**The NIE's own scripts do not yet run on the host**: its state machines
+are NTK's protoFSM, whose engine - `DoEvent`, `DoEvent_Loop`, the event
+queue and the periodic events, 19 functions - is *native-compiled*
+NewtonScript (function class 0x232: ARM code in one 61 KB binary, `pkgns.py
+--natives`), which a host cannot call; `InetStartUp` stops at the first.
+Running `DNSGetAddressFromName` or `InetGrabLink` end to end wants host
+re-expressions of those 19 functions, bound to the package's function
+objects.
+
 ## Host format of an option
 
 An option is a 12-byte header (label, length of the data, flags) and its
@@ -200,4 +255,5 @@ to nought, which is no timeout at all; the host tool re-arms it in
 | marshalling out (`MarshalArguments`: a script's `{arglist, typelist}` into bytes, in the MessagePad's byte order) | done: `frames/MarshalOut.cpp`, `test_Marshalling` (the NIE's `itrs` data) |
 | the frame translators: `PFrameSink`/`PFrameSource`, `PScriptDataOut`/`In` (a value by its form - string, char, number as a big-endian long, bytes, binary, template), `POptionDataOut`/`In` (option frames to a `TOptionArray` and back; a `'service` frame becomes a `'sid '` option naming it), `GetDataForm`, `InitTranslators` | done: `comms/Translators.h` (library `comms_script`), `test_Translators`.  NOT YET: reading a `'template` back goes through `ConstructReturnValue`, which cannot read an `'array` field and reads words in the host's order while the bytes are the device's; the six flatten/stream translators `InitTranslators` also registers |
 | the NewtonScript endpoint: `TNewScriptEndpointClient` (protoBasicEndpoint, @383) and its 22 `CINew*`/`CIRequestsPending` natives - requests synchronous or queued with their callbacks, output by form, the input spec (form, termination by byteCount/endSequence/useEOP, filter, target, rcvOptions, partialScript), inputScript and completionScript, exceptions to the endpoint's exceptionHandler | done: `comms/NewScriptEndpoint.h`, registered by `RegisterCommsNatives`; the newt world starts the comm manager and the host services (DEVIATION: the ROM's loader does); **M3** passes - `src/host/demo/echo.ns` (ctest `host.NewtonEcho`, `newton --tcp-echo port` runs the echo server, `comms/host/HostEchoServer.h`).  NOT YET: the 'frame form (PFlattenPtr/PUnFlattenPtr), the modem navigator, protoStreamingEndpoint (`TStreamingEndpointClient`, `CIS*`) |
-| the link and DNS services (**M4**: `ictl`, `dnst`), `TEndpointPipe` | NOT YET |
+| the DNS service (**M4**, `dnst`): `THostDNSService`/`THostDNSTool` answering the NIE's `dnsq`/`rrcd` requests through the host's resolver | done: `comms/host/HostDNSTool.h`, ctest `host.NewtonDNS`; NOT YET: the record's names beyond the room the request left, the NIE's own domain manager (its protoFSM engine is native-compiled) |
+| the link controller (**M4**, `ictl`), `TEndpointPipe` | NOT YET |

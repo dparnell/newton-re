@@ -11,7 +11,10 @@
 				its own native TCP/IP stack; the host's starts a tool over the
 				host's sockets.
 
-				NOT YET: 'ictl (the link controller) and 'dnst (DNS).
+				THostDNSService, 'serv=dnst - the NIE's name lookups, over a
+				THostDNSTool (the host's resolver).
+
+				NOT YET: 'ictl (the link controller).
 
 	Host code for the NIE's services (no ROM counterpart; the shape is the
 	ROM's TAsyncService, 0x0003b0c4-0x0003b14c).
@@ -30,6 +33,17 @@ public:
 	PROTOCOL_IMPL_HEADER_MACRO(THostInetService);
 
 	THostInetService*	New();
+	void				Delete();
+	NewtonErr			Start(TOptionArray* options, ULong serviceId, TServiceInfo* serviceInfo);
+	NewtonErr			DoneStarting(TAEvent* event, ULong size, TServiceInfo* serviceInfo);
+};
+
+PROTOCOL THostDNSService : public TCMService
+{
+public:
+	PROTOCOL_IMPL_HEADER_MACRO(THostDNSService);
+
+	THostDNSService*	New();
 	void				Delete();
 	NewtonErr			Start(TOptionArray* options, ULong serviceId, TServiceInfo* serviceInfo);
 	NewtonErr			DoneStarting(TAEvent* event, ULong size, TServiceInfo* serviceInfo);

@@ -11,6 +11,7 @@ add_library(comms STATIC
     host/HostTCPTool.cpp
     host/HostServices.cpp
     host/HostEchoServer.cpp
+    host/HostDNSTool.cpp
 )
 # hal_host_sockets: the host's network, which host/HostTCPTool.cpp (the
 # stand-in for the NIE's TCP tool) works over

@@ -590,6 +590,27 @@ POptionDataOut::ConvertToOption(RefArg frame, long& error, PFrameSink* sink)
 		else
 			error = kCommScriptErrNotAnOption;
 	}
+	if (error == noErr && label == kCMOServiceIdentifier && option->Length() >= 8)
+	{
+		// DEVIATION: a 'sid ' option a script writes out itself is the
+		// device's two big-endian longs (the service, the port); the host's
+		// TCMOServiceIdentifier has them in host words
+		TCMOServiceIdentifier* sid = (TCMOServiceIdentifier*) NewPtrClear(sizeof(TCMOServiceIdentifier));
+		if (sid == nil)
+			error = MemError();
+		else
+		{
+			const UByte* bytes = (const UByte*) (option + 1);
+			sid->SetLabel(kCMOServiceIdentifier);
+			sid->SetAsService();
+			sid->SetOpCode(option->GetOpCode());
+			sid->SetLength(sizeof(TCMOServiceIdentifier) - sizeof(TOption));
+			sid->fServiceId = GetBigEndianWord(bytes);
+			sid->fPortId = GetBigEndianWord(bytes + 4);
+			DisposPtr((Ptr) option);
+			option = sid;
+		}
+	}
 
 done:
 	if (error != noErr && option != nil)
@@ -706,6 +727,18 @@ POptionDataIn::ConvertFromOption(RefArg frame, TOption* option, PFrameSource* so
 		if (form == kFormNone)
 			err = kCommScriptErrBadForm;
 		RefVar data;
+		// DEVIATION: a 'sid ' option is read back as the device's two
+		// big-endian longs (the host keeps them in host words)
+		UByte sidBytes[8];
+		UByte* optionData = (UByte*) (option + 1);
+		Size optionLength = option->Length();
+		if (option->Label() == kCMOServiceIdentifier && optionLength >= (Size) (sizeof(TCMOServiceIdentifier) - sizeof(TOption)))
+		{
+			PutBigEndianWord(sidBytes, (unsigned int) ((TCMOServiceIdentifier*) option)->fServiceId);
+			PutBigEndianWord(sidBytes + 4, (unsigned int) ((TCMOServiceIdentifier*) option)->fPortId);
+			optionData = sidBytes;
+			optionLength = 8;
+		}
 		if (err == noErr)
 		{
 			if (form == kFormTemplate)
@@ -718,7 +751,7 @@ POptionDataIn::ConvertFromOption(RefArg frame, TOption* option, PFrameSource* so
 						err = kCommScriptErrBadTypelist;
 					else
 					{
-						data = ParseInput(source, kFormTemplate, option->Length(), (UByte*) (option + 1), typelist, &err);
+						data = ParseInput(source, kFormTemplate, optionLength, optionData, typelist, &err);
 						SetFrameSlot(frame, RSSYMdata, data);
 					}
 				}
@@ -726,7 +759,7 @@ POptionDataIn::ConvertFromOption(RefArg frame, TOption* option, PFrameSource* so
 			else
 			{
 				RefVar noTypelist;
-				data = ParseInput(source, form, option->Length(), (UByte*) (option + 1), noTypelist, &err);
+				data = ParseInput(source, form, optionLength, optionData, noTypelist, &err);
 				SetFrameSlot(frame, RSSYMdata, data);
 			}
 		}

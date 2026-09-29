@@ -303,3 +303,11 @@ set_tests_properties(host.NewtonRecorder PROPERTIES TIMEOUT 180
 add_test(NAME host.NewtonEcho COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 8 --tcp-echo 52371 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/echo.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(host.NewtonEcho PROPERTIES TIMEOUT 120
                      PASS_REGULAR_EXPRESSION "echo: connected, state 5.*echo: received hello .byteCount 5.*echo: sent asynchronously, done.*echo: line 15 characters, ended by endsequence.*echo: disconnected, state 2.*echo: unbound, state 1.*echo: done")
+
+# the NIE's DNS protocol ('sid ' naming 'dnst, a 'dnsq query and 'rrcd
+# records) answered by the host's DNS service over the host's resolver
+# (comms/host/HostDNSTool.h): localhost, a reverse lookup, a name that
+# cannot exist - no network needed
+add_test(NAME host.NewtonDNS COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 6 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/dns.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(host.NewtonDNS PROPERTIES TIMEOUT 120
+                     PASS_REGULAR_EXPRESSION "dns: instantiated, state 1.*dns: localhost type 1: 127.0.0.1.*dns:  type 12: 0.0.0.0 .. -> ..[A-Za-z].*dns: no-such-host.invalid not found, -60791.*dns: done")

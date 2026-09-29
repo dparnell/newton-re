@@ -385,3 +385,17 @@ HostResolveName(const char* name, uint32_t* addresses, int maxCount, int* count)
 	*count = n;
 	return n > 0 ? kHostSocketOK : kHostSocketNotFound;
 }
+
+
+int
+HostResolveAddress(uint32_t address, char* name, size_t size)
+{
+	HostSocketsInit();
+	struct sockaddr_in sa;
+	memset(&sa, 0, sizeof(sa));
+	sa.sin_family = AF_INET;
+	sa.sin_addr.s_addr = htonl(address);
+	if (size == 0 || getnameinfo((struct sockaddr*) &sa, sizeof(sa), name, (socklen_t) size, NULL, 0, NI_NAMEREQD) != 0)
+		return kHostSocketNotFound;
+	return kHostSocketOK;
+}

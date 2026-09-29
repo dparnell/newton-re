@@ -76,6 +76,10 @@ int		HostSocketClose(int handle);
 // does.)
 int		HostResolveName(const char* name, uint32_t* addresses, int maxCount, int* count);
 
+// An IPv4 address's name (the reverse lookup), NUL-terminated in name.
+// (This one blocks too.)
+int		HostResolveAddress(uint32_t address, char* name, size_t size);
+
 #ifdef __cplusplus
 }
 #endif

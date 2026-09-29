@@ -1,0 +1,63 @@
+// DNS: the Newton Internet Enabler's name lookup, spoken as its own domain
+// manager speaks it (inetenbl.pkg's ProcessNextQuery and connect actions,
+// read with tools/newton-rom/analysis/pkgns.py): a protoBasicEndpoint
+// (@383) instantiated with a 'sid ' service option naming 'dnst and the
+// link id, default domain and server options; then a query, an option
+// request of one 'dnsq (the name, query type 1: an address) and four
+// 'rrcd records the service fills in.  The host's DNS service answers it
+// through the host's resolver (comms/host/HostDNSTool.h), so "localhost"
+// needs no network; then an address's name (type 12), and a name that
+// cannot exist.
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//       --script src/host/demo/dns.ns --headless 6
+
+Print("dns: instantiating");
+dns := {_proto: @383,
+	exceptionHandler: func(e) begin
+		Print("dns: exception " & e.name & " " & e.data);
+		true;
+	end};
+dns:Instantiate(dns, [
+	{label: "sid ", type: 'service, opCode: 512, form: 'template,
+	 data: {arglist: ["dnst", 0], typeList: ['struct, ['array, 'char, 4], 'ulong]}},
+	{label: "ilid", type: 'option, opCode: 512, form: 'template,
+	 data: {arglist: [-1], typeList: ['struct, 'ulong]}},
+	{label: "ddom", type: 'option, opCode: 512, form: 'template,
+	 data: {arglist: ["."], typeList: ['struct, ['array, 'char, 0]]}}]);
+Print("dns: instantiated, state " & dns:State());
+
+// one query: 'dnsq then four 'rrcd, as ProcessNextQuery builds them
+// (the NIE asks with empty strings for the record's names, which leaves a
+// name no room; the host writes what fits - so the reverse lookup here
+// asks with room for one, where the NIE's own tool makes the room)
+query := func(queryType, address, name, room) begin
+	local options := [
+		{label: "dnsq", type: 'option, opCode: 1024, form: 'template,
+		 data: {arglist: ["dnst", 0, 1, address, queryType, StrLen(name), name],
+		        typeList: ['struct, ['array, 'char, 4], 'ulong, 'ulong, 'ulong, 'ulong, 'ulong, ['array, 'char, 0]]}}];
+	for i := 1 to 4 do
+		AddArraySlot(options,
+			{label: "rrcd", type: 'option, opCode: 1024, form: 'template,
+			 data: {arglist: [0, 0, [0, 0, 0, 0], [0, 0, 0, 0], 0, 0, "", room],
+			        typeList: ['struct, 'short, 'short, ['array, 'byte, 4], ['array, 'byte, 4],
+			                   'ulong, 'ulong, ['array, 'char, 0], ['array, 'char, 0]]}});
+	local answered := dns:Option(options, nil);
+	local result := answered[0].data.arglist[1];
+	if result <> 0 then
+		Print("dns: " & name & " not found, " & result)
+	else
+		foreach record in answered do
+			if StrEqual(record.label, "rrcd") and not record.result then begin
+				local a := record.data.arglist;
+				Print("dns: " & name & " type " & a[0] & ": " & a[3][0] & "." & a[3][1] & "." & a[3][2] & "." & a[3][3]
+					& " \"" & a[6] & "\" -> \"" & a[7] & "\"");
+			end;
+end;
+
+call query with (1, [0, 0, 0, 0], "localhost", "");
+call query with (12, [127, 0, 0, 1], "", "................................................................");
+call query with (1, [0, 0, 0, 0], "no-such-host.invalid", "");
+
+dns:Dispose();
+Print("dns: done");
