@@ -68,6 +68,6 @@ add_library(comms_dock STATIC
     ModemNavigator.cpp
     Docker.cpp
 )
-target_link_libraries(comms_dock PUBLIC comms_serial comms_script packages stores newt intl)
+target_link_libraries(comms_dock PUBLIC comms_serial comms_script packages stores newt intl qd utility)
 
 add_subdirectory(tests)

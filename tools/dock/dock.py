@@ -24,6 +24,10 @@ Usage
         runs <program> (a newton), waits for its "[host] serial port N"
         line, connects there and loads the packages; then answers the
         program's exit status (or 1 if a package was refused).
+    python tools/dock/dock.py --session --package file.pkg --spawn <program...>
+        the same inside a docking session: 'dock', the Newton's 'name',
+        'dinf'/'ninf', the timeout, and the password exchange (the empty
+        password; newtondes.py is the Newton's DES) before the 'lpkg's.
     python tools/dock/dock.py --package file.pkg --connect 127.0.0.1:3679
         the same against a newton already running (start the Connection
         application's connection on it after this is waiting).
@@ -45,6 +49,7 @@ import threading
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from mnp import MNPLink  # noqa: E402
+import newtondes  # noqa: E402
 
 
 class DockSession:
@@ -75,12 +80,52 @@ class DockSession:
         self.link.send(b"newtdock" + cmd + struct.pack(">I", len(data)) + data + pad)
         print("dock.py: -> %s (%d bytes)" % (cmd.decode("latin-1"), len(data)))
 
-    def load_packages(self, packages):
-        """The package loader's session.  ==> the results, one a package."""
+    def expect(self, what):
         cmd, data = self.read_command()
-        if cmd != b"rtdk":
-            raise RuntimeError("expected rtdk, got %r" % cmd)
+        if cmd != what:
+            raise RuntimeError("expected %s, got %r" % (what.decode("latin-1"), cmd))
+        return data
+
+    def docking_session(self, password=""):
+        """A docking session begun, the Newton's 'rtdk' already read: the
+        session asked for ('dock', load packages), the Newton's name read,
+        the desktop's info given ('dinf': protocol 11, our challenge) and
+        the Newton's read ('ninf': its challenge), the timeout set, then
+        the passwords - the Newton's 'pass' (our challenge under its key)
+        checked against the key of `password`, and ours sent.  The
+        Newton then says 'dres' 0: the session is under way."""
+        self.write_command(b"dock", struct.pack(">I", SESSION_LOAD_PACKAGE))
+        name = self.expect(b"name")
+        info_length = struct.unpack(">I", name[:4])[0]
+        words = struct.unpack(">%dI" % (info_length // 4), name[4:4 + info_length])
+        owner = name[4 + info_length:].decode("utf-16-be", "replace").split("\0")[0]
+        print("dock.py: the Newton's name: id %08x, machine %08x, protocol %d, owner %r"
+              % (words[0], words[2], words[17], owner))
+        challenge = (0x12345678, 0x9abcdef0)
+        self.write_command(b"dinf", struct.pack(">6I", 11, DESKTOP_WINDOWS, challenge[0], challenge[1],
+                                                SESSION_LOAD_PACKAGE, 0))
+        ninf = self.expect(b"ninf")
+        version, n0, n1 = struct.unpack(">3I", ninf[:12])
+        print("dock.py: the Newton speaks protocol %d" % version)
+        self.write_command(b"stim", struct.pack(">I", 60))
+        key = newtondes.char_to_key(password)
+        theirs = struct.unpack(">2I", self.expect(b"pass")[:8])
+        if newtondes.decode_nonce(key, theirs) != challenge:
+            raise RuntimeError("the Newton's password is not ours")
+        print("dock.py: the Newton knows the password")
+        self.write_command(b"pass", struct.pack(">2I", *newtondes.encode_nonce(key, (n0, n1))))
+        result = struct.unpack(">i", self.expect(b"dres")[:4])[0]
+        if result != 0:
+            raise RuntimeError("the Newton refused the session: %d" % result)
+        print("dock.py: docked")
+
+    def load_packages(self, packages, session=False):
+        """The package loader's session, or (session) a docking session
+        that loads the packages.  ==> the results, one a package."""
+        data = self.expect(b"rtdk")
         print("dock.py: the Newton's protocol version is %d" % struct.unpack(">I", data[:4]))
+        if session:
+            self.docking_session()
         results = []
         for path in packages:
             with open(path, "rb") as f:
@@ -95,13 +140,17 @@ class DockSession:
         return results
 
 
-def dock(host, port, packages):
+SESSION_LOAD_PACKAGE = 4        # the kinds of session: 1 none, 2 sync, 3 restore, 4 load packages
+DESKTOP_WINDOWS = 1             # the desktop's platform (0 Macintosh, 1 Windows)
+
+
+def dock(host, port, packages, session=False):
     link = MNPLink.connect(host, port)
     link.sock.settimeout(120)
     try:
         link.accept()
         print("dock.py: link up")
-        results = DockSession(link).load_packages(packages)
+        results = DockSession(link).load_packages(packages, session)
         # the Newton closes the link once it has read the 'disc'
         try:
             while True:
@@ -113,7 +162,7 @@ def dock(host, port, packages):
     return results
 
 
-def run_spawned(program, packages):
+def run_spawned(program, packages, session=False):
     proc = subprocess.Popen(program, stdout=subprocess.PIPE, text=True, errors="replace")
     port = None
     for line in proc.stdout:
@@ -134,7 +183,7 @@ def run_spawned(program, packages):
     t.start()
     ok = True
     try:
-        results = dock("127.0.0.1", port, packages)
+        results = dock("127.0.0.1", port, packages, session)
         ok = all(r == 0 for r in results)
     except (EOFError, ConnectionError, socket.timeout, RuntimeError) as e:
         print("dock.py: %s" % e)
@@ -148,14 +197,17 @@ def run_spawned(program, packages):
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--package", action="append", required=True, help="a package to load (in order)")
+    ap.add_argument("--session", action="store_true",
+                    help="dock (the handshake and the password exchange) and load the packages in the session, "
+                         "rather than answering 'rtdk' with 'lpkg'")
     group = ap.add_mutually_exclusive_group(required=True)
     group.add_argument("--spawn", nargs=argparse.REMAINDER, help="the newton to run, and its arguments (the rest of the line; it prints '[host] serial port N')")
     group.add_argument("--connect", help="host:port of a newton already running")
     args = ap.parse_args()
     if args.spawn:
-        sys.exit(run_spawned(args.spawn, args.package))
+        sys.exit(run_spawned(args.spawn, args.package, args.session))
     host, _, port = args.connect.rpartition(":")
-    results = dock(host or "127.0.0.1", int(port), args.package)
+    results = dock(host or "127.0.0.1", int(port), args.package, args.session)
     sys.exit(0 if all(r == 0 for r in results) else 1)
 
 

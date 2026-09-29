@@ -15,6 +15,12 @@
 #include "NewtWorld.h"
 #include "Dates.h"
 #include "Soups.h"
+#include "ROMConstants.h"
+#include "ObjectStreamer.h"
+#include "Locale.h"
+#include "Ports.h"
+#include "NewtonGestalt.h"
+#include "hal/System.h"
 #include "AppWorld.h"
 #include "Interpreter.h"
 #include "Frames.h"
@@ -251,10 +257,10 @@ TDocker::TDocker()
 	fDesktopApps = NILREF;
 	fCursors = nil;
 	fSyncChanges = NILREF;
-	fField8c = 0;
-	fField90 = 0;
-	fField94 = 0;
-	fField98 = 0;
+	fDesktopChallenge[0] = 0;
+	fDesktopChallenge[1] = 0;
+	fNewtonChallenge[0] = 0;
+	fNewtonChallenge[1] = 0;
 	fSessionAgreed = false;
 	fPlatform = 2;
 	fStopping = false;
@@ -269,19 +275,19 @@ TDocker::TDocker()
 	fField2e = false;
 	fField28 = NILREF;
 	fSessionStarted = false;
-	fField30 = false;
+	fInExtension = false;
 	fField38 = 0;
 	fField31 = false;
 	fField3c = 0;
 	fLocked = false;
-	fField34 = NILREF;
+	fVBOCompression = 2;
 	fHasArg1 = false;
 	fLoadPackageOnly = false;
 	fDynArray7c = nil;
 	fExtensionCommands = nil;
-	fField58 = 0;
+	fManufacturer = 0;
 	fField60 = NILREF;
-	fField5c = 0;
+	fMachineType = 0;
 	fField64 = 0;
 	fField68 = 0;
 	fField6c = NILREF;
@@ -292,10 +298,10 @@ TDocker::TDocker()
 	// (not set by the ROM's constructor either)
 	fStopDone = false;
 	fCommand = 0;
-	fField74 = 0;
-	fField78 = 0;
-	fField9c = 0;
-	fFielda0 = 0;
+	fDesktopTime = 0;
+	fTimeSet = 0;
+	fKey[0] = 0;			// (the ROM's key is whatever the heap held)
+	fKey[1] = 0;
 	fProtocol = 0;
 	fSubProtocol = 0;
 }
@@ -495,7 +501,7 @@ TDocker::WaitForDisconnect(void)
 
 
 // ROM 0x00094318 CleanUpIfError__7TDockerFUc
-// After an operation: an error (other than kDockErrAlreadyDocking and
+// After an operation: an error (other than kDockErrRetryPassword and
 // -16005, a connection the desktop closed), or force, ends the session -
 // the error is told the desktop, if the pipe was ever open and the error is
 // not -16009, and the pipe and the rest are given back.
@@ -503,7 +509,7 @@ void
 TDocker::CleanUpIfError(Boolean force)
 {
 	long error = fError;
-	if ((error == noErr || error == kDockErrAlreadyDocking || error == -16005) && !force)
+	if ((error == noErr || error == kDockErrRetryPassword || error == -16005) && !force)
 		return;
 	fCleanedUp = true;
 	if (error != noErr && fPipe != nil && fPipeOpen && error != -16009)
@@ -803,7 +809,9 @@ TDocker::RemoveProtocolExtension(RefArg command, ULong commandWord)
 // The session begun: the pipe made from the options frame (its
 // connectTimeout in seconds, 30 if it has none; then its idleTimeout),
 // 'rtdk' said and the desktop's answer read.  'lpkg' is a package to load;
-// 'dock' a docking session (NOT YET: kCommErrMethodNotImplemented).
+// 'dock' a docking session: its kind, the Newton's name, the desktop's
+// info, the icons and the timeout, then from protocol 10 the passwords -
+// each side sends the other's challenge encrypted under its key.
 // ==> fError.
 long
 TDocker::Connect(RefArg connection, RefArg options, RefArg password)
@@ -844,11 +852,50 @@ TDocker::Connect(RefArg connection, RefArg options, RefArg password)
 		{
 			if (fStopping)
 				Throw(exLongErrorException, (void*) (intptr_t) kDockErrDisconnected, nil);
-			// NOT YET: ReadInitiateDocking, WriteNewtonName, the desktop
-			// info ('dinf'), the icons ('wicn'), the timeout ('stim') or
-			// a result ('dres'), and from protocol 10 the password
-			// exchange
-			Throw(exLongErrorException, (void*) (intptr_t) kCommErrMethodNotImplemented, nil);
+			ReadInitiateDocking();
+			WriteNewtonName();
+			ReadDockerHeader(&fCommand, &fLength);
+			if (fCommand == kDDesktopInfo)
+			{
+				ReadDesktopInfo();
+				ReadDockerHeader(&fCommand, &fLength);
+			}
+			if (fProtocolVersion < 10)
+			{
+				// an old desktop may only load packages
+				if (fState != kDockStateLoadPackage)
+					Throw(exLongErrorException, (void*) (intptr_t) kDockErrProtocolVersion, nil);
+				fSessionAgreed = true;
+			}
+			if (fCommand == kDWhichIcons)
+			{
+				SetWhichIcons();
+				ReadDockerHeader(&fCommand, &fLength);
+			}
+			if (fCommand == kDSetTimeout)
+			{
+				long seconds;
+				*fPipe >> seconds;
+				fPipe->SetTimeout(seconds * kSeconds);
+			}
+			else
+			{
+				long error = kDockErrDesktopError;
+				if (fCommand == kDResult)
+					error = fError = ReadResult();
+				if (error != noErr)
+					Throw(exLongErrorException, (void*) (intptr_t) error, nil);
+			}
+			if (fStopping)
+				Throw(exLongErrorException, (void*) (intptr_t) kDockErrDisconnected, nil);
+			if (fProtocolVersion > 9)
+			{
+				WritePassword(password);
+				ReadPassword();
+			}
+			if (fStopping)
+				Throw(exLongErrorException, (void*) (intptr_t) kDockErrDisconnected, nil);
+			fSessionStarted = true;
 		}
 		else
 			Throw(exLongErrorException, (void*) (intptr_t) (fCommand == kDRequestToDock ? kDockErrRequestToDock : kDockErrBadHeader), nil);
@@ -900,7 +947,8 @@ TDocker::CompatabilityHacks(void)
 // ROM 0x00095130 DoConnection__7TDockerFRC6RefVarN21RUc
 // The session carried out, the NewtonScript world forked first so that it
 // goes on running meanwhile: a package loader's session
-// (CompatabilityHacks), or a docking session's commands (NOT YET).  done
+// (CompatabilityHacks), or a docking session - what the Newton wants
+// said, then the desktop's commands carried out until one ends it.  done
 // says whether the session is over.  ==> fError.
 long
 TDocker::DoConnection(RefArg arg1, RefArg arg2, RefArg callback, Boolean* done)
@@ -908,7 +956,7 @@ TDocker::DoConnection(RefArg arg1, RefArg arg2, RefArg callback, Boolean* done)
 	if (fCleanedUp)
 		return noErr;
 	fStopping = false;
-	Boolean keyboard = false;
+	Boolean operationDone = false;
 	*done = true;
 	fError = noErr;
 	if (!fSessionAgreed)
@@ -929,11 +977,30 @@ TDocker::DoConnection(RefArg arg1, RefArg arg2, RefArg callback, Boolean* done)
 				Throw(exLongErrorException, (void*) (intptr_t) fError, nil);
 			if (!fLoadPackageOnly)
 			{
-				// NOT YET: the docking session - a sync or restore
-				// started ('ssyn', 'rrst') or a result, then the
-				// commands read and carried out (ProcessCommand,
-				// KeyboardProcessCommand) until done
-				Throw(exLongErrorException, (void*) (intptr_t) kCommErrMethodNotImplemented, nil);
+				// the session under way and the desktop silent: what the
+				// Newton wants of it said (a sync, a restore, or a result)
+				if (fSessionStarted && BytesAvailable(true) == 0)
+				{
+					if (fState == kDockStateSync)
+						WriteDockerHeader(kDSync, true);
+					else if (fState == kDockStateRestore)
+						WriteDockerHeader(kDRestore, true);
+					else
+						WriteResult(noErr);
+				}
+				*done = false;
+				while (fError == noErr && !*done && !operationDone && !fStopping)
+				{
+					ReadDockerHeader(&fCommand, &fLength);
+					ProcessCommand(done, &operationDone);
+					if (fState == kDockStateKeyboard)
+					{
+						// NOT YET: the keyboard passthrough
+						// (KeyboardProcessCommand)
+						operationDone = true;
+						fSessionStarted = true;
+					}
+				}
 			}
 			else
 				CompatabilityHacks();
@@ -946,12 +1013,12 @@ TDocker::DoConnection(RefArg arg1, RefArg arg2, RefArg callback, Boolean* done)
 	}
 	if (!fStopping)
 	{
-		if (fError == noErr && fState == kDockStateSync && keyboard)
+		if (fError == noErr && fState == kDockStateSync && operationDone)
 			fSelectiveSyncOK = true;
 	}
 	else
 	{
-		if (!keyboard)
+		if (!operationDone)
 			*done = CleanUpIfStopping(*done);
 		if (fError == -16005)
 			fError = noErr;
@@ -1099,6 +1166,479 @@ TDocker::FlushCommand(void)
 }
 
 
+// ROM 0x00099e7c ReadRef__7TDockerFRC6RefVar
+// An object the desktop sent (NSOF), its large binaries onto the store
+// given; the command's padding read after it.
+Ref
+TDocker::ReadRef(RefArg store)
+{
+	RefVar obj;
+	{
+		TObjectReader reader(*fPipe, store);
+		obj = reader.Read();
+	}
+	if (fLength != 0xffffffff)
+		FlushPadding(fLength);
+	return obj;
+}
+
+
+// ROM 0x00099d10 WriteRef__7TDockerFUlRC6RefVar
+// An object sent as the command's data (NSOF, its length first, padded),
+// large binaries compressed if the desktop asked ('cvbo'); a command of 0
+// is the object alone, no header.
+void
+TDocker::WriteRef(ULong command, RefArg obj)
+{
+	TObjectWriter writer(obj, *fPipe, false);
+	if (command != 0)
+	{
+		WriteDockerHeader(command, false);
+		if (fVBOCompression == 2 || (fField2e && fVBOCompression == 1))
+			writer.SetCompressLargeBinaries();
+		long size = writer.Size();
+		*fPipe << size;
+		writer.Write();
+		Pad(size);
+		fPipe->FlushWrite();
+	}
+	else
+		writer.Write();
+}
+
+
+// ROM 0x00094580 ReadInitiateDocking__7TDockerFv
+// 'dock': the kind of session the desktop wants.
+void
+TDocker::ReadInitiateDocking(void)
+{
+	if (fLength != 4)
+		Throw(exLongErrorException, (void*) (intptr_t) kDockErrBadLength, nil);
+	unsigned long state;
+	*fPipe >> state;
+	fState = (long) state;
+}
+
+
+// ROM 0x0009bc08 WriteNewtonName__7TDockerFv
+// 'name': the Newton's unique id (made the first time it is asked for),
+// what Gestalt says of the machine, the internal store's signature, the
+// serial number, the protocol version, and the owner's name.
+void
+TDocker::WriteNewtonName(void)
+{
+	RefVar pref(GetPreference(RefVar(RSSYMnewtonuniqueid)));
+	ULong uniqueID;
+	if (ISNIL(pref))
+	{
+		long seed = GetRandSeed();
+		SetRandSeed(RealClock());
+		do
+			uniqueID = (ULong) (Long32) (Random() + Random() * 0x10000);
+		while (uniqueID == 0 || (Long32) uniqueID == -1);
+		SetPreference(RefVar(RSSYMnewtonuniqueid), RefVar(MAKEINT(uniqueID)));
+		SetRandSeed(seed);
+	}
+	else
+		uniqueID = RINT(pref);
+	RefVar name(GetPreference(RefVar(RSSYMname)));
+	static const UniChar kNoName[1] = { 0 };
+	const UniChar* nameChars = ISNIL(name) ? kNoName : GetCString(name);
+	ULong version = RINT(GetProtoVariable(fConnection, RefVar(RSSYMprotocolversion), nil));
+	ULong serialNumber[2] = { 0, 0 };
+	GetSystemSerialNumber(serialNumber);
+
+	WriteDockerHeader(kDNewtonName, false);
+	long nameLength = Ustrlen(nameChars) * sizeof(UniChar) + sizeof(UniChar);
+	*fPipe << (long) (nameLength + 0x4c);
+	TUGestalt gestalt;
+	// DEVIATION (pointer size): the ROM asks for 0x3c bytes, the class and
+	// the date of manufacture after it
+	struct { TGestaltSystemInfo info; ULong manufactureDate; } system;
+	memset(&system, 0, sizeof(system));
+	fError = gestalt.Gestalt(kGestalt_SystemInfo, &system, sizeof(system));
+	if (fError != noErr)
+		Throw(exLongErrorException, (void*) (intptr_t) fError, nil);
+	ULong nsVersion = 0;
+	fError = gestalt.Gestalt(kGestalt_NewtonScriptVersion, &nsVersion, sizeof(nsVersion));
+	if (fError != noErr)
+		Throw(exLongErrorException, (void*) (intptr_t) fError, nil);
+	*fPipe << (long) 0x48;
+	*fPipe << (unsigned long) uniqueID;
+	fManufacturer = system.info.fManufacturer;
+	*fPipe << (unsigned long) system.info.fManufacturer;
+	fMachineType = system.info.fMachineType;
+	*fPipe << (unsigned long) system.info.fMachineType;
+	*fPipe << (unsigned long) system.info.fROMVersion;
+	*fPipe << (unsigned long) system.info.fROMStage;
+	*fPipe << (unsigned long) system.info.fRAMSize;
+	// (the height before the width)
+	*fPipe << (unsigned long) system.info.fScreenHeight;
+	*fPipe << (unsigned long) system.info.fScreenWidth;
+	*fPipe << (unsigned long) system.info.fPatchVersion;
+	*fPipe << (unsigned long) nsVersion;
+	RefVar internal(GetArraySlot(RefVar(GetStores()), 0));
+	*fPipe << (long) RINT(StoreGetSignature(internal));
+	*fPipe << (long) system.info.fScreenResolution.v;
+	*fPipe << (long) system.info.fScreenResolution.h;
+	*fPipe << (unsigned long) system.info.fScreenDepth;
+	*fPipe << (long) 3;			// (the system update, the ROM says only "3")
+	*fPipe << (unsigned long) serialNumber[0];
+	*fPipe << (unsigned long) serialNumber[1];
+	*fPipe << (unsigned long) version;
+	// DEVIATION: the name's UniChars are the device's, big-endian
+	UniChar* bigEndian = (UniChar*) NewPtr(nameLength);
+	if (bigEndian == nil)
+		OutOfMemory();
+	for (long i = 0; i < nameLength / (long) sizeof(UniChar); i++)
+	{
+		UByte* b = (UByte*) &bigEndian[i];
+		b[0] = (UByte) (nameChars[i] >> 8);
+		b[1] = (UByte) nameChars[i];
+	}
+	fPipe->WriteChunk(bigEndian, nameLength, false);
+	DisposPtr((Ptr) bigEndian);
+	Pad(nameLength);
+	fPipe->FlushWrite();
+}
+
+
+// ROM 0x000945d8 ReadDesktopInfo__7TDockerFv
+// 'dinf': the desktop's protocol version (10 at least), its platform, its
+// challenge, the session it wants, whether it can sync selectively and
+// (if there is more) its applications; answered by 'ninf' - the version
+// both speak and the Newton's own challenge, two random words.
+void
+TDocker::ReadDesktopInfo(void)
+{
+	unsigned long word;
+	*fPipe >> word;
+	fProtocolVersion = word;
+	if (fProtocolVersion < 10)
+		Throw(exLongErrorException, (void*) (intptr_t) kDockErrProtocolVersion, nil);
+	*fPipe >> word;
+	fPlatform = (long) word;
+	*fPipe >> word;
+	fDesktopChallenge[0] = (DESWord) word;
+	*fPipe >> word;
+	fDesktopChallenge[1] = (DESWord) word;
+	*fPipe >> word;
+	fState = (long) word;
+	*fPipe >> word;
+	fSelectiveSyncOK = (Boolean) word;
+	if (fLength - 0x18 < 4)
+		fDesktopApps = NILREF;
+	else
+		fDesktopApps = ReadRef(RefVar(NILREF));
+
+	WriteDockerHeader(kDNewtonInfo, false);
+	*fPipe << (long) 0xc;
+	ULong version = RINT(GetProtoVariable(fConnection, RefVar(RSSYMprotocolversion), nil));
+	if (version < fProtocolVersion)
+		fProtocolVersion = version;
+	*fPipe << (unsigned long) fProtocolVersion;
+	SetFrameSlot(fConnection, RSSYMprotocolversion, RefVar(MAKEINT(fProtocolVersion)));
+	long seed = GetRandSeed();
+	SetRandSeed(RealClock());
+	fNewtonChallenge[0] = (DESWord) (Random() + Random() * 0x100);
+	fNewtonChallenge[1] = (DESWord) (Random() + Random() * 0x100);
+	SetRandSeed(seed);
+	*fPipe << (unsigned long) fNewtonChallenge[0];
+	*fPipe << (unsigned long) fNewtonChallenge[1];
+	fPipe->FlushWrite();
+}
+
+
+// ROM 0x00092c80 SetWhichIcons__7TDockerFv
+// 'wicn': which of the Connection application's buttons to show.
+void
+TDocker::SetWhichIcons(void)
+{
+	unsigned long icons;
+	*fPipe >> icons;
+	SetFrameSlot(fConnection, RSSYMwhichicons, RefVar(MAKEINT(icons)));
+	WriteResult(noErr);
+}
+
+
+// ROM 0x0009b970 SetTimeout__7TDockerFv
+// 'stim' during a session: the pipe's timeout, in seconds.
+void
+TDocker::SetTimeout(void)
+{
+	unsigned long seconds;
+	*fPipe >> seconds;
+	fPipe->SetTimeout(seconds * kSeconds);
+	WriteResult(noErr);
+}
+
+
+// ROM 0x000947e8 WritePassword__7TDockerFRC6RefVar
+// 'pass': the desktop's challenge encrypted under the password's key (a
+// string, or the key itself as an 8-byte binary).  A desktop that sent no
+// challenge is told kDockErrNotConnected instead.
+void
+TDocker::WritePassword(RefArg password)
+{
+	if (fDesktopChallenge[0] == 0 && fDesktopChallenge[1] == 0)
+	{
+		WriteDockerHeader(kDResult, false);
+		*fPipe << (long) 4;
+		*fPipe << (long) kDockErrNotConnected;
+		fPipe->FlushWrite();
+		return;
+	}
+	if (IsInstance(password, RSSYMstring))
+	{
+		LockRef(password);
+		DESCharToKey(GetCString(password), fKey);
+		UnlockRef(password);
+	}
+	else if (IsBinary(password))
+	{
+		LockRef(password);
+		const UByte* key = (const UByte*) BinaryData(password);
+		fKey[0] = GetBigEndianWord(key);
+		fKey[1] = GetBigEndianWord(key + 4);
+		UnlockRef(password);
+	}
+	else
+		// ROM BUG: neither a string nor a key: the desktop is told the
+		// password is wrong, and then sent the challenge encrypted under
+		// whatever key the docker had anyway (and the ROM unlocks nothing
+		// it locked, which is harmless)
+		WriteResult(kDockErrNotConnected);
+	DESWord block[2] = { fDesktopChallenge[0], fDesktopChallenge[1] };
+	DESEncodeNonce(fKey, block);
+	WriteDockerHeader(kDPassword, false);
+	*fPipe << (long) 8;
+	*fPipe << (unsigned long) block[0];
+	*fPipe << (unsigned long) block[1];
+	fPipe->FlushWrite();
+}
+
+
+// ROM 0x00094920 VerifyPassword__7TDockerFv
+// The desktop's 'pass': our challenge, encrypted under our key - or, the
+// ROM allows, under the empty password's.  Anything else is a wrong
+// password (said, and thrown).
+void
+TDocker::VerifyPassword(void)
+{
+	if (fLength != 8)
+		Throw(exLongErrorException, (void*) (intptr_t) kDockErrBadLength, nil);
+	unsigned long word;
+	*fPipe >> word;
+	DESWord reply[2];
+	reply[0] = (DESWord) word;
+	*fPipe >> word;
+	reply[1] = (DESWord) word;
+	DESWord block[2] = { reply[0], reply[1] };
+	DESDecodeNonce(fKey, block);
+	if (!(fNewtonChallenge[0] == block[0] && fNewtonChallenge[1] == block[1]))
+	{
+		static const UniChar kNoPassword[2] = { 0, 0 };
+		DESWord emptyKey[2];
+		DESCharToKey(kNoPassword, emptyKey);
+		DESDecodeNonce(emptyKey, reply);
+		if (!(fNewtonChallenge[0] == reply[0] && fNewtonChallenge[1] == reply[1]))
+		{
+			WriteResult(kDockErrNotConnected);
+			Throw(exLongErrorException, (void*) (intptr_t) kDockErrNotConnected, nil);
+		}
+	}
+	fSessionAgreed = true;
+}
+
+
+// ROM 0x00094a20 ReadPassword__7TDockerFv
+// The desktop's answer to our 'pass': its own ('pass', verified - the ROM
+// has VerifyPassword in line), 'pwbd' (ask the user again:
+// kDockErrRetryPassword), or a result, which ends the session.
+void
+TDocker::ReadPassword(void)
+{
+	ReadDockerHeader(&fCommand, &fLength);
+	if (fCommand == kDPassword)
+	{
+		VerifyPassword();
+		return;
+	}
+	if (fCommand == kDPWWrong)
+	{
+		fError = kDockErrRetryPassword;
+		return;
+	}
+	long error = kDockErrDesktopError;
+	if (fCommand == kDResult)
+	{
+		error = fError = ReadResult();
+		if (error == noErr)
+			return;
+	}
+	Throw(exLongErrorException, (void*) (intptr_t) error, nil);
+}
+
+
+// ROM 0x00094ac4 RetryPassword__7TDockerFRC6RefVar
+// The password again, after the desktop said 'pwbd'.  ==> fError.
+long
+TDocker::RetryPassword(RefArg password)
+{
+	if (fCleanedUp)
+		return noErr;
+	WaitAndLockTDocker();
+	fError = noErr;
+	newton_try
+	{
+		WritePassword(password);
+		ReadPassword();
+		fSessionStarted = true;
+	}
+	newton_catch_all
+	{
+		ProcessException(CurrentException());
+	}
+	end_try;
+	CleanUpIfStopping(false);
+	CleanUpIfError(false);
+	UnlockTDocker();
+	return fError;
+}
+
+
+// ROM 0x0009c150 CheckProtocolExtension__7TDockerFUlRUc
+// A command a protocol extension handles: its function called (on the
+// protocol frame) with the docker unlocked meanwhile; result says whether
+// it answered something other than nil.  ==> whether it was one.
+Boolean
+TDocker::CheckProtocolExtension(ULong command, Boolean* result)
+{
+	long index;
+	if (fExtensionCommands == nil || (index = fExtensionCommands->Find(command)) < 0)
+		return false;
+	fInExtension = true;
+	Boolean wasLocked = GetTDockerLock();
+	UnlockTDocker();
+	RefVar fn(GetArraySlot(fExtensions, index));
+	*result = NOTNIL(NSCall(fn, fConnection));
+	fInExtension = false;
+	if (wasLocked)
+		WaitAndLockTDocker();
+	return true;
+}
+
+
+// ROM 0x0009c1f8 CheckProtocolPatch__7TDockerFUlRUc
+// (A command a protocol patch handles: none, in this ROM.)
+Boolean
+TDocker::CheckProtocolPatch(ULong /*command*/, Boolean* /*result*/)
+{
+	return false;
+}
+
+
+// ROM 0x000934b0 ProcessCommand__7TDockerFRUcT1
+// One of the desktop's commands carried out.  done: the session is over
+// ('disc'); operationDone: the operation the session was for is over, and
+// the command loop ends without disconnecting (an extension answered,
+// 'opca', 'opdn', a package loaded on protocol 10).
+// NOT YET: the soup, entry, cursor, store, package-list, patch, slip and
+// function commands - each is answered 'unkn' as a command the Newton does
+// not know is, which a desktop takes as a Newton too old to do it.
+void
+TDocker::ProcessCommand(Boolean* done, Boolean* operationDone)
+{
+	*done = false;
+	*operationDone = false;
+	fSessionStarted = false;
+	if (CheckProtocolExtension(fCommand, operationDone) || CheckProtocolPatch(fCommand, operationDone))
+		;
+	else
+	{
+		switch (fCommand)
+		{
+		case kDLoadPackage:
+			if (fState == kDockStateRestore)
+				fCurrentSoup = ISNIL(fCurrentStore) ? NILREF : StoreGetSoup(fCurrentStore, RefVar(Rextrassoupname));
+			ReadPackage();
+			WriteResult(fError);
+			if (fState != kDockStateRestore && fProtocolVersion == 10)
+				*operationDone = true;
+			break;
+		case kDDisconnect:
+			*done = true;
+			break;
+		case kDResult:
+			fError = ReadResult();
+			break;
+		case kDHello:
+			FlushCommand();
+			break;
+		case kDUnknownCommand:
+		{
+			unsigned long command;
+			*fPipe >> command;
+			fCommand = command;
+			Throw(exLongErrorException, (void*) (intptr_t) kDockErrNoDocker, nil);
+		}
+		case kDWhichIcons:
+			SetWhichIcons();
+			break;
+		case kDSetTimeout:
+			SetTimeout();
+			break;
+		case kDOperationCanceled:
+			*operationDone = true;
+			WriteDockerHeader(kDOpCanceledAck, true);
+			break;
+		case kDOpDone:
+			*operationDone = true;
+			break;
+		case kDSetVBOCompression:
+		{
+			unsigned long compression;
+			*fPipe >> compression;
+			fVBOCompression = (long) compression;
+			break;
+		}
+		case kDSync:
+			fState = kDockStateSync;
+			WriteResult(noErr);
+			break;
+		case kDRestore:
+			fState = kDockStateRestore;
+			WriteResult(noErr);
+			break;
+		case kDRestoreAll:
+			fState = kDockStateLoadPackage;
+			WriteResult(noErr);
+			break;
+		case kDDesktopInControl:
+			fState = kDockStateNone;
+			fSessionStarted = false;
+			break;
+		case kDSetTime:
+		{
+			unsigned long minutes;
+			*fPipe >> minutes;
+			fDesktopTime = minutes & 0x1fffffff;
+			fTimeSet = RealClock();
+			WriteLong(kDTime, fTimeSet);
+			break;
+		}
+		default:
+			// NOT YET (see above), and a command no Newton knows
+			FlushCommand();
+			WriteLong(kDUnknownCommand, fCommand);
+			break;
+		}
+	}
+	if (*operationDone)
+		fSessionStarted = true;
+}
+
+
 // ------------------------------------------------------------------------
 //	The protocol frame's natives
 // ------------------------------------------------------------------------
@@ -1132,14 +1672,14 @@ SaveTheDocker(RefArg connection, TDocker* docker)
 
 
 // ROM 0x0009631c CleanUpDockerIfError__FRC6RefVarlUcT3
-// After a native: no error (or kDockErrAlreadyDocking, or -16005) notes the
+// After a native: no error (or kDockErrRetryPassword, or -16005) notes the
 // time the desktop was last heard from (if touch); any other error deletes
 // the docker and leaves the frame not connected.  An error is then thrown
 // if throwIt says so.
 void
 CleanUpDockerIfError(RefArg connection, long error, Boolean touch, Boolean throwIt)
 {
-	if (error == noErr || error == kDockErrAlreadyDocking || error == -16005)
+	if (error == noErr || error == kDockErrRetryPassword || error == -16005)
 	{
 		if (touch)
 			SetFrameSlot(connection, RSSYMlastcommunicationwithdesktop, RefVar(FTimeInSeconds(RefVar(NILREF))));
@@ -1196,7 +1736,7 @@ Ref
 FConnConnect(RefArg rcvr, RefArg options, RefArg password)
 {
 	long error = GetTheDocker(rcvr, true)->Connect(rcvr, options, password);
-	if (error == noErr || error == kDockErrAlreadyDocking)
+	if (error == noErr || error == kDockErrRetryPassword)
 	{
 		SetFrameSlot(rcvr, RSSYMthedesktoptype, RefVar(MAKEINT(GetTheDocker(rcvr, true)->GetPlatform())));
 		SetFrameSlot(rcvr, RSSYMconnected, RefVar(TRUEREF));
@@ -1250,6 +1790,38 @@ FConnBuildStoreFrame(RefArg rcvr, RefArg store, RefArg withInfo)
 	GetStoreVersion(StoreFromWrapper(store), &version);
 	SetFrameSlot(frame, RSSYMstoreversion, RefVar(MAKEINT(version)));
 	return frame;
+}
+
+
+// ROM 0x00096884 FConnRetryPassword
+// RetryPassword(password)
+Ref
+FConnRetryPassword(RefArg rcvr, RefArg password)
+{
+	long error = GetTheDocker(rcvr, true)->RetryPassword(password);
+	CleanUpDockerIfError(rcvr, error, true, true);
+	return NILREF;
+}
+
+
+// ROM 0x00097124 FDESCreatePasswordKey
+// DESCreatePasswordKey(password): the password's key, an 8-byte 'deskey
+// binary (which a password slot may hold in its place).
+Ref
+FDESCreatePasswordKey(RefArg /*rcvr*/, RefArg password)
+{
+	if (!IsInstance(password, RSSYMstring))
+		Throw(exErrorException, (void*) (intptr_t) kDockErrNotConnected, nil);
+	LockRef(password);
+	DESWord key[2];
+	DESCharToKey(GetCString(password), key);
+	UnlockRef(password);
+	RefVar binary(AllocateBinary(RSSYMdeskey, 8));
+	LockRef(binary);
+	PutBigEndianWord(BinaryData(binary), key[0]);
+	PutBigEndianWord(BinaryData(binary) + 4, key[1]);
+	UnlockRef(binary);
+	return binary;
 }
 
 
@@ -1364,6 +1936,8 @@ RegisterDockerNatives(void)
 	RegisterNativeFunction("FConnInstallProtocolExtension", (void*) FConnInstallProtocolExtension, 2);
 	RegisterNativeFunction("FConnRemoveProtocolExtension", (void*) FConnRemoveProtocolExtension, 1);
 	RegisterNativeFunction("FConnStop", (void*) FConnStop, 0);
+	RegisterNativeFunction("FConnRetryPassword", (void*) FConnRetryPassword, 1);
+	RegisterNativeFunction("FDESCreatePasswordKey", (void*) FDESCreatePasswordKey, 1);
 	RegisterNativeFunction("FConnBuildStoreFrame", (void*) FConnBuildStoreFrame, 2);
 	RegisterNativeFunction("FConnGetSyncChanges", (void*) FConnGetSyncChanges, 0);
 	RegisterNativeFunction("FConnectionState", (void*) FConnectionState, 0);

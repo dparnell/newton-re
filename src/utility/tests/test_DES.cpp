@@ -213,6 +213,20 @@ main()
 	CheckPassword("password");
 	CheckPassword("a longer password than eight");
 
+	// the values tools/dock/newtondes.py (the desktop's copy) prints
+	{
+		static const UniChar kEmpty[1] = { 0 };
+		static const UniChar kSecret[7] = { 's', 'e', 'c', 'r', 'e', 't', 0 };
+		DESWord k[2];
+		DESCharToKey(kEmpty, k);
+		EXPECT(k[0] == 0xf207bf4f && k[1] == 0x851b167d);
+		DESCharToKey(kSecret, k);
+		EXPECT(k[0] == 0xcdfbc154 && k[1] == 0x1567c58d);
+		DESWord key[2] = { 0x13345779, 0x9BBCDFF1 }, block[2] = { 0x01234567, 0x89ABCDEF };
+		DESEncodeNonce(key, block);
+		EXPECT(block[0] == 0xb1a43e32 && block[1] == 0xd37048e8);
+	}
+
 	if (failures == 0)
 		printf("test_DES: all passed\n");
 	else

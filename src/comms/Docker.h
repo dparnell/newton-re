@@ -23,14 +23,22 @@
 				is) are FConn*; the docker object hangs off the frame's
 				conncobject slot as an address Ref.
 
-				NOT YET: a docking session ('dock': ReadInitiateDocking,
-				the Newton's name, the desktop info, the icons, the
-				password exchange) and its commands (ProcessCommand and the
-				soup, store, package and keyboard commands); the protocol
-				extensions are recorded (InstallProtocolExtension) but
-				never called, that being ProcessCommand's; the keyboard
-				passthrough.  A desktop that
-				answers 'dock' is told kCommErrMethodNotImplemented.
+				A docking session: 'dock' (the kind of session), the
+				Newton's 'name', the desktop's 'dinf' answered by 'ninf'
+				(the protocol both speak, and each side's challenge), the
+				icons and the timeout, then the passwords - each side
+				sends the other's challenge encrypted under its own key
+				(utility/DES.h; the empty password's key is accepted too).
+				Then ProcessCommand carries out the desktop's commands:
+				packages ('lpkg'), the session's kind ('ssyn', 'rrst',
+				'rins', 'dsnc'), the time, the timeout, the icons,
+				cancelling, and the protocol extensions (a function the
+				Connection application installed for a command).
+
+				NOT YET: the soup, entry, cursor, store, package-list,
+				patch, slip and function commands - each is answered
+				'unkn', as a Newton that does not know it would; the
+				keyboard passthrough.
 
 				The ROM's class; its declaration is not in the DDK, so the
 				names of the fields are ours, their order the ROM's (0xb8
@@ -49,6 +57,7 @@
 #endif
 #include "objects.h"
 #include "NewtonExceptions.h"
+#include "DES.h"
 
 // the commands (what the words spell)
 enum
@@ -65,7 +74,20 @@ enum
 	kDSync				= 'ssyn',
 	kDRestore			= 'rrst',
 	kDOperationCanceled	= 'opca',
-	kDOpCanceledAck		= 'ocaa'
+	kDOpCanceledAck		= 'ocaa',
+	kDNewtonName		= 'name',
+	kDNewtonInfo		= 'ninf',
+	kDPassword			= 'pass',
+	kDPWWrong			= 'pwbd',
+	kDHello				= 'helo',
+	kDUnknownCommand	= 'unkn',
+	kDOpDone			= 'opdn',
+	kDSetStoreGetNames	= 'ssgn',
+	kDSetTime			= 'stme',
+	kDTime				= 'time',
+	kDSetVBOCompression	= 'cvbo',
+	kDRestoreAll		= 'rins',
+	kDDesktopInControl	= 'dsnc'
 };
 
 // the docker's errors
@@ -74,13 +96,14 @@ enum
 	kDockErrBadStoreSignature	= -28001,
 	kDockErrDesktopError		= -28012,		// (-28012 = 0xffff9294: an unexpected command)
 	kDockErrBadHeader			= -28016,		// not 'newt' 'dock', or not what was expected
-	kDockErrNotConnected		= -28022,		// DoConnection before a session was agreed
-	kDockErrAlreadyDocking		= -28023,		// (a connection that is not an error)
+	kDockErrNotConnected		= -28022,		// DoConnection before a session was agreed; a bad password
+	kDockErrRetryPassword		= -28023,		// the desktop asks for the password again ('pwbd'): not an error
 	kDockErrNoDocker			= -28009,		// the frame has no docker
 	kDockErrDisconnected		= -28013,		// stopped while connecting
 	kDockErrRequestToDock		= -28029,		// the desktop said 'rtdk' back
 	kDockErrProtocolVersion		= -28011,		// (-28011 = 0xffff9295)
-	kDockErrBadExtension		= -28020		// no command, or one already extended
+	kDockErrBadExtension		= -28020,		// no command, or one already extended
+	kDockErrBadLength			= -28007		// a command's data not the length it must be
 };
 
 // the session's states (eDockingState)
@@ -152,6 +175,7 @@ public:
 
 	Boolean			GetTDockerLock(void);
 	Boolean			WaitAndLockTDocker(void);
+	long			RetryPassword(RefArg password);
 	void			UnlockTDocker(void);
 
 	void			ProcessException(Exception* exception);
@@ -174,6 +198,23 @@ public:
 	void			Pad(ULong length);
 	void			FlushPadding(ULong length);
 	void			FlushCommand(void);
+	Ref				ReadRef(RefArg store);
+	void			WriteRef(ULong command, RefArg obj);
+
+	// the docking session's handshake
+	void			ReadInitiateDocking(void);
+	void			WriteNewtonName(void);
+	void			ReadDesktopInfo(void);
+	void			SetWhichIcons(void);
+	void			SetTimeout(void);
+	void			WritePassword(RefArg password);
+	void			ReadPassword(void);
+	void			VerifyPassword(void);
+
+	// its commands
+	void			ProcessCommand(Boolean* done, Boolean* operationDone);
+	Boolean			CheckProtocolExtension(ULong command, Boolean* result);
+	Boolean			CheckProtocolPatch(ULong command, Boolean* result);
 
 	// DEVIATION: the ROM keeps its Refs in RefHandles it allocates itself
 	// (AllocateRefHandle, stackPos 0); RefStructs are the same thing, made
@@ -190,10 +231,10 @@ public:
 	Boolean			fField2d;				// +0x2d
 	Boolean			fField2e;				// +0x2e
 	Boolean			fSessionStarted;		// +0x2f  the session is under way (the desktop has spoken)
-	Boolean			fField30;				// +0x30
+	Boolean			fInExtension;			// +0x30  a protocol extension is running
 	Boolean			fField31;				// +0x31
 	Boolean			fLocked;				// +0x32
-	Ref				fField34;				// +0x34
+	long			fVBOCompression;		// +0x34  'cvbo': large binaries written compressed (2 always, 1 when fField2e)
 	long			fField38;				// +0x38
 	long			fField3c;				// +0x3c
 	RefStruct		fSyncChanges;			// +0x40
@@ -202,25 +243,22 @@ public:
 	ULong			fProtocolVersion;		// +0x4c
 	long			fError;					// +0x50
 	TCursorArray*	fCursors;				// +0x54
-	long			fField58;				// +0x58
-	long			fField5c;				// +0x5c
+	ULong			fManufacturer;			// +0x58  the Newton's, as its name says them
+	ULong			fMachineType;			// +0x5c
 	Ref				fField60;				// +0x60
 	long			fField64;				// +0x64
 	long			fField68;				// +0x68
 	RefStruct		fField6c;				// +0x6c
 	RefStruct		fField70;				// +0x70
-	long			fField74;				// +0x74
-	long			fField78;				// +0x78
+	ULong			fDesktopTime;			// +0x74  'stme': the desktop's clock (minutes)
+	ULong			fTimeSet;				// +0x78  and ours when it said so
 	TDockerDynArray*	fDynArray7c;		// +0x7c
 	TDockerDynArray*	fExtensionCommands;	// +0x80  the protocol extensions' commands
 	RefStruct		fExtensions;			// +0x84  and their functions, in the same order
 	RefStruct		fDesktopApps;			// +0x88
-	long			fField8c;				// +0x8c
-	long			fField90;				// +0x90
-	long			fField94;				// +0x94
-	long			fField98;				// +0x98
-	long			fField9c;				// +0x9c
-	long			fFielda0;				// +0xa0
+	DESWord			fDesktopChallenge[2];	// +0x8c  what the desktop wants encrypted with the password
+	DESWord			fNewtonChallenge[2];	// +0x94  what the Newton wants encrypted
+	DESWord			fKey[2];				// +0x9c  the password's key
 	long			fState;					// +0xa4
 	long			fPlatform;				// +0xa8
 	Boolean			fSessionAgreed;			// +0xac  DoConnection may go ahead
