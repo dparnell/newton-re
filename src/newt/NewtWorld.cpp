@@ -25,6 +25,7 @@
 #include "Locale.h"
 #include "Fonts.h"
 #include "Screen.h"
+#include "NTK.h"
 #include "CommManager.h"
 #include "HostServices.h"
 #include "Translators.h"
@@ -48,6 +49,7 @@
 #include "NSErrors.h"
 #include "OSErrors.h"
 #include "Screen.h"
+#include "NTK.h"
 #include <string.h>
 
 NewtGlobals*	gNewtGlobals = nil;			// ROM 0x0c1054b0 gNewtGlobals
@@ -195,7 +197,7 @@ TNewtWorld::ForkSwitch(Boolean in)
 // with the OS running NewCoder makes them by name through the registry
 // rather than straight off their class info.
 // NOT YET RECONSTRUCTED: the real-time alarm
-// name, NTKInit, REPInit/ResetREPIdler, InitExternal,
+// name, InitExternal,
 // HandleCardEvents,
 // HandleTestAgentEvent, FMinimumBatteryCheck, LoadInkerCalibration,
 // AllocateEarlyStuff (the sort tables).
@@ -244,8 +246,14 @@ TNewtWorld::MainConstructor()
 		InitFonts();
 	}
 	InitTranslators();			// (comms/Translators.h: its flatten and stream translators NOT YET)
+	NTKInit();					// ROM 0x0030d280: the REP translators registered, the REP's idler made
 	if (gREPout == nil)
 		HostInitREP(stdout, nil);
+	// ROM 0x0030d29c: the REP's idler set for its translators.  (The ROM
+	// does this between InitREPIn/InitREPOut and REPInit, which HostInitREP
+	// makes one call; REPInit leaves the translators' idle times as they
+	// are, so after it comes to the same.)
+	ResetREPIdler();
 	fGlobals.fInterpreter = gInterpreter;
 	fGlobals.fStackPos = gCurrentStackPos;
 	fGlobals.fPort = GetCurrentPort();

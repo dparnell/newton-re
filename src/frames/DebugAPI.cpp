@@ -526,13 +526,6 @@ NTKStackFrameInfo(TNSDebugAPI& api, long index)
 }
 
 
-// ROM 0x002d3510 NTKStackTrace__FPv
-// NOT YET RECONSTRUCTED: the NTK's stack trace over its connection.
-void
-NTKStackTrace(void* /*interpreter*/)
-{ }
-
-
 /* -------------------------------------------------------------------------------
 	The REP's stack trace
 ------------------------------------------------------------------------------- */

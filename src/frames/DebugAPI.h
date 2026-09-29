@@ -63,7 +63,7 @@ Ref		GetNameFromDebugHash(RefArg hash);
 Ref		CheckForObjectName(RefArg context, const char* contextName, RefArg obj);
 Ref		SearchForObjectName(RefArg obj);		// "vars", "vars.foo", "functions.bar" ...
 Ref		NTKStackFrameInfo(TNSDebugAPI& api, long index);
-void	NTKStackTrace(void* interpreter);		// NOT YET RECONSTRUCTED
+// (NTKStackTrace, which sends these over the NTK's connection, is comms/NTK.h's)
 void	REPBreakLoop(void);
 void	BreakLoop(void);
 

@@ -109,6 +109,27 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
                      --expect-second "queued: \"Beamed note\".*beam-send: the Out Box is empty"
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonBeamIrDA PROPERTIES TIMEOUT 300 PASS_REGULAR_EXPRESSION "twonewtons.py: both ended as expected")
+    # the Newton Toolkit's inspector (comms/NTK.h): ntkListener over MNP on
+    # the serial port to tools/ntk/inspector.py, which sets the timeout,
+    # installs and deletes a package, evaluates expressions (one sending an
+    # object back with NTKSend), sends lines to the REP (their output, and
+    # three exceptions: a ref, a message and an error) and tells the script
+    # to close the listener; then ntkDownload, answered with the package
+    add_test(NAME host.NewtonNTK
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/ntk/inspector.py
+                     --timeout 45
+                     --install ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monaco.pkg --delete Monaco
+                     --eval "1 + 2" --eval "NTKSend({answer: 42}); 'sent" --eval "foreach p in GetPackages() collect p.title"
+                     --line "Print(\"hello from the inspector\")" --line "Throw(x, 1)"
+                     --line "Throw('|evt.ex.msg|, \"oops\")" --line "Throw('|evt.ex.foo|, -8007)"
+                     --finish "vars.ntkInspected := true"
+                     --package ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monaco.pkg
+                     --spawn $<TARGET_FILE:newton> --rom ${NEWTON_ROM_BIN} --serial-port 0 --headless 150
+                     --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/ntk.ns
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonNTK PROPERTIES TIMEOUT 240
+                         PASS_REGULAR_EXPRESSION "connected .'cnnt' answered 'okln'.*timeout set: rslt 0.*monaco.pkg installed: rslt 0.*Monaco deleted: rslt 0.*1 . 2 => 3.*<- fobj {'answer: 42}.*=> 'Sent.*=> \\['Cardfile'.*<- text '\"hello from the inspector\"'.*<- eref .'evt.ex.fr.intrp;type.ref.frame'.*<- estr .'evt.ex.msg', 'oops'.*<- eerr .'evt.ex.foo', -8007.*listener: 0, alive: TRUE.*monaco.pkg: rslt 0.*ntk: download 0.*ntk: installed Monaco.*ntk: done.*exit status 0"
+                         FAIL_REGULAR_EXPRESSION "waited in vain|fell over")
 endif()
 
 # deferred recognition (views/Rerecognize.h): "ton" written, and the

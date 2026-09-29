@@ -55,6 +55,7 @@
 #include "NewScriptEndpoint.h"
 #include "Docker.h"
 #include "Beamer.h"
+#include "NTK.h"
 #include "NIENatives.h"
 
 
@@ -130,6 +131,9 @@ RegisterAllNatives(void)
 	RegisterCommsNatives();
 	RegisterDockerNatives();
 	RegisterBeamerNatives();
+
+	// the Newton Toolkit's inspector connection
+	RegisterNTKNatives();
 
 	// third-party packages' native functions re-expressed (the NIE's)
 	RegisterNIENatives();

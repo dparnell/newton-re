@@ -1,0 +1,41 @@
+// The Newton Toolkit's inspector (ctest host.NewtonNTK): the listener
+// opened over MNP on the serial port (connection type 3), with
+// tools/ntk/inspector.py at the other end evaluating expressions, sending
+// lines to the REP and at last setting vars.ntkInspected; then the
+// listener closed and one package asked for with ntkDownload, which the
+// inspector answers with fixtures/packages/fonts/monaco.pkg.
+//   python tools/ntk/inspector.py --eval "1 + 2" --finish "vars.ntkInspected := true" \
+//       --package fixtures/packages/fonts/monaco.pkg \
+//       --spawn build/host/host/newton --rom build/MP2x00US/rom.bin \
+//       --serial-port 0 --headless 150 --script src/host/demo/ntk.ns
+// (What this script prints while the listener is open goes to the
+// inspector, as 'text'.)
+HostInclude("common.ns");
+vars.ntkInspected := nil;
+before := Length(GetPackages());
+Print({listener: ntkListener(true, 3, nil, nil, nil), alive: NTKAlive()});
+
+// The listener's task is told to finish, not waited for, so its name
+// ('ntk ') is still registered for a moment after ntkListener(nil): until
+// it has gone, ntkDownload's own task cannot start and it answers -10068
+// (kError_Already_Registered).  Tried again until it can.
+tries := 0;
+download := func() begin
+	local result := ntkDownload(3, nil, nil, nil);
+	if result = -10068 and tries < 80 then begin
+		tries := tries + 1;
+		AddDelayedCall(download, nil, 250);
+	end else begin
+		Print("ntk: download " & result);
+		local packages := GetPackages();
+		if Length(packages) > before then
+			Print("ntk: installed " & packages[Length(packages) - 1].title);
+		Print("ntk: done");
+		HostQuit();
+	end;
+end;
+
+call waitFor with ("ntk: the inspector", func() vars.ntkInspected, func() begin
+	Print({listenerClosed: ntkListener(nil, nil, nil, nil, nil), alive: NTKAlive()});
+	call download with ();
+end, 120);

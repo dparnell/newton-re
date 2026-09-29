@@ -88,4 +88,13 @@ add_library(comms_dock STATIC
 )
 target_link_libraries(comms_dock PUBLIC comms_serial comms_script packages stores newt intl qd utility)
 
+# The Newton Toolkit's inspector connection (NTK.h): the debugger nub the
+# desktop's NTK talks to, its task and endpoint client (over the dock's easy
+# options), the REP translators it swaps in, and the tethered listener.
+add_library(comms_ntk STATIC
+    NTKTranslators.cpp
+    NTKNub.cpp
+)
+target_link_libraries(comms_ntk PUBLIC comms_dock comms_script packages stores views newt frames utility)
+
 add_subdirectory(tests)
