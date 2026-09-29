@@ -71,6 +71,7 @@ steps := [
 		Print("inetsetup: host setups " & call hostSetups with ());
 		GetRoot().|InternetSetup:NIE|:Close();
 		Print("inetsetup: done");
+		HostQuit();
 	end];
 
 nextStep := func() begin
@@ -82,4 +83,22 @@ nextStep := func() begin
 	end;
 end;
 
-AddDelayedCall(nextStep, nil, 7000);
+// The steps start once what they need is there - the three packages
+// installed (one after the other, as `newton --package` sends them), the
+// NIE's service registry made by its procrastinated UnitsInstalledScript
+// and the host's services and stationery in it (comms/host/HostLink.ns) -
+// asked for until it is so rather than waited for a fixed time, which
+// under load was not long enough (the application then said it had no
+// module packages).
+ready := func()
+	GetRoot().|InternetSetup:NIE| and GetGlobalVar('|InetServices:NIE|)
+		and GetGlobalVar('|InetServices:NIE|).|HostNetwork:host| and GetDataDefs('|HostNetwork:host|)
+		and Query(GetUnionSoupAlways("Internet Setups"), {type: 'index}):Entry();
+startTicks := Ticks();
+waitReady := func() begin
+	if call ready with () or Ticks() - startTicks > 120 * 60 then
+		AddDelayedCall(nextStep, nil, 1500)
+	else
+		AddDelayedCall(waitReady, nil, 250);
+end;
+AddDelayedCall(waitReady, nil, 1000);
