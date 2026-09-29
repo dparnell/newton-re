@@ -9,6 +9,19 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: the book reader, round 3 - the remote view and page thumbnails
+
+- `views/RemoteView.h`: `TRemoteView` (classes 87/88), made by
+  `BuildView` - it hides its one child and draws it itself, scaled into
+  its own bounds keeping the aspect ratio (the scaling undone if the
+  drawing throws); printing a full page it draws only what the print
+  form covers (2db2779).
+- `PageThumbnail` builds the ROM's thumbnail template (from the page
+  template's `thumbnailScript` or the page's blocks) as a `TRemoteView`,
+  which Copperfield draws into a 60x80 bitmap; `books.Copperfield`
+  checks it (b3f9b77).  Found: text drawn under `TQDScaler` comes out
+  about a third of its width.
+
 ## 2026-09-29: the book reader, round 2 - the search, and Copperfield reads a book
 
 - The search (`src/books/Search.cpp`): `TLibrarian::Find`/`CuFind` over a
