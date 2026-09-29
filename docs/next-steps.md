@@ -122,13 +122,12 @@ worked through.  What could come next (not ranked; the owner chooses):
   Recorder's Rec, Stop, Play); GSM checked bit for bit against the
   standard 06.10 test sequences, if they can be brought in;
   `NewWiredPtr` in `memory/` (the `NewPtr` fallback works).
-- **The book reader, round 2** (round 1 done 2026-09-29: the help book
-  installs, opens and draws a page - `docs/books/README.md`): the search
-  (`TLibrarian::Find`, `TextSearch`, `FindPageByValue`/`BySubject`,
-  `FindContentBySlot`, `CuFind`, `TurnToContent`),
-  `PageContents`/`PageScroll`/`PageThumbnail`, `ZoomView` over
-  `ZoomRect`, ink marks (`AddInkMarks`), and a Copperfield book from a
-  package.
+- **The book reader**: done bar `PageThumbnail` (2026-09-29;
+  `docs/books/README.md`), which waits on `TRemoteView` (view class 88).
+  A package with a `'book` part is wanted in `fixtures/` to test the
+  part handler with a real book (Copperfield has only read the help book
+  under another ISBN).  The rest of the reader is its NewtonScript side,
+  which runs as it is.
 - **The comms stack**: being worked (2026-09-29; `docs/comms/README.md`).
   Networking goes to the host's own TCP/IP stack through host
   implementations of the NIE's services (`inet`, `ictl`, `dnst`) - the

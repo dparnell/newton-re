@@ -9,6 +9,25 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: the book reader, round 2 - the search, and Copperfield reads a book
+
+- The search (`src/books/Search.cpp`): `TLibrarian::Find`/`CuFind` over a
+  book's hints and the `FiveBitASCII_Adobe` table (`BookTables.cpp`,
+  romtable.py), `TextSearch` (a hit only at the start of a word, the
+  result titled by the words around it), `FindContentBySlot`,
+  `FindPageByValue`/`BySubject`, `TurnToContent`, `AddInkMarks`.  ROM
+  bugs kept: a book without hints is never searched; a partial match
+  loses the character that broke it ("aab" does not contain "ab");
+  `FindPageByValue`'s first-page stop is per page (d8bab4a).
+- `PageContents`, `PageScroll`, `ZoomView` over `qd/ZoomRect.cpp`'s
+  `ZoomRect`/`FixStep` (db6b82d).
+- Copperfield opens a book (the help book under another ISBN, put in by
+  `BookAvailable`), turns to page 5, scrolls, keeps its place in the
+  Library soup and takes a bookmark (ctest `books.Copperfield`,
+  d2a2812).  The title overlapping a help page's first line is thought
+  to be the ROM's own layout (help pages are laid out for Tiny Tim), not
+  confirmed.
+
 ## 2026-09-29: comms, round 2 - the endpoint, the marshalling and the translators
 
 - The NIE's option layouts read out of its own native code with the new
