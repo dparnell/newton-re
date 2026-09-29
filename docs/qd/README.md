@@ -205,15 +205,69 @@ aligned to the port's `patAlign`.  "Or" on a gray map is not a bitwise
 or: every non-white source pixel replaces the destination pixel (the
 ROM's per-depth loops clear the destination pixel first).  The ROM's
 blitter works a halfword-aligned word at a time with per-depth loops
-(`BBSrcCopy`, `BBSrcOr2`, ...); the host's `Draw.cpp` works a pixel at a
+(`BBSrcCopy`, `BBSrcOr2`, ...); the host's `Draw.cpp` works a row at a
 time with the same semantics (`DEVIATION`: the code, not the pixels),
 copying a row ahead of writing it and bottom-up when the source lies
-above the destination in the same map.  `CopyBits` 0x00289898 goes
+above the destination in the same map - "Drawing speed" below.  `CopyBits` 0x00289898 goes
 through the port's `bitsProc` (`StdBits` 0x00288abc: clipped by the
 port's regions and the mask) when the destination is the current port's
 bits, else straight to `StretchBits`.
 `test_Draw` checks every verb, mode, clip and depth pixel by pixel on
 offscreen maps.
+
+### Drawing speed
+
+The host's blitter was first written a pixel at a time through
+`GetPixel`/`SetPixel`, which made a busy screen slow to redraw. Measured
+with `src/host/demo/drawbench.ns`, which opens and closes Names, Dates
+and the Extras drawer, scrolls the Notepad and redraws the screen, 20
+times each. It reports the processor time (`HostCPUTime`) and the wall
+time; the wall time also includes the open and close animations' own
+pacing. `tools/host/profile.py <pid>` samples a running host.
+
+The profile at the start: `RgnBlt` 77% inclusive, and `GetPixel`,
+`SetPixel`, `BlitPixels` and `PatternPixel` about 60% self. Once the
+blitter was fast, the host display driver's `Blit` (every animation frame
+reaches the display) came next.
+
+- **The blitter's fast path, `BlitPixelsFast`:**
+  - The maps' bits, depths and origins, and the pattern and its
+    alignment, are looked up once a call, not once a pixel.
+  - A pattern's row is worked out once a row.
+  - The masks are ANDed into one visibility row (`VisibleRow`).
+  - A copy between maps of one depth whose pixels line up in their bytes
+    moves each visible run's bytes. This is not done within one row of
+    one map, which must be read whole before it is written.
+  - A copy row every pixel of which is visible is packed a byte at a time.
+  - Everything else goes pixel by pixel through the same `Transfer`.
+- **The oracle:** the old blitter is kept as `BlitPixelsSlow`
+  (`NEWTON_QD_SLOW=1`, or `SetQDSlowBlitter`). `qd/tests/test_Blitter.cpp`
+  (ctest `qd.Blitter`) draws 240 random scenes both ways and compares
+  every byte. The scenes cover every verb and all sixteen pen modes,
+  patterns and alignments, pens of several sizes, and `CopyBits` at depths
+  1/2/4/8 with masks, overlapping and stretched. They also cover
+  `ScrollRect`, complex clip and visible regions, and maps at odd origins.
+  A one-pixel error planted in the fast path shows up in 65 of the scenes.
+  A copy's source must lie within its map: QuickDraw reads the source
+  rectangle unclipped, so outside it reads whatever memory is there.
+- **The display:** `THostScreenDriver::Blit` turns a byte of pixels into
+  its grays through tables made once for each depth. `test_Screen` checks
+  it against a pixel-at-a-time reference.
+
+| drawbench, 20 rounds (default build, unoptimised) | processor | wall |
+|---|---|---|
+| before (pixel at a time, display a pixel at a time) | 11.0 s | 31.5 s |
+| now | 3.4 s | 25.9 s |
+| the same, built `RelWithDebInfo`: slow blitter | 2.8 s | 24.9 s |
+| built `RelWithDebInfo`: now | 1.6 s | 24.9 s |
+
+The project builds unoptimised by default. An optimised build
+(`-DCMAKE_BUILD_TYPE=RelWithDebInfo`) is worth as much again for
+interactive use.
+
+A full-screen Notepad redraw took 18.9 ms of processor and now takes
+about 6 ms. What remains of the wall time is mostly the animations'
+pacing, which is the ROM's.
 
 ### StretchBits (`src/qd/Stretch.cpp`)
 
