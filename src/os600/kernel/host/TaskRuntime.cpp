@@ -38,6 +38,7 @@
 #include "RealTimeClock.h"
 #include "hal/MMU.h"
 #include "hal/host/Host.h"
+#include "hal/host/HostInterruptSources.h"
 #include "MonitorGlue.h"
 
 #include <stdio.h>
@@ -185,6 +186,7 @@ HostDeliverInterrupts()
 		gHostTimeSliceArmed = false;
 		PreEmptiveTimerInterruptHandler();
 	}
+	HostDeliverInterruptSources(&now);			// the host drivers' interrupts (hal/host/HostInterruptSources.h)
 }
 
 
@@ -231,6 +233,12 @@ HostIdleTask()
 		if (HostRTCAlarmDeadline(&rtc) && (!haveDeadline || CompCompare(&rtc, &deadline) < 0))
 		{
 			deadline = rtc;
+			haveDeadline = true;
+		}
+		Int64 source;
+		if (HostInterruptSourcesDeadline(&source) && (!haveDeadline || CompCompare(&source, &deadline) < 0))
+		{
+			deadline = source;
 			haveDeadline = true;
 		}
 		if (haveDeadline)

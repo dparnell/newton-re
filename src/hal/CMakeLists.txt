@@ -8,6 +8,7 @@ add_library(hal_host STATIC
     host/System.cpp
     host/MMU.cpp
     host/Power.cpp
+    host/HostInterruptSources.cpp
 )
 target_link_libraries(hal_host PUBLIC newton_config toolbox)
 

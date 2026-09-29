@@ -98,6 +98,37 @@ kernel source is unchanged.
   runner they only need the nesting counts, which the exit path consults
   (`InAtomicSection`).
 
+## Interrupt sources: the host drivers' interrupts
+
+The timers' and the real-time clock's interrupts are wired into
+`HostDeliverInterrupts` and `HostIdleTask` by name.  Any other hardware a
+host driver stands in for (the sound hardware's "this DMA buffer is
+played" is the first) registers an *interrupt source* instead
+(`hal/host/HostInterruptSources.h`): two functions, `deadline` - whether an
+interrupt is due at all and, if so, the system-clock time it falls due -
+and `deliver`, the interrupt handler.
+
+* `HostDeliverInterrupts` asks every source at each safe point and runs the
+  `deliver` of each one whose time has come, after the timers and the RTC,
+  with the baton held and at interrupt level: what an ARM handler may do
+  (`SendForInterrupt`, setting a flag the deferred-work path reads) and no
+  system call.
+* `HostIdleTask` folds the earliest source deadline into the time it sleeps
+  until, beside the timer alarm, the time slice and the RTC alarm - so a
+  source wakes a machine that has nothing else to do.  On the controllable
+  clock that makes a source deterministic: the idle task jumps straight to
+  the deadline and delivers it there.
+* A host thread that is not a task (an audio device's callback) never calls
+  either function; it only leaves something for `deadline` to read, the way
+  the window's thread leaves pen records in the tablet buffer.  A driver
+  whose hardware finishes on its own clock gives the time it expects the
+  hardware to finish as the deadline and checks its own done flag when
+  asked.
+
+With no source registered nothing changes (`test_HostInterruptSources`
+checks that a source's deadline wakes the idle task at exactly its time and
+that its handler runs then; the os600 and newt tests run unchanged).
+
 ## Threads that are none of the machine's
 
 A host program may have threads of its own that are not tasks at all: the
