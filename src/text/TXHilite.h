@@ -99,8 +99,8 @@ public:
 	void			HiliteFrame(long frame, TXOffsetRange range, long firstLine, long lastLine) const;	// ROM 0x0023bd1c HiliteFrame__8TXHiliteCFl13TXOffsetRangeN21
 	void			CalcRangePosition(TXOffsetRange range, TXRunPositionInfo* where);	// ROM 0x0023bef8 CalcRangePosition__8TXHiliteF13TXOffsetRangeP17TXRunPositionInfo
 	void			CalcCaretRect(void);							// ROM 0x0023bf90 CalcCaretRect__8TXHiliteFv
-	// The hilite's outline as a region (only its frame when asked;
-	// `global` is NOT YET - QuickDraw's LocalToGlobal is not in qd/).
+	// The hilite's outline as a region (only its frame when asked; in the
+	// pixel map's coordinates when `global`).
 	RgnHandle		GetHiliteRgn(Boolean frameOnly, Boolean global);	// ROM 0x0023bfdc GetHiliteRgn__8TXHiliteFUcT1
 	Boolean			IsPointInHilite(Point pt);						// ROM 0x0023c0bc IsPointInHilite__8TXHiliteF5Point
 	void			GetCaretRect(TXLongRect* r);					// ROM 0x0023c178 GetCaretRect__8TXHiliteFP10TXLongRect

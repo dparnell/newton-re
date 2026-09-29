@@ -3,6 +3,7 @@
 // with the background and answered as the update region, what the clip
 // region hides left alone, and nothing done with the pen hidden.
 #include "ScrollRect.h"
+#include "LocalToGlobal.h"
 #include "Rects.h"
 #include "Regions.h"
 #include "Draw.h"
@@ -113,6 +114,18 @@ main()
 	ScrollRect(&all, 4, 4, update);
 	EXPECT(EmptyRgn(update) && OnlyBlack(10, 10, 20, 20));
 	gPort.pnVis = 0;
+
+	// LocalToGlobal: the port's bits' bounds taken off
+	Point pt = MakePoint(5, 7);
+	LocalToGlobal(&pt);
+	EXPECT(pt.h == 5 && pt.v == 7);
+	OffsetRect(&gMap.bounds, -20, -30);						// the map's origin 20 across, 30 down the port
+	SetPortBits(&gMap);
+	pt = MakePoint(5, 7);
+	LocalToGlobal(&pt);
+	EXPECT(pt.h == 25 && pt.v == 37);
+	OffsetRect(&gMap.bounds, 20, 30);
+	SetPortBits(&gMap);
 
 	DisposeRgn(update);
 	ClosePort(&gPort);

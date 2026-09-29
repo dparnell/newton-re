@@ -15,6 +15,7 @@
 #include "Draw.h"
 #include "NewtonTime.h"
 #include "Polygons.h"
+#include "LocalToGlobal.h"
 
 
 // ROM 0x0024dd18 TXCurrentTicks__Fv
@@ -524,7 +525,11 @@ TXHilite::GetHiliteRgn(Boolean frameOnly, Boolean global)
 	}
 	if (global)
 	{
-		// NOT YET RECONSTRUCTED: LocalToGlobal (QuickDraw's is not in qd/)
+		Point origin;
+		origin.v = 0;
+		origin.h = 0;
+		LocalToGlobal(&origin);
+		OffsetRgn(rgn, origin.h, origin.v);
 	}
 	SetPort(saved);
 	return rgn;

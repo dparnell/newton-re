@@ -32,6 +32,7 @@ add_library(qd STATIC
     Screen.cpp
     ScreenNatives.cpp
     ScrollRect.cpp
+    LocalToGlobal.cpp
     RectNatives.cpp
 )
 target_link_libraries(qd PUBLIC newton_config memory toolbox frames protocols stores)
