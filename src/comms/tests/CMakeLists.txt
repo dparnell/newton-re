@@ -46,6 +46,11 @@ add_executable(test_MNP test_MNP.cpp)
 target_link_libraries(test_MNP PRIVATE comms_serial hal_host_serial os600_kernel os600_user)
 find_package(Python3 COMPONENTS Interpreter)
 if(Python3_FOUND)
+    # the same link with V.42bis both ways (the ROM's coder against
+    # tools/dock/v42bis.py's, in compressed mode)
+    add_test(NAME comms.MNPV42bis
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/dock/mnp.py --echo --v42bis --spawn $<TARGET_FILE:test_MNP>)
+    set_tests_properties(comms.MNPV42bis PROPERTIES TIMEOUT 120 PASS_REGULAR_EXPRESSION "V.42bis .1024, 32.*came in compressed mode.*test_MNP: all passed")
     add_test(NAME comms.V42bis
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/dock/v42bis.py --check $<TARGET_FILE:test_V42bis>)
     set_tests_properties(comms.V42bis PROPERTIES TIMEOUT 300 PASS_REGULAR_EXPRESSION "v42bis.py: all the same")

@@ -12,8 +12,10 @@ Purpose
     DLE doubled, DLE ETX, CRC-16/ARC low byte first), the link request
     exchange as the acceptor (the Newton connects), LT data frames with
     their sequence numbers and LA acknowledgements, class 4's short
-    headers, and LD.  It does not compress (it offers no compression, so
-    none is negotiated).
+    headers, and LD.  With --v42bis it accepts V.42bis compression both
+    ways when the Newton asks for it (tools/dock/v42bis.py, compressing in
+    compressed mode from the start); otherwise it offers none, so none is
+    negotiated.
 
 Usage
     As a library:
@@ -23,7 +25,7 @@ Usage
         link.send(b"...")                           # LTs, each acknowledged
         link.close()
     As a test runner (ctest comms.MNP):
-        python tools/dock/mnp.py [--echo] [--no-class4] --spawn <program>
+        python tools/dock/mnp.py [--echo] [--no-class4] [--v42bis] --spawn <program>
     runs <program>, which prints "port N" on its first line of output once
     its serial port listens; connects to it, accepts the link and, with
     --echo, sends back whatever it receives until the Newton disconnects;
@@ -84,6 +86,8 @@ class MNPLink:
         self.recv_seq = 0
         self.disconnected = False
         self.received_while_sending = []
+        self.v42bis = None           # (N2, N7) once negotiated
+        self.compressor = self.expander = None
 
     @classmethod
     def connect(cls, host, port, tries=500):
@@ -137,10 +141,13 @@ class MNPLink:
 
     # --- the link
 
-    def accept(self, class4=True):
+    def accept(self, class4=True, v42bis=False):
         """The Newton's LR answered with ours: octet framing, its window
-        and data size, class 4 if it asked for it (and class4 allows);
-        then its LA."""
+        and data size, class 4 if it asked for it (and class4 allows),
+        V.42bis both ways if it asked for it and v42bis allows (a
+        dictionary of at most 1024 entries and strings of at most 32
+        characters: tools/dock/v42bis.py compresses what is sent and
+        expands what comes); then its LA."""
         body = self.read_frame()
         if len(body) < 2 or body[1] != LR:
             raise MNPError("expected an LR, got %r" % body)
@@ -164,6 +171,14 @@ class MNPLink:
             reply += bytes([8, 1, opt & 3])
             if (opt & 1) and self.max_data == 64:
                 self.max_data = 256
+        if v42bis and 0x0e in params and len(params[0x0e]) >= 4 and params[0x0e][0]:
+            import v42bis as v42
+            n2 = min((params[0x0e][1] << 8) | params[0x0e][2], 1024)
+            n7 = min(params[0x0e][3], 32)
+            reply += bytes([0x0e, 4, 3, n2 >> 8, n2 & 0xff, n7])
+            self.compressor = v42.Encoder(n2, n7)
+            self.expander = v42.Decoder(n2, n7)
+            self.v42bis = (n2, n7)
         reply[0] = len(reply) - 1
         self.write_frame(bytes(reply))
         # (an LR sent again - the Newton's timer ran out before our answer
@@ -212,7 +227,14 @@ class MNPLink:
         return None
 
     def receive(self):
-        """The next LT's data."""
+        """The next LT's data (expanded, with V.42bis: perhaps nothing, when
+        the LT held only part of a codeword)."""
+        data = self._receive()
+        if self.expander is not None:
+            data = self.expander.decode(data)
+        return data
+
+    def _receive(self):
         if self.received_while_sending:
             return self.received_while_sending.pop(0)
         while True:
@@ -221,7 +243,12 @@ class MNPLink:
                 return data
 
     def send(self, data):
-        """The data in LTs, each waited on until it is acknowledged."""
+        """The data in LTs, each waited on until it is acknowledged (with
+        V.42bis compressed first, and flushed)."""
+        if self.compressor is not None:
+            # (compressed mode from the start: this end does not weigh
+            # which mode is better, as the ROM's encoder does)
+            data = self.compressor.to_compressed() + self.compressor.encode(data) + self.compressor.flush()
         size = min(self.max_data, 256)
         for i in range(0, len(data), size):
             self.send_seq = (self.send_seq + 1) & 0xFF
@@ -255,7 +282,7 @@ class MNPLink:
             pass
 
 
-def run_spawned(program, echo, class4=True):
+def run_spawned(program, echo, class4=True, v42bis=False):
     proc = subprocess.Popen(program, stdout=subprocess.PIPE, text=True)
     port = None
     for line in proc.stdout:
@@ -274,15 +301,20 @@ def run_spawned(program, echo, class4=True):
 
     link = MNPLink.connect("127.0.0.1", port)
     try:
-        link.accept(class4)
-        print("mnp.py: link up (window %d, data %d, class 4 %s)" % (link.window, link.max_data, link.class4))
+        link.accept(class4, v42bis)
+        print("mnp.py: link up (window %d, data %d, class 4 %s, V.42bis %s)"
+              % (link.window, link.max_data, link.class4, link.v42bis))
         while echo:
             data = link.receive()
-            link.send(data)
+            if data:
+                link.send(data)
     except (EOFError, socket.timeout, ConnectionError) as e:
         print("mnp.py: %s" % e)
     finally:
         link.close()
+    if link.expander is not None:
+        print("mnp.py: V.42bis: the Newton's data came %s" % (
+            "in compressed mode at the end" if not link.expander.transparent else "in transparent mode at the end"))
     status = proc.wait(timeout=120)
     t.join(timeout=5)
     return status
@@ -293,8 +325,9 @@ def main():
     ap.add_argument("--spawn", nargs="+", required=True, help="the program to run (prints 'port N')")
     ap.add_argument("--echo", action="store_true", help="send back whatever is received")
     ap.add_argument("--no-class4", action="store_true", help="refuse class 4 (the long frame headers)")
+    ap.add_argument("--v42bis", action="store_true", help="accept V.42bis compression (tools/dock/v42bis.py)")
     args = ap.parse_args()
-    sys.exit(run_spawned(args.spawn, args.echo, not args.no_class4))
+    sys.exit(run_spawned(args.spawn, args.echo, not args.no_class4, args.v42bis))
 
 
 if __name__ == "__main__":
