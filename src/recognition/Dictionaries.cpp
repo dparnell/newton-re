@@ -23,6 +23,7 @@
 #include "RSSymbols.h"
 #include "ROMConstants.h"
 #include "Unicode.h"
+#include "AirusIterator.h"	// GetWordCompletions
 
 #include <string.h>
 
@@ -771,6 +772,89 @@ LookupWordOrVariant(const UniChar* word, ULong* attribute, UniChar* variant)
 
 
 /*------------------------------------------------------------------------------
+	C o m p l e t i o n s
+------------------------------------------------------------------------------*/
+
+// ROM 0x0013f628 GetWordCompletions__FPP15AirusAParmBlockPUcRC6RefVarPll
+// The words of one dictionary that begin with the prefix, put into the
+// array from *count on until the array's max is reached or the
+// dictionary runs out; *count is left at the next free slot.
+void
+GetWordCompletions(Handle dictionary, UByte* prefix, RefArg words, long* count, long max)
+{
+	TAirusIterator iter(dictionary);
+	iter.Reset(prefix, true, false);
+	UByte word[64];
+	ULong attribute;
+	UByte terminal;
+	long slot = *count;
+	while (slot < max && iter.ThisWord(word, attribute, terminal))
+	{
+		SetArraySlot(words, slot, RefVar(MakeString((const char*) word)));
+		iter.NextWord();
+		slot++;
+	}
+	*count = slot;
+}
+
+
+// ROM 0x0013f6e0 FLookupCompletions
+// LookupCompletions(word, max, context): up to max words of the ordinary
+// chain that begin with the word - the chain built for the view the
+// context is (its own dictionaries when it has custom ones), or the
+// default one.  When the word's first letter was a capital, every
+// completion is capitalised too.
+//
+// The word is copied into a buffer of 64 UniChars with no room kept for
+// the terminator, and only its first letter lowered (LowercaseText of
+// one character) before it is brought down to eight bits - both as the
+// ROM does it.
+static Ref
+FLookupCompletions(RefArg /*rcvr*/, RefArg word, RefArg max, RefArg context)
+{
+	TDictChain* chains[kDictChainCount];
+	for (long i = 0; i < kDictChainCount; i++)
+		chains[i] = nil;
+	TView* view = nil;
+	if (NOTNIL(context))
+		view = (TView*) RefToAddress(RefVar(GetProtoVariable(context, RSSYMviewcobject, nil)));
+	RefVar config(Clone(RefVar(Rrcbuildchains)));
+	if (view != nil && CountCustomDictionaries(view) != 0)
+	{
+		SetFrameSlot(config, RSSYMinputmask, RefVar(MAKEINT(view->fFlags & 0x1ffff00)));
+		SetFrameSlot(config, RSSYMdictionaries, RefVar(view->GetVar(RSSYMdictionaries)));
+	}
+	BuildChains(chains, config);
+	UniChar text[64];
+	Ustrncpy(text, (const UniChar*) BinaryData(word), 64);
+	UniChar first = text[0];
+	LowercaseText(text, 1);
+	UByte bytes[64];
+	ConvertFromUnicode(text, bytes, 1, 0x3f);
+	long most = RINT(max);
+	RefVar words(AllocateArray(RSSYMarray, most));
+	long count = 0;
+	if (chains[kDictChainOrdinary] != nil)
+	{
+		long dictionaries = chains[kDictChainOrdinary]->fCount;
+		for (long i = 0; i < dictionaries && count < most; i++)
+			GetWordCompletions(*(Handle*) chains[kDictChainOrdinary]->GetEntry(i), bytes, words, &count, most);
+	}
+	SetLength(words, count);
+	if (first != text[0])
+	{
+		for (long i = 0; i < Length(words); i++)
+		{
+			RefVar completion(GetArraySlotRef(words, i));
+			StrCapitalize(completion);
+		}
+	}
+	DoneChains(chains);
+	return words;
+}
+
+
+/*------------------------------------------------------------------------------
 	W h a t   a   s c r i p t   a s k s   o f   t h e   d i c t i o n a r i e s
 ------------------------------------------------------------------------------*/
 
@@ -1063,6 +1147,7 @@ void
 RegisterDictionaryNatives(void)
 {
 	RegisterNativeFunction("FAirusResult", (void*) FAirusResult, 0);
+	RegisterNativeFunction("FLookupCompletions", (void*) FLookupCompletions, 3);
 	RegisterNativeFunction("FConvertDictionaryData", (void*) FConvertDictionaryData, 1);
 	RegisterNativeFunction("FAirusRegisterDictionary", (void*) FAirusRegisterDictionary, 0);
 	RegisterNativeFunction("FAirusUnregisterDictionary", (void*) FAirusUnregisterDictionary, 0);

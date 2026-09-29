@@ -378,6 +378,23 @@ TApplication::DoCommand(RefArg cmd)
 	N a t i v e s
 ------------------------------------------------------------------------------*/
 
+// ROM 0x000af800 FHandleUnit
+// view:HandleUnit(command, unit) - a command of that id made with the
+// unit as its parameter and dispatched to the view (the receiver's own
+// responder).  ==> nil when the dispatch answered 0 or 2, true otherwise
+// (the ROM compares the dispatch's answer with nil's Ref as well as with
+// nought).
+static Ref
+FHandleUnit(RefArg rcvr, RefArg command, RefArg unit)
+{
+	TResponder* responder = FailGetResponder(rcvr, RefVar());
+	Long parameter = (Long) RefToAddress(unit);
+	RefVar cmd(MakeCommand((ULong) RINT(command), responder, parameter));
+	Long result = gApplication->DispatchCommand(cmd);
+	return (result == 0 || result == 2) ? NILREF : TRUEREF;
+}
+
+
 // ROM 0x000af8fc FPostCommand__FRC6RefVarN21
 // PostCommand(receiverName, id): the command (the id an integer, or a
 // four-character string) dispatched to the responder of the name.
@@ -556,6 +573,7 @@ FRunDelayedActions(RefArg /*rcvr*/)
 void
 RegisterApplicationNatives(void)
 {
+	RegisterNativeFunction("FHandleUnit", (void*) FHandleUnit, 2);
 	RegisterNativeFunction("FPostCommand__FRC6RefVarN21", (void*) FPostCommand, 2);
 	RegisterNativeFunction("FPostCommandParam__FRC6RefVarN31", (void*) FPostCommandParam, 3);
 	RegisterNativeFunction("FPostAndDo__FRC6RefVarT1", (void*) FPostAndDo, 1);

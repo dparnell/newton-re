@@ -45,6 +45,13 @@ add_test(NAME host.NewtonRecognize COMMAND newton --rom ${NEWTON_ROM_BIN} --disp
 set_tests_properties(host.NewtonRecognize PROPERTIES TIMEOUT 180
                      PASS_REGULAR_EXPRESSION "Recognize read ton.*unread strokes came back as nothing.*RecognizeInkWord read ton.*RecognizeTextInStyles made \"an ton\".*RecognizePara made \"ton ton\", the range ending at 7.*ink came back as a piece of 4 strokes.*ink came back as a piece of 4 strokes")
 
+# the correction and word-unit methods on a paragraph, the correction info
+# and a view of its own (GetAlternatives, Extract, insert, HandleRawInk,
+# VoteOnWordUnit, HandleUnit)
+add_test(NAME host.NewtonAlternatives COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 50 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/alternatives.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonAlternatives PROPERTIES TIMEOUT 180
+                     PASS_REGULAR_EXPRESSION "GetAlternatives offered 2 words, the first \"ton\".*Extract took 1 word info.*Extract past the text took nothing.*insert put the range back.*HandleRawInk answered nil.*VoteOnWordUnit answered an integer.*HandleUnit answered true")
+
 # the cursive recogniser: the letter set made cursive and "ton" and "to"
 # written, the word segmenter handing each word to the reader
 # (GCTryToRecognize), its readings made into word units and the page

@@ -144,6 +144,7 @@ void	BuildChains(TDictChain** chains, RefArg config);	// ROM 0x0013d808 BuildCha
 void	BuildChains(TDictChain** chains);					// ROM 0x0013d9dc BuildChains__FPP10TDictChain - from the view the caret is in
 void	CompactChains(TDictChain** chains);					// ROM 0x0013db74 CompactChains__FPP10TDictChain
 void	DoneChains(TDictChain** chains);					// ROM 0x0013dbac DoneChains__FPP10TDictChain
+void	GetWordCompletions(Handle dictionary, UByte* prefix, RefArg words, long* count, long max);	// ROM 0x0013f628 GetWordCompletions__FPP15AirusAParmBlockPUcRC6RefVarPll - the dictionary's words beginning with the prefix, from *count on
 
 // The lookups.  ==> the id of the dictionary the word was found in, or
 // -1; `attribute` comes back with whatever was stored beside the word.

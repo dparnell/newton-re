@@ -2187,6 +2187,57 @@ FHandleInkWord(RefArg rcvr, RefArg parameter)
 }
 
 
+// ROM 0x00171140 FHandleRawInk
+// view:HandleRawInk(parameter) - the same for raw ink: the aeRawInk
+// command (0x15) handed to the view.  ==> whether the view took it.
+static Ref
+FHandleRawInk(RefArg rcvr, RefArg parameter)
+{
+	return MAKEBOOLEAN(SendViewCommand(rcvr, aeRawInk, parameter) != 0);
+}
+
+
+// ROM 0x001ee6f0 FVoteOnWordUnit
+// paragraph:VoteOnWordUnit(unit) - what the paragraph would do with a
+// word unit, asked without doing it: HandleWord with reallyDoIt false.
+// The point it is asked at is the middle of the unit's base-line box
+// (both axes halved with an arithmetic shift), its h brought to the
+// unit's bounds' left when it lies outside them sideways and its v to
+// their bottom when it lies outside them up or down.  ==> HandleWord's
+// answer as an integer.
+static Ref
+FVoteOnWordUnit(RefArg rcvr, RefArg unit)
+{
+	TView* view = FailGetView(rcvr);
+	if (!view->DerivedFrom(clParagraphView))
+		ThrowMsg("not a paragraph view");
+	TUnitPublic* theUnit = (TUnitPublic*) RefToAddress(unit);
+	Rect bounds;
+	theUnit->Bounds(&bounds);
+	Handle word = theUnit->Word();
+	HLock(word);
+	UniChar* text = *(UniChar**) word;
+	ULong length = Ustrlen(text);
+	ULong startTime = theUnit->StartTime();
+	ULong endTime = theUnit->EndTime();
+	Rect base = theUnit->fWordBase;
+	Point pt;
+	pt.v = (short) (base.top + base.bottom) >> 1;
+	pt.h = (short) (base.left + base.right) >> 1;
+	if (pt.h < bounds.left || pt.h > bounds.right)
+		pt.h = bounds.left;
+	if (pt.v < bounds.top || bounds.bottom < pt.v)
+		pt.v = bounds.bottom;
+	RefVar info;
+	long offset;
+	long result = ((TParagraphView*) view)->HandleWord(text, length, bounds, pt, startTime, endTime,
+														 info, false, &offset, theUnit);
+	HUnlock(word);
+	DisposHandle(word);
+	return MAKEINT(result);
+}
+
+
 // ROM 0x001ee980 FGetStyleAtOffset
 // GetStyleAtOffset(offset) on a paragraph: the style of the character
 // at that offset, as a single spec.  The corrector asks it so that a
@@ -2713,6 +2764,8 @@ RegisterViewNatives(void)
 	RegisterNativeFunction("FHiliteX", (void*) FHiliteX, 1);
 	RegisterNativeFunction("FHandleInsertItems", (void*) FHandleInsertItems, 1);
 	RegisterNativeFunction("FHandleInkWord", (void*) FHandleInkWord, 1);
+	RegisterNativeFunction("FHandleRawInk", (void*) FHandleRawInk, 1);
+	RegisterNativeFunction("FVoteOnWordUnit", (void*) FVoteOnWordUnit, 1);
 	RegisterNativeFunction("FGetStyleAtOffset", (void*) FGetStyleAtOffset, 1);
 	RegisterNativeFunction("FCaretRelativeToVisibleRect", (void*) FCaretRelativeToVisibleRect, 1);
 	RegisterNativeFunction("FDropHilites", (void*) FDropHilites, 0);

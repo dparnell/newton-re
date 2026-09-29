@@ -107,6 +107,7 @@ void	RemoveCorrectionInfo(TView* view);				// ROM 0x00077d88 RemoveCorrectionInf
 void	ClearEmptyEntries(RefArg list);					// ROM 0x00078d04 ClearEmptyEntries__FRC6RefVar
 // The entry for a range of a view's text, made when there is none.
 Ref		GetWordInfo(RefArg list, TView* view, long at, long length);	// ROM 0x00076f58 GetWordInfo__FRC6RefVarP5TViewlT3
+Ref		GetWordInfo(TView* view, long at, long length);	// ROM 0x00079ab4 GetWordInfo__FP5TViewlT2 - on CorrectInfo()
 // Two entries made into one, and the pieces of that.
 void	MergeWordInfo(RefArg list, long first, long second);	// ROM 0x00076dc0 MergeWordInfo__FRC6RefVarlT2
 Ref		MergeWords(RefArg first, RefArg second);		// ROM 0x00076c48 MergeWords__FRC6RefVarT1

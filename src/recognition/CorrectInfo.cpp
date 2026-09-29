@@ -705,6 +705,16 @@ GetWordInfo(RefArg list, TView* view, long at, long length)
 }
 
 
+// ROM 0x00079ab4 GetWordInfo__FP5TViewlT2
+// The same, on the one correction info the machine keeps.
+Ref
+GetWordInfo(TView* view, long at, long length)
+{
+	RefVar list(CorrectInfo());
+	return GetWordInfo(list, view, at, length);
+}
+
+
 // ROM 0x00077190 ExtractRange__FRC6RefVarP5TViewlT3
 // A correction info of its own holding copies of every entry of a view
 // that overlaps a range of its text.  That is what goes into an undo:
@@ -1467,6 +1477,77 @@ FAddWordInfo(RefArg info, RefArg word)
 
 // The correction natives a script reaches.
 
+// ROM 0x00078a00 FGetAlternates
+// paragraph:GetAlternatives(start, length) - what the corrector offers for
+// the word there: a clone of canonicalCorrectorAlternates holding its
+// readings (without the toggled ones, and with the capitalised one
+// added) and its strokes.  Nil for a view that is not a paragraph.
+static Ref
+FGetAlternates(RefArg rcvr, RefArg start, RefArg length)
+{
+	TView* view = GetView(rcvr);
+	if (view == nil || !view->DerivedFrom(clParagraphView))
+		return NILREF;
+	long len = RINT(length);
+	long at = RINT(start);
+	RefVar info(GetWordInfo(view, at, len));
+	RemoveToggledEntries(info, 1);
+	AddCapitalizedEntry(info);
+	RefVar alternates(Clone(RefVar(Rcanonicalcorrectoralternates)));
+	SetFrameSlot(alternates, RSSYMwords, RefVar(GetWordArray(info)));
+	SetFrameSlot(alternates, RSSYMink, RefVar(GetFrameSlotRef(info, RSSYMstrokes)));
+	return alternates;
+}
+
+
+// ROM 0x00079c48 FInsertRange
+// correctInfo:insert(range, view) - a range Extract took out put back for
+// the view (InsertRange).  ==> nil.
+static Ref
+FInsertRange(RefArg rcvr, RefArg range, RefArg view)
+{
+	InsertRange(rcvr, range, GetView(view));
+	return NILREF;
+}
+
+
+// ROM 0x00079bd8 FExtractRange
+// correctInfo:Extract(view, start, stop) - a correction info of its own
+// with copies of the view's entries that overlap the range (nil when
+// none do, or when the receiver is nil).  The native writes the walk out
+// again rather than calling ExtractRange, and compares differently: an
+// entry's start is compared unsigned with the range's stop, the entry's
+// stop signed with the range's start - kept.
+static Ref
+FExtractRange(RefArg rcvr, RefArg view, RefArg start, RefArg stop)
+{
+	ULong to = (ULong) (uint32_t) RINT(stop);
+	long from = RINT(start);
+	TView* theView = GetView(view);
+	RefVar result;
+	if (NOTNIL(rcvr))
+	{
+		long id = theView->fId;
+		RefVar taken(NewCorrectInfo());
+		RefVar list(GetFrameSlotRef(rcvr, RSSYMinfo));
+		long count = Length(list);
+		for (long i = 0; i < count; i++)
+		{
+			RefVar word(GetArraySlotRef(list, i));
+			ULong wordStart = (ULong) (uint32_t) RINT(RefVar(GetFrameSlotRef(word, RSSYMstart)));
+			long wordStop = RINT(RefVar(GetFrameSlotRef(word, RSSYMstop)));
+			long wordId = RINT(RefVar(GetFrameSlotRef(word, RSSYMid)));
+			if (wordId == id && wordStart < to && from <= wordStop)
+				AddWordInfo(taken, RefVar(Clone(word)));
+		}
+		list = GetFrameSlotRef(taken, RSSYMinfo);
+		if (Length(list) > 0)
+			result = taken;
+	}
+	return result;
+}
+
+
 // ROM 0x000799b4 FAddUnitInfo
 // correctInfo:AddUnit(view, start, stop, unit) - a word info made from
 // the unit and put on the list for the characters start to stop of the
@@ -1527,6 +1608,9 @@ RegisterCorrectInfoNatives(void)
 	RegisterNativeFunction("FDoEntryLearning", (void*) FDoEntryLearning, 1);
 	RegisterNativeFunction("FTestWordInfoFlags", (void*) FTestWordInfoFlags, 1);
 	RegisterNativeFunction("FAddUnitInfo", (void*) FAddUnitInfo, 4);
+	RegisterNativeFunction("FGetAlternates", (void*) FGetAlternates, 2);
+	RegisterNativeFunction("FExtractRange", (void*) FExtractRange, 3);
+	RegisterNativeFunction("FInsertRange", (void*) FInsertRange, 2);
 	RegisterNativeFunction("FMoveCorrectionInfo__FRC6RefVarN41", (void*) FMoveCorrectionInfo, 3);
 	RegisterNativeFunction("FSetWordInfoFlags", (void*) FSetWordInfoFlags, 1);
 	RegisterNativeFunction("FClearWordInfoFlags", (void*) FClearWordInfoFlags, 1);

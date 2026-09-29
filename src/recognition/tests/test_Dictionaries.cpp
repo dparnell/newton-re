@@ -29,6 +29,7 @@
 #include "RootView.h"
 #include "Ports.h"
 #include "NativeFunctions.h"
+#include "Interpreter.h"
 #include "ROMConstants.h"
 #include "DictPartHandler.h"
 #include "REPTranslators.h"
@@ -330,6 +331,34 @@ main()
 		EXPECT(LookUp("at", &attribute) == 6 && attribute == 3);
 		EXPECT(LookUp("be", &attribute) == 0x18 && attribute == 9);
 		EXPECT(LookUp("zoo", &attribute) == -1);
+	}
+
+	// ---- completions (LookupCompletions, GetWordCompletions) ----
+	// The words of the ordinary chain that begin with a prefix, in the
+	// trie's order, as many as asked for; a capital first letter makes
+	// every completion start with one.
+	{
+		RefVar found(AllocateArray(RSSYMarray, 4));
+		long count = 0;
+		GetWordCompletions(words, (UByte*) "a", found, &count, 4);
+		EXPECT(count == 2);
+		EXPECT(WordIs(GetArraySlotRef(found, 0), "an") && WordIs(GetArraySlotRef(found, 1), "at"));
+		count = 1;
+		GetWordCompletions(names, (UByte*) "b", found, &count, 4);		// from slot 1 on
+		EXPECT(count == 2 && WordIs(GetArraySlotRef(found, 1), "be"));
+
+		RegisterDictionaryNatives();
+		RefVar fn(Intern((char*) "LookupCompletions"));
+		RefVar all(NSCallGlobalFn(fn, RefVar(MakeString("a")), RefVar(MAKEINT(5)), RefVar()));
+		EXPECT(Length(all) == 2);
+		EXPECT(WordIs(GetArraySlotRef(all, 0), "an") && WordIs(GetArraySlotRef(all, 1), "at"));
+		RefVar one(NSCallGlobalFn(fn, RefVar(MakeString("a")), RefVar(MAKEINT(1)), RefVar()));
+		EXPECT(Length(one) == 1 && WordIs(GetArraySlotRef(one, 0), "an"));
+		RefVar capital(NSCallGlobalFn(fn, RefVar(MakeString("A")), RefVar(MAKEINT(5)), RefVar()));
+		EXPECT(Length(capital) == 2);
+		EXPECT(WordIs(GetArraySlotRef(capital, 0), "An") && WordIs(GetArraySlotRef(capital, 1), "At"));
+		RefVar none(NSCallGlobalFn(fn, RefVar(MakeString("q")), RefVar(MAKEINT(5)), RefVar()));
+		EXPECT(Length(none) == 0);
 	}
 
 	// ---- the capitalisations a lookup tries ----
