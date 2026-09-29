@@ -1039,6 +1039,46 @@ GLUE(Glue_SetupSend)
 	w.Return(cpu, w.ToARM(method));
 	return true;
 }
+// TranslateException(interpreter, Exception*): the exception frame of an
+// Exception in the ARM world (a catch clause's CurrentException() is the
+// ARM address of its handler's Exception: the name a C string in the arena,
+// a ref exception's data a RefVar of the ARM world's, a message's a C
+// string) - made into a host Exception for the interpreter's own.
+GLUE(Glue_TranslateException)
+{
+	uint32_t e = cpu.r[1];
+	uint32_t nameAddr = 0, data = 0;
+	w.Read32(e, &nameAddr);
+	w.Read32(e + 4, &data);
+	char name[64];
+	if (!w.ReadCString(nameAddr, name, sizeof(name)))
+		strcpy(name, "evt.ex");
+	static char message[256];
+	RefStruct ref;
+	Exception x;
+	x.name = (ExceptionName) name;
+	x.destructor = nil;
+	if (Subexception(x.name, exMsgException))
+	{
+		if (!w.ReadCString(data, message, sizeof(message)))
+			message[0] = 0;
+		x.data = message;
+	}
+	else if (Subexception(x.name, (ExceptionName) "type.ref"))
+	{
+		ref = data != 0 ? w.ArgRef(data) : NILREF;
+		x.data = &ref;
+	}
+	else
+		x.data = (void*) (intptr_t) (int32_t) data;
+	w.Return(cpu, w.ToARM(gInterpreter->TranslateException(&x)));
+	return true;
+}
+GLUE(Glue_StrEndsWith)
+{
+	w.Return(cpu, StrEndsWith(RefVar(w.ArgRef(cpu.r[0])), RefVar(w.ArgRef(cpu.r[1]))) ? 1 : 0);
+	return true;
+}
 GLUE(Glue_SetLexScope)
 {
 	w.Return(cpu, w.ToARM(SetLexScope(RefVar(w.ArgRef(cpu.r[0])), RefVar(w.ArgRef(cpu.r[1])), RefVar(w.ArgRef(cpu.r[2])), RefVar(w.ArgRef(cpu.r[3])))));
@@ -1287,6 +1327,8 @@ InitGlue(void)
 		{ "Throw", Glue_Throw },
 		{ "SetupSend__FRC6RefVarT1lR6RefVar", Glue_SetupSend },
 		{ "SetLexScope__FRC6RefVarN31", Glue_SetLexScope },
+		{ "TranslateException__12TInterpreterFP9Exception", Glue_TranslateException },
+		{ "StrEndsWith__FRC6RefVarT1", Glue_StrEndsWith },
 		{ "AllocateFrameWithMap__FRC6RefVar", Glue_AllocateFrameWithMap },
 		{ "ThrowRefException__FPcRC6RefVar", Glue_ThrowRefException },
 		{ "Subexception", Glue_Subexception },

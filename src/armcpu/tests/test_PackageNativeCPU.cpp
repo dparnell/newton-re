@@ -11,7 +11,8 @@
 				ARM code's handler with its data, and a ref the ARM code
 				throws reaches a NewtonScript handler as the ref; a native
 				of another code binary is called from ARM code; SetupSend and
-				AllocateFrameWithMap answered.
+				AllocateFrameWithMap answered; TranslateException over the
+				catch clause's Exception; StrEndsWith.
 */
 
 #include "PackageNativeCPU.h"
@@ -73,8 +74,8 @@ main()
 	InitObjects();
 	InstallPackageNativeCPU();
 
-	RefVar code(AllocateBinary(RSSYMbinary, 0x280));
-	memset(BinaryData(code), 0, 0x280);
+	RefVar code(AllocateBinary(RSSYMbinary, 0x310));
+	memset(BinaryData(code), 0, 0x310);
 	// +0x00: return the string object at +0x40 (a pointer ref: its address + 1)
 	Put(code, 0x00, 0xe28f0039);		// add r0,pc,#0x39    (0x08 + 0x39 = 0x41)
 	Put(code, 0x04, 0xe1a0f00e);		// mov pc,lr
@@ -180,6 +181,40 @@ main()
 	Put(code, 0x254, 0xe51ff004);		// AllocateFrameWithMap, tail-called
 	Put(code, 0x258, 0x01800810);		// AllocateFrameWithMap__FRC6RefVar
 
+	// +0x280: the exception frame of what GetArraySlotRef throws, made by
+	// TranslateException from the catch clause's CurrentException()
+	// +0x2e0: StrEndsWith(first argument, second)
+	Put(code, 0x280, 0xe92d4010);		// stmfd sp!,{r4,lr}
+	Put(code, 0x284, 0xe24dd070);		// sub sp,sp,#0x70     (an ExceptionHandler at sp)
+	Put(code, 0x288, 0xe1a04001);		// mov r4,r1
+	Put(code, 0x28c, 0xe28d0008);		// add r0,sp,#8
+	Put(code, 0x290, 0xebffffaa);		// bl setjmp
+	Put(code, 0x294, 0xe3500000);		// cmp r0,#0
+	Put(code, 0x298, 0x1a000005);		// bne caught
+	Put(code, 0x29c, 0xe1a0000d);		// mov r0,sp
+	Put(code, 0x2a0, 0xebffffa8);		// bl AddExceptionHandler
+	Put(code, 0x2a4, 0xe5940000);		// ldr r0,[r4]
+	Put(code, 0x2a8, 0xe5900000);		// ldr r0,[r0]
+	Put(code, 0x2ac, 0xe3a01000);		// mov r1,#0
+	Put(code, 0x2b0, 0xebffffa6);		// bl GetArraySlotRef  (throws)
+	Put(code, 0x2b4, 0xe3a00206);		// caught: mov r0,#0x60000000 (the interpreter)
+	Put(code, 0x2b8, 0xe28d1060);		// add r1,sp,#0x60     (CurrentException(): the handler's Exception)
+	Put(code, 0x2bc, 0xeb000003);		// bl TranslateException
+	Put(code, 0x2c0, 0xe28dd070);		// add sp,sp,#0x70
+	Put(code, 0x2c4, 0xe8bd8010);		// ldmfd sp!,{r4,pc}
+	Put(code, 0x2d0, 0xe51ff004);
+	Put(code, 0x2d4, 0x018020dc);		// TranslateException__12TInterpreterFP9Exception
+	Put(code, 0x2e0, 0xe92d4000);		// stmfd sp!,{lr}
+	Put(code, 0x2e4, 0xe1a00001);		// mov r0,r1
+	Put(code, 0x2e8, 0xe1a01002);		// mov r1,r2
+	Put(code, 0x2ec, 0xeb000003);		// bl StrEndsWith
+	Put(code, 0x2f0, 0xe3500000);		// cmp r0,#0
+	Put(code, 0x2f4, 0x13a0001a);		// movne r0,#0x1a      (true)
+	Put(code, 0x2f8, 0x03a00002);		// moveq r0,#2         (nil)
+	Put(code, 0x2fc, 0xe8bd8000);		// ldmfd sp!,{pc}
+	Put(code, 0x300, 0xe51ff004);
+	Put(code, 0x304, 0x01800b04);		// StrEndsWith__FRC6RefVarT1
+
 	// another code binary: +0x00 answers its argument plus one
 	RefVar other(AllocateBinary(RSSYMbinary, 0x10));
 	Put(other, 0x00, 0xe5910000);		// ldr r0,[r1]
@@ -195,6 +230,8 @@ main()
 	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "nativeCallOther")), RefVar(MakeBinaryNative(code, 2, 0x1e0)));
 	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "nativeSetupSend")), RefVar(MakeBinaryNative(code, 3, 0x220)));
 	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "nativeFrameWithMap")), RefVar(MakeBinaryNative(code, 1, 0x250)));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "nativeTranslate")), RefVar(MakeBinaryNative(code, 1, 0x280)));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "nativeEndsWith")), RefVar(MakeBinaryNative(code, 2, 0x2e0)));
 	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "otherPlusOne")), RefVar(MakeBinaryNative(other, 1, 0x00)));
 
 	// a string in the code binary: its UniChars in the host's order, of class 'string
@@ -235,6 +272,11 @@ main()
 		EXPECT(IsFrame(made) && Length(made) == 2 && EQRef(SharedFrameMap(made), map));
 	}
 	EXPECT(PackageNativeCPUAnswers("SetLexScope__FRC6RefVarN31"));
+	// the exception frame, as a NewtonScript handler would see it
+	EXPECT(RINT(Eval("call nativeTranslate with (42).data.value")) == 42);
+	EXPECT(EQRef(Eval("call nativeTranslate with (42).name"), Intern((char*) "evt.ex.fr;type.ref.frame")));
+	EXPECT(EQRef(Eval("call nativeEndsWith with (\"Mahjongg\", \"jongg\")"), TRUEREF));
+	EXPECT(ISNIL(Eval("call nativeEndsWith with (\"Mahjongg\", \"Mah\")")));
 	EXPECT(PackageNativeCPUAnswers("Length__Fl") && PackageNativeCPUEntryCount() > 50);
 
 	if (failures == 0)
