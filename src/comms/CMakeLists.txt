@@ -36,8 +36,14 @@ add_library(comms_serial STATIC
     SharpIRTool.cpp
     IrSIR.cpp
     IrProbeTool.cpp
+    IrDATables.cpp
+    irda/IrQOS.cpp
+    irda/IrDscInfo.cpp
+    irda/IrIASService.cpp
 )
 target_link_libraries(comms_serial PUBLIC comms hal_serial hal_timers)
+# the IrDA stack ('irda': docs/comms/README.md, "Beaming - the plan")
+target_include_directories(comms_serial PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/irda)
 
 # The NewtonScript side: the frame translators (values and option frames
 # to and from bytes and option arrays) and the NewtonScript endpoint.

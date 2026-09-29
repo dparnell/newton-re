@@ -47,6 +47,11 @@ target_link_libraries(test_SharpIR PRIVATE comms_serial hal_host_serial os600_ke
 add_test(NAME comms.SharpIR COMMAND test_SharpIR)
 set_tests_properties(comms.SharpIR PROPERTIES TIMEOUT 120)
 
+# the IrDA stack's self-contained parts: QOS, discovery info, the IAS database
+add_executable(test_IrDAParts test_IrDAParts.cpp)
+target_link_libraries(test_IrDAParts PRIVATE comms_serial)
+add_test(NAME comms.IrDAParts COMMAND test_IrDAParts)
+
 # the IR probe: probe against probe (IrDA), probe against Sharp IR
 add_executable(test_IrProbe test_IrProbe.cpp)
 target_link_libraries(test_IrProbe PRIVATE comms_serial hal_host_serial os600_kernel os600_user)
