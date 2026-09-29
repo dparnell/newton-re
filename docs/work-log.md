@@ -9,6 +9,23 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: comms, round 4 - the host's DNS service
+
+- `analysis/pkgns.py`: a package's NewtonScript listed and disassembled
+  where it lies in the .pkg (`--functions`, `--disasm`, `--refs`), and
+  its NTK native-compiled functions (`--natives`, `--native-disasm`)
+  (72b809c).
+- The `dnst` service (`comms/host/HostDNSTool.h`): the NIE's `dnsq` +
+  four `rrcd` option request (op 1024) answered through the host's
+  resolver; not found is the NIE's own -60791.  `src/host/demo/dns.ns`
+  (ctest `host.NewtonDNS`): "localhost" to 127.0.0.1 and back (9f784a6).
+- Bug found: a script's own `'sid '` option is two big-endian longs,
+  which the host read as host words (a garbage port, -10015); the
+  translators now convert it (DEVIATION).
+- Finding: the NIE's protoFSM engine (`DoEvent`, the 19 KB
+  `DoEvent_Loop`, the event queue, ...) is native-compiled - 19 functions
+  in one 61 KB binary of ARM - so `InetStartUp` stops at its first call.
+
 ## 2026-09-29: the book reader, round 4 - the thumbnail's clipping was the host's
 
 - A page thumbnail showed only its top-left 17x23 pixels.  First taken

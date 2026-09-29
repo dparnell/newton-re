@@ -138,11 +138,17 @@ worked through.  What could come next (not ranked; the owner chooses):
   M2 and M3 done: the endpoint, and protoBasicEndpoint
   (`comms/NewScriptEndpoint.h`) talking TCP through the host -
   `src/host/demo/echo.ns`, ctest `host.NewtonEcho`, `newton --tcp-echo
-  port`.  Next, M4: the `dnst` (DNS) and `ictl` (link control) host
-  services, their option layouts read out of the NIE's code with
-  `pkgdisasm.py` first; then the `'frame` form (`PFlattenPtr`/
-  `PUnFlattenPtr`), the other six translators and
-  protoStreamingEndpoint.  The rest of comms (CCL,
+  port`.  M4: `dnst` done (`comms/host/HostDNSTool.h`, ctest
+  `host.NewtonDNS`; the NIE's `dnsq`/`rrcd` protocol read with
+  `analysis/pkgns.py`; a record name the NIE asks for with no room is
+  cut short until the ROM call its own tool makes room with - part 10
+  +0x4604 - is identified).  Blocked: the NIE's own scripts
+  (`InetStartUp`, `DNSGetAddressFromName`, `InetGrabLink`) cannot run -
+  its protoFSM engine is 19 NTK native-compiled functions, 61 KB of ARM
+  (`pkgns.py --natives`); how a package's native code is to run on the
+  host is the owner's decision, and `ictl` waits on it.  Meanwhile: the
+  `'frame` form (`PFlattenPtr`/`PUnFlattenPtr`), the other six
+  translators and protoStreamingEndpoint.  The rest of comms (CCL,
   AppleTalk, IR, NTK, the desktop connection - which the test server's
   link, the IR sniffing, `SuckPackageFromEndPoint` and fax reception wait
   on) comes after.
