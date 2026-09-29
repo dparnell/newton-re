@@ -22,7 +22,15 @@ registers; the choices below were agreed with the project owner.
   access register from the pick's environment, its copy environment and the
   environments of the tasks it is serving as a monitor (`fMonitorCaller`
   chain), and returns into the pick. With no switch, the glue's r0 goes back
-  to the caller as the result.
+  to the caller as the result; with one, the switched-out task's saved r0
+  is the glue's r0 too (it is still in the register when they are saved).
+  The host's stubs therefore store a glue's result in the saved r0 *before*
+  the exit (`ExitWithResult`, `GenericSWIStub`), so a task pre-empted at the
+  exit - a timer or the time slice delivered there - still gets it, and a
+  completion that comes later overwrites it.  (Until 2026-09-29 they did
+  not, and a pre-empted call answered whatever r0 held at the call: a
+  `GetPortSWI` answered its own selector, and a name server lookup went to
+  port 0 - which only a slow host, e.g. under `NEWTON_HEAPCHECK`, showed.)
 * Kernel code that completes a blocked task writes its result into the
   task's saved r0 (and r1-r4 for a receive), and sometimes changes its saved
   pc: `TMonitor::Release` points a killed caller at `TaskKillSelf`,

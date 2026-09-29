@@ -115,14 +115,10 @@ need first:
    the progress callback, `LODefCreateFromComp`, a card's 'stor event
    (`StorageCardInserted`/`MountStore`), `SuckPackageOffDeskTop`,
    `RestoreSegmentedPackage`, `SuckPackageFromEndpoint` (comms),
-   `CPackageArchivalPipe`, `StopFrameSound`.  Open question: with
-   `NEWTON_HEAPCHECK` set (even to a number so large that it never walks),
-   the boot's `ActivateStorePackages` gets `kError_Bad_ObjectId` (-10015)
-   from the `SendRPC` to the package manager in `InstallPackage` and the
-   stored package stays inactive; without it the same boot works.  The
-   heap walks find no damage; merely installing the hooks changes an
-   object id somewhere - look for a stale port or message id used from
-   `PreMain`'s task after the world has forked.
+   `CPackageArchivalPipe`, `StopFrameSound`.  (The failure under
+   `NEWTON_HEAPCHECK` was a host runtime bug, fixed 2026-09-29: a task
+   switched out on its way back from a system call lost the call's answer
+   - `docs/work-log.md`; ctest `host.NewtonPackageStoreSlow`.)
 6. **1.x packages** - `Activate1.XPackage`, `DeActivate1.XPackage`,
    `Remove1.XPackage`, `1.XPackageToVBO`, `PackageAvailable`/
    `PackageUnavailable`, the store's package directory: 27 functions,

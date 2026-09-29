@@ -35,6 +35,7 @@ GenericSWI(ULong selector, ...)
 	TTask* self = gCurrentTask;
 	self->fRegister[kcPC] = kResumeInStub;
 	long result = GenericSWIHandler(selector, p1, p2, p3, p4);
+	self->fRegister[kcR0] = (TRegister) result;		// (as SWI.cpp's ExitWithResult: the answer stands if the task is switched out at the exit)
 	if (HostSWIExit(self, kResumeInStub))
 		return (long) self->fRegister[kcR0];
 	return result;

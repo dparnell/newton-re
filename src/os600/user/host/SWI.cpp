@@ -40,11 +40,22 @@ ExitWithSavedResult(TTask* self)
 }
 
 
-// The exit for a glue that returned its result: the saved r0 stands if the
-// task was switched out meanwhile.
+// The exit for a glue that returned its result.  The result goes into the
+// task's saved r0 first, as the ROM's exit path leaves it (r0 holds the
+// glue's answer when a switched-out task's registers are saved), so that a
+// task switched out on its way back - a timer or the time slice delivered
+// at the exit - still gets it; kernel code that completes a blocked call
+// writes the saved r0 afterwards, and that answer stands.
+//
+// (Host bug fixed 2026-09-29: the result was only returned, so a switch at
+// the exit handed back whatever r0 was saved at the call - GetPortSWI's
+// name server port came back as its argument and a lookup went to port 0,
+// which made the boot's store packages fail to activate whenever the host
+// ran slowly, e.g. under NEWTON_HEAPCHECK.)
 static inline long
 ExitWithResult(TTask* self, long result)
 {
+	self->fRegister[kcR0] = (TRegister) result;
 	if (HostSWIExit(self, kResumeInStub))
 		return (long) self->fRegister[kcR0];
 	return result;

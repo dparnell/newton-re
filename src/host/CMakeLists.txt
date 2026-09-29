@@ -141,6 +141,19 @@ if(Python3_FOUND)
     set_tests_properties(host.NewtonPackageStore PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED host_package_store
                          PASS_REGULAR_EXPRESSION "afterRestart: TRUE, pssid: [0-9]+, onInternal: TRUE}.*title: \"Formulas2\".*deactivated: TRUE.*activatedAgain: TRUE.*packagestore: done"
                          FAIL_REGULAR_EXPRESSION "FALSE|NIL,")
+    # the same boot slowed by the heap checker's hooks: a task switched out on
+    # its way back from a system call once lost the call's answer
+    # (os600/user/host/SWI.cpp's ExitWithResult), and the store package
+    # did not activate
+    add_test(NAME host.NewtonPackageStoreSlow
+             COMMAND newton --rom ${NEWTON_ROM_BIN} --store ${CMAKE_CURRENT_BINARY_DIR}/packagestore.store
+                     --headless 5 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/packagestore.ns
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonPackageStoreSlow PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED host_package_store
+                         DEPENDS host.NewtonPackageStore
+                         ENVIRONMENT "NEWTON_HEAPCHECK=100000"
+                         PASS_REGULAR_EXPRESSION "afterRestart: TRUE, pssid: [0-9]+, onInternal: TRUE}.*activatedAgain: TRUE.*packagestore: done"
+                         FAIL_REGULAR_EXPRESSION "FALSE|NIL,")
 endif()
 
 # a large binary (VBO) made on the booted machine's internal store

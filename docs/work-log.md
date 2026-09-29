@@ -9,6 +9,29 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: a system call's answer lost to a switch at its exit
+
+- The boot's store packages failed to activate whenever `NEWTON_HEAPCHECK`
+  was set, even at a count that never walks.  The hooks change nothing in
+  the heap; they only slow the host (every `DisposPtr` walks it).  The
+  failing call was `InstallPackage`'s RPC to port **0**: `PackageManagerPortId`'s
+  name server lookup had gone to port 0, because `TUNameServer`'s
+  `GetPortSWI(kGetNameServerPort)` had answered 0.
+- Root cause, in the host runtime (`os600/user/host/SWI.cpp`'s
+  `ExitWithResult`, and `GenericSWIStub.cpp`): a glue's result was only
+  returned, and when `HostSWIExit` switched the task out (a timer or the
+  time slice falling due at the exit - which a slow host makes likely) the
+  stub answered the saved r0 instead - whatever r0 held at the call.  The
+  ROM's exit path saves the switched-out task's registers with r0 still
+  holding the glue's answer.  Fixed: the result is stored in the saved r0
+  before the exit, so a pre-empted call keeps it and a later completion
+  still overwrites it (`docs/host-runtime.md`).
+- Any system call could have been hit on a slow run; this is the likely
+  cause of other rare "impossible" failures seen under load.  ctest
+  `host.NewtonPackageStoreSlow` (the store-package boot under
+  `NEWTON_HEAPCHECK=100000`) fails without the fix and passes with it;
+  `NEWTON_HEAPCHECK=1` and `=20` runs activate the package too.
+
 ## 2026-09-29: packages round 4 - packages on a store
 
 - **The store side** (`135a556`; `stores/PackageObjects.cpp`):
