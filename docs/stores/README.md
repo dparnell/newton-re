@@ -804,6 +804,148 @@ ephemerals on remount, an LZ-compressed one, the entry deleted.  ctest
 `host.NewtonVBO` makes one on the booted machine (`MakeBitmap` with a
 store, `GetBitmapInfo`).
 
+## Plan: the real stores - the flash, the PSS manager and the cards
+
+The host keeps the internal store in a `THostStore`, an in-memory store
+saved to a file of its own (a DEVIATION). The ROM keeps it in the internal
+flash, in the flash store's own log-structured format. Memory cards are
+not there at all: `TPSSManager` and the card server are NOT YET, so
+`GetCardSlotStores` and `UnmountCard` answer "no sockets".
+
+**The goal:**
+
+- The internal store is the ROM's own flash format (`TFlashStore`), kept
+  in a host file that stands for the flash chips, and it survives
+  restarts.
+- A memory card can be inserted and removed: `newton --card file` at
+  boot, and a host command to insert or pull one while the OS runs.
+  `GetCardSlotStores` and `UnmountCard` then work for real.
+
+### What the ROM has, by layer
+
+The sizes are the ROM's code for each layer, from `symbols.json`; the
+host's share is what must be written for the host rather than
+transcribed.
+
+| Layer | ROM | Size | What it is |
+|---|---|---|---|
+| **The flash store** | `TFlashStore` (a `TStore`, capabilities `LOBJ rom sram flsh`), `TFlashBlock`, `TFlashPhysBlock`, `TFlashIterator`, `TFlashStoreLookupCache`, `SObject`, `SDirEnt`, `SFlashLogEntry`, `SFlashBlockLogEntry`, `SReservedBlockLogEntry`, `SCompactState` (DDK `PSS/CompactState.h`: 'bltg'..'zarf') | ~45 KB (129 + 44 + iterator/cache functions) | The on-flash format: logical blocks mapped to physical ones by a log, a directory of objects in each block (buckets of `SDirEnt`), objects (`SObject`) with transaction state bits cleared as a transaction goes (flash can only turn 1s into 0s), compaction into a spare block, erase counts and wear levelling, the transaction record and recovery at mount, reserved blocks (the calibration data) |
+| **The mutex wrapper** | `TMuxStore` over `TMuxStoreMonitor` | ~5 KB | Every `TStore` call made through a monitor, so that one store is used by one task at a time |
+| **The flash** | the `TFlash` protocol (37 methods: `Read`, `Write`, `Erase`, `SuspendErase`, `Copy`, `IsVirgin`, the geometry: `GetTotalSize`, `GetEraseRegionSize`, `GetGroupSize`, ...) with `TNewInternalFlash` (internal), `TFlashSeries2` and `TFlashAMD` (card chips) | ~18 KB + ~6 KB | A flash device's bytes and blocks. `TNewInternalFlash` keeps a list of `TFlashRange`s (`T8/16/32BitFlashRange`: a bank of chips on a bus of that width), the reserved block ranges, and the logical-to-physical mapping of its banks |
+| **The chip driver** | the `TFlashDriver` protocol (12 methods), `T28F016_SA_SVDriver` (the Intel 28F016SA/SV chips) | ~2 KB | Chip commands: write a word, start and poll an erase, lock a block, read status |
+| **The PSS manager** | `TPSSManager` (a task: `InitPSSManager`, `MainConstructor`, `RegisterStores`, `CardAvailable`, `CardGone`, `CardIsSame`, `ReinsertCard`, `GetCardSlotStores`, `GetStorePSSInfo`, `GCStores`, the UI engine for "card removed while in use") | ~5 KB | Makes the internal store at boot, and a store for each memory card the card server announces; keeps up to four stores for each socket (0x1fc bytes a socket, 0x50 a store) |
+| **The card server** | `TCardServer` (a task: card detection and recognition, power, the card handlers' registry, `DoCardEjection`, the async messages `TCardAsyncMsg` - 0x6f is unmount), `TCardEventHandler`, `TCardSystemEventHandler` | ~12 KB | Watches the sockets and runs card handlers on what is in them |
+| **Sockets and cards** | `TCardSocket` (87 functions: interrupts, power, the bus, the pins), `TCardPCMCIA` (the CIS: tuples, `CisTpl_*`, checksums), `TCHMemModem` (the memory and modem card handler: `CheckNSetupMemoryDevice`, `NewFlashDriver`, ...) | ~18 + ~29 + ~30 KB | The PCMCIA hardware, a card's own description of itself, and turning a memory card into a `TFlash` for the PSS manager |
+
+In all, some 170 KB of ROM code. About a third of it is the flash store,
+which must be exact because it is the format on the flash. About a third
+is sockets, power and interrupts, which the host replaces.
+
+### The host boundary
+
+The boundary sits where the hardware starts. Everything above it is
+transcribed; below it, the host stands in.
+
+- **The flash chips' bytes.** The host implements the chips' bytes and
+  their rules, not the chips' commands:
+  - reads;
+  - a write that ANDs into what is there, since flash only clears bits
+    (Einstein's `(existing & ~mask) | value`);
+  - a block erase to 0xFF, taking no time.
+
+  This lives in `hal/host/HostFlash.h`: a flash bank over a file.
+  `TFlashRange` and `T28F016_SA_SVDriver` are transcribed down to the
+  point where they touch the chips; a host `TFlashDriver` does those
+  touches on the bank. That keeps `TNewInternalFlash`'s bank mapping, the
+  reserved blocks and the logical-to-physical layout exactly the ROM's,
+  so the file is the flash as the machine would hold it.
+- **The sockets.** `hal/host/HostCardSocket.h` stands for the PCMCIA
+  controller:
+  - card detect and card lock as the host inserts and removes;
+  - write protect;
+  - the attribute memory (the CIS) and the common memory, read from and
+    written to a card image file;
+  - power, interrupts and wait states as things that simply succeed.
+
+  `TCardSocket`'s interface is the DDK's (`PCMCIA/CardSocket.h`), so the
+  card server above it is transcribed.
+- **The card.** A linear flash card image: the common memory, a
+  `TFlashSeries2` or `TFlashAMD` chip set over it (the card's CIS says
+  which), and the attribute memory with the CIS.
+
+### Einstein's files
+
+Einstein (`pguyot/Einstein`) emulates the same machine at the hardware
+level, and its two files are simple.
+
+- **Einstein's internal flash** is one 8 MB file: two 4 MB banks one after
+  the other (physical 0x02000000 and 0x10000000). Bytes are in the
+  machine's order, erased is 0xFF, and a write ANDs as above. If the host
+  bank has the same two banks at the same file offsets, **the file is
+  Einstein's**, and the internal store can be moved between the two.
+  - The reserved blocks (block 0's 'DLDS', 'OSCD', the calibration data)
+    Einstein seeds itself. The host must seed them the same way, or leave
+    them erased and let the ROM's code handle a virgin flash.
+  - To check with a real Einstein file once the flash store mounts.
+- **Einstein's linear card image** (`TLinearCard`) is:
+  1. the common memory;
+  2. the CIS (stored "scrambled" as on the card, two bytes per CIS byte);
+  3. an optional icon;
+  4. the card's name;
+  5. a big-endian `ImageInfo` footer (the offsets and sizes of each
+     section, a type and a version).
+
+  Its flash follows the Intel command set with 64 KB erase blocks. The
+  host's card file can be this very container: the socket reads the CIS
+  from it and the flash works on the data section. Whether a card
+  written by one opens in the other is to check at step 6.
+
+### Order of work
+
+Each step comes with its host tests.
+
+1. **The flash, from the chips up.** `hal/host/HostFlash.h` (a bank over a
+   file, with AND writes and erases), a host `TFlashDriver`, `TFlashRange`
+   and its 8/16/32-bit forms, and `TNewInternalFlash`.
+   - Test: `Read`/`Write`/`Erase` through `TFlash` land in the file where
+     Einstein's layout puts them.
+2. **The flash store's format, read-only.**
+   - `TFlashStore::Init`/`Mount`, the log scans, `TFlashBlock`, lookup,
+     `Read`, `GetObjectSize`, `NextObject`.
+   - Test: a flash image Einstein wrote (or one the ROM formatted in a
+     later step) mounts, and its objects read back.
+3. **The flash store, writing.**
+   - `Format`, `NewObject`, `Write`, `SetObjectSize`, `DeleteObject`,
+     `ReplaceObject`, the lookup cache, compaction, wear levelling.
+   - Then transactions: `StartTransaction`, the transaction bits,
+     `DoCommit`/`DoAbort`, `SeparatelyAbort`, `LowLevelRecovery` at
+     mount.
+   - Tests: the same scripts `test_Store` runs over `THostStore`; a
+     power cut in the middle of a transaction (the file copied at each
+     step), recovered at the next mount.
+4. **`TMuxStore`, and the internal store for real.**
+   - `TPSSManager`'s internal half: `InitPSSManager`, `MainConstructor`,
+     `RegisterStores`.
+   - `newton --store` becomes the flash file.
+   - Tests: the ctests that boot on a store, with the internal store on
+     the flash; a restart keeps the Names, the packages and the store
+     packages.
+5. **The card server and a socket.** `TCardServer`, the host socket, card
+   detection and recognition, `TCardPCMCIA`'s CIS, `TCHMemModem`, the
+   PSS manager's `CardAvailable`/`CardGone`.
+   - `newton --card file`, and `HostInsertCard(path)` /
+     `HostRemoveCard()` for scripts.
+   - `GetCardSlotStores`, `UnmountCard`, `GetCardInfo` and
+     `GetCardTypes` answer from the real server.
+   - Tests: a formatted card's store appears in `GetStores()`, a soup
+     is written to it, the card is pulled and put back, and the entries
+     are still there.
+6. **Einstein's files.** Checked both ways where an Einstein image is
+   available, and noted in the curiosities if they differ.
+
+`THostStore` stays for the unit tests that want a store without a flash
+under it.
+
 ## Not yet
 
 The word hints
