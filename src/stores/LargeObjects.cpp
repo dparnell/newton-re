@@ -25,6 +25,11 @@
 #include "AppWorld.h"			// TForkWorld (a pipe to read from forks)
 #include "PackageIterator.h"	// ObjectSize: a package's own size
 #include "UserTasks.h"			// GetGlobals
+#include "Frames.h"				// TLOCallback::Callback
+#include "ObjectHeap.h"
+#include "Interpreter.h"		// DoBlock
+#include "ROMConstants.h"		// Rcanonicalpackagecallbackinfo
+#include "RSSymbols.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -676,6 +681,54 @@ LOCompanderName(TStore* store, PSSId id, char* name)
 		err = store->Read(nameId, 0, name, length);
 	}
 	return err;
+}
+
+
+// ROM 0x00102ac8 Callback__11TLOCallbackFP15TLOCallbackInfo
+// The progress callback.  The first call only makes the info frame - a
+// clone of canonicalPackageCallbackInfo with the package's size, how many
+// parts it has and its name; every later one (when there is a function)
+// sets the part being read and the amount read in it and calls the script
+// with the frame, any exception the script throws dropped.
+// DEVIATION: the name is the package's own big-endian UniChars, which the
+// host puts in its own order before making the string.
+void
+TLOCallback::Callback(TLOCallbackInfo* info)
+{
+	if (ISNIL(*fInfoFrame))
+	{
+		*fInfoFrame = Clone(RefVar(Rcanonicalpackagecallbackinfo));
+		SetFrameSlot(RefVar(*fInfoFrame), RefVar(RSSYMpackagesize), RefVar(MAKEINT(info->fPackageSize)));
+		SetFrameSlot(RefVar(*fInfoFrame), RefVar(RSSYMnumberofparts), RefVar(MAKEINT(info->fNumberOfParts)));
+		if (info->fPackageName != nil)
+		{
+			long length = 0;
+			while (GetBigEndianHalf((const UByte*) (info->fPackageName + length)) != 0)
+				length++;
+			UniChar* name = (UniChar*) malloc((length + 1) * sizeof(UniChar));
+			if (name != nil)
+			{
+				for (long i = 0; i <= length; i++)
+					name[i] = GetBigEndianHalf((const UByte*) (info->fPackageName + i));
+				SetFrameSlot(RefVar(*fInfoFrame), RefVar(RSSYMpackagename), RefVar(MakeString(name)));
+				free(name);
+			}
+		}
+		return;
+	}
+	if (ISNIL(*fFunction))
+		return;
+	RefVar args(AllocateArray(RefVar(RSSYMarray), 1));
+	SetFrameSlot(RefVar(*fInfoFrame), RefVar(RSSYMcurrentpartnumber), RefVar(MAKEINT(info->fCurrentPart)));
+	SetFrameSlot(RefVar(*fInfoFrame), RefVar(RSSYMamountread), RefVar(MAKEINT(info->fAmountRead)));
+	SetArraySlot(args, 0, RefVar(*fInfoFrame));
+	newton_try
+	{
+		DoBlock(RefVar(*fFunction), args);
+	}
+	newton_catch((ExceptionName) "")
+	{}
+	end_try;
 }
 
 

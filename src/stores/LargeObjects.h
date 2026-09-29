@@ -64,7 +64,41 @@
 #endif
 
 class CPipe;
-class TLOCallback;
+class RefStruct;
+
+
+// What a large object being made tells its progress callback (0x14 bytes):
+// the package's size, how much of it has been read, its name (big-endian
+// UniChars, as the package holds them), the part being read and how many
+// parts there are.
+struct TLOCallbackInfo
+{
+	ULong				fPackageSize;		// +0x00
+	ULong				fAmountRead;		// +0x04
+	const UniChar*		fPackageName;		// +0x08
+	ULong				fCurrentPart;		// +0x0c
+	ULong				fNumberOfParts;		// +0x10
+};
+
+// The progress callback: not a class with a vtable but a record whose
+// first word is the function to call (the ROM's is always
+// TLOCallback::Callback), then the script's callback function and the info
+// frame it is given (both in RefHandles), then how many bytes are read
+// between calls.  Whatever makes a large object from a pipe calls
+// fProc(this, &info) each time that many bytes have been read
+// (TPackageIterator::Store, FillChunkArrayCompressed).  The ROM's is 0x10
+// bytes, made on the stack by AllocatePackage.
+class TLOCallback
+{
+public:
+	void				Callback(TLOCallbackInfo* info);		// ROM 0x00102ac8 Callback__11TLOCallbackFP15TLOCallbackInfo
+	static void			CallbackProc(TLOCallback* callback, TLOCallbackInfo* info)	{ callback->Callback(info); }	// (the host's way of holding Callback in fProc)
+
+	void				(*fProc)(TLOCallback*, TLOCallbackInfo*);	// +0x00
+	RefStruct*			fFunction;			// +0x04  the script's callback, nil for none
+	RefStruct*			fInfoFrame;			// +0x08  made from canonicalPackageCallbackInfo on the first call
+	ULong				fFrequency;			// +0x0c  bytes between calls
+};
 
 
 // The root object, as it lies on the store (big-endian words).

@@ -142,8 +142,9 @@ if(Python3_FOUND)
                          PASS_REGULAR_EXPRESSION "afterRestart: TRUE, pssid: [0-9]+, onInternal: TRUE}.*title: \"Formulas2\".*deactivated: TRUE.*activatedAgain: TRUE.*packagestore: done"
                          FAIL_REGULAR_EXPRESSION "FALSE|NIL,")
     # a package cut into a soup of chunk entries and restored with
-    # store:RestoreSegmentedPackage (packages/PackageArchivalPipe.h), on a
-    # store of its own holding Formulas2
+    # store:RestoreSegmentedPackage (packages/PackageArchivalPipe.h), and
+    # stored with SuckPackageFromBinary's progress callback, on a store of
+    # its own holding Formulas2
     add_test(NAME host.NewtonSegmented.install
              COMMAND newton --rom ${NEWTON_ROM_BIN} --erase --store ${CMAKE_CURRENT_BINARY_DIR}/segmented.store
                      --headless 4 --package ${HOST_PACKAGE_DIR}/Formulas2.pkg
@@ -156,7 +157,7 @@ if(Python3_FOUND)
                      --headless 5 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/segmented.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonSegmented PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED host_segmented_store
-                         PASS_REGULAR_EXPRESSION "removed: TRUE}.*chunks: [0-9]+, restored: TRUE, sameBytes: TRUE, title: \"Formulas2\"}.*segmented: done"
+                         PASS_REGULAR_EXPRESSION "removed: TRUE}.*sucked: TRUE, calls: [1-9][0-9]*, callbacksCalled: TRUE, infoSize: TRUE, infoName: \"Formulas2\", infoParts: 1, amountRead: TRUE}.*chunks: [0-9]+, restored: TRUE, sameBytes: TRUE, title: \"Formulas2\"}.*segmented: done"
                          FAIL_REGULAR_EXPRESSION "sameBytes: NIL")
     # the same boot slowed by the heap checker's hooks: a task switched out on
     # its way back from a system call once lost the call's answer

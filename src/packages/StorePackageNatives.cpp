@@ -177,20 +177,28 @@ WrapPackage(ULong id, TStore* store)
 // default store.  ==> RegisterNewPackage's answer.
 // ROM BUG kept: only RegisterNewPackage is given the default store; the
 // package itself is stored through the store argument's own `store` slot,
-// which nil does not have.
-// NOT YET RECONSTRUCTED: the progress callback (TLOCallback over the
-// parameters' callback function, every callbackFreq bytes).
+// which nil does not have.  The parameters' callback function is called
+// every callbackFreq bytes as the package is read (TLOCallback, told by
+// TPackageIterator::Store).
 Ref
-AllocatePackage(CPipe* pipe, RefArg storeObject, RefArg callback, ULong /*callbackFrequency*/, int activate)
+AllocatePackage(CPipe* pipe, RefArg storeObject, RefArg callback, ULong callbackFrequency, int activate)
 {
-	RefVar callbackFn(callback);
+	// the progress callback, on the stack as the ROM's is: the script's
+	// function, its info frame (made at the first call) and the frequency
+	RefStruct callbackFn(callback);
+	RefStruct callbackInfo;
+	TLOCallback progress;
+	progress.fProc = TLOCallback::CallbackProc;
+	progress.fFunction = &callbackFn;
+	progress.fInfoFrame = &callbackInfo;
+	progress.fFrequency = callbackFrequency;
 	RefVar store(storeObject);
 	if (ISNIL(store))
 		store = NSCallGlobalFn(RSSYMgetdefaultstore);
 	TStore* theStore = StoreOf(storeObject);
 	GC();
 	ULong id = 0;
-	NewtonErr err = StorePackage(pipe, theStore, nil, &id);
+	NewtonErr err = StorePackage(pipe, theStore, &progress, &id);
 	if (err != noErr)
 		ThrowFramesError(err);
 	RefVar pkgRef(WrapPackage(id, theStore));

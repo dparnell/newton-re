@@ -664,12 +664,23 @@ TPackageIterator::Store(TStore* store, PSSId indexId, TCallbackCompressor* compr
 // part's start (the source is never advanced), so a part longer than 1K
 // is stored as its first 1K over and over.  (A package reaches the store
 // through a pipe, which is read properly.)
-// NOT YET RECONSTRUCTED: the progress callback (TLOCallback).
+// Read from a pipe, the progress callback is told each time its frequency
+// of bytes has been read: the package's size and name, how many parts, the
+// part being read, and how much of the package has come in (counted from
+// the directory's and relocation chunk's sizes).  Copied from memory, it is
+// never told.
 NewtonErr
-TPackageIterator::Store(TStore* store, PSSId indexId, TCallbackCompressor* compressor, TLOCallback* /*callback*/)
+TPackageIterator::Store(TStore* store, PSSId indexId, TCallbackCompressor* compressor, TLOCallback* callback)
 {
 	char* buffer = nil;
 	TStorePackageWriter writer;
+	TLOCallbackInfo progress;
+	progress.fAmountRead = 0;
+	progress.fCurrentPart = 0;
+	progress.fPackageName = PackageName();
+	progress.fNumberOfParts = NumberOfParts();
+	progress.fPackageSize = PackageSize();
+	ULong sinceTold = 0;
 	NewtonErr err = GetRelocationChunkInfo();
 	if (err == noErr)
 		err = writer.Init(store, indexId, PackageSize(), compressor, fRelocationInfo, (RelocationEntry*) fRelocationData);
@@ -690,11 +701,13 @@ TPackageIterator::Store(TStore* store, PSSId indexId, TCallbackCompressor* compr
 	&&  (err = writer.WriteChunk((char*) fParts, (long) (fDirectory->NumParts() << 5), false)) == noErr
 	&&  (err = writer.WriteChunk((char*) fDirectoryData, (long) (fDirectory->DirectorySize() - (fDirectory->NumParts() * 0x20 + kPackageDirectorySize)), false)) == noErr)
 	{
+		ULong amountRead = fDirectory->DirectorySize();
 		if (fRelocationInfo != nil)
 		{
 			if ((err = writer.WriteChunk((char*) fRelocationInfo, kRelocationHeaderSize, false)) == noErr
 			&&  fRelocationData != nil)
 				err = writer.WriteChunk((char*) fRelocationData, (long) (fRelocationInfo->RelocationSize() - kRelocationHeaderSize), false);
+			amountRead += fRelocationInfo->RelocationSize();
 		}
 		for (ULong i = 0; err == noErr && i < numParts; i++)
 		{
@@ -726,6 +739,8 @@ TPackageIterator::Store(TStore* store, PSSId indexId, TCallbackCompressor* compr
 						long count = n;
 						Boolean eof;
 						fPipe->ReadChunk(buffer, count, eof);
+						amountRead += n;
+						sinceTold += n;
 					}
 					newton_catch(exPipeException)
 					{
@@ -733,6 +748,13 @@ TPackageIterator::Store(TStore* store, PSSId indexId, TCallbackCompressor* compr
 						readErr = (NewtonErr) (long) (Long) _info.exception.data;
 					}
 					end_try;
+					if (readErr == noErr && callback != nil && callback->fFrequency <= sinceTold)
+					{
+						progress.fCurrentPart = i;
+						progress.fAmountRead = amountRead;
+						callback->fProc(callback, &progress);
+						sinceTold = 0;
+					}
 				}
 				if ((err = readErr) != noErr)
 					break;

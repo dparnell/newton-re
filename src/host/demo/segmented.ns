@@ -32,6 +32,26 @@ AddDelayedCall(func() begin
 		AddArraySlot(chunks, chunk);
 	end;
 	Print({removed: SafeRemovePackage(pkgRef) <> nil});
+
+	// SuckPackageFromBinary's progress callback (TLOCallback): the package
+	// put back together from the chunks and stored with a callback every
+	// 8K - the first time only makes the info frame, so the script is
+	// called from the second on - then taken off again to free the name
+	local whole := MakeBinary(size, 'package);
+	for off := 0 to size - 1 by 4096 do begin
+		local chunk := chunks[off div 4096];
+		BinaryMunger(whole, off, Length(chunk), chunk, 0, Length(chunk));
+	end;
+	local calls := 0;
+	local last := nil;
+	local sucked := store:SuckPackageFromBinary(whole,
+		{callback: func(info) begin calls := calls + 1; last := Clone(info) end,
+		 callbackFreq: 8192});
+	Print({sucked: IsPackage(sucked), calls: calls, callbacksCalled: calls > 0,
+	       infoSize: last.packageSize = size, infoName: last.packageName,
+	       infoParts: last.numberOfParts, amountRead: last.amountRead > 0 and last.amountRead <= size});
+	SafeRemovePackage(sucked);
+
 	local restored := store:RestoreSegmentedPackage(soup, keys);
 	local same := restored and Length(restored) = size;
 	if same then
