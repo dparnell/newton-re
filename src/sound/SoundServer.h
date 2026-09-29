@@ -141,6 +141,17 @@ struct TUSoundNodeReply
 	long		fPosition;			// +0x1c  samples played
 };
 
+// The two sizes the server answers with: a command's plain reply (the
+// ROM's 0x14 - the event, the channel, the error and a value) and a pause,
+// stop or refused schedule's, which says where the node had got to (0x20).
+// DEVIATION: the host's ULong is pointer-sized, so the fields lie further
+// apart than the ROM's byte counts; a reply of 0x20 bytes stopped short of
+// fNodeId, and a stopped or paused channel said it had played nothing -
+// the Sound Recorder then never cut its recording to the length recorded,
+// and played the whole 64K buffer (its status stuck at "Playing...").
+static const ULong kSndShortReplySize = offsetof(TUSoundNodeReply, fNodeId);		// 0x14 on the ROM
+static const ULong kSndNodeReplySize = sizeof(TUSoundNodeReply);					// 0x20 on the ROM
+
 // A block the server is playing (0x5c bytes in the ROM).
 struct ChannelNode
 {

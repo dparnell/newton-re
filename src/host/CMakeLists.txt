@@ -328,7 +328,7 @@ set_tests_properties(host.NewtonTXPages PROPERTIES TIMEOUT 120
 # is the pen's clicks)
 add_test(NAME host.NewtonRecorder COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 120 --microphone-tone 1000 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/recorder.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(host.NewtonRecorder PROPERTIES TIMEOUT 180
-                     PASS_REGULAR_EXPRESSION "test tone makes up (8[0-9]|9[0-9]|100)% of what was played.*recorder: opened: Ready to record.*recorder: recording: Recording.*recorder: stopped: Ready to play or record.*recorder: played: Playing.*recorder: done"
+                     PASS_REGULAR_EXPRESSION "test tone makes up (8[0-9]|9[0-9]|100)% of what was played.*recorder: opened: Ready to record.*recorder: recording: Recording.*recorder: stopped: Ready to play or record.*recorder: played: Playing.*recorder: finished: Ready to play or record.*recorder: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain")
 
 # a protoBasicEndpoint over TCP (comms/NewScriptEndpoint.h): the NIE's

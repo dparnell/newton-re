@@ -1,7 +1,8 @@
 // The Sound Recorder, driven through its own buttons: after the Setup walk
 // (as setup.ns does) it is opened, Rec is tapped, two seconds of the
 // microphone are recorded, Stop is tapped, then Play, and what the
-// recorder's status line says at each step is printed.  Headless, the
+// recorder's status line says at each step is printed - the last once the
+// recording has played to its end and the recorder is ready again.  Headless, the
 // microphone is the null sound backend's test tone (newton's
 // --microphone-tone) and what is played is kept, so newton says at the
 // end how much of the playback was that tone.
@@ -48,15 +49,15 @@ call walkSetup with (name, func() begin
                     call tapAt with (200, 200);		// Play
                     call waitFor with ("recorder: playing", func() call says with ("Playing"), func() begin
                         call status with ("played");
-                        // (four seconds of playing - the two recorded and
-                        // some over - before the recorder is closed: the
-                        // status line stays at "Playing..." however long
-                        // it is left, so there is nothing to wait for)
-                        AddDelayedCall(func() begin
+                        // (the recording played to its end: the sound's
+                        // completion goes back to the recorder, which
+                        // says so)
+                        call waitFor with ("recorder: played to the end", func() not call says with ("Playing"), func() begin
+                            call status with ("finished");
                             recorder:Close();
                             Print("recorder: done");
                             HostQuit();
-                          end, nil, 4000);
+                          end, 60);
                       end, 60);
                   end, 60);
               end, nil, 2000);

@@ -307,7 +307,7 @@ TSoundChannel::FreeNode(ChannelNode* node, long error, int state)
 		fFlags &= ~(kSndChannelRunning | kSndChannelPaused);
 		if (fHaveStartToken != 0)
 		{
-			result = fStartToken.ReplyRPC(&reply, 0x14, 0);
+			result = fStartToken.ReplyRPC(&reply, kSndShortReplySize, 0);
 			fHaveStartToken = 0;
 		}
 	}
@@ -1516,7 +1516,7 @@ TCodecChannel::SendStart(void)
 	reply.fEvent.fAEventID = 'usnd';
 	TUPort port(gSndPort);
 	ULong replySize;
-	port.SendRPC(&replySize, &request, offsetof(TUSoundNodeRequest, fBlock), &reply, 0x14);
+	port.SendRPC(&replySize, &request, offsetof(TUSoundNodeRequest, fBlock), &reply, kSndShortReplySize);
 	fCodecFlags |= kCodecStarted;
 }
 
@@ -1639,7 +1639,7 @@ TSoundServerHandler::AEHandlerProc(TUMsgToken* token, ULong* /*size*/, TAEvent* 
 	reply.fNodeId = 0;
 	reply.fState = 0;
 	reply.fPosition = 0;
-	ULong size = 0x14;
+	ULong size = kSndShortReplySize;
 	reply.fChannel = request->fChannel;
 	ULong value = request->fNodeId;						// (the event's +0x10: an immediate command's value)
 	switch (command)
@@ -1667,11 +1667,11 @@ TSoundServerHandler::AEHandlerProc(TUMsgToken* token, ULong* /*size*/, TAEvent* 
 		break;
 	case kSndPause:
 		reply.fError = server->PauseChannel(request->fChannel, &reply);
-		size = 0x20;
+		size = kSndNodeReplySize;
 		break;
 	case kSndStop:
 		reply.fError = server->StopChannel(request->fChannel, &reply);
-		size = 0x20;
+		size = kSndNodeReplySize;
 		break;
 	case kSndSchedule:
 		reply.fError = server->ScheduleNode(request, token);
@@ -1682,7 +1682,7 @@ TSoundServerHandler::AEHandlerProc(TUMsgToken* token, ULong* /*size*/, TAEvent* 
 		}
 		reply.fUnknown10 = request->fNodeId;
 		reply.fNodeId = 0;
-		size = 0x20;
+		size = kSndNodeReplySize;
 		break;
 	case kSndCancel:
 		reply.fError = server->CancelNode(request);
