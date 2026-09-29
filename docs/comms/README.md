@@ -335,6 +335,95 @@ while the docker loads a package, and passes 6 of 6 copies beside 8 hogs.
 `dock.ns` still waits on the docker's own slots, which is the better way
 to wait anyway.
 
+## Beaming - the plan
+
+How one MessagePad beams an item to another, established from the ROM (the
+Beam transport's frame, `nsfunctions.py --object 0x4d2565`; the C++ side
+decompiled with `decompile.py --class TBeamer`, `TIrProbeTool`,
+`TSharpIRTool`; the services' class infos with `classinfo.py`) and sized
+with `analysis/classsizes.py` (a function's size is its extent to the next
+code symbol):
+
+- **The transport.** Beam is a NewtonScript transport in the ROM (the frame
+  at `0x4d2565`, `appSymbol '|beam:Newton|`, over protoTransport @389).  Its
+  `SendRequest` and `ReceiveRequest` call two natives, `BeamSend` and
+  `BeamReceive` (`ZapSend`/`ZapReceive`, 0x0003d818/0x0003d9b4 - "Zap"
+  was beaming's early name; `BeamCancel` is `ZapCancel`), which make a
+  C++ `TBeamer` over the transport frame and call back into it
+  (`BeamNextItem`, `BeamCommitSend`, `BeamCommitRecv`, `SetStatus`,
+  `HandleError`).  The receiving side is asked by the user (the In Box's
+  Receive, which is `ReceiveRequest`); the root's `IRConnectRequest` and
+  the `'snif` service (`IRSniffService`, `TSniffIRTool`, 2 KB) are the
+  sniffing a 2.x Newton does for an incoming beam - NOT in the first plan.
+- **`TBeamer`** (0x0003b6f0 - 0x0003de8c, 18 functions, 7.9 KB, plus
+  `TBeamerCallback`): `Open` chooses the IR protocol and opens a C++
+  endpoint (`CMGetEndpoint`, done) with it; `OpenPipe` puts a
+  `TEndpointPipe` (done) on it; `SendNewton`/`ReceiveNewton` move the items
+  as NSOF (`TObjectWriter`/`TObjectReader`, done) with the progress
+  callback; `SendWizard`/`ReceiveWizard` talk to a Sharp Wizard organiser
+  instead (through `PFrameSink`/`PFrameSource`).
+- **Which protocol.** `TBeamer::Open` reads the user preference
+  `zapCommToolId`.  Unset (the default), it first opens the **probe**
+  service `'pkir'` (`IRProbeService`, `TIrProbeTool`, 0x000f6fe0, 34
+  functions, 3.7 KB, over `TAsyncSerTool`), which alternates the IR
+  hardware between IrDA SIR and Sharp's ASK and sends each kind of test
+  frame (an IrDA TEST frame through `TIrSIR`/`TIrLAPPutBuffer`; a Sharp
+  control packet) until the other side answers, and reports what it found
+  in a `TCMOSlowIRProtocolType` option (`IdentifyProtocol`, an
+  `nOptMgmt` get).  Then it closes that endpoint and opens the real one:
+  `'irda'` when the peer answered IrDA (bit 3 of the protocol type - two
+  2.1 MessagePads), `'slir'` otherwise (an older Newton).  Set, the
+  preference names the service outright, skipping the probe.
+- **Sharp IR, `'slir'`** (`TIRService` → `TSharpIRTool`, 0x001e07b4, 56
+  functions, 9.2 KB, over `TAsyncSerTool`): the Newton 1.x / 2.0 beaming
+  protocol - lead-in, control, negotiate and data packets, a state machine
+  (`NextState`, 1.2 KB), timers as delayed messages to itself; options
+  `TCMOSlowIRConnect`, `TCMOSlowIRProtocolType`, `TCMOSlowIRStats`,
+  `TCMOSlowIRBitBang`, `TCMOSlowIRSniff`.
+- **IrDA, `'irda'`** (`TIrDAService` → `TIrDATool` 5.2 KB, `TIrGlue` 6.0
+  KB, `TIrLAP` 11.2 KB, `TIrLAPConn` 3.3 KB, `TIrLMP` 1.3 KB, `TIrQOS` 1.7
+  KB, `TIrSIR` 1.7 KB, `TIrLAPPutBuffer` 0.5 KB, `TIrDscInfo` 0.5 KB,
+  `TIrStream` 0.4 KB, `TIrCRC16` done; options `TCMOIrDADiscovery`,
+  `...ConnectionInfo`, `...ReceiveBuffers`, `...LinkDisconnect`,
+  `...ConnectUserData`, `...ConnectAttrName` - about 32 KB): discovery,
+  the link (IrLAP) and a single IrLMP connection, the beamer asking for
+  one 1 KB receive buffer and a 20-second link-disconnect time.
+- **The hardware.** Every one of these tools is a serial tool: it claims
+  the chip at `'infr'` (`kHWLocBuiltInIR`, `TSerTool::ClaimSerialChip` -
+  done) and switches its IR mode with the HAL option `'irlk'`
+  (`THMOSerIRLinkConfig`: mode 0 Sharp ASK, 1 IrDA 1.6 µs, 2 IrDA 3/16, 3
+  either; the auto-receive flag, and a status bit saying which kind the
+  last byte came as).  On the MessagePad that is the Voyager chip's IR
+  port; `TIRQTimer` (a platform timer the ADC and battery use too) is not
+  part of the IR stack.
+
+**The host's part** (the one DEVIATION): `hal/host/HostIRChip`, a
+`TSerialChip` registered at `'infr'` whose medium is a TCP connection to
+another host Newton (`newton --ir-peer listen:PORT` on one,
+`--ir-peer HOST:PORT` on the other).  Every byte crosses as a pair - the
+byte and the modulation it was sent with (ASK or IrDA, from the chip's
+`'irlk'` mode) - and a receiver in the other mode does not hear it (in
+auto-receive it hears both and notes which in the status), so the probe
+meets the same behaviour it meets on the air.  A receiver that is
+transmitting does not hear anything (IR is half duplex).
+
+The order, each a verified piece with a test:
+
+1. `hal/host/HostIRChip` and `--ir-peer`: two chips over a socket, the
+   modulation rule (`hal.HostIRChip`).
+2. `TSharpIRTool` and `TIRService` (`'slir'`) with the slow IR options:
+   an endpoint on each of two chips connects, listens and moves data
+   (`comms.SharpIR`).
+3. `TBeamer`, `ZapSend`/`ZapReceive`/`ZapCancel`: with `zapCommToolId`
+   set to `"slir"`, one host `newton` beams a Note to another (ctest
+   `host.NewtonBeam`: two processes, both scripts polling, `HostQuit`).
+4. `TIrSIR`, `TIrLAPPutBuffer`, `TIrProbeTool`, `IRProbeService`
+   (`'pkir'`): the default path's first half - between two 2.1s the probe
+   answers IrDA (both sides send and echo IrDA TEST frames themselves), so
+   the default beam waits on step 5; the probe is tested on its own.
+5. IrDA (`'irda'`): `TIrSIR` upward to `TIrDATool` - two 2.1 MessagePads
+   then beam over IrDA as the ROM would.
+
 ## Status
 
 | piece | state |
