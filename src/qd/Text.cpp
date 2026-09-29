@@ -967,9 +967,20 @@ FMeasuredNumberStr(RefArg /*rcvr*/, RefArg number, RefArg width, RefArg fontSpec
 }
 
 
+// ROM 0x000e3d08 FLoadFontCache
+// LoadFontCache(): the font table loaded again (LoadFontTable).
+static Ref
+FLoadFontCache(RefArg /*rcvr*/)
+{
+	LoadFontTable();
+	return NILREF;
+}
+
+
 void
 RegisterTextNatives(void)
 {
+	RegisterNativeFunction("FLoadFontCache", (void*) FLoadFontCache, 0);
 	RegisterNativeFunction("FMeasuredNumberStr", (void*) FMeasuredNumberStr, 3);
 	RegisterNativeFunction("FFontAscent__FRC6RefVarT1", (void*) FFontAscent, 1);
 	RegisterNativeFunction("FFontDescent__FRC6RefVarT1", (void*) FFontDescent, 1);

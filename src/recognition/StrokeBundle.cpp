@@ -28,6 +28,7 @@
 #include "Controller.h"
 #include "Polygons.h"
 #include "View.h"		// FailGetView
+#include "Ports.h"		// the pen
 
 
 // (a box that holds nothing yet: the recogniser's mark is a top of
@@ -714,9 +715,64 @@ FStrokesAfterUnit(RefArg /*rcvr*/, RefArg unit, RefArg /*ignored*/)
 }
 
 
+// ROM 0x00078b48 FDrawOriginal
+// DrawOriginal(bundle, itemBounds): the writing a stroke bundle holds drawn
+// into a box (the corrector's picture of what was written), two pixels
+// thick, as large as fits without stretching it more than twice its size;
+// ==> the box it was drawn in.  The bundle's bounds and the box must be
+// bounds frames ("bad strokeBounds", "bad itemBounds").
+//
+// The box loses two pixels at the right and bottom for the thick pen.  Then
+// the width that keeps the writing's shape at the box's full height is
+// worked out; when that is too wide the box's width is kept and the height
+// made to suit.
+//
+// ROM BUG, kept: that height is the box's height times the too-wide width
+// divided by the box's - the ratio upside down - so it comes out taller
+// than the box instead of shorter, and the box grows rather than shrinks
+// in that direction (then limited to twice the writing's height, as the
+// width is to twice its width).
+static Ref
+FDrawOriginal(RefArg /*rcvr*/, RefArg bundle, RefArg itemBounds)
+{
+	RefVar strokeBoundsObj(GetFrameSlotRef(bundle, RSSYMbounds));
+	Rect strokeBounds, box;
+	if (!FromObject(strokeBoundsObj, strokeBounds))
+		ThrowMsg("bad strokeBounds");
+	if (!FromObject(itemBounds, box))
+		ThrowMsg("bad itemBounds");
+	PenState penState;
+	GetPenState(&penState);
+	PenNormal();
+	PenSize(2, 2);
+	box.bottom -= 2;
+	box.right -= 2;
+	long height = (short) (box.bottom - box.top);
+	long width = (short) (box.right - box.left);
+	long strokeWidth = (short) (strokeBounds.right - strokeBounds.left);
+	long strokeHeight = (short) (strokeBounds.bottom - strokeBounds.top);
+	long drawWidth = (height * strokeWidth) / strokeHeight;
+	long drawHeight = height;
+	if (drawWidth > width)
+	{
+		drawHeight = (drawWidth * height) / width;		// (the ROM bug above: upside down)
+		drawWidth = width;
+	}
+	if (drawWidth > strokeWidth * 2)
+		drawWidth = strokeWidth * 2;
+	if (drawHeight > strokeHeight * 2)
+		drawHeight = strokeHeight * 2;
+	InsetRect(&box, (short) ((width - drawWidth) >> 1), (short) ((height - drawHeight) >> 1));
+	DrawStrokeBundle(bundle, &strokeBounds, &box);
+	SetPenState(&penState);
+	return ToObject(box);
+}
+
+
 void
 RegisterStrokeBundleNatives(void)
 {
+	RegisterNativeFunction("FDrawOriginal", (void*) FDrawOriginal, 2);
 	RegisterNativeFunction("FCountStrokes", (void*) FCountStrokes, 1);
 	RegisterNativeFunction("FGetStroke", (void*) FGetStroke, 2);
 	RegisterNativeFunction("FGetBundleBounds__FRC6RefVarT1", (void*) FGetBundleBounds, 1);

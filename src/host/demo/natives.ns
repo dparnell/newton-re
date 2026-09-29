@@ -3,6 +3,8 @@
 //
 //   RepeatInfoToText   a repeating meeting's pattern in words
 //   MeasuredNumberStr  a number's text cut to fit a width
+//   DrawOriginal       a stroke bundle's writing drawn into a box
+//   LoadFontCache      the font table loaded again
 //
 //   build/host/host/newton --rom build/MP2x00US/rom.bin --headless 30 --script src/host/demo/natives.ns
 
@@ -28,6 +30,16 @@ Print(["fits", MeasuredNumberStr("3.14159", 200, kFont)]);
 Print(["cut", MeasuredNumberStr("3.14159", StrFontWidth("3.14", kFont) + 1, kFont)]);
 Print(["whole", MeasuredNumberStr("314159", 10, kFont)]);
 Print(["too narrow", MeasuredNumberStr("31.4159", 5, kFont)]);
+
+// the writing a stroke bundle holds drawn into a box: as large as fits,
+// kept within twice its size (and the box grown, not shrunk, when the
+// writing is too wide for it - a ROM bug kept)
+kBundle := {bounds: {left: 0, top: 0, right: 20, bottom: 10}, strokes: []};
+Print(["original", DrawOriginal(kBundle, {left: 0, top: 0, right: 100, bottom: 50})]);
+Print(["original narrow", DrawOriginal(kBundle, {left: 0, top: 0, right: 50, bottom: 100})]);
+try DrawOriginal({bounds: {left: 0}, strokes: []}, {left: 0, top: 0, right: 1, bottom: 1}) onexception |evt.ex.msg| do Print(["bad bundle", CurrentException().message]);
+GetRoot():LoadFontCache();
+Print("fonts loaded");
 
 QuickLookDone(nil);
 Print("natives: done");
