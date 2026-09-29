@@ -86,6 +86,27 @@ bugs and ROM bugs found on the way.
   `layout.tsv` manifest, and `rombuild.py` proved by a byte-identical
   rebuild of the area.
 
+## 2026-09-30: the last natives outside comms
+
+- `store:HasPassword`/`SetPassword` (825c01ab) over the ROM's password
+  check, which holds a **master key** - a password whose key is
+  `c1855223 d339abef` opens every store (`docs/curiosities.md`);
+  `GetCardSlotStores` (nil: no sockets, 81391c5c); `RegisterGestalt`/
+  `ReplaceGestalt` (a script's gestalt read back in its marshalled order;
+  the ROM's leak of the block it builds kept), `BootSucceeded`/
+  `QuickLookDone` (the `bootResults`/`bootFailure` files), `UnmountCard`
+  (13c7f765); `RepeatInfoToText` (`intl/RepeatText.cpp`) and
+  `MeasuredNumberStr` (ROM bugs kept: a whole number too wide answers
+  nil; the cut is written into the caller's string) (6607113e);
+  `DrawOriginal` (ROM bug kept: the ratio upside down, so the box grows),
+  `LoadFontCache` (d0050d50); `DrawExpando` (7998ac73); the serial
+  debugger's two natives (`testing/SerialDebugger.cpp`, 726d07f6);
+  `store:SuckPackageFromEndPoint` (`packages/EndpointPackages.cpp`,
+  `packages` linking `comms_script`; ctest `host.NewtonEndpointPackage`,
+  06970bfe); `instance:Dispatch` on a monitor protocol (b72c71b9).
+- natives.py 1214 -> 1231 of 1326; ctests `host.NewtonGestalt`,
+  `host.NewtonNatives`; 219 of 219.
+
 ## 2026-09-30: beaming over the default path
 
 - ctest `host.NewtonBeamIrDA` (43717fe6): with zapCommToolId nil the probe

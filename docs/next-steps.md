@@ -16,9 +16,12 @@ the way are all in `docs/work-log.md`.
   work in parallel, each building in its own directory under `tmp/`.
 - `analysis/coverage.py build/MP2x00US --check`: 15657 citations, 0 bad;
   10165 of 16671 functions (60.97%).
-- `analysis/natives.py --unbound`: 1214 of the ROM's 1326 natives
-  answered (91.6%); left mostly in comms (58 of 147), then system,
-  intl, testing, qd.
+- `analysis/natives.py --unbound`: 1231 of the ROM's 1326 natives
+  answered (92.8%); only comms' are left (its own 89, the AppleTalk
+  `*Zone*` four and IR sniffing).  `instance:Dispatch` works only on a
+  monitor protocol (a host protocol's methods need numbered thunks, NOT
+  YET); the card server (`TCardServer`, the PSS manager's sockets) is
+  behind `UnmountCard` and `GetCardSlotStores`.
 
 ## What works
 
