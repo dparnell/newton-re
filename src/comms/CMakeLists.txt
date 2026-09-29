@@ -13,6 +13,7 @@ add_library(comms STATIC
     host/HostServices.cpp
     host/HostEchoServer.cpp
     host/HostDNSTool.cpp
+    host/HostLinkTool.cpp
 )
 # hal_host_sockets: the host's network, which host/HostTCPTool.cpp (the
 # stand-in for the NIE's TCP tool) works over
@@ -21,10 +22,20 @@ target_include_directories(comms PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURR
 
 # The NewtonScript side: the frame translators (values and option frames
 # to and from bytes and option arrays) and the NewtonScript endpoint.
+# host/HostLink.ns, the host's link for the NIE, is compiled in as a string
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/HostLinkSource.cpp
+    COMMAND ${CMAKE_COMMAND} -DINPUT=${CMAKE_CURRENT_SOURCE_DIR}/host/HostLink.ns
+            -DOUTPUT=${CMAKE_CURRENT_BINARY_DIR}/HostLinkSource.cpp -DNAME=gHostLinkSource
+            -P ${CMAKE_SOURCE_DIR}/cmake/EmbedText.cmake
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/host/HostLink.ns ${CMAKE_SOURCE_DIR}/cmake/EmbedText.cmake
+    VERBATIM)
 add_library(comms_script STATIC
     Translators.cpp
     NewScriptEndpoint.cpp
     StreamingEndpoint.cpp
+    host/HostLink.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/HostLinkSource.cpp
 )
 # newt: ExceptionNotify and CheckForDeferredActions; views: the root view
 # brought up to date after an endpoint event

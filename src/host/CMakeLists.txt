@@ -317,3 +317,22 @@ set_tests_properties(host.NewtonDNS PROPERTIES TIMEOUT 120
 add_test(NAME host.NewtonStream COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 8 --tcp-echo 52372 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/stream.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(host.NewtonStream PROPERTIES TIMEOUT 120
                      PASS_REGULAR_EXPRESSION "stream: connected, state 5.*stream: sent, progress 1536 of 1854.*stream: received a streamed frame 1996 300 89401 .*progress 1854.*stream: done")
+
+# the Newton Internet Enabler end to end through its own API (demo/inet.ns):
+# InetGrabLink over the host's link (comms/host/HostLink.h - the NIE's link
+# state machine, its protoFSM run by the re-expressions of
+# src/thirdparty/nie), DNSGetAddressFromName("localhost"), a TCP echo to
+# the address it answered, the link released and taken down.  Only when
+# the NIE's packages are there.
+set(NIE_DIR ${CMAKE_SOURCE_DIR}/../fixtures/packages/apple/NIE2)
+if(EXISTS ${NIE_DIR}/REGPKGS/inetenbl.pkg)
+    add_test(NAME host.NewtonInet
+             COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --erase
+                     --store ${CMAKE_CURRENT_BINARY_DIR}/inet.store --tcp-echo 52373 --headless 25
+                     --package ${NIE_DIR}/ENETSUP/newtdev.pkg --package ${NIE_DIR}/REGPKGS/inetenbl.pkg
+                     --package ${NIE_DIR}/REGPKGS/inetstup.pkg
+                     --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/inet.ns
+             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(host.NewtonInet PROPERTIES TIMEOUT 180
+                         PASS_REGULAR_EXPRESSION "inet: default link Host network.*inet: link connected, connected.*inet: localhost is 127.0.0.1.*inet: connected, state 5.*inet: echoed hello.*inet: endpoint disposed.*inet: link released.*inet: link now disconnected.*inet: done")
+endif()

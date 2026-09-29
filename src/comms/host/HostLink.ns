@@ -1,0 +1,135 @@
+// The host's link for the Newton Internet Enabler (comms/host/HostLink.h):
+// a physical layer and a link layer service in the NIE's service registry
+// (the global InetServices:NIE) and a "Host network" setup in its
+// "Internet Setups" soup, so InetGrabLink connects over the host's own
+// network.  This file is compiled into the host (HostLinkSource.cpp, made
+// by src/cmake/EmbedText.cmake) and evaluated at boot; it answers the frame
+// kept in the global HostLink:host.
+//
+// DEVIATION (owner's decision - docs/comms/README.md, "The link"): the
+// NIE's services (enetsup.pkg's Ethernet and DHCP, modmsup.pkg's modem and
+// PPP) load the NIE's native stack modules and drive the card or the modem;
+// the host's network is always up, so each step the NIE's link state
+// machine asks of these two succeeds at once.
+//
+// The protocol is the NIE's own, as its link state machine (inetenbl.pkg,
+// 0x401f5's states) speaks it to a service - read with
+// tools/newton-rom/analysis/pkgns.py:
+//   service:InstantiateAndPerform(nil, 'Create, nil) makes the service's
+//   instance; then instance:DoEvent(event, params) with
+//     'SetCCE [cce], 'SetLinkEntry [entry]      (kept)
+//     'LoadDriverProtocol [frame, symbol]       answered 'Loaded
+//     'connect [frame, symbol]                  answered 'Connected
+//     'EngageLinkProtocol [frame, symbol]       answered 'Engaged
+//     'ProcessStackActive [frame, symbol]       answered 'Processed
+//     'DisengageLinkProtocol [frame, symbol]    answered 'Disengaged
+//     'Disconnect [frame, symbol]               answered 'Disconnected
+//     'Cancel, 'Dispose, 'Abort                 (nothing to undo)
+//   an answer being frame:symbol(InetBuildStatusFrame(linkID, status, nil,
+//   nil, nil, nil)), as enetsup.pkg's Ethernet service answers 'connect
+//   (0x10649).
+
+{
+	service: {
+		fCCE: nil,
+		fLinkEntry: nil,
+		InstantiateAndPerform: func(parent, event, params)
+		begin
+			local instance := {_proto: self, fCCE: nil, fLinkEntry: nil};
+			if event then
+				instance:DoEvent(event, params);
+			instance;
+		end,
+		DoEvent: func(event, params)
+		begin
+			if event = 'SetCCE then
+				fCCE := params[0]
+			else if event = 'SetLinkEntry then
+				fLinkEntry := params[0]
+			else begin
+				local status := if event = 'LoadDriverProtocol then 'Loaded
+					else if event = 'connect then 'Connected
+					else if event = 'EngageLinkProtocol then 'Engaged
+					else if event = 'ProcessStackActive then 'Processed
+					else if event = 'DisengageLinkProtocol then 'Disengaged
+					else if event = 'Disconnect then 'Disconnected;
+				if status and params and params[0] then
+					Perform(params[0], params[1],
+						[InetBuildStatusFrame(if fLinkEntry then fLinkEntry.linkID, status, nil, nil, nil, nil)]);
+			end;
+			nil;
+		end,
+	},
+
+	// the two services, made when the NIE is there
+	Services: func()
+	begin
+		[{_proto: service, class: 'PhysicalService, symbol: '|HostNetwork:host|,
+		  name: "Host network", description: "The host computer's own network"},
+		 {_proto: service, class: 'LogicalService, symbol: '|HostLink:host|,
+		  name: "Host", description: "The host computer's TCP/IP"}];
+	end,
+
+	// once the NIE's service registry exists (its UnitsInstalledScript makes
+	// it, when its packages' units are all there) and the host's services
+	// are not in it yet: the services registered, the setup added unless it
+	// is there already, and made the default link when there is none
+	Check: func()
+	begin
+		// (once: a change to the packages while the host's services are
+		// there - another package, the NIE's own removal - leaves the NIE
+		// alone)
+		local registry := GetGlobalVar('|InetServices:NIE|);
+		if not registry or registry.|HostNetwork:host| then
+			return nil;
+		local physical, logical;
+		foreach s in :Services() do begin
+			registry.(s.symbol) := s;
+			if s.class = 'PhysicalService then physical := s else logical := s;
+		end;
+		// (Internet Setup registers its soup when it is first opened -
+		// newtSoup's, inetstup.pkg 0xe4e1 - and the NIE finds a setup by its
+		// linkID index, so the host registers the same soup with the same
+		// indexes: its tags index, which only the application's own filing
+		// uses, comes with the application)
+		RegUnionSoup('|HostLink:host|, {name: "Internet Setups", userName: "Internet Setups",
+			ownerApp: '|InternetSetup:Newton|, userDescr: "The Internet Setup soup.",
+			indexes: [{structure: 'slot, path: 'setupName, type: 'string},
+			          {structure: 'slot, path: 'linkID, type: 'int}]});
+		local soup := GetUnionSoupAlways("Internet Setups");
+		local cursor := soup:Query(nil);
+		local entry := cursor:Entry();
+		while entry and entry.physicalLayer <> physical.symbol do
+			entry := cursor:Next();
+		// (without the NIE's link manager, which InetStartUp would start:
+		// a link id is the ticks, unique among the setups, as the manager's
+		// MGetLinkUniqueID, 0x46ac9, makes one; the default link is the
+		// user configuration's InetDefaultLink, which its
+		// MSetLinkDefaultID, 0x466d9, sets)
+		if not entry then begin
+			local linkID := Ticks();
+			while soup:Query({type: 'index, indexPath: 'linkID, beginKey: linkID, endKey: linkID}):Entry() do
+				linkID := linkID + 1;
+			entry := {class: 'INET, version: 2,
+				linkID: linkID,
+				setupName: "Host network",
+				physicalLayer: physical.symbol,
+				linkLayer: logical.symbol};
+			soup:AddToDefaultStoreXmit(entry, '|HostLink:host|);
+		end;
+		if not GetUserConfig('InetDefaultLink) then
+			SetUserConfig('InetDefaultLink, entry.linkID);
+		entry.linkID;
+	end,
+
+	// the NIE's registry is looked for now, and again after each change to
+	// the "Packages" soup (the NIE's own units wait on it, 0x16c5, and
+	// then take a second: this takes two)
+	Start: func()
+	begin
+		RegSoupChange("Packages", '|HostLink:host|,
+			func(soupName, appSymbol, changeType, changeData)
+				AddProcrastinatedCall('|HostLink:host|, func() GetGlobalVar('|HostLink:host|):Check(), nil, 2000));
+		:Check();
+	end,
+}

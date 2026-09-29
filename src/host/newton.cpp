@@ -55,6 +55,7 @@
 #include "HostHeapCheck.h"
 #include "HostSoundDriver.h"
 #include "HostEchoServer.h"
+#include "HostLink.h"
 #include "os600/kernel/host/TaskRuntime.h"
 #include "REPTranslators.h"
 #include "Interpreter.h"
@@ -115,6 +116,16 @@ NewtonBoot(void)
 	THostScreenDriver* display = HostDisplay();
 	if (gWindowed && !HostWindowStart(display->Width(), display->Height(), display->Pixels(), "Newton", gScale))
 		fprintf(stderr, "newton: no window on this host; running headless\n");
+}
+
+
+// PreMain's host hook: the program's globals, and the host's link for the
+// Newton Internet Enabler (comms/host/HostLink.h: it waits for the NIE)
+static void
+NewtonPreMain(void)
+{
+	HostInstallPackageGlobal();
+	HostLinkStart();
 }
 
 
@@ -271,7 +282,7 @@ main(int argc, char** argv)
 	HostConfigureNewtWorld(romImage, heapSize, width, height, depth);
 	gNewtBootTestScript = script;
 	gNewtHostBoot = NewtonBoot;
-	gNewtHostPreMain = HostInstallPackageGlobal;
+	gNewtHostPreMain = NewtonPreMain;
 	NewtInstallUserMain();
 	gHostKernelServicesTask = KernelServices;
 	// the sound hardware (hal/host/HostSoundDriver.h): with a window, the

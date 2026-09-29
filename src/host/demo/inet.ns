@@ -1,0 +1,113 @@
+// The Newton Internet Enabler end to end on the host, through its own
+// NewtonScript API: the link grabbed (InetGrabLink - the NIE's link state
+// machine, over the host's link services and 'ictl, comms/host/HostLink.h),
+// a name looked up (DNSGetAddressFromName - the NIE's domain manager, over
+// the host's 'dnst), a TCP connection to the address it answered (a
+// protoBasicEndpoint with the 'inet service, the link's id and the remote
+// socket, over the host's 'inet) that sends "hello" to an echo server and
+// reads it back, and the link released and taken down (InetReleaseLink,
+// InetDisconnectLink).
+//
+// It needs the NIE's packages and the echo server:
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//       --erase --store inet.store --tcp-echo 52373 --headless 20 \
+//       --package fixtures/packages/apple/NIE2/ENETSUP/newtdev.pkg \
+//       --package fixtures/packages/apple/NIE2/REGPKGS/inetenbl.pkg \
+//       --package fixtures/packages/apple/NIE2/REGPKGS/inetstup.pkg \
+//       --script src/host/demo/inet.ns
+//
+// (The NIE's functions appear only once its units are all installed - its
+// UnitsInstalledScript runs a second after a change to the "Packages"
+// soup - and the host's link after that, so the script waits.)
+
+kInetEchoPort := 52373;
+
+inetClient := {
+	linkID: nil,
+
+	Linked: func(linkID, status, err)
+	begin
+		if err then
+			Print("inet: link failed, " & err)
+		else if status.linkStatus = 'connected then begin
+			Print("inet: link connected, " & status.infoStatus);
+			self.linkID := linkID;
+			DNSGetAddressFromName("localhost", self, 'Resolved);
+		end;
+	end,
+
+	Resolved: func(results, err)
+	begin
+		if err or not results then begin
+			Print("inet: localhost not resolved, " & err);
+			return;
+		end;
+		local address := results[0].resultIPAddress;
+		Print("inet: localhost is " & address[0] & "." & address[1] & "." & address[2] & "." & address[3]);
+		:Talk(address);
+	end,
+
+	Talk: func(address)
+	begin
+		local ep := {_proto: @383,
+			exceptionHandler: func(e) begin
+				Print("inet: exception " & e.name & " " & e.data);
+				true;
+			end};
+		ep:Instantiate(ep, [
+			{label: "inet", type: 'service, opCode: 512},
+			{label: "ilid", type: 'option, opCode: 512,
+			 data: {arglist: [linkID], typelist: ['struct, 'ulong]}},
+			{label: "itrs", type: 'option, opCode: 512,
+			 data: {arglist: [address, kInetEchoPort],
+			        typelist: ['struct, ['array, 'byte, 4], 'short]}}]);
+		ep:Bind(nil, nil);
+		ep:Connect(nil, nil);
+		Print("inet: connected, state " & ep:State());
+		ep:SetInputSpec({
+			form: 'string,
+			termination: {byteCount: 5},
+			inputScript: func(endpoint, data, terminator, options) begin
+				Print("inet: echoed " & data);
+				AddDelayedCall(func() begin
+					endpoint:Disconnect(true, nil);
+					endpoint:Unbind(nil);
+					endpoint:Dispose();
+					Print("inet: endpoint disposed");
+					InetReleaseLink(inetClient.linkID, inetClient, 'Released);
+				end, nil, 100);
+			end});
+		ep:Output("hello", nil, nil);
+	end,
+
+	Released: func(linkID, status, err)
+	begin
+		// (released, the NIE keeps the link up for its next client; the
+		// script takes it down)
+		Print("inet: link released, still " & status.linkStatus);
+		InetDisconnectLink(linkID, self, 'Disconnected);
+	end,
+
+	// (the NIE answers a disconnecting client as soon as it is taken off the
+	// link's clients; the link then goes down through its states - the
+	// domain manager deactivated, the link protocol disengaged, the
+	// physical layer disconnected - and is asked about a little later)
+	Disconnected: func(linkID, status, err)
+	begin
+		if err then
+			Print("inet: disconnect failed, " & err)
+		else
+			AddDelayedCall(func() begin
+				Print("inet: link now " & InetGetLinkStatus(linkID));
+				Print("inet: done");
+			end, nil, 3000);
+	end,
+};
+
+AddDelayedCall(func() begin
+	local linkID := InetGetDefaultLinkID();
+	local entry := InetGetLinkEntry(linkID);
+	Print("inet: default link " & (if entry then entry.setupName else "none"));
+	InetGrabLink(linkID, inetClient, 'Linked);
+end, nil, 6000);
