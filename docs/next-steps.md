@@ -212,7 +212,7 @@ worked through.  What could come next (not ranked; the owner chooses):
   the unoptimised default build - `-DCMAKE_BUILD_TYPE=RelWithDebInfo`
   roughly halves processor time again for interactive use; `VisibleRow`
   and `StretchBits`/text are the next hot spots if wanted.
-- **The ROM-free track** (below): step 1, the decompiler, at 99.7%.
+- **The ROM-free track** (below): step 1, the decompiler, done; step 2 planned.
 - Small: the date the Assistant's "tomorrow" comes to ("schedule lunch
   with Daniel tomorrow" puts the meeting on today).
 
@@ -360,15 +360,16 @@ the OS loads, so a change to a source file or a resource is rebuilt and
 used on the next run.  The pieces, roughly in order:
 
 1. A NewtonScript **decompiler** whose output compiles back to the same
-   bytes - **being done, 99.7%**: `analysis/nsdecompile.py` round-trips
-   5491 of the ROM's 5507 functions (`docs/frames/decompiler.md`, ctest
-   `host.NSDecompileRoundTrip`).  Left: string-subclass literals built
-   from their text rather than their bytes (6), a closure made at build
-   time (0x5acf1d), 7 immediates the lexer cannot write, 2 foreach-value
-   shapes.
+   bytes - **done**: `analysis/nsdecompile.py` round-trips all 5507 of
+   the ROM's functions (`docs/frames/decompiler.md`; ctest
+   `host.NSDecompileRoundTrip` requires 100%).
 2. **Resource extraction**: bitmaps to images, sounds to sound files,
    fonts, strings, locale bundles, the object graph that ties them
-   together, as files a person can edit.
+   together, as files a person can edit - planned in
+   `docs/rom-free/README.md`: first the opaque-resource skeleton
+   (`analysis/romextract.py` and `rombuild.py`, the rebuilt object area
+   byte-identical as the ctest), starting with a census of how the frame
+   maps are shared.
 3. A **builder** that makes the object area (and the packages) from the
    sources and resources, in the form `frames/ROMImport.cpp` reads today.
 4. Booting from that output with no `--rom`, the generated tables that

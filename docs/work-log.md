@@ -9,7 +9,7 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
-## 2026-09-30: the ROM-free track, step 1 - a round-tripping NewtonScript decompiler
+## 2026-09-30: the ROM-free track, step 1 - a round-tripping NewtonScript decompiler (100%)
 
 - `analysis/nsdecompile.py build/MP2x00US --roundtrip --newtonscript
   <newtonscript>` decompiles every one of the ROM's NewtonScript
@@ -32,6 +32,20 @@ bugs and ROM bugs found on the way.
 - Compiler: the NTK's constant handling behind the host flag
   `gCompilerNTKConstants` - a magic-pointer constant gets one literal per
   name and a reference to a constant is not a receiver reference.
+- To 100%, 5507 of 5507 (8b1d0e6, 65648d9, ae17ab4, 7db2775): string
+  subclasses and halfword shapes built in the host's byte order (the
+  importer swaps them); the "immediates" were native-function frames the
+  NTK put in literals (special immediate 0x132, now a constant); a
+  foreach's variable closed over by an inner function; the build-time
+  closure 0x5acf1d rebuilt by the function that made it
+  (`kClosureMaker_...`).  The ctest's 600-function sample requires 100%.
+- Step 2 planned in `docs/rom-free/README.md` (e688ad4):
+  `nsfunctions.py --census` counts the object area (46538 objects, 2.9
+  MB; 10679 shared; 1012 reachable only from the magic pointers or C);
+  bitmaps to PNG, sounds to WAV, pictures as PICT, fonts as .sfnt, the
+  object graph as NewtonScript under `romsrc/objects/` with a
+  `layout.tsv` manifest, and `rombuild.py` proved by a byte-identical
+  rebuild of the area.
 
 ## 2026-09-30: the rest of the docker's commands
 
