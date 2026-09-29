@@ -93,7 +93,19 @@ ARM code a 32-bit view:
   interpreter, the global function frame) are answered by the adapter.
 
 Only the entry points a package's code actually uses are implemented on the
-host side; an unimplemented one stops the CPU and reports its name.
+host side; an unimplemented one stops the CPU and reports its name.  All
+123 that the fixtures' native code reaches (`gluetable.py --package` over
+inetenbl, modmsup, Mahjongg and newthack) and the host has a function for
+are answered, and `test_PackageNativeCPU` checks each by name; four are
+not, for want of one: `Debugger`, `EnableFramesFunctionProfiling`,
+`GetGlobals` (it would hand the ARM code a host pointer) and
+`PublicFiller_236`.  `malloc`/`free` are blocks of the call's arena (`free`
+gives back only the last block), so nothing a native allocates outlives
+its call.
+
+The applications among the fixtures are used for real by
+`src/host/demo/thirdparty-apps.ns` (ctest `host.NewtonThirdPartyApps`):
+Mahjongg's two natives deal the board and NewtHack's runs each turn.
 
 ## Calls out, as the adapter answers them
 
