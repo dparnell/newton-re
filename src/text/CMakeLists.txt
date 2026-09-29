@@ -12,6 +12,7 @@ add_library(text STATIC
     TXArray.cpp
     TXAttributes.cpp
     TXChars.cpp
+    TXLinesHeights.cpp
     TXObjectRange.cpp
     TXOffset.cpp
     TXRuler.cpp

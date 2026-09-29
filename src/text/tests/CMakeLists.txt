@@ -28,3 +28,8 @@ add_executable(test_TXUtilities test_TXUtilities.cpp)
 target_link_libraries(test_TXUtilities PRIVATE text memory)
 add_test(NAME text.TXUtilities COMMAND test_TXUtilities)
 set_tests_properties(text.TXUtilities PROPERTIES TIMEOUT 120)
+
+add_executable(test_TXLinesHeights test_TXLinesHeights.cpp)
+target_link_libraries(test_TXLinesHeights PRIVATE text memory)
+add_test(NAME text.TXLinesHeights COMMAND test_TXLinesHeights)
+set_tests_properties(text.TXLinesHeights PROPERTIES TIMEOUT 120)
