@@ -35,7 +35,18 @@
 #include "TXOffset.h"
 #endif
 
-struct TXLineRunDisplayInfo;		// the line, the run's place on it and where it is drawn (TXLine)
+// What a run is handed to measure, draw or hit-test its piece of a line:
+// the characters, how many, the width the piece takes on the line and,
+// on a fully justified line, the extra it is to be stretched by (both
+// 16.16).  (The ROM's is the first 0x10 bytes of a larger record TXLine
+// fills in.)
+struct TXLineRunDisplayInfo
+{
+	const UniChar*	fText;			// +0x00
+	long			fLength;		// +0x04
+	Fixed			fWidth;			// +0x08
+	Fixed			fJustifyExtra;	// +0x0c  nought unless the line is fully justified
+};
 struct TXRunPositionInfo;			// a run's place on a line, for its hilite
 class TXPointingDevice;				// the pen, as the engine's click tracking sees it
 struct TXClickCommandInfo;			// what a click in a run asks for
@@ -52,13 +63,18 @@ public:
 	// the pure ones are named from TXGraphicsRun's vtable)
 	virtual Boolean	IsTextRun(void) const = 0;						// (pure: +0x54)
 	virtual void	GetHeightInfo(int* ascent, int* descent, int* leading) = 0;	// (pure: +0x58)
-	virtual long	PixelToChar(const TXLineRunDisplayInfo& info, long pixel, TXOffsetRange* range) = 0;	// (pure: +0x5c)
-	virtual long	CharToPixel(const TXLineRunDisplayInfo& info, long offset) = 0;	// (pure: +0x60)
-	virtual void	Draw(const TXLineRunDisplayInfo& info, long offset, const Rect& clip, int mode) = 0;	// (pure: +0x64)
-	virtual long	FullJustifPortion(const TXLineRunDisplayInfo& info);	// ROM 0x00245ea4 FullJustifPortion__5TXRunFRC20TXLineRunDisplayInfo (+0x68: 0)
+	virtual void	PixelToChar(const TXLineRunDisplayInfo& info, Fixed pixel, TXOffsetRange* range) = 0;	// (pure: +0x5c) the character boundary nearest `pixel`
+	virtual Fixed	CharToPixel(const TXLineRunDisplayInfo& info, long offset) = 0;	// (pure: +0x60) where the character at `offset` starts
+	virtual void	Draw(const TXLineRunDisplayInfo& info, Fixed x, const Rect& line, int baseline) = 0;	// (pure: +0x64) drawn from `x`, `baseline` pixels below the line's top
+	virtual Fixed	FullJustifPortion(const TXLineRunDisplayInfo& info);	// ROM 0x00245ea4 FullJustifPortion__5TXRunFRC20TXLineRunDisplayInfo (+0x68: 0)
 	virtual long	VisibleLen(const UniChar* text, long count);	// ROM 0x00245eb8 VisibleLen__5TXRunFPCUsl (+0x6c: all of it)
-	virtual long	MeasureWidth(const TXLineRunDisplayInfo& info) = 0;	// (pure: +0x70)
-	virtual long	LineBreak(const UniChar* text, long count, long width, long* broken, Boolean wordWrap, long* widthUsed) = 0;	// (pure: +0x74)
+	virtual Fixed	MeasureWidth(const TXLineRunDisplayInfo& info) = 0;	// (pure: +0x70)
+	// Where a line breaks in text[start, count): `width` is the room left
+	// (16.16), `length` answers how many characters from `start` go on
+	// the line.  ==> 2 all of them (the room they took off `width`), 0 cut
+	// at a word, 1 cut inside one (only when `mayCutWord`: the line has
+	// nothing on it yet).
+	virtual long	LineBreak(const UniChar* text, long count, long start, Fixed* width, Boolean mayCutWord, long* length) = 0;	// (pure: +0x74)
 	virtual long	Click(const TXRunPositionInfo& where, TXPointingDevice* pen, long offset, int clicks, const Rect& bounds, TXClickCommandInfo* command);	// ROM 0x00245eb0 Click__5TXRunFRC17TXRunPositionInfoP16TXPointingDeviceliRC4RectP18TXClickCommandInfo (+0x78: 0)
 	virtual void	SetHilite(char on, const TXRunPositionInfo& where, Boolean draw);	// ROM 0x00245ec0 SetHilite__5TXRunFcRC17TXRunPositionInfoUc (+0x7c: nothing)
 	virtual void	DrawHilite(const TXRunPositionInfo& where);		// ROM 0x00245ec4 DrawHilite__5TXRunFRC17TXRunPositionInfo (+0x80: nothing)

@@ -27,7 +27,7 @@ TXRun::Assign(const TXAttrObject* /*other*/)
 // ROM 0x00245ea4 FullJustifPortion__5TXRunFRC20TXLineRunDisplayInfo
 // How much of the line's slack this run takes when the line is fully
 // justified: none, unless a subclass says otherwise.
-long
+Fixed
 TXRun::FullJustifPortion(const TXLineRunDisplayInfo& /*info*/)
 {
 	return 0;

@@ -13,6 +13,7 @@ add_library(text STATIC
     TXAttributes.cpp
     TXChars.cpp
     TXLinesHeights.cpp
+    TXNewtTextRun.cpp
     TXObjectRange.cpp
     TXOffset.cpp
     TXRuler.cpp
