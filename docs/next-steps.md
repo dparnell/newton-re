@@ -156,7 +156,9 @@ worked through.  What could come next (not ranked; the owner chooses):
   `TSerTool`/`TAsyncSerTool`, the `TSerialChip` registry - over a host
   `TSerialChip` whose wire is a TCP socket (port 3679, as Einstein), so
   NCX or UnixNPI connect to localhost as to an emulator; about 80 KB of
-  ROM, layer by layer, ending in ctest `host.NewtonDock`.  `test_NIEProtoFSM` also runs
+  ROM, layer by layer, ending in ctest `host.NewtonDock`.  Layer 1 done
+  (the serial chip seam and registry, the host's TCP serial port -
+  `hal.HostSerialChip`); next `TSerTool`/`TAsyncSerTool` and 'aser.  `test_NIEProtoFSM` also runs
   each check on the package's own ARM code through armcpu, and the two
   agree (2ae6d73).  armcpu left: frames in a code binary; protocol parts
   through the CPU - no fixture needs them yet (every protocol part among

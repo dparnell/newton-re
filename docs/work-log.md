@@ -9,6 +9,22 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: the desktop connection, layer 1 - the serial chip over TCP
+
+- `hal/HALSerialChip.h`: the DDK's TSerialChip and PSerialChipRegistry
+  re-expressed, methods virtual in the ROM's dispatch order (not named
+  SerialChip.h: the V1 DDK header would shadow it); `SerialChipRegistry.cpp`
+  is the ROM's PTheSerChipRegistry - eight slots, ids 0x80 + slot, a
+  chip named to the name server by its location, a service's default
+  chip in the config server's "DefHWLoc", FindByOption over a
+  TCMOSerialChipSpec, the ROM's no-op 'slot loop in FindByLocation kept.
+- `hal/host/HostSerialChip.h`: `THostSerialChip` (DEVIATION, hardware),
+  the external port 'extr' whose wire is a TCP socket on localhost:3679
+  (Einstein's): a desktop connecting raises DCD/DSR/CTS, bytes reach the
+  tool's receive interrupt and leave from its transmit-empty interrupt,
+  polled every 5 ms as a host interrupt source (ctest
+  `hal.HostSerialChip`, 371b3ae).
+
 ## 2026-09-29: comms, round 11 - an NIE bug confirmed on its own ARM
 
 - `NEWTON_NIE_ON_CPU` leaves the NIE's natives unregistered, so a whole
