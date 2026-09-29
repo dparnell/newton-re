@@ -181,11 +181,12 @@ worked through.  What could come next (not ranked; the owner chooses):
   through the Connection app's autodock (`host.NewtonDock` over
   `tools/dock/dock.py`); a docking session's handshake and password
   exchange are in and load packages (`host.NewtonDockSession`); the store
-  and soup commands are in (9bd3a3a).  Next: the entry and cursor
-  commands (ReturnEntry, AddEntry, ChangeEntry, DeleteEntries,
-  RemoteQuery and the RemoteCursor family, WriteSoupIDs/WriteChangedIDs) -
-  answered 'unkn' until then - then CreateSoup/SendSoup/BackupSoup, the
-  package list ('gpin'), the keyboard passthrough and the slips.
+  and soup commands (9bd3a3a) and the cursor and entry commands
+  (8a2af65) are in.  Next: CreateSoup / CreateSoupFromSoupDef / SendSoup
+  / BackupSoup - answered 'unkn' until then - then the package list
+  ('gpin'), `ConvertEntry` (1.x entries, refused for now) and
+  `IsDuplicateEntry` (selective restore, answers no for now), the
+  keyboard passthrough and the slips.
   **Open, outside the docker**: a livelock between `TPMIterator::Init`'s
   semaphore and `TForkWorld`'s mutex - a script polling `GetPackages()`
   while a forked world works (`docs/comms/README.md`); being looked into.  `test_NIEProtoFSM` also runs

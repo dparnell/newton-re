@@ -9,6 +9,18 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-30: the docker's cursor and entry commands
+
+- `TCursorArray`; the cursor commands ('qury', 'cmap', 'goto', 'crsr',
+  'move', 'next', 'prev', 'rset', 'rend', 'cnt ', 'whch', 'cfre'), the
+  entry commands ('rete', 'rcen', 'adde', 'auni', 'cent', 'dele',
+  'esou'/'dsou', 'sver') and the id lists ('gids', 'gcid'), over
+  `GetEntryFromID`, `WriteEntry`, `ReplaceEntryContents`,
+  `AddChangedSoup`, `ShouldBackupEntry`, `GetSoupIDCount` (8a2af65).  ROM
+  bug kept: when `WriteSoupIDs` fails to add an id it adds it again to
+  get the error it throws.  `host.NewtonDockSession` opens a cursor over
+  Notes, adds an entry, finds its id, reads, changes and deletes it.
+
 ## 2026-09-30: the docker's store and soup commands
 
 - Stores ('gsto', 'ssto'/'ssgn', 'sdef', 'gdfs', 'ssig', 'ssna') and
