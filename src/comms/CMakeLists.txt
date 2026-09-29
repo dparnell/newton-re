@@ -16,4 +16,11 @@ add_library(comms STATIC
 target_link_libraries(comms PUBLIC newton_config os600_user memory utility hal_host_sockets)
 target_include_directories(comms PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/host)
 
+# The NewtonScript side: the frame translators (values and option frames
+# to and from bytes and option arrays) and the NewtonScript endpoint.
+add_library(comms_script STATIC
+    Translators.cpp
+)
+target_link_libraries(comms_script PUBLIC comms frames)
+
 add_subdirectory(tests)
