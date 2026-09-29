@@ -1591,12 +1591,13 @@ Writer.expr = _expr
 #	the ROM's functions
 # ------------------------------------------------------------------------------
 
-def rom_functions(rom):
-	"""Every 2.x function in the object area that is not a literal of another
-	(those are decompiled with the function they are in)."""
+def rom_functions(rom, objects=None):
+	"""Every 2.x function in the object area (or in `objects`: a package
+	part's) that is not a literal of another (those are decompiled with the
+	function they are in)."""
 	fns = []
 	nested = set()
-	for ref in nf.objects(rom):
+	for ref in (nf.objects(rom) if objects is None else objects):
 		if rom.flags(ref) & 1 and rom.size(ref) >= 32:
 			s = rom.slots(ref)
 			if s[0] == 0x32 and rom.is_ptr(s[1]):

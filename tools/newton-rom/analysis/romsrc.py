@@ -135,6 +135,83 @@ IDENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*\Z")
 RESERVED = {"nil", "true", "real", "string", "binary", "array", "map"}
 
 
+def same_object(rom, v, ref, where):
+	"""Where a compiled value (the notation read back) differs from the ROM's
+	object at ref; None when it is the same."""
+	if isinstance(v, Imm):
+		return None if v.ref == ref else "%s: %#x, the ROM's %#x" % (where, v.ref, ref)
+	if isinstance(v, Sym):
+		name = rom.symname(ref) if rom.is_ptr(ref) else None
+		return None if name is not None and name.lower() == v.name.lower() else "%s: '%s" % (where, v.name)
+	if not isinstance(v, Obj) or not rom.is_ptr(ref):
+		return "%s: a different kind of value" % where
+	f = rom.flags(ref)
+	if v.kind == "binary":
+		if f & 1:
+			return "%s: a binary, the ROM's is not" % where
+		why = same_object(rom, v.cls, rom.cls(ref), where + "^")
+		if why:
+			return why
+		return None if v.data == rom.data(ref) else "%s: the bytes differ" % where
+	if v.kind == "frame":
+		if f & 3 != 3:
+			return "%s: a frame, the ROM's is not" % where
+		slots = rom.frame_slots(ref)
+		if [t.lower() for t in v.tags] != [(t or "").lower() for t, _ in slots]:
+			return "%s: the tags differ" % where
+		for tag, item, (_, value) in zip(v.tags, v.items, slots):
+			why = same_object(rom, item, value, where + "." + tag)
+			if why:
+				return why
+		return None
+	if v.kind == "array":
+		if f & 3 != 1:
+			return "%s: an array, the ROM's is not" % where
+		why = same_object(rom, v.cls, rom.cls(ref), where + "^")
+		if why:
+			return why
+		slots = rom.slots(ref)
+		if len(slots) != len(v.items):
+			return "%s: %d slots, the ROM's %d" % (where, len(v.items), len(slots))
+		for i, (item, value) in enumerate(zip(v.items, slots)):
+			why = same_object(rom, item, value, "%s[%d]" % (where, i))
+			if why:
+				return why
+		return None
+	return "%s: a %s" % (where, v.kind)
+
+
+def part_objects(rom, first, last, align):
+	"""A package part's objects, walked from its start (aligned to `align`
+	bytes), the byte the gaps are filled with, and the gaps that are not all
+	that byte (object -> their bytes: a version 0 package fills some with a
+	word of 0xbeacebad): None unless the part is exactly a run of objects
+	whose pointers all stay within it."""
+	objs = []
+	gaps = {}
+	counts = collections.Counter()
+	a = first
+	while a < last:
+		size = rom.size(a + 1)
+		if size < 12:
+			return None
+		objs.append(a + 1)
+		nxt = first + ((a - first + size + align - 1) & ~(align - 1))		# (aligned from the part's start)
+		gaps[a + 1] = bytes(rom.rom[a + size:nxt])
+		counts.update(gaps[a + 1])
+		a = nxt
+	if a != last:
+		return None
+	inside = set(objs)
+	for o in objs:
+		refs = [rom.cls(o)] + (rom.slots(o) if rom.flags(o) & 1 else [])
+		if any(r & 3 == 1 and r not in inside for r in refs):
+			return None
+	pad = counts.most_common(1)[0][0] if counts else PAD
+	odd = {o: g for o, g in gaps.items() if g and g != bytes([pad]) * len(g)}
+	return objs, pad, odd
+
+
 def symbol_hash(name: bytes) -> int:
 	"""SymbolHashFunction (ROM 0x0032dab8): the sum of the upper-cased
 	bytes times the golden ratio."""
@@ -169,11 +246,17 @@ def string_text(text: str) -> str:
 # ---- extraction
 
 class Extractor:
-	def __init__(self, rom: nf.ROM, out: str, build_dir: str = None):
+	def __init__(self, rom: nf.ROM, out: str, build_dir: str = None, objects=None, area=None, pad=PAD,
+				 newtonscript=None):
+		"""The ROM's object area; or, given `objects` and `area` (its base and
+		size) and the byte between objects, a package part's objects."""
 		self.rom = rom
 		self.build_dir = build_dir
 		self.out = out
-		self.objs = list(nf.objects(rom))
+		self.main = objects is None
+		self.area = (rom.soup, rom.soup_size) if area is None else area
+		self.pad = pad
+		self.objs = list(nf.objects(rom)) if objects is None else list(objects)
 		self.inside = set(self.objs)
 		self.maps = {rom.cls(o) for o in self.objs if rom.flags(o) & 3 == 3}
 		more = set(self.maps)
@@ -189,8 +272,12 @@ class Extractor:
 		self.names = {}					# object -> definition name
 		self.paths = {}					# object -> path
 		self.layout_extra = {}			# object -> extra manifest fields
-		self.functions = set(nd.rom_functions(rom))
+		self.functions = set(nd.rom_functions(rom, None if self.main else self.objs))
 		self.simple_sounds = self.find_simple_sounds()
+		self.undecompiled = []			# (function, why): the ones kept as bytecode
+		self.odd_gaps = {}				# object -> the bytes after it, when they are not the pad byte
+		self.newtonscript = newtonscript
+		self.sources = self.function_sources()
 		self.in_function = 0			# inside a function written as source
 		self.aliases = []				# (path, name): a named object inside a compiled function
 		self.named_refs = []			# (path, name, the definition being written): every named reference
@@ -204,6 +291,55 @@ class Extractor:
 		if rom.flags(o) & 1:
 			refs += [s for s in rom.slots(o) if s in self.inside]
 		return refs
+
+	def function_sources(self):
+		"""Each function's source, as the decompiler writes it - only those
+		that compile back to the same function (checked by compiling them
+		all with the host's newtonscript, when there is one, and comparing
+		what comes back with the ROM's objects); the rest are kept as their
+		bytecode, with the reason in self.undecompiled."""
+		sources = {}
+		for o in sorted(self.functions):
+			try:
+				sources[o] = nd.record(self.rom, o)
+			except (nd.DecompileError, IndexError, KeyError, AttributeError, TypeError, ValueError) as e:
+				self.undecompiled.append((o, "decompile: %s" % e))
+		if self.newtonscript is None or not sources:
+			return sources
+		os.makedirs(self.out, exist_ok=True)
+		records = os.path.join(self.out, ".verify-records.txt")
+		compiled = os.path.join(self.out, ".verify-compiled.txt")
+		order = sorted(sources)
+		with open(records, "w", encoding="utf-8", newline="\n") as f:
+			for n, o in enumerate(order):
+				f.write("@@ %x\n%s" % (n, sources[o].split("\n", 1)[1]))
+		env = dict(os.environ, NEWTON_ROM=os.path.join(self.out, "no-rom-image"))
+		subprocess.run([nd.newtonscript_path(self.newtonscript), "--compile-records", records, compiled], env=env,
+					   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		with open(compiled, encoding="utf-8") as f:
+			lines = f.read().split("\n")
+		done = set()
+		for i, line in enumerate(lines):
+			if not line.startswith("@@ "):
+				continue
+			fields = line.split()
+			n = int(fields[1], 16)
+			o = order[n]
+			done.add(o)
+			if len(fields) > 2:
+				why = "compile: " + " ".join(fields[3:])
+			else:
+				why = same_object(self.rom, Reader(lines[i + 1], "compiled", self.out).value(), o, "")
+			if why:
+				self.undecompiled.append((o, why))
+				del sources[o]
+		for o in order:
+			if o not in done and o in sources:
+				self.undecompiled.append((o, "not compiled"))
+				del sources[o]
+		os.remove(records)
+		os.remove(compiled)
+		return sources
 
 	def find_simple_sounds(self):
 		"""The samples of the simple sounds (8-bit, uncompressed), with their
@@ -245,9 +381,26 @@ class Extractor:
 		cuts = {start, end}
 		for e in rex["entries"]:
 			cuts |= {e["address"], e["address"] + e["size"]}
+		parts = {}				# a frames part's start -> (its end, its tree's directory)
 		for p in pkgs:
 			cuts |= {p["base"], p["base"] + p["size"]}
-			names[p["base"]] = re.sub(r"[^A-Za-z0-9_]", "_", p["name"]) + ".pkg"
+			name = re.sub(r"[^A-Za-z0-9_]", "_", p["name"])
+			names[p["base"]] = name + ".pkg"
+			for part in p["parts"]:
+				if part["flags"] & 3 != 1:
+					continue
+				first = p["base"] + p["directory_size"] + part["offset"]
+				last = first + part["size"]
+				align = 8 if p["signature"].endswith("0") else 4
+				found = part_objects(self.rom, first, last, align)
+				if found is None:
+					continue			# (a part not a plain run of objects: kept in the package's bytes)
+				objs, pad, odd = found
+				cuts |= {first, last}
+				names[p["base"]] = name + ".head.bin"
+				names[last] = name + ".tail.bin"
+				names[first] = name + "/"
+				parts[first] = (last, objs, pad, odd)
 		cuts = sorted(c for c in cuts if start <= c <= end)
 		os.makedirs(os.path.join(self.out, "rex"), exist_ok=True)
 		rom = self.rom.rom
@@ -256,6 +409,18 @@ class Extractor:
 			f.write("rex\t%x\t%x\n" % (start, end - start))
 			for a, b in zip(cuts, cuts[1:]):
 				name = names.get(a, "bytes_%x" % a)
+				if name.endswith("/"):
+					# a package's frames part: its objects as a tree of their own
+					last, objs, pad, odd = parts[a]
+					rel = "rex/" + name
+					sub = Extractor(self.rom, os.path.join(self.out, rel), self.build_dir, objs, (a, last - a), pad,
+									self.newtonscript)
+					sub.odd_gaps = odd
+					sub.run()
+					print("  %s: %d objects, %d functions as source, %d as bytecode"
+						  % (rel, len(objs), len(sub.sources), len(sub.undecompiled)))
+					f.write("%x\t%s\n" % (a, rel))
+					continue
 				rel = "rex/" + (name if "." in name else name + ".bin")
 				with open(os.path.join(self.out, rel), "wb") as out:
 					out.write(rom[a:b])
@@ -327,13 +492,14 @@ class Extractor:
 		self.paths[o] = path
 		f = rom.flags(o)
 		cls = rom.cls(o)
-		if o in self.functions and not self.in_function:
+		source = self.sources.get(o) if not self.in_function else None
+		if source is not None:
 			# the function's source; its objects walked for their paths and
 			# maps (what the builder lays the compiled function out by)
 			rel = "functions/%x.ns" % o
 			os.makedirs(os.path.join(self.out, "functions"), exist_ok=True)
 			with open(os.path.join(self.out, rel), "w", encoding="utf-8", newline="\n") as out:
-				out.write(nd.record(rom, o))
+				out.write(source)
 			self.in_function += 1
 			try:
 				self.frame_text(o, path)
@@ -479,15 +645,27 @@ class Extractor:
 			for _, text in sorted(mapdefs):
 				f.write(text + "\n")
 		with open(os.path.join(self.out, "layout.tsv"), "w", encoding="utf-8", newline="\n") as f:
-			f.write("# the ROM's object area: %#x, %#x bytes\n" % (rom.soup, rom.soup_size))
-			f.write("area\t%x\t%x\n" % (rom.soup, rom.soup_size))
+			f.write("# the objects' area: %#x, %#x bytes; the byte between objects\n" % self.area)
+			f.write("area\t%x\t%x\t%x\n" % (self.area + (self.pad,)))
 			for o in self.objs:
 				fields = ["%x" % (o - 1), self.paths[o], "%x" % rom.flags(o)]
 				if o in self.layout_extra:
 					fields.append(self.layout_extra[o])
+				if o in self.odd_gaps:
+					fields.append("gap=%s" % self.odd_gaps[o].hex())
+				if rom.word(o - 1 + 4):
+					# the header's second word, nought but for a part's first object
+					fields.append("gc=%x" % rom.word(o - 1 + 4))
 				f.write("\t".join(fields) + "\n")
 			for path, name in self.aliases:
 				f.write("alias\t%s\t%s\n" % (path, name))
+		if self.undecompiled:
+			with open(os.path.join(self.out, "bytecode.tsv"), "w", encoding="utf-8", newline="\n") as f:
+				f.write("# the functions kept as bytecode: they do not decompile, or do not compile back the same\n")
+				for o, why in sorted(self.undecompiled):
+					f.write("%x\t%s\n" % (o, why))
+		if not self.main:
+			return len(defs), len(mapdefs)
 		# the lexicons
 		os.makedirs(os.path.join(self.out, "lexicons"), exist_ok=True)
 		_, writes = romdicts.decode(rom.rom, rom.by_name[romdicts.INIT_FUNCTION])
@@ -820,9 +998,10 @@ class Builder:
 				fields = line.rstrip("\n").split("\t")
 				if fields[0] == "area":
 					self.area_base, self.area_size = int(fields[1], 16), int(fields[2], 16)
+					self.pad = int(fields[3], 16) if len(fields) > 3 else PAD
 					continue
 				if fields[0] == "alias":
-					self.aliases[fields[1]] = fields[2]
+					self.aliases[fields[1].lower()] = fields[2]
 					continue
 				extra = dict(x.split("=", 1) for x in fields[3:])
 				self.entries.append((int(fields[0], 16), fields[1], int(fields[2], 16), extra))
@@ -913,13 +1092,15 @@ class Builder:
 	def walk(self, v, path):
 		if not isinstance(v, Obj):
 			return v
-		if path in self.aliases:
-			name = self.aliases[path]
+		# (paths are matched whatever their case: a compiled frame's tags are
+		# spelt as the host first interned the symbols)
+		if path.lower() in self.aliases:
+			name = self.aliases[path.lower()]
 			if name not in self.defs:
 				raise ValueError("%s: the alias %s is not defined" % (path, name))
 			return Name(name)
 		v.path = path
-		self.by_path[path] = v
+		self.by_path[path.lower()] = v
 		if v.kind == "frame":
 			v.items = [self.walk(item, path + "." + quote_name(tag)) for tag, item in zip(v.tags, v.items)]
 		elif v.kind in ("array", "map"):
@@ -938,7 +1119,7 @@ class Builder:
 		addr = {}					# path -> ref
 		symbols = {}				# a symbol's name, in lower case -> ref
 		for a, path, _, _ in entries:
-			addr[path] = a + 1
+			addr[path.lower()] = a + 1
 			if path.startswith("'"):
 				r = Reader(path, "layout", self.src)
 				r.take("'")
@@ -955,13 +1136,14 @@ class Builder:
 				# spells one as the host first interned it)
 				return symbols[v.name.lower()]
 			if isinstance(v, Name):
-				return addr[v.name]
-			return addr[v.path]
+				return addr[v.name.lower()]
+			return addr[v.path.lower()]
 
 		# the magic-pointer table
 		self.magic_base = None
 		self.magic = []
-		with open(os.path.join(self.src, "magic.tsv"), encoding="utf-8") as f:
+		magic = os.path.join(self.src, "magic.tsv")
+		with open(magic if os.path.exists(magic) else os.devnull, encoding="utf-8") as f:
 			for line in f:
 				if line.startswith("#"):
 					continue
@@ -971,8 +1153,8 @@ class Builder:
 					continue
 				if int(index) != len(self.magic):
 					raise ValueError("magic.tsv: entry %s out of order" % index)
-				if what in addr:
-					self.magic.append(addr[what])
+				if what.lower() in addr:
+					self.magic.append(addr[what.lower()])
 				elif what.startswith("'"):
 					self.magic.append(ref(Reader(what, "magic.tsv", self.src).value()))
 				else:
@@ -1005,22 +1187,29 @@ class Builder:
 						continue
 					if int(fields[0], 16) != base + len(data):
 						raise ValueError("rex.tsv: %s is not where the piece before it ends" % fields[1])
+					if fields[1].endswith("/"):
+						# a package's frames part, built from its own tree
+						part_base, part = Builder(os.path.join(self.src, fields[1]), self.newtonscript).build()
+						if part_base != base + len(data):
+							raise ValueError("rex.tsv: %s's objects are laid out at %#x" % (fields[1], part_base))
+						data += part
+						continue
 					with open(os.path.join(self.src, fields[1]), "rb") as piece:
 						data += piece.read()
 				if len(data) != length:
 					raise ValueError("rex.tsv: the pieces make %#x bytes, not %#x" % (len(data), length))
 				self.blocks.append((base, bytes(data)))
 
-		out = bytearray([PAD]) * area_size
+		out = bytearray([self.pad]) * area_size
 		for a, path, flags, extra in entries:
 			if path.startswith("'"):
 				name = Reader(path, "layout", self.src)
 				name.take("'")
 				text = name.name_text().encode("latin-1")
 				body = struct.pack(">I", symbol_hash(text)) + text + b"\0"
-				words = struct.pack(">III", ((12 + len(body)) << 8) | flags, 0, nf.SYMBOL_CLASS) + body
+				words = struct.pack(">III", ((12 + len(body)) << 8) | flags, int(extra.get("gc", "0"), 16), nf.SYMBOL_CLASS) + body
 			else:
-				v = self.by_path[path]
+				v = self.by_path[path.lower()]
 				if v.kind == "binary":
 					body = v.data
 					cls = ref(v.cls)
@@ -1030,9 +1219,12 @@ class Builder:
 				else:
 					body = b"".join(struct.pack(">I", ref(x)) for x in v.items)
 					cls = ref(v.cls)
-				words = struct.pack(">III", ((12 + len(body)) << 8) | flags, 0, cls) + body
+				words = struct.pack(">III", ((12 + len(body)) << 8) | flags, int(extra.get("gc", "0"), 16), cls) + body
 			o = a - area_base
 			out[o:o + len(words)] = words
+			if "gap" in extra:
+				gap = bytes.fromhex(extra["gap"])
+				out[o + len(words):o + len(words) + len(gap)] = gap
 		return area_base, bytes(out)
 
 
@@ -1087,6 +1279,7 @@ def main(argv=None):
 	e = sub.add_parser("extract", help="write the object area as source")
 	e.add_argument("build_dir")
 	e.add_argument("-o", "--output", required=True)
+	e.add_argument("--newtonscript", help="the host's newtonscript: only functions that compile back the same are written as source")
 	b = sub.add_parser("build", help="make the object area from source")
 	b.add_argument("source")
 	b.add_argument("-o", "--output")
@@ -1101,13 +1294,13 @@ def main(argv=None):
 	if a.command == "roundtrip":
 		import shutil
 		shutil.rmtree(a.output, ignore_errors=True)
-		if main(["extract", a.build_dir, "-o", a.output]) != 0:
+		if main(["extract", a.build_dir, "-o", a.output, "--newtonscript", a.newtonscript]) != 0:
 			return 1
 		return main(["build", a.output, "--check", a.build_dir, "--newtonscript", a.newtonscript]
 					+ (["-o", a.objects] if a.objects else []))
 	if a.command == "extract":
 		rom = nf.ROM(a.build_dir)
-		e = Extractor(rom, a.output, a.build_dir)
+		e = Extractor(rom, a.output, a.build_dir, newtonscript=a.newtonscript)
 		n, m = e.run()
 		print("%d definitions (%d taken from compiled functions) and %d maps written to %s"
 			  % (n, e.same_count, m, a.output))

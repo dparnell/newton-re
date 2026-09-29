@@ -395,6 +395,54 @@ from decompiled source.**
   bytes until the host has an ARM story for them (the host registers its
   own screen driver).
 
+### The extension's frames packages from source
+
+Each package's frames part is now a tree of its own, `rex/<Package>/`:
+objects, functions, maps, a layout and resources, exactly as the object
+area's tree is. The package's bytes around the part are
+`rex/<Package>.head.bin` (its directory) and `.tail.bin`, and the
+builder builds the part and splices it back in. The whole extension is
+still byte for byte the ROM's.
+
+| Package | Objects | Functions as source | Kept as bytecode |
+|---|---|---|---|
+| Cardfile | 3445 | 334 | 2 |
+| Connection | 3059 | 416 | 1 |
+| FaxViewer | 666 | 77 | 0 |
+| Formulas | 1188 | 125 | 0 |
+| help book | 834 | (no functions) | |
+| ListView | 2967 | 0 | 266 |
+| Setup | 1061 | 119 | 0 |
+
+- **Which functions are source.** A function is written as source only
+  when it compiles back the same. The extractor now checks this for
+  every tree:
+  - it compiles each tree's decompiled functions in one run of
+    `newtonscript --compile-records`;
+  - it compares what comes back with the ROM's objects (`same_object`),
+    because the decompiler's round trip only knows the object area;
+  - it keeps any that differ as bytecode, listed with the reason in the
+    tree's `bytecode.tsv`.
+
+  In the object area all 5480 pass. In the packages:
+  - 3 do not decompile: corner cases of the sorted variable order;
+  - **ListView's 266 are all different**: that package was built with
+    debugging information, so every function carries a `DebuggerInfo`
+    slot, which the NTK's debug build wrote and the compiler does not
+    make. They stay bytecode until the compiler's debug information is
+    matched to it.
+- **Differences from the object area:**
+  - A part's objects are aligned from the part's start, to 8 bytes in a
+    version 0 package.
+  - The gaps hold that package's fill byte (0xbf), and in ListView some
+    hold a word of 0xbeacebad. The layout records such a gap on its
+    object's line (`gap=`), and records the header's second word where
+    it is not nought (a part's first object has 1: `gc=`).
+  - Paths are matched whatever their case, because a compiled frame's
+    tags are spelt as the host first interned them.
+- **Still bytes:** ScreenBuffer and ScreenDrivers (ARM protocol code) and
+  WorldData (a soup part).
+
 ### The plan
 
 - **3a. The builder writes a loadable object file. Done.**
