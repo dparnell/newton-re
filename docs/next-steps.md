@@ -132,17 +132,21 @@ worked through.  What could come next (not ranked; the owner chooses):
   `docs/sound/README.md`).  Round 1 done: the `PSoundDriver` seam, the
   server (`'sndm`, output and decompressor channels, `FillDMABuffer`
   mixing), the host driver (`hal/host/HostSoundDriver.h`, buffer ends as
-  host interrupt sources, a null capture backend).  Round 2: the real
-  `TUSoundChannel` (Open/Close/SendImmediate/Schedule/Start/Pause/Stop,
-  `SoundNode`, `AECompletionProc`) and `TFrameSoundChannel` (`Convert`
-  0x000d2774), `GlobalSoundChannel` opening it, the `protoSoundChannel`
-  natives (0x001e67e8-0x001e70b4) with the ROM click played in a test; the
-  Win32 waveOut backend; the host programs registering the driver
-  (`HostInstallSoundDriver` before `OsBoot`, linking `hal_host_sound`).
-  Then the codec channel's task (`InitNode` 0x001e494c), input and the
-  compressors for the Sound Recorder (`FSoundOpen`, the smoke run's one
-  failure), packages' `StopFrameSound`, and `NewWiredPtr` in `memory/`
-  (nil today: the server's buffers fall back on `NewPtr`, a DEVIATION).
+  host interrupt sources, a null capture backend).  Round 2 done: the
+  client `TUSoundChannel`, `TFrameSoundChannel`, `GlobalSoundChannel` and
+  the twelve `protoSoundChannel` natives - `PlaySoundSync` of the ROM click
+  plays through the server (`sound.PlaySound`, `host.NewtonSound`);
+  `newton` installs the driver, with a waveOut loudspeaker when windowed
+  (`host/win32/HostAudio.cpp` - not yet heard: every test run is
+  headless).  Round 3: the codec channel (0x001e4110-0x001e5a00, ~25
+  functions: `InitNode`, `DecompressLoop`, `ScheduleDMA`, ...) so IMA and
+  mu-law frames are heard (a coded frame is completed at once as
+  cancelled until then, a DEVIATION); input (`SoundInputIH`, input
+  channels, `EmptyDMABuffer`, a capture source on the host driver,
+  `CompressLoop`, `FSoundOpen` 'input) for the Sound Recorder, the smoke
+  run's one failure; `TSoundPowerHandler`, `TGSMCodec`/`TDTMFCodec`,
+  packages' `StopFrameSound`, and `NewWiredPtr` in `memory/` (nil today:
+  the server's buffers fall back on `NewPtr`, a DEVIATION).
 - **The book reader** (`TLibrarian`, 49 methods; 19 unanswered `books`
   natives) - the Newton's books and the help book, and with it the
   `'book` part handler (the ROM's help book is refused for want of it).

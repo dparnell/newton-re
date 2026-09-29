@@ -9,6 +9,21 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: the sound server, round 2 - sounds played from scripts
+
+- The client `TUSoundChannel`, `TFrameSoundChannel` (`sound/FrameSoundChannel.h`),
+  `GlobalSoundChannel` and the twelve `protoSoundChannel` natives:
+  `PlaySoundSync` of the ROM click plays through the server - 260 samples
+  reach the driver, 0.965 correlated with the click's own
+  (`sound.PlaySound`, `host.NewtonSound`, `src/host/demo/sound.ns`).
+  `newton` installs the host sound driver, a waveOut loudspeaker when
+  windowed (`host/win32/HostAudio.cpp`, not yet heard) and the null
+  backend headless; `NEWTON_TRACE_SOUND` says why a frame cannot be played.
+  Found on the way: imported reals of class 'Real were never byte-swapped
+  (the importer compared class names with strcmp; fixed with symcmp in
+  `611feca`), which is what stopped `host.NewtonKeyHelp`.  Commits
+  `1734952`, `e547245`, `81cb4dc`, `788e8a4`.
+
 ## 2026-09-29: the sound server, round 1
 
 - The `PSoundDriver` seam (`sound/SoundDriver.h`, the ROM's driver
