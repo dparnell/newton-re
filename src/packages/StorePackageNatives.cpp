@@ -51,6 +51,7 @@
 #include "NewtonExceptions.h"
 #include "OSErrors.h"
 #include "ByteOrder.h"
+#include "SoundChannel.h"		// StopFrameSound
 
 #include <string.h>
 
@@ -404,11 +405,12 @@ FInstallPackage(RefArg /*rcvr*/, RefArg pkgRef)
 // ROM 0x00321d8c FDeinstallPackage
 // DeActivatePackage(pkgRef): the package flushed and taken out of use, the
 // domain manager told it has no id any more, the pkgRef taken off
-// vars.activePackageList and every ref into its bytes declawed.
-// NOT YET RECONSTRUCTED: StopFrameSound first (the sound server).
+// vars.activePackageList and every ref into its bytes declawed.  Any
+// frame sound playing is stopped first (it may be the package's).
 static Ref
 FDeinstallPackage(RefArg /*rcvr*/, RefArg pkgRef)
 {
+	StopFrameSound();
 	char* address = BinaryData(pkgRef);
 	Length(pkgRef);
 	ULong packageId = 0;

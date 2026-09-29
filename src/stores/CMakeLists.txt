@@ -30,8 +30,9 @@ add_library(stores STATIC
 	Ephemerals.cpp
 	PackageStorePartHandler.cpp
 )
-# package_manager: the package store's part handler (a TPartHandler)
-target_link_libraries(stores PUBLIC newton_config protocols memory toolbox frames compression hal_host package_manager)
+# package_manager: the package store's part handler (a TPartHandler);
+# sound: StopFrameSound before a package on a store goes out of use
+target_link_libraries(stores PUBLIC newton_config protocols memory toolbox frames compression hal_host package_manager sound)
 target_include_directories(stores PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(tests)

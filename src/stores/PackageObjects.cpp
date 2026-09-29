@@ -29,6 +29,7 @@
 #include "ByteOrder.h"
 #include "OSErrors.h"
 #include "UserTasks.h"		// Reboot
+#include "SoundChannel.h"		// StopFrameSound
 
 #include <string.h>
 
@@ -190,11 +191,12 @@ PackageAvailable(TStore* store, PSSId rootId, ULong* packageId)
 
 // ROM 0x00162160 PackageUnavailable__FUl
 // The package on a store taken out of use: flushed, removed from the
-// package manager, and unmapped.
-// NOT YET RECONSTRUCTED: StopFrameSound first (the sound server).
+// package manager, and unmapped.  Any frame sound playing is stopped
+// first (it may be the package's).
 NewtonErr
 PackageUnavailable(ULong packageId)
 {
+	StopFrameSound();
 	RDMParams params;
 	params.fStore = nil;
 	params.fObjectId = 0;

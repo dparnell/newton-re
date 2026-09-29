@@ -29,7 +29,7 @@ add_library(packages STATIC
 )
 # stores: a streamed frames part is read with a TObjectReader, and the
 # package natives answer the package stores
-target_link_libraries(packages PUBLIC newton_config package_manager utility os600_user toolbox frames stores)
+target_link_libraries(packages PUBLIC newton_config package_manager utility os600_user toolbox frames stores sound)
 target_include_directories(packages PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(tests)
