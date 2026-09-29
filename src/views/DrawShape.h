@@ -107,6 +107,7 @@ void	GetBoundsRect(RefArg shape, Rect* bounds, const Point& origin, TStyleSave* 
 void	WedgeBox(Rect* box, short startAngle, short arcAngle);						// ROM 0x000e148c WedgeBox__FP5TRectsT2
 void	DrawShape(RefArg shape, RefArg style, const Point& origin);					// ROM 0x000df7c8 DrawShape__FRC6RefVarT1RC6TPoint
 void	DrawShapeList(RefArg shape, const Point& origin, TStyleSave* style);		// ROM 0x000dfabc DrawShapeList__FRC6RefVarRC6TPointP10TStyleSave
+void	DrawShapeScaled(RefArg shape, RefArg style, const Point& origin, Point resolution);	// ROM 0x000df8a8 DrawShapeScaled__FRC6RefVarT1RC6TPoint5Point - drawn at a resolution (v, h) other than 72 dpi
 void	DrawOneShape(RefArg shape, const Point& origin, TStyleSave* style);			// ROM 0x000dfd00 DrawOneShape__FRC6RefVarRC6TPointP10TStyleSave
 
 // the NewtonScript functions: DrawShape, MakeRect, MakeOval, MakeRoundRect,

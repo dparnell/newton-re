@@ -578,6 +578,60 @@ DrawShape(RefArg shape, RefArg style, const Point& origin)
 }
 
 
+// ROM 0x000df8a8 DrawShapeScaled__FRC6RefVarT1RC6TPoint5Point
+// The shape drawn at a resolution other than 72 dpi (a bitmap's
+// deviceRes, DrawIntoBitmap): a style frame whose transform maps 72 by 72
+// pixels onto the resolution's (vertical, horizontal) put in force first,
+// the scaler forced on, then the shape's own style and the shape under
+// it.  The levels and the scaler are put back and the pen restored
+// whether the drawing threw or not.
+void
+DrawShapeScaled(RefArg shape, RefArg style, const Point& origin, Point resolution)
+{
+	TStyleSave styleSave;
+	Rect r;
+	SetRect(&r, 0, 0, 72, 72);
+	RefVar transform(MakeArray(2));
+	SetArraySlot(transform, 0, RefVar(ToObject(r)));
+	SetRect(&r, 0, 0, resolution.h, resolution.v);
+	SetArraySlot(transform, 1, RefVar(ToObject(r)));
+	RefVar scaling(AllocateFrame());
+	SetFrameSlot(scaling, RSSYMtransform, transform);
+	PenState pen;
+	GetPenState(&pen);
+	if (!styleSave.SetStyle(scaling, origin, 0))
+		return;
+	SaveLevel outer;
+	styleSave.BeginLevel(&outer);
+	SaveLevel inner;
+	Boolean innerBegun = false;
+	long forced = TQDScaler::ForceScaling(1);
+	newton_try
+	{
+		if (styleSave.SetStyle(style, origin, 0))
+		{
+			styleSave.BeginLevel(&inner);
+			innerBegun = true;
+			DrawShapeList(shape, origin, &styleSave);
+		}
+	}
+	cleanup
+	{
+		if (innerBegun)
+			styleSave.EndLevel();
+		TQDScaler::ForceScaling(forced);
+		styleSave.EndLevel();
+		SetPenState(&pen);
+	}
+	end_try;
+	if (innerBegun)
+		styleSave.EndLevel();
+	TQDScaler::ForceScaling(forced);
+	styleSave.EndLevel();
+	SetPenState(&pen);
+}
+
+
 // ROM 0x000dfabc DrawShapeList__FRC6RefVarRC6TPointP10TStyleSave
 // A list: each member drawn - a style frame is put in force for the rest
 // (a style leaving nothing visible skips them); a nested list is drawn
@@ -1720,9 +1774,12 @@ FIsPrimShape(RefArg /*rcvr*/, RefArg shape)
 // the bitmap's bounds, which is what confines the drawing to it (a fresh
 // port's visible region is the screen's).
 //
-// NOT YET RECONSTRUCTED: a bitmap whose resolution is not 72 dpi, which
-// the ROM draws through DrawShapeScaled.  (The scaler is forced on around
-// the drawing, as the ROM forces it.)
+// A bitmap whose resolution (deviceRes) is given and is not 72 dpi each
+// way is drawn into through DrawShapeScaled, at its resolution; otherwise
+// the scaler is forced on around the drawing.
+//
+// ROM BUG, kept: a throw out of the plain drawing leaves the scaler
+// forced (the ROM puts it back only after a drawing that returns).
 Ref
 FDrawIntoBitmap(RefArg /*rcvr*/, RefArg shape, RefArg styles, RefArg bitmap)
 {
@@ -1741,21 +1798,26 @@ FDrawIntoBitmap(RefArg /*rcvr*/, RefArg shape, RefArg styles, RefArg bitmap)
 	Point origin;
 	origin.h = 0;
 	origin.v = 0;
-	long forced = TQDScaler::ForceScaling(1);
 	newton_try
 	{
-		DrawShape(shape, styles, origin);
+		Point res = pm->deviceRes;
+		if (res.v == 0 || res.h == 0 || (res.v == 72 && res.h == 72))
+		{
+			long forced = TQDScaler::ForceScaling(1);
+			DrawShape(shape, styles, origin);
+			TQDScaler::ForceScaling(forced);
+		}
+		else
+			DrawShapeScaled(shape, styles, origin, res);
 	}
 	newton_catch_all
 	{
-		TQDScaler::ForceScaling(forced);
 		SetPort(saved);
 		ClosePort(&port);
 		UnlockRef(data);
 		rethrow;
 	}
 	end_try;
-	TQDScaler::ForceScaling(forced);
 	SetPort(saved);
 	ClosePort(&port);
 	UnlockRef(data);

@@ -1197,6 +1197,29 @@ TestShapes()
 		EXPECT(GetPixel(pm, 1, 3) == 0 && GetPixel(pm, 12, 8) == 0);
 		UnlockRef(data);
 	}
+	// a bitmap at 144 dpi is drawn into at twice the size (DrawShapeScaled)
+	Eval("bm144 := MakeBitmap(40, 20, {resolution: 144})");
+	Eval("DrawIntoBitmap(MakeRect(2, 3, 12, 9), nil, bm144)");
+	{
+		RefVar data(Eval("bm144.data"));
+		LockRef(data);
+		PixelMap* pm = (PixelMap*) BinaryData(data);
+		long lit = 0;
+		long left = 99, top = 99, right = -1, bottom = -1;
+		for (long y = 0; y < 20; y++)
+			for (long x = 0; x < 40; x++)
+				if (GetPixel(pm, x, y) != 0)
+				{
+					lit++;
+					if (x < left) left = x;
+					if (y < top) top = y;
+					if (x > right) right = x;
+					if (y > bottom) bottom = y;
+				}
+		EXPECT(left == 4 && top == 6 && right == 23 && bottom == 17);
+		EXPECT(lit == 112);					// the frame and its pen doubled too
+		UnlockRef(data);
+	}
 	Eval("DrawIntoBitmap(MakeRect(2, 3, 12, 9), {fillPattern: 5}, bm)");
 	{
 		RefVar data(Eval("bm.data"));

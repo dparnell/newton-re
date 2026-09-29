@@ -11,8 +11,9 @@
 				four-bit grays two to a byte (RGBtoGray).  Each takes a row,
 				the gray table (nil for direct pixels) and the row's bytes.
 				A pixel pattern out of a picture goes through them
-				(ConvertPixPat, PicPlay.cpp); the blitter's SetupConversion
-				and the CombineX variants are NOT YET.
+				(ConvertPixPat, PicPlay.cpp), and so does every source row
+				StretchBits converts (Stretch.cpp's SetupConversion; its
+				CombineX variants fold further rows into it).
 
 	Reconstructed from the MP2x00 US ROM (0x00074c08-0x000755e0); each
 	function cites its origin.

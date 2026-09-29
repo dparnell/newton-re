@@ -227,6 +227,47 @@ TestDrawing()
 	}
 	EXPECT(GetPixel(&gMap, 17, 2) != 0 && GetPixel(&gMap, 18, 2) == 0 && GetPixel(&gMap, 75, 19) == 0 && GetPixel(&gMap, 76, 19) != 0);
 	EXPECT(GetPixel(&gMap, 19, 5) != 0 && GetPixel(&gMap, 20, 5) == 0 && GetPixel(&gMap, 17, 1) != 0);
+	// the faces worked on the slab: outline, underline, italic
+	// (outline: smeared right and down, the original a pixel in XORed out;
+	//  underline: broken a pixel either side of the g's descender; italic:
+	//  each row a pixel further right every two rows up from the slab's
+	//  bottom, which is below the descent)
+	Clear();
+	Draw("Hg", kEspy, 12, kOutlineFace, &bounds);
+	EXPECT(PictureIs(2, 5, 17, 14,
+		"###...###........\n"
+		"#.#...#.#........\n"
+		"#.#...#.#..######\n"
+		"#.#...#.#.##....#\n"
+		"#.#####.###.###.#\n"
+		"#.......##.##.#.#\n"
+		"#.#####.##.#..#.#\n"
+		"#.#...#.##.#.##.#\n"
+		"#.#...#.##.###..#\n"
+		"#.#...#.###...#.#\n"
+		"###...###.#####.#\n"
+		"..........####.##\n"
+		"..........#...##.\n"
+		"..........#####..\n", "Hg in Espy 12 outline"));
+	Clear();
+	Draw("Hg", kEspy, 12, kUnderlineFace, &bounds);
+	EXPECT(PictureIs(0, 13, 18, 4,
+		"..#.....#..###.#..\n"
+		"...............#..\n"
+		".#########....#..#\n"
+		"...........###....\n", "Hg in Espy 12 underlined"));
+	Clear();
+	Draw("Hg", kEspy, 12, kItalicFace, &bounds);
+	EXPECT(PictureIs(5, 5, 16, 9,
+		"....#.....#.....\n"
+		"...#.....#......\n"
+		"...#.....#...###\n"
+		"..#.....#..#...#\n"
+		"..#######.#....#\n"
+		".#.....#.#....#.\n"
+		".#.....#.#....#.\n"
+		"#.....#.#...##..\n"
+		"#.....#..###.#..\n", "Hg in Espy 12 italic"));
 	Clear();
 	HidePen();
 	Draw("H", kEspy, 12, 0, &bounds);

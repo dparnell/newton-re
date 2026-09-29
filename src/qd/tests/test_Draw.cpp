@@ -344,6 +344,32 @@ TestBits()
 	EXPECT(MapIs(&gray, [](long x, long y) -> long { return ExpTwoRects(x, y) ? 15 : 0; }, "one bit to four through a region"));
 	DisposeRgn(a);
 	DisposeRgn(b);
+	RectRgn(port.visRgn, &gray.bounds);
+	// direct colour made four-bit grays (SetupConversion): 32-bit pixels
+	// black, white, black, white across one row copied as they are, and
+	// two rows (black over white) shrunk into one (SetupCombine)
+	static unsigned char directBits[16 * 4 * 2];
+	memset(directBits, 0, sizeof(directBits));
+	for (long x = 1; x < 4; x += 2)
+		memset(directBits + x * 4 + 1, 0xff, 3);
+	memset(directBits + 16 * 4 + 1, 0xff, 16 * 4 - 1);
+	PixelMap direct;
+	direct.baseAddr = (Ptr) directBits;
+	direct.rowBytes = 16 * 4;
+	SetRect(&direct.bounds, 0, 0, 16, 2);
+	direct.pixMapFlags = kPixMapPtr | 32;
+	direct.deviceRes.h = direct.deviceRes.v = kDefaultDPI;
+	direct.grayTable = nil;
+	memset(grayBits, 0, sizeof(grayBits));
+	Rect four, fourTo;
+	SetRect(&four, 0, 0, 4, 1);
+	SetRect(&fourTo, 0, 0, 4, 1);
+	CopyBits(&direct, &gray, &four, &fourTo, srcCopy, nil);
+	EXPECT(GetPixel(&gray, 0, 0) == 15 && GetPixel(&gray, 1, 0) == 0 && GetPixel(&gray, 2, 0) == 15 && GetPixel(&gray, 3, 0) == 0);
+	SetRect(&four, 4, 0, 8, 2);
+	SetRect(&fourTo, 0, 4, 4, 5);
+	CopyBits(&direct, &gray, &four, &fourTo, srcCopy, nil);
+	EXPECT(GetPixel(&gray, 0, 4) == 15 && GetPixel(&gray, 1, 4) == 15 && GetPixel(&gray, 2, 4) == 15 && GetPixel(&gray, 3, 4) == 15);	// the darker kept
 	ClosePort(&port);
 }
 
