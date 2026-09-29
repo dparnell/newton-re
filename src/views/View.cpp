@@ -42,6 +42,7 @@
 #include "Animate.h"		// TAnimate (SyncScroll)
 #include "Cursors.h"		// CursorNext etc. (SyncScrollSoup)
 #include "Bits.h"
+#include "SoundSettings.h"	// FPlaySound (SoundEffect)
 #include <string.h>
 
 TViewList*	TView::gEmptyViewList = nil;		// ROM 0x0c101930 gEmptyViewList__5TView
@@ -3087,6 +3088,18 @@ TView::SyncScroll(RefArg items, RefArg indexRef, RefArg directionRef)
 		gRootView->Update(nil);
 	}
 	return showing;
+}
+
+
+// ROM 0x00262ff4 SoundEffect__5TViewFRC6RefVar
+// The sound the view's slot names played (PlaySound in its context), when
+// it has one.
+void
+TView::SoundEffect(RefArg slot)
+{
+	RefVar sound(GetVar(slot));
+	if (NOTNIL(sound))
+		FPlaySound(fContext, sound);
 }
 
 

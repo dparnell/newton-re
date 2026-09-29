@@ -73,6 +73,10 @@ public:
 	long		PreviousPage(RefArg reader);
 	void		SetCurrentPage(RefArg reader, long page);
 
+	Boolean		CompareValues(RefArg item, RefArg slot, RefArg value);
+	Ref			FindContentByValue(RefArg reader, RefArg slot, RefArg value, RefArg book);
+	long		FindPageByContent(RefArg reader, RefArg item, long offset, long* blockIndex, RefArg book);
+
 	static TLibrarian*	gLibrarian;		// (0x0c1010d0)
 
 	RefStruct*	fLibrary;				// +0x04  { isbnSymbol: partFrame, ... }

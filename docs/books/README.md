@@ -9,17 +9,23 @@ book a package brings (Newton Book Maker and BookMaker's `'book` parts).
 |---|---|---|
 | The `'book` part handler (`TBookPartHandler`) | `src/books/BookPartHandler.cpp` | done |
 | The library (`TLibrarian`, `gLibrarian`, `InitLibrarian`, `BookAvailable`/`BookRemoved`) | `src/books/Librarian.cpp` | done |
-| The book functions over the Library soup (page, bookmarks, ink marks, `WhereIsBook`, ...) | `src/books/Librarian.cpp` | done (18 of 37 natives) |
-| The help book's outline (`TOutline`, `THelpOutline`: view classes 102-107) | - | NOT YET |
-| The page views (`PageTurnTo`, `MakeBlockView`, `AddToContentArea`, ...) | - | NOT YET |
-| Searching a book (`TLibrarian::Find`, `FindPage*`, `FindContent*`, `CuFind`) | - | NOT YET |
+| The book functions over the Library soup (page, bookmarks, ink marks, `WhereIsBook`, ...) | `src/books/Librarian.cpp` | done |
+| The outline (`TOutline`, `THelpOutline`: view classes 102-107, `RefreshTopics`, `TopicByName`, `ScrollToCurrent`) | `src/books/Outline.cpp` | done |
+| The page views (`PageTurnTo`, `PageTurnToSpread`, `PageTurnAway`, `MakeBlockView`, `AddToContentArea`, `TurnToPage`, `HiliteBlock`) | `src/books/Pages.cpp` | done |
+| `FindContentByValue`, `FindPageByContent`, `CompareValues` | `src/books/Librarian.cpp` | done |
+| The rest of the search (`TLibrarian::Find`, `TextSearch`, `FindPageByValue`/`BySubject`, `FindContentBySlot`, `CuFind`, `TurnToContent`) | - | NOT YET |
+| `PageContents`, `PageScroll`, `PageThumbnail`, `ZoomView` (over `ZoomRect`), `CurrentKiosk`'s callers | - | NOT YET |
 | Ink marks (`AddInkMarks`) | - | NOT YET |
 
 The booting OS installs the ROM's help book: it is in the library, and the
 Extras drawer has its icon (`src/books/tests/books-library.ns`, ctest
-`books.Library`).  It cannot be opened yet: its reader's outline view
-(`THelpOutline`) is not reconstructed, and `RefreshTopics` is the first
-native the reader asks for that is missing.
+`books.Library`).  It opens and reads: Tiny Tim's `OpenHelpBook` (what the
+Extras drawer's Help icon runs) shows the outline of the book's topics, a
+tap opens "Learn the Basics", and a tap on "Erase text, writing, or
+drawings" turns the content area to its page - the text and the zigzag
+picture (`src/books/tests/books-help.ns`, ctest `books.HelpBook`, which
+writes `tmp/books-help-{outline,topics,page}.pgm`).  Copperfield (a book of
+one's own from a package) is not tried yet.
 
 ## The pieces and their sizes
 
@@ -103,6 +109,15 @@ store) and hands to `BookRemoved` (0x00108358) when the part goes.
 - `CurrentKiosk` at page 0 asks a page that is not there for its blocks.
 - `PrepBookX` (`PrepBook`) is nothing but a debugging line printed on the
   REP.
+- `THelpOutline::DerivedFrom` asks `TView`, so a help outline does not say it
+  is a `TOutline`.
+- `TOutline::FindTopic` compares the pen, made relative to the view's left,
+  with half the view's right edge on the screen.
+- `TOutline::ScrollToSelection` keeps the position from going below nought
+  scrolling up but not scrolling down.
+- `TOutline::AddTopic` marks the word before the topic array when the first
+  topic is deeper than level 1 (the host leaves it alone), and a topic with
+  no shallower topic before it keeps a stack-rubbish parent (nought here).
 
 ## The order of the work
 

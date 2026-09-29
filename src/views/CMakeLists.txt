@@ -59,7 +59,9 @@ add_library(views STATIC
 # dependent, as frames and intl are)
 # (BuildView makes the text engine's TXView, which is itself a view: views
 # and text are mutually dependent)
-target_link_libraries(views PUBLIC ink newton_config qd frames intl utility recognition stores sound text)
+# (BuildView makes the book reader's outline, TOutline, which is a view
+# over the book reader's library: views and books are mutually dependent)
+target_link_libraries(views PUBLIC ink newton_config qd frames intl utility recognition stores sound text books)
 target_include_directories(views PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(tests)

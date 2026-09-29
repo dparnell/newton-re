@@ -2023,6 +2023,38 @@ FGetHiliteOffsets(RefArg /*rcvr*/)
 }
 
 
+// ROM 0x001f0f48 TruncateText__FPUsUllP11StyleRecord
+// The text cut at its first line break and, when that first line is as
+// wide as width or wider, shortened a character at a time from the end,
+// the last character left an ellipsis (U+2026), until it fits - one
+// character at least.  The text is terminated where it ends.  ==> its
+// length.  (The book reader's outline draws its topics through it.)
+long
+TruncateText(UniChar* text, ULong length, long width, StyleRecord* style)
+{
+	ULong count = 0;
+	for ( ; count < length; count++)
+		if (IsBreaker(text[count]))
+			break;
+	if (count != 0)
+	{
+		if (MeasureOnce(text, count, style) >= width)
+		{
+			for ( ; count != 0; count--)
+			{
+				text[count - 1] = 0x2026;
+				if (MeasureOnce(text, count, style) < width)
+					break;
+			}
+			if (count == 0)
+				count = 1;
+		}
+		text[count] = 0;
+	}
+	return count;
+}
+
+
 // ROM 0x000e3490 ToGlobalCoordinates__FRC6RefVarPsN32
 // A point (or two) in the view's own coordinates moved into the screen's:
 // the x's take the view's left edge, the y's its top.  Any of the four

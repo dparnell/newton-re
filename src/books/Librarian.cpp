@@ -8,6 +8,8 @@
 */
 
 #include "Librarian.h"
+#include "Outline.h"
+#include "Pages.h"
 #include "RootView.h"
 #include "Soups.h"
 #include "Entries.h"
@@ -488,6 +490,150 @@ TLibrarian::BookRemoved(RefArg bookFrame)
 }
 
 
+// ROM 0x0010893c CompareValues__10TLibrarianFRC6RefVarN21
+// Whether a content item's slot holds the value: a string compared as
+// StrEqual does (cases apart), an integer as an integer, a real as a real,
+// anything else by identity.  An item without the slot never matches.
+Boolean
+TLibrarian::CompareValues(RefArg item, RefArg slot, RefArg value)
+{
+	RefVar held;
+	if (!FrameHasSlot(item, slot))
+		return false;
+	held = GetFrameSlotRef(item, slot);
+	if (EQRef(ClassOf(held), RSSYMstring))
+		return NOTNIL(FStrEqual(RefVar(), held, value));
+	if (ISINT(held))
+		return RVALUE(held) == RINT(value);
+	if (IsReal(held))
+		return CDouble(held) == CDouble(value);
+	return EQRef(held, value);
+}
+
+
+// ROM 0x0010a458 FindContentByValue__10TLibrarianFRC6RefVarN31
+// The content items of a book whose slot holds the value - or, with an
+// array of slots, whose slots all hold the array of values.  The book is
+// the reader's (book nil or true: true stops at the first found) or the
+// one given.
+Ref
+TLibrarian::FindContentByValue(RefArg reader, RefArg slot, RefArg value, RefArg bookArg)
+{
+	RefVar isbn;
+	RefVar book;
+	RefVar contents;
+	RefVar item;
+	RefVar found;
+	Boolean firstOnly = false;
+	Boolean manySlots = false;
+	long slotCount = 0;
+	if (ISNIL(bookArg) || EQRef(bookArg, TRUEREF))
+	{
+		isbn = GetVariable(reader, RSSYMisbn, nil, 0);
+		book = GetBookFrame(isbn);
+		if (EQRef(bookArg, TRUEREF))
+			firstOnly = true;
+	}
+	else
+		book = bookArg;
+	if (IsArray(slot))
+	{
+		slotCount = Length(slot);
+		manySlots = true;
+	}
+	found = MakeArray(0);
+	contents = GetFrameSlotRef(book, RSSYMcontents);
+	long count = Length(contents);
+	for (long i = 0; i < count; i++)
+	{
+		item = GetArraySlotRef(contents, i);
+		Boolean matches = true;
+		if (!manySlots)
+			matches = CompareValues(item, slot, value);
+		else
+		{
+			for (long j = 0; j < slotCount && matches; j++)
+				matches = CompareValues(item, RefVar(GetArraySlotRef(slot, j)), RefVar(GetArraySlotRef(value, j)));
+		}
+		if (matches)
+		{
+			AddArraySlot(found, item);
+			if (firstOnly)
+				break;
+		}
+	}
+	return found;
+}
+
+
+// ROM 0x0010a980 FindPageByContent__10TLibrarianFRC6RefVarT1lPlT1
+// The page (from 1) showing a content item - from offset characters in -
+// in the reader's rendering (or the given book's rendering of the same
+// number): the item's firstPage, when it has one and no offset is asked
+// for, else a search of the pages' blocks from there on (a block showing a
+// part of the item must reach the offset).  *blockIndex, when asked for,
+// is which block of the page it is.  ==> 0 when no page shows it.
+long
+TLibrarian::FindPageByContent(RefArg reader, RefArg item, long offset, long* blockIndex, RefArg book)
+{
+	RefVar pages;
+	long page = 0;
+	pages = GetFrameSlotRef(item, RSSYMfirstpage);
+	if (NOTNIL(pages))
+	{
+		if (!EQRef(ClassOf(pages), RSSYMarray))
+			page = RINT(pages);
+		else
+			page = RINT(GetArraySlotRef(pages, RINT(GetVariable(reader, RSSYMcurrendering, nil, 0))));
+		if (offset == 0)
+			return page;
+		page = page - 1;
+	}
+	RefVar pageFrame;
+	RefVar blocks;
+	RefVar block;
+	RefVar len;
+	if (ISNIL(book))
+		pages = Pages(reader);
+	else
+	{
+		pages = GetFrameSlotRef(book, RSSYMrendering);
+		pages = GetArraySlotRef(pages, RINT(GetVariable(reader, RSSYMcurrendering, nil, 0)));
+		pages = GetFrameSlotRef(pages, RSSYMpages);
+	}
+	long count = Length(pages);
+	for ( ; page < count; page++)
+	{
+		pageFrame = GetArraySlotRef(pages, page);
+		blocks = GetFrameSlotRef(pageFrame, RSSYMblocks);
+		long blockCount = Length(blocks);
+		for (long i = 0; i < blockCount; i++)
+		{
+			block = GetArraySlotRef(blocks, i);
+			if (EQRef(GetFrameSlotRef(block, RSSYMitem), item))
+			{
+				len = GetFrameSlotRef(block, RSSYMdatalen);
+				Boolean here = ISNIL(len);
+				if (!here)
+				{
+					long length = RINT(len);
+					len = GetFrameSlotRef(block, RSSYMdataoffset);
+					long start = ISNIL(len) ? 0 : RINT(len);
+					here = offset <= start + length;
+				}
+				if (here)
+				{
+					if (blockIndex != nil)
+						*blockIndex = i;
+					return page + 1;
+				}
+			}
+		}
+	}
+	return 0;
+}
+
+
 /*------------------------------------------------------------------------------
 	T h e   b o o k   f u n c t i o n s
 	Mostly methods of Copperfield: the reader is the receiver, and its isbn
@@ -768,6 +914,24 @@ WhereIsBook(RefArg rcvr, RefArg isbnArg)
 }
 
 
+// ROM 0x0010a428 FindContentByValue
+// reader:FindContentByValue(slot, value, book)
+Ref
+FindContentByValue(RefArg rcvr, RefArg slot, RefArg value, RefArg book)
+{
+	return TLibrarian::gLibrarian->FindContentByValue(rcvr, slot, value, book);
+}
+
+
+// ROM 0x0010a730 FindPageByContent
+// reader:FindPageByContent(item, offset, book)
+Ref
+FindPageByContent(RefArg rcvr, RefArg item, RefArg offset, RefArg book)
+{
+	return MAKEINT(TLibrarian::gLibrarian->FindPageByContent(rcvr, item, RINT(offset), nil, book));
+}
+
+
 // ROM 0x0010d108 BookClosed
 // reader:BookClosed() - the book's Library entry written back.
 Ref
@@ -803,4 +967,8 @@ RegisterBookNatives(void)
 	RegisterNativeFunction("UpdateBookmarks", (void*) UpdateBookmarks, 1);
 	RegisterNativeFunction("WhereIsBook", (void*) WhereIsBook, 1);
 	RegisterNativeFunction("BookClosed", (void*) BookClosed, 0);
+	RegisterNativeFunction("FindContentByValue", (void*) FindContentByValue, 3);
+	RegisterNativeFunction("FindPageByContent", (void*) FindPageByContent, 3);
+	RegisterOutlineNatives();
+	RegisterPageNatives();
 }

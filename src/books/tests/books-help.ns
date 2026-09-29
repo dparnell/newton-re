@@ -1,0 +1,46 @@
+// The ROM's help book read (books/Outline.h, books/Pages.h): Tiny Tim's
+// OpenHelpBook - what the Extras drawer's Help icon does - opens the
+// outline of the book's topics; a tap on "Learn the Basics" opens it, and a
+// tap on its first topic turns the content area to that topic's page
+// ("Erase text, writing, or drawings": its text and the zigzag picture).
+// The display is written to tmp/books-help-*.pgm at each step
+// (tools/imaging/pgm2png.py makes PNGs of them).
+//
+//   build/host/host/newton --rom <image> --display 320x480 --headless 12 --script src/books/tests/books-help.ns
+
+failures := 0;
+check := func(what, ok)
+  begin
+    if not ok then
+      begin
+        Print("books-help: FAILED " & what);
+        failures := failures + 1;
+      end;
+  end;
+tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
+
+AddDelayedCall(func() begin
+    local tt := GetRoot().tinytim;
+    tt:OpenHelpBook("GECKO!HDI?");
+    call check with ("the reader is open", Visible(tt));
+    call check with ("its book is the help book", tt.bookRef and StrEqual(tt.bookRef.isbn, "GECKO!HDI?"));
+    call check with ("the content area is empty", Length(tt.contentArea:ChildViewFrames()) = 0);
+    ScreenSnapshot("tmp/books-help-outline.pgm");
+    AddDelayedCall(func() begin
+        call tapAt with (110, 117);        // Learn the Basics
+        AddDelayedCall(func() begin
+            ScreenSnapshot("tmp/books-help-topics.pgm");
+            call tapAt with (120, 131);    // Erase text, writing, or drawings
+            AddDelayedCall(func() begin
+                ScreenSnapshot("tmp/books-help-page.pgm");
+                local kids := tt.contentArea:ChildViewFrames();
+                call check with ("the page has views", Length(kids) >= 2);
+                local found := nil;
+                foreach kid in kids do
+                  if kid.text and StrPos(kid.text, "scrubbing", 0) then found := true;
+                call check with ("one is the page's text", found);
+                Print("books-help: done, " & NumberStr(failures) & " failed");
+              end, nil, 2000);
+          end, nil, 1500);
+      end, nil, 1500);
+  end, nil, 3000);

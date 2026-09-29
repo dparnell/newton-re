@@ -276,6 +276,7 @@ public:
 	void		RemoveChildView(TView* child);							// ROM 0x0025f96c RemoveChildView__5TViewFP5TView
 	void		RemoveUnmarked(void);									// ROM 0x002623a0 RemoveUnmarked__5TViewFv
 	Ref			SyncScroll(RefArg items, RefArg index, RefArg direction);	// ROM 0x002635f4 SyncScroll__5TViewFRC6RefVarN21 - a roll's items scrolled a step: ==> the items now showing (nil: nothing to do)
+	void		SoundEffect(RefArg slot);								// ROM 0x00262ff4 SoundEffect__5TViewFRC6RefVar - the sound the slot names played
 	Ref			SyncScrollSoup(RefArg cursor, RefArg direction);		// ROM 0x00263034 SyncScrollSoup__5TViewFRC6RefVarT1 - ... a roll over a soup cursor: ==> nil
 	void		ReorderView(TView* child, long index);					// ROM 0x00260cd8 ReorderView__5TViewFP5TViewl
 	void		BringToFront(void);										// ROM 0x002611e8 BringToFront__5TViewFv
@@ -387,6 +388,8 @@ extern long			gSlowMotion;			// 0x0c101a2c  drawing shown step by step (NOT YET:
 // views from contexts
 TView*		GetView(RefArg context);								// ROM 0x002613fc GetView__FRC6RefVar
 TView*		GetView(RefArg context, RefArg name);					// ROM 0x002614e0 GetView__FRC6RefVarT1
+struct StyleRecord;
+long		TruncateText(UniChar* text, ULong length, long width, StyleRecord* style);	// ROM 0x001f0f48 TruncateText__FPUsUllP11StyleRecord (ViewNatives.cpp) - the first line, ended with an ellipsis where it is too wide
 void		DrawSetPen(RefArg context);								// ROM 0x001ec290 DrawSetPen__FRC6RefVar - drawPenMode/drawPenSizeX/Y into the port's pen
 Ref			FDrawXBitmap(RefArg rcvr, RefArg bounds, RefArg picture, RefArg index, RefArg mode);	// ROM 0x0003ead4 FDrawXBitmap - one image out of a strip
 Ref			FRedoChildrenX(RefArg rcvr);								// ROM 0x001ead80 FRedoChildrenX - view:RedoChildren()
