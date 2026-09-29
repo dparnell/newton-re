@@ -28,6 +28,9 @@
 #include "Unicode.h"
 #include "Fonts.h"
 #include "ObjHeader.h"
+#include "TextObject.h"
+#include "Frames.h"
+#include <new>
 #include <string.h>
 
 const OpcodeProc*	gOpcodeProcs = nil;		// ROM 0x00380a9c OpcodeProcs (set by views/PictureShapes.cpp)
@@ -700,6 +703,155 @@ IsShapeVerb(long opcode, long base)
 }
 
 
+/*------------------------------------------------------------------------------
+	T e x t
+------------------------------------------------------------------------------*/
+
+// (host) A TextOptions as the ROM reads it, seven words straight into
+// memory: big-endian in the picture.
+static void
+GetPicTextOptions(TextOptions* options)
+{
+	options->fJustification = (Fixed) GetPicLong();
+	options->fAlignment = (Fixed) GetPicLong();
+	options->fWidth = (Fixed) GetPicLong();
+	options->fReserved = GetPicLong();
+	options->fTransferMode = GetPicLong();
+	options->fFittedWidth = (Fixed) GetPicLong();
+	options->fReserved2 = GetPicLong();
+}
+
+
+// (host) A style's seven words after its family, as the ROM reads them
+// straight into memory.  DEVIATION: two of them are the font pattern (a
+// Ref) and the pattern (a PatternHandle) the recording had, which mean
+// nothing now - in the ROM a stale pointer the text is drawn with, and
+// which DrawPicture disposes; the host keeps nought and nil.
+static void
+GetPicStyleWords(StyleRecord* style)
+{
+	style->fFontSize = (Fixed) GetPicLong();
+	style->fFontFace = GetPicLong();
+	GetPicLong();
+	style->fFontPattern = 0;
+	style->fTransferMode = GetPicLong();
+	style->fReserved14 = GetPicLong();
+	style->fReserved18 = GetPicLong();
+	GetPicLong();
+	style->fPattern = nil;
+}
+
+
+// ROM 0x003336ec DrawPicText__FP7PicPlay
+// 0x81a3's text drawn as a text object at the picture's text scales: in
+// 0x81a2's styles and runs (flag 0x80) or 0x81a1's one style, with 0x81a0's
+// options (flag 0x40) - their width, if they have one, scaled by the
+// picture's horizontal scale meanwhile.
+//
+// ROM QUIRK, kept: the width is put back only if the scaled one is not
+// nought.  (Host: an integer family 0x800000 - 0x81a1's with the picture
+// carrying it, which 0x81a4 never fills in, see DoPutText - is drawn with
+// nothing: DEVIATION, the ROM's font engine reading whatever lies at that
+// address.)
+void
+DrawPicText(PicPlay* play)
+{
+	Fixed width = 0;
+	Boolean multiStyle = (play->fTextFlags & 0x80) != 0;
+	Boolean withOptions = (play->fTextFlags & 0x40) != 0;
+	if (withOptions && play->fTextOptions.fWidth != 0)
+	{
+		Fixed scale = FixedDivide((Fixed) ((ULong32) ((unsigned short) play->fToRect.right - (unsigned short) play->fToRect.left) << 16),
+								  (Fixed) ((ULong32) ((unsigned short) play->fFromRect.right - (unsigned short) play->fFromRect.left) << 16));
+		width = play->fTextOptions.fWidth;
+		play->fTextOptions.fWidth = FixedMultiply(width, scale);
+	}
+	StyleRecord* style = &play->fXStyle;
+	TextOptions* options = withOptions ? &play->fTextOptions : nil;
+	StyleRecord** styles;
+	short* runLengths;
+	if (!multiStyle)
+	{
+		runLengths = nil;
+		styles = &style;
+	}
+	else
+	{
+		runLengths = play->fXRunLengths;
+		styles = play->fXStyles;
+	}
+	if (!multiStyle && ISINT((Ref) style->fFontFamily) && RINT((Ref) style->fFontFamily) == 0x800000)
+		;											// (host: see above)
+	else
+	{
+		TextObjectRef text = NewText(play->fXText, play->fXTextCount, styles, runLengths, play->fXTextLoc, options);
+		if (text != 0)
+		{
+			CallDrawText(text, play->fTextHScale, play->fTextVScale);
+			DisposeText(text);
+		}
+	}
+	if (withOptions && play->fTextOptions.fWidth != 0)
+		play->fTextOptions.fWidth = width;
+}
+
+
+// ROM 0x00333cd0 TextCleanup__FP7PicPlayPc
+// What 0x81a2-0x81a4 allocated given back: the families 0x81a4 read (with
+// one style, the block it was handed), the text, and 0x81a2's styles and
+// runs.
+//
+// ROM BUG, not kept: with several styles the ROM gives back each integer
+// family's block - the first is the start of 0x81a4's block, the others
+// inside it, which the ROM hands to QDDisposeTempPtr as if each were a
+// block of its own; the host gives the block back once (DEVIATION: a
+// pointer inside a block would damage the host's heap).
+void
+TextCleanup(PicPlay* play, char* families)
+{
+	Boolean multiStyle = (play->fTextFlags & 0x80) != 0;
+	if ((play->fTextFlags & 0x20) != 0)
+	{
+		if (!multiStyle)
+		{
+			if (families != nil)
+				QDDisposeTempPtr(families);
+		}
+		else
+		{
+			Boolean first = true;
+			StyleRecord* style = play->fXStyleRecs + play->fStyleCount;
+			for (long i = play->fStyleCount; i > 0; i--)
+			{
+				style--;
+				if (ISINT((Ref) style->fFontFamily))
+				{
+					char* block = (char*) RefToAddress(style->fFontFamily);
+					if (block == families && first)
+					{
+						QDDisposeTempPtr(block);
+						first = false;
+					}
+				}
+			}
+		}
+	}
+	QDDisposeTempPtr(play->fXText);
+	play->fXText = nil;
+	if (!multiStyle)
+		return;
+	StyleRecord* style = play->fXStyleRecs;
+	for (long i = play->fStyleCount; i > 0; i--, style++)
+		style->~StyleRecord();
+	DisposPtr((Ptr) play->fXStyles);
+	play->fXStyles = nil;
+	DisposPtr((Ptr) play->fXRunLengths);
+	play->fXRunLengths = nil;
+	QDDisposeTempPtr(play->fXStyleRecs);
+	play->fXStyleRecs = nil;
+}
+
+
 // ROM 0x0033249c ParsePicCodes__FP7PicPlayPCPFlT1P8GrafPort_v
 // One opcode played: a byte for a version 1 picture, a word (word aligned)
 // for version 2.  ==> 1 to go on, 0 at the end (0xff) or when the picture
@@ -775,19 +927,18 @@ ParsePicCodes(PicPlay* play, const OpcodeProc* procs)
 			break;
 		}
 		case 0x03:									// TxFont
-			play->fTextFont = GetPicWord();
-			// (host: the family is looked up only for the shapes, the one
-			//  reader of it while the text is NOT YET drawn - SearchFont
-			//  wants the fonts in vars, which a bare QuickDraw has not)
-			if (procs != nil)
-				play->fTextFamily = SearchFont(play->fTextFont, nil);
+			play->fTextStyle.fFontFamily = SearchFont(GetPicWord(), nil);
 			break;
 		case 0x04:									// TxFace
-			play->fTextFace = (short) GetPicUByte();
+			play->fTextStyle.fFontFace = (short) GetPicUByte();
 			break;
-		case 0x05:									// TxMode
-			play->fTextMode = GetPicWord() & 0xffff;
+		case 0x05:									// TxMode: both kinds of text's
+		{
+			long mode = GetPicWord();
+			play->fMacTextOptions.fTransferMode = mode;
+			play->fTextOptions.fTransferMode = mode & 0xffff;
 			break;
+		}
 		case 0x06:									// SpExtra
 			play->fSpaceExtra = GetPicLong();
 			break;
@@ -815,7 +966,7 @@ ParsePicCodes(PicPlay* play, const OpcodeProc* procs)
 			break;
 		}
 		case 0x0d:									// TxSize
-			play->fTextSize = (Fixed) ((ULong) GetPicWord() << 16);
+			play->fTextStyle.fFontSize = (Fixed) ((ULong) GetPicWord() << 16);
 			break;
 		case 0x0e:									// FgColor
 		case 0x0f:									// BkColor
@@ -942,8 +1093,9 @@ ParsePicCodes(PicPlay* play, const OpcodeProc* procs)
 			if (opcode >= 0x28 && opcode <= 0x2b)
 			{
 				// LongText, DHText, DVText, DHDVText: where the text goes,
-				// then a count and the characters.  NOT YET RECONSTRUCTED:
-				// the text drawn (NewText, CallDrawText) - it is read.
+				// then a count and the Mac Roman characters, drawn as a text
+				// object in the style TxFont, TxSize and TxFace made (and
+				// the old opcodes' options: only TxMode's transfer mode)
 				if (opcode == 0x28)
 					GetPicPoint(&play->fTextLoc);
 				else if (opcode == 0x29)
@@ -971,9 +1123,11 @@ ParsePicCodes(PicPlay* play, const OpcodeProc* procs)
 				loc.y = (Fixed) ((ULong) (unsigned short) play->fTextLoc.v << 16);
 				ConvertToUnicode(chars, text, kMacRomanEncoding, 0x7fffffff);
 				MapFPoint(&loc, from, to);
-				// NOT YET RECONSTRUCTED: NewText at loc in the text style,
-				// and CallDrawText of it when there is no proc
-				if (proc != nil)
+				StyleRecord* style = &play->fTextStyle;
+				TextObjectRef textObj = NewText(text, count, &style, nil, loc, &play->fMacTextOptions);
+				if (proc == nil)
+					CallDrawText(textObj, play->fTextHScale, play->fTextVScale);
+				else
 				{
 					text[count] = 0;
 					play->fProcPt = play->fTextLoc;
@@ -981,6 +1135,7 @@ ParsePicCodes(PicPlay* play, const OpcodeProc* procs)
 					play->fProcText = text;
 					proc((long) opcode, play, port);
 				}
+				DisposeText(textObj);
 				return 1;
 			}
 			return GetPicResvOpcode(2, true);
@@ -1155,34 +1310,23 @@ ParsePicCodes(PicPlay* play, const OpcodeProc* procs)
 	case 0x81a0:									// the text options
 		if (GetPicLong() != 0x1c)
 			return 0;
-		GetPicDiscard(0x1c);						// NOT YET: kept at +0x58
+		GetPicTextOptions(&play->fTextOptions);
+		play->fTextOptions.fFittedWidth = 0;
+		play->fTextOptions.fReserved2 = 0;
 		return 1;
 	case 0x81a1:									// the text style
 	{
 		if (GetPicLong() != 0x20)
 			return 0;
-		// the family: a Mac font id, or with 0x800000 set a ref
+		// the family: a Mac font id, or with 0x800000 set one the picture
+		// carries (which 0x81a4 fills in only for 0x81a2's styles)
 		ULong family = (ULong) GetPicLong();
-		// (host: looked up only for the shapes, the one reader of this
-		//  style while the text is NOT YET drawn - see TxFont)
-		if (procs != nil)
-		{
-			if ((family & 0x800000) == 0)
-				play->fXStyle.fFontFamily = SearchFont(family, nil);
-			else
-				play->fXStyle.fFontFamily = (Ref) (family << 2);
-		}
-		play->fXStyle.fFontSize = (Fixed) GetPicLong();
-		play->fXStyle.fFontFace = GetPicLong();
-		GetPicLong();
+		if ((family & 0x800000) == 0)
+			play->fXStyle.fFontFamily = SearchFont(family, nil);
+		else
+			play->fXStyle.fFontFamily = (Ref) (family << 2);
+		GetPicStyleWords(&play->fXStyle);
 		play->fXStyle.fFontPattern = 0;				// (the ROM clears the word it read: an integer nought, not nil)
-		play->fXStyle.fTransferMode = GetPicLong();
-		play->fXStyle.fReserved14 = GetPicLong();
-		play->fXStyle.fReserved18 = GetPicLong();
-		// DEVIATION: the ROM keeps the picture's last word as the style's
-		// pattern handle; a word out of a picture is no host pointer
-		GetPicLong();
-		play->fXStyle.fPattern = nil;
 		return 1;
 	}
 	case 0x81a2:									// the style runs
@@ -1193,13 +1337,41 @@ ParsePicCodes(PicPlay* play, const OpcodeProc* procs)
 		play->fStyleCount = styles;
 		if (runs * 4 + styles * 0x20 + 2 != size)
 			return 0;
-		GetPicDiscard(runs * 4);
+		play->fXStyles = (StyleRecord**) NewPtr(runs * sizeof(StyleRecord*));
+		if (play->fXStyles == nil)
+			Throw(exOutOfMemory, nil, nil);
+		play->fXRunLengths = (short*) NewPtr(runs * 2);
+		if (play->fXRunLengths == nil)
+		{
+			DisposPtr((Ptr) play->fXStyles);
+			Throw(exOutOfMemory, nil, nil);
+		}
+		play->fXStyleRecs = (StyleRecord*) QDNewTempPtr(styles * sizeof(StyleRecord));
+		if (play->fXStyleRecs == nil)
+		{
+			DisposPtr((Ptr) play->fXStyles);
+			DisposPtr((Ptr) play->fXRunLengths);
+			Throw(exOutOfMemory, nil, nil);
+		}
+		// each run: its length, and which style (host: read a word at a
+		// time where the ROM reads them all in and rewrites them in place)
+		for (long i = 0; i < runs; i++)
+		{
+			ULong run = (ULong) GetPicLong();
+			play->fXRunLengths[i] = (short) run;
+			play->fXStyles[i] = &play->fXStyleRecs[(long) (Long32) run >> 16];
+		}
+		// each style: the family (a Mac font id, or 0x800000 for one 0x81a4
+		// names), then the rest as it was recorded
 		for (long i = 0; i < styles; i++)
 		{
+			StyleRecord* style = new (&play->fXStyleRecs[i]) StyleRecord;
 			ULong family = (ULong) GetPicLong();
-			// a family with 0x800000 set is named in 0x81a4
-			play->fInlineFamily[i] = (family & 0x800000) != 0;
-			GetPicDiscard(0x1c);
+			GetPicStyleWords(style);
+			if ((family & 0x800000) == 0)
+				style->fFontFamily = SearchFont(family, nil);
+			else
+				style->fFontFamily = (Ref) (family << 2);
 		}
 		return 1;
 	}
@@ -1214,12 +1386,7 @@ ParsePicCodes(PicPlay* play, const OpcodeProc* procs)
 		long count = GetPicWord();
 		if (count + 0xd != size)
 			return 0;
-		if (proc == nil)
-		{
-			GetPicDiscard(count);					// NOT YET: drawn (DrawPicText, TextCleanup) unless flags 0x20 wait for 0x81a4
-			return 1;
-		}
-		// DEVIATION: two bytes more than the ROM's block, which the proc
+		// DEVIATION: two bytes more than the ROM's block, which a proc
 		// reads one character past; and the characters are big-endian in
 		// the picture, turned into the host's order
 		UniChar* text = (UniChar*) QDNewTempPtr(count + 2);
@@ -1229,22 +1396,57 @@ ParsePicCodes(PicPlay* play, const OpcodeProc* procs)
 		GetPicData((char*) text, count);
 		for (long i = 0; i < count / 2; i++)
 			text[i] = GetBigEndianHalf((const unsigned char*) &text[i]);
-		// ROM BUG, kept: with the procs the block is never given back
-		// (TextCleanup is only on the drawing side)
-		if ((play->fTextFlags & 0x20) == 0)
-			proc((long) opcode, play, port);
+		if ((play->fTextFlags & 0x20) != 0)
+			return 1;								// drawn once 0x81a4 has named the families
+		if (proc == nil)
+		{
+			DrawPicText(play);
+			TextCleanup(play, nil);
+			return 1;
+		}
+		// ROM BUG, kept: with the procs nothing is given back (TextCleanup
+		// is only on the drawing side)
+		proc((long) opcode, play, port);
 		return 1;
 	}
 	case 0x81a4:									// the families the styles name
 	{
-		GetPicLong();
-		GetPicWord();
-		for (long i = 0; i < play->fStyleCount; i++)
-			if (play->fInlineFamily[i])
-				GetPicDiscard(GetPicWord());
-		if (proc != nil)
-			proc((long) opcode, play, port);
-		return 1;									// NOT YET: the text drawn
+		long size = GetPicLong();
+		long count = GetPicWord();
+		char* families = (char*) QDNewTempPtr(count * 3 + size - 2);
+		if (families == nil)
+		{
+			TextCleanup(play, nil);
+			return 0;
+		}
+		// each of 0x81a2's styles whose family is an integer (0x800000: one
+		// the picture carries) is given the address of a block holding it
+		// - a length halfword and that many bytes, as an integer family
+		// always points at (the host's halfword in its own order, as a rich
+		// string writes it)
+		char* p = families;
+		StyleRecord* style = play->fXStyleRecs;
+		for (long i = play->fStyleCount; i > 0; i--, style++)
+		{
+			if (ISINT((Ref) style->fFontFamily))
+			{
+				style->fFontFamily = AddressToRef(p);
+				long length = GetPicWord();
+				*(UniChar*) p = (UniChar) length;
+				GetPicData(p + 2, length);
+				p += 2 + length;
+				if (((uintptr_t) p & 3) != 0)
+					p += 4 - ((uintptr_t) p & 3);
+			}
+		}
+		if (proc == nil)
+		{
+			DrawPicText(play);
+			TextCleanup(play, families);
+			return 1;
+		}
+		proc((long) opcode, play, port);
+		return 1;
 	}
 	default:
 		if (opcode >= 0x8100)
@@ -1254,21 +1456,24 @@ ParsePicCodes(PicPlay* play, const OpcodeProc* procs)
 }
 
 
+// the text options a picture begins with (QDTables.cpp, generated)
+extern const unsigned int	kPicDefaultTextOptions[7];
+
+
 // ROM 0x003337fc DrawPicture__FPP7PictureP4RectUc
 // The picture played into the rectangle: its frame mapped onto it (a
 // negative scale draws nothing), the port set up and put back afterwards.
 // With toShapes nothing is drawn: the opcodes go to the OpcodeProcs, which
 // gather the shapes the picture is made of, and those are the answer.
 //
-// ROM QUIRK, kept: the text style starts in the system font at a size of
-// 0xc - twelve sixty-five-thousandths of a point, where the other style
-// is made at 0xc0000 - so text with no TxSize before it comes out at a
-// size of nought.
+// The Newton's text starts in the system font at 12 points with the
+// options at 0x00380ca0 (kPicDefaultTextOptions, as a recording picture
+// starts); LongText's in the system font with no options.
 //
-// NOT YET RECONSTRUCTED: the text options the ROM copies from 0x00380ca0
-// (the text is not drawn).  (Host: the two styles' families are looked up
-// only for the shapes, whose procs are their one reader while the text is
-// not drawn - SearchFont wants the fonts in vars.)
+// ROM QUIRK, kept: LongText's style starts at a size of 0xc - twelve
+// sixty-five-thousandths of a point, where the other style is made at
+// 0xc0000 - so text with no TxSize before it comes out at a size of
+// nought.  (Host: SearchFont wants the fonts in vars.)
 Ref
 DrawPicture(PicHandle picture, Rect* dstRect, Boolean toShapes)
 {
@@ -1286,12 +1491,10 @@ DrawPicture(PicHandle picture, Rect* dstRect, Boolean toShapes)
 	if (hScale < 0 || vScale < 0)
 		return NILREF;
 	PicPlay play;
-	if (toShapes)
 	{
 		RefVar systemFont(SearchFont(0, nil));
 		MakeSimpleStyle(&play.fXStyle, systemFont, 0xc0000, 0);
 		CopyStyle(&play.fXStyle);
-		play.fTextFamily = systemFont;
 	}
 	play.fToRect = *dstRect;
 	play.fFromRect = frame;
@@ -1310,6 +1513,13 @@ DrawPicture(PicHandle picture, Rect* dstRect, Boolean toShapes)
 	play.fSavedClip = port->clipRgn;
 	play.fPlayClip = NewRgn();
 	play.fVersion = 1;
+	play.fTextOptions.fJustification = (Fixed) kPicDefaultTextOptions[0];
+	play.fTextOptions.fAlignment = (Fixed) kPicDefaultTextOptions[1];
+	play.fTextOptions.fWidth = (Fixed) kPicDefaultTextOptions[2];
+	play.fTextOptions.fReserved = (long) kPicDefaultTextOptions[3];
+	play.fTextOptions.fTransferMode = (long) kPicDefaultTextOptions[4];
+	play.fTextOptions.fFittedWidth = (Fixed) kPicDefaultTextOptions[5];
+	play.fTextOptions.fReserved2 = (long) kPicDefaultTextOptions[6];
 	port->clipRgn = NewRgn();
 	SetFgPattern(stdPatterns[blackPat]);
 	SetBgPattern(stdPatterns[whitePat]);
@@ -1318,7 +1528,11 @@ DrawPicture(PicHandle picture, Rect* dstRect, Boolean toShapes)
 	port->pnSize.h = 1;
 	port->pnSize.v = 1;
 	port->pnMode = patCopy;
-	play.fTextSize = 0xc;
+	memset(&play.fMacTextOptions, 0, sizeof(play.fMacTextOptions));
+	{
+		RefVar systemFont(SearchFont(0, nil));
+		MakeSimpleStyle(&play.fTextStyle, systemFont, 0xc, 0);
+	}
 	play.fSpaceExtra = 0;
 	port->patAlign.v = 0;
 	port->patAlign.h = 0;
@@ -1340,6 +1554,8 @@ DrawPicture(PicHandle picture, Rect* dstRect, Boolean toShapes)
 	*port = saved;
 	qdGlobals.fPicHandle = nil;
 	qdGlobals.fPicOffset = 0;
+	if (play.fTextStyle.fPattern != nil)
+		DisposePattern(play.fTextStyle.fPattern);
 	if (play.fXStyle.fPattern != nil)
 		DisposePattern(play.fXStyle.fPattern);
 	return toShapes ? (Ref) play.fShapes : NILREF;

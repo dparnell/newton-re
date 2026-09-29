@@ -76,10 +76,10 @@ StyleToNSFont(StyleRecord* style)
 static Ref
 GetNSFont(PicPlay* play)
 {
-	RefVar family(GetFrameSlotRef(play->fTextFamily, RSSYMtsid));
+	RefVar family(GetFrameSlotRef(play->fTextStyle.fFontFamily, RSSYMtsid));
 	if (ISNIL(family))
-		family = GetFrameSlotRef(play->fTextFamily, RSSYMscreensym);
-	return MakeCompactFont(family, (short) ((ULong32) (play->fTextSize + 0x8000) >> 16), play->fTextFace);
+		family = GetFrameSlotRef(play->fTextStyle.fFontFamily, RSSYMscreensym);
+	return MakeCompactFont(family, (short) ((ULong32) (play->fTextStyle.fFontSize + 0x8000) >> 16), play->fTextStyle.fFontFace);
 }
 
 
@@ -546,9 +546,9 @@ XtndPicCodes(long opcode, PicPlay* play, GrafPort* port)
 	RefVar str(MakeString(text));
 	QDDisposeTempPtr((char*) text);
 	RefVar font(StyleToNSFont(&play->fXStyle));
-	play->fTextFamily = play->fXStyle.fFontFamily;
-	play->fTextSize = play->fXStyle.fFontSize;
-	play->fTextFace = play->fXStyle.fFontFace;
+	play->fTextStyle.fFontFamily = play->fXStyle.fFontFamily;
+	play->fTextStyle.fFontSize = play->fXStyle.fFontSize;
+	play->fTextStyle.fFontFace = play->fXStyle.fFontFace;
 	long h = (short) ((ULong32) (play->fXTextLoc.x + 0x8000) >> 16);
 	long v = (short) ((ULong32) (play->fXTextLoc.y + 0x8000) >> 16);
 	RefVar shape(TextShape(str, font, h, v));

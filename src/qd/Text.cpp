@@ -15,6 +15,7 @@
 */
 
 #include "Text.h"
+#include "TextObject.h"
 #include "Draw.h"
 #include "FixedMath.h"
 #include "Frames.h"
@@ -180,21 +181,26 @@ JustifyText(const UniChar* chars, long length, TextOptions* options, TextLayout*
 }
 
 
-// ROM 0x0035a418 DoTextOnce__FPvlPP11StyleRecordPs6FPointP11TextOptionsP14TextBoundsInfoUc
-// The text as one text object: measured (MeasureGlyphWidths: the
-// characters that fit the options' width), laid out (JustifyText) and
-// drawn when asked, its bounds calculated when wanted.  Each run
-// (runLengths, or the whole text for one style) is drawn with its
-// style's font from the pen position: every glyph at its bearing from
-// the baseline, advancing by its width; the options' or the pen's mode
-// and the style's pattern (else the port's); bold smeared a pixel to the
-// right, an underline the font's offset below the baseline for the run's
-// width.  ==> the length drawn.
-long
-DoTextOnce(const void* text, long length, StyleRecord** styles, const short* runLengths, FPoint where, TextOptions* options, TextBoundsInfo* bounds, Boolean draw)
+// (host) A text object measured (MeasureGlyphWidths: the characters that
+// fit the options' width - the object's length is cut to them, as the
+// ROM's is), laid out (JustifyText) and drawn when asked, its bounds
+// calculated when wanted: the work the ROM's DrText and CalcTextBounds
+// share.  Each run (the run lengths, or the whole text for one style) is
+// drawn with its style's font from the pen position: every glyph at its
+// bearing from the baseline, advancing by its width; the options' or the
+// pen's mode and the style's pattern (else the port's); bold smeared a
+// pixel to the right, an underline the font's offset below the baseline
+// for the run's width.  ==> the length drawn.
+static long
+LayOutText(TextObject* obj, TextBoundsInfo* bounds, Boolean draw)
 {
 	GrafPort* port = GetCurrentPort();
-	const UniChar* chars = (const UniChar*) text;
+	const UniChar* chars = (const UniChar*) obj->fText;
+	long length = obj->fLength;
+	StyleRecord** styles = obj->fStyles;
+	const short* runLengths = obj->fRunLengths;
+	FPoint where = obj->fLocation;
+	TextOptions* options = obj->fOptions;
 	if (length < 0)
 		length = 0;
 	Fixed* advances = (Fixed*) QDNewTempPtr((length + 1) * sizeof(Fixed));
@@ -216,6 +222,7 @@ DoTextOnce(const void* text, long length, StyleRecord** styles, const short* run
 		for (long i = 0; i < fitted; i++)
 			layout.fWidth += advances[i];
 		length = fitted;
+		obj->fLength = fitted;
 	}
 	Fixed x = where.x + JustifyText(chars, length, options, &layout);
 	Fixed start = x;
@@ -302,6 +309,62 @@ DoTextOnce(const void* text, long length, StyleRecord** styles, const short* run
 	QDDisposeTempPtr(advances);
 	QDDisposeTempPtr(runs);
 	return length;
+}
+
+// ROM 0x0035c530 DrText__FlN21
+// The text object drawn - StdText's drawing, after the recording.
+// DEVIATION: the ROM composes each chunk of glyphs into a one-bit slab
+// (DrTextChunk) and blits it; the host draws a glyph at a time.  NOT YET
+// RECONSTRUCTED: the scales (the text is drawn at full size).
+void
+DrText(TextObjectRef text, Fixed /*hScale*/, Fixed /*vScale*/)
+{
+	LayOutText(TextObj(text), nil, true);
+}
+
+
+// ROM 0x0035b32c DispatchCalcBounds__FlPv
+// The text object's bounds.  DEVIATION: the ROM asks the port's text proc
+// for them (the operation 0x200, CalcTextBounds); the host measures.
+static void
+DispatchCalcBounds(TextObjectRef text, TextBoundsInfo* bounds)
+{
+	LayOutText(TextObj(text), bounds, false);
+}
+
+
+// ROM 0x0035a418 DoTextOnce__FPvlPP11StyleRecordPs6FPointP11TextOptionsP14TextBoundsInfoUc
+// The text as a text object for a single use, made on the stack (not
+// flagged as allocated, so DisposeText only drops its caches): drawn
+// through the port's text proc when asked, which records it into an open
+// picture as well, then measured for the bounds when they are wanted.
+// ==> its length after the layout (the characters that fit a width).
+// NOT YET RECONSTRUCTED: the options' transfer modes 9 and 10 (a flag of
+// the layout's, and 10 dropping the options).
+long
+DoTextOnce(const void* text, long length, StyleRecord** styles, const short* runLengths, FPoint where, TextOptions* options, TextBoundsInfo* bounds, Boolean draw)
+{
+	TextObject obj;
+	memset(&obj, 0, sizeof(obj));
+	TextObject* handle = &obj;
+	TextObjectRef ref = (TextObjectRef) &handle;
+	obj.fText = text;
+	obj.fLength = length;
+	obj.fStyles = styles;
+	obj.fRunLengths = runLengths;
+	obj.fLocation = where;
+	obj.fOptions = options;
+	// (the ROM makes its two caches here, as temporary blocks, for a text
+	//  of up to 0x80 characters; the host has none - DEVIATION)
+	obj.fHScale = 0x10000;
+	obj.fVScale = 0x10000;
+	if (draw)
+		DrawTextObj(ref);
+	if (bounds != nil)
+		DispatchCalcBounds(ref, bounds);
+	long drawn = obj.fLength;
+	DisposeText(ref);
+	return drawn;
 }
 
 

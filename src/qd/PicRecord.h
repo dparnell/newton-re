@@ -63,8 +63,8 @@ struct PicSave
 	RgnHandle		fClip;			// +0x0c  the clip region it has
 	PatternHandle	fPnPat;			// +0x10  the pen pattern it has
 	PatternHandle	fBkPat;			// +0x14  the background pattern it has
-	Fixed			fField18;		// +0x18  1.0
-	Fixed			fField1c;		// +0x1c  1.0
+	Fixed			fTextHScale;	// +0x18  the scales the last text was drawn at (1.0 to begin with)
+	Fixed			fTextVScale;	// +0x1c
 	Point			fPnLoc;			// +0x20  where the last line it has ended
 	Point			fPnSize;		// +0x24  the pen size it has
 	long			fPnMode;		// +0x28  the pen mode it has (patCopy to begin with)

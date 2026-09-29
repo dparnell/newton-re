@@ -100,6 +100,10 @@ PATCHES = {
          "\t\tStructSizeType\tpicSize;\n\t\tshort\t\t\tfiller;\t\t/* APCS word alignment of the Rect (sync_ddk_headers.py) */\n\t\tRect\tpicFrame;\n\t\t} Picture;"),
         ("\t\tStructSizeType\tpolySize;\n\t\tRect\tpolyBBox;\n\t\tPoint\tpolyPoints[1];\n\t\t} Polygon;",
          "\t\tStructSizeType\tpolySize;\n\t\tshort\t\t\tfiller;\t\t/* APCS word alignment of the Rect (sync_ddk_headers.py) */\n\t\tRect\tpolyBBox;\n\t\tPoint\tpolyPoints[1];\n\t\t} Polygon;"),
+        # a text object is a handle (NewText 0x0035bfc4) passed as the ARM's word;
+        # Long is that word, pointer-sized on a host
+        ("\ttypedef void (*TextObjProc) (/*TextObjectRef*/ long , Fixed , Fixed );",
+         "\ttypedef void (*TextObjProc) (/*TextObjectRef*/ Long , Fixed , Fixed );\t/* Long: a handle (sync_ddk_headers.py) */"),
     ],
     # ConfigQD.h: the MP2100 ROM is built with QD_Gray - its PixelMap has the
     # grayTable field (0x1c bytes: a GrafPort is 0x54 bytes with portRect at

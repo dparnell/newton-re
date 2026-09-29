@@ -23,6 +23,7 @@ add_library(qd STATIC
     BitFlipTable.cpp
     PicPlay.cpp
     PicRecord.cpp
+    TextObject.cpp
     Curves.cpp
     QDTables.cpp
     Transform.cpp

@@ -234,7 +234,7 @@
 	typedef void (*RectProcPtr) (GrafVerb ,Rect *);
 	typedef void (*RgnProcPtr) (GrafVerb , RgnHandle );
 	typedef void (*RRectProcPtr) (GrafVerb , Rect *, long , long );
-	typedef void (*TextObjProc) (/*TextObjectRef*/ long , Fixed , Fixed );
+	typedef void (*TextObjProc) (/*TextObjectRef*/ Long , Fixed , Fixed );	/* Long: a handle (sync_ddk_headers.py) */
 
 	typedef struct QDProcs
 		{

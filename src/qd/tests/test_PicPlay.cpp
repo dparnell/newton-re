@@ -4,8 +4,9 @@
 // bitmap, the same scaled up, a packed bitmap, a line, the empty clip a
 // picture starts with, and a version 2 picture with its word opcodes;
 // then a picture recorded (OpenPicture, every standard proc, ClosePicture)
-// and played back to the same pixels as the scene drawn directly, and
-// PackBits against UnpackBits.  Runs over a standalone kernel heap with
+// and played back to the same pixels as the scene drawn directly, text
+// recorded both ways (the Newton's opcodes and the Macintosh's) and played
+// back, and PackBits against UnpackBits.  Runs over a standalone kernel heap with
 // the ROM's objects imported (a recorded picture's text style begins in
 // the system font).
 #include "PicPlay.h"
@@ -24,6 +25,7 @@
 #include "ROMImport.h"
 #include "ROMConstants.h"
 #include "Fonts.h"
+#include "Text.h"
 #include "memory/host/KernelHeap.h"
 
 #include <stdio.h>
@@ -390,6 +392,114 @@ TestRecord()
 }
 
 
+// (the first pixel the map and a copy of it differ at, reported)
+static void
+ReportDifference(const unsigned char* direct)
+{
+	for (long y = 0; y < kSize; y++)
+		for (long x = 0; x < kSize; x++)
+			if ((GetPixel(&gMap, x, y) != 0) != ((direct[y * 8 + x / 8] & (0x80 >> (x & 7))) != 0))
+			{
+				fprintf(stderr, "  first difference at (%ld,%ld)\n", x, y);
+				return;
+			}
+}
+
+
+// (how many times a word opcode appears in a picture, walking it byte by
+// byte - an upper bound, the data may hold the same bytes)
+static long
+CountOpcode(PicHandle picture, long opcode)
+{
+	long size = GetHandleSize((Handle) picture);
+	const unsigned char* p = (const unsigned char*) *picture;
+	long count = 0;
+	for (long i = 10; i + 1 < size; i += 2)
+		if (GetBigEndianHalf(p + i) == opcode)
+			count++;
+	return count;
+}
+
+
+// the text the text tests draw: one style, two styles in runs, one style
+// right-aligned in a width, and the first again
+static void
+TextScene(Boolean macOnly)
+{
+	RefVar systemFont(SearchFont(0, nil));
+	StyleRecord plain, bold;
+	MakeSimpleStyle(&plain, systemFont, 0xa0000, 0);
+	MakeSimpleStyle(&bold, systemFont, 0xa0000, 1);
+	StyleRecord* one[1] = { &plain };
+	const UniChar hello[] = { 'H', 'e', 'l', 'l', 'o' };
+	FPoint where = { 2 << 16, 12 << 16 };
+	DrawTextOnce(hello, 5, one, nil, where, nil, nil);
+	if (macOnly)
+		return;
+	StyleRecord* two[2] = { &plain, &bold };
+	const short runs[2] = { 3, 3 };
+	const UniChar newton[] = { 'N', 'e', 'w', 't', 'o', 'n' };
+	where.y = 26 << 16;
+	DrawTextOnce(newton, 6, two, runs, where, nil, nil);
+	TextOptions options;
+	memset(&options, 0, sizeof(options));
+	options.fAlignment = 0x10000;
+	options.fWidth = 60 << 16;
+	const UniChar right[] = { 'R', 'i', 'g', 'h', 't' };
+	where.y = 40 << 16;
+	DrawTextOnce(right, 5, one, nil, where, &options, nil);
+	where.y = 54 << 16;
+	DrawTextOnce(hello, 5, one, nil, where, nil, nil);
+}
+
+
+// Text recorded into a picture and played back to the same pixels: the
+// Newton's opcodes (a style once, a run of styles, the options, and the
+// text each time), and a picture for the Macintosh (TxFont, TxSize, TxFace
+// and LongText).
+static void
+TestRecordText()
+{
+	for (int mac = 0; mac < 2; mac++)
+	{
+		ClearMap();
+		TextScene(mac);
+		unsigned char direct[sizeof(gBits)];
+		memcpy(direct, gBits, sizeof(gBits));
+		EXPECT(Ink(0, 0, kSize, kSize) > (mac ? 20 : 80));
+		EXPECT(mac || (Ink(0, 30, 30, 44) == 0 && Ink(30, 30, kSize, 44) > 10));	// "Right" is at the right
+
+		ClearMap();
+		Rect frame;
+		SetRect(&frame, 0, 0, kSize, kSize);
+		PicHandle picture = OpenPicture(&frame, mac);
+		TextScene(mac);
+		ClosePicture();
+		EXPECT(Ink(0, 0, kSize, kSize) == 0);			// the pen was hidden
+		if (mac)
+		{
+			EXPECT(CountOpcode(picture, 0x0028) == 1 && CountOpcode(picture, 0x0003) >= 1 && CountOpcode(picture, 0x000d) >= 1);
+			EXPECT(CountOpcode(picture, 0x81a3) == 0);
+		}
+		else
+		{
+			// the plain style is recorded once (it is the one the picture has
+			// after the first text; the run of styles does not change that)
+			EXPECT(CountOpcode(picture, 0x81a1) == 1);
+			EXPECT(CountOpcode(picture, 0x81a2) == 1);
+			EXPECT(CountOpcode(picture, 0x81a3) == 4);
+			EXPECT(CountOpcode(picture, 0x81a0) == 1);
+		}
+		Rect dst = frame;
+		DrawPicture(picture, &dst, false);
+		EXPECT(memcmp(direct, gBits, sizeof(gBits)) == 0);
+		if (memcmp(direct, gBits, sizeof(gBits)) != 0)
+			ReportDifference(direct);
+		KillPicture(picture);
+	}
+}
+
+
 // PackBits, the ROM's: runs and literals, and back out through UnpackBits
 static void
 TestPackBits()
@@ -465,6 +575,7 @@ main()
 	TestUnpackBits();
 	TestPackBits();
 	TestRecord();
+	TestRecordText();
 
 	ClosePort(&gPort);
 	printf("test_PicPlay: %s\n", failures == 0 ? "ok" : "FAILED");

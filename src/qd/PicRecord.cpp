@@ -16,10 +16,16 @@
 #include "ByteOrder.h"
 #include "Frames.h"
 #include "Curves.h"
+#include "TextObject.h"
+#include "RichString.h"
+#include "RSSymbols.h"
+#include "Unicode.h"
+#include "NewtonExceptions.h"
+#include "Objects.h"
 #include <string.h>
 
 // the text options a picture begins with (QDTables.cpp, generated: its
-// last word, fReserved2, is 1)
+// transfer mode is srcOr, the rest nought)
 extern const unsigned int	kPicDefaultTextOptions[7];
 
 
@@ -75,8 +81,8 @@ OpenPicture(Rect* frame, Boolean macPicture)
 	ps->fMacPicture = macPicture;
 	ps->fPnPat = stdPatterns[blackPat];		// (the ROM's stdPatterns + 0x10)
 	ps->fBkPat = stdPatterns[whitePat];
-	ps->fField18 = 0x10000;
-	ps->fField1c = 0x10000;
+	ps->fTextHScale = 0x10000;
+	ps->fTextVScale = 0x10000;
 	SetPt(&ps->fPnLoc, 0, 0);
 	SetPt(&ps->fPnSize, 1, 1);
 	ps->fPnMode = patCopy;
@@ -711,4 +717,338 @@ CheckPic(void)
 		CopyRgn(port->clipRgn, CurrentPicSave(port)->fClip);
 	}
 	return true;
+}
+
+
+
+/*------------------------------------------------------------------------------
+	T e x t
+------------------------------------------------------------------------------*/
+
+// (host) A style's seven words after its family, as the ROM writes them
+// straight out of memory.  DEVIATION: two of them are a Ref and a pointer,
+// wider on a host; only their low 32 bits go into the picture.
+static void
+PutPicStyleWords(const StyleRecord* style)
+{
+	PutPicLong(style->fFontSize);
+	PutPicLong(style->fFontFace);
+	PutPicLong((long) (Long32) (Ref) style->fFontPattern);
+	PutPicLong(style->fTransferMode);
+	PutPicLong(style->fReserved14);
+	PutPicLong(style->fReserved18);
+	PutPicLong((long) (Long32) (uintptr_t) style->fPattern);
+}
+
+
+// (host) The family word a style is recorded with: its font's Mac font id,
+// or 0x800000 for a family the picture carries itself - an ink word, or
+// the address of a block (an integer: a rich string's ink) - named again in
+// 0x81a4.  A family without an integer macFontID is nought.
+static long
+PicFamilyWord(RefArg family)
+{
+	if (!IsInkWord(family) && !ISINT(family))
+	{
+		Ref id = GetFrameSlotRef(family, RSSYMmacfontid);
+		return ISINT(id) ? RINT(id) : 0;
+	}
+	return 0x800000;
+}
+
+
+// (host) How many characters the runs come to (the whole text for one
+// style), counted as the ROM counts them.
+static long
+RunsTotal(const TextObject* obj)
+{
+	long total = 0;
+	const short* runs = obj->fRunLengths;
+	long run;
+	for (long left = obj->fLength; left > 0; left -= run)
+	{
+		if (runs == nil)
+			run = obj->fLength;
+		else
+			run = *runs++;
+		total += run;
+	}
+	return total;
+}
+
+
+// ROM 0x0035a680 DoPutText__FlN21
+// A text object drawn at these scales, recorded when a picture is open.
+//
+// A picture for the Macintosh gets its old opcodes: the first style's font
+// (TxFont, its family's macFontID), size and face, then LongText at the
+// location with the characters in Mac Roman - every time, whether they
+// changed or not.
+//
+// A Newton picture gets the scales (TxRatio) when they differ from the
+// last text's, the options - TxMode alone when only the transfer mode
+// differs, else 0x81a0 with all of them - then the style: 0x81a1 for one
+// style (when it is not the one the picture has), or 0x81a2 with every
+// run's length and style index and every style for several; a family is
+// its Mac font id, or 0x800000 when the picture carries it in 0x81a4 (an
+// ink word's bytes, or the block an integer family points at).  0x81a3 is
+// the text: its length, location, flags (0x80 several styles, 0x40
+// options, 0x20 a 0x81a4 follows) and the UniChars.
+//
+// ROM BUGS, kept:
+//  - 0x81a0 does not remember the options it wrote, so the same options
+//    are written again every time.
+//  - LongText's count is a byte, but every character is written: a text of
+//    more than 255 characters leaves a picture that cannot be read.
+//  - with one style, an integer family's block is copied without its
+//    length halfword and two bytes short, and 0x81a4 still writes the
+//    length's worth, the last two whatever the buffer held (host: nought);
+//    playing it back, 0x81a4 fills in only the several-style records, so
+//    the one style's family stays the integer 0x800000.
+// DEVIATIONS: the Mac characters are converted for the text's length into
+// a buffer as long, where the ROM converts to the first nought character
+// into 236 bytes on its stack; the options' last word is never called as
+// the text getter it is in the ROM (a host long cannot hold a proc), so
+// the text is always written straight from memory; and the UniChars and
+// an integer family's length halfword, the ROM's words in memory, are
+// written big-endian.
+void
+DoPutText(TextObjectRef text, Fixed hScale, Fixed vScale)
+{
+	if (!CheckPic())
+		return;
+	GrafPort* port = GetCurrentPort();
+	PicSave* ps = CurrentPicSave(port);
+	long multiStyle = 0;
+	long withOptions = 0;
+	long inlineSize = 0;
+	long inlineCount = 0;
+	char* inlineData = nil;
+	RefVar family;
+	TextObject* obj = TextObj(text);
+	if (obj->fLength == 0)
+		return;
+
+	if (ps->fMacPicture)
+	{
+		StyleRecord* style = obj->fStyles[0];
+		RefVar macFamily(style->fFontFamily);
+		long id = (short) RINT(GetFrameSlotRef(macFamily, RSSYMmacfontid));
+		Fixed size = style->fFontSize;
+		long face = style->fFontFace;
+		PutPicOpcode(0x03);							// TxFont
+		PutPicWord(id);
+		PutPicOpcode(0x0d);							// TxSize
+		PutPicWord((short) ((ULong32) (size + 0x8000) >> 16));
+		PutPicOpcode(0x04);							// TxFace
+		PutPicByte(face);
+		PutPicOpcode(0x28);							// LongText
+		PutPicWord((short) ((ULong32) (obj->fLocation.y + 0x8000) >> 16));
+		PutPicWord((short) ((ULong32) (obj->fLocation.x + 0x8000) >> 16));
+		long count = RunsTotal(obj);
+		PutPicByte(count);
+		char* chars = (char*) QDNewTempPtr(count + 1);
+		if (chars == nil)
+			Throw(exOutOfMemory, nil, nil);
+		ConvertFromUnicode((const UniChar*) obj->fText, chars, kMacRomanEncoding, count);
+		PutPicData(chars, count);
+		QDDisposeTempPtr(chars);
+		return;
+	}
+
+	char state = 0;
+	if (obj->fFlags & kTextObjAllocated)
+	{
+		state = HGetState((Handle) text);
+		HLock((Handle) text);
+		obj = TextObj(text);
+	}
+	if (ps->fTextHScale != hScale || ps->fTextVScale != vScale)
+	{
+		PutPicOpcode(0x10);							// TxRatio
+		PutPicWord(vScale >> 8);
+		PutPicWord(hScale >> 8);
+		PutPicWord(0x100);
+		PutPicWord(0x100);
+		ps->fTextHScale = hScale;
+		ps->fTextVScale = vScale;
+	}
+	TextOptions* options = obj->fOptions;
+	if (options != nil)
+	{
+		TextOptions* had = &ps->fTextOptions;
+		Boolean same = had->fJustification == options->fJustification && had->fAlignment == options->fAlignment
+					&& had->fWidth == options->fWidth && had->fReserved == options->fReserved;
+		if (had->fTransferMode != options->fTransferMode && same)
+		{
+			PutPicOpcode(0x05);						// TxMode
+			PutPicWord((short) options->fTransferMode);
+			had->fTransferMode = options->fTransferMode;
+		}
+		else if (!same)
+		{
+			PutPicOpcode(0x81a0);
+			PutPicLong(0x1c);
+			PutPicLong(options->fJustification);
+			PutPicLong(options->fAlignment);
+			PutPicLong(options->fWidth);
+			PutPicLong(options->fReserved);
+			PutPicLong(options->fTransferMode);
+			PutPicLong(options->fFittedWidth);
+			PutPicLong(options->fReserved2);
+		}
+		withOptions = 1;
+	}
+
+	if (obj->fRunLengths == nil)
+	{
+		StyleRecord* style = obj->fStyles[0];
+		family = style->fFontFamily;
+		StyleRecord had;
+		had.fFontFamily = ps->fTextStyle.fFontFamily->ref;
+		had.fFontSize = ps->fTextStyle.fFontSize;
+		had.fFontFace = ps->fTextStyle.fFontFace;
+		had.fFontPattern = ps->fTextStyle.fFontPattern;
+		had.fTransferMode = ps->fTextStyle.fTransferMode;
+		had.fReserved14 = ps->fTextStyle.fReserved14;
+		had.fReserved18 = ps->fTextStyle.fReserved18;
+		had.fPattern = ps->fTextStyle.fPattern;
+		if (!EqualStyle(style, &had))
+		{
+			PutPicOpcode(0x81a1);
+			PutPicLong(0x20);
+			ps->fTextStyle.fFontFamily->ref = style->fFontFamily;
+			ps->fTextStyle.fFontSize = style->fFontSize;
+			ps->fTextStyle.fFontFace = style->fFontFace;
+			ps->fTextStyle.fFontPattern = style->fFontPattern;
+			ps->fTextStyle.fTransferMode = style->fTransferMode;
+			ps->fTextStyle.fReserved14 = style->fReserved14;
+			ps->fTextStyle.fReserved18 = style->fReserved18;
+			ps->fTextStyle.fPattern = style->fPattern;
+			if (!IsInkWord(family) && !ISINT(family))
+				PutPicLong(PicFamilyWord(family));
+			else
+			{
+				const char* data;
+				if (ISINT(family))
+				{
+					const UniChar* block = (const UniChar*) RefToAddress(family);
+					inlineSize = (short) *block;
+					data = (const char*) (block + 1);
+				}
+				else
+				{
+					data = (const char*) BinaryData(family);
+					inlineSize = Length(family) + 2;
+				}
+				inlineData = (char*) QDNewTempPtr(inlineSize);
+				if (inlineData == nil)
+					Throw(exOutOfMemory, nil, nil);
+				memset(inlineData, 0, inlineSize);
+				char* p = inlineData;
+				if (IsInkWord(family))
+				{
+					PutBigEndianHalf(p, (unsigned short) (inlineSize - 2));
+					p += 2;
+				}
+				BlockMove(data, p, inlineSize - 2);
+				PutPicLong(0x800000);
+				inlineCount = 1;
+			}
+			PutPicStyleWords(style);
+		}
+	}
+	else
+	{
+		multiStyle = 1;
+		long runCount = 0;
+		const short* runs = obj->fRunLengths;
+		for (long left = obj->fLength; left > 0; left -= *runs++)
+			runCount++;
+		long runsSize = runCount * 4;
+		unsigned char* runData = (unsigned char*) QDNewTempPtr(runsSize);
+		if (runData == nil)
+			Throw(exOutOfMemory, nil, nil);
+		StyleRecord** styles = obj->fStyles;
+		runs = obj->fRunLengths;
+		for (long i = 0; i < runCount; i++)
+		{
+			family = styles[i]->fFontFamily;
+			PutBigEndianWord(runData + i * 4, (unsigned int) ((long) runs[i] | (i << 16)));
+			if (ISINT(family))
+				inlineSize += (short) *(const UniChar*) RefToAddress(family) + 2;
+			else if (IsInkWord(family))
+				inlineSize += Length(family) + 2;
+		}
+		PutPicOpcode(0x81a2);
+		PutPicLong(runsSize + runCount * 0x20 + 2);
+		PutPicByte(runCount);
+		PutPicByte(runCount);
+		PutPicData((const char*) runData, runsSize);
+		QDDisposeTempPtr(runData);
+		for (long i = 0; i < runCount; i++)
+		{
+			family = styles[i]->fFontFamily;
+			PutPicLong(PicFamilyWord(family));
+			PutPicStyleWords(styles[i]);
+		}
+		if (inlineSize != 0)
+		{
+			inlineData = (char*) QDNewTempPtr(inlineSize);
+			if (inlineData == nil)
+				Throw(exOutOfMemory, nil, nil);
+			char* p = inlineData;
+			for (long i = 0; i < runCount; i++)
+			{
+				family = styles[i]->fFontFamily;
+				if (ISINT(family))
+				{
+					// the block: its length halfword (the bytes after it), then those
+					const UniChar* block = (const UniChar*) RefToAddress(family);
+					long size = (short) (*block + 2);
+					PutBigEndianHalf(p, *block);
+					BlockMove(block + 1, p + 2, size - 2);
+					p += size;
+					inlineCount++;
+				}
+				else if (IsInkWord(family))
+				{
+					long size = Length(family);
+					PutBigEndianHalf(p, (unsigned short) size);
+					BlockMove(BinaryData(family), p + 2, (short) size);
+					p += 2 + (short) size;
+					inlineCount++;
+				}
+			}
+		}
+	}
+
+	long bytes = RunsTotal(obj) * 2;
+	PutPicOpcode(0x81a3);
+	PutPicLong(bytes + 0xd);
+	PutPicWord((short) obj->fLength);
+	PutPicLong(obj->fLocation.x);
+	PutPicLong(obj->fLocation.y);
+	long flags = 0;
+	if (multiStyle)
+		flags = 0x80;
+	if (withOptions)
+		flags |= 0x40;
+	if (inlineSize != 0)
+		flags |= 0x20;
+	PutPicByte(flags);
+	PutPicWord((short) bytes);
+	const UniChar* chars = (const UniChar*) obj->fText;
+	for (long i = 0; i < bytes / 2; i++)
+		PutPicWord(chars[i]);
+	if (inlineSize != 0)
+	{
+		PutPicOpcode(0x81a4);
+		PutPicLong(inlineSize + 2);
+		PutPicWord(inlineCount);
+		PutPicData(inlineData, inlineSize);
+		QDDisposeTempPtr(inlineData);
+	}
+	if (TextObj(text)->fFlags & kTextObjAllocated)
+		HSetState((Handle) text, state);
 }

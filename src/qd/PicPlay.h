@@ -21,9 +21,16 @@
 				(0x0c80-0x0c84, 0x8088-0x808c), paths (0x8190-0x8194) and
 				styled text (0x81a0-0x81a4).
 
-				NOT YET RECONSTRUCTED: text (the 0x28-0x2b opcodes and the
-				Newton's 0x81a0-0x81a4 are read and not drawn - NewText,
-				CallDrawText, DrawPicText, TextCleanup), curves and paths
+				Text is drawn as a text object (TextObject.h) through the
+				port's text proc: the old opcodes' LongText (0x28-0x2b, Mac
+				Roman characters in the style TxFont, TxSize and TxFace
+				made) and the Newton's own - 0x81a0 the options, 0x81a1 one
+				style or 0x81a2 several with their runs, 0x81a3 the
+				UniChars (DrawPicText), 0x81a4 the families a picture
+				carries itself (ink words), after which the text is drawn;
+				TextCleanup gives back what they allocated.
+
+				NOT YET RECONSTRUCTED: curves and paths
 				(read, not drawn - MapCurve/CallCurve, MapPaths/CallPaths),
 				pixel patterns (0x12-0x14 type 1: read and the pattern left
 				as it was - ConvertPixPat's converters).  Recording is
@@ -48,6 +55,7 @@
 
 #include "Ports.h"
 #include "Fonts.h"
+#include "Text.h"
 #include "FixedGeometry.h"
 
 struct PicPlay;
@@ -73,17 +81,18 @@ struct PicPlay
 	RgnHandle	fPlayClip = nil;		// +0x4c  the picture's own clip, unmapped
 	RgnHandle	fSavedClip = nil;		// +0x50  the port's clip it was called with
 	long		fVersion = 0;			// +0x54  1, or 0x2ff
+	TextOptions	fTextOptions = {};		// +0x58  0x81a0's options (kPicDefaultTextOptions to begin with)
 	StyleRecord	fXStyle;				// +0x74  0x81a1's style (the family, the size, the face; the rest as read)
+	StyleRecord**	fXStyles = nil;		// +0x94  0x81a2's: a style per run (a pointer block)
+	short*		fXRunLengths = nil;		// +0x98  the runs' lengths (a pointer block)
+	StyleRecord*	fXStyleRecs = nil;	// +0x9c  the styles (a temporary block; host: StyleRecords)
 	long		fStyleCount = 0;		// +0xa0  0x81a2's styles
 	long		fXTextCount = 0;		// +0xa4  0x81a3's characters
 	long		fTextFlags = 0;			// +0xa8  0x81a3's flags
 	UniChar*	fXText = nil;			// +0xac  0x81a3's text (a temporary block)
 	FPoint		fXTextLoc = {};			// +0xb0  where it goes, mapped
-	long		fTextMode = 0;			// +0xc8  TxMode
-	RefStruct	fTextFamily;			// +0xd4  the text style's family (TxFont's, or 0x81a1's once a text has used it)
-	Fixed		fTextSize = 0;			// +0xd8  TxSize
-	long		fTextFace = 0;			// +0xdc  TxFace
-	long		fTextFont = 0;			// host: TxFont's Mac font id, as read
+	TextOptions	fMacTextOptions = {};	// +0xb8  LongText's options (nought but TxMode's transfer mode, +0xc8)
+	StyleRecord	fTextStyle;				// +0xd4  LongText's style: TxFont's family, TxSize, TxFace (the shapes take 0x81a1's family, size and face into it once a text has used it)
 	long		fSpaceExtra = 0;		// +0xf4  SpExtra
 	Point		fProcPt = {};			// +0xf8  for the procs: a line's end, mapped (the pen is its start); where text goes
 	Rect		fProcRect = {};			// +0xfc  a rectangle, oval, arc's box, or a bitmap's destination, mapped
@@ -100,7 +109,6 @@ struct PicPlay
 	RefStruct	fStyle;					// +0x12c its style frame
 	RefStruct	fLastStyle;				// +0x130 the style frame added last (one only goes in when it changes)
 	RefStruct	fShapes;				// +0x134 the shapes and styles: DrawPicture's answer
-	char		fInlineFamily[256] = {};	// host: which of 0x81a2's styles name their family in 0x81a4 (the ROM's +0x9c styles)
 };
 
 // The procs that turn a picture into shapes (views/PictureShapes.cpp sets
@@ -116,6 +124,8 @@ Boolean		ImpossibleToDraw(GrafPort* port);								// ROM 0x00330068 ImpossibleTo
 void		MapFPoint(FPoint* pt, const Rect* src, const Rect* dst);		// ROM 0x0033519c MapFPoint__FP6FPointP4RectT2
 // One opcode; ==> 0 at the end (or when the picture cannot go on).
 long		ParsePicCodes(PicPlay* play, const OpcodeProc* procs);			// ROM 0x0033249c ParsePicCodes__FP7PicPlayPCPFlT1P8GrafPort_v
+void		DrawPicText(PicPlay* play);									// ROM 0x003336ec DrawPicText__FP7PicPlay - 0x81a3's text drawn
+void		TextCleanup(PicPlay* play, char* families);					// ROM 0x00333cd0 TextCleanup__FP7PicPlayPc - 0x81a2-0x81a4's blocks given back
 OpcodeProc	LookupOpcodeEntry(ULong opcode, const OpcodeProc* procs);		// ROM 0x00332470 LookupOpcodeEntry__FUlPCPFlP7PicPlayP8GrafPort_v
 long		GetPicBits(long opcode, PicPlay* play, const OpcodeProc* procs);	// ROM 0x003346b4 GetPicBits__FlP7PicPlayPCPFT1T2P8GrafPort_v
 PatternHandle	GetPicPixPat(long type);									// ROM 0x00333dc0 GetPicPixPat__Fl
