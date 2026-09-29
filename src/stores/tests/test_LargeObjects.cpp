@@ -15,6 +15,7 @@
 #include "Store.h"
 #include "Compression.h"
 #include "ByteOrder.h"
+#include "NewtQD.h"			// PixelMap
 #include "Protocols.h"
 #include "Boot.h"
 #include "KernelGlobals.h"
@@ -177,6 +178,122 @@ Scenario(const char* compander)
 }
 
 
+// A bitmap kept through TPixelMapCompander: the PixelMap at the front of
+// the object, then rows of a diagonal line (each row the one above moved
+// a bit - what the row filter turns into mostly noughts), then a page and
+// more of nothing.  Read back byte for byte after an unmap; the header the
+// first write keeps on the store; smaller on the store than plain LZ; and
+// an object filled from a pipe (nought passed for its base) read back too.
+static const long kRowBytes = 8;
+static const long kRows = 400;
+static const long kPixSize = (long) sizeof(PixelMap) + kRowBytes * kRows + 0x500;
+
+static void
+MakeBitmapBytes(UByte* data)
+{
+	memset(data, 0, kPixSize);
+	PixelMap* pm = (PixelMap*) data;
+	pm->baseAddr = (Ptr) (intptr_t) sizeof(PixelMap);
+	pm->rowBytes = kRowBytes;
+	pm->bounds.top = 0;
+	pm->bounds.left = 0;
+	pm->bounds.bottom = (short) kRows;
+	pm->bounds.right = (short) (kRowBytes * 8);
+	pm->pixMapFlags = 0x4000 | 0x1000 | 1;		// (kPixMapOffset | kPixMapVersion2, one bit deep)
+	pm->deviceRes.h = pm->deviceRes.v = 72;
+	UByte* rows = data + sizeof(PixelMap);
+	for (long r = 0; r < kRows; r++)
+	{
+		long bit = r % (kRowBytes * 8);
+		rows[r * kRowBytes + bit / 8] |= (UByte) (0x80 >> (bit % 8));
+	}
+}
+
+static void
+PixelMapScenario()
+{
+	InitQDCompression();
+	TStore* store = TStore::New("THostStore");
+	EXPECT(store != nil);
+	if (store == nil)
+		return;
+	EXPECT(store->Init(nil, 0x80000, 0, 0, kStoreIsInternal, nil) == noErr);
+	store->Format();
+	UByte* image = (UByte*) malloc(kPixSize);
+	MakeBitmapBytes(image);
+
+	// written through the compander, unmapped, read back
+	ULong id = 0, address = 0;
+	EXPECT(CreateLargeObject(&id, store, kPixSize, (char*) "TPixelMapCompander", nil, 0) == noErr && id != 0);
+	EXPECT(MapLargeObject(&address, store, id, false) == noErr && address != 0);
+	memcpy((void*) address, image, kPixSize);
+	EXPECT(FlushLargeObject(store, id) == noErr);
+	EXPECT(memcmp((void*) address, image, kPixSize) == 0);		// (the mapped copy is not filtered: the host writes from a copy)
+	EXPECT(UnmapLargeObject(address) == noErr);
+	EXPECT(MapLargeObject(&address, store, id, false) == noErr);
+	EXPECT(memcmp((void*) address, image, kPixSize) == 0);
+	EXPECT(UnmapLargeObject(address) == noErr);
+
+	// the header: its size, then the Newton's PixelMap (rowBytes at +8)
+	UByte root[kLargeObjectRootSize];
+	EXPECT(store->Read(id, 0, (char*) root, kLargeObjectRootSize) == noErr);
+	PSSId headerId = GetBigEndianWord(root + kLORootCompanderParams);
+	long headerSize = 0;
+	UByte header[0x2c];
+	EXPECT(store->GetObjectSize(headerId, &headerSize) == noErr && headerSize == 0x2c);
+	EXPECT(store->Read(headerId, 0, (char*) header, 0x2c) == noErr);
+	EXPECT(GetBigEndianWord(header) == 0x2c && GetBigEndianHalf(header + 8) == kRowBytes
+		   && GetBigEndianHalf(header + 12) == 0 && GetBigEndianHalf(header + 14) == kRows);
+	EXPECT(GetBigEndianWord(header + 0x1c) == kRowBytes / 4);		// (ROM quirk: a 1-bit map's grayTable word is the row's words)
+
+	// what is on the store: page 0 is the LZ of the page row-filtered
+	// (walking back from the end, each word XORed with the word a row -
+	// two words - above it), and the page of noughts at the end an empty
+	// object
+	PSSId chunkArray = GetBigEndianWord(root + kLORootChunkArray);
+	long chunks = 0;
+	EXPECT(store->GetObjectSize(chunkArray, &chunks) == noErr);
+	chunks >>= 2;
+	UByte word[4];
+	EXPECT(store->Read(chunkArray, 0, (char*) word, 4) == noErr);
+	PSSId page0 = GetBigEndianWord(word);
+	long packed = 0;
+	EXPECT(store->GetObjectSize(page0, &packed) == noErr && packed > 0 && packed < 0x400);
+	char* compressed = (char*) malloc(packed);
+	EXPECT(store->Read(page0, 0, compressed, packed) == noErr);
+	uint32_t expanded[0x100], filtered[0x100];
+	TDecompressor* lz = (TDecompressor*) NewByName("TDecompressor", "TLZDecompressor");
+	EXPECT(lz != nil && lz->Init(nil) == noErr);
+	ULong outSize = 0;
+	if (lz != nil)
+	{
+		EXPECT(lz->Decompress(&outSize, expanded, 0x400, compressed, packed) == noErr);
+		lz->Delete();
+	}
+	memcpy(filtered, image, 0x400);
+	for (long k = 0x100 - 1; k >= 2; k--)
+		filtered[k] ^= filtered[k - 2];
+	EXPECT(outSize == 0x400 && memcmp(expanded, filtered, 0x400) == 0);
+	free(compressed);
+	EXPECT(store->Read(chunkArray, (chunks - 1) << 2, (char*) word, 4) == noErr);
+	long lastSize = -1;
+	EXPECT(store->GetObjectSize(GetBigEndianWord(word), &lastSize) == noErr && lastSize == 0);
+
+	// filled from a pipe: nought for the object's base, so no row length
+	// and no filter - but the bytes come back
+	CTestPipe pipe(kPixSize);
+	pipe.WriteChunk(image, kPixSize, false);
+	pipe.Rewind();
+	ULong piped = 0;
+	EXPECT(LODefaultCreate(&piped, store, &pipe, kPixSize, false, (char*) "TPixelMapCompander", nil, 0, nil) == noErr);
+	EXPECT(MapLargeObject(&address, store, piped, true) == noErr && memcmp((void*) address, image, kPixSize) == 0);
+	EXPECT(UnmapLargeObject(address) == noErr);
+
+	free(image);
+	store->Delete();
+}
+
+
 static void
 LargeObjectScenario()
 {
@@ -185,6 +302,7 @@ LargeObjectScenario()
 	InitializeStoreCompanders();
 	Scenario("TSimpleStoreCompander");
 	Scenario("TLZStoreCompander");
+	PixelMapScenario();
 	HostStopTasks();
 }
 

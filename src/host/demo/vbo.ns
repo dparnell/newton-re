@@ -7,14 +7,17 @@
 //   NEWTON_HEAPCHECK=50 build/host/host/newton --rom build/MP2x00US/rom.bin \
 //       --display 320x480 --script src/host/demo/vbo.ns --headless 5
 //
-// (TPixelMapCompander, MakeBitmap's default for a store bitmap, is NOT
-// YET, so a compander is named.  GetLearningData is not asked: with no
+// The bitmap is kept by MakeBitmap's default compander for a store bitmap,
+// TPixelMapCompander (stores/PixelMapCompander.cpp); a second names LZ.
+// GetLearningData is not asked: with no
 // big-learning database it runs into the ROM bug in SizeOfLearningData,
 // recognition/WordRecognizer.cpp.)
 
 AddDelayedCall(func() begin
-	local b := MakeBitmap(64, 64, {store: GetStores()[0], companderName: "TLZStoreCompander"});
+	local b := MakeBitmap(64, 64, {store: GetStores()[0]});
 	local i := GetBitmapInfo(b);
 	Print({bitsVBO: IsVBO(i.bits), compander: i.compandername, onStore: i.store = GetStores()[0], rowbytes: i.rowbytes, bounds: i.bounds});
+	local n := MakeBitmap(64, 64, {store: GetStores()[0], companderName: "TLZStoreCompander"});
+	Print({namedCompander: GetBitmapInfo(n).compandername});
 	Print("vbo: done");
 end, [], 1000);

@@ -54,6 +54,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 
 namespace
@@ -193,7 +194,7 @@ Load(MappedObject* entry)
 	for (long offset = 0; offset < entry->fSize && err == noErr; offset += kCompanderBlockSize)
 	{
 		long n = entry->fSize - offset < kCompanderBlockSize ? entry->fSize - offset : kCompanderBlockSize;
-		err = entry->fCompander->Read(offset, entry->fData + offset, n, 0);
+		err = entry->fCompander->Read(offset, entry->fData + offset, n, (ULong) (uintptr_t) entry->fData);	// (the object's base, as TROMDomainManager1K::DecompressAndMap passes it)
 	}
 	return err;
 }
@@ -232,10 +233,17 @@ WriteBack(MappedObject* entry)
 				return err;
 		}
 	}
+	// DEVIATION: the ROM writes a page out as it lets the page go
+	// (TROMDomainManager1K::WriteOutPage), so a compander may change the
+	// page it is given - TPixelMapCompander filters it in place; the host
+	// keeps the whole object mapped, so each page is written from a copy.
+	// The last argument is the object's base, as WriteOutPage passes it.
+	uint32_t copy[kCompanderBlockSize / 4];
 	for (long offset = 0; offset < entry->fSize && err == noErr; offset += kCompanderBlockSize)
 	{
 		long n = entry->fSize - offset < kCompanderBlockSize ? entry->fSize - offset : kCompanderBlockSize;
-		err = entry->fCompander->Write(offset, entry->fData + offset, n, 0);
+		memcpy(copy, entry->fData + offset, n);
+		err = entry->fCompander->Write(offset, (char*) copy, n, (ULong) (uintptr_t) entry->fData);
 	}
 	if (err == noErr && (long) GetBigEndianWord(root + kLORootSize) != entry->fSize)
 	{

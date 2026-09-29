@@ -22,6 +22,7 @@ add_library(stores STATIC
 	CopyEntries.cpp
 	ObjectStreamer.cpp
 	StoreCompander.cpp
+	PixelMapCompander.cpp
 	LargeObjects.cpp
 	PackageObjects.cpp
 	host/HostLargeObjects.cpp

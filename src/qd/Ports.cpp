@@ -16,6 +16,7 @@
 #include "Frames.h"
 #include "NativeFunctions.h"
 #include "NewtonExceptions.h"
+#include "StoreCompander.h"		// InitQDCompression
 #include <string.h>
 #include <stdint.h>
 
@@ -866,6 +867,7 @@ InitGraf(void)
 	qdGlobals.fScreenBits.rowBytes = 0;
 	SetEmptyRect(&qdGlobals.fScreenBits.bounds);
 	qdGlobals.fScreenBits.pixMapFlags = kPixMapPtr | 1;
+	InitQDCompression();			// (a store bitmap's compander: stores/StoreCompander.h)
 	OpenPort(&gGrafPort);
 	gQDRunning = true;
 }

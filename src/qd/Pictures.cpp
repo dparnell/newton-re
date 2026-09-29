@@ -437,10 +437,8 @@ DrawPicture(RefArg picture, const Rect& box, ULong justify, long mode)
 // The binary itself: the header written over the front of it and the
 // rows left as they were allocated (nought).  With a store it is a large
 // binary instead, compressed by the named compander - TPixelMapCompander
-// when none is named.  (TPixelMapCompander - LZ over the rows each
-// XORed with the one above, 0x1000-byte blocks - is NOT YET RECONSTRUCTED,
-// so on the host a store bitmap must name a compander of its own, e.g.
-// "TLZStoreCompander"; without one FLBAllocCompressed fails.)
+// (stores/PixelMapCompander.cpp: LZ over pages whose rows are each XORed
+// with the one above) when none is named.
 //
 // DEVIATION: the ROM's header is 0x1c bytes because a Newton pointer is
 // four; the host's PixelMap is larger, so the header is written as a

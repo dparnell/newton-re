@@ -30,8 +30,9 @@
 				drives one, are packages/StorePackages.h, because a page
 				is relocated as it is read).
 
-				NOT YET RECONSTRUCTED: TXIPStoreCompander and
-				TPixelMapCompander.
+				TPixelMapCompander, a bitmap's, is below.
+
+				NOT YET RECONSTRUCTED: TXIPStoreCompander.
 
 	The interface has no DDK header; it follows the dispatch tables
 	tools/newton-rom/analysis/classinfo.py decodes (docs/protocols/).
@@ -180,6 +181,51 @@ public:
 	PSSId			fChunkTableId;		// +0x24
 	Boolean			fOwnsCoders;		// +0x28  its own compressor/decompressor (vs the shared ones)
 };
+
+
+// TPixelMapCompander - the default compander of a bitmap kept on a store
+// (MakeBitmap's): LZ over 1K pages, each page first *row-delta filtered* -
+// every word XORed with the word one row above it (the row length from a
+// copy of the bitmap's PixelMap kept in the compander's parameter object,
+// made on the first write) - so that the runs a drawing leaves compress.
+// The ROM's instance is 0x4c bytes; it is in the QuickDraw part of the ROM
+// (0x0018a95c-0x0018b22c) and QuickDraw's InitGraf registers it
+// (InitQDCompression).  PixelMapCompander.cpp.
+PROTOCOL TPixelMapCompander : public TStoreCompander
+{
+public:
+	PROTOCOL_IMPL_HEADER_MACRO(TPixelMapCompander);
+
+	TPixelMapCompander*	New();			// ROM 0x0018a984 New__18TPixelMapCompanderFv
+	void			Delete();					// ROM 0x0018a9a0 Delete__18TPixelMapCompanderFv
+
+	NewtonErr		Init(TStore* store, ULong rootId, ULong headerId, UChar readOnly, UChar shared);	// ROM 0x0018a9a4 Init__18TPixelMapCompanderFP6TStoreUlT2UcT4
+	ULong			BlockSize();				// ROM 0x0018ab9c BlockSize__18TPixelMapCompanderFv
+	NewtonErr		Read(ULong offset, char* buffer, long count, ULong objectBase);	// ROM 0x0018ac1c Read__18TPixelMapCompanderFUlPclT1
+	NewtonErr		Write(ULong offset, char* buffer, long count, ULong objectBase);	// ROM 0x0018ae9c Write__18TPixelMapCompanderFUlPclT1
+	void			DoTransactionAgainst(long arg, ULong page);					// ROM 0x0018b200 DoTransactionAgainst__18TPixelMapCompanderFlUl
+	Boolean			IsReadOnly();				// ROM 0x0018a97c IsReadOnly__18TPixelMapCompanderFv
+
+	void			DisposeAllocations();		// ROM 0x0018aba4 DisposeAllocations__18TPixelMapCompanderFv
+
+	TStore*			fStore;				// +0x10
+	ULong			fRootId;			// +0x14
+	PSSId			fChunkTableId;		// +0x18
+	Boolean			fReadOnly;			// +0x1c
+	TDecompressor*	fDecompressor;		// +0x20
+	TCompressor*	fCompressor;		// +0x24
+	char*			fBuffer;			// +0x28  scratch for a compressed page
+	long			fBufferSize;		// +0x2c
+	PSSId			fHeaderId;			// +0x30  the parameter object: the header (0x2c bytes, big-endian)
+	UByte*			fHeader;			// +0x34  ... read in: 0x2c, then a Newton PixelMap (0x1c bytes)
+	long			fCachedCount;		// +0x38  the page size the next three are for (-1: none)
+	long			fXorWords;			// +0x3c  words XORed: the whole rows in a page, less the first
+	long			fTailBytes;			// +0x40  bytes after the last whole row
+	long			fRowWords;			// +0x44  the bitmap's rowBytes / 4
+	Boolean			fOwnsCoders;		// +0x48  its own LZ coders (vs the shared ones)
+};
+
+void	InitQDCompression(void);		// ROM 0x0018a964 InitQDCompression__Fv - TPixelMapCompander registered (InitGraf)
 
 
 // Register the companders with the protocol registry (a host subset of the

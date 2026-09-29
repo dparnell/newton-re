@@ -170,4 +170,4 @@ endif()
 # (stores/LargeBinaries.h, qd/Pictures.h's GetBitmapInfo; needs the ROM image)
 add_test(NAME host.NewtonVBO COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 5 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/vbo.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonVBO PROPERTIES TIMEOUT 120
-                     PASS_REGULAR_EXPRESSION "bitsVBO: TRUE,[^}]*compander: \"TLZStoreCompander\",[^}]*onStore: TRUE,[^}]*rowbytes: 8.*vbo: done")
+                     PASS_REGULAR_EXPRESSION "bitsVBO: TRUE,[^}]*compander: \"TPixelMapCompander\",[^}]*onStore: TRUE,[^}]*rowbytes: 8.*namedCompander: \"TLZStoreCompander\".*vbo: done")
