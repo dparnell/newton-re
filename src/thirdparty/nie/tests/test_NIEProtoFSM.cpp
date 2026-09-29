@@ -17,12 +17,15 @@
 #include "RSSymbols.h"
 #include "NSErrors.h"
 #include "ROMImport.h"
+#include "REPTranslators.h"
+#include <stdlib.h>
 #include "memory/host/KernelHeap.h"
 
 #include <stdio.h>
 #include <string.h>
 
 static int failures = 0;
+static bool gOnCPU = false;		// (the checks running on the package's own code)
 #define EXPECT(cond) do { if (!(cond)) { failures++; printf("FAIL %s:%d: %s\n", __FILE__, __LINE__, #cond); } } while (0)
 
 static RefStruct* gCodeRef = nil;
@@ -511,31 +514,38 @@ TestObjectToString(void)
 	SetFrameSlot(RefVar(gVarFrame), RefVar(Sym("vars")), RefVar(gVarFrame));		// (GetGlobalVar reads vars)
 	Eval("seen := nil; printDepth := nil; printLength := nil; printReal := nil; printProto := nil; printParent := nil");
 
-	// f, a test double in native code (registered at an offset of the
-	// binary no function uses), sees the settings through its lexical scope
-	// as the package's own printer does
-	static const char* const kProbe[] = { "maxDepth", "maxLength", "floatFormat", "runProto", "backList" };
-	RefVar probe(NativeFunction(kProbeOffset, 2, kProbe, 5));
-	SetArraySlot(lits, 20, probe);
-	EXPECT(NOTNIL(Eval("StrEqual(call objToString with ('a), \"x: 1\")")));
-	EXPECT(EQRef(Eval("seen[0]"), Sym("a")));
-	EXPECT(RINT(Eval("seen[1]")) == 0);
-	EXPECT(RINT(Eval("seen[2]")) == 65535);
-	EXPECT(RINT(Eval("seen[3]")) == 65535);
-	EXPECT(NOTNIL(Eval("StrEqual(seen[4], \"%.16e\")")));
-	EXPECT(ISNIL(Eval("seen[5]")));
-	EXPECT(RINT(Eval("Length(seen[6])")) == 1);
-	// the global settings
-	Eval("printDepth := 3; printLength := -1; printReal := \"%g\"; printProto := 'yes");
-	Eval("call objToString with ('a)");
-	EXPECT(RINT(Eval("seen[2]")) == 3);
-	EXPECT(RINT(Eval("seen[3]")) == 65535);
-	EXPECT(NOTNIL(Eval("StrEqual(seen[4], \"%g\")")));
-	EXPECT(NOTNIL(Eval("seen[5]")));
-	Eval("printDepth := nil; printLength := nil; printReal := nil; printProto := nil");
-	// exceptions become a message
-	EXPECT(NOTNIL(Eval("StrEqual(call objToString with ('boom), \"<exception occurred>\")")));
-	EXPECT(NOTNIL(Eval("StrEqual(call objToString with ('mem), \"<insufficient memory>\")")));
+	// (not on the CPU: the package's own code calls a native function of its
+	// binary straight through NativeEntry, so a host double registered at
+	// an offset of it is never asked there)
+	if (!gOnCPU)
+	{
+		// f, a test double in native code (registered at an offset of the
+		// binary no function uses), sees the settings through its lexical scope
+		// as the package's own printer does
+		static const char* const kProbe[] = { "maxDepth", "maxLength", "floatFormat", "runProto", "backList" };
+		RefVar probe(NativeFunction(kProbeOffset, 2, kProbe, 5));
+		SetArraySlot(lits, 20, probe);
+		Eval("seen := nil; first := call objToString with ('a)");
+		EXPECT(NOTNIL(Eval("StrEqual(first, \"x: 1\")")));
+		EXPECT(EQRef(Eval("seen[0]"), Sym("a")));
+		EXPECT(RINT(Eval("seen[1]")) == 0);
+		EXPECT(RINT(Eval("seen[2]")) == 65535);
+		EXPECT(RINT(Eval("seen[3]")) == 65535);
+		EXPECT(NOTNIL(Eval("StrEqual(seen[4], \"%.16e\")")));
+		EXPECT(ISNIL(Eval("seen[5]")));
+		EXPECT(RINT(Eval("Length(seen[6])")) == 1);
+		// the global settings
+		Eval("printDepth := 3; printLength := -1; printReal := \"%g\"; printProto := 'yes");
+		Eval("call objToString with ('a)");
+		EXPECT(RINT(Eval("seen[2]")) == 3);
+		EXPECT(RINT(Eval("seen[3]")) == 65535);
+		EXPECT(NOTNIL(Eval("StrEqual(seen[4], \"%g\")")));
+		EXPECT(NOTNIL(Eval("seen[5]")));
+		Eval("printDepth := nil; printLength := nil; printReal := nil; printProto := nil");
+		// exceptions become a message
+		EXPECT(NOTNIL(Eval("StrEqual(call objToString with ('boom), \"<exception occurred>\")")));
+		EXPECT(NOTNIL(Eval("StrEqual(call objToString with ('mem), \"<insufficient memory>\")")));
+	}
 
 	// the package's own printer (0x14649), its literals as NewtonScript source
 	static const char* const kPrinterLits[] = {
@@ -637,6 +647,8 @@ main()
 	gObjectHeapSize = 0x200000;
 	InitObjects();
 	RegisterSoupNatives();		// (IsValid, which the printer asks)
+	if (getenv("NIE_TEST_REP") != nil)		// (the REP on stdout: NEWTON_TRACE_EXCEPTIONS then prints each throw)
+		HostInitREP(stdout);
 
 	FILE* f = fopen(NIE_PACKAGE, "rb");
 	if (f == nil)
@@ -656,18 +668,18 @@ main()
 
 	// first the oracle: the package's own ARM code on the CPU interpreter
 	// (src/armcpu), nothing registered but the test's printer double; the
-	// same checks must pass there
+	// same checks must pass there - a check that fails on one side and not
+	// the other is a re-expression (or the CPU) that is wrong
 	RegisterPackageNative(kNIECodeLength, kNIECodeHash, kProbeOffset, (void*) ProbePrinter, 3, "(test) f");
 	InstallPackageNativeCPU();
-	// (advisory until the CPU answers every ROM entry the NIE's code calls:
-	// what it cannot run yet is reported, not failed)
+	gOnCPU = true;
 	printf("test_NIEProtoFSM: on the CPU (the package's own code):\n");
 	int before = failures;
 	RunAll();
 	printf("test_NIEProtoFSM: %d check(s) failed on the CPU\n", failures - before);
-	failures = before;
 
 	// then the re-expressions
+	gOnCPU = false;
 	SetPackageNativeFallback(nil);
 	RegisterNIENatives();
 	// the re-expressions are what run: no CPU fallback now (a function the
