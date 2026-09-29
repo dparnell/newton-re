@@ -397,11 +397,15 @@ used on the next run.  The pieces, roughly in order:
    that moves objects still boots to the same screen (`build
    --relayout`; ctests `host.ROMSourceEdit`,
    `host.NewtonEditedSameScreen`, `host.ROMSourceEditValue`) - new frames
-   get maps and symbols, the extension's parts relay out.  The owner
-   decided (2026-09-30) to commit the tree as `romsrc/`: being done.
+   get maps and symbols, the extension's parts relay out.  **The tree is
+   committed as `romsrc/` and is the source** (the owner's decision,
+   2026-09-30; `romsrc/README.md`); the extractor is not run over it
+   again, and `host.ROMSourceCommitted` (does it still build the ROM
+   byte for byte?) is to be retired at its first intentional edit.
    Left: 3 decompile edge cases (Cardfile 2, Connection 1), the REx
    header checksum's algorithm, the IMA sounds and tables as editable
-   forms, ROM code for packages with native ARM code.
+   forms, moving slots within a frame without editing `layout.tsv`, ROM
+   code for packages with native ARM code.
 
 Until then the ROM image stays how the reconstruction is checked against
 the original; new run-time dependencies on it are to be avoided or noted.
@@ -428,6 +432,10 @@ mosrun is the one aimed at them and runs on Windows too, so it is the
 first to try, with mpw as a second opinion where a tool misbehaves.
 
 ## Working notes that keep being needed
+
+- **Committing beside other agents**: commit with `git commit -m ... --
+  <paths>`, which takes only those paths, so nothing another agent has
+  staged is swept in.
 
 - **Heap damage**: `NEWTON_HEAPCHECK=N` (every Nth allocation; 1 for
   all) makes `newton` walk the newt task's heap after allocations and

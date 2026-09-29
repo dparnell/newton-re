@@ -86,6 +86,21 @@ bugs and ROM bugs found on the way.
   `layout.tsv` manifest, and `rombuild.py` proved by a byte-identical
   rebuild of the area.
 
+## 2026-09-30: the ROM source tree committed as `romsrc/`
+
+- The owner's decision: the tree is committed and is now the source,
+  extracted once, never re-extracted over (ac045347: the tree and
+  `.gitattributes` only - its .bin/.png/.wav/.pict/.ttf/.pkg binary,
+  .ns/.tsv/.md LF text).
+- The build switched to it (50774437): target `romsrc` and fixture
+  `host.ROMSourceBuild` build `<build>/romsrc-objects.bin` from it with
+  `--relayout`; the no-image boots and the edit tests use it (the edit
+  tests on a copy); `host.ROMSourceRoundTrip` tests the extractor into
+  `<build>/romsrc-extracted` (target `romsrc-extract`);
+  `host.ROMSourceCommitted` reports whether `romsrc/` still builds the
+  ROM byte for byte; the builder's working files go to a temporary
+  directory, never into the tree.  209 of 209 ctests.
+
 ## 2026-09-30: the IR probe
 
 - `comms/IrProbeTool.h` (061d413): `TIrProbeTool` and 'pkir' - connecting,
