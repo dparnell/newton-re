@@ -1,0 +1,57 @@
+// The book reader's library after the boot (books/Librarian.h): the ROM's
+// help book, a 'book part in the ROM extension, has been installed by the
+// 'book part handler - it is in the librarian's library under its ISBN,
+// as a help book (Tiny Tim's, so Copperfield is not one of the
+// applications Find searches) - and the Extras drawer has its icon
+// entry, put there by SetupROMHelpBook.  The book is then taken out and
+// put back through the NewtonScript BookRemoved and BookAvailable.
+//
+//   build/host/host/newton --rom <image> --headless 8 --script src/books/tests/books-library.ns
+
+failures := 0;
+check := func(what, ok)
+  begin
+    if not ok then
+      begin
+        Print("books-library: FAILED " & what);
+        failures := failures + 1;
+      end;
+  end;
+
+AddDelayedCall(func() begin
+    local root := GetRoot();
+    local library := root.copperfield.library;
+    local part := library.|GECKO!HDI?|;
+    call check with ("the help book is in the library", part <> nil);
+    call check with ("it is a help book", part.help = true);
+    call check with ("its title", StrEqual(part.book.title, "Help"));
+    call check with ("Copperfield is not a Find application", not LSearch(vars.findApps, 'copperfield, 0, '|=|, nil));
+    local entries := vars.|Parts1.x|;
+    local found := nil;
+    if entries then
+      foreach entry in entries do
+        if entry.isbn and StrEqual(entry.isbn, "GECKO!HDI?") then found := entry;
+    call check with ("the Extras drawer has its icon", found <> nil);
+    call check with ("a second BookAvailable says it is in already", BookAvailable(part, 0) = true);
+    call check with ("a book without an ISBN is not taken", BookAvailable({book: {title: "x"}}, 0) = nil);
+    // a help book has no Library soup entry, so BookRemoved says so (-10008)
+    call check with ("a help book is not in the Library soup", BookRemoved({isbn: "GECKO!HDI?"}) = -10008);
+    // a book of one's own: an entry in the Library soup, Copperfield made a
+    // Find application, and all of it taken back by BookRemoved
+    local mine := {book: {isbn: "TEST-0001", title: "A Test Book", shortTitle: "Test",
+                          rendering: [{pages: [{}, {}, {}]}]}};
+    local removeFrame := BookAvailable(mine, 7);
+    call check with ("BookAvailable answers the remove frame", IsFrame(removeFrame) and StrEqual(removeFrame.isbn, "TEST-0001"));
+    call check with ("the book is in the library", library.|TEST-0001| = mine);
+    local entry := root.copperfield:GetLibraryEntry("TEST-0001");
+    call check with ("it has a Library soup entry", entry <> nil);
+    call check with ("the entry says it is present", entry and entry.bookPresent = 1 and entry.packageId = 7);
+    call check with ("with a bookmark list per rendering", entry and Length(entry.marks) = 1);
+    call check with ("Copperfield is a Find application", LSearch(vars.findApps, 'copperfield, 0, '|=|, nil));
+    call check with ("BookRemoved answers 0", BookRemoved(removeFrame) = 0);
+    call check with ("the book is out of the library", library.|TEST-0001| = nil);
+    entry := root.copperfield:GetLibraryEntry("TEST-0001");
+    call check with ("the entry says it is not present", entry and entry.bookPresent = 0 and entry.packageId = nil);
+    call check with ("Copperfield is not a Find application again", not LSearch(vars.findApps, 'copperfield, 0, '|=|, nil));
+    Print("books-library: done, " & NumberStr(failures) & " failed");
+  end, nil, 3000);

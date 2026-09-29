@@ -28,6 +28,7 @@
 #include "NSErrors.h"
 #include "OSErrors.h"
 #include "NewtWorld.h"
+#include "Librarian.h"
 #include "hal/host/HostTablet.h"
 #include <string.h>
 
@@ -61,7 +62,7 @@ TNotebook::DerivedFrom(long id) const
 // ROM 0x001467f8 Constructor__9TNotebookFv
 // The application constructed, the root view made from the viewRoot
 // template (gRootView), and the librarian with its library soup (from
-// the root's copperfield: NOT YET RECONSTRUCTED - TLibrarian).
+// the root's copperfield: books/Librarian.h).
 //
 // The template is the ROM's own Rviewroot (MakeRootTemplate), 263 slots:
 // the methods the applications send to the root - Notify, BlessApp,
@@ -75,6 +76,7 @@ TNotebook::Constructor(void)
 {
 	TApplication::Constructor();
 	InitViewSystem(RefVar(MakeRootTemplate()));
+	InitLibrarian();
 }
 
 

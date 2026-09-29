@@ -816,8 +816,9 @@ FOpenX(RefArg rcvr)
 // ROM 0x001f1758 FCloseX
 // :Close(): aeDropChild dispatched to the parent - the view hidden and
 // removed; a view still being set up is marked for deletion instead
-// (the Constructor throws -8501).
-static Ref
+// (the Constructor throws -8501).  (Not static: the book reader's
+// BookRemoved closes the reader with it.)
+Ref
 FCloseX(RefArg rcvr)
 {
 	TView* view = GetView(rcvr);

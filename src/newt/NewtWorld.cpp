@@ -30,6 +30,7 @@
 #include "ROMPackages.h"
 #include "FramePartHandler.h"
 #include "DictPartHandler.h"
+#include "Librarian.h"
 #include "Soups.h"
 #include "ROMConstants.h"
 #include "RSSymbols.h"
@@ -191,8 +192,7 @@ TNewtWorld::ForkSwitch(Boolean in)
 // rather than straight off their class info.
 // NOT YET RECONSTRUCTED: the real-time alarm
 // name, InitTranslators, NTKInit, REPInit/ResetREPIdler, InitExternal,
-// the 'book part handler (TBookPartHandler over the book reader's
-// TLibrarian), HandleCardEvents,
+// HandleCardEvents,
 // HandleTestAgentEvent, FMinimumBatteryCheck, LoadInkerCalibration,
 // AllocateEarlyStuff (the sort tables).
 long
@@ -215,6 +215,7 @@ TNewtWorld::MainConstructor()
 	RegisterBusyBoxNatives();		// (host/HostNatives.h's RegisterAllNatives is below this library)
 	RegisterModalDialogNatives();
 	RegisterAppDebugNatives();
+	RegisterBookNatives();
 	InitializeCompression();
 	// DEVIATION: the ROM starts the sound manager from the loader
 	// (TLoader::TheMain 0x0011401c), whose services are all NOT YET; the
@@ -244,10 +245,11 @@ TNewtWorld::MainConstructor()
 	fHandler->InitIdler((TTimeout) 0, 0, false);
 	gApplication = new TARMNotebook;
 	gApplication->Constructor();
-	// the part handlers whose parts come to this world ('book, over the
-	// book reader, is NOT YET)
+	// the part handlers whose parts come to this world
 	TPartHandler* handler = new TFormPartHandler;
 	handler->Init('form');
+	handler = new TBookPartHandler;
+	handler->Init('book');
 	handler = new TDictPartHandler;
 	handler->Init('dict');
 	handler = new TAutoScriptPartHandler;
