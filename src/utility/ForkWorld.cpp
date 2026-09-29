@@ -93,6 +93,17 @@ TForkWorld::TaskConstructor()
 
 
 // ROM 0x000cb618 TaskDestructor__10TForkWorldFv
+// ROM BUG kept: whether this is a fork is decided by fRunsMain, not fIsMain.
+// ForkInit (0x000cb2e4) clears only fIsMain, so a fork keeps the fRunsMain
+// its constructor gave it (true) until it forks in its turn.  A fork whose
+// start fails - TUTaskWorld::TaskEntry calls TaskDestructor when the start
+// message's Receive, TaskConstructor or the reply to the parent fails
+// (0x0025bb0c, 0x0025bb48 -> 0x0025bb64) - therefore takes the main world's
+// branch.  It runs MainDestructor and deletes fMutex, which is its parent's
+// mutex, shared by the whole family and still in use.  It also takes one off
+// fWorlds, which TaskConstructor never added for it.  A fork that ran and
+// ended normally has forked (Fork clears fRunsMain), so only the failure
+// paths are affected.
 void
 TForkWorld::TaskDestructor()
 {

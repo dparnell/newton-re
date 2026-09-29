@@ -174,7 +174,10 @@ TUTaskWorld::StartTask(Boolean wantResultFromChild, Boolean wantOwnerShip, TTime
 // ROM 0x0025ba94 TaskEntry__11TUTaskWorldFUlT1
 // The child's side, running on the copy: wait for the parent's RPC if it
 // wants a result, construct, answer, run, destruct, and unmake the copy in
-// place.
+// place.  (Every failure - the start Receive, the constructor, the reply -
+// still destructs, as the ROM does; for a TForkWorld fork that frees the
+// family's mutex, a ROM bug kept and described at
+// TForkWorld::TaskDestructor.)
 void
 TUTaskWorld::TaskEntry(ULong /*size*/, TObjectId taskId)
 {
