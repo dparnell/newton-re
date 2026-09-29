@@ -98,30 +98,16 @@ The owner's order - the package manager, host package loading, the
 recognition system, the testing system, finishing packages - has been
 worked through.  What could come next (not ranked; the owner chooses):
 
-- **The sound server**: being worked (2026-09-29; plan in
-  `docs/sound/README.md`).  Round 1 done: the `PSoundDriver` seam, the
-  server (`'sndm`, output and decompressor channels, `FillDMABuffer`
-  mixing), the host driver (`hal/host/HostSoundDriver.h`, buffer ends as
-  host interrupt sources, a null capture backend).  Round 2 done: the
-  client `TUSoundChannel`, `TFrameSoundChannel`, `GlobalSoundChannel` and
-  the twelve `protoSoundChannel` natives - `PlaySoundSync` of the ROM click
-  plays through the server (`sound.PlaySound`, `host.NewtonSound`);
-  `newton` installs the driver, with a waveOut loudspeaker when windowed
-  (`host/win32/HostAudio.cpp` - not yet heard: every test run is
-  headless).  Round 3 done: the codec channel (coded frames heard),
-  recording (a test-signal microphone; IMA recording exact), the power
-  handler, `TDTMFCodec`, `StopFrameSound` - the Sound Recorder opens, and
-  open-apps reports 0 failed.  Round 4 done: 16-bit samples big-endian
-  in memory on every host (`sound/SampleWords.h`, swapped only at the
-  host driver); the waveIn microphone; the Sound Recorder driven through
-  its buttons (`demo/recorder.ns`, `host.NewtonRecorder`; `newton
-  --microphone-tone HZ`).  Next (round 5): `TGSMCodec` and the GSM 06.10
-  full-rate coder under it (the Toast library, 0x002a85f8-0x00347000
-  with unnamed helpers) - the Sound Recorder records through it and keeps
-  plain samples until then; then re-check the Recorder demo's tone share
-  (GSM is lossy).  Also left: the loudspeaker and microphone heard by ear
-  (windowed `newton --script src/host/demo/sound.ns`; the Recorder's Rec,
-  Stop, Play); `NewWiredPtr` in `memory/` (the `NewPtr` fallback works).
+- **Sound: finished** (2026-09-29; `docs/sound/README.md`): the server,
+  the client and frame channels, the `protoSoundChannel` natives, the codec
+  channel (IMA, mu-law, GSM 06.10, the DTMF synthesiser), recording, the
+  power handler; the host driver with a waveOut loudspeaker and a waveIn
+  microphone when windowed.  The Sound Recorder records and plays through
+  GSM (`host.NewtonRecorder`).  Left: the loudspeaker and microphone heard
+  by ear (windowed `newton --script src/host/demo/sound.ns`, then the
+  Recorder's Rec, Stop, Play); GSM checked bit for bit against the
+  standard 06.10 test sequences, if they can be brought in;
+  `NewWiredPtr` in `memory/` (the `NewPtr` fallback works).
 - **The book reader** (`TLibrarian`, 49 methods; 19 unanswered `books`
   natives) - the Newton's books and the help book, and with it the
   `'book` part handler (the ROM's help book is refused for want of it).
@@ -129,9 +115,6 @@ worked through.  What could come next (not ranked; the owner chooses):
   IR, NTK and the desktop connection.  The test server's link, the IR
   sniffing, `SuckPackageFromEndPoint` and fax reception (the only real
   source of the fax-page bitmaps `RotTiledBitmap` turns) wait on it.
-- **The recognition gaps** listed under "Recognition" below (seven
-  methods, `ValidateWord`'s questions, `FindBaseline`'s first path, the
-  arbiter's graphics words).
 - **Now reachable over the large binaries**: the text engine's
   `TXNewtStreamFactory` (a compressed large binary for a stream above 4K)
   and `RotTiledBitmap` (only a fax page reaches it, so it still waits on

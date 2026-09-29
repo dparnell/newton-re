@@ -9,6 +9,22 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: the sound server, round 5 - GSM, and the Sound Recorder recording through it
+
+- The GSM 06.10 full-rate coder - the ROM's compiled Toast library,
+  transcribed function by function (`sound/GSM.h`; the library's unnamed
+  static helpers cited by address; tables from the ROM's initialised data,
+  `GSMTables.cpp`) - and `TGSMCodec` over it, registered in the ROM's order
+  (mu-law, IMA, GSM, DTMF).  ROM quirk kept: an all-silent subframe is
+  scaled by 6 instead of 0 in the lag search (no effect on the output).
+  `test_GSM`: 33-byte frames with the magic nibble, 13-bit samples, a
+  voice-like signal back at correlation 0.999, silence silent,
+  deterministic, a bad frame refused - not yet bit for bit against the
+  standard test sequences.
+- The Sound Recorder records through it: 98% of the headless demo's
+  playback is the test tone (47% before, when the "GSM" frames held raw
+  samples).  Commits `5c3a5ab`, `30b4a57`.
+
 ## 2026-09-29: pictures finished - the plan as next-steps.md carried it
 
 Rounds 1-4 of finishing pictures (commits in each item below; round 4
