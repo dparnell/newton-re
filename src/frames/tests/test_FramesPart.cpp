@@ -129,6 +129,27 @@ main()
 	EXPECT(GetArraySlotRef(keeper, 0) == kDeclawedRef);
 	EXPECT(!InFramesPartArea(top));
 
+	// A provisional import (only looked at) goes with its package's bytes;
+	// one that is not provisional (installed: its handler's) stays, and so
+	// does one whose bytes are elsewhere.  Outside a collection it goes at
+	// once; inside one it is declawed by that collection and given back
+	// after it.
+	{
+		TImportedObjectArea* lookedAt = ImportFramesPart(part, kCardfilePartSize, kCardfilePackage + kCardfilePartOffset);
+		EXPECT(lookedAt != nil && FindFramesPart(part) == lookedAt);
+		SetFramesPartProvisional(lookedAt, true);
+		RefVar lookedAtTop(FramePartToplevelFrame(lookedAt->fArea));
+		SetArraySlotRef(keeper, 0, lookedAtTop);
+		RemoveProvisionalFramesParts(part + 1, part + kCardfilePartSize);		// (not its first byte)
+		EXPECT(FindFramesPart(part) == lookedAt);
+		SetFramesPartProvisional(lookedAt, false);
+		RemoveProvisionalFramesParts(part, part + kCardfilePartSize);
+		EXPECT(FindFramesPart(part) == lookedAt && IsFrame(RefVar(GetArraySlotRef(keeper, 0))));
+		SetFramesPartProvisional(lookedAt, true);
+		RemoveProvisionalFramesParts(part, part + kCardfilePartSize);
+		EXPECT(FindFramesPart(part) == nil && GetArraySlotRef(keeper, 0) == kDeclawedRef);
+	}
+
 	// Classes are named as the object system compares them - whatever the
 	// case, and a dotted subclass of 'string is a string: a part whose real
 	// is of class 'Real and whose string is a 'String.foo has both brought

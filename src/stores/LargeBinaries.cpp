@@ -16,6 +16,7 @@
 #include "Entries.h"			// MakeEntryCache, PutEntryIntoCache, FaultBlockObject
 #include "Soups.h"				// ToObject, CheckWriteProtect, IsValidStore
 #include "PackageIterator.h"	// IsPackageHeader
+#include "FramesPart.h"			// RemoveProvisionalFramesParts
 #include "ObjectHeap.h"
 #include "Interpreter.h"
 #include "NativeFunctions.h"
@@ -571,7 +572,12 @@ RegisterLargeBinaryForDeclawing(const LBData* data)
 {
 	if (data->fAddress != 0
 	&& (!LargeObjectAddressIsValid(data->fAddress) || IsPackageHeader((const void*) data->fAddress, 0x34)))
+	{
+		// DEVIATION: a part of the package only looked at was imported,
+		// and goes with it (frames/FramesPart.h)
+		RemoveProvisionalFramesParts((const void*) data->fAddress, (const void*) (data->fAddress + data->fLength));
 		return RegisterRangeForDeclawing(data->fAddress, data->fAddress + data->fLength);
+	}
 	return false;
 }
 

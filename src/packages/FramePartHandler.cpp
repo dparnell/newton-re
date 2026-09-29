@@ -162,6 +162,20 @@ FindOrImportPackagePart(Ptr data, PartInfo* info, Boolean* inROMImage)
 	T F r a m e P a r t H a n d l e r
 ------------------------------------------------------------------------------*/
 
+// A part that would not install: its area removed - unless it was
+// imported before, only to be looked at (GetPkgRefInfo), in which case it
+// stays provisional: the package is still there to be looked at, and its
+// bytes, and refs into them, would still be good on the MessagePad.
+static void
+GiveBackPart(TImportedObjectArea* area, Boolean lookedAt)
+{
+	if (lookedAt)
+		SetFramesPartProvisional(area, true);
+	else
+		RemoveFramesPart(area);
+}
+
+
 // ROM 0x000d118c Install__17TFramePartHandlerFRC6PartId10SourceTypeP8PartInfo
 // The part's top-level frame found and handed to InstallFrame, with a
 // remove object made for it; kError_Bad_Package when there is no frame.
@@ -183,6 +197,7 @@ TFramePartHandler::Install(const PartId& partId, SourceType sourceType, PartInfo
 	NewtonErr err = noErr;
 	Ptr data = nil;
 	TImportedObjectArea* area = nil;
+	Boolean lookedAt = false;
 	if (!IsMemory(sourceType))
 	{
 		Ref ref = NILREF;
@@ -205,13 +220,15 @@ TFramePartHandler::Install(const PartId& partId, SourceType sourceType, PartInfo
 		else
 		{
 			Boolean inROM = false;
+			lookedAt = FindFramesPart((const void*) data) != nil;
 			area = FindOrImportPackagePart(data, partInfo, &inROM);
 			if (area == nil)
 				return kError_Bad_Package;
+			SetFramesPartProvisional(area, false);		// (the part's now: see below)
 			frame = FramePartToplevelFrame(area->fArea);
 			if (ISNIL(frame))
 			{
-				RemoveFramesPart(area);
+				GiveBackPart(area, lookedAt);
 				return kError_Bad_Package;
 			}
 			void* source = area->fArea;
@@ -234,20 +251,20 @@ TFramePartHandler::Install(const PartId& partId, SourceType sourceType, PartInfo
 	if (ISNIL(frame) || !IsFrame(frame))
 	{
 		if (area != nil)
-			RemoveFramesPart(area);
+			GiveBackPart(area, lookedAt);
 		return kError_Bad_Package;
 	}
 	if (err != noErr)
 	{
 		if (area != nil)
-			RemoveFramesPart(area);
+			GiveBackPart(area, lookedAt);
 		return err;
 	}
 	fRemoveObject = new FramePartRemoveObject;
 	if (fRemoveObject == nil)
 	{
 		if (area != nil)
-			RemoveFramesPart(area);
+			GiveBackPart(area, lookedAt);
 		return MemError();
 	}
 	fRemoveObject->fObject = new RefStruct(NILREF);
@@ -262,7 +279,7 @@ TFramePartHandler::Install(const PartId& partId, SourceType sourceType, PartInfo
 		delete fRemoveObject;
 		fRemoveObject = nil;
 		if (area != nil)
-			RemoveFramesPart(area);
+			GiveBackPart(area, lookedAt);
 	}
 	return err;
 }

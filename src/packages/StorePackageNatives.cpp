@@ -449,6 +449,10 @@ FDeinstallPackage(RefArg /*rcvr*/, RefArg pkgRef)
 	ULong start = data->fAddress;
 	if (start != 0)
 	{
+		// DEVIATION: the host's refs into the package are into the areas
+		// its parts were imported into; the part handlers took theirs
+		// away, and a part only looked at goes now (FramesPart.h)
+		RemoveProvisionalFramesParts((const void*) start, (const void*) (start + data->fLength));
 		RegisterRangeForDeclawing(start, start + data->fLength);
 		data->fAddress = 0;
 		DeclawRefsInRegisteredRanges();
@@ -628,12 +632,16 @@ GetPkgInfoFromVAddr(ULong address)
 				// it lies; the host imports the part first, if nothing has
 				// (FramePartHandler.h's FindOrImportPackagePart: the Extras
 				// drawer asks before the package is activated).  A streamed
-				// part is one flattened object, not a run of them.
+				// part is one flattened object, not a run of them.  What is
+				// imported here is provisional until the part is installed
+				// (FramesPart.h): if it never is, it goes with the package.
 				TImportedObjectArea* area = FindFramesPart((const void*) part.data);
 				if (area == nil && !part.compressed)
 				{
 					Boolean inROM = false;
 					area = FindOrImportPackagePart((Ptr) part.data, &part, &inROM);
+					if (area != nil && !inROM)
+						SetFramesPartProvisional(area, true);
 				}
 				if (area != nil)
 					what = FramePartToplevelFrame(area->fArea);

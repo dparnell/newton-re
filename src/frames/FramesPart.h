@@ -40,6 +40,16 @@ Boolean					InFramesPartArea(Ref r);							// an object of an imported part
 // not been imported (the host's stand-in for finding a part's objects
 // where its package lies).
 TImportedObjectArea*	FindFramesPart(const void* part);
+// A part imported only to be looked at - GetPkgRefInfo answering a stored
+// package's part frames before (or without) the part being installed - is
+// provisional: no part handler owns it, so it goes when the package's
+// bytes do (RemoveProvisionalFramesParts, called where the ROM declaws a
+// package's range: DeActivatePackage, and a package's large binary let
+// go of) rather than being kept, leaked, and found again at the same
+// address for whatever is mapped there next.  An installed part's area is
+// its part handler's to remove.
+void					SetFramesPartProvisional(TImportedObjectArea* area, Boolean provisional);
+void					RemoveProvisionalFramesParts(const void* start, const void* end);	// those whose bytes are in [start, end)
 
 // The top-level frame of the part whose first object (the array) is at
 // part; nil when there is no such array.

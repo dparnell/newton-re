@@ -18,6 +18,8 @@ struct FramesPartArea
 {
 	TImportedObjectArea	fArea;
 	FramesPartArea*		fNext;
+	Boolean				fProvisional;	// imported only to be looked at (FramesPart.h)
+	Boolean				fDoomed;		// removed during a collection, given back after it
 };
 static FramesPartArea*	gFramesParts = nil;
 
@@ -45,6 +47,8 @@ ImportFramesPart(const void* part, ULong size, ULong32 refBase, long align)
 		return nil;
 	}
 	entry->fNext = gFramesParts;
+	entry->fProvisional = false;
+	entry->fDoomed = false;
 	gFramesParts = entry;
 	return &entry->fArea;
 }
@@ -71,6 +75,68 @@ RemoveFramesPart(TImportedObjectArea* area)
 			delete entry;
 			return;
 		}
+	}
+}
+
+
+void
+SetFramesPartProvisional(TImportedObjectArea* area, Boolean provisional)
+{
+	for (FramesPartArea* entry = gFramesParts; entry != nil; entry = entry->fNext)
+		if (&entry->fArea == area)
+			entry->fProvisional = provisional;
+}
+
+
+// The areas doomed during a collection given back once it is over (a GC
+// proc): their refs were declawed by the collection itself.
+static void
+FreeDoomedFramesParts(void* /*refCon*/)
+{
+	for (FramesPartArea** link = &gFramesParts; *link != nil; )
+	{
+		FramesPartArea* entry = *link;
+		if (entry->fDoomed)
+		{
+			*link = entry->fNext;
+			FindOffsetCacheClear();
+			delete entry;
+		}
+		else
+			link = &entry->fNext;
+	}
+}
+
+
+// A large binary is let go of in the middle of a collection (LBDestroy is
+// its finaliser), when the heap cannot be walked again to declaw: the
+// area's range is registered for the declawing that collection ends with,
+// and the area itself is given back after it.
+void
+RemoveProvisionalFramesParts(const void* start, const void* end)
+{
+	const unsigned char* from = (const unsigned char*) start;
+	const unsigned char* to = (const unsigned char*) end;
+	for (FramesPartArea* entry = gFramesParts; entry != nil; )
+	{
+		FramesPartArea* next = entry->fNext;
+		if (entry->fProvisional && !entry->fDoomed && entry->fArea.fBytes >= from && entry->fArea.fBytes < to)
+		{
+			if (gHeap != nil && gHeap->fInGC)
+			{
+				static Boolean registered = false;
+				if (!registered)
+				{
+					GCRegister(&gFramesParts, FreeDoomedFramesParts);
+					registered = true;
+				}
+				entry->fDoomed = true;
+				RegisterRangeForDeclawing((ULong) entry->fArea.fArea, (ULong) entry->fArea.fAreaEnd);
+			}
+			else
+				RemoveFramesPart(&entry->fArea);
+		}
+		entry = next;
 	}
 }
 
