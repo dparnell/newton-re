@@ -174,7 +174,7 @@ worked through.  What could come next (not ranked; the owner chooses):
   `comms.SerialTool`), layer 3 done (MNP with class 5 compression,
   `tools/dock/mnp.py` the desktop end; `comms.MNP`,
   `comms.MNPLongHeaders`, `comms.MNPClass5`; V.42bis's coder NOT YET,
-  wanted only if a real desktop asks for it).  Layer 4 part 1 done:
+  since done).  Layer 4 part 1 done:
   `TDocker`'s package-loading path, the protocol extensions, 13 `Conn*`
   natives, `newton --serial-port` (default 3679) starting the serial port
   and services at boot (`host.NewtonDocker`); a package loads end to end
@@ -189,10 +189,10 @@ worked through.  What could come next (not ranked; the owner chooses):
   restore) and the app's read/write natives; a desktop's slip is shown
   and answered headless; the keyboard passthrough and 'gpat' are in.  The
   docker answers every desktop command but 'rpat' (installing a system
-  patch, which the host cannot do).  Open: a rare hang in an in-session
-  'lpkg' under stress (1 in 36), being looked into; V.42bis; a real
-  desktop (NCX, UnixNPI) over localhost:3679 not yet tried; tests for
-  'islp' and 'gpwd'.
+  patch, which the host cannot do); V.42bis is in.  Left: 'rpat' and
+  `BackupPatches`, V.42bis's internal-buffer mode, tests for 'islp' and
+  'gpwd', and a real desktop (NCX, UnixNPI) over localhost:3679 - not
+  yet tried.
   The livelock between `TPMIterator::Init`'s semaphore and `TForkWorld`'s
   mutex was the host runtime's, fixed (12e55a2; ctest
   `host.NewtonDockGetPackages`).  `test_NIEProtoFSM` also runs

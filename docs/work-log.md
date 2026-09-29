@@ -86,6 +86,22 @@ bugs and ROM bugs found on the way.
   `layout.tsv` manifest, and `rombuild.py` proved by a byte-identical
   rebuild of the area.
 
+## 2026-09-30: V.42bis
+
+- `comms/V42bis.cpp` (d091c7e): the ROM's BTLZ coder (`BTEncode`,
+  `BTFlush`, `BTDecode`, the bit packing, `SendCodeword`, the inits) over
+  its own 0x39d4-byte block, the node arrays big-endian halfwords at the
+  ROM's offsets; MNP's class-4 hooks call it.  Cross-checked against
+  `tools/dock/v42bis.py`, written from the ITU recommendation
+  independently of the ROM - both directions, transparent, compressed
+  and alternating, N2 512/1024/2048 with N7 6/32/250 (ctests
+  `comms.V42bis`, `comms.V42bisRoundTrip`).  The ROM's arrays hold 2048
+  nodes, so N2 is at most 1024 each way with both directions compressed.
+- `mnp.py --v42bis` accepts it as the desktop; `comms.MNPV42bis` echoes
+  over a live link with (1024, 32) negotiated (9518bc6).
+- The 1-in-36 in-session 'lpkg' hang did not recur in 102 stressed copies
+  after 12e55a2's host-runtime fixes, whose symptom it matched.
+
 ## 2026-09-30: the keyboard passthrough - the docker complete
 
 - The keyboard passthrough (3f611a7): `DoKeyboardPassthrough`,
