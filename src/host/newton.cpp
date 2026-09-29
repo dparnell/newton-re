@@ -259,11 +259,16 @@ main(int argc, char** argv)
 	// the sound hardware (hal/host/HostSoundDriver.h): with a window, the
 	// loudspeaker (win32/HostAudio.h); headless, or with no audio device,
 	// the null backend, which keeps what was played
-	static const HostSoundBackend kLoudspeaker = { HostAudioPlay };
+	// and the microphone (the same file's waveIn), when there is one
+	static const HostSoundBackend kLoudspeaker = { HostAudioPlay, nil };
+	static const HostSoundBackend kLoudspeakerAndMicrophone = { HostAudioPlay, HostMicrophoneRecord };
 	Boolean loud = gWindowed && HostAudioOpen(kHostSoundRate);
-	HostInstallSoundDriver(loud ? &kLoudspeaker : nil);
+	Boolean hearing = loud && HostMicrophoneOpen(kHostSoundRate);
+	HostInstallSoundDriver(hearing ? &kLoudspeakerAndMicrophone : loud ? &kLoudspeaker : nil);
 	OsBoot();
 	HostWindowStop();
+	if (hearing)
+		HostMicrophoneClose();
 	if (loud)
 		HostAudioClose();
 	long played = 0;

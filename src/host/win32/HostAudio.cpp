@@ -92,7 +92,112 @@ HostAudioClose(void)
 	gDevice = NULL;
 }
 
+/*------------------------------------------------------------------------------
+	The microphone: eight buffers of a tenth of a second kept queued on the
+	waveIn device; a record takes the samples of the buffers the device has
+	filled, in order, into a ring, and hands out the oldest.
+------------------------------------------------------------------------------*/
+
+static const int	kInHeaders = 8;
+static const long	kInHeaderSamples = 2160;
+static const long	kInRing = 1 << 16;
+
+static HWAVEIN		gInDevice = NULL;
+static WAVEHDR		gInHeaders[kInHeaders];
+static short		gInBuffers[kInHeaders][kInHeaderSamples];
+static int			gInNext = 0;			// the header the device fills next
+static short		gInRing[kInRing];
+static long			gInHead = 0;			// the ring's oldest sample
+static long			gInTail = 0;			// where the next goes
+
+
+bool
+HostMicrophoneOpen(long sampleRate)
+{
+	if (gInDevice != NULL)
+		return true;
+	WAVEFORMATEX format;
+	memset(&format, 0, sizeof(format));
+	format.wFormatTag = WAVE_FORMAT_PCM;
+	format.nChannels = 1;
+	format.nSamplesPerSec = (DWORD) sampleRate;
+	format.wBitsPerSample = 16;
+	format.nBlockAlign = 2;
+	format.nAvgBytesPerSec = (DWORD) sampleRate * 2;
+	if (waveInOpen(&gInDevice, WAVE_MAPPER, &format, 0, 0, CALLBACK_NULL) != MMSYSERR_NOERROR)
+	{
+		gInDevice = NULL;
+		return false;
+	}
+	memset(gInHeaders, 0, sizeof(gInHeaders));
+	for (int i = 0; i < kInHeaders; i++)
+	{
+		gInHeaders[i].lpData = (LPSTR) gInBuffers[i];
+		gInHeaders[i].dwBufferLength = kInHeaderSamples * sizeof(short);
+		waveInPrepareHeader(gInDevice, &gInHeaders[i], sizeof(WAVEHDR));
+		waveInAddBuffer(gInDevice, &gInHeaders[i], sizeof(WAVEHDR));
+	}
+	gInNext = 0;
+	gInHead = gInTail = 0;
+	waveInStart(gInDevice);
+	return true;
+}
+
+
+void
+HostMicrophoneRecord(short* samples, long count)
+{
+	if (gInDevice != NULL)
+	{
+		// the buffers the device has filled, in order, into the ring and
+		// back to the device
+		while ((gInHeaders[gInNext].dwFlags & WHDR_DONE) != 0)
+		{
+			WAVEHDR* header = &gInHeaders[gInNext];
+			long n = (long) (header->dwBytesRecorded / sizeof(short));
+			for (long i = 0; i < n; i++)
+			{
+				gInRing[gInTail] = gInBuffers[gInNext][i];
+				gInTail = (gInTail + 1) & (kInRing - 1);
+				if (gInTail == gInHead)
+					gInHead = (gInHead + 1) & (kInRing - 1);		// the oldest overwritten
+			}
+			header->dwFlags &= ~WHDR_DONE;
+			header->dwBytesRecorded = 0;
+			waveInAddBuffer(gInDevice, header, sizeof(WAVEHDR));
+			gInNext = (gInNext + 1) % kInHeaders;
+		}
+	}
+	for (long i = 0; i < count; i++)
+	{
+		if (gInHead != gInTail)
+		{
+			samples[i] = gInRing[gInHead];
+			gInHead = (gInHead + 1) & (kInRing - 1);
+		}
+		else
+			samples[i] = 0;
+	}
+}
+
+
+void
+HostMicrophoneClose(void)
+{
+	if (gInDevice == NULL)
+		return;
+	waveInReset(gInDevice);
+	for (int i = 0; i < kInHeaders; i++)
+		waveInUnprepareHeader(gInDevice, &gInHeaders[i], sizeof(WAVEHDR));
+	waveInClose(gInDevice);
+	gInDevice = NULL;
+}
+
 #else
+
+bool	HostMicrophoneOpen(long)				{ return false; }
+void	HostMicrophoneRecord(short* samples, long count)	{ for (long i = 0; i < count; i++) samples[i] = 0; }
+void	HostMicrophoneClose(void)				{ }
 
 bool	HostAudioOpen(long)					{ return false; }
 void	HostAudioPlay(const short*, long)	{ }
