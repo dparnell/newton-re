@@ -136,11 +136,15 @@ worked through.  What could come next (not ranked; the owner chooses):
   done: options, buffer lists, `TCommTool`, the comm manager, the host TCP
   tool over `hal/host/HostSockets.h`; `CMStartService` with the `inet`
   service hands back an open tool that echoes through a local server.
-  Next, M2: `CMGetEndpoint` + `TEndpoint`/`TSerialEndpoint`
-  (0x001d9968-0x001dd4f0) + `TEndpointEventHandler`
-  (0x000ac670-0x000acd08) + the `TCommTool*PB` classes; M3:
-  `TNewScriptEndpointClient` + the `CINew*` natives, a script's
-  `protoBasicEndpoint` echoing through the host; M4: `ictl`/`dnst` and
+  M2 done (the endpoint, `comms.Endpoint`); M3 part done - the
+  marshalling out (`frames/MarshalOut.cpp`) and the frame translators
+  (`comms/Translators.h`, library `comms_script`); the NIE's option
+  layouts are read from its own code (`analysis/pkgdisasm.py`).  Next:
+  `TNewScriptEndpointClient` (0x00133c84-0x0013930c), the `CINew*`
+  natives with a `RegisterCommsNatives` (then in `HostNatives.cpp`, the
+  host linking `comms_script`), a `.ns` echo demo as a ctest, and the
+  template read-back (`ConstructReturnValue`) in the device's byte order
+  with `'array` fields.  Then M4: the `ictl`/`dnst` host services and
   `InitializeCommManager` in the boot.  The rest of comms (CCL,
   AppleTalk, IR, NTK, the desktop connection - which the test server's
   link, the IR sniffing, `SuckPackageFromEndPoint` and fax reception wait

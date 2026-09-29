@@ -9,6 +9,29 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: comms, round 2 - the endpoint, the marshalling and the translators
+
+- The NIE's option layouts read out of its own native code with the new
+  `analysis/pkgdisasm.py` (part 4 PInetToolCE, part 10 TDNSTool): `itrs`
+  address + big-endian port, `ilpt` port + a byte defaulting to 1, `itsv`
+  a long 1 = TCP / 2 = UDP, `ilid` a long defaulting to -1 - the table
+  and the evidence in `docs/comms/README.md` (d60be75).
+- M2: `CMGetEndpoint`, `TEndpoint`, `TEndpointEventHandler`, the endpoint
+  events, `TSerialEndpoint` and its request blocks; `comms.Endpoint`
+  runs Open to Close against a TCP echo server (83ebf98).
+- Marshalling out, `MarshalArguments` (`frames/MarshalOut.cpp`): script
+  values into a block by a template, big-endian; ROM bugs kept - a
+  `'char` field writes the address of the converted bytes, a binary goes
+  as a real (8960879).
+- The frame translators (`comms/Translators.h`, library `comms_script`):
+  `PScriptDataOut/In`, `POptionDataOut/In`, `GetDataForm`,
+  `InitTranslators`; a `'service` frame becomes a `'sid '` option
+  (ffb0bed).
+- `host.NewtonThirdPartyPackages` was seen failing once ("missing:
+  [|Internet Setup|]") in another build; it passed four runs in the comms
+  build and runs no comms code, so it is suspected to be a race on the
+  last install, not proven.
+
 ## 2026-09-29: the book reader, round 1 - the help book opens and reads
 
 - `src/books/`: `TLibrarian` (`gLibrarian`, the Library soup,
