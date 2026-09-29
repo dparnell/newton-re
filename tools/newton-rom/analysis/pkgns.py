@@ -160,6 +160,7 @@ def main(argv=None) -> int:
     ap.add_argument("--refs", action="append", default=[])
     ap.add_argument("--natives", action="store_true")
     ap.add_argument("--native-disasm", action="append", default=[])
+    ap.add_argument("--rom", help="a build directory: name the ROM functions NTK glue calls reach")
     args = ap.parse_args(argv)
 
     pkg = PackageImage(args.package)
@@ -193,6 +194,8 @@ def main(argv=None) -> int:
             print("%-50s %d args  code %#x+%#x, %d bytes  (%#x)" % (held.get(ref, "%#x" % ref), n, binary, off, length, ref))
     for name in args.native_disasm:
         import pkgdisasm
+        if args.rom:
+            pkgdisasm.load_rom(args.rom)
         ref = find(pkg, held, name)
         rows = [r for r in natives(pkg) if r[0] == ref]
         if not rows:

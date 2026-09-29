@@ -18,6 +18,11 @@ disassembles the code before it, where the function that loads it from
 its literal pool lies.  A word that reads as four printable characters
 is shown as such beside the instruction.
 
+With --rom BUILD a call through NTK's glue (a stub `ldr pc,[pc,#-4]` and
+an address 0x018xxxxx) is named: the ROM maps 0x01800000 onto a table at
+physical 0x13000, a B per word into the jump table, so 0x01800000 + 4k is
+the function the word at ROM 0x13000 + 4k branches to.
+
 Needs capstone (tools/newton-rom/requirements.txt).  Offsets are relative
 to the part (a part is loaded at an arbitrary address and relocated, so
 branch targets are part offsets too).
@@ -52,14 +57,74 @@ def fourcc(word):
     return ''
 
 
+# NTK's glue: native code reaches the ROM through stubs `ldr pc,[pc,#-4]`
+# followed by an address 0x018xxxxx.  The ROM maps that page range onto a
+# table at physical 0x13000 (just after the patchable jump table), one B
+# instruction per word, each to a slot of the 2.x jump table: so
+# 0x01800000 + 4k is the function the word at ROM 0x13000 + 4k branches to.
+GLUE_BASE = 0x01800000
+GLUE_TABLE = 0x13000
+GLUE_SIZE = 0x3000
+
+_rom = None
+_names = None
+
+
+def load_rom(build_dir):
+    """The ROM image and its code symbols, for naming glue calls."""
+    global _rom, _names
+    import re
+    with open(os.path.join(build_dir, 'rom.bin'), 'rb') as f:
+        _rom = f.read()
+    _names = {}
+    with open(os.path.join(build_dir, 'symbols.txt'), encoding='utf-8') as f:
+        for line in f:
+            m = re.match(r'^(\S+) code\s+(\S+)', line)
+            if m:
+                _names.setdefault(int(m.group(1), 16), m.group(2))
+
+
+def glue_name(address):
+    """The ROM function an NTK glue address 0x018xxxxx reaches (None when
+    no ROM is loaded or the address is not glue)."""
+    if _rom is None or not (GLUE_BASE <= address < GLUE_BASE + GLUE_SIZE):
+        return None
+    word = struct.unpack_from('>I', _rom, GLUE_TABLE + address - GLUE_BASE)[0]
+    if word >> 24 != 0xea:
+        return None
+    off = word & 0xffffff
+    if off & 0x800000:
+        off -= 0x1000000
+    target = address + 8 + off * 4
+    return _names.get(target, '%#x' % target)
+
+
+def glue_stubs(code):
+    """offset -> ROM function name of each glue stub in the code."""
+    stubs = {}
+    for off in range(0, len(code) - 7, 4):
+        if struct.unpack_from('>I', code, off)[0] == 0xe51ff004:
+            name = glue_name(struct.unpack_from('>I', code, off + 4)[0])
+            if name:
+                stubs[off] = name
+    return stubs
+
+
 def disassemble(code, start, end):
     md = capstone.Cs(capstone.CS_ARCH_ARM, capstone.CS_MODE_ARM | capstone.CS_MODE_BIG_ENDIAN)
+    stubs = glue_stubs(code) if _rom is not None else {}
     off = start & ~3
     while off < end and off + 4 <= len(code):
         word = struct.unpack_from('>I', code, off)[0]
         insns = list(md.disasm(code[off:off + 4], off))
         text = (insns[0].mnemonic + ' ' + insns[0].op_str) if insns else '.word 0x%08x' % word
         note = fourcc(word)
+        if insns and insns[0].mnemonic in ('bl', 'b') and insns[0].op_str.startswith('#'):
+            target = int(insns[0].op_str[1:], 16)
+            if target in stubs:
+                note = stubs[target]
+        elif _rom is not None and glue_name(word):
+            note = glue_name(word)
         print('  %06x  %08x  %-40s %s' % (off, word, text, note))
         off += 4
 
@@ -73,7 +138,10 @@ def main():
     ap.add_argument('--end', type=lambda s: int(s, 0))
     ap.add_argument('--find', action='append', default=[])
     ap.add_argument('--context', type=lambda s: int(s, 0), default=0x60)
+    ap.add_argument('--rom', help='a build directory (rom.bin, symbols.txt): name the ROM functions NTK glue calls reach')
     args = ap.parse_args()
+    if args.rom:
+        load_rom(args.rom)
 
     data = open(args.package, 'rb').read()
     ps = parts(data)

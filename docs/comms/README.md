@@ -172,6 +172,18 @@ data is the device's two big-endian longs; the translators turn it into
 the host's `TCMOServiceIdentifier` and back (DEVIATION).  Demo:
 `src/host/demo/dns.ns`, ctest `host.NewtonDNS`.
 
+**NTK's glue.**  A package's native code (its protocol parts and its
+native-compiled NewtonScript) reaches the ROM through stubs `ldr pc,[pc,#-4]`
+followed by an address 0x018xxxxx.  The ROM maps that range onto a table
+at physical 0x13000 - just after the patchable jump table - one B
+instruction per word, each into a slot of the 2.x jump table, so
+0x01800000 + 4k is the function the word at ROM 0x13000 + 4k branches to
+(found by fitting every table word's target to a jump-table slot: only
+the base 0x13000 makes all 512 of the first ones land on one; confirmed by
+the DNS tool's calls being `TOptionArray::OptionAt`, `RemoveOptionAt` and
+`InsertVarOptionAt`, and a native function's first calls
+`AllocateRefHandle`).  `pkgdisasm.py`/`pkgns.py --rom BUILD` name them.
+
 **The NIE's own scripts do not yet run on the host**: its state machines
 are NTK's protoFSM, whose engine - `DoEvent`, `DoEvent_Loop`, the event
 queue and the periodic events, 19 functions - is *native-compiled*
