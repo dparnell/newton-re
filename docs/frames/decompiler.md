@@ -131,6 +131,7 @@ by side.
 | 1 | 5398 of 5507 | 5122 (93.0%) | the first version |
 | 2 | 5398 of 5507 | 5200 (94.4%) | functions compiled at the top level; pushed literal functions as constants; `foreach ... deeply in` |
 | 3 | 5398 of 5507 | 5372 (97.5%) | locals a loop reuses declared first; the late locals put in the last loop's body; the NTK's constants (below) |
+| 4 | 5447 of 5507 | 5418 (98.4%) | no assignment joined to a read across a branch target (a loop's top); quoted paths `'a.b`, `'[pathExpr: x]`; reals of class `'Real` |
 
 The 5507 functions are every top-level NewtonScript function in the ROM's
 object area; functions that are literals of others are decompiled inside

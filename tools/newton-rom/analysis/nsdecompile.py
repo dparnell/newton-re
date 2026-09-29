@@ -504,6 +504,9 @@ class Decompiled:
 				value = pop()
 				target = Local(b) if a == OP_SETVAR else Var(self.symbol(self.lit(b)))
 				nxt = ins[k + 1] if k + 1 < end else None
+				# (not across a place something branches to: that is another statement)
+				if nxt is not None and nxt.pc in self.targets():
+					nxt = None
 				same = nxt is not None and ((a == OP_SETVAR and nxt.a == OP_GETVAR and nxt.b == b)
 											 or (a == OP_FINDSETVAR and nxt.a == OP_FINDVAR and nxt.b == b))
 				if same:
@@ -530,6 +533,12 @@ class Decompiled:
 		return stmts, stack
 
 	# ---- loops
+
+	def targets(self):
+		"""Every pc a branch goes to."""
+		if not hasattr(self, "_targets"):
+			self._targets = {i.b for i in self.instrs if i.a in (OP_BRANCH, OP_BIF, OP_BIT, OP_BILND)}
+		return self._targets
 
 	def loop_tops(self):
 		"""{top pc: the backward branch's instruction} of every loop."""
@@ -865,7 +874,7 @@ class Writer:
 				if not text.endswith("\0"):
 					raise DecompileError("a string with no terminator")
 				return string_literal(text[:-1])
-			if cname == "real":
+			if cname is not None and cname.lower() == "real":
 				return real_literal(struct.unpack(">d", rom.data(ref)[:8])[0])
 			raise DecompileError("a binary of class %s" % (cname or rom.describe(cls)))
 		if f & 3 == 3:
@@ -882,8 +891,12 @@ class Writer:
 			cname = rom.symname(cls) if rom.is_ptr(cls) else None
 			if cname is None:
 				raise DecompileError("an array of class %s" % rom.describe(cls))
-			if cname == "pathExpr":
-				raise DecompileError("a path expression as a literal")
+			if cname == "pathExpr" and not quoted:
+				# a path: 'a.b.c
+				names = [rom.symname(s) for s in rom.slots(ref)]
+				if None not in names and len(names) > 1:
+					return "'" + ".".join(ident(n) for n in names)
+				# (with other elements: the array written as it is)
 			items = ", ".join(self.constant(v, True) for v in rom.slots(ref))
 			text = "[" + ("%s: " % ident(cname) if cname != "array" else "") + items + "]"
 			return text if quoted else "'" + text
@@ -1045,9 +1058,8 @@ class Writer:
 				return "%s.%s" % (obj, ident(name))
 			if self.rom.is_ptr(e.ref) and self.rom.flags(e.ref) & 1 and self.rom.symname(self.rom.cls(e.ref)) == "pathExpr":
 				names = [self.rom.symname(s) for s in self.rom.slots(e.ref)]
-				if None in names:
-					raise DecompileError("a path expression of other things")
-				return obj + "".join("." + ident(n) for n in names)
+				if None not in names and len(names) > 1:
+					return obj + "".join("." + ident(n) for n in names)
 		return "%s.(%s)" % (obj, self.expr(fn, e, indent))
 
 	def target(self, fn, node, indent):
