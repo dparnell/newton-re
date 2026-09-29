@@ -142,13 +142,18 @@ worked through.  What could come next (not ranked; the owner chooses):
   `host.NewtonDNS`; the NIE's `dnsq`/`rrcd` protocol read with
   `analysis/pkgns.py`; a record name the NIE asks for with no room is
   cut short until the ROM call its own tool makes room with - part 10
-  +0x4604 - is identified).  Blocked: the NIE's own scripts
-  (`InetStartUp`, `DNSGetAddressFromName`, `InetGrabLink`) cannot run -
-  its protoFSM engine is 19 NTK native-compiled functions, 61 KB of ARM
-  (`pkgns.py --natives`); how a package's native code is to run on the
-  host is the owner's decision, and `ictl` waits on it.  Meanwhile: the
-  `'frame` form (`PFlattenPtr`/`PUnFlattenPtr`), the other six
-  translators and protoStreamingEndpoint.  The rest of comms (CCL,
+  +0x4604 - is identified; since fixed, it is `InsertVarOptionAt`).  Also done: the `'frame` form (the
+  flatteners), all ten translators, protoStreamingEndpoint
+  (`comms/StreamingEndpoint.h`, ctest `host.NewtonStream`).  The NIE's
+  own scripts (`InetStartUp`, `DNSGetAddressFromName`, `InetGrabLink`)
+  stop at its protoFSM engine, 19 NTK native-compiled functions
+  (`pkgns.py --natives`).  The owner's decision (2026-09-29): the NIE's
+  native functions are re-expressed as host code, looked up by package
+  and function, and other packages' native code falls back on an ARM
+  interpreter - one seam in the interpreter's native entry.  Being done
+  now: the seam and the NIE's protoFSM; the ARM interpreter.  Then
+  `ictl`, read by running the NIE's link state machine; the modem
+  navigator.  The rest of comms (CCL,
   AppleTalk, IR, NTK, the desktop connection - which the test server's
   link, the IR sniffing, `SuckPackageFromEndPoint` and fax reception wait
   on) comes after.

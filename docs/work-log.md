@@ -9,6 +9,43 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: comms, round 5 - the flatteners and the streaming endpoint
+
+- The NIE's DNS tool replaces an answered record through
+  `TOptionArray::RemoveOptionAt`/`InsertVarOptionAt` (identified by their
+  arguments - NTK's glue table at 0x018xxxxx is not yet mapped onto ROM
+  symbols); the request's array is the client's own, so it may grow.
+  The host tool does the same, so a record asked for with the NIE's
+  empty names comes back whole (caa1644).
+- `CPtrPipe` (`utility/Pipes.h`), `CRefPipe` (`stores/RefPipe.h`) and the
+  flatteners `PFlattenPtr`/`PUnFlattenPtr`/`PFlattenRef`/`PUnFlattenRef`;
+  the endpoint's `'frame` form (`echo.ns` sends a frame and reads it
+  back).  ROM quirk kept: `PFlattenPtr` starts at offset 4 whenever
+  there is a header.  DEVIATION: its block is `NewPtr`'d where the ROM
+  mallocs, its callers asking `GetPtrSize` and freeing from the pointer
+  heap (dd09202).
+- protoStreamingEndpoint: `TEndpointPipe` (`comms/EndpointPipe.h`),
+  `PStreamInRef`/`PStreamOutRef`, `TStreamingEndpointClient`,
+  `TStreamingCallBack` and the four `CIS*` natives
+  (`comms/StreamingEndpoint.h`); `InitTranslators` registers all ten in
+  the ROM's order; `PipeCallBack::Status` given the signature its one ROM
+  subclass uses.  `stream.ns` (ctest `host.NewtonStream`) streams a
+  300-element frame out and back with progress every 512 bytes (729142e).
+
+## 2026-09-29: the port-region audit
+
+- `analysis/portfields.py` checks every `src/` use of a port's
+  visRgn/clipRgn against the ROM function it cites (Ghidra's `GrafPort`
+  lacks `QD_Gray`'s word, so its `clipRgn` is the ROM's visRgn and its
+  `fgPat` the ROM's clip): OK / DIFFERS / NO-PORT, the last checked in
+  the disassembly.
+- Six more swaps fixed (19fd089): `TMonthView::HandleClick` and
+  `TEditView::ValidateCaret` restored the saved visRgn into the clip
+  (after a calendar tap the clip stayed replaced - `test_Views` now
+  checks both regions after one), `TRootView::RestoreBitsUnderCaret`,
+  `DoCaretClick`, `TInkWordGlyph::DrawAt`, `ZoomRect`.  68 functions
+  checked, 62 were right.
+
 ## 2026-09-29: comms, round 4 - the host's DNS service
 
 - `analysis/pkgns.py`: a package's NewtonScript listed and disassembled
