@@ -915,6 +915,21 @@ def real_literal(v):
 	return text
 
 
+UNQUOTABLE = re.compile(r"a binary of class|a function inside a literal")
+
+# A binary out of the hex of its bytes, for a constant's source (a literal
+# NewtonScript has no syntax for: a bitmap, a sound's samples, ...)
+BINARY_FROM_HEX = """func(hex, cls) begin
+	local b := MakeBinary(StrLen(hex) div 2, cls);
+	for i := 0 to Length(b) - 1 do begin
+		local h := Ord(hex[2 * i]);
+		local l := Ord(hex[2 * i + 1]);
+		StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+	end;
+	b
+end"""
+
+
 def upper_sum(text):
 	return sum(ord(c.upper()) for c in text)
 
@@ -1051,6 +1066,38 @@ class Writer:
 			return text if quoted else "'" + text
 		raise DecompileError("a literal not understood")
 
+	def built(self, ref):
+		"""Source that builds a literal when it is evaluated, for a literal
+		that cannot be quoted: a binary (made by kBinaryFromHex), or a frame
+		or array holding one or a function (a constant compiled on its own).
+		Bound to a constant, it is pushed as the literal it evaluates to."""
+		rom = self.rom
+		try:
+			return self.constant(ref)
+		except DecompileError as e:
+			if not UNQUOTABLE.match(str(e)):
+				raise
+		f = rom.flags(ref)
+		cls = rom.cls(ref)
+		if f & 3 == 0:
+			if "kBinaryFromHex" not in dict(self.constants):
+				self.constants.insert(0, ("kBinaryFromHex", BINARY_FROM_HEX))
+			return "call kBinaryFromHex with (\"%s\", %s)" % (rom.data(ref).hex(), self.constant(cls))
+		if f & 1 and len(rom.slots(ref)) >= 5 and rom.slots(ref)[0] == 0x32:
+			name = "kFunction_%x" % ref
+			if name not in dict(self.constants):
+				self.constants.append((name, None))
+				text = self.function(Decompiled(rom, ref).decompile(), 0)
+				self.constants[[n for n, _ in self.constants].index(name)] = (name, text)
+			return name
+		if f & 3 == 3:
+			return "{" + ", ".join("%s: %s" % (ident(tag), self.built(value)) for tag, value in rom.frame_slots(ref)) + "}"
+		cname = rom.symname(cls) if rom.is_ptr(cls) else None
+		if cname is None:
+			raise DecompileError("an array of class %s" % rom.describe(cls))
+		items = ", ".join(self.built(v) for v in rom.slots(ref))
+		return "[" + ("%s: " % ident(cname) if cname != "array" else "") + items + "]"
+
 	# ---- expressions
 
 	def expr(self, fn, node, indent=0):
@@ -1076,9 +1123,18 @@ class Writer:
 				same = sorted(s for s in fn.repeated_literals() if fn.literals[s] == node.ref)
 				name = "kLiteral_%x" % node.ref if node.slot == same[0] else "kLiteral_%x_%d" % (node.ref, node.slot)
 				if name not in dict(self.constants):
-					self.constants.append((name, self.constant(node.ref)))
+					self.constants.append((name, self.built(node.ref)))
 				return name
-			return self.constant(node.ref)
+			try:
+				return self.constant(node.ref)
+			except DecompileError as e:
+				if not UNQUOTABLE.match(str(e)):
+					raise
+			# a literal no quoted source makes: a constant that builds it
+			name = "kLiteral_%x" % node.ref
+			if name not in dict(self.constants):
+				self.constants.append((name, self.built(node.ref)))
+			return name
 		if isinstance(node, Local):
 			return ident(fn.local_name(node.index))
 		if isinstance(node, Var):
