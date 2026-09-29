@@ -8,7 +8,7 @@ can be read, edited and compiled back into the same functions.
 - **Round-trip harness:** `newtonscript --roundtrip`, in
   `src/host/NSRoundTrip.cpp`.
 - **ctest:** `host.NSDecompileRoundTrip` runs the round trip over a sample
-  of 600 functions and fails below 93%.
+  of 600 functions and fails below 96%.
 
 ```
 python tools/newton-rom/analysis/nsdecompile.py build/MP2x00US Max 0x3c56f9     # the source of functions
@@ -54,6 +54,20 @@ the round trip only asks that the same code comes out.
   `|index` and `|result` for `collect`). The decompiler walks its tree as
   `WalkForDeclarations` does and puts each `local` where it gives the
   ROM's numbering.
+- **Names, when the table of variables is sorted:** the compiler keeps a
+  function's variables in a frame (`fVarLocs`), and `AddSlot` sorts a
+  frame's map once it passes 20 tags (`ConvertToSortedMap`). A function
+  with more than 20 arguments and locals therefore numbers its stack
+  locals in *sorted* order: by symbol hash, then by name. The hash
+  (`SymbolHashFunction`) is the sum of the upper-cased characters times
+  0x9E3779B9, in 32 bits, so it depends on that sum alone. For such a
+  function the decompiler chooses each local's sum so that the hashes come
+  in the ROM's order, the loops' hidden locals (`name|limit`,
+  `k` + `v` + `|iter`, ...) included, and makes a name adding up to it
+  (`v19_yyx`). This is a depth-first search, each name aiming at an even
+  share of the hash range. A hidden local may sort before the names it is
+  made of, so it is checked when the last of them is chosen. Every `local`
+  goes at the start, since the order of declarations no longer matters.
 - **Constants:** these are inlined by the compiler, and come back as the
   values they stood for.
 
@@ -132,6 +146,7 @@ by side.
 | 2 | 5398 of 5507 | 5200 (94.4%) | functions compiled at the top level; pushed literal functions as constants; `foreach ... deeply in` |
 | 3 | 5398 of 5507 | 5372 (97.5%) | locals a loop reuses declared first; the late locals put in the last loop's body; the NTK's constants (below) |
 | 4 | 5447 of 5507 | 5418 (98.4%) | no assignment joined to a read across a branch target (a loop's top); quoted paths `'a.b`, `'[pathExpr: x]`; reals of class `'Real` |
+| 5 | 5447 of 5507 | 5434 (98.7%) | names chosen in hash order for functions whose table of variables is sorted (more than 20) |
 
 The 5507 functions are every top-level NewtonScript function in the ROM's
 object area; functions that are literals of others are decompiled inside

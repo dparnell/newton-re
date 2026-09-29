@@ -40,6 +40,7 @@ results.
 from __future__ import annotations
 
 import argparse
+import bisect
 import collections
 import os
 import random
@@ -282,6 +283,8 @@ class Decompiled:
 	def local_name(self, index):
 		if index in self.arg_names:
 			return self.arg_names[index]
+		if getattr(self, "chosen_names", None) and index in self.chosen_names:
+			return self.chosen_names[index]
 		if index < 3 + self.num_args:
 			return "a%d" % (index - 2)
 		return "l%d" % (index - 2 - self.num_args)
@@ -306,7 +309,98 @@ class Decompiled:
 		if len(stack) != 1:
 			raise DecompileError("the function's value: %d on the stack" % len(stack))
 		self.body = Block(stmts, stack[0]) if stmts else stack[0]
+		self.choose_sorted_names()
 		return self
+
+	def choose_sorted_names(self):
+		"""Names for the stack locals when the compiler's table of variables
+		(fVarLocs, a frame) will have its map sorted: AddSlot sorts a map once
+		it passes 20 tags, and the stack locals are then numbered in the
+		sorted order - by symbol hash, then name - so names are chosen whose
+		order is the ROM's numbering, the loops' hidden names (|limit,
+		|incr, |iter, |index, |result, made from the loops' variables' names)
+		included."""
+		first = 3 + self.num_args
+		closed_locals = [n for n in self.frame_names if n not in self.arg_names.values()]
+		if self.num_args + self.num_locals + len(closed_locals) <= 20:
+			return
+		derived = {}			# position -> (the free positions its name is made of, the suffix)
+
+		def derive(p, bases, suffix):
+			if derived.get(p, (bases, suffix)) != (bases, suffix):
+				raise DecompileError("a loop's hidden local made of two sets of names")
+			derived[p] = (bases, suffix)
+
+		for n in walk_all(self.body):
+			if isinstance(n, For):
+				derive(n.limit, [n.var], "|limit")
+				derive(n.incr, [n.var], "|incr")
+			elif isinstance(n, Foreach):
+				bases = ([n.slot] if n.slot is not None else []) + [n.val]
+				derive(n.iter, bases, "|iter")
+				if n.collect:
+					derive(n.index, bases, "|index")
+					derive(n.result, bases, "|result")
+		positions = list(range(first, first + self.num_locals))
+		free = [p for p in positions if p not in derived]
+		if any(b not in free for bases, _ in derived.values() for b in bases):
+			raise DecompileError("a loop over a variable not on the stack in the sorted order")
+		GOLD = 0x9E3779B9
+		low = 400				# every sum from here on makes a name (name_with_sum)
+		sum_range = range(low, low + 2400)
+		sums = {}
+		budget = [400000]
+		count = len(positions)
+
+		def hash_of(s):
+			return (s * GOLD) & 0xffffffff
+
+		def key_of(p):
+			if p in derived:
+				bases, suffix = derived[p]
+				if any(b not in sums for b in bases):
+					return None
+				return sum(sums[b] for b in bases) + upper_sum(suffix)
+			return sums.get(p)
+
+		def consistent():
+			"""The positions whose names are known so far in increasing hash
+			order, and no two the same sum."""
+			keys = [k for k in (key_of(p) for p in positions) if k is not None]
+			hs = [hash_of(k) for k in keys]
+			return all(a < b for a, b in zip(hs, hs[1:])) and len(set(keys)) == len(keys)
+
+		order = [p for p in positions if p in free]
+
+		def place(i):
+			"""Sums for the free names order[i:], depth first.  The positions
+			are in the sorted order, so a loop's hidden local may come before
+			the names it is made of; it is checked when the last of them is
+			chosen.  Each name aims at an even share of the hash range, which
+			leaves room on both sides for the hidden locals still to come."""
+			if i == len(order):
+				return True
+			p = order[i]
+			ideal = (positions.index(p) + 1) * (1 << 32) // (count + 1)
+			lower = max([hash_of(key_of(q)) for q in positions[:positions.index(p)] if key_of(q) is not None], default=-1)
+			upper = min([hash_of(key_of(q)) for q in positions[positions.index(p) + 1:] if key_of(q) is not None], default=1 << 32)
+			choices = sorted((s for s in sum_range if lower < hash_of(s) < upper), key=lambda s: abs(hash_of(s) - ideal))
+			tried = 0
+			for s in choices:
+				budget[0] -= 1
+				if budget[0] < 0 or tried >= 40:
+					return False
+				sums[p] = s
+				if consistent():
+					tried += 1
+					if place(i + 1):
+						return True
+				del sums[p]
+			return False
+
+		if not place(0) or not consistent():
+			raise DecompileError("no names found in the sorted order")
+		self.chosen_names = {p: name_with_sum(sums[p], p) for p in free}
 
 	def symbol(self, ref):
 		name = self.rom.symname(ref)
@@ -810,6 +904,50 @@ def real_literal(v):
 	return text
 
 
+def upper_sum(text):
+	return sum(ord(c.upper()) for c in text)
+
+
+
+def name_with_sum(total, index):
+	"""A name whose upper-cased characters add up to total (the symbol hash's
+	only input): 'v', the stack index and an underscore, then letters and
+	digits to make up the rest.  Every total from 400 on makes one."""
+	name = "v%d_" % index
+	rest = total - upper_sum(name)
+	k = -(-rest // 90)
+	if k and rest >= 65 * k:
+		# k letters as nearly alike as they can be
+		return (name + "".join(chr(rest // k + (1 if i < rest % k else 0)) for i in range(k))).lower()
+	tail = []
+	while rest > 300:
+		tail.append("Z")
+		rest -= 90
+	if rest not in NAME_TAILS:
+		raise DecompileError("a name's sum not made")
+	return (name + "".join(tail) + NAME_TAILS[rest]).lower()
+
+
+def _name_tails():
+	"""The shortest string of letters and digits adding up to each total."""
+	chars = [chr(c) for c in list(range(48, 58)) + list(range(65, 91))]
+	tails = {0: ""}
+	frontier = [""]
+	for _ in range(4):
+		nxt = []
+		for t in frontier:
+			for c in chars:
+				s = upper_sum(t + c)
+				if s <= 400 and s not in tails:
+					tails[s] = t + c
+					nxt.append(t + c)
+		frontier = nxt
+	return tails
+
+
+NAME_TAILS = _name_tails()
+
+
 def uses_environment(node):
 	"""Whether a function's code finds a variable by name, uses self or
 	inherited, or has a function that does - what would give it an argFrame
@@ -1189,6 +1327,15 @@ def declarations(fn):
 	collect(fn.body)
 	for i in range(first, first + fn.num_locals):
 		used.add(i)
+	closed = [nm for nm in fn.frame_names if nm not in fn.arg_names.values()]
+	if getattr(fn, "chosen_names", None):
+		# the table of variables sorted (choose_sorted_names): the order of
+		# the declarations does not matter, only that each local not a
+		# loop's is declared
+		loops = set()
+		for n in walk_all(fn.body):
+			loops.update(x for x in loop_names(n) if x is not None)
+		return [(nm, "closed") for nm in closed] + [(i, "front") for i in sorted(used) if i not in loops]
 	declared = []
 	wanted = []			# (index, before)
 	expected = [first]
@@ -1221,7 +1368,6 @@ def declarations(fn):
 			wanted.append((i, None))
 			declared.append(i)
 	# the closed-over locals, in the argFrame's order, first
-	closed = [nm for nm in fn.frame_names if nm not in fn.arg_names.values()]
 	return [(nm, "closed") for nm in closed] + wanted
 
 
@@ -1231,12 +1377,14 @@ def insert_declarations(body, decls):
 	that must come before a loop just before the statement holding it."""
 	if not isinstance(body, Block):
 		body = Block([], body)
-	front = [d for d, where in decls if where in ("closed", None)]
-	before = [(d, where) for d, where in decls if where not in ("closed", None)]
+	before = [(d, where) for d, where in decls if where not in ("closed", "front", None)]
 	stmts = list(body.stmts)
 	final = body.final
 	names_front = []
 	closed = [d for d, where in decls if where == "closed"]
+	front = [d for d, where in decls if where == "front"]
+	if front:
+		stmts.insert(0, LocalDecl(front))
 	if closed:
 		stmts.insert(0, LocalDecl(closed))
 	for d, where in before:
