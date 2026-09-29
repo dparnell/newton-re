@@ -111,6 +111,13 @@ bugs and ROM bugs found on the way.
   line breaks (and `test_Views`' espy-18 style runs) depend on.
 - `src/host/demo/scaledmap.ns` (ctest `host.ScaledMapDemo`): the World
   Clock's map at half size, and shapes with text doubled and stretched.
+- Ink words and italic in the recorded scenes (`2737dc6`): `test_Ink`
+  records text whose runs are ink words and plays it back to the same
+  pixels, and pins the ROM bug that one ink-word style alone plays back
+  as nothing.  Host bug found on the way: `GlyphInkData` read an ink word
+  held as a block (a rich string's, or a picture's 0x81a4) two bytes
+  short - the size halfword counts the word, not itself - cutting its
+  strokes.
 
 ## 2026-09-29: pictures round 2 - curves, paths, pixel patterns, arcs, italic
 

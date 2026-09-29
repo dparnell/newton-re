@@ -565,8 +565,10 @@ comes back 2).
 
 NOT YET RECONSTRUCTED: a picture drawn under a scaling transform
 (`TQDScaler`).
-`test_PicPlay` plays hand-written pictures (among them pixel patterns of
-32 and 8 bits), records the standard procs' scene, text both ways,
+`test_Ink`'s `TestInkWordPicture` records ink words carried in 0x81a4 and
+plays them back.  `test_PicPlay` plays hand-written pictures (among them
+pixel patterns of 32 and 8 bits), records the standard procs' scene, text
+both ways (with bold and italic runs),
 curves and paths, a four-bit pattern and arcs, and plays them back to the
 same pixels;
 `test_Views`'s `TestPicture` draws the ROM's world map.
