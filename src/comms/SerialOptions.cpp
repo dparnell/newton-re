@@ -14,6 +14,8 @@
 
 #include "Options.h"
 #include "SerialOptions.h"
+
+#include <string.h>
 #include "HALOptions.h"
 
 #define OPTION_DATA_LENGTH(cls)	(sizeof(cls) - sizeof(TOption))
@@ -311,4 +313,85 @@ TCMOSlowIRConnect::TCMOSlowIRConnect()
 	SetLabel(kCMOSlowIRConnect);
 	SetLength(OPTION_DATA_LENGTH(TCMOSlowIRConnect));
 	connectOptions = 0;
+}
+
+
+/*------------------------------------------------------------------------------
+	The IrDA options (SerialOptions.h)
+------------------------------------------------------------------------------*/
+
+// ROM 0x001de2e8 __ct__17TCMOIrDADiscoveryFv
+// Eight slots; a PDA; any peer; look for other traffic first.
+TCMOIrDADiscovery::TCMOIrDADiscovery()
+	: TOption(kOptionType)
+{
+	SetLabel(kCMOIrDADiscovery);
+	SetLength(OPTION_DATA_LENGTH(TCMOIrDADiscovery));
+	fProbeSlots = 8;
+	fMyServiceHints = 2;
+	fPeerServiceHints = 0xFFFFFFFF;
+	fPeerDevAddr = 0;
+	fMediaBusyCheck = 1;
+}
+
+
+// ROM 0x001de35c __ct__22TCMOIrDAReceiveBuffersFv
+TCMOIrDAReceiveBuffers::TCMOIrDAReceiveBuffers()
+	: TOption(kOptionType)
+{
+	SetLabel(kCMOIrDAReceiveBuffers);
+	SetLength(OPTION_DATA_LENGTH(TCMOIrDAReceiveBuffers));
+	fSize = 0x200;
+	fCount = 1;
+}
+
+
+// ROM 0x001de3b8 __ct__22TCMOIrDALinkDisconnectFv
+TCMOIrDALinkDisconnect::TCMOIrDALinkDisconnect()
+	: TOption(kOptionType)
+{
+	SetLabel(kCMOIrDALinkDisconnect);
+	SetLength(OPTION_DATA_LENGTH(TCMOIrDALinkDisconnect));
+	fTimeout = 40;
+}
+
+
+// ROM 0x001de40c __ct__22TCMOIrDAConnectionInfoFv
+// Both class names "X" - the peer's at the fourth byte, not after the
+// first's terminator as the DDK's comment has it.
+TCMOIrDAConnectionInfo::TCMOIrDAConnectionInfo()
+	: TOption(kOptionType)
+{
+	SetLabel(kCMOIrDAConnectionInfo);
+	SetLength(OPTION_DATA_LENGTH(TCMOIrDAConnectionInfo));
+	fMyLSAPId = 0;
+	fPeerLSAPId = 0;
+	fMyNameLength = 1;
+	fPeerNameLength = 1;
+	fClassNames[0] = 'X';
+	fClassNames[1] = 0;
+	fClassNames[4] = 'X';
+	fClassNames[5] = 0;
+}
+
+
+// ROM 0x001de488 __ct__23TCMOIrDAConnectUserDataFv
+TCMOIrDAConnectUserData::TCMOIrDAConnectUserData()
+	: TOption(kOptionType)
+{
+	SetLabel(kCMOIrDAConnectUserData);
+	SetLength(OPTION_DATA_LENGTH(TCMOIrDAConnectUserData));
+	fDataLength = 0;
+}
+
+
+// ROM 0x001de4dc __ct__23TCMOIrDAConnectAttrNameFv
+// "IrDA:IrLMP:LsapSel", its length 18 (and its terminator copied too).
+TCMOIrDAConnectAttrName::TCMOIrDAConnectAttrName()
+	: TOption(kOptionType)
+{
+	SetLabel(kCMOIrDAConnectAttrName);
+	SetLength(OPTION_DATA_LENGTH(TCMOIrDAConnectAttrName));
+	fNameLength = 18;
+	memcpy(fName, "IrDA:IrLMP:LsapSel", 19);
 }

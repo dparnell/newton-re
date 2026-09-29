@@ -1,0 +1,23 @@
+// One host Newton beams a Note to another (ctest host.NewtonBeam, run by
+// tools/host/twonewtons.py with src/host/demo/beam-receive.ns on the other
+// newton; the two IR ports face each other over a socket, --ir-peer).
+//
+// The Beam transport sends Sharp IR ('slir': zapCommToolId set, so the
+// probe - 'pkir', which would find IrDA between two 2.1s - is not asked):
+// the note is routed to Beam (Send, which puts it in the Out Box), then
+// sent as the Out Box's Send button sends it (the transport's SendRequest
+// with the item), and the run ends when the Out Box is empty again.
+HostInclude("common.ns");
+SetUserConfig('zapCommToolId, "slir");
+note := {appSymbol: 'paperroll, title: "Beamed note",
+		 body: {text: "hello from the other Newton"}};
+Send('beam, note);
+outbox := GetUnionSoup("OutBox");
+call waitFor with ("beam-send: the Out Box", func() outbox:Query(nil):Entry() <> nil, func() begin
+	Print({queued: outbox:Query(nil):Entry().title});
+	TransportNotify('|beam:Newton|, 'SendRequest, [{cause: 'user, item: outbox:Query(nil):Entry()}]);
+	call waitFor with ("beam-send: the note sent", func() outbox:Query(nil):Entry() = nil, func() begin
+		Print("beam-send: the Out Box is empty");
+		HostQuit();
+	end, 60);
+end, 20);

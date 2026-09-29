@@ -52,6 +52,7 @@ add_library(comms_script STATIC
     HostOptionLayouts.cpp
     NewScriptEndpoint.cpp
     StreamingEndpoint.cpp
+    Beamer.cpp
     host/HostLink.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/HostLinkSource.cpp
 )

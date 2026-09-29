@@ -1,0 +1,14 @@
+// The other end of src/host/demo/beam-send.ns (ctest host.NewtonBeam): the
+// In Box's Receive for Beam (the transport's ReceiveRequest, which listens
+// on the IR port until the other newton connects), then the run ends when
+// the note is in the In Box.
+HostInclude("common.ns");
+SetUserConfig('zapCommToolId, "slir");
+TransportNotify('|beam:Newton|, 'ReceiveRequest, [{cause: 'user}]);
+inbox := GetUnionSoup("InBox");
+call waitFor with ("beam-receive: the In Box", func() inbox:Query(nil):Entry() <> nil, func() begin
+	local e := inbox:Query(nil):Entry();
+	Print({received: e.title, text: e.body.text, from: e.fromRef});
+	Print("beam-receive: the note is in the In Box");
+	HostQuit();
+end, 120);

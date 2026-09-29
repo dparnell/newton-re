@@ -84,6 +84,7 @@
 #include "HostIRChip.h"
 #include "FIQTimer.h"
 #include "SerialTool.h"
+#include "SharpIRTool.h"
 #include "MNP.h"
 #include "HostLink.h"
 #include "os600/kernel/host/TaskRuntime.h"
@@ -186,6 +187,7 @@ NewtonBoot(void)
 			err = HostIRChipInstall(gIRPeer);
 		if (err == noErr)
 		{
+			RegisterIRCommServices();
 			printf("[host] IR port %u\n", (unsigned) HostIRChipPort(HostIRChipInstalled()));
 			fflush(stdout);
 		}

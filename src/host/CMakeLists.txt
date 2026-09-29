@@ -77,6 +77,18 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/dock.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonDockSession PROPERTIES TIMEOUT 240 PASS_REGULAR_EXPRESSION "the Newton speaks protocol 11.*the Newton knows the password.*docked.*stores: Internal.*the default store is Internal.*soups on Internal, the System soup among them.*the System soup made current: 0.*the System soup.s info.*added entry.*the new one among them.*reads .written by dock.py.*after .cent. it reads .changed by dock.py.*a 1.x entry added as [0-9].*entries all right.*soup .dock.py test. made: 0.*the backup sent ids ..0, -2, -32768...*the soup sent entries .0, 1, 2..*backup all right.*.test. echoed b.echo.*after a stray b.newtdockrtst.*classes in the inheritance: .*Max.3, 7. called on the Newton: 7.*the system patches: 0 bytes.*the slip was answered with button 1.*requests all right.*monaco.pkg: dres 0.*packages on the store: Monaco .17064 bytes.*Monaco removed .0., 0 left.*monaco.pkg loaded again: dres 0.*the keyboard passthrough started: True.*the Newton disconnected after the keyboard.*dock: the desktop.s slip says Tap the first button.*dock: installed Monaco.*dock: typed from the desktop: hello!.*dock: done")
+    # beaming: two newtons, their IR ports facing each other over a socket
+    # (--ir-peer), one beams a note (Sharp IR) and the other receives it
+    # into its In Box (tools/host/twonewtons.py runs both)
+    add_test(NAME host.NewtonBeam
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/host/twonewtons.py $<TARGET_FILE:newton>
+                     --rom ${NEWTON_ROM_BIN} --seconds 120
+                     --first ${CMAKE_CURRENT_SOURCE_DIR}/demo/beam-receive.ns
+                     --expect-first "eceived: \"Beamed note\".*text: \"hello from the other Newton\".*beam-receive: the note is in the In Box"
+                     --second ${CMAKE_CURRENT_SOURCE_DIR}/demo/beam-send.ns
+                     --expect-second "queued: \"Beamed note\".*beam-send: the Out Box is empty"
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonBeam PROPERTIES TIMEOUT 300 PASS_REGULAR_EXPRESSION "twonewtons.py: both ended as expected")
 endif()
 
 # deferred recognition (views/Rerecognize.h): "ton" written, and the
