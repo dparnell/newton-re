@@ -6,6 +6,7 @@
 # the flash store (host/).
 add_library(stores STATIC
     Store.cpp
+    MuxStore.cpp
     PackageStore.cpp
     host/HostStore.cpp
     StoreWrapper.cpp

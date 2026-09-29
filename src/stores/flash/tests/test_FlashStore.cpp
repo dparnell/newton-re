@@ -8,6 +8,7 @@
 // Runs as the kernel services task of a booted OS, as test_Flash does.
 
 #include "FlashStore.h"
+#include "MuxStore.h"
 #include "MemoryAllocator.h"
 #include "HostFlash.h"
 #include "Host.h"
@@ -213,11 +214,42 @@ TestCompaction(TFlashStore* store, PSSId* kept)
 }
 
 
+// The flash store wrapped as every task sees it: a TMuxStore, whose
+// changes go through its monitor.
+static void
+TestMuxStore(PSSId* kept)
+{
+	EXPECT(HostFlashOpen(kFlashFile) == noErr);
+	TFlashStore* flash = OpenStore();
+	TMuxStore* store = (TMuxStore*) TStore::New("TMuxStore");
+	EXPECT(store != nil);
+	EXPECT(store->SetStore(flash, 0) == noErr);
+	EXPECT(store->GetStore() == flash);
+	EXPECT(strcmp(store->StoreKind(), "Internal") == 0);
+	EXPECT(Holds(store, kept[0], "goodbye"));
+	PSSId id = 0;
+	EXPECT(store->NewObject((char*) "through the monitor", 19, &id) == noErr && id != 0);
+	EXPECT(Holds(store, id, "through the monitor"));
+	EXPECT(store->LockStore() == noErr);
+	EXPECT(store->Write(id, 0, (char*) "THROUGH", 7) == noErr);
+	EXPECT(store->Abort() == noErr);
+	EXPECT(Holds(store, id, "through the monitor"));
+	EXPECT(store->DeleteObject(id) == noErr);
+	long size = 0;
+	EXPECT(store->GetObjectSize(id, &size) == kSError_ObjectNotFound);
+	store->Delete();		// the flash store with it
+	gFlash->Delete();
+	HostFlashClose();
+}
+
+
 static void
 FlashStoreScenario(void)
 {
 	TNewInternalFlash::ClassInfo()->Register();
 	TFlashStore::ClassInfo()->Register();
+	TMuxStore::ClassInfo()->Register();
+	TMuxStoreMonitor::ClassInfo()->Register();
 	remove(kFlashFile);
 	EXPECT(HostFlashOpen(kFlashFile) == noErr);
 	HostClearSections();
@@ -248,6 +280,7 @@ FlashStoreScenario(void)
 	EXPECT(Holds(store, kept[0], "goodbye"));
 	CloseStore(store);
 	HostFlashClose();
+	TestMuxStore(kept);
 	remove(kFlashFile);
 	HostStopTasks();
 }
