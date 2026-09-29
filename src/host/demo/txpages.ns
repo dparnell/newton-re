@@ -70,6 +70,8 @@ AddDelayedCall(func() begin
 		AddDelayedCall(func() begin
 			ScreenSnapshot("build/txpages-2.pgm");
 			Print("txpages: " & pages & " pages, " & after & " with the page break, " & tx:GetTotalHeight() & " pixels tall");
+			Print("txpages: done");
+			HostQuit();
 		end, nil, 500);
 	end, nil, 500);
 end, nil, 1000);

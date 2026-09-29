@@ -12,32 +12,11 @@
 // The buttons are at the places the recorder puts them on a 320x480
 // screen: Rec (83..130, 182..218), Stop (130..177), Play (177..224).
 
-tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
-typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
+
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
 
 name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
 
-page := 0;
-nextPage := func()
-  begin
-    page := page + 1;
-    if page < 10 then
-      begin
-        call tapAt with (293, 468);			// Continue
-        AddDelayedCall(nextPage, nil, 1800);
-      end
-    else
-      call tapAt with (297, 468);			// Done, on "Congratulations"
-  end;
-
-AddDelayedCall(func() begin
-    call tapAt with (293, 468);				// past "Welcome"
-    AddDelayedCall(func() begin
-        call tapAt with (200, 150);			// the caret into the First line
-        foreach c in name do call typeKey with (c);
-        AddDelayedCall(nextPage, nil, 1500);
-      end, nil, 2000);
-  end, nil, 3000);
 
 recorder := nil;
 status := func(step)
@@ -46,25 +25,42 @@ status := func(step)
     Print("recorder: " & step & ": " & (if text then text else "-"));
   end;
 
-AddDelayedCall(func() begin
+// the recorder's status line starts with `text` ("Recording...")
+says := func(text) begin
+    local now := recorder.statusText.text;
+    IsString(now) and StrPos(now, text, 0) = 0;
+  end;
+
+// Each step once the status line says the one before it has happened; the
+// two seconds of recording are the recording's length, not a wait
+call walkSetup with (name, func() begin
     recorder := GetRoot().SoundRecorder;
     recorder:Open();
-    AddDelayedCall(func() begin
+    call waitFor with ("recorder: open", func() call says with ("Ready to record"), func() begin
         call status with ("opened");
         call tapAt with (106, 200);				// Rec
-        AddDelayedCall(func() begin
-            call status with ("recording");
-            call tapAt with (153, 200);			// Stop
+        call waitFor with ("recorder: recording", func() call says with ("Recording"), func() begin
             AddDelayedCall(func() begin
-                call status with ("stopped");
-                call tapAt with (200, 200);		// Play
-                AddDelayedCall(func() begin
-                    call status with ("played");
-                    recorder:Close();
-                    Print("recorder: done");
-                  end, nil, 4000);
-              end, nil, 1000);
-          end, nil, 2000);
-      end, nil, 2000);
-  end, nil, 30000);
+                call status with ("recording");
+                call tapAt with (153, 200);			// Stop
+                call waitFor with ("recorder: stopped", func() call says with ("Ready to play or record"), func() begin
+                    call status with ("stopped");
+                    call tapAt with (200, 200);		// Play
+                    call waitFor with ("recorder: playing", func() call says with ("Playing"), func() begin
+                        call status with ("played");
+                        // (four seconds of playing - the two recorded and
+                        // some over - before the recorder is closed: the
+                        // status line stays at "Playing..." however long
+                        // it is left, so there is nothing to wait for)
+                        AddDelayedCall(func() begin
+                            recorder:Close();
+                            Print("recorder: done");
+                            HostQuit();
+                          end, nil, 4000);
+                      end, 60);
+                  end, 60);
+              end, nil, 2000);
+          end, 60);
+      end, 60);
+  end);
 Print("recorder: the script is loaded");

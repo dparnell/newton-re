@@ -45,4 +45,5 @@ AddDelayedCall(func() begin
 	end;
 	Print({directory: entry <> nil, empty: entry and Length(entry.pssids) = 0});
 	Print("onex: done");
+	HostQuit();
 end, [], 1000);

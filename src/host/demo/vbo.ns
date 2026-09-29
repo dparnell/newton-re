@@ -20,4 +20,5 @@ AddDelayedCall(func() begin
 	local n := MakeBitmap(64, 64, {store: GetStores()[0], companderName: "TLZStoreCompander"});
 	Print({namedCompander: GetBitmapInfo(n).compandername});
 	Print("vbo: done");
+	HostQuit();
 end, [], 1000);

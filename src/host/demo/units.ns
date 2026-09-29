@@ -26,4 +26,5 @@ AddDelayedCall(func()
     Print("units: FulfillImportTable(nil) is" && (if FulfillImportTable(nil) then "true" else "nil"));
     FlushImports();
     Print("units: done");
+    HostQuit();
   end, nil, 2000);

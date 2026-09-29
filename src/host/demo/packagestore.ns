@@ -30,4 +30,5 @@ AddDelayedCall(func() begin
 	local id := ActivatePackage(pkgRef);
 	Print({activatedAgain: (call onStore with ("Formulas2")).id = id});
 	Print("packagestore: done");
+	HostQuit();
 end, [], 1000);

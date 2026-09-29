@@ -62,4 +62,5 @@ AddDelayedCall(func() begin
 	       title: GetPkgRefInfo(restored).title});
 	soup:RemoveFromStore();
 	Print("segmented: done");
+	HostQuit();
 end, [], 1000);

@@ -139,6 +139,8 @@ AddDelayedCall(func() begin
 				AddDelayedCall(func() begin
 					local rulers := reader:GetRangeData({first: 0, last: 0}, 'rulers);
 					Print("txview: the ruler's justification is now " & rulers[1].justification);
+					Print("txview: done");
+					HostQuit();
 				  end, nil, 1000);
 
 				// all of it replaced undoably: the undo keeps 4200 bytes, which

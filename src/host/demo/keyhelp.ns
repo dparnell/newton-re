@@ -24,5 +24,7 @@ AddDelayedCall(func() begin
 	AddDelayedCall(func() begin
 		ScreenSnapshot("keyhelp.pgm");
 		Print("keyhelp: snapshot");
+		Print("keyhelp: done");
+		HostQuit();
 	end, nil, 1000);
 end, nil, 4000);

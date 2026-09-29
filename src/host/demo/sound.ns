@@ -23,4 +23,5 @@ Print("sound: started, " & (if soundChannel:IsActive() then "active" else "not a
 AddDelayedCall(func() begin
 	soundChannel:Close();
 	Print("sound: closed");
+	HostQuit();
 end, nil, 1000);

@@ -34,37 +34,18 @@ app := {
 
 // the Setup assistant walked through first, as open-apps.ns does (a
 // modal slip keeps the idlers from running)
-tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
-typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
+
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
 
 name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
 
-page := 0;
-nextPage := func()
-  begin
-    page := page + 1;
-    if page < 10 then
-      begin
-        call tapAt with (293, 468);			// Continue
-        AddDelayedCall(nextPage, nil, 1800);
-      end
-    else
-      call tapAt with (297, 468);			// Done, on "Congratulations"
-  end;
 
-AddDelayedCall(func() begin
-    call tapAt with (293, 468);				// past "Welcome"
-    AddDelayedCall(func() begin
-        call tapAt with (200, 150);			// the caret into the First line
-        foreach c in name do call typeKey with (c);
-        AddDelayedCall(nextPage, nil, 1500);
-      end, nil, 2000);
-  end, nil, 3000);
-
-AddDelayedCall(func() begin
+call walkSetup with (name, func() begin
 		about := call @152.New with (app, nil, nil);
 		Print("credits: the about slip is open");
-		AddDelayedCall(func() begin
+		// (the slip changes to its credits by itself after eight seconds
+		// idle: waited for until the credits' picture is made)
+		call waitFor with ("credits: the credits shown", func() about.creditPict, func() begin
 				if about.creditPict then
 					begin
 						local b := ShapeBounds(about.creditPict);
@@ -74,5 +55,7 @@ AddDelayedCall(func() begin
 					Print("credits: no picture");
 				ScreenSnapshot("build/credits.pgm");
 				Print("credits: written build/credits.pgm");
-			end, nil, 12000);
-	end, nil, 30000);
+				Print("credits: done");
+				HostQuit();
+			end, 60);
+	end);

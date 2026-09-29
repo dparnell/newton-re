@@ -17,4 +17,5 @@ begin
 		& ", after reset" && (if after then "changed" else "default"));
 	DrawStringShapes("hello", 100);
 	Print("letterstyles: done");
+	HostQuit();
 end

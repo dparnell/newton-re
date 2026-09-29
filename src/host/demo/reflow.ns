@@ -21,31 +21,11 @@
 // src/host/demo/ink.ns, because every boot of the host's in-memory store
 // starts there and it would cover the picture.
 
-tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
-typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
-name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
-page := 0;
-nextPage := func()
-  begin
-    page := page + 1;
-    if page < 10 then
-      begin
-        call tapAt with (293, 468);			// Continue
-        AddDelayedCall(nextPage, nil, 1800);
-      end
-    else
-      call tapAt with (297, 468);			// Done, on "Congratulations"
-  end;
-AddDelayedCall(func() begin
-    call tapAt with (293, 468);				// past "Welcome"
-    AddDelayedCall(func() begin
-        call tapAt with (200, 150);			// the caret into the First line
-        foreach c in name do call typeKey with (c);
-        AddDelayedCall(nextPage, nil, 1500);
-      end, nil, 2000);
-  end, nil, 3000);
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
 
-AddDelayedCall(func() begin
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+
+call walkSetup with (name, func() begin
 	local font := {family: 'espy, face: 0, size: 12};
 	local data := [
 		{viewClass: 81, viewFlags: 1, viewFont: font, viewBounds: {left: 10, top: 10, right: 300, bottom: 30},
@@ -80,5 +60,7 @@ AddDelayedCall(func() begin
 	AddDelayedCall(func() begin
 		ScreenSnapshot("reflow.pgm");
 		Print("reflow: snapshot");
+		Print("reflow: done");
+		HostQuit();
 	end, nil, 1000);
-end, nil, 27000);
+end);

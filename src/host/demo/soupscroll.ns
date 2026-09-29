@@ -62,4 +62,5 @@ AddDelayedCall(func() begin
 	roll:Close();
 	soup:RemoveFromStoreXmit(nil);
 	Print("soupscroll: done");
+	HostQuit();
 end, nil, 3000);

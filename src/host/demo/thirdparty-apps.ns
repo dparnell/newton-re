@@ -53,7 +53,8 @@ index := 0;
 taps := nil;
 current := nil;
 
-tap := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
+HostInclude("common.ns");		// waitFor, walkSetup
+tap := tapAt;
 
 // Mahjongg: two free tiles of one kind, found by asking the game itself
 // (its validToTap), and a tap in the middle of each, which the game takes
@@ -180,43 +181,15 @@ next := func()
 			end;
 	end;
 
-// the Setup assistant a fresh machine starts with, walked through first
-// (as open-apps.ns does), so that it is not left behind the applications
+// the Setup assistant a fresh machine starts with walked through first
+// (common.ns), so that it is not left behind the applications; then the
+// applications, once every one of them is installed (the packages arrive
+// one after the other)
 name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
-typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
-page := 0;
-nextPage := func()
-	begin
-		page := page + 1;
-		if page < 10 then
-			begin
-				call tap with (293, 468);			// Continue
-				AddDelayedCall(nextPage, nil, 1800);
-			end
-		else
-			call tap with (297, 468);			// Done, on "Congratulations"
-	end;
-AddDelayedCall(func() begin
-		call tap with (293, 468);				// past "Welcome"
-		AddDelayedCall(func() begin
-				call tap with (200, 150);			// the caret into the First line
-				foreach c in name do call typeKey with (c);
-				AddDelayedCall(nextPage, nil, 1500);
-			end, nil, 2000);
-	end, nil, 3000);
-
-// the applications begin once every one of them is installed (the packages
-// arrive one after the other) and the Setup assistant has been walked
-installed := func() begin
-	local all := page >= 10;
-	foreach app in apps do if not GetRoot().(app.sym) then all := nil;
-	all
-end;
-startTicks := Ticks();
-waitInstalled := func()
-	if call installed with () or Ticks() - startTicks > 120 * 60 then
-		AddDelayedCall(next, nil, 3000)
-	else
-		AddDelayedCall(waitInstalled, nil, 250);
-AddDelayedCall(waitInstalled, nil, 1000);
+call walkSetup with (name, func()
+	call waitFor with ("thirdparty-apps: the packages installed", func() begin
+			local all := true;
+			foreach app in apps do if not GetRoot().(app.sym) then all := nil;
+			all
+		end, func() AddDelayedCall(next, nil, 1000), 120));
 Print("thirdparty-apps: the script is loaded");

@@ -68,6 +68,7 @@ AddDelayedCall(func() begin
         Print("testagent: deactivated; reporting now prints instead:");
         TestReportMessage("testagent: printed, not queued");
         Print("testagent: done");
+        HostQuit();
       end, nil, 1500);
   end, nil, 3000);
 Print("testagent: the script is loaded");
