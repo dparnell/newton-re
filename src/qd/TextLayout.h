@@ -31,7 +31,7 @@ struct TextLayout
 
 // Every character's advance in its run's font; with a width to fit, the
 // count that fits.  (Text.cpp)
-long	MeasureGlyphWidths(const UniChar* chars, long length, StyleRecord** styles, const short* runLengths, TextOptions* options, TextLayout* layout, GrafPort* port, Fixed hScale = 0x10000, Fixed vScale = 0x10000);	// ROM 0x0035baa4 MeasureGlyphWidths__Fl
+long	MeasureGlyphWidths(const UniChar* chars, long length, StyleRecord** styles, const short* runLengths, TextOptions* options, TextLayout* layout, GrafPort* port, Fixed hScale = 0x10000, Fixed vScale = 0x10000, ULong objFlags = 0);	// ROM 0x0035baa4 MeasureGlyphWidths__Fl
 // The slack spread over the characters; ==> the offset of the text's
 // start.  (Text.cpp)
 Fixed	JustifyText(const UniChar* chars, long length, TextOptions* options, TextLayout* layout);	// ROM 0x0035b6d8 JustifyText__Fl

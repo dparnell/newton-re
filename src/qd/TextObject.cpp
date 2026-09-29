@@ -162,7 +162,7 @@ HostLayOut(TextObject* obj, TextLayout* layout, Fixed* start)
 		return false;
 	}
 	const UniChar* chars = (const UniChar*) obj->fText;
-	long fitted = MeasureGlyphWidths(chars, length, obj->fStyles, obj->fRunLengths, obj->fOptions, layout, GetCurrentPort());
+	long fitted = MeasureGlyphWidths(chars, length, obj->fStyles, obj->fRunLengths, obj->fOptions, layout, GetCurrentPort(), 0x10000, 0x10000, obj->fFlags);
 	if (fitted < length)
 	{
 		layout->fWidth = 0;

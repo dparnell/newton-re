@@ -18,6 +18,7 @@
 #include "TextObject.h"
 #include "TextLayout.h"
 #include "Draw.h"
+#include "ByteOrder.h"
 #include "FixedMath.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
@@ -128,8 +129,10 @@ GlyphRgn(const FontEngineInfo* info, long left, long top, long slabBottom)
 // text is cut before the first character that would cross it, the width
 // so far kept in the options.  ==> the count that fits.
 long
-MeasureGlyphWidths(const UniChar* chars, long length, StyleRecord** styles, const short* runLengths, TextOptions* options, TextLayout* layout, GrafPort* port, Fixed hScale, Fixed vScale)
+MeasureGlyphWidths(const UniChar* chars, long length, StyleRecord** styles, const short* runLengths, TextOptions* options, TextLayout* layout, GrafPort* port, Fixed hScale, Fixed vScale, ULong objFlags)
 {
+	// (an object flagged both 0x40000 and 0x10000 is measured whole)
+	Boolean noFit = (objFlags & 0x40000) != 0 && (objFlags & 0x10000) != 0;
 	long fitted = length;
 	Fixed limit = (options != nil) ? options->fWidth : 0;
 	if (options != nil)
@@ -162,7 +165,7 @@ MeasureGlyphWidths(const UniChar* chars, long length, StyleRecord** styles, cons
 			// the advances kept being the strike's own.  The host tests the
 			// strike's advances, which the paragraphs' line breaking (and
 			// test_Views' style runs, espy 18 stretched from 16) rely on.
-			if (limit != 0 && index < fitted && width + advance > limit)
+			if (limit != 0 && !noFit && index < fitted && width + advance > limit)
 				fitted = index;
 			width += advance;
 			if (chars[index] == kSpace)
@@ -256,7 +259,7 @@ LayOutText(TextObject* obj, TextBoundsInfo* bounds, Boolean draw, Fixed hScale =
 	TextLayout layout;
 	layout.fAdvances = advances;
 	layout.fRuns = runs;
-	long fitted = MeasureGlyphWidths(chars, length, styles, runLengths, options, &layout, port, hScale, vScale);
+	long fitted = MeasureGlyphWidths(chars, length, styles, runLengths, options, &layout, port, hScale, vScale, obj->fFlags);
 	if (fitted < length)
 	{
 		// the characters beyond the width are dropped from the layout
@@ -395,8 +398,12 @@ DispatchCalcBounds(TextObjectRef text, TextBoundsInfo* bounds)
 // through the port's text proc when asked, which records it into an open
 // picture as well, then measured for the bounds when they are wanted.
 // ==> its length after the layout (the characters that fit a width).
-// NOT YET RECONSTRUCTED: the options' transfer modes 9 and 10 (a flag of
-// the layout's, and 10 dropping the options).
+//
+// The options' fFittedWidth, before the layout writes it, is a selector
+// too: 9 flags the object 0x40000 - which, with the flag 0x10000 that
+// SetTextObjField's field 8 sets, has MeasureGlyphWidths fit nothing (a
+// one-use object never has that one, so here it changes nothing) - and 10
+// flags it the same and drops the options altogether.
 long
 DoTextOnce(const void* text, long length, StyleRecord** styles, const short* runLengths, FPoint where, TextOptions* options, TextBoundsInfo* bounds, Boolean draw)
 {
@@ -409,6 +416,16 @@ DoTextOnce(const void* text, long length, StyleRecord** styles, const short* run
 	obj.fStyles = styles;
 	obj.fRunLengths = runLengths;
 	obj.fLocation = where;
+	if (options != nil)
+	{
+		if (options->fFittedWidth == 9)
+			obj.fFlags |= 0x40000;
+		else if (options->fFittedWidth == 10)
+		{
+			obj.fFlags |= 0x40000;
+			options = nil;
+		}
+	}
 	obj.fOptions = options;
 	// (the ROM makes its two caches here, as temporary blocks, for a text
 	//  of up to 0x80 characters; the host has none - DEVIATION)
@@ -652,15 +669,54 @@ ConvertToQDFlush(ULong justify, Fixed* justification)
 }
 
 
+// (host) One character of the text as the break table classes it: its
+// Mac Roman byte, looked up in the class table (a signed byte).
+static long
+BreakClass(const UniChar* ch, const unsigned char* classTable)
+{
+	unsigned char bytes[2] = { 0, 0 };
+	ConvertFromUnicode(ch, bytes, kMacRomanEncoding, 1);
+	return (signed char) classTable[bytes[0]];
+}
+
+
+// (host) A step of one of the table's state machines: the row the state
+// names (a halfword offset at table + state), the class's entry in it - a
+// signed byte whose top bit marks the position and whose low seven bits
+// are the next state (nought: the word has ended).
+static long
+BreakStep(const unsigned char* table, long state, long cls, Boolean* marked)
+{
+	const unsigned char* row = table + GetBigEndianHalf(table + state);
+	long next = (signed char) row[cls];
+	*marked = next < 0;
+	if (next < 0)
+		next = (short) (next & 0x7f);
+	return next;
+}
+
+
 // ROM 0x000ec09c FindWordBreaks__FPUsUlT2Uc6RefVarPUlT6
 // The word around the offset: wordStart and wordEnd (offsets into the
-// text).  The ROM classifies the characters through the locale's
-// lineBreakTable (a binary: a class per character, a state machine for
-// breaking before and after); the host breaks at spaces and carriage
-// returns (DEVIATION: the table).  Not forward: the character before the
-// offset is the one looked at.
+// text), found by the locale's break table - the Macintosh Script
+// Manager's kind: a binary whose header gives a class table (a class per
+// Mac Roman character, at the halfword +4), a backward state machine (+8)
+// and a forward one (+0xa), and how far from the start the backward scan
+// is not worth doing (+0xc).  Not forward: the character before the offset
+// is the one looked at.  The backward machine runs from the offset towards
+// the start (state 2), marking where the word may begin, until it answers
+// state 0; the forward one runs from the mark (state 2), marking where it
+// may end - a word that ends at or before the offset starts the scan again
+// from its end, one that ends beyond it is the answer.
+//
+// ROM BUGS, kept: the backward scan answers a mark it never made (whatever
+// the register held) when its machine stops before marking anything, and
+// the forward scan that runs off the end answers an end it never marked
+// (host: the start of the text, for both - DEVIATION, a register's garbage
+// cannot be reproduced).  DEVIATION: with no table (a host without the
+// locale's) the word runs between spaces and carriage returns.
 void
-FindWordBreaks(const UniChar* text, ULong length, ULong offset, Boolean forward, RefArg /*breakTable*/, ULong* wordStart, ULong* wordEnd)
+FindWordBreaks(const UniChar* text, ULong length, ULong offset, Boolean forward, RefArg breakTable, ULong* wordStart, ULong* wordEnd)
 {
 	if (text == nil || length == 0)
 	{
@@ -668,22 +724,98 @@ FindWordBreaks(const UniChar* text, ULong length, ULong offset, Boolean forward,
 		*wordEnd = 0;
 		return;
 	}
-	if (!forward && offset > 0)
+	if (!IsBinary(breakTable))
+	{
+		if (!forward && offset > 0)
+			offset--;
+		if (offset >= length)
+		{
+			*wordStart = length;
+			*wordEnd = length;
+			return;
+		}
+		ULong start = offset;
+		while (start > 0 && text[start - 1] != kSpace && text[start - 1] != kCarriageReturn)
+			start--;
+		ULong end = offset;
+		while (end < length && text[end] != kSpace && text[end] != kCarriageReturn)
+			end++;
+		*wordStart = start;
+		*wordEnd = end;
+		return;
+	}
+	if (!forward)
 		offset--;
+	const UniChar* textEnd = text + length;
+	const UniChar* wordBegin = text;			// (r5: host, the start - see above)
+	const UniChar* wordStop = text;				// (r10)
+	const UniChar* mark = text;					// (r9)
 	if (offset >= length)
 	{
 		*wordStart = length;
 		*wordEnd = length;
 		return;
 	}
-	ULong start = offset;
-	while (start > 0 && text[start - 1] != kSpace && text[start - 1] != kCarriageReturn)
-		start--;
-	ULong end = offset;
-	while (end < length && text[end] != kSpace && text[end] != kCarriageReturn)
-		end++;
-	*wordStart = start;
-	*wordEnd = end;
+	const unsigned char* table = (const unsigned char*) BinaryData(breakTable);
+	const unsigned char* classTable = table + GetBigEndianHalf(table + 4);
+	const unsigned char* backTable = table + GetBigEndianHalf(table + 8);
+	const unsigned char* forwardTable = table + GetBigEndianHalf(table + 0xa);
+	const UniChar* at = text + offset;
+	Boolean marked;
+	if (offset < 0x8000 && (short) GetBigEndianHalf(table + 0xc) > (short) offset)
+		wordBegin = text;
+	else
+	{
+		long state = 2;
+		const UniChar* p = at;
+		for (; p > text; p--)
+		{
+			state = BreakStep(backTable, state, BreakClass(p, classTable), &marked);
+			if (marked)
+				wordBegin = p;
+			if (state == 0)
+				break;
+		}
+		if (p <= text)
+			wordBegin = text;
+	}
+	const UniChar* p = wordBegin;
+	long state = 2;
+	if (wordBegin <= textEnd)
+	{
+		do
+		{
+			const UniChar* here = p;
+			unsigned char bytes[2] = { 0, 0 };
+			if (p < textEnd)
+				ConvertFromUnicode(p, bytes, kMacRomanEncoding, 1);
+			p++;
+			long cls = (signed char) classTable[bytes[0]];
+			if (p > textEnd)
+				cls = 0;
+			state = BreakStep(forwardTable, state, cls, &marked);
+			if (marked)
+				mark = here;
+			if (state == 0)
+			{
+				if (mark > at)
+				{
+					wordStop = mark;
+					break;
+				}
+				wordBegin = mark;
+				p = mark;
+				state = 2;
+			}
+			else if (p > textEnd)
+			{
+				wordStop = mark;
+				break;
+			}
+		} while (p <= textEnd);
+	}
+	*wordStart = (ULong) (wordBegin - text);
+	*wordEnd = (ULong) (wordStop - text);
 }
 
 

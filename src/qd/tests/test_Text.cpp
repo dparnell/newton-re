@@ -249,6 +249,45 @@ TestItalic()
 }
 
 
+// Word breaks by the U.S. locale's lineBreakTable (the ROM's 'Intl binary
+// 0x4a4209): the word a line may break around, found by the table's two
+// state machines.
+static void
+TestWordBreaks()
+{
+	RefVar table(TranslateROMRef(0x004a4209));
+	EXPECT(IsBinary(table));
+	UniChar text[32];
+	ConvertToUnicode("Hello World again", text, kMacRomanEncoding, 31);
+	ULong length = Ustrlen(text);
+	// forward: the word the offset is in - a run of letters, or the space
+	// between two (a word of its own); not forward: the character before
+	// it (at 0 the offset wraps round and answers the end)
+	// forward: the word the offset is in - a run of letters, or the space
+	// between two (a word of its own); not forward: the character before
+	// it (at 0 the offset wraps round and answers the end)
+	const ULong offsets[] = { 0, 3, 5, 6, 8, 11, 12, 16 };
+	const ULong forwards[][2] = { { 0, 5 }, { 0, 5 }, { 5, 6 }, { 6, 11 }, { 6, 11 }, { 11, 12 }, { 12, 17 }, { 12, 17 } };
+	const ULong backwards[][2] = { { 17, 17 }, { 0, 5 }, { 0, 5 }, { 5, 6 }, { 6, 11 }, { 6, 11 }, { 11, 12 }, { 12, 17 } };
+	for (unsigned long i = 0; i < sizeof(offsets) / sizeof(offsets[0]); i++)
+	{
+		ULong start, end;
+		FindWordBreaks(text, length, offsets[i], true, table, &start, &end);
+		EXPECT(start == forwards[i][0] && end == forwards[i][1]);
+		FindWordBreaks(text, length, offsets[i], false, table, &start, &end);
+		EXPECT(start == backwards[i][0] && end == backwards[i][1]);
+	}
+	// several spaces are one word of their own: "hello   world" at 6 is the
+	// spaces, 5..8; looking back from "again" the word is the space before it
+	ConvertToUnicode("hello   world again", text, kMacRomanEncoding, 31);
+	ULong a, b;
+	FindWordBreaks(text, 19, 6, true, table, &a, &b);
+	EXPECT(a == 5 && b == 8);
+	FindWordBreaks(text, 19, 14, false, table, &a, &b);
+	EXPECT(a == 13 && b == 14);
+}
+
+
 static void
 TestNatives()
 {
@@ -458,6 +497,7 @@ main()
 		TestFonts();
 		TestDrawing();
 		TestItalic();
+		TestWordBreaks();
 		TestNatives();
 		TestLayout();
 		TestStyleTable();
