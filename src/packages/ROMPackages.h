@@ -45,6 +45,16 @@
 VAddr	GetRExConfigEntry(ULong rexId, ULong tag, ULong* size);		// ROM 0x0011ef10 GetRExConfigEntry
 VAddr	GetPackageList(ULong rexId);								// ROM 0x0011eeec GetPackageList
 
+// the entries of a tag one after another (*currentIndex starting at 0), and
+// the one in the highest-numbered extension that has one
+VAddr	PrimRExConfigEntry(ULong rexId, ULong tag, ULong* length);						// ROM 0x0011eddc PrimRExConfigEntry
+VAddr	PrimNextRExConfigEntry(ULong rexId, ULong tag, ULong* length, ULong* currentIndex);	// ROM 0x0011ee60 PrimNextRExConfigEntry
+VAddr	PrimLastRExConfigEntry(ULong tag, ULong* length);								// ROM 0x0011eda0 PrimLastRExConfigEntry
+VAddr	GetLastRExConfigEntry(ULong tag, ULong* length);								// ROM 0x0011ef44 GetLastRExConfigEntry
+
+// where extension rexId is in the ROM's address space, 0 if there is none
+ULong	RExAddress(ULong rexId);
+
 // Every package of every ROM extension's package list loaded.
 void	LoadHighROMFramesPackages(void);							// ROM 0x000e7040 LoadHighROMFramesPackages__Fv
 

@@ -16,6 +16,10 @@
 #include "Newton.h"
 #endif
 
+#ifndef __KERNELTYPES_H
+#include "KernelTypes.h"
+#endif
+
 extern "C" {
 void	SetDomainAccessControl(ULong access);		// two bits per domain: 01 client, 11 manager (see os600/kernel/Domain.h)
 
@@ -26,5 +30,18 @@ void	SetDomainAccessControl(ULong access);		// two bits per domain: 01 client, 1
 void	SetDomainRange(ULong base, ULong size, ULong domainNumber);
 void	ClearDomainRange(ULong base, ULong size);
 }
+
+// Map one 1 MB section of virtual space onto physical memory, without
+// the jump table's help (the internal flash's windows are made this
+// way: TNewInternalFlash::AlignAndMapVMRange).
+void	AddNewSecPNJT(VAddr virtualAddr, PAddr physicalAddr, ULong domain, Perm perm, UChar cacheable);	// ROM 0x0015a5dc AddNewSecPNJT__FUlN214PermUc
+
+// Where a virtual address that code outside the kernel was handed - one
+// of the windows AddNewSecPNJT made - is in memory.  On the machine
+// itself the MMU does this and the answer is the address; a port whose
+// memory is not the Newton's own answers where it keeps those bytes
+// (the host: hal/host/Host.h's HostRegisterPhysicalMemory), or nil for
+// an address nothing is mapped at.
+Ptr		VirtualAddressToPointer(VAddr virtualAddr);
 
 #endif	/* __HAL_MMU_H */

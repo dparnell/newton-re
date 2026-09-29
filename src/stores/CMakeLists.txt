@@ -37,3 +37,4 @@ target_link_libraries(stores PUBLIC newton_config protocols memory toolbox frame
 target_include_directories(stores PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(tests)
+add_subdirectory(flash)

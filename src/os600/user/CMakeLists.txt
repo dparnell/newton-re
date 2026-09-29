@@ -6,6 +6,7 @@ add_library(os600_user STATIC
     UserSharedMem.cpp
     UserPorts.cpp
     UserSemaphore.cpp
+    SemaphoreGrabber.cpp
     UserMonitor.cpp
     UserTasks.cpp
     UserDomain.cpp

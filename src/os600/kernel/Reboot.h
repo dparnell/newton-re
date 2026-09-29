@@ -21,6 +21,11 @@ const ULong kMaxUnsuccessfulBoots = 12;		// more than this and Reboot powers off
 
 NewtonErr	Reboot(NewtonErr error, ULong rebootType, Boolean safe);	// GenericSWI 28; safe: honour reboot protection
 void		Restart();													// GenericSWI 29
+
+// The machine turned off - everything powered down, the interrupts off -
+// and then rebooted with the error as the reason (safe).  What the flash
+// code does when it cannot trust the flash any longer.
+void		PowerOffAndReboot(NewtonErr error);							// ROM 0x000e6bbc PowerOffAndReboot__Fl
 void		CantThrowInUndefinedModeReboot();
 
 #endif	/* __REBOOT_H */

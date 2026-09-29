@@ -28,55 +28,138 @@
 #include "Soups.h"
 
 
+// The extensions' headers, found in the ROM's own bytes.
+//
+// DEVIATION: the ROM keeps a table of the four extensions' addresses
+// (0x0c1064ac, unnamed), filled at boot from what the loader found; the
+// host does not boot from the ROM, so it looks for each RExBlock header in
+// the ROM's own bytes, which the host keeps for exactly this
+// (frames/ROMImport.h's ROMRegion: the image, or the extension an object
+// file built from the ROM source tree carries) - on word boundaries, as
+// the signature's comment in ddk/ROMExtension.h says it is meant to be.
+// The header's words are big-endian, as everything in the image is.
+static const unsigned char*
+FindRExHeader(ULong rexId, ULong* romAddress, ULong* available)
+{
+	for (long region = 0; region < ROMRegionCount(); region++)
+	{
+		ULong base = 0, imageSize = 0;
+		const unsigned char* rom = (const unsigned char*) ROMRegion(region, &base, &imageSize);
+		if (rom == nil)
+			continue;
+		for (ULong at = (4 - (base & 3)) & 3; at + sizeof(RExHeader) <= imageSize; at += kARMWord)
+		{
+			if (GetBigEndianWord(rom + at) != kRExSignatureA || GetBigEndianWord(rom + at + 4) != kRExSignatureB)
+				continue;
+			if (GetBigEndianWord(rom + at + 0x1c) != rexId)		// the extension's id
+				continue;
+			if (romAddress != nil)
+				*romAddress = base + at;
+			if (available != nil)
+				*available = imageSize - at;
+			return rom + at;
+		}
+	}
+	return nil;
+}
+
+
+// Where extension rexId is in the ROM's address space (the ROM's table at
+// 0x0c1064ac), 0 when there is none.
+ULong
+RExAddress(ULong rexId)
+{
+	ULong address = 0;
+	return FindRExHeader(rexId, &address, nil) != nil ? address : 0;
+}
+
+
+// ROM 0x0011ee60 PrimNextRExConfigEntry
+// The next entry of the tag from *currentIndex on (an entry whose offset
+// is -1 has been taken out), and the index after it.
+// DEVIATION: the answer is where the host keeps the entry, in its copy of
+// the image (see FindRExHeader); the entry's words are big-endian there.
+VAddr
+PrimNextRExConfigEntry(ULong rexId, ULong tag, ULong* length, ULong* currentIndex)
+{
+	*length = 0;
+	if (rexId > 3)
+		return 0;
+	ULong available = 0;
+	const unsigned char* rex = FindRExHeader(rexId, nil, &available);
+	if (rex == nil)
+		return 0;
+	ULong count = GetBigEndianWord(rex + 0x24);
+	for (ULong i = *currentIndex; i < count; i++)
+	{
+		ULong entry = 0x28 + i * 3 * kARMWord;
+		if (entry + 3 * kARMWord > available)
+			break;
+		if (GetBigEndianWord(rex + entry) != tag || GetBigEndianWord(rex + entry + kARMWord) == 0xFFFFFFFF)
+			continue;
+		*length = GetBigEndianWord(rex + entry + 2 * kARMWord);
+		*currentIndex = i + 1;
+		// the offset is from the extension's start
+		return (VAddr) (rex + GetBigEndianWord(rex + entry + kARMWord));
+	}
+	return 0;
+}
+
+
+// ROM 0x0011eddc PrimRExConfigEntry
+// The first entry of the tag in extension rexId.
+VAddr
+PrimRExConfigEntry(ULong rexId, ULong tag, ULong* length)
+{
+	ULong index = 0;
+	return PrimNextRExConfigEntry(rexId, tag, length, &index);
+}
+
+
+// ROM 0x0011eda0 PrimLastRExConfigEntry
+// The entry of the tag in the highest-numbered extension that has one.
+VAddr
+PrimLastRExConfigEntry(ULong tag, ULong* length)
+{
+	for (long rexId = 3; rexId >= 0; rexId--)
+	{
+		VAddr entry = PrimRExConfigEntry((ULong) rexId, tag, length);
+		if (entry != 0)
+			return entry;
+	}
+	return 0;
+}
+
+
+// ROM 0x0011ef44 GetLastRExConfigEntry
+// The ROM asks the kernel (generic system call 0x41) from user mode and
+// goes straight to PrimLastRExConfigEntry in a privileged one; the host
+// always goes straight there (the kernel has no table: see FindRExHeader).
+VAddr
+GetLastRExConfigEntry(ULong tag, ULong* length)
+{
+	return PrimLastRExConfigEntry(tag, length);
+}
+
+
 // ROM 0x0011ef10 GetRExConfigEntry
 // The ROM does a generic system call (0x3b) and the kernel answers out of
 // the extension headers the loader found at boot.
 //
 // DEVIATION: the host does not boot from the ROM, so the kernel has no
 // such table (os600/kernel/GenericSWI.cpp answers
-// kError_Call_Not_Implemented for that selector).  The extensions are
-// found in the ROM's own bytes instead, which the host keeps for exactly
-// this (frames/ROMImport.h's ROMRegion: the image, or the extension an
-// object file built from the ROM source tree carries); a RExBlock header
-// is looked for on word boundaries, as the signature's comment in
-// ddk/ROMExtension.h says it is meant to be.  The answer is where the
-// entry is in the host's copy of the image - the address the package
-// manager and the frames part handlers read it at - rather than its ROM
-// address.
+// kError_Call_Not_Implemented for that selector); the entry is found as
+// PrimRExConfigEntry finds it, in the host's copy of the image - the
+// address the package manager and the frames part handlers read it at -
+// rather than at its ROM address.
 VAddr
 GetRExConfigEntry(ULong rexId, ULong tag, ULong* size)
 {
+	ULong length = 0;
+	VAddr entry = PrimRExConfigEntry(rexId, tag, &length);
 	if (size != nil)
-		*size = 0;
-	for (long region = 0; region < ROMRegionCount(); region++)
-	{
-	ULong base = 0, imageSize = 0;
-	const unsigned char* rom = (const unsigned char*) ROMRegion(region, &base, &imageSize);
-	if (rom == nil)
-		continue;
-	for (ULong at = (4 - (base & 3)) & 3; at + sizeof(RExHeader) <= imageSize; at += kARMWord)
-	{
-		if (GetBigEndianWord(rom + at) != kRExSignatureA || GetBigEndianWord(rom + at + 4) != kRExSignatureB)
-			continue;
-		if (GetBigEndianWord(rom + at + 0x1c) != rexId)		// the extension's id
-			continue;
-		ULong count = GetBigEndianWord(rom + at + 0x24);
-		ULong table = at + 0x28;
-		for (ULong i = 0; i < count; i++)
-		{
-			ULong entry = table + i * 3 * kARMWord;
-			if (entry + 3 * kARMWord > imageSize)
-				break;
-			if (GetBigEndianWord(rom + entry) != tag)
-				continue;
-			if (size != nil)
-				*size = GetBigEndianWord(rom + entry + 2 * kARMWord);
-			// the offset is from the extension's start
-			return (VAddr) (rom + at + GetBigEndianWord(rom + entry + kARMWord));
-		}
-	}
-	}
-	return 0;
+		*size = length;
+	return entry;
 }
 
 

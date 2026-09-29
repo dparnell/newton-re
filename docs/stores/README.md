@@ -854,11 +854,17 @@ transcribed; below it, the host stands in.
   - a block erase to 0xFF, taking no time.
 
   This lives in `hal/host/HostFlash.h`: a flash bank over a file.
-  `TFlashRange` and `T28F016_SA_SVDriver` are transcribed down to the
-  point where they touch the chips; a host `TFlashDriver` does those
-  touches on the bank. That keeps `TNewInternalFlash`'s bank mapping, the
-  reserved blocks and the logical-to-physical layout exactly the ROM's,
-  so the file is the flash as the machine would hold it.
+  `TFlashRange` is transcribed down to the point where it hands a word
+  or a block to the chips' driver. `T28F016_SA_SVDriver` is not: it *is*
+  the chips' command set (page-buffer loads, block erases polled through
+  the status registers), so a host `TFlashDriver`
+  (`stores/flash/host/HostFlashDriver.cpp`) stands in its place and does
+  what the commands come to on the bank. It identifies the chips as the
+  ROM's driver identifies an MP2x00's - two 16-bit Intel 28F016SA parts
+  (0x89/0x66A0, 2 MB each in 64 KB blocks) on a 32-bit bus - so the
+  ranges, the 128 KB erase regions, the reserved region and the
+  logical-to-physical layout are exactly the ROM's, and the file is the
+  flash as the machine would hold it.
 - **The sockets.** `hal/host/HostCardSocket.h` stands for the PCMCIA
   controller:
   - card detect and card lock as the host inserts and removes;
@@ -904,7 +910,10 @@ level, and its two files are simple.
 
 Each step comes with its host tests.
 
-1. **The flash, from the chips up.** `hal/host/HostFlash.h` (a bank over a
+1. **The flash, from the chips up.** DONE (2026-09-30) -
+   `stores/flash/Flash.h`, "The internal flash" below; ctest
+   `stores.Flash`.
+   `hal/host/HostFlash.h` (a bank over a
    file, with AND writes and erases), a host `TFlashDriver`, `TFlashRange`
    and its 8/16/32-bit forms, and `TNewInternalFlash`.
    - Test: `Read`/`Write`/`Erase` through `TFlash` land in the file where
@@ -945,6 +954,61 @@ Each step comes with its host tests.
 
 `THostStore` stays for the unit tests that want a store without a flash
 under it.
+
+## The internal flash
+
+`stores/flash/` (library `flash`) is the flash the flash store will sit
+on: the `TFlash` and `TFlashDriver` protocols, the ranges of chips and
+`TNewInternalFlash` - all of it reconstructed but the chips' driver.
+
+**Finding the chips.** `TNewInternalFlash::InternalInit` asks each driver
+(the ROM extensions' 'fdrv entries, then the ROM's own) what answers at
+the flash bank's write window, 0x34000000 - first a pair of 16-bit chips
+on the two halves of the bus, then four 8-bit ones, then each half on its
+own - and makes a `TFlashRange` for what it finds: a `T32BitFlashRange`
+for a full bus, `T16Bit`/`T8Bit` for a half or a lane. A second bank in
+I/O space at 0x10000000 is tried too, unless an 'flsa entry forbids it or
+a ROM extension already lives there. Each range gets a read window from
+0x30000000 up (cached) and a write window from 0x34000000 up (uncached;
+twice or four times as wide for a narrow range, since each word of the
+bus then carries two bytes or one), mapped a megabyte at a time - but
+only by the instance the boot makes (`kMapWindows`, InitCGlobals through
+`InitForReservedBlock`); the one the store uses (`Init`) relies on those
+mappings. The range's erase unit is a block of every chip at once: 128 KB
+on an MP2x00.
+
+**Regions.** The first erase region is the reserved block (calibration,
+patches - `TReservedBlockAccessor`, NOT YET) and is taken out of the flash
+addresses. The rest are *regions*, one of which is always the spare. Each
+region starts with four bytes of the flash's own: the logical region it
+holds (big-endian) and 0x00FF. `Init` reads them into a map
+(`GatherBlockMappingInfo`); `Erase` of a logical region marks its region
+0x000F, gives the spare its logical number, wipes the old header to
+nought, points the map at the spare and starts erasing the old region in
+the background - which becomes the new spare. A start after an
+interruption finishes what was left (`SetupVirtualMappings`); a flash
+that makes no sense is wiped into regions 0..n-2 with the last the spare
+(`Clobber`), and `Init` answers `kSError_NeedsFormat` so the store
+formats it. So what the store sees is `GetTotalSize` bytes - on an MP2x00
+4 MB less the reserved region and the spare, 3.75 MB - whose every
+region begins with four bytes it must leave alone.
+
+**The host's chips.** `hal/host/HostFlash.h` keeps the bank in a file in
+Einstein's layout (bank 1 at offset 0, bank 2 after it in an 8 MB file),
+writes through to it at every word and erase, and registers it as
+physical memory at 0x02000000; `AddNewSecPNJT` on the host records the
+section and `VirtualAddressToPointer` (`hal/MMU.h`) finds the bytes behind
+a window. The host's driver ANDs each word in and erases a block at once.
+`TBankControlRegister` (the bus width) and `InternalVppOn`/`Off` (the
+programming voltage) are `hal/Flash.h`, remembered or counted only.
+
+ROM bugs kept: `TBankControlRegister::ConfigureFlashBankDataSize` answers
+a positive 0x293b for lanes it cannot make a bus of; `TFlashRange::IsVirgin`
+answers "no" without `DoneReadingArray`; `TNewInternalFlash::IsVirgin`
+wraps a length shorter than a region's header; `CheckEraseCompletion`
+always says "not complete" on an instance with no lock; and an Erase
+interrupted between its first two writes is recovered into a state the
+next start wipes (`test_Flash` shows it; `docs/curiosities.md`).
 
 ## Not yet
 

@@ -51,6 +51,20 @@ TDelayTimer::GetHardwareTime()
 }
 
 
+// ROM 0x0008e948 ShortTimerDelay__FUl
+// The same busy wait without a timer object: spin until the free-running
+// timer has moved on by the delay.
+void
+ShortTimerDelay(THardwareTimeUnits delay)
+{
+	if (delay == 0)
+		return;
+	ULong start = FIQTimerCounter();
+	while (FIQTimerCounter() - start < delay)
+		;
+}
+
+
 // ROM 0x0008e9c8 ShortTimerDelay__11TDelayTimerFUl
 void
 TDelayTimer::ShortTimerDelay(THardwareTimeUnits delay)

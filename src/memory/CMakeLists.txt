@@ -5,6 +5,7 @@ add_library(memory STATIC
     SkiaHeap.cpp
     SafeHeap.cpp
     MemoryManager.cpp
+    MemoryAllocator.cpp
     host/KernelHeap.cpp
 )
 target_link_libraries(memory PUBLIC newton_config os600_user)

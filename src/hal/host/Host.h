@@ -30,4 +30,12 @@ extern ULong	gHostDomainAccess;
 extern Boolean	gHostPoweredOff;
 extern long		gHostInterruptLevel;	// > 0 while an interrupt is being delivered: the processor is in IRQ/FIQ mode, IsSuperMode answers true
 
+// Physical memory a host device keeps (a flash bank), for
+// VirtualAddressToPointer (hal/MMU.h) to find behind a mapped section;
+// HostClearSections forgets every section AddNewSecPNJT recorded (a test
+// starting afresh).
+void			HostRegisterPhysicalMemory(PAddr base, ULong size, Ptr memory);
+void			HostUnregisterPhysicalMemory(PAddr base);
+void			HostClearSections(void);
+
 #endif	/* __HAL_HOST_H */

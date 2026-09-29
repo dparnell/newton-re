@@ -2249,3 +2249,27 @@ has a password at all: `StoreSetPassword` (ROM 0x003527f4) refuses it by
 answering nil.
 
 Ported as it is, with the key in `stores/Soups.cpp`.
+
+---
+
+## A flash erase that, interrupted at the wrong moment, loses everything a start later
+
+The internal flash (`stores/flash/InternalFlash.cpp`) never erases a
+region in place. `TNewInternalFlash::Erase` (ROM 0x0013c10c) swaps the
+region with a spare in three writes to their four-byte headers: the old
+region is marked 0x000F ("giving itself up"), the spare is given the
+logical region's number, and the old header is wiped to nought. The old
+region is then erased in the background and becomes the new spare. At
+every start `SetupVirtualMappings` (ROM 0x0013b214) reads the headers and
+finishes whatever an interruption left half done, accepting only five
+combinations of oddities - kept as the string `"011110000001"` on its
+stack and indexed by a four-bit mask.
+
+One of the five, 11, is what the power failing between the first two
+writes leaves: a marked region, the spare still erased, and a logical
+region that no header claims. The recovery erases the marked region and
+makes it the spare - but leaves the old spare erased as well, and the
+logical region with nowhere to live. Nothing is lost yet. At the *next*
+start the headers show two erased regions, which is not one of the five,
+and the whole flash is wiped (`Clobber`) and the store told to format.
+`test_Flash` walks through it. Ported as it is.

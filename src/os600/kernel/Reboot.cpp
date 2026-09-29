@@ -83,3 +83,15 @@ Restart()
 	EnterFIQAtomic();
 	Reset();
 }
+
+
+// ROM 0x000e6bbc PowerOffAndReboot__Fl
+// DEVIATION: the ROM first turns the machine off - FIQs off, every I/O
+// power supply off, the interrupts disabled, the GPIO interface reset so
+// that only the power switch wakes it, PowerOffSystem - which on a host
+// is nothing; then it reboots as here.
+void
+PowerOffAndReboot(NewtonErr error)
+{
+	Reboot(error, 0, true);
+}
