@@ -286,6 +286,17 @@ public:
 	void			WriteSoupIDs(void);
 	void			WriteChangedIDs(void);
 
+	// making, sending and backing up soups
+	void			CreateSoup(void);
+	void			CreateSoupFromSoupDef(void);
+	Ref				GetBackupCursor(void);
+	void			CheckCancel(ULong* lastLook);
+	void			SendSoup(void);
+	void			FinishSequence(short* count, short value);
+	Boolean			SoupChangedSinceLastBackup(void);
+	void			ClearSoupDirty(void);
+	void			BackupSoup(void);
+
 	void			ProcessCommand(Boolean* done, Boolean* operationDone);
 	Boolean			CheckProtocolExtension(ULong command, Boolean* result);
 	Boolean			CheckProtocolPatch(ULong command, Boolean* result);

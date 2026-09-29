@@ -67,10 +67,24 @@ class DockSession:
         return data
 
     def read_command(self):
-        """The next command: (its four characters, its data)."""
+        """The next command: (its four characters, its data).  A 'bids'
+        (a backup's ids: its length 0xffffffff) is read as the halfwords up
+        to its 0x8000; a 'base' carries its id where the length goes."""
         newt, dock, cmd, length = struct.unpack(">4s4s4sI", self._read(16))
         if newt != b"newt" or dock != b"dock":
             raise RuntimeError("not a dock header: %r %r" % (newt, dock))
+        if cmd == b"bids":
+            data = bytearray()
+            while True:
+                half = self._read(2)
+                data += half
+                if half == b"\x80\x00":
+                    break
+            print("dock.py: <- bids (%d bytes)" % len(data))
+            return cmd, bytes(data)
+        if cmd == b"base":
+            print("dock.py: <- base %d" % length)
+            return cmd, struct.pack(">I", length)
         data = self._read(length)
         if length & 3:
             self._read(4 - (length & 3))
@@ -196,6 +210,45 @@ class DockSession:
               % (result, count3, end, "all right" if ok else "WRONG"))
         return ok
 
+    def backup_a_soup(self, soup="dock.py test"):
+        """In a session: a soup made ('csop'), three entries added, and it
+        backed up ('bksp': their ids, the desktop's time being later than
+        they were made) and sent ('snds': the entries), then removed
+        ('dsou').  ==> True if it all came out as it should."""
+        ok = True
+        reply, data = self.word(b"stme", struct.pack(">I", 0x1ffffff0))
+        name = (soup + "\0").encode("utf-16-be")
+        self.write_command(b"csop", struct.pack(">I", len(name)) + name + b"\0" * ((4 - len(name) % 4) % 4)
+                           + nsof.encode([]))
+        # (the length word, the name padded, then the indexes: the command's
+        # length covers them all)
+        result = struct.unpack(">i", self.expect(b"dres")[:4])[0]
+        print("dock.py: soup %r made: %d" % (soup, result))
+        ids = [self.word(b"adde", nsof.encode({Symbol("n"): i}))[1] for i in range(3)]
+        print("dock.py: entries %s added" % ids)
+        self.write_command(b"bksp")
+        cmd, data = self.read_command()
+        runs = []
+        while cmd != b"bsdn":
+            if cmd == b"bids":
+                runs.append(list(struct.unpack(">%dh" % (len(data) // 2), data)))
+            cmd, data = self.read_command()
+        expected = [[ids[0], -2, -0x8000]] if ids == list(range(ids[0], ids[0] + 3)) else None
+        print("dock.py: the backup sent ids %s" % runs)
+        ok = ok and runs == expected
+        self.write_command(b"snds")
+        sent = []
+        cmd, data = self.read_command()
+        while cmd != b"bsdn":
+            sent.append(nsof.decode(data).get(Symbol("n")))
+            cmd, data = self.read_command()
+        print("dock.py: the soup sent entries %s" % sent)
+        ok = ok and sent == [0, 1, 2]
+        self.write_command(b"dsou")
+        result = struct.unpack(">i", self.expect(b"dres")[:4])[0]
+        print("dock.py: soup removed: %d; backup %s" % (result, "all right" if ok and result == 0 else "WRONG"))
+        return ok and result == 0
+
     def load_packages(self, packages, session=False):
         """The package loader's session, or (session) a docking session
         that loads the packages.  ==> the results, one a package."""
@@ -206,6 +259,8 @@ class DockSession:
             self.look_at_stores()
             if not self.look_at_entries():
                 raise RuntimeError("the entry commands went wrong")
+            if not self.backup_a_soup():
+                raise RuntimeError("the backup commands went wrong")
         results = []
         for path in packages:
             with open(path, "rb") as f:

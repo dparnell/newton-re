@@ -47,6 +47,7 @@ extern const ExceptionName exLongErrorException;
 extern const ExceptionName exErrorException;
 extern const ExceptionName exFrames;
 extern const ExceptionName exOutOfMemory;
+extern const ExceptionName exNoSoupDefException;
 
 
 
@@ -2681,14 +2682,326 @@ TDocker::WriteChangedIDs(void)
 }
 
 
+// ------------------------------------------------------------------------
+//	Making, sending and backing up soups
+// ------------------------------------------------------------------------
+
+// DEVIATION: a soup name the desktop sends is big-endian UniChars; the host
+// turns it round in place
+static UniChar*
+DeviceString(Ptr data, ULong length)
+{
+	UniChar* chars = (UniChar*) data;
+	for (ULong i = 0; i < length / sizeof(UniChar); i++)
+		chars[i] = (UniChar) (((UByte*) data)[i * 2] << 8 | ((UByte*) data)[i * 2 + 1]);
+	return chars;
+}
+
+
+// ROM 0x000988a4 CreateSoup__7TDockerFv
+// 'csop': a soup of the name (its length first) with the indexes that
+// follow made on the current store, unless there is one, and made the
+// current soup.  ==> 'dres' (with none, only fError: kDockErrNoCurrentSoup).
+void
+TDocker::CreateSoup(void)
+{
+	unsigned long length;
+	*fPipe >> length;
+	Ptr data = ReadString(length);
+	newton_try
+	{
+		RefVar name(MakeString(DeviceString(data, length)));
+		RefVar indexes(ReadRef(fCurrentStore));
+		fCurrentSoup = StoreGetSoup(fCurrentStore, name);
+		if (ISNIL(fCurrentSoup))
+		{
+			fCurrentSoup = StoreCreateSoup(fCurrentStore, name, indexes);
+			if (NOTNIL(fCurrentSoup))
+				AddChangedSoup(RefVar(RSSYMchanged), 1);
+		}
+	}
+	newton_catch_all
+	{
+		DisposPtr(data);
+		rethrow;
+	}
+	end_try;
+	DisposPtr(data);
+	if (ISNIL(fCurrentSoup))
+		fError = kDockErrNoCurrentSoup;
+	else
+	{
+		SetupSoup();
+		WriteResult(fError);
+	}
+}
+
+
+// ROM 0x00098a00 CreateSoupFromSoupDef__7TDockerFv
+// 'cdsp': the soup of the name made from its registered soupDef
+// (CreateUSoupMember), unless there is one; a soup no soupDef describes is
+// not an error here.  ==> 'dres' (-28015 for no soup).
+void
+TDocker::CreateSoupFromSoupDef(void)
+{
+	Ptr data = ReadString(fLength);
+	newton_try
+	{
+		newton_try
+		{
+			RefVar name(MakeString(DeviceString(data, fLength)));
+			fCurrentSoup = StoreGetSoup(fCurrentStore, name);
+			if (ISNIL(fCurrentSoup))
+			{
+				fCurrentSoup = NSCallGlobalFn(RefVar(RSSYMcreateusoupmember), name, fCurrentStore);
+				if (NOTNIL(fCurrentSoup))
+					AddChangedSoup(RefVar(RSSYMchanged), 1);
+			}
+		}
+		newton_catch_all
+		{
+			DisposPtr(data);
+			data = nil;
+			rethrow;
+		}
+		end_try;
+		DisposPtr(data);
+		data = nil;
+	}
+	newton_catch(exNoSoupDefException)
+	{ }
+	end_try;
+	long result;
+	if (ISNIL(fCurrentSoup))
+		result = kDockErrNoSuchSoup;
+	else
+	{
+		SetupSoup();
+		result = fError;
+	}
+	WriteResult(result);
+}
+
+
+// ROM 0x00099040 GetBackupCursor__7TDockerFv
+// A cursor over what a backup of the current soup takes: its entries, from
+// the start, or for the packages soup the packages GetBackupAllPackagesCursor
+// answers.
+Ref
+TDocker::GetBackupCursor(void)
+{
+	RefVar cursor;
+	if (ISNIL(fCurrentSoup))
+		Throw(exLongErrorException, (void*) (intptr_t) kDockErrNoCurrentSoup, nil);
+	else if (!fIsPackageSoup)
+	{
+		ValidateQuery();
+		CursorReset(fQuery);
+		cursor = fQuery;
+	}
+	else
+		cursor = NSCallGlobalFn(RefVar(RSSYMgetbackupallpackagescursor), fCurrentStore);
+	return cursor;
+}
+
+
+// ROM 0x00098f94 CheckCancel__7TDockerFRUl
+// During a long send: what the desktop sent read - 'opca' cancels it
+// (acknowledged, and kDockErrDisconnected thrown), anything else is thrown
+// away.
+// ROM BUG: it means to look at most every 90 ticks, but returns when 90
+// ticks HAVE passed since the last look - and the last look is only
+// recorded when it looks - so after the machine's first second and a half
+// it never looks at all, and a desktop cannot cancel a backup.
+void
+TDocker::CheckCancel(ULong* lastLook)
+{
+	ULong now = Ticks();
+	if (*lastLook + 90 <= now)
+		return;
+	*lastLook = now;
+	if (BytesAvailable(true) == 0)
+		return;
+	ReadDockerHeader(&fCommand, &fLength);
+	if (fCommand != kDOperationCanceled)
+	{
+		FlushCommand();
+		return;
+	}
+	Boolean done = false, operationDone = false;
+	ProcessCommand(&done, &operationDone);
+	Throw(exLongErrorException, (void*) (intptr_t) kDockErrDisconnected, nil);
+}
+
+
+// ROM 0x000990e0 SendSoup__7TDockerFv
+// 'snds': every entry a backup takes sent ('entr' each), then 'bsdn'.
+void
+TDocker::SendSoup(void)
+{
+	RefVar cursor(GetBackupCursor());
+	if (NOTNIL(cursor))
+	{
+		ULong lastLook = 0;
+		for (RefVar entry(CursorEntry(cursor)); NOTNIL(entry); entry = CursorNext(cursor))
+		{
+			CheckCancel(&lastLook);
+			if (ShouldBackupEntry(entry))
+				WriteEntry('entr', entry);
+		}
+	}
+	WriteDockerHeader('bsdn', true);
+	ClearSoupDirty();
+}
+
+
+// ROM 0x000991bc FinishSequence__7TDockerFRss
+// A run of ids in a 'bids' closed: the count of consecutive ids after its
+// first, negated, if there were any, and then the value (the next id, or
+// 0x8000 to end the list).
+void
+TDocker::FinishSequence(short* count, short value)
+{
+	if (*count > 0)
+	{
+		*fPipe << (short) -*count;
+		*count = 0;
+	}
+	*fPipe << value;
+}
+
+
+// ROM 0x00099218 SoupChangedSinceLastBackup__7TDockerFv
+// Whether the current soup must be backed up: not if it was backed up at
+// the desktop's time (or a minute later) and has not been dirtied since,
+// in which case the desktop is told 'ndir'.
+Boolean
+TDocker::SoupChangedSinceLastBackup(void)
+{
+	Boolean changed = true;
+	if (ISNIL(fCurrentSoup))
+		Throw(exLongErrorException, (void*) (intptr_t) kDockErrNoCurrentSoup, nil);
+	RefVar last(SoupGetInfo(fCurrentSoup, RSSYMncklastbackuptime));
+	if (NOTNIL(last))
+	{
+		ULong lastBackup = RINT(last);
+		if (fDesktopTime == lastBackup || fDesktopTime == lastBackup + 1)
+		{
+			RefVar flags(SoupGetFlags(fCurrentSoup));
+			if (NOTNIL(flags) && (RINT(flags) & 2) == 0)
+			{
+				changed = false;
+				WriteDockerHeader('ndir', true);
+			}
+		}
+	}
+	return changed;
+}
+
+
+// ROM 0x00099310 ClearSoupDirty__7TDockerFv
+// The current soup noted as backed up at the time the desktop set, and its
+// dirty flag cleared (not on a read-only store).
+void
+TDocker::ClearSoupDirty(void)
+{
+	if (ISNIL(StoreIsReadOnly(fCurrentStore)))
+	{
+		SoupSetInfo(fCurrentSoup, RSSYMncklastbackuptime, RefVar(MAKEINT(fTimeSet)));
+		RefVar flags(SoupGetFlags(fCurrentSoup));
+		if (NOTNIL(flags))
+			SoupSetFlags(fCurrentSoup, RefVar(MAKEINT(RINT(flags) & ~2)));
+	}
+}
+
+
+// ROM 0x000993c8 BackupSoup__7TDockerFv
+// 'bksp': the current soup backed up, if it changed since the last backup
+// - an entry changed since the desktop's time (or with an id above the one
+// the desktop gave, if it gave one) sent whole ('entr'), and the ids of
+// the others sent as runs ('bids': a first id, then for a run of the ids
+// after it their count negated, the next id, ..., and 0x8000 to end;
+// 'base' first when an id does not fit in a short); then 'bsdn'.
+// ROM BUG: the base 'base' announces is never kept - the ids after it are
+// still written less nought - so an id above 0x7fff is sent as its low
+// sixteen bits, and every later id makes another 'base'.
+void
+TDocker::BackupSoup(void)
+{
+	unsigned long maxID = 0x7fffffff;
+	if (fLength == 4)
+		*fPipe >> maxID;
+	if (SoupChangedSinceLastBackup())
+	{
+		RefVar cursor(GetBackupCursor());
+		if (NOTNIL(cursor))
+		{
+			ULong lastLook = 0;
+			short count = 0;
+			Boolean inSequence = false;
+			ULong previous = 0;
+			const ULong base = 0;
+			ULong id = 0;
+			for (RefVar entry(CursorEntry(cursor)); NOTNIL(entry); entry = CursorNext(cursor))
+			{
+				CheckCancel(&lastLook);
+				if (!ShouldBackupEntry(entry))
+					continue;
+				if ((ULong) EntryModTime(entry) < fDesktopTime && (ULong) EntryUniqueID(entry) <= maxID)
+				{
+					id = EntryUniqueID(entry);
+					Boolean start = !inSequence;
+					if (inSequence)
+					{
+						if (previous + 1 == id && count < 0x7fff)
+							count++;
+						else if (id - base > 0x7fff)
+						{
+							FinishSequence(&count, (short) -0x8000);
+							WriteDockerHeader('base', false);
+							*fPipe << (unsigned long) id;
+							start = true;
+						}
+						else
+							FinishSequence(&count, (short) (id - base));
+					}
+					if (start)
+					{
+						WriteDockerHeader('bids', false);
+						*fPipe << (unsigned long) 0xffffffff;
+						*fPipe << (short) (id - base);
+						inSequence = true;
+						count = 0;
+					}
+					previous = id;
+				}
+				else
+				{
+					if (inSequence)
+					{
+						inSequence = false;
+						FinishSequence(&count, (short) -0x8000);
+					}
+					WriteEntry('entr', entry);
+				}
+			}
+			if (inSequence)
+				FinishSequence(&count, (short) -0x8000);
+		}
+		WriteDockerHeader('bsdn', true);
+	}
+	ClearSoupDirty();
+}
+
+
 // ROM 0x000934b0 ProcessCommand__7TDockerFRUcT1
 // One of the desktop's commands carried out.  done: the session is over
 // ('disc'); operationDone: the operation the session was for is over, and
 // the command loop ends without disconnecting (an extension answered,
 // 'opca', 'opdn', a package loaded on protocol 10).
-// The stores', soups', cursors' and entries' commands are here too.  NOT
-// YET: the soup-creating, backup, package-list, patch, slip and function
-// commands - each is answered 'unkn' as a command the Newton does not know
+// The stores', soups', cursors' and entries' commands are here too, and
+// making, sending and backing up soups.  NOT YET: the package-list, patch,
+// slip and function commands - each is answered 'unkn' as a command the Newton does not know
 // is, which a desktop takes as a Newton too old to do it.
 void
 TDocker::ProcessCommand(Boolean* done, Boolean* operationDone)
@@ -2882,6 +3195,18 @@ TDocker::ProcessCommand(Boolean* done, Boolean* operationDone)
 			break;
 		case 'gcid':
 			WriteChangedIDs();
+			break;
+		case 'csop':
+			CreateSoup();
+			break;
+		case 'cdsp':
+			CreateSoupFromSoupDef();
+			break;
+		case 'snds':
+			SendSoup();
+			break;
+		case 'bksp':
+			BackupSoup();
 			break;
 		case kDSetTime:
 		{
