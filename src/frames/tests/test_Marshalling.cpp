@@ -8,6 +8,7 @@
 // sits on a four-byte boundary where a host compiler would want eight.
 
 #include "Marshalling.h"
+#include "Unicode.h"
 #include "ObjectHeap.h"
 #include "Frames.h"
 #include "ROMImport.h"
@@ -152,6 +153,41 @@ main()
 		EXPECT(MarshalArguments(args, type, block, sizeof(block), 0) == noErr);
 		static const unsigned char kExpected[6] = { 0x7f, 0, 0, 1, 0x12, 0x34 };
 		EXPECT(memcmp(block, kExpected, 6) == 0);
+
+		// and back, in the device's order: the array field an array again
+		long failed = 0;
+		RefVar back(ConstructReturnValueFromDevice(block, type, &failed, 0));
+		EXPECT(failed == 0 && IsArray(back) && Length(back) == 2);
+		RefVar a(GetArraySlotRef(back, 0));
+		EXPECT(IsArray(a) && Length(a) == 4 && RINT(GetArraySlotRef(a, 0)) == 127 && RINT(GetArraySlotRef(a, 3)) == 1);
+		EXPECT(RINT(GetArraySlotRef(back, 1)) == 0x1234);
+	}
+
+	// device-order words and an array of characters read as a string
+	{
+		alignas(4) static const unsigned char kBlock[12] = { 0xff, 0xff, 0xff, 0xfe, 'a', 'b', 'c', 0, 0x12, 0x34, 0, 0 };
+		RefVar chars(MakeArray(3));
+		SetArraySlot(chars, 0, RefVar(Intern((char*) "array")));
+		SetArraySlot(chars, 1, RefVar(Intern((char*) "char")));
+		SetArraySlot(chars, 2, MAKEINT(4));
+		RefVar type(MakeArray(4));
+		SetArraySlot(type, 0, RefVar(Intern((char*) "struct")));
+		SetArraySlot(type, 1, RefVar(Intern((char*) "long")));
+		SetArraySlot(type, 2, chars);
+		SetArraySlot(type, 3, RefVar(Intern((char*) "short")));
+		long failed = 0;
+		RefVar back(ConstructReturnValueFromDevice((void*) kBlock, type, &failed, kMacRomanEncoding));
+		EXPECT(failed == 0 && Length(back) == 3);
+		EXPECT(RINT(GetArraySlotRef(back, 0)) == -2);
+		RefVar s(GetArraySlotRef(back, 1));
+		EXPECT(IsString(s) && GetCString(s)[0] == 'a' && GetCString(s)[2] == 'c' && GetCString(s)[3] == 0);
+		EXPECT(RINT(GetArraySlotRef(back, 2)) == 0x1234);
+
+		// an aggregate that is neither a struct nor an array
+		RefVar bad(MakeArray(1));
+		SetArraySlot(bad, 0, RefVar(Intern((char*) "long")));
+		ConstructReturnValueFromDevice((void*) kBlock, bad, &failed, 0);
+		EXPECT(failed == kNSErrBadMarshalType);
 	}
 
 	// a long and a short packed, the long's word big-endian

@@ -24,10 +24,9 @@
 				that needs; only what a structure of scalars wants is here.
 
 	Reconstructed from the MP2x00 US ROM (0x000cd6cc-0x000ce38c); each
-	function cites its origin.  NOT YET RECONSTRUCTED: the marshalling
-	that goes the other way, the array aggregates (UnmarshalArray
-	0x000cdaf4), and the types that are pointers into the block -
-	'cstring, 'unicode, 'binary, 'ref and the split longs.
+	function cites its origin.  NOT YET RECONSTRUCTED: the types that are
+	pointers into the block - 'cstring, 'unicode, 'binary, 'ref and the
+	split longs.
 */
 
 #ifndef __MARSHALLING_H
@@ -82,6 +81,14 @@ Ref		UnmarshalStruct(void** bytes, RefArg type, long* failed, int encoding);	// 
 
 // What a system call's parameter block says, by its template.
 Ref		ConstructReturnValue(void* bytes, RefArg type, long* failed, int encoding);	// ROM 0x000cf7c0 ConstructReturnValue__FPvRC6RefVarPli
+
+// An ['array, type, count] template's values.
+Ref		UnmarshalArray(void** bytes, RefArg type, long* failed, int encoding);	// ROM 0x000cdaf4 UnmarshalArray__FPPvRC6RefVarPli
+
+// DEVIATION: the same over bytes in the MessagePad's (big-endian) order -
+// what came from a comm tool or a wire - where ConstructReturnValue reads
+// the host's, which is what a host parameter block is in.
+Ref		ConstructReturnValueFromDevice(void* bytes, RefArg type, long* failed, int encoding);
 
 // The marshalling's errors.
 enum

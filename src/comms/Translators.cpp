@@ -402,9 +402,9 @@ PScriptDataIn::ParseInput(FormType form, long encoding, long length, UByte* data
 
 		case kFormTemplate:
 			{
-				// NOT YET: ConstructReturnValue reads the host's byte order
-				// (frames/Marshalling.cpp), where what came is the device's
-				RefVar args(ConstructReturnValue(data, typelist, error, encoding));
+				// DEVIATION: read in the MessagePad's byte order, which is
+				// what came (the ROM's ConstructReturnValue reads its own)
+				RefVar args(ConstructReturnValueFromDevice(data, typelist, error, encoding));
 				if (*error == noErr)
 				{
 					if (IsArray(args))

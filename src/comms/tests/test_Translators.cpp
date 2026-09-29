@@ -239,7 +239,7 @@ TestOptions(void)
 		UByte* data = (UByte*) (ilpt + 1);
 		data[3] = 9;
 	}
-	RefVar flat(Eval("[{form: 'number}, {label: \"itrs\", data: {typelist: ['struct, 'byte, 'byte, 'byte, 'byte]}}, {form: 'number}, {form: 'binary}]"));
+	RefVar flat(Eval("[{form: 'number}, {label: \"itrs\", data: {typelist: ['struct, ['array, 'byte, 4], 'short]}}, {form: 'number}, {form: 'binary}]"));
 	parms.fFrame = flat;
 	parms.fXlator = source;
 	long err = noErr;
@@ -259,9 +259,9 @@ TestOptions(void)
 	EXPECT(RINT(GetFrameSlot(f1, RSSYMresult)) == kCommScriptOptionResultBase - 1);
 	RefVar d1(GetFrameSlot(f1, RSSYMdata));
 	RefVar args(GetFrameSlot(d1, RSSYMarglist));
-	// (the fields read a byte at a time: ConstructReturnValue cannot read an
-	// 'array, and reads words in the host's order - NOT YET)
-	EXPECT(IsArray(args) && Length(args) == 4 && RINT(GetArraySlotRef(args, 0)) == 0x7f && RINT(GetArraySlotRef(args, 3)) == 1);
+	EXPECT(IsArray(args) && Length(args) == 2 && RINT(GetArraySlotRef(args, 1)) == 0x1234);
+	RefVar address(GetArraySlotRef(args, 0));
+	EXPECT(IsArray(address) && Length(address) == 4 && RINT(GetArraySlotRef(address, 0)) == 0x7f && RINT(GetArraySlotRef(address, 3)) == 1);
 	RefVar f2(GetArraySlotRef(flat, 2));
 	EXPECT(ISNIL(GetFrameSlot(f2, RSSYMresult)) && RINT(GetFrameSlot(f2, RSSYMdata)) == 9);
 
