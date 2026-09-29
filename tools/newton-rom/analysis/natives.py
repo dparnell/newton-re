@@ -147,8 +147,18 @@ def read_registered(src):
 # in one place as areas are reconstructed.
 AREAS = OrderedDict((
     ('comms', r'AppleTalk|NBP|^CI|^FConn|Endpoint|Modem|^FSerial|Online|Remote'
-              r'|^Zap|Beam|IrDA|^FSetupTethered|NTK|^Fpkg|^FDES'),
-    ('books', r'Book|Topic|Kiosk|^FQuickLook|Bookmark|CurrentPage|CountPages'),
+              r'|^Zap|Beam|IrDA|^FSetupTethered|NTK|^Fpkg|^FDES'
+              # the endpoint wrapper's methods, the connection's, the comm
+              # configuration frames'
+              r'|^EW|^FProcessBuiltinCommand|^SendAbort$|^FSendCode$|^CF|^FTranslate$'
+              r'|^FGetNames__'),
+    ('books', r'Book|Topic|Kiosk|^FQuickLook|Bookmark|CurrentPage|CountPages'
+              # the book reader's methods (protoBook and the page views)
+              r'|^FindContentBy|^FindPageBy|^AddInkMarks$|^InkMarks$|^AuthorData$'
+              r'|^PreviousPage$|^TurnToContent$|^TurnToPage$|^PageContents$'
+              r'|^PageThumbnail$|^PageScroll$|^AddToContentArea$|^CuFind$'
+              r'|^ScrollToCurrent$|^HiliteBlock$|^ZoomView$'),
+    ('text', r'^FTX'),			# the text engine's protoTXView (src/text/)
     ('testing', r'^FTest|TestAgent|^FJournal|^FDebug|^FUriah|^FStdio|Sniffing'
                 r'|^FInitSerialDebugging|^FPreInitSerialDebugging|^FHobbleTablet'
                 r'|^FInsertTabletSample|BypassTablet'),
@@ -168,12 +178,16 @@ AREAS = OrderedDict((
                     r'|^FExtractRange$|^FHandleUnit|^FHandleRawInk'
                     r'|^FLookupCompletions|^FVoteOnWordUnit'),
     ('views', r'^FView|View|Caret|Hilite|Clipboard|KeyCommand|Popup|^FTie'
+              r'|^FDV$|^ReFlow$|^ReflowPreflight$|^FormatVertical__|RichString'
+              r'|^FSyncScroll|^FKeyboardInput|^FKeyHelpSlip|^FDisplaySplashGraphic$'
+              r'|^FGrayShrink$|^FComputeParagraphHeight$'
               r'|Paragraph|^FInsert|^FSetFont|^FGetFont|^FMakeCompactFont'
               r'|^FChangeStyles|^FDrawInto|^FGetEditArray|^FGetRangeText'),
     ('qd', r'^FMakeBitmap|Bitmap|^FMakePict|^FPictToShape|^FMungeShape'
            r'|^FGetShapeInfo|^FFindShape|^FPackRGB|^FGetRed|^FGetGreen|^FGetBlue'
            r'|Font|^FStrWidth|^FDraw'),
-    ('sound', r'Sound|^FSetInputGain|^FSetOutputDevice|^FGetTone|^FIsEqualTone'),
+    ('sound', r'Sound|^FSetInputGain|^FSetOutputDevice|^FGetTone|^FIsEqualTone'
+              r'|^F(Get|Set)Channel(Volume|InputGain)$'),
     ('intl', r'^FGetMeeting|^FRepeatInfo|Meeting|^FMeasuredNumberStr|Zone'),
     ('system', r'Gestalt|Power|^FReboot|^FUnmountCard|^FGetCardSlotStores'
                r'|^FBootSucceeded|^FClassInfo|^FNextClassInfo|^FNewByName'
