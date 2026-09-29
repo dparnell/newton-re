@@ -929,9 +929,9 @@ There are none.  `analysis/protousers.py build/MP2x00US @826 --view-class
 built-in packages (`packages.py --extract DIR`): protoTXView is the only
 frame of view class 108, no frame inherits from it, no package mentions
 @826, and no C function refers to `Rprototxview` (`xrefs.py`).  The
-engine was there for packages outside the ROM - Newton Works, the word
-processor that came with the eMate 300 and the MP2100 - so the demos and
-the host tests are what exercise it.
+engine was there for packages outside this image - Newton Works, the
+word processor, was one - so the demos and the host tests are what
+exercise it.
 
 ## Not yet reconstructed - the plan
 
