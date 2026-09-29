@@ -9,6 +9,24 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: comms, round 10 - Internet Setup and protoEndpointFSM
+
+- Internet Setup driven on the host (`src/host/demo/inetsetup.ns`, ctest
+  `host.NewtonInetSetup`, 5bac85a): "Host network" is listed and opens,
+  and New / Generic Setup / "Connect using" offers it beside LocalTalk,
+  Modem and Serial.  What stopped it, all in `HostLink.ns`: a
+  LogicalService needs an `excludeFrom`; a setup is shown and edited
+  through the data definition its class names, one per physical layer,
+  offered only when its `DependenciesLoaded` is true - so the host
+  registers `HostNetwork:host`, proto'd from Ethernet's, with Ethernet's
+  view definitions.
+- protoEndpointFSM (`src/host/demo/inetfsm.ns`, ctest
+  `host.NewtonInetFSM`, 037b2a3), taken from the 'Inet Protos:NIE unit:
+  connects, echoes "hello", disconnects.  A machine made from the proto
+  needs its own `fsm_private_states`, even empty.  The host link services
+  now answer Release, so the link manager's CleanUp completes and goes
+  back to idle.
+
 ## 2026-09-29: the third-party apps used for real
 
 - `src/host/demo/thirdparty-apps.ns` (ctest `host.NewtonThirdPartyApps`)
