@@ -14,9 +14,12 @@
 				every registrant has had the event.  Gestalt answers from the
 				kernel's globals.
 
+				Resource arbitration is the comm tools' claim of a registered
+				resource (a serial chip): claimed actively (an owner asked to
+				release it first) or passively (told when the active owner
+				gives it up).
+
 	Reconstructed from the MP2x00 US ROM; each function cites its origin.
-	Resource arbitration (the comm tools' claim/unclaim protocol,
-	0x0012fa3c-0x001300f4) is NOT YET RECONSTRUCTED.
 */
 
 #include "NameServerImpl.h"
@@ -28,6 +31,7 @@
 #include "KernelGlobals.h"
 #include "VirtualMemory.h"
 #include "List.h"
+#include "CommTool.h"
 #include "ListIterator.h"
 #include "SortedList.h"
 #include "OSErrors.h"
@@ -134,11 +138,15 @@ TObjectNameList::Remove(char* name, char* type)
 	else
 		prev->fNext = entry->fNext;
 
-	if (entry->fResArbInfo != nil)
+	// a claimed resource's record goes with it, unless an owner is being
+	// asked to release it: then ResArbHandleReply sees it has gone
+	TResArbitrationInfo* info = entry->fResArbInfo;
+	if (info != nil)
 	{
-		// NOT YET RECONSTRUCTED: TResArbitrationInfo (0x00130c7c-): with its
-		// kResArb_NotificationPending bit (1) clear the record is destroyed,
-		// otherwise its kResArb_Removed bit (2) is set for ResArbHandleReply
+		if ((info->fFlags & kResArb_NotificationPending) == 0)
+			delete info;
+		else
+			info->fFlags |= kResArb_Removed;
 	}
 
 	TNameServerQueuedRequest* prevWaiter = nil;
@@ -550,25 +558,320 @@ TNameServer::SendSystemEvent(SystemEvent event, TObjectId msgId)
 }
 
 
-// ROM 0x0012fa3c ResourceArbitration__11TNameServerFR10TUMsgTokenP22TResArbitrationRequest
-void
-TNameServer::ResourceArbitration(TUMsgToken* token, TResArbitrationRequest* /*request*/)
+// ROM 0x0012f220 __ct__19TResArbitrationInfoFv
+TResArbitrationInfo::TResArbitrationInfo()
 {
-	// NOT YET RECONSTRUCTED: the comm tools' resource claim protocol
-	// (kResArbitrationClaim/Unclaim/PassiveClaim/PassiveUnclaim over
-	// TResArbitrationInfo/TResOwnerInfo and TCommToolResArbRequest,
-	// 0x00131498-0x00131b50)
+	fRequest.fAEventID = 'comt';			// (TCommToolResArbRequest's constructors)
+	fRequest.fOpCode = 0;
+	fRequest.fResNamePtr = nil;
+	fRequest.fResTypePtr = nil;
+	fReply.fAEventID = 'comt';				// (TCommToolReply's)
+	fReply.fResult = noErr;
+	fReply.fSize = sizeof(TNSResArbReply);
+	fFlags = 0;
+	fPassiveOwner = nil;
+	fRPCInfo.fType = kRPCInfo_ResArb;
+	fOwner = nil;
+	fRPCInfo.fInfo = this;
+}
+
+
+// ROM 0x0012f298 __dt__19TResArbitrationInfoFv
+TResArbitrationInfo::~TResArbitrationInfo()
+{
+	if (fPassiveOwner != nil)
+		delete fPassiveOwner;
+	if (fOwner != nil)
+		delete fOwner;
+}
+
+
+// ROM 0x0012f2ec Init__19TResArbitrationInfoFP6TUPort
+// The request message, its replies collected on the name server's port with
+// the record's RPC info as the refcon.  (What SetCollectorPort answers is
+// what Init answers.)
+NewtonErr
+TResArbitrationInfo::Init(TUPort* collectorPort)
+{
+	NewtonErr err = fMsg.Init(true);
+	if (err != noErr)
+		return err;
+	err = fMsg.SetUserRefCon((ULong) &fRPCInfo);
+	if (err != noErr)
+		return err;
+	return fMsg.SetCollectorPort(collectorPort->fId);
+}
+
+
+// ROM 0x0012f340 __ct__13TResOwnerInfoFv
+TResOwnerInfo::TResOwnerInfo()
+{
+	fName = nil;
+	fField0C = 0;
+}
+
+
+// ROM 0x0012f37c __dt__13TResOwnerInfoFv
+TResOwnerInfo::~TResOwnerInfo()
+{
+	if (fName != nil)
+		DisposPtr((Ptr) fName);
+}
+
+
+// ROM 0x0012fa3c ResourceArbitration__11TNameServerFR10TUMsgTokenP22TResArbitrationRequest
+// A comm tool claims or gives up a registered resource (a serial chip, by
+// its location).  An active claim of a resource someone has makes the
+// name server ask that owner - the active one, else the passive one - to
+// release it, and the claimant waits for the answer (ResArbHandleReply); a
+// passive claim is refused if anyone has it, and the passive owner is told
+// at once that it has it.  Giving up the active claim tells the passive
+// owner it has the resource.  The record goes when nobody has it.
+void
+TNameServer::ResourceArbitration(TUMsgToken* token, TResArbitrationRequest* request)
+{
 	TNameServerReply reply;
-	reply.fResult = kError_Call_Not_Implemented;
+	ULong thing, spec;
+	TObjectNameEntry* entry;
+	if (!fLists[Hash(fName)].Lookup(fName, fType, &thing, &spec, &entry))
+	{
+		reply.fResult = kError_Not_Registered;
+		goto done;
+	}
+	{
+		TResArbitrationInfo* info = entry->fResArbInfo;
+		reply.fResult = -10078;
+		switch (request->fRequestType)
+		{
+		case kResArbitrationClaim:
+			if (info == nil)
+			{
+				reply.fResult = ResArbBuildResArbInfo(entry);
+				if (reply.fResult != noErr)
+					goto done;
+				info = entry->fResArbInfo;
+				reply.fResult = ResArbBuildResOwnerInfo(info->fOwner, request->fOwnerName, request->fOwnerPortId);
+			}
+			else
+			{
+				if (info->fFlags & kResArb_NotificationPending)
+					goto done;
+				TResOwnerInfo* owner = info->fOwner;
+				if (owner == nil)
+					owner = info->fPassiveOwner;
+				if (owner != nil)
+				{
+					// the owner asked to release it; the claimant answered
+					// when it has
+					info->fRequest.fOpCode = kCommToolResArbRelease;
+					info->fRequest.fResNamePtr = (UChar*) entry->fName;
+					info->fRequest.fResTypePtr = (UChar*) entry->fType;
+					reply.fResult = owner->fPort.SendRPC(&info->fMsg, &info->fRequest, sizeof(info->fRequest),
+															&info->fReply, sizeof(info->fReply), 0x6978000, nil,
+															kCommToolRequestTypeResArb, false);
+					if (reply.fResult == noErr)
+					{
+						info->fClaimant = *token;
+						info->fClaimantPort = request->fOwnerPortId;
+						info->fClaimantName = request->fOwnerName;
+						info->fFlags |= kResArb_NotificationPending;
+						return;
+					}
+					goto done;
+				}
+				reply.fResult = ResArbBuildResOwnerInfo(info->fOwner, request->fOwnerName, request->fOwnerPortId);
+			}
+			if (reply.fResult == noErr)
+				goto done;
+			goto dropIfUnowned;
+
+		case kResArbitrationUncliam:
+			if (info != nil)
+			{
+				ResArbDeleteResOwnerInfo(info->fOwner);
+				info->fOwner = nil;
+				if (info->fPassiveOwner == nil)
+					ResArbDeleteResArbInfo(entry);
+				else
+					ResArbSendClaimNotification(entry);
+			}
+			reply.fResult = noErr;
+			goto done;
+
+		case kResArbitrationPassiveClaim:
+			if (info != nil && (info->fPassiveOwner != nil || info->fOwner != nil))
+				goto done;
+			if (info == nil)
+			{
+				reply.fResult = ResArbBuildResArbInfo(entry);
+				if (reply.fResult != noErr)
+					goto done;
+				info = entry->fResArbInfo;
+			}
+			reply.fResult = ResArbBuildResOwnerInfo(info->fPassiveOwner, request->fOwnerName, request->fOwnerPortId);
+			if (reply.fResult == noErr)
+			{
+				reply.fResult = noErr;
+				token->ReplyRPC(&reply, sizeof(reply), noErr);
+				ResArbSendClaimNotification(entry);
+				return;
+			}
+			goto dropIfUnowned;
+
+		case kResArbitrationPassiveUnclaim:
+			reply.fResult = noErr;
+			if (info == nil)
+				goto done;
+			ResArbDeleteResOwnerInfo(info->fPassiveOwner);
+			info->fPassiveOwner = nil;
+			if (info->fOwner != nil)
+				goto done;
+			ResArbDeleteResArbInfo(entry);
+			goto done;
+
+		default:
+			return;					// (not answered)
+		}
+	dropIfUnowned:
+		if (info->fPassiveOwner != nil || info->fOwner != nil)
+			goto done;
+		ResArbDeleteResArbInfo(entry);
+	}
+done:
 	token->ReplyRPC(&reply, sizeof(reply), noErr);
 }
 
 
-// ROM 0x00130014 ResArbHandleReply__11TNameServerFP19TResArbitrationInfo
-void
-TNameServer::ResArbHandleReply(TResArbitrationInfo* /*info*/)
+// ROM 0x0012fd44 ResArbBuildResArbInfo__11TNameServerFP16TObjectNameEntry
+NewtonErr
+TNameServer::ResArbBuildResArbInfo(TObjectNameEntry* entry)
 {
-	// NOT YET RECONSTRUCTED: see ResourceArbitration
+	NewtonErr err;
+	entry->fResArbInfo = new TResArbitrationInfo;
+	if (entry->fResArbInfo == nil)
+		err = MemError();
+	else
+		err = entry->fResArbInfo->Init(&fPort);
+	if (err != noErr)
+	{
+		if (entry->fResArbInfo != nil)
+			delete entry->fResArbInfo;
+		entry->fResArbInfo = nil;
+	}
+	return err;
+}
+
+
+// ROM 0x0012fda4 ResArbDeleteResArbInfo__11TNameServerFP16TObjectNameEntry
+void
+TNameServer::ResArbDeleteResArbInfo(TObjectNameEntry* entry)
+{
+	if (entry->fResArbInfo != nil)
+		delete entry->fResArbInfo;
+	entry->fResArbInfo = nil;
+}
+
+
+// ROM 0x0012fdd0 ResArbBuildResOwnerInfo__11TNameServerFRP13TResOwnerInfoUlT2
+// The owner's port, and a copy of its name out of the shared memory the
+// claim named.
+NewtonErr
+TNameServer::ResArbBuildResOwnerInfo(TResOwnerInfo*& owner, TObjectId ownerName, TObjectId ownerPortId)
+{
+	NewtonErr err = noErr;
+	TUSharedMem name;
+	owner = new TResOwnerInfo;
+	if (owner == nil)
+		err = MemError();
+	else
+	{
+		owner->fPort.CopyObject(ownerPortId);
+		if (ownerName != 0)
+		{
+			name.CopyObject(ownerName);
+			ULong size;
+			err = name.GetSize(&size, nil);
+			if (err == noErr)
+			{
+				owner->fName = NewPtr(size);
+				if (owner->fName == nil)
+					err = MemError();
+				else
+					err = name.CopyFromShared(&size, owner->fName, size, 0, nil);
+			}
+			if (err != noErr)
+			{
+				if (owner != nil)
+					delete owner;
+				owner = nil;
+			}
+		}
+	}
+	return err;
+}
+
+
+// ROM 0x0012fecc ResArbDeleteResOwnerInfo__11TNameServerFRP13TResOwnerInfo
+void
+TNameServer::ResArbDeleteResOwnerInfo(TResOwnerInfo*& owner)
+{
+	if (owner != nil)
+		delete owner;
+	owner = nil;
+}
+
+
+// ROM 0x0012ff80 ResArbSendClaimNotification__11TNameServerFP16TObjectNameEntry
+// The passive owner told (and waited for) that the resource is its.
+NewtonErr
+TNameServer::ResArbSendClaimNotification(TObjectNameEntry* entry)
+{
+	TResArbitrationInfo* info = entry->fResArbInfo;
+	info->fRequest.fOpCode = kCommToolResArbClaimNotification;
+	info->fRequest.fResNamePtr = (UChar*) entry->fName;
+	info->fRequest.fResTypePtr = (UChar*) entry->fType;
+	ULong returnSize;
+	NewtonErr err = info->fPassiveOwner->fPort.SendRPC(&returnSize, &info->fRequest, sizeof(info->fRequest),
+														&info->fReply, sizeof(info->fReply), 0x6978000,
+														kCommToolRequestTypeResArb, false);
+	if (err == noErr)
+		err = info->fReply.fResult;
+	return err;
+}
+
+
+// ROM 0x00130014 ResArbHandleReply__11TNameServerFP19TResArbitrationInfo
+// The owner asked to release a resource has answered: if it let it go the
+// claimant becomes the owner; either way the claimant hears.  (The name
+// having gone meanwhile, the claimant is told so and the record goes.)
+void
+TNameServer::ResArbHandleReply(TResArbitrationInfo* info)
+{
+	TNameServerReply reply;
+	if (info->fFlags & kResArb_Removed)
+	{
+		TObjectNameEntry entry;
+		entry.fNext = nil;
+		entry.fName = nil;
+		entry.fType = nil;
+		entry.fResArbInfo = nil;
+		reply.fResult = kError_Not_Registered;
+		info->fClaimant.ReplyRPC(&reply, sizeof(reply), noErr);
+		entry.fResArbInfo = info;
+		ResArbDeleteResArbInfo(&entry);
+	}
+	else if (info->fFlags & kResArb_NotificationPending)
+	{
+		info->fFlags &= ~kResArb_NotificationPending;
+		reply.fResult = info->fReply.fResult;
+		if (reply.fResult == noErr)
+		{
+			if (info->fOwner != nil)
+				ResArbDeleteResOwnerInfo(info->fOwner);
+			reply.fResult = ResArbBuildResOwnerInfo(info->fOwner, info->fClaimantName, info->fClaimantPort);
+		}
+		info->fClaimant.ReplyRPC(&reply, sizeof(reply), noErr);
+	}
 }
 
 

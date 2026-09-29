@@ -26,6 +26,9 @@
 #ifndef __USERSHAREDMEM_H
 #include "UserSharedMem.h"
 #endif
+#ifndef __AEVENTS_H
+#include "AEvents.h"
+#endif
 #ifndef __ITEMCOMPARER_H
 #include "ItemComparer.h"
 #endif
@@ -33,7 +36,7 @@
 class CList;
 class CListIterator;
 class CSortedList;
-class TResArbitrationInfo;		// NOT YET RECONSTRUCTED: the comm-tool resource arbitration record (0x00130c7c)
+class TResArbitrationInfo;
 
 
 // A registration: the (name, type) pair and the two words it stands for.
@@ -94,6 +97,64 @@ enum
 {
 	kRPCInfo_ResArb		= 1,	// a resource-arbitration claim notification came back
 	kRPCInfo_SysEvent	= 2		// a system event was delivered to one registrant
+};
+
+
+// A comm tool's request and reply as the name server sends them: the
+// layouts of the DDK's TCommToolResArbRequest and TCommToolReply, whose
+// constructors are the comm tools' (the name server lies below them).
+struct TNSResArbRequest : public TAEvent	// 0x14 bytes in the ROM
+{
+	ULong				fOpCode;		// +0x08  kCommToolResArbRelease (1), kCommToolResArbClaimNotification (2)
+	UChar*				fResNamePtr;	// +0x0c  the entry's own strings
+	UChar*				fResTypePtr;	// +0x10
+};
+
+struct TNSResArbReply : public TAEvent		// 0x10 bytes in the ROM
+{
+	NewtonErr			fResult;		// +0x08
+	ULong				fSize;			// +0x0c
+};
+
+// Who has a resource: the owner's port, and its name (a copy of the Unicode
+// string the claim named, if it named one).
+class TResOwnerInfo				// 0x10 bytes
+{
+public:
+						TResOwnerInfo();
+						~TResOwnerInfo();
+
+	TUPort				fPort;			// +0x00
+	void*				fName;			// +0x08
+	ULong				fField0C;		// +0x0c  (cleared, otherwise unused)
+};
+
+// A claimed resource (a TObjectNameEntry's fResArbInfo): its active and
+// passive owners, and - while an active owner is being asked to give it
+// up - the request sent, its reply, and the claimant waiting for it.
+class TResArbitrationInfo		// 0x64 bytes
+{
+public:
+						TResArbitrationInfo();
+						~TResArbitrationInfo();
+	NewtonErr			Init(TUPort* collectorPort);
+
+	ULong				fFlags;			// +0x00  kResArb_NotificationPending, kResArb_Removed
+	TResOwnerInfo*		fPassiveOwner;	// +0x04
+	TResOwnerInfo*		fOwner;			// +0x08
+	TNSResArbRequest	fRequest;		// +0x0c
+	TUAsyncMessage		fMsg;			// +0x20
+	TNSResArbReply		fReply;			// +0x30
+	TUMsgToken			fClaimant;		// +0x40  the claim waiting on the owner's answer
+	TObjectId			fClaimantPort;	// +0x50
+	TObjectId			fClaimantName;	// +0x54
+	TRPCInfo			fRPCInfo;		// +0x58  kRPCInfo_ResArb, this
+};
+
+enum
+{
+	kResArb_NotificationPending	= 1,	// an owner has been asked to release it
+	kResArb_Removed				= 2		// the name went meanwhile
 };
 
 
@@ -162,6 +223,11 @@ private:
 	NewtonErr			SendSystemEvent(SystemEvent event, TObjectId msgId);
 
 	void				ResourceArbitration(TUMsgToken* token, TResArbitrationRequest* request);
+	NewtonErr			ResArbBuildResArbInfo(TObjectNameEntry* entry);
+	void				ResArbDeleteResArbInfo(TObjectNameEntry* entry);
+	NewtonErr			ResArbBuildResOwnerInfo(TResOwnerInfo*& owner, TObjectId ownerName, TObjectId ownerPortId);
+	void				ResArbDeleteResOwnerInfo(TResOwnerInfo*& owner);
+	NewtonErr			ResArbSendClaimNotification(TObjectNameEntry* entry);
 	void				ResArbHandleReply(TResArbitrationInfo* info);
 
 	void				Gestalt(ULong selector, TUMsgToken* token);
