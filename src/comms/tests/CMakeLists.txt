@@ -28,3 +28,16 @@ add_executable(test_SerialTool test_SerialTool.cpp)
 target_link_libraries(test_SerialTool PRIVATE comms_serial hal_host_serial os600_kernel os600_user)
 add_test(NAME comms.SerialTool COMMAND test_SerialTool)
 set_tests_properties(comms.SerialTool PROPERTIES TIMEOUT 60)
+
+# MNP against the desktop end in tools/dock/mnp.py (which runs the program)
+add_executable(test_MNP test_MNP.cpp)
+target_link_libraries(test_MNP PRIVATE comms_serial hal_host_serial os600_kernel os600_user)
+find_package(Python3 COMPONENTS Interpreter)
+if(Python3_FOUND)
+    add_test(NAME comms.MNP
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/dock/mnp.py --echo --spawn $<TARGET_FILE:test_MNP>)
+    set_tests_properties(comms.MNP PROPERTIES TIMEOUT 120)
+    add_test(NAME comms.MNPLongHeaders
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/dock/mnp.py --echo --no-class4 --spawn $<TARGET_FILE:test_MNP>)
+    set_tests_properties(comms.MNPLongHeaders PROPERTIES TIMEOUT 120)
+endif()

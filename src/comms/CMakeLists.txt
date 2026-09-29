@@ -28,6 +28,10 @@ add_library(comms_serial STATIC
     SerialTool.cpp
     AsyncSerialTool.cpp
     FramedSerialTool.cpp
+    MNP.cpp
+    MNPClass5.cpp
+    MNPClass5Tables.cpp
+    V42bis.cpp
 )
 target_link_libraries(comms_serial PUBLIC comms hal_serial hal_timers)
 
