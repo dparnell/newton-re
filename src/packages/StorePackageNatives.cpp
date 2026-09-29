@@ -268,16 +268,32 @@ NewPackage(CPipe* pipe, RefArg storeObject, RefArg callback, ULong callbackFrequ
 
 // ROM 0x001fbd08 FSuckPackageFromBinary
 // store:SuckPackageFromBinary(binary, parameters): the package in a binary
-// stored (read through a memory pipe over the binary's bytes).
+// stored (read through a memory pipe over the binary's bytes).  The ROM
+// holds the binary in a TObjectPtr for the whole store, which locks it: the
+// pipe reads from a pointer into it while storing allocates, and a
+// collection would otherwise move it (the host once read a 238K package
+// from where it had been, and stored garbage).
 Ref
 FSuckPackageFromBinary(RefArg rcvr, RefArg binary, RefArg parameters)
 {
 	long length = Length(binary);
-	CBufferSegment segment;
-	segment.Init(BinaryData(binary), length, false, 0, -1);
-	MemoryPipe pipe;
-	pipe.Init(&segment, nil, false);
-	return SuckPackageThruPipe(&pipe, rcvr, parameters);
+	RefVar result;
+	LockRef(binary);
+	newton_try
+	{
+		CBufferSegment segment;
+		segment.Init(BinaryData(binary), length, false, 0, -1);
+		MemoryPipe pipe;
+		pipe.Init(&segment, nil, false);
+		result = SuckPackageThruPipe(&pipe, rcvr, parameters);
+	}
+	cleanup
+	{
+		UnlockRef(binary);
+	}
+	end_try;
+	UnlockRef(binary);
+	return result;
 }
 
 

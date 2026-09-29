@@ -630,6 +630,10 @@ TestOnStore(void)
 	StoreScenario("TSimpleStoreDecompressor", ntk, size);
 	PutBigEndianWord(ntk + 0x0c, GetBigEndianWord(ntk + 0x0c) & ~0x10000000);
 	StoreScenario("TLZStoreDecompressor", ntk, size);
+	// kUseFasterCompressionFlag: Zippy (a third-party Mahjongg is flagged so)
+	PutBigEndianWord(ntk + 0x0c, GetBigEndianWord(ntk + 0x0c) | 0x02000000);
+	StoreScenario("TZippyStoreDecompressor", ntk, size);
+	PutBigEndianWord(ntk + 0x0c, GetBigEndianWord(ntk + 0x0c) & ~0x02000000);
 
 	// read from a file through the C library, as SuckPackageOffDeskTop
 	// does (utility/StdioPipe.h): stored, and the same bytes come back
