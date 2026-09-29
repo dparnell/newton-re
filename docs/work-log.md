@@ -9,6 +9,25 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: comms, round 7 - the NIE's protoFSM re-expressed
+
+- `analysis/ntknative.py <pkg> <holder> --rom BUILD` lists an NTK
+  native-compiled NewtonScript function as statements (which RefHandle
+  each stack slot holds, the literals, the outgoing arguments;
+  NativeEntry's fast path elided) (4a8227b, 658ef2a).
+- `src/thirdparty/nie/`: 18 of the protoFSM's 19 native functions
+  re-expressed and registered through `frames/PackageNatives.h` - the
+  queue, `DoEvent`/`DoUniqueEvent`/`DoEvent_Check`, the engine view's
+  idle, the ancestor collectors, the periodic events,
+  `KillPeriodicEvent`, `ProtoClone`, `ObjectToString` and its trim, and
+  `DoEvent_Loop` (18980 bytes, tested with a whole machine of native
+  methods) - over `NIERuntime.h` (the variable lookup, global calls,
+  the arithmetic fast paths, try/onexception) (a91a24e, ebe10ae,
+  ee223dd, cd06c72, 5949830, c50f5b4, 0c3c7b7).  NIE bugs kept:
+  `ProtoClone` reaches itself through the variable `f`; `DoEvent_Check`
+  ignores its argument.  The test asserts no fallback is installed and
+  that the registry answers each offset (3d97eca).
+
 ## 2026-09-29: the ARM interpreter for packages' native code
 
 - `src/armcpu/ARMCPU.h`: `TARMCPU`, an ARMv4 interpreter (ARM state, the

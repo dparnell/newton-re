@@ -152,10 +152,15 @@ worked through.  What could come next (not ranked; the owner chooses):
   and function, and other packages' native code falls back on an ARM
   interpreter.  The seam is in (`frames/PackageNatives.h`: host
   re-expressions keyed by code length, FNV-1a hash and offset, then
-  `SetPackageNativeFallback`, then an error).  Being done now: the NIE's
-  protoFSM (19 functions, 60 KB of ARM) re-expressed in
-  `src/thirdparty/nie/` - first the code binary's own routines
-  (0xf14-0x2920), then the functions from the smallest up.  The ARM
+  `SetPackageNativeFallback`, then an error).  The NIE's protoFSM: 18
+  of its 19 native functions re-expressed in `src/thirdparty/nie/`
+  (ctest `thirdparty.NIEProtoFSM`); being done now: the object printer
+  `f` (0x14649, 15 KB), then a cross-check of each re-expression against
+  the ARM interpreter running the original.
+  Host bug seen: with `NEWTON_TRACE_EXCEPTIONS` and the REP on stdout,
+  printing some exception frames recurses without end ("--- evt.ex.fr.type;
+  type.ref.frame: " repeated) - in test_NIEProtoFSM after the -48807
+  'queue' throw.  The ARM
   interpreter is in (`src/armcpu/`, `docs/armcpu/README.md`: Mahjongg's
   native functions run and it deals, ctest `armcpu.Mahjongg`); left
   there: NewtHack's native function, a native in another package's code
