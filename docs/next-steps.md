@@ -156,11 +156,7 @@ worked through.  What could come next (not ranked; the owner chooses):
   of its 19 native functions re-expressed in `src/thirdparty/nie/`
   (ctest `thirdparty.NIEProtoFSM`); being done now: the object printer
   `f` (0x14649, 15 KB), then a cross-check of each re-expression against
-  the ARM interpreter running the original.
-  Host bug seen: with `NEWTON_TRACE_EXCEPTIONS` and the REP on stdout,
-  printing some exception frames recurses without end ("--- evt.ex.fr.type;
-  type.ref.frame: " repeated) - in test_NIEProtoFSM after the -48807
-  'queue' throw.  The ARM
+  the ARM interpreter running the original.  The ARM
   interpreter is in (`src/armcpu/`, `docs/armcpu/README.md`: Mahjongg's
   native functions run and it deals, ctest `armcpu.Mahjongg`); left
   there: NewtHack's native function, a native in another package's code
