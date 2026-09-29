@@ -161,36 +161,16 @@ worked through.  What could come next (not ranked; the owner chooses):
 
 ### Recognition
 
-**Complete for what the built-in fields reach** (2026-09-28;
-`docs/recognition/README.md`'s "Status: complete").  The NOT YET sweep of
-2026-09-29 (`06c17ba`: 107 comments to 59, all genuine) found natives
-misfiled under frames: recognition is **119 of 125** (`PenPos` answered
-since, with the packages on a store), and it turned up gaps in code that
-is otherwise done.  **Left to do, reachable now:**
+**Complete** (2026-09-29; `docs/recognition/README.md`'s status): all 125
+of its natives answered, and the code gaps the NOT YET sweep found
+(`ValidateWord`'s questions, `FindBaseline`'s first path over
+`low_level`, the arbiter's shape-or-word rules, `EndInkStrokeGroup`)
+filled - `024ee51`, `6a59f42`.  What remains is out of the U.S. ROM's
+reach, hardware, or waiting on another area:
 
-- **Six methods**: `GetAlternatives` (FGetAlternates
-  0x00078a00) and `Extract` (FExtractRange 0x00079bd8) of the correction
-  info, `HandleUnit` 0x000af800, `HandleRawInk` 0x00171140,
-  `LookupCompletions` 0x0013f6e0, `VoteOnWordUnit` 0x001ee6f0
-  (`natives.py --unbound --area recognition`).
-- `ValidateWord`'s two questions (`Words.cpp`): the dictionary lookup of
-  the word and its variants (0x0008f098) and `WRecVerifyWordSymbols`
-  0x001444c8 - so every word validates as unknown.
-- `FindBaseline`'s first path (`Words.cpp`): `GetTraceFromStrokes` and
-  ParaGraph's `low_level` are there now, but it still takes the box path,
-  so an ink word's measurements come from its box.
-- `TWRecognizer::EndInkStrokeGroup`'s body (a heap switch and
-  `WRecEndInkStrokeGroup`, which exists now), and moving the engine into
-  a VM heap of its own (`NewVMHeap`/`DestroyVMHeap` exist; `CreateVMHeap`
-  does not).
-- `TArbiter::ArbitrateGraphicsWords` (a word that may have been drawn as a
-  shape) and the shape half of `ArbitrateEarly` - both empty, and
-  `TGeneralShapeUnit`, which they wait on, is there now.
-- The waiting ink redrawn on a screen update (`UpdateCompressGroup`,
-  `UpdateStrokesInList`, `UpdateStroke` 0x001455bc-0x00145728) - the
-  inker's side, like `StrokeUpdate`.
-
-Out of the U.S. ROM's reach, hardware, or waiting on another area:
+- **The inker's side** (hardware): the waiting ink redrawn on a screen
+  update (`UpdateCompressGroup`, `UpdateStrokesInList`, `UpdateStroke`
+  0x001455bc-0x00145728), like `StrokeUpdate`.
 
 - **Unreachable from this ROM**: the French/German accent checks
   (`CheckDiacriticsDirections` 0x0007c9a0, 684 B; `AnalyseDiacriticsDirection`,
@@ -291,7 +271,7 @@ inside an area).  At 2026-09-29:
 | views | 12 | |
 | sound | 8 | the sound server |
 | testing, intl | 6 each | testing: the serial debugging, Uriah, the IR sniffing |
-| recognition, system | 6 each | recognition: methods of the unit and correction-info protos (above) |
+| system | 6 | |
 | qd | 4 | |
 | stores | 2 | store passwords |
 | packages | 1 | SuckPackageFromEndPoint (comms) |

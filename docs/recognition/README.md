@@ -23,17 +23,24 @@ Notepad (`write.ns`, `cursive.ns`, `numbers.ns`, `shapes.ns`,
 
 What is left, and why:
 
-* **Reachable, still to do** (found by the NOT YET sweep of 2026-09-29;
-  `docs/next-steps.md` lists them with addresses): six prototype
-  methods (`GetAlternatives`, `Extract`, `HandleUnit`, `HandleRawInk`,
-  `LookupCompletions`, `VoteOnWordUnit` - recognition's natives are 119
-  of 125, not all), `ValidateWord`'s dictionary and symbol
-  checks, `FindBaseline`'s first path over `low_level`,
-  `TWRecognizer::EndInkStrokeGroup`'s body, and the arbiter's
-  `ArbitrateGraphicsWords` and the shape half of `ArbitrateEarly`.
-  (`SafeExceptionNotify` prints to stderr where the ROM puts a notify slip
-  up - a DEVIATION the owner chose, 2026-09-29, to keep script errors easy
-  to see.)
+* **Reachable - done 2026-09-29** (the gaps the NOT YET sweep found):
+  all 125 of recognition's natives are answered (`GetAlternatives`,
+  `Extract`, `insert`, `LookupCompletions`, `HandleUnit`, `HandleRawInk`
+  and `VoteOnWordUnit` the last - `src/host/demo/alternatives.ns`, ctest
+  `host.NewtonAlternatives`); `ValidateWord` asks the dictionaries
+  (`LookupWordOrVariant`) and the recogniser in use
+  (`WRecVerifyWordSymbols`); `FindBaseline` reads the word's base line
+  with ParaGraph's `low_level` in its base-line-only mode (the heights at
+  rc +0xec/+0xea, which the decompiler names after the halfwords that
+  follow them - an unaligned load takes the one *before*), falling back
+  on the box only when that base comes to nought; the arbiter weighs a
+  shape against a word (`ArbitrateGraphicsWords`, `ArbitrateByRules`,
+  `GetGraphicBiasedScore`, and the shape half of `ArbitrateEarly`); and
+  `TWRecognizer::EndInkStrokeGroup` hands its run of ink on.  The engine
+  stays in the ordinary heap rather than a VM heap of its own (decided:
+  nothing on the host depends on it).  (`SafeExceptionNotify` prints to
+  stderr where the ROM puts a notify slip up - a DEVIATION the owner
+  chose, 2026-09-29, to keep script errors easy to see.)
 * **Unreachable from the U.S. ROM**: `CheckDiacriticsDirections`
   (0x0007c9a0) and `AnalyseDiacriticsDirection` - about 3.2 KB asked only
   for a French or German letter set - and the sixteen-bit dictionary walks

@@ -9,6 +9,35 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: the recognition system's last gaps
+
+- The seven unanswered methods (`024ee51`): the correction info's
+  `GetAlternatives` (FGetAlternates), `Extract` (FExtractRange - its own
+  walk, one comparison unsigned and the other signed, as the ROM) and
+  `insert` (FInsertRange), `LookupCompletions` over
+  `GetWordCompletions` (the prefix copied into 64 UniChars with no room
+  for the terminator and only its first letter lowered, as the ROM;
+  completions come back in the cursor's sorted order), `HandleUnit`,
+  `HandleRawInk` and `VoteOnWordUnit` (the point at the middle of the
+  unit's base-line box, clamped to its bounds - from the disassembly).
+  `src/host/demo/alternatives.ns`, ctest `host.NewtonAlternatives`;
+  `test_Dictionaries`' completions.  Recognition's natives: 125 of 125.
+- The code gaps (`6a59f42`): `ValidateWord` asks the dictionaries and
+  `WRecVerifyWordSymbols` (over the unnamed 0x00144470: Rosetta's domain
+  when it reads, ParaGraph's `VerifyWordSymbols` otherwise);
+  `FindBaseline` takes its first path over ParaGraph's `low_level` in its
+  base-line-only mode - the decompiler read each of its three unaligned
+  loads (the two heights, rc +0xec/+0xea, and the trace's count put in
+  rc +0x96) as the halfword after the one the load takes; the arbiter's
+  `ArbitrateGraphicsWords`, `ArbitrateByRules`, `GetGraphicBiasedScore`,
+  `GetFirstWordIndex` and the shape half of `ArbitrateEarly`;
+  `TWRecognizer::EndInkStrokeGroup`.  The engine's own VM heap is decided
+  against (nothing on the host depends on it).
+- Host test note: `test_Words` now makes the dictionaries (and a stand-in
+  `rcbuildchains`) before validating, the ROM never running without them;
+  `WRecVerifyWordSymbols` answers "nothing to object to" with no
+  recognition system (DEVIATION, host tests only).
+
 ## 2026-09-29: the text engine, round 1 - towards protoTXView
 
 - Sized the path to the 39 protoTXView methods natives.py now files
