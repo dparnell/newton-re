@@ -39,3 +39,8 @@ target_link_libraries(test_TextObject PRIVATE qd)
 target_compile_definitions(test_TextObject PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
 add_test(NAME qd.TextObject COMMAND test_TextObject)
 set_tests_properties(qd.TextObject PROPERTIES TIMEOUT 120)
+
+add_executable(test_ScrollRect test_ScrollRect.cpp)
+target_link_libraries(test_ScrollRect PRIVATE qd)
+add_test(NAME qd.ScrollRect COMMAND test_ScrollRect)
+set_tests_properties(qd.ScrollRect PROPERTIES TIMEOUT 120)

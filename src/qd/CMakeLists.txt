@@ -31,6 +31,7 @@ add_library(qd STATIC
     Transform.cpp
     Screen.cpp
     ScreenNatives.cpp
+    ScrollRect.cpp
     RectNatives.cpp
 )
 target_link_libraries(qd PUBLIC newton_config memory toolbox frames protocols stores)
