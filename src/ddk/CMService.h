@@ -108,8 +108,8 @@ PROTOCOL TCMService : public TProtocol
 	static	TCMService*	New(char*);
 			void		Delete();
 
-			NewtonErr	Start(TOptionArray* options, ULong serviceId, TServiceInfo* serviceInfo);		// start the service
-			NewtonErr	DoneStarting(TAEvent* event, ULong size, TServiceInfo* serviceInfo);			// called back when done starting
+			VIRTUAL NewtonErr	Start(TOptionArray* options, ULong serviceId, TServiceInfo* serviceInfo) ENDVIRTUAL;		// start the service
+			VIRTUAL NewtonErr	DoneStarting(TAEvent* event, ULong size, TServiceInfo* serviceInfo) ENDVIRTUAL;			// called back when done starting
 
 };
 

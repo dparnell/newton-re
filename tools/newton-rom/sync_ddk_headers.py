@@ -56,6 +56,16 @@ PATCHES = {
         ('#define\tunicodeUS\t\t\t\t\t$\\u001F',
          '#define\tunicodeUS\t\t\t\t\t$\\u001F' + "\r*/"),
     ],
+    # CMService.h: a service's Start and DoneStarting are the protocol's
+    # methods, which src/protocols/Protocols.h makes virtual (VIRTUAL ...
+    # ENDVIRTUAL, the DDK's own "hasNoProtocols" way) so an implementation can
+    # supply them; the header declares them plainly, as ProtocolGen took them
+    "CMService.h": [
+        ("\t\t\tNewtonErr\tStart(TOptionArray* options, ULong serviceId, TServiceInfo* serviceInfo);",
+         "\t\t\tVIRTUAL NewtonErr\tStart(TOptionArray* options, ULong serviceId, TServiceInfo* serviceInfo) ENDVIRTUAL;"),
+        ("\t\t\tNewtonErr\tDoneStarting(TAEvent* event, ULong size, TServiceInfo* serviceInfo);",
+         "\t\t\tVIRTUAL NewtonErr\tDoneStarting(TAEvent* event, ULong size, TServiceInfo* serviceInfo) ENDVIRTUAL;"),
+    ],
     # UserSemaphore.h: GetRefCon takes void**, fSem is a ULong* -> needs a cast in C++
     "UserSemaphore.h": [
         ("TULockingSemaphore(TObjectId id = 0) : TUSemaphoreGroup(id) { GetRefCon(&fSem); }",

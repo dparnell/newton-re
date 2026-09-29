@@ -184,7 +184,9 @@ to nought, which is no timeout at all; the host tool re-arms it in
 | `CBufferList`, `CShadowBufferSegment` (what a tool's data comes in) | done: `utility/BufferList.h`, `utility/ShadowBufferSegment.h`, `test_BufferList` |
 | the comm tool: `TCommTool`, the requests and replies, the tool's own options, `StartCommTool`, `ServiceToPort` | done: `comms/CommTools.h` |
 | the host TCP tool and the sockets | done: `comms/host/HostTCPTool.h`, `hal/host/HostSockets.h`; **M0** passes (`test_CommTool`) |
-| `OpenCommTool`, `TAsyncServiceMessage`, the comm manager (`TCMWorld`, `TCMEventHandler`, `CMStartService`, `CMGetEndpoint`) | NOT YET |
+| the comm manager: `TCMWorld`, `TCMEventHandler` (starting a service by its `serv` capability), `TStartInfo`, `TAsyncServiceMessage`, `OpenCommTool`, `CMStartService`, the last device and package, `CMGetServiceVersion` | done: `comms/CommManager.h`; **M1** passes (`test_CommManager`) |
+| the host's `inet` service (`THostInetService`) | done: `comms/host/HostServices.h` |
+| `CMGetEndpoint` (needs `TEndpoint`), the docking loader (`TSCPLoader`, `SCPLoad`), `TICHandler`, `InitializeCommHardware`, the ROM's own services (`RegisterROMProtcols`) | NOT YET |
 | `CMemObject` (a status request's answer goes through `TUSharedMem` meanwhile) | NOT YET |
 | `TPCommTool`/`StartCommToolProtocol` (a tool as a `TCommToolProtocol`) | NOT YET |
 | the endpoint, the NewtonScript endpoint, the link and DNS services | NOT YET |

@@ -7,3 +7,8 @@ add_executable(test_CommTool test_CommTool.cpp)
 target_link_libraries(test_CommTool PRIVATE comms os600_kernel os600_user)
 add_test(NAME comms.CommTool COMMAND test_CommTool)
 set_tests_properties(comms.CommTool PROPERTIES TIMEOUT 60)
+
+add_executable(test_CommManager test_CommManager.cpp)
+target_link_libraries(test_CommManager PRIVATE comms os600_kernel os600_user)
+add_test(NAME comms.CommManager COMMAND test_CommManager)
+set_tests_properties(comms.CommManager PROPERTIES TIMEOUT 60)
