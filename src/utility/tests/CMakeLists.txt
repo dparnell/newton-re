@@ -27,3 +27,7 @@ add_executable(test_BufferList test_BufferList.cpp)
 target_link_libraries(test_BufferList PRIVATE utility os600_kernel os600_user)
 add_test(NAME utility.BufferList COMMAND test_BufferList)
 set_tests_properties(utility.BufferList PROPERTIES TIMEOUT 30)
+
+add_executable(test_CircleBuf test_CircleBuf.cpp)
+target_link_libraries(test_CircleBuf PRIVATE utility)
+add_test(NAME utility.CircleBuf COMMAND test_CircleBuf)

@@ -26,6 +26,7 @@ add_library(utility STATIC
     CRC16.cpp
     CRC16Tables.cpp
     RingBuffer.cpp
+    CircleBuf.cpp
     Random.cpp
 )
 target_link_libraries(utility PUBLIC newton_config toolbox os600_user memory)
