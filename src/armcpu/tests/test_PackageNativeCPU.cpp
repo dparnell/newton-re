@@ -10,7 +10,8 @@
 				host; an exception thrown out of a host function reaches the
 				ARM code's handler with its data, and a ref the ARM code
 				throws reaches a NewtonScript handler as the ref; a native
-				of another code binary is called from ARM code.
+				of another code binary is called from ARM code; SetupSend and
+				AllocateFrameWithMap answered.
 */
 
 #include "PackageNativeCPU.h"
@@ -165,6 +166,20 @@ main()
 	Put(code, 0x20c, 0xe8bd8030);		// ldmfd sp!,{r4,r5,pc}
 	Put(code, 0x210, 0xe51ff004);
 	Put(code, 0x214, 0x01802750);		// NativeEntry__FRC6RefVarlPP9RefHandle
+	// +0x220: SetupSend(first argument, second, false, third): the method
+	// +0x250: AllocateFrameWithMap(first argument)
+	Put(code, 0x220, 0xe92d4000);		// stmfd sp!,{lr}
+	Put(code, 0x224, 0xe1a00001);		// mov r0,r1           (the receiver)
+	Put(code, 0x228, 0xe1a01002);		// mov r1,r2           (the message)
+	Put(code, 0x22c, 0xe3a02000);		// mov r2,#0           (not ifDefined)
+	Put(code, 0x230, 0xeb000002);		// bl SetupSend        (r3: the third argument's RefVar, the implementor written into it)
+	Put(code, 0x234, 0xe8bd8000);		// ldmfd sp!,{pc}
+	Put(code, 0x240, 0xe51ff004);
+	Put(code, 0x244, 0x01802748);		// SetupSend__FRC6RefVarT1lR6RefVar
+	Put(code, 0x250, 0xe1a00001);		// mov r0,r1           (the map)
+	Put(code, 0x254, 0xe51ff004);		// AllocateFrameWithMap, tail-called
+	Put(code, 0x258, 0x01800810);		// AllocateFrameWithMap__FRC6RefVar
+
 	// another code binary: +0x00 answers its argument plus one
 	RefVar other(AllocateBinary(RSSYMbinary, 0x10));
 	Put(other, 0x00, 0xe5910000);		// ldr r0,[r1]
@@ -178,6 +193,8 @@ main()
 	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "nativeCatch")), RefVar(MakeBinaryNative(code, 1, 0xc0)));
 	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "nativeThrow")), RefVar(MakeBinaryNative(code, 1, 0x180)));
 	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "nativeCallOther")), RefVar(MakeBinaryNative(code, 2, 0x1e0)));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "nativeSetupSend")), RefVar(MakeBinaryNative(code, 3, 0x220)));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "nativeFrameWithMap")), RefVar(MakeBinaryNative(code, 1, 0x250)));
 	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "otherPlusOne")), RefVar(MakeBinaryNative(other, 1, 0x00)));
 
 	// a string in the code binary: its UniChars in the host's order, of class 'string
@@ -207,6 +224,17 @@ main()
 	EXPECT(RINT(thrown) == 7);
 	// a native of another code binary, called from ARM code
 	EXPECT(RINT(Eval("call nativeCallOther with (otherPlusOne, 41)")) == 42);
+	// the interpreter's send set up from ARM code: the method, found in the proto
+	EXPECT(RINT(Eval("begin local p := {m: func() 5}; local f := call nativeSetupSend with ({_proto: p}, 'm, nil); call f with () end")) == 5);
+	// a frame made on another's map
+	{
+		RefVar model(Eval("{a: 1, b: 2}"));
+		RefVar map(SharedFrameMap(model));
+		const RefVar* args[1] = { &map };
+		RefVar made(RunPackageNativeOnCPU(code, 0x250, RefVar(NILREF), 1, args));
+		EXPECT(IsFrame(made) && Length(made) == 2 && EQRef(SharedFrameMap(made), map));
+	}
+	EXPECT(PackageNativeCPUAnswers("SetLexScope__FRC6RefVarN31"));
 	EXPECT(PackageNativeCPUAnswers("Length__Fl") && PackageNativeCPUEntryCount() > 50);
 
 	if (failures == 0)

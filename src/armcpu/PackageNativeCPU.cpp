@@ -916,6 +916,7 @@ GLUE(Glue_RCHARError)			{ w.Return(cpu, (uint32_t) _RCHARError(w.ToHost(cpu.r[0]
 GLUE(Glue_ClassOf)				{ w.Return(cpu, w.ToARM(ClassOf(RefVar(w.ArgRef(cpu.r[0]))))); return true; }
 GLUE(Glue_IsSymbol)				{ w.Return(cpu, IsSymbol(w.ToHost(cpu.r[0])) ? 1 : 0); return true; }
 GLUE(Glue_AllocateFrame)		{ w.Return(cpu, w.ToARM(AllocateFrame())); return true; }
+GLUE(Glue_AllocateFrameWithMap)	{ w.Return(cpu, w.ToARM(AllocateFrameWithMap(RefVar(w.ArgRef(cpu.r[0]))))); return true; }
 GLUE(Glue_AllocateArray)		{ w.Return(cpu, w.ToARM(AllocateArray(RefVar(w.ArgRef(cpu.r[0])), (int32_t) cpu.r[1]))); return true; }
 GLUE(Glue_AddArraySlot)			{ AddArraySlot(RefVar(w.ArgRef(cpu.r[0])), RefVar(w.ArgRef(cpu.r[1]))); w.Return(cpu, 0); return true; }
 GLUE(Glue_SetFrameSlot)			{ SetFrameSlot(RefVar(w.ArgRef(cpu.r[0])), RefVar(w.ArgRef(cpu.r[1])), RefVar(w.ArgRef(cpu.r[2]))); w.Return(cpu, 0); return true; }
@@ -1025,6 +1026,24 @@ GLUE(Glue_Send)
 	return true;
 }
 GLUE(Glue_Run)					{ gInterpreter->Run(); w.Return(cpu, 0); return true; }
+// SetupSend(receiver, message, ifDefined, RefVar& implementor): the method,
+// with the implementor written back through the ARM code's RefVar
+GLUE(Glue_SetupSend)
+{
+	RefVar implementor(w.ArgRef(cpu.r[3]));
+	Ref fn = SetupSend(RefVar(w.ArgRef(cpu.r[0])), RefVar(w.ArgRef(cpu.r[1])), (int32_t) cpu.r[2], implementor);
+	RefVar method(fn);
+	uint32_t handle = 0;
+	w.Read32(cpu.r[3], &handle);
+	w.Write32(handle, w.ToARM(implementor));
+	w.Return(cpu, w.ToARM(method));
+	return true;
+}
+GLUE(Glue_SetLexScope)
+{
+	w.Return(cpu, w.ToARM(SetLexScope(RefVar(w.ArgRef(cpu.r[0])), RefVar(w.ArgRef(cpu.r[1])), RefVar(w.ArgRef(cpu.r[2])), RefVar(w.ArgRef(cpu.r[3])))));
+	return true;
+}
 GLUE(Glue_FindImplementor)		{ w.Return(cpu, w.ToARM(FindImplementor(RefVar(w.ArgRef(cpu.r[0])), RefVar(w.ArgRef(cpu.r[1]))))); return true; }
 GLUE(Glue_FindProtoImplementor)	{ w.Return(cpu, w.ToARM(FindProtoImplementor(RefVar(w.ArgRef(cpu.r[0])), RefVar(w.ArgRef(cpu.r[1]))))); return true; }
 GLUE(Glue_SetVariableOrGlobal)
@@ -1266,6 +1285,9 @@ InitGlue(void)
 		{ "ExitHandler", Glue_ExitHandler },
 		{ "NextHandler", Glue_NextHandler },
 		{ "Throw", Glue_Throw },
+		{ "SetupSend__FRC6RefVarT1lR6RefVar", Glue_SetupSend },
+		{ "SetLexScope__FRC6RefVarN31", Glue_SetLexScope },
+		{ "AllocateFrameWithMap__FRC6RefVar", Glue_AllocateFrameWithMap },
 		{ "ThrowRefException__FPcRC6RefVar", Glue_ThrowRefException },
 		{ "Subexception", Glue_Subexception },
 		{ "GetStackStateBlock__Fv", Glue_GetStackStateBlock },
