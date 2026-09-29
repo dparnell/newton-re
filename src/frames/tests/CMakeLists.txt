@@ -46,3 +46,8 @@ add_executable(test_Marshalling test_Marshalling.cpp)
 target_link_libraries(test_Marshalling PRIVATE frames)
 target_compile_definitions(test_Marshalling PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
 add_test(NAME frames.Marshalling COMMAND test_Marshalling)
+
+add_executable(test_PackageNatives test_PackageNatives.cpp)
+target_link_libraries(test_PackageNatives PRIVATE frames)
+target_compile_definitions(test_PackageNatives PRIVATE "NEWTON_ROM_IMAGE=\"${NEWTON_ROM_IMAGE}\"")
+add_test(NAME frames.PackageNatives COMMAND test_PackageNatives)

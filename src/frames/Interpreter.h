@@ -223,6 +223,7 @@ public:
 	void		CallCFunction(RefArg fn, long numArgs, int isFrame);
 	void		CallPlainCFunction(RefArg fn, long numArgs);
 	Ref			CallCFuncPtr(void* funcPtr, long numArgs);
+	Ref			CallPackageNative(RefArg code, ULong offset, long numArgs);	// host: frames/PackageNatives.h
 	void		Return(FramesProfilingKind kind);
 
 	// the value stack

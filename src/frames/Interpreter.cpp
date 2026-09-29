@@ -20,6 +20,7 @@
 */
 
 #include "Interpreter.h"
+#include "PackageNatives.h"
 #include "NativeFunctions.h"
 #include "RSSymbols.h"
 #include "ROMConstants.h"
@@ -737,18 +738,87 @@ TInterpreter::CallPlainCodeBlock(RefArg fn, long numArgs, long flags)
 
 
 // ROM 0x002f4da8 CallCFunction__12TInterpreterFRC6RefVarli
-// A native function with its code in a binary: the closure (if any) goes
-// on the stack as an extra argument.  isFrame: a binCFunction frame rather
-// than a 0x232 array.  NOT YET RECONSTRUCTED: running the ARM code
-// (NativeEntry throws).
+// A native function with its code in a binary - a 0x232 array [class,
+// code, numArgs, closure, offset] or (isFrame) a binCFunction frame: the
+// argument count checked, the closure (if any) pushed as one argument
+// more, the code called with the receiver and the arguments, and its
+// result replacing them on the stack.
+// DEVIATION: the code is ARM, which the host cannot call: a host
+// re-expression registered for it runs instead, else the fallback (an ARM
+// interpreter), else it throws - frames/PackageNatives.h.
 void
-TInterpreter::CallCFunction(RefArg fn, long numArgs, int /*isFrame*/)
+TInterpreter::CallCFunction(RefArg fn, long numArgs, int isFrame)
 {
 	StateRef(fVMState->fFunction) = fn;
 	fPC = -1;
 	StateRef(fVMState->fPC) = MAKEINT(-1);
 	RefVar closure;
-	NativeEntry(fn, numArgs, &closure.h);
+	RefVar code;
+	long expected;
+	ULong offset;
+	if (!isFrame)
+	{
+		Ref* slots = ObjArraySlots(NoFaultObjectPtr(fn));
+		expected = RVALUE(slots[2]);
+		closure = slots[3];
+		code = slots[1];
+		offset = RVALUE(slots[4]);
+	}
+	else
+	{
+		expected = RINT(GetFrameSlotRef(fn, RSSYMnumargs));
+		closure = GetFrameSlotRef(fn, RSSYMclosure);
+		code = GetFrameSlotRef(fn, RSSYMcode);
+		offset = RINT(GetFrameSlotRef(fn, RSSYMoffset));
+	}
+	if (expected != numArgs)
+		Throw(exInterpreter, (void*) kNSErrWrongNumberOfArgs, nil);
+	if (NOTNIL(closure))
+	{
+		numArgs++;
+		PushValue(closure);
+	}
+	RefVar result(CallPackageNative(code, offset, numArgs));
+	fValueStack.fTop -= numArgs;
+	PushValue(result);
+	if (fTraceLevel != 0)
+		TraceReturn();
+}
+
+
+// Host: a package's native function called - its host re-expression, the
+// fallback, or the error (frames/PackageNatives.h).
+Ref
+TInterpreter::CallPackageNative(RefArg code, ULong offset, long numArgs)
+{
+	long boundArgs = 0;
+	PackageNativeKey key;
+	void* fn = FindPackageNative(code, offset, &boundArgs, &key);
+	if (fn != nil)
+	{
+		if (boundArgs != numArgs)
+			Throw(exInterpreter, (void*) kNSErrWrongNumberOfArgs, nil);
+		return CallCFuncPtr(fn, numArgs);
+	}
+	PackageNativeFallback fallback = GetPackageNativeFallback();
+	if (fallback != nil)
+	{
+		if (fValueStack.fHandlesEnd - fValueStack.fHandles < fValueStack.Depth())
+			fValueStack.Fill();
+		long first = fValueStack.Depth() - numArgs;
+		const RefVar* args[8];
+		if (numArgs > 8)
+			Throw(exInterpreter, (void*) kNSErrTooManyArgs, nil);
+		for (long i = 0; i < numArgs; i++)
+			args[i] = &fValueStack.StackRef(first + i);
+		return fallback(code, offset, StateVar(fVMState->fReceiver), numArgs, args);
+	}
+	fprintf(stderr, "[frames] a package's native (ARM) function: code of %lu bytes, hash 0x%08lx, offset 0x%lx - no host re-expression and no fallback\n",
+			(unsigned long) key.fCodeLength, (unsigned long) key.fCodeHash, (unsigned long) key.fOffset);
+	if (getenv("NEWTON_TRACE_MISSING") != nil && gREPout != nil)
+		StackTrace();
+	Throw(exInterpreter, (void*) kNSErrNativeNotReconstructed, nil);
+	return NILREF;
 }
 
 
