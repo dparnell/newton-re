@@ -154,6 +154,16 @@ if(Python3_FOUND)
                          ENVIRONMENT "NEWTON_HEAPCHECK=100000"
                          PASS_REGULAR_EXPRESSION "afterRestart: TRUE, pssid: [0-9]+, onInternal: TRUE}.*activatedAgain: TRUE.*packagestore: done"
                          FAIL_REGULAR_EXPRESSION "FALSE|NIL,")
+    # the 1.x package natives over the same store's package (run last: it
+    # removes the package)
+    add_test(NAME host.NewtonOneX
+             COMMAND newton --rom ${NEWTON_ROM_BIN} --store ${CMAKE_CURRENT_BINARY_DIR}/packagestore.store
+                     --headless 5 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/onex.ns
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonOneX PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED host_package_store
+                         DEPENDS "host.NewtonPackageStore;host.NewtonPackageStoreSlow"
+                         PASS_REGULAR_EXPRESSION "found: TRUE.*deactivated: TRUE.*activated: TRUE, positive: TRUE.*same: TRUE.*removed: TRUE.*directory: TRUE, empty: TRUE.*onex: done"
+                         FAIL_REGULAR_EXPRESSION "FALSE")
 endif()
 
 # a large binary (VBO) made on the booted machine's internal store

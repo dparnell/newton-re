@@ -1,0 +1,48 @@
+// The 1.x package natives (packages/StorePackages.h): run against a store
+// that holds a package - the store host.NewtonPackageStore uses, where
+// Formulas2 was stored with store:SuckPackageFromBinary.  A 1.x machine's
+// packages were found by their pssid in the store's package directory;
+// the natives it kept work on any package on a store: DeActivate1.XPackage
+// by the package id, Activate1.XPackage by the pssid and store (answering
+// the new id), store:1.XPackageToVBO the package as a pkgRef, and
+// Remove1.XPackage taking it away - its pssid out of the directory (which
+// is made in the System soup for the purpose) and the package removed.
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --erase --store tmp/p.store \
+//       --package build/host/host/packages/Formulas2.pkg --headless 5
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --store tmp/p.store \
+//       --script src/host/demo/onex.ns --headless 5
+
+AddDelayedCall(func() begin
+	local onStore := func(title) begin
+		local found := nil;
+		foreach p in GetPackages() do if p.store and StrEqual(p.title, title) then found := p;
+		found
+	end;
+	local p := call onStore with ("Formulas2");
+	Print({found: p <> nil});
+	local store := p.store;
+	local pssid := p.pssid;
+	Print({deactivated: |DeActivate1.XPackage|(p.id) = 0 and call onStore with ("Formulas2") = nil});
+	local id := |Activate1.XPackage|(pssid, store);
+	local again := call onStore with ("Formulas2");
+	Print({activated: again <> nil and again.id = id, positive: id > 0});
+	local pkgRef := store:|1.XPackageToVBO|(pssid);
+	Print({vbo: IsPackage(pkgRef), same: GetPkgRefInfo(pkgRef).id = id});
+	|Remove1.XPackage|({id: id, pssid: pssid, store: store});
+	Print({removed: call onStore with ("Formulas2") = nil});
+	local entry := nil;
+	foreach s in GetStores() do begin
+		local soup := s:GetSoup("System");
+		if soup then begin
+			local c := soup:Query(nil);
+			local e := c:Entry();
+			while e do begin
+				if e.pssids then entry := e;
+				e := c:Next();
+			end;
+		end;
+	end;
+	Print({directory: entry <> nil, empty: entry and Length(entry.pssids) = 0});
+	Print("onex: done");
+end, [], 1000);

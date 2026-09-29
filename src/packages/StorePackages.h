@@ -387,7 +387,22 @@ Ref			AllocatePackage(CPipe* pipe, RefArg storeObject, RefArg parameters);	// RO
 Ref			SuckPackageThruPipe(CPipe* pipe, RefArg storeObject, RefArg callback, ULong callbackFrequency, int activate);	// ROM 0x00321234 SuckPackageThruPipe__FP5CPipeRC6RefVarT2Uli
 Ref			SuckPackageThruPipe(CPipe* pipe, RefArg storeObject, RefArg parameters);	// ROM 0x00321258 SuckPackageThruPipe__FP5CPipeRC6RefVarT2
 NewtonErr	NewPackage(CPipe* pipe, RefArg storeObject, RefArg callback, ULong callbackFrequency);	// ROM 0x0032125c NewPackage__FP5CPipeRC6RefVarT2Ul
+NewtonErr	NewPackage(CPipe* pipe, RefArg storeObject, ULong* packageId);			// ROM 0x0032106c NewPackage__FP5CPipeRC6RefVarPUl - the 1.x way: an LZ large object, listed in the store's package directory
 Ref			GetPkgInfoFromVAddr(ULong address);										// ROM 0x003220a4 GetPkgInfoFromVAddr__FUl
+
+// the 1.x packages: the store's package directory (a System soup entry
+// whose pssids slot lists them) and the natives over it
+Ref			StoreGetPackageDirectory(RefArg storeObject);							// ROM 0x00320e10 StoreGetPackageDirectory - nil for none
+Ref			StoreMakePackageDirectory(RefArg storeObject);							// ROM 0x00321534 StoreMakePackageDirectory
+Ref			StorePackageDirectoryAdd(RefArg storeObject, RefArg pssid);				// ROM 0x00322034 StorePackageDirectoryAdd
+Ref			StorePackageDirectoryRemove(RefArg storeObject, RefArg pssid);			// ROM 0x00322948 StorePackageDirectoryRemove
+Ref			StorePackagesAvailable(RefArg storeObject);								// ROM 0x003229b8 StorePackagesAvailable
+Ref			StorePackagesUnavailable(RefArg storeObject);							// ROM 0x00322aa8 StorePackagesUnavailable
+Ref			StorePackageAvailable(RefArg storeObject, RefArg pssid);				// ROM 0x00322bc4 StorePackageAvailable
+Ref			FActivate1XPackage(RefArg rcvr, RefArg pssid, RefArg storeObject);		// ROM 0x00322c40 FActivate1XPackage
+Ref			FDeActivate1XPackage(RefArg rcvr, RefArg packageId);					// ROM 0x00322c10 FDeActivate1XPackage
+Ref			FRemove1XPackage(RefArg rcvr, RefArg package);							// ROM 0x00320eac FRemove1XPackage
+Ref			Store1XPackageToVBO(RefArg rcvr, RefArg pssid);							// ROM 0x00320d38 Store1XPackageToVBO
 Boolean		IsPackage(RefArg obj);													// ROM 0x00321ef8 IsPackage__FRC6RefVar (ROMPackages.cpp)
 Ref			FSuckPackageFromBinary(RefArg rcvr, RefArg binary, RefArg parameters);	// store:SuckPackageFromBinary
 void		RegisterStorePackageNatives(void);

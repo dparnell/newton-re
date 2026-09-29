@@ -27,7 +27,13 @@
 #include "PackagePipe.h"
 #include "LargeBinaries.h"
 #include "StoreWrapper.h"
-#include "Soups.h"				// ToObject
+#include "Soups.h"				// ToObject, StoreGetSoup, Query, SoupAdd
+#include "Cursors.h"			// CursorEntry
+#include "Entries.h"			// EntryChange
+#include "ROMPackages.h"		// FGetPackages
+#include "PartHandler.h"		// RemovePackage
+#include "Compression.h"		// TCallbackCompressor
+#include "NewtErrors.h"			// kNoMemory
 #include "FramesPart.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
@@ -592,6 +598,281 @@ FGetPkgInfoFromPssid(RefArg /*rcvr*/, RefArg pssid, RefArg storeObject)
 }
 
 
+/*------------------------------------------------------------------------------
+	T h e   1 . x   p a c k a g e s
+
+	A Newton 1.x machine kept its packages on a store by a different
+	arrangement: a *package directory* - an entry of the store's System
+	soup found by `Rpackagequery`, made from `Rpackagedirectory`, whose
+	`pssids` slot lists the store objects the packages are kept in - and
+	three natives that activate, deactivate and remove one by its pssid or
+	its package id.  A 2.x store's packages are the "Packages" soup's
+	(ActivateStorePackages); these are what the ROM keeps for a store
+	written by a 1.x machine, and `1.XPackageToVBO` turns such a package
+	into a 2.x one's pkgRef.
+------------------------------------------------------------------------------*/
+
+// ROM 0x00320e10 StoreGetPackageDirectory
+// The store's 1.x package directory: the System soup's entry the package
+// query finds, nil when there is no System soup (or no such entry).
+Ref
+StoreGetPackageDirectory(RefArg storeObject)
+{
+	RefVar directory;
+	RefVar name(Rsystemsoupname);
+	if (NOTNIL(StoreHasSoup(storeObject, name)))
+	{
+		RefVar soup(StoreGetSoup(storeObject, name));
+		RefVar cursor(Query(soup, RefVar(Rpackagequery)));
+		directory = CursorEntry(cursor);
+	}
+	return directory;
+}
+
+
+// ROM 0x00321534 StoreMakePackageDirectory
+// ... made when there is none: the System soup made if need be and a
+// clone of the directory template added to it.
+Ref
+StoreMakePackageDirectory(RefArg storeObject)
+{
+	RefVar directory(StoreGetPackageDirectory(storeObject));
+	if (ISNIL(directory))
+	{
+		RefVar soup;
+		RefVar name(Rsystemsoupname);
+		if (ISNIL(StoreHasSoup(storeObject, name)))
+			soup = StoreCreateSoup(storeObject, name, RefVar(Rsystemsoupindexes));
+		else
+			soup = StoreGetSoup(storeObject, name);
+		directory = DeepClone(RefVar(Rpackagedirectory));
+		SoupAdd(soup, directory);
+	}
+	return directory;
+}
+
+
+// ROM 0x00322034 StorePackageDirectoryAdd
+// A pssid added to the directory's list, the entry written back.
+Ref
+StorePackageDirectoryAdd(RefArg storeObject, RefArg pssid)
+{
+	RefVar directory(StoreMakePackageDirectory(storeObject));
+	RefVar pssids(GetFrameSlotRef(directory, RSSYMpssids));
+	AddArraySlot(pssids, pssid);
+	EntryChange(directory);
+	return directory;
+}
+
+
+// ROM 0x00322948 StorePackageDirectoryRemove
+// ... and taken out of it.
+Ref
+StorePackageDirectoryRemove(RefArg storeObject, RefArg pssid)
+{
+	RefVar directory(StoreMakePackageDirectory(storeObject));
+	RefVar pssids(GetFrameSlotRef(directory, RSSYMpssids));
+	ArrayRemove(pssids, pssid);
+	EntryChange(directory);
+	return directory;
+}
+
+
+// ROM 0x003229b8 StorePackagesAvailable
+// Every package the directory lists made available (mapped and
+// installed); one that fails is passed over.  (Nothing in the ROM calls
+// it.)
+Ref
+StorePackagesAvailable(RefArg storeObject)
+{
+	TStore* store = StoreOf(storeObject);
+	RefVar directory(StoreGetPackageDirectory(storeObject));
+	if (NOTNIL(directory))
+	{
+		RefVar pssids(GetFrameSlotRef(directory, RSSYMpssids));
+		long count = Length(pssids);
+		for (long i = 0; i < count; i++)
+		{
+			newton_try
+			{
+				ULong packageId;
+				PackageAvailable(store, RINT(GetArraySlotRef(pssids, i)), &packageId);
+			}
+			newton_catch_all
+			{ }
+			end_try;
+		}
+	}
+	return NILREF;
+}
+
+
+// ROM 0x00322aa8 StorePackagesUnavailable
+// Every installed package on the store (GetPackages' frames whose store is
+// this one) made unavailable; one that fails is passed over.  (Nothing in
+// the ROM calls it.)
+Ref
+StorePackagesUnavailable(RefArg storeObject)
+{
+	RefVar packages(FGetPackages(RefVar()));
+	RefVar info;
+	long count = Length(packages);
+	for (long i = 0; i < count; i++)
+	{
+		info = GetArraySlotRef(packages, i);
+		if (EQ(GetFrameSlotRef(info, RSSYMstore), storeObject))
+		{
+			newton_try
+			{
+				PackageUnavailable(RINT(GetFrameSlotRef(info, RSSYMid)));
+			}
+			newton_catch_all
+			{ }
+			end_try;
+		}
+	}
+	return NILREF;
+}
+
+
+// ROM 0x00322bc4 StorePackageAvailable
+// store:... (pssid): the package made available.  ==> the error.  (Nothing
+// in the ROM calls it.)
+Ref
+StorePackageAvailable(RefArg storeObject, RefArg pssid)
+{
+	ULong packageId;
+	return MAKEINT(PackageAvailable(StoreOf(storeObject), RINT(pssid), &packageId));
+}
+
+
+// ROM 0x00322c40 FActivate1XPackage
+// Activate1.XPackage(pssid, store): the 1.x package kept in that store
+// object made available.  ==> its package id, or the error - the same
+// integer either way (a ROM quirk: a caller cannot tell a small negative
+// id from an error, though ids are never negative).
+Ref
+FActivate1XPackage(RefArg /*rcvr*/, RefArg pssid, RefArg storeObject)
+{
+	ULong packageId;
+	long result = PackageAvailable(StoreOf(storeObject), RINT(pssid), &packageId);
+	if (result == noErr)
+		result = (long) packageId;
+	return MAKEINT(result);
+}
+
+
+// ROM 0x00322c10 FDeActivate1XPackage
+// DeActivate1.XPackage(packageId): made unavailable.  ==> the error.
+Ref
+FDeActivate1XPackage(RefArg /*rcvr*/, RefArg packageId)
+{
+	return MAKEINT(PackageUnavailable(RINT(packageId)));
+}
+
+
+// ROM 0x00320eac FRemove1XPackage
+// Remove1.XPackage(package): a package id, or a frame with its id, pssid
+// and store (GetPackages' form).  Its pssid comes out of the store's
+// directory; then a package id is removed (RemovePackage), and failing one
+// the store object is deallocated.  ==> nil.
+Ref
+FRemove1XPackage(RefArg /*rcvr*/, RefArg package)
+{
+	ULong packageId = 0;
+	TStore* store = nil;
+	PSSId rootId = 0;
+	RefVar storeObject;
+	if (ISINT(package))
+	{
+		packageId = RVALUE(package);
+		if (IdToStore(packageId, &store, &rootId) == noErr)
+			storeObject = ToObject(store);
+	}
+	else
+	{
+		RefVar slot(GetFrameSlotRef(package, RSSYMid));
+		if (ISINT(slot))
+			packageId = RVALUE(slot);
+		slot = GetFrameSlotRef(package, RSSYMpssid);
+		if (ISINT(slot))
+			rootId = RVALUE(slot);
+		storeObject = GetFrameSlotRef(package, RSSYMstore);
+		if (NOTNIL(storeObject))
+			store = StoreOf(storeObject);
+	}
+	if (NOTNIL(storeObject) && rootId != 0)
+		StorePackageDirectoryRemove(storeObject, RefVar(MAKEINT(rootId)));
+	if (packageId != 0)
+		RemovePackage(packageId);
+	else if (store != nil && rootId != 0)
+		DeallocatePackage(store, rootId);
+	return NILREF;
+}
+
+
+// ROM 0x00320d38 Store1XPackageToVBO
+// store:1.XPackageToVBO(pssid): a 1.x package kept in the store object
+// wrapped as a 'package large binary - its pkgRef - mapped read-only when
+// it is not mapped already; a store object that is not a package throws
+// (-48210, the pssid as the bad value).
+Ref
+Store1XPackageToVBO(RefArg rcvr, RefArg pssid)
+{
+	TStore* store = StoreOf(rcvr);
+	ULong address;
+	if (StoreToVAddr(&address, store, RINT(pssid)) != noErr
+	&&  MapLargeObject(&address, store, RINT(pssid), true) != noErr)
+		ThrowExFramesWithBadValue(-48210, pssid);
+	return WrapLargeObject(store, RSSYMpackage, RINT(pssid), address);
+}
+
+
+// ROM 0x0032106c NewPackage__FP5CPipeRC6RefVarPUl
+// A package from a pipe kept on the store the 1.x way - a large object
+// compressed by the LZ callback compressor, installed from there - and its
+// store object added to the store's package directory.  The store is
+// locked meanwhile and the transaction aborted if anything throws.  ==> the
+// error; *packageId the package's id (0 when it was only dispatched).
+// (RestorePatchFromPipe is its caller: the patch package put back.)
+NewtonErr
+NewPackage(CPipe* pipe, RefArg storeObject, ULong* packageId)
+{
+	TStoreWrapper* wrapper = (TStoreWrapper*) GetFrameSlotRef(storeObject, RSSYMstore);
+	TStore* store = wrapper->fStore;
+	RefVar unused;
+	OSErrIf(wrapper->LockStore());
+	NewtonErr err;
+	newton_try
+	{
+		PSSId rootId;
+		err = store->NewWithinTransaction(0, &rootId);
+		if (err == noErr)
+		{
+			TCallbackCompressor* compressor = (TCallbackCompressor*) NewByName("TCallbackCompressor", "TLZCallbackCompressor");
+			if (compressor == nil)
+				err = kNoMemory;			// (-7000)
+			else
+			{
+				err = compressor->Init(nil);
+				if (err == noErr)
+					err = NewPackage(pipe, store, rootId, packageId, (char*) "TLZStoreDecompressor", nil, 0, compressor);
+				compressor->Delete();
+				if (err == noErr && *packageId != 0)
+					StorePackageDirectoryAdd(storeObject, RefVar(MAKEINT(rootId)));
+			}
+		}
+	}
+	cleanup
+	{
+		OSErrIf(wrapper->Abort());
+	}
+	end_try;
+	OSErrIf(wrapper->UnlockStore());
+	return err;
+}
+
+
 // ROM 0x001fb504 FPidToPackageLite
 // PidToPackageLite(pid): a clone of canonicalPackageLiteFrame - the id,
 // the size, the store and the pssid - of a package on a store; nil for
@@ -630,4 +911,8 @@ RegisterStorePackageNatives(void)
 	RegisterNativeFunction("FGetPkgRefInfo", (void*) FGetPkgRefInfo, 1);
 	RegisterNativeFunction("FGetPkgInfoFromPssid", (void*) FGetPkgInfoFromPssid, 2);
 	RegisterNativeFunction("FPidToPackageLite", (void*) FPidToPackageLite, 1);
+	RegisterNativeFunction("FActivate1XPackage", (void*) FActivate1XPackage, 2);
+	RegisterNativeFunction("FDeActivate1XPackage", (void*) FDeActivate1XPackage, 1);
+	RegisterNativeFunction("FRemove1XPackage", (void*) FRemove1XPackage, 1);
+	RegisterNativeFunction("Store1XPackageToVBO", (void*) Store1XPackageToVBO, 1);
 }
