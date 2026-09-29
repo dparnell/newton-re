@@ -11,6 +11,12 @@ nothing.
 
     python romsrc.py extract build/MP2x00US -o build/MP2x00US/romsrc
     python romsrc.py build build/MP2x00US/romsrc -o build/MP2x00US/objects.bin --check build/MP2x00US
+
+The output (-o) is what the host loads in place of a ROM image
+(`newton --objects`, frames/ROMImport.h's ImportBuiltObjects): the header
+- the 8 bytes "NewtObjs", then as big-endian words the version (1), the
+area's base address and size, the magic-pointer table's address and its
+count - then the area, then the magic pointers as big-endian words.
     python romsrc.py roundtrip build/MP2x00US -o <dir> --newtonscript <exe>   # both, as the ctest runs them
 
 `build` needs the host's newtonscript (--newtonscript) to compile the
@@ -27,6 +33,9 @@ binary but strings and reals is kept as its bytes):
                      host's compiler (newtonscript --compile-records)
     maps.ns          the frame maps, `map_<addr> := map(class, supermap, 'tag, ...);`
     resources/<class>/<addr>.bin   the binaries' bytes
+    magic.tsv        the magic-pointer table (gROMMagicPointerTable): each
+                     entry's index and what it is - an object's path in
+                     the layout, or a value
     layout.tsv       the manifest: every object's address, path and header flags,
                      and each frame's map; `alias` lines say which named
                      object a path inside a compiled function is (an object
@@ -430,6 +439,14 @@ class Extractor:
 				f.write("\t".join(fields) + "\n")
 			for path, name in self.aliases:
 				f.write("alias\t%s\t%s\n" % (path, name))
+		with open(os.path.join(self.out, "magic.tsv"), "w", encoding="utf-8", newline="\n") as f:
+			count = rom.word(rom.mp_table)
+			f.write("# the magic-pointer table: @index, then the object (its path) or value\n")
+			f.write("table\t%x\n" % rom.mp_table)
+			for i in range(count):
+				ref = rom.word(rom.mp_table + 4 + 4 * i)
+				what = self.paths[ref] if ref in self.inside else self.value(ref, "@%d" % i)
+				f.write("%d\t%s\n" % (i, what))
 		return len(defs), len(mapdefs)
 
 
@@ -879,6 +896,26 @@ class Builder:
 				return addr[v.name]
 			return addr[v.path]
 
+		# the magic-pointer table
+		self.magic_base = None
+		self.magic = []
+		with open(os.path.join(self.src, "magic.tsv"), encoding="utf-8") as f:
+			for line in f:
+				if line.startswith("#"):
+					continue
+				index, what = line.rstrip("\n").split("\t", 1)
+				if index == "table":
+					self.magic_base = int(what, 16)
+					continue
+				if int(index) != len(self.magic):
+					raise ValueError("magic.tsv: entry %s out of order" % index)
+				if what in addr:
+					self.magic.append(addr[what])
+				elif what.startswith("'"):
+					self.magic.append(ref(Reader(what, "magic.tsv", self.src).value()))
+				else:
+					self.magic.append(ref(Reader(what, "magic.tsv", self.src).value()))
+
 		out = bytearray([PAD]) * area_size
 		for a, path, flags, extra in entries:
 			if path.startswith("'"):
@@ -902,6 +939,23 @@ class Builder:
 			o = a - area_base
 			out[o:o + len(words)] = words
 		return area_base, bytes(out)
+
+
+def container(builder, area_base, area):
+	"""The file the host loads: header, area, magic pointers."""
+	header = b"NewtObjs" + struct.pack(">5I", 1, area_base, len(area), builder.magic_base, len(builder.magic))
+	return header + area + b"".join(struct.pack(">I", r) for r in builder.magic)
+
+
+def check_magic(builder, rom):
+	count = rom.word(rom.mp_table)
+	original = [rom.word(rom.mp_table + 4 + 4 * i) for i in range(count)]
+	if builder.magic_base != rom.mp_table or builder.magic != original:
+		bad = [i for i in range(max(len(original), len(builder.magic)))
+			   if i >= len(original) or i >= len(builder.magic) or original[i] != builder.magic[i]]
+		print("the magic-pointer table differs at %d entries, e.g. @%s" % (len(bad), bad[:5]), file=sys.stderr)
+		return 1
+	return 0
 
 
 def check(area_base, built, rom, entries_src):
@@ -954,12 +1008,12 @@ def main(argv=None):
 	base, area = builder.build()
 	if a.output:
 		with open(a.output, "wb") as f:
-			f.write(area)
+			f.write(container(builder, base, area))
 	print("built %d objects, %#x bytes at %#x" % (len(builder.by_path), len(area), base))
 	if a.check:
 		rom = nf.ROM(a.check)
-		result = check(base, area, rom, None)
-		print("the object area is %s" % ("identical to the ROM's" if result == 0 else "NOT the ROM's"))
+		result = check(base, area, rom, None) | check_magic(builder, rom)
+		print("the object area and magic pointers are %s" % ("identical to the ROM's" if result == 0 else "NOT the ROM's"))
 		return result
 	return 0
 
