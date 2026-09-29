@@ -249,6 +249,42 @@ class DockSession:
         print("dock.py: soup removed: %d; backup %s" % (result, "all right" if ok and result == 0 else "WRONG"))
         return ok and result == 0
 
+    def other_requests(self):
+        """In a session: 'test' and 'rtst' echoed, the class inheritance
+        ('ginh'), the sync options ('gsyn'), a global function called
+        ('cgfn'), and a protocol extension installed and removed ('pext',
+        'rpex').  ==> True if it all came out as it should."""
+        ok = True
+        self.write_command(b"test", b"echo")
+        echoed = self.expect(b"test")
+        ok = ok and echoed == b"echo"
+        # (the ROM writes the 'rtst' header twice: a stray one first)
+        self.write_command(b"rtst", nsof.encode({Symbol("x"): 1}))
+        stray = self._read(12)
+        back = nsof.decode(self.expect(b"rtst"))
+        print("dock.py: 'test' echoed %r; 'rtst' echoed %r after a stray %r" % (echoed, back, stray))
+        ok = ok and stray == b"newtdockrtst" and back == {Symbol("x"): 1}
+        self.write_command(b"ginh")
+        data = self.expect(b"dinh")
+        count = struct.unpack(">I", data[:4])[0]
+        names = data[4:].split(b"\0")
+        pairs = dict(zip(names[0:2 * count:2], names[1:2 * count:2]))
+        print("dock.py: %d classes in the inheritance: %s" % (count, ", ".join(
+            "%s < %s" % (k.decode("mac_roman"), v.decode("mac_roman")) for k, v in list(pairs.items())[:4])))
+        ok = ok and count > 0 and len(pairs) == count
+        self.write_command(b"gsyn")
+        options = nsof.decode(self.expect(b"sopt"))
+        print("dock.py: the sync options: %r" % (options,))
+        self.write_command(b"cgfn", nsof.encode({Symbol("function"): Symbol("Max"), Symbol("args"): [3, 7]}))
+        result = nsof.decode(self.expect(b"cres"))
+        print("dock.py: Max(3, 7) called on the Newton: %r" % (result,))
+        ok = ok and result == 7
+        _, installed = self.word(b"pext", struct.pack(">I", 0x7a7a7a7a) + nsof.encode(None))
+        _, removed = self.word(b"rpex", struct.pack(">I", 0x7a7a7a7a))
+        print("dock.py: extension 'zzzz' installed %d, removed %d; requests %s"
+              % (installed, removed, "all right" if ok and installed == 0 and removed == 0 else "WRONG"))
+        return ok and installed == 0 and removed == 0
+
     def load_packages(self, packages, session=False):
         """The package loader's session, or (session) a docking session
         that loads the packages.  ==> the results, one a package."""
@@ -261,6 +297,8 @@ class DockSession:
                 raise RuntimeError("the entry commands went wrong")
             if not self.backup_a_soup():
                 raise RuntimeError("the backup commands went wrong")
+            if not self.other_requests():
+                raise RuntimeError("the other requests went wrong")
         results = []
         for path in packages:
             with open(path, "rb") as f:
@@ -277,6 +315,17 @@ class DockSession:
             info = nsof.decode(self.expect(b"pinf"))
             print("dock.py: packages on the store: %s" % ", ".join(
                 "%s (%d bytes, id %d)" % (p[Symbol("name")], p[Symbol("packageSize")], p[Symbol("packageId")]) for p in info))
+            # each removed ('rmvp') and loaded again
+            for p in info:
+                _, result = self.word(b"rmvp", nsof.encode(p[Symbol("name")]))
+                self.write_command(b"gpin", nsof.encode(p[Symbol("name")]))
+                left = nsof.decode(self.expect(b"pinf"))
+                print("dock.py: %s removed (%d), %d left of the name" % (p[Symbol("name")], result, len(left)))
+            for path in packages:
+                with open(path, "rb") as f:
+                    self.write_command(b"lpkg", f.read())
+                result = struct.unpack(">i", self.expect(b"dres")[:4])[0]
+                print("dock.py: %s loaded again: dres %d" % (os.path.basename(path), result))
         self.write_command(b"disc")
         return results
 

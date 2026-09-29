@@ -324,7 +324,7 @@ TDocker::TDocker()
 	fConversionFrame = NILREF;
 	fOwnerApp = NILREF;
 	fCleanedUp = false;
-	fFieldb4 = false;
+	fInConnectionApp = false;
 	fState = kDockStateNone;
 	// (not set by the ROM's constructor either)
 	fStopDone = false;
@@ -3057,14 +3057,280 @@ TDocker::GetPackageInfo(void)
 }
 
 
+// ROM 0x00092b18 DoRestorePackage__7TDockerFv
+// 'rpkg': a package restored from the pieces a backup kept (its entry in
+// the current store's packages soup; RestoreAPackageFromPieces).
+void
+TDocker::DoRestorePackage(void)
+{
+	if (ISNIL(fCurrentStore))
+		fCurrentSoup = NILREF;
+	else
+		fCurrentSoup = StoreGetSoup(fCurrentStore, RefVar(Rextrassoupname));
+	RefVar pieces(ReadRef(fCurrentStore));
+	NSCallGlobalFn(RefVar(RSSYMrestoreapackagefrompieces), pieces, fCurrentStore);
+	WriteResult(noErr);
+	AddChangedSoup(RefVar(RSSYMchanged), 1);
+}
+
+
+// ROM 0x00092bf0 DoRemovePackage__7TDockerFv
+// 'rmvp': the package of the name removed from the current store, if it is
+// there.
+void
+TDocker::DoRemovePackage(void)
+{
+	RefVar name(ReadRef(fCurrentStore));
+	RefVar entry(NSCallGlobalFn(RefVar(RSSYMgetpackageentry), name, fCurrentStore));
+	if (NOTNIL(entry))
+		NSCallGlobalFn(RefVar(RSSYMremovepackage), entry);
+	WriteResult(noErr);
+	AddChangedSoup(RefVar(RSSYMchanged), 1);
+}
+
+
+// ROM 0x000979ec WriteInheritanceFrame__7TDockerFv
+// 'ginh' -> 'dinh': the class inheritance (each class and its superclass
+// as C strings, their count first).
+void
+TDocker::WriteInheritanceFrame(void)
+{
+	ULong count = 0;
+	ULong length = 0;
+	{
+		RefVar inheritance(gInheritanceFrame);
+		TObjectIterator iter(inheritance, false);
+		for ( ; !iter.Done(); iter.Next())
+		{
+			count++;
+			length += strlen(SymbolName(iter.Tag())) + strlen(SymbolName(iter.Value())) + 2;
+		}
+	}
+	WriteDockerHeader('dinh', false);
+	*fPipe << (unsigned long) (length + 4);
+	*fPipe << (unsigned long) count;
+	{
+		RefVar inheritance(gInheritanceFrame);
+		TObjectIterator iter(inheritance, false);
+		for ( ; !iter.Done(); iter.Next())
+		{
+			const char* name = SymbolName(iter.Tag());
+			fPipe->WriteChunk(name, strlen(name) + 1, false);
+			name = SymbolName(iter.Value());
+			fPipe->WriteChunk(name, strlen(name) + 1, false);
+		}
+	}
+	Pad(length + 4);
+	fPipe->FlushWrite();
+}
+
+
+// ROM 0x0009b9b8 WriteSyncOptions__7TDockerFv
+// 'gsyn' -> 'sopt': the sync options the Connection application gave
+// DoConnection.
+void
+TDocker::WriteSyncOptions(void)
+{
+	WriteDockerHeader('sopt', false);
+	TObjectWriter writer(fDoConnectionArg, *fPipe, false);
+	if (fVBOCompression == 2 || (fIsPackageSoup && fVBOCompression == 1))
+		writer.SetCompressLargeBinaries();
+	long size = writer.Size();
+	*fPipe << size;
+	writer.Write();
+	Pad(size);
+	fPipe->FlushWrite();
+}
+
+
+// ROM 0x0009bff8 TestMessage__7TDockerFv
+// 'test': the data sent back as it came (no data: an empty 'test').
+void
+TDocker::TestMessage(void)
+{
+	if (fLength == 0)
+	{
+		WriteDockerHeader('test', true);
+		return;
+	}
+	Ptr data = NewPtr(fLength);
+	if (data == nil)
+		OutOfMemory();
+	ReadChunk(data, fLength, true);
+	WriteDockerHeader('test', false);
+	*fPipe << (unsigned long) fLength;
+	fPipe->WriteChunk(data, fLength, false);
+	Pad(fLength);
+	fPipe->FlushWrite();
+	DisposPtr(data);
+}
+
+
+// ROM 0x0009c0c0 TestRefMessage__7TDockerFv
+// 'rtst': the object sent back (no data: an empty 'rtst').
+// ROM BUG: the header is written twice - once here, without its length,
+// and again by WriteRef - so what the desktop gets is a stray 12-byte
+// header in front of the answer.
+void
+TDocker::TestRefMessage(void)
+{
+	if (fLength == 0)
+	{
+		WriteDockerHeader('rtst', true);
+		return;
+	}
+	RefVar obj(ReadRef(RefVar(NILREF)));
+	WriteDockerHeader('rtst', false);
+	WriteRef('rtst', obj);
+}
+
+
+// ROM 0x00092cf8 CallFunction__7TDockerFUc
+// 'cgfn' (global) / 'crmf' (the root's method): a function called - a frame
+// {function, args}, or its name followed by the arguments.  ==> 'cres'
+// what it answered.
+void
+TDocker::CallFunction(Boolean global)
+{
+	RefVar call(ReadRef(fCurrentStore));
+	RefVar name, args, result;
+	if (!IsSymbol(call))
+	{
+		name = GetFrameSlot(call, RSSYMfunction);
+		args = GetFrameSlot(call, RSSYMargs);
+	}
+	else
+	{
+		name = call;
+		args = ReadRef(fCurrentStore);
+	}
+	if (!global)
+	{
+		RefVar root(NSCallGlobalFn(RefVar(RSSYMgetroot)));
+		result = DoMessage(root, name, args);
+	}
+	else
+		result = NSCallGlobalFnWithArgArray(name, args);
+	WriteRef('cres', result);
+}
+
+
+// ROM 0x000927ac CallConnectionApp__7TDockerFRC6RefVarT1
+// A method of the Connection application called with the protocol frame
+// and the argument (kDockErrDesktopError if there is no application or no
+// such method); an error the docker recorded meanwhile is thrown.
+Ref
+TDocker::CallConnectionApp(RefArg method, RefArg arg)
+{
+	RefVar root(NSCallGlobalFn(RefVar(RSSYMgetroot)));
+	if (ISNIL(root))
+		Throw(exLongErrorException, (void*) (intptr_t) kDockErrDesktopError, nil);
+	RefVar app(GetVariable(root, RefVar(RSSYMconnection), nil, 0));
+	if (ISNIL(app))
+		Throw(exLongErrorException, (void*) (intptr_t) kDockErrDesktopError, nil);
+	RefVar fn(GetProtoVariable(app, method, nil));
+	if (ISNIL(fn))
+		Throw(exLongErrorException, (void*) (intptr_t) kDockErrDesktopError, nil);
+	RefVar args(AllocateArray(RSSYMarray, 2));
+	SetArraySlot(args, 0, fConnection);
+	SetArraySlot(args, 1, arg);
+	fInConnectionApp = true;
+	RefVar result(DoBlock(fn, args));
+	fInConnectionApp = false;
+	if (fError != noErr)
+		Throw(exLongErrorException, (void*) (intptr_t) fError, nil);
+	return result;
+}
+
+
+// ROM 0x00092938 DoDisplaySlip__7TDockerFv
+// 'dslp': a slip the desktop describes shown by the Connection application
+// (DisplaySlip).  ==> 'slrs' what it answered (a number).
+void
+TDocker::DoDisplaySlip(void)
+{
+	RefVar slip(ReadRef(RefVar(NILREF)));
+	RefVar result(CallConnectionApp(RefVar(RSSYMdisplayslip), slip));
+	WriteDockerHeader('slrs', false);
+	*fPipe << (long) 4;
+	*fPipe << (long) RINT(result);
+	fPipe->FlushWrite();
+}
+
+
+// ROM 0x000929f8 DoImportParametersSlip__7TDockerFv
+// 'islp': the import parameters slip shown (DisplayImportSlip), the docker
+// unlocked meanwhile.  ==> 'islr' what the user chose.
+void
+TDocker::DoImportParametersSlip(void)
+{
+	RefVar parameters(ReadRef(RefVar(NILREF)));
+	Boolean wasLocked = GetTDockerLock();
+	UnlockTDocker();
+	RefVar result(CallConnectionApp(RefVar(RSSYMdisplayimportslip), parameters));
+	if (wasLocked)
+		WaitAndLockTDocker();
+	WriteRef('islr', result);
+}
+
+
+// ROM 0x00092aa0 DoGetPassword__7TDockerFv
+// 'gpwd': the user asked for the password (GetPassword), which is sent
+// ('pass', the desktop's challenge under its key).
+void
+TDocker::DoGetPassword(void)
+{
+	RefVar prompt(ReadRef(RefVar(NILREF)));
+	RefVar password(CallConnectionApp(RefVar(RSSYMgetpassword), prompt));
+	WritePassword(password);
+}
+
+
+// ROM 0x000926cc ReadProtocolExtension__7TDockerFv
+// 'pext': a protocol extension the desktop installs - the command, then
+// the function.
+void
+TDocker::ReadProtocolExtension(void)
+{
+	unsigned long command;
+	*fPipe >> command;
+	RefVar fn(ReadRef(RefVar(NILREF)));
+	fError = InstallProtocolExtension(RefVar(NILREF), fn, command);
+}
+
+
+// ROM 0x00092760 ReadRemoveProtocolExtension__7TDockerFv
+// 'rpex': a protocol extension removed.
+void
+TDocker::ReadRemoveProtocolExtension(void)
+{
+	unsigned long command;
+	*fPipe >> command;
+	fError = RemoveProtocolExtension(RefVar(NILREF), command);
+}
+
+
+// ROM 0x00099ca8 ReadResultString__7TDockerFv
+// 'ress': a result the desktop gives as a string, kept in the protocol
+// frame's desktopResult.  ==> kDockErrResultString.
+long
+TDocker::ReadResultString(void)
+{
+	RefVar result(ReadRef(RefVar(NILREF)));
+	SetFrameSlot(fConnection, RSSYMdesktopresult, result);
+	return kDockErrResultString;
+}
+
+
 // ROM 0x000934b0 ProcessCommand__7TDockerFRUcT1
 // One of the desktop's commands carried out.  done: the session is over
 // ('disc'); operationDone: the operation the session was for is over, and
 // the command loop ends without disconnecting (an extension answered,
 // 'opca', 'opdn', a package loaded on protocol 10).
 // The stores', soups', cursors' and entries' commands are here too, and
-// making, sending and backing up soups, and the package list.  NOT YET:
-// the package restore and removal, patch, slip and function commands - each is answered 'unkn' as a command the Newton does not know
+// making, sending and backing up soups, the package list, restoring and
+// removing packages, calling functions and the Connection application's
+// slips.  NOT YET: the system patches ('gpat', 'rpat') - each is answered 'unkn' as a command the Newton does not know
 // is, which a desktop takes as a Newton too old to do it.
 void
 TDocker::ProcessCommand(Boolean* done, Boolean* operationDone)
@@ -3273,6 +3539,50 @@ TDocker::ProcessCommand(Boolean* done, Boolean* operationDone)
 			break;
 		case 'gpin':
 			GetPackageInfo();
+			break;
+		case 'rpkg':
+			DoRestorePackage();
+			break;
+		case 'rmvp':
+			DoRemovePackage();
+			break;
+		case 'ginh':
+			WriteInheritanceFrame();
+			break;
+		case 'gsyn':
+			WriteSyncOptions();
+			break;
+		case 'test':
+			TestMessage();
+			break;
+		case 'rtst':
+			TestRefMessage();
+			break;
+		case 'cgfn':
+			CallFunction(true);
+			break;
+		case 'crmf':
+			CallFunction(false);
+			break;
+		case 'dslp':
+			DoDisplaySlip();
+			break;
+		case 'islp':
+			DoImportParametersSlip();
+			break;
+		case 'gpwd':
+			DoGetPassword();
+			break;
+		case 'pext':
+			ReadProtocolExtension();
+			WriteResult(fError);
+			break;
+		case 'rpex':
+			ReadRemoveProtocolExtension();
+			WriteResult(fError);
+			break;
+		case 'ress':
+			fError = ReadResultString();
 			break;
 		case kDSetTime:
 		{

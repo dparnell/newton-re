@@ -112,7 +112,8 @@ enum
 	kDockErrNoEntry				= -28005,		// an entry command with no entry
 	kDockErrNoSuchEntry			= -28008,		// no entry of the id
 	kDockErrEntryNotFound		= -28002,		// an entry to change that is not there
-	kDockErrBadCursor			= -28026		// no cursor of the number
+	kDockErrBadCursor			= -28026,		// no cursor of the number
+	kDockErrResultString		= -28028		// the desktop sent a result as a string ('ress')
 };
 
 // the session's states (eDockingState)
@@ -297,6 +298,21 @@ public:
 	void			ClearSoupDirty(void);
 	void			BackupSoup(void);
 	void			GetPackageInfo(void);
+	void			DoRestorePackage(void);
+	void			DoRemovePackage(void);
+	void			WriteInheritanceFrame(void);
+	void			WriteSyncOptions(void);
+	// the desktop's other requests
+	void			TestMessage(void);
+	void			TestRefMessage(void);
+	void			CallFunction(Boolean global);
+	Ref				CallConnectionApp(RefArg method, RefArg arg);
+	void			DoDisplaySlip(void);
+	void			DoImportParametersSlip(void);
+	void			DoGetPassword(void);
+	void			ReadProtocolExtension(void);
+	void			ReadRemoveProtocolExtension(void);
+	long			ReadResultString(void);
 
 	void			ProcessCommand(Boolean* done, Boolean* operationDone);
 	Boolean			CheckProtocolExtension(ULong command, Boolean* result);
@@ -355,7 +371,7 @@ public:
 	Boolean			fPipeOpen;				// +0xb1
 	Boolean			fSelectiveSyncOK;		// +0xb2
 	Boolean			fCleanedUp;				// +0xb3
-	Boolean			fFieldb4;				// +0xb4
+	Boolean			fInConnectionApp;		// +0xb4  a method of the Connection application is running (CallConnectionApp)
 };
 
 
