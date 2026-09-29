@@ -20,6 +20,11 @@
 #include "CompMath.h"
 #include "FixedMath.h"
 #include "OSErrors.h"
+#include "Rects.h"
+#include "Regions.h"
+#include "Draw.h"
+#include "Angles.h"
+#include <string.h>
 
 
 /*------------------------------------------------------------------------------
@@ -212,18 +217,182 @@ OvalRgn(const Rect* r, long ovalWidth, long ovalHeight)
 	A r c s ,   o v a l s ,   r o u n d   r e c t a n g l e s
 ------------------------------------------------------------------------------*/
 
+// (host) One of DrawArc's slabs: row y from left up to right, cut to the
+// clip rectangle as the ROM's DrawSlab (0x00347784) cuts it, drawn through
+// the port's regions (the ROM masks the row with them itself).
+static void
+ArcSlab(long y, long left, long right, const Rect* clip, long mode, PatternHandle pattern)
+{
+	if (left < clip->left)
+		left = clip->left;
+	if (right > clip->right)
+		right = clip->right;
+	if (right <= left)
+		return;
+	Rect slab;
+	SetRect(&slab, left, y, right, y + 1);
+	DrawRect(&slab, mode, pattern);
+}
+
+
+// (host) An arc of less than a full turn, as the ROM's DrawArc draws it: a
+// row at a time down the oval (and, framed, the oval inset by the pen),
+// each row cut by the two lines from the centre at the start and end
+// angles.  An angle is QuickDraw's - nought straight up, clockwise - and a
+// line's slope is SlopeFromAngle's scaled by the rectangle's aspect; each
+// line's x is followed down the rows from the top.  Which side of a line
+// a row keeps depends on whether its ray points up (its "q" is negative:
+// the angle is within 90 of the top); at the centre row the two lines
+// change places (the lower half is walked the other way round), and an arc
+// that lies wholly in one half has the other half left out.
+static void
+DrawPartArc(const Rect* r, Boolean framed, long ovalWidth, long ovalHeight, long mode, PatternHandle pattern, long startAngle, long arcAngle, const Rect* clip)
+{
+	GrafPort* port = GetCurrentPort();
+	long start = startAngle % 360;
+	if (start < 0)
+		start += 360;
+	long end = start + arcAngle;
+	if (end > 359)
+		end -= 360;
+	long cy = (r->bottom + r->top) >> 1;
+	long cx = (r->left + r->right) >> 1;
+	long height = r->bottom - r->top;
+	Fixed aspect = FixedDivide((Fixed) ((ULong32) (r->right - r->left) << 16), (Fixed) ((ULong32) height << 16));
+	Fixed slopeStart = FixedMultiply(SlopeFromAngle(start), aspect);
+	Fixed slopeEnd = FixedMultiply(SlopeFromAngle(end), aspect);
+	Fixed xStart = (Fixed) (((ULong32) cx << 16) - (ULong32) (height >> 1) * (ULong32) slopeStart);
+	Fixed xEnd = (Fixed) (((ULong32) cx << 16) - (ULong32) (height >> 1) * (ULong32) slopeEnd);
+	long qStart = start < 180 ? start - 90 : 270 - start;
+	long qEnd = end < 180 ? end - 90 : 270 - end;
+	Boolean skip = false;
+	if (arcAngle == 180)
+	{
+		if (start == 90)
+			skip = true;							// the lower half only
+	}
+	else if (arcAngle < 180 && (qStart | qEnd) >= 0)
+		skip = true;								// both rays point down
+
+	OvalRec outer, inner;
+	memset(&inner, 0, sizeof(inner));
+	InitOval(r, &outer, ovalWidth, ovalHeight);
+	long curveEnd = outer.fTop + (ovalHeight >> 1);
+	long straightEnd = curveEnd + (r->bottom - r->top) - ovalHeight;
+	inner.fTop = 0x7fff;
+	if (framed)
+	{
+		long pnh = port->pnSize.h;
+		Rect in;
+		in.left = (short) (r->left + pnh);
+		in.right = (short) (r->right - pnh);
+		if (in.left < in.right)
+		{
+			long pnv = port->pnSize.v;
+			in.top = (short) (r->top + pnv);
+			in.bottom = (short) (r->bottom - pnv);
+			if (in.top < in.bottom)
+				InitOval(&in, &inner, ovalWidth - pnh * 2, ovalHeight - pnv * 2);
+		}
+	}
+	long y = outer.fTop;
+	do
+	{
+		if (y < curveEnd || y >= straightEnd)
+		{
+			BumpOval(&outer, y);
+			BumpOval(&inner, y);
+		}
+		if (y == cy)
+		{
+			long q = -qEnd;
+			skip = false;
+			if (arcAngle == 180)
+			{
+				if (start == 270)
+					break;							// the upper half only
+			}
+			else if (arcAngle < 180 && (-qStart | q) >= 0)
+				break;								// both rays point up
+			qEnd = -qStart;
+			qStart = q;
+			Fixed x = xEnd;
+			xEnd = xStart;
+			xStart = x;
+			Fixed slope = slopeEnd;
+			slopeEnd = slopeStart;
+			slopeStart = slope;
+		}
+		if (y >= clip->top && !skip)
+		{
+			long outerLeft = outer.fLeft >> 16;
+			long outerRight = outer.fRight >> 16;
+			long a = outerLeft;
+			if (qStart < 0 && a < (xStart >> 16))
+				a = xStart >> 16;
+			long b = outerRight;
+			if (qEnd < 0 && b > (xEnd >> 16))
+				b = xEnd >> 16;
+			Boolean bothUp = (qStart & qEnd) < 0;
+			if (y >= inner.fTop && inner.fBottom > y)
+			{
+				long innerLeft = inner.fLeft >> 16;
+				long innerRight = inner.fRight >> 16;
+				long c = innerLeft;
+				if (qEnd < 0 && c > (xEnd >> 16))
+					c = xEnd >> 16;
+				long d = innerRight;
+				if (qStart < 0 && d < (xStart >> 16))
+					d = xStart >> 16;
+				if (a < b)
+				{
+					ArcSlab(y, a, c, clip, mode, pattern);
+					ArcSlab(y, d, b, clip, mode, pattern);
+				}
+				else if (bothUp && arcAngle > 180)
+				{
+					if (c == b)
+						ArcSlab(y, a, innerLeft, clip, mode, pattern);
+					else if (d == a)
+						ArcSlab(y, innerRight, b, clip, mode, pattern);
+					ArcSlab(y, outerLeft, c, clip, mode, pattern);
+					ArcSlab(y, d, outerRight, clip, mode, pattern);
+				}
+			}
+			else if (a < b)
+				ArcSlab(y, a, b, clip, mode, pattern);
+			else if (bothUp && arcAngle > 180)
+			{
+				ArcSlab(y, outerLeft, b, clip, mode, pattern);
+				ArcSlab(y, a, outerRight, clip, mode, pattern);
+			}
+		}
+		xStart = AddFixed(xStart, slopeStart);
+		xEnd = AddFixed(xEnd, slopeEnd);
+		y++;
+	} while (y < clip->bottom);
+}
+
+
 // ROM 0x002aaaf8 DrawArc__FP4RectUclN23PP8PixelMapN23
 // The shape - an oval of the corners' size within the rectangle, or, from
-// startAngle through arcAngle, the wedge of it - drawn under the mode and
-// pattern: the whole of it, or, framed, without the same shape inset by
-// the pen (the pen hidden: nothing).  NOT YET RECONSTRUCTED: arcs of less
-// than a full turn (the ROM clips the rows by the angles' slopes, the
-// centre and the ends' quadrants; nothing is drawn here).
+// startAngle through arcAngle, the wedge of it - drawn under the mode (a
+// pattern mode; anything else draws nothing) and pattern: the whole of it,
+// or, framed, without the same shape inset by the pen (the pen hidden:
+// nothing).  The ROM draws a row at a time within the rectangle the clip
+// and visible regions' boxes, the port and the shape have in common; a
+// full turn is drawn here as a region (DEVIATION, the same pixels), less
+// than one row by row as the ROM does (DrawPartArc).
 void
 DrawArc(const Rect* r, Boolean framed, long ovalWidth, long ovalHeight, long mode, PatternHandle pattern, long startAngle, long arcAngle)
 {
 	GrafPort* port = GetCurrentPort();
-	if (port->pnVis < 0 || arcAngle == 0)
+	if (port->pnVis < 0 || (mode & ~7) != 8)
+		return;
+	Rect clip;
+	if (!RSect(&clip, 4, &(*port->clipRgn)->rgnBBox, &(*port->visRgn)->rgnBBox, &port->portBits.bounds, r))
+		return;
+	if (arcAngle == 0)
 		return;
 	if (arcAngle < 0)
 	{
@@ -231,7 +400,10 @@ DrawArc(const Rect* r, Boolean framed, long ovalWidth, long ovalHeight, long mod
 		arcAngle = -arcAngle;
 	}
 	if (arcAngle < 360)
+	{
+		DrawPartArc(r, framed, ovalWidth, ovalHeight, mode, pattern, startAngle, arcAngle, &clip);
 		return;
+	}
 	RgnHandle shape = OvalRgn(r, ovalWidth, ovalHeight);
 	if (shape == nil)
 		return;

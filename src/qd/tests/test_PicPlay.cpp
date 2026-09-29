@@ -32,6 +32,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 static int failures = 0;
 #define EXPECT(cond) do { if (!(cond)) { failures++; fprintf(stderr, "FAIL %s:%d: %s\n", __FILE__, __LINE__, #cond); } } while (0)
@@ -766,6 +767,71 @@ TestPixPat()
 }
 
 
+// the arcs the arc test draws: a quarter painted, three quarters framed
+// with a thick pen, the lower half painted, a thin wedge across the top
+// inverted, and a round-cornered arc (FillArc over an oval of its own)
+static void
+ArcScene()
+{
+	PenNormal();
+	Rect r;
+	SetRect(&r, 2, 2, 30, 30);
+	PaintArc(&r, 0, 90);
+	SetRect(&r, 34, 2, 62, 30);
+	PenSize(3, 2);
+	FrameArc(&r, 45, 270);
+	PenNormal();
+	SetRect(&r, 2, 34, 30, 60);
+	PaintArc(&r, 90, 180);
+	SetRect(&r, 34, 34, 62, 60);
+	PaintArc(&r, -20, 40);
+	InvertArc(&r, 200, -60);
+	PenNormal();
+}
+
+
+// Arcs of less than a full turn, drawn a row at a time as the ROM draws
+// them: the right pixels on each side of the lines from the centre, and
+// the same recorded and played back.
+static void
+TestArcs()
+{
+	ClearMap();
+	ArcScene();
+	// (PICPLAY_DUMP set in the environment prints the arcs, to look at)
+	if (getenv("PICPLAY_DUMP"))
+		for (long y = 0; y < kSize; y++)
+		{
+			for (long x = 0; x < kSize; x++)
+				fputc(GetPixel(&gMap, x, y) ? '#' : '.', stderr);
+			fputc('\n', stderr);
+		}
+	unsigned char direct[sizeof(gBits)];
+	memcpy(direct, gBits, sizeof(gBits));
+	// the quarter from 12 o'clock to 3: the upper right of its box only
+	EXPECT(Ink(16, 2, 30, 16) > 120 && Ink(2, 2, 15, 30) == 0 && Ink(2, 17, 30, 30) == 0);
+	// three quarters framed from 45 degrees: nothing between 1:30 and 10:30
+	// across the top, the ring elsewhere
+	EXPECT(GetPixel(&gMap, 48, 2) == 0 && GetPixel(&gMap, 48, 29) != 0 && GetPixel(&gMap, 34, 16) != 0);
+	EXPECT(GetPixel(&gMap, 48, 16) == 0);							// the middle is not framed
+	// the lower half
+	EXPECT(Ink(2, 34, 30, 46) == 0 && Ink(2, 48, 30, 60) > 200);
+
+	ClearMap();
+	Rect frame;
+	SetRect(&frame, 0, 0, kSize, kSize);
+	PicHandle picture = OpenPicture(&frame, false);
+	ArcScene();
+	ClosePicture();
+	EXPECT(CountOpcode(picture, 0x0061) >= 1 && CountOpcode(picture, 0x0060) >= 1);
+	DrawPicture(picture, &frame, false);
+	EXPECT(memcmp(direct, gBits, sizeof(gBits)) == 0);
+	if (memcmp(direct, gBits, sizeof(gBits)) != 0)
+		ReportDifference(direct);
+	KillPicture(picture);
+}
+
+
 // PackBits, the ROM's: runs and literals, and back out through UnpackBits
 static void
 TestPackBits()
@@ -844,6 +910,7 @@ main()
 	TestRecordText();
 	TestRecordCurves();
 	TestPixPat();
+	TestArcs();
 
 	ClosePort(&gPort);
 	printf("test_PicPlay: %s\n", failures == 0 ? "ok" : "FAILED");

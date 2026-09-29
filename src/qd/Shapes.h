@@ -10,9 +10,11 @@
 				and 64-bit arithmetic, InitOval/BumpOval, PutOval writing
 				the rows' end points), drawn by DrawArc as a region: the
 				whole shape, or, framed, the shape less the same shape inset
-				by the pen.  Arcs of less than a full turn are NOT YET
-				RECONSTRUCTED (the ROM's DrawArc clips the oval's rows by the
-				angles' slopes; the host draws nothing for them).
+				by the pen.  An arc of less than a full turn is drawn a row
+				at a time as the ROM's DrawArc draws it, each row of the
+				oval (and the inset one) cut by the lines from the centre at
+				the start and end angles (SlopeFromAngle, scaled by the
+				rectangle's aspect).
 
 	Reconstructed from the MP2x00 US ROM (0x002aa908-0x002aaaf8,
 	0x002f7664-0x002f77dc, 0x002f7fc0, 0x00320550-0x00320bd0,
