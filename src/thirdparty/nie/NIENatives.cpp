@@ -18,6 +18,7 @@ void
 RegisterNIENatives(void)
 {
 	REGISTER(0x29ec, NIEDoEvent, 3, "_proto.DoEvent");
+	REGISTER(0x2ff8, NIEDoEventLoop, 1, "_proto.DoEvent_Loop");
 	REGISTER(0x7a1c, NIEQueuePeek, 1, "QueueTemplate.Peek");
 	REGISTER(0x7b78, NIEQueueDeQueue, 1, "QueueTemplate.DeQueue");
 	REGISTER(0x7dc0, NIEQueueEnQueue, 2, "QueueTemplate.EnQueue");

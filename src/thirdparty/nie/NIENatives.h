@@ -44,6 +44,9 @@ Ref		NIEKillPeriodicEvent(RefArg rcvr, RefArg event, RefArg closure);
 // ProtoClone (ProtoFSMClone.cpp)
 Ref		NIEProtoClone(RefArg rcvr, RefArg obj, RefArg closure);
 
+// the engine's loop (ProtoFSMLoop.cpp)
+Ref		NIEDoEventLoop(RefArg rcvr, RefArg closure);
+
 void	RegisterNIENatives(void);
 
 #endif

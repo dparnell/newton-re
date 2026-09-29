@@ -78,4 +78,15 @@ void		NIESetVariable(RefArg env, RefArg symbol, RefArg value);
 // goes on to the next handler.
 bool		NIETryEvtEx(void (*body)(void*), void* data);
 
+// The same with a handler: `try body onexception |evt.ex| do handler`,
+// the handler given the exception (for CurrentException, which the native
+// code does inline as TInterpreter::TranslateException of the handler's
+// exception).
+void		NIETryEvtEx(void (*body)(void*), void (*handler)(void*, Exception*), void* data);
+
+// a <> b (integers inline, else FUnorderedLessOrGreater) and a + b
+// (integers inline, else FAdd).
+bool		NIENotEqual(RefArg a, RefArg b);
+Ref		NIEAdd(RefArg a, RefArg b);
+
 #endif

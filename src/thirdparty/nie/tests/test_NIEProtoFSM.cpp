@@ -328,6 +328,138 @@ TestProtoClone(void)
 }
 
 
+// A whole machine: protoFSM's methods as the package's native functions,
+// states in an ancestor frame, driven by DoEvent and DoEvent_Loop.
+static void
+TestLoop(void)
+{
+	static const char* const kCheck[] = { "fsm_private_context" };
+	static const char* const kQueue[] = { "queue" };
+	static const char* const kDeQueue[] = { "queue", "RemoveSlot" };
+	static const char* const kDoEvent[] = { "protoFSM:DoEvent", "DoEvent_Check", "pendingEventQueue", "EnQueue",
+		"pendingParamsQueue", "busy", "engineView", "SetupIdle", "turtle", "Array", "AddDelayedSend" };
+	static const char* const kProto[] = { "_proto" };
+	static const char* const kLoop[] = { "protoFSM:DoEvent_Loop", "DoEvent_Check", "pendingState", "stateCache",
+		"isNewPendingState", "ancestors", "MCollectAncestorStates", "eventCache", "pendingEventQueue", "Peek",
+		"MCollectAncestorEvents", "fsm_private_event:Release", "UnknownEvent", "pendingParamsQueue", "DebugFSM",
+		"UnknownState", "NilState", "currentStateFrame", "currentEventFrame", "DeQueue",
+		"currentState", "currentEvent", "currentParams", "map", "engineView",
+		"ChildViewFrames", "IsArray", "Array", "scope", "State",
+		"RemoveStepView", "map", "action", "PreAction", "TraceFSM",
+		"level", "evt.ex", "Perform", "CurrentException", "ExceptionHandler",
+		"PostAction", "nextState", "waitView", "Release", "terminal",
+		"Reset", "closeWaitView", "AddDelayedCall", "busy", "IsEmpty",
+		"nextNoIdle", "turtle", "Dispose" };
+
+	SetFrameSlot(RefVar(GetGFunctionFrame()), RefVar(Sym("AddDelayedSend")),
+		RefVar(Eval("func(v, m, a, d) begin sent := [v, m, a, d]; nil end")));
+	SetFrameSlot(RefVar(GetGFunctionFrame()), RefVar(Sym("AddDelayedCall")),
+		RefVar(Eval("func(f, a, d) begin called := [f, a, d]; nil end")));
+	SetFrameSlot(RefVar(GetGFunctionFrame()), RefVar(Sym("RemoveStepView")),
+		RefVar(Eval("func(parent, child) AddArraySlot(removed, child)")));
+
+	// the prototype: every method native
+	RefVar proto(Eval("{}"));
+	RefVar queueProto(Eval("{}"));
+	SetFrameSlot(queueProto, RefVar(Sym("EnQueue")), RefVar(NativeFunction(0x7dc0, 1, kQueue, 1)));
+	SetFrameSlot(queueProto, RefVar(Sym("DeQueue")), RefVar(NativeFunction(0x7b78, 0, kDeQueue, 2)));
+	SetFrameSlot(queueProto, RefVar(Sym("Peek")), RefVar(NativeFunction(0x7a1c, 0, kQueue, 1)));
+	SetFrameSlot(queueProto, RefVar(Sym("IsEmpty")), RefVar(NativeFunction(0x8004, 0, kQueue, 1)));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Sym("queueProto")), queueProto);
+	Eval("queueProto.Reset := func() queue := []");
+	SetFrameSlot(proto, RefVar(Sym("DoEvent_Check")), RefVar(NativeFunction(0xd4cc, 1, kCheck, 1)));
+	SetFrameSlot(proto, RefVar(Sym("DoEvent")), RefVar(NativeFunction(0x29ec, 2, kDoEvent, 11)));
+	SetFrameSlot(proto, RefVar(Sym("MCollectAncestorStates")), RefVar(NativeFunction(0xe65c, 2, kProto, 1)));
+	SetFrameSlot(proto, RefVar(Sym("MCollectAncestorEvents")), RefVar(NativeFunction(0xe808, 3, kProto, 1)));
+	RefVar loop(NativeFunction(0x2ff8, 0, kLoop, 53));
+	RefVar lits(GetFrameSlot(RefVar(GetArraySlot(loop, 3)), RefVar(Sym("_literals"))));
+	RefVar map(SharedFrameMap(RefVar(Eval("{_proto: nil, _parent: nil}"))));
+	SetArraySlot(lits, 23, map);
+	SetArraySlot(lits, 31, map);
+	SetArraySlot(lits, 46, RefVar(Eval("func(ctx) if ctx.waitView then ctx.waitView:Close()")));
+	SetFrameSlot(proto, RefVar(Sym("DoEvent_Loop")), loop);
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Sym("fsmProto")), proto);
+
+	Eval("trace := []; debug := []; actions := []; removed := []; handled := nil;"
+		"states := {"
+		"  Idle: {Go: {action: func(what) AddArraySlot(actions, what), nextState: 'Running},"
+		"         Fail: {action: func() Throw('|evt.ex.msg|, \"oops\")},"
+		"         Hurry: {action: func() AddArraySlot(actions, 'hurry), nextNoIdle: true}},"
+		"  Running: {Stop: {action: func() AddArraySlot(actions, 'stop), nextState: 'Idle}}"
+		"};"
+		"engine := {ChildViewFrames: func() [{scope: 'State, n: 1}, {scope: 'Machine, n: 2}]};"
+		"machine := {_proto: fsmProto, currentStateFrame: nil, currentEventFrame: nil,"
+		"  TraceFSM: func(what, s, e, p) AddArraySlot(trace, what),"
+		"  DebugFSM: func(why, s, e, p) AddArraySlot(debug, [why, s, e]),"
+		"  ExceptionHandler: func(ex) handled := ex,"
+		"  fsm_private_context: {pendingState: 'Idle, stateCache: nil, isNewPendingState: true,"
+		"    ancestors: [states], eventCache: nil, busy: nil, engineView: engine, level: 0, turtle: 5,"
+		"    waitView: nil, Release: nil,"
+		"    pendingEventQueue: {_proto: queueProto, queue: []},"
+		"    pendingParamsQueue: {_proto: queueProto, queue: []}}}");
+
+	// one event: its action done, the next state pending, nothing more to do
+	Eval("sent := nil; machine:DoEvent('Go, ['hello])");
+	EXPECT(EQRef(Eval("sent[1]"), Sym("SetupIdle")));
+	EXPECT(ISNIL(Eval("machine:DoEvent_Loop()")));
+	EXPECT(EQRef(Eval("actions[0]"), Sym("hello")));
+	EXPECT(EQRef(Eval("machine.fsm_private_context.pendingState"), Sym("Running")));
+	EXPECT(EQRef(Eval("machine.fsm_private_context.currentState"), Sym("Idle")));
+	EXPECT(NOTNIL(Eval("machine.fsm_private_context.isNewPendingState")));
+	EXPECT(ISNIL(Eval("machine.fsm_private_context.busy")));
+	EXPECT(RINT(Eval("machine.fsm_private_context.level")) == 0);
+	EXPECT(EQRef(Eval("trace[0]"), Sym("PreAction")));
+	EXPECT(EQRef(Eval("trace[1]"), Sym("PostAction")));
+	EXPECT(EQRef(Eval("trace[2]"), Sym("nextState")));
+	EXPECT(RINT(Eval("Length(removed)")) == 1);			// the State-scoped child view
+	EXPECT(RINT(Eval("removed[0].n")) == 1);
+	EXPECT(EQRef(Eval("machine.currentStateFrame._parent"), Eval("machine")));
+	EXPECT(EQRef(Eval("machine.currentEventFrame._parent"), Eval("machine.currentStateFrame")));
+
+	// two events: the first done, the machine still busy, the idle the turtle
+	Eval("machine:DoEvent('Stop, []); machine:DoEvent('Bogus, [])");
+	EXPECT(RINT(Eval("machine:DoEvent_Loop()")) == 5);
+	EXPECT(EQRef(Eval("actions[1]"), Sym("stop")));
+	EXPECT(NOTNIL(Eval("machine.fsm_private_context.busy")));
+	// an event the state does not know: DebugFSM, and the event dropped
+	EXPECT(ISNIL(Eval("machine:DoEvent_Loop()")));
+	EXPECT(EQRef(Eval("debug[0][0]"), Sym("UnknownEvent")));
+	EXPECT(EQRef(Eval("debug[0][1]"), Sym("Idle")));
+	EXPECT(EQRef(Eval("debug[0][2]"), Sym("Bogus")));
+	EXPECT(RINT(Eval("Length(machine.fsm_private_context.pendingEventQueue.queue)")) == 0);
+	EXPECT(ISNIL(Eval("machine.currentEventFrame")));
+
+	// an action that throws: the machine's ExceptionHandler told
+	Eval("machine:DoEvent('Fail, [])");
+	EXPECT(ISNIL(Eval("machine:DoEvent_Loop()")));
+	EXPECT(NOTNIL(Eval("handled")));
+	EXPECT(EQRef(Eval("handled.name"), Sym("evt.ex.msg")));
+	EXPECT(RINT(Eval("machine.fsm_private_context.level")) == 0);
+
+	// nextNoIdle: the next event is taken straight away
+	Eval("machine:DoEvent('Hurry, []); machine:DoEvent('Go, ['again])");
+	EXPECT(ISNIL(Eval("machine:DoEvent_Loop()")));
+	EXPECT(EQRef(Eval("actions[2]"), Sym("hurry")));
+	EXPECT(EQRef(Eval("actions[3]"), Sym("again")));
+
+	// a wait view and a terminal state: the queues reset, the view closed later
+	Eval("states.Done := {terminal: true};"
+		"states.Running.Finish := {nextState: 'Done};"
+		"machine.fsm_private_context.waitView := {Close: func() closed := true};"
+		"called := nil; machine:DoEvent('Finish, []); machine:DoEvent('Stop, [])");
+	EXPECT(ISNIL(Eval("machine:DoEvent_Loop()")));
+	EXPECT(EQRef(Eval("machine.fsm_private_context.pendingState"), Sym("Done")));
+	EXPECT(RINT(Eval("Length(machine.fsm_private_context.pendingEventQueue.queue)")) == 0);
+	EXPECT(NOTNIL(Eval("called")));
+	Eval("closed := nil; call called[0] with (called[1][0])");
+	EXPECT(NOTNIL(Eval("closed")));
+
+	// no context: nil
+	Eval("machine.fsm_private_context := nil");
+	EXPECT(ISNIL(Eval("machine:DoEvent_Loop()")));
+}
+
+
 int
 main()
 {
@@ -364,6 +496,7 @@ main()
 		TestEvents();
 		TestPeriodic();
 		TestProtoClone();
+		TestLoop();
 	}
 	newton_catch_all
 	{

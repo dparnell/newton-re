@@ -15,6 +15,8 @@ Ref FAref(RefArg rcvr, RefArg obj, RefArg index);		// frames/Builtins.cpp
 Ref FSubtract(RefArg rcvr, RefArg a, RefArg b);		// frames/Builtins.cpp
 Ref FEqual(RefArg rcvr, RefArg a, RefArg b);			// frames/Builtins.cpp
 Ref FGreaterThan(RefArg rcvr, RefArg a, RefArg b);	// frames/Builtins.cpp
+Ref FUnorderedLessOrGreater(RefArg rcvr, RefArg a, RefArg b);
+Ref FAdd(RefArg rcvr, RefArg a, RefArg b);
 void IncrementCurrentStackPos(void);				// frames/ObjectHeap.cpp
 void DecrementCurrentStackPos(void);
 void ClearRefHandles(void);
@@ -136,6 +138,31 @@ NIESetVariable(RefArg env, RefArg symbol, RefArg value)
 // IncrementCurrentStackPos, setjmp, AddExceptionHandler; on a throw
 // DecrementCurrentStackPos, ClearRefHandles, ResetStackStateBlock, and
 // Subexception against the handler's name, which the code keeps inline)
+void
+NIETryEvtEx(void (*body)(void*), void (*handler)(void*, Exception*), void* data)
+{
+	StackState* state = GetStackStateBlock();
+	IncrementCurrentStackPos();
+	newton_try
+	{
+		body(data);
+		DecrementCurrentStackPos();
+		DisposeStackStateBlock(state);
+	}
+	newton_catch_all
+	{
+		DecrementCurrentStackPos();
+		ClearRefHandles();
+		ResetStack(*state);
+		DisposeStackStateBlock(state);
+		if (!Subexception(_info.exception.name, "evt.ex"))
+			rethrow;
+		handler(data, &_info.exception);
+	}
+	end_try;
+}
+
+
 bool
 NIETryEvtEx(void (*body)(void*), void* data)
 {
@@ -160,4 +187,24 @@ NIETryEvtEx(void (*body)(void*), void* data)
 	}
 	end_try;
 	return caught;
+}
+
+
+// NIE inetenbl.pkg part 1 +0x1bf8 (<>)
+bool
+NIENotEqual(RefArg a, RefArg b)
+{
+	if (ISINT(a) && ISINT(b))
+		return (Ref) a != (Ref) b;
+	return NOTNIL(FUnorderedLessOrGreater(RefVar(), a, b));
+}
+
+
+// NIE inetenbl.pkg part 1 +0x1c24 (+)
+Ref
+NIEAdd(RefArg a, RefArg b)
+{
+	if (ISINT(a) && ISINT(b))
+		return MAKEINT((long) ((ULong) RINT(a) + (ULong) RINT(b)));
+	return FAdd(RefVar(), a, b);
 }
