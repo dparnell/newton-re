@@ -18,6 +18,7 @@
 #include "SoundDriver.h"
 #include "SoundSettings.h"
 #include "FrameSoundChannel.h"
+#include "IMACodec.h"
 #include "Frames.h"
 #include "Compiler.h"
 #include "Interpreter.h"
@@ -57,6 +58,41 @@ static long		gClickFormat = -1;
 static double	gClickRate = 0;
 static short*	gClickLinear = nil;		// its samples as 16-bit linear
 
+// an IMA-coded sound frame: a second of a rising tone at the hardware's
+// rate (so nothing is resampled), coded by CompressIMA, played through
+// the codec channel; what was played must be exactly what ExpandIMA
+// makes of the same bytes
+static const char* const	kIMASource = (const char*) 1;
+static const long			kIMASamples = 21600 / 64 * 64;
+static short*				gIMAExpected = nil;
+
+static long
+PlayIMA(void)
+{
+	short* tone = new short[kIMASamples];
+	for (long i = 0; i < kIMASamples; i++)
+		tone[i] = (short) (12000.0 * sin(i * (0.02 + i * 0.000002)));
+	long bytes = kIMASamples / kIMABlockSize * kIMABlockBytes;
+	RefVar samples(AllocateBinary(RSSYMsamples, bytes));
+	IMAState state;
+	CompressIMA(tone, (signed char*) BinaryData(samples), kIMASamples, &state, 1, 0);
+	gIMAExpected = new short[kIMASamples];
+	IMAState expand;
+	ExpandIMA((const signed char*) BinaryData(samples), gIMAExpected, &expand, kIMASamples / kIMABlockSize, 1, 2);
+	delete[] tone;
+	RefVar frame(AllocateFrame());
+	SetFrameSlot(frame, RSSYMsndframetype, RSSYMcodec);
+	SetFrameSlot(frame, RSSYMcodecname, RefVar(MakeString("TIMACodec")));
+	SetFrameSlot(frame, RSSYMsamples, samples);
+	SetFrameSlot(frame, RSSYMcompressiontype, RefVar(MAKEINT(6)));
+	SetFrameSlot(frame, RSSYMdatatype, RefVar(MAKEINT(16)));
+	SetFrameSlot(frame, RSSYMsamplingrate, RefVar(MAKEINT(kHostSoundRate)));
+	SetFrameSlot(frame, RSSYMbuffersize, RefVar(MAKEINT(4096)));		// a whole number of IMA blocks' output
+	SetFrameSlot(frame, RSSYMbuffercount, RefVar(MAKEINT(4)));
+	RefVar result(FPlaySoundSync(RefVar(NILREF), frame));
+	return NOTNIL(result) ? 1 : 0;
+}
+
 // 'host/'play: PlaySoundSync(click) in the world; 1 when it came back
 struct TPlayEvent : public TAEvent
 {
@@ -72,7 +108,9 @@ public:
 		play->fResult = 0;
 		newton_try
 		{
-			if (play->fSource == nil)
+			if (play->fSource == kIMASource)
+				play->fResult = PlayIMA();
+			else if (play->fSource == nil)
 			{
 				RefVar click(FConvertToSoundFrame(RefVar(NILREF), RefVar(MAKEMAGICPTR(kClickSoundMagicPtr))));
 				RefVar samples(GetProtoVariable(click, RSSYMsamples, nil));
@@ -206,6 +244,15 @@ Scenario(void)
 	double correlation = Correlation(played, count);
 	printf("click: correlation with its own samples %.4f\n", correlation);
 	EXPECT(correlation > 0.95);
+
+	// coded sound: IMA through the codec channel
+	HostSoundClearCapture();
+	EXPECT(Send(newtPort, kIMASource) == 1);
+	WaitForSilence();
+	played = HostSoundCaptured(&count);
+	printf("IMA: %ld samples played of %ld\n", count, kIMASamples);
+	EXPECT(count == kIMASamples);
+	EXPECT(gIMAExpected != nil && played != nil && memcmp(played, gIMAExpected, kIMASamples * sizeof(short)) == 0);
 
 	// a channel of the script's own, and its callback
 	HostSoundClearCapture();

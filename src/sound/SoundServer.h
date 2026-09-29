@@ -58,6 +58,8 @@
 #endif
 
 #include "UserPorts.h"
+#include "UserSharedMem.h"
+#include "SoundCodec.h"
 
 
 // the 'usnd' commands (the server's AEHandlerProc; TUSoundChannel sends them)
@@ -160,7 +162,7 @@ struct ChannelNode
 	long			fUnknown40;		// +0x40
 	TUMsgToken		fToken;			// +0x44  the request's, answered when the node is freed
 	long			fChannelVolume;	// +0x54
-	ULong			fUnknown58;		// +0x58
+	void*			fCodecState;	// +0x58  a codec channel's CodecState
 };
 
 
@@ -239,21 +241,88 @@ public:
 };
 
 
+// One of a codec channel's buffers: the request that schedules it on the
+// output channel, the reply that comes back when the output channel has
+// taken it, and the message they travel in (0x80 bytes in the ROM).
+struct CodecNode
+{
+	TUSoundNodeRequest	fRequest;		// +0x00  fBlock.fData: the buffer (malloc'd by GetNodeBuffer)
+	TUSoundNodeReply	fReply;			// +0x4c
+	TUAsyncMessage		fMessage;		// +0x6c  collected on the codec channel's port
+	ULong				fIndex;			// +0x7c
+};
+
+// What a codec channel keeps about a node it is decoding (0x48 bytes).
+struct CodecState
+{
+	long			fRefCount;			// +0x00  the node's buffers out with the output channel
+	TSoundCodec*	fCodec;				// +0x04
+	long			fUsers;				// +0x08
+	Boolean			fDone;				// +0x0c  the codec has produced the node's last buffer
+	ULong			fBufferSize;		// +0x10  bytes (the frame's bufferSize)
+	ULong			fBufferCount;		// +0x14  2..8 (the frame's bufferCount)
+	ULong			fIndex;				// +0x18  the buffer to fill next
+	CodecNode*		fNodes[8];			// +0x1c
+	long			fUnknown3C;			// +0x3c
+	long			fError;				// +0x40  what the node is to be answered with
+	long			fState;				// +0x44
+};
+
+// the codec channel's own flags (+0x1e4)
+enum
+{
+	kCodecAbort		= 0x01,		// stop decoding
+	kCodecStarted	= 0x02,		// the output channel has been started
+	kCodecStopped	= 0x04		// stopped part way: fStoppedNodeId/fStoppedPosition say where
+};
+
+// A decompressor (or compressor): a task of its own ('codc) that runs the
+// node's codec a buffer at a time and schedules the buffers on the output
+// channel it feeds, as a client of the server would.
 class TCodecChannel : public TSoundChannel
 {
 public:
 						TCodecChannel(ULong id, const TSoundDriverInfo& info);	// ROM 0x001e4110 __ct__13TCodecChannelFUlRC16TSoundDriverInfo
 	virtual				~TCodecChannel();										// ROM 0x001e419c __dt__13TCodecChannelFv
+	virtual long		Cancel(TUSoundNodeRequest* request);					// ROM 0x001e45b4 Cancel__13TCodecChannelFP18TUSoundNodeRequest
+	virtual long		Start(TUMsgToken* token);								// ROM 0x001e4720 Start__13TCodecChannelFP10TUMsgToken
+	virtual long		Pause(TUSoundNodeReply* reply);							// ROM 0x001e4828 Pause__13TCodecChannelFP16TUSoundNodeReply
+	virtual void		Stop(TUSoundNodeReply* reply, long error);				// ROM 0x001e4898 Stop__13TCodecChannelFP16TUSoundNodeReplyl
+	virtual long		FreeNode(ChannelNode* node, long error, int state);		// ROM 0x001e4454 FreeNode__13TCodecChannelFP11ChannelNodeli
 	virtual void		SetupNode(ChannelNode* node);							// ROM 0x001e442c SetupNode__13TCodecChannelFP11ChannelNode
 
-	ChannelNode*		fCodecNodes;			// +0x1e0  (NOT YET: the decompressing loop's nodes)
-	ULong				fUnknown1E4;			// +0x1e4
-	TULockingSemaphore	fLock;					// +0x1e8
-	ULong				fUnknown1F4;			// +0x1f4
-	TUPort				fPort;					// +0x1f8  its task's (NOT YET: the task)
+	static void			MainEventLoop(TCodecChannel** channel);					// ROM 0x001e480c MainEventLoop__13TCodecChannelSFPP13TCodecChannel
+	void				DecompressLoop(void);									// ROM 0x001e4cd0 DecompressLoop__13TCodecChannelFv
+	NewtonErr			InitNode(ChannelNode* node);							// ROM 0x001e494c InitNode__13TCodecChannelFP11ChannelNode
+	long				InitCodecNodes(ChannelNode* node);						// ROM 0x001e4ab4 InitCodecNodes__13TCodecChannelFP11ChannelNode
+	long				DeleteCodecNodes(ChannelNode* node);					// ROM 0x001e4c40 DeleteCodecNodes__13TCodecChannelFP11ChannelNode
+	long				ReleaseNode(ChannelNode* node);							// ROM 0x001e44e8 ReleaseNode__13TCodecChannelFP11ChannelNode
+	ChannelNode*		GetNextNode(void);										// ROM 0x001e4250 GetNextNode__13TCodecChannelFv
+	NewtonErr			GetNodeBuffer(ChannelNode* node, void** buffer);		// ROM 0x001e4f60 GetNodeBuffer__13TCodecChannelFP11ChannelNodePPv
+	long				FillDMABuffer(ChannelNode* node, ULong* size, SoundBlock* block);	// ROM 0x001e4fe8 FillDMABuffer__13TCodecChannelFP11ChannelNodePUlP10SoundBlock
+	void				GetBufferTimeout(ULong* timeout);						// ROM 0x001e5190 GetBufferTimeout__13TCodecChannelFPUl
+	long				WaitForNextBuffer(ULong timeout);						// ROM 0x001e5208 WaitForNextBuffer__13TCodecChannelFUl
+	long				ScheduleDMA(ChannelNode* node, long size, SoundBlock* block);	// ROM 0x001e5380 ScheduleDMA__13TCodecChannelFP11ChannelNodeiP10SoundBlock
+	void				SendStart(void);										// ROM 0x001e5478 SendStart__13TCodecChannelFv
+	void				Abort(UChar stopOutput);								// ROM 0x001e5990 Abort__13TCodecChannelFUc
+
+	CodecState*			GetCodecState(ChannelNode* node);						// ROM 0x001e45bc GetCodecState__13TCodecChannelFP11ChannelNode
+	void				SetCodecState(ChannelNode* node, CodecState* state);	// ROM 0x001e45e0 SetCodecState__13TCodecChannelFP11ChannelNodeP10CodecState
+	TSoundCodec*		GetCodec(ChannelNode* node);							// ROM 0x001e4634 GetCodec__13TCodecChannelFP11ChannelNode
+	void				SetCodec(ChannelNode* node, TSoundCodec* codec);		// ROM 0x001e4640 SetCodec__13TCodecChannelFP11ChannelNodeP11TSoundCodec
+	long				GetNodeRefCount(ChannelNode* node);						// ROM 0x001e4708 GetNodeRefCount__13TCodecChannelFP11ChannelNode
+	void				SetNodeRefCount(ChannelNode* node, long count);			// ROM 0x001e4714 SetNodeRefCount__13TCodecChannelFP11ChannelNodel
+
+	ChannelNode*		fCodecNodes;			// +0x1e0  nodes done with, waiting for their buffers to come back
+	ULong				fCodecFlags;			// +0x1e4  kCodecAbort, kCodecStarted, kCodecStopped
+	TULockingSemaphore	fLock;					// +0x1e8  held by the task while it runs
+	ULong				fOutstanding;			// +0x1f4  buffers out with the output channel
+	TUPort				fPort;					// +0x1f8  where their replies come back
 	ULong				fOutputChannelId;		// +0x200  the output channel it feeds
 	TSoundChannel*		fOutputChannel;			// +0x204
-	ULong				fUnknown208;			// +0x208
+	CodecState*			fCodecState;			// +0x208  (an output channel's: never in practice)
+	ULong				fStoppedNodeId;			// +0x210
+	long				fStoppedPosition;		// +0x214
 };
 
 

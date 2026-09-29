@@ -15,6 +15,8 @@
 #include "OSErrors.h"
 #include "NewtonMemory.h"
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 
@@ -462,6 +464,9 @@ TUSoundChannel::Start(int async)
 	NewtonErr err = SendImmediate(async == 0 ? kSndStartWait : kSndStart, fCodecChannelId, 0, &reply, sizeof(reply));
 	if (err == noErr)
 		err = reply.fError;
+	if (err != noErr && getenv("NEWTON_TRACE_SOUND") != NULL)
+		fprintf(stderr, "sound: start %s on channel %lu/%lu: %ld (busy %s)\n", async ? "async" : "sync",
+				(unsigned long) fChannelId, (unsigned long) fCodecChannelId, (long) err, fBusyNodes ? "yes" : "no");
 	if (err == noErr)
 	{
 		fFlags &= ~kSoundChannelPaused;

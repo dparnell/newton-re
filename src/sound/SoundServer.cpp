@@ -12,6 +12,11 @@
 #include "NewtonMemory.h"
 #include "UserGlobals.h"
 #include "hal/Atomic.h"
+#include "UserTasks.h"
+#include "OSErrors.h"
+#include "FrameSoundChannel.h"		// ConvertCodecBlock
+#include <stdlib.h>
+#include <stddef.h>
 #include <string.h>
 
 long	gMaxFilterNodes = 0;		// ROM 0x0c101b18 gMaxFilterNodes
@@ -109,7 +114,7 @@ TSoundChannel::Schedule(TUSoundNodeRequest* request, TUMsgToken* token)
 			node->fToken = *token;
 			node->fNodeId = request->fNodeId;
 			node->fPosition = 0;
-			node->fUnknown58 = 0;
+			node->fCodecState = nil;
 			node->fData = request->fBlock.fData;
 			node->fCount = request->fBlock.fCount;
 			node->fSampleBits = request->fBlock.fSampleBits;
@@ -667,28 +672,34 @@ filled:
 
 /*------------------------------------------------------------------------------
 	T C o d e c C h a n n e l
+	A decompressor: when started, a task of its own ('codc, MainEventLoop)
+	runs each node's codec a buffer at a time (the frame's bufferSize, up to
+	bufferCount of them out at once) and schedules the buffers on the
+	output channel it feeds, through gSndPort as any client would; each
+	buffer's reply comes back to the channel's own port, and a node is
+	answered (ReleaseNode) once its last buffer is back.
 ------------------------------------------------------------------------------*/
 
 // ROM 0x001e4110 __ct__13TCodecChannelFUlRC16TSoundDriverInfo
-// Its lock and its port; the task that decompresses into the output
-// channel is started when coded sound is scheduled (NOT YET).
 TCodecChannel::TCodecChannel(ULong id, const TSoundDriverInfo& /*info*/)
 	:	TSoundChannel(id)
 {
 	fCodecNodes = nil;
 	fLock.Init();
-	fUnknown1E4 = 0;
-	fUnknown1F4 = 0;
-	fUnknown208 = 0;
+	fCodecFlags = 0;
+	fOutstanding = 0;
+	fCodecState = nil;
 	fPort.Init();
 	fOutputChannelId = 0;
 	fOutputChannel = nil;
+	fStoppedNodeId = 0;
+	fStoppedPosition = 0;
 }
 
 
 // ROM 0x001e419c __dt__13TCodecChannelFv
-// Every node answered as closed.  NOT YET RECONSTRUCTED: ReleaseNode for
-// the decompressing loop's nodes (fCodecNodes), which nothing makes yet.
+// Every node answered as closed, and the ones waiting for their buffers
+// let go.
 TCodecChannel::~TCodecChannel()
 {
 	ChannelNode* node = fNodes;
@@ -699,17 +710,702 @@ TCodecChannel::~TCodecChannel()
 		FreeNode(node, kSndErrNoChannel, 1);
 		node = next;
 	}
+	node = fCodecNodes;
+	while (node != nil)
+	{
+		ChannelNode* next = node->fNext;
+		ReleaseNode(node);
+		node = next;
+	}
 }
 
 
 // ROM 0x001e442c SetupNode__13TCodecChannelFP11ChannelNode
-// NOT YET RECONSTRUCTED: InitNode (0x001e494c), the codec opened on the
-// node's data - only coded sound is scheduled on a decompressor, and
-// TFrameSoundChannel does not schedule it yet.
+// The node to decode next: its codec state made and its codec started.
 void
 TCodecChannel::SetupNode(ChannelNode* node)
 {
+	if (node != nil)
+		InitNode(node);
 	fNodes = node;
+}
+
+
+// ROM 0x001e4454 FreeNode__13TCodecChannelFP11ChannelNodeli
+// A node being decoded is not answered yet: it waits at the end of
+// fCodecNodes, with the answer it is to have, until its buffers are back.
+long
+TCodecChannel::FreeNode(ChannelNode* node, long error, int state)
+{
+	CodecState* codecState = GetCodecState(node);
+	if (codecState == nil)
+		return TSoundChannel::FreeNode(node, error, state);
+	codecState->fError = error;
+	codecState->fState = state;
+	if (fCodecNodes == nil)
+		fCodecNodes = node;
+	else
+	{
+		ChannelNode* last = fCodecNodes;
+		while (last->fNext != nil)
+			last = last->fNext;
+		last->fNext = node;
+	}
+	node->fNext = nil;
+	return noErr;
+}
+
+
+// ROM 0x001e44e8 ReleaseNode__13TCodecChannelFP11ChannelNode
+// A node answered at last: its codec stopped, its buffers given back when
+// nothing else uses the state, and the client told.
+long
+TCodecChannel::ReleaseNode(ChannelNode* node)
+{
+	if (fCodecNodes == node)
+		fCodecNodes = node->fNext;
+	else if (fNodes == node)
+		fNodes = node->fNext;
+	CodecState* codecState = GetCodecState(node);
+	SafeCodecStop(GetCodec(node), codecState->fState);
+	if (--codecState->fUsers == 0)
+	{
+		DeleteCodecNodes(node);
+		SetCodecState(node, nil);
+	}
+	// NOT YET RECONSTRUCTED: the record state an input node has (the ROM
+	// deletes it here; SetRecordState is never called yet)
+	long result = TSoundChannel::FreeNode(node, codecState->fError, codecState->fState);
+	if (codecState->fUsers == 0)
+		delete codecState;
+	return result;
+}
+
+
+// ROM 0x001e45b4 Cancel__13TCodecChannelFP18TUSoundNodeRequest
+// (A decompressor's nodes are not cancelled.)
+long
+TCodecChannel::Cancel(TUSoundNodeRequest* /*request*/)
+{
+	return noErr;
+}
+
+
+// ROM 0x001e45bc GetCodecState__13TCodecChannelFP11ChannelNode
+// A decompressor's (or an output channel's) state is the node's own; any
+// other kind of channel has one for all its nodes.
+CodecState*
+TCodecChannel::GetCodecState(ChannelNode* node)
+{
+	if ((fFlags & kSndChannelOutput) != 0 || (fFlags & kSndChannelDecompressor) != 0)
+		return (node != nil) ? (CodecState*) node->fCodecState : nil;
+	return fCodecState;
+}
+
+
+// ROM 0x001e45e0 SetCodecState__13TCodecChannelFP11ChannelNodeP10CodecState
+void
+TCodecChannel::SetCodecState(ChannelNode* node, CodecState* state)
+{
+	if ((fFlags & kSndChannelOutput) == 0 && (fFlags & kSndChannelDecompressor) == 0)
+		fCodecState = state;
+	else
+		node->fCodecState = state;
+}
+
+
+// ROM 0x001e4634 GetCodec__13TCodecChannelFP11ChannelNode
+TSoundCodec*
+TCodecChannel::GetCodec(ChannelNode* node)
+{
+	return ((CodecState*) node->fCodecState)->fCodec;
+}
+
+
+// ROM 0x001e4640 SetCodec__13TCodecChannelFP11ChannelNodeP11TSoundCodec
+void
+TCodecChannel::SetCodec(ChannelNode* node, TSoundCodec* codec)
+{
+	((CodecState*) node->fCodecState)->fCodec = codec;
+}
+
+
+// ROM 0x001e4708 GetNodeRefCount__13TCodecChannelFP11ChannelNode
+long
+TCodecChannel::GetNodeRefCount(ChannelNode* node)
+{
+	return ((CodecState*) node->fCodecState)->fRefCount;
+}
+
+
+// ROM 0x001e4714 SetNodeRefCount__13TCodecChannelFP11ChannelNodel
+void
+TCodecChannel::SetNodeRefCount(ChannelNode* node, long count)
+{
+	((CodecState*) node->fCodecState)->fRefCount = count;
+}
+
+
+// ROM 0x001e4250 GetNextNode__13TCodecChannelFv
+// The node decoded: played again if it loops (its codec reset on the
+// data), else the next one set up and this one freed - which, the node
+// still having buffers out, only puts it on fCodecNodes.
+ChannelNode*
+TCodecChannel::GetNextNode(void)
+{
+	ChannelNode* node = fNodes;
+	if (node != nil)
+	{
+		if (node->fLoops < 1)
+		{
+			ChannelNode* next = node->fNext;
+			SetupNode(next);
+			FreeNode(node, noErr, 0);
+			node = next;
+		}
+		else
+		{
+			node->fLoops--;
+			CodecBlock block;
+			ConvertCodecBlock((SoundBlock*) &node->fData, &block);
+			SafeCodecReset(GetCodec(node), &block);
+		}
+	}
+	return node;
+}
+
+
+// ROM 0x001e4720 Start__13TCodecChannelFP10TUMsgToken
+// Started as any channel is, and the decompressing task started unless it
+// is already running: an aborting one is waited out first.
+long
+TCodecChannel::Start(TUMsgToken* token)
+{
+	long err = TSoundChannel::Start(token);
+	if (err == noErr)
+	{
+		if ((fCodecFlags & kCodecAbort) != 0)
+		{
+			fLock.Acquire(kWaitOnBlock);
+			fLock.Release();
+		}
+		if (fLock.Acquire(kNoWaitOnBlock) == noErr)
+		{
+			TUTask task;
+			fCodecFlags &= ~kCodecAbort;
+			TCodecChannel* self = this;
+			err = task.Init((TaskProcPtr) MainEventLoop, 2000, sizeof(self), &self, 0x0c, 'codc');
+			fLock.Release();
+			if (err == noErr)
+				err = task.Start();
+			if (err != noErr)
+				fCodecFlags |= kCodecAbort;
+		}
+	}
+	return err;
+}
+
+
+// ROM 0x001e480c MainEventLoop__13TCodecChannelSFPP13TCodecChannel
+// The 'codc task: a decompressor decompresses (a compressor compresses -
+// CompressLoop, NOT YET RECONSTRUCTED), and the task ends.
+void
+TCodecChannel::MainEventLoop(TCodecChannel** channel)
+{
+	TCodecChannel* self = *channel;
+	if ((self->fFlags & kSndChannelDecompressor) != 0)
+		self->DecompressLoop();
+}
+
+
+// ROM 0x001e4cd0 DecompressLoop__13TCodecChannelFv
+// Under the channel's lock: fill a buffer from the codec and schedule it
+// on the output channel, until bufferCount of them are out; then start the
+// output channel, and from then on wait for a buffer to come back (a
+// paused channel waits for as long as it takes) before filling the next.
+// A node the codec has finished moves on (GetNextNode).  An error, or a
+// Stop (kCodecAbort), ends it: where it had got to is kept for the
+// Stop's reply, and Abort gives everything back.
+void
+TCodecChannel::DecompressLoop(void)
+{
+	UChar failed = false;
+	CodecState* codecState = nil;
+	ULong size;
+	SoundBlock block;
+	fLock.Acquire(kWaitOnBlock);
+	fCodecFlags &= ~kCodecStarted;
+	for (;;)
+	{
+		ChannelNode* node = fNodes;
+		if ((node == nil && fOutstanding == 0) || (fCodecFlags & kCodecAbort) != 0)
+			break;
+		codecState = GetCodecState(node);
+		if (fNodes != nil && (fCodecFlags & kCodecAbort) == 0)
+		{
+			memcpy(&block, &node->fData, sizeof(block));
+			if (FillDMABuffer(node, &size, &block) != noErr)
+			{
+				failed = true;
+				break;
+			}
+			node = fNodes;
+			codecState = GetCodecState(node);
+			if (size != 0 && (fCodecFlags & kCodecAbort) == 0)
+			{
+				if (ScheduleDMA(node, size, &block) != noErr)
+				{
+					failed = true;
+					break;
+				}
+				if (++codecState->fIndex >= codecState->fBufferCount)
+					codecState->fIndex = 0;
+			}
+		}
+		if ((fCodecFlags & kCodecStarted) == 0
+		 && (node == nil || codecState->fBufferCount <= fOutstanding)
+		 && (fCodecFlags & kCodecAbort) == 0)
+			SendStart();
+		if ((fCodecFlags & kCodecStarted) != 0 && (fCodecFlags & kCodecAbort) == 0)
+		{
+			if (fOutstanding == 0)
+				break;
+			long err;
+			do
+			{
+				ULong timeout;
+				GetBufferTimeout(&timeout);
+				err = WaitForNextBuffer(timeout);
+			} while ((fFlags & kSndChannelPaused) != 0 && err == kError_Message_Timed_Out);
+			if (err != noErr)
+			{
+				failed = true;
+				break;
+			}
+		}
+		if (codecState != nil && codecState->fDone)
+			GetNextNode();
+	}
+	if ((fCodecFlags & kCodecAbort) != 0 && fNodes != nil)
+	{
+		fStoppedNodeId = fNodes->fNodeId;
+		fStoppedPosition = fNodes->fPosition;
+		fCodecFlags |= kCodecStopped;
+	}
+	Abort(failed);
+	fLock.Release();
+	fCodecFlags = 0;
+	fOutstanding = 0;
+}
+
+
+// ROM 0x001e4828 Pause__13TCodecChannelFP16TUSoundNodeReply
+// Paused, or going again; the reply says where the node being decoded is.
+long
+TCodecChannel::Pause(TUSoundNodeReply* reply)
+{
+	long resumed = 0;
+	if (reply != nil)
+	{
+		if (fNodes == nil)
+		{
+			reply->fNodeId = 0;
+			reply->fState = 2;
+			reply->fPosition = 0;
+		}
+		else
+		{
+			reply->fNodeId = fNodes->fNodeId;
+			reply->fState = 2;
+			reply->fPosition = fNodes->fPosition;
+		}
+	}
+	if ((fFlags & kSndChannelRunning) != 0)
+	{
+		if ((fFlags & kSndChannelPaused) == 0)
+			fFlags |= kSndChannelPaused;
+		else
+		{
+			fFlags &= ~kSndChannelPaused;
+			resumed = 1;
+		}
+	}
+	return resumed;
+}
+
+
+// ROM 0x001e4898 Stop__13TCodecChannelFP16TUSoundNodeReplyl
+// The task told to stop, the output channel it feeds stopped (which gives
+// back the buffers it holds, and so wakes the task), and the task waited
+// out; the reply says where the decoding had got to.
+void
+TCodecChannel::Stop(TUSoundNodeReply* reply, long /*error*/)
+{
+	if ((fCodecFlags & kCodecAbort) == 0)
+	{
+		fCodecFlags |= kCodecAbort;
+		fOutputChannel->Stop(reply, noErr);		// (the ROM passes the reply and whatever r2 held)
+		fLock.Acquire(kWaitOnBlock);
+		fCodecFlags &= ~kCodecAbort;
+		fLock.Release();
+		if (reply != nil)
+		{
+			if ((fCodecFlags & kCodecStopped) == 0)
+			{
+				reply->fNodeId = 0;
+				reply->fState = 1;
+				reply->fPosition = 0;
+			}
+			else
+			{
+				reply->fNodeId = fStoppedNodeId;
+				reply->fState = 1;
+				reply->fPosition = fStoppedPosition;
+			}
+		}
+	}
+	fFlags &= ~(kSndChannelRunning | kSndChannelPaused);
+}
+
+
+// ROM 0x001e494c InitNode__13TCodecChannelFP11ChannelNode
+// A node's codec state (made the first time), its codec reset on the
+// node's data and started; the first user of a state sets up its buffers:
+// the frame's bufferSize, and bufferCount held to 2..8.
+NewtonErr
+TCodecChannel::InitNode(ChannelNode* node)
+{
+	NewtonErr err = noErr;
+	if (node == nil)
+		return noErr;
+	CodecState* codecState = GetCodecState(node);
+	if (codecState == nil)
+	{
+		codecState = new CodecState;
+		if (codecState == nil)
+			return MemError();
+		SetCodecState(node, codecState);
+		codecState->fUsers = 0;
+		codecState->fBufferCount = 0;
+		codecState->fIndex = 0;
+		codecState->fDone = false;
+	}
+	// NOT YET RECONSTRUCTED: an input channel's or compressor's RecordState
+	SetNodeRefCount(node, 0);
+	codecState->fUsers++;
+	TSoundCodec* codec = (TSoundCodec*) node->fCodec;
+	SetCodec(node, codec);
+	if (codec != nil)
+	{
+		if (codecState->fUsers == 1)
+		{
+			codecState->fBufferSize = node->fUnknown3C;
+			ULong count = node->fUnknown40;
+			if (count < 2)
+				count = 2;
+			else if (count >= 8)
+				count = 8;
+			codecState->fBufferCount = count;
+			codecState->fUnknown3C = 0;
+			InitCodecNodes(node);
+		}
+		CodecBlock block;
+		ConvertCodecBlock((SoundBlock*) &node->fData, &block);
+		err = SafeCodecReset(codec, &block);
+		if (err == noErr)
+			err = SafeCodecStart(codec);
+	}
+	return err;
+}
+
+
+// ROM 0x001e4ab4 InitCodecNodes__13TCodecChannelFP11ChannelNode
+// A request for each buffer, addressed to the output channel and carrying
+// the node's block (its data filled in by GetNodeBuffer).
+long
+TCodecChannel::InitCodecNodes(ChannelNode* node)
+{
+	CodecState* codecState = GetCodecState(node);
+	for (long i = 0; i < 8; i++)
+		codecState->fNodes[i] = nil;
+	for (ULong i = 0; i < codecState->fBufferCount; i++)
+	{
+		CodecNode* codecNode = new CodecNode;
+		if (codecNode != nil)
+		{
+			memset(&codecNode->fRequest, 0, sizeof(codecNode->fRequest));
+			memset(&codecNode->fReply, 0, sizeof(codecNode->fReply));
+			codecNode->fRequest.fBlock.fSampleRate = 0x560a6e85;
+			codecNode->fRequest.fBlock.fVolume = 0x7fffffff;
+			codecNode->fRequest.fChannelVolume = 0x7fffffff;
+			codecNode->fReply.fEvent.fAEventClass = kNewtEventClass;
+			codecNode->fReply.fEvent.fAEventID = 'usnd';
+		}
+		codecState->fNodes[i] = codecNode;
+		codecNode->fRequest.fEvent.fAEventClass = kNewtEventClass;
+		codecNode->fRequest.fEvent.fAEventID = 'usnd';
+		codecNode->fRequest.fCommand = kSndSchedule;
+		codecNode->fRequest.fChannel = fOutputChannelId;
+		memcpy(&codecNode->fRequest.fBlock, &node->fData, sizeof(SoundBlock));
+		codecNode->fRequest.fChannelVolume = node->fChannelVolume;
+		codecNode->fRequest.fBlock.fData = nil;
+		codecNode->fRequest.fNodeId = node->fNodeId;
+		codecNode->fIndex = i;
+	}
+	return noErr;
+}
+
+
+// ROM 0x001e4c40 DeleteCodecNodes__13TCodecChannelFP11ChannelNode
+long
+TCodecChannel::DeleteCodecNodes(ChannelNode* node)
+{
+	long err = noErr;
+	CodecState* codecState = GetCodecState(node);
+	for (ULong i = 0; i < codecState->fBufferCount; i++)
+	{
+		CodecNode* codecNode = codecState->fNodes[i];
+		if (codecNode->fRequest.fBlock.fData != nil)
+		{
+			free(codecNode->fRequest.fBlock.fData);
+			codecNode->fRequest.fBlock.fData = nil;
+			err = codecNode->fMessage.Abort();
+		}
+		if (codecState->fNodes[i] != nil)
+			delete codecState->fNodes[i];
+		codecState->fNodes[i] = nil;
+	}
+	return err;
+}
+
+
+// ROM 0x001e4f60 GetNodeBuffer__13TCodecChannelFP11ChannelNodePPv
+// The buffer whose turn it is, made the first time with the message it is
+// sent in, collected on this channel's port.
+NewtonErr
+TCodecChannel::GetNodeBuffer(ChannelNode* node, void** buffer)
+{
+	NewtonErr err = noErr;
+	CodecState* codecState = GetCodecState(node);
+	CodecNode* codecNode = codecState->fNodes[codecState->fIndex];
+	void* data = codecNode->fRequest.fBlock.fData;
+	if (data == nil)
+	{
+		data = malloc(codecState->fBufferSize);
+		if (data == nil)
+			err = MemError();
+		else
+		{
+			codecNode->fRequest.fBlock.fData = data;
+			err = codecNode->fMessage.Init(true);
+			if (err == noErr)
+				err = codecNode->fMessage.SetCollectorPort(fPort);
+		}
+	}
+	if (buffer != nil)
+		*buffer = data;
+	return err;
+}
+
+
+// ROM 0x001e4fe8 FillDMABuffer__13TCodecChannelFP11ChannelNodePUlP10SoundBlock
+// A buffer's worth out of the codec (fDone when it came short or the
+// codec says it has finished); nothing at all moves on to the next node
+// and tries that.  The node's position counts the coded bytes used, and
+// the block becomes what the codec produced.
+long
+TCodecChannel::FillDMABuffer(ChannelNode* node, ULong* size, SoundBlock* block)
+{
+	CodecState* codecState = GetCodecState(node);
+	TSoundCodec* codec = GetCodec(node);
+	ULong coded = 0;
+	void* buffer;
+	CodecBlock codecBlock;
+	long err = GetNodeBuffer(node, &buffer);
+	if (err != noErr)
+		return err;
+	*size = codecState->fBufferSize;
+	ConvertCodecBlock(block, &codecBlock);
+	err = SafeCodecProduce(codec, buffer, size, &coded, &codecBlock);
+	if (err != noErr)
+		return err;
+	codecState->fDone = (*size < codecState->fBufferSize || codec->BufferCompleted());
+	if (*size == 0 && (node = GetNextNode()) != nil)
+	{
+		err = GetNodeBuffer(node, &buffer);
+		if (err != noErr)
+			return err;
+		CodecState* nextState = GetCodecState(node);
+		codec = GetCodec(node);
+		*size = nextState->fBufferSize;
+		err = SafeCodecProduce(codec, buffer, size, &coded, &codecBlock);
+		if (err != noErr)
+			return err;
+		nextState->fDone = (*size < nextState->fBufferSize || codec->BufferCompleted());
+	}
+	if (*size != 0)
+	{
+		node->fPosition += coded;
+		ConvertCodecBlock(&codecBlock, block);
+	}
+	return noErr;
+}
+
+
+// ROM 0x001e5190 GetBufferTimeout__13TCodecChannelFPUl
+// How long to wait for a buffer to come back: as long as the first
+// buffer takes to play, and two seconds.
+void
+TCodecChannel::GetBufferTimeout(ULong* timeout)
+{
+	*timeout = 0;
+	ChannelNode* node = fCodecNodes;
+	if (node == nil)
+		node = fNodes;
+	if (node != nil)
+	{
+		CodecState* codecState = GetCodecState(node);
+		CodecNode* first = codecState->fNodes[0];
+		ULong perMillisecond = (ULong) first->fRequest.fBlock.fSampleRate / 1000;
+		*timeout = ((ULong) first->fRequest.fBlock.fPlayCount / (perMillisecond >> 16)) * kMilliseconds;
+	}
+	*timeout += 0x707ce0;			// (7372000 ticks: two seconds)
+}
+
+
+// ROM 0x001e5208 WaitForNextBuffer__13TCodecChannelFUl
+// A buffer's reply received on the channel's port (nothing to wait for:
+// at once); a buffer played is one fewer out, and the node waiting at the
+// head (or the one being decoded) let go when it was its last.
+long
+TCodecChannel::WaitForNextBuffer(ULong timeout)
+{
+	TUSoundNodeReply reply;
+	memset(&reply, 0, sizeof(reply));
+	reply.fEvent.fAEventClass = kNewtEventClass;
+	reply.fEvent.fAEventID = 'usnd';
+	if (fOutstanding == 0)
+		return noErr;
+	ULong size;
+	ULong msgType = 0;
+	TUMsgToken token;
+	long err = fPort.Receive(&size, &reply, sizeof(reply), &token, &msgType, timeout, kMsgType_MatchAll, false, false);
+	// (the ROM sizes a shared-memory reply here and drops the answer)
+	if (err != noErr)
+		return err;
+	if (reply.fError == noErr)
+	{
+		ChannelNode* node = fCodecNodes;
+		if (node == nil)
+			node = fNodes;
+		if (node != nil)
+		{
+			fOutstanding--;
+			long count = GetNodeRefCount(node) - 1;
+			SetNodeRefCount(node, count);
+			if (count == 0)
+				ReleaseNode(node);
+		}
+	}
+	return reply.fError;
+}
+
+
+// ROM 0x001e5380 ScheduleDMA__13TCodecChannelFP11ChannelNodeiP10SoundBlock
+// The buffer just filled scheduled on the output channel, asynchronously,
+// as samples of the block's (the codec's output) kind.
+long
+TCodecChannel::ScheduleDMA(ChannelNode* node, long size, SoundBlock* block)
+{
+	CodecState* codecState = GetCodecState(node);
+	CodecNode* codecNode = codecState->fNodes[codecState->fIndex];
+	codecNode->fRequest.fBlock.fSampleRate = block->fSampleRate;
+	codecNode->fRequest.fBlock.fFormat = block->fFormat;
+	codecNode->fRequest.fBlock.fSampleBits = block->fSampleBits;
+	codecNode->fRequest.fBlock.fPlayCount = size / (block->fSampleBits / 8);
+	TUPort port(gSndPort);
+	long err = port.SendRPC(&codecNode->fMessage, &codecNode->fRequest, sizeof(codecNode->fRequest),
+							&codecNode->fReply, sizeof(codecNode->fReply));
+	if (err == noErr)
+	{
+		fOutstanding++;
+		SetNodeRefCount(node, GetNodeRefCount(node) + 1);
+	}
+	return err;
+}
+
+
+// ROM 0x001e5478 SendStart__13TCodecChannelFv
+// The output channel started (the server's command 9), once.
+void
+TCodecChannel::SendStart(void)
+{
+	if ((fCodecFlags & kCodecStarted) != 0)
+		return;
+	TUSoundNodeRequest request;
+	memset(&request, 0, sizeof(request));
+	request.fEvent.fAEventClass = kNewtEventClass;
+	request.fEvent.fAEventID = 'usnd';
+	request.fChannel = fOutputChannelId;
+	request.fCommand = kSndStart;
+	TUSoundNodeReply reply;
+	memset(&reply, 0, sizeof(reply));
+	reply.fEvent.fAEventClass = kNewtEventClass;
+	reply.fEvent.fAEventID = 'usnd';
+	TUPort port(gSndPort);
+	ULong replySize;
+	port.SendRPC(&replySize, &request, offsetof(TUSoundNodeRequest, fBlock), &reply, 0x14);
+	fCodecFlags |= kCodecStarted;
+}
+
+
+// ROM 0x001e5990 Abort__13TCodecChannelFUc
+// The end of the decoding: after an error the output channel is stopped
+// first; every buffer still out waited for; then every node answered
+// (-30000, stopped) and the ones waiting let go.
+void
+TCodecChannel::Abort(UChar stopOutput)
+{
+	long err = noErr;
+	if (stopOutput)
+	{
+		TUSoundNodeRequest request;
+		memset(&request, 0, sizeof(request));
+		request.fEvent.fAEventClass = kNewtEventClass;
+		request.fEvent.fAEventID = 'usnd';
+		request.fBlock.fSampleRate = 0x560a6e85;
+		request.fBlock.fVolume = 0x7fffffff;
+		request.fChannelVolume = 0x7fffffff;
+		request.fCommand = kSndStop;
+		request.fChannel = fOutputChannelId;
+		TUSoundNodeReply reply;
+		memset(&reply, 0, sizeof(reply));
+		reply.fEvent.fAEventClass = kNewtEventClass;
+		reply.fEvent.fAEventID = 'usnd';
+		TUPort port(gSndPort);
+		ULong replySize;
+		port.SendRPC(&replySize, &request, sizeof(request), &reply, sizeof(reply));
+		err = reply.fError;
+	}
+	while (err == noErr && fOutstanding != 0)
+		err = WaitForNextBuffer(0);
+	ChannelNode* node;
+	while ((node = fNodes) != nil)
+	{
+		fNodes = node->fNext;
+		CodecState* codecState = GetCodecState(node);
+		if (codecState != nil)
+			for (ULong i = 0; i < codecState->fBufferCount; i++)
+				codecState->fNodes[i]->fMessage.Abort();
+		FreeNode(node, ERRBASE_SOUND, 1);
+	}
+	node = fCodecNodes;
+	while (node != nil)
+	{
+		ChannelNode* next = node->fNext;
+		ReleaseNode(node);
+		node = next;
+	}
 }
 
 

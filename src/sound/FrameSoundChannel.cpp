@@ -170,23 +170,31 @@ TFrameSoundChannel::Close(void)
 // The frame converted (Convert throws when it cannot be) and scheduled,
 // this channel's callback to hear when it has been played.
 //
-// DEVIATION: coded sound (a codec frame) is not scheduled - the server's
-// codec channel does not decompress yet (TCodecChannel::InitNode, NOT
-// YET), so the block would sit on it for ever and a PlaySoundSync never
-// come back.  It is completed at once, as though cancelled.
+// (A codec frame whose codec cannot be made - the ROM has no
+// TMacintalkCodec, the speech a string becomes, and TGSMCodec and
+// TDTMFCodec are NOT YET here - has no codec in its block: OpenCodec's
+// error is not looked at, and the coded bytes are played as samples, as
+// the ROM's would be.  NEWTON_TRACE_SOUND says so.)
+//
+// DEVIATION: with no sound server the block is let go at once
+// (TUSoundChannel::Schedule drops it).
 NewtonErr
 TFrameSoundChannel::Schedule(RefArg sound)
 {
 	SoundBlock block;
 	Convert(sound, &block);
-	if (block.fCodec != nil)
+	if (block.fCodec == nil && getenv("NEWTON_TRACE_SOUND") != NULL
+	 && EQRef(RefVar(GetProtoVariable(RefVar(*BlockFrame(&block)), RSSYMsndframetype, nil)), RSSYMcodec))
 	{
-		fCallback.Complete(&block, 1, kSndErrCancelled);
-		return noErr;
+		RefVar name(GetProtoVariable(RefVar(*BlockFrame(&block)), RSSYMcodecname, nil));
+		char codec[64] = "?";
+		if (IsString(name))
+			ConvertFromUnicode(GetCString(name), codec, kMacRomanEncoding, sizeof(codec) - 1);
+		fprintf(stderr, "sound: no codec %s: the coded bytes are played as they are\n", codec);
 	}
 	NewtonErr err = TUSoundChannel::Schedule(&block, &fCallback);
-	if (err != noErr || gSndPort == 0)
-		fCallback.Complete(&block, 1, err);		// (the host's: the block's hold on the frame let go)
+	if (gSndPort == 0)
+		fCallback.Complete(&block, 1, err);
 	return err;
 }
 
