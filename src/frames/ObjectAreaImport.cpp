@@ -12,6 +12,7 @@
 #include "ByteOrder.h"
 #include "OSErrors.h"
 
+#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -31,6 +32,27 @@ IsHalfwordShapeClass(const char* name)
 		if (strcasecmp(name, kClasses[i]) == 0)
 			return true;
 	return false;
+}
+
+
+// Whether a class, by name, is super or a subclass of it as the object
+// system decides it: symbols are the same whatever their case (symcmp -
+// the ROM's reals include some of class 'Real), and a dotted name is a
+// subclass of the name it starts with ('string.foo is a 'string), as
+// IsSubclassRef has it.  (Names are all the importer has: the objects are
+// not live yet.)
+static Boolean
+IsClassNamed(const char* className, const char* super)
+{
+	if (symcmp((char*) className, (char*) super) == 0)
+		return true;
+	size_t length = strlen(super);
+	if (strchr(className, '.') == nil || strlen(className) <= length || className[length] != '.')
+		return false;
+	for (size_t i = 0; i < length; i++)
+		if (toupper((unsigned char) className[i]) != toupper((unsigned char) super[i]))
+			return false;
+	return true;
 }
 
 
@@ -234,7 +256,7 @@ TImportedObjectArea::Import(const unsigned char* bytes, ULong32 base, ULong32 si
 					if (ISPTR(hostClass) && IsSymbol(hostClass))
 						className = SymbolName(hostClass);
 				}
-				if (className != nil && strcmp(className, "real") == 0 && length == 8)
+				if (className != nil && symcmp((char*) className, (char*) "real") == 0 && length == 8)
 				{
 					unsigned char* d = (unsigned char*) ObjData(o);
 					ULong32 hi = GetBigEndianWord(d);
@@ -244,7 +266,7 @@ TImportedObjectArea::Import(const unsigned char* bytes, ULong32 base, ULong32 si
 					memcpy(&value, &bits, sizeof(double));
 					memcpy(d, &value, sizeof(double));
 				}
-				else if (className != nil && (strcmp(className, "string") == 0 || strncmp(className, "string.", 7) == 0))
+				else if (className != nil && IsClassNamed(className, "string"))
 				{
 					UniChar* s = (UniChar*) ObjData(o);
 					for (long j = 0; j < length / 2; j++)

@@ -129,6 +129,46 @@ main()
 	EXPECT(GetArraySlotRef(keeper, 0) == kDeclawedRef);
 	EXPECT(!InFramesPartArea(top));
 
+	// Classes are named as the object system compares them - whatever the
+	// case, and a dotted subclass of 'string is a string: a part whose real
+	// is of class 'Real and whose string is a 'String.foo has both brought
+	// into the host's byte order.
+	{
+		static unsigned char p[0x70];
+		const ULong32 base = 0x10000000;
+		memset(p, 0, sizeof(p));
+		PutBigEndianWord(p + 0x00, 0x00001441);		// the array the part begins with, two slots
+		PutBigEndianWord(p + 0x08, NILREF);
+		PutBigEndianWord(p + 0x0c, base + 0x2c + 1);
+		PutBigEndianWord(p + 0x10, base + 0x5c + 1);
+		PutBigEndianWord(p + 0x14, (21 << 8) | kObjReadOnly);	// 'Real
+		PutBigEndianWord(p + 0x1c, (ULong32) kSymbolClass);
+		PutBigEndianWord(p + 0x20, SymbolHashFunction("Real"));
+		memcpy(p + 0x24, "Real", 5);
+		PutBigEndianWord(p + 0x2c, (20 << 8) | kObjReadOnly);	// a real of class 'Real: 1.5
+		PutBigEndianWord(p + 0x34, base + 0x14 + 1);
+		PutBigEndianWord(p + 0x38, 0x3ff80000);
+		PutBigEndianWord(p + 0x40, (27 << 8) | kObjReadOnly);	// 'String.foo
+		PutBigEndianWord(p + 0x48, (ULong32) kSymbolClass);
+		PutBigEndianWord(p + 0x4c, SymbolHashFunction("String.foo"));
+		memcpy(p + 0x50, "String.foo", 11);
+		PutBigEndianWord(p + 0x5c, (18 << 8) | kObjReadOnly);	// a 'String.foo: "hi"
+		PutBigEndianWord(p + 0x64, base + 0x40 + 1);
+		PutBigEndianHalf(p + 0x68, 'h');
+		PutBigEndianHalf(p + 0x6a, 'i');
+		TImportedObjectArea* classes = ImportFramesPart(p, sizeof(p), base);
+		EXPECT(classes != nil);
+		if (classes != nil)
+		{
+			RefVar array(MAKEPTR(classes->fArea));
+			RefVar real(GetArraySlotRef(array, 0));
+			EXPECT(IsReal(real) && CDouble(real) == 1.5);
+			RefVar string(GetArraySlotRef(array, 1));
+			EXPECT(StringIs(string, "hi"));
+			RemoveFramesPart(classes);
+		}
+	}
+
 	if (failures == 0)
 		printf("test_FramesPart: all passed\n");
 	return failures != 0;
