@@ -41,3 +41,8 @@ if(Python3_FOUND)
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/dock/mnp.py --echo --no-class4 --spawn $<TARGET_FILE:test_MNP>)
     set_tests_properties(comms.MNPLongHeaders PROPERTIES TIMEOUT 120)
 endif()
+
+add_executable(test_MNPClass5 test_MNPClass5.cpp)
+target_link_libraries(test_MNPClass5 PRIVATE comms_serial hal_host_serial os600_kernel os600_user)
+add_test(NAME comms.MNPClass5 COMMAND test_MNPClass5)
+set_tests_properties(comms.MNPClass5 PROPERTIES TIMEOUT 60)
