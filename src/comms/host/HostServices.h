@@ -14,7 +14,9 @@
 				THostDNSService, 'serv=dnst - the NIE's name lookups, over a
 				THostDNSTool (the host's resolver).
 
-				NOT YET: 'ictl (the link controller).
+				THostLinkService, 'serv=ictl - the NIE's connection control
+				endpoint, over a THostLinkTool (DEVIATION: the host's link is
+				always up; HostLinkTool.h).
 
 	Host code for the NIE's services (no ROM counterpart; the shape is the
 	ROM's TAsyncService, 0x0003b0c4-0x0003b14c).
@@ -44,6 +46,17 @@ public:
 	PROTOCOL_IMPL_HEADER_MACRO(THostDNSService);
 
 	THostDNSService*	New();
+	void				Delete();
+	NewtonErr			Start(TOptionArray* options, ULong serviceId, TServiceInfo* serviceInfo);
+	NewtonErr			DoneStarting(TAEvent* event, ULong size, TServiceInfo* serviceInfo);
+};
+
+PROTOCOL THostLinkService : public TCMService
+{
+public:
+	PROTOCOL_IMPL_HEADER_MACRO(THostLinkService);
+
+	THostLinkService*	New();
 	void				Delete();
 	NewtonErr			Start(TOptionArray* options, ULong serviceId, TServiceInfo* serviceInfo);
 	NewtonErr			DoneStarting(TAEvent* event, ULong size, TServiceInfo* serviceInfo);
