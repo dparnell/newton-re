@@ -1,0 +1,128 @@
+// Third-party packages (the owner's fixtures/packages: applications,
+// games, fonts, Apple's Newton Internet Enabler), each stored on a fresh
+// internal store by `newton --package` and installed from there, then
+// removed again the ways a user does it.  Run by ctest
+// host.NewtonThirdPartyPackages (src/host/CMakeLists.txt, which lists the
+// packages), and followed by thirdparty-restart.ns on the same store.
+//
+// What is checked:
+//  - each package's Extras drawer entry has the class the ROM's
+//    HandleNewPackage (0x54b475) gives it: an application's 'form part a
+//    FormEntry, an 'auto part with a text an AutoEntry, and a package with
+//    no part that has a text (the fonts, ISP Templates) a '????Entry -
+//    an extension;
+//  - the fonts' families are in vars.fonts;
+//  - RPNcalc opens and takes four taps (7 Enter 8 +: its display says 15,
+//    ScreenSnapshot tmp/thirdparty-rpn.pgm);
+//  - every package removed - SafeRemovePackage (what the drawer's delete
+//    does, through the icon's SafeRemovePackageQT), DeActivatePackage then
+//    RemovePackage (its part frames looked at in between, as the drawer
+//    does), or RemovePackage - leaves no stored package and no entry, no
+//    font family, a part frame kept by a script declawed, and its store
+//    objects freed.
+
+expected := {
+	|RPNcalc:NMad|: 'FormEntry, |Daleks:Avarice|: 'FormEntry, |Mahjongg:Scrawl|: 'FormEntry,
+	|NewtHack:ChrisDopp|: 'FormEntry, |NHSounds:CAD|: 'AutoEntry, |Register:FlaSheridn|: 'FormEntry,
+	Monaco: '|????Entry|, |Klingon Font|: '|????Entry|, |Times:NL$|: '|????Entry|,
+	|Zapf Chancery:NL$|: '|????Entry|, |Zapf Dingbats:NL$|: '|????Entry|,
+	| Newton Devices|: 'AutoEntry, |Newton Internet Enabler|: 'AutoEntry,
+	|NIE Ethernet Module|: 'AutoEntry, |NIE LocalTalk Module|: 'AutoEntry,
+	|NIE Modem & Serial Module|: 'AutoEntry, |ISP Templates|: '|????Entry|,
+	|Internet Setup|: 'FormEntry};
+
+storedRefs := func() begin
+	local refs := [];
+	local c := Query(GetUnionSoupAlways("Packages"), {type: 'index});
+	local e := c:Entry();
+	while e do begin
+		if e.pkgRef then AddArraySlot(refs, e.pkgRef);
+		e := c:Next();
+	end;
+	refs
+end;
+
+entryCount := func() begin
+	local n := 0;
+	local c := Query(GetUnionSoupAlways("Packages"), {type: 'index});
+	local e := c:Entry();
+	while e do begin
+		if e.packageName and not e.pkgRef then n := n + 1;
+		e := c:Next();
+	end;
+	n
+end;
+
+AddDelayedCall(func() begin
+	// the drawer's entries
+	local wrong := [];
+	local seen := 0;
+	local missing := Clone(expected);
+	local c := Query(GetUnionSoupAlways("Packages"), {type: 'index});
+	local e := c:Entry();
+	while e do begin
+		if e.packageName and not e.pkgRef and not StrEqual(e.packageName, "NewtHack") then begin
+			seen := seen + 1;
+			RemoveSlot(missing, Intern(e.packageName));
+			local want := expected.(Intern(e.packageName));
+			if ClassOf(e) <> want then AddArraySlot(wrong, [e.packageName, ClassOf(e), want]);
+		end;
+		e := c:Next();
+	end;
+	local missingNames := [];
+	foreach tag, v in missing do AddArraySlot(missingNames, tag);
+	Print({entries: seen, expected: Length(expected), wrong: wrong, missing: missingNames});
+	Print({fonts: vars.fonts.Monaco exists and vars.fonts.|Klingon Font:Prism| exists and vars.fonts.Times exists
+		and vars.fonts.|Zapf Chancery| exists and vars.fonts.|Zapf Dingbats| exists});
+
+	// RPNcalc: 7 Enter 8 +
+	local rpn := GetRoot().|RPNcalc:NMad|;
+	rpn:Open();
+	taps := [[149, 187], [102, 272], [175, 187], [233, 272]];
+	tapNext := func() begin
+		if Length(taps) > 0 then begin
+			local t := taps[0];
+			ArrayRemoveCount(taps, 0, 1);
+			PenDown(t[0], t[1]); PenUp(); IdleStrokes();
+			AddDelayedCall(tapNext, nil, 600);
+		end else begin
+			ScreenSnapshot("tmp/thirdparty-rpn.pgm");
+			Print({rpnOpened: rpn.viewCObject <> nil});
+			rpn:Close();
+			AddDelayedCall(removeAll, nil, 500);
+		end;
+	end;
+	AddDelayedCall(tapNext, nil, 1000);
+end, nil, 14000);
+
+removeAll := func() begin
+	local before := GetStores()[0]:UsedSize();
+	local onStore := 0;
+	kept := [];
+	local i := 0;
+	foreach r in call storedRefs with () do begin
+		local info := GetPkgRefInfo(r);
+		onStore := onStore + info.cmprsdSz;
+		AddArraySlot(kept, info.parts[0]);
+		if i mod 3 = 0 then
+			SafeRemovePackage(r)
+		else if i mod 3 = 1 then begin
+			DeActivatePackage(r);
+			AddArraySlot(kept, GetPkgRefInfo(r).parts[0]);
+			RemovePackage(r);
+		end else
+			RemovePackage(r);
+		i := i + 1;
+	end;
+	AddDelayedCall(func() begin
+		Gc();
+		local declawed := true;
+		foreach k in kept do if IsFrame(k) then declawed := nil;
+		local active := 0;
+		foreach p in GetPackages() do if p.store then active := active + 1;
+		Print({removedPackages: i, stored: Length(call storedRefs with ()), entriesLeft: call entryCount with (),
+			active: active, fontsGone: not (vars.fonts.Monaco exists), declawed: declawed,
+			freed: before - GetStores()[0]:UsedSize() >= onStore});
+		Print("thirdparty: done");
+	end, nil, 1000);
+end;

@@ -12,6 +12,7 @@ add_library(package_manager STATIC
     PackagePipe.cpp
     PartPipe.cpp
     PackageLoader.cpp
+    ROMClassInfo.cpp
 )
 # stores: the ROM domain manager a package on a store is told to (the two
 # static libraries depend on each other)

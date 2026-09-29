@@ -8,6 +8,7 @@
 */
 
 #include "PackageManager.h"
+#include "ROMClassInfo.h"
 #include "PackageIterator.h"
 #include "Protocols.h"
 #include "UserPorts.h"
@@ -408,6 +409,32 @@ TPackageEventHandler::CheckAndInstallPatch(PartInfo& /*info*/, SourceType /*type
 }
 
 
+// DEVIATION (InstallPart, below): what a protocol part would have been
+// registered as, said on stderr - the implementation, the interface it
+// implements and its capabilities (ROMClassInfo.h) - so that a missing
+// driver or tool is named where a script later fails to make it by name,
+// and a host replacement can be registered under the same names.
+static void
+ReportUnregisteredProtocol(TPackageBlock* package, ULong partIndex, const void* code, ULong size)
+{
+	char name[64];
+	long n = 0;
+	if (package != nil && package->fName != nil)
+		for (const UniChar* c = package->fName; *c != 0 && n < (long) sizeof(name) - 1; c++)
+			name[n++] = *c < 0x80 ? (char) *c : '?';
+	name[n] = 0;
+	ROMClassInfoNames names;
+	if (code == nil || !ReadROMClassInfo(code, size, &names))
+		fprintf(stderr, "[packages] \"%s\" part %lu: a protocol part with no class info the host can read; not registered\n",
+				name, (unsigned long) partIndex);
+	else
+		fprintf(stderr, "[packages] \"%s\" part %lu: protocol %s (implements %s%s%s) not registered (its code is ARM: a host implementation must be registered under these names)\n",
+				name, (unsigned long) partIndex, names.fImplementation, names.fInterface,
+				names.fSignature[0] != 0 ? ", " : "", names.fSignature);
+	fflush(stderr);
+}
+
+
 // ROM 0x0015e804 InstallPart__20TPackageEventHandlerFPUlPlPUcRC6PartIdR16ExtendedPartInfo10SourceTypeRC10PartSource
 // One part installed.  A part for another processor is passed over (not
 // accepted, no error).  An autoLoad part is the manager's own business: a
@@ -449,6 +476,7 @@ TPackageEventHandler::InstallPart(ULong* classInfo, RemoveObjPtr* removeObj, UCh
 			// protocol parts (the screen drivers) have host stand-ins.
 			if (err == noErr)
 			{
+				ReportUnregisteredProtocol(fPackage, fPartIndex, code, info.size);
 				if (code != nil && (!IsMemory(type) || info.autoCopy))
 					free(code);
 				*classInfo = 0;

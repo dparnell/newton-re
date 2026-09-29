@@ -195,6 +195,46 @@ if(Python3_FOUND)
                          FAIL_REGULAR_EXPRESSION "FALSE")
 endif()
 
+# Third-party packages (fixtures/packages: RPNcalc, games, fonts, Apple's
+# Newton Internet Enabler) stored and installed on a fresh store, their
+# Extras drawer entries checked, RPNcalc tapped, then all removed; then a
+# restart on the same store finds none of them (demo/thirdparty.ns,
+# demo/thirdparty-restart.ns).  MDaleks is the same package as Daleks under
+# another file name, which the ROM's RegisterNewPackage refuses.  Only
+# when the fixtures are there.
+set(THIRDPARTY_DIR ${CMAKE_SOURCE_DIR}/../fixtures/packages)
+if(EXISTS ${THIRDPARTY_DIR}/apps/RPNcalc/rpncalc.pkg)
+    set(THIRDPARTY_ARGS)
+    foreach(pkg apps/RPNcalc/rpncalc.pkg games/Daleks/Daleks1.pkg games/Daleks/MDaleks1.pkg
+                games/Mahjongg2.1/Mahjongg.pkg games/NewtHack1_1/newthack.pkg games/NewtHack1_1/nhsounds.pkg
+                games/NewtHack1_1/register.pkg fonts/monaco.pkg fonts/KLINGON_.PKG "fonts/times font.pkg"
+                "fonts/zapf chancery font.pkg" "fonts/zapf dingbats font.pkg"
+                apple/NIE2/ENETSUP/newtdev.pkg apple/NIE2/REGPKGS/inetenbl.pkg apple/NIE2/ENETSUP/enetsup.pkg
+                apple/NIE2/LOCTSUP/loctsup.pkg apple/NIE2/MODMSER/modmsup.pkg apple/NIE2/MODMSER/isptmplt.pkg
+                apple/NIE2/REGPKGS/inetstup.pkg)
+        list(APPEND THIRDPARTY_ARGS --package ${THIRDPARTY_DIR}/${pkg})
+    endforeach()
+    add_test(NAME host.NewtonThirdPartyPackages
+             COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --erase
+                     --store ${CMAKE_CURRENT_BINARY_DIR}/thirdparty.store --headless 40
+                     ${THIRDPARTY_ARGS} --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/thirdparty.ns
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonThirdPartyPackages PROPERTIES TIMEOUT 240
+                         FIXTURES_SETUP host_thirdparty_store
+                         PASS_REGULAR_EXPRESSION "MDaleks1.pkg: not installed.*entries: 18,[^}]*wrong: \\[\\],[^}]*missing: \\[\\]}.*fonts: TRUE.*rpnOpened: TRUE.*removedPackages: 18, stored: 0, entriesLeft: 0, active: 0, fontsGone: TRUE, declawed: TRUE, freed: TRUE.*thirdparty: done"
+                         FAIL_REGULAR_EXPRESSION "fell over")
+    add_test(NAME host.NewtonThirdPartyPackages.restart
+             COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480
+                     --store ${CMAKE_CURRENT_BINARY_DIR}/thirdparty.store --headless 10
+                     --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/thirdparty-restart.ns
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonThirdPartyPackages.restart PROPERTIES TIMEOUT 120
+                         FIXTURES_REQUIRED host_thirdparty_store DEPENDS host.NewtonThirdPartyPackages
+                         PASS_REGULAR_EXPRESSION "restartStored: 0, restartEntries: 0, restartActive: 0, fontsGone: TRUE.*thirdparty-restart: done")
+else()
+    message(STATUS "fixtures/packages not there: host.NewtonThirdPartyPackages is not run")
+endif()
+
 # a large binary (VBO) made on the booted machine's internal store
 # (stores/LargeBinaries.h, qd/Pictures.h's GetBitmapInfo; needs the ROM image)
 add_test(NAME host.NewtonVBO COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 5 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/vbo.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)

@@ -5,6 +5,7 @@
 # hardware anyway.
 add_library(pcmcia STATIC
     CardInfo.cpp
+    CardPartHandler.cpp
 )
-target_link_libraries(pcmcia PUBLIC newton_config frames)
+target_link_libraries(pcmcia PUBLIC newton_config frames package_manager)
 target_include_directories(pcmcia PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

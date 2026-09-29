@@ -6,6 +6,7 @@
 	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
+#include "CardPartHandler.h"
 #include "NewtWorld.h"
 #include "SoundCodec.h"
 #include "SystemNatives.h"
@@ -253,6 +254,8 @@ TNewtWorld::MainConstructor()
 	handler->Init('auto');
 	handler = new TCommPartHandler;
 	handler->Init('comm');
+	// DEVIATION: 'cdhl belongs to the card server's world (NOT YET)
+	InitCardPartHandler();
 	StartDrawing(nil, nil);
 	return noErr;
 }

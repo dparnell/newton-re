@@ -1,0 +1,19 @@
+// After thirdparty.ns removed every third-party package, the machine
+// restarted on the same store: nothing comes back (ctest
+// host.NewtonThirdPartyPackages.restart).
+AddDelayedCall(func() begin
+	local stored := 0;
+	local entries := 0;
+	local c := Query(GetUnionSoupAlways("Packages"), {type: 'index});
+	local e := c:Entry();
+	while e do begin
+		if e.pkgRef then stored := stored + 1
+		else if e.packageName then entries := entries + 1;
+		e := c:Next();
+	end;
+	local active := 0;
+	foreach p in GetPackages() do if p.store then active := active + 1;
+	Print({restartStored: stored, restartEntries: entries, restartActive: active,
+		fontsGone: not (vars.fonts.Monaco exists)});
+	Print("thirdparty-restart: done");
+end, nil, 6000);
