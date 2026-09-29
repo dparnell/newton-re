@@ -113,8 +113,7 @@ reproduces a timing race.  Still sleeping fixed times: the comms demos
 (echo, dns, stream, inet, inetfsm); `comms.MNPLongHeaders` failed once
 under `stress.py --suite --hogs 16`.  Host layout: run
 `analysis/romsizes.py` (and `--lp64`) after reconstructing message or
-reply code; `CommManager.cpp`'s three `SetReply(0xC, event)` want
-`sizeof(TAESystemEvent)` before a Linux host;
+reply code (the whole tree is clean, 60335af);
 write new ones the same way, never with a fixed wait for something
 asynchronous - under a parallel ctest the packages `--package` queues
 and the NIE's procrastinated setup arrive late.
