@@ -17,11 +17,34 @@
 #include "NativeFunctions.h"
 #include "RSSymbols.h"
 #include "NewtonExceptions.h"
+#include "SortTables.h"
+#include "utility/Unicode.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 extern const ExceptionName exMsgException;
+
+// (the object system's functions the fixtures' native code reaches that
+//  no header of the reconstruction's declares)
+void	ArrayMunger(RefArg a1, long a1start, long a1count, RefArg a2, long a2start, long a2count);
+long	ArrayPosition(RefArg array, RefArg item, long start, RefArg test);
+void	BinaryMunger(RefArg a1, long a1start, long a1count, RefArg a2, long a2start, long a2count);
+void	StrMunger(RefArg s1, long s1start, long s1count, RefArg s2, long s2start, long s2count);
+double	CoerceToDouble(RefArg r);
+Ref		EnsureInternal(RefArg obj);
+void	ReplaceObjectRef(Ref target, Ref replacement);
+void	SortArray(RefArg array, RefArg test, RefArg key);
+int		StrBeginsWith(RefArg str, RefArg prefix);
+void	StrCapitalizeWords(RefArg str);
+void	StrCapitalize(RefArg str);
+void	StrDowncase(RefArg str);
+void	StrUpcase(RefArg str);
+long	StrPosition(RefArg str, RefArg substr, long start);
+long	StrReplace(RefArg str, RefArg substr, RefArg replacement, long count);
+Ref		Substring(RefArg str, long start, long count);
+void	TrimString(RefArg str);
+void	PrintObject(RefArg obj, long indent);
 
 extern const ExceptionName exInterpreter;
 
@@ -152,6 +175,8 @@ public:
 	bool			DeliverHost(TARMCPU& cpu, Exception* e);		// a host exception, its data translated
 	void			ThrowToHost(const char* name, uint32_t data);	// an ARM throw no ARM handler takes
 	uint32_t		CString(const char* s);			// a copy in the arena
+	uint32_t		Alloc(uint32_t size);			// a block of the arena
+	void			Free(uint32_t a);				// (only the last block goes back)
 	bool			ReadCString(uint32_t a, char* buffer, size_t size);
 	uint32_t		StackStateToken(StackState* state);
 	StackState*		StackStateOf(uint32_t token);
@@ -594,6 +619,31 @@ TNativeWorld::CString(const char* s)
 	fArenaTop += size;
 	memcpy(&fArena[a - kArenaBase], s, n);
 	return a;
+}
+
+
+uint32_t
+TNativeWorld::Alloc(uint32_t n)
+{
+	uint32_t size = (n + 7) & ~7u;
+	if (size < n || fArenaTop + size > kArenaSize - kStackSize)
+		ThrowMsg("armcpu: the arena is full");
+	uint32_t a = kArenaBase + fArenaTop;
+	fArenaTop += size;
+	memset(&fArena[a - kArenaBase], 0, size);
+	return a;
+}
+
+
+void
+TNativeWorld::Free(uint32_t a)
+{
+	if (a == 0 || !Arena(a - 8, 8))
+		return;
+	uint32_t size = 0;
+	Read32(a - 8, &size);
+	if (a - 8 + ((size + 8 + 7) & ~7u) == kArenaBase + fArenaTop)
+		fArenaTop = a - 8 - kArenaBase;
 }
 
 
@@ -1079,6 +1129,161 @@ GLUE(Glue_StrEndsWith)
 	w.Return(cpu, StrEndsWith(RefVar(w.ArgRef(cpu.r[0])), RefVar(w.ArgRef(cpu.r[1]))) ? 1 : 0);
 	return true;
 }
+// SetupResend(message, ifDefined, RefVar& implementor), as SetupSend
+GLUE(Glue_SetupResend)
+{
+	RefVar implementor(w.ArgRef(cpu.r[2]));
+	RefVar method(SetupResend(RefVar(w.ArgRef(cpu.r[0])), (int32_t) cpu.r[1], implementor));
+	uint32_t handle = 0;
+	w.Read32(cpu.r[2], &handle);
+	w.Write32(handle, w.ToARM(implementor));
+	w.Return(cpu, w.ToARM(method));
+	return true;
+}
+#define REF(n)		RefVar(w.ArgRef(cpu.r[n]))
+#define LONG(n)		((long) (int32_t) cpu.r[n])
+GLUE(Glue_ArrayMunger)		{ ArrayMunger(REF(0), LONG(1), LONG(2), REF(3), (int32_t) w.Arg(cpu, 4), (int32_t) w.Arg(cpu, 5)); w.Return(cpu, 0); return true; }
+GLUE(Glue_BinaryMunger)		{ BinaryMunger(REF(0), LONG(1), LONG(2), REF(3), (int32_t) w.Arg(cpu, 4), (int32_t) w.Arg(cpu, 5)); w.Return(cpu, 0); return true; }
+GLUE(Glue_StrMunger)		{ StrMunger(REF(0), LONG(1), LONG(2), REF(3), (int32_t) w.Arg(cpu, 4), (int32_t) w.Arg(cpu, 5)); w.Return(cpu, 0); return true; }
+GLUE(Glue_ArrayPosition)	{ w.Return(cpu, (uint32_t) ArrayPosition(REF(0), REF(1), LONG(2), REF(3))); return true; }
+GLUE(Glue_EnsureInternal)	{ w.Return(cpu, w.ToARM(EnsureInternal(REF(0)))); return true; }
+GLUE(Glue_ReplaceObjectRef)	{ ReplaceObjectRef(w.ToHost(cpu.r[0]), w.ToHost(cpu.r[1])); w.Return(cpu, 0); return true; }
+GLUE(Glue_SortArray)		{ SortArray(REF(0), REF(1), REF(2)); w.Return(cpu, 0); return true; }
+GLUE(Glue_StrBeginsWith)	{ w.Return(cpu, StrBeginsWith(REF(0), REF(1)) ? 1 : 0); return true; }
+GLUE(Glue_StrCapitalizeWords)	{ StrCapitalizeWords(REF(0)); w.Return(cpu, 0); return true; }
+GLUE(Glue_StrCapitalize)	{ StrCapitalize(REF(0)); w.Return(cpu, 0); return true; }
+GLUE(Glue_StrDowncase)		{ StrDowncase(REF(0)); w.Return(cpu, 0); return true; }
+GLUE(Glue_StrUpcase)		{ StrUpcase(REF(0)); w.Return(cpu, 0); return true; }
+GLUE(Glue_StrPosition)		{ w.Return(cpu, (uint32_t) StrPosition(REF(0), REF(1), LONG(2))); return true; }
+GLUE(Glue_StrReplace)		{ w.Return(cpu, (uint32_t) StrReplace(REF(0), REF(1), REF(2), LONG(3))); return true; }
+GLUE(Glue_Substring)		{ w.Return(cpu, w.ToARM(Substring(REF(0), LONG(1), LONG(2)))); return true; }
+GLUE(Glue_TrimString)		{ TrimString(REF(0)); w.Return(cpu, 0); return true; }
+GLUE(Glue_PrintObject)		{ PrintObject(REF(0), LONG(1)); w.Return(cpu, 0); return true; }
+// CoerceToDouble: Norcroft's software floating point answers a double in
+// r0 (the high word) and r1
+GLUE(Glue_CoerceToDouble)
+{
+	double d = CoerceToDouble(REF(0));
+	uint64_t bits;
+	memcpy(&bits, &d, 8);
+	cpu.r[1] = (uint32_t) bits;
+	w.Return(cpu, (uint32_t) (bits >> 32));
+	return true;
+}
+#undef REF
+#undef LONG
+
+// The Unicode text functions over the ARM world's memory: the text copied
+// out (a UniChar is a value there: Read16/Write16), worked on, written back.
+static long
+ReadUniChars(TNativeWorld& w, uint32_t a, UniChar* buffer, long max)
+{
+	long n = 0;
+	uint16_t c = 0;
+	while (n < max - 1 && w.Read16(a + (uint32_t) n * 2, &c) && c != 0)
+		buffer[n++] = c;
+	buffer[n] = 0;
+	return n;
+}
+GLUE(Glue_CompareStringNoCase)
+{
+	static UniChar a[1024], b[1024];
+	ReadUniChars(w, cpu.r[0], a, 1024);
+	ReadUniChars(w, cpu.r[1], b, 1024);
+	w.Return(cpu, (uint32_t) CompareStringNoCase(a, b));
+	return true;
+}
+static bool
+CaseText(TNativeWorld& w, TARMCPU& cpu, bool upper)
+{
+	long n = (int32_t) cpu.r[1];
+	UniChar* text = (UniChar*) malloc((size_t) (n > 0 ? n : 1) * sizeof(UniChar));
+	uint16_t c = 0;
+	for (long i = 0; i < n; i++)
+	{
+		w.Read16(cpu.r[0] + (uint32_t) i * 2, &c);
+		text[i] = c;
+	}
+	if (upper)
+		UppercaseText(text, n);
+	else
+		LowercaseText(text, n);
+	for (long i = 0; i < n; i++)
+		w.Write16(cpu.r[0] + (uint32_t) i * 2, text[i]);
+	free(text);
+	w.Return(cpu, 0);
+	return true;
+}
+GLUE(Glue_UppercaseText)		{ return CaseText(w, cpu, true); }
+GLUE(Glue_LowercaseText)		{ return CaseText(w, cpu, false); }
+// ConvertToUnicode(src, dest, encoding, n): at most n characters, up to a
+// nul, and the nul written after them
+GLUE(Glue_ConvertToUnicode)
+{
+	long n = (int32_t) cpu.r[3];
+	if (n < 0)
+		n = 0;
+	char* src = (char*) malloc((size_t) n + 1);
+	UniChar* dest = (UniChar*) malloc(((size_t) n + 1) * sizeof(UniChar));
+	uint8_t c = 0;
+	long i = 0;
+	for (; i < n && w.Read8(cpu.r[0] + (uint32_t) i, &c) && c != 0; i++)
+		src[i] = (char) c;
+	src[i] = 0;
+	ConvertToUnicode(src, dest, (int32_t) cpu.r[2], n);
+	for (long j = 0; j <= n; j++)
+	{
+		w.Write16(cpu.r[1] + (uint32_t) j * 2, dest[j]);
+		if (dest[j] == 0)
+			break;
+	}
+	free(src);
+	free(dest);
+	w.Return(cpu, 0);
+	return true;
+}
+GLUE(Glue_ConvertFromUnicode)
+{
+	long n = (int32_t) cpu.r[3];
+	if (n < 0)
+		n = 0;
+	UniChar* src = (UniChar*) malloc(((size_t) n + 1) * sizeof(UniChar));
+	char* dest = (char*) malloc((size_t) n * 2 + 2);
+	uint16_t c = 0;
+	long i = 0;
+	for (; i < n && w.Read16(cpu.r[0] + (uint32_t) i * 2, &c) && c != 0; i++)
+		src[i] = c;
+	src[i] = 0;
+	memset(dest, 0, (size_t) n * 2 + 2);
+	ConvertFromUnicode(src, dest, (int32_t) cpu.r[2], n);
+	for (long j = 0; j < n * 2 + 2; j++)
+	{
+		w.Write8(cpu.r[1] + (uint32_t) j, (uint8_t) dest[j]);
+		if (dest[j] == 0)
+			break;
+	}
+	free(src);
+	free(dest);
+	w.Return(cpu, 0);
+	return true;
+}
+// malloc/free: blocks of the call's arena, a word before each holding its
+// size.  (free gives nothing back but the last block made: the arena lasts
+// only as long as the call, so a native's own blocks go with it.)
+GLUE(Glue_malloc)
+{
+	uint32_t size = cpu.r[0];
+	uint32_t a = w.Alloc(size + 8);
+	w.Write32(a, size);
+	w.Return(cpu, a + 8);
+	return true;
+}
+GLUE(Glue_free)
+{
+	w.Free(cpu.r[0]);
+	w.Return(cpu, 0);
+	return true;
+}
 GLUE(Glue_SetLexScope)
 {
 	w.Return(cpu, w.ToARM(SetLexScope(RefVar(w.ArgRef(cpu.r[0])), RefVar(w.ArgRef(cpu.r[1])), RefVar(w.ArgRef(cpu.r[2])), RefVar(w.ArgRef(cpu.r[3])))));
@@ -1329,6 +1534,32 @@ InitGlue(void)
 		{ "SetLexScope__FRC6RefVarN31", Glue_SetLexScope },
 		{ "TranslateException__12TInterpreterFP9Exception", Glue_TranslateException },
 		{ "StrEndsWith__FRC6RefVarT1", Glue_StrEndsWith },
+		{ "SetupResend__FRC6RefVarlR6RefVar", Glue_SetupResend },
+		{ "ArrayMunger__FRC6RefVarlT2T1N22", Glue_ArrayMunger },
+		{ "BinaryMunger__FRC6RefVarlT2T1N22", Glue_BinaryMunger },
+		{ "StrMunger__FRC6RefVarlT2T1N22", Glue_StrMunger },
+		{ "ArrayPosition__FRC6RefVarT1lT1", Glue_ArrayPosition },
+		{ "EnsureInternal__FRC6RefVar", Glue_EnsureInternal },
+		{ "ReplaceObjectRef__FlT1", Glue_ReplaceObjectRef },
+		{ "SortArray__FRC6RefVarN21", Glue_SortArray },
+		{ "StrBeginsWith__FRC6RefVarT1", Glue_StrBeginsWith },
+		{ "StrCapitalizeWords__FRC6RefVar", Glue_StrCapitalizeWords },
+		{ "StrCapitalize__FRC6RefVar", Glue_StrCapitalize },
+		{ "StrDowncase__FRC6RefVar", Glue_StrDowncase },
+		{ "StrUpcase__FRC6RefVar", Glue_StrUpcase },
+		{ "StrPosition__FRC6RefVarT1l", Glue_StrPosition },
+		{ "StrReplace__FRC6RefVarN21l", Glue_StrReplace },
+		{ "Substring__FRC6RefVarlT2", Glue_Substring },
+		{ "TrimString__FRC6RefVar", Glue_TrimString },
+		{ "PrintObject__FRC6RefVarUl", Glue_PrintObject },
+		{ "CoerceToDouble__FRC6RefVar", Glue_CoerceToDouble },
+		{ "CompareStringNoCase__FPUsT1", Glue_CompareStringNoCase },
+		{ "UppercaseText__FPUsl", Glue_UppercaseText },
+		{ "LowercaseText__FPUsl", Glue_LowercaseText },
+		{ "ConvertToUnicode__FPCvPUslT3", Glue_ConvertToUnicode },
+		{ "ConvertFromUnicode__FPCUsPvlT3", Glue_ConvertFromUnicode },
+		{ "malloc", Glue_malloc },
+		{ "free", Glue_free },
 		{ "AllocateFrameWithMap__FRC6RefVar", Glue_AllocateFrameWithMap },
 		{ "ThrowRefException__FPcRC6RefVar", Glue_ThrowRefException },
 		{ "Subexception", Glue_Subexception },
@@ -1412,6 +1643,14 @@ PackageNativeCPUAnswers(const char* name)
 	for (uint32_t i = 0; i < kGlueSlots; i++)
 		if (gGlue[i].fName != nil && strcmp(gGlue[i].fName, name) == 0)
 			return true;
+	// (or a native function of the ROM's the host has, called generically)
+	for (unsigned long i = 0; i < kPublicJumpTableCount; i++)
+		if (strcmp(kPublicJumpTable[i].fName, name) == 0 && kPublicJumpTable[i].fSlot != 0)
+		{
+			long numArgs = 0;
+			if (ResolveNativeFunction((ULong) kPublicJumpTable[i].fSlot, &numArgs) != nil)
+				return true;
+		}
 	return false;
 }
 

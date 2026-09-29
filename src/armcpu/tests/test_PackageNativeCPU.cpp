@@ -279,6 +279,60 @@ main()
 	EXPECT(ISNIL(Eval("call nativeEndsWith with (\"Mahjongg\", \"Mah\")")));
 	EXPECT(PackageNativeCPUAnswers("Length__Fl") && PackageNativeCPUEntryCount() > 50);
 
+	// every ROM entry the fixtures' native code reaches (gluetable.py --package
+	// over inetenbl, modmsup, Mahjongg and newthack) that the host has a
+	// function for; not answered, for want of one: Debugger,
+	// EnableFramesFunctionProfiling, GetGlobals (a host pointer), PublicFiller_236
+	static const char* kReached[] =
+	{
+		"AddArraySlot__FRC6RefVarT1", "AddExceptionHandler", "AllocateArray__FRC6RefVarl",
+		"AllocateBinary__FRC6RefVarl", "AllocateFrameWithMap__FRC6RefVar", "AllocateFrame__Fv",
+		"AllocateRefHandle__Fl", "ArrayMunger__FRC6RefVarlT2T1N22", "ArrayPosition__FRC6RefVarT1lT1",
+		"BinaryData__Fl", "BinaryMunger__FRC6RefVarlT2T1N22", "Call__12TInterpreterFRC6RefVarl",
+		"ClassOf__FRC6RefVar", "ClearRefHandles__Fv", "Clone__FRC6RefVar",
+		"CoerceToDouble__FRC6RefVar", "CompareStringNoCase__FPUsT1", "ConvertFromUnicode__FPCUsPvlT3",
+		"ConvertToUnicode__FPCvPUslT3", "DecrementCurrentStackPos__Fv", "DeepClone__FRC6RefVar",
+		"DisposeRefHandle__FP9RefHandle", "DisposeStackStateBlock__FP10StackState", "EQRef__FlT1",
+		"EnsureInternal__FRC6RefVar", "ExitHandler", "FAdd",
+		"FAref", "FDivide", "FEqual",
+		"FGreaterOrEqual", "FGreaterThan", "FLessOrEqual",
+		"FLessThan", "FMultiply", "FNegate",
+		"FNewIterator", "FSetAref", "FSubtract",
+		"FUnorderedLessOrGreater", "FindImplementor__FRC6RefVarT1", "FindProtoImplementor__FRC6RefVarT1",
+		"ForEachLoopDone__FRC6RefVar", "ForEachLoopNext__FRC6RefVar", "ForEachLoopReset__FRC6RefVarT1",
+		"FrameHasPath__FRC6RefVarT1", "FrameHasSlotRef__FlT1", "GetArraySlotRef__FlT1",
+		"GetFramePath__FRC6RefVarT1", "GetFrameSlotRef__FlT1", "GetGFunctionFrame__Fv",
+		"GetGInterpreter__Fv", "GetImplementor__12TInterpreterFv", "GetProtoVariable__FRC6RefVarT1Pl",
+		"GetReceiver__12TInterpreterFv", "GetStackStateBlock__Fv", "GetVariable__FRC6RefVarT1Pli",
+		"ISREAL__Fl", "IncrementCurrentStackPos__Fv", "Intern__FPc",
+		"IsInstance__FRC6RefVarT1", "IsSend__12TInterpreterFv", "IsString__FRC6RefVar",
+		"IsSubclassRef__FlT1", "IsSymbol__Fl", "Length__Fl",
+		"LockRef__Fl", "LowercaseText__FPUsl", "MAKEBOOLEAN__Fi",
+		"MakeString__FPCc", "NativeEntry__FRC6RefVarlPP9RefHandle", "NextHandler",
+		"ObjectFlags__Fl", "PopValue__12TInterpreterFv", "PrintObject__FRC6RefVarUl",
+		"PushValue__12TInterpreterFRC6RefVar", "RCHAR__Fl", "RemoveSlot__FRC6RefVarT1",
+		"ReplaceObjectRef__FlT1", "ResetStackStateBlock__FP10StackState", "Run__12TInterpreterFv",
+		"Send__12TInterpreterFRC6RefVarN21l", "SetArraySlotRef__FlN21", "SetCallEnv__12TInterpreterFv",
+		"SetClass__FRC6RefVarT1", "SetFramePath__FRC6RefVarN21", "SetFrameSlot__FRC6RefVarN21",
+		"SetLength__FRC6RefVarl", "SetLexScope__FRC6RefVarN31", "SetSendEnv__12TInterpreterFRC6RefVarT1",
+		"SetVariableOrGlobal__FRC6RefVarN21iT4", "SetupResend__FRC6RefVarlR6RefVar", "SetupSend__FRC6RefVarT1lR6RefVar",
+		"Slots__Fl", "SortArray__FRC6RefVarN21", "StrBeginsWith__FRC6RefVarT1",
+		"StrCapitalizeWords__FRC6RefVar", "StrCapitalize__FRC6RefVar", "StrDowncase__FRC6RefVar",
+		"StrEndsWith__FRC6RefVarT1", "StrMunger__FRC6RefVarlT2T1N22", "StrPosition__FRC6RefVarT1l",
+		"StrReplace__FRC6RefVarN21l", "StrUpcase__FRC6RefVar", "Subexception",
+		"Substring__FRC6RefVarlT2", "Throw", "ThrowRefException__FPcRC6RefVar",
+		"TotalClone__FRC6RefVar", "TranslateException__12TInterpreterFP9Exception", "TrimString__FRC6RefVar",
+		"UnlockRef__Fl", "UppercaseText__FPUsl", "_RCHARError__Fl",
+		"_RINTError__Fl", "__rt_sdiv", "__rt_sdiv10",
+		"free", "longjmp", "malloc",
+		"memcpy", "setjmp", "strlen",
+	};
+	for (const char* n : kReached)
+		if (!PackageNativeCPUAnswers(n))
+		{
+			failures++;
+			printf("FAIL: %s is not answered\n", n);
+		}
 	if (failures == 0)
 		printf("test_PackageNativeCPU: all passed\n");
 	else
