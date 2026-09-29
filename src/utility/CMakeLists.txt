@@ -25,6 +25,8 @@ add_library(utility STATIC
     StdioPipe.cpp
     CRC16.cpp
     CRC16Tables.cpp
+    DES.cpp
+    DESTables.cpp
     RingBuffer.cpp
     CircleBuf.cpp
     Random.cpp

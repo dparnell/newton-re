@@ -6,6 +6,13 @@ add_executable(test_Pipes test_Pipes.cpp)
 target_link_libraries(test_Pipes PRIVATE utility)
 add_test(NAME utility.Pipes COMMAND test_Pipes)
 
+# the ROM's own DES run on the ARM interpreter as the oracle (needs the
+# ROM image)
+add_executable(test_DES test_DES.cpp)
+target_link_libraries(test_DES PRIVATE utility armcpu)
+target_compile_definitions(test_DES PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
+add_test(NAME utility.DES COMMAND test_DES)
+
 add_executable(test_CRC16 test_CRC16.cpp)
 target_link_libraries(test_CRC16 PRIVATE utility)
 add_test(NAME utility.CRC16 COMMAND test_CRC16)

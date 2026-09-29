@@ -10,6 +10,29 @@ where it lives, so you can go and read it.
 
 ---
 
+## The Newton's DES is not quite the standard's
+
+The desktop connection's password exchange and the store passwords use DES
+(`utility/DES.cpp`, from ROM 0x002d4420 onwards). The tables are the
+standard's, but `DESKeySched` (ROM 0x002f7264) shifts each 32-bit half of
+the key left one bit before PC1 selects from it. The published test
+vectors therefore do not come out, and the bits DES leaves out are not the
+key's parity bits. `DESCharToKey`, which turns a password into a key, sets
+odd parity in bit 0 of every byte. That changes the key DES actually uses.
+
+`DESCharToKey` has a quirk of its own. It encrypts the password four
+characters at a time, each piece under the key made from the pieces before
+it, starting from the key "W@h`bmtd". It then ORs the parity-corrected
+bytes into the encrypted block rather than storing them. So a byte whose
+low bit was cleared to make its parity odd keeps the bit set.
+
+`test_DES` does not use the published vectors, because the ROM does not
+match them. It runs the ROM's own `DESEncodeNonce`, `DESDecodeNonce` and
+`DESCharToKey` on the ARM interpreter (`armcpu/ARMCPU.h`) over the ROM
+image, and the reconstruction has to agree with them.
+
+---
+
 ## The digit reader knows "good" is not 9009
 
 ParaGraph's digit and number reader runs first in any field that allows
