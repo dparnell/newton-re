@@ -566,6 +566,24 @@ main()
 	memcpy(BinaryData(gCode), code, kNIECodeLength);
 
 	RegisterNIENatives();
+	// the re-expressions are what run: no CPU fallback here (a function the
+	// registry missed would throw, not be emulated), and every function the
+	// package holds is found with its own argument count
+	EXPECT(GetPackageNativeFallback() == nil);
+	{
+		static const struct { ULong offset; long numArgs; } kAll[] = {
+			{ 0x29ec, 3 }, { 0x2ff8, 1 }, { 0x7a1c, 1 }, { 0x7b78, 1 }, { 0x7dc0, 2 }, { 0x7ef0, 1 },
+			{ 0x8004, 1 }, { 0x8124, 2 }, { 0x8670, 2 }, { 0xc498, 2 }, { 0xd4cc, 2 },
+			{ 0xd5e4, 1 }, { 0xdbdc, 1 }, { 0xde38, 2 }, { 0xe43c, 1 }, { 0xe65c, 3 }, { 0xe808, 4 }, { 0xe9f0, 3 } };
+		for (size_t i = 0; i < sizeof(kAll) / sizeof(kAll[0]); i++)
+		{
+			long numArgs = -1;
+			void* fn = FindPackageNative(gCode, kAll[i].offset, &numArgs, nil);
+			if (fn == nil || numArgs != kAll[i].numArgs)
+				printf("  offset %#lx: %s\n", (unsigned long) kAll[i].offset, fn == nil ? "not registered" : "wrong argument count");
+			EXPECT(fn != nil && numArgs == kAll[i].numArgs);
+		}
+	}
 	RegisterPackageNative(kNIECodeLength, kNIECodeHash, kProbeOffset, (void*) ProbePrinter, 3, "(test) f");
 	newton_try
 	{
