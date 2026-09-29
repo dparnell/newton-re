@@ -51,6 +51,10 @@ constructors of its own):
                     or 'cbits bitmap: its rows a grayscale PNG (black the
                     Newton's set pixels), its 16-byte header (a FramBitmap:
                     qd/Pictures.h) in hex, its bits per pixel
+    sound('samples, "resources/samples/addr.wav")   the samples of a
+                    simple sound (8-bit, uncompressed: offset binary, as a
+                    WAV file's 8-bit samples are); the sampling rate stays
+                    in the sound frame
     function("functions/addr.ns")   a function, compiled from that source
     {tag: value, ...}      a frame (its map is the manifest's)
     [cls: value, ...]      an array whose class is the symbol cls
@@ -85,6 +89,8 @@ import subprocess					# noqa: E402
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "imaging"))
 import png							# noqa: E402
+
+import wave							# noqa: E402
 
 BITMAP_CLASSES = ("bits", "mask", "cbits")
 
@@ -148,6 +154,7 @@ class Extractor:
 		self.paths = {}					# object -> path
 		self.layout_extra = {}			# object -> extra manifest fields
 		self.functions = set(nd.rom_functions(rom))
+		self.simple_sounds = self.find_simple_sounds()
 		self.in_function = 0			# inside a function written as source
 		self.aliases = []				# (path, name): a named object inside a compiled function
 
@@ -159,6 +166,30 @@ class Extractor:
 		if rom.flags(o) & 1:
 			refs += [s for s in rom.slots(o) if s in self.inside]
 		return refs
+
+	def find_simple_sounds(self):
+		"""The samples of the simple sounds (8-bit, uncompressed), with their
+		frame's sampling rate: what a WAV file holds exactly."""
+		rom = self.rom
+		found = {}
+		for o in self.objs:
+			if rom.flags(o) & 3 != 3:
+				continue
+			slots = dict(rom.frame_slots(o))
+			kind = slots.get("sndFrameType")
+			if kind is None or rom.symname(kind) != "simpleSound" or slots.get("dataType") != 8 << 2 \
+					or slots.get("compressionType") != 0 or "samples" not in slots:
+				continue
+			rate = slots.get("samplingRate")
+			hz = 22026
+			if rom.is_ptr(rate) and rom.symname(rom.cls(rate)) in ("Real", "real"):
+				hz = struct.unpack(">d", rom.data(rate))[0]
+			elif rom.is_ptr(rate) and rom.symname(rom.cls(rate)) == "fixed":
+				hz = struct.unpack(">i", rom.data(rate))[0] / 65536
+			elif rate is not None and rate & 3 == 0:
+				hz = rate >> 2
+			found[slots["samples"]] = max(1, int(round(hz)))
+		return found
 
 	def r_names(self):
 		"""The ROM's object constants: R<name>, whose word holds the ref (with
@@ -290,6 +321,15 @@ class Extractor:
 				top = (1 << depth) - 1
 				png.write_gray(os.path.join(self.out, rel), width, height, [[top - v for v in row] for row in rows], depth)
 				return "bitmap(%s, \"%s\", \"%s\", %d)" % (self.value(cls, path + "^"), rel, header.hex(), depth)
+		if o in self.simple_sounds and not self.in_function:
+			rel = "resources/%s/%x.wav" % (folder, o)
+			os.makedirs(os.path.join(self.out, os.path.dirname(rel)), exist_ok=True)
+			with wave.open(os.path.join(self.out, rel), "wb") as w:
+				w.setnchannels(1)
+				w.setsampwidth(1)
+				w.setframerate(self.simple_sounds[o])
+				w.writeframes(data)
+			return "sound(%s, \"%s\")" % (self.value(cls, path + "^"), rel)
 		rel = "resources/%s/%x.bin" % (folder, o)
 		if self.in_function:
 			return "binary(%s, \"%s\")" % (self.value(cls, path + "^"), rel)	# (compiled, not written)
@@ -390,6 +430,30 @@ def bitmap_bytes(header, depth, rows):
 		for x, v in enumerate(row):
 			line[(x * depth) // 8] |= v << (8 - depth - (x * depth) % 8)
 		out += line
+	return bytes(out)
+
+
+def wav_samples(path):
+	"""A WAV file's samples as a simple sound's: 8-bit offset binary, one
+	channel.  The extractor's own files are read as they are; another
+	(16-bit, stereo: a sound edited elsewhere) is brought to that by
+	averaging the channels and keeping each sample's high byte."""
+	with wave.open(path, "rb") as w:
+		channels, width, count = w.getnchannels(), w.getsampwidth(), w.getnframes()
+		frames = w.readframes(count)
+	if channels == 1 and width == 1:
+		return frames
+	out = bytearray()
+	step = channels * width
+	for i in range(0, len(frames) - step + 1, step):
+		total = 0
+		for c in range(channels):
+			sample = frames[i + c * width:i + (c + 1) * width]
+			if width == 1:
+				total += sample[0] - 128
+			else:
+				total += int.from_bytes(sample[-1:], "little", signed=True)		# (the high byte of a little-endian sample)
+		out.append((total // channels + 128) & 0xff)
 	return bytes(out)
 
 
@@ -516,7 +580,7 @@ class Reader:
 		if kind == "name" and text in ("nil", "true"):
 			self.take()
 			return Imm(2 if text == "nil" else 0x1a)
-		if kind == "name" and text in ("real", "string", "binary", "array", "map", "bytes", "function", "bitmap") \
+		if kind == "name" and text in ("real", "string", "binary", "array", "map", "bytes", "function", "bitmap", "sound") \
 				and self.toks[self.i + 1][1] == "(":
 			self.take()
 			self.take("(")
@@ -524,7 +588,7 @@ class Reader:
 			while self.peek()[1] != ")":
 				if text in ("real",) and self.peek()[0] == "number":
 					args.append(float(self.take()[1]))
-				elif text in ("string", "binary", "bytes", "function", "bitmap") and self.peek()[0] == "string":
+				elif text in ("string", "binary", "bytes", "function", "bitmap", "sound") and self.peek()[0] == "string":
 					args.append(self.take()[1])
 				elif text == "bitmap" and self.peek()[0] == "number":
 					args.append(self.take()[1])
@@ -541,6 +605,8 @@ class Reader:
 			if text == "binary":
 				with open(os.path.join(self.root, args[1][1:-1]), "rb") as f:
 					return Obj("binary", args[0], data=f.read())
+			if text == "sound":
+				return Obj("binary", args[0], data=wav_samples(os.path.join(self.root, args[1][1:-1])))
 			if text == "bitmap":
 				cls, rel, header, depth = args[0], args[1][1:-1], bytes.fromhex(args[2][1:-1]), int(args[3])
 				width, height, levels = png.read_gray(os.path.join(self.root, rel), depth)

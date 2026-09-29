@@ -170,8 +170,26 @@ reported as the decompiler's was.
      the bitmap's levels, and `tools/imaging/test_png.py` tests that. A
      PNG of a new size is refused until its header's bounds are changed
      to match.
-4. **Sounds** (`samples`): WAV and back. The codecs a sound frame names
-   are the sound area's (`docs/sound/README.md`).
+4. **Sounds: the simple sounds done.** The ROM has 34 `samples`
+   binaries.
+   - The simple sounds' samples (8-bit and uncompressed, `sndFrameType
+     'simpleSound`) are WAV files, written as `sound('samples,
+     "resources/samples/<addr>.wav")`. Newton 8-bit samples are offset
+     binary, as a WAV file's 8-bit samples are, so the bytes go across
+     unchanged. The WAV's rate is the frame's `samplingRate`, rounded,
+     for a player's sake only: the frame keeps the real rate. Two of them
+     are in the tree; the third is a literal inside a function.
+   - An edited WAV of 16 bits or two channels is brought down to 8-bit
+     mono by the builder.
+   - The other 31 stay `.bin`, and this is deliberate:
+     - 12 are IMA ADPCM in the Newton's own blocks (0x40 samples with a
+       big-endian header, `sound/IMACodec.h`). A WAV holds IMA ADPCM in
+       blocks of its own, so decoding and encoding again would not give
+       the same bytes. They can become an editable WAV once the builder
+       compresses a sound with `sound/IMACodec.h`, accepting new bytes
+       for an edited sound.
+     - 19 are `TDTMFCodec` parameters: the ring tones as tone sequences,
+       50 bytes each. That is a table, not sampled sound.
 5. **Pictures and fonts**: PICT files, and the `sfnt` files as they are.
 6. **The ROM extension's ten packages** (`analysis/packages.py`), each
    extracted to the same form and rebuilt as a package.
@@ -224,7 +242,8 @@ manifest and 7 MB of resources.
 What it is not yet:
 
 - 362 nested functions are still bytecode (stage 2).
-- Sounds, pictures and fonts are still `.bin` files.
+- The compressed sounds, the pictures and the fonts are still `.bin`
+  files.
 - The files are cut by address, not by what they belong to (the
   dominator grouping above).
 - Resources are opaque, and inline objects are named by path, so an edit
