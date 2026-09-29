@@ -9,6 +9,30 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-30: the ROM-free track, step 1 - a round-tripping NewtonScript decompiler
+
+- `analysis/nsdecompile.py build/MP2x00US --roundtrip --newtonscript
+  <newtonscript>` decompiles every one of the ROM's NewtonScript
+  functions to source and compiles it back with the reconstruction's own
+  compiler, comparing instructions, literals and argFrame byte for byte
+  (`docs/frames/decompiler.md`; ctest `host.NSDecompileRoundTrip` over a
+  sample).  94.4% at first (b00be8e), 99.7% - 5491 of 5507 - after ten
+  rounds (6a1ce06, a2556eb, 952624d, 1749b85, 9011b47, 5061331, b7f32c4,
+  12c05b6).
+- What it took: locals declared where the ROM numbered them; loops found
+  at their tops, quoted paths; in a function of more than 20 variables
+  the compiler's variable frame is sorted (`AddSlot` sorts a map past 20
+  tags), so locals are named to hash into the ROM's order (the sum of the
+  upper-cased characters x 0x9E3779B9), loops' hidden locals included;
+  function literals pushed without `set-lex-scope` written as
+  `kFunction_` constants; `exists` paths; repeated literals told apart by
+  slot; an empty else told from an inner construct ending at the same
+  place; unquotable literals built by constants (`kBinaryFromHex`,
+  constructors for frames and arrays holding binaries or functions).
+- Compiler: the NTK's constant handling behind the host flag
+  `gCompilerNTKConstants` - a magic-pointer constant gets one literal per
+  name and a reference to a constant is not a receiver reference.
+
 ## 2026-09-30: the rest of the docker's commands
 
 - Package restore and removal ('rpkg' `DoRestorePackage`, 'rmvp'

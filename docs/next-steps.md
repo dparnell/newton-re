@@ -212,7 +212,7 @@ worked through.  What could come next (not ranked; the owner chooses):
   the unoptimised default build - `-DCMAKE_BUILD_TYPE=RelWithDebInfo`
   roughly halves processor time again for interactive use; `VisibleRow`
   and `StretchBits`/text are the next hot spots if wanted.
-- **The ROM-free track** (below).
+- **The ROM-free track** (below): step 1, the decompiler, at 99.7%.
 - Small: the date the Assistant's "tomorrow" comes to ("schedule lunch
   with Daniel tomorrow" puts the meeting on today).
 
@@ -359,12 +359,13 @@ step packing them and the recompiled NewtonScript back into the objects
 the OS loads, so a change to a source file or a resource is rebuilt and
 used on the next run.  The pieces, roughly in order:
 
-1. A NewtonScript **decompiler** (over `nsfunctions.py --disasm`'s
-   decoding) whose output compiles back to the same bytes, checked
-   function by function over all of the ROM's code objects - the
-   compiler (`frames/Compiler.h`, the ROM's own yacc tables) being
-   faithful enough to reproduce the ROM's code generation is the part to
-   watch.
+1. A NewtonScript **decompiler** whose output compiles back to the same
+   bytes - **being done, 99.7%**: `analysis/nsdecompile.py` round-trips
+   5491 of the ROM's 5507 functions (`docs/frames/decompiler.md`, ctest
+   `host.NSDecompileRoundTrip`).  Left: string-subclass literals built
+   from their text rather than their bytes (6), a closure made at build
+   time (0x5acf1d), 7 immediates the lexer cannot write, 2 foreach-value
+   shapes.
 2. **Resource extraction**: bitmaps to images, sounds to sound files,
    fonts, strings, locale bundles, the object graph that ties them
    together, as files a person can edit.
