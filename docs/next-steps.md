@@ -125,10 +125,22 @@ worked through.  What could come next (not ranked; the owner chooses):
 - **The book reader** (`TLibrarian`, 49 methods; 19 unanswered `books`
   natives) - the Newton's books and the help book, and with it the
   `'book` part handler (the ROM's help book is refused for want of it).
-- **The comms stack**: 120 unanswered natives - endpoints, CCL, AppleTalk,
-  IR, NTK and the desktop connection.  The test server's link, the IR
-  sniffing, `SuckPackageFromEndPoint` and fax reception (the only real
-  source of the fax-page bitmaps `RotTiledBitmap` turns) wait on it.
+- **The comms stack**: being worked (2026-09-29; `docs/comms/README.md`).
+  Networking goes to the host's own TCP/IP stack through host
+  implementations of the NIE's services (`inet`, `ictl`, `dnst`) - the
+  owner's decision; no TCP/IP stack is written or emulated.  M0 and M1
+  done: options, buffer lists, `TCommTool`, the comm manager, the host TCP
+  tool over `hal/host/HostSockets.h`; `CMStartService` with the `inet`
+  service hands back an open tool that echoes through a local server.
+  Next, M2: `CMGetEndpoint` + `TEndpoint`/`TSerialEndpoint`
+  (0x001d9968-0x001dd4f0) + `TEndpointEventHandler`
+  (0x000ac670-0x000acd08) + the `TCommTool*PB` classes; M3:
+  `TNewScriptEndpointClient` + the `CINew*` natives, a script's
+  `protoBasicEndpoint` echoing through the host; M4: `ictl`/`dnst` and
+  `InitializeCommManager` in the boot.  The rest of comms (CCL,
+  AppleTalk, IR, NTK, the desktop connection - which the test server's
+  link, the IR sniffing, `SuckPackageFromEndPoint` and fax reception wait
+  on) comes after.
 - **Now reachable over the large binaries**: the text engine's
   `TXNewtStreamFactory` (a compressed large binary for a stream above 4K)
   and `RotTiledBitmap` (only a fax page reaches it, so it still waits on

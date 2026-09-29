@@ -9,6 +9,26 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: comms, round 1 - the comm tool and manager over the host's sockets
+
+- The owner's decision: networking goes to the host's TCP/IP stack
+  through host implementations of the NIE's services, not a TCP/IP stack
+  of our own or the NIE's ARM code.  The plan with sizes is
+  `docs/comms/README.md`.
+- Options (`TOption`, `TOptionArray`, `TOptionIterator`), `CBufferList`
+  and `CShadowBufferSegment` (`utility/`), `TCommTool` whole with
+  `StartCommTool`/`ServiceToPort`/`OpenCommTool`, the comm manager
+  (`TCMWorld`, `CMStartService`), and the host's `inet` service and TCP
+  tool (`THostTCPTool`, a `TCommTool` subclass: only connect, listen,
+  get, put and termination are host code) over `hal/host/HostSockets.h`
+  (a plain C interface built without the Newton include paths, library
+  `hal_host_sockets`).  M0: the tool itself echoes through a local TCP
+  server; M1: `CMStartService` hands back an open tool that does.  ROM bugs
+  kept, among them `ImportConnectPB` checking the wrong pointer and a lost
+  disconnect event.  Found: the host clock standing still lets
+  `TaskMain`'s timeout countdown reach 0 ("no timeout"), so a polled tool
+  re-arms it.  Commits `19d8e59`, `5f26289`, `45890d6`, `1ec804b`.
+
 ## 2026-09-29: third-party packages install and uninstall (the owner's fixtures)
 
 - Stored apps came in as extensions: the Extras drawer's
