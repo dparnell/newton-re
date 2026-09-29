@@ -26,7 +26,8 @@ and, for each, the ROM's ref and the ref now (build --relayout).
 
 edit-test is the test of editability: it copies a tree, adds a slot
 holding a new frame to Rcanonicalinkshape (so the builder must make maps
-and symbols), lengthens one string in it (the plain string of 12 characters or more with the lowest
+and symbols), lengthens a string in the first package's part (so every
+package after it moves), lengthens one string in the object area (the plain string of 12 characters or more with the lowest
 address - near the area's start, so that nearly every object after it
 moves), and builds the copy with --relayout into an object
 file, which the host must boot as it boots the ROM's (ctest
@@ -193,6 +194,37 @@ def same_object(rom, v, ref, where):
 	return "%s: a %s" % (where, v.kind)
 
 
+def lengthen_first_string(tree):
+	"""edit-test's edit: the plain string of 12 characters or more with the
+	lowest address in a tree's objects gains " (edited)"."""
+	address = {}
+	with open(os.path.join(tree, "layout.tsv"), encoding="utf-8") as f:
+		for line in f:
+			fields = line.split("\t")
+			if len(fields) > 2 and not line.startswith(("#", "area", "alias")):
+				address[fields[1]] = int(fields[0], 16)
+	best = None
+	folder = os.path.join(tree, "objects")
+	for name in sorted(os.listdir(folder)):
+		with open(os.path.join(folder, name), encoding="utf-8") as f:
+			for i, line in enumerate(f.read().split("\n")):
+				m = re.match(r'([A-Za-z_][A-Za-z0-9_]*) := "([^"\\]{12,})";$', line)
+				if m and m.group(1) in address and (best is None or address[m.group(1)] < best[0]):
+					best = (address[m.group(1)], name, i, m.group(1), m.group(2))
+	if best is None:
+		print("no string to edit in %s" % folder)
+		return 1
+	_, name, i, what, text = best
+	path = os.path.join(folder, name)
+	with open(path, encoding="utf-8") as f:
+		lines = f.read().split("\n")
+	lines[i] = '%s := "%s (edited)";' % (what, text)
+	print("edited %s in %s: \"%s\" is now \"%s (edited)\"" % (what, os.path.relpath(path, tree), text, text))
+	with open(path, "w", encoding="utf-8", newline="\n") as f:
+		f.write("\n".join(lines))
+	return 0
+
+
 def file_name(path, ref):
 	"""A file's name made of an object's path (what holds it, so that a
 	person finds it): its letters, digits and dots, the rest made _, cut
@@ -270,7 +302,7 @@ def string_text(text: str) -> str:
 
 class Extractor:
 	def __init__(self, rom: nf.ROM, out: str, build_dir: str = None, objects=None, area=None, pad=PAD,
-				 newtonscript=None):
+				 newtonscript=None, align=4):
 		"""The ROM's object area; or, given `objects` and `area` (its base and
 		size) and the byte between objects, a package part's objects."""
 		self.rom = rom
@@ -279,6 +311,7 @@ class Extractor:
 		self.main = objects is None
 		self.area = (rom.soup, rom.soup_size) if area is None else area
 		self.pad = pad
+		self.align = align
 		self.objs = list(nf.objects(rom)) if objects is None else list(objects)
 		self.inside = set(self.objs)
 		self.maps = {rom.cls(o) for o in self.objs if rom.flags(o) & 3 == 3}
@@ -527,6 +560,7 @@ class Extractor:
 		for e in rex["entries"]:
 			cuts |= {e["address"], e["address"] + e["size"]}
 		parts = {}				# a frames part's start -> (its end, its tree's directory)
+		aligns = {}
 		for p in pkgs:
 			cuts |= {p["base"], p["base"] + p["size"]}
 			name = re.sub(r"[^A-Za-z0-9_]", "_", p["name"])
@@ -541,6 +575,7 @@ class Extractor:
 				if found is None:
 					continue			# (a part not a plain run of objects: kept in the package's bytes)
 				objs, pad, odd = found
+				aligns[first] = align
 				cuts |= {first, last}
 				names[p["base"]] = name + ".head.bin"
 				names[last] = name + ".tail.bin"
@@ -559,7 +594,7 @@ class Extractor:
 					last, objs, pad, odd = parts[a]
 					rel = "rex/" + name
 					sub = Extractor(self.rom, os.path.join(self.out, rel), self.build_dir, objs, (a, last - a), pad,
-									self.newtonscript)
+									self.newtonscript, aligns[a])
 					sub.odd_gaps = odd
 					sub.run()
 					print("  %s: %d objects, %d functions as source, %d as bytecode"
@@ -790,8 +825,8 @@ class Extractor:
 			for _, text in sorted(mapdefs):
 				f.write(text + "\n")
 		with open(os.path.join(self.out, "layout.tsv"), "w", encoding="utf-8", newline="\n") as f:
-			f.write("# the objects' area: %#x, %#x bytes; the byte between objects\n" % self.area)
-			f.write("area\t%x\t%x\t%x\n" % (self.area + (self.pad,)))
+			f.write("# the objects' area: %#x, %#x bytes; the byte between objects; the objects' alignment\n" % self.area)
+			f.write("area\t%x\t%x\t%x\t%x\n" % (self.area + (self.pad, self.align)))
 			for o in self.objs:
 				fields = ["%x" % (o - 1), self.paths[o], "%x" % rom.flags(o)]
 				if o in self.layout_extra:
@@ -1108,7 +1143,7 @@ def string_bytes(literal):
 # ---- building
 
 class Builder:
-	def __init__(self, src, newtonscript=None, relayout=False):
+	def __init__(self, src, newtonscript=None, relayout=False, base=None):
 		"""relayout: the objects laid out afresh, one after another in the
 		layout's order at the sizes they now have (an edit that grows or
 		shrinks one moves every one after it; an object the layout does not
@@ -1116,6 +1151,7 @@ class Builder:
 		self.src = src
 		self.newtonscript = newtonscript
 		self.relayout = relayout
+		self.new_base = base				# (relayout: where the area now starts - a package part that has moved)
 		self.relocations = []			# (the ROM's ref, the ref now) for every object that moved
 		self.defs = {}
 		files = [os.path.join(src, "maps.ns")]
@@ -1150,6 +1186,7 @@ class Builder:
 				if fields[0] == "area":
 					self.area_base, self.area_size = int(fields[1], 16), int(fields[2], 16)
 					self.pad = int(fields[3], 16) if len(fields) > 3 else PAD
+					self.align = int(fields[4], 16) if len(fields) > 4 else 4
 					continue
 				if fields[0] == "alias":
 					self.aliases[fields[1].lower()] = fields[2]
@@ -1278,6 +1315,74 @@ class Builder:
 			return 12 + len(v.data)
 		return 12 + 4 * len(v.items)
 
+	def rex_relaid_out(self, rex):
+		"""The ROM extension put back together with its frames parts laid out
+		afresh, each at wherever it now falls: a part that grew or shrank
+		moves everything after it.  What records where things are is made to
+		agree: each package's directory (its size, its part's size), the
+		extension's header (its length; each config entry's offset, and the
+		package list's size) and the frame export table 'fexp (the refs of
+		the objects the parts export, each moved as its object was).  The
+		header's checksum is left as it was (the host does not check it; its
+		sum is NOT YET known)."""
+		pieces = []
+		with open(rex, encoding="utf-8") as f:
+			for line in f:
+				if line.startswith("#"):
+					continue
+				fields = line.rstrip("\n").split("\t")
+				if fields[0] == "rex":
+					base, length = int(fields[1], 16), int(fields[2], 16)
+				else:
+					pieces.append((int(fields[0], 16), fields[1]))
+		data = bytearray()
+		moved = {}					# a piece's old address -> its new one
+		relocations = {}			# an exported object's old ref -> its new one
+		head = None					# the offset in data of the last package directory
+		fexp_at = None
+		for old, rel in pieces:
+			new = base + len(data)
+			moved[old] = new
+			if rel.endswith("/"):
+				sub = Builder(os.path.join(self.src, rel), self.newtonscript, relayout=True, base=new)
+				_, part = sub.build()
+				relocations.update(dict(sub.relocations))
+				delta = len(part) - sub.original_size
+				if head is not None and delta:
+					# the package directory: its size (+28), and the entry of the
+					# part at this offset (+52 on, 32 bytes each: offset, size, size again)
+					size_at = head + 28
+					struct.pack_into(">I", data, size_at, struct.unpack_from(">I", data, size_at)[0] + delta)
+					dir_size = struct.unpack_from(">I", data, head + 44)[0]
+					for i in range(struct.unpack_from(">I", data, head + 48)[0]):
+						entry = head + 52 + 32 * i
+						if head + dir_size + struct.unpack_from(">I", data, entry)[0] == len(data):
+							for k in (4, 8):
+								struct.pack_into(">I", data, entry + k, struct.unpack_from(">I", data, entry + k)[0] + delta)
+				data += part
+				continue
+			with open(os.path.join(self.src, rel), "rb") as piece:
+				blob = piece.read()
+			if blob[:7] == b"package":
+				head = len(data)
+			data += blob
+		moved[base + length] = base + len(data)
+		# the header: its length, and each config entry's offset and size
+		struct.pack_into(">I", data, 0x18, len(data))
+		for i in range(struct.unpack_from(">I", data, 0x24)[0]):
+			entry = 0x28 + 12 * i
+			tag, offset, size = struct.unpack_from(">4sII", data, entry)
+			start, end = base + offset, base + offset + size
+			new_start, new_end = moved.get(start, start), moved.get(end, end)
+			struct.pack_into(">II", data, entry + 4, new_start - base, new_end - new_start)
+			if tag == b"fexp":
+				fexp_at, fexp_size = new_start - base, new_end - new_start
+		if fexp_at is not None:
+			for k in range(fexp_at, fexp_at + fexp_size - 3, 4):
+				ref = struct.unpack_from(">I", data, k)[0]
+				struct.pack_into(">I", data, k, relocations.get(ref, ref))		# (the entries are refs)
+		return base, bytes(data)
+
 	def map_tags(self, name):
 		"""A map definition's tags, its supermap's first, in lower case (None:
 		not a map)."""
@@ -1363,7 +1468,8 @@ class Builder:
 		new refs are kept (self.relocations) for the object file, so that the
 		host's constants, which name the ROM's addresses, find them."""
 		out = []
-		at = self.area_base
+		at = self.area_base if self.new_base is None else self.new_base
+		start = at
 		for a, path, flags, extra in entries:
 			size = self.object_size(path)
 			if size is None:
@@ -1371,17 +1477,17 @@ class Builder:
 			out.append((at, path, flags, extra))
 			if at != a:
 				self.relocations.append((a + 1, at + 1))
-			at += (size + 3) & ~3
+			at = start + ((at - start + size + self.align - 1) & ~(self.align - 1))
 		for path in sorted(new_paths):
 			if path.startswith("'"):
 				out.append((at, path, 0x40, {}))				# a symbol
-				at += (self.object_size(path) + 3) & ~3
+				at = start + ((at - start + self.object_size(path) + self.align - 1) & ~(self.align - 1))
 				continue
 			v = self.by_path[path]
 			flags = {"binary": 0x40, "frame": 0x43}.get(v.kind, 0x41)
 			out.append((at, v.path, flags, {}))
-			at += (self.object_size(v.path) + 3) & ~3
-		return out, at - self.area_base
+			at = start + ((at - start + self.object_size(v.path) + self.align - 1) & ~(self.align - 1))
+		return out, at - start
 
 	def build(self):
 		area_base, area_size, entries = self.area_base, self.area_size, self.entries
@@ -1396,9 +1502,12 @@ class Builder:
 		missing = [p for p in self.by_path if p not in addr]
 		if missing and not self.relayout:
 			raise ValueError("%d objects the layout does not place, e.g. %s" % (len(missing), missing[:3]))
+		self.original_size = area_size
 		if self.relayout:
 			missing = self.make_maps_and_symbols(entries, missing, symbols)
 			entries, area_size = self.lay_out_afresh(entries, missing)
+			if self.new_base is not None:
+				area_base = self.new_base
 			addr = {}
 			symbols = {}
 			for a, path, _, _ in entries:
@@ -1455,7 +1564,9 @@ class Builder:
 
 		# the ROM extension, put back together
 		rex = os.path.join(self.src, "rex.tsv")
-		if os.path.exists(rex):
+		if os.path.exists(rex) and self.relayout:
+			self.blocks.append(self.rex_relaid_out(rex))
+		elif os.path.exists(rex):
 			with open(rex, encoding="utf-8") as f:
 				data = bytearray()
 				base = None
@@ -1587,31 +1698,14 @@ def main(argv=None):
 		import shutil
 		shutil.rmtree(a.output, ignore_errors=True)
 		shutil.copytree(a.source, a.output)
-		address = {}
-		with open(os.path.join(a.output, "layout.tsv"), encoding="utf-8") as f:
-			for line in f:
-				fields = line.split("\t")
-				if len(fields) > 2 and not line.startswith(("#", "area", "alias")):
-					address[fields[1]] = int(fields[0], 16)
-		best = None
+		# the lowest string in the object area, and in the first package's
+		# part (every package after it moves)
+		trees = [a.output] + sorted(os.path.join(a.output, "rex", t) for t in os.listdir(os.path.join(a.output, "rex"))
+									if os.path.isdir(os.path.join(a.output, "rex", t)))[:1]
+		for tree in trees:
+			if lengthen_first_string(tree) != 0:
+				return 1
 		folder = os.path.join(a.output, "objects")
-		for name in sorted(os.listdir(folder)):
-			with open(os.path.join(folder, name), encoding="utf-8") as f:
-				for i, line in enumerate(f.read().split("\n")):
-					m = re.match(r'([A-Za-z_][A-Za-z0-9_]*) := "([^"\\]{12,})";$', line)
-					if m and m.group(1) in address and (best is None or address[m.group(1)] < best[0]):
-						best = (address[m.group(1)], name, i, m.group(1), m.group(2))
-		if best is None:
-			print("no string to edit in %s" % folder)
-			return 1
-		_, name, i, what, text = best
-		path = os.path.join(folder, name)
-		with open(path, encoding="utf-8") as f:
-			lines = f.read().split("\n")
-		lines[i] = '%s := "%s (edited)";' % (what, text)
-		print("edited %s in %s: \"%s\" is now \"%s (edited)\"" % (what, name, text, text))
-		with open(path, "w", encoding="utf-8", newline="\n") as f:
-			f.write("\n".join(lines))
 		# and a slot added to a frame, holding a new frame: a map made for
 		# each, and symbols for the new names
 		for name in sorted(os.listdir(folder)):

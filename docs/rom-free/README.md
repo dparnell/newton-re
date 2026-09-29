@@ -478,6 +478,28 @@ The builder also makes what an edit needs that the layout does not have:
 New objects take the flags the ROM's own of their kind have: 0x43 for a
 frame, 0x41 for an array or map, 0x40 for a binary or symbol.
 
+**The extension's parts are laid out afresh too.** With `--relayout`,
+each package's frames part is built at wherever it now falls, at its own
+alignment (8 in a version 0 package, from the part's start), so a part
+that grows or shrinks moves every package after it. The builder keeps
+everything that records where things are in step:
+
+- **each package's directory**: its size, and its part entry's size
+  (twice);
+- **the extension's header**: its length, each config entry's offset, and
+  the package list's size;
+- **the frame export table `'fexp`**: the refs of the objects the parts
+  export (through magic-pointer table 2), each moved as its object was.
+
+The header's checksum is left as it was. The host does not check it, and
+how the ROM computes it is NOT YET known. An unedited tree laid out
+afresh is byte for byte the ROM's, extension and all.
+
+`edit-test` now also lengthens a string in the first package's part
+(Cardfile's "Cards and Notes"). The extension grows by 20 bytes, every
+package after Cardfile moves (Setup among them), and the boot still
+draws the same Setup Welcome.
+
 **Decision: the constants stay the ROM's addresses, and the object file
 says where each object went. The builder does not generate
 `ROMConstants.h`.**
