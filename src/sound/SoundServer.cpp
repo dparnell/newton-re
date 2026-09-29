@@ -773,7 +773,7 @@ TSoundServerHandler::AEHandlerProc(TUMsgToken* token, ULong* /*size*/, TAEvent* 
 	reply.fPosition = 0;
 	ULong size = 0x14;
 	reply.fChannel = request->fChannel;
-	ULong value = ((ULong*) event)[4];					// (the event's +0x10: an immediate command's value)
+	ULong value = request->fNodeId;						// (the event's +0x10: an immediate command's value)
 	switch (command)
 	{
 	case kSndStopAll:
@@ -879,6 +879,20 @@ TSoundServer::GetSizeOf()
 }
 
 
+// DEVIATION: the ROM's DMA buffers are NewWiredPtr blocks - memory whose
+// pages stay put for the DMA controller - and the reconstruction's
+// NewWiredPtr is NOT YET (memory/MemoryManager.cpp answers nil); the host
+// driver reads the buffers with the CPU, so ordinary blocks serve.
+static Ptr
+NewDMABuffer(void)
+{
+	Ptr p = NewWiredPtr(kDMABufferSize);
+	if (p == nil)
+		p = NewPtr(kDMABufferSize);
+	return p;
+}
+
+
 // ROM 0x001e8274 MainConstructor__12TSoundServerFv
 // The driver made (the machine's own, PMainSoundDriver, before the
 // Cirrus one), the mixing buffer and the two DMA buffers, the interrupt
@@ -899,20 +913,20 @@ TSoundServer::MainConstructor()
 	fMixBuffer = NewPtr(kDMABufferSize);
 	if (fMixBuffer == nil)
 		return MemError();
-	fDMABuffer[0] = NewWiredPtr(kDMABufferSize);
+	fDMABuffer[0] = NewDMABuffer();
 	if (fDMABuffer[0] == nil)
 		return MemError();
-	fDMABuffer[1] = NewWiredPtr(kDMABufferSize);
+	fDMABuffer[1] = NewDMABuffer();
 	if (fDMABuffer[1] == nil)
 		return MemError();
 	gSndDriver->SetOutputBuffers((VAddr) fDMABuffer[0], kDMABufferSize, (VAddr) fDMABuffer[1], kDMABufferSize);
 	gSndDriver->SetOutputCallbackProc(SoundOutputIH, this);
 	if (gSndDriver->ClassInfo()->GetCapability("SoundInput") != nil)
 	{
-		fInputBuffer[0] = NewWiredPtr(kDMABufferSize);
+		fInputBuffer[0] = NewDMABuffer();
 		if (fInputBuffer[0] == nil)
 			return MemError();
-		fInputBuffer[1] = NewWiredPtr(kDMABufferSize);
+		fInputBuffer[1] = NewDMABuffer();
 		if (fInputBuffer[1] == nil)
 			return MemError();
 		gSndDriver->SetInputBuffers((VAddr) fInputBuffer[0], kDMABufferSize, (VAddr) fInputBuffer[1], kDMABufferSize);

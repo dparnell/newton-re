@@ -29,3 +29,11 @@ add_library(hal_host_tablet STATIC
 )
 target_link_libraries(hal_host_tablet PUBLIC newton_config recognition os600_user)
 target_include_directories(hal_host_tablet PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/host)
+
+# The host's sound output: a PSoundDriver (sound/SoundDriver.h) whose
+# buffers end as host interrupt sources, keeping what was played for tests.
+add_library(hal_host_sound STATIC
+    host/HostSoundDriver.cpp
+)
+target_link_libraries(hal_host_sound PUBLIC newton_config sound hal_host)
+target_include_directories(hal_host_sound PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/host)

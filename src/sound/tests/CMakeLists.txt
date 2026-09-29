@@ -27,3 +27,8 @@ add_executable(test_SoundVolume test_SoundVolume.cpp)
 target_link_libraries(test_SoundVolume PRIVATE sound frames)
 add_test(NAME sound.SoundVolume COMMAND test_SoundVolume)
 set_tests_properties(sound.SoundVolume PROPERTIES TIMEOUT 60)
+
+add_executable(test_SoundServer test_SoundServer.cpp)
+target_link_libraries(test_SoundServer PRIVATE sound hal_host_sound os600_kernel os600_user)
+add_test(NAME sound.SoundServer COMMAND test_SoundServer)
+set_tests_properties(sound.SoundServer PROPERTIES TIMEOUT 60)
