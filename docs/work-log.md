@@ -86,6 +86,20 @@ bugs and ROM bugs found on the way.
   `layout.tsv` manifest, and `rombuild.py` proved by a byte-identical
   rebuild of the area.
 
+## 2026-09-30: the IR probe
+
+- `comms/IrProbeTool.h` (061d413): `TIrProbeTool` and 'pkir' - connecting,
+  four IrDA TEST frames carrying 'prbe' each waited for a tenth of a
+  second, then the port switched to ASK for a Sharp offer of protocols
+  0xf (or every third time an ENQ), round and round for about two
+  minutes; listening, half-second ticks in auto-receive, a TEST frame
+  echoed and answered IrDA (8), two ENQs or an offer without IrDA's bit
+  answered Sharp (7); the answer read back as 'irpt'.
+- `comms/IrSIR.h`: IrDA's SIR framing (`TIrSIR`: BOFs, escapes, the
+  CRC-16 low byte first, EOF; the 0xf0b8 residue checked on receive) and
+  `TIrLAPPutBuffer`.  ctest `comms.IrProbe`: probe to probe answers IrDA,
+  probe to a Sharp listener answers Sharp IR.
+
 ## 2026-09-30: a Note beamed from one host to another
 
 - `comms/Beamer.h` (e92e34c): `TBeamer` whole (0x3b6f0-0x3dc10) - Open
