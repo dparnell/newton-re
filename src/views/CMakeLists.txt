@@ -34,6 +34,7 @@ add_library(views STATIC
     ListView.cpp
     MeetingView.cpp
     SliderView.cpp
+    RemoteView.cpp
     StyleRuns.cpp
     ParagraphView.cpp
     Rerecognize.cpp

@@ -35,6 +35,7 @@
 #include "NewtonExceptions.h"
 #include "TXView.h"
 #include "Outline.h"
+#include "RemoteView.h"
 
 
 // ROM 0x001ef4c4 BadWickedNaughtyNoot__Fl
@@ -147,7 +148,7 @@ TView::BuildContext(RefArg templ, Boolean forceVisible)
 // TMathOpView, TMathLineView, TRemoteView, TPrintView, TMeetingView,
 // TSliderView, TListView, TOutline, THelpOutline for
 // classes 75-108, and -8501 for any other); TTextView (97, 98),
-// TOutline (102-105) and THelpOutline (106, 107: books/Outline.h),
+// TRemoteView (87, 88), TOutline (102-105) and THelpOutline (106, 107: books/Outline.h),
 // TPictureView (75, 76), TParagraphView (81), TPolygonView (82), TDataView (83), TPickView
 // (89-91), TGaugeView (92), TKeyboardView (79), TMonthView (80),
 // TClipboard (101) and TXView (108, text/TXView.h) are
@@ -163,9 +164,11 @@ BuildView(TView* parent, RefArg context)
 	case clMathExpView:
 	case clMathOpView:
 	case clMathLineView:
-	case clRemoteView - 1: case clRemoteView:
 	case clPrintView - 1: case clPrintView:
 		view = new TView;
+		break;
+	case clRemoteView - 1: case clRemoteView:
+		view = new TRemoteView;
 		break;
 	case clOutline - 3: case clOutline - 2: case clOutline - 1: case clOutline:
 		view = new TOutline;
