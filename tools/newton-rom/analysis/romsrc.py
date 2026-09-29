@@ -1329,8 +1329,9 @@ class Builder:
 		extension's header (its length; each config entry's offset, and the
 		package list's size) and the frame export table 'fexp (the refs of
 		the objects the parts export, each moved as its object was).  The
-		header's checksum is left as it was (the host does not check it; its
-		sum is NOT YET known)."""
+		header's checksum is left as it was: nothing in the ROM reads it
+		(TestForREx 0x003137dc takes a block on its signatures and id alone;
+		docs/rom-free/README.md)."""
 		pieces = []
 		with open(rex, encoding="utf-8") as f:
 			for line in f:

@@ -527,9 +527,30 @@ everything that records where things are in step:
 - **the frame export table `'fexp`**: the refs of the objects the parts
   export (through magic-pointer table 2), each moved as its object was.
 
-The header's checksum is left as it was. The host does not check it, and
-how the ROM computes it is NOT YET known. An unedited tree laid out
-afresh is byte for byte the ROM's, extension and all.
+The header's checksum word (`RExHeader.checksum`, +8, 0x98e6 in this
+ROM) is left as it was, because **nothing in the ROM reads it**:
+
+- **The only code that looks at an extension's header** is the boot's
+  scan: `RExScanner` 0x00313888, over `ScanForREx` 0x00313818 and
+  `TestForREx` 0x003137dc. `TestForREx` accepts a block on its two
+  signature words and an id below 4 alone. `ScanForREx` records the
+  block's `start` (+0x20), its address and its `length` (+0x18), and
+  steps on by the length.
+- **The ROM's own check for a changed ROM or extension is something
+  else.** `OSCalibrationParameters::CalculateROMREXCheckSums` 0x001a71b8
+  sums the whole ROM and extension, word by word, as two 32-bit sums:
+  the low halves and the high halves of each word. It keeps them with
+  the calibration data in flash, and a change forces recalibration
+  (`operator==(TROMREXCheckSums, …)` 0x001a7150). That sum is computed
+  when it is needed, so it follows an edited extension by itself.
+- **None of the usual sums gives 0x98e6** over the block: of its bytes,
+  its words, its halfwords, the low or high halves, their XOR or the
+  ROM's `ChecksumRotateRightXOR`, with the field zeroed, set to
+  0xffffffff or left as it is. It was presumably written by Apple's
+  build tools, and it matters to no code in the ROM.
+
+An unedited tree laid out afresh is byte for byte the ROM's, extension
+and all.
 
 `edit-test` now also lengthens a string in the first package's part
 (Cardfile's "Cards and Notes"). The extension grows by 20 bytes, every
