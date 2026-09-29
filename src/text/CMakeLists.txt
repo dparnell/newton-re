@@ -13,6 +13,7 @@ add_library(text STATIC
     TXAttributes.cpp
     TXChars.cpp
     TXFrameFormatter.cpp
+    TXFormatter.cpp
     TXFrames.cpp
     TXGraphicsRun.cpp
     TXLine.cpp
