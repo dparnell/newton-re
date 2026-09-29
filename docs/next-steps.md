@@ -158,10 +158,11 @@ worked through.  What could come next (not ranked; the owner chooses):
   `f` (0x14649, 15 KB), then a cross-check of each re-expression against
   the ARM interpreter running the original.  The ARM
   interpreter is in (`src/armcpu/`, `docs/armcpu/README.md`: Mahjongg's
-  native functions run and it deals, ctest `armcpu.Mahjongg`); left
-  there: NewtHack's native function, a native in another package's code
-  binary, objects other than symbols in a code binary, a host
-  exception's data in the ARM world, then protocol parts.  Then `InetStartUp`/`DNSGetAddressFromName` end to end,
+  native functions run and it deals, ctests `armcpu.Mahjongg`,
+  `armcpu.NewtHack`, `armcpu.PackageNativeCPU`); left there: frames in a
+  code binary, and protocol parts through the CPU - no fixture needs them
+  yet (every protocol part among the fixtures is the NIE's), so take them
+  up when a non-NIE driver or comms-tool package arrives.  Then `InetStartUp`/`DNSGetAddressFromName` end to end,
   `ictl` read by running the NIE's link state machine, the modem
   navigator.  The rest of comms (CCL,
   AppleTalk, IR, NTK, the desktop connection - which the test server's

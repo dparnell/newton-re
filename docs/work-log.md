@@ -9,6 +9,25 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: the ARM interpreter, round 2
+
+- NewtHack's five-argument native runs (ctest `armcpu.NewtHack`,
+  8589946).
+- Objects in a code binary come back as host objects (symbols interned,
+  strings' UniChars swapped, binaries, arrays' slots translated; frames
+  NOT YET), and exception data crosses both ways (a ref as a RefVar, a
+  message as a C string copy; an uncaught ARM throw goes out to the host
+  translated back; `ThrowRefException` handled by name) - ctest
+  `armcpu.PackageNativeCPU` over hand-assembled natives (2804e11).
+- `NativeEntry` on another code binary's function answers a callback
+  that runs it as the interpreter would - its host re-expression, else a
+  new CPU run (7e8021a).
+- Survey of the 19 fixture packages (`docs/armcpu/README.md`, "Which
+  fixtures have native code"): NTK native code in Mahjongg, NewtHack and
+  the NIE's `modmsup` and `inetenbl` (all the same NTK runtime: 128
+  stubs, code from 0x29ec); protocol parts only in the NIE's packages
+  (5773a7b).
+
 ## 2026-09-29: comms, round 7 - the NIE's protoFSM re-expressed
 
 - `analysis/ntknative.py <pkg> <holder> --rom BUILD` lists an NTK
