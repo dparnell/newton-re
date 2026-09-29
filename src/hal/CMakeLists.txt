@@ -71,3 +71,14 @@ target_link_libraries(hal_host_serial PUBLIC newton_config hal_serial hal_host h
 target_include_directories(hal_host_serial PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/host)
 
 add_subdirectory(tests)
+
+# The machine's timers the serial tools use (FIQTimer.h: the fast timers
+# multiplexed over the free-running timer's match interrupt; the DDK's
+# TDelayTimer's busy waits), over the host's clock (host/HostFIQTimer.cpp).
+add_library(hal_timers STATIC
+    FIQTimer.cpp
+    DelayTimer.cpp
+    host/HostFIQTimer.cpp
+)
+target_link_libraries(hal_timers PUBLIC newton_config hal_host)
+target_include_directories(hal_timers PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/host)
