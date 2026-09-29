@@ -1029,6 +1029,7 @@ FPidToPackageLite(RefArg /*rcvr*/, RefArg packageId)
 void
 RegisterStorePackageNatives(void)
 {
+	RegisterEndpointPackageNatives();
 	RegisterNativeFunction("FSuckPackageFromBinary", (void*) FSuckPackageFromBinary, 2);
 	RegisterNativeFunction("StorePackageRestore", (void*) StorePackageRestore, 1);
 	RegisterNativeFunction("FInstallPackage", (void*) FInstallPackage, 1);

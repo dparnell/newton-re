@@ -248,6 +248,21 @@ if(Python3_FOUND)
     set_tests_properties(host.NewtonSegmented PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED host_segmented_store
                          PASS_REGULAR_EXPRESSION "removed: TRUE}.*sucked: TRUE, calls: [1-9][0-9]*, callbacksCalled: TRUE, infoSize: TRUE, infoName: \"Formulas2\", infoParts: 1, amountRead: TRUE}.*chunks: [0-9]+, restored: TRUE, sameBytes: TRUE, title: \"Formulas2\"}.*segmented: done"
                          FAIL_REGULAR_EXPRESSION "sameBytes: NIL")
+    # store:SuckPackageFromEndPoint (packages/EndpointPackages.cpp): Formulas2's
+    # bytes sent to the echo server over a TCP endpoint and sucked back off it
+    add_test(NAME host.NewtonEndpointPackage.install
+             COMMAND newton --rom ${NEWTON_ROM_BIN} --erase --store ${CMAKE_CURRENT_BINARY_DIR}/endpointpkg.store
+                     --headless 4 --package ${HOST_PACKAGE_DIR}/Formulas2.pkg
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonEndpointPackage.install PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED host_package
+                         FIXTURES_SETUP host_endpointpkg_store
+                         PASS_REGULAR_EXPRESSION "Formulas2.pkg: installed as package")
+    add_test(NAME host.NewtonEndpointPackage
+             COMMAND newton --rom ${NEWTON_ROM_BIN} --store ${CMAKE_CURRENT_BINARY_DIR}/endpointpkg.store
+                     --tcp-echo 52372 --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/endpointpkg.ns
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonEndpointPackage PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED host_endpointpkg_store
+                         PASS_REGULAR_EXPRESSION "removed: TRUE.*sucked: TRUE, title: \"Formulas2\", sameSize: TRUE}.*endpointpkg: done")
     # the same boot slowed by the heap checker's hooks: a task switched out on
     # its way back from a system call once lost the call's answer
     # (os600/user/host/SWI.cpp's ExitWithResult), and the store package

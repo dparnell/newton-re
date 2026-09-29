@@ -1,0 +1,48 @@
+// store:SuckPackageFromEndPoint (packages/EndpointPackages.cpp): a package
+// read off a NewtonScript endpoint straight onto the store.  Run on a store
+// that holds Formulas2 (kept there by an earlier boot's `--package`): its
+// bytes are copied and the package taken off the store (the store refuses a
+// second package of the same name), then the bytes sent to the host's echo
+// server over a TCP endpoint - which sends them back - and the package
+// sucked off the endpoint and kept on the store again.
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --erase --store tmp/e.store \
+//       --package build/host/host/packages/Formulas2.pkg --headless 5
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --store tmp/e.store \
+//       --tcp-echo 52372 --script src/host/demo/endpointpkg.ns --headless 30
+
+kEchoPort := 52372;
+
+AddDelayedCall(func() begin
+	local p := nil;
+	foreach q in GetPackages() do if q.store and StrEqual(q.title, "Formulas2") then p := q;
+	local pkgRef := PssidToPkgRef(p.pssid, p.store);
+	local size := Length(pkgRef);
+	local whole := MakeBinary(size, 'package);
+	BinaryMunger(whole, 0, size, pkgRef, 0, size);
+	Print({removed: SafeRemovePackage(pkgRef) <> nil, size: size});
+
+	local ep := {_proto: @383,
+		exceptionHandler: func(e) begin
+			Print("endpointpkg: exception " & e.name & " " & e.data);
+			true;
+		end};
+	ep:Instantiate(ep, [
+		{label: "inet", type: 'service, opCode: 512},
+		{label: "itrs", type: 'option, opCode: 512,
+		 data: {arglist: [[127, 0, 0, 1], kEchoPort],
+		        typelist: ['struct, ['array, 'byte, 4], 'short]}}]);
+	ep:Bind(nil, nil);
+	ep:Connect(nil, nil);
+	ep:Output(whole, nil, {form: 'binary});
+
+	local store := GetStores()[0];
+	local sucked := store:SuckPackageFromEndPoint(ep, nil);
+	Print({sucked: IsPackage(sucked), title: GetPkgRefInfo(sucked).title,
+	       sameSize: Length(sucked) = size});
+	ep:Disconnect(true, nil);
+	ep:Unbind(nil);
+	ep:Dispose();
+	Print("endpointpkg: done");
+	HostQuit();
+end, [], 1000);

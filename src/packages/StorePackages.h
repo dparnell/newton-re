@@ -407,5 +407,6 @@ Boolean		IsPackage(RefArg obj);													// ROM 0x00321ef8 IsPackage__FRC6Ref
 Ref			FSuckPackageFromBinary(RefArg rcvr, RefArg binary, RefArg parameters);	// store:SuckPackageFromBinary
 Ref			StoreSegmentedPackageRestore(RefArg rcvr, RefArg soup, RefArg keys);	// store:RestoreSegmentedPackage (PackageArchivalPipe.h)
 void		RegisterStorePackageNatives(void);
+void		RegisterEndpointPackageNatives(void);		// EndpointPackages.cpp: store:SuckPackageFromEndPoint (registered by RegisterStorePackageNatives)
 
 #endif	/* __STOREPACKAGES_H */
