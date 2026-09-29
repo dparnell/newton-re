@@ -70,6 +70,14 @@ TAsyncSerTool::TaskConstructor()
 }
 
 
+// ROM 0x00039a28 TaskDestructor__13TAsyncSerToolFv
+void
+TAsyncSerTool::TaskDestructor()
+{
+	TSerTool::TaskDestructor();
+}
+
+
 /*------------------------------------------------------------------------------
 	Buffers and the chip
 ------------------------------------------------------------------------------*/
@@ -1500,4 +1508,5 @@ void
 RegisterSerialCommServices(void)
 {
 	TAsyncService::ClassInfo()->Register();
+	TFramedAsyncService::ClassInfo()->Register();
 }

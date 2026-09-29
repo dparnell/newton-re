@@ -27,6 +27,7 @@ target_include_directories(comms PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURR
 add_library(comms_serial STATIC
     SerialTool.cpp
     AsyncSerialTool.cpp
+    FramedSerialTool.cpp
 )
 target_link_libraries(comms_serial PUBLIC comms hal_serial hal_timers)
 

@@ -66,6 +66,7 @@
 #include "UserTasks.h"
 #include "AEvents.h"
 #include "CircleBuf.h"
+#include "CRC16.h"
 
 class TFIQTimer;
 struct FIQTimer;
@@ -232,6 +233,7 @@ public:
 
 protected:
 	virtual NewtonErr	TaskConstructor();
+	virtual void		TaskDestructor();
 	virtual UChar*		GetToolName();
 	virtual ULong		ProcessOptionStart(TOption* theOption, ULong label, ULong opcode);
 	virtual NewtonErr	AddDefaultOptions(TOptionArray* options);
@@ -322,6 +324,67 @@ protected:
 };
 
 
+// The framed async tool ("Framed Async Serial Tool", serv 'fser): a framed
+// put is sent as SYN DLE STX, the data with every DLE doubled, DLE ETX and
+// the CRC-16 of it all (low byte first); a framed get finds the header,
+// takes the escapes out, checks the CRC and answers the frame.  Each frame
+// goes through a buffer of its own (fOutFrame, fInFrame) on its way to or
+// from the async tool's.  MNP is built on it.
+class TFramedAsyncSerTool : public TAsyncSerTool
+{
+public:
+						TFramedAsyncSerTool(ULong serviceId);
+	virtual				~TFramedAsyncSerTool();
+
+	virtual ULong		GetSizeOf();
+
+protected:
+	virtual NewtonErr	TaskConstructor();
+	virtual void		TaskDestructor();
+	virtual UChar*		GetToolName();
+	virtual ULong		ProcessOptionStart(TOption* theOption, ULong label, ULong opcode);
+	virtual NewtonErr	AddDefaultOptions(TOptionArray* options);
+	virtual NewtonErr	AddCurrentOptions(TOptionArray* options);
+	virtual void		KillPut();
+	virtual void		KillGet();
+	virtual NewtonErr	AllocateBuffers();
+	virtual void		DeallocateBuffers();
+	virtual ULong		FillOutputBuffer();
+	virtual ULong		EmptyInputBuffer(ULong* markerValue);
+
+	void				SetFramingCtl(TCMOFramingParms* opt);
+	void				GetFramingCtl(TCMOFramingParms* opt);
+	void				ResetFramingStats();
+
+	ULong				fInState;				// +0x4b0  where a framed get has got to
+	ULong				fOutState;				// +0x4b4  and a framed put
+	ULong				fField4B8;				// +0x4b8
+	TCRC16				fInCRC;					// +0x4bc
+	TCRC16				fOutCRC;				// +0x4c4
+	Boolean				fInEscaped;				// +0x4cc  the byte in hand followed an escape
+	UByte				fOutSaved;				// +0x4cd  a byte that did not fit, sent next time
+	Boolean				fOutHaveSaved;			// +0x4ce
+	UByte				fInSaved;				// +0x4cf  a byte that did not fit, kept next time
+	Boolean				fInHaveSaved;			// +0x4d0
+	TCircleBuf			fOutFrame;				// +0x4d4
+	TCircleBuf			fInFrame;				// +0x4fc
+	ULong				fFrameBufSize;			// +0x524  (0x200)
+	TCMOFramingParms	fFraming;				// +0x528
+	TCMOFramedAsyncStats	fFramedStats;		// +0x53c
+};
+
+
+PROTOCOL TFramedAsyncService : public TCMService
+{
+public:
+	PROTOCOL_IMPL_HEADER_MACRO(TFramedAsyncService);
+	TFramedAsyncService*	New();
+	void				Delete();
+	NewtonErr			Start(TOptionArray* options, ULong serviceId, TServiceInfo* serviceInfo);
+	NewtonErr			DoneStarting(TAEvent* event, ULong size, TServiceInfo* serviceInfo);
+};
+
+
 PROTOCOL TAsyncService : public TCMService
 {
 public:
@@ -332,7 +395,7 @@ public:
 	NewtonErr			DoneStarting(TAEvent* event, ULong size, TServiceInfo* serviceInfo);
 };
 
-// the serial service put in the protocol registry (the kernel services
+// the serial services put in the protocol registry (the kernel services
 // task's job, the registry being a monitor)
 void	RegisterSerialCommServices(void);
 

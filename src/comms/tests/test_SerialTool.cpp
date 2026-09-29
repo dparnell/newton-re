@@ -11,6 +11,7 @@
 #include "SerialEndpoint.h"
 #include "CommManager.h"
 #include "SerialTool.h"
+#include "CRC16.h"
 #include "HostSerialChip.h"
 #include "HostSockets.h"
 #include "FIQTimer.h"
@@ -25,12 +26,16 @@
 #include <thread>
 #include <atomic>
 #include <chrono>
+#include <mutex>
 
 static int failures = 0;
 static bool sScenarioDone = false;
 static std::atomic<bool> sDesktopStop(false);
 static std::atomic<long> sDesktopEchoed(0);
 static unsigned short sPort = 0;
+static std::mutex sLogLock;
+static UByte sLog[4096];				// what the desktop has had, in order
+static long sLogCount = 0;
 #define EXPECT(cond) do { if (!(cond)) { failures++; printf("FAIL %s:%d: %s\n", __FILE__, __LINE__, #cond); } } while (0)
 
 
@@ -68,6 +73,11 @@ Desktop(void)
 			size_t sent = 0;
 			HostSocketSend(s, buf + off, got - off, &sent);
 			off += sent;
+		}
+		{
+			std::lock_guard<std::mutex> lock(sLogLock);
+			for (size_t i = 0; i < got && sLogCount < (long) sizeof(sLog); i++)
+				sLog[sLogCount++] = buf[i];
 		}
 		sDesktopEchoed += got;
 	}
@@ -137,6 +147,60 @@ Scenario(void)
 }
 
 
+// The framed tool ('fser): a frame goes out as SYN DLE STX, the data with
+// its DLE doubled, DLE ETX and the CRC-16 (ARC) of the data and the ETX low
+// byte first; the desktop's echo of it is taken apart again into the frame.
+static void
+FramedScenario(void)
+{
+	TOptionArray options;
+	options.Init();
+	TOption service;
+	service.SetAsService('fser');
+	options.AppendOption(&service);
+	TEndpoint* ep = nil;
+	EXPECT(CMGetEndpoint(&options, &ep, false) == noErr && ep != nil);
+	if (ep == nil)
+		return;
+	EXPECT(ep->Open(0) == noErr);
+	EXPECT(ep->Bind() == noErr);
+	EXPECT(ep->Connect() == noErr && ep->GetState() == kDataXfer);
+	long logStart;
+	{
+		std::lock_guard<std::mutex> lock(sLogLock);
+		logStart = sLogCount;
+	}
+
+	UByte frame[] = { 'a', 0x10, 'b' };
+	Size n = sizeof(frame);
+	EXPECT(ep->Snd(frame, n, 2) == noErr && n == (Size) sizeof(frame));	// (2: a frame, the whole of it)
+	UByte back[64];
+	memset(back, 0, sizeof(back));
+	n = sizeof(back);
+	ULong flags = 2;
+	NewtonErr err = ep->Rcv(back, n, 1, &flags);
+	EXPECT(err == noErr && n == 3 && memcmp(back, frame, 3) == 0 && (flags & 1) == 0);
+
+	TCRC16 crc;
+	crc.Reset();
+	crc.ComputeCRC('a');
+	crc.ComputeCRC(0x10);
+	crc.ComputeCRC('b');
+	crc.ComputeCRC(0x03);
+	crc.Get();
+	UByte wire[] = { 0x16, 0x10, 0x02, 'a', 0x10, 0x10, 'b', 0x10, 0x03, crc.fResult[1], crc.fResult[0] };
+	{
+		std::lock_guard<std::mutex> lock(sLogLock);
+		EXPECT(sLogCount - logStart == (long) sizeof(wire) && memcmp(sLog + logStart, wire, sizeof(wire)) == 0);
+	}
+
+	EXPECT(ep->Disconnect() == noErr);
+	EXPECT(ep->UnBind() == noErr);
+	EXPECT(ep->Close() == noErr);
+	ep->Delete();
+}
+
+
 class TTestWorld : public TAppWorld
 {
 public:
@@ -145,6 +209,7 @@ public:
 	{
 		EnableForking(false);
 		Scenario();
+		FramedScenario();
 		sScenarioDone = true;
 		HostStopTasks();
 	}
