@@ -1835,12 +1835,13 @@ FDrawIntoBitmap(RefArg /*rcvr*/, RefArg shape, RefArg styles, RefArg bitmap)
 // The bitmap's bounds are moved into the view's coordinate space
 // (by src.topLeft - dst.topLeft), so that drawing the view where it
 // thinks it is lands in the right part of the bitmap; the two rectangles
-// are then intersected down to what both can hold, and that is the clip.
-//
-// Unlike DrawIntoBitmap the ROM sets the *clip* region rather than the
-// visible one, and leaves the visible region as a fresh port has it -
-// the screen's bounds - which is what a view's own coordinates are in.
-// The pen is put back to normal for the drawing and restored after.
+// are then intersected down to what both can hold, and that is the port's
+// rectangle and its visible region; the clip is left wide open, as a fresh
+// port has it.  (The ROM's port is at sp at OpenPort, 0x0003f1d0: the
+// rectangle goes to its +0x1c, portRect, at 0x0003f2f8 and RectRgn is
+// given its +0x24, visRgn, at 0x0003f30c - the decompiler names that word
+// clipRgn.)  The pen is put back to normal for the drawing and restored
+// after.
 Ref
 FViewIntoBitmap(RefArg rcvr, RefArg srcRect, RefArg dstRect, RefArg bitmap)
 {
@@ -1877,7 +1878,8 @@ FViewIntoBitmap(RefArg rcvr, RefArg srcRect, RefArg dstRect, RefArg bitmap)
 	SectRect(&held, &src, &src);
 	OffsetRect(&dst, src.left - dst.left, src.top - dst.top);
 	SectRect(&dst, &src, &src);
-	RectRgn(port.clipRgn, &src);
+	port.portRect = src;
+	RectRgn(port.visRgn, &src);
 
 	PenState pen;
 	GetPenState(&pen);

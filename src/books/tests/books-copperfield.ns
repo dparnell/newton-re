@@ -65,6 +65,19 @@ AddDelayedCall(func() begin
               end;
             Print("books-copperfield: thumbnail " & NumberStr(black) & " black pixels");
             call check with ("something drawn in it", black > 20 and black < 2400);
+            // the whole page, not only its top-left corner: ink in the right
+            // half (bytes 3 to 7 of a row, x 24 and on) and below row 40
+            local right := 0;
+            local low := 0;
+            for i := Length(data) - 640 to Length(data) - 1 do
+              if ExtractByte(data, i) <> 0 then
+                begin
+                  local k := i - (Length(data) - 640);
+                  if k mod 8 >= 3 then right := right + 1;
+                  if k div 8 >= 40 then low := low + 1;
+                end;
+            call check with ("the thumbnail's right half is drawn", right > 20);
+            call check with ("the thumbnail's lower half is drawn", low > 20);
             GetRoot():DrawShape(MakeShape(bits), {transform: [250, 400]});
           end;
         ScreenSnapshot("tmp/books-thumbnail.pgm");

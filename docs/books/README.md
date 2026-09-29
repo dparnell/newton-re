@@ -15,7 +15,7 @@ book a package brings (Newton Book Maker and BookMaker's `'book` parts).
 | `FindContentByValue`, `FindPageByContent`, `CompareValues` | `src/books/Librarian.cpp` | done |
 | The search (`TLibrarian::Find` over the hints, `TextSearch`, `ExtractWords`, `CuFind`, `FindPageByValue`/`BySubject`, `FindContentBySlot`, `TurnToContent`) and `AddInkMarks` | `src/books/Search.cpp` | done |
 | `PageContents`, `PageScroll`, `ZoomView` (over `qd/ZoomRect.cpp`'s `ZoomRect`/`FixStep`) | `src/books/Pages.cpp` | done |
-| `PageThumbnail` (a `TRemoteView`, class 88 - `views/RemoteView.h` - of the page's blocks) | `src/books/Pages.cpp` | done; the thumbnail shows only its top-left corner, as the ROM's does (below) |
+| `PageThumbnail` (a `TRemoteView`, class 88 - `views/RemoteView.h` - of the page's blocks) | `src/books/Pages.cpp` | done (ctest `books.Copperfield` checks the whole page is in the thumbnail) |
 | Ink marks (`AddInkMarks`) | - | NOT YET |
 
 The booting OS installs the ROM's help book: it is in the library, and the
@@ -105,6 +105,26 @@ not a help book, and registers the book's task templates.  It answers `nil`
 handler keeps (with the `bookRemoveScript`, and `type: 2` for a package on a
 store) and hands to `BookRemoved` (0x00108358) when the part goes.
 
+### Page thumbnails
+
+`PageThumbnail` makes a `TRemoteView` under the root view (its clipper's
+visible region its own bounds) and Copperfield's script draws it into a
+60x80 bitmap with `ViewIntoBitmap`.  Two regions have to be right for the
+whole page to land in it, and both are the port's *visRgn* in the ROM,
+though the decompiler names the word `clipRgn` (the ROM's `GrafPort` has
+`visRgn` at +0x24 and `clipRgn` at +0x28, as `SetupScalingRegions` reads
+them at 0x00196368):
+
+- `ViewIntoBitmap` gives its fresh port the drawn rectangle as `portRect`
+  and visible region (0x0003f2f8, 0x0003f30c) and leaves the clip wide open;
+- `TRemoteView::RealDraw` maps the visible region back from its own bounds
+  into the page's (0x001a67c4, `MapRgn` at 0x001a684c) before the child
+  draws, because the scaler, started with `mapVis` set (`StartScaling`'s
+  r1 = 1 at 0x001a682c), maps it forward again (`SetupScalingRegions`).
+
+The host had both on the clip, and a thumbnail showed only its top-left
+17x23 pixels.
+
 ### Finding things (`Search.cpp`)
 
 A book may carry `hints`: one binary (class `'data`) per content item, a bit
@@ -138,17 +158,6 @@ round it between ellipses (`ExtractWords`).  A book's `bookSearchScript` and
   the start of a new one ("aab" does not contain "ab").
 - `FindPageByValue` with book `true` (the first only) stops at the first
   block on each page, not at the first page.
-- A page thumbnail shows only the part of the page that lands in its
-  top-left 17x23 pixels.  The text is drawn at the right scale (each line
-  27 to 51 pixels wide in the 60-pixel bitmap), but it is clipped:
-  `TRemoteView::RealDraw` maps the port's clip back to the page's
-  coordinates for the scaler to map forward again, and not the visible
-  region, which the scaler (`mapVis`) maps forward all the same - the
-  thumbnail view's visible region (its clipper's: its own bounds, 0..60)
-  comes out 0..17.  Traced on the host with the drawing's rectangles
-  printed at each stage, and every step checked against the ROM's code
-  (`ScaledText`, `DrTextChunk`, `StretchBits`, `SetupScalingRegions`,
-  `StartScaling`, `ViewIntoBitmap`, `TView::Constructor`, `TView::Draw`).
 - `THelpOutline::DerivedFrom` asks `TView`, so a help outline does not say it
   is a `TOutline`.
 - `TOutline::FindTopic` compares the pen, made relative to the view's left,

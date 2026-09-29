@@ -53,22 +53,15 @@ TRemoteView::Constructor(RefArg context, TView* parent)
 // The child drawn scaled into the view: the transform from its bounds onto
 // the view's made once (square: the smaller scale for both), scaling
 // started with the visible region mapped, the child made visible for the
-// while, the port's clip mapped from the view's bounds back to the
-// child's, and the child drawn whole - or, when the view's printView has a
-// format that uses the full page, as much of it as the print form covers;
-// the clip put back, the child hidden again and the scaling stopped, even
+// while, the port's visible region mapped from the view's bounds back to
+// the child's (the scaler maps it forward again as it draws), and the
+// child drawn whole - or, when the view's printView has a format that
+// uses the full page, as much of it as the print form covers; the visible
+// region put back, the child hidden again and the scaling stopped, even
 // when the drawing throws.
-// ROM BUG, kept: the clip is mapped back to the child's coordinates for
-// the scaler to map forward again, but the visible region is not, and the
-// scaler (mapVis: TQDScaler::SetupScalingRegions) maps it forward all the
-// same - so a remote view whose clipper's visible region is its own bounds
-// (one made under the root view, as the book reader's PageThumbnail makes
-// its thumbnail) draws only the part of its child that lands in the
-// top-left corner, the view's bounds scaled down once more.  A 60x80
-// thumbnail of a 206x214 page shows its top-left 17x23 pixels.  (Every
-// step - TView::Constructor's clipper, ViewVisibleChanged, TView::Draw's
-// SetupVisRgn, ViewIntoBitmap's port, StartScaling, SetupScalingRegions -
-// was checked against the ROM's code.)
+// (The region is the port's visRgn, [port,#0x24] at 0x001a67c4 and
+// 0x001a6968 - the decompiler names that word clipRgn, the ROM's GrafPort
+// having its clipRgn at +0x28, as SetupScalingRegions reads it.)
 void
 TRemoteView::RealDraw(Rect& bounds)
 {
@@ -77,15 +70,15 @@ TRemoteView::RealDraw(Rect& bounds)
 	TRegionVar saved;
 	GrafPort* port;
 	GetPort(&port);
-	RgnHandle clip = port->clipRgn;
-	CopyRgn(clip, saved);
+	RgnHandle vis = port->visRgn;
+	CopyRgn(vis, saved);
 	newton_try
 	{
 		if ((fTransform.fFlags & kTransformSetUp) == 0)
 			fTransform.Setup(&fChild->viewBounds, &viewBounds, true);
 		TQDScaler::StartScaling(&fTransform, true, 1);
 		fChild->SetFlags(vVisible);
-		MapRgn(clip, &fTransform.fDst, &fTransform.fSrc);
+		MapRgn(vis, &fTransform.fDst, &fTransform.fSrc);
 		fDrawn = fChild->viewBounds;
 		RefVar printView(GetVar(RSSYMprintview));
 		if (NOTNIL(printView))
@@ -103,13 +96,13 @@ TRemoteView::RealDraw(Rect& bounds)
 	cleanup
 	{
 		GetPort(&port);
-		CopyRgn(saved, port->clipRgn);
+		CopyRgn(saved, port->visRgn);
 		fChild->ClearFlags(vVisible);
 		TQDScaler::StopScaling();
 	}
 	end_try;
 	GetPort(&port);
-	CopyRgn(saved, port->clipRgn);
+	CopyRgn(saved, port->visRgn);
 	fChild->ClearFlags(vVisible);
 	TQDScaler::StopScaling();
 }
