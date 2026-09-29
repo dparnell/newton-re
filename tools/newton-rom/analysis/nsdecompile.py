@@ -919,7 +919,16 @@ def real_literal(v):
 # (IsHalfwordShapeClass in frames/ObjectAreaImport.cpp)
 HALFWORD_CLASSES = {"boundsrect", "rectangle", "oval", "roundrectangle", "line", "polygonshape", "polygondata", "regiondata"}
 
-UNQUOTABLE = re.compile(r"a binary of class|a function inside a literal")
+UNQUOTABLE = re.compile(r"a binary of class|a function inside a literal|an immediate")
+
+# The special immediates no source makes, and an expression answering each:
+# the class of a native function ([class 0x132, funcPtr, numArgs], a C
+# function a literal frame calls - the NTK's way to a function with no
+# global name, such as YieldToFork) and of a code block
+SPECIAL_IMMEDIATES = {
+	0x132: ("kNativeFuncClass", "GetGlobalFn('Length).class"),
+	0x32: ("kCodeBlockClass", "(func() nil).class"),
+}
 
 # A binary out of the hex of its bytes, for a constant's source (a literal
 # NewtonScript has no syntax for: a bitmap, a sound's samples, ...)
@@ -1081,6 +1090,14 @@ class Writer:
 		except DecompileError as e:
 			if not UNQUOTABLE.match(str(e)):
 				raise
+		if not rom.is_ptr(ref):
+			if ref in SPECIAL_IMMEDIATES:
+				# no syntax makes it, but a function object carries it as its class
+				name, source = SPECIAL_IMMEDIATES[ref]
+				if name not in dict(self.constants):
+					self.constants.insert(0, (name, source))
+				return name
+			raise DecompileError("an immediate %#x" % ref)
 		f = rom.flags(ref)
 		cls = rom.cls(ref)
 		if f & 3 == 0:
@@ -1105,9 +1122,9 @@ class Writer:
 		if f & 1 and len(rom.slots(ref)) >= 5 and rom.slots(ref)[0] == 0x32:
 			name = "kFunction_%x" % ref
 			if name not in dict(self.constants):
-				self.constants.append((name, None))
+				# (the constants the function uses first: they come before it)
 				text = self.function(Decompiled(rom, ref).decompile(), 0)
-				self.constants[[n for n, _ in self.constants].index(name)] = (name, text)
+				self.constants.append((name, text))
 			return name
 		if f & 3 == 3:
 			return "{" + ", ".join("%s: %s" % (ident(tag), self.built(value)) for tag, value in rom.frame_slots(ref)) + "}"

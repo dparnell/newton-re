@@ -159,6 +159,7 @@ by side.
 | 7 | 5447 of 5507 | 5442 (98.8%) | repeated literals told apart by slot, not object; an NTK magic-pointer constant a literal per name |
 | 8 | 5447 of 5507 | 5444 (98.9%) | a branch to an `if`'s end that an inner construct's ends there too is the inner's: the outer `if` has no `else` |
 | 9 | 5447 of 5507 | 5446 (98.9%; all but one of those decompiled) | a constant no receiver reference (NTK); `l := <loop>` kept a statement so the loop's locals are declared first |
+| 12 | 5505 of 5507 | 5504 (99.9%) | the native-function frames the NTK put in literals (`{class: 0x132, funcPtr, numArgs}`, calling a C function with no global name, such as YieldToFork): the special immediate 0x132 is a constant, `GetGlobalFn('Length).class`; a function's constants come before it |
 | 11 | 5498 of 5507 | 5497 (99.8%) | string subclasses from their text and rectangles from `MakeRect`: the host keeps both in its own byte order |
 | 10 | 5498 of 5507 | 5491 (99.7%) | literals no quoted source makes (binaries; frames and arrays holding a binary or a function) written as constants that build them: `kBinaryFromHex`, `{tag: kFunction_x}` |
 
@@ -179,8 +180,9 @@ them.
   extraction.
 - **Reals of class `'Real`:** the capitalised class, which the lexer does
   not make.
-- **Immediates beyond the lexer:** for example, characters above `$\u`
-  range.
+- **Immediates beyond the lexer:** the special immediates such as 0x132
+  (a native function's class) have no syntax. They are written as
+  constants evaluated from an object that carries one (round 12).
 - **A few branch shapes not yet understood.**
 
 The remaining round-trip failures (instructions) are the next round's work
