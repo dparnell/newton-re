@@ -26,6 +26,8 @@
 #include "ROMConstants.h"
 #include "Fonts.h"
 #include "Text.h"
+#include "TextObject.h"
+#include "Transform.h"
 #include "Curves.h"
 #include "Paths.h"
 #include "memory/host/KernelHeap.h"
@@ -832,6 +834,68 @@ TestArcs()
 }
 
 
+// Text in a picture drawn into a rectangle twice the frame's size comes
+// out at twice the size: espy 12 at (2, 14) in a 32-pixel frame played
+// into 64 pixels is espy 12 drawn at the scales 2.0 at (4, 28) - there is
+// no 24-point strike, so the font engine stretches its 16-point one by
+// the ratio.  (Espy 24 drawn at 1.0 is *not* the same pixels: its ratio
+// comes out a sixty-five-thousandth short, 1.49998 against 1.5, the ROM's
+// FixedDivide rounding - the glyphs' edges land a pixel apart.)
+static void
+TestScaledText()
+{
+	RefVar systemFont(SearchFont(0, nil));
+	StyleRecord style12;
+	MakeSimpleStyle(&style12, systemFont, 0xc0000, 0);
+	const UniChar hi[] = { 'H', 'i', '!' };
+	StyleRecord* styles[1] = { &style12 };
+	ClearMap();
+	FPoint where = { 4 << 16, 28 << 16 };
+	TextObjectRef text = NewText(hi, 3, styles, nil, where, nil);
+	CallDrawText(text, 0x20000, 0x20000);
+	DisposeText(text);
+	unsigned char direct[sizeof(gBits)];
+	memcpy(direct, gBits, sizeof(gBits));
+	// twice the height of espy 12's H (9 rows): 18
+	long top = -1, bottom = -1;
+	for (long y = 0; y < kSize; y++)
+		if (Ink(0, y, kSize, y + 1) != 0)
+		{
+			if (top < 0)
+				top = y;
+			bottom = y;
+		}
+	EXPECT(top == 10 && bottom == 27);
+
+	ClearMap();
+	Rect frame;
+	SetRect(&frame, 0, 0, 32, 32);
+	PicHandle picture = OpenPicture(&frame, false);
+	FPoint small = { 2 << 16, 14 << 16 };
+	DrawTextOnce(hi, 3, styles, nil, small, nil, nil);
+	ClosePicture();
+	Rect dst;
+	SetRect(&dst, 0, 0, 64, 64);
+	DrawPicture(picture, &dst, false);
+	EXPECT(memcmp(direct, gBits, sizeof(gBits)) == 0);
+	if (memcmp(direct, gBits, sizeof(gBits)) != 0)
+		ReportDifference(direct);
+	KillPicture(picture);
+
+	// the same under the scaler: a transform twice the size, and the text
+	// drawn at its own size and place in the transform's coordinates
+	ClearMap();
+	TTransform twice;
+	twice.fFlags = 0;
+	twice.Setup(&frame, &dst, false);
+	TQDScaler::StartScaling(twice);
+	DrawTextOnce(hi, 3, styles, nil, small, nil, nil);
+	TQDScaler::StopScaling();
+	EXPECT(memcmp(direct, gBits, sizeof(gBits)) == 0);
+	if (memcmp(direct, gBits, sizeof(gBits)) != 0)
+		ReportDifference(direct);
+}
+
 // PackBits, the ROM's: runs and literals, and back out through UnpackBits
 static void
 TestPackBits()
@@ -911,6 +975,7 @@ main()
 	TestRecordCurves();
 	TestPixPat();
 	TestArcs();
+	TestScaledText();
 
 	ClosePort(&gPort);
 	printf("test_PicPlay: %s\n", failures == 0 ? "ok" : "FAILED");

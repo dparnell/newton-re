@@ -17,6 +17,14 @@
 #include "NativeFunctions.h"
 #include "NewtonExceptions.h"
 #include "StoreCompander.h"		// InitQDCompression
+#include "Draw.h"
+#include "Shapes.h"
+#include "Curves.h"
+#include "Paths.h"
+#include "Polygons.h"
+#include "PicPlay.h"
+#include "PicRecord.h"
+#include "TextObject.h"
 #include <string.h>
 #include <stdint.h>
 
@@ -619,17 +627,25 @@ PatternPixel(PatternHandle pattern, long x, long y, long depth)
 ------------------------------------------------------------------------------*/
 
 // ROM 0x002e45b8 SetStdProcs__FP7QDProcs
-// NOT YET RECONSTRUCTED: the arc, bits, curve, line, oval, paths, picture,
-// polygon, round-rect and text procs; the rect and region ones are Draw.cpp's.
-void	StdRect(GrafVerb verb, Rect* r);
-void	StdRgn(GrafVerb verb, RgnHandle rgn);
-
+// Every proc the standard one (the ROM copies them from its table at
+// 0x00380bcc).
 void
 SetStdProcs(QDProcs* procs)
 {
-	memset(procs, 0, sizeof(QDProcs));
+	procs->arcProc = StdArc;
+	procs->bitsProc = StdBits;
+	procs->curveProc = StdCurve;
+	procs->getPicProc = StdGetPic;
+	procs->lineProc = StdLine;
+	procs->ovalProc = StdOval;
+	procs->pathsProc = StdPaths;
+	procs->commentProc = StdComment;
+	procs->polyProc = StdPoly;
+	procs->putPicProc = (PutPicDataProc) StdPutPic;
 	procs->rectProc = StdRect;
 	procs->rgnProc = StdRgn;
+	procs->rRectProc = StdRRect;
+	procs->textProc = StdText;
 }
 
 

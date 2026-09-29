@@ -16,6 +16,9 @@ target_compile_definitions(newtonscript PRIVATE "NEWTON_DEFAULT_ROM_IMAGE=\"${NE
 # the demo: a view hierarchy drawn into build/views-demo.pgm (needs the ROM image)
 add_test(NAME host.ViewsDemo COMMAND newtonscript --rom ${NEWTON_ROM_BIN} --display 320x480 ${CMAKE_CURRENT_SOURCE_DIR}/demo/views.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.ViewsDemo PROPERTIES TIMEOUT 120)
+# drawing under a transform that scales: the world map at half size, shapes and text stretched
+add_test(NAME host.ScaledMapDemo COMMAND newtonscript --rom ${NEWTON_ROM_BIN} --display 320x480 ${CMAKE_CURRENT_SOURCE_DIR}/demo/scaledmap.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.ScaledMapDemo PROPERTIES TIMEOUT 120 PASS_REGULAR_EXPRESSION "the map is 360 by 179.*scaledmap: written")
 
 # newton: the OS booted and the NewtonScript world run over a window on the
 # host display (Windows: host/win32/HostWindow.cpp; elsewhere headless),

@@ -463,29 +463,130 @@ TestTransforms()
 	EXPECT(square.fScaleH == 0x8000 && square.fScaleV == 0x8000);
 	EXPECT(square.fDst.right == 5 && square.fDst.bottom == 5);
 
-	// the stack: the offsets of the transforms that do not scale add up,
-	// and one that does scale is left out of it (NOT YET)
+	// the stack: its level, and the scaler taking the port's procs over
+	// while there is one (and giving them back at the end)
 	EXPECT(TQDScaler::GetTransformLevel() == 0);
-	Point none = TQDScaler::Offset();
-	EXPECT(none.h == 0 && none.v == 0);
+	EXPECT(gPort.grafProcs == nil);
 	TQDScaler::StartScaling(move);
 	EXPECT(TQDScaler::GetTransformLevel() == 1);
-	Point one = TQDScaler::Offset();
-	EXPECT(one.h == 3 && one.v == 24);
+	EXPECT(gPort.grafProcs != nil && gPort.grafProcs->rectProc == ScaledRect);
 	TQDScaler::StartScaling(move);
-	Point two = TQDScaler::Offset();
-	EXPECT(two.h == 6 && two.v == 48);
 	TQDScaler::StartScaling(stretch);
-	Point three = TQDScaler::Offset();
-	EXPECT(three.h == 6 && three.v == 48);		// the stretching one adds nothing
+	EXPECT(TQDScaler::GetTransformLevel() == 3);
+	// the three together: the first's source to where they take it - moved
+	// by (3, 24) twice, then twice as wide and half as high
+	const TTransform& all = TQDScaler::gScale->fTransform;
+	EXPECT(all.fScaleH == 0x20000 && all.fScaleV == 0x8000);
+	EXPECT(all.fSrc.left == 0 && all.fSrc.top == 0 && all.fDst.left == 6 && all.fDst.top == 48 && all.fDst.right == 26 && all.fDst.bottom == 53);
 	TQDScaler::StopScaling();
 	TQDScaler::ReplaceScaling(square);
 	EXPECT(TQDScaler::GetTransformLevel() == 2);
 	TQDScaler::StopScaling();
 	TQDScaler::StopScaling();
-	EXPECT(TQDScaler::GetTransformLevel() == 0);
+	EXPECT(TQDScaler::GetTransformLevel() == 0 && TQDScaler::gScale == nil);
+	EXPECT(gPort.grafProcs == nil);
 	Point back = TQDScaler::Offset();
 	EXPECT(back.h == 0 && back.v == 0);
+}
+
+
+// Drawing under a transform that scales: the shapes' coordinates mapped
+// (a point rounded to the nearest pixel), the pen of a frame scaled - its
+// height from its *width*, a ROM bug - and a clip set in the drawing's own
+// coordinates mapped too, and cut by the clip the port had.
+static void
+TestScaling()
+{
+	Rect src, dst, r;
+	SetRect(&src, 0, 0, 10, 10);
+	SetRect(&dst, 4, 4, 24, 9);					// twice as wide, half as high, moved
+	TTransform stretch;
+	stretch.fFlags = 0;
+	stretch.Setup(&src, &dst, false);
+	Clear();
+	TQDScaler::StartScaling(stretch);
+	SetRect(&r, 1, 2, 5, 6);
+	PaintRect(&r);
+	TQDScaler::StopScaling();
+	EXPECT(PictureIs(16, 8,
+		"................\n"
+		"................\n"
+		"................\n"
+		"................\n"
+		"................\n"
+		"......########..\n"
+		"......########..\n"
+		"................\n", "a rectangle scaled"));
+
+	// a frame: the pen 2 wide and 1 high becomes 4 wide - and 1 high, from
+	// its width times the half
+	Clear();
+	PenSize(2, 1);
+	TQDScaler::StartScaling(stretch);
+	SetRect(&r, 0, 0, 8, 8);
+	FrameRect(&r);
+	TQDScaler::StopScaling();
+	EXPECT(gPort.pnSize.h == 2 && gPort.pnSize.v == 1);			// given back
+	PenNormal();
+	EXPECT(PictureIs(24, 10,
+		"........................\n"
+		"........................\n"
+		"........................\n"
+		"........................\n"
+		"....################....\n"
+		"....####........####....\n"
+		"....####........####....\n"
+		"....################....\n"
+		"........................\n"
+		"........................\n", "a frame scaled"));
+
+	// the pen's width scaled makes the height too: a pen 1 wide and 3 high
+	// frames with a height of a pixel (1 x 0.5 rounds to 1)
+	Clear();
+	PenSize(1, 3);
+	TQDScaler::StartScaling(stretch);
+	FrameRect(&r);
+	EXPECT(gPort.pnSize.h == 1 && gPort.pnSize.v == 3);
+	TQDScaler::StopScaling();
+	PenNormal();
+	EXPECT(GetPixel(&gMap, 10, 4) != 0 && GetPixel(&gMap, 10, 5) == 0);
+
+	// a clip set under the transform, in its coordinates: mapped
+	Clear();
+	RgnHandle saved = NewRgn();
+	GetClip(saved);
+	TQDScaler::StartScaling(stretch);
+	SetRect(&r, 0, 0, 5, 10);
+	ClipRect(&r);								// the left half
+	SetRect(&r, 0, 0, 10, 10);
+	PaintRect(&r);
+	SetClip(saved);
+	TQDScaler::StopScaling();
+	EXPECT(PictureIs(26, 10,
+		"..........................\n"
+		"..........................\n"
+		"..........................\n"
+		"..........................\n"
+		"....##########............\n"
+		"....##########............\n"
+		"....##########............\n"
+		"....##########............\n"
+		"....##########............\n"
+		"..........................\n", "a clip mapped"));
+	GetClip(saved);
+	EXPECT(EqualRect(&(*saved)->rgnBBox, &(*gPort.clipRgn)->rgnBBox));
+	DisposeRgn(saved);
+
+	// nothing is scaled while a region is being recorded
+	TQDScaler::StartScaling(stretch);
+	RgnHandle rgn = NewRgn();
+	OpenRgn();
+	SetRect(&r, 1, 1, 3, 3);
+	FrameRect(&r);
+	CloseRgn(rgn);
+	TQDScaler::StopScaling();
+	EXPECT((*rgn)->rgnBBox.left == 1 && (*rgn)->rgnBBox.right == 3);
+	DisposeRgn(rgn);
 }
 
 
@@ -508,6 +609,7 @@ main()
 	EXPECT(FixedMultiply(0x18000, 0x20000) == 0x30000 && FixedMultiply(-0x10000, 0x8000) == -0x8000);
 	EXPECT(FixedDivide(0x30000, 0x20000) == 0x18000 && FixedDivide(0x10000, 0x30000) == 0x5555 && FixedDivide(1, 0) == 0x7fffffff);
 	TestTransforms();
+	TestScaling();
 	TestOvals();
 	TestRoundRects();
 	TestLines();

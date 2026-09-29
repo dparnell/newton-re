@@ -63,10 +63,23 @@ ItalicSlabBottom(const FontEngineInfo* info, long baseline)
 
 // the glyph's set bits as a region at (left, top) - each row's runs
 // become the region's change points; with italic, each row moved right
-// by ItalicShift
+// by ItalicShift.  A strike drawn at another size than its own (the font
+// engine's fScaleX/fScaleY not 1.0) has every row and column of it
+// stretched to the pixels its edges come to at that scale (DEVIATION: the
+// ROM's DrTextChunk composes the run at the strike's size and stretches
+// the whole slab when it blits it; the host stretches each glyph, nearest
+// pixel, which is not always the same pixels).
+static long
+ScaledEdge(long n, Fixed scale)
+{
+	return RoundFixed(FixedMultiply(ToFixed(n), scale));
+}
+
+
 static RgnHandle
 GlyphRgn(const FontEngineInfo* info, long left, long top, long slabBottom)
 {
+	Boolean scaled = info->fScaleX != 0x10000 || info->fScaleY != 0x10000;
 	RgnHandle rgn = NewRgn();
 	if (rgn == nil || info->fGlyphBits == nil || info->fGlyphWidth == 0 || info->fGlyphHeight == 0)
 		return rgn;
@@ -91,7 +104,13 @@ GlyphRgn(const FontEngineInfo* info, long left, long top, long slabBottom)
 				x++;
 			long shift = info->fStyleAdjust[1] != 0 ? ItalicShift(info, slabBottom, top + row) : 0;
 			Rect run;
-			SetRect(&run, left + start + shift, top + row, left + x + shift, top + row + 1);
+			if (scaled)
+				SetRect(&run, left + ScaledEdge(start + shift, info->fScaleX), top + ScaledEdge(row, info->fScaleY),
+							  left + ScaledEdge(x + shift, info->fScaleX), top + ScaledEdge(row + 1, info->fScaleY));
+			else
+				SetRect(&run, left + start + shift, top + row, left + x + shift, top + row + 1);
+			if (EmptyRect(&run))
+				continue;
 			PutRect(&run, points, &offset, &limit);
 		}
 	}
@@ -109,7 +128,7 @@ GlyphRgn(const FontEngineInfo* info, long left, long top, long slabBottom)
 // text is cut before the first character that would cross it, the width
 // so far kept in the options.  ==> the count that fits.
 long
-MeasureGlyphWidths(const UniChar* chars, long length, StyleRecord** styles, const short* runLengths, TextOptions* options, TextLayout* layout, GrafPort* port)
+MeasureGlyphWidths(const UniChar* chars, long length, StyleRecord** styles, const short* runLengths, TextOptions* options, TextLayout* layout, GrafPort* port, Fixed hScale, Fixed vScale)
 {
 	long fitted = length;
 	Fixed limit = (options != nil) ? options->fWidth : 0;
@@ -125,7 +144,7 @@ MeasureGlyphWidths(const UniChar* chars, long length, StyleRecord** styles, cons
 		if (count > length - done)
 			count = length - done;
 		FontEngineInfo info;
-		Boolean opened = OpenFont(&port->portBits, styles[run], 0x10000, 0x10000, &info) != 3;
+		Boolean opened = OpenFont(&port->portBits, styles[run], hScale, vScale, &info) != 3;
 		for (long i = 0; i < count; i++)
 		{
 			long index = done + i;
@@ -137,6 +156,12 @@ MeasureGlyphWidths(const UniChar* chars, long length, StyleRecord** styles, cons
 				advance = info.fGlyphAdvance;
 			}
 			layout->fAdvances[index] = advance;
+			// NOT YET RECONSTRUCTED: the ROM measures the width to fit at
+			// the size drawn - a strike stretched to another size (fScaleX
+			// not 1.0) has each advance scaled for the test (0x0035be78),
+			// the advances kept being the strike's own.  The host tests the
+			// strike's advances, which the paragraphs' line breaking (and
+			// test_Views' style runs, espy 18 stretched from 16) rely on.
 			if (limit != 0 && index < fitted && width + advance > limit)
 				fitted = index;
 			width += advance;
@@ -209,7 +234,7 @@ JustifyText(const UniChar* chars, long length, TextOptions* options, TextLayout*
 // pixel to the right, an underline the font's offset below the baseline
 // for the run's width.  ==> the length drawn.
 static long
-LayOutText(TextObject* obj, TextBoundsInfo* bounds, Boolean draw)
+LayOutText(TextObject* obj, TextBoundsInfo* bounds, Boolean draw, Fixed hScale = 0x10000, Fixed vScale = 0x10000)
 {
 	GrafPort* port = GetCurrentPort();
 	const UniChar* chars = (const UniChar*) obj->fText;
@@ -231,7 +256,7 @@ LayOutText(TextObject* obj, TextBoundsInfo* bounds, Boolean draw)
 	TextLayout layout;
 	layout.fAdvances = advances;
 	layout.fRuns = runs;
-	long fitted = MeasureGlyphWidths(chars, length, styles, runLengths, options, &layout, port);
+	long fitted = MeasureGlyphWidths(chars, length, styles, runLengths, options, &layout, port, hScale, vScale);
 	if (fitted < length)
 	{
 		// the characters beyond the width are dropped from the layout
@@ -256,7 +281,7 @@ LayOutText(TextObject* obj, TextBoundsInfo* bounds, Boolean draw)
 			count = length - done;
 		StyleRecord* style = styles[run];
 		FontEngineInfo info;
-		if (OpenFont(&port->portBits, style, 0x10000, 0x10000, &info) == 3)
+		if (OpenFont(&port->portBits, style, hScale, vScale, &info) == 3)
 		{
 			for (long i = 0; i < count; i++)
 				x += advances[done + i];
@@ -264,10 +289,12 @@ LayOutText(TextObject* obj, TextBoundsInfo* bounds, Boolean draw)
 			run++;
 			continue;
 		}
-		if (info.fAscent > maxAscent)
-			maxAscent = info.fAscent;
-		if (info.fDescent > maxDescent)
-			maxDescent = info.fDescent;
+		long ascent = info.fAscent;
+		long descent = info.fDescent;
+		if (ascent > maxAscent)
+			maxAscent = ascent;
+		if (descent > maxDescent)
+			maxDescent = descent;
 		long mode = (options != nil && options->fTransferMode != 0) ? options->fTransferMode
 				  : (style->fTransferMode != 0) ? style->fTransferMode : port->pnMode;
 		PatternHandle pattern = (style->fPattern != nil) ? style->fPattern : port->fgPat;
@@ -286,8 +313,15 @@ LayOutText(TextObject* obj, TextBoundsInfo* bounds, Boolean draw)
 				info.fGetGlyph(chars[done + i], 0, &info);
 				if (info.fGlyphBits != nil)
 				{
-					long left = (short) ((x + 0x8000) >> 16) + info.fGlyphBearingX;
-					long top = baseline - info.fGlyphBearingY;
+					long bearingX = info.fGlyphBearingX;
+					long bearingY = info.fGlyphBearingY;
+					if (info.fScaleX != 0x10000 || info.fScaleY != 0x10000)
+					{
+						bearingX = ScaledEdge(bearingX, info.fScaleX);
+						bearingY = ScaledEdge(bearingY, info.fScaleY);
+					}
+					long left = (short) ((x + 0x8000) >> 16) + bearingX;
+					long top = baseline - bearingY;
 					RgnHandle glyph = GlyphRgn(&info, left, top, ItalicSlabBottom(&info, baseline));
 					if (glyph != nil)
 					{
@@ -301,7 +335,11 @@ LayOutText(TextObject* obj, TextBoundsInfo* bounds, Boolean draw)
 					}
 				}
 			}
-			x += advances[done + i];
+			// (drawing a stretched strike: the advance scaled with it, as
+			//  DrTextChunk scales its run's width by fScaleX.  NOT YET
+			//  RECONSTRUCTED: CalcTextBounds' own handling of such a strike;
+			//  the bounds are measured with the strike's advances)
+			x += (draw && info.fScaleX != 0x10000) ? FixedMultiply(advances[done + i], info.fScaleX) : advances[done + i];
 		}
 		if (draw && info.fStyleAdjust[3] != 0 && port->pnVis >= 0)
 		{
@@ -329,14 +367,15 @@ LayOutText(TextObject* obj, TextBoundsInfo* bounds, Boolean draw)
 }
 
 // ROM 0x0035c530 DrText__FlN21
-// The text object drawn - StdText's drawing, after the recording.
+// The text object drawn at the scales - StdText's drawing, after the
+// recording: the fonts opened at the size times the scale (a strike of
+// that size if there is one, else the nearest stretched to it).
 // DEVIATION: the ROM composes each chunk of glyphs into a one-bit slab
-// (DrTextChunk) and blits it; the host draws a glyph at a time.  NOT YET
-// RECONSTRUCTED: the scales (the text is drawn at full size).
+// (DrTextChunk) and blits it; the host draws a glyph at a time.
 void
-DrText(TextObjectRef text, Fixed /*hScale*/, Fixed /*vScale*/)
+DrText(TextObjectRef text, Fixed hScale, Fixed vScale)
 {
-	LayOutText(TextObj(text), nil, true);
+	LayOutText(TextObj(text), nil, true, hScale, vScale);
 }
 
 

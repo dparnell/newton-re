@@ -406,6 +406,55 @@ GetTextObjField(TextObjectRef text, TextObjectField field, void* result)
 }
 
 
+// ROM 0x0035e028 SetTextObjField__Fl15TextObjectFieldPv
+// A field of the object changed, the layout's caches thrown away (except
+// for the location, which moves the text without changing its layout).
+// The text is the pointer `value` points at; the styles, the run lengths
+// and the options are `value` itself.  ==> whether it took.  NOT YET
+// RECONSTRUCTED: a length that grows rewinds the layout (RewindLength,
+// 0x0035e0c8) - the host keeps none to rewind.
+Boolean
+SetTextObjField(TextObjectRef text, TextObjectField field, void* value)
+{
+	TextObject* obj = TextObj(text);
+	switch (field)
+	{
+	case kTextObjText:
+		obj->fText = *(const void**) value;
+		break;
+	case kTextObjFittedLength:
+	{
+		long length = *(long*) value;
+		long had = obj->fLength;
+		obj->fLength = length;
+		if (had < length)
+			return true;					// (RewindLength)
+		break;
+	}
+	case kTextObjStyles:
+		obj->fStyles = (StyleRecord**) value;
+		break;
+	case kTextObjRunLengths:
+		obj->fRunLengths = (const short*) value;
+		break;
+	case kTextObjLocation:
+		memcpy(&obj->fLocation, value, sizeof(FPoint));
+		return true;
+	case kTextObjOptions:
+		obj->fOptions = (TextOptions*) value;
+		break;
+	case kTextObjBounds:
+	case kTextObjMetrics:
+		return false;
+	case 8:
+		obj->fFlags |= 0x10000;
+		return false;
+	}
+	InvalCachedTextInfo(text);
+	return true;
+}
+
+
 // ROM 0x00195cb0 GetTextObjField__16TQDLibraryDriverFliPv
 void
 TQDLibraryDriver::GetTextObjField(TextObjectRef text, int field, void* result)

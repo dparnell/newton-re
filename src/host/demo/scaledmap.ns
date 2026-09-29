@@ -1,0 +1,41 @@
+// Drawing under a transform that scales (qd/Transform.h's TQDScaler): the
+// ROM's world map picture drawn at its own size, then the same picture and
+// a few shapes with text drawn through a style frame's `transform` into
+// rectangles of other sizes - half the size, and stretched.  Run from the
+// repository root:
+//
+//   build/host/host/newtonscript --rom build/MP2x00US/rom.bin --display 320x480 src/host/demo/scaledmap.ns
+//   python tools/imaging/pgm2png.py build/scaledmap.pgm build/scaledmap.png
+//
+// A transform is [source rectangle, destination rectangle]: everything the
+// shape draws in the source's coordinates lands in the destination's.
+
+map := ROMConstant("worldMapBitmap");
+mapShape := MakeShape(map);
+b := ShapeBounds(mapShape);
+Print("scaledmap: the map is " & (b.right - b.left) & " by " & (b.bottom - b.top));
+
+// shapes and text in a 100 by 60 box of their own
+box := [{penSize: 2}, MakeRect(0, 0, 100, 60),
+        {fillPattern: 3}, MakeOval(10, 10, 50, 50),
+        {font: 0x3000}, MakeText("Newton", 55, 30, 100, 50)];
+
+view := AddView(GetRoot(), {
+	viewClass: 74, viewFlags: 1,
+	viewBounds: {left: 0, top: 0, right: 320, bottom: 480},
+	viewFormat: 0x1,						// white fill
+	viewDrawScript: func()
+		begin
+			// the map at its own size
+			:DrawShape(mapShape, nil);
+			// half the size, below it
+			:DrawShape(mapShape, {transform: [b, {left: 0, top: 180, right: (b.right - b.left) div 2, bottom: 180 + (b.bottom - b.top) div 2}]});
+			// the box at its own size, twice the size, and stretched
+			:DrawShape(box, {transform: [0, 270]});
+			:DrawShape(box, {transform: [{left: 0, top: 0, right: 100, bottom: 60}, {left: 110, top: 270, right: 310, bottom: 390}]});
+			:DrawShape(box, {transform: [{left: 0, top: 0, right: 100, bottom: 60}, {left: 0, top: 400, right: 300, bottom: 470}]});
+		end });
+view:Dirty();
+RefreshViews();
+ScreenSnapshot("build/scaledmap.pgm");
+Print("scaledmap: written build/scaledmap.pgm");

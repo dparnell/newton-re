@@ -107,6 +107,7 @@ enum TextObjectField
 };
 
 void			GetTextObjField(TextObjectRef text, TextObjectField field, void* result);	// ROM 0x0035df90 GetTextObjField__Fl15TextObjectFieldPv
+Boolean			SetTextObjField(TextObjectRef text, TextObjectField field, void* value);	// ROM 0x0035e028 SetTextObjField__Fl15TextObjectFieldPv
 void			CharToPoint(TextObjectRef text, long offset, FPoint* point);	// ROM 0x0035e100 CharToPoint__FlT1P6FPoint - where the character at `offset` starts
 long			PointToChar(TextObjectRef text, FPoint point);			// ROM 0x00359d40 PointToChar__Fl6FPoint - the character boundary nearest the point
 Boolean			UpdateLayoutState(TextObjectRef text, long level, Fixed hScale, Fixed vScale);	// ROM 0x0035c080 UpdateLayoutState__FlN31 - ==> whether the layout could be brought to the level
