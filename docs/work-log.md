@@ -9,6 +9,23 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-30: an audit of ROM byte counts sizing host structs
+
+- `analysis/romsizes.py` (`tests/test_romsizes.py`) scans for hex sizes
+  given to message, allocation and copy calls - also through a variable
+  assigned a few lines before, as the sound bug hid - and says whether the
+  struct holds anything pointer-sized on the host (`ULong`, `Long`,
+  `Ref`, pointers, `TObjectId`, `ArrayIndex`, `TRegister`): WIDE, NARROW
+  or UNKNOWN; `--lp64` treats `long` as wide as on Linux (9fb8718).  On
+  the tree before 6aef861 it flags exactly the sound server's three reply
+  sizes; outside `src/comms` it finds nothing else, and the 23 unknown
+  hits are byte buffers or all-byte records.  In `src/comms`,
+  `CommManager.cpp`'s three `SetReply(0xC, event)` are right on Windows
+  but would truncate on an LP64 host.
+- The recording node's rubbish error on Stop is the ROM's: `InitNode`
+  (0x1e494c) allocates the codec state and never sets its error and
+  state words - commented and kept.
+
 ## 2026-09-30: the desktop connection, layer 4 part 1 - TDocker
 
 - `TEzEndpointPipe` and the modem navigator (4567d7a); `CBufferPipe::Init`

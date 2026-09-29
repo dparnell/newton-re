@@ -111,12 +111,10 @@ ROM with none registered), a text object's layout numbers (0x400) and
 (`waitFor`) and ends with `HostQuit()`; `tools/host/stress.py`
 reproduces a timing race.  Still sleeping fixed times: the comms demos
 (echo, dns, stream, inet, inetfsm); `comms.MNPLongHeaders` failed once
-under `stress.py --suite --hogs 16`.  Host layout: a ROM byte count
-used as the size of a message or reply holding `ULong`s (pointer-sized on
-the host) truncates it - found in the sound server, being audited across
-the tree.  Sound: the compressor's first node is released with an
-uninitialised error when recording stops (seen as 19333588) - check
-against the ROM;
+under `stress.py --suite --hogs 16`.  Host layout: run
+`analysis/romsizes.py` (and `--lp64`) after reconstructing message or
+reply code; `CommManager.cpp`'s three `SetReply(0xC, event)` want
+`sizeof(TAESystemEvent)` before a Linux host;
 write new ones the same way, never with a fixed wait for something
 asynchronous - under a parallel ctest the packages `--package` queues
 and the NIE's procrastinated setup arrive late.
