@@ -1328,6 +1328,10 @@ TCompiler::ClosureWalker(RefArg /*node*/, long kind, RefArg a1, RefArg a2, RefAr
 				SetFrameSlot(fFunctionState->fVarLocs, a1, RefVar(MAKEINT(RVALUE(loc) + 1)));
 			return true;
 		}
+		// (host: the NTK's compiler knew a constant for what it was, so a
+		// reference to one did not make a nested function need the receiver)
+		if (gCompilerNTKConstants && fFunctionState->IsConstant(a1))
+			return true;
 		if (!fFunctionState->NoteVarReference(a1))
 			fFunctionState->NoteMsgEnvReference(kMsgEnvReceiver);
 		return true;

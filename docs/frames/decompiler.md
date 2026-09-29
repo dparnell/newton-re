@@ -87,7 +87,9 @@ the project was built. Written inline, such a function would be closed
 over whenever the compiler gave it an argFrame, and a nested function gets
 one for any free name - `self`, a global, even a global constant -
 because `ClosureWalker` notes every name that is not a variable as the
-receiver's (the ROM's does the same). Such a function is written as its own definition,
+receiver's (the ROM's does the same). The NTK's own compiler knew a
+constant for what it was: a nested function that uses one needed no
+receiver on its account, which `gCompilerNTKConstants` also gives. Such a function is written as its own definition,
 a global constant `kFunction_<address>` compiled first. The main function
 refers to it by name, which pushes the same literal:
 
@@ -156,6 +158,7 @@ by side.
 | 6 | 5447 of 5507 | 5440 (98.8%) | every function pushed without `set-lex-scope` made a constant; `a.b.(c) exists` (its get-paths are all 0) |
 | 7 | 5447 of 5507 | 5442 (98.8%) | repeated literals told apart by slot, not object; an NTK magic-pointer constant a literal per name |
 | 8 | 5447 of 5507 | 5444 (98.9%) | a branch to an `if`'s end that an inner construct's ends there too is the inner's: the outer `if` has no `else` |
+| 9 | 5447 of 5507 | 5446 (98.9%; all but one of those decompiled) | a constant no receiver reference (NTK); `l := <loop>` kept a statement so the loop's locals are declared first |
 
 The 5507 functions are every top-level NewtonScript function in the ROM's
 object area; functions that are literals of others are decompiled inside

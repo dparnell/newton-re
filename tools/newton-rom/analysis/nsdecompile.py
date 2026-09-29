@@ -603,6 +603,12 @@ class Decompiled:
 					nxt = None
 				same = nxt is not None and ((a == OP_SETVAR and nxt.a == OP_GETVAR and nxt.b == b)
 											 or (a == OP_FINDSETVAR and nxt.a == OP_FINDVAR and nxt.b == b))
+				if same and not stack and any(loop_names(n) for n in walk_all(value)):
+					# `l := <a loop>; ... l ...` compiles as `(l := <a loop>)`
+					# does, but declares the loop's locals before whatever
+					# uses l; kept a statement (only with nothing else on
+					# the stack, which a statement would jump ahead of)
+					same = False
 				if same:
 					stack.append(Assign(target, value, True))
 					k += 2
