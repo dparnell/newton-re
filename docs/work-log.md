@@ -91,6 +91,27 @@ bugs and ROM bugs found on the way.
   Built in `tmp/build-text` (in parallel with other agents); ctest there
   130/130, open-apps only the Sound Recorder.
 
+## 2026-09-29: pictures round 2 - curves, paths, pixel patterns, arcs
+
+- Curves and paths (`3f1d0f8`, `qd/Curves.h`, `qd/Paths.h`): the verbs,
+  `StdCurve`/`StdPaths` recording and drawing, `FrCurve`'s five halvings,
+  the TrueType path walker, and `ParsePicCodes` mapping and drawing both.
+  ROM bugs kept: a curve is mapped twice on playback; a "same curve" is
+  recorded as 0x0c88+verb, which playback reads as a reserved opcode;
+  `GetCurveBounds` never lets its first point reach the maximum.  The
+  DDK's path words became `Long32` (sync patch).
+- Pixel patterns of type 1 (`a2f0ceb`, `qd/PixelConvert.h`):
+  `GetPicPixPat` reads them whole and `ConvertPixPat` makes them the
+  screen's kind through the row converters.  ROM bugs kept:
+  `ConvertIndex8to4`'s first pixel takes its gray's low nibble; rows not
+  a multiple of four bytes are laid out skewed.  A recorded four-bit
+  pattern comes back a shade out for some grays - the ROM's own round
+  trip through `PutColorTable`'s ramp and `RGBtoGray`.
+- Arcs of less than a full turn (`fd38560`): `DrawArc`'s row loop, each
+  row cut by the lines at the two angles.  The open-apps smoke still
+  opens everything but the Sound Recorder, and the World Clock's map
+  still draws.
+
 ## 2026-09-29: pictures round 1 - recording, and text in pictures
 
 - Pictures recorded (`3ef412d`, `qd/PicRecord.h`): `OpenPicture`,

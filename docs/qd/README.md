@@ -238,7 +238,18 @@ angles' slopes for an arc, the clip regions' masks).  The host packs
 `PutOval`'s points into a region (`OvalRgn`) and draws it through
 `DrawRgn` - the same pixels, the classic QuickDraw ovals (`test_Shapes`
 pins the 8x8 circle and others) - and frames as the shape less the same
-shape inset by the pen; arcs of less than a full turn are NOT YET.
+shape inset by the pen.  An arc of less than a full turn is drawn as the
+ROM's `DrawArc` 0x002aaaf8 draws every shape: a row at a time within the
+box the clip and visible regions, the port and the shape share, each row
+of the oval (and of the inset one, framed) cut by the two lines from the
+centre at the start and end angles - QuickDraw's, nought straight up and
+clockwise - whose slopes are `SlopeFromAngle`'s scaled by the box's
+aspect, their x followed down from the top.  A line whose ray points up
+(its angle within 90 of the top) cuts the row; one pointing down does not;
+at the centre row the two lines change places, and an arc lying wholly in
+one half leaves the other out.  Each cut piece is a one-row rectangle
+drawn through `DrawRect` (the ROM's `DrawSlab` 0x00347784 into the bits).
+`DrawArc` draws nothing for a mode that is not a pattern mode.
 `FixedMultiply` 0x0038b008 and `FixedDivide` 0x0038af20 (fplib assembly:
 magnitudes, rounding half up, saturation) are `src/toolbox/FixedMath.cpp`.
 
@@ -499,12 +510,42 @@ each one's block though all but the first are inside the first
 carried family is never filled in, so the text is drawn with the
 integer 0x800000 as its font (the host draws nothing).
 
-NOT YET RECONSTRUCTED: curves and paths (read, not drawn:
-`MapCurve`/`CallCurve`, `MapPaths`/`CallPaths`), pixel patterns of type
-1 (read, and the port keeps its pattern: `ConvertPixPat`'s converters),
-and a picture drawn under a scaling transform (`TQDScaler`).
-`test_PicPlay` plays hand-written pictures, records the standard procs'
-scene and text both ways and plays them back to the same pixels;
+Curves (0x0c80-0x0c84, and 0x8088-0x808c "the same curve") are read into
+PicPlay +8, mapped onto the destination *twice* (`MapCurve`: a picture
+drawn at another size has its curves scaled twice over - ROM bug kept)
+and handed to `CallCurve`; paths (0x8190-0x8194: the handle's size and
+bytes) are mapped once and handed to `CallPaths`.  Neither asks the
+procs, so they are drawn even while a picture is being made into shapes.
+ROM bug kept: `StdCurve` records the curve the picture already has as
+0x0c88 + the verb, which playback reads as a reserved opcode of 0x18
+bytes, so a curve drawn twice running leaves a picture that cannot be
+read past it.
+
+A pixel pattern of type 1 (in 0x12-0x14) is a pixel map of its own:
+`GetPicPixPat` 0x00333dc0 reads its header, a colour table for an
+indexed one (made a gray table of its depth, `GetPicGrayTable`) and the
+rows - as they are, or packed a row at a time (`UnpackBits`; 16-bit
+pixels packed as words, `UnpackWords`) - into a pattern whose pixels
+follow its header, and `ConvertPixPat` 0x00334244 makes it the screen's
+kind in place: one bit stays; indexed pixels go through the gray table
+(`ConvertIndex2`/`ConvertIndex4` keep their depth, `ConvertIndex8to4`
+packs eight-bit ones into four); direct 16- and 32-bit pixels (with a
+pad byte, without one, or a component plane at a time) become four-bit
+grays two to a byte (`qd/PixelConvert.h`, 0x00074c08-0x000755e0, through
+`RGBtoGray`).  ROM bugs kept: `ConvertIndex8to4`'s first pixel of each
+pair takes its gray's low four bits; a row that is not a multiple of four
+bytes is laid out two bytes further on than the pattern's row bytes say,
+so a one- or two-bit pixel pattern comes out skewed; and a four-bit
+pattern recorded (`PutPixPat`: a gray ramp, white first, for its colour
+table) comes back through `RGBtoGray` a shade out for some grays (3
+comes back 2).
+
+NOT YET RECONSTRUCTED: a picture drawn under a scaling transform
+(`TQDScaler`).
+`test_PicPlay` plays hand-written pictures (among them pixel patterns of
+32 and 8 bits), records the standard procs' scene, text both ways,
+curves and paths, a four-bit pattern and arcs, and plays them back to the
+same pixels;
 `test_Views`'s `TestPicture` draws the ROM's world map.
 
 ### Pictures recorded (`src/qd/PicRecord.h`)
@@ -629,6 +670,40 @@ region is the screen's, and without that nothing is drawn at all.
 NOT YET: a bitmap whose resolution is not 72 dpi (`DrawShapeScaled`),
 `TQDScaler::ForceScaling` around the unscaled case, and
 `ViewIntoBitmap`, which draws a whole view into one.
+
+## Curves and paths (`src/qd/Curves.h`, `src/qd/Paths.h`)
+
+A curve is a quadratic from a first point through a control point to a
+last one, in 16.16.  The verbs (`FrameCurve` 0x002d1c7c ... `FillCurve`)
+go through the port's `curveProc` or `StdCurve` 0x002d202c, which records
+it (0x0c80 + the verb, `PutPicCurve` 0x003323c4 - the opcode + 8 alone
+for the curve the picture has) and draws it: framed, as lines from its
+first point (`FrCurve` 0x002d1dd8 halves it at its middle five times,
+de Casteljau, 32 lines); otherwise the inside of the curve closed by a
+line back to its start, a region (`DrawCurve`), if its bounds meet the
+clip and visible regions.  `GetCurveBounds` 0x002d211c starts its
+maximum at -0x7fa6 and never looks at a point for the maximum when it
+lowered the minimum, so the first point never counts for the right and
+bottom (ROM bug kept); `MapCurve`, `OffsetCurve`, `ScaleCurve`,
+`SetCurve`, `EqualCurve`.
+
+Paths are TrueType outlines: a handle of contours, each its point count,
+a bit per point (set: off the curve) and the points in 16.16.  The path
+walker (`InitPathWalker` 0x003279ac, `NextPathSegment` 0x00327a74,
+`OnCurve`) turns a contour into lines (two on-curve points) and
+quadratic curves (an off-curve point between two on-curve ones; between
+two off-curve points the curve passes through their middle), starting at
+the first on-curve point; it does not close the contour back to its
+start.  `StdPaths` 0x00327e08 records (0x8190 + the verb, `PutPicPaths`:
+the handle's size and bytes) and draws: framed, each contour from its
+start (`FramePath`, `FrCurve` for a curve); otherwise the outlines made
+into a region - even-odd, since a region is its inversion points - and
+drawn (`DrawPaths`).  `MapPaths`, `OffsetPaths`, `ScalePaths`,
+`GetPathsBounds` (a plain box, with the same -0x7fa6 start),
+`CopyPaths` (on a failed resize a path of more than four bytes is
+emptied, a smaller one copied regardless), `SizeOfPaths`, `DisposePaths`.
+A sync patch makes the DDK's path words `Long32`, the ARM's word, since a
+host's `long` may be wider.
 
 ## Polygons and recording (`src/qd/Polygons.h`)
 
