@@ -404,17 +404,6 @@ TQDScaler::GetTransformLevel(void)
 }
 
 
-// (host) See Transform.h.
-Point
-TQDScaler::Offset(void)
-{
-	Point none;
-	none.h = 0;
-	none.v = 0;
-	return none;
-}
-
-
 // ROM 0x001972a8 UseTransform__9TQDScalerFP10TTransformUc
 // A transform pushed, or put in place of the innermost; the transform in
 // force worked out again.

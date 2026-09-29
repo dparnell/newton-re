@@ -19,6 +19,9 @@
 #include "Text.h"
 #include "Pictures.h"
 #include "PicPlay.h"
+#include "RootView.h"
+#include "ParagraphView.h"
+#include "PicRecord.h"
 #include "ByteOrder.h"
 #include "Fonts.h"
 #include "RichString.h"
@@ -495,18 +498,17 @@ ShapeBounds(RefArg shape, Rect* bounds)
 
 
 // Where a shape is drawn: the caller's origin, or - while a transform is
-// in force - the offset the transforms come to, because SetStyle folded
-// the origin into the first of them.
-//
-// DEVIATION: the ROM adds the origin only when there is no transform and
-// leaves the mapping to TQDScaler, which puts every coordinate QuickDraw
-// is given through the stack of them.  That scaler is NOT YET (see
-// qd/Transform.h), so the offset is added here instead; a transform that
-// really scales is still drawn unscaled.
+// in force - nothing, because SetStyle folded the origin into the first of
+// the transforms and TQDScaler maps everything drawn through them.
 static Point
 DrawOrigin(const Point& origin, TStyleSave* style)
 {
-	return style->fTransformDepth == 0 ? origin : TQDScaler::Offset();
+	if (style->fTransformDepth == 0)
+		return origin;
+	Point none;
+	none.h = 0;
+	none.v = 0;
+	return none;
 }
 
 
@@ -857,9 +859,8 @@ DrawOneShape(RefArg shape, const Point& origin, TStyleSave* style)
 	if (EQRef(cls, RSSYMpicture))
 	{
 		// the picture played into its box (qd/PicPlay.h) through a handle
-		// over the binary's bytes.  NOT YET RECONSTRUCTED: under a scaling
-		// transform the ROM forces the scaler and clips to its visible
-		// region first (TQDScaler); the box is drawn into as it is.
+		// over the binary's bytes (under a transform the scaler maps the
+		// picture's drawing like any other)
 		RefVar data(GetProtoVariable(shape, RSSYMdata, nil));
 		Rect box;
 		GetBoundsRect(shape, &box, origin, style);
@@ -1083,11 +1084,11 @@ HitShape(RefArg shape, const Point& pt, RefArg path)
 	}
 
 	// anything else: drawn into a region, and the point tested against it
+	// (the scaler forced on meanwhile, so that a transform in force maps
+	//  the shape recorded as it maps the one drawn)
 	TRegionVar rgn;
 	OpenRgn();
-	// (the ROM turns the QD scaler off around this - TQDScaler::ForceScaling
-	//  0x002f8e28 - so that the shape records at its own size.  NOT YET
-	//  RECONSTRUCTED: the scaler, so there is nothing to turn off.)
+	long forced = TQDScaler::ForceScaling(1);
 	Point origin;
 	origin.h = 0;
 	origin.v = 0;
@@ -1097,10 +1098,12 @@ HitShape(RefArg shape, const Point& pt, RefArg path)
 	}
 	newton_catch_all
 	{
+		TQDScaler::ForceScaling(forced);
 		CloseRgn(rgn);
 		rethrow;
 	}
 	end_try;
+	TQDScaler::ForceScaling(forced);
 	CloseRgn(rgn);
 	return PtInRgn(pt, rgn);
 }
@@ -1254,21 +1257,25 @@ FMakePolygon(RefArg /*rcvr*/, RefArg points)
 
 // ROM 0x000e31b4 FMakeRegion
 // A 'region frame (canonicalRegionShape) whose data is the region of the
-// shape: the shape drawn (with no style) into an open region.
+// shape: the shape drawn (with no style) into an open region, any forcing
+// of the scaler taken off meanwhile (so a region records at its own size).
 static Ref
 FMakeRegion(RefArg /*rcvr*/, RefArg shape)
 {
 	TRegionVar rgn;
 	OpenRgn();
+	long forced = TQDScaler::ForceScaling(0);
 	newton_try
 	{
 		DrawShape(shape, RefVar(NILREF), MakePoint(0, 0));
 	}
 	cleanup
 	{
+		TQDScaler::ForceScaling(forced);
 		CloseRgn(rgn);
 	}
 	end_try;
+	TQDScaler::ForceScaling(forced);
 	CloseRgn(rgn);
 	long size = (*rgn)->rgnSize;
 	RefVar result(Clone(RefVar(Rcanonicalregionshape)));
@@ -1462,6 +1469,131 @@ FOffsetShape(RefArg rcvr, RefArg shape, RefArg dx, RefArg dy)
 }
 
 
+/*------------------------------------------------------------------------------
+	P i c t u r e s   m a d e
+------------------------------------------------------------------------------*/
+
+// ROM 0x000e3fa4 SetStandAloneBoundsInViewsRecursively__FP5TView
+// Every paragraph under the view (at any depth) told to keep bounds of its
+// own (text flag 0x800) and to fill its caches again, so that it draws
+// into a picture whole rather than as the screen's clipping leaves it.
+static void
+SetStandAloneBoundsInViewsRecursively(TView* view)
+{
+	TListLoop loop(view->fChildren);
+	TView* child;
+	while ((child = (TView*) loop.Next()) != nil)
+	{
+		if (!child->DerivedFrom(clParagraphView))
+		{
+			if (child->fChildren->GetArraySize() > 0)
+				SetStandAloneBoundsInViewsRecursively(child);
+		}
+		else
+		{
+			TParagraphView* para = (TParagraphView*) child;
+			para->fTextFlags |= 0x800;
+			para->RefillAllCaches();
+		}
+	}
+}
+
+
+// ROM 0x000e3d20 ROM_CommonMakePict__FP5TViewR5TRectRC6RefVarT3
+// A picture recorded within the rectangle: the view drawn (a view straight
+// under the root erasing the rectangle first), or the shape in the style
+// with the scaler forced on - the clip and pen put back afterwards - and
+// made a picture shape: canonicalPictureShape's clone with the rectangle
+// as its bounds and the picture's bytes as a 'pictureData binary.  A style
+// with a macPict slot records a picture for the Macintosh.  If the drawing
+// throws, the picture is killed and the exception goes on.
+static Ref
+ROM_CommonMakePict(TView* view, Rect& bounds, RefArg shape, RefArg style)
+{
+	TRegionVar clip;
+	GetClip(clip);
+	PenState pen;
+	GetPenState(&pen);
+	PenNormal();
+	Boolean macPicture = false;
+	if (NOTNIL(style))
+		macPicture = NOTNIL(GetProtoVariable(style, RSSYMmacpict, nil));
+	PicHandle picture = OpenPicture(&bounds, macPicture);
+	ClipRect(&bounds);
+	Boolean threw = false;
+	ExceptionName name = nil;
+	void* data = nil;
+	ExceptionDestructor destructor = nil;
+	newton_try
+	{
+		if (view == nil)
+		{
+			Point origin;
+			origin.h = 0;
+			origin.v = 0;
+			long forced = TQDScaler::ForceScaling(1);
+			DrawShape(shape, style, origin);
+			TQDScaler::ForceScaling(forced);
+		}
+		else
+		{
+			if (view->fParent == (TView*) gRootView)
+				EraseRect(&bounds);
+			view->Draw(bounds, false);
+		}
+	}
+	newton_catch_all
+	{
+		threw = true;
+		name = CurrentException()->name;
+		data = CurrentException()->data;
+		destructor = CurrentException()->destructor;
+	}
+	end_try;
+	ClosePicture();
+	SetClip(clip);
+	SetPenState(&pen);
+	if (threw)
+	{
+		KillPicture(picture);
+		Throw(name, data, destructor);
+	}
+	long length = GetHandleSize((Handle) picture);
+	RefVar result(Clone(RefVar(Rcanonicalpictureshape)));
+	RefVar box(AllocateBinary(RSSYMboundsrect, sizeof(Rect)));
+	SetFrameSlot(result, RSSYMbounds, box);
+	memmove(BinaryData(box), &bounds, sizeof(Rect));
+	RefVar bytes(AllocateBinary(RSSYMpicturedata, length));
+	SetFrameSlot(result, RSSYMdata, bytes);
+	memmove(BinaryData(bytes), *picture, length);
+	KillPicture(picture);
+	return result;
+}
+
+
+// ROM 0x000dc8c0 CommonMakePict__FP5TViewR5TRectRC6RefVarT3
+// A view's paragraphs made to draw whole first.
+Ref
+CommonMakePict(TView* view, Rect& bounds, RefArg shape, RefArg style)
+{
+	if (view != nil)
+		SetStandAloneBoundsInViewsRecursively(view);
+	return ROM_CommonMakePict(view, bounds, shape, style);
+}
+
+
+// ROM 0x000dd6a0 FMakePict
+// MakePict(shapes, style): the shapes recorded into a picture within their
+// bounds.
+static Ref
+FMakePict(RefArg /*rcvr*/, RefArg shapes, RefArg style)
+{
+	Rect bounds;
+	ShapeBounds(shapes, &bounds);
+	return CommonMakePict(nil, bounds, shapes, style);
+}
+
+
 // ROM 0x000dc8fc FMakeShape
 // MakeShape(object): a shape made of whatever it is given.
 //
@@ -1558,11 +1690,11 @@ FMakeShape(RefArg /*rcvr*/, RefArg obj)
 	}
 	else if (IsPrimShape(obj))
 		shape = obj;
-	else if (GetView(obj) != nil)
+	else if (TView* view = GetView(obj))
 	{
-		// NOT YET RECONSTRUCTED: the view's own picture - the ROM asks the
-		// view for its bounds and hands them to CommonMakePict 0x000dc8c0,
-		// which is not reconstructed; nil stands in for the picture.
+		// the view's own picture, within its outer bounds
+		view->OuterBounds(&bounds);
+		shape = CommonMakePict(view, bounds, RefVar(NILREF), RefVar(NILREF));
 	}
 	return shape;
 }
@@ -1589,8 +1721,8 @@ FIsPrimShape(RefArg /*rcvr*/, RefArg shape)
 // port's visible region is the screen's).
 //
 // NOT YET RECONSTRUCTED: a bitmap whose resolution is not 72 dpi, which
-// the ROM draws through DrawShapeScaled; and TQDScaler::ForceScaling,
-// which it turns off around the unscaled case.
+// the ROM draws through DrawShapeScaled.  (The scaler is forced on around
+// the drawing, as the ROM forces it.)
 Ref
 FDrawIntoBitmap(RefArg /*rcvr*/, RefArg shape, RefArg styles, RefArg bitmap)
 {
@@ -1609,18 +1741,21 @@ FDrawIntoBitmap(RefArg /*rcvr*/, RefArg shape, RefArg styles, RefArg bitmap)
 	Point origin;
 	origin.h = 0;
 	origin.v = 0;
+	long forced = TQDScaler::ForceScaling(1);
 	newton_try
 	{
 		DrawShape(shape, styles, origin);
 	}
 	newton_catch_all
 	{
+		TQDScaler::ForceScaling(forced);
 		SetPort(saved);
 		ClosePort(&port);
 		UnlockRef(data);
 		rethrow;
 	}
 	end_try;
+	TQDScaler::ForceScaling(forced);
 	SetPort(saved);
 	ClosePort(&port);
 	UnlockRef(data);
@@ -1775,6 +1910,9 @@ RegisterShapeNatives(void)
 	RegisterNativeFunction("FMakeRegion", (void*) FMakeRegion, 1);
 	RegisterNativeFunction("FMakeText", (void*) FMakeText, 5);
 	RegisterNativeFunction("FMakeTextBox", (void*) FMakeTextBox, 5);
+	RegisterNativeFunction("FMakePict", (void*) FMakePict, 2);
+	gPictureShapeDrawer = DrawShape;
+	gPictureShapeBounds = ShapeBounds;
 	RegisterNativeFunction("FShapeBounds", (void*) FShapeBounds, 1);
 	RegisterNativeFunction("FOffsetShape", (void*) FOffsetShape, 3);
 	RegisterNativeFunction("FScaleShape", (void*) FScaleShape, 3);

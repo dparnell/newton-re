@@ -218,3 +218,9 @@ set_tests_properties(host.NewtonReflow PROPERTIES TIMEOUT 150
 add_test(NAME host.NewtonSoupScroll COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 20 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/soupscroll.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonSoupScroll PROPERTIES TIMEOUT 120
                      PASS_REGULAR_EXPRESSION "down -> 1, answer nil.*tall one -> 1, origin 34.*past it -> 2, origin 0.*up into the tall one -> 1, origin 68.*up a step -> 1, origin 34.*past the last -> 0.*up at the first -> 0.*up from the third -> 1, origin 68.*soupscroll: done")
+
+# the About slip's credits: MakePict records the lines as text shapes into one
+# picture, which the credits view draws with CopyBits (needs the ROM image)
+add_test(NAME host.NewtonCredits COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 50 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/credits.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonCredits PROPERTIES TIMEOUT 150
+                     PASS_REGULAR_EXPRESSION "credits: creditPict 184 by 216, creditHeight 218.*credits: written")

@@ -356,12 +356,21 @@ Justify(Rect* r, const Rect& box, ULong justify)
 }
 
 
+// the shapes' drawing (views/DrawShape.cpp sets them: the view system's,
+// which the qd library does not link)
+void	(*gPictureShapeDrawer)(RefArg shape, RefArg style, const Point& origin) = nil;
+void	(*gPictureShapeBounds)(RefArg shape, Rect* bounds) = nil;
+
+
 // ROM 0x001897fc DrawPicture__FRC6RefVarRC5TRectUll
 // A bitmap frame (one with bits or colorData) drawn in the box: its
 // bounds justified into the box ("bad pictBounds frame" without proper
 // bounds); mode 8 (patCopy) draws the mask first in srcBic and the bits
 // in srcOr - a masked copy; a negative mode draws the mask itself in the
 // mode negated.
+//
+// Anything else - not a frame, a 'bitmap-class frame, a frame without bits
+// - is a shape, drawn by DrawShape in the transfer mode.
 //
 // A 'picture binary is a QuickDraw picture: its frame (big-endian, at +2)
 // justified into the box and the picture played there (qd/PicPlay.h's
@@ -398,10 +407,29 @@ DrawPicture(RefArg picture, const Rect& box, ULong justify, long mode)
 		UnlockRef(picture);
 		return;
 	}
-	if (!IsFrame(picture))
+	if (!IsFrame(picture) || IsInstance(picture, RSSYMbitmap)
+	 || (!FrameHasSlotRef(picture, RSSYMbits) && !FrameHasSlotRef(picture, RSSYMcolordata)))
+	{
+		// anything else is a shape (a picture shape among them - what
+		// MakePict makes): drawn in a style of the transfer mode alone, at
+		// the box's corner, or with its bounds justified into the box
+		// (ROM QUIRK, kept: a frame of class 'bitmap goes this way too)
+		if (gPictureShapeDrawer == nil)
+			return;								// (host: no view system linked)
+		Rect where = box;
+		if (justify != 0)
+		{
+			gPictureShapeBounds(picture, &where);
+			Justify(&where, box, justify);
+		}
+		RefVar style(AllocateFrame());
+		SetFrameSlot(style, RSSYMtransfermode, RefVar(MAKEINT(mode)));
+		Point origin;
+		origin.h = where.left;
+		origin.v = where.top;
+		gPictureShapeDrawer(picture, style, origin);
 		return;
-	if (!IsInstance(picture, RSSYMbitmap) && !FrameHasSlotRef(picture, RSSYMbits) && !FrameHasSlotRef(picture, RSSYMcolordata))
-		return;
+	}
 	Rect bounds;
 	RefVar boundsFrame(GetFrameSlotRef(picture, RSSYMbounds));
 	if (ISNIL(boundsFrame) || !FromObject(boundsFrame, bounds))

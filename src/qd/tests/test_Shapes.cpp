@@ -485,8 +485,6 @@ TestTransforms()
 	TQDScaler::StopScaling();
 	EXPECT(TQDScaler::GetTransformLevel() == 0 && TQDScaler::gScale == nil);
 	EXPECT(gPort.grafProcs == nil);
-	Point back = TQDScaler::Offset();
-	EXPECT(back.h == 0 && back.v == 0);
 }
 
 

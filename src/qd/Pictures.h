@@ -67,6 +67,8 @@ public:
 
 void	DrawBitmap(RefArg bitmap, Rect* box, long mode);					// the bitmap copied into the box (sized to the bits when 0 wide)
 void	Justify(Rect* r, const Rect& box, ULong justify);					// r placed in the box by the viewJustify bits
+extern void	(*gPictureShapeDrawer)(RefArg shape, RefArg style, const Point& origin);	// views/DrawShape.cpp's DrawShape
+extern void	(*gPictureShapeBounds)(RefArg shape, Rect* bounds);					// and ShapeBounds
 void	DrawPicture(RefArg picture, const Rect& box, ULong justify, long mode);	// a bitmap frame drawn in the box, justified
 
 // Asking a bitmap about a point, from its own origin: whether it is in

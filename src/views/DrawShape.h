@@ -100,6 +100,8 @@ public:
 Boolean	IsStyleFrame(RefArg obj);													// ROM 0x000dd7e4 IsStyleFrame__FRC6RefVar
 Boolean	IsPrimShape(RefArg obj);													// ROM 0x000dd828 IsPrimShape__FRC6RefVar
 Ref		MakeRectShape(RefArg cls, RefArg left, RefArg top, RefArg right, RefArg bottom);	// ROM 0x000e1360 MakeRectShape__FRC6RefVarN41
+class TView;
+Ref		CommonMakePict(TView* view, Rect& bounds, RefArg shape, RefArg style);		// ROM 0x000dc8c0 CommonMakePict__FP5TViewR5TRectRC6RefVarT3 - the view, or the shape in the style, recorded into a picture shape
 void	ShapeBounds(RefArg shape, Rect* bounds);									// ROM 0x000e0f20 ShapeBounds__FRC6RefVarP5TRect - a shape's or a list's bounds
 void	GetBoundsRect(RefArg shape, Rect* bounds, const Point& origin, TStyleSave* style);	// ROM 0x000dfc60 GetBoundsRect__FRC6RefVarP5TRectRC6TPointP10TStyleSave
 void	WedgeBox(Rect* box, short startAngle, short arcAngle);						// ROM 0x000e148c WedgeBox__FP5TRectsT2

@@ -1,0 +1,78 @@
+// The About slip's credits (MakePict): the ROM's about slip (@152) opened
+// for an application whose aboutInfo has a credits list - the MP2x00 ships
+// none, so this one is made up - shows its basic information, and after
+// eight seconds idle closes that and opens its credits view, whose
+// viewSetupDoneScript makes every line a text shape (a line starting with
+// '%' a heading in bold) and records them all into one picture with
+// MakePict; its viewDrawScript draws the picture with CopyBits, scrolled a
+// step every five seconds by its viewIdleScript.  Run from the repository
+// root:
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 --script src/host/demo/credits.ns --headless 40
+//   python tools/imaging/pgm2png.py build/credits.pgm build/credits.png
+
+app := {
+	title: "Reconstruction",
+	appName: "Reconstruction",
+	aboutInfo: {
+		tagLine: "The reconstruction",
+		version: "1.0",
+		copyright: "(c) the Newton RE project",
+		credits: [
+			"%Picture playback",
+			"ParsePicCodes",
+			"DrawPicture",
+			"%Picture recording",
+			"OpenPicture",
+			"ClosePicture",
+			"MakePict",
+			"%Scaling",
+			"TQDScaler",
+			"%Thanks",
+			"Apple's Newton team"]},
+	allSoups: []};
+
+// the Setup assistant walked through first, as open-apps.ns does (a
+// modal slip keeps the idlers from running)
+tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
+typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
+
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+
+page := 0;
+nextPage := func()
+  begin
+    page := page + 1;
+    if page < 10 then
+      begin
+        call tapAt with (293, 468);			// Continue
+        AddDelayedCall(nextPage, nil, 1800);
+      end
+    else
+      call tapAt with (297, 468);			// Done, on "Congratulations"
+  end;
+
+AddDelayedCall(func() begin
+    call tapAt with (293, 468);				// past "Welcome"
+    AddDelayedCall(func() begin
+        call tapAt with (200, 150);			// the caret into the First line
+        foreach c in name do call typeKey with (c);
+        AddDelayedCall(nextPage, nil, 1500);
+      end, nil, 2000);
+  end, nil, 3000);
+
+AddDelayedCall(func() begin
+		about := call @152.New with (app, nil, nil);
+		Print("credits: the about slip is open");
+		AddDelayedCall(func() begin
+				if about.creditPict then
+					begin
+						local b := ShapeBounds(about.creditPict);
+						Print("credits: creditPict " & (b.right - b.left) & " by " & (b.bottom - b.top) & ", creditHeight " & about.creditHeight);
+					end
+				else
+					Print("credits: no picture");
+				ScreenSnapshot("build/credits.pgm");
+				Print("credits: written build/credits.pgm");
+			end, nil, 12000);
+	end, nil, 30000);

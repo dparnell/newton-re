@@ -34,24 +34,26 @@
 #include "Bits.h"
 #include "Screen.h"
 #include "Shapes.h"
+#include "Transform.h"
 #include "ByteOrder.h"
 
 
 // ROM 0x000e15b8 PointInShape__FRC6RefVarRC6TPointP10TStyleSave
 // Whether the point is inside the shape as it is drawn: the shape drawn
 // into a region (from the origin, in the style in force) and the point
-// tested against that.  (The ROM forces the QD scaler off round the
-// drawing - TQDScaler::ForceScaling - so the shape records at its own
-// size; the scaler is NOT YET, so there is nothing to force.)
+// tested against that - the scaler forced on meanwhile, so that a
+// transform in force maps the shape recorded as it maps the one drawn.
 Boolean
 PointInShape(RefArg shape, const Point& pt, TStyleSave* style)
 {
 	TRegionVar rgn;
 	OpenRgn();
+	long forced = TQDScaler::ForceScaling(1);
 	Point origin;
 	origin.h = 0;
 	origin.v = 0;
 	DrawOneShape(shape, origin, style);
+	TQDScaler::ForceScaling(forced);
 	CloseRgn(rgn);
 	return PtInRgn(pt, rgn);
 }

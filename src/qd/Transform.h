@@ -86,10 +86,6 @@ public:
 	static Boolean	ReplaceClip(RgnHandle base, RgnHandle clip, long level);			// ROM 0x00196244 ReplaceClip__9TQDScalerSFPP6RegionT1l
 	static Boolean	LowLevelReplaceClip(RgnHandle base, RgnHandle clip, long level);	// ROM 0x00196148 LowLevelReplaceClip__9TQDScalerSFPP6RegionT1l
 
-	// (host) what DrawShape adds to every shape while a transform is in
-	// force: nothing any more, now that the scaler maps the drawing itself
-	// - views/DrawShape.cpp's DEVIATION it answered is to go
-	static Point	Offset(void);
 
 	void			Setup(void);											// ROM 0x00196f8c Setup__9TQDScalerFv
 	void			Cleanup(void);											// ROM 0x0019736c Cleanup__9TQDScalerFv
