@@ -25,12 +25,16 @@
 
 	DEVIATION: the engine runs in the ordinary heap and the domain only
 	keeps the exception handler.  The ROM gives the recogniser a VM heap
-	of its own (`NewVMHeap`, `SetHeap`, `DestroyVMHeap` - which
-	memory/MemoryManager.cpp now has, bar `CreateVMHeap`); moving the
-	engine into one is NOT YET.
+	of its own (`NewVMHeap`, `SetHeap`, `DestroyVMHeap` -
+	memory/MemoryManager.cpp has those, not `CreateVMHeap`) so that its
+	memory is kept apart and can be thrown away whole when it runs out;
+	nothing the host does depends on that, so the engine stays in the
+	ordinary heap (decided 2026-09-29, and revisited only if a heap of
+	its own becomes observable).
 
-	NOT YET RECONSTRUCTED: `EndInkStrokeGroup`'s body (a heap switch
-	and `WRecEndInkStrokeGroup`, which InkGroups.h now has).
+	`EndInkStrokeGroup` hands a run of ink to the stroke world's grouping
+	(`WRecEndInkStrokeGroup`); the ROM's heap switch around it is the
+	DEVIATION above.
 
 	Reconstructed from the MP2x00 US ROM (0x0026d84c-0x0026e808); the
 	protocol's interface follows the ROM's dispatch table
@@ -100,7 +104,7 @@ public:
 	TUnit*		GetPartialGroup(UChar* found);				// ROM 0x0026de70 GetPartialGroup__12TWRecognizerFPUc - the word still being built
 	long		AddSub(TWRecUnit* group, TStrokeUnit* stroke);	// ROM 0x0026dff4 AddSub__12TWRecognizerFP9TWRecUnitP11TStrokeUnit
 	long		EndSubs(TWRecUnit* group);					// ROM 0x0026e038 EndSubs__12TWRecognizerFP9TWRecUnit
-	void		EndInkStrokeGroup(TStrokeUnit** strokes);	// ROM 0x0026e074 EndInkStrokeGroup__12TWRecognizerFPP11TStrokeUnit (NOT YET: the heap switch and WRecEndInkStrokeGroup)
+	void		EndInkStrokeGroup(TStrokeUnit** strokes);	// ROM 0x0026e074 EndInkStrokeGroup__12TWRecognizerFPP11TStrokeUnit - WRecEndInkStrokeGroup (the heap switch: DEVIATION)
 	void		NewClassification(TWRecUnit* unit);			// ROM 0x0026df88 NewClassification__12TWRecognizerFP9TWRecUnit
 
 	void		InvalidateUnit(TWRecUnit* unit);			// ROM 0x0026df20 InvalidateUnit__12TWRecognizerFP9TWRecUnit

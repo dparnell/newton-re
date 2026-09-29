@@ -3,13 +3,12 @@
 
 	Contains:	Word validation (Words.h).
 
-	NOT YET RECONSTRUCTED: ValidateWord's two questions to the rest of the
-	recognition system, which the dictionaries and the word recogniser
-	could now answer - the lookup of the word and its variants
-	(0x0008f098; the dictionaries themselves are Dictionaries.h) and
-	WRecVerifyWordSymbols 0x001444c8.  Until they are wired in no word is
-	found and nothing is objected to.  StripRecognitionWord's
-	gEnabledLanguage and gWordID are the word recogniser's too.
+	ValidateWord asks the rest of the recognition system two questions:
+	the dictionaries whether they have the word or a variant of it
+	(LookupWordOrVariant, Dictionaries.h), and the word recogniser in use
+	whether it can write its symbols (WRecVerifyWordSymbols).
+	StripRecognitionWord's gEnabledLanguage and gWordID are the word
+	recogniser's too.
 */
 
 #include "Words.h"
@@ -26,6 +25,18 @@
 #include "ObjectHeap.h"
 #include "ROMConstants.h"
 #include "Interpreter.h"	// DoBlock
+#include "WRecDomain.h"		// WRecVerifyWordSymbols
+#include "Controller.h"		// gController
+#include "WordRecognizer.h"	// VerifyWordSymbols
+#include "Dictionaries.h"	// LookupWordOrVariant
+#include "LowLevel.h"		// FindBaseline: low_level
+#include "CursiveReader.h"	// xrdata_type
+#include "XrDomains.h"		// rc_type, RCGetH
+#include "InkGroups.h"		// GetTraceFromStrokes
+#include "StrokeQueue.h"	// gTabScale
+#include "ParaGraph.h"		// HWRMemoryFree
+#include "FixedMath.h"
+#include "Rects.h"			// SetPt
 
 #include <string.h>
 
@@ -604,12 +615,13 @@ FValidateWord(RefArg /*rcvr*/, RefArg word, RefArg /*options*/)
 		flags |= kWordStartsUpper;
 	if ((caps & kCapAllUpper) != 0)
 		flags |= kWordIsAllCaps;
-	// NOT YET RECONSTRUCTED: the call at 0x0008f098, the word and the
-	// variants of it looked up in the dictionaries - it answers which
-	// variant it found (-1 for none) and the variant's capitalisation
-	// joins the word's.  Until it is wired in nothing is found.
-	long found = -1;
+	// the word and its variants looked up in the dictionaries: which
+	// variant was found (-1 for none), and the attribute it was found with
+	// joins the variant's own capitalisation
 	ULong variantCaps = caps;
+	UniChar variant[64];
+	long found = LookupWordOrVariant(text, &variantCaps, variant);
+	variantCaps = CheckCapAttributes(variant) | variantCaps;
 	if (found != -1)
 		flags |= kWordKnownOrBad;
 	if (found == -1)
@@ -624,9 +636,8 @@ FValidateWord(RefArg /*rcvr*/, RefArg word, RefArg /*options*/)
 		flags |= kWordHasSpaces;
 	if (!HasChars(text))
 		flags |= kWordHasNoLetters;
-	// NOT YET RECONSTRUCTED: WRecVerifyWordSymbols 0x001444c8, the word
-	// recogniser asked whether it could write the word's symbols; until it
-	// is, nothing is objected to (the ROM's answer with no recogniser)
+	if (!WRecVerifyWordSymbols(text))
+		flags |= kWordHasBadSymbols;
 	if ((flags & kWordIsNotAWord) != 0)
 		flags |= kWordKnownOrBad;
 	if ((flags & kWordFoundOtherCase) != 0)
@@ -704,61 +715,89 @@ RegisterWordNatives(void)
 ------------------------------------------------------------------------------*/
 
 // ROM 0x00065b2c FindBaseline__FPP7TStrokeP5Point
-// The four corners a word of strokes would be laid out in.
+// The four corners a word of strokes would be laid out in: the top-left,
+// top-right, bottom-left and bottom-right, the bottom being the baseline.
 //
 // The recogniser is asked first: the strokes are turned into the trace
-// its feature extractor works on and `low_level` is run over it, which
-// among everything else says where the short letters stand and how far
-// up they reach.  When that cannot be done the strokes' own box is used
-// instead - the word then sits entirely above its baseline, which is the
-// best that can be said without reading it - and the answer is 1 rather
-// than 0 to say so.
+// ParaGraph's low level works on (GetTraceFromStrokes) and `low_level`
+// is run over it in its base-line-only mode (rc +0x90 = 0x72, +0x92 = 1),
+// which says where the line is.  The two heights it leaves at rc +0xec
+// (the base line) and +0xea (from it to the top, negative) are in the
+// tablet's units, so they are brought to pixels by gTabScale.y.  When
+// that cannot be done - no trace, or low_level fails - the answer is 1
+// rather than 0, and so is the box's: the strokes' own box is used
+// instead, the word sitting entirely above its baseline.
+//
+// ROM QUIRK kept: the box is used whenever the base line low_level gave
+// comes to nought, not only when it failed (the test is on the value).  Both
+// heights are read through unaligned loads, which take the halfword
+// *before* the one named - rc +0xec and +0xea, not +0xee and +0xec - and
+// the trace's point count goes in rc +0x96 the same way (the fourth of
+// GetTraceFromStrokes' answers).
 //
 // A box with no width, or none with no height, is given one, because
 // nothing downstream divides by nought happily.
-//
-// NOT YET RECONSTRUCTED: the first path.  What it needs is there now -
-// GetTraceFromStrokes (InkGroups.h) and ParaGraph's `low_level`
-// (LowLevel.h) - but this still always takes the second path, so an ink
-// word's measurements come from its box.
 long
 FindBaseline(TStroke** strokes, Point* out)
 {
-	long failed = 1;			// (0 once low_level has been asked and answered)
-	long upper = 0;
-	long upperRight = 0;
-	long base = 0;
-	long baseRight = 0;
-
-	FRect box;
-	Boolean first = true;
-	for (long i = 0; strokes[i] != nil; i++)
+	long failed = 0;
+	short base = 0;				// r6: the base line (the box's bottom when nought)
+	short top = 0;				// r8
+	short baseRight = 0;		// r9
+	short topRight = 0;			// r10
+	PS_point_type* trace = nil;
+	short nStrokes = 0;
+	short nPoints = 0;
+	GetTraceFromStrokes(strokes, &trace, &nStrokes, &nPoints);
+	long done = 1;
+	if (trace != nil)
 	{
-		AddRect(&strokes[i]->fBBox, &box, first);
-		first = false;
-	}
-	if (first)
-		SetRectangleEmpty(&box);
-	long left = RoundFixed(box.left);
-	long right = RoundFixed(box.right);
-	if (left == right)
-		right = right + 1;
-	if (base == 0)
-	{
-		upper = RoundFixed(box.top);
-		base = RoundFixed(box.bottom);
-		upperRight = upper;
-		baseRight = base;
-		if (upper == base)
+		rc_type rc;
+		memset(&rc, 0, sizeof(rc));
+		RCSetH(&rc, 0x96, (UShort) nPoints);
+		rc.fTrace = trace;
+		RCSetH(&rc, 0x90, 0x72);
+		RCSetH(&rc, 0x92, 1);
+		xrdata_type xr;
+		memset(&xr, 0, sizeof(xr));
+		done = low_level(trace, &xr, &rc);
+		if (done == 0)
 		{
-			base = base + 1;
+			Fixed scale = gTabScale.y;
+			long lineY = (short) RCGetH(&rc, 0xec);
+			long toTop = (short) RCGetH(&rc, 0xea);
+			base = (short) ((FixedDivide((Fixed) ((uint32_t) lineY << 16), scale) + 0x8000) >> 16);
+			top = (short) ((FixedDivide((Fixed) ((uint32_t) (lineY + toTop) << 16), scale) + 0x8000) >> 16);
 			baseRight = base;
+			topRight = top;
 		}
 	}
-	out[0].h = (short) left;	out[0].v = (short) upper;
-	out[1].h = (short) right;	out[1].v = (short) upperRight;
-	out[2].h = (short) left;	out[2].v = (short) base;
-	out[3].h = (short) right;	out[3].v = (short) baseRight;
+	if (done != 0)
+		failed = 1;
+	if (trace != nil)
+		HWRMemoryFree((Ptr) trace);
+
+	FRect box;
+	SetRectangleEmpty(&box);		// DEVIATION: with no strokes the ROM reads what is on its stack
+	for (long i = 0; strokes[i] != nil; i++)
+		AddRect(&strokes[i]->fBBox, &box, i == 0);
+	short left = (short) ((box.left + 0x8000) >> 16);
+	short right = (short) ((box.right + 0x8000) >> 16);
+	if (left == right)
+		right = (short) (right + 1);
+	if (base == 0)
+	{
+		top = (short) ((box.top + 0x8000) >> 16);
+		base = (short) ((box.bottom + 0x8000) >> 16);
+		if (top == base)
+			base = (short) (base + 1);
+		topRight = top;
+		baseRight = base;
+	}
+	SetPt(&out[0], left, top);
+	SetPt(&out[1], right, topRight);
+	SetPt(&out[2], left, base);
+	SetPt(&out[3], right, baseRight);
 	return failed;
 }
 
@@ -770,6 +809,42 @@ long
 WRecFindBaseline(TStroke** strokes, Point* out)
 {
 	return FindBaseline(strokes, out);
+}
+
+
+// ROM 0x00144470 (unnamed) - WRecDomainInUse
+// The 'WREC' recogniser's domain while that recogniser is the one reading
+// (gWordID), nil otherwise - Rosetta's, when the letter set is printed.
+static TDomain*
+WRecDomainInUse(void)
+{
+	if (gRecognition.fRecognizers == nil)		// DEVIATION: a host test with no recognition system
+		return nil;
+	TRecognizer* recognizer = gRecognition.fRecognizers->FindRecognizer('WREC');
+	if (recognizer != nil && gWordID == 'WREC')
+		return recognizer->Domain();
+	return nil;
+}
+
+
+// ROM 0x001444c8 WRecVerifyWordSymbols__FPUs
+// Whether the word recogniser in use can write every symbol of the word:
+// Rosetta's domain is asked when it is the one reading, ParaGraph's
+// (the free VerifyWordSymbols, over the 'XRWR' domain) otherwise.
+//
+// DEVIATION: the ROM always has a recognition system to ask; a host test
+// that validates words without one is answered "nothing to object to".
+Boolean
+WRecVerifyWordSymbols(UniChar* word)
+{
+	TDomain* domain = WRecDomainInUse();
+	if (domain == nil)
+	{
+		if (gController == nil)
+			return true;
+		return VerifyWordSymbols(word);
+	}
+	return ((TWRecDomain*) domain)->VerifyWordSymbols(word);
 }
 // ROM 0x0c101864 gSaveWordTrainingData
 // Set out of the "learning enabled" preference (Recognizer.cpp).

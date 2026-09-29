@@ -10,6 +10,10 @@
 #include "Controller.h"
 #include "Domain.h"
 #include "Recognizer.h"
+#include "ShapeDomain.h"		// TGeneralShapeUnit, GetAvgLength, gCurveFlag
+#include "WordUnit.h"		// TStdWordUnit
+#include "Unicode.h"			// Ustrlen
+#include <string.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -424,31 +428,278 @@ GetRecognitionCase(TRecArea* area)
 // ROM 0x00208adc ArbitrateEarly__FP9BestMatch
 // Whether a unit can be settled without waiting for the rest: a scrub
 // over a single stroke that nothing else was written with, or a general
-// shape large enough to be meant as one.
+// shape meant as one.
 //
-// NOT YET RECONSTRUCTED: the general-shape half (TGeneralShapeUnit is
-// there now, in ShapeDomain.h - it is this half that is still to be
-// transcribed); a shape never decides early here.
+// A shape settles early when it lies over one stroke nothing else was
+// written with and snapped within five pixels of another (fSnapped 1,
+// fSnapDist under 5.0), or when what it was read as is sure enough to be
+// meant: a line or its like (labels 0 and 1; fewer than four elements of
+// the shape wanted), a rectangle or its like (4 and 6; at most five), a
+// curve (9 to 12; any), or a context unit (flag 0x100000; at most
+// twenty) - and then only if its box is at least 25 pixels each way.
 Boolean
 ArbitrateEarly(BestMatch* match)
 {
 	TUnit* unit = match->fUnit;
-	if (UnitInClass(unit->fType, kScrubUnit))
+	ULong type = unit->fType;
+	if (UnitInClass(type, kScrubUnit))
 	{
 		if (OnlyStrokeWritten((TStrokeUnit*) ((TSIUnit*) unit)->GetSub(0)))
 			return true;
+	}
+	if (type != kShapeUnit)
+		return false;
+	TGeneralShapeUnit* shape = (TGeneralShapeUnit*) unit;
+	if (shape->fSnapped == 1 && shape->fSnapDist < 0x50000)
+	{
+		if (OnlyStrokeWritten((TStrokeUnit*) shape->GetSub(0)))
+		{
+			gLastType = kLastTypeShape;
+			return true;
+		}
+	}
+	TDArray* general = shape->GetGeneralShape();
+	ULong elements = 0;
+	Boolean context = shape->TestFlags(0x100000);		// a context unit (ShapeDomain.cpp)
+	Boolean sure = true;
+	ULong most = 0;
+	if (shape->InterpretationCount() == 0)
+		return false;
+	switch (shape->GetLabel(0))
+	{
+	case 0: case 1:
+		elements = 4;
+		break;
+	case 4: case 6:
+		most = 5;
+		break;
+	case 9: case 10: case 11: case 12:
+		break;
+	default:
+		sure = false;
+		break;
+	}
+	if (context)
+	{
+		most = 0x14;
+		sure = true;
+	}
+	if (general != nil && elements == 0)
+		elements = (ULong) general->fCount;
+	if (sure && (most == 0 || elements <= most))
+	{
+		FRect box;
+		unit->GetBBox(&box);
+		// (rHeight, rWidth: bottom - top, right - left)
+		if (0x18ffff < box.bottom - box.top && 0x18ffff < box.right - box.left)
+		{
+			gLastType = kLastTypeShape;
+			return true;
+		}
 	}
 	return false;
 }
 
 
+// ROM 0x00207ccc GetFirstWordIndex__FP12TStdWordUnit
+// The first of a word unit's interpretations that is not labelled 0x28;
+// -1 when all of them are.
+long
+GetFirstWordIndex(TStdWordUnit* unit)
+{
+	ULong count = (ULong) unit->InterpretationCount();
+	for (ULong i = 0; i < count; i++)
+		if (unit->GetLabel(i) != 0x28)
+			return (long) i;
+	return -1;
+}
+
+
+// ROM 0x00207d34 GetGraphicBiasedScore__FP7TSIUnit
+// A shape's score as it is weighed against a word's: a curve's (labels 9
+// to 12) divided by three tenths of the shape's mean side (that capped at
+// 30 pixels, the factor at least 1), which favours a big curve over a
+// word; any other shape's as it is.
+ULong
+GetGraphicBiasedScore(TSIUnit* unit)
+{
+	ULong length = (ULong) GetAvgLength((TGeneralShapeUnit*) unit);
+	if (length >= 0x1e)
+		length = 0x1e;
+	ULong factor = (length * 3) / 10;
+	if (factor <= 1)
+		factor = 1;
+	long label = unit->GetLabel(0);
+	if (label >= 9 && label <= 12)
+		return (ULong) (uint32_t) unit->GetScore(0) / factor;
+	return (ULong) unit->GetScore(0);
+}
+
+
+// ROM 0x002079f0 ArbitrateByRules__FP6TArrayT1UlN33
+// One shape against one word, settled by rules before the scores are
+// compared: the shape wins when it snapped onto another shape, when it
+// is a curve and curves are looked for, when the word is a single
+// letter and the shape is big (more than 30 pixels high or wide - 35 for
+// an I or an a read beside a rectangle-like shape, labels 4 to 7), or
+// when the word has no reading of one letter and the shape is a
+// triangle-like one (label 8).  ==> 1 when the shape was put on the
+// winners, 0 when the rules do not decide (or either unit is invalid, or
+// there is not exactly one of each), -1 for no memory.
+long
+ArbitrateByRules(TArray* gathered, TArray* winners, ULong shapeScore, ULong shapes, ULong wordScore, ULong words)
+{
+	BestMatch shapeMatch;
+	BestMatch wordMatch;
+	memset(&shapeMatch, 0, sizeof(shapeMatch));
+	memset(&wordMatch, 0, sizeof(wordMatch));
+	if (!(shapes == 1 && words == 1))
+		return 0;
+	TArrayIterator iter;
+	BestMatch* match = (BestMatch*) gathered->GetIterator(&iter);
+	for (ULong i = 0; i < (ULong) iter.fCount; i++)
+	{
+		BestMatch entry = *match;
+		ULong type = entry.fUnit->fType;
+		if (UnitInClass(type, kShapeUnit))
+			shapeMatch = entry;
+		else if (UnitInClass(type, kWordUnit))
+			wordMatch = entry;
+		match = (BestMatch*) iter.GetNext();
+	}
+	TStdWordUnit* word = (TStdWordUnit*) wordMatch.fUnit;
+	TGeneralShapeUnit* shape = (TGeneralShapeUnit*) shapeMatch.fUnit;
+	if (word->TestFlags(kInvalidUnit) || shape->TestFlags(kInvalidUnit))
+		return 0;
+	Boolean shapeWins = false;
+	long label;
+	if (shape->fSnapped == 1)
+		shapeWins = true;
+	else if (((label = shape->GetLabel(0)) == 10 || label == 11 || label == 12) && gCurveFlag)
+		shapeWins = true;
+	else
+	{
+		if (word->InterpretationCount() == 0)
+			return 0;
+		long first = GetFirstWordIndex(word);
+		Handle firstWord = first < 0 ? nil : word->GetString((ULong) first);
+		Handle best = word->GetString(0);
+		if (best != nil && Ustrlen(*(UniChar**) best) == 1)
+		{
+			Fixed limit = 0x1e0000;
+			if (firstWord != nil)
+			{
+				UniChar c = **(UniChar**) firstWord;
+				label = shape->GetLabel(0);
+				if ((c == 'I' || c == 'a' || c == 'A') && (label == 7 || label == 6 || label == 5 || label == 4))
+					limit = 0x230000;
+			}
+			FRect box;
+			word->GetBBox(&box);
+			if (box.bottom - box.top > limit || box.right - box.left > limit)
+				shapeWins = true;
+			else
+				return 0;
+		}
+		else if (shape->GetLabel(0) == 8)
+			shapeWins = true;
+		else
+			return 0;
+	}
+	BestMatch* won = (BestMatch*) winners->AddEntry();
+	if (won == nil)
+		return -1;
+	*won = shapeMatch;
+	gLastType = kLastTypeShape;
+	return 1;
+}
+
+
 // ROM 0x0020770c ArbitrateGraphicsWords__8TArbiterFP6TArray
-// NOT YET RECONSTRUCTED: a word that may have been drawn rather than
-// written - the shape and the word are weighed against each other.  With
-// nothing here the gather is left undecided and thrown away.
+// A word that may have been drawn rather than written: the shapes and the
+// words gathered are weighed against each other.  Each side's mean score
+// is taken (an invalid unit counting 10000; a shape's biased towards big
+// curves, GetGraphicBiasedScore); when neither side has a valid unit
+// nothing is decided.  The rules for one of each go first
+// (ArbitrateByRules); failing them, the side with the lower mean - the
+// scores are costs - wins, every unit of it going on the winners.
 void
-TArbiter::ArbitrateGraphicsWords(TArray* /*gathered*/)
-{ }
+TArbiter::ArbitrateGraphicsWords(TArray* gathered)
+{
+	ULong shapes = 0, words = 0;
+	ULong shapeSum = 0, wordSum = 0;
+	Boolean noWord = true, noShape = true;
+	TArrayIterator iter;
+	BestMatch* match = (BestMatch*) gathered->GetIterator(&iter);
+	if (iter.fCount == 0)
+		return;
+	for (ULong i = 0; i < (ULong) iter.fCount; i++)
+	{
+		TSIUnit* unit = (TSIUnit*) match->fUnit;
+		Boolean invalid = unit->TestFlags(kInvalidUnit);
+		ULong type = unit->fType;
+		if (UnitInClass(type, kWordUnit))
+		{
+			ULong score;
+			if (!invalid)
+			{
+				score = (ULong) (uint32_t) unit->GetInterpretation(0)->score;
+				noWord = false;
+			}
+			else
+				score = 10000;
+			wordSum += score;
+			words++;
+		}
+		else if (UnitInClass(type, kShapeUnit))
+		{
+			ULong score;
+			if (!invalid)
+			{
+				score = GetGraphicBiasedScore(unit);
+				noShape = false;
+			}
+			else
+				score = 10000;
+			shapeSum += score;
+			shapes++;
+		}
+		match = (BestMatch*) iter.GetNext();
+	}
+	if (words != 0)
+		wordSum = (ULong) (uint32_t) wordSum / words;
+	if (shapes != 0)
+		shapeSum = (ULong) (uint32_t) shapeSum / shapes;
+	if (noWord && noShape)
+		return;
+	long ruled = ArbitrateByRules(gathered, Winners(), shapeSum, shapes, wordSum, words);
+	if (ruled < 0)
+	{
+		fController->SignalMemoryError();
+		return;
+	}
+	if (ruled > 0)
+		return;
+	gathered->Lock();
+	ULong winning = wordSum < shapeSum ? kWordUnit : kShapeUnit;
+	match = (BestMatch*) gathered->GetIterator(&iter);
+	for (ULong i = 0; i < (ULong) iter.fCount; i++)
+	{
+		if (UnitInClass(match->fUnit->fType, winning))
+		{
+			BestMatch* won = (BestMatch*) Winners()->AddEntry();
+			if (won == nil)
+			{
+				fController->SignalMemoryError();
+				break;
+			}
+			*won = *match;
+			gLastType = winning == kWordUnit ? kLastTypeWord : kLastTypeShape;
+		}
+		match = (BestMatch*) iter.GetNext();
+	}
+	gathered->Unlock();
+}
 
 
 // HOST ONLY: with NEWTON_TRACE_ARBITER set in the environment, each

@@ -35,9 +35,13 @@
 				is marked claimed and invalid, which is what `CleanUp`
 				then clears out.
 
-				NOT YET RECONSTRUCTED: `ArbitrateGraphicsWords` (a word
-				drawn as a shape), the shape half of `ArbitrateEarly`, and
-				`SetCaseAndTime` (the journal's replay of units).
+				A shape and a word over the same strokes are weighed by
+				`ArbitrateGraphicsWords` (rules first, `ArbitrateByRules`,
+				then the lower mean score), and `ArbitrateEarly` settles a
+				scrub or a sure shape without waiting.
+
+				NOT YET RECONSTRUCTED: `SetCaseAndTime` (the journal's
+				replay of units).
 
 	Reconstructed from the MP2x00 US ROM (0x00206bf0-0x00208ea0); each
 	function cites its origin.
@@ -56,6 +60,8 @@ class TController;
 // One unit offered for arbitration as one of the types its area takes,
 // with the association that says how (the recogniser, its parameters and
 // the time it is arbitrated at).
+class TStdWordUnit;
+class TSIUnit;
 struct BestMatch
 {
 	TUnit*		fUnit;			// +0x00
@@ -88,7 +94,7 @@ public:
 	void				CleanUp(void);						// ROM 0x00207de0 CleanUp__8TArbiterFv
 	Boolean				GatherUnits(ULong level, Boolean restore, TArray* out);	// ROM 0x00206cc4 GatherUnits__8TArbiterFUlUcP6TArray - the units that cover the same strokes; ==> whether they cover them all
 	Boolean				ArbitrateUnits(TRecArea* area);		// ROM 0x00207118 ArbitrateUnits__8TArbiterFP8TRecArea - ==> whether anything won
-	void				ArbitrateGraphicsWords(TArray* gathered);	// ROM 0x0020770c ArbitrateGraphicsWords__8TArbiterFP6TArray (NOT YET)
+	void				ArbitrateGraphicsWords(TArray* gathered);	// ROM 0x0020770c ArbitrateGraphicsWords__8TArbiterFP6TArray - a shape and a word over the same strokes weighed
 	Boolean				WaitingForOtherUnits(TRecArea* area, BestMatch* match);	// ROM 0x00208ca8 WaitingForOtherUnits__8TArbiterFP8TRecAreaP9BestMatch
 	Boolean				AllUnitsPresent(TRecArea* area, BestMatch* match);	// ROM 0x00208dbc AllUnitsPresent__8TArbiterFP8TRecAreaP9BestMatch
 
@@ -110,6 +116,9 @@ long		ArbiterGetUnitStrokes(TSIUnit* unit, TDArray* strokes);	// ROM 0x00208104 
 long		GetRecognitionCase(TRecArea* area);			// ROM 0x00208218 GetRecognitionCase__FP8TRecArea - the scrubs it takes, +2 for shapes, +4 for words
 long		GetBestInterpretation(TArray* gathered, TArray* winners);	// ROM 0x00207608 GetBestInterpretation__FP6TArrayT1 - the lowest-scoring one wins
 long		ArbitrateWithScrubs(TArray* gathered, TArray* winners);	// ROM 0x002074ac ArbitrateWithScrubs__FP6TArrayT1 - everything that is not a scrub wins
+long		GetFirstWordIndex(TStdWordUnit* unit);			// ROM 0x00207ccc GetFirstWordIndex__FP12TStdWordUnit - the first interpretation not labelled 0x28; -1
+ULong		GetGraphicBiasedScore(TSIUnit* unit);			// ROM 0x00207d34 GetGraphicBiasedScore__FP7TSIUnit - a shape's score, a big curve's made smaller
+long		ArbitrateByRules(TArray* gathered, TArray* winners, ULong shapeScore, ULong shapes, ULong wordScore, ULong words);	// ROM 0x002079f0 ArbitrateByRules__FP6TArrayT1UlN33 - one shape against one word: ==> 1 the shape won, 0 undecided, -1 no memory
 Boolean		ArbitrateEarly(BestMatch* match);			// ROM 0x00208adc ArbitrateEarly__FP9BestMatch - whether it can be decided without waiting
 ULong		UnitInClass(ULong type, ULong classType);	// ROM 0x0038abd8 (unnamed) - the type itself, or one of the class's
 

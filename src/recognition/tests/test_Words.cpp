@@ -5,6 +5,8 @@
 // natives answer Refs; without the ROM's objects the Unicode tables are
 // the host's Latin-1 fallbacks, which is enough for these words.
 #include "Words.h"
+#include "ROMConstants.h"
+#include "RSSymbols.h"
 #include "Dictionaries.h"
 #include "ObjectHeap.h"
 #include "Frames.h"
@@ -109,8 +111,16 @@ main()
 	Uni(word, "parnell");
 	EXPECT(CheckCapAttributes(word) == 0);
 
-	// ValidateWord: with no dictionaries nothing is ever found, so a
-	// well-formed word comes back as "not in them" and nothing else
+	// ValidateWord: the dictionaries are made first (without the ROM's
+	// objects the list is empty, so nothing is ever found) and a
+	// well-formed word comes back as "not in them" and nothing else; with
+	// no recognition system nothing objects to its symbols
+	InitDictionaries();
+	// (and the configuration a lookup's chains start from - the ROM's
+	// `rcbuildchains`, which is not here without its objects)
+	RefVar buildChains(AllocateFrame());
+	SetFrameSlot(buildChains, RSSYMinputmask, RefVar(MAKEINT(0x1000)));
+	Rrcbuildchains = buildChains;
 	RefVar flags(FValidateWord(RefVar(NILREF), RefVar(Str("hello")), RefVar(NILREF)));
 	EXPECT(RINT(flags) == kWordNotFound);
 	flags = FValidateWord(RefVar(NILREF), RefVar(Str("HELLO")), RefVar(NILREF));

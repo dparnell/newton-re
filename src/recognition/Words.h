@@ -61,6 +61,7 @@ enum
 class TStroke;
 long	FindBaseline(TStroke** strokes, Point* out);	// ROM 0x00065b2c FindBaseline__FPP7TStrokeP5Point
 long	WRecFindBaseline(TStroke** strokes, Point* out);	// ROM 0x001444c4 WRecFindBaseline__FPP7TStrokeP5Point
+Boolean	WRecVerifyWordSymbols(UniChar* word);				// ROM 0x001444c8 WRecVerifyWordSymbols__FPUs - whether the recogniser in use can write the word's symbols
 
 
 Boolean	HasSpaces(const UniChar* word);				// ROM 0x00256460 HasSpaces__FPUs

@@ -12,8 +12,8 @@
 
 				DEVIATION: the engine runs in the ordinary heap and only
 				the exception handler is left (the VM heaps are in
-				memory/MemoryManager.cpp now; moving the engine into one
-				is NOT YET - WRecDomain.h).
+				memory/MemoryManager.cpp; the engine stays
+				out of them - WRecDomain.h).
 				Where the ROM gives the recogniser back by destroying the
 				heap it lived in, this deletes it.
 */
@@ -23,6 +23,7 @@
 #include "NewtonMemory.h"
 #include "Stroke.h"
 #include "NewtonExceptions.h"
+#include "InkGroups.h"		// WRecEndInkStrokeGroup
 
 #include <string.h>
 
@@ -146,13 +147,16 @@ TWRecognizer::EndSubs(TWRecUnit* group)
 
 
 // ROM 0x0026e074 EndInkStrokeGroup__12TWRecognizerFPP11TStrokeUnit
-// NOT YET RECONSTRUCTED: the body - the heap switched to the recogniser
-// task's default heap and WRecEndInkStrokeGroup (InkGroups.h, now there)
-// called, which closes a run of strokes the engine has decided are ink
-// rather than writing.
+// A run of strokes the engine has decided are ink rather than writing,
+// closed: handed to the stroke world's ink grouping
+// (WRecEndInkStrokeGroup).  The ROM switches to the recogniser task's
+// default heap for it and back to the engine's own afterwards
+// (gWRecTaskDefaultHeap, gWRecHeap); DEVIATION: the host's engine runs in
+// the ordinary heap (above), so there is nothing to switch.
 void
-TWRecognizer::EndInkStrokeGroup(TStrokeUnit** /*strokes*/)
+TWRecognizer::EndInkStrokeGroup(TStrokeUnit** strokes)
 {
+	WRecEndInkStrokeGroup(strokes);
 }
 
 
