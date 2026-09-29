@@ -184,10 +184,11 @@ worked through.  What could come next (not ranked; the owner chooses):
   and soup commands (9bd3a3a) and the cursor and entry commands
   (8a2af65) are in, soups are made, sent and backed up, and 'gpin' lists
   the packages (cc1b30a, 1235149); all of `ProcessCommand` is in except
-  the system patches ('gpat'/'rpat') (a0966b4).  Next: `ConvertEntry`
-  (1.x entries, refused for now), `IsDuplicateEntry` (selective restore,
-  answers no for now), the keyboard passthrough ('kybd'), the patches; the
-  three slip commands are not yet tested (each opens a dialog).
+  the system patches ('gpat'/'rpat') (a0966b4), with `ConvertEntry`,
+  `IsDuplicateEntry` (untested: autodock never asks for a selective
+  restore) and the app's read/write natives; a desktop's slip is shown
+  and answered headless.  Left: the keyboard passthrough, the patches,
+  tests for 'islp' and 'gpwd'.
   **Open, outside the docker**: a livelock between `TPMIterator::Init`'s
   semaphore and `TForkWorld`'s mutex - a script polling `GetPackages()`
   while a forked world works (`docs/comms/README.md`); being looked into.  `test_NIEProtoFSM` also runs

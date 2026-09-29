@@ -67,6 +67,23 @@ bugs and ROM bugs found on the way.
   `layout.tsv` manifest, and `rombuild.py` proved by a byte-identical
   rebuild of the area.
 
+## 2026-09-30: 1.x entries, selective restore, and a desktop's slip
+
+- `ConvertEntry` (a 1.x entry through its owner's conversion frame; ROM
+  quirk kept: with no owner `fOwnerApp` becomes 0, not nil, so it is never
+  looked up again) and `IsDuplicateEntry` (the first plain index less the
+  slots the ROM's table at 0x00472c1d lists, else `_uniqueID`, with
+  `ConnectionDupValidTest`) (0dc5104).
+- The Connection app's own read/write natives (`WriteCommand`,
+  `ReadCommand`, `ProcessBuiltinCommand`, ...) (17c9f78); ROM bug kept:
+  `WriteCommandHeader`'s "no data" flag is the integer 0, not nil.  A
+  desktop's 'dslp' slip is found and tapped headless and answers 'slrs'
+  1; while it is up its idle's 'helo' waits 10 s on the busy docker and
+  is dropped, as the ROM does.
+- Test fix (fb877ba): the controllable clock jumped to the next deadline
+  whenever every task was idle and ran MNP's timers out while the Python
+  peer was still sending; the serial and MNP tests use the real clock.
+
 ## 2026-09-30: the rest of the docker's commands
 
 - Package restore and removal ('rpkg' `DoRestorePackage`, 'rmvp'
