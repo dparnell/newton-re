@@ -148,9 +148,28 @@ reported as the decompiler's was.
      (shared, or held in a slot as well as being a literal). They are not
      top-level, so the decompiler writes them inside their parent, and
      the tree keeps their definitions as frames of bytecode.
-3. **Bitmaps** (`bits`, `mask`, `cbits`): PNG and back, lossless. The
-   first real resource, and the most numerous. `tools/imaging/pgm2png.py`
-   is the start of the image side.
+3. **Bitmaps. Done:** `bits`, `mask` and `cbits` are PNG and back,
+   lossless.
+   - The tree has 344 + 121 + 60 PNGs; the other 12 are literals inside
+     functions, which the decompiler builds.
+   - Each is written as `bitmap('bits, "resources/bits/<addr>.png",
+     "<header>", <depth>)`:
+     - the rows are a grayscale PNG of the bitmap's own bit depth, with
+       the Newton's set pixels black;
+     - the 16-byte header (a FramBitmap, `qd/Pictures.h`) stays in hex,
+       because its pad word is not always nought and the builder must
+       reproduce it;
+     - a `cbits`' depth comes from its row bytes: the one depth whose
+       rows fit with less than a word over.
+   - A bitmap goes to PNG only when the PNG holds it exactly: one
+     possible depth, rows that fill its bytes, nothing set in the
+     padding. The extractor packs the rows back and compares before
+     choosing the PNG; every one of the ROM's qualifies.
+   - An edited PNG may be any PNG a program writes (RGB, a palette,
+     alpha, filters). `tools/imaging/png.py` reads it by luminance into
+     the bitmap's levels, and `tools/imaging/test_png.py` tests that. A
+     PNG of a new size is refused until its header's bounds are changed
+     to match.
 4. **Sounds** (`samples`): WAV and back. The codecs a sound frame names
    are the sound area's (`docs/sound/README.md`).
 5. **Pictures and fonts**: PICT files, and the `sfnt` files as they are.
@@ -205,6 +224,7 @@ manifest and 7 MB of resources.
 What it is not yet:
 
 - 362 nested functions are still bytecode (stage 2).
+- Sounds, pictures and fonts are still `.bin` files.
 - The files are cut by address, not by what they belong to (the
   dominator grouping above).
 - Resources are opaque, and inline objects are named by path, so an edit

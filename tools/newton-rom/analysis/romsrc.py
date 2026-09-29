@@ -47,6 +47,10 @@ constructors of its own):
     real(1.5)  real('Real, 1.5)   a real, of class 'real or another
     binary('cls, "resources/cls/addr.bin")   any other binary
     bytes('cls, "0a1b...")   a binary given in hex (what the host's compiler writes)
+    bitmap('cls, "resources/cls/addr.png", "header", depth)   a 'bits, 'mask
+                    or 'cbits bitmap: its rows a grayscale PNG (black the
+                    Newton's set pixels), its 16-byte header (a FramBitmap:
+                    qd/Pictures.h) in hex, its bits per pixel
     function("functions/addr.ns")   a function, compiled from that source
     {tag: value, ...}      a frame (its map is the manifest's)
     [cls: value, ...]      an array whose class is the symbol cls
@@ -78,6 +82,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import nsfunctions as nf			# noqa: E402
 import nsdecompile as nd			# noqa: E402
 import subprocess					# noqa: E402
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "imaging"))
+import png							# noqa: E402
+
+BITMAP_CLASSES = ("bits", "mask", "cbits")
 
 PAD = 0xba						# the bytes between objects
 PER_FILE = 400					# definitions in one objects/NNN.ns
@@ -272,6 +281,15 @@ class Extractor:
 			if struct.pack(">d", float(text)) == data and "nan" not in text and "inf" not in text:
 				return "real(%s)" % text if cname == "real" else "real('%s, %s)" % (quote_name(cname), text)
 		folder = re.sub(r"[^A-Za-z0-9_.-]", "_", cname or "class_%x" % cls)
+		if cname in BITMAP_CLASSES and not self.in_function:
+			made = bitmap_rows(data, cname)
+			if made is not None:
+				header, depth, width, height, rows = made
+				rel = "resources/%s/%x.png" % (folder, o)
+				os.makedirs(os.path.join(self.out, os.path.dirname(rel)), exist_ok=True)
+				top = (1 << depth) - 1
+				png.write_gray(os.path.join(self.out, rel), width, height, [[top - v for v in row] for row in rows], depth)
+				return "bitmap(%s, \"%s\", \"%s\", %d)" % (self.value(cls, path + "^"), rel, header.hex(), depth)
 		rel = "resources/%s/%x.bin" % (folder, o)
 		if self.in_function:
 			return "binary(%s, \"%s\")" % (self.value(cls, path + "^"), rel)	# (compiled, not written)
@@ -322,6 +340,57 @@ class Extractor:
 			for path, name in self.aliases:
 				f.write("alias\t%s\t%s\n" % (path, name))
 		return len(defs), len(mapdefs)
+
+
+# ---- bitmaps
+
+def bitmap_depths(data, cname):
+	"""The depths a bitmap's rows could be: one for 'bits and 'mask; for
+	'cbits, those whose rows fit its row bytes with less than a word over."""
+	if cname != "cbits":
+		return [1]
+	row_bytes, width = struct.unpack(">H", data[4:6])[0], bitmap_bounds(data)[1]
+	return [d for d in (1, 2, 4, 8) if (width * d + 7) // 8 <= row_bytes < (width * d + 7) // 8 + 4]
+
+
+def bitmap_bounds(data):
+	top, left, bottom, right = struct.unpack(">4h", data[8:16])
+	return bottom - top, right - left
+
+
+def bitmap_rows(data, cname):
+	"""(header, depth, width, height, rows of pixel values) of a bitmap the
+	PNG form holds exactly - one depth it can be, rows that fill its bytes
+	and nothing in the padding - or None."""
+	if len(data) < 16:
+		return None
+	row_bytes = struct.unpack(">H", data[4:6])[0]
+	height, width = bitmap_bounds(data)
+	depths = bitmap_depths(data, cname)
+	if len(depths) != 1 or height <= 0 or width <= 0 or len(data) != 16 + row_bytes * height:
+		return None
+	depth = depths[0]
+	rows = []
+	for r in range(height):
+		line = data[16 + r * row_bytes:16 + (r + 1) * row_bytes]
+		rows.append([(line[(x * depth) // 8] >> (8 - depth - (x * depth) % 8)) & ((1 << depth) - 1) for x in range(width)])
+	header = data[:16]
+	if bitmap_bytes(header, depth, rows) != data:
+		return None
+	return header, depth, width, height, rows
+
+
+def bitmap_bytes(header, depth, rows):
+	"""A bitmap's bytes: the header, then each row packed from its high bit
+	and padded with zeros to the header's row bytes."""
+	row_bytes = struct.unpack(">H", header[4:6])[0]
+	out = bytearray(header)
+	for row in rows:
+		line = bytearray(row_bytes)
+		for x, v in enumerate(row):
+			line[(x * depth) // 8] |= v << (8 - depth - (x * depth) % 8)
+		out += line
+	return bytes(out)
 
 
 # ---- reading the notation
@@ -447,7 +516,7 @@ class Reader:
 		if kind == "name" and text in ("nil", "true"):
 			self.take()
 			return Imm(2 if text == "nil" else 0x1a)
-		if kind == "name" and text in ("real", "string", "binary", "array", "map", "bytes", "function") \
+		if kind == "name" and text in ("real", "string", "binary", "array", "map", "bytes", "function", "bitmap") \
 				and self.toks[self.i + 1][1] == "(":
 			self.take()
 			self.take("(")
@@ -455,7 +524,9 @@ class Reader:
 			while self.peek()[1] != ")":
 				if text in ("real",) and self.peek()[0] == "number":
 					args.append(float(self.take()[1]))
-				elif text in ("string", "binary", "bytes", "function") and self.peek()[0] == "string":
+				elif text in ("string", "binary", "bytes", "function", "bitmap") and self.peek()[0] == "string":
+					args.append(self.take()[1])
+				elif text == "bitmap" and self.peek()[0] == "number":
 					args.append(self.take()[1])
 				else:
 					args.append(self.value())
@@ -470,6 +541,14 @@ class Reader:
 			if text == "binary":
 				with open(os.path.join(self.root, args[1][1:-1]), "rb") as f:
 					return Obj("binary", args[0], data=f.read())
+			if text == "bitmap":
+				cls, rel, header, depth = args[0], args[1][1:-1], bytes.fromhex(args[2][1:-1]), int(args[3])
+				width, height, levels = png.read_gray(os.path.join(self.root, rel), depth)
+				if (height, width) != bitmap_bounds(header):
+					raise ValueError("%s is %d x %d, its header's bounds %d x %d: change the header too"
+									 % (rel, width, height, bitmap_bounds(header)[1], bitmap_bounds(header)[0]))
+				top = (1 << depth) - 1
+				return Obj("binary", cls, data=bitmap_bytes(header, depth, [[top - v for v in row] for row in levels]))
 			if text == "bytes":
 				return Obj("binary", args[0], data=bytes.fromhex(args[1][1:-1]))
 			if text == "function":
