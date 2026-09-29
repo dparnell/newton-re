@@ -15,6 +15,9 @@
 #include "StrokeBundle.h"
 #include "InkFont.h"
 #include "Fonts.h"
+#include "Text.h"
+#include "PicPlay.h"
+#include "PicRecord.h"
 #include "ROMConstants.h"
 #include "DrawShape.h"
 #include "Rects.h"
@@ -1958,6 +1961,97 @@ TestInkFont()
 }
 
 
+// Ink words in a picture: text whose runs' fonts are ink words is recorded
+// with the words' bytes carried in the picture (0x81a2 styles with the
+// family 0x800000, 0x81a4 the words) and played back to the same pixels.
+// A single run whose font is an ink word is recorded the same way, but -
+// a ROM bug kept - playing it back never puts the word back into the one
+// style, so nothing is drawn (the ROM draws with whatever lies at the
+// integer 0x800000).
+static void
+TestInkWordPicture()
+{
+	InitializeInkCodecs();
+	InitializeParagraphCompression();
+	InitializeInkFont();
+	// vars.fonts as the boot makes it (a picture begins in the system font)
+	InitFonts();
+	RefVar fonts(AllocateFrame());
+	RefVar fontList(Rromfontlist);
+	for (long i = 0; i < Length(fontList); i++)
+		SetFrameSlot(fonts, RefVar(FamilyNumToSym(i)), RefVar(GetArraySlotRef(fontList, i)));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(RSSYMfonts), fonts);
+	memset(gDrawBits, 0, sizeof(gDrawBits));
+	OpenPort(&gDrawPort);
+	SetPortBits(&gDrawMap);
+	gDrawPort.portRect = gDrawMap.bounds;
+	RectRgn(gDrawPort.visRgn, &gDrawMap.bounds);
+	RectRgn(gDrawPort.clipRgn, &gDrawMap.bounds);
+
+	TStroke* list[2];
+	list[0] = MakeLine(10, 20, 40, 44, 12);
+	list[1] = nil;
+	Rect box;
+	RefVar across(TStrokesToInkWord(list, &box));
+	list[0]->Dispose();
+	list[0] = MakeLine(10, 40, 40, 20, 12);
+	RefVar up(TStrokesToInkWord(list, &box));
+	list[0]->Dispose();
+	InkWordInfo info;
+	GetInkWordInfo(across, &info);
+	StyleRecord first, second;
+	first.fFontFamily = across;
+	first.fFontSize = ToFixed(info.fScaledFontSize);
+	first.fFontFace = 0;
+	first.fFontPattern = NILREF;
+	first.fPattern = nil;
+	first.fTransferMode = 0;
+	second = first;
+	second.fFontFamily = up;
+	StyleRecord* styles[2] = { &first, &second };
+	const short runs[2] = { 1, 1 };
+	const UniChar chars[2] = { 0xF700, 0xF700 };
+	FPoint where = { ToFixed(4), ToFixed(40) };
+
+	DrawTextOnce(chars, 2, styles, runs, where, nil, nil);
+	unsigned char direct[sizeof(gDrawBits)];
+	memcpy(direct, gDrawBits, sizeof(gDrawBits));
+	EXPECT(DrawnPixels() > 20);
+
+	memset(gDrawBits, 0, sizeof(gDrawBits));
+	PicHandle picture = OpenPicture(&gDrawMap.bounds, false);
+	DrawTextOnce(chars, 2, styles, runs, where, nil, nil);
+	ClosePicture();
+	EXPECT(DrawnPixels() == 0);
+	// the words' bytes are in it: 0x81a4 follows the text
+	long size = GetHandleSize((Handle) picture);
+	const unsigned char* p = (const unsigned char*) *picture;
+	long carried = 0;
+	for (long i = 10; i + 1 < size; i += 2)
+		if (p[i] == 0x81 && p[i + 1] == 0xa4)
+			carried++;
+	EXPECT(carried >= 1);
+	Rect frame = gDrawMap.bounds;
+	DrawPicture(picture, &frame, false);
+	EXPECT(memcmp(direct, gDrawBits, sizeof(gDrawBits)) == 0);
+	KillPicture(picture);
+
+	// one run alone: recorded, and played back as nothing
+	memset(gDrawBits, 0, sizeof(gDrawBits));
+	StyleRecord* one[1] = { &first };
+	picture = OpenPicture(&gDrawMap.bounds, false);
+	DrawTextOnce(chars, 1, one, nil, where, nil, nil);
+	ClosePicture();
+	DrawPicture(picture, &frame, false);
+	EXPECT(DrawnPixels() == 0);
+	KillPicture(picture);
+	memset(gDrawBits, 0, sizeof(gDrawBits));
+	DrawTextOnce(chars, 1, one, nil, where, nil, nil);
+	EXPECT(DrawnPixels() > 10);
+	ClosePort(&gDrawPort);
+}
+
+
 int
 main()
 {
@@ -2005,6 +2099,7 @@ main()
 	TestInkShapes();
 	TestStrokeBundles();
 	TestInkFont();
+	TestInkWordPicture();
 	TestInkWordFontParms();
 
 	if (failures == 0)

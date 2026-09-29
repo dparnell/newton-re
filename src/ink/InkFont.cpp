@@ -69,8 +69,11 @@ GlyphInkData(RefArg ink, long* outSize)
 		return InkData(ink, outSize);
 	const UByte* block = (const UByte*) RefToAddress(ink);
 	long length = *(const UniChar*) block;
+	// (the halfword is the size of the word after it, as a rich string
+	//  keeps it and GetInkWordAddrInfo reads it - the strokes are all of
+	//  that but the eight bytes of measurements at its end)
 	if (outSize != nil)
-		*outSize = length - (long) sizeof(UniChar) - (long) sizeof(PackedInkWordInfo);
+		*outSize = length - (long) sizeof(PackedInkWordInfo);
 	return block + sizeof(UniChar);
 }
 

@@ -426,23 +426,24 @@ CountOpcode(PicHandle picture, long opcode)
 }
 
 
-// the text the text tests draw: one style, two styles in runs, one style
+// the text the text tests draw: one style, three (plain, bold, italic) in runs, one style
 // right-aligned in a width, and the first again
 static void
 TextScene(Boolean macOnly)
 {
 	RefVar systemFont(SearchFont(0, nil));
-	StyleRecord plain, bold;
+	StyleRecord plain, bold, italic;
 	MakeSimpleStyle(&plain, systemFont, 0xa0000, 0);
 	MakeSimpleStyle(&bold, systemFont, 0xa0000, 1);
+	MakeSimpleStyle(&italic, systemFont, 0xa0000, 2);
 	StyleRecord* one[1] = { &plain };
 	const UniChar hello[] = { 'H', 'e', 'l', 'l', 'o' };
 	FPoint where = { 2 << 16, 12 << 16 };
 	DrawTextOnce(hello, 5, one, nil, where, nil, nil);
 	if (macOnly)
 		return;
-	StyleRecord* two[2] = { &plain, &bold };
-	const short runs[2] = { 3, 3 };
+	StyleRecord* two[3] = { &plain, &bold, &italic };
+	const short runs[3] = { 3, 1, 2 };
 	const UniChar newton[] = { 'N', 'e', 'w', 't', 'o', 'n' };
 	where.y = 26 << 16;
 	DrawTextOnce(newton, 6, two, runs, where, nil, nil);
