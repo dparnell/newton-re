@@ -138,16 +138,14 @@ worked through.  What could come next (not ranked; the owner chooses):
   done: options, buffer lists, `TCommTool`, the comm manager, the host TCP
   tool over `hal/host/HostSockets.h`; `CMStartService` with the `inet`
   service hands back an open tool that echoes through a local server.
-  M2 done (the endpoint, `comms.Endpoint`); M3 part done - the
-  marshalling out (`frames/MarshalOut.cpp`) and the frame translators
-  (`comms/Translators.h`, library `comms_script`); the NIE's option
-  layouts are read from its own code (`analysis/pkgdisasm.py`).  Next:
-  `TNewScriptEndpointClient` (0x00133c84-0x0013930c), the `CINew*`
-  natives with a `RegisterCommsNatives` (then in `HostNatives.cpp`, the
-  host linking `comms_script`), a `.ns` echo demo as a ctest, and the
-  template read-back (`ConstructReturnValue`) in the device's byte order
-  with `'array` fields.  Then M4: the `ictl`/`dnst` host services and
-  `InitializeCommManager` in the boot.  The rest of comms (CCL,
+  M2 and M3 done: the endpoint, and protoBasicEndpoint
+  (`comms/NewScriptEndpoint.h`) talking TCP through the host -
+  `src/host/demo/echo.ns`, ctest `host.NewtonEcho`, `newton --tcp-echo
+  port`.  Next, M4: the `dnst` (DNS) and `ictl` (link control) host
+  services, their option layouts read out of the NIE's code with
+  `pkgdisasm.py` first; then the `'frame` form (`PFlattenPtr`/
+  `PUnFlattenPtr`), the other six translators and
+  protoStreamingEndpoint.  The rest of comms (CCL,
   AppleTalk, IR, NTK, the desktop connection - which the test server's
   link, the IR sniffing, `SuckPackageFromEndPoint` and fax reception wait
   on) comes after.

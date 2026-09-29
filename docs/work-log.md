@@ -9,6 +9,28 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: comms, round 3 - a script's endpoint talks TCP (M3)
+
+- Templates read back in the device's byte order with `'array` fields
+  (`ConstructReturnValueFromDevice`, `UnmarshalArray`; 1aae5dc).
+- `TNewScriptEndpointClient` and its 22 `CINew*` natives
+  (`comms/NewScriptEndpoint.h`, `RegisterCommsNatives`): requests
+  synchronous or queued to `completionScript`, errors to
+  `exceptionHandler`, output by form, the input spec (byteCount,
+  endSequence, end of packet, filters, binary targets, receive options,
+  `partialScript`/`inputScript`) (676f8e5).  The newt world starts the
+  comm manager, the host services and the translators (DEVIATION: the
+  loader does it on the device).  `newton --tcp-echo port` and
+  `src/host/demo/echo.ns`: bind, connect, "hello" back through a 5-byte
+  termination, an asynchronous line back through an end sequence,
+  cancel (the pending receive reported as -16005), disconnect (ctest
+  `host.NewtonEcho`).
+- Bugs found: the translators' bad-typelist error is -54011, not -54005;
+  the endpoint's buffers mixed the host's malloc with the pointer heap's
+  ReallocPtr/DisposPtr, crashing the first Output.  ROM bug kept: an
+  asynchronous Bind never reads its options back (the wrong word of the
+  bind event) and leaks their array.
+
 ## 2026-09-29: the book reader, round 3 - the remote view and page thumbnails
 
 - `views/RemoteView.h`: `TRemoteView` (classes 87/88), made by
