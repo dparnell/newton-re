@@ -1043,8 +1043,7 @@ TDocker::DoConnection(RefArg arg1, RefArg arg2, RefArg callback, Boolean* done)
 					ProcessCommand(done, &operationDone);
 					if (fState == kDockStateKeyboard)
 					{
-						// NOT YET: the keyboard passthrough
-						// (KeyboardProcessCommand)
+						KeyboardProcessCommand();
 						operationDone = true;
 						fSessionStarted = true;
 					}
@@ -3849,6 +3848,123 @@ TDocker::ProcessBuiltinCommand(Boolean* done)
 }
 
 
+// ROM 0x000958cc DoKeyboardPassthrough__7TDockerFv
+// The keyboard passthrough the Connection application starts: the world
+// forked, the desktop told ('kybd'), and its keys taken until it is done.
+long
+TDocker::DoKeyboardPassthrough(void)
+{
+	if (fCleanedUp)
+		return noErr;
+	fError = noErr;
+	if (!fSessionAgreed)
+		return kDockErrNotConnected;
+	WaitAndLockTDocker();
+	newton_try
+	{
+		fError = ((TForkWorld*) GetGlobals())->Fork(nil);
+		if (fError != noErr)
+			Throw(exLongErrorException, (void*) (intptr_t) fError, nil);
+		WriteDockerHeader('kybd', true);
+		KeyboardProcessCommand();
+		fSessionStarted = true;
+	}
+	newton_catch_all
+	{
+		ProcessException(CurrentException());
+	}
+	end_try;
+	CleanUpIfStopping(false);
+	if (fError == -16005)
+		fError = noErr;
+	CleanUpIfError(false);
+	UnlockTDocker();
+	return fError;
+}
+
+
+// ROM 0x000953f0 KeyboardProcessCommand__7TDockerFv
+// The desktop's keys: a string ('kbds') or one character ('kbdc', the
+// high half of a word) posted to the view with the key focus
+// (PostKeyString), until the desktop says it has finished ('opdn') or
+// cancels ('opca').  The Connection application's idle (IdleConnection)
+// runs as often as it asks meanwhile.
+// ROM BUG: the time of the last idle is never moved on, so once its
+// interval has passed the idle runs after every command.
+void
+TDocker::KeyboardProcessCommand(void)
+{
+	Boolean done = false;
+	RefVar view;
+	RefVar text;
+	ULong lastIdle = RINT(FTimeInSeconds(RefVar(NILREF)));
+	ULong interval = 1;
+	NSSend(fConnection, RefVar(RSSYMstartidle), RefVar(NILREF), RefVar(NILREF));
+	newton_try
+	{
+		while (fError == noErr && !done && !fStopping)
+		{
+			ReadDockerHeader(&fCommand, &fLength);
+			if (!CheckProtocolExtension(fCommand, &done) && !CheckProtocolPatch(fCommand, &done))
+			{
+				if (fCommand == 'kbds')
+				{
+					Ptr data = ReadString(fLength);
+					// DEVIATION: the desktop's UniChars are big-endian
+					UniChar* chars = (UniChar*) data;
+					for (ULong i = 0; i < fLength / sizeof(UniChar); i++)
+						chars[i] = (UniChar) (((UByte*) data)[i * 2] << 8 | ((UByte*) data)[i * 2 + 1]);
+					text = MakeString(chars);
+					DisposPtr(data);
+				}
+				else if (fCommand == 'kbdc')
+				{
+					unsigned long word;
+					*fPipe >> word;
+					UniChar chars[2] = { (UniChar) (word >> 16), 0 };
+					text = MakeString(chars);
+				}
+				else if (fCommand == kDHello)
+					;
+				else if (fCommand == kDOperationCanceled || fCommand == kDOpDone)
+					done = true;
+				else
+				{
+					FlushCommand();
+					WriteLong(kDUnknownCommand, fCommand);
+				}
+			}
+			if (NOTNIL(text))
+			{
+				SetFrameSlot(fConnection, RSSYMlastcommunicationwithdesktop, RefVar(FTimeInSeconds(RefVar(NILREF))));
+				view = NSCallGlobalFn(RefVar(RSSYMgetview), RefVar(RSSYMviewfrontkey));
+				NSCallGlobalFn(RefVar(RSSYMpostkeystring), view, text);
+				text = NILREF;
+				((TNewtWorld*) GetGlobals())->fHandler->SetWakeupTime(1);
+				if (fLength > 100)
+					FYieldToFork(RefVar(NILREF));
+			}
+			ULong now = RINT(FTimeInSeconds(RefVar(NILREF)));
+			if (lastIdle + interval < now)
+			{
+				fInConnectionApp = true;
+				interval = RINT(NSSend(fConnection, RefVar(RSSYMidleconnection), RefVar(NILREF))) / 1000;
+				fInConnectionApp = false;
+			}
+		}
+	}
+	newton_catch_all
+	{
+		NSSend(fConnection, RefVar(RSSYMstopidle), RefVar(NILREF));
+		fInConnectionApp = false;
+		rethrow;
+	}
+	end_try;
+	NSSend(fConnection, RefVar(RSSYMstopidle), RefVar(NILREF));
+	fInConnectionApp = false;
+}
+
+
 // ROM 0x000934b0 ProcessCommand__7TDockerFRUcT1
 // One of the desktop's commands carried out.  done: the session is over
 // ('disc'); operationDone: the operation the session was for is over, and
@@ -4468,6 +4584,16 @@ FConnReadBytes(RefArg rcvr, RefArg count, RefArg binary)
 }
 
 
+// ROM 0x00096a44 FConnDoKeyboardPassthrough
+Ref
+FConnDoKeyboardPassthrough(RefArg rcvr)
+{
+	long error = GetTheDocker(rcvr, true)->DoKeyboardPassthrough();
+	CleanUpDockerIfError(rcvr, error, true, true);
+	return NILREF;
+}
+
+
 // ROM 0x000968fc FProcessBuiltinCommand
 // ProcessBuiltinCommand(): ==> whether the session is over.
 Ref
@@ -4600,6 +4726,7 @@ RegisterDockerNatives(void)
 	RegisterNativeFunction("FConnFlushCommandData", (void*) FConnFlushCommandData, 0);
 	RegisterNativeFunction("FConnReadBytes", (void*) FConnReadBytes, 2);
 	RegisterNativeFunction("FProcessBuiltinCommand", (void*) FProcessBuiltinCommand, 0);
+	RegisterNativeFunction("FConnDoKeyboardPassthrough", (void*) FConnDoKeyboardPassthrough, 0);
 	RegisterNativeFunction("FConnEntriesEqual", (void*) FConnEntriesEqual, 1);
 	RegisterNativeFunction("FConnRetryPassword", (void*) FConnRetryPassword, 1);
 	RegisterNativeFunction("FDESCreatePasswordKey", (void*) FDESCreatePasswordKey, 1);

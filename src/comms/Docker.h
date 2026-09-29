@@ -328,6 +328,9 @@ public:
 	long			FlushCommandData(void);
 	long			ReadBytes(long* count, RefArg buffer);
 	long			ProcessBuiltinCommand(Boolean* done);
+	// the keyboard passthrough: the desktop's keyboard typing on the Newton
+	long			DoKeyboardPassthrough(void);
+	void			KeyboardProcessCommand(void);
 
 	void			ProcessCommand(Boolean* done, Boolean* operationDone);
 	Boolean			CheckProtocolExtension(ULong command, Boolean* result);

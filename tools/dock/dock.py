@@ -340,7 +340,20 @@ class DockSession:
                     self.write_command(b"lpkg", f.read())
                 result = struct.unpack(">i", self.expect(b"dres")[:4])[0]
                 print("dock.py: %s loaded again: dres %d" % (os.path.basename(path), result))
-        self.write_command(b"disc")
+        if session:
+            # the keyboard passthrough: dock.ns's DockTestKeyboard puts the
+            # docker in its keyboard state; a string, a character, and done
+            self.write_command(b"cgfn", nsof.encode({Symbol("function"): Symbol("DockTestKeyboard"), Symbol("args"): []}))
+            print("dock.py: the keyboard passthrough started: %r" % (nsof.decode(self.expect(b"cres")),))
+            self.write_command(b"kbds", "hello".encode("utf-16-be") + b"\0\0")
+            self.write_command(b"kbdc", struct.pack(">HH", ord("!"), 0))
+            self.write_command(b"opdn")
+            # (the Connection application ends the session when the
+            # keyboard is done: the Newton says 'disc')
+            self.expect(b"disc")
+            print("dock.py: the Newton disconnected after the keyboard")
+        else:
+            self.write_command(b"disc")
         return results
 
 

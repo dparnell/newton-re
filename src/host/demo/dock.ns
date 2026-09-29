@@ -23,6 +23,21 @@ app:ConnectionPrefsWrite('autoDockAddr, {type: 'serial});
 Print("dock: autodock");
 app:autodock();
 
+// The keyboard passthrough: dock.py calls DockTestKeyboard ('cgfn'), which
+// makes a paragraph the key view and puts the docker into its keyboard
+// state (SetState(9), as the Connection application's Keyboard button
+// does); the keys the desktop then sends are typed into it.
+dockPara := nil;
+DefGlobalFn('DockTestKeyboard, func() begin
+	dockPara := AddView(GetRoot(), {
+		viewClass: 81, viewFlags: 1 + 0x200 + 0x800, viewBounds: {left: 20, top: 280, right: 300, bottom: 340},
+		viewFormat: 0x151, viewFont: {family: 'espy, face: 0, size: 12}, viewLineSpacing: 16, text: ""});
+	dockPara:Dirty();
+	SetKeyView(dockPara, 0);
+	GetRoot().Connection.theEndpoint:SetState(9);
+	true
+end);
+
 // A slip the desktop asks the Connection application to show ('dslp':
 // DisplaySlip, a modal dialog with the desktop's title, message and
 // buttons) is answered by tapping its first button, as a user would.  Only
@@ -57,6 +72,7 @@ call waitFor with ("dock: the connection",
 		local packages := GetPackages();
 		if Length(packages) > before then
 			Print("dock: installed " & packages[Length(packages) - 1].title);
+		if dockPara then Print("dock: typed from the desktop: " & dockPara.text);
 		Print("dock: done");
 		HostQuit();
 	end, 150);
