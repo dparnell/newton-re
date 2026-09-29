@@ -192,6 +192,11 @@ void	SetDomainDelays(TController* controller, ULong delay);	// ROM 0x0020c4f4 Se
 
 extern TController*	gController;							// ROM 0x0c10187c gController
 
+// The strokes nothing took for ten seconds disposed (NukeEgregiousStrokes)
+// when the controller holds no pieces, their boxes into `rect` (emptied
+// first); ==> whether there were any.
+Boolean	CleanupStrayInk(FRect* rect);						// ROM 0x0020bd54 CleanupStrayInk__FP5FRect
+
 // The controller's state put aside (TRecognitionManager::
 // SaveRecognitionState): its flags, lists and pass times, and the
 // arbiter's; the controller meanwhile starts with empty lists.

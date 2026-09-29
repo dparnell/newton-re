@@ -23,11 +23,19 @@
 				draw.  SetupDistances scales the distances to the screen's
 				resolution (4, 6 and 6 points; the ROM asks the gestalt).
 
-				NOT YET RECONSTRUCTED: the inker task (StrokeUpdate draws
-				the buffered strokes; the LCD entry calling RealStrokeTime -
-				on the host StrokeTime, the recogniser's hook, does the
-				inker's reading, DEVIATION), the stroke queue semaphore,
-				the journalling, NukeEgregiousStrokes' callers.
+				The ink is the inker's *live* ink, on the display only
+				and never in the screen's bits (the ROM's TLiveInker ORs
+				it onto the LCD); an update that paints over it draws the
+				waiting strokes into the bits (TRootView::PostDraw ->
+				TController::UpdateInk -> StrokeUpdate), and a stroke's
+				ink is taken off by showing the screen's rectangle again
+				(SmartScreenDirty) or, once drawn, by invalidating it.
+
+				NOT YET RECONSTRUCTED: the inker task (the LCD entry
+				calling RealStrokeTime - on the host StrokeTime, the
+				recogniser's hook, does the inker's reading and its live
+				ink, DEVIATION), the stroke queue semaphore, the
+				journalling.
 
 	Reconstructed from the MP2x00 US ROM (0x001fefa8-0x001ffe70,
 	0x00222f6c-0x002230c8, 0x0011b8e0-0x0011b8fc, 0x001f9660); each

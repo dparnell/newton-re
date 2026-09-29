@@ -32,6 +32,8 @@
 #include "NewtonExceptions.h"
 #include "UnitPublic.h"
 #include "Recognizer.h"	// gInhibitPopup
+#include "Controller.h"		// UpdateInk
+#include "Stroke.h"
 #include "NewtonTime.h"
 #include "ClipboardView.h"
 #include "Animate.h"
@@ -344,11 +346,33 @@ TRootView::RemoveAllViews(void)
 
 
 // ROM 0x001b2360 PostDraw__9TRootViewFR5TRect
-// NOT YET RECONSTRUCTED: the ink in the rect redrawn (TController::
-// UpdateInk) and the stroke groups updated.
+// The ink waiting to be recognised drawn again over what was just drawn
+// (TRecognitionManager::Update, written out in line): the live ink is
+// only on the display (the inker's), so an update that paints over it
+// puts it into the screen's bits (TController::UpdateInk), and where the
+// strays were cleaned up is redrawn.  NOT YET RECONSTRUCTED: the stroke
+// groups waiting to be compressed updated (StrokeCentral::
+// UpdateCompressGroup 0x001455bc).
 void
-TRootView::PostDraw(Rect& /*bounds*/)
-{ }
+TRootView::PostDraw(Rect& bounds)
+{
+	FRect fixed;
+	FixRect(&fixed, &bounds);
+	if (gRecognition.fLevel != 0)
+	{
+		long size = RINT(GetPreference(RSSYMuserpensize));
+		PenSize(size, size);
+		FRect strays = fixed;
+		gRecognition.fController->UpdateInk(&strays);
+		if (!EmptyRectangle(&strays))
+		{
+			Rect r;
+			UnfixRect(&strays, &r);
+			AdjustForInk(&r);
+			SmartInvalidate(r);
+		}
+	}
+}
 
 
 // ROM 0x001b236c RealDraw__9TRootViewFR5TRect

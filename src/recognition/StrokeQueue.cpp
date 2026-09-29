@@ -12,6 +12,9 @@
 #include "Unit.h"
 #include "FixedMath.h"
 #include "NewtonGestalt.h"		// TUGestalt (SetupDistances)
+#include "Draw.h"				// InkerLine
+#include "Screen.h"				// BlitToScreens
+#include "Rects.h"
 #include <stdio.h>
 #include <stdint.h>
 
@@ -506,18 +509,87 @@ StrokeGet(void)
 // sample as it converts it, from the point before to the point just read
 // (DrawInk, 0x0021765c); the host has no converter, and the points are
 // already in the stroke by the time this is reached, so the stroke being
-// written is drawn instead.  What lands on the screen is the same, and
-// drawing it again costs nothing but time: the ink is ORed in, so a
+// written is inked whole instead.  What lands on the display is the same,
+// and inking it again costs nothing but time: the ink is ORed in, so a
 // segment drawn twice is the segment.
-// The stroke inked, whatever of it has been drawn before.  The ink is
-// ORed into the screen, so a segment drawn twice is the segment; what it
-// costs is the walk over the points, and the pen puts down few enough of
-// them between ticks that it does not show.
+//
+// It lands on the display only, as the ROM's does: TLiveInker (0x00113840
+// on) inks the segments into a small map of its own and ORs that onto the
+// LCD (BlitToScreens mode 1), never into the screen's bits.  That is what
+// SmartScreenDirty relies on - the screen's rectangle shown again takes a
+// live stroke off the display - and what marks a stroke kStrokeDrawn only
+// when the views' update draws it into the bits (StrokeUpdate, TStroke::
+// Draw), so that it is then invalidated rather than re-shown.  (The host
+// once inked into the screen's bits here with TStroke::Draw, so ink that
+// was put down as dirty screen - a scrub's on a TXView, which takes it off
+// with InkOff(false) - stayed wherever no view redrew over it.)  The
+// host's map is the screen's size and one bit deep, and is left clear
+// after every use.
+static PixelMap			gLiveInkMap;
+static unsigned char*	gLiveInkBits = nil;
+
+static void
+LiveInk(TStroke* stroke)
+{
+	if (stroke->TestFlags(kStrokeNoInk))
+		return;
+	const Rect& screen = qdGlobals.fScreenBits.bounds;
+	if (gLiveInkBits == nil || !EqualRect(&gLiveInkMap.bounds, &screen))
+	{
+		if (gLiveInkBits != nil)
+			delete[] gLiveInkBits;
+		long rowBytes = (((screen.right - screen.left) + 31) / 32) * 4;
+		gLiveInkBits = new unsigned char[rowBytes * (screen.bottom - screen.top)]();
+		gLiveInkMap.baseAddr = (Ptr) gLiveInkBits;
+		gLiveInkMap.rowBytes = (short) rowBytes;
+		gLiveInkMap.bounds = screen;
+		gLiveInkMap.pixMapFlags = kPixMapPtr | 1;
+		gLiveInkMap.deviceRes.h = gLiveInkMap.deviceRes.v = kDefaultDPI;
+		gLiveInkMap.grayTable = nil;
+	}
+	Boolean acquired = AcquireStroke(stroke);
+	long count = stroke->Count();
+	Rect inked;
+	SetEmptyRect(&inked);
+	stroke->Lock();
+	SamplePt* sample = stroke->GetPoint(0);
+	Point at;
+	at.h = (short) ((SampleX(sample) + 0x8000) >> 16);
+	at.v = (short) ((SampleY(sample) + 0x8000) >> 16);
+	Point pen;
+	pen.h = pen.v = (short) ((stroke->fFlags & 0xff00) >> 8);
+	sample++;
+	for (long i = 1; i < count; i++, sample++)
+	{
+		Point was = at;
+		at.h = (short) ((SampleX(sample) + 0x8000) >> 16);
+		at.v = (short) ((SampleY(sample) + 0x8000) >> 16);
+		if (was.h != at.h || was.v != at.v)
+		{
+			Rect damaged;
+			SetEmptyRect(&damaged);
+			InkerLine(was, at, &damaged, pen, &gLiveInkMap);
+			if (!EmptyRect(&damaged))
+				UnionRect(&inked, &damaged, &inked);
+		}
+	}
+	stroke->Unlock();
+	if (acquired)
+		ReleaseStroke();
+	if (EmptyRect(&inked))
+		return;
+	BlitToScreens(&gLiveInkMap, &inked, &inked, srcOr);
+	long first = (inked.left - screen.left) / 8;
+	long last = (inked.right - 1 - screen.left) / 8;
+	for (long y = inked.top; y < inked.bottom; y++)
+		memset(gLiveInkBits + (y - screen.top) * gLiveInkMap.rowBytes + first, 0, last - first + 1);
+}
+
 static void
 InkStroke(TSStroke* stroke)
 {
 	if (stroke != nil && stroke->Count() != 0)
-		stroke->Draw();
+		LiveInk(stroke);
 }
 
 long
@@ -631,8 +703,8 @@ RealStrokeTime(void)
 
 // ROM 0x001ffb50 StrokeUpdate__FP5FRect
 // The queued strokes still the inker's, with points, that are not done
-// or lie in the rect, drawn.  NOT YET RECONSTRUCTED: the inker (Draw only
-// flags them).
+// or lie in the rect, drawn into the screen's bits (an update has just
+// painted over their live ink).
 void
 StrokeUpdate(FRect* rect)
 {

@@ -1480,3 +1480,43 @@ RestoreRecognitionState(TController* controller, ControllerState* state)
 	RestoreArbiterState(controller->fArbiter, state->fArbiter);
 	delete state;
 }
+
+
+// ROM 0x0020bc88 UpdateInk__11TControllerFP5FRect
+// Part of the screen redrawn (TRootView::PostDraw): the ink of the stroke
+// pieces the controller still holds that nothing has claimed drawn into
+// it again - every one of them, or only those in `bounds` once they have
+// been drawn since they were done - then the strays cleaned up and the
+// stroke queue's own strokes drawn (StrokeUpdate); `bounds` comes back as
+// where the strays were.
+void
+TController::UpdateInk(FRect* bounds)
+{
+	FRect box;
+	ULong count = fPieces->fCount;
+	for (ULong i = 0; i < count; i++)
+	{
+		TUnit* unit = fPieces->GetUnit(i);
+		unit->GetBBox(&box);
+		if (unit->fType == kStrokeUnit && !unit->TestFlags(kClaimedUnit))
+		{
+			TStroke* stroke = ((TStrokeUnit*) unit)->fStroke;
+			if (!stroke->TestFlags(kStrokeDrawnWhenDone) || SectRectangle(&box, bounds, &box))
+				stroke->Draw();
+		}
+	}
+	CleanupStrayInk(&box);
+	StrokeUpdate(bounds);
+	*bounds = box;
+}
+
+
+// ROM 0x0020bd54 CleanupStrayInk__FP5FRect
+Boolean
+CleanupStrayInk(FRect* rect)
+{
+	SetRectangleEmpty(rect);
+	if (gController->fPieces->fCount != 0)
+		return false;
+	return NukeEgregiousStrokes(rect);
+}

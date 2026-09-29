@@ -108,7 +108,7 @@ MapPixel(const PixelMap* map, long x, long y)
 // (all ones black), at the same place on the display (dst names where;
 // src and dst are the same rectangle in the ROM's use).
 void
-THostScreenDriver::Blit(PixelMap* map, Rect* src, Rect* dst, long /*mode*/)
+THostScreenDriver::Blit(PixelMap* map, Rect* src, Rect* dst, long mode)
 {
 	if (fPixels == nil || map == nil)
 		return;
@@ -129,6 +129,8 @@ THostScreenDriver::Blit(PixelMap* map, Rect* src, Rect* dst, long /*mode*/)
 			if (dx < 0 || dx >= width || x < map->bounds.left || x >= map->bounds.right)
 				continue;
 			long value = MapPixel(map, x, y);
+			if (mode == srcOr && value == 0)
+				continue;			// the live inker's: only its ink put on the display
 			fPixels[dy * width + dx] = (unsigned char) ((value * 255) / maxValue);
 		}
 	}
