@@ -218,6 +218,37 @@ TestDrawing()
 }
 
 
+// Italic synthesised: each row of the run's slab moved right by another
+// eight sixteenths of a pixel going up from the slab's bottom (which is
+// below the descent by the descent again: espy 12's minAfterBL is -3, so
+// its slab ends 6 below the baseline), so the baseline row is already three
+// pixels over and the 'H''s top row seven.
+static void
+TestItalic()
+{
+	StyleRecord style;
+	CreateTextStyleRecord(RefVar(MAKEINT(PackFont(kEspy, 12, kItalicFace))), &style);
+	FontEngineInfo engine;
+	EXPECT(OpenFont(&gMap, &style, 0x10000, 0x10000, &engine) == 0);
+	EXPECT(engine.fStyleAdjust[1] == 8 && engine.fMinAfterBL == -3);
+	CloseFont(&engine);
+	DisposeStyleRecord(&style);
+	TextBoundsInfo bounds;
+	Clear();
+	Draw("Hl", kEspy, 12, kItalicFace, &bounds);
+	EXPECT(PictureIs(2, 5, 24, 9,
+		".......#.....#.#........\n"
+		"......#.....#.#.........\n"
+		"......#.....#.#.........\n"
+		".....#.....#.#..........\n"
+		".....#######.#..........\n"
+		"....#.....#.#...........\n"
+		"....#.....#.#...........\n"
+		"...#.....#.#............\n"
+		"...#.....#.#............\n", "Hl in espy 12 italic"));
+}
+
+
 static void
 TestNatives()
 {
@@ -426,6 +457,7 @@ main()
 	{
 		TestFonts();
 		TestDrawing();
+		TestItalic();
 		TestNatives();
 		TestLayout();
 		TestStyleTable();

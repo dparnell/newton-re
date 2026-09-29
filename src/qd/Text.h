@@ -11,7 +11,8 @@
 				font), drawn through the pen's mode with the style's or the
 				port's pattern; the faces the font lacks are synthesised as
 				the font engine says (bold smeared a pixel right, underline
-				a line below the baseline, italic and outline NOT YET).
+				a line below the baseline, italic sheared a row at a time as the
+				ROM shears its slab; outline NOT YET).
 				MeasureOnce/MeasureOnceFont answer a string's width, the
 				NewtonScript StrFontWidth and Font* functions are here too.
 				A TextOptions asks for layout: the characters that fit a

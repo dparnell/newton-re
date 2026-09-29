@@ -36,10 +36,36 @@ const UniChar kSpace = 0x20;
 const UniChar kEllipsis = 0x2026;
 
 
+// (host) How far italic moves row y of a run to the right, as the ROM's
+// DrTextChunk (0x0035c788) shears its slab: the slab's bottom row stays
+// where it is and each row above it moves another italic sixteenths of a
+// pixel, the whole pixels of the running sum taken (a right shift of the
+// slab's bits).  The slab's bottom is the baseline less the strike's
+// minAfterBL, less minAfterBL again or less the underline's reach
+// (-(offset + 2 * [4] + 1)), whichever is lower - so it stands below the
+// descent by the descent once more.
+static long
+ItalicShift(const FontEngineInfo* info, long slabBottom, long y)
+{
+	return ((slabBottom - 1 - y) * info->fStyleAdjust[1]) >> 4;
+}
+
+
+static long
+ItalicSlabBottom(const FontEngineInfo* info, long baseline)
+{
+	long reach = -(info->fStyleAdjust[2] + info->fStyleAdjust[4] * 2 + 1);
+	if (info->fMinAfterBL <= reach)
+		reach = info->fMinAfterBL;
+	return baseline - info->fMinAfterBL - reach;
+}
+
+
 // the glyph's set bits as a region at (left, top) - each row's runs
-// become the region's change points
+// become the region's change points; with italic, each row moved right
+// by ItalicShift
 static RgnHandle
-GlyphRgn(const FontEngineInfo* info, long left, long top)
+GlyphRgn(const FontEngineInfo* info, long left, long top, long slabBottom)
 {
 	RgnHandle rgn = NewRgn();
 	if (rgn == nil || info->fGlyphBits == nil || info->fGlyphWidth == 0 || info->fGlyphHeight == 0)
@@ -63,8 +89,9 @@ GlyphRgn(const FontEngineInfo* info, long left, long top)
 			long start = x;
 			while (x < info->fGlyphWidth && (bits[x >> 3] & (0x80 >> (x & 7))))
 				x++;
+			long shift = info->fStyleAdjust[1] != 0 ? ItalicShift(info, slabBottom, top + row) : 0;
 			Rect run;
-			SetRect(&run, left + start, top + row, left + x, top + row + 1);
+			SetRect(&run, left + start + shift, top + row, left + x + shift, top + row + 1);
 			PutRect(&run, points, &offset, &limit);
 		}
 	}
@@ -261,7 +288,7 @@ LayOutText(TextObject* obj, TextBoundsInfo* bounds, Boolean draw)
 				{
 					long left = (short) ((x + 0x8000) >> 16) + info.fGlyphBearingX;
 					long top = baseline - info.fGlyphBearingY;
-					RgnHandle glyph = GlyphRgn(&info, left, top);
+					RgnHandle glyph = GlyphRgn(&info, left, top, ItalicSlabBottom(&info, baseline));
 					if (glyph != nil)
 					{
 						DrawRgn(glyph, mode, pattern);
