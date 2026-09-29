@@ -1,11 +1,11 @@
-# Sound: the codecs the Newton uses for recorded sound - IMA/DVI ADPCM
-# (IMACodec.h), the 8-bit sample codings (SampleConvert.h: mu-law and
-# offset-binary 8-bit), the sample-rate converters (Resample.h) and the
-# TSoundCodec protocol with its mu-law implementation (SoundCodec.h).  The DDK
-# has no header for these; reconstructed from the ROM.  The
-# TSoundCodec/TSoundServer streaming is NOT YET; SoundChannel.h has only
-# as much of TUSoundChannel as the volume needs, and SoundSettings.h the
-# NewtonScript volume functions over it.
+# Sound: the codecs (IMACodec.h; SampleConvert.h's mu-law and
+# offset-binary 8-bit; the TSoundCodec protocol with its mu-law, IMA and
+# DTMF implementations, SoundCodec.h, DTMFCodec.cpp), the sample-rate
+# converters (Resample.h), the sound server (SoundServer.h over the
+# PSoundDriver of SoundDriver.h), its clients (SoundChannel.h,
+# FrameSoundChannel.h) and the NewtonScript sound functions
+# (SoundSettings.h).  The DDK has no header for these; reconstructed from
+# the ROM (docs/sound/README.md).
 #
 # The 8-bit decoders dither with QuickDraw's Random (qd/Ports.h), as the
 # ROM's do, so the library depends on qd; the filtered resampler needs the

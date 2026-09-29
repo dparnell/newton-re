@@ -19,9 +19,9 @@
 				up; Start, Stop and Init are the hooks a codec with state of
 				its own needs, and are empty in the mu-law one.
 
-				TGSMCodec and TDTMFCodec are NOT YET; so is the
-				TSoundServer/TSoundChannel layer that drives them, with the
-				SoundBlock a CodecBlock is converted from.
+				TDTMFCodec (the touch tones' synthesiser) is here too;
+				TGSMCodec is NOT YET.  The sound server's codec channel
+				(SoundServer.h, TCodecChannel) drives them.
 
 	Not in the DDK; the interface follows the ROM's dispatch table
 	(tools/newton-rom/analysis/classinfo.py --name TMuLawCodec) and the
