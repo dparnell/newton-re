@@ -64,12 +64,26 @@ DeleteRefStruct(RefStruct* r)
 void
 ThrowRefException(ExceptionName name, RefArg data)
 {
-	if (getenv("NEWTON_TRACE_EXCEPTIONS") != nil && gREPout != nil)
+	// (host only: a throw while the trace is printing - an object the
+	// printer cannot print - would come back here and print again without
+	// end, so the trace is not re-entered and a failure in it is dropped)
+	static int sTracing = 0;
+	if (getenv("NEWTON_TRACE_EXCEPTIONS") != nil && gREPout != nil && sTracing == 0)
 	{
-		gREPout->Print("--- %s: ", name);
-		PrintObject(data, 0);
-		gREPout->Print("\n");
-		StackTrace();
+		sTracing++;
+		newton_try
+		{
+			gREPout->Print("--- %s: ", name);
+			PrintObject(data, 0);
+			gREPout->Print("\n");
+			StackTrace();
+		}
+		newton_catch_all
+		{
+			gREPout->Print(" *** (the trace itself threw %s)\n", _info.exception.name);
+		}
+		end_try;
+		sTracing--;
 	}
 	if (!Subexception(name, (ExceptionName) "evt.ex") || !Subexception(name, (ExceptionName) "type.ref"))
 	{
