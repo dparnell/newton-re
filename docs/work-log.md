@@ -86,6 +86,30 @@ bugs and ROM bugs found on the way.
   `layout.tsv` manifest, and `rombuild.py` proved by a byte-identical
   rebuild of the area.
 
+## 2026-09-30: the ROM source tree made editable
+
+- The extension's frames packages from source (ef83602): each package's
+  frames part is a tree of its own (`rex/<Package>/`), the package bytes
+  around it kept as `.head.bin`/`.tail.bin`, the extension still
+  byte-identical.  Every function is verified before it is written as
+  source - each tree's functions compiled in one `newtonscript` run and
+  compared with the ROM's; those that differ stay bytecode with the
+  reason in `bytecode.tsv` (all 5480 of the object area pass; 1071 of the
+  packages' do; ListView's 266 carry `DebuggerInfo`, which the compiler
+  does not make).  The layout records the parts' alignment, their 0xbf
+  padding and ListView's 0xbeacebad gap words.
+- `build --relayout` (4e96f01) lays objects out afresh at the sizes they
+  now have; rather than generating `ROMConstants.h` (which would tie a
+  host build to one layout), the object file (version 3) carries a table
+  of moved objects that the importer looks the C++ constants up in
+  (`MovedRef`), so an edited tree needs a new object file but no host
+  rebuild.  `romsrc.py edit-test` lengthens one string, moving 43566
+  objects, and the boot still draws the Setup screen pixel for pixel
+  (ctests `host.ROMSourceEdit`, `host.NewtonEditedSameScreen`).
+- Files grouped by the root object that dominates them, function files
+  named by the path that holds them (`functions/Rbuiltinfunctions.
+  AddAlarm.ns`) (5b5d319).  205 of 205 ctests.
+
 ## 2026-09-30: Sharp IR
 
 - `comms/SharpIRTool.h` (0f017f4): `TSharpIRTool`, serv 'slir' - the
