@@ -16,6 +16,7 @@
 
 #include "Text.h"
 #include "TextObject.h"
+#include "TextLayout.h"
 #include "Draw.h"
 #include "FixedMath.h"
 #include "Frames.h"
@@ -76,22 +77,11 @@ GlyphRgn(const FontEngineInfo* info, long left, long top)
 }
 
 
-// the layout of a text: each character's advance and its run
-struct TextLayout
-{
-	Fixed*	fAdvances;		// per character, 16.16 (the justification added)
-	long*	fRuns;			// per character, the run it is in
-	long	fCount;
-	Fixed	fWidth;			// the advances' sum
-	long	fSpaces;
-};
-
-
 // ROM 0x0035baa4 MeasureGlyphWidths__Fl
 // Every character's advance in its run's font; with a width to fit, the
 // text is cut before the first character that would cross it, the width
 // so far kept in the options.  ==> the count that fits.
-static long
+long
 MeasureGlyphWidths(const UniChar* chars, long length, StyleRecord** styles, const short* runLengths, TextOptions* options, TextLayout* layout, GrafPort* port)
 {
 	long fitted = length;
@@ -145,7 +135,7 @@ MeasureGlyphWidths(const UniChar* chars, long length, StyleRecord** styles, cons
 // nine shares, another character one - or, for a text wider than the
 // width, every character the same.  ==> the offset of the text's start:
 // the slack times the alignment.
-static Fixed
+Fixed
 JustifyText(const UniChar* chars, long length, TextOptions* options, TextLayout* layout)
 {
 	if (options == nil || options->fWidth == 0)
