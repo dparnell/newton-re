@@ -119,6 +119,23 @@ public:
 };
 
 
+// 'font: a part of font families - each frame in it with a `screenSym`
+// added to vars.fonts under that symbol (one with only a `psSym` to
+// vars.psFonts), a family already there left alone; the remove object is
+// the list of [frame, symbol] pairs added, which RemoveFrame takes out
+// again (FontPartHandler.cpp).  InitFontLoader makes the one instance,
+// gFontPartHandler.
+class TFontPart : public TFramePartHandler
+{
+public:
+	virtual	NewtonErr	InstallFrame(RefArg frame, const PartId& partId, SourceType sourceType, PartInfo* partInfo);
+	virtual	NewtonErr	RemoveFrame(RefArg removeObject, const PartId& partId, PartType partType);
+};
+
+extern TFontPart*	gFontPartHandler;
+void		InitFontLoader(void);
+
+
 // host (DEVIATION, above): a frames part in memory imported into a host
 // object area - nil when its bytes are not a run of objects (reported);
 // *inROMImage whether it is one of the ROM's.  (The 'dict part handler's

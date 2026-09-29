@@ -651,6 +651,25 @@ InitFonts(void)
 }
 
 
+// ROM 0x002e2048 FlushFontCache__Fv
+// The four entries of the open-font cache (gFontGlobals, 0x38 bytes each)
+// marked empty, so that no family a removed font part took away is still
+// used.  The host keeps no cache (OpenFont, above), so there is nothing to
+// empty.
+void
+FlushFontCache(void)
+{
+}
+
+
+// ROM 0x002e2070 LoadFontTable__Fv
+// Empty in the ROM too (InitFontLoader calls it last).
+void
+LoadFontTable(void)
+{
+}
+
+
 // the ROM's font list (the magic pointer the packed font spec indexes)
 Ref
 GetROMFontList(void)

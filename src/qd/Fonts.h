@@ -182,6 +182,8 @@ long		SFNTOpenFont(PixelMap* pm, StyleRecord* style, RefArg fontFamily, Fixed xS
 long		OpenFont(PixelMap* pm, StyleRecord* style, Fixed xScale, Fixed yScale, FontEngineInfo* info);
 void		CloseFont(FontEngineInfo* info);		// host: what info->fClose does
 void		InitFonts(void);
+void		FlushFontCache(void);		// the open-font cache emptied (a font part went)
+void		LoadFontTable(void);
 Ref			SearchFont(long macFontID, const UniChar* name);		// a font family by Mac id or name; the system font
 void		GetStyleFontInfo(StyleRecord* style, FontInfo* fontInfo);
 long		FontRefToCharSize(RefArg font);

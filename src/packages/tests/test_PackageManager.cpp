@@ -428,7 +428,7 @@ TestManager(void)
 // the form a frames part takes when a package is streamed.  The package's
 // words are big-endian; its name is the only thing in the directory data.
 static UByte*
-StreamedPackage(const char* name, RefArg frame, ULong* packageSize)
+StreamedPackage(const char* name, RefArg frame, ULong* packageSize, ULong partType = 'form')
 {
 	CTestPipe nsof(64);
 	{
@@ -454,7 +454,7 @@ StreamedPackage(const char* name, RefArg frame, ULong* packageSize)
 	PutBigEndianWord(entry + 0x00, 0);							// the part's offset from the directory's end
 	PutBigEndianWord(entry + 0x04, partSize);
 	PutBigEndianWord(entry + 0x08, partSize);
-	PutBigEndianWord(entry + 0x0c, 'form');
+	PutBigEndianWord(entry + 0x0c, partType);
 	PutBigEndianWord(entry + 0x14, 0x81);						// frames, notify
 	UByte* data = package + kHeader + kEntry;
 	for (ULong i = 0; name[i] != 0; i++)
@@ -526,6 +526,59 @@ TestStreamed(void)
 	list.Done();
 	ULong setupSize = GetBigEndianWord(gROM + kSetup + 0x1c);
 	EXPECT(setup != 0 && StreamLoad(gROM + kSetup, setupSize, &id) == kError_Package_Already_Exists && id == setup);
+	free(package);
+}
+
+
+// A 'font part (TFontPart): a family added to vars.fonts under its
+// screenSym, a PostScript one to vars.psFonts under its psSym, one whose
+// name is taken already left alone, and a value that is not a frame passed
+// over; the package's removal takes out only what it added.
+static void
+TestFontPart(void)
+{
+	RefVar vars(gVarFrame);
+	RefVar fonts(GetFrameSlotRef(vars, RSSYMfonts));
+	{		// (a copy of the ROM's, which may be read-only)
+		fonts = IsFrame(fonts) ? Clone(fonts) : AllocateFrame();
+		SetFrameSlot(vars, RSSYMfonts, fonts);
+	}
+	RefVar psFonts(GetFrameSlotRef(vars, RSSYMpsfonts));
+	{		// (a copy of the ROM's, which may be read-only)
+		psFonts = IsFrame(psFonts) ? Clone(psFonts) : AllocateFrame();
+		SetFrameSlot(vars, RSSYMpsfonts, psFonts);
+	}
+	RefVar existing(AllocateFrame());
+	SetFrameSlot(fonts, RefVar(Intern((char*) "testTaken")), existing);
+
+	RefVar part(AllocateFrame());
+	RefVar screen(AllocateFrame());
+	SetFrameSlot(screen, RSSYMscreensym, RefVar(Intern((char*) "testScreen")));
+	SetFrameSlot(screen, RSSYMname, RefVar(MakeString("Test")));
+	SetFrameSlot(part, RefVar(Intern((char*) "a")), screen);
+	RefVar ps(AllocateFrame());
+	SetFrameSlot(ps, RSSYMpssym, RefVar(Intern((char*) "testPS")));
+	SetFrameSlot(part, RefVar(Intern((char*) "b")), ps);
+	RefVar taken(AllocateFrame());
+	SetFrameSlot(taken, RSSYMscreensym, RefVar(Intern((char*) "testTaken")));
+	SetFrameSlot(part, RefVar(Intern((char*) "c")), taken);
+	SetFrameSlot(part, RefVar(Intern((char*) "d")), RefVar(MAKEINT(7)));
+	SetFrameSlot(part, RefVar(Intern((char*) "e")), RefVar(AllocateFrame()));
+	ULong size = 0;
+	UByte* package = StreamedPackage("Fonts", part, &size, 'font');
+	ULong id = 0;
+	long fontSlots = Length(fonts), psSlots = Length(psFonts);
+	EXPECT(StreamLoad(package, size, &id) == noErr && id != 0);
+	RefVar added(GetFrameSlotRef(fonts, RefVar(Intern((char*) "testScreen"))));
+	EXPECT(IsFrame(added) && IsString(RefVar(GetFrameSlotRef(added, RSSYMname))));
+	EXPECT(IsFrame(RefVar(GetFrameSlotRef(psFonts, RefVar(Intern((char*) "testPS"))))));
+	EXPECT(EQRef(GetFrameSlotRef(fonts, RefVar(Intern((char*) "testTaken"))), existing));
+	EXPECT(Length(fonts) == fontSlots + 1 && Length(psFonts) == psSlots + 1);
+	EXPECT(DeinstallPackage(id) == noErr);
+	EXPECT(ISNIL(GetFrameSlotRef(fonts, RefVar(Intern((char*) "testScreen")))));
+	EXPECT(ISNIL(GetFrameSlotRef(psFonts, RefVar(Intern((char*) "testPS")))));
+	EXPECT(EQRef(GetFrameSlotRef(fonts, RefVar(Intern((char*) "testTaken"))), existing));
+	EXPECT(Length(fonts) == fontSlots && Length(psFonts) == psSlots);
 	free(package);
 }
 
@@ -779,6 +832,7 @@ public:
 		InitQueries();
 		(new TTestFramePartHandler)->Init('form');
 		(new TTestFramePartHandler)->Init('auto');
+		InitFontLoader();
 		return noErr;
 	}
 	virtual long		PreMain()
@@ -791,6 +845,7 @@ public:
 			TestManager();
 			TestOnStore();
 			TestSegmented();
+			TestFontPart();
 			TestStreamed();
 		}
 		gDone = true;
