@@ -5,6 +5,7 @@
 //   MeasuredNumberStr  a number's text cut to fit a width
 //   DrawOriginal       a stroke bundle's writing drawn into a box
 //   LoadFontCache      the font table loaded again
+//   an expando's viewDrawScript (DrawExpando)
 //
 //   build/host/host/newton --rom build/MP2x00US/rom.bin --headless 30 --script src/host/demo/natives.ns
 
@@ -40,6 +41,17 @@ Print(["original narrow", DrawOriginal(kBundle, {left: 0, top: 0, right: 50, bot
 try DrawOriginal({bounds: {left: 0}, strokes: []}, {left: 0, top: 0, right: 1, bottom: 1}) onexception |evt.ex.msg| do Print(["bad bundle", CurrentException().message]);
 GetRoot():LoadFontCache();
 Print("fonts loaded");
+
+// an expando (@175)'s lines drawn: each line's label and text asked of
+// it (setup1, setup2); an empty text drawn as the view's `empty`
+kAsked := [];
+kLine := func(label, text) {setup1: func(target) begin AddArraySlot(kAsked, label); label end,
+						  setup2: func(target) text};
+expando := AddView(GetRoot(), {_proto: @175, viewBounds: {left: 10, top: 300, right: 230, bottom: 360},
+	numLines: 2, lines: [call kLine with ("Name", "Daniel"), call kLine with ("Phone", "")],
+	viewSetupFormScript: nil, viewSetupChildrenScript: nil});
+expando:viewDrawScript();
+Print(["expando asked", kAsked]);
 
 QuickLookDone(nil);
 Print("natives: done");

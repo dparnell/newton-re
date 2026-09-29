@@ -29,6 +29,11 @@
 #include "Screen.h"			// StartDrawing, StopDrawing
 #include "Locale.h"			// GetPreference, SetPreference
 #include "SplashScreen.h"	// DrawSplashGraphic
+#include "Text.h"			// DrawRichString
+#include "Fonts.h"			// CreateTextStyleRecord
+#include "RichString.h"
+#include "Interpreter.h"	// DoMessage
+#include <string.h>
 
 
 // ROM 0x001ea130 FDV
@@ -216,9 +221,75 @@ void	RegisterKeyHelpSlipNatives(void);		// KeyHelpSlip.cpp
 void	RegisterReflowNatives(void);			// Reflow.cpp
 
 
+Ref		FStrFilled(RefArg rcvr, RefArg str);			// frames/StringNatives.cpp
+
+
+// ROM 0x001ec6b4 FDrawExpando
+// An expando's viewDrawScript: its lines drawn, each a label and a text
+// side by side.  Line after line from lineIndent below the view's top: the
+// label that line's setup1 message answers (given the view's target) in
+// labelStyle at the view's left, and the text its setup2 answers - the
+// view's `empty` when that is empty - in textStyle indent pixels to the
+// right; then lineHeight down.  The line numbered `split` is not drawn:
+// it leaves insertHeight instead (where the expanded part goes).  The text
+// is drawn in transfer mode 1 (srcOr), with no width to fit.
+static Ref
+FDrawExpando(RefArg rcvr)
+{
+	TView* view = FailGetView(rcvr);
+	long top = view->viewBounds.top;
+	long left = view->viewBounds.left;
+	long y = RINT(GetProtoVariable(rcvr, RSSYMlineindent, nil)) + top;
+	long numLines = RINT(GetProtoVariable(rcvr, RSSYMnumlines, nil));
+	long split = RINT(GetProtoVariable(rcvr, RSSYMsplit, nil));
+	RefVar lines(GetProtoVariable(rcvr, RSSYMlines, nil));
+	long indent = RINT(GetProtoVariable(rcvr, RSSYMindent, nil));
+	long lineHeight = RINT(GetProtoVariable(rcvr, RSSYMlineheight, nil));
+	RefVar empty(GetProtoVariable(rcvr, RSSYMempty, nil));
+	RefVar args(AllocateArray(RSSYMarray, 1));
+	SetArraySlot(args, 0, RefVar(GetProtoVariable(rcvr, RSSYMtarget, nil)));
+	RefVar line, text;
+	StyleRecord labelStyle, textStyle;
+	CreateTextStyleRecord(RefVar(GetProtoVariable(rcvr, RSSYMlabelstyle, nil)), &labelStyle);
+	CreateTextStyleRecord(RefVar(GetProtoVariable(rcvr, RSSYMtextstyle, nil)), &textStyle);
+	TextOptions options;
+	memset(&options, 0, sizeof(options));
+	options.fTransferMode = 1;
+	for (long i = 0; i < numLines; i++)
+	{
+		long advance;
+		if (i == split)
+			advance = RINT(GetProtoVariable(rcvr, RSSYMinsertheight, nil));
+		else
+		{
+			line = GetArraySlot(lines, i);
+			text = DoMessage(line, RSSYMsetup1, args);
+			TRichString rich(text);
+			FPoint at;
+			at.x = left << 16;
+			at.y = y << 16;
+			DrawRichString(rich, 0, rich.Length(), &labelStyle, at, &options, nil);
+			text = DoMessage(line, RSSYMsetup2, args);
+			if (ISNIL(FStrFilled(rcvr, text)))
+				text = empty;
+			rich.SetStringData(text);
+			at.x = (left + indent) << 16;
+			at.y = y << 16;
+			DrawRichString(rich, 0, rich.Length(), &textStyle, at, &options, nil);
+			advance = lineHeight;
+		}
+		y += advance;
+	}
+	DisposeStyleRecord(&textStyle);
+	DisposeStyleRecord(&labelStyle);
+	return NILREF;
+}
+
+
 void
 RegisterViewExtraNatives(void)
 {
+	RegisterNativeFunction("FDrawExpando", (void*) FDrawExpando, 0);
 	RegisterKeyHelpSlipNatives();
 	RegisterReflowNatives();
 	RegisterNativeFunction("FSyncScrollX", (void*) FSyncScrollX, 3);
