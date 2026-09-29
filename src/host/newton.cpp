@@ -45,6 +45,7 @@
 #include "HostStores.h"
 #include "HostPackages.h"
 #include "HostHeapCheck.h"
+#include "HostSoundDriver.h"
 #include "os600/kernel/host/TaskRuntime.h"
 #include "REPTranslators.h"
 #include "Interpreter.h"
@@ -254,7 +255,14 @@ main(int argc, char** argv)
 	gNewtHostPreMain = HostInstallPackageGlobal;
 	NewtInstallUserMain();
 	gHostKernelServicesTask = KernelServices;
+	// the sound hardware (hal/host/HostSoundDriver.h): the null backend,
+	// which keeps what was played, for now
+	HostInstallSoundDriver(nil);
 	OsBoot();
 	HostWindowStop();
+	long played = 0;
+	HostSoundCaptured(&played);
+	if (played > 0)
+		fprintf(stderr, "[host] sound: %ld samples played\n", played);
 	return 0;
 }

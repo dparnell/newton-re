@@ -33,7 +33,7 @@ if(WIN32)
     target_link_libraries(host_window PUBLIC user32 gdi32 shell32)
 endif()
 add_executable(newton newton.cpp HostKeyboard.cpp HostPackages.cpp HostHeapCheck.cpp)
-target_link_libraries(newton PRIVATE newt host_views host_window)
+target_link_libraries(newton PRIVATE newt host_views host_window hal_host_sound)
 target_compile_definitions(newton PRIVATE "NEWTON_DEFAULT_ROM_IMAGE=\"${NEWTON_ROM_BIN}\"")
 
 # the newt world booted headless for two seconds with the views demo as its
@@ -224,3 +224,10 @@ set_tests_properties(host.NewtonSoupScroll PROPERTIES TIMEOUT 120
 add_test(NAME host.NewtonCredits COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 50 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/credits.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonCredits PROPERTIES TIMEOUT 150
                      PASS_REGULAR_EXPRESSION "credits: creditPict 184 by 216, creditHeight 218.*credits: written")
+
+# a sound played: the ROM's click through PlaySoundSync and through a
+# protoSoundChannel with a callback, headless over the null sound backend
+# (hal/host/HostSoundDriver.h), which counts what was played
+add_test(NAME host.NewtonSound COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 3 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/sound.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(host.NewtonSound PROPERTIES TIMEOUT 120
+                     PASS_REGULAR_EXPRESSION "sound: 520 samples played.*sound: played.*sound: started, active.*sound: callback state 0 error 0.*sound: closed")

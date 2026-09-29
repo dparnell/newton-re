@@ -1,0 +1,26 @@
+// Sound: the ROM's click played the way the system plays it
+// (PlaySoundSync of magic pointer 51 - GlobalSoundChannel, the sound
+// server, the host's sound driver), then again through a
+// protoSoundChannel (@431) of the script's own, whose callback is sent
+// the state and error once the click has been played.  Headless, the
+// host's null sound backend keeps what was played and newton says how many samples it
+// came to when it stops (the click is 267 samples at 22026 a second:
+// 260 at the driver's 21600, twice over).
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//       --script src/host/demo/sound.ns --headless 3
+
+Print("sound: PlaySoundSync");
+PlaySoundSync(@51);
+Print("sound: played");
+
+soundChannel := {_proto: @431};
+soundChannel:Open();
+soundChannel:Schedule({_proto: @51,
+	callback: func(state, error) Print("sound: callback state " & state & " error " & error)});
+soundChannel:Start(true);
+Print("sound: started, " & (if soundChannel:IsActive() then "active" else "not active"));
+AddDelayedCall(func() begin
+	soundChannel:Close();
+	Print("sound: closed");
+end, nil, 1000);
