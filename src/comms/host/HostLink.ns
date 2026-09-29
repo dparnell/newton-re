@@ -94,6 +94,26 @@
 			if not base and GetDataDefs(s) then base := s;
 		if not base then
 			return nil;
+		local views := GetDataDefs(base).viewsToDisplay;
+		if IsArray(views) then begin
+			local kept := [];
+			foreach v in views do
+				if v <> 'cardData then AddArraySlot(kept, v);
+			views := kept;
+		end;
+		// (and the new setup's pages less the card's picker - a child whose
+		// path starts with cardData, Ethernet's first page's third)
+		local noCard := func(pages) if not IsArray(pages) then pages else begin
+			local out := [];
+			foreach page in pages do begin
+				local children := [];
+				foreach c in page.stepChildren do
+					if not (IsArray(c.path) and Length(c.path) > 0 and c.path[0] = 'cardData) then
+						AddArraySlot(children, c);
+				AddArraySlot(out, {_proto: page, stepChildren: children});
+			end;
+			out;
+		end;
 		RegDataDef(host, {_proto: GetDataDefs(base),
 			symbol: host,
 			name: "Host network",
@@ -102,6 +122,12 @@
 			// (offered in the New Internet Setup's picker when the layer is
 			// there, as the Ethernet one asks for its service)
 			DependenciesLoaded: func() InetGetService('|HostNetwork:host|) <> nil,
+			// (the fields the setup's pages show: the prototype's, less its
+			// card - Ethernet's, 0x1cec9, has one; the host's network needs
+			// none)
+			viewsToDisplay: views,
+			newEntryViews: call noCard with (GetDataDefs(base).newEntryViews),
+			AlternateNewViews: call noCard with (GetDataDefs(base).AlternateNewViews),
 			FillNewEntry: func(entry) begin
 				entry.setupName := "Host network";
 				entry.physicalLayer := '|HostNetwork:host|;
