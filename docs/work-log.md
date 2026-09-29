@@ -9,6 +9,25 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-30: the ROM-free track, step 2 - the object area as editable files
+
+- Functions as source (62cbe15): the builder hands every function to one
+  run of `newtonscript --compile-records` - the host's own compiler, with
+  no ROM image - and the object area still comes out identical; 5480
+  top-level functions are `functions/<addr>.ns`; 3784 `alias` lines in
+  the manifest say which named object a shared literal is; symbols
+  matched whatever their case.  362 functions nested inside others stay
+  bytecode.
+- Bitmaps as grayscale PNGs at their own depth (525; the 16-byte header
+  kept beside each in hex, its pad word not always zero), read back by
+  `tools/imaging/png.py`, a pure-Python reader of whatever an editor
+  writes (287ce02).  Simple 8-bit sounds as WAV, byte for byte; the 12 IMA
+  ADPCM sounds and the 19 ring-tone tables stay opaque (0177c0b).  The 7
+  QuickDraw pictures as .pict, the 13 fonts as .ttf (five bitmap fonts,
+  eight metric-only) (a07f134).  The tree: 19 MB in 6,500 files
+  (6d2b19a); `host.ROMSourceRoundTrip` byte-identical at every step,
+  about 25 s.
+
 ## 2026-09-30: the ROM-free track, step 2 stage 1 - the object area as source
 
 - How frame maps are shared (`nsfunctions.py --census`): 8336 maps for

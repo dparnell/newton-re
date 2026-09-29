@@ -213,7 +213,7 @@ worked through.  What could come next (not ranked; the owner chooses):
   the unoptimised default build - `-DCMAKE_BUILD_TYPE=RelWithDebInfo`
   roughly halves processor time again for interactive use; `VisibleRow`
   and `StretchBits`/text are the next hot spots if wanted.
-- **The ROM-free track** (below): step 1, the decompiler, done; step 2 stage 1 (the object area as source, byte-identical) done.
+- **The ROM-free track** (below): step 1, the decompiler, done; step 2 (the object area as editable source, rebuilt byte-identical) done bar details; next step 3, the host loading the built area.
 - Small: the date the Assistant's "tomorrow" comes to ("schedule lunch
   with Daniel tomorrow" puts the meeting on today).
 
@@ -367,13 +367,14 @@ used on the next run.  The pieces, roughly in order:
 2. **Resource extraction**: bitmaps to images, sounds to sound files,
    fonts, strings, locale bundles, the object graph that ties them
    together, as files a person can edit (`docs/rom-free/README.md`).
-   Stage 1 done: `analysis/romsrc.py` extracts the object area as source
-   and builds it back byte-identical (ctest `host.ROMSourceRoundTrip`).
-   Next: functions as decompiled source, the builder moving into the host
-   so it can compile them; then bitmaps to PNG, sounds to WAV, pictures,
-   fonts, the ROM extension's packages, files grouped by what they
-   belong to.  The tree is generated, not committed, until it is worth
-   editing.
+   Done bar the details: `analysis/romsrc.py` extracts the object area
+   as source - functions as decompiled NewtonScript (compiled back by the
+   host with no ROM image), bitmaps as PNG, simple sounds as WAV,
+   pictures as PICT, fonts as .ttf - and builds it back byte-identical
+   (ctest `host.ROMSourceRoundTrip`).  Left: 362 nested functions still
+   bytecode; the IMA sounds and the tables opaque; files cut by address
+   rather than grouped by what they belong to.  The tree is generated,
+   not committed, until it is worth editing.
 3. A **builder** that makes the object area (and the packages) from the
    sources and resources, in the form `frames/ROMImport.cpp` reads today.
 4. Booting from that output with no `--rom`, the generated tables that
