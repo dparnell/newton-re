@@ -9,6 +9,23 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-30: the docker backs up soups and lists packages
+
+- 'csop' (CreateSoup), 'cdsp' (CreateSoupFromSoupDef, swallowing
+  evt.ex.nosoupdef as the ROM does), 'snds' (SendSoup), 'bksp'
+  (BackupSoup: entries changed since the desktop's 'stme' sent whole,
+  the rest as runs in 'bids' - an id, minus the count after it, 0x8000
+  to end, a 'base' first when an id does not fit a short; 'ndir' for an
+  unchanged soup), `GetBackupCursor`, `CheckCancel`, `FinishSequence`
+  (cc1b30a).  ROM bugs kept (`docs/curiosities.md`, "A backup that cannot
+  be cancelled"): `CheckCancel` returns when 90 ticks have already passed
+  since its last look, so after the first 1.5 s of uptime it never looks
+  again; `BackupSoup` never keeps the base its 'base' announces.
+- 'gpin' (GetPackageInfo over `TPMIterator`, answering 'pinf') (1235149).
+  `dock.py --session` makes a soup, adds three entries, backs it up
+  (bids [0, -2, 0x8000]), sends it, removes it, and finds the package it
+  loaded in the list.
+
 ## 2026-09-30: the docker's cursor and entry commands
 
 - `TCursorArray`; the cursor commands ('qury', 'cmap', 'goto', 'crsr',

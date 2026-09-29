@@ -182,11 +182,13 @@ worked through.  What could come next (not ranked; the owner chooses):
   `tools/dock/dock.py`); a docking session's handshake and password
   exchange are in and load packages (`host.NewtonDockSession`); the store
   and soup commands (9bd3a3a) and the cursor and entry commands
-  (8a2af65) are in.  Next: CreateSoup / CreateSoupFromSoupDef / SendSoup
-  / BackupSoup - answered 'unkn' until then - then the package list
-  ('gpin'), `ConvertEntry` (1.x entries, refused for now) and
-  `IsDuplicateEntry` (selective restore, answers no for now), the
-  keyboard passthrough and the slips.
+  (8a2af65) are in, soups are made, sent and backed up, and 'gpin' lists
+  the packages (cc1b30a, 1235149).  Left in `ProcessCommand` (answered
+  'unkn' until then): package restore and removal ('rpkg', 'rmvp'),
+  patches ('gpat', 'rpat'), slips ('dslp', 'islp', 'gpwd'), functions
+  ('cgfn'/'crmf'), 'ginh', 'gsyn', 'test'/'rtst', 'ress', 'pext'/'rpex',
+  `ConvertEntry` (1.x entries, refused for now), `IsDuplicateEntry`
+  (selective restore, answers no for now), the keyboard passthrough.
   **Open, outside the docker**: a livelock between `TPMIterator::Init`'s
   semaphore and `TForkWorld`'s mutex - a script polling `GetPackages()`
   while a forked world works (`docs/comms/README.md`); being looked into.  `test_NIEProtoFSM` also runs
