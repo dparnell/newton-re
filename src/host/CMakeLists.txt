@@ -241,6 +241,13 @@ set_tests_properties(host.NewtonTXView PROPERTIES TIMEOUT 120
                      FAIL_REGULAR_EXPRESSION "FAILED|Exception"
                      PASS_REGULAR_EXPRESSION "txview: 176 characters, 142-176 the last line, scrolled from [1-9][0-9]* to 0.*txview: scrubbed to 167 characters.*txview: 2100 characters on the store, 2100 read back.*txview: replaced undoably, 4 characters left.*txview: the ruler.s justification is now left")
 
+# a paginated protoTXView: the text poured through pages and a page break put
+# in (src/text/TXFrames.h's TXPageFrames, TXFrameFormatter.h's TXPageFormatter)
+add_test(NAME host.NewtonTXPages COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 12 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/txpages.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonTXPages PROPERTIES TIMEOUT 120
+                     FAIL_REGULAR_EXPRESSION "FAILED|Exception"
+                     PASS_REGULAR_EXPRESSION "txpages: 2 pages, 3 with the page break, 655 pixels tall")
+
 # the Sound Recorder driven through its Rec, Stop and Play buttons, headless:
 # the null microphone hears a 1000 Hz test tone (newton --microphone-tone)
 # and newton says how much of what was played back was that tone (the

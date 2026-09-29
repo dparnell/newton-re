@@ -2,13 +2,16 @@
 // document put together from its handlers and filled by an edit, drawn
 // through the display into an offscreen port, a caret placed by a tap, a
 // selection hilited (and grown by dragging and by the arrows), a scroll,
-// and typing.  The ROM image is imported for its fonts and its U.S.
-// locale bundle.
+// and typing; and a paginated document (TXPageFrames, TXPageFormatter)
+// with a page break.  The ROM image is imported for its fonts and its
+// U.S. locale bundle.
 #include "Textension.h"
 #include "TXNewtTextRun.h"
 #include "TXRuler.h"
 #include "TXRulerRange.h"
 #include "TXChars.h"
+#include "TXFrames.h"
+#include "TXStream.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
 #include "ROMImport.h"
@@ -322,6 +325,139 @@ TestDocument()
 }
 
 
+// A paginated document: pages of two lines each, the lines poured from
+// one page into the next as the text grows and shrinks, and a page break
+// (a character 10) ending its page early.
+static void
+TestPages()
+{
+	TXHandlers handlers;
+	handlers.fChars = new TestChars;
+	TXPageFrames* pages = new TXPageFrames;
+	handlers.fFrames = pages;
+	Textension* doc = new Textension;
+	EXPECT(doc->ITextension(&gPort, handlers, 2) == noErr);
+	EXPECT(pages->GetCountPages() == 1);					// the empty line's page
+	int ascent, descent, leading;
+	((TXNewtTextRun*) doc->fPendingRun)->GetHeightInfo(&ascent, &descent, &leading);
+	long lineHeight = ascent + descent + leading;
+	TXLongPoint size = { 2 * lineHeight + 3, kWidth };
+	pages->SetTextBoundsSize(size, nil, 0);
+	EXPECT(((TXPageFormatter*) pages->fFormatter)->fPageHeight == size.v);
+
+	UniChar buffer[512];
+	long n = (long) strlen(kText);
+	for (long i = 0; i < n; i++)
+		buffer[i] = (UniChar) kText[i];
+	TXTextDescriptor text;
+	text.Set(buffer, n);
+	TXReplaceParams params(text);
+	EXPECT(doc->ReplaceRange(0, 0, &params) == noErr);
+
+	TXFormatter* formatter = doc->fFormatter;
+	TXMultiFrameFormatter* frames = (TXMultiFrameFormatter*) pages->fFormatter;
+	long lines = formatter->fLastLine + 1;
+	EXPECT(lines >= 4);
+	long count = pages->GetCountPages();
+	EXPECT(count == (lines + 1) / 2);
+	for (long page = 0; page < count; page++)
+	{
+		TXOffsetPair range;
+		EXPECT(frames->GetFrameLineRange(page, &range));
+		long last = 2 * page + 1 < lines ? 2 * page + 1 : lines - 1;
+		EXPECT(range.fStart == 2 * page && range.fEnd == last);
+		EXPECT(frames->GetFrameTextHeight(page) == (last - 2 * page + 1) * lineHeight);
+		EXPECT(frames->LineToFrame(2 * page, false) == page);
+	}
+	TXOffsetPair none;
+	EXPECT(!frames->GetFrameLineRange(count, &none));
+
+	// the pages one under another, a 5-pixel gutter between
+	Rect margins;
+	pages->GetFramesMargins(&margins);
+	long pageHeight = size.v + margins.top + margins.bottom;
+	EXPECT(pages->GetPageHeight() == pageHeight);
+	EXPECT(pages->GetTotalHeight() == count * (pageHeight + 5) - 5);
+	EXPECT(pages->GetTotalWidth() == kWidth + margins.left + margins.right);
+	TXLongRect bounds;
+	pages->GetAbsTextBounds(1, &bounds);
+	EXPECT(bounds.top == pageHeight + 5 + margins.top && bounds.bottom == bounds.top + size.v);
+	TXLongPoint pt = { pageHeight + 6, 3 };
+	EXPECT(pages->PointToNearestFrame(pt) == 1);
+	pt.v = 0x7fff;
+	EXPECT(pages->PointToNearestFrame(pt) == count - 1);
+	TXPageCell cell;
+	pages->PageNoToCell(3, &cell);
+	EXPECT(cell.fRow == 3 && cell.fColumn == 0);
+
+	// a line's worth taken out of the first page: the others come back
+	TXOffset firstLineEnd = formatter->fLineEnds->GetRangeEnd(0);
+	TXTextDescriptor nothing;
+	nothing.Set(buffer, 0);
+	TXReplaceParams remove(nothing);
+	EXPECT(doc->ReplaceRange(0, firstLineEnd, &remove) == noErr);
+	long fewer = formatter->fLastLine + 1;
+	EXPECT(fewer == lines - 1);
+	EXPECT(pages->GetCountPages() == (fewer + 1) / 2);
+	for (long page = 0; page < pages->GetCountPages(); page++)
+	{
+		TXOffsetPair range;
+		EXPECT(frames->GetFrameLineRange(page, &range));
+		EXPECT(range.fStart == 2 * page);
+	}
+
+	// a page break after the first line's first word: the first page
+	// ends with the line the break ends
+	long before = pages->GetCountPages();
+	TXOffset at = 0;
+	while (doc->fChars->GetChar(at) != ' ')
+		at++;
+	UniChar lf = 10;
+	TXTextDescriptor brk;
+	brk.Set(&lf, 1);
+	TXReplaceParams insert(brk);
+	EXPECT(doc->ReplaceRange(at, at + 1, &insert) == noErr);
+	EXPECT(frames->fPageBreaks != nil && frames->fPageBreaks->fCount == 1);
+	EXPECT(*(long*) frames->fPageBreaks->GetElementPtr(0) == at);
+	TXOffsetPair range;
+	EXPECT(frames->GetFrameLineRange(0, &range));
+	EXPECT(range.fStart == 0 && range.fEnd == 0);
+	EXPECT(formatter->fLineEnds->GetRangeEnd(0) == at + 1);
+	EXPECT(frames->GetFrameTextHeight(0) == lineHeight);
+	EXPECT(pages->GetCountPages() >= before);
+	long total = 0;
+	for (long page = 0; page < pages->GetCountPages(); page++)
+		total += frames->GetFrameTextHeight(page);
+	EXPECT(total == frames->fTotalHeight);
+
+	// laid out again from scratch, the pages come out the same
+	long again = pages->GetCountPages();
+	EXPECT(frames->Format() == noErr);
+	EXPECT(pages->GetCountPages() == again);
+	EXPECT(frames->GetFrameLineRange(0, &range) && range.fEnd == 0);
+
+	// the page breaks go through a stream and come back
+	TXHandleStream stream;
+	EXPECT(frames->WriteToStream(&stream) == noErr);
+	stream.SetPosition(0);
+	delete frames->fPageBreaks;
+	frames->fPageBreaks = nil;
+	EXPECT(frames->ReadFromStream(&stream) == noErr);
+	EXPECT(frames->fPageBreaks != nil && frames->fPageBreaks->fCount == 1 && *(long*) frames->fPageBreaks->GetElementPtr(0) == at);
+
+	// the break taken out again: no table, and every change reflows
+	TXTextDescriptor none2;
+	none2.Set(buffer, 0);
+	TXReplaceParams remove2(none2);
+	EXPECT(doc->ReplaceRange(at, at + 1, &remove2) == noErr);
+	EXPECT(doc->fChars->GetChar(at) != 10);
+	EXPECT(frames->fPageBreaks == nil);
+	EXPECT(frames->GetFrameLineRange(0, &range) && range.fEnd == 1);
+
+	delete doc;
+}
+
+
 int
 main()
 {
@@ -369,6 +505,7 @@ main()
 		Textension::RegisterRun(new TXNewtTextRun);
 		Textension::RegisterRuler(new TXAdvancedRuler);
 		TestDocument();
+		TestPages();
 	}
 	newton_catch_all
 	{

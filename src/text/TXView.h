@@ -44,8 +44,10 @@
 
 				ShowRuler puts the ruler bar (TXRulerUI.h) above the text.
 
-				NOT YET: the pages (TXPageFrames), marked where they would
-				be.
+				A paginated view (SetGeometry's paginate) is laid out on
+				TXNewtPageFrames: the pages of TXFrames.h's TXPageFrames,
+				each drawn with a gray line along its top; a character 10
+				in the text is a page break.
 
 	Reconstructed from the MP2x00 US ROM (0x0024659c-0x0024dff4); each
 	function cites its origin.
@@ -243,6 +245,16 @@ public:
 
 	TView*			fView;			// +0x24
 	TRegionStruct	fSavedVis;		// +0x28  the port's visible region while focused
+};
+
+
+// The pages of a paginated view: a gray line drawn along the top of
+// every page but the first.  The ROM's object is a TXPageFrames (0x34
+// bytes) with a vtable of its own.
+class TXNewtPageFrames : public TXPageFrames
+{
+public:
+	virtual void	Draw(long frame) const;							// ROM 0x0024db0c Draw__16TXNewtPageFramesCFl
 };
 
 

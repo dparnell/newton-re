@@ -28,10 +28,20 @@
 				change of size or margins means for the display (bits: 1
 				the width changed, 2 only the height, 0x18 the margins).
 
-				The ROM's objects are 0x28 bytes (TXFrames) and 0x30
-				(TXMonoSizeFrames, TXMonoFrame).  TXPageFrames is NOT YET.
+				`TXPageFrames` is the pages of a paginated document: one
+				frame per page, all one size, laid out in rows of
+				`fColumns` (one) with a gutter of 5 pixels between them;
+				its formatter is a TXPageFormatter (TXFrameFormatter.h),
+				which says how many pages the text takes.  A page is the
+				text's size with the margins round it, so the whole
+				document is as tall as its rows of pages and the gutters
+				between them.
 
-	Reconstructed from the MP2x00 US ROM (0x00239e0c-0x0023ac54); each
+				The ROM's objects are 0x28 bytes (TXFrames), 0x30
+				(TXMonoSizeFrames, TXMonoFrame) and 0x34 (TXPageFrames).
+
+	Reconstructed from the MP2x00 US ROM (0x00239e0c-0x0023ac54,
+	0x002413e0-0x00241598, 0x00241774, 0x0024282c-0x00242a2c); each
 	function cites its origin.
 */
 
@@ -172,6 +182,40 @@ public:
 	virtual long	GetTotalWidth(void) const;						// ROM 0x0023ab1c GetTotalWidth__11TXMonoFrameCFv
 	virtual void	SectFrames(const Rect& r, TXSectFrames* frames) const;	// ROM 0x0023aa30 SectFrames__11TXMonoFrameCFRC4RectP12TXSectFrames - frame 0
 	virtual long	PointToNearestFrame(const TXLongPoint& pt) const;	// ROM 0x0023aa28 PointToNearestFrame__11TXMonoFrameCFRC11TXLongPoint - 0
+};
+
+
+// Where a page is: its row and its column.
+struct TXPageCell
+{
+	long			fRow;			// +0x00
+	long			fColumn;		// +0x04
+};
+
+
+class TXPageFrames : public TXMonoSizeFrames
+{
+public:
+					TXPageFrames();									// ROM 0x002413e0 __ct__12TXPageFramesFv - with a TXPageFormatter
+
+	// The page's text moved to where the page is.
+	virtual void	GetAbsTextBounds(long frame, TXLongRect* bounds) const;	// ROM 0x002429b0 GetAbsTextBounds__12TXPageFramesCFlP10TXLongRect
+	virtual long	GetTotalHeight(void) const;						// ROM 0x002428a4 GetTotalHeight__12TXPageFramesCFv - the rows of pages and the gutters between
+	virtual long	GetTotalWidth(void) const;						// ROM 0x00242904 GetTotalWidth__12TXPageFramesCFv
+	// The pages from the one at the rectangle's top left to the one at
+	// its bottom right.
+	virtual void	SectFrames(const Rect& r, TXSectFrames* frames) const;	// ROM 0x002414f8 SectFrames__12TXPageFramesCFRC4RectP12TXSectFrames
+	virtual long	PointToNearestFrame(const TXLongPoint& pt) const;	// ROM 0x00241440 PointToNearestFrame__12TXPageFramesCFRC11TXLongPoint
+
+	// from vtable +0x3c
+	virtual long	GetCountPages(void) const;						// ROM 0x00241434 GetCountPages__12TXPageFramesCFv - the formatter's frames
+	virtual long	GetPageGutter(void) const;						// ROM 0x00241774 GetPageGutter__12TXPageFramesCFv - 5
+
+	long			GetPageHeight(void) const;						// ROM 0x0024282c GetPageHeight__12TXPageFramesCFv - the text's and the margins
+	long			GetPageWidth(void) const;						// ROM 0x00242868 GetPageWidth__12TXPageFramesCFv
+	void			PageNoToCell(long page, TXPageCell* cell) const;	// ROM 0x0024295c PageNoToCell__12TXPageFramesCFlP10TXPageCell
+
+	unsigned char	fColumns;		// +0x30  pages in a row
 };
 
 #endif	/* __TXFRAMES_H */

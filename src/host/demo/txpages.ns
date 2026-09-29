@@ -1,0 +1,75 @@
+// A paginated protoTXView (src/text/TXView.h, TXFrames.h's TXPageFrames,
+// TXFrameFormatter.h's TXPageFormatter) in the booted Newton world: pages
+// asked for with SetGeometry before the document is made, text poured
+// through them, and a page break put in.  Run from the repository root:
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//       --headless 12 --script src/host/demo/txpages.ns
+//   build/venv/Scripts/python tools/imaging/pgm2png.py build/txpages-1.pgm build/txpages-1.png
+//
+// build/txpages-1.pgm: the text over two pages, the second page's top edge
+// a gray line (with the gutter of five pixels above it); build/txpages-2.pgm:
+// a page break put in after the first sentence, so the first page ends
+// there and the rest moves on a page, redrawn by the edit alone.  Each
+// check prints "txpages: FAILED ..." when it does not hold (the ctest looks
+// for that), and the last line says how the pages came out.
+//
+// The view shows two pages at most: with three or more in view the ROM's
+// note of the frames an edit touched overflows (TXFrameFormatter.h's
+// TXFramesEditInfo, ROM BUG) and the pages past the second are not redrawn
+// properly after an edit - on the Newton as here.
+//
+// Pages can only be asked for before the document is made (the view's
+// SetupDone makes it), so SetGeometry is sent from viewSetupChildrenScript,
+// when the view exists but its document does not yet.  protoTXView is
+// magic pointer 826.
+
+AddDelayedCall(func() begin
+	local margins := {left: 4, top: 4, right: 4, bottom: 4};
+	local pageHeight := 215;
+	tx := AddView(GetRoot(), {
+		_proto: @826,						// protoTXView
+		viewFlags: 0x0A01,					// visible, clickable, gestures
+		viewBounds: {left: 20, top: 30, right: 300, bottom: 465},
+		viewFormat: 0x151,					// white fill, a one-pixel frame
+		viewFont: 0x2800,					// espy 10
+		viewSetupChildrenScript: func() begin
+			:SetGeometry(true, 272, pageHeight, margins);
+			inherited:?viewSetupChildrenScript();
+		end });
+
+	local sentence := "The Newton's text engine lays a document out on pages when it is asked to, each page the same size with a gutter between them. ";
+	local text := sentence;
+	for i := 1 to 5 do
+		text := text & sentence;
+	tx:Replace({first: 0, last: 0}, {text: text, styles: [StrLen(text), {family: 'espy, size: 12, face: 0}]}, nil);
+	local count := tx:GetCountCharacters();
+	if count <> StrLen(text) then Print("txpages: FAILED - the text put in is " & count & " characters");
+
+	// the pages: each the height asked for (the text's and the margins),
+	// one under another with a gutter of 5
+	local pages := tx:GetCountPages();
+	if pages < 2 then Print("txpages: FAILED - " & pages & " page(s)");
+	local total := tx:GetTotalHeight();
+	if total <> pages * (pageHeight + 5) - 5 then Print("txpages: FAILED - the pages are " & total & " tall for " & pages);
+	RefreshViews();
+
+	AddDelayedCall(func() begin
+		ScreenSnapshot("build/txpages-1.pgm");
+
+		// a page break after the first sentence: the first page ends there
+		local at := StrLen(sentence);
+		tx:InsertPageBreak({first: at, last: at});
+		local after := tx:GetCountPages();
+		if tx:GetCountCharacters() <> count + 1 then Print("txpages: FAILED - the page break is not in the text");
+		if after <= pages then Print("txpages: FAILED - the page break left " & after & " page(s) of " & pages);
+		local brk := tx:GetRangeData({first: at, last: at + 1}, 'text);
+		if Ord(brk[0]) <> 10 then Print("txpages: FAILED - the page break is character " & Ord(brk[0]));
+		RefreshViews();
+
+		AddDelayedCall(func() begin
+			ScreenSnapshot("build/txpages-2.pgm");
+			Print("txpages: " & pages & " pages, " & after & " with the page break, " & tx:GetTotalHeight() & " pixels tall");
+		end, nil, 500);
+	end, nil, 500);
+end, nil, 1000);

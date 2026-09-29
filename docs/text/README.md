@@ -232,9 +232,8 @@ the busy box it is working, takes the first of `GetStores()`, rounds the
 size up to a whole kilobyte and adds two more, and asks
 `FLBAllocCompressed` for a `'binary` of that length on the store with a
 `"TLZStoreCompander"` over it — which is what lets a document larger
-than the heap be worked on at all. That arm is **not yet**: large
-binaries are not reconstructed, so `Create` answers `kError_No_Memory`,
-which is exactly what the ROM's own does when nothing came of it.
+than the heap be worked on at all.  (With no store, or when the store
+cannot make the binary, it answers the error, as the ROM's does.)
 
 ### Text through a stream
 
@@ -465,8 +464,9 @@ all five out, `Get` makes one outside the pool and `Done` frees it);
 `TXInvalSectRect` dirties a rectangle on the root view (its vtable +0x54,
 `TRootView::Dirty`) when it shows through a region, and
 `TXGetNewDefaultObject` copies the default run or ruler from the
-registered objects (`gRegisteredRuns`/`gRegisteredRulers`).  NOT YET:
-`TXScrollRect`, over QuickDraw's `ScrollRect`.
+registered objects (`gRegisteredRuns`/`gRegisteredRulers`).
+`TXScrollRect` scrolls a rectangle of the port over QuickDraw's
+`ScrollRect` (`qd/ScrollRect.h`).
 
 ## The lines' heights (`text/TXLinesHeights.h`)
 
@@ -618,8 +618,57 @@ in frame 0, the frame 0x7fff pixels tall), a width, and a height that is
 unbounded (0x40000000) until one is given.  An edit leaves a note of the
 frames it touched in `gFramesEditInfo` - which has room for two, and
 `CatchFrame` does not check - with, for the mono formatter, how much the
-text's height changed, which is what a display redraws by.  The
-multi-frame and page formatters and `TXPageFrames` are NOT YET.
+text's height changed, which is what a display redraws by.
+
+### Pages
+
+A paginated document (a protoTXView given `SetGeometry(true, ...)` before
+its document is made) is laid out on `TXPageFrames`: one frame per page,
+every page the text's size with the margins round it, laid out in rows of
+`fColumns` (always one in the ROM) with a gutter of five pixels between
+them, so the document is `pages * (page height + 5) - 5` tall and a page's
+text is its frame's rectangle moved down by the pages above it
+(`PageNoToCell`, `GetAbsTextBounds`); a point is on the page its row and
+column say (`PointToNearestFrame`, clamped to the last page), and a
+rectangle crosses the pages from the one at its top left to the one at its
+bottom right (`SectFrames`).  `TXNewtPageFrames`, the view's, draws a gray
+line along the top of every page but the first.
+
+The formatter is a `TXPageFormatter`, over `TXMultiFrameFormatter`: the
+frames are a `TXRanges` whose element is a frame's end (the line after its
+last) and the height of the text in it.  Every change to a line - put in,
+made taller or shorter, taken out - is added to its frame's height, and
+the frame is *reflowed* when it no longer fits (or got shorter, so lines
+may come back, or whenever page breaks are involved): `CheckReflow` walks
+on from the frame, `MeasureFrame` saying where each frame's lines should
+end now (as many lines as the page holds - one at least - or up to a page
+break) and `BreakFrame` ending them there, the difference carried into the
+next frame; a frame that must give back more than the next one holds
+empties it, and it is removed (`RemoveFormattedFrames`), and what is left
+over at the end becomes a new page (`AppendFrame`).  It stops at the first
+frame after the edited one that comes out as it was.  `Format` lays the
+lines out into pages from scratch (a document read in, `CalcLinesHeights`).
+
+A **page break** is a character 10 in the text (`InsertPageBreak` puts one
+in; the formatter already ends a line there).  The multi-frame formatter
+keeps their offsets in a `TXLongTagArray` (`CharRangeChanged`: those in
+what an edit took out dropped, the rest moved, and the 10s in what was put
+in added), and a page that runs past one ends with the line the break ends
+(`CheckFrameBreaks`).  When the last break goes, the table goes with it and
+every later change reflows (`fReflowAll`).  They travel on a stream after
+the lines, a halfword count and a word each.
+
+ROM BUG: `gFramesEditInfo` has room for two frames and `CatchFrame` does
+not check, but `TXDisplay::BeginEdit` catches every frame in the view, so
+a view showing three pages or more writes the third frame's entry over the
+note's own first and last frame (the last made nought) and the fourth and
+later ones into the eight bytes after it and `gTXParagCtrlChars`; those
+frames are then not found, and are not redrawn properly after an edit.
+The host keeps the three globals together in the ROM's order
+(`TXFrameFormatter.cpp`), so it goes wrong in the same way - a demo page
+four in view showed a page with a line missing and one half-drawn after a
+page break was put in.  With pages of a realistic size a view shows two at
+most.
 
 ## The formatter (`text/TXFormatter.h`)
 
@@ -851,15 +900,19 @@ and a packed font spec given to `ChangeRangeRuns` (the method) comes out
 with its family four times its number, while the same spec in command
 0x49 goes in with a bare size and face; others are commented where
 they are (the drag rectangle of a picture made of a stale stack word, the
-insertion of a tab whose old value is whatever the stack held).  NOT YET:
-pages (TXPageFrames, TXMultiFrameFormatter).
+insertion of a tab whose old value is whatever the stack held).  A
+paginated view is laid out on `TXNewtPageFrames` (above, "Pages").
 
 `src/host/demo/txview.ns` (ctest `host.NewtonTXView`) puts text in, types
 a word at its end, makes it bold, scrolls, cuts "hello" to a clipping and
 pastes it at the start, scrubs it out with the pen, keeps 2100 characters
 on the store and reads them back into another view, shows the ruler bar
 over it and taps a justification on it - six pictures,
-`build/txview-1.pgm` to `-6.pgm`.
+`build/txview-1.pgm` to `-6.pgm`.  `src/host/demo/txpages.ns` (ctest
+`host.NewtonTXPages`) asks for pages of 215 pixels, puts six sentences on
+two of them and a page break after the first, which ends the first page
+there and makes three - `build/txpages-1.pgm` and `-2.pgm`; the
+paginated side is also `test_TXDisplay`'s `TestPages`.
 
 ## Not yet reconstructed - the plan
 
@@ -894,12 +947,11 @@ Bottom up, in the order the layers need each other:
    `PointToChar`, `GetTextObjField`), which came with them.
 3. DONE: `TXLine` (0x0023cba8-0x0023ded4), the pieces, tabs,
    justification, drawing and hit-testing.
-4. DONE for a view's one frame: `TXFrames`, `TXMonoSizeFrames`,
-   `TXMonoFrame`, `TXSectFrames`, `TXDisplayChanges`, `TXFrameFormatter`,
-   `TXMonoFrameFormatter`, `gFramesEditInfo` and `TXFormatter`.  NOT YET:
-   the paginated side - `TXMultiFrameFormatter` (0x002415b0-0x00242704),
-   `TXPageFrames` and `TXPageFormatter` (0x002413e0-0x00242a2c), which
-   only a document laid out on pages needs.
+4. DONE: `TXFrames`, `TXMonoSizeFrames`, `TXMonoFrame`, `TXSectFrames`,
+   `TXDisplayChanges`, `TXFrameFormatter`, `TXMonoFrameFormatter`,
+   `gFramesEditInfo` and `TXFormatter`, and the paginated side -
+   `TXMultiFrameFormatter` (0x002415b0-0x00242704), `TXPageFrames` and
+   `TXPageFormatter` (0x002413e0-0x00242a2c) and `TXNewtPageFrames`.
 5. DONE: `TXDisplay` and `TXHilite` (with `qd/ScrollRect.h`).  The
    Newton subclasses `TXNewtDisplay`/`TXNewtHilite` (a TView's visible
    region, the root view's caret and key view) come with `TXView`.
@@ -910,7 +962,7 @@ Bottom up, in the order the layers need each other:
 7. DONE: `TXView` and the 39 natives, `TXNewtContainer`, `TXBinaryChars`,
    the clipboard, drag and drop and the gestures, `TXVBOChars` and the
    stream factory's large binaries, and the ruler bar (`TXRulerUI`).
-   What is left of the engine is the paginated side (item 4).
+   With the pages (item 4) the engine is complete.
 
 `TXAttrObject::ReadPublicData`/`WritePublicData` are the base's empty
 pair; the subclasses that put a style on a stream come with the runs.

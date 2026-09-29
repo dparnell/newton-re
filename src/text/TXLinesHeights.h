@@ -131,7 +131,7 @@ public:
 
 
 // The one a line being laid out uses (TXLine::DefineRuns).
-extern TXParagCtrlChars	gTXParagCtrlChars;					// ROM 0x0c104de0 gTXParagCtrlChars
+extern TXParagCtrlChars&	gTXParagCtrlChars;					// ROM 0x0c104de0 gTXParagCtrlChars (kept after gFramesEditInfo: TXFrameFormatter.cpp)
 
 
 #endif	/* __TXLINESHEIGHTS_H */

@@ -346,11 +346,7 @@ long
 TXView::GetCountPages(void)
 {
 	if (fTXFlags & kTXViewPaginated)
-	{
-		// NOT YET RECONSTRUCTED: TXPageFrames - its page count (vtable
-		// +0x3c); a paginated document is never made on the host
-		return 0;
-	}
+		return ((TXPageFrames*) fText->fDisplay->fFrames)->GetCountPages();
 	return (long) (intptr_t) this;
 }
 
@@ -392,9 +388,14 @@ TXView::CreateNewTextension(void)
 					handlers.fDisplay = display;
 					if (fTXFlags & kTXViewPaginated)
 					{
-						// NOT YET RECONSTRUCTED: TXPageFrames /
-						// TXNewtPageFrames - the document is made on one
-						// frame instead
+						handlers.fFrames = new TXNewtPageFrames;
+						if (handlers.fFrames == nil)
+						{
+							delete display;
+							delete hilite;
+							delete chars;
+							Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
+						}
 					}
 					NewtonErr err = fText->ITextension(nil, handlers, 0);
 					if (err != noErr)
@@ -1951,6 +1952,29 @@ PortPicSave(void)
 }
 
 
+// ROM 0x0024db0c Draw__16TXNewtPageFramesCFl
+// A page's top edge in gray - not the first page's, and not into a
+// picture being recorded.
+void
+TXNewtPageFrames::Draw(long frame) const
+{
+	if (frame == 0)
+		return;
+	if (PortPicSave() != nil)
+		return;
+	Rect r;
+	GetFrameBounds(frame, &r);
+	PenState pen;
+	GetPenState(&pen);
+	PenNormal();
+	SetFgPattern(GetStdPattern(grayPat));
+	PenSize(1, 1);
+	MoveTo(r.left, r.top);
+	Line(r.right - r.left, 0);
+	SetPenState(&pen);
+}
+
+
 // ROM 0x0024d824 Focus__13TXNewtDisplayFPPP6RegionP5Point
 // The port's visible region narrowed to the view's (the old one kept) and
 // the clip set to the text's region - unless a picture is being recorded.
@@ -2441,7 +2465,7 @@ TXView::DrawDragData(const Rect& /*bounds*/)
 	PenState saved;
 	GetPenState(&saved);
 	PenNormal();
-	SetFgPattern(GetStdPattern(2));
+	SetFgPattern(GetStdPattern(grayPat));
 	PenSize(2, 2);
 	FrameRgn(rgn);
 	SetPenState(&saved);

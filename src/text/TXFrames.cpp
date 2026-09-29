@@ -3,7 +3,8 @@
 
 	Contains:	The frames (TXFrames.h).
 
-	Reconstructed from the MP2x00 US ROM (0x00239e0c-0x0023ac54); each
+	Reconstructed from the MP2x00 US ROM (0x00239e0c-0x0023ac54,
+	0x002413e0-0x00241598, 0x00241774, 0x0024282c-0x00242a2c); each
 	function cites its origin.
 */
 
@@ -566,4 +567,144 @@ TXMonoFrame::GetTotalWidth(void) const
 	TXLongRect frame;
 	GetAbsFrameBounds(0, &frame);
 	return frame.right - frame.left;
+}
+
+
+// ROM 0x002413e0 __ct__12TXPageFramesFv
+TXPageFrames::TXPageFrames()
+{
+	fColumns = 1;
+	fFormatter = new TXPageFormatter;
+}
+
+
+// ROM 0x00241434 GetCountPages__12TXPageFramesCFv
+long
+TXPageFrames::GetCountPages(void) const
+{
+	return fFormatter->GetCountFrames();
+}
+
+
+// ROM 0x00241440 PointToNearestFrame__12TXPageFramesCFRC11TXLongPoint
+long
+TXPageFrames::PointToNearestFrame(const TXLongPoint& pt) const
+{
+	long column;
+	if (fColumns < 2)
+		column = 0;
+	else
+	{
+		column = pt.h / (GetPageWidth() + GetPageGutter());
+		if (column >= fColumns - 1)
+			column = fColumns - 1;
+	}
+	long row = pt.v / (GetPageHeight() + GetPageGutter());
+	long page = row * fColumns + column;
+	long last = GetCountPages() - 1;
+	if (page < last)
+		last = page;
+	return last;
+}
+
+
+// ROM 0x002414f8 SectFrames__12TXPageFramesCFRC4RectP12TXSectFrames
+void
+TXPageFrames::SectFrames(const Rect& r, TXSectFrames* frames) const
+{
+	TXLongRect abs;
+	DrawToAbs(r, &abs);
+	TXLongPoint pt;
+	pt.v = abs.top;
+	pt.h = abs.left;
+	long first = PointToNearestFrame(pt);
+	pt.v = abs.top;
+	pt.h = abs.right;
+	long topRight = PointToNearestFrame(pt);
+	pt.v = abs.bottom;
+	pt.h = abs.right;
+	long last = PointToNearestFrame(pt);
+	frames->SetUniform(first, (topRight - first) + 1, last, fColumns);
+}
+
+
+// ROM 0x00241774 GetPageGutter__12TXPageFramesCFv
+long
+TXPageFrames::GetPageGutter(void) const
+{
+	return 5;
+}
+
+
+// ROM 0x0024282c GetPageHeight__12TXPageFramesCFv
+long
+TXPageFrames::GetPageHeight(void) const
+{
+	Rect margins;
+	GetFramesMargins(&margins);
+	return fSize.v + margins.top + margins.bottom;
+}
+
+
+// ROM 0x00242868 GetPageWidth__12TXPageFramesCFv
+long
+TXPageFrames::GetPageWidth(void) const
+{
+	Rect margins;
+	GetFramesMargins(&margins);
+	return fSize.h + margins.left + margins.right;
+}
+
+
+// ROM 0x002428a4 GetTotalHeight__12TXPageFramesCFv
+long
+TXPageFrames::GetTotalHeight(void) const
+{
+	long rows = (GetCountPages() + fColumns - 1) / fColumns;
+	long gutter = GetPageGutter();
+	return rows * (GetPageHeight() + gutter) - gutter;
+}
+
+
+// ROM 0x00242904 GetTotalWidth__12TXPageFramesCFv
+long
+TXPageFrames::GetTotalWidth(void) const
+{
+	long columns = GetCountPages();
+	if (fColumns < columns)
+		columns = fColumns;
+	long gutter = GetPageGutter();
+	return columns * (GetPageWidth() + gutter) - gutter;
+}
+
+
+// ROM 0x0024295c PageNoToCell__12TXPageFramesCFlP10TXPageCell
+void
+TXPageFrames::PageNoToCell(long page, TXPageCell* cell) const
+{
+	long column = 0;
+	if (page == 0)
+		cell->fRow = 0;
+	else if (fColumns == 1)
+		cell->fRow = page;
+	else
+	{
+		cell->fRow = page / fColumns;
+		column = page % fColumns;
+	}
+	cell->fColumn = column;
+}
+
+
+// ROM 0x002429b0 GetAbsTextBounds__12TXPageFramesCFlP10TXLongRect
+void
+TXPageFrames::GetAbsTextBounds(long frame, TXLongRect* bounds) const
+{
+	TXFrames::GetAbsTextBounds(frame, bounds);
+	TXPageCell cell;
+	PageNoToCell(frame, &cell);
+	long gutter = GetPageGutter();
+	long width = GetPageWidth();
+	long height = GetPageHeight();
+	bounds->Offset(cell.fColumn * (width + gutter), cell.fRow * (height + gutter));
 }
