@@ -75,8 +75,22 @@ was worked through is in `docs/work-log.md`): 31 of the 32 package
 natives answered.  Left: the `'book` handler (the book reader),
 `SuckPackageFromEndPoint` (comms), a protocol part's class info (raw
 ARM), a card's `'stor` event and `GetCardReinsertionInfo` (PCMCIA),
-`StopFrameSound` (the sound server), XIP packages (the ROM domain
-manager's page faulting, about 11 KB).
+XIP packages (the ROM domain manager's page faulting, about 11 KB).
+
+**Third-party packages** (`fixtures/packages/`, ctest
+`host.NewtonThirdPartyPackages` with a restart half): every fixture
+installs - apps and Internet Setup as `FormEntry`, NHSounds and the NIE
+modules as `AutoEntry`, fonts and ISP Templates as `'????Entry` (the ROM's
+own `HandleNewPackage` does the same) - except MDaleks1, which the ROM
+refuses as a second "Daleks:Avarice".  Removal (the drawer's delete,
+`SafeRemovePackage`, `DeActivatePackage` + `RemovePackage`) is clean and
+survives a restart.  RPNcalc computes; Daleks, NewtHack, Register and
+Internet Setup open.  Left: Mahjongg carries a compiled native (ARM)
+function the host cannot run; the NIE's protocol parts (their table is
+in `docs/packages/README.md`) get host implementations from the comms
+work (the owner's decision: the host's own TCP/IP stack, not the NIE's);
+the card server (`TCardServer`) - a `'cdhl` part is registered with no
+sockets to serve.
 
 ## Pictures: finished
 

@@ -9,6 +9,27 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: third-party packages install and uninstall (the owner's fixtures)
+
+- Stored apps came in as extensions: the Extras drawer's
+  `HandleNewPackage` reads `GetPkgRefInfo(pkgRef).parts` as soon as a
+  package is stored, before it is activated, and the host only had a
+  part's frame once the part was imported at install - now imported on
+  demand and reused by the install (`aa7fe7c`), and such provisional
+  areas go with their package (`f85988a`).
+- `SuckPackageFromBinary` read from a binary it had not locked, so a
+  collection while storing moved it and garbage was stored (Mahjongg,
+  Daleks, Times refused with -10401) - locked as the ROM's `TObjectPtr`
+  does (`69e8ac8`).
+- The 'font part handler (`TFontPart`, `InitFontLoader`; fonts into
+  `vars.fonts` and out again) (`eef305e`); `PackageContaining` through the
+  domain manager (the NIE's later parts lie beyond where the host looked),
+  `ObjectPkgRef`/`ObjectPid` for a part's objects (`226f0cb`);
+  `TCardPartHandler` for 'cdhl parts, and unregistered protocol parts named
+  on stderr with `classinfo.py --package` listing them (`3b73f9c`); docs
+  and `host.NewtonThirdPartyPackages` (`63b583d`).  MDaleks1 is refused as
+  the ROM refuses it: a second package of the same name.
+
 ## 2026-09-29: the text engine, round 6 - pages; finished
 
 - Pagination (`e3d153b`): `TXPageFrames` (a frame per page, rows of
