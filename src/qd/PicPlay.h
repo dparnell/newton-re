@@ -30,8 +30,11 @@
 				carries itself (ink words), after which the text is drawn;
 				TextCleanup gives back what they allocated.
 
-				NOT YET RECONSTRUCTED: curves and paths
-				(read, not drawn - MapCurve/CallCurve, MapPaths/CallPaths),
+				Curves (Curves.h) and paths (Paths.h) are mapped onto the
+				destination and handed to CallCurve/CallPaths - even while
+				the picture is being made into shapes (a ROM quirk kept).
+
+				NOT YET RECONSTRUCTED:
 				pixel patterns (0x12-0x14 type 1: read and the pattern left
 				as it was - ConvertPixPat's converters).  Recording is
 				PicRecord.h.
@@ -68,7 +71,7 @@ typedef void	(*OpcodeProc)(long opcode, PicPlay* play, GrafPort* port);
 struct PicPlay
 {
 	Rect		fRect = {};				// +0x00  the last rectangle read ("the same" opcodes use it again)
-	char		fCurve[0x18] = {};		// +0x08  the last curve read
+	curve		fCurve = {};			// +0x08  the last curve read
 	Point		fLastPt = {};			// +0x20  where the last line ended, unmapped
 	Point		fTextLoc = {};			// +0x24  where text goes, unmapped
 	Point		fOvalSize = {};			// +0x28  a round rectangle's corners

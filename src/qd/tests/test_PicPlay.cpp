@@ -26,6 +26,8 @@
 #include "ROMConstants.h"
 #include "Fonts.h"
 #include "Text.h"
+#include "Curves.h"
+#include "Paths.h"
 #include "memory/host/KernelHeap.h"
 
 #include <stdio.h>
@@ -500,6 +502,97 @@ TestRecordText()
 }
 
 
+// (a handle of paths: contours of count points each, their off-curve bits
+// and the points in whole pixels)
+static pathsHandle
+MakePaths(long contours, const long* counts, const ULong32* bits, const short (*points)[2])
+{
+	long size = 4;
+	for (long c = 0; c < contours; c++)
+		size += 4 + ((counts[c] + 31) >> 5) * 4 + counts[c] * 8;
+	pathsHandle h = (pathsHandle) NewHandle(size);
+	Long32* w = (Long32*) *h;
+	*w++ = contours;
+	long k = 0;
+	for (long c = 0; c < contours; c++)
+	{
+		*w++ = counts[c];
+		for (long i = 0; i < ((counts[c] + 31) >> 5); i++)
+			*w++ = (Long32) bits[c];
+		for (long i = 0; i < counts[c]; i++, k++)
+		{
+			*w++ = points[k][0] << 16;
+			*w++ = points[k][1] << 16;
+		}
+	}
+	return h;
+}
+
+
+// the curves and paths the recording test draws: a curve framed, one
+// painted and one filled, and paths - a square with a rounded corner (an
+// off-curve point) framed, and two contours, the second inside the first,
+// painted (a hole: the regions' inversion points are even-odd)
+static void
+CurveScene()
+{
+	PenNormal();
+	curve c;
+	FPoint a = { 2 << 16, 20 << 16 }, b = { 16 << 16, 0 }, e = { 30 << 16, 20 << 16 };
+	SetCurve(&c, a, b, e);
+	FrameCurve(&c);
+	FPoint a2 = { 34 << 16, 2 << 16 }, b2 = { 62 << 16, 10 << 16 }, e2 = { 34 << 16, 20 << 16 };
+	SetCurve(&c, a2, b2, e2);
+	PaintCurve(&c);
+	OffsetCurve(&c, 0, 20 << 16);
+	FillCurve(&c, GetStdPattern(grayPat));
+	const long counts1[1] = { 6 };
+	const ULong32 bits1[1] = { 0x08000000 };			// point 4 is off the curve
+	const short points1[6][2] = { { 2, 26 }, { 20, 26 }, { 20, 36 }, { 20, 44 }, { 10, 44 }, { 2, 26 } };
+	pathsHandle square = MakePaths(1, counts1, bits1, points1);
+	FramePaths(square);
+	DisposePaths(square);
+	const long counts2[2] = { 5, 5 };
+	const ULong32 bits2[2] = { 0, 0 };
+	const short points2[10][2] = { { 2, 48 }, { 30, 48 }, { 30, 62 }, { 2, 62 }, { 2, 48 },
+								   { 8, 52 }, { 20, 52 }, { 20, 58 }, { 8, 58 }, { 8, 52 } };
+	pathsHandle ring = MakePaths(2, counts2, bits2, points2);
+	PaintPaths(ring);
+	DisposePaths(ring);
+	PenNormal();
+}
+
+
+// Curves and paths drawn, recorded and played back to the same pixels.
+static void
+TestRecordCurves()
+{
+	ClearMap();
+	CurveScene();
+	unsigned char direct[sizeof(gBits)];
+	memcpy(direct, gBits, sizeof(gBits));
+	EXPECT(Ink(0, 0, 32, 22) > 20 && Ink(0, 0, 32, 22) < 120);	// the framed curve: a line, not an area
+	EXPECT(GetPixel(&gMap, 45, 11) != 0);					// the painted curve's inside
+	EXPECT(Ink(2, 48, 30, 62) > 200 && GetPixel(&gMap, 14, 55) == 0);	// the ring and its hole
+
+	ClearMap();
+	Rect frame;
+	SetRect(&frame, 0, 0, kSize, kSize);
+	PicHandle picture = OpenPicture(&frame, false);
+	CurveScene();
+	ClosePicture();
+	EXPECT(Ink(0, 0, kSize, kSize) == 0);
+	EXPECT(CountOpcode(picture, 0x0c80) >= 1 && CountOpcode(picture, 0x0c81) >= 1 && CountOpcode(picture, 0x0c84) >= 1);
+	EXPECT(CountOpcode(picture, 0x8190) >= 1 && CountOpcode(picture, 0x8191) >= 1);
+	Rect dst = frame;
+	DrawPicture(picture, &dst, false);
+	EXPECT(memcmp(direct, gBits, sizeof(gBits)) == 0);
+	if (memcmp(direct, gBits, sizeof(gBits)) != 0)
+		ReportDifference(direct);
+	KillPicture(picture);
+}
+
+
 // PackBits, the ROM's: runs and literals, and back out through UnpackBits
 static void
 TestPackBits()
@@ -576,6 +669,7 @@ main()
 	TestPackBits();
 	TestRecord();
 	TestRecordText();
+	TestRecordCurves();
 
 	ClosePort(&gPort);
 	printf("test_PicPlay: %s\n", failures == 0 ? "ok" : "FAILED");

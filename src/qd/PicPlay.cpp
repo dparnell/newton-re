@@ -29,6 +29,8 @@
 #include "Fonts.h"
 #include "ObjHeader.h"
 #include "TextObject.h"
+#include "Curves.h"
+#include "Paths.h"
 #include "Frames.h"
 #include <new>
 #include <string.h>
@@ -852,6 +854,33 @@ TextCleanup(PicPlay* play, char* families)
 }
 
 
+// (host) A curve opcode's work in ParsePicCodes (0x0c80-0x0c84 and
+// 0x8088-0x808c): the curve read unless it is "the same" as the last, then
+// a copy of it mapped onto the destination and handed to CallCurve.
+//
+// ROM BUGS, kept: the copy is mapped twice, so a picture drawn at another
+// size has its curves scaled twice over; and the procs are never asked -
+// the curve is drawn even while the picture is being made into shapes.
+// And StdCurve records a curve the same as the last as 0x0c88 + the verb,
+// which this reads as a reserved opcode of 0x18 bytes: a curve drawn twice
+// running leaves a picture that cannot be read past it.
+static long
+PlayCurve(PicPlay* play, GrafVerb verb, Boolean same)
+{
+	if (!same)
+	{
+		Fixed* p = &play->fCurve.first.x;
+		for (long i = 0; i < 6; i++)
+			p[i] = (Fixed) GetPicLong();
+	}
+	curve c = play->fCurve;
+	MapCurve(&c, &play->fFromRect, &play->fToRect);
+	MapCurve(&c, &play->fFromRect, &play->fToRect);
+	CallCurve(verb, &c);
+	return 1;
+}
+
+
 // ROM 0x0033249c ParsePicCodes__FP7PicPlayPCPFlT1P8GrafPort_v
 // One opcode played: a byte for a version 1 picture, a word (word aligned)
 // for version 2.  ==> 1 to go on, 0 at the end (0xff) or when the picture
@@ -1277,32 +1306,28 @@ ParsePicCodes(PicPlay* play, const OpcodeProc* procs)
 	if (opcode < 0x8000)
 	{
 		if (opcode >= 0xc80 && opcode - 0xc80 <= 4)
-		{
-			// the Newton's curves.  NOT YET RECONSTRUCTED: MapCurve (the ROM
-			// maps the curve twice), CallCurve - the curve is read.
-			if (!same)
-				GetPicData(play->fCurve, 0x18);
-			return 1;
-		}
+			return PlayCurve(play, verb, same);
 		return GetPicResvOpcode((opcode >> 8) << 1, false);
 	}
 	if (opcode - 0x8000 >= 0x88 && opcode - 0x8000 <= 0x8c)
-	{
-		if (!same)
-			GetPicData(play->fCurve, 0x18);			// NOT YET: the curve drawn
-		return 1;
-	}
+		return PlayCurve(play, verb, same);
 	if (opcode - 0x8100 >= 0x90 && opcode - 0x8100 <= 0x94)
 	{
-		// the Newton's paths.  NOT YET RECONSTRUCTED: MapPaths, CallPaths.
+		// the Newton's paths: the handle's size and bytes, mapped and drawn
 		long size = GetPicLong();
-		Handle paths = NewHandle(size);
+		pathsHandle paths = (pathsHandle) NewHandle(size);
 		if (paths == nil)
 			return 0;
-		HLock(paths);
-		GetPicData(*paths, size);
-		HUnlock(paths);
-		DisposHandle(paths);
+		HLock((Handle) paths);
+		GetPicData((char*) *paths, size);
+		// (host: every word of them big-endian in the picture)
+		Long32* words = (Long32*) *paths;
+		for (long i = 0; i < size / 4; i++)
+			words[i] = (Long32) GetBigEndianWord(&words[i]);
+		HUnlock((Handle) paths);
+		MapPaths(paths, from, to);
+		CallPaths(verb, paths);
+		DisposHandle((Handle) paths);
 		return 1;
 	}
 	switch (opcode)

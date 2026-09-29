@@ -25,6 +25,7 @@ add_library(qd STATIC
     PicRecord.cpp
     TextObject.cpp
     Curves.cpp
+    Paths.cpp
     QDTables.cpp
     Transform.cpp
     Screen.cpp

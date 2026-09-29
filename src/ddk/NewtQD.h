@@ -66,14 +66,14 @@
 
 	typedef struct path
 		{
-		long	vectors;
-		long	controlBits[1];
+		Long32	vectors;		/* Long32: the ARM's word (sync_ddk_headers.py) */
+		Long32	controlBits[1];
 		point	vector[1];
 		} path;
 
 	typedef struct paths
 		{
-		long	contours;
+		Long32	contours;		/* Long32: the ARM's word (sync_ddk_headers.py) */
 		path	contour[1];
 		} paths;
 	typedef paths* pathsPtr;
@@ -86,7 +86,7 @@
 		/* private */
 		long index;
 		long ep;
-		long* bits;
+		Long32* bits;		/* Long32: the contour's words (sync_ddk_headers.py) */
 		point* p;
 		} pathWalker;
 

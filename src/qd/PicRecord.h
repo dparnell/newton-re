@@ -93,6 +93,8 @@ void		PutPicLong(long value);									// ROM 0x00331f10 PutPicLong__Fl
 void		PutPicRect(long opcode, const Rect* r);					// ROM 0x00331f2c PutPicRect__FlP4Rect - opcode + 8 alone for the last rectangle again
 void		PutPicPoint(Point pt);									// ROM 0x00331f90 PutPicPoint__F5Point
 void		PutPicRgn(RgnHandle rgn);								// ROM 0x00331e30 PutPicRgn__FPP6Region - a region or polygon
+void		PutPicCurve(long opcode, const curve* c);				// ROM 0x003323c4 PutPicCurve__FlP5curve - opcode + 8 alone for the last curve again
+void		PutPicPaths(pathsHandle p);								// ROM 0x00332434 PutPicPaths__FPP5paths - the size, then the bytes
 void		PutPicPat(PatternHandle pattern);						// ROM 0x00331fb8 PutPicPat__FPP8PixelMap - PnPat (0x09), or FillPixPat (0x14) for a gray one
 void		PutPixPat(PixelMap* pm);								// ROM 0x00332040 PutPixPat__FP8PixelMap
 void		PutPat1Data(PixelMap* pm);								// ROM 0x0033208c PutPat1Data__FP8PixelMap - the pattern as eight bytes of one bit

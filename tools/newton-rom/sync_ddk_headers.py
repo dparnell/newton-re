@@ -100,6 +100,14 @@ PATCHES = {
          "\t\tStructSizeType\tpicSize;\n\t\tshort\t\t\tfiller;\t\t/* APCS word alignment of the Rect (sync_ddk_headers.py) */\n\t\tRect\tpicFrame;\n\t\t} Picture;"),
         ("\t\tStructSizeType\tpolySize;\n\t\tRect\tpolyBBox;\n\t\tPoint\tpolyPoints[1];\n\t\t} Polygon;",
          "\t\tStructSizeType\tpolySize;\n\t\tshort\t\t\tfiller;\t\t/* APCS word alignment of the Rect (sync_ddk_headers.py) */\n\t\tRect\tpolyBBox;\n\t\tPoint\tpolyPoints[1];\n\t\t} Polygon;"),
+        # paths are the ARM's 32-bit words, in a picture as in memory; a host's long
+        # may be wider (an LP64 Linux), so they are spelt Long32 (host_compat.h)
+        ("\t\tlong\tvectors;\n\t\tlong\tcontrolBits[1];",
+         "\t\tLong32\tvectors;\t\t/* Long32: the ARM's word (sync_ddk_headers.py) */\n\t\tLong32\tcontrolBits[1];"),
+        ("\t\tlong\tcontours;\n\t\tpath\tcontour[1];",
+         "\t\tLong32\tcontours;\t\t/* Long32: the ARM's word (sync_ddk_headers.py) */\n\t\tpath\tcontour[1];"),
+        ("\t\tlong index;\n\t\tlong ep;\n\t\tlong* bits;",
+         "\t\tlong index;\n\t\tlong ep;\n\t\tLong32* bits;\t\t/* Long32: the contour's words (sync_ddk_headers.py) */"),
         # a text object is a handle (NewText 0x0035bfc4) passed as the ARM's word;
         # Long is that word, pointer-sized on a host
         ("\ttypedef void (*TextObjProc) (/*TextObjectRef*/ long , Fixed , Fixed );",

@@ -321,6 +321,43 @@ PutPicRgn(RgnHandle rgn)
 }
 
 
+// ROM 0x003323c4 PutPicCurve__FlP5curve
+// A curve: the opcode + 8 alone when it is the one the picture has, else
+// the opcode and its six 16.16 values, remembered.  (Host: the values
+// big-endian in the picture.)
+void
+PutPicCurve(long opcode, const curve* c)
+{
+	PicSave* ps = CurrentPicSave(GetCurrentPort());
+	if (EqualCurve(c, &ps->fCurve))
+	{
+		PutPicOpcode(opcode + 8);
+		return;
+	}
+	ps->fCurve = *c;
+	PutPicOpcode(opcode);
+	const Fixed* p = &c->first.x;
+	for (long i = 0; i < 6; i++)
+		PutPicLong(p[i]);
+}
+
+
+// ROM 0x00332434 PutPicPaths__FPP5paths
+// Paths: the handle's size, then its bytes.  (Host: every one of them is a
+// 32-bit word, big-endian in the picture.)
+void
+PutPicPaths(pathsHandle p)
+{
+	long size = GetHandleSize((Handle) p);
+	PutPicLong(size);
+	HLock((Handle) p);
+	const Long32* words = (const Long32*) *p;
+	for (long i = 0; i < size / 4; i++)
+		PutPicLong(words[i]);
+	HUnlock((Handle) p);
+}
+
+
 // ROM 0x00331d10 PutPicVerb__FUc
 // What the verb draws with, where the picture does not say it already:
 // frame the pen size, then (frame and paint) the pen mode, then (frame,
