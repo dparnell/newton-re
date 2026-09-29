@@ -111,41 +111,85 @@ def glue_stubs(code):
 
 
 # NTK's native-compiled NewtonScript also calls routines of its own at the
-# front of the code binary, most of which check the ROM's version word
-# (0x13dc: 0x20002 on the MP2x00 US 2.1) and, on a 2.x ROM, go straight to
+# front of the code binary, most of which check the ROM's version words
+# (0x13dc: 0x20002 on the MP2x00 US 2.1; 0x13e0, whose top half picks
+# between the ldreq/ldrgt forms) and, on a 2.x ROM, go straight to
 # a glue stub (the ROM has the runtime support NTK's native code needs:
 # GetGInterpreter, TInterpreter::GetReceiver, IsSend, SetSendEnv...).
 ROM_VERSION = 0x20002
 
 
+def _rom_word(address):
+    return struct.unpack_from('>I', _rom, address)[0]
+
+
 def trampoline_target(code, stubs, at, depth=0):
     """What a call to `at` reaches on this ROM: a glue stub's function, or
-    None for a routine of the binary's own."""
-    if at in stubs:
-        return stubs[at]
-    if depth > 4:
-        return None
+    None for a routine of the binary's own.  The routine's version tests are
+    run (a little emulation of mov/ldr/sub/asr/cmp and the conditional
+    branches and loads of pc, over the ROM's words at 0x13dc and 0x13e0)."""
     import re
     md = capstone.Cs(capstone.CS_ARCH_ARM, capstone.CS_MODE_ARM | capstone.CS_MODE_BIG_ENDIAN)
-    for k in range(16):
-        off = at + 4 * k
-        if off + 4 > len(code):
+    regs = {}
+    flags = None                        # (value compared, operand)
+    pc = at
+    for _ in range(64):
+        if pc in stubs:
+            return stubs[pc]
+        if pc + 4 > len(code):
             return None
-        insns = list(md.disasm(code[off:off + 4], off))
+        insns = list(md.disasm(code[pc:pc + 4], pc))
         if not insns:
             return None
         m, o = insns[0].mnemonic, insns[0].op_str
-        if m in ('bge', 'bgt') and o.startswith('#'):
-            # (the version test's branch taken on a 2.x ROM)
-            return trampoline_target(code, stubs, int(o[1:], 16), depth + 1)
-        if m == 'b' and o.startswith('#') and k > 0:
-            return trampoline_target(code, stubs, int(o[1:], 16), depth + 1)
-        if m == 'ldrgt' and o.startswith('pc'):
-            found = re.search(r'#(0x[0-9a-f]+|\d+)', o)
-            word = struct.unpack_from('>I', code, off + 8 + int(found.group(1), 0))[0]
+        ops = [x.strip() for x in o.split(',')]
+        base = m[:-2] if m[-2:] in ('eq', 'ne', 'gt', 'ge', 'lt', 'le') and m not in ('bne',) else m
+        cond = m[len(base):] if base != m else ''
+        if m in ('bne', 'bgt', 'bge', 'blt', 'ble', 'beq'):
+            base, cond = 'b', m[1:]
+        taken = True
+        if cond:
+            if flags is None:
+                return None
+            a, b = flags
+            taken = {'eq': a == b, 'ne': a != b, 'gt': a > b, 'ge': a >= b, 'lt': a < b, 'le': a <= b}[cond]
+
+        def value(x):
+            x = x.strip('#')
+            if x in ('ip', 'r0', 'r1', 'r2', 'r3'):
+                return regs.get(x, 0)
+            try:
+                return int(x, 0)
+            except ValueError:
+                return 0
+        if not taken:
+            pc += 4
+            continue
+        if base == 'mov' and ops[0] != 'pc':
+            regs[ops[0]] = value(ops[1])
+        elif base == 'ldr' and ops[0] == 'pc':
+            found = re.search(r'#(-?0x[0-9a-f]+|-?\d+)', o)
+            word = struct.unpack_from('>I', code, pc + 8 + int(found.group(1), 0))[0]
             return glue_name(word)
-        if m in ('ldmdb', 'ldm', 'pop') or (m == 'mov' and o.startswith('pc')):
+        elif base == 'ldr':
+            found = re.match(r'\[(\w+), #(0x[0-9a-f]+|\d+)\]', ops[1] + ', ' + ops[2] if len(ops) > 2 else ops[1])
+            if not found or regs.get(found.group(1)) is None:
+                return None
+            regs[ops[0]] = _rom_word(regs[found.group(1)] + int(found.group(2), 0))
+        elif base == 'sub':
+            regs[ops[0]] = value(ops[1]) - value(ops[2])
+        elif base == 'asr':
+            regs[ops[0]] = value(ops[1]) >> value(ops[2])
+        elif base == 'cmp':
+            flags = (value(ops[0]), value(ops[1]))
+        elif base == 'b' and o.startswith('#'):
+            pc = int(o[1:], 16)
+            continue
+        elif base in ('push', 'stmdb') or (base == 'ldmdb' and cond):
+            pass                        # (the frame set up, or given back before a tail branch)
+        else:
             return None
+        pc += 4
     return None
 
 

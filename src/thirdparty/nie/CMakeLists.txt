@@ -3,6 +3,7 @@
 add_library(thirdparty_nie STATIC
     NIERuntime.cpp
     ProtoFSMQueue.cpp
+    ProtoFSMEngine.cpp
     NIENatives.cpp
 )
 target_link_libraries(thirdparty_nie PUBLIC frames)

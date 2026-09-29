@@ -105,6 +105,41 @@ TestQueue(void)
 }
 
 
+static void
+TestEngine(void)
+{
+	static const char* const kCheck[] = { "fsm_private_context" };
+	static const char* const kIdle[] = { "fsm", "DoEvent_Loop" };
+	static const char* const kProto[] = { "_proto" };
+
+	// DoEvent_Check: the context, whatever it is asked
+	RefVar m(Eval("{fsm_private_context: 'ctx}"));
+	SetFrameSlot(m, RefVar(Sym("DoEvent_Check")), RefVar(NativeFunction(0xd4cc, 1, kCheck, 1)));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Sym("m")), m);
+	EXPECT(EQRef(Eval("m:DoEvent_Check('anything)"), Sym("ctx")));
+
+	// the engine view's idle: fsm:DoEvent_Loop()
+	RefVar engine(Eval("{fsm: {DoEvent_Loop: func() 42}}"));
+	SetFrameSlot(engine, RefVar(Sym("viewIdleScript")), RefVar(NativeFunction(0xe43c, 0, kIdle, 2)));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Sym("engine")), engine);
+	EXPECT(RINT(Eval("engine:viewIdleScript()")) == 42);
+
+	// the ancestors' states, each put behind the ones before it
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Sym("collectStates")), RefVar(NativeFunction(0xe65c, 2, kProto, 1)));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Sym("collectEvents")), RefVar(NativeFunction(0xe808, 3, kProto, 1)));
+	Eval("anc := [{Idle: {a: 1, Go: {x: 1}}}, {Busy: {}}, {Idle: {b: 2, Go: {y: 3}}}]");
+	RefVar r(Eval("call collectStates with (anc, 'Idle)"));
+	EXPECT(IsFrame(r) && RINT(GetFrameSlot(r, RefVar(Sym("b")))) == 2);
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Sym("collected")), r);
+	EXPECT(RINT(Eval("collected.a")) == 1);		// (the first ancestor's, behind the last's)
+	EXPECT(ISNIL(Eval("call collectStates with (anc, 'None)")));
+	EXPECT(ISNIL(Eval("call collectStates with (nil, 'Idle)")));
+	EXPECT(RINT(Eval("call collectEvents with (anc, 'Idle, 'Go).y")) == 3);
+	EXPECT(RINT(Eval("call collectEvents with (anc, 'Idle, 'Go).x")) == 1);
+	EXPECT(ISNIL(Eval("call collectEvents with (anc, 'Busy, 'Go)")));
+}
+
+
 int
 main()
 {
@@ -137,6 +172,7 @@ main()
 	newton_try
 	{
 		TestQueue();
+		TestEngine();
 	}
 	newton_catch_all
 	{

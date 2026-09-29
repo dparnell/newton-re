@@ -25,6 +25,12 @@ Ref		NIEQueuePeek(RefArg rcvr, RefArg closure);
 Ref		NIEQueueGetQueueSize(RefArg rcvr, RefArg closure);
 Ref		NIEQueueIsEmpty(RefArg rcvr, RefArg closure);
 
+// protoFSM's engine (ProtoFSMEngine.cpp)
+Ref		NIEDoEventCheck(RefArg rcvr, RefArg name, RefArg closure);
+Ref		NIEEngineViewIdleScript(RefArg rcvr, RefArg closure);
+Ref		NIEMCollectAncestorStates(RefArg rcvr, RefArg ancestors, RefArg state, RefArg closure);
+Ref		NIEMCollectAncestorEvents(RefArg rcvr, RefArg ancestors, RefArg state, RefArg event, RefArg closure);
+
 void	RegisterNIENatives(void);
 
 #endif
