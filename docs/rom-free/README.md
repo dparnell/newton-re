@@ -120,36 +120,108 @@ decompiler's NTK constants already are.
 Each step is committed with its test, and the round trip's percentage is
 reported as the decompiler's was.
 
-1. **The skeleton, with the resources opaque.** `analysis/romextract.py`
-   writes the object graph as source, with every binary other than
-   strings and reals as a `.bin` file. `analysis/rombuild.py` (Python at
-   first, reading the source through the host's `newtonscript --compile`
-   entry to be added) writes the area back. The ctest compares the two,
-   and the target is 100% of objects identical.
-2. **Bitmaps** (`bits`, `mask`, `cbits`): PNG and back, lossless. The
+1. **The skeleton, with the resources opaque. Done:**
+   `analysis/romsrc.py`, ctest `host.ROMSourceRoundTrip`. `extract` writes
+   the object graph as source, with every binary other than strings and
+   reals as a `.bin` file, and functions as frames whose instructions are
+   one of those. `build` writes the area back, and **all 46538 objects
+   come out byte for byte the ROM's**. The notation is in the tool's own
+   documentation; see "Stage 1" below for what it is not yet.
+2. **Functions as source.** The decompiler's NewtonScript, compiled by the
+   builder. The builder then needs the host's compiler, so from here it
+   moves into the host (`newtonscript --build-romsrc`, serialising the
+   compiled objects into the ROM's layout).
+3. **Bitmaps** (`bits`, `mask`, `cbits`): PNG and back, lossless. The
    first real resource, and the most numerous. `tools/imaging/pgm2png.py`
    is the start of the image side.
-3. **Sounds** (`samples`): WAV and back. The codecs a sound frame names
+4. **Sounds** (`samples`): WAV and back. The codecs a sound frame names
    are the sound area's (`docs/sound/README.md`).
-4. **Pictures and fonts**: PICT files, and the `sfnt` files as they are.
-5. **The ROM extension's ten packages** (`analysis/packages.py`), each
+5. **Pictures and fonts**: PICT files, and the `sfnt` files as they are.
+6. **The ROM extension's ten packages** (`analysis/packages.py`), each
    extracted to the same form and rebuilt as a package.
-6. **The loader side (step 4):** `frames/ROMImport.cpp` reads the builder's
+7. **The loader side (step 4):** `frames/ROMImport.cpp` reads the builder's
    area instead of the image, then the host programs run with no `--rom`.
 
-The first thing to settle in step 1 is the frame maps. A map is an object
-of its own, which frames share (the census does not yet count them). The census should
-count the maps, and how often a frame written as `{...}` in source would
-get a map other than the one the ROM gave it. That count decides whether
-maps are named objects in the source or facts in the manifest.
+## The frame maps
+
+A frame's class word points at its **map**: an array of the frame's slot
+names, whose first slot is a supermap (nil, or a map whose names come
+first). `nsfunctions.py --census` counts them:
+
+- There are **8336 maps** for 12838 frames. 282 of them are supermaps that
+  no frame uses directly.
+- Only 359 maps are shared by more than one frame. Between them they carry
+  5143 frames: one map of `left, top, right, bottom` alone carries 1096.
+- There are 2249 different tag lists, and 23 of them have more than one
+  map, 6110 maps in all. **5783 of those are the functions' own maps:**
+  every one of the NTK's code blocks (`class, instructions, literals,
+  argFrame, numArgs`) has a map to itself, where a builder that made maps
+  from the tags would give them one between them.
+- 318 maps are held in a slot other than a supermap's, as values a script
+  uses.
+
+So which map a frame has cannot be told from its slots, and a map is
+sometimes a value in its own right. **The maps are named objects** in the
+source (`maps.ns`: `map_<addr> := map(class, supermap, 'tag, ...)`), and
+**which map each frame uses is a fact in the manifest** (`map=` on the
+frame's line). A frame's source stays `{tag: value, ...}`. The builder
+checks that its tags are its map's, and will make a map for a frame the
+manifest does not know (a frame added by an edit).
+
+## Stage 1: what the source is and is not yet
+
+`python tools/newton-rom/analysis/romsrc.py extract build/MP2x00US -o <dir>`
+(or `cmake --build <build> --target romsrc`) writes the tree. It takes
+about 4 seconds, and `build <dir> --check build/MP2x00US` takes about 2.
+
+The tree holds:
+
+- 3038 definitions in `objects/NNN.ns`, 400 to a file in address order;
+- the 8336 maps in `maps.ns`;
+- `layout.tsv`, one line per object;
+- about 3900 `.bin` files: the 4681 instruction strings are most of
+  them.
+
+On disk it is about 2.3 MB of object source, 0.8 MB of maps, 1.8 MB of
+manifest and 7 MB of resources.
+
+What it is not yet:
+
+- Functions are frames with a binary of bytecode, not source (next).
+- The files are cut by address, not by what they belong to (the
+  dominator grouping above).
+- Resources are opaque, and inline objects are named by path, so an edit
+  that moves a slot also has to move the manifest's line.
+
+In short, it is a faithful and readable dump, and not yet a tree to edit.
+
+## Where the tree lives
+
+**Decision: the tree is generated at build time, not committed, until it
+is a tree worth editing.** What is committed now is the tools, the
+ctest, and the `romsrc` make target.
+
+- **Size.** A generated tree is about 12 MB in some 12,000 files. Each
+  re-extraction after a tool change would rewrite most of it, so every
+  improvement to the extractor would be a multi-MB commit of churn, and
+  the history would be the extractor's rather than anyone's edits.
+- **Nothing reads it yet.** While the OS still loads the ROM image, an
+  edit to the tree changes nothing that runs, so committing it would
+  invite edits that are silently lost at the next extraction.
+- **When it is committed.** The tree goes into the repository once, as
+  `romsrc/`, when three things are true:
+  - its functions are source (stage 2);
+  - its common resources are files a person edits (bitmaps and sounds);
+  - the host builds its object area from the committed tree (step 3's
+    builder in the build).
+  From then on the tree is the source and the extractor is not run again,
+  so later commits are people's edits, which git keeps as small deltas.
+  The one-time addition is of the order of `DebugRom/`, which the
+  repository already carries.
+- **It is Apple's data**, as the ROM images in `DebugRom/` are. Keeping
+  it in the repository is no different in kind.
 
 ## Open questions
-
-- **Where the tree lives.** It is Apple's data. The repository already
-  keeps the ROM images (`DebugRom/`). While the builder is not yet
-  lossless, the tree is generated into `build/<rom>/romsrc/`. It is
-  committed to the repository once it round-trips, which is the point at
-  which editing it means something.
 - **mosrun** (https://github.com/MatthiasWM/mosrun) runs Apple's own
   Newton build tools (the Rex builder, the ARM tools). It could check
   step 5's packages and ROM extension against Apple's builder, byte for

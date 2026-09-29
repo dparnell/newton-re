@@ -459,6 +459,33 @@ def main(argv=None) -> int:
         out.append("shared (referenced from more than one slot): %d" % sum(1 for n in referenced.values() if n > 1))
         out.append("referenced from no object (roots: magic pointers, the ROM's C code): %d"
                    % sum(1 for r in objs if r not in referenced))
+        # the frame maps: how many, how shared, and how many share a tag list
+        # with another map (what a builder making maps from tags would merge)
+        frame_maps = {}
+        for ref in objs:
+            if rom.flags(ref) & 3 == 3:
+                frame_maps[rom.cls(ref)] = frame_maps.get(rom.cls(ref), 0) + 1
+        maps = set(frame_maps)
+        more = set(maps)
+        while more:
+            supers = {rom.slots(m)[0] for m in more if rom.slots(m)[0] in inside} - maps
+            maps |= supers
+            more = supers
+        by_tags = {}
+        for m in maps:
+            by_tags.setdefault((rom.slots(m)[0], tuple(rom.slots(m)[1:])), []).append(m)
+        alike = [ms for ms in by_tags.values() if len(ms) > 1]
+        code = sum(len(ms) for key, ms in by_tags.items() if len(ms) > 1
+                   and [rom.symname(t) for t in key[1]] == ["class", "instructions", "literals", "argFrame", "numArgs"])
+        out.append("frame maps: %d (%d supermaps no frame uses directly); %d shared by more than one frame, "
+                   "carrying %d frames" % (len(maps), len(maps) - len(frame_maps),
+                                           sum(1 for n in frame_maps.values() if n > 1),
+                                           sum(n for n in frame_maps.values() if n > 1)))
+        out.append("tag lists: %d; %d of them have more than one map, %d maps in all (%d of them a function's own)"
+                   % (len(by_tags), len(alike), sum(len(ms) for ms in alike), code))
+        in_slots = sum(1 for ref in objs if rom.flags(ref) & 1
+                       for i, s in enumerate(rom.slots(ref)) if s in maps and not (ref in maps and i == 0))
+        out.append("maps held in a slot other than a supermap's: %d" % in_slots)
     if args.refs:
         for holder, fn, name in sorted(script_refs(rom, args.refs)):
             out.append("%-24s %-60s %#x" % (name, holder, fn))

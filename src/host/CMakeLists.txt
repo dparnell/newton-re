@@ -434,4 +434,22 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD}/sym
                      --newtonscript $<TARGET_FILE:newtonscript> --rom ${NEWTON_ROM_BIN} --min-percent 100
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NSDecompileRoundTrip PROPERTIES TIMEOUT 300)
+
+    # the ROM-free track's step 2 (docs/rom-free/README.md): the object area
+    # written as source (tools/newton-rom/analysis/romsrc.py) and built back
+    # out of it, byte for byte the ROM's
+    add_test(NAME host.ROMSourceRoundTrip
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/newton-rom/analysis/romsrc.py
+                     roundtrip ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD} -o ${CMAKE_BINARY_DIR}/romsrc-test
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.ROMSourceRoundTrip PROPERTIES TIMEOUT 300)
+
+    # `cmake --build <dir> --target romsrc`: the source tree, generated into
+    # the build directory (it is not kept in the repository yet - why is
+    # docs/rom-free/README.md's "Where the tree lives")
+    add_custom_target(romsrc
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/newton-rom/analysis/romsrc.py
+                     extract ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD} -o ${CMAKE_BINARY_DIR}/romsrc
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..
+             COMMENT "Writing the ROM's object area as source into ${CMAKE_BINARY_DIR}/romsrc")
 endif()
