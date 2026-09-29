@@ -1,0 +1,82 @@
+@@ 0x75c7b1
+@@const kROM_8278
+@8278
+@@main
+func(a1, soupsToo, a3) begin
+	local appList, soupName;
+	local v9_mmll, v12_tttttttt, v13_zzzzzzyyy, v14_vvvvvvvuuuu, v17_zzzzzzzzzzzzyyy, v18_xxxwwwwwwwwwwwwww, v19_xxxxxxxxwwwwwwwwwwww, v22_yyyyyyyxxxxxxxxxxxxxxxx;
+	appList := [Array: ];
+	v12_tttttttt := func(a1) begin
+		local l1;
+		l1 := BInsert(appList, {name: a1}, '|str<|, '[pathExpr: name], 'returnElt);
+		if soupsToo then begin
+				if (not l1.soups) then begin
+						l1.soups := [Array: soupName]
+					end else begin
+						BInsert(l1.soups, soupName, '|str<|, nil, true)
+					end
+			end;
+		l1
+	end;
+	v17_zzzzzzzzzzzzyyy := a1[0]:GetSoupNames();
+	(for v21_tttttttttss := 1 to (Length(a1) - 1) do begin
+			(foreach v10_zzzzzzzzzzzzzzzyyyyyyyyyyyy in a1[v21_tttttttttss]:GetSoupNames() do begin
+					call a3 with ();
+					BInsert(v17_zzzzzzzzzzzzyyy, v10_zzzzzzzzzzzzzzzyyyyyyyyyyyy, '|str<|, nil, true)
+				end)
+		end);
+	(foreach soupName in v17_zzzzzzzzzzzzyyy do begin
+			call a3 with ();
+			if (not StrEqual(soupName, "Packages")) then begin
+					if BFind(kROM_8278, soupName, '|str<|, nil) then begin
+							v13_zzzzzzyyy := call v12_tttttttt with ("System information");
+							if (not v9_mmll) then begin
+									v9_mmll := SetClass(v13_zzzzzzyyy, 'systemFrame)
+								end
+						end else begin
+							if (BeginsWith(soupName, "Backup_") or StrEqual(soupName, "BackupInfo")) then begin
+									v13_zzzzzzyyy := call v12_tttttttt with ("Card backup");
+									if (not v14_vvvvvvvuuuu) then begin
+											v14_vvvvvvvuuuu := SetClass(v13_zzzzzzyyy, 'cardBackupFrame)
+										end
+								end else begin
+									if (v18_xxxwwwwwwwwwwwwww := GetSoupDef(soupName)) then begin
+											if (v18_xxxwwwwwwwwwwwwww.ownerApp <> 'SystemScratch) then begin
+													if (not (v19_xxxxxxxxwwwwwwwwwwww := v18_xxxwwwwwwwwwwwwww.ownerAppName)) then begin
+															if IsSymbol(v18_xxxwwwwwwwwwwwwww.ownerApp) then begin
+																	v19_xxxxxxxxwwwwwwwwwwww := GetAppName(v18_xxxwwwwwwwwwwwwww.ownerApp)
+																end else begin
+																	v19_xxxxxxxxwwwwwwwwwwww := soupName
+																end
+														end
+												end;
+											call v12_tttttttt with (v19_xxxxxxxxwwwwwwwwwwww)
+										end else begin
+											(foreach v16_wwwwwwwwvvvvvv in a1 do begin
+													if (v10_zzzzzzzzzzzzzzzyyyyyyyyyyyy := v16_wwwwwwwwvvvvvv:GetSoup(soupName)) then begin
+															break
+														end
+												end);
+											if (if IsArray((v18_xxxwwwwwwwwwwwwww := v10_zzzzzzzzzzzzzzzyyyyyyyyyyyy:GetInfo('applications))) then (Length(v18_xxxwwwwwwwwwwwwww) > 0)) then begin
+													(foreach v7_vvvvvvvvvvvvvvvvvvu in v18_xxxwwwwwwwwwwwwww do begin
+															if IsSymbol(v7_vvvvvvvvvvvvvvvvvvu) then begin
+																	v19_xxxxxxxxwwwwwwwwwwww := GetAppName(v7_vvvvvvvvvvvvvvvvvvu)
+																end else begin
+																	v19_xxxxxxxxwwwwwwwwwwww := soupName
+																end;
+															call v12_tttttttt with (v19_xxxxxxxxwwwwwwwwwwww)
+														end)
+												end else begin
+													v13_zzzzzzyyy := call v12_tttttttt with ("Other information");
+													if (not v22_yyyyyyyxxxxxxxxxxxxxxxx) then begin
+															v22_yyyyyyyxxxxxxxxxxxxxxxx := SetClass(v13_zzzzzzyyy, 'otherFrame)
+														end
+												end
+										end
+								end
+						end
+				end
+		end);
+	appList
+end
+@@end

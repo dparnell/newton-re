@@ -1,2 +1,0 @@
-# the functions kept as bytecode: they do not decompile, or do not compile back the same
-75c7b1	decompile: a loop over a variable not on the stack in the sorted order

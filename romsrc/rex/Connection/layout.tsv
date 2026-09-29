@@ -3364,6 +3364,12 @@ alias	obj_759ac5.VerifyNetworkAddress.literals[4]	obj_746cf5
 alias	obj_759ac5.DoAutoDockFinish.literals[3]	obj_75526d
 alias	obj_759ac5.DoAutoDockFinish.literals[7].instructions	obj_7588c9
 alias	obj_759ac5.DisplayImportSlip.literals[7].instructions	obj_758289
+alias	obj_759ac5.GetAppsForStoreWithCallback.literals[3].literals[3]	obj_74aef5
+alias	obj_759ac5.GetAppsForStoreWithCallback.literals[8]	obj_748ff5
+alias	obj_759ac5.GetAppsForStoreWithCallback.literals[14]	obj_75ad51
+alias	obj_759ac5.GetAppsForStoreWithCallback.literals[16]	obj_75ad89
+alias	obj_759ac5.GetAppsForStoreWithCallback.literals[17]	obj_75adad
+alias	obj_759ac5.GetAppsForStoreWithCallback.literals[29]	obj_75a9d9
 alias	obj_759ac5.ImportFile.literals[6].instructions	obj_75d07d
 alias	obj_759ac5.InvalidateApplicationList.instructions	obj_75d139
 alias	obj_759ac5.ToggleKeyboardPassthrough.literals[17]	obj_745f61

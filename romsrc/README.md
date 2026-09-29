@@ -30,7 +30,7 @@ are kept. How it was made, and why it is shaped as it is, is in
 | `rex/`, `rex.tsv` | The ROM extension, in pieces: its header and config entries, and the ten packages. A package with a frames part is `<Package>.head.bin` (its directory), the part as a tree of its own in `<Package>/` (the same layout as this one), and `<Package>.tail.bin`. |
 | `magic.tsv` | The magic-pointer table: `@index` and the object it names. |
 | `layout.tsv` | The manifest: every object's address, path in the source and header flags, each frame's map, and aliases (shared objects that a compiled function makes afresh). |
-| `bytecode.tsv` (in a part's tree) | The few functions kept as bytecode, with the reason. |
+| `bytecode.tsv` (in a part's tree) | The functions kept as bytecode, with the reason, when any are. None are now. |
 
 The notation, `same("path")`, `function("…")`, `bitmap(…)` and the rest,
 is described in the documentation of `romsrc.py` (`python
