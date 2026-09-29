@@ -648,8 +648,8 @@ pattern recorded (`PutPixPat`: a gray ramp, white first, for its colour
 table) comes back through `RGBtoGray` a shade out for some grays (3
 comes back 2).
 
-NOT YET RECONSTRUCTED: a picture drawn under a scaling transform
-(`TQDScaler`).
+A picture drawn under a scaling transform goes through the scaler like
+any other drawing (`Transform.h`; `src/host/demo/scaledmap.ns`).
 `test_Ink`'s `TestInkWordPicture` records ink words carried in 0x81a4 and
 plays them back.  `test_PicPlay` plays hand-written pictures (among them
 pixel patterns of 32 and 8 bits), records the standard procs' scene, text
@@ -931,8 +931,7 @@ an orientation of 1.
 
 ## Not yet
 
-Arcs of less than a full turn, the text, curves and paths of pictures,
-`ScrollRect`, `ZoomRect`, the screen update task and the alert screen
+`ZoomRect`, the screen update task and the alert screen
 info, the per-task globals, `TGrayShrink`, the font cache, the
 `TQDLibraryDriver` protocol.
 

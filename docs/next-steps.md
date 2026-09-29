@@ -121,6 +121,21 @@ recording produces.  Sizes are `callgraph.py` lower bounds (not done):
    `cdfd8c8`).
 7. DONE (round 3) **`TQDScaler`** (0x00196018-0x001973c8, about 5 KB): a picture (or
    any drawing) under a transform that scales.
+8. DONE (round 4: `6ed07c2`, `fb762cc`, `e622a1b`, `0734071`, `0e10570`)
+   **The ROM's own blitting of pictures and text**: `StretchBits` whole
+   (`SetupConversion`, the `Combine*`, 33 row stretchers, the blit modes
+   under region masks - now at the port's depth, as the ROM makes them);
+   text composed a style run at a time into a slab and stretched
+   (`DrText`/`DrTextChunk`, with outline and shadow, the broken underline,
+   gray text through `MakeGrayText` and a font spec's `color`);
+   `CalcTextBounds`; `DrawShapeScaled` for bitmaps not at 72 dpi; a
+   `colorData` entry chosen and its colour table made a gray table.
+
+Pictures are finished.  Left, and recorded as NOT YET where they lie:
+`TGrayShrink` (the view protocol that shrinks an anti-aliased one-bit ink
+word into grays - the ordinary stretch stands in, as on a ROM with no
+implementation registered), a text object's layout numbers (0x400) and
+`TextArrow` (0x2000), `ZoomRect`, a `MakeBitmap` kept on a store.
 
 ## Candidates for the next piece of work
 
@@ -172,9 +187,6 @@ worked through.  What could come next (not ranked; the owner chooses):
   through region scan conversion, which is why a busy screen redraws
   slowly on the host.  A faster blitter with identical output is host
   work only, but it makes the interactive build pleasant to use.
-- **The rest of pictures**: text, curves and paths inside a picture
-  (`docs/qd/README.md`; `PictToShape` makes a picture's text into text
-  boxes but `DrawPicture` does not draw it).
 - **The ROM-free track** (below).
 - Small: the date the Assistant's "tomorrow" comes to ("schedule lunch
   with Daniel tomorrow" puts the meeting on today).

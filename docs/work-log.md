@@ -9,6 +9,36 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: pictures, round 4 - the ROM's text drawing, CalcTextBounds, DrawShapeScaled
+
+- `StretchBits` as the ROM's (`6ed07c2`): the row stretchers, converters,
+  combiners and blit modes, transcribed through `transcribe_words.py`.
+- Text composed as the ROM composes it (`fb762cc`, `qd/DrText.cpp`):
+  `DrTextChunk` ORs a style run's glyphs into a one-bit slab at the
+  strike's size, works bold, italic, the underline (broken by
+  descenders) and outline/shadow on it, and `StretchBits` it onto the
+  port - or ORs straight into the port for plain srcOr text.  The mode is
+  the options' (srcOr with none), not the pen's.  `CalcTextBounds` and
+  the 0x200 operation; `TextBoundsInfo` +0x10/+0x18 are the leading and
+  the vertical advance.
+- Host bug found: every region mask was made one bit per pixel, where the
+  ROM makes it at the port's depth (`InitRgnRec`); on the four-bit screen
+  `StretchBits` through a complex visible region lost most of what it
+  drew (the Notepad's icons, the credits' text).  Fixed, and `RgnBlt`'s
+  mask buffers sized to match - the first cut of that overran them and
+  damaged the heap for every booted run until it was caught with
+  `NEWTON_HEAPCHECK`.
+- A font spec's `color` made the style's pattern (`0734071`), gray text
+  through `MakeGrayText`; `fFontPattern` is 0 for none, as the ROM clears
+  it, not nil.
+- `DrawShapeScaled` (`e622a1b`): `DrawIntoBitmap` at a bitmap's own
+  resolution; `GetFramBitmap`'s entry choice and gray table (`0e10570`).
+- Pixels that changed: the scaled-map demo's stretched text (the slab is
+  stretched whole rather than each glyph, nearest pixel); a descender row
+  below the strike's `minAfterBL` is clipped (typing.ns's "y"); text in
+  srcCopy now blanks its slab's rectangle; `test_Text`'s pen-mode check
+  became an options-mode one.  Pictures are finished bar `TGrayShrink`.
+
 ## 2026-09-29: the sound server, round 4 - byte order, the microphone, the Recorder driven
 
 - 16-bit samples big-endian in memory on every host - a frame's samples,
