@@ -18,6 +18,7 @@
 #include "Task.h"
 #include "MemObjManager.h"
 #include "OSErrors.h"
+#include "EventCollector.h"
 
 void (*gHostUserMain)() = nil;
 
@@ -57,13 +58,13 @@ TLoader::TheMain()
 	// LoadHighROMDriverPackages (0x01b0f78c), InitLicenseeDomain (0x01b0e720),
 	// LoadStartupDriver (0x01b139b4), LoadPlatformDriver (0x01b36b30);
 	// gGPIInterruptAsyncMessage.Init(false) and the 'newt'/'idle'/'ext '
-	// message at 0x0c101160 (the GPI interrupt event); InitEvents
-	// (0x002b6404), InitAlertManager (0x01afbd84), InitializeSound
+	// message at 0x0c101160 (the GPI interrupt event); InitAlertManager (0x01afbd84), InitializeSound
 	// (0x01b74a68), InitializeCommManager (0x01a06350), InitCardServices
 	// (0x01b2f7fc), InitTestAgent when gNewtTests & 0x800, ZapInternalStoreCheck
 	// (0x01b10874); InitPowerManager (in the 'rams' environment/domain,
 	// with the monitor task priority set to gTmuxTaskPriority) and
 	// InitPSSManager(user env, rams domain).
+	InitEvents();
 	TUTask mainTask;
 	if (mainTask.Init((TaskProcPtr) UserMain, 0x6800, 0, nil, kUserTaskPriority, 'main') == noErr)
 		mainTask.Start();

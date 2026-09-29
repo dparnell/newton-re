@@ -230,7 +230,9 @@ RegistryScenario()
 	ULong refCon = 0;
 	for (const TClassInfo* info = registry->First(seed, &refCon); info != nil; info = registry->Next(seed, info, &refCon))
 	{
-		seen++;
+		// (the boot's loader registers the event collector, InitEvents)
+		if (strcmp(info->InterfaceName(), "TEventCollector") != 0)
+			seen++;
 		if (strcmp(info->InterfaceName(), "TShape") == 0)
 			seenShapes++;
 		if (info == circle)

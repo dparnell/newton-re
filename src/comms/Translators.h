@@ -316,4 +316,7 @@ public:
 
 void		InitTranslators(void);
 
+// the trace frames and translate (CommTrace.cpp)
+void		RegisterCommTraceNatives(void);
+
 #endif

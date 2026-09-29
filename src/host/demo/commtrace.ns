@@ -1,0 +1,32 @@
+// The communications' trace frame (@661, "Client Trace": comms/CommTrace.cpp)
+// and translate (ctest host.NewtonCommTrace): a trace frame made from
+// traceElements (its Instantiate maps each label to its index and calls
+// cfinstantiate, which makes a THistoryCollector), events recorded by label
+// and by index, the frame disposed; then translate flattening a frame into
+// a binary and unflattening it again (the second time with
+// unflattenNoCode, which refuses functions), and a wrong translator refused (-54001, as evt.ex.comm).
+
+trace := {_proto: @661, name: "Demo Trace",
+	traceElements: [{label: 'connect, trace: "connecting"}, {label: 'byte, trace: "a byte"}]};
+trace:Instantiate();
+Print({collector: trace.privateEventCollector <> nil, events: trace.privateTraceEvents <> nil, map: trace._traceMap});
+trace:record('connect, nil);
+trace:record('byte, $A);
+trace:indexrecord(1, 66);
+trace:Dispose();
+Print({disposed: trace.privateEventCollector = nil});
+
+flat := translate({greeting: "bonjour", numbers: [3, 1, 4]}, 'flattener, nil, nil);
+Print({flattened: ClassOf(flat), length: Length(flat)});
+back := translate(flat, 'unflattener, nil, nil);
+Print({unflattened: back.greeting, second: back.numbers[1]});
+
+Print({unflattenedNoCode: translate(flat, 'unflattenNoCode, nil, nil).greeting});
+
+try
+	translate(flat, 'sideways, nil, nil)
+onexception |evt.ex.comm| do
+	Print({wrongTranslator: CurrentException().error});
+
+Print("commtrace: done");
+HostQuit();

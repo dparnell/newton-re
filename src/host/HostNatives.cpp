@@ -133,6 +133,7 @@ RegisterAllNatives(void)
 	RegisterDockerNatives();
 	RegisterBeamerNatives();
 	RegisterScriptEndpointNatives();		// protoEndpoint (1.x)
+	RegisterCommTraceNatives();				// cfinstantiate, cfrecord, translate
 
 	// the Newton Toolkit's inspector connection
 	RegisterNTKNatives();

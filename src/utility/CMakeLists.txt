@@ -22,6 +22,7 @@ add_library(utility STATIC
     BufferList.cpp
     ShadowBufferSegment.cpp
     Pipes.cpp
+    EventCollector.cpp
     StdioPipe.cpp
     CRC16.cpp
     CRC16Tables.cpp

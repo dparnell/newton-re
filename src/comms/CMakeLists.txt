@@ -64,6 +64,7 @@ add_custom_command(
     VERBATIM)
 add_library(comms_script STATIC
     Translators.cpp
+    CommTrace.cpp
     HostOptionLayouts.cpp
     NewScriptEndpoint.cpp
     StreamingEndpoint.cpp

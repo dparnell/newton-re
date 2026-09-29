@@ -451,6 +451,12 @@ set_tests_properties(host.NewtonProtoEndpoint PROPERTIES TIMEOUT 120
                      PASS_REGULAR_EXPRESSION "Instantiate: NIL, state: 1.*Connect: NIL, state: 5.*protoendpoint: received hello.*protoendpoint: line of 15 characters.*protoendpoint: frame bonjour 4.*outputDone: TRUE.*Disconnect: NIL, state: 0.*protoendpoint: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain")
 
+# the communications' trace frame (@661: cfinstantiate, cfrecord, Dispose
+# over a THistoryCollector) and translate (comms/CommTrace.cpp)
+add_test(NAME host.NewtonCommTrace COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 30 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/commtrace.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(host.NewtonCommTrace PROPERTIES TIMEOUT 90
+                     PASS_REGULAR_EXPRESSION "collector: TRUE.*events: TRUE.*Connect: 0, byte: 1.*disposed: TRUE.*flattened: binary, length: 48.*unflattened: \"bonjour\", second: 1.*unflattenedNoCode: \"bonjour\".*wrongTranslator: -54001.*commtrace: done")
+
 # the NIE's DNS protocol ('sid ' naming 'dnst, a 'dnsq query and 'rrcd
 # records) answered by the host's DNS service over the host's resolver
 # (comms/host/HostDNSTool.h): localhost, a reverse lookup, a name that

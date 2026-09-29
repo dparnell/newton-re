@@ -44,3 +44,7 @@ add_executable(test_TaskSafeRingBuffer test_TaskSafeRingBuffer.cpp)
 target_link_libraries(test_TaskSafeRingBuffer PRIVATE utility os600_kernel os600_user)
 add_test(NAME utility.TaskSafeRingBuffer COMMAND test_TaskSafeRingBuffer)
 set_tests_properties(utility.TaskSafeRingBuffer PROPERTIES TIMEOUT 60)
+
+add_executable(test_EventCollector test_EventCollector.cpp)
+target_link_libraries(test_EventCollector PRIVATE utility os600_kernel os600_user)
+add_test(NAME utility.EventCollector COMMAND test_EventCollector)
