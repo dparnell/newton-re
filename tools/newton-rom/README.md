@@ -62,6 +62,10 @@ tools/newton-rom/
                           --relocatable, --rename OLD=NEW for loadable copies), --doc docs/packages/rex-packages.md
     pkgdisasm.py          the ARM code of a package's protocol parts (capstone): --list, --part N [--start --end],
                           --find LABEL (every four-character literal, with the code that loads it)
+    pkgns.py              a package's NewtonScript, read where it lies in the .pkg: --functions (every function
+                          object by the frame slot holding it), --disasm HOLDER|0xREF, --refs SYMBOL,
+                          --natives (NTK's native-compiled functions: code offset and length in their binary),
+                          --native-disasm HOLDER|0xREF (their ARM code, capstone)
     protousers.py         the ROM's own users of a proto: BUILD @n [--view-class N] [--packages DIR] lists the
                           ROM frames whose _proto is it (or whose viewClass is N) and searches the extracted
                           packages for its magic pointer (how protoTXView was found to have none)
