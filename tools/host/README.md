@@ -114,3 +114,35 @@ The damage is then between the allocation named and the one before it.
 `NEWTON_HEAPDUMP=1` as well lists the free list and every block at each
 walk.  The code is `src/host/HostHeapCheck.cpp`; it is how the cursive
 lock-up was traced to `CreateTrigramHeader` asking for a ROM size.
+
+## stress.py - host tests under load
+
+A test that waits a fixed time for something asynchronous passes on an
+idle machine and fails now and then in a full parallel `ctest`, when
+something else is using the CPU. Examples are a script that waits a few
+seconds for the packages `newton --package` queues, or for the NIE's
+procrastinated setup. This tool makes that happen every time instead of
+now and then:
+
+    python tools/host/stress.py build/host --test host.NewtonInetSetup --copies 10 --hogs 8
+    python tools/host/stress.py build/host --suite --rounds 3 --hogs 8 [-j 8] [-R regex]
+
+- **`--test`** runs copies of one ctest test at the same time.
+  - Each copy runs in its own directory, `tmp/stress/<test>/<n>/`, with its
+    own store. Output a script writes under `tmp/` lands there too.
+  - The command line, working directory, pass and fail expressions and
+    timeout are read from `ctest --show-only=json-v1`.
+  - It prints how many copies passed, and the tail of each failed copy's
+    output. The full output is in `output.txt` in that copy's directory.
+- **`--suite`** runs the whole `ctest -j` (or the tests matching `-R`)
+  `--rounds` times. It prints each round's wall time and the tests that
+  failed.
+- **`--hogs N`** keeps N processes spinning on the CPU for as long as the
+  run lasts.
+
+A test that listens on a fixed port (`--tcp-echo`) cannot run as copies.
+
+The three races of 2026-09-30 were found this way; `docs/work-log.md`
+records them. Before the fix, 10 copies of `host.NewtonInetSetup` beside 8
+hogs passed 0 of 10; after it they pass 10 of 10. The cure is always the
+same: wait on a condition, and end the run with `HostQuit()`.
