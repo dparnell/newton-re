@@ -143,7 +143,7 @@ TRichString::Format(void) const
 
 // ROM 0x001ac670 GrabPtr__11TRichStringCFv
 // The text, the object locked against the collector (an indirect
-// binary's data through its procedures - NOT YET RECONSTRUCTED).
+// binary's data through its procedures, as BinaryData gives it).
 UniChar*
 TRichString::GrabPtr(void) const
 {
@@ -182,8 +182,29 @@ TRichString::GetChar(ULong index) const
 }
 
 
+// ROM 0x001ab768 DoStringerStuff__11TRichStringFPcPlT1T2
+// What Stringer copies of a string: the text's bytes (its length, twice
+// its characters, into *length) and its ink region's bytes (*inkLength).
+// With neither buffer given only the lengths are answered.
+void
+TRichString::DoStringerStuff(char* text, long* length, char* inkData, long* inkLength)
+{
+	*length = fLength * sizeof(UniChar);
+	*inkLength = fInkSize;
+	if (text == nil && inkData == nil)
+		return;
+	char* p = (char*) GrabPtr();
+	if (text != nil)
+		BlockMove(p, text, *length);
+	if (inkData != nil && fInkSize != 0)
+		BlockMove(p + fInkStart, inkData, fInkSize);
+	ReleasePtr();
+}
+
+
 // ROM 0x001ab8f4 SetChar__11TRichStringFUlUs
-// (an ink word's character is replaced through MungeRange: NOT YET)
+// A character replaced; over an ink word's character, through MungeRange
+// so that the word's blob goes with it.
 void
 TRichString::SetChar(ULong index, UniChar c)
 {

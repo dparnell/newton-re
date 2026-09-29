@@ -328,6 +328,7 @@ long	PushArgArray(RefArg args);
 Ref		DoCall(RefArg fn, long numArgs);				// the args pushed already
 Ref		DoSend(RefArg receiver, RefArg implementor, RefArg message, long numArgs);
 Ref		DoBlock(RefArg fn, RefArg args);
+void	ForgetDeveloperNotified(char* name);	// ROM 0x002f5610 ForgetDeveloperNotified__FPc - an exception's breakOnThrows report forgotten
 Ref		DoScript(RefArg receiver, RefArg fn, RefArg args);
 Ref		DoMessage(RefArg receiver, RefArg message, RefArg args);
 Ref		DoMessageIfDefined(RefArg receiver, RefArg message, RefArg args, long* defined);

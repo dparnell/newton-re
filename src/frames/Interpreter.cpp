@@ -1668,12 +1668,71 @@ TInterpreter::ExceptionBeingHandled(void)
 }
 
 
-// ROM 0x002f5568 DeveloperNotified__FP9Exception
-// NOT YET RECONSTRUCTED: the REP's record of exceptions already reported.
-static Boolean
-DeveloperNotified(Exception* /*exception*/)
+// The exceptions the developer has already been told of (and broken into
+// the REP for) while breakOnThrows is set: a list of their names, each a
+// copy the exception was pointed at when it was remembered - which is why
+// the names are compared as pointers, not as strings.
+struct DeveloperNotifiedEntry
 {
-	return true;
+	DeveloperNotifiedEntry*	fNext;		// +0x00
+	char*					fName;		// +0x04
+};
+// ROM 0x0c10546c gDeveloperNotified
+static DeveloperNotifiedEntry*	gDeveloperNotified = nil;
+
+
+// ROM 0x002f5568 DeveloperNotified__FP9Exception
+// Whether this very exception has been reported already.
+static Boolean
+DeveloperNotified(Exception* exception)
+{
+	for (DeveloperNotifiedEntry* e = gDeveloperNotified; e != nil; e = e->fNext)
+		if (e->fName == exception->name)
+			return true;
+	return false;
+}
+
+
+// ROM 0x002f55a4 RememberDeveloperNotified__FP9Exception
+// The exception's name copied, the exception pointed at the copy, and the
+// copy put on the list, so that the same exception rethrown further out is
+// not reported again.  Out of memory, nothing is remembered.
+static void
+RememberDeveloperNotified(Exception* exception)
+{
+	char* name = new char[strlen(exception->name) + 1];
+	if (name == nil)
+		return;
+	DeveloperNotifiedEntry* entry = new DeveloperNotifiedEntry;
+	if (entry == nil)
+	{
+		delete[] name;
+		return;
+	}
+	strcpy(name, exception->name);
+	exception->name = name;
+	entry->fName = name;
+	entry->fNext = gDeveloperNotified;
+	gDeveloperNotified = entry;
+}
+
+
+// ROM 0x002f5610 ForgetDeveloperNotified__FPc
+// The entry of that name (the copy's pointer) off the list and given back.
+void
+ForgetDeveloperNotified(char* name)
+{
+	for (DeveloperNotifiedEntry** link = &gDeveloperNotified; *link != nil; link = &(*link)->fNext)
+	{
+		DeveloperNotifiedEntry* entry = *link;
+		if (entry->fName == name)
+		{
+			*link = entry->fNext;
+			delete[] entry->fName;
+			delete entry;
+			return;
+		}
+	}
 }
 
 
@@ -1690,7 +1749,16 @@ TInterpreter::HandleException(Exception* exception, long baseDepth, StackState& 
 	ExceptionName name = exception->name;
 	if (!DeveloperNotified(exception) && GetFrameSlotRef(gVarFrame, RSSYMbreakonthrows) != NILREF)
 	{
-		// NOT YET RECONSTRUCTED: POutTranslator::ExceptionNotify(gREPout) and the BreakLoop
+		// breakOnThrows: the developer told, the break loop entered (the
+		// global function BreakLoop), and the exception remembered so that
+		// it breaks only once on its way out.  (DEVIATION: the ROM always
+		// has a REP; a host program without one is not told.)
+		if (gREPout != nil)
+			gREPout->ExceptionNotify(exception);
+		RefVar args(NILREF);
+		RefVar breakLoop(GetFrameSlotRef(gFunctionFrame, RSSYMbreakloop));
+		DoBlock(breakLoop, args);
+		RememberDeveloperNotified(exception);
 	}
 	RefVar handler(fExceptionContext);
 	RefVar exceptions;

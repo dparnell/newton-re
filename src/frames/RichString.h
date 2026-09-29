@@ -65,6 +65,7 @@ public:
 	void		MungeRange(ULong start, ULong count, const TRichString* src, ULong srcStart, ULong srcCount);
 	int			CompareSubStringCommon(const TRichString& other, ULong start, long count, Boolean exact) const;
 	long		Verify(void) const;				// 0 when well formed
+	void		DoStringerStuff(char* text, long* length, char* inkData, long* inkLength);	// ROM 0x001ab768 DoStringerStuff__11TRichStringFPcPlT1T2 - the text's and the ink's bytes, for Stringer
 
 	// The ink.  An offset "in the ink" is a byte offset from the start of
 	// the ink region (fInkStart); GetInkWordNoInfoOffset answers one from

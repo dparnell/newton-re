@@ -19,6 +19,7 @@
 #include "Interpreter.h"
 #include "NativeFunctions.h"
 #include "Unicode.h"
+#include "RichString.h"
 #include "RSSymbols.h"
 #include "NSErrors.h"
 #include "OSErrors.h"
@@ -743,18 +744,16 @@ SPrintObject(RefArg obj)
 // the length, in bytes) and, for a rich string, its ink data into
 // inkData (inkLength).  A string, nil (nothing), a character, an
 // integer, a real (%g, "0.0" for zero) or a symbol; ==> false for
-// anything else.  NOT YET RECONSTRUCTED: TRichString::DoStringerStuff -
-// a rich string's ink is not carried over (its characters are).
+// anything else.  A string's text and ink come from
+// TRichString::DoStringerStuff, so a rich string's ink is carried over.
 static Boolean
-StringerStringObject(RefArg obj, char* text, long* length, char* /*inkData*/, long* inkLength)
+StringerStringObject(RefArg obj, char* text, long* length, char* inkData, long* inkLength)
 {
 	*inkLength = 0;
 	if (IsString(obj))
 	{
-		long count = Ustrlen((const UniChar*) BinaryData(obj));
-		*length = count * sizeof(UniChar);
-		if (text != nil)
-			BlockMove(BinaryData(obj), text, *length);
+		TRichString s(obj);
+		s.DoStringerStuff(text, length, inkData, inkLength);
 		return true;
 	}
 	Ref ref = obj;
@@ -843,12 +842,13 @@ Stringer(RefArg array)
 	}
 	if (inkLength > 0)
 	{
-		unsigned char* trailer = (unsigned char*) (char*) locked + size - 4;
-		ULong word = (textLength / 2) << 4;
-		trailer[0] = (unsigned char) (word >> 24);
-		trailer[1] = (unsigned char) (word >> 16);
-		trailer[2] = (unsigned char) (word >> 8);
-		trailer[3] = (unsigned char) (word | 1);
+		// (host: written as the two UniChars TRichString::SetFormatAndLength
+		// reads it back as, as MungeRange and MakeRichString write it,
+		// rather than as the ROM's one word.)
+		UniChar* trailer = (UniChar*) ((char*) locked + size - 4);
+		ULong word = ((textLength / 2) << 4) | 1;
+		trailer[0] = (UniChar) (word >> 16);
+		trailer[1] = (UniChar) word;
 	}
 	return str;
 }

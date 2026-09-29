@@ -14,6 +14,7 @@
 #include "ROMConstants.h"
 #include "Unicode.h"
 #include "NSErrors.h"
+#include "RSSymbols.h"
 #include "memory/host/KernelHeap.h"
 
 #include <stdio.h>
@@ -474,6 +475,44 @@ TestFiles()
 }
 
 
+// breakOnThrows: an exception thrown with it set is reported to the REP
+// and the global function BreakLoop is run - once for that exception, not
+// again at each handler it passes on its way out
+static long gBreaks = 0;
+static Ref
+TestBreakLoop(RefArg /*rcvr*/)
+{
+	gBreaks++;
+	return NILREF;
+}
+
+static void
+TestBreakOnThrows()
+{
+	RefVar functions(gFunctionFrame);
+	RefVar saved(GetFrameSlotRef(functions, RSSYMbreakloop));
+	SetFrameSlot(functions, RSSYMbreakloop, RefVar(MakeCFunction((void*) TestBreakLoop, 0, nil)));
+	SetFrameSlot(RefVar(gVarFrame), RSSYMbreakonthrows, RefVar(TRUEREF));
+	Printed();
+	gBreaks = 0;
+	// caught at once: one break
+	EXPECT_INT("try Throw('|evt.ex.msg;my.test|, \"x\") onexception |evt.ex.msg| do 7", 7);
+	EXPECT(gBreaks == 1);
+	EXPECT(strstr(Printed(), "!!! Exception") != nil);			// the REP was told
+	// through an inner handler that rethrows to an outer one: still one
+	gBreaks = 0;
+	EXPECT_INT("try (try Throw('|evt.ex.msg;my.test|, \"y\") onexception |evt.ex.foo| do 1) onexception |evt.ex.msg| do 8", 8);
+	EXPECT(gBreaks == 1);
+	// with it off: none
+	SetFrameSlot(RefVar(gVarFrame), RSSYMbreakonthrows, RefVar(NILREF));
+	gBreaks = 0;
+	EXPECT_INT("try Throw('|evt.ex.msg;my.test|, \"z\") onexception |evt.ex.msg| do 9", 9);
+	EXPECT(gBreaks == 0);
+	SetFrameSlot(functions, RSSYMbreakloop, saved);
+	Printed();
+}
+
+
 int
 main()
 {
@@ -506,6 +545,7 @@ main()
 		TestCodeBlocks();
 		TestErrors();
 		TestFiles();
+		TestBreakOnThrows();
 	}
 	newton_catch_all
 	{

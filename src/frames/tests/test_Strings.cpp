@@ -295,6 +295,18 @@ TestRichStringInk()
 	EXPECT(InkTextIs(m2, "xy#c") && m2.NumInkWords() == 1 && m2.Verify() == 0);
 	StrMunger(munged, 0, -1, RefVar(MakeString("plain")), 0, -1);	// all of it: plain again
 	EXPECT(StringEquals(munged, "plain") && TRichString(munged).Format() == kRichStringFormatPlain);
+
+	// Stringer (the & operator) carries a rich string's ink over
+	const char* three[] = { "CCC" };
+	SetFrameSlot(RefVar(gVarFrame), RefVar(SYMBOL("rs1")), RefVar(MakeInkString("a#b#c", two, 2)));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(SYMBOL("rs2")), RefVar(MakeInkString("d#", three, 1)));
+	RefVar joined(Eval("rs1 & \"-\" & rs2"));
+	TRichString j(joined);
+	EXPECT(InkTextIs(j, "a#b#c-d#") && j.NumInkWords() == 3 && j.Verify() == 0);
+	RefVar w0(j.CloneInkWordNo(0)), w1(j.CloneInkWordNo(1)), w2(j.CloneInkWordNo(2));
+	EXPECT(Length(w0) == 4 && memcmp(BinaryData(w0), "AAAA", 4) == 0);
+	EXPECT(Length(w1) == 2 && memcmp(BinaryData(w1), "BB", 2) == 0);
+	EXPECT(Length(w2) == 3 && memcmp(BinaryData(w2), "CCC", 3) == 0);
 }
 
 
