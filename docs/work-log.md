@@ -88,6 +88,13 @@ bugs and ROM bugs found on the way.
   `host.NewtonDockGetPackages` (a script polling `GetPackages()` every
   tick while the docker loads a package): 54 of 54 copies beside 8 hogs;
   before, an unstressed crash 2 in 3 and a hang 2 in 6.
+- Seen on the way and checked: a fork whose start fails deletes its
+  family's mutex - a ROM bug, kept (1bbe3cd).  `ForkInit` (0x000cb2e4)
+  clears only `fIsMain`; `TForkWorld::TaskDestructor` (0x000cb618) picks
+  the main world's branch by `fRunsMain`, still true in a fork until it
+  forks; `TUTaskWorld::TaskEntry` (0x0025ba94) destructs on every
+  failure, so such a fork runs `MainDestructor`, deletes the parent's
+  shared `fMutex` and decrements `fWorlds` it never added.
 
 ## 2026-09-30: 1.x entries, selective restore, and a desktop's slip
 

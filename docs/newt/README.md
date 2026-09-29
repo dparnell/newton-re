@@ -492,3 +492,8 @@ builds again:
 
 (The run itself prints a couple of `Query` exceptions from the code still
 holding the soup it removed; the next boot is clean.)
+
+A fork whose start fails (its start message not received, its
+constructor or its reply to the parent failing) takes
+`TForkWorld::TaskDestructor`'s main-world branch and deletes the family's
+mutex - a ROM bug, kept (`src/utility/ForkWorld.cpp`).
