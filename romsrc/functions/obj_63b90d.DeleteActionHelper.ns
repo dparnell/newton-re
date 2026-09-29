@@ -1,0 +1,21 @@
+@@ 0x504355
+func() begin
+	local l1;
+	saveWhatView.viewEffect := nil;
+	(if (l1 := saveWhat)._cursor then begin
+			try begin
+					self:ProcessMeetings(l1, 'delete)
+				end onexception |evt.ex| do begin
+					saveWhatView:delete('Retarget, '[Array: ]);
+					Rethrow()
+				end;
+			saveWhatView:delete('Retarget, '[Array: ])
+		end else (if self:DeleteMeeting(l1, true) then begin
+				saveWhatView:delete('changeViewTo, [Array: mainDisplay]);
+				if (if (l1.viewStationery = 'cribNote) then Visible(cribView)) then begin
+						cribView:RedoChildren()
+					end;
+				(if self:GetMeetingSlot(l1, 'mtgAlarm) then self:initializeAlarms())
+			end))
+end
+@@end

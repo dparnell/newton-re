@@ -1,0 +1,5 @@
+@@ 0x5256e5
+func() begin
+	(if (userConfiguration.lettersInFieldsOption <> nil) then 16384 else 0)
+end
+@@end

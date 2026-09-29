@@ -1,0 +1,5 @@
+@@ 0x768afd
+func() begin
+	self:GotoPage((fPageNum + 1))
+end
+@@end

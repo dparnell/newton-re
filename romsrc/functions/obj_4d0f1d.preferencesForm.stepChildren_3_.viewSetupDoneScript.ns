@@ -1,0 +1,5 @@
+@@ 0x4cdd2d
+func() begin
+	(if (not GetRoot().(appSymbol):GetConfig('hideAutoPref)) then self:Hide())
+end
+@@end

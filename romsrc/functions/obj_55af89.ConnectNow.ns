@@ -1,0 +1,17 @@
+@@ 0x55af29
+func(a1) begin
+	local l1;
+	l1 := nil;
+	self:SetStatusDialog('Connecting, nil, nil);
+	try begin
+			l1 := CallOnlineService(a1)
+		end onexception |evt.ex| do begin
+			self:HandleError((l1 := CurrentException().error));
+			self:CancelRequest(nil)
+		end;
+	(if (l1 <> 0) then begin
+			self:HandleError(l1);
+			self:CancelRequest(nil)
+		end)
+end
+@@end

@@ -1,0 +1,22 @@
+@@ 0x75899d
+@@const kROM_8269
+@8269
+@@const kROM_8259
+@8259
+@@main
+func() begin
+	local l1, l2;
+	endpoint:SetState(2);
+	l1 := endpoint:GetState();
+	if (protoContext:ConnectionPrefsRead('alwaysSyncall) or (not l1.selectiveSyncOK)) then begin
+			kROM_8269:OpenOnEndpoint('all, endpoint, nil)
+		end else begin
+			(l2 := BuildContext(kROM_8259)).endpoint := endpoint;
+			l2:FilterDialog();
+			if (l1.protocolVersion > 10) then begin
+					endpoint:WriteCommand("ntic", true, true)
+				end
+		end;
+	self:DoneForNow()
+end
+@@end

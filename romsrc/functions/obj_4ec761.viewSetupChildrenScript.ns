@@ -1,0 +1,106 @@
+@@ 0x4ec72d
+@@const kFunction_4eb029
+func() begin
+	(if (if prefView then prefView.viewCObject) then begin
+			newtAppBase:RememberedClose(prefView);
+			RemoveSlot(self, 'prefView)
+		end else begin
+			l1 := newtAppBase.prefsView;
+			local l1;
+			(foreach l2 in GetGlobals().transports do begin
+					local l4;
+					if (if (if (l4 := GetRoot().(l2)) then (l4.owner = appSymbol)) then l4.preferencesForm) then begin
+							l1 := l4.preferencesForm;
+							break
+						end
+				end);
+			(prefView := BuildContext(l1)).theApp := newtAppBase;
+			prefView.transport := l4;
+			newtAppBase:RememberedOpen(prefView)
+		end)
+end
+@@const kLiteral_4ec10d
+[Array: {DoInfoAbout: nil, DoInfoPrefs: kFunction_4eb029, _proto: @124}, @234, @434, '{viewBounds: {left: 7, top: 0, right: 39, bottom: 13}, viewJustify: 17408, text: "  New", _proto: @813}]
+@@const kFunction_4eb799
+func() begin
+	inherited:?viewSetupFormScript();
+	(newtAppBase._hangupKeyButton := self)
+end
+@@const kFunction_4eb7b9
+func() begin
+	RemoveSlot(newtAppBase, '_hangupKeyButton);
+	inherited:?viewQuitScript()
+end
+@@const kFunction_4eb851
+func() begin
+	popup := (foreach l1, l2 in '{lineBusy: "Line Busy", noAnswer: "No Answer", leftMessage: "Left Message", followup: "Followup Needed", completed: "Call Completed"} collect {item: l2, symbol: l1});
+	inherited:buttonClickScript()
+end
+@@const kFunction_4eb889
+func(a1) begin
+	self:hangup(popup[a1].symbol)
+end
+@@const kFunction_4eb939
+func() begin
+	self:manualDial()
+end
+@@const kFunction_4ebb5d
+func() begin
+	viewBounds := OffsetRect(viewBounds, -2, 0);
+	self:SetupIdle(1000);
+	(text := self:timeText())
+end
+@@const kFunction_4ebb7d
+func() begin
+	self:SetupIdle(0)
+end
+@@const kFunction_4ebb9d
+func() begin
+	if (if (if (if (if (startTime = 0) then activeTransport) then activeTransport.currentItem) then HasSlot(activeTransport.currentItem, 'startTime)) then (activeTransport.currentItem.startTime <> 0)) then begin
+			startTime := activeTransport.currentItem.startTime
+		end;
+	(if (startTime > 0) then self:TimeSpec((TimeInSeconds() - startTime)) else self:TimeSpec(0))
+end
+@@const kFunction_4ebbbd
+func() begin
+	SetValue(self, 'text, self:timeText());
+	1000
+end
+@@const kLiteral_4ec441
+[Array: @234, @434, '{viewBounds: {left: 7, top: 0, right: 39, bottom: 13}, viewJustify: 17408, text: "  New", _proto: @813}, {text: "  Hang Up", viewBounds: '{left: 0, top: -15, right: 51, bottom: -2}, viewJustify: 150, popup: nil, viewSetupFormScript: kFunction_4eb799, viewQuitScript: kFunction_4eb7b9, buttonClickScript: kFunction_4eb851, pickActionScript: kFunction_4eb889, _proto: @386}, {icon: @716, viewBounds: '{left: -19, top: 0, right: -7, bottom: 13}, viewJustify: 18438, buttonClickScript: kFunction_4eb939, _proto: @198}, {text: "000:00", viewBounds: '{left: 0, top: 0, right: 40, bottom: 13}, viewFont: 1057792, viewFormat: 5, viewTransferMode: 3, startTime: 0, viewSetupFormScript: kFunction_4ebb5d, stopTimer: kFunction_4ebb7d, timeText: kFunction_4ebb9d, viewIdleScript: kFunction_4ebbbd, _proto: @218}]
+@@const kFunction_4eb469
+func() begin
+	inherited:?viewSetupFormScript();
+	(newtAppBase._callKeyButton := self)
+end
+@@const kFunction_4eb489
+func() begin
+	RemoveSlot(newtAppBase, '_callKeyButton);
+	inherited:?viewQuitScript()
+end
+@@const kFunction_4eb529
+func() begin
+	(if (if (not activeTransport) then (not (if slipUp then slipUp.viewCObject))) then self:placecall())
+end
+@@const kFunction_4eb629
+func() begin
+	inherited:?viewSetupFormScript();
+	(newtAppBase._AddToNamesKeyButton := self)
+end
+@@const kFunction_4eb649
+func() begin
+	RemoveSlot(newtAppBase, '_AddToNamesKeyButton);
+	inherited:?viewQuitScript()
+end
+@@const kFunction_4eb679
+func() begin
+	self:AddToCardfile()
+end
+@@const kLiteral_4ec249
+[Array: {DoInfoAbout: nil, DoInfoPrefs: kFunction_4eb029, _proto: @124}, @234, @434, '{viewBounds: {left: 7, top: 0, right: 39, bottom: 13}, viewJustify: 17408, text: "  New", _proto: @813}, {viewBounds: '{left: 0, top: -15, right: 54, bottom: -2}, viewJustify: 150, viewSetupFormScript: kFunction_4eb469, viewQuitScript: kFunction_4eb489, text: "Place Call", buttonClickScript: kFunction_4eb529, _proto: @226}, {viewBounds: '{left: 0, top: -15, right: 24, bottom: -2}, viewJustify: 150, icon: @772, viewSetupFormScript: kFunction_4eb629, viewQuitScript: kFunction_4eb649, buttonClickScript: kFunction_4eb679, _proto: @198}]
+@@main
+func() begin
+	menuLeftButtons := (if (currentLayout = 'overview) then kLiteral_4ec10d else (if activeTransport then kLiteral_4ec441 else (if (not targetView) then kLiteral_4ec10d else kLiteral_4ec249)));
+	inherited:viewSetupChildrenScript()
+end
+@@end

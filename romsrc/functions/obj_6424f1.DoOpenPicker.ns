@@ -1,0 +1,15 @@
+@@ 0x4d5c4d
+func() begin
+	local l1;
+	if (if pickerSlip then pickerSlip.viewCObject) then begin
+			return nil
+		end;
+	inPeoplePicker := true;
+	if singleSelect then begin
+			(l1 := Clone(GetDataDefs(class))).singleSelect := true
+		end else begin
+			l1 := class
+		end;
+	(pickerSlip := _picker:New(l1, DeepClone(selected), self, nil))
+end
+@@end

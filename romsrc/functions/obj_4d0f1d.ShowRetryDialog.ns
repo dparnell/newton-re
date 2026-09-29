@@ -1,0 +1,11 @@
+@@ 0x4d0579
+func() begin
+	self:RemoveFlag(modemRetry);
+	self:SetStatusDialog('idle, 'vConfirm, {statusText: "To receive faxes, you must have a modem connected.    Please connect a modem, then try again.", primary: {text: "Try Again", script: func() begin
+		GetRoot().(appSymbol):SetupListen()
+	end}, secondary: nil, closeBox: func() begin
+		GetRoot().(appSymbol):Wrapup();
+		GetRoot().(appSymbol):CloseStatusDialog(nil)
+	end})
+end
+@@end

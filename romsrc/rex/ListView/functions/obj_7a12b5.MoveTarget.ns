@@ -1,0 +1,6 @@
+@@ 0x79efed names
+func(aTarget, aDestStore) begin
+	local moveResult;
+	(if (moveResult := list:MoveTask(task, aTarget, aDestStore)) then (target := moveResult))
+end
+@@end

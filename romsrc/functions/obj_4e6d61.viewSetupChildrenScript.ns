@@ -1,0 +1,12 @@
+@@ 0x4e6cb5
+func() begin
+	self.viewChildren := [Array: ];
+	Append(self.viewChildren, wordMatchedHeading);
+	Append(self.viewChildren, confidenceInMatchHeading);
+	l1 := Length(matchedWords);
+	local l1;
+	(for l2 := 0 to (l1 - 1) do begin
+			Append(self.viewChildren, {_proto: protoMetricsLine, wordIndex: l2})
+		end)
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x4f32a5
+func(a1) begin
+	local l1;
+	(if (BAnd((l1 := bxor(mtgInfo, a1)), 31) > 0) then begin
+			mtgInfo := l1;
+			self:Initialize();
+			self:UpdateText()
+		end else self:Initialize())
+end
+@@end

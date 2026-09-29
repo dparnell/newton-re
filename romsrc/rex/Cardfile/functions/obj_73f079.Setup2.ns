@@ -1,0 +1,5 @@
+@@ 0x73f2a1
+func(a1) begin
+	(if (if a1 then a1.(path)) then a1.(path).label else "")
+end
+@@end

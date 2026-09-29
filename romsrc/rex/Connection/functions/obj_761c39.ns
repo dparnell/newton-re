@@ -1,0 +1,6 @@
+@@ 0x761c39
+func() begin
+	local l1;
+	(if (l1 := GetUserConfig('emporia)) then return l1 else return '[Array: ])
+end
+@@end

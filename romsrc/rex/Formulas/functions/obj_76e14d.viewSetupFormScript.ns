@@ -1,0 +1,8 @@
+@@ 0x76ed75
+func() begin
+	local l1;
+	SetKeyView(self, 0);
+	l1 := GetAppParams();
+	(self.viewBounds := OffsetRect(self.viewBounds, (-l1.appAreaGlobalLeft), (-l1.appAreaGlobalTop)))
+end
+@@end

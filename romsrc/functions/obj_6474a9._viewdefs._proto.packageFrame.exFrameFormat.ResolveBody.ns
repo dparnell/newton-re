@@ -1,0 +1,6 @@
+@@ 0x54a9cd
+func(a1) begin
+	local l1;
+	(if (if (l1 := inherited:ResolveBody(a1)) then l1.pkgRef) then {class: 'packageFrame, package: l1.pkgRef} else return l1)
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x4c8019
+func(a1, a2, a3, a4) begin
+	(if (not self:IsLogItem(a1)) then begin
+			a3.printPreview := @532;
+			(if (a1.state <> 'pending) then 'printPreview)
+		end)
+end
+@@end

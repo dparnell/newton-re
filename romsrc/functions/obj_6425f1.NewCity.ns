@@ -1,0 +1,9 @@
+@@ 0x4ce755
+func(a1, a2, a3) begin
+	if (not a1.country) then begin
+			a1.country := userConfiguration.location.country
+		end;
+	self:AddToCities(a1, a2);
+	(if a3 then self:SetLocation(a1))
+end
+@@end

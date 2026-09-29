@@ -1,0 +1,11 @@
+@@ 0x46f93d
+func() begin
+	local l1, l2;
+	(if (headerText exists) then begin
+			text := ParamStr("Select a ^0", [Array: headerText]);
+			l2 := self.viewBounds;
+			l1 := StrFontWidth(self.text, viewFont);
+			(self.viewBounds := RelBounds(l2.left, l2.top, l1, ((l2.bottom - l2.top) + 1)))
+		end)
+end
+@@end

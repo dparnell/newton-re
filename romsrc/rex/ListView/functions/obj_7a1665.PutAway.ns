@@ -1,0 +1,31 @@
+@@ 0x7972bd names
+func(anItem) begin
+	local beamedEntry, task, added, today, date, text, reminder;
+	reminder := nil;
+	self:GetToDoSoup();
+	if ((beamedEntry := anItem.body).viewStationery = 'TodoItem) then begin
+			if beamedEntry.data then begin
+					text := ExtractData(beamedEntry.data, "...", 256)
+				end else begin
+					text := ""
+				end;
+			date := beamedEntry.mtgStartDate
+		end else begin
+			text := MakeRichString(beamedEntry.text, beamedEntry.styles);
+			date := beamedEntry.date;
+			if beamedEntry.remindForDate then begin
+					reminder := beamedEntry.remindForDate
+				end
+		end;
+	date := (date - (date mod 1440));
+	today := ((today := Time()) - (today mod 1440));
+	if (if (date < today) then (beamedEntry.mtgDone = nil)) then begin
+			date := today
+		end;
+	task := (added := self:AddTask(text, date, beamedEntry.mtgPriority, beamedEntry.mtgDone, reminder)).topic;
+	added.Entry.needsSort := true;
+	EntryChangeXmit(added.Entry, 'todo);
+	measureTopics := true;
+	self:RedoTopics()
+end
+@@end

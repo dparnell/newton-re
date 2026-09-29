@@ -1,0 +1,8 @@
+@@ 0x4cdd4d
+func() begin
+	(if (ModalConfirm("You are about to set up your Newton to exclusively receive faxes. Once in this mode, tap the 'Stop' button to exit. Do you want to continue?", 'okCancelDefaultCancel) = true) then begin
+			GetRoot().(appSymbol):SetConfig('faxAutoReceive, true);
+			base:ClosePrefs()
+		end)
+end
+@@end

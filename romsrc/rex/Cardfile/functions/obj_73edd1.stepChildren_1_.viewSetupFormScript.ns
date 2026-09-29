@@ -1,0 +1,20 @@
+@@ 0x73f4f9
+func() begin
+	if (target := customInfo) then begin
+			firstLine := nil;
+			local l1;
+			local l2;
+			local l3;
+			(foreach l1, l2 in lines do begin
+					l3 := l2.path;
+					if ((not target.(l3)) or (not StrFilled(target.(l3).label))) then begin
+							firstLine := l1;
+							break
+						end
+				end)
+		end else begin
+			firstLine := 0
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

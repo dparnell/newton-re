@@ -1,0 +1,9 @@
+@@ 0x757885
+func() begin
+	protoContext:ConnectionPrefsWrite('savePassword, passwordPref.viewValue);
+	protoContext:ConnectionPrefsWrite('removedups, removeDupsPref.viewValue);
+	protoContext:ConnectionPrefsWrite('timeoutConnection, timeoutPref.viewValue);
+	protoContext:ConnectionPrefsWrite('alwaysSyncall, alwaysSyncAllPref.viewValue);
+	(if (not protoContext:ConnectionPrefsRead('savePassword)) then protoContext:PasswordSave(nil))
+end
+@@end

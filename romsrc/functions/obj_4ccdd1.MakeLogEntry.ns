@@ -1,0 +1,9 @@
+@@ 0x4cb5f5
+func(a1, a2) begin
+	a1.name := Clone(a2.name);
+	a1.phoneNumber := Clone(a2.phoneNumber);
+	a1.faxResolution := Clone(a2.faxResolution);
+	a1.duration := Clone(a2.duration);
+	inherited:MakeLogEntry(a1, a2)
+end
+@@end

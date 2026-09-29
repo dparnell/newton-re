@@ -1,0 +1,5 @@
+@@ 0x4390f5
+func(a1) begin
+	(result := a1)
+end
+@@end

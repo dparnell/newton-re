@@ -1,0 +1,7 @@
+@@ 0x4da5c1
+func() begin
+	inherited:viewSetupFormScript();
+	self.data := target.data;
+	(self.reflowStart := 0)
+end
+@@end

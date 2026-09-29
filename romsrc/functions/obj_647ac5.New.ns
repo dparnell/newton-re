@@ -1,0 +1,8 @@
+@@ 0x48ecb9
+func(a1, a2) begin
+	local l1;
+	(l1 := BuildContext(self)).godParent := a1;
+	l1.store := a2;
+	l1:FilterDialog()
+end
+@@end

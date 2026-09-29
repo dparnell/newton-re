@@ -1,0 +1,5 @@
+@@ 0x468ed1
+func(a1, a2) begin
+	self:SetupItem(a2, {target: a1.target, targetView: a1.targetView})
+end
+@@end

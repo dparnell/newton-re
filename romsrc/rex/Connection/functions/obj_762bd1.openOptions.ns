@@ -1,0 +1,5 @@
+@@ 0x762bed
+func() begin
+	inherited:openOptions()
+end
+@@end

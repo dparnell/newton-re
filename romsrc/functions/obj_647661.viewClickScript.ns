@@ -1,0 +1,7 @@
+@@ 0x45c379
+func(a1) begin
+	playsound(@51);
+	SetKeyView(entryLine, 99999);
+	true
+end
+@@end

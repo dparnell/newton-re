@@ -1,0 +1,23 @@
+@@ 0x74ad75
+func() begin
+	l1 := protoContext:GetBackupStoreVersion();
+	self.StoreMap := [Array: ];
+	local l1;
+	(foreach l2 in GetStores() do begin
+			local l4;
+			if (l2.version > l1) then begin
+					AddArraySlot(StoreMap, l2)
+				end
+		end);
+	self.numStores := Length(StoreMap);
+	l4 := Clone(OriginalViewBounds);
+	self.packagesCheckboxVisible := self:ShowPackagesCheckbox();
+	if (not packagesCheckboxVisible) then begin
+			self.checkAdjust := 15;
+			l4.bottom := (l4.bottom - 15)
+		end else begin
+			self.checkAdjust := nil
+		end;
+	SetValue(self, 'viewBounds, l4)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x4cb595
+func(a1) begin
+	self:SetConfig('autoDelivery, a1)
+end
+@@end

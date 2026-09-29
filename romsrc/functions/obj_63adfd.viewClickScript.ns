@@ -1,0 +1,9 @@
+@@ 0x42be85
+func(a1) begin
+	InkOff(a1);
+	self:hilite(true);
+	timeField:Toggle();
+	self:hilite(nil);
+	true
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x45159d
+func() begin
+	inherited:?viewDrawScript();
+	(if fBorder then self:DrawShape(fBorder, {pensize: 2}))
+end
+@@end

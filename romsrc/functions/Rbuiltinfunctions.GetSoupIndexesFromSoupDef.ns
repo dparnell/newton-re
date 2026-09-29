@@ -1,0 +1,9 @@
+@@ 0x569911
+func(a1) begin
+	local l1;
+	if (l1 := GetSoupDef(a1)) then begin
+			return l1.indexes
+		end;
+	nil
+end
+@@end

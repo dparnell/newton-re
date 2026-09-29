@@ -1,0 +1,6 @@
+@@ 0x738785
+func() begin
+	local l1;
+	(if (l1 := GetStores()[0]:GetSoup(allSoups.names.soupName)) then l1:GetInfo('customFields))
+end
+@@end

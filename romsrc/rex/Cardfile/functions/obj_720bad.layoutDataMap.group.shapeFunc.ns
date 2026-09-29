@@ -1,0 +1,25 @@
+@@ 0x7423b5
+func(a1, a2, a3, a4) begin
+	l2 := [Array: ];
+	l4 := FontAscent(a4.font);
+	l5 := fontHeight(a4.font);
+	l6 := a2.left;
+	l7 := a2.right;
+	l3 := GetDataDefs(ClassOf(a1[0]));
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	local l6;
+	local l7;
+	(foreach l8 in a1[0] do begin
+			entry := ResolveEntryAlias(l8._alias);
+			l1 := Stringer([Array: "\n+", l3:Get(l8, 'name, 'text)]);
+			a2.bottom := (a2.top + l4);
+			AddArraySlot(l2, MakeText(l1, l6, a2.top, l7, a2.bottom));
+			a2.top := (a2.top + l5)
+		end);
+	{shape: l2}
+end
+@@end

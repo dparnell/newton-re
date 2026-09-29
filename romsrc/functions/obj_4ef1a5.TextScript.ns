@@ -1,0 +1,5 @@
+@@ 0x4ef165
+func(a1, a2) begin
+	Stringer([Array: ParamStr("Phone Message: ^0 ^1 on ^2", [Array: a2.name, a2.phoneNumber, DateNTime(a2.timestamp)]), "\n\n", notesText(a2.notes)])
+end
+@@end

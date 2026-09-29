@@ -1,0 +1,22 @@
+@@ 0x45bef5
+@@const kFunction_45bd5d
+func(a1, a2) begin
+	StrEqual(a1, a2)
+end
+@@main
+func(a1) begin
+	local l1;
+	l1 := ((a1.hours * 60) + a1.minutes);
+	a1.name := Stringer([Array: TimeStr(l1, @66.shortTimeStrSpec), " ", self:GetDaysStr(a1.days)]);
+	(if ArrayPos(ListItems, a1.name, 0, kFunction_45bd5d) then self:SysBeep() else begin
+			a1.owner := ownerSymbol;
+			a1.ownerName := ownerName;
+			a1.tolerance := tolerance;
+			AddArraySlot(ListItems, a1.name);
+			Selection := (Length(ListItems) - 1);
+			self:SetupList();
+			self:RedoChildren();
+			AddAlarm(Stringer([Array: a1.name, $:, ownerName]), UpdatePeriodicAlarmTime(a1), nil, functions.PeriodicAlarmFunc, [Array: a1])
+		end)
+end
+@@end

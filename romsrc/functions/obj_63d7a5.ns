@@ -1,0 +1,25 @@
+@@ 0x63d7a5
+@@const kLiteral_491521
+"Calibration"
+@@const kFunction_5acb89
+func() begin
+	local l1, l2, l3;
+	l2 := GetStores()[0];
+	if l2:HasSoup(@276) then begin
+			l3 := l2:GetSoup(@276);
+			if (if (l1 := l3:Query({type: 'index, indexPath: 'tag, beginKey: kLiteral_491521, endKey: kLiteral_491521}):entry()) then IsTabletCalibrationNeeded()) then begin
+					l1.rotated := Array(4, nil);
+					EntryChange(l1)
+				end
+		end;
+	l1
+end
+@@main
+func() begin
+	local l1;
+	(if (if (l1 := call (kFunction_5acb89) with ()) then l1.data) then begin
+			SetCalibration(l1.data);
+			true
+		end)
+end
+@@end

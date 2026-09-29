@@ -1,0 +1,36 @@
+@@ 0x4f7a19
+@@const kFunction_4f44e1
+func(a1, a2, a3, a4) begin
+	local l1;
+	(if (a2 <> 'calendar) then begin
+			if (a3 = 'SoupLeaves) then begin
+					l1 := '|SoupsLeft:Dates|
+				end else begin
+					if (a3 = 'SoupEnters) then begin
+							l1 := '|SoupsEntered:Dates|
+						end else begin
+							if (StrEqual(a1, @23) or StrEqual(a1, @239)) then begin
+									l1 := '|MeetingSoupChanged:Dates|
+								end else begin
+									l1 := '|EventSoupChanged:Dates|
+								end
+						end
+				end;
+			AddProcrastinatedSend(l1, GetRoot().calendar, 'FilterChanged, [Array: a1, a2, a3, a4], 0)
+		end)
+end
+@@main
+func() begin
+	RegSoupChange(@23, 'calendar, kFunction_4f44e1);
+	RegSoupChange(@239, 'calendar, kFunction_4f44e1);
+	RegSoupChange(@22, 'calendar, kFunction_4f44e1);
+	RegSoupChange(@242, 'calendar, kFunction_4f44e1);
+	if ((mainDisplay = ToDoListView) or (mainDisplay = AgendaView)) then begin
+			cribView:Hide()
+		end;
+	(if ((mainDisplay = YearView) or (mainDisplay = MonthOverView)) then upDownScroller:Hide() else begin
+			mainDisplay:?calculateScrollRects();
+			upDownScroller:AdjustArrows()
+		end)
+end
+@@end

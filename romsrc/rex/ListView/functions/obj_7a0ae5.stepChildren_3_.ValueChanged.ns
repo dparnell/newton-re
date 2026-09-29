@@ -1,0 +1,7 @@
+@@ 0x79f9ad names
+func() begin
+	savedDone := viewValue;
+	task.mtgDone := viewValue;
+	(dirtyFlag := true)
+end
+@@end

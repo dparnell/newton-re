@@ -1,0 +1,16 @@
+@@ 0x5a4141
+func(a1) begin
+	local l1;
+	l1 := GetRoot().mailSlip;
+	(if a1 then begin
+			if l1.setEmporia then begin
+					UseCurrentEmporium()
+				end;
+			l1.setEmporia := nil;
+			(if ((not userConfiguration.mailAccount) or (not StrFilled(userConfiguration.mailAccount))) then l1:DoRegister(nil) else begin
+					mailRegister.request := nil;
+					mailRegister:Open()
+				end)
+		end)
+end
+@@end

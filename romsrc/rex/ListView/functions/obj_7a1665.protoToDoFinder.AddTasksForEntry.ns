@@ -1,0 +1,74 @@
+@@ 0x79b5ad names
+func(anEntry, aResults, anOffset, aPrevCount, aMaxCount) begin
+	found := [Array: ];
+	i := 0;
+	if (findType = 'text) then begin
+			local excerpt;
+			local newFindItem;
+			local found;
+			local i;
+			local f;
+			local value;
+			local path;
+			local date;
+			local ti;
+			local t;
+			local r;
+			(for ti := 0 to (Length(anEntry.topics) - 1) do begin
+					if (r := FindStringInFrame((t := anEntry.topics[ti]), findWords, true)) then begin
+							AddArraySlot(found, r[0]);
+							AddArraySlot(found, [Array: ti]);
+							AddArraySlot(found, r[2])
+						end
+				end)
+		end else begin
+			if (anEntry.date <> 0) then begin
+					found := Array((Length(anEntry.topics) * 3), nil);
+					(for ti := 0 to (Length(anEntry.topics) - 1) do begin
+							f := (ti * 3);
+							found[f] := anEntry.topics[ti].text;
+							found[(f + 1)] := [Array: ti]
+						end)
+				end else begin
+					Write(Stringer([Array: "repeating task may match, anOffset=", anOffset, " ", "aPrevCount=", aPrevCount, " ", "findType="]));
+					Print(findType);
+					found := [Array: ];
+					(for ti := 0 to (Length(anEntry.topics) - 1) do begin
+							if self:TaskMatches((t := anEntry.topics[ti])) then begin
+									AddArraySlot(found, t.text);
+									AddArraySlot(found, [Array: ti]);
+									AddArraySlot(found, nil)
+								end
+						end)
+				end
+		end;
+	(for f := 0 to (Length(found) - 1) by 3 do begin
+			value := found[f];
+			path := found[(f + 1)];
+			if ((i + aPrevCount) > aMaxCount) then begin
+					break
+				end;
+			if (anEntry.date = 0) then begin
+					t := anEntry.topics[path[0]];
+					date := NextMeeting(((Time() div 1440) * 1440), t.repeatInfo);
+					if t.repeatInfo.reminderInterval then begin
+							date := (date - t.repeatInfo.reminderInterval)
+						end
+				end else begin
+					date := anEntry.date
+				end;
+			if (date(date).year = date(Time()).year) then begin
+					excerpt := Stringer([Array: LongDateStr(date, 74985), " ", value])
+				end else begin
+					excerpt := Stringer([Array: LongDateStr(date, 4799084), " ", value])
+				end;
+			if (StrLen(excerpt) > 50) then begin
+					excerpt := SubStr(excerpt, 0, 50)
+				end;
+			(newFindItem := {_proto: @178, finder: (if self.masterFinder then masterFinder else self), realFinder: self, entryID: anEntry._uniqueID, soup: EntrySoup(anEntry), storeID: EntryStore(anEntry):GetSignature(), selected: nil, itemIndex: ((anOffset + aPrevCount) + i), title: excerpt, topicIndex: path[0], offset: found[(f + 2)], instanceTime: date}).selected := self:IsSelected({_uniqueID: newFindItem.entryID, _storeID: newFindItem.storeID, instanceTime: newFindItem.instanceTime, topicIndex: newFindItem.topicIndex});
+			AddArraySlot(aResults, newFindItem);
+			i := (i + 1)
+		end);
+	i
+end
+@@end

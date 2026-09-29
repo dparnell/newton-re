@@ -1,0 +1,8 @@
+@@ 0x4d3cbd
+func() begin
+	if invoker then begin
+			invoker:?UpdatePhone()
+		end;
+	EntryChange(userConfiguration)
+end
+@@end

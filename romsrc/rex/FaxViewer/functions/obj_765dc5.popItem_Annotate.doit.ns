@@ -1,0 +1,9 @@
+@@ 0x766a59
+func(a1) begin
+	local l1;
+	if ((l1 := GetVariable(a1, 'ImageTarget)):GetScalingInfo().zoomedTo <> 'fullSize) then begin
+			l1:ZoomTo('fullSize)
+		end;
+	l1:SetAnnotationMode('edit)
+end
+@@end

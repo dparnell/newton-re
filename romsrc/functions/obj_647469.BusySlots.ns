@@ -1,0 +1,10 @@
+@@ 0x56a0fd
+func() begin
+	l1 := [Array: ];
+	local l1;
+	(for l2 := 1 to getCardInfo().totalSockets do begin
+			AddArraySlot(l1, [Array: ])
+		end);
+	l1
+end
+@@end

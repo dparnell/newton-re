@@ -1,0 +1,14 @@
+@@ 0x453f69
+func(a1, a2) begin
+	(if a1 then (for l1 := (Length(a1) - 1) to 0 by -1 do begin
+				local l4;
+				if (if (l4 := a1[l1])._Unselected then a2) then begin
+						ArrayRemoveCount(a1, l1, 1)
+					end else begin
+						if (if l4._alias then l4._fakeID) then begin
+								l4._fakeID := nil
+							end
+					end
+			end))
+end
+@@end

@@ -1,0 +1,36 @@
+@@ 0x438229
+func(a1) begin
+	InkOff(a1);
+	playsound(@51);
+	l3 := self:GlobalBox();
+	(loop (if StrokeDone(a1) then break));
+	l4 := (GetPoint(4, a1) - l3.left);
+	l5 := (GetPoint(5, a1) - l3.top);
+	l4 := min(max(l4, 0), dstRect.right);
+	l5 := min(max(l5, 0), dstRect.bottom);
+	l1 := MapPtX(l4, dstRect, srcRect);
+	l2 := MapPtY(l5, dstRect, srcRect);
+	if ((l6 := Length((list := ClosestLocations(GetLocationSoup(spots), listLimit, radius, l1, l2, (if filter then {width: worldRect.right, height: worldRect.bottom, slot: slot, filter: filter} else {width: worldRect.right, height: worldRect.bottom}))))) > 0) then begin
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			local l5;
+			local l6;
+			(foreach l7 in list do begin
+					local l9;
+					if (l9 := l7.place.region) then begin
+							l7.item := Stringer([Array: l7.item, " ", l9])
+						end
+				end)
+		end else begin
+			AddArraySlot(list, {item: "Middle of Nowhere"})
+		end;
+	if (if shortCircuit then (l6 = 1)) then begin
+			self:pickActionScript(0)
+		end else begin
+			DoPopup(list, l4, l5, self)
+		end;
+	true
+end
+@@end

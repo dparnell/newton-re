@@ -1,0 +1,12 @@
+@@ 0x4d92ed
+func() begin
+	local l1;
+	if ((not (l1 := ResolveEntryAlias(userConfiguration.currentPersona))) or (not l1.owner.signature)) then begin
+			viewFlags := 0
+		end else begin
+			added := true
+		end;
+	target.fromSignature := GetUserConfig('signLetter);
+	inherited:viewSetupFormScript()
+end
+@@end

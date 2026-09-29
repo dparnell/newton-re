@@ -1,0 +1,6 @@
+@@ 0x51f89d
+func(a1) begin
+	viewBounds.left := (viewBounds.left - a1);
+	self:SyncView()
+end
+@@end

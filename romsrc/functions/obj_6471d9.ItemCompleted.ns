@@ -1,0 +1,27 @@
+@@ 0x535739
+func(a1, a2, a3) begin
+	local l1;
+	self:SetStatusDialog((if (status = 'cancelling) then 'cancelling else 'HangingUp), 'vStatus, {primary: nil});
+	if (if callEndpoint then ((((((status = 'DialingDone) or (status = 'DialingDoneTo)) or (status = 'DialingDoneFrom)) or (status = 'RingingFrom)) or (status = 'AnswerInProgress)) or (status = 'DialingTo))) then begin
+			try begin
+					callEndpoint:hangup(nil)
+				end onexception |evt.ex| do begin end
+		end;
+	manualStatus := true;
+	if a1 then begin
+			l1 := a1.state;
+			if IsInstance(a3, 'symbol) then begin
+					a1.error := 0;
+					a1.hangupreason := a3;
+					a3 := nil
+				end;
+			if ((a3 = nil) or (a3 = 0)) then begin
+					l1 := 'log
+				end;
+			a1.endTime := TimeInSeconds();
+			inherited:ItemCompleted(a1, l1, a3)
+		end;
+	currentItem := nil;
+	self:CloseStatusDialog(nil)
+end
+@@end

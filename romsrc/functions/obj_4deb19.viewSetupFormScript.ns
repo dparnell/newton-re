@@ -1,0 +1,11 @@
+@@ 0x4deaf9
+func() begin
+	local l1;
+	if (if isIndex then (target.kind <> 'Add)) then begin
+			access := 'readOnly
+		end else begin
+			newDictionaries := (l1 := GetLocale()).recogCityDictionaries
+		end;
+	inherited:viewSetupFormScript()
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x724fe9
+func(a1) begin
+	self:DrawShape(a1, {transferMode: 2, penPattern: 0, fillPattern: 5})
+end
+@@end

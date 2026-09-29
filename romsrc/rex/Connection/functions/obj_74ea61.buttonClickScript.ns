@@ -1,0 +1,15 @@
+@@ 0x74eabd
+func() begin
+	local l1, l2;
+	(if (currentSelection <> nil) then (if self:VerifyAlias((l1 := currentFiles[currentIndex])) then begin
+				if HasPath(l1, 'whichVol) then begin
+						l2 := {name: l1.name, whichVol: l1.whichVol}
+					end else begin
+						l2 := l1.name
+					end;
+				closing := true;
+				protoContext:FileBrowserClose(endpoint);
+				(if (callWhenDone exists) then call callWhenDone with (endpoint, nil, whichFiles, l2, currentPath))
+			end))
+end
+@@end

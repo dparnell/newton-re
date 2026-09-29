@@ -1,0 +1,17 @@
+@@ 0x5b639d
+func(a1, a2) begin
+	if (if ((a1 = $w) or (a1 = $.)) then (BAnd(a2, 33554432) <> 0)) then begin
+			base:_DoCloseButton()
+		end;
+	if (if (a1 >= $0) then (a1 <= $9)) then begin
+			PINKeyPad:keyPressScript(a1)
+		end;
+	if ((a1 = $\n) or (a1 = $\03)) then begin
+			PINKeyPad:keyPressScript($E)
+		end;
+	if (a1 = $\08) then begin
+			PINKeyPad:keyPressScript($<)
+		end;
+	true
+end
+@@end

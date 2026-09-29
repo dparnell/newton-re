@@ -1,0 +1,22 @@
+@@ 0x729ad9
+func() begin
+	l1 := target.phones;
+	l2 := 0;
+	inherited:?viewQuitScript();
+	l3 := Length(l1);
+	local l1;
+	local l2;
+	local l3;
+	(for l4 := 0 to (l3 - 1) do begin
+			if (not StrFilled(l1[l4])) then begin
+					l1[l4] := nil
+				end else begin
+					l2 := l4
+				end
+		end);
+	if ((l2 + 1) < l3) then begin
+			SetLength(l1, (l2 + 1))
+		end;
+	self:StartFlush()
+end
+@@end

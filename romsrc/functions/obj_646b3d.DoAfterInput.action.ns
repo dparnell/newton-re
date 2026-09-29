@@ -1,0 +1,6 @@
+@@ 0x4994e9
+func() begin
+	fStage := (fStage + 1);
+	(if (if (fMode = 'AutoInAndOut) then (fStage < 2)) then 'DoOutput else 'DoDisconnect)
+end
+@@end

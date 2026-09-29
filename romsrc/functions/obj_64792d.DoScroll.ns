@@ -1,0 +1,18 @@
+@@ 0x4407ed
+func(a1) begin
+	local l1;
+	(foreach l2 in (l1 := self:ChildViewFrames()) do begin
+			local l4;
+			if (a1 = l2.arrowDirection) then begin
+					if (not l2:EndOfTheLine(a1)) then begin
+							l4 := Clone(l2.baseFrame);
+							self:SetupExtras(a1, l4);
+							scrollView:?viewScroll2DScript(a1, l4);
+							self:AdjustArrows();
+							l2:DoDrawing('viewDrawScript, [Array: ])
+						end;
+					break
+				end
+		end)
+end
+@@end

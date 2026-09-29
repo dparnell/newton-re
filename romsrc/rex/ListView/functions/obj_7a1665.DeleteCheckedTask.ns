@@ -1,0 +1,6 @@
+@@ 0x797975 names
+func(aDate, aTask) begin
+	local textPart1, result;
+	(if HasPath(aTask, 'repeatInfo) then (if (result := ModalConfirm(Stringer([Array: (textPart1 := SubStr(MakeRichString(aTask.text, aTask.styles), 0, 24)), "\u2026\u", " ", "is a recurring task. Delete all occurrences?"]), 'yesNo)) then self:DeleteTask(0, aTask, nil) else return nil) else self:DeleteTask(aDate, aTask, nil))
+end
+@@end

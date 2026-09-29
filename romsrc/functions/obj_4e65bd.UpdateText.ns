@@ -1,0 +1,5 @@
+@@ 0x4e6581
+func() begin
+	SetValue(self, 'text, ParamStr("Suggested word \u201C\u^0\u201D\u:", [Array: requestedWord]))
+end
+@@end

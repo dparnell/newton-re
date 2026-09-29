@@ -1,0 +1,6 @@
+@@ 0x484c99
+func(a1) begin
+	local l1;
+	(if (l1 := SetContains(folderList, a1)) then self:SetClusterValue((l1 + 1)) else self:SetClusterValue(0))
+end
+@@end

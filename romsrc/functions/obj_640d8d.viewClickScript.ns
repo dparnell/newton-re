@@ -1,0 +1,47 @@
+@@ 0x439845
+func(a1) begin
+	local l1, l2, l3;
+	InkOff(a1);
+	self:Dirty();
+	RefreshViews();
+	l1 := self:GlobalBox();
+	l3 := -1;
+	(loop begin
+			x := GetPoint(4, a1);
+			if ((l2 := (GetPoint(5, a1) - l1.top)) > 0) then begin
+					l2 := (l2 div lineHeight)
+				end;
+			if (((numItems = 0) or (x < l1.left)) or (x > l1.right)) then begin
+					l2 := -1
+				end else begin
+					if (l2 < 0) then begin
+							if (viewOriginY > 0) then begin
+									self:viewScrollUpScript();
+									RefreshViews();
+									l3 := -1
+								end;
+							l2 := 0
+						end else begin
+							if (l2 > (numItems - 1)) then begin
+									l2 := -1
+								end else begin
+									if (l2 >= viewLines) then begin
+											if (viewOriginY < spillHeight) then begin
+													self:viewScrollDownScript();
+													RefreshViews();
+													l3 := -1
+												end;
+											l2 := (viewLines - 1)
+										end
+								end
+						end
+				end;
+			if (l2 <> l3) then begin
+					self:HiliteLine((l2 + (viewOriginY div lineHeight)));
+					l3 := l2
+				end;
+			(if StrokeDone(a1) then break)
+		end);
+	(if (l2 >= 0) then self:buttonClickScript((Selection := (l2 + (viewOriginY div lineHeight)))))
+end
+@@end

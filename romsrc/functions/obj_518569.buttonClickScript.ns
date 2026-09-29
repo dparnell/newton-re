@@ -1,0 +1,5 @@
+@@ 0x518469
+func() begin
+	self:Confirm("Delete", ParamStr("^0 ^1 ^2", [Array: "This will permanently remove all items before", ShortDateStr(DaysValue.Date, 0), ".  Do you want to continue?"]), self, 'RemoveItems)
+end
+@@end

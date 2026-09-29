@@ -1,0 +1,17 @@
+@@ 0x54bf15
+func(a1) begin
+	local l1, l2, l3, l4;
+	(if BFind(a1, @276, '|str<|, nil) then (if (l1 := GetStores()[0]:GetSoup("Packages")) then begin
+				l2 := l1:Query('{tagspec: {all: [Array: _icon, _noBackup], none: _soups}});
+				l3 := GetAppPrefs('BuiltInExtrasState, '{});
+				l4 := l2:entry();
+				(while l4 do begin
+						if l4.app then begin
+								l3.(l4.app) := {sequence: l4.sequence, labels: l4.labels}
+							end;
+						(l4 := l2:Next())
+					end);
+				EntryChange(l3)
+			end))
+end
+@@end

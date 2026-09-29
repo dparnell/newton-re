@@ -1,0 +1,11 @@
+@@ 0x518b05
+func() begin
+	(if (currentY < DataRect.bottom) then begin
+			pageNumber := (pageNumber + 1);
+			notes:RedoChildren();
+			Footer:viewSetupFormScript();
+			SetValue(Footer, 'text, Footer.text);
+			true
+		end)
+end
+@@end

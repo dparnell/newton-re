@@ -1,0 +1,8 @@
+@@ 0x42755d
+func(a1) begin
+	viewValue := a1;
+	self:Dirty();
+	RefreshViews();
+	(elapsedTime := 0)
+end
+@@end

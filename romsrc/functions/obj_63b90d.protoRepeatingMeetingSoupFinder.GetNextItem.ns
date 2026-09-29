@@ -1,0 +1,17 @@
+@@ 0x4ef399
+func() begin
+	if masterFinder.scrollingForward then begin
+			if ((l1 := currentRepeatingEntryFinder).currentInstance < l1.instancesCount) then begin
+					l1.currentInstance := (l1.currentInstance + 1)
+				end
+		end else begin
+			(foreach l1 in repeatingEntryFinders do begin
+					if (l1.currentInstance < l1.instancesCount) then begin
+							l1.currentInstance := (l1.currentInstance + 1)
+						end
+				end);
+			masterFinder.scrollingForward := true
+		end;
+	self:ChooseEarliestInstance()
+end
+@@end

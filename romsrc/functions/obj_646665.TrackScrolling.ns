@@ -1,0 +1,45 @@
+@@ 0x45dcf9
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10;
+	InkOff(a1);
+	BusyBoxControl(2);
+	playsound(@51);
+	l4 := self:GlobalBox();
+	(repeat l6 := GetPoint(4, a1); l7 := GetPoint(5, a1); l2 := (l6 - l4.left); l3 := (l7 - l4.top); if (direction = 'right) then begin
+				l2 := (l2 mod tileSize)
+			end else begin
+				l3 := (l3 mod tileSize)
+			end; if (not l5) then begin
+				(l8 := self:LocalBox()).(direction) := tileSize;
+				l9 := ShapeBounds((l5 := self:GetHiliteShape(l2, l3, l8)));
+				l9 := RelBounds(l4.left, l4.top, (l9.right - l9.left), (l9.bottom - l9.top))
+			end; if ((if (direction = 'right) then ((l7 < l9.top) or (l7 > l9.bottom))) or (if (direction = 'bottom) then ((l6 < l9.left) or (l6 > l9.right)))) then begin
+				l1 := nil
+			end else begin
+				l1 := ((l10 := (if (direction = 'right) then (l6 - l4.left) else (l7 - l4.top))) div tileSize);
+				if (l10 < 0) then begin
+						self:hiliter(l5, hilitedIndex);
+						self:ScrollBy(scrollAmount);
+						hilitedIndex := (l1 := nil)
+					end else begin
+						if (l1 >= numTiles) then begin
+								self:hiliter(l5, hilitedIndex);
+								if (l1 >= maxTiles) then begin
+										self:ScrollBy((-scrollAmount))
+									end;
+								hilitedIndex := (l1 := nil)
+							end
+					end
+			end; if (l1 <> hilitedIndex) then begin
+				self:hiliter(l5, hilitedIndex);
+				self:hiliter(l5, (hilitedIndex := l1))
+			end until StrokeDone(a1));
+	(if l1 then begin
+			if autoDeselect then begin
+					self:hiliter(l5, hilitedIndex);
+					hilitedIndex := nil
+				end;
+			[Array: (l1 + firstVisibleItem), l2, l3]
+		end)
+end
+@@end

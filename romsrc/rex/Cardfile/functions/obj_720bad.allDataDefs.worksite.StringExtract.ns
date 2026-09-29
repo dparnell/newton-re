@@ -1,0 +1,12 @@
+@@ 0x73dbe9
+func(a1, a2) begin
+	local l1;
+	if (not StrFilled((l1 := a1.place))) then begin
+			l1 := "Untitled Worksite"
+		end;
+	if (a2 > 1) then begin
+			l1 := Stringer([Array: l1, "\n ", "Worksite"])
+		end;
+	l1
+end
+@@end

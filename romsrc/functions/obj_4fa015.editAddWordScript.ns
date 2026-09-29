@@ -1,0 +1,5 @@
+@@ 0x4f9e79
+func(a1, a2) begin
+	self:MakeNewMeetingFrame('cribNote, MakeRichString(a1.text, a1.styles), selectedDates[0], 0)
+end
+@@end

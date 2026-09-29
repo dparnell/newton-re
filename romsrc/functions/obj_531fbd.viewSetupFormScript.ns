@@ -1,0 +1,10 @@
+@@ 0x531f7d
+func() begin
+	if HasPath(fields, 'saveAsLog) then begin
+			viewValue := fields.saveAsLog
+		end else begin
+			viewValue := (fields.saveAsLog := (not transport:GetConfig('phonenocalllogging)))
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

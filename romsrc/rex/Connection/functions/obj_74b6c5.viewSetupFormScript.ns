@@ -1,0 +1,13 @@
+@@ 0x74b765
+func() begin
+	if (not inited) then begin
+			OriginalViewBounds := Clone(viewBounds)
+		end;
+	self.inited := true;
+	(if checkAdjust then begin
+			self.viewBounds := Clone(OriginalViewBounds);
+			viewBounds.top := (viewBounds.top - checkAdjust);
+			(viewBounds.bottom := (viewBounds.bottom - checkAdjust))
+		end else (self.viewBounds := OriginalViewBounds))
+end
+@@end

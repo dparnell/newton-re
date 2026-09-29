@@ -1,0 +1,11 @@
+@@ 0x430849
+func() begin
+	title := StrTruncate(Clone(title), 132);
+	if (count = 1) then begin
+			text := ParamStr("^0, 1 item", [Array: title])
+		end else begin
+			text := ParamStr("^0, ^1 items", [Array: title, NumberStr(count)])
+		end;
+	(if (skip <> 0) then (text := Stringer([Array: text, $\u2026])))
+end
+@@end

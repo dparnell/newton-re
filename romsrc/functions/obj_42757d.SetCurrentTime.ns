@@ -1,0 +1,8 @@
+@@ 0x42751d
+func() begin
+	local l1, l2, l3;
+	l1 := (TimeInSeconds() - startSeconds);
+	l2 := (maxValue - minValue);
+	self:SetAndUpdate((l3 := (if playTime then ceiling(((l1 * l2) / playTime)) else (l1 mod l2))))
+end
+@@end

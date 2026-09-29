@@ -1,0 +1,6 @@
+@@ 0x7691bd
+func(a1) begin
+	self.mungeType := a1;
+	(if (Length(ImageTarget:GetAnnotations()) > 0) then GetRoot():Confirm("Fax Rotation", "Your annotations for this page will be lost.  Do you want to continue?", self, 'DoMungeREally) else self:DoMungeREally(true))
+end
+@@end

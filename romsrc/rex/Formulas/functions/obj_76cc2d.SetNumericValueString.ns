@@ -1,0 +1,5 @@
+@@ 0x76cf01
+func(a1) begin
+	(if (a1 = nil) then SetValue(value, 'text, Clone("")) else SetValue(value, 'text, a1))
+end
+@@end

@@ -1,0 +1,25 @@
+@@ 0x74fd6d
+func(a1) begin
+	local l1, l2;
+	l1 := true;
+	if a1.alias then begin
+			try begin
+					if HasPath(a1, 'whichVol) then begin
+							l2 := {name: a1.name, whichVol: a1.whichVol}
+						end else begin
+							l2 := a1.name
+						end;
+					checkCommandsInIdle := nil;
+					endpoint:WriteCommand("rali", l2, true);
+					l1 := (protoContext:CallReadCommand(endpoint, "alir").data = 1);
+					checkCommandsInIdle := true
+				end onexception |evt.ex| do begin
+					l1 := nil
+				end
+		end;
+	if (not l1) then begin
+			AddDeferredSend(self, 'Notify, [Array: 5, "Dock", "The alias can\u2019\ut be resolved on the desktop."])
+		end;
+	return l1
+end
+@@end

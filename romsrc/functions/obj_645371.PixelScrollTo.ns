@@ -1,0 +1,14 @@
+@@ 0x4af6d5
+func(a1, a2) begin
+	duringScroll := 'pixel;
+	try begin
+			layout:DropHilites();
+			layout:SetOrigin(a1, a2);
+			layout:?Jogged()
+		end onexception |evt.ex| do begin
+			duringScroll := nil;
+			Rethrow()
+		end;
+	(duringScroll := nil)
+end
+@@end

@@ -1,0 +1,15 @@
+@@ 0x48bed1
+func() begin
+	if (not (l1 := ResolveEntryAlias(GetUserConfig('currentPersona)))) then begin
+			return nil
+		end;
+	l2 := {};
+	SetPersona(l1, l2);
+	SetUserConfigEnMasse('personae, l2);
+	local l1;
+	local l2;
+	(if GetRoot().senderList then (foreach l3 in GetRoot().senderList do begin
+				l3:JamIt()
+			end))
+end
+@@end

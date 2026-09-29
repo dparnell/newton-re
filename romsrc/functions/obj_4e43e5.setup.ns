@@ -1,0 +1,6 @@
+@@ 0x4e43c5
+func() begin
+	local l1;
+	(if ((l1 := self:GetSelectionFont()).family = -536870912) then nil else l1.family)
+end
+@@end

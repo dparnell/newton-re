@@ -1,0 +1,9 @@
+@@ 0x45a035
+func(a1, a2, a3, a4) begin
+	local l1;
+	(l1 := self:Init()).context := a4;
+	l1.message := a1;
+	l1.returnKey := a2;
+	l1:popup(a3)
+end
+@@end

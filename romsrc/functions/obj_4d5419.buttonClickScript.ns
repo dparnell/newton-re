@@ -1,0 +1,52 @@
+@@ 0x4d53f9
+func() begin
+	local l1, l2, l3, l4, l5, l6;
+	l1 := GetRoot();
+	if (newMtgStartTime >= newMtgStopTime) then begin
+			l1:Notify(3, "Assist", "Please specify a meeting/event time");
+			return nil
+		end;
+	if selectedNames then begin
+			Invitees:AddMemoryItem()
+		end;
+	if selectedLocations then begin
+			location:AddMemoryItem()
+		end;
+	l2 := l1.calendar;
+	ClearUndoStacks();
+	if (not whoIsUp('calendar)) then begin
+			l2:Open()
+		end;
+	if newMtgDate then begin
+			l3 := newTitle;
+			if event then begin
+					if (if selectedNames then (Length(selectedNames) > 0)) then begin
+							l5 := selectedNames[0];
+							if HasSlot(action, 'GetTitle) then begin
+									l3 := action:GetTitle(l5)
+								end
+						end;
+					l4 := l2:AddEvent(l3, newMtgDate, 'yearly, nil)
+				end else begin
+					l4 := l2:AddAppointment(l3, (newMtgDate + newMtgStartTime), (newMtgStopTime - newMtgStartTime), nil, nil)
+				end;
+			if l4 then begin
+					if event then begin
+							l4.mtgIconType := 'annualEvent;
+							if (l6 := EntryFromObj(l5)) then begin
+									action:?AddToCardfile(l6, newMtgDate, l4)
+								end
+						end else begin
+							if (if (selectedLocations <> nil) then (Length(selectedLocations) > 0)) then begin
+									l4.mtgLocation := selectedLocations[0]
+								end
+						end;
+					l4.mtgInvitees := selectedNames;
+					EntryChangeXmit(l4, 'calendarAPI);
+					l2:ScrollToMeeting(l4)
+				end
+		end;
+	l2:redisplayScript();
+	scheduleSlip:Close()
+end
+@@end

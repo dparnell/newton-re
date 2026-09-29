@@ -1,0 +1,21 @@
+@@ 0x4b3b3d
+func(a1, a2, a3, a4) begin
+	local l1;
+	(if a1 then begin
+			l1 := {cause: a2, cursor: nil};
+			if a3 then begin
+					if TargetIsCursor(a3) then begin
+							l1.cursor := GetTargetCursor(a3, nil)
+						end else begin
+							l1.cursor := GetTargetCursor(CreateTargetCursor('ioCursor, [Array: a3]), nil)
+						end
+				end else begin
+					if (a4 = nil) then begin
+							a4 := self:GetSpec('transport, {all: '_new}, a1.appSymbol)
+						end;
+					l1.cursor := self:MakeCursor('outbox, a4)
+				end;
+			(if (l1.cursor:entry() or (a2 = 'periodic)) then self:TransportCall(a1, 'SendRequest, [Array: l1]) else (if (a2 <> 'silent) then self:Notify(3, "InOut Box", "Nothing to Send.")))
+		end)
+end
+@@end

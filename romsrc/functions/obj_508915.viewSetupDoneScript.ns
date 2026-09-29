@@ -1,0 +1,8 @@
+@@ 0x508875
+func() begin
+	if (BAnd(self.viewFlags, 130) = 0) then begin
+			AddPrecludedSend('PositionCaret, self, 'PositionCaret, [Array: 10, (viewOriginY + viewLineSpacing), nil], 0)
+		end;
+	inherited:?viewSetupDoneScript()
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x73e259
+func(a1) begin
+	if IsReadOnly(allLayouts) then begin
+			allLayouts := Clone(allLayouts)
+		end;
+	(allLayouts.(EnsureInternal(a1.symbol)) := a1)
+end
+@@end

@@ -1,0 +1,17 @@
+@@ 0x5951d5
+func(a1) begin
+	local l1;
+	lastError := a1;
+	(if (a1 <> -16005) then begin
+			if (a1 = -1) then begin
+					a1 := lastErrMsg
+				end;
+			(if IsInteger(a1) then begin
+					if (l1 := self:TranslateError(a1)) then begin
+							self:Notify(3, serviceName, l1)
+						end;
+					self:ConnectionAbort()
+				end else GetRoot():Notify(3, serviceName, a1))
+		end)
+end
+@@end

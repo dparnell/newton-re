@@ -1,0 +1,10 @@
+@@ 0x421d79
+func(a1, a2, a3, a4, a5) begin
+	local l1, l2;
+	RemoveAlarm(a1);
+	l1 := (if IsFrame(a2) then TotalSeconds(a2) else a2);
+	GetStores()[0]:GetSoup("SystemAlarmSoup"):AddFlushed((l2 := {key: a1, Time: TimeInSecondsToTime(l1), notifyArgs: a3, callBackFn: a4, TimeInSeconds: l1, callBackParams: a5}));
+	SetNextAlarm();
+	a1
+end
+@@end

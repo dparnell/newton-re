@@ -1,0 +1,6 @@
+@@ 0x51f801
+func() begin
+	routingButton := nil;
+	inherited:?viewQuitScript()
+end
+@@end

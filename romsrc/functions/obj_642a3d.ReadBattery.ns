@@ -1,0 +1,35 @@
+@@ 0x43be69
+func(a1) begin
+	local l1;
+	if (not a1) then begin
+			a1 := BatteryStatus(0)
+		end;
+	if batteryLabelForm then begin
+			if ((a1.chargeState = 'preliminaryCharge) or (a1.chargeState = 'fastCharging)) then begin
+					l1 := "Charging"
+				end else begin
+					if (a1.chargeState = 'deepToast) then begin
+							l1 := "Fault"
+						end else begin
+							if ((a1.chargeState = 'trickleCharge) or (a1.chargeState = 'trickleChargeContinuous)) then begin
+									l1 := "Charged"
+								end else begin
+									if (if (if (a1.acPower = 'yes) then (a1.chargeState = 'discharging)) then ((a1.batteryType = 'nicd) or (a1.batteryType = 'nimh))) then begin
+											l1 := "Waiting"
+										end else begin
+											if (a1.acPower = 'yes) then begin
+													l1 := "Adapter"
+												end else begin
+													l1 := "Battery"
+												end
+										end
+								end
+						end
+				end;
+			if (batteryLabelForm.text <> l1) then begin
+					SetValue(batteryLabelForm, 'text, l1)
+				end
+		end;
+	(if (gauge.viewValue <> a1.batteryCapacity) then SetValue(gauge, 'viewValue, a1.batteryCapacity))
+end
+@@end

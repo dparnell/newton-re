@@ -1,0 +1,49 @@
+@@ 0x73ce79
+@@const kFunction_73d01d
+func(a1, a2) begin
+	(a2._proto = @386)
+end
+@@const kFunction_73d061
+func(a1, a2) begin
+	(a2._proto = @400)
+end
+@@const kFunction_73d0dd
+func(a1, a2) begin
+	(a2._proto = @440)
+end
+@@main
+func() begin
+	l2 := menuLeftButtons;
+	l1 := menuRightButtons;
+	if (currentLayout = 'overview) then begin
+			l3 := ArrayPos((menuLeftButtons := Clone(menuLeftButtons)), nil, 0, kFunction_73d01d);
+			ArrayRemoveCount(menuLeftButtons, l3, 1);
+			l6 := ArrayPos(menuLeftButtons, nil, 0, kFunction_73d061);
+			ArrayRemoveCount(menuLeftButtons, l6, 1);
+			AddArraySlot((menuRightButtons := Clone(menuRightButtons)), {_proto: @872})
+		end;
+	if (Length((l7 := GetAuxButtons(appSymbol))) > 0) then begin
+			if IsReadOnly(menuLeftButtons) then begin
+					menuLeftButtons := Clone(menuLeftButtons)
+				end;
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			local l5;
+			local l6;
+			local l7;
+			local l8;
+			l8 := (foreach l9 deeply in l7 collect l9.butt);
+			ArrayMunger(menuLeftButtons, Length(menuLeftButtons), nil, l8, 0, nil)
+		end;
+	if (superSymbol = 'ownerNames) then begin
+			if (l4 := ArrayPos((menuRightButtons := Clone(menuRightButtons)), nil, 0, kFunction_73d0dd)) then begin
+					ArrayRemoveCount(menuRightButtons, l4, 1)
+				end
+		end;
+	inherited:viewSetupChildrenScript();
+	menuLeftButtons := l2;
+	(menuRightButtons := l1)
+end
+@@end

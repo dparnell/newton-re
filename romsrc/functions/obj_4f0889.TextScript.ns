@@ -1,0 +1,5 @@
+@@ 0x4f0869
+func(a1, a2) begin
+	Stringer([Array: a2.name, " ", a2.phoneNumber, $\n, a2.notes])
+end
+@@end

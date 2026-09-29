@@ -1,0 +1,24 @@
+@@ 0x53899d
+func() begin
+	local l1;
+	local l2;
+	(foreach l3 in (l2 := (if (l1 := GetRoot().ExtrasDrawer.storesFilter) then [Array: l1] else GetStores())) do begin
+			if (not l3:IsReadOnly()) then begin
+					if (not (l5 := (if fentry.ownerApp then GetRoot().(fentry.ownerApp)))) then begin
+							l5 := GetRoot().ExtrasDrawer
+						end;
+					local l5;
+					(foreach l6 in fentry.soupNames do begin
+							local l8;
+							if (l8 := l3:GetSoup(l6)) then begin
+									try begin
+											l8:RemoveFromStoreXmit(l5.appSymbol)
+										end onexception |evt.ex| do begin
+											self:Notify(3, "Packages", ParamStr("Unable to delete the data from ^0", [Array: l3:GetName()]))
+										end
+								end
+						end)
+				end
+		end)
+end
+@@end

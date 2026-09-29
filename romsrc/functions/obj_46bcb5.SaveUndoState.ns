@@ -1,0 +1,12 @@
+@@ 0x46bbf5
+func(a1) begin
+	local l1, l2;
+	l1 := wordSource;
+	if a1 then begin
+			wordSource := a1
+		end;
+	l2 := inherited:SaveUndoState((l2 := {offset: refCon.wordOffset, length: refCon.wordLength}));
+	wordSource := l1;
+	(self.savedUndoState := l2)
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x530459
+func() begin
+	l1 := GetUserConfig('screenOrientation);
+	local l1;
+	labelCommands := (foreach l2 in items collect (if l2.title then (if IsArray(l2.title) then l2.title[l1] else l2.title) else 'pickseparator));
+	inherited:?viewSetupFormScript()
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x59364d
+func() begin
+	local l1;
+	l1 := MakeModemOption();
+	[Array: {label: "p3  ", type: 'service, opCode: 512}, {label: "mods", type: 'service, opCode: 512}, {label: "mecp", type: 'option, opCode: 512, data: {arglist: [Array: 1], typelist: [Array: 10, 1]}}, {label: "mnpa", type: 'option, opCode: 512, data: {arglist: [Array: 0], typelist: [Array: 10, 1]}}, {label: "mnpc", type: 'option, opCode: 512, data: {arglist: [Array: 1], typelist: [Array: 10, 1]}}, l1, {label: "p3no", type: 'option, opCode: 512, data: {arglist: [Array: 1, 0, 0, 0], typelist: [Array: 10, 4, 4, 4, 4]}}]
+end
+@@end

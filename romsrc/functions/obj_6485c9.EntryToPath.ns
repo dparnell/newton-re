@@ -1,0 +1,5 @@
+@@ 0x4b8ead
+func(a1) begin
+	(target.(path) := a1.(path))
+end
+@@end

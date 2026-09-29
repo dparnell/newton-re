@@ -1,0 +1,9 @@
+@@ 0x44f4bd
+func(a1, classes, path) begin
+	StableSort(a1, '|<|, func(a1) begin
+		local l1, l2;
+		l2 := (if path then a1.(path) else a1);
+		(if (l1 := LSearch(classes, ClassOf(l2), 0, '|=|, nil)) then l1 else 10000)
+	end)
+end
+@@end

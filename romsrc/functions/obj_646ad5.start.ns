@@ -1,0 +1,8 @@
+@@ 0x498405
+func(a1) begin
+	CallbackSpec := {_proto: CallbackSpec, reqTimeout: 200000};
+	fException := nil;
+	occupancy := 1;
+	self:Run(a1)
+end
+@@end

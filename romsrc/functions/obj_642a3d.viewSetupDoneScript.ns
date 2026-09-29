@@ -1,0 +1,12 @@
+@@ 0x43be29
+func() begin
+	(if (gauge.viewFlags <> 0) then begin
+			self:ReadBattery(nil);
+			self:SetupIdle(viewIdleFrequency);
+			self.powerStatusChangeSym := Intern(Stringer([Array: "batteryGauge.", viewCObject]));
+			RegPowerStatusChange(powerStatusChangeSym, func(a1) begin
+				self:ReadBattery(a1)
+			end)
+		end)
+end
+@@end

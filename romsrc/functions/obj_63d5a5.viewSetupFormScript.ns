@@ -1,0 +1,5 @@
+@@ 0x4a7039
+func() begin
+	SetKeyView(self, 0)
+end
+@@end

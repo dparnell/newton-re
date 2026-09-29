@@ -1,0 +1,10 @@
+@@ 0x5317d9
+func(a1) begin
+	local l1;
+	if (((not (l1 := GetTAPICommFrame(a1))) or (not l1.config)) or (not l1.config.supportsEventIncoming)) then begin
+			a1 := nil
+		end;
+	transport:SetConfig('phoneAutoReceive, (a1 <> nil));
+	SetUserConfig('currentDialSpeaker, a1)
+end
+@@end

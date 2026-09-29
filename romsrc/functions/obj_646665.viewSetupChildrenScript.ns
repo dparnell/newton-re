@@ -1,0 +1,11 @@
+@@ 0x45dd19
+func() begin
+	self:CalculateTileSizes();
+	maxFirstItem := max(1, ((self:GetItemcount() - maxTiles) + 1));
+	self:SetupPieces();
+	if (scrollAmount = 'page) then begin
+			scrollAmount := numTiles
+		end;
+	(hilitedIndex := (if (if (if selectedItem then (selectedItem >= firstVisibleItem)) then (selectedItem < (firstVisibleItem + numTiles))) then (selectedItem - firstVisibleItem)))
+end
+@@end

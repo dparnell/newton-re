@@ -1,0 +1,5 @@
+@@ 0x766879
+func(a1) begin
+	GetVariable(a1, 'ImageTarget):SetAnnotationMode('Show)
+end
+@@end

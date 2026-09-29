@@ -1,0 +1,12 @@
+@@ 0x73d859
+@@const kFunction_73d459
+func(a1, a2) begin
+	call GetRoot().cardfile.kGenericTextFunc with (a2)
+end
+@@main
+func(a1, a2) begin
+	local l1;
+	RemoveSlot((l1 := Clone(a2)), 'owner);
+	call (kFunction_73d459) with (a1, l1)
+end
+@@end

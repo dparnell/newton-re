@@ -1,0 +1,7 @@
+@@ 0x7adebd
+func() begin
+	fCompleted.PhoneWork := true;
+	SetKeyView(vVoice.vInputCityCode, 0);
+	inherited:?viewSetupDoneScript()
+end
+@@end

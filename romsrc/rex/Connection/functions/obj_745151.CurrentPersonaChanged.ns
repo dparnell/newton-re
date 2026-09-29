@@ -1,0 +1,8 @@
+@@ 0x7453e1
+func() begin
+	(if (currentlyShowing = 'modem) then begin
+			phonePicker.fullNumber := nil;
+			self:SetNewWillDialText()
+		end)
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x523ab9
+func(a1, a2) begin
+	self:OpenHelpBook(a1);
+	Outline:TopicByName(aValue)
+end
+@@end

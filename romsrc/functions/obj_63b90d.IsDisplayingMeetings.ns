@@ -1,0 +1,6 @@
+@@ 0x4fb035
+func() begin
+	local l1;
+	((((l1 := mainDisplay) = scheduleView) or (l1 = AgendaView)) or (if ((l1 = MonthOverView) or (l1 = YearView)) then ((previousMainDataDisplay = scheduleView) or (previousMainDataDisplay = AgendaView))))
+end
+@@end

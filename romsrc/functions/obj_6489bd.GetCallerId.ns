@@ -1,0 +1,6 @@
+@@ 0x52eb75
+func() begin
+	local l1, l2;
+	(if ((l2 := self:option((l1 := {label: "rout", type: 'address, opCode: 1024, data: {arglist: [Array: 3, 100, "Caller ID not available                                                                             "], typelist: [Array: 10, 1, 2, [Array: 11, 13, 0]]}}), nil)).result = nil) then return l2.data.arglist[2] else Throw('|evt.ex.comm|, l2.result))
+end
+@@end

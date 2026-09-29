@@ -1,0 +1,25 @@
+@@ 0x43ee4d
+func() begin
+	if (not (if defaultKeyboard then GetVariable(self, defaultKeyboard))) then begin
+			defaultKeyboard := _popupKeyboards[0]
+		end;
+	if (if root.currentKeyboard then (root.currentKeyboard <> defaultKeyboard)) then begin
+			if HasPath(root, 'currentKeyboard.keyboardSymbol) then begin
+					defaultKeyboard := root.currentKeyboard.keyboardSymbol
+				end else begin
+					defaultKeyboard := root.currentKeyboard.preallocatedContext
+				end
+		end;
+	l1 := GetVariable(self, defaultKeyboard).userName;
+	local l1;
+	local l2;
+	l2 := (foreach l3 in _popupKeyboards collect begin
+		local l7;
+		GetVariable(self, l3).userName
+	end);
+	if (defaultPos := ArrayPos(l2, l1, 0, nil)) then begin
+			l2[defaultPos] := {item: l1, mark: $\uFC0B, pickable: true}
+		end;
+	(if root.currentKeyboard then self:PopupMenu(l2, nil) else (if (l7 := GetVariable(self, defaultKeyboard)) then l7:Open()))
+end
+@@end

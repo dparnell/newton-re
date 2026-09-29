@@ -1,0 +1,11 @@
+@@ 0x457a71
+func(a1, a2) begin
+	local l1;
+	(if (ObjEntryClass(a1.nameRef) = 'group) then begin
+			a2:Tapped('Toggle);
+			_tapinfo := nil;
+			_dirtyPaths := nil;
+			(_dirtyValues := nil)
+		end else inherited:HitItem(a1, a2))
+end
+@@end

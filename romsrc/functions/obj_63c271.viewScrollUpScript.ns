@@ -1,0 +1,18 @@
+@@ 0x51c841
+func() begin
+	(if (scrollStealer <> nil) then PostCommand(scrollStealer, 45) else begin
+			if Visible(pageDialog) then begin
+					pageDialog:Close()
+				end;
+			if Visible(pageNumberDialog) then begin
+					pageNumberDialog:Close()
+				end;
+			if ((pagesShowing = 1) or (self:CurrentPage() = 2)) then begin
+					self:ScrollPage(-1)
+				end else begin
+					self:ScrollPage(-2)
+				end;
+			(if Visible(markupLayer) then contentArea:ShowMarkup())
+		end)
+end
+@@end

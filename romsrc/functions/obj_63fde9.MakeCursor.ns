@@ -1,0 +1,8 @@
+@@ 0x5b88c1
+func(a1, a2, a3) begin
+	local l1;
+	l1 := self:AllocateCursor();
+	l1:Initialize(a1, a2, a3);
+	return l1
+end
+@@end

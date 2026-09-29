@@ -1,0 +1,84 @@
+@@ 0x560d09
+func() begin
+	l1 := self:LocalBox();
+	self.maxLines := (l1.bottom div lineHeight);
+	l1.bottom := lineHeight;
+	self.scrollAmount := (maxLines - 2);
+	self.pieces := [Array: '{font: 1058816}];
+	l2 := [Array: ];
+	l3 := maxLines;
+	l4 := scrollOrigin;
+	l5 := 0;
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	(foreach l6 in categoryArray do begin
+			if doUpdates then begin
+					caller:SetStatus(nil)
+				end;
+			l8 := self:MakeCategoryFrame(l6);
+			if (l9 := l6.collapsed) then begin
+					l10 := 0
+				end else begin
+					l10 := l8.count
+				end;
+			if (l4 > 0) then begin
+					if l9 then begin
+							l10 := 0
+						end;
+					if (l10 > l4) then begin
+							l4 := (-l4)
+						end else begin
+							l4 := (l4 - l10)
+						end;
+					if (l4 = 0) then begin
+							l4 := 1
+						end
+				end;
+			if (l4 <= 0) then begin
+					l4 := (-l4);
+					l8.skip := l4;
+					l5 := (l5 + 2);
+					AddArraySlot(l2, l8);
+					AddArraySlot(pieces, self:setAndBump(l8.title, 0, l1));
+					l3 := (l3 - 1);
+					if (not l9) then begin
+							l11 := [Array: ];
+							l3 := (l3 - self:AddCategoryItem(l11, l8, l4, l3));
+							l12 := [Array: '{font: 9216}];
+							AddArraySlot(pieces, l12);
+							l13 := GetVariable(l6, 'SelectItem);
+							local l8;
+							local l9;
+							local l10;
+							local l11;
+							local l12;
+							local l13;
+							(foreach l14 in l11 do begin
+									local l16;
+									if l13 then begin
+											l16 := MakeShape((if l14.selected then CheckOn else CheckOff));
+											AddArraySlot(l12, OffsetShape(l16, (l1.left + checkBoxHorzOffset), (l1.top + checkBoxVertOffset)));
+											l14.listIndex := l5
+										end;
+									AddArraySlot(l12, self:setAndBump(l14.title, 18, l1))
+								end);
+							ArrayMunger(l2, Length(l2), 0, l11, 0, nil)
+						end else begin
+							l5 := (l5 - 1)
+						end;
+					if (l3 <= 0) then begin
+							break
+						end;
+					l4 := 0
+				end else begin
+					l4 := (l4 - 1)
+				end
+		end);
+	self.moreBelow := (l3 <= 0);
+	self.items := l2;
+	(self.numLines := min(maxLines, Length(items)))
+end
+@@end

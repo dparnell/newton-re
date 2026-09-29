@@ -1,0 +1,14 @@
+@@ 0x7a23ed names
+func(aPart) begin
+	UnregisterDataDef('list);
+	UnregisterViewDef('default, 'list);
+	UnregisterViewDef('listFormat, 'list);
+	UnregisterViewDef('listFormat2, 'list);
+	UnregisterDataDef('checkList);
+	UnregisterViewDef('default, 'checkList);
+	UnregisterViewDef('listFormat, 'checkList);
+	UnregisterViewDef('listFormat2, 'checkList);
+	UnregisterDataDef('convertTodo);
+	nil
+end
+@@end

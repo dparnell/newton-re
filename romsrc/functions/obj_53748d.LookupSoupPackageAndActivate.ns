@@ -1,0 +1,6 @@
+@@ 0x5373ad
+func() begin
+	local l1;
+	(if (not (l1 := self:LookupSoupPackage())) then 'noSoupPackage else (if SetContains(ActivePackageList, l1.pkgRef) then 'alreadyActive else (if SafeActivatePackage(l1.pkgRef, l1.packageName, EntryStore(l1)) then 'justActivated)))
+end
+@@end

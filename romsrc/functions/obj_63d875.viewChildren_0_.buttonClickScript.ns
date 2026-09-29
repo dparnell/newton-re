@@ -1,0 +1,5 @@
+@@ 0x5a57e5
+func() begin
+	(if eworld then self:Confirm("Mail Registration", "Tap OK to stop account creation.", self, 'ConfirmCallback) else base:AllDone(nil))
+end
+@@end

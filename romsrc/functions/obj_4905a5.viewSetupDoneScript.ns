@@ -1,0 +1,5 @@
+@@ 0x490525
+func() begin
+	(if (Length(pkgNames) = 0) then self:Hide())
+end
+@@end

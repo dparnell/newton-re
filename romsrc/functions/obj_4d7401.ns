@@ -1,0 +1,15 @@
+@@ 0x4d7401
+func(a1, a2, a3) begin
+	local l1;
+	l1 := (if a2 then DeepClone(a1) else a1);
+	if (if a3 then l1.labels) then begin
+			l1.labels := |Ensure1.XFolderExists|(l1.labels, 'paperroll)
+		end;
+	if l1.data then begin
+			ConvertChildTemplates(l1.data, 'oneO, 'twoO)
+		end;
+	l1.class := 'paperroll;
+	l1._version := 2;
+	l1
+end
+@@end

@@ -1,0 +1,12 @@
+@@ 0x4ba325
+func(a1) begin
+	local l1, l2, l3;
+	if (if (l3 := (l2 := self:PathQuery((l1 := self:PreQuery(labelCommands[a1].item)))):entry()) then StrEqual(labelCommands[a1].item, GetRoot():PrimaryName(l3))) then begin
+			targetView:jamFromEntry(l3)
+		end;
+	if l3 then begin
+			baseLine:hilite(nil)
+		end;
+	l3
+end
+@@end

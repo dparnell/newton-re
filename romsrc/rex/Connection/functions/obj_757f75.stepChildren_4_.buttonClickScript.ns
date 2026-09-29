@@ -1,0 +1,10 @@
+@@ 0x7582bd
+func() begin
+	closing := true;
+	inherited:?buttonClickScript();
+	context:Close();
+	protoContext:SendCancelToDesktop(endpoint);
+	protoContext:ImportFileClose(endpoint);
+	(if callWhenDone then call callWhenDone with ())
+end
+@@end

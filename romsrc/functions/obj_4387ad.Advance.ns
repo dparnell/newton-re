@@ -1,0 +1,5 @@
+@@ 0x43878d
+func(a1) begin
+	inherited:Advance((if (value < 0) then (-a1) else a1))
+end
+@@end

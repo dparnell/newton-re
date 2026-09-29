@@ -1,0 +1,19 @@
+@@ 0x4ea6c1
+func(a1) begin
+	l1 := a1.realFinder;
+	if (not (l2 := a1.instanceTime)) then begin
+			l2 := (l3 := l1.cursor:entry()).mtgStartDate
+		end;
+	l4 := l1.meetingType;
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	(foreach l5 in meetingSoupFinders do begin
+			if (l5 <> l1) then begin
+					l5:FindNextAfterItem(l4, l2)
+				end
+		end);
+	(scrollingForward := true)
+end
+@@end

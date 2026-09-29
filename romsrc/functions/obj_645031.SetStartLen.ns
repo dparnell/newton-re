@@ -1,0 +1,7 @@
+@@ 0x469c11
+func(a1, a2) begin
+	local l1;
+	(l1 := refCon).wordOffset := a1;
+	(l1.wordLength := a2)
+end
+@@end

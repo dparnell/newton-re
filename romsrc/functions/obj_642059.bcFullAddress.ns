@@ -1,0 +1,55 @@
+@@ 0x5197a5
+func(a1) begin
+	local l1, l2, l3, l4;
+	l1 := "";
+	if a1 then begin
+			l2 := 0;
+			l3 := 0;
+			l1 := SmartStart(50);
+			if StrFilled(a1.address) then begin
+					l2 := SmartConcat(l1, l2, a1.address);
+					l2 := SmartConcat(l1, l2, $\n);
+					l3 := (l3 + 1)
+				end;
+			if StrFilled(a1.address2) then begin
+					l2 := SmartConcat(l1, l2, a1.address2);
+					l2 := SmartConcat(l1, l2, $\n);
+					l3 := (l3 + 1)
+				end;
+			l4 := l2;
+			if StrFilled(a1.city) then begin
+					l2 := SmartConcat(l1, l2, a1.city)
+				end;
+			if StrFilled(a1.region) then begin
+					if StrFilled(a1.city) then begin
+							l2 := SmartConcat(l1, l2, $,);
+							l2 := SmartConcat(l1, l2, $ );
+							l2 := SmartConcat(l1, l2, a1.region)
+						end else begin
+							l2 := SmartConcat(l1, l2, a1.region)
+						end
+				end;
+			if StrFilled(a1.postal_code) then begin
+					l2 := SmartConcat(l1, l2, $ );
+					l2 := SmartConcat(l1, l2, a1.postal_code)
+				end;
+			if (l4 <> l2) then begin
+					l2 := SmartConcat(l1, l2, $\n);
+					l3 := (l3 + 1)
+				end;
+			if (ClassOf(a1.country) = 'symbol) then begin
+					l2 := SmartConcat(l1, l2, GetCountryEntry(a1.country)[0].name);
+					l2 := SmartConcat(l1, l2, $\n);
+					l3 := (l3 + 1)
+				end else begin
+					if StrFilled(a1.country) then begin
+							l2 := SmartConcat(l1, l2, a1.country);
+							l2 := SmartConcat(l1, l2, $\n);
+							l3 := (l3 + 1)
+						end
+				end;
+			SmartStop(l1, l2)
+		end;
+	l1
+end
+@@end

@@ -1,0 +1,27 @@
+@@ 0x4b53bd
+func(a1) begin
+	local l1, l2, l3, l4, l5;
+	if TargetIsCursor(a1) then begin
+			return {isCursor: true}
+		end;
+	if a1.appSymbol then begin
+			if (if (l3 := GetRoot().(a1.appSymbol)) then (l3.PutAway or l3.PutAwayScript)) then begin
+					l1 := a1.appSymbol
+				end
+		end;
+	if (l4 := DataClassOf(a1)) then begin
+			l2 := ClassAppByClass(l4)
+		end;
+	if (l5 := GetItemTransport(a1):?CanPutAway(a1)) then begin
+			if l2 then begin
+					AddArraySlot(l2, l5)
+				end else begin
+					l2 := [Array: l5]
+				end
+		end;
+	if (if (not l1) then l2) then begin
+			l1 := l2[0]
+		end;
+	(if l1 then {theApp: l1, appList: l2})
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x599a5d
+func() begin
+	viewBounds := RelBounds(10, (self:BottomOfSlip() - 64), -20, 15);
+	inherited:?viewSetupFormScript()
+end
+@@end

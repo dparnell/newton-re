@@ -1,0 +1,12 @@
+@@ 0x54a9ad
+func(a1, a2) begin
+	local l1;
+	if (a2.target = nil) then begin
+			return nil
+		end;
+	if (l1 := (if a2.target.package then GetPkgRefInfo(a2.target.package))) then begin
+			a1.title := l1.title
+		end;
+	inherited:SetupItem(a1, a2)
+end
+@@end

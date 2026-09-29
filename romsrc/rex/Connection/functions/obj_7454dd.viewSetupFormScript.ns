@@ -1,0 +1,9 @@
+@@ 0x7462d9
+func() begin
+	self.viewBounds := Clone(viewBounds);
+	self.viewBounds.right := (_currentWidth - 25);
+	self.fullNumber := nil;
+	self:SetLabelCommandsFromUserConfig(self);
+	inherited:?viewSetupFormScript()
+end
+@@end

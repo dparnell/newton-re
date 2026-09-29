@@ -1,0 +1,13 @@
+@@ 0x78cadd names
+func(aDragRef) begin
+	self:AddTopicDragDrop(aDragRef, true, nil);
+	self:RedoChildren();
+	self.offset := nil;
+	indexList := Array(Length(aDragRef.topics), nil);
+	local indexList;
+	(for i := 0 to (Length(indexList) - 1) do begin
+			indexList[i] := ((aDragRef.dragTo.index + 1) + i)
+		end);
+	AddUndoAction('UndoDropTopic, [Array: indexList])
+end
+@@end

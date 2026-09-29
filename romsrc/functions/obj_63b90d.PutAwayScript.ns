@@ -1,0 +1,69 @@
+@@ 0x4f8365
+func(a1) begin
+	l3 := true;
+	l2 := a1.body;
+	try begin
+			if l2.labels then begin
+					RemoveSlot(l2, 'labels)
+				end;
+			if ((l4 := l2.viewStationery) = 'meeting) then begin
+					l1 := GetUnionSoupAlways(@23)
+				end else begin
+					if (l4 = 'cribNote) then begin
+							if (l2.repeatTemplate or (if HasSlot(l2, 'repeatType) then l2.repeatType)) then begin
+									l1 := GetUnionSoupAlways(@242)
+								end else begin
+									l1 := GetUnionSoupAlways(@22)
+								end
+						end else begin
+							if ((l4 = 'RepeatingMeeting) or (l4 = 'exceptionMeeting)) then begin
+									l1 := GetUnionSoupAlways(@239)
+								end else begin
+									if ((l4 = 'TodoItem) or (l2.class = 'todo)) then begin
+											self:GetToDo():PutAway(a1)
+										end
+								end
+						end
+				end;
+			if l1 then begin
+					l5 := l2;
+					if l2.repeatTemplate then begin
+							l6 := l2.mtgStartDate;
+							if ((l5 := l2.repeatTemplate).version = nil) then begin
+									self:Convert10to20(l5, nil);
+									if (l4 = 'cribNote) then begin
+											l6 := (l6 - (l6 mod 1440))
+										end
+								end;
+							self:SetRepeatingMeetingStartDate(l5, l6, nil)
+						end;
+					self:CarefulAdd(l1, l5, nil);
+					if (if (l5.version = 2) then l5.repeatType) then begin
+							if (l7 := l5.InstanceNotesData) then begin
+									local l1;
+									local l2;
+									local l3;
+									local l4;
+									local l5;
+									local l6;
+									local l7;
+									(foreach l8 in l7 do begin
+											local l10, l11;
+											l10 := {notes: l8[1], repeatingMeetingAlias: MakeEntryAlias(l5)};
+											self:CarefulAdd(l1, l10, nil);
+											if IsSoupEntry(l10) then begin
+													if (l11 := MakeEntryAlias(l10)) then begin
+															l8[1] := l11
+														end
+												end
+										end);
+									EntryChangeXmit(l5, 'calendarAPI)
+								end
+						end
+				end
+		end onexception |evt.ex| do begin
+			l3 := nil
+		end;
+	l3
+end
+@@end

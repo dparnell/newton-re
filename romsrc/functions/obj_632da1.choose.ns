@@ -1,0 +1,7 @@
+@@ 0x4e3e1d
+func(a1, a2) begin
+	frame := a1;
+	slot := a2;
+	self:Open()
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x510765
+func(a1, a2) begin
+	local l1, l2, l3;
+	(if (l3 := self:GetMeetingSlot((l2 := (l1 := self:IdentifyAppointments(a1, a2, nil, true))[0]), 'mtgIconType)) then l3 else (if (l2.viewStationery = 'cribNote) then 'event else 'meeting))
+end
+@@end

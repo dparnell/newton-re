@@ -1,0 +1,6 @@
+@@ 0x43c7d1
+func() begin
+	self:FiddleWithArrows();
+	inherited:?viewSetupDoneScript()
+end
+@@end

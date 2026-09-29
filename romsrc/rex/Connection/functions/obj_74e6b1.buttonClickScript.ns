@@ -1,0 +1,26 @@
+@@ 0x74e805
+func(a1) begin
+	local l1, l2, l3, l4, l5;
+	if (a1 >= Length(currentFiles)) then begin
+			return nil
+		end;
+	l2 := (l1 := currentFiles[a1]).type;
+	l3 := l1.name;
+	(if ((l2 = 2) or (l2 = 3)) then (if self:VerifyAlias(l1) then begin
+				l4 := self:GetIcon(l1);
+				ArrayInsert(browseFolder.labelCommands, browseFolder:MakeListItem(Clone(l3), l4), 0);
+				l5 := {name: Clone(l3), type: l2};
+				if HasPath(l1, 'whichVol) then begin
+						l5.whichVol := l1.whichVol
+					end;
+				AddArraySlot(currentPath, l5);
+				browseFolder:MyUpdate(Clone(l3), l4);
+				self:UpdateAndRebuildFileList()
+			end) else begin
+			currentSelection := l3;
+			currentIndex := a1;
+			protoContext:ShowIfNotVisible(doitButton);
+			protoContext:ShowIfNotVisible(getinfoButton)
+		end)
+end
+@@end

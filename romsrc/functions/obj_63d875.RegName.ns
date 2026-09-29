@@ -1,0 +1,16 @@
+@@ 0x5a557d
+func() begin
+	pleaseWaitForm:Close();
+	(if sendScreen then begin
+			self:Notify(3, "Mail Registration", "That account name is not available");
+			info.mailAccount := nil;
+			register5:RedoChildren()
+		end else begin
+			pages[index]:Hide();
+			register5:RedoChildren();
+			register5:Show();
+			index := 3;
+			(sendScreen := true)
+		end)
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x438409
+func(a1) begin
+	local l1;
+	if ((l1 := a1) < 0) then begin
+			l1 := (21600 + l1)
+		end;
+	(24855 * l1)
+end
+@@end

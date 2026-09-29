@@ -1,0 +1,7 @@
+@@ 0x4b8031
+func() begin
+	hack := true;
+	SetValue(self, 'text, self:TargetData());
+	(hack := nil)
+end
+@@end

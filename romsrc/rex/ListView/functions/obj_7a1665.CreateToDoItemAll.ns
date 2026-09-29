@@ -1,0 +1,60 @@
+@@ 0x79772d names
+func(aDate, aRichString, aReminder, aFrequency, aPriority, aComplete) begin
+	local todoTask, newView, ti, isVisible;
+	if (isVisible := Visible(self)) then begin
+			self:EndFlush()
+		end;
+	self:GetToDoSoup();
+	aDate := ((aDate div 1440) * 1440);
+	if aFrequency then begin
+			todoTask := self:AddTask(aRichString, 0, aPriority, aComplete, nil);
+			if (not HasPath((aFrequency := Clone(aFrequency)), 'mtgStartDate)) then begin
+					aFrequency.mtgStartDate := aDate
+				end else begin
+					aFrequency.mtgStartDate := ((aFrequency.mtgStartDate div 1440) * 1440)
+				end;
+			if isVisible then begin
+					aDate := selectedDates[0]
+				end;
+			if (if aReminder then (aReminder <> 0)) then begin
+					aFrequency.reminderInterval := (aReminder * 1440)
+				end;
+			todoTask.topic.repeatInfo := aFrequency;
+			todoTask.topic.repeatDone := [Array: ];
+			EntryChangeXmit(todoTask.Entry, nil)
+		end else begin
+			if (if aReminder then (aReminder <> 0)) then begin
+					todoTask := self:AddTask(aRichString, (aDate - (Abs(aReminder) * 1440)), aPriority, aComplete, aDate);
+					aDate := (aDate - (Abs(aReminder) * 1440))
+				end else begin
+					todoTask := self:AddTask(aRichString, aDate, aPriority, aComplete, nil)
+				end
+		end;
+	if (if (if isVisible then (selectedDates <> nil)) then (aDate = selectedDates[0])) then begin
+			self:RedoChildren();
+			if (ti := ArrayPos(topics, todoTask.topic, 0, nil)) then begin
+					if (mainDisplay <> agendaView) then begin
+							if (ti < firstTopic) then begin
+									firstTopic := Max(0, (ti - 1));
+									self:RedoChildren()
+								end else begin
+									if (ti > lastTopic) then begin
+											firstTopic := ((firstTopic + ti) - lastTopic);
+											self:RedoChildren()
+										end
+								end
+						end
+				end else begin
+					Write("Couldn't find ");
+					Print(todoTask)
+				end;
+			self:CalculateScrollRects()
+		end else begin
+			ti := todoTask.index
+		end;
+	if Visible(self) then begin
+			self:AddUndoAction('UndoNewTask, [Array: aDate, todoTask.topic])
+		end;
+	ti
+end
+@@end

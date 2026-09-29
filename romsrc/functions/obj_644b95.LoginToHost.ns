@@ -1,0 +1,84 @@
+@@ 0x59543d
+func(a1, a2, a3, a4, a5, a6) begin
+	local l1;
+	connected := nil;
+	connectState := nil;
+	if (not a3) then begin
+			a3 := userConfiguration.mailAccount
+		end;
+	eworld.account := a3;
+	if (not a4) then begin
+			a4 := userConfiguration.mailPassword
+		end;
+	if (not a6) then begin
+			if (if (a6 := userConfiguration.mailPhoneFull) then IsInteger(a6)) then begin
+					a6 := SPrintObject(a6)
+				end
+		end;
+	if (if a6 then IsInteger(a6)) then begin
+			a6 := SPrintObject(a6)
+		end;
+	eworld.phone := a6;
+	if (not a5) then begin
+			self:GetNetwork(a1);
+			a5 := mailnavigator
+		end;
+	if (not self:PrefsSet(a3, a4, a6, a5, a2, a1)) then begin
+			return nil
+		end;
+	if (transport exists) then begin
+			transport:?SetStatusDialog('Initializing, 'vStatus, {primary: nil})
+		end;
+	try begin
+			self:Instantiate(self, self:GetOptions())
+		end onexception |evt.ex| do begin
+			transport:?CloseStatusDialog(nil);
+			self:HandleThrow();
+			return nil
+		end;
+	l1 := [Array: {type: 'address, label: "rout", opCode: 512, data: {arglist: [Array: 3, StrLen(a6), a6], typelist: [Array: 10, 1, 2, [Array: 11, 13, 0]]}}];
+	if (not (transport exists)) then begin
+			self:?loginStatus(1)
+		end;
+	try begin
+			self:Bind(nil, nil);
+			connectState := 'Bind;
+			if (transport exists) then begin
+					transport:?SetStatusDialog('dialing, 'vStatusTitle, {titleText: a6})
+				end;
+			self:Connect(l1, nil);
+			connectState := 'Connect;
+			connected := true
+		end onexception |evt.ex| do begin
+			transport:?CloseStatusDialog(nil);
+			self:HandleThrow();
+			return nil
+		end;
+	if (transport exists) then begin
+			transport:?SetStatusDialog('Connecting, 'vStatusTitle, {titleText: a5.title})
+		end else begin
+			self:?loginStatus(2)
+		end;
+	eworld.navigator := a5;
+	navigator._parent := self;
+	err := self:connectToHost(navigator);
+	navigator._parent := nil;
+	if err then begin
+			transport:?CloseStatusDialog(nil);
+			if (err = -16005) then begin
+					self:ConnectionAbort()
+				end else begin
+					self:HandleError(err)
+				end;
+			return nil
+		end;
+	eworld.navigator := nil;
+	if (transport exists) then begin
+			transport:?SetStatusDialog('Login, 'vStatusTitle, {titleText: a3})
+		end else begin
+			self:?loginStatus(3)
+		end;
+	self:Login(a3, a4);
+	return true
+end
+@@end

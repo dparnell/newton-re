@@ -1,0 +1,25 @@
+@@ 0x749b45
+func() begin
+	l2 := (l1 := GetStores())[0];
+	(if (restoreOptions.storeType = 0) then begin
+			self.popup := [Array: {item: l2:GetName(), store: l2, mark: $\uFC0B}];
+			(selectedStore := l2)
+		end else begin
+			self.popup := [Array: ];
+			local l1;
+			local l2;
+			(for l3 := 1 to (Length(l1) - 1) do begin
+					local l6, l7, l8;
+					if (not (l6 := l1[l3]):IsReadOnly()) then begin
+							l7 := l6:GetName()
+						end;
+					if (not StrFilled(l7)) then begin
+							l7 := l6:GetKind()
+						end;
+					AddArraySlot(popup, {item: l7, store: l6})
+				end);
+			self:FindCandidateStore(restoreOptions.stores[0]);
+			((l8 := LFetch(popup, selectedStore, 0, '|=|, 'store)).mark := $\uFC0B)
+		end)
+end
+@@end

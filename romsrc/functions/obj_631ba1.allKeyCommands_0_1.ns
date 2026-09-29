@@ -1,0 +1,5 @@
+@@ 0x4ebf41
+func(a1) begin
+	self:CommonKeyScript('_callKeyButton)
+end
+@@end

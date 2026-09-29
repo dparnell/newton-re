@@ -1,0 +1,10 @@
+@@ 0x55d3a1
+func(a1) begin
+	local l1;
+	if (not busybox) then begin
+			return true
+		end;
+	l1 := (if a1 then {titleText: a1, barber: true} else {barber: true});
+	busybox:SetStatus('vBarber, l1)
+end
+@@end

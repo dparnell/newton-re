@@ -1,0 +1,28 @@
+@@ 0x511a2d
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6;
+	l1 := 536870911;
+	l2 := 0;
+	l3 := (a1 + 1);
+	l5 := (l4 := Query(GetUnionSoupAlways(@239), {type: 'index, indexPath: 'mtgStopDate, beginKey: 0})):entry();
+	(while l5 do begin
+			if (if ((nextDate := NextMeeting(l3, l5)) > 0) then (nextDate <= l1)) then begin
+					if (l6 := self:FindException(nextDate, l5)) then begin
+							newDuration := self:GetMeetingSlot(l6, 'mtgDuration)
+						end else begin
+							newDuration := l5.mtgDuration
+						end;
+					if (nextDate < l1) then begin
+							l1 := nextDate;
+							l2 := newDuration
+						end else begin
+							if (newDuration > l2) then begin
+									l2 := newDuration
+								end
+						end
+				end;
+			(l5 := l4:Next())
+		end);
+	(if (l1 < 536870911) then [Array: l1, l2])
+end
+@@end

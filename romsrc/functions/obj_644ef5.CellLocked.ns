@@ -1,0 +1,6 @@
+@@ 0x465ff5
+func(a1) begin
+	local l1;
+	(if (if (l1 := template) then l1.format) then (if (((a1 < wordLeft) or (a1 >= wordRight)) or (l1.format[(a1 - wordLeft)] = $_)) then true))
+end
+@@end

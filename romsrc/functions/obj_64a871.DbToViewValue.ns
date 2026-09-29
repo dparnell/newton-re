@@ -1,0 +1,5 @@
+@@ 0x4239d5
+func(a1) begin
+	max(0, (maxValue - rinttol((a1 / dbIncr))))
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x4c2649
+func() begin
+	(if bits then self:DrawShape(bits, '{transferMode: 0, penPattern: 0, fillPattern: 1}))
+end
+@@end

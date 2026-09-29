@@ -1,0 +1,9 @@
+@@ 0x56838d
+func(a1) begin
+	local l1;
+	(if IsSoupEntry((l1 := GetModemSetUp(a1))) then begin
+			EntryRemoveFromSoupXmit(l1, '_newt);
+			true
+		end)
+end
+@@end

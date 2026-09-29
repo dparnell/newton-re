@@ -1,0 +1,19 @@
+@@ 0x4d3a3d
+@@const kLiteral_4d2699
+"ext"
+@@main
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6;
+	l3 := 0;
+	if (if (l1 := StrPosExact(a1, "(", l3)) then (l2 := StrPosExact(a1, ")", l3))) then begin
+			l4 := Substr(a1, (l1 + 1), ((l2 - l1) - 1));
+			l3 := (l2 + 1)
+		end;
+	if (((l2 := StrPosExact(a1, kLiteral_4d2699, l3)) or (l2 := StrPosExact(a1, "ex", l3))) or (l2 := StrPosExact(a1, "x", l3))) then begin
+			l6 := StringFilter(Substr(a1, l2, (StrLen(a1) - l2)), kLiteral_4d2699, 'rejectBeginning)
+		end else begin
+			l2 := StrLen(a1)
+		end;
+	{areacode: l4, phone: Substr(a1, l3, (l2 - l3)), extension: l6}
+end
+@@end

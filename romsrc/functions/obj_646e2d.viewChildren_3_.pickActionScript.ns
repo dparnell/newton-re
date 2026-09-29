@@ -1,0 +1,14 @@
+@@ 0x43d1d9
+func(a1) begin
+	local l1, l2;
+	l1 := GetLocationSoup(spots);
+	(l2 := DeepClone('{type: index, indexPath: [Array: country, name, region]})).beginKey := [Array: a1, "\u0000\u"];
+	l2.endKey := [Array: a1, "\u7FFF\u"];
+	cityList.cursor := l1:Query(l2);
+	currentCountry := a1;
+	cityList.hilitedIndex := 0;
+	self:SetResult(cityList.cursor:entry());
+	cityList:RedoChildren();
+	SetValue(self, 'text, Stringer([Array: $\uFC01, GetCountryEntry(a1)[0].name]))
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x5a84c5
+func(a1, a2) begin
+	local l1;
+	if (if (l1 := GetDirectoryEntry(a1)) then l1.extensionPaths) then begin
+			RemoveSlot(l1.extensionPaths, a2);
+			EntryChange(l1)
+		end;
+	return l1
+end
+@@end

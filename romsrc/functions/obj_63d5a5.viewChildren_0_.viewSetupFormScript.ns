@@ -1,0 +1,6 @@
+@@ 0x4a707d
+func() begin
+	title := ParamStr("^0 Preferences", [Array: theApp.title]);
+	inherited:viewSetupFormScript()
+end
+@@end

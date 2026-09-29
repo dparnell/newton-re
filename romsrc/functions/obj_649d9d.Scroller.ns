@@ -1,0 +1,8 @@
+@@ 0x4c2185
+func(a1) begin
+	if HiliteOwner() then begin
+			PostCommand(HiliteOwner(), 48)
+		end;
+	self:Retarget(true)
+end
+@@end

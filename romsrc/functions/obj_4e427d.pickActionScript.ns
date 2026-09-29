@@ -1,0 +1,7 @@
+@@ 0x4e40e9
+func(a1) begin
+	base.(slot) := popup[a1].(slot);
+	self:fontChanged(true);
+	inherited:pickActionScript(a1)
+end
+@@end

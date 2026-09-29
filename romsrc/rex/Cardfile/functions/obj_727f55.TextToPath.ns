@@ -1,0 +1,6 @@
+@@ 0x727fc9
+func(a1) begin
+	baseLine.changed := true;
+	inherited:TextToPath(a1)
+end
+@@end

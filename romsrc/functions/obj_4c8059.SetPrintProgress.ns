@@ -1,0 +1,15 @@
+@@ 0x4c7fb9
+func(a1, a2) begin
+	local l1, l2, l3;
+	if (a2 < 100) then begin
+			l1 := 'Sending
+		end else begin
+			l1 := 'Confirming
+		end;
+	l2 := status;
+	status := l1;
+	l3 := ParamStr(self:GetStatusString(), [Array: NumberStr(a1)]);
+	status := l2;
+	self:SetStatus(l1, {statusText: l3, progress: a2})
+end
+@@end

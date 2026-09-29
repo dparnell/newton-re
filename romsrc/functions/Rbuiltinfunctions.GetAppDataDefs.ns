@@ -1,0 +1,12 @@
+@@ 0x4a8811
+func(a1) begin
+	l1 := {};
+	local l1;
+	(foreach l2, l3 deeply in _dataDefs do begin
+			if (l3.superSymbol = a1) then begin
+					l1.(l2) := l3
+				end
+		end);
+	(if (Length(l1) > 0) then l1)
+end
+@@end

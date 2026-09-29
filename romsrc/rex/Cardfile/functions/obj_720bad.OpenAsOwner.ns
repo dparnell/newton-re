@@ -1,0 +1,25 @@
+@@ 0x73e4f5
+@@const kLiteral_722c79
+"Names"
+@@main
+func(a1) begin
+	local l1, l2, l3, l4, l5;
+	if self.viewCObject then begin
+			l4 := (self.superSymbol = 'ownerNames);
+			if (if (self = GetRoot().(UserConfiguration.blessedApp)) then (not l4)) then begin
+					GetRoot():Notify(3, kLiteral_722c79, "To see Owner Info, you must select a different backdrop application.");
+					return nil
+				end else begin
+					self:Close();
+					if l4 then begin
+							return nil
+						end
+				end
+		end;
+	if a1 then begin
+			(l3 := GetRoot().cardfile).previousLayout := 'default;
+			l3.currentLayout := 'overview
+		end;
+	(if (if self:GetAppPreferences().usePassword then (l5 := GetUserConfig('passwordKey))) then (if ModalCheckPIN("Enter PIN", l5) then self:DoOwnerOpen() else GetRoot():Notify(3, kLiteral_722c79, "The PIN you entered is incorrect.  Owner Info cannot be opened.")) else self:DoOwnerOpen())
+end
+@@end

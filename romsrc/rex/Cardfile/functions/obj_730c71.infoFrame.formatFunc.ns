@@ -1,0 +1,5 @@
+@@ 0x730f01
+func(a1) begin
+	(if (if a1[0] then (Length(a1[0]) > 0)) then "[signature]" else "")
+end
+@@end

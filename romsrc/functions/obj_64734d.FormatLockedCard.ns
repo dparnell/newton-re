@@ -1,0 +1,5 @@
+@@ 0x56b1e5
+func(a1) begin
+	ModalCardAlert('FormatLockedCard, a1, nil)
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x7696f1
+func() begin
+	(if (not target) then begin
+			nodata.viewFlags := BOr(nodata.viewFlags, 1);
+			floatingBar.viewFlags := 0;
+			(imageContainer.viewFlags := 0)
+		end)
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x520d11
+func() begin
+	RemoveSlot(pageDialog, '_defaultButton);
+	inherited:?viewQuitScript()
+end
+@@end

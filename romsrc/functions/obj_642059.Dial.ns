@@ -1,0 +1,5 @@
+@@ 0x4497f5
+func(a1, a2) begin
+	AddDeferredCall(functions.RawDial, [Array: a1, a2])
+end
+@@end

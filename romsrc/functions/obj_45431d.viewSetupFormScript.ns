@@ -1,0 +1,10 @@
+@@ 0x452c3d
+func() begin
+	self.lineHeight := GetVariable(self:Parent(), 'lineHeight);
+	if ((not lineHeight) or (lineHeight < 13)) then begin
+			lineHeight := max(FontHeight(viewFont), 13)
+		end;
+	checkBoxVertOffset := (lineHeight - 13);
+	(if readOnly then (firstColumnTextIndent := 2))
+end
+@@end

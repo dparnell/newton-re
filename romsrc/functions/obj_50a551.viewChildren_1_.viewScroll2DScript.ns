@@ -1,0 +1,10 @@
+@@ 0x5056fd
+func(a1, a2) begin
+	local l1;
+	if (not (l1 := Header.viewOriginY)) then begin
+			l1 := 0
+		end;
+	Header:SetOrigin(0, (l1 + a2.amount));
+	RefreshViews()
+end
+@@end

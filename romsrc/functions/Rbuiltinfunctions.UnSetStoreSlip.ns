@@ -1,0 +1,10 @@
+@@ 0x4973e5
+func(a1) begin
+	local l1;
+	if (l1 := LSearch(StoreSlipRegistry.storeSlips, a1, 0, '|=|, nil)) then begin
+			StoreSlipRegistry.storeSlips[l1]:Close();
+			RemoveSlot(StoreSlipRegistry.storeSlips, l1)
+		end;
+	nil
+end
+@@end

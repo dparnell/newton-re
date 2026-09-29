@@ -1,0 +1,8 @@
+@@ 0x763cd9
+func(a1, a2) begin
+	RegDataDef('ImageView, a1.partData.ImageDataDef);
+	RegDataView('ImageView, a1.partData.ImageViewerDef);
+	RegDataView('ImageView, a1.partData.ImagePrintFormat);
+	RegDataView('ImageView, a1.partData.faxViewerRouteFormat)
+end
+@@end

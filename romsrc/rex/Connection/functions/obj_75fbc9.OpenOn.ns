@@ -1,0 +1,9 @@
+@@ 0x760b75
+func(a1, a2, a3) begin
+	local l1;
+	(l1 := BuildContext(self)).endpoint := a1;
+	l1.callback := a2;
+	l1.configOptions := a3;
+	(if a3.modal then l1:ModalDialog() else l1:FilterDialog())
+end
+@@end

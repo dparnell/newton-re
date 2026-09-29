@@ -1,0 +1,8 @@
+@@ 0x79f065 names
+func() begin
+	local wealth;
+	wealth := DecodeRichString(newTitle, 12291);
+	task.text := wealth.text;
+	(task.styles := wealth.styles)
+end
+@@end

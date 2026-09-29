@@ -1,0 +1,5 @@
+@@ 0x43e6b9
+func() begin
+	self:PopupMenu(popup, nil)
+end
+@@end

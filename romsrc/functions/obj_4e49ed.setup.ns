@@ -1,0 +1,6 @@
+@@ 0x4e49cd
+func() begin
+	local l1;
+	(if ((l1 := self:GetSelectionFont()).size = -536870912) then nil else GetFontSize(l1))
+end
+@@end

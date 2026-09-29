@@ -1,0 +1,12 @@
+@@ 0x5a8325
+func(a1, a2) begin
+	local l1;
+	if (l1 := GetDirectoryEntry(a1)) then begin
+			l1.metadataPath := a2;
+			EntryChange(l1)
+		end else begin
+			GetStores()[0]:GetSoup(@129):Add((l1 := {app: a1, metadataPath: a2}))
+		end;
+	return l1
+end
+@@end

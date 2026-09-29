@@ -1,0 +1,6 @@
+@@ 0x5a6581
+func() begin
+	inherited:textChanged();
+	(info.currentCountry := (info.countrySlot := self:CountryLookup(entryLine.text)))
+end
+@@end

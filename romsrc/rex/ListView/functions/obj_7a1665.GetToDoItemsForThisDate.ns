@@ -1,0 +1,50 @@
+@@ 0x797cb5 names
+func(aDate) begin
+	store := 0;
+	self:GetToDoSoup();
+	if (entries := self:GetToDoEntry(aDate, nil)) then begin
+			nDayTopics := 0;
+			local entries;
+			local Entry;
+			local dayTopics;
+			local nDayTopics;
+			local t;
+			local i;
+			local store;
+			local hasOtherTasks;
+			(foreach Entry in entries do begin
+					nDayTopics := (nDayTopics + Length(Entry.topics))
+				end);
+			dayTopics := Array(nDayTopics, nil);
+			i := 0;
+			store := 0;
+			(foreach Entry in entries do begin
+					(foreach t in Entry.topics do begin
+							t.source := store;
+							dayTopics[i] := t;
+							i := (i + 1)
+						end);
+					store := (store + 1);
+					if Entry.needsSort then begin
+							hasOtherTasks := true
+						end
+				end)
+		end else begin
+			dayTopics := [Array: ]
+		end;
+	if oldTodoSoup then begin
+			hasOtherTasks := (self:AddOldSoupTasks(dayTopics, aDate) or hasOtherTasks)
+		end;
+	if (repeatTargets := self:GetToDoEntry(0, nil)) then begin
+			hasOtherTasks := (self:AddRepeatingTasks(dayTopics, aDate) or hasOtherTasks)
+		end else begin
+			repeatTargets := [Array: ]
+		end;
+	if (if ((store > 1) or hasOtherTasks) then (Length(dayTopics) > 1)) then begin
+			StableSort(dayTopics, '|<|, func(t) begin
+				(t.mtgPriority + (if t.mtgDone then 10 else 0))
+			end)
+		end;
+	dayTopics
+end
+@@end

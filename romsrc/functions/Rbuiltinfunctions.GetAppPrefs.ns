@@ -1,0 +1,16 @@
+@@ 0x5b52fd
+@@const kROM_276
+@276
+@@main
+func(a1, a2) begin
+	local l1, l2, l3, l4, l5;
+	l1 := GetStores()[0]:GetSoup(kROM_276);
+	l2 := SymbolName(a1);
+	(if (l4 := (l3 := Query(l1, {type: 'index, indexPath: 'tag, beginKey: l2, endKey: l2})):entry()) then l4 else (if a2 then begin
+				if (not (l5 := Clone(a2)).tag) then begin
+						l5.tag := l2
+					end;
+				l1:Add(l5)
+			end))
+end
+@@end

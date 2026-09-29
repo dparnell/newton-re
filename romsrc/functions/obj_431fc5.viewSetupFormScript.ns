@@ -1,0 +1,6 @@
+@@ 0x431fa5
+func() begin
+	quantize := increment;
+	inherited:viewSetupFormScript()
+end
+@@end

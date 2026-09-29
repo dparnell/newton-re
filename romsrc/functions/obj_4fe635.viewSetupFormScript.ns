@@ -1,0 +1,7 @@
+@@ 0x4fe48d
+func() begin
+	text := self:GetMeetingText(realData);
+	self.viewFont := dayView.viewFont;
+	(self.viewLineSpacing := dayView.viewLineSpacing)
+end
+@@end

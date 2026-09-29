@@ -1,0 +1,23 @@
+@@ 0x459a85
+func(a1, a2) begin
+	if (a2 <> 'email) then begin
+			return nil
+		end;
+	if (if (l3 := GetRoot().cardfile:bcEMailAddress(EntryFromObj(a1), preferredRouting)) then ((l2 := Length(l3)) > 0)) then begin
+			SortByClass(l3, preferredRouting, 'email);
+			l1 := Array((l2 + 2), nil);
+			local l1;
+			local l2;
+			local l3;
+			(for l4 := 0 to (l2 - 1) do begin
+					local l7, l8;
+					l7 := l3[l4].email;
+					l8 := ParamStr("^0 (^1)", [Array: l7, EmailSystems.emailText.(ClassOf(l7))]);
+					l1[l4] := {value: l7, item: l8, pickable: true}
+				end);
+			l1[l2] := 'pickseparator;
+			l1[(l2 + 1)] := {item: "New Address", value: 'OpenEditor, pickable: true}
+		end;
+	l1
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x5b6199
+func() begin
+	(if StrFilled(pin) then (newPinKey := DESCreatePasswordKey(pin)))
+end
+@@end

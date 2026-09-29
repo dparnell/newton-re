@@ -1,0 +1,7 @@
+@@ 0x4b4259
+func(a1, a2, a3, a4) begin
+	local l1;
+	l1 := {cause: a3, cursor: GetTargetCursor(a4, nil)};
+	self:TransportCall(a1, a2, [Array: l1])
+end
+@@end

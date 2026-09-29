@@ -1,0 +1,18 @@
+@@ 0x46c331
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9;
+	l1 := nil;
+	CalcInkBounds((l3 := GetInkAt((l2 := refCon).form, l2.wordOffset)));
+	l5 := ScaleX((l4 := GesturePoint(1, a1)).x, itemBox, l3.viewBounds);
+	if (l6 := SplitInkAt(l3, l5, 10)) then begin
+			(l7 := SPrintObject("   "))[0] := $\uF701;
+			l7[2] := $\uF701;
+			l8 := [styles: 2, l6[0].ink, 1, l6[1].ink];
+			l9 := l2.wordOffset;
+			InsertStyledText(l2.form, l9, l2.wordLength, l7, l8);
+			SetKeyView(l2.form, l9);
+			l1 := true
+		end;
+	return l1
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x73c851
+func(a1) begin
+	local l1;
+	l1 := target;
+	(if inherited:pickActionScript(a1) then newtAppBase:ShowEditSlip('default, nil, l1, true, true))
+end
+@@end

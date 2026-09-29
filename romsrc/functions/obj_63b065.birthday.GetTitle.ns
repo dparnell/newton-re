@@ -1,0 +1,5 @@
+@@ 0x527851
+func(a1) begin
+	return ParamStr("Bday: ^0", [Array: GetDataDefs('|nameRef.people|):Get(a1, 'name, 'text)])
+end
+@@end

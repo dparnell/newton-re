@@ -1,0 +1,12 @@
+@@ 0x5696c9
+func(a1, a2) begin
+	local l1;
+	if (if (l1 := BFetch(UnionSoupRegistry, a1, '|str<|, 'soupDef.name)) then (not IsReadOnly(l1))) then begin
+			BDelete(l1.apps, a2, '|sym<|, nil, nil);
+			if (Length(l1.apps) = 0) then begin
+					BDelete(UnionSoupRegistry, a1, '|str<|, 'soupDef.name, (if (a2 = '_RegisterCardSoup) then 1))
+				end
+		end;
+	nil
+end
+@@end

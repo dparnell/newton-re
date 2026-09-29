@@ -1,0 +1,5 @@
+@@ 0x4d1779
+func() begin
+	SetUserConfig('zapAutoReceive, viewValue)
+end
+@@end

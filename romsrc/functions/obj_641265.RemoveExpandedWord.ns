@@ -1,0 +1,15 @@
+@@ 0x5aa039
+func(a1) begin
+	local l1, l2, l3, l4;
+	self:SetUpDictionary();
+	l1 := {attribute: nil, terminalClass: nil};
+	(if (((l2 := expandDict:LookupWord(a1, l1)) = 2) or (l2 = 3)) then (if l1.attribute then begin
+				expandDict:DeleteWord(a1);
+				expanded := (l3 := expandDict.list)[l1.attribute];
+				l3[l1.attribute] := nil;
+				(while (if ((l4 := Length(l3)) > 0) then (not l3[(l4 - 1)])) do ArrayRemoveCount(l3, (l4 - 1), 1));
+				AddUndoAction('AddExpandWord, [Array: a1, expanded]);
+				(if self.viewCObject then words:Dirty())
+			end))
+end
+@@end

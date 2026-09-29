@@ -1,0 +1,9 @@
+@@ 0x4866f9
+func() begin
+	inherited:RedoText();
+	showBarText.text := StrTruncate(showBarText.text, 137);
+	showBarText.width := (StrFontWidth(showBarText.text, showBarText.viewFont) + 16);
+	showBarText.viewBounds := SetBounds(((-showBarText.width) - 4), 3, -4, 17);
+	(showBarText.viewJustify := 8388646)
+end
+@@end

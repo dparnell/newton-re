@@ -1,0 +1,6 @@
+@@ 0x42b36d
+func(a1, a2, a3) begin
+	a1.hIndex := (a2 - 1);
+	(a1.vIndex := (a3 - 1))
+end
+@@end

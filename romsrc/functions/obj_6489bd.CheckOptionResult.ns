@@ -1,0 +1,20 @@
+@@ 0x52e591
+func(a1) begin
+	l1 := nil;
+	l2 := nil;
+	if IsArray(a1) then begin
+			local l1;
+			(foreach l2 in a1 do begin
+					if (l2.result <> nil) then begin
+							l1 := l2;
+							break
+						end
+				end)
+		end else begin
+			if (a1.result <> nil) then begin
+					l1 := a1
+				end
+		end;
+	l1
+end
+@@end

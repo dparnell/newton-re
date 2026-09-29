@@ -1,0 +1,5 @@
+@@ 0x513b7d
+func() begin
+	(if (indexLastVisibleItem < numberOfItems) then indexLastVisibleItem else (numberOfItems + self:GetToDoAgendaView().lastTopic))
+end
+@@end

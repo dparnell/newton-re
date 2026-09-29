@@ -1,0 +1,8 @@
+@@ 0x4e3e9d
+func() begin
+	if (not (font := frame.(slot))) then begin
+			font := GetUserConfig('userFont)
+		end;
+	(example.viewFont := font)
+end
+@@end

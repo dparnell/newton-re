@@ -1,0 +1,5 @@
+@@ 0x59ac29
+func(a1) begin
+	mailEndPoint:instantiateFromTEndpoint((mailEndPoint := {_proto: mailEndPoint, _parent: self}), nil, a1)
+end
+@@end

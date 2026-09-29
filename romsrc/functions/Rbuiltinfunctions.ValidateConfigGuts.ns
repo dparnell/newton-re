@@ -1,0 +1,43 @@
+@@ 0x4a0979
+func(a1, a2, a3, a4) begin
+	local dataFields, hasText, hasNumber;
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11;
+	dataFields := [Array: ];
+	l9 := func(a1, a2, a3) begin
+		AddArraySlot(dataFields, {_proto: a1.inputProto, path: (if a2 then a2 else a3), HasData: a1.HasData, label: a1.theText});
+		hasText := (hasText or (a1.type = 'text));
+		(hasNumber := (hasNumber or (a1.type = 'number)))
+	end;
+	if a1 then begin
+			l1 := a1
+		end else begin
+			if (a2 = 'location) then begin
+					if (not (l1 := (if (l10 := GetUserConfig('currentEmporium)) then ResolveEntryAlias(l10)))) then begin
+							if IsReadOnly((l11 := GetUserConfig('location))) then begin
+									SetUserConfig('location, DeepClone(l11))
+								end;
+							l1 := GetUserConfig('location)
+						end
+				end else begin
+					if (a2 = 'owner) then begin
+							if (not (l1 := ResolveEntryAlias(GetUserConfig('currentPersona)))) then begin
+									l1 := GetRoot().cardfile:addcard('owner, nil)
+								end
+						end
+				end
+		end;
+	if (not l1) then begin
+			GetRoot():Notify(3, "Addressing", "Addressing error: no address frame found");
+			return nil
+		end;
+	l8 := (if IsFrame(a2) then a2 else @308.(a2));
+	ValidityCheck(l1, l8, a3, l9, a4.context);
+	(if (Length(dataFields) > 0) then begin
+			(l6 := BuildContext({_proto: @508, stepChildren: dataFields, target: l1, isUserConfig: (not a1), pathArray: a3, context: a4.context, compView: a4.receiver, compMsg: a4.message, titleText: a4.titleText, userText: a4.userText, kbdType: (if hasText then 'alpha else (if hasNumber then 'number))})):Open();
+			return {slip: l6, result: nil}
+		end else (if a4.message then begin
+				Perform(a4.receiver, a4.message, '[Array: true]);
+				return '{result: true}
+			end))
+end
+@@end

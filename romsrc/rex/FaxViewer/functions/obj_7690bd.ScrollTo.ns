@@ -1,0 +1,6 @@
+@@ 0x769169
+func(a1, a2) begin
+	ImageTarget:ScrollTo(a1, a2);
+	imageContainer:UpdateScrollers()
+end
+@@end

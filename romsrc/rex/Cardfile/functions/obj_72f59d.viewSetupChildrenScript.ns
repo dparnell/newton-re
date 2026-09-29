@@ -1,0 +1,8 @@
+@@ 0x72f5d1
+func() begin
+	local l1;
+	inherited:viewSetupChildrenScript();
+	(l1 := Clone(viewBounds)).left := (l1.right - self:GetMaxTextWidth());
+	SetValue(self, 'viewBounds, l1)
+end
+@@end

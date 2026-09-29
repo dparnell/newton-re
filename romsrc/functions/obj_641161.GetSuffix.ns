@@ -1,0 +1,5 @@
+@@ 0x4583c1
+func(a1) begin
+	return nil
+end
+@@end

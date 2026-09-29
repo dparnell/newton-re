@@ -1,0 +1,7 @@
+@@ 0x5b7e01
+func(a1) begin
+	local l1;
+	(l1 := @558:BuildMeUp(a1)):ModalDialog();
+	l1.newPinKey
+end
+@@end

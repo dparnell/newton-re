@@ -1,0 +1,7 @@
+@@ 0x523041
+func() begin
+	RemoveSlot(self, 'aboutText);
+	RemoveSlot(self, 'secret);
+	RemoveSlot(self, 'viewChildren)
+end
+@@end

@@ -1,0 +1,14 @@
+@@ 0x52be79
+@@const kROM_216
+@216
+@@main
+func(a1) begin
+	local l1, l2;
+	(if (not StrEqual((l1 := GetCurrentModemSetup()).modemName, kROM_216)) then begin
+			if (if (not (l2 := self:NavigateHelper(a1, l1))) then l1.FaxConnectSetupScript) then begin
+					l2 := l1:FaxConnectSetupScript(a1)
+				end;
+			l2
+		end)
+end
+@@end

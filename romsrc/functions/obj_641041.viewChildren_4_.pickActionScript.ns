@@ -1,0 +1,9 @@
+@@ 0x4d6afd
+func(a1) begin
+	local l1;
+	l1 := a1[0];
+	dirtyFlag := true;
+	totMin := (l1 - (l1 mod 1440));
+	inherited:pickActionScript(a1)
+end
+@@end

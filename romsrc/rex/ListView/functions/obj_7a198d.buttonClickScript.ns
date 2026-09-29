@@ -1,0 +1,9 @@
+@@ 0x7a1215 names
+func() begin
+	local cachedNewMtgDate;
+	cachedNewMtgDate := newMtgDate;
+	todoSlip:ApplyAllChanges();
+	newMtgDate := cachedNewMtgDate;
+	inherited:buttonClickScript()
+end
+@@end

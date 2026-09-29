@@ -1,0 +1,5 @@
+@@ 0x52ec35
+func(a1, a2) begin
+	self:SendOption("tran", a1, a2)
+end
+@@end

@@ -1,0 +1,14 @@
+@@ 0x4c5805
+func() begin
+	l1 := self:GetAppPreferences().sortby;
+	local l1;
+	(foreach l2 in headings do begin
+			local l4;
+			l4 := self:MakeCursor(currentSoupSymbol, l2.spec);
+			l2.count := l4:CountEntries();
+			if (if (l2.count = 0) then (l1 = 'Date)) then begin
+					SetRemove(headings, l2)
+				end
+		end)
+end
+@@end

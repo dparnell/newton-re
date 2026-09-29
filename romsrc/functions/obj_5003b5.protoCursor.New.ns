@@ -1,0 +1,5 @@
+@@ 0x50e851
+func(a1, a2) begin
+	{_proto: self, calendar: a1, maxNumberPerPage: a2}
+end
+@@end

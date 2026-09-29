@@ -1,0 +1,10 @@
+@@ 0x477565
+func() begin
+	local l1;
+	if (if (not kids) then data) then begin
+			l1 := GetUserConfig('mailFont);
+			kids := ReFlow(data, {reflowFont: l1, unistyle: nil, graphicsGutter: 8, textGutter: -8, viewLineSpacing: FontHeight(l1)}, fields.targetBox, self:LocalBox())
+		end;
+	(if kids then (self.stepChildren := ArrayMunger([Array: ], 0, 0, kids, reflowStart, nil)))
+end
+@@end

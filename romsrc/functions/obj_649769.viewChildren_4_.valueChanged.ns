@@ -1,0 +1,5 @@
+@@ 0x4b503d
+func() begin
+	(GetRoot().iobox.deleteAfterPutaway := viewValue)
+end
+@@end

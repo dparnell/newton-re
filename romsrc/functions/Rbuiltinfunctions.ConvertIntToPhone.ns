@@ -1,0 +1,12 @@
+@@ 0x48c5e1
+func(a1) begin
+	local l1, l2;
+	l2 := "-";
+	(if (not IsInstance(a1, 'string)) then begin
+			if (StrLen((l1 := SPrintObject(a1))) = 7) then begin
+					StrMunger(l1, 3, 0, l2, 0, Length(l2))
+				end;
+			l1
+		end else a1)
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x4dfaa5
+func(a1) begin
+	target.gmt := (a1 * 60);
+	self:UpdateLocationFields();
+	self:StartFlush();
+	inherited:pickActionScript(a1)
+end
+@@end

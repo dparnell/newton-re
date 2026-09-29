@@ -1,0 +1,5 @@
+@@ 0x4a726d
+func() begin
+	AddDeferredSend(theApp, 'RememberedClose, [Array: base])
+end
+@@end

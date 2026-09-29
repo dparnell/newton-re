@@ -1,0 +1,32 @@
+@@ 0x41de3d
+func() begin
+	local l1, l2;
+	if (l1 := GetMemoryItems(memory)) then begin
+			if (not labelCommands) then begin
+					labelCommands := l1
+				end else begin
+					AddArraySlot((labelCommands := Clone(labelCommands)), 'pickseparator);
+					AddArraySlot(labelCommands, l1[0])
+				end
+		end;
+	self:SetLabelText(label);
+	labelLine.viewFont := labelFont;
+	width := (StrFontWidth(labelLine.text, labelFont) + 4);
+	if (not indent) then begin
+			indent := (width + 2)
+		end;
+	height := FontHeight(labelFont);
+	if HasPath(self, 'viewLineSpacing) then begin
+			entryLine.viewLineSpacing := self.viewLineSpacing
+		end;
+	if HasPath(self, 'entryFont) then begin
+			entryLine.viewFont := self.entryFont
+		end;
+	l2 := self:LocalBox();
+	labelLine.viewBounds := RelBounds(0, (entryLine.viewLineSpacing - height), indent, height);
+	entryLine.viewFlags := self.entryFlags;
+	entryLine.viewBounds := SetBounds(indent, 0, l2.right, 0);
+	entryLine.textFlags := self.entryTextFlags;
+	(entryLine.text := self:TextSetup())
+end
+@@end

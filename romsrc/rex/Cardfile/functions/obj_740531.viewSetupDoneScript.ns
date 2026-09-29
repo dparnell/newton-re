@@ -1,0 +1,10 @@
+@@ 0x740585
+func() begin
+	local l1, l2, l3;
+	(if (if target then (target.class = 'group)) then (if ((l1 := (l3 := self:ChildViewFrames()[0]):GetMaxBottom()) > l3:GlobalBox().bottom) then begin
+				stepChildren := [Array: ];
+				AddStepView(self, {_proto: @218, text: "(more)", viewBounds: '{left: 0, top: -14, right: 40, bottom: -4}, viewJustify: 144});
+				l3:SetNewBottom(12)
+			end))
+end
+@@end

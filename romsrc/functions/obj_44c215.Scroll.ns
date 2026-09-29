@@ -1,0 +1,5 @@
+@@ 0x44c0e9
+func(a1) begin
+	(if (a1 = 'down) then self:SetOrigin(0, (viewOriginY - lineHeight)) else self:SetOrigin(0, (viewOriginY + lineHeight)))
+end
+@@end

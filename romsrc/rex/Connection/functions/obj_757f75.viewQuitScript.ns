@@ -1,0 +1,7 @@
+@@ 0x7584a1
+func() begin
+	protoContext:RemoveOpenWindow(self);
+	endpoint:StopIdle(self);
+	(if (not closing) then endpoint:ConnectionDone(0))
+end
+@@end

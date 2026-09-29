@@ -1,0 +1,13 @@
+@@ 0x74a435
+func(a1) begin
+	local l1;
+	l1 := (foreach l2 in appsList.selectedItems collect appsList.listItems[l2]);
+	l6 := (if packageList.selectedItems then (foreach l2 in packageList.selectedItems collect begin
+			local l6;
+			packageList.listItems[l2]
+		end) else '[Array: ]);
+	a1.applications := l1;
+	a1.packages := l6;
+	(a1.merge := nil)
+end
+@@end

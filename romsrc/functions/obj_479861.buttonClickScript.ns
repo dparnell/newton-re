@@ -1,0 +1,13 @@
+@@ 0x479841
+func() begin
+	local l1;
+	(try begin
+			self:SlipClosed()
+		end onexception |evt.ex| do begin
+			if ((l1 := CurrentException().error) = -10605) then begin
+					inherited:?buttonClickScript()
+				end;
+			Rethrow()
+		end)
+end
+@@end

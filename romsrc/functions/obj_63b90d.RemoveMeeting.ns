@@ -1,0 +1,7 @@
+@@ 0x4f7de9
+func(a1) begin
+	EntryRemoveFromSoupXmit(a1, 'calendar);
+	calendar:redisplayScript();
+	AddUndoAction('AddMeeting, [Array: a1])
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x483655
+func(a1) begin
+	local l1;
+	if (not (l1 := self:ValidItem(a1))) then begin
+			l1 := 0
+		end;
+	return l1
+end
+@@end

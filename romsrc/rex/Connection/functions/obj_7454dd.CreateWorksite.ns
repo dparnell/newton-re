@@ -1,0 +1,9 @@
+@@ 0x745821
+func() begin
+	local target;
+	target := self:CreateConfig('location, '[Array: place, connectionPhone, areacode, country], "Where are you calling?", 'validateDialog, 'ValidateDone);
+	(self.thecallback := func(a1) begin
+		self:SetWorksite(target)
+	end)
+end
+@@end

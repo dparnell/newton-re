@@ -1,0 +1,8 @@
+@@ 0x59f04d
+func() begin
+	inherited:JamIt();
+	mailPhonePicker:SyncView();
+	mailPhonePicker:RedoChildren();
+	mailPhonePicker:JamIt(true)
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x56b1a5
+func(a1) begin
+	local l1;
+	(if GetRoot().preferenceRoll.viewCObject then begin
+			l1 := ModalCardAlert('|FormatWithExtremePrejudice?|, a1, nil);
+			HandleCardEvent('|FormatReally?|, [Array: a1, l1])
+		end)
+end
+@@end

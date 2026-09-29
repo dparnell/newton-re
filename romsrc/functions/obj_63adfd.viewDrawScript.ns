@@ -1,0 +1,10 @@
+@@ 0x42be65
+func() begin
+	if (lastSeed <> setTimeSeed) then begin
+			lastSeed := setTimeSeed;
+			self:SetupIdle(self:calcTime())
+		end;
+	DrawXBitmap(handsBounds, smallClocks, hours, 0);
+	DrawXBitmap(handsBounds, smallClocks, (12 + minutes), 1)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x733acd
+func() begin
+	(if noneIsChosen then "None" else inherited:textSetup())
+end
+@@end

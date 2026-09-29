@@ -1,0 +1,5 @@
+@@ 0x41a751
+func(a1) begin
+	(BAnd(GetViewFlags(a1), 1) <> 0)
+end
+@@end

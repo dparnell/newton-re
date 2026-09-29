@@ -1,0 +1,5 @@
+@@ 0x5aebc9
+func() begin
+	SetRemoteWriting((not GetRemoteWriting()))
+end
+@@end

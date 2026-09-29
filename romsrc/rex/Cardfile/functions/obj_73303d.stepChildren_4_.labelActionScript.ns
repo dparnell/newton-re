@@ -1,0 +1,6 @@
+@@ 0x733a51
+func(a1) begin
+	local l1;
+	(if (noneIsChosen := (if (ClassOf((l1 := labelCommands[a1])) = 'frame) then l1.isNoneItem)) then self:UpdateText(l1.item) else inherited:labelActionScript(a1))
+end
+@@end

@@ -1,0 +1,18 @@
+@@ 0x53742d
+func(a1) begin
+	if IsReadOnly(fentry._tagList) then begin
+			fentry._tagList := Clone(fentry._tagList)
+		end;
+	if fentry.labels then begin
+			SetRemove(fentry._tagList, fentry.labels)
+		end;
+	if a1 then begin
+			SetAdd(fentry._tagList, a1, true);
+			fentry.labels := a1
+		end else begin
+			fentry.labels := nil
+		end;
+	EntryChange(fentry);
+	true
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x462b79
+func(a1) begin
+	poppedView := nil;
+	self:hilite(nil);
+	self:ExecMessage(a1)
+end
+@@end

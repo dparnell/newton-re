@@ -1,0 +1,10 @@
+@@ 0x57014d
+func() begin
+	deck:Shuffle();
+	table := deck:Deal(25);
+	self:EvalTable();
+	money := (money - bet);
+	SetValue(bankroll, 'text, Stringer([Array: $$, money]));
+	self:Dirty()
+end
+@@end

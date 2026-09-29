@@ -1,0 +1,5 @@
+@@ 0x5b8bcd
+func(a1) begin
+	return StripRecognitionWordDiacritsOK(a1)
+end
+@@end

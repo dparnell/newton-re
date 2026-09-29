@@ -1,0 +1,10 @@
+@@ 0x535549
+func(a1) begin
+	(if (if (if (if transportProvider then (transportProvider.serviceId = a1)) then callEndpoint) then self:GetConfig('phoneAutoReceive)) then begin
+			self:SetConfig('phoneAutoReceive, nil);
+			self:StopAutoReceive();
+			self:SetConfig('phoneAutoReceive, true);
+			self:StartAutoReceive()
+		end)
+end
+@@end

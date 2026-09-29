@@ -1,0 +1,6 @@
+@@ 0x51fd41
+func() begin
+	routingButton := self;
+	inherited:?viewSetupFormScript()
+end
+@@end

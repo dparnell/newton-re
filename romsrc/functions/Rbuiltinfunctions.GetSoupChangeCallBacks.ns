@@ -1,0 +1,6 @@
+@@ 0x569c05
+func(a1, a2) begin
+	local l1;
+	(if (l1 := GetSoupChangeWatcher(a1, a2)) then l1.callBacks else '{})
+end
+@@end

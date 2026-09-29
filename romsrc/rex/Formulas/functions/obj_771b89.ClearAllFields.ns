@@ -1,0 +1,9 @@
+@@ 0x7723d5
+func() begin
+	solvingFormula := true;
+	Country1Field:SetNumericValue(nil);
+	Country2Field:SetNumericValue(nil);
+	solvingFormula := nil;
+	(solvedFor := nil)
+end
+@@end

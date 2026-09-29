@@ -1,0 +1,105 @@
+@@ 0x49624d
+@@const kBinaryFromHex
+func(hex, cls) begin
+	local b := MakeBinary(StrLen(hex) div 2, cls);
+	for i := 0 to Length(b) - 1 do begin
+		local h := Ord(hex[2 * i]);
+		local l := Ord(hex[2 * i + 1]);
+		StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+	end;
+	b
+end
+@@const kLiteral_48e169
+{statusText: "Restore", titleText: "Restoring\u2026\u", icon: {mask: call kBinaryFromHex with ("000000000004010901090174011e018100000000000000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe0000000000000000000000000000000000000", 'mask), bits: call kBinaryFromHex with ("000000000004010901090174011e01817ff00000fff80000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000dfd80000cf980000c7180000c2180000c0180000fff800007ff000000000000000000000", 'bits), bounds: '{left: 0, top: 0, right: 13, bottom: 21}}, barber: true, closeBox: nil}
+@@const kLiteral_488675
+"Restore"
+@@main
+func(type, prefs, soupsToRestore, packagesToRestore) begin
+	try begin
+			if (DoProgress('vBarber, kLiteral_48e169, func(a1) begin
+				try begin
+						l1 := nil;
+						convertProblems := [Array: ];
+						progressSlip := a1;
+						l2 := (restoredSoups := [Array: ]);
+						a1:SetStatus('vBarber, {titleText: "Preparing to restore\u2026\u", barber: true});
+						l3 := self:getSrcStore();
+						if (type = 'all) then begin
+								l4 := [Array: ];
+								local l1;
+								local l2;
+								local l3;
+								local l4;
+								(foreach l5 in soupsToRestore do begin
+										a1:SetStatus('vBarber, {barber: true});
+										if IsFrame(l5) then begin
+												(foreach l7 in l5.soups do begin
+														BInsert(l4, l7, '|str<|, nil, nil)
+													end)
+											end else begin
+												BInsert(l4, l5, '|str<|, nil, nil)
+											end
+									end);
+								(foreach l7 in l3:GetSoupNames() do begin
+										local l9;
+										a1:SetStatus('vBarber, {barber: true});
+										if (not BFind(l4, l7, '|str<|, nil)) then begin
+												if StrEqual(l7, @276) then begin
+														l3:GetSoup(l7):RemoveFromStore();
+														call @118 with ()
+													end else begin
+														if (not StrEqual(l7, "Packages")) then begin
+																l3:GetSoup(l7):RemoveFromStore()
+															end
+													end
+											end;
+										AddArraySlot(l2, l7)
+									end)
+							end;
+						try begin
+								self:restoreManySoups(soupsToRestore)
+							end onexception |evt.ex.cancel| do begin
+								Rethrow()
+							end onexception |evt.ex| do begin
+								l1 := true
+							end;
+						if (not l1) then begin
+								a1:SetStatus('vBarber, {titleText: "Restoring\u2026\u", barber: true});
+								if (type = 'all) then begin
+										ZapPackagesForFullRestore(l3)
+									end;
+								self:restoreSomePackages(packagesToRestore);
+								if (if (if backupInfo.storeInfo then (prefs.restoreType = 'all)) then (prefs.restorePackages = 'all)) then begin
+										l3:SetAllInfo(backupInfo.storeInfo)
+									end
+							end;
+						a1:SetStatus('vBarber, {titleText: "Cleaning up\u2026\u", barber: true})
+					end onexception |evt.ex| do begin
+						l9 := CurrentException()
+					end;
+				Sort(restoredSoups, '|str<|, nil);
+				CallFrameBasedRegistryFns(SoupRestoreRegistry, [Array: restoredSoups]);
+				(if l9 then Throw(l9.name, l9.error))
+			end) = 'Cancel) then begin
+					if (restoredPkgs or (Length(restoredSoups) > 0)) then begin
+							GetRoot():Notify(3, kLiteral_488675, "Restore was cancelled. Some items may not have been restored.")
+						end
+				end
+		end onexception |evt.ex| do begin end;
+	(if (if convertProblems then ((l3 := Length(convertProblems)) > 0)) then begin
+			l4 := "";
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			(foreach l5, l6 in convertProblems do begin
+					if (l5 = (l3 - 1)) then begin
+							l4 := Stringer([Array: l4, l6])
+						end else begin
+							l4 := Stringer([Array: l4, l6, ", "])
+						end
+				end);
+			GetRoot():Notify(3, kLiteral_488675, ParamStr("Errors occurred converting data for applications: ^0", [Array: l4]))
+		end)
+end
+@@end

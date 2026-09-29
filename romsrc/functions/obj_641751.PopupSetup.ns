@@ -1,0 +1,5 @@
+@@ 0x48a349
+func(a1) begin
+	StyledStrTruncate(Clone(self:TextFromRef(a1)), 200, @88)
+end
+@@end

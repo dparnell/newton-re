@@ -1,0 +1,9 @@
+@@ 0x722b79
+func() begin
+	local l1;
+	(if (theApp.superSymbol = 'ownerNames) then begin
+			EntryChange((l1 := theApp:GetAppPreferences()));
+			(if (if l1.usePassword then (not GetUserConfig('passwordKey))) then GetRoot():Notify(3, "Names", "There is currently no PIN.  To set a PIN, open the Prefs app from Extras and select Security."))
+		end)
+end
+@@end

@@ -1,0 +1,19 @@
+@@ 0x442ded
+func() begin
+	local l1, l2, l3, l4;
+	l1 := Date(selectedDates[0]);
+	if ((l2 := Length(selectedDates)) > 1) then begin
+			if (if ((endDate := Date(selectedDates[(l2 - 1)])).month <> l1.month) then monthView.month) then begin
+					l1.month := monthView.month;
+					l1.year := monthView.year;
+					l1.Date := 1
+				end
+		end;
+	if (l1.year = 2920) then begin
+			l3 := monthSpec
+		end else begin
+			l3 := monthYearSpec
+		end;
+	LongDateStr((l4 := TotalMinutes(l1)), l3)
+end
+@@end

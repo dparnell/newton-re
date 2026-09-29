@@ -1,0 +1,24 @@
+@@ 0x456ef5
+func(a1) begin
+	local l1, l2, l3, l4;
+	l1 := _tapinfo.nameRef;
+	l2 := _tapinfo.fieldPath;
+	l3 := nil;
+	if _edited then begin
+			if (if _tapinfo.cryoNameRefData then (not l1.(l2))) then begin
+					l1.(l2) := _tapinfo.cryoNameRefData;
+					l3 := true
+				end else begin
+					if (Length((l4 := self:Equivalent(l1, _dirtyValues, _dirtyPaths))) > 0) then begin
+							self:ModifyEntry(l1, l4)
+						end else begin
+							l3 := true
+						end
+				end
+		end;
+	_context:Tapped((if (not l3) then (if _selectOnly then 'select else 'Toggle)));
+	_tapinfo := nil;
+	_dirtyPaths := nil;
+	(_dirtyValues := nil)
+end
+@@end

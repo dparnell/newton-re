@@ -1,0 +1,44 @@
+@@ 0x4a9bfd
+func() begin
+	if self.viewBounds then begin
+			l1 := self:GlobalBox();
+			l2 := GetAppParams().appAreaBounds;
+			if (if (if (if (if (l1.left = l2.left) then (l1.top = l2.top)) then (l1.right = l2.right)) then (l1.bottom = l2.bottom)) then self.viewFormat) then begin
+					self.viewFormat := BAnd(self.viewFormat, bnot(786672))
+				end
+		end;
+	newtAppBase := (targetApp := self);
+	l3 := self:GetAppState();
+	if (if (if (storesFilter exists) then storesFilter) then (not storesFilter:IsValid())) then begin
+			storesFilter := nil
+		end;
+	if allSoups then begin
+			local l1;
+			local l2;
+			local l3;
+			(foreach l4, l5 in (allSoups := Clone(allSoups)) do begin
+					l7 := (allSoups.(l4) := Clone(l5));
+					l7:MakeSoup(appSymbol);
+					l7.soupFilter := labelsFilter;
+					if (storesFilter exists) then begin
+							l7.storesFilter := storesFilter
+						end;
+					l7:SetupCursor();
+					self:RestoreFolderPosition(l4, l7, labelsFilter)
+				end)
+		end;
+	RegFolderChanged(appSymbol, func(a1, a2) begin
+		(foreach l1 in allSoups do begin
+				self:FolderChanged(l1.soupName, a1, a2)
+			end)
+	end);
+	if allKeyCommands then begin
+			local l7;
+			(foreach l8 in allKeyCommands do begin
+					newtAppBase.(l8[0].keyMessage) := l8[1];
+					newtAppBase:AddKeyCommand(l8[0])
+				end)
+		end;
+	SetKeyView(self, 0)
+end
+@@end

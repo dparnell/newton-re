@@ -1,0 +1,12 @@
+@@ 0x457169
+func(a1) begin
+	local l1, l2;
+	l1 := ObjEntryClass(a1);
+	(l2 := Clone(a1)).class := (if l1 then l1 else entryType);
+	RemoveSlot(l2, '_alias);
+	RemoveSlot(l2, '_entryClass);
+	RemoveSlot(l2, '_Unselected);
+	RemoveSlot(l2, '_fakeID);
+	l2
+end
+@@end

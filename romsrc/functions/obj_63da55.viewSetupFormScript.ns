@@ -1,0 +1,18 @@
+@@ 0x4f1081
+func() begin
+	local l1, l2;
+	if selectedMeeting.repeatType then begin
+			l1 := GetRoot().calendar;
+			if (l2 := l1:FindException(originalMtgDate, selectedMeeting)) then begin
+					meetingInstance := l2
+				end else begin
+					meetingInstance := l1:MakeInstanceOfRepeatingMeeting(selectedMeeting, originalMtgDate)
+				end
+		end else begin
+			meetingInstance := selectedMeeting
+		end;
+	RepeatingView.meetingInstance := meetingInstance;
+	RepeatingView.originalMtgDate := meetingInstance.mtgStartDate;
+	inherited:viewSetupFormScript()
+end
+@@end

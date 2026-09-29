@@ -1,0 +1,6 @@
+@@ 0x4a8079
+func(a1) begin
+	UnRegSoupChange(soupName, a1);
+	UnRegUnionSoup(soupName, a1)
+end
+@@end

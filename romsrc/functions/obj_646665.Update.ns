@@ -1,0 +1,6 @@
+@@ 0x45dc79
+func() begin
+	hilitedIndex := (if (if (if selectedItem then (selectedItem >= firstVisibleItem)) then (selectedItem < (firstVisibleItem + numTiles))) then (selectedItem - firstVisibleItem));
+	self:Dirty()
+end
+@@end

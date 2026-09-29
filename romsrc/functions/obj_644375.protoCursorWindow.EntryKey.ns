@@ -1,0 +1,5 @@
+@@ 0x5b9a7d
+func(a1) begin
+	(if (Length(buffer) > a1) then call entryFilter with (buffer[a1]))
+end
+@@end

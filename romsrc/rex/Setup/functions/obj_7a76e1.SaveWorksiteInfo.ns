@@ -1,0 +1,21 @@
+@@ 0x7a86f1
+func(a1, a2) begin
+	local l1, l2, l3;
+	if (if (not (l3 := IsSoupEntry(a1))) then (not a2)) then begin
+			return nil
+		end;
+	if (if mapCountry then (l2 := a1.AreaCode)) then begin
+			if (l1 := self:GetCityFromAreacode(l2, mapCountry)) then begin
+					a1.cityAlias := MakeEntryAlias(l1);
+					a1.country := GetCountryEntry(l1.country)[0].name;
+					a1.countrySymbol := l1.country
+				end
+		end;
+	if l3 then begin
+			EntryChange(a1)
+		end else begin
+			a1 := GetRoot().cardfile:AddCard('worksite, a1)
+		end;
+	a1
+end
+@@end

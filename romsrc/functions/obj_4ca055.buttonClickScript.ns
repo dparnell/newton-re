@@ -1,0 +1,16 @@
+@@ 0x4ca009
+func() begin
+	local l1;
+	if (if fields.toRef then (Length(fields.toRef) > 0)) then begin
+			RemoveSlot(fields.toRef[0], 'asIsPhone);
+			l1 := GetDataDefs('|nameRef.fax|):GetRoutingInfo(fields.toRef[0])[0];
+			callOptionsSlip.inNumber := l1.rawNumber;
+			callOptionsSlip.inCountry := l1.country
+		end else begin
+			callOptionsSlip.inNumber := nil;
+			callOptionsSlip.inCountry := nil
+		end;
+	inherited:buttonClickScript();
+	(optionsUp := callOptionsSlip.viewCObject)
+end
+@@end

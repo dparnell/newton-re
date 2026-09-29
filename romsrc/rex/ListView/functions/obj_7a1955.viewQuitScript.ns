@@ -1,0 +1,8 @@
+@@ 0x7a10a5 names
+func() begin
+	(if (repeatType = 5) then begin
+			todoSlip.savedFrequencyIndex := 0;
+			todoSlip:RelayoutSlip(nil)
+		end)
+end
+@@end

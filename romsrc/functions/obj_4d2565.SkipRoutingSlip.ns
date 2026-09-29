@@ -1,0 +1,10 @@
+@@ 0x4d2395
+func(a1) begin
+	(if (if (self:ConnectionDetect() = 'Now) then ((a1.error = nil) or (a1.error = 0))) then begin
+			if (Routing.(a1.appSymbol) or (if GetRoot().(a1.appSymbol) then (GetRoot().(a1.appSymbol).SetupRoutingSlip exists))) then begin
+					a1.body := target
+				end;
+			return true
+		end else return nil)
+end
+@@end

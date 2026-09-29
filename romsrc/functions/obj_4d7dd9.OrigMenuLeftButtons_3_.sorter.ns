@@ -1,0 +1,8 @@
+@@ 0x4d7d41
+@@const kLiteral_4d6ed5
+"Note"
+@@main
+func(a1, a2) begin
+	(if StrEqual(a1, kLiteral_4d6ed5) then return -1 else (if StrEqual(a2, kLiteral_4d6ed5) then return 1 else return StrCompare(a1, a2)))
+end
+@@end

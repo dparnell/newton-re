@@ -1,0 +1,5 @@
+@@ 0x507559
+func(a1) begin
+	GetDataDefs('|nameRef.meetingPlace|):Get(a1, 'company, 'text)
+end
+@@end

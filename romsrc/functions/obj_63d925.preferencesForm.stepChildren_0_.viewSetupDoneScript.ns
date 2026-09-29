@@ -1,0 +1,5 @@
+@@ 0x59d189
+func() begin
+	(if (not transport:GetConfig('onlineRegEnabled)) then self:Hide())
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x4e61cd
+func() begin
+	GetRandomDictionaryWord(3, 7)
+end
+@@end

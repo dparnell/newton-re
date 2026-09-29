@@ -1,0 +1,29 @@
+@@ 0x5994c5
+func() begin
+	local l1, l2;
+	(if fields.attachment then begin
+			if (fields.body = nil) then begin
+					fields.body := DeepClone(target)
+				end;
+			(if fields.body.package then begin
+					fields.IsPackage := true;
+					l1 := GetPkgRefInfo(fields.body.package);
+					try begin
+							if (if (if (l1.numparts > 0) then (l1.parttypes[0] = 'form)) then l1.parts[0].text) then begin
+									l2 := l1.parts[0].text
+								end else begin
+									l2 := l1.title
+								end
+						end onexception |evt.ex| do begin
+							l2 := l1.title
+						end;
+					fields.body.class := 'packageFrame;
+					fields.body.data := fields.body.package;
+					fields.body.filesize := l1.size;
+					fields.body.type := "pkg ";
+					fields.body.creator := "pkgX";
+					(if (not fields.edited) then (fields.text := ParamStr("Attached package information:\nName: ^0\nSize: ^1 bytes\n^2", [Array: fields.body.filename, l1.size, l1.copyright])))
+				end)
+		end else (if (not TargetIsCursor(target)) then (fields.body := nil)))
+end
+@@end

@@ -1,0 +1,13 @@
+@@ 0x4e7819
+func(a1, a2) begin
+	local l1;
+	a2.title := Clone(GetRoot().calendar:GetMeetingText(a1.target));
+	a2.body := a1.target;
+	(if (l1 := a2.body.repeatTemplate) then begin
+			(l1 := DeepClone(l1)).NotesData := GetRoot().calendar:GetNotesData(a2.body)[1];
+			RemoveSlot(l1, 'InstanceNotesData);
+			a2.body := Clone(a2.body);
+			(a2.body.repeatTemplate := l1)
+		end)
+end
+@@end

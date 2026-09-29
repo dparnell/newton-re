@@ -1,0 +1,23 @@
+@@ 0x79b5fd names
+func(results, offset, maxCount) begin
+	local c, Entry, i;
+	(c := cursor:clone()):Reset();
+	indexFirstItem := Length(results);
+	Entry := c:Entry();
+	i := 0;
+	(loop begin
+			if ((Entry = nil) or (i >= maxCount)) then begin
+					break
+				end;
+			(try begin
+					i := (i + self:AddTasksForEntry(Entry, results, offset, i, maxCount));
+					(Entry := c:Next())
+				end onexception |evt.ex| do begin
+					breakloop();
+					(Entry := nil)
+				end)
+		end);
+	items := results;
+	i
+end
+@@end

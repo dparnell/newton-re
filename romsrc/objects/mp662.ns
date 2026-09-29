@@ -1,0 +1,13 @@
+obj_52d381 := same("obj_6489bd.Open.literals[16]");
+obj_52d631 := same("obj_6489bd.SpeakerOptionDone.literals[1]");
+obj_52d66d := same("obj_6489bd.SendDigit.literals[0]");
+obj_52d6a5 := same("obj_6489bd.AnswerIncoming.literals[0]");
+obj_52d719 := same("obj_6489bd.UnHold.literals[0]");
+obj_52d74d := same("obj_6489bd.Forward.literals[0]");
+obj_52d781 := same("obj_6489bd.ForwardClear.literals[0]");
+obj_52d885 := same("obj_6489bd.Hold.literals[0]");
+obj_52d909 := same("obj_6489bd.Transfer.literals[0]");
+obj_52d93d := same("obj_6489bd.SetSpeaker.literals[0]");
+obj_52dd85 := same("obj_6489bd.UnHold.instructions");
+obj_52dfbd := same("obj_6489bd.SetSpeaker.instructions");
+obj_6489bd := {currentDevice: nil, UnHold: function("functions/obj_6489bd.UnHold.ns"), passiveState: [|Array|: {label: obj_52d3cd, type: 'option, opCode: 512, data: {arglist: [|Array|: nil], typelist: [|Array|: 10, [|Array|: 11, 13, 4]]}}, {label: obj_4bf2ed, type: 'option, opCode: 512, data: {arglist: [|Array|: true], typelist: [|Array|: 10, 5]}}], serviceId: nil, SetSpeaker: function("functions/obj_6489bd.SetSpeaker.ns"), AnswerIncoming: function("functions/obj_6489bd.AnswerIncoming.ns"), Open: function("functions/obj_6489bd.Open.ns"), Close: function("functions/obj_6489bd.Close.ns"), SendDigit: function("functions/obj_6489bd.SendDigit.ns"), SpeakerOptionDone: function("functions/obj_6489bd.SpeakerOptionDone.ns"), serviceOption: {label: "taps", type: 'option, opCode: 512, data: {arglist: [|Array|: true, true, nil, nil], typelist: [|Array|: 10, 5, 5, 5, 5]}}, ForwardClear: function("functions/obj_6489bd.ForwardClear.ns"), Hold: function("functions/obj_6489bd.Hold.ns"), configOptions: nil, passiveClaim: [|Array|: {label: obj_52d3cd, type: 'option, opCode: 512, data: {arglist: [|Array|: nil], typelist: [|Array|: 10, [|Array|: 11, 13, 4]]}}, {label: obj_52d3b5, type: 'option, opCode: 512, data: {arglist: [|Array|: true], typelist: [|Array|: 10, 5]}}], _proto: @383, Forward: function("functions/obj_6489bd.Forward.ns"), SpeakerOptionContinue: function("functions/obj_6489bd.SpeakerOptionContinue.ns"), GetCallerId: function("functions/obj_6489bd.GetCallerId.ns"), confirmStore: nil, SendOption: function("functions/obj_6489bd.SendOption.ns"), SpeakerOption: function("functions/obj_6489bd.SpeakerOption.ns"), openTimeout: 15000, CheckOptionResult: function("functions/obj_6489bd.CheckOptionResult.ns"), declareSelf: 'tapiEndpoint, hangup: function("functions/obj_6489bd.hangup.ns"), eventHandler: function("functions/obj_6489bd.eventHandler.ns"), Transfer: function("functions/obj_6489bd.Transfer.ns"), MakeOutgoing: function("functions/obj_6489bd.MakeOutgoing.ns"), ReturnOption: function("functions/obj_6489bd.ReturnOption.ns")};

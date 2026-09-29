@@ -1,0 +1,5 @@
+@@ 0x732975
+func() begin
+	peoplePicker:SetNowShowing((if viewValue then 'selected else 'all))
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x73c151
+func() begin
+	beamer := @502:new();
+	beamer:Initialize('autoInAndOut, func(a1, a2) begin
+		self:beamerPutAway(a1, a2)
+	end)
+end
+@@end

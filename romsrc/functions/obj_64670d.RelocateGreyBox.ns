@@ -1,0 +1,22 @@
+@@ 0x45e811
+func(a1) begin
+	local l1;
+	ScaleShape(greyBox, nil, a1.viewBox);
+	OffsetShape(greyBox, a1.offsetX, a1.offsetY);
+	ScaleShape(greyBox, a1.extent, thumbnailBounds);
+	l1 := self:LocalBox();
+	if ((greyBounds := ShapeBounds(greyBox)).left < l1.left) then begin
+			greyBounds.left := l1.left
+		end;
+	if (greyBounds.top < l1.top) then begin
+			greyBounds.top := l1.top
+		end;
+	if (greyBounds.right > l1.right) then begin
+			greyBounds.right := l1.right
+		end;
+	if (greyBounds.bottom > l1.bottom) then begin
+			greyBounds.bottom := l1.bottom
+		end;
+	ScaleShape(greyBox, nil, greyBounds)
+end
+@@end

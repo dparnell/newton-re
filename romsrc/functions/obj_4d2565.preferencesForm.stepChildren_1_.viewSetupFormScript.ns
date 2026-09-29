@@ -1,0 +1,6 @@
+@@ 0x4d18f1
+func() begin
+	local l1;
+	(viewValue := (if (l1 := transport:GetConfig('dontAutoPutAway)) then nil else true))
+end
+@@end

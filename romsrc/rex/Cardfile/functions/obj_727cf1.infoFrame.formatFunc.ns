@@ -1,0 +1,13 @@
+@@ 0x72826d
+func(a1) begin
+	local l1;
+	l1 := "";
+	if a1[0] then begin
+			l1 := Stringer([Array: l1, " ", ParamStr("Bday: ^0", [Array: (if (if IsInstance(a1[0], 'string) then IsRichString(a1[0])) then a1[0] else ShortDateStr(a1[0], 0))])])
+		end;
+	if a1[1] then begin
+			l1 := Stringer([Array: l1, " ", "\n", " ", ParamStr("Anniv.: ^0", [Array: (if (if IsInstance(a1[1], 'string) then IsRichString(a1[1])) then a1[1] else ShortDateStr(a1[1], 0))])])
+		end;
+	l1
+end
+@@end

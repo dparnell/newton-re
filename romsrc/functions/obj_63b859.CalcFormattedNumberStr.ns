@@ -1,0 +1,20 @@
+@@ 0x4e220d
+@@const kLiteral_4e1865
+"%.8G"
+@@main
+func(a1) begin
+	local l1, l2, l3;
+	if (a1 < 0) then begin
+			l1 := Stringer([Array: "-", FormattedNumberStr((-a1), kLiteral_4e1865)])
+		end else begin
+			l1 := FormattedNumberStr(a1, kLiteral_4e1865)
+		end;
+	if (l2 := StrPos(l1, "e", 0)) then begin
+			l1 := Substr(l1, 0, l2);
+			l2 := StrPos((l3 := FormattedNumberStr(a1, "%.8g")), "e", 0);
+			l3 := Substr(l3, l2, 9999);
+			l1 := Stringer([Array: l1, l3])
+		end;
+	l1
+end
+@@end

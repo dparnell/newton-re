@@ -1,0 +1,5 @@
+@@ 0x45978d
+func(a1) begin
+	{name: self:Get(a1, 'name, 'text), email: self:Get(a1, 'email, nil)}
+end
+@@end

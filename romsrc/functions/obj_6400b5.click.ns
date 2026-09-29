@@ -1,0 +1,7 @@
+@@ 0x562095
+func() begin
+	findDrawer:HideOtherApps(self.finder.owner);
+	AddDeferredSend(self, 'CloseFindAll, nil);
+	findDrawer:ShowItem(self.finder, self)
+end
+@@end

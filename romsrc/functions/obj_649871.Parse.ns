@@ -1,0 +1,10 @@
+@@ 0x44d001
+func(a1) begin
+	local l1;
+	l1 := @783;
+	if @784:IsValid(a1) then begin
+			l1 := @784
+		end;
+	return l1
+end
+@@end

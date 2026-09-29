@@ -1,0 +1,12 @@
+@@ 0x548449
+func(a1, a2) begin
+	local l1, l2;
+	if (Length((l1 := self:GetChildIconViews())) > 0) then begin
+			l2 := (self:HandleNavKey(a1, a2, l1) or self:HandleTypeSelect(a1, a2, l1))
+		end;
+	if (not l2) then begin
+			l2 := inherited:?viewKeyDownScript(a1, a2)
+		end;
+	l2
+end
+@@end

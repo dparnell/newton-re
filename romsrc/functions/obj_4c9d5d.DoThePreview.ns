@@ -1,0 +1,8 @@
+@@ 0x4c9d3d
+func(a1) begin
+	(if a1 then begin
+			self:CommitFaxInfo();
+			inherited:buttonClickScript()
+		end)
+end
+@@end

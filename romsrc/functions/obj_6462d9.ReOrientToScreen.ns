@@ -1,0 +1,10 @@
+@@ 0x482531
+func() begin
+	local l1, l2;
+	l1 := self:GlobalBox();
+	self:Close();
+	l2 := GetUserConfig('screenOrientation);
+	viewBounds := self:MungeBounds(l1.left, topValues[l2], l1.right, (topValues[l2] + curView.height));
+	self:Open()
+end
+@@end

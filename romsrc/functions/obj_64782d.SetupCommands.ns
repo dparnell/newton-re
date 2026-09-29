@@ -1,0 +1,20 @@
+@@ 0x4baa19
+func() begin
+	local l1;
+	if (access = 'readOnly) then begin
+			return nil
+		end;
+	if (l1 := GetMemoryItems(memory)) then begin
+			if (not labelCommands) then begin
+					labelCommands := l1
+				end else begin
+					AddArraySlot((labelCommands := Clone(labelCommands)), 'pickseparator);
+					AddArraySlot(labelCommands, l1[0])
+				end
+		end;
+	(if (if labelCommands then filter.picker) then begin
+			AddArraySlot((labelCommands := Clone(labelCommands)), 'pickseparator);
+			AddArraySlot(labelCommands, "Other")
+		end)
+end
+@@end

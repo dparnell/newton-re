@@ -1,0 +1,24 @@
+@@ 0x48985d
+func() begin
+	local l1, l2;
+	l1 := 0;
+	if ((l2 := self:GetSettings()).doTextRecognition or l2.doInkWordRecognition) then begin
+			if l2.wordsCursiveOption then begin
+					l1 := BOr(l1, 4096)
+				end;
+			if l2.lettersCursiveOption then begin
+					l1 := BOr(l1, 24576)
+				end;
+			if l2.numbersCursiveOption then begin
+					l1 := BOr(l1, 1843200)
+				end;
+			if (if (l1 <> 0) then l2.punctuationcursiveoption) then begin
+					l1 := BOr(l1, 32768)
+				end
+		end;
+	if l2.doShapeRecognition then begin
+			l1 := BOr(l1, 65536)
+		end;
+	return l1
+end
+@@end

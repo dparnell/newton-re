@@ -1,0 +1,22 @@
+@@ 0x75c16d
+func(a1, a2) begin
+	local l1, l2;
+	if a1 then begin
+			l1 := self:GetWorksite(a1)
+		end;
+	if l1 then begin
+			if (not self:CallValidate(l1, a2)) then begin
+					return nil
+				end else begin
+					l2 := l1.connectionNetwork
+				end
+		end else begin
+			l2 := a1
+		end;
+	if (not l2) then begin
+			GetRoot():Notify(3, "Dock", "You must choose a computer or worksite before connecting.");
+			theEndpoint:ConnectionDone(0)
+		end;
+	return l2
+end
+@@end

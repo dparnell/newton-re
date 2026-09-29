@@ -1,0 +1,6 @@
+@@ 0x5b637d
+func() begin
+	SetKeyView(self, 0);
+	HideCaret()
+end
+@@end

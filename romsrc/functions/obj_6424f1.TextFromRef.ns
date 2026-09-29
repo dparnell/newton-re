@@ -1,0 +1,32 @@
+@@ 0x4d5cad
+func(a1) begin
+	l2 := GetDataDefs(class);
+	if (if (if a1 then (IsArray(a1) = nil)) then l2) then begin
+			l1 := l2:Get(a1, textSlot, 'text)
+		end else begin
+			if (if (if a1 then (Length(a1) > 0)) then l2) then begin
+					local l1;
+					local l2;
+					(foreach l3 in a1 do begin
+							local l5, l6, l7;
+							l5 := l2:Get(l3, textSlot, 'text);
+							if (if l1 then StrFilled(l1)) then begin
+									l1 := ParamStr("^0, ^1", [Array: l1, l5])
+								end else begin
+									l1 := l5
+								end
+						end);
+					if (if l1 then StrFilled(l1)) then begin
+							l6 := self:LocalBox();
+							l7 := 12291;
+							l1 := StrTruncate(l1, ((l6.right - l6.left) - indent))
+						end else begin
+							l1 := "???"
+						end
+				end else begin
+					l1 := "None"
+				end
+		end;
+	l1
+end
+@@end

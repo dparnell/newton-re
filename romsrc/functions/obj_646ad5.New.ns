@@ -1,0 +1,5 @@
+@@ 0x498345
+func() begin
+	{_proto: self, _parent: self._parent}
+end
+@@end

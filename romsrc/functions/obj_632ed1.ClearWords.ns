@@ -1,0 +1,8 @@
+@@ 0x4e60b5
+func() begin
+	matchedWords := [Array: ];
+	matchedValues := [Array: ];
+	recognizedWord := nil;
+	(lastWordEndTime := nil)
+end
+@@end

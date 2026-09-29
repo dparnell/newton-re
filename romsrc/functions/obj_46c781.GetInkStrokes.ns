@@ -1,0 +1,9 @@
+@@ 0x46c079
+func() begin
+	local l1, l2;
+	if (l1 := GetInkAt(refCon.form, refCon.wordOffset)) then begin
+			CalcBundleBounds((l2 := ExpandInk(l1, 0)))
+		end;
+	return l2
+end
+@@end

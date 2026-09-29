@@ -1,0 +1,32 @@
+@@ 0x465b79
+func() begin
+	local l1, l2, l3, l4, l5;
+	if self:FixedWord() then begin
+			wordLeft := 0;
+			trailers := 0
+		end else begin
+			wordLeft := (if (wordRight < maxChars) then 1 else 0);
+			self:AddEndCaps()
+		end;
+	wordRight := (StrLen(text) - trailers);
+	dispLeft := 0;
+	l1 := (StrLen(text) * cellWidth);
+	if ((dispIndent := ((((l2 := self:LocalBox()).right - l2.left) - l1) div 2)) < 0) then begin
+			dispIndent := 0
+		end;
+	lastChar := nil;
+	ClearTryString();
+	altChars := Array((l3 := StrLen(text)), nil);
+	(while (l3 > 0) do (if (if ((l3 := (l3 - 1)) < wordRight) then (l3 >= wordLeft)) then (if (not IsWhiteSpace((l4 := text[l3]))) then begin
+					if IsLower(l4) then begin
+							l5 := CHR((ORD(l4) - 32))
+						end else begin
+							if IsUpper(l4) then begin
+									l5 := CHR((ORD(l4) + 32))
+								end
+						end;
+					(altChars[l3] := Stringer([Array: l4, l5]))
+				end)));
+	self:Dirty()
+end
+@@end

@@ -1,0 +1,19 @@
+@@ 0x79799d names
+func(aStart) begin
+	if (aStart = 'now) then begin
+			self:StartFlush();
+			self:EndFlush();
+			return nil
+		end else begin
+			if (aStart = true) then begin
+					self:StartFlush()
+				end
+		end;
+	(if ((Length(targets) > 1) or (Length(repeatTargets) > 0)) then begin
+			if (not aStart) then begin
+					self:StartFlush()
+				end;
+			self:EndFlush()
+		end)
+end
+@@end

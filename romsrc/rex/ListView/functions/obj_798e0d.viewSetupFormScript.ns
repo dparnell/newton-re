@@ -1,0 +1,8 @@
+@@ 0x798d45 names
+func() begin
+	inherited:viewSetupFormScript();
+	self.viewBounds := self.newBounds;
+	cachedToDoAgendaView := self;
+	SetKeyView(self:parent(), 0)
+end
+@@end

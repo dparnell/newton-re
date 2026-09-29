@@ -1,0 +1,9 @@
+@@ 0x5b7321
+func() begin
+	inherited:?viewSetupFormScript();
+	viewChildren := [Array: PINDisplay, PINKeyPad];
+	PINDisplay.viewBounds := SetBounds(5, 0, -5, 10);
+	PINKeyPad.viewBounds := SetBounds(20, 10, -20, 0);
+	(PINKeyPad.viewFormat := 5)
+end
+@@end

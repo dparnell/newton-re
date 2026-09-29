@@ -1,0 +1,12 @@
+@@ 0x549e3d
+func(a1, a2) begin
+	(if (a2 = 13) then begin
+			SetValue(self, 'viewFlags, BOr(GetViewFlags(self), 33554432));
+			if self:SetupFakeTarget() then begin
+					InkOff(a1);
+					self:DeleteActionScript(nil, self)
+				end;
+			true
+		end)
+end
+@@end

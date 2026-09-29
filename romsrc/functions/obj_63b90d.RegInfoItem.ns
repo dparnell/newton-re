@@ -1,0 +1,9 @@
+@@ 0x511a9d
+func(a1, a2) begin
+	if (not infoAuxRegistry) then begin
+			infoAuxRegistry := {}
+		end;
+	infoAuxRegistry.(EnsureInternal(a1)) := a2;
+	nil
+end
+@@end

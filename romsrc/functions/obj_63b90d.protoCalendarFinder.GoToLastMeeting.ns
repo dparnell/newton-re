@@ -1,0 +1,10 @@
+@@ 0x4ea8b5
+func() begin
+	(foreach l1 in meetingSoupFinders do begin
+			l1:GoToLastMeeting()
+		end);
+	self:ChooseLatestItem();
+	scrollingForward := nil;
+	(currentItem := (cacheMeetingsCount - 1))
+end
+@@end

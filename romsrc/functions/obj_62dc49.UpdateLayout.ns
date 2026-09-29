@@ -1,0 +1,8 @@
+@@ 0x4b5a2d
+func() begin
+	(if (if layout then layout.viewCObject) then begin
+			layout:SyncChildren();
+			layout:Dirty()
+		end)
+end
+@@end

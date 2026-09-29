@@ -1,0 +1,7 @@
+@@ 0x438e59
+func() begin
+	(if params then (foreach l1, l2 in params do begin
+				self.(l1) := l2
+			end))
+end
+@@end

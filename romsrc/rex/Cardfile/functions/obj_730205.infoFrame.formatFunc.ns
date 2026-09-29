@@ -1,0 +1,10 @@
+@@ 0x730b11
+func(a1) begin
+	local l1;
+	TrimString((l1 := ParamStr("^?0Card Name: ^0\n||^?1Card #: ^1||", [Array: a1[1], a1[2]])));
+	if a1[3] then begin
+			l1 := Stringer([Array: l1, ParamStr("\nExp. Date: ^0", [Array: (if (if IsInstance(a1[3], 'string) then IsRichString(a1[3])) then a1[3] else ShortDateStr(a1[3], 0))])])
+		end;
+	l1
+end
+@@end

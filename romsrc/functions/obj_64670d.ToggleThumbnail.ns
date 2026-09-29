@@ -1,0 +1,5 @@
+@@ 0x45e891
+func(a1) begin
+	(if ((not a1) or viewCObject) then self:Close() else self:OpenThumbnail(a1))
+end
+@@end

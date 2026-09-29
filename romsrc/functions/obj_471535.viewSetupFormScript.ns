@@ -1,0 +1,13 @@
+@@ 0x4714d5
+func() begin
+	(def := Clone(def)).tabWidths := zoneTableWidth;
+	def.tabProtos := entryProto;
+	def.tabValues := nil;
+	if def.indentX then begin
+			def.tabWidths := (def.tabWidths - def.indentX)
+		end;
+	self.viewBounds := Clone(viewBounds);
+	self.viewBounds.bottom := (viewBounds.top + (((5 * FontHeight(viewFont)) - 5) + 1));
+	(numZones := 0)
+end
+@@end

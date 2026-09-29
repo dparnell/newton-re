@@ -1,0 +1,14 @@
+@@ 0x4d6835
+func() begin
+	local l1, l2;
+	l1 := GetRoot().calendar;
+	ClearUndoStacks();
+	if (not whoIsUp('calendar)) then begin
+			l1:Open()
+		end;
+	l2 := l1:GetToDo();
+	l2:CreateToDoItemAll(totMin, title, nil, nil, priority, nil);
+	l1:ShowToDoList(totMin);
+	remindSlip:Close()
+end
+@@end

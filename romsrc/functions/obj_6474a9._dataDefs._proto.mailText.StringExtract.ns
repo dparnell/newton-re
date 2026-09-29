@@ -1,0 +1,5 @@
+@@ 0x59b569
+func(a1, a2) begin
+	(if a1.title then a1.title else (if a1.text then (if (StrLen(a1.text) > 50) then Substr(a1.text, 0, 50) else a1.text) else "Untitled Mail"))
+end
+@@end

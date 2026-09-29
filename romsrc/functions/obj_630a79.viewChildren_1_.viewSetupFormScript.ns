@@ -1,0 +1,6 @@
+@@ 0x523db5
+func() begin
+	inherited:viewSetupFormScript();
+	(viewBounds := SetBounds(0, -2, titleWidth, (titleHeight - 3)))
+end
+@@end

@@ -1,0 +1,13 @@
+@@ 0x53746d
+func(a1) begin
+	local l1;
+	(if a1 then begin
+			if (l1 := (if (not (if a1.viewCObject then Visible(a1))) then (if fentry.closeControl then (fentry.closeControl = 'alwaysClose) else GetUserConfig('ExtraAlwaysClose)))) then begin
+					AddDeferredSend(a1, 'ButtonToggle, nil)
+				end else begin
+					a1:ButtonToggle()
+				end;
+			l1
+		end)
+end
+@@end

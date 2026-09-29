@@ -1,0 +1,7 @@
+@@ 0x79ef85 names
+func(meeting, whatView) begin
+	local textPart1, result;
+	viewEffect := nil;
+	(if HasPath(task, 'repeatInfo) then (if (result := ModalConfirm(Stringer([Array: (textPart1 := SubStr(MakeRichString(task.text, task.styles), 0, 24)), "\u2026\u", " ", "is a recurring task. Delete all occurrences?"]), 'yesNo)) then self:Delete('DeleteTask, [Array: 0, task, true]) else return nil) else (if task.remindForDate then base:Delete('DeleteTask, [Array: nominalDate, task, true]) else base:Delete('DeleteTask, [Array: newMtgDate, task, true])))
+end
+@@end

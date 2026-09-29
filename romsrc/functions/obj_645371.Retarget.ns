@@ -1,0 +1,20 @@
+@@ 0x4af231
+func(a1) begin
+	if (((l1 := dataCursor:entry()) = 'deleted) or (l1 = nil)) then begin
+			dataCursor:Next();
+			if (dataCursor:entry() = nil) then begin
+					dataCursor:prev()
+				end;
+			if (dataCursor:entry() = nil) then begin
+					self:SetupCursor()
+				end
+		end;
+	if a1 then begin
+			self:RedoChildren()
+		end;
+	local l1;
+	(if retargetChain then (foreach l2 in retargetChain do begin
+				l2:RetargetNotify()
+			end))
+end
+@@end

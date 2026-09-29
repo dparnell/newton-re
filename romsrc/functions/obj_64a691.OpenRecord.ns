@@ -1,0 +1,12 @@
+@@ 0x4268bd
+func(a1) begin
+	local l1;
+	if RecordEngine then begin
+			RecordEngine:Done()
+		end;
+	self.openCalled := true;
+	self:Open();
+	l1 := (if (GetUserConfig('inputDevice) <> nil) then 'record else 'play);
+	(RecordEngine := @851:New({_parent: self, fCallBack: a1, fSoundArray: [Array: ], fDirection: l1}))
+end
+@@end

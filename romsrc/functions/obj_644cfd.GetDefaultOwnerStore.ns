@@ -1,0 +1,6 @@
+@@ 0x47fbf1
+func() begin
+	local l1;
+	(if (l1 := GetRoot().(owner):GetDefaultAppStore()):IsReadOnly() then GetStores()[0] else l1)
+end
+@@end

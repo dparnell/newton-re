@@ -1,0 +1,5 @@
+@@ 0x4835b5
+func(a1, a2) begin
+	(if (if a1 then (not SetContains(GetFolderList(a2, nil), a1))) then AddFolder(SymbolName(a1), a2) else a1)
+end
+@@end

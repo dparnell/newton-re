@@ -1,0 +1,5 @@
+@@ 0x41d515
+func() begin
+	(if HasPath(self:Parent(), 'viewLineSpacing) then (self.viewLineSpacing := self:Parent().viewLineSpacing))
+end
+@@end

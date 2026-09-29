@@ -1,0 +1,25 @@
+@@ 0x78cf65 names
+func(anIndex) begin
+	if ((level := topics[anIndex].level) = nil) then begin
+			level := 1
+		end;
+	olderSis := anIndex;
+	local olderSis;
+	local ti;
+	local level;
+	local topicLevel;
+	(for ti := (anIndex - 1) to 0 by -1 do begin
+			if ((topicLevel := topics[ti].level) = nil) then begin
+					topicLevel := 1
+				end;
+			if (topicLevel = level) then begin
+					olderSis := ti
+				end else begin
+					if (topicLevel < level) then begin
+							break
+						end
+				end
+		end);
+	olderSis
+end
+@@end

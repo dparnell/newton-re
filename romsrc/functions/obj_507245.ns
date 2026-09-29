@@ -1,0 +1,32 @@
+@@ 0x507245
+func(a1, a2) begin
+	l1 := SmartStart(20);
+	l2 := 0;
+	if (if (a1 <> nil) then (Length(a1) > 0)) then begin
+			local l1;
+			local l2;
+			(foreach l3 in a1 do begin
+					local l5;
+					l5 := self:GetNameOfPerson(l3);
+					if (if a2 then (l2 > 50)) then begin
+							break
+						end else begin
+							if (StrLen(l5) > 0) then begin
+									if (l2 > 0) then begin
+											l2 := SmartConcat(l1, l2, ", ")
+										end;
+									l2 := SmartConcat(l1, l2, l5)
+								end
+						end
+				end);
+			if a2 then begin
+					l1 := StyledStrTruncate(l1, a2, 10243);
+					l2 := nil
+				end
+		end;
+	if l2 then begin
+			SmartStop(l1, l2)
+		end;
+	l1
+end
+@@end

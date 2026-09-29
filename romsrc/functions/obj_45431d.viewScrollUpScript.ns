@@ -1,0 +1,14 @@
+@@ 0x452ed9
+func() begin
+	if (not canScrollUp) then begin
+			return true
+		end;
+	self:LockScreen(true);
+	inherited:?viewScrollUpScript();
+	AZTabs:Update();
+	upDownScroller:Update();
+	self:LockScreen(nil);
+	listBase:MarkCursorPosition();
+	true
+end
+@@end

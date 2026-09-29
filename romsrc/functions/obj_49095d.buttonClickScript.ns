@@ -1,0 +1,17 @@
+@@ 0x490911
+func() begin
+	result := ModalConfirm("Restore will replace the information on your Newton device with the information in the backup and then will restart. Are you sure you want to do this?", '[Array: {value: some, text: "Restore"}, {value: Cancel, text: "Cancel", keyValue: default}]);
+	(if (if Visible(self:Parent()) then (result <> 'Cancel)) then begin
+			if (prefsCache.(prefsSlot) = 'Partial) then begin
+					scrollList:stashItems(soupNameList)
+				end;
+			if prefsCache.restorePackages then begin
+					packageList:stashItems(pkgNames)
+				end;
+			AddDeferredCall(func() begin
+				godParent:doRestore(result);
+				self:hilite(nil)
+			end, '[Array: ])
+		end else self:hilite(nil))
+end
+@@end

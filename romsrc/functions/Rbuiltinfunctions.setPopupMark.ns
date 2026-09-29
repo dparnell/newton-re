@@ -1,0 +1,6 @@
+@@ 0x41ea79
+func(a1, a2) begin
+	clearPopupMark(a1);
+	(a1[a2] := {item: a1[a2], mark: $\uFC0B})
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x5b0729
+func() begin
+	self.viewValue := (9 - userConfiguration.letterSpaceCursiveOption);
+	(if (((ClassOf(viewValue) <> 'int) or (viewValue < 0)) or (viewValue > maxValue)) then begin
+			userConfiguration.letterSpaceCursiveOption := 4;
+			(self.viewValue := (9 - userConfiguration.letterSpaceCursiveOption))
+		end)
+end
+@@end

@@ -1,0 +1,15 @@
+@@ 0x59b9cd
+func() begin
+	local l1, l2;
+	(if fields then begin
+			l1 := fields;
+			if (if (if (not fields.text) then fields.body) then fields.body.text) then begin
+					l1 := fields.body;
+					inBody := true
+				end;
+			l2 := TextBounds(l1.text, {font: GetUserConfig('mailFont)}, SetBounds(0, 0, 636, 0));
+			l1.height := l2.bottom;
+			(self.viewChildren := [Array: {viewBounds: l2, _proto: @193, viewStationery: 'para, text: l1.text, viewFont: GetUserConfig('mailFont)}])
+		end else (self.viewChildren := [Array: ]))
+end
+@@end

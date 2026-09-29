@@ -1,0 +1,6 @@
+@@ 0x4eae55
+func(a1) begin
+	local l1;
+	(if (if (l1 := Query(a1.soup, {type: 'index, indexPath: '_uniqueID, beginKey: a1.entryID}):entry()) then LSearch('[Array: meeting, RepeatingMeeting, exceptionMeeting, cribNote], l1.viewStationery, 0, '|=|, nil)) then self:isSelected(a1) else 'NotCheckable)
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x49c45d
+func() begin
+	nextEntry := 0;
+	(foreach l1 in layout:ChildViewFrames() do begin
+			l1:SyncView()
+		end)
+end
+@@end

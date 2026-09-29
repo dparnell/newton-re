@@ -1,0 +1,14 @@
+@@ 0x50e8d1
+func(a1) begin
+	if a1 then begin
+			items := self:FetchPage(a1, nil)
+		end else begin
+			items := nil
+		end;
+	index := 0;
+	baseIndex := 0;
+	lastIndex := (if items then (Length(items) - 1) else -1);
+	earliestPage := 0;
+	(startItemsCache := (if items then [Array: items[1]] else [Array: ]))
+end
+@@end

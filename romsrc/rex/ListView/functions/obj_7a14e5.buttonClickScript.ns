@@ -1,0 +1,5 @@
+@@ 0x78d825 names
+func() begin
+	editor:NewRelative('aunt)
+end
+@@end

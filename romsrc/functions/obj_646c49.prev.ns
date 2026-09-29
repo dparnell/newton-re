@@ -1,0 +1,11 @@
+@@ 0x4a7729
+func() begin
+	local l1;
+	(loop (if (not ((l1 := self:move(-1)) = 'deleted)) then begin
+				if ((not l1) or (not validTest)) then begin
+						break l1
+					end;
+				(if call validTest with (l1) then break l1)
+			end))
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x481ac9
+func() begin
+	(if (CancelRequest exists) then base:CancelRequest('userCancel) else GetRoot().(appSymbol):CancelRequest('userCancel))
+end
+@@end

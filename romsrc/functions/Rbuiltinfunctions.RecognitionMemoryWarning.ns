@@ -1,0 +1,12 @@
+@@ 0x62b175
+func(a1) begin
+	local l1;
+	l1 := func() begin
+		FlushUserConfig();
+		AsyncConfirm("Words are being left as ink due to a shortage of memory.  If you have multiple applications or connections open, closing some of them may help.  If you continue to have problems, you should restart your Newton device.", [Array: "OK", "Restart"], func(a1) begin
+			(if (a1 = 1) then AddDeferredCall(functions.ReBoot, nil))
+		end)
+	end;
+	(if a1 then GetRoot().notifyIcon:AddAction("Recognition Warning", l1, nil) else AddDeferredCall(l1, nil))
+end
+@@end

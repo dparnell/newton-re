@@ -1,0 +1,17 @@
+@@ 0x468dbd
+func(a1, a2) begin
+	local l1;
+	if (l1 := GetDataDefs(DataClassOf(a2))) then begin
+			if l1.TextScript then begin
+					return l1:TextScript(a1, a2)
+				end else begin
+					if l1.description then begin
+							return l1.description
+						end else begin
+							return l1.name
+						end
+				end
+		end;
+	(if TargetIsCursor(a2) then return "This is a list of items. The text for each item can be edited in the outbox." else return "No Text available for this item")
+end
+@@end

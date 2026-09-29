@@ -1,0 +1,6 @@
+@@ 0x4c0d11
+func() begin
+	theApp:GetAppPreferences().sortby := clusterValue;
+	(changed := true)
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x562391
+func(a1) begin
+	SetRemove(findApps, a1);
+	nil
+end
+@@end

@@ -1,0 +1,16 @@
+@@ 0x7400f1
+func() begin
+	local l1, l2, l3, l4;
+	(if (l1 := layout.dataCursor:entry()) then begin
+			if (ClassOf((l4 := layout.dataCursor:IndexPath())) = 'Array) then begin
+					l4 := l4[0]
+				end;
+			if IsInstance((l2 := l1.(l4)), 'string) then begin
+					l3 := (if (StrLen(l2) > 0) then l2[0])
+				end else begin
+					l3 := (if (StrLen(l1.sorton) > 0) then l1.sorton[0])
+				end;
+			(if l3 then AddProcrastinatedSend('cardfileAZTabs, self, 'SetLetter, [Array: l3, true], 0))
+		end)
+end
+@@end

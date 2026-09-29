@@ -1,0 +1,7 @@
+@@ 0x59d941
+func() begin
+	local l1;
+	(l1 := BuildContext({_proto: periodicAlarmEditor, ownerName: Stringer([Array: "Mail:", appSymbol]), ownerSymbol: appSymbol, title: text})):Open();
+	(alarmsUp := l1)
+end
+@@end

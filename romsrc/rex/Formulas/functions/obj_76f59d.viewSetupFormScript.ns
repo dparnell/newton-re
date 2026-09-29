@@ -1,0 +1,21 @@
+@@ 0x770995
+func() begin
+	local l1;
+	if ((l1 := self:GetFormulaValues()).(formulaSymbol).measurement = nil) then begin
+			curMeasurement := 0
+		end else begin
+			curMeasurement := l1.(formulaSymbol).measurement
+		end;
+	if (l1.(formulaSymbol).USItem = nil) then begin
+			SetValue(US, 'defaultItem, USDefaults[curMeasurement])
+		end else begin
+			SetValue(US, 'defaultItem, l1.(formulaSymbol).USItem)
+		end;
+	if (l1.(formulaSymbol).MetricItem = nil) then begin
+			SetValue(Metric, 'defaultItem, MetricDefaults[curMeasurement])
+		end else begin
+			SetValue(Metric, 'defaultItem, l1.(formulaSymbol).MetricItem)
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

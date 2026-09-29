@@ -1,0 +1,6 @@
+@@ 0x45e24d
+func(a1, a2) begin
+	if (a2 = 50) then begin end;
+	true
+end
+@@end

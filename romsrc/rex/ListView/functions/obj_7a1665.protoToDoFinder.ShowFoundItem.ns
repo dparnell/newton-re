@@ -1,0 +1,10 @@
+@@ 0x79b5d5 names
+func(item) begin
+	local c, Entry;
+	currentItem := item.itemIndex;
+	(if (Entry := (c := Query(item.soup, {type: 'index, indexPath: '_uniqueID, startKey: item.entryID})):Entry()) then begin
+			cursor:Goto(Entry);
+			self:ShowItem(item, Entry)
+		end)
+end
+@@end

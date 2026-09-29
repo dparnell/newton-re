@@ -1,0 +1,22 @@
+@@ 0x4bd15d
+func() begin
+	viewWidth := (l2 := editor:LocalBox()).right;
+	viewHeight := l2.bottom;
+	if (not scrollOverlap) then begin
+			scrollOverlap := floor((viewHeight / 3))
+		end;
+	scrollXAmount := (viewWidth - scrollOverlap);
+	scrollYAmount := (viewHeight - scrollOverlap);
+	if (self.viewChildren := (if target then target.(path))) then begin
+			local l1;
+			local l2;
+			(foreach l3 in self.viewChildren do begin
+					l1 := UnionRect(l1, l3.viewBounds)
+				end);
+			if l1 then begin
+					self.initialDataRect := l1
+				end
+		end;
+	(self.stepChildren := (if (if optionFlags then (optionFlags = 1)) then (if (initialDataRect.right <= viewWidth) then [Array: OneDscroller] else [Array: TwoDscroller])))
+end
+@@end

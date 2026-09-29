@@ -1,0 +1,16 @@
+@@ 0x4db385
+@@const kROM_251
+@251
+@@main
+func() begin
+	UnRegSoupChange(kROM_251, appSymbol);
+	expanded := 218;
+	currentForm := nil;
+	awayKey := MakeEntryAlias(target);
+	cards := nil;
+	target := nil;
+	pix := nil;
+	list := nil;
+	ClearUndoStacks()
+end
+@@end

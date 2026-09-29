@@ -1,0 +1,9 @@
+@@ 0x42d301
+func(a1) begin
+	(if (a1 < Length(items)) then begin
+			allCollapsed := nil;
+			index := a1;
+			roll:RedoChildren()
+		end)
+end
+@@end

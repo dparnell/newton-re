@@ -1,0 +1,29 @@
+@@ 0x5956ad
+func() begin
+	if eworld then begin
+			eworld.connected := nil
+		end;
+	AddDeferredCall(func() begin
+		if eworld then begin
+				try begin
+						self:Cancel(nil)
+					end onexception |evt.ex| do begin end
+			end;
+		if eworld then begin
+				try begin
+						self:Disconnect(true, nil)
+					end onexception |evt.ex| do begin end
+			end;
+		if eworld then begin
+				try begin
+						self:Unbind(nil)
+					end onexception |evt.ex| do begin end
+			end;
+		self:?LogoutDoneScript();
+		if eworld then begin
+				self:Dispose()
+			end;
+		(eworld := nil)
+	end, [Array: ])
+end
+@@end

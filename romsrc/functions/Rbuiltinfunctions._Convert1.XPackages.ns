@@ -1,0 +1,31 @@
+@@ 0x558165
+func(store, statusView) begin
+	local entry;
+	local l1;
+	(if (l1 := store:GetSoup(@276)) then (if (entry := l1:Query('{indexPath: tag, beginKey: "Packages", endKey: "Packages"}):entry()) then store:AtomicAction(func() begin
+				l1 := [Array: ];
+				l2 := [Array: ];
+				local l1;
+				local l2;
+				(foreach l3, l4 in entry.pssids do begin
+						if IsSirNotAppearingInThisROM((l6 := GetPkgInfoFromPssid(l4, store)).title, l6.version, 'Convert) then begin
+								AddArraySlot(l2, l4)
+							end else begin
+								AddArraySlot(l1, {pkgRef: store:|1.XPackageToVBO|(l4), packageName: l6.title})
+							end
+					end);
+				EntryRemoveFromSoup(entry);
+				local l6;
+				(foreach l7 in l1 do begin
+						statusView:?SetStatus('vBarber, {titleText: Stringer([Array: $\u201C, l7.packageName, $\u201D]), barber: true});
+						RegisterNewPackage(l7.pkgRef, store, nil)
+					end);
+				l9 := {pssid: nil, store: store};
+				local l9;
+				(foreach l4 in l2 do begin
+						l9.pssid := l4;
+						|Remove1.XPackage|(l9)
+					end)
+			end)))
+end
+@@end

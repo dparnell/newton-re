@@ -1,0 +1,7 @@
+@@ 0x4d9a5d
+func() begin
+	inherited:viewSetupFormScript();
+	self.data := target.(dataPath);
+	(self.reflowStart := 0)
+end
+@@end

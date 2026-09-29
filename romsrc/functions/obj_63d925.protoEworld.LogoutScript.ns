@@ -1,0 +1,5 @@
+@@ 0x59eb49
+func() begin
+	self:?SetStatusDialog('Disconnecting, 'vStatus, {primary: nil})
+end
+@@end

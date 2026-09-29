@@ -1,0 +1,5 @@
+@@ 0x4482cd
+func() begin
+	(if (not fAnnoShape) then self:DrawShape(theFill, '{pensize: 0, fillPattern: 3, transferMode: 3}))
+end
+@@end

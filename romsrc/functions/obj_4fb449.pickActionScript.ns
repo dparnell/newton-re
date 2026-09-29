@@ -1,0 +1,37 @@
+@@ 0x4fb409
+func(a1) begin
+	local l1;
+	l1 := selectedDates[0];
+	if (a1 = 0) then begin
+			selectedDates := [Array: l1];
+			self:changeViewTo(scheduleView)
+		end else begin
+			if (a1 = 1) then begin
+					selectedDates := self:FindWorkWeekContainingDate(l1);
+					self:changeViewTo(scheduleView)
+				end else begin
+					if (a1 = 2) then begin
+							self:changeViewTo(MonthOverView)
+						end else begin
+							if (a1 = 3) then begin
+									self:changeViewTo(YearView)
+								end else begin
+									if (a1 = 5) then begin
+											self:ShowToDoList(l1)
+										end else begin
+											if (a1 = 6) then begin
+													selectedDates := [Array: l1];
+													self:changeViewTo(AgendaView)
+												end else begin
+													if (a1 = 8) then begin
+															self:GoToToday()
+														end
+												end
+										end
+								end
+						end
+				end
+		end;
+	inherited:pickActionScript(a1)
+end
+@@end

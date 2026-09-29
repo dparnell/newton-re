@@ -1,0 +1,11 @@
+@@ 0x482681
+func() begin
+	local l1;
+	if appSymbol then begin
+			if (if (l1 := GetRoot().(appSymbol)) then l1.CloseStatusDialog) then begin
+					return l1:CloseStatusDialog(true)
+				end
+		end;
+	inherited:buttonClickScript()
+end
+@@end

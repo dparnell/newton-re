@@ -1,0 +1,9 @@
+@@ 0x46768d
+func(a1) begin
+	local l1, l2, l3;
+	(if (if a1 then (StrLen(a1) > 0)) then (if IsAlpha((l1 := a1[0])) then begin
+				l2 := SPrintObject((l1 := (if (l1 < $a) then CHR((ORD(l1) + 32)) else CHR((ORD(l1) - 32)))));
+				(if (not (l3 := StrPos(a1, l2, 1))) then StrMunger(a1, 1, 0, l2, 0, 1))
+			end))
+end
+@@end

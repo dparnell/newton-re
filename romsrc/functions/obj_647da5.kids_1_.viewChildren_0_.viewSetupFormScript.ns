@@ -1,0 +1,6 @@
+@@ 0x532ec1
+func() begin
+	base.keyedDigits := self;
+	(text := self:path().(name))
+end
+@@end

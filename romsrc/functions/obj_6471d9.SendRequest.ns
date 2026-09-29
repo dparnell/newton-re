@@ -1,0 +1,38 @@
+@@ 0x5357d9
+func(a1) begin
+	local l1;
+	if (a1.cause = 'submit) then begin
+			return nil
+		end;
+	if currentItem then begin
+			if (status = 'RingingFrom) then begin
+					self:SetStatus(status, nil);
+					dismissCall := nil;
+					self:EventIncoming();
+					return nil
+				end else begin
+					self:ItemCompleted(currentItem, nil, nil)
+				end
+		end;
+	if ((currentItem := self:ItemRequest(a1)).serviceProvider = nil) then begin
+			currentItem.startTime := TimeInSeconds();
+			status := 'DialingDoneTo;
+			return nil
+		end;
+	l1 := GetDataDefs('|nameRef.phone|):GetRoutingInfo(currentItem.toRef[0])[0];
+	currentItem.numberToDial := l1.phoneNumber;
+	manualStatus := currentItem.saveAsLog;
+	(try begin
+			self:SetTransportProvider(currentItem.serviceProvider);
+			if (not callEndpoint) then begin
+					self:InstallEndpoint(transportProvider, true)
+				end;
+			(if (if transportProvider.config.outgoingNeededDelay then StrFilled(currentItem.numberToDial)) then begin
+					abortCall := nil;
+					self:DelayDialing(transportProvider.config.outgoingNeededDelay)
+				end else self:FinishDialing())
+		end onexception |evt.ex| do begin
+			(if self:HandleThrow() then self:Shutdown())
+		end)
+end
+@@end

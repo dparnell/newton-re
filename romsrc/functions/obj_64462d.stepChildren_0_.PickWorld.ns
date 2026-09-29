@@ -1,0 +1,5 @@
+@@ 0x438e79
+func(a1) begin
+	context:?pickActionScript((if result then a1.(result) else a1))
+end
+@@end

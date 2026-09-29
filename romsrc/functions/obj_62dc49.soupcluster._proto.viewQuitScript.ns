@@ -1,0 +1,5 @@
+@@ 0x4c077d
+func() begin
+	self:ChainOut('retargetChain)
+end
+@@end

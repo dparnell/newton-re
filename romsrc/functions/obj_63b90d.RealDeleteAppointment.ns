@@ -1,0 +1,38 @@
+@@ 0x50f52d
+func(a1) begin
+	(foreach l1 in a1 do begin
+			local l3, l4, l5, l6, l7;
+			if (l1.repeatTemplate = nil) then begin
+					EntryRemoveFromSoupXmit(l1, 'calendarAPI)
+				end else begin
+					l3 := l1.repeatTemplate;
+					l4 := l1.mtgStartDate;
+					if (l1.viewStationery = 'RepeatingMeeting) then begin
+							if (l3.exceptions = nil) then begin
+									l3.exceptions := [Array: ]
+								end;
+							AddArraySlot(l3.exceptions, [Array: l4, nil]);
+							self:UpdateInstanceNotesDataTime(l3, l4, nil);
+							self:CarefulChange(GetUnionSoup(@239), l3, nil)
+						end else begin
+							if (l1.viewStationery = 'exceptionMeeting) then begin
+									l5 := l1.originDate;
+									if ((l6 := self:searchExceptionList(l3, l5)) >= 0) then begin
+											(l7 := l3.exceptions[l6])[1] := nil;
+											self:UpdateInstanceNotesDataTime(l3, l4, nil);
+											self:CarefulChange(GetUnionSoup(@239), l3, nil)
+										end
+								end else begin
+									if (l3.exceptions = nil) then begin
+											l3.exceptions := [Array: ]
+										end;
+									AddArraySlot(l3.exceptions, [Array: l4, nil]);
+									self:UpdateInstanceNotesDataTime(l3, l4, nil);
+									self:CarefulChange(GetUnionSoup(@242), l3, nil)
+								end
+						end
+				end
+		end);
+	nil
+end
+@@end

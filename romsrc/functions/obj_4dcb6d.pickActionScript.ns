@@ -1,0 +1,25 @@
+@@ 0x4dcb2d
+func(a1) begin
+	local l1, l2;
+	l1 := self:GlobalBox();
+	if (a1 = 0) then begin
+			alarmPopup:New(alarmTime, alarmOn, l1, base)
+		end else begin
+			if (a1 = 1) then begin
+					l2 := ((Time() - 46811520) * 60);
+					timerPopup:New((if (timerTime > l2) then ((timerTime - l2) div 60) else 0), l1, base)
+				end else begin
+					if (a1 = 2) then begin
+							@288:New(nil, 1, l1, base)
+						end else begin
+							if (not optionsSlip) then begin
+									optionsSlip := options:New(self)
+								end else begin
+									optionsSlip:Close()
+								end
+						end
+				end
+		end;
+	inherited:pickActionScript(a1)
+end
+@@end

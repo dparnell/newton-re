@@ -1,0 +1,14 @@
+@@ 0x48a3c9
+func(a1) begin
+	if self:pickerSetup() then begin
+			pop := Clone(labelCommands);
+			if selectedIndex then begin
+					pop[selectedIndex] := {item: pop[selectedIndex], mark: $\uFC0B}
+				end;
+			DoPopup(pop, a1, nil, self)
+		end else begin
+			self:DoOpenPicker()
+		end;
+	true
+end
+@@end

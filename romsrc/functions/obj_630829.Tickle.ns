@@ -1,0 +1,5 @@
+@@ 0x4637c9
+func() begin
+	SetValue(message, 'text, Stringer([Array: message.text, $.]))
+end
+@@end

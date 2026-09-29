@@ -1,0 +1,6 @@
+@@ 0x79ac3d names
+func(item) begin
+	local alias;
+	(if item.realFinder:IsSelected((alias := {_uniqueID: item.entryID, _storeID: item.storeID, instanceTime: item.instanceTime, topicIndex: item.topicIndex})) then true)
+end
+@@end

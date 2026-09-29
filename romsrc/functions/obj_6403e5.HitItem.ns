@@ -1,0 +1,8 @@
+@@ 0x43b225
+func(a1, a2, a3) begin
+	(if (if (a2 < selectIndent) then (not (if items then items[a1].category))) then begin
+			self:SelectItem(a1);
+			true
+		end)
+end
+@@end

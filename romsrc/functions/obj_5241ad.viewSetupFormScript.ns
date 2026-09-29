@@ -1,0 +1,8 @@
+@@ 0x51e7dd
+func() begin
+	(if miniBar then begin
+			self.viewBounds := RelBounds(42, 0, 17, 17);
+			self:SetMarkIcon()
+		end)
+end
+@@end

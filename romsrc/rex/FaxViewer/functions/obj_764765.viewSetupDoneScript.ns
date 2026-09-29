@@ -1,0 +1,5 @@
+@@ 0x764a55
+func() begin
+	self:PrepareToPrint((fPageIndex := 0))
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x75419d
+func() begin
+	(fResults.Conflicts := self.entryLine.text)
+end
+@@end

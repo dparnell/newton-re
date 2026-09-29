@@ -1,0 +1,15 @@
+@@ 0x75db3d
+func() begin
+	(if (not self:TransportsIdle()) then self:Notify(3, "Dock", "You can\u2019\ut start a connection when other communications are in progress.") else begin
+			if (not theEndpoint) then begin
+					self:SetupEndpoint()
+				end;
+			if (self:ConnectionPrefsRead('timeoutConnection) = nil) then begin
+					theEndpoint.maxIdleTime := nil
+				end;
+			(if (not startingConnection) then desktopConnection:GetConnectionParams(func(a1) begin
+					self:StartConnection(a1)
+				end))
+		end)
+end
+@@end

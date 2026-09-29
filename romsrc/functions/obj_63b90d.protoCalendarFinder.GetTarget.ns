@@ -1,0 +1,16 @@
+@@ 0x4ea7c1
+func() begin
+	l1 := [Array: ];
+	l2 := 0;
+	local l1;
+	local l2;
+	(foreach l3 in meetingSoupFinders do begin
+			l2 := l3:AddTargetItems(l1, l2)
+		end);
+	self:AddTargetToDoItems(l1, l2);
+	if (Length(l1) = 0) then begin
+			l1 := nil
+		end;
+	{class: 'CalendarOverview, _cursor: l1}
+end
+@@end

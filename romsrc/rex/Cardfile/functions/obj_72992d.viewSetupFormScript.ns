@@ -1,0 +1,6 @@
+@@ 0x729959
+func() begin
+	inherited:viewSetupFormScript();
+	(if (if (not suppressAreaCode) then (not StrFilled(currAreaCode))) then (currAreaCode := Clone(GetUserConfig('currentAreaCode))))
+end
+@@end

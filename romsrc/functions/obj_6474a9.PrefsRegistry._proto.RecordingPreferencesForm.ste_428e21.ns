@@ -1,0 +1,10 @@
+@@ 0x428e21
+func() begin
+	local l1;
+	inherited:?viewSetupFormScript();
+	if (not (l1 := GetUserConfig('inputGain))) then begin
+			l1 := 128
+		end;
+	(if (viewValue <> l1) then SetValue(self, 'viewValue, l1))
+end
+@@end

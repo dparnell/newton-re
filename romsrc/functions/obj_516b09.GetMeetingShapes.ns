@@ -1,0 +1,26 @@
+@@ 0x516a69
+func(a1, a2, a3) begin
+	(if (l1 := GetAllMeetings(MeetingSoup, RepeatSoup, a1, (a1 + 1440))) then begin
+			l3 := 0;
+			local l1;
+			local l2;
+			local l3;
+			(foreach l4, l5 in l1 do begin
+					if (if (ClassOf(l5) <> 'meeting) then (not l5.mtgText)) then begin
+							l1[l4] := nil;
+							l3 := (l3 + 1)
+						end
+				end);
+			(for l4 := 1 to l3 do begin
+					SetRemove(l1, nil)
+				end);
+			local l9;
+			l9 := (foreach l5 in l1 collect begin
+				local l13;
+				a2 := (ShapeBounds((l13 := self:GetSingleMeetingShape(l5, a2, a3))).bottom + 2);
+				l13
+			end);
+			ArrayInsert(l9, bodyStyle, 0)
+		end)
+end
+@@end

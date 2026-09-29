@@ -1,0 +1,39 @@
+@@ 0x4abcf1
+func(a1, a2, a3, a4, a5) begin
+	if (not dateFindSlot) then begin
+			return nil
+		end;
+	a5:SetStatus(Stringer([Array: "Searching in", " ", title, $\u2026]));
+	if layout then begin
+			layout:FlushData()
+		end;
+	l3 := 0;
+	l4 := 536870911;
+	if (a2 = 'dateBefore) then begin
+			l4 := a1
+		end else begin
+			if (a2 = 'dateOn) then begin
+					l3 := a1;
+					l4 := (a1 + 1440)
+				end else begin
+					l3 := (a1 + 1)
+				end
+		end;
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	(foreach l5 in allSoups do begin
+			local l7, l8;
+			if (l7 := GetUnionSoup(l5.soupName)) then begin
+					if (l2 := l7:Query({type: 'index, indexPath: dateFindSlot, beginKey: l3, endKey: l4})):entry() then begin
+							l8 := {_proto: GetVariable(self, 'soupFinder), owner: self, findType: a2, findWords: a1, isReset: true, zeroOneOrMoreResult: nil, cursor: l2};
+							if l5.userName then begin
+									l8.title := l5.userName
+								end;
+							AddArraySlot(a3, l8)
+						end
+				end
+		end)
+end
+@@end

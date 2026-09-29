@@ -1,0 +1,26 @@
+@@ 0x5535cd
+func(a1) begin
+	local l1, l2, l3;
+	l1 := GetStores()[0]:GetSoup("Packages");
+	l2 := a1.partFrame;
+	(if (if (a1.partType = 'form) then (not l1:GetInfo('extrasState))) then begin
+			(l3 := @589.ROMPackageEntry:New()).text := l2.text;
+			l3.icon := l2.icon;
+			l3.app := l2.app;
+			if l2.iconPro then begin
+					l3.iconPro := l2.iconPro
+				end;
+			if l2.sequence then begin
+					l3.sequence := l2.sequence
+				end;
+			if l2._tagList then begin
+					l3._tagList := l2._tagList;
+					l3.labels := l2.labels
+				end;
+			if (not l3.sequence) then begin
+					l3.sequence := root.ExtrasDrawer:GetNewSequence(nil)
+				end;
+			l1:AddFlushed(l3)
+		end)
+end
+@@end

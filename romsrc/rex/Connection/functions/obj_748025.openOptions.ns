@@ -1,0 +1,6 @@
+@@ 0x7480d9
+func() begin
+	AddArraySlot((result := [Array: {label: "mods", type: 'service, opCode: 512}, {label: "mecp", type: 'option, opCode: 512, data: {arglist: [Array: 16], typeList: [Array: 10, 1]}}, {label: "mnpc", type: 'option, opCode: 512, data: {arglist: [Array: 11], typeList: [Array: 10, 1]}}, {label: "mnpa", type: 'option, opCode: 512, data: {arglist: [Array: nil], typeList: [Array: 10, 5]}}]), MakeModemOption());
+	return result
+end
+@@end

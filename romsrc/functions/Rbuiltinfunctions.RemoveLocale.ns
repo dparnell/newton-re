@@ -1,0 +1,89 @@
+@@ 0x4a6179
+@@const kFunction_4a5e11
+func(target, message, params) begin
+	if HasPath(functions, 'AddDeferredSend) then begin
+			return AddDeferredSend(target, message, params)
+		end;
+	return AddDeferredAction(func() begin
+		Perform(target, message, params)
+	end, '[Array: ])
+end
+@@const kFunction_4a5e7d
+func(a1, a2) begin
+	StrEqual(a1, a2.title)
+end
+@@const kFunction_4a5cfd
+func(a1, a2) begin
+	l1 := nil;
+	if (Length(a1) = Length(a2)) then begin
+			l1 := true;
+			local l1;
+			(foreach l2 in a1 do begin
+					if (not SetContains(a2, l2)) then begin
+							l1 := nil;
+							break
+						end
+				end)
+		end;
+	return l1
+end
+@@const kFunction_4a5c79
+func(a1, a2) begin
+	l1 := nil;
+	if (Length(a1) = Length(a2)) then begin
+			l1 := true;
+			local l1;
+			(foreach l2, l3 in a1 do begin
+					if (a2.(l2) <> l3) then begin
+							l1 := nil;
+							break
+						end
+				end)
+		end;
+	return l1
+end
+@@main
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9;
+	if (l1 := FindLocale(a1)) then begin
+			if (ClassOf(a1) = 'symbol) then begin
+					l2 := a1;
+					l3 := l1.title
+				end else begin
+					if IsInstance(a1, 'string) then begin
+							l2 := l1.localeSym;
+							l3 := a1
+						end
+				end;
+			if StrEqual(GetLocale().title, l3) then begin
+					SetLocale((l4 := international._proto.locales[0].title));
+					GetGlobals().setTimeSeed := Random(0, 10000000);
+					call (kFunction_4a5e11) with (GetRoot(), 'RedoChildren, [Array: ])
+				end;
+			if (if HasPath(international, 'locales) then international.locales) then begin
+					l6 := ArrayPos((l5 := Clone(international.locales)), l3, 0, kFunction_4a5e7d);
+					RemoveSlot(l5, l6);
+					l7 := international._proto.locales;
+					if call (kFunction_4a5cfd) with (l5, l7) then begin
+							if (not IsReadOnly(international.locales)) then begin
+									RemoveSlot(international, 'locales)
+								end
+						end else begin
+							international.(EnsureInternal('locales)) := l5
+						end
+				end;
+			if (if HasPath(international, 'localeTable) then international.localeTable) then begin
+					RemoveSlot((l8 := Clone(international.localeTable)), l2);
+					l9 := international._proto.localeTable;
+					if call (kFunction_4a5c79) with (l8, l9) then begin
+							if (not IsReadOnly(international.localeTable)) then begin
+									RemoveSlot(international, 'localeTable)
+								end
+						end else begin
+							international.(EnsureInternal('localeTable)) := l8
+						end
+				end
+		end;
+	l1
+end
+@@end

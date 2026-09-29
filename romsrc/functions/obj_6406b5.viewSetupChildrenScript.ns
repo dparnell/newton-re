@@ -1,0 +1,11 @@
+@@ 0x4c71cd
+func() begin
+	local l1;
+	if useFullPage then begin
+			self:SetMarginBounds(true)
+		end;
+	pageWidth := (l1 := self:LocalBox()).right;
+	pageHeight := l1.bottom;
+	(if self.mainFormat then (self.stepChildren := [Array: mainFormat]))
+end
+@@end

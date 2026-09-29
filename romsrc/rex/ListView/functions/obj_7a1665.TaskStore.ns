@@ -1,0 +1,5 @@
+@@ 0x79735d names
+func(aTask) begin
+	(if ((not HasPath(aTask, 'source)) or (aTask.source = nil)) then nil else (if (ClassOf(aTask.source) = 'symbol) then GetStores()[SetContains('[Array: RO0, RO1, RO2, RO3, RO4], aTask.source)] else (if (if HasPath(aTask, 'repeatInfo) then repeatTargets) then EntryStore(repeatTargets[aTask.source]) else (if targets then EntryStore(targets[aTask.source])))))
+end
+@@end

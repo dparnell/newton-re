@@ -1,0 +1,5 @@
+@@ 0x4239f5
+func(a1) begin
+	(if (a1 = 0) then (-32768.0) else ((maxValue - a1) * dbIncr))
+end
+@@end

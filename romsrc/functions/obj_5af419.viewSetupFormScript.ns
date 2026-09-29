@@ -1,0 +1,6 @@
+@@ 0x5af3d9
+func() begin
+	self.viewValue := userConfiguration.speedCursiveOption;
+	(if (((ClassOf(viewValue) <> 'int) or (viewValue < 0)) or (viewValue > maxValue)) then (self.viewValue := (userConfiguration.speedCursiveOption := 5)))
+end
+@@end

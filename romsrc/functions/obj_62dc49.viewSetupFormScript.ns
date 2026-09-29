@@ -1,0 +1,9 @@
+@@ 0x4b0a8d
+func() begin
+	self:?RegisterIOViewDefs();
+	hideFilter := Clone(hideFilter);
+	inherited:viewSetupFormScript();
+	currentLayout := 'overview;
+	self:FileUsedItems()
+end
+@@end

@@ -1,0 +1,16 @@
+@@ 0x4cd6a1
+func() begin
+	if (wasAutoReceive := GetRoot().(appSymbol):GetConfig('faxAutoReceive)) then begin
+			wasAutoReceive := (GetRoot().(appSymbol).status <> 'idle);
+			GetRoot().(appSymbol):SetConfig('faxAutoReceive, wasAutoReceive)
+		end;
+	if ((((lastRing := GetUserConfig('faxringstoanswer)) = nil) or (lastRing <= 0)) or (lastRing > 6)) then begin
+			lastRing := 2;
+			SetUserConfig('faxringstoanswer, lastRing)
+		end;
+	(if GetRoot().(appSymbol):GetConfig('hideAutoPref) then begin
+			self.viewBounds := Clone(viewBounds);
+			(viewBounds.bottom := (viewBounds.bottom - 20))
+		end)
+end
+@@end

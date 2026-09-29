@@ -1,0 +1,6 @@
+@@ 0x3c688d
+func(a1, a2) begin
+	FolderChangedRegistry.(EnsureInternal(a1)) := a2;
+	nil
+end
+@@end

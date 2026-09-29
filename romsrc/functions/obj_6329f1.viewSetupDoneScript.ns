@@ -1,0 +1,7 @@
+@@ 0x56170d
+func() begin
+	self.target := (self.targetView := base);
+	SetKeyView(self, 0);
+	inherited:?viewSetupDoneScript()
+end
+@@end

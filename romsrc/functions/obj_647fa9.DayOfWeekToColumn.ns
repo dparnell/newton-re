@@ -1,0 +1,5 @@
+@@ 0x4f2cf5
+func(a1) begin
+	(((a1 - self:GetFirstDay()) + 7) mod 7)
+end
+@@end

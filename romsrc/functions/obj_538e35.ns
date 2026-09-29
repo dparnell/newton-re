@@ -1,0 +1,13 @@
+@@ 0x538e35
+func() begin
+	local l1;
+	(if self:LookupSoupPackageAndActivate() then begin
+			if (if (l1 := GetRoot().TinyTim).viewCObject then StrEqual(l1.isbn, fentry.isbn)) then begin
+					l1:Close();
+					return nil
+				end;
+			AddDeferredSend(l1, 'OpenHelpBook, [Array: fentry.isbn]);
+			(if fentry.closeControl then (fentry.closeControl = 'alwaysClose) else GetUserConfig('ExtraAlwaysClose))
+		end)
+end
+@@end

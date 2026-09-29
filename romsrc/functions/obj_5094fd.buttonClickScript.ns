@@ -1,0 +1,6 @@
+@@ 0x5094c5
+func() begin
+	MeetingNotes.needToChangeThisOrFutureOccurrences := 'ThisOneOnly;
+	base:Close()
+end
+@@end

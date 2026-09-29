@@ -1,0 +1,17 @@
+@@ 0x47fb51
+func(a1) begin
+	l1 := self:NewItem(nil);
+	local l1;
+	(foreach l2, l3 in a1 do begin
+			if (not SetContains(fromItemSlotsToPunt, l2)) then begin
+					l1.(l2) := l3
+				end;
+			l1.labels := nil
+		end);
+	if a1.destAppSymbol then begin
+			l1.fromAppSymbol := a1.appSymbol;
+			l1.appSymbol := a1.destAppSymbol
+		end;
+	l1
+end
+@@end

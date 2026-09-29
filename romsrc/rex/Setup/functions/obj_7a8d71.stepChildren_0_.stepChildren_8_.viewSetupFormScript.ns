@@ -1,0 +1,15 @@
+@@ 0x7aab4d
+func() begin
+	if (description exists) then begin
+			self.text := description
+		end;
+	if (descriptionHeight exists) then begin
+			self.viewBounds := Clone(viewBounds);
+			viewBounds.bottom := (viewBounds.top + descriptionHeight)
+		end else begin
+			width := viewBounds.right;
+			viewBounds := TextBounds(text, {font: viewFont}, RelBounds(0, 1, width, 0))
+		end;
+	(self.viewLineSpacing := fontHeight(viewFont))
+end
+@@end

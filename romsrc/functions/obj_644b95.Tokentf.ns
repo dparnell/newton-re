@@ -1,0 +1,16 @@
+@@ 0x5952a5
+func(a1, a2, a3) begin
+	local l1;
+	if (self:getdata(a2, (a3 - 1), 1, 'integer) = 144) then begin
+			l1 := self:getdata(a2, a3, 2, 'string)
+		end;
+	(if a1.file_in then begin
+			a1.file_in.reply := l1;
+			self:output("xG", nil, nil)
+		end else (if a1.file_out then begin
+				a1.file_out.reply := l1;
+				self:File_UploadStart(a1.file_out);
+				(a1.file_out := nil)
+			end))
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x4b9a09
+func() begin
+	@288:New(target.(path), increment, self:GlobalLabelBounds(), self)
+end
+@@end

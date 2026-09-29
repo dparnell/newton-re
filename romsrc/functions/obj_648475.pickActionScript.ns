@@ -1,0 +1,6 @@
+@@ 0x45ac01
+func(a1) begin
+	Date := a1[0];
+	inherited:pickActionScript(a1[0])
+end
+@@end

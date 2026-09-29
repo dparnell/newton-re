@@ -1,0 +1,5 @@
+@@ 0x5b1989
+func() begin
+	(viewValue := GetUserConfig('penSoundEffects))
+end
+@@end

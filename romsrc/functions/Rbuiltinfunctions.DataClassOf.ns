@@ -1,0 +1,25 @@
+@@ 0x476c1d
+func(a1) begin
+	local l1;
+	l1 := nil;
+	if a1 then begin
+			if IsFrame(a1) then begin
+					if a1.body then begin
+							if ((l1 := DataClassOf(a1.body)) = 'frame) then begin
+									l1 := nil
+								end
+						end;
+					if (l1 = nil) then begin
+							l1 := a1.class
+						end;
+					if (not l1) then begin
+							l1 := a1.viewStationery
+						end
+				end;
+			if (l1 = nil) then begin
+					l1 := ClassOf(a1)
+				end
+		end;
+	l1
+end
+@@end

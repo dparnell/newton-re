@@ -1,0 +1,15 @@
+@@ 0x628839
+func(a1) begin
+	local l1;
+	if ((l1 := userConfiguration.letterSetSelection) <> 2) then begin
+			userConfiguration.letterSetSelection := 2;
+			ReadCursiveOptions()
+		end;
+	userConfiguration.bigLearningEnabled := a1;
+	ReadCursiveOptions();
+	(if (l1 <> 2) then begin
+			userConfiguration.letterSetSelection := l1;
+			ReadCursiveOptions()
+		end)
+end
+@@end

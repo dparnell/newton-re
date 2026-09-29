@@ -1,0 +1,7 @@
+@@ 0x73bdb1
+func(a1) begin
+	beamer:Cancel();
+	base:Close();
+	(GetRoot().cardfile.barber := nil)
+end
+@@end

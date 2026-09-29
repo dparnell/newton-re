@@ -1,0 +1,64 @@
+@@ 0x73e839
+@@const kLiteral_738f8d
+'{type: index, IndexPath: sorton, tagSpec: {none: _ownerNames}}
+@@main
+func() begin
+	(if (not syncing) then begin
+			if (l1 := (superSymbol = 'ownerNames)) then begin
+					title := "Owner Info";
+					viewHelpTopic := "owners"
+				end;
+			appEmptyStr := nil;
+			if (not HasSlot(self, 'routeScripts)) then begin
+					ArrayMunger((l2 := Clone(extraRouteScripts)), Length(l2), 0, routeScripts, 0, nil);
+					routeScripts := l2
+				end;
+			if IsReadOnly(allSoups) then begin
+					(allSoups := Clone(allSoups)).names := Clone(allSoups.names)
+				end;
+			if l1 then begin
+					self.labelsFilter := nil;
+					allSoups.names.soupQuery := Clone(kLiteral_738f8d);
+					allSoups.names.soupQuery.tagSpec := {equal: '_ownerNames};
+					allSoups.names.SetupCursor := func() begin
+						theSoup := GetStores()[0]:GetSoup(soupName);
+						(theCursor := theSoup:Query(soupQuery))
+					end
+				end else begin
+					if ((l6 := (l7 := self:GetAppPreferences()).sortBy) = 'sorton) then begin
+							allSoups.names.soupQuery := kLiteral_738f8d
+						end else begin
+							local l1;
+							local l2;
+							local l3;
+							local l4;
+							local l5;
+							local l6;
+							local l7;
+							local l8;
+							local l9;
+							(foreach l10 in (l9 := (l8 := GetUnionSoupAlways(allSoups.names.soupName)):GetSoupList()) do begin
+									if (not self:CheckSortBy(l10, l6)) then begin
+											self:Notify(3, title, "Your sorting prefs have been reset to the default sort order.");
+											try begin
+													l8:RemoveIndex([Array: l6, 'sorton])
+												end onexception |evt.ex| do begin end;
+											allSoups.names.soupQuery := kLiteral_738f8d;
+											l7.sortBy := 'sorton;
+											EntryChange(l7);
+											break
+										end
+								end);
+							if (l7.sortBy <> 'sorton) then begin
+									allSoups.names.soupQuery := Clone(kLiteral_738f8d);
+									allSoups.names.soupQuery.IndexPath := [Array: l6, 'sorton]
+								end
+						end
+				end;
+			inherited:?viewSetupFormScript();
+			viewBounds := (l5 := call kGetAppSize with (self, currentLayout)).bounds;
+			viewJustify := l5.justify;
+			(viewFormat := l5.viewFormat)
+		end)
+end
+@@end

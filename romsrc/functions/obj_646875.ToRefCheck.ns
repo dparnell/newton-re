@@ -1,0 +1,16 @@
+@@ 0x478b21
+func(a1) begin
+	local l1, l2, l3, l4;
+	(if (if (if (if HasPath(fields, 'alternatives) then (not fields.toRef)) then IsArray(fields.alternatives)) then (Length(fields.alternatives) > 0)) then begin
+			l1 := GetDataDefs(a1);
+			fields.toRef := Array(1, l1:MakeNameRef(fields.alternatives[0], a1));
+			l2 := nil;
+			if ((l3 := Length(fields.alternatives)) > 1) then begin
+					l2 := Array((l3 - 1), nil);
+					l4 := 0;
+					(repeat l2[l4] := l1:MakeNameRef(fields.alternatives[(l4 + 1)], a1) until ((l4 := (l4 + 1)) = (l3 - 1)))
+				end;
+			(fields.alternatives := l2)
+		end)
+end
+@@end

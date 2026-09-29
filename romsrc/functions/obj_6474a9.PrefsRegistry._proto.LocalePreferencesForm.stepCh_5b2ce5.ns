@@ -1,0 +1,7 @@
+@@ 0x5b2ce5
+func(a1) begin
+	AddUndoAction('setLabelScript, [Array: vars.(configPath)]);
+	vars.(configPath) := items[a1].title;
+	(international.Keyboard := items[a1])
+end
+@@end

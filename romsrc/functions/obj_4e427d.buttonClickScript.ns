@@ -1,0 +1,22 @@
+@@ 0x4e425d
+func() begin
+	if (if (if (l1 := GetKeyView()) then l1.textFlags) then (BAnd(l1.textFlags, 24) <> 0)) then begin
+			self:Notify(3, "Styles", "The style cannot be changed here.");
+			self:hilite(nil);
+			return nil
+		end;
+	popup := Clone(pop);
+	if (l2 := self:setup()) then begin
+			local l1;
+			local l2;
+			(foreach l3, l4 in popup do begin
+					if (l4.(slot) = l2) then begin
+							popup[l3] := Clone(l4);
+							popup[l3].mark := $\uFC0B;
+							break
+						end
+				end)
+		end;
+	inherited:buttonClickScript()
+end
+@@end

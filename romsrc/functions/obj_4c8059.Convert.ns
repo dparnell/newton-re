@@ -1,0 +1,12 @@
+@@ 0x4c7f99
+func(a1, a2, a3) begin
+	if (if (a2 = 'oneO) then (a3 = 'twoO)) then begin
+			a1.fromRef := GetUserConfig('currentPersona);
+			self:SetPageBounds(a1);
+			a1.fromName := GetUserConfig('name);
+			a1.currentFormat := a1.printerFormat;
+			a1.timestamp := a1.Date
+		end;
+	a1
+end
+@@end

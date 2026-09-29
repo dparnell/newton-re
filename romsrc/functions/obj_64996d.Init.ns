@@ -1,0 +1,6 @@
+@@ 0x44dbfd
+func(a1) begin
+	local l1;
+	self:SetTemplate((l1 := self:Parse(a1)))
+end
+@@end

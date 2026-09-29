@@ -1,0 +1,54 @@
+@@ 0x75d291
+@@const kROM_8270
+@8270
+@@const kLiteral_745f61
+"Dock"
+@@main
+func(a1) begin
+	local oldPassthruMode;
+	local l1, l2, l3;
+	l1 := func() begin
+		keyboardCookie := nil;
+		AddDeferredSend(self, 'ToggleKeyboardPassthrough, [Array: nil])
+	end;
+	(if keyPassthroughOn then (if (a1 or ModalConfirm("Do you want to stop using the keyboard on your desktop computer?", 'yesNo)) then begin
+				oldPassthruMode := keyPassthroughOn;
+				self:TurnKeyPassthruOff();
+				(if (not a1) then begin
+						if whichConnection then begin
+								theEndpoint:StopIdle(whichConnection)
+							end;
+						self:StopOperation(theEndpoint);
+						(l2 := BuildContext(kROM_8270)).doneCallback := func() begin
+							(if (oldPassthruMode = 'newton) then self:OpenWhichConnection(theEndpoint))
+						end;
+						l2:FilterDialog()
+					end)
+			end else (if (not keyboardCookie) then (keyboardCookie := GetRoot().NotifyIcon:AddAction(kLiteral_745f61, l1, nil)))) else (if (a1 or ModalConfirm("Use the keyboard on your desktop computer to enter data into your Newton device. When you're done, tap the Dock icon in the Extras Drawer", 'okCancel)) then begin
+				keyboardCookie := GetRoot().NotifyIcon:AddAction(kLiteral_745f61, l1, nil);
+				if whichConnection then begin
+						theEndpoint:StopIdle(whichConnection);
+						whichConnection.closing := true
+					end;
+				self:CloseOpenWindows(nil);
+				ConnectPassthruKeyboard(true);
+				keyPassthroughOn := (if a1 then 'Desktop else 'newton);
+				l3 := 0;
+				try begin
+						theEndpoint:SetState(9);
+						if (not a1) then begin
+								result := theEndpoint:DoKeyboardPassthrough()
+							end
+					end onexception |evt.ex| do begin
+						l3 := CurrentException().error;
+						if theEndpoint then begin
+								theEndpoint:ConnectionDone(l3)
+							end
+					end;
+				(if (if (l3 = 0) then (not a1)) then begin
+						self:TurnKeyPassthruOff();
+						self:OpenWhichConnection(theEndpoint)
+					end)
+			end))
+end
+@@end

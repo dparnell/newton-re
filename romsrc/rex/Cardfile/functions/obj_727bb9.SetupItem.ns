@@ -1,0 +1,6 @@
+@@ 0x727ca5
+func(a1, a2) begin
+	a1.title := nil;
+	inherited:SetupItem(a1, a2)
+end
+@@end

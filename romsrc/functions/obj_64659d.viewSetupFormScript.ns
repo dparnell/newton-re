@@ -1,0 +1,11 @@
+@@ 0x4313c5
+func() begin
+	(if CommandKeyboardConnected() then begin
+			if (not vars._infoButtons) then begin
+					vars._infoButtons := [Array: ]
+				end;
+			SetAdd(vars._infoButtons, self, true);
+			(if IsKeyDown(57, true) then (self.icon := self.upperCaseIcon))
+		end)
+end
+@@end

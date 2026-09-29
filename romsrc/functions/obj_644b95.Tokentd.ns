@@ -1,0 +1,16 @@
+@@ 0x59588d
+func(a1, a2, a3) begin
+	local l1, l2;
+	l1 := self:getdata(a2, 2, 2, 'string);
+	l2 := Array(19, 0);
+	a3 := a1.file_out.filesize;
+	l2[3] := (a3 div 65536);
+	a3 := (a3 - l2[3]);
+	l2[2] := (a3 div 256);
+	l2[1] := (a3 - l2[2]);
+	self:output(l1, nil, true);
+	self:output(l2, nil, true);
+	self:output(a1.file_out.filename, nil, true);
+	self:send(true)
+end
+@@end

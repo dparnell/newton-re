@@ -1,0 +1,16 @@
+@@ 0x51e3c5
+func() begin
+	nBrowsers := Length(browsers);
+	(foreach l1 in browsers do begin
+			if HasSlot(l1, 'Header) then begin
+					nBrowsers := (nBrowsers - 1)
+				end
+		end);
+	text := Clone(browsers[paneIndex].name);
+	if (nBrowsers > 1) then begin
+			text := Stringer([Array: $\uFC01, text])
+		end;
+	self:RedoText();
+	(viewBounds := SetBounds(0, -2, width, FontHeight(viewFont)))
+end
+@@end

@@ -1,0 +1,12 @@
+@@ 0x49bcf5
+func() begin
+	local l1, l2;
+	if (not (l1 := _cachedSettings)) then begin
+			self._cachedSettings := self:ExpandSettingsFrame(_recogSettings)
+		end;
+	if (l2 := self:GetItem()) then begin
+			SetValue(self, 'icon, l2.icon)
+		end;
+	(_cachedSettings := l1)
+end
+@@end

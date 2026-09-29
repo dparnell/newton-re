@@ -1,0 +1,16 @@
+@@ 0x42e3b9
+func(a1) begin
+	(if (not writeProtected) then (if (a1 < numLines) then begin
+				if insert then begin
+						self:CloseEdit(insert)
+					end;
+				split := a1;
+				if keys then begin
+						keys:Close();
+						keys := nil
+					end;
+				self.insertHeight := (editHeight + 6);
+				(self.insert := {_proto: lines[split], viewBounds: RelBounds(0, (3 + (a1 * lineHeight)), editWidth, editHeight), indent: indent, viewLineSpacing: viewLineSpacing})
+			end))
+end
+@@end

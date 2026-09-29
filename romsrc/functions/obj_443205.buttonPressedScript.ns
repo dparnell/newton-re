@@ -1,0 +1,9 @@
+@@ 0x4431e5
+func() begin
+	self:?MonthPicked();
+	monthView:Dirty();
+	self:SetTitle();
+	self:?DateChanged(selectedDates);
+	RefreshViews()
+end
+@@end

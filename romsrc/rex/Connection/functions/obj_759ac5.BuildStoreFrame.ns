@@ -1,0 +1,19 @@
+@@ 0x75af6d
+func(a1, a2, a3) begin
+	l1 := ConnBuildStoreFrame(a1, a3);
+	if a2 then begin
+			l2 := [Array: ];
+			l3 := [Array: ];
+			local l1;
+			local l2;
+			local l3;
+			(foreach l4 in a1:GetSoupNames() do begin
+					AddArraySlot(l2, l4);
+					AddArraySlot(l3, a1:GetSoup(l4):GetSignature())
+				end);
+			l1.soups := l2;
+			l1.signatures := l3
+		end;
+	return l1
+end
+@@end

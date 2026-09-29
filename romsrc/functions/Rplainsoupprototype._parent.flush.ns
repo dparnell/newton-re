@@ -1,0 +1,6 @@
+@@ 0x62b421
+func() begin
+	BadWickedNaughtyNoot(Stringer([Array: "soup:Flush(\"", self:GetName(), "\")"]), 'discontinued);
+	self:NaughtyFlush()
+end
+@@end

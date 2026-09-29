@@ -1,0 +1,6 @@
+@@ 0x4d0edd
+func() begin
+	self:RemoveFlag(manualReceive);
+	(if (status = 'idle) then self:SetupListen())
+end
+@@end

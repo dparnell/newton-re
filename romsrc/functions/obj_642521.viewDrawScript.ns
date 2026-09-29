@@ -1,0 +1,13 @@
+@@ 0x4bc2dd
+func() begin
+	local l1;
+	if (not suppressAreaCode) then begin
+			if (not shapes) then begin
+					l1 := (((indent + parenWidth) + areaCodeWidth) - 3);
+					shapes := [Array: MakeText("(", indent, 0, (indent + parenWidth), 29), MakeText(")", l1, 0, (l1 + parenWidth), 29)]
+				end;
+			self:DrawShape(shapes, {font: viewFont})
+		end;
+	(if label then inherited:viewDrawScript())
+end
+@@end

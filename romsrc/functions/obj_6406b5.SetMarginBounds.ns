@@ -1,0 +1,21 @@
+@@ 0x4c70e1
+func(a1) begin
+	local l1;
+	l1 := viewBounds;
+	RemoveSlot(self, 'viewBounds);
+	(viewBounds := Clone(viewBounds)).left := (viewBounds.left + margins.left);
+	viewBounds.right := (viewBounds.right - margins.right);
+	viewBounds.top := (viewBounds.top + margins.top);
+	viewBounds.bottom := (viewBounds.bottom - margins.bottom);
+	if fields.faxResolution then begin
+			viewBounds.top := (viewBounds.top + 20)
+		end;
+	if (if useFullPage then fields.printableMargin) then begin
+			viewBounds.left := max((viewBounds.left - fields.printableMargin.left), 0);
+			viewBounds.right := min((viewBounds.right + fields.printableMargin.right), 0);
+			viewBounds.top := max((viewBounds.top - fields.printableMargin.top), 0);
+			viewBounds.bottom := min((viewBounds.bottom + fields.printableMargin.bottom), 0)
+		end;
+	(if (if a1 then ((((viewBounds.left <> l1.left) or (viewBounds.right <> l1.right)) or (viewBounds.top <> l1.top)) or (viewBounds.bottom <> l1.bottom))) then SetValue(self, 'viewBounds, viewBounds))
+end
+@@end

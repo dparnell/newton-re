@@ -1,0 +1,5 @@
+@@ 0x452649
+func(a1) begin
+	(if (a1 = 'Filing) then {target: nil, targetType: nil, targetView: self, targetStore: GetDefaultStore()} else self:Parent():?GetTargetInfo(a1))
+end
+@@end

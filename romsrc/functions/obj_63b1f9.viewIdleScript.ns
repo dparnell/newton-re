@@ -1,0 +1,15 @@
+@@ 0x56e501
+func() begin
+	local l1, l2;
+	l1 := inherited:?viewIdleScript();
+	if cardMessage.keepSlotPowered then begin
+			if (l2 := GetCardSlotStores(CardSlot)) then begin
+					l2[0]:IsReadOnly()
+				end;
+			if (not l1) then begin
+					l1 := 5000
+				end
+		end;
+	l1
+end
+@@end

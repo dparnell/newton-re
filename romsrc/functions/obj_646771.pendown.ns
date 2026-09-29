@@ -1,0 +1,52 @@
+@@ 0x447e81
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11, l12, l13;
+	InkOff(a1);
+	BusyBoxControl(2);
+	quiet := true;
+	self:?PrepareToScroll();
+	l1 := fXOffset;
+	l2 := fYOffset;
+	l3 := nil;
+	l4 := self:GlobalBox();
+	l5 := (GetPoint(0, a1) - l4.left);
+	l6 := (GetPoint(1, a1) - l4.top);
+	l7 := l5;
+	l8 := l6;
+	l9 := [Array: l5, l6];
+	l10 := [Array: handShape, {transferMode: 1, transform: l9}];
+	self:DoDrawing('DrawShape, l10);
+	(repeat l13 := StrokeDone(a1); pointX := (GetPoint(4, a1) - l4.left); pointY := (GetPoint(5, a1) - l4.top); if (pointX < l5) then begin
+				pointX := min(l5, (pointX + dragCorridor))
+			end else begin
+				pointX := max(l5, (pointX - dragCorridor))
+			end; if (pointY < l6) then begin
+				pointY := min(l6, (pointY + dragCorridor))
+			end else begin
+				pointY := max(l6, (pointY - dragCorridor))
+			end; l11 := (l7 - pointX); l12 := (l8 - pointY); if ((abs(l11) >= 2) or (abs(l12) >= 2)) then begin
+				self:LockScreen(true);
+				if self:ScrollBy(ceiling((l11 * horMult)), ceiling((l12 * vertMult))) then begin
+						l3 := true;
+						self:?ScalingInfoChanged('dragging)
+					end else begin
+						self:Dirty()
+					end;
+				RefreshViews();
+				l9[0] := pointX;
+				l9[1] := pointY;
+				self:DoDrawing('DrawShape, l10);
+				self:LockScreen(nil);
+				l7 := pointX;
+				l8 := pointY
+			end until l13);
+	self:Dirty();
+	self:?ScalingInfoChanged('dragDone);
+	self:?DoneScrolling();
+	if l3 then begin
+			AddUndoAction('DoUndo, [Array: fZoomedTo, l1, l2])
+		end;
+	quiet := nil;
+	true
+end
+@@end

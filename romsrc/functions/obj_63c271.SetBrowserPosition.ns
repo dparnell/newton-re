@@ -1,0 +1,5 @@
+@@ 0x51c649
+func() begin
+	(if Visible(browser) then browser.Outline:ScrollToCurrent(browser.Outline))
+end
+@@end

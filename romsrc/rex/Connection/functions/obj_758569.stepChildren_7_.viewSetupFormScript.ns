@@ -1,0 +1,6 @@
+@@ 0x75934d
+func() begin
+	self:SetupViewBounds('Keyboard);
+	self:SetupButton()
+end
+@@end

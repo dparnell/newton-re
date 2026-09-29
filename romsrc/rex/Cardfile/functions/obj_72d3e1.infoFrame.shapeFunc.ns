@@ -1,0 +1,6 @@
+@@ 0x72d7fd
+func(a1, a2, a3, a4) begin
+	local l1;
+	inherited:shapeFunc([Array: (l1 := self:formatFunc(a1))], a2, a3, a4)
+end
+@@end

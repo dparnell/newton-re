@@ -1,0 +1,24 @@
+@@ 0x528951
+func(a1, a2) begin
+	local l1;
+	(if HasPath(a2, 'phone) then (if (a2.who = nil) then begin
+				if (l1 := FindPossiblePhone(a2.raw)) then begin
+						a1.dialdirect := a2.phrases[l1]
+					end;
+				(if (a1.candidates = nil) then (a1.rawtext := FindPossibleName(a2.noisewords, a2.OrigPhrase)))
+			end else (foreach l2 in a2.phone do begin
+					if isa((l1 := l2[0]), 'parsed_phone) then begin
+							a1.dialdirect := l1.value;
+							break
+						end else begin
+							if isa(l1, 'phone_tag) then begin
+									if IsSymbol(l1) then begin
+											l1 := MapSymToFrame(l1)
+										end;
+									a1.phoneTag := l1.tagSymbol;
+									break
+								end
+						end
+				end)) else (if (not a1.candidates) then (a1.rawtext := FindPossibleName(a2.noisewords, a2.OrigPhrase))))
+end
+@@end

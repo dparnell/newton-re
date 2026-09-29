@@ -1,0 +1,15 @@
+@@ 0x50cc7d
+func() begin
+	if (selectedMeeting.viewStationery = 'cribNote) then begin
+			labelCommands := [Array: labelCommands[2]]
+		end;
+	inherited:viewSetupFormScript();
+	entryLine.viewFont := viewFont;
+	(if (Length(labelCommands) < 2) then begin
+			self.text := Substr(text, 2, (StrLen(text) - 2));
+			self.viewFlags := (self.viewFlags - 512);
+			self.viewJustify := (viewJustify - 2);
+			(self.indent := 0)
+		end)
+end
+@@end

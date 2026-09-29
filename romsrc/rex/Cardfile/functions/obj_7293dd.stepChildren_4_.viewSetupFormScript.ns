@@ -1,0 +1,9 @@
+@@ 0x729a7d
+func() begin
+	if (not target.(path)) then begin
+			target.(path) := Clone("");
+			SetClass(target.(path), 'workPhone)
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

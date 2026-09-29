@@ -1,0 +1,5 @@
+@@ 0x5354a9
+func(a1) begin
+	(if (status = 'Listening) then true else (if (a1 = 'idle) then nil else inherited:PowerOffCheck(a1)))
+end
+@@end

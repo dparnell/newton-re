@@ -1,0 +1,85 @@
+@@ 0x496119
+@@const kBinaryFromHex
+func(hex, cls) begin
+	local b := MakeBinary(StrLen(hex) div 2, cls);
+	for i := 0 to Length(b) - 1 do begin
+		local h := Ord(hex[2 * i]);
+		local l := Ord(hex[2 * i + 1]);
+		StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+	end;
+	b
+end
+@@const kFunction_48e335
+func(a1) begin
+	(not StrEqual(a1, "Patch2.0"))
+end
+@@const kLiteral_48e355
+{type: 'index, indexPath: 'name, IndexValidTest: kFunction_48e335}
+@@const kLiteral_48e1a9
+{statusText: "Erase Backup", titleText: "Erasing backup\u2026\u", icon: {mask: call kBinaryFromHex with ("000000000004010901090174011e018100000000000000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe0000000000000000000000000000000000000", 'mask), bits: call kBinaryFromHex with ("000000000004010901090174011e01817ff00000fff80000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000dfd80000cf980000c7180000c2180000c0180000fff800007ff000000000000000000000", 'bits), bounds: '{left: 0, top: 0, right: 13, bottom: 21}}, barber: true, closeBox: nil}
+@@const kLiteral_488bf1
+"Erasing backup\u2026\u"
+@@const kLiteral_4887b5
+"Erase Backup"
+@@main
+func(store) begin
+	local soup, cursor, name, removeSoup, error;
+	(if store:IsValid() then begin
+			store:MarkBusy(whoAmI, nil);
+			try begin
+					if (soup := store:GetSoup("BackupInfo")) then begin
+							cursor := soup:Query(kLiteral_48e355)
+						end;
+					error := nil;
+					try begin
+							if (DoProgress('vBarber, kLiteral_48e1a9, func(status) begin
+								MapCursor(cursor, func(a1) begin
+									name := a1.name;
+									status:SetStatus('vBarber, {titleText: kLiteral_488bf1, barber: true});
+									if (if (not a1.package) then (not a1.segmentedPackage)) then begin
+											removeSoup := store:GetSoup(Stringer([Array: "BACKUP_", name]));
+											status:SetStatus('vBarber, {titleText: kLiteral_488bf1, barber: true});
+											try begin
+													if removeSoup then begin
+															removeSoup:RemoveFromStore()
+														end
+												end onexception |evt.ex| do begin
+													error := true
+												end
+										end else begin
+											status:SetStatus('vBarber, {titleText: kLiteral_488bf1, barber: true})
+										end;
+									try begin
+											EntryRemoveFromSoup(a1)
+										end onexception |evt.ex| do begin
+											error := true
+										end;
+									status:SetStatus('vBarber, {titleText: kLiteral_488bf1, barber: true})
+								end);
+								if store:HasSoup("BACKUP_Packages") then begin
+										status:SetStatus('vBarber, {titleText: "Erasing backup\u2026\u", barber: true});
+										try begin
+												store:GetSoup("BACKUP_Packages"):RemoveFromStore()
+											end onexception |evt.ex| do begin
+												error := true
+											end
+									end;
+								(try begin
+										soup:RemoveFromStoreXmit(whoAmI)
+									end onexception |evt.ex| do begin
+										(error := true)
+									end)
+							end) = 'Cancel) then begin
+									GetRoot():Notify(3, kLiteral_4887b5, "Warning! Part of the backup has been removed.")
+								end
+						end onexception |evt.ex| do begin
+							error := true
+						end;
+					if error then begin
+							GetRoot():Notify(3, kLiteral_4887b5, "There was an error while erasing the backup. Part of the backup may have been removed.")
+						end
+				end onexception |evt.ex| do begin end;
+			store:MarkNotBusy(whoAmI)
+		end)
+end
+@@end

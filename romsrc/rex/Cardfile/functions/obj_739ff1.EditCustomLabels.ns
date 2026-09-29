@@ -1,0 +1,5 @@
+@@ 0x73b365
+func() begin
+	newtAppBase:EditCustomLabels()
+end
+@@end

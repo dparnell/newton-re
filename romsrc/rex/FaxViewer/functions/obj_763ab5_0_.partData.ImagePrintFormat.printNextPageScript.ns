@@ -1,0 +1,8 @@
+@@ 0x764a9d
+func() begin
+	if (not target) then begin
+			return nil
+		end;
+	ImageTarget:PrepareToPrint((fPageIndex := (fPageIndex + 1)))
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x54aedd
+func(a1, a2, a3, a4) begin
+	(if (a2 <> 'ExtrasDrawer) then (if (if (a3 = 'entryAdded) then IsPackageEntry(a4)) then self:HandleNewPackage(a4) else (if (a3 = 'entryRemoved) then self:HandleRemovedPackage(a4) else (if (if (a3 = 'entryMoved) then IsPackageEntry(a4.entry)) then self:HandleMovedPackage(a4) else (if (a3 = 'SoupEnters) then nil else (if (if (a2 = '|Mr.Freeze|) then IsPackageEntry(a4)) then self:HandleFreezingOrThawing(a4) else (if (a2 = 'XmitPackageOp) then self:RedoIcons() else self:InvalIcons())))))))
+end
+@@end

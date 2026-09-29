@@ -1,0 +1,46 @@
+@@ 0x554be1
+@@const kLiteral_5367b5
+'{font: 1058816}
+@@const kROM_601
+@601
+@@main
+func() begin
+	l2 := ((l1 := self:LocalBox()).right - 30);
+	l3 := 15;
+	l4 := (l2 div 2);
+	l5 := ((3 * l2) div 4);
+	l6 := (l1.right - 15);
+	l8 := Length((l7 := GetValidStores()));
+	l9 := [Array: '{font: 1058816, justification: center}, MakeText(ParamStr("\u201C\u^0\u201D\u Storage", [Array: target.text]), l3, 5, l6, 16), '{font: 9216}, MakeText("Location", l3, 30, l4, 40), '{font: 9216, justification: right}, MakeText("Items", l4, 30, l5, 40), MakeText("Size", l5, 30, l6, 40), MakeLine(l3, 42, l6, 42), kLiteral_5367b5];
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	local l6;
+	local l7;
+	local l8;
+	local l9;
+	(foreach l10, l11 in l7 do begin
+			l13 := 0;
+			l14 := 0;
+			local l13;
+			local l14;
+			(foreach l15 in target.soupNames do begin
+					local l17, l18, l19;
+					if (l17 := l11:GetSoup(l15)) then begin
+							l18 := l17:Query(nil);
+							l14 := (l14 + l18:CountEntries());
+							l13 := (l13 + l17:GetSize())
+						end
+				end);
+			l13 := max(1, (l13 div 1024));
+			l19 := (45 + (l10 * 16));
+			AddArraySlot(l9, [Array: MakeText(l11:GetName(), l3, l19, l4, (l19 + 10)), '{font: 1058816, justification: right}, MakeText(Stringer([Array: l14]), l4, l19, l5, (l19 + 10)), MakeText(Stringer([Array: l13, "K"]), l5, l19, l6, (l19 + 10))]);
+			if l11:IsReadOnly() then begin
+					AddArraySlot(l9, OffsetShape(MakeShape(kROM_601), 0, l19))
+				end
+		end);
+	self:DrawShape(l9, kLiteral_5367b5)
+end
+@@end

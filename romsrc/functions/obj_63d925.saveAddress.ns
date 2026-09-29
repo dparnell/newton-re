@@ -1,0 +1,19 @@
+@@ 0x5a2e19
+func(a1, a2) begin
+	local l1, l2, l3, l4, l5;
+	l1 := @231;
+	if (if (l2 := a1.fromRef).name.last then StrEqual(l2.name.last, l2.email)) then begin
+			l2.name.last := nil
+		end;
+	if (if a1.fromName then (StrLen(a1.fromName) > 0)) then begin
+			if (if (l5 := StrPos((l4 := TrimString(a1.fromName)), " ", 0)) then (l5 > 0)) then begin
+					l3 := Substr(l4, (l5 + 1), StrLen(l4));
+					l4 := Substr(l4, 0, l5)
+				end;
+			l2.name.last := l3;
+			l2.name.first := l4
+		end;
+	GetRoot().mailSlip.nameToAdd := l2;
+	ValidateConfigGuts(l2, l1.validationFrame, [Array: 'name], {userText: ParamStr("Please specify a name for eMail address \u201C\u^0\u201D\u", [Array: l2.email]), titleText: "E-Mail Name", context: GetRoot().mailSlip, receiver: GetRoot().mailSlip, message: 'DoAddName})
+end
+@@end

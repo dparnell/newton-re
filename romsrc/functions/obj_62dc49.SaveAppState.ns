@@ -1,0 +1,14 @@
+@@ 0x4b11ad
+func() begin
+	local l1;
+	if ((l1 := self:GetAppPreferences()).currentSoupSymbol <> currentSoupSymbol) then begin
+			l1.currentSoupSymbol := currentSoupSymbol
+		end;
+	l1.hideFilter := hideFilter;
+	l1.descending := (not sortUp);
+	l1.sortPicker := sortPicker;
+	l1.statesCollapsed := statesCollapsed;
+	l1.deleteAfterPutaway := deleteAfterPutaway;
+	inherited:SaveAppState()
+end
+@@end

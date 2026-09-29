@@ -1,0 +1,10 @@
+@@ 0x4ae0ed
+func() begin
+	inherited:viewSetupFormScript();
+	(if (if shortCircuit then (Length(self:SetUpStatArray()) = 1)) then begin
+			viewBounds.right := (viewBounds.right - StrFontWidth("  ", viewFont));
+			text := Substr(text, 2, nil);
+			(viewDrawScript := nil)
+		end)
+end
+@@end

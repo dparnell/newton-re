@@ -1,0 +1,24 @@
+@@ 0x4d0405
+func(a1) begin
+	if (if (if (if (if (if discardPage then sessionInfo) then sessionInfo.body) then sessionInfo.body.info) then sessionInfo.body.info.pageCount) then (sessionInfo.body.info.pageCount > 1)) then begin
+			sessionInfo.body.info.pageCount := (sessionInfo.body.info.pageCount - 1);
+			discardPage := nil
+		end;
+	if (if (if (if (if sessionInfo then sessionInfo.body) then sessionInfo.body.info) then sessionInfo.body.info.pageCount) then (sessionInfo.body.info.pageCount > 0)) then begin
+			SetLength(sessionInfo.body.pages, sessionInfo.body.info.pageCount);
+			if ((sessionInfo.error = nil) or (sessionInfo.error = 0)) then begin
+					try begin
+							self:ChangeState('writing);
+							self:ItemCompleted(sessionInfo, 'Received, a1)
+						end onexception |evt.ex| do begin
+							self:HandleThrow()
+						end
+				end
+		end else begin
+			self:HandleError(a1)
+		end;
+	nextinputspec := nil;
+	activeInputSpec := nil;
+	(sessionInfo := nil)
+end
+@@end

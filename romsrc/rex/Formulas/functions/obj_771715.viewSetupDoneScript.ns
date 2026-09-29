@@ -1,0 +1,6 @@
+@@ 0x7717d5
+func() begin
+	inherited:?viewSetupDoneScript();
+	SetKeyView(self.CalcLine.value.value, 9999)
+end
+@@end

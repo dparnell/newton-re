@@ -1,0 +1,10 @@
+@@ 0x4ae571
+func(a1) begin
+	if (newtAppBase.currentLayout = 'overview) then begin
+			newtAppBase:ShowLayout(nil)
+		end;
+	preferredViewDef := a1.symbol;
+	layout.viewDef := a1.symbol;
+	layout:Retarget(true)
+end
+@@end

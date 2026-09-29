@@ -1,0 +1,6 @@
+@@ 0x4c07dd
+func() begin
+	local l1;
+	self:DrawShape(MakeLine(((l1 := self:LocalBox()).left + 10), (l1.bottom - 2), (l1.right - 10), (l1.bottom - 2)), nil)
+end
+@@end

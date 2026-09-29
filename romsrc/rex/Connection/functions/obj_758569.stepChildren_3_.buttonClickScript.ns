@@ -1,0 +1,11 @@
+@@ 0x758bc9
+func() begin
+	endpoint:SetState(3);
+	self:DoneForNow();
+	(try begin
+			ConnOpenFileBrowser(endpoint, 2, '[Array: "Dock", "Select a file to restore", "Restore"], 'syncFiles, protoContext.FileBrowserDone)
+		end onexception |evt.ex| do begin
+			endpoint:ConnectionDone(CurrentException().error)
+		end)
+end
+@@end

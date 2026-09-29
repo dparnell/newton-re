@@ -1,0 +1,33 @@
+@@ 0x503bbd
+func() begin
+	local l1;
+	if relayoutInProgress then begin
+			return nil
+		end;
+	self:InitCachedMeetingSlots();
+	if (not (newStopDate := self:GetMeetingSlot(selectedMeeting, 'mtgStopDate))) then begin
+			newStopDate := 536870911
+		end;
+	if selectedMeeting.repeatTemplate then begin
+			newFirstDate := GetNextMeetingTime(selectedMeeting.repeatTemplate, 0)
+		end else begin
+			newFirstDate := originalMtgDate
+		end;
+	l1 := GetAppParams().appAreaHeight;
+	if (280 > l1) then begin
+			self.viewBounds := Clone(viewBounds);
+			self.viewBounds.top := 8;
+			self.viewBounds.bottom := (viewBounds.top + 210);
+			self.viewJustify := 16;
+			slipTooTall := true
+		end;
+	self.targetView := self;
+	mainViewLastMailFormat := calendar.lastMailFormat;
+	calendar.lastMailFormat := nil;
+	self:LayoutSlip((selectedMeeting.repeatTemplate <> nil));
+	dirtyFlag := nil;
+	alreadyAsked := nil;
+	self.ClosingFromQuitScript := nil;
+	(needToChangeThisOrFutureOccurrences := nil)
+end
+@@end

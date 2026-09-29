@@ -1,0 +1,8 @@
+@@ 0x4d62ed
+func() begin
+	if (event = nil) then begin
+			viewFlags := BAnd(viewFlags, bnot(1))
+		end;
+	(viewBounds := RelBounds(4, dpSlip.seriesMsgHeaderTop, 200, 10))
+end
+@@end

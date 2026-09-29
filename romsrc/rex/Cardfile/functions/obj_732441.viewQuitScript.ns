@@ -1,0 +1,11 @@
+@@ 0x732805
+func() begin
+	inherited:?viewQuitScript();
+	target.members := (if selected then selected else [Array: ]);
+	SetClass(target.members, dataClass);
+	if (Length(target.members) > 0) then begin
+			target.groupInfo.nowShowing := nowShowing
+		end;
+	self:StartFlush()
+end
+@@end

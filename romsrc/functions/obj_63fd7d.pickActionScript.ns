@@ -1,0 +1,52 @@
+@@ 0x46d7bd
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6;
+	l1 := nil;
+	l2 := GetRoot().correct;
+	l3 := nil;
+	l4 := refCon;
+	if IsFrame(a1) then begin
+			if (a1.x = 0) then begin
+					if l4.form.text then begin
+							l4.form:SetHilite(l4.wordOffset, (l4.wordOffset + l4.wordLength), true)
+						end;
+					OpenKeypadFor(l4.form)
+				end else begin
+					if (not l4.form:?ViewCorrectorScript(l4)) then begin
+							l2.refCon := l4;
+							l6 := wordInfo:GetWords();
+							l2.pickItems := (if (Length(l6) > 0) then l6);
+							l2.wordInfo := wordInfo;
+							if l2.viewCObject then begin
+									l2.cText:SetupAll(Clone(pickItems[0]), 'external, nil, nil)
+								end;
+							l2:Open()
+						end
+				end;
+			l1 := true
+		end else begin
+			if (ClassOf((l5 := pickItems[a1])) = 'string) then begin
+					UnmapAmbiguousCharacters(l5)
+				end
+		end;
+	(if (if IsFrame(l5) then l5.context) then l5.context:?CorrectorActionScript(l5) else (if (not l1) then begin
+				self:LockScreen(true);
+				if (ClassOf(l5) = 'string) then begin
+						self:ReplaceWord(a1, true)
+					end;
+				if IsFrame(l5) then begin
+						if (l5 = @801) then begin
+								self:LockScreen(nil);
+								self:HandleTryLetters();
+								self:LockScreen(true)
+							end else begin
+								self:CorrectInk(l5)
+							end
+					end;
+				if l2.viewCObject then begin
+						l4.form:SetHilite(l4.wordOffset, (l4.wordOffset + l4.wordLength), true)
+					end;
+				self:LockScreen(nil)
+			end))
+end
+@@end

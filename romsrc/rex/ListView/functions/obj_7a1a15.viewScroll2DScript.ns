@@ -1,0 +1,12 @@
+@@ 0x798575 names
+func(aDir, anExtras) begin
+	if (aDir = 'up) then begin
+			self:viewScrollUpScript()
+		end else begin
+			if (aDir = 'down) then begin
+					self:viewScrollDownScript()
+				end
+		end;
+	RefreshViews()
+end
+@@end

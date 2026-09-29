@@ -1,0 +1,53 @@
+@@ 0x7662b9
+func() begin
+	popup := [Array: (l1 := {_proto: popItem_ShowThumb, item: (if Visible(imageContainer.vThumbFloater) then "Hide Thumbnail" else "Show Thumbnail")}), 'pickSeparator];
+	l2 := ImageTarget.zoomStops;
+	l3 := ImageTarget:GetScalingInfo().zoomedTo;
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	(foreach l6 in popSizeItems do begin
+			local l8, l9;
+			l1 := self.(l6);
+			if ArrayPos(l2, l1.zoomStop, 0, nil) then begin
+					if (l1.zoomStop = l3) then begin
+							l1 := {_proto: l1, item: l1.item, mark: $\uFC0B}
+						end;
+					AddArraySlot(popup, l1)
+				end
+		end);
+	AddArraySlot(popup, 'pickSeparator);
+	l8 := nil;
+	if ImageTarget:CanZoomBy(1) then begin
+			AddArraySlot(popup, popItem_Enlarge);
+			l8 := true
+		end;
+	if ImageTarget:CanZoomBy(-1) then begin
+			AddArraySlot(popup, popItem_Reduce);
+			l8 := true
+		end;
+	if self:?EntryCool(nil) then begin
+			if l8 then begin
+					AddArraySlot(popup, 'pickSeparator)
+				end;
+			l1 := popItem_Annotate;
+			l9 := popItem_Drag;
+			if (ImageTarget:GetAnnotationMode() = 'edit) then begin
+					(l1 := Clone(l1)).mark := $\uFC0B
+				end else begin
+					(l9 := Clone(l9)).mark := $\uFC0B
+				end;
+			AddArraySlot(popup, l1);
+			AddArraySlot(popup, l9)
+		end;
+	if (not fEntryStore:IsReadOnly()) then begin
+			AddArraySlot(popup, 'pickSeparator);
+			AddArraySlot(popup, popItem_RotateRight);
+			AddArraySlot(popup, popItem_Rotate180);
+			AddArraySlot(popup, popItem_RotateLeft)
+		end;
+	inherited:?buttonClickScript()
+end
+@@end

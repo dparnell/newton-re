@@ -1,0 +1,7 @@
+@@ 0x49f079
+func() begin
+	local l1;
+	l1 := self:LocalBox();
+	(pix := [Array: self:addIcon(icon, 0), self:addIconLine(description, 0), self:addTextLine(ParamStr("Date: ^2 ^0 ^1", [Array: LongDateStr(target.timestamp, @66.abbrDayOfWeekStrSpec), ShortDateStr(target.timestamp, @66.numericDateStrSpec), HourMinute(target.timestamp)]), 1), self:addTextLine(ParamStr("Size: ^0 bytes", [Array: EntrySize(target)]), 2), self:addTextLine(ParamStr("Where: ^0", [Array: EntryStore(target):GetName()]), 3)])
+end
+@@end

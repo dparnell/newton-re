@@ -1,0 +1,18 @@
+@@ 0x4c71ad
+func() begin
+	(if fields then begin
+			result := nil;
+			if (if (printForm exists) then printForm.printNextPageScript) then begin
+					result := printForm:printNextPageScript()
+				end;
+			if (if (if (result = nil) then targetCursor) then (not usesCursors)) then begin
+					if (target := targetCursor:Next()) then begin
+							mainFormat := coverForm:FindCursorFormat(target);
+							self:RedoChildren();
+							result := true
+						end
+				end;
+			result
+		end)
+end
+@@end

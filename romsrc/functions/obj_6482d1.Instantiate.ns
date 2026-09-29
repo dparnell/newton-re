@@ -1,0 +1,46 @@
+@@ 0x47372d
+func(a1, a2) begin
+	self.appSymbol := a1;
+	self.appName := a2;
+	self.closingDown := nil;
+	self.idleUseCount := 0;
+	self.idlingViews := nil;
+	if (not self.packageCallback) then begin
+			self.packageCallback := func(a1) begin
+				self.percentDone := (if (if (if a1 then a1.packageSize) then a1.amountRead) then ceiling(((a1.amountRead / a1.packageSize) * 100)) else 100);
+				(self.packageName := a1.packageName)
+			end
+		end;
+	self:ConnInstantiate();
+	thefunc := func(a1) begin
+		local l1, l2;
+		l1 := self:ReadCommandData();
+		l2 := GetRoot().Connection:GetAppNames(self, l1);
+		self:WriteCommand("appn", l2, true);
+		return nil
+	end;
+	self:InstallAnyProtocolExtension("gapp", thefunc);
+	if (if vars.protocolExtensions then IsArray(vars.protocolExtensions)) then begin
+			(foreach l1 in vars.protocolExtensions do begin
+					if (if IsArray(l1) then (Length(l1) = 2)) then begin
+							self:InstallAnyProtocolExtension(l1[0], l1[1])
+						end
+				end)
+		end;
+	lastcommunicationwithdesktop := TimeInSeconds();
+	powerOnCallback := func(a1) begin
+		(if (if (a1 = 'emergencyPowerOn) then connected) then self:ConnectionDone(0))
+	end;
+	RegPowerOn('Connection, powerOnCallback);
+	powerOffCallback := func(a1, a2) begin
+		if (a1 = 'okToPowerOff) then begin
+				return (if connected then nil else true)
+			end;
+		if (a1 = 'PowerOff) then begin
+				return true
+			end;
+		return nil
+	end;
+	RegPowerOff('Connection, powerOffCallback)
+end
+@@end

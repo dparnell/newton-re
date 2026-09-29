@@ -1,0 +1,15 @@
+@@ 0x4f2cd5
+func() begin
+	local l1;
+	if (self:firstDayOfWeek exists) then begin
+			return firstDayOfWeek
+		end;
+	if (not (l1 := GetUserConfig('firstDayOfWeek))) then begin
+			l1 := GetLocale().firstDayOfWeek
+		end;
+	if (not l1) then begin
+			l1 := 0
+		end;
+	l1
+end
+@@end

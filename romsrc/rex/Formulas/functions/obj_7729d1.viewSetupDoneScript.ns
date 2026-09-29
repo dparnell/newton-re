@@ -1,0 +1,7 @@
+@@ 0x772ee9
+func() begin
+	AddArraySlot((FSViews := [Array: ]), DateField);
+	inherited:?viewSetupDoneScript();
+	self:SolveFormula(nil)
+end
+@@end

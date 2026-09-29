@@ -1,0 +1,6 @@
+@@ 0x46af05
+func() begin
+	self.setupDone := true;
+	inherited:viewSetupDoneScript()
+end
+@@end

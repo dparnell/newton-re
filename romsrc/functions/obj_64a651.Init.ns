@@ -1,0 +1,9 @@
+@@ 0x426041
+func() begin
+	inherited:?Init();
+	self.userConfigChangeSym := Intern(Stringer([Array: "RecorderChassis.", viewCObject]));
+	RegUserConfigChange(userConfigChangeSym, func(a1) begin
+		self:HandleConfigChange(a1)
+	end)
+end
+@@end

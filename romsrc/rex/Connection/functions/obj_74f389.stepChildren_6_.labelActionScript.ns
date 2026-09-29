@@ -1,0 +1,6 @@
+@@ 0x750e59
+func(a1) begin
+	currentPath := [Array: currentDevices[a1]];
+	self:RebuildFileList('drive, nil)
+end
+@@end

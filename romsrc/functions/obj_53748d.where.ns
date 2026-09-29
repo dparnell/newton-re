@@ -1,0 +1,6 @@
+@@ 0x53730d
+func() begin
+	local l1;
+	(if (l1 := self:store()) then l1:GetName() else "")
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x4c8481
+func() begin
+	(viewBounds := DeepClone(viewBounds)).top := (((envelopeHeight + bottomIndent) - 19) - 2);
+	(viewBounds.bottom := (viewBounds.top + 13))
+end
+@@end

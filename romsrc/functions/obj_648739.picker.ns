@@ -1,0 +1,5 @@
+@@ 0x4b9db1
+func() begin
+	@436:New({spots: @452, zoomer: 'northAmerica, result: 'name}, self:GlobalLabelBounds(), self)
+end
+@@end

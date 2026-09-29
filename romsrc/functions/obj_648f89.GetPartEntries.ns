@@ -1,0 +1,20 @@
+@@ 0x551ae1
+func() begin
+	local l1, l2, l3, l4, l5;
+	l1 := [Array: ];
+	l2 := [Array: ];
+	l3 := userConfiguration.blessedapp;
+	l5 := (l4 := GetRoot().ExtrasDrawer:GetPartCursor(nil, nil, '_buttonBar)):entry();
+	(while l5 do begin
+			if (l5.app <> l3) then begin
+					if (l5.sequence < 0) then begin
+							AddArraySlot(l1, l5)
+						end else begin
+							AddArraySlot(l2, l5)
+						end
+				end;
+			(l5 := l4:Next())
+		end);
+	{fixed: l1, mobile: l2}
+end
+@@end

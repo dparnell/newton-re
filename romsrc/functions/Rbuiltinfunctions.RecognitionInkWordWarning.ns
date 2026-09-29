@@ -1,0 +1,15 @@
+@@ 0x62b23d
+@@const kFunction_62b21d
+func(a1) begin
+	nil
+end
+@@main
+func(a1) begin
+	local l1, l2;
+	(if (userConfiguration.letterSetSelection = 2) then begin
+			l1 := functions.AsyncConfirm;
+			l2 := [Array: "Words are being left as ink because you are connecting or overlapping letters.  When using the Printing recognition setting, be careful not to connect letters.  The Cursive setting permits joined letters.", [Array: "OK"], kFunction_62b21d];
+			(if a1 then GetRoot().notifyIcon:AddAction("Recognition Warning", l1, l2) else AddDeferredCall(l1, l2))
+		end)
+end
+@@end

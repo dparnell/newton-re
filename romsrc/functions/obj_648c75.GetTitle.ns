@@ -1,0 +1,5 @@
+@@ 0x49eff9
+func() begin
+	(if HasPath(target, 'title) then target.title else MakeRichString(Stringer([Array: LongDateStr(target.timestamp, @66.abbrDayOfWeekStrSpec), " ", ShortDateStr(target.timestamp, @66.numericMDStrSpec)]), nil))
+end
+@@end

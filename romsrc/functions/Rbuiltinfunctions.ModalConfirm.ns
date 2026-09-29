@@ -1,0 +1,15 @@
+@@ 0x46136d
+func(a1, a2) begin
+	local l1;
+	if (not IsArray(a2)) then begin
+			if (ClassOf(a2) = 'symbol) then begin
+					a2 := @543.(a2)
+				end;
+			if (not a2) then begin
+					a2 := @543.okCancel
+				end
+		end;
+	(l1 := BuildContext({_proto: @544, message: a1, buttonList: a2})):ModalDialog();
+	l1.confirmedValue
+end
+@@end

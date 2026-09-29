@@ -1,0 +1,12 @@
+@@ 0x448dc5
+func() begin
+	local l1;
+	l1 := true;
+	if (if (if (displayParams.appAreaHeight < 320) then (not self.ReOrientToScreen)) then (self._parent = GetRoot())) then begin
+			if (l1 := ModalConfirm("This cannot operate in this orientation.  Should the screen be rotated before opening?", nil)) then begin
+					SetScreenOrientation(2)
+				end
+		end;
+	(if l1 then self:_Open())
+end
+@@end

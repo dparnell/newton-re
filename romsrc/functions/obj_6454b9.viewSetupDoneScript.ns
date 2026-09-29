@@ -1,0 +1,8 @@
+@@ 0x49cad9
+func() begin
+	RegStationeryChange(Intern(Stringer([Array: viewCObject, ":Overview:", GetVariable(self, 'appSymbol)])), func(a1, a2, a3, a4) begin
+		self:HandleStationeryChange(a1, a2, a3, a4)
+	end);
+	inherited:?viewSetupDoneScript()
+end
+@@end

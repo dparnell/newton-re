@@ -1,0 +1,18 @@
+@@ 0x5993c5
+func(a1, a2, a3) begin
+	(if a1 then begin
+			if (if IsString(a2) then (StrLen(a2) > 61)) then begin
+					fields.title := Substr(a2, 0, 61)
+				end else begin
+					fields.title := a2
+				end;
+			(if IsRichString(fields.text) then AsyncConfirm("The text copy of the mail contains ink which can not be sent.  You may remove or convert the ink words.", [Array: {value: true, text: "Remove"}, {value: nil, text: "Convert"}], func(a1) begin
+					self:StripInkFromText(a1)
+				end) else begin
+					self:getAttachment();
+					self:shrinkMessage();
+					self:ContinueSend(noworlater)
+				end)
+		end)
+end
+@@end

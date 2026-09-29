@@ -1,0 +1,27 @@
+@@ 0x76b2c5
+func(a1, a2) begin
+	local l1, l2;
+	if changeInProgress then begin
+			return nil
+		end;
+	(if (StrLen(a2.text) > 0) then begin
+			if ((((StrEqual(a2.text, "+") or StrEqual(a2.text, "-")) or StrEqual(a2.text, ".")) or StrEqual(a2.text, "-.")) or StrEqual(a2.text, "+.")) then begin
+					return nil
+				end;
+			if ((calcLineValue := self:FormulasStringToNumber(a2.text)) = nil) then begin
+					l1 := self:FormulasStripBadChars(a2.text);
+					AddDeferredSend(self, SetNumericValueString, [Array: l1]);
+					self:Notify(3, "Formulas", "Only numbers are allowed in this field.");
+					return nil
+				end;
+			if integerField then begin
+					calcLineValue := floor(calcLineValue)
+				end;
+			self:SolveFormula(lineNumber);
+			(if (not StrEqual((l2 := StringFilter(a2.text, " ", 'rejectAll)), a2.text)) then AddDeferredSend(self, 'SetNumericValueString, [Array: l2]))
+		end else begin
+			calcLineValue := nil;
+			self:ClearFormula()
+		end)
+end
+@@end

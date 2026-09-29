@@ -1,0 +1,21 @@
+@@ 0x48ac85
+func(a1) begin
+	local l1, l2, l3, l4;
+	l2 := (if (if (l1 := GetUserConfig('personae)) then (Length(l1) > 1)) then Length(l1) else -1);
+	l3 := (Length(popup) - (if (not GetVariable(self, 'hideOtherCity)) then 1 else 0));
+	if (a1 < l2) then begin
+			SetUserConfig('currentPersona, l1[a1]);
+			UseCurrentPersona()
+		end else begin
+			if (a1 < l3) then begin
+					if (l4 := popup[a1].value) then begin
+							SetUserConfig('currentEmporium, l4);
+							UseCurrentEmporium()
+						end
+				end else begin
+					self:PickOther()
+				end
+		end;
+	self:hilite(nil)
+end
+@@end

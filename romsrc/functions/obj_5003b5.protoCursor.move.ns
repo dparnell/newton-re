@@ -1,0 +1,75 @@
+@@ 0x50e7b9
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11;
+	if (if (a1 >= 0) then (not items)) then begin
+			return nil
+		end;
+	if (if (if items then ((index + a1) > lastIndex)) then atEndOfCursor) then begin
+			index := (lastIndex + 1);
+			return nil
+		end;
+	if (a1 > maxNumberPerPage) then begin
+			a1 := maxNumberPerPage
+		end else begin
+			if (a1 < (-maxNumberPerPage)) then begin
+					a1 := (-maxNumberPerPage)
+				end
+		end;
+	if ((index := (index + a1)) < baseIndex) then begin
+			if (index < earliestPage) then begin
+					if atBeginningOfCursor then begin end else begin
+							if (l3 := self:FetchPrevPage((l2 := (if (if items then (Length(items) >= 2)) then items[1])))) then begin
+									l4 := Length(l3);
+									earliestPage := (earliestPage - 1);
+									lastIndex := (baseIndex - 1);
+									baseIndex := (baseIndex - l4);
+									if (if (l4 < maxNumberPerPage) then items) then begin
+											l5 := Length(items);
+											if IsString(l3[(l4 - 1)]) then begin
+													l6 := true;
+													l5 := (l5 - 1);
+													baseIndex := (baseIndex - 1)
+												end;
+											l7 := min(l5, (maxNumberPerPage - l4));
+											ArrayMunger(l3, l4, 0, items, (if l6 then 1 else 0), l7);
+											lastIndex := ((baseIndex + Length(l3)) - 1);
+											if (if atEndOfCursor then (l7 < l5)) then begin
+													atEndOfCursor := nil
+												end
+										end else begin
+											atEndOfCursor := nil
+										end;
+									items := l3;
+									AddArraySlot(startItemsCache, items[1])
+								end else nil
+						end
+				end else begin
+					l1 := ArrayPos(startItemsCache, items[1], 0, IsSameItem);
+					items := self:FetchPage((l8 := startItemsCache[(l1 - 1)]), true);
+					lastIndex := (((baseIndex := (baseIndex - maxNumberPerPage)) + Length(items)) - 1)
+				end
+		end else begin
+			if (index >= (baseIndex + maxNumberPerPage)) then begin
+					if IsString((l9 := items[(lastIndex - baseIndex)])) then begin
+							l9 := items[((lastIndex - baseIndex) - 1)]
+						end;
+					if (l10 := self:FetchPage(l9, nil)) then begin
+							items := l10;
+							lastIndex := (((baseIndex := (baseIndex + maxNumberPerPage)) + Length(items)) - 1);
+							if (not (l1 := ArrayPos(startItemsCache, items[1], 0, IsSameItem))) then begin
+									AddArraySlot(startItemsCache, items[1])
+								end;
+							atBeginningOfCursor := nil
+						end else nil
+				end
+		end;
+	l11 := (lastIndex + 1);
+	(if (index < baseIndex) then begin
+			index := (baseIndex - 1);
+			return nil
+		end else (if (index >= l11) then begin
+				index := l11;
+				return nil
+			end else self:entry()))
+end
+@@end

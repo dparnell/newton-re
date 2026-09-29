@@ -1,0 +1,24 @@
+@@ 0x75ac51
+@@const kFunction_75ad31
+func() begin
+	nil
+end
+@@const kLiteral_748ff5
+"Packages"
+@@main
+func(a1) begin
+	self:BuildApplicationList(kFunction_75ad31);
+	(foreach l1 in applications do begin
+			if (if l1.soups then BFind(l1.soups, a1, '|str<|, nil)) then begin
+					return l1.name
+				end
+		end);
+	if StrEqual(a1, kLiteral_748ff5) then begin
+			return kLiteral_748ff5
+		end;
+	if (BeginsWith(a1, "Backup_") or StrEqual(a1, "BackupInfo")) then begin
+			return "Card backup"
+		end;
+	return ""
+end
+@@end

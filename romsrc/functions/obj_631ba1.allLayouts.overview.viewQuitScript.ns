@@ -1,0 +1,6 @@
+@@ 0x4ee89d
+func() begin
+	RemoveSlot(status, 'menuRightButtons);
+	inherited:?viewQuitScript()
+end
+@@end

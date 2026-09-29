@@ -1,0 +1,26 @@
+@@ 0x4eed31
+func(toStore) begin
+	local l1;
+	l1 := cursor:soup():GetName();
+	(if selected then begin
+			self:ForEachSelected(func(a1, a2) begin
+				(if (EntryStore(a1) <> toStore) then begin
+						l1 := (foreach l1 in repeatingEntryFinders do begin
+								if (if (a1._uniqueID = l1.EntryUniqueID) then IsSameEntry(l1.entryAlias, a1)) then begin
+										break l1
+									end
+							end);
+						owner:MoveTargetXmit(a1, toStore, nil);
+						if l1 then begin
+								l1.entryAlias := MakeEntryAlias(a1);
+								l1.EntryUniqueID := a1._uniqueID
+							end;
+						0
+					end)
+			end);
+			XmitSoupChange(l1, 'unknown, 'whatThe, nil);
+			selected := nil;
+			(waitToUnSelect := nil)
+		end)
+end
+@@end

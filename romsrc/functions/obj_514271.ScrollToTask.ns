@@ -1,0 +1,41 @@
+@@ 0x5141d5
+func(a1, a2) begin
+	l1 := calendarBottom;
+	l2 := self:GetToDoAgendaView();
+	self:SetOrigin(0, l1);
+	l2:RedoChildren();
+	l3 := 0;
+	l4 := itemHeights;
+	l5 := self:LocalBox().bottom;
+	if (not (l6 := l2:getToDoBottom())) then begin
+			l3 := l1;
+			currentItem := numberOfItems
+		end else begin
+			if ((l1 := ((l1 + l6) - self:GlobalBox().top)) > l5) then begin
+					local l1;
+					local l2;
+					local l3;
+					local l4;
+					local l5;
+					local l6;
+					(foreach l7, l8 in l4 do begin
+							local l10;
+							if ((l1 - l3) > l5) then begin
+									l3 := (l3 + l8);
+									currentItem := (l7 + 1)
+								end else begin
+									break
+								end
+						end)
+				end
+		end;
+	self:SetOrigin(0, l3);
+	l10 := l2:lastIsEnd();
+	l6 := l2:getToDoBottom();
+	if (if (l3 = calendarBottom) then ((not l10) or (if (if l10 then l6) then (l6 > self:GlobalBox().bottom)))) then begin
+			l2:ScrollToTask(a1, a2)
+		end;
+	self:calculateScrollRects();
+	self:Dirty()
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x561c95
+func(a1) begin
+	(if a1 then self:DeleteActionHelper())
+end
+@@end

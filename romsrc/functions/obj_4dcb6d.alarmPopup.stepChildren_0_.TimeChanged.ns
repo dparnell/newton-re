@@ -1,0 +1,5 @@
+@@ 0x4dc3bd
+func() begin
+	(if (not alarmed) then alarming:toggleCheck())
+end
+@@end

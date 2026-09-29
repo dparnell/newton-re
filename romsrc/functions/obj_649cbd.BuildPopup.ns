@@ -1,0 +1,24 @@
+@@ 0x4ae681
+func() begin
+	popup := [Array: ];
+	statArray := self:SetUpStatArray();
+	if sorter then begin
+			Sort(statArray, sorter, 'name)
+		end;
+	l1 := nil;
+	local l1;
+	(foreach l2 in statArray do begin
+			local l4, l5;
+			l4 := (if l2.name then l2.name else l2.title);
+			l5 := (if l2.icon then begin
+					l1 := true;
+					{item: l4, icon: l2.icon}
+				end else {item: l4});
+			if (l2.symbol = layout.viewDef) then begin
+					l5.mark := $\uFC0B
+				end;
+			AddArraySlot(popup, l5)
+		end);
+	(if l1 then (popup[0].indent := 24))
+end
+@@end

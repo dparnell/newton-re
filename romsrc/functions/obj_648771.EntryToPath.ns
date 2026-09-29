@@ -1,0 +1,5 @@
+@@ 0x4ba2c5
+func(a1) begin
+	(target.(path) := GetRoot():PrimaryName(a1))
+end
+@@end

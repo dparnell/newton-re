@@ -1,0 +1,7 @@
+@@ 0x42b9b5
+func() begin
+	self:SetPopup();
+	self:SetupIdle(viewIdleFrequency);
+	SetKeyView(self, 0)
+end
+@@end

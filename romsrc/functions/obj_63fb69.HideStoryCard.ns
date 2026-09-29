@@ -1,0 +1,8 @@
+@@ 0x51a5b5
+func() begin
+	(if (storyCard <> nil) then begin
+			storyCard:Close();
+			(storyCard := nil)
+		end)
+end
+@@end

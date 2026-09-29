@@ -1,0 +1,5 @@
+@@ 0x756e75
+func() begin
+	(viewValue := protoContext:ConnectionPrefsRead('savePassword))
+end
+@@end

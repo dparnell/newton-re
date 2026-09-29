@@ -1,0 +1,31 @@
+@@ 0x520d51
+func() begin
+	local l1, l2, l3, l4;
+	self:UpDatePrevs();
+	l4 := 24;
+	if ((recentPage <> 0) or (recentKiosk <> 0)) then begin
+			l4 := ((l4 + returnToWidth) + 7)
+		end;
+	if ((l3 := Length(marks)) > 0) then begin
+			l4 := ((l4 + unmarkWidth) + 7)
+		end;
+	if firstMark then begin
+			l4 := (((l4 + markWidth) + 7) + StrWidth(NumberStr(firstMark)))
+		end;
+	if secondMark then begin
+			l4 := (((l4 + markWidth) + 7) + StrWidth(NumberStr(secondMark)))
+		end;
+	l2 := 0;
+	if (l3 > 0) then begin
+			l2 := 1
+		end;
+	if (l3 > 3) then begin
+			l2 := 2
+		end;
+	l3 := min(3, l3);
+	l1 := max(l4, (l3 * 66));
+	l2 := ((((l2 * 98) + 13) + (l2 + 4)) + 6);
+	self.viewBounds := RelBounds(0, 0, l1, l2);
+	SetKeyView(self, nil)
+end
+@@end

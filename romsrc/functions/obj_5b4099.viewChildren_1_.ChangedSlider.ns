@@ -1,0 +1,6 @@
+@@ 0x5b4129
+func() begin
+	SetUserConfig('alarmSoundEffects, (viewValue <> 0));
+	inherited:ChangedSlider()
+end
+@@end

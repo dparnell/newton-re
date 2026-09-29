@@ -1,0 +1,8 @@
+@@ 0x489035
+func(a1) begin
+	local l1;
+	(l1 := Clone('{settings: nil, curItem: nil})).curItem := _recogPopup[BAnd(a1, 31)];
+	l1.settings := ExpandSettings(a1);
+	return l1
+end
+@@end

@@ -1,0 +1,11 @@
+@@ 0x47fc51
+func(a1, a2) begin
+	local l1, l2, l3, l4, l5;
+	l1 := ((a2.right - a2.left) - 10);
+	l2 := self:GetItemTitle(a1);
+	l3 := self:GetItemInfo(a1, l1, 9216);
+	l5 := StrFontWidth((l4 := self:GetItemStateString(a1)), 1058816);
+	l2 := StyledStrTruncate(Clone(l2), (l1 - (l5 + 10)), 1058816);
+	(shapes := [Array: {font: 1058816}, MakeText(l2, a2.left, a2.top, (a2.right - l5), (a2.top + 11)), MakeText(l4, (a2.right - l5), a2.top, a2.right, (a2.top + 11)), {font: 9216}, MakeText(l3, (a2.left + 10), a2.top, a2.right, (a2.bottom - 4))])
+end
+@@end

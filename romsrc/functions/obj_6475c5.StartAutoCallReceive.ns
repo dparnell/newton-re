@@ -1,0 +1,9 @@
+@@ 0x530bc5
+func() begin
+	local appSym;
+	appSym := '|PhoneHome:Newton|;
+	(if (if (if userConfiguration.(appSym) then userConfiguration.(appSym).phoneAutoReceive) then userConfiguration.(appSym).enableAutoUI) then AddDeferredCall(func() begin
+			GetRoot().(appSym):StartAutoReceive()
+		end, nil))
+end
+@@end

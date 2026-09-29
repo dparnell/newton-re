@@ -1,0 +1,8 @@
+@@ 0x42bea5
+func() begin
+	local l1;
+	l1 := self:calcTime();
+	self:Dirty();
+	l1
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x499419
+func() begin
+	fEndpoint:Instantiate(fEndpoint, fEndpoint.configOptions);
+	'DoBind
+end
+@@end

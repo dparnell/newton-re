@@ -1,0 +1,31 @@
+@@ 0x50ba61
+func() begin
+	local l1, l2;
+	inherited:?viewSetupDoneScript();
+	if (not theApp.prefsCache) then begin
+			l1 := theApp:GetAppPreferences().meetingAlarms
+		end else begin
+			l1 := theApp.prefsCache.meetingAlarms
+		end;
+	(if l1 then (if (l2 := ArrayPos(labelWarningTimes, l1, 0, nil)) then SetValue(textDisplay, 'text, choices[l2]) else begin
+				if (if (Date(l1).minute = 0) then (Date(l1).hour = 0)) then begin
+						SetValue(otherPicker, 'text, Stringer([Array: "\uFC01\u", " ", otherChoices[2]]));
+						SetValue(otherInput, 'text, NumberStr((l1 div otherWarningTimes[2])));
+						otherSelection := 0
+					end else begin
+						if (Date(l1).minute = 0) then begin
+								SetValue(otherPicker, 'text, Stringer([Array: "\uFC01\u", " ", otherChoices[1]]));
+								SetValue(otherInput, 'text, NumberStr((l1 div otherWarningTimes[1])));
+								otherSelection := 0
+							end else begin
+								SetValue(otherPicker, 'text, Stringer([Array: "\uFC01\u", " ", otherChoices[0]]));
+								SetValue(otherInput, 'text, NumberStr(l1));
+								otherSelection := 0
+							end
+					end;
+				otherPicker:Show();
+				otherInput:Show();
+				SetValue(textDisplay, 'text, choices[(Length(choices) - 1)])
+			end) else SetValue(textDisplay, 'text, choices[0]))
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x47b1ad
+func(a1) begin
+	self:GetTransport():SetConfig(info.fileConfig, a1);
+	self:UpdateText(self:TextSetup())
+end
+@@end

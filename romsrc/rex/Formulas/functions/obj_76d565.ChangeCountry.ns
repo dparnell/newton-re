@@ -1,0 +1,10 @@
+@@ 0x76dbc5
+func(a1) begin
+	country := a1.symbol;
+	SetValue(label, 'text, Stringer([Array: $\uFC01, GetCountryEntry(country)[0].name]));
+	SetValue(Currency, 'text, GetCountryEntry(country)[0].Currency);
+	self:ComputeExchangeRate();
+	label:RestyleString();
+	Currency:RestyleString()
+end
+@@end

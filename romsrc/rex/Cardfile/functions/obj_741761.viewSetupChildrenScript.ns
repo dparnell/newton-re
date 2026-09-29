@@ -1,0 +1,9 @@
+@@ 0x7417d9
+func() begin
+	local l1;
+	if (if (if (if target then IsSoupEntry(target)) then (l1 := GetViewDefs(target.class))) then l1.allinfo) then begin
+			self.stepChildren := [Array: l1.allinfo]
+		end;
+	inherited:?viewSetupChildrenScript()
+end
+@@end

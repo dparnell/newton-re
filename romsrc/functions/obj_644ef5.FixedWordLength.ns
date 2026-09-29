@@ -1,0 +1,5 @@
+@@ 0x4660a1
+func() begin
+	(if (if template then template.format) then StrLen(template.format))
+end
+@@end

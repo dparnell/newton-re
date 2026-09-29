@@ -1,0 +1,7 @@
+@@ 0x74ce25
+func() begin
+	protoContext:RemoveOpenWindow(self);
+	self:HandleClick(0);
+	endpoint:StopIdle(self)
+end
+@@end

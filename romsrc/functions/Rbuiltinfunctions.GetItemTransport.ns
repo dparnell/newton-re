@@ -1,0 +1,17 @@
+@@ 0x476b09
+func(a1) begin
+	local l1;
+	l1 := nil;
+	if (if IsFrame(a1) then a1.category) then begin
+			l1 := GetRoot().(a1.category)
+		end;
+	try begin
+			if ((l1 = nil) or (l1.defaultConfiguration = nil)) then begin
+					l1 := GetRoot().|defaultTransport:Newton|
+				end
+		end onexception |evt.ex| do begin
+			return (l1 := GetRoot().|defaultTransport:Newton|)
+		end;
+	l1
+end
+@@end

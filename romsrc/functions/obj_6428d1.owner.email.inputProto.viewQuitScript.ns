@@ -1,0 +1,9 @@
+@@ 0x48e029
+func() begin
+	inherited:?viewQuitScript();
+	(if (if emailclass then target.(path)) then begin
+			SetClass(target.(path), emailclass);
+			self:StartFlush()
+		end)
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x4fe815
+func(a1) begin
+	(foreach l1 in a1 do begin
+			if SetContains(l1.types, 'meeting) then begin
+					return cribView
+				end
+		end);
+	self
+end
+@@end

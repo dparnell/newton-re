@@ -1,0 +1,15 @@
+@@ 0x4bdd65
+func() begin
+	if (Length((l2 := self:ChildViewFrames())) > 0) then begin
+			local l1;
+			local l2;
+			(foreach l3 in l2[0]:ChildViewFrames() do begin
+					local l5;
+					if (l5 := l3:?TextScript()) then begin
+							l1 := Stringer([Array: l1, $\n, l5])
+						end
+				end)
+		end;
+	l1
+end
+@@end

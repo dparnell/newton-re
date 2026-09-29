@@ -1,0 +1,5 @@
+@@ 0x4ccaa1
+func() begin
+	(self.text := Stringer([Array: fields.name, $\n, Substr(fields.displayNumber, 0, StrPos(fields.displayNumber, ",,,", 0))]))
+end
+@@end

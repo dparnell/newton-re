@@ -1,0 +1,15 @@
+@@ 0x76bd19
+func(a1) begin
+	if (a1 = nil) then begin
+			calcLineValue := nil
+		end else begin
+			if IsFinite(a1) then begin
+					calcLineValue := a1
+				end else begin
+					calcLineValue := nil;
+					self:Notify(3, "Formulas", "The result is out of range.")
+				end
+		end;
+	self:SetNumericValueString(self:FormulasNumberToString(calcLineValue))
+end
+@@end

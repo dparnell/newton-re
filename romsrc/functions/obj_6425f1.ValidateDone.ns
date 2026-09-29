@@ -1,0 +1,11 @@
+@@ 0x4ceb39
+func(a1) begin
+	local l1, l2;
+	if a1 then begin
+			if (if (l1 := ResolveEntryAlias(newOne)).cityAlias then (l2 := GetCityFromAlias(l1.cityAlias))) then begin
+					self:SetLocationAndEmporium(l2, newOne)
+				end
+		end;
+	RemoveSlot(self, 'newOne)
+end
+@@end

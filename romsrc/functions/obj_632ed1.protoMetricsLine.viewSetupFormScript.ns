@@ -1,0 +1,5 @@
+@@ 0x4e6945
+func() begin
+	(self.viewBounds := SetBounds(0, (11 + (wordIndex * 10)), 220, (11 + ((wordIndex + 1) * 10))))
+end
+@@end

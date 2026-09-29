@@ -1,0 +1,6 @@
+@@ 0x54ff95
+func() begin
+	filingButton := self;
+	inherited:?viewSetupFormScript()
+end
+@@end

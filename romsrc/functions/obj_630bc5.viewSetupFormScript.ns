@@ -1,0 +1,16 @@
+@@ 0x4dbe29
+func() begin
+	if (Time() < 45234660) then begin
+			vars.setTimeSeed := Random(0, 10000000);
+			SetTime(48301327)
+		end;
+	if (not (alarmTime := GetUserConfig('alarmClockTime))) then begin
+			alarmTime := (Time() - (Time() mod 1440))
+		end;
+	alarmOn := GetUserConfig('alarmClockOn);
+	if (not (timerTime := GetUserConfig('alarmClockTimer))) then begin
+			timerTime := 0
+		end;
+	SetKeyView(self, 0)
+end
+@@end

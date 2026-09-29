@@ -1,0 +1,52 @@
+@@ 0x4864b9
+func() begin
+	l3 := GetVariable((l2 := (l1 := self:GetTargetInfo('Filing)).targetView), 'labelsFilter);
+	l4 := GetVariable(l2, 'localFoldersOnly);
+	l5 := GetVariable(l2, 'systemFoldersToo);
+	folderList := GetAppFolderSyms(GetVariable(l2, 'appSymbol), l4, l5);
+	(l6 := Array((4 + Length(folderList)), nil))[0] := {item: (if (l2:AppObjectUnfiled exists) then GetVariable(l2, 'AppObjectUnfiled) else ParamStr(unfiled, [Array: GetVariable(l2, 'appObject)[1]])), mark: (if (not l3) then $\uFC0B else $ )};
+	l6[1] := 'pickseparator;
+	l7 := 2;
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	local l6;
+	local l7;
+	(foreach l8 in folderList do begin
+			if (l3 = l8) then begin
+					l6[l7] := {item: GetFolderStr(l8), mark: $\uFC0B}
+				end else begin
+					l6[l7] := GetFolderStr(l8)
+				end;
+			l7 := (l7 + 1)
+		end);
+	l6[(Length(l6) - 2)] := 'pickseparator;
+	l6[(Length(l6) - 1)] := {item: GetVariable(l2, 'AppAll), mark: (if (l3 = '_all) then $\uFC0B else $\n)};
+	l10 := GetStores();
+	if (if (l2:storesFilter exists) then (Length(l10) > 1)) then begin
+			l11 := GetVariable(l2, 'storesFilter);
+			l12 := (Length(l6) + 1);
+			SetLength(l6, ((l12 + Length(l10)) + 2));
+			l6[(l12 - 1)] := 'picksolidseparator;
+			local l10;
+			local l11;
+			local l12;
+			(foreach l7, l13 in l10 do begin
+					local l15;
+					if (not StrFilled((l15 := l13:GetName()))) then begin
+							l15 := "Unnamed Card"
+						end;
+					if (l11 = l13) then begin
+							l6[(l12 + l7)] := {item: l15, mark: $\uFC0B}
+						end else begin
+							l6[(l12 + l7)] := l15
+						end
+				end);
+			l6[(Length(l6) - 2)] := 'pickseparator;
+			l6[(Length(l6) - 1)] := {item: "All Stores", mark: (if (not l11) then $\uFC0B else $\n)}
+		end;
+	DoPopup(l6, 0, 2, self)
+end
+@@end

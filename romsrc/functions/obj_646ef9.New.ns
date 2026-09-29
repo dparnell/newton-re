@@ -1,0 +1,9 @@
+@@ 0x4322c9
+func(a1, a2, a3, a4) begin
+	local l1;
+	(l1 := self:Init()).value := a1;
+	l1.params := a2;
+	l1.context := a4;
+	l1:popup(a3)
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x512051
+func(a1, a2) begin
+	local l1;
+	l1 := (if (not self:IsDisplayingToDoItems()) then 'toDoList);
+	self:displaydate(a1, l1);
+	mainDisplay:ScrollToTask(a1, a2)
+end
+@@end

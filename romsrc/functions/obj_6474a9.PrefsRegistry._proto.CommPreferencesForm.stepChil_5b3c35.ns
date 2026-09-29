@@ -1,0 +1,16 @@
+@@ 0x5b3c35
+@@const kLiteral_3c5f05
+"28.8 and faster"
+@@main
+func(a1) begin
+	local l1;
+	(if a1 then begin
+			if (if (l1 := GetUserConfig('currentModem)) then StrEqual(popup[removeModemIndex], l1)) then begin
+					SetUserConfig('currentModem, kLiteral_3c5f05);
+					modemPicker:UpdateText(kLiteral_3c5f05)
+				end;
+			RemoveModemSetUp(popup[removeModemIndex]);
+			(if (Length((popup := GetAllSoupBasedModemSetUpNames())) = 0) then AddDeferredSend(self, 'Close, nil))
+		end)
+end
+@@end

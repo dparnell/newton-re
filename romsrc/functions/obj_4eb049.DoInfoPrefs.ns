@@ -1,0 +1,21 @@
+@@ 0x4eb029
+func() begin
+	(if (if prefView then prefView.viewCObject) then begin
+			newtAppBase:RememberedClose(prefView);
+			RemoveSlot(self, 'prefView)
+		end else begin
+			l1 := newtAppBase.prefsView;
+			local l1;
+			(foreach l2 in GetGlobals().transports do begin
+					local l4;
+					if (if (if (l4 := GetRoot().(l2)) then (l4.owner = appSymbol)) then l4.preferencesForm) then begin
+							l1 := l4.preferencesForm;
+							break
+						end
+				end);
+			(prefView := BuildContext(l1)).theApp := newtAppBase;
+			prefView.transport := l4;
+			newtAppBase:RememberedOpen(prefView)
+		end)
+end
+@@end

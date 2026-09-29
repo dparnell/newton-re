@@ -1,0 +1,6 @@
+@@ 0x443991
+func() begin
+	popup := nil;
+	self:hilite(nil)
+end
+@@end

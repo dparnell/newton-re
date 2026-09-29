@@ -1,0 +1,20 @@
+@@ 0x457f59
+func(a1, a2, a3) begin
+	l1 := [Array: ];
+	local l1;
+	(foreach l2 in a3 do begin
+			if (l2 = 'name) then begin
+					if (a1.name <> a2.name) then begin
+							if (((not (if a1.name then a2.name)) or (if (a1.name.last <> a2.name.last) then (not (if (if a1.name.last then a2.name.last) then StrEqual(a1.name.last, a2.name.last))))) or (if (a1.name.first <> a2.name.first) then (not (if (if a1.name.first then a2.name.first) then StrEqual(a1.name.first, a2.name.first))))) then begin
+									AddArraySlot(l1, l2)
+								end
+						end
+				end else begin
+					if (if (a1.(l2) <> a2.(l2)) then (not (if (if IsInstance(a1.(l2), 'string) then IsInstance(a2.(l2), 'string)) then StrEqual(a1.(l2), a2.(l2))))) then begin
+							AddArraySlot(l1, l2)
+						end
+				end
+		end);
+	l1
+end
+@@end

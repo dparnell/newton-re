@@ -1,0 +1,7 @@
+@@ 0x4ce6a1
+func(a1) begin
+	AddUndoAction('SetNewLocation, [Array: target]);
+	cards:Goto(a1);
+	self:Retarget()
+end
+@@end

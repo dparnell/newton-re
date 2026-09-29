@@ -1,0 +1,6 @@
+@@ 0x466735
+func() begin
+	self:hilite(nil);
+	(if popupForm then ClosedEntryForm(popupForm))
+end
+@@end

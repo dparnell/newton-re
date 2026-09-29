@@ -1,0 +1,6 @@
+@@ 0x758f35
+func() begin
+	self:SetupViewBounds('install);
+	self:SetupButton()
+end
+@@end

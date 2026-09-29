@@ -1,0 +1,24 @@
+@@ 0x742a15
+func(a1, a2, a3, a4, a5) begin
+	local l1;
+	(if target then begin
+			if (if editSlipLayout then editSlipLayout.viewCObject) then begin
+					editSlipLayout.closeBox:buttonClickScript()
+				end;
+			(l1 := BuildContext(editSlip)).appBase := (l1.newtAppBase := newtAppBase);
+			l1.title := title;
+			l1.appSymbol := appSymbol;
+			l1.allSoups := allSoups;
+			l1.saveEntry := a3;
+			l1.target := target;
+			l1.targetView := self:GetTargetView();
+			l1.addingData := a4;
+			l1.makingNewCard := a5;
+			l1.selectedLayout := a1;
+			l1.selectedPath := a2;
+			l1._recogSettings := _recogSettings;
+			newtAppBase:RememberedOpen(l1);
+			(newtAppBase.editSlipLayout := l1)
+		end)
+end
+@@end

@@ -1,0 +1,35 @@
+@@ 0x44eb49
+@@const kLiteral_44c6a5
+"            "
+@@main
+func() begin
+	local l1, l2, l3, l4, l5;
+	l1 := self.maxChars;
+	l2 := self.cellHeight;
+	if viewBounds then begin
+			l1 := (((l3 := self:LocalBox()).right - l3.left) div cellWidth);
+			l2 := (l3.bottom - l3.top)
+		end else begin
+			self.viewBounds := RelBounds(left, top, ((l1 * cellWidth) + 1), l2)
+		end;
+	if (l4 := self:FixedWordLength()) then begin
+			l1 := min(l1, l4)
+		end;
+	l5 := StrLen(kLiteral_44c6a5);
+	if (l1 <= l5) then begin
+			blankText := Substr(kLiteral_44c6a5, 0, l1)
+		end else begin
+			l4 := l1;
+			blankText := nil;
+			(while (l4 > l5) do begin
+					blankText := Stringer([Array: blankText, kLiteral_44c6a5]);
+					(l4 := (l4 - l5))
+				end);
+			blankText := Stringer([Array: blankText, Substr(kLiteral_44c6a5, 0, l4)])
+		end;
+	self.maxChars := l1;
+	self.cellHeight := l2;
+	self:InvalDrawCache('all);
+	self:UseNewTemplate(nil)
+end
+@@end

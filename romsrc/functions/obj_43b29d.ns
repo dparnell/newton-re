@@ -1,0 +1,11 @@
+@@ 0x43b29d
+func(a1, a2) begin
+	local l1;
+	if (a1 > selectIndent) then begin
+			(l1 := Clone(a2)).left := selectIndent
+		end else begin
+			(l1 := Clone(a2)).right := (selectIndent - 1)
+		end;
+	[Array: '{transferMode: 2, penPattern: 0, fillPattern: 5}, MakeShape(l1)]
+end
+@@end

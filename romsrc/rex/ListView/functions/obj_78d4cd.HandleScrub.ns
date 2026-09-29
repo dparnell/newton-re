@@ -1,0 +1,52 @@
+@@ 0x78cbcd names
+func(aBounds, aUnit) begin
+	deleteList := [Array: ];
+	oldCurTopic := curTopic;
+	local topic;
+	local ti;
+	local MarkerBounds;
+	local deleteList;
+	local deletedTopics;
+	local nToDelete;
+	local i;
+	local oldCurTopic;
+	(for ti := firstTopic to (nTopics - 1) do begin
+			if (((topic := topics[ti]).hideCount = nil) or (topic.hideCount = 0)) then begin
+					if ((MarkerBounds := InsetRect(self:MarkerBounds(topic), 2, 6)).top > aBounds.bottom) then begin
+							break
+						end;
+					if (BAnd(listViewFlags, 2) <> 0) then begin
+							MarkerBounds.left := ((MarkerBounds.left - 13) - 2)
+						end;
+					if RectsOverlap(aBounds, MarkerBounds) then begin
+							if ((not HasPath(topic, 'hideCount)) or (topic.hideCount = 0)) then begin
+									SetAdd(deleteList, ti, true);
+									self:AddKidsToList(deleteList, ti, topic.level)
+								end
+						end
+				end
+		end);
+	if ((nToDelete := Length(deleteList)) > 0) then begin
+			InkOff(aUnit);
+			curTopic := nil;
+			deletedTopics := Array(nToDelete, nil);
+			(for i := 0 to (nToDelete - 1) do begin
+					local result;
+					if ((if HasPath((topic := topics[deleteList[i]]), 'source) then (topic.source = nil)) or (ClassOf(topic.source) = 'symbol)) then begin
+							self:Notify(3, title, "Can\u2019\ut delete a 1.x formatted To Do item");
+							return 'noPoof
+						end;
+					deletedTopics[i] := topic
+				end);
+			if ((result := self:DeleteTopics(deleteList)) = nil) then begin
+					return 'noPoof
+				end;
+			if (nTopics = 0) then begin
+					curTopic := nil
+				end;
+			AddUndoAction('UndoScrub, [Array: deleteList, deletedTopics, oldCurTopic]);
+			return true
+		end;
+	nil
+end
+@@end

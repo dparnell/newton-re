@@ -1,0 +1,5 @@
+@@ 0x4d1679
+func() begin
+	(wasAutoReceive := GetUserConfig('zapAutoReceive))
+end
+@@end

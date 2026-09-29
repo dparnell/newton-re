@@ -1,0 +1,5 @@
+@@ 0x42ae4d
+func(a1) begin
+	self:ChildViewFrames()[a1].text
+end
+@@end

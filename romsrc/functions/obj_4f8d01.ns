@@ -1,0 +1,20 @@
+@@ 0x4f8d01
+func(a1) begin
+	local l1, l2, l3, l4, l5;
+	l2 := (((l1 := a1.viewBounds).top * 13) div 16);
+	l3 := ((l1.bottom * 13) div 16);
+	l4 := a1.viewStationery;
+	(if LSearch('[Array: meeting, RepeatingMeeting, exceptionMeeting, cribNote], l4, 0, '|=|, nil) then begin
+			l2 := ((l2 := (l2 + 3)) - (l2 mod 6));
+			if (((l3 := ((l3 := (l3 + 3)) - (l3 mod 6))) - l2) < 13) then begin
+					l3 := (l2 + 13)
+				end;
+			l1.top := l2;
+			(l1.bottom := l3)
+		end else begin
+			l5 := (l1.bottom - l1.top);
+			l1.top := l2;
+			(l1.bottom := (l2 + l5))
+		end)
+end
+@@end

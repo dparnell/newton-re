@@ -1,0 +1,11 @@
+@@ 0x425351
+func() begin
+	try begin
+			fSoundChannel:Close()
+		end onexception |evt.ex| do begin end;
+	try begin
+			fSoundChannel:Open()
+		end onexception |evt.ex| do begin end;
+	self:SetState(1)
+end
+@@end

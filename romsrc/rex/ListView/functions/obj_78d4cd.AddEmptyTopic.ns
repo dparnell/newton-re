@@ -1,0 +1,20 @@
+@@ 0x78ceed names
+func(anIndex, aLevel) begin
+	local topicFrame, sis;
+	topicFrame := self:MakeTopicFrame(aLevel);
+	ArrayInsert(topics, topicFrame, anIndex);
+	nTopics := (nTopics + 1);
+	if (if (aLevel <> 1) then (BAnd(listViewFlags, 2) <> 0)) then begin
+			self:SetDone(anIndex, topicFrame, nil, true, true)
+		end;
+	if (BAnd(listViewFlags, 12) <> 0) then begin
+			if (anIndex <> 0) then begin
+					if (sis := self:OlderSister(anIndex)) then begin
+							topicFrame.mtgPriority := topics[sis].mtgPriority
+						end
+				end
+		end;
+	self:StartFlush();
+	topicFrame
+end
+@@end

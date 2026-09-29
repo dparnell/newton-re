@@ -1,0 +1,11 @@
+@@ 0x4fd5c5
+func(a1) begin
+	local l1;
+	(if (startTime > 0) then begin
+			l1 := ((2 * lineHeight) * a1);
+			self:DoDrawing('zapAMPM, nil);
+			DayTable:SlideEffect((-l1), 0, nil, 'doscrollscript, [Array: l1, a1]);
+			self:Dirty()
+		end)
+end
+@@end

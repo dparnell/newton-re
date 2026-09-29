@@ -1,0 +1,8 @@
+@@ 0x748661
+@@const kLiteral_748721
+"atlk"
+@@main
+func() begin
+	return (result := [Array: {label: kLiteral_748721, type: 'service, opCode: 512}, {label: kLiteral_748721, type: 'option, opCode: 256, data: {arglist: [Array: "adsp"], typeList: [Array: 10, [Array: 11, 13, 4]]}}, {label: "endp", type: 'option, opCode: 512, data: {arglist: [Array: "TADSPEndpoint"], typeList: [Array: 10, [Array: 11, 13, 0]]}}])
+end
+@@end

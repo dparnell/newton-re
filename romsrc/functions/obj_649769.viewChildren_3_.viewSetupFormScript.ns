@@ -1,0 +1,24 @@
+@@ 0x4b4e91
+func() begin
+	showit := nil;
+	if TargetIsCursor(theItem) then begin
+			text := ""
+		end else begin
+			text := (if IsFrame(theAppToRun) then theAppToRun.appName else GetAppName(theAppToRun))
+		end;
+	popup := Array((l1 := (if theApps then Length(theApps) else 0)), nil);
+	if theApps then begin
+			local l1;
+			(foreach l2, l3 in theApps do begin
+					local l5;
+					popup[l2] := (if IsFrame(l3) then l3.appName else GetAppName(l3))
+				end)
+		end;
+	if (showit := (l1 > 1)) then begin
+			text := Stringer([Array: $\uFC01, text])
+		end;
+	l5 := FontHeight(viewFont);
+	viewBounds := RelBounds(viewBounds.left, viewBounds.top, viewBounds.right, l5);
+	inherited:?viewSetupFormScript()
+end
+@@end

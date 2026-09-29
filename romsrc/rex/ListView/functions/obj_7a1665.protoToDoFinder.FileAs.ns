@@ -1,0 +1,5 @@
+@@ 0x79ad4d names
+func(labels) begin
+	return nil
+end
+@@end

@@ -1,0 +1,26 @@
+@@ 0x72c095
+func(a1, a2, a3, a4) begin
+	local l1, l2, l3, l4, l5, l6;
+	l5 := FontAscent(a4.font);
+	(if StrFilled(a1[0]) then begin
+			l1 := StrFontWidth((l3 := ParamStr("^0 ^1", [Array: MakeDisplayPhone(a1[0]), phoneTypes.phoneLabels.(ClassOf(a1[0]))])), a4.font);
+			l2 := (a2.right - a2.left);
+			if a4.leftInfo then begin
+					l4 := a4.leftInfo
+				end else begin
+					if (a4.justification = 'right) then begin
+							l4 := ((l2 - l1) - 16)
+						end else begin
+							if (a4.justification = 'center) then begin
+									l4 := ceiling((((l2 - l1) - 16) / 2))
+								end else begin
+									l4 := a2.left
+								end
+						end
+				end;
+			l6 := {shape: [Array: {font: a4.font, justification: 'left}, OffsetShape(MakeShape(@322), l4, (a2.top + 2)), MakeText(l3, (l4 + 16), a2.top, a2.right, (a2.top + l5)), a4], misc: {bbox: RelBounds(l4, (a2.top - a3), 16, 16)}};
+			a2.top := (a2.top + fontHeight(a4.font));
+			l6
+		end)
+end
+@@end

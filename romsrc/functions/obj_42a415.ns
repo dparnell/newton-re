@@ -1,0 +1,6 @@
+@@ 0x42a415
+func(a1) begin
+	cluster:SetCluster(base);
+	true
+end
+@@end

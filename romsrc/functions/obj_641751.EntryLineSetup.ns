@@ -1,0 +1,7 @@
+@@ 0x48a309
+func() begin
+	local l1;
+	l1 := self:LocalBox();
+	StyledStrTruncate(Clone(self:TextFromRef(selected)), ((l1.right - l1.left) - indent), entryLine.viewFont)
+end
+@@end

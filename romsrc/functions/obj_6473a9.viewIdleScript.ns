@@ -1,0 +1,9 @@
+@@ 0x4606b5
+func() begin
+	(if (gyreCount < gyreReps) then begin
+			self:DoDrawing('CopyBits, copyBitsArgs);
+			gyreCount := (gyreCount + 1);
+			gyreRate
+		end)
+end
+@@end

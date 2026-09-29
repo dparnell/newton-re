@@ -1,0 +1,9 @@
+@@ 0x517a4d
+func() begin
+	local l1;
+	l1 := ((l1 := Time()) - (l1 mod 1440));
+	self.Date := l1;
+	self.initialDate := l1;
+	(self.DeleteFrom := l1)
+end
+@@end

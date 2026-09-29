@@ -1,0 +1,46 @@
+@@ 0x78cdfd names
+func() begin
+	if (not Visible(self)) then begin
+			return nil
+		end;
+	if ((lastKid := (Length((kids := self:ChildViewFrames())) - 1)) = -1) then begin
+			adjusting := nil;
+			curTopicChanged := nil;
+			topicChanged := 999999;
+			return nil
+		end;
+	adjusting := true;
+	self:Dirty();
+	(try begin
+			if ((vi := self:VisibleTopicIndex(topicChanged)) > 0) then begin
+					lastView := kids[(vi - 1)]
+				end else begin
+					lastView := nil
+				end;
+			local adjustView;
+			local lastView;
+			local kids;
+			local lastKid;
+			local vi;
+			local topic;
+			(for vi := vi to lastKid do begin
+					adjustView := kids[vi];
+					topic := topics[adjustView.index];
+					self:AdjustParagraph(lastView, adjustView, nil, nil);
+					topic.viewBounds := adjustView.viewBounds;
+					lastView := adjustView
+				end);
+			if (if curTopicChanged then curTopic) then begin
+					self:EnsureVisibleTopic(curTopic)
+				end;
+			adjusting := nil;
+			curTopicChanged := nil;
+			(topicChanged := 999999)
+		end onexception |evt.ex| do begin
+			adjusting := nil;
+			curTopicChanged := nil;
+			topicChanged := 999999;
+			Rethrow()
+		end)
+end
+@@end

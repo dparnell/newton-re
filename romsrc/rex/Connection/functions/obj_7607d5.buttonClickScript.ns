@@ -1,0 +1,8 @@
+@@ 0x760829
+func() begin
+	base.userCancel := true;
+	AddDeferredAction(func() begin
+		base:Close()
+	end, nil)
+end
+@@end

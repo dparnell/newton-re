@@ -1,0 +1,6 @@
+@@ 0x50c2c5
+func() begin
+	viewValue := theApp:GetAppPreferences().toDoInternalStore;
+	(text := ParamStr("Always store new ^0 internally", [Array: "tasks"]))
+end
+@@end

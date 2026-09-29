@@ -1,0 +1,18 @@
+@@ 0x5958c5
+func(a1) begin
+	if activeTransaction then begin
+			return nil
+		end;
+	if (not connected) then begin
+			return nil
+		end;
+	if a1 then begin
+			activetimeout := a1;
+			transactiontimeout := a1;
+			if (not timerStarted) then begin
+					AddDelayedSend(self, 'TimeoutTick, [Array: ], 5000)
+				end
+		end;
+	true
+end
+@@end

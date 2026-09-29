@@ -1,0 +1,13 @@
+@@ 0x4bc995
+func(a1) begin
+	local l1;
+	if (not a1) then begin
+			a1 := ""
+		end;
+	self:AddUndoAction('UpdateText, [Array: Clone(phone:GetRichString())]);
+	if IsInteger(a1) then begin
+			a1 := SPrintObject(a1)
+		end;
+	(if phone.viewCObject then SetValue(phone, 'text, a1) else (currPhoneNum := a1))
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x442821
+func() begin
+	local l1;
+	DrawXBitmap((l1 := OffsetRect((l1 := Clone(digitFrame)), (1 - l1.left), 0)), digits, (currentIndex div 10), copyMode);
+	DrawXBitmap((l1 := OffsetRect(l1, (l1.right - 1), 0)), digits, (currentIndex mod 10), copyMode)
+end
+@@end

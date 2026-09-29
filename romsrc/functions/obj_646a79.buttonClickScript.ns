@@ -1,0 +1,18 @@
+@@ 0x48b1b1
+func() begin
+	(if (l2 := GetUserConfig('emporia)) then begin
+			local l1;
+			local l2;
+			local l3;
+			l3 := (foreach l4 in l2 collect {item: (if (l1 := ResolveEntryAlias(l4).place) then l1 else "(unnamed location)"), value: l4});
+			if (Length(l3) = 0) then begin
+					AddArraySlot(place, {item: GetUserConfig('location).name, value: nil})
+				end;
+			Sort(l3, '|str<|, 'item);
+			AddArraySlot(l3, 'pickseparator);
+			AddArraySlot(l3, "Other City");
+			popup := l3;
+			inherited:buttonClickScript()
+		end else self:hilite(nil))
+end
+@@end

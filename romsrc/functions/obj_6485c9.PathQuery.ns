@@ -1,0 +1,5 @@
+@@ 0x4b8e4d
+func(a1) begin
+	dataSoup:Query({type: 'words, words: a1})
+end
+@@end

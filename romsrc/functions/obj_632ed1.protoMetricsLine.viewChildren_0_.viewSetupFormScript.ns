@@ -1,0 +1,11 @@
+@@ 0x4e6981
+func() begin
+	self.text := matchedWords[wordIndex];
+	if StrEqual(matchedWords[wordIndex], requestedWord) then begin
+			self.viewFont := @100
+		end else begin
+			self.viewFont := @99
+		end;
+	MapAmbiguousCharacters(self.text)
+end
+@@end

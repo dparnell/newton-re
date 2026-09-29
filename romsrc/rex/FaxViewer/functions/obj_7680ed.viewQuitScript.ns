@@ -1,0 +1,11 @@
+@@ 0x768a19
+func() begin
+	local l1;
+	if (fPage <> nil) then begin
+			self:StoreCurrentFaxPage();
+			self:EndFlush()
+		end;
+	(l1 := self:GetAppPreferences().|dFaxViewer:Dondo|).ShowThumbnail := Visible(vThumbFloater);
+	(l1.scaling := ImageTarget:GetScalingInfo())
+end
+@@end

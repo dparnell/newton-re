@@ -1,0 +1,13 @@
+@@ 0x454105
+func() begin
+	local l1, l2;
+	(if freshest then begin
+			(l1 := freshest.nameRef)._Unselected := true;
+			totalSelected := (totalSelected - 1);
+			if (if (l2 := (if freshest.index then freshest.index else self:GetVisibleIndex(l1))) then viewCObject) then begin
+					self:UpdatePiece(l2, l1)
+				end;
+			(freshest := nil)
+		end)
+end
+@@end

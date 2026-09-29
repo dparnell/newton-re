@@ -1,0 +1,8 @@
+@@ 0x757e85
+func() begin
+	(if (error <> 0) then begin
+			self.viewBounds := Clone(viewBounds);
+			(viewBounds.bottom := (viewBounds.bottom + 20))
+		end)
+end
+@@end

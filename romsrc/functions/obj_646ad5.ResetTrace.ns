@@ -1,0 +1,5 @@
+@@ 0x498425
+func() begin
+	(traceArray := [Array: ])
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x45c7b9
+func() begin
+	local l1;
+	(if (l1 := NextKeyView(self:ChildViewFrames()[0], 0, 0)) then SetKeyView(l1, 0))
+end
+@@end

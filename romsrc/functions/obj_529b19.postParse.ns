@@ -1,0 +1,78 @@
+@@ 0x529af9
+func() begin
+	l1 := GetRoot();
+	if (not (l2 := GetGroupTransport(taskType))) then begin
+			l1:Notify(3, "Assist", "No mail transport installed.");
+			l1.assistant:Close();
+			return nil
+		end;
+	if ((l4 := self:iaGetTargetInfo((l3 := GetView('viewfrontmostapp)), l2, transportStr)) = nil) then begin
+			l1.assistant:Close();
+			return nil
+		end;
+	if (l5 := GetMatchedEntries('allEntries, self.entries)) then begin
+			self:RemoveGroupsExcept(l5, '|nameRef.email|)
+		end;
+	(if (if l5 then (Length(l5) = 0)) then l1:Notify(3, "Assist", "Cannot mail to a group that is not a E-mail type group.") else begin
+			if ((l2 := l1.(l2):NewItem(l3)) <> nil) then begin
+					self:SetEmailTags(l2);
+					if (l5 <> nil) then begin
+							l8 := 0;
+							l9 := true;
+							local l1;
+							local l2;
+							local l3;
+							local l4;
+							local l5;
+							local l6;
+							local l7;
+							local l8;
+							local l9;
+							(foreach l10, l11 in l5 do begin
+									if self:SetDisplayName((l7 := GetDataDefs('|nameRef.email|):MakeNameRef((l13 := ResolveEntryAlias(l11.alias)), '|nameRef.email|)), l11, l13) then begin
+											l7._alias := nil
+										end;
+									l14 := nil;
+									if (ObjEntryClass(l13) <> 'group) then begin
+											l14 := (l7.email := dsGetCandidateEMail(l2, l13))
+										end;
+									if (l9 <> nil) then begin
+											l2.toRef := [Array: l7];
+											l9 := nil
+										end else begin
+											if (not l2.alternatives) then begin
+													l2.alternatives := [Array: ]
+												end;
+											ArrayInsert(l2.alternatives, l7, l8);
+											l8 := (l8 + 1)
+										end;
+									if (if (if (l15 := GetRoot().cardfile:bcEMailAddress(l13, '[Array: |string.email|])) then (Length(l15) > 0)) then l14) then begin
+											local l13;
+											local l14;
+											local l15;
+											(foreach l16 in l15 do begin
+													local l18, l19, l20;
+													if (if (not StrEqual((l18 := l16.email), l14)) then (if l2.mailTag then SetContains(l2.mailTag, ClassOf(l18)))) then begin
+															(l19 := Clone(l7)).name := Clone(l19.name);
+															l19.email := l18;
+															if (not l2.alternatives) then begin
+																	l2.alternatives := [Array: ]
+																end;
+															ArrayInsert(l2.alternatives, l19, l8);
+															l8 := (l8 + 1)
+														end
+												end)
+										end
+								end)
+						end else begin
+							if (l20 := FindPossibleName(self.noisewords, self.OrigPhrase)) then begin
+									l2.toRef := [Array: GetDataDefs('|nameRef.email|):MakeNameRef({name: {last: l20}}, '|nameRef.email|)]
+								end
+						end;
+					l6 := OpenRoutingSlip(l2, l4);
+					l1.assistant:Close()
+				end;
+			(if (not l6) then l1:Notify(3, "Assist", "There is nothing to mail."))
+		end)
+end
+@@end

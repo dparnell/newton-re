@@ -1,0 +1,23 @@
+@@ 0x448989
+func(a1, a2) begin
+	local l1, l2, l3, l4;
+	InkOff(a1);
+	l1 := [Array: a2.left, a2.top, a2.right, a2.bottom];
+	l2 := self:GlobalBox();
+	a2 := OffsetRect(a2, l2.left, l2.top);
+	l3 := true;
+	self:DoDrawing('InvertRect, l1);
+	l4 := GetPoint(8, a1);
+	(while (not StrokeDone(a1)) do begin
+			if (IsPtInRect(l4.x, l4.y, a2) <> l3) then begin
+					self:DoDrawing('InvertRect, l1);
+					l3 := (not l3)
+				end;
+			(l4 := GetPoint(8, a1))
+		end);
+	if l3 then begin
+			self:DoDrawing('InvertRect, l1)
+		end;
+	IsPtInRect(l4.x, l4.y, a2)
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x595f45
+func(a1, a2) begin
+	local l1;
+	(if (if (l1 := info.(a2)) then (StrLen(l1) > 0)) then begin
+			self:atom(18, 1, a1, nil);
+			self:atom(0, 14, l1, nil)
+		end)
+end
+@@end

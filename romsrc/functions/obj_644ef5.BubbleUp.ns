@@ -1,0 +1,7 @@
+@@ 0x4672d1
+func(a1, a2, a3) begin
+	StrReverse(a1);
+	self:BubbleDown(a1, a2, a3);
+	StrReverse(a1)
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x4ef469
+func() begin
+	(if IsInstance(target.(path), '|string.noData|) then begin
+			target.(path) := "";
+			""
+		end else Clone(target.(path)))
+end
+@@end

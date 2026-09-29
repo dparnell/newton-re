@@ -1,0 +1,10 @@
+@@ 0x59eca9
+func(a1) begin
+	(if (mode = 'batch) then self:submit(a1) else begin
+			(foreach l1, l2 in a1 do begin
+					message.(l1) := l2
+				end);
+			self:submit(message)
+		end)
+end
+@@end

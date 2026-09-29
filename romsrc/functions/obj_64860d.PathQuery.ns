@@ -1,0 +1,10 @@
+@@ 0x4b9149
+func(a1) begin
+	local l1;
+	(if (if (dataCursor.indexPath = path) then (dataCursor.indexType = 'int)) then begin
+			l1 := dataCursor:clone();
+			l1:GotoKey(a1);
+			l1
+		end)
+end
+@@end

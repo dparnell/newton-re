@@ -1,0 +1,5 @@
+@@ 0x51715d
+func() begin
+	(cursor := nil)
+end
+@@end

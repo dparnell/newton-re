@@ -1,0 +1,20 @@
+@@ 0x75f9ed
+@@const kROM_8263
+@8263
+@@main
+func(a1, a2, a3, a4) begin
+	local l1, l2;
+	l1 := 0;
+	try begin
+			a1:WriteCommand("gfin", a2, true)
+		end onexception |evt.ex| do begin
+			a1:ConnectionDone((l1 := CurrentException().error))
+		end;
+	(if (l1 = 0) then begin
+			(l2 := BuildContext(kROM_8263)).fileName := a3;
+			l2.path := a4;
+			l2.endpoint := a1;
+			l2:FilterDialog()
+		end)
+end
+@@end

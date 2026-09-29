@@ -1,0 +1,8 @@
+@@ 0x5b9f4d
+func(a1) begin
+	local l1;
+	l1 := cursor:move(a1);
+	cursorLoc := (cursorLoc + l1);
+	return l1
+end
+@@end

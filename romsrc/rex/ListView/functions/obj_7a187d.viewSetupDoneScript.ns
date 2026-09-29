@@ -1,0 +1,5 @@
+@@ 0x79f80d names
+func() begin
+	SetValue(entryLine, 'viewJustify, BAnd(entryLine.viewJustify, bnot(8388608)))
+end
+@@end

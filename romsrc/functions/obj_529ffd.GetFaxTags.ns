@@ -1,0 +1,6 @@
+@@ 0x529fbd
+func(a1) begin
+	local l1;
+	(if HasSlot(a1, 'phoneTag) then (if (a1.phoneTag = 'homefaxPhone) then self.iaHomeTags else self.iaWorkTags) else (if (not (tags := self:GetTransportTags((l1 := self:GetPreferredSymb())))) then self.(l1) else tags))
+end
+@@end

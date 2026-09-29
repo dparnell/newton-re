@@ -1,0 +1,8 @@
+@@ 0x561765
+func() begin
+	self.findAllResults := nil;
+	self.title := nil;
+	self.viewBounds := nil;
+	inherited:?viewQuitScript()
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x47fcb1
+func(a1, a2) begin
+	local l1;
+	if ((l1 := GetUserConfig(appSymbol)) = nil) then begin
+			l1 := EnsureInternal(Clone(defaultConfiguration))
+		end;
+	l1.(EnsureInternal(a1)) := EnsureInternal(a2);
+	SetUserConfig(appSymbol, l1)
+end
+@@end

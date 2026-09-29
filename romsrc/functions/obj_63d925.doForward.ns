@@ -1,0 +1,33 @@
+@@ 0x5a2bc5
+func(a1, a2) begin
+	local l1, l2, l3;
+	l1 := GetRoot().(GetVariable(a2, 'appSymbol));
+	l1:?MarkRead(a1);
+	(a1 := DeepClone(a1)).reply := true;
+	a1.box := nil;
+	a1._proto := nil;
+	a1.state := 'pending;
+	a1.Connect := 'notreally;
+	RemoveSlot(a1, '_uniqueID);
+	RemoveSlot(a1, '_modTime);
+	RemoveSlot(a1, 'xlabels);
+	RemoveSlot(a1, 'labels);
+	RemoveSlot(a1, 'timestamp);
+	RemoveSlot(a1, 'account);
+	a1.toRef := [Array: ];
+	a1.cc := [Array: ];
+	a1.bcc := [Array: ];
+	a1.edited := true;
+	if (not a1.body) then begin
+			l2 := GetRoot().mailSlip:TextHeader(a1);
+			a1.text := Stringer([Array: l2, $\n, a1.text])
+		end;
+	if (if (if a1.title then IsString(a1.title)) then StrFilled(a1.title)) then begin
+			if (if (not BeginsWith((l3 := StringFilter(Substr(a1.title, 0, 6), " 0123456789()", 'rejectAll)), "Fwd>")) then (not BeginsWith(l3, "Fwd:"))) then begin
+					a1.title := Stringer([Array: "Fwd: ", a1.title])
+				end
+		end;
+	l1 := GetRoot().(GetVariable(a2, 'appSymbol));
+	l1:ItemCompleted(a1, 'save)
+end
+@@end

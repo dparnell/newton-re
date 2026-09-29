@@ -1,0 +1,14 @@
+@@ 0x48fb05
+func(a1) begin
+	(if (if a1 then Visible(self:Parent())) then begin
+			if (prefsCache.(prefsSlot) = 'Partial) then begin
+					scrollList:stashItems(soupNameList)
+				end;
+			AddDeferredCall(func() begin
+				self:hilite(nil);
+				base:Close();
+				godParent:doBackup()
+			end, '[Array: ])
+		end else self:hilite(nil))
+end
+@@end

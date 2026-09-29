@@ -1,0 +1,14 @@
+@@ 0x472595
+func(a1, a2) begin
+	local l1, l2;
+	(if (if (a1 <> nil) then (not StrEqual(a1, ""))) then begin
+			if (a2 = nil) then begin
+					tempZone := "*"
+				end else begin
+					tempZone := a2
+				end;
+			l2 := self:nbpString();
+			self:ChooserDone((l1 := Stringer([Array: a1, Stringer([Array: ":", l2, "@"]), tempZone])), l2, 'networkSym)
+		end)
+end
+@@end

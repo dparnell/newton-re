@@ -1,0 +1,7 @@
+@@ 0x4615ed
+func(a1, a2, receiver, message) begin
+	AddDeferredCall(functions.AsyncConfirm, [Array: a2, 'okCancelDefaultOk, func(a1) begin
+		Perform(receiver, message, [Array: a1])
+	end])
+end
+@@end

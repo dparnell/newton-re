@@ -1,0 +1,13 @@
+@@ 0x54b09d
+func(a1, a2) begin
+	local l1, l2;
+	l1 := @589.((if a2.help then 'HelpBookEntry else 'BookEntry)):New();
+	l2 := a2.Book;
+	l1.isbn := l2.isbn;
+	l1.text := (if l2.shortTitle then l2.shortTitle else l2.title);
+	if l2.icon then begin
+			l1.icon := l2.icon
+		end;
+	l1
+end
+@@end

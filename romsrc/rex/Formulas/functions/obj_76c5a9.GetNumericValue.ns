@@ -1,0 +1,5 @@
+@@ 0x76c7d9
+func() begin
+	return CalcLine:GetNumericValue()
+end
+@@end

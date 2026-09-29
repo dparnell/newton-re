@@ -1,0 +1,37 @@
+@@ 0x5a2779
+func(a1, a2) begin
+	local l1, l2, l3;
+	if (if (l1 := GetHilitedTextItems()) then (Length(l1) > 0)) then begin
+			l1 := l1[0]
+		end;
+	a1.reply := true;
+	a1.box := nil;
+	a1._proto := nil;
+	a1.state := 'pending;
+	RemoveSlot(a1, '_uniqueID);
+	RemoveSlot(a1, '_modTime);
+	RemoveSlot(a1, 'xlabels);
+	RemoveSlot(a1, 'labels);
+	RemoveSlot(a1, 'timestamp);
+	if (if (if a1.title then IsString(a1.title)) then StrFilled(a1.title)) then begin
+			if (if (not BeginsWith((l2 := StringFilter(Substr(a1.title, 0, 6), " 0123456789()", 'rejectAll)), "Re>")) then (not BeginsWith(l2, "Re:"))) then begin
+					a1.title := Stringer([Array: "Re: ", a1.title])
+				end
+		end;
+	RemoveSlot(a1, 'text);
+	RemoveSlot(a1, 'edited);
+	RemoveSlot(a1, 'account);
+	if (if IsString(l1) then StrFilled(l1)) then begin
+			l1 := StringFilter(l1, " \n", 'rejectBeginning);
+			(while (EndsWith(l1, "\n") or EndsWith(l1, " ")) do (l1 := Substr(l1, 0, (StrLen(l1) - 1))));
+			a1.body := GetRoot().paperroll:MakeTextNoteFont(Stringer([Array: "\n------\n", l1, "\n------\n"]), nil, [Array: 8, GetUserConfig('userFont), StrLen(l1), 2109441, 8, GetUserConfig('userFont)])
+		end else begin
+			a1.body := GetDataDefs('paperroll):MakeNewEntry()
+		end;
+	a1.currentFormat := 'prFrameFormat;
+	a1.appSymbol := 'paperroll;
+	a1.attachment := true;
+	l3 := GetRoot().(GetVariable(a2, 'appSymbol));
+	l3:ItemCompleted(a1, 'save)
+end
+@@end

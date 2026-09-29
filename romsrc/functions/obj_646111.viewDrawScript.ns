@@ -1,0 +1,5 @@
+@@ 0x441ac1
+func() begin
+	DrawXBitmap(digitFrame, digits, currentIndex, copyMode)
+end
+@@end

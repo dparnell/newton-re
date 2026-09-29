@@ -1,0 +1,12 @@
+@@ 0x5b7709
+func() begin
+	viewBounds := Clone(viewBounds);
+	(if (not GetUserConfig('passwordkey)) then begin
+			text := "Set PIN";
+			(viewBounds := RelBounds(0, 27, 43, 15))
+		end else begin
+			text := "Change PIN";
+			(viewBounds := RelBounds(-51, 27, 62, 15))
+		end)
+end
+@@end

@@ -1,0 +1,29 @@
+@@ 0x73498d
+func(a1) begin
+	numbersArray := nil;
+	baudArray := nil;
+	l3 := appBase:GetCity(target);
+	l4 := target.countrySymbol;
+	if a1 then begin
+			if (l1 := DialinNetworkRegistry.(a1):?GetAccessNumbers(nil, l3)) then begin
+					local l1;
+					local l2;
+					local l3;
+					local l4;
+					numbersArray := (foreach l5 in l1 collect {item: l5.mailPhone, country: l4});
+					l2 := (foreach l5 in l1 collect l5.mailPhone);
+					baudArray := (foreach l5 in l1 collect l5.baud)
+				end
+		end;
+	if numberChooser.viewCObject then begin
+			numberChooser:JamFromEntry({phones: l2});
+			numberChooser:Retarget()
+		end;
+	(if (if (if baudChooser.viewCObject then l1) then (Length(l1) > 0)) then begin
+			target.(baudChooser.path) := l1[0].baud;
+			baudChooser:UpdateText(NumberStr(l1[0].baud));
+			self:StartFlush();
+			baudChooser:Retarget()
+		end)
+end
+@@end

@@ -1,0 +1,35 @@
+@@ 0x4e6135
+func(a1) begin
+	strokes := self:GetPolygons(a1);
+	self:Dirty();
+	if (lastWordEndTime = nil) then begin
+			self.lastWordEndTime := GetUnitEndTime(a1)
+		end else begin
+			newEndTime := GetUnitEndTime(a1);
+			if ((l2 := (GetUnitEndTime(a1) - lastWordEndTime)) > 180) then begin
+					self.recognizedWord := nil
+				end;
+			self.lastWordEndTime := newEndTime
+		end;
+	self.matchedWords := GetWordArray(a1);
+	if (Length(self.matchedWords) > 3) then begin
+			SetLength(self.matchedWords, 3)
+		end;
+	self.matchedValues := GetScoreArray(a1);
+	recognizedWord := matchedWords[0];
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	l4 := (foreach l5, l6 in matchedWords do begin
+			if StrEqual(l6, requestedWord) then begin
+					break l5
+				end
+		end);
+	if l4 then begin
+			DoCursiveTraining((l1 := GetTrainingData(a1)), l4);
+			DisposeTrainingData(l1)
+		end;
+	metrics:RedoChildren()
+end
+@@end

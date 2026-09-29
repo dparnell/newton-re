@@ -1,0 +1,26 @@
+@@ 0x7390a1
+@@const kFunction_73924d
+func(a1) begin
+	(a1.labels <> '_ownerNames)
+end
+@@main
+func() begin
+	local l1;
+	(if (GetRoot().cardfile.superSymbol = 'ownerNames) then begin
+			theSoup := GetStores()[0]:GetSoup(soupName);
+			(theCursor := theSoup:Query(soupQuery))
+		end else begin
+			if theSoup:HasTags() then begin
+					if (not soupFilter) then begin
+							(l1 := Clone(soupQuery)).tagSpec := '{equal: [Array: ]}
+						end
+				end else begin
+					if (soupFilter = '_all) then begin
+							RemoveSlot((l1 := Clone(soupQuery)), 'tagSpec);
+							l1.validTest := kFunction_73924d
+						end
+				end;
+			(if l1 then (theCursor := theSoup:Query(l1)) else inherited:SetupCursor())
+		end)
+end
+@@end

@@ -1,0 +1,44 @@
+@@ 0x483235
+@@const kFunction_482d35
+func() begin
+	local l1;
+	if IsReadOnly((l1 := GetUserConfig('userFolderGroups))) then begin
+			l1 := (userConfiguration.userFolderGroups := DeepClone(l1))
+		end;
+	l1
+end
+@@const kFunction_482cd5
+func() begin
+	local l1;
+	if IsReadOnly((l1 := GetUserConfig('userFolders))) then begin
+			l1 := (userConfiguration.userFolders := Clone(l1))
+		end;
+	l1
+end
+@@main
+func(a1, a2) begin
+	local l1, l2, l3, l4, l5, l6;
+	l1 := call (kFunction_482d35) with ();
+	l2 := GenFolderSym(a1);
+	if (not a2) then begin
+			a2 := '_Global
+		end;
+	if (((not l2) or (if (if (a2 = '_Global) then l1._Global) then (Length(l1._Global) >= 12))) or (if (if (a2 <> '_Global) then l1.(a2)) then (Length(l1.(a2)) >= 12))) then begin
+			return nil
+		end;
+	l4 := GetUserConfig('userFolders).(l2);
+	l5 := SetContains(l1._Global, l2);
+	if (not l4) then begin
+			(l6 := call (kFunction_482cd5) with ()).(l2) := Clone(a1)
+		end else begin
+			if ((if (a2 = '_Global) then (not l5)) or (if (a2 <> '_Global) then l5)) then begin
+					return nil
+				end
+		end;
+	if (l3 := (if (not l1.(a2)) then (l1.(a2) := [Array: l2]) else SetAdd(l1.(a2), l2, true))) then begin
+			EntryChange(userConfiguration);
+			XmitFolderChange(nil, l2, a2)
+		end;
+	l2
+end
+@@end

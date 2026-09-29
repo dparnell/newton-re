@@ -1,0 +1,16 @@
+@@ 0x51ec7d
+func(a1, a2) begin
+	local l1;
+	self.text := Stringer([Array: "p.", NumberStr(a1)]);
+	if (a2 <> nil) then begin
+			text := Stringer([Array: text, "-", NumberStr(a2)])
+		end;
+	pgButWidth := max((StrWidth(text) + 6), 30);
+	if miniBar then begin
+			if ((l1 := (pgButWidth - (viewBounds.right - viewBounds.left))) <> 0) then begin
+					self:Parent():ButnWidthChanged(l1)
+				end
+		end;
+	self:SyncView()
+end
+@@end

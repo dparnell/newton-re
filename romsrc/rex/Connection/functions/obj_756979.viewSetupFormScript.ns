@@ -1,0 +1,8 @@
+@@ 0x756b81
+func() begin
+	self.protoContext := GetRoot().Connection;
+	protoContext:AddOpenWindow(self);
+	self:SetupIdle(500);
+	inherited:?viewSetupFormScript()
+end
+@@end

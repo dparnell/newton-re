@@ -1,0 +1,6 @@
+@@ 0x76f535
+func(a1) begin
+	self:LaunchFormula();
+	return true
+end
+@@end

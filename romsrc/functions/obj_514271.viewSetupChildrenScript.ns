@@ -1,0 +1,53 @@
+@@ 0x512765
+func() begin
+	if ((l1 := selectedDates[0]) <> displaydate) then begin
+			displaydate := selectedDates[0];
+			currentItem := 0;
+			viewOriginY := 0
+		end;
+	items := nil;
+	pieces := nil;
+	l2 := GetAllMeetings(notes, RepeatNotes, displaydate, nil);
+	l3 := GetAllMeetings(MeetingSoup, RepeatSoup, displaydate, nil);
+	if (if (not l2) then (not l3)) then begin
+			numberOfItems := 0
+		end else begin
+			if (if l2 then (not l3)) then begin
+					items := l2
+				end else begin
+					if (if (not l2) then l3) then begin
+							items := l3
+						end else begin
+							ArrayMunger((items := l2), Length(items), 0, l3, 0, nil)
+						end
+				end;
+			local l1;
+			local l2;
+			local l3;
+			(for l4 := (Length(items) - 1) to 0 by -1 do begin
+					local l7;
+					if (not LSearch('[Array: meeting, RepeatingMeeting, exceptionMeeting, cribNote], items[l4].viewStationery, 0, '|=|, nil)) then begin
+							ArrayRemoveCount(items, l4, 1)
+						end
+				end);
+			numberOfItems := Length(items)
+		end;
+	if (numberOfItems > 0) then begin
+			self:SetupAbstracts()
+		end else begin
+			calendarBottom := 0
+		end;
+	if (if (if HasSlot(self, 'stepChildren) then stepChildren) then (Length(stepChildren) > 0)) then begin
+			SetRemove(stepChildren, ToDoAgendaTemplate)
+		end;
+	if (hasToDoItems := (if (l7 := ToDoListView:GetToDoItemsForThisDate(displaydate)) then (Length(l7) > 0))) then begin
+			self:AddToDoAgendaView(calendarBottom)
+		end;
+	cachedToDoAgendaView := nil;
+	boringDay := nil;
+	(if (if (numberOfItems = 0) then (not hasToDoItems)) then begin
+			boringDay := MakeText(ParamStr("No agenda for ^0.", [Array: LongDateStr(displaydate, DateSpecLong)]), self:LocalBox().left, 34, self:LocalBox().right, 51);
+			0
+		end)
+end
+@@end

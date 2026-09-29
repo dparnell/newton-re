@@ -1,0 +1,21 @@
+@@ 0x79b4bd names
+func(callback) begin
+	(if selected then begin
+			c := Query(cursor:soup(), '{type: index});
+			local c;
+			(foreach alias in selected do begin
+					local e;
+					e := c:gotokey(alias._uniqueID);
+					(loop begin
+							if (e._uniqueID <> alias._uniqueID) then begin
+									break (e := nil)
+								end;
+							(if (EntryStore(e):GetSignature() <> alias._storeID) then (e := c:Next()) else break)
+						end);
+					if e then begin
+							call callback with (e, alias.topicIndex)
+						end else nil
+				end)
+		end)
+end
+@@end

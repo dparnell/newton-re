@@ -1,0 +1,13 @@
+@@ 0x7322b9
+func() begin
+	if ((l1 := ClassOf(target.members)) = 'Array) then begin
+			l1 := peoplePicker.dataClass
+		end;
+	local l1;
+	(foreach l2 in labelCommands do begin
+			if (l2.symbol = l1) then begin
+					return l2.item
+				end
+		end)
+end
+@@end

@@ -1,0 +1,11 @@
+@@ 0x4adea1
+func() begin
+	(if (if boutView then boutView.viewCObject) then begin
+			newtAppBase:RememberedClose(boutView);
+			RemoveSlot(self, 'boutView)
+		end else begin
+			(boutView := BuildContext(aboutView)).theApp := newtAppBase;
+			newtAppBase:RememberedOpen(boutView)
+		end)
+end
+@@end

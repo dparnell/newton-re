@@ -1,0 +1,9 @@
+@@ 0x5684dd
+func() begin
+	l1 := GetAllSoupBasedModemSetUpNames();
+	local l1;
+	local l2;
+	l2 := (foreach l3 in @217 collect l3.modemName);
+	BMerge(l1, l2, '|str<|, nil, true)
+end
+@@end

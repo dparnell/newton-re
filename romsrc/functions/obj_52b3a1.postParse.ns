@@ -1,0 +1,32 @@
+@@ 0x52b381
+func() begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9;
+	l2 := (l1 := GetRoot()).assistant;
+	l3 := Clone(OrigPhrase);
+	if (l3 := self:FilterAction(input, phrases, l3, 'time_act)) then begin
+			l3 := self:FilterNoise(l3, @270)
+		end;
+	if l3 then begin
+			l3 := GlueStrings(l3)
+		end;
+	(if l3 then begin
+			l4 := l1.worldClock;
+			l5 := [Array: ];
+			(if (l6 := l4:find(l3, l5, 'localFind, nil)) then begin
+					l7 := l6.items;
+					if ((l8 := Length(l6.items)) = 1) then begin
+							l4:Open();
+							l4:ShowFoundItem(l7[0])
+						end else begin
+							(l9 := BuildContext(pseudoOverview)).items := l7;
+							l9.city := l3;
+							l9:Open()
+						end;
+					l2:Close()
+				end else l2:Duh(nil))
+		end else begin
+			l2:Close();
+			l1.worldClock:Open()
+		end)
+end
+@@end

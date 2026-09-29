@@ -1,0 +1,6 @@
+@@ 0x466045
+func() begin
+	local l1;
+	(if (l1 := template) then l1.format)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x5b8b59
+func(a1) begin
+	return StripRecognitionWord(a1)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x42749d
+func() begin
+	self:SetAndUpdate(maxValue)
+end
+@@end

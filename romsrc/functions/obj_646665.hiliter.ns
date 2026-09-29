@@ -1,0 +1,5 @@
+@@ 0x45dd39
+func(a1, a2) begin
+	(if a2 then self:DrawShape(a1, {transform: (if (direction = 'right) then [Array: (a2 * tileSize), 0] else [Array: 0, (a2 * tileSize)])}))
+end
+@@end

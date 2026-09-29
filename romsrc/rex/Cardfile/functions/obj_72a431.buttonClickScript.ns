@@ -1,0 +1,6 @@
+@@ 0x72a47d
+func() begin
+	AddDeferredSend(base, Close, '[Array: ]);
+	self:EditCustomLabels()
+end
+@@end

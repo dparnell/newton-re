@@ -1,0 +1,7 @@
+@@ 0x4f8e49
+func(a1, a2, a3, a4) begin
+	local l1;
+	l1 := '[Array: oneO, twoO];
+	(if ((a1.viewStationery = 'TodoItem) or (ClassOf(a1) = 'todo)) then GetDataDefs('convertTodo):Convert(a1, a2, a3) else (if (if SetContains(l1, a2) then SetContains(l1, a3)) then (if (if (a2 = 'oneO) then (a3 = 'twoO)) then self:Convert10to20(a1, true) else (if (if (a2 = 'twoO) then (a3 = 'oneO)) then self:Convert20to10(a1, true) else a1))))
+end
+@@end

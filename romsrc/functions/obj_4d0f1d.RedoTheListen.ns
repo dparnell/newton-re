@@ -1,0 +1,8 @@
+@@ 0x4d07bd
+func() begin
+	(if (status = 'Listening) then begin
+			self:SetFlag(redoListen);
+			self:TearDownListen()
+		end)
+end
+@@end

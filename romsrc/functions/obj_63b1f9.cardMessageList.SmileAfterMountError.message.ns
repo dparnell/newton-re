@@ -1,0 +1,5 @@
+@@ 0x56c7fd
+func(a1) begin
+	ParamStr("This card cannot be read. (^0) To erase the card remove it, unlock it, then reinsert the card with \u201C\uPrefs\u201D\u open.", [Array: GetRoot():TranslateError(a1)])
+end
+@@end

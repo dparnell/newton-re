@@ -1,0 +1,10 @@
+@@ 0x49e845
+func(a1) begin
+	(if ((not target) or EntryStore(target):IsReadOnly()) then begin
+			if a1 then begin
+					self:Notify(3, title, "This is on a write protected card and cannot be changed")
+				end;
+			nil
+		end else true)
+end
+@@end

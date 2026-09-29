@@ -1,0 +1,7 @@
+@@ 0x5ac7ad
+func(a1) begin
+	local l1;
+	Downcase((l1 := SPrintObject(a1[0])));
+	return (l1[0] <> a1[0])
+end
+@@end

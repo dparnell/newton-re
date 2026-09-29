@@ -1,0 +1,16 @@
+@@ 0x735a05
+func(a1) begin
+	if (l3 := GetDataDefs(a1.class)) then begin
+			l2 := Clone(l3.viewsToDisplay);
+			local l1;
+			local l2;
+			local l3;
+			(foreach l4, l5 in (l1 := GetViewDefs(a1.class)) do begin
+					if (if (l5.type = 'editor) then (l4 <> 'default)) then begin
+							SetAdd(l2, l4, true)
+						end
+				end)
+		end;
+	l2
+end
+@@end

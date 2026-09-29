@@ -1,0 +1,7 @@
+@@ 0x46f9ed
+func(a1) begin
+	timeoutCounter := 300000;
+	inherited:viewClickScript(a1);
+	(selectedIndex := (self.vIndex - vOrg))
+end
+@@end

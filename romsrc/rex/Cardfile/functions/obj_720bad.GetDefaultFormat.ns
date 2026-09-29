@@ -1,0 +1,9 @@
+@@ 0x738455
+func(a1, a2) begin
+	local l1;
+	if (not (l1 := (if (if self.lastFormats then self.lastFormats.(a1)) then self.lastFormats.(a1)))) then begin
+			l1 := 'cfSingleFormat
+		end;
+	l1
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x75de25
+func() begin
+	desktopConnection:OpenCallOptionsSlip()
+end
+@@end

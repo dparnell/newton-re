@@ -1,0 +1,11 @@
+@@ 0x4f247d
+func() begin
+	local l1;
+	l1 := Date(selectedDates[0]);
+	if (repeatType = 2) then begin
+			mtgInfo := l1.Date
+		end;
+	self:UpdateText();
+	self:Dirty()
+end
+@@end

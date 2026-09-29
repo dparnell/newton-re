@@ -1,0 +1,12 @@
+@@ 0x48e595
+func(a1) begin
+	l2 := Length((l3 := selectedItems));
+	prefsCache.(prefsArray) := Array(l2, nil);
+	local l1;
+	local l2;
+	local l3;
+	(for l1 := 0 to (l2 - 1) do begin
+			prefsCache.(prefsArray)[l1] := a1[l3[l1]]
+		end)
+end
+@@end

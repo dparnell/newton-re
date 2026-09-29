@@ -1,0 +1,16 @@
+@@ 0x78cc6d names
+func(aList) begin
+	oldCurTopic := curTopic;
+	deletedTopics := Array((nToDelete := Length(aList)), nil);
+	local oldCurTopic;
+	local deletedTopics;
+	local nToDelete;
+	local topic;
+	(for i := 0 to (nToDelete - 1) do begin
+			topic := topics[aList[i]];
+			deletedTopics[i] := topic
+		end);
+	self:DeleteTopics(aList);
+	AddUndoAction('UndoScrub, [Array: aList, deletedTopics, oldCurTopic])
+end
+@@end

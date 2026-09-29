@@ -1,0 +1,13 @@
+@@ 0x74a20d
+func() begin
+	local l1;
+	self.protoContext := GetRoot().Connection;
+	protoContext:AddOpenWindow(self);
+	if ((not restoreOptions.packages) or (Length(restoreOptions.packages) = 0)) then begin
+			(l1 := Clone(self.viewBounds)).top := (l1.top + 40);
+			l1.bottom := (l1.bottom - 60);
+			viewBounds := l1
+		end;
+	endpoint:StartIdle(self, 2000)
+end
+@@end

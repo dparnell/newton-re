@@ -1,0 +1,5 @@
+@@ 0x7336d1
+func(a1) begin
+	inherited:UpdateText(StringFilter(a1, "0123456789>!,#*wp", 'passAll))
+end
+@@end

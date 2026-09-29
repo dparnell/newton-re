@@ -1,0 +1,12 @@
+@@ 0x46f735
+func() begin
+	if (notifyOnClose exists) then begin
+			if (selectedIndex = nil) then begin
+					self:Notify(3, "Chooser", ParamStr("No ^0 was selected.", [Array: headerText]))
+				end else begin
+					notifyOnClose:networkChooserDone(currentSelection, currentZone)
+				end
+		end;
+	self:CloseAndNotify(nil)
+end
+@@end

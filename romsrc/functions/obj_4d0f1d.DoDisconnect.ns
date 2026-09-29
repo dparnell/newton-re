@@ -1,0 +1,11 @@
+@@ 0x4d0e3d
+func(a1) begin
+	local l1;
+	(try begin
+			self:ChangeState('Disconnecting);
+			ep:Disconnect(true, disconnectSpec)
+		end onexception |evt.ex| do begin
+			(if ((l1 := CurrentException().error) <> -36003) then self:DoDisconnectComplete(l1))
+		end)
+end
+@@end

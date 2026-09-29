@@ -1,0 +1,30 @@
+@@ 0x59eba9
+func() begin
+	local l1, l2, l3;
+	eworld.msg := self:?ItemRequest(eworld.request);
+	(if msg then begin
+			self:?SetStatusDialog('Sending, 'vStatusTitle, {titleText: msg.title});
+			msg.error := nil;
+			self:Mail_Send(msg)
+		end else begin
+			l1 := GetUserConfig('mailMode);
+			l2 := eworld.request.cause;
+			l3 := eworld.firstTime;
+			eworld.request := nil;
+			eworld.msg := nil;
+			eworld.firstTime := nil;
+			if (not l1) then begin
+					l1 := 'interactive
+				end;
+			(if l3 then (if (if GetUserConfig('mailautodisconnect) then (lastRequest = 'SendRequest)) then self:LogoutIfNoRequests() else begin
+						eworld.mode := (if (l2 = 'periodic) then 'batch else l1);
+						self:?SetStatusDialog('Checking, 'vStatus, nil);
+						GetRoot().iobox:RemoveTempItems(appSymbol);
+						Perform(eworld, listMethod, [Array: ])
+					end) else begin
+					self:?SetStatusDialog('connected, 'vStatus, nil);
+					self:?CloseStatusDialog(nil)
+				end)
+		end)
+end
+@@end

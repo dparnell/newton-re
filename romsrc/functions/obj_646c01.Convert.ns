@@ -1,0 +1,5 @@
+@@ 0x421c49
+func(a1, a2, a3, a4) begin
+	(if (if (a2 <> 'oneO) then (a3 <> 'one0)) then entry)
+end
+@@end

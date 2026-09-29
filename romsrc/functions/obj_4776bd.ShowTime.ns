@@ -1,0 +1,7 @@
+@@ 0x45bb11
+func(a1, a2) begin
+	hours := (a1 mod 12);
+	minutes := a2;
+	self:Dirty()
+end
+@@end

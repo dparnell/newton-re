@@ -1,0 +1,5 @@
+@@ 0x56b0a1
+func(a1) begin
+	ModalCardAlert('CardReInserted, a1, nil)
+end
+@@end

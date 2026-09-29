@@ -1,0 +1,9 @@
+@@ 0x747e51
+func() begin
+	local l1;
+	self.protoContext := GetRoot().Connection;
+	l1 := self:LocalBox();
+	self._currentWidth := (l1.right - l1.left);
+	(subViewsOpen := {})
+end
+@@end

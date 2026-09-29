@@ -1,0 +1,6 @@
+@@ 0x4ae275
+func() begin
+	self:BuildPopup();
+	(if (if shortCircuit then (Length(popup) = 1)) then self:pickActionScript(0) else inherited:buttonClickScript())
+end
+@@end

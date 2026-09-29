@@ -1,0 +1,9 @@
+@@ 0x7345b1
+func() begin
+	labelCommands := numbersArray;
+	if (if (if (not target.(path)) then labelCommands) then (Length(labelCommands) > 0)) then begin
+			target.(path) := labelCommands[0].item
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

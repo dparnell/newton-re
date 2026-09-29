@@ -1,0 +1,14 @@
+@@ 0x432559
+func(a1, a2, a3, a4) begin
+	local l1, l2;
+	l1 := self:Init();
+	l2 := (a1[0] + (a2 div 2));
+	l1.startTime := (l2 - (l2 mod a2));
+	l2 := (a1[1] + (a2 div 2));
+	l1.stopTime := (l2 - (l2 mod a2));
+	l1.increment := a2;
+	l1.spread := (l1.stopTime - l1.startTime);
+	l1.context := a4;
+	l1:popup(a3)
+end
+@@end

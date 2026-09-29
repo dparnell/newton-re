@@ -1,0 +1,14 @@
+@@ 0x482591
+func(a1) begin
+	self:EventPause(true);
+	valueData := a1;
+	(if curView then begin
+			(foreach l1 in self:ChildViewFrames() do begin
+					if l1.indicator then begin
+							l1:?viewUpdateFormScript()
+						end
+				end);
+			RefreshViews()
+		end)
+end
+@@end

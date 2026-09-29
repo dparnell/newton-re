@@ -1,0 +1,8 @@
+@@ 0x47a66d
+func(a1) begin
+	currentOffset := (currentOffset + 1);
+	textWidth := textWidth;
+	a1 := StyledStrTruncate(Clone(a1), textWidth, 1058816);
+	AddArraySlot(pix, self:addTextLine(a1, currentOffset))
+end
+@@end

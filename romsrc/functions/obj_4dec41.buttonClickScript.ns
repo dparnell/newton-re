@@ -1,0 +1,5 @@
+@@ 0x4dec21
+func() begin
+	self:SetForm(nil)
+end
+@@end

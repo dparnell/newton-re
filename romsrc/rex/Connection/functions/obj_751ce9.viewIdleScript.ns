@@ -1,0 +1,6 @@
+@@ 0x7524dd
+func() begin
+	self:updateIndicator(currentStatusSetup);
+	return 500
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x599305
+func(a1) begin
+	mailEditor.message := fields;
+	mailEditor.path := 'text;
+	mailEditor.updateScript := a1;
+	mailEditor.appName := appName;
+	mailEditor:Open()
+end
+@@end

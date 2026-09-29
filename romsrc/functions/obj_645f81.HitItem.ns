@@ -1,0 +1,8 @@
+@@ 0x43b4e9
+func(a1, a2, a3) begin
+	(if (not inherited:HitItem(a1, a2, a3)) then begin
+			self:Dirty();
+			true
+		end)
+end
+@@end

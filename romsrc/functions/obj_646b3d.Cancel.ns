@@ -1,0 +1,28 @@
+@@ 0x499589
+@@const kFunction_4977bd
+func(a1, a2, a3) begin
+	local l1;
+	if (l1 := a1.stateMachine).tracing then begin
+			l1:Trace("Cancel completion", {result: a3, occupancy: l1.occupancy})
+		end;
+	l1.fOptionsIn := a2;
+	(if (l1.occupancy <= 1) then l1:AsyncWaitComplete((if a3 then a3 else -16005)) else (l1.occupancy := (l1.occupancy - 1)))
+end
+@@const kLiteral_4977dd
+{_proto: @525, completionscript: kFunction_4977bd}
+@@main
+func() begin
+	if tracing then begin
+			self:Trace(Stringer([Array: "Cancel() called.", " ", (if cancelBlocked then "(blocked!)" else "")]), {occupancy: occupancy})
+		end;
+	(if (if (occupancy > 0) then (not cancelBlocked)) then begin
+			occupancy := (occupancy + 1);
+			(try begin
+					fEndpoint:Cancel(kLiteral_4977dd)
+				end onexception |evt.ex| do begin
+					occupancy := (occupancy - 1);
+					(if (CurrentException().error <> -36003) then Rethrow())
+				end)
+		end)
+end
+@@end

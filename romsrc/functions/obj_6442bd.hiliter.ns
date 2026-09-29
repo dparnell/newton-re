@@ -1,0 +1,18 @@
+@@ 0x43e019
+@@const kBinaryFromHex
+func(hex, cls) begin
+	local b := MakeBinary(StrLen(hex) div 2, cls);
+	for i := 0 to Length(b) - 1 do begin
+		local h := Ord(hex[2 * i]);
+		local l := Ord(hex[2 * i + 1]);
+		StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+	end;
+	b
+end
+@@const kLiteral_43ded9
+{bits: call kBinaryFromHex with ("0000000000040127012701fd01350213fffff000fffff000fffff800fffff800fffff800fffff800fffff800fffff800fffff800fffff800fffff800fffff800fffff80000000c00", 'bits), bounds: '{left: 0, top: 0, right: 22, bottom: 14}}
+@@main
+func(a1) begin
+	(if (if viewCObject then (a1 >= 0)) then self:DoDrawing('CopyBits, [Array: kLiteral_43ded9, 2, ((2 + startLeft) + ((a1 * (iconBBox.bottom - 2)) div numIndices)), 2]))
+end
+@@end

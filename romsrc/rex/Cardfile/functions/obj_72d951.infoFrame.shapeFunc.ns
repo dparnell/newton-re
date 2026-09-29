@@ -1,0 +1,22 @@
+@@ 0x72dfc9
+func(a1, a2, a3, a4) begin
+	if (not (l2 := a1[0])) then begin
+			l2 := 0
+		end;
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	(foreach l6 in GetViewDefs('person) do begin
+			if (if (l6.type = 'bizcard) then (l6.bizCardNum = l2)) then begin
+					break (l1 := l6.bizCardIcon)
+				end
+		end);
+	(if l1 then begin
+			l4 := StrFontWidth((l3 := "Card Style: "), a4.font);
+			l5 := FontAscent(a4.font);
+			{shape: [Array: MakeText(l3, a2.left, a2.top, a2.right, (a2.top + l5)), OffsetShape(MakeShape(l1), (a2.left + l4), (a2.top + 3))]}
+		end)
+end
+@@end

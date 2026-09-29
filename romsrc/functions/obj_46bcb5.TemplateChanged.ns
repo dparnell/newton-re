@@ -1,0 +1,10 @@
+@@ 0x46b999
+func() begin
+	local l1;
+	l1 := self:GetViewTemplate();
+	if ((template._proto <> l1) or HasPath(l1, 'templateArray)) then begin
+			return l1
+		end;
+	return nil
+end
+@@end

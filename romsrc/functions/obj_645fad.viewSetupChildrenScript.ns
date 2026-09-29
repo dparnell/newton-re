@@ -1,0 +1,91 @@
+@@ 0x4510f1
+func() begin
+	self:SetupPickerDef(pickerDef);
+	if (not origListBounds) then begin
+			origListBounds := listBase.viewBounds
+		end;
+	listBase.viewFont := viewFont;
+	l1 := (listBase.viewBounds := Clone(origListBounds));
+	if readOnly then begin
+			suppressSelOnlyCheckbox := true;
+			suppressNew := true;
+			reviewSelections := true
+		end;
+	if suppressFolderTabs then begin
+			self.labelsFilter := '_all;
+			self.storesFilter := nil;
+			folderTabs.viewFlags := 0;
+			l1.top := (l1.top - 13)
+		end else begin
+			if (storesFilter exists) then begin
+					self.storesFilter := storesFilter
+				end
+		end;
+	if suppressAZTabs then begin
+			AZTabs.viewFlags := 0;
+			l1.top := (l1.top - 18)
+		end;
+	if suppressScrollers then begin
+			upDownScroller.viewFlags := 0
+		end;
+	if suppressSelOnlyCheckbox then begin
+			selectedCheckBox.viewFlags := 0
+		end;
+	if suppressCloseBox then begin
+			closeBox.viewFlags := 0
+		end;
+	if (if suppressNew then suppressFind) then begin
+			findNnewContainer.viewFlags := 0
+		end;
+	if (pickerDef.singleSelect or suppressCounter) then begin
+			selCountText.viewFlags := 0
+		end;
+	if (if (if (if (if suppressSelOnlyCheckbox then suppressCloseBox) then suppressNew) then suppressFind) then (pickerDef.singleSelect or suppressCounter)) then begin
+			l1.bottom := (l1.bottom + 25);
+			dividerLine.viewFlags := 0
+		end;
+	if (not suppressBorder) then begin
+			l2 := self:LocalBox();
+			fBorder := MakeRect(0, 0, l2.right, l2.bottom)
+		end;
+	if selected then begin
+			StableSort(selected, '|str<|, func(a1) begin
+				pickerDef:Get(a1, pickerDef._sortPath, 'sortText)
+			end)
+		end else begin
+			selected := [Array: ]
+		end;
+	l3 := 0;
+	l4 := nil;
+	if selected then begin
+			l5 := ClassOf(pickerDef);
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			local l5;
+			(for l6 := 0 to (Length(selected) - 1) do begin
+					local l9;
+					if (not (l9 := selected[l6])._Unselected) then begin
+							l4 := l9;
+							listBase.freshest := {nameRef: l9};
+							l3 := (l3 + 1)
+						end;
+					if (not IsInstance(l9, l5)) then begin
+							l9 := (selected[l6] := pickerDef:MakeNameRef(l9, nil))
+						end;
+					if ((not l9._alias) or (not ResolveEntryAlias(l9._alias))) then begin
+							l9._fakeID := self:GetUniqueFakeID()
+						end else begin
+							l9._fakeID := nil
+						end
+				end)
+		end;
+	totalSelected := l3;
+	if (reviewSelections := (if (if reviewSelections then l4) then (not pickerDef.singleSelect))) then begin
+			nowShowing := 'selected
+		end;
+	self:SetupCursor(l4);
+	AddDeferredSend(AZTabs, 'Update, [Array: ])
+end
+@@end

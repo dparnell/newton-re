@@ -1,0 +1,9 @@
+@@ 0x435c6d
+func(a1) begin
+	local l1;
+	if (if (l1 := realCurs:GotoKey(a1)) then (l1.kind = 'delete)) then begin
+			l1 := self:Next()
+		end;
+	l1
+end
+@@end

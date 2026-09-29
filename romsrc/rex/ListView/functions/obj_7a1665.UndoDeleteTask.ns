@@ -1,0 +1,11 @@
+@@ 0x7974ad names
+func(aDate, aTask) begin
+	local Entry;
+	(Entry := self:GetToDoEntryDefaultStore(aDate, nil).Entry).needsSort := true;
+	AddArraySlot(Entry.topics, aTask);
+	EntryChangeXmit(Entry, 'todo);
+	AddUndoAction('DeleteTask, [Array: aDate, aTask, true]);
+	self:RedoTopics();
+	self:CalculateScrollRects()
+end
+@@end

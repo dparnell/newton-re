@@ -1,0 +1,32 @@
+@@ 0x5954dd
+func() begin
+	if (not connected) then begin
+			timerStarted := nil;
+			return nil
+		end;
+	if activetimeout then begin
+			if ((activetimeout := (activetimeout - 5)) <= 0) then begin
+					if lastAtom then begin
+							if (lastAtom = 'atom09) then begin
+									self:atom09(self, lastStream, 4, 0, 0)
+								end else begin
+									if (lastAtom = 'atom17) then begin
+											self.retry := true;
+											self:atom17(self, lastStream, 2, 0, 0);
+											self.retry := nil;
+											self.mail_in := nil;
+											self:EndTransaction();
+											self:Atom00(self, lastStream, 2, 0, 0);
+											self:Mail_Read(lastMailID, transport)
+										end
+								end
+						end else begin
+							self:EndTransaction();
+							self:?transactionAbortedScript(nil)
+						end
+				end
+		end;
+	timerStarted := true;
+	AddDelayedSend(self, 'TimeoutTick, [Array: ], 5000)
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x55da05
+func() begin
+	curLabelCommand := savedLabelCommand;
+	inherited:?viewSetupFormScript();
+	self:AdjustForDate()
+end
+@@end

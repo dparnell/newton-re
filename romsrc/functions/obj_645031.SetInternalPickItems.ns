@@ -1,0 +1,35 @@
+@@ 0x46ab1d
+func() begin
+	l1 := cText.lastChar;
+	l2 := cText.template;
+	if (if (not cText:FixedWord()) then l1) then begin
+			l4 := cText.altChars[l1];
+			l5 := (l1 - cText.wordLeft);
+			if l4 then begin
+					l6 := cText:CurrentWord();
+					l3 := Array(((l7 := (StrLen(l4) - 1)) + 1), nil);
+					local l1;
+					local l2;
+					local l3;
+					local l4;
+					local l5;
+					local l6;
+					local l7;
+					(for l8 := 0 to l7 do begin
+							local l11;
+							l6[l5] := l4[l8];
+							l3[l8] := Clone(l6)
+						end)
+				end
+		end;
+	if (not l3) then begin
+			if ((StrLen((l11 := cText:GetWordForDisplay())) = 0) or (not IsInk(l11[0]))) then begin
+					l3 := [Array: l11]
+				end else begin
+					l3 := [Array: ]
+				end
+		end;
+	pickItems := nil;
+	(if (Length(l3) > 0) then (pickItems := l3))
+end
+@@end

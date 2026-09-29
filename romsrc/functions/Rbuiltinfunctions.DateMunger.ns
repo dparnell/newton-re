@@ -1,0 +1,14 @@
+@@ 0x44ca65
+func(a1, a2, a3) begin
+	local l1, l2, l3;
+	(if a2 then begin
+			l2 := StrLen((l1 := SPrintObject(a2)));
+			l3 := 0;
+			if (l2 > 2) then begin
+					l3 := (l2 - 2);
+					l2 := 2
+				end;
+			StrMunger(a1, ((a3 + 2) - l2), l2, l1, l3, l2)
+		end)
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x54fe4d
+func() begin
+	rotateButton := nil;
+	inherited:?viewQuitScript()
+end
+@@end

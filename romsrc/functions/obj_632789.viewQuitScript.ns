@@ -1,0 +1,10 @@
+@@ 0x55b875
+func() begin
+	findAllResults := (localFinder := (target := nil));
+	appSpecificChildren := nil;
+	RemoveSlot(self, 'stepChildren);
+	findOverview:Close();
+	UnRegStoreChange('_find);
+	inherited:?viewQuitScript()
+end
+@@end

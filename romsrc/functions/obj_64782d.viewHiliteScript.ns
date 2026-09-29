@@ -1,0 +1,6 @@
+@@ 0x4bac81
+func(a1) begin
+	self:DrawShape(MakeRoundRect(labelBox.left, labelBox.top, labelBox.right, (labelBox.top + height), 4), '{transferMode: 2, penPattern: 0, fillPattern: 5});
+	true
+end
+@@end

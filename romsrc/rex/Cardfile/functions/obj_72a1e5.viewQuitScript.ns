@@ -1,0 +1,9 @@
+@@ 0x72a3ad
+func() begin
+	if target.(path) then begin
+			SetClass(target.(path), '|string.custom|);
+			self:StartFlush()
+		end;
+	inherited:?viewQuitScript()
+end
+@@end

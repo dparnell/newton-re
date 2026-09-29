@@ -1,0 +1,5 @@
+@@ 0x4b84d9
+func() begin
+	(if (if (if target then path) then target.(path)) then TimeStr(target.(path), format) else "")
+end
+@@end

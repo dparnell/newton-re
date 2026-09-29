@@ -1,0 +1,5 @@
+@@ 0x4f1d69
+func() begin
+	(if self:IsCurrentSettingsSameAsEveryDay() then (clusterValue := 6) else (clusterValue := RepeatingView.repeatType))
+end
+@@end

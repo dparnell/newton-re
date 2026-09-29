@@ -1,0 +1,42 @@
+@@ 0x766ef1
+@@const kFunction_7670a5
+func(a1, a2, a3) begin
+	local l1;
+	warningName := (if (not a1) then 'vBarber else (if (ClassOf(a1) <> 'symbol) then 'vGauge else a1));
+	if (a3 = 'default) then begin
+			a3 := nil
+		end;
+	if (not a2) then begin
+			a2 := fTitle
+		end;
+	fTitle := a2;
+	self:viewset((l1 := {name: warningName, values: {icon: @515, statusText: a2, titleText: a3, barber: (warningName = 'vBarber), gauge: (if (warningName = 'vGauge) then 1), closeBox: nil, primary: nil}}));
+	self:Open();
+	(if (warningName = 'vBarber) then self:SetupIdle(300) else self:SetupIdle(0))
+end
+@@const kFunction_7672d5
+func(a1) begin
+	(if ((warningName = 'vGauge) or (warningName = 'vBarber)) then self:UpdateIndicator({name: warningName, values: {gauge: (if (warningName = 'vGauge) then a1[0]), barber: (warningName = 'vBarber)}}))
+end
+@@const kFunction_76738d
+func() begin
+	self:Update(nil);
+	300
+end
+@@const kLiteral_766fc5
+{OpenDlog: kFunction_7670a5, Update: kFunction_7672d5, viewIdleScript: kFunction_76738d, fTitle: nil, warningName: nil, viewEffect: 236577, _proto: @467}
+@@main
+func(a1) begin
+	if (not initializing) then begin
+			if (WarningDialog = nil) then begin
+					WarningDialog := BuildContext(kLiteral_766fc5)
+				end;
+			WarningDialog:OpenDlog('vStatus, "Changing magnification", nil)
+		end;
+	inherited:ZoomTo(a1);
+	(if (if (not initializing) then WarningDialog) then begin
+			WarningDialog:Close();
+			(WarningDialog := nil)
+		end)
+end
+@@end

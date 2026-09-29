@@ -1,0 +1,36 @@
+@@ 0x78d02d names
+func(aDragRef, anOffset, aLastDragPt, aCopy) begin
+	doPriority := true;
+	if (if IsFrame(aDragRef) then HasPath(aDragRef, 'viewCObject)) then begin
+			return nil
+		end;
+	if (not HasPath(aDragRef, 'topics)) then begin
+			return nil
+		end;
+	if (if (dragTo <> nil) then (dragTo.index = -2)) then begin
+			return true
+		end;
+	if (dragTo = nil) then begin
+			saveDragTo := {index: aDragRef.dragTo.index, level: aDragRef.dragTo.level};
+			doPriority := nil
+		end else begin
+			saveDragTo := dragTo
+		end;
+	local saveDragTo;
+	local doPriority;
+	local topic;
+	local undoDragRef;
+	local undoDoneList;
+	undoDoneList := (foreach topic in topics collect topic.mtgDone);
+	self:AddTopicDragDrop(aDragRef, true, true);
+	self:RemoveTopicDragDrop(aDragRef, true);
+	if aDragRef.doneList then begin
+			self:UndoCheck(aDragRef.doneList)
+		end;
+	measureTopics := true;
+	self:RedoTopics();
+	(undoDragRef := self:MakeUndoDragRef(aDragRef, saveDragTo)).doneList := undoDoneList;
+	AddUndoAction('viewDropMoveScript, [Array: undoDragRef, nil, nil, nil]);
+	(curTopic := nil)
+end
+@@end

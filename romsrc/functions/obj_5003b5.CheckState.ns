@@ -1,0 +1,6 @@
+@@ 0x4ffdf5
+func(a1) begin
+	local l1;
+	(if ((l1 := ClassOf(a1)) = 'string) then 'NotCheckable else (if (((l1 = 'meeting) or a1.topic) or LSearch('[Array: meeting, RepeatingMeeting, exceptionMeeting, cribNote], a1.viewStationery, 0, '|=|, nil)) then self:isSelected(a1) else 'NotCheckable))
+end
+@@end

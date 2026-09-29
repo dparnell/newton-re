@@ -1,0 +1,5 @@
+@@ 0x4429d9
+func() begin
+	context:?newYear(value)
+end
+@@end

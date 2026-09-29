@@ -1,0 +1,10 @@
+@@ 0x4d2471
+func() begin
+	local l1;
+	l1 := inherited:?GetStatusString();
+	if (((status = 'Sending) or (status = 'Receiving)) or (status = 'Confirming)) then begin
+			l1 := ParamStr(l1, [Array: NumberStr(beamIndex), NumberStr(beamTotal)])
+		end;
+	l1
+end
+@@end

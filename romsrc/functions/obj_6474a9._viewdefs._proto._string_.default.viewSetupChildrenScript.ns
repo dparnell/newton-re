@@ -1,0 +1,5 @@
+@@ 0x4771b1
+func() begin
+	(if fields then (self.viewChildren := [Array: {viewBounds: SetBounds(0, 0, 636, 100), _proto: @193, viewStationery: 'para, text: target, viewFont: GetUserConfig('mailFont)}]) else (self.viewChildren := [Array: ]))
+end
+@@end

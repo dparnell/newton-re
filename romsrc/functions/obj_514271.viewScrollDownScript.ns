@@ -1,0 +1,21 @@
+@@ 0x5134c5
+func(a1) begin
+	local l1, l2;
+	l1 := self:GetToDoAgendaView();
+	if (if ((calendarBottom - viewOriginY) = 0) then l1) then begin
+			if ((not l1:lastIsEnd()) or (l1:getToDoBottom() > self:GlobalBox().bottom)) then begin
+					l1:viewScrollDownScript()
+				end
+		end else begin
+			l2 := self:LocalBox();
+			if ((if (not l1) then ((calendarBottom - viewOriginY) > self:LocalBox().bottom)) or (if l1 then ((not l1:lastIsEnd()) or (l1:getToDoBottom() > self:GlobalBox().bottom)))) then begin
+					self:doscrollscript(itemHeights[currentItem]);
+					AgendaView.currentItem := (currentItem + 1);
+					if (if (if ((calendarBottom - viewOriginY) <= l2.bottom) then l1) then (not l1:lastIsEnd())) then begin
+							l1:RedoChildren()
+						end
+				end
+		end;
+	self:calculateScrollRects()
+end
+@@end

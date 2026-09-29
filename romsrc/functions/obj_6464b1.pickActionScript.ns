@@ -1,0 +1,9 @@
+@@ 0x43fecd
+func(a1) begin
+	local l1;
+	l1 := popup[a1];
+	RemoveSlot(self, 'popup);
+	AddDeferredSend(self, l1.msg, l1.args);
+	inherited:?pickActionScript(a1)
+end
+@@end

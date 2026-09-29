@@ -1,0 +1,12 @@
+@@ 0x5adc1d
+func() begin
+	if (if letters then origin) then begin
+			(for l1 := 0 to (StrLen(letters) - 1) do begin
+					if (letters[l1] = origin) then begin
+							return l1
+						end
+				end)
+		end;
+	return -1
+end
+@@end

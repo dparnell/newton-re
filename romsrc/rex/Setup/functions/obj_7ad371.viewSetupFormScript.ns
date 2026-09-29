@@ -1,0 +1,18 @@
+@@ 0x7ad421
+func() begin
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	(if ((l2 := Length((l1 := fPersona.phones))) > 0) then (foreach l3 in l1 do begin
+				if (ClassOf(l3) = 'faxPhone) then begin
+						if (if ((l4 := ParsePhone(l3)).AreaCode <> nil) then (not StrEqual(l4.AreaCode, ""))) then begin
+								vFax:SetTextArea(l4.AreaCode)
+							end;
+						if (if (l4.phone <> nil) then (not StrEqual(l4.phone, ""))) then begin
+								vFax:SetTextLocal(l4.phone)
+							end
+					end
+			end))
+end
+@@end

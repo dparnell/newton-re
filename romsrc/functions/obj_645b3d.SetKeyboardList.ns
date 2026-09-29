@@ -1,0 +1,12 @@
+@@ 0x43eead
+func(a1, a2) begin
+	local l1;
+	l1 := Clone(GetVariable(self, '_popupKeyboards));
+	if (if (ClassOf(a2) = 'symbol) then (a2 = 'noGlobalKeyboards)) then begin
+			l1 := SetUnion([Array: ], a1, true)
+		end else begin
+			l1 := SetUnion((l1 := SetDifference(l1, a2)), a1, true)
+		end;
+	(self._popupKeyboards := l1)
+end
+@@end

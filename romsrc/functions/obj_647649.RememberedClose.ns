@@ -1,0 +1,5 @@
+@@ 0x47b6f5
+func(a1) begin
+	self:viewQuitScript()
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x4ba305
+func(a1) begin
+	local l1;
+	if (l1 := (if (if a1 then (Length(a1) > 0)) then (if a1[0]._alias then ResolveEntryAlias(a1[0]._alias) else a1[0]))) then begin
+			targetView:jamFromEntry(l1)
+		end;
+	baseLine:hilite(nil)
+end
+@@end

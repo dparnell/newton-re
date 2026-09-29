@@ -1,0 +1,8 @@
+@@ 0x55b8d1
+func() begin
+	(if localFinder then begin
+			localFinder:ShowOrdinalItem('prev);
+			self:UpdateStatus()
+		end)
+end
+@@end

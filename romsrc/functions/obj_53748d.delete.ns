@@ -1,0 +1,6 @@
+@@ 0x5373ed
+func() begin
+	local l1;
+	(if (l1 := self:LookupSoupPackage()) then SafeRemovePackageQT(l1))
+end
+@@end

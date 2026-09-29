@@ -1,0 +1,10 @@
+@@ 0x4b640d
+func(a1) begin
+	if a1 then begin
+			self:FlushEntry(target);
+			pieces := nil;
+			self:Dirty()
+		end;
+	(info := nil)
+end
+@@end

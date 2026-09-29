@@ -1,0 +1,14 @@
+@@ 0x51a665
+func(a1) begin
+	local l1, l2;
+	self:OpenBook(a1.isbn);
+	if (l1 := a1.found).page then begin
+			l2 := l1.page
+		end else begin
+			l2 := self:FindPageByContent(l1.item, l1.char, l1.bookSoup);
+			l1.page := l2
+		end;
+	self:TurnToPage(l2);
+	self:HiliteBlock(l1.item, l1.char, l1.len)
+end
+@@end

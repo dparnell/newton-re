@@ -1,0 +1,7 @@
+@@ 0x5a40c1
+func(a1) begin
+	local l1;
+	(l1 := inherited:NewItem(a1)).class := 'mailText;
+	l1
+end
+@@end

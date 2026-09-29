@@ -1,0 +1,5 @@
+@@ 0x51dcf1
+func() begin
+	AddDeferredSend(base, 'Close, nil)
+end
+@@end

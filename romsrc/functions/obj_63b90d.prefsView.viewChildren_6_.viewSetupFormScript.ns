@@ -1,0 +1,6 @@
+@@ 0x50c14d
+func() begin
+	viewValue := theApp:GetAppPreferences().internalStore;
+	(text := ParamStr("Always store new ^0 internally", [Array: Downcase(Clone(theApp.appObject[1]))]))
+end
+@@end

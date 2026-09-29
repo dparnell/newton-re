@@ -1,0 +1,9 @@
+@@ 0x79981d names
+func(aFindWords, aSoupFinders, aMasterFinder, aContext) begin
+	local cursor;
+	aContext:SetStatus("Searching in To Do\u2026\u");
+	self:GetToDoSoup();
+	self:EndFlush();
+	(if (cursor := dataSoup:Query({type: 'words, words: aFindWords, indexPath: 'date})):Entry() then AddArraySlot(aSoupFinders, {_proto: protoToDoFinder, masterFinder: aMasterFinder, owner: GetRoot().calendar, findType: 'text, findWords: aFindWords, cursor: cursor}))
+end
+@@end

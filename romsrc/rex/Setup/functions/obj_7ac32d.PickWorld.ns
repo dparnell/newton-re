@@ -1,0 +1,12 @@
+@@ 0x7ac3e9
+func(a1) begin
+	mapCountry := a1.symbol;
+	fPersona.country := a1.name;
+	fWorkSite.countrySymbol := a1.symbol;
+	fWorkSite.country := a1.name;
+	fWorkworksite.countrySymbol := a1.symbol;
+	fWorkworksite.country := a1.name;
+	SetLocale(a1.symbol);
+	pickBase:Refresh()
+end
+@@end

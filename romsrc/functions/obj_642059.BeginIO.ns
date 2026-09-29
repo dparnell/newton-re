@@ -1,0 +1,8 @@
+@@ 0x4be515
+func() begin
+	local l1;
+	l1 := vars.ioBusy;
+	vars.ioBusy := true;
+	l1
+end
+@@end

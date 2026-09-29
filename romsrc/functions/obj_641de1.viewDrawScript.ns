@@ -1,0 +1,21 @@
+@@ 0x432741
+func() begin
+	local l1, l2, l3, l4, l5;
+	l1 := self:GetDuration((stopTime - startTime));
+	l2 := 96;
+	l3 := 108;
+	l4 := 0;
+	if (not StrFilled(l1[0])) then begin
+			l3 := (l3 - 6)
+		end else begin
+			l4 := StrFontWidth(l1[0], 10240)
+		end;
+	if (not StrFilled(l1[1])) then begin
+			l2 := (l2 + 6)
+		end else begin
+			l4 := max(l4, StrFontWidth(l1[1], 10240))
+		end;
+	l4 := (((119 - l4) div 2) - 12);
+	self:DrawShape((l5 := [Array: MakeText(startlabel, 0, 0, 123, 16), MakeText(stoplabel, 0, 48, 123, 64), '{font: 10240, justification: center}, MakeText(l1[0], 0, l2, 123, (l2 + 16)), MakeText(l1[1], 0, l3, 123, (l3 + 16)), '{font: 1057792}, MakeText("\uFC01\u", l4, 101, (l4 + 20), 117)]), '{font: 1058816, justification: center})
+end
+@@end

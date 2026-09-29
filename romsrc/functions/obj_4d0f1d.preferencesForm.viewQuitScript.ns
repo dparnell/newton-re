@@ -1,0 +1,10 @@
+@@ 0x4cd6c1
+func() begin
+	local l1;
+	if (if alarmSlip then alarmSlip.viewCObject) then begin
+			alarmSlip:Close()
+		end;
+	l1 := GetRoot().(appSymbol);
+	(if (if l1:GetConfig('faxAutoReceive) then (wasAutoReceive = nil)) then l1:start() else (if (if (not l1:GetConfig('faxAutoReceive)) then (wasAutoReceive = true)) then l1:CancelRequest('userCancel) else (if (if (if (lastRing <> GetUserConfig('faxringstoanswer)) then l1:GetConfig('faxAutoReceive)) then wasAutoReceive) then l1:RedoTheListen())))
+end
+@@end

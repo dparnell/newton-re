@@ -1,0 +1,13 @@
+@@ 0x556dc5
+func(a1, a2, a3) begin
+	local l1, l2;
+	(if (l1 := LFetch(GetPackages(), a2, 0, '|str=|, 'title)) then begin
+			l2 := (if l1.store then l1.store:GetName() else "Built-In");
+			GetRoot():Notify(3, "Newton", ParamStr("The package \u201C\u^0\u201D\u (on store \u201C\u^1\u201D\u) was not activated because a package by the same name (on store \u201C\u^2\u201D\u) is already in use.", [Array: a2, a3:GetName(), l2]));
+			nil
+		end else begin
+			ActivatePackage(a1);
+			true
+		end)
+end
+@@end

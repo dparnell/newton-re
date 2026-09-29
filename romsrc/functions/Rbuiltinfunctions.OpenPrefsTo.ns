@@ -1,0 +1,25 @@
+@@ 0x5b552d
+@@const kROM_810
+@810
+@@const kROM_809
+@809
+@@main
+func(a1) begin
+	local l1;
+	(if (ClassOf(a1) = 'frame) then begin
+			(l1 := BuildContext((if a1.nogo then kROM_810 else kROM_809))).viewBounds := SetBounds(0, 0, 224, a1.height);
+			l1.stepChildren := l1.viewChildren;
+			l1.viewChildren := [Array: a1];
+			l1.prefPanelProto := a1;
+			if (a1.height < GetAppParams().appAreaWidth) then begin
+					l1.ReOrientToScreen := GetRoot().Close
+				end;
+			l1:Open();
+			return l1
+		end else (foreach l2, l3 in GetPrefs() do begin
+				if StrEqual(l3.overview, a1) then begin
+						return OpenPrefsTo(l3)
+					end
+			end))
+end
+@@end

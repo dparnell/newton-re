@@ -1,0 +1,5 @@
+@@ 0x565839
+func() begin
+	AddProcrastinatedCall('_FlushUserConfig, functions.EntryChangeXmit, [Array: userConfiguration, '_newt], 0)
+end
+@@end

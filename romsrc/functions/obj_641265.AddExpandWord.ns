@@ -1,0 +1,23 @@
+@@ 0x5a9e69
+func(a1, a2) begin
+	local l1, l2, l3;
+	l1 := nil;
+	self:SetUpDictionary();
+	if (l2 := self:GetIndex()) then begin
+			if ((l3 := expandDict:AddWord(a1, l2)) = 0) then begin
+					expandDict.list[l2] := a2;
+					AddUndoAction('RemoveExpandedWord, [Array: a1]);
+					l1 := true
+				end;
+			if self.viewCObject then begin
+					words:Dirty();
+					self:ExpandOff()
+				end
+		end else begin
+			if self.viewCObject then begin
+					self:Notify(3, notifyTitle, "You have reached the maximum of 256 expand words.  Please remove some expand words and try again.")
+				end
+		end;
+	return l1
+end
+@@end

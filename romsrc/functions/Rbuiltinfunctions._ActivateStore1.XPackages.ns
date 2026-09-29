@@ -1,0 +1,56 @@
+@@ 0x5585d9
+@@const kBinaryFromHex
+func(hex, cls) begin
+	local b := MakeBinary(StrLen(hex) div 2, cls);
+	for i := 0 to Length(b) - 1 do begin
+		local h := Ord(hex[2 * i]);
+		local l := Ord(hex[2 * i + 1]);
+		StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+	end;
+	b
+end
+@@const kLiteral_484299
+{mask: call kBinaryFromHex with ("000000000004010901090174011e018100000000000000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe0000000000000000000000000000000000000", 'mask), bits: call kBinaryFromHex with ("000000000004010901090174011e01817ff00000fff80000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000dfd80000cf980000c7180000c2180000c0180000fff800007ff000000000000000000000", 'bits), bounds: '{left: 0, top: 0, right: 13, bottom: 21}}
+@@main
+func(store) begin
+	local dupList, errList, miscErrorCount, entry, packageList;
+	local l1, l2;
+	dupList := nil;
+	errList := nil;
+	miscErrorCount := 0;
+	if (l1 := store:GetSoup(@276)) then begin
+			if (entry := l1:Query('{indexPath: tag, beginKey: "Packages", endKey: "Packages"}):entry()) then begin
+					packageList := GetPackages();
+					l2 := GetRoot().SleepScreen.viewCObject;
+					if (Length(entry.pssids) > 0) then begin
+							DoProgress('vBarber, {barber: true, statusText: ParamStr("Activating packages on the store \u201C\u^0\u201D\u.", [Array: store:GetName()]), icon: kLiteral_484299, primary: nil, closeBox: nil, screenRelativeH: l2}, func(a1) begin
+								(foreach l1 in entry.pssids do begin
+										local l3, l4, l5, l6;
+										try begin
+												if (not IsSirNotAppearingInThisROM((l4 := (l3 := GetPkgInfoFromPssid(l1, store)).title), l3.version, 'activate)) then begin
+														if (l5 := LFetch(packageList, l4, 0, '|str=|, 'title)) then begin
+																l6 := (if l5.store then l5.store:GetName() else "Built-In");
+																dupList := StrConcatDelimited(dupList, ", ", ParamStr("\u201C\u^0\u201D\u on \u201C\u^1\u201D\u", [Array: l4, l6]))
+															end else begin
+																try begin
+																		a1:?SetStatus('vBarber, {titleText: Stringer([Array: $\u201C, l4, $\u201D]), barber: true});
+																		|Activate1.XPackage|(l1, store)
+																	end onexception |evt.ex| do begin
+																		errList := StrConcatDelimited(errList, ", ", Stringer([Array: $\u201C, l4, $\u201D]))
+																	end
+															end
+													end
+											end onexception |evt.ex| do begin
+												miscErrorCount := (miscErrorCount + 1)
+											end
+									end)
+							end)
+						end
+				end
+		end;
+	if (miscErrorCount > 0) then begin
+			errList := StrConcatDelimited(errList, ", ", ParamStr("^0 unknown package^?1s||", [Array: miscErrorCount, (miscErrorCount > 1)]))
+		end;
+	{dupList: dupList, errList: errList}
+end
+@@end

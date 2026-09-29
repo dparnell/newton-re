@@ -1,0 +1,16 @@
+@@ 0x41c7ad
+func(a1, a2, a3, a4, a5) begin
+	local l1, l2;
+	l1 := ProcrastinatedActions.(a1);
+	l2 := (Ticks() + ((a5 * 60) div 1000));
+	(if l1 then begin
+			l1.receiverOrClosure := a2;
+			l1.argArray := a4;
+			l1.message := a3;
+			(l1.timeToRun := l2)
+		end else begin
+			ProcrastinatedActions.(EnsureInternal(a1)) := {receiverOrClosure: a2, argArray: a4, message: a3, timeToRun: l2};
+			AddDelayedCall(functions.ExecuteProcrastinatedCall, [Array: a1], a5)
+		end)
+end
+@@end

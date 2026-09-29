@@ -1,0 +1,72 @@
+@@ 0x79ee6d names
+func() begin
+	local when, displayDate;
+	if (if (if isNewToDo then (not dirtyFlag)) then (StrLen(newTitle) = 0)) then begin
+			if HasPath(task, 'repeatInfo) then begin
+					list:DeleteTask(0, task, true)
+				end else begin
+					list:DeleteTask(originalMtgDate, task, true)
+				end;
+			isNewToDo := nil
+		end else begin
+			if (if isNewToDo then dirtyFlag) then begin
+					when := newMtgDate;
+					if HasPath(task, 'repeatInfo) then begin
+							when := 0
+						end;
+					list:AddUndoAction('UndoNewTask, [Array: when, task]);
+					isNewToDo := nil
+				end;
+			if (if Visible(list) then dirtyFlag) then begin
+					self:ApplyAllChanges();
+					list:StartFlush();
+					if HasPath(task, 'repeatInfo) then begin
+							if ((displayDate := NextMeeting(selectedDates[0], task.repeatInfo)) = 0) then begin
+									displayDate := task.repeatInfo.mtgStartDate
+								end;
+							if task.repeatInfo.reminderInterval then begin
+									displayDate := (displayDate - task.repeatInfo.reminderInterval)
+								end
+						end else begin
+							if (newMtgDate <> selectedDates[0]) then begin
+									displayDate := newMtgDate
+								end
+						end;
+					if (if displayDate then (displayDate <> selectedDates[0])) then begin
+							selectedDates[0] := displayDate;
+							self:RedisplayScript();
+							if (mainDisplay <> agendaView) then begin
+									GetRoot().calendar:GetToDo():ScrollToTask(newMtgDate, task)
+								end else begin
+									agendaView:ScrollToTask(newMtgDate, task)
+								end
+						end else begin
+							if Visible(DatesOverviewForm) then begin
+									DatesOverviewForm:Retarget()
+								end else begin
+									if needsMeasure then begin
+											list.measureTopics := true
+										end;
+									list:RedoChildren();
+									if (mainDisplay <> agendaView) then begin
+											list:ScrollToTask(newMtgDate, task)
+										end else begin
+											agendaView:ScrollToTask(newMtgDate, task)
+										end
+								end
+						end
+				end
+		end;
+	calendar.lastMailFormat := mainViewLastMailFormat;
+	RemoveSlot(self, 'newStopDate);
+	RemoveSlot(self, 'newFirstDate);
+	task := nil;
+	paraView := nil;
+	savedPriorityIndex := nil;
+	savedReminderIndex := nil;
+	savedFrequencyIndex := nil;
+	killRepeating := nil;
+	nominalDate := nil;
+	(list := nil)
+end
+@@end

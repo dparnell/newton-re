@@ -1,0 +1,6 @@
+@@ 0x4e349d
+func() begin
+	self:JamDisplay(self:CalcFormattedNumberStr(value));
+	(inputKeys := "")
+end
+@@end

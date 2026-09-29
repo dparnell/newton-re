@@ -1,0 +1,48 @@
+@@ 0x4dab25
+func(a1) begin
+	l1 := "";
+	if a1 then begin
+			l4 := [Array: ];
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			local l5;
+			local l6;
+			(for l2 := 0 to (Length(a1) - 1) do begin
+					if HasSlot((l6 := a1[l2]), 'text) then begin
+							AddArraySlot(l4, l6)
+						end else begin
+							if HasSlot(l6, 'realData) then begin
+									AddArraySlot(l4, l6.realData)
+								end
+						end
+				end);
+			(for l2 := 0 to (Length(l4) - 2) do begin
+					(for l3 := (Length(l4) - 1) to (l2 + 1) by -1 do begin
+							if (l4[l2].viewBounds.top > l4[l3].viewBounds.top) then begin
+									l5 := l4[l3];
+									l4[l3] := l4[l2];
+									l4[l2] := l5
+								end else begin
+									if (l4[l2].viewBounds.top = l4[l3].viewBounds.top) then begin
+											if (l4[l2].viewBounds.left > l4[l3].viewBounds.left) then begin
+													l5 := l4[l3];
+													l4[l3] := l4[l2];
+													l4[l2] := l5
+												end
+										end
+								end
+						end)
+				end);
+			(for l2 := 0 to (Length(l4) - 1) do begin
+					local l11;
+					if (l11 := MakeRichString(l4[l2].text, l4[l2].styles)) then begin
+							l1 := StrConcat(l1, l11)
+						end;
+					l1 := StrConcat(l1, "\n")
+				end)
+		end;
+	l1
+end
+@@end

@@ -1,0 +1,15 @@
+@@ 0x42fa51
+func(a1) begin
+	local l1;
+	if (Length((l1 := vars.EmailSystems)) = 1) then begin
+			l1.emailClasses := Clone(l1._proto.emailClasses);
+			l1.emailText := Clone(l1._proto.emailText);
+			l1.emailInternet := Clone(l1._proto.emailInternet)
+		end;
+	if (not LSearch(l1.emailClasses, a1.symbol, 0, '|=|, nil)) then begin
+			AddArraySlot(l1.emailClasses, a1.symbol)
+		end;
+	l1.emailText.(EnsureInternal(a1.symbol)) := SetClass(EnsureInternal(a1.name), EnsureInternal(a1.symbol));
+	(l1.emailInternet.(EnsureInternal(a1.symbol)) := EnsureInternal(a1.normalize))
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x4b94f5
+func(a1) begin
+	local l1, l2;
+	(if ((not StrFilled(a1)) or IsRichString(a1)) then a1 else begin
+			validDate := IsValidDate(a1);
+			l1 := target.(path);
+			(if (l2 := StringToDate(a1)) then (if (if l1 then IsImmediate(l1)) then ((l2 - (l2 mod 1440)) + (l1 mod 1440)) else (l2 - (l2 mod 1440))))
+		end)
+end
+@@end

@@ -1,0 +1,11 @@
+@@ 0x46b0f9
+func(a1) begin
+	(if (wordSource = 'Editing) then begin
+			self:ProcrastinatedDisplayExternal(savedUndoState);
+			(savedUndoState := nil)
+		end else begin
+			self:DoPendingUpdate();
+			self:RealDisplayExternal(a1)
+		end)
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x46bb19
+func(a1) begin
+	local l1;
+	if (not HasPath(template, '_MultiWord)) then begin
+			self:SetNewWord((l1 := GetDynamicValue(refCon.form, 'text, 'string)), 'single);
+			self:SetStartLen(0, StrLen(l1))
+		end;
+	inherited:UseNewTemplate(a1)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x4a71e1
+func() begin
+	(if theApp.prefsCache then (theApp.prefsCache.internalStore := viewValue))
+end
+@@end

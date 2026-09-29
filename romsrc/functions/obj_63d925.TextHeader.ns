@@ -1,0 +1,40 @@
+@@ 0x5a3275
+func(a1) begin
+	l1 := ParamStr("Subject: ^0\n", [Array: a1.title]);
+	l2 := (if (if a1.fromName then (StrLen(a1.fromName) > 0)) then ParamStr("From: ^0 (^1)\n", [Array: a1.fromName, a1.fromRef.email]) else ParamStr("From: ^0\n", [Array: a1.fromRef.email]));
+	l1 := Stringer([Array: (l1 := Stringer([Array: (l1 := Stringer([Array: l1, l2])), "Sent: ", a1.dateStr, $\n])), ParamStr("Received: ^2 ^0 ^1\n", [Array: LongDateStr(a1.timestamp, @66.abbrDayOfWeekStrSpec), ShortDateStr(a1.timestamp, @66.numericDateStrSpec), HourMinute(a1.timestamp)])]);
+	if (Length(a1.toRef) > 0) then begin
+			local l1;
+			local l2;
+			(for l3 := 0 to (Length(a1.toRef) - 1) do begin
+					if (l3 = 0) then begin
+							l1 := Stringer([Array: l1, "To: ", a1.toRef[0].email])
+						end else begin
+							l1 := Stringer([Array: l1, ", ", a1.toRef[l3].email])
+						end
+				end);
+			l1 := Stringer([Array: l1, $\n])
+		end;
+	if (Length(a1.cc) > 0) then begin
+			(for l3 := 0 to (Length(a1.cc) - 1) do begin
+					if (l3 = 0) then begin
+							l1 := Stringer([Array: l1, "Cc: ", a1.cc[0].email])
+						end else begin
+							l1 := Stringer([Array: l1, ", ", a1.cc[l3].email])
+						end
+				end);
+			l1 := Stringer([Array: l1, $\n])
+		end;
+	if (Length(a1.bcc) > 0) then begin
+			(for l3 := 0 to (Length(a1.bcc) - 1) do begin
+					if (l3 = 0) then begin
+							l1 := Stringer([Array: l1, "Bcc: ", a1.bcc[0].email])
+						end else begin
+							l1 := Stringer([Array: l1, ", ", a1.bcc[l3].email])
+						end
+				end);
+			l1 := Stringer([Array: l1, $\n])
+		end;
+	l1
+end
+@@end

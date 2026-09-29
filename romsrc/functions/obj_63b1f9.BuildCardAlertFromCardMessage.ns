@@ -1,0 +1,11 @@
+@@ 0x56e521
+func(a1, a2, a3) begin
+	local l1;
+	if IsFunction(a1.message) then begin
+			a1 := {_proto: a1, message: a1:message(a3)}
+		end;
+	(l1 := BuildContext(self)).CardSlot := a2;
+	l1.cardMessage := a1;
+	l1
+end
+@@end

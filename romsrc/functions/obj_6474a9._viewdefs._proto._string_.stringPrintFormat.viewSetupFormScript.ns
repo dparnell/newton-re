@@ -1,0 +1,9 @@
+@@ 0x4773fd
+func() begin
+	local l1;
+	inherited:viewSetupFormScript();
+	l1 := GetUserConfig('mailFont);
+	self.data := [Array: {_proto: @193, viewBounds: SetBounds(0, 0, 636, 100), viewStationery: 'para, text: target, viewFont: l1}];
+	(self.reflowStart := 0)
+end
+@@end

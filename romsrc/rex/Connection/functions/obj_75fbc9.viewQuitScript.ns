@@ -1,0 +1,41 @@
+@@ 0x760c61
+func() begin
+	local l1;
+	if needToAbort then begin
+			if configOptions.modal then begin
+					call callback with (nil)
+				end else begin
+					AddDeferredCall(callback, [Array: nil])
+				end;
+			return nil
+		end;
+	if endpoint then begin
+			endpoint:StopIdle(self)
+		end;
+	l1 := {userName: nil, password: nil, userCancel: nil};
+	if configOptions.|name?| then begin
+			l1.userName := nameInput.entryLine.text;
+			if (if configOptions.|guest?| then (nameInput.curLabelCommand = (Length(nameInput.labelCommands) - 1))) then begin
+					l1.userName := 'guest
+				end
+		end;
+	if (configOptions.|password?|.guest or configOptions.|password?|.users) then begin
+			if ((if (l1.userName = 'guest) then configOptions.|password?|.guest) or (if (not (l1.userName = 'guest)) then configOptions.|password?|.users)) then begin
+					if passwordInput.passwordVisible then begin
+							l1.password := passwordInput.entryLine.text
+						end else begin
+							l1.password := passwordInput.realText
+						end
+				end
+		end;
+	l1.userCancel := userCancel;
+	if callback then begin
+			if configOptions.modal then begin
+					call callback with (l1)
+				end else begin
+					AddDeferredCall(callback, [Array: l1])
+				end
+		end;
+	inherited:?viewQuitScript()
+end
+@@end

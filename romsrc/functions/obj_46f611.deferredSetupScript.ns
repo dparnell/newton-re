@@ -1,0 +1,22 @@
+@@ 0x46f551
+func() begin
+	local l1, l2;
+	l1 := 0;
+	if formOpen then begin
+			if (not appleTalkOpen) then begin
+					l1 := OpenAppleTalk()
+				end;
+			if (l1 <> 0) then begin
+					if (l1 = -12014) then begin
+							l2 := "The chooser can not be opened because AppleTalk is already in use."
+						end else begin
+							l2 := ParamStr("There is a problem opening the chooser. (^0)", [Array: self:TranslateError(l1)])
+						end;
+					self:CloseAndNotify(l2)
+				end else begin
+					appleTalkOpen := true
+				end
+		end;
+	return (if formOpen then appleTalkOpen)
+end
+@@end

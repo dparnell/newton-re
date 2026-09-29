@@ -1,0 +1,26 @@
+@@ 0x5b9151
+func(a1, a2) begin
+	local l1, l2;
+	if (((a1 = 7) or (a1 = 1)) or (a1 = 42)) then begin
+			a1 := 6
+		end;
+	if ((a1 = 43) or (a1 = 44)) then begin
+			a1 := 26
+		end;
+	if (a1 = 2) then begin
+			a1 := 3
+		end;
+	if (a1 = 41) then begin
+			a1 := 24
+		end;
+	l1 := GetDictionary(a1);
+	if (if (if ((l2 := l1:LookupEncodedWord(a2)) <> 2) then (l2 <> 3)) then (a1 = 0)) then begin
+			l1 := GetDictionary(6);
+			if (if ((l2 := l1:LookupEncodedWord(a2)) <> 2) then (l2 <> 3)) then begin
+					l1 := GetDictionary(3);
+					l2 := l1:LookupEncodedWord(a2)
+				end
+		end;
+	return ((l2 = 2) or (l2 = 3))
+end
+@@end

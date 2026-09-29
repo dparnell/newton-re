@@ -1,0 +1,60 @@
+@@ 0x55bf3d
+func(a1) begin
+	if (Length(findAllResults) >= 2) then begin
+			l1 := 2
+		end else begin
+			l1 := 0;
+			local l1;
+			(foreach l2 in findAllResults do begin
+					local l4, l5, l6, l7;
+					if (not (l4 := l2:?ZeroOneOrMore())) then begin
+							l4 := l2:count()
+						end;
+					if ((l1 := (l1 + l4)) >= 2) then begin
+							break
+						end
+				end)
+		end;
+	(if (l1 = 0) then begin
+			if (a1 = 'findFrontmost) then begin
+					l5 := ParamStr("Not found in ^0.", [Array: GetVariable(target, 'title)])
+				end else begin
+					if (a1 = 'findSelected) then begin
+							l5 := "Not found in selected apps."
+						end else begin
+							l5 := "Not found anywhere."
+						end
+				end;
+			self:SetMessage(l5);
+			(target := nil)
+		end else (if (l1 = 1) then begin
+				if (a1 <> 'findFrontmost) then begin
+						self:HideOtherApps(findAllResults[0].owner);
+						if (if (not (l6 := findAllResults[0].title)) then findAllResults[0].owner.appSymbol) then begin
+								l6 := GetAppName(findAllResults[0].owner.appSymbol)
+							end;
+						if (not l6) then begin
+								l6 := "Frontmost app"
+							end;
+						if findDrawer.viewCObject then begin
+								SetValue(findDrawer.radioCluster.frontMostAppRadioButton, 'text, l6)
+							end
+					end;
+				self:ShowItem(findAllResults[0], 'first)
+			end else begin
+				if (a1 <> 'findFrontmost) then begin
+						localFinder := (target := nil)
+					end;
+				self:SetStatus("Creating list of found items\u2026\u");
+				if (if GetVariable((l7 := GetView('viewfrontmostapp)), 'CustomFindOverview) then (not findDrawer.viewCObject)) then begin
+						l7:CustomFindOverview(findAllResults)
+					end else begin
+						findOverview.findAllResults := findAllResults;
+						findOverview.titleText := findText;
+						findOverview.savedScrollOrigin := nil;
+						findOverview:Open()
+					end;
+				self:UpdateStatus()
+			end))
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x73aa19
+func() begin
+	if (if (if selectedLayout then target) then GetViewDefs(target.class).(selectedLayout)) then begin
+			self.viewDef := selectedLayout
+		end else begin
+			self.viewDef := 'default
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

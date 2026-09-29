@@ -1,0 +1,19 @@
+@@ 0x530499
+func() begin
+	l1 := GetUserConfig(configSlot);
+	self:ensureServerSetup();
+	server:setdefaultConfig(l1);
+	if server then begin
+			server:Dispose();
+			server := nil
+		end;
+	local l1;
+	(foreach l2, l3 deeply in CommConfigChangeRegistry do begin
+			if (l3 = CommConfigChangeRegistry.(l2)) then begin
+					try begin
+							call l3 with (configService, l1)
+						end onexception |evt.ex| do begin end
+				end
+		end)
+end
+@@end

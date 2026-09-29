@@ -1,0 +1,7 @@
+@@ 0x552031
+func() begin
+	local l1, l2;
+	l2 := OffsetRect(ShapeBounds((l1 := self:GetIconShapeText())), 0, 1);
+	[Array: l1, '{transferMode: 2, penPattern: 0, fillPattern: 5}, MakeShape(l2)]
+end
+@@end

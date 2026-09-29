@@ -1,0 +1,33 @@
+@@ 0x51a5ed
+func(a1, a2, a3) begin
+	local l1, l2;
+	(if (storyCard <> nil) then self:HideStoryCard() else (if (Length((theContent := self:FindContentByValue(a1, a2, true))) <> 0) then begin
+				l1 := {_proto: @221, viewBounds: a3};
+				if (ClassOf((l2 := theContent[0].data)) = 'picture) then begin
+						l1.viewClass := 76;
+						l1.icon := l2
+					end else begin
+						l1.text := l2
+					end;
+				if theContent[0].viewFont then begin
+						l1.viewFont := theContent[0].viewFont
+					end;
+				if theContent[0].styles then begin
+						l1.styles := theContent[0].styles
+					end;
+				if theContent[0].tabs then begin
+						l1.tabs := theContent[0].tabs
+					end;
+				if theContent[0].viewJustify then begin
+						l1.viewJustify := theContent[0].viewJustify
+					end else begin
+						if theContent[0].layout then begin
+								if (BAnd(theContent[0].layout, 4) <> 0) then begin
+										l1.viewJustify := 2
+									end
+							end
+					end;
+				(storyCard := self:InsertForm(l1)):Show()
+			end))
+end
+@@end

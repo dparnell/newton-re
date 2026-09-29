@@ -1,0 +1,8 @@
+@@ 0x75e08d
+func(a1) begin
+	local l1;
+	l1 := GetRoot().Connection;
+	l1:CloseOpenWindows(true);
+	(a1.secretDoneCallback := nil)
+end
+@@end

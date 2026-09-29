@@ -1,0 +1,16 @@
+@@ 0x4bdbad
+func() begin
+	local l1, l2;
+	viewChildren := nil;
+	(if target then begin
+			targetDataDef := (currentDataDef := GetEntryDataDef((l1 := (if (if path then target.path) then target.(path) else target))));
+			if (viewDef <> nil) then begin
+					targetViewDef := (currentViewDef := GetEntryDataView(l1, viewDef))
+				end;
+			(if (l2 := Clone(targetViewDef)) then begin
+					l2.realData := (if path then target.(path) else target);
+					(viewChildren := [Array: l2])
+				end)
+		end)
+end
+@@end

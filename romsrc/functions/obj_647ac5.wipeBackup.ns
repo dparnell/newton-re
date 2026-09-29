@@ -1,0 +1,6 @@
+@@ 0x48ec5d
+func(a1, a2, a3) begin
+	a1:Close();
+	a2:wipeBackup(a3)
+end
+@@end

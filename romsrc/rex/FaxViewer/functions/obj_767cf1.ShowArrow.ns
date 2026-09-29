@@ -1,0 +1,8 @@
+@@ 0x767f4d
+func(a1, a2) begin
+	(if a2 then self.(a1):Open() else begin
+			self.(a1):hilite(nil);
+			self.(a1):Close()
+		end)
+end
+@@end

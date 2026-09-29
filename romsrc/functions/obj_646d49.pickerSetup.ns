@@ -1,0 +1,36 @@
+@@ 0x48cdbd
+func() begin
+	labelCommands := [Array: ];
+	if (l4 := GetMemoryItems(memory)) then begin
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			local l5;
+			local l6;
+			(foreach l7 in l4 do begin
+					AddArraySlot(labelCommands, {item: GetNames(l7.item), realStr: l7.item})
+				end);
+			ArrayInsert(labelCommands, 'pickseparator, Length(labelCommands))
+		end;
+	l5 := Length(labelCommands);
+	ArrayMunger(labelCommands, l5, 0, staticLabelCommands, 0, nil);
+	if target.(path) then begin
+			l1 := GetNames(target.(path));
+			(for l6 := 0 to (l5 - 2) do begin
+					if StrEqual(labelCommands[l6].item, l1) then begin
+							labelCommands[l6].mark := $\uFC0B;
+							break (l2 := true)
+						end
+				end);
+			if (not l2) then begin
+					ArrayInsert(labelCommands, {item: GetNames(target.(path)), mark: $\uFC0B}, 0)
+				end
+		end else begin
+			l3 := (Length(labelCommands) - Length(staticLabelCommands));
+			labelCommands[l3] := Clone(labelCommands[l3]);
+			labelCommands[l3].mark := $\uFC0B
+		end;
+	true
+end
+@@end

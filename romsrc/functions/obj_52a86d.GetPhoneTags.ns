@@ -1,0 +1,9 @@
+@@ 0x52a82d
+func(a1) begin
+	local l1;
+	(if HasSlot(a1, 'phoneTag) then [Array: a1.phoneTag, Intern(Stringer([Array: "string.phone.", a1.phoneTag])), 'phone] else begin
+			l1 := self:GetPreferredSymb();
+			self.(l1)
+		end)
+end
+@@end

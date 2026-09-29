@@ -1,0 +1,10 @@
+@@ 0x46d629
+func(a1, a2) begin
+	local l1, l2;
+	(if (a2 > 0) then begin
+			l2 := (l1 := a1.words)[a2];
+			ArrayRemoveCount(l1, a2, 1);
+			ArrayInsert(l1, l2, 0)
+		end)
+end
+@@end

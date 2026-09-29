@@ -1,0 +1,21 @@
+@@ 0x74f699
+func(a1) begin
+	if (if a1 then (Length(a1) > 0)) then begin
+			if ((l2 := (StrLen(a1) - 1)) > 1) then begin
+					local l1;
+					local l2;
+					(for l3 := 1 to l2 do begin
+							if ((a1[l3] = $:) or (a1[l3] = $ )) then begin
+									l2 := l3;
+									break
+								end
+						end)
+				end;
+			l1 := Stringer([Array: Substr(a1, 0, l2), ":"])
+		end;
+	if (not l1) then begin
+			l1 := ""
+		end;
+	return l1
+end
+@@end

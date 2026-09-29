@@ -1,0 +1,6 @@
+@@ 0x744c09
+func() begin
+	local l1;
+	(if ((l1 := protoContext:ConnectionPrefsRead('type)) <> currentChoice) then protoContext:ConnectionPrefsWrite('type, currentChoice))
+end
+@@end

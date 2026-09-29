@@ -1,0 +1,18 @@
+@@ 0x563605
+func() begin
+	local l1, l2, l3;
+	if (vars.quicklooklives or (BatteryCount() < 1)) then begin
+			return nil
+		end;
+	if (if ((l1 := BatteryStatus(0)).acPower <> 'yes) then (l1.batteryCapacity <= l1.batteryLow)) then begin
+			if GetRoot().GetBatteryMessages then begin
+					l2 := GetRoot():GetBatteryMessages().batteryLowMessage
+				end;
+			if (not l2) then begin
+					l2 := "The battery is running low. You need to recharge or change batteries soon."
+				end;
+			(l3 := GetRoot():Notify(4, "Battery", l2)).batteryAlert := true
+		end;
+	CheckCardBattery()
+end
+@@end

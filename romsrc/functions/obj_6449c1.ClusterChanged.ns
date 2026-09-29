@@ -1,0 +1,16 @@
+@@ 0x4462c9
+func() begin
+	local l1;
+	if (if (clusterValue = 'morningStr) then (setter.hours > 11)) then begin
+			l1 := -12
+		end;
+	if (if (clusterValue = 'eveningStr) then (setter.hours < 12)) then begin
+			l1 := 12
+		end;
+	(if l1 then begin
+			setter.hours := (setter.hours + l1);
+			Time := ((((Time div 1440) * 1440) + (setter.hours * 60)) + setter.minutes);
+			setter:TimeChanged()
+		end)
+end
+@@end

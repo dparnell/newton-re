@@ -1,0 +1,5 @@
+@@ 0x5b9bc9
+func() begin
+	return cursor
+end
+@@end

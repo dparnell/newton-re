@@ -1,0 +1,5 @@
+@@ 0x42efc5
+func(a1) begin
+	(if (if a1 then (phoneIndex < Length(a1.(path)))) then a1.(path)[phoneIndex])
+end
+@@end

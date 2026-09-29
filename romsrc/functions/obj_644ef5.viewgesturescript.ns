@@ -1,0 +1,22 @@
+@@ 0x468711
+func(a1, a2) begin
+	local l1;
+	l1 := nil;
+	if (a2 = 49) then begin
+			l1 := self:HandleTap(a1)
+		end else begin
+			if (a2 = 50) then begin
+					l1 := self:HandleTap(a1)
+				end else begin
+					if (a2 = 15) then begin
+							l1 := self:HandleCaret(a1)
+						end else begin
+							if (a2 = 13) then begin
+									l1 := self:HandleScrub(a1)
+								end
+						end
+				end
+		end;
+	return l1
+end
+@@end

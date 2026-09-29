@@ -1,0 +1,57 @@
+@@ 0x4961c9
+@@const kBinaryFromHex
+func(hex, cls) begin
+	local b := MakeBinary(StrLen(hex) div 2, cls);
+	for i := 0 to Length(b) - 1 do begin
+		local h := Ord(hex[2 * i]);
+		local l := Ord(hex[2 * i + 1]);
+		StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+	end;
+	b
+end
+@@const kLiteral_4886c9
+"Erase Card"
+@@const kLiteral_48e211
+{statusText: "Erase Card", titleText: "Preparing to erase card\u2026\u", primary: nil, icon: {mask: call kBinaryFromHex with ("000000000004010901090174011e018100000000000000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe0000000000000000000000000000000000000", 'mask), bits: call kBinaryFromHex with ("000000000004010901090174011e01817ff00000fff80000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000dfd80000cf980000c7180000c2180000c0180000fff800007ff000000000000000000000", 'bits), bounds: '{left: 0, top: 0, right: 13, bottom: 21}}, barber: true, closeBox: nil}
+@@const kROM_556
+@556
+@@main
+func(store) begin
+	local default, name;
+	if (not GetRoot().Connection:TransportsIdle()) then begin
+			GetRoot():Notify(3, kLiteral_4886c9, "Can't erase while communications are busy.");
+			return nil
+		end;
+	(if (if (if store then store:IsValid()) then (not store:IsReadOnly())) then begin
+			store:MarkBusy(whoAmI, nil);
+			try begin
+					DoProgress('vBarber, kLiteral_48e211, func(a1) begin
+						a1:SetStatus('vBarber, {titleText: "Closing applications\u2026\u", barber: true});
+						DeActivateStorePackages(store);
+						a1:SetStatus('vBarber, {titleText: "Getting card information\u2026\u", barber: true});
+						default := (store = GetDefaultStore());
+						name := Clone(store:GetName());
+						a1:SetStatus('vBarber, {titleText: "Erasing the card\u2026\u", barber: true});
+						XmitStoreSoupsLeaving(store);
+						self:setDestStore((store := store:Erase()));
+						a1:SetStatus('vBarber, {titleText: "Setting card information\u2026\u", barber: true});
+						if default then begin
+								SetDefaultStore(store)
+							end;
+						if StrEqual(name, "Untitled") then begin
+								name := Clone(kROM_556)
+							end;
+						backupSoup := nil;
+						backupCursor := nil;
+						backupInfo := nil;
+						store:SetName(name);
+						SetValue(nameInput, 'text, Clone(name))
+					end)
+				end onexception |evt.ex| do begin
+					GetRoot():Notify(3, kLiteral_4886c9, "There was an error while erasing the card.")
+				end;
+			store:MarkNotBusy(whoAmI);
+			GetRoot().ExtrasDrawer:RedoIcons()
+		end)
+end
+@@end

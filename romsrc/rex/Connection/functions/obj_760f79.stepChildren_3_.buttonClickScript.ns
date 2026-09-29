@@ -1,0 +1,32 @@
+@@ 0x76155d
+func() begin
+	local myCallback;
+	local l1;
+	AddDeferredAction(func() begin
+		base:Close()
+	end, nil);
+	(if (prefsFrame.type = 'modem) then begin
+			l1 := modemStuff:GetPhone();
+			if (if (if IsFrame(options) then l1) then (StrLen(l1) > 0)) then begin
+					(options := DeepClone(options)).phonenumber := l1;
+					options := {connectOptions: options, password: password}
+				end else begin
+					options := nil
+				end;
+			AddDeferredCall(callback, [Array: options])
+		end else begin
+			myCallback := func() begin
+				if IsFrame(options) then begin
+						options := {connectOptions: options, password: password}
+					end else begin
+						options := nil
+					end;
+				call callback with (options)
+			end;
+			(if options.callBeforeConnect then options:callBeforeConnect((options := DeepClone(options)), func(a1) begin
+					options := a1;
+					AddDeferredCall(myCallback, nil)
+				end) else AddDeferredCall(myCallback, nil))
+		end)
+end
+@@end

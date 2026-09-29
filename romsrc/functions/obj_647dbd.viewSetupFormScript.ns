@@ -1,0 +1,9 @@
+@@ 0x4bc7e5
+func() begin
+	inherited:viewSetupFormScript();
+	phone.viewFlags := filter.recFlags;
+	phone.textFlags := filter.recTextFlags;
+	phone.dictionaries := filter.dictionaries;
+	(phone.recConfig := filter.recConfig)
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x486b09
+func() begin
+	inherited:?viewDrawScript();
+	(if (lastSeed <> vars.setTimeSeed) then begin
+			lastSeed := vars.setTimeSeed;
+			self:viewIdleScript()
+		end)
+end
+@@end

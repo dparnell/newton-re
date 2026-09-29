@@ -1,0 +1,8 @@
+@@ 0x4aee91
+func() begin
+	local l1, l2;
+	entries := [Array: (l1 := dataCursor:entry())];
+	entryViewDefs := [Array: GetEntryDataView(l1, viewDef)];
+	(nextEntry := 0)
+end
+@@end

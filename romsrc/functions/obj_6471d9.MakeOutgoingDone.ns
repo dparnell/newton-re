@@ -1,0 +1,8 @@
+@@ 0x5356b5
+func(a1) begin
+	if (a1 = -54021) then begin
+			a1 := -24001
+		end;
+	GetRoot().(appSymbol):DialingComplete(a1)
+end
+@@end

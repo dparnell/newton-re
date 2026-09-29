@@ -1,0 +1,5 @@
+@@ 0x761911
+func() begin
+	(if callOptionsSlip.outNumber then modemStuff:SetNewWillDial(callOptionsSlip.outNumber.text))
+end
+@@end

@@ -1,0 +1,16 @@
+@@ 0x4aa96d
+func(a1) begin
+	l1 := a1.appSymbol;
+	local l1;
+	(foreach l2 in a1.allDataDefs do begin
+			UnregisterDataDef(l2)
+		end);
+	(foreach l4, l5 in a1.allViewDefs do begin
+			(foreach l7 in l5 do begin
+					UnregisterViewDef(l7, l4)
+				end)
+		end);
+	UnRegAppClasses(l1);
+	UnRegFindApps(l1)
+end
+@@end

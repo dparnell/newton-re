@@ -1,0 +1,24 @@
+@@ 0x4c5619
+func(a1) begin
+	local l1;
+	if (if selected then (Length(selected) > 0)) then begin
+			if (Length(selected) = 1) then begin
+					if (l1 := {target: ResolveEntryAlias(selected[0]), targetView: self}).target then begin
+							l1.appSymbol := l1.target.appSymbol
+						end
+				end else begin
+					l1 := {target: CreateTargetCursor('newtOverview, selected), targetView: self};
+					if (a1 = 'Filing) then begin
+							l1.target.labels := '__XXTempLabel
+						end
+				end
+		end else begin
+			l1 := {target: nil, targetView: nil}
+		end;
+	layout.target := l1.target;
+	if (a1 = 'Filing) then begin
+			l1.targetView := newtAppBase
+		end;
+	l1
+end
+@@end

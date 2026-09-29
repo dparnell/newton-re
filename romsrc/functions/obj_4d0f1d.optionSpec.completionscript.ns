@@ -1,0 +1,5 @@
+@@ 0x4ceecd
+func(a1, a2, a3) begin
+	a1:CheckEOF(a2, a3)
+end
+@@end

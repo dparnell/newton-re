@@ -1,0 +1,7 @@
+@@ 0x72667d
+func() begin
+	local l1;
+	label := (l1 := GetLocale()).streetLabel;
+	inherited:?viewSetupFormScript()
+end
+@@end

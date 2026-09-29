@@ -1,0 +1,19 @@
+@@ 0x435ba1
+func(a1) begin
+	if romOnly then begin
+			return realCurs:move(a1)
+		end;
+	if (a1 <> 0) then begin
+			if (a1 < 0) then begin
+					(for l1 := 1 to abs(a1) do begin
+							self:prev()
+						end)
+				end else begin
+					(for l1 := 1 to a1 do begin
+							self:Next()
+						end)
+				end
+		end;
+	self:entry()
+end
+@@end

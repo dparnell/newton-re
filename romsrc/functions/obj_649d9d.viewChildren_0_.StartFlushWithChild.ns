@@ -1,0 +1,14 @@
+@@ 0x4c3069
+func(a1) begin
+	local l1, l2;
+	if (if (l1 := GetCaretInfo()) then (l1.view = a1)) then begin
+			AddProcrastinatedSend('checkCaret, targetView, 'checkCaret, nil, 500)
+		end;
+	l2 := a1.viewBounds.bottom;
+	if (if target.height then (l2 > target.height)) then begin
+			target.height := (l2 + 5);
+			nextEntry := 0
+		end;
+	self:StartFlush()
+end
+@@end

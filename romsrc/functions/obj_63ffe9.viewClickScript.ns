@@ -1,0 +1,17 @@
+@@ 0x42e399
+func(a1) begin
+	local l1, l2;
+	(if ((l1 := ((l2 := (GetPoint(1, a1) - expando:GlobalBox().top)) div lineHeight)) >= split) then begin
+			l1 := ((l2 := (l2 - insertHeight)) div lineHeight);
+			(if (if (l2 >= 0) then (l1 >= split)) then begin
+					self:ExpandLine((l1 + 1));
+					expando:RedoChildren();
+					true
+				end)
+		end else begin
+			self:ExpandLine(l1);
+			expando:RedoChildren();
+			true
+		end)
+end
+@@end

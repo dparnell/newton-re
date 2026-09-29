@@ -1,0 +1,10 @@
+@@ 0x4c9111
+func() begin
+	local l1;
+	l1 := nil;
+	if (if fields.toRef then (Length(fields.toRef) > 0)) then begin
+			l1 := GetDataDefs('|nameRef.fax|):GetRoutingInfo(fields.toRef[0])[0]
+		end;
+	transport:SetupAddressInfo(fields, l1)
+end
+@@end

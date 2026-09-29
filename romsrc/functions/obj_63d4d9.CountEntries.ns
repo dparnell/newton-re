@@ -1,0 +1,10 @@
+@@ 0x44fe15
+func() begin
+	l1 := 0;
+	local l1;
+	(for l2 := 0 to (finalCurse - 1) do begin
+			l1 := (l1 + curses[l2].cursor:CountEntries())
+		end);
+	l1
+end
+@@end

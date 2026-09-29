@@ -1,0 +1,11 @@
+@@ 0x748791
+@@const kLiteral_7488d9
+"bsiz"
+@@main
+func() begin
+	local l1;
+	(l1 := DeepClone([Array: {label: "rout", type: 'address, opCode: 512, data: {arglist: [Array: 1, 1, "sltk", 0, ""], typeList: [Array: 10, 1, 1, [Array: 11, 13, 4], 2, [Array: 11, 15, 0]]}}, {label: kLiteral_7488d9, type: 'option, opCode: 512, data: {arglist: [Array: 1, 2048], typeList: [Array: 'struct, 'ulong, 'long]}}, {label: kLiteral_7488d9, type: 'option, opCode: 512, data: {arglist: [Array: 2, 2048], typeList: [Array: 'struct, 'ulong, 'long]}}]))[0].data.arglist[3] := StrLen(self.AppleTalkAddress);
+	l1[0].data.arglist[4] := self.AppleTalkAddress;
+	return l1
+end
+@@end

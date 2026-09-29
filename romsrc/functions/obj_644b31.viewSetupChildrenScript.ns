@@ -1,0 +1,13 @@
+@@ 0x442dcd
+func() begin
+	monthView.datesFont := datesFont;
+	monthView.labelFont := labelFont;
+	if (not selectedDates) then begin
+			selectedDates := [Array: Time()]
+		end;
+	if (Date(selectedDates[0]).year = 2920) then begin
+			noTodayShow := true
+		end;
+	(monthYearLabel.text := self:JamIt())
+end
+@@end

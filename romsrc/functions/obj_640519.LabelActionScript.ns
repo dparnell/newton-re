@@ -1,0 +1,15 @@
+@@ 0x42efe5
+func(a1) begin
+	self:SetLabelText(labelCommands[a1]);
+	labelLine:Dirty();
+	if (phoneIndex < Length(target.(path))) then begin
+			SetClass(target.(path)[phoneIndex], labelSymbols[a1])
+		end else begin
+			(for l1 := (Length(target.(path)) + 1) to phoneIndex do begin
+					AddArraySlot(target.(path), SetClass(Clone(""), 'phone))
+				end);
+			AddArraySlot(target.(path), SetClass(Clone(""), labelSymbols[a1]))
+		end;
+	true
+end
+@@end

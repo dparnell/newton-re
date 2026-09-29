@@ -1,0 +1,18 @@
+@@ 0x7981cd names
+func(aEntry) begin
+	local oldTask, convertFrame, newHeight;
+	oldTask := {};
+	convertFrame := DeepClone(aEntry);
+	oldTask.viewStationery := 'TodoItem;
+	oldTask.mtgPriority := convertFrame.mtgPriority;
+	oldTask.mtgDone := convertFrame.mtgDone;
+	oldTask.mtgStartDate := aEntry.date;
+	newHeight := (((newHeight := (convertFrame.viewBounds.bottom - convertFrame.viewBounds.top)) div 19) * 16);
+	convertFrame.viewBounds.top := 0;
+	convertFrame.viewBounds.bottom := newHeight;
+	convertFrame.viewBounds.left := 0;
+	oldTask.height := newHeight;
+	oldTask.data := [Array: {viewStationery: 'para, viewBounds: convertFrame.viewBounds, text: convertFrame.text, viewFont: 12290}];
+	oldTask
+end
+@@end

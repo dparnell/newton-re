@@ -1,0 +1,10 @@
+@@ 0x7433ed
+func(a1, a2) begin
+	local l1, l2;
+	(if (l2 := (if UserConfiguration.currentPersona then ResolveEntryAlias(UserConfiguration.currentPersona))) then begin
+			(l1 := BuildContext(cardExchangeLayout)).theEntry := l2;
+			l1.appBase := (l1.newtAppBase := newtAppBase);
+			newtAppBase:RememberedOpen(l1)
+		end else self:Notify(3, title, "There is no current owner card to send."))
+end
+@@end

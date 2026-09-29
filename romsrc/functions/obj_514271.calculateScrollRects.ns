@@ -1,0 +1,45 @@
+@@ 0x513965
+func() begin
+	local l1, l2, l3, l4;
+	l1 := upDownScroller;
+	l2 := self:GetToDoAgendaView();
+	l3 := AgendaView:LocalBox().bottom;
+	(if (if (calendarBottom = 0) then (not l2)) then begin
+			l1.ScrollRect := (l1.DataRect := (l1.ViewRect := nil));
+			l1.yPos := 0;
+			l1:SetArrow('up, 'normal);
+			l1:SetArrow('down, 'normal);
+			l1:Dirty()
+		end else begin
+			if l2 then begin
+					if l2:lastIsEnd() then begin
+							if (if (l4 := l2:getToDoBottom()) then (l4 > self:GlobalBox().bottom)) then begin
+									l1:SetArrow('down, 'more)
+								end else begin
+									l1:SetArrow('down, 'normal)
+								end
+						end else begin
+							l1:SetArrow('down, 'more)
+						end
+				end else begin
+					if (l3 >= (calendarBottom - viewOriginY)) then begin
+							l1:SetArrow('down, 'normal)
+						end else begin
+							l1:SetArrow('down, 'more)
+						end
+				end;
+			if ((viewOriginY > 0) or (if (calendarBottom = 0) then (not l2:firstIsTop()))) then begin
+					l1:SetArrow('up, 'more)
+				end else begin
+					l1:SetArrow('up, 'normal)
+				end;
+			l1:Dirty();
+			if (if (if (calendarBottom = 0) then l2) then (not l2:firstIsTop())) then begin
+					l1.yPos := 1
+				end else begin
+					l1.yPos := AgendaView.viewOriginY
+				end;
+			(l1.ScrollRect := (l1.DataRect := (l1.ViewRect := nil)))
+		end)
+end
+@@end

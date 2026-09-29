@@ -1,0 +1,31 @@
+@@ 0x5530c5
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11;
+	InkOff(a1);
+	clicker();
+	l2 := (l1 := self:GlobalBox()).left;
+	l3 := l1.top;
+	self:hilite(true);
+	RefreshViews();
+	l4 := iconPro.hilited;
+	l5 := true;
+	(repeat if l5 then begin
+				self:?buttonPressedScript()
+			end; l9 := (l8 := GetPoint(8, a1)).x; l10 := l8.y; if ((l9 <> l6) or (l10 <> l7)) then begin
+				l11 := (PtInPicture((l9 - l2), (l10 - l3), l4) <> nil);
+				if (l5 <> l11) then begin
+						self:hilite(l11);
+						RefreshViews();
+						l5 := l11;
+						l4 := iconPro.((if l11 then 'hilited else 'unhilited))
+					end;
+				l6 := l9;
+				l7 := l10
+			end until StrokeDone(a1));
+	if l5 then begin
+			self:hilite(nil);
+			self:?buttonClickScript()
+		end;
+	true
+end
+@@end

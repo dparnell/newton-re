@@ -1,0 +1,14 @@
+@@ 0x4b5f75
+func() begin
+	if (currentSoupSymbol = 'outbox) then begin
+			self.text := "  Send";
+			self.checkSlot := 'SendRequest
+		end else begin
+			self.text := "  Receive";
+			self.checkSlot := 'ReceiveRequest
+		end;
+	width := StdButtonWidth(text);
+	(viewBounds := Clone(viewBounds)).left := (viewBounds.right - width);
+	(_sendKeyButton := self)
+end
+@@end

@@ -1,0 +1,12 @@
+@@ 0x75dc65
+@@const kROM_8269
+@8269
+@@main
+func(a1) begin
+	(if (not startingConnection) then (if a1 then begin
+				startingConnection := true;
+				base:Close();
+				kROM_8269:OpenForSync(a1.password, a1.connectOptions, theEndpoint, nil)
+			end else self:Notify(3, "Dock", "The necessary connection options weren\u2019\ut filled in.")))
+end
+@@end

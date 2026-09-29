@@ -1,0 +1,9 @@
+@@ 0x4ad8c9
+func() begin
+	self:ChainIn('retargetChain);
+	if keyButton then begin
+			newtAppBase.(keyButton) := self
+		end;
+	inherited:?viewSetupDoneScript()
+end
+@@end

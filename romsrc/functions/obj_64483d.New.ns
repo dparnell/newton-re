@@ -1,0 +1,10 @@
+@@ 0x455285
+func(a1, a2, a3, a4) begin
+	(pop := self:Init()).dataClass := a1;
+	pop.context := a3;
+	pop.selected := a2;
+	pop.options := a4;
+	pop:Open();
+	pop
+end
+@@end

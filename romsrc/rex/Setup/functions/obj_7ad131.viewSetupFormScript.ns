@@ -1,0 +1,7 @@
+@@ 0x7ad181
+func() begin
+	self.text := text;
+	self.viewLineSpacing := fontHeight(viewFont);
+	inherited:?viewSetupFormScript()
+end
+@@end

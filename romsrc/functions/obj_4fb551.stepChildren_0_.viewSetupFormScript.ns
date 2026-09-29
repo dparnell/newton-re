@@ -1,0 +1,6 @@
+@@ 0x4fa7f5
+func() begin
+	self.newtAppBase := calendar;
+	inherited:viewSetupFormScript()
+end
+@@end

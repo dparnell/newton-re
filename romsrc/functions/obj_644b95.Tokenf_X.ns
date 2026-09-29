@@ -1,0 +1,8 @@
+@@ 0x5954bd
+func(a1, a2, a3) begin
+	if a1.file_in then begin
+			self:File_DownloadDone(a1.file_in)
+		end;
+	(a1.file_in := nil)
+end
+@@end

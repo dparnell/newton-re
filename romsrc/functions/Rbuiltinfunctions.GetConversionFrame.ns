@@ -1,0 +1,24 @@
+@@ 0x5a7e89
+func(a1) begin
+	local l1, l2, l3, l4;
+	if (a1 = nil) then begin
+			return nil
+		end;
+	if (l1 := '{note: paperroll, Outline: paperroll, checkList: paperroll, grid: paperroll, person: cardfile, company: cardfile, place: cardfile, group: cardfile, owner: cardfile, worksite: cardfile, ioItem: iobox}.(a1)) then begin
+			a1 := l1
+		end;
+	if (not (l2 := DataConversionRegistry.(a1))) then begin
+			return nil
+		end;
+	if IsFrame(l2) then begin
+			l3 := l2
+		end else begin
+			if (not (l3 := GetRoot().(l2))) then begin
+					if (l4 := GetDataDefs(a1)) then begin
+							l3 := l4.(l2)
+						end
+				end
+		end;
+	return l3
+end
+@@end

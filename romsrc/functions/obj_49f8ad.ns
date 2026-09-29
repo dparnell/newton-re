@@ -1,0 +1,5 @@
+@@ 0x49f8ad
+func() begin
+	(if HasPath(target, 'title) then Clone(target.title) else Stringer([Array: LongDateStr(target.timestamp, @66.abbrDayOfWeekStrSpec), " ", ShortDateStr(target.timestamp, @66.numericMDStrSpec)]))
+end
+@@end

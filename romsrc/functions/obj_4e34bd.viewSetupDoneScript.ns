@@ -1,0 +1,5 @@
+@@ 0x4e2a21
+func() begin
+	(if (if (if Clear then (ClassOf(inputKeys) <> 'char)) then (StrLen(inputKeys) = 0)) then self:JamDisplay(self:CalcFormattedNumberStr(value)) else self:JamDisplay(inputKeys))
+end
+@@end

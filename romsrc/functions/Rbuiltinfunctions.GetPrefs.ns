@@ -1,0 +1,24 @@
+@@ 0x5b5245
+@@const kLiteral_5b47a9
+'[Array: PasswordForm, TimePreferencesForm, LocalePreferencesForm, SoundPreferencesForm, RecordingPreferencesForm, AlarmSoundPreferencesForm, SleepPreferencesForm, PenPreferencesForm, GuestAccessPreferencesForm, HWRecPreferencesForm, RecognitionPreferencesForm, HandwritingStylePreferencesForm, TextEditPreferencesForm, LetterShapesPreferencesForm, FineTuningPreferencesForm, ZapPreferencesForm, CommPreferencesForm, [pathExpr: output, FaxPreferencesForm], AutoDockPrefsPanel]
+@@main
+func() begin
+	l1 := [Array: ];
+	l2 := [Array: ];
+	local l1;
+	local l2;
+	(foreach l3 in kLiteral_5b47a9 do begin
+			if (if (l5 := PrefsRegistry.(l3)) then (not l5:?DoNotDisplay())) then begin
+					AddArraySlot(l1, l5)
+				end
+		end);
+	(foreach l3, l5 deeply in PrefsRegistry do begin
+			if (if (if (not SetContains(kLiteral_5b47a9, l3)) then (l5 = PrefsRegistry.(l3))) then (not l5:?DoNotDisplay())) then begin
+					AddArraySlot(l2, l5)
+				end
+		end);
+	ArrayMunger(l2, Length(l2), nil, preferences, 0, nil);
+	Sort(l2, '|str<|, 'overview);
+	ArrayMunger(l1, Length(l1), nil, l2, 0, nil)
+end
+@@end

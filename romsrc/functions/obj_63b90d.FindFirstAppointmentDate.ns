@@ -1,0 +1,33 @@
+@@ 0x50eb95
+@@const kFunction_50eb55
+func(a1, a2) begin
+	local l1, l2;
+	(if (l2 := (l1 := Query(a1, {type: 'index, indexPath: 'mtgStartDate, beginKey: a2})):entry()) then l2.mtgStartDate else 536870911)
+end
+@@const kFunction_50eb75
+func(a1, a2) begin
+	local l1, l2, l3, l4;
+	l1 := Query(a1, '{type: index, indexPath: mtgStopDate, beginKey: 0});
+	l2 := 536870911;
+	l3 := l1:entry();
+	(while l3 do begin
+			if (if ((l4 := NextMeeting(a2, l3)) > 0) then (l4 < l2)) then begin
+					l2 := l4
+				end;
+			(l3 := l1:Next())
+		end);
+	l2
+end
+@@main
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7;
+	l1 := kFunction_50eb55;
+	l2 := kFunction_50eb75;
+	l3 := call l1 with (MeetingSoup, a1);
+	l4 := call l1 with (notes, a1);
+	l5 := call l2 with (RepeatSoup, a1);
+	l6 := call l2 with (RepeatNotes, a1);
+	l7 := 536870911;
+	(l7 := min((l7 := min((l7 := min(l3, l4)), l5)), l6))
+end
+@@end

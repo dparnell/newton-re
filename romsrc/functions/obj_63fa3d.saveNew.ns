@@ -1,0 +1,31 @@
+@@ 0x471ec5
+func(a1, a2, a3) begin
+	(if (not StrEqual(a1, "")) then (if (l2 := self:getPrinterProto(a2, a3)) then begin
+				(l1 := Clone(l2)).printerType := a3;
+				l1.printerName := a1;
+				userConfiguration.currentPrinter := l1;
+				if (userConfiguration.printers = nil) then begin
+						userConfiguration.printers := [Array: ]
+					end;
+				local l1;
+				local l2;
+				local l3;
+				local l4;
+				l2 := FindStringInArray((foreach l5 in (l3 := userConfiguration.printers) collect l5.printerName), a1);
+				if (l2 = nil) then begin
+						if ((l4 := Length(l3)) < 2) then begin
+								SetLength(l3, (l4 + 1));
+								l4 := (l4 + 1)
+							end;
+						(for l9 := 1 to (l4 - 1) do begin
+								l3[l9] := l3[(l9 - 1)]
+							end)
+					end else begin
+						(for l9 := 1 to l2 do begin
+								l3[l9] := l3[(l9 - 1)]
+							end)
+					end;
+				(l3[0] := Clone(l1))
+			end))
+end
+@@end

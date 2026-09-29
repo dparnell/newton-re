@@ -1,0 +1,6 @@
+@@ 0x4b9d39
+func(a1) begin
+	country := labelCommands[a1].country;
+	nil
+end
+@@end

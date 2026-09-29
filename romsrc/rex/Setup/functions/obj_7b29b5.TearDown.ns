@@ -1,0 +1,11 @@
+@@ 0x7b3409
+func() begin
+	if fPersona.owner then begin
+			fPersona.owner.signature := sigCapture.viewChildren
+		end else begin
+			fPersona.owner := {};
+			fPersona.owner.signature := sigCapture.viewChildren
+		end;
+	(fReviewDone := true)
+end
+@@end

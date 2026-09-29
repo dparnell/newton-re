@@ -1,0 +1,6 @@
+@@ 0x62ab79
+func(a1, a2, a3, a4) begin
+	BadWickedNaughtyNoot("q_vairegerpg(...)", 'undocumented);
+	self:InvertRect(a1, a2, a3, a4)
+end
+@@end

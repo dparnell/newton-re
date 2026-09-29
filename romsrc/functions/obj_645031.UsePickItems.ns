@@ -1,0 +1,12 @@
+@@ 0x46ae2d
+func() begin
+	local l1, l2;
+	AddUndoAction('RestoreAlternates, [Array: savedPickItems]);
+	l2 := StrLen((l1 := cText:GetWordForDisplay()));
+	if cText:IsInkWord() then begin
+			pickItems := nil
+		end;
+	alternates:SyncView();
+	(savedPickItems := nil)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x54b05d
+func(a1, a2) begin
+	@589.FormEntry:New()
+end
+@@end

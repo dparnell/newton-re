@@ -1,0 +1,5 @@
+@@ 0x4aef39
+func() begin
+	(if (if (not forceNewEntry) then (not dataCursor:entry())) then self:DrawShape(self:AppEmpty(), '{}))
+end
+@@end

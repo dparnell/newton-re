@@ -1,0 +1,5 @@
+@@ 0x62f429
+func(a1, a2) begin
+	(vars.(EnsureInternal(a1)) := a2)
+end
+@@end

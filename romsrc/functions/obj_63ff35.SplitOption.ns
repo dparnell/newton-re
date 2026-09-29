@@ -1,0 +1,21 @@
+@@ 0x52f489
+func(a1, a2) begin
+	l1 := nil;
+	if a2 then begin
+			l2 := Length(a1);
+			if (a2 = 'standalone) then begin
+					l1 := a1[(l2 - 1)];
+					SetLength(a1, (l2 - 1))
+				end else begin
+					l1 := [Array: ];
+					local l1;
+					local l2;
+					(for l3 := (l2 - a2) to (l2 - 1) do begin
+							AddArraySlot(l1, a1[l3])
+						end);
+					SetLength(a1, (l2 - a2))
+				end
+		end;
+	l1
+end
+@@end

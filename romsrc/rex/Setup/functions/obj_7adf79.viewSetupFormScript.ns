@@ -1,0 +1,7 @@
+@@ 0x7aef11
+func() begin
+	inherited:?viewSetupFormScript();
+	self.value := Date(Time()).year;
+	(selectedDates := [Array: Time()])
+end
+@@end

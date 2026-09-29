@@ -1,0 +1,11 @@
+@@ 0x4c57c5
+func(a1) begin
+	if (a1 < 0) then begin
+			scrollOrigin := max(0, (scrollOrigin + a1))
+		end else begin
+			scrollOrigin := min(max(0, (numItems - maxLines)), (scrollOrigin + a1))
+		end;
+	pieces := nil;
+	self:Dirty()
+end
+@@end

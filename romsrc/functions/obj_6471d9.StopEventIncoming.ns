@@ -1,0 +1,13 @@
+@@ 0x5355e9
+func() begin
+	local l1;
+	(if (status = 'RingingFrom) then (if ((l1 := (Ticks() - lastRing)) >= 480) then begin
+				dismissCall := nil;
+				currentItem := nil;
+				self:CloseStatusDialog(nil);
+				self:UpdateStatusSlots('Listening, nil, nil)
+			end else AddDelayedCall(func() begin
+				self:StopEventIncoming()
+			end, nil, ((480 - l1) * 16))))
+end
+@@end

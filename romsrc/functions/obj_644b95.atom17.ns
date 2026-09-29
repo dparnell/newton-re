@@ -1,0 +1,143 @@
+@@ 0x5957ad
+func(a1, a2, a3, a4, a5) begin
+	local l1, l2, l3, l4, l5, l6;
+	if a1.cancelling then begin
+			return nil
+		end;
+	l1 := a1.mail_in;
+	l3 := "";
+	eworld.lastAtom := 'atom17;
+	eworld.lastStream := a2;
+	if (a3 = 0) then begin
+			if l1 then begin
+					l1.depth := (l1.depth + 1);
+					self:AddTextToVBO(a1, l1, "\n")
+				end else begin
+					a1.mail_in := {depth: 0, currentFormat: 'targetFrameFormat, toRef: [Array: ], cc: [Array: ], bcc: [Array: ], text: self:GetDefaultOwnerStore():NewVBO('string, 2), nextClear: 10240}
+				end
+		end;
+	if (a3 = 25) then begin
+			l1.type := self:getdata(a5, 0, a4, 'integer)
+		end;
+	if (a3 = 20) then begin
+			l1.data := self:getdata(a5, 0, a4, 'integer);
+			if (l1.data = 1) then begin
+					l1.hasfile := true
+				end
+		end;
+	if (a3 = 22) then begin
+			l1.filesize := self:getdata(a5, 0, a4, 'integer)
+		end;
+	if (a3 = 23) then begin
+			l1.filetype := self:getdata(a5, 0, a4, 'integer)
+		end;
+	if (a3 = 3) then begin
+			self:Mail_SendMessage()
+		end;
+	if (a3 = 4) then begin
+			a1.mail_out := nil;
+			a1.mail_state := nil;
+			self:EndTransaction();
+			self:?Mail_SendDone(nil)
+		end;
+	if (a3 = 5) then begin
+			if (a1.mail_state = 'list) then begin
+					self:EndTransaction();
+					return self:?ListDone(nil)
+				end;
+			l4 := self:getdata(a5, 1, (a4 - 1), 'string);
+			if (a1.mail_state = 'Read) then begin
+					if l1 then begin
+							l1.progress := l4
+						end else begin
+							self:Notify(3, serviceName, l4)
+						end;
+					a1.statusView := nil;
+					return self:Mail_MessageDone(l1)
+				end;
+			if (a1.mail_state = 'send) then begin
+					self:EndTransaction();
+					return self:?Mail_SendDone(l4)
+				end;
+			self:Notify(3, serviceName, l4)
+		end;
+	if (a3 = 14) then begin
+			if (l1.depth = 0) then begin
+					l1.id := self:getdata(a5, 0, a4, 'integer)
+				end
+		end;
+	if (a3 = 17) then begin
+			l2 := self:getdata(a5, 0, a4, 'string);
+			if (l1.depth = 0) then begin
+					l1.dateStr := l2
+				end else begin
+					self:AddTextToVBO(a1, l1, Stringer([Array: "\nDate:\t", l2]))
+				end
+		end;
+	if (a3 = 15) then begin
+			l2 := self:getdata(a5, 0, a4, 'string);
+			if (l1.depth = 0) then begin
+					l1.fromRef := self:MakeMailNameRef(l2)
+				end else begin
+					self:AddTextToVBO(a1, l1, Stringer([Array: "\nFrom:\t", l2]))
+				end
+		end;
+	if (a3 = 10) then begin
+			l2 := self:getdata(a5, 0, a4, 'string);
+			if (l1.depth = 0) then begin
+					l1.title := l2
+				end else begin
+					self:AddTextToVBO(a1, l1, Stringer([Array: "\nSubject:\t", l2]))
+				end
+		end;
+	if (a3 = 21) then begin
+			l1.filename := self:getdata(a5, 0, a4, 'string)
+		end;
+	if (a3 = 9) then begin
+			l2 := self:getdata(a5, 0, a4, 'string);
+			if (l1.depth = 0) then begin
+					l5 := 'toRef;
+					if (l1.addrType = 1) then begin
+							l5 := 'cc
+						end else begin
+							if (l1.addrType = 2) then begin
+									l5 := 'bcc
+								end
+						end;
+					AddArraySlot(l1.(l5), self:MakeMailNameRef(l2))
+				end else begin
+					self:AddTextToVBO(a1, l1, Stringer([Array: "\nTo:\t", l2]))
+				end
+		end;
+	if (a3 = 19) then begin
+			l1.addrType := self:getdata(a5, 0, a4, 'integer)
+		end;
+	if (a3 = 11) then begin
+			if (if (l1.depth > 0) then (Length(l1.text) > 2)) then begin
+					if (not self:AddTextToVBO(a1, l1, "\n\n")) then begin
+							return nil
+						end
+				end;
+			l6 := 0;
+			(while (a4 > 0) do begin
+					if (not self:AddTextToVBO(a1, l1, self:getdata(a5, l6, (if (a4 > 512) then 512 else a4), 'encoded))) then begin
+							return nil
+						end;
+					a4 := (a4 - 512);
+					(l6 := (l6 + 512))
+				end);
+			if (l1.nextClear < Length(l1.text)) then begin
+					l1.nextClear := (l1.nextClear + 10240);
+					ClearVBOCache(l1.text)
+				end
+		end;
+	(if (a3 = 2) then begin
+			l1.depth := (l1.depth - 1);
+			(if (l1.depth >= 0) then self:AddTextToVBO(a1, l1, "\n\n") else (if (not a1.retry) then begin
+						a1.statusView := nil;
+						self:Mail_MessageDone(l1);
+						(a1.mail_in := nil)
+					end))
+		end)
+end
+@@end

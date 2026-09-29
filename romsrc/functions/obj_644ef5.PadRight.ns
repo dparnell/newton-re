@@ -1,0 +1,14 @@
+@@ 0x44eee9
+func() begin
+	local l1, l2, l3;
+	l1 := self.text;
+	(if (not self:FixedWord()) then begin
+			l2 := StrLen(l1);
+			if ((l3 := (maxChars - (l2 - dispLeft))) > 0) then begin
+					StrMunger(l1, l2, 0, blankText, 0, l3);
+					SetLength(altChars, (l2 + l3))
+				end;
+			(trailers := (StrLen(l1) - wordRight))
+		end)
+end
+@@end

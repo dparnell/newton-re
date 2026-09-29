@@ -1,0 +1,13 @@
+@@ 0x4e2299
+func(a1, a2) begin
+	if (if (a1 <> $\00) then (not IsCommandKeystroke(a1, a2))) then begin
+			(foreach l1 in lookup do begin
+					if (a1 = l1[0]) then begin
+							keys:keyPressScript(l1[1]);
+							RefreshViews()
+						end
+				end)
+		end;
+	nil
+end
+@@end

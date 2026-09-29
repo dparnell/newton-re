@@ -1,0 +1,46 @@
+@@ 0x4d4f8d
+func() begin
+	local l1, l2, l3;
+	self.dpSlip := {};
+	(l1 := dpSlip).slipTitleHt := 13;
+	l1.titleFieldHt := 70;
+	l1.dateFieldHt := 24;
+	l1.timeFieldHt := 24;
+	l1.peopleFieldHt := 22;
+	l1.locFieldHt := 22;
+	l1.repeatFieldHt := 22;
+	l1.mtgMsgHeaderTop := 0;
+	l1.dateFieldTop := 0;
+	l1.timeFieldTop := 0;
+	l1.peopleFieldTop := 0;
+	l1.locFieldTop := 0;
+	l1.repeatFieldTop := 0;
+	l1.seriesMsgHeaderTop := 0;
+	l1.dateRangeTop := 0;
+	l2 := 12;
+	l3 := l1.slipTitleHt;
+	l1.titleFieldTop := l3;
+	l3 := ((l3 + l1.titleFieldHt) + 2);
+	(if event then begin
+			l1.peopleFieldTop := l3;
+			l3 := ((l3 + l1.peopleFieldHt) + 2);
+			l1.mtgMsgHeaderTop := l3;
+			l3 := ((l3 + l2) + 2);
+			l1.dateFieldTop := l3;
+			l3 := ((l3 + l1.dateFieldHt) + 2);
+			l1.seriesMsgHeaderTop := l3;
+			l3 := ((l3 + l2) + 2);
+			l1.dateRangeTop := l3;
+			(l3 := ((l3 + l1.dateFieldHt) + 2))
+		end else begin
+			l1.dateFieldTop := l3;
+			l3 := ((l3 + l1.dateFieldHt) + 2);
+			l1.timeFieldTop := l3;
+			l3 := ((l3 + l1.timeFieldHt) + 2);
+			l1.peopleFieldTop := l3;
+			l3 := ((l3 + l1.peopleFieldHt) + 2);
+			l1.locFieldTop := l3;
+			(l3 := ((l3 + l1.locFieldHt) + 2))
+		end)
+end
+@@end

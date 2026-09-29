@@ -1,0 +1,84 @@
+@@ 0x496039
+@@const kFunction_48e3a1
+func(a1, a2) begin
+	a1:Query({type: 'index, indexPath: 'name, beginKey: a2, endKey: a2})
+end
+@@const kLiteral_48880d
+"Restoring \u201C\u^0\u201D\u\u2026\u"
+@@const kLiteral_488675
+"Restore"
+@@const kLiteral_47e085
+"There is not enough space to restore the package \u201C\u^0\u201D\u. Some packages may not have been restored."
+@@main
+func(a1) begin
+	(if (Length(a1) > 0) then (try begin
+				l1 := progressSlip;
+				l2 := self:getSrcStore();
+				l3 := self:getDestStore():GetSoup("BACKUP_Packages");
+				l4 := (l2:TotalSize() - theFudgeFactor);
+				local l1;
+				local l2;
+				local l3;
+				local l4;
+				(foreach l5 in a1 do begin
+						local l7, l8, l9, l10, l11, l12, l13, l14, l15, l16, l17;
+						l9 := (if (l8 := LFetch((l7 := GetPackages()), l5, 0, '|str=|, 'title)) then (l8.store = l2));
+						if (l10 := (not l3)) then begin
+								l12 := (l11 := call (kFunction_48e3a1) with (backupSoup, l5)):entry();
+								(while l12 do begin
+										if (if (l12.package or l12.segmentedPackage) then (not l12.patches)) then begin
+												break
+											end;
+										(l12 := l11:Next())
+									end);
+								l1:SetStatus('vBarber, {titleText: ParamStr(kLiteral_48880d, [Array: l12.name]), barber: true});
+								if l9 then begin
+										RemovePackage(l8)
+									end;
+								restoredPkgs := true;
+								l1:SetStatus('vBarber, {barber: true});
+								if (if l12.package then (not l12.patches)) then begin
+										l2:SuckPackageFromBinary(l12.package, '{|don'tactivate|: true})
+									end;
+								if (if l12.segmentedPackage then (not l12.patches)) then begin
+										l2:RestoreSegmentedPackage(backupSoup, l12.segmentedPackage)
+									end
+							end else begin
+								if l3 then begin
+										l13 := 0;
+										l1:SetStatus('vBarber, {titleText: ParamStr("Checking size of \u201C\u^0\u201D\u\u2026\u", [Array: l5]), barber: true});
+										l12 := (l14 := l3:Query({indexPath: 'packageName, beginKey: l5, endKey: l5})):entry();
+										(while l12 do begin
+												l1:SetStatus('vBarber, {barber: true});
+												l13 := (l13 + EntrySize(l12));
+												(l12 := l14:Next())
+											end);
+										l15 := ((l4 - l2:UsedSize()) - theFudgeFactor);
+										l16 := (if l8 then l8.size else 0);
+										if ((l15 + l16) < l13) then begin
+												Throw('|evt.ex.nofit|, -123)
+											end;
+										if l9 then begin
+												RemovePackage(l8)
+											end;
+										restoredPkgs := true;
+										l1:SetStatus('vBarber, {titleText: ParamStr(kLiteral_48880d, [Array: l5]), barber: true});
+										RestoreAPackageFromBackup(l5, l3, l2)
+									end
+							end
+					end)
+			end onexception |evt.ex.cancel| do begin
+				Rethrow()
+			end onexception |evt.ex.nofit| do begin
+				GetRoot():Notify(3, kLiteral_488675, ParamStr(kLiteral_47e085, [Array: l5]));
+				Rethrow()
+			end onexception |evt.ex| do begin
+				if (if HasSlot((l17 := CurrentException()), 'error) then (l17.error = -10617)) then begin
+						GetRoot():Notify(3, kLiteral_488675, ParamStr(kLiteral_47e085, [Array: l5]))
+					end else begin
+						GetRoot():Notify(3, kLiteral_488675, ParamStr("There was an error while restoring the package \u201C\u^0\u201D\u. Some packages may not have been restored.", [Array: l5]))
+					end;
+				Rethrow()
+			end))
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x41ff11
+func(a1) begin
+	if IsNumber(a1) then begin
+			a1 := TimeToTimeInSeconds(a1, 0)
+		end;
+	SetTimeInSeconds(a1)
+end
+@@end

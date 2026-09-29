@@ -1,0 +1,6 @@
+@@ 0x76738d
+func() begin
+	self:Update(nil);
+	300
+end
+@@end

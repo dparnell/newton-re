@@ -1,0 +1,8 @@
+@@ 0x526c15
+func() begin
+	local l1, l2, l3;
+	l2 := (l1 := Date(Time())).dayOfWeek;
+	l3 := ((l1.hour * 60) + l1.minute);
+	(if (if (if (l2 > 0) then (l2 < 6)) then (if (l3 >= 540) then (l3 <= 1080))) then 'iaWorkTags else 'iaHomeTags)
+end
+@@end

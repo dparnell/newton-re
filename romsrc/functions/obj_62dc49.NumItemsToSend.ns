@@ -1,0 +1,12 @@
+@@ 0x4b3be1
+func(a1, a2) begin
+	local l1;
+	if (not a1) then begin
+			return 0
+		end;
+	if (not a2) then begin
+			a2 := self:GetSpec('transport, '{all: _new}, a1.appSymbol)
+		end;
+	(l1 := self:MakeCursor('outbox, a2)):CountEntries()
+end
+@@end

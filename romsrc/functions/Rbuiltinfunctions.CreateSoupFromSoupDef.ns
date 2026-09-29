@@ -1,0 +1,20 @@
+@@ 0x5698c1
+func(a1, a2, a3) begin
+	local l1, l2, l3;
+	l1 := a2:CreateSoup(a1.name, a1.indexes);
+	l1:SetInfo('soupDef, a1);
+	if (l2 := a1.initHook) then begin
+			if IsFunction(l2) then begin
+					call l2 with (l1, a1)
+				end else begin
+					if (l3 := GetRoot().(a1.ownerApp)) then begin
+							Perform(l3, l2, [Array: l1, a1])
+						end
+				end
+		end;
+	if a3 then begin
+			XmitSoupChange(a1.name, a3, 'soupCreated, l1)
+		end;
+	l1
+end
+@@end

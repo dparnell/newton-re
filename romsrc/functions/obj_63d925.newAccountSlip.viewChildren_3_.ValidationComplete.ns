@@ -1,0 +1,18 @@
+@@ 0x5a0afd
+func(a1) begin
+	(if a1 then begin
+			theEmporium := ResolveEntryAlias(userConfiguration.currentEmporium);
+			thePersona := ResolveEntryAlias(userConfiguration.currentPersona);
+			if SetPersona then begin
+					UseCurrentPersona()
+				end;
+			if setEmporia then begin
+					UseCurrentEmporium()
+				end;
+			SetPersona := nil;
+			setEmporia := nil;
+			base:Close();
+			AddDeferredSend(theTransport, 'DoConnect, [Array: theEmporium, thePersona, request, GetUserConfig('mailMode), GetUserConfig('mailListMethod)])
+		end)
+end
+@@end

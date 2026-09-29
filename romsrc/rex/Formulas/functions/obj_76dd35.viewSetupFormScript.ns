@@ -1,0 +1,6 @@
+@@ 0x76ddf1
+func() begin
+	SetValue(LabelField, 'label, calcLineLabel);
+	(calcLineValue := nil)
+end
+@@end

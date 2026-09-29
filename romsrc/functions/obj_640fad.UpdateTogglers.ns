@@ -1,0 +1,7 @@
+@@ 0x4896b1
+func() begin
+	(foreach l1 in recTogglers do begin
+			l1:SetRecognizers()
+		end)
+end
+@@end

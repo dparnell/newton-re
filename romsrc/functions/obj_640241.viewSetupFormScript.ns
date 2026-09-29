@@ -1,0 +1,21 @@
+@@ 0x49a109
+func() begin
+	local l1, l2, l3;
+	if firstTime then begin
+			self.viewBounds := Clone(saveBounds)
+		end;
+	l2 := self:GlobalBox();
+	l1 := GetCaretBox();
+	if (if (if (if (if (not freeze) then firstTime) then l1) then (l2.top < l1.bottom)) then (l2.bottom > l1.top)) then begin
+			l3 := ((l1.top - l2.bottom) - 32);
+			if ((l2.top + l3) > 8) then begin
+					viewBounds := OffsetRect(viewBounds, 0, l3)
+				end
+		end;
+	if (if currentKeyboard then (currentKeyboard <> self)) then begin
+			currentKeyboard:Close()
+		end;
+	currentKeyboard := self;
+	(firstTime := nil)
+end
+@@end

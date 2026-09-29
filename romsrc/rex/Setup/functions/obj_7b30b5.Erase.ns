@@ -1,0 +1,7 @@
+@@ 0x7b320d
+func() begin
+	self.viewChildren := nil;
+	self:RedoChildren();
+	xline:dirty()
+end
+@@end

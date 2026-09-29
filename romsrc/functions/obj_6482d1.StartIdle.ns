@@ -1,0 +1,16 @@
+@@ 0x4731bd
+func(a1, a2) begin
+	(if (not a1) then (idleUseCount := (idleUseCount + 1)) else begin
+			if (not idlingViews) then begin
+					idlingViews := [Array: a1];
+					idleUseCount := (idleUseCount + 1)
+				end else begin
+					if (not LSearch(idlingViews, a1, 0, '|=|, nil)) then begin
+							AddArraySlot(idlingViews, a1);
+							idleUseCount := (idleUseCount + 1)
+						end
+				end;
+			a1:SetupIdle(a2)
+		end)
+end
+@@end

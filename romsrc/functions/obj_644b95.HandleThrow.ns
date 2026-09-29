@@ -1,0 +1,28 @@
+@@ 0x5953ad
+func() begin
+	local l1, l2, l3, l4;
+	l1 := 0;
+	if HasSlot((l2 := CurrentException()), 'message) then begin
+			l1 := -1;
+			self.lastErrMsg := l2.message
+		end else begin
+			if HasSlot(l2, 'error) then begin
+					l1 := l2.error
+				end else begin
+					if HasSlot(l2.data, 'errorCode) then begin
+							l1 := l2.data.errorCode
+						end else begin
+							GetRoot():Notify(3, serviceName, "Unexpected error")
+						end
+				end
+		end;
+	if (l3 := (not self:ignoreError(l1))) then begin
+			if (l4 := (if (connectState = 'Login) then GetVariable(self, 'currentItem) else (if (if request then (self:ItemRequest exists)) then self:ItemRequest(request)))) then begin
+					self:ItemCompleted(l4, l4.state, l1)
+				end else begin
+					self:HandleError(l1)
+				end
+		end;
+	l3
+end
+@@end

@@ -1,0 +1,17 @@
+@@ 0x4ef5ad
+func() begin
+	if (not masterFinder.scrollingForward) then begin
+			if ((l1 := currentRepeatingEntryFinder).currentInstance >= 0) then begin
+					l1.currentInstance := (l1.currentInstance - 1)
+				end
+		end else begin
+			(foreach l1 in repeatingEntryFinders do begin
+					if (l1.currentInstance >= 0) then begin
+							l1.currentInstance := (l1.currentInstance - 1)
+						end
+				end);
+			masterFinder.scrollingForward := nil
+		end;
+	self:ChooseLatestInstance()
+end
+@@end

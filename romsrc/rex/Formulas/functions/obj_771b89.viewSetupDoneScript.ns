@@ -1,0 +1,9 @@
+@@ 0x771f4d
+func() begin
+	AddArraySlot((FSViews := [Array: ]), Country1Field);
+	AddArraySlot(FSViews, ExchangeRateField);
+	AddArraySlot(FSViews, Country2Field);
+	inherited:?viewSetupDoneScript();
+	self:ComputeExchangeRate()
+end
+@@end

@@ -1,0 +1,11 @@
+@@ 0x72a299
+func() begin
+	local l1, l2;
+	if (if (l1 := self:GetCustomInfo()) then l1.(path)) then begin
+			l2 := self:parent():LocalBox();
+			StyledStrTruncate((label := Clone(l1.(path).label)), (((l2.right - l2.left) - 25) div 2), viewFont);
+			self.memory := (if IsSymbol(path) then path else path[0])
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

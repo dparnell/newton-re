@@ -1,0 +1,7 @@
+@@ 0x5289b1
+func(a1) begin
+	local l1;
+	l1 := GetVariable((l1 := GetView('viewfrontmostapp)), 'appSymbol);
+	(if (a1 = l1) then true)
+end
+@@end

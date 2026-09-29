@@ -1,0 +1,6 @@
+@@ 0x462a69
+func(a1) begin
+	SetRemove(messageList, a1);
+	(if (Length(messageList) = 0) then AddDeferredSend(self, 'Close, nil))
+end
+@@end

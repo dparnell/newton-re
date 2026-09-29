@@ -1,0 +1,6 @@
+@@ 0x3c6659
+func(a1, a2) begin
+	PowerOnRegistry.(EnsureInternal(a1)) := a2;
+	nil
+end
+@@end

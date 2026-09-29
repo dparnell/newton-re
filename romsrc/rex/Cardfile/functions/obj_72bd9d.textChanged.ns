@@ -1,0 +1,5 @@
+@@ 0x72bf51
+func() begin
+	(changed := true)
+end
+@@end

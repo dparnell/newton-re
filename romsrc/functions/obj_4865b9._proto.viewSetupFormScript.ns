@@ -1,0 +1,5 @@
+@@ 0x486459
+func() begin
+	self:RedoText()
+end
+@@end

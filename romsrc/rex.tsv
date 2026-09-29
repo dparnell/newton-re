@@ -1,0 +1,30 @@
+# the ROM extension: its pieces in address order (address, file)
+rex	71fc4c	ce3fc
+71fc4c	rex/header.bin
+71fcf8	rex/dio_71fcf8.bin
+71ff40	rex/gpio_71ff40.bin
+7201c8	rex/ralc_7201c8.bin
+7201f4	rex/Cardfile.head.bin
+72031c	rex/Cardfile/
+7436d0	rex/Connection.head.bin
+7437f4	rex/Connection/
+7639ac	rex/FaxViewer.head.bin
+763ab4	rex/FaxViewer/
+769770	rex/Formulas.head.bin
+769890	rex/Formulas/
+773f60	rex/help_book.head.bin
+774070	rex/help_book/
+7850d0	rex/ListView.head.bin
+78517c	rex/ListView/
+7a5554	rex/ScreenBuffer.pkg
+7a5700	rex/ScreenDrivers.pkg
+7a67fc	rex/Setup.head.bin
+7a6914	rex/Setup/
+7b4d20	rex/WorldData.pkg
+7ebfc8	rex/pad_7ebfc8.bin
+7ec000	rex/ptpt_7ec000.bin
+7ec400	rex/glpt_7ec400.bin
+7ec800	rex/pad_7ec800.bin
+7ed000	rex/fexp_7ed000.bin
+7ed298	rex/pad_7ed298.bin
+7ee000	rex/jump_7ee000.bin

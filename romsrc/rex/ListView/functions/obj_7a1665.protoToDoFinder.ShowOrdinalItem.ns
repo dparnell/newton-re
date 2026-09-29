@@ -1,0 +1,26 @@
+@@ 0x79b625 names
+func(ordinal) begin
+	local results, oldItem, currentEntryIndex, oldEntryIndex;
+	if (items = nil) then begin
+			self:AddFoundItems((results := [Array: ]), 0, 1)
+		end;
+	(if (ordinal = 'first) then begin
+			currentItem := 0;
+			self:ShowItem(items[indexFirstItem], cursor:Reset())
+		end else begin
+			oldItem := currentItem;
+			if (ordinal = 'Prev) then begin
+					currentItem := (currentItem - 1)
+				end else begin
+					if (ordinal = 'Next) then begin
+							currentItem := (currentItem + 1)
+						end else begin
+							currentItem := ordinal
+						end
+				end;
+			currentEntryIndex := self:GetEntryIndexForInstanceIndex((currentItem := Min(Max(currentItem, 0), (self:Count() - 1))));
+			oldEntryIndex := self:GetEntryIndexForInstanceIndex(oldItem);
+			self:ShowItem(items[(indexFirstItem + currentItem)], cursor:Move((currentEntryIndex - oldEntryIndex)))
+		end)
+end
+@@end

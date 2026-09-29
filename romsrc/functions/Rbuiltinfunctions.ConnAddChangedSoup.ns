@@ -1,0 +1,13 @@
+@@ 0x472a7d
+func(a1, a2, a3, a4) begin
+	local l1, l2, l3;
+	if (not a1) then begin
+			return nil
+		end;
+	l1 := [pathExpr: 'name];
+	(if (l2 := BFind(a1, a2, '|str<|, l1)) then (if (l3 := a1[l2]).(a3) then (l3.(a3) := (l3.(a3) + a4)) else (l3.(a3) := a4)) else begin
+			(l3 := {name: a2}).(a3) := a4;
+			BInsert(a1, l3, '|str<|, l1, true)
+		end)
+end
+@@end

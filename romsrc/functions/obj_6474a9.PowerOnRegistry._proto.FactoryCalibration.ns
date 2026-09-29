@@ -1,0 +1,5 @@
+@@ 0x562c75
+func(a1) begin
+	(if (Gestalt(16777220).rebootreason = -10080) then GetRoot():Notify(3, -10080, nil))
+end
+@@end

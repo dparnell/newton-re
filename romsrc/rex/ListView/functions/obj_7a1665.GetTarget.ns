@@ -1,0 +1,60 @@
+@@ 0x797a3d names
+func(anOldTarget) begin
+	if scrollCausedRedo then begin
+			return nil
+		end;
+	curWidth := GetRoot():GlobalBox().right;
+	if entryChanged then begin
+			self:EndFlush()
+		end;
+	if ((target := (targets := self:GetToDoEntry(selectedDates[0], true))[0]) <> anOldTarget) then begin
+			firstTopic := 0;
+			curTopic := nil
+		end;
+	if ((repeatTargets := self:GetToDoEntry(0, nil)) = nil) then begin
+			repeatTargets := [Array: ]
+		end;
+	if (((Length(targets) > 1) or (Length(repeatTargets) > 0)) or oldTodoSoup) then begin
+			curWidth := GetRoot():GlobalBox().right;
+			nTopics := 0;
+			local curWidth;
+			local Entry;
+			local t;
+			local i;
+			local store;
+			local hasOtherTasks;
+			(foreach Entry in targets do begin
+					nTopics := (nTopics + Length(Entry.topics))
+				end);
+			self.topics := Array(nTopics, nil);
+			i := 0;
+			store := 0;
+			(foreach Entry in targets do begin
+					if Entry.needsSort then begin
+							self:SortToDoItems(Entry)
+						end;
+					(foreach t in Entry.topics do begin
+							t.source := store;
+							topics[i] := t;
+							i := (i + 1)
+						end);
+					store := (store + 1)
+				end);
+			if oldTodoSoup then begin
+					hasOtherTasks := (self:AddOldSoupTasks(topics, selectedDates[0]) or hasOtherTasks)
+				end;
+			hasOtherTasks := (self:AddRepeatingTasks(topics, selectedDates[0]) or hasOtherTasks);
+			if (if ((store > 1) or hasOtherTasks) then (Length(topics) > 1)) then begin
+					StableSort(topics, '|<|, func(t) begin
+						(t.mtgPriority + (if t.mtgDone then 10 else 0))
+					end)
+				end
+		end else begin
+			if (if (if (if (anOldTarget <> nil) then (target <> anOldTarget)) then (target <> nil)) then target.needsSort) then begin
+					self:SortToDoItems(target)
+				end;
+			self.topics := target.topics
+		end;
+	(nTopics := Length(topics))
+end
+@@end

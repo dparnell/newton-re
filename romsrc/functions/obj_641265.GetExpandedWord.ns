@@ -1,0 +1,14 @@
+@@ 0x5a9f09
+func(a1) begin
+	local l1, l2, l3;
+	self:SetUpDictionary();
+	l1 := nil;
+	l2 := {attribute: nil, terminalClass: nil};
+	if (((l3 := expandDict:LookupWord(a1, l2)) = 2) or (l3 = 3)) then begin
+			if l2.attribute then begin
+					l1 := expandDict.list[l2.attribute]
+				end
+		end;
+	l1
+end
+@@end

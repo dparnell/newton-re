@@ -1,0 +1,5 @@
+@@ 0x51e425
+func() begin
+	self:hilite(nil)
+end
+@@end

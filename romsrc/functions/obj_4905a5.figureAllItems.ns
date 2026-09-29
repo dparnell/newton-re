@@ -1,0 +1,25 @@
+@@ 0x490585
+func() begin
+	l5 := (self.ListItems := pkgNames);
+	(if (prefsCache.restorePackages = 'all) then begin
+			l2 := Length(l5);
+			l6 := (self.selectedItems := Array(l2, nil));
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			local l5;
+			local l6;
+			(if (l2 > 0) then (for l1 := 0 to (l2 - 1) do begin
+						l6[l1] := l1
+					end))
+		end else begin
+			l6 := (self.selectedItems := [Array: ]);
+			(foreach l3 in prefsCache.restorePackNames do begin
+					if (l4 := LSearch(l5, l3, 0, '|str=|, nil)) then begin
+							AddArraySlot(l6, l4)
+						end
+				end)
+		end)
+end
+@@end

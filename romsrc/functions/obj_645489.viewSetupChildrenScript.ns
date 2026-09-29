@@ -1,0 +1,15 @@
+@@ 0x49c5c9
+func() begin
+	inherited:viewSetupChildrenScript();
+	if (not dataCursor:clone():Next()) then begin
+			lastItem := entries[0]
+		end;
+	lastHeight := self:LocalBox().bottom;
+	if entries[0] then begin
+			self.viewChildren := Array(1, protoChild)
+		end else begin
+			RemoveSlot(self, 'viewChildren)
+		end;
+	layout:Retarget(nil)
+end
+@@end

@@ -1,0 +1,36 @@
+@@ 0x5334e9
+func() begin
+	popup := [Array: ];
+	if (l1 := ResolveEntryAlias(GetUserConfig('currentPersona))) then begin
+			if (if IsArray((l2 := GetRoot().cardfile:bcPhoneNumber(l1, 'phone))) then (Length(l2) > 0)) then begin
+					local l1;
+					local l2;
+					(foreach l3 in l2 do begin
+							self:addCmds(ParamStr("^0 ^1", [Array: PhoneTypes.phoneText.(ClassOf(l3)), "Phone"]), MakeDisplayPhone(l3), nil)
+						end)
+				end;
+			l5 := true;
+			if (if IsArray((l6 := GetRoot().cardfile:bcCreditCards(l1, '|string.card|))) then (Length(l6) > 0)) then begin
+					local l5;
+					local l6;
+					(foreach l7 in l6 do begin
+							l5 := self:addCmds(l7.creditCardName, l7.creditCardNum, l5)
+						end)
+				end
+		end;
+	l5 := true;
+	l9 := GetRoot().(appSymbol).currentItem;
+	l10 := nil;
+	l11 := nil;
+	if (if (if (if (if l9 then (l10 := l9.toRef)) then (Length(l10) > 0)) then l10[0]) then (l11 := EntryFromObj(l10[0]))) then begin
+			local l9;
+			local l10;
+			local l11;
+			local l12;
+			(foreach l13 in (l12 := GetRoot().cardfile:bcCustomFields(l11, nil)) do begin
+					l5 := self:addCmds(l13.label, l13.value, l5)
+				end)
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

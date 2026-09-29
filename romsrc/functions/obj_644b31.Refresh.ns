@@ -1,0 +1,6 @@
+@@ 0x442e4d
+func() begin
+	monthView:Dirty();
+	self:SetTitle()
+end
+@@end

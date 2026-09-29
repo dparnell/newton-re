@@ -1,0 +1,14 @@
+@@ 0x470f95
+func() begin
+	local l1;
+	if (l1 := inherited:deferredSetupScript()) then begin
+			timeoutCounter := 300000;
+			chooserNBPTable:startScript();
+			if formOpen then begin
+					self:SetupIdle(idleFrequency);
+					theZoneTable:updateZoneList()
+				end
+		end;
+	return l1
+end
+@@end

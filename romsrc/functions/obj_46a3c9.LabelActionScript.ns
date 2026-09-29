@@ -1,0 +1,10 @@
+@@ 0x46a3a9
+func(a1) begin
+	local l1, l2;
+	l1 := cText.template;
+	l2 := cText:GetWordForDisplay();
+	l1:switch(a1, l2);
+	cText:SetupAll(l2, 'single, l1, true);
+	cText:InvalDrawCache('all)
+end
+@@end

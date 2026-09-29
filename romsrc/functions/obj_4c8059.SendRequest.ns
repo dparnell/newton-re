@@ -1,0 +1,32 @@
+@@ 0x4c7ef9
+func(a1) begin
+	local l1;
+	if (a1.cause = 'submit) then begin
+			return nil
+		end;
+	if currentRequest then begin
+			return self:QueueRequest(currentRequest, a1)
+		end;
+	currentRequest := a1;
+	try begin
+			(while (l1 := self:ItemRequest(a1)) do (if l1.manualDialing then begin
+						manualDialingForm.message := l1;
+						manualDialingForm.deferredFax := func(a1) begin
+							GetRoot().(appSymbol):PrintNow(a1)
+						end;
+						manualDialingForm:Open();
+						'manualDialingForm
+					end else self:PrintNow(l1)))
+		end onexception |evt.ex| do begin
+			currentRequest := nil;
+			currentItem := nil;
+			currentRecipient := nil;
+			self:SetStatus('idle, nil);
+			Rethrow()
+		end;
+	currentRequest := nil;
+	currentItem := nil;
+	currentRecipient := nil;
+	self:SetStatus('idle, nil)
+end
+@@end

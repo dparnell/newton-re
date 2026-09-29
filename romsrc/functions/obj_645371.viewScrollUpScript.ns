@@ -1,0 +1,5 @@
+@@ 0x4aef91
+func() begin
+	self:Effect(44171264, nil, @85, 'Scroller, [Array: -1])
+end
+@@end

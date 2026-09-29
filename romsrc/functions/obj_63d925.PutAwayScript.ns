@@ -1,0 +1,13 @@
+@@ 0x5a4081
+func(a1) begin
+	(if (a1.text or a1.package) then begin
+			if (if a1.text then ((a1.edited or (a1.class = 'smartMail)) or (if (not a1.body) then (not a1.package)))) then begin
+					self:doCopyToNotes(a1, nil)
+				end;
+			if a1.package then begin
+					self:doLoad(a1, nil)
+				end;
+			true
+		end)
+end
+@@end

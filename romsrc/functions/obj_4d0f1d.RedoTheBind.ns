@@ -1,0 +1,9 @@
+@@ 0x4d079d
+func() begin
+	self:SetFlag(redoBind);
+	(if (status = 'Listening) then begin
+			self:SetFlag(redoBind);
+			self:TearDownListen()
+		end else (if (status <> 'idle) then self:SetFlag(redoBind)))
+end
+@@end

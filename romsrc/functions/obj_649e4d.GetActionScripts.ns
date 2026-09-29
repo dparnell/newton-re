@@ -1,0 +1,33 @@
+@@ 0x4b6b8d
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7;
+	l1 := nil;
+	if TargetIsCursor((l2 := a1.target)) then begin
+			l3 := nil;
+			l5 := (l4 := GetTargetCursor(l2, nil)):entry();
+			(while l5 do begin
+					if (l3 = nil) then begin
+							l3 := l5.category
+						end;
+					if (l5.category <> l3) then begin
+							l3 := nil;
+							break
+						end;
+					(l5 := l4:Next())
+				end);
+			if l3 then begin
+					l1 := GetRoot().(l3)
+				end
+		end else begin
+			if l2 then begin
+					l1 := GetItemTransport(l2)
+				end
+		end;
+	l6 := Clone(ioboxscripts);
+	if l1 then begin
+			l7 := l1:?GetTransportScripts(l2);
+			ArrayMunger(l6, Length(l6), 0, l7, 0, nil)
+		end;
+	l6
+end
+@@end

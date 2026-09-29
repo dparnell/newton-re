@@ -1,0 +1,6 @@
+@@ 0x4dfa85
+func() begin
+	Time := (target.gmt div 60);
+	inherited:?viewSetupFormScript()
+end
+@@end

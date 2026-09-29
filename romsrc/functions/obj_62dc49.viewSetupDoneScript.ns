@@ -1,0 +1,16 @@
+@@ 0x4b0cb5
+func() begin
+	inherited:?viewSetupDoneScript();
+	try begin
+			TransportNotify('_all, 'AppOpened, [Array: appSymbol])
+		end onexception |evt.ex| do begin
+			self:Notify(3, "InOut Box", "Error in transport script")
+		end;
+	if activeNotify then begin
+			GetRoot().notifyIcon:KillAction(activeNotify);
+			activeNotify := nil
+		end;
+	lastFrontMost := true;
+	self:SetupIdle((kIdleConst * 1000))
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x4455cd
+func(a1, a2) begin
+	(if (a1 > a2) then return (a1 - a2) else return (a2 - a1))
+end
+@@end

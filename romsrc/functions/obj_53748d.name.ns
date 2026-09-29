@@ -1,0 +1,5 @@
+@@ 0x5372ed
+func() begin
+	ParamStr("\u201C\u^0\u201D\u", [Array: fentry.text])
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x429321
+func() begin
+	(if (if (if (if labelCommands then iconBounds) then (Length(labelCommands) > 0)) then IsFrame(labelCommands[0])) then labelCommands[0].icon)
+end
+@@end

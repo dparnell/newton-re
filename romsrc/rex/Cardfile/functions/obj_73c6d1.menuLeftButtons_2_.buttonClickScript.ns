@@ -1,0 +1,51 @@
+@@ 0x73c939
+func() begin
+	popup := [Array: ];
+	(if target then begin
+			l3 := GetViewDefs(target.class);
+			if (not (l10 := GetDataDefs(target.class))) then begin
+					self:hilite(nil);
+					return nil
+				end;
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			local l5;
+			local l6;
+			local l7;
+			local l8;
+			local l9;
+			local l10;
+			(foreach l1 in (l4 := l10.viewsToDisplay) do begin
+					if (l3.(l1).type = 'editor) then begin
+							self:AddLayout(popup, l3, l1)
+						end
+				end);
+			(foreach l1, l2 in l3 do begin
+					if (if (if (not SetContains(l4, l1)) then (l2.type = 'editor)) then (l1 <> 'default)) then begin
+							self:AddLayout(popup, l3, l1)
+						end
+				end);
+			l5 := Length(popup);
+			if (l9 := self:GetCustomInfo()) then begin
+					(foreach l1, l8 in l9 do begin
+							if StrFilled(l8.label) then begin
+									AddArraySlot(popup, {item: l8.label, slot: 'custom, custom: [pathExpr: l1]})
+								end
+						end)
+				end;
+			l6 := Length(popup);
+			if (Length(popup) > l5) then begin
+					ArrayInsert(popup, 'pickseparator, l5)
+				end;
+			if ((l6 - l5) < 10) then begin
+					if (Length(popup) > 0) then begin
+							AddArraySlot(popup, 'pickseparator)
+						end;
+					AddArraySlot(popup, {item: customEditor.name, slot: customEditor})
+				end;
+			inherited:buttonClickScript()
+		end else self:hilite(nil))
+end
+@@end

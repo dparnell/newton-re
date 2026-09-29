@@ -1,0 +1,49 @@
+@@ 0x4bced1
+func(a1, a2) begin
+	local l1, l2, l3, l4;
+	l1 := 0;
+	l2 := 0;
+	if (a1 = 'left) then begin
+			l1 := (-scrollXAmount)
+		end else begin
+			if (a1 = 'right) then begin
+					l1 := scrollXAmount
+				end else begin
+					if (a1 = 'up) then begin
+							l2 := (-scrollYAmount)
+						end else begin
+							if (a1 = 'down) then begin
+									l2 := scrollYAmount
+								end
+						end
+				end
+		end;
+	l3 := viewOriginX;
+	l4 := viewOriginY;
+	if (l1 <> 0) then begin
+			if (l1 > 0) then begin
+					if self.ScrollRect then begin
+							l1 := min(((ScrollRect.right - l3) - viewWidth), l1)
+						end
+				end else begin
+					l1 := max((-l3), l1)
+				end;
+			l3 := (l3 + l1)
+		end;
+	if (l2 <> 0) then begin
+			if (l2 > 0) then begin
+					if self.ScrollRect then begin
+							l2 := min(((ScrollRect.bottom - l4) - viewHeight), l2)
+						end
+				end else begin
+					l2 := max((-l4), l2)
+				end;
+			l4 := (l4 + l2)
+		end;
+	editor:DropHilites();
+	editor:SetOrigin(l3, l4);
+	ViewRect := OffsetRect(ViewRect, l1, l2);
+	self:UpdateBounds();
+	RefreshViews()
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x7537b9
+func() begin
+	self:updateIndicator(initialSetup);
+	return 500
+end
+@@end

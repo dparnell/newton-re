@@ -1,0 +1,24 @@
+@@ 0x503aa1
+func() begin
+	local l1;
+	ClosingFromQuitScript := true;
+	if Visible(peoplePopup) then begin
+			peoplePopup:Close()
+		end;
+	if Visible(placePopup) then begin
+			placePopup:Close()
+		end;
+	if (isNewMeeting or dirtyFlag) then begin
+			if (not (l1 := selectedMeeting.repeatTemplate)) then begin
+					l1 := selectedMeeting
+				end;
+			if IsSoupEntry(l1) then begin
+					self:CarefulSave()
+				end
+		end;
+	calendar.lastMailFormat := mainViewLastMailFormat;
+	dpSlip := nil;
+	originalLocationAlias := nil;
+	(originalInviteesAliases := nil)
+end
+@@end

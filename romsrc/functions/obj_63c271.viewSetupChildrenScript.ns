@@ -1,0 +1,9 @@
+@@ 0x51ca01
+func() begin
+	self.viewChildren := Clone(kids);
+	(if (dpCu.fullBar = true) then AddArraySlot(viewChildren, fullCtrlPanel) else begin
+			AddArraySlot(viewChildren, miniCtrlPanel);
+			(panelOpen := nil)
+		end)
+end
+@@end

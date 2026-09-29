@@ -1,0 +1,7 @@
+@@ 0x43f1e1
+func(a1, a2) begin
+	local l1;
+	(l1 := self:Init()).context := a2;
+	l1:popup(a1)
+end
+@@end

@@ -1,0 +1,11 @@
+@@ 0x7978fd names
+func(anIndex, aLevel) begin
+	local topicFrame, gtdeds;
+	gtdeds := self:GetToDoEntryDefaultStore(selectedDates[0], nil);
+	SetAdd(targets, gtdeds.Entry, true);
+	(topicFrame := self:MakeTopicFrame(aLevel)).source := gtdeds.storeIndex;
+	ArrayInsert(topics, topicFrame, anIndex);
+	nTopics := (nTopics + 1);
+	topicFrame
+end
+@@end

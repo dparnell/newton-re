@@ -1,0 +1,5 @@
+@@ 0x419219
+func(a1) begin
+	SafeSetDisplayParams(CreateDisplayParams(a1))
+end
+@@end

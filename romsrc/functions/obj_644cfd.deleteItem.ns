@@ -1,0 +1,5 @@
+@@ 0x47fa91
+func(a1) begin
+	(if a1 then GetRoot().(owner):?ItemCompleted(a1, nil))
+end
+@@end

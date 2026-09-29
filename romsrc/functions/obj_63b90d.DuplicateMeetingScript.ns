@@ -1,0 +1,18 @@
+@@ 0x503d41
+func(a1, a2) begin
+	local l1;
+	if (not a1) then begin
+			self:Notify(3, title, "There is nothing to duplicate.");
+			return nil
+		end;
+	(if a1._cursor then begin
+			try begin
+					self:ProcessMeetings(a1, 'duplicate)
+				end onexception |evt.ex| do begin
+					DatesOverviewForm:Retarget();
+					Rethrow()
+				end;
+			DatesOverviewForm:Retarget()
+		end else self:OpenMeetingSlip((l1 := self:DuplicateMeeting(a1)), nil, nil))
+end
+@@end

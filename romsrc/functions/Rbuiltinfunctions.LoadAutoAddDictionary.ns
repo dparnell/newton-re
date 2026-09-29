@@ -1,0 +1,5 @@
+@@ 0x5aca0d
+func() begin
+	LoadDictionary(36, "AutoAdd")
+end
+@@end

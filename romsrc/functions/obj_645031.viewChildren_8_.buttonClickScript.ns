@@ -1,0 +1,6 @@
+@@ 0x46cb31
+func() begin
+	correct.gotoKeyboard := true;
+	OpenKeypadFor(refCon.form)
+end
+@@end

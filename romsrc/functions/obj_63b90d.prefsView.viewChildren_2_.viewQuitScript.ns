@@ -1,0 +1,15 @@
+@@ 0x50baa1
+func() begin
+	local l1;
+	(if (if Visible(otherPicker) then otherInput.text) then begin
+			if (StrLen(otherInput.text) = 0) then begin
+					l1 := nil
+				end else begin
+					if (l1 := StringToNumber(TrimString(otherInput.text))) then begin
+							l1 := (floor(round(l1)) * otherWarningTimes[otherSelection])
+						end
+				end;
+			(if (not theApp.prefsCache) then (theApp:GetAppPreferences().meetingAlarms := l1) else (theApp.prefsCache.meetingAlarms := l1))
+		end)
+end
+@@end

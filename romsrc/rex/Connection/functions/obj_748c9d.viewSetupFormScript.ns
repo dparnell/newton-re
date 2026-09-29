@@ -1,0 +1,6 @@
+@@ 0x748d65
+func() begin
+	self:InitializeTextList(self, restoreOptions.applications);
+	inherited:?viewSetupFormScript()
+end
+@@end

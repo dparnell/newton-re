@@ -1,0 +1,5 @@
+@@ 0x4eeb21
+func() begin
+	(if HasPath(target, 'title) then target.title else (if (target.state = 'Received) then "Received Call" else "Call"))
+end
+@@end

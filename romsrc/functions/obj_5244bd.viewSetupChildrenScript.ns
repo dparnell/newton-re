@@ -1,0 +1,73 @@
+@@ 0x520d71
+func() begin
+	self:UpDatePrevs();
+	self.viewChildren := [Array: ];
+	l1 := 0;
+	l2 := 0;
+	local l1;
+	local l2;
+	(foreach l3 in marks do begin
+			AddArraySlot(self.viewChildren, {_proto: @159, viewBounds: RelBounds(((l2 * 66) + 2), ((l1 * 97) + 3), 62, 93), icon: self:PageThumbnail(l3), text: Stringer([Array: l3]), pageNumber: l3});
+			if ((l2 := (l2 + 1)) >= 3) then begin
+					l2 := 0;
+					l1 := (l1 + 1)
+				end
+		end);
+	AddArraySlot(self.viewChildren, {_proto: @166});
+	if ((recentKiosk <> 0) or (recentPage <> 0)) then begin
+			AddArraySlot(self.viewChildren, {_proto: @386, text: " Return to", viewJustify: 2182, viewBounds: RelBounds(((-returnToWidth) - 6), -16, returnToWidth, 13), contains: nil, popup: nil, viewSetupFormScript: func() begin
+				popup := [Array: ];
+				contains := [Array: ];
+				if (if (recentPage <> 0) then (recentPage <> self:CurrentPage())) then begin
+						AddArraySlot(popup, Stringer([Array: "Page", " ", recentPage]));
+						AddArraySlot(contains, 0)
+					end;
+				(if (recentKiosk <> 0) then begin
+						AddArraySlot(popup, self:CurrentKiosk().name);
+						AddArraySlot(contains, 1)
+					end)
+			end, pickActionScript: func(a1) begin
+				local l1;
+				if ((l1 := contains[a1]) = 0) then begin
+						self:TurnToPage(recentPage)
+					end else begin
+						if (l1 = 1) then begin
+								self:TurnToPage(recentKiosk)
+							end
+					end;
+				inherited:pickActionScript(a1);
+				base:Close()
+			end})
+		end;
+	if (Length(marks) > 0) then begin
+			AddArraySlot(self.viewChildren, {_proto: @386, viewJustify: 2182, viewBounds: RelBounds(((-unmarkWidth) - 6), -16, unmarkWidth, 13), text: " Unmark", popup: nil, contains: nil, viewSetupFormScript: func() begin
+				popup := [Array: ];
+				contains := [Array: ];
+				(foreach l1 in marks do begin
+						AddArraySlot(popup, Stringer([Array: "Page", " ", NumberStr(l1)]));
+						AddArraySlot(contains, l1)
+					end);
+				AddArraySlot(popup, 'pickseparator);
+				AddArraySlot(contains, nil);
+				AddArraySlot(popup, "All Marks");
+				AddArraySlot(contains, 666)
+			end, pickActionScript: func(a1) begin
+				local l1;
+				if ((l1 := contains[a1]) = 666) then begin
+						SetLength(marks, 0)
+					end else begin
+						SetRemove((marks := self:Bookmarks()), l1)
+					end;
+				self:UpdateBookmarks(marks);
+				inherited:pickActionScript(a1);
+				base:SyncView();
+				base:RedoChildren();
+				base:Parent():Dirty()
+			end})
+		end;
+	if secondMark then begin
+			AddArraySlot(self.viewChildren, {_proto: protoMarkButton, thisPage: secondMark})
+		end;
+	(if firstMark then AddArraySlot(self.viewChildren, {_proto: protoMarkButton, thisPage: firstMark}))
+end
+@@end

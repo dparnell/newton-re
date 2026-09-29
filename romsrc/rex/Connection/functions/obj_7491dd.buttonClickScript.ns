@@ -1,0 +1,10 @@
+@@ 0x749231
+func() begin
+	if (Length(packageList.selectedItems) = Length(packageList.listItems)) then begin
+			packageList.selectedItems := [Array: ]
+		end else begin
+			self:SelectAll(packageList)
+		end;
+	packageList:DrawHilite()
+end
+@@end

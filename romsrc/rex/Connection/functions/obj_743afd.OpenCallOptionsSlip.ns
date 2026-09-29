@@ -1,0 +1,5 @@
+@@ 0x744185
+func() begin
+	deviceSpecificStuff:OpenCallOptionsSlip()
+end
+@@end

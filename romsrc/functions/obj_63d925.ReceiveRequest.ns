@@ -1,0 +1,50 @@
+@@ 0x5a3d85
+func(a1) begin
+	if (a1.cause = 'user) then begin
+			if (if eworld then eworld.connected) then begin
+					if (status = 'connected) then begin
+							self:?SetStatusDialog('Checking, 'vStatus, nil);
+							GetRoot().iobox:RemoveTempItems(appSymbol);
+							Perform(eworld, GetUserConfig('mailListMethod), [Array: ])
+						end else begin
+							if (lastRequest = 'ReceiveRequest) then begin
+									return nil
+								end else begin
+									self:QueueRequest('ReceiveRequest, a1);
+									return nil
+								end
+						end
+				end else begin
+					if (if (not (if connectSlip then connectSlip.viewCObject)) then (status = 'idle)) then begin
+							(connectSlip := BuildContext(connectOptionsSlip)).request := a1;
+							connectSlip.theApp := GetRoot().(owner);
+							connectSlip.theTransport := self;
+							connectSlip.connectionType := 'receive;
+							connectSlip.clearOnClose := 'connectSlip;
+							if connectSlip.theApp.viewCObject then begin
+									connectSlip.theApp:RememberedOpen(connectSlip)
+								end else begin
+									connectSlip:Open()
+								end
+						end else begin
+							return nil
+						end
+				end
+		end else begin
+			if (if (if (a1.cause = 'Remote) then eworld) then eworld.connected) then begin
+					if (status = 'connected) then begin
+							eworld.request := a1;
+							eworld:GetNextMessage()
+						end else begin
+							if (lastRequest = 'ReceiveRequest) then begin
+									self:QueueRequest(eworld.request, a1)
+								end else begin
+									self:QueueRequest('ReceiveRequest, a1);
+									return nil
+								end
+						end
+				end
+		end;
+	(lastRequest := 'ReceiveRequest)
+end
+@@end

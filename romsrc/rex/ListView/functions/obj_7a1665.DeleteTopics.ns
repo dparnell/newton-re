@@ -1,0 +1,46 @@
+@@ 0x797c0d names
+func(aList) begin
+	self:EndFlush();
+	if ((nItems := Length(aList)) > 1) then begin
+			Sort(aList, '|>|, nil)
+		end;
+	local nItems;
+	local task;
+	local i;
+	local theIndex;
+	local entries;
+	local Entry;
+	local index;
+	(for i := 0 to (nItems - 1) do begin
+			theIndex := aList[i];
+			if HasPath((task := topics[theIndex]), 'repeatInfo) then begin
+					if (result := ModalConfirm(Stringer([Array: (textPart1 := SubStr(MakeRichString(task.text, task.styles), 0, 24)), "\u2026\u", " ", "is a recurring task. Delete all occurrences?"]), 'yesNo)) then begin
+							self:DeleteTask(0, task, true)
+						end else begin
+							return nil
+						end
+				end else begin
+					if ((if HasPath(task, 'source) then (task.source = nil)) or (ClassOf(task.source) = 'symbol)) then begin
+							self:Notify(3, "To Do", "Can\u2019\ut delete a 1.x formatted To Do item");
+							return nil
+						end;
+					local textPart1;
+					local result;
+					(foreach Entry in (entries := self:GetToDoEntry(selectedDates[0], nil)) do begin
+							if (index := SetContains(Entry.topics, task)) then begin
+									if self:CheckReadOnly(Entry) then begin
+											return nil
+										end;
+									ArrayRemoveCount(Entry.topics, index, 1);
+									EntryChangeXmit(Entry, 'todo)
+								end
+						end)
+				end
+		end);
+	curTopic := nil;
+	if viewCObject then begin
+			self:RedoTopics()
+		end;
+	true
+end
+@@end

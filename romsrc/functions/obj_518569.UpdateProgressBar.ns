@@ -1,0 +1,8 @@
+@@ 0x518489
+func(a1) begin
+	local l1;
+	RunningCount := min((RunningCount := (RunningCount + a1)), ItemCount);
+	l1 := (if (ItemCount > 0) then ((RunningCount * 100) div ItemCount) else 50);
+	statusView:SetStatus('vGauge, {gauge: l1})
+end
+@@end

@@ -1,0 +1,13 @@
+@@ 0x49e309
+func(a1) begin
+	(foreach l1 in self:ChildViewFrames() do begin
+			if HasPath(l1, 'jamFromEntry) then begin
+					l1:jamFromEntry(a1)
+				end;
+			if HasPath(l1, 'Retarget) then begin
+					l1:Retarget()
+				end
+		end);
+	self:StartFlush()
+end
+@@end

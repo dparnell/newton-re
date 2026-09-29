@@ -1,0 +1,19 @@
+@@ 0x465f4d
+func(a1) begin
+	local l1;
+	result := nil;
+	if template then begin
+			if template.format then begin
+					if (if (if (a1 >= wordLeft) then (a1 < wordRight)) then (template.format[(a1 - wordLeft)] <> $_)) then begin
+							l1 := (ORD((l1 := template.format[(a1 - wordLeft)])) - ORD($0));
+							result := template.filters[l1]
+						end
+				end else begin
+					if template.filters then begin
+							result := template.filters[0]
+						end
+				end
+		end;
+	return result
+end
+@@end

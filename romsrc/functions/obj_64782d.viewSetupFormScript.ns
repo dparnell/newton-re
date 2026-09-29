@@ -1,0 +1,13 @@
+@@ 0x4bab69
+func() begin
+	if (if (if (targetView exists) then targetView) then (BAnd(targetView.viewFlags, 130) <> 0)) then begin
+			access := 'readOnly
+		end;
+	(filter := Clone(flavor))._parent := self;
+	filter:?InitFilter();
+	self:SetupCommands();
+	dontResizeLabel := indent;
+	height := FontHeight(labelFont);
+	self:SetLabelText(label)
+end
+@@end

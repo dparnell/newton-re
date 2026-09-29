@@ -1,0 +1,6 @@
+@@ 0x462319
+func(a1) begin
+	notification:YouSnoozeYouLose(snoozeARoos[a1]);
+	inherited:?pickActionScript(a1)
+end
+@@end

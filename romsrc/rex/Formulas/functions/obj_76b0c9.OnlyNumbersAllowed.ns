@@ -1,0 +1,5 @@
+@@ 0x76bb45
+func() begin
+	self:Notify(3, "Formulas", "Only numbers are allowed in this field.")
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x5b71bd
+func() begin
+	(self.text := self:CurTimeStr())
+end
+@@end

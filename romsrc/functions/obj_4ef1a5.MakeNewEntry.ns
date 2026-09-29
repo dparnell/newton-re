@@ -1,0 +1,7 @@
+@@ 0x4ef185
+func() begin
+	local l1;
+	(l1 := GetRoot().(taskSlip):NewItem(nil)).fromCallApp := true;
+	l1
+end
+@@end

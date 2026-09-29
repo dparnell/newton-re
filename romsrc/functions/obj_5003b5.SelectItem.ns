@@ -1,0 +1,34 @@
+@@ 0x4ff6fd
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6;
+	if IsString((l1 := cursor:NthEntry(a1))) then begin
+			return nil
+		end;
+	l2 := Clone(canonicalOverviewSelectedItem);
+	l3 := (cursor.baseIndex + a1);
+	l2.index := l3;
+	l2.instanceTime := l1.mtgStartDate;
+	if l1.topic then begin
+			l2.class := 'todo;
+			l2.entryAlias := nil;
+			l2.topic := l1.topic;
+			l2.topicID := l1.topicID
+		end else begin
+			l4 := (if l1.repeatTemplate then l1.repeatTemplate else l1);
+			l2.entryAlias := MakeEntryAlias(l4);
+			l2.topic := nil
+		end;
+	if selected then begin
+			if (l5 := LSearch(selected, l3, 0, '|=|, '[pathExpr: index])) then begin
+					RemoveSlot(selected, l5)
+				end else begin
+					AddArraySlot(selected, l2)
+				end
+		end else begin
+			selected := [Array: l2]
+		end;
+	(l6 := self:LocalBox()).bottom := ((l6.top := (a1 * lineHeight)) + lineHeight);
+	pieces[a1] := self:GetTheRightShape(l1, l6);
+	self:Dirty()
+end
+@@end

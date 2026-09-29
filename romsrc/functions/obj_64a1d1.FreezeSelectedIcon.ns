@@ -1,0 +1,31 @@
+@@ 0x54de79
+@@const kBinaryFromHex
+func(hex, cls) begin
+	local b := MakeBinary(StrLen(hex) div 2, cls);
+	for i := 0 to Length(b) - 1 do begin
+		local h := Ord(hex[2 * i]);
+		local l := Ord(hex[2 * i + 1]);
+		StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+	end;
+	b
+end
+@@const kLiteral_54b9f5
+{bits: call kBinaryFromHex with ("000000000004007a007a025c0095027c000000000000000000000000000000000000000000000000000000000007f000007fff0007ff8ff03fff80fc7fff803e7fff80fe6fff87f661ffbf86643ffc066603e00667f1c00663f1800660f180066001800e7001801e3e0180fc1fc187f003f9bf80007ffc00000fe000", 'bits), bounds: '{left: 0, top: 0, right: 32, bottom: 27}}
+@@main
+func(a1) begin
+	(if a1 then begin
+			DoProgress('vBarber, {barber: true, statusText: "Freezing selected icons.", primary: nil, icon: kLiteral_54b9f5, closeBox: nil}, func(a1) begin
+				(foreach l1 in fakeTarget.kids do begin
+						local l3;
+						a1:SetStatus('vBarber, {titleText: ParamStr("Freezing \u201C\u^0\u201D\u", [Array: l1.target.fentry.text]), barber: true});
+						try begin
+								SafeFreezePackageQT((l3 := l1.target:LookupSoupPackage()))
+							end onexception |evt.ex.msg| do begin
+								self:Notify(3, title, CurrentException().message)
+							end
+					end)
+			end);
+			XmitPackageOp('SafeFreezePackage)
+		end)
+end
+@@end

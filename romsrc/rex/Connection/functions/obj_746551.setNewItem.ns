@@ -1,0 +1,13 @@
+@@ 0x746f95
+func(a1) begin
+	local l1;
+	(if (StrLen(a1) > 0) then begin
+			self:UpdateText(self:GetUserVisible(a1));
+			curLabelCommand := FindStringInArray((l1 := self:GetConfig()), a1);
+			protoContext:ConnectionPrefsWrite(currentChoiceUserconfigTag, a1);
+			self:Remember(a1);
+			self:SetLabelCommandsFromUserConfig(self);
+			self:SetNewWillDialText()
+		end)
+end
+@@end

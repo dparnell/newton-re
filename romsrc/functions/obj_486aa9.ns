@@ -1,0 +1,11 @@
+@@ 0x486aa9
+func(a1) begin
+	local l1, l2;
+	l1 := viewBounds;
+	l2 := StrFontWidth(a1, viewFont);
+	(if ((l1.right - l1.left) <> l2) then begin
+			(l1 := Clone(l1)).right := (l1.left + l2);
+			l1
+		end)
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x508ba5
+func() begin
+	local l1;
+	l1 := (if self:GetNotesData(selectedMeeting)[1] then "Edit Notes" else "Add Notes");
+	viewBounds := RelBounds(6, -18, (6 + StrFontWidth(l1, viewFont)), 13);
+	(text := l1)
+end
+@@end

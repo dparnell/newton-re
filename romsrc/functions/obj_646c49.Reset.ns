@@ -1,0 +1,5 @@
+@@ 0x4a7749
+func() begin
+	self:GotoKey(0)
+end
+@@end

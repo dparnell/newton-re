@@ -1,0 +1,6 @@
+@@ 0x79759d names
+func() begin
+	self:EndFlush();
+	nil
+end
+@@end

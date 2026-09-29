@@ -1,0 +1,10 @@
+@@ 0x7a107d names
+func() begin
+	local delta;
+	inherited:viewSetupFormScript();
+	self.viewBounds := Clone(self.viewBounds);
+	delta := (45 - viewBounds.top);
+	viewBounds.top := (viewBounds.top + delta);
+	(viewBounds.bottom := (viewBounds.bottom + delta))
+end
+@@end

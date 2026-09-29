@@ -1,0 +1,6 @@
+@@ 0x46ac6d
+func() begin
+	local l1;
+	(pickItems := [Array: (l1 := cText:GetWordForDisplay())])
+end
+@@end

@@ -1,0 +1,16 @@
+@@ 0x5977ad
+func() begin
+	local l1;
+	l1 := self:GetTheText();
+	if (if (not (message.(path) = l1)) then (((not message.(path)) or (not l1)) or (StrExactCompare(message.(path), l1) <> 0))) then begin
+			message.(path) := l1
+		end;
+	if (if (if changed then IsSoupEntry(message)) then FrameDirty(message)) then begin
+			EntryChange(message)
+		end;
+	if (if updateScript then changed) then begin
+			call updateScript with (message.(path))
+		end;
+	(message := nil)
+end
+@@end

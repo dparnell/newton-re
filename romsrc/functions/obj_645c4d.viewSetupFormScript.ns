@@ -1,0 +1,30 @@
+@@ 0x4be205
+func() begin
+	(if target then begin
+			local l1;
+			local l2;
+			l2 := (foreach l3 in paths collect begin
+				local l7, l8, l9, l10;
+				(if StrFilled(target.(l3)) then begin
+						l1 := true;
+						target.(l3)
+					end else "")
+			end);
+			shape := [Array: ];
+			if l1 then begin
+					l7 := 0;
+					(loop begin
+							l9 := (if (l8 := StrPos(format, "\n", l7)) then (l8 - l7));
+							if StrFilled((l10 := ParamStr(Substr(format, l7, l9), l2))) then begin
+									AddArraySlot(shape, l10)
+								end;
+							if (not l8) then begin
+									break
+								end;
+							(l7 := (l8 + 1))
+						end)
+				end;
+			(if autoSize then ((viewBounds := Clone(viewBounds)).bottom := (viewBounds.top + (Length(shape) * FontHeight(viewFont)))))
+		end else (shape := [Array: ]))
+end
+@@end

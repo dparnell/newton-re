@@ -1,0 +1,8 @@
+@@ 0x4da80d
+func() begin
+	if self.stepChildren then begin
+			reflowStart := (reflowStart + Length(self.stepChildren))
+		end;
+	(if (if kids then (reflowStart < Length(kids))) then self:RedoChildren())
+end
+@@end

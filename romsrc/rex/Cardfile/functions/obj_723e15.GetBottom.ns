@@ -1,0 +1,6 @@
+@@ 0x7250ad
+func() begin
+	local l1;
+	(if ((l1 := Length(hitArray)) > 0) then hitArray[(l1 - 1)].vOffset else 0)
+end
+@@end

@@ -1,0 +1,23 @@
+@@ 0x4dbf09
+@@const kBinaryFromHex
+func(hex, cls) begin
+	local b := MakeBinary(StrLen(hex) div 2, cls);
+	for i := 0 to Length(b) - 1 do begin
+		local h := Ord(hex[2 * i]);
+		local l := Ord(hex[2 * i + 1]);
+		StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+	end;
+	b
+end
+@@const kLiteral_4e73bd
+{bits: call kBinaryFromHex with ("000000000004000c000c000a00100014ffc00000ffc00000ffc000007f800000", 'bits), bounds: '{left: 0, top: 0, right: 10, bottom: 4}}
+@@main
+func() begin
+	local l1;
+	if (not pix) then begin
+			l1 := self:LocalBox();
+			pix := [Array: MakeRoundRect(0, (l1.bottom - 23), l1.right, l1.bottom, 4), OffsetShape(MakeShape(kLiteral_4e73bd), (l1.left + 16), 109), OffsetShape(MakeShape(kLiteral_4e73bd), ((l1.right - 16) - 10), 109)]
+		end;
+	self:DrawShape(pix, {pensize: 2})
+end
+@@end

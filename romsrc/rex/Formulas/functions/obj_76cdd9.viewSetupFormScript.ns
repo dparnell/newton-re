@@ -1,0 +1,8 @@
+@@ 0x76ce59
+func() begin
+	(viewBounds := Clone(viewBounds)).top := 13;
+	viewBounds.left := indent;
+	viewBounds.bottom := 29;
+	(viewBounds.right := 215)
+end
+@@end

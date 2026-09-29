@@ -1,0 +1,5 @@
+@@ 0x7464e5
+func(a1) begin
+	(if self.thecallback then call self.thecallback with (a1))
+end
+@@end

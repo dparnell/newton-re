@@ -1,0 +1,7 @@
+@@ 0x49d145
+func(a1, a2) begin
+	hiliteEntry := nil;
+	newtAppBase:ShowLayout(nil);
+	inherited:ShowFoundItem(a1, a2)
+end
+@@end

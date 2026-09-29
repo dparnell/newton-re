@@ -1,0 +1,8 @@
+@@ 0x4983c5
+func(a1, a2) begin
+	if (not traceArray) then begin
+			return nil
+		end;
+	AddArraySlot(traceArray, {state: fState, exception: fException, text: a1, data: a2, Ticks: Ticks(), Time: Time()})
+end
+@@end

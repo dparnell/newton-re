@@ -1,0 +1,6 @@
+@@ 0x4ac765
+func(a1) begin
+	local l1;
+	(if (l1 := newtAppBase.(a1)) then PressButton(l1))
+end
+@@end

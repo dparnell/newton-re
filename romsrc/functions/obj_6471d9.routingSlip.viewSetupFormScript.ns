@@ -1,0 +1,7 @@
+@@ 0x531a15
+func() begin
+	self:ToRefCheck('|nameRef.phone|);
+	inherited:?viewSetupFormScript();
+	logcheck:prepareThyself()
+end
+@@end

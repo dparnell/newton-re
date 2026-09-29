@@ -1,0 +1,5 @@
+@@ 0x4cff91
+func(a1, a2, a3, a4) begin
+	a1:ReceiveData(a2, a3)
+end
+@@end

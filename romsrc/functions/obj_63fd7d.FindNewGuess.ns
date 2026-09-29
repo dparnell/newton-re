@@ -1,0 +1,14 @@
+@@ 0x46d7dd
+func(a1) begin
+	l1 := wordInfo:GetWords();
+	l3 := (Length((l2 := a1:GetWords())) - 1);
+	local l1;
+	local l2;
+	local l3;
+	(for l4 := 0 to l3 do begin
+			if (not FindStringInArray(l1, l2[l4])) then begin
+					break self:MoveToFirst(a1, l4)
+				end
+		end)
+end
+@@end

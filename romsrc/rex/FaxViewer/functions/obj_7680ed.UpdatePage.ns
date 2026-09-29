@@ -1,0 +1,12 @@
+@@ 0x7695cd
+func() begin
+	local l1;
+	l1 := fPage;
+	WarningDialog:Update(nil);
+	ImageTarget:setup(l1.image, l1.annotations, nil);
+	if Visible(vThumbFloater) then begin
+			vThumbFloater:setup(self:MakeAndStashThumbnail(fPageNum))
+		end;
+	self:Update()
+end
+@@end

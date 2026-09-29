@@ -1,0 +1,6 @@
+@@ 0x62e851
+func(a1) begin
+	RemoveSlot(vars, a1);
+	nil
+end
+@@end

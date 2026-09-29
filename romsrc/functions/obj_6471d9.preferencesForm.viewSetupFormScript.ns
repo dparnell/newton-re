@@ -1,0 +1,14 @@
+@@ 0x531105
+func() begin
+	transport := GetRoot().(appSymbol);
+	if (not transport:GetConfig('enableAutoUI)) then begin
+			transport:SetConfig('phoneAutoReceive, nil);
+			(viewBounds := Clone(viewBounds)).bottom := (viewBounds.bottom - 24)
+		end;
+	if (wasAutoReceive := transport:GetConfig('phoneAutoReceive)) then begin
+			wasAutoReceive := (transport.status <> 'idle);
+			transport:SetConfig('phoneAutoReceive, wasAutoReceive)
+		end;
+	SetKeyView(self, 0)
+end
+@@end

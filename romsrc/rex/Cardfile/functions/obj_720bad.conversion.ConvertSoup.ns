@@ -1,0 +1,5 @@
+@@ 0x73780d
+func(a1, a2, a3) begin
+	(if (not a1:HasTags()) then a1:AddIndex('{structure: slot, path: labels, type: tags}))
+end
+@@end

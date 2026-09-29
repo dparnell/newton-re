@@ -1,0 +1,74 @@
+@@ 0x508119
+func() begin
+	local l1, l2, l3, l4;
+	if relayoutInProgress then begin
+			return labelCommands[savedAlarmIndex]
+		end;
+	if ((l1 := self:GetMeetingSlot(selectedMeeting, 'mtgAlarm)) = nil) then begin
+			WarningView.alarmOn := nil;
+			l4 := 0
+		end else begin
+			WarningView.alarmOn := true;
+			if (not selectedMeeting.repeatTemplate) then begin
+					l1 := (selectedMeeting.mtgStartDate - l1)
+				end;
+			if (selectedMeeting.viewStationery = 'cribNote) then begin
+					l2 := (((l1 + 1440) - 1) div 1440);
+					WarningView.unitsValue := l2;
+					WarningView.unitsIndex := 2;
+					if (if (l2 >= 0) then (l2 <= 3)) then begin
+							l4 := (l2 + 1)
+						end else begin
+							l4 := 5
+						end
+				end else begin
+					if ((l1 = 0) or ((l1 mod 60) <> 0)) then begin
+							WarningView.unitsValue := l1;
+							WarningView.unitsIndex := 0;
+							if (l1 = 0) then begin
+									l4 := 1
+								end else begin
+									if (l1 = 5) then begin
+											l4 := 2
+										end else begin
+											if (l1 = 15) then begin
+													l4 := 3
+												end else begin
+													if (l1 = 30) then begin
+															l4 := 4
+														end else begin
+															l4 := 7
+														end
+												end
+										end
+								end
+						end else begin
+							if ((l1 mod 1440) <> 0) then begin
+									l2 := (l1 div 60);
+									WarningView.unitsValue := l2;
+									WarningView.unitsIndex := 1;
+									if (l2 = 1) then begin
+											l4 := 5
+										end else begin
+											l4 := 7
+										end
+								end else begin
+									l2 := (l1 div 1440);
+									WarningView.unitsValue := (l1 div 1440);
+									WarningView.unitsIndex := 2;
+									if (l2 = 1) then begin
+											l4 := 6
+										end else begin
+											l4 := 7
+										end
+								end
+						end
+				end
+		end;
+	savedAlarmIndex := l4;
+	if (not StrEqual((l3 := labelCommands[l4]), "Other")) then begin
+			WarningView.viewFlags := BAnd(WarningView.viewFlags, bnot(1))
+		end;
+	l3
+end
+@@end

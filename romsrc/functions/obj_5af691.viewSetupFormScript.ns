@@ -1,0 +1,5 @@
+@@ 0x5af651
+func() begin
+	(self.viewValue := ((userConfiguration.timeoutCursiveOption - 15) div 5))
+end
+@@end

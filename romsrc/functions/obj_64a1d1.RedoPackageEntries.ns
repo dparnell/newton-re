@@ -1,0 +1,15 @@
+@@ 0x553295
+func(packageName, store) begin
+	local PackageEntry;
+	(if (PackageEntry := GetPackageEntry(packageName, store)) then store:AtomicAction(func() begin
+			local l1, l2, l3;
+			l3 := (l2 := store:GetSoup("Packages"):Query((l1 := {beginKey: packageName, endKey: packageName, indexPath: 'packageName, tagspec: '{none: _package}}))):entry();
+			(while l3 do begin
+					EntryRemoveFromSoupXmit(l3, 'ExtrasDrawer);
+					(l3 := l2:Next())
+				end);
+			self:HandleNewPackage(PackageEntry);
+			(if IsPackageEntryFrozen(PackageEntry) then self:HandleFreezingOrThawing(PackageEntry))
+		end))
+end
+@@end

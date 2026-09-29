@@ -1,0 +1,54 @@
+@@ 0x4834b9
+@@const kFunction_482d35
+func() begin
+	local l1;
+	if IsReadOnly((l1 := GetUserConfig('userFolderGroups))) then begin
+			l1 := (userConfiguration.userFolderGroups := DeepClone(l1))
+		end;
+	l1
+end
+@@const kFunction_482cd5
+func() begin
+	local l1;
+	if IsReadOnly((l1 := GetUserConfig('userFolders))) then begin
+			l1 := (userConfiguration.userFolders := Clone(l1))
+		end;
+	l1
+end
+@@main
+func(a1, a2, a3) begin
+	local l1, l2, l3, l4, l5;
+	if (not a1) then begin
+			return nil
+		end;
+	(if (if GetUserConfig('userFolders).(a1) then (a3 <> '_System)) then begin
+			l1 := call (kFunction_482d35) with ();
+			l2 := GenFolderSym(a2);
+			if (not a3) then begin
+					a3 := '_Global
+				end;
+			if (not l2) then begin
+					return nil
+				end;
+			l3 := call (kFunction_482cd5) with ();
+			(if (a1 = l2) then (if SetContains(l1._System, a1) then nil else begin
+						l3.(a1) := Clone(a2);
+						a1
+					end) else begin
+					l4 := GetUserConfig('userFolders).(l2);
+					l5 := SetContains(l1._Global, l2);
+					if (if l4 then ((if (a3 = '_Global) then (not l5)) or (if (a3 <> '_Global) then l5))) then begin
+							return nil
+						end;
+					l3.(l2) := Clone(a2);
+					l1.(a3)[SetContains(l1.(a3), a1)] := l2;
+					if (Length(GetFolderGroups(a1)) = 0) then begin
+							RemoveSlot(l3, a1)
+						end;
+					EntryChange(userConfiguration);
+					XmitFolderChange(a1, l2, a3);
+					l2
+				end)
+		end)
+end
+@@end

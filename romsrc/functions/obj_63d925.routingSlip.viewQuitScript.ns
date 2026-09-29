@@ -1,0 +1,9 @@
+@@ 0x5992e5
+func() begin
+	if (if (ValidateSlip exists) then ValidateSlip.viewCObject) then begin
+			ValidateSlip:Close()
+		end;
+	ValidateSlip := nil;
+	inherited:?viewQuitScript()
+end
+@@end

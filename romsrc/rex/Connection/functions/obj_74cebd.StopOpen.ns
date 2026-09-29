@@ -1,0 +1,9 @@
+@@ 0x74ded1
+func(a1) begin
+	if (not a1) then begin
+			a1 := -1
+		end;
+	aborting := a1;
+	endpoint:StopIdle(self)
+end
+@@end

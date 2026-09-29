@@ -1,0 +1,17 @@
+@@ 0x51a645
+@@const kFunction_5198d9
+func(a1) begin
+	'NotCheckable
+end
+@@const kLiteral_5198f9
+{_proto: @359, CheckState: kFunction_5198d9, SelectItem: nil, MoveTo: nil}
+@@main
+func(a1, a2, a3, a4, a5) begin
+	l2 := [Array: ];
+	local l1;
+	local l2;
+	(if self:CuFind(a1, self, l2, a3, a4, [Array: {isbn: a5}]) then (foreach l1 in l2 do begin
+				AddArraySlot(a2, {_proto: kLiteral_5198f9, owner: self, title: l1.title, findType: 'text, findWords: SplitString(a1), items: l1.items})
+			end))
+end
+@@end

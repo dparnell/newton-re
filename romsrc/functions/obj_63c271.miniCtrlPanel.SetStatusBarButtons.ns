@@ -1,0 +1,11 @@
+@@ 0x51f749
+func(a1) begin
+	if HasPath(a1, 'left) then begin
+			leftButtons := a1.left
+		end;
+	if HasPath(a1, 'right) then begin
+			rightButtons := a1.right
+		end;
+	(if (copperfield.panelOpen = true) then self:RedoChildren())
+end
+@@end

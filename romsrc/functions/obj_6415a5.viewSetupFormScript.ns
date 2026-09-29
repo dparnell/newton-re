@@ -1,0 +1,65 @@
+@@ 0x4d4fe9
+@@const kBinaryFromHex
+func(hex, cls) begin
+	local b := MakeBinary(StrLen(hex) div 2, cls);
+	for i := 0 to Length(b) - 1 do begin
+		local h := Ord(hex[2 * i]);
+		local l := Ord(hex[2 * i + 1]);
+		StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+	end;
+	b
+end
+@@const kLiteral_4d4505
+{bits: call kBinaryFromHex with ("00000000000400a400a400d500af00e37ff80000fffc0000cccc0000fffc0000cccc0000fffc0000fccc0000fffc0000cccc0000fffc00007ff80000", 'bits), bounds: '{left: 0, top: 0, right: 14, bottom: 11}}
+@@const kLiteral_4d457d
+{bits: call kBinaryFromHex with ("0000000000040059005900d7006400e67ffc0000fffe0000cfe60000c7c60000d3960000c1060000e7ce0000dff60000c7c60000fffe00007ffc0000", 'bits), bounds: '{left: 0, top: 0, right: 15, bottom: 11}}
+@@main
+func() begin
+	local l1, l2;
+	(try begin
+			if (not rotationInProgress) then begin
+					newMtgStartTime := (totMin mod 1440);
+					newMtgDate := (totMin - newMtgStartTime);
+					if (newMtgStartTime > 1410) then begin
+							newMtgStartTime := 1410;
+							newMtgStopTime := 1440
+						end else begin
+							newMtgStopTime := (newMtgStartTime + 60)
+						end;
+					if (if (l2 := nameEntries) then (Length(l2) > 0)) then begin
+							selectedNames := [Array: l2[0]];
+							if ((l1 := Length(l2)) > 1) then begin
+									alternativeNames := self:PopOne(l2, l1)
+								end
+						end;
+					if event then begin
+							newFirstDate := newMtgDate;
+							newStopDate := 536870911;
+							newHeaderText := "Annual Event";
+							newHeaderIcon := kLiteral_4d4505
+						end else begin
+							newHeaderText := "Meeting";
+							newHeaderIcon := kLiteral_4d457d;
+							if (if (l2 := locationEntries) then (Length(l2) > 0)) then begin
+									selectedLocations := [Array: l2[0]];
+									if ((l1 := Length(l2)) > 1) then begin
+											alternativeLocations := self:PopOne(l2, l1)
+										end
+								end
+						end
+				end else begin
+					rotationInProgress := nil
+				end;
+			if (displayParams.appAreaHeight < 320) then begin
+					self.viewBounds := Clone(viewBounds);
+					self.viewBounds.top := 8;
+					self.viewBounds.bottom := (viewBounds.top + 210);
+					self.viewJustify := 80
+				end;
+			self:LayoutSlip()
+		end onexception |evt.ex.outofmem| do begin
+			self:Notify(3, "Assist", "There is not enough memory to open the slip");
+			return nil
+		end)
+end
+@@end

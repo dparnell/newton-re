@@ -1,0 +1,5 @@
+@@ 0x4996bd
+func(a1) begin
+	(if legalModes.(a1) then (fMode := a1) else Throw('|evt.ex.proto|, -8608))
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x4c2801
+func() begin
+	width := (StrFontWidth(text, viewFont) + 6);
+	(viewBounds := Clone(viewBounds)).left := (viewBounds.right - width);
+	(_sendKeyButton := self)
+end
+@@end

@@ -1,0 +1,22 @@
+@@ 0x570c01
+func(a1, a2) begin
+	(if (if (Length(AutoDockRegistry) > 0) then GetUserConfig('AutoDockOn)) then begin
+			if a2 then begin
+					if GlobalVarExists('AutoDockSlip) then begin
+							AutoDockSlip:MoveBehind(nil);
+							AutoDockSlip.dockMessage := a1
+						end else begin
+							DefGlobalVar('AutoDockSlip, BuildContext(@833));
+							AutoDockSlip.dockMessage := a1;
+							AutoDockSlip:Open()
+						end
+				end else begin
+					if (if (a1 = 'Disconnect) then GlobalVarExists('AutoDockSlip)) then begin
+							AutoDockSlip:Close()
+						end;
+					CallFrameBasedRegistryFns(AutoDockRegistry, [Array: a1])
+				end;
+			true
+		end)
+end
+@@end

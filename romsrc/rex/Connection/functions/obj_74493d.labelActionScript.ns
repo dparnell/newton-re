@@ -1,0 +1,7 @@
+@@ 0x744b25
+func(a1) begin
+	currentChoice := choices[a1];
+	self:SaveConnectionType();
+	deviceSpecificStuff:DisplayDeviceSpecificViews(currentChoice)
+end
+@@end

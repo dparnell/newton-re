@@ -1,0 +1,6 @@
+@@ 0x3c6285
+func(a1) begin
+	RemoveSlot(DataConversionRegistry, a1);
+	nil
+end
+@@end

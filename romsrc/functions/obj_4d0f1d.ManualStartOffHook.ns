@@ -1,0 +1,15 @@
+@@ 0x4d0849
+func() begin
+	self:SetFlag(offHook);
+	(if (status = 'idle) then begin
+			self:SetFlag(manualReceive);
+			self:SetupListen()
+		end else (if (status = 'Listening) then begin
+				self:SetFlag((redoListen + manualOnAuto));
+				self:TearDownListen()
+			end else begin
+				GetRoot():SysBeep();
+				self:CloseStatusDialog(nil)
+			end))
+end
+@@end

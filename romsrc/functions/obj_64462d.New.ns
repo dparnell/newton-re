@@ -1,0 +1,8 @@
+@@ 0x438da5
+func(a1, a2, a3) begin
+	local l1;
+	(l1 := self:Init()).params := a1;
+	l1.context := a3;
+	l1:popup(a2)
+end
+@@end

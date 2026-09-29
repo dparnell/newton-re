@@ -1,0 +1,8 @@
+@@ 0x4db641
+func(a1) begin
+	(if (expanded <> a1) then begin
+			expanded := a1;
+			appBase:SyncView()
+		end)
+end
+@@end

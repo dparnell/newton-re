@@ -1,0 +1,27 @@
+@@ 0x548565
+func(a1, a2, a3) begin
+	(if (l1 := self:NewTypeSelectKey(a1, a2)) then begin
+			local l1;
+			(foreach l2 in a3 do begin
+					local l4, l5, l6;
+					if (l4 := l2.shape) then begin
+							if overUp then begin
+									l5 := l4[1].data
+								end else begin
+									l5 := l4[(Length(l4) - 1)][0].data
+								end
+						end else begin
+							l5 := (l6 := l2.target.fentry).text;
+							if IsSoupEntry(l6) then begin
+									EntryUndoChanges(l6)
+								end
+						end;
+					if BeginsWith(l5, l1) then begin
+							self:ChangeSelection(l2, a3);
+							break
+						end
+				end);
+			true
+		end)
+end
+@@end

@@ -1,0 +1,17 @@
+@@ 0x7510cd
+func(a1) begin
+	local l1, l2;
+	(try begin
+			checkCommandsInIdle := nil;
+			endpoint:WriteCommand("sflt", a1, true);
+			if (l1 := protoContext:CallReadCommand(endpoint, "file")) then begin
+					l1 := l1.data
+				end;
+			self:RebuildFileList(nil, l1);
+			(checkCommandsInIdle := true)
+		end onexception |evt.ex| do begin
+			l2 := CurrentException().error;
+			AddDeferredSend(GetRoot().Connection, 'HandleException, [Array: l2, endpoint])
+		end)
+end
+@@end

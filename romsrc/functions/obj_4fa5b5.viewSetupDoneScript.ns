@@ -1,0 +1,13 @@
+@@ 0x4fa575
+func() begin
+	TieViews(DateView, self, 'DateChanged);
+	self.firstDayOfWeek := GetUserConfig('firstDayOfWeek);
+	if (not firstDayOfWeek) then begin
+			self.firstDayOfWeek := GetLocale().firstDayOfWeek
+		end;
+	if (not firstDayOfWeek) then begin
+			self.firstDayOfWeek := 0
+		end;
+	self:DateChanged(nil, nil)
+end
+@@end

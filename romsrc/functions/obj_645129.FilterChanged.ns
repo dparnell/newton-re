@@ -1,0 +1,17 @@
+@@ 0x4aa10d
+func() begin
+	(foreach l1, l2 in allSoups do begin
+			self:SaveFolderPosition(l1, l2, l2.soupFilter);
+			l2.soupFilter := labelsFilter;
+			if (storesFilter exists) then begin
+					if (if storesFilter then (not storesFilter:IsValid())) then begin
+							storesFilter := nil
+						end;
+					l2.storesFilter := storesFilter
+				end;
+			l2:SetupCursor();
+			self:RestoreFolderPosition(l1, l2, labelsFilter)
+		end);
+	layout:FilterChanged()
+end
+@@end

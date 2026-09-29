@@ -1,0 +1,23 @@
+@@ 0x73aa95
+func() begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9;
+	l8 := GetAppParams().appAreaHeight;
+	l9 := self:LocalBox();
+	l1 := Length((l2 := self:ChildViewFrames()[0]:ChildViewFrames()));
+	l3 := Clone(base.viewBounds);
+	l4 := (l2[(l1 - 1)]:GlobalBox().bottom + extraChildrenHeight);
+	if (if (not viewChildren[0].noKeyboard) then (l4 > l8)) then begin
+			l7 := self:ChildViewFrames()[1];
+			RemoveStepView(self, l7);
+			l4 := ((l4 - extraChildrenHeight) + 18)
+		end;
+	l3.top := max(7, ((l8 - l4) - 3));
+	SetValue(base, 'viewBounds, l3);
+	if (viewDef <> 'editNotes) then begin
+			if (l5 := NextKeyView(l2[0], 0, 0)) then begin
+					SetKeyView(l5, 999)
+				end
+		end;
+	inherited:?viewSetupDoneScript()
+end
+@@end

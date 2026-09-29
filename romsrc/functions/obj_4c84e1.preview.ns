@@ -1,0 +1,10 @@
+@@ 0x4c84a1
+func(a1) begin
+	local l1, l2;
+	(if (transport:SetupFormat(a1) <> nil) then self:Notify(3, "Print", "The print format for this item is missing") else begin
+			GetCurrentFormat(a1):LastChanceToSetup(a1);
+			(l2 := BuildContext(@141)).fields := a1;
+			l2:Open()
+		end)
+end
+@@end

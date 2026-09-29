@@ -1,0 +1,8 @@
+@@ 0x44dded
+func(a1) begin
+	StrReplace(a1, " -", "", nil);
+	StrReplace(a1, " ", "", nil);
+	StrReplace(a1, "-", " ", nil);
+	return a1
+end
+@@end

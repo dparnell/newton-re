@@ -1,0 +1,41 @@
+@@ 0x50a531
+func(a1, a2, a3, a4) begin
+	(if (l1 := a1.InstanceNotesData) then begin
+			if (not (l3 := (if ((l2 := BSearchRight(l1, a3, '|<|, 0)) >= 0) then (l1[l2][0] = a3)))) then begin
+					if a4 then begin
+							return nil
+						end else begin
+							l2 := (l2 + 1)
+						end
+				end;
+			(if (l2 >= 0) then begin
+					l4 := [Array: ];
+					l5 := (if a4 then 1);
+					ArrayMunger(l4, 0, 0, l1, l2, l5);
+					if a4 then begin
+							ArrayRemoveCount(l1, l2, 1)
+						end else begin
+							SetLength(l1, l2)
+						end;
+					a2.InstanceNotesData := l4;
+					if (Length(l1) = 0) then begin
+							a1.InstanceNotesData := nil
+						end;
+					l6 := MakeEntryAlias(a2);
+					local l1;
+					local l2;
+					local l3;
+					local l4;
+					local l5;
+					local l6;
+					(foreach l7 in l4 do begin
+							local l9;
+							if (l9 := ResolveEntryAlias(l7[1])) then begin
+									l9.repeatingMeetingAlias := l6;
+									EntryChangeXmit(l9, 'calendar)
+								end
+						end)
+				end)
+		end)
+end
+@@end

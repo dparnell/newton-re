@@ -1,0 +1,9 @@
+@@ 0x561ba9
+func(a1, a2) begin
+	(if (not findAllResults) then self:Notify(3, "Find Overview", "Find did not find anything, so there is nothing to delete") else (if (not self:IsAnythingSelected()) then self:Notify(3, "Find Overview", "There is nothing selected to delete") else begin
+				saveWhat := a1;
+				saveWhatView := a2;
+				self:Confirm("Find", "Delete all selected items? (This includes the entire item(s) in which the text or date was found. You cannot Undo this.)", self, 'deleteActionConfirmCB)
+			end))
+end
+@@end

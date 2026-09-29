@@ -1,0 +1,10 @@
+@@ 0x56e93d
+func(a1) begin
+	(foreach l1, l2 in a1 do begin
+			if (not l2) then begin
+					a1[l1] := deck[(top := (top - 1))]
+				end
+		end);
+	a1
+end
+@@end

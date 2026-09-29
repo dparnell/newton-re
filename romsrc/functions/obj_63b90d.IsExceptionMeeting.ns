@@ -1,0 +1,5 @@
+@@ 0x500759
+func(a1) begin
+	((a1.viewStationery = 'exceptionMeeting) or (if (if (a1.viewStationery = 'cribNote) then a1.repeatTemplate) then self:FindException(a1.mtgStartDate, a1.repeatTemplate)))
+end
+@@end

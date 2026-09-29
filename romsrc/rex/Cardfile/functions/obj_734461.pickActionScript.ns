@@ -1,0 +1,10 @@
+@@ 0x734531
+func(a1) begin
+	inherited:pickActionScript(a1);
+	(if (if baudArray then (Length(baudArray) > 0)) then begin
+			target.(baudChooser.path) := baudArray[a1];
+			self:StartFlush();
+			baudChooser:Retarget()
+		end)
+end
+@@end

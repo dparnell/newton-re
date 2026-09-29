@@ -1,0 +1,6 @@
+@@ 0x5aa3f1
+func(a1) begin
+	self:ExpandOff();
+	words:DoDrawing('trackLinesHilite, [Array: a1])
+end
+@@end

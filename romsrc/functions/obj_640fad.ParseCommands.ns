@@ -1,0 +1,19 @@
+@@ 0x489591
+func(a1) begin
+	l1 := self:GetRecognizers();
+	l2 := self:GetSettings();
+	local l1;
+	local l2;
+	(foreach l3, l4 in a1.commands do begin
+			local l6, l7;
+			if (l6 := l1.(l3)) then begin
+					l2.(l6.symbol) := l4.recState;
+					if ((l7 := l4.recSettings) = 'default) then begin
+							self:GetDefaultSettings(l3)
+						end else begin
+							l2.(l7) := true
+						end
+				end
+		end)
+end
+@@end

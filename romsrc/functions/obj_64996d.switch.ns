@@ -1,0 +1,10 @@
+@@ 0x44dc3d
+func(a1, a2) begin
+	local l1;
+	if (if ((l1 := templateArray[a1]) = @792) then (self:Parse(a2) <> @792)) then begin
+			self:Notify(3, "Corrector", "Sorry, unable to switch to the requested format");
+			return nil
+		end;
+	self:SetTemplate(l1)
+end
+@@end

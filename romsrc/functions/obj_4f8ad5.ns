@@ -1,0 +1,20 @@
+@@ 0x4f8ad5
+func(a1) begin
+	local l1;
+	(if ((l1 := a1.viewStationery) = 'meeting) then begin
+			if HasSlot(a1, 'repeatTemplate) then begin
+					RemoveSlot(a1, 'repeatTemplate)
+				end;
+			if HasSlot(a1, 'repeatType) then begin
+					RemoveSlot(a1, 'repeatType)
+				end;
+			if HasSlot(a1, 'mtgInfo) then begin
+					RemoveSlot(a1, 'mtgInfo)
+				end;
+			if HasSlot(a1, 'mtgStopDate) then begin
+					RemoveSlot(a1, 'mtgStopDate)
+				end;
+			(if HasSlot(a1, 'exceptions) then RemoveSlot(a1, 'exceptions))
+		end else (if (l1 = 'RepeatingMeeting) then nil else (if (l1 = 'exceptionMeeting) then nil else (if (l1 = 'cribNote) then (a1.mtgDuration := 0)))))
+end
+@@end

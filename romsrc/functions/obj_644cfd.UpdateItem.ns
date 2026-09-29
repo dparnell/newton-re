@@ -1,0 +1,5 @@
+@@ 0x47ffc5
+func(a1) begin
+	GetRoot().(owner):itemchanged(a1, true)
+end
+@@end

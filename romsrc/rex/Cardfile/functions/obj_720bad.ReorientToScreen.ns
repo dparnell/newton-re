@@ -1,0 +1,8 @@
+@@ 0x73762d
+func() begin
+	local l1;
+	l1 := (superSymbol = 'ownerNames);
+	self:_Close();
+	(if l1 then self:OpenAsOwner(true) else self:Open())
+end
+@@end

@@ -1,0 +1,19 @@
+@@ 0x49d625
+func() begin
+	inherited:FilterChanged();
+	l1 := [Array: ];
+	l2 := dataCursor:clone();
+	if selected then begin
+			local l1;
+			local l2;
+			(foreach l3 in selected do begin
+					local l5;
+					if (if (l5 := ResolveEntryAlias(l3)) then l2:Goto(l5)) then begin
+							AddArraySlot(l1, l3)
+						end
+				end);
+			selected := l1
+		end;
+	(hilitedIndex := nil)
+end
+@@end

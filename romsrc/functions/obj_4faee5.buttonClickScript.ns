@@ -1,0 +1,13 @@
+@@ 0x4faea5
+func() begin
+	local l1;
+	l1 := (foreach l2 in builtinPopupElts collect (if l2 then {item: (l6 := meetingTypeRegistry.(l2)).label, icon: l6.icon, indent: 28} else 'pickseparator));
+	if (if externalTypeRegistry then (Length(externalTypeRegistry) > 0)) then begin
+			AddArraySlot(l1, 'pickseparator);
+			local l6;
+			ArrayMunger(l1, Length(l1), 0, Sort((foreach l7 in externalTypeRegistry collect l7), '|str<|, 'item), 0, nil)
+		end;
+	popup := l1;
+	inherited:buttonClickScript()
+end
+@@end

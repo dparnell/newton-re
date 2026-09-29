@@ -1,0 +1,13 @@
+@@ 0x478ac1
+func() begin
+	pix := nil;
+	firstTime := true;
+	_nextKeyView := nil;
+	if validateDialog then begin
+			validateDialog:Close();
+			validateDialog := nil
+		end;
+	ClosedEntryForm(self);
+	(if (if OnlyOneRoutingSlip() then (vars.CurrentRouteSlip = self)) then (vars.CurrentRouteSlip := nil))
+end
+@@end

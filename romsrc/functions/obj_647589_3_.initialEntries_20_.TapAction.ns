@@ -1,0 +1,6 @@
+@@ 0x546185
+func() begin
+	PostCommand('application, 114);
+	GetUserConfig('ExtraAlwaysClose)
+end
+@@end

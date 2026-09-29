@@ -1,0 +1,15 @@
+@@ 0x4b3555
+func() begin
+	local l1, l2, l3, l4;
+	l1 := GetTargetCursor(outQueue, nil);
+	outQueue._cursor := [Array: ];
+	l2 := l1:entry();
+	(while l2 do begin
+			if (if (l3 := GetItemTransport(l2)) then l3.SendRequest) then begin
+					l4 := {cause: (if l2.Connect then 'item else 'submit), cursor: GetTargetCursor(l2, nil)};
+					self:TransportCallX(l3, 'SendRequest, [Array: l4])
+				end;
+			(l2 := l1:Next())
+		end)
+end
+@@end

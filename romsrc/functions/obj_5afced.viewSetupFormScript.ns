@@ -1,0 +1,8 @@
+@@ 0x5afbf9
+func() begin
+	(if (((ClassOf((clusterValue := userConfiguration.letterSetSelection)) <> 'int) or (clusterValue < 0)) or (clusterValue > 4)) then begin
+			clusterValue := 2;
+			self:ClusterChanged()
+		end)
+end
+@@end

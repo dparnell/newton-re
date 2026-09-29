@@ -1,0 +1,11 @@
+@@ 0x554355
+func(a1) begin
+	local l1, l2, l3;
+	l1 := (not EntryIsResident(a1));
+	l3 := (l2 := {_proto: @589.(a1.class), fentry: a1}):?TapAction();
+	if l1 then begin
+			EntryUndoChanges(a1)
+		end;
+	l3
+end
+@@end

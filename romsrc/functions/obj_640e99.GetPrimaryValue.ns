@@ -1,0 +1,48 @@
+@@ 0x4578d1
+@@const kLiteral_4559fd
+{person: SetClass(Clone("Untitled Person"), '|string.noData|), owner: SetClass(Clone("Untitled Owner"), '|string.noData|), company: SetClass(Clone("Untitled Company"), '|string.noData|), group: SetClass(Clone("Untitled Group"), '|string.noData|), worksite: SetClass(Clone("Untitled Worksite"), '|string.noData|)}
+@@const kLiteral_450465
+SetClass(Clone("--"), '|string.noData|)
+@@main
+func(a1, a2) begin
+	local l1, l2, l3, l4;
+	if IsEntryAlias(a1) then begin
+			l2 := ResolveEntryAlias(a1)
+		end else begin
+			l2 := a1
+		end;
+	if IsFrame(l2) then begin
+			if IsNameRef(l2) then begin
+					if (l3 := EntryFromObj(l2)) then begin
+							l2 := l3
+						end
+				end;
+			if l2 then begin
+					l1 := l2.(self:GetPrimaryPath(a1))
+				end
+		end else begin
+			l1 := l2
+		end;
+	if ((a2 = 'sortText) or (a2 = 'text)) then begin
+			if IsFrame(l1) then begin
+					if (a2 = 'sortText) then begin
+							l1 := ParamStr("^?0^?1^0, ^1|^0||^1|", [Array: l1.last, l1.first])
+						end else begin
+							l1 := ParamStr("^?0^?1^0 ^1|^0||^1|", [Array: l1.first, l1.last])
+						end;
+					if (if (if (a2 = 'sortText) then IsFrame(l2)) then l2.sorton) then begin
+							l1 := l2.sorton
+						end
+				end;
+			if ((not IsString(l1)) or (not StrFilled(l1))) then begin
+					if (not (l4 := ObjEntryClass(a1))) then begin
+							l4 := entryType
+						end;
+					if (not (l1 := Clone(kLiteral_4559fd.(l4)))) then begin
+							l1 := Clone(kLiteral_450465)
+						end
+				end
+		end;
+	l1
+end
+@@end

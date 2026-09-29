@@ -1,0 +1,61 @@
+@@ 0x4f1b69
+func(a1) begin
+	local l1, l2, l3;
+	(l1 := repeatPickers).DayPicker:Hide();
+	l1.datepicker:Hide();
+	l1.DateAndMonthPicker:Hide();
+	l1.WeekPicker:Hide();
+	l1.LastWeekPicker:Hide();
+	repeatType := a1;
+	if (a1 = 6) then begin
+			repeatType := 0;
+			mtgInfo := BOr(4064, 31)
+		end else begin
+			if ((a1 = 0) or (a1 = 4)) then begin
+					if (mtgInfo = 0) then begin
+							if (repeatType = 0) then begin
+									mtgInfo := ((2048 >> mtgDate.dayOfWeek) + 31)
+								end else begin
+									if (repeatType = 4) then begin
+											mtgInfo := ((mtgInfo := ((TotalMinutes(mtgDate) div 1440) << 8)) + 14)
+										end
+								end
+						end;
+					l2 := 0;
+					if (repeatType = 0) then begin
+							l2 := BAnd(mtgInfo, 4064)
+						end else begin
+							l3 := Date((l3 := ((mtgInfo >> 8) * 1440)));
+							l2 := (2048 >> l3.dayOfWeek)
+						end;
+					l1.DayPicker:Initialize(l2, (repeatType = 4));
+					l1.DayPicker:Show()
+				end else begin
+					if (a1 = 2) then begin
+							l1.datepicker:Initialize();
+							l1.datepicker:Show()
+						end else begin
+							if (a1 = 3) then begin
+									l1.DateAndMonthPicker:Initialize();
+									l1.DateAndMonthPicker:Show()
+								end else begin
+									if (a1 = 1) then begin
+											l1.WeekPicker:Initialize();
+											l1.WeekPicker:Show()
+										end else begin
+											if (a1 = 7) then begin
+													l1.DateAndMonthPicker:Initialize();
+													l1.DateAndMonthPicker:Show();
+													if self:IsAmbiguousWeek(mtgDate) then begin
+															l1.LastWeekPicker:Initialize();
+															l1.LastWeekPicker:Show()
+														end
+												end
+										end
+								end
+						end
+				end
+		end;
+	self:UpdateText()
+end
+@@end

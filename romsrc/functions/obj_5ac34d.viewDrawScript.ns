@@ -1,0 +1,18 @@
+@@ 0x5ac32d
+func() begin
+	l1 := {font: 1058816};
+	l2 := window:GetNumberEntries();
+	l5 := -4;
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	(for l6 := 0 to (l2 - 1) do begin
+			local l9;
+			self:DrawShape((l9 := MakeText((l4 := dictionary:DecodeRecognitionWord(Clone((l3 := window:GetEntry(l6)).word), l3.attribute)), 9, l5, (9 + self:LocalBox().right), (l5 + lineHeight))), l1);
+			l5 := (l5 + lineHeight)
+		end);
+	self:WordHilite()
+end
+@@end

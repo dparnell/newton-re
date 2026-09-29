@@ -1,0 +1,10 @@
+@@ 0x771755
+func(a1) begin
+	local l1;
+	if (((l1 := self:SolveForPeriod(a1[1], a1[2], a1[3], a1[4])) = nil) or (l1 < 0)) then begin
+			l1 := nil;
+			self:Notify(3, "Net Present Value", "No solution.")
+		end;
+	return l1
+end
+@@end

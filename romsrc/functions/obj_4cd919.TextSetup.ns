@@ -1,0 +1,5 @@
+@@ 0x4cd8f9
+func() begin
+	return labelCommands[(GetUserConfig('faxringstoanswer) - 1)]
+end
+@@end

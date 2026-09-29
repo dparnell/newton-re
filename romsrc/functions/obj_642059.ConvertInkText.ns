@@ -1,0 +1,34 @@
+@@ 0x4217a5
+@@const kLiteral_3c58bd
+"("
+@@main
+func(a1, a2, a3, a4, a5, a6, a7, a8) begin
+	local l1;
+	if (dataDialog := GetVariable(self, a6)) then begin
+			if dataDialog.viewCObject then begin
+					dataDialog:Close()
+				end;
+			SetVariable(self, a6, nil)
+		end;
+	(if IsRichString(a1) then begin
+			a1 := Clone(a1);
+			l1 := nil;
+			if StrPos(a1, kLiteral_3c58bd, 0) then begin
+					l1 := true;
+					if (not a2) then begin
+							a2 := 'phone;
+							a3 := 262144
+						end;
+					StrReplace(a1, kLiteral_3c58bd, "(", 1);
+					StrReplace(a1, ")", ")", 1)
+				end;
+			(dataDialog := BuildContext({_proto: @391, userTitle: a4, userText: a5, richText: a1, compView: self, compMsg: a7, kbdType: a2, recFlags: a3, userData: a8, phoneCvt: l1})):Open();
+			SetVariable(self, a6, dataDialog);
+			AddDelayedSend(dataDialog, 'Recognize, nil, 500);
+			return nil
+		end else (if a7 then begin
+				Perform(self, a7, [Array: true, a1, a8]);
+				return true
+			end))
+end
+@@end

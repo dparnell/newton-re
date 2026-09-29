@@ -1,0 +1,12 @@
+@@ 0x51c9c1
+func(a1) begin
+	local l1;
+	if (not HasPath((l1 := Clone(a1)), 'dynamic)) then begin
+			l1.dynamic := true
+		end;
+	browserRefnum := (browserRefnum + 1);
+	l1.refNum := browserRefnum;
+	AddArraySlot(browsers, l1);
+	browserRefnum
+end
+@@end

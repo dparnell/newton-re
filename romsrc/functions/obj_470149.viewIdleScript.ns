@@ -1,0 +1,30 @@
+@@ 0x4700a9
+func() begin
+	local l1, l2;
+	l2 := 0;
+	l1 := 0;
+	if formOpen then begin
+			currentChecks := (currentChecks + 1);
+			if nbpCookie then begin
+					l1 := NBPGetCount(nbpCookie)
+				end;
+			if (l1 > currentNames) then begin
+					if Visible(startupMsg) then begin
+							startupMsg:Hide()
+						end;
+					currentNames := l1;
+					self:CopyNBPNamesToTable()
+				end;
+			if (currentChecks > 20) then begin
+					l2 := self:getIdleFrequency(2)
+				end else begin
+					if (currentChecks > 4) then begin
+							l2 := self:getIdleFrequency(1)
+						end else begin
+							l2 := self:getIdleFrequency(0)
+						end
+				end
+		end;
+	return l2
+end
+@@end

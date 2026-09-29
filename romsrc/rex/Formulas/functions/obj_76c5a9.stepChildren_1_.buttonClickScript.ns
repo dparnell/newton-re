@@ -1,0 +1,5 @@
+@@ 0x76c749
+func() begin
+	self:Div12()
+end
+@@end

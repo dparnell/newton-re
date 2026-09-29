@@ -1,0 +1,5 @@
+@@ 0x4c2609
+func() begin
+	(if target then (bits := transport:GetTitleInfoShape(target, self:LocalBox())))
+end
+@@end

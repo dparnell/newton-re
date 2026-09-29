@@ -1,0 +1,5 @@
+@@ 0x44ae0d
+func(a1) begin
+	(if (HiliteOwner() or a1.hilitedData) then a1:ClipboardCommand(0))
+end
+@@end

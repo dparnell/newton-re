@@ -1,0 +1,18 @@
+@@ 0x4177c9
+func() begin
+	inRetarget := true;
+	if (l2 := (l1 := self:TargetData()).sounds) then begin
+			local l1;
+			local l2;
+			(foreach l3 in l2 do begin
+					if (not HasPath(l3, '_proto)) then begin
+							l3._proto := @849
+						end
+				end)
+		end;
+	SetValue(self, 'sounds, l2);
+	SetValue(recorder, 'sounds, l2);
+	SetValue(soundDescription, 'text, l1.description);
+	(inRetarget := nil)
+end
+@@end

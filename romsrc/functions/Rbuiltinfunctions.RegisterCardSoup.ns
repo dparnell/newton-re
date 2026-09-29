@@ -1,0 +1,14 @@
+@@ 0x62b625
+func(a1, a2, a3, a4) begin
+	local l1, l2;
+	BadWickedNaughtyNoot(Stringer([Array: "RegisterCardSoup(\"", a1, "\", ...)"]), 'obsolete);
+	l1 := {name: a1, userName: a1, ownerApp: a3, ownerAppName: GetAppName(a3), userDescr: a4[1], indexes: a2};
+	if (not GetUnionSoup(a1)) then begin
+			if (l2 := GetDefaultStore()):IsReadOnly() then begin
+					l2 := GetStores()[0]
+				end;
+			CreateSoupFromSoupDef(l1, l2, a3)
+		end;
+	RegUnionSoup('_RegisterCardSoup, l1)
+end
+@@end

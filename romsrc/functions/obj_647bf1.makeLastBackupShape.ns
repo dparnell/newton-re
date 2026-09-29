@@ -1,0 +1,25 @@
+@@ 0x496295
+@@const kLiteral_488735
+"No backup on \u201C\u^0\u201D\u"
+@@main
+func(a1) begin
+	local l1, l2, l3, l4;
+	l1 := a1:GetKind();
+	l2 := a1:GetName();
+	if (l3 := backupInfo) then begin
+			if ((not l3.version) or (if (l3.soupType = 'all) then (l3.packageType = 'all))) then begin
+					l4 := "Full"
+				end else begin
+					l4 := "Partial"
+				end;
+			l4 := StrTruncate((l4 := Stringer([Array: l4, " ", "backup:", " ", DateNTime(l3.backupDate)])), 170)
+		end else begin
+			if (StrLen(l2) > 0) then begin
+					l4 := StrTruncate(ParamStr(kLiteral_488735, [Array: l2]), 170)
+				end else begin
+					l4 := StrTruncate(ParamStr(kLiteral_488735, [Array: l1]), 170)
+				end
+		end;
+	(infoShapes[2] := MakeText(l4, 15, 86, 185, 99))
+end
+@@end

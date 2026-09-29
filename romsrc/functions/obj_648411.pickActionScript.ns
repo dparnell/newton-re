@@ -1,0 +1,6 @@
+@@ 0x45a8e5
+func(a1) begin
+	Time := a1;
+	inherited:pickActionScript(a1)
+end
+@@end

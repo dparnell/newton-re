@@ -1,0 +1,5 @@
+@@ 0x5a04a1
+func() begin
+	(clusterValue := accountType)
+end
+@@end

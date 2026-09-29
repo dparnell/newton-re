@@ -1,0 +1,18 @@
+@@ 0x4dd9e1
+@@const kFunction_4dd9c1
+func(a1) begin
+	LocationEntryRemoveFromSoup(a1)
+end
+@@main
+func() begin
+	if (not selected) then begin
+			return nil
+		end;
+	self:ForEachSelected(kFunction_4dd9c1);
+	XmitSoupChange(cursor:soup():GetName(), 'unknown, 'whatThe, nil);
+	selected := nil;
+	self.isReset := nil;
+	self.zeroOneOrMoreResult := nil;
+	(self.cacheCount := nil)
+end
+@@end

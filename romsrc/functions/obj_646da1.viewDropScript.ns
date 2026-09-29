@@ -1,0 +1,111 @@
+@@ 0x547415
+@@const kLiteral_5a74d1
+"Packages"
+@@main
+func(a1, a2, a3) begin
+	local v6_ttssssssssss, v7_pooooooo, v9_yyyyxxxxxxxxxxxxx, v10_wwwwvvvvvvvvvvvvvvv, v12_jiiii, v13_yyyyyyyyyyyyyyxxxx, v14_yxxxxxxxxxxxxx, v19_zzzzzzzzzzzzzzzzzzzzzyyyyyy, v21_zzzzzzzzzzzzyyyyyyy, v22_zzzyyyyy, v24_yyyyyyyxxxxxxxxxxxxxxxxxxxx, v25_xxxxxxxxxxxxxxxxxwwwwww, v26_wwwwwwwwwwwwwwwwwww, v27_vvvvvvvvvvvvvuu, v28_tttttttttts, v29_zzzzzzzzzzzzzzzzzzzyyyyy, v30_zzzzzzzzzzzzzzzzzzzy, v31_zzyyy, v32_yyyyyyyxxxxxxxxxxxx;
+	v21_zzzzzzzzzzzzyyyyyyy := a2.dragRef.droppedEntries;
+	v22_zzzyyyyy := (iconSpace <> a2.fromFinder);
+	a2.dragRef.externalDrop := v22_zzzyyyyy;
+	if (if v22_zzzyyyyy then storesFilter) then begin
+			v28_tttttttttts := Length(v21_zzzzzzzzzzzzyyyyyyy);
+			(foreach v8_zyy, v16_ttttts in v21_zzzzzzzzzzzzyyyyyyy do begin
+					if (EntryStore(v16_ttttts) <> storesFilter) then begin
+							RemoveSlot(v21_zzzzzzzzzzzzyyyyyyy, v8_zyy)
+						end
+				end);
+			if (Length(v21_zzzzzzzzzzzzyyyyyyy) < v28_tttttttttts) then begin
+					if (Length(v21_zzzzzzzzzzzzyyyyyyy) > 0) then begin
+							v25_xxxxxxxxxxxxxxxxxwwwwww := "Some of the icons were not moved. Select \u201C\uAll Stores\u201D\u from the folder tab in the Extras Drawer and try again."
+						end else begin
+							if (v28_tttttttttts > 1) then begin
+									v25_xxxxxxxxxxxxxxxxxwwwwww := "The icons were not moved. Select \u201C\uAll Stores\u201D\u from the folder tab in the Extras Drawer and try again."
+								end else begin
+									v25_xxxxxxxxxxxxxxxxxwwwwww := "The icon was not moved. Select \u201C\uAll Stores\u201D\u from the folder tab in the Extras Drawer and try again."
+								end
+						end;
+					self:Notify(3, title, v25_xxxxxxxxxxxxxxxxxwwwwww);
+					if (Length(v21_zzzzzzzzzzzzyyyyyyy) = 0) then begin
+							return nil
+						end
+				end
+		end;
+	v6_ttssssssssss := (if (labelsFilter <> '_all) then labelsFilter);
+	(if (labelsFilter = '_all) then (if v22_zzzyyyyy then begin
+				(foreach v16_ttttts in v21_zzzzzzzzzzzzyyyyyyy do begin
+						self:ChangeTagListAndLabels(v16_ttttts, v6_ttssssssssss);
+						EntryChange(v16_ttttts)
+					end);
+				XmitSoupChange(kLiteral_5a74d1, 'ExtrasDrawer, 'whatThe, nil)
+			end else self:Notify(3, title, "You may not reorder icons while viewing \u201C\uAll Icons.\u201D\u They are arranged alphabetically by name.")) else begin
+			v30_zzzzzzzzzzzzzzzzzzzy := ((v9_yyyyxxxxxxxxxxxxx := Length((v26_wwwwwwwwwwwwwwwwwww := iconSpace:GetChildIconViews()))) - 1);
+			v13_yyyyyyyyyyyyyyxxxx := a3.x;
+			v31_zzyyy := a3.y;
+			(foreach v8_zyy, v18_vvvvvvvvvvuuuuuu in v26_wwwwwwwwwwwwwwwwwww do begin
+					v29_zzzzzzzzzzzzzzzzzzzyyyyy := v18_vvvvvvvvvvuuuuuu:GlobalBox();
+					if (if (v31_zzyyy > v29_zzzzzzzzzzzzzzzzzzzyyyyy.top) then (v31_zzyyy <= v29_zzzzzzzzzzzzzzzzzzzyyyyy.bottom)) then begin
+							v27_vvvvvvvvvvvvvuu := v29_zzzzzzzzzzzzzzzzzzzyyyyy.left;
+							v7_pooooooo := v29_zzzzzzzzzzzzzzzzzzzyyyyy.right;
+							v24_yyyyyyyxxxxxxxxxxxxxxxxxxxx := ((v27_vvvvvvvvvvvvvuu + v7_pooooooo) div 2);
+							if (if (v27_vvvvvvvvvvvvvuu < v13_yyyyyyyyyyyyyyxxxx) then (v13_yyyyyyyyyyyyyyxxxx <= v24_yyyyyyyxxxxxxxxxxxxxxxxxxxx)) then begin
+									v30_zzzzzzzzzzzzzzzzzzzy := (v8_zyy - 1);
+									break
+								end else begin
+									if (if (v24_yyyyyyyxxxxxxxxxxxxxxxxxxxx < v13_yyyyyyyyyyyyyyxxxx) then (v13_yyyyyyyyyyyyyyxxxx <= v7_pooooooo)) then begin
+											v30_zzzzzzzzzzzzzzzzzzzy := v8_zyy;
+											break
+										end
+								end
+						end
+				end);
+			(while (if (v30_zzzzzzzzzzzzzzzzzzzy > 0) then (not v26_wwwwwwwwwwwwwwwwwww[v30_zzzzzzzzzzzzzzzzzzzy].target.fentry.sequence)) do (v30_zzzzzzzzzzzzzzzzzzzy := (v30_zzzzzzzzzzzzzzzzzzzy - 1)));
+			if (v30_zzzzzzzzzzzzzzzzzzzy > 0) then begin
+					v19_zzzzzzzzzzzzzzzzzzzzzyyyyyy := (v32_yyyyyyyxxxxxxxxxxxx := v26_wwwwwwwwwwwwwwwwwww[v30_zzzzzzzzzzzzzzzzzzzy].target.fentry).sequence
+				end else begin
+					if (if (v9_yyyyxxxxxxxxxxxxx > 0) then v26_wwwwwwwwwwwwwwwwwww[0].target.fentry.sequence) then begin
+							v19_zzzzzzzzzzzzzzzzzzzzzyyyyyy := (v26_wwwwwwwwwwwwwwwwwww[0].target.fentry.sequence - 1)
+						end else begin
+							v19_zzzzzzzzzzzzzzzzzzzzzyyyyyy := -1
+						end
+				end;
+			if (v19_zzzzzzzzzzzzzzzzzzzzzyyyyyy < -1) then begin
+					v19_zzzzzzzzzzzzzzzzzzzzzyyyyyy := -1;
+					v32_yyyyyyyxxxxxxxxxxxx := nil
+				end;
+			v10_wwwwvvvvvvvvvvvvvvv := v19_zzzzzzzzzzzzzzzzzzzzzyyyyyy;
+			(foreach v16_ttttts in v21_zzzzzzzzzzzzyyyyyyy do begin
+					if v22_zzzyyyyy then begin
+							self:ChangeTagListAndLabels(v16_ttttts, v6_ttssssssssss)
+						end;
+					v16_ttttts.sequence := (v10_wwwwvvvvvvvvvvvvvvv := (v10_wwwwvvvvvvvvvvvvvvv + 1));
+					EntryChange(v16_ttttts)
+				end);
+			if v22_zzzyyyyy then begin
+					if (v12_jiiii := (if storesFilter then storesFilter:GetSoup(kLiteral_5a74d1) else GetUnionSoup(kLiteral_5a74d1))) then begin
+							v14_yxxxxxxxxxxxxx := v12_jiiii:Query(self:GetQuerySpec(v6_ttssssssssss));
+							if v32_yyyyyyyxxxxxxxxxxxx then begin
+									v14_yxxxxxxxxxxxxx:Goto(v32_yyyyyyyxxxxxxxxxxxx);
+									v14_yxxxxxxxxxxxxx:Next()
+								end else begin
+									v14_yxxxxxxxxxxxxx:GotoKey((v19_zzzzzzzzzzzzzzzzzzzzzyyyyyy + 1))
+								end;
+							(foreach v16_ttttts in MapCursor(v14_yxxxxxxxxxxxxx, nil) do begin
+									if (if (if (if v16_ttttts.sequence then (v16_ttttts.sequence >= 0)) then (not SetContains(v21_zzzzzzzzzzzzyyyyyyy, v16_ttttts))) then (not EntryStore(v16_ttttts):IsReadOnly())) then begin
+											v16_ttttts.sequence := (v10_wwwwvvvvvvvvvvvvvvv := (v10_wwwwvvvvvvvvvvvvvvv + 1));
+											EntryChange(v16_ttttts)
+										end
+								end)
+						end;
+					GetRoot().buttons.saturationCheck := true
+				end else begin
+					(for v8_zyy := (v30_zzzzzzzzzzzzzzzzzzzy + 1) to (v9_yyyyxxxxxxxxxxxxx - 1) do begin
+							if (if (if (if (v16_ttttts := v26_wwwwwwwwwwwwwwwwwww[v8_zyy].target.fentry).sequence then (v16_ttttts.sequence >= 0)) then (not SetContains(v21_zzzzzzzzzzzzyyyyyyy, v16_ttttts))) then (not EntryStore(v16_ttttts):IsReadOnly())) then begin
+									v16_ttttts.sequence := (v10_wwwwvvvvvvvvvvvvvvv := (v10_wwwwvvvvvvvvvvvvvvv + 1));
+									EntryChange(v16_ttttts)
+								end
+						end)
+				end;
+			XmitSoupChange(kLiteral_5a74d1, 'ExtrasDrawer, 'whatThe, nil)
+		end)
+end
+@@end

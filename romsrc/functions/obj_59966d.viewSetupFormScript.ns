@@ -1,0 +1,6 @@
+@@ 0x59964d
+func() begin
+	alternatives := fields.alternatives;
+	inherited:?viewSetupFormScript()
+end
+@@end

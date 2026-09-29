@@ -1,0 +1,21 @@
+@@ 0x4aab4d
+func(a1, a2, a3) begin
+	local l1, l2, l3;
+	if (not (l2 := (l1 := self:GetAppPreferences()).folderPositions)) then begin
+			l2 := (l1.folderPositions := {})
+		end;
+	if (not HasSlot(l2, a1)) then begin
+			l2.(a1) := {}
+		end;
+	if (not HasSlot(l2, 'environs)) then begin
+			l2.environs := {}
+		end;
+	if (not HasSlot(l2.environs, a1)) then begin
+			l2.environs.(a1) := {}
+		end;
+	l3 := (if a3 then a3 else 'unfiled);
+	l2.(a1).(l3) := a2:GetCursorPosition();
+	l2.environs.(a1).(l3) := a2:GetCursorKey();
+	AddProcrastinatedCall('_EntryChange, functions.EntryChange, [Array: l1], 0)
+end
+@@end

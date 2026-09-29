@@ -1,0 +1,6 @@
+@@ 0x521bc5
+func() begin
+	fields.body.fromPage := 1;
+	(self.text := "1")
+end
+@@end

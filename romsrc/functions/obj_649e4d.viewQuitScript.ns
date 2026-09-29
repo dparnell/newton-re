@@ -1,0 +1,6 @@
+@@ 0x4b6bad
+func() begin
+	_tagKeyButton := nil;
+	inherited:?viewQuitScript()
+end
+@@end

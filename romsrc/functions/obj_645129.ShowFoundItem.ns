@@ -1,0 +1,21 @@
+@@ 0x4abdd1
+func(a1, a2) begin
+	if (a1.labels <> labelsFilter) then begin
+			l1 := labelsFilter;
+			labelsFilter := '_all;
+			local l1;
+			(foreach l2, l3 in allSoups do begin
+					l3.soupFilter := '_all;
+					if (storesFilter exists) then begin
+							l3.storesFilter := nil
+						end;
+					l3:SetupCursor()
+				end);
+			layout:FilterChanged();
+			if filterBar then begin
+					filterBar:UpdateFilter(l1, '_all)
+				end
+		end;
+	layout:ShowFoundItem(a1, a2)
+end
+@@end

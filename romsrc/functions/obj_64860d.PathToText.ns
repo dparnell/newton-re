@@ -1,0 +1,5 @@
+@@ 0x4b9109
+func() begin
+	(if IsString(target.(path)) then Clone(target.(path)) else FormattedNumberStr(target.(path), format))
+end
+@@end

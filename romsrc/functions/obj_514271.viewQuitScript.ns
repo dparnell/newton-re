@@ -1,0 +1,10 @@
+@@ 0x512461
+func() begin
+	UnRegSoupChange(@282, 'calendar);
+	UnRegSoupChange("To Do List", 'calendar);
+	(foreach l1 in '[Array: boringDay, cachedToDoAgendaView, calendarBottom, currentItem, displaydate, itemHeights, hasToDoItems, items, numberOfItems, pieces, ToDoAgendaTemplate] do begin
+			self.(l1) := nil
+		end);
+	(stepChildren := [Array: ])
+end
+@@end

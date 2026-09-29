@@ -1,0 +1,10 @@
+@@ 0x761ac1
+func(a1, a2, a3, a4) begin
+	local l1;
+	(l1 := BuildContext(self)).options := a1;
+	l1.prefsFrame := a2;
+	l1.password := a3;
+	l1.callback := a4;
+	l1:Open()
+end
+@@end

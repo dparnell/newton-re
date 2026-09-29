@@ -1,0 +1,65 @@
+@@ 0x45fbed
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6;
+	l1 := self:LocalBox();
+	l2 := {top: (fYOffset <= 5), left: (fXOffset <= 5), bottom: (max(0, fYOffset) >= (fMaxY - 5)), right: (max(0, fXOffset) >= (fMaxX - 5))};
+	l3 := (fXOffset + (l1.right div 2));
+	l4 := (fYOffset + (l1.bottom div 2));
+	l5 := Clone(currentSize);
+	if (ClassOf(a1) = 'symbol) then begin
+			if (not (currentSize := usefulSizes.(a1))) then begin
+					Throw('|evt.ex.msg,invalid.zoom.size|, "Invalid Zoom Symbol")
+				end
+		end else begin
+			if drawGrayScaled then begin
+					if (a1 >= 1) then begin
+							(currentSize := Clone(usefulSizes.fullSize)).right := floor((zoomUpSize.right * a1));
+							currentSize.bottom := floor((zoomUpSize.bottom * a1))
+						end else begin
+							(currentSize := Clone(usefulSizes.fullSize)).right := floor(round((currentSize.right * a1)));
+							currentSize.bottom := floor(round((currentSize.bottom * a1)))
+						end
+				end else begin
+					(currentSize := Clone(usefulSizes.fullSize)).right := floor(round((currentSize.right * a1)));
+					currentSize.bottom := floor(round((currentSize.bottom * a1)))
+				end
+		end;
+	(if ((((l5.right <> currentSize.right) or (l5.bottom <> currentSize.bottom)) or (l5.left <> currentSize.left)) or (l5.top <> currentSize.top)) then begin
+			if (if (fAnnotateMode = 'edit) then (a1 <> 'fullSize)) then begin
+					currentSize := l5;
+					Throw('|evt.ex.msg;cant.zoom.while.editing|, "Can't zoom while editing")
+				end;
+			if (not quiet) then begin
+					AddUndoAction('DoUndo, [Array: fZoomedTo, fXOffset, fYOffset])
+				end;
+			fZoomedTo := (if (if (if (if (currentSize.right = fullSize.right) then (currentSize.bottom = fullSize.bottom)) then (currentSize.left = fullSize.left)) then (currentSize.top = fullSize.top)) then 'fullSize else a1);
+			self:SetupSizes();
+			l6 := ShapeBounds(ScaleShape(MakeShape(RelBounds(l3, l4, 1, 1)), l5, currentSize));
+			fXOffset := max(0, min(fMaxX, (if (if l2.left then l2.right) then ((currentSize.right - l1.right) div 2) else (if l2.left then 0 else (if l2.right then fMaxX else (l6.left - (l1.right div 2)))))));
+			fYOffset := max(0, min(fMaxY, (if (if l2.top then l2.bottom) then ((currentSize.bottom - l1.bottom) div 2) else (if l2.top then 0 else (if l2.bottom then fMaxY else (l6.top - (l1.bottom div 2)))))));
+			if (currentSize.right < l1.right) then begin
+					if (BAnd(viewJustify, 2) <> 0) then begin
+							fXOffset := (fXOffset - ((l1.right - currentSize.right) div 2))
+						end else begin
+							if (BAnd(viewJustify, 1) <> 0) then begin
+									fXOffset := ((fXOffset - l1.right) - currentSize.right)
+								end
+						end
+				end;
+			if (currentSize.bottom < l1.bottom) then begin
+					if (BAnd(viewJustify, 4) <> 0) then begin
+							fYOffset := (fYOffset - ((l1.bottom - currentSize.bottom) div 2))
+						end else begin
+							if (BAnd(viewJustify, 8) <> 0) then begin
+									fYOffset := ((fYOffset - l1.bottom) - currentSize.bottom)
+								end
+						end
+				end;
+			self:SetOrigin(fXOffset, fYOffset);
+			if (not quiet) then begin
+					self:?ScalingInfoChanged('zoom)
+				end;
+			true
+		end)
+end
+@@end

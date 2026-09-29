@@ -1,0 +1,5 @@
+@@ 0x7b4989
+func() begin
+	(if (UserConfiguration.blessedApp <> savedBlessed) then GetRoot():BlessApp(savedBlessed) else base:Close())
+end
+@@end

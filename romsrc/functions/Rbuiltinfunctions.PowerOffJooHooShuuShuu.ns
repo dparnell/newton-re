@@ -1,0 +1,21 @@
+@@ 0x563089
+func(a1) begin
+	(foreach l1 in OldPowerOffHandlers do begin
+			try begin
+					if (not l1:PowerOffScript('okToPowerOff)) then begin
+							return (PoweringOff := nil)
+						end
+				end onexception |evt.ex| do begin end
+		end);
+	(foreach l3, l1 deeply in PowerOffRegistry do begin
+			if (l1 = PowerOffRegistry.(l3)) then begin
+					try begin
+							if (not call l1 with ('okToPowerOff, a1)) then begin
+									return (PoweringOff := nil)
+								end
+						end onexception |evt.ex| do begin end
+				end
+		end);
+	true
+end
+@@end

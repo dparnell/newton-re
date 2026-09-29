@@ -1,0 +1,53 @@
+@@ 0x50f3b5
+func(a1, a2, a3, a4) begin
+	local l1, l2, l3;
+	(if (a1 <> nil) then begin
+			l1 := Date(a3);
+			if (a1 = 'Daily) then begin
+					l2 := 0;
+					l3 := BOr(4064, 31)
+				end else begin
+					if (a1 = 'Weekly) then begin
+							l2 := 0;
+							if (a2 = nil) then begin
+									l3 := (2048 >> l1.dayOfWeek)
+								end else begin
+									l3 := self:ExtractDayNames(a2)
+								end;
+							l3 := BOr(l3, 31)
+						end else begin
+							if (a1 = 'biweekly) then begin
+									l2 := 4;
+									l3 := (((a3 div 1440) << 8) + 14)
+								end else begin
+									if (a1 = 'monthlyByWeek) then begin
+											l2 := 1;
+											if (a2 = nil) then begin
+													l3 := (16 >> ((l1.Date - 1) div 7))
+												end else begin
+													l3 := self:ExtractWeekNumbers(a2)
+												end;
+											l3 := BOr(l3, (2048 >> l1.dayOfWeek))
+										end else begin
+											if (a1 = 'monthly) then begin
+													l2 := 2;
+													l3 := l1.Date
+												end else begin
+													if (a1 = 'yearly) then begin
+															l2 := 3;
+															l3 := ((l1.month << 8) + l1.Date)
+														end else begin
+															if (a1 = 'yearlyByWeek) then begin
+																	l2 := 7;
+																	l3 := (((l1.month << 12) + (2048 >> l1.dayOfWeek)) + (16 >> (((l1.dayOfWeek + l1.Date) - 1) div 7)))
+																end
+														end
+												end
+										end
+								end
+						end
+				end;
+			self:ConvertToRepeating(a4, l2, l3, 536870911, nil)
+		end)
+end
+@@end

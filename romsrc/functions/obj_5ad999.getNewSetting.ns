@@ -1,0 +1,6 @@
+@@ 0x5ad935
+func() begin
+	self:Dirty();
+	self:InitClusterValue(GetLetterHilite())
+end
+@@end

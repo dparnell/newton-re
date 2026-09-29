@@ -1,0 +1,8 @@
+@@ 0x74e7a9
+func() begin
+	if (not self:RebuildFileList(nil, nil)) then begin
+			self:StopOpen(-16005)
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

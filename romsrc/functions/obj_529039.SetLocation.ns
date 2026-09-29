@@ -1,0 +1,19 @@
+@@ 0x528ff9
+func(a1, a2) begin
+	(if (l1 := GetMatchedEntries('places, self.entries)) then begin
+			l3 := Array((l2 := Length(l1)), nil);
+			local l1;
+			local l2;
+			local l3;
+			(for l4 := 0 to (l2 - 1) do begin
+					local l7, l8;
+					l8 := ResolveEntryAlias((l7 := l1[l4]).alias);
+					l3[l4] := GetDataDefs('|nameRef.meetingPlace|):MakeNameRef(l8, '|nameRef.meetingPlace|);
+					if self:SetDisplayName(l3[l4], l7, l8) then begin
+							l3[l4]._alias := nil
+						end
+				end);
+			(a1.locationEntries := l3)
+		end else (if (not a2) then (if (a2 := FindPossibleLocation(self.noisewords, self.OrigPhrase)) then (a1.locationEntries := [Array: GetDataDefs('|nameRef.meetingPlace|):MakeNameRef({company: a2}, '|nameRef.meetingPlace|)]))))
+end
+@@end

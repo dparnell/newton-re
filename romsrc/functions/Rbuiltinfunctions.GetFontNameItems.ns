@@ -1,0 +1,29 @@
+@@ 0x416729
+func(a1, a2) begin
+	if (not a2) then begin
+			a2 := GetAllFontFamilies()
+		end else begin
+			if (a2 = 'all) then begin
+					a2 := [Array: ];
+					(foreach l1, l2 deeply in fonts do begin
+							AddArraySlot(a2, l1)
+						end)
+				end
+		end;
+	if IsInteger(a1) then begin
+			a1 := GetFontFamilySym(a1)
+		end;
+	l4 := [Array: ];
+	local l4;
+	(foreach l2 in a2 do begin
+			local l6;
+			l6 := {item: fonts.(l2).name, family: l2};
+			if (a1 = l2) then begin
+					l6.mark := $\uFC0B
+				end;
+			AddArraySlot(l4, l6)
+		end);
+	Sort(l4, '|str<|, 'item);
+	l4
+end
+@@end

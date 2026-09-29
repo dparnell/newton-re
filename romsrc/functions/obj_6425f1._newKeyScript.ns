@@ -1,0 +1,5 @@
+@@ 0x4db0e9
+func(a1) begin
+	self:CommonKeyScript(_newKeyButton)
+end
+@@end

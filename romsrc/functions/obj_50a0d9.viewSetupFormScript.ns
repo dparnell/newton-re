@@ -1,0 +1,5 @@
+@@ 0x50a099
+func() begin
+	(text := verbText)
+end
+@@end

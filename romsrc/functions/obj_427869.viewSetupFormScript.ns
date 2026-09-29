@@ -1,0 +1,6 @@
+@@ 0x427741
+func() begin
+	text := (if (GetUserConfig('inputDevice) <> nil) then "Ready to record." else "No recording source set.");
+	inherited:?viewSetupFormScript()
+end
+@@end

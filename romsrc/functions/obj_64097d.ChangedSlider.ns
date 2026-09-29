@@ -1,0 +1,5 @@
+@@ 0x42b0c9
+func() begin
+	(vars.(valuePath) := viewValue)
+end
+@@end

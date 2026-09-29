@@ -1,0 +1,14 @@
+@@ 0x5576e5
+func(a1, a2) begin
+	try begin
+			if (a1.partType = 'form) then begin
+					RemoveFormPart(a1, a2)
+				end else begin
+					if (a1.partType = 'auto) then begin
+							RemoveAutoPart(a1, a2)
+						end
+				end
+		end onexception |evt.ex| do begin end;
+	(if (a1.packageStyle = 'HighROM) then GetRoot().ExtrasDrawer:HandleRemovedHighROMPart(a1.packageId) else (if (a1.packageStyle = '|1.X|) then GetRoot().ExtrasDrawer:|HandleRemoved1.XPart|(a1.packageId)))
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x4f0555
+func() begin
+	SetKeyView(entryLine, 9999);
+	inherited:?viewSetupDoneScript()
+end
+@@end

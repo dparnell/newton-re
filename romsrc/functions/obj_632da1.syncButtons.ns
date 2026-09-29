@@ -1,0 +1,5 @@
+@@ 0x4e4089
+func() begin
+	(size := (face := (family := nil)))
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x4d0391
+func() begin
+	self:ChangeState('idle);
+	UnRegCommConfigChange(appSymbol);
+	faxFlags := 0;
+	self:SetConfig('faxAutoReceive, nil)
+end
+@@end

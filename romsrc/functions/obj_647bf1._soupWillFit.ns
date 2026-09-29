@@ -1,0 +1,40 @@
+@@ 0x495f11
+@@const kLiteral_4889e9
+"Checking size of \u201C\u^0\u201D\u\u2026\u"
+@@const kLiteral_48e235
+"BACKUP_"
+@@main
+func(a1, a2, a3, a4) begin
+	l5 := progressSlip;
+	l1 := 0;
+	l2 := 0;
+	if IsFrame(a3) then begin
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			local l5;
+			(foreach l6 in a3.soups do begin
+					l5:SetStatus('vBarber, {titleText: ParamStr(kLiteral_4889e9, [Array: a3.name]), barber: true});
+					if (l3 := a1:GetSoup((if a4 then l6 else Stringer([Array: kLiteral_48e235, l6])))) then begin
+							l2 := (l2 + l3:GetSize())
+						end;
+					l5:SetStatus('vBarber, {titleText: ParamStr(kLiteral_4889e9, [Array: a3.name]), barber: true});
+					if (l4 := a2:GetSoup((if a4 then Stringer([Array: kLiteral_48e235, l6]) else l6))) then begin
+							l1 := (l1 + l4:GetSize())
+						end
+				end)
+		end else begin
+			l5:SetStatus('vBarber, {titleText: ParamStr(kLiteral_4889e9, [Array: a3]), barber: true});
+			if (l3 := a1:GetSoup((if a4 then l6 else Stringer([Array: kLiteral_48e235, l6])))) then begin
+					l2 := (l2 + l3:GetSize())
+				end;
+			l5:SetStatus('vBarber, {titleText: ParamStr(kLiteral_4889e9, [Array: a3]), barber: true});
+			if (l4 := a2:GetSoup((if a4 then Stringer([Array: kLiteral_48e235, l6]) else l6))) then begin
+					l1 := (l1 + l4:GetSize())
+				end
+		end;
+	l1 := (l1 + ((a2:TotalSize() - a2:UsedSize()) - theFudgeFactor));
+	(l2 < l1)
+end
+@@end

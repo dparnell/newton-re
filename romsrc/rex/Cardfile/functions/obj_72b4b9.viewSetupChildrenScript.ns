@@ -1,0 +1,11 @@
+@@ 0x72b8a9
+func() begin
+	stepChildren := Clone(stepChildren);
+	if (target.class = 'company) then begin
+			AddArraySlot(stepChildren, title)
+		end else begin
+			AddArraySlot(stepChildren, affiliate)
+		end;
+	inherited:?viewSetupChildrenScript()
+end
+@@end

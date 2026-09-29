@@ -1,0 +1,6 @@
+@@ 0x6294f5
+func(a1, a2) begin
+	BadWickedNaughtyNoot(Stringer([Array: "StringEQ(", a1, $,, a2, ")"]), 'undocumented);
+	StrEqual(a1, a2)
+end
+@@end

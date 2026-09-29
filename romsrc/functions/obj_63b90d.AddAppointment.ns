@@ -1,0 +1,19 @@
+@@ 0x510115
+func(a1, a2, a3, a4, a5) begin
+	local l1;
+	self:ValidateTitleAndDatetimeArgs(a1, a2);
+	if ((not IsInteger(a3)) or (a3 <= 0)) then begin
+			ThrowBadTypeWithFrameData(-48418, a3)
+		end;
+	self:ValidatePeriod(a2, a4, a5);
+	l1 := self:MakeNewMeetingFrame('meeting, a1, a2, a3);
+	self:InitializeRepeatInfo(a4, a5, a2, l1);
+	if l1.repeatType then begin
+			l1.viewStationery := 'RepeatingMeeting;
+			self:CarefulAdd(GetUnionSoupAlways(@239), l1, nil)
+		end else begin
+			self:CarefulAdd(GetUnionSoupAlways(@23), l1, nil)
+		end;
+	l1
+end
+@@end

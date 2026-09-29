@@ -1,0 +1,5 @@
+@@ 0x4ae701
+func() begin
+	(if targetView.targetDataDef then GetDefs(form, [Array: targetView.targetDataDef.symbol], types) else [Array: ])
+end
+@@end

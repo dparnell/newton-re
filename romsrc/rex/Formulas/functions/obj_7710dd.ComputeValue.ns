@@ -1,0 +1,11 @@
+@@ 0x771145
+func(a1) begin
+	local l1;
+	if ((l1 := self:SolveForPresentValue((a1[0] * 12), (a1[1] / 12), 0, (-a1[3]))) = nil) then begin
+			self:Notify(3, "Loan Payment", "Interest rate out of range.")
+		end else begin
+			l1 := abs(l1)
+		end;
+	return l1
+end
+@@end

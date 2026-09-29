@@ -1,0 +1,53 @@
+@@ 0x4e3a15
+func() begin
+	(if (l1 := GetHiliteOffsets()) then begin
+			l2 := {family: nil, size: nil, face: nil, pensize: nil, scale: nil};
+			local l1;
+			local l2;
+			(foreach l3 in l1 do begin
+					local l5, l6, l7, l8;
+					l6 := (if (ClassOf((l5 := l3[0]:GetStylesOfRange(l3[1], (l3[2] - l3[1]), nil))) = 'int) then 0 else 1);
+					(while (l6 <= (Length(l5) - 1)) do begin
+							l7 := {family: GetFontFamilySym(l5[l6]), size: GetFontSize(l5[l6]), face: GetFontFace(l5[l6]), pensize: (if (ClassOf(l5[l6]) = 'inkWord) then GetInkWordInfo(l5[l6]).origPenSize), scale: (if (ClassOf(l5[l6]) = 'inkWord) then GetInkWordInfo(l5[l6]).scale)};
+							if (not l2.family) then begin
+									l2.family := l7.family
+								end else begin
+									if (l2.family <> l7.family) then begin
+											l2.family := -536870912
+										end
+								end;
+							if (not l2.size) then begin
+									l2.size := l7.size
+								end else begin
+									if (l2.size <> l7.size) then begin
+											l2.size := -536870912
+										end
+								end;
+							if (not l2.face) then begin
+									l2.face := l7.face
+								end else begin
+									if (l2.face <> l7.face) then begin
+											l2.face := -536870912
+										end
+								end;
+							if (if (not l2.pensize) then l7.pensize) then begin
+									l2.pensize := l7.pensize
+								end else begin
+									if (if (if l2.pensize then l7.pensize) then (l2.pensize <> l7.pensize)) then begin
+											l2.pensize := -536870912
+										end
+								end;
+							if (if (not l2.scale) then l7.scale) then begin
+									l2.scale := l7.scale
+								end else begin
+									if (if (if l2.scale then l7.scale) then (l2.scale <> l7.scale)) then begin
+											l2.scale := -536870912
+										end
+								end;
+							(l6 := (l6 + 2))
+						end)
+				end);
+			l2
+		end else {family: GetFontFamilySym((l8 := GetInsertionStyle())), size: GetFontSize(l8), face: GetFontFace(l8), pensize: GetUserConfig('userPenSize)})
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x4cf725
+func(a1, a2, a3) begin
+	a1:DoDispose(a3)
+end
+@@end

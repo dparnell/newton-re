@@ -1,0 +1,5 @@
+@@ 0x4f7d89
+func() begin
+	(if Visible(DatesOverviewForm) then self:changeViewTo(mainDisplay) else self:changeViewTo(DatesOverviewForm))
+end
+@@end

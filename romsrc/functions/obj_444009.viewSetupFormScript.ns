@@ -1,0 +1,7 @@
+@@ 0x443fd9
+func() begin
+	selectedDates := dates;
+	inherited:viewSetupFormScript();
+	(if (Date(selectedDates[0]).year = 2920) then (calendar.viewBounds := SetBounds(0, 0, 0, -2)))
+end
+@@end

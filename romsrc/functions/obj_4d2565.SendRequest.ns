@@ -1,0 +1,8 @@
+@@ 0x4d2545
+func(a1) begin
+	if (a1.cause = 'submit) then begin
+			return nil
+		end;
+	(if (status <> 'idle) then self:QueueRequest('SendRequest, a1) else self:BeamSend(self, a1))
+end
+@@end

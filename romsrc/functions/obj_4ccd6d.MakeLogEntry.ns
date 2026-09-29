@@ -1,0 +1,6 @@
+@@ 0x4c8b8d
+func(a1, a2) begin
+	a1.printerUsed := GetUserConfig('currentPrinter);
+	inherited:MakeLogEntry(a1, a2)
+end
+@@end

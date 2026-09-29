@@ -1,0 +1,5 @@
+@@ 0x4b0dc5
+func() begin
+	inherited:?viewPostQuitScript()
+end
+@@end

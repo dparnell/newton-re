@@ -1,0 +1,6 @@
+@@ 0x797c65 names
+func() begin
+	inherited:viewSetupChildrenScript();
+	self:CalculateScrollRects()
+end
+@@end

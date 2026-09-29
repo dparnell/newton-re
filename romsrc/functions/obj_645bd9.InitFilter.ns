@@ -1,0 +1,15 @@
+@@ 0x4ba021
+func() begin
+	local l1;
+	if (l1 := self:Parent()).newRecFlags then begin
+			recFlags := newRecFlags
+		end;
+	if l1.newDictionaries then begin
+			dictionaries := newDictionaries
+		end;
+	if l1.newRecTextFlags then begin
+			recTextFlags := newRecTextFlags
+		end;
+	inherited:?InitFilter()
+end
+@@end

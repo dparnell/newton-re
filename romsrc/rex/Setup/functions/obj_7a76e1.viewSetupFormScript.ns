@@ -1,0 +1,21 @@
+@@ 0x7b00b5
+func() begin
+	local l1, l2;
+	BusyBoxControl(0);
+	if ((savedBlessed := UserConfiguration.blessedApp) = 'SetUp) then begin
+			savedBlessed := 'paperroll
+		end;
+	if (not fPages) then begin
+			fPages := stepChildren
+		end;
+	stepChildren := [Array: ];
+	fCompleted := {};
+	fFirstTime := (GetUserConfig('blessedApp) = 'SetUp);
+	l1 := GetAppParams().appAreaWidth;
+	l2 := GetAppParams().appAreaHeight;
+	if (l1 > l2) then begin
+			fformat := 'wide
+		end;
+	(if (l1 <> 240) then (self.viewBounds := OffsetRect(displayParams.rootBounds, (-displayParams.appAreaGlobalLeft), (-displayParams.appAreaGlobalTop))))
+end
+@@end

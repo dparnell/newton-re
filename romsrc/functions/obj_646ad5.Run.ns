@@ -1,0 +1,66 @@
+@@ 0x4982e5
+func(a1) begin
+	local l1, l2, l3;
+	if fRunning then begin
+			if tracing then begin
+					self:Trace(Stringer([Array: "Machine is already running; run(", a1, ") ignored."]), nil)
+				end;
+			Throw('|evt.ex.proto|, -8607);
+			return nil
+		end;
+	fRunning := true;
+	if a1 then begin
+			l1 := a1
+		end else begin
+			l1 := fState
+		end;
+	(while l1 do begin
+			fState := l1;
+			(try begin
+					(while l1 do begin
+							if tracing then begin
+									self:Trace(Stringer([Array: "Run(", l1, ")"]), nil)
+								end;
+							if (not (l2 := self.(l1))) then begin
+									Throw('|evt.ex.proto|, -8601)
+								end;
+							if (IsReadOnly(l2) or (not HasSlot(l2, '_parent))) then begin
+									l3 := l2._parent;
+									l2 := {_proto: l2, _parent: self};
+									if l3 then begin
+											l2._parent := l3
+										end
+								end;
+							if (not (fTimeout := l2.timeOut)) then begin
+									fTimeout := 200000
+								end;
+							CallbackSpec.reqTimeout := fTimeout;
+							l1 := l2:action();
+							self.cancelBlocked := self.(l1).cancelBlocked;
+							(if ((l1 = 'waitAsync) or (l1 = 'exit)) then begin
+									if (l1 = 'exit) then begin
+											occupancy := 0;
+											fState := nil
+										end;
+									(l1 := nil)
+								end else begin
+									if (ClassOf(l1) <> 'symbol) then begin
+											l1 := nil
+										end;
+									if (l1 = nil) then begin
+											Throw('|evt.ex.proto|, -8601)
+										end;
+									(fState := l1)
+								end)
+						end)
+				end onexception |evt.ex| do begin
+					if tracing then begin
+							self:Trace(Stringer([Array: "Run(", fState, ") - Exception occurred:"]), CurrentException())
+						end;
+					(l1 := self:DoError(CurrentException()))
+				end)
+		end);
+	fRunning := nil;
+	(if tracing then (if fState then self:Trace("AsyncWait", nil) else self:Trace("Run() complete.", nil)))
+end
+@@end

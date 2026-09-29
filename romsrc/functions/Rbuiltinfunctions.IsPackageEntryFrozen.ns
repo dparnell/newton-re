@@ -1,0 +1,5 @@
+@@ 0x559c69
+func(a1) begin
+	LFetch(a1._tagList, '_frozen, 0, '|=|, nil)
+end
+@@end

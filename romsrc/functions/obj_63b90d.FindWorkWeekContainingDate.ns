@@ -1,0 +1,14 @@
+@@ 0x4f6805
+func(a1) begin
+	l1 := Array(5, nil);
+	(l2 := Date(a1)).hour := (l2.minute := (l2.second := 0));
+	l2.Date := ((l2.Date - l2.dayOfWeek) + 1);
+	l1[0] := TotalMinutes(l2);
+	local l1;
+	local l2;
+	(for l3 := 0 to 4 do begin
+			l1[l3] := (l1[0] + (1440 * l3))
+		end);
+	l1
+end
+@@end

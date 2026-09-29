@@ -1,0 +1,21 @@
+@@ 0x50453d
+func(a1) begin
+	l1 := a1.repeatTemplate;
+	if self:IsExceptionMeeting(a1) then begin
+			local l1;
+			(foreach l2 in l1.exceptions do begin
+					if (if l2[1] then (l2[1].mtgStartDate = a1.mtgStartDate)) then begin
+							l2[1] := nil;
+							break
+						end
+				end)
+		end else begin
+			if (not l1.exceptions) then begin
+					l1.exceptions := [Array: ]
+				end;
+			AddArraySlot(l1.exceptions, [Array: a1.mtgStartDate, nil])
+		end;
+	self:UpdateInstanceNotesDataTime(l1, a1.mtgStartDate, nil);
+	self:CarefulChange(EntrySoup(l1), l1, true)
+end
+@@end

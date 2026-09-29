@@ -1,0 +1,47 @@
+@@ 0x46457d
+func(a1, a2) begin
+	l1 := [Array: ];
+	l2 := [Array: ];
+	if (a1 = nil) then begin
+			return l1
+		end;
+	local l1;
+	local l2;
+	(foreach l3 in a1 do begin
+			if (l3.title or l3:?GetTitle(a2)) then begin
+					(foreach l5 in l3.dataTypes do begin
+							SetAdd(l2, l5, true)
+						end)
+				end
+		end);
+	(foreach l7 in transports do begin
+			local l9, l10, l11, l12;
+			if ((l9 := GetRoot().(l7)) = nil) then begin
+					Throw('|evt.ex.ioBox|, -8301)
+				end;
+			if (if (if HasPath(l9, 'dataTypes) then IsArray(l9.dataTypes)) then l9.SendRequest) then begin
+					if SetOverlaps(l2, l9.dataTypes) then begin
+							if l9.group then begin
+									l10 := GetGroupTransport(l9.group);
+									l11 := GetRoot().(l10);
+									if (l9.appSymbol = l10) then begin
+											AddArraySlot(l1, l9)
+										end else begin
+											if (not SetOverlaps(l2, l11.dataTypes)) then begin
+													if ((l12 := GetUserConfig('transportGroups)) = nil) then begin
+															l12 := {}
+														end;
+													l12.(EnsureInternal(l9.group)) := l9.appSymbol;
+													SetUserConfig('transportGroups, l12);
+													AddArraySlot(l1, l9)
+												end
+										end
+								end else begin
+									AddArraySlot(l1, l9)
+								end
+						end
+				end
+		end);
+	return l1
+end
+@@end

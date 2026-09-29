@@ -1,0 +1,12 @@
+@@ 0x5afc19
+func() begin
+	if (clusterValue = nil) then begin
+			clusterValue := 2;
+			self:SetClusterValue(2);
+			self:SysBeep()
+		end;
+	userConfiguration.letterSetSelection := clusterValue;
+	wordExample:Dirty();
+	ReadCursiveOptions()
+end
+@@end

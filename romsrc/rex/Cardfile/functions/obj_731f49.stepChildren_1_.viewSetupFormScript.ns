@@ -1,0 +1,14 @@
+@@ 0x73217d
+func() begin
+	l1 := [Array: ];
+	labelCommands := [Array: ];
+	local l1;
+	(foreach l2, l3 deeply in _dataDefs do begin
+			if (if (l3.superSymbol = 'groupTransport) then (not SetContains(l1, l2))) then begin
+					AddArraySlot(labelCommands, {item: l3.name, symbol: l2});
+					SetAdd(l1, l2, nil)
+				end
+		end);
+	inherited:?viewSetupFormScript()
+end
+@@end

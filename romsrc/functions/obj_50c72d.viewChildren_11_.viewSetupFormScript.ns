@@ -1,0 +1,10 @@
+@@ 0x5082f9
+func() begin
+	self.viewBounds := RelBounds(0, dpSlip.freqFieldTop, 220, 18);
+	if hideFrequencyField then begin
+			viewFlags := BAnd(viewFlags, bnot(1))
+		end;
+	inherited:?viewSetupFormScript();
+	(entryLine.viewFont := 10243)
+end
+@@end

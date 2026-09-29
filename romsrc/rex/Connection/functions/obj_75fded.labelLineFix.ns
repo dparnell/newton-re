@@ -1,0 +1,31 @@
+@@ 0x7602e9
+func(a1) begin
+	local l1, l2, l3;
+	(if (if (not self:labelClick(a1)) then labelCommands) then begin
+			if self:TrackHilite(a1) then begin
+					if curLabelCommand then begin
+							if IsFrame((l2 := labelCommands[curLabelCommand])) then begin
+									l3 := l2.item
+								end else begin
+									l3 := l2
+								end;
+							if (not StrEqual(entryLine.text, l3)) then begin
+									curLabelCommand := nil
+								end
+						end;
+					if (curLabelCommand = nil) then begin
+							l1 := labelCommands
+						end else begin
+							if (not IsFrame((l1 := Clone(labelCommands))[curLabelCommand])) then begin
+									l1[curLabelCommand] := {item: l1[curLabelCommand], mark: $\uFC0B}
+								end else begin
+									(l1[curLabelCommand] := Clone(l1[curLabelCommand])).mark := $\uFC0B
+								end
+						end;
+					self:PopupMenu(l1, {indent: indent});
+					entryLine:dirty()
+				end;
+			true
+		end)
+end
+@@end

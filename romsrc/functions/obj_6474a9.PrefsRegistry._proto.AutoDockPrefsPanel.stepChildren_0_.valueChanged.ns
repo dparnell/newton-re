@@ -1,0 +1,5 @@
+@@ 0x570d01
+func() begin
+	SetUserConfig('AutoDockOn, viewValue)
+end
+@@end

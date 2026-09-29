@@ -1,0 +1,12 @@
+@@ 0x550281
+func() begin
+	extras.memex := nil;
+	(if (newBlessed <> userConfiguration.blessedapp) then begin
+			if (not newBlessed) then begin
+					newBlessed := 'paperroll
+				end;
+			extras.fakeTarget.blessedapp := newBlessed;
+			self:Confirm(extras.title, ParamStr("Are you sure you want to make ^0 the backdrop?", [Array: GetRoot().(newBlessed).title]), extras, 'BlessSelectedIcon)
+		end)
+end
+@@end

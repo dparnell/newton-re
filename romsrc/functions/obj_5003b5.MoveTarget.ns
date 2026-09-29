@@ -1,0 +1,20 @@
+@@ 0x4ff555
+func(a1, a2) begin
+	local l1, l2, l3;
+	(if a1.entryAlias then (if (l1 := ResolveEntryAlias(a1.entryAlias)) then begin
+				if l1.repeatType then begin
+						if (not (l2 := self:FindException(a1.instanceTime, l1))) then begin
+								if (not repeatingInstanceTemplate) then begin
+										repeatingInstanceTemplate := Clone(protoInstanceOfRepeatingMeeting)
+									end;
+								(l2 := repeatingInstanceTemplate).viewStationery := l1.viewStationery;
+								l2.mtgStartDate := a1.instanceTime;
+								l2.repeatTemplate := l1
+							end
+					end else begin
+						l2 := l1
+					end;
+				calendar:MoveTarget(l2, a2)
+			end) else (if ((l3 := self:GetToDo():TaskStore(a1.topic)) <> a2) then self:GetToDo():MoveTask(a1.topic, {Date: a1.instanceTime}, a2)))
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x55af49
+func(a1) begin
+	if (a1 <> 0) then begin
+			self:HandleError(a1)
+		end;
+	self:SetStatus('idle, nil)
+end
+@@end

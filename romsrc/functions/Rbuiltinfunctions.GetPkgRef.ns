@@ -1,0 +1,6 @@
+@@ 0x559165
+func(a1, a2) begin
+	local l1;
+	(if (l1 := GetPackageEntry(a1, a2)) then l1.pkgRef)
+end
+@@end

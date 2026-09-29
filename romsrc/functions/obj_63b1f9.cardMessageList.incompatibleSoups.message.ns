@@ -1,0 +1,5 @@
+@@ 0x56c79d
+func(a1) begin
+	ParamStr("Card \u201C\u^0\u201D\u is locked and formatted for a different language. To update it remove the card, unlock it, then reinsert the card.", [Array: a1])
+end
+@@end

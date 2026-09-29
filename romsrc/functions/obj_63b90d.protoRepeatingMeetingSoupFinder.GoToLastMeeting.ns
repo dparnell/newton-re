@@ -1,0 +1,8 @@
+@@ 0x4ef6e9
+func() begin
+	(foreach l1 in repeatingEntryFinders do begin
+			l1.currentInstance := (l1.instancesCount - 1)
+		end);
+	self:ChooseLatestInstance()
+end
+@@end

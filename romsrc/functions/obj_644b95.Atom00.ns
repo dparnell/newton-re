@@ -1,0 +1,14 @@
+@@ 0x59582d
+func(a1, a2, a3, a4, a5) begin
+	if (if (if (a3 = 1) then (not a1.connected)) then (a1.connectState <> 'Connect)) then begin
+			self:EndTransaction();
+			self:LoginDone()
+		end;
+	if a1.statusView then begin
+			a1.statusView:MailReceiveStatus()
+		end;
+	a1.lastAtom := nil;
+	a1.lastStream := nil;
+	self:defaultAtom00(a1, a2, a3, a4, a5)
+end
+@@end

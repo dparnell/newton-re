@@ -1,0 +1,15 @@
+@@ 0x4c7f19
+func(a1, a2) begin
+	(if IsFrame(a2) then begin
+			a1.phoneNumber := a2.phoneNumber;
+			a1.name := a2.name;
+			a1.displayNumber := a2.displayNumber;
+			userConfiguration.currentFaxNumber := a2.phoneNumber;
+			(userConfiguration.currentFaxTitle := a1.title)
+		end else begin
+			a1.phoneNumber := nil;
+			a1.displayNumber := "";
+			(a1.name := "")
+		end)
+end
+@@end

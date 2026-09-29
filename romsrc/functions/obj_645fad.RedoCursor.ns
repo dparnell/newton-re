@@ -1,0 +1,14 @@
+@@ 0x452435
+func() begin
+	self:UpdateCursor();
+	if fCurrentKey then begin
+			cursor:GotoKey(fCurrentKey)
+		end else begin
+			cursor:Reset()
+		end;
+	self:LockScreen(true);
+	AZTabs:Update();
+	listBase:Update();
+	self:LockScreen(nil)
+end
+@@end

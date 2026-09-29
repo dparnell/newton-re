@@ -1,0 +1,16 @@
+@@ 0x425ecd
+func() begin
+	fSoundFrameSlots := Clone(fQualitySettings.defaults);
+	if (not (l1 := fRecordQuality)) then begin
+			l1 := GetUserConfig('recordingQuality)
+		end;
+	if (not l1) then begin
+			l1 := (if (Gestalt(16777219).cputype = 'strongarm) then 'GSM8K16Codec else 'IMA8K16Codec)
+		end;
+	local l1;
+	local l2;
+	(if (l2 := fQualitySettings.(l1)) then (foreach l3, l4 in l2 do begin
+				fSoundFrameSlots.(l3) := l4
+			end))
+end
+@@end

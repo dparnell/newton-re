@@ -1,0 +1,11 @@
+@@ 0x554749
+func() begin
+	(if theApp.soupervisor then begin
+			viewChildren := withFiling;
+			(if theApp.appObject then begin
+					base.AppObjectFileThisOn := ParamStr("File these ^1 on", theApp.appObject);
+					(base.appObjectFileThisIn := ParamStr("File these ^1 in", theApp.appObject))
+				end)
+		end else (viewChildren := noFiling))
+end
+@@end

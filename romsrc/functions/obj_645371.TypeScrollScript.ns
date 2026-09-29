@@ -1,0 +1,6 @@
+@@ 0x4afda9
+func(a1) begin
+	local l1;
+	(if ((l1 := layout.dataCursor:entry()) <> layout.dataCursor:GotoKey(a1)) then layout:Effect(133120, nil, @85, 'Retarget, [Array: true]))
+end
+@@end

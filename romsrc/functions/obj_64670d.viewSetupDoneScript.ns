@@ -1,0 +1,6 @@
+@@ 0x45e7b5
+func() begin
+	self:setup((if tempImage then tempImage else image));
+	(tempImage := nil)
+end
+@@end

@@ -1,0 +1,22 @@
+@@ 0x55d7fd
+func(a1) begin
+	local l1, l2, l3;
+	(if (viewExpanded <> a1) then begin
+			l1 := 0;
+			if appSpecificChildren then begin
+					l1 := (appSpecificChildren.viewBounds.bottom + 5);
+					if appSpecificChildren.dontIncludeInputLine then begin
+							l1 := (l1 - 50)
+						end
+				end;
+			l2 := {findSelected: 75, findFrontmost: l1, findGlobal: 0};
+			l3 := Clone(findInput.entryLine.text);
+			self:LockScreen(true);
+			SetValue(self, 'viewBounds, self:ExpandView(l2.((viewExpanded := a1))));
+			SetValue(findInput.entryLine, 'text, l3);
+			self:RedoChildren();
+			RefreshViews();
+			self:LockScreen(nil)
+		end)
+end
+@@end

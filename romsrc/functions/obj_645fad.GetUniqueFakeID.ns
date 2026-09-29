@@ -1,0 +1,6 @@
+@@ 0x451755
+func() begin
+	anyFakes := true;
+	(if (not fakeID) then (fakeID := 0) else (fakeID := (fakeID + 1)))
+end
+@@end

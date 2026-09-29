@@ -1,0 +1,12 @@
+@@ 0x525685
+func() begin
+	defaultFullCommands := GenFullCommands();
+	if defaultChoices then begin
+			self:SetLabelCommands(Sort(Clone(defaultChoices), '|str<|, nil))
+		end else begin
+			self:SetLabelCommands(Sort(Clone(defaultFullCommands), '|str<|, nil))
+		end;
+	self:FindCustomDicts();
+	""
+end
+@@end

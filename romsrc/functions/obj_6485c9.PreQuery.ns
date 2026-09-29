@@ -1,0 +1,5 @@
+@@ 0x4b8ded
+func(a1) begin
+	SplitString(a1)
+end
+@@end

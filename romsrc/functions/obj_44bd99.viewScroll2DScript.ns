@@ -1,0 +1,15 @@
+@@ 0x44bd69
+func(a1, a2) begin
+	local l1, l2;
+	l1 := self:Parent();
+	if (self:GetArrow(a1) = 'more) then begin
+			l2 := Ticks();
+			l1:Scroll(a1);
+			RefreshViews();
+			if ((l2 := (Ticks() - l2)) < scrollingSleepTime) then begin
+					Sleep((scrollingSleepTime - l2))
+				end
+		end;
+	l1:SetScrollers()
+end
+@@end

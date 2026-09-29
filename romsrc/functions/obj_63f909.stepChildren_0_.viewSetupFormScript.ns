@@ -1,0 +1,5 @@
+@@ 0x4321a1
+func() begin
+	(increment := self:Parent().increment)
+end
+@@end

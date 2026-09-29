@@ -1,0 +1,16 @@
+@@ 0x5519d9
+func(a1, a2) begin
+	if a1 then begin
+			l1 := Length(a1);
+			local l1;
+			(foreach l2, l3 in a1 do begin
+					l3.sequence := (l2 - l1);
+					EntryChange(l3)
+				end)
+		end;
+	(if a2 then (foreach l2, l3 in a2 do begin
+				l3.sequence := (1000 + l2);
+				EntryChange(l3)
+			end))
+end
+@@end

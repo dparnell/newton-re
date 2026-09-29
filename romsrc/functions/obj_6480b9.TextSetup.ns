@@ -1,0 +1,8 @@
+@@ 0x5304b9
+func() begin
+	(if (not vars.(configSlot)) then begin
+			self:ensureServerSetup();
+			labelCommands[self:LabelIndex(server:getdefaultConfig())]
+		end else labelCommands[self:LabelIndex(GetUserConfig(configSlot))])
+end
+@@end

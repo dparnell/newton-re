@@ -1,0 +1,6 @@
+@@ 0x7a8931
+func() begin
+	PlaySound(@102);
+	(if fReadyToQuit then self:SetupClose() else (fReadyToQuit := true))
+end
+@@end

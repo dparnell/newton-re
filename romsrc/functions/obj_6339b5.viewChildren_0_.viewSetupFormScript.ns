@@ -1,0 +1,9 @@
+@@ 0x4cb7a9
+func() begin
+	local l1;
+	if ((l1 := TableLookup(@79, error)) = nil) then begin
+			l1 := error
+		end;
+	(text := ParamStr("A printing problem has occurred (^0).", [Array: l1]))
+end
+@@end

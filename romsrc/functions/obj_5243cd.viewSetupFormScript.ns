@@ -1,0 +1,5 @@
+@@ 0x51feb1
+func() begin
+	(self.maxValue := self:CountPages())
+end
+@@end

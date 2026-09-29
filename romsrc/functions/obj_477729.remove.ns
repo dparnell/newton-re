@@ -1,0 +1,13 @@
+@@ 0x45bf15
+func() begin
+	(if (if self.Selection then (self.Selection >= 0)) then begin
+			RemoveAlarm(Stringer([Array: self.ListItems[self.Selection], $:, ownerName]));
+			ArrayRemoveCount(self.ListItems, self.Selection, 1);
+			if (self.Selection >= Length(self.ListItems)) then begin
+					self.Selection := (Length(self.ListItems) - 1)
+				end;
+			self:SetupList();
+			self:RedoChildren()
+		end)
+end
+@@end

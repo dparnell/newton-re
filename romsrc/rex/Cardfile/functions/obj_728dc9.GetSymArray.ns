@@ -1,0 +1,5 @@
+@@ 0x728e31
+func() begin
+	GetGlobals().phoneTypes.phoneClasses
+end
+@@end

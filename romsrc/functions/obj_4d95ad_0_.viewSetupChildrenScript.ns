@@ -1,0 +1,10 @@
+@@ 0x4d9541
+func() begin
+	local l1;
+	if (if (not kids) then data) then begin
+			(l1 := self:LocalBox()).bottom := (l1.bottom - 60);
+			kids := ReFlow(data, '{reflowFont: 12289, unistyle: nil, graphicsGutter: 16, textGutter: -16, viewLineSpacing: 28}, fields.targetBox, l1)
+		end;
+	(if kids then (self.stepChildren := ArrayMunger([Array: ], 0, 0, kids, reflowStart, nil)))
+end
+@@end

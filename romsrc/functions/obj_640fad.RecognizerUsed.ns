@@ -1,0 +1,12 @@
+@@ 0x4893d1
+func(a1) begin
+	(foreach l1 in popup do begin
+			if (l1 <> 'pickseparator) then begin
+					if (if (if HasPath(l1, 'commands) then (l1.commands.(a1) exists)) then l1.commands.(a1).recState) then begin
+							return true
+						end
+				end
+		end);
+	return nil
+end
+@@end

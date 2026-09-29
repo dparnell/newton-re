@@ -1,0 +1,10 @@
+@@ 0x7536e1
+func(a1) begin
+	(if (not stopping) then begin
+			stopping := true;
+			currentStatusSetup.values.titleText := "Stopping...";
+			self:viewSet(currentStatusSetup);
+			protoContext:StopOperation(endpoint)
+		end)
+end
+@@end

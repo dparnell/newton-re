@@ -1,0 +1,27 @@
+@@ 0x516cc5
+func() begin
+	yOffset := 0;
+	drawShapes := [Array: ];
+	l1 := (if (if selectedDates then (Length(selectedDates) > 0)) then selectedDates[0]);
+	if oldShapes then begin
+			self:CarefulCreate(oldShapes, l1)
+		end;
+	local l1;
+	(if (if selectedDates then (Length(selectedDates) > 0)) then (foreach l2 in selectedDates do begin
+				local l4;
+				if (not Header) then begin
+						Header := true;
+						self:CarefulCreate(self:GetDateHeader(l2, yOffset, pageWidth), l2)
+					end;
+				if (not todos) then begin
+						todos := true;
+						if (l4 := GetRoot().calendar:GetToDo()) then begin
+								self:CarefulCreate(l4:GetToDoShapes(l2, yOffset, pageWidth, bodyFont), l2)
+							end
+					end;
+				Header := nil;
+				todos := nil;
+				yOffset := (yOffset + 6)
+			end))
+end
+@@end

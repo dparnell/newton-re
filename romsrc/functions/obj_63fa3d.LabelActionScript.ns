@@ -1,0 +1,5 @@
+@@ 0x472515
+func(a1) begin
+	(if (a1 = (printersInList + 1)) then AddDeferredAction(openNetworkScript, [Array: ]) else (if (a1 = (printersInList + 2)) then AddDeferredAction(openSerialScript, [Array: ]) else (if (if (userConfiguration.printers <> nil) then (Length(userConfiguration.printers) > a1)) then (userConfiguration.currentPrinter := Clone(userConfiguration.printers[a1])))))
+end
+@@end

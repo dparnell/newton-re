@@ -1,0 +1,5 @@
+@@ 0x56b2a5
+func(a1, a2) begin
+	CardAlert('MiscCardError, a1, a2)
+end
+@@end

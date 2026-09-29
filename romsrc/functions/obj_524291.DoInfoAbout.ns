@@ -1,0 +1,5 @@
+@@ 0x51ed99
+func() begin
+	bookAbout:Open()
+end
+@@end

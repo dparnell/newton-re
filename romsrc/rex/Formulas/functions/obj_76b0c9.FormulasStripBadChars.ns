@@ -1,0 +1,21 @@
+@@ 0x76b8e1
+@@const kLiteral_76ba2d
+"0123456789"
+@@main
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6;
+	if (StrEqual((l1 := Substr(a1, 0, 1)), "+") or StrEqual(l1, "-")) then begin
+			a1 := Substr(a1, 1, (StrLen(a1) - 1))
+		end else begin
+			l1 := nil
+		end;
+	l2 := GetLocale().numberFormat;
+	l3 := Stringer([Array: kLiteral_76ba2d, l2.groupSepStr, l2.decimalPoint]);
+	l4 := StringFilter(a1, l3, 'passAll);
+	if (if StrFilled((l5 := StringFilter(a1, l2.decimalPoint, 'passAll))) then (StrLen(l5) > 1)) then begin
+			l6 := StrPos(a1, l2.decimalPoint, 0);
+			l4 := Stringer([Array: Substr(l4, 0, (l6 + 1)), StringFilter(Substr(l4, (l6 + 1), nil), Stringer([Array: kLiteral_76ba2d, l2.groupSepStr]), 'passAll)])
+		end;
+	(if l1 then return Stringer([Array: l1, l4]) else return l4)
+end
+@@end

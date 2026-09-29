@@ -1,0 +1,6 @@
+@@ 0x59c941
+func() begin
+	inherited:viewSetupDoneScript();
+	(if GetRoot().mailSlip:AlarmsEnabled() then enableCheckbox:toggleCheck())
+end
+@@end

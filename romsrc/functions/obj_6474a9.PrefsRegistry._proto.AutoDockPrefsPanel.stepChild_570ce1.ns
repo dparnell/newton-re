@@ -1,0 +1,5 @@
+@@ 0x570ce1
+func() begin
+	(viewValue := GetUserConfig('AutoDockOn))
+end
+@@end

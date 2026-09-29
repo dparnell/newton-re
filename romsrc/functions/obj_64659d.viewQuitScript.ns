@@ -1,0 +1,8 @@
+@@ 0x4313e5
+func() begin
+	if vars._infoButtons then begin
+			SetRemove(vars._infoButtons, self)
+		end;
+	(if popUpView then popUpView:?Close())
+end
+@@end

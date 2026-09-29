@@ -1,0 +1,36 @@
+@@ 0x4e8179
+@@const kROM_255
+@255
+@@const kROM_256
+@256
+@@main
+func(a1, a2, a3, a4) begin
+	a4:SetStatus(ParamStr("^0^1^2", [Array: kROM_255, GetVariable(self, 'title), kROM_256]));
+	l3 := [Array: nil, nil];
+	if (ClassOf(a1) = 'Array) then begin
+			l1 := a1
+		end else begin
+			l1 := SplitString(a1)
+		end;
+	l4 := GetRoot().calendar;
+	l5 := [Array: ];
+	l6 := [Array: ];
+	l7 := {_proto: protoCalendarFinder, owner: l4, meetingSoupFinders: l5, todoSoupFinders: l6};
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	local l6;
+	local l7;
+	(foreach l8 in soupIndexArray do begin
+			local l10, l11;
+			l10 := l8[1];
+			l2 := Query(GetUnionSoup(l8[0]), {type: 'words, words: l1, indexPath: (if (l10 = 'mtgStopDate) then '_uniqueID else l10)});
+			self:AddFinder(l5, l2, l7, 'text, l1)
+		end);
+	l11 := self:GetToDo();
+	l11:?find(l1, l6, l7, a4);
+	(if ((Length(l5) > 0) or (Length(l6) > 0)) then AddArraySlot(a2, l7))
+end
+@@end

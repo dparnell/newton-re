@@ -1,0 +1,15 @@
+@@ 0x4ded39
+func() begin
+	country := GetCountryEntry(target.country)[0];
+	RemoveSlot(self, 'viewChildren);
+	if (not country.regions) then begin
+			RemoveSlot((viewChildren := Clone(viewChildren)), 3)
+		end;
+	(if (not closestKey) then begin
+			if IsReadOnly(viewChildren) then begin
+					viewChildren := Clone(viewChildren)
+				end;
+			RemoveSlot(viewChildren, 2)
+		end)
+end
+@@end

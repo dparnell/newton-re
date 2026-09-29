@@ -1,0 +1,6 @@
+@@ 0x3c6a19
+func(a1, a2) begin
+	StationeryChangeRegistry.(EnsureInternal(a1)) := a2;
+	nil
+end
+@@end

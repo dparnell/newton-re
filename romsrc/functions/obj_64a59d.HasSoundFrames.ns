@@ -1,0 +1,9 @@
+@@ 0x4252b5
+func() begin
+	(if (if fSoundArray then (Length(fSoundArray) > 0)) then (not (foreach l1 in fSoundArray do begin
+				if (l1:GetSampleCount() = 0) then begin
+						break true
+					end
+			end)))
+end
+@@end

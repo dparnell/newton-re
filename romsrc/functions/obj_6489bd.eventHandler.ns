@@ -1,0 +1,5 @@
+@@ 0x52ec15
+func(a1) begin
+	(if (a1.eventCode = 7) then (if (a1.data = 1) then self:?EventIncoming() else (if (a1.data = 2) then self:?EventRinger() else (if (a1.data = 4) then self:?EventClearDisplay() else (if (a1.data = 5) then self:?EventOffHook() else (if (a1.data = 6) then self:?EventOnHook() else (if (a1.data = 8) then self:?EventConversation() else (if (a1.data = 9) then self:?EventDialTone() else (if (a1.data = 10) then self:?EventRingbackTone() else (if (a1.data = 11) then self:?EventBusyTone() else (if (a1.data = 12) then self:?EventReorder() else self:?EventUnknown(a1.eventCode, a1.data))))))))))) else self:?EventUnknown(a1.eventCode, a1.data))
+end
+@@end

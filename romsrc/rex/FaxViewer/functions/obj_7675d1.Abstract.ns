@@ -1,0 +1,15 @@
+@@ 0x76787d
+func(a1, a2) begin
+	local l1, l2, l3, l4, l5, l6, l7;
+	(if (l1 := (if (a1 <= Length(target.pages)) then imageContainer:MakeAndStashThumbnail(a1))) then begin
+			l2 := ((a2.right - a2.left) - 2);
+			l3 := RelBounds((a2.left + 1), 1, l2, l2);
+			l5 := MakeShape((l3 := FitToBox((l4 := ShapeBounds(l1)), l3, 6)));
+			l6 := MakeText((l6 := ParamStr("Page ^0", [Array: NumberStr(a1)])), a2.left, (a2.top + l2), a2.right, ((a2.top + l2) + fontHeight(viewFont)));
+			if (l7 := MakeShape(l1)) then begin
+					l1 := l7
+				end;
+			[Array: {justification: 'center, font: viewFont}, l6, l5, {transform: [Array: l4, l3]}, l1]
+		end)
+end
+@@end

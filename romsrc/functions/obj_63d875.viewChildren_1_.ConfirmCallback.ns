@@ -1,0 +1,7 @@
+@@ 0x5a5a21
+func(a1) begin
+	(if a1 then AddDeferredCall(func() begin
+			self:doContinue()
+		end, nil))
+end
+@@end

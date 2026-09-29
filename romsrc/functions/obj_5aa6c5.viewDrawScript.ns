@@ -1,0 +1,26 @@
+@@ 0x5aa6a5
+func() begin
+	l1 := {font: 1058816};
+	l2 := window:GetNumberEntries();
+	if (if (A2Z exists) then (l2 > 0)) then begin
+			A2Z:setLetter(window:EntryKey(0)[0])
+		end;
+	l5 := -4;
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	(for l6 := 0 to (l2 - 1) do begin
+			local l9, l10;
+			l4 := dictionary:DecodeRecognitionWord(Clone((l3 := window:GetEntry(l6)).word), l3.attribute);
+			if (l9 := self:GetExpandedWord(l3.word)) then begin
+					StrReplace((l9 := Clone(l9)), SPrintObject($\n), "\u00AC\u", nil);
+					l4 := Stringer([Array: l4, " ", "->", " ", l9])
+				end;
+			self:DrawShape((l10 := MakeText(l4, 9, l5, 216, (l5 + lineHeight))), l1);
+			l5 := (l5 + lineHeight)
+		end);
+	self:WordHilite()
+end
+@@end

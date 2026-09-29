@@ -1,0 +1,11 @@
+@@ 0x4170c5
+func(a1) begin
+	local l1;
+	l1 := {soundData: {sounds: nil, description: "00:00"}};
+	a1.|SoundPaper:NSG| := l1;
+	a1.class := '|SoundPaper:NSG|;
+	a1.viewStationery := 'paperroll;
+	a1.height := self.height;
+	a1
+end
+@@end

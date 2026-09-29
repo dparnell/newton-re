@@ -1,0 +1,5 @@
+@@ 0x7690f9
+func() begin
+	(if ImageTarget.viewCObject then ImageTarget:GetScalingInfo())
+end
+@@end

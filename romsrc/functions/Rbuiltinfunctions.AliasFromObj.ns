@@ -1,0 +1,8 @@
+@@ 0x44fff1
+func(a1) begin
+	if (not a1) then begin
+			return nil
+		end;
+	(if IsInstance(a1, 'alias) then a1 else (if IsNameRef(a1) then a1._alias else (if IsSoupEntry(a1) then MakeEntryAlias(a1))))
+end
+@@end

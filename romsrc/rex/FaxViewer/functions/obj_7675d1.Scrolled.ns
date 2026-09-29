@@ -1,0 +1,6 @@
+@@ 0x767719
+func() begin
+	arrowContainer:ShowArrow('leftArrow, (firstVisibleItem > 1));
+	arrowContainer:ShowArrow('rightArrow, (firstVisibleItem < maxFirstItem))
+end
+@@end

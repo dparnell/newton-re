@@ -1,0 +1,5 @@
+@@ 0x522629
+func() begin
+	(self:Parent().Scroller := self)
+end
+@@end

@@ -1,0 +1,15 @@
+@@ 0x4c6275
+func() begin
+	if fields.pageNumber then begin
+			fields.pageNumber := (fields.pageNumber + 1)
+		end;
+	if _pageTurner then begin
+			_pageTurner:TurnPage()
+		end;
+	(if usingCoverPage then begin
+			usingCoverPage := nil;
+			self:RedoChildren();
+			true
+		end else (if (if coverForm then coverForm.printNextPageScriptX) then coverForm:printNextPageScriptX()))
+end
+@@end

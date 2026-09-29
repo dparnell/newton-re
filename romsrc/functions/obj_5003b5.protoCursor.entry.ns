@@ -1,0 +1,12 @@
+@@ 0x50e811
+func() begin
+	local l1, l2;
+	l1 := nil;
+	if index then begin
+			if (if ((l2 := (index - baseIndex)) >= 0) then (l2 < Length(items))) then begin
+					l1 := items[l2]
+				end
+		end;
+	l1
+end
+@@end

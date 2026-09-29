@@ -1,0 +1,19 @@
+@@ 0x7367d1
+func(a1) begin
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	(foreach l5 in call GetRoot().cardfile.kViewsToDisplay with (a1) do begin
+			l1 := GetRoot().cardfile:GetInfoFrame(l5, a1.class);
+			l3 := call GetRoot().cardfile.kTextDumper with (a1, l1, l1.checkPrefix[0], l3);
+			if (if l1.checkPrefix[1] then (l4 := a1.(l1.checkPrefix[1]))) then begin
+					(for l7 := 0 to Length(l4) do begin
+							AddArraySlot((l2 := Clone(l1.checkPrefix[1])), l7);
+							l3 := call GetRoot().cardfile.kTextDumper with (a1, l1, l2, l3)
+						end)
+				end
+		end);
+	l3
+end
+@@end

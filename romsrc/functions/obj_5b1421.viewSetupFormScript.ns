@@ -1,0 +1,17 @@
+@@ 0x5b13a5
+func() begin
+	local l1, l2;
+	l2 := (if (l1 := Gestalt('[Array: 33554441, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1])) then l1[6] else 0);
+	labelCommands := [Array: ];
+	if (BAnd(l2, 1) <> 0) then begin
+			AddArraySlot(labelCommands, {item: "Internal Speaker", value: 1})
+		end;
+	if (BAnd(l2, 8) <> 0) then begin
+			AddArraySlot(labelCommands, {item: "Line-out", value: 8})
+		end;
+	if (BAnd(l2, 9) = 9) then begin
+			AddArraySlot(labelCommands, {item: "Speaker & Line-out", value: 9})
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

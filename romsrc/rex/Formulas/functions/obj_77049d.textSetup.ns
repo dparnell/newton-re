@@ -1,0 +1,5 @@
+@@ 0x7706e1
+func() begin
+	return labelCommands[curMeasurement]
+end
+@@end

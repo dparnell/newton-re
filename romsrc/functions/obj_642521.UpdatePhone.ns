@@ -1,0 +1,8 @@
+@@ 0x4bc31d
+func(a1) begin
+	(if phone then begin
+			phone.changed := true;
+			(if phone.viewCObject then SetValue(phone, 'text, a1) else (currPhoneNum := a1))
+		end)
+end
+@@end

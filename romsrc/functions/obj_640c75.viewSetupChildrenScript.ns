@@ -1,0 +1,8 @@
+@@ 0x42b81d
+func() begin
+	if (def.tabHeights = 0) then begin
+			def.tabHeights := FontHeight(GetVariable(self, 'viewFont))
+		end;
+	(self.viewChildren := self:LayoutTable(def, hOrg, vOrg))
+end
+@@end

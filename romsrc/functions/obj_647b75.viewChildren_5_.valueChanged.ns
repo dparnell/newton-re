@@ -1,0 +1,6 @@
+@@ 0x48fd0d
+func() begin
+	prefsCache.packageType := (if viewValue then 'all else 'none);
+	EntryChangeXmit(prefsCache, 'backup)
+end
+@@end

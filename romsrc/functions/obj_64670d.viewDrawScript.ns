@@ -1,0 +1,5 @@
+@@ 0x45e7d5
+func() begin
+	self:DrawShape(theShape, '{transferMode: 0})
+end
+@@end

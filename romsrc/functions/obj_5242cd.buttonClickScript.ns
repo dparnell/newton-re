@@ -1,0 +1,5 @@
+@@ 0x51ee21
+func() begin
+	(if base:BookOKClose() then base:Close())
+end
+@@end

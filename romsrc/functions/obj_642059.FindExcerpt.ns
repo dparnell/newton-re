@@ -1,0 +1,5 @@
+@@ 0x5607fd
+func(a1, a2) begin
+	a2[0]
+end
+@@end

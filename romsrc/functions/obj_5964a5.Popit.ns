@@ -1,0 +1,13 @@
+@@ 0x596485
+func(a1) begin
+	local l1;
+	if (Length(selected) = 0) then begin
+			l1 := [Array: GetDataDefs('|nameRef.email|):MakeNameRef({name: {last: "None"}}, '|nameRef.email|)]
+		end else begin
+			l1 := DeepClone(selected)
+		end;
+	_picker:New(class, l1, self, {readOnly: true, suppressFolderTabs: true, suppressCounter: true});
+	base:hilite(nil);
+	true
+end
+@@end

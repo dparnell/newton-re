@@ -1,0 +1,35 @@
+@@ 0x529019
+func() begin
+	l1 := {givenTime: nil, usualTime: nil, usualValue: nil, currentTime: Time(), hasDate: nil, hasTime: nil};
+	l2 := GetRoot();
+	if (l3 := GetVariable(self, 'action)) then begin
+			local l1;
+			local l2;
+			local l3;
+			(for l4 := 0 to (Length(l3) - 1) do begin
+					local l7, l8, l9, l10;
+					if (if isa((l7 := l3[l4][0]), 'schedule_act) then HasPath(l7, 'usualTime)) then begin
+							l1.usualValue := getSlot(l7, 'usualTime);
+							l1.usualTime := StringToDate(l1.usualValue);
+							break
+						end
+				end);
+			l3 := l3[0][0]
+		end;
+	l8 := GetVariable(self, 'when);
+	(l9 := l2.(taskSlip)).totMin := self:GetTime(l8, l1);
+	l9.newTitle := self:SetTitle();
+	l10 := self:SetInvitees(l9);
+	if (if l3 then isa(l3, 'special_event_act)) then begin
+			l9.event := true;
+			l9.repeatIt := GetVariable(l3, 'repeatIt);
+			l9.action := l3
+		end else begin
+			l9.event := nil;
+			l9.repeatIt := nil;
+			self:SetLocation(l9, l10)
+		end;
+	l9:Open();
+	l2.assistant:Close()
+end
+@@end

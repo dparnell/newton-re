@@ -1,0 +1,19 @@
+@@ 0x512b99
+func(a1) begin
+	local l1;
+	l1 := AgendaView:LocalBox();
+	{_proto: protoToDoAgendaView, newBounds: SetBounds(0, a1, l1.right, (l1.bottom + a1)), getToDoBottom: func() begin
+		local l1;
+		(if (if (Length((l1 := self:ChildViewFrames())) = (nTopics - firstTopic)) then (nTopics > 0)) then l1[(Length(l1) - 1)]:GlobalBox().bottom)
+	end, getHeightTopToDo: func() begin
+		local l1;
+		(if (Length((l1 := self:ChildViewFrames())) > 0) then self:ChildViewFrames()[0]:LocalBox().bottom else 0)
+	end, lastIsEnd: func() begin
+		((nTopics - firstTopic) = Length(self:ChildViewFrames()))
+	end, firstIsTop: func() begin
+		(firstTopic = 0)
+	end, ResetScrollViewRect: func() begin
+		AgendaView:calculateScrollRects()
+	end}
+end
+@@end

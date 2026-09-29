@@ -1,0 +1,15 @@
+@@ 0x54ee41
+func(a1) begin
+	local l1, l2;
+	(if (a1 <> nRows) then begin
+			nRows := a1;
+			l1 := Clone(viewBounds);
+			l2 := ((nRows * vSpacing) + 13);
+			l1.top := (l1.bottom - (l2 + 50));
+			if (l1.top < ((-displayParams.appAreaHeight) + 6)) then begin
+					l1.top := (-displayParams.appAreaHeight)
+				end;
+			(if viewCObject then SetValue(self, 'viewBounds, l1) else (viewBounds := l1))
+		end)
+end
+@@end

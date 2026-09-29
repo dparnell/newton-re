@@ -1,0 +1,14 @@
+@@ 0x41dd7d
+func(a1) begin
+	local l1;
+	if (if (l1 := GetMemoryItems(memory)) then (not a1)) then begin
+			a1 := l1
+		end;
+	(if (a1 <> oldLabelCommands) then begin
+			labelCommands := a1;
+			self:SetLabelText(label);
+			labelLine:Dirty();
+			(oldLabelCommands := labelCommands)
+		end)
+end
+@@end

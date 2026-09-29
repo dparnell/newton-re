@@ -1,0 +1,6 @@
+@@ 0x5018e9
+func(a1, a2) begin
+	local l1;
+	(((l1 := (a1 - (a1 mod 1440))) - (a2 * 1440)) + 540)
+end
+@@end

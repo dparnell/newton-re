@@ -1,0 +1,6 @@
+@@ 0x73b941
+func() begin
+	call GetRoot().cardfile.kDoneWithBeaming with (beamer, nil);
+	inherited:?buttonClickScript()
+end
+@@end

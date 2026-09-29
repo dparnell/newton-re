@@ -1,0 +1,9 @@
+@@ 0x443621
+func(a1) begin
+	local l1, l2, l3, l4;
+	l2 := (l1 := self:LocalBox()).bottom;
+	l3 := (StrFontWidth(text, viewFont) + 4);
+	self:DrawShape(MakeRoundRect((l4 := ((l1.right - l3) div 2)), 0, (l4 + l3), l2, 8), '{transferMode: 2, penPattern: 0, fillPattern: 5});
+	true
+end
+@@end

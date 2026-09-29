@@ -1,0 +1,5 @@
+@@ 0x44c34d
+func() begin
+	(text := message)
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x48540d
+func() begin
+	(if (targetView:appObjectFileAction exists) then begin
+			self.text := GetVariable(targetView, 'appObjectFileAction);
+			self.viewBounds := Clone(viewBounds);
+			(self.viewBounds.left := (-(StrWidth(self.text) + 12)))
+		end)
+end
+@@end

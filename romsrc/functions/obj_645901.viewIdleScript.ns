@@ -1,0 +1,12 @@
+@@ 0x4b88fd
+func() begin
+	local l1, l2;
+	(if StrFilled(text) then begin
+			if (if (l2 := (l1 := dataSoup:Query({type: 'words, words: SplitString(text), indexPath: soupQuery.indexPath})):entry()) then (l2 <> 'deleted)) then begin
+					dataCursor:Goto(l2);
+					self:DoRetarget()
+				end;
+			nil
+		end)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x455375
+func() begin
+	context:pickActionScript(selected)
+end
+@@end

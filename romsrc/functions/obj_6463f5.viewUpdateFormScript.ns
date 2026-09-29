@@ -1,0 +1,6 @@
+@@ 0x481591
+func() begin
+	self:viewSetupFormScript();
+	self:Dirty()
+end
+@@end

@@ -1,0 +1,12 @@
+@@ 0x4d2505
+func(a1, a2, a3) begin
+	if (if (a2 = 'oneO) then (a3 = 'twoO)) then begin
+			if (a1.box <> 'inbox) then begin
+					a1.fromRef := self:SendableFromRef()
+				end;
+			a1.state := nil;
+			a1.Folder := nil
+		end;
+	a1
+end
+@@end

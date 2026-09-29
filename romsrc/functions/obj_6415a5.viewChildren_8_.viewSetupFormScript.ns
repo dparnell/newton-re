@@ -1,0 +1,8 @@
+@@ 0x4d61cd
+func() begin
+	if (event = nil) then begin
+			viewFlags := BAnd(viewFlags, bnot(1))
+		end;
+	(viewBounds := RelBounds(0, dpSlip.mtgMsgHeaderTop, 200, 10))
+end
+@@end

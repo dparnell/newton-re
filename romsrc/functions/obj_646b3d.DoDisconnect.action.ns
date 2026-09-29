@@ -1,0 +1,6 @@
+@@ 0x499681
+func() begin
+	fEndpoint:Disconnect(true, CallbackSpec);
+	'waitAsync
+end
+@@end

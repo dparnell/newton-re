@@ -1,0 +1,15 @@
+@@ 0x47a1c5
+func(a1) begin
+	local l1;
+	activeFormat := formats[a1];
+	fields.currentFormat := activeFormat.symbol;
+	if (fields.currentFormat = nil) then begin
+			Throw('|evt.ex.msg|, "Format is missing symbol")
+		end;
+	activeFormat:?SetupSlip(parentBase, fields);
+	if activeFormat.auxForm then begin
+			self:auxSetup()
+		end else nil;
+	(if (if fields.appSymbol then (l1 := GetRoot().(fields.appSymbol))) then l1:SetDefaultFormat(fields.category, target, fields.currentFormat))
+end
+@@end

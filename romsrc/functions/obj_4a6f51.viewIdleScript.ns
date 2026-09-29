@@ -1,0 +1,12 @@
+@@ 0x4a6ef5
+func() begin
+	local l1, l2, l3;
+	l2 := ((l1 := self:LocalBox()).bottom - l1.top);
+	if ((l3 := (viewOriginY + l2)) > creditHeight) then begin
+			l3 := 0
+		end;
+	viewOriginY := l3;
+	self:Effect(131296, nil, @85, nil, [Array: ]);
+	5000
+end
+@@end

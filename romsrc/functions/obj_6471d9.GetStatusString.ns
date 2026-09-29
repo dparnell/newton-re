@@ -1,0 +1,22 @@
+@@ 0x5356d5
+func() begin
+	local l1, l2;
+	l1 := inherited:?GetStatusString();
+	if ((((status = 'DialingTo) or (status = 'DialingDoneTo)) or (status = 'DialingDoneFrom)) or (status = 'RingingFrom)) then begin
+			if StrFilled((l2 := currentItem.name)) then begin
+					l1 := ParamStr(l1, [Array: l2])
+				end else begin
+					if (status = 'RingingFrom) then begin
+							l1 := dialogStatusMsgs.Ringing
+						end else begin
+							l1 := dialogStatusMsgs.DialingDone
+						end
+				end
+		end else begin
+			if (status = 'Connecting) then begin
+					l1 := ParamStr(l1, [Array: transportProvider.name])
+				end
+		end;
+	l1
+end
+@@end

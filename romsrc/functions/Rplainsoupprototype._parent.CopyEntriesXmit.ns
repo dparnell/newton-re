@@ -1,0 +1,10 @@
+@@ 0x634e6d
+func(a1, a2) begin
+	local l1;
+	l1 := self:CopyEntries(a1);
+	if a2 then begin
+			XmitSoupChange(a1:GetName(), a2, 'whatThe, nil)
+		end;
+	l1
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x49f059
+func() begin
+	if (not pix) then begin
+			pix := self:buildPix()
+		end;
+	self:DrawShape(pix, '{font: 1058816})
+end
+@@end

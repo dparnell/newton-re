@@ -1,0 +1,10 @@
+@@ 0x48b345
+func(a1) begin
+	local l1;
+	if (Length((l1 := GetCountryEntry(a1))) > 0) then begin
+			cntrySym := Intern(Stringer([Array: "string.country.", SymbolName(l1[0].symbol)]));
+			SetClass(a1, cntrySym)
+		end;
+	a1
+end
+@@end

@@ -1,0 +1,27 @@
+@@ 0x4c56d9
+func(a1) begin
+	local l1;
+	l1 := (Length(headings) - 1);
+	(while (headings[l1].index > a1) do (l1 := (l1 - 1)));
+	currentHeadingIndex := l1;
+	if (a1 = headings[l1].index) then begin
+			if overviewMode then begin
+					headings[l1].collapsed := nil
+				end else begin
+					headings[l1].collapsed := (not headings[l1].collapsed)
+				end;
+			self:SaveHeadingState(headings[l1]);
+			if (not overviewMode) then begin
+					return nil
+				end else begin
+					a1 := (a1 + 1)
+				end
+		end;
+	if headings[l1].curs then begin
+			headings[l1].curs:Reset()
+		end else begin
+			headings[l1].curs := self:MakeCursor(currentSoupSymbol, headings[l1].spec)
+		end;
+	headings[l1].curs:move(((a1 - headings[l1].index) - 1))
+end
+@@end

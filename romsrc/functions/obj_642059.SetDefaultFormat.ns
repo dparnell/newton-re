@@ -1,0 +1,8 @@
+@@ 0x4647d5
+func(a1, a2, a3) begin
+	if (self.lastFormats = nil) then begin
+			self.lastFormats := {}
+		end;
+	(self.lastFormats.(a1) := a3)
+end
+@@end

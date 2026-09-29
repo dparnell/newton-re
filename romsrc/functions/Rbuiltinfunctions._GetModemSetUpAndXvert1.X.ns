@@ -1,0 +1,12 @@
+@@ 0x5681b1
+func(a1, a2) begin
+	local l1, l2;
+	if a2 then begin
+			|Convert1.XModemSetUps|()
+		end;
+	if (not (l2 := (l1 := GetStores()[0]:GetSoup(@276):Query({indexPath: 'modemName, beginKey: a1, endKey: a1})):entry())) then begin
+			l2 := BFetch(@217, a1, '|str<|, 'modemName)
+		end;
+	l2
+end
+@@end

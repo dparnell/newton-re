@@ -1,0 +1,22 @@
+@@ 0x78d1e5 names
+func(anIndex, aTopic) begin
+	if ((if HasPath(aTopic, 'source) then (aTopic.source = nil)) or (ClassOf(aTopic.source) = 'symbol)) then begin
+			self:Dirty();
+			self:Notify(3, title, "Can\u2019\ut modify a 1.x formatted To Do item");
+			return nil
+		end;
+	curTopic := anIndex;
+	local topic;
+	local undoList;
+	local newCheck;
+	undoList := (foreach topic in topics collect topic.mtgDone);
+	if (if HasPath(aTopic, 'mtgDone) then aTopic.mtgDone) then begin
+			newCheck := nil
+		end else begin
+			newCheck := true
+		end;
+	self:SetDone(anIndex, aTopic, newCheck, true, true);
+	self:StartFlush();
+	AddUndoAction('UndoCheck, [Array: undoList])
+end
+@@end

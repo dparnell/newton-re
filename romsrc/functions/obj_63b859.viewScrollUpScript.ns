@@ -1,0 +1,8 @@
+@@ 0x4e1e79
+func() begin
+	(if (index > 1) then begin
+			index := (index - 1);
+			self:calcPaperDisplay()
+		end)
+end
+@@end

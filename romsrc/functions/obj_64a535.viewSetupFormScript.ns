@@ -1,0 +1,6 @@
+@@ 0x481ba9
+func() begin
+	base._defaultButton := self;
+	inherited:?viewSetupFormScript()
+end
+@@end

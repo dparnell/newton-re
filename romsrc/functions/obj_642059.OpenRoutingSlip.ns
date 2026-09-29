@@ -1,0 +1,5 @@
+@@ 0x4646a9
+func(a1) begin
+	OpenRoutingSlip(a1, self:GetTargetInfo('Routing))
+end
+@@end

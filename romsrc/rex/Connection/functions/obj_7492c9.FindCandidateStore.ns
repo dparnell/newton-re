@@ -1,0 +1,25 @@
+@@ 0x749a25
+func(a1) begin
+	l1 := a1.name;
+	l2 := a1.signature;
+	l3 := [Array: ];
+	local l1;
+	local l2;
+	local l3;
+	(foreach l4 in popup do begin
+			if (l4.store:GetSignature() = l2) then begin
+					break (l3 := [Array: l4.store])
+				end else begin
+					if StrEqual(l4.store:GetName(), l1) then begin
+							SetAdd(l3, l4.store, true)
+						end
+				end
+		end);
+	if (Length(l3) = 0) then begin
+			selectedStore := popup[0].store
+		end else begin
+			selectedStore := l3[0]
+		end;
+	(restoreOptions.stores := [Array: {name: selectedStore:GetName(), signature: selectedStore:GetSignature()}])
+end
+@@end

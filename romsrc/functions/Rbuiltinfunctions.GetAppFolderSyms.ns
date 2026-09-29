@@ -1,0 +1,14 @@
+@@ 0x482c79
+func(a1, a2, a3) begin
+	local l1, l2;
+	l2 := GetUserConfig('userFolderGroups);
+	l1 := (if (if a1 then l2.(a1)) then Clone(l2.(a1)) else [Array: ]);
+	if (not a2) then begin
+			l1 := SetUnion(l1, l2._Global, true)
+		end;
+	if a3 then begin
+			l1 := SetUnion(l1, l2._System, true)
+		end;
+	Sort(l1, '|str<|, functions.GetFolderStr)
+end
+@@end

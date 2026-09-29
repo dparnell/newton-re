@@ -1,0 +1,21 @@
+@@ 0x502c51
+@@const kLiteral_5025e1
+'[Array: ]
+@@main
+func(a1, a2) begin
+	if (not a1) then begin
+			a1 := kLiteral_5025e1
+		end;
+	if (not a2) then begin
+			a2 := kLiteral_5025e1
+		end;
+	(if (a1 = a2) then true else (if (Length(a1) <> Length(a2)) then nil else begin
+				(for l1 := 0 to (Length(a1) - 1) do begin
+						if (a1[l1] <> a2[l1]) then begin
+								return nil
+							end
+					end);
+				true
+			end))
+end
+@@end

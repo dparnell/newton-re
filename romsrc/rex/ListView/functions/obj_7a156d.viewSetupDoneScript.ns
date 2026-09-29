@@ -1,0 +1,17 @@
+@@ 0x78e4dd names
+func() begin
+	topics := editor.topics;
+	if reflowOptions then begin
+			local ti;
+			local topics;
+			(for ti := 0 to (Length(topics) - 1) do begin
+					if ((topics[ti].hideCount = 0) or (topics[ti].hideCount = nil)) then begin
+							totalKids := (totalKids + 1)
+						end
+				end)
+		end else begin
+			totalKids := Length(editor.topics)
+		end;
+	inherited:?viewSetupDoneScript()
+end
+@@end

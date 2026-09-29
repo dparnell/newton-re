@@ -1,0 +1,50 @@
+@@ 0x4e48f1
+func() begin
+	l1 := self:GetSelectionFont();
+	if self:HiliteContainsInk() then begin
+			pop := Clone(popWithInkSizes);
+			if (l1.scale = 50) then begin
+					l2 := 'Scale50
+				end else begin
+					if (l1.scale = 75) then begin
+							l2 := 'Scale75
+						end else begin
+							if (l1.scale = 100) then begin
+									l2 := 'Scale100
+								end
+						end
+				end;
+			if l2 then begin
+					local l1;
+					local l2;
+					(foreach l3, l4 in pop do begin
+							if (l2 = l4.size) then begin
+									pop[l3] := Clone(l4);
+									pop[l3].mark := $\uFC0B
+								end
+						end)
+				end
+		end else begin
+			if (l1.family = -536870912) then begin
+					RemoveSlot(self, 'pop)
+				end else begin
+					if l1.family then begin
+							if (ClassOf(l1) = 'int) then begin
+									l1 := @533[BAnd(l1, 1023)]
+								end else begin
+									l1 := fonts.(l1.family)
+								end;
+							if HasPath(l1, 'userSizes) then begin
+									pop := [Array: ];
+									(foreach l6 deeply in l1.userSizes do begin
+											AddArraySlot(pop, {item: Stringer([Array: l6, $ ]), size: l6})
+										end)
+								end else begin
+									RemoveSlot(self, 'pop)
+								end
+						end
+				end
+		end;
+	inherited:buttonClickScript()
+end
+@@end

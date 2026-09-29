@@ -1,0 +1,7 @@
+@@ 0x5530a5
+func() begin
+	local l1;
+	l1 := (BAnd(GetViewFlags(self), 33554432) <> 0);
+	self:CopyBits(iconPro.((if l1 then 'hilited else 'unhilited)), 0, 0, 8)
+end
+@@end

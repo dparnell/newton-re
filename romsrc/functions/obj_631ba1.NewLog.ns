@@ -1,0 +1,5 @@
+@@ 0x4ecccd
+func() begin
+	self:AddEntryFromStationery('calllog)
+end
+@@end

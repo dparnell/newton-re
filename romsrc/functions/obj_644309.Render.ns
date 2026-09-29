@@ -1,0 +1,7 @@
+@@ 0x4c6321
+func() begin
+	_setupChildrenNow := true;
+	self:?viewSetupChildrenScript();
+	PostCommand(self, 56)
+end
+@@end

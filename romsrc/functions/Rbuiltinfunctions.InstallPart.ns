@@ -1,0 +1,24 @@
+@@ 0x557609
+func(a1) begin
+	local l1;
+	try begin
+			if (a1.partType = 'form) then begin
+					l1 := InstallFormPart(a1)
+				end else begin
+					if (a1.partType = 'auto) then begin
+							l1 := InstallAutoPart(a1)
+						end
+				end
+		end onexception |evt.ex| do begin
+			GetRoot():Notify(3, "Newton", ParamStr("An error occurred activating the package \u201C\u^0\u201D\u. It may not work with this system. Contact the software publisher for further information. (Part ^1, Type ^2)", [Array: a1.packageName, a1.partIndex, a1.partType]))
+		end;
+	if (a1.packageStyle = 'HighROM) then begin
+			GetRoot().ExtrasDrawer:HandleNewHighROMPart(a1)
+		end else begin
+			if (a1.packageStyle = '|1.X|) then begin
+					GetRoot().ExtrasDrawer:|HandleNew1.XPart|(a1)
+				end
+		end;
+	l1
+end
+@@end

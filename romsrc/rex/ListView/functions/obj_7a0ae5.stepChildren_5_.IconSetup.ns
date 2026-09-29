@@ -1,0 +1,5 @@
+@@ 0x79ffc5 names
+func() begin
+	labelCommands[savedPriorityIndex].icon
+end
+@@end

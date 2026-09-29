@@ -1,0 +1,7 @@
+@@ 0x485705
+func() begin
+	local l1;
+	l1 := self:GetTargetInfo('Filing);
+	filingSlip:OpenForUser(self, l1, GetVariable(l1.targetView, 'doCardRouting), GetVariable(l1.targetView, 'dontStartWithFolder))
+end
+@@end

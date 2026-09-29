@@ -1,0 +1,5 @@
+@@ 0x798d95 names
+func(aType) begin
+	(if (if selected then (Length(selected) > 0)) then {target: {_cursor: selected}, targetView: self} else {target: nil, targetView: nil})
+end
+@@end

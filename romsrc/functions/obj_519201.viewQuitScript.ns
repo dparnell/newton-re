@@ -1,0 +1,14 @@
+@@ 0x51dc71
+func() begin
+	paneIndex := 0;
+	browserPane := nil;
+	browserView := nil;
+	self.browser := nil;
+	RemoveSlot(self, 'copperfield);
+	RemoveSlot(self, 'isbn);
+	RemoveSlot(self, 'contentArea);
+	RemoveSlot(self, 'BookData);
+	RemoveSlot(self, 'CurrentBook);
+	RemoveSlot(self, 'ReOrientToScreen)
+end
+@@end

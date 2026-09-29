@@ -1,0 +1,9 @@
+@@ 0x6341fd
+func(a1) begin
+	local l1, l2;
+	if (not (l2 := a1:GetSoup((l1 := self:GetName())))) then begin
+			l2 := CreateUSoupMember(l1, a1)
+		end;
+	l2
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x7713b5
+func() begin
+	inherited:ClearAllFields();
+	TotalPayments:SetNumericValueString(nil);
+	TotalInterest:SetNumericValueString(nil)
+end
+@@end

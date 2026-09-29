@@ -1,0 +1,20 @@
+@@ 0x42cc11
+func(a1) begin
+	local l1, l2;
+	InkOff(a1);
+	clicker();
+	l2 := (if ((l1 := self:Parent()) = GetRoot()) then RelBounds(displayParams.appAreaGlobalLeft, displayParams.appAreaGlobalTop, displayParams.appAreaWidth, displayParams.appAreaHeight) else l1:GlobalBox());
+	if (if (if (not ViewContainsCaretView(self)) then CommandKeyboardConnected()) then (not RestoreKeyView(self))) then begin
+			if self.defaultKeyViewName then begin
+					SetKeyView(self.(defaultKeyViewName), 0)
+				end else begin
+					if (if self.textFlags then (BAnd(self.textFlags, 16384) <> 0)) then begin
+							SetKeyView(self, 0)
+						end
+				end
+		end;
+	self:MoveBehind(nil);
+	self:Drag(a1, l2);
+	self:Dirty()
+end
+@@end

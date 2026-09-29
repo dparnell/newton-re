@@ -1,0 +1,23 @@
+@@ 0x74b991
+func() begin
+	if inited then begin
+			return nil
+		end;
+	self.inited := true;
+	self.protoContext := GetRoot().Connection;
+	protoContext:AddOpenWindow(self);
+	self.whichStores := protoContext:ConnectionPrefsRead('storeOptions);
+	if ((not whichStores) or IsFrame(whichStores)) then begin
+			whichStores := [Array: ]
+		end;
+	self.closing := nil;
+	protoContext:BuildApplicationList(func() begin
+		endpoint:IdleConnection(true)
+	end);
+	self.soupOptions := protoContext:ConnectionPrefsRead('soupOptions);
+	self.OriginalViewBounds := Clone(viewBounds);
+	self:AdjustForStores();
+	self:RegisterMyStoreChange();
+	endpoint:StartIdle(self, 2000)
+end
+@@end

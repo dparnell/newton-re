@@ -1,0 +1,12 @@
+@@ 0x4ac685
+func(fields) begin
+	local l1, l2;
+	l1 := layout.dataCursor:clone();
+	if (l2 := layout.masterSoup.theSoup:Query({type: 'index, indexPath: '_uniqueID, startKey: fields.pageID, validTest: func(a1) begin
+		(if (fields.pageID = a1._uniqueID) then (fields.storeID = EntryStore(a1):GetSignature()))
+	end}):entry()) then begin
+			l1:Goto(l2)
+		end;
+	l1
+end
+@@end

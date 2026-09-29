@@ -1,0 +1,5 @@
+@@ 0x46af61
+func() begin
+	(if (wordRight > wordLeft) then IsInk(text[wordLeft]))
+end
+@@end

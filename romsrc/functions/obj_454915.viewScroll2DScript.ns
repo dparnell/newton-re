@@ -1,0 +1,12 @@
+@@ 0x454875
+func(a1, a2) begin
+	if (a1 = 'up) then begin
+			listBase:viewScrollUpScript()
+		end else begin
+			if (a1 = 'down) then begin
+					listBase:viewScrollDownScript()
+				end
+		end;
+	RefreshViews()
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x74aea1
+func(a1) begin
+	return LFetch(whichStores, a1, 0, '|str<|, '[pathExpr: name])
+end
+@@end

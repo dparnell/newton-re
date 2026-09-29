@@ -1,0 +1,22 @@
+@@ 0x4bc3f9
+func() begin
+	(if label then inherited:SetupCommands() else begin
+			l1 := self:GetSymArray();
+			l2 := self:GetTextArray();
+			l3 := filter:PathToText();
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			labelCommands := (foreach l5 in l1 collect {item: l2.(l5), class: l5});
+			if (not currPhoneType) then begin
+					if (if (if l3 then (l4 := ClassOf(l3))) then l2.(l4)) then begin
+							currPhoneType := l4
+						end else begin
+							currPhoneType := l1[0]
+						end
+				end;
+			(label := l2.(currPhoneType))
+		end)
+end
+@@end

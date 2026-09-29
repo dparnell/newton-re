@@ -1,0 +1,14 @@
+@@ 0x4ffa65
+func() begin
+	cursor := nil;
+	selected := nil;
+	pieces := nil;
+	emptyOverviewText := nil;
+	calendar.lastMailFormat := mainViewLastMailFormat;
+	RemoveSlot(calendar, 'routeScripts);
+	if filingButtonView.viewCObject then begin
+			RemoveStepView(statusbar, filingButtonView)
+		end;
+	inherited:?viewQuitScript()
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x462b05
+func() begin
+	poppedView := nil;
+	self:hilite(nil)
+end
+@@end

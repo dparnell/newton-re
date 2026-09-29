@@ -1,0 +1,16 @@
+@@ 0x5496ad
+func() begin
+	local l1;
+	(if (l1 := (BAnd(GetViewFlags(self), 33554432) <> 0)) then begin
+			if (not self.hilitedShape) then begin
+					self.hilitedShape := self:GetIconShapeHilited()
+				end;
+			self:DrawShape(self.hilitedShape, iconStyle)
+		end else begin
+			if (not self.shape) then begin
+					self.shape := self:GetIconShape()
+				end;
+			self:DrawShape(self.shape, iconStyle)
+		end)
+end
+@@end

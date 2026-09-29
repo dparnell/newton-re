@@ -1,0 +1,14 @@
+@@ 0x4f1c25
+func(a1) begin
+	local l1, l2, l3;
+	if (repeatType = 0) then begin
+			mtgInfo := BOr((l1 := DayPicker:GetSelected()), 31)
+		end else begin
+			l2 := Date(((mtgInfo >> 8) * 1440));
+			l3 := (a1 - l2.dayOfWeek);
+			l2.Date := (l2.Date + l3);
+			mtgInfo := (((TotalMinutes((l2 := Date(TotalMinutes(l2)))) div 1440) << 8) + 14)
+		end;
+	self:UpdateText()
+end
+@@end

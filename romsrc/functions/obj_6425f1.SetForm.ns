@@ -1,0 +1,18 @@
+@@ 0x4de525
+func(a1) begin
+	if a1 then begin
+			a1 := GetVariable(self, a1)
+		end;
+	if currentForm then begin
+			currentForm:?flush();
+			if (currentForm <> a1) then begin
+					currentForm:Close()
+				end
+		end;
+	self:ShrinkyDink((if a1 then a1.bigSized else 218));
+	(if (currentForm <> a1) then begin
+			currentForm := nil;
+			(if a1 then a1:Open() else self:UpdateLocationFields())
+		end)
+end
+@@end

@@ -1,0 +1,11 @@
+@@ 0x4adec1
+func() begin
+	(if (if prefView then prefView.viewCObject) then begin
+			newtAppBase:RememberedClose(prefView);
+			RemoveSlot(self, 'prefView)
+		end else begin
+			(prefView := BuildContext(prefsView)).theApp := newtAppBase;
+			newtAppBase:RememberedOpen(prefView)
+		end)
+end
+@@end

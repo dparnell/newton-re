@@ -1,0 +1,5 @@
+@@ 0x423ab5
+func(a1) begin
+	(if (userConfigSlot = 'soundVolumeDb) then self:SysBeep() else (if (userConfigSlot = 'alarmVolumeDb) then PlaySoundIrregardlessAtVolume(GetRegisteredSound(GetUserConfig('alarmSound)), a1)))
+end
+@@end

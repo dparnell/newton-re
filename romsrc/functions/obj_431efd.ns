@@ -1,0 +1,14 @@
+@@ 0x431efd
+func(a1, a2, a3, a4) begin
+	local l1, l2;
+	if (not a1) then begin
+			a1 := Time()
+		end;
+	l1 := self:Init();
+	l2 := ((if (not a1) then Time() else a1) + (a2 div 2));
+	l1.Time := (l2 - (l2 mod a2));
+	l1.increment := a2;
+	l1.context := a4;
+	l1:popup(a3)
+end
+@@end

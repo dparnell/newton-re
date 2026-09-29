@@ -1,0 +1,13 @@
+@@ 0x467af1
+func(a1) begin
+	l2 := Array((l1 := StrLen(a1)), nil);
+	l3 := (l1 - 1);
+	local l1;
+	local l2;
+	local l3;
+	(for l4 := 0 to l3 do begin
+			l2[l4] := SPrintObject(a1[l4])
+		end);
+	return l2
+end
+@@end

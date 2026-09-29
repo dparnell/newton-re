@@ -1,0 +1,8 @@
+@@ 0x75e0e9
+@@const kROM_8276
+@8276
+@@main
+func(a1, a2, a3) begin
+	kROM_8276:OpenOn(a1, a2, a3)
+end
+@@end

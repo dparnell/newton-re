@@ -1,0 +1,91 @@
+@@ 0x5364d5
+@@const kNativeFuncClass
+call func(f) if IsFrame(f) then f.class else f[0] with (GetGlobalFn('StrLen))
+@@const kLiteral_5358f1
+{class: kNativeFuncClass, funcPtr: 7035605, numArgs: 2}
+@@const kFunction_53611d
+func(a1) begin
+	l1 := 0;
+	local l1;
+	(for l2 := 1 to Length(a1) by 2 do begin
+			local l5, l6;
+			l5 := a1[(l2 - 1)];
+			if (l1 < l5) then begin
+					Write(Substr("                                             ", 0, (l5 - l1)))
+				end;
+			l1 := l5;
+			if (l2 < Length(a1)) then begin
+					Write((l6 := SubstituteChars(Stringer([Array: a1[l2]]), "\n", " ")))
+				end else begin
+					return nil
+				end;
+			l1 := (l1 + StrLen(l6))
+		end);
+	Write("\n")
+end
+@@main
+func(a1, a2) begin
+	l1 := a1;
+	l2 := {objects: {count: 0, size: 0}, binary: {count: 0, size: 0}, frame: {count: 0, size: 0}, Array: {count: 0, size: 0}, string: {count: 0, size: 0}, symbol: {count: 0, size: 0}, bitmap: {count: 0, size: 0}, shape: {count: 0, size: 0}, map: {count: 0, size: 0}, Real: {count: 0, size: 0}, instructions: {count: 0, size: 0}, capture: [Array: ], reference: nil, filter: a2};
+	if (not a2) then begin
+			l2.capture := nil
+		end else begin
+			if (ClassOf(a2) <> 'symbol) then begin
+					l2.reference := a2;
+					l2.filter := nil
+				end
+		end;
+	if (not l1) then begin
+			l1 := {undo: [Array: call kLiteral_5358f1 with (l1, 2), call kLiteral_5358f1 with (l1, 3)], root: GetRoot(), vars: vars};
+			l3 := [Array: ]
+		end else begin
+			if (l1 = vars) then begin
+					l3 := [Array: GetRoot()]
+				end else begin
+					if (l1 = GetRoot()) then begin
+							l3 := [Array: vars]
+						end else begin
+							l3 := [Array: GetRoot(), vars]
+						end
+				end
+		end;
+	ObjectSize(l1, l2, l3, SetClass([Array: ], 'pathExpr));
+	l4 := kFunction_53611d;
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	(foreach l5, l6 in l2 do begin
+			if (if (if (ClassOf(l6) = 'frame) then (l5 <> 'reference)) then (l6.count > 0)) then begin
+					call l4 with ([Array: 0, l5, 20, l6.count, 35, l6.size])
+				end
+		end);
+	if a2 then begin
+			Sort((l8 := Clone(l2.capture)), '|>|, (if (a2 = 'allKids) then 'sizeAll else 'size));
+			if (if (a2 <> 'all) then (a2 <> 'allKids)) then begin
+					Write(Stringer([Array: "\n", a2, "\n"]))
+				end;
+			local l8;
+			(foreach l9 in l8 do begin
+					l11 := nil;
+					local l11;
+					(foreach l12 in l9.path do begin
+							if (ClassOf(l12) = 'int) then begin
+									l11 := Stringer([Array: l11, $[, l12, $]])
+								end else begin
+									l11 := Stringer([Array: l11, $., l12])
+								end
+						end);
+					if (if StrFilled(l11) then (l11[0] = $.)) then begin
+							l11 := Substr(l11, 1, nil)
+						end;
+					if (ClassOf(a2) <> 'symbol) then begin
+							call l4 with ([Array: 2, l9.class, 20, "", 30, l11])
+						end else begin
+							call l4 with ([Array: 2, l9.size, 10, l9.sizeAll, 18, l9.class, 30, "", 40, l11])
+						end
+				end)
+		end;
+	(if (not a2) then l2)
+end
+@@end

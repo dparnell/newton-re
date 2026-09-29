@@ -1,0 +1,22 @@
+@@ 0x764e11
+func(a1, a2) begin
+	(if (a2.findType = 'text) then (for l1 := 0 to (Length(a1.pages) - 1) do begin
+				if (l4 := a1.pages[l1].annotations) then begin
+						local l4;
+						(foreach l5 in l4 do begin
+								local l7, l8, l9, l10, l11, l12;
+								if FindStringInFrame(l5, a2.findWords, 'text) then begin
+										imageContainer:GotoPage((l1 + 1));
+										ImageTarget:ZoomTo('fullSize);
+										l8 := (((l7 := l5.viewBounds).right - l7.left) div 2);
+										l9 := ((l7.bottom - l7.top) div 2);
+										l11 := (((l10 := self:LocalBox()).right - l10.left) div 2);
+										l12 := ((l10.bottom - l10.top) div 2);
+										ImageTarget:ScrollTo(((l7.left + l8) - l11), ((l7.top + l9) - l12));
+										return nil
+									end
+							end)
+					end
+			end))
+end
+@@end

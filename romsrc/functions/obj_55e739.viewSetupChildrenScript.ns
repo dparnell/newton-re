@@ -1,0 +1,8 @@
+@@ 0x55e3f9
+func() begin
+	if (not (GetVariable(GetView('viewfrontmostapp), 'find) or additionalFind)) then begin
+			radioCluster.frontMostAppRadioButton.viewFlags := 0
+		end;
+	(if base.savedScope then (self.clusterValue := savedScope))
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x634731
+func(a1, a2, a3) begin
+	local l1;
+	l1 := self:AddToStore(a1, a2);
+	if a3 then begin
+			XmitSoupChange(self:GetName(), a3, 'entryAdded, a1)
+		end;
+	l1
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x52270d
+func() begin
+	self:Parent().scrolledView := self;
+	(self.viewBounds := Clone(viewBounds))
+end
+@@end

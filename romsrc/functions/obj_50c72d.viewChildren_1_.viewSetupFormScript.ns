@@ -1,0 +1,11 @@
+@@ 0x5058b9
+func() begin
+	local l1;
+	if selectedMeeting.repeatTemplate then begin
+			l1 := selectedMeeting.repeatTemplate
+		end else begin
+			l1 := selectedMeeting
+		end;
+	(if (if IsSoupEntry(l1) then EntryStore(l1):IsReadOnly()) then (icon := lockedIcon) else (icon := nil))
+end
+@@end

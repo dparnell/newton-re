@@ -1,0 +1,5 @@
+@@ 0x4ffd59
+func() begin
+	(if (not cursor.items) then self:DrawShape(emptyOverviewText, {font: 12291, justification: 'center}) else inherited:viewDrawScript())
+end
+@@end

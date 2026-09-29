@@ -1,0 +1,11 @@
+@@ 0x4d08c9
+func(a1) begin
+	(if (if (a1 <> 'userCancel) then (status = 'Listening)) then true else begin
+			if (not self:AnySet(manualOnAuto)) then begin
+					self:SetFlag(manualReceive)
+				end;
+			self:TearDownListen();
+			(status = 'idle)
+		end)
+end
+@@end

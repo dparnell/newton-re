@@ -1,0 +1,7 @@
+@@ 0x79f985 names
+func() begin
+	viewValue := task.mtgDone;
+	savedDone := task.mtgDone;
+	inherited:?viewSetupFormScript()
+end
+@@end

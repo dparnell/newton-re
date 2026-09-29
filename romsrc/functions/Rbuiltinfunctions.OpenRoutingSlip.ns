@@ -1,0 +1,168 @@
+@@ 0x46547d
+@@const kFunction_463e65
+func(a1, a2) begin
+	a1
+end
+@@const kLiteral_463e85
+{type: 'routeFormat, symbol: 'bogus, title: "bogus", SetupItem: kFunction_463e65}
+@@main
+func(a1, a2) begin
+	if (a1 = nil) then begin
+			return nil
+		end;
+	if (if OnlyOneRoutingSlip() then CurrentRouteSlip) then begin
+			GetRoot():Notify(3, "Routing", "Sorry.  Another routing slip is already open.");
+			return 'skipErrorMessage
+		end;
+	if (((l1 := GetItemTransport(a1)) = nil) or (l1.dataTypes = nil)) then begin
+			Throw('|evt.ex.ioBox|, -8301)
+		end;
+	if (l1.routingSlip = nil) then begin
+			Throw('|evt.ex.ioBox|, -8302)
+		end;
+	(l2 := BuildContext(l1.routingSlip)).transport := l1;
+	l2.activeFormat := nil;
+	l2.fields := a1;
+	l2.formats := [Array: ];
+	if (a1.state = nil) then begin
+			if (a2 = nil) then begin
+					return nil
+				end;
+			l3 := {|beam:newton|: 'zapSlip, |print:newton|: 'printSlip, |faxsend:newton|: 'faxSlip};
+			if (if (if (l4 := (if a1.appSymbol then GetRoot().(a1.appSymbol))) then (not a1.assistnoverify)) then l4.VerifyRoutingInfo) then begin
+					if ((a2 := l4:VerifyRoutingInfo(a2, a1)) = nil) then begin
+							return 'skipErrorMessage
+						end else begin
+							if a2.targetTitle then begin
+									l2.fields.title := a2.targetTitle
+								end
+						end
+				end;
+			if (if a2.appSymbol then (a2.appSymbol <> a1.appSymbol)) then begin
+					a1.appSymbol := a2.appSymbol;
+					if (if (if (l4 := (if a1.appSymbol then GetRoot().(a1.appSymbol))) then (not a1.assistnoverify)) then l4.VerifyRoutingInfo) then begin
+							if ((a2 := l4:VerifyRoutingInfo(a2, a1)) = nil) then begin
+									return 'skipErrorMessage
+								end else begin
+									if a2.targetTitle then begin
+											l2.fields.title := a2.targetTitle
+										end
+								end
+						end
+				end;
+			l2.target := a2.target;
+			l2.targetView := a2.targetView;
+			l2._nextKeyView := l2.targetView;
+			if (if (l2.target = nil) then l2.targetView) then begin
+					if HasPath(a2, 'targetView.SetupTarget) then begin
+							l5 := nil;
+							if l3.(l2.fields.category) then begin
+									l5 := l2.fields.category;
+									l2.fields.category := l3.(l2.fields.category)
+								end;
+							a2.targetView:?SetupTarget(l2);
+							if l5 then begin
+									l2.fields.category := l5
+								end
+						end
+				end;
+			if (l2.target = nil) then begin
+					return nil
+				end;
+			if (Length(l1.dataTypes) = 0) then begin
+					l2.formats := [Array: kLiteral_463e85]
+				end else begin
+					if ((l6 := GetAppFormats(l2.fields.appSymbol)) = nil) then begin
+							l6 := GetRouteFormats(l2.target)
+						end;
+					if l6 then begin
+							local l1;
+							local l2;
+							local l3;
+							local l4;
+							local l5;
+							local l6;
+							(foreach l7 in l6 do begin
+									if SetOverlaps(l1.dataTypes, l7.dataTypes) then begin
+											SetAdd(l2.formats, l7, true)
+										end
+								end)
+						end
+				end;
+			if (Length(l2.formats) = 0) then begin
+					return 'skipErrorMessage
+				end;
+			if (if (l2.fields.currentFormat = nil) then l4) then begin
+					l2.fields.currentFormat := l4:GetDefaultFormat(l2.fields.category, l2.target)
+				end;
+			if (l2.fields.currentFormat <> nil) then begin
+					(foreach l7 in l2.formats do begin
+							local l9;
+							if (l7.symbol = l2.fields.currentFormat) then begin
+									l2.activeFormat := l7;
+									break
+								end
+						end)
+				end;
+			if (l2.activeFormat = nil) then begin
+					l2.activeFormat := l2.formats[0];
+					l2.fields.currentFormat := l2.activeFormat.symbol;
+					if l4 then begin
+							l4:SetDefaultFormat(l2.fields.category, l2.target, l2.fields.currentFormat)
+						end
+				end;
+			if (if l2.target then (not l2.fields.alternatives)) then begin
+					if (if (l9 := GetHilitedTextItems()) then (Length(l9) > 0)) then begin
+							if (l9 := GlueStrings(l9)) then begin
+									l2.fields.alternatives := GuessAddressee(l9);
+									nameIndex := 0
+								end
+						end
+				end;
+			if HasSlot(l2.activeFormat, 'SetupSlip) then begin
+					l2.activeFormat:SetupSlip(l2, l2.fields)
+				end else begin
+					if (l2.activeFormat:?SetupItem(l2.fields, a2) = nil) then begin
+							GetRoot():Notify(3, l1.title, "This item cannot be sent.");
+							return nil
+						end
+				end;
+			if (if l2.targetView then l2.target) then begin
+					if HasPath(l2, 'targetView.SetupRoutingSlip) then begin
+							l5 := nil;
+							if l3.(l2.fields.category) then begin
+									l5 := l2.fields.category;
+									l2.fields.category := l3.(l2.fields.category)
+								end;
+							l2.targetView:?SetupRoutingSlip(l2.fields);
+							if l5 then begin
+									l2.fields.category := l5
+								end
+						end
+				end;
+			a1.state := 'ready
+		end else begin
+			l2.target := (if l2.fields.body then l2.fields.body else l2.fields);
+			l2.targetView := self;
+			l2.activeFormat := GetCurrentFormat(l2.fields);
+			if l2.activeFormat then begin
+					l2.formats := [Array: l2.activeFormat];
+					l2.target := l2.activeFormat:?ResolveBody(l2.fields)
+				end;
+			if (if (not l2.fields.Connect) then (not (l2.fields.state = 'pending))) then begin
+					l2.Editing := true
+				end
+		end;
+	if (if (a1.state = 'ready) then l1:?SkipRoutingSlip(a1)) then begin
+			if l2.activeFormat then begin
+					a1 := l2.activeFormat:ParseCursor(a1, {target: l2.target, targetView: l2.targetView})
+				end;
+			a1.Connect := true;
+			l1:ItemSubmit(a1);
+			return l2
+		end;
+	l2:Open();
+	OpenedEntryForm(l2, nil);
+	l2
+end
+@@end

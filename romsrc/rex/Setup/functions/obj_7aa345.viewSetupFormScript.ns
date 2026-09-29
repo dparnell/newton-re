@@ -1,0 +1,11 @@
+@@ 0x7aa3bd
+func() begin
+	if (buttonText exists) then begin
+			self.text := buttonText
+		end else begin
+			self.text := "Go Back"
+		end;
+	(viewBounds := Clone(viewBounds)).left := ((viewBounds.right - StrFontWidth(text, viewFont)) - 6);
+	(viewBounds.top := (viewBounds.bottom - fontHeight(viewFont)))
+end
+@@end

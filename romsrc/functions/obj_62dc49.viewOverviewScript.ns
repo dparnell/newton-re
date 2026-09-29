@@ -1,0 +1,5 @@
+@@ 0x4b0f35
+func() begin
+	(if (currentLayout = 'itemLayout) then self:ShowLayout('overview) else layout:ToggleOverview())
+end
+@@end

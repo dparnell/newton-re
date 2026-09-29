@@ -1,0 +1,6 @@
+@@ 0x559111
+func(a1, a2) begin
+	local l1, l2;
+	(if (l1 := a2:GetSoup("Packages")) then l1:Query((l2 := {beginKey: a1, endKey: a1, indexPath: 'packageName, tagspec: '{all: _package}})):entry())
+end
+@@end

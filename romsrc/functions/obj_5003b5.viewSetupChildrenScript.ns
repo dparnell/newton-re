@@ -1,0 +1,30 @@
+@@ 0x4ffc45
+func() begin
+	local l1, l2, l3, l4;
+	if (not cursor) then begin
+			l1 := self:LocalBox();
+			cursor := protoCursor:New(calendar, (l1.bottom div lineHeight));
+			l2 := 536870911;
+			l3 := 536870911;
+			if calendar:IsDisplayingMeetings() then begin
+					l2 := self:FindFirstAppointmentDate(selectedDates[0])
+				end;
+			if calendar:IsDisplayingToDoItems() then begin
+					if ((l3 := calendar.ToDoListView:nextToDoDate(selectedDates[0])) = nil) then begin
+							l3 := 536870911
+						end
+				end;
+			if ((l4 := min(l2, l3)) <> 536870911) then begin
+					cursor:Initialize(l4);
+					prevDate := nil
+				end else begin
+					cursor:Initialize(nil);
+					emptyOverviewText := MakeTextLines(ParamStr("No items on or after\n^0.", [Array: LongDateStr(selectedDates[0], DateSpecLong)]), {left: self:LocalBox().left, top: 80, right: self:LocalBox().right, bottom: (80 + (lineHeight * 2))}, lineHeight, 12291);
+					cursor.atEndOfCursor := true
+				end
+		end else begin
+			cursor:ResetToFirstVisibleItem()
+		end;
+	(if (not cursor.items) then (self.numLines := 0) else self:SetupAbstracts(cursor))
+end
+@@end

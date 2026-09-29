@@ -1,0 +1,16 @@
+@@ 0x79c8e5 names
+func(aDate, aYOffset, aWidth, aFont) begin
+	shapes := [Array: {font: aFont, justification: 'left}];
+	lineHt := (GetFontSize(aFont) + 2);
+	local task;
+	local iconShape;
+	local shapes;
+	local lineHt;
+	local result;
+	(foreach task in self:GetToDoItemsForThisDate(aDate) do begin
+			result := self:GetTaskShapes(shapes, task, aYOffset, aWidth, aFont);
+			aYOffset := ((aYOffset + result.height) + 5)
+		end);
+	(if (Length(shapes) = 1) then nil else shapes)
+end
+@@end

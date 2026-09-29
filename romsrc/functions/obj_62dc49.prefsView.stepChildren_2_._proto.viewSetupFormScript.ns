@@ -1,0 +1,5 @@
+@@ 0x4c0fdd
+func() begin
+	(viewValue := (not SetContains(GetRoot().iobox.hideFilter, slot)))
+end
+@@end

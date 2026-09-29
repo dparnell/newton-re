@@ -1,0 +1,19 @@
+@@ 0x5a845d
+func(a1, a2, a3) begin
+	local l1;
+	if (a1 = nil) then begin
+			return nil
+		end;
+	if (l1 := GetDirectoryEntry(a1)) then begin
+			if (not HasSlot(l1, 'extensionPaths)) then begin
+					l1.extensionPaths := {}
+				end;
+			l1.extensionPaths.(a2) := a3;
+			EntryChange(l1)
+		end else begin
+			(l1 := {app: a1, extensionPaths: {}}).extensionPaths.(a2) := a3;
+			GetStores()[0]:GetSoup(@129):Add(l1)
+		end;
+	return l1
+end
+@@end

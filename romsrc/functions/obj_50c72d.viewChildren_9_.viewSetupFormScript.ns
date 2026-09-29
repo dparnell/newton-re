@@ -1,0 +1,12 @@
+@@ 0x507b71
+@@const kROM_126
+@126
+@@main
+func() begin
+	if hideSeriesMsgHeader then begin
+			viewFlags := BAnd(viewFlags, bnot(1))
+		end;
+	self.viewBounds := RelBounds(4, dpSlip.seriesMsgHeaderTop, 200, 10);
+	(self.text := ParamStr("This recurring ^0 occurs between:", [Array: (if (selectedMeeting.viewStationery = 'cribNote) then "event" else kROM_126)]))
+end
+@@end

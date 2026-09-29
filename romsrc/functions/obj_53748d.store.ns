@@ -1,0 +1,5 @@
+@@ 0x53736d
+func() begin
+	(if IsSoupEntry(fentry) then EntryStore(fentry))
+end
+@@end

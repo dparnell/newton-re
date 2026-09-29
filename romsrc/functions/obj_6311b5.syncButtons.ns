@@ -1,0 +1,6 @@
+@@ 0x4e3c05
+func() begin
+	size := (face := (family := nil));
+	nil
+end
+@@end

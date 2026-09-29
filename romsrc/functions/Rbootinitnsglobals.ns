@@ -1,0 +1,17 @@
+@@ 0x3c5b25
+func() begin
+	(foreach l1, l2 in @546 do begin
+			if (not vars.(l1)) then begin
+					vars.(l1) := (if IsFunction(l2) then call l2 with () else l2)
+				end else nil
+		end);
+	(foreach l1, l2 in @547 do begin
+			if (not vars.(l1)) then begin
+					vars.(l1) := Clone(l2)
+				end else nil
+		end);
+	call @118 with ();
+	vars.printDepth := 1;
+	(vars.PrintLength := 16)
+end
+@@end

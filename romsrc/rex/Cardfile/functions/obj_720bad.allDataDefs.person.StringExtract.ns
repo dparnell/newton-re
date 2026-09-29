@@ -1,0 +1,23 @@
+@@ 0x73d4b5
+func(a1, a2) begin
+	l1 := "";
+	if (not StrFilled((l4 := ParamStr("^?0^?1^0, ^1|^0||^1|", [Array: a1.name.last, a1.name.first])))) then begin
+			l4 := "Untitled Person"
+		end;
+	if (a2 > 1) then begin
+			if (if (l3 := a1.phones) then ((l2 := Length(l3)) > 0)) then begin
+					local l1;
+					local l2;
+					local l3;
+					local l4;
+					(for l5 := 0 to (l2 - 1) do begin
+							if StrFilled(l3[l5]) then begin
+									break (l1 := Stringer([Array: " ", MakeDisplayPhone(l3[l5])]))
+								end
+						end)
+				end;
+			l4 := Stringer([Array: l4, "\n", l1])
+		end;
+	l4
+end
+@@end

@@ -1,0 +1,14 @@
+@@ 0x52f4e9
+func(a1, a2, a3) begin
+	if a2 then begin
+			if (a2 = 'standalone) then begin
+					AddArraySlot(a1, a3)
+				end else begin
+					(foreach l1 in a3 do begin
+							AddArraySlot(a1, l1)
+						end)
+				end
+		end;
+	a1
+end
+@@end

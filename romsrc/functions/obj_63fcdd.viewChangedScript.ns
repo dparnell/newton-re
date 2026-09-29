@@ -1,0 +1,5 @@
+@@ 0x429d41
+func(a1, a2) begin
+	(if (a1 = 'viewValue) then self:valueChanged())
+end
+@@end

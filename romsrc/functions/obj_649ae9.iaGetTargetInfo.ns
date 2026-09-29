@@ -1,0 +1,38 @@
+@@ 0x526ed5
+func(a1, a2, a3) begin
+	if (not (l1 := a1:GetActiveView())) then begin
+			GetRoot():Notify(3, "Assist", ParamStr("There is nothing to ^0.", [Array: Lower(Clone(a3))]));
+			return nil
+		end;
+	l2 := l1:GetTargetInfo('Routing);
+	if (not (l3 := GetVariable(a1, 'appSymbol))) then begin
+			GetRoot():Notify(3, "Assist", ParamStr("^0 not supported for frontmost window.", [Array: a3]));
+			return nil
+		end;
+	if (l2.target = nil) then begin
+			GetRoot():Notify(3, "Assist", ParamStr("There is nothing to ^0.", [Array: Lower(Clone(a3))]));
+			return nil
+		end;
+	if ((l4 := GetAppFormats(l3)) = nil) then begin
+			l4 := GetRouteFormats(l2.target)
+		end;
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	local l6;
+	(foreach l7 in (l5 := GetFormatTransports(l4, l2.target)) do begin
+			local l9;
+			if ((l9 := GetVariable(l7, 'appSymbol)) = a2) then begin
+					l6 := true;
+					break
+				end
+		end);
+	if (not l6) then begin
+			GetRoot():Notify(3, "Assist", ParamStr("^0 not supported for frontmost window.", [Array: a3]));
+			return nil
+		end;
+	return l2
+end
+@@end

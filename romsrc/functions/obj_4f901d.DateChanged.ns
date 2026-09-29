@@ -1,0 +1,14 @@
+@@ 0x4f8fdd
+func(a1) begin
+	if dateChangedBecauseMonthPicked then begin
+			AddProcrastinatedSend('calendar, calendar, 'redisplayScript, [Array: ], 500);
+			dateChangedBecauseMonthPicked := nil
+		end else begin
+			if Visible(MonthOverView) then begin
+					self:changeViewTo(previousMainDataDisplay)
+				end;
+			calendar:redisplayScript()
+		end;
+	ClearUndoStacks()
+end
+@@end

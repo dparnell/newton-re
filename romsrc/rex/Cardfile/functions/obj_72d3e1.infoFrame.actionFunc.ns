@@ -1,0 +1,17 @@
+@@ 0x72d855
+func(a1, a2, a3, a4, a5, a6, a7) begin
+	local l1, l2, l3;
+	l2 := a5.(a6).pagerNum;
+	if StrFilled((l3 := a5.(a6).pagerPin)) then begin
+			if StrFilled(l2) then begin
+					l1 := ParsePhone(l2)
+				end else begin
+					l1 := {}
+				end;
+			l1.extension := ParamStr("^?0^0^?1 ^1|||^?1^1|", [Array: l1.extension, l3]);
+			l2 := MakePhone(l1)
+		end;
+	a7.phoneNum := l2;
+	inherited:actionFunc(a1, a2, a3, a4, a5, a6, a7)
+end
+@@end

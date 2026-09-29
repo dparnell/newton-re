@@ -1,0 +1,5 @@
+@@ 0x4362bd
+func() begin
+	realCurs:WhichEnd()
+end
+@@end

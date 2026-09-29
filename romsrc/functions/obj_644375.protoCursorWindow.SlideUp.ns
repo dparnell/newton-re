@@ -1,0 +1,13 @@
+@@ 0x5ba0c1
+func(a1) begin
+	local l1;
+	(for l2 := ((l1 := (dipStick - max(0, ((dipStick + a1) - bufferSize)))) - 1) to 0 by -1 do begin
+			buffer[(l2 + a1)] := buffer[l2]
+		end);
+	(for l2 := 0 to (a1 - 1) do begin
+			buffer[l2] := nil
+		end);
+	cursorLoc := (cursorLoc + a1);
+	(dipStick := (a1 + l1))
+end
+@@end

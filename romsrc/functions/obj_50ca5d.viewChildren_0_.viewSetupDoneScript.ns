@@ -1,0 +1,5 @@
+@@ 0x50c9b1
+func() begin
+	(if (unitsValue = -1) then (text := "") else (text := NumberStr(unitsValue)))
+end
+@@end

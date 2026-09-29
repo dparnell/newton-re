@@ -1,0 +1,33 @@
+@@ 0x4a6291
+@@const kFunction_4a5e7d
+func(a1, a2) begin
+	StrEqual(a1, a2.title)
+end
+@@main
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6;
+	if (l1 := international.locales) then begin
+			if IsReadOnly(l1) then begin
+					l1 := Clone(l1)
+				end;
+			if (l3 := FindLocale((l2 := a1.title))) then begin
+					if (l4 := ArrayPos(l1, l2, 0, kFunction_4a5e7d)) then begin
+							l1[l4] := a1
+						end
+				end else begin
+					AddArraySlot(l1, a1)
+				end;
+			international.(EnsureInternal('locales)) := l1
+		end;
+	(if (l5 := international.localeTable) then begin
+			if IsReadOnly(l5) then begin
+					l5 := Clone(l5)
+				end;
+			if (not (l6 := a1.localeSym)) then begin
+					l6 := Intern(a1.title)
+				end;
+			l5.(l6) := a1;
+			(international.(EnsureInternal('localeTable)) := l5)
+		end)
+end
+@@end

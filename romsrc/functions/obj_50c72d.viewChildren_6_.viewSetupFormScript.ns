@@ -1,0 +1,11 @@
+@@ 0x507071
+func() begin
+	viewBounds := RelBounds(0, dpSlip.dateRangeTop, 220, 18);
+	if hideDateRangeFields then begin
+			viewFlags := BAnd(viewFlags, bnot(1))
+		end;
+	startTime := newFirstDate;
+	stopTime := newStopDate;
+	inherited:viewSetupFormScript()
+end
+@@end

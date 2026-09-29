@@ -1,0 +1,23 @@
+@@ 0x5354e9
+func() begin
+	(if ((not self:GetConfig('phoneAutoReceive)) or (status = 'Connecting)) then begin
+			self:CloseStatusDialog(nil);
+			currentItem := nil;
+			self:SetConfig('phoneAutoReceive, nil);
+			transportProvider := nil;
+			speakerNeedsReset := nil;
+			if callEndpoint then begin
+					self:UpdateStatusSlots('Disconnecting, nil, nil);
+					callEndpoint:Close();
+					callEndpoint := nil
+				end;
+			UnRegCommConfigChange(appSymbol);
+			self:UpdateStatusSlots('idle, nil, nil)
+		end else begin
+			if speakerNeedsReset then begin
+					self:SetSpeaker(true)
+				end;
+			self:UpdateStatusSlots('Listening, nil, nil)
+		end)
+end
+@@end

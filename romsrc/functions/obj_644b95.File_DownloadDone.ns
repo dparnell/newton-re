@@ -1,0 +1,7 @@
+@@ 0x5953cd
+func(a1) begin
+	self:EndTransaction();
+	ClearVBOCache(a1.data);
+	(if a1.doneScript then Perform(self, a1.doneScript, [Array: a1]))
+end
+@@end

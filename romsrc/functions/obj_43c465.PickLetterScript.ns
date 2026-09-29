@@ -1,0 +1,7 @@
+@@ 0x43c445
+func(a1) begin
+	cityList.hilitedIndex := nil;
+	cityList.cursor:GotoKey((if countryAndName then [Array: currentCountry, a1] else a1));
+	cityList:RedoChildren()
+end
+@@end

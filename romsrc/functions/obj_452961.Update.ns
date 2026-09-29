@@ -1,0 +1,6 @@
+@@ 0x452941
+func() begin
+	local l1, l2;
+	(if (if Visible(self) then (l1 := cursor:entry())) then self:setLetter((l2 := (if StrFilled((l2 := pickBase:IndexStr(cursor:entry()))) then l2[0] else $ )), true))
+end
+@@end

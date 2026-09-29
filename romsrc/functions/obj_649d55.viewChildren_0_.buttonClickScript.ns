@@ -1,0 +1,11 @@
+@@ 0x4c2465
+func() begin
+	(if infoSlip then begin
+			infoSlip:Close();
+			(infoSlip := nil)
+		end else (if (if transport then transport.transportInfoForm) then begin
+				layout:FlushData();
+				(infoSlip := transport.transportInfoForm:New(target, transport, self:GlobalBox(), self))
+			end else self:Notify(3, "InOut Box", "No Information Available")))
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x5b9389
+func(a1, a2, a3) begin
+	self.prefix := a1;
+	self.pin := a2;
+	self.loc := a3;
+	self.currentEntry := {};
+	self.currentEntry := {word: nil, attribute: nil, terminalClass: nil};
+	self:PrivateReset(a1, a2, a3)
+end
+@@end

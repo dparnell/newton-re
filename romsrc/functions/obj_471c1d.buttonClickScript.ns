@@ -1,0 +1,5 @@
+@@ 0x471bc5
+func(a1) begin
+	(currentSelection := ListItems[a1])
+end
+@@end

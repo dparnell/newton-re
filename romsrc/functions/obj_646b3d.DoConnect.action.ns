@@ -1,0 +1,6 @@
+@@ 0x499389
+func() begin
+	fEndpoint:Connect(fOptionsOut, CallbackSpec);
+	'waitAsync
+end
+@@end

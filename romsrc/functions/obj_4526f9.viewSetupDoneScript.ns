@@ -1,0 +1,5 @@
+@@ 0x4526d9
+func() begin
+	SetValue(title, 'text, pickerDef.name)
+end
+@@end

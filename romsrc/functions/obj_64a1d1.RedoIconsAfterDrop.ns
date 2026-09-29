@@ -1,0 +1,15 @@
+@@ 0x54c8f5
+func(a1) begin
+	if a1 then begin
+			GetRoot().buttons:RedoIcons()
+		end;
+	needsRecalc := 'all;
+	(if viewCObject then begin
+			iconSpace:RedoChildren();
+			(if memex then begin
+					memex:Close();
+					self:DoInfoMemory()
+				end)
+		end)
+end
+@@end

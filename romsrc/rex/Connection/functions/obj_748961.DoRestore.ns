@@ -1,0 +1,38 @@
+@@ 0x74a56d
+@@const kROM_8269
+@8269
+@@main
+func() begin
+	local l1, l2, l3, l4;
+	if endpoint.closingDown then begin
+			return nil
+		end;
+	self:CollectOptions((l1 := {}));
+	l2 := nil;
+	if (if IsArray(storePicker.labelCommands) then (Length(storePicker.labelCommands) > 0)) then begin
+			l1.storeToUse := storePicker.labelCommands[storePicker.indexValue].store
+		end;
+	(if (if (Length(l1.applications) = 0) then (Length(l1.packages) = 0)) then begin
+			AddDeferredSend(self, 'Notify, [Array: 5, "Dock", "You didn\u2019\ut select anything to restore."]);
+			(restoring := nil)
+		end else begin
+			l3 := 0;
+			if l2 then begin
+					l4 := 0;
+					try begin
+							endpoint:WriteCommand("rall", l4, true)
+						end onexception |evt.ex| do begin
+							endpoint:ConnectionDone((l3 := CurrentException().error))
+						end
+				end else begin
+					try begin
+							endpoint:WriteCommand("ropt", l1, true)
+						end onexception |evt.ex| do begin
+							endpoint:ConnectionDone((l3 := CurrentException().error))
+						end
+				end;
+			base:Close();
+			(if (l3 = 0) then kROM_8269:OpenOnEndpoint(nil, endpoint, nil))
+		end)
+end
+@@end

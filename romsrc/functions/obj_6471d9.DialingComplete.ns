@@ -1,0 +1,34 @@
+@@ 0x5357b9
+func(a1) begin
+	local l1, l2, l3, l4;
+	if (currentItem = nil) then begin
+			return nil
+		end;
+	(try begin
+			if a1 then begin
+					Throw('|evt.ex.comm|, a1)
+				end;
+			(if (status <> 'DialingDoneTo) then begin
+					currentItem.startTime := TimeInSeconds();
+					l2 := {keyedDigits: (l1 := currentItem.numberToDial), SpeakerToggle: transportProvider.config.supportsSpeaker, closeBox: func() begin
+						GetRoot().(appSymbol):CloseStatusDialog(nil)
+					end};
+					l3 := nil;
+					if currentItem.saveAsLog then begin
+							l2.primary := nil;
+							if (StrFilled(l1) or (status <> 'DialingTo)) then begin
+									l3 := true
+								end
+						end;
+					l4 := (if (status = 'DialingTo) then 'DialingDoneTo else 'DialingDoneFrom);
+					(if l3 then begin
+							self:CloseStatusDialog(nil);
+							self:UpdateStatusSlots(l4, 'vPhoneKeypad, l2);
+							(userClosedStatus := nil)
+						end else self:SetStatusDialog(l4, 'vPhoneKeypad, l2))
+				end)
+		end onexception |evt.ex| do begin
+			(if self:HandleThrow() then self:Shutdown())
+		end)
+end
+@@end

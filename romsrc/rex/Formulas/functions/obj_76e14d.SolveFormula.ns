@@ -1,0 +1,33 @@
+@@ 0x76e69d
+func(a1) begin
+	if solvingFormula then begin
+			return nil
+		end;
+	l1 := 0;
+	l2 := Array(Length(FSViews), nil);
+	local l1;
+	local l2;
+	(foreach l3, l4 in FSViews do begin
+			l2[l3] := l4:GetNumericValue();
+			if (l2[l3] = nil) then begin
+					l1 := (l1 + 1)
+				end
+		end);
+	if (l1 = 1) then begin
+			(foreach l3, l6 in l2 do begin
+					if (l6 = nil) then begin
+							solvedFor := l3
+						end
+				end)
+		end;
+	if (if (l1 = 0) then (solvedFor = a1)) then begin
+			AddDeferredSend(self, 'FillInTheSolution, [Array: solvedFor, nil]);
+			self:Notify(3, "Formulas", "You cannot change the field that was being solved. Tap clear then enter the new values.");
+			return nil
+		end;
+	(if (l1 <= 1) then begin
+			l2[solvedFor] := FSViews[solvedFor]:ComputeValue(l2);
+			AddDeferredSend(self, 'FillInTheSolution, [Array: solvedFor, l2[solvedFor]])
+		end)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x4ba609
+func(a1, a2) begin
+	(if (if a1.company then FindStringInFrame(a1.company, a2, nil)) then {item: Stringer([Array: a1.company, " ", $(, a1.address, $)]), id: MakeEntryAlias(a1)})
+end
+@@end

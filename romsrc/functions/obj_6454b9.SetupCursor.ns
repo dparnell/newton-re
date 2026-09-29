@@ -1,0 +1,6 @@
+@@ 0x49d1a1
+func() begin
+	inherited:SetupCursor();
+	(if cursor then (self.cursor := dataCursor:clone()))
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x42ae6d
+func(a1) begin
+	self:ChildViewFrames()[a1].viewValue
+end
+@@end

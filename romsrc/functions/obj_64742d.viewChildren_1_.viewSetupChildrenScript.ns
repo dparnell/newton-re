@@ -1,0 +1,19 @@
+@@ 0x460f7d
+func() begin
+	(self.viewChildren := (foreach l1, l2 in buttonList collect begin
+		local l6;
+		{_proto: (if IsFrame(l2) then begin
+				if (l2.keyValue = 'default) then begin
+						l6 := buttonTemplateDefault
+					end;
+				if (l2.keyValue = 'Close) then begin
+						l6 := buttonTemplateClose
+					end;
+				if (not l2.keyValue) then begin
+						l6 := buttonTemplate
+					end;
+				l6
+			end else buttonTemplate), buttonValue: (if IsFrame(l2) then l2.value else l1), text: (if IsFrame(l2) then l2.text else l2)}
+	end))
+end
+@@end

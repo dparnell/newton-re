@@ -1,0 +1,9 @@
+@@ 0x47a185
+func() begin
+	parentBase := GetVariable(self:Parent(), 'base);
+	inherited:?viewSetupFormScript();
+	(if (if activeFormat then activeFormat.auxForm) then AddDeferredCall(func() begin
+			parentBase:auxSetup()
+		end, nil))
+end
+@@end

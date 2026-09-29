@@ -1,0 +1,17 @@
+@@ 0x443055
+func(a1, a2) begin
+	local l1;
+	if (((l1 := Date(a1)).month <> monthView.month) or (l1.year <> monthView.year)) then begin
+			l1.month := monthView.month;
+			l1.year := monthView.year;
+			l1.Date := 1
+		end;
+	if (if (l1.year = 2920) then ((l1.month + a2) > 12)) then begin
+			a2 := (a2 - 12)
+		end;
+	if (if (l1.year = 2920) then ((l1.month + a2) < 1)) then begin
+			a2 := (a2 + 12)
+		end;
+	IncrementMonth(TotalMinutes(l1), a2)
+end
+@@end

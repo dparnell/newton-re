@@ -1,0 +1,5 @@
+@@ 0x75fff5
+func() begin
+	(if (if IsArray(labelCommands) then (Length(labelCommands) > 0)) then (if IsFrame(labelCommands[curLabelCommand]) then Clone(labelCommands[curLabelCommand].item) else Clone(labelCommands[curLabelCommand])))
+end
+@@end

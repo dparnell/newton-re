@@ -1,0 +1,7 @@
+@@ 0x46bfcd
+func() begin
+	local l1;
+	(l1 := Clone(cText.viewBounds)).bottom := (l1.top + 45);
+	(self.viewBounds := l1)
+end
+@@end

@@ -1,0 +1,14 @@
+@@ 0x4f7ca9
+@@const kFunction_4f4119
+func() begin
+	GetRoot().calendar:RollOverAlarm(nil)
+end
+@@main
+func() begin
+	local l1;
+	Print('RollOverAlarm);
+	self:GetToDo():RollItemsOver();
+	l1 := (((l1 := (Time() + 1440)) - (l1 mod 1440)) + 180);
+	AddAlarm("To Do", l1, nil, kFunction_4f4119, [Array: ])
+end
+@@end

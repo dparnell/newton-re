@@ -1,0 +1,7 @@
+@@ 0x4ae1ed
+func() begin
+	inherited:pickCancelledScript();
+	popup := nil;
+	(statArray := nil)
+end
+@@end

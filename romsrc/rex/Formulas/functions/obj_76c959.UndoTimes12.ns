@@ -1,0 +1,7 @@
+@@ 0x76cbd1
+func(a1) begin
+	AddUndoAction('UndoTimes12, [Array: self:GetNumericValue()]);
+	self:SetNumericValue(a1);
+	self:SolveFormula(lineNumber)
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x44e309
+func(a1, a2, a3) begin
+	local l1;
+	return floor(round((l1 := ((l1 := ((l1 := ((l1 := ((l1 := a1) - a2.left)) / (a2.right - a2.left))) * (a3.right - a3.left))) + a3.left))))
+end
+@@end

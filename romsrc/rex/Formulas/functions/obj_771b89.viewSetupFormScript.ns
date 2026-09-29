@@ -1,0 +1,22 @@
+@@ 0x772269
+func() begin
+	local l1, l2, l3;
+	inherited:?viewSetupFormScript();
+	if ((l1 := self:GetFormulaValues()).(formulaSymbol).country1 = nil) then begin
+			l2 := 'USA
+		end else begin
+			l2 := l1.(formulaSymbol).country1
+		end;
+	SetValue(Country1Field, 'country, l2);
+	if (l1.(formulaSymbol).country2 = nil) then begin
+			l3 := 'Japan
+		end else begin
+			l3 := l1.(formulaSymbol).country2
+		end;
+	SetValue(Country2Field, 'country, l3);
+	(if (l1.(formulaSymbol) <> nil) then begin
+			l1.(formulaSymbol).values[1] := GetExchangeRate(l2, l3);
+			EntryChange(l1)
+		end)
+end
+@@end

@@ -1,0 +1,16 @@
+@@ 0x538bcd
+func() begin
+	local l1, l2;
+	(if self:LookupSoupPackageAndActivate() then begin
+			if (l2 := (l1 := GetRoot().copperfield):CurrentBook()) then begin
+					if (not StrEqual(l2.isbn, fentry.isbn)) then begin
+							l1:Close();
+							l1:viewPreOpenScript(fentry.isbn)
+						end
+				end else begin
+					l1:PrepBook(fentry.isbn)
+				end;
+			self:_Open(l1)
+		end)
+end
+@@end

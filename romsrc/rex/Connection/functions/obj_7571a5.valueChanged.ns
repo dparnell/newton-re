@@ -1,0 +1,22 @@
+@@ 0x757281
+@@const kFunction_757359
+func(a1) begin
+	(if (a1 = 'connect) then GetRoot().Connection:autodock())
+end
+@@main
+func() begin
+	if viewValue then begin
+			connectValues.viewFlags := BOr(connectValues.viewFlags, 1);
+			RegAutoDock('Connection, kFunction_757359)
+		end else begin
+			connectValues.viewFlags := BAnd(connectValues.viewFlags, -2);
+			UnRegAutoDock('Connection)
+		end;
+	protoContext:ConnectionPrefsWrite('autodock, autodock.viewValue);
+	self:SavePrefs();
+	(if (not GetGlobals().ConnectionLikesWorksites) then begin
+			self:parent():SyncView();
+			self:parent():RedoChildren()
+		end)
+end
+@@end

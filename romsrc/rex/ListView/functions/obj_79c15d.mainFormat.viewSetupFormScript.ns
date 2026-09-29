@@ -1,0 +1,6 @@
+@@ 0x79bc0d names
+func() begin
+	target := fields.body;
+	(task := fields.task)
+end
+@@end

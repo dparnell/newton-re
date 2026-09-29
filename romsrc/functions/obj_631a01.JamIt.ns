@@ -1,0 +1,5 @@
+@@ 0x4d3dc5
+func() begin
+	SetValue(outNumber, 'text, self:MungePhone(inNumber, inCountry))
+end
+@@end

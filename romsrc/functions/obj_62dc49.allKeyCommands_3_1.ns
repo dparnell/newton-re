@@ -1,0 +1,5 @@
+@@ 0x4b03bd
+func(a1) begin
+	(if (if _tagKeyButton then _tagKeyButton.viewCObject) then PressButton(_tagKeyButton))
+end
+@@end

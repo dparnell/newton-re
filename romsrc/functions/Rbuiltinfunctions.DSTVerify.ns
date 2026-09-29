@@ -1,0 +1,13 @@
+@@ 0x4201f9
+func(a1) begin
+	local l1, l2, l3;
+	l1 := 0;
+	if (l2 := userConfiguration.location) then begin
+			if ((l3 := (60 * DSTOffset(a1, l2))) <> userConfiguration.daylightsavings) then begin
+					l1 := ((l3 - userConfiguration.daylightsavings) div 60);
+					SetUserConfig('daylightsavings, l3)
+				end
+		end;
+	l1
+end
+@@end

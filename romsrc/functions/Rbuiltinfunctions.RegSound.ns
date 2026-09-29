@@ -1,0 +1,6 @@
+@@ 0x3c65bd
+func(a1, a2) begin
+	SoundRegistry.(EnsureInternal(a1)) := a2;
+	nil
+end
+@@end

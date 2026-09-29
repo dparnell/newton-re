@@ -1,0 +1,10 @@
+@@ 0x62f041
+func(a1, a2, a3) begin
+	local l1;
+	l1 := EntryReplaceWithModTime(a1, a2);
+	if a3 then begin
+			XmitSoupChange(EntrySoup(entry):GetName(), a3, 'entryReplaced, {oldEntry: a1, entry: a2})
+		end;
+	l1
+end
+@@end

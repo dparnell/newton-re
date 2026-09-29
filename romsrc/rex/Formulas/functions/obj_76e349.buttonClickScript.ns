@@ -1,0 +1,11 @@
+@@ 0x76e395
+func() begin
+	l1 := {solvedFor: solvedFor, values: [Array: ]};
+	local l1;
+	(foreach l2 in FSViews do begin
+			AddArraySlot(l1.values, l2:GetNumericValue())
+		end);
+	AddUndoAction('UndoClear, [Array: l1]);
+	self:ClearAllFields()
+end
+@@end

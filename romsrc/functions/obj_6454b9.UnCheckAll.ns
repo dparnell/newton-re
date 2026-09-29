@@ -1,0 +1,7 @@
+@@ 0x49db7d
+func() begin
+	hilitedIndex := nil;
+	selected := nil;
+	layout:DoRetarget()
+end
+@@end

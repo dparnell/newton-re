@@ -1,0 +1,6 @@
+@@ 0x4fc9e5
+func(a1) begin
+	self:RemoveMeetingFromDate(a1, displaydate, nil);
+	true
+end
+@@end

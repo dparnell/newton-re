@@ -1,0 +1,14 @@
+@@ 0x73f12d
+func() begin
+	(if StrFilled(entryLine.text) then begin
+			if (not target) then begin
+					target := {}
+				end;
+			if (not target.(path)) then begin
+					target.(path) := {}
+				end;
+			target.(path).label := entryLine:GetRichString();
+			(lastChanged := path)
+		end)
+end
+@@end

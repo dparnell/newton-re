@@ -1,0 +1,8 @@
+@@ 0x532a71
+func() begin
+	if InkConvert then begin
+			InkConvert:Close()
+		end;
+	(InkConvert := nil)
+end
+@@end

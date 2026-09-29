@@ -1,0 +1,19 @@
+@@ 0x44de1d
+func(a1, a2) begin
+	local l1, l2, l3;
+	a2 := StringFilter(a2, a1.filters[0], 'passAll);
+	l1 := SPrintObject("   -    ");
+	l2 := StrLen(a2);
+	l3 := StrLen(l1);
+	i := 1;
+	j := 1;
+	(while (if (i <= l2) then (j <= l3)) do begin
+			if (a1.format[(l3 - j)] <> $_) then begin
+					l1[(l3 - j)] := a2[(l2 - i)];
+					i := (i + 1)
+				end;
+			(j := (j + 1))
+		end);
+	return l1
+end
+@@end

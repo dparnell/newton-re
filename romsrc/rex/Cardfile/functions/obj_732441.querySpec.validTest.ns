@@ -1,0 +1,6 @@
+@@ 0x73276d
+func(a1) begin
+	local l1;
+	((((not (l1 := a1.class)) or IsSubclass(l1, 'person)) or IsSubclass(l1, 'company)) or IsSubclass(l1, 'owner))
+end
+@@end

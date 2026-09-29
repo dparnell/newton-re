@@ -1,0 +1,9 @@
+@@ 0x4ff1ed
+func() begin
+	local l1, l2, l3;
+	l1 := GetRoot().calendar:GetTextOfRoutedMeeting(target);
+	l2 := self:LocalBox();
+	l3 := TextBounds(l1, {font: 12291}, SetBounds(0, 0, (l2.right - 4), 0));
+	(self.viewChildren := [Array: {viewBounds: l3, viewStationery: 'para, text: l1, viewFont: 12291, recConfig: @449}])
+end
+@@end

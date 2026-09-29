@@ -1,0 +1,16 @@
+@@ 0x4dee1d
+func() begin
+	local l1;
+	if (not StrFilled(target.name)) then begin
+			target.name := Clone("Unnamed City")
+		end;
+	(if FrameDirty(target) then begin
+			self:VerifyUniqueLocation(target);
+			l1 := LocationEntryChange(target);
+			(if cards.romOnly then self:RebuildCardCursor(l1) else (if (l1 <> target) then begin
+						target := l1;
+						cards:Goto(l1)
+					end))
+		end)
+end
+@@end

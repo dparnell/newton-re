@@ -1,0 +1,10 @@
+@@ 0x4e4f61
+func(a1) begin
+	if a1.mtgInvitees then begin
+			(foreach l1 in a1.mtgInvitees do begin
+					l1._alias := nil
+				end)
+		end;
+	(if a1.mtgLocation then (a1.mtgLocation._alias := nil))
+end
+@@end

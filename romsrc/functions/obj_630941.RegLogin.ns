@@ -1,0 +1,9 @@
+@@ 0x5b6c15
+func(a1, a2) begin
+	if IsReadOnly(loginRegistry) then begin
+			loginRegistry := {_proto: loginRegistry}
+		end;
+	loginRegistry.(EnsureInternal(a1)) := a2;
+	nil
+end
+@@end

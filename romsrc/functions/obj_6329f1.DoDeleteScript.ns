@@ -1,0 +1,6 @@
+@@ 0x561d01
+func() begin
+	findAllResults := [Array: ];
+	findAllList:RedoChildren()
+end
+@@end

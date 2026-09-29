@@ -1,0 +1,26 @@
+@@ 0x42a69d
+func() begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11;
+	l1 := SetBounds(0, 0, 0, 0);
+	l2 := SetBounds(0, 0, 0, 0);
+	l3 := Clone(stepChildren[0]);
+	l4 := Clone(stepChildren[1]);
+	l5 := (labelIcon.bounds.right - labelIcon.bounds.left);
+	l6 := (labelIcon.bounds.bottom - labelIcon.bounds.top);
+	l7 := StrFontWidth(labelText, viewFont);
+	l8 := (FontAscent(viewFont) + FontDescent(viewFont));
+	l9 := max(l5, l7);
+	l1.left := (16 + ((l9 - l5) div 2));
+	l1.right := (l1.left + l5);
+	l2.left := (16 + ((l9 - l7) div 2));
+	l2.right := (l2.left + l7);
+	l11 := ((((l10 := self:LocalBox()).bottom - l10.top) - ((l6 + spacing) + l8)) div 2);
+	l1.top := l11;
+	l1.bottom := (l1.top + l6);
+	l2.top := (l1.bottom + spacing);
+	l2.bottom := (l2.top + l8);
+	l3.viewBounds := l1;
+	l4.viewBounds := l2;
+	(self.stepChildren := [Array: l3, l4])
+end
+@@end

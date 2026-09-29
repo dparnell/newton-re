@@ -1,0 +1,59 @@
+@@ 0x466f0d
+func(a1, a2) begin
+	if (a1 = nil) then begin
+			return nil
+		end;
+	if (a2 = nil) then begin
+			return TransportNotify(a1, 'CheckOutBox, '[Array: ])
+		end;
+	if (if a2.hidden then (not a2.completionscript)) then begin
+			a2.hidden := nil
+		end;
+	if a2.printerFormat then begin
+			a2.currentFormat := a2.printerFormat
+		end;
+	if (if (if (a1 = 'mail) then a2.email) then (a2.toRef = nil)) then begin
+			l1 := GetDataDefs('|nameRef.email|);
+			l2 := StrParseTrimmed(a2.email, ",");
+			a2.toRef := [Array: ];
+			local l1;
+			local l2;
+			(foreach l3 in l2 do begin
+					AddArraySlot(a2.toRef, l1:MakeNameRef({name: l3, email: SetClass(l3, '|string.email|)}, '|nameRef.email|))
+				end)
+		end else begin
+			if (a1 = 'fax) then begin
+					if (a2.toRef = nil) then begin
+							a2.toRef := [Array: {name: {last: a2.name}, phone: a2.phoneNumber, country: "USA", asIsPhone: a2.phoneNumber}]
+						end;
+					if HasPath(a2, 'hasCoverPage) then begin
+							a2.coverPage := (if a2.hasCoverPage then 'standard)
+						end
+				end
+		end;
+	if (l5 := GetGroupTransport(a1)) then begin
+			a1 := l5
+		end;
+	if (l6 := GetRoot().(a1)) then begin
+			a2 := Clone(a2);
+			if (l3 := l6:NewItem(nil)) then begin
+					local l5;
+					local l6;
+					(foreach l7, l8 in a2 do begin
+							local l10;
+							l3.(l7) := l8
+						end);
+					if (l3.state = nil) then begin
+							l3.state := 'ready
+						end;
+					if (if (l3.currentFormat = nil) then (not TargetIsCursor(l3))) then begin
+							if (l10 := GetCurrentFormat(l3)) then begin
+									l3.currentFormat := l10.symbol
+								end
+						end;
+					return GetRoot().(l6.owner):submit(l3)
+				end
+		end;
+	nil
+end
+@@end

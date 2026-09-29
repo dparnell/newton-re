@@ -1,0 +1,25 @@
+@@ 0x4f7a59
+func(a1, a2, a3) begin
+	local l1, l2, l3;
+	if (l1 := a1.InstanceNotesData) then begin
+			l2 := BFind(l1, a2, '|<|, 0)
+		end;
+	(if a1.undoNotes then begin
+			if a3 then begin
+					self:StoreLocalNotes(a1, a3, a1.undoNotes, nil)
+				end;
+			RemoveSlot(a1, 'undoNotes)
+		end else (if l2 then begin
+				if a3 then begin
+						l1[l2][0] := a3
+					end else begin
+						if (l3 := ResolveEntryAlias(l1[l2][1])) then begin
+								EntryRemoveFromSoupXmit(l3, appSymbol);
+								a1.undoNotes := l3.notes
+							end;
+						ArrayRemoveCount(l1, l2, 1)
+					end;
+				true
+			end))
+end
+@@end

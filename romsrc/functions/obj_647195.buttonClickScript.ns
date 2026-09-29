@@ -1,0 +1,13 @@
+@@ 0x479d4d
+func() begin
+	popup := [Array: ];
+	local l1;
+	(foreach l2 in transports do begin
+			local l4;
+			if (if (if (l4 := GetRoot().(l2)) then (l4.group = transport.group)) then SetOverlaps(routingTypes, l4.dataTypes)) then begin
+					AddArraySlot(popup, {item: l4.title, transportSym: l4.appSymbol})
+				end
+		end);
+	inherited:buttonClickScript()
+end
+@@end

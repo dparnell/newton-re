@@ -1,0 +1,6 @@
+@@ 0x5b3bf5
+func() begin
+	local l1;
+	(if (Length((l1 := GetAllSoupBasedModemSetUpNames())) > 0) then (popup := l1) else (self.viewFlags := 0))
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x499715
+func() begin
+	fEndpoint:Bind(fOptionsOut, CallbackSpec);
+	'waitAsync
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x5b71dd
+func() begin
+	self:SetupIdle(30000)
+end
+@@end

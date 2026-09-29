@@ -1,0 +1,6 @@
+@@ 0x7412c5
+func(a1) begin
+	inherited:Retarget(a1);
+	(target := dataCursor:entry())
+end
+@@end

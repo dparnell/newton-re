@@ -1,0 +1,26 @@
+@@ 0x73a8a5
+func() begin
+	local l1, l2;
+	l1 := viewChildren[0];
+	stepChildren := Clone(stepChildren);
+	if l1.nukeRecToggle then begin
+			ArrayMunger(stepChildren, 1, 1, nil, 0, nil)
+		end;
+	if l1.usePhoneKeys then begin
+			stepChildren[0] := {_proto: @676, viewJustify: 144, viewBounds: SetBounds(0, (-126 - extraChildrenHeight), 124, (-extraChildrenHeight))}
+		end else begin
+			if l1.useNumericKeys then begin
+					stepChildren[0] := {_proto: @376, viewJustify: 144, viewBounds: SetBounds(0, (-101 - extraChildrenHeight), 105, (-extraChildrenHeight)), viewFont: keypadFont}
+				end else begin
+					if l1.noKeyboard then begin
+							ArrayMunger(stepChildren, 0, 1, nil, 0, nil)
+						end else nil
+				end
+		end;
+	if (not l1.noKeyboard) then begin
+			l2 := stepChildren[0].viewBounds;
+			extraChildrenHeight := ((extraChildrenHeight + l2.bottom) - l2.top)
+		end;
+	inherited:?viewSetupChildrenScript()
+end
+@@end

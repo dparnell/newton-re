@@ -1,0 +1,13 @@
+@@ 0x5a7ef5
+func(a1, a2, a3, a4, a5, a6) begin
+	local l1;
+	l1 := a5;
+	if (not a2) then begin
+			a2 := GetConversionFrame(a1)
+		end;
+	if a2 then begin
+			l1 := a2:?Convert(a5, a3, a4, a6)
+		end else nil;
+	return l1
+end
+@@end

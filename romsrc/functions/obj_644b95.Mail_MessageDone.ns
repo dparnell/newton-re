@@ -1,0 +1,24 @@
+@@ 0x5957cd
+func(a1) begin
+	local l1, l2;
+	self:EndTransaction();
+	if a1 then begin
+			if (if userConfiguration.mailStripHeaders then StrPos(a1.fromRef.email, "@", 0)) then begin
+					if (l1 := StrPos(a1.text, "----------------------- Headers --", 0)) then begin
+							l1 := (l1 * 2);
+							BinaryMunger(a1.text, l1, ((Length(a1.text) - l1) - 2), nil, 0, nil)
+						end
+				end;
+			if (Length(a1.text) = 2) then begin
+					l2 := "Text of message missing, message was probably too large";
+					self:AddTextToVBO(nil, a1, l2)
+				end;
+			a1.account := curAccount;
+			ClearVBOCache(a1.text);
+			if a1.fromName then begin
+					a1.fromRef.name := Clone(a1.fromName)
+				end
+		end;
+	self:?Mail_Message(a1)
+end
+@@end

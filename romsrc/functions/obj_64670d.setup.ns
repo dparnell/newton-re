@@ -1,0 +1,15 @@
+@@ 0x45e871
+func(a1) begin
+	local l1, l2, l3;
+	l1 := self:LocalBox();
+	thumbnailBox := MakeShape((thumbnailBounds := FitToBox((l2 := ShapeBounds(a1)), l1, viewJustify)));
+	thumbnail := MakeBitmap((l1.right - l1.left), (l1.bottom - l1.top), nil);
+	DrawIntoBitmap(a1, {transform: [Array: l2, thumbnailBounds]}, thumbnail);
+	ClearVBOCache(thumbnail);
+	(if (self:GetScalingInfo exists) then begin
+			greyBox := MakeShape(RelBounds(0, 0, 1, 1));
+			theShape := [Array: thumbnail, '{pensize: 0, fillPattern: 3, transferMode: 3}, MakeShape(self:LocalBox()), {transferMode: 0, clipping: greyBox}, thumbnail, '{pensize: 2, penPattern: 3, transferMode: 0}, greyBox];
+			(if (l3 := self:GetScalingInfo()) then self:RelocateGreyBox(self:GetScalingInfo()))
+		end else (theShape := thumbnail))
+end
+@@end

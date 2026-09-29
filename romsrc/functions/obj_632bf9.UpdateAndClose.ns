@@ -1,0 +1,57 @@
+@@ 0x487e19
+@@const kLiteral_4836e1
+"Filing"
+@@const kLiteral_486fb5
+"The folder named \u201C\u^0\u201D\u already exists."
+@@main
+func() begin
+	local l1, l2, l3, l4, l5;
+	newName := folderEditLine.entryLine.text;
+	l1 := GetUserConfig('userFolderGroups);
+	l2 := (if Visible(localOnlyCheckBox) then localOnlyCheckBox.viewValue else (not SetContains(l1._Global, oldSymbol)));
+	newApp := (if doGlobalFolders then (if (if doLocalFolders then l2) then theApp else '_Global) else theApp);
+	if (if ((newSymbol := GenFolderSym(newName)) = nil) then (oldSymbol = nil)) then begin
+			self:Close();
+			return nil
+		end;
+	l3 := (if newSymbol then SetContains(l1._Global, newSymbol));
+	l4 := (if newSymbol then GetUserConfig('userFolders).(newSymbol));
+	(if (if (not oldSymbol) then (not newSymbol)) then self:Close() else (if (not newSymbol) then (if (if (if (oldApp <> '_Global) then l1._Global) then SetContains(l1._Global, oldSymbol)) then begin
+					RemoveFolder(oldSymbol, oldApp);
+					self:Close();
+					GetRoot().filingSlip:UpdateToFolder(newSymbol)
+				end else self:Confirm(kLiteral_4836e1, ParamStr("Are you sure you want to remove the \u201C\u^0\u201D\u folder?  Items in this folder will be moved to Unfiled.", [Array: oldName]), self, 'ConfirmChange)) else (if (not oldSymbol) then begin
+					if l4 then begin
+							if (if (newApp <> '_Global) then l3) then begin
+									self:Notify(3, kLiteral_4836e1, ParamStr("A global folder named \u201C\u^0\u201D\u already exists. Delete or Rename the global folder to create a local one.", [Array: newName]))
+								end else begin
+									if (if (newApp = '_Global) then (not l3)) then begin
+											self:Notify(3, kLiteral_4836e1, ParamStr("The local folder named \u201C\u^0\u201D\u already exists. Delete or Rename the local folder(s) to create a global one.", [Array: newName]))
+										end else begin
+											l5 := true
+										end
+								end;
+							if (not l5) then begin
+									self:Close()
+								end
+						end else begin
+							l5 := true
+						end;
+					(if l5 then (if ((if (newApp = '_Global) then l3) or (if (if (newApp <> '_Global) then l1.(newApp)) then SetContains(l1.(newApp), newSymbol))) then begin
+								self:Notify(3, kLiteral_4836e1, ParamStr(kLiteral_486fb5, [Array: newName]));
+								self:Close()
+							end else begin
+								AddFolder(newName, newApp);
+								self:Close();
+								GetRoot().filingSlip:UpdateToFolder(newSymbol)
+							end))
+				end else (if (oldSymbol = newSymbol) then begin
+						RenameFolder(oldSymbol, newName, oldApp);
+						self:Close();
+						GetRoot().filingSlip:UpdateToFolder(newSymbol)
+					end else (if (if l4 then ((if (newApp = '_Global) then l3) or (if (if (newApp <> '_Global) then l1.(newApp)) then SetContains(l1.(newApp), newSymbol)))) then begin
+							self:Notify(3, kLiteral_4836e1, ParamStr(kLiteral_486fb5, [Array: newName]));
+							self:Close()
+						end else self:Confirm(kLiteral_4836e1, ParamStr("Are you sure you want to change the name of the \u201C\u^0\u201D\u folder to \u201C\u^1\u201D\u?", [Array: oldName, newName]), self, 'ConfirmChange))))))
+end
+@@end

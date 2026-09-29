@@ -1,0 +1,15 @@
+@@ 0x4840a9
+func() begin
+	if folderEdit.viewCObject then begin
+			folderEdit:Close()
+		end;
+	target := nil;
+	targetView := nil;
+	targetStore := nil;
+	filingButton := nil;
+	folderList := nil;
+	otherOtherTargetView := nil;
+	_nextKeyView := nil;
+	UnRegStoreChange('_filing)
+end
+@@end

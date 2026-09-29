@@ -1,0 +1,19 @@
+@@ 0x52a221
+func() begin
+	local l1, l2, l3, l4, l5;
+	l1 := GetRoot();
+	if (not (l2 := GetGroupTransport(taskType))) then begin
+			l1:Notify(3, "Assist", "No print transport installed.");
+			return nil
+		end;
+	if ((l4 := self:iaGetTargetInfo((l3 := GetView('viewfrontmostapp)), l2, transportStr)) = nil) then begin
+			l1.assistant:Close();
+			return nil
+		end;
+	if ((l2 := l1.(l2):NewItem(l3)) <> nil) then begin
+			l5 := OpenRoutingSlip(l2, l4);
+			l1.assistant:Close()
+		end;
+	(if (not l5) then l1:Notify(3, "Assist", "There is nothing to print."))
+end
+@@end

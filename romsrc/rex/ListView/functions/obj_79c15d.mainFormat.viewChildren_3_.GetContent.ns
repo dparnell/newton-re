@@ -1,0 +1,5 @@
+@@ 0x79bf3d names
+func() begin
+	MakeRichString(task.text, task.styles)
+end
+@@end

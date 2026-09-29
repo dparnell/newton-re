@@ -1,0 +1,6 @@
+@@ 0x4cbeb5
+func() begin
+	_pageTurner := self;
+	self:TurnPage()
+end
+@@end

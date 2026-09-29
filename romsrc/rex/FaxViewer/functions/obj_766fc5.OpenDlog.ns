@@ -1,0 +1,16 @@
+@@ 0x7670a5
+func(a1, a2, a3) begin
+	local l1;
+	warningName := (if (not a1) then 'vBarber else (if (ClassOf(a1) <> 'symbol) then 'vGauge else a1));
+	if (a3 = 'default) then begin
+			a3 := nil
+		end;
+	if (not a2) then begin
+			a2 := fTitle
+		end;
+	fTitle := a2;
+	self:viewset((l1 := {name: warningName, values: {icon: @515, statusText: a2, titleText: a3, barber: (warningName = 'vBarber), gauge: (if (warningName = 'vGauge) then 1), closeBox: nil, primary: nil}}));
+	self:Open();
+	(if (warningName = 'vBarber) then self:SetupIdle(300) else self:SetupIdle(0))
+end
+@@end

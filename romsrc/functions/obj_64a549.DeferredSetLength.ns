@@ -1,0 +1,6 @@
+@@ 0x423409
+func(a1) begin
+	SetLength(samples, (length * self:GetSampleSize()));
+	(if a1 then call a1 with ())
+end
+@@end

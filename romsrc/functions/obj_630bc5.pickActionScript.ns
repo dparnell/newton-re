@@ -1,0 +1,8 @@
+@@ 0x4dbec9
+func(a1) begin
+	AddUndoAction('pickActionScript, [Array: Time()]);
+	lastSeed := (vars.setTimeSeed := Random(0, 10000000));
+	SetTime(a1);
+	GetRoot():Dirty()
+end
+@@end

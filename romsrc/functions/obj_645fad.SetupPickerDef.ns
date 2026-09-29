@@ -1,0 +1,7 @@
+@@ 0x450b1d
+func(a1) begin
+	local l1;
+	l1 := a1.primaryPath;
+	(if IsReadOnly(a1) then (pickerDef := {_proto: a1, class: a1.class, _sortPath: (if l1 then l1 else a1.columns[0].fieldPath)}) else ((pickerDef := a1)._sortPath := (if l1 then l1 else pickerDef.columns[0].fieldPath)))
+end
+@@end

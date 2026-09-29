@@ -1,0 +1,76 @@
+@@ 0x78d0f5 names
+func(aNewOne) begin
+	local newView, theIndex, level, prevLevel, flags, prevIndex, prevTopic, prevView, fontSpec;
+	theIndex := nTopics;
+	if (if (nTopics > 0) then ((aNewOne.viewBounds.top - self:ListBottom()) < viewLineSpacing)) then begin
+			level := Max(1, ((((aNewOne.viewBounds.left - 20) - leftMarkGap) - rightMarkGap) div 20));
+			if HasPath((prevTopic := topics[(theIndex - 1)]), 'level) then begin
+					prevLevel := prevTopic.level
+				end else begin
+					prevLevel := 1
+				end;
+			if (level > prevLevel) then begin
+					level := (prevLevel + 1)
+				end;
+			if (if (if (level > 1) then (prevTopic.hideCount <> nil)) then (prevTopic.hideCount > 0)) then begin
+					self:RevealTopic((theIndex - 1))
+				end;
+			prevView := self:TopicIndexToView((theIndex - 1))
+		end else begin
+			if (nTopics = 0) then begin
+					level := 1;
+					prevView := nil
+				end else begin
+					level := 1;
+					prevIndex := (nTopics - 1);
+					(while (if topics[prevIndex].hideCount then (topics[prevIndex].hideCount > 0)) do (prevIndex := (prevIndex - 1)));
+					prevView := self:TopicIndexToView(prevIndex);
+					prevIndex := (nTopics - 1);
+					(while (if (if (topics[prevIndex].level <> 1) then (topics[prevIndex].level <> nil)) then (prevIndex > 0)) do (prevIndex := (prevIndex - 1)))
+				end
+		end;
+	level := Min(level, maxLevel);
+	if topicFont then begin
+			flags := (if HasPath(aNewOne, 'textFlags) then aNewOne.textFlags else 0);
+			aNewOne.textFlags := BOr(flags, 25);
+			aNewOne.viewFont := topicFont
+		end;
+	self:AddEmptyTopic(theIndex, level);
+	topics[theIndex].text := aNewOne.text;
+	if HasPath(aNewOne, 'styles) then begin
+			topics[theIndex].styles := aNewOne.styles
+		end else begin
+			if ((fontSpec := aNewOne.viewFont) = nil) then begin
+					fontSpec := GetInsertionStyle()
+				end;
+			topics[theIndex].styles := [Array: StrLen(aNewOne.text), fontSpec]
+		end;
+	topics[theIndex].viewBounds := aNewOne.viewBounds;
+	if aNewOne.mtgDone then begin
+			topics[theIndex].mtgDone := aNewOne.mtgDone
+		end;
+	if aNewOne.mtgPriority then begin
+			topics[theIndex].mtgPriority := aNewOne.mtgPriority
+		end;
+	ReplaceObject(aNewOne, Clone(canonicalParaTopic));
+	aNewOne.text := topics[theIndex].text;
+	aNewOne.styles := topics[theIndex].styles;
+	aNewOne.viewBounds := topics[theIndex].viewBounds;
+	aNewOne.index := theIndex;
+	self:UpdateMultipleStores('now);
+	try begin
+			reflow := true;
+			newView := AddView(self, aNewOne);
+			reflow := nil
+		end onexception |evt.ex| do begin
+			reflow := nil;
+			Rethrow()
+		end;
+	self:AdjustParagraph(prevView, newView, (((((level - 1) * 20) + 20) + leftMarkGap) + rightMarkGap), rightMargin);
+	topics[theIndex].viewBounds := newView.viewBounds;
+	curTopic := theIndex;
+	AddUndoAction('UndoAddWriting, [Array: theIndex]);
+	self:DirtyBelow(theIndex);
+	return true
+end
+@@end

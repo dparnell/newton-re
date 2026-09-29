@@ -1,0 +1,9 @@
+@@ 0x726e89
+func(a1, a2) begin
+	inherited:viewChangedScript(a1, a2);
+	(if (not target.(path)) then begin
+			target.(path) := Clone("");
+			self:StartFlush()
+		end)
+end
+@@end

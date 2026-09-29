@@ -1,0 +1,15 @@
+@@ 0x548245
+func() begin
+	self:LockScreen(true);
+	(foreach l1 in self:GetChildIconViews() do begin
+			if (BAnd(GetViewFlags(l1), 33554432) <> 0) then begin
+					if overUp then begin
+							l1:Checkit(nil)
+						end else begin
+							l1:hilite(nil)
+						end
+				end
+		end);
+	self:LockScreen(nil)
+end
+@@end

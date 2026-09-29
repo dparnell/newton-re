@@ -1,0 +1,12 @@
+@@ 0x535649
+func() begin
+	self:CloseStatusDialog(nil);
+	self:UpdateStatusSlots('AnswerInProgress, 'vStatus, nil);
+	self:ItemCommit(currentItem);
+	(try begin
+			(if transportProvider.config.supportsAnswerIncoming then callEndpoint:AnswerIncoming(true) else callEndpoint:MakeOutgoing("", true))
+		end onexception |evt.ex| do begin
+			(if self:HandleThrow() then self:Shutdown())
+		end)
+end
+@@end

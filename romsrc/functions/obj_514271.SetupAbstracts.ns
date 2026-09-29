@@ -1,0 +1,27 @@
+@@ 0x512d95
+func() begin
+	l1 := 0;
+	l3 := (l2 := self:LocalBox()).bottom;
+	l4 := numberOfItems;
+	l5 := items;
+	l2.bottom := lineHeight;
+	self.pieces := Array(l4, nil);
+	self.itemHeights := Array(l4, nil);
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	local l6;
+	local l7;
+	l7 := (for l8 := 0 to (l4 - 1) do begin
+			local l11;
+			l11 := l5[l8].viewStationery;
+			pieces[l8] := self:Abstract(l5[l8], l2);
+			itemHeights[l8] := (l2.bottom - l2.top);
+			l1 := (l1 + itemHeights[l8]);
+			l2.bottom := ((l2.top := l2.bottom) + lineHeight)
+		end);
+	(if l1 then (calendarBottom := l1) else (calendarBottom := 0))
+end
+@@end

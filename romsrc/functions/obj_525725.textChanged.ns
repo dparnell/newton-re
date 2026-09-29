@@ -1,0 +1,5 @@
+@@ 0x5256a5
+func() begin
+	SetValue(assistMsg, 'text, "")
+end
+@@end

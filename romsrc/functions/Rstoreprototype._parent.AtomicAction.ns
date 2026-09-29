@@ -1,0 +1,14 @@
+@@ 0x635cb5
+func(a1) begin
+	local l1;
+	try begin
+			self:Lock();
+			l1 := call a1 with ();
+			self:Unlock()
+		end onexception |evt.ex| do begin
+			self:Abort();
+			Rethrow()
+		end;
+	l1
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x531125
+func() begin
+	local l1;
+	(if (if (l1 := transport:GetConfig('phoneAutoReceive)) then (wasAutoReceive = nil)) then transport:StartAutoReceive() else (if (if (not l1) then (wasAutoReceive = true)) then transport:StopAutoReceive()))
+end
+@@end

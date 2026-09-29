@@ -1,0 +1,5 @@
+@@ 0x7a057d names
+func(unit) begin
+	(if savedDone then self:NotifyCompleted() else inherited:viewClickScript(unit))
+end
+@@end

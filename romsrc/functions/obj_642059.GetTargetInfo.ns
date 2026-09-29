@@ -1,0 +1,14 @@
+@@ 0x449ce5
+func(a1) begin
+	local l1, l2;
+	l1 := GetVariable(self, 'target);
+	l2 := nil;
+	if (a1 = 'Filing) then begin
+			l2 := GetVariable(self, 'targetApp)
+		end;
+	if (not l2) then begin
+			l2 := GetVariable(self, 'targetView)
+		end;
+	{target: l1, targetView: l2, targetStore: (if (if l1 then IsSoupEntry(l1)) then EntryStore(l1))}
+end
+@@end

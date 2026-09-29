@@ -1,0 +1,14 @@
+@@ 0x4c1605
+func() begin
+	(if (if modemprefView then modemprefView.viewCObject) then begin
+			newtAppBase:RememberedClose(modemprefView);
+			RemoveSlot(self, 'modemprefView)
+		end else begin
+			(modemprefView := OpenPrefsTo(PrefsRegistry.CommPreferencesForm)).theApp := newtAppBase;
+			if (not newtAppBase._kiddos) then begin
+					newtAppBase._kiddos := [Array: ]
+				end;
+			SetAdd(newtAppBase._kiddos, GetView(modemprefView), true)
+		end)
+end
+@@end

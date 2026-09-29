@@ -1,0 +1,30 @@
+@@ 0x51e405
+func(a1) begin
+	local l1;
+	if (a1 >= 0) then begin
+			if (browserPane <> nil) then begin
+					RemoveView(base, browserPane);
+					browserView := nil
+				end;
+			paneIndex := pickItems[a1].paneIndex;
+			SetValue(self, 'text, Stringer([Array: $\uFC01, pickItems[a1].item]));
+			if HasSlot((l1 := browsers[paneIndex]), 'list) then begin
+					Outline:Show();
+					if HasSlot(l1, 'outlineClickScript) then begin
+							Outline.outlineClickScript := l1.outlineClickScript
+						end else begin
+							Outline.outlineClickScript := nil
+						end;
+					curIndex := 0;
+					self:RefreshTopics(Outline, curIndex);
+					browserPane := nil
+				end else begin
+					Outline:Hide();
+					browserPane := l1.form;
+					browserView := AddView(browser, browserPane)
+				end;
+			self:SyncView()
+		end;
+	self:hilite(nil)
+end
+@@end

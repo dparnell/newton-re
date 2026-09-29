@@ -1,0 +1,7 @@
+@@ 0x4d1699
+func() begin
+	local l1;
+	l1 := GetRoot().(appSymbol);
+	(if (if GetUserConfig('zapAutoReceive) then (wasAutoReceive = nil)) then AddDeferredCall(functions.StartIRSniffing, nil) else (if (if (not GetUserConfig('zapAutoReceive)) then (wasAutoReceive = true)) then AddDeferredCall(functions.StopIRSniffing, nil)))
+end
+@@end

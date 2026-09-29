@@ -1,0 +1,19 @@
+@@ 0x72b071
+func(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) begin
+	local l1, l2;
+	if phoneLeft then begin
+			a10.leftInfo := phoneLeft
+		end else begin
+			if (a10.justification = 'right) then begin
+					(a8 := Clone(a8)).right := (a8.right - 25)
+				end
+		end;
+	l2 := inherited:?AddAllInfoItem(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+	if (not phoneLeft) then begin
+			if ((l1 := Length(a4)) > 0) then begin
+					phoneLeft := a4[(l1 - 1)].misc.bbox.left
+				end
+		end;
+	l2
+end
+@@end

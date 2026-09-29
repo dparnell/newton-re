@@ -1,0 +1,6 @@
+@@ 0x73237d
+func(a1) begin
+	local l1;
+	(if (peoplePicker.dataClass <> (l1 := labelCommands[a1].symbol)) then peoplePicker:ChangeDataClass(l1))
+end
+@@end

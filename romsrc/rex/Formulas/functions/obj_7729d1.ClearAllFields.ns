@@ -1,0 +1,8 @@
+@@ 0x772cc1
+func() begin
+	DateField:SetNumericValue(nil);
+	DayOfWeekField:SetNumericValueString(nil);
+	WeekInYearField:SetNumericValueString(nil);
+	DayInYearField:SetNumericValueString(nil)
+end
+@@end

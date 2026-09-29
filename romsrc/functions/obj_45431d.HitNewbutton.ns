@@ -1,0 +1,9 @@
+@@ 0x4539b5
+func() begin
+	local l1;
+	(l1 := pickerDef:MakeNameRef(nil, nil))._Unselected := 'totally;
+	l1.labels := (if (labelsFilter <> '_all) then labelsFilter);
+	self:SetTapInfo(l1, nil, nil, 'New);
+	(fOpenEditor := pickerDef:New(fTapinfo, self))
+end
+@@end

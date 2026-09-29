@@ -1,0 +1,16 @@
+@@ 0x511c05
+func(a1, a2) begin
+	local l1;
+	if (((not a2.item) or (not a2.icon)) or (not a2.newMeeting)) then begin
+			ThrowBadTypeWithFrameData(-48416, a2)
+		end;
+	if (not externalTypeRegistry) then begin
+			externalTypeRegistry := {};
+			meetingTypeRegistry := {_proto: MeetingTypesROM}
+		end;
+	l1 := {_proto: a2, item: a2.item, icon: a2.icon, label: a2.item, shape: MakeShape(a2.icon)};
+	externalTypeRegistry.(EnsureInternal(a1)) := l1;
+	meetingTypeRegistry.(EnsureInternal(a1)) := l1;
+	nil
+end
+@@end

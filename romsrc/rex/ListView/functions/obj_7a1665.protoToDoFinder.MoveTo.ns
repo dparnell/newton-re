@@ -1,0 +1,12 @@
+@@ 0x79b735 names
+func(toStore) begin
+	local toSoup;
+	local soupName;
+	toSoup := toStore:GetSoup((soupName := cursor:soup():GetName()));
+	self:ForEachSelected(func(e, topicIndex) begin
+		(if (EntryStore(e) <> toStore) then EntryMove(e, toSoup))
+	end);
+	selected := nil;
+	XmitSoupChange("To Do List", 'todo, 'whatThe, nil)
+end
+@@end

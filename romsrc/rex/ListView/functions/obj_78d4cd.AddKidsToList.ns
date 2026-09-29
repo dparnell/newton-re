@@ -1,0 +1,13 @@
+@@ 0x78ca65 names
+func(aList, anIndex, aLevel) begin
+	if (aLevel = nil) then begin
+			aLevel := 1
+		end;
+	(for ti := (anIndex + 1) to (nTopics - 1) do begin
+			if ((topics[ti].level = nil) or (topics[ti].level <= aLevel)) then begin
+					break
+				end;
+			SetAdd(aList, ti, true)
+		end)
+end
+@@end

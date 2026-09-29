@@ -1,0 +1,11 @@
+@@ 0x4c1c41
+func() begin
+	local l1;
+	l1 := masterSoup.theCursor:entry();
+	masterSoup:SetupCursor();
+	if IsSoupEntry(l1) then begin
+			masterSoup.theCursor:Goto(l1)
+		end;
+	inherited:?SetupCursor()
+end
+@@end

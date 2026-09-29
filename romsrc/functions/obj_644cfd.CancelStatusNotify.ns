@@ -1,0 +1,8 @@
+@@ 0x47fbb1
+func() begin
+	(if activeNotify then begin
+			GetRoot().notifyIcon:KillAction(activeNotify);
+			(activeNotify := nil)
+		end)
+end
+@@end

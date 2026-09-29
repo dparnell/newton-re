@@ -1,0 +1,6 @@
+@@ 0x4dc7b9
+func() begin
+	context:SetNewTimer(0);
+	self:SetupIdle(0)
+end
+@@end

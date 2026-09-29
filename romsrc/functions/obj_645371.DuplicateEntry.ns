@@ -1,0 +1,9 @@
+@@ 0x4af9ad
+func(a1) begin
+	local l1, l2;
+	if (if (l2 := self:GetAppPreferences()) then l2.internalStore) then begin
+			l1 := GetStores()[0]
+		end;
+	self:DuplicateEntryGuts(a1, l1)
+end
+@@end

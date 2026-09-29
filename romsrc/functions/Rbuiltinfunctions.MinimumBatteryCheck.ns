@@ -1,0 +1,13 @@
+@@ 0x563d8d
+@@const kNativeFuncClass
+call func(f) if IsFrame(f) then f.class else f[0] with (GetGlobalFn('StrLen))
+@@const kLiteral_563d19
+{class: kNativeFuncClass, funcPtr: 7037708, numArgs: 0}
+@@main
+func() begin
+	(if call kLiteral_563d19 with () then begin
+			RefreshViews();
+			CallPowerOnFns('emergencyPowerOff)
+		end)
+end
+@@end

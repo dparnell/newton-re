@@ -1,0 +1,9 @@
+@@ 0x741fcd
+func(a1) begin
+	local l1;
+	if ((not (l1 := a1.body).class) or (not l1.version)) then begin
+			a1.body := self.conversion:Convert(l1, 'oneO, 'twoO, nil)
+		end;
+	(if (l1 := inherited:PutAwayScript(a1)) then XmitSoupChange(@47, '_routing, 'entryAdded, l1))
+end
+@@end

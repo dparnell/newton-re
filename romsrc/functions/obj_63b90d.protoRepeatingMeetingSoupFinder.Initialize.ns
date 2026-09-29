@@ -1,0 +1,26 @@
+@@ 0x4ec3f9
+func() begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9;
+	self.repeatingEntryFinders := [Array: ];
+	l1 := findType;
+	l2 := owner;
+	if (findType <> 'text) then begin
+			l4 := ((l3 := (findWhat - (findWhat mod 1440))) + 1440)
+		end;
+	l5 := ((l5 := Time()) - (l5 mod 1440));
+	l7 := 0;
+	l8 := [Array: nil, nil, nil];
+	l9 := cursor:Reset();
+	(while (l9 <> nil) do begin
+			if l9.mtgStartDate then begin
+					l6 := self:AddFoundRepeatingMeetingInstances(l9, l3, l4, l5, l8)
+				end else begin
+					l6 := self:AddFoundMeetingsWithLocalNotes(l9)
+				end;
+			l7 := (l7 + l6);
+			(l9 := cursor:Next())
+		end);
+	cacheCount := l7;
+	self:ChooseEarliestInstance()
+end
+@@end

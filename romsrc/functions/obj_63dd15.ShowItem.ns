@@ -1,0 +1,16 @@
+@@ 0x461b29
+func(a1, a2) begin
+	local l1;
+	l1 := self:AddItem(a1, a2);
+	if ((a1.nfType = 5) or (a1.nfType = 6)) then begin
+			self:ModalDialog()
+		end else begin
+			if modalstate() then begin
+					self:FilterDialog()
+				end else begin
+					self:Open()
+				end
+		end;
+	l1
+end
+@@end

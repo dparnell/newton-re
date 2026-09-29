@@ -1,0 +1,35 @@
+@@ 0x52e935
+func(a1) begin
+	if ((currentDevice := serviceId) = nil) then begin
+			return nil
+		end;
+	l1 := [Array: {label: currentDevice, type: 'service, opCode: 512}];
+	if configOptions then begin
+			l2 := configOptions;
+			if IsFunction(configOptions) then begin
+					l2 := Apply(configOptions, '[Array: ])
+				end;
+			if (if l2 then IsArray(l2)) then begin
+					local l1;
+					local l2;
+					(foreach l3, l4 in l2 do begin
+							AddArraySlot(l1, l4)
+						end)
+				end
+		end;
+	l6 := Length(l1);
+	(foreach l3, l4 in passiveClaim do begin
+			local l6, l7;
+			AddArraySlot(l1, DeepClone(l4))
+		end);
+	l1[l6].data.arglist := [Array: currentDevice];
+	if a1 then begin
+			l1[(l6 + 1)].data.arglist := [Array: nil]
+		end;
+	self:Instantiate(self, l1);
+	self:Bind(nil, {reqTimeout: openTimeout});
+	self:Connect(serviceOption, {reqTimeout: openTimeout});
+	(l7 := [Array: DeepClone(passiveState[0]), passiveState[1]])[0].data.arglist := [Array: currentDevice];
+	self:option(l7, nil)
+end
+@@end

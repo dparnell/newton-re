@@ -1,0 +1,6 @@
+@@ 0x7b108d
+func() begin
+	label := GetLocale().cityLabel;
+	(self.vInputLine.viewFlags := (self.vInputLine.viewFlags + 8388608))
+end
+@@end

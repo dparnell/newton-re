@@ -1,0 +1,6 @@
+@@ 0x48f97d
+func() begin
+	self.soupNameList := GetApplicationNames(godParent:getSrcStore(), true);
+	inherited:?viewSetupFormScript()
+end
+@@end

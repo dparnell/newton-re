@@ -1,0 +1,5 @@
+@@ 0x47fdbd
+func() begin
+	GetRoot().(owner):?RemoveTempItems(appSymbol)
+end
+@@end

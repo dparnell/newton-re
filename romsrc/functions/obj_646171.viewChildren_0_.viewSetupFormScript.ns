@@ -1,0 +1,6 @@
+@@ 0x446719
+func() begin
+	local l1, l2;
+	(if (useAmPm := ((l1 := GetLocale().timeformat).timeCycle = 1)) then (viewBounds := SetBounds(-4, 0, 119, 28)) else (viewBounds := SetBounds((l2 := 10), 0, (119 - l2), 28)))
+end
+@@end

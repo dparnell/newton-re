@@ -1,0 +1,12 @@
+@@ 0x533509
+func(a1, a2, a3) begin
+	if (if (if (if a2 then (not IsImmediate(a2))) then StrFilled(a2)) then (Length(popup) < 25)) then begin
+			if a3 then begin
+					AddArraySlot(popup, 'pickseparator)
+				end;
+			AddArraySlot(popup, {item: a1, value: a2});
+			a3 := nil
+		end;
+	a3
+end
+@@end

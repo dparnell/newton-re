@@ -1,0 +1,5 @@
+@@ 0x4dc331
+func() begin
+	context:?SetNewAlarm(Time, alarmed)
+end
+@@end

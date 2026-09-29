@@ -1,0 +1,5 @@
+@@ 0x4603fd
+func(a1, a2) begin
+	Throw('|evt.ex.fr.intrp;type.ref.frame|, {errorCode: a1, value: a2})
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x4d9db1
+func() begin
+	self.text := "";
+	if StrFilled(fields.toName) then begin
+			self.text := Stringer([Array: self.text, "To:", " ", fields.toName, $\n])
+		end;
+	(if StrFilled(fields.title) then (self.text := Stringer([Array: self.text, "Subject:", " ", fields.title])))
+end
+@@end

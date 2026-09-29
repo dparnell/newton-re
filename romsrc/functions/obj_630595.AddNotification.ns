@@ -1,0 +1,10 @@
+@@ 0x5abeed
+@@const kFunction_5abecd
+func() begin
+	GetRoot().reviewDict:Open()
+end
+@@main
+func() begin
+	(if (not warningRaised) then (self.warningRaised := GetRoot().notifyIcon:AddAction("Review word list", kFunction_5abecd, nil)))
+end
+@@end

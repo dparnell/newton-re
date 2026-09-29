@@ -1,0 +1,6 @@
+@@ 0x444e55
+func(a1) begin
+	spread := nil;
+	self:IntervalChanged()
+end
+@@end

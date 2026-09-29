@@ -1,0 +1,10 @@
+@@ 0x55c9a1
+func() begin
+	(foreach l1 in findApps do begin
+			if (if GetVariable(self, l1) then (not self:Find1(GetVariable(self, l1), 'globalFind, nil))) then begin
+					return nil
+				end
+		end);
+	true
+end
+@@end

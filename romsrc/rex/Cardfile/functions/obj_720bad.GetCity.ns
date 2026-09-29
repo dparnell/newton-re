@@ -1,0 +1,29 @@
+@@ 0x742091
+func(a1) begin
+	if IsEntryAlias((l2 := a1.cityAlias)) then begin
+			l1 := ResolveEntryAlias(l2);
+			if (if EntryValid(target) then (not EntryStore(target):IsReadOnly())) then begin
+					a1.cityAlias := [Array: l1.name, l1.longitude, l1.latitude];
+					EntryChange(a1)
+				end
+		end else begin
+			if IsArray(l2) then begin
+					if ((l4 := Length((l3 := GetCityEntry(l2[0])))) > 1) then begin
+							local l1;
+							local l2;
+							local l3;
+							local l4;
+							(foreach l5 in l3 do begin
+									if (if (l5.longitude = l2[1]) then (l5.latitude = l2[2])) then begin
+											break (l1 := l5)
+										end
+								end)
+						end;
+					if (if (not l1) then (l4 > 0)) then begin
+							l1 := l3[0]
+						end
+				end
+		end;
+	l1
+end
+@@end

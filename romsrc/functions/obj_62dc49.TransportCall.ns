@@ -1,0 +1,5 @@
+@@ 0x4b4169
+func(a1, a2, a3) begin
+	(if (if a1 then a1.(a2)) then AddDeferredSend(self, 'TransportCallX, [Array: a1, a2, a3]))
+end
+@@end

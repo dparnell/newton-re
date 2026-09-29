@@ -1,0 +1,22 @@
+@@ 0x436c31
+func(a1) begin
+	l1 := EntrySoup(a1);
+	l2 := {};
+	local l1;
+	local l2;
+	(foreach l3 in l1:GetIndexes() do begin
+			if (l3.structure = 'slot) then begin
+					l2.(l3.path) := true
+				end else begin
+					(foreach l5 in l3.path do begin
+							l2.(l5) := true
+						end)
+				end
+		end);
+	(foreach l7, l8 in a1 do begin
+			if (not l2.(l7)) then begin
+					RemoveSlot(a1, l7)
+				end
+		end)
+end
+@@end

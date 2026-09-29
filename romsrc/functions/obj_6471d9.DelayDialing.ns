@@ -1,0 +1,21 @@
+@@ 0x5355c9
+func(a1) begin
+	(try begin
+			if abortCall then begin
+					status := 'cancelling;
+					self:CancelRequest('userCancel);
+					return nil
+				end;
+			(if (a1 > 0) then begin
+					self:SetStatus('Connecting, {statusText: (if (a1 > 1) then ParamStr("^0 seconds to dialing\u2026\u", [Array: NumberStr(a1)]) else "1 second to dialing\u2026\u"), primary: {text: "Stop", script: func() begin
+						(GetRoot().(appSymbol).abortCall := true)
+					end}});
+					AddDelayedCall(func(a1) begin
+						self:DelayDialing(a1)
+					end, [Array: (a1 - 1)], 1000)
+				end else self:FinishDialing())
+		end onexception |evt.ex| do begin
+			(if self:HandleThrow() then self:Shutdown())
+		end)
+end
+@@end

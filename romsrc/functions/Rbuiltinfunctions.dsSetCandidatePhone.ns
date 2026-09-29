@@ -1,0 +1,8 @@
+@@ 0x52a2e5
+func(a1, a2, a3) begin
+	(if HasSlot(a1, 'dialdirect) then begin
+			a2.phone := a1.dialdirect;
+			(if (not a2.country) then (a2.country := userConfiguration.location.country))
+		end else (if a3 then (a2.phone := a3[0])))
+end
+@@end

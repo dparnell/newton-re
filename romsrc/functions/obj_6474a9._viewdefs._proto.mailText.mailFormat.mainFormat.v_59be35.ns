@@ -1,0 +1,12 @@
+@@ 0x59be35
+func() begin
+	local l1, l2;
+	if (if (not kids) then data) then begin
+			l1 := SetFontSize((l1 := GetUserConfig('mailFont)), 10);
+			(l2 := InsetRect(fields.printerPageBounds, 60, 0)).top := (l2.top + 60);
+			l2.bottom := (l2.bottom - 60);
+			kids := ReFlow(data, {reflowFont: l1, unistyle: nil, graphicsGutter: 8, textGutter: -8, viewLineSpacing: FontHeight(l1), pageBounds: l2}, fields.targetBox, self:LocalBox())
+		end;
+	(if kids then (self.stepChildren := ArrayMunger([Array: ], 0, 0, kids, reflowStart, nil)))
+end
+@@end

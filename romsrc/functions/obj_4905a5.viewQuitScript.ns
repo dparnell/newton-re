@@ -1,0 +1,11 @@
+@@ 0x490565
+func() begin
+	if (Length(pkgNames) > 0) then begin
+			self:stashItems(pkgNames)
+		end else begin
+			prefsCache.restorePackages := 'Partial;
+			prefsCache.restorePackNames := [Array: ]
+		end;
+	EntryChangeXmit(prefsCache, 'backup)
+end
+@@end

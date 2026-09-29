@@ -1,0 +1,25 @@
+@@ 0x4a76a9
+func(a1) begin
+	local l1, l2;
+	if ((index := (index + a1)) < -1) then begin
+			index := -1
+		end else begin
+			if (index > Length(things)) then begin
+					index := Length(things)
+				end
+		end;
+	l1 := self:entry();
+	l2 := (if (a1 < 0) then -1 else 1);
+	(loop begin
+			if (not (l1 = 'deleted)) then begin
+					if ((not l1) or (not validTest)) then begin
+							break l1
+						end;
+					if call validTest with (l1) then begin
+							break l1
+						end
+				end;
+			(l1 := self:move(l2))
+		end)
+end
+@@end

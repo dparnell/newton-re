@@ -1,0 +1,22 @@
+@@ 0x7360b9
+@@const kROM_8192
+@8192
+@@main
+func(a1) begin
+	(foreach l1 in '[Array: viewSetupFormScript, viewSetupChildrenScript, viewSetupDoneScript, viewQuitScript, viewShowScript, viewHideScript] do begin
+			RemoveSlot(self, l1)
+		end);
+	self._proto := kROM_8192;
+	(if self.viewCObject then (if (self.superSymbol = 'ownerNames) then begin
+				AddDeferredSend(self, 'Close, '[Array: ]);
+				AddDeferredSend(self, 'Open, '[Array: ]);
+				true
+			end else (if (a1.appBase = self) then begin
+					self:Toggle();
+					true
+				end else begin
+					self:RememberedCloseAll();
+					nil
+				end)))
+end
+@@end

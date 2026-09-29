@@ -1,0 +1,11 @@
+@@ 0x54eb39
+func(a1) begin
+	(foreach l1 in |Parts1.x| do begin
+			if (if ('copperfield = l1.app) then StrEqual(a1.isbn, l1.isbn)) then begin
+					SetRemove(|Parts1.x|, l1);
+					break
+				end
+		end);
+	self:InvalIcons()
+end
+@@end

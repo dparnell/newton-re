@@ -1,0 +1,5 @@
+@@ 0x4eb095
+func() begin
+	self:ShowEntry(cursor:entry())
+end
+@@end

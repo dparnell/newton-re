@@ -1,0 +1,5 @@
+@@ 0x4aeec1
+func() begin
+	self:Retarget(nil)
+end
+@@end

@@ -1,0 +1,18 @@
+@@ 0x4ed2dd
+func() begin
+	local l1, l2, l3, l4;
+	(if (if (if (l1 := targetView.target) then StrFilled(l1.name)) then StrFilled(l1.phoneNumber)) then begin
+			if IsRichString(l1.name) then begin
+					l2 := {first: l1.name}
+				end else begin
+					if ((l3 := (Length((l2 := SplitString(l1.name))) - 1)) = 0) then begin
+							l2 := {first: l2[0]}
+						end else begin
+							l4 := l2[l3];
+							l2 := {first: GlueStrings(RemoveSlot(l2, l3)), last: l4}
+						end
+				end;
+			(if ModalConfirm(ParamStr("Would you like to add a new Name?\n\n            ^0^?1\n           ^1||\n           ^2", [Array: l2.first, l2.last, l1.phoneNumber]), 'yesNoDefaultYes) then GetRoot().cardfile:addcard('person, {name: l2, phones: [Array: SetClass(l1.phoneNumber, 'phone)], sorton: " "}))
+		end else self:Notify(3, title, "You must fill in a name and number before adding to Names"))
+end
+@@end

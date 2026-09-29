@@ -1,0 +1,19 @@
+@@ 0x74f30d
+func(a1) begin
+	local l1;
+	if (a1.type = 0) then begin
+			l1 := macDesktop
+		end else begin
+			if (a1.type = 2) then begin
+					l1 := macOpenFolder
+				end else begin
+					if (a1.type = 3) then begin
+							l1 := macDisk
+						end else begin
+							l1 := macFile
+						end
+				end
+		end;
+	return l1
+end
+@@end

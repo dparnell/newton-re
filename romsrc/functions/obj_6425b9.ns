@@ -1,0 +1,23 @@
+@@ 0x6425b9
+@@const kNativeFuncClass
+call func(f) if IsFrame(f) then f.class else f[0] with (GetGlobalFn('StrLen))
+@@const kBinaryFromHex
+func(hex, cls) begin
+	local b := MakeBinary(StrLen(hex) div 2, cls);
+	for i := 0 to Length(b) - 1 do begin
+		local h := Ord(hex[2 * i]);
+		local l := Ord(hex[2 * i + 1]);
+		StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+	end;
+	b
+end
+@@const kLiteral_52b639
+{bits: call kBinaryFromHex with ("00000000000400f500f5025f010f027a00000000000c0000000c0000000c000000080300180007001e1f0e00067fc00000f1e00001c0700001c07000038e3800038e38007b8e3bc0718431c001c0600000e1c0000071800000380000001c0000001c000000380000003c0000000e0000001e0000001c0000", 'bits), bounds: '{left: 0, top: 0, right: 27, bottom: 26}}
+@@const kLiteral_52b64d
+{class: kNativeFuncClass, funcPtr: 7018690, numArgs: 1}
+@@main
+func() begin
+	local l1;
+	return (l1 := DoProgress('vBarber, {statusText: "Interpreting", barber: true, icon: kLiteral_52b639, closeBox: nil}, kLiteral_52b64d))
+end
+@@end

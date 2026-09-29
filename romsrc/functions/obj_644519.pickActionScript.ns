@@ -1,0 +1,37 @@
+@@ 0x444c61
+func(a1) begin
+	local l1, l2, l3, l4;
+	l1 := pop[a1];
+	l2 := Date(startTime);
+	if l1.skipDay then begin
+			l2.Date := (l2.Date + l1.skipDay)
+		end else begin
+			if l1.skipMonth then begin
+					l2.year := (l2.year + (l1.skipMonth div 12));
+					l2.month := (l2.month + (l1.skipMonth mod 12));
+					if (l2.month > 12) then begin
+							l2.month := (l2.month - 12);
+							l2.year := (l2.year + 1)
+						end
+				end else begin
+					if l1.skipYear then begin
+							l2.year := (l2.year + l1.skipYear)
+						end
+				end
+		end;
+	if ((Ongoing := l1.Ongoing) or l1.plusDay) then begin
+			l3 := 0
+		end else begin
+			l3 := -1440
+		end;
+	l4 := (TotalMinutes(l2) + l3);
+	if l1.skipToMonthEnd then begin
+			l2 := Date(l4);
+			l4 := (l4 + ((l2.daysInMonth - l2.Date) * 1440))
+		end;
+	spread := ((stopTime := (stop.selectedDates[0] := l4)) - startTime);
+	context:?NewTime(startTime, (if Ongoing then 536870911 else stopTime));
+	stop:Refresh();
+	base:Dirty()
+end
+@@end

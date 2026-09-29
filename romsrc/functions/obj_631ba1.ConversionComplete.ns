@@ -1,0 +1,12 @@
+@@ 0x4ecf99
+func(a1, a2, a3) begin
+	local l1;
+	(if a1 then begin
+			if (l1 := ResolveEntryAlias(a3.toRef[0]._alias)) then begin
+					GetRoot().cardfile:ReplaceInkData(l1, 'phone, a3.toRef[0].phone, nil, a2)
+				end;
+			a3.phoneNumber := (a3.toRef[0].phone := a2);
+			(slipUp := self:OpenRoutingSlip(a3))
+		end)
+end
+@@end

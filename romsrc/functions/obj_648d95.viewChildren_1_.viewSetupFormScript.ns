@@ -1,0 +1,16 @@
+@@ 0x47ba2d
+func() begin
+	(if (infoPrefs = nil) then (self.viewFlags := BAnd(viewFlags, bnot(1))) else begin
+			stdItems := [Array: ];
+			(foreach l1, l2 deeply in infoPrefs do begin
+					if (not HasSlot(self, l1)) then begin
+							self.(l1) := l2
+						end
+				end);
+			if (DoInfoAbout exists) then begin
+					AddArraySlot(stdItems, {item: "About", msg: 'DoInfoAbout})
+				end;
+			(if (DoInfoHelp exists) then AddArraySlot(stdItems, {item: "Help", msg: 'DoInfoHelp}))
+		end)
+end
+@@end

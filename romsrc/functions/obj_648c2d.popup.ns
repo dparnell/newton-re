@@ -1,0 +1,30 @@
+@@ 0x43f445
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9;
+	a1 := OffsetRect(a1, (-displayParams.appAreaGlobalLeft), (-displayParams.appAreaGlobalTop));
+	l2 := (if (l1 := self.viewFormat) then (BAnd((l1 >> 8), 15) + BAnd((l1 >> 16), 3)) else 2);
+	l4 := SectRect((l3 := RelBounds((displayParams.appAreaLeft + l2), (displayParams.appAreaTop + l2), (displayParams.appAreaWidth - (2 * l2)), (displayParams.appAreaHeight - (2 * l2)))), a1);
+	if ((l6 := (l3.bottom - (l4.top + viewBounds.bottom))) > 0) then begin
+			self.viewBounds := RelBounds(l4.right, l4.top, viewBounds.right, viewBounds.bottom)
+		end else begin
+			if ((l5 := ((l4.bottom - viewBounds.bottom) - l3.top)) > 0) then begin
+					self.viewBounds := RelBounds(l4.right, (l4.bottom - viewBounds.bottom), viewBounds.right, viewBounds.bottom);
+					self.viewEffect := 395264
+				end else begin
+					l7 := (if (l5 > l6) then ((displayParams.appAreaHeight - l2) - viewBounds.bottom) else l2);
+					l8 := min(viewBounds.bottom, (displayParams.appAreaHeight - l2));
+					self.viewBounds := RelBounds(l4.right, l7, viewBounds.right, l8);
+					self.viewEffect := 236577
+				end
+		end;
+	if ((l9 := (l3.right - viewBounds.right)) < 0) then begin
+			self.viewBounds := OffsetRect(viewBounds, l9, 0)
+		end;
+	if modalstate() then begin
+			self:FilterDialog()
+		end else begin
+			self:Open()
+		end;
+	self
+end
+@@end

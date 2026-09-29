@@ -1,0 +1,29 @@
+@@ 0x50002d
+@@const kLiteral_50e9f9
+'{font: 12288}
+@@const kROM_256
+@256
+@@main
+func(a1, a2) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10;
+	(if ((l1 := ClassOf(a1)) = 'string) then return [Array: '{font: 1058816}, MakeText(a1, a2.left, a2.top, a2.right, (a2.bottom - 4))] else (if (((l1 = 'meeting) or a1.topic) or LSearch('[Array: meeting, RepeatingMeeting, exceptionMeeting, cribNote], a1.viewStationery, 0, '|=|, nil)) then begin
+				if a1.topic then begin
+						l2 := MakeRichString((l3 := a1.topic).text, l3.styles);
+						l4 := @12[l3.mtgPriority]
+					end else begin
+						l2 := self:MeetingAbstract(a1);
+						l4 := GetMeetingIcon(a1)
+					end;
+				l5 := l4.bounds;
+				l6 := ((24 - (l5.right - l5.left)) div 2);
+				l7 := ((16 - (l5.bottom - l5.top)) div 2);
+				l8 := ((a2.left + 24) + 2);
+				l9 := (a2.right - l8);
+				StyledStrTruncate(l2, l9, 12288);
+				[Array: kLiteral_50e9f9, OffsetShape(MakeShape(l4), (a2.left + l6), (a2.top + l7)), MakeText(l2, l8, a2.top, a2.right, (a2.bottom - 4))]
+			end else begin
+				StyledStrTruncate((l10 := ExtractData([Array: a1], kROM_256, 50)), (a2.right - a2.left), 12288);
+				[Array: kLiteral_50e9f9, MakeText(l10, a2.left, a2.top, a2.right, (a2.bottom - 4))]
+			end))
+end
+@@end

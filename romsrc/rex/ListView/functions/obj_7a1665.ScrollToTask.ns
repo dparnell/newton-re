@@ -1,0 +1,18 @@
+@@ 0x7979ed names
+func(aDate, aTask) begin
+	local index;
+	(if (index := SetContains(topics, aTask)) then begin
+			if (index < firstTopic) then begin
+					firstTopic := Max(0, (index - 1));
+					self:RedoTopics()
+				end else begin
+					if (index >= (firstTopic + Length(viewChildren))) then begin
+							firstTopic := (index - 1);
+							self:RedoTopics()
+						end
+				end;
+			self:CalculateScrollRects();
+			self:ActiveTopic(index)
+		end)
+end
+@@end

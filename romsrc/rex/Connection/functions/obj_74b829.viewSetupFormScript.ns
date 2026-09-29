@@ -1,0 +1,15 @@
+@@ 0x74b8cd
+func() begin
+	self.listItems := (foreach l1 in StoreMap collect begin
+		local l5;
+		if (not StrFilled((l5 := l1:GetName()))) then begin
+				l5 := l1:GetKind()
+			end;
+		l5
+	end);
+	self.selectedItems := [Array: ];
+	self:|SelectAll?|();
+	self:SetupList();
+	inherited:?viewSetupFormScript()
+end
+@@end

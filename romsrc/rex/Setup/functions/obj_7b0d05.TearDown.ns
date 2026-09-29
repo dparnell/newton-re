@@ -1,0 +1,10 @@
+@@ 0x7b16cd
+func() begin
+	fReviewDone := true;
+	fPersona.address := vAddr1:GetText();
+	fPersona.address2 := vAddr2:GetText();
+	fPersona.city := vCity:GetText();
+	fPersona.region := vRegion:GetText();
+	(fPersona.postal_code := vZipInput:GetText())
+end
+@@end

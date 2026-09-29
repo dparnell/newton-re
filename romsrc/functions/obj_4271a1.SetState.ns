@@ -1,0 +1,26 @@
+@@ 0x427181
+@@const kBinaryFromHex
+func(hex, cls) begin
+	local b := MakeBinary(StrLen(hex) div 2, cls);
+	for i := 0 to Length(b) - 1 do begin
+		local h := Ord(hex[2 * i]);
+		local l := Ord(hex[2 * i + 1]);
+		StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+	end;
+	b
+end
+@@const kLiteral_423e59
+{bits: call kBinaryFromHex with ("000000000004003500350084004c009f7fffffc0ffffffe0c0000060c0000060c0000060c0000060c071c060c071c060c071c060c071c060c071c060c071c060c071c060c071c060c071c060c071c060c071c060c0000060c0000060c0000060c0000060ffffffe07fffffc0", 'bits), bounds: '{left: 0, top: 0, right: 27, bottom: 23}}
+@@const kLiteral_423d09
+{bits: call kBinaryFromHex with ("0000000000040035003500a9004c00c47fffffc0ffffffe0c0000060c0000060c0000060c0180060c01c0060c01e0060c01f0060c01f8060c01fc060c01fc060c01fc060c01f8060c01f0060c01e0060c01c0060c0180060c0000060c0000060c0000060ffffffe07fffffc0", 'bits), bounds: '{left: 0, top: 0, right: 27, bottom: 23}}
+@@main
+func(a1, a2, a3) begin
+	(if (a2 = 4) then (if (recButIcon.icon <> kLiteral_423e59) then begin
+				SetValue(recButIcon, 'icon, kLiteral_423e59);
+				SetValue(recButText, 'text, "Pause")
+			end) else (if (recButIcon.icon <> kLiteral_423d09) then begin
+				SetValue(recButIcon, 'icon, kLiteral_423d09);
+				SetValue(recButText, 'text, "Play")
+			end))
+end
+@@end

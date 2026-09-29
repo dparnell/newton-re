@@ -1,0 +1,12 @@
+@@ 0x548af1
+func(a1, a2) begin
+	local l1, l2, l3;
+	(if (Length(a1.icons) > 0) then (if ((l1 := (a1.indexes[0] + 1)) > (Length(a2) - 1)) then begin
+				l2 := (if overUp then topIndexText else topIndexIcon);
+				base:viewScrollDownScript();
+				l3 := (if overUp then topIndexText else topIndexIcon);
+				a2 := self:GetChildIconViews();
+				(if (l3 <> l2) then self:ChangeSelection(a2[0], nil) else self:ChangeSelection(a2[(Length(a2) - 1)], nil))
+			end else self:ChangeSelection(a2[l1], a1.icons)) else self:ChangeSelection(a2[0], nil))
+end
+@@end

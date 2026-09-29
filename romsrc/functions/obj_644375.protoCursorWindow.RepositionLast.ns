@@ -1,0 +1,6 @@
+@@ 0x5b9e41
+func(a1) begin
+	cursor:Initialize(a1, nil, 'last);
+	self:FillBuffer()
+end
+@@end

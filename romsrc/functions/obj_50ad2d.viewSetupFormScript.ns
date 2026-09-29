@@ -1,0 +1,8 @@
+@@ 0x50aced
+func() begin
+	(if (Length(choices) > 1) then (self.text := Stringer([Array: "\uFC01\u", " ", label])) else begin
+			self.text := label;
+			(self.viewFlags := (viewFlags - 512))
+		end)
+end
+@@end

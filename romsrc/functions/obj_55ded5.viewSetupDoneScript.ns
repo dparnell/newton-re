@@ -1,0 +1,6 @@
+@@ 0x55db21
+func() begin
+	AddDeferredSend(entryLine, 'SetHilite, [Array: 0, 9999, true]);
+	(if (if entryLine.text then StringToDate(entryLine.text)) then (findDate.selectedDates := [Array: StringToDate(entryLine.text)]))
+end
+@@end

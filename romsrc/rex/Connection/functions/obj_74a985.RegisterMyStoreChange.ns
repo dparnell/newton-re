@@ -1,0 +1,15 @@
+@@ 0x74b051
+func() begin
+	local l1;
+	l1 := func(a1, a2, a3) begin
+		protoContext:InvalidateApplicationList();
+		protoContext:BuildApplicationList(func() begin
+			endpoint:IdleConnection(true)
+		end);
+		protoContext:ShowIfNotVisible(backupPackages);
+		self:AdjustForStores();
+		base:RedoChildren()
+	end;
+	RegStoreChange('Connection, l1)
+end
+@@end

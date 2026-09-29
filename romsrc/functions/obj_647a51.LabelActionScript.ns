@@ -1,0 +1,5 @@
+@@ 0x530f69
+func(a1) begin
+	self:SetProvider(labelCommands[a1].slot)
+end
+@@end

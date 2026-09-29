@@ -1,0 +1,6 @@
+@@ 0x4f9989
+func(a1, a2, a3, a4) begin
+	local l1, l2;
+	(if ((l2 := (l1 := (if a1.realData then a1.realData else a1)).viewStationery) = 'cribNote) then true)
+end
+@@end

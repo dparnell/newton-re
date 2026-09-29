@@ -1,0 +1,6 @@
+@@ 0x447ecd
+func(a1, a2, a3) begin
+	self:ZoomTo(a1);
+	self:ScrollTo(a2, a3)
+end
+@@end

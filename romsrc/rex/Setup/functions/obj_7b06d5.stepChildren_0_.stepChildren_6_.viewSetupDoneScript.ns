@@ -1,0 +1,5 @@
+@@ 0x7b0b71
+func() begin
+	(if fFirstTime then self:Hide())
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x4548f5
+func() begin
+	self:SetArrow('up, (if canScrollUp then 'more else 'normal));
+	self:SetArrow('down, (if canScrollDown then 'more else 'normal));
+	Scroller:Dirty()
+end
+@@end

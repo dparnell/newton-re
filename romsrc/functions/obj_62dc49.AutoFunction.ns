@@ -1,0 +1,24 @@
+@@ 0x4b3ef5
+func(a1) begin
+	local l1, l2, l3;
+	if (not IsSoupEntry(a1)) then begin
+			return nil
+		end;
+	(try begin
+			(if a1.appSymbol then begin
+					l1 := GetVariable(GetRoot(), a1.appSymbol);
+					l3 := (if (if (l2 := (if a1.category then GetRoot().(a1.category))) then (l2:GetConfig('dontAutoPutAway) = 'never)) then true);
+					(if (if (if l1 then l1.AutoPutaway) then (not l3)) then (if l1:AutoPutaway(a1) then begin
+								self:PutAwayCompleted(a1);
+								if activeNotify then begin
+										GetRoot().notifyIcon:KillAction(activeNotify);
+										activeNotify := nil
+									end;
+								return nil
+							end))
+				end)
+		end onexception |evt.ex| do begin
+			self:Notify(3, "InOut Box", Stringer([Array: "Error in AutoPutAway script", " ", a1.appSymbol]))
+		end)
+end
+@@end

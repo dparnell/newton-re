@@ -1,0 +1,14 @@
+@@ 0x46ca01
+func() begin
+	local l1, l2, l3;
+	cText:SaveUndoState('external);
+	l1 := correct.hiliteBusy;
+	correct.hiliteBusy := true;
+	correctInfo:offset((l2 := correct.refCon).form, l2.wordOffset, l2.wordLength, 0);
+	l3 := RecognizePara(l2.form, l2.wordOffset, (l2.wordOffset + l2.wordLength), 1, nil);
+	l2.wordLength := (l3 - l2.wordOffset);
+	correct.hiliteBusy := l1;
+	self:SetHilite();
+	self:UseExternalWord()
+end
+@@end

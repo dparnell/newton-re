@@ -1,0 +1,37 @@
+@@ 0x73f625
+func(a1, a2, a3) begin
+	if (l1 := self:GetInfoFrame(a2, a1.class)) then begin
+			if l1.stringData then begin
+					if IsInstance(a3, 'string) then begin
+							l2 := a3
+						end
+				end else begin
+					l2 := {};
+					local l1;
+					local l2;
+					local l3;
+					(foreach l4 in l1.checkPaths do begin
+							if a3.(l4) then begin
+									l2.(l4) := a3.(l4)
+								end
+						end);
+					if (Length(l2) = 0) then begin
+							l2 := nil
+						end
+				end;
+			if l2 then begin
+					if (l3 := self:GetNewPath(a1, a2)) then begin
+							if (l3 = true) then begin
+									(foreach l4, l6 in l2 do begin
+											a1.(l4) := l6
+										end)
+								end else begin
+									a1.(l3) := l2
+								end;
+							self:SetCardfileStuff(a1, true)
+						end
+				end
+		end;
+	l2
+end
+@@end

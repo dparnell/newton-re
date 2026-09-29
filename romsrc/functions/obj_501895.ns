@@ -1,0 +1,5 @@
+@@ 0x501895
+func(a1) begin
+	(if a1.repeatTemplate then a1.repeatTemplate.mtgText else a1.mtgText)
+end
+@@end

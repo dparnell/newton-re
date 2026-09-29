@@ -1,0 +1,5 @@
+@@ 0x4b99e9
+func() begin
+	(if IsString(target.(path)) then Clone(target.(path)) else Stringer([Array: (if longFormat then LongDateStr(target.(path), longFormat) else ShortDateStr(target.(path), shortFormat)), " ", TimeStr(target.(path), format)]))
+end
+@@end

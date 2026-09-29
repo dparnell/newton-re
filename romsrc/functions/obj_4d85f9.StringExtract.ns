@@ -1,0 +1,9 @@
+@@ 0x4d85b9
+func(a1, a2) begin
+	local l1;
+	if StrEqual((l1 := (if (if a1.data then (Length(a1.data) > 0)) then ExtractData(a1.data, "...", 50) else "-empty-")), "") then begin
+			l1 := "-empty-"
+		end;
+	(if a1.title then Stringer([Array: a1.title, " ", l1]) else l1)
+end
+@@end

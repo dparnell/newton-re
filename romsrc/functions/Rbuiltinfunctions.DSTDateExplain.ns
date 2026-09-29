@@ -1,0 +1,7 @@
+@@ 0x420705
+func(a1) begin
+	local l1;
+	l1 := GetLocale();
+	(if a1.ordinal then ParamStr("^?0^1|last| ^2 in ^3", [Array: (a1.ordinal < 5), l1.shortOrdinals[a1.ordinal], l1.longDateFormat.abbrDofWeek[a1.dayOfWeek], l1.longDateFormat.abbrMonth[(a1.month - 1)]]) else LongDateStr(TotalMinutes(a1), @66.monthDayStrSpec))
+end
+@@end

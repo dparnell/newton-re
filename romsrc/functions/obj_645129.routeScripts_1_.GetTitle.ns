@@ -1,0 +1,5 @@
+@@ 0x4a9525
+func(a1) begin
+	(if a1 then "Delete")
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x4ebfe9
+func(a1) begin
+	self:CommonKeyScript('_AddToNamesKeyButton)
+end
+@@end

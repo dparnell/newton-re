@@ -1,0 +1,34 @@
+@@ 0x72041d
+@@const kFunction_720809
+func(a1, a2, a3, a4) begin
+	GetRoot().cardfile:NewtSoupChangedNotify(a1, a2, a3, a4)
+end
+@@main
+func(a1) begin
+	local namesSoup;
+	local l1, l2, l3, l4;
+	l1 := a1.partData.theForm;
+	(l4 := {}).(EnsureInternal('theStuff)) := l1:NewtInstallScript(l1);
+	l4.(EnsureInternal('appSymbol)) := l1.appSymbol;
+	l2 := BuildContext(l1);
+	OverrideBuiltinApp('cardfile, l2);
+	namesSoup := l1.allSoups.names;
+	l4.(EnsureInternal('soupName)) := namesSoup.soupName;
+	if (not GetStores()[0]:HasSoup(namesSoup.soupName)) then begin
+			l3 := Clone(namesSoup);
+			l3:MakeSoup(l1.appSymbol);
+			l3:AddWalletEntries()
+		end;
+	RegSoupChange(namesSoup.soupName, l1.appSymbol, kFunction_720809);
+	RegSoupRestore(l1.appSymbol, func(a1) begin
+		local l1, l2;
+		(if BFetch(a1, namesSoup.soupName, '|str<|, nil) then begin
+				if (l2 := (l1 := GetRoot().cardfile).allSoups.names).theSoup then begin
+						l2.theSoup := nil
+					end;
+				l1:CheckAllBdays()
+			end)
+	end);
+	l4
+end
+@@end

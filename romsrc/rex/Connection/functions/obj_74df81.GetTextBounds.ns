@@ -1,0 +1,7 @@
+@@ 0x74e619
+func() begin
+	local l1;
+	(l1 := Clone(viewBounds)).right := min(savedViewBounds.right, (textIndent + StrFontWidth(entryLine.text, entryLine.viewFont)));
+	return l1
+end
+@@end

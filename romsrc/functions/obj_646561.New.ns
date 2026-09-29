@@ -1,0 +1,13 @@
+@@ 0x47a60d
+func(a1, a2, a3, a4) begin
+	local l1;
+	(l1 := BuildContext(self)).transport := a2;
+	l1.target := a1;
+	l1.icon := a2.icon;
+	l1.description := a2.title;
+	l1.context := a4;
+	l1.bbox := a3;
+	l1:Open();
+	l1
+end
+@@end

@@ -1,0 +1,51 @@
+@@ 0x751e29
+@@const kROM_8261
+@8261
+@@const kROM_8262
+@8262
+@@main
+func() begin
+	if (not inited) then begin
+			inited := true;
+			self.protoContext := GetRoot().Connection;
+			protoContext:AddOpenWindow(self);
+			self.initialSetup := DeepClone(initialSetup);
+			initialSetup.values.statusText := labels[0];
+			self.currentStatusSetup := DeepClone(initialSetup);
+			self.stopping := nil;
+			self.closing := nil;
+			AddDeferredCall(func() begin
+				local l1, l2;
+				(try begin
+						if (whichFiles = 1) then begin
+								l1 := protoContext:CallReadCommand(endpoint, "gist");
+								endpoint:WriteCommand("isto", protoContext:BuildStoreFrame(GetStores()[0], nil, nil), true)
+							end;
+						l1 := protoContext:CallReadCommand(endpoint, "dres");
+						if (endpoint:DesktopType() = 0) then begin
+								self.theFileBrowser := BuildContext(kROM_8261)
+							end else begin
+								self.theFileBrowser := BuildContext(kROM_8262)
+							end;
+						theFileBrowser.whichFiles := whichFiles;
+						theFileBrowser.labels := labels;
+						theFileBrowser.callWhenDone := callWhenDone;
+						theFileBrowser.callWhenSetup := func() begin
+							closing := true;
+							self:Close()
+						end;
+						theFileBrowser.endpoint := endpoint;
+						theFileBrowser:FilterDialog()
+					end onexception |evt.ex| do begin
+						if ((l2 := CurrentException().error) <> -16005) then begin
+								endpoint:ConnectionDone(l2)
+							end;
+						closing := true;
+						self:Close()
+					end)
+			end, nil);
+			endpoint:StartIdle(self, 500)
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x4b5bf5
+func() begin
+	width := (StrFontWidth(text, viewFont) + 6);
+	(viewBounds := Clone(viewBounds)).left := (viewBounds.right - width);
+	if (not sortPicker) then begin
+			self.viewFlags := BAnd(self.viewFlags, bnot(1))
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x4dfe11
+func() begin
+	local l1;
+	(if (daylight := (if (l1 := (if HasPath(target, 'daylight) then target.daylight else (if country then country.daylight))) then GetDSTEntry(l1))) then daylight[0].name else "none")
+end
+@@end

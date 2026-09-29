@@ -1,0 +1,8 @@
+@@ 0x76bc3d
+func() begin
+	self.viewBounds := Clone(viewBounds);
+	self.viewBounds.left := indent;
+	self.viewBounds.right := (self.viewBounds.right - rightmargin);
+	(self.calcLineValue := nil)
+end
+@@end

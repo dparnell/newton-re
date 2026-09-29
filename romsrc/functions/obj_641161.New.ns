@@ -1,0 +1,7 @@
+@@ 0x456ff9
+func(a1, a2) begin
+	_tapinfo := a1;
+	_context := a2;
+	(if self.OpenEditor then self:OpenEditor(a1, a2, 'New) else self:DefaultOpenEditor(a1, a2, 'New))
+end
+@@end

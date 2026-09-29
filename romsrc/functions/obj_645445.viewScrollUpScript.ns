@@ -1,0 +1,20 @@
+@@ 0x49c365
+func() begin
+	local l1, l2, l3, l4, l5, l6;
+	l2 := ((l1 := self:LocalBox()).bottom - (if viewLineSpacing then (4 * viewLineSpacing) else 24));
+	l3 := Length(entries);
+	if (viewOriginY <> 0) then begin
+			if (viewOriginY >= l1.bottom) then begin
+					l4 := (if ((viewOriginY mod l2) = 0) then l2 else (viewOriginY mod l2))
+				end else begin
+					l4 := viewOriginY
+				end
+		end else begin
+			if (not (l5 := dataCursor:clone():prev())) then begin
+					return nil
+				end;
+			l4 := (if (l5.height > l1.bottom) then (if ((l6 := (l5.height mod l2)) < (l1.bottom - l2)) then (l6 + l2) else l6) else l5.height)
+		end;
+	self:PixelScrollBy(0, (-l4))
+end
+@@end

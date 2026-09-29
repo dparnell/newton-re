@@ -1,0 +1,6 @@
+@@ 0x75f251
+func() begin
+	local l1;
+	(if (if (l1 := GetRoot().TinyTim) then l1.viewCObject) then l1:Close() else OpenHelpTo("Connect"))
+end
+@@end

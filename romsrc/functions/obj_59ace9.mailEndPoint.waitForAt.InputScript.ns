@@ -1,0 +1,13 @@
+@@ 0x59ab81
+func(a1, a2, a3, a4) begin
+	(if (a1.curstate = 'waitForAt) then begin
+			a1.curstate := 'waitForConnected;
+			(try begin
+					a1:SetInputSpec(a1.waitForConnected);
+					a1:output(Stringer([Array: "c ", a1:networkIdentifier(), "*NEWTMAIL0001\n"]), nil, {async: true})
+				end onexception |evt.ex| do begin
+					self:quit()
+				end)
+		end)
+end
+@@end

@@ -1,0 +1,12 @@
+@@ 0x54d5f9
+func() begin
+	local l1;
+	self:GenericActionScript((l1 := func(a1) begin
+		local l1;
+		if (if (if ((l1 := (if (if fakeTarget.storeChanged then (fakeTarget.newStore <> a1.target:store())) then a1.target:Preflight('move, fakeTarget.kids) else 'OK)) = 'OK) then fakeTarget.labelsChanged) then (fakeTarget.labels <> a1.target.fentry.labels)) then begin
+				l1 := a1.target:Preflight('Filing, fakeTarget.kids)
+			end;
+		l1
+	end), 'FileSelectedIcons, true, "file ^1", "This icon can\u2019\ut be filed^?0 because it is ^0||.", "These icons can\u2019\ut be filed^?0 because they are ^0||.")
+end
+@@end

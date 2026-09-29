@@ -1,0 +1,11 @@
+@@ 0x42aecd
+func(a1) begin
+	(if (childrenType = 'checkBox) then begin
+			l1 := self:ChildViewFrames();
+			local l1;
+			(foreach l2, l3 in a1 do begin
+					l1[l2]:SetCheck(l3)
+				end)
+		end)
+end
+@@end

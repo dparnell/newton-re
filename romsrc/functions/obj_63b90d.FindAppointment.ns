@@ -1,0 +1,42 @@
+@@ 0x511645
+func(a1, a2, a3, a4, a5) begin
+	local l1;
+	if (not ((a1 = nil) or IsInstance(a1, 'string))) then begin
+			ThrowBadTypeWithFrameData(-48414, a1)
+		end;
+	if (not ((a2 = nil) or self:ValidateArrayType(a2, 'string, nil))) then begin
+			ThrowBadTypeWithFrameData(-48413, a2)
+		end;
+	if (not (((a3 = nil) or IsInteger(a3)) or (if (if (if (if IsArray(a3) then (Length(a3) = 2)) then IsInteger(a3[0])) then IsInteger(a3[1])) then (a3[0] <= a3[1])))) then begin
+			ThrowBadTypeWithFrameData(-48413, a3)
+		end;
+	if (not self:ValidateMeetingFindType(a4)) then begin
+			ThrowBadTypeWithFrameData(-48413, a4)
+		end;
+	if (not ((a5 = nil) or IsInteger(a5))) then begin
+			ThrowBadTypeWithFrameData(-48418, a5)
+		end;
+	if (a5 = nil) then begin
+			a5 := 50
+		end;
+	l1 := [Array: ];
+	if (((a4 = nil) or (a4 = 'meeting)) or (if IsArray(a4) then SetContains(a4, 'meeting))) then begin
+			self:FindInSoup(a1, a2, a3, GetUnionSoupAlways(@23), nil, a5, l1)
+		end;
+	if (if (Length(l1) < a5) then (((a4 = nil) or (a4 = 'event)) or (if IsArray(a4) then SetContains(a4, 'event)))) then begin
+			self:FindInSoup(a1, a2, a3, GetUnionSoupAlways(@22), true, a5, l1)
+		end;
+	if (if (Length(l1) < a5) then (((a4 = nil) or (a4 = 'RepeatingMeeting)) or (if IsArray(a4) then SetContains(a4, 'RepeatingMeeting)))) then begin
+			self:FindInRepeatSoup(a1, a2, a3, GetUnionSoupAlways(@239), nil, a5, l1)
+		end;
+	if (if (Length(l1) < a5) then (((a4 = nil) or (a4 = 'RepeatingEvent)) or (if IsArray(a4) then SetContains(a4, 'RepeatingEvent)))) then begin
+			self:FindInRepeatSoup(a1, a2, a3, GetUnionSoupAlways(@242), true, a5, l1)
+		end;
+	(if (Length(l1) > 0) then begin
+			if (Length(l1) > a5) then begin
+					SetLength(l1, a5)
+				end;
+			l1
+		end)
+end
+@@end

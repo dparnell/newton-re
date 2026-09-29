@@ -1,0 +1,5 @@
+@@ 0x438489
+func(a1) begin
+	(if (a1 >= 0) then 0 else 1)
+end
+@@end

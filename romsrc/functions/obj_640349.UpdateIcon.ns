@@ -1,0 +1,5 @@
+@@ 0x429301
+func(a1) begin
+	SetValue(entryLineIcon, 'icon, a1)
+end
+@@end

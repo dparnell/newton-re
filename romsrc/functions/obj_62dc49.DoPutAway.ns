@@ -1,0 +1,38 @@
+@@ 0x4b56c5
+func(a1, a2, a3) begin
+	local l1, l2, l3, l4, l5, l6;
+	if TargetIsCursor(a2) then begin
+			l1 := nil;
+			l3 := (l2 := GetTargetCursor(a2, '{})):entry();
+			(while l3 do begin
+					if (l4 := self:GetPutAwayInfo(l3)) then begin
+							if (not self:PutOneAway((l5 := (if IsFrame(l4.theApp) then l4.theApp.appSymbol else l4.theApp)), l3, a3)) then begin
+									l1 := true
+								end
+						end else begin
+							l1 := true
+						end;
+					(l3 := l2:Next())
+				end);
+			selected := nil;
+			if l1 then begin
+					self:Notify(3, "Put Away", "Some selected items could not be put away.")
+				end
+		end else begin
+			if (not (l6 := self:PutOneAway(a1, a2, a3))) then begin
+					self:Notify(3, "Put Away", "The item could not be put away.");
+					return true
+				end
+		end;
+	selected := nil;
+	if deleteAfterPutaway then begin
+			if (currentLayout = 'overview) then begin
+					layout:Retarget('sync)
+				end else begin
+					layout:Retarget(nil);
+					newtAppBase:ShowLayout('overview)
+				end
+		end;
+	nil
+end
+@@end

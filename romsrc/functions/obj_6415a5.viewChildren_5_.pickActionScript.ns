@@ -1,0 +1,19 @@
+@@ 0x4d58a1
+func(a1, a2) begin
+	local l1, l2;
+	newMtgStartTime := (a1 mod 1440);
+	l1 := (a1 - newMtgStartTime);
+	newMtgStopTime := min((a2 - l1), 1440);
+	a2 := (l1 + newMtgStopTime);
+	l2 := 1410;
+	if (newMtgStartTime > l2) then begin
+			newMtgStartTime := l2;
+			a1 := (l1 + newMtgStartTime)
+		end;
+	if (newMtgStopTime < newMtgStartTime) then begin
+			newMtgStopTime := min(1440, (newMtgStartTime + 60));
+			a2 := (l1 + newMtgStopTime)
+		end;
+	inherited:pickActionScript(a1, a2)
+end
+@@end

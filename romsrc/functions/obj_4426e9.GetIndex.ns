@@ -1,0 +1,5 @@
+@@ 0x4426ad
+func(a1) begin
+	((a1 mod 100) div 10)
+end
+@@end

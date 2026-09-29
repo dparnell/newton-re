@@ -1,0 +1,6 @@
+@@ 0x4ba681
+func() begin
+	ArrayMunger((dictionaries := Clone(dictionaries)), Length(dictionaries), 0, GetLocale().recogCompanyDictionaries, 0, nil);
+	inherited:?InitFilter()
+end
+@@end

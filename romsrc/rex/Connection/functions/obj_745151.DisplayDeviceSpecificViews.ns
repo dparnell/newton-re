@@ -1,0 +1,41 @@
+@@ 0x747549
+func(a1) begin
+	local l1, l2, l3, l4, l5;
+	protoContext:HideIfVisible(AppleTalkPicker);
+	protoContext:HideIfVisible(phonePicker);
+	protoContext:HideIfVisible(connWillDialLabel);
+	protoContext:HideIfVisible(connWillDialText);
+	if ((currentlyShowing := a1) = 'modem) then begin
+			self:SetLabelCommandsFromUserConfig(phonePicker);
+			protoContext:ShowIfNotVisible(phonePicker);
+			connWillDialLabel.text := "Will dial: ";
+			connWillDialText.text := phonePicker:GetPhoneNumber();
+			l2 := true
+		end else begin
+			if (currentlyShowing = 'AppleTalk) then begin
+					protoContext:ShowIfNotVisible(AppleTalkPicker);
+					connWillDialLabel.text := "Will connect to: ";
+					connWillDialText.text := AppleTalkPicker:GetNetworkName();
+					l2 := true
+				end else begin
+					l1 := self:GetConnectionOptions(currentlyShowing, nil)
+				end
+		end;
+	if (SetConnectionType exists) then begin
+			self:SetConnectionType(currentlyShowing, a1, l1)
+		end;
+	(if l2 then begin
+			protoContext:ShowIfNotVisible(connWillDialLabel);
+			protoContext:ShowIfNotVisible(connWillDialText);
+			l3 := max(40, StrFontWidth(connWillDialText.text, connWillDialText.viewFont));
+			l4 := StrFontWidth(connWillDialLabel.text, connWillDialLabel.viewFont);
+			if ((l3 + l4) > _currentWidth) then begin
+					l5 := 0
+				end else begin
+					l5 := (((_currentWidth - l3) - l4) div 2)
+				end;
+			SetValue(connWillDialLabel, 'viewBounds, SetBounds(l5, connWillDialLabel.viewBounds.top, (l5 + l4), connWillDialLabel.viewBounds.bottom));
+			SetValue(connWillDialText, 'viewBounds, SetBounds(0, connWillDialText.viewBounds.top, (_currentWidth - l4), connWillDialText.viewBounds.bottom))
+		end)
+end
+@@end

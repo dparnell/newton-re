@@ -1,0 +1,6 @@
+@@ 0x74ec5d
+func() begin
+	self:Hide();
+	inherited:?viewSetupDoneScript()
+end
+@@end

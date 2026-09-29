@@ -1,0 +1,8 @@
+@@ 0x44dfdd
+func(a1) begin
+	self.format := a1.format;
+	self.string := a1.string;
+	self.filters := a1.filters;
+	(self.curTemplate := a1)
+end
+@@end

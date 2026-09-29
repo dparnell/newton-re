@@ -1,0 +1,29 @@
+@@ 0x5657b5
+func(a1, a2) begin
+	(foreach l1, l2 in a2 do begin
+			l4 := userConfiguration._proto.(l1);
+			if ((l2 = l4) or (if (if IsBinary(l2) then IsBinary(l4)) then BinEqual(l2, l4))) then begin
+					RemoveSlot(userConfiguration, l1)
+				end else begin
+					userConfiguration.(EnsureInternal(l1)) := EnsureInternal(l2)
+				end
+		end);
+	try begin
+			SystemConfigChange(a1)
+		end onexception |evt.ex| do begin end;
+	local l4;
+	(foreach l5, l6 deeply in UserConfigChangeRegistry do begin
+			if (UserConfigChangeRegistry.(l5) = l6) then begin
+					try begin
+							if (GetFunctionArgCount(l6) = 2) then begin
+									call l6 with (a1, a2)
+								end else begin
+									call l6 with (a1)
+								end
+						end onexception |evt.ex| do begin end
+				end
+		end);
+	FlushUserConfig();
+	a2
+end
+@@end

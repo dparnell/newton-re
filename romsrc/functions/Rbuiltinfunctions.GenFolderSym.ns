@@ -1,0 +1,50 @@
+@@ 0x482fb9
+@@const kLiteral_3c59b1
+"0123456789ABCDEF"
+@@const kLiteral_482d55
+"\\u"
+@@main
+func(a1) begin
+	if (not StrFilled(a1)) then begin
+			return nil
+		end;
+	l1 := Downcase(Clone(a1));
+	local l1;
+	(foreach l2, l3 in GetUserConfig('userFolders) do begin
+			local l5, l6, l7, l8, l9, l10;
+			if (StrExactCompare(Downcase(Clone(l3)), l1) = 0) then begin
+					return l2
+				end
+		end);
+	l5 := Clone(a1);
+	l6 := 0;
+	l7 := 0;
+	l8 := StrLen(l5);
+	l9 := nil;
+	(while (l6 < l8) do (if ((l7 := ORD(Downcase(l5[l6]))) > 127) then begin
+				(l10 := Clone("BobE"))[0] := kLiteral_3c59b1[BAnd((l7 >> 12), 15)];
+				l10[1] := kLiteral_3c59b1[BAnd((l7 >> 8), 15)];
+				l10[2] := kLiteral_3c59b1[BAnd((l7 >> 4), 15)];
+				l10[3] := kLiteral_3c59b1[BAnd(l7, 15)];
+				if (not l9) then begin
+						l9 := true;
+						l10 := Stringer([Array: kLiteral_482d55, l10])
+					end;
+				StrMunger(l5, l6, 1, l10, 0, nil);
+				l6 := (l6 + StrLen(l10));
+				(l8 := ((l8 + StrLen(l10)) - 1))
+			end else begin
+				if l9 then begin
+						l9 := nil;
+						StrMunger(l5, l6, 0, kLiteral_482d55, 0, nil);
+						l6 := (l6 + 2);
+						l8 := (l8 + 2)
+					end;
+				(if (l5[l6] = $:) then begin
+						StrMunger(l5, l6, 1, nil, 0, 0);
+						(l8 := (l8 - 1))
+					end else (l6 := (l6 + 1)))
+			end));
+	Intern((l5 := StringFilter(l5, "_", 'rejectBeginning)))
+end
+@@end

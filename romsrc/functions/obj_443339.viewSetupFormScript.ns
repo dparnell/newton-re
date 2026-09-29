@@ -1,0 +1,13 @@
+@@ 0x443075
+func() begin
+	local l1;
+	self.viewBounds := Clone(self.viewBounds);
+	(if titleHeight then (self.viewBounds.bottom := titleHeight) else begin
+			l1 := viewFont;
+			if (titleFont exists) then begin
+					l1 := titleFont
+				end;
+			(self.viewBounds.bottom := max(FontHeight(l1), 12))
+		end)
+end
+@@end

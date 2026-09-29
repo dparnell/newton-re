@@ -1,0 +1,8 @@
+@@ 0x4e2a95
+func(a1) begin
+	(if (ClassOf(a1) = 'char) then begin
+			(x := Clone(" "))[0] := a1;
+			SetValue(Display, 'text, x)
+		end else SetValue(Display, 'text, a1))
+end
+@@end

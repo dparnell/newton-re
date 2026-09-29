@@ -1,0 +1,10 @@
+@@ 0x5a62bd
+func() begin
+	local l1;
+	l1 := GetLocale();
+	city.label := l1.cityLabel;
+	state.label := l1.regionLabel;
+	zip.label := l1.postalCodeLabel;
+	inherited:?viewSetupFormScript()
+end
+@@end

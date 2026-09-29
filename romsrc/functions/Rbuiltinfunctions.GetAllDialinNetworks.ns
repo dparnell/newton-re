@@ -1,0 +1,13 @@
+@@ 0x4804fd
+func() begin
+	l1 := [Array: ];
+	local l1;
+	(foreach l2, l3 deeply in DialinNetworkRegistry do begin
+			if (if (DialinNetworkRegistry.(l2) = l3) then IsFrame(l3)) then begin
+					AddArraySlot(l1, l3)
+				end
+		end);
+	Sort(l1, '|str<|, 'title);
+	return l1
+end
+@@end

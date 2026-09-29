@@ -1,0 +1,10 @@
+@@ 0x4541d5
+@@const kFunction_4541b5
+func(a1, a2) begin
+	(if (if (not a2._Unselected) then a2._alias) then IsSameEntry(a1, a2._alias))
+end
+@@main
+func(a1) begin
+	(if IsNameRef(a1) then (not a1._Unselected) else (if selected then LSearch(selected, AliasFromObj(a1), 0, kFunction_4541b5, nil)))
+end
+@@end

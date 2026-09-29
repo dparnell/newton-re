@@ -1,0 +1,5 @@
+@@ 0x74fe19
+func() begin
+	folderList:viewScrollUpScript()
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x480f91
+func() begin
+	SetValue(self, 'text, self:GetText());
+	SetValue(self, 'viewJustify, self:GetJustify())
+end
+@@end

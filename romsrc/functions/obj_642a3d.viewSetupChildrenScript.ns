@@ -1,0 +1,8 @@
+@@ 0x43be09
+func() begin
+	(if (BatteryCount() < 1) then begin
+			gauge.viewFlags := 0;
+			(if batteryLabelForm then (batteryLabelForm.viewFlags := 0))
+		end)
+end
+@@end

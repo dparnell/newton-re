@@ -1,0 +1,44 @@
+@@ 0x4538e5
+@@const kFunction_450079
+func(a1) begin
+	local l1;
+	if (not a1) then begin
+			return nil
+		end;
+	(if IsInstance(a1, 'alias) then ResolveEntryAlias(a1) else (if (if IsFrame(a1) then a1._alias) then (if (l1 := ResolveEntryAlias(a1._alias)) then l1 else a1) else a1))
+end
+@@main
+func(a1) begin
+	local l1, l2;
+	l1 := fTapinfo.nameRef;
+	l2 := fTapinfo.tapIndex;
+	self:LockScreen(true);
+	if (a1 = 'select) then begin
+			self:DoSelectObj(l1, l2)
+		end else begin
+			if (a1 = 'Toggle) then begin
+					self:DoToggleSelectObj(l1, l2)
+				end
+		end;
+	if (if fTapinfo.tapIndex then viewCObject) then begin
+			self:UpdatePiece(fTapinfo.tapIndex, l1)
+		end;
+	if (not StrEqual(fTapinfo._sortValue, pickerDef:Get(l1, pickerDef._sortPath, 'sortText))) then begin
+			cursor:Goto(call (kFunction_450079) with (l1));
+			AZTabs:Update();
+			listBase:Update();
+			listBase:MarkCursorPosition()
+		end else begin
+			if (nowShowing = 'selected) then begin
+					AZTabs:Update();
+					listBase:Update()
+				end else begin
+					self:Refresh()
+				end
+		end;
+	self:LockScreen(nil);
+	pickBase:MaskTaps(nil);
+	fTapinfo := nil;
+	(fOpenEditor := nil)
+end
+@@end

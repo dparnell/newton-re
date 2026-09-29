@@ -1,0 +1,12 @@
+@@ 0x5b0f71
+func() begin
+	theArray := [Array: ];
+	(foreach l1, l2 deeply in SoundRegistry do begin
+			if (SoundRegistry.(l1) = l2) then begin
+					AddArraySlot(theArray, {item: l2.userName, soundSymbol: l1})
+				end
+		end);
+	Sort(theArray, '|str<|, 'item);
+	EnsureInternal(theArray)
+end
+@@end

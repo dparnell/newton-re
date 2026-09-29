@@ -1,0 +1,21 @@
+@@ 0x4d0819
+func() begin
+	local l1;
+	l1 := nil;
+	try begin
+			if (if (status <> 'idle) then (ep:state() <> 0)) then begin
+					self:ChangeState('aborting);
+					ep:Cancel(cancelSpec)
+				end else begin
+					if (status <> 'idle) then begin
+							self:ChangeState('idle)
+						end
+				end
+		end onexception |evt.ex| do begin
+			if self:HandleThrow() then begin
+					l1 := true
+				end
+		end;
+	(if l1 then self:DoDisconnect(nil))
+end
+@@end

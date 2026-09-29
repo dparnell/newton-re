@@ -1,0 +1,5 @@
+@@ 0x7443ad
+func(a1) begin
+	RemoveSlot(subViewsOpen, a1)
+end
+@@end

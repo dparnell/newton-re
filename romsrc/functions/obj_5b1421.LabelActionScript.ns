@@ -1,0 +1,11 @@
+@@ 0x5b13e5
+func(a1) begin
+	local value;
+	value := labelCommands[a1].value;
+	AddDeferredCall(func() begin
+		SetOutputDevice(value);
+		PlaySoundSync(GetRegisteredSound(GetUserConfig('beepSound)));
+		SetUserConfig('outputDevice, value)
+	end, nil)
+end
+@@end

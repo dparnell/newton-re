@@ -1,0 +1,6 @@
+@@ 0x43c281
+func(a1) begin
+	inherited:SetupAbstracts(a1);
+	(if Visible(upDown) then upDown:FiddleWithArrows())
+end
+@@end

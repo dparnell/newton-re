@@ -1,0 +1,8 @@
+@@ 0x508d0d
+func() begin
+	if (isNewMeeting or dirtyFlag) then begin
+			self:CarefulSave()
+		end;
+	self:CloseSlip()
+end
+@@end

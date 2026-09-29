@@ -1,0 +1,5 @@
+@@ 0x480555
+func(a1) begin
+	DialinNetworkRegsitry.(a1)
+end
+@@end

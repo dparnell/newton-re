@@ -1,0 +1,11 @@
+@@ 0x51c7f1
+func() begin
+	if Visible(pageDialog) then begin
+			pageDialog:Close()
+		end;
+	if Visible(pageNumberDialog) then begin
+			pageNumberDialog:Close()
+		end;
+	browser:Toggle()
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x50b4b1
+func() begin
+	inherited:?viewSetupFormScript();
+	playsound(@301);
+	self.text := xyzzy;
+	(self.viewBounds := RelBounds(0, 0, 140, 12))
+end
+@@end

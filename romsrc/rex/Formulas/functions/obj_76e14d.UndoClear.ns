@@ -1,0 +1,13 @@
+@@ 0x76ec89
+func(a1) begin
+	solvedFor := a1.solvedFor;
+	solvingFormula := true;
+	(foreach l1, l2 in FSViews do begin
+			if ((solvedFor = nil) or (l1 <> solvedFor)) then begin
+					l2:SetNumericValue(a1.values[l1])
+				end
+		end);
+	solvingFormula := nil;
+	self:SolveFormula(nil)
+end
+@@end

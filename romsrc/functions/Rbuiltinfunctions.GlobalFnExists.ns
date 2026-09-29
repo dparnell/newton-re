@@ -1,0 +1,5 @@
+@@ 0x62faad
+func(a1) begin
+	HasSlot(functions, a1)
+end
+@@end

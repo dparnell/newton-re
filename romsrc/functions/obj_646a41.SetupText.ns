@@ -1,0 +1,9 @@
+@@ 0x48ae39
+func() begin
+	local l1, l2;
+	(if (l1 := GetUserConfig('currentPersona)) then begin
+			l2 := ResolveEntryAlias(l1);
+			(text := Stringer([Array: (if (Length(GetUserConfig('personae)) > 1) then $\uFC01), self:PrimaryName(l2)]))
+		end else (text := ""))
+end
+@@end

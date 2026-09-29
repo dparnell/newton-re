@@ -1,0 +1,46 @@
+@@ 0x44f1c1
+func(a1, a2) begin
+	local l1, l2;
+	l1 := nil;
+	self:SaveUndoState(nil);
+	if ((a1 = wordRight) or (a2 = wordLeft)) then begin
+			self:DeleteSpace((a1 - wordLeft), (a2 - wordLeft));
+			l1 := true
+		end else begin
+			if (a1 < wordLeft) then begin
+					a1 := wordLeft
+				end;
+			if (a2 > wordRight) then begin
+					a2 := wordRight
+				end;
+			if self:FixedWord() then begin
+					(while (a1 < a2) do begin
+							if (if (not self:CellLocked(a1)) then (text[a1] <> $ )) then begin
+									text[a1] := $ ;
+									altChars[a1] := nil;
+									l1 := true
+								end;
+							(a1 := (a1 + 1))
+						end)
+				end else begin
+					if ((l2 := (a2 - a1)) > 0) then begin
+							StrMunger(text, a1, l2, nil, 0, 0);
+							ArrayRemoveCount(altChars, a1, l2);
+							wordRight := (wordRight - l2);
+							self:PadRight();
+							l1 := true
+						end
+				end
+		end;
+	if (if lastChar then ((lastChar < wordLeft) or (lastChar >= wordRight))) then begin
+			lastChar := nil
+		end;
+	if l1 then begin
+			wordSource := 'single;
+			self:InvalDrawCache('chars);
+			self:DisplayExternal(true);
+			self:Dirty()
+		end;
+	return l1
+end
+@@end

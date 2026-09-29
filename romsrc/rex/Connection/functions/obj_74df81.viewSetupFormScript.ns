@@ -1,0 +1,10 @@
+@@ 0x74e481
+func() begin
+	if (not savedViewBounds) then begin
+			self:SetNewPath(nil);
+			self.savedViewBounds := Clone(viewBounds)
+		end;
+	self.indent := (StrFontWidth(text, viewFont) + 3);
+	inherited:?viewSetupFormScript()
+end
+@@end

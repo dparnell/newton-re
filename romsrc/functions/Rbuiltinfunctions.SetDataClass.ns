@@ -1,0 +1,5 @@
+@@ 0x476c59
+func(a1, a2) begin
+	(if a1 then SetClass(a1, a2))
+end
+@@end

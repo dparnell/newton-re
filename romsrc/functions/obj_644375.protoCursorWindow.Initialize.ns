@@ -1,0 +1,9 @@
+@@ 0x5b99d1
+func(a1, a2) begin
+	self.buffer := Array(a2, nil);
+	self.bufferSize := a2;
+	self.cursor := a1;
+	self.dipStick := self:FillBuffer();
+	return self
+end
+@@end

@@ -1,0 +1,13 @@
+@@ 0x4796a9
+func() begin
+	viewBounds := DeepClone(viewBounds);
+	if (if formats then (Length(formats) > 1)) then begin
+			viewBounds.top := (envelopeHeight + 8);
+			viewBounds.bottom := (viewBounds.top + 16);
+			viewBounds.right := (envelopeWidth - 10)
+		end else begin
+			self.viewFlags := BAnd(self.viewFlags, bnot(1))
+		end;
+	inherited:viewSetupFormScript()
+end
+@@end

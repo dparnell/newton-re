@@ -1,0 +1,17 @@
+@@ 0x4a04f1
+func(a1, a2, a3, a4, a5, a6) begin
+	local l1, l2, l3;
+	if (if a5 then (l1 := GetVariable(self, a5))) then begin
+			if l1.viewCObject then begin
+					l1:Close()
+				end;
+			SetVariable(self, a5, nil)
+		end;
+	l2 := {userText: a4, context: self, receiver: self, message: a6};
+	l3 := ValidateConfigGuts(a2, a1, a3, l2);
+	if (if a5 then l3.slip) then begin
+			SetVariable(self, a5, l3.slip)
+		end;
+	l3.result
+end
+@@end

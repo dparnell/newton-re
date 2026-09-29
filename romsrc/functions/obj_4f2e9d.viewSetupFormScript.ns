@@ -1,0 +1,5 @@
+@@ 0x4f2e5d
+func() begin
+	self:InitializeDayOfWeekButton(dayNum)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x538545
+func(a1, a2) begin
+	(if ((a1 = 'Filing) or (a1 = 'route)) then 'OK else (if ((a1 = 'delete) or (a1 = 'move)) then "built-in" else "the wrong kind"))
+end
+@@end

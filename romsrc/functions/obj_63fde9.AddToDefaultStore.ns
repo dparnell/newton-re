@@ -1,0 +1,5 @@
+@@ 0x5b8961
+func(a1) begin
+	self:Add(a1)
+end
+@@end

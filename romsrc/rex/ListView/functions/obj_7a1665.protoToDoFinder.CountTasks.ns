@@ -1,0 +1,22 @@
+@@ 0x79b70d names
+func(anEntry) begin
+	(if (findType = 'text) then begin
+			if (found := FindStringInFrame(anEntry.topics, findWords, 'first)) then begin
+					return (Length(found) / 3)
+				end;
+			return 0
+		end else (if (anEntry.date = 0) then begin
+				Print("gotta count repeating");
+				Count := 0;
+				local found;
+				local topic;
+				local Count;
+				(foreach topic in anEntry.topics do begin
+						if self:TaskMatches(topic) then begin
+								Count := (Count + 1)
+							end
+					end);
+				Count
+			end else Length(anEntry.topics)))
+end
+@@end

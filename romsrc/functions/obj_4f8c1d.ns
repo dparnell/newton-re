@@ -1,0 +1,26 @@
+@@ 0x4f8c1d
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6;
+	if (a1.viewBounds = true) then begin
+			a1.viewBounds := nil;
+			return nil
+		end;
+	l2 := (((l1 := a1.viewBounds).top * 16) div 13);
+	l3 := ((l1.bottom * 16) div 13);
+	l4 := a1.viewStationery;
+	(if LSearch('[Array: meeting, RepeatingMeeting, exceptionMeeting, cribNote], l4, 0, '|=|, nil) then begin
+			l2 := ((l2 := (l2 + 4)) - (l2 mod 8));
+			if (((l3 := ((l3 := (l3 + 4)) - (l3 mod 8))) - l2) < 16) then begin
+					l3 := (l2 + 16)
+				end;
+			l1.top := l2;
+			(l1.bottom := l3)
+		end else begin
+			l5 := (l1.bottom - l1.top);
+			l1.top := l2;
+			l1.bottom := (l2 + l5);
+			l6 := (((l6 := ((l6 := ((l6 := a1.mtgStartDate) - (l6 mod 1440))) + ((l2 * 1440) div 768))) + 8) - ((l6 + 8) mod 15));
+			(a1.mtgStartDate := l6)
+		end)
+end
+@@end

@@ -1,0 +1,21 @@
+@@ 0x4d774d
+func(a1) begin
+	local l1;
+	if IsFrame(a1) then begin
+			if a1._version then begin
+					if (a1._version = 2) then begin
+							l1 := 'twoO
+						end
+				end else begin
+					if a1.class then begin
+							l1 := 'twoO
+						end else begin
+							if (if a1.viewStationery then a1.height) then begin
+									l1 := 'oneO
+								end
+						end
+				end
+		end;
+	l1
+end
+@@end

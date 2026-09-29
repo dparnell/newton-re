@@ -1,0 +1,12 @@
+@@ 0x423a75
+func() begin
+	local l1;
+	(if (not hwMode) then begin
+			l1 := self:ViewValueToDb(viewValue);
+			(if (userConfigSlot = 'soundVolumeDb) then begin
+					SetSystemVolume(l1);
+					PlaySoundIrregardless(@302)
+				end else PlaySoundIrregardlessAtVolume(@302, l1))
+		end)
+end
+@@end

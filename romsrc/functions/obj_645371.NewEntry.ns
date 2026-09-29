@@ -1,0 +1,10 @@
+@@ 0x4af835
+func(a1, a2, a3) begin
+	masterSoup:AddEntry(a1, a3);
+	if a2 then begin
+			dataCursor:Goto(a1)
+		end;
+	AddUndoSend(layout, 'KillEntry, [Array: a1]);
+	(if a2 then layout:NewTarget() else layout:Retarget(true))
+end
+@@end

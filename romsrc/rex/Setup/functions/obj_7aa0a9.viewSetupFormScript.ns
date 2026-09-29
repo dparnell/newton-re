@@ -1,0 +1,15 @@
+@@ 0x7aa161
+func() begin
+	if (buttonText exists) then begin
+			self.text := buttonText
+		end else begin
+			self.text := "Continue"
+		end;
+	viewBounds := Clone(viewBounds);
+	if (not fFirstTime) then begin
+			viewBounds.right := (viewBounds.right - 21)
+		end;
+	viewBounds.left := ((viewBounds.right - StrFontWidth(text, viewFont)) - 6);
+	(viewBounds.top := (viewBounds.bottom - fontHeight(viewFont)))
+end
+@@end

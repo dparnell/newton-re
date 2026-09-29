@@ -1,0 +1,24 @@
+@@ 0x4dacd1
+func(a1, a2) begin
+	local l1, l2, l3;
+	dateStop := ((dateStart := ((dateStart := (l1 := paperroll:SetupPrintingCursor(a1)):entry().timestamp) - (dateStart mod 1440))) + 10080);
+	text := "";
+	(loop begin
+			if (not (l2 := l1:prev())) then begin
+					break
+				end;
+			(if (l2.timestamp < dateStart) then break)
+		end);
+	(loop begin
+			if (not (l2 := l1:Next())) then begin
+					break
+				end;
+			if (l2.timestamp > dateStop) then begin
+					break
+				end;
+			l3 := LongDateStr(l2.timestamp, @66.longDateStrSpec);
+			(text := Stringer([Array: text, l3, "\n", notesText(l2.data), "\n"]))
+		end);
+	text
+end
+@@end

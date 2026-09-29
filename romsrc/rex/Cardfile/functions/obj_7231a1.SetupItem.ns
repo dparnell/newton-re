@@ -1,0 +1,6 @@
+@@ 0x7236ed
+func(a1, a2) begin
+	a1.title := name;
+	inherited:SetupItem(a1, a2)
+end
+@@end

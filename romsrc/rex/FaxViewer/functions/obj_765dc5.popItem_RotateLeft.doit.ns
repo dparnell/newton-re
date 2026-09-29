@@ -1,0 +1,5 @@
+@@ 0x7669b5
+func(a1) begin
+	a1:DoMunge('rotateLeft)
+end
+@@end

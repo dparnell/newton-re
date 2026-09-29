@@ -1,0 +1,7 @@
+@@ 0x5a5f85
+func() begin
+	inherited:?viewSetupDoneScript();
+	firstName.entryLine.dictionaries := [Array: 48, 31, 0];
+	(lastName.entryLine.dictionaries := [Array: 7, 31, 0])
+end
+@@end

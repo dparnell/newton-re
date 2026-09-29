@@ -1,0 +1,16 @@
+@@ 0x43d9e5
+func(a1) begin
+	local l1, l2;
+	(if (if viewCObject then (a1 >= 0)) then begin
+			l1 := (startLeft + ((a1 * (iconBBox.right - 4)) div numIndices));
+			if (a1 = 0) then begin
+					l1 := (l1 + 2);
+					l2 := hiliteIconA
+				end else begin
+					l1 := (l1 + indent);
+					l2 := hiliteIcon
+				end;
+			self:DoDrawing('CopyBits, [Array: l2, l1, ((viewBBox.bottom - (hiliteIcon.bounds.bottom - hiliteIcon.bounds.top)) - 2), 2])
+		end)
+end
+@@end

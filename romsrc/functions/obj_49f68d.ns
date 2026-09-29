@@ -1,0 +1,14 @@
+@@ 0x49f68d
+func(a1) begin
+	local l1;
+	l1 := nil;
+	if (soupFilter = nil) then begin
+			l1 := '_unfiled
+		end else begin
+			if (soupFilter <> '_all) then begin
+					l1 := soupFilter
+				end
+		end;
+	self:AddTagSlot(a1, 'all, l1)
+end
+@@end

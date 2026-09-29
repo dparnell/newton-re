@@ -1,0 +1,18 @@
+@@ 0x75f341
+@@const kROM_8260
+@8260
+@@main
+func(a1, a2) begin
+	local result;
+	local l1, l2;
+	result := 0;
+	l1 := GetRoot().Connection;
+	(l2 := BuildContext(kROM_8260)).config := a2;
+	l2.endpoint := a1;
+	l2.DesktopInputDone := func(a1) begin
+		(result := a1)
+	end;
+	l2:ModalDialog();
+	return result
+end
+@@end

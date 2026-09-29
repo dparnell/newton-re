@@ -1,0 +1,15 @@
+@@ 0x5b8169
+func(a1) begin
+	local l1;
+	(if ((not a1) or ModalCheckPIN("Enter old PIN", a1)) then (if (l1 := ModalPINPrompt("Enter New PIN")) then (if ModalCheckPIN("Confirm New PIN", l1) then l1 else begin
+					GetRoot():Notify(3, "PIN Entry", "Confirmation of the new PIN failed. Your original PIN remains unchanged.");
+					nil
+				end) else begin
+				GetRoot():Notify(3, "PIN Entry", "No new PIN was entered. Your original PIN remains unchanged.");
+				nil
+			end) else begin
+			GetRoot():Notify(3, "PIN Entry", "An incorrect PIN has been entered. Please try again.");
+			nil
+		end)
+end
+@@end

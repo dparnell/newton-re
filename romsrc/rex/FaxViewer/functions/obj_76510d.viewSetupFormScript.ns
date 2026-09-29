@@ -1,0 +1,6 @@
+@@ 0x7651c1
+func() begin
+	inherited:?viewSetupFormScript();
+	(self.scrollView := imageContainer)
+end
+@@end

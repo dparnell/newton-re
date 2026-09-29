@@ -1,0 +1,6 @@
+@@ 0x545b89
+func() begin
+	AddDeferredSend(GetRoot().cardfile, 'OpenAsOwner, '[Array: true]);
+	GetUserConfig('ExtraAlwaysClose)
+end
+@@end

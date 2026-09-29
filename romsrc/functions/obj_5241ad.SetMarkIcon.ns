@@ -1,0 +1,11 @@
+@@ 0x51e85d
+func() begin
+	local l1;
+	if pageNumsShowing[0] then begin
+			l1 := Length(self:InkMarks(pageNumsShowing[0]))
+		end else begin
+			l1 := Length(self:InkMarks(pageNumsShowing[1]))
+		end;
+	self:SetDynamicMarkIcon(l1)
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x4ec815
+func() begin
+	inherited:?viewSetupDoneScript();
+	(if activeNotify then begin
+			GetRoot().notifyIcon:KillAction(activeNotify);
+			(activeNotify := nil)
+		end)
+end
+@@end

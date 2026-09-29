@@ -1,0 +1,5 @@
+@@ 0x562de1
+func(a1) begin
+	AddArraySlot(OldPowerOffHandlers, a1)
+end
+@@end

@@ -1,0 +1,21 @@
+@@ 0x78cc1d names
+func(aDropPoint) begin
+	box := self:GlobalBox();
+	x := (aDropPoint.x - box.left);
+	if ((y := (aDropPoint.y - box.top)) <= self:ListBottom()) then begin
+			local x;
+			local y;
+			local box;
+			local topic;
+			local topicBounds;
+			(foreach topic in topics do begin
+					(topicBounds := Clone(topic.viewBounds)).left := (topicBounds.left - ((20 + leftMarkGap) + rightMarkGap));
+					if (if ((topic.hideCount = 0) or (topic.hideCount = nil)) then IsPtInRect(x, y, topicBounds)) then begin
+							return allDropTypes
+						end
+				end);
+			return markerDropTypes
+		end;
+	allDropTypes
+end
+@@end

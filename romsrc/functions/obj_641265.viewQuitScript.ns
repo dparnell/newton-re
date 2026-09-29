@@ -1,0 +1,18 @@
+@@ 0x5a949d
+func() begin
+	try begin
+			SaveUserDictionary();
+			SaveExpandDictionary()
+		end onexception |evt.ex| do begin
+			self:Notify(3, notifyTitle, "The word list could not be saved. (Memory is probably full).")
+		end;
+	if (if (window exists) then window) then begin
+			window:GetCursor():Dispose();
+			RemoveSlot(self, 'window)
+		end;
+	viewBounds := nil;
+	(foreach l1 in [Array: 'expandDict, 'dictionary, 'selectedEntry, 'selectedWord, 'lineHeight, 'selectedIndex, 'viewFlags] do begin
+			RemoveSlot(self, l1)
+		end)
+end
+@@end

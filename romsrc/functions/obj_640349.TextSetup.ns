@@ -1,0 +1,14 @@
+@@ 0x429381
+func() begin
+	local l1, l2;
+	l1 := "";
+	if (if labelCommands then (Length(labelCommands) > 0)) then begin
+			if IsFrame((l2 := (l1 := labelCommands[0]))) then begin
+					if (if (not (l1 := l2.item)) then l2.keyMessage) then begin
+							l1 := MatchKeyMessage(self, l2.keyMessage).name
+						end
+				end
+		end;
+	l1
+end
+@@end

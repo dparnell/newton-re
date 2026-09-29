@@ -1,0 +1,23 @@
+@@ 0x48f6c9
+func() begin
+	inherited:?viewSetupFormScript();
+	if (l1 := soupNameList) then begin
+			l3 := LSearch(l1, 'otherFrame, 0, '|=|, 'class)
+		end;
+	if l3 then begin
+			l2 := l1[l3];
+			RemoveSlot(l1, l3);
+			local l1;
+			local l2;
+			local l3;
+			(foreach l4 in l2.soups do begin
+					BInsert(l1, {name: l4, soups: [Array: l4]}, '|str<|, '[pathExpr: name], nil)
+				end)
+		end;
+	self.ListItems := [Array: ];
+	self.selectedItems := [Array: ];
+	self.checkAll := (prefsCache.(prefsSlot) = 'all);
+	self:figureAllItems(ListItems, selectedItems);
+	self:SetupList()
+end
+@@end

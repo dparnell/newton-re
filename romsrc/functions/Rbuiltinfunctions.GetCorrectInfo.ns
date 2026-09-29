@@ -1,0 +1,5 @@
+@@ 0x46dd99
+func() begin
+	GetGlobals().correctInfo
+end
+@@end

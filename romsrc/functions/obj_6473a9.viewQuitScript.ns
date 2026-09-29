@@ -1,0 +1,5 @@
+@@ 0x460675
+func() begin
+	(if HasSlot(self, 'viewBounds) then RemoveSlot(self, 'viewBounds))
+end
+@@end

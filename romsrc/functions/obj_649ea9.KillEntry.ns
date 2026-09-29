@@ -1,0 +1,5 @@
+@@ 0x4c5985
+func(a1) begin
+	self:ioKillEntry(a1)
+end
+@@end

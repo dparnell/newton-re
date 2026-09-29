@@ -1,0 +1,6 @@
+@@ 0x7a9669
+func(a1) begin
+	self:viewOverviewScript();
+	true
+end
+@@end

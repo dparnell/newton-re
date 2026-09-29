@@ -1,0 +1,5 @@
+@@ 0x75fb85
+func() begin
+	(self.reopenMainSlip := true)
+end
+@@end

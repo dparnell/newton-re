@@ -1,0 +1,8 @@
+@@ 0x461ced
+func() begin
+	if (not allCollapsed) then begin
+			self:MarkItemSeen(index, nil)
+		end;
+	inherited:?viewOverviewScript()
+end
+@@end

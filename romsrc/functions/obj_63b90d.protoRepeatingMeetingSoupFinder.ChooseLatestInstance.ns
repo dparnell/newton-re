@@ -1,0 +1,33 @@
+@@ 0x4efd8d
+func() begin
+	l1 := 0;
+	l2 := nil;
+	local l1;
+	local l2;
+	(foreach l3 in repeatingEntryFinders do begin
+			local l5, l6;
+			if (if (l3.currentInstance >= 0) then (l3.currentInstance < l3.instancesCount)) then begin
+					l5 := l3.instancesDates[l3.currentInstance]
+				end else begin
+					l5 := nil
+				end;
+			l6 := nil;
+			if (not l5) then begin
+					l6 := nil
+				end else begin
+					if (l5 > l1) then begin
+							l6 := true
+						end else begin
+							if (l5 = l1) then begin
+									l6 := (l3.EntryUniqueID > earliestFinder.EntryUniqueID)
+								end
+						end
+				end;
+			if l6 then begin
+					l2 := l3;
+					l1 := l5
+				end
+		end);
+	(if l2 then (self.currentRepeatingEntryFinder := l2))
+end
+@@end

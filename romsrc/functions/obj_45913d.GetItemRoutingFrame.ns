@@ -1,0 +1,9 @@
+@@ 0x458c15
+func(a1) begin
+	local l1;
+	if ((not (l1 := self:Get(a1, 'phone, nil))) or IsInstance(l1, '|string.noData|)) then begin
+			l1 := ""
+		end;
+	{entry: a1, name: self:Get(a1, primaryPath, 'text), country: a1.country, rawNumber: l1, displayNumber: MakeDisplayPhone(l1), phoneNumber: (if a1.asIsPhone then a1.asIsPhone else GetRoot():MungePhone(l1, a1.country))}
+end
+@@end

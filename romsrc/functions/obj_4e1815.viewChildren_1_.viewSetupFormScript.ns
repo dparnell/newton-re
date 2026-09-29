@@ -1,0 +1,6 @@
+@@ 0x4e1505
+func() begin
+	Time := LocalTime(nil, target);
+	(place := target)
+end
+@@end

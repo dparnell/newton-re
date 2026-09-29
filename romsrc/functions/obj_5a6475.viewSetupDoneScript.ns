@@ -1,0 +1,9 @@
+@@ 0x5a62dd
+func() begin
+	local l1;
+	inherited:?viewSetupDoneScript();
+	l1 := GetLocale();
+	city.entryLine.dictionaries := l1.recogCityDictionaries;
+	(state.entryLine.dictionaries := l1.recogStateDictionaries)
+end
+@@end

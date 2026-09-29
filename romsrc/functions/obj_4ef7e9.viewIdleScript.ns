@@ -1,0 +1,11 @@
+@@ 0x4ef7c9
+func() begin
+	local l1, l2;
+	if (if target.toRef then (Length(target.toRef) > 0)) then begin
+			if ((not (l2 := GetDataDefs('|nameRef.phone|):Get((l1 := target.toRef[0]), 'name, 'text))) or (not (if StrFilled(target.name) then StrEqual(l2, target.name)))) then begin
+					target.toRef := nil
+				end
+		end;
+	inherited:viewIdleScript()
+end
+@@end

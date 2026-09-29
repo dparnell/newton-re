@@ -1,0 +1,7 @@
+@@ 0x736255
+func(a1) begin
+	local l1, l2, l3;
+	l1 := GetRoot().calendar;
+	(if (l3 := l1:FindAppointment((l2 := ParamStr("Bday: ^0", [Array: GetRoot():PrimaryName(a1)])), nil, nil, '[Array: RepeatingMeeting, RepeatingEvent], 1)) then l1:DeleteRepeatingEntry(l2, l3[0].mtgStartDate, true))
+end
+@@end

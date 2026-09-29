@@ -1,0 +1,84 @@
+@@ 0x4c57e5
+func() begin
+	self:Retarget(nil);
+	l1 := dataCursor:entry();
+	l2 := self:LocalBox();
+	self.maxLines := (l2.bottom div lineHeight);
+	l2.bottom := lineHeight;
+	hilitedIndex := nil;
+	self.numItems := 0;
+	l3 := (scrollOrigin = -1);
+	l4 := nil;
+	l5 := self:GetAppPreferences().sortby;
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	(foreach l6 in headings do begin
+			l6.index := numItems;
+			if (if l3 then l1) then begin
+					if (l5 = 'Date) then begin
+							l4 := (if (l1.timestamp >= l6.sortTag) then (l1.timestamp < (l6.sortTag + 1440)))
+						end else begin
+							if (l5 = 'transport) then begin
+									l4 := (l1.category = l6.sortTag)
+								end else begin
+									if (l5 = 'status) then begin
+											l4 := (l1.state = l6.sortTag)
+										end
+								end
+						end;
+					if l4 then begin
+							if (overviewMode or l6.collapsed) then begin
+									scrollOrigin := l6.index
+								end else begin
+									l8 := 0;
+									if (not (l9 := l6.curs)) then begin
+											l9 := self:MakeCursor(currentSoupSymbol, l6.spec)
+										end;
+									l9:Goto(l1);
+									(while l9:prev() do (l8 := (l8 + 1)));
+									scrollOrigin := (numItems + l8)
+								end
+						end
+				end;
+			if (if (not overviewMode) then (not l6.collapsed)) then begin
+					numItems := ((numItems + l6.count) + 1)
+				end else begin
+					numItems := (numItems + 1)
+				end;
+			if (if (if (not l3) then (scrollOrigin >= l6.index)) then (scrollOrigin < numItems)) then begin
+					if l6.curs then begin
+							l6.curs:Reset()
+						end else begin
+							l6.curs := self:MakeCursor(currentSoupSymbol, l6.spec)
+						end;
+					if (scrollOrigin > l6.index) then begin
+							l6.curs:move(((scrollOrigin - l6.index) - 1))
+						end;
+					if (l1 := l6.curs:entry()) then begin
+							dataCursor:Goto(l1)
+						end
+				end
+		end);
+	if (scrollOrigin = -1) then begin
+			scrollOrigin := 0
+		end else begin
+			if ((numItems - scrollOrigin) < maxLines) then begin
+					scrollOrigin := max(0, (numItems - maxLines))
+				end
+		end;
+	checkBoxVertOffset := 2;
+	self.pieces := Array(min(maxLines, max((numItems - scrollOrigin), 0)), nil);
+	local l8;
+	local l9;
+	local l10;
+	(for l11 := 0 to (Length(pieces) - 1) do begin
+			pieces[l11] := self:GetTheRightShape((l11 + scrollOrigin), l2);
+			l2.bottom := ((l2.top := l2.bottom) + lineHeight)
+		end);
+	self.numLines := Length(pieces);
+	nil
+end
+@@end

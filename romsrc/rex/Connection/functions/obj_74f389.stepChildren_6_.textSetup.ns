@@ -1,0 +1,23 @@
+@@ 0x750d91
+func() begin
+	if (Length(labelCommands) > 0) then begin
+			if (if currentPath then (Length(currentPath) > 0)) then begin
+					l2 := self:GetDriveFromName(currentPath[0].name);
+					local l1;
+					local l2;
+					(for l3 := 0 to (Length(labelCommands) - 1) do begin
+							local l6;
+							l6 := self:GetDriveFromName(labelCommands[l3]);
+							if StrEqual(l2, l6) then begin
+									l1 := labelCommands[l3];
+									break
+								end
+						end)
+				end;
+			if (not l1) then begin
+					l1 := labelCommands[0]
+				end
+		end;
+	(if l1 then return l1 else return "")
+end
+@@end

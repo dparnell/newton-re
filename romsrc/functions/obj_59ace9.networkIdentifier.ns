@@ -1,0 +1,13 @@
+@@ 0x59aa85
+func() begin
+	local l1;
+	l1 := "eworld2";
+	if (speed <= 9600) then begin
+			l1 := "eworld1"
+		end;
+	if (speed <= 2400) then begin
+			l1 := "eworld0"
+		end;
+	l1
+end
+@@end

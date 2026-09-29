@@ -1,0 +1,5 @@
+@@ 0x4840e9
+func(a1) begin
+	PressButton(editFoldersButton)
+end
+@@end

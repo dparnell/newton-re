@@ -1,0 +1,12 @@
+@@ 0x4ee071
+@@const kFunction_4ee051
+func(a1, a2) begin
+	(if (if (a1._uniqueID = a2._uniqueID) then (a1._storeID = a2._storeID)) then (a1.instanceTime = a2.instanceTime))
+end
+@@main
+func(a1) begin
+	local l1, l2;
+	l1 := {_uniqueID: a1.entryID, _storeID: a1.storeID, instanceTime: a1.instanceTime};
+	(if selected then (if (l2 := LSearch(selected, l1, 0, kFunction_4ee051, nil)) then RemoveSlot(selected, l2) else AddArraySlot(selected, l1)) else (selected := [Array: l1]))
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x4dab89
+func(a1, a2) begin
+	notesText(a2.data)
+end
+@@end

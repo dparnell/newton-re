@@ -1,0 +1,5 @@
+@@ 0x42516d
+func() begin
+	(if fStore then fStore else GetDefaultStore())
+end
+@@end

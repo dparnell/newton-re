@@ -1,0 +1,16 @@
+@@ 0x4ab0d1
+func(a1, a2, a3) begin
+	local l1;
+	if ((if (labelsFilter = a2) then a2) or (if (not a3) then (not labelsFilter))) then begin
+			labelsFilter := a3;
+			l1 := true
+		end;
+	self:FolderChangedX(a1, a2, a3);
+	(if l1 then begin
+			if filterBar then begin
+					filterBar:UpdateFilter(a2, a3)
+				end;
+			self:FilterChanged()
+		end)
+end
+@@end

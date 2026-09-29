@@ -1,0 +1,6 @@
+@@ 0x3c61c1
+func(a1, a2) begin
+	SoupRestoreRegistry.(EnsureInternal(a1)) := a2;
+	nil
+end
+@@end

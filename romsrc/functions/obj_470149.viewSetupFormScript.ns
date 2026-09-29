@@ -1,0 +1,15 @@
+@@ 0x4700c9
+func() begin
+	currentNames := 0;
+	currentChecks := 0;
+	chooserNBPTable := self;
+	(def := Clone(def)).tabProtos := entryProto;
+	def.tabWidths := 170;
+	if def.indentX then begin
+			def.tabWidths := (def.tabWidths - def.indentX)
+		end;
+	self.viewBounds := Clone(viewBounds);
+	self.viewBounds.bottom := (viewBounds.top + (((7 * FontHeight(viewFont)) - 7) + 1));
+	(if (startSelection <> nil) then (currentSelection := GetNames(startSelection)))
+end
+@@end

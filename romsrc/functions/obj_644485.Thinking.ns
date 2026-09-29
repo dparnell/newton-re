@@ -1,0 +1,6 @@
+@@ 0x525105
+func() begin
+	SetValue(assistMsg, 'text, "Interpreting...");
+	RefreshViews()
+end
+@@end

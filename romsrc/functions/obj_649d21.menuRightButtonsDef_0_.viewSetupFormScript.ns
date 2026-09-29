@@ -1,0 +1,6 @@
+@@ 0x4c1741
+func() begin
+	inherited:?viewSetupFormScript();
+	(_closeBox := self)
+end
+@@end

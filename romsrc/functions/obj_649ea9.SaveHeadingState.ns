@@ -1,0 +1,6 @@
+@@ 0x4c58e5
+func(a1) begin
+	local l1, l2;
+	(if ((l1 := ClassOf(headings)) = 'transport) then (if (l2 := GetRoot().(a1.sortTag)) then l2:SetConfig(collapsedSym, a1.collapsed)) else (if (l1 = 'status) then (statesCollapsed.(a1.sortTag) := a1.collapsed)))
+end
+@@end

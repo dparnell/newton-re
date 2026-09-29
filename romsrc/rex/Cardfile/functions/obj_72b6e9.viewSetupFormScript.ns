@@ -1,0 +1,9 @@
+@@ 0x72b779
+func() begin
+	local l1;
+	newDictionaries := (l1 := GetLocale()).recogHonorificDictionaries;
+	labelCommands := l1.commonHonorifics;
+	label := l1.honorificLabel;
+	inherited:?viewSetupFormScript()
+end
+@@end

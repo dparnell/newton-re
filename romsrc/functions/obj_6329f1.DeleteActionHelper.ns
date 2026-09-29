@@ -1,0 +1,15 @@
+@@ 0x561c4d
+func() begin
+	what := saveWhat;
+	whatView := saveWhatView;
+	if findAllResults then begin
+			closeWhenSoupsChange := nil;
+			(foreach l1 in findAllResults do begin
+					l1:delete()
+				end);
+			closeWhenSoupsChange := true;
+			whatView:delete('DoDeleteScript, [Array: ])
+		end;
+	base:Close()
+end
+@@end

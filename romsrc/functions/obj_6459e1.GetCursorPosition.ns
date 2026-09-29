@@ -1,0 +1,6 @@
+@@ 0x4a8411
+func() begin
+	local l1;
+	(if IsSoupEntry((l1 := theCursor:entry())) then self:GetAlias(l1))
+end
+@@end

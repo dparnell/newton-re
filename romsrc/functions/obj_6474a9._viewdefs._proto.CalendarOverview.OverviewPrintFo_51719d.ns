@@ -1,0 +1,5 @@
+@@ 0x51719d
+func() begin
+	(if drawShapes then self:DrawShape(drawShapes, bodyStyle))
+end
+@@end

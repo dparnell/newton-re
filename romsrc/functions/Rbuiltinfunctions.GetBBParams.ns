@@ -1,0 +1,38 @@
+@@ 0x418e91
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8;
+	if GlobalVarExists('ButtonBarParams) then begin
+			l1 := ButtonBarParams[a1]
+		end;
+	if (not l1) then begin
+			l2 := GetUserConfig('buttonBarPositions);
+			l3 := GetUserConfig('buttonBarControlsPositions);
+			l4 := GetUserConfig('bellyButtonPositions);
+			if ((l2 or l3) or l4) then begin
+					l5 := GetRawDisplayParams(a1);
+					l6 := (if (if l2 then l2[a1]) then l2[a1] else l5.buttonBarPosition);
+					l7 := (if (if l3 then l3[a1]) then l3[a1] else l5.buttonBarControlsPosition);
+					l8 := (if (if l4 then l4[a1]) then l4[a1] else l5.bellyButtonPosition);
+					if ((l6 = 'right) or (l6 = 'left)) then begin
+							if (l7 <> 'bottom) then begin
+									l7 := 'top
+								end
+						end else begin
+							if (l7 <> 'right) then begin
+									l7 := 'left
+								end
+						end;
+					if (((l6 <> l5.buttonBarPosition) or (l7 <> l5.buttonBarControlsPosition)) or (l8 <> l5.bellyButtonPosition)) then begin
+							if ((l6 = 'right) or (l6 = 'left)) then begin
+									l1 := {buttonBarPosition: l6, buttonBarThickness: l5.buttonBarVThickness, buttonBarControlsPosition: l7, bellyButtonPosition: l8}
+								end else begin
+									if ((l6 = 'top) or (l6 = 'bottom)) then begin
+											l1 := {buttonBarPosition: l6, buttonBarThickness: l5.buttonBarHThickness, buttonBarControlsPosition: l7, bellyButtonPosition: l8}
+										end
+								end
+						end
+				end
+		end;
+	l1
+end
+@@end

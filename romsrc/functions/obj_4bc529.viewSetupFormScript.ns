@@ -1,0 +1,11 @@
+@@ 0x4bc4e9
+func() begin
+	local l1;
+	if (not suppressAreaCode) then begin
+			viewBounds := SetBounds((l1 := ((indent + parenWidth) - 3)), 0, (l1 + areaCodeWidth), 40)
+		end;
+	text := currAreaCode;
+	self._keyboard := GetRoot().phoneKeyboard;
+	inherited:?viewSetupFormScript()
+end
+@@end

@@ -1,0 +1,19 @@
+@@ 0x4b62f1
+func() begin
+	popup := [Array: ];
+	if (if layout then layout.viewDefFrame) then begin
+			(foreach l1, l2 in layout.viewDefFrame do begin
+					if (if ((l2.type = 'viewer) or (l2.type = 'editor)) then ((l2.protection = nil) or (l2.protection = 'public))) then begin
+							self:AddToPopup(l1, l2)
+						end
+				end)
+		end;
+	if (Length(popup) > 1) then begin
+			self.viewFlags := BOr(self.viewFlags, 1)
+		end else begin
+			self.viewFlags := BAnd(self.viewFlags, bnot(1))
+		end;
+	inherited:?viewSetupFormScript();
+	(_showKeyButton := self)
+end
+@@end

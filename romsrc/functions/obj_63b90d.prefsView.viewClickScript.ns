@@ -1,0 +1,26 @@
+@@ 0x50b425
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10;
+	l1 := GetPoint(0, a1);
+	l2 := GetPoint(1, a1);
+	l4 := ((l3 := self:GlobalBox()).left + 3);
+	l5 := (l3.right - 3);
+	l6 := (l3.top + 3);
+	l7 := (l3.bottom - 3);
+	if (if (l1 < l4) then (l2 < l6)) then begin
+			l8 := true
+		end else begin
+			if (if (l1 < l4) then (l2 > (l7 - 3))) then begin
+					l10 := true
+				end else begin
+					if (if (l1 > l5) then (l2 < l6)) then begin
+							l9 := true
+						end else begin
+							return inherited:?viewClickScript(a1)
+						end
+				end
+		end;
+	self.xyzzy := (if l9 then "Scott Jenson" else (if l8 then "Fred Tou" else (if l10 then "Jeremy Wyld")));
+	who:Toggle()
+end
+@@end

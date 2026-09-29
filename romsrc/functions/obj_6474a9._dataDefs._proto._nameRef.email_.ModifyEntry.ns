@@ -1,0 +1,15 @@
+@@ 0x459b39
+func(a1, a2) begin
+	(if (l1 := EntryFromObj(a1)) then begin
+			local l1;
+			(foreach l2 in a2 do begin
+					if (l2 = 'email) then begin
+							GetRoot().cardfile:AddCardData(l1, 'email, {email: a1.email})
+						end else begin
+							self:ModifyEntryPath(a1, l1, l2)
+						end
+				end);
+			EntryChangeXmit(l1, 'entryChanged)
+		end)
+end
+@@end

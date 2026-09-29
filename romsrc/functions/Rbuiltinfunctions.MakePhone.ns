@@ -1,0 +1,16 @@
+@@ 0x4d3af5
+func(a1) begin
+	local l1;
+	l1 := "()x";
+	if StrFilled(a1.areacode) then begin
+			a1.areacode := StringFilterOut(a1.areacode, l1)
+		end;
+	if StrFilled(a1.phone) then begin
+			a1.phone := StringFilterOut(a1.phone, l1)
+		end;
+	if StrFilled(a1.extension) then begin
+			a1.extension := StringFilterOut(a1.extension, l1)
+		end;
+	ParamStr("^?0(^0)||^1^?2x^2||", [Array: a1.areacode, a1.phone, a1.extension])
+end
+@@end

@@ -1,0 +1,34 @@
+@@ 0x595285
+func(a1) begin
+	local l1, l2;
+	if a1.data then begin
+			if ((if a1.type then StrEqual(a1.type, "pkg ")) or EndsWith(a1.filename, ".pkg")) then begin
+					mailmessage.package := a1.data
+				end;
+			if (if a1.type then StrEqual(a1.type, "newt")) then begin
+					if (not (l1 := self:filetoframe(a1.data, a1.filesize))) then begin
+							l2 := "Not enough free space in the default soup to unpack the enclosure.";
+							GetRoot():Notify(3, serviceName, msg.text);
+							return nil
+						end;
+					if (not l1.text) then begin
+							l1.text := mailmessage.text
+						end;
+					l1.toRef := mailmessage.toRef;
+					if mailmessage.fromName then begin
+							l1.fromName := mailmessage.fromName
+						end;
+					l1.fromRef := mailmessage.fromRef;
+					l1.subject := mailmessage.subject;
+					l1.id := mailmessage.id;
+					l1.dateStr := mailmessage.dateStr;
+					l1.cc := mailmessage.cc;
+					l1.bcc := mailmessage.bcc;
+					l1.account := mailmessage.account;
+					mailmessage := l1
+				end
+		end;
+	self:?Mail_DownloadDoneScript(mailmessage);
+	(mailmessage := nil)
+end
+@@end

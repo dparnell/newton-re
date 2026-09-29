@@ -1,0 +1,10 @@
+@@ 0x72be4d
+func() begin
+	inherited:?viewSetupDoneScript();
+	if hiliteAreaCode then begin
+			AddDeferredSend(entryLine, 'SetHilite, [Array: 0, 999, true])
+		end;
+	entryLine._keyboard := GetRoot().phonekeyboard;
+	(entryLine.dictionaries := dictionaries)
+end
+@@end

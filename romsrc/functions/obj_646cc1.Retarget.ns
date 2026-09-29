@@ -1,0 +1,6 @@
+@@ 0x4b7e89
+func() begin
+	self:SetIcon();
+	self:Dirty()
+end
+@@end

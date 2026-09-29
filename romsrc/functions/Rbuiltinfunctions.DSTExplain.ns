@@ -1,0 +1,19 @@
+@@ 0x4205f1
+func(a1) begin
+	local l1, l2, l3;
+	l1 := "none";
+	if (not HasSlot((l2 := a1), 'daylight)) then begin
+			if ((not (l2 := GetCountryEntry(l2.country))) or (Length(l2) = 0)) then begin
+					return ""
+				end;
+			l2 := l2[0]
+		end;
+	if (if l2 then l2.daylight) then begin
+			if (l3 := GetDSTEntry(l2.daylight)) then begin
+					l3 := l3[0];
+					l1 := ParamStr("^0 - ^1", [Array: DSTDateExplain(l3.start), DSTDateExplain(l3.stop)])
+				end
+		end;
+	l1
+end
+@@end

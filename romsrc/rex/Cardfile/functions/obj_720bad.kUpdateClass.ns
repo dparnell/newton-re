@@ -1,0 +1,5 @@
+@@ 0x736ac5
+func(a1) begin
+	(if (ClassOf(a1.sorton) = 'name) then (a1.class := 'person) else (a1.class := 'company))
+end
+@@end

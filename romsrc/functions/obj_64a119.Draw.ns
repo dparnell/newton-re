@@ -1,0 +1,30 @@
+@@ 0x56f855
+func() begin
+	gameState := 'over;
+	(foreach l1, l2 in cardHolder:ChildViewFrames() do begin
+			if (BAnd(GetViewFlags(l2), 33554432) <> 0) then begin
+					hand[l1] := nil
+				end
+		end);
+	l4 := deck:Eval5((hand := deck:Draw(hand)));
+	if ((money := (money + deck.DrawPayOffs.(l4))) < bet) then begin
+			GetRoot():Notify(3, "Draw Poker", "Your line of credit has been terminated.");
+			AddDeferredSend(base, 'Close, nil)
+		end else begin
+			if (money > bankLimit) then begin
+					GetRoot():Notify(3, "Draw Poker", "Congratulations! You broke the bank.");
+					AddDeferredSend(base, 'Close, nil)
+				end
+		end;
+	SetValue(handValue, 'text, SymbolName(l4));
+	SetValue(dButton, 'text, "Deal");
+	SetValue(bankroll, 'text, Stringer([Array: $$, money]));
+	(foreach l1, l2 in cardHolder:ChildViewFrames() do begin
+			local l4;
+			if (BAnd(GetViewFlags(l2), 33554432) <> 0) then begin
+					l2:hilite(nil)
+				end
+		end);
+	cardHolder:Dirty()
+end
+@@end

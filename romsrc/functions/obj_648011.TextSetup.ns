@@ -1,0 +1,5 @@
+@@ 0x45ada1
+func() begin
+	ParamStr("^0 - ^?1ongoing|^2|", [Array: (if longFormat then LongDateStr(startTime, @66.(longFormat)) else ShortDateStr(startTime, @66.(shortFormat))), (stopTime = 536870911), (if longFormat then LongDateStr(stopTime, @66.(longFormat)) else ShortDateStr(stopTime, @66.(shortFormat)))])
+end
+@@end

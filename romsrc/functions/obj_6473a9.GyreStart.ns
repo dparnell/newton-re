@@ -1,0 +1,6 @@
+@@ 0x460695
+func() begin
+	self.gyreCount := 0;
+	self:SetupIdle(gyreRate)
+end
+@@end

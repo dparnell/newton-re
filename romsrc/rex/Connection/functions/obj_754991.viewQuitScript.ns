@@ -1,0 +1,10 @@
+@@ 0x754c49
+func() begin
+	protoContext:RemoveOpenWindow(self);
+	protoContext:ImportFileClose(endpoint);
+	if callWhenDone then begin
+			call callWhenDone with ()
+		end;
+	endpoint:StopIdle(self)
+end
+@@end

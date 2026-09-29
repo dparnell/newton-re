@@ -1,0 +1,36 @@
+@@ 0x41a4c1
+func() begin
+	local l1, l2, l3, l4, l5;
+	if (not vars.quicklooklives) then begin
+			l1 := GetUserConfig('SleepTime);
+			l2 := self:EventPause(nil);
+			if (if (if (l3 := GetUserConfig('backOff)) then (l2 >= l3)) then BackLightStatus()) then begin
+					BackLight(nil)
+				end;
+			if wokeFromAlarmOrGPI then begin
+					l4 := ((Ticks() - wokeFromAlarmOrGPI) div 60);
+					if (l2 < l4) then begin
+							wokeFromAlarmOrGPI := nil
+						end else begin
+							l1 := 45
+						end
+				end;
+			l5 := (((BatteryStatus(0).acPower <> 'yes) or GetUserConfig('powerSleep)) or wokeFromAlarmOrGPI);
+			if (if (if (l1 <> nil) then (l2 >= l1)) then l5) then begin
+					PowerOff('idle)
+				end;
+			if ((minute mod 2) = 0) then begin
+					MinimumBatteryCheck();
+					if ((minute mod 20) = 0) then begin
+							MainBatteryCheck();
+							DSTVerify(Time());
+							if ((minute mod 120) = 0) then begin
+									BackupBatteryCheck()
+								end
+						end
+				end;
+			minute := (minute + 1)
+		end;
+	viewIdleFrequency
+end
+@@end

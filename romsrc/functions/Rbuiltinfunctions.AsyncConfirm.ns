@@ -1,0 +1,17 @@
+@@ 0x4614d5
+func(a1, a2, closure) begin
+	local view;
+	if (not IsArray(a2)) then begin
+			if (ClassOf(a2) = 'symbol) then begin
+					a2 := @543.(a2)
+				end;
+			if (not a2) then begin
+					a2 := @543.okCancel
+				end
+		end;
+	(view := BuildContext({_proto: @544, message: a1, buttonList: a2, viewQuitScript: func() begin
+		AddDeferredCall(closure, [Array: view.confirmedValue])
+	end})):FilterDialog();
+	view
+end
+@@end

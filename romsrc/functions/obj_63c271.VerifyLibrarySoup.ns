@@ -1,0 +1,46 @@
+@@ 0x51c701
+func() begin
+	local theISBNs, onlines, offlines;
+	theISBNs := [Array: ];
+	onlines := [Array: ];
+	offlines := [Array: ];
+	MapCursor((l1 := GetRoot().ExtrasDrawer:GetPartCursor(nil, nil, nil)), func(a1) begin
+		local l1;
+		l1 := (not EntryIsResident(a1));
+		if HasSlot(a1, 'isbn) then begin
+				if a1.isbn then begin
+						AddArraySlot(theISBNs, a1.isbn)
+					end
+			end;
+		if l1 then begin
+				EntryUndoChanges(a1)
+			end;
+		nil
+	end);
+	local l1;
+	(foreach l2 in GetGlobals().|Parts1.x| do begin
+			local l4;
+			if HasSlot(l2, 'isbn) then begin
+					if l2.isbn then begin
+							AddArraySlot(theISBNs, l2.isbn)
+						end
+				end
+		end);
+	MapCursor((l4 := self:CreateGetSoup():Query({})), func(a1) begin
+		(if LSearch(theISBNs, a1.isbn, 0, '|str=|, nil) then begin
+				AddArraySlot(onlines, a1);
+				(if (a1.bookPresent = 0) then begin
+						a1.bookPresent := 1;
+						EntryChange(a1)
+					end)
+			end else begin
+				AddArraySlot(offlines, a1);
+				(if (a1.bookPresent = 1) then begin
+						a1.bookPresent := 0;
+						EntryChange(a1)
+					end)
+			end)
+	end);
+	{online: onlines, offline: offlines}
+end
+@@end

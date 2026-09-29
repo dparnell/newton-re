@@ -1,0 +1,16 @@
+@@ 0x431445
+func(a1) begin
+	l1 := [Array: ];
+	local l1;
+	(foreach l2 in stdItems do begin
+			if GetVariable(self, l2.msg) then begin
+					AddArraySlot(l1, l2)
+				end
+		end);
+	if (if (Length(l1) > 0) then (Length(a1) > 0)) then begin
+			AddArraySlot(l1, 'pickseparator)
+		end;
+	ArrayMunger(l1, Length(l1), nil, a1, 0, nil);
+	l1
+end
+@@end

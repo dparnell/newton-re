@@ -1,0 +1,6 @@
+@@ 0x469af5
+func() begin
+	local l1;
+	(if (l1 := refCon).form.text then l1.form:SetHiliteNoUpdate(l1.wordOffset, (l1.wordOffset + l1.wordLength), true))
+end
+@@end

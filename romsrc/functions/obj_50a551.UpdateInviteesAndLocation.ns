@@ -1,0 +1,34 @@
+@@ 0x503b9d
+func() begin
+	local l1, l2;
+	l1 := (not self:IsSameListOfAliases(inviteesAliases, self:GetMeetingSlot(selectedMeeting, 'mtgInvitees)));
+	l2 := (not self:IsSameAlias(locationAlias, self:GetMeetingSlot(selectedMeeting, 'mtgLocation)));
+	(if (l1 or l2) then begin
+			if ((selectedMeeting.repeatTemplate = nil) or self:IsExceptionMeeting(selectedMeeting)) then begin
+					if l1 then begin
+							self:ChangeMeeting(selectedMeeting, 'mtgInvitees, inviteesAliases);
+							if selectedMeeting.repeatTemplate then begin
+									selectedMeeting.repeatTemplate.mtgInvitees := originalInviteesAliases;
+									EntryChangeXmit(selectedMeeting.repeatTemplate, 'calendar)
+								end
+						end;
+					if l2 then begin
+							self:ChangeMeeting(selectedMeeting, 'mtgLocation, locationAlias);
+							if selectedMeeting.repeatTemplate then begin
+									selectedMeeting.repeatTemplate.mtgLocation := originalLocationAlias;
+									EntryChangeXmit(selectedMeeting.repeatTemplate, 'calendar)
+								end
+						end
+				end;
+			(if newSplitRepeatTemplate then begin
+					if l1 then begin
+							newSplitRepeatTemplate.mtgInvitees := inviteesAliases
+						end;
+					if l2 then begin
+							newSplitRepeatTemplate.mtgLocation := locationAlias
+						end;
+					EntryChangeXmit(newSplitRepeatTemplate, 'calendar)
+				end)
+		end)
+end
+@@end

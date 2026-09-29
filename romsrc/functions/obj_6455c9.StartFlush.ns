@@ -1,0 +1,8 @@
+@@ 0x49e3cd
+func() begin
+	if (if targetView then targetView.viewCObject) then begin
+			targetView:SetupIdle(5000)
+		end;
+	(entryChanged := true)
+end
+@@end

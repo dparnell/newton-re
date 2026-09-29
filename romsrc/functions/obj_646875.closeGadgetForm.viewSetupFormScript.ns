@@ -1,0 +1,7 @@
+@@ 0x478a81
+func() begin
+	local l1;
+	(l1 := self:Parent()).base := l1;
+	(printDepth := 0)
+end
+@@end

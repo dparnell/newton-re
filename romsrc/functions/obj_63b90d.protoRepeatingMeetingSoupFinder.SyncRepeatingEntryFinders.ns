@@ -1,0 +1,25 @@
+@@ 0x4f0071
+func(a1, a2) begin
+	l1 := nil;
+	local l1;
+	(foreach l2 in repeatingEntryFinders do begin
+			local l4;
+			if (if (if (not l1) then (a1._uniqueID = l2.EntryUniqueID)) then IsSameEntry(l2.entryAlias, a1)) then begin
+					l1 := true;
+					currentRepeatingEntryFinder := l2;
+					l2.currentInstance := BFind(l2.instancesDates, a2, '|<|, nil)
+				end else begin
+					if (l2.EntryUniqueID < a1._uniqueID) then begin
+							l4 := (a2 + 1)
+						end else begin
+							if (if (l2.EntryUniqueID = a1._uniqueID) then (not l1)) then begin
+									l4 := (a2 + 1)
+								end else begin
+									l4 := a2
+								end
+						end;
+					l2.currentInstance := BSearchLeft(l2.instancesDates, l4, '|<|, nil)
+				end
+		end)
+end
+@@end

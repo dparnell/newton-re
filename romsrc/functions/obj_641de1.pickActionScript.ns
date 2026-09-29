@@ -1,0 +1,9 @@
+@@ 0x432a55
+func(a1) begin
+	spread := pop[a1].skip;
+	stopTime := (stop.Time := (startTime + spread));
+	base:Dirty();
+	stop:Refresh();
+	context:?NewTime(startTime, stopTime)
+end
+@@end

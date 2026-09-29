@@ -1,0 +1,5 @@
+@@ 0x461c8d
+func() begin
+	(self.items := Notifications)
+end
+@@end

@@ -1,0 +1,43 @@
+@@ 0x468319
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6;
+	if popChars then begin
+			l1 := nil;
+			if IsFrame(a1) then begin
+					l3 := (((l2 := popChars[a1.index]).width * a1.y) + a1.x);
+					l4 := l2.words[l3];
+					self:ReplaceChar(lastChar, l4, l4[0])
+				end else begin
+					if IsFrame((l2 := popChars[a1])) then begin
+							if (l2.action = 'deleteItem) then begin
+									self:DeleteText(lastChar, (lastChar + 1))
+								end else begin
+									if (l2.action = 'insertItem) then begin
+											self:InsertSpace(lastChar)
+										end else begin
+											if (l2.action = 'appendWord) then begin
+													self:AddNewWord(1)
+												end else begin
+													if (l2.action = 'insertWord) then begin
+															self:AddNewWord(-1)
+														end
+												end
+										end
+								end
+						end else begin
+							if (l2 <> 'pickseparator) then begin
+									if (l6 := ArrayPos((l5 := Clone(popChars)), 'pickseparator, 0, nil)) then begin
+											ArrayRemoveCount(l5, l6, (Length(l5) - l6))
+										end;
+									UnmapAmbiguousCharacters((l1 := l5[a1]));
+									UnmapAmbiguousCharacters((l5 := Stringer(l5)));
+									StrMunger(l5, a1, 1, nil, 0, 0);
+									StrMunger(l5, 0, 0, l1, 0, 1);
+									self:ReplaceChar(lastChar, l5, l1[0])
+								end
+						end
+				end
+		end;
+	(popChars := nil)
+end
+@@end

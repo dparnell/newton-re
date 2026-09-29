@@ -1,0 +1,9 @@
+@@ 0x548bb9
+func(a1, a2) begin
+	local l1, l2;
+	(if (Length(a1.icons) > 0) then (if ((l1 := (a1.indexes[0] - 1)) < 0) then (if ((l2 := (if overUp then topIndexText else topIndexIcon)) <> 0) then begin
+					base:viewScrollUpScript();
+					self:ChangeSelection((a2 := self:GetChildIconViews())[(Length(a2) - 1)], nil)
+				end) else self:ChangeSelection(a2[l1], a1.icons)) else self:ChangeSelection(a2[(Length(a2) - 1)], nil))
+end
+@@end

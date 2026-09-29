@@ -1,0 +1,13 @@
+@@ 0x5b53d1
+func() begin
+	l1 := self:LocalBox();
+	local l1;
+	local l2;
+	(foreach l3 in self:ChildViewFrames() do begin
+			if (l3._proto = prefPanelProto) then begin
+					l2 := l3:LocalBox()
+				end
+		end);
+	(if (if l2 then (l1.bottom < l2.bottom)) then SetValue(self, 'viewBounds, RelBounds(0, 0, l1.right, l2.bottom)))
+end
+@@end

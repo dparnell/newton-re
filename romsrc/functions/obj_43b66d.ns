@@ -1,0 +1,29 @@
+@@ 0x43b66d
+func(a1) begin
+	l1 := cursor:entry();
+	if (not cursor:move(a1)) then begin
+			l2 := (if (a1 < 0) then -1 else 1);
+			if hilitedIndex then begin
+					cursor:Goto(l1);
+					local l1;
+					local l2;
+					(for l3 := 0 to a1 by l2 do begin
+							if (not cursor:move(l2)) then begin
+									break (a1 := l3)
+								end
+						end)
+				end;
+			if (l2 < 0) then begin
+					cursor:Next()
+				end else begin
+					cursor:prev()
+				end
+		end;
+	if hilitedIndex then begin
+			if (((hilitedIndex := (hilitedIndex - a1)) < 0) or (hilitedIndex >= maxLines)) then begin
+					hilitedIndex := nil
+				end
+		end;
+	self:RedoChildren()
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x42f885
+func(a1) begin
+	StrReplace(a1, ",", ".", nil);
+	if (not StrPos(a1, "@compuserve.com", 0)) then begin
+			a1 := Stringer([Array: a1, "@compuserve.com"])
+		end;
+	a1
+end
+@@end

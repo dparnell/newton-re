@@ -1,0 +1,5 @@
+@@ 0x43211d
+func() begin
+	context:?NewTime(Time)
+end
+@@end

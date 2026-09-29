@@ -1,0 +1,30 @@
+@@ 0x4631b5
+func(a1, a2, a3) begin
+	local l1, l2, l3;
+	if (l1 := CurrentException()).data then begin
+			l2 := l1.name;
+			if IsFrame(l1.data) then begin
+					if (if (not a3) then l1.data.userMessage) then begin
+							Rethrow()
+						end;
+					(l3 := Clone(l1.data))._UserTitle := a1;
+					l3._UserMessage := a2
+				end else begin
+					l3 := {_UserTitle: a1, _UserMessage: a2, _OrigExData: l1.data}
+				end
+		end else begin
+			if l1.message then begin
+					l2 := '|evt.ex;type.ref|;
+					l3 := {_UserTitle: a1, _UserMessage: a2, message: l1.message}
+				end else begin
+					l2 := Intern(Stringer([Array: l1.name, ";type.ref"]));
+					if l1.error then begin
+							l3 := {_UserTitle: a1, _UserMessage: a2, errorCode: l1.error}
+						end else begin
+							l3 := {_UserTitle: a1, _UserMessage: a2}
+						end
+				end
+		end;
+	Throw(l2, l3)
+end
+@@end

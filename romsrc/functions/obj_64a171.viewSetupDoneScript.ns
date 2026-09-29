@@ -1,0 +1,9 @@
+@@ 0x57012d
+@@const kROM_828
+@828
+@@main
+func() begin
+	deck := kROM_828:New();
+	self:Deal()
+end
+@@end

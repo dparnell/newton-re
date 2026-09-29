@@ -1,0 +1,5 @@
+@@ 0x56b2e5
+func(a1) begin
+	CardAlert('SRAMCardReplaceBattery, a1, nil)
+end
+@@end

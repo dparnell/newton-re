@@ -1,0 +1,5 @@
+@@ 0x532a11
+func() begin
+	callassist:buttonClickScript()
+end
+@@end

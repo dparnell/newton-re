@@ -1,0 +1,11 @@
+@@ 0x4f1b09
+func() begin
+	local l1;
+	if self:IsCurrentSettingsSameAsEveryDay() then begin
+			l1 := 6
+		end else begin
+			l1 := repeatType
+		end;
+	self:SetupRepeatViews(l1)
+end
+@@end

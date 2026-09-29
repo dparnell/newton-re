@@ -1,0 +1,5 @@
+@@ 0x5681f5
+func(a1) begin
+	|GetModemSetUpAndXvert1.X|(a1, true)
+end
+@@end

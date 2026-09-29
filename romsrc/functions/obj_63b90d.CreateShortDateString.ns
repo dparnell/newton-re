@@ -1,0 +1,5 @@
+@@ 0x4f6cc5
+func(a1, a2) begin
+	Stringer([Array: LongDateStr(a1, @66.abbrDayOfWeekStrSpec), " ", ShortDateStr(a1, @66.numericMDStrSpec), " ", (if a2 then TimeStr(a1, @66.shortTimeStrSpec) else "")])
+end
+@@end

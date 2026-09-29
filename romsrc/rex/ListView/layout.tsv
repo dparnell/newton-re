@@ -1,0 +1,3171 @@
+# the objects' area: 0x78517c, 0x203d8 bytes; the byte between objects; the objects' alignment
+area	78517c	203d8	ba	8
+78517c	obj_78517d	41
+78518c	'|<|	40
+7851a4	'|>|	40
+7851bc	'bnot	40
+7851d4	'clone	40
+7851ec	'|Array|	40
+785204	'ExtractData	40
+785224	'Time	40
+78523c	'Ticks	40
+785254	'slot	40
+78526c	'dbg1	40
+785284	'parent	40
+78529c	'viewChildren	40
+7852bc	'ArrayPos	40
+7852dc	'test	40
+7852f4	'kid	40
+78530c	'_proto	40
+785324	'RemoveSlot	40
+785344	'item	40
+78535c	'symbol	40
+785374	'|string|	40
+78538c	'Intern	40
+7853a4	'structure	40
+7853c4	'type	40
+7853dc	'path	40
+7853f4	'GetStores	40
+785414	'GetSoup	40
+78542c	'Query	40
+785444	'indexPath	40
+785464	'beginKey	40
+785484	'endKey	40
+78549c	'Entry	40
+7854b4	'GetUserConfig	40
+7854d4	'CreateSoup	40
+7854f4	'name	40
+78550c	'SetBounds	40
+78552c	'IsFrame	40
+785544	'bounds	40
+78555c	'ShapeBounds	40
+78557c	'right	40
+785594	'left	40
+7855ac	'bottom	40
+7855c4	'top	40
+7855dc	'MakeShape	40
+7855fc	'c	40
+785614	'setlength	40
+785634	'class	40
+78564c	'data	40
+785664	'bits	40
+78567c	'OffsetShape	40
+78569c	's	40
+7856b4	'text	40
+7856cc	'template	40
+7856ec	'_keyCommands	40
+78570c	'ArrayInsert	40
+78572c	't	40
+785744	'r	40
+78575c	map_78575d	c1
+78577c	'RelBounds	40
+78579c	'height	40
+7857b4	'preallocatedContext	40
+7857dc	'allocateContext	40
+7857fc	'app	40
+785814	'hilite	40
+78582c	'msg	40
+785844	'Print	40
+78585c	obj_78585d	41
+78586c	'result	40
+785884	'offset	40
+78589c	'spec	40
+7858b4	'value	40
+7858cc	'image	40
+7858e4	'code	40
+7858fc	'numArgs	40
+785914	'stepChildren	40
+785934	'stepallocatecontext	40
+78595c	'i	40
+785974	'|i\|limit|	40
+78598c	'|i\|incr|	40
+7859a4	'StrLen	40
+7859bc	'pathExpr	40
+7859dc	'x	40
+7859f4	obj_7a12b5._keyCommands[1].category	40
+785a14	'index	40
+785a2c	'kids	40
+785a44	obj_785a45	40
+785a5c	'todo	40
+785a74	'label	40
+785a8c	obj_785a8d	40
+785aa4	'topicsLabel	40
+785ac4	'listView	40
+785ae4	obj_7a156d.title	40
+785b0c	'listPrintDef	40
+785b2c	obj_78e6cd.title	40
+785b5c	'listPrintVisDef	40
+785b7c	obj_785b7d	40
+785b9c	obj_785b9d	40
+785bb4	obj_785bb5	40
+785bcc	obj_78ef15.mailBulletDone	40
+785be4	'checkList	40
+785c04	'mailBulletDone	40
+785c24	obj_78ef15.mailBulletNotDone	40
+785c3c	'mailBulletNotDone	40
+785c64	obj_7a15d5.StringExtract.literals[3]	40
+785c84	obj_785c85	40
+785ca4	obj_785ca5	40
+785cc4	'list	40
+785cdc	obj_78f2a5.appAll	40
+785d04	obj_78f2a5.appObject[1]	40
+785d24	obj_7a1665.DuplicateTask.literals[5]	40
+785d4c	obj_7a1665.DuplicateTask.literals[10]	40
+785d84	'title	40
+785d9c	obj_785d9d	40
+785dc4	obj_785dc5	40
+785e24	obj_785e25	40
+785e84	obj_785e85	40
+785edc	obj_785edd	40
+785f64	obj_785f65	40
+785fd4	obj_7a1665.RollItemsOver.literals[24]	40
+786064	obj_7a12b5.NotifyCompleted.literals[1]	40
+7860fc	'todoSlip	40
+78611c	'adjusting	40
+78613c	'curTopicChanged	40
+78615c	'measureTopics	40
+78617c	'topicChanged	40
+78619c	'topMargin	40
+7861bc	'_keyDaughterScript	40
+7861e4	'keyView	40
+7861fc	'maxLevel	40
+78621c	'NewRelative	40
+78623c	'daughter	40
+78625c	'_keySisterScript	40
+786284	'sister	40
+78629c	'_keyAuntScript	40
+7862bc	'aunt	40
+7862d4	'_keyCheckItemScript	40
+7862fc	'listViewFlags	40
+78631c	'curTopic	40
+78633c	'theIndex	40
+78635c	'theTopic	40
+78637c	'topics	40
+786394	'HandleCheck	40
+7863b4	'viewAddChildScript	40
+7863dc	'aNewOne	40
+7863f4	'newView	40
+78640c	'level	40
+786424	'prevLevel	40
+786444	'flags	40
+78645c	'prevIndex	40
+78647c	'prevTopic	40
+78649c	'prevView	40
+7864bc	'fontSpec	40
+7864dc	'nTopics	40
+7864f4	'viewBounds	40
+786514	'ListBottom	40
+786534	'viewLineSpacing	40
+786554	'Max	40
+78656c	'leftMarkGap	40
+78658c	'rightMarkGap	40
+7865ac	'hideCount	40
+7865cc	'RevealTopic	40
+7865ec	'TopicIndexToView	40
+786614	'Min	40
+78662c	'topicFont	40
+78664c	'textFlags	40
+78666c	'viewFont	40
+78668c	'AddEmptyTopic	40
+7866ac	'styles	40
+7866c4	'GetInsertionStyle	40
+7866ec	'mtgDone	40
+786704	'mtgPriority	40
+786724	'ReplaceObject	40
+786744	'canonicalParaTopic	40
+78676c	'UpdateMultipleStores	40
+786794	'now	40
+7867ac	'reflow	40
+7867c4	'AddView	40
+7867dc	'|evt.ex|	40
+7867f4	'Rethrow	40
+78680c	'AdjustParagraph	40
+78682c	'rightMargin	40
+78684c	'AddUndoAction	40
+78686c	'UndoAddWriting	40
+78688c	'DirtyBelow	40
+7868ac	'viewChangedScript	40
+7868d4	'aSlot	40
+7868ec	'aView	40
+786904	'theList	40
+78691c	'Visible	40
+786934	'topic	40
+78694c	'StartFlush	40
+78696c	'doingScrub	40
+78698c	'AddDeferredSend	40
+7869ac	'ChildChanged	40
+7869cc	'viewDropMoveScript	40
+7869f4	'aDragRef	40
+786a14	'anOffset	40
+786a34	'aLastDragPt	40
+786a54	'aCopy	40
+786a6c	'saveDragTo	40
+786a8c	'doPriority	40
+786aac	'undoDragRef	40
+786acc	'undoDoneList	40
+786aec	'viewCObject	40
+786b0c	'dragTo	40
+786b24	'AddTopicDragDrop	40
+786b4c	'RemoveTopicDragDrop	40
+786b74	'doneList	40
+786b94	'UndoCheck	40
+786bb4	'RedoTopics	40
+786bd4	'MakeUndoDragRef	40
+786bf4	'viewDropRemoveScript	40
+786c1c	'undoDragTo	40
+786c3c	'UndoDropRemove	40
+786c5c	'viewDropScript	40
+786c7c	'aDropType	40
+786c9c	'aDropData	40
+786cbc	'aDropPt	40
+786cd4	'indexList	40
+786cf4	'task	40
+786d0c	'UndoDropTopic	40
+786d2c	'viewGetDropDataScript	40
+786d54	'aDragType	40
+786d74	'theText	40
+786d8c	'notFirst	40
+786dac	obj_786dad	40
+786dbc	'MakeRichString	40
+786ddc	obj_786ddd	40
+786dec	obj_78d4cd.viewGetDropDataScript.literals[19]	c1
+786e04	'viewGetDropTypesScript	40
+786e2c	'aDropPoint	40
+786e4c	'y	40
+786e64	'box	40
+786e7c	'GlobalBox	40
+786e9c	'topicBounds	40
+786ebc	'IsPtInRect	40
+786edc	'allDropTypes	40
+786efc	'markerDropTypes	40
+786f1c	'viewSetupChildrenScript	40
+786f44	'GetTarget	40
+786f64	'target	40
+786f7c	'printAddExtra	40
+786f9c	'ReflowTopics	40
+786fbc	'reflowOptions	40
+786fdc	'SetupVisibleChildren	40
+787004	'firstTopic	40
+787024	'viewSetupDoneScript	40
+78704c	'LocalBox	40
+78706c	'rightIndent	40
+78708c	'uniqueSymbol	40
+7870ac	obj_78d4cd.viewSetupDoneScript.literals[5]	40
+7870cc	'viewSetupFormScript	40
+7870f4	'viewFlags	40
+787114	'CheckFlags	40
+787134	'EntryCool	40
+787154	'menuButtons	40
+787174	'baseLeftGap	40
+787194	'ActiveTopic	40
+7871b4	'anIndex	40
+7871cc	'SetKeyView	40
+7871ec	'AddKidsToList	40
+78720c	'aList	40
+787224	'aLevel	40
+78723c	'ti	40
+787254	'SetAdd	40
+78726c	'topicFrame	40
+78728c	'sis	40
+7872a4	'MakeTopicFrame	40
+7872c4	'SetDone	40
+7872dc	'OlderSister	40
+7872fc	'aDropOnSelf	40
+78731c	'aDoPrioritize	40
+78733c	'moveList	40
+78735c	'newIndex	40
+78737c	'mom	40
+787394	'nItems	40
+7873ac	'dLevel	40
+7873c4	'moveInSelf	40
+7873e4	obj_78d4cd.AddTopicDragDrop.literals[4]	c1	gap=beacebad
+7873fc	'Mother	40
+787414	'ExpandTopic	40
+787434	'repeatInfo	40
+787454	'repeatDone	40
+787474	'AppendTopic	40
+787494	'TopicBottom	40
+7874b4	'setSomething	40
+7874d4	'YoungerSister	40
+7874f4	'SetPriority	40
+787514	'AdjustKids	40
+787534	'adjustView	40
+787554	'lastView	40
+787574	'ChildViewFrames	40
+787594	'lastKid	40
+7875ac	'vi	40
+7875c4	'Dirty	40
+7875dc	'VisibleTopicIndex	40
+787604	'EnsureVisibleTopic	40
+78762c	'aTopic	40
+787644	'aNewIndex	40
+787664	'aTop	40
+78767c	'aLevelDelta	40
+78769c	'SetTopAndLevel	40
+7876bc	'CalcLevel	40
+7876dc	'anX	40
+7876f4	'theLevel	40
+787714	'topicLevel	40
+787734	'lettersCursiveOption	40
+78775c	'duringScroll	40
+78777c	'AddProcrastinatedSend	40
+7877a4	'ClickBounds	40
+7877c4	'MarkerBounds	40
+7877e4	'TopicHeight	40
+787804	'DeleteTopics	40
+787824	'j	40
+78783c	'hasFamily	40
+78785c	'familyDone	40
+78787c	'int	40
+787894	'Sort	40
+7878ac	'source	40
+7878c4	'Notify	40
+7878dc	'DeletingTopic	40
+7878fc	'ArrayRemoveCount	40
+787924	'RedoChildren	40
+787944	'DirtyBox	40
+787964	'ourBox	40
+78797c	'layoutBox	40
+78799c	'targetView	40
+7879bc	'starts	40
+7879d4	'ends	40
+7879ec	'amt	40
+787a04	'Abs	40
+787a1c	'layout	40
+787a34	'PixelScrollBy	40
+787a54	'StartFlushWithChild	40
+787a7c	obj_78d4cd.EnsureVisibleTopic.literals[15]	c1	gap=beacebad
+787a94	'anOldTarget	40
+787ab4	'GetTopicCount	40
+787ad4	'GetTopicData	40
+787af4	obj_78d4cd.GetTopicData.literals[4]	c1
+787b0c	'undoList	40
+787b2c	'newCheck	40
+787b4c	'HandleScrub	40
+787b6c	'aBounds	40
+787b84	'aUnit	40
+787b9c	'deleteList	40
+787bbc	'deletedTopics	40
+787bdc	'nToDelete	40
+787bfc	'oldCurTopic	40
+787c1c	'InsetRect	40
+787c3c	'RectsOverlap	40
+787c5c	'InkOff	40
+787c74	'noPoof	40
+787c8c	'UndoScrub	40
+787cac	'HasKids	40
+787cc4	'IsEmpty	40
+787cdc	'IsReadOnly	40
+787cfc	obj_78d4cd.MakeTopicFrame.literals[2]	c1	gap=beacebad
+787d2c	obj_78d4cd.MakeTopicFrame.literals[3]	c1
+787d54	obj_78d4cd.MakeTopicFrame.literals[4]	c1
+787d7c	obj_78d4cd.MakeTopicFrame.literals[5]	c1	gap=beacebad
+787da4	'anOldDragTo	40
+787dc4	'dragRef	40
+787ddc	'newDragTo	40
+787dfc	'indices	40
+787e14	'toIndex	40
+787e2c	'from	40
+787e44	'topicsMoved	40
+787e64	'newIndices	40
+787e84	'DeepClone	40
+787ea4	'aRelation	40
+787ec4	'NewTopic	40
+787ee4	obj_787ee5	40
+787ef4	'aText	40
+787f0c	'newTopicFont	40
+787f2c	'curTopicLevel	40
+787f4c	'IsCollapsed	40
+787f6c	'FontHeight	40
+787f8c	'UndoAddTopic	40
+787fac	'OldestSister	40
+787fcc	'olderSis	40
+787fec	'PickActionScript	40
+788014	'anAction	40
+788034	'oldPriority	40
+788054	'anOptions	40
+788074	'ki	40
+78808c	'view	40
+7880a4	'lastTopic	40
+7880c4	'reflowStart	40
+7880e4	'LockScreen	40
+788104	'ChildTemplateFromTopic	40
+78812c	'MungeStyles	40
+78814c	'AddStepView	40
+78816c	'RemoveStepView	40
+78818c	'aRemoveFromSelf	40
+7881ac	'ri	40
+7881c4	'ResolveClick	40
+7881e4	'topicIndex	40
+788204	obj_78d4cd.ResolveClick.literals[2]	c1	gap=beacebad
+78821c	'where	40
+788234	'marker	40
+78824c	obj_78824d	c1
+788264	'aDone	40
+78827c	'aPropagateUp	40
+78829c	'aPropagateDown	40
+7882bc	'momDone	40
+7882d4	'aPriority	40
+7882f4	'anUndo	40
+78830c	'oldestSis	40
+78832c	'youngestSis	40
+78834c	'newPlace	40
+78836c	'movingUp	40
+78838c	'needsPrioritySort	40
+7883b4	'StableSort	40
+7883d4	obj_7883d5	c1
+7883ec	'SetReadOnly	40
+78840c	'aStatus	40
+788424	'aNewTop	40
+78843c	'aDLevel	40
+788454	'oldTop	40
+78846c	'delta	40
+788484	'dH	40
+78849c	'newBounds	40
+7884bc	'OffsetRect	40
+7884dc	'SetTopicData	40
+7884fc	'aStyles	40
+788514	'ShoveBelow	40
+788534	'aDelta	40
+78854c	'realData	40
+78856c	'SetValue	40
+78858c	'ShowFoundItem	40
+7885ac	'anEntry	40
+7885c4	'aFinder	40
+7885dc	'found	40
+7885f4	'findType	40
+788614	'FindStringInFrame	40
+78863c	'findWords	40
+78865c	'first	40
+788674	'ShowFoundTopic	40
+788694	'HiliteOwner	40
+7886b4	'SetHilite	40
+7886d4	'ToggleTopic	40
+7886f4	'CollapseTopic	40
+788714	'anOldCurTopic	40
+788734	'aDeletedTopics	40
+788754	'aStart	40
+78876c	map_78876d	c1
+78889c	obj_78d4cd.IsEmpty.instructions	c0
+7888bc	obj_78d4cd.IsEmpty.literals	c1
+7888d4	obj_78d4cd.GetTopicCount.literals	c1
+7888e4	obj_78d4cd.viewDropRemoveScript.instructions	c0
+788944	obj_78d4cd.viewDropRemoveScript.literals	c1	gap=beacebad
+788984	obj_78d4cd.AddKidsToList.instructions	c0
+7889e4	obj_78d4cd.AddKidsToList.literals	c1	gap=beacebad
+788a04	'|ti\|limit|	40
+788a24	'|ti\|incr|	40
+788a3c	obj_78d4cd.viewSetupDoneScript.instructions	c0
+788a64	obj_78d4cd.viewSetupDoneScript.literals	c1
+788a94	obj_78d4cd.OlderSister.instructions	c0
+788b04	obj_78d4cd.OlderSister.literals	c1	gap=beacebad
+788b1c	obj_78d4cd.UndoDropRemove.instructions	c0
+788b7c	obj_78d4cd.UndoDropRemove.literals	c1	gap=beacebad
+788bac	obj_78d4cd.ActiveTopic.instructions	c0
+788bcc	obj_78d4cd.ActiveTopic.literals	c1	gap=beacebad
+788bec	obj_78d4cd._keyCheckItemScript.instructions	c0
+788c1c	obj_78d4cd._keyCheckItemScript.literals	c1	gap=beacebad
+788c3c	obj_78d4cd.Mother.instructions	c0
+788cb4	obj_78d4cd.Mother.literals	c1
+788ccc	obj_78d4cd.RedoTopics.instructions	c0
+788cec	obj_78d4cd.RedoTopics.literals	c1	gap=beacebad
+788d04	'|topic\|iter|	40
+788d24	'|t\|limit|	40
+788d3c	'|t\|incr|	40
+788d54	obj_78d4cd.viewGetDropTypesScript.literals	c1	gap=beacebad
+788d9c	obj_78d4cd.TopicHeight.instructions	c0
+788db4	obj_78d4cd.TopicHeight.literals	c1	gap=beacebad
+788dcc	obj_78d4cd.UndoDropTopic.instructions	c0
+788e2c	obj_78d4cd.UndoDropTopic.literals	c1	gap=beacebad
+788e54	obj_78d4cd.UndoScrub.literals	c1	gap=beacebad
+788ea4	obj_78d4cd.CalcLevel.instructions	c0
+788ef4	obj_78d4cd.CalcLevel.literals	c1
+788f1c	obj_78d4cd.viewChangedScript.instructions	c0
+788fa4	obj_78d4cd.viewChangedScript.literals	c1	gap=beacebad
+788fec	obj_78d4cd.SetReadOnly.instructions	c0
+78900c	obj_78d4cd.SetReadOnly.literals	c1
+789024	obj_78d4cd._keyAuntScript.literals	c1
+78903c	obj_78d4cd.ShoveBelow.instructions	c0
+7890a4	obj_78d4cd.ShoveBelow.literals	c1
+7890d4	obj_78d4cd.GetTopicData.instructions	c0
+789114	obj_78d4cd.GetTopicData.literals	c1
+789134	obj_78d4cd.ResolveClick.literals	c1	gap=beacebad
+789184	obj_78d4cd.AdjustKids.literals	c1	gap=beacebad
+7891d4	'|vi\|limit|	40
+7891f4	'|vi\|incr|	40
+78920c	obj_78d4cd.UndoAddWriting.instructions	c0
+789224	obj_78d4cd.UndoAddWriting.literals	c1	gap=beacebad
+78923c	obj_78d4cd.ShowFoundItem.instructions	c0
+789284	obj_78d4cd.ShowFoundItem.literals	c1	gap=beacebad
+7892b4	obj_78d4cd.viewDropScript.instructions	c0
+78933c	obj_78d4cd.viewDropScript.literals	c1	gap=beacebad
+789374	obj_789375	c0
+789394	obj_78d4cd._keySisterScript.literals	c1
+7893ac	obj_78d4cd.UndoAddTopic.instructions	c0
+7893ec	obj_78d4cd.UndoAddTopic.literals	c1
+789424	obj_78d4cd.AddEmptyTopic.instructions	c0
+789494	obj_78d4cd.AddEmptyTopic.literals	c1
+7894c4	obj_78d4cd.SetDone.literals	c1	gap=beacebad
+7894f4	obj_78d4cd.UpdateMultipleStores.instructions	c0
+789514	obj_78d4cd.UpdateMultipleStores.literals	c1
+789524	obj_78d4cd.OldestSister.instructions	c0
+789594	obj_78d4cd.OldestSister.literals	c1	gap=beacebad
+7895ac	obj_78d4cd.SetPriority.literals[13].literals	c1	gap=beacebad
+7895c4	obj_78d4cd.AppendTopic.instructions	c0
+7895e4	obj_78d4cd.AppendTopic.literals	c1	gap=beacebad
+789604	obj_78d4cd.GetTarget.instructions	c0
+789624	obj_78d4cd.GetTarget.literals	c1
+78963c	obj_78d4cd.MakeUndoDragRef.literals	c1	gap=beacebad
+789664	'|topic\|index|	40
+789684	'|topic\|result|	40
+7896a4	obj_78d4cd.YoungerSister.instructions	c0
+789714	obj_78d4cd.YoungerSister.literals	c1
+78972c	obj_78d4cd.viewSetupFormScript.instructions	c0
+78978c	obj_78d4cd.viewSetupFormScript.literals	c1
+7897bc	obj_78d4cd.DirtyBelow.instructions	c0
+7897e4	obj_78d4cd.DirtyBelow.literals	c1
+789804	obj_78d4cd.HasKids.instructions	c0
+789834	obj_78d4cd.HasKids.literals	c1
+78984c	obj_78d4cd.MakeTopicFrame.instructions	c0
+7898b4	obj_78d4cd.MakeTopicFrame.literals	c1	gap=beacebad
+7898dc	obj_78d4cd.PickActionScript.instructions	c0
+789924	obj_78d4cd.PickActionScript.literals	c1	gap=beacebad
+78994c	obj_78d4cd.ToggleTopic.instructions	c0
+78998c	obj_78d4cd.ToggleTopic.literals	c1	gap=beacebad
+7899bc	obj_78d4cd.SetTopAndLevel.instructions	c0
+789a24	obj_78d4cd.SetTopAndLevel.literals	c1	gap=beacebad
+789a4c	obj_78d4cd.HandleCheck.literals	c1	gap=beacebad
+789a94	'|j\|limit|	40
+789aac	'|j\|incr|	40
+789ac4	obj_78d4cd.SetTopicData.instructions	c0
+789b24	obj_78d4cd.SetTopicData.literals	c1	gap=beacebad
+789b4c	obj_78d4cd.ChildChanged.instructions	c0
+789bb4	obj_78d4cd.ChildChanged.literals	c1	gap=beacebad
+789bfc	obj_78d4cd.CheckFlags.instructions	c0
+789c1c	obj_78d4cd.CheckFlags.literals	c1
+789c34	obj_78d4cd.UndoCheck.instructions	c0
+789c6c	obj_78d4cd.UndoCheck.literals	c1
+789c8c	obj_78d4cd.NewRelative.instructions	c0
+789d0c	obj_78d4cd.NewRelative.literals	c1
+789d44	obj_78d4cd.viewSetupChildrenScript.instructions	c0
+789d7c	obj_78d4cd.viewSetupChildrenScript.literals	c1
+789dac	obj_78d4cd._keyDaughterScript.literals	c1
+789dc4	obj_78d4cd.ClickBounds.instructions	c0
+789dfc	obj_78d4cd.ClickBounds.literals	c1	gap=beacebad
+789e24	obj_78d4cd.IsReadOnly.instructions	c0
+789e5c	obj_78d4cd.IsReadOnly.literals	c1
+789e74	obj_78d4cd.ShowFoundTopic.instructions	c0
+789ee4	obj_78d4cd.ShowFoundTopic.literals	c1	gap=beacebad
+789f24	obj_78d4cd.RevealTopic.instructions	c0
+789f64	obj_78d4cd.RevealTopic.literals	c1
+789f84	obj_78d4cd.RemoveTopicDragDrop.literals	c1	gap=beacebad
+789fcc	obj_78d4cd.IsEmpty.DebuggerInfo	c1	gap=beacebad
+789fe4	obj_78d4cd.viewDropRemoveScript.DebuggerInfo	c1
+789ffc	obj_78d4cd.AddKidsToList.DebuggerInfo	c1
+78a024	obj_78d4cd.OlderSister.DebuggerInfo	c1
+78a04c	obj_78d4cd.UndoDropRemove.literals[5]	c1	gap=beacebad
+78a064	obj_78d4cd.UndoDropRemove.DebuggerInfo	c1	gap=beacebad
+78a08c	obj_78d4cd.DeletingTopic	c3	map=map_7a2625	gap=beacebad
+78a0b4	obj_78d4cd.DeletingTopic.DebuggerInfo	c1	gap=beacebad
+78a0cc	obj_78d4cd.ActiveTopic.DebuggerInfo	c1	gap=beacebad
+78a0e4	obj_78d4cd._keyCheckItemScript.DebuggerInfo	c1	gap=beacebad
+78a104	obj_78d4cd.Mother.DebuggerInfo	c1	gap=beacebad
+78a12c	obj_78d4cd.ReflowTopics.literals[10]	c1	gap=beacebad
+78a144	obj_78d4cd.ReflowTopics.literals[11]	c1	gap=beacebad
+78a15c	obj_78d4cd.ReflowTopics.literals[12]	c1	gap=beacebad
+78a174	obj_78d4cd.ReflowTopics.literals[13]	c1	gap=beacebad
+78a18c	obj_78d4cd.ReflowTopics.literals[14]	c1	gap=beacebad
+78a1a4	obj_78d4cd.ReflowTopics.literals	c1	gap=beacebad
+78a21c	obj_78d4cd.ReflowTopics.instructions	c0
+78a37c	obj_78d4cd.ReflowTopics.DebuggerInfo	c1
+78a3bc	obj_78d4cd.HandleScrub.literals	c1	gap=beacebad
+78a434	obj_78d4cd.HandleScrub.instructions	c0
+78a5e4	obj_78d4cd.HandleScrub.DebuggerInfo	c1	gap=beacebad
+78a634	obj_78d4cd.viewGetDropDataScript.literals	c1	gap=beacebad
+78a694	obj_78d4cd.viewGetDropDataScript.instructions	c0
+78a7ac	obj_78d4cd.viewGetDropDataScript.DebuggerInfo	c1	gap=beacebad
+78a7e4	obj_78d4cd.viewGetDropTypesScript.instructions	c0
+78a894	obj_78d4cd.viewGetDropTypesScript.DebuggerInfo	c1	gap=beacebad
+78a8c4	obj_78d4cd.TopicHeight.literals[1]	c1	gap=beacebad
+78a8dc	obj_78d4cd.TopicHeight.DebuggerInfo	c1	gap=beacebad
+78a8f4	obj_78d4cd.UndoDropTopic.DebuggerInfo	c1
+78a924	obj_78d4cd.UndoScrub.literals[5]	c1	gap=beacebad
+78a93c	obj_78d4cd.UndoScrub.instructions	c0
+78aa14	obj_78d4cd.UndoScrub.DebuggerInfo	c1	gap=beacebad
+78aa54	obj_78d4cd.NewTopic.literals	c1	gap=beacebad
+78aad4	obj_78d4cd.NewTopic.instructions	c0
+78ac2c	obj_78d4cd.NewTopic.DebuggerInfo	c1	gap=beacebad
+78ac64	obj_78d4cd.CalcLevel.DebuggerInfo	c1	gap=beacebad
+78ac84	obj_78d4cd.viewChangedScript.DebuggerInfo	c1
+78aca4	obj_78d4cd.SetReadOnly.DebuggerInfo	c1
+78acbc	obj_78d4cd._keyAuntScript.DebuggerInfo	c1	gap=beacebad
+78acd4	obj_78d4cd.ShoveBelow.literals[4]	c1	gap=beacebad
+78acec	obj_78d4cd.ShoveBelow.literals[7]	c1	gap=beacebad
+78ad04	obj_78d4cd.ShoveBelow.DebuggerInfo	c1
+78ad24	obj_78d4cd.GetTopicData.DebuggerInfo	c1
+78ad3c	obj_78d4cd.ResolveClick.instructions	c0
+78ae0c	obj_78d4cd.ResolveClick.DebuggerInfo	c1
+78ae34	obj_78d4cd.AdjustKids.instructions	c0
+78af1c	obj_78d4cd.AdjustKids.DebuggerInfo	c1
+78af4c	obj_78d4cd.UndoAddWriting.DebuggerInfo	c1	gap=beacebad
+78af64	obj_78d4cd.ShowFoundItem.DebuggerInfo	c1
+78af84	obj_78d4cd.viewDropScript.DebuggerInfo	c1	gap=beacebad
+78afb4	obj_78d4cd._keySisterScript.DebuggerInfo	c1	gap=beacebad
+78afcc	obj_78d4cd.UndoAddTopic.DebuggerInfo	c1	gap=beacebad
+78afec	obj_78d4cd.AddEmptyTopic.DebuggerInfo	c1
+78b00c	obj_78d4cd.SetDone.instructions	c0
+78b16c	obj_78d4cd.SetDone.DebuggerInfo	c1
+78b1ac	obj_78d4cd.UpdateMultipleStores.DebuggerInfo	c1	gap=beacebad
+78b1c4	obj_78d4cd.OldestSister.DebuggerInfo	c1	gap=beacebad
+78b1f4	obj_78d4cd.SetPriority.literals[13]	c3	map=map_7a264d	gap=beacebad
+78b21c	obj_78d4cd.SetPriority.literals[13].DebuggerInfo	c1	gap=beacebad
+78b234	obj_78d4cd.SetPriority.literals	c1
+78b2a4	obj_78d4cd.SetPriority.instructions	c0
+78b45c	obj_78d4cd.SetPriority.DebuggerInfo	c1	gap=beacebad
+78b4ac	obj_78d4cd.AppendTopic.DebuggerInfo	c1
+78b4cc	obj_78d4cd.GetTarget.DebuggerInfo	c1	gap=beacebad
+78b4e4	obj_78d4cd.AddTopicDragDrop.literals[9]	c1	gap=beacebad
+78b4fc	obj_78d4cd.AddTopicDragDrop.literals	c1
+78b56c	obj_78d4cd.AddTopicDragDrop.instructions	c0
+78b824	obj_78d4cd.AddTopicDragDrop.DebuggerInfo	c1
+78b87c	obj_78d4cd.MakeUndoDragRef.instructions	c0
+78b95c	obj_78d4cd.MakeUndoDragRef	c3	map=map_7a2675	gap=beacebad
+78b984	obj_78d4cd.MakeUndoDragRef.DebuggerInfo	c1	gap=beacebad
+78b9cc	obj_78d4cd.viewDropMoveScript.literals[5]	c1	gap=beacebad
+78b9e4	obj_78d4cd.viewDropMoveScript.literals[6]	c1	gap=beacebad
+78b9fc	obj_78d4cd.viewDropMoveScript.literals	c1	gap=beacebad
+78ba5c	obj_78d4cd.viewDropMoveScript.instructions	c0
+78bb8c	obj_78d4cd.viewDropMoveScript.DebuggerInfo	c1
+78bbcc	obj_78d4cd.YoungerSister.DebuggerInfo	c1
+78bbf4	obj_78d4cd.DirtyBelow.literals[3]	c1	gap=beacebad
+78bc0c	obj_78d4cd.DirtyBelow.DebuggerInfo	c1
+78bc24	obj_78d4cd.HasKids.DebuggerInfo	c1	gap=beacebad
+78bc3c	obj_78d4cd.viewAddChildScript.literals[1]	c1	gap=beacebad
+78bc54	obj_78d4cd.viewAddChildScript.literals[4]	c1	gap=beacebad
+78bc6c	obj_78d4cd.viewAddChildScript.literals	c1	gap=beacebad
+78bd24	obj_78d4cd.viewAddChildScript.instructions	c0
+78c00c	obj_78d4cd.viewAddChildScript.DebuggerInfo	c1
+78c044	obj_78d4cd.EnsureVisibleTopic.literals[5]	c1	gap=beacebad
+78c05c	obj_78d4cd.EnsureVisibleTopic.instructions	c0
+78c11c	obj_78d4cd.EnsureVisibleTopic.literals	c1
+78c16c	obj_78d4cd.EnsureVisibleTopic.DebuggerInfo	c1
+78c194	obj_78d4cd.MakeTopicFrame.DebuggerInfo	c1	gap=beacebad
+78c1ac	obj_78d4cd.PickActionScript.DebuggerInfo	c1	gap=beacebad
+78c1cc	obj_78d4cd.ToggleTopic.DebuggerInfo	c1	gap=beacebad
+78c1e4	obj_78d4cd.SetTopAndLevel.literals[1]	c1	gap=beacebad
+78c1fc	obj_78d4cd.SetTopAndLevel.DebuggerInfo	c1
+78c22c	obj_78d4cd.HandleCheck.instructions	c0
+78c314	obj_78d4cd.HandleCheck.DebuggerInfo	c1
+78c344	obj_78d4cd.DeleteTopics.instructions	c0
+78c58c	obj_78d4cd.DeleteTopics.literals	c1
+78c5ec	obj_78d4cd.DeleteTopics.DebuggerInfo	c1
+78c63c	obj_78d4cd.SetTopicData.DebuggerInfo	c1
+78c65c	obj_78d4cd.ChildChanged.DebuggerInfo	c1	gap=beacebad
+78c67c	obj_78d4cd.CheckFlags	c3	map=map_7a269d	gap=beacebad
+78c6a4	obj_78d4cd.UndoCheck.DebuggerInfo	c1
+78c6c4	obj_78d4cd.NewRelative.DebuggerInfo	c1	gap=beacebad
+78c6e4	obj_78d4cd._keyDaughterScript.DebuggerInfo	c1	gap=beacebad
+78c6fc	obj_78d4cd.ClickBounds.DebuggerInfo	c1
+78c714	obj_78d4cd.IsReadOnly.DebuggerInfo	c1
+78c72c	obj_78d4cd.ShowFoundTopic.DebuggerInfo	c1	gap=beacebad
+78c754	obj_78d4cd.RevealTopic.DebuggerInfo	c1
+78c76c	obj_78d4cd.RemoveTopicDragDrop.instructions	c0
+78c98c	obj_78d4cd.RemoveTopicDragDrop.DebuggerInfo	c1	gap=beacebad
+78c9ec	obj_78d4cd.IsEmpty	43	map=map_7a26c5	gap=beacebad
+78ca14	obj_78d4cd.GetTopicCount	43	map=map_7a26ed	gap=beacebad
+78ca3c	obj_78d4cd.viewDropRemoveScript	43	map=map_7a2715	gap=beacebad
+78ca64	obj_78d4cd.AddKidsToList	43	map=map_7a273d	gap=beacebad
+78ca8c	obj_78d4cd.viewSetupDoneScript	43	map=map_7a2765	gap=beacebad
+78cab4	obj_78d4cd.OlderSister	43	map=map_7a278d	gap=beacebad
+78cadc	obj_78d4cd.UndoDropRemove	43	map=map_7a27b5	gap=beacebad
+78cb04	obj_78d4cd.ActiveTopic	43	map=map_7a27dd	gap=beacebad
+78cb2c	obj_78d4cd._keyCheckItemScript	43	map=map_7a2805	gap=beacebad
+78cb54	obj_78d4cd.Mother	43	map=map_7a282d	gap=beacebad
+78cb7c	obj_78d4cd.ReflowTopics	43	map=map_7a2855	gap=beacebad
+78cba4	obj_78d4cd.RedoTopics	43	map=map_7a287d	gap=beacebad
+78cbcc	obj_78d4cd.HandleScrub	43	map=map_7a28a5	gap=beacebad
+78cbf4	obj_78d4cd.viewGetDropDataScript	43	map=map_7a28cd	gap=beacebad
+78cc1c	obj_78d4cd.viewGetDropTypesScript	43	map=map_7a28f5	gap=beacebad
+78cc44	obj_78d4cd.TopicHeight	43	map=map_7a291d	gap=beacebad
+78cc6c	obj_78d4cd.UndoDropTopic	43	map=map_7a2945	gap=beacebad
+78cc94	obj_78d4cd.UndoScrub	43	map=map_7a296d	gap=beacebad
+78ccbc	obj_78d4cd.NewTopic	43	map=map_7a2995	gap=beacebad
+78cce4	obj_78d4cd.CalcLevel	43	map=map_7a29bd	gap=beacebad
+78cd0c	obj_78d4cd.viewChangedScript	43	map=map_7a29e5	gap=beacebad
+78cd34	obj_78d4cd.SetReadOnly	43	map=map_7a2a0d	gap=beacebad
+78cd5c	obj_78d4cd._keyAuntScript	43	map=map_7a2a35	gap=beacebad
+78cd84	obj_78d4cd.ShoveBelow	43	map=map_7a2a5d	gap=beacebad
+78cdac	obj_78d4cd.GetTopicData	43	map=map_7a2a85	gap=beacebad
+78cdd4	obj_78d4cd.ResolveClick	43	map=map_7a2aad	gap=beacebad
+78cdfc	obj_78d4cd.AdjustKids	43	map=map_7a2ad5	gap=beacebad
+78ce24	obj_78d4cd.UndoAddWriting	43	map=map_7a2afd	gap=beacebad
+78ce4c	obj_78d4cd.ShowFoundItem	43	map=map_7a2b25	gap=beacebad
+78ce74	obj_78d4cd.viewDropScript	43	map=map_7a2b4d	gap=beacebad
+78ce9c	obj_78d4cd._keySisterScript	43	map=map_7a2b75	gap=beacebad
+78cec4	obj_78d4cd.UndoAddTopic	43	map=map_7a2b9d	gap=beacebad
+78ceec	obj_78d4cd.AddEmptyTopic	43	map=map_7a2bc5	gap=beacebad
+78cf14	obj_78d4cd.SetDone	43	map=map_7a2bed	gap=beacebad
+78cf3c	obj_78d4cd.UpdateMultipleStores	43	map=map_7a2c15	gap=beacebad
+78cf64	obj_78d4cd.OldestSister	43	map=map_7a2c3d	gap=beacebad
+78cf8c	obj_78d4cd.SetPriority	43	map=map_7a2c65	gap=beacebad
+78cfb4	obj_78d4cd.AppendTopic	43	map=map_7a2c8d	gap=beacebad
+78cfdc	obj_78d4cd.GetTarget	43	map=map_7a2cb5	gap=beacebad
+78d004	obj_78d4cd.AddTopicDragDrop	43	map=map_7a2cdd	gap=beacebad
+78d02c	obj_78d4cd.viewDropMoveScript	43	map=map_7a2d05	gap=beacebad
+78d054	obj_78d4cd.YoungerSister	43	map=map_7a2d2d	gap=beacebad
+78d07c	obj_78d4cd.viewSetupFormScript	43	map=map_7a2d55	gap=beacebad
+78d0a4	obj_78d4cd.DirtyBelow	43	map=map_7a2d7d	gap=beacebad
+78d0cc	obj_78d4cd.HasKids	43	map=map_7a2da5	gap=beacebad
+78d0f4	obj_78d4cd.viewAddChildScript	43	map=map_7a2dcd	gap=beacebad
+78d11c	obj_78d4cd.EnsureVisibleTopic	43	map=map_7a2df5	gap=beacebad
+78d144	obj_78d4cd.MakeTopicFrame	43	map=map_7a2e1d	gap=beacebad
+78d16c	obj_78d4cd.PickActionScript	43	map=map_7a2e45	gap=beacebad
+78d194	obj_78d4cd.ToggleTopic	43	map=map_7a2e6d	gap=beacebad
+78d1bc	obj_78d4cd.SetTopAndLevel	43	map=map_7a2e95	gap=beacebad
+78d1e4	obj_78d4cd.HandleCheck	43	map=map_7a2ebd	gap=beacebad
+78d20c	obj_78d4cd.DeleteTopics	43	map=map_7a2ee5	gap=beacebad
+78d234	obj_78d4cd.SetTopicData	43	map=map_7a2f0d	gap=beacebad
+78d25c	obj_78d4cd.ChildChanged	43	map=map_7a2f35	gap=beacebad
+78d284	obj_78d4cd.UndoCheck	43	map=map_7a2f5d	gap=beacebad
+78d2ac	obj_78d4cd.NewRelative	43	map=map_7a2f85	gap=beacebad
+78d2d4	obj_78d4cd.viewSetupChildrenScript	43	map=map_7a2fad	gap=beacebad
+78d2fc	obj_78d4cd._keyDaughterScript	43	map=map_7a2fd5	gap=beacebad
+78d324	obj_78d4cd.ClickBounds	43	map=map_7a2ffd	gap=beacebad
+78d34c	obj_78d4cd.IsReadOnly	43	map=map_7a3025	gap=beacebad
+78d374	obj_78d4cd.ShowFoundTopic	43	map=map_7a304d	gap=beacebad
+78d39c	obj_78d4cd.RevealTopic	43	map=map_7a3075	gap=beacebad
+78d3c4	obj_78d4cd.RemoveTopicDragDrop	43	map=map_7a309d	gap=beacebad
+78d3ec	'char	40
+78d404	'modifiers	40
+78d424	'keymessage	40
+78d444	obj_78d4cd._keyCommands[3].name	40
+78d464	'category	40
+78d484	map_78d485	c1	gap=beacebad
+78d4ac	obj_78d4cd._keyCommands[3]	43	map=map_78d485
+78d4cc	obj_78d4cd	c3	map=map_7a14cd	gap=beacebad
+78d604	obj_78d4cd._keyCommands[2].name	40
+78d624	obj_78d4cd._keyCommands[2]	43	map=map_78d485
+78d644	obj_78d4cd._keyCommands[1].name	40
+78d664	obj_78d4cd._keyCommands[1]	43	map=map_78d485
+78d684	obj_78d4cd._keyCommands[0].name	40
+78d69c	obj_78d4cd._keyCommands[0]	43	map=map_78d485
+78d6bc	obj_78d4cd._keyCommands	c1	gap=beacebad
+78d6dc	'icon	40
+78d6f4	'buttonClickScript	40
+78d71c	'editor	40
+78d734	'debug	40
+78d74c	map_78d74d	c1
+78d76c	obj_7a14e5.buttonClickScript.literals	c1
+78d784	obj_7a14e5.viewBounds	43	map=map_78575d	gap=beacebad
+78d7a4	obj_7a14e5.icon.bounds	c3	map=map_7a30c5	gap=beacebad
+78d7c4	obj_7a14e5.icon.bits	40
+78d80c	obj_7a14e5.icon	c3	map=map_78d9fd	gap=beacebad
+78d824	obj_7a14e5.buttonClickScript	43	map=map_7a30e5	gap=beacebad
+78d84c	obj_7a1505.buttonClickScript.literals	c1
+78d864	obj_7a1505.viewBounds	43	map=map_78575d	gap=beacebad
+78d884	obj_7a1505.icon.bounds	c3	map=map_7a310d	gap=beacebad
+78d8a4	obj_7a1505.icon.bits	40
+78d8ec	obj_7a1505.icon	c3	map=map_78d9fd	gap=beacebad
+78d904	obj_7a1505.buttonClickScript	43	map=map_7a312d	gap=beacebad
+78d92c	map_78d92d	c1	gap=beacebad
+78d944	obj_78d945	c0
+78d95c	obj_7a1525.buttonClickScript.literals	c1
+78d974	obj_7a1525.viewBounds	43	map=map_78575d	gap=beacebad
+78d994	obj_7a1525.icon.bounds	c3	map=map_7a3155	gap=beacebad
+78d9b4	obj_7a1525.icon.bits	40
+78d9fc	map_78d9fd	c1
+78da14	obj_7a1525.icon	c3	map=map_78d9fd	gap=beacebad
+78da2c	obj_7a1525.buttonClickScript	43	map=map_7a3175	gap=beacebad
+78da54	'viewFormat	40
+78da74	'viewJustify	40
+78da94	'listLetterFormat	40
+78dabc	'done	40
+78dad4	'numKids	40
+78daec	map_78daed	c1
+78db14	'printListViewFlags	40
+78db3c	obj_7a156d.protoList.viewSetupChildrenScript.instructions	c0
+78dbcc	obj_7a156d.protoList.viewSetupChildrenScript.literals	c1
+78dc0c	obj_7a156d.protoList.viewSetupFormScript.instructions	c0
+78dc24	obj_7a156d.protoList.viewSetupFormScript.literals	c1	gap=beacebad
+78dc4c	obj_7a156d.protoList.viewSetupChildrenScript.DebuggerInfo	c1	gap=beacebad
+78dc64	obj_7a156d.protoList.viewSetupChildrenScript	43	map=map_7a319d	gap=beacebad
+78dc8c	obj_7a156d.protoList.viewSetupFormScript	43	map=map_7a31c5	gap=beacebad
+78dcb4	map_78dcb5	c1	gap=beacebad
+78dccc	'routingType	40
+78dcec	'version	40
+78dd04	'printFormat	40
+78dd24	'listFormat	40
+78dd44	'protoList	40
+78dd64	'totalKids	40
+78dd84	'margins	40
+78dd9c	'listMemoFormat	40
+78ddbc	obj_7a156d.viewSetupChildrenScript.literals[5]	c1
+78dddc	obj_7a156d.viewSetupChildrenScript.literals[4]	40
+78ddfc	'viewClass	40
+78de1c	'StrFilled	40
+78de3c	'fields	40
+78de54	'toName	40
+78de6c	obj_7a156d.viewSetupChildrenScript.literals[8].literals[5]	40
+78de84	obj_7a156d.viewSetupChildrenScript.literals[8].literals[9]	40
+78dea4	'SubStr	40
+78debc	obj_78debd	c1	gap=beacebad
+78deec	'fromName	40
+78df0c	obj_7a156d.viewSetupChildrenScript.literals[10].literals[5]	40
+78df24	'LongDateStr	40
+78df44	'timestamp	40
+78df64	'yearMonthDayStrSpec	40
+78df8c	obj_78df8d	c1
+78dfa4	'letterheadForm	40
+78dfc4	'printNextPageScript	40
+78dfec	map_78dfed	c1
+78e054	'listLetterPrintDef	40
+78e07c	obj_7a156d.viewSetupDoneScript.instructions	c0
+78e0d4	obj_7a156d.viewSetupDoneScript.literals	c1	gap=beacebad
+78e0fc	obj_7a156d.printNextPageScript.instructions	c0
+78e154	obj_7a156d.printNextPageScript.literals	c1	gap=beacebad
+78e184	obj_7a156d.viewSetupFormScript.instructions	c0
+78e19c	obj_7a156d.viewSetupFormScript.literals	c1	gap=beacebad
+78e1b4	obj_7a156d.viewSetupChildrenScript.literals[8].instructions	c0
+78e214	obj_7a156d.viewSetupChildrenScript.literals[8].literals	c1	gap=beacebad
+78e254	obj_7a156d.viewSetupChildrenScript.literals[10].instructions	c0
+78e29c	obj_7a156d.viewSetupChildrenScript.literals[10].literals	c1
+78e2d4	obj_7a156d.viewSetupChildrenScript.literals[8].argFrame	c3	map=map_79339d
+78e2ec	obj_7a156d.viewSetupChildrenScript.literals[10].argFrame	c3	map=map_79339d
+78e304	obj_7a156d.viewSetupDoneScript.DebuggerInfo	c1
+78e324	obj_7a156d.viewSetupChildrenScript.literals[8]	c3	map=map_7a31ed	gap=beacebad
+78e34c	obj_7a156d.viewSetupChildrenScript.literals[10]	c3	map=map_7a3215	gap=beacebad
+78e374	obj_7a156d.viewSetupChildrenScript.instructions	c0
+78e474	obj_7a156d.viewSetupChildrenScript.literals	c1
+78e4dc	obj_7a156d.viewSetupDoneScript	43	map=map_7a323d	gap=beacebad
+78e504	obj_7a156d.printNextPageScript	43	map=map_7a3265	gap=beacebad
+78e52c	obj_7a156d.viewSetupFormScript	43	map=map_7a328d	gap=beacebad
+78e554	obj_7a156d.stepChildren	41	gap=beacebad
+78e564	obj_7a156d.viewSetupChildrenScript	43	map=map_7a32b5	gap=beacebad
+78e58c	obj_7a156d.margins	43	map=map_78575d	gap=beacebad
+78e5ac	map_78e5ad	c1	gap=beacebad
+78e5c4	'auxForm	40
+78e5dc	'listMemoPrintDef	40
+78e604	obj_78e605	43	map=map_78e625
+78e624	map_78e625	c1	gap=beacebad
+78e64c	obj_78e64d	43	map=map_78e625
+78e66c	'listFormat2	40
+78e68c	map_78e68d	c1
+78e6ac	'checkPrintDef	40
+78e6cc	obj_78e6cd	43	map=map_78e68d	gap=beacebad
+78e6ec	map_78e6ed	c1
+78e704	'checkPrintVisDef	40
+78e72c	obj_78e72d	43	map=map_78e6ed	gap=beacebad
+78e744	'checkLetterPrintDef	40
+78e76c	obj_78e76d	43	map=map_78e6ed	gap=beacebad
+78e784	map_78e785	c1
+78e7ac	'checkMemoPrintDef	40
+78e7d4	obj_78e7d5	43	map=map_78e785	gap=beacebad
+78e7fc	'listDataDef	40
+78e81c	obj_78e81d	43	map=map_78e625
+78e83c	'description	40
+78e85c	'metaData	40
+78e87c	'superSymbol	40
+78e89c	'notes	40
+78e8b4	'MakeNewEntry	40
+78e8d4	'makeNewTopic	40
+78e8f4	'SheetBounds	40
+78e914	'StringExtract	40
+78e934	'nLines	40
+78e94c	'guts	40
+78e964	'TextScript	40
+78e984	map_78e985	c1
+78e9cc	'bullet	40
+78e9e4	'checkDataDef	40
+78ea04	obj_78ea05	c0
+78ea24	obj_7a15d5.MakeNewEntry.literals	c1	gap=beacebad
+78ea44	obj_7a15d5.SheetBounds.instructions	c0
+78ea5c	obj_7a15d5.SheetBounds.literals	c1
+78ea6c	obj_7a15d5.StringExtract.instructions	c0
+78eac4	obj_7a15d5.StringExtract.literals	c1	gap=beacebad
+78eaf4	obj_7a15d5.TextScript.literals	c1
+78eb2c	obj_7a15d5.MakeNewEntry	c3	map=map_7a32dd	gap=beacebad
+78eb54	obj_7a15d5.SheetBounds	c3	map=map_7a3305	gap=beacebad
+78eb7c	obj_7a15d5.SheetBounds.DebuggerInfo	c1	gap=beacebad
+78eb94	obj_78eb95	40
+78eba4	obj_7a15d5.StringExtract	c3	map=map_7a332d	gap=beacebad
+78ebcc	obj_7a15d5.StringExtract.DebuggerInfo	c1	gap=beacebad
+78ebec	obj_7a15d5.TextScript.instructions	c0
+78ecb4	obj_7a15d5.TextScript.DebuggerInfo	c1	gap=beacebad
+78ecec	obj_7a15d5.icon.bounds	c3	map=map_7a3355	gap=beacebad
+78ed0c	obj_7a15d5.icon.bits	40
+78ed64	obj_7a15d5.icon	c3	map=map_78d9fd	gap=beacebad
+78ed7c	obj_7a15d5.TextScript	43	map=map_7a3375	gap=beacebad
+78eda4	map_78eda5	c1	gap=beacebad
+78edbc	obj_78edbd	c1	gap=beacebad
+78ede4	map_78ede5	c1	gap=beacebad
+78ee1c	'listViewDef	40
+78ee3c	obj_78ef15.MakeNewEntry.literals	c1	gap=beacebad
+78ee5c	obj_78ef15.MakeNewEntry	c3	map=map_7a339d	gap=beacebad
+78ee84	obj_78ef15.icon.bounds	c3	map=map_7a33c5	gap=beacebad
+78eea4	obj_78ef15.icon.bits	40
+78eefc	obj_78ef15.icon	c3	map=map_78d9fd	gap=beacebad
+78ef14	obj_78ef15	43	map=map_78ede5
+78ef44	'default	40
+78ef5c	'appAll	40
+78ef74	'appObject	40
+78ef94	'viewDefHeight	40
+78efb4	'rollScrolling	40
+78efd4	'MinimalBounds	40
+78eff4	'n	40
+78f00c	map_78f00d	c1	gap=beacebad
+78f064	obj_78f2a5.MinimalBounds.literals	c1	gap=beacebad
+78f08c	obj_78f2a5.ShowFoundItem.literals	c1	gap=beacebad
+78f0a4	obj_78f2a5.MinimalBounds.literals[2]	c1	gap=beacebad
+78f0bc	obj_78f2a5.MinimalBounds.literals[3]	c1	gap=beacebad
+78f0d4	obj_78f2a5.MinimalBounds	c3	map=map_7a33e5	gap=beacebad
+78f0fc	obj_78f2a5.MinimalBounds.DebuggerInfo	c1	gap=beacebad
+78f124	obj_78f2a5.ShowFoundItem.DebuggerInfo	c1
+78f13c	obj_78f2a5.viewBounds	43	map=map_78575d	gap=beacebad
+78f15c	obj_78f2a5.appObject	41	gap=beacebad
+78f174	obj_78f2a5.ShowFoundItem	43	map=map_7a340d	gap=beacebad
+78f19c	map_78f19d	c1	gap=beacebad
+78f1bc	obj_78f26d.viewSetupDoneScript.instructions	c0
+78f1f4	obj_78f26d.viewSetupDoneScript.literals	c1
+78f224	obj_78f26d.viewBounds	43	map=map_78575d	gap=beacebad
+78f244	obj_78f26d.viewSetupDoneScript	43	map=map_7a3435	gap=beacebad
+78f26c	obj_78f26d	c3	map=map_78f28d	gap=beacebad
+78f28c	map_78f28d	c1	gap=beacebad
+78f2a4	obj_78f2a5	c3	map=map_78f305
+78f304	map_78f305	c1
+78f324	obj_78f3ad.debug	40
+78f33c	map_78f33d	c1
+78f354	obj_78f3ad.menuButtons	41
+78f36c	obj_78f2a5.stepChildren	c1	gap=beacebad
+78f384	'listViewRouteDef	40
+78f3ac	obj_78f3ad	c3	map=map_7a161d	gap=beacebad
+78f3cc	obj_78f2a5.stepallocatecontext	c1	gap=beacebad
+78f3ec	obj_78f3ed	43	map=map_78f795	gap=beacebad
+78f404	map_78f405	c1	gap=beacebad
+78f424	'checkViewDef	40
+78f444	map_78f445	c1	gap=beacebad
+78f494	obj_78f495	c0
+78f51c	obj_78f68d.MinimalBounds.literals	c1	gap=beacebad
+78f544	obj_78f545	c0
+78f55c	obj_78f68d.ShowFoundItem.literals	c1	gap=beacebad
+78f574	obj_78f68d.MinimalBounds.literals[2]	c1	gap=beacebad
+78f58c	obj_78f68d.MinimalBounds.literals[3]	c1	gap=beacebad
+78f5a4	obj_78f68d.MinimalBounds	c3	map=map_7a345d	gap=beacebad
+78f5cc	obj_78f68d.MinimalBounds.DebuggerInfo	c1	gap=beacebad
+78f5f4	obj_78f68d.ShowFoundItem.DebuggerInfo	c1
+78f60c	obj_78f68d.viewBounds	43	map=map_78575d	gap=beacebad
+78f62c	obj_78f68d.ShowFoundItem	43	map=map_7a3485	gap=beacebad
+78f654	obj_78f655	c3	map=map_78f675	gap=beacebad
+78f674	map_78f675	c1	gap=beacebad
+78f68c	obj_78f68d	c3	map=map_78f6e5
+78f6e4	map_78f6e5	c1
+78f704	map_78f705	c1	gap=beacebad
+78f71c	obj_7a1635.menuButtons	41
+78f734	obj_78f68d.stepChildren	c1	gap=beacebad
+78f74c	'checkViewRouteDef	40
+78f774	obj_78f68d.stepallocatecontext	c1	gap=beacebad
+78f794	map_78f795	c1
+78f7ac	obj_78f7ad	43	map=map_78f795	gap=beacebad
+78f7c4	'GetRoot	40
+78f7dc	'calendar	40
+78f7fc	'RollOverAlarm	40
+78f81c	obj_78f84d.instructions	c0
+78f834	obj_78f84d.literals	c1
+78f84c	obj_78f84d	c3	map=map_7a34ad	gap=beacebad
+78f874	'aNewTime	40
+78f894	'last	40
+78f8ac	'lastRollover	40
+78f8cc	'newTime	40
+78f8e4	'SetUserConfig	40
+78f904	'EnsureInternal	40
+78f924	'FlushUserConfig	40
+78f944	obj_78517d[0].InstallScript.literals[45].instructions	c0
+78f974	obj_78517d[0].InstallScript.literals[45].literals	c1	gap=beacebad
+78f99c	obj_78517d[0].InstallScript.literals[45]	c3	map=map_7a34d5	gap=beacebad
+78f9c4	obj_78517d[0].InstallScript.literals[45].DebuggerInfo	c1	gap=beacebad
+78f9e4	'RO0	40
+78f9fc	'RO1	40
+78fa14	'RO2	40
+78fa2c	'RO3	40
+78fa44	'RO4	40
+78fa5c	obj_78fa5d	c1
+78fa7c	'whoAmI	40
+78fa94	'toDoListView	40
+78fab4	obj_7a1665.allDropTypes	c1
+78facc	'viewStationery	40
+78faec	'para	40
+78fb04	'viewCaretActivateScript	40
+78fb2c	map_78fb2d	c1
+78fb5c	'state	40
+78fb74	'minimalChildren	40
+78fb94	'scrollCausedRedo	40
+78fbbc	'topicDragInfo	40
+78fbdc	'types	40
+78fbf4	map_78fbf5	c1	gap=beacebad
+78fc14	'topicMarkers	40
+78fc34	'dataSoup	40
+78fc54	'entryChanged	40
+78fc74	'masterSoup	40
+78fc94	'soupName	40
+78fcb4	'soupIndices	40
+78fcd4	'date	40
+78fcec	map_78fced	c1	gap=beacebad
+78fd0c	'soupQuery	40
+78fd2c	map_78fd2d	c1
+78fd44	'defaultDataType	40
+78fd64	'CreateBlankEntry	40
+78fd8c	'needsSort	40
+78fdac	obj_7a1665.masterSoup.CreateBlankEntry.literals[3]	c1
+78fdcc	map_78fdcd	c1	gap=beacebad
+78fdf4	'flushDate	40
+78fe14	'oldTodoSoup	40
+78fe34	'repeatTargets	40
+78fe54	'targets	40
+78fe6c	'soupervisor	40
+78fe8c	'moveOnly	40
+78feac	map_78fead	c1	gap=beacebad
+78fec4	'selectedDates	40
+78fee4	'CalculateScrollRects	40
+78ff0c	'viewIdleScript	40
+78ff2c	'EndFlush	40
+78ff4c	'viewQuitScript	40
+78ff6c	'ApplyAllChanges	40
+78ff8c	'UnRegSoupChange	40
+78ffac	'viewScrollDownScript	40
+78ffd4	'oldFirst	40
+78fff4	'ClearUndoStacks	40
+790014	'viewScrollUpScript	40
+79003c	'GetToDoSoup	40
+79005c	'RollItemsOver	40
+79007c	'RegSoupChange	40
+79009c	'OldSoupChanged	40
+7900bc	'NewSoupChanged	40
+7900dc	'ConvertToDoSoup	40
+7900fc	'SetCaretInfo	40
+79011c	obj_7a1665.viewSetupFormScript.literals[14]	c1
+790134	'gtdeds	40
+79014c	'GetToDoEntryDefaultStore	40
+79017c	'storeIndex	40
+79019c	'AddOldSoupTasks	40
+7901bc	'aTopicList	40
+7901dc	'today	40
+7901f4	'querySpec	40
+790214	'mtgStartDate	40
+790234	'startKey	40
+790254	map_790255	c1
+790274	'validTest	40
+790294	obj_7a1665.AddOldSoupTasks.literals[1]	c3	map=map_790255	gap=beacebad
+7902b4	'tomorrow	40
+7902d4	'cursor	40
+7902ec	'pastTest	40
+79030c	'presentTest	40
+79032c	'futureTest	40
+79034c	'itemDate	40
+79036c	'endTest	40
+790384	'CountEntries	40
+7903a4	'converted	40
+7903c4	'MoveConvertedEntry	40
+7903ec	'GetDataDefs	40
+79040c	'convertTodo	40
+79042c	'ConvertOldEntry	40
+79044c	'Next	40
+790464	'AddRepeatingTasks	40
+79048c	'aDate	40
+7904a4	'addedTasks	40
+7904c4	'store	40
+7904dc	'curWidth	40
+7904fc	'NextMeeting	40
+79051c	'reminderInterval	40
+790544	'nextDate	40
+790564	'AddTask	40
+79057c	'aRichString	40
+79059c	'aComplete	40
+7905bc	'aReminder	40
+7905dc	'nDayTopics	40
+7905fc	'StringToTopic	40
+79061c	'remindForDate	40
+79063c	'lastWidth	40
+79065c	'EntryChangeXmit	40
+79067c	obj_7a1665.AddTask.literals[17]	c1	gap=beacebad
+79069c	'EntryStore	40
+7906bc	'scroller	40
+7906dc	'upDownScroller	40
+7906fc	'scrollRect	40
+79071c	'dataRect	40
+79073c	'viewRect	40
+79075c	'SetArrow	40
+79077c	'up	40
+790794	'more	40
+7907ac	'normal	40
+7907c4	'down	40
+7907dc	'CheckReadOnly	40
+7907fc	'aEntry	40
+790814	'whatStore	40
+790834	'GetName	40
+79084c	'ParamStr	40
+79086c	'oldEntry	40
+79088c	'theSoup	40
+7908a4	'HasSoup	40
+7908bc	'deleted	40
+7908d4	'|evt.ex.fr.store|	40
+7908f4	'error	40
+79090c	'CurrentException	40
+790934	'EntryUndoChanges	40
+79095c	'EntryRemoveFromSoupXmit	40
+790984	'XmitSoupChange	40
+7909a4	'whatThe	40
+7909bc	obj_7a1665.ConvertToDoSoup.literals[48]	40
+7909d4	'CreateToDoItemAll	40
+7909fc	'aFrequency	40
+790a1c	'todoTask	40
+790a3c	'isVisible	40
+790a5c	'mainDisplay	40
+790a7c	'agendaView	40
+790a9c	'Write	40
+790ab4	obj_7a1665.CreateToDoItemAll.literals[22]	40
+790ae4	'UndoNewTask	40
+790b04	'CreateToDoItem	40
+790b24	'DeleteCheckedTask	40
+790b4c	'aTask	40
+790b64	'textPart1	40
+790b84	'ModalConfirm	40
+790ba4	'yesNo	40
+790bbc	'DeleteTask	40
+790bdc	'DeleteRolledTopics	40
+790c04	'aRedraw	40
+790c1c	'entries	40
+790c34	'GetToDoEntry	40
+790c54	'unique	40
+790c6c	'SetContains	40
+790c8c	'noUndoOrDraw	40
+790cac	'UndoDeleteTask	40
+790ccc	'DuplicateTask	40
+790cec	'newTask	40
+790d04	'oldLen	40
+790d1c	'reminder	40
+790d3c	'counts	40
+790d54	'whichTarget	40
+790d74	'originalLen	40
+790d94	'EntryValid	40
+790db4	obj_7a1665.EndFlush.literals[4]	40
+790e4c	'SetRemove	40
+790e6c	'FlushEntry	40
+790e8c	'bother	40
+790ea4	'FirstVisibleTopic	40
+790ecc	'hasOtherTasks	40
+790eec	'SortToDoItems	40
+790f0c	'aMakeNewEntry	40
+790f2c	'dataCursor	40
+790f4c	'cachedSoup	40
+790f6c	'soup	40
+790f84	'MakeSoup	40
+790fa4	'toDoApp	40
+790fbc	'AddToDefaultStoreXmit	40
+790fe4	'AddXmit	40
+790ffc	'MapCursor	40
+79101c	'aSeedStore	40
+79103c	'GetAppPreferences	40
+791064	'toDoInternalStore	40
+79108c	'GetDefaultStore	40
+7910ac	'e	40
+7910c4	obj_7a1665.GetToDoEntryDefaultStore.literals[26]	c1
+7910dc	'GetToDoItemsForRange	40
+791104	'aDate1	40
+79111c	'aDate2	40
+791134	'day	40
+79114c	'dayTopics	40
+79116c	'GetToDoItemsForThisDate	40
+791194	obj_7a1665.GetToDoItemsForRange.literals[2]	c1
+7911ac	'GetUnionSoup	40
+7911cc	'GrowNote	40
+7911ec	'checkTarget	40
+79120c	'lastChecked	40
+79122c	'LastToDoDate	40
+79124c	'earliestDate	40
+79126c	'yesterday	40
+79128c	'ResetToEnd	40
+7912ac	'Prev	40
+7912c4	obj_7912c5	c1
+7912e4	obj_7912e5	c1
+791304	'PrevMeeting	40
+791324	'LastVisibleTopic	40
+79134c	'TimeInSeconds	40
+79136c	obj_7a1665.MakeTopicFrame.literals[4]	c1	gap=beacebad
+79139c	'theStore	40
+7913bc	'MoveTask	40
+7913dc	'aTarget	40
+7913f4	'aDestStore	40
+791414	'originalEntry	40
+791434	'destSoup	40
+791454	'possibleTargets	40
+791474	obj_7a1665.MoveTask.literals[12]	40
+7914d4	'CheckWriteProtect	40
+7914fc	'CreateUSoupMember	40
+791524	'MoveTaskToDate	40
+791544	'anOldDate	40
+791564	'UndoMoveTaskToDate	40
+79158c	'NextToDoDate	40
+7915ac	obj_7915ad	c1	gap=beacebad
+7915cc	'aSoupName	40
+7915ec	'anAppSymbol	40
+79160c	'aChangeType	40
+79162c	'aChangeData	40
+79164c	'cal	40
+791664	'theToDo	40
+79167c	'GetToDo	40
+791694	'soupLeaves	40
+7916b4	'soupCreated	40
+7916d4	'soupEnters	40
+7916f4	'soupDeleted	40
+791714	'RedisplayScript	40
+791734	'PutAway	40
+79174c	'anItem	40
+791764	'beamedEntry	40
+791784	'added	40
+79179c	'body	40
+7917b4	'TodoItem	40
+7917d4	obj_7917d5	40
+7917ec	'RemoveOldTodoItems	40
+791814	'aBeforeDate	40
+791834	'aRemoveWhich	40
+791854	'progressContext	40
+791874	'nTasks	40
+79188c	obj_79188d	c1
+7918ac	'UpdateProgressBar	40
+7918d4	'd	40
+7918ec	'which	40
+791904	'RollEntryOver	40
+791924	'aNewDate	40
+791944	'doneItems	40
+791964	'notDoneItems	40
+791984	'newEntry	40
+7919a4	'newTopics	40
+7919c4	'aFromAlarm	40
+7919e4	'oldDate	40
+7919fc	'repeatEntries	40
+791a1c	'rollEm	40
+791a34	'protectError	40
+791a54	obj_791a55	c1
+791a74	'RollRepeatOver	40
+791a94	obj_7a1665.RollItemsOver.literals[17]	40
+791b7c	'nextAlarm	40
+791b9c	'AddAlarm	40
+791bbc	obj_791bbd	40
+791bd4	'aPrevDate	40
+791bf4	'checkedEntry	40
+791c14	'doneIndex	40
+791c34	'changed	40
+791c4c	'rollDate	40
+791c6c	'ScrollToTask	40
+791c8c	'SetTaskDone	40
+791cac	'SetTaskPriority	40
+791ccc	'ShowChanges	40
+791cec	'itemTime	40
+791d0c	'hit	40
+791d24	'items	40
+791d3c	'currentItem	40
+791d5c	obj_7a1665.ShowFoundItem.literals[3]	40
+791db4	'aAppSymbol	40
+791dd4	'theSlip	40
+791dec	'IsSoupEntry	40
+791e0c	'CloseSlip	40
+791e2c	'SetupIdle	40
+791e4c	'wealth	40
+791e64	'appSymbol	40
+791e84	'DecodeRichString	40
+791eac	'StrFontWidth	40
+791ecc	'TaskStore	40
+791eec	obj_7a1665.TaskStore.literals[3]	c1
+791f0c	'Close	40
+791f24	'paraView	40
+791f44	'readOnly	40
+791f64	'originalMtgDate	40
+791f84	'nominalDate	40
+791fa4	'Open	40
+791fbc	'aWasDate	40
+791fdc	'ValidateToDo	40
+791ffc	map_791ffd	c1	gap=beacebad
+792184	obj_7a1665.FlushEntry.instructions	c0
+7921fc	obj_7a1665.UndoMoveTaskToDate.instructions	c0
+792224	obj_7a1665.UndoMoveTaskToDate.literals	c1
+79223c	obj_79223d	c0
+79224c	obj_7a1665.FirstVisibleTopic.literals	c1
+79225c	obj_7a1665.TaskStore.instructions	c0
+7922cc	obj_7a1665.TaskStore.literals	c1
+7922fc	obj_7a1665.GetToDoSoup.instructions	c0
+792334	obj_7a1665.GetToDoSoup.literals	c1	gap=beacebad
+792364	obj_7a1665.LastVisibleTopic.literals	c1
+792374	obj_7a1665.MoveConvertedEntry.instructions	c0
+79238c	obj_7a1665.MoveConvertedEntry.literals	c1
+79239c	obj_7a1665.viewQuitScript.instructions	c0
+79240c	obj_7a1665.UndoDeleteTask.instructions	c0
+792454	obj_7a1665.UndoDeleteTask.literals	c1
+79248c	obj_7a1665.AddOldSoupTasks.literals[4].instructions	c0
+7924a4	obj_7a1665.AddOldSoupTasks.literals[4].literals	c1
+7924bc	obj_7a1665.AddOldSoupTasks.literals[5].instructions	c0
+7924e4	obj_7a1665.AddOldSoupTasks.literals[5].literals	c1	gap=beacebad
+792504	obj_792505	c0
+792514	obj_7a1665.AddOldSoupTasks.literals[7].instructions	c0
+79252c	obj_7a1665.AddOldSoupTasks.literals[7].literals	c1
+792544	obj_7a1665.RollEntryOver.literals	c1
+79258c	obj_7a1665.viewIdleScript.instructions	c0
+7925a4	obj_7a1665.viewIdleScript.literals	c1
+7925b4	'|Entry\|iter|	40
+7925d4	obj_7a1665.CreateToDoItem.instructions	c0
+7925ec	obj_7a1665.CreateToDoItem.literals	c1
+7925fc	obj_7a1665.RollOverAlarm.instructions	c0
+792634	obj_7a1665.RollOverAlarm.literals	c1	gap=beacebad
+792664	obj_7a1665.GetToDoEntryDefaultStore.literals[13].literals	c1	gap=beacebad
+79267c	obj_7a1665.masterSoup.CreateBlankEntry.instructions	c0
+7926a4	obj_7a1665.masterSoup.CreateBlankEntry.literals	c1	gap=beacebad
+7926c4	'|indextarget\|iter|	40
+7926ec	'|t\|iter|	40
+792704	obj_7a1665.ShowChanges.instructions	c0
+792714	obj_7a1665.ShowChanges.literals	c1
+792724	obj_7a1665.NextToDoDate.literals[4].literals	c1
+792734	obj_7a1665.RemoveOldTodoItems.literals[6].instructions	c0
+79274c	obj_7a1665.RemoveOldTodoItems.literals[6].literals	c1	gap=beacebad
+792764	obj_792765	c0
+79277c	obj_7a1665.RemoveOldTodoItems.literals[20].literals	c1
+79278c	'|sd\|iter|	40
+7927a4	obj_7a1665.ShowFoundItem.instructions	c0
+7927fc	obj_7a1665.ShowFoundItem.literals	c1	gap=beacebad
+792834	obj_7a1665.viewScrollDownScript.instructions	c0
+792874	obj_7a1665.viewScrollDownScript.literals	c1	gap=beacebad
+7928a4	obj_7a1665.AddEmptyTopic.instructions	c0
+7928e4	obj_7a1665.AddEmptyTopic.literals	c1
+79291c	obj_7a1665.StartFlush.instructions	c0
+79293c	obj_7a1665.StartFlush.literals	c1
+79295c	obj_7a1665.DeleteCheckedTask.instructions	c0
+7929b4	obj_7a1665.DeleteCheckedTask.literals	c1	gap=beacebad
+7929f4	obj_7a1665.UpdateMultipleStores.instructions	c0
+792a54	obj_7a1665.UpdateMultipleStores.literals	c1
+792a74	'|task\|iter|	40
+792a94	obj_7a1665.ScrollToTask.instructions	c0
+792ae4	obj_7a1665.ScrollToTask.literals	c1	gap=beacebad
+792b14	obj_7a1665.AppendTopic.instructions	40
+792ba4	obj_7a1665.AppendTopic.literals	c1
+792bdc	obj_7a1665.GetTarget.literals[23].literals	c1	gap=beacebad
+792bf4	obj_7a1665.canonicalParaTopic.viewCaretActivateScript.instructions	c0
+792c0c	obj_7a1665.canonicalParaTopic.viewCaretActivateScript.literals	c1	gap=beacebad
+792c24	obj_7a1665.viewScrollUpScript.instructions	c0
+792c5c	obj_7a1665.viewScrollUpScript.literals	c1	gap=beacebad
+792c84	obj_7a1665.LastToDoDate.literals[14].literals	c1
+792c94	obj_7a1665.viewSetupFormScript.instructions	c0
+792cf4	obj_7a1665.viewSetupFormScript.literals	c1	gap=beacebad
+792d44	obj_7a1665.OldSoupChanged.instructions	c0
+792dbc	obj_7a1665.OldSoupChanged.literals	c1
+792dfc	obj_7a1665.ValidateToDo.instructions	c0
+792e2c	obj_7a1665.ValidateToDo.literals	c1	gap=beacebad
+792e4c	obj_7a1665.viewAddChildScript.instructions	c0
+792e8c	obj_7a1665.viewAddChildScript.literals	c1	gap=beacebad
+792ebc	obj_7a1665.EnsureVisibleTopic.instructions	c0
+792ef4	obj_7a1665.EnsureVisibleTopic.literals	c1
+792f0c	obj_7a1665.MakeTopicFrame.instructions	c0
+792f3c	obj_7a1665.MakeTopicFrame.literals	c1
+792f5c	obj_7a1665.HandleCheck.instructions	c0
+792fcc	obj_7a1665.HandleCheck.literals	c1	gap=beacebad
+793014	obj_7a1665.CheckReadOnly.instructions	c0
+79304c	obj_7a1665.CheckReadOnly.literals	c1	gap=beacebad
+79307c	obj_7a1665.SortToDoItems.instructions	c0
+7930ac	obj_7a1665.SortToDoItems.literals	c1
+7930dc	obj_7930dd	c0
+7930fc	obj_7a1665.SortToDoItems.literals[4].literals	c1	gap=beacebad
+793114	obj_7a1665.viewSetupChildrenScript.instructions	c0
+79312c	obj_7a1665.viewSetupChildrenScript.literals	c1	gap=beacebad
+793144	obj_7a1665.GetToDoItemsForRange.instructions	c0
+7931b4	obj_7a1665.GetToDoItemsForRange.literals	c1
+7931cc	'|day\|limit|	40
+7931ec	'|day\|incr|	40
+79320c	obj_7a1665.GetToDoItemsForThisDate.literals	c1
+79324c	obj_7a1665.GetToDoItemsForThisDate.literals[11].literals	c1	gap=beacebad
+793264	obj_7a1665.UndoNewTask.instructions	c0
+79328c	obj_7a1665.UndoNewTask.literals	c1	gap=beacebad
+7932a4	obj_7a1665.AddRepeatingTasks.literals	c1
+7932ec	obj_7a1665.DeleteRolledTopics.instructions	c0
+79333c	obj_7a1665.DeleteRolledTopics.literals	c1	gap=beacebad
+793364	'|theIndex\|iter|	40
+793384	obj_7a1665.AddOldSoupTasks.literals[4].argFrame	c3	map=map_79339d
+79339c	map_79339d	41	gap=beacebad
+7933bc	obj_7a1665.AddOldSoupTasks.literals[5].argFrame	c3	map=map_79339d
+7933d4	obj_7a1665.AddOldSoupTasks.literals[7].argFrame	c3	map=map_79339d
+7933ec	map_7933ed	41
+793414	obj_7a1665.GetToDoEntryDefaultStore.literals[13].argFrame	c3	map=map_79339d
+79342c	map_79342d	41
+79344c	obj_7a1665.RemoveOldTodoItems.literals[6].argFrame	c3	map=map_79339d
+793464	map_793465	41
+793484	obj_7a1665.PutAway.instructions	c0
+79357c	obj_7a1665.PutAway.literals	c1	gap=beacebad
+7935f4	obj_7a1665.PutAway.literals[20]	c1	gap=beacebad
+79360c	obj_7a1665.PutAway.DebuggerInfo	c1
+79363c	obj_7a1665.FlushEntry.literals	c1	gap=beacebad
+793694	obj_7a1665.FlushEntry.DebuggerInfo	c1
+7936b4	obj_7a1665.UndoMoveTaskToDate.DebuggerInfo	c1
+7936d4	obj_7a1665.TaskStore.DebuggerInfo	c1	gap=beacebad
+7936ec	obj_7a1665.MoveConvertedEntry	c3	map=map_7a3515	gap=beacebad
+793714	obj_7a1665.MoveConvertedEntry.DebuggerInfo	c1
+79372c	obj_7a1665.viewQuitScript.literals	c1	gap=beacebad
+793784	obj_7a1665.UndoDeleteTask.DebuggerInfo	c1	gap=beacebad
+7937a4	obj_7a1665.AddOldSoupTasks.literals[4]	c3	map=map_7a353d	gap=beacebad
+7937cc	obj_7a1665.AddOldSoupTasks.literals[4].DebuggerInfo	c1
+7937ec	obj_7a1665.AddOldSoupTasks.literals[5]	c3	map=map_7a3565	gap=beacebad
+793814	obj_7a1665.AddOldSoupTasks.literals[5].DebuggerInfo	c1
+793834	obj_7a1665.AddOldSoupTasks.literals[6]	c3	map=map_7a358d	gap=beacebad
+79385c	obj_7a1665.AddOldSoupTasks.literals[6].DebuggerInfo	c1
+79387c	obj_7a1665.AddOldSoupTasks.literals[7]	c3	map=map_7a35b5	gap=beacebad
+7938a4	obj_7a1665.AddOldSoupTasks.literals[7].DebuggerInfo	c1
+7938c4	obj_7a1665.AddOldSoupTasks.literals	c1	gap=beacebad
+79392c	obj_7a1665.AddOldSoupTasks.instructions	c0
+793a4c	obj_7a1665.AddOldSoupTasks.DebuggerInfo	c1	gap=beacebad
+793a9c	obj_7a1665.RollEntryOver.instructions	c0
+793c04	obj_7a1665.RollEntryOver.DebuggerInfo	c1
+793c4c	obj_7a1665.RollRepeatOver.literals[8]	c1	gap=beacebad
+793c64	obj_7a1665.RollRepeatOver.literals[9]	c1	gap=beacebad
+793c7c	obj_7a1665.RollRepeatOver.literals	c1
+793cd4	obj_7a1665.RollRepeatOver.instructions	c0
+793e4c	obj_7a1665.RollRepeatOver.DebuggerInfo	c1
+793e8c	obj_7a1665.CalculateScrollRects.literals[13]	c1	gap=beacebad
+793ea4	obj_7a1665.CalculateScrollRects.instructions	c0
+793f44	obj_7a1665.CalculateScrollRects.literals	c1
+793f94	obj_7a1665.CalculateScrollRects.DebuggerInfo	c1	gap=beacebad
+793fac	obj_7a1665.SetTaskDone	c3	map=map_7a35dd	gap=beacebad
+793fd4	obj_7a1665.SetTaskDone.DebuggerInfo	c1
+793fec	obj_7a1665.RollItemsOver.literals	c1
+79405c	obj_7a1665.RollItemsOver.instructions	c0
+7941ac	obj_7a1665.RollItemsOver.DebuggerInfo	c1	gap=beacebad
+7941ec	obj_7a1665.CreateToDoItem.DebuggerInfo	c1
+79420c	obj_7a1665.RollOverAlarm.DebuggerInfo	c1	gap=beacebad
+794224	obj_7a1665.GetToDoEntryDefaultStore.literals[13]	c3	map=map_7a3605	gap=beacebad
+79424c	obj_7a1665.GetToDoEntryDefaultStore.literals[13].DebuggerInfo	c1
+794264	obj_7a1665.GetToDoEntryDefaultStore.literals	c1
+7942dc	obj_7a1665.GetToDoEntryDefaultStore.instructions	c0
+7943bc	obj_7a1665.GetToDoEntryDefaultStore.DebuggerInfo	c1
+7943e4	obj_7a1665.SetTaskPriority	c3	map=map_7a362d	gap=beacebad
+79440c	obj_7a1665.SetTaskPriority.DebuggerInfo	c1
+794424	obj_7a1665.masterSoup.CreateBlankEntry	c3	map=map_7a3655	gap=beacebad
+79444c	obj_7a1665.CreateToDoItemAll.literals[7]	c1	gap=beacebad
+794464	obj_7a1665.CreateToDoItemAll.literals[8]	c1	gap=beacebad
+79447c	obj_7a1665.CreateToDoItemAll.literals	c1
+7944fc	obj_7a1665.CreateToDoItemAll.instructions	c0
+7946c4	obj_7a1665.CreateToDoItemAll.DebuggerInfo	c1
+7946fc	obj_7a1665.EndFlush.literals	c1	gap=beacebad
+794764	obj_7a1665.EndFlush.instructions	c0
+794964	obj_7a1665.EndFlush.DebuggerInfo	c1	gap=beacebad
+7949a4	obj_7a1665.MoveTaskToDate.literals	c1	gap=beacebad
+7949fc	obj_7a1665.MoveTaskToDate.instructions	c0
+794a94	obj_7a1665.MoveTaskToDate.DebuggerInfo	c1	gap=beacebad
+794abc	obj_7a1665.EntryCool	c3	map=map_7a367d	gap=beacebad
+794ae4	obj_7a1665.EntryCool.DebuggerInfo	c1	gap=beacebad
+794afc	obj_7a1665.GetToDoEntry.instructions	c0
+794bcc	obj_7a1665.GetToDoEntry.literals	c1	gap=beacebad
+794c34	obj_7a1665.GetToDoEntry.DebuggerInfo	c1
+794c5c	obj_7a1665.NextToDoDate.literals[4]	c3	map=map_7a36a5	gap=beacebad
+794c84	obj_7a1665.NextToDoDate.literals[4].DebuggerInfo	c1	gap=beacebad
+794c9c	obj_7a1665.NextToDoDate.literals[12]	c1	gap=beacebad
+794cb4	obj_7a1665.NextToDoDate.literals[13]	c1	gap=beacebad
+794ccc	obj_7a1665.NextToDoDate.instructions	c0
+794e44	obj_7a1665.NextToDoDate.literals	c1
+794e9c	obj_7a1665.NextToDoDate.DebuggerInfo	c1	gap=beacebad
+794ecc	obj_7a1665.RemoveOldTodoItems.literals[6]	c3	map=map_7a36cd	gap=beacebad
+794ef4	obj_7a1665.RemoveOldTodoItems.literals[6].DebuggerInfo	c1
+794f0c	obj_7a1665.RemoveOldTodoItems.literals	c1
+794f74	obj_7a1665.RemoveOldTodoItems.literals[20]	c3	map=map_7a36f5	gap=beacebad
+794f9c	obj_7a1665.RemoveOldTodoItems.literals[20].DebuggerInfo	c1
+794fb4	obj_7a1665.RemoveOldTodoItems.instructions	c0
+7951c4	obj_7a1665.RemoveOldTodoItems.DebuggerInfo	c1
+795214	obj_7a1665.ShowFoundItem.DebuggerInfo	c1
+79523c	obj_7a1665.viewScrollDownScript.DebuggerInfo	c1	gap=beacebad
+795254	obj_7a1665.ConvertToDoSoup.instructions	c0
+79540c	obj_7a1665.ConvertToDoSoup.literals	c1
+7954dc	obj_7a1665.ConvertToDoSoup.DebuggerInfo	c1
+795514	obj_7a1665.AddEmptyTopic.DebuggerInfo	c1
+795534	obj_7a1665.StringToTopic.instructions	c0
+7955e4	obj_7a1665.StringToTopic.literals	c1
+795634	obj_7a1665.StringToTopic.DebuggerInfo	c1	gap=beacebad
+795664	obj_7a1665.NewSoupChanged.instructions	c0
+79571c	obj_7a1665.NewSoupChanged.literals	c1
+79576c	obj_7a1665.NewSoupChanged	c3	map=map_7a371d	gap=beacebad
+795794	obj_7a1665.NewSoupChanged.DebuggerInfo	c1
+7957bc	obj_7a1665.DeleteCheckedTask.DebuggerInfo	c1
+7957dc	obj_7a1665.UpdateMultipleStores.DebuggerInfo	c1	gap=beacebad
+7957f4	obj_7a1665.DeleteTask.instructions	c0
+79596c	obj_7a1665.DeleteTask.literals	c1	gap=beacebad
+7959d4	obj_7a1665.DeleteTask.DebuggerInfo	c1	gap=beacebad
+795a0c	obj_7a1665.ScrollToTask.DebuggerInfo	c1	gap=beacebad
+795a2c	obj_7a1665.AppendTopic.DebuggerInfo	c1	gap=beacebad
+795a54	obj_7a1665.GetTarget.literals	c1
+795ac4	obj_7a1665.GetTarget.literals[23]	c3	map=map_7a3745	gap=beacebad
+795aec	obj_7a1665.GetTarget.literals[23].DebuggerInfo	c1	gap=beacebad
+795b04	obj_7a1665.GetTarget.instructions	c0
+795d24	obj_7a1665.GetTarget.DebuggerInfo	c1	gap=beacebad
+795d5c	obj_7a1665.canonicalParaTopic.viewCaretActivateScript.DebuggerInfo	c1	gap=beacebad
+795d74	obj_7a1665.viewScrollUpScript.DebuggerInfo	c1	gap=beacebad
+795d8c	obj_7a1665.LastToDoDate.literals[14]	c3	map=map_7a376d	gap=beacebad
+795db4	obj_7a1665.LastToDoDate.literals[14].DebuggerInfo	c1	gap=beacebad
+795dcc	obj_7a1665.LastToDoDate.literals	c1
+795e2c	obj_7a1665.LastToDoDate.literals[18]	c1	gap=beacebad
+795e44	obj_7a1665.LastToDoDate.literals[19]	c1	gap=beacebad
+795e5c	obj_7a1665.LastToDoDate.instructions	c0
+796024	obj_7a1665.LastToDoDate.DebuggerInfo	c1
+796054	obj_7a1665.GrowNote	c3	map=map_7a3795	gap=beacebad
+79607c	obj_7a1665.OldSoupChanged	c3	map=map_7a37bd	gap=beacebad
+7960a4	obj_7a1665.OldSoupChanged.DebuggerInfo	c1
+7960cc	obj_7a1665.ValidateToDo	c3	map=map_7a37e5	gap=beacebad
+7960f4	obj_7a1665.ValidateToDo.DebuggerInfo	c1	gap=beacebad
+79610c	obj_7a1665.viewAddChildScript.DebuggerInfo	c1	gap=beacebad
+796124	obj_7a1665.EnsureVisibleTopic.DebuggerInfo	c1	gap=beacebad
+79613c	obj_7a1665.MakeTopicFrame	c3	map=map_7a380d	gap=beacebad
+796164	obj_7a1665.MakeTopicFrame.DebuggerInfo	c1	gap=beacebad
+79617c	obj_7a1665.ToggleTopic.literals	c1
+7961ec	obj_7a1665.ToggleTopic.literals[22]	c1	gap=beacebad
+796204	obj_7a1665.ToggleTopic.literals[23]	c1	gap=beacebad
+79621c	obj_7a1665.ToggleTopic.instructions	c0
+7963c4	obj_7a1665.ToggleTopic.DebuggerInfo	c1	gap=beacebad
+7963e4	obj_7a1665.HandleCheck.DebuggerInfo	c1
+796404	obj_7a1665.CheckReadOnly.DebuggerInfo	c1	gap=beacebad
+796424	obj_7a1665.DeleteTopics.literals	c1
+7964ac	obj_7a1665.DeleteTopics.instructions	c0
+796614	obj_7a1665.DeleteTopics.DebuggerInfo	c1	gap=beacebad
+79665c	obj_7a1665.SortToDoItems.literals[4]	c3	map=map_7a3835	gap=beacebad
+796684	obj_7a1665.SortToDoItems.literals[4].DebuggerInfo	c1	gap=beacebad
+79669c	obj_7a1665.SortToDoItems	c3	map=map_7a385d	gap=beacebad
+7966c4	obj_7a1665.SortToDoItems.DebuggerInfo	c1	gap=beacebad
+7966dc	obj_7a1665.GetToDoItemsForRange.DebuggerInfo	c1	gap=beacebad
+79670c	obj_7a1665.GetToDoItemsForThisDate.instructions	c0
+796864	obj_7a1665.GetToDoItemsForThisDate.literals[11]	c3	map=map_7a3885	gap=beacebad
+79688c	obj_7a1665.GetToDoItemsForThisDate.literals[11].DebuggerInfo	c1	gap=beacebad
+7968a4	obj_7a1665.GetToDoItemsForThisDate.DebuggerInfo	c1	gap=beacebad
+7968e4	obj_7a1665.MoveTask.literals	c1
+7969b4	obj_7a1665.MoveTask.instructions	c0
+796d04	obj_7a1665.MoveTask.DebuggerInfo	c1
+796d4c	obj_7a1665.UndoNewTask.DebuggerInfo	c1
+796d64	obj_7a1665.AddRepeatingTasks.literals[8]	c1	gap=beacebad
+796d7c	obj_7a1665.AddRepeatingTasks.literals[9]	c1	gap=beacebad
+796d94	obj_7a1665.AddRepeatingTasks.literals[10]	c1	gap=beacebad
+796dac	obj_7a1665.AddRepeatingTasks.instructions	c0
+796ee4	obj_7a1665.AddRepeatingTasks.DebuggerInfo	c1
+796f24	obj_7a1665.AddTask.instructions	c0
+79705c	obj_7a1665.AddTask.literals	c1	gap=beacebad
+7970b4	obj_7a1665.AddTask.DebuggerInfo	c1
+7970ec	obj_7a1665.DeleteRolledTopics	c3	map=map_7a38ad	gap=beacebad
+797114	obj_7a1665.DeleteRolledTopics.DebuggerInfo	c1	gap=beacebad
+79713c	obj_7a1665.DuplicateTask.literals[14]	c1	gap=beacebad
+797154	obj_7a1665.DuplicateTask.literals[15]	c1	gap=beacebad
+79716c	obj_7a1665.DuplicateTask.instructions	c0
+79722c	obj_7a1665.DuplicateTask.literals	c1	gap=beacebad
+797294	obj_7a1665.DuplicateTask.DebuggerInfo	c1
+7972bc	obj_7a1665.PutAway	43	map=map_7a38d5	gap=beacebad
+7972e4	obj_7a1665.FlushEntry	43	map=map_7a38fd	gap=beacebad
+79730c	obj_7a1665.UndoMoveTaskToDate	43	map=map_7a3925	gap=beacebad
+797334	obj_7a1665.FirstVisibleTopic	43	map=map_7a394d	gap=beacebad
+79735c	obj_7a1665.TaskStore	43	map=map_7a3975	gap=beacebad
+797384	obj_7a1665.topicMarkers.bounds	c3	map=map_7a399d	gap=beacebad
+7973a4	obj_7a1665.topicMarkers.bits	40
+79741c	obj_7a1665.topicMarkers	c3	map=map_78d9fd	gap=beacebad
+797434	obj_7a1665.GetToDoSoup	43	map=map_7a39bd	gap=beacebad
+79745c	obj_7a1665.LastVisibleTopic	43	map=map_7a39e5	gap=beacebad
+797484	obj_7a1665.viewQuitScript	43	map=map_7a3a0d	gap=beacebad
+7974ac	obj_7a1665.UndoDeleteTask	43	map=map_7a3a35	gap=beacebad
+7974d4	obj_7a1665.AddOldSoupTasks	43	map=map_7a3a5d	gap=beacebad
+7974fc	obj_7a1665.AddOldSoupTasks.argFrame	43	map=map_7933ed	gap=beacebad
+797524	obj_7a1665.RollEntryOver	43	map=map_7a3a85	gap=beacebad
+79754c	obj_7a1665.RollRepeatOver	43	map=map_7a3aad	gap=beacebad
+797574	obj_7a1665.CalculateScrollRects	43	map=map_7a3ad5	gap=beacebad
+79759c	obj_7a1665.viewIdleScript	43	map=map_7a3afd	gap=beacebad
+7975c4	obj_7a1665.RollItemsOver	43	map=map_7a3b25	gap=beacebad
+7975ec	obj_7a1665.CreateToDoItem	43	map=map_7a3b4d	gap=beacebad
+797614	obj_7a1665.RollOverAlarm	43	map=map_7a3b75	gap=beacebad
+79763c	obj_7a1665.GetToDoEntryDefaultStore	43	map=map_7a3b9d	gap=beacebad
+797664	obj_7a1665.GetToDoEntryDefaultStore.argFrame	43	map=map_79342d	gap=beacebad
+797684	obj_7a1665.appObject	41	gap=beacebad
+79769c	obj_7a1665.markerDropTypes	41
+7976ac	obj_7a1665.masterSoup.soupIndices[0]	43	map=map_78fced
+7976c4	obj_7a1665.masterSoup.soupIndices	41
+7976d4	obj_7a1665.masterSoup.soupQuery	43	map=map_78fd2d	gap=beacebad
+7976ec	obj_7a1665.masterSoup	c3	map=map_797715	gap=beacebad
+797714	map_797715	c1	gap=beacebad
+79772c	obj_7a1665.CreateToDoItemAll	43	map=map_7a3bc5	gap=beacebad
+797754	obj_7a1665.EndFlush	43	map=map_7a3bed	gap=beacebad
+79777c	obj_7a1665.MoveTaskToDate	43	map=map_7a3c15	gap=beacebad
+7977a4	obj_7a1665.GetToDoEntry	43	map=map_7a3c3d	gap=beacebad
+7977cc	obj_7a1665.soupervisor	43	map=map_78fead
+7977dc	obj_7a1665.ShowChanges	43	map=map_7a3c65	gap=beacebad
+797804	obj_7a1665.NextToDoDate	43	map=map_7a3c8d	gap=beacebad
+79782c	obj_7a1665.targets	41	gap=beacebad
+79783c	obj_7a1665.RemoveOldTodoItems	43	map=map_7a3cb5	gap=beacebad
+797864	obj_7a1665.RemoveOldTodoItems.argFrame	43	map=map_793465	gap=beacebad
+797884	obj_7a1665.ShowFoundItem	43	map=map_7a3cdd	gap=beacebad
+7978ac	obj_7a1665.viewScrollDownScript	43	map=map_7a3d05	gap=beacebad
+7978d4	obj_7a1665.ConvertToDoSoup	43	map=map_7a3d2d	gap=beacebad
+7978fc	obj_7a1665.AddEmptyTopic	43	map=map_7a3d55	gap=beacebad
+797924	obj_7a1665.StartFlush	43	map=map_7a3d7d	gap=beacebad
+79794c	obj_7a1665.StringToTopic	43	map=map_7a3da5	gap=beacebad
+797974	obj_7a1665.DeleteCheckedTask	43	map=map_7a3dcd	gap=beacebad
+79799c	obj_7a1665.UpdateMultipleStores	43	map=map_7a3df5	gap=beacebad
+7979c4	obj_7a1665.DeleteTask	43	map=map_7a3e1d	gap=beacebad
+7979ec	obj_7a1665.ScrollToTask	43	map=map_7a3e45	gap=beacebad
+797a14	obj_7a1665.AppendTopic	43	map=map_7a3e6d	gap=beacebad
+797a3c	obj_7a1665.GetTarget	43	map=map_7a3e95	gap=beacebad
+797a64	obj_7a1665.canonicalParaTopic.styles	41	gap=beacebad
+797a74	obj_7a1665.canonicalParaTopic.viewCaretActivateScript	43	map=map_7a3ebd	gap=beacebad
+797a9c	obj_7a1665.canonicalParaTopic	43	map=map_78fb2d	gap=beacebad
+797acc	obj_7a1665.viewScrollUpScript	43	map=map_7a3ee5	gap=beacebad
+797af4	obj_7a1665.LastToDoDate	43	map=map_7a3f0d	gap=beacebad
+797b1c	obj_7a1665.viewSetupFormScript	43	map=map_7a3f35	gap=beacebad
+797b44	obj_7a1665.viewAddChildScript	43	map=map_7a3f5d	gap=beacebad
+797b6c	obj_7a1665.EnsureVisibleTopic	43	map=map_7a3f85	gap=beacebad
+797b94	obj_7a1665.ToggleTopic	43	map=map_7a3fad	gap=beacebad
+797bbc	obj_7a1665.HandleCheck	43	map=map_7a3fd5	gap=beacebad
+797be4	obj_7a1665.CheckReadOnly	43	map=map_7a3ffd	gap=beacebad
+797c0c	obj_7a1665.DeleteTopics	43	map=map_7a4025	gap=beacebad
+797c34	obj_7a1665.topicDragInfo.types	41	gap=beacebad
+797c4c	obj_7a1665.topicDragInfo	43	map=map_78fbf5
+797c64	obj_7a1665.viewSetupChildrenScript	43	map=map_7a404d	gap=beacebad
+797c8c	obj_7a1665.GetToDoItemsForRange	43	map=map_7a4075	gap=beacebad
+797cb4	obj_7a1665.GetToDoItemsForThisDate	43	map=map_7a409d	gap=beacebad
+797cdc	obj_7a1665.MoveTask	43	map=map_7a40c5	gap=beacebad
+797d04	obj_7a1665.UndoNewTask	43	map=map_7a40ed	gap=beacebad
+797d2c	obj_7a1665.AddRepeatingTasks	43	map=map_7a4115	gap=beacebad
+797d54	obj_7a1665.AddTask	43	map=map_7a413d	gap=beacebad
+797d7c	obj_7a1665.DuplicateTask	43	map=map_7a4165	gap=beacebad
+797da4	obj_7a1665.repeatTargets	41	gap=beacebad
+797db4	'supportTypes	40
+797dd4	'oneO	40
+797dec	'twoO	40
+797e04	'Convert	40
+797e1c	'aFrame	40
+797e34	'srcFormat	40
+797e54	'dstFormat	40
+797e74	'Convert10to20	40
+797e94	'Convert20to10	40
+797eb4	'oldTask	40
+797ecc	'convertFrame	40
+797eec	'newHeight	40
+797f0c	obj_79842d.Convert20to10.literals[19]	c1
+797f2c	map_797f2d	c1
+797f54	'EntrySoup	40
+797f74	'GetStore	40
+797f94	obj_79842d.Convert.instructions	c0
+797fec	obj_79842d.Convert.literals	c1	gap=beacebad
+798014	obj_79842d.Convert10to20.instructions	c0
+79802c	obj_79842d.Convert10to20.literals	c1
+79803c	obj_79842d.Convert20to10.instructions	c0
+7980bc	obj_79842d.Convert.DebuggerInfo	c1	gap=beacebad
+7980dc	obj_79842d.Convert10to20.DebuggerInfo	c1
+7980f4	obj_79842d.Convert20to10.literals[8]	c1	gap=beacebad
+79810c	obj_79842d.Convert20to10.literals[9]	c1	gap=beacebad
+798124	obj_79842d.Convert20to10.literals[10]	c1	gap=beacebad
+79813c	obj_79842d.Convert20to10.literals[11]	c1	gap=beacebad
+798154	obj_79842d.Convert20to10.literals[12]	c1	gap=beacebad
+79816c	obj_79842d.Convert20to10.literals	c1
+7981cc	obj_79842d.Convert20to10	c3	map=map_7a418d	gap=beacebad
+7981f4	obj_79842d.Convert20to10.DebuggerInfo	c1
+798214	obj_79842d.ConvertOldEntry.instructions	c0
+798314	obj_79842d.ConvertOldEntry.literals	c1
+798374	obj_79842d.ConvertOldEntry.DebuggerInfo	c1	gap=beacebad
+79839c	obj_79842d.supportTypes	41	gap=beacebad
+7983b4	obj_79842d.Convert	43	map=map_7a41b5	gap=beacebad
+7983dc	obj_79842d.Convert10to20	43	map=map_7a41dd	gap=beacebad
+798404	obj_79842d.ConvertOldEntry	43	map=map_7a4205	gap=beacebad
+79842c	obj_79842d	43	map=map_797f2d	gap=beacebad
+798454	'viewScroll2DScript	40
+79847c	'aDir	40
+798494	'anExtras	40
+7984b4	'RefreshViews	40
+7984d4	map_7984d5	c1	gap=beacebad
+7984f4	'todoViewDef	40
+798514	obj_7a1a15.viewScroll2DScript.instructions	c0
+79853c	obj_7a1a15.viewScroll2DScript.literals	c1
+79855c	obj_7a1a15.viewScroll2DScript.DebuggerInfo	c1
+798574	obj_7a1a15.viewScroll2DScript	43	map=map_7a422d	gap=beacebad
+79859c	'viewer	40
+7985b4	'oldTarget	40
+7985d4	map_7985d5	c1
+79862c	'protoToDoAgendaView	40
+798654	obj_7988ad.viewSetupFormScript.instructions	c0
+79866c	obj_7988ad.viewSetupFormScript.literals	c1
+79868c	obj_7988ad.GetTarget.instructions	c0
+7986ac	obj_7988ad.GetTarget.literals	c1	gap=beacebad
+7986d4	obj_7988ad.viewSetupFormScript.literals[1]	c1	gap=beacebad
+7986ec	obj_7988ad.CalculateScrollRects	c3	map=map_7a4255	gap=beacebad
+798714	obj_7988ad.GetTarget.DebuggerInfo	c1	gap=beacebad
+79872c	obj_7988ad.StartFlush	c3	map=map_7a427d	gap=beacebad
+798754	obj_7988ad.EndFlush	c3	map=map_7a42a5	gap=beacebad
+79877c	obj_7988ad._keyDaughterScript	c3	map=map_7a42cd	gap=beacebad
+7987a4	obj_7988ad._keyDaughterScript.DebuggerInfo	c1	gap=beacebad
+7987bc	obj_7988ad._keySisterScript	c3	map=map_7a42f5	gap=beacebad
+7987e4	obj_7988ad._keySisterScript.DebuggerInfo	c1	gap=beacebad
+7987fc	obj_7988ad._keyAuntScript	c3	map=map_7a431d	gap=beacebad
+798824	obj_7988ad._keyAuntScript.DebuggerInfo	c1	gap=beacebad
+79883c	obj_7988ad.viewBounds	43	map=map_78575d	gap=beacebad
+79885c	obj_7988ad.viewSetupFormScript	43	map=map_7a4345	gap=beacebad
+798884	obj_7988ad.GetTarget	43	map=map_7a436d	gap=beacebad
+7988ac	obj_7988ad	43	map=map_7985d5	gap=beacebad
+798904	map_798905	c1	gap=beacebad
+798934	'cachedToDoAgendaView	40
+79895c	'viewOriginY	40
+79897c	'calendarBottom	40
+79899c	'GetTargetInfo	40
+7989bc	'aType	40
+7989d4	'selected	40
+7989f4	'_cursor	40
+798a0c	obj_798e0d.GetTargetInfo.literals[1]	c1	gap=beacebad
+798a24	obj_798a25	c1
+798a3c	'HitItem	40
+798a54	'aHitFrame	40
+798a74	'aY	40
+798a8c	'HitTest	40
+798aa4	'ht	40
+798abc	map_798abd	c1	gap=beacebad
+798b0c	obj_798e0d.viewSetupFormScript.instructions	c0
+798b2c	obj_798e0d.viewSetupFormScript.literals	c1	gap=beacebad
+798b54	obj_798e0d.CalculateScrollRects.instructions	c0
+798b7c	obj_798e0d.CalculateScrollRects.literals	c1	gap=beacebad
+798b9c	obj_798e0d.GetTargetInfo.instructions	c0
+798bcc	obj_798e0d.GetTargetInfo.literals	c1	gap=beacebad
+798bec	obj_798e0d.HitItem.instructions	c0
+798c04	obj_798e0d.HitItem.literals	c1	gap=beacebad
+798c1c	obj_798e0d.HitTest.instructions	c0
+798c54	obj_798e0d.HitTest.literals	c1	gap=beacebad
+798c84	obj_798e0d.CalculateScrollRects.DebuggerInfo	c1	gap=beacebad
+798c9c	obj_798e0d.GetTargetInfo.DebuggerInfo	c1	gap=beacebad
+798cb4	obj_798e0d.HitItem.DebuggerInfo	c1	gap=beacebad
+798cd4	obj_798e0d.HitTest.literals[5]	c1	gap=beacebad
+798cec	obj_798e0d.HitTest.DebuggerInfo	c1	gap=beacebad
+798d0c	obj_798e0d.canonicalParaTopic.styles	41	gap=beacebad
+798d1c	obj_798e0d.canonicalParaTopic	43	map=map_798905
+798d44	obj_798e0d.viewSetupFormScript	43	map=map_7a4395	gap=beacebad
+798d6c	obj_798e0d.CalculateScrollRects	43	map=map_7a43bd	gap=beacebad
+798d94	obj_798e0d.GetTargetInfo	43	map=map_7a43e5	gap=beacebad
+798dbc	obj_798e0d.HitItem	43	map=map_7a440d	gap=beacebad
+798de4	obj_798e0d.HitTest	43	map=map_7a4435	gap=beacebad
+798e0c	obj_798e0d	43	map=map_798abd
+798e54	'DateFind	40
+798e74	'aWhat	40
+798e8c	'aFindType	40
+798eac	'aSoupFinders	40
+798ecc	'aMasterFinder	40
+798eec	'aContext	40
+798f0c	'SetStatus	40
+798f2c	'dateBefore	40
+798f4c	'singleTest	40
+798f6c	'repeatTest	40
+798f8c	'dateAfter	40
+798fac	'protoToDoFinder	40
+798fcc	'masterFinder	40
+798fec	'owner	40
+799004	obj_799005	c1
+799024	obj_7a1665.DateFind.literals[6].instructions	c0
+79904c	obj_7a1665.DateFind.literals[6].literals	c1	gap=beacebad
+799064	obj_7a1665.DateFind.literals[8].instructions	c0
+79908c	obj_7a1665.DateFind.literals[8].literals	c1
+7990a4	obj_7990a5	c0
+7990bc	obj_7a1665.DateFind.literals[12].literals	c1	gap=beacebad
+7990d4	obj_7a1665.DateFind.literals[13].instructions	c0
+7990fc	obj_7a1665.DateFind.literals[13].literals	c1
+799114	obj_7a1665.DateFind.literals[14].instructions	c0
+79912c	obj_7a1665.DateFind.literals[14].literals	c1	gap=beacebad
+799144	obj_7a1665.DateFind.literals[15].instructions	c0
+79916c	obj_7a1665.DateFind.literals[15].literals	c1
+799184	obj_7a1665.DateFind.literals[26].literals	c1
+799194	obj_7a1665.DateFind.literals[6].argFrame	c3	map=map_79339d
+7991ac	obj_7a1665.DateFind.literals[8].argFrame	c3	map=map_79339d
+7991c4	obj_7a1665.DateFind.literals[12].argFrame	c3	map=map_79339d
+7991dc	obj_7a1665.DateFind.literals[13].argFrame	c3	map=map_79339d
+7991f4	obj_7a1665.DateFind.literals[14].argFrame	c3	map=map_79339d
+79920c	obj_7a1665.DateFind.literals[15].argFrame	c3	map=map_79339d
+799224	map_799225	41
+799244	obj_7a1665.DateFind.literals[6]	c3	map=map_7a445d	gap=beacebad
+79926c	obj_7a1665.DateFind.literals[6].DebuggerInfo	c1
+799284	obj_7a1665.DateFind.literals[8]	c3	map=map_7a4485	gap=beacebad
+7992ac	obj_7a1665.DateFind.literals[8].DebuggerInfo	c1	gap=beacebad
+7992cc	obj_7a1665.DateFind.literals[12]	c3	map=map_7a44ad	gap=beacebad
+7992f4	obj_7a1665.DateFind.literals[12].DebuggerInfo	c1
+79930c	obj_7a1665.DateFind.literals[13]	c3	map=map_7a44d5	gap=beacebad
+799334	obj_7a1665.DateFind.literals[13].DebuggerInfo	c1	gap=beacebad
+799354	obj_7a1665.DateFind.literals[14]	c3	map=map_7a44fd	gap=beacebad
+79937c	obj_7a1665.DateFind.literals[14].DebuggerInfo	c1
+799394	obj_7a1665.DateFind.literals[15]	c3	map=map_7a4525	gap=beacebad
+7993bc	obj_7a1665.DateFind.literals[15].DebuggerInfo	c1	gap=beacebad
+7993dc	obj_7a1665.DateFind.literals	c1	gap=beacebad
+79946c	obj_7a1665.DateFind.literals[26]	c3	map=map_7a454d	gap=beacebad
+799494	obj_7a1665.DateFind.literals[26].DebuggerInfo	c1
+7994ac	obj_7a1665.DateFind.instructions	c0
+7995fc	obj_7a1665.DateFind.DebuggerInfo	c1
+79963c	obj_7a1665.DateFind	43	map=map_7a4575	gap=beacebad
+799664	obj_7a1665.DateFind.argFrame	43	map=map_799225	gap=beacebad
+799684	'Find	40
+79969c	'aFindWords	40
+7996bc	obj_7996bd	40
+7996f4	'words	40
+79970c	obj_7a1665.Find.literals[6]	c1	gap=beacebad
+79972c	obj_79972d	c1
+799754	obj_7a1665.Find.instructions	c0
+7997ac	obj_7a1665.Find.literals	c1
+7997f4	obj_7a1665.Find.DebuggerInfo	c1	gap=beacebad
+79981c	obj_7a1665.Find	43	map=map_7a459d	gap=beacebad
+799844	'cacheEntryCount	40
+799864	'cacheInstanceArrayCount	40
+79988c	'indexFirstItem	40
+7998ac	'AddFoundItems	40
+7998cc	'results	40
+7998e4	'maxCount	40
+799904	'Reset	40
+79991c	'AddTasksForEntry	40
+799944	'breakloop	40
+799964	'aResults	40
+799984	'aPrevCount	40
+7999a4	'aMaxCount	40
+7999c4	'excerpt	40
+7999dc	'newFindItem	40
+7999fc	'f	40
+799a14	obj_7a1665.protoToDoFinder.AddTasksForEntry.literals[7]	40
+799a6c	obj_7a1665.protoToDoFinder.AddTasksForEntry.literals[9]	40
+799a94	obj_7a1665.protoToDoFinder.AddTasksForEntry.literals[11]	40
+799ab4	'TaskMatches	40
+799ad4	'year	40
+799aec	'finder	40
+799b04	'realFinder	40
+799b24	'entryID	40
+799b3c	'_uniqueID	40
+799b5c	'storeID	40
+799b74	'GetSignature	40
+799b94	'itemIndex	40
+799bb4	'instanceTime	40
+799bd4	obj_7a1665.protoToDoFinder.AddTasksForEntry.literals[33]	c1
+799c14	'IsSelected	40
+799c34	'_storeID	40
+799c54	'Count	40
+799c6c	'instanceCount	40
+799c8c	'CountTasks	40
+799cac	obj_7a1665.protoToDoFinder.Count.literals[8]	40
+799cfc	obj_7a1665.protoToDoFinder.CountTasks.literals[7]	40
+799d34	'Delete	40
+799d4c	'delList	40
+799d64	'ForEachSelected	40
+799d84	'zeroOneOrMoreResult	40
+799dac	'cacheCount	40
+799dcc	'FileAs	40
+799de4	'labels	40
+799dfc	'callback	40
+799e1c	obj_7a1665.protoToDoFinder.ForEachSelected.literals[3]	c3	map=map_799e2d
+799e2c	map_799e2d	c1	gap=beacebad
+799e44	'alias	40
+799e5c	'gotokey	40
+799e74	'GetEntryIndexForInstanceIndex	40
+799ea4	'instanceIndex	40
+799ec4	'totalInstances	40
+799ee4	'itemAlias	40
+799f04	'IsThisItemSelected	40
+799f2c	obj_799f2d	c1
+799f4c	'ReSync	40
+799f64	'MoveTo	40
+799f7c	'toStore	40
+799f94	'toSoup	40
+799fac	'EntryMove	40
+799fcc	'SelectItem	40
+799fec	'Goto	40
+79a004	'ShowItem	40
+79a024	'viewPreOpenScript	40
+79a04c	'ShowToDoList	40
+79a06c	'ShowOrdinalItem	40
+79a08c	'ordinal	40
+79a0a4	'oldItem	40
+79a0bc	'currentEntryIndex	40
+79a0e4	'oldEntryIndex	40
+79a104	'Move	40
+79a11c	'match	40
+79a134	'ZeroOneOrMore	40
+79a154	map_79a155	c1
+79a1cc	obj_7a1665.protoToDoFinder.ForEachSelected.literals	c1	gap=beacebad
+79a20c	'|alias\|iter|	40
+79a22c	obj_7a1665.protoToDoFinder.IsThisItemSelected.instructions	c0
+79a25c	obj_7a1665.protoToDoFinder.IsThisItemSelected.literals	c1
+79a284	obj_7a1665.protoToDoFinder.SelectItem.instructions	c0
+79a2cc	obj_7a1665.protoToDoFinder.SelectItem.literals	c1	gap=beacebad
+79a304	obj_7a1665.protoToDoFinder.SelectItem.literals[6].literals	c1	gap=beacebad
+79a324	obj_7a1665.protoToDoFinder.Reset.literals	c1	gap=beacebad
+79a33c	obj_7a1665.protoToDoFinder.ReSync.instructions	c0
+79a354	obj_7a1665.protoToDoFinder.ReSync.literals	c1	gap=beacebad
+79a374	obj_7a1665.protoToDoFinder.TaskMatches.instructions	c0
+79a3e4	obj_7a1665.protoToDoFinder.TaskMatches.literals	c1	gap=beacebad
+79a414	obj_7a1665.protoToDoFinder.GetEntryIndexForInstanceIndex.instructions	c0
+79a464	obj_7a1665.protoToDoFinder.GetEntryIndexForInstanceIndex.literals	c1	gap=beacebad
+79a47c	'|instanceCount\|iter|	40
+79a4a4	obj_7a1665.protoToDoFinder.FileAs.instructions	c0
+79a4b4	'|f\|limit|	40
+79a4cc	'|f\|incr|	40
+79a4e4	obj_7a1665.protoToDoFinder.ShowFoundItem.instructions	c0
+79a524	obj_7a1665.protoToDoFinder.ShowFoundItem.literals	c1	gap=beacebad
+79a564	obj_7a1665.protoToDoFinder.AddFoundItems.instructions	c0
+79a5ec	obj_7a1665.protoToDoFinder.AddFoundItems.literals	c1	gap=beacebad
+79a624	obj_7a1665.protoToDoFinder.ShowOrdinalItem.literals	c1	gap=beacebad
+79a674	obj_7a1665.protoToDoFinder.ShowItem.instructions	c0
+79a6d4	obj_7a1665.protoToDoFinder.ShowItem.literals	c1	gap=beacebad
+79a714	obj_7a1665.protoToDoFinder.ZeroOneOrMore.instructions	c0
+79a73c	obj_7a1665.protoToDoFinder.ZeroOneOrMore.literals	c1
+79a754	obj_7a1665.protoToDoFinder.Delete.instructions	c0
+79a794	obj_7a1665.protoToDoFinder.Delete.literals	c1
+79a7cc	obj_7a1665.protoToDoFinder.Delete.literals[0].instructions	c0
+79a7ec	obj_7a1665.protoToDoFinder.Delete.literals[0].literals	c1	gap=beacebad
+79a804	obj_7a1665.protoToDoFinder.Delete.literals[2].instructions	c0
+79a834	obj_7a1665.protoToDoFinder.Delete.literals[2].literals	c1
+79a85c	obj_7a1665.protoToDoFinder.Count.instructions	c0
+79a8c4	obj_7a1665.protoToDoFinder.Count.literals	c1
+79a8fc	obj_7a1665.protoToDoFinder.CountTasks.instructions	c0
+79a97c	obj_7a1665.protoToDoFinder.CountTasks.literals	c1	gap=beacebad
+79a9b4	obj_7a1665.protoToDoFinder.MoveTo.instructions	c0
+79a9ec	obj_7a1665.protoToDoFinder.MoveTo.literals	c1
+79aa2c	obj_7a1665.protoToDoFinder.MoveTo.literals[6].instructions	c0
+79aa4c	obj_7a1665.protoToDoFinder.MoveTo.literals[6].literals	c1	gap=beacebad
+79aa6c	obj_7a1665.protoToDoFinder.IsSelected.instructions	c0
+79aa8c	obj_7a1665.protoToDoFinder.IsSelected.literals	c1
+79aaa4	obj_79aaa5	c0
+79aae4	obj_7a1665.protoToDoFinder.IsSelected.literals[1].literals	c1	gap=beacebad
+79ab04	obj_7a1665.protoToDoFinder.Delete.literals[2].argFrame	c3	map=map_79339d
+79ab1c	map_79ab1d	41
+79ab3c	obj_7a1665.protoToDoFinder.MoveTo.literals[6].argFrame	c3	map=map_79339d
+79ab54	map_79ab55	41	gap=beacebad
+79ab7c	obj_7a1665.protoToDoFinder.ForEachSelected.instructions	c0
+79ac14	obj_7a1665.protoToDoFinder.ForEachSelected.DebuggerInfo	c1	gap=beacebad
+79ac3c	obj_7a1665.protoToDoFinder.IsThisItemSelected	c3	map=map_7a45c5	gap=beacebad
+79ac64	obj_7a1665.protoToDoFinder.IsThisItemSelected.DebuggerInfo	c1
+79ac7c	obj_7a1665.protoToDoFinder.SelectItem.literals[6]	c3	map=map_7a45ed	gap=beacebad
+79aca4	obj_7a1665.protoToDoFinder.SelectItem.literals[6].DebuggerInfo	c1
+79acbc	obj_7a1665.protoToDoFinder.SelectItem.DebuggerInfo	c1	gap=beacebad
+79acdc	obj_7a1665.protoToDoFinder.TaskMatches.literals[6]	c1	gap=beacebad
+79acf4	obj_7a1665.protoToDoFinder.TaskMatches.literals[7]	c1	gap=beacebad
+79ad0c	obj_7a1665.protoToDoFinder.TaskMatches.DebuggerInfo	c1	gap=beacebad
+79ad2c	obj_7a1665.protoToDoFinder.GetEntryIndexForInstanceIndex.DebuggerInfo	c1
+79ad4c	obj_7a1665.protoToDoFinder.FileAs	c3	map=map_7a4615	gap=beacebad
+79ad74	obj_7a1665.protoToDoFinder.FileAs.DebuggerInfo	c1	gap=beacebad
+79ad8c	obj_7a1665.protoToDoFinder.AddTasksForEntry.literals[18]	c1	gap=beacebad
+79ada4	obj_7a1665.protoToDoFinder.AddTasksForEntry.literals[19]	c1	gap=beacebad
+79adbc	obj_7a1665.protoToDoFinder.AddTasksForEntry.literals	c1
+79ae6c	obj_7a1665.protoToDoFinder.AddTasksForEntry.instructions	c0
+79b194	obj_7a1665.protoToDoFinder.AddTasksForEntry.DebuggerInfo	c1
+79b1f4	obj_7a1665.protoToDoFinder.ShowFoundItem.DebuggerInfo	c1	gap=beacebad
+79b214	obj_7a1665.protoToDoFinder.AddFoundItems.DebuggerInfo	c1
+79b23c	obj_7a1665.protoToDoFinder.ShowOrdinalItem.instructions	c0
+79b2cc	obj_7a1665.protoToDoFinder.ShowOrdinalItem.DebuggerInfo	c1	gap=beacebad
+79b2f4	obj_7a1665.protoToDoFinder.ShowItem.DebuggerInfo	c1
+79b30c	obj_7a1665.protoToDoFinder.Delete.literals[0]	c3	map=map_7a463d	gap=beacebad
+79b334	obj_7a1665.protoToDoFinder.Delete.literals[0].DebuggerInfo	c1	gap=beacebad
+79b354	obj_7a1665.protoToDoFinder.Delete.literals[2]	c3	map=map_7a4665	gap=beacebad
+79b37c	obj_7a1665.protoToDoFinder.Delete.literals[2].DebuggerInfo	c1	gap=beacebad
+79b39c	obj_7a1665.protoToDoFinder.Delete.DebuggerInfo	c1
+79b3b4	obj_7a1665.protoToDoFinder.Count.DebuggerInfo	c1
+79b3d4	obj_7a1665.protoToDoFinder.CountTasks.DebuggerInfo	c1	gap=beacebad
+79b3fc	obj_7a1665.protoToDoFinder.MoveTo.literals[6]	c3	map=map_7a468d	gap=beacebad
+79b424	obj_7a1665.protoToDoFinder.MoveTo.literals[6].DebuggerInfo	c1
+79b444	obj_7a1665.protoToDoFinder.MoveTo.DebuggerInfo	c1
+79b464	obj_7a1665.protoToDoFinder.IsSelected.literals[1]	c3	map=map_7a46b5	gap=beacebad
+79b48c	obj_7a1665.protoToDoFinder.IsSelected.literals[1].DebuggerInfo	c1
+79b4a4	obj_7a1665.protoToDoFinder.IsSelected.DebuggerInfo	c1	gap=beacebad
+79b4bc	obj_7a1665.protoToDoFinder.ForEachSelected	43	map=map_7a46dd	gap=beacebad
+79b4e4	obj_7a1665.protoToDoFinder.SelectItem	43	map=map_7a4705	gap=beacebad
+79b50c	obj_7a1665.protoToDoFinder.Reset	43	map=map_7a472d	gap=beacebad
+79b534	obj_7a1665.protoToDoFinder.ReSync	43	map=map_7a4755	gap=beacebad
+79b55c	obj_7a1665.protoToDoFinder.TaskMatches	43	map=map_7a477d	gap=beacebad
+79b584	obj_7a1665.protoToDoFinder.GetEntryIndexForInstanceIndex	43	map=map_7a47a5	gap=beacebad
+79b5ac	obj_7a1665.protoToDoFinder.AddTasksForEntry	43	map=map_7a47cd	gap=beacebad
+79b5d4	obj_7a1665.protoToDoFinder.ShowFoundItem	43	map=map_7a47f5	gap=beacebad
+79b5fc	obj_7a1665.protoToDoFinder.AddFoundItems	43	map=map_7a481d	gap=beacebad
+79b624	obj_7a1665.protoToDoFinder.ShowOrdinalItem	43	map=map_7a4845	gap=beacebad
+79b64c	obj_7a1665.protoToDoFinder.ShowItem	43	map=map_7a486d	gap=beacebad
+79b674	obj_7a1665.protoToDoFinder.ZeroOneOrMore	43	map=map_7a4895	gap=beacebad
+79b69c	obj_7a1665.protoToDoFinder.Delete	43	map=map_7a48bd	gap=beacebad
+79b6c4	obj_7a1665.protoToDoFinder.Delete.argFrame	43	map=map_79ab1d	gap=beacebad
+79b6e4	obj_7a1665.protoToDoFinder.Count	43	map=map_7a48e5	gap=beacebad
+79b70c	obj_7a1665.protoToDoFinder.CountTasks	43	map=map_7a490d	gap=beacebad
+79b734	obj_7a1665.protoToDoFinder.MoveTo	43	map=map_7a4935	gap=beacebad
+79b75c	obj_7a1665.protoToDoFinder.MoveTo.argFrame	43	map=map_79ab55
+79b77c	obj_7a1665.protoToDoFinder.IsSelected	43	map=map_7a495d	gap=beacebad
+79b7a4	obj_7a1665.protoToDoFinder	43	map=map_79a155	gap=beacebad
+79b81c	obj_79b81d	40
+79b834	obj_79b835	40
+79b84c	obj_79b84d	41	gap=beacebad
+79b86c	'DeclareSelf	40
+79b88c	'displayLine	40
+79b8ac	'contentText	40
+79b8cc	'labelText	40
+79b8ec	'GetContent	40
+79b90c	map_79b90d	c1	gap=beacebad
+79b944	obj_79ba75.viewSetupFormScript.instructions	c0
+79b98c	obj_79ba75.viewSetupFormScript.literals	c1	gap=beacebad
+79b9b4	obj_79ba75.viewSetupFormScript	43	map=map_7a4985	gap=beacebad
+79b9dc	map_79b9dd	c1
+79b9fc	obj_79ba75.viewChildren[0].viewSetupFormScript.instructions	c0
+79ba14	obj_79ba75.viewChildren[0].viewSetupFormScript.literals	c1
+79ba2c	obj_79ba75.viewChildren[0].viewBounds	43	map=map_78575d	gap=beacebad
+79ba4c	obj_79ba75.viewChildren[0].viewSetupFormScript	43	map=map_7a49ad	gap=beacebad
+79ba74	obj_79ba75	c3	map=map_79baad	gap=beacebad
+79baac	map_79baad	c1	gap=beacebad
+79bac4	obj_79ba75.viewChildren[1].viewSetupFormScript.instructions	c0
+79bae4	obj_79ba75.viewChildren[1].viewSetupFormScript.literals	c1	gap=beacebad
+79bb0c	obj_79ba75.viewChildren[1].viewBounds	43	map=map_78575d	gap=beacebad
+79bb2c	obj_79ba75.viewChildren[1].viewSetupFormScript	43	map=map_7a49d5	gap=beacebad
+79bb54	map_79bb55	c1	gap=beacebad
+79bb6c	obj_79ba75.viewChildren	c1	gap=beacebad
+79bb84	map_79bb85	c1
+79bbb4	obj_79c15d.mainFormat.viewSetupFormScript.instructions	c0
+79bbcc	obj_79c15d.mainFormat.viewSetupFormScript.literals	c1	gap=beacebad
+79bbec	obj_79c15d.mainFormat.viewBounds	43	map=map_78575d	gap=beacebad
+79bc0c	obj_79c15d.mainFormat.viewSetupFormScript	43	map=map_7a49fd	gap=beacebad
+79bc34	obj_79c15d.mainFormat	c3	map=map_79bd45
+79bc64	obj_79c15d.mainFormat.viewChildren[0].labelText	40
+79bc7c	'longDateStrSpec	40
+79bc9c	map_79bc9d	c1	gap=beacebad
+79bcc4	obj_79c15d.mainFormat.viewChildren[0].GetContent.instructions	c0
+79bcdc	obj_79c15d.mainFormat.viewChildren[0].GetContent.literals	c1	gap=beacebad
+79bcfc	obj_79c15d.mainFormat.viewChildren[0].GetContent	43	map=map_7a4a25	gap=beacebad
+79bd24	obj_79c15d.mainFormat.viewChildren[0]	43	map=map_79bc9d
+79bd44	map_79bd45	c1	gap=beacebad
+79bd5c	obj_79c15d.mainFormat.viewChildren[1].GetContent.instructions	c0
+79bd74	obj_79c15d.mainFormat.viewChildren[1].GetContent.literals	c1	gap=beacebad
+79bd94	obj_79c15d.mainFormat.viewChildren[1].viewBounds	43	map=map_78575d	gap=beacebad
+79bdb4	obj_79c15d.mainFormat.viewChildren[1].GetContent	43	map=map_7a4a4d	gap=beacebad
+79bddc	obj_79c15d.mainFormat.viewChildren[1]	43	map=map_79be95
+79bdfc	obj_79c15d.mainFormat.viewChildren[2].GetContent.instructions	c0
+79be14	obj_79c15d.mainFormat.viewChildren[2].GetContent.literals	c1
+79be2c	obj_79c15d.mainFormat.viewChildren[2].viewBounds	43	map=map_78575d	gap=beacebad
+79be4c	obj_79c15d.mainFormat.viewChildren[2].GetContent	43	map=map_7a4a75	gap=beacebad
+79be74	obj_79c15d.mainFormat.viewChildren[2]	43	map=map_79be95
+79be94	map_79be95	c1	gap=beacebad
+79bebc	'singleTaskPrintDef	40
+79bee4	obj_79c15d.mainFormat.viewChildren[3].GetContent.instructions	c0
+79befc	obj_79c15d.mainFormat.viewChildren[3].GetContent.literals	c1	gap=beacebad
+79bf1c	obj_79c15d.mainFormat.viewChildren[3].viewBounds	43	map=map_78575d	gap=beacebad
+79bf3c	obj_79c15d.mainFormat.viewChildren[3].GetContent	43	map=map_7a4a9d	gap=beacebad
+79bf64	obj_79c15d.mainFormat.viewChildren[3]	43	map=map_79be95
+79bf84	obj_79c15d.mainFormat.viewChildren	c1	gap=beacebad
+79bfa4	'mainFormat	40
+79bfc4	'SetupSlip	40
+79bfe4	'slip	40
+79bffc	map_79bffd	c1	gap=beacebad
+79c024	'singleTaskFrameDef	40
+79c04c	obj_79c15d.SetupSlip.instructions	c0
+79c08c	obj_79c15d.SetupSlip.literals	c1
+79c0bc	obj_79c15d.SetupSlip.literals[0]	c1	gap=beacebad
+79c0d4	obj_79c15d.SetupSlip.literals[4]	c1	gap=beacebad
+79c0ec	obj_79c15d.SetupSlip.literals[5]	c1	gap=beacebad
+79c104	obj_79c15d.SetupSlip.literals[7]	c1	gap=beacebad
+79c11c	obj_79c15d.SetupSlip.DebuggerInfo	c1
+79c134	obj_79c15d.SetupSlip	43	map=map_7a4ac5	gap=beacebad
+79c15c	obj_79c15d	c3	map=map_79c185	gap=beacebad
+79c184	map_79c185	c1	gap=beacebad
+79c19c	obj_79c19d	40
+79c1c4	obj_79c695.SetupSlip.literals[1]	40
+79c22c	'startDate	40
+79c24c	obj_79c24d	40
+79c26c	obj_79c26d	40
+79c27c	obj_79c27d	40
+79c29c	obj_79c29d	40
+79c2ac	obj_79c2ad	40
+79c2c4	obj_79c2c5	40
+79c2dc	map_79c2dd	c1	gap=beacebad
+79c304	obj_79c695.SetupSlip.instructions	c0
+79c38c	obj_79c695.TextScript.instructions	c0
+79c3fc	obj_79c695.SetupSlip.literals[0]	c1	gap=beacebad
+79c414	obj_79c695.SetupSlip.literals[3]	c1	gap=beacebad
+79c42c	obj_79c695.SetupSlip.literals[5]	c1	gap=beacebad
+79c444	obj_79c695.SetupSlip.literals[6]	c1	gap=beacebad
+79c45c	obj_79c695.SetupSlip.literals[8]	c1	gap=beacebad
+79c474	obj_79c695.SetupSlip.literals[9]	c1	gap=beacebad
+79c48c	obj_79c695.SetupSlip.literals[11]	c1	gap=beacebad
+79c4a4	obj_79c695.SetupSlip.literals[12]	c1	gap=beacebad
+79c4bc	obj_79c695.SetupSlip.literals[14]	c1	gap=beacebad
+79c4d4	obj_79c695.SetupSlip.literals[15]	c1	gap=beacebad
+79c4ec	obj_79c695.SetupSlip.literals[16]	c1	gap=beacebad
+79c504	obj_79c695.SetupSlip.literals	c1	gap=beacebad
+79c56c	obj_79c695.SetupSlip.literals[17]	c1	gap=beacebad
+79c584	obj_79c695.SetupSlip.literals[18]	c1	gap=beacebad
+79c59c	obj_79c695.SetupSlip	c3	map=map_7a4aed	gap=beacebad
+79c5c4	obj_79c695.SetupSlip.DebuggerInfo	c1	gap=beacebad
+79c5e4	obj_79c695.TextScript.literals	c1	gap=beacebad
+79c644	obj_79c695.TextScript	c3	map=map_7a4b15	gap=beacebad
+79c66c	obj_79c695.TextScript.DebuggerInfo	c1	gap=beacebad
+79c694	obj_79c695	c3	map=map_79c6bd	gap=beacebad
+79c6bc	map_79c6bd	c1	gap=beacebad
+79c6d4	'GetToDoShapes	40
+79c6f4	'aYOffset	40
+79c714	'aWidth	40
+79c72c	'aFont	40
+79c744	'iconShape	40
+79c764	'shapes	40
+79c77c	'font	40
+79c794	'justification	40
+79c7b4	'lineHt	40
+79c7cc	'GetFontSize	40
+79c7ec	'GetTaskShapes	40
+79c80c	obj_7a1665.GetToDoShapes.instructions	c0
+79c884	obj_7a1665.GetToDoShapes.literals	c1
+79c8ac	obj_7a1665.GetToDoShapes.DebuggerInfo	c1
+79c8e4	obj_7a1665.GetToDoShapes	43	map=map_7a4b3d	gap=beacebad
+79c90c	'aShapes	40
+79c924	'textShapes	40
+79c944	obj_79c945	c1
+79c95c	'checkBitmaps	40
+79c97c	'priorityItems	40
+79c99c	'MakeTextLines	40
+79c9bc	obj_7a1665.GetTaskShapes.literals[20]	c1
+79c9d4	obj_7a1665.GetTaskShapes.instructions	c0
+79caac	obj_7a1665.GetTaskShapes.literals	c1
+79cb0c	obj_7a1665.GetTaskShapes.DebuggerInfo	c1	gap=beacebad
+79cb4c	obj_7a1665.GetTaskShapes	43	map=map_7a4b65	gap=beacebad
+79cb74	obj_7a0ae5.stepChildren[0].title	40
+79cb9c	'noScroll	40
+79cbbc	obj_7a12b5.noScroll	40
+79cc04	'noOverview	40
+79cc24	obj_7a12b5.noOverview	40
+79cc6c	'dirtyFlag	40
+79cc8c	'relayoutInProgress	40
+79ccb4	'newTitle	40
+79ccd4	'newFirstDate	40
+79ccf4	'newMtgDate	40
+79cd14	'newStopDate	40
+79cd34	'cardReserved	40
+79cd54	'selectedMeeting	40
+79cd74	'killRepeating	40
+79cd94	'needsMeasure	40
+79cdb4	'savedDone	40
+79cdd4	'savedPriorityIndex	40
+79cdfc	'savedReminderIndex	40
+79ce24	'savedFrequencyIndex	40
+79ce4c	'hideMtgMsgHeader	40
+79ce74	'hideDateField	40
+79ce94	'hideSeriesMsgHeader	40
+79cebc	'hideDateRangeFields	40
+79cee4	'hideFrequencyField	40
+79cf0c	'slipHeight	40
+79cf2c	'mainViewLastMailFormat	40
+79cf54	'_actionKeyScript	40
+79cf7c	'PressButton	40
+79cf9c	'actionButton	40
+79cfbc	'_filingKeyScript	40
+79cfe4	'filingButton	40
+79d004	'routeScripts	40
+79d024	obj_7a12b5.routeScripts[0].title	40
+79d044	'routeScript	40
+79d064	'DuplicateToDoScript	40
+79d08c	obj_7a12b5.routeScripts[1].title	40
+79d0ac	'DeleteToDoScript	40
+79d0d4	map_79d0d5	c1	gap=beacebad
+79d0f4	'labelsFilter	40
+79d114	'storesFilter	40
+79d134	'doCardRouting	40
+79d154	'onlyCardRouting	40
+79d174	obj_79d175	40
+79d18c	obj_7a12b5.appObject[1]	40
+79d1a4	obj_7a12b5.appAll	40
+79d1c4	'appObjectFileThisIn	40
+79d1ec	obj_7a12b5.appObjectFileThisIn	40
+79d224	'FilingChanged	40
+79d244	'filter	40
+79d25c	'EntryChange	40
+79d27c	'Update	40
+79d294	'FilterChanged	40
+79d2b4	'FolderChanged	40
+79d2d4	'paperroll	40
+79d2f4	'oldFolder	40
+79d314	'newFolder	40
+79d334	'targetType	40
+79d354	'beamTarget	40
+79d374	'targetStore	40
+79d394	obj_7a12b5.GetTargetInfo.literals[17]	c1	gap=beacebad
+79d3b4	'MoveTarget	40
+79d3d4	'moveResult	40
+79d3f4	'NotifyCompleted	40
+79d414	'mtgStopDate	40
+79d434	'GetNextMeetingTime	40
+79d45c	'dp	40
+79d474	'displayParams	40
+79d494	'appAreaHeight	40
+79d4b4	'appAreaWidth	40
+79d4d4	obj_7a12b5.viewSetupFormScript.literals[22]	c1
+79d4ec	'repeatTemplate	40
+79d50c	'repeatType	40
+79d52c	'mtgInfo	40
+79d544	'lastMailFormat	40
+79d564	'LayoutSlip	40
+79d584	'Header	40
+79d59c	'MeetingTitle	40
+79d5bc	'entryLine	40
+79d5dc	'isNewToDo	40
+79d5fc	'when	40
+79d614	'displayDate	40
+79d634	'DatesOverviewForm	40
+79d65c	'Retarget	40
+79d67c	'UpdateText	40
+79d69c	'UpdatePriorityDone	40
+79d6c4	'UpdateReminderSpec	40
+79d6ec	'UpdateTime	40
+79d70c	'UpdateFrequency	40
+79d72c	'UpdateDateRange	40
+79d74c	'base	40
+79d764	'meeting	40
+79d77c	'whatView	40
+79d79c	'viewEffect	40
+79d7bc	obj_79d7bd	40
+79d7cc	obj_79d7cd	40
+79d834	'taskDate	40
+79d854	'dupTask	40
+79d86c	'aShowRepeatingFields	40
+79d894	'isRepeating	40
+79d8b4	'isConvertToRepeating	40
+79d8dc	'RelayoutSlip	40
+79d8fc	'SetupRoutingSlip	40
+79d924	'aRoutingSlip	40
+79d944	'mtgDate	40
+79d95c	'exceptions	40
+79d97c	'instanceNotesData	40
+79d9a4	'oldSpec	40
+79d9bc	'newSpec	40
+79d9d4	'repeatingView	40
+79d9f4	'GetRepeatSpec	40
+79da14	obj_7a12b5.UpdateTime.literals[11]	40
+79da4c	map_79da4d	c1	gap=beacebad
+79db6c	obj_7a12b5.GetTargetInfo.instructions	c0
+79dbe4	obj_7a12b5.viewSetupDoneScript.instructions	c0
+79dbfc	obj_7a12b5.viewSetupDoneScript.literals	c1	gap=beacebad
+79dc1c	obj_7a12b5.UpdateDateRange.instructions	c0
+79dc5c	obj_7a12b5.UpdateDateRange.literals	c1	gap=beacebad
+79dc94	obj_7a12b5.UpdateReminderSpec.literals	c1
+79dcd4	obj_79dcd5	c0
+79dce4	obj_7a12b5._filingKeyScript.literals	c1	gap=beacebad
+79dcfc	obj_7a12b5.UpdatePriorityDone.instructions	c0
+79dd34	obj_7a12b5.UpdatePriorityDone.literals	c1
+79dd5c	obj_7a12b5._actionKeyScript.literals	c1	gap=beacebad
+79dd74	obj_7a12b5.FolderChanged.instructions	c0
+79dd8c	obj_7a12b5.FolderChanged.literals	c1
+79ddac	obj_7a12b5.LayoutSlip.instructions	c0
+79de1c	obj_7a12b5.LayoutSlip.literals	c1	gap=beacebad
+79de4c	obj_7a12b5.ApplyAllChanges.instructions	c0
+79de94	obj_7a12b5.ApplyAllChanges.literals	c1	gap=beacebad
+79decc	obj_7a12b5.FilingChanged.instructions	c0
+79def4	obj_7a12b5.FilingChanged.literals	c1
+79df1c	obj_7a12b5.MoveTarget.instructions	c0
+79df3c	obj_7a12b5.MoveTarget.literals	c1	gap=beacebad
+79df5c	obj_79df5d	c0
+79df6c	obj_7a12b5.RelayoutSlip.instructions	c0
+79df9c	obj_7a12b5.RelayoutSlip.literals	c1
+79dfbc	obj_7a12b5.DeleteTask.instructions	c0
+79dfd4	obj_7a12b5.DeleteTask.literals	c1	gap=beacebad
+79dff4	obj_7a12b5.UpdateText.instructions	c0
+79e014	obj_7a12b5.UpdateText.literals	c1	gap=beacebad
+79e03c	obj_7a12b5.DuplicateToDoScript.instructions	c0
+79e0bc	obj_7a12b5.NotifyCompleted.instructions	c0
+79e0d4	obj_7a12b5.NotifyCompleted.literals	c1
+79e0ec	obj_7a12b5.SetupRoutingSlip.instructions	c0
+79e104	obj_7a12b5.SetupRoutingSlip.literals	c1	gap=beacebad
+79e124	obj_79e125	c0
+79e134	obj_7a12b5.CloseSlip.literals	c1	gap=beacebad
+79e14c	obj_7a12b5.GetTargetInfo.literals	c1	gap=beacebad
+79e1a4	obj_7a12b5.GetTargetInfo.DebuggerInfo	c1
+79e1bc	obj_7a12b5.viewSetupDoneScript.literals[1]	c1	gap=beacebad
+79e1d4	obj_7a12b5.UpdateDateRange.literals[2]	c1	gap=beacebad
+79e1ec	obj_7a12b5.UpdateDateRange.literals[4]	c1	gap=beacebad
+79e204	obj_7a12b5.UpdateReminderSpec.literals[5]	c1	gap=beacebad
+79e21c	obj_7a12b5.UpdateReminderSpec.instructions	c0
+79e2dc	obj_7a12b5.UpdateReminderSpec.DebuggerInfo	c1	gap=beacebad
+79e2f4	obj_7a12b5._filingKeyScript.DebuggerInfo	c1	gap=beacebad
+79e30c	obj_7a12b5.viewQuitScript.literals[18]	c1	gap=beacebad
+79e324	obj_7a12b5.viewQuitScript.literals[19]	c1	gap=beacebad
+79e33c	obj_7a12b5.viewQuitScript.literals[20]	c1	gap=beacebad
+79e354	obj_7a12b5.viewQuitScript.literals	c1	gap=beacebad
+79e414	obj_7a12b5.viewQuitScript.instructions	c0
+79e5c4	obj_7a12b5.viewQuitScript.DebuggerInfo	c1
+79e5dc	obj_7a12b5.UpdateFrequency.literals[7]	c1	gap=beacebad
+79e5f4	obj_7a12b5.UpdateFrequency.literals[11]	c1	gap=beacebad
+79e60c	obj_7a12b5.UpdateFrequency.literals[12]	c1	gap=beacebad
+79e624	obj_7a12b5.UpdateFrequency.literals[14]	c1	gap=beacebad
+79e63c	obj_7a12b5.UpdateFrequency.literals	c1
+79e6b4	obj_7a12b5.UpdateFrequency.literals[24]	c1	gap=beacebad
+79e6cc	obj_7a12b5.UpdateFrequency.literals[25]	c1	gap=beacebad
+79e6e4	obj_7a12b5.UpdateFrequency.instructions	c0
+79e80c	obj_7a12b5.UpdateFrequency.literals[26]	c1	gap=beacebad
+79e824	obj_7a12b5.UpdateFrequency.DebuggerInfo	c1
+79e83c	obj_7a12b5._actionKeyScript.DebuggerInfo	c1	gap=beacebad
+79e854	obj_7a12b5.FolderChanged.literals[4]	c1	gap=beacebad
+79e86c	obj_7a12b5.LayoutSlip.DebuggerInfo	c1	gap=beacebad
+79e88c	obj_7a12b5.DeleteToDoScript.literals	c1
+79e8e4	obj_7a12b5.DeleteToDoScript.instructions	c0
+79e97c	obj_7a12b5.DeleteToDoScript.DebuggerInfo	c1
+79e99c	obj_7a12b5.FilingChanged.DebuggerInfo	c1	gap=beacebad
+79e9b4	obj_7a12b5.MoveTarget.DebuggerInfo	c1	gap=beacebad
+79e9d4	obj_7a12b5.FilterChanged	c3	map=map_7a4b8d	gap=beacebad
+79e9fc	obj_7a12b5.RelayoutSlip.DebuggerInfo	c1	gap=beacebad
+79ea14	obj_7a12b5.DeleteTask.DebuggerInfo	c1	gap=beacebad
+79ea34	obj_7a12b5.UpdateText.DebuggerInfo	c1	gap=beacebad
+79ea4c	obj_7a12b5.DuplicateToDoScript.literals	c1
+79ea9c	obj_7a12b5.DuplicateToDoScript.DebuggerInfo	c1	gap=beacebad
+79eac4	obj_7a12b5.viewSetupFormScript.literals[10]	c1	gap=beacebad
+79eadc	obj_7a12b5.viewSetupFormScript.literals	c1
+79eb64	obj_7a12b5.viewSetupFormScript.instructions	c0
+79ec54	obj_7a12b5.viewSetupFormScript.DebuggerInfo	c1
+79ec6c	obj_7a12b5.SetupRoutingSlip.DebuggerInfo	c1	gap=beacebad
+79ec84	obj_7a12b5.UpdateTime.literals	c1
+79ece4	obj_7a12b5.UpdateTime.instructions	c0
+79ed8c	obj_7a12b5.UpdateTime.DebuggerInfo	c1
+79eda4	obj_7a12b5.GetTargetInfo	43	map=map_7a4bb5	gap=beacebad
+79edcc	obj_7a12b5.viewSetupDoneScript	43	map=map_7a4bdd	gap=beacebad
+79edf4	obj_7a12b5.UpdateDateRange	43	map=map_7a4c05	gap=beacebad
+79ee1c	obj_7a12b5.UpdateReminderSpec	43	map=map_7a4c2d	gap=beacebad
+79ee44	obj_7a12b5._filingKeyScript	43	map=map_7a4c55	gap=beacebad
+79ee6c	obj_7a12b5.viewQuitScript	43	map=map_7a4c7d	gap=beacebad
+79ee94	obj_7a12b5.UpdateFrequency	43	map=map_7a4ca5	gap=beacebad
+79eebc	obj_7a12b5.UpdatePriorityDone	43	map=map_7a4ccd	gap=beacebad
+79eee4	obj_7a12b5._actionKeyScript	43	map=map_7a4cf5	gap=beacebad
+79ef0c	obj_7a12b5.FolderChanged	43	map=map_7a4d1d	gap=beacebad
+79ef34	obj_7a12b5.LayoutSlip	43	map=map_7a4d45	gap=beacebad
+79ef5c	obj_7a12b5.ApplyAllChanges	43	map=map_7a4d6d	gap=beacebad
+79ef84	obj_7a12b5.DeleteToDoScript	43	map=map_7a4d95	gap=beacebad
+79efac	obj_7a12b5.appObject	41	gap=beacebad
+79efc4	obj_7a12b5.FilingChanged	43	map=map_7a4dbd	gap=beacebad
+79efec	obj_7a12b5.MoveTarget	43	map=map_7a4de5	gap=beacebad
+79f014	obj_7a12b5.RelayoutSlip	43	map=map_7a4e0d	gap=beacebad
+79f03c	obj_7a12b5.DeleteTask	43	map=map_7a4e35	gap=beacebad
+79f064	obj_7a12b5.UpdateText	43	map=map_7a4e5d	gap=beacebad
+79f08c	obj_7a12b5.DuplicateToDoScript	43	map=map_7a4e85	gap=beacebad
+79f0b4	obj_7a12b5.viewSetupFormScript	43	map=map_7a4ead	gap=beacebad
+79f0dc	obj_7a12b5.routeScripts[0]	43	map=map_79d0d5
+79f0f4	obj_7a12b5.routeScripts[1]	43	map=map_79d0d5
+79f10c	obj_7a12b5.routeScripts	41	gap=beacebad
+79f124	obj_7a12b5.NotifyCompleted	43	map=map_7a4ed5	gap=beacebad
+79f14c	obj_7a12b5.SetupRoutingSlip	43	map=map_7a4efd	gap=beacebad
+79f174	obj_7a12b5.CloseSlip	43	map=map_7a4f25	gap=beacebad
+79f19c	obj_7a12b5.UpdateTime	43	map=map_7a4f4d	gap=beacebad
+79f1c4	'protoRepeat	40
+79f1e4	obj_7a12b5.protoRepeat.GetRepeatSpec.literals[4]	c1
+79f204	map_79f205	c1	gap=beacebad
+79f22c	obj_7a12b5.protoRepeat.GetRepeatSpec.instructions	c0
+79f24c	obj_7a12b5.protoRepeat.GetRepeatSpec.literals	c1
+79f26c	obj_7a12b5.protoRepeat.GetRepeatSpec	43	map=map_7a4f75	gap=beacebad
+79f294	obj_7a12b5.protoRepeat	43	map=map_79f205
+79f2b4	obj_7a0ae5.stepChildren[0].titleIcon.bounds	c3	map=map_7a4f9d	gap=beacebad
+79f2d4	obj_7a0ae5.stepChildren[0].titleIcon.bits	40
+79f31c	obj_7a0ae5.stepChildren[0].titleIcon	c3	map=map_78d9fd	gap=beacebad
+79f334	map_79f335	c1
+79f35c	'dateValue	40
+79f37c	'ShouldHide	40
+79f39c	'frequencyPicker	40
+79f3bc	'seriesMsgHeader	40
+79f3dc	'recurInterval	40
+79f3fc	obj_7a0ae5.viewSetupChildrenScript.instructions	c0
+79f424	obj_7a0ae5.viewSetupChildrenScript.literals	c1
+79f454	obj_7a0ae5.viewBounds	43	map=map_78575d	gap=beacebad
+79f474	obj_7a0ae5.viewSetupChildrenScript	43	map=map_7a4fbd	gap=beacebad
+79f49c	'titleIcon	40
+79f4bc	map_79f4bd	c1
+79f4d4	map_79f4d5	c1	gap=beacebad
+79f4ec	'lockedIcon	40
+79f50c	map_79f50d	c1
+79f53c	obj_7a0ae5.stepChildren[1].viewSetupFormScript.instructions	c0
+79f55c	obj_7a0ae5.stepChildren[1].viewSetupFormScript.literals	c1
+79f574	obj_7a0ae5.stepChildren[1].viewBounds	43	map=map_78575d	gap=beacebad
+79f594	obj_7a0ae5.stepChildren[1].lockedIcon.bounds	c3	map=map_7a4fe5	gap=beacebad
+79f5b4	obj_7a0ae5.stepChildren[1].lockedIcon.bits	40
+79f60c	obj_7a0ae5.stepChildren[1].lockedIcon	c3	map=map_78d9fd	gap=beacebad
+79f624	obj_7a0ae5.stepChildren[1].viewSetupFormScript	43	map=map_7a5005	gap=beacebad
+79f64c	obj_7a0ae5.stepChildren[1]	43	map=map_79f50d	gap=beacebad
+79f67c	obj_7a187d.label	40
+79f694	'memory	40
+79f6ac	'todoTitle	40
+79f6cc	'textChanged	40
+79f6ec	map_79f6ed	c1	gap=beacebad
+79f734	obj_7a187d.viewSetupDoneScript.instructions	c0
+79f754	obj_7a187d.viewSetupDoneScript.literals	c1
+79f774	obj_7a187d.viewSetupFormScript.instructions	c0
+79f7a4	obj_7a187d.viewSetupFormScript.literals	c1
+79f7c4	obj_7a187d.textChanged.instructions	c0
+79f7e4	obj_7a187d.textChanged.literals	c1	gap=beacebad
+79f80c	obj_7a187d.viewSetupDoneScript	43	map=map_7a502d	gap=beacebad
+79f834	obj_7a187d.viewSetupFormScript	43	map=map_7a5055	gap=beacebad
+79f85c	obj_7a187d.textChanged	43	map=map_7a507d	gap=beacebad
+79f884	'viewValue	40
+79f8a4	'ValueChanged	40
+79f8c4	map_79f8c5	c1	gap=beacebad
+79f8f4	obj_7a0ae5.stepChildren[3].viewSetupFormScript.instructions	c0
+79f90c	obj_7a0ae5.stepChildren[3].viewSetupFormScript.literals	c1
+79f92c	obj_7a0ae5.stepChildren[3].ValueChanged.instructions	c0
+79f944	obj_7a0ae5.stepChildren[3].ValueChanged.literals	c1
+79f964	obj_7a0ae5.stepChildren[3].viewBounds	43	map=map_78575d	gap=beacebad
+79f984	obj_7a0ae5.stepChildren[3].viewSetupFormScript	43	map=map_7a50a5	gap=beacebad
+79f9ac	obj_7a0ae5.stepChildren[3].ValueChanged	43	map=map_7a50cd	gap=beacebad
+79f9d4	obj_7a0ae5.stepChildren[3]	c3	map=map_79fa05	gap=beacebad
+79fa04	map_79fa05	c1	gap=beacebad
+79fa1c	'labelFont	40
+79fa3c	'entryFont	40
+79fa5c	'aNewValue	40
+79fa7c	'reminderPicker	40
+79fa9c	'SetupRange	40
+79fabc	map_79fabd	c1
+79faec	'hide	40
+79fb04	obj_79fc7d.viewSetupFormScript.instructions	c0
+79fb1c	obj_79fc7d.viewSetupFormScript.literals	c1
+79fb34	obj_79fc7d.PickActionScript.instructions	c0
+79fb5c	obj_79fc7d.PickActionScript.literals	c1
+79fb84	obj_79fc7d.ShouldHide.literals	c1	gap=beacebad
+79fb9c	obj_79fc7d.label	40
+79fbb4	obj_79fc7d.PickActionScript.DebuggerInfo	c1	gap=beacebad
+79fbcc	obj_79fc7d.ShouldHide.DebuggerInfo	c1	gap=beacebad
+79fbe4	obj_79fc7d.viewBounds	43	map=map_78575d	gap=beacebad
+79fc04	obj_79fc7d.viewSetupFormScript	43	map=map_7a50f5	gap=beacebad
+79fc2c	obj_79fc7d.PickActionScript	43	map=map_7a511d	gap=beacebad
+79fc54	obj_79fc7d.ShouldHide	43	map=map_7a5145	gap=beacebad
+79fc7c	obj_79fc7d	c3	map=map_7a18dd	gap=beacebad
+79fcb4	'iconBounds	40
+79fcd4	'labelCommands	40
+79fcf4	'indent	40
+79fd0c	obj_7a0ae5.stepChildren[5].viewSetupFormScript.literals[2]	c1	gap=beacebad
+79fd2c	obj_79fd2d	40
+79fd4c	obj_79fd4d	c1
+79fd64	'IconSetup	40
+79fd84	'LabelActionScript	40
+79fdac	'TextSetup	40
+79fdcc	map_79fdcd	c1	gap=beacebad
+79fe14	obj_7a0ae5.stepChildren[5].viewSetupFormScript.instructions	c0
+79fe54	obj_7a0ae5.stepChildren[5].viewSetupFormScript.literals	c1	gap=beacebad
+79fe94	obj_7a0ae5.stepChildren[5].IconSetup.instructions	c0
+79feac	obj_7a0ae5.stepChildren[5].IconSetup.literals	c1
+79fec4	obj_79fec5	c0
+79fedc	obj_7a0ae5.stepChildren[5].LabelActionScript.literals	c1	gap=beacebad
+79fef4	obj_7a0ae5.stepChildren[5].TextSetup.instructions	c0
+79ff1c	obj_7a0ae5.stepChildren[5].TextSetup.literals	c1	gap=beacebad
+79ff44	obj_7a0ae5.stepChildren[5].LabelActionScript.DebuggerInfo	c1	gap=beacebad
+79ff5c	obj_7a0ae5.stepChildren[5].viewBounds	43	map=map_78575d	gap=beacebad
+79ff7c	obj_7a0ae5.stepChildren[5].iconBounds	43	map=map_78575d	gap=beacebad
+79ff9c	obj_7a0ae5.stepChildren[5].viewSetupFormScript	43	map=map_7a516d	gap=beacebad
+79ffc4	obj_7a0ae5.stepChildren[5].IconSetup	43	map=map_7a5195	gap=beacebad
+79ffec	obj_7a0ae5.stepChildren[5].LabelActionScript	43	map=map_7a51bd	gap=beacebad
+7a0014	obj_7a0ae5.stepChildren[5].TextSetup	43	map=map_7a51e5	gap=beacebad
+7a003c	obj_7a0ae5.stepChildren[5]	c3	map=map_7a0085	gap=beacebad
+7a0084	map_7a0085	c1	gap=beacebad
+7a009c	obj_7a0645.text	40
+7a00bc	'reminderLabels	40
+7a00dc	obj_7a00dd	40
+7a00f4	obj_7a0645.reminderLabels[1]	40
+7a011c	obj_7a0645.reminderLabels[2]	40
+7a0144	obj_7a0645.reminderLabels[3]	40
+7a016c	obj_7a0645.reminderLabels[4]	40
+7a0194	obj_7a0645.reminderLabels[5]	40
+7a01bc	obj_7a0645.reminderLabels[6]	40
+7a01e4	obj_7a0645.reminderLabels[7]	40
+7a020c	'viewClickScript	40
+7a022c	'unit	40
+7a0244	'remindRange	40
+7a0264	map_7a0265	c1
+7a02a4	obj_7a0645.viewClickScript.literals	c1
+7a02bc	obj_7a0645.viewSetupFormScript.instructions	c0
+7a02d4	obj_7a0645.viewSetupFormScript.literals	c1	gap=beacebad
+7a02ec	obj_7a0645.SetupRange.instructions	c0
+7a0374	obj_7a0645.SetupRange.literals	c1
+7a03b4	obj_7a0645.TextSetup.literals	c1
+7a03f4	obj_7a0645.LabelActionScript.literals	c1	gap=beacebad
+7a040c	obj_7a0645.viewClickScript.DebuggerInfo	c1	gap=beacebad
+7a0424	obj_7a0645.SetupRange.DebuggerInfo	c1	gap=beacebad
+7a043c	obj_7a0645.TextSetup.literals[5]	c1	gap=beacebad
+7a0454	obj_7a0645.TextSetup.literals[6]	c1	gap=beacebad
+7a046c	obj_7a0645.TextSetup.instructions	c0
+7a04fc	obj_7a0645.TextSetup.DebuggerInfo	c1
+7a0514	obj_7a0645.LabelActionScript.DebuggerInfo	c1	gap=beacebad
+7a052c	obj_7a0645.viewBounds	43	map=map_78575d	gap=beacebad
+7a054c	obj_7a0645.reminderLabels	41	gap=beacebad
+7a057c	obj_7a0645.viewClickScript	43	map=map_7a520d	gap=beacebad
+7a05a4	obj_7a0645.viewSetupFormScript	43	map=map_7a5235	gap=beacebad
+7a05cc	obj_7a0645.SetupRange	43	map=map_7a525d	gap=beacebad
+7a05f4	obj_7a0645.TextSetup	43	map=map_7a5285	gap=beacebad
+7a061c	obj_7a0645.LabelActionScript	43	map=map_7a52ad	gap=beacebad
+7a0644	obj_7a0645	c3	map=map_7a18f5	gap=beacebad
+7a068c	'initialString	40
+7a06ac	'currentLabelIndex	40
+7a06d4	map_7a06d5	c1
+7a0704	'repeatingPicked	40
+7a0724	obj_7a0725	c0
+7a0744	obj_7a0985.viewClickScript.literals	c1
+7a075c	obj_7a0985.ShouldHide.literals	c1	gap=beacebad
+7a0774	obj_7a0985.TextSetup.instructions	c0
+7a0794	obj_7a0985.TextSetup.literals	c1
+7a07b4	obj_7a0985.LabelActionScript.instructions	c0
+7a0824	obj_7a0985.LabelActionScript.literals	c1	gap=beacebad
+7a0864	obj_7a0985.viewClickScript.DebuggerInfo	c1	gap=beacebad
+7a087c	obj_7a0985.ShouldHide.DebuggerInfo	c1	gap=beacebad
+7a0894	obj_7a0985.TextSetup.DebuggerInfo	c1	gap=beacebad
+7a08ac	obj_7a0985.LabelActionScript.DebuggerInfo	c1
+7a08c4	obj_7a0985.viewBounds	43	map=map_78575d	gap=beacebad
+7a08e4	obj_7a0985.viewClickScript	43	map=map_7a52d5	gap=beacebad
+7a090c	obj_7a0985.ShouldHide	43	map=map_7a52fd	gap=beacebad
+7a0934	obj_7a0985.TextSetup	43	map=map_7a5325	gap=beacebad
+7a095c	obj_7a0985.LabelActionScript	43	map=map_7a534d	gap=beacebad
+7a0984	obj_7a0985	c3	map=map_7a190d	gap=beacebad
+7a09bc	obj_7a0ab5.text	40
+7a0a14	map_7a0a15	c1
+7a0a3c	obj_7a0ab5.ShouldHide.literals	c1	gap=beacebad
+7a0a54	obj_7a0ab5.ShouldHide.DebuggerInfo	c1	gap=beacebad
+7a0a6c	obj_7a0ab5.viewBounds	43	map=map_78575d	gap=beacebad
+7a0a8c	obj_7a0ab5.ShouldHide	43	map=map_7a5375	gap=beacebad
+7a0ab4	obj_7a0ab5	c3	map=map_7a1925	gap=beacebad
+7a0ae4	obj_7a0ae5	c3	map=map_7a0f2d
+7a0b2c	'longFormat	40
+7a0b4c	'shortFormat	40
+7a0b6c	'numericDateStrSpec	40
+7a0b94	'startTime	40
+7a0bb4	'stopTime	40
+7a0bd4	'popit	40
+7a0bec	'aStop	40
+7a0c04	map_7a0c05	c1
+7a0c44	obj_7a0ee5.viewClickScript.literals	c1
+7a0c5c	obj_7a0ee5.viewSetupFormScript.instructions	c0
+7a0c74	obj_7a0ee5.viewSetupFormScript.literals	c1
+7a0c94	obj_7a0ee5.popit.instructions	c0
+7a0cac	obj_7a0ee5.popit.literals	c1	gap=beacebad
+7a0ccc	obj_7a0ee5.PickActionScript.instructions	c0
+7a0cec	obj_7a0ee5.PickActionScript.literals	c1	gap=beacebad
+7a0d0c	obj_7a0d0d	c0
+7a0d2c	obj_7a0ee5.ShouldHide.literals	c1	gap=beacebad
+7a0d44	obj_7a0ee5.label	40
+7a0d64	obj_7a0ee5.viewClickScript.DebuggerInfo	c1	gap=beacebad
+7a0d7c	obj_7a0ee5.popit.DebuggerInfo	c1	gap=beacebad
+7a0d94	obj_7a0ee5.PickActionScript.DebuggerInfo	c1
+7a0dac	obj_7a0ee5.ShouldHide.DebuggerInfo	c1	gap=beacebad
+7a0dc4	obj_7a0ee5.viewBounds	43	map=map_78575d	gap=beacebad
+7a0de4	obj_7a0ee5.viewClickScript	43	map=map_7a539d	gap=beacebad
+7a0e0c	obj_7a0ee5.viewSetupFormScript	43	map=map_7a53c5	gap=beacebad
+7a0e34	obj_7a0ee5.popit	43	map=map_7a53ed	gap=beacebad
+7a0e5c	obj_7a0ee5.PickActionScript	43	map=map_7a5415	gap=beacebad
+7a0e84	obj_7a0ee5.ShouldHide	43	map=map_7a543d	gap=beacebad
+7a0eac	obj_7a0ae5.stepChildren	c1	gap=beacebad
+7a0ee4	obj_7a0ee5	c3	map=map_7a193d	gap=beacebad
+7a0f2c	map_7a0f2d	c1	gap=beacebad
+7a0f64	obj_7a0ae5.stepallocatecontext	c1	gap=beacebad
+7a0fa4	map_7a0fa5	c1	gap=beacebad
+7a0fc4	obj_7a1955.viewSetupFormScript.instructions	c0
+7a0ffc	obj_7a1955.viewSetupFormScript.literals	c1	gap=beacebad
+7a101c	obj_7a1955.viewQuitScript.instructions	c0
+7a1044	obj_7a1955.viewQuitScript.literals	c1	gap=beacebad
+7a1064	obj_7a1955.viewSetupFormScript.DebuggerInfo	c1	gap=beacebad
+7a107c	obj_7a1955.viewSetupFormScript	43	map=map_7a5465	gap=beacebad
+7a10a4	obj_7a1955.viewQuitScript	43	map=map_7a548d	gap=beacebad
+7a10cc	obj_7a12b5._keyCommands[1].name	40
+7a10e4	obj_7a12b5._keyCommands[1]	43	map=map_78d485
+7a1104	obj_7a1105	40
+7a1124	obj_7a12b5._keyCommands[0]	43	map=map_78d485
+7a1144	obj_7a12b5._keyCommands	c1	gap=beacebad
+7a115c	'cachedNewMtgDate	40
+7a1184	map_7a1185	c1	gap=beacebad
+7a11a4	obj_7a198d.buttonClickScript.instructions	c0
+7a11bc	obj_7a198d.buttonClickScript.literals	c1	gap=beacebad
+7a11dc	obj_7a198d.buttonClickScript.DebuggerInfo	c1	gap=beacebad
+7a11f4	obj_7a198d.viewBounds	43	map=map_78575d	gap=beacebad
+7a1214	obj_7a198d.buttonClickScript	43	map=map_7a54b5	gap=beacebad
+7a123c	map_7a123d	c1
+7a1254	obj_7a1295.viewBounds	43	map=map_78575d	gap=beacebad
+7a1274	obj_7a12b5.stepChildren	c1
+7a1294	obj_7a1295	c3	map=map_7a19c5	gap=beacebad
+7a12b4	obj_7a12b5	c3	map=map_7a13f5	gap=beacebad
+7a13f4	map_7a13f5	c1	gap=beacebad
+7a142c	obj_7a12b5.stepallocatecontext	c1	gap=beacebad
+7a145c	map_7a145d	c1
+7a1474	obj_7a12b5.stepChildren[4].buttonClickScript.literals	c1	gap=beacebad
+7a148c	obj_7a12b5.stepChildren[4].buttonClickScript	43	map=map_7a54dd	gap=beacebad
+7a14b4	map_7a14b5	c1	gap=beacebad
+7a14cc	map_7a14cd	c1
+7a14e4	obj_7a14e5	c3	map=map_78d92d
+7a1504	obj_7a1505	c3	map=map_78d92d
+7a1524	obj_7a1525	c3	map=map_78d92d
+7a1544	obj_7a156d.protoList	c3	map=map_78dcb5
+7a156c	obj_7a156d	c3	map=map_78e5ad
+7a15d4	obj_7a15d5	c3	map=map_78eda5
+7a161c	map_7a161d	c1
+7a1634	obj_7a1635	c3	map=map_7a164d
+7a164c	map_7a164d	c1
+7a1664	obj_7a1665	c3	map=map_7a17fd
+7a17fc	map_7a17fd	c1
+7a1824	obj_79ba75.viewChildren[0]	c3	map=map_79bb55
+7a1844	obj_79ba75.viewChildren[1]	c3	map=map_79bb55
+7a1864	obj_7a0ae5.stepChildren[0]	c3	map=map_79f4d5
+7a187c	obj_7a187d	c3	map=map_7a18c5
+7a18c4	map_7a18c5	c1
+7a18dc	map_7a18dd	c1
+7a18f4	map_7a18f5	c1
+7a190c	map_7a190d	c1
+7a1924	map_7a1925	c1
+7a193c	map_7a193d	c1
+7a1954	obj_7a1955	c3	map=map_7a1975
+7a1974	map_7a1975	c1
+7a198c	obj_7a198d	c3	map=map_7a19ad
+7a19ac	map_7a19ad	c1
+7a19c4	map_7a19c5	c1
+7a19dc	obj_7a12b5.stepChildren[4]	c3	map=map_7a14b5
+7a19f4	'protoToDoSlip	40
+7a1a14	obj_7a1a15	c3	map=map_7a1a85	gap=beacebad
+7a1a84	map_7a1a85	c1	gap=beacebad
+7a1aec	'theForm	40
+7a1b04	'InstallScript	40
+7a1b24	'aPart	40
+7a1b3c	'firstAlarm	40
+7a1b5c	'RegDataDef	40
+7a1b7c	'RegDataView	40
+7a1b9c	'RegAppClasses	40
+7a1bbc	obj_78517d[0].InstallScript.literals[25]	c1
+7a1bcc	'RegSetTime	40
+7a1bec	obj_78517d[0].InstallScript.literals[48]	40
+7a1d04	'RemoveScript	40
+7a1d24	'UnregisterDataDef	40
+7a1d4c	'UnregisterViewDef	40
+7a1d74	'_ExportTable	40
+7a1d94	map_7a1d95	c1
+7a1dbc	'major	40
+7a1dd4	'minor	40
+7a1dec	'objects	40
+7a1e04	map_7a1e05	c1
+7a1e24	'|ListView private|	40
+7a1e4c	'|ikid\|iter|	40
+7a1e6c	obj_78517d[0].RemoveScript.instructions	c0
+7a1eac	obj_78517d[0].RemoveScript.literals	c1	gap=beacebad
+7a1edc	obj_78517d[0].InstallScript.literals[1]	c1	gap=beacebad
+7a1ef4	obj_78517d[0].InstallScript.literals[3]	c1	gap=beacebad
+7a1f0c	obj_78517d[0].InstallScript.literals[5]	c1	gap=beacebad
+7a1f24	obj_78517d[0].InstallScript.literals[6]	c1	gap=beacebad
+7a1f3c	obj_78517d[0].InstallScript.literals[7]	c1	gap=beacebad
+7a1f54	obj_78517d[0].InstallScript.literals[8]	c1	gap=beacebad
+7a1f6c	obj_78517d[0].InstallScript.literals[9]	c1	gap=beacebad
+7a1f84	obj_78517d[0].InstallScript.literals[11]	c1	gap=beacebad
+7a1f9c	obj_78517d[0].InstallScript.literals[12]	c1	gap=beacebad
+7a1fb4	obj_78517d[0].InstallScript.literals[13]	c1	gap=beacebad
+7a1fcc	obj_78517d[0].InstallScript.literals[14]	c1	gap=beacebad
+7a1fe4	obj_78517d[0].InstallScript.literals[15]	c1	gap=beacebad
+7a1ffc	obj_78517d[0].InstallScript.literals[16]	c1	gap=beacebad
+7a2014	obj_78517d[0].InstallScript.literals[17]	c1	gap=beacebad
+7a202c	obj_78517d[0].InstallScript.literals[19]	c1	gap=beacebad
+7a2044	obj_78517d[0].InstallScript.literals[20]	c1	gap=beacebad
+7a205c	obj_78517d[0].InstallScript.literals[21]	c1	gap=beacebad
+7a2074	obj_78517d[0].InstallScript.literals[23]	c1	gap=beacebad
+7a208c	obj_78517d[0].InstallScript.literals[33]	c1	gap=beacebad
+7a20a4	obj_78517d[0].InstallScript.literals[35]	c1	gap=beacebad
+7a20bc	obj_78517d[0].InstallScript.instructions	c0
+7a22ac	obj_78517d[0].InstallScript.literals[37]	c1	gap=beacebad
+7a22c4	obj_78517d[0].InstallScript.literals	c1	gap=beacebad
+7a239c	obj_78517d[0].InstallScript	c3	map=map_7a5505	gap=beacebad
+7a23c4	obj_78517d[0].InstallScript.DebuggerInfo	c1
+7a23ec	obj_78517d[0].RemoveScript	c3	map=map_7a552d	gap=beacebad
+7a2414	obj_78517d[0].RemoveScript.DebuggerInfo	c1	gap=beacebad
+7a242c	obj_78517d[0]._ExportTable[0].objects	41	gap=beacebad
+7a245c	obj_78517d[0]._ExportTable[0]	43	map=map_7a1e05	gap=beacebad
+7a247c	obj_78517d[0]._ExportTable[1].objects	41	gap=beacebad
+7a24d4	obj_78517d[0]._ExportTable[1]	43	map=map_7a1e05	gap=beacebad
+7a24f4	obj_78517d[0]._ExportTable	41	gap=beacebad
+7a250c	obj_78517d[0]	43	map=map_7a1d95	gap=beacebad
+7a2534	'instructions	40
+7a2554	'literals	40
+7a2574	'argFrame	40
+7a2594	'DebuggerInfo	40
+7a25b4	'_nextArgFrame	40
+7a25d4	'_parent	40
+7a25ec	'_implementor	40
+7a260c	'hasVar	40
+7a2624	map_7a2625	41
+7a264c	map_7a264d	41
+7a2674	map_7a2675	41
+7a269c	map_7a269d	41
+7a26c4	map_7a26c5	41
+7a26ec	map_7a26ed	41
+7a2714	map_7a2715	41
+7a273c	map_7a273d	41
+7a2764	map_7a2765	41
+7a278c	map_7a278d	41
+7a27b4	map_7a27b5	41
+7a27dc	map_7a27dd	41
+7a2804	map_7a2805	41
+7a282c	map_7a282d	41
+7a2854	map_7a2855	41
+7a287c	map_7a287d	41
+7a28a4	map_7a28a5	41
+7a28cc	map_7a28cd	41
+7a28f4	map_7a28f5	41
+7a291c	map_7a291d	41
+7a2944	map_7a2945	41
+7a296c	map_7a296d	41
+7a2994	map_7a2995	41
+7a29bc	map_7a29bd	41
+7a29e4	map_7a29e5	41
+7a2a0c	map_7a2a0d	41
+7a2a34	map_7a2a35	41
+7a2a5c	map_7a2a5d	41
+7a2a84	map_7a2a85	41
+7a2aac	map_7a2aad	41
+7a2ad4	map_7a2ad5	41
+7a2afc	map_7a2afd	41
+7a2b24	map_7a2b25	41
+7a2b4c	map_7a2b4d	41
+7a2b74	map_7a2b75	41
+7a2b9c	map_7a2b9d	41
+7a2bc4	map_7a2bc5	41
+7a2bec	map_7a2bed	41
+7a2c14	map_7a2c15	41
+7a2c3c	map_7a2c3d	41
+7a2c64	map_7a2c65	41
+7a2c8c	map_7a2c8d	41
+7a2cb4	map_7a2cb5	41
+7a2cdc	map_7a2cdd	41
+7a2d04	map_7a2d05	41
+7a2d2c	map_7a2d2d	41
+7a2d54	map_7a2d55	41
+7a2d7c	map_7a2d7d	41
+7a2da4	map_7a2da5	41
+7a2dcc	map_7a2dcd	41
+7a2df4	map_7a2df5	41
+7a2e1c	map_7a2e1d	41
+7a2e44	map_7a2e45	41
+7a2e6c	map_7a2e6d	41
+7a2e94	map_7a2e95	41
+7a2ebc	map_7a2ebd	41
+7a2ee4	map_7a2ee5	41
+7a2f0c	map_7a2f0d	41
+7a2f34	map_7a2f35	41
+7a2f5c	map_7a2f5d	41
+7a2f84	map_7a2f85	41
+7a2fac	map_7a2fad	41
+7a2fd4	map_7a2fd5	41
+7a2ffc	map_7a2ffd	41
+7a3024	map_7a3025	41
+7a304c	map_7a304d	41
+7a3074	map_7a3075	41
+7a309c	map_7a309d	41
+7a30c4	map_7a30c5	41
+7a30e4	map_7a30e5	41
+7a310c	map_7a310d	41
+7a312c	map_7a312d	41
+7a3154	map_7a3155	41
+7a3174	map_7a3175	41
+7a319c	map_7a319d	41
+7a31c4	map_7a31c5	41
+7a31ec	map_7a31ed	41
+7a3214	map_7a3215	41
+7a323c	map_7a323d	41
+7a3264	map_7a3265	41
+7a328c	map_7a328d	41
+7a32b4	map_7a32b5	41
+7a32dc	map_7a32dd	41
+7a3304	map_7a3305	41
+7a332c	map_7a332d	41
+7a3354	map_7a3355	41
+7a3374	map_7a3375	41
+7a339c	map_7a339d	41
+7a33c4	map_7a33c5	41
+7a33e4	map_7a33e5	41
+7a340c	map_7a340d	41
+7a3434	map_7a3435	41
+7a345c	map_7a345d	41
+7a3484	map_7a3485	41
+7a34ac	map_7a34ad	41
+7a34d4	map_7a34d5	41
+7a34fc	'mod	40
+7a3514	map_7a3515	41
+7a353c	map_7a353d	41
+7a3564	map_7a3565	41
+7a358c	map_7a358d	41
+7a35b4	map_7a35b5	41
+7a35dc	map_7a35dd	41
+7a3604	map_7a3605	41
+7a362c	map_7a362d	41
+7a3654	map_7a3655	41
+7a367c	map_7a367d	41
+7a36a4	map_7a36a5	41
+7a36cc	map_7a36cd	41
+7a36f4	map_7a36f5	41
+7a371c	map_7a371d	41
+7a3744	map_7a3745	41
+7a376c	map_7a376d	41
+7a3794	map_7a3795	41
+7a37bc	map_7a37bd	41
+7a37e4	map_7a37e5	41
+7a380c	map_7a380d	41
+7a3834	map_7a3835	41
+7a385c	map_7a385d	41
+7a3884	map_7a3885	41
+7a38ac	map_7a38ad	41
+7a38d4	map_7a38d5	41
+7a38fc	map_7a38fd	41
+7a3924	map_7a3925	41
+7a394c	map_7a394d	41
+7a3974	map_7a3975	41
+7a399c	map_7a399d	41
+7a39bc	map_7a39bd	41
+7a39e4	map_7a39e5	41
+7a3a0c	map_7a3a0d	41
+7a3a34	map_7a3a35	41
+7a3a5c	map_7a3a5d	41
+7a3a84	map_7a3a85	41
+7a3aac	map_7a3aad	41
+7a3ad4	map_7a3ad5	41
+7a3afc	map_7a3afd	41
+7a3b24	map_7a3b25	41
+7a3b4c	map_7a3b4d	41
+7a3b74	map_7a3b75	41
+7a3b9c	map_7a3b9d	41
+7a3bc4	map_7a3bc5	41
+7a3bec	map_7a3bed	41
+7a3c14	map_7a3c15	41
+7a3c3c	map_7a3c3d	41
+7a3c64	map_7a3c65	41
+7a3c8c	map_7a3c8d	41
+7a3cb4	map_7a3cb5	41
+7a3cdc	map_7a3cdd	41
+7a3d04	map_7a3d05	41
+7a3d2c	map_7a3d2d	41
+7a3d54	map_7a3d55	41
+7a3d7c	map_7a3d7d	41
+7a3da4	map_7a3da5	41
+7a3dcc	map_7a3dcd	41
+7a3df4	map_7a3df5	41
+7a3e1c	map_7a3e1d	41
+7a3e44	map_7a3e45	41
+7a3e6c	map_7a3e6d	41
+7a3e94	map_7a3e95	41
+7a3ebc	map_7a3ebd	41
+7a3ee4	map_7a3ee5	41
+7a3f0c	map_7a3f0d	41
+7a3f34	map_7a3f35	41
+7a3f5c	map_7a3f5d	41
+7a3f84	map_7a3f85	41
+7a3fac	map_7a3fad	41
+7a3fd4	map_7a3fd5	41
+7a3ffc	map_7a3ffd	41
+7a4024	map_7a4025	41
+7a404c	map_7a404d	41
+7a4074	map_7a4075	41
+7a409c	map_7a409d	41
+7a40c4	map_7a40c5	41
+7a40ec	map_7a40ed	41
+7a4114	map_7a4115	41
+7a413c	map_7a413d	41
+7a4164	map_7a4165	41
+7a418c	map_7a418d	41
+7a41b4	map_7a41b5	41
+7a41dc	map_7a41dd	41
+7a4204	map_7a4205	41
+7a422c	map_7a422d	41
+7a4254	map_7a4255	41
+7a427c	map_7a427d	41
+7a42a4	map_7a42a5	41
+7a42cc	map_7a42cd	41
+7a42f4	map_7a42f5	41
+7a431c	map_7a431d	41
+7a4344	map_7a4345	41
+7a436c	map_7a436d	41
+7a4394	map_7a4395	41
+7a43bc	map_7a43bd	41
+7a43e4	map_7a43e5	41
+7a440c	map_7a440d	41
+7a4434	map_7a4435	41
+7a445c	map_7a445d	41
+7a4484	map_7a4485	41
+7a44ac	map_7a44ad	41
+7a44d4	map_7a44d5	41
+7a44fc	map_7a44fd	41
+7a4524	map_7a4525	41
+7a454c	map_7a454d	41
+7a4574	map_7a4575	41
+7a459c	map_7a459d	41
+7a45c4	map_7a45c5	41
+7a45ec	map_7a45ed	41
+7a4614	map_7a4615	41
+7a463c	map_7a463d	41
+7a4664	map_7a4665	41
+7a468c	map_7a468d	41
+7a46b4	map_7a46b5	41
+7a46dc	map_7a46dd	41
+7a4704	map_7a4705	41
+7a472c	map_7a472d	41
+7a4754	map_7a4755	41
+7a477c	map_7a477d	41
+7a47a4	map_7a47a5	41
+7a47cc	map_7a47cd	41
+7a47f4	map_7a47f5	41
+7a481c	map_7a481d	41
+7a4844	map_7a4845	41
+7a486c	map_7a486d	41
+7a4894	map_7a4895	41
+7a48bc	map_7a48bd	41
+7a48e4	map_7a48e5	41
+7a490c	map_7a490d	41
+7a4934	map_7a4935	41
+7a495c	map_7a495d	41
+7a4984	map_7a4985	41
+7a49ac	map_7a49ad	41
+7a49d4	map_7a49d5	41
+7a49fc	map_7a49fd	41
+7a4a24	map_7a4a25	41
+7a4a4c	map_7a4a4d	41
+7a4a74	map_7a4a75	41
+7a4a9c	map_7a4a9d	41
+7a4ac4	map_7a4ac5	41
+7a4aec	map_7a4aed	41
+7a4b14	map_7a4b15	41
+7a4b3c	map_7a4b3d	41
+7a4b64	map_7a4b65	41
+7a4b8c	map_7a4b8d	41
+7a4bb4	map_7a4bb5	41
+7a4bdc	map_7a4bdd	41
+7a4c04	map_7a4c05	41
+7a4c2c	map_7a4c2d	41
+7a4c54	map_7a4c55	41
+7a4c7c	map_7a4c7d	41
+7a4ca4	map_7a4ca5	41
+7a4ccc	map_7a4ccd	41
+7a4cf4	map_7a4cf5	41
+7a4d1c	map_7a4d1d	41
+7a4d44	map_7a4d45	41
+7a4d6c	map_7a4d6d	41
+7a4d94	map_7a4d95	41
+7a4dbc	map_7a4dbd	41
+7a4de4	map_7a4de5	41
+7a4e0c	map_7a4e0d	41
+7a4e34	map_7a4e35	41
+7a4e5c	map_7a4e5d	41
+7a4e84	map_7a4e85	41
+7a4eac	map_7a4ead	41
+7a4ed4	map_7a4ed5	41
+7a4efc	map_7a4efd	41
+7a4f24	map_7a4f25	41
+7a4f4c	map_7a4f4d	41
+7a4f74	map_7a4f75	41
+7a4f9c	map_7a4f9d	41
+7a4fbc	map_7a4fbd	41
+7a4fe4	map_7a4fe5	41
+7a5004	map_7a5005	41
+7a502c	map_7a502d	41
+7a5054	map_7a5055	41
+7a507c	map_7a507d	41
+7a50a4	map_7a50a5	41
+7a50cc	map_7a50cd	41
+7a50f4	map_7a50f5	41
+7a511c	map_7a511d	41
+7a5144	map_7a5145	41
+7a516c	map_7a516d	41
+7a5194	map_7a5195	41
+7a51bc	map_7a51bd	41
+7a51e4	map_7a51e5	41
+7a520c	map_7a520d	41
+7a5234	map_7a5235	41
+7a525c	map_7a525d	41
+7a5284	map_7a5285	41
+7a52ac	map_7a52ad	41
+7a52d4	map_7a52d5	41
+7a52fc	map_7a52fd	41
+7a5324	map_7a5325	41
+7a534c	map_7a534d	41
+7a5374	map_7a5375	41
+7a539c	map_7a539d	41
+7a53c4	map_7a53c5	41
+7a53ec	map_7a53ed	41
+7a5414	map_7a5415	41
+7a543c	map_7a543d	41
+7a5464	map_7a5465	41
+7a548c	map_7a548d	41
+7a54b4	map_7a54b5	41
+7a54dc	map_7a54dd	41
+7a5504	map_7a5505	41
+7a552c	map_7a552d	41
+alias	obj_78517d[0].InstallScript.literals[41]	obj_791bbd
+alias	obj_78517d[0].InstallScript.literals[42]	obj_78f84d
+alias	obj_78517d[0].InstallScript.literals[47]	obj_791bbd
+alias	obj_78d4cd.GetTopicCount.instructions	obj_79223d
+alias	obj_78d4cd.viewDropRemoveScript.literals[5]	obj_7883d5
+alias	obj_78d4cd.DeletingTopic.instructions	obj_79df5d
+alias	obj_78d4cd.HandleScrub.literals[20]	obj_785dc5
+alias	obj_78d4cd.viewGetDropDataScript.literals[6]	obj_79c26d
+alias	obj_78d4cd.viewGetDropDataScript.literals[9]	obj_786dad
+alias	obj_78d4cd.viewGetDropDataScript.literals[10]	obj_786ddd
+alias	obj_78d4cd.viewGetDropDataScript.literals[11]	obj_78eb95
+alias	obj_78d4cd.viewGetDropDataScript.literals[14]	obj_786ddd
+alias	obj_78d4cd.viewGetDropDataScript.literals[15]	obj_78eb95
+alias	obj_78d4cd._keyAuntScript.instructions	obj_789375
+alias	obj_78d4cd.ResolveClick.literals[9]	obj_78824d
+alias	obj_78d4cd.ResolveClick.literals[11]	obj_78824d
+alias	obj_78d4cd.ResolveClick.literals[14]	obj_78824d
+alias	obj_78d4cd.ResolveClick.literals[15]	obj_78824d
+alias	obj_78d4cd._keySisterScript.instructions	obj_789375
+alias	obj_78d4cd.SetPriority.literals[5]	obj_785e25
+alias	obj_78d4cd.SetPriority.literals[13].instructions	obj_7930dd
+alias	obj_78d4cd.SetPriority.literals[19]	obj_7883d5
+alias	obj_78d4cd.MakeUndoDragRef.literals[0]	obj_78585d
+alias	obj_78d4cd.viewDropMoveScript.literals[7]	obj_7883d5
+alias	obj_78d4cd.HandleCheck.literals[4]	obj_785e25
+alias	obj_78d4cd.DeleteTopics.literals[10]	obj_785dc5
+alias	obj_78d4cd.NewRelative.literals[9]	obj_787ee5
+alias	obj_78d4cd._keyDaughterScript.instructions	obj_789375
+alias	obj_78ef15.MakeNewEntry.instructions	obj_78ea05
+alias	obj_78ef15.MakeNewEntry.literals[3]	obj_78edbd
+alias	obj_78f26d.viewSetupDoneScript.literals[5]	obj_787ee5
+alias	obj_78f2a5.MinimalBounds.instructions	obj_78f495
+alias	obj_78f2a5.ShowFoundItem.instructions	obj_78f545
+alias	obj_78f68d.MinimalBounds.instructions	obj_78f495
+alias	obj_78f68d.ShowFoundItem.instructions	obj_78f545
+alias	obj_79842d.Convert20to10.literals[0]	obj_78585d
+alias	obj_79842d.ConvertOldEntry.literals[1]	obj_7917d5
+alias	obj_79842d.ConvertOldEntry.literals[7]	obj_78fa5d
+alias	obj_7988ad.CalculateScrollRects.instructions	obj_79df5d
+alias	obj_7988ad.StartFlush.instructions	obj_79df5d
+alias	obj_7988ad.EndFlush.instructions	obj_79df5d
+alias	obj_7988ad._keyDaughterScript.instructions	obj_79df5d
+alias	obj_7988ad._keySisterScript.instructions	obj_79df5d
+alias	obj_7988ad._keyAuntScript.instructions	obj_79df5d
+alias	obj_798e0d.GetTargetInfo.literals[2]	obj_798a25
+alias	obj_798e0d.GetTargetInfo.literals[3]	obj_798a25
+alias	obj_79c15d.mainFormat.viewChildren[1].GetContent.literals[2]	obj_79c2ad
+alias	obj_79c15d.mainFormat.viewChildren[1].GetContent.literals[3]	obj_79c2c5
+alias	obj_79c15d.mainFormat.viewChildren[2].GetContent.literals[0]	obj_79b84d
+alias	obj_79c695.TextScript.literals[4]	obj_79c26d
+alias	obj_79c695.TextScript.literals[7]	obj_79c26d
+alias	obj_79c695.TextScript.literals[8]	obj_79c24d
+alias	obj_79c695.TextScript.literals[9]	obj_79c29d
+alias	obj_79c695.TextScript.literals[10]	obj_78eb95
+alias	obj_79c695.TextScript.literals[11]	obj_79b84d
+alias	obj_79c695.TextScript.literals[13]	obj_79c26d
+alias	obj_79c695.TextScript.literals[14]	obj_79c27d
+alias	obj_79c695.TextScript.literals[15]	obj_79c29d
+alias	obj_79c695.TextScript.literals[16]	obj_78eb95
+alias	obj_79c695.TextScript.literals[18]	obj_79c2ad
+alias	obj_79c695.TextScript.literals[19]	obj_79c2c5
+alias	obj_79fc7d.ShouldHide.instructions	obj_7a0d0d
+alias	obj_7a0645.viewClickScript.instructions	obj_7a0725
+alias	obj_7a0645.LabelActionScript.instructions	obj_79fec5
+alias	obj_7a0985.viewClickScript.instructions	obj_7a0725
+alias	obj_7a0985.ShouldHide.instructions	obj_7a0d0d
+alias	obj_7a0ab5.ShouldHide.instructions	obj_7a0d0d
+alias	obj_7a0ae5.stepChildren[5].viewSetupFormScript.literals[0]	obj_79b81d
+alias	obj_7a0ae5.stepChildren[5].viewSetupFormScript.literals[3]	obj_79fd2d
+alias	obj_7a0ae5.stepChildren[5].viewSetupFormScript.literals[4]	obj_79fd4d
+alias	obj_7a0ae5.stepChildren[5].viewSetupFormScript.literals[5]	obj_79b835
+alias	obj_7a0ae5.stepChildren[5].viewSetupFormScript.literals[6]	obj_79fd4d
+alias	obj_7a0ae5.stepChildren[5].viewSetupFormScript.literals[7]	obj_7a00dd
+alias	obj_7a0ae5.stepChildren[5].viewSetupFormScript.literals[8]	obj_79fd4d
+alias	obj_7a0ae5.stepChildren[5].LabelActionScript.instructions	obj_79fec5
+alias	obj_7a0ee5.viewClickScript.instructions	obj_7a0725
+alias	obj_7a0ee5.ShouldHide.instructions	obj_7a0d0d
+alias	obj_7a12b5.GetTargetInfo.literals[13]	obj_78fa5d
+alias	obj_7a12b5._filingKeyScript.instructions	obj_79dcd5
+alias	obj_7a12b5._actionKeyScript.instructions	obj_79dcd5
+alias	obj_7a12b5.DeleteToDoScript.literals[7]	obj_79d7bd
+alias	obj_7a12b5.DeleteToDoScript.literals[8]	obj_78eb95
+alias	obj_7a12b5.DeleteToDoScript.literals[9]	obj_79d7cd
+alias	obj_7a12b5.FilterChanged.instructions	obj_79df5d
+alias	obj_7a12b5.NotifyCompleted.literals[0]	obj_791bbd
+alias	obj_7a12b5.SetupRoutingSlip.literals[1]	obj_791bbd
+alias	obj_7a12b5.CloseSlip.instructions	obj_79e125
+alias	obj_7a12b5.UpdateTime.literals[12]	obj_78eb95
+alias	obj_7a12b5.stepChildren[4].buttonClickScript.instructions	obj_79e125
+alias	obj_7a14e5.buttonClickScript.instructions	obj_78d945
+alias	obj_7a1505.buttonClickScript.instructions	obj_78d945
+alias	obj_7a1525.buttonClickScript.instructions	obj_78d945
+alias	obj_7a156d.viewSetupChildrenScript.literals[8].literals[1]	obj_787ee5
+alias	obj_7a156d.viewSetupChildrenScript.literals[8].literals[6]	obj_78eb95
+alias	obj_7a156d.viewSetupChildrenScript.literals[8].literals[10]	obj_78eb95
+alias	obj_7a156d.viewSetupChildrenScript.literals[9]	obj_78debd
+alias	obj_7a156d.viewSetupChildrenScript.literals[10].literals[1]	obj_787ee5
+alias	obj_7a156d.viewSetupChildrenScript.literals[10].literals[6]	obj_78eb95
+alias	obj_7a156d.viewSetupChildrenScript.literals[11]	obj_78debd
+alias	obj_7a156d.viewSetupChildrenScript.literals[13]	obj_78df8d
+alias	obj_7a156d.viewSetupChildrenScript.literals[19]	obj_78df8d
+alias	obj_7a156d.viewSetupChildrenScript.literals[20]	obj_78df8d
+alias	obj_7a156d.viewSetupChildrenScript.literals[21]	obj_78df8d
+alias	obj_7a15d5.MakeNewEntry.instructions	obj_78ea05
+alias	obj_7a15d5.MakeNewEntry.literals[3]	obj_78edbd
+alias	obj_7a15d5.StringExtract.literals[1]	obj_7917d5
+alias	obj_7a15d5.StringExtract.literals[6]	obj_78eb95
+alias	obj_7a15d5.TextScript.literals[4]	obj_79c26d
+alias	obj_7a15d5.TextScript.literals[7]	obj_786dad
+alias	obj_7a1665.PutAway.literals[5]	obj_7917d5
+alias	obj_7a1665.PutAway.literals[7]	obj_787ee5
+alias	obj_7a1665.FlushEntry.literals[9]	obj_785edd
+alias	obj_7a1665.FlushEntry.literals[11]	obj_785f65
+alias	obj_7a1665.FlushEntry.literals[12]	obj_791bbd
+alias	obj_7a1665.FirstVisibleTopic.instructions	obj_79223d
+alias	obj_7a1665.GetToDoSoup.literals[6]	obj_791bbd
+alias	obj_7a1665.LastVisibleTopic.instructions	obj_79223d
+alias	obj_7a1665.viewQuitScript.literals[5]	obj_791bbd
+alias	obj_7a1665.viewQuitScript.literals[8]	obj_785d9d
+alias	obj_7a1665.AddOldSoupTasks.literals[6].instructions	obj_792505
+alias	obj_7a1665.SetTaskDone.instructions	obj_79df5d
+alias	obj_7a1665.RollItemsOver.literals[8]	obj_791a55
+alias	obj_7a1665.RollItemsOver.literals[16]	obj_791bbd
+alias	obj_7a1665.RollOverAlarm.literals[4]	obj_791bbd
+alias	obj_7a1665.RollOverAlarm.literals[5]	obj_78f84d
+alias	obj_7a1665.GetToDoEntryDefaultStore.literals[6]	obj_785d9d
+alias	obj_7a1665.GetToDoEntryDefaultStore.literals[13].instructions	obj_7990a5
+alias	obj_7a1665.GetToDoEntryDefaultStore.literals[14]	obj_799005
+alias	obj_7a1665.SetTaskPriority.instructions	obj_79df5d
+alias	obj_7a1665.MoveTaskToDate.literals[3]	obj_785e85
+alias	obj_7a1665.EntryCool.instructions	obj_792505
+alias	obj_7a1665.GetToDoEntry.literals[7]	obj_791a55
+alias	obj_7a1665.GetToDoEntry.literals[16]	obj_785d9d
+alias	obj_7a1665.NextToDoDate.literals[4].instructions	obj_792765
+alias	obj_7a1665.NextToDoDate.literals[5]	obj_7912e5
+alias	obj_7a1665.NextToDoDate.literals[15]	obj_7915ad
+alias	obj_7a1665.NextToDoDate.literals[18]	obj_7915ad
+alias	obj_7a1665.RemoveOldTodoItems.literals[7]	obj_79188d
+alias	obj_7a1665.RemoveOldTodoItems.literals[20].instructions	obj_792765
+alias	obj_7a1665.RemoveOldTodoItems.literals[21]	obj_7912e5
+alias	obj_7a1665.ConvertToDoSoup.literals[1]	map_78fead
+alias	obj_7a1665.ConvertToDoSoup.literals[7]	obj_785d9d
+alias	obj_7a1665.ConvertToDoSoup.literals[17]	obj_78585d
+alias	obj_7a1665.ConvertToDoSoup.literals[33]	obj_785edd
+alias	obj_7a1665.ConvertToDoSoup.literals[35]	obj_785f65
+alias	obj_7a1665.ConvertToDoSoup.literals[36]	obj_791bbd
+alias	obj_7a1665.DeleteCheckedTask.literals[5]	obj_79d7bd
+alias	obj_7a1665.DeleteCheckedTask.literals[6]	obj_78eb95
+alias	obj_7a1665.DeleteCheckedTask.literals[7]	obj_79d7cd
+alias	obj_7a1665.DeleteTask.literals[2]	obj_791bbd
+alias	obj_7a1665.DeleteTask.literals[3]	obj_785dc5
+alias	obj_7a1665.GetTarget.literals[23].instructions	obj_7930dd
+alias	obj_7a1665.LastToDoDate.literals[4]	obj_7912c5
+alias	obj_7a1665.LastToDoDate.literals[13]	obj_7912c5
+alias	obj_7a1665.LastToDoDate.literals[14].instructions	obj_792765
+alias	obj_7a1665.LastToDoDate.literals[15]	obj_7912e5
+alias	obj_7a1665.viewSetupFormScript.literals[5]	obj_791bbd
+alias	obj_7a1665.viewSetupFormScript.literals[9]	obj_785d9d
+alias	obj_7a1665.GrowNote.instructions	obj_79df5d
+alias	obj_7a1665.OldSoupChanged.literals[4]	obj_791bbd
+alias	obj_7a1665.CheckReadOnly.literals[3]	obj_791bbd
+alias	obj_7a1665.CheckReadOnly.literals[4]	obj_785edd
+alias	obj_7a1665.DeleteTopics.literals[9]	obj_79d7bd
+alias	obj_7a1665.DeleteTopics.literals[10]	obj_78eb95
+alias	obj_7a1665.DeleteTopics.literals[11]	obj_79d7cd
+alias	obj_7a1665.DeleteTopics.literals[18]	obj_791bbd
+alias	obj_7a1665.DeleteTopics.literals[19]	obj_785dc5
+alias	obj_7a1665.SortToDoItems.literals[4].instructions	obj_7930dd
+alias	obj_7a1665.GetToDoItemsForThisDate.literals[11].instructions	obj_7930dd
+alias	obj_7a1665.MoveTask.literals[2]	obj_791bbd
+alias	obj_7a1665.MoveTask.literals[3]	obj_785e85
+alias	obj_7a1665.MoveTask.literals[10]	obj_79d7bd
+alias	obj_7a1665.MoveTask.literals[11]	obj_78eb95
+alias	obj_7a1665.MoveTask.literals[43]	obj_785edd
+alias	obj_7a1665.MoveTask.literals[45]	obj_785f65
+alias	obj_7a1665.DateFind.literals[1]	obj_7996bd
+alias	obj_7a1665.DateFind.literals[12].instructions	obj_7990a5
+alias	obj_7a1665.DateFind.literals[18]	obj_79188d
+alias	obj_7a1665.DateFind.literals[25]	obj_79972d
+alias	obj_7a1665.DateFind.literals[26].instructions	obj_792765
+alias	obj_7a1665.DateFind.literals[27]	obj_799005
+alias	obj_7a1665.DateFind.literals[31]	obj_79972d
+alias	obj_7a1665.Find.literals[0]	obj_7996bd
+alias	obj_7a1665.Find.literals[14]	obj_79972d
+alias	obj_7a1665.protoToDoFinder.IsThisItemSelected.literals[4]	obj_799f2d
+alias	obj_7a1665.protoToDoFinder.SelectItem.literals[4]	obj_799f2d
+alias	obj_7a1665.protoToDoFinder.SelectItem.literals[6].instructions	obj_79aaa5
+alias	obj_7a1665.protoToDoFinder.Reset.instructions	obj_79e125
+alias	obj_7a1665.protoToDoFinder.AddTasksForEntry.literals[8]	obj_78eb95
+alias	obj_7a1665.protoToDoFinder.AddTasksForEntry.literals[10]	obj_78eb95
+alias	obj_7a1665.protoToDoFinder.AddTasksForEntry.literals[23]	obj_78eb95
+alias	obj_7a1665.protoToDoFinder.AddTasksForEntry.literals[25]	obj_78eb95
+alias	obj_7a1665.protoToDoFinder.AddTasksForEntry.literals[39]	obj_799f2d
+alias	obj_7a1665.protoToDoFinder.ShowFoundItem.literals[6]	obj_7915ad
+alias	obj_7a1665.protoToDoFinder.MoveTo.literals[9]	obj_785d9d
+alias	obj_7a1665.protoToDoFinder.IsSelected.literals[1].instructions	obj_79aaa5
+alias	obj_7a1665.GetToDoShapes.literals[1]	obj_79c945
+alias	obj_7a1665.GetTaskShapes.literals[1]	obj_79c945
+alias	obj_79b84d[0]	obj_79b81d
+alias	obj_79b84d[1]	obj_79fd2d
+alias	obj_79b84d[2]	obj_79b835
+alias	obj_79b84d[3]	obj_7a00dd

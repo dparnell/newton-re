@@ -1,0 +1,5 @@
+@@ 0x5b97d9
+func() begin
+	(if self:PrivateEntry(currentEntry) then return currentEntry.word else return nil)
+end
+@@end

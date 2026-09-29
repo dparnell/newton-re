@@ -1,0 +1,12 @@
+@@ 0x4f9ed5
+func(a1, a2, a3) begin
+	local l1;
+	(if HasPath(a1, 'repeatTemplate) then begin
+			setSlot((l1 := a1.repeatTemplate), a2, a3);
+			self:CarefulChange(RepeatNotes, l1, true)
+		end else begin
+			setSlot(a1, a2, a3);
+			self:CarefulChange(notes, a1, true)
+		end)
+end
+@@end

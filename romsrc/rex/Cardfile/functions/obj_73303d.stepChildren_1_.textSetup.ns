@@ -1,0 +1,6 @@
+@@ 0x7334c9
+func() begin
+	local l1;
+	(if (if target.cityAlias then (l1 := appBase:GetCity(target))) then l1.name)
+end
+@@end

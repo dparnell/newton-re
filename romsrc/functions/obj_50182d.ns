@@ -1,0 +1,11 @@
+@@ 0x50182d
+func(a1, a2) begin
+	local l1;
+	if (if (not (l1 := a1.(a2))) then a1.repeatTemplate) then begin
+			if (if (a2 <> 'viewBounds) then (not (if (a2 = 'mtgLocation) then HasSlot(a1, 'mtgLocation)))) then begin
+					l1 := a1.repeatTemplate.(a2)
+				end
+		end;
+	l1
+end
+@@end

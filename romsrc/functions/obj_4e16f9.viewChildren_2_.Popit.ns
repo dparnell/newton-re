@@ -1,0 +1,6 @@
+@@ 0x4df1cd
+func(a1) begin
+	self:flush();
+	inherited:Popit(a1)
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x47b6b5
+func() begin
+	local l1, l2;
+	l1 := GetRoot().(appSymbol);
+	(if (if (l2 := GetRoot().TinyTim) then l2.viewCObject) then l2:Close() else OpenHelpTo("Route"))
+end
+@@end

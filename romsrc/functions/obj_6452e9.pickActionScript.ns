@@ -1,0 +1,9 @@
+@@ 0x4acb4d
+func(a1) begin
+	local l1;
+	inherited:pickActionScript(a1);
+	l1 := self:AddEntryFromStationery(popup[a1].symbol);
+	popup := nil;
+	l1
+end
+@@end

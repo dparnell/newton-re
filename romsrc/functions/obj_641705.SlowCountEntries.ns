@@ -1,0 +1,12 @@
+@@ 0x43626d
+func() begin
+	local l1, l2;
+	if romOnly then begin
+			return realCurs:CountEntries()
+		end;
+	l1 := 1;
+	(l2 := self:clone()):Reset();
+	(while l2:Next() do (l1 := (l1 + 1)));
+	l1
+end
+@@end

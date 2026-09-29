@@ -1,0 +1,19 @@
+@@ 0x59d169
+func(a1) begin
+	local l1, l2;
+	(if a1 then begin
+			if setEmporia then begin
+					UseCurrentEmporium()
+				end;
+			setEmporia := nil;
+			if ((not userConfiguration.mailAccount) or (not StrFilled(userConfiguration.mailAccount))) then begin
+					GetRoot().mailSlip:DoRegister(nil)
+				end else begin
+					mailRegister.request := nil;
+					mailRegister:Open()
+				end;
+			l1 := GetRoot().mailSlip.owner;
+			(if (l2 := GetRoot().(l1)).viewCObject then AddDeferredSend(l2, 'RememberedClose, [Array: base]) else base:Close())
+		end)
+end
+@@end

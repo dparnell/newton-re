@@ -1,0 +1,25 @@
+@@ 0x75ae29
+func(a1, a2) begin
+	local l1, l2, l3, l4, l5, l6;
+	l1 := a1.type;
+	if (l2 := LSearch('[Array: serial, modem, AppleTalk, IrDA, |2400Serial|, |4800Serial|, |9600Serial|], l1, 0, '|=|, nil)) then begin
+			l3 := '[Array: @8256, @8255, @8257, @8290, @8293, @8292, @8291][l2];
+			if (l1 = 'AppleTalk) then begin
+					l4 := 'AppleTalkAddress;
+					l5 := self:VerifyNetworkAddress(a1.networkCurrentChoice, a2)
+				end;
+			if l4 then begin
+					if l5 then begin
+							(l3 := Clone(l3)).(l4) := l5
+						end else begin
+							l3 := nil
+						end
+				end
+		end else begin
+			if (if (l6 := GetDesktopConnTransports()) then l6.transports) then begin
+					l3 := l6.transports.(l1)
+				end
+		end;
+	return l3
+end
+@@end

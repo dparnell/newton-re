@@ -1,0 +1,14 @@
+@@ 0x4d077d
+func(a1) begin
+	(if self:AnySet(((manualReceive + modemRetry) + bailAuto)) then begin
+			self:RemoveFlag(redoBind);
+			self:DoUnbind(a1)
+		end else (if self:AnySet(redoBind) then self:DoUnbind(a1) else begin
+				if (not self:AnySet(redoListen)) then begin
+						self:RemoveFlag(manualOnAuto)
+					end;
+				self:RemoveFlag(redoListen);
+				self:DoListen(nil)
+			end))
+end
+@@end

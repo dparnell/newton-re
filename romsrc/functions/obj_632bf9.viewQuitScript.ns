@@ -1,0 +1,5 @@
+@@ 0x487df9
+func() begin
+	(oldName := (newName := nil))
+end
+@@end

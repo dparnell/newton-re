@@ -1,0 +1,11 @@
+@@ 0x599385
+func(a1) begin
+	(if a1 then begin
+			StripInk(fields.text, $\uFC02);
+			StrReplace(fields.text, "\uFC02\u", "-ink-", nil);
+			self:getAttachment();
+			self:shrinkMessage();
+			self:ContinueSend(noworlater)
+		end else self:editMessage(nil))
+end
+@@end

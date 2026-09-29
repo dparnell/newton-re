@@ -1,0 +1,8 @@
+@@ 0x461cad
+func() begin
+	if (not allCollapsed) then begin
+			self:MarkItemSeen(index, nil)
+		end;
+	inherited:?viewScrollUpScript()
+end
+@@end

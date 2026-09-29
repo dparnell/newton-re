@@ -1,0 +1,5 @@
+@@ 0x4d8b89
+func() begin
+	SetKeyView(self.entryLine, 9999)
+end
+@@end

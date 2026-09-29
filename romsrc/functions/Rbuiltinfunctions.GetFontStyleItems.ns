@@ -1,0 +1,22 @@
+@@ 0x416a1d
+func(a1, a2) begin
+	if (not a2) then begin
+			a2 := 15
+		end;
+	l1 := [Array: ];
+	local l1;
+	(foreach l2 in @855 do begin
+			local l4, l5;
+			if (BAnd((l4 := l2.face), a2) = l4) then begin
+					l5 := l2;
+					if (not a1) then begin end else begin
+							if ((if (a1 = 0) then (l4 = 0)) or (if (if (a1 > 0) then (l4 > 0)) then (BAnd(l4, a1) = l4))) then begin
+									(l5 := Clone(l5)).mark := $\uFC0B
+								end
+						end;
+					AddArraySlot(l1, l5)
+				end
+		end);
+	l1
+end
+@@end

@@ -1,0 +1,20 @@
+@@ 0x5b8edd
+func(a1) begin
+	local l1, l2;
+	if (((l1 := self:LookupWord(a1, nil)) = -6) or (l1 = 1)) then begin
+			self:EncodeRecognitionWordDiacritsOK((l2 := Clone(a1)));
+			if (StrLen(l2) > 0) then begin
+					if (StrExactCompare(Upcase(Clone(a1)), a1) = 0) then begin
+							if (((l1 := self:LookupWord(Capitalize(Downcase(Clone(l2))), nil)) = -6) or (l1 = 1)) then begin
+									l1 := self:LookupWord(Downcase(Clone(l2)), nil)
+								end
+						end else begin
+							if (StrExactCompare(Capitalize(Downcase(Clone(a1))), a1) = 0) then begin
+									l1 := self:LookupWord(Downcase(Clone(l2)), nil)
+								end
+						end
+				end
+		end;
+	return l1
+end
+@@end

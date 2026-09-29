@@ -1,0 +1,11 @@
+@@ 0x526f75
+func(a1) begin
+	local l1, l2;
+	if (l1 := GetGroupTransport(taskType)) then begin
+			if (if (l2 := GetRoot().(l1)) then l2.(a1)) then begin
+					return l2.(a1)
+				end
+		end;
+	return nil
+end
+@@end

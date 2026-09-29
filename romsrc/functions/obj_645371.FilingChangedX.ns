@@ -1,0 +1,33 @@
+@@ 0x4afc05
+func() begin
+	l1 := masterSoup:GetCursorKey();
+	if filedChild then begin
+			if filedChild.FilingChangedX then begin
+					filedChild:FilingChangedX()
+				end
+		end else begin
+			local l1;
+			(foreach l2 in self:ChildViewFrames() do begin
+					local l4;
+					if l2.FilingChangedX then begin
+							l2:FilingChangedX()
+						end
+				end)
+		end;
+	l4 := dataCursor:entry();
+	masterSoup:SetupCursor();
+	layout:SetupCursor();
+	if IsSoupEntry(l4) then begin
+			dataCursor:Goto(l4)
+		end else begin
+			if l1 then begin
+					masterSoup:GotoCursorKey(l1);
+					layout:SetupCursor()
+				end else begin
+					layout:SetupCursor();
+					dataCursor:ResetToEnd()
+				end
+		end;
+	layout:NewTarget()
+end
+@@end

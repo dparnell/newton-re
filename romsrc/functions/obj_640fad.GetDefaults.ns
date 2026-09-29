@@ -1,0 +1,6 @@
+@@ 0x485d85
+func(a1) begin
+	local l1;
+	(if (l1 := self:GetRecognizers().(a1)) then l1.default)
+end
+@@end

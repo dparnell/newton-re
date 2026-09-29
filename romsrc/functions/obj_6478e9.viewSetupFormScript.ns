@@ -1,0 +1,22 @@
+@@ 0x4bb865
+func() begin
+	local l1;
+	inherited:viewSetupFormScript();
+	if HasPath(self, 'viewLineSpacing) then begin
+			entryLine.viewLineSpacing := self.viewLineSpacing
+		end;
+	entryLine.viewFont := entryFont;
+	if (((access = 'readWrite) or (access = 'Query)) or (access = 'queryOnly)) then begin
+			entryLine.viewFlags := filter.recFlags;
+			entryLine.textFlags := filter.recTextFlags;
+			entryLine.dictionaries := filter.dictionaries;
+			entryLine.recConfig := filter.recConfig
+		end;
+	if (BAnd(entryLine.viewFlags, 2) <> 0) then begin
+			entryLine.viewFormat := 0
+		end;
+	l1 := self:LocalBox();
+	entryLine.viewBounds := SetBounds(indent, 0, l1.right, 0);
+	(entryLine.text := (if (if (if target then path) then target.(path)) then filter:PathToText() else ""))
+end
+@@end

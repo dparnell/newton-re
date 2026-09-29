@@ -1,0 +1,5 @@
+@@ 0x59d48d
+func(a1) begin
+	SetUserConfig('mailMode, labelValues[a1])
+end
+@@end

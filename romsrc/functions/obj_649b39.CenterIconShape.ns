@@ -1,0 +1,16 @@
+@@ 0x549315
+func(a1) begin
+	(foreach l1 in a1 do begin
+			local l3;
+			if IsPrimShape(l1) then begin
+					l3 := ShapeBounds(l1);
+					OffsetShape(l1, (((hSpacing - l3.right) - l3.left) div 2), (iconBottom - l3.bottom))
+				end else begin
+					if IsArray(l1) then begin
+							self:CenterIconShape(l1)
+						end
+				end
+		end);
+	a1
+end
+@@end

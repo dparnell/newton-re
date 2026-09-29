@@ -1,0 +1,7 @@
+@@ 0x422a81
+func(a1, a2) begin
+	local l1;
+	(l1 := ConvertToSoundFrame((l1 := Clone(a1)))).volume := a2;
+	PlaySoundIrregardless(l1)
+end
+@@end

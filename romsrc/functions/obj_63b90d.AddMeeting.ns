@@ -1,0 +1,11 @@
+@@ 0x4f7b89
+func(a1) begin
+	local l1, l2, l3;
+	l2 := ((l1 := a1.mtgStartDate) + a1.mtgDuration);
+	l3 := (l1 - (l1 mod 1440));
+	meetings := GetAllMeetings(MeetingSoup, RepeatSoup, l3, (l3 + 1440));
+	self:CarefulAdd(MeetingSoup, a1, nil);
+	calendar:redisplayScript();
+	AddUndoAction('RemoveMeeting, [Array: a1])
+end
+@@end

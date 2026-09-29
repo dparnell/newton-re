@@ -1,0 +1,9 @@
+@@ 0x74b429
+func() begin
+	if (Length(appList.selectedItems) <> Length(appList.listItems)) then begin
+			local l1;
+			l1 := (foreach l2 in appList.selectedItems collect appList.listItems[l2])
+		end;
+	return l1
+end
+@@end

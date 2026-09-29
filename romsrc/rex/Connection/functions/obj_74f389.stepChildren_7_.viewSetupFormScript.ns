@@ -1,0 +1,10 @@
+@@ 0x751021
+func() begin
+	if currentFilters then begin
+			self.labelCommands := currentFilters
+		end else begin
+			self.labelCommands := '[Array: ]
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

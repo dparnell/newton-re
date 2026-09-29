@@ -1,0 +1,17 @@
+@@ 0x42efa5
+func(a1) begin
+	(if (if a1 then (phoneIndex < Length(a1.(path)))) then begin
+			l1 := ClassOf(a1.(path)[phoneIndex]);
+			l2 := labelCommands[0];
+			local l1;
+			local l2;
+			(foreach l3, l4 in labelSymbols do begin
+					if (l4 = l1) then begin
+							l2 := labelCommands[l3];
+							break
+						end
+				end);
+			l2
+		end else labelCommands[0])
+end
+@@end

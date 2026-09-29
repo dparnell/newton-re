@@ -1,0 +1,8 @@
+@@ 0x735071
+func() begin
+	if (if (if newBdays then (superSymbol = 'names)) then ((newBdays = true) or (Length(newBdays) > 0))) then begin
+			GetRoot():Confirm(@47, "There are new birthdays in Names.  Do you want to add them to the Date Book?", self, 'AddNewBdays)
+		end;
+	inherited:?viewSetupDoneScript()
+end
+@@end

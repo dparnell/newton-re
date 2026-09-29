@@ -1,0 +1,27 @@
+@@ 0x4ea915
+func() begin
+	(if self.cacheCount then cacheCount else begin
+			l1 := 0;
+			if meetingSoupFinders then begin
+					local l1;
+					(foreach l2 in meetingSoupFinders do begin
+							l1 := (l1 + l2:count())
+						end);
+					if (not currentMeetingSoupFinder) then begin
+							if (Length(meetingSoupFinders) = 1) then begin
+									currentMeetingSoupFinder := meetingSoupFinders[0]
+								end else begin
+									self:ChooseEarliestItem()
+								end
+						end
+				end;
+			self.cacheMeetingsCount := l1;
+			if todoSoupFinders then begin
+					(foreach l2 in todoSoupFinders do begin
+							l1 := (l1 + l2:count())
+						end)
+				end;
+			(self.cacheCount := l1)
+		end)
+end
+@@end

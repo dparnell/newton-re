@@ -1,0 +1,5 @@
+@@ 0x41e2f1
+func(a1, a2) begin
+	(if (a1 = 'text) then self:textChanged())
+end
+@@end

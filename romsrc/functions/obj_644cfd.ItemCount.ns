@@ -1,0 +1,18 @@
+@@ 0x47f271
+func(a1) begin
+	local l1;
+	l1 := 0;
+	if a1.item then begin
+			l1 := 1
+		end else begin
+			if a1.cursor then begin
+					if IsArray(a1.cursor) then begin
+							l1 := Length(a1.cursor)
+						end else begin
+							l1 := a1.cursor:CountEntries()
+						end
+				end
+		end;
+	return l1
+end
+@@end

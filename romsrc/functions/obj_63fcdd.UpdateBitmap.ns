@@ -1,0 +1,10 @@
+@@ 0x429d01
+func() begin
+	if viewValue then begin
+			base.icon := onBitmap
+		end else begin
+			base.icon := offBitmap
+		end;
+	base:Dirty()
+end
+@@end

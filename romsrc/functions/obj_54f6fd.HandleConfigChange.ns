@@ -1,0 +1,7 @@
+@@ 0x54f69d
+func(a1) begin
+	local l1;
+	l1 := GetUserConfig('lcdContrast);
+	(if (if (a1 = 'lcdContrast) then (viewValue <> l1)) then SetValue(self, 'viewValue, l1))
+end
+@@end

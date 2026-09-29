@@ -1,0 +1,29 @@
+@@ 0x465595
+func(a1, a2, a3) begin
+	l2 := nil;
+	if (a1 = '_all) then begin
+			local l1;
+			local l2;
+			(foreach l3 in transports do begin
+					local l5;
+					if (if (l1 := GetRoot().(l3)) then l1.(a2)) then begin
+							Perform(l1, a2, a3)
+						end
+				end)
+		end else begin
+			if (l5 := GetGroupTransport(a1)) then begin
+					a1 := l5
+				end;
+			if ((l1 := GetRoot().(a1)) = nil) then begin
+					l2 := 'noTransport
+				end else begin
+					if HasPath(l1, a2) then begin
+							l2 := Perform(l1, a2, a3)
+						end else begin
+							l2 := 'NoMethod
+						end
+				end
+		end;
+	return l2
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x4cb6ad
+func() begin
+	fixed := nil;
+	(userDismissed := nil)
+end
+@@end

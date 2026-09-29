@@ -1,0 +1,12 @@
+@@ 0x5b8535
+func(a1, a2) begin
+	local l1;
+	if (not SetContains('[Array: 0, 1, 2, 4], a2)) then begin
+			Throw('|evt.ex.msg.dict|, Stringer([Array: "bad attrSize:", " ", a2]))
+		end;
+	if ((l1 := self:PrivateNew(a1, a2)) < 0) then begin
+			Throw('|evt.ex.msg.dict|, SPrintObject(l1))
+		end;
+	return nil
+end
+@@end

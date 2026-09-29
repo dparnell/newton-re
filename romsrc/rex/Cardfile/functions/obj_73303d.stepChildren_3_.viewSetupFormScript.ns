@@ -1,0 +1,6 @@
+@@ 0x73366d
+func() begin
+	labelCommands := GetLocale().commonDialingPrefixes;
+	inherited:?viewSetupFormScript()
+end
+@@end

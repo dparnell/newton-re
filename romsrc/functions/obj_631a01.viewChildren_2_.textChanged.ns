@@ -1,0 +1,6 @@
+@@ 0x4d3ff1
+func() begin
+	userConfiguration.dialingPrefix := entryLine.text;
+	self:JamIt()
+end
+@@end

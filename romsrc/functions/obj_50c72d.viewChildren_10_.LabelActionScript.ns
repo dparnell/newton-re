@@ -1,0 +1,49 @@
+@@ 0x508139
+func(a1) begin
+	local l1;
+	dirtyFlag := true;
+	l1 := nil;
+	if (a1 = 0) then begin
+			WarningView.alarmOn := nil
+		end else begin
+			WarningView.alarmOn := true;
+			if (labelWarningUnits = 0) then begin
+					if (if (a1 >= 1) then (a1 <= 4)) then begin
+							WarningView.unitsValue := labelWarningTimes[a1];
+							WarningView.unitsIndex := 0
+						end else begin
+							if (a1 = 5) then begin
+									WarningView.unitsValue := 1;
+									WarningView.unitsIndex := 1
+								end else begin
+									if (a1 = 6) then begin
+											WarningView.unitsValue := 1;
+											WarningView.unitsIndex := 2
+										end else begin
+											l1 := true;
+											WarningView.unitsValue := -1
+										end
+								end
+						end
+				end else begin
+					if (if (a1 >= 1) then (a1 <= 4)) then begin
+							WarningView.unitsValue := labelWarningTimes[a1];
+							WarningView.unitsIndex := 2
+						end else begin
+							l1 := true;
+							WarningView.unitsValue := -1
+						end
+				end
+		end;
+	if l1 then begin
+			if (not Visible(WarningView)) then begin
+					WarningView:Open()
+				end
+		end else begin
+			if Visible(WarningView) then begin
+					WarningView:Close()
+				end
+		end;
+	(savedAlarmIndex := a1)
+end
+@@end

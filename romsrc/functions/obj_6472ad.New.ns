@@ -1,0 +1,11 @@
+@@ 0x4a7921
+func(a1, a2) begin
+	local l1;
+	if IsFrame(a2) then begin
+			(l1 := inherited:New(a1, a2._cursor)).targetpath := a2.targetpath
+		end else begin
+			l1 := inherited:New(a1, a2)
+		end;
+	l1
+end
+@@end

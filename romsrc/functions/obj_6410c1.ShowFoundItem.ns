@@ -1,0 +1,7 @@
+@@ 0x55f041
+func(a1) begin
+	local l1;
+	currentItem := a1.itemIndex;
+	self:ShowEntry((l1 := Query(a1.soup, {type: 'index, indexPath: '_uniqueID, beginKey: a1.entryID})):entry())
+end
+@@end

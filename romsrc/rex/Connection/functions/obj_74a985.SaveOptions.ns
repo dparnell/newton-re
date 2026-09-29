@@ -1,0 +1,10 @@
+@@ 0x74bff1
+func() begin
+	local l1;
+	soupOptions := appList:CollectOptions();
+	protoContext:ConnectionPrefsWrite('soupOptions, soupOptions);
+	protoContext:ConnectionPrefsWrite('storeOptions, whichStores);
+	l1 := (if soupOptions then appList.listItems);
+	protoContext:ConnectionPrefsWrite('allApps, l1)
+end
+@@end

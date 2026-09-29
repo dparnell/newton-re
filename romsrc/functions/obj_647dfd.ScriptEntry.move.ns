@@ -1,0 +1,14 @@
+@@ 0x538405
+func(a1) begin
+	local l1, l2;
+	(if self:LookupSoupPackage() then inherited:move(a1) else begin
+			l2 := a1:GetSoup((l1 := EntrySoup(fentry):GetName()));
+			if EntryStore(fentry):IsReadOnly() then begin
+					EntryCopyXmit(fentry, l2, '_newt)
+				end else begin
+					EntryMoveXmit(fentry, l2, '_newt)
+				end;
+			true
+		end)
+end
+@@end

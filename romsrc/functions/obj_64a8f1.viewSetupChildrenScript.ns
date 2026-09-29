@@ -1,0 +1,11 @@
+@@ 0x4da7ed
+func() begin
+	if (if (not kids) then data) then begin
+			kids := ReFlow(data, '{reflowFont: 12289, unistyle: nil, graphicsGutter: 16, textGutter: -16, viewLineSpacing: 28}, fields.targetBox, self:LocalBox())
+		end;
+	if kids then begin
+			self.stepChildren := ArrayMunger([Array: ], 0, 0, kids, reflowStart, nil)
+		end;
+	inherited:?viewSetupChildrenScript()
+end
+@@end

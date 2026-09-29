@@ -1,0 +1,7 @@
+@@ 0x52cfb9
+func(a1) begin
+	local l1, l2;
+	l1 := StrLen(a1);
+	(l2 := {label: "rout", type: 'address, opCode: 512, data: {arglist: [Array: 3, l1, a1], typelist: [Array: 10, 1, 2, [Array: 11, 13, 0]]}})
+end
+@@end

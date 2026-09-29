@@ -1,0 +1,5 @@
+@@ 0x4b9535
+func() begin
+	@317:New((if (if target.(path) then (not IsRichString(target.(path)))) then [Array: target.(path)]), self:GlobalLabelBounds(), self)
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x5a0add
+func(a1) begin
+	(if a1 then (if request then (setEmporia := self:ValidateConfig('location, nil, '[Array: mailPhone], msgValidateNumber, 'ValidateSlip, 'ValidationComplete)) else begin
+				base:Close();
+				UseCurrentPersona();
+				GetRoot():Notify(3, theTransport.title, ParamStr("Your e-mail information has been placed in your owner card in Owner Info. You can now send and receive mail with the account \u201C\u^0\u201D\u", [Array: userConfiguration.mailAccount]))
+			end))
+end
+@@end

@@ -1,0 +1,31 @@
+@@ 0x7508a5
+func() begin
+	local l1;
+	self.setupDone := nil;
+	self.closing := nil;
+	self.protoContext := GetRoot().Connection;
+	protoContext:AddOpenWindow(self);
+	if (ClassOf(windowsFolder) <> 'bitMap) then begin
+			windowsFolder := MakeShape(windowsFolder);
+			windowsOpenFolder := MakeShape(windowsOpenFolder)
+		end;
+	aborting := nil;
+	currentDevices := [Array: ];
+	currentPath := [Array: ];
+	currentFilters := [Array: ];
+	try begin
+			endpoint:WriteCommand("gdev", nil, nil);
+			currentDevices := (l1 := protoContext:CallReadCommand(endpoint, "devs")).data;
+			endpoint:WriteCommand("gflt", nil, nil);
+			currentFilters := (l1 := protoContext:CallReadCommand(endpoint, "filt")).data;
+			endpoint:WriteCommand("dpth", nil, nil);
+			if (not IsArray((l1 := protoContext:CallReadCommand(endpoint, "path")).data)) then begin
+					Throw('|evt.ex.error|, -28012)
+				end;
+			currentPath := l1.data
+		end onexception |evt.ex| do begin
+			self:StopOpen(CurrentException().error)
+		end;
+	self:GetNewFileFolderLists(nil, nil)
+end
+@@end

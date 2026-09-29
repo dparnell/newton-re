@@ -1,0 +1,14 @@
+@@ 0x54f829
+func(a1) begin
+	local l1;
+	InkOff(a1);
+	l1 := (contrastSlider.viewValue + increment);
+	if (if (contrastSlider.minValue < l1) then (l1 < contrastSlider.maxValue)) then begin
+			if self:TrackHilite(a1) then begin
+					SetValue(contrastSlider, 'viewValue, l1);
+					self:hilite(nil)
+				end
+		end;
+	true
+end
+@@end

@@ -1,0 +1,39 @@
+@@ 0x526909
+func(a1, a2) begin
+	l5 := Array((l4 := Length(a1)), nil);
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	(for l1 := 0 to (l4 - 1) do begin
+			local l8, l9, l10;
+			l8 := getSlot((l3 := a1[l1][0]), 'value);
+			l5[l1] := l8;
+			if HasSlot(l3, 'Time) then begin
+					a2.hasTime := true;
+					if (if (not StrEqual(StringFilter(l8, "am", 'passAll), "am")) then (not StrEqual(StringFilter(l8, "pm", 'passAll), "pm"))) then begin
+							l2 := (l2 := Date(StringToTime(l8))).hour
+						end
+				end;
+			if HasSlot(l3, 'Date) then begin
+					a2.hasDate := true
+				end
+		end);
+	if (if (a2.hasTime = nil) then (a2.usualTime <> nil)) then begin
+			AddArraySlot(l5, a2.usualValue)
+		end;
+	l9 := GlueStrings(l5);
+	if a2.hasDate then begin
+			l10 := StringToDateFrame(l9);
+			a2.dayOfWeek := (if (if l10.dayOfWeek then (not l10.Date)) then (not l10.month))
+		end;
+	l3 := StringToDate(l9);
+	if (l2 <> nil) then begin
+			if (if (l2 >= 1) then (l2 < 7)) then begin
+					l3 := (l3 + 720)
+				end
+		end;
+	return l3
+end
+@@end

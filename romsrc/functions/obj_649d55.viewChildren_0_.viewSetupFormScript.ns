@@ -1,0 +1,6 @@
+@@ 0x4c2445
+func() begin
+	icon := transport.icon;
+	(_titleKeyButton := self)
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x4d0951
+func() begin
+	local l1;
+	l1 := inherited:?GetStatusString();
+	if ((status = 'Receiving) or (status = 'Confirming)) then begin
+			l1 := ParamStr(l1, [Array: NumberStr(sessionInfo.body.info.pageCount)])
+		end;
+	l1
+end
+@@end

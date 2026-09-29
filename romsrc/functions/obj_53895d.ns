@@ -1,0 +1,15 @@
+@@ 0x53895d
+func() begin
+	local l1;
+	local l2;
+	(foreach l3 in (l1 := GetValidStores()) do begin
+			(foreach l5 in fentry.soupNames do begin
+					if l3:HasSoup(l5) then begin
+							l2 := Stringer([Array: (if l2 then Stringer([Array: l2, $,])), " ", l3:GetName()]);
+							break
+						end
+				end)
+		end);
+	(if (not l2) then "" else l2)
+end
+@@end

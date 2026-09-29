@@ -1,0 +1,37 @@
+@@ 0x481ae9
+func() begin
+	local l1, l2, l3, l4, l5, l6;
+	l2 := (l1 := self:path()).(name);
+	visibleAction := nil;
+	if (if (not HasSlot(l1, name)) then (BAnd(self.viewFlags, 1) = 1)) then begin
+			l3 := 'shiftOnly
+		end else begin
+			if (if (ClassOf(l2) = 'frame) then l2.text) then begin
+					l3 := 'create
+				end else begin
+					l3 := nil
+				end
+		end;
+	if (l3 = 'create) then begin
+			buttonClickScript := l2.script;
+			l4 := (StrWidth((text := l2.text)) + 10);
+			self.constViewBounds := DeepClone(self.constViewBounds);
+			self.viewBounds := DeepClone(self.viewBounds);
+			if ((BAnd(viewJustify, 32) = 32) or (BAnd(viewJustify, 1024) = 1024)) then begin
+					constViewBounds.left := (constViewBounds.right - l4);
+					viewBounds.left := (viewBounds.right - l4)
+				end else begin
+					if (if (not (BAnd(viewJustify, 48) = 48)) then (not (BAnd(viewJustify, 1536) = 1536))) then begin
+							constViewBounds.right := (constViewBounds.left + l4);
+							viewBounds.right := (viewBounds.left + l4)
+						end
+				end;
+			visibleAction := 'makeVisible
+		end;
+	(if ((l3 = 'create) or (l3 = 'shiftOnly)) then (if (l5 := self:shiftItem()) then (if ((l5.visibleAction = 'makeVisible) or (if (not l5.visibleAction) then (BAnd(l5.viewFlags, 1) = 1))) then (self.viewBounds := DeepClone(self.constViewBounds)) else begin
+					(l6 := DeepClone(self.constViewBounds)).right := l5.viewBounds.right;
+					l6.left := (self.constViewBounds.left - (self.constViewBounds.right - l5.viewBounds.right));
+					(self.viewBounds := l6)
+				end)) else (visibleAction := 'makeInvisible))
+end
+@@end

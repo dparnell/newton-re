@@ -1,0 +1,64 @@
+@@ 0x5a97a1
+@@const kLiteral_5a8909
+"This word is already in a word list"
+@@main
+func(a1) begin
+	local l1, l2, l3;
+	self:SetUpDictionary();
+	if (if expandFlag then self.viewCObject) then begin
+			self:AddExpandWord(selectedWord, a1);
+			return nil
+		end;
+	if (not WRecIsBeingUsed()) then begin
+			if (GetLocale().enabledlanguage <> 'Swedish) then begin
+					StripDiacriticals((l1 := Clone(a1)));
+					if (StrExactCompare(a1, l1) = 0) then begin
+							l1 := nil
+						end
+				end
+		end;
+	l2 := true;
+	if self.viewCObject then begin
+			if (BAnd((errorCode := ValidateWord(Clone(a1), nil)), 128) <> 0) then begin
+					if (BAnd(errorCode, 8192) <> 0) then begin
+							l3 := kLiteral_5a8909
+						end else begin
+							if (BAnd(errorCode, 16) <> 0) then begin
+									l3 := "This word contains symbols that can't be recognized"
+								end else begin
+									if (BAnd(errorCode, 4096) <> 0) then begin
+											l3 := "The lower case version of this word is already in a word list"
+										end else begin
+											if (BAnd(errorCode, 8) <> 0) then begin
+													l3 := "There are no alphabetic letters in this word"
+												end else begin
+													if (BAnd(errorCode, 2) <> 0) then begin
+															l3 := "Short words may decrease recognition accuracy"
+														end else begin
+															l3 := kLiteral_5a8909
+														end
+												end
+										end
+								end
+						end
+				end else begin
+					if (BAnd(errorCode, 4096) <> 0) then begin
+							if (BAnd(errorCode, 1024) = 0) then begin
+									l3 := "The capitalized version of this word is already in a word list"
+								end
+						end else begin
+							if l1 then begin
+									l3 := "This word contains diacritical characters, which will be stripped and added as a word expansion.  The word should be written without diacriticals"
+								end
+						end
+				end;
+			if l3 then begin
+					l2 := ModalConfirm(Stringer([Array: l3, ".  Do you really want to add it?"]), 'yesNoDefaultNo)
+				end
+		end;
+	if l2 then begin
+			l2 := self:DoAddWord(a1, l1)
+		end;
+	return l2
+end
+@@end

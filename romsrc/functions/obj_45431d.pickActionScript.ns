@@ -1,0 +1,5 @@
+@@ 0x4536e5
+func(a1) begin
+	(fOpenEditor := pickerDef:?pickActionScript(a1, fTapinfo, self))
+end
+@@end

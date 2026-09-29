@@ -1,0 +1,5 @@
+@@ 0x5b9781
+func(a1) begin
+	(if (if dict then currentEntry.word) then dict:ChangeAttribute(currentEntry.word, a1))
+end
+@@end

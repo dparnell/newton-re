@@ -1,0 +1,43 @@
+@@ 0x7979c5 names
+func(aDate, aTask, aRedraw) begin
+	if ((if HasPath(aTask, 'source) then (aTask.source = nil)) or (ClassOf(aTask.source) = 'symbol)) then begin
+			self:Notify(3, "To Do", "Can\u2019\ut delete a 1.x formatted To Do item");
+			return nil
+		end;
+	self:GetToDoSoup();
+	self:EndFlush();
+	local index;
+	local task;
+	local entries;
+	(foreach Entry in (entries := self:GetToDoEntry(aDate, nil)) do begin
+			if HasPath(aTask, 'unique) then begin
+					(foreach task in Entry.topics do begin
+							if HasPath(task, 'unique) then begin
+									if (task.unique = aTask.unique) then begin
+											aTask := task
+										end
+								end
+						end)
+				end;
+			if (index := SetContains(Entry.topics, aTask)) then begin
+					if self:CheckReadOnly(Entry) then begin
+							return nil
+						end;
+					ArrayRemoveCount(Entry.topics, index, 1);
+					EntryChangeXmit(Entry, 'todo);
+					if (if (if (aDate = selectedDates[0]) then topics) then (Length(topics) > 0)) then begin
+							if (index := SetContains(topics, aTask)) then begin
+									ArrayRemoveCount(topics, index, 1)
+								end
+						end;
+					if (aRedraw <> 'noUndoOrDraw) then begin
+							AddUndoAction('UndoDeleteTask, [Array: aDate, aTask])
+						end;
+					if (if (if aRedraw then (aRedraw <> 'noUndoOrDraw)) then viewCObject) then begin
+							self:RedoTopics()
+						end;
+					break
+				end
+		end)
+end
+@@end

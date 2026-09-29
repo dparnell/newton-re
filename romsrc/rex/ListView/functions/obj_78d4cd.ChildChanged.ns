@@ -1,0 +1,16 @@
+@@ 0x78d25d names
+func(aView) begin
+	local theIndex, topic;
+	theIndex := aView.index;
+	(topic := topics[theIndex]).styles := aView.styles;
+	topic.viewBounds := aView.viewBounds;
+	if (adjusting or (if (duringScroll exists) then duringScroll)) then begin
+			return nil
+		end;
+	topicChanged := Min(topicChanged, theIndex);
+	if (theIndex = curTopic) then begin
+			curTopicChanged := true
+		end;
+	AddProcrastinatedSend(uniqueSymbol, self, 'AdjustKids, nil, 0)
+end
+@@end

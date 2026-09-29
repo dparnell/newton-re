@@ -1,0 +1,21 @@
+@@ 0x523205
+func() begin
+	local l1, l2, l3;
+	if ((l1 := self:GetLibraryEntry(isbn)).curRendering <> sizesList[index].rendering) then begin
+			l1.curpage := 1;
+			l1.prevpage := 1;
+			l1.curRendering := sizesList[index].rendering
+		end;
+	l1.flags := BAnd(l1.flags, -4);
+	l2 := 2;
+	if (sizesList[index].spread = true) then begin
+			l2 := 1
+		end;
+	l1.flags := BOr(l1.flags, l2);
+	EntryChange(l1);
+	l3 := isbn;
+	base:Close();
+	GetRoot().copperfield:Close();
+	GetRoot().copperfield:OpenBook(l3)
+end
+@@end

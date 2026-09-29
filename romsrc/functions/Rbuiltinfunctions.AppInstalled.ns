@@ -1,0 +1,5 @@
+@@ 0x4b4031
+func(a1) begin
+	GetRoot().iobox:AppInstalled(a1)
+end
+@@end

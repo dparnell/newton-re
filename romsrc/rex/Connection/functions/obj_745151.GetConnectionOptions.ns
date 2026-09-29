@@ -1,0 +1,40 @@
+@@ 0x747bf1
+func(a1, a2) begin
+	local l1;
+	local l2;
+	(foreach l3, l4 in builtInTransports do begin
+			local l6, l7, l8;
+			if (l4 = a1) then begin
+					l1 := true;
+					l2 := builtinTransportConfig[l3];
+					break
+				end
+		end);
+	if l1 then begin
+			if (a1 = 'modem) then begin
+					l6 := phonePicker:VerifyPhone(a2);
+					l7 := 'phonenumber;
+					if (if l6 then (StrLen(l6) = 0)) then begin
+							l6 := nil
+						end
+				end else begin
+					if (a1 = 'AppleTalk) then begin
+							l7 := 'AppleTalkAddress;
+							l6 := AppleTalkPicker:VerifyNetworkAddress(a2)
+						end
+				end;
+			if l7 then begin
+					if l6 then begin
+							(l2 := Clone(l2)).(l7) := l6
+						end else begin
+							l2 := nil
+						end
+				end
+		end else begin
+			if (if (l8 := GetDesktopConnTransports()) then l8.transports) then begin
+					l2 := l8.transports.(a1)
+				end
+		end;
+	return l2
+end
+@@end

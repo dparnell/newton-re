@@ -1,0 +1,18 @@
+@@ 0x4737dd
+func(a1, a2) begin
+	l1 := Downcase(Clone(a1));
+	l2 := true;
+	local l1;
+	local l2;
+	(for l3 := 0 to (StrLen(l1) - 1) do begin
+			if (ORD(l1[l3]) <> ORD(a1[l3])) then begin
+					l2 := nil;
+					break
+				end
+		end);
+	if l2 then begin
+			Throw('|evt.ex.error|, -28020)
+		end;
+	self:InstallAnyProtocolExtension(a1, a2)
+end
+@@end

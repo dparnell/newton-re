@@ -1,0 +1,6 @@
+@@ 0x49ea7d
+func() begin
+	filedChild := _entryViewForFiling;
+	inherited:buttonClickScript()
+end
+@@end

@@ -1,0 +1,24 @@
+@@ 0x466b29
+func(a1) begin
+	AddTryString(text[lastChar]);
+	l3 := (StrLen(a1) - 1);
+	local l1;
+	local l2;
+	local l3;
+	(for l4 := 0 to l3 do begin
+			if (not InTryString((l1 := a1[l4]))) then begin
+					l2 := l1;
+					if (l4 > 0) then begin
+							StrMunger(a1, l4, 1, nil, 0, 0);
+							StrMunger(a1, 0, 0, SPrintObject(l1), 0, 1)
+						end;
+					break
+				end
+		end);
+	if (not l2) then begin
+			ClearTryString();
+			l2 := (if (l3 >= 0) then a1[0])
+		end;
+	return l2
+end
+@@end

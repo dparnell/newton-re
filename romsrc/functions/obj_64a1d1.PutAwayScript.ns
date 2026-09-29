@@ -1,0 +1,6 @@
+@@ 0x54cf61
+func(a1) begin
+	local l1;
+	(if IsBinary((l1 := (if a1.body then a1.body.package))) then (if IsPackage(l1) then RegisterNewPackage(l1, GetDefaultStore(), true) else GetDefaultStore():SuckPackageFromBinary(l1, nil)))
+end
+@@end

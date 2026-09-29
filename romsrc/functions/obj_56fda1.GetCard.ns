@@ -1,0 +1,5 @@
+@@ 0x56fce1
+func() begin
+	table[cardIndex]
+end
+@@end

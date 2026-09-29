@@ -1,0 +1,10 @@
+@@ 0x7a0935 names
+func() begin
+	local initialString;
+	(if relayoutInProgress then return labelCommands[savedFrequencyIndex] else begin
+			initialString := inherited:TextSetup();
+			savedFrequencyIndex := currentLabelIndex;
+			initialString
+		end)
+end
+@@end

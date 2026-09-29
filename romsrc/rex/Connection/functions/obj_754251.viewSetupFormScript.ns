@@ -1,0 +1,7 @@
+@@ 0x754369
+func() begin
+	local l1;
+	l1 := (StrFontWidth(self.text, self.viewFont) + kMatteSize);
+	(self.viewBounds := SetBounds((kMinimumDistance - l1), self.viewBounds.top, kMinimumDistance, self.viewBounds.bottom))
+end
+@@end

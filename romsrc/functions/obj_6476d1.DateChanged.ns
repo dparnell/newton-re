@@ -1,0 +1,7 @@
+@@ 0x443ce5
+func(a1) begin
+	self:?NewTime(a1);
+	RefreshViews();
+	yearPicker:SetYear(monthView.year)
+end
+@@end

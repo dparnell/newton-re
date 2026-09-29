@@ -1,0 +1,5 @@
+@@ 0x599eb5
+func() begin
+	(self.viewValue := (fields.receipt := GetUserConfig('mailReceipt)))
+end
+@@end

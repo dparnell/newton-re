@@ -1,0 +1,19 @@
+@@ 0x5599a5
+func(a1) begin
+	local entry;
+	local l1, l2;
+	if (not (entry := PackageEntryFromThingy(a1))) then begin
+			return nil
+		end;
+	l1 := EntryStore(entry);
+	l1:AtomicAction(func() begin
+		SetAdd(entry._tagList, '_frozen, true);
+		EntryChange(entry);
+		UnsafeXmitSoupChangeNow("Packages", '|Mr.Freeze|, 'entryChanged, entry)
+	end);
+	if IsPackageActive((l2 := entry.pkgRef)) then begin
+			DeActivatePackage(l2)
+		end;
+	true
+end
+@@end

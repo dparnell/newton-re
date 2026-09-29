@@ -1,0 +1,19 @@
+@@ 0x42c305
+func() begin
+	local l1, l2;
+	if (not titleHeight) then begin
+			titleHeight := FontHeight(viewFont)
+		end;
+	l1 := (self:Parent():LocalBox().right - 20);
+	titleWidth := (StrFontWidth(title, viewFont) + 1);
+	l2 := (if titleicon then ((titleicon.bounds.right - titleicon.bounds.left) + 3) else 0);
+	if ((titleWidth + l2) > l1) then begin
+			titleWidth := (l1 - l2);
+			self.text := StyledStrTruncate(Clone(title), titleWidth, viewFont)
+		end else begin
+			self.text := title
+		end;
+	titleWidth := (titleWidth + l2);
+	(self.viewBounds := SetBounds(0, -3, titleWidth, (titleHeight + 2)))
+end
+@@end

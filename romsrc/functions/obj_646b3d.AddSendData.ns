@@ -1,0 +1,8 @@
+@@ 0x49944d
+func(a1) begin
+	if IsReadOnly(fOutgoingData) then begin
+			fOutgoingData := Clone(fOutgoingData)
+		end;
+	(if a1 then AddArraySlot(fOutgoingData, a1))
+end
+@@end

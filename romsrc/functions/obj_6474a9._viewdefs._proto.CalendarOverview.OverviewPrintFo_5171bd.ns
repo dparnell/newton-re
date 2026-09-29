@@ -1,0 +1,57 @@
+@@ 0x5171bd
+func() begin
+	drawShapes := [Array: ];
+	l4 := nil;
+	l5 := 0;
+	l6 := GetRoot().calendar:GetToDo();
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	local l6;
+	(for l7 := cursorIndex to (cursorLength - 1) do begin
+			local l10, l11, l12, l13, l14;
+			if (l10 := cursor[l7]).entryAlias then begin
+					if (l11 := ResolveEntryAlias(l10.entryAlias)) then begin
+							if l11.repeatType then begin
+									if (not (l1 := self:FindException(l10.instanceTime, l11))) then begin
+											(l1 := repeatingInstance).viewStationery := l11.viewStationery;
+											l1.mtgStartDate := l10.instanceTime;
+											l1.repeatTemplate := l11
+										end
+								end else begin
+									l1 := l11
+								end;
+							if (l1.viewStationery = 'cribNote) then begin
+									l2 := self:GetSingleEventShape(l1, l5, pageWidth)
+								end else begin
+									l2 := self:GetSingleMeetingShape(l1, l5, pageWidth)
+								end
+						end
+				end else begin
+					l2 := (l12 := l6:GetTaskShapes(nil, l10.topic, l5, pageWidth, bodyFont)).shapes
+				end;
+			l13 := (ShapeBounds(l2).bottom + 2);
+			l14 := ((l14 := l10.instanceTime) - (l14 mod 1440));
+			if (l4 <> l14) then begin
+					l3 := self:GetDateHeader((l4 := l14), l5, pageWidth);
+					OffsetShape(l2, 0, headerHt);
+					l5 := (l13 + headerHt)
+				end else begin
+					l3 := nil;
+					l5 := l13
+				end;
+			if (l13 <= pageHeight) then begin
+					if l3 then begin
+							ArrayInsert(drawShapes, l3, 0)
+						end;
+					ArrayInsert(drawShapes, l2, 0);
+					indexFirstShapeThatDidntFit := nil
+				end else begin
+					indexFirstShapeThatDidntFit := l7;
+					break
+				end
+		end)
+end
+@@end

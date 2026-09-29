@@ -1,0 +1,25 @@
+@@ 0x462f85
+func(a1, a2, a3) begin
+	local l1, l2, l3, l4;
+	l1 := vars.LastExData;
+	vars.LastExData := nil;
+	(if self:SpecialOutOfMemoryAlert(a2) then return nil else begin
+			if (if IsFrame(l1) then l1._UserMessage) then begin
+					l2 := l1._UserTitle;
+					l3 := l1._UserMessage
+				end else begin
+					if (if (if (ClassOf(l4) = 'int) then (l4 = -8103)) then (a2 = -8003)) then begin
+							l2 := self:TranslateToOverview(a2);
+							l3 := self:TranslateError(-8003)
+						end else begin
+							l2 := self:TranslateToOverview(a2);
+							if (ClassOf((l4 := actionDescription)) = 'int) then begin
+									l4 := self:TranslateError(l4)
+								end;
+							l3 := ParamStr("^0\n(^1)", [Array: l4, self:TranslateError(a2)])
+						end
+				end;
+			self:Notify(a1, l2, l3)
+		end)
+end
+@@end

@@ -1,0 +1,32 @@
+@@ 0x472e6d
+func(a1) begin
+	local l1;
+	(if (not closingDown) then begin
+			if (not a1) then begin
+					a1 := -1
+				end;
+			closingDown := true;
+			if connected then begin
+					try begin
+							self:Abort(a1)
+						end onexception |evt.ex| do begin
+							l1 := CurrentException().error;
+							if (if (if (a1 = 0) then l1) then (l1 <> -28009)) then begin
+									a1 := l1
+								end
+						end
+				end;
+			if (if (callWhenDone exists) then callWhenDone) then begin
+					call callWhenDone with (a1)
+				end;
+			if (if (secretDoneCallback exists) then secretDoneCallback) then begin
+					call secretDoneCallback with (self)
+				end;
+			UnRegPowerOff('Connection);
+			UnRegPowerOn('Connection);
+			connected := nil;
+			idlingViews := nil;
+			(idleUseCount := 0)
+		end)
+end
+@@end

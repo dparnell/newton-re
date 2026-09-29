@@ -1,0 +1,10 @@
+@@ 0x733995
+func() begin
+	inherited:pickerSetup();
+	if (not noneIsChosen) then begin
+			AddArraySlot(labelCommands, 'pickseparator);
+			AddArraySlot(labelCommands, {item: "None", isNoneItem: true})
+		end;
+	true
+end
+@@end

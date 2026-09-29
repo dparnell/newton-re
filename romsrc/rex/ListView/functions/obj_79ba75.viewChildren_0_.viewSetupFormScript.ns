@@ -1,0 +1,5 @@
+@@ 0x79ba4d names
+func() begin
+	(text := displayLine.labelText)
+end
+@@end

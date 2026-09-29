@@ -1,0 +1,8 @@
+@@ 0x5616b1
+func() begin
+	self.viewBounds := RelBounds(0, (displayParams.appAreaTop + 8), min(304, (displayParams.appAreaWidth - 16)), (displayParams.appAreaHeight - 16));
+	self.title := ParamStr("Find \u201C\u^0\u201D\u", [Array: StrTruncate(Clone(titleText), (viewBounds.right - 60))]);
+	globalFoldersOnly := (Length(findAllResults) <> 1);
+	inherited:?viewSetupFormScript()
+end
+@@end

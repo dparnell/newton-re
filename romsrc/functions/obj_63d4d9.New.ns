@@ -1,0 +1,16 @@
+@@ 0x44f7c9
+func(a1, a2) begin
+	l1 := {_proto: self, curses: [Array: ]};
+	if a2 then begin
+			l1.comparator := a2
+		end;
+	if a1 then begin
+			local l1;
+			(foreach l2 in a1 do begin
+					l1:addCursor(l2, nil)
+				end)
+		end;
+	l1:Reset();
+	l1
+end
+@@end

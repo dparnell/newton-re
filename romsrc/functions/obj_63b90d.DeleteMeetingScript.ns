@@ -1,0 +1,9 @@
+@@ 0x504215
+func(a1, a2) begin
+	(if (not a1) then self:Notify(3, title, "There is nothing to delete.") else begin
+			saveWhat := a1;
+			saveWhatView := a2;
+			(if a1._cursor then self:Confirm(title, "Delete all selected items? (Can\u2019\ut Undo)", self, 'DeleteActionConfirm) else self:DeleteActionHelper())
+		end)
+end
+@@end

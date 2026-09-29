@@ -1,0 +1,9 @@
+@@ 0x49768d
+func(a1, a2, a3, a4) begin
+	local l1;
+	(l1 := a1.stateMachine).fIncomingData := a2;
+	l1.fOptionsIn := a4;
+	l1.fTerminatorIn := a3;
+	l1:AsyncWaitComplete(nil)
+end
+@@end

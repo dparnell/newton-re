@@ -1,0 +1,11 @@
+@@ 0x75a951
+func(a1, a2) begin
+	local l1, l2;
+	if (l1 := BFind(a1, "Other information", '|str<|, '[pathExpr: name])) then begin
+			l2 := a1[l1];
+			ArrayRemoveCount(a1, l1, 1);
+			AddArraySlot(a1, l2)
+		end;
+	(if self:AnyPackages(a2) then ArrayInsert(a1, '{name: "Packages", packages: true, soups: [Array: "Packages"], class: packageFrame}, 0))
+end
+@@end

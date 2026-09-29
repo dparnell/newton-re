@@ -1,0 +1,5 @@
+@@ 0x454b3d
+func() begin
+	listBase:HitNewbutton()
+end
+@@end

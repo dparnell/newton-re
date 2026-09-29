@@ -1,0 +1,7 @@
+@@ 0x4d2525
+func(a1) begin
+	local l1;
+	(l1 := inherited:NewItem(a1)).fromRef := self:SendableFromRef();
+	l1
+end
+@@end

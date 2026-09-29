@@ -1,0 +1,10 @@
+@@ 0x595ee5
+func(a1, a2) begin
+	local l1;
+	Busy := true;
+	l1 := self:LoginToHost(nil, nil, "New User  ", "5555555555", a1, a2);
+	transport:?SetStatus('idle, nil);
+	transport:?CloseStatusDialog(nil);
+	l1
+end
+@@end

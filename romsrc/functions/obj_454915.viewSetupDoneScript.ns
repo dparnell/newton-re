@@ -1,0 +1,7 @@
+@@ 0x454809
+func() begin
+	inherited:?viewSetupDoneScript();
+	self:SetArrow('up, (if canScrollUp then 'more else 'normal));
+	self:SetArrow('down, (if canScrollDown then 'more else 'normal))
+end
+@@end

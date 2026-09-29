@@ -1,0 +1,25 @@
+@@ 0x4d8111
+func(a1, a2) begin
+	local l1, l2, l3, l4, l5, l6;
+	if (l2 := LSearch(AuxButtonRegistry, a1, 0, '|=|, 'appSymbol)) then begin
+			ArrayRemoveCount(AuxButtonRegistry, l2, 1)
+		end;
+	if a2.destApp then begin
+			l1 := {appSymbol: EnsureInternal(a1), butt: a2, destApp: EnsureInternal(a2.destApp)};
+			if (not (l3 := LSearch(AuxButtonRegistry, nil, 0, '|=|, 'destApp))) then begin
+					l3 := 0
+				end;
+			ArrayInsert(AuxButtonRegistry, l1, l3);
+			if (l4 := GetRoot().(a2.destApp)) then begin
+					l4:?AddAuxButton(l1)
+				end
+		end else begin
+			l1 := {appSymbol: EnsureInternal(a1), butt: a2};
+			AddArraySlot(AuxButtonRegistry, l1);
+			if (l6 := (if (l5 := GetUserConfig('blessedapp)) then GetRoot().(l5))) then begin
+					l6:?AddAuxButton(l1)
+				end
+		end;
+	l1
+end
+@@end

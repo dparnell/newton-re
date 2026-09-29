@@ -1,0 +1,6 @@
+@@ 0x4d3f91
+func() begin
+	labelCommands := GetLocale().commonDialingPrefixes;
+	inherited:viewSetupChildrenScript()
+end
+@@end

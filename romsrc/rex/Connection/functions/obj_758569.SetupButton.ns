@@ -1,0 +1,11 @@
+@@ 0x759a55
+func() begin
+	local l1;
+	(if (l1 := desktopPrefs.(buttonID)) then begin
+			if l1.icon then begin
+					icon := l1.icon
+				end;
+			(if l1.buttonClickScript then (buttonClickScript := l1.buttonClickScript))
+		end)
+end
+@@end

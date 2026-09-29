@@ -1,0 +1,17 @@
+@@ 0x79576d names
+func(aSoupName, aAppSymbol, aChangeType, aChangeData) begin
+	local cal, theSlip;
+	(if ((((aChangeType = 'soupLeaves) or (aChangeType = 'soupEnters)) or (aChangeType = 'soupDeleted)) or (aChangeType = 'whatThe)) then begin
+			if (if (theSlip := (cal := GetRoot().calendar).todoSlip) then Visible(theSlip)) then begin
+					if (if IsSoupEntry(theSlip.target) then (not EntryValid(theSlip.target))) then begin
+							theSlip:CloseSlip()
+						end
+				end;
+			if (aChangeType = 'soupEnters) then begin
+					SetUserConfig(EnsureInternal('lastRollover), 1);
+					FlushUserConfig()
+				end;
+			(if Visible(cal) then cal:RedisplayScript())
+		end)
+end
+@@end

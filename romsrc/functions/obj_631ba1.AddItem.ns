@@ -1,0 +1,55 @@
+@@ 0x4ed9ed
+func(a1, a2, a3) begin
+	if (a2 = nil) then begin
+			return nil
+		end;
+	(if a2.saveAsLog then begin
+			if (not viewCObject) then begin
+					self:Open()
+				end;
+			if (a2.labels <> labelsFilter) then begin
+					l1 := labelsFilter;
+					labelsFilter := a2.labels;
+					local l1;
+					(foreach l2, l3 in allSoups do begin
+							local l5, l6, l7;
+							l3.soupFilter := labelsFilter;
+							l3:SetupCursor()
+						end);
+					layout:FilterChanged();
+					if filterBar then begin
+							filterBar:UpdateFilter(l1, labelsFilter)
+						end;
+					layout.dataCursor:Goto(a2);
+					layout:DoRetarget()
+				end;
+			if (not IsSoupEntry(a2)) then begin
+					layout:NewEntry(a2, true, nil)
+				end;
+			if (if (a2.state = 'log) then (a3 = 'complete)) then begin
+					l5 := (if (if (a2.startTime > 0) then (a2.endTime > 0)) then self:TimeSpec((a2.endTime - a2.startTime)));
+					if a2.hangupreason then begin
+							l6 := '{lineBusy: "Line Busy", noAnswer: "No Answer", leftMessage: "Left Message", followup: "Followup Needed", completed: "Call Completed"}.(a2.hangupreason)
+						end;
+					if (not l6) then begin
+							l6 := "Call Cancelled"
+						end;
+					self:addText(ParamStr("^0 ^?1(Duration ^1)||", [Array: l6, l5, l5]), a2)
+				end else begin
+					l7 := GetItemTransport(a2);
+					if (if (a2.state = 'ready) then (a3 = 'submit)) then begin
+							self:addText(ParamStr("^1 called ^0", [Array: MakeDisplayPhone(a2.phoneNumber), DateNTime(nil)]), a2);
+							if self:StartSend(l7, (if a2.Connect then 'item else 'submit), a2, nil) then begin
+									self:ActivateCall(l7, a2)
+								end
+						end else begin
+							if (if (a2.state = 'Received) then (a3 = 'Commit)) then begin
+									self:addText(ParamStr("^0 received call", [Array: DateNTime(nil)]), a2);
+									self:ActivateCall(l7, a2)
+								end
+						end
+				end;
+			AddProcrastinatedCall('_EntryChange, functions.EntryChange, [Array: a2], 0)
+		end else (if (if (a2.state = 'ready) then (a3 = 'submit)) then self:StartSend(GetItemTransport(a2), (if a2.Connect then 'item else 'submit), a2, nil)))
+end
+@@end

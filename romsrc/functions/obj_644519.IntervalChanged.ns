@@ -1,0 +1,17 @@
+@@ 0x444d45
+func() begin
+	startTime := start.selectedDates[0];
+	if spread then begin
+			stopTime := (stop.selectedDates[0] := (startTime + spread));
+			stop:Refresh()
+		end else begin
+			if ((stopTime := stop.selectedDates[0]) < startTime) then begin
+					stopTime := (stop.selectedDates[0] := startTime);
+					stop:Refresh()
+				end;
+			Ongoing := nil
+		end;
+	context:?NewTime(startTime, (if Ongoing then 536870911 else stopTime));
+	base:Dirty()
+end
+@@end

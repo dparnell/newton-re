@@ -1,0 +1,29 @@
+@@ 0x513251
+func(a1, a2, a3) begin
+	l1 := StrLen(a1);
+	StyledStrTruncate(a1, a2, a3);
+	if ((l2 := StrLen(a1)) < l1) then begin
+			local l1;
+			local l2;
+			local l3;
+			l3 := (for l4 := (l2 - 1) to 0 by -1 do begin
+					if IsWhiteSpace(a1[l4]) then begin
+							local l7;
+							l7 := (for l8 := (l4 - 1) to 0 by -1 do begin
+									if (not IsWhiteSpace(a1[l8])) then begin
+											break (l8 + 1)
+										end
+								end);
+							break (if l7 then l7 else 0)
+						end
+				end);
+			if l3 then begin
+					l2 := l3
+				end else begin
+					l2 := (l2 - 1)
+				end;
+			StrMunger(a1, l2, nil, nil, 0, 0)
+		end;
+	a1
+end
+@@end

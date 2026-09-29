@@ -1,0 +1,11 @@
+@@ 0x466a31
+func(a1, a2) begin
+	l1 := (StrLen(a1) - 1);
+	local l1;
+	(for l2 := 0 to l1 do begin
+			if (a1[l2] = a2) then begin
+					break l2
+				end
+		end)
+end
+@@end

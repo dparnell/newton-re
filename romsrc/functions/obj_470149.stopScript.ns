@@ -1,0 +1,15 @@
+@@ 0x470109
+func() begin
+	local l1;
+	l1 := 0;
+	if nbpCookie then begin
+			theTable:SetupIdle(0);
+			l1 := NBPStop(nbpCookie);
+			nbpCookie := nil
+		end;
+	if (l1 <> 0) then begin
+			self:showError(l1)
+		end;
+	return l1
+end
+@@end

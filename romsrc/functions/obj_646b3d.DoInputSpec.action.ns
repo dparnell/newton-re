@@ -1,0 +1,7 @@
+@@ 0x499615
+func() begin
+	CallbackSpec.rcvOptions := fOptionsOut;
+	fEndpoint:SetInputSpec(InputSpec);
+	'waitAsync
+end
+@@end

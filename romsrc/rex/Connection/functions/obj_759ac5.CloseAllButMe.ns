@@ -1,0 +1,10 @@
+@@ 0x75e1f5
+func(a1) begin
+	local l1;
+	l1 := (if (if self.whichConnection then whichConnection.whichConnectionOpen) then [Array: a1, whichConnection] else [Array: a1]);
+	if GetRoot().Connection.viewCObject then begin
+			AddArraySlot(l1, GetRoot().Connection)
+		end;
+	(self.savedChildren := self:|KillRootChildren!|(l1))
+end
+@@end

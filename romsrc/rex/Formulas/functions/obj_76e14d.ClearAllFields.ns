@@ -1,0 +1,10 @@
+@@ 0x76e62d
+func() begin
+	solvingFormula := true;
+	(foreach l1 in FSViews do begin
+			l1:SetNumericValue(nil)
+		end);
+	solvingFormula := nil;
+	(solvedFor := nil)
+end
+@@end

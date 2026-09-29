@@ -1,0 +1,9 @@
+@@ 0x47b10d
+func(a1) begin
+	(if (if info then info.logConfig) then inherited:Popit(a1) else (if info then begin
+				self:BringUpFiling(info.logText);
+				self:pickCancelledScript();
+				true
+			end))
+end
+@@end

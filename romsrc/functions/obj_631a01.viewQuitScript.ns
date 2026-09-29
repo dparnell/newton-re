@@ -1,0 +1,8 @@
+@@ 0x4d3d11
+func() begin
+	invoker := nil;
+	inNumber := nil;
+	inCountry := nil;
+	(pix := nil)
+end
+@@end

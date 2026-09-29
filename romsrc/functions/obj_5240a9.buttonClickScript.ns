@@ -1,0 +1,7 @@
+@@ 0x524029
+func() begin
+	Outline:Show();
+	self:Hide();
+	self:hilite(nil)
+end
+@@end

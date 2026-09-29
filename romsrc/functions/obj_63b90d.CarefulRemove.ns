@@ -1,0 +1,10 @@
+@@ 0x4f7b19
+func(a1, a2) begin
+	(try begin
+			EntryRemoveFromSoupXmit(a1, a2)
+		end onexception |evt.ex.fr.store| do begin
+			AddProcrastinatedSend('calendar, calendar, 'redisplayScript, [Array: ], 100);
+			self:NotifyStoreError()
+		end)
+end
+@@end

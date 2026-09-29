@@ -1,0 +1,52 @@
+@@ 0x47f985
+func(a1) begin
+	local l1, l2, l3, l4;
+	l1 := nil;
+	(loop begin
+			l2 := nil;
+			if a1.item then begin
+					l1 := a1.item;
+					a1.item := nil
+				end else begin
+					if a1.cursor then begin
+							if (l1 := a1.cursor:entry()) then begin
+									a1.cursor:Next()
+								end
+						end
+				end;
+			if (if (if (not l1) then a1.requestQueue) then (Length(a1.requestQueue) > 0)) then begin
+					l3 := a1.requestQueue[0];
+					a1.cause := l3.cause;
+					if (if ((l1 := l3.item) = nil) then l3.cursor) then begin
+							a1.cursor := l3.cursor;
+							if (l1 := a1.cursor:entry()) then begin
+									a1.cursor:Next()
+								end
+						end;
+					SetRemove(a1.requestQueue, l3);
+					l2 := (Length(a1.requestQueue) > 0)
+				end;
+			if (if (if l1 then IsFrame(l1)) then l1.currentFormat) then begin
+					l2 := true;
+					if (if (l4 := GetCurrentFormat(l1)) then l4.ResolveItem) then begin
+							l1 := l4:ResolveItem(l1)
+						end else begin
+							if (if l1.needsResolve then l1.body) then begin
+									self:Notify(3, "Routing", "This item cannot be sent because the proper format cannot be found. Please make sure both the format and the original application are installed before sending.");
+									l1 := nil
+								end
+						end
+				end;
+			if IsFrame(l1) then begin
+					break
+				end else begin
+					if l1 then begin
+							l2 := true
+						end
+				end;
+			(if (not l2) then break)
+		end);
+	currentItem := l1;
+	l1
+end
+@@end

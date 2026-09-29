@@ -1,0 +1,5 @@
+@@ 0x5b8a09
+func(a1) begin
+	self:MakeCursor(a1.prefix, a1.pin, a1.loc)
+end
+@@end

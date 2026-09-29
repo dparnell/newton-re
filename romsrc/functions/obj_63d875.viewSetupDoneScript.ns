@@ -1,0 +1,11 @@
+@@ 0x5a5461
+func() begin
+	pages := [Array: register1, register2, register3, register4];
+	index := 0;
+	register2:Hide();
+	register3:Hide();
+	register4:Hide();
+	register5:Hide();
+	backBtn:Hide()
+end
+@@end

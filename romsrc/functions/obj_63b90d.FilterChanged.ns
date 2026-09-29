@@ -1,0 +1,52 @@
+@@ 0x4f7cc9
+func(a1, a2, a3, a4) begin
+	local l1, l2, l3;
+	if (l1 := ((a3 = 'SoupLeaves) or (a3 = 'SoupEnters))) then begin
+			BusyBoxControl(1)
+		end;
+	l2 := (StrEqual(a1, @23) or StrEqual(a1, @239));
+	if Visible(DatesOverviewForm) then begin
+			if l1 then begin
+					DatesOverviewForm:Retarget()
+				end else begin
+					if (a3 = 'entryMoved) then begin
+							DatesOverviewForm:FilterChanged()
+						end else begin
+							DatesOverviewForm:RedoChildren()
+						end
+				end
+		end else begin
+			if (if Visible(scheduleView) then (l1 or l2)) then begin
+					scheduleView:RedoChildren()
+				end else begin
+					if Visible(AgendaView) then begin
+							AgendaView.currentItem := 0;
+							AgendaView.viewOriginY := 0;
+							AgendaView:RedoChildren()
+						end else begin
+							if Visible(MonthOverView) then begin
+									MonthOverView:SyncChildren()
+								end
+						end
+				end
+		end;
+	if (if Visible(cribView) then (l1 or (not l2))) then begin
+			cribView:RedoChildren()
+		end;
+	if (if (a3 = 'SoupLeaves) then Visible(MeetingNotes)) then begin
+			if (if (not IsSoupEntry((l3 := selectedMeeting))) then l3.repeatTemplate) then begin
+					l3 := l3.repeatTemplate
+				end;
+			if (not EntryValid(l3)) then begin
+					MeetingNotes.dirtyFlag := nil;
+					MeetingNotes:Close();
+					selectedMeeting := nil
+				end
+		end;
+	if Visible(upDownScroller) then begin
+			mainDisplay:?calculateScrollRects();
+			upDownScroller:AdjustArrows()
+		end;
+	self:initializeAlarms()
+end
+@@end

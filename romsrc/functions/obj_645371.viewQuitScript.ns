@@ -1,0 +1,11 @@
+@@ 0x4aee21
+func() begin
+	checkAllPrimed := nil;
+	(if newtAppBase.statusBarSlot then begin
+			if self.menuLeftButtons then begin
+					RemoveSlot(newtAppBase.(statusBarSlot), 'menuLeftButtons)
+				end;
+			(if self.menuRightButtons then RemoveSlot(newtAppBase.(statusBarSlot), 'menuRightButtons))
+		end)
+end
+@@end

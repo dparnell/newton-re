@@ -1,0 +1,5 @@
+@@ 0x599a7d
+func() begin
+	(if (fields.title = 'multiple) then "Multiple Items" else fields.title)
+end
+@@end

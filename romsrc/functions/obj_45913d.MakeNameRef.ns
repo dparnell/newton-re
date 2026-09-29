@@ -1,0 +1,18 @@
+@@ 0x4588f5
+func(a1, a2) begin
+	local l1, l2, l3, l4;
+	l1 := inherited:MakeNameRef(a1, a2);
+	l2 := EntryFromObj(a1);
+	l1.phone := (if IsInstance(l2, 'group) then l2.members else (if (if IsFrame(a1) then a1.phone) then a1.phone else (if l2 then (if (if (l3 := GetRoot().cardfile:bcPhoneNumber(l2, preferredRouting)) then (Length(l3) > 0)) then begin
+						SortByClass(l3, preferredRouting, nil);
+						l3[0]
+					end))));
+	if (if l2 then l2.country) then begin
+			l4 := l2.country
+		end else begin
+			l4 := (if IsFrame(a1) then a1.country)
+		end;
+	l1.country := l4;
+	l1
+end
+@@end

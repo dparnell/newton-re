@@ -1,0 +1,6 @@
+@@ 0x4a6855
+func() begin
+	basic:Close();
+	credits:Open()
+end
+@@end

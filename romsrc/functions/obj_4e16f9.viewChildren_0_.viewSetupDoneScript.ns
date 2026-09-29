@@ -1,0 +1,5 @@
+@@ 0x4deedd
+func() begin
+	(if (target.kind = 'Add) then SetKeyView(self.entryLine, 0))
+end
+@@end

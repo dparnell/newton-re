@@ -1,0 +1,16 @@
+@@ 0x4fcd3d
+func(a1) begin
+	local l1, l2, l3;
+	(if (a1.viewStationery <> 'cribNote) then (if (if ((l2 := ((l1 := (a1.mtgStartDate mod 1440)) - startTime)) >= 0) then (l2 < (ViewDuration - 30))) then nil else begin
+				l1 := ((l1 div 60) * 60);
+				l1 := max(0, (l1 - 120));
+				l3 := ((ViewDuration div 60) * 60);
+				stopTime := ((startTime := min(l1, (1440 - l3))) + ViewDuration);
+				DayTable:calculateScrollRects();
+				upDownScroller:AdjustArrows();
+				DayTable:SetOrigin(0, ((startTime div 30) * 16));
+				DayTable:SyncView();
+				DayTable:Dirty()
+			end))
+end
+@@end

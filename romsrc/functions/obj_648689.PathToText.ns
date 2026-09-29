@@ -1,0 +1,5 @@
+@@ 0x4b982d
+func() begin
+	(if IsString(target.(path)) then Clone(target.(path)) else TimeStr(target.(path), format))
+end
+@@end

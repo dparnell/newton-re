@@ -1,0 +1,5 @@
+@@ 0x521be5
+func(a1) begin
+	(fields.body.fromPage := a1)
+end
+@@end

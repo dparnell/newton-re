@@ -1,0 +1,5 @@
+@@ 0x47ef45
+func(a1) begin
+	(if self:ValidItem(a1) then (_cachedSettings.curItem := a1))
+end
+@@end

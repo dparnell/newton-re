@@ -1,0 +1,5 @@
+@@ 0x4bd8d1
+func() begin
+	(viewValue := (if target then (target.(path) = assert)))
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x7346dd
+func(a1) begin
+	target.(path) := labelCommands[a1].baudRate;
+	self:StartFlush()
+end
+@@end

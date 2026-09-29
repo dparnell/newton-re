@@ -1,0 +1,836 @@
+# the objects' area: 0x774070, 0x11060 bytes; the byte between objects; the objects' alignment
+area	774070	11060	bf	8
+774070	obj_774071	41
+774080	obj_774071[0]	43	map=map_774099
+774098	map_774099	41
+7740b0	'book	40
+7740c8	'help	40
+7740e0	obj_774071[0].book	43	map=map_774119
+774118	map_774119	41
+774158	'version	40
+774170	'isbn	40
+774188	'title	40
+7741a0	'author	40
+7741b8	'publicationDate	40
+7741d8	'contents	40
+7741f8	'styles	40
+774210	'browsers	40
+774230	'templates	40
+774250	'rendering	40
+774270	obj_774071[0].book.isbn	40
+774298	'|string|	40
+7742b0	obj_774071[0].book.title	40
+7742c8	obj_774071[0].book.author	40
+7742f0	obj_774071[0].book.contents	41
+7745a0	'|Array|	40
+7745b8	obj_7745b9	43	map=map_7745d1
+7745d0	map_7745d1	41
+7745f0	'data	40
+774608	'layout	40
+774620	'name	40
+774638	obj_7745b9.data	40
+774668	obj_7745b9.name	40
+774688	obj_774689	43	map=map_7746a1
+7746a0	map_7746a1	41
+7746c0	'viewFont	40
+7746e0	obj_774689.data	40
+774730	obj_774731	43	map=map_774749
+774748	map_774749	41
+774768	'family	40
+774780	'face	40
+774798	'size	40
+7747b0	'espy	40
+7747c8	obj_7747c9	43	map=map_7747e1
+7747e0	map_7747e1	41
+7747f8	obj_7747c9.data	40
+7748a0	obj_7748a1	43	map=map_774749
+7748b8	obj_7748b9	43	map=map_7748c9
+7748c8	map_7748c9	41
+7748e0	obj_7748b9.data	40
+774ae8	'picture	40
+774b00	obj_774b01	43	map=map_7747e1
+774b18	obj_774b01.data	40
+774cf8	obj_774cf9	43	map=map_7746a1
+774d10	obj_774cf9.data	40
+774d48	obj_774d49	43	map=map_7747e1
+774d60	obj_774d49.data	40
+775048	obj_775049	43	map=map_7746a1
+775060	obj_775049.data	40
+7750b8	obj_7750b9	43	map=map_7747e1
+7750d0	obj_7750b9.data	40
+775398	obj_775399	43	map=map_7746a1
+7753b0	obj_775399.data	40
+775408	obj_775409	43	map=map_7747e1
+775420	obj_775409.data	40
+775768	obj_775769	43	map=map_7746a1
+775780	obj_775769.data	40
+7757b0	obj_7757b1	43	map=map_7747e1
+7757c8	obj_7757b1.data	40
+775ad0	obj_775ad1	43	map=map_7746a1
+775ae8	obj_775ad1.data	40
+775b30	obj_775b31	43	map=map_7747e1
+775b48	obj_775b31.data	40
+775ce0	obj_775ce1	43	map=map_7746a1
+775cf8	obj_775ce1.data	40
+775d30	obj_775d31	43	map=map_7747e1
+775d48	obj_775d31.data	40
+776018	obj_776019	43	map=map_7746a1
+776030	obj_776019.data	40
+776070	obj_776071	43	map=map_7747e1
+776088	obj_776071.data	40
+7763a0	obj_7763a1	43	map=map_7745d1
+7763b8	obj_7763a1.data	40
+7763e8	obj_7763a1.name	40
+776400	obj_776401	43	map=map_7746a1
+776418	obj_776401.data	40
+776450	obj_776451	43	map=map_7747e1
+776468	obj_776451.data	40
+776510	obj_776511	43	map=map_7748c9
+776520	obj_776511.data	40
+7765c0	obj_7765c1	43	map=map_7747e1
+7765d8	obj_7765c1.data	40
+776848	obj_776849	43	map=map_7746a1
+776860	obj_776849.data	40
+7768b0	obj_7768b1	43	map=map_7747e1
+7768c8	obj_7768b1.data	40
+776a40	obj_776a41	43	map=map_7748c9
+776a50	obj_776a41.data	40
+776b20	obj_776b21	43	map=map_7747e1
+776b38	obj_776b21.data	40
+776c60	obj_776c61	43	map=map_7746a1
+776c78	obj_776c61.data	40
+776cd0	obj_776cd1	43	map=map_7747e1
+776ce8	obj_776cd1.data	40
+776e90	obj_776e91	43	map=map_7748c9
+776ea0	obj_776e91.data	40
+776f70	obj_776f71	43	map=map_7747e1
+776f88	obj_776f71.data	40
+776fb8	obj_776fb9	43	map=map_7746a1
+776fd0	obj_776fb9.data	40
+777010	obj_777011	43	map=map_7747e1
+777028	obj_777011.data	40
+7772a0	obj_7772a1	43	map=map_7746a1
+7772b8	obj_7772a1.data	40
+777300	obj_777301	43	map=map_7747e1
+777318	obj_777301.data	40
+7774e8	obj_7774e9	43	map=map_7748c9
+7774f8	obj_7774e9.data	40
+7775c8	obj_7775c9	43	map=map_7747e1
+7775e0	obj_7775c9.data	40
+7776a0	obj_7776a1	43	map=map_7746a1
+7776b8	obj_7776a1.data	40
+7776f0	obj_7776f1	43	map=map_7747e1
+777708	obj_7776f1.data	40
+7778d0	obj_7778d1	43	map=map_7748c9
+7778e0	obj_7778d1.data	40
+7779b0	obj_7779b1	43	map=map_7747e1
+7779c8	obj_7779b1.data	40
+777a90	obj_777a91	43	map=map_7746a1
+777aa8	obj_777a91.data	40
+777af0	obj_777af1	43	map=map_7747e1
+777b08	obj_777af1.data	40
+777e38	obj_777e39	43	map=map_7746a1
+777e50	obj_777e39.data	40
+777e88	obj_777e89	43	map=map_7747e1
+777ea0	obj_777e89.data	40
+7781e8	obj_7781e9	43	map=map_7746a1
+778200	obj_7781e9.data	40
+778250	obj_778251	43	map=map_7747e1
+778268	obj_778251.data	40
+778580	obj_778581	43	map=map_7746a1
+778598	obj_778581.data	40
+7785c0	obj_7785c1	43	map=map_7747e1
+7785d8	obj_7785c1.data	40
+778830	obj_778831	43	map=map_7746a1
+778848	obj_778831.data	40
+778890	obj_778891	43	map=map_7747e1
+7788a8	obj_778891.data	40
+778bf0	obj_778bf1	43	map=map_7746a1
+778c08	obj_778bf1.data	40
+778c30	obj_778c31	43	map=map_7747e1
+778c48	obj_778c31.data	40
+778d68	obj_778d69	43	map=map_7745d1
+778d80	obj_778d69.data	40
+778db0	obj_778d69.name	40
+778dd0	obj_778dd1	43	map=map_7746a1
+778de8	obj_778dd1.data	40
+778e18	obj_778e19	43	map=map_7747e1
+778e30	obj_778e19.data	40
+778fd0	obj_778fd1	43	map=map_7746a1
+778fe8	obj_778fd1.data	40
+779018	obj_779019	43	map=map_7747e1
+779030	obj_779019.data	40
+779110	obj_779111	43	map=map_7746a1
+779128	obj_779111.data	40
+779158	obj_779159	43	map=map_7747e1
+779170	obj_779159.data	40
+7792b0	obj_7792b1	43	map=map_7746a1
+7792c8	obj_7792b1.data	40
+779310	obj_779311	43	map=map_7747e1
+779328	obj_779311.data	40
+779598	obj_779599	43	map=map_7746a1
+7795b0	obj_779599.data	40
+779608	obj_779609	43	map=map_7747e1
+779620	obj_779609.data	40
+779850	obj_779851	43	map=map_7745d1
+779868	obj_779851.data	40
+779898	obj_779851.name	40
+7798b0	obj_7798b1	43	map=map_7746a1
+7798c8	obj_7798b1.data	40
+7798f8	obj_7798f9	43	map=map_7747e1
+779910	obj_7798f9.data	40
+779c88	obj_779c89	43	map=map_7746a1
+779ca0	obj_779c89.data	40
+779ce0	obj_779ce1	43	map=map_7747e1
+779cf8	obj_779ce1.data	40
+779f60	obj_779f61	43	map=map_7746a1
+779f78	obj_779f61.data	40
+779fc0	obj_779fc1	43	map=map_7747e1
+779fd8	obj_779fc1.data	40
+77a1a0	obj_77a1a1	43	map=map_7746a1
+77a1b8	obj_77a1a1.data	40
+77a200	obj_77a201	43	map=map_7747e1
+77a218	obj_77a201.data	40
+77a430	obj_77a431	43	map=map_7746a1
+77a448	obj_77a431.data	40
+77a490	obj_77a491	43	map=map_7747e1
+77a4a8	obj_77a491.data	40
+77a558	obj_77a559	43	map=map_7746a1
+77a570	obj_77a559.data	40
+77a598	obj_77a599	43	map=map_7747e1
+77a5b0	obj_77a599.data	40
+77a768	obj_77a769	43	map=map_7745d1
+77a780	obj_77a769.data	40
+77a7c0	obj_77a769.name	40
+77a7e0	obj_77a7e1	43	map=map_7746a1
+77a7f8	obj_77a7e1.data	40
+77a838	obj_77a839	43	map=map_7747e1
+77a850	obj_77a839.data	40
+77ab68	obj_77ab69	43	map=map_7746a1
+77ab80	obj_77ab69.data	40
+77abb0	obj_77abb1	43	map=map_7747e1
+77abc8	obj_77abb1.data	40
+77aee0	obj_77aee1	43	map=map_7746a1
+77aef8	obj_77aee1.data	40
+77af40	obj_77af41	43	map=map_7747e1
+77af58	obj_77af41.data	40
+77b0f0	obj_77b0f1	43	map=map_7746a1
+77b108	obj_77b0f1.data	40
+77b138	obj_77b139	43	map=map_7747e1
+77b150	obj_77b139.data	40
+77b400	obj_77b401	43	map=map_7746a1
+77b418	obj_77b401.data	40
+77b458	obj_77b459	43	map=map_7747e1
+77b470	obj_77b459.data	40
+77b7c0	obj_77b7c1	43	map=map_7746a1
+77b7d8	obj_77b7c1.data	40
+77b818	obj_77b819	43	map=map_7747e1
+77b830	obj_77b819.data	40
+77bb68	obj_77bb69	43	map=map_7745d1
+77bb80	obj_77bb69.data	40
+77bbb0	obj_77bb69.name	40
+77bbc8	obj_77bbc9	43	map=map_7746a1
+77bbe0	obj_77bbc9.data	40
+77bc28	obj_77bc29	43	map=map_7747e1
+77bc40	obj_77bc29.data	40
+77bd80	obj_77bd81	43	map=map_7746a1
+77bd98	obj_77bd81.data	40
+77bdd8	obj_77bdd9	43	map=map_7747e1
+77bdf0	obj_77bdd9.data	40
+77c010	obj_77c011	43	map=map_7746a1
+77c028	obj_77c011.data	40
+77c080	obj_77c081	43	map=map_7747e1
+77c098	obj_77c081.data	40
+77c240	obj_77c241	43	map=map_7746a1
+77c258	obj_77c241.data	40
+77c290	obj_77c291	43	map=map_7747e1
+77c2a8	obj_77c291.data	40
+77c568	obj_77c569	43	map=map_77c589
+77c588	map_77c589	41
+77c5a8	obj_77c569.data	40
+77c5e0	obj_77c569.name	40
+77c5f8	obj_77c5f9	43	map=map_7746a1
+77c610	obj_77c5f9.data	40
+77c660	obj_77c661	43	map=map_7747e1
+77c678	obj_77c661.data	40
+77c8d8	obj_77c8d9	43	map=map_7746a1
+77c8f0	obj_77c8d9.data	40
+77c928	obj_77c929	43	map=map_7747e1
+77c940	obj_77c929.data	40
+77cc00	obj_77cc01	43	map=map_7746a1
+77cc18	obj_77cc01.data	40
+77cc50	obj_77cc51	43	map=map_7747e1
+77cc68	obj_77cc51.data	40
+77cd60	obj_77cd61	43	map=map_7745d1
+77cd78	obj_77cd61.data	40
+77cdb0	obj_77cd61.name	40
+77cdd0	obj_77cdd1	43	map=map_7746a1
+77cde8	obj_77cdd1.data	40
+77ce18	obj_77ce19	43	map=map_7747e1
+77ce30	obj_77ce19.data	40
+77d100	obj_77d101	43	map=map_7746a1
+77d118	obj_77d101.data	40
+77d150	obj_77d151	43	map=map_7747e1
+77d168	obj_77d151.data	40
+77d4a0	obj_77d4a1	43	map=map_7746a1
+77d4b8	obj_77d4a1.data	40
+77d4f8	obj_77d4f9	43	map=map_7747e1
+77d510	obj_77d4f9.data	40
+77d7a8	obj_77d7a9	43	map=map_7746a1
+77d7c0	obj_77d7a9.data	40
+77d7f0	obj_77d7f1	43	map=map_7747e1
+77d808	obj_77d7f1.data	40
+77da70	obj_77da71	43	map=map_7746a1
+77da88	obj_77da71.data	40
+77dac0	obj_77dac1	43	map=map_7747e1
+77dad8	obj_77dac1.data	40
+77db78	obj_77db79	43	map=map_7748c9
+77db88	obj_77db79.data	40
+77dc58	obj_77dc59	43	map=map_7747e1
+77dc70	obj_77dc59.data	40
+77df18	obj_77df19	43	map=map_7745d1
+77df30	obj_77df19.data	40
+77df70	obj_77df19.name	40
+77df90	obj_77df91	43	map=map_7746a1
+77dfa8	obj_77df91.data	40
+77dfc8	obj_77dfc9	43	map=map_7747e1
+77dfe0	obj_77dfc9.data	40
+77e2a0	obj_77e2a1	43	map=map_7746a1
+77e2b8	obj_77e2a1.data	40
+77e2e8	obj_77e2e9	43	map=map_7747e1
+77e300	obj_77e2e9.data	40
+77e658	obj_77e659	43	map=map_77c589
+77e678	obj_77e659.data	40
+77e6c0	obj_77e659.name	40
+77e6e0	obj_77e6e1	43	map=map_7746a1
+77e6f8	obj_77e6e1.data	40
+77e740	obj_77e741	43	map=map_7747e1
+77e758	obj_77e741.data	40
+77e928	obj_77e929	43	map=map_7746a1
+77e940	obj_77e929.data	40
+77e988	obj_77e989	43	map=map_7747e1
+77e9a0	obj_77e989.data	40
+77ebc8	obj_77ebc9	43	map=map_7745d1
+77ebe0	obj_77ebc9.data	40
+77ec28	obj_77ebc9.name	40
+77ec40	obj_77ec41	43	map=map_7746a1
+77ec58	obj_77ec41.data	40
+77ec98	obj_77ec99	43	map=map_7747e1
+77ecb0	obj_77ec99.data	40
+77f038	obj_77f039	43	map=map_7746a1
+77f050	obj_77f039.data	40
+77f090	obj_77f091	43	map=map_7747e1
+77f0a8	obj_77f091.data	40
+77f408	obj_77f409	43	map=map_7746a1
+77f420	obj_77f409.data	40
+77f468	obj_77f469	43	map=map_7747e1
+77f480	obj_77f469.data	40
+77f6e0	obj_77f6e1	43	map=map_7746a1
+77f6f8	obj_77f6e1.data	40
+77f720	obj_77f721	43	map=map_7747e1
+77f738	obj_77f721.data	40
+77f9c0	obj_77f9c1	43	map=map_7746a1
+77f9d8	obj_77f9c1.data	40
+77fa00	obj_77fa01	43	map=map_7747e1
+77fa18	obj_77fa01.data	40
+77fd88	obj_77fd89	43	map=map_7746a1
+77fda0	obj_77fd89.data	40
+77fde0	obj_77fde1	43	map=map_7747e1
+77fdf8	obj_77fde1.data	40
+780110	obj_780111	43	map=map_7745d1
+780128	obj_780111.data	40
+780170	obj_780111.name	40
+780188	obj_780189	43	map=map_7746a1
+7801a0	obj_780189.data	40
+7801f8	obj_7801f9	43	map=map_7747e1
+780210	obj_7801f9.data	40
+780580	obj_780581	43	map=map_7746a1
+780598	obj_780581.data	40
+7805d8	obj_7805d9	43	map=map_7747e1
+7805f0	obj_7805d9.data	40
+780708	obj_780709	43	map=map_7746a1
+780720	obj_780709.data	40
+780758	obj_780759	43	map=map_7747e1
+780770	obj_780759.data	40
+780860	obj_780861	43	map=map_7746a1
+780878	obj_780861.data	40
+7808a8	obj_7808a9	43	map=map_7747e1
+7808c0	obj_7808a9.data	40
+780b78	obj_780b79	43	map=map_7746a1
+780b90	obj_780b79.data	40
+780bd0	obj_780bd1	43	map=map_7747e1
+780be8	obj_780bd1.data	40
+780f40	obj_780f41	43	map=map_7745d1
+780f58	obj_780f41.data	40
+780fa8	obj_780f41.name	40
+780fc0	obj_780fc1	43	map=map_7746a1
+780fd8	obj_780fc1.data	40
+781020	obj_781021	43	map=map_7747e1
+781038	obj_781021.data	40
+781328	obj_781329	43	map=map_7746a1
+781340	obj_781329.data	40
+781388	obj_781389	43	map=map_7747e1
+7813a0	obj_781389.data	40
+781640	obj_781641	43	map=map_7746a1
+781658	obj_781641.data	40
+7816b0	obj_7816b1	43	map=map_7747e1
+7816c8	obj_7816b1.data	40
+7819e8	obj_7819e9	43	map=map_7746a1
+781a00	obj_7819e9.data	40
+781a50	obj_781a51	43	map=map_7747e1
+781a68	obj_781a51.data	40
+781d58	obj_781d59	43	map=map_7745d1
+781d70	obj_781d59.data	40
+781d98	obj_781d59.name	40
+781db8	obj_781db9	43	map=map_7746a1
+781dd0	obj_781db9.data	40
+781e08	obj_781e09	43	map=map_7747e1
+781e20	obj_781e09.data	40
+782108	obj_782109	43	map=map_7746a1
+782120	obj_782109.data	40
+782158	obj_782159	43	map=map_7747e1
+782170	obj_782159.data	40
+782458	obj_774071[0].book.styles	41
+782470	obj_774071[0].book.styles[0]	43	map=map_774749
+782488	'geneva	40
+7824a0	obj_774071[0].book.browsers	41
+7824b0	obj_774071[0].book.browsers[0]	43	map=map_7824c9
+7824c8	map_7824c9	41
+7824e0	'list	40
+7824f8	obj_774071[0].book.browsers[0].name	40
+782518	obj_774071[0].book.browsers[0].list	41
+782678	obj_774071[0].book.browsers[0].list[0]	43	map=map_782689
+782688	map_782689	41
+7826a0	'item	40
+7826b8	obj_774071[0].book.browsers[0].list[1]	43	map=map_7826d1
+7826d0	map_7826d1	41
+7826e8	'level	40
+782700	obj_774071[0].book.browsers[0].list[2]	43	map=map_7826d1
+782718	obj_774071[0].book.browsers[0].list[3]	43	map=map_7826d1
+782730	obj_774071[0].book.browsers[0].list[4]	43	map=map_7826d1
+782748	obj_774071[0].book.browsers[0].list[5]	43	map=map_7826d1
+782760	obj_774071[0].book.browsers[0].list[6]	43	map=map_7826d1
+782778	obj_774071[0].book.browsers[0].list[7]	43	map=map_7826d1
+782790	obj_774071[0].book.browsers[0].list[8]	43	map=map_7826d1
+7827a8	obj_774071[0].book.browsers[0].list[9]	43	map=map_782689
+7827b8	obj_774071[0].book.browsers[0].list[10]	43	map=map_7826d1
+7827d0	obj_774071[0].book.browsers[0].list[11]	43	map=map_7826d1
+7827e8	obj_774071[0].book.browsers[0].list[12]	43	map=map_7826d1
+782800	obj_774071[0].book.browsers[0].list[13]	43	map=map_7826d1
+782818	obj_774071[0].book.browsers[0].list[14]	43	map=map_7826d1
+782830	obj_774071[0].book.browsers[0].list[15]	43	map=map_7826d1
+782848	obj_774071[0].book.browsers[0].list[16]	43	map=map_7826d1
+782860	obj_774071[0].book.browsers[0].list[17]	43	map=map_7826d1
+782878	obj_774071[0].book.browsers[0].list[18]	43	map=map_7826d1
+782890	obj_774071[0].book.browsers[0].list[19]	43	map=map_7826d1
+7828a8	obj_774071[0].book.browsers[0].list[20]	43	map=map_7826d1
+7828c0	obj_774071[0].book.browsers[0].list[21]	43	map=map_7826d1
+7828d8	obj_774071[0].book.browsers[0].list[22]	43	map=map_782689
+7828e8	obj_774071[0].book.browsers[0].list[23]	43	map=map_7826d1
+782900	obj_774071[0].book.browsers[0].list[24]	43	map=map_7826d1
+782918	obj_774071[0].book.browsers[0].list[25]	43	map=map_7826d1
+782930	obj_774071[0].book.browsers[0].list[26]	43	map=map_7826d1
+782948	obj_774071[0].book.browsers[0].list[27]	43	map=map_7826d1
+782960	obj_774071[0].book.browsers[0].list[28]	43	map=map_782689
+782970	obj_774071[0].book.browsers[0].list[29]	43	map=map_7826d1
+782988	obj_774071[0].book.browsers[0].list[30]	43	map=map_7826d1
+7829a0	obj_774071[0].book.browsers[0].list[31]	43	map=map_7826d1
+7829b8	obj_774071[0].book.browsers[0].list[32]	43	map=map_7826d1
+7829d0	obj_774071[0].book.browsers[0].list[33]	43	map=map_7826d1
+7829e8	obj_774071[0].book.browsers[0].list[34]	43	map=map_7826d1
+782a00	obj_774071[0].book.browsers[0].list[35]	43	map=map_782689
+782a10	obj_774071[0].book.browsers[0].list[36]	43	map=map_7826d1
+782a28	obj_774071[0].book.browsers[0].list[37]	43	map=map_7826d1
+782a40	obj_774071[0].book.browsers[0].list[38]	43	map=map_7826d1
+782a58	obj_774071[0].book.browsers[0].list[39]	43	map=map_7826d1
+782a70	obj_774071[0].book.browsers[0].list[40]	43	map=map_7826d1
+782a88	obj_774071[0].book.browsers[0].list[41]	43	map=map_7826d1
+782aa0	obj_774071[0].book.browsers[0].list[42]	43	map=map_782689
+782ab0	obj_774071[0].book.browsers[0].list[43]	43	map=map_7826d1
+782ac8	obj_774071[0].book.browsers[0].list[44]	43	map=map_7826d1
+782ae0	obj_774071[0].book.browsers[0].list[45]	43	map=map_7826d1
+782af8	obj_774071[0].book.browsers[0].list[46]	43	map=map_7826d1
+782b10	obj_774071[0].book.browsers[0].list[47]	43	map=map_7826d1
+782b28	obj_774071[0].book.browsers[0].list[48]	43	map=map_7826d1
+782b40	obj_774071[0].book.browsers[0].list[49]	43	map=map_7826d1
+782b58	obj_774071[0].book.browsers[0].list[50]	43	map=map_7826d1
+782b70	obj_774071[0].book.browsers[0].list[51]	43	map=map_782689
+782b80	obj_774071[0].book.browsers[0].list[52]	43	map=map_7826d1
+782b98	obj_774071[0].book.browsers[0].list[53]	43	map=map_7826d1
+782bb0	obj_774071[0].book.browsers[0].list[54]	43	map=map_7826d1
+782bc8	obj_774071[0].book.browsers[0].list[55]	43	map=map_7826d1
+782be0	obj_774071[0].book.browsers[0].list[56]	43	map=map_7826d1
+782bf8	obj_774071[0].book.browsers[0].list[57]	43	map=map_782689
+782c08	obj_774071[0].book.browsers[0].list[58]	43	map=map_7826d1
+782c20	obj_774071[0].book.browsers[0].list[59]	43	map=map_7826d1
+782c38	obj_774071[0].book.browsers[0].list[60]	43	map=map_7826d1
+782c50	obj_774071[0].book.browsers[0].list[61]	43	map=map_7826d1
+782c68	obj_774071[0].book.browsers[0].list[62]	43	map=map_7826d1
+782c80	obj_774071[0].book.browsers[0].list[63]	43	map=map_782689
+782c90	obj_774071[0].book.browsers[0].list[64]	43	map=map_7826d1
+782ca8	obj_774071[0].book.browsers[0].list[65]	43	map=map_7826d1
+782cc0	obj_774071[0].book.browsers[0].list[66]	43	map=map_7826d1
+782cd8	obj_774071[0].book.browsers[0].list[67]	43	map=map_7826d1
+782cf0	obj_774071[0].book.browsers[0].list[68]	43	map=map_7826d1
+782d08	obj_774071[0].book.browsers[0].list[69]	43	map=map_7826d1
+782d20	obj_774071[0].book.browsers[0].list[70]	43	map=map_782689
+782d30	obj_774071[0].book.browsers[0].list[71]	43	map=map_7826d1
+782d48	obj_774071[0].book.browsers[0].list[72]	43	map=map_7826d1
+782d60	obj_774071[0].book.browsers[0].list[73]	43	map=map_7826d1
+782d78	obj_774071[0].book.browsers[0].list[74]	43	map=map_7826d1
+782d90	obj_774071[0].book.browsers[0].list[75]	43	map=map_7826d1
+782da8	obj_774071[0].book.browsers[0].list[76]	43	map=map_782689
+782db8	obj_774071[0].book.browsers[0].list[77]	43	map=map_7826d1
+782dd0	obj_774071[0].book.browsers[0].list[78]	43	map=map_7826d1
+782de8	obj_774071[0].book.browsers[0].list[79]	43	map=map_7826d1
+782e00	obj_774071[0].book.browsers[0].list[80]	43	map=map_7826d1
+782e18	obj_774071[0].book.browsers[0].list[81]	43	map=map_782689
+782e28	obj_774071[0].book.browsers[0].list[82]	43	map=map_7826d1
+782e40	obj_774071[0].book.browsers[0].list[83]	43	map=map_7826d1
+782e58	obj_774071[0].book.templates	41
+782e68	obj_782e69	43	map=map_782e81
+782e80	map_782e81	41
+782e98	'nColumns	40
+782eb8	'column	40
+782ed0	obj_782e69.column	41
+782ee0	obj_782e69.column[0]	43	map=map_782ef9
+782ef8	map_782ef9	41
+782f10	'width	40
+782f28	'type	40
+782f40	obj_774071[0].book.rendering	41
+782f50	obj_774071[0].book.rendering[0]	43	map=map_782f69
+782f68	map_782f69	41
+782f80	'pageSize	40
+782fa0	'pages	40
+782fb8	obj_774071[0].book.rendering[0].pageSize	43	map=map_782fd9
+782fd8	map_782fd9	41
+782ff8	'left	40
+783010	'top	40
+783028	'right	40
+783040	'bottom	40
+783058	obj_774071[0].book.rendering[0].pages	41
+783188	obj_774071[0].book.rendering[0].pages[0]	43	map=map_7831a1
+7831a0	map_7831a1	41
+7831b8	'template	40
+7831d8	'blocks	40
+7831f0	obj_774071[0].book.rendering[0].pages[0].blocks	41
+783210	obj_774071[0].book.rendering[0].pages[0].blocks[0]	43	map=map_783229
+783228	map_783229	41
+783240	'bounds	40
+783258	obj_783259	41
+783278	obj_774071[0].book.rendering[0].pages[0].blocks[1]	43	map=map_783229
+783290	obj_783291	41
+7832b0	obj_774071[0].book.rendering[0].pages[0].blocks[2]	43	map=map_783229
+7832c8	obj_774071[0].book.rendering[0].pages[0].blocks[2].bounds	41
+7832e8	obj_774071[0].book.rendering[0].pages[0].blocks[3]	43	map=map_783229
+783300	obj_774071[0].book.rendering[0].pages[0].blocks[3].bounds	41
+783320	obj_774071[0].book.rendering[0].pages[1]	43	map=map_7831a1
+783338	obj_774071[0].book.rendering[0].pages[1].blocks	41
+783350	obj_774071[0].book.rendering[0].pages[1].blocks[0]	43	map=map_783229
+783368	obj_774071[0].book.rendering[0].pages[1].blocks[1]	43	map=map_783229
+783380	obj_783381	41
+7833a0	obj_774071[0].book.rendering[0].pages[2]	43	map=map_7831a1
+7833b8	obj_774071[0].book.rendering[0].pages[2].blocks	41
+7833d0	obj_774071[0].book.rendering[0].pages[2].blocks[0]	43	map=map_783229
+7833e8	obj_7833e9	41
+783408	obj_774071[0].book.rendering[0].pages[2].blocks[1]	43	map=map_783229
+783420	obj_783421	41
+783440	obj_774071[0].book.rendering[0].pages[3]	43	map=map_7831a1
+783458	obj_774071[0].book.rendering[0].pages[3].blocks	41
+783470	obj_774071[0].book.rendering[0].pages[3].blocks[0]	43	map=map_783229
+783488	obj_774071[0].book.rendering[0].pages[3].blocks[1]	43	map=map_783229
+7834a0	obj_774071[0].book.rendering[0].pages[4]	43	map=map_7831a1
+7834b8	obj_774071[0].book.rendering[0].pages[4].blocks	41
+7834d0	obj_774071[0].book.rendering[0].pages[4].blocks[0]	43	map=map_783229
+7834e8	obj_774071[0].book.rendering[0].pages[4].blocks[1]	43	map=map_783229
+783500	obj_774071[0].book.rendering[0].pages[5]	43	map=map_7831a1
+783518	obj_774071[0].book.rendering[0].pages[5].blocks	41
+783530	obj_774071[0].book.rendering[0].pages[5].blocks[0]	43	map=map_783229
+783548	obj_774071[0].book.rendering[0].pages[5].blocks[1]	43	map=map_783229
+783560	obj_774071[0].book.rendering[0].pages[6]	43	map=map_7831a1
+783578	obj_774071[0].book.rendering[0].pages[6].blocks	41
+783590	obj_774071[0].book.rendering[0].pages[6].blocks[0]	43	map=map_783229
+7835a8	obj_774071[0].book.rendering[0].pages[6].blocks[1]	43	map=map_783229
+7835c0	obj_774071[0].book.rendering[0].pages[7]	43	map=map_7831a1
+7835d8	obj_774071[0].book.rendering[0].pages[7].blocks	41
+7835f0	obj_774071[0].book.rendering[0].pages[7].blocks[0]	43	map=map_783229
+783608	obj_774071[0].book.rendering[0].pages[7].blocks[1]	43	map=map_783229
+783620	obj_774071[0].book.rendering[0].pages[8]	43	map=map_7831a1
+783638	obj_774071[0].book.rendering[0].pages[8].blocks	41
+783658	obj_774071[0].book.rendering[0].pages[8].blocks[0]	43	map=map_783229
+783670	obj_774071[0].book.rendering[0].pages[8].blocks[1]	43	map=map_783229
+783688	obj_774071[0].book.rendering[0].pages[8].blocks[2]	43	map=map_783229
+7836a0	obj_774071[0].book.rendering[0].pages[8].blocks[2].bounds	41
+7836c0	obj_774071[0].book.rendering[0].pages[8].blocks[3]	43	map=map_783229
+7836d8	obj_774071[0].book.rendering[0].pages[8].blocks[3].bounds	41
+7836f8	obj_774071[0].book.rendering[0].pages[9]	43	map=map_7831a1
+783710	obj_774071[0].book.rendering[0].pages[9].blocks	41
+783730	obj_774071[0].book.rendering[0].pages[9].blocks[0]	43	map=map_783229
+783748	obj_774071[0].book.rendering[0].pages[9].blocks[1]	43	map=map_783229
+783760	obj_774071[0].book.rendering[0].pages[9].blocks[1].bounds	41
+783780	obj_774071[0].book.rendering[0].pages[9].blocks[2]	43	map=map_783229
+783798	obj_774071[0].book.rendering[0].pages[9].blocks[2].bounds	41
+7837b8	obj_774071[0].book.rendering[0].pages[9].blocks[3]	43	map=map_783229
+7837d0	obj_774071[0].book.rendering[0].pages[9].blocks[3].bounds	41
+7837f0	obj_774071[0].book.rendering[0].pages[10]	43	map=map_7831a1
+783808	obj_774071[0].book.rendering[0].pages[10].blocks	41
+783828	obj_774071[0].book.rendering[0].pages[10].blocks[0]	43	map=map_783229
+783840	obj_774071[0].book.rendering[0].pages[10].blocks[1]	43	map=map_783229
+783858	obj_774071[0].book.rendering[0].pages[10].blocks[1].bounds	41
+783878	obj_774071[0].book.rendering[0].pages[10].blocks[2]	43	map=map_783229
+783890	obj_783891	41
+7838b0	obj_774071[0].book.rendering[0].pages[10].blocks[3]	43	map=map_783229
+7838c8	obj_7838c9	41
+7838e8	obj_774071[0].book.rendering[0].pages[11]	43	map=map_7831a1
+783900	obj_774071[0].book.rendering[0].pages[11].blocks	41
+783918	obj_774071[0].book.rendering[0].pages[11].blocks[0]	43	map=map_783229
+783930	obj_774071[0].book.rendering[0].pages[11].blocks[1]	43	map=map_783229
+783948	obj_774071[0].book.rendering[0].pages[12]	43	map=map_7831a1
+783960	obj_774071[0].book.rendering[0].pages[12].blocks	41
+783980	obj_774071[0].book.rendering[0].pages[12].blocks[0]	43	map=map_783229
+783998	obj_774071[0].book.rendering[0].pages[12].blocks[1]	43	map=map_783229
+7839b0	obj_7839b1	41
+7839d0	obj_774071[0].book.rendering[0].pages[12].blocks[2]	43	map=map_783229
+7839e8	obj_774071[0].book.rendering[0].pages[12].blocks[3]	43	map=map_783229
+783a00	obj_774071[0].book.rendering[0].pages[13]	43	map=map_7831a1
+783a18	obj_774071[0].book.rendering[0].pages[13].blocks	41
+783a38	obj_774071[0].book.rendering[0].pages[13].blocks[0]	43	map=map_783229
+783a50	obj_774071[0].book.rendering[0].pages[13].blocks[1]	43	map=map_783229
+783a68	obj_774071[0].book.rendering[0].pages[13].blocks[2]	43	map=map_783229
+783a80	obj_774071[0].book.rendering[0].pages[13].blocks[3]	43	map=map_783229
+783a98	obj_774071[0].book.rendering[0].pages[14]	43	map=map_7831a1
+783ab0	obj_774071[0].book.rendering[0].pages[14].blocks	41
+783ac8	obj_774071[0].book.rendering[0].pages[14].blocks[0]	43	map=map_783229
+783ae0	obj_774071[0].book.rendering[0].pages[14].blocks[1]	43	map=map_783229
+783af8	obj_774071[0].book.rendering[0].pages[15]	43	map=map_7831a1
+783b10	obj_774071[0].book.rendering[0].pages[15].blocks	41
+783b28	obj_774071[0].book.rendering[0].pages[15].blocks[0]	43	map=map_783229
+783b40	obj_774071[0].book.rendering[0].pages[15].blocks[1]	43	map=map_783229
+783b58	obj_774071[0].book.rendering[0].pages[16]	43	map=map_7831a1
+783b70	obj_774071[0].book.rendering[0].pages[16].blocks	41
+783b88	obj_774071[0].book.rendering[0].pages[16].blocks[0]	43	map=map_783229
+783ba0	obj_774071[0].book.rendering[0].pages[16].blocks[1]	43	map=map_783229
+783bb8	obj_774071[0].book.rendering[0].pages[17]	43	map=map_7831a1
+783bd0	obj_774071[0].book.rendering[0].pages[17].blocks	41
+783be8	obj_774071[0].book.rendering[0].pages[17].blocks[0]	43	map=map_783229
+783c00	obj_774071[0].book.rendering[0].pages[17].blocks[1]	43	map=map_783229
+783c18	obj_774071[0].book.rendering[0].pages[18]	43	map=map_7831a1
+783c30	obj_774071[0].book.rendering[0].pages[18].blocks	41
+783c48	obj_774071[0].book.rendering[0].pages[18].blocks[0]	43	map=map_783229
+783c60	obj_774071[0].book.rendering[0].pages[18].blocks[1]	43	map=map_783229
+783c78	obj_774071[0].book.rendering[0].pages[19]	43	map=map_7831a1
+783c90	obj_774071[0].book.rendering[0].pages[19].blocks	41
+783ca8	obj_774071[0].book.rendering[0].pages[19].blocks[0]	43	map=map_783229
+783cc0	obj_774071[0].book.rendering[0].pages[19].blocks[1]	43	map=map_783229
+783cd8	obj_774071[0].book.rendering[0].pages[20]	43	map=map_7831a1
+783cf0	obj_774071[0].book.rendering[0].pages[20].blocks	41
+783d08	obj_774071[0].book.rendering[0].pages[20].blocks[0]	43	map=map_783229
+783d20	obj_774071[0].book.rendering[0].pages[20].blocks[1]	43	map=map_783229
+783d38	obj_774071[0].book.rendering[0].pages[21]	43	map=map_7831a1
+783d50	obj_774071[0].book.rendering[0].pages[21].blocks	41
+783d68	obj_774071[0].book.rendering[0].pages[21].blocks[0]	43	map=map_783229
+783d80	obj_774071[0].book.rendering[0].pages[21].blocks[1]	43	map=map_783229
+783d98	obj_774071[0].book.rendering[0].pages[22]	43	map=map_7831a1
+783db0	obj_774071[0].book.rendering[0].pages[22].blocks	41
+783dc8	obj_774071[0].book.rendering[0].pages[22].blocks[0]	43	map=map_783229
+783de0	obj_774071[0].book.rendering[0].pages[22].blocks[1]	43	map=map_783229
+783df8	obj_774071[0].book.rendering[0].pages[23]	43	map=map_7831a1
+783e10	obj_774071[0].book.rendering[0].pages[23].blocks	41
+783e28	obj_774071[0].book.rendering[0].pages[23].blocks[0]	43	map=map_783229
+783e40	obj_774071[0].book.rendering[0].pages[23].blocks[1]	43	map=map_783229
+783e58	obj_774071[0].book.rendering[0].pages[24]	43	map=map_7831a1
+783e70	obj_774071[0].book.rendering[0].pages[24].blocks	41
+783e88	obj_774071[0].book.rendering[0].pages[24].blocks[0]	43	map=map_783229
+783ea0	obj_774071[0].book.rendering[0].pages[24].blocks[1]	43	map=map_783229
+783eb8	obj_774071[0].book.rendering[0].pages[25]	43	map=map_7831a1
+783ed0	obj_774071[0].book.rendering[0].pages[25].blocks	41
+783ee8	obj_774071[0].book.rendering[0].pages[25].blocks[0]	43	map=map_783229
+783f00	obj_774071[0].book.rendering[0].pages[25].blocks[1]	43	map=map_783229
+783f18	obj_774071[0].book.rendering[0].pages[26]	43	map=map_7831a1
+783f30	obj_774071[0].book.rendering[0].pages[26].blocks	41
+783f48	obj_774071[0].book.rendering[0].pages[26].blocks[0]	43	map=map_783229
+783f60	obj_774071[0].book.rendering[0].pages[26].blocks[1]	43	map=map_783229
+783f78	obj_774071[0].book.rendering[0].pages[27]	43	map=map_7831a1
+783f90	obj_774071[0].book.rendering[0].pages[27].blocks	41
+783fa8	obj_774071[0].book.rendering[0].pages[27].blocks[0]	43	map=map_783229
+783fc0	obj_774071[0].book.rendering[0].pages[27].blocks[1]	43	map=map_783229
+783fd8	obj_774071[0].book.rendering[0].pages[28]	43	map=map_7831a1
+783ff0	obj_774071[0].book.rendering[0].pages[28].blocks	41
+784008	obj_774071[0].book.rendering[0].pages[28].blocks[0]	43	map=map_783229
+784020	obj_774071[0].book.rendering[0].pages[28].blocks[1]	43	map=map_783229
+784038	obj_774071[0].book.rendering[0].pages[29]	43	map=map_7831a1
+784050	obj_774071[0].book.rendering[0].pages[29].blocks	41
+784068	obj_774071[0].book.rendering[0].pages[29].blocks[0]	43	map=map_783229
+784080	obj_774071[0].book.rendering[0].pages[29].blocks[1]	43	map=map_783229
+784098	obj_774071[0].book.rendering[0].pages[30]	43	map=map_7831a1
+7840b0	obj_774071[0].book.rendering[0].pages[30].blocks	41
+7840c8	obj_774071[0].book.rendering[0].pages[30].blocks[0]	43	map=map_783229
+7840e0	obj_774071[0].book.rendering[0].pages[30].blocks[1]	43	map=map_783229
+7840f8	obj_774071[0].book.rendering[0].pages[31]	43	map=map_7831a1
+784110	obj_774071[0].book.rendering[0].pages[31].blocks	41
+784128	obj_774071[0].book.rendering[0].pages[31].blocks[0]	43	map=map_783229
+784140	obj_774071[0].book.rendering[0].pages[31].blocks[1]	43	map=map_783229
+784158	obj_774071[0].book.rendering[0].pages[32]	43	map=map_7831a1
+784170	obj_774071[0].book.rendering[0].pages[32].blocks	41
+784188	obj_774071[0].book.rendering[0].pages[32].blocks[0]	43	map=map_783229
+7841a0	obj_774071[0].book.rendering[0].pages[32].blocks[1]	43	map=map_783229
+7841b8	obj_774071[0].book.rendering[0].pages[33]	43	map=map_7831a1
+7841d0	obj_774071[0].book.rendering[0].pages[33].blocks	41
+7841e8	obj_774071[0].book.rendering[0].pages[33].blocks[0]	43	map=map_783229
+784200	obj_774071[0].book.rendering[0].pages[33].blocks[1]	43	map=map_783229
+784218	obj_774071[0].book.rendering[0].pages[34]	43	map=map_7831a1
+784230	obj_774071[0].book.rendering[0].pages[34].blocks	41
+784248	obj_774071[0].book.rendering[0].pages[34].blocks[0]	43	map=map_783229
+784260	obj_774071[0].book.rendering[0].pages[34].blocks[1]	43	map=map_783229
+784278	obj_774071[0].book.rendering[0].pages[35]	43	map=map_7831a1
+784290	obj_774071[0].book.rendering[0].pages[35].blocks	41
+7842a8	obj_774071[0].book.rendering[0].pages[35].blocks[0]	43	map=map_783229
+7842c0	obj_774071[0].book.rendering[0].pages[35].blocks[1]	43	map=map_783229
+7842d8	obj_774071[0].book.rendering[0].pages[36]	43	map=map_7831a1
+7842f0	obj_774071[0].book.rendering[0].pages[36].blocks	41
+784308	obj_774071[0].book.rendering[0].pages[36].blocks[0]	43	map=map_783229
+784320	obj_774071[0].book.rendering[0].pages[36].blocks[1]	43	map=map_783229
+784338	obj_774071[0].book.rendering[0].pages[37]	43	map=map_7831a1
+784350	obj_774071[0].book.rendering[0].pages[37].blocks	41
+784368	obj_774071[0].book.rendering[0].pages[37].blocks[0]	43	map=map_783229
+784380	obj_774071[0].book.rendering[0].pages[37].blocks[1]	43	map=map_783229
+784398	obj_774071[0].book.rendering[0].pages[38]	43	map=map_7831a1
+7843b0	obj_774071[0].book.rendering[0].pages[38].blocks	41
+7843c8	obj_774071[0].book.rendering[0].pages[38].blocks[0]	43	map=map_783229
+7843e0	obj_774071[0].book.rendering[0].pages[38].blocks[1]	43	map=map_783229
+7843f8	obj_774071[0].book.rendering[0].pages[39]	43	map=map_7831a1
+784410	obj_774071[0].book.rendering[0].pages[39].blocks	41
+784428	obj_774071[0].book.rendering[0].pages[39].blocks[0]	43	map=map_783229
+784440	obj_774071[0].book.rendering[0].pages[39].blocks[1]	43	map=map_783229
+784458	obj_774071[0].book.rendering[0].pages[40]	43	map=map_7831a1
+784470	obj_774071[0].book.rendering[0].pages[40].blocks	41
+784488	obj_774071[0].book.rendering[0].pages[40].blocks[0]	43	map=map_783229
+7844a0	obj_774071[0].book.rendering[0].pages[40].blocks[1]	43	map=map_783229
+7844b8	obj_774071[0].book.rendering[0].pages[41]	43	map=map_7831a1
+7844d0	obj_774071[0].book.rendering[0].pages[41].blocks	41
+7844e0	obj_774071[0].book.rendering[0].pages[41].blocks[0]	43	map=map_783229
+7844f8	obj_7844f9	41
+784518	obj_774071[0].book.rendering[0].pages[42]	43	map=map_7831a1
+784530	obj_774071[0].book.rendering[0].pages[42].blocks	41
+784548	obj_774071[0].book.rendering[0].pages[42].blocks[0]	43	map=map_783229
+784560	obj_774071[0].book.rendering[0].pages[42].blocks[1]	43	map=map_783229
+784578	obj_774071[0].book.rendering[0].pages[43]	43	map=map_7831a1
+784590	obj_774071[0].book.rendering[0].pages[43].blocks	41
+7845a8	obj_774071[0].book.rendering[0].pages[43].blocks[0]	43	map=map_783229
+7845c0	obj_774071[0].book.rendering[0].pages[43].blocks[1]	43	map=map_783229
+7845d8	obj_774071[0].book.rendering[0].pages[44]	43	map=map_7831a1
+7845f0	obj_774071[0].book.rendering[0].pages[44].blocks	41
+784608	obj_774071[0].book.rendering[0].pages[44].blocks[0]	43	map=map_783229
+784620	obj_774071[0].book.rendering[0].pages[44].blocks[1]	43	map=map_783229
+784638	obj_774071[0].book.rendering[0].pages[45]	43	map=map_7831a1
+784650	obj_774071[0].book.rendering[0].pages[45].blocks	41
+784668	obj_774071[0].book.rendering[0].pages[45].blocks[0]	43	map=map_783229
+784680	obj_774071[0].book.rendering[0].pages[45].blocks[1]	43	map=map_783229
+784698	obj_774071[0].book.rendering[0].pages[46]	43	map=map_7831a1
+7846b0	obj_774071[0].book.rendering[0].pages[46].blocks	41
+7846c8	obj_774071[0].book.rendering[0].pages[46].blocks[0]	43	map=map_783229
+7846e0	obj_774071[0].book.rendering[0].pages[46].blocks[1]	43	map=map_783229
+7846f8	obj_774071[0].book.rendering[0].pages[47]	43	map=map_7831a1
+784710	obj_774071[0].book.rendering[0].pages[47].blocks	41
+784728	obj_774071[0].book.rendering[0].pages[47].blocks[0]	43	map=map_783229
+784740	obj_774071[0].book.rendering[0].pages[47].blocks[1]	43	map=map_783229
+784758	obj_774071[0].book.rendering[0].pages[48]	43	map=map_7831a1
+784770	obj_774071[0].book.rendering[0].pages[48].blocks	41
+784788	obj_774071[0].book.rendering[0].pages[48].blocks[0]	43	map=map_783229
+7847a0	obj_774071[0].book.rendering[0].pages[48].blocks[1]	43	map=map_783229
+7847b8	obj_774071[0].book.rendering[0].pages[49]	43	map=map_7831a1
+7847d0	obj_774071[0].book.rendering[0].pages[49].blocks	41
+7847f0	obj_774071[0].book.rendering[0].pages[49].blocks[0]	43	map=map_783229
+784808	obj_774071[0].book.rendering[0].pages[49].blocks[1]	43	map=map_783229
+784820	obj_774071[0].book.rendering[0].pages[49].blocks[2]	43	map=map_783229
+784838	obj_774071[0].book.rendering[0].pages[49].blocks[2].bounds	41
+784858	obj_774071[0].book.rendering[0].pages[49].blocks[3]	43	map=map_783229
+784870	obj_774071[0].book.rendering[0].pages[49].blocks[3].bounds	41
+784890	obj_774071[0].book.rendering[0].pages[50]	43	map=map_7831a1
+7848a8	obj_774071[0].book.rendering[0].pages[50].blocks	41
+7848c0	obj_774071[0].book.rendering[0].pages[50].blocks[0]	43	map=map_783229
+7848d8	obj_774071[0].book.rendering[0].pages[50].blocks[1]	43	map=map_783229
+7848f0	obj_774071[0].book.rendering[0].pages[51]	43	map=map_7831a1
+784908	obj_774071[0].book.rendering[0].pages[51].blocks	41
+784920	obj_774071[0].book.rendering[0].pages[51].blocks[0]	43	map=map_783229
+784938	obj_774071[0].book.rendering[0].pages[51].blocks[1]	43	map=map_783229
+784950	obj_774071[0].book.rendering[0].pages[52]	43	map=map_7831a1
+784968	obj_774071[0].book.rendering[0].pages[52].blocks	41
+784978	obj_774071[0].book.rendering[0].pages[52].blocks[0]	43	map=map_783229
+784990	obj_774071[0].book.rendering[0].pages[53]	43	map=map_7831a1
+7849a8	obj_774071[0].book.rendering[0].pages[53].blocks	41
+7849c0	obj_774071[0].book.rendering[0].pages[53].blocks[0]	43	map=map_783229
+7849d8	obj_774071[0].book.rendering[0].pages[53].blocks[1]	43	map=map_783229
+7849f0	obj_774071[0].book.rendering[0].pages[54]	43	map=map_7831a1
+784a08	obj_774071[0].book.rendering[0].pages[54].blocks	41
+784a20	obj_774071[0].book.rendering[0].pages[54].blocks[0]	43	map=map_783229
+784a38	obj_774071[0].book.rendering[0].pages[54].blocks[1]	43	map=map_783229
+784a50	obj_774071[0].book.rendering[0].pages[55]	43	map=map_7831a1
+784a68	obj_774071[0].book.rendering[0].pages[55].blocks	41
+784a80	obj_774071[0].book.rendering[0].pages[55].blocks[0]	43	map=map_783229
+784a98	obj_774071[0].book.rendering[0].pages[55].blocks[1]	43	map=map_783229
+784ab0	obj_774071[0].book.rendering[0].pages[56]	43	map=map_7831a1
+784ac8	obj_774071[0].book.rendering[0].pages[56].blocks	41
+784ae0	obj_774071[0].book.rendering[0].pages[56].blocks[0]	43	map=map_783229
+784af8	obj_774071[0].book.rendering[0].pages[56].blocks[1]	43	map=map_783229
+784b10	obj_774071[0].book.rendering[0].pages[57]	43	map=map_7831a1
+784b28	obj_774071[0].book.rendering[0].pages[57].blocks	41
+784b40	obj_774071[0].book.rendering[0].pages[57].blocks[0]	43	map=map_783229
+784b58	obj_774071[0].book.rendering[0].pages[57].blocks[1]	43	map=map_783229
+784b70	obj_774071[0].book.rendering[0].pages[58]	43	map=map_7831a1
+784b88	obj_774071[0].book.rendering[0].pages[58].blocks	41
+784ba0	obj_774071[0].book.rendering[0].pages[58].blocks[0]	43	map=map_783229
+784bb8	obj_774071[0].book.rendering[0].pages[58].blocks[1]	43	map=map_783229
+784bd0	obj_774071[0].book.rendering[0].pages[59]	43	map=map_7831a1
+784be8	obj_774071[0].book.rendering[0].pages[59].blocks	41
+784c00	obj_774071[0].book.rendering[0].pages[59].blocks[0]	43	map=map_783229
+784c18	obj_774071[0].book.rendering[0].pages[59].blocks[1]	43	map=map_783229
+784c30	obj_774071[0].book.rendering[0].pages[60]	43	map=map_7831a1
+784c48	obj_774071[0].book.rendering[0].pages[60].blocks	41
+784c60	obj_774071[0].book.rendering[0].pages[60].blocks[0]	43	map=map_783229
+784c78	obj_774071[0].book.rendering[0].pages[60].blocks[1]	43	map=map_783229
+784c90	obj_774071[0].book.rendering[0].pages[61]	43	map=map_7831a1
+784ca8	obj_774071[0].book.rendering[0].pages[61].blocks	41
+784cc0	obj_774071[0].book.rendering[0].pages[61].blocks[0]	43	map=map_783229
+784cd8	obj_774071[0].book.rendering[0].pages[61].blocks[1]	43	map=map_783229
+784cf0	obj_774071[0].book.rendering[0].pages[62]	43	map=map_7831a1
+784d08	obj_774071[0].book.rendering[0].pages[62].blocks	41
+784d20	obj_774071[0].book.rendering[0].pages[62].blocks[0]	43	map=map_783229
+784d38	obj_774071[0].book.rendering[0].pages[62].blocks[1]	43	map=map_783229
+784d50	obj_774071[0].book.rendering[0].pages[63]	43	map=map_7831a1
+784d68	obj_774071[0].book.rendering[0].pages[63].blocks	41
+784d80	obj_774071[0].book.rendering[0].pages[63].blocks[0]	43	map=map_783229
+784d98	obj_774071[0].book.rendering[0].pages[63].blocks[1]	43	map=map_783229
+784db0	obj_774071[0].book.rendering[0].pages[64]	43	map=map_7831a1
+784dc8	obj_774071[0].book.rendering[0].pages[64].blocks	41
+784de0	obj_774071[0].book.rendering[0].pages[64].blocks[0]	43	map=map_783229
+784df8	obj_774071[0].book.rendering[0].pages[64].blocks[1]	43	map=map_783229
+784e10	obj_774071[0].book.rendering[0].pages[65]	43	map=map_7831a1
+784e28	obj_774071[0].book.rendering[0].pages[65].blocks	41
+784e40	obj_774071[0].book.rendering[0].pages[65].blocks[0]	43	map=map_783229
+784e58	obj_774071[0].book.rendering[0].pages[65].blocks[1]	43	map=map_783229
+784e70	obj_774071[0].book.rendering[0].pages[66]	43	map=map_7831a1
+784e88	obj_774071[0].book.rendering[0].pages[66].blocks	41
+784ea0	obj_774071[0].book.rendering[0].pages[66].blocks[0]	43	map=map_783229
+784eb8	obj_774071[0].book.rendering[0].pages[66].blocks[1]	43	map=map_783229
+784ed0	obj_774071[0].book.rendering[0].pages[67]	43	map=map_7831a1
+784ee8	obj_774071[0].book.rendering[0].pages[67].blocks	41
+784f00	obj_774071[0].book.rendering[0].pages[67].blocks[0]	43	map=map_783229
+784f18	obj_774071[0].book.rendering[0].pages[67].blocks[1]	43	map=map_783229
+784f30	obj_774071[0].book.rendering[0].pages[68]	43	map=map_7831a1
+784f48	obj_774071[0].book.rendering[0].pages[68].blocks	41
+784f60	obj_774071[0].book.rendering[0].pages[68].blocks[0]	43	map=map_783229
+784f78	obj_774071[0].book.rendering[0].pages[68].blocks[1]	43	map=map_783229
+784f90	obj_774071[0].book.rendering[0].pages[69]	43	map=map_7831a1
+784fa8	obj_774071[0].book.rendering[0].pages[69].blocks	41
+784fc0	obj_774071[0].book.rendering[0].pages[69].blocks[0]	43	map=map_783229
+784fd8	obj_774071[0].book.rendering[0].pages[69].blocks[1]	43	map=map_783229
+784ff0	obj_774071[0].book.rendering[0].pages[70]	43	map=map_7831a1
+785008	obj_774071[0].book.rendering[0].pages[70].blocks	41
+785020	obj_774071[0].book.rendering[0].pages[70].blocks[0]	43	map=map_783229
+785038	obj_774071[0].book.rendering[0].pages[70].blocks[1]	43	map=map_783229
+785050	obj_774071[0].book.rendering[0].pages[71]	43	map=map_7831a1
+785068	obj_774071[0].book.rendering[0].pages[71].blocks	41
+785080	obj_774071[0].book.rendering[0].pages[71].blocks[0]	43	map=map_783229
+785098	obj_774071[0].book.rendering[0].pages[71].blocks[1]	43	map=map_783229
+7850b0	obj_774071[0].book.rendering[0].pages[71].blocks[1].bounds	41

@@ -1,0 +1,8 @@
+@@ 0x56e735
+@@const kROM_828
+@828
+@@main
+func() begin
+	{_proto: kROM_828, deck: nil, top: nil}
+end
+@@end

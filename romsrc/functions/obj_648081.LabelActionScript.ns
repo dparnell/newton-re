@@ -1,0 +1,7 @@
+@@ 0x47b18d
+func(a1) begin
+	self:GetTransport():SetConfig(info.logConfig, info.logActions[a1]);
+	self:UpdateText(self:TextSetup());
+	(if info.fileChoices[a1] then self:BringUpFiling(ParamStr(info.fileText, [Array: info.fileChoices[a1]])))
+end
+@@end

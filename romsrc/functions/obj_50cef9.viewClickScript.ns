@@ -1,0 +1,11 @@
+@@ 0x50ced9
+func(a1) begin
+	local l1;
+	l1 := self:LocalBox();
+	self:DrawShape(MakeRect(0, 0, l1.right, l1.bottom), '{fillPattern: 5, transferMode: 2});
+	calendar.selectedDates := [Array: selectedDates[0]];
+	self:changeViewTo(MonthOverView);
+	calendar:redisplayScript();
+	true
+end
+@@end

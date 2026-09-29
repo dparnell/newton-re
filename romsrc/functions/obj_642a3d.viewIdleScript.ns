@@ -1,0 +1,6 @@
+@@ 0x43bde9
+func() begin
+	self:ReadBattery(nil);
+	viewIdleFrequency
+end
+@@end

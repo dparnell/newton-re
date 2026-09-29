@@ -1,0 +1,17 @@
+@@ 0x4b1029
+func(a1) begin
+	local l1, l2;
+	if (currentLayout = 'overview) then begin
+			return layout:GetTargetInfo(a1)
+		end;
+	l1 := nil;
+	l2 := GetVariable(self, 'target);
+	if (a1 = 'Filing) then begin
+			l1 := GetVariable(self, 'targetApp)
+		end;
+	if (l1 = nil) then begin
+			l1 := GetVariable(self, 'targetView)
+		end;
+	{target: l2, targetView: l1, targetStore: (if (if l2 then IsSoupEntry(l2)) then EntryStore(l2)), appSymbol: (if (if l2 then l2.appSymbol) then l2.appSymbol)}
+end
+@@end

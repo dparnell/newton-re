@@ -1,0 +1,5 @@
+@@ 0x6340ad
+func(a1) begin
+	self:AddToStore(a1, GetDefaultStore())
+end
+@@end

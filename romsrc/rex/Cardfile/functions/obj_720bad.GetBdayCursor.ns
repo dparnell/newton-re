@@ -1,0 +1,21 @@
+@@ 0x741df1
+@@const kFunction_741eb5
+func(a1) begin
+	a1.bday
+end
+@@main
+func() begin
+	local l1, l2, l3;
+	if (not (l1 := allSoups.names.theSoup)) then begin
+			l1 := Clone(allSoups.names);
+			l1:MakeSoup(appSymbol);
+			l1 := l1.theSoup
+		end;
+	l2 := Clone('{type: index, IndexPath: sorton, tagSpec: {none: _ownerNames}});
+	if (not l1:HasTags()) then begin
+			RemoveSlot(l2, 'tagSpec)
+		end;
+	l2.validTest := kFunction_741eb5;
+	(l3 := l1:Query(l2))
+end
+@@end

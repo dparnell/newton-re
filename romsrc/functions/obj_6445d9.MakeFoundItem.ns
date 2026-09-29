@@ -1,0 +1,10 @@
+@@ 0x560669
+func(a1, a2) begin
+	l1 := {_proto: @178, finder: self, itemIndex: nil};
+	local l1;
+	(foreach l2, l3 in a1 do begin
+			l1.(l2) := l3
+		end);
+	l1
+end
+@@end

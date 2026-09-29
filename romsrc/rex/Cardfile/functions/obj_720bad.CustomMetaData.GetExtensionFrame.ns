@@ -1,0 +1,17 @@
+@@ 0x7364dd
+func() begin
+	(if (l1 := GetRoot().cardfile:GetCustomInfo()) then begin
+			l2 := {};
+			l3 := [Array: ];
+			local l1;
+			local l2;
+			local l3;
+			(foreach l4, l5 in l1 do begin
+					l2.(l4) := Clone(l5);
+					l2.(l4).path := l4;
+					AddArraySlot(l3, l4)
+				end);
+			{FieldDefinitionsFrame: l2, ImportExportArray: l3, FunctionsFrame: {ValidateCustom: CustomValidation}, ValidateEntry: [Array: 'ValidateCustom]}
+		end)
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x520cd1
+func() begin
+	local l1;
+	l1 := StrWidth(NumberStr(thisPage));
+	self.viewBounds := RelBounds((((-markWidth) - l1) - 6), -16, (markWidth + l1), 13);
+	self.text := Stringer([Array: "Mark p.", NumberStr(thisPage)]);
+	(pageDialog._defaultButton := self)
+end
+@@end

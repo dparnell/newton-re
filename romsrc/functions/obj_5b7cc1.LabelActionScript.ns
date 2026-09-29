@@ -1,0 +1,8 @@
+@@ 0x5b7c0d
+func(a1) begin
+	(if (a1 = 3) then SetUserConfig('usepassword, nil) else begin
+			SetUserConfig('usepassword, true);
+			SetUserConfig('passwordFrequency, ([Array: 0, 60, 1440, nil])[a1])
+		end)
+end
+@@end

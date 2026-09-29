@@ -1,0 +1,13 @@
+@@ 0x533869
+func() begin
+	(if SpeakerIsOn then begin
+			GetRoot().(appSymbol):SetSpeaker(nil);
+			SetValue(self, 'icon, speakerOffIcon);
+			(SpeakerIsOn := nil)
+		end else begin
+			GetRoot().(appSymbol):SetSpeaker(true);
+			SetValue(self, 'icon, speakerOnIcon);
+			(SpeakerIsOn := true)
+		end)
+end
+@@end

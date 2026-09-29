@@ -1,0 +1,13 @@
+@@ 0x458d8d
+func(a1, a2) begin
+	local l1, l2, l3;
+	l1 := GetRoot().cardfile;
+	l2 := a1.phone;
+	RemoveSlot(a1, 'phone);
+	l1:AddCardData((l3 := l1:addcard((l3 := self:PrepareToAdd(a1)).class, l3)), 'phone, l2);
+	EntryChangeXmit(l3, 'entryAdded);
+	self:FixupPostAdd(a1, l3);
+	a1.phone := l2;
+	l3
+end
+@@end

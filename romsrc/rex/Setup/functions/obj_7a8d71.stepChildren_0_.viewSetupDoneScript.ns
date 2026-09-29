@@ -1,0 +1,5 @@
+@@ 0x7aad65
+func() begin
+	(if fFirstTime then vCloser:Hide())
+end
+@@end

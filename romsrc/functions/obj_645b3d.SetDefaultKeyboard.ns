@@ -1,0 +1,5 @@
+@@ 0x43ee8d
+func(a1) begin
+	(if ArrayPos(_popupKeyboards, a1, 0, nil) then (defaultKeyboard := a1))
+end
+@@end

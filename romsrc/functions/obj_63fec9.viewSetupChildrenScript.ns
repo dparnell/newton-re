@@ -1,0 +1,11 @@
+@@ 0x42c4e5
+func() begin
+	if (not titleHeight) then begin
+			titleHeight := FontHeight(viewFont)
+		end;
+	titleWidth := (StrFontWidth(title, viewFont) + 6);
+	divider.viewBounds := SetBounds(0, ((titleHeight div 2) - 1), 0, ((titleHeight div 2) + 2));
+	dividerText.text := title;
+	(dividerText.viewBounds := RelBounds(16, 0, titleWidth, titleHeight))
+end
+@@end

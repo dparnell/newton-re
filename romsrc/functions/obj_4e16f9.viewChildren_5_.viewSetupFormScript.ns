@@ -1,0 +1,7 @@
+@@ 0x4df8f5
+func() begin
+	longitude := target.longitude;
+	latitude := target.latitude;
+	inherited:?viewSetupFormScript()
+end
+@@end

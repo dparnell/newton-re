@@ -1,0 +1,20 @@
+@@ 0x4da149
+func() begin
+	self.viewBounds := RelBounds(0, 20, pageWidth, 80);
+	viewChildren := nil;
+	(if (viewChildren := (if (l1 := ResolveEntryAlias(userConfiguration.currentPersona)) then l1.owner.signature)) then begin
+			l2 := 9999;
+			l3 := 9999;
+			local l1;
+			local l2;
+			local l3;
+			(foreach l4 in viewChildren do begin
+					l2 := min(l2, l4.viewBounds.left);
+					l3 := min(l3, l4.viewBounds.top)
+				end);
+			(foreach l4 in viewChildren do begin
+					l4.viewBounds := OffsetRect(l4.viewBounds, (-l2), (-l3))
+				end)
+		end)
+end
+@@end

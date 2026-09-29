@@ -1,0 +1,25 @@
+@@ 0x51c48d
+func() begin
+	(if (l1 := self:CurrentBook()) then begin
+			self:Close();
+			self:viewPreOpenScript(l1.isbn);
+			l3 := (l2 := displayParams).appAreaWidth;
+			l4 := l2.appAreaHeight;
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			local l5;
+			(for l6 := 0 to (Length(l1.rendering) - 1) do begin
+					if (if ((l5 := self:PageSize(l6)).width <= l3) then (l5.height <= l4)) then begin
+							if (l6 <> curRendering) then begin
+									curRendering := l6;
+									self:ResetCachedPages(l1.isbn);
+									break
+								end
+						end
+				end);
+			self:Open()
+		end)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x73b2d9
+func() begin
+	newtAppBase:GetCustomInfo()
+end
+@@end

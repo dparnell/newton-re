@@ -1,0 +1,8 @@
+@@ 0x4293e1
+func(a1) begin
+	if self:TrackHilite(a1) then begin
+			self:Popit((indent - 2))
+		end;
+	true
+end
+@@end

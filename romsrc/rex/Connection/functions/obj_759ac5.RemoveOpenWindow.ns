@@ -1,0 +1,13 @@
+@@ 0x75be81
+func(a1) begin
+	if (openWindows = nil) then begin
+			return nil
+		end;
+	(for l1 := 0 to (Length(openWindows) - 1) do begin
+			if (openWindows[l1] = a1) then begin
+					openWindows[l1] := nil;
+					break
+				end
+		end)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x42d281
+func() begin
+	(self._curItems := nil)
+end
+@@end

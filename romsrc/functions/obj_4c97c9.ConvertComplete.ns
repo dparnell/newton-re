@@ -1,0 +1,9 @@
+@@ 0x4c97a9
+func(a1, a2, a3) begin
+	InkConvert := nil;
+	(if (if a1 then a2) then begin
+			a3.entry.phone := a2;
+			self:SetWillDial()
+		end)
+end
+@@end

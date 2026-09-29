@@ -1,0 +1,45 @@
+@@ 0x4ce5b9
+@@const kBinaryFromHex
+func(hex, cls) begin
+	local b := MakeBinary(StrLen(hex) div 2, cls);
+	for i := 0 to Length(b) - 1 do begin
+		local h := Ord(hex[2 * i]);
+		local l := Ord(hex[2 * i + 1]);
+		StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+	end;
+	b
+end
+@@const kLiteral_4ce239
+"\uFC01\u^0^?1 ^1||^?2, ^3||"
+@@const kLiteral_4db6e5
+MakeRect(0, 0, 218, 31)
+@@const kLiteral_4db6cd
+{class: 'bitmap, bounds: SetClass(MakeRect(3, 7, 20, 22), 'boundsrect), data: call kBinaryFromHex with ("000000000004019f019f009701ae00a80080000001c000001be000001f7000001e3800001c1c0000380e00007007000071c7000031c6000031c6000031c6000000000000ffff8000ffff8000", 'bits)}
+@@const kLiteral_4db929
+{bits: call kBinaryFromHex with ("000000000038006200620028006b01d80001000008b2256d52befdffffffefff77f4d56a551482a812000000001205504a2a95aacbfbbffdffffffefdf52ada9134400002000000000080824920994aaadd5abd7defffff7fdafba95a5493001000000000000200324a96a577d6ffbffffdefaf56aed554a64124904040000000000028925522556bbbb7f7ff7ffff7ddb7b576a6a5145082000000000010428a29595bab7b6efbffffbffbfb7775aa912a92450000000000000000008a9da95ccd7d5faffffffff7fadb995910c10a482800000005049420c226a676d7fbfffffffd7eafaccea56e54400000000000000005049420c226a676d7fbfffffffd7eafaccea56e544000000000000000008a9da95ccd7d5faffffffff7fadb995910c10a482800000000000010428a29595bab7b6efbffffbffbfb7775aa912a9245000000000028925522556bbbb7f7ff7ffff7ddb7b576a6a5145082000000000000000200324a96a577d6ffbffffdefaf56aed554a64124904040000080824920994aaadd5abd7defffff7fdafba95a5493001000000000000001205504a2a95aacbfbbffdffffffefdf52ada91344000020000001000008b2256d52befdffffffefff77f4d56a551482a81200000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000", 'bits), bounds: '{left: 0, top: 0, right: 432, bottom: 9}}
+@@main
+func() begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10;
+	if ((shift := (107 - LongitudeToCoordinate(userConfiguration.location.longitude, 214))) < 0) then begin
+			shift := (shift + 214)
+		end;
+	l1 := (target := cards:entry());
+	if (l2 := userConfiguration.location).country then begin
+			l3 := GetCountryEntry(l2.country)[0]
+		end;
+	l4 := nil;
+	if l1.country then begin
+			l4 := GetCountryEntry(l1.country)[0]
+		end;
+	l5 := LocalTime(nil, l1);
+	l6 := ((LatitudeToCoordinate(l1.latitude, 107) - 4) + 39);
+	if ((l7 := ((LongitudeToCoordinate(l1.longitude, 214) - 4) + shift)) > 214) then begin
+			l7 := (l7 - 214)
+		end;
+	l8 := Stringer([Array: CircleDistance(l2.longitude, l2.latitude, l1.longitude, l1.latitude, GetLocale().distanceMeasure), " ", GetLocale().distanceLabelShort]);
+	l9 := ParamStr(kLiteral_4ce239, [Array: l2.name, l2.region, (not StrEqual(l2.name, l3.name)), l3.name]);
+	l10 := ParamStr(kLiteral_4ce239, [Array: l1.name, l1.region, (not StrEqual(l1.name, l4.name)), l4.name]);
+	pix := [Array: '{fillPattern: 5}, kLiteral_4db6e5, '{justification: center, transferMode: 2, font: @88}, MakeText(l9, 0, 0, 215, 13), kLiteral_4db6cd, '{justification: center, transferMode: 2, font: @100}, MakeText(Stringer([Array: HourMinute(nil), "  ", ShortDate(nil)]), 0, 14, 215, 25), '{justification: center, font: @88}, MakeText(l10, 0, 152, 215, 160), '{justification: center, font: @100}, MakeText(Stringer([Array: HourMinute(l5), "  ", ShortDate(l5)]), 0, 162, 215, 172), '{justification: center, font: @99}, MakeText(l8, 0, 175, 215, 185), '{transferMode: 0}, OffsetShape(MakeShape(kLiteral_4db929), (-(((Time() mod 1440) * 215) div 1440)), 30), OffsetShape(ScaleShape(MakeShape(@321), scaleSrc, scaleDst), shift, 39), OffsetShape(ScaleShape(MakeShape(@321), scaleSrc, scaleDst), (shift - 214), 39), '{fillPattern: 1}, MakeRect(l7, l6, (l7 + 8), (l6 + 8))];
+	appBase:Dirty()
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x523021
+func(a1, a2) begin
+	(if (if (a2 = 50) then (not secret)) then begin
+			secret := true;
+			self:RedoChildren()
+		end)
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x533091
+func(a1) begin
+	keyedDigits:AddKey(Stringer([Array: "", a1]), nil);
+	GetRoot().(appSymbol).callEndpoint:SendDigit(a1, true);
+	true
+end
+@@end

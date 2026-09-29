@@ -1,0 +1,5 @@
+@@ 0x51e445
+func() begin
+	(width := (StrFontWidth((text := StrTruncate(text, 137)), viewFont) + 4))
+end
+@@end

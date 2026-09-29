@@ -1,0 +1,16 @@
+@@ 0x745ff9
+func() begin
+	local l1, l2;
+	if fullNumber then begin
+			l1 := fullNumber
+		end else begin
+			if (if (l2 := self:GetWorksite(protoContext:ConnectionPrefsRead('phoneCurrentChoice))) then l2.connectionPhone) then begin
+					l1 := self:MungePhone(MakePhone({areacode: l2.areacode, phone: l2.connectionPhone}), self:WorksiteToCountry(l2))
+				end
+		end;
+	if (l1 = nil) then begin
+			l1 := ""
+		end;
+	return l1
+end
+@@end

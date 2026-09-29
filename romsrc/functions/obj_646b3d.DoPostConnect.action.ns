@@ -1,0 +1,8 @@
+@@ 0x4996dd
+func() begin
+	(if (fMode = 'AutoInAndOut) then begin
+			fEndpoint:option([Array: Clone('{label: "irco", type: option, opCode: 1024, form: template, data: {arglist: [Array: 0], typelist: [Array: 10, 1]}})], CallbackSpec);
+			'waitAsync
+		end else 'DoOutput)
+end
+@@end

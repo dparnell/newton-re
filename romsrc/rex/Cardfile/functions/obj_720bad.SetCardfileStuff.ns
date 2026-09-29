@@ -1,0 +1,52 @@
+@@ 0x7384d9
+func(a1, a2) begin
+	local l1, l2;
+	l1 := a1.class;
+	if (not a1.cardType) then begin
+			if (if (l1 <> 'group) then (l1 <> 'worksite)) then begin
+					a1.cardType := allSoups.names.defaultCardType
+				end else begin
+					a1.cardType := 1
+				end
+		end;
+	a1.version := 2;
+	if ((l1 = 'person) or (l1 = 'owner)) then begin
+			if StrFilled(a1.name.last) then begin
+					l2 := ParamStr("^0 ^1", [Array: a1.name.last, a1.name.first])
+				end else begin
+					if a1.name.first then begin
+							l2 := a1.name.first
+						end
+				end
+		end else begin
+			if (if (l1 = 'company) then a1.company) then begin
+					l2 := a1.company
+				end else begin
+					if (if (l1 = 'worksite) then a1.place) then begin
+							l2 := a1.place
+						end else begin
+							if (if (l1 = 'group) then a1.group) then begin
+									l2 := a1.group
+								end
+						end
+				end
+		end;
+	if (if StrFilled(l2) then (not IsRichString(l2))) then begin
+			a1.sorton := l2
+		end;
+	if (not StrFilled(a1.sorton)) then begin
+			a1.sorton := " "
+		end;
+	self:SetIAClass(a1);
+	if (not a1.name) then begin
+			a1.name := Clone('{honorific: nil, first: "", last: nil, title: nil})
+		end;
+	if (not a1.company) then begin
+			a1.company := Clone("")
+		end;
+	if (not a1.postal_code) then begin
+			a1.postal_code := Clone("")
+		end;
+	(if a2 then EntryChange(a1))
+end
+@@end

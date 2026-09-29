@@ -1,0 +1,11 @@
+@@ 0x45564d
+func(a1, a2, a3, a4) begin
+	local l1;
+	(l1 := self:Init()).dataClass := a1;
+	l1.context := a3;
+	l1.selected := a2;
+	l1.options := a4;
+	l1:Open();
+	l1
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x54cbb1
+func() begin
+	overUp := (not overUp);
+	nRows := 0;
+	self:SavePrefs();
+	self:RedoIcons()
+end
+@@end

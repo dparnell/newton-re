@@ -1,0 +1,22 @@
+@@ 0x7a7d21
+func() begin
+	local l1, l2;
+	if (l1 := GetUserConfig('currentPersona)) then begin
+			fPersona := ResolveEntryAlias(l1)
+		end else begin
+			fPersona := {name: {first: Clone(""), last: Clone("")}, phones: [Array: ]}
+		end;
+	if (l2 := GetAppPrefs(appSymbol, '{})) then begin
+			fWorkSite := ResolveEntryAlias(l2.homeWorksite);
+			fWorkworksite := ResolveEntryAlias(l2.workWorksite)
+		end;
+	if (not fWorkSite) then begin
+			fWorkSite := {}
+		end;
+	if (not fWorkworksite) then begin
+			fWorkworksite := {}
+		end;
+	self:ShowPage(fFirstPage);
+	AddDeferredSend(self, 'MoveBehind, [Array: nil])
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x44a2e5
+func(a1) begin
+	local l1;
+	if (if IsArray((l1 := self._keyCommands)) then (not IsReadOnly(l1))) then begin
+			SetRemove(l1, a1)
+		end;
+	nil
+end
+@@end

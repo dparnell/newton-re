@@ -1,0 +1,6 @@
+@@ 0x429341
+func(a1) begin
+	SetValue(entryLine, 'text, a1);
+	self:textChanged()
+end
+@@end

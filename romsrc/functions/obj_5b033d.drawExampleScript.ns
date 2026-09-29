@@ -1,0 +1,28 @@
+@@ 0x5b0305
+func() begin
+	l1 := 0;
+	l2 := 0;
+	self:DrawShape((l3 := MakeLine(l1, (l2 + textHeight), viewBounds.right, (l2 + textHeight))), lineStyle);
+	self:SelectSpacingOption();
+	l4 := charSpace[userConfiguration.letterSpaceCursiveOption];
+	l5 := wordSpace[userConfiguration.letterSpaceCursiveOption];
+	l6 := userConfiguration.letterSetSelection;
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	local l6;
+	local l7;
+	(foreach l8 in (l7 := wordBits[l6]) do begin
+			(foreach l10 in l8 do begin
+					local l12;
+					l12 := ShapeBounds((l3 := MakeShape(l10))).right;
+					OffsetShape(l3, l1, l2);
+					self:DrawShape(l3, '{transferMode: 1});
+					l1 := ((l1 + l12) + l4)
+				end);
+			l1 := ((l1 - l4) + l5)
+		end)
+end
+@@end

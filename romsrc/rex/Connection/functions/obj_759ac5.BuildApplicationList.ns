@@ -1,0 +1,17 @@
+@@ 0x75ce95
+func(a1) begin
+	(if (not self.applications) then begin
+			l1 := self:GetBackupStoreVersion();
+			l2 := [Array: ];
+			local l1;
+			local l2;
+			(foreach l3 in GetStores() do begin
+					if (l3.version > l1) then begin
+							AddArraySlot(l2, l3)
+						end
+				end);
+			self.applications := self:GetAppsForStoreWithCallback(l2, true, a1);
+			self:AddDefaultApps(applications, nil)
+		end)
+end
+@@end

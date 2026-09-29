@@ -1,0 +1,6 @@
+@@ 0x54ad2d
+func(a1) begin
+	local l1, l2;
+	(if (if (l1 := GetRoot().(a1)) then IsInstance(l1.appName, 'string)) then l1.appName else (if (if l1 then IsInstance(l1.title, 'string)) then l1.title else (if (l2 := GetRoot().ExtrasDrawer:SetExtrasInfo(a1, '{})) then l2.text else SymbolName(a1))))
+end
+@@end

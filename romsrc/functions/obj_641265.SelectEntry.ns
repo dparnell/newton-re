@@ -1,0 +1,16 @@
+@@ 0x5aa0f9
+func(a1) begin
+	if a1 then begin
+			selectedEntry := window:GetEntry(a1)
+		end else begin
+			selectedEntry := nil
+		end;
+	(if selectedEntry then begin
+			selectedWord := selectedEntry.word;
+			(selectedIndex := a1)
+		end else begin
+			selectedWord := nil;
+			(selectedIndex := nil)
+		end)
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x740469
+func(a1) begin
+	local l1;
+	l1 := inherited:indexClickScript(a1);
+	(if (currentLayout <> 'overview) then newtAppBase:ShowLayout('overview) else (if l1 then (if (l1.newEntry <> l1.currEntry) then layout:Effect(133120, nil, @85, 'Retarget, [Array: true]) else self:RetargetNotify())))
+end
+@@end

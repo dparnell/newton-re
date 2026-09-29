@@ -1,0 +1,11 @@
+@@ 0x43c575
+func(a1) begin
+	local l1;
+	if (if (((l1 := Ticks()) - lastClick) < 30) then HasSlot(GetRoot(), 'batteryInfo)) then begin
+			GetRoot().batteryInfo:Open()
+		end else begin
+			lastClick := l1
+		end;
+	true
+end
+@@end

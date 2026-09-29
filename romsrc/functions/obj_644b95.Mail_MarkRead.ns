@@ -1,0 +1,7 @@
+@@ 0x59584d
+func(a1) begin
+	self:StartStream("ey");
+	self:atom(3, 1, a1.id, nil);
+	self:SendStream()
+end
+@@end

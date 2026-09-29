@@ -1,0 +1,9 @@
+@@ 0x439865
+func(a1) begin
+	local l1;
+	(if (if ((l1 := (viewOriginY + a1)) >= 0) then (l1 <= spillHeight)) then begin
+			self:SetOrigin(0, l1);
+			(if useScrollers then textListScrollers:UpdateScrollers((a1 div lineHeight)))
+		end)
+end
+@@end

@@ -1,0 +1,18 @@
+@@ 0x744b81
+func() begin
+	l2 := nil;
+	local l1;
+	local l2;
+	(for l3 := 0 to (Length(choices) - 1) do begin
+			if (choices[l3] = currentChoice) then begin
+					l1 := labelCommands[l3];
+					l2 := true;
+					break
+				end
+		end);
+	if (not l2) then begin
+			l1 := labelCommands[0]
+		end;
+	return l1
+end
+@@end

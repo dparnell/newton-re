@@ -1,0 +1,6 @@
+@@ 0x74bc39
+func() begin
+	storeList:|SelectAll?|();
+	storeList:DrawHilite()
+end
+@@end

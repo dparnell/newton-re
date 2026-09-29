@@ -1,0 +1,6 @@
+@@ 0x485c3d
+func(a1, a2) begin
+	local l1;
+	(if (GetVariable((l1 := self:GetTargetInfo('Filing)).targetView, 'labelsFilter) <> a1) then showBarText:SyncView())
+end
+@@end

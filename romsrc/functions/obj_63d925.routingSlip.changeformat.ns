@@ -1,0 +1,15 @@
+@@ 0x599325
+func() begin
+	(if ((activeFormat.routingType = 'frame) or (activeFormat.routingType = 'view)) then begin
+			if (not fields.reply) then begin
+					fields.attachment := (not GetUserConfig('mailTextOnly))
+				end;
+			attachCheck:AllowChecking(true)
+		end else begin
+			if (not fields.reply) then begin
+					fields.attachment := nil
+				end;
+			attachCheck:AllowChecking(nil)
+		end)
+end
+@@end

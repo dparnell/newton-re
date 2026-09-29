@@ -1,0 +1,14 @@
+@@ 0x4dffbd
+func() begin
+	local l1, l2;
+	l1 := GetVariable(self:Parent(), 'target);
+	inherited:viewSetupFormScript();
+	if (not (l2 := l1.country)) then begin
+			l2 := userConfiguration.location.country
+		end;
+	target := GetCountryEntry(l2)[0];
+	cursor := GetLocationSoup(@295):Query('{type: index, indexPath: name});
+	SetKeyView(nil, nil);
+	cursor:Goto(target)
+end
+@@end

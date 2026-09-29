@@ -1,0 +1,5 @@
+@@ 0x59c9b5
+func() begin
+	(if GetRoot().(ownerSymbol) then GetRoot().(ownerSymbol):EnableAlarms(self.viewValue))
+end
+@@end

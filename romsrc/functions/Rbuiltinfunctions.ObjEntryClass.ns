@@ -1,0 +1,9 @@
+@@ 0x450205
+func(a1) begin
+	local l1;
+	if (not a1) then begin
+			return nil
+		end;
+	(if IsNameRef(a1) then a1._entryClass else (if (if (not (ClassOf(a1) = 'frame)) then IsFrame(a1)) then ClassOf(a1) else (if (l1 := EntryFromObj(a1)) then (if l1.class then l1.class else (if l1.viewStationery then l1.viewStationery else (if l1.sorton then (if (ClassOf(l1.sorton) = 'name) then 'person else 'company) else ClassOf(l1)))))))
+end
+@@end

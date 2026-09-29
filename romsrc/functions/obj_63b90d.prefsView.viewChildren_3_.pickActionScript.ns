@@ -1,0 +1,13 @@
+@@ 0x50bdd1
+func(a1) begin
+	local l1;
+	(if a1 then (if (inherited:?pickActionScript(a1) <> -1) then begin
+				if (a1 = 0) then begin
+						l1 := nil
+					end else begin
+						l1 := labelWarningTimes[a1]
+					end;
+				(if (not theApp.prefsCache) then (theApp:GetAppPreferences().eventAlarms := l1) else (theApp.prefsCache.eventAlarms := l1))
+			end))
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x4d5711
+func(a1) begin
+	local l1;
+	newMtgDate := ((l1 := a1[0]) - (l1 mod 1440));
+	inherited:pickActionScript(a1)
+end
+@@end

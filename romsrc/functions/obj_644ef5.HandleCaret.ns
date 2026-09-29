@@ -1,0 +1,14 @@
+@@ 0x46847d
+func(a1) begin
+	local l1, l2, l3, l4, l5;
+	l1 := nil;
+	l2 := GesturePoint(1, a1);
+	l3 := self:GlobalBox();
+	l4 := (l2.y - (l3.top + viewLineSpacing));
+	if (if (if (l2.line = 0) then (l4 < 8)) then (l4 > -4)) then begin
+			self:InsertSpace((lastChar := ((l5 := self:FindCell(l2.x)).edge + dispLeft)));
+			l1 := true
+		end;
+	return l1
+end
+@@end

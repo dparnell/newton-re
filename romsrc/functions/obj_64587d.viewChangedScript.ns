@@ -1,0 +1,8 @@
+@@ 0x4b81b5
+func(a1, a2) begin
+	(if (if (not hack) then (a1 = 'text)) then begin
+			target.(path) := a2:GetRichString();
+			self:StartFlush()
+		end)
+end
+@@end

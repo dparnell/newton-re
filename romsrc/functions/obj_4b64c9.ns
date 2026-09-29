@@ -1,0 +1,8 @@
+@@ 0x4b64c9
+func() begin
+	if info then begin
+			info:Close()
+		end;
+	(if newtAppBase then (if newtAppBase._titleKeyButton then RemoveSlot(newtAppBase, '_titleKeyButton)))
+end
+@@end

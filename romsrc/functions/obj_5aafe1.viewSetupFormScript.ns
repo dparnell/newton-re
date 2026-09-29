@@ -1,0 +1,14 @@
+@@ 0x5aaf7d
+func() begin
+	local l1, l2, l3;
+	inherited:viewSetupFormScript();
+	self.viewBounds := Clone(viewBounds);
+	viewBounds.bottom := (viewBounds.bottom - 22);
+	if (BAnd((l3 := ((l2 := ((l1 := self:Parent():LocalBox()).right - l1.left)) div 14)), 1) > 0) then begin
+			l3 := (l3 - 1)
+		end;
+	viewBounds.top := (viewBounds.bottom - (5 * l3));
+	viewBounds.left := 0;
+	(viewBounds.right := (14 * l3))
+end
+@@end

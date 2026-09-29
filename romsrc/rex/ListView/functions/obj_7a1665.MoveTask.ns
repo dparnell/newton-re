@@ -1,0 +1,112 @@
+@@ 0x797cdd names
+@@const kLiteral_791bbd
+"To Do"
+@@main
+func(aTask, aTarget, aDestStore) begin
+	i := 0;
+	if ((if HasPath(aTask, 'source) then (aTask.source = nil)) or (ClassOf(aTask.source) = 'symbol)) then begin
+			self:Notify(3, kLiteral_791bbd, "Can\u2019\ut move a 1.x formatted To Do item");
+			return nil
+		end;
+	if HasPath(aTask, 'repeatInfo) then begin
+			if ((result := ModalConfirm(Stringer([Array: (textPart1 := SubStr(MakeRichString(aTask.text, aTask.styles), 0, 24)), "\u2026\u", " ", "is a recurring task. Move all instances?"]), 'yesNo)) = nil) then begin
+					return nil
+				end
+		end;
+	try begin
+			aDestStore:CheckWriteProtect();
+			if HasPath(aTask, 'repeatInfo) then begin
+					local originalEntry;
+					local Entry;
+					local i;
+					local destSoup;
+					local possibleTargets;
+					local textPart1;
+					local result;
+					(foreach Entry in repeatTargets do begin
+							if SetContains(Entry.topics, aTask) then begin
+									originalEntry := Entry;
+									break
+								end
+						end);
+					if (EntryStore(originalEntry) = aDestStore) then begin
+							return originalEntry
+						end;
+					self:UpdateMultipleStores('now);
+					SetRemove(originalEntry.topics, aTask);
+					EntryChangeXmit(originalEntry, 'todo);
+					(foreach Entry in repeatTargets do begin
+							if (EntryStore(Entry) = aDestStore) then begin
+									aTask.source := i;
+									AddArraySlot(Entry.topics, aTask);
+									Entry.needsSort := true;
+									EntryChangeXmit(Entry, 'todo);
+									self:RedoTopics();
+									return Entry
+								end;
+							i := (i + 1)
+						end)
+				end else begin
+					(foreach Entry in targets do begin
+							if (EntryStore(Entry) = aDestStore) then begin
+									aTask.source := i;
+									self:UpdateMultipleStores(nil);
+									self:RedoTopics();
+									return Entry
+								end;
+							i := (i + 1)
+						end)
+				end;
+			if ((destSoup := aDestStore:GetSoup(masterSoup.soupName)) = nil) then begin
+					destSoup := CreateUSoupMember(masterSoup.soupName, aDestStore)
+				end;
+			Entry := masterSoup:CreateBlankEntry();
+			if HasPath(aTask, 'repeatInfo) then begin
+					Entry.date := 0;
+					Entry.lastRollover := ((Time() div 1440) * 1440)
+				end else begin
+					Entry.date := aTarget.date
+				end;
+			destSoup:AddXmit(Entry, nil)
+		end onexception |evt.ex.fr.store| do begin
+			error := CurrentException().error;
+			where := aDestStore:GetName();
+			if (error = -10605) then begin
+					msg := "To Do changes could not be saved (\u201C\u^0\u201D\u is write-protected)"
+				end else begin
+					if (error = -10617) then begin
+							msg := "To Do changes could not be saved (\u201C\u^0\u201D\u is full)"
+						end
+				end;
+			if msg then begin
+					self:Notify(3, kLiteral_791bbd, ParamStr(msg, [Array: where]))
+				end else begin
+					Rethrow()
+				end;
+			return nil
+		end;
+	if HasPath(aTask, 'repeatInfo) then begin
+			SetAdd(repeatTargets, Entry, true);
+			possibleTargets := repeatTargets
+		end else begin
+			SetAdd(targets, Entry, true);
+			possibleTargets := targets
+		end;
+	i := 0;
+	(foreach Entry in possibleTargets do begin
+			local error, msg, where;
+			if (EntryStore(Entry) <> aDestStore) then begin
+					i := (i + 1)
+				end
+		end);
+	aTask.source := i;
+	if HasPath(aTask, 'repeatInfo) then begin
+			Entry.topics := [Array: aTask];
+			EntryChangeXmit(Entry, 'todo)
+		end else begin
+			self:UpdateMultipleStores(nil)
+		end;
+	self:RedoTopics();
+	return Entry
+end
+@@end

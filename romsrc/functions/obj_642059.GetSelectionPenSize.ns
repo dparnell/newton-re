@@ -1,0 +1,6 @@
+@@ 0x4e3605
+func() begin
+	local l1, l2;
+	(if (if (if (l1 := vars.lastPolyHiliteChanged) then l1.viewCObject) then l1.hilites) then (BAnd(l1.viewFormat, 3840) >> 8) else (if GetHiliteOffsets() then (if ((l2 := self:GetSelectionFont()).pensize = -536870912) then nil else (if (not l2.pensize) then GetUserConfig('userPenSize) else l2.pensize)) else GetUserConfig('userPenSize)))
+end
+@@end

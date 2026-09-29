@@ -1,0 +1,60 @@
+@@ 0x55c3b5
+@@const kBinaryFromHex
+func(hex, cls) begin
+	local b := MakeBinary(StrLen(hex) div 2, cls);
+	for i := 0 to Length(b) - 1 do begin
+		local h := Ord(hex[2 * i]);
+		local l := Ord(hex[2 * i + 1]);
+		StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+	end;
+	b
+end
+@@const kLiteral_55bfe5
+{bits: call kBinaryFromHex with ("00000000000400d200d2026300e6027700fe000003ff80000783c0000e00e0000c0060001c0070001801300018033000180370001807b000180f70001c3ef0001c7d60000e2ae0000f83c0003fff80007bfe0000f8000000f0000000e0000000", 'bits), bounds: '{left: 0, top: 0, right: 20, bottom: 20}}
+@@main
+func(a1, scope, a3, a4) begin
+	local findDrawer;
+	local l1, l2, l3, l4;
+	l1 := (findDrawer := GetRoot().findDrawer).appSpecificChildren;
+	l2 := findDrawer.findInput;
+	if (if (if a1 then (SplitString(a1)[0] = nil)) then (not (if l1 then l1.dontIncludeInputLine))) then begin
+			findDrawer:SetMessage("No text to search for.")
+		end else begin
+			if (ClassOf(a3) = 'symbol) then begin
+					findType := ({text: 0, DatesBefore: 2, DatesOn: 3, DatesAfter: 4}).(a3)
+				end else begin
+					if ((a3 < 0) or (a3 > 4)) then begin
+							findType := nil
+						end
+				end;
+			l3 := nil;
+			l4 := nil;
+			if (if (if (if (not (if l1 then l1.dontIncludeInputLine)) then l2) then (l2.curLabelCommand > 0)) then (not (l3 := self:ConvertTextToDate(a1, l2.curLabelCommand)))) then begin
+					return nil
+				end;
+			if l3 then begin
+					a1 := l3.findText;
+					l4 := l3.findTime
+				end;
+			findDrawer.findType := findType;
+			findDrawer.findAllResults := [Array: ];
+			findDrawer.findText := a1;
+			findDrawer.findTime := l4;
+			findDrawer.selectedAppSymbols := a4;
+			if (DoProgress('vBarber, {statusText: "Find", barber: true, icon: kLiteral_55bfe5, closeBox: nil}, func(a1) begin
+				findDrawer.busybox := a1;
+				if (if findDrawer.additionalFind then (findDrawer.savedScope = 'findFrontmost)) then begin
+						findDrawer:DoAdditionalFind()
+					end else begin
+						if Perform(findDrawer, scope, [Array: ]) then begin
+								findDrawer:ShowFound(scope)
+							end
+					end;
+				(findDrawer.busybox := nil)
+			end) = 'Cancel) then begin
+					self:Notify(3, "Find", "The Find action was cancelled")
+				end
+		end;
+	(busybox := nil)
+end
+@@end

@@ -1,0 +1,28 @@
+@@ 0x59ffdd
+func(a1) begin
+	(if a1 then begin
+			if callOptionsSlip.viewCObject then begin
+					callOptionsSlip:Close()
+				end;
+			theEmporium := ResolveEntryAlias(userConfiguration.currentEmporium);
+			thePersona := ResolveEntryAlias(userConfiguration.currentPersona);
+			if SetPersona then begin
+					UseCurrentPersona()
+				end;
+			if setEmporia then begin
+					UseCurrentEmporium()
+				end;
+			SetPersona := nil;
+			setEmporia := nil;
+			if theApp.viewCObject then begin
+					AddDeferredSend(theApp, 'RememberedClose, [Array: base])
+				end else begin
+					base:Close()
+				end;
+			if clearOnClose then begin
+					theTransport.(clearOnClose) := nil
+				end;
+			AddDeferredSend(theTransport, 'DoConnect, [Array: theEmporium, thePersona, request, GetUserConfig('mailMode), listMethod])
+		end)
+end
+@@end

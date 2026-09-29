@@ -1,0 +1,8 @@
+@@ 0x5b2ae1
+func(a1, a2) begin
+	UndoAction := true;
+	self:setLabelScript(a1);
+	userConfiguration.letterSetSelection := a2;
+	(UndoAction := nil)
+end
+@@end

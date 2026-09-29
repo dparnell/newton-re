@@ -1,0 +1,5 @@
+@@ 0x52e975
+func(a1, a2) begin
+	self:SendOption("sdgt", a1, a2)
+end
+@@end

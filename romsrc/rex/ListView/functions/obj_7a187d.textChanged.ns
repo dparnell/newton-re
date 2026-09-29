@@ -1,0 +1,7 @@
+@@ 0x79f85d names
+func() begin
+	dirtyFlag := true;
+	needsMeasure := true;
+	(newTitle := MakeRichString(text, styles))
+end
+@@end

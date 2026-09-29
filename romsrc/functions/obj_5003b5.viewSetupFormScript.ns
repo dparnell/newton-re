@@ -1,0 +1,16 @@
+@@ 0x4ff9c5
+func() begin
+	mainViewLastMailFormat := calendar.lastMailFormat;
+	calendar.lastMailFormat := nil;
+	calendar.routeScripts := calendar.MeetingNotes.routeScripts;
+	SetKeyView(self, 0);
+	if (not HasSlot(statusbar, 'stepChildren)) then begin
+			statusbar.stepChildren := Clone(statusbar.stepChildren)
+		end;
+	filingButtonView := AddStepView(statusbar, filingButton);
+	statusbar:Dirty();
+	RefreshViews();
+	inherited:?viewSetupFormScript();
+	(hilitedIndex := nil)
+end
+@@end

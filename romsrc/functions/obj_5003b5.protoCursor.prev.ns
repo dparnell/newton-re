@@ -1,0 +1,5 @@
+@@ 0x50e8b1
+func() begin
+	self:move(-1)
+end
+@@end

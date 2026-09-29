@@ -1,0 +1,5 @@
+@@ 0x4c3451
+func() begin
+	GetRoot().iobox:GetDefaultItem()
+end
+@@end

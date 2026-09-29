@@ -1,0 +1,44 @@
+@@ 0x49d519
+func(a1, a2, a3, a4, a5) begin
+	if a4 then begin
+			if (not (l3 := a5:GetSoup((l2 := allSoups.(mastersoupSlot).soupName)))) then begin
+					l3 := CreateUSoupMember(l2, a5)
+				end
+		end;
+	local l1;
+	local l2;
+	local l3;
+	(foreach l4, l5 in selected do begin
+			local l7;
+			if (l1 := ResolveEntryAlias(l5)) then begin
+					l7 := nil;
+					if a2 then begin
+							if (not a3) then begin
+									if l1.labels then begin
+											RemoveSlot(l1, 'labels);
+											l7 := true
+										end
+								end else begin
+									if (a3 <> l1.labels) then begin
+											l1.labels := a3;
+											l7 := true
+										end
+								end
+						end;
+					if (if a4 then (EntryStore(l1) <> a5)) then begin
+							self:SetActionDescription(-8101);
+							if EntryStore(l1):IsReadOnly() then begin
+									EntryCopy(l1, l3)
+								end else begin
+									EntryMove(l1, l3)
+								end
+						end else begin
+							if l7 then begin
+									EntryChange(l1)
+								end
+						end
+				end
+		end);
+	(if (a4 or l7) then XmitSoupChange(masterSoup.soupName, appSymbol, 'whatThe, nil))
+end
+@@end

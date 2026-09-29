@@ -1,0 +1,8 @@
+@@ 0x43f0fd
+func() begin
+	(if (not StrFilled(callOptionsSlip.inNumber)) then self:Notify(3, text, "No phone number is specified. Please choose or enter a phone number.") else begin
+			callOptionsSlip.invoker := self;
+			callOptionsSlip:Toggle()
+		end)
+end
+@@end

@@ -1,0 +1,20 @@
+@@ 0x72c659
+func() begin
+	local l1, l2, l3, l4;
+	if (if self.phoneNum then (l2 := target.(path))) then begin
+			l4 := ClassOf(l2);
+			l2 := ParsePhone(l2).phone
+		end;
+	if self.areacode then begin
+			l1 := (if (if (not StrFilled(l2)) then (not areacode.changed)) then nil else TrimString(areacode.entryLine:GetRichString()))
+		end;
+	l3 := (if self.extension then TrimString(extension.entryLine:GetRichString()));
+	savePhoneNum := MakePhone({areacode: l1, phone: l2, extension: l3});
+	if (if l4 then StrFilled(savePhoneNum)) then begin
+			SetClass(savePhoneNum, l4)
+		end else begin
+			savePhoneNum := nil
+		end;
+	'postQuit
+end
+@@end

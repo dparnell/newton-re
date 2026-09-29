@@ -1,0 +1,21 @@
+@@ 0x4579f1
+func(a1, a2, a3) begin
+	local l1, l2;
+	if (if (not (a2 = primaryPath)) then (not (ObjEntryClass(a1) = 'group))) then begin
+			return inherited:Get(a1, a2, a3)
+		end;
+	if (a2 = primaryPath) then begin
+			return self:GetPrimaryValue(a1, a3)
+		end;
+	if IsArray((l1 := self:GetObjSlot(a1, a2))) then begin
+			l2 := Length(l1)
+		end else begin
+			if a1.members then begin
+					l2 := Length(a1.members)
+				end else begin
+					l2 := 0
+				end
+		end;
+	(if (a3 = 'text) then return ParamStr("(^0 members)", [Array: l2]) else return l1)
+end
+@@end

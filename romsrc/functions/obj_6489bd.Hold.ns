@@ -1,0 +1,5 @@
+@@ 0x52ea41
+func(a1) begin
+	self:SendOption("hold", 'ignore, a1)
+end
+@@end

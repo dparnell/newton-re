@@ -1,0 +1,11 @@
+@@ 0x49678d
+@@const kROM_574
+@574
+@@main
+func(a1) begin
+	(if self:TrackHilite(a1) then (if (if backupInfo then (not openEraseSlip)) then begin
+				kROM_574:New(base, self:getDestStore());
+				self:hilite(nil)
+			end else self:checkToErase()) else self:hilite(nil))
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x545861
+func() begin
+	OpenForCardIcon();
+	GetUserConfig('ExtraAlwaysClose)
+end
+@@end

@@ -1,0 +1,42 @@
+@@ 0x75939d
+func() begin
+	whichConnectionOpen := true;
+	self.protoContext := GetRoot().Connection;
+	protoContext:AddOpenWindow(self);
+	self.closing := nil;
+	try begin
+			endpoint:SetState(1);
+			if (if (if (l1 := endpoint:GetState().desktopApps) then IsArray(l1)) then (Length(l1) > 0)) then begin
+					self.desktopPrefs := l1[0]
+				end
+		end onexception |evt.ex| do begin end;
+	if endpoint.whichIcons then begin
+			l2 := endpoint.whichIcons;
+			l3 := 4;
+			l4 := 0;
+			l5 := 1;
+			self.layout := {};
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			local l5;
+			(for l6 := 0 to 5 do begin
+					if (BAnd(l2, l5) > 0) then begin
+							if (l3 > 3) then begin
+									l4 := (l4 + 1);
+									l3 := 1
+								end;
+							layout.('[Array: backup, Restore, install, Import, sync, Keyboard][l6]) := {row: l4, col: l3};
+							l3 := (l3 + 1)
+						end;
+					l5 := (l5 * 2)
+				end);
+			if (l4 = 1) then begin
+					self.viewBounds := Clone(viewBounds);
+					self.viewBounds.bottom := ((self.viewBounds.bottom - 50) - 5)
+				end
+		end;
+	self:StartIdle()
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x4445d1
+func() begin
+	start.selectedDates := [Array: startTime];
+	(stop.selectedDates := [Array: stopTime])
+end
+@@end

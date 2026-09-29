@@ -1,0 +1,11 @@
+@@ 0x773451
+func() begin
+	formulasList := GetFormulas();
+	self.selection := nil;
+	self.listItems := Array(Length(formulasList), nil);
+	(foreach l1, l2 in formulasList do begin
+			self.listItems[l1] := Stringer([Array: "\u2022\u", " ", l2.overview])
+		end);
+	self:SetupList()
+end
+@@end

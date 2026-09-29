@@ -1,0 +1,9 @@
+@@ 0x45e831
+func() begin
+	if (self:GetScalingInfo exists) then begin
+			self:RelocateGreyBox(self:GetScalingInfo())
+		end;
+	self:DoDrawing('viewDrawScript, [Array: ]);
+	(needToUpdate := nil)
+end
+@@end

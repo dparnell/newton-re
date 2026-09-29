@@ -1,0 +1,5 @@
+@@ 0x4de571
+func() begin
+	self:New()
+end
+@@end

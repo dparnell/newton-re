@@ -1,0 +1,15 @@
+@@ 0x78ce75 names
+func(aDropType, aDropData, aDropPt) begin
+	(if ((aDropType = 'topic) or (aDropType = 'task)) then begin
+			indexList := Array(Length(aDropData.topics), nil);
+			local indexList;
+			(for i := 0 to (Length(indexList) - 1) do begin
+					indexList[i] := ((dragTo.index + 1) + i)
+				end);
+			self:AddTopicDragDrop(aDropData, nil, true);
+			self:RedoTopics();
+			AddUndoAction('UndoDropTopic, [Array: indexList]);
+			true
+		end)
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x5154a1
+func() begin
+	local l1, l2, l3;
+	l1 := Length(selectedDates);
+	l2 := selectedDates[0];
+	l3 := selectedDates[(l1 - 1)];
+	(if (l1 > 1) then (self.text := ParamStr("^0 ^1 ^2", [Array: LongDateStr(l2, DateSpecShort), "-", LongDateStr(l3, DateSpecShort)])) else (self.text := LongDateStr(l2, DateSpecLong)))
+end
+@@end

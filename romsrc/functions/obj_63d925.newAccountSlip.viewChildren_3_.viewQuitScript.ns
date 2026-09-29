@@ -1,0 +1,8 @@
+@@ 0x5a0a9d
+func() begin
+	if ValidateSlip then begin
+			ValidateSlip:Close()
+		end;
+	inherited:?viewQuitScript()
+end
+@@end

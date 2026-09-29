@@ -1,0 +1,37 @@
+@@ 0x466775
+func(a1) begin
+	l1 := [Array: ];
+	if ((l1 := Clone(self:GetRouteScripts(a1))) = nil) then begin
+			l1 := [Array: ]
+		end;
+	if (l2 := GetVariable(self, 'currentViewDef)) then begin
+			if (l3 := GetVariable(l2, 'routeScripts)) then begin
+					ArrayMunger(l1, Length(l1), 0, l3, 0, nil)
+				end
+		end;
+	if (Length(l1) = 0) then begin
+			if (if (l4 := GetVariable(self, 'appSymbol)) then Routing.(l4)) then begin
+					local l1;
+					local l2;
+					local l3;
+					local l4;
+					(foreach l5 in Routing.(l4) do begin
+							if (if l5 then l5.routeScript) then begin
+									(l5 := Clone(l5)).appSymbol := l4;
+									if (if (l5.title <> nil) then (l5.icon = nil)) then begin
+											if StrEqual(l5.title, "Delete") then begin
+													l5.icon := @291
+												end else begin
+													if StrEqual(l5.title, "Duplicate") then begin
+															l5.icon := @292
+														end
+												end
+										end;
+									AddArraySlot(l1, l5)
+								end
+						end)
+				end
+		end;
+	return l1
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x42e2c1
+func(a1) begin
+	SetKeyView(a1, 99999);
+	(if keys then keys:Open())
+end
+@@end

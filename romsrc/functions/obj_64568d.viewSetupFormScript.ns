@@ -1,0 +1,15 @@
+@@ 0x4b6dd9
+func() begin
+	local l1, l2;
+	inherited:viewSetupFormScript();
+	l1 := target.height;
+	if (if targetViewDef then targetViewDef.viewDefHeight) then begin
+			minimumHeight := (23 + targetViewDef.viewDefHeight)
+		end;
+	if (nextEntry >= Length(entries)) then begin
+			l1 := max(minimumHeight, (lastHeight + viewOriginY))
+		end;
+	self.viewBounds := SetBounds(0, 0, 0, l1);
+	(if (not cutoffMinWidth) then (cutoffMinWidth := ((l2 := GetAppParams()).appAreaWidth - 40)))
+end
+@@end

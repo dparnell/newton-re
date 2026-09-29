@@ -1,0 +1,8 @@
+@@ 0x722ab1
+func() begin
+	if (theApp.superSymbol = 'ownerNames) then begin
+			(viewBounds := Clone(viewBounds)).bottom := (viewBounds.bottom - 86)
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

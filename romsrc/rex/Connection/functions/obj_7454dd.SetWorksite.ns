@@ -1,0 +1,10 @@
+@@ 0x745de5
+func(a1) begin
+	(if (if a1 then a1.place) then begin
+			protoContext:ConnectionPrefsWrite(currentChoiceUserconfigTag, a1.place);
+			self:UpdateText(a1.place);
+			self:SetLabelCommandsFromUserConfig(self);
+			self:SetNewWillDialText()
+		end)
+end
+@@end

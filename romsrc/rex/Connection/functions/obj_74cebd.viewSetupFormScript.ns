@@ -1,0 +1,26 @@
+@@ 0x74ef2d
+func() begin
+	self.protoContext := GetRoot().Connection;
+	protoContext:AddOpenWindow(self);
+	self.closing := nil;
+	if IsReadOnly(macIcons) then begin
+			macIcons := Array(Length((l1 := macIcons)), nil);
+			local l1;
+			(foreach l2, l3 in l1 do begin
+					local l5;
+					macIcons[l2] := MakeShape(l1[l2])
+				end)
+		end;
+	currentPath := [Array: ];
+	aborting := nil;
+	(try begin
+			endpoint:WriteCommand("dpth", nil, nil);
+			if (not IsArray((l5 := protoContext:CallReadCommand(endpoint, "path")).data)) then begin
+					Throw('|evt.ex.error|, -28012)
+				end;
+			(currentPath := l5.data)
+		end onexception |evt.ex| do begin
+			self:StopOpen(CurrentException().error)
+		end)
+end
+@@end

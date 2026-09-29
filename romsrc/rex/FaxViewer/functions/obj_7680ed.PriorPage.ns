@@ -1,0 +1,5 @@
+@@ 0x769661
+func() begin
+	self:GotoPage((fPageNum - 1))
+end
+@@end

@@ -1,0 +1,13 @@
+@@ 0x7abbbd
+func(a1, a2) begin
+	local l1;
+	(foreach l2 in (l1 := SplitString(StringFilter(a1, ",./:;!@#$%^&*()_+=", 'rejectAll))) do begin
+			local l4;
+			if (if l2 then (StrLen(l2) > 1)) then begin
+					if (l4 := LookupWord(l2)) then begin
+							GetRoot().ReviewDict:AddWord(l4)
+						end
+				end
+		end)
+end
+@@end

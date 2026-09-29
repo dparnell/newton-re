@@ -1,0 +1,5 @@
+@@ 0x78ee5d names
+func() begin
+	{class: 'checkList, height: 200, topics: [Array: ], timestamp: Time(), makeNewTopic: true}
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x44a7e5
+func(a1) begin
+	clicker();
+	PostCommand('application, 114)
+end
+@@end

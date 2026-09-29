@@ -1,0 +1,53 @@
+@@ 0x47fe3d
+func(a1, a2, a3) begin
+	local l1, l2;
+	(if a1 then begin
+			if a2 then begin
+					a1.state := a2
+				end;
+			if a3 then begin
+					a1.error := a3
+				end;
+			currentItem := nil;
+			l1 := 'save;
+			if (if a1._saveBodyAlias then (not self:IsInItem(a1))) then begin
+					a1.body := a1._saveBodyAlias;
+					RemoveSlot(a1, '_saveBodyAlias)
+				end;
+			if a1.completionscript then begin
+					if (if a1.appSymbol then (app := GetRoot().(a1.appSymbol))) then begin
+							try begin
+									l2 := app:?ItemCompletionScript(a1)
+								end onexception |evt.ex| do begin
+									self:Notify(3, title, "Error in completionScript")
+								end;
+							if l2 then begin
+									l1 := nil
+								end
+						end else begin
+							a1.completionscript := nil
+						end
+				end;
+			if (not a1.completionscript) then begin
+					if (not self:ignoreError(a1.error)) then begin
+							self:HandleError(a1.error)
+						end;
+					if (a1.state = 'Sent) then begin
+							l1 := (if (not a1.covert) then self:GetConfig('outboxLogging))
+						end else begin
+							if (if (a1.state = 'ready) then a1.Connect) then begin
+									l1 := nil;
+									a1.error := nil;
+									a1._reopened := true;
+									OpenRoutingSlip(a1, nil);
+									a1._reopened := nil
+								end
+						end
+				end;
+			if (if (a1.state = 'Sent) then (not a1.sentTimeStamp)) then begin
+					a1.sentTimeStamp := Time()
+				end;
+			GetRoot().(owner):ItemCompleted(a1, l1)
+		end)
+end
+@@end

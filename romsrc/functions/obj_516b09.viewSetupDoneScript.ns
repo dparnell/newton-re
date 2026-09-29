@@ -1,0 +1,8 @@
+@@ 0x516a09
+func() begin
+	local l1;
+	pageHeight := (((l1 := self:LocalBox()).bottom - 12) - 4);
+	pageWidth := l1.right;
+	self:setupNextPage()
+end
+@@end

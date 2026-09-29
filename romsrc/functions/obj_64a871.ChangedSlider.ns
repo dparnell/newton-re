@@ -1,0 +1,8 @@
+@@ 0x423a95
+func() begin
+	local l1;
+	l1 := self:ViewValueToDb(viewValue);
+	SetUserConfig(userConfigSlot, l1);
+	self:VolumeChangeAction(l1)
+end
+@@end

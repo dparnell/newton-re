@@ -1,0 +1,37 @@
+@@ 0x469311
+func() begin
+	local l1, l2, l3, l4, l5;
+	l1 := self:Parent().viewBounds;
+	l2 := Clone(saveBounds);
+	l3 := 10;
+	if ((l4 := (28 + (10 * cText.cellWidth))) > (l1.right - l1.left)) then begin
+			l3 := 8;
+			l4 := (28 + (8 * cText.cellWidth))
+		end;
+	l2.left := 0;
+	l2.right := l4;
+	if (l2.bottom > l1.bottom) then begin
+			l2.bottom := (l1.bottom - 29);
+			l2.top := (l2.bottom - 64)
+		end;
+	self.saveBounds := l2;
+	inherited:viewSetupFormScript();
+	self:RegisterOpenKeyboard(6);
+	cText.maxChars := l3;
+	if wordInfo then begin
+			cText:SetNewWord(pickItems[0], 'external);
+			wordInfo := nil
+		end else begin
+			if (if pickItems then (Length(pickItems) > 0)) then begin
+					cText:SetNewWord(pickItems[0], 'pickItems)
+				end else begin
+					cText:SetNewWord(SPrintObject(""), 'none)
+				end
+		end;
+	if (not self.refCon) then begin
+			self.refCon := self:GetCaretRefCon();
+			refConChanged := true
+		end;
+	cText:SetNewTemplate((l5 := cText:GetViewTemplate()))
+end
+@@end

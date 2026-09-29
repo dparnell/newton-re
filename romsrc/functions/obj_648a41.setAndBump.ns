@@ -1,0 +1,8 @@
+@@ 0x560d7d
+func(a1, a2, a3) begin
+	local l1;
+	l1 := MakeText(a1, (a3.left + a2), a3.top, a3.right, (a3.bottom - 2));
+	a3.bottom := ((a3.top := a3.bottom) + lineHeight);
+	l1
+end
+@@end

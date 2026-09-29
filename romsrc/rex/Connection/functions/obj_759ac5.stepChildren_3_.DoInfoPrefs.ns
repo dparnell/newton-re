@@ -1,0 +1,9 @@
+@@ 0x75f2f5
+@@const kROM_8271
+@8271
+@@main
+func() begin
+	local l1;
+	(l1 := BuildContext(kROM_8271)):Open()
+end
+@@end

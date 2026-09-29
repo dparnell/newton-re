@@ -1,0 +1,6 @@
+@@ 0x535509
+func(a1) begin
+	callEndpoint:SetSpeaker(a1, true);
+	(speakerNeedsReset := (not a1))
+end
+@@end

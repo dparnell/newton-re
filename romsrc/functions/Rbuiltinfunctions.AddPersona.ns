@@ -1,0 +1,37 @@
+@@ 0x48bdd5
+@@const kFunction_48bd19
+func(a1, a2, a3) begin
+	l1 := nil;
+	l2 := nil;
+	l4 := {};
+	if (not (l3 := GetUserConfig(a1))) then begin
+			l3 := [Array: ]
+		end else begin
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			(foreach l1 in l3 do begin
+					if IsSameEntry(l1, a3) then begin
+							l2 := l1;
+							break
+						end
+				end)
+		end;
+	if (not l2) then begin
+			l1 := MakeEntryAlias(a3);
+			AddArraySlot(l3, l1);
+			l4.(a1) := l3;
+			if (if (a2 = 'currentPersona) then (not GetUserConfig('currentPersona))) then begin
+					SetUserConfig('currentPersona, l3[0]);
+					UseCurrentPersona()
+				end;
+			SetUserConfigEnMasse(a1, l4)
+		end;
+	l1
+end
+@@main
+func(a1) begin
+	call (kFunction_48bd19) with ('personae, 'currentPersona, a1)
+end
+@@end

@@ -1,0 +1,29 @@
+@@ 0x4c5945
+func(a1, a2, a3, a4, a5) begin
+	local l1, l2;
+	l2 := (l1 := GetTargetCursor(a1, nil)):entry();
+	(while l2 do begin
+			if a2 then begin
+					if (not a3) then begin
+							if l2.labels then begin
+									RemoveSlot(l2, 'labels);
+									self:Fileit(l2);
+									EntryChange(l2)
+								end
+						end else begin
+							if (a3 <> l2.labels) then begin
+									l2.labels := a3;
+									self:Fileit(l2);
+									EntryChange(l2)
+								end
+						end
+				end;
+			if a4 then begin
+					self:MoveTarget(l2, a5)
+				end;
+			(l2 := l1:Next())
+		end);
+	selected := nil;
+	layout:Retarget(true)
+end
+@@end

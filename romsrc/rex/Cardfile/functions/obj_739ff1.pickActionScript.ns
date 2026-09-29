@@ -1,0 +1,7 @@
+@@ 0x73b219
+func(a1) begin
+	target.sorton := SPrintObject(a1);
+	EntryChange(target);
+	AddDeferredSend(closeBox, 'buttonClickScript, '[Array: ])
+end
+@@end

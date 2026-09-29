@@ -1,0 +1,6 @@
+@@ 0x4be601
+func() begin
+	vars.ioBusy := nil;
+	(vars.ioStopping := nil)
+end
+@@end

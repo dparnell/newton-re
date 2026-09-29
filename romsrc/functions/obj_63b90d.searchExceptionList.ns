@@ -1,0 +1,14 @@
+@@ 0x4f6ce5
+func(a1, a2) begin
+	local l1;
+	if a1.exceptions then begin
+			l1 := LSearch(a1.exceptions, a2, 0, '|=|, '[pathExpr: 0])
+		end else begin
+			a1.exceptions := [Array: ]
+		end;
+	if (not l1) then begin
+			l1 := -1
+		end;
+	l1
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x524d15
+func(a1) begin
+	(if a1 then (curTopic := index))
+end
+@@end

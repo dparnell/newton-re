@@ -1,0 +1,20 @@
+@@ 0x560689
+func(a1, a2, a3) begin
+	l1 := a2;
+	local l1;
+	(foreach l2, l3 in items do begin
+			local l5;
+			if (l1 > 0) then begin
+					l1 := (l1 - 1)
+				end else begin
+					if ((l2 - a2) >= a3) then begin
+							break
+						end;
+					(l5 := self:MakeFoundItem(l3, nil)).selected := self:isSelected({_uniqueID: l5.entryID, _storeID: l5.storeID});
+					l5.itemIndex := l2;
+					AddArraySlot(a1, l5)
+				end
+		end);
+	(l2 - a2)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x4aa029
+func(a1) begin
+	SetRemove(newtAppBase.(a1), self)
+end
+@@end

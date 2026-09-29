@@ -1,0 +1,5 @@
+@@ 0x4b7841
+func(a1) begin
+	parentView:EntryCool(a1)
+end
+@@end

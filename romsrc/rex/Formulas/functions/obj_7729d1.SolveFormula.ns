@@ -1,0 +1,16 @@
+@@ 0x772d25
+func(a1) begin
+	local l1, l2, l3, l4, l5;
+	(if (DateField.calcLineValue <> nil) then begin
+			DayOfWeekField:SetNumericValueString((l2 := LongDateStr((l1 := DateField.calcLineValue), @66.longDayOfWeekStrSpec)));
+			WeekInYearField:SetNumericValueString(WeekNumber(l1, nil));
+			(l3 := Date(l1)).month := 1;
+			l3.Date := 1;
+			l4 := TotalMinutes(l3);
+			l3.month := 12;
+			l3.Date := 31;
+			l5 := TotalMinutes(l3);
+			DayInYearField:SetNumericValueString(Stringer([Array: NumberStr((1 + ((l1 - l4) div 1440))), "/", NumberStr(((l5 - l1) div 1440))]))
+		end)
+end
+@@end

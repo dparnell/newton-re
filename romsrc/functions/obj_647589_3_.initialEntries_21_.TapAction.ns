@@ -1,0 +1,6 @@
+@@ 0x546251
+func() begin
+	GetRoot().findDrawer:PrimeAndOpen();
+	GetUserConfig('ExtraAlwaysClose)
+end
+@@end

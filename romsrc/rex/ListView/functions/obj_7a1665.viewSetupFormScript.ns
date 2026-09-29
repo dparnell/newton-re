@@ -1,0 +1,15 @@
+@@ 0x797b1d names
+func() begin
+	self.viewBounds := SetBounds(0, 74, 0, -18);
+	self:GetToDoSoup();
+	self:RollItemsOver(nil);
+	firstTopic := 0;
+	RegSoupChange("To Do", 'todo, OldSoupChanged);
+	RegSoupChange("To Do List", 'todo, NewSoupChanged);
+	if oldTodoSoup then begin
+			self:ConvertToDoSoup()
+		end;
+	inherited:viewSetupFormScript();
+	SetCaretInfo(self, {x: 43, y: 20})
+end
+@@end

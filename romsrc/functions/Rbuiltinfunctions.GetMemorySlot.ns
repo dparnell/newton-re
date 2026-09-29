@@ -1,0 +1,17 @@
+@@ 0x420a49
+@@const kROM_276
+@276
+@@main
+func(a1, a2) begin
+	local l1, l2, l3, l4, l5;
+	(if a1 then begin
+			l1 := GetStores()[0]:GetSoup(kROM_276);
+			l2 := Stringer([Array: "_M_", a1]);
+			l4 := (l3 := Query(l1, {type: 'index, indexPath: 'tag, beginKey: l2, endKey: l2})):entry();
+			(if (a2 = 'remove) then EntryRemoveFromSoup(l4) else (if l4 then l4 else (if (a2 = 'make) then begin
+							l1:Add((l5 := {tag: l2, items: [Array: ]}));
+							l5
+						end)))
+		end)
+end
+@@end

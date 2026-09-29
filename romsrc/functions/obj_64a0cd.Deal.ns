@@ -1,0 +1,5 @@
+@@ 0x56e89d
+func(a1) begin
+	ArrayMunger([Array: ], 0, nil, deck, (top := (top - a1)), a1)
+end
+@@end

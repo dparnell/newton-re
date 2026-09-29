@@ -1,0 +1,13 @@
+@@ 0x75b279
+func() begin
+	if transports then begin
+			(foreach l1 in transports do begin
+					local l3;
+					if (if (l3 := GetRoot().(l1)) then (l3.Status <> 'idle)) then begin
+							return nil
+						end
+				end)
+		end;
+	return true
+end
+@@end

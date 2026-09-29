@@ -1,0 +1,12 @@
+@@ 0x4e0f11
+func() begin
+	local l1;
+	(if FrameDirty(target) then begin
+			l1 := LocationEntryChange(target);
+			(if cards.romOnly then self:RebuildCardCursor(l1) else (if (l1 <> target) then begin
+						target := l1;
+						cards:Goto(l1)
+					end))
+		end)
+end
+@@end

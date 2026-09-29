@@ -1,0 +1,7 @@
+@@ 0x510dfd
+func(a1, a2) begin
+	local l1;
+	self:ValidateTitleAndDatetimeArgs(a1, a2);
+	self:GetNotesData((l1 := self:FindExactlyOneAppointment(a1, nil, a2, nil)))[1]
+end
+@@end

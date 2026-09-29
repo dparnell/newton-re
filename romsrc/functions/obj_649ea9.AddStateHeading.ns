@@ -1,0 +1,12 @@
+@@ 0x4c58a5
+func(a1, a2) begin
+	local l1;
+	(l1 := Clone('{title: nil, collapsed: nil, count: 1, spec: nil})).sortTag := a1;
+	l1.title := stateStrings.(a1);
+	l1.spec := self:GetSpec('status, a2, a1);
+	curs := self:MakeCursor(currentSoupSymbol, l1.spec);
+	l1.count := curs:CountEntries();
+	l1.collapsed := statesCollapsed.(a1);
+	AddArraySlot(headings, l1)
+end
+@@end

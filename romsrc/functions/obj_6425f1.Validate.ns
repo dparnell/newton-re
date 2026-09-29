@@ -1,0 +1,15 @@
+@@ 0x4db589
+func() begin
+	local l1;
+	l1 := (target := cards:entry());
+	(while (if target then (target = 'deleted)) do (target := cards:Next()));
+	if (not target) then begin
+			target := cards:prev();
+			(while (if target then (target = 'deleted)) do (target := cards:prev()))
+		end;
+	(if (l1 <> target) then begin
+			self:UpdateLocationFields();
+			self:Retarget()
+		end)
+end
+@@end

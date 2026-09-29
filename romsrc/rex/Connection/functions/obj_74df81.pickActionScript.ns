@@ -1,0 +1,6 @@
+@@ 0x74e55d
+func(a1) begin
+	inherited:?pickActionScript(a1);
+	self:ReCenter()
+end
+@@end

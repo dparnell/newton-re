@@ -1,0 +1,8 @@
+@@ 0x4b59c9
+func() begin
+	local l1;
+	(l1 := self:GetAppPreferences()).whichSoup := 'outbox;
+	self:Open();
+	self:MoveBehind(nil)
+end
+@@end

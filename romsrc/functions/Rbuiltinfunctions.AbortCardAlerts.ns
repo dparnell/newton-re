@@ -1,0 +1,14 @@
+@@ 0x56e281
+func(a1, a2) begin
+	l1 := 0;
+	local l1;
+	(foreach l2, l3 in OpenCardViews do begin
+			if (l3.CardSlot = a1) then begin
+					l3.confirmedValue := a2;
+					l3:Close();
+					l1 := (l1 + 1)
+				end
+		end);
+	(if (l1 > 0) then l1)
+end
+@@end

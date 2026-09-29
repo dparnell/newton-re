@@ -1,0 +1,38 @@
+@@ 0x437fc1
+func() begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10;
+	dstRect := self:LocalBox();
+	if (if zoomer then ((zoomer = 'srcRect) or continents.(zoomer))) then begin
+			if (zoomer <> 'srcRect) then begin
+					srcRect := SetBounds(LongitudeToCoordinate((l2 := continents.(zoomer)).leftLongitude, worldRect.right), LatitudeToCoordinate(l2.topLatitude, worldRect.bottom), LongitudeToCoordinate(l2.rightLongitude, worldRect.right), LatitudeToCoordinate(l2.bottomLatitude, worldRect.bottom))
+				end;
+			if (l1 := (srcRect.right < srcRect.left)) then begin
+					srcRect.right := (srcRect.right + worldRect.right)
+				end else begin
+					srcRect := SectRect(srcRect, pictRect)
+				end;
+			l3 := (srcRect.right - srcRect.left);
+			l4 := (srcRect.bottom - srcRect.top);
+			l5 := (dstRect.right - dstRect.left);
+			l6 := (dstRect.bottom - dstRect.top);
+			l7 := (l3 / l4);
+			l8 := (l5 / l6);
+			if (l7 > l8) then begin
+					l9 := (floor((((l4 * l7) / l8) - l4)) div 2);
+					srcRect.top := (srcRect.top - l9);
+					srcRect.bottom := (srcRect.bottom + l9)
+				end else begin
+					l9 := (floor((((l3 * l8) / l7) - l3)) div 2);
+					srcRect.left := (srcRect.left - l9);
+					srcRect.right := (srcRect.right + l9)
+				end;
+			l3 := (srcRect.right - srcRect.left);
+			l4 := (srcRect.bottom - srcRect.top);
+			l7 := (l3 / l4)
+		end else begin
+			srcRect := GraphicSize(@321)
+		end;
+	l10 := MakeShape(mapPict);
+	(shape := OffsetShape(ScaleShape((if l1 then [Array: l10, OffsetShape(MakeShape(mapPict), worldRect.right, 0)] else l10), srcRect, dstRect), 0, 0))
+end
+@@end

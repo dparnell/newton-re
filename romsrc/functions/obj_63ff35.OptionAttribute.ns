@@ -1,0 +1,14 @@
+@@ 0x52f469
+func(a1) begin
+	local l1;
+	l1 := nil;
+	if a1 then begin
+			if IsArray(a1) then begin
+					l1 := Length(a1)
+				end else begin
+					l1 := 'standalone
+				end
+		end;
+	l1
+end
+@@end

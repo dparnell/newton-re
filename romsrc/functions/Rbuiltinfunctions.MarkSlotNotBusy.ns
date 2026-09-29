@@ -1,0 +1,9 @@
+@@ 0x56a1dd
+func(a1, a2) begin
+	local l1, l2;
+	(if (l2 := LSearch((l1 := BusySlots[a2]), a1, 0, '|=|, 'appSymbol)) then begin
+			RemoveSlot(l1, l2);
+			true
+		end)
+end
+@@end

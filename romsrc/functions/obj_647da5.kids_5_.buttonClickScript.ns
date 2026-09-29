@@ -1,0 +1,5 @@
+@@ 0x5339a1
+func() begin
+	GetRoot().(appSymbol):CancelRequest(0)
+end
+@@end

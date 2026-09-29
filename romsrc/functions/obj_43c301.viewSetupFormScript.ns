@@ -1,0 +1,42 @@
+@@ 0x43c2a1
+@@const kLiteral_435a99
+'{type: index, indexPath: [Array: country, name, region]}
+@@main
+func() begin
+	local l1, l2, l3, l4;
+	if countryAndName then begin
+			viewBounds := SetBounds(3, 20, -26, -2)
+		end;
+	l1 := GetLocationSoup(spots);
+	if countryAndName then begin
+			l2 := kLiteral_435a99
+		end else begin
+			if (not StrEqual(spots, @251)) then begin
+					l2 := '{type: index, indexPath: name}
+				end else begin
+					l2 := '{type: index, indexPath: [Array: name, country, region]}
+				end
+		end;
+	cursor := l1:Query(l2);
+	if initialSpot then begin
+			if IsFrame(initialSpot) then begin
+					cursor:Goto(initialSpot)
+				end else begin
+					cursor:GotoKey(initialSpot)
+				end;
+			self:SetResult(cursor:entry());
+			hilitedIndex := 0
+		end else begin
+			if countryAndName then begin
+					cursor:GotoKey([Array: userConfiguration.countrySlot])
+				end
+		end;
+	(if countryAndName then begin
+			currentCountry := (l3 := cursor:entry()).country;
+			(l4 := DeepClone(kLiteral_435a99)).beginKey := [Array: currentCountry, "\u0000\u"];
+			l4.endKey := [Array: currentCountry, "\u7FFF\u"];
+			cursor := l1:Query(l4);
+			cursor:Goto(l3)
+		end)
+end
+@@end

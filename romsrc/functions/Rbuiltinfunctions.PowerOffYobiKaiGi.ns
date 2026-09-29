@@ -1,0 +1,37 @@
+@@ 0x563235
+func(a1) begin
+	if ((not PoweringOff) or (PoweringOff = 'inYobiKaiGi)) then begin
+			return nil
+		end;
+	if (not PowerOffFenceSitters) then begin
+			(foreach l1 in OldPowerOffHandlers do begin
+					try begin
+							l1:PowerOffScript('PowerOff)
+						end onexception |evt.ex| do begin end
+				end);
+			SetClass((PowerOffFenceSitters := [Array: ]), a1);
+			(foreach l3, l1 deeply in PowerOffRegistry do begin
+					local l5, l6;
+					if (l1 = PowerOffRegistry.(l3)) then begin
+							AddArraySlot(PowerOffFenceSitters, l3)
+						end
+				end)
+		end;
+	if (not a1) then begin
+			a1 := ClassOf(PowerOffFenceSitters)
+		end;
+	PoweringOff := 'inYobiKaiGi;
+	(while (if PowerOffFenceSitters then (Length(PowerOffFenceSitters) > 0)) do begin
+			l3 := PowerOffFenceSitters[0];
+			l5 := nil;
+			try begin
+					l5 := call PowerOffRegistry.(l3) with ('PowerOff, a1)
+				end onexception |evt.ex| do begin end;
+			(if (if (if PowerOffFenceSitters then (Length(PowerOffFenceSitters) > 0)) then (PowerOffFenceSitters[0] = l3)) then (if (l5 = 'holdYourHorses) then return (PoweringOff := true) else SetRemove(PowerOffFenceSitters, l3)))
+		end);
+	PowerOffFenceSitters := nil;
+	PoweringOff := nil;
+	PowerOnSequence((l6 := PowerOffRingiSho()));
+	true
+end
+@@end

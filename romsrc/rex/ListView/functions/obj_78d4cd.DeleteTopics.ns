@@ -1,0 +1,75 @@
+@@ 0x78d20d names
+func(aList) begin
+	if (ClassOf(aList) = 'int) then begin
+			i := aList;
+			topic := topics[i];
+			aList := [Array: i];
+			if topic.level then begin
+					self:AddKidsToList(aList, i, topic.level)
+				end else begin
+					self:AddKidsToList(aList, i, 1)
+				end
+		end;
+	if ((nItems := Length(aList)) > 1) then begin
+			Sort(aList, '|>|, nil)
+		end;
+	local i;
+	local nItems;
+	local topic;
+	local theIndex;
+	local j;
+	local mom;
+	local level;
+	local hasFamily;
+	local familyDone;
+	local theTopic;
+	(foreach topic in aList do begin
+			if ((if HasPath((theTopic := topics[topic]), 'source) then (theTopic.source = nil)) or (ClassOf(theTopic.source) = 'symbol)) then begin
+					self:Notify(3, title, "Can\u2019\ut delete a 1.x formatted To Do item");
+					return nil
+				end
+		end);
+	(for i := 0 to (nItems - 1) do begin
+			theIndex := aList[i];
+			self:DeletingTopic((topic := topics[theIndex]));
+			if (((topic.level = 1) or (topic.level = nil)) or topic.mtgDone) then begin
+					mom := nil
+				end else begin
+					(for j := (theIndex - 1) to 0 by -1 do begin
+							if (topics[j].level < topic.level) then begin
+									mom := j;
+									break
+								end
+						end)
+				end;
+			ArrayRemoveCount(topics, theIndex, 1);
+			nTopics := (nTopics - 1);
+			if mom then begin
+					if ((topic := topics[mom]).mtgDone = nil) then begin
+							level := topic.level;
+							familyDone := true;
+							hasFamily := nil;
+							(for j := (mom + 1) to (nTopics - 1) do begin
+									if ((topics[j].level = nil) or (topics[j].level <= level)) then begin
+											break
+										end;
+									hasFamily := true;
+									if (topics[j].mtgDone = nil) then begin
+											familyDone := nil;
+											break
+										end
+								end);
+							if (if hasFamily then familyDone) then begin
+									self:SetDone(mom, topics[mom], true, true, nil)
+								end
+						end
+				end
+		end);
+	self:UpdateMultipleStores(true);
+	if viewCObject then begin
+			self:RedoChildren()
+		end;
+	curTopic := nil;
+	true
+end
+@@end

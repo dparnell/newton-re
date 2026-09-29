@@ -1,0 +1,18 @@
+@@ 0x4afd29
+func(a1, a2) begin
+	local l1, l2;
+	if useTypeScrolling then begin
+			if (if (if (BAnd(a2, 33554432) = 0) then (a1 >= $ )) then (not (if (a1 >= $\uF721) then (a1 <= $\uF72F)))) then begin
+					l2 := Ticks();
+					if ((not self.keyDownTime) or ((l2 - keyDownTime) > 100)) then begin
+							self.keyString := nil
+						end;
+					self.keyString := Stringer([Array: self.keyString, a1]);
+					self:TypeScrollScript(keyString);
+					self.keyDownTime := l2;
+					l1 := true
+				end
+		end;
+	l1
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x4b7669
+func(a1) begin
+	(if (if path then a1.(path)) then a1.(path) else a1)
+end
+@@end

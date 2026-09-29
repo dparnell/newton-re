@@ -1,0 +1,15 @@
+@@ 0x519535
+func(a1) begin
+	local l1, l2;
+	(if a1 then begin
+			if (not (l1 := a1.class)) then begin
+					if (ClassOf(a1.sorton) = 'name) then begin
+							l1 := 'person
+						end else begin
+							l1 := 'company
+						end
+				end;
+			(if ((l1 = 'person) or (l1 = 'owner)) then self:bcFullName(a1.name) else (if (l2 := GetDataDefs(l1)) then l2:StringExtract(a1, 1) else a1.sorton))
+		end)
+end
+@@end

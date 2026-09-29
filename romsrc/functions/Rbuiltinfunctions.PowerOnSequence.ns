@@ -1,0 +1,13 @@
+@@ 0x563365
+func(a1) begin
+	local l1;
+	vars.setTimeSeed := Random(0, 536870911);
+	if (not (l1 := GetRoot()).SleepScreen:PasswordCheck()) then begin
+			l1:Dirty();
+			RefreshViews()
+		end;
+	BackupBatteryCheck();
+	MainBatteryCheck();
+	CallPowerOnFns(a1)
+end
+@@end

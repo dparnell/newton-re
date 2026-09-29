@@ -1,0 +1,6 @@
+@@ 0x4572d1
+func(a1, a2) begin
+	a1._alias := MakeEntryAlias(a2);
+	(a1._entryClass := ClassOf(a2))
+end
+@@end

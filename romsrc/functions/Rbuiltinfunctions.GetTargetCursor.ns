@@ -1,0 +1,11 @@
+@@ 0x4b2159
+func(a1, a2) begin
+	local l1, l2;
+	(if TargetIsCursor(a1) then begin
+			if (not (l2 := (if (l1 := GetDataDefs(ClassOf(a1))) then l1:?Query(a1, a2)))) then begin
+					l2 := @536:New(a2, a1)
+				end;
+			l2
+		end else @505:New(a2, (if a1 then [Array: a1] else [Array: ])))
+end
+@@end

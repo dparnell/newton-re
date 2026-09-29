@@ -1,0 +1,6 @@
+@@ 0x460ce5
+func() begin
+	confirmedValue := buttonValue;
+	base:Close()
+end
+@@end

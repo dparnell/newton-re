@@ -1,0 +1,7 @@
+@@ 0x5a6659
+func() begin
+	inherited:?viewSetupDoneScript();
+	cardfirst.entryLine.dictionaries := [Array: 48, 31, 0];
+	(cardlast.entryLine.dictionaries := [Array: 7, 31, 0])
+end
+@@end

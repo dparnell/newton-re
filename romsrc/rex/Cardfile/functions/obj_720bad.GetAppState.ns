@@ -1,0 +1,12 @@
+@@ 0x738881
+func() begin
+	local l1;
+	if (superSymbol = 'names) then begin
+			l1 := inherited:GetAppState()
+		end else begin
+			l1 := self:GetAppPreferences()
+		end;
+	newBdays := l1.newBdays;
+	l1
+end
+@@end

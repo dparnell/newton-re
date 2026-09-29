@@ -1,0 +1,21 @@
+@@ 0x4b4109
+func(a1) begin
+	local l1, l2, l3;
+	if (currentSoupSymbol = a1) then begin
+			return nil
+		end;
+	currentSoupSymbol := a1;
+	if (l1 := allSoups.(a1)) then begin
+			target := l1.theCursor:entry()
+		end;
+	(if (currentLayout = 'itemLayout) then begin
+			layout:SyncView();
+			layout:Retarget(true)
+		end else begin
+			layout.selected := nil;
+			self:UpdateLayout();
+			(l3 := (l2 := newtAppBase:ChildViewFrames())[(Length(l2) - 1)]):SyncChildren();
+			l3:Dirty()
+		end)
+end
+@@end

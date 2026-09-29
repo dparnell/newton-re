@@ -1,0 +1,5 @@
+@@ 0x5a0abd
+func() begin
+	(if (accountType = 'New) then (setEmporia := (not self:ValidateConfig('location, nil, '[Array: mailPhone], msgValidateNumber, 'ValidateSlip, 'RegValidationComplete))) else (SetPersona := (not self:ValidateConfig('owner, nil, '[Array: email, emailPassword], msgValidateSource, 'ValidateSlip, 'MoreValidation))))
+end
+@@end

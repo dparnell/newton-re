@@ -1,0 +1,12 @@
+@@ 0x4729c9
+func(a1) begin
+	(foreach l1 in a1 do begin
+			local l3;
+			l1:Open()
+		end);
+	if (l3 := GetUserConfig('blessedapp)) then begin
+			l3 := GetRoot().(l3)
+		end;
+	(if l3 then l3:MoveBehind(GetRoot():ChildViewFrames()[0]))
+end
+@@end

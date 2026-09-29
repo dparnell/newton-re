@@ -1,0 +1,20 @@
+@@ 0x49a359
+func() begin
+	local l1, l2;
+	if ((l1 := self:Parent()) = GetRoot()) then begin
+			l2 := GetAppParams().appAreaWidth
+		end else begin
+			l2 := l1:LocalBox().right
+		end;
+	if (l2 > 339) then begin
+			saveBounds := bigBounds
+		end else begin
+			if (l2 < 282) then begin
+					saveBounds := smallBounds
+				end else begin
+					RemoveSlot(self, 'saveBounds)
+				end
+		end;
+	inherited:viewSetupFormScript()
+end
+@@end

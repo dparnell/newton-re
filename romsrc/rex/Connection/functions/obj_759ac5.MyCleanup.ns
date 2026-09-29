@@ -1,0 +1,18 @@
+@@ 0x75facd
+func(a1) begin
+	local l1;
+	self:TurnKeyPassthruOff();
+	self:CloseOpenWindows(nil);
+	l1 := theEndpoint;
+	theEndpoint := nil;
+	startingConnection := nil;
+	if reopenMainSlip then begin
+			AddDeferredSend(self, 'Open, nil)
+		end else begin
+			if ((not Visible(self)) or closeBoxTapped) then begin
+					self:TossStuff()
+				end
+		end;
+	(if (if (a1 <> 0) then l1) then self:ShowError(l1, a1, nil))
+end
+@@end

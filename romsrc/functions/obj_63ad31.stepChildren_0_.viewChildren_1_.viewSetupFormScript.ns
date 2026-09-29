@@ -1,0 +1,6 @@
+@@ 0x4d90f5
+func() begin
+	inherited:viewSetupFormScript();
+	(entryLine.viewJustify := 192)
+end
+@@end

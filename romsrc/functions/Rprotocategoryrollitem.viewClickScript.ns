@@ -1,0 +1,9 @@
+@@ 0x4305fd
+func(a1) begin
+	(if self:TrackHilite(a1) then begin
+			self:click();
+			self:hilite(nil);
+			true
+		end)
+end
+@@end

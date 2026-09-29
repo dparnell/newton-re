@@ -1,0 +1,8 @@
+@@ 0x5abf29
+func() begin
+	(if warningRaised then begin
+			GetRoot().notifyIcon:KillAction(warningRaised);
+			(warningRaised := nil)
+		end)
+end
+@@end

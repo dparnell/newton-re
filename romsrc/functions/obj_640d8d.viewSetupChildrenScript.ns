@@ -1,0 +1,10 @@
+@@ 0x4398c5
+func() begin
+	local l1;
+	l1 := (if isShapeList then pictList else textList);
+	(if useScrollers then begin
+			viewChildren := [Array: l1, textListScrollers];
+			(if (viewOriginY > spillHeight) then self:SetOrigin(0, max(spillHeight, 0)))
+		end else (viewChildren := [Array: l1]))
+end
+@@end

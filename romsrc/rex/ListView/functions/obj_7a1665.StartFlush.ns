@@ -1,0 +1,7 @@
+@@ 0x797925 names
+func() begin
+	list:SetupIdle(5000);
+	flushDate := selectedDates[0];
+	(entryChanged := true)
+end
+@@end

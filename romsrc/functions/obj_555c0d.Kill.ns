@@ -1,0 +1,28 @@
+@@ 0x555bed
+func(a1) begin
+	(if a1 then begin
+			local l1;
+			local l2;
+			(foreach l3 in (l2 := (if (l1 := GetRoot().ExtrasDrawer.storesFilter) then [Array: l1] else GetStores())) do begin
+					if (not l3:IsReadOnly()) then begin
+							(foreach l5 in target.soupNames do begin
+									local l7;
+									if (l7 := l3:GetSoup(l5)) then begin
+											try begin
+													if (if target.emptyInternal then (l3 = GetStores()[0])) then begin
+															l7:RemoveAllEntriesXmit('soupervisor)
+														end else begin
+															l7:RemoveFromStoreXmit('soupervisor);
+															GetRoot().ExtrasDrawer:InvalIcons()
+														end
+												end onexception |evt.ex| do begin
+													self:Notify(3, "Packages", ParamStr("Unable to delete the data from ^0", [Array: l3:GetName()]))
+												end
+										end
+								end)
+						end
+				end);
+			base:Close()
+		end)
+end
+@@end

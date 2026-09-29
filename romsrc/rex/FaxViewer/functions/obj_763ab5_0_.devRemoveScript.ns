@@ -1,0 +1,8 @@
+@@ 0x763e95
+func(a1) begin
+	UnRegDataDef('ImageView);
+	UnRegDataView('ImageView, 'default);
+	UnRegDataView('ImageView, 'ImagePrintFormatSym);
+	UnRegDataView('ImageView, 'imageRouteFormat)
+end
+@@end

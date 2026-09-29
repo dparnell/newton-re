@@ -1,0 +1,10 @@
+@@ 0x736f19
+func() begin
+	local l1;
+	(if (superSymbol = 'names) then begin
+			(l1 := self:GetAppPreferences()).newBdays := newBdays;
+			EntryChange(l1);
+			(if self.viewCObject then inherited:SaveAppState())
+		end)
+end
+@@end

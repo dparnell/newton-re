@@ -1,0 +1,6 @@
+@@ 0x4f27e1
+func() begin
+	local l1;
+	self:SetClusterValue((l1 := BAnd(mtgInfo, 31)))
+end
+@@end

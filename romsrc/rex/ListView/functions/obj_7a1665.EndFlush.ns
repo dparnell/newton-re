@@ -1,0 +1,53 @@
+@@ 0x797755 names
+func() begin
+	(if entryChanged then begin
+			originalLen := Length(targets);
+			local t;
+			local counts;
+			local i;
+			local whichTarget;
+			local originalLen;
+			(foreach index, target in targets do begin
+					if (not EntryValid(target)) then begin
+							self:Notify(3, title, "The storage card was ejected so the last few changes have been lost.");
+							return nil
+						end
+				end);
+			counts := Array(Length(targets), 0);
+			(foreach t in targets do begin
+					t.topics := Array(nTopics, nil)
+				end);
+			(foreach t in topics do begin
+					if (not HasPath(t, 'repeatInfo)) then begin
+							if (if ((whichTarget := t.source) <> nil) then (ClassOf(whichTarget) <> 'symbol)) then begin
+									targets[whichTarget].topics[counts[whichTarget]] := t;
+									counts[whichTarget] := (counts[whichTarget] + 1)
+								end
+						end
+				end);
+			(for i := 0 to (Length(targets) - 1) do begin
+					setlength(targets[i].topics, counts[i])
+				end);
+			(foreach t in topics do begin
+					if HasPath(t, 'repeatInfo) then begin
+							if t.mtgDone then begin
+									SetAdd(t.repeatDone, flushDate, true)
+								end else begin
+									SetRemove(t.repeatDone, flushDate)
+								end
+						end
+				end);
+			(foreach t in targets do begin
+					if (if EntryValid(t) then (not EntryStore(t):IsReadOnly())) then begin
+							self:FlushEntry(t)
+						end
+				end);
+			(foreach t in repeatTargets do begin
+					if (if EntryValid(t) then (not EntryStore(t):IsReadOnly())) then begin
+							self:FlushEntry(t)
+						end
+				end);
+			(entryChanged := nil)
+		end)
+end
+@@end

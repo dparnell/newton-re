@@ -1,0 +1,5 @@
+@@ 0x4e0401
+func() begin
+	(pix := nil)
+end
+@@end

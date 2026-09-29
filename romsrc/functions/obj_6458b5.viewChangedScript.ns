@@ -1,0 +1,14 @@
+@@ 0x4b8355
+func(a1, a2) begin
+	local l1;
+	(if (if (not GetVariable(a2, 'hack)) then (a1 = 'text)) then begin
+			if (not (l1 := StringToNumber(a2.(a1)))) then begin
+					if (not (l1 := StringToNumber(StringFilter(a2.(a1), "0123456789.,-", 'passAll)))) then begin
+							l1 := 0
+						end
+				end;
+			GetVariable(a2, 'target).(path) := (if integerOnly then floor((l1 + 0.5)) else l1);
+			self:StartFlush()
+		end)
+end
+@@end

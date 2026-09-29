@@ -1,0 +1,15 @@
+@@ 0x723539
+func() begin
+	local l1;
+	inherited:?viewSetupFormScript();
+	if (not targetCursor) then begin
+			l1 := Clone(GetRoot().cardfile.allSoups.names);
+			l1:MakeSoup(GetRoot().cardfile.appSymbol);
+			l1.soupQuery := Clone(l1.soupQuery);
+			l1.soupQuery.IndexPath := 'sorton;
+			l1:SetupCursor();
+			targetCursor := l1.theCursor
+		end;
+	(if (if (target := targetCursor:entry()) then (not target.class)) then call GetRoot().cardfile.kUpdateClass with (target))
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x530519
+func(a1) begin
+	self:LabelActionScript(self:LabelIndex(a1))
+end
+@@end

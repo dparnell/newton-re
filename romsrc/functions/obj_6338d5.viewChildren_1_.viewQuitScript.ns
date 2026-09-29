@@ -1,0 +1,10 @@
+@@ 0x5b4edd
+func() begin
+	if openChild then begin
+			openChild:Close()
+		end;
+	openChild := nil;
+	self:savePreferences();
+	RemovePowerOffHandler(self)
+end
+@@end

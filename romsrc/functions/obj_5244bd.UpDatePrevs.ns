@@ -1,0 +1,22 @@
+@@ 0x520d91
+func() begin
+	local l1;
+	marks := self:Bookmarks();
+	secondMark := nil;
+	firstMark := nil;
+	if (l1 := pageNumsShowing[0]) then begin
+			if (not SetContains(marks, l1)) then begin
+					firstMark := l1
+				end
+		end;
+	if (l1 := pageNumsShowing[1]) then begin
+			if (not SetContains(marks, l1)) then begin
+					secondMark := l1
+				end
+		end;
+	if ((recentPage := self:PreviousPage()) = self:CurrentPage()) then begin
+			recentPage := 0
+		end;
+	(if (theKiosk := self:CurrentKiosk()) then (recentKiosk := theKiosk.page) else (recentKiosk := 0))
+end
+@@end

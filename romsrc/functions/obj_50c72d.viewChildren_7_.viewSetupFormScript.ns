@@ -1,0 +1,10 @@
+@@ 0x50743d
+func() begin
+	self.viewBounds := RelBounds(0, dpSlip.peopleFieldTop, 220, 18);
+	if hideInviteesField then begin
+			viewFlags := BAnd(viewFlags, bnot(1))
+		end;
+	inherited:?viewSetupFormScript();
+	(entryLine.viewFont := 10243)
+end
+@@end

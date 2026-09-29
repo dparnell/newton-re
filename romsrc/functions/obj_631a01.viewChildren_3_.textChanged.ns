@@ -1,0 +1,6 @@
+@@ 0x4d4361
+func() begin
+	userConfiguration.callingCard := entryLine.text;
+	self:JamIt()
+end
+@@end

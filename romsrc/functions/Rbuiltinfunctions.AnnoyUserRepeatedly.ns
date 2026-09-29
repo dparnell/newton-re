@@ -1,0 +1,18 @@
+@@ 0x42277d
+@@const kFunction_4225e1
+func(a1) begin
+	AnnoyUserRepeatedly(a1)
+end
+@@main
+func(a1) begin
+	local l1, l2;
+	(if (if (l1 := LFetch(Notifications, 9, 0, '|=|, 'nfType)) then (not l1.seenByUser)) then begin
+			if (a1 > 0) then begin
+					GetRoot().notification:ShowItem(l1, nil);
+					AnnoyUser()
+				end;
+			l2 := GetUserConfig('AlarmAnnoyDelays);
+			(if (a1 < Length(l2)) then AddAlarmInSeconds("AnnoyingAlarm", (TimeInSeconds() + l2[a1]), nil, kFunction_4225e1, [Array: (a1 + 1)]))
+		end)
+end
+@@end

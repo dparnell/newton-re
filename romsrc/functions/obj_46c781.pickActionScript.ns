@@ -1,0 +1,19 @@
+@@ 0x46c70d
+func(a1) begin
+	local l1;
+	if popChars then begin
+			if ((l1 := popChars[a1]).code = 0) then begin
+					recognizeButton:Recognize()
+				end else begin
+					if (l1.code = 1) then begin
+							self:HandleScrub(nil)
+						end else begin
+							if ((l1.code = 2) or (l1.code = 3)) then begin
+									self:HandleJoin(l1)
+								end
+						end
+				end
+		end;
+	(popChars := nil)
+end
+@@end

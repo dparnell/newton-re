@@ -1,0 +1,9 @@
+@@ 0x7461d9
+func(a1, a2) begin
+	local l1;
+	self.thecallback := a2;
+	l1 := self:ValidateConfig('location, a1, '[Array: connectionPhone, areacode, country], "Where are you calling?", 'validateDialog, 'ValidateDone);
+	fullNumber := nil;
+	return l1
+end
+@@end

@@ -1,0 +1,17 @@
+@@ 0x78f5a5 names
+func(anEntry) begin
+	local top, n, theTopic, ti;
+	if ((n := Length(anEntry.topics)) > 0) then begin
+			ti := (n - 1);
+			theTopic := anEntry.topics[ti];
+			(while (if (if (ti >= 0) then (theTopic.hideCount <> nil)) then (theTopic.hideCount > 0)) do begin
+					ti := (ti - 1);
+					(theTopic := anEntry.topics[ti])
+				end);
+			top := Max(theTopic.viewBounds.bottom, (theTopic.viewBounds.top + 16))
+		end else begin
+			top := 16
+		end;
+	SetBounds(0, 0, 240, top)
+end
+@@end

@@ -1,0 +1,19 @@
+@@ 0x4b8785
+func(a1, a2) begin
+	(if (if (not GetVariable(a2, 'hack)) then (a1 = 'text)) then begin
+			if StrFilled(a2.(a1)) then begin
+					if textFrame then begin
+							(foreach l1, l2 in textFrame do begin
+									if StrEqual((if textFramePath then l2.(textFramePath) else l2), a2.(a1)) then begin
+											GetVariable(a2, 'target).(path) := l1;
+											break
+										end
+								end)
+						end else begin
+							GetVariable(a2, 'target).(path) := Intern(a2.(a1))
+						end
+				end;
+			self:StartFlush()
+		end)
+end
+@@end

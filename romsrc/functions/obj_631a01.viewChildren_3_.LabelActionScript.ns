@@ -1,0 +1,9 @@
+@@ 0x4d4381
+func(a1) begin
+	local l1;
+	l1 := labelCommands[a1];
+	userConfiguration.longDistanceCarrier := (if (if StrFilled(l1.num) then StrFilled(l1.carrier)) then Intern(l1.carrier));
+	self:UpdateText(l1.num);
+	true
+end
+@@end

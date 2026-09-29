@@ -1,0 +1,16 @@
+@@ 0x523a59
+func() begin
+	if (not bookRef) then begin
+			if (not isbn) then begin
+					isbn := "Gecko!HDI?"
+				end;
+			if (not bookRef) then begin
+					bookRef := self:WhereIsBook(isbn).bookSoup.Book
+				end
+		end;
+	if (displayParams.appAreaHeight <= 240) then begin
+			viewFormat := 337
+		end;
+	inherited:viewSetupFormScript()
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x55a389
+func(a1) begin
+	local l1;
+	(if (if (l1 := PackageEntryFromThingy(a1)) then OKToDeactivatePackage(l1.pkgRef, l1.packageName, "Are you sure you want to remove it?")) then RemovePackage(l1))
+end
+@@end

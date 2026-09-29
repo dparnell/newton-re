@@ -1,0 +1,7 @@
+@@ 0x76d8e9
+func() begin
+	SetValue(label, 'text, Stringer([Array: $\uFC01, GetCountryEntry(country)[0].name]));
+	SetValue(Currency, 'text, GetCountryEntry(country)[0].Currency);
+	label:RestyleString()
+end
+@@end

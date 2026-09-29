@@ -1,0 +1,5 @@
+@@ 0x52aaed
+func() begin
+	call @859 with ()
+end
+@@end

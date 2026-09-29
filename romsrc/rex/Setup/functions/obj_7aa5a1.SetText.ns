@@ -1,0 +1,6 @@
+@@ 0x7aa669
+func(a1) begin
+	SetValue(self, 'text, a1);
+	self:AdjustHeight()
+end
+@@end

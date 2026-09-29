@@ -1,0 +1,14 @@
+@@ 0x757759
+func() begin
+	local l1;
+	self.protoContext := GetRoot().Connection;
+	protoContext:AddOpenWindow(self);
+	(if (if (l1 := protoContext:ConnectionPrefsRead('autodock)) then (not GetGlobals().ConnectionLikesWorksites)) then begin
+			self.viewBounds := SetBounds(0, 50, 220, 270);
+			(connectValues.viewFlags := BOr(connectValues.viewFlags, 1))
+		end else begin
+			self.viewBounds := SetBounds(0, 50, 220, 175);
+			(connectValues.viewFlags := BAnd(connectValues.viewFlags, -2))
+		end)
+end
+@@end

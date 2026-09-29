@@ -1,0 +1,5 @@
+@@ 0x761325
+func() begin
+	(self.text := Stringer([Array: "Will dial: ", " ", self:GetPhone()]))
+end
+@@end

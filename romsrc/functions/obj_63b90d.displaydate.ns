@@ -1,0 +1,20 @@
+@@ 0x511f7d
+func(a1, a2) begin
+	local l1;
+	selectedDates := [Array: (l1 := (a1 - (a1 mod 1440)))];
+	if (a2 = 'day) then begin
+			self:changeViewTo(scheduleView)
+		end else begin
+			if (a2 = 'toDoList) then begin
+					self:changeViewTo(ToDoListView)
+				end else begin
+					if (a2 = 'Agenda) then begin
+							self:changeViewTo(AgendaView)
+						end
+				end
+		end;
+	self:DateChangedScript();
+	monthController:Refresh();
+	nil
+end
+@@end

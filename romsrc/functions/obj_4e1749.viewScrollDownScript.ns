@@ -1,0 +1,6 @@
+@@ 0x4e0049
+func() begin
+	target := cursor:prev();
+	self:RedoChildren()
+end
+@@end

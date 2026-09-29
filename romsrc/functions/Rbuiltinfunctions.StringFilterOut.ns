@@ -1,0 +1,6 @@
+@@ 0x4d38d1
+func(a1, a2) begin
+	local l1;
+	(l1 := StringFilter((l1 := SubstituteChars(a1, a2, "\uFFFF\u")), "\uFFFF\u", 'rejectAll))
+end
+@@end

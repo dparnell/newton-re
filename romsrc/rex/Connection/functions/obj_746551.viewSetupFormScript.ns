@@ -1,0 +1,9 @@
+@@ 0x746f11
+func() begin
+	self.viewBounds := Clone(viewBounds);
+	self.viewBounds.right := (_currentWidth - 25);
+	self.currentChoiceUserconfigTag := AppleTalkUserConfigTag;
+	self:SetLabelCommandsFromUserConfig(self);
+	inherited:?viewSetupFormScript()
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x75f591
+func(a1, a2, a3) begin
+	self:ShowAppError("Dock", a1, a2, a3)
+end
+@@end

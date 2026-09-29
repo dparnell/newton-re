@@ -1,0 +1,12 @@
+@@ 0x4d09e1
+func(a1) begin
+	local l1;
+	l1 := [Array: ];
+	if a1 then begin
+			if (if (if a1.state then self:IsInItem(a1)) then (not self:IsLogItem(a1))) then begin
+					ArrayInsert(l1, replyAction, 0)
+				end
+		end;
+	(if (Length(l1) > 0) then l1)
+end
+@@end

@@ -1,0 +1,39 @@
+@@ 0x50a3c5
+func() begin
+	local l1, l2, l3, l4;
+	if newSplitRepeatTemplate then begin
+			return nil
+		end;
+	l1 := selectedMeeting.repeatTemplate;
+	(if (needToChangeThisOrFutureOccurrences = 'ThisAndFuture) then (if (NextMeeting(0, l1) = selectedMeeting.mtgStartDate) then begin
+				l3 := ((l2 := (newFirstDate - (newFirstDate mod 1440))) + newtMtgStartTime);
+				self:UpdateNotesData(l1, l1.mtgStartDate, l3);
+				l1.mtgStartDate := newMtgDate;
+				l1.mtgDuration := newMtgDuration;
+				selectedMeeting.mtgStartDate := newMtgDate;
+				newSplitRepeatTemplate := l1;
+				EntryChangeXmit(l1, 'calendar)
+			end else begin
+				l4 := Clone(l1);
+				if originalInviteesAliases then begin
+						l1.mtgInvitees := originalInviteesAliases
+					end;
+				if originalLocationAlias then begin
+						l1.mtgLocation := originalLocationAlias
+					end;
+				l4.mtgStartDate := newMtgDate;
+				l4.mtgDuration := newMtgDuration;
+				l4.exceptions := nil;
+				l4.InstanceNotesData := nil;
+				selectedRepeatSoup:GetMember(EntryStore(l1)):AddXmit((l4 := DeepClone(l4)), 'calendar);
+				self:TransferLocalNotes(l1, l4, newMtgDate, nil);
+				newSplitRepeatTemplate := l4;
+				l2 := ((l2 := selectedMeeting.mtgStartDate) - (l2 mod 1440));
+				l1.mtgStopDate := (l2 - 1);
+				EntryChangeXmit(l1, 'calendar)
+			end) else begin
+			selectedMeeting := self:MakeNewExceptionFrame(l1, selectedMeeting.mtgStartDate, newMtgDate, newMtgDuration);
+			self:CarefulChange(selectedRepeatSoup, l1, true)
+		end)
+end
+@@end

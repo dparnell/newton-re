@@ -1,0 +1,16 @@
+@@ 0x7b3c85
+@@const kFunction_7b3d21
+func(a1, a2) begin
+	(if a2.debug then StrEqual(a1, a2.debug))
+end
+@@main
+func() begin
+	local l1;
+	self:hilite(true);
+	(if (l1 := ArrayPos(fPages, gotoName, 0, kFunction_7b3d21)) then begin
+			fReviewDone := nil;
+			base.fReadyToQuit := nil;
+			base:ShowPage(l1)
+		end)
+end
+@@end

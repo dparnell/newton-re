@@ -1,0 +1,18 @@
+@@ 0x59f6c5
+func(a1) begin
+	local l1, l2;
+	(if a1 then begin
+			l1 := mailAccess[0].mailPhone;
+			l2 := mailAccess[0].mailNetwork;
+			if (not StrEqual(l1, GetUserConfig('mailPhone))) then begin
+					SetUserConfig('mailPhone, l1)
+				end;
+			if (l2 <> GetUserConfig('mailNetwork)) then begin
+					SetUserConfig('mailNetwork, l2)
+				end;
+			willDialNum := self:MungePhone(l1, GetUserConfig('currentCountry));
+			SetValue(willDial, 'text, willDialNum);
+			(if StrFilled(l1) then self:UpdateText(l1))
+		end)
+end
+@@end

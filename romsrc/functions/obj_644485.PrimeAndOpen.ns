@@ -1,0 +1,11 @@
+@@ 0x5252a1
+func() begin
+	local l1, l2;
+	if (l2 := GleanIntendedText()) then begin
+			l1 := self:TryIt(l2)
+		end else begin
+			l1 := assistant:ButtonToggle()
+		end;
+	l1
+end
+@@end

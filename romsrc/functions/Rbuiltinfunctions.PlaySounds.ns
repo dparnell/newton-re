@@ -1,0 +1,10 @@
+@@ 0x429045
+func(a1, a2, a3) begin
+	(l1 := {_proto: @431, direction: 'play}):Open();
+	local l1;
+	(foreach l2 in a1 do begin
+			l1:schedule(l2)
+		end);
+	l1:start(a2)
+end
+@@end

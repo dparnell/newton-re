@@ -1,0 +1,6 @@
+@@ 0x7269c5
+func() begin
+	label := GetLocale().regionLabel;
+	inherited:?viewSetupFormScript()
+end
+@@end

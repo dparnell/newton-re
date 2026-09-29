@@ -1,0 +1,13 @@
+@@ 0x554819
+func() begin
+	(foreach l1 in target.soupNames do begin
+			UnRegSoupChange(l1, 'soupervisor)
+		end);
+	if theApp.appObject then begin
+			RemoveSlot(base, 'AppObjectFileThisOn);
+			RemoveSlot(base, 'appObjectFileThisIn)
+		end;
+	theApp := nil;
+	(target := nil)
+end
+@@end

@@ -1,0 +1,51 @@
+@@ 0x43e651
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9;
+	l1 := ((viewBounds.right - viewBounds.left) div 2);
+	l2 := self:GlobalBox().left;
+	l4 := (GetPoint(4, a1) - l2);
+	l6 := (GetPoint(0, a1) - l2);
+	l3 := self:GlobalBox().top;
+	l5 := (GetPoint(5, a1) - l3);
+	l7 := (GetPoint(1, a1) - l3);
+	if (self:distance(self:diff(l1, l4), self:diff(l1, l5)) < self:distance(self:diff(l1, l6), self:diff(l1, l7))) then begin
+			l4 := (l6 - l1);
+			l5 := (l1 - l7)
+		end else begin
+			l4 := (l4 - l1);
+			l5 := (l1 - l5)
+		end;
+	if (l4 < 0) then begin
+			l2 := (-l4)
+		end else begin
+			l2 := l4
+		end;
+	if (l5 < 0) then begin
+			l3 := (-l5)
+		end else begin
+			l3 := l5
+		end;
+	l8 := (15 - self:FastEnoughAtan(l2, l3));
+	if ((l4 * l5) < 0) then begin
+			l8 := (30 - l8)
+		end;
+	if ((l4 < 0) or (if (l4 <= 0) then (l5 < 0))) then begin
+			l8 := (l8 + 30)
+		end;
+	if (l8 = 60) then begin
+			l8 := 0
+		end;
+	if (l2 > l3) then begin
+			l9 := (l2 + (l3 div 2))
+		end else begin
+			l9 := (l3 + (l2 div 2))
+		end;
+	if (l9 > ((viewBounds.right - viewBounds.left) div 3)) then begin
+			minutes := l8
+		end else begin
+			hours := ((l8 + 2) div 5)
+		end;
+	self:TimeChanged();
+	return true
+end
+@@end

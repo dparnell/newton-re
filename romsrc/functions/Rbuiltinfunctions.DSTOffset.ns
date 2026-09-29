@@ -1,0 +1,48 @@
+@@ 0x4204fd
+func(a1, a2) begin
+	local testYear;
+	local l1, l2, l3, l4, l5, l6;
+	if (not HasSlot((l1 := a2), 'daylight)) then begin
+			if ((not (l1 := GetCountryEntry(l1.country))) or (Length(l1) = 0)) then begin
+					return 0
+				end;
+			l1 := l1[0]
+		end else begin
+			if (not l1.daylight) then begin
+					return 0
+				end
+		end;
+	l2 := 0;
+	if (if l1 then l1.daylight) then begin
+			if ((not (l3 := GetDSTEntry(l1.daylight))) or (Length(l3) = 0)) then begin
+					return 0
+				end;
+			l3 := l3[0];
+			testYear := Date(a1).year;
+			l4 := func(a1) begin
+				local l1, l2, l3;
+				l1 := Date(TotalMinutes({year: testYear, month: a1.month, Date: 1, hour: 0, minute: 0}));
+				if ((l2 := (a1.dayOfWeek - l1.dayOfWeek)) < 0) then begin
+						l2 := (l2 + 7)
+					end;
+				(l3 := Clone(l1)).Date := ((1 + l2) + (7 * (a1.ordinal - 1)));
+				if (if (l3.Date > l3.daysInMonth) then (a1.ordinal = 5)) then begin
+						l3.Date := (l3.Date - 7)
+					end;
+				(TotalMinutes(l3) + a1.Time)
+			end;
+			l5 := call l4 with (l3.start);
+			l6 := call l4 with (l3.stop);
+			if (l3.start.month < l3.stop.month) then begin
+					if (if (a1 >= l5) then (a1 < l6)) then begin
+							l2 := l3.change
+						end
+				end else begin
+					if (not (if (a1 >= l6) then (a1 < l5))) then begin
+							l2 := l3.change
+						end
+				end
+		end;
+	l2
+end
+@@end

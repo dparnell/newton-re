@@ -1,0 +1,53 @@
+@@ 0x4f7e09
+func(a1, a2, a3, a4) begin
+	if (a1.InstanceNotesData = nil) then begin
+			a1.InstanceNotesData := [Array: ]
+		end;
+	l1 := a1.InstanceNotesData;
+	(if (a3 = nil) then (if a2 then (if (l2 := BFind(l1, a2, '|<|, 0)) then begin
+					if (l3 := ResolveEntryAlias(l1[l2][1])) then begin
+							EntryRemoveFromSoupXmit(l3, 'calendar)
+						end;
+					ArrayRemoveCount(l1, l2, 1)
+				end) else begin
+				local l1;
+				local l2;
+				local l3;
+				(for l2 := 0 to (Length(l1) - 1) do begin
+						local l6, l7, l8;
+						if (l3 := ResolveEntryAlias(l1[l2][1])) then begin
+								EntryRemoveFromSoupXmit(l3, 'calendar)
+							end
+					end);
+				(a1.InstanceNotesData := nil)
+			end) else begin
+			if (l2 := BFind(l1, a2, '|<|, 0)) then begin
+					if (l3 := ResolveEntryAlias(l1[l2][1])) then begin
+							l3.notes := a3;
+							EntryChangeXmit(l3, 'calendar)
+						end else begin
+							ArrayRemoveCount(l1, l2, 1);
+							l2 := nil
+						end
+				end;
+			(if (not l2) then begin
+					l6 := {notes: a3, repeatingMeetingAlias: nil};
+					if IsSoupEntry(a1) then begin
+							l6.repeatingMeetingAlias := MakeEntryAlias(a1);
+							EntrySoup(a1):AddXmit(l6, appSymbol)
+						end else begin
+							if (a1.viewStationery = 'RepeatingMeeting) then begin
+									l7 := RepeatSoup:GetMember(a4)
+								end else begin
+									l7 := RepeatNotes:GetMember(a4)
+								end;
+							self:CarefulAdd(l7, l6, true)
+						end;
+					(if IsSoupEntry(l6) then begin
+							l8 := MakeEntryAlias(l6);
+							BInsert(a1.InstanceNotesData, [Array: a2, l8], '|<|, 0, true)
+						end)
+				end)
+		end)
+end
+@@end

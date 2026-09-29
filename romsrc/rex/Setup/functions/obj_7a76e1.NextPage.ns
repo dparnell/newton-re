@@ -1,0 +1,6 @@
+@@ 0x7a8851
+func() begin
+	self.fReadyToQuit := nil;
+	(if (if (if fCompleted.fully then (fCurrentPageIndex < (Length(fPages) - 1))) then fReviewDone) then return self:ShowPage((Length(fPages) - 1)) else return self:ShowPage((fCurrentPageIndex + 1)))
+end
+@@end

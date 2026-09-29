@@ -1,0 +1,5 @@
+@@ 0x4fcaa5
+func(a1) begin
+	self:AddMeetingToDate(a1, a1.mtgStartDate, nil)
+end
+@@end

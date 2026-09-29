@@ -1,0 +1,9 @@
+@@ 0x48f689
+func(a1) begin
+	if (prefsCache.(prefsSlot) = 'all) then begin
+			prefsCache.(prefsSlot) := 'Partial
+		end;
+	inherited:HiliteLine(a1);
+	(if (Length(selectedItems) = Length(ListItems)) then (checkAll := true) else (checkAll := nil))
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x72f895
+func() begin
+	appBase._notesRecogSettings := _recogSettings;
+	if (if target.notes then (Length(target.notes) = 0)) then begin
+			target.notes := nil
+		end;
+	inherited:?viewQuitScript()
+end
+@@end

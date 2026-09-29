@@ -1,0 +1,13 @@
+@@ 0x5116c5
+func(a1, a2, a3, a4) begin
+	local l1;
+	if ((l1 := self:FindAppointment(a1, a2, a3, a4, 2)) = nil) then begin
+			ThrowBadTypeWithFrameData(-48418, l1)
+		end else begin
+			if (Length(l1) > 1) then begin
+					ThrowBadTypeWithFrameData(-48418, l1)
+				end
+		end;
+	l1[0]
+end
+@@end

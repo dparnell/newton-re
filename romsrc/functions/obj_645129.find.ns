@@ -1,0 +1,12 @@
+@@ 0x4aba39
+func(a1, a2, a3, a4) begin
+	(foreach l1 in allSoups do begin
+			local l3;
+			l3 := Length(a2);
+			self:StandardFind(a1, l1.soupName, a2, a4, l1.soupQuery.indexPath);
+			if (if l1.userName then (l3 < Length(a2))) then begin
+					a2[l3].title := l1.userName
+				end
+		end)
+end
+@@end

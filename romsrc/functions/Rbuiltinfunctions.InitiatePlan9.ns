@@ -1,0 +1,9 @@
+@@ 0x504649
+func() begin
+	local l1;
+	(if IsReadOnly((l1 := GetRoot().calendar).meetingTypeRegistry) then begin
+			l1.externalTypeRegistry := {};
+			(l1.meetingTypeRegistry := {_proto: l1.|MeetingTypesROM-51|})
+		end else (l1.meetingTypeRegistry._proto := l1.|MeetingTypesROM-51|))
+end
+@@end

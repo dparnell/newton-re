@@ -1,0 +1,9 @@
+@@ 0x4f9e39
+func(a1) begin
+	local l1, l2;
+	(if ((l2 := (l1 := (if a1.realData then a1.realData else a1)).viewStationery) = 'cribNote) then begin
+			self:KillCrib(l1, true);
+			true
+		end)
+end
+@@end

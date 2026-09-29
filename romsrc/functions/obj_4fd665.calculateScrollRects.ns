@@ -1,0 +1,45 @@
+@@ 0x4fd56d
+func() begin
+	l1 := 769;
+	l2 := -1;
+	local l1;
+	local l2;
+	(foreach l3 in self:ChildViewFrames() do begin
+			if (Length((l5 := l3:ChildViewFrames())) > 0) then begin
+					if (l1 > 0) then begin
+							local l5;
+							(foreach l6 in l5 do begin
+									if ((l8 := l6.viewBounds.top) < l1) then begin
+											l1 := l8
+										end;
+									if (l1 <= 0) then begin
+											break
+										end
+								end)
+						end;
+					if (l2 < 736) then begin
+							(foreach l6 in l5 do begin
+									local l8, l9, l10, l11, l12, l13;
+									if ((l9 := l6.viewBounds.top) > l2) then begin
+											l2 := l9
+										end;
+									if (l2 >= 736) then begin
+											break
+										end
+								end)
+						end
+				end;
+			l11 := (PositionToTime((l10 := self:ChildViewFrames()[0]), l1) div 60);
+			l12 := ((PositionToTime(l10, l2) div 60) + 1)
+		end);
+	if (l11 <= l12) then begin
+			upDownScroller.DataRect := SetBounds(0, l11, 0, l12)
+		end else begin
+			upDownScroller.DataRect := SetBounds(0, 9999, 0, 9999)
+		end;
+	l13 := (ViewDuration div 60);
+	upDownScroller.yPos := (startTime div 60);
+	upDownScroller.ViewRect := SetBounds(0, 0, 0, l13);
+	(upDownScroller.ScrollRect := SetBounds(0, 0, 0, 24))
+end
+@@end

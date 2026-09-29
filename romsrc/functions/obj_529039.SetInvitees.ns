@@ -1,0 +1,25 @@
+@@ 0x528fd9
+func(a1) begin
+	if (l2 := GetMatchedEntries('person, self.entries)) then begin
+			l4 := Array((l3 := Length(l2)), nil);
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			(for l5 := 0 to (l3 - 1) do begin
+					local l8, l9;
+					l9 := ResolveEntryAlias((l8 := l2[l5]).alias);
+					l4[l5] := GetDataDefs('|nameRef.people|):MakeNameRef(l9, '|nameRef.people|);
+					if self:SetDisplayName(l4[l5], l8, l9) then begin
+							l4[l5]._alias := nil
+						end
+				end);
+			a1.nameEntries := l4
+		end else begin
+			if (l1 := FindPossibleName(self.noisewords, self.OrigPhrase)) then begin
+					a1.nameEntries := [Array: GetDataDefs('|nameRef.people|):MakeNameRef({name: {last: l1}}, '|nameRef.people|)]
+				end
+		end;
+	return l1
+end
+@@end

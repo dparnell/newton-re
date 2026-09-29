@@ -1,0 +1,5 @@
+@@ 0x484609
+func() begin
+	(text := (if doCardRouting then (if (targetView:AppObjectFileThisOn exists) then GetVariable(targetView, 'AppObjectFileThisOn) else (if (targetView:appObject exists) then (if ((not target._cursor) or (Length(target._cursor) = 1)) then ParamStr("File this ^0 on", [Array: GetVariable(targetView, 'appObject)[0]]) else ParamStr("File the selected ^0 on", [Array: GetVariable(targetView, 'appObject)[1]])) else "File on"))))
+end
+@@end

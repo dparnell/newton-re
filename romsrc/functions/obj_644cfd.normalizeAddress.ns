@@ -1,0 +1,25 @@
+@@ 0x47ff65
+func(a1) begin
+	local l1, l2, l3;
+	if (not IsString((l1 := GetDataDefs('|nameRef.email|):Get(a1, 'email, nil)))) then begin
+			return l1
+		end;
+	l2 := ClassOf(l1);
+	if (if IsArray(addressSymbols) then LSearch(addressSymbols, l2, 0, '|=|, nil)) then begin
+			return l1
+		end;
+	if (not (l3 := (if IsFrame(translate) then translate.(l2)))) then begin
+			l3 := EmailSystems.emailInternet.(l2)
+		end;
+	if l3 then begin
+			if IsFunction(l3) then begin
+					l1 := call l3 with (l1)
+				end else begin
+					if (not StrPos(l1, l3, 0)) then begin
+							l1 := Stringer([Array: l1, l3])
+						end
+				end
+		end;
+	l1
+end
+@@end

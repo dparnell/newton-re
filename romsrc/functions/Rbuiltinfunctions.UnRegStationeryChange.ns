@@ -1,0 +1,6 @@
+@@ 0x3c6a4d
+func(a1) begin
+	RemoveSlot(StationeryChangeRegistry, a1);
+	nil
+end
+@@end

@@ -1,0 +1,44 @@
+@@ 0x420bed
+@@const kFunction_4208b5
+func(a1, a2) begin
+	local l1;
+	l1 := (Time() div 1440);
+	(if (((16 >> (l1 - a1.when)) + (8 * a1.count)) > ((16 >> (l1 - a2.when)) + (8 * a2.count))) then -1 else 1)
+end
+@@const kFunction_4208d5
+func(a1) begin
+	Sort(a1, kFunction_4208b5, nil)
+end
+@@main
+func(a1, a2, a3) begin
+	if (((not a1) or (not a2)) or (if IsInstance(a2, 'string) then (not StrFilled(a2)))) then begin
+			return nil
+		end;
+	(if (l1 := GetMemorySlot(a1, 'make)) then begin
+			l2 := l1.items;
+			l3 := nil;
+			local l1;
+			local l2;
+			local l3;
+			(foreach l4 in l2 do begin
+					if (l3 := (if a3 then call a3 with (l4.item, a2) else StrEqual(l4.item, a2))) then begin
+							if a3 then begin
+									l4.item := Clone(a2)
+								end;
+							l4.when := (Time() div 1440);
+							l4.count := (l4.count + 1);
+							call (kFunction_4208d5) with (l2);
+							break
+						end
+				end);
+			if (not l3) then begin
+					call (kFunction_4208d5) with (l2);
+					ArrayInsert(l2, {item: Clone(a2), when: (Time() div 1440), count: 1}, 0);
+					if (Length(l2) > 8) then begin
+							SetLength(l2, 8)
+						end
+				end;
+			EntryChange(l1)
+		end)
+end
+@@end

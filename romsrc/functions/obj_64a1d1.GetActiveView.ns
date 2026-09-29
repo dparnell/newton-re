@@ -1,0 +1,9 @@
+@@ 0x54d08d
+func() begin
+	local l1;
+	if (l1 := iconSpace:SetupFakeTargetHelper()) then begin
+			iconSpace:PostSetupFakeTarget(l1)
+		end;
+	self
+end
+@@end

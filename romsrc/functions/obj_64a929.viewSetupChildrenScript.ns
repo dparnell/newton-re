@@ -1,0 +1,10 @@
+@@ 0x4da5e1
+func() begin
+	if (self.reflowStart = 0) then begin
+			self.stepChildren := [Array: GetUserConfig('letterheadForm), page1guts]
+		end else begin
+			self.stepChildren := [Array: page2Guts]
+		end;
+	inherited:viewSetupChildrenScript()
+end
+@@end

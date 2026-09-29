@@ -1,0 +1,10 @@
+@@ 0x635c7d
+func(a1, a2, a3) begin
+	local l1;
+	l1 := self:CreateSoup(a1, a2);
+	if a3 then begin
+			XmitSoupChange(a1, a3, 'soupCreated, l1)
+		end;
+	l1
+end
+@@end

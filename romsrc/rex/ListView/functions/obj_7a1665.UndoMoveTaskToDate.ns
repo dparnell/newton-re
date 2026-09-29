@@ -1,0 +1,10 @@
+@@ 0x79730d names
+func(aTask, aTarget, aDate, aWasDate) begin
+	if (selectedDates[0] <> aDate) then begin
+			return nil
+		end;
+	self:MoveTaskToDate(aTask, aTarget, aDate, aWasDate);
+	selectedDates[0] := aWasDate;
+	self:RedisplayScript()
+end
+@@end

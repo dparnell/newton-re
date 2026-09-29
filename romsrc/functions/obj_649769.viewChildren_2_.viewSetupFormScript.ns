@@ -1,0 +1,10 @@
+@@ 0x4b4c51
+func() begin
+	if TargetIsCursor(theItem) then begin
+			text := "Put away all selected items"
+		end else begin
+			text := "Put Away item to:"
+		end;
+	((viewBounds := Clone(viewBounds)).right := (viewBounds.left + StrFontWidth(text, viewFont)))
+end
+@@end

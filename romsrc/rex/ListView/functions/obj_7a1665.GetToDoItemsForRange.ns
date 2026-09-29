@@ -1,0 +1,14 @@
+@@ 0x797c8d names
+func(aDate1, aDate2) begin
+	theList := [Array: ];
+	local day;
+	local theList;
+	local dayTopics;
+	(for day := (aDate1 := ((aDate1 div 1440) * 1440)) to aDate2 by 1440 do begin
+			if (if ((dayTopics := self:GetToDoItemsForThisDate(day)) <> nil) then (Length(dayTopics) > 0)) then begin
+					AddArraySlot(theList, {date: day, topics: dayTopics})
+				end
+		end);
+	theList
+end
+@@end

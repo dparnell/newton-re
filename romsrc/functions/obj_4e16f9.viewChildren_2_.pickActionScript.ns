@@ -1,0 +1,32 @@
+@@ 0x4df1ed
+func(a1) begin
+	closestKey := MakeEntryAlias(a1);
+	target.country := a1.country;
+	target.gmt := a1.gmt;
+	target.longitude := a1.longitude;
+	target.latitude := a1.latitude;
+	if a1.dst then begin
+			target.dst := a1.dst
+		end else begin
+			RemoveSlot(a1, 'dst)
+		end;
+	if a1.region then begin
+			target.region := a1.region
+		end else begin
+			RemoveSlot(a1, 'region)
+		end;
+	if a1.areacode then begin
+			target.areacode := a1.areacode
+		end else begin
+			RemoveSlot(a1, 'areacode)
+		end;
+	if a1.mailAccess then begin
+			target.mailAccess := DeepClone(a1.mailAccess)
+		end else begin
+			RemoveSlot(a1, 'mailAccess)
+		end;
+	self:StartFlush();
+	inherited:pickActionScript(a1.name);
+	base:RedoChildren()
+end
+@@end

@@ -1,0 +1,15 @@
+@@ 0x453c15
+@@const kFunction_453bd5
+func(a1, a2) begin
+	(if a2 then IsSameEntry(a1, a2))
+end
+@@const kFunction_453bf5
+func(a1, a2) begin
+	(a1 = a2)
+end
+@@main
+func(a1) begin
+	local l1;
+	(if (if selected then (Length(selected) > 0)) then (if (l1 := AliasFromObj(a1)) then LSearch(selected, l1, 0, kFunction_453bd5, '_alias) else (if IsNameRef(a1) then LSearch(selected, a1._fakeID, 0, kFunction_453bf5, '_fakeID))))
+end
+@@end

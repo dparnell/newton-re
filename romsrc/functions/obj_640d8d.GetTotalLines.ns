@@ -1,0 +1,5 @@
+@@ 0x439785
+func() begin
+	return numItems
+end
+@@end

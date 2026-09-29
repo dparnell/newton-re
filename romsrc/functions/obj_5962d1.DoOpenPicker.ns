@@ -1,0 +1,13 @@
+@@ 0x5962b1
+func() begin
+	if (if currentPicker then currentPicker.viewCObject) then begin
+			if (currentPickerLine = path) then begin
+					return nil
+				end;
+			currentPicker:Close()
+		end;
+	inherited:DoOpenPicker();
+	currentPicker := pickerSlip;
+	(currentPickerLine := path)
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x4a7941
+func(a1) begin
+	if (not (index := ArrayPos(things, a1, 0, IsSameEntry(e, i)))) then begin
+			index := -1
+		end;
+	self:entry()
+end
+@@end

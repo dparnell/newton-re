@@ -1,0 +1,12 @@
+@@ 0x429ce1
+func() begin
+	AddUndoAction('toggleCheck, [Array: ]);
+	if (viewValue = nil) then begin
+			viewValue := buttonValue
+		end else begin
+			viewValue := nil
+		end;
+	self:valueChanged();
+	self:UpdateBitmap()
+end
+@@end

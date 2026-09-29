@@ -1,0 +1,33 @@
+@@ 0x4fe165
+func() begin
+	local l1, l2, l3, l4;
+	if (viewBounds = nil) then begin
+			if kidBounds then begin
+					if (l2 := LSearch(dayView.viewChildren, realData, 0, '|=|, nil)) then begin
+							l1 := kidBounds[l2]
+						end
+				end;
+			self.viewBounds := (if l1 then l1 else LayoutMeeting(realData, viewHeight, tabWidths, nil))
+		end;
+	if (l3 := realData).repeatTemplate then begin
+			l3 := l3.repeatTemplate
+		end;
+	if (l3.version <> 2) then begin
+			if EntryStore(l3):IsReadOnly() then begin
+					if realData.viewBounds then begin
+							l4 := (realData.mtgStartDate mod 1440);
+							self.viewBounds := {left: viewBounds.left, top: TimeToPosition(dayView, l4), right: viewBounds.right, bottom: TimeToPosition(dayView, (l4 + self:GetMeetingSlot(realData, 'mtgDuration)))}
+						end
+				end else begin
+					self:Convert10to20(l3, nil);
+					EntryChangeXmit(l3, 'calendar);
+					if realData.repeatTemplate then begin
+							realData := self:MakeInstanceOfRepeatingMeeting(l3, realData.mtgStartDate)
+						end
+				end
+		end;
+	target := self.realData;
+	targetView := self;
+	inherited:viewSetupFormScript()
+end
+@@end

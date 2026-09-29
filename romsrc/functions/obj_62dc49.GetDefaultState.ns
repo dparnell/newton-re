@@ -1,0 +1,14 @@
+@@ 0x4b1121
+func() begin
+	local l1;
+	(l1 := inherited:GetDefaultState()).sortby := 'Date;
+	l1.descending := nil;
+	l1.sortPicker := nil;
+	l1.currentSoupSymbol := currentSoupSymbol;
+	l1.whichSoup := 'inbox;
+	l1.hideFilter := [Array: 'hidden];
+	l1.statesCollapsed := {};
+	l1.deleteAfterPutaway := true;
+	l1
+end
+@@end

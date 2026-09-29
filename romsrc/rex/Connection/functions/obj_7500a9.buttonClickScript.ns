@@ -1,0 +1,18 @@
+@@ 0x750171
+func(a1) begin
+	local l1;
+	if (a1 < Length(currentPath)) then begin
+			SetLength(currentPath, (a1 + 1))
+		end else begin
+			a1 := (a1 - Length(currentPath));
+			l1 := {name: Clone(currentFolders[a1].name), type: currentFolders[a1].type};
+			if HasPath(currentFolders[a1], 'whichVol) then begin
+					l1.whichVol := currentFolders[a1].whichVol
+				end;
+			AddArraySlot(currentPath, l1)
+		end;
+	selection := nil;
+	currentIndex := nil;
+	self:RebuildFileList('path, nil)
+end
+@@end

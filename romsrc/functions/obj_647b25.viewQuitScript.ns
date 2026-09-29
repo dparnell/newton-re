@@ -1,0 +1,5 @@
+@@ 0x48f3b9
+func() begin
+	(godParent.(whoAmI) := nil)
+end
+@@end

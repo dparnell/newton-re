@@ -1,0 +1,5 @@
+@@ 0x41dd1d
+func() begin
+	AddMemoryItem(memory, entryLine.text)
+end
+@@end

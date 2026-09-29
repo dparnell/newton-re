@@ -1,0 +1,5 @@
+@@ 0x4cbd95
+func() begin
+	(self.text := DateNTime(Time()))
+end
+@@end

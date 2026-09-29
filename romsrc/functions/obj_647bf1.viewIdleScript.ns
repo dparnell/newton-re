@@ -1,0 +1,29 @@
+@@ 0x495f71
+func() begin
+	local l1, l2, l3;
+	if (l1 := self:getDestStore()):IsValid() then begin
+			l3 := l1:IsReadOnly();
+			self:makeMemoryInfoShape(l1);
+			l2 := Visible(backupButton);
+			if (l3 <> lastROValue) then begin
+					if l3 then begin
+							SetValue(nameInput, 'viewFlags, BAnd(nameInput.viewFlags, bnot(14848)));
+							SetValue(nameInput, 'viewFormat, BAnd(nameInput.viewFormat, bnot(143616)));
+							if (GetKeyView() = nameInput) then begin
+									SetKeyView(self, 0)
+								end;
+							backupButton:Hide();
+							eraseButton:Hide()
+						end else begin
+							SetValue(nameInput, 'viewFlags, BOr(nameInput.viewFlags, 14848));
+							SetValue(nameInput, 'viewFormat, BOr(nameInput.viewFormat, 143616));
+							backupButton:Show();
+							eraseButton:Show()
+						end;
+					lastROValue := l3
+				end;
+			self:Dirty()
+		end;
+	5000
+end
+@@end

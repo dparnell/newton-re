@@ -1,0 +1,12 @@
+@@ 0x56f815
+@@const kROM_828
+@828
+@@main
+func() begin
+	(foreach l1, l2 in cardHolder:ChildViewFrames() do begin
+			l2.cardIndex := l1
+		end);
+	deck := kROM_828:New();
+	self:Deal()
+end
+@@end

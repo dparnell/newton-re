@@ -1,0 +1,14 @@
+@@ 0x54a22d
+func(a1, a2, a3, a4) begin
+	(if specifiableExtraIconTypes.(a1) then begin
+			l1 := {packageName: a3};
+			local l1;
+			(foreach l2 in specifiableExtraIconSlots do begin
+					if HasSlot(a2, l2) then begin
+							l1.(l2) := a2.(l2)
+						end
+				end);
+			self:AddIconEntry(a1, l1, a4)
+		end)
+end
+@@end

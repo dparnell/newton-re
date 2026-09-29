@@ -1,0 +1,10 @@
+@@ 0x469dbd
+func() begin
+	if refCon.form.text then begin
+			cText:SetupAll(self:GetExternalWord(), 'external, cText.template, nil)
+		end else begin
+			cText:SetupAll(SPrintObject(""), 'none, nil, nil)
+		end;
+	cInk:Dirty()
+end
+@@end

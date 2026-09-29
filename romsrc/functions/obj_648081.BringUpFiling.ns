@@ -1,0 +1,10 @@
+@@ 0x47b16d
+func(a1) begin
+	local l1;
+	fileTarget := {labels: self:GetTransport():GetConfig(info.fileConfig)};
+	l1 := {_parent: GetRoot().(self:GetTransport().owner), appObjectFileThisIn: a1, appObjectFileAction: "Set", caller: self, FileThis: func(a1, a2, a3, a4, a5) begin
+		caller:FileThis((if a2 then a3))
+	end};
+	GetRoot().filingSlip:OpenForUser(self, {target: fileTarget, targetView: l1}, nil, nil)
+end
+@@end

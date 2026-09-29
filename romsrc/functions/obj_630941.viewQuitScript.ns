@@ -1,0 +1,8 @@
+@@ 0x5b6b69
+func() begin
+	local l1;
+	(if (l1 := GetClipboardIcon()) then (foreach l2 in l1 do begin
+				l2:Show()
+			end))
+end
+@@end

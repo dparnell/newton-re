@@ -1,0 +1,14 @@
+@@ 0x50e779
+func(a1) begin
+	local l1, l2, l3;
+	l1 := index;
+	l2 := baseIndex;
+	l3 := self:move(a1);
+	if (baseIndex = l2) then begin
+			index := l1
+		end else begin
+			self:move((-a1))
+		end;
+	l3
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x4c30c9
+func() begin
+	self:Fileit(target);
+	inherited:FilingChangedX()
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x749759
+func(a1) begin
+	if self:TrackHilite(a1) then begin
+			self:PopupMenu(popup, {bounds: self:LocalBox()})
+		end else begin
+			self:hilite(nil)
+		end;
+	true
+end
+@@end

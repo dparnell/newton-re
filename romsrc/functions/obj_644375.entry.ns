@@ -1,0 +1,5 @@
+@@ 0x5b951d
+func() begin
+	(if self:PrivateEntry(currentEntry) then return Clone(currentEntry) else return nil)
+end
+@@end

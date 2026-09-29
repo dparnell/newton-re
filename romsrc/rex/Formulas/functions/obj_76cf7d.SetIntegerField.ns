@@ -1,0 +1,5 @@
+@@ 0x76d4fd
+func(a1) begin
+	SetValue(value, 'integerField, a1)
+end
+@@end

@@ -1,0 +1,20 @@
+@@ 0x741a65
+func(a1, a2) begin
+	local l1, l2, l3;
+	l1 := childToScroll.viewOriginY;
+	l2 := (max(a2.count, 1) * 16);
+	if (if (a1 = 'up) then (l1 > 0)) then begin
+			l3 := max(0, (l1 - l2))
+		end else begin
+			if ((l1 + allinfoHeight) < childBottom) then begin
+					l3 := min((childBottom - allinfoHeight), (l1 + l2))
+				end
+		end;
+	(if l3 then begin
+			childToScroll:SetOrigin(0, l3);
+			scrollArrows.yPos := l3;
+			scrollArrows:AdjustArrows();
+			RefreshViews()
+		end)
+end
+@@end

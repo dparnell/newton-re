@@ -1,0 +1,29 @@
+@@ 0x51fca5
+func() begin
+	self.viewChildren := Clone(kids);
+	if (not stepChildren) then begin
+			stepChildren := [Array: ]
+		end else begin
+			self.stepChildren := [Array: ]
+		end;
+	if leftButtons then begin
+			(foreach l1, l2 in leftButtons do begin
+					if (if HasPath(l2, 'text) then HasPath(l2, 'viewFont)) then begin
+							l4 := (StrFontWidth(l2.text, l2.viewFont) + 6)
+						end else begin
+							l4 := (l2.viewBounds.right - l2.viewBounds.left)
+						end;
+					AddArraySlot(stepChildren, (if (l1 > 0) then {_proto: l2, viewBounds: RelBounds(6, 0, l4, 13), viewJustify: 17414} else {_proto: l2, viewBounds: RelBounds(65, 2, l4, 13), viewJustify: 6}))
+				end)
+		end;
+	(if rightButtons then (foreach l1, l2 in rightButtons do begin
+				local l4;
+				if (if HasPath(l2, 'text) then HasPath(l2, 'viewFont)) then begin
+						l4 := (StrFontWidth(l2.text, l2.viewFont) + 6)
+					end else begin
+						l4 := (l2.viewBounds.right - l2.viewBounds.left)
+					end;
+				AddArraySlot(stepChildren, (if (l1 > 0) then {_proto: l2, viewBounds: RelBounds(((-l4) - 6), 0, l4, 13), viewJustify: 18438} else {_proto: l2, viewBounds: RelBounds(((-l4) - 48), 2, l4, 13), viewJustify: 38}))
+			end))
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x736f91
+@@const kLiteral_736fd5
+'{name: {first: first}, sorton: sorton, company: company, postal_code: postal_code, cardType: class}
+@@main
+func(a1, a2) begin
+	(kLiteral_736fd5.(a1) = kLiteral_736fd5.(a2))
+end
+@@end

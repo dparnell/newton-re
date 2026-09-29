@@ -1,0 +1,14 @@
+@@ 0x46a169
+func() begin
+	(if IsInk(cText.text[cText.wordLeft]) then begin
+			cInk:ShowView(true);
+			cInk:Dirty();
+			recognizeButton:ShowView(true);
+			cText:ShowView(nil)
+		end else begin
+			cText:ShowView(true);
+			cInk:ShowView(nil);
+			recognizeButton:ShowView(nil)
+		end)
+end
+@@end

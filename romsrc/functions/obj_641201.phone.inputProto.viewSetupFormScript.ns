@@ -1,0 +1,11 @@
+@@ 0x4562f1
+func() begin
+	if (not target.(path)) then begin
+			target.(path) := Clone("")
+		end;
+	if IsString(target.(path)) then begin
+			SetClass(target.(path), context._subclass)
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

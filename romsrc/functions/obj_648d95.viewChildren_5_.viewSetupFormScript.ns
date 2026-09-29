@@ -1,0 +1,10 @@
+@@ 0x47bdf9
+func() begin
+	self:doTheShuffle();
+	if info then begin
+			text := info.routeText;
+			labelCommands := (foreach l1 in info.routeChoices collect ParamStr(l1, [Array: info.routeVerb]))
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

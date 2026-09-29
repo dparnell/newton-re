@@ -1,0 +1,8 @@
+@@ 0x79b535 names
+func() begin
+	cacheEntryCount := nil;
+	currentItem := 0;
+	self:Reset();
+	(zeroOneOrMoreResult := nil)
+end
+@@end

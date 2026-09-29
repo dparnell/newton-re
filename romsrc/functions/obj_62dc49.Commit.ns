@@ -1,0 +1,5 @@
+@@ 0x4b3471
+func(a1) begin
+	self:AddItem('inbox, a1)
+end
+@@end

@@ -1,0 +1,12 @@
+@@ 0x4ea6e1
+func(a1) begin
+	(foreach l1 in meetingSoupFinders do begin
+			l1.waitToUnSelect := waitToUnSelect;
+			l1:FileAs(a1)
+		end);
+	(foreach l1 in todoSoupFinders do begin
+			l1.waitToUnSelect := waitToUnSelect;
+			l1:FileAs(a1)
+		end)
+end
+@@end

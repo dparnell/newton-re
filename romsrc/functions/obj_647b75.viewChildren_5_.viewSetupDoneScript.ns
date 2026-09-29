@@ -1,0 +1,10 @@
+@@ 0x48fced
+func() begin
+	local l1, l2;
+	inherited:?viewSetupDoneScript();
+	if (l2 := GetBackupAllPackagesCursor(godParent:getSrcStore())) then begin
+			l1 := l2:entry()
+		end;
+	(if ((not l2) or (not l1)) then self:Hide())
+end
+@@end

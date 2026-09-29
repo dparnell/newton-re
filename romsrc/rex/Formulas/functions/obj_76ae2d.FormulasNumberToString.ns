@@ -1,0 +1,27 @@
+@@ 0x76beb1
+func(a1) begin
+	local l1;
+	(if (a1 = nil) then return Clone("") else begin
+			if integerField then begin
+					l1 := FormattedNumberStr(a1, "%.0f")
+				end else begin
+					if (abs(a1) < 0.01) then begin
+							if StrEqual(Substr((l1 := FormattedNumberStr(a1, "%.8f")), (StrLen(l1) - 9), 9), Stringer([Array: GetLocale().numberFormat.decimalPoint, "00000000"])) then begin
+									l1 := Substr(l1, 0, (StrLen(l1) - 9))
+								end
+						end else begin
+							if (decimalPlaces = 4) then begin
+									if StrEqual(Substr((l1 := FormattedNumberStr(a1, "%.4f")), (StrLen(l1) - 5), 5), Stringer([Array: GetLocale().numberFormat.decimalPoint, "0000"])) then begin
+											l1 := Substr(l1, 0, (StrLen(l1) - 5))
+										end
+								end else begin
+									if StrEqual(Substr((l1 := FormattedNumberStr(a1, "%.2f")), (StrLen(l1) - 3), 3), Stringer([Array: GetLocale().numberFormat.decimalPoint, "00"])) then begin
+											l1 := Substr(l1, 0, (StrLen(l1) - 3))
+										end
+								end
+						end
+				end;
+			return l1
+		end)
+end
+@@end

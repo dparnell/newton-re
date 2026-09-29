@@ -1,0 +1,17 @@
+@@ 0x5952e5
+func() begin
+	if uploadingfile then begin
+			self:SetEWError(1);
+			AddDeferredSend(self, 'ConnectionAbort, nil);
+			return nil
+		end;
+	self:?connectionAbortedScript(0);
+	if activetimeout then begin
+			self:EndTransaction()
+		end;
+	(if (connectState = 'Login) then begin
+			self:Logout();
+			(connectState := 'Connect)
+		end else self:LogoutDone())
+end
+@@end

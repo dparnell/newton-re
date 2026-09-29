@@ -1,0 +1,15 @@
+@@ 0x439745
+func(a1) begin
+	local l1;
+	(if useMultipleSelections then (if (if (if a1 then (a1 < numItems)) then (a1 >= 0)) then (if (l1 := SetContains(selectedItems, a1)) then begin
+					ArrayRemoveCount(selectedItems, l1, 1);
+					self:InvertLine(a1, nil)
+				end else begin
+					AddArraySlot(selectedItems, a1);
+					self:InvertLine(a1, true)
+				end)) else (if (Selection <> a1) then begin
+				self:InvertLine(Selection, nil);
+				self:InvertLine((Selection := a1), true)
+			end))
+end
+@@end

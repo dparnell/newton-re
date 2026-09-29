@@ -1,0 +1,41 @@
+@@ 0x59575d
+func(a1, a2, a3) begin
+	local l1, l2, l3, l4, l5;
+	if ((l1 := a1.file_in).filesize = 0) then begin
+			return nil
+		end;
+	(if l1.data then begin
+			if l1.statusView then begin
+					l1.statusView:filetransferstatus(l1.offset, l1.filesize)
+				end;
+			l1.offset := self:decodepacket(l1.data, l1.offset, a2, 2, a3, (l1.filesize - l1.offset));
+			(if (l1.offset > l1.nextClear) then begin
+					l1.nextClear := (l1.nextClear + 10240);
+					ClearVBOCache(l1.data)
+				end)
+		end else begin
+			l2 := 0;
+			if (l1.filetype = 247) then begin
+					l3 := self:getmacheader(a2, a3);
+					l1.type := l3.type;
+					l2 := l3.length
+				end;
+			l5 := (((l4 := self:GetDefaultOwnerStore()):TotalSize() - l4:UsedSize()) - 10240);
+			(if (if (((if l1.type then StrEqual(l1.type, "newt")) or (if l1.type then StrEqual(l1.type, "pkg "))) or EndsWith(l1.filename, ".pkg")) then (l5 > (fileSizeMultiplier * l1.filesize))) then begin
+					l1.data := l4:NewVBO(EnsureInternal('package), l1.filesize);
+					l1.offset := self:decodepacket(l1.data, 0, a2, (2 + l2), (a3 - l2), l1.filesize);
+					(l1.nextClear := 10240)
+				end else begin
+					if (l5 <= (fileSizeMultiplier * l1.filesize)) then begin
+							GetRoot():Notify(3, serviceName, ParamStr("Not enough free space in the default soup to save the enclosure. Need ^0K bytes of additional space", [Array: ((((fileSizeMultiplier * l1.filesize) - l5) + 1023) div 1024)]))
+						end else begin
+							GetRoot():Notify(3, serviceName, ParamStr("Ignoring the enclosed file named \u201C\u^0\u201D\u because it is not a file format known to the Newton", [Array: l1.filename]))
+						end;
+					l1.data := nil;
+					l1.filesize := 0;
+					self:output("xA", nil, true);
+					self:output(255, 'byte, nil)
+				end)
+		end)
+end
+@@end

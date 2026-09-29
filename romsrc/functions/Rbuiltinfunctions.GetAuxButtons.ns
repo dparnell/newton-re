@@ -1,0 +1,21 @@
+@@ 0x4d7fa9
+func(a1) begin
+	l1 := [Array: ];
+	if a1 then begin
+			local l1;
+			(foreach l2 in AuxButtonRegistry do begin
+					if (l2.destApp = a1) then begin
+							AddArraySlot(l1, l2)
+						end
+				end)
+		end;
+	if (a1 = GetUserConfig('blessedapp)) then begin
+			(foreach l2 in AuxButtonRegistry do begin
+					if (not l2.destApp) then begin
+							AddArraySlot(l1, l2)
+						end
+				end)
+		end;
+	l1
+end
+@@end

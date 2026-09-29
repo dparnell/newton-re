@@ -1,0 +1,28 @@
+@@ 0x516a89
+func(a1, a2) begin
+	(if a1 then (if ((l1 := ShapeBounds(a1).bottom) < pageHeight) then begin
+				oldShapes := nil;
+				ArrayMunger(drawShapes, Length(drawShapes), nil, a1, 0, nil);
+				(yOffset := l1)
+			end else begin
+				local l1;
+				local l2;
+				(foreach l3, l4 in a1 do begin
+						local l6, l7;
+						l2 := l3;
+						if (if (not (l6 := (if IsFrame(l4) then l4.font))) then (ShapeBounds(l4).bottom > pageHeight)) then begin
+								break
+							end
+					end);
+				oldShapes := [Array: ];
+				ArrayMunger(drawShapes, Length(drawShapes), nil, a1, 0, l2);
+				ArrayMunger(oldShapes, 0, nil, a1, l2, nil);
+				OffsetShape(oldShapes, 0, (-ShapeBounds(oldShapes).top));
+				if (if (ShapeBounds(oldShapes).bottom < pageHeight) then a2) then begin
+						l7 := ArrayPos(selectedDates, a2, 0, nil);
+						ArrayRemoveCount(selectedDates, 0, l7)
+					end;
+				Throw('|evt.ex.nextpage|, a2)
+			end))
+end
+@@end

@@ -1,0 +1,29 @@
+@@ 0x74740d
+func() begin
+	self:SetLabelCommandsFromUserConfig(self);
+	l1 := protoContext:ConnectionPrefsRead(currentChoiceUserconfigTag);
+	l2 := self:GetConfig();
+	l3 := self:GetUserVisible(l1);
+	if (if labelCommands then ((curLabelCommand > 0) or (if l3 then StrEqual(l3, labelCommands[0])))) then begin
+			if (if l2 then (curLabelCommand < Length(l2))) then begin
+					l4 := l1
+				end else begin
+					if (l5 := self:GetWorksites()) then begin
+							local l1;
+							local l2;
+							local l3;
+							local l4;
+							local l5;
+							(foreach l6 in l5 do begin
+									local l8;
+									if (if (if (l8 := ResolveEntryAlias(l6)) then l8.place) then StrEqual(l3, l8.place)) then begin
+											l4 := l8.(WorksiteNetworkSlot);
+											break
+										end
+								end)
+						end
+				end
+		end;
+	return l4
+end
+@@end

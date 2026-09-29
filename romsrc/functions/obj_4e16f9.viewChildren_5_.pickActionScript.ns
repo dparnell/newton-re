@@ -1,0 +1,9 @@
+@@ 0x4df935
+func(a1, a2) begin
+	target.longitude := a1;
+	target.latitude := a2;
+	self:UpdateLocationFields();
+	self:StartFlush();
+	inherited:pickActionScript(a1, a2)
+end
+@@end

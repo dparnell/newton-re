@@ -1,0 +1,5 @@
+@@ 0x54c925
+func() begin
+	self:RedoIconsAfterDrop(true)
+end
+@@end

@@ -1,0 +1,16 @@
+@@ 0x4bcf11
+func() begin
+	self.ViewRect := editor:LocalBox();
+	self.DataRect := editor.initialDataRect;
+	if (not self.ScrollRect) then begin
+			if notesize then begin
+					self.ScrollRect := SetBounds(0, 0, notesize[0], notesize[1])
+				end else begin
+					self.ScrollRect := SetBounds(0, 0, max(ViewRect.right, DataRect.right), 2000)
+				end
+		end;
+	self.scrollXUnits := editor.scrollXAmount;
+	self.scrollYUnits := editor.scrollYAmount;
+	(scrollerView := self)
+end
+@@end

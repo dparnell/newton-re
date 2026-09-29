@@ -1,0 +1,8 @@
+@@ 0x53738d
+func() begin
+	local l1, l2;
+	l1 := self:store();
+	l2 := fentry.packageName;
+	(if (if l1 then l2) then GetPackageEntry(l2, l1))
+end
+@@end

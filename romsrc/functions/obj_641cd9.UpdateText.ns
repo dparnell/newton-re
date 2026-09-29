@@ -1,0 +1,10 @@
+@@ 0x4f1bc5
+func() begin
+	local l1;
+	l1 := meetingInstance.mtgStartDate;
+	if Visible(repeatPickers.DateAndMonthPicker) then begin
+			l1 := repeatPickers.DateAndMonthPicker.selectedDates[0]
+		end;
+	(if (mtgInfo <> 0) then SetValue(MessageBox, 'text, RepeatInfoToText(mtgInfo, repeatType, l1)) else SetValue(MessageBox, 'text, ""))
+end
+@@end

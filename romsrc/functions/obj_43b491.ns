@@ -1,0 +1,23 @@
+@@ 0x43b491
+@@const kFunction_43b471
+func(a1, a2) begin
+	IsSameEntry(a1, a2)
+end
+@@main
+func(a1) begin
+	local l1, l2, l3, l4;
+	l2 := MakeEntryAlias((l1 := cursor:clone():move(a1)));
+	if selected then begin
+			if (l3 := LSearch(selected, l2, 0, kFunction_43b471, nil)) then begin
+					RemoveSlot(selected, l3)
+				end else begin
+					AddArraySlot(selected, l2)
+				end
+		end else begin
+			selected := [Array: l2]
+		end;
+	(l4 := self:LocalBox()).bottom := ((l4.top := (a1 * lineHeight)) + lineHeight);
+	pieces[a1] := self:GetTheRightShape(l1, l4);
+	self:Dirty()
+end
+@@end

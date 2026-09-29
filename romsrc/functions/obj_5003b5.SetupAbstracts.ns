@@ -1,0 +1,30 @@
+@@ 0x50024d
+func(a1) begin
+	l1 := self:LocalBox();
+	self.maxLines := (l1.bottom div lineHeight);
+	l1.bottom := lineHeight;
+	self.pieces := Array(maxLines, nil);
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	l4 := (for l5 := 0 to (maxLines - 1) do begin
+			if (l5 = 0) then begin
+					l3 := a1:entry()
+				end else begin
+					l3 := a1:Next()
+				end;
+			if (not l3) then begin
+					break l5
+				end;
+			l2 := self:GetTheRightShape(l3, l1);
+			pieces[l5] := l2;
+			l1.bottom := ((l1.top := l1.bottom) + lineHeight)
+		end);
+	if l4 then begin
+			SetLength(pieces, l4)
+		end;
+	self.numLines := Length(pieces);
+	a1:ResetToFirstVisibleItem()
+end
+@@end

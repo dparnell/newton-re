@@ -1,0 +1,6 @@
+@@ 0x74dbb1
+func() begin
+	protoContext:RemoveOpenWindow(self);
+	(if (not aborting) then (if (not closing) then endpoint:ConnectionDone(0)))
+end
+@@end

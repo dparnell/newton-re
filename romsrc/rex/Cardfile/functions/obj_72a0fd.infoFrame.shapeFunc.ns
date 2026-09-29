@@ -1,0 +1,31 @@
+@@ 0x72a851
+func(a1, a2, a3, a4) begin
+	l4 := [Array: ];
+	l5 := [Array: ];
+	l6 := FontAscent(a4.font);
+	l7 := fontHeight(a4.font);
+	l8 := a2.left;
+	l9 := a2.right;
+	if (l1 := GetRoot().cardfile:GetCustomInfo()) then begin
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			local l5;
+			local l6;
+			local l7;
+			local l8;
+			local l9;
+			(foreach l10, l11 in a1 do begin
+					if (if (if StrFilled(l11) then (l2 := l1.(checkPaths[l10]))) then StrFilled(l2.label)) then begin
+							l3 := ParamStr("^0: ^1", [Array: l1.(checkPaths[l10]).label, l11]);
+							a2.bottom := (a2.top + l6);
+							AddArraySlot(l5, MakeText(l3, l8, a2.top, l9, a2.bottom));
+							AddArraySlot(l4, checkPaths[l10]);
+							a2.top := (a2.top + l7)
+						end
+				end)
+		end;
+	(if (Length(l5) > 0) then {shape: l5, misc: l4})
+end
+@@end

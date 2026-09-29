@@ -1,0 +1,5 @@
+@@ 0x44e14d
+func(a1) begin
+	(if (a1 >= $a) then (a1 <= $z))
+end
+@@end

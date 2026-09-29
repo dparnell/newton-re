@@ -1,0 +1,8 @@
+@@ 0x76d721
+func(a1) begin
+	(if self:TrackHilite(a1) then begin
+			self:CalcLineLabelClickScript(a1);
+			self:hilite(nil)
+		end)
+end
+@@end

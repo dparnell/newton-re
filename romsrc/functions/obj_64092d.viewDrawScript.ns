@@ -1,0 +1,7 @@
+@@ 0x485c5d
+func() begin
+	local l1;
+	l1 := self:LocalBox();
+	self:DrawShape(MakeRect(0, 0, l1.right, (l1.bottom - 6)), '{fillPattern: 5})
+end
+@@end

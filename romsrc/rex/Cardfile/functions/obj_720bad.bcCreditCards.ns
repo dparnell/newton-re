@@ -1,0 +1,5 @@
+@@ 0x73c63d
+func(a1, a2) begin
+	self:bcHelper(a1, a2, '[Array: [pathExpr: owner, creditCards]], '[Array: creditCardName, creditCardNum])
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x7b0331
+func(a1, a2) begin
+	local l1, l2;
+	(if StrFilled(a1) then begin
+			l2 := (l1 := GetLocationSoup(@251):Query({type: 'index, IndexPath: 'AreaCode, beginKey: a1, endKey: a1})):entry();
+			(while l2 do (if (l2.country = a2) then break l2 else (l2 := l1:Next())))
+		end)
+end
+@@end

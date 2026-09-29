@@ -1,0 +1,5 @@
+@@ 0x4a8d59
+func(a1) begin
+	UnRegDataDef(a1)
+end
+@@end

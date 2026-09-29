@@ -1,0 +1,10 @@
+@@ 0x4d0a01
+func(a1) begin
+	(try begin
+			self:ChangeState('unbinding);
+			ep:Unbind(unbindSpec)
+		end onexception |evt.ex| do begin
+			self:DoDispose(CurrentException().error)
+		end)
+end
+@@end

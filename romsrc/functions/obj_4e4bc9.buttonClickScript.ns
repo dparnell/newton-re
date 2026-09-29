@@ -1,0 +1,6 @@
+@@ 0x4e4b4d
+func() begin
+	pop := MakeFontMenu(nil, 'none, 'none, nil);
+	inherited:buttonClickScript()
+end
+@@end

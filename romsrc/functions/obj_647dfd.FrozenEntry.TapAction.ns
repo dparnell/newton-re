@@ -1,0 +1,6 @@
+@@ 0x5380bd
+func() begin
+	ThawPackage(self:LookupSoupPackage());
+	nil
+end
+@@end

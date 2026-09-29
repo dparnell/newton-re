@@ -1,0 +1,5 @@
+@@ 0x51c771
+func(a1) begin
+	(if (ClassOf(a1) = 'frame) then self:PrepBook(a1.isbn) else self:PrepBook(a1))
+end
+@@end

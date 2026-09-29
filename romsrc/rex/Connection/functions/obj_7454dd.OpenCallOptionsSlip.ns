@@ -1,0 +1,14 @@
+@@ 0x745a81
+func() begin
+	local l1;
+	if (if (l1 := self:GetWorksite(protoContext:ConnectionPrefsRead('phoneCurrentChoice))) then l1.connectionPhone) then begin
+			callOptionsSlip.inNumber := MakePhone({areacode: l1.areacode, phone: l1.connectionPhone})
+		end else begin
+			callOptionsSlip.inNumber := ""
+		end;
+	callOptionsSlip.inCountry := self:WorksiteToCountry(l1);
+	callOptionsSlip.invoker := self;
+	callOptionsSlip:Toggle();
+	self:?AddOpenWindow(callOptionsSlip)
+end
+@@end

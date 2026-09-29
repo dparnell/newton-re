@@ -1,0 +1,20 @@
+@@ 0x55ca61
+func() begin
+	local l1, l2, l3, l4;
+	target := GetView('viewfrontmostapp);
+	l1 := 0;
+	l2 := self:ChildViewFrames();
+	l3 := nil;
+	(while (if (l1 < Length(l2)) then (not l3)) do begin
+			if (if l2[l1]._proto then (l2[l1]._proto = appSpecificChildren)) then begin
+					l3 := l2[l1]
+				end;
+			(l1 := (l1 + 1))
+		end);
+	l4 := findText;
+	if appSpecificChildren.dontIncludeInputLine then begin
+			l4 := nil
+		end;
+	GetView('viewfrontmostapp):additionalFind(self, findAllResults, l3, l4)
+end
+@@end

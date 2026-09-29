@@ -1,0 +1,13 @@
+@@ 0x551fcd
+func() begin
+	local l1, l2, l3, l4, l5, l6;
+	if (l2 := StrPos((l1 := target.fentry.text), "\n", 0)) then begin
+			l1 := Substr(l1, 0, l2)
+		end;
+	l3 := iconStyle.font;
+	l4 := min(hSpacing, (StrFontWidth(l1, l3) + 2));
+	l5 := ((hSpacing - l4) div 2);
+	l6 := (iconSpacingV - 11);
+	MakeText(l1, l5, l6, (l5 + l4), ((l6 + FontAscent(l3)) - 1))
+end
+@@end

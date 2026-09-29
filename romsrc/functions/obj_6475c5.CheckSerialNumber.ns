@@ -1,0 +1,22 @@
+@@ 0x5692f1
+func() begin
+	local msg;
+	local l1, l2;
+	l1 := call @846 with ();
+	l2 := GetStores()[0]:GetSignature();
+	if l1 then begin
+			if ((l1 := ExtractLong(l1, 4)) <> l2) then begin
+					if (l2 = 0) then begin
+							msg := "The internal store's signature is invalid. A hard reset may correct the problem."
+						end else begin
+							msg := "The internal store's signature has been altered. A hard reset may correct the problem."
+						end
+				end
+		end else begin
+			msg := "This unit's serial number cannot be read."
+		end;
+	(if msg then AddDeferredCall(func() begin
+			GetRoot():Notify(3, "Newton", msg)
+		end, nil))
+end
+@@end

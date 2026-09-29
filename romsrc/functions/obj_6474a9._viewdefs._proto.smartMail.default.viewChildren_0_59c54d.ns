@@ -1,0 +1,10 @@
+@@ 0x59c54d
+func() begin
+	self.viewChildren := [Array: ];
+	(if (if (if fields then target) then target.options) then (foreach l1 in target.options do begin
+				AddArraySlot(viewChildren, {_proto: @226, viewFont: @100, viewJustify: 8389638, viewBounds: RelBounds(6, 6, StdButtonWidth(l1.label), 13), text: l1.label, option: l1, buttonClickScript: func() begin
+					self:doOption(option)
+				end})
+			end))
+end
+@@end

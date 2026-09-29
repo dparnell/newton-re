@@ -1,0 +1,14 @@
+@@ 0x74da39
+func() begin
+	if callWhenSetup then begin
+			call callWhenSetup with ()
+		end;
+	(if aborting then begin
+			if (if endpoint.connected then (aborting <> -16005)) then begin
+					protoContext:SendCancelToDesktop(endpoint)
+				end;
+			protoContext:HandleErrorDuringStartup(endpoint, self, aborting);
+			(if endpoint.connected then (if (callWhenDone exists) then call callWhenDone with (endpoint, true, nil, nil, nil)))
+		end else endpoint:StartIdle(self, 2000))
+end
+@@end

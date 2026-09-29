@@ -1,0 +1,27 @@
+@@ 0x5acf1d
+@@const kFunction_5aced1
+func() begin
+	local l1, l2, l3;
+	if (l2 := GetUserConfig('Keyboard)) then begin
+			if (l1 := LookupTitle(international.keyboards, l2)) then begin
+					international.Keyboard := l1
+				end
+		end;
+	if ((l3 := GetUserConfig('sortID)) <> GetSortID(nil)) then begin
+			SetSortID(l3)
+		end;
+	SetLocale(GetUserConfig('locale));
+	SetInkerPenSize(GetUserConfig('userPenSize));
+	LoadUserDictionary();
+	LoadExpandDictionary();
+	LoadAutoAddDictionary();
+	loadLetterWeights();
+	LoadHardwareEntry()
+end
+@@const kClosureMaker_5acf1d
+func(script, parameters) func() begin
+		Apply(script, parameters)
+	end
+@@main
+call kClosureMaker_5acf1d with (kFunction_5aced1, '[Array: ])
+@@end

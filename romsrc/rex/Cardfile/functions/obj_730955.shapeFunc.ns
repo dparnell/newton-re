@@ -1,0 +1,18 @@
+@@ 0x730981
+func(a1, a2, a3, a4) begin
+	local l1, l2, l3, l4;
+	l2 := nil;
+	if StrFilled((l4 := self:formatFunc(a1))) then begin
+			l1 := fontHeight(a4.font);
+			l2 := MakeTextLines(l4, a2, l1, a4.font);
+			a2.top := (a2.top + (l1 * Length(l2)))
+		end;
+	(if (l3 := inherited:shapeFunc(a1, a2, a3, a4)) then begin
+			if l2 then begin
+					ArrayMunger(l3.shape, Length(l3.shape), 0, l2, 0, nil)
+				end;
+			l3.misc.phoneNum := a1[0];
+			l3
+		end else {shape: l2, misc: {bbox: SetBounds(0, 0, 0, 0), phoneNum: a1[0]}})
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x4b41c5
+func(a1, a2, a3) begin
+	(try begin
+			Perform(a1, a2, a3)
+		end onexception |evt.ex| do begin
+			a1:HandleThrow()
+		end)
+end
+@@end

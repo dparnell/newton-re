@@ -1,0 +1,12 @@
+@@ 0x4c90b1
+func(a1) begin
+	(if a1 then begin
+			if (if (not callPhoneLine.selected) then (not fields.manualDialing)) then begin
+					self:Notify(3, "Fax", "You have not chosen a recipient! Please fill in the 'Name' field and try again.");
+					return nil
+				end;
+			self:CommitFaxInfo();
+			self:ContinueSend(noworlater)
+		end)
+end
+@@end

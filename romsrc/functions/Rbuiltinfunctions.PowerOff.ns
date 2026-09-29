@@ -1,0 +1,13 @@
+@@ 0x562f45
+func(a1) begin
+	if PoweringOff then begin
+			return nil
+		end;
+	PoweringOff := true;
+	if (not a1) then begin
+			a1 := 'because
+		end;
+	AddDeferredCall(functions.PowerOffSoodan, [Array: a1]);
+	true
+end
+@@end

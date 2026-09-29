@@ -1,0 +1,9 @@
+@@ 0x4724d5
+func(a1) begin
+	if (a1 < printersInList) then begin
+			self:UpdateText(labelCommands[a1])
+		end;
+	self:LabelActionScript(a1);
+	base:hilite(nil)
+end
+@@end

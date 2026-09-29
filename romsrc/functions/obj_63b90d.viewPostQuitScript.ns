@@ -1,0 +1,10 @@
+@@ 0x4f7e49
+func() begin
+	MeetingSoup := nil;
+	RepeatSoup := nil;
+	notes := nil;
+	RepeatNotes := nil;
+	selectedMeeting := nil;
+	(selectedDates := nil)
+end
+@@end

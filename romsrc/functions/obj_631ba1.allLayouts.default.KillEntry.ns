@@ -1,0 +1,11 @@
+@@ 0x4ee981
+func(a1) begin
+	if (viewOriginX exists) then begin
+			viewOriginX := 0
+		end;
+	if (viewOriginY exists) then begin
+			viewOriginY := 0
+		end;
+	inherited:KillEntry(a1)
+end
+@@end

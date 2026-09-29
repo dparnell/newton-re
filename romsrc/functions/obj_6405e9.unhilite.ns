@@ -1,0 +1,8 @@
+@@ 0x43caad
+func() begin
+	(if (curIndex >= 0) then begin
+			self:DoDrawing('hiliter, [Array: curIndex]);
+			(curIndex := -1)
+		end)
+end
+@@end

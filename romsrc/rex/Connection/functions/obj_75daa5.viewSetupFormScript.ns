@@ -1,0 +1,10 @@
+@@ 0x75dcfd
+func() begin
+	local l1;
+	l1 := (StrFontWidth(text, viewFont) + 6);
+	(if (GetUserConfig('blessedApp) = 'Connection) then begin
+			self.viewJustify := 12326;
+			(self.viewBounds := SetBounds(((-l1) - 5), 0, -5, 0))
+		end else (self.viewBounds := SetBounds(((-l1) - 7), 0, -7, 0)))
+end
+@@end

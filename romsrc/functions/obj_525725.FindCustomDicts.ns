@@ -1,0 +1,10 @@
+@@ 0x525705
+func() begin
+	assistLine.dictionaries := [Array: ];
+	(foreach l1 in vars.dictionaries do begin
+			if (if HasPath(l1, 'custom) then (l1.custom = 'roger)) then begin
+					Append(assistLine.dictionaries, l1.dictID)
+				end
+		end)
+end
+@@end

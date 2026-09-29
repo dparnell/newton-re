@@ -1,0 +1,10 @@
+@@ 0x4e69f9
+func() begin
+	local l1;
+	if ((l1 := matchedValues[wordIndex]) > 1000) then begin
+			l1 := 1000
+		end;
+	self.text := ParamStr("^0%", [Array: SPrintObject(((1000 - l1) div 10))]);
+	(self.viewFont := @99)
+end
+@@end

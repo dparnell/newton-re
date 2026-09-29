@@ -1,0 +1,29 @@
+@@ 0x46117d
+func() begin
+	(if self._nextKeyView then return nil else (if HasSlot(self, '_keyCommands) then return nil else begin
+				l1 := (BAnd(self.viewFlags, 4) = 1);
+				l2 := [modalKeyCmds: ];
+				l3 := [Array: ];
+				local l1;
+				local l2;
+				local l3;
+				(foreach l4 in GetRoot()._keyCommands do begin
+						if ((BAnd(l4.modifiers, 1) = 1) or (if l1 then (BAnd(l4.modifiers, 2) = 1))) then begin
+								AddArraySlot(l2, l4)
+							end
+					end);
+				ArrayMunger(l2, 0, 0, self._keyCommands, 0, nil);
+				(foreach l4 in l2 do begin
+						local l6;
+						if (l6 := GetVariable(self, l4.keyMessage)) then begin
+								self.(l4.keyMessage) := l6;
+								AddArraySlot(l3, l4.keyMessage)
+							end
+					end);
+				self._keyCommands := l2;
+				self._addedKeyCommands := l3;
+				self._nextKeyView := 'none;
+				SetKeyView(self, 0)
+			end))
+end
+@@end

@@ -1,0 +1,42 @@
+@@ 0x49d371
+func(a1) begin
+	l4 := {target: nil, targetView: self};
+	if (a1 = 'Filing) then begin
+			l4.targetView := targetApp
+		end;
+	if (if selected then (Length(selected) > 0)) then begin
+			if (Length(selected) = 1) then begin
+					l4.target := ResolveEntryAlias(selected[0])
+				end else begin
+					if (l5 = nil) then begin
+							l5 := GetVariable(self, 'overviewTargetClass)
+						end;
+					if (l5 = nil) then begin
+							l5 := 'newtOverview
+						end;
+					l4.target := CreateTargetCursor(l5, selected);
+					if (a1 = 'Filing) then begin
+							l4.target.labels := '__XXTempLabel
+						end
+				end;
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			local l5;
+			(foreach l6 in selected do begin
+					if (if IsSoupEntry((l1 := ResolveEntryAlias(l6))) then (l2 := EntryStore(l1))) then begin
+							if (not l3) then begin
+									l3 := l2
+								end else begin
+									if (l2 <> l3) then begin
+											break (l3 := nil)
+										end
+								end
+						end
+				end);
+			l4.targetStore := l3
+		end;
+	l4
+end
+@@end

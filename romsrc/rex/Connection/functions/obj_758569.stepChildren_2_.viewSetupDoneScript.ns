@@ -1,0 +1,5 @@
+@@ 0x758ab9
+func() begin
+	self:MyHide('backup)
+end
+@@end

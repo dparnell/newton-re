@@ -1,0 +1,6 @@
+@@ 0x41e221
+func() begin
+	entryLine.recConfig := self.entryRecConfig;
+	inherited:viewSetupChildrenScript()
+end
+@@end

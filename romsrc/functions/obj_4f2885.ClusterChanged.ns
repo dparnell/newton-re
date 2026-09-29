@@ -1,0 +1,10 @@
+@@ 0x4f2801
+func() begin
+	local l1;
+	(if ((l1 := BAnd(mtgInfo, 31)) <> clusterValue) then begin
+			mtgInfo := (BAnd(mtgInfo, bnot(31)) + clusterValue);
+			self:Initialize();
+			self:UpdateText()
+		end)
+end
+@@end

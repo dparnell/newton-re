@@ -1,0 +1,17 @@
+@@ 0x532ab1
+func() begin
+	local theInfo;
+	local l1;
+	l1 := "";
+	if (if fields.toRef then (Length(fields.toRef) > 0)) then begin
+			if IsRichString((theInfo := GetDataDefs('|nameRef.phone|):GetRoutingInfo(fields.toRef[0])[0]).rawNumber) then begin
+					AddDeferredCall(func() begin
+						self:ConvertStart(theInfo)
+					end, nil)
+				end else begin
+					l1 := theInfo.phoneNumber
+				end
+		end;
+	l1
+end
+@@end

@@ -1,0 +1,41 @@
+@@ 0x744db9
+func() begin
+	self.viewBounds := Clone(viewBounds);
+	self.viewBounds.right := (_currentWidth - 25);
+	if (l1 := GetDesktopConnTransports()) then begin
+			self.choices := Clone(builtInTransports);
+			self.labelCommands := Clone(defaultTransportTypes);
+			local l1;
+			(foreach l2, l3 in l1.transports do begin
+					AddArraySlot(choices, l2);
+					AddArraySlot(labelCommands, l3.name)
+				end)
+		end else begin
+			self.choices := builtInTransports;
+			self.labelCommands := defaultTransportTypes
+		end;
+	if (if (limitChoices exists) then IsArray(limitChoices)) then begin
+			l5 := [Array: ];
+			l6 := [Array: ];
+			local l5;
+			local l6;
+			(foreach l7 in limitChoices do begin
+					(foreach l9, l10 in choices do begin
+							if (l10 = l7) then begin
+									AddArraySlot(l5, l7);
+									AddArraySlot(l6, labelCommands[l9])
+								end
+						end)
+				end);
+			self.choices := l5;
+			self.labelCommands := l6
+		end;
+	if (not (currentChoice := protoContext:ConnectionPrefsRead('type))) then begin
+			currentChoice := choices[0]
+		end;
+	if HasPath(userconfigTypeTags, currentChoice) then begin
+			currentChoice := userconfigTypeTags.(currentChoice)
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x59cec9
+func() begin
+	local l1, l2;
+	(if (if GetRoot().(appSymbol).eworld then GetRoot().(appSymbol).eworld.connected) then begin
+			GetRoot():Notify(3, GetRoot().(appSymbol).title, ParamStr("Please disconnect from ^0 before changing your preferences", [Array: GetRoot().(appSymbol).title]));
+			l1 := GetRoot().(appSymbol).owner;
+			(if (l2 := GetRoot().(l1)).viewCObject then AddDeferredSend(l2, 'RememberedClose, [Array: self]) else AddDeferredSend(self, 'Close, nil))
+		end)
+end
+@@end

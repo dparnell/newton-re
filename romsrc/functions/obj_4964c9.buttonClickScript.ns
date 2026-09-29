@@ -1,0 +1,8 @@
+@@ 0x496489
+@@const kROM_577
+@577
+@@main
+func() begin
+	(if (not openRestorePrefsSlip) then kROM_577:New(self:Parent()) else openRestorePrefsSlip:Close())
+end
+@@end

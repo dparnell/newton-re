@@ -1,0 +1,10 @@
+@@ 0x4ea8d5
+func() begin
+	(foreach l1 in meetingSoupFinders do begin
+			l1:delete()
+		end);
+	(foreach l1 in todoSoupFinders do begin
+			l1:delete()
+		end)
+end
+@@end

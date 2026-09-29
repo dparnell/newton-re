@@ -1,0 +1,5 @@
+@@ 0x444d91
+func(a1) begin
+	self:IntervalChanged()
+end
+@@end

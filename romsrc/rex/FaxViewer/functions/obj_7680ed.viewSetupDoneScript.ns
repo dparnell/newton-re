@@ -1,0 +1,19 @@
+@@ 0x768495
+func() begin
+	local l1, l2;
+	WarningDialog:Update(nil);
+	l1 := self:GetAppPreferences().|dFaxViewer:Dondo|;
+	if Visible(vThumbFloater) then begin
+			vThumbFloater:RelocateGreyBox(ImageTarget:GetScalingInfo())
+		end;
+	fPageScrollWidth := ((l2 := ImageTarget:LocalBox()).right - (l2.right div 10));
+	fPageScrollHeight := (l2.bottom - (l2.bottom div 10));
+	WarningDialog:Update(nil);
+	self:Update();
+	if WarningDialog then begin
+			AddDeferredSend(WarningDialog, 'Close, [Array: ]);
+			WarningDialog := nil
+		end;
+	(self.initializing := nil)
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x62b321
+func(a1) begin
+	BadWickedNaughtyNoot(Stringer([Array: "usoup:Add(\"", self:GetName(), "\")"]), 'discontinued);
+	self:AddToStore(a1, GetStores()[0])
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x4fecf1
+func() begin
+	if previousMainDataDisplay then begin
+			self:changeViewTo(previousMainDataDisplay)
+		end else begin
+			self:changeViewTo(scheduleView)
+		end;
+	(if (Length(holdDates) <> Length(selectedDates)) then self:redisplayScript() else (if (Length(SetDifference(selectedDates, holdDates)) > 0) then self:redisplayScript()))
+end
+@@end

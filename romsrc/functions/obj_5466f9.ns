@@ -1,0 +1,9 @@
+@@ 0x5466f9
+func(a1, a2) begin
+	SetRemove(a1._tagList, a1.labels);
+	if a2 then begin
+			SetAdd(a1._tagList, a2, true)
+		end;
+	(a1.labels := a2)
+end
+@@end

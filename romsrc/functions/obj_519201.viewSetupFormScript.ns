@@ -1,0 +1,18 @@
+@@ 0x51dc51
+func() begin
+	local l1, l2;
+	self.copperfield := GetRoot().copperfield;
+	self.browser := self;
+	if (BAnd(copperfield.bookFlags, 32) <> 0) then begin
+			autoClose := true
+		end;
+	self.browsers := copperfield.browsers;
+	self.pickItems := copperfield.pickItems;
+	self.isbn := copperfield.isbn;
+	self.contentArea := copperfield.contentArea;
+	self.BookData := copperfield.BookData;
+	self.CurrentBook := copperfield.CurrentBook;
+	l2 := ((l1 := copperfield:GlobalBox()).right - ((l1.right - l1.left) div 2));
+	(self.viewBounds := RelBounds((l2 - 112), ((l1.bottom - 173) - 5), 224, 173))
+end
+@@end

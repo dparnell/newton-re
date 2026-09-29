@@ -1,0 +1,10 @@
+@@ 0x7363e1
+func() begin
+	local l1;
+	inherited:?viewQuitScript();
+	superSymbol := 'names;
+	RemoveSlot(self, 'title);
+	RemoveSlot(self, 'viewHelpTopic);
+	'postQuit
+end
+@@end

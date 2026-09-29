@@ -1,0 +1,26 @@
+@@ 0x484089
+@@const kLiteral_4836e1
+"Filing"
+@@main
+func(a1, a2, a3, a4) begin
+	(if (not a2.target) then self:Notify(3, kLiteral_4836e1, "There is nothing to file.") else (if (if (a3 = 'onlyCardRouting) then (Length(GetStores()) = 1)) then self:Notify(3, kLiteral_4836e1, "This item is already filed internally.  If you would like to file it on a card, please insert one.") else (if self.viewCObject then (if (a2.targetView = self.targetView) then self:Close() else self:Notify(3, kLiteral_4836e1, "The filing form is already open.")) else begin
+					self.target := a2.target;
+					self.targetView := a2.targetView;
+					self._nextKeyView := targetView;
+					self.targetStore := a2.targetStore;
+					self.doCardRouting := a3;
+					self.filingButton := a1;
+					self.otherOtherTargetView := a2.otherOtherTargetView;
+					self.dontStartWithFolder := a4;
+					if (if targetStore then targetStore:IsReadOnly()) then begin
+							if a3 then begin
+									self.doCardRouting := 'onlyCardRouting
+								end else begin
+									self:Notify(3, kLiteral_4836e1, "This app does not support card routing and the card is locked");
+									return nil
+								end
+						end;
+					self:Open()
+				end)))
+end
+@@end

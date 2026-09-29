@@ -1,0 +1,5 @@
+@@ 0x439115
+func() begin
+	(if result then context:?pickActionScript((if returnSlot then result.(returnSlot) else result)) else context:?pickCancelledScript())
+end
+@@end

@@ -1,0 +1,29 @@
+@@ 0x50c9d1
+func(a1, a2) begin
+	local l1, l2, l3;
+	l1 := nil;
+	(if (a1 = 'text) then begin
+			dirtyFlag := true;
+			(if StrEqual(a2.text, "") then (unitsValue := -1) else begin
+					if ((not (l3 := StringToNumber(a2.text))) or (trunc(l3) <> l3)) then begin
+							l1 := true;
+							l2 := "The value for the advance notice must be a whole number."
+						end else begin
+							if (not LimitInt(l3, 0, 999)) then begin
+									l1 := true;
+									l2 := "The value for the advance notice must be between 0 and 999."
+								end
+						end;
+					(if (not l1) then (if (l3 <> -1) then (unitsValue := rinttol(l3))) else begin
+							self:Notify(3, "Alarm", l2);
+							if (unitsValue = -1) then begin
+									text := ""
+								end else begin
+									text := NumberStr(unitsValue)
+								end;
+							self:Dirty()
+						end)
+				end)
+		end)
+end
+@@end

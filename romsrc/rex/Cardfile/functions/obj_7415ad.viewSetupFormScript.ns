@@ -1,0 +1,11 @@
+@@ 0x741b91
+func() begin
+	if (superSymbol = 'ownerNames) then begin
+			if IsReadOnly(stepChildren) then begin
+					stepChildren := Clone(stepChildren)
+				end;
+			ArrayMunger(stepChildren, 0, 2, nil, 0, 0)
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

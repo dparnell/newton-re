@@ -1,0 +1,15 @@
+@@ 0x548cd1
+func(a1, a2) begin
+	local l1, l2, l3, l4, l5;
+	(if (Length(a1.icons) > 0) then begin
+			l1 := (self:LocalBox().right div hSpacing);
+			(if ((l3 := ((l2 := a1.indexes[0]) + l1)) > (Length(a2) - 1)) then begin
+					l4 := (if overUp then topIndexText else topIndexIcon);
+					base:viewScrollDownScript();
+					l5 := (if overUp then topIndexText else topIndexIcon);
+					a2 := self:GetChildIconViews();
+					(if (l5 <> l4) then self:ChangeSelection(a2[min((l2 mod l1), (Length(a2) - 1))], nil) else self:ChangeSelection(a2[l2], nil))
+				end else self:ChangeSelection(a2[l3], a1.icons))
+		end else self:ChangeSelection(a2[0], nil))
+end
+@@end

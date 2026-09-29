@@ -1,0 +1,8 @@
+@@ 0x454e1d
+func(a1) begin
+	(if (if fOpenEditor then Visible(fOpenEditor)) then true else begin
+			AddDeferredSend(self, 'Close, [Array: ]);
+			nil
+		end)
+end
+@@end

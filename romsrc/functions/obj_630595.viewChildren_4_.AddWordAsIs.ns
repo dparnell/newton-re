@@ -1,0 +1,9 @@
+@@ 0x5ac829
+func() begin
+	self:RemoveSelection();
+	(if (not selectedEntry) then begin
+			dictionary.count := 0;
+			AutoAdd:Close()
+		end)
+end
+@@end

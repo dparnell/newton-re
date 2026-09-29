@@ -1,0 +1,19 @@
+@@ 0x76eb99
+func() begin
+	(if ((l1 := self:GetFormulaValues()).(formulaSymbol) = nil) then begin
+			l1.(formulaSymbol) := {values: Array(Length(FSViews), nil), solvedFor: nil};
+			EntryChange(l1)
+		end else begin
+			solvedFor := l1.(formulaSymbol).solvedFor;
+			solvingFormula := true;
+			local l1;
+			(foreach l2, l3 in FSViews do begin
+					if ((solvedFor = nil) or (l2 <> solvedFor)) then begin
+							l3:SetNumericValue(l1.(formulaSymbol).values[l2])
+						end
+				end);
+			solvingFormula := nil;
+			self:SolveFormula(nil)
+		end)
+end
+@@end

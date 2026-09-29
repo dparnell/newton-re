@@ -1,0 +1,7 @@
+@@ 0x43e9a9
+func() begin
+	local l1, l2, l3;
+	l2 := ((l1 := self:GlobalBox()).right - l1.left);
+	((l3 := (viewBounds := Clone(viewBounds))).right := (l3.left + StdButtonWidth(text)))
+end
+@@end

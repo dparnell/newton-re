@@ -1,0 +1,8 @@
+@@ 0x724c51
+func(a1, a2) begin
+	OffsetShape(shapeArray, (viewOriginX - a1), (viewOriginY - a2));
+	viewOriginX := a1;
+	viewOriginY := a2;
+	self:dirty()
+end
+@@end

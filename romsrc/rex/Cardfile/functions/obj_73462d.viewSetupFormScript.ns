@@ -1,0 +1,9 @@
+@@ 0x7347f5
+func() begin
+	labelCommands := [Array: ];
+	(for l1 := 0 to (Length(BaudTypes.baudRates) - 1) do begin
+			AddArraySlot(labelCommands, {item: BaudTypes.baudText[l1], baudRate: BaudTypes.baudRates[l1]})
+		end);
+	inherited:?viewSetupFormScript()
+end
+@@end

@@ -1,0 +1,28 @@
+@@ 0x52d2bd
+func() begin
+	local l1, l2, l3, l4, l5, l6, l7;
+	l1 := ([Array: "0", "1", "2", "3"])[userConfiguration.modemSoundVolume];
+	l2 := 60;
+	if userConfiguration.carrierdelay then begin
+			l2 := userConfiguration.carrierdelay
+		end;
+	l3 := 3;
+	if userConfiguration.blinddialdelay then begin
+			waitBeforeBlindDial := userConfiguration.blinddialdelay
+		end;
+	l4 := 2;
+	if userConfiguration.commaDelay then begin
+			l4 := userConfiguration.commaDelay
+		end;
+	l5 := 2;
+	if (if userConfiguration.faxringstoanswer then (userConfiguration.faxringstoanswer > 0)) then begin
+			l5 := userConfiguration.faxringstoanswer
+		end;
+	if (userConfiguration.currentCountry = 'Canada) then begin
+			l6 := 10
+		end else begin
+			l6 := GetCountryEntry(userConfiguration.currentCountry)[0].countryCode
+		end;
+	(l7 := {type: 'option, label: "mdo ", opCode: 512, form: 'template, data: {arglist: [Array: (userConfiguration.modemSoundVolume > 0), (if (not userConfiguration.blinddialing) then (not userConfiguration.manualDialing)), (not userConfiguration.manualDialing), (userConfiguration.dialing = 'touchtone), userConfiguration.manualDialing, l1, l2, l3, l4, l5, l6, userConfiguration.cellularConnection], typelist: [Array: 'struct, 'boolean, 'boolean, 'boolean, 'boolean, 'boolean, [Array: 'Array, 'char, 1], 'byte, 'byte, 'byte, 'byte, 'uLong, 'boolean]}})
+end
+@@end

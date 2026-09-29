@@ -1,0 +1,5 @@
+@@ 0x41b029
+func(a1) begin
+	(StrFontWidth(a1, 1057792) + 6)
+end
+@@end

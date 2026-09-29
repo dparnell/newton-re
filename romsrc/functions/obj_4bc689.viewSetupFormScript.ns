@@ -1,0 +1,9 @@
+@@ 0x4bc635
+func() begin
+	local l1;
+	l1 := (if suppressAreaCode then 0 else (areaCodeWidth + (2 * parenWidth)));
+	(viewBounds := Clone(viewBounds)).left := (indent + l1);
+	text := currPhoneNum;
+	inherited:?viewSetupFormScript()
+end
+@@end

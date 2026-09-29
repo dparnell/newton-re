@@ -1,0 +1,18 @@
+@@ 0x463789
+func(a1) begin
+	local l1, l2;
+	if (displayParams.appAreaWidth <> displayParams.scrWidth) then begin
+			l1 := ((displayParams.scrWidth - displayParams.appAreaWidth) div 2);
+			if (displayParams.appAreaGlobalLeft <> 0) then begin
+					l1 := (-l1)
+				end;
+			l2 := OffsetRect(self._proto.viewBounds, l1, 0);
+			if self.viewCObject then begin
+					SetValue(self, 'viewBounds, l2)
+				end else begin
+					self.viewBounds := l2
+				end
+		end;
+	self:Bother(a1)
+end
+@@end

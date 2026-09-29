@@ -1,0 +1,6 @@
+@@ 0x550ee9
+func(a1) begin
+	self:RedoIcons();
+	(if a1 then GetRoot().ExtrasDrawer:RedoIconsAfterDrop(nil))
+end
+@@end

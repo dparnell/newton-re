@@ -1,0 +1,6 @@
+@@ 0x79f835 names
+func() begin
+	text := newTitle;
+	(viewBounds := RelBounds(0, 16, -8, (if (slipHeight = 280) then 96 else 64)))
+end
+@@end

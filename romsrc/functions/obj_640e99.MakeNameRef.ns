@@ -1,0 +1,21 @@
+@@ 0x457669
+func(a1, a2) begin
+	local l1, l2, l3, l4;
+	l1 := self:MakeCanonicalNameRef(a1, a2);
+	l3 := self:GetPrimaryPath(a1);
+	if IsFrame((l4 := (if IsEntryAlias(a1) then ResolveEntryAlias(a1) else a1))) then begin
+			if (if (not (l2 := l4.(l3))) then IsNameRef(l4)) then begin
+					if (l4 := EntryFromObj(l4)) then begin
+							l2 := l4.(l3)
+						end
+				end
+		end else begin
+			l2 := l4
+		end;
+	if (if IsInstance(l2, 'string) then (l3 = 'name)) then begin
+			l2 := {last: l2}
+		end;
+	l1.(l3) := l2;
+	l1
+end
+@@end

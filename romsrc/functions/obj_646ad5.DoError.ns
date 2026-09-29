@@ -1,0 +1,27 @@
+@@ 0x4982a5
+func(a1) begin
+	local l1;
+	if tracing then begin
+			self:Trace("DoError(...)", a1)
+		end;
+	if (not fException) then begin
+			fException := a1
+		end;
+	(if (occupancy <= 1) then begin
+			if (not (l1 := (if fState then self.(fState).OnError))) then begin
+					if tracing then begin
+							self:Trace(Stringer([Array: "DoError(\u2026\u): No error state specified for state", " ", fState, "!  Can't throw: state machine dies."]), nil)
+						end;
+					if autoNotify then begin
+							GetRoot():Notify(4, "Data Exchange", EnsureInternal(ParamStr("An error occurred but \u201C\u^0\u201D\u has no error state.", [Array: fState])))
+						end;
+					l1 := 'exit
+				end;
+			occupancy := 1;
+			l1
+		end else begin
+			occupancy := (occupancy - 1);
+			nil
+		end)
+end
+@@end

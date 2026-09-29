@@ -1,0 +1,10 @@
+@@ 0x423a15
+func() begin
+	(if (not hwMode) then begin
+			self.userConfigChangeSym := Intern(Stringer([Array: "VolumeSlider.", viewCObject]));
+			RegUserConfigChange(userConfigChangeSym, func(a1) begin
+				self:HandleConfigChange(a1)
+			end)
+		end)
+end
+@@end

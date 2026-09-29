@@ -1,0 +1,5 @@
+@@ 0x4fcdbd
+func() begin
+	upDownScroller:AdjustArrows()
+end
+@@end

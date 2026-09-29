@@ -1,0 +1,9 @@
+@@ 0x745d0d
+func() begin
+	self:?RemoveOpenWindow(callOptionsSlip);
+	(if callOptionsSlip.outNumber then begin
+			fullNumber := callOptionsSlip.outNumber.text;
+			self:SetNewWillDialText()
+		end)
+end
+@@end

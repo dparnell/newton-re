@@ -1,0 +1,15 @@
+@@ 0x47fc71
+func(a1) begin
+	local l1;
+	l1 := nil;
+	if (not self:?ignoreError(a1)) then begin
+			if (l1 = nil) then begin
+					l1 := TableLookup(@79, a1)
+				end;
+			if (l1 = nil) then begin
+					l1 := ParamStr("Error ^0 encountered", [Array: NumberStr(a1)])
+				end
+		end;
+	l1
+end
+@@end

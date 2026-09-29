@@ -1,0 +1,22 @@
+@@ 0x46b039
+func(a1) begin
+	local l1, l2;
+	self:DoPendingUpdate();
+	self:SaveUndoState(nil);
+	l1 := refCon.wordOffset;
+	if (a1 > 0) then begin
+			l1 := (l1 + refCon.wordLength)
+		end;
+	self:SetCaret(l1);
+	if (a1 <= 0) then begin
+			a1 := 0
+		end else begin
+			a1 := 1
+		end;
+	wordSource := 'none;
+	self:ReplaceExternal(" ", nil);
+	self:SetCaret((l1 + a1));
+	self:SetHilite();
+	self:UseExternalWord()
+end
+@@end

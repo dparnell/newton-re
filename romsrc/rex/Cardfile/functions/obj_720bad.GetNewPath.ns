@@ -1,0 +1,38 @@
+@@ 0x7357dd
+func(a1, a2) begin
+	local l1, l2, l3, l4, l5, l6, l7;
+	l4 := 0;
+	l6 := nil;
+	if (l3 := self:GetInfoFrame(a2, a1.class)) then begin
+			if (if (l1 := self:MakeDataPaths(l3.checkPrefix[0], l3.checkPaths, l3.stringData)) then (not self:HasPathData(a1, l1, l3.stringData))) then begin
+					l7 := l3.checkPrefix[0]
+				end else begin
+					if (l2 := l3.checkPrefix[1]) then begin
+							l4 := 0;
+							if (not a1.(l2)) then begin
+									a1.(l2) := [Array: ]
+								end;
+							l5 := Length(a1.(l2));
+							(while (l4 < l5) do begin
+									AddArraySlot((newPath := Clone(l3.checkPrefix[1])), l4);
+									if (if (l1 := self:MakeDataPaths(newPath, l3.checkPaths, l3.stringData)) then (not self:HasPathData(a1, l1, l3.stringData))) then begin
+											break (l6 := true)
+										end;
+									(l4 := (l4 + 1))
+								end);
+							if (not l6) then begin
+									if l3.stringData then begin
+											AddArraySlot(a1.(l3.checkPrefix[1]), "")
+										end else begin
+											AddArraySlot(a1.(l3.checkPrefix[1]), {})
+										end
+								end;
+							AddArraySlot((l7 := Clone(l3.checkPrefix[1])), l4)
+						end else begin
+							l7 := nil
+						end
+				end
+		end;
+	l7
+end
+@@end

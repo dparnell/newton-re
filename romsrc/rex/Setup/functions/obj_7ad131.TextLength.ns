@@ -1,0 +1,5 @@
+@@ 0x7ad1c1
+func() begin
+	(if self.text then StrLen(self.text) else 0)
+end
+@@end

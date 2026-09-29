@@ -1,0 +1,53 @@
+@@ 0x51369d
+func(a1) begin
+	if (not items) then begin
+			return nil
+		end;
+	(if (l1 := ArrayPos(items, a1, 0, IsSameItem)) then begin
+			l2 := itemHeights;
+			l3 := self:LocalBox().bottom;
+			l4 := 0;
+			if (l1 > 0) then begin
+					local l1;
+					local l2;
+					local l3;
+					local l4;
+					(for l5 := 0 to (l1 - 1) do begin
+							l4 := (l4 + l2[l5])
+						end)
+				end;
+			l8 := (l4 + l2[l1]);
+			if (not (if (l4 >= viewOriginY) then (l8 <= (l3 + viewOriginY)))) then begin
+					l9 := 0;
+					if (l1 <> 0) then begin
+							l10 := calendarBottom;
+							if (l11 := self:GetToDoAgendaView()) then begin
+									self:SetOrigin(0, l10);
+									l11:RedoChildren();
+									if (not (l12 := l11:getToDoBottom())) then begin
+											l10 := (l10 + l3)
+										end else begin
+											l10 := ((l10 + l11:getToDoBottom()) - self:GlobalBox().top)
+										end
+								end;
+							if (l10 > l3) then begin
+									(for l5 := 0 to (l1 - 1) do begin
+											local l8, l9, l10, l11, l12;
+											if ((l10 - l9) > l3) then begin
+													l9 := (l9 + l2[l5]);
+													currentItem := (l5 + 1)
+												end else begin
+													break
+												end
+										end)
+								end
+						end else begin
+							currentItem := 0
+						end;
+					self:SetOrigin(0, l9)
+				end;
+			self:calculateScrollRects();
+			self:Dirty()
+		end)
+end
+@@end

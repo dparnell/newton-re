@@ -1,0 +1,5 @@
+@@ 0x52e915
+func(a1) begin
+	self:SendOption("answ", 'ignore, a1)
+end
+@@end

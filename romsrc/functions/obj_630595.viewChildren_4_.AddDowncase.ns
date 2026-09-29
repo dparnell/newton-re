@@ -1,0 +1,17 @@
+@@ 0x5ac849
+func() begin
+	local l1, l2;
+	if selectedEntry then begin
+			l1 := selectedEntry.word;
+			self:RemoveSelection();
+			reviewDict:RemoveWord(l1);
+			Downcase((l2 := SPrintObject(l1[0])));
+			l1[0] := l2[0];
+			reviewDict:AddWord(l1)
+		end;
+	(if (not selectedEntry) then begin
+			dictionary.count := 0;
+			AutoAdd:Close()
+		end)
+end
+@@end

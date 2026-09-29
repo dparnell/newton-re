@@ -1,0 +1,18 @@
+@@ 0x51d319
+func() begin
+	self.bookScripts := Clone(protoBookScripts);
+	if (l3 := (l1 := self:CurrentBook()).scripts) then begin
+			local l1;
+			local l2;
+			local l3;
+			(for l2 := 0 to (Length(l3) - 1) by 2 do begin
+					local l6;
+					self.bookScripts.(l3[l2]) := l3[(l2 + 1)]
+				end)
+		end;
+	self._proto := bookScripts;
+	l6 := self:PageSize(nil);
+	self.viewBounds := RelBounds(0, 0, l6.width, l6.height);
+	(if (pagesShowing = 2) then (viewBounds.right := ((l6.width * 2) + 15)))
+end
+@@end

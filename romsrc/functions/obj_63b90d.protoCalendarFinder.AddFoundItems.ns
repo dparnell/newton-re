@@ -1,0 +1,15 @@
+@@ 0x4ea781
+func(a1, a2, a3) begin
+	local l1;
+	l1 := 0;
+	if (a2 < cacheMeetingsCount) then begin
+			l1 := self:AddFoundMeetingItems(a1, a2, a3);
+			a2 := (a2 + l1);
+			a3 := (a3 - l1)
+		end;
+	if ((a2 + a3) > cacheMeetingsCount) then begin
+			l1 := (l1 + self:AddFoundToDoItems(a1, a2, a3))
+		end;
+	l1
+end
+@@end

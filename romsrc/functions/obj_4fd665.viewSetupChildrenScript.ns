@@ -1,0 +1,38 @@
+@@ 0x4fd645
+func() begin
+	(if ((numDays := Length(selectedDates)) <= 7) then begin
+			viewWidth := ((l1 := self:GlobalBox()).right - l1.left);
+			tabAcross := numDays;
+			tabWidths := ((viewWidth - 15) div tabAcross);
+			tabValues := selectedDates;
+			self.viewChildren := self:LayoutTable(self, 0, 0);
+			self.SubKids := Array(numDays, nil);
+			if (if (numDays > 1) then ((tabValues[1] - tabValues[0]) > 1440)) then begin
+					l2 := true
+				end;
+			if l2 then begin
+					local l1;
+					local l2;
+					(for l3 := 0 to (numDays - 1) do begin
+							SubKids[l3] := GetAllMeetings(MeetingSoup, RepeatSoup, tabValues[l3], nil)
+						end)
+				end else begin
+					l6 := tabValues[0];
+					l7 := (tabValues[(numDays - 1)] + 1440);
+					if (l8 := GetAllMeetings(MeetingSoup, RepeatSoup, l6, l7)) then begin
+							l9 := 0;
+							l10 := 0;
+							(for l3 := 0 to (numDays - 1) do begin
+									local l6, l7, l8, l9, l10, l11, l12;
+									l12 := ((tabValues[l3] + 1440) - 1);
+									if ((l11 := BSearchRight(l8, l12, '|<|, 'mtgStartDate)) >= l9) then begin
+											SubKids[l3] := ArrayMunger([Array: ], 0, nil, l8, l9, ((l11 - l9) + 1));
+											l9 := (l11 + 1)
+										end
+								end)
+						end
+				end;
+			(if (if (if (numDays = 5) then ((selectedDates[1] - selectedDates[0]) = 1440)) then (Date(selectedDates[0]).dayOfWeek = 1)) then (scheduleView.whoAmI := 'WeekView) else (scheduleView.whoAmI := 'scheduleView))
+		end)
+end
+@@end

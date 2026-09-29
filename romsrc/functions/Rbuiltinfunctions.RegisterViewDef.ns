@@ -1,0 +1,5 @@
+@@ 0x4a8db9
+func(a1, a2) begin
+	RegDataView(a2, a1)
+end
+@@end

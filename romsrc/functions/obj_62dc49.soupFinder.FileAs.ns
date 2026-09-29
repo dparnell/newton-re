@@ -1,0 +1,21 @@
+@@ 0x4b2d51
+func(labels) begin
+	(if selected then begin
+			if (Length(selected) = 1) then begin
+					self:ForEachSelected(func(a1) begin
+						a1.labels := labels;
+						GetRoot().iobox:Fileit(a1);
+						EntryChangeXmit(a1, 'find)
+					end)
+				end else begin
+					self:ForEachSelected(func(a1) begin
+						a1.labels := labels;
+						GetRoot().iobox:Fileit(a1);
+						EntryChange(a1)
+					end);
+					XmitSoupChange(cursor:soup():GetName(), 'unknown, 'whatThe, nil)
+				end;
+			(if (not (if owner.doCardRouting then waitToUnSelect)) then (selected := nil))
+		end)
+end
+@@end

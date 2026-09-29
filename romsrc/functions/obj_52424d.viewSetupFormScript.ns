@@ -1,0 +1,9 @@
+@@ 0x51ec9d
+func() begin
+	page := self:CurrentPage();
+	(if (miniBar = nil) then (self.viewBounds := RelBounds(0, 2, pgButWidth, 13)) else begin
+			self.viewBounds := RelBounds(-2, 2, pgButWidth, 13);
+			(self.viewJustify := 22)
+		end)
+end
+@@end

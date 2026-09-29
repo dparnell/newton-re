@@ -1,0 +1,7 @@
+@@ 0x4cb90d
+func() begin
+	fixed := true;
+	userDismissed := true;
+	base:Close()
+end
+@@end

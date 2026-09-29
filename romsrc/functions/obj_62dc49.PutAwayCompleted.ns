@@ -1,0 +1,9 @@
+@@ 0x4b3d91
+func(a1) begin
+	local l1;
+	if (l1 := GetItemTransport(a1)) then begin
+			l1:?ItemPutAway(a1)
+		end;
+	(if deleteAfterPutaway then self:ItemCompleted(a1, nil))
+end
+@@end

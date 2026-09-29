@@ -1,0 +1,40 @@
+@@ 0x46b789
+func(a1, a2) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11;
+	l5 := StrLen((l4 := GetDynamicValue((l3 := refCon).form, 'text, 'string)));
+	l6 := l3.wordOffset;
+	l7 := l3.wordLength;
+	l8 := (l6 + l7);
+	l11 := IsInk(l4[l6]);
+	if (if (if (a2 = 0) then (l6 > 0)) then IsWhiteSpace(l4[(l6 - 1)])) then begin
+			if (l10 := ScanPrevWordEnd(l4, (l6 - 1), 0)) then begin
+					l9 := (if (IsInk(l4[(l10 - 1)]) <> l11) then l10 else ScanWordStart(l4, (l10 - 1), 0));
+					a1 := l10;
+					a2 := l6;
+					l2 := l9
+				end
+		end else begin
+			if (if (if (a1 = l7) then (l8 < l5)) then IsWhiteSpace(l4[l8])) then begin
+					if (l9 := ScanNextWord(l4, l8, l5)) then begin
+							l10 := (if (IsInk(l4[l9]) <> l11) then l9 else ScanWordEnd(l4, l9, l5));
+							a1 := l8;
+							a2 := l9;
+							l2 := l6
+						end
+				end
+		end;
+	if l9 then begin
+			self:LockScreen(true);
+			hiliteBusy := true;
+			self:SetStartStop(a1, a2);
+			self:ReplaceSelection("", l3, nil);
+			self:SetStartLen(l2, ((l10 - l9) + l7));
+			self:CheckMergeInk();
+			hiliteBusy := nil;
+			self:UseExternalWord();
+			self:LockScreen(nil);
+			l1 := true
+		end;
+	return l1
+end
+@@end

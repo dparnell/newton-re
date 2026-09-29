@@ -1,0 +1,12 @@
+@@ 0x45738d
+func(a1, a2, a3) begin
+	l1 := [Array: ];
+	local l1;
+	(foreach l2 in a3 do begin
+			if ((not (if (if IsInstance(a1.(l2), 'string) then IsInstance(a2.(l2), 'string)) then StrEqual(a1.(l2), a2.(l2)))) or (a1.(l2) <> a2.(l2))) then begin
+					AddArraySlot(l1, l2)
+				end
+		end);
+	l1
+end
+@@end

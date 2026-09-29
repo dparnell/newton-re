@@ -1,0 +1,35 @@
+@@ 0x55ebe9
+func() begin
+	inherited:?viewSetupFormScript();
+	ListItems := [Array: ];
+	ListSymbols := [Array: ];
+	selectedItems := [Array: ];
+	(foreach l1 in findApps do begin
+			l3 := GetVariable(self, l1);
+			l4 := (if l1 then GetAppName(l1));
+			l5 := GetVariable(base, 'selectedAppSymbols);
+			if (if l3 then l4) then begin
+					if (l6 := l3:?AppFindTargets()) then begin
+							local l3;
+							local l4;
+							local l5;
+							local l6;
+							(foreach l7 in l6 do begin
+									AddArraySlot(ListItems, l7.name);
+									AddArraySlot(ListSymbols, {appSymbol: l1, target: l7.target});
+									if (if l5 then SetContains(l5, l1)) then begin
+											AddArraySlot(selectedItems, (Length(ListItems) - 1))
+										end
+								end)
+						end else begin
+							AddArraySlot(ListItems, l4);
+							AddArraySlot(ListSymbols, l1);
+							if (if l5 then SetContains(l5, l1)) then begin
+									AddArraySlot(selectedItems, (Length(ListItems) - 1))
+								end
+						end
+				end
+		end);
+	self:SetupList()
+end
+@@end

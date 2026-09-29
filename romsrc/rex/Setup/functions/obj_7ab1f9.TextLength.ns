@@ -1,0 +1,5 @@
+@@ 0x7ab591
+func() begin
+	(if vInputLine.text then StrLen(vInputLine.text) else 0)
+end
+@@end

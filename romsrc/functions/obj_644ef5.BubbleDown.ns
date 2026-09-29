@@ -1,0 +1,19 @@
+@@ 0x467265
+func(a1, a2, a3) begin
+	l1 := SPrintObject(a2);
+	(if (l2 := StrPos(a1, l1, 0)) then begin
+			l3 := (StrLen(a1) - 1);
+			local l1;
+			local l2;
+			local l3;
+			(for l4 := (l2 + 1) to l3 do begin
+					l1[0] := a1[l4];
+					if (not StrPos(a3, l1, 0)) then begin
+							break
+						end;
+					a1[(l4 - 1)] := l1[0];
+					a1[l4] := a2
+				end)
+		end)
+end
+@@end

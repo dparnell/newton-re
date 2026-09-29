@@ -1,0 +1,19 @@
+@@ 0x5a3451
+func(a1, a2) begin
+	local l1, l2;
+	l2 := GetRoot().(GetVariable(a2, 'appSymbol));
+	l2:?MarkRead(a1);
+	ArrayInsert((a1 := DeepClone(a1)).toRef, a1.fromRef, 0);
+	a1.name := a1.fromName;
+	if (if (l1 := LSearch(a1.toRef, a1.account, 0, '|str=|, 'email)) then (Length(a1.toRef) > 1)) then begin
+			ArrayRemoveCount(a1.toRef, l1, 1)
+		end;
+	if (l1 := LSearch(a1.cc, a1.account, 0, '|str=|, 'email)) then begin
+			ArrayRemoveCount(a1.cc, l1, 1)
+		end;
+	if (l1 := LSearch(a1.bcc, a1.account, 0, '|str=|, 'email)) then begin
+			ArrayRemoveCount(a1.bcc, l1, 1)
+		end;
+	GetRoot().mailSlip:ReallyDoReply(a1, a2)
+end
+@@end

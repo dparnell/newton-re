@@ -1,0 +1,12 @@
+@@ 0x512805
+func(a1) begin
+	if (not HasSlot(self, 'stepChildren)) then begin
+			self.stepChildren := Clone(self.stepChildren)
+		end;
+	if (not self.stepChildren) then begin
+			self.stepChildren := [Array: ]
+		end;
+	self.ToDoAgendaTemplate := self:MakeToDoAgendaTemplate(a1);
+	AddArraySlot(self.stepChildren, ToDoAgendaTemplate)
+end
+@@end

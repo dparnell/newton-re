@@ -1,0 +1,5 @@
+@@ 0x42dc79
+func() begin
+	ReadCursiveOptions()
+end
+@@end

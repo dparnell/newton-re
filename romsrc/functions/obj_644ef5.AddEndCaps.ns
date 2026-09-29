@@ -1,0 +1,11 @@
+@@ 0x44ef8d
+func() begin
+	local l1, l2;
+	l1 := self.text;
+	if (wordLeft > 0) then begin
+			StrMunger(l1, 0, 0, blankText, 0, wordLeft)
+		end;
+	l2 := StrLen(l1);
+	(if ((trailers := (maxChars - l2)) <= 0) then (trailers := 0) else StrMunger(l1, l2, 0, blankText, 0, trailers))
+end
+@@end

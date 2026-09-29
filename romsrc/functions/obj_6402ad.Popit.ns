@@ -1,0 +1,18 @@
+@@ 0x41ddfd
+func() begin
+	local l1, l2;
+	(if labelCommands then begin
+			l1 := labelCommands;
+			if curLabelCommand then begin
+					if IsFrame((l2 := (l1 := Clone(l1))[curLabelCommand])) then begin
+							(l2 := (l1[curLabelCommand] := Clone(l2))).mark := $\uFC0B
+						end else begin
+							l1[curLabelCommand] := {item: l2, mark: $\uFC0B}
+						end
+				end;
+			labelLine.alwaysCallPickActionScript := alwaysCallPickActionScript;
+			labelLine:PopupMenu(l1, {indent: indent});
+			entryLine:Dirty()
+		end)
+end
+@@end

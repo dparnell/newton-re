@@ -1,0 +1,22 @@
+@@ 0x47eaf1
+func() begin
+	if (not GetRoot().recTogglers) then begin
+			GetRoot().recTogglers := [Array: ]
+		end;
+	SetAdd(recTogglers, self, true);
+	if (icon <> recTogglers[0].icon) then begin
+			self.icon := recTogglers[0].icon
+		end;
+	if (not HasPath(GetRoot(), '_recognizerUserChoices)) then begin
+			GetRoot()._recognizerUserChoices := @49
+		end;
+	self:SetupPopup();
+	self:InitRecogSettings();
+	if (not _cachedSettings.curItem) then begin
+			self:JamIt(defaultItem)
+		end else begin
+			self:JamIt(_cachedSettings.curItem)
+		end;
+	(_cachedSettings := nil)
+end
+@@end

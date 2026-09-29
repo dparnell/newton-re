@@ -1,0 +1,22 @@
+@@ 0x526929
+func(a1) begin
+	local l1, l2;
+	l1 := a1.givenTime;
+	l2 := a1.currentTime;
+	if (l1 >= l2) then begin
+			return 0
+		end;
+	if (if (a1.hasTime = nil) then (a1.usualTime <> nil)) then begin
+			if ((l1 + 30) > l2) then begin
+					return 30
+				end;
+			if ((l1 + 60) > l2) then begin
+					return 60
+				end
+		end;
+	if a1.dayOfWeek then begin
+			return 10080
+		end;
+	return -1
+end
+@@end

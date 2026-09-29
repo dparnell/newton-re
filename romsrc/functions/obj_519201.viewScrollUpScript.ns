@@ -1,0 +1,5 @@
+@@ 0x51dc91
+func() begin
+	(if Visible(Outline) then PostCommand(Outline, 45) else (if browserView then PostCommand(browserView, 45)))
+end
+@@end

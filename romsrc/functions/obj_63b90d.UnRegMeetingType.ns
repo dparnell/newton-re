@@ -1,0 +1,7 @@
+@@ 0x511c79
+func(a1) begin
+	RemoveSlot(externalTypeRegistry, a1);
+	RemoveSlot(meetingTypeRegistry, a1);
+	nil
+end
+@@end

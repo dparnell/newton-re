@@ -1,0 +1,5 @@
+@@ 0x4df745
+func(a1) begin
+	(if (target.kind = 'Add) then inherited:viewClickScript(a1) else self:Notify(3, "Time Zones", "This field can not be changed for built-in locations."))
+end
+@@end

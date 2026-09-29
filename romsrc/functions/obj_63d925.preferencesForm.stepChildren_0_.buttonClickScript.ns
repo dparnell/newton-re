@@ -1,0 +1,5 @@
+@@ 0x59d149
+func() begin
+	(setEmporia := (not self:ValidateConfig('location, nil, '[Array: mailPhone], msgValidateNumber, 'ValidateSlip, 'ValidationComplete)))
+end
+@@end

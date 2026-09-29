@@ -1,0 +1,6 @@
+@@ 0x4d37fd
+func(a1) begin
+	local l1;
+	(if (not StrFilled(a1)) then 'USA else (if (if (l1 := GetCountryEntry(a1)) then (Length(l1) > 0)) then l1[0].symbol else 'USA))
+end
+@@end

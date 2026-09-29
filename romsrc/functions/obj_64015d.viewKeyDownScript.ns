@@ -1,0 +1,9 @@
+@@ 0x42b9f5
+func(a1, a2) begin
+	(if (a1 <> $\00) then begin
+			clicker();
+			self:Close();
+			true
+		end)
+end
+@@end

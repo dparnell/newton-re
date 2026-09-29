@@ -1,0 +1,11 @@
+@@ 0x4c7c35
+func(a1) begin
+	local l1;
+	if ((l1 := GetCurrentFormat(a1)) = nil) then begin
+			a1.error := -8306
+		end else begin
+			a1.error := nil
+		end;
+	a1.error
+end
+@@end

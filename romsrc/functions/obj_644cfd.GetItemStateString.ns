@@ -1,0 +1,19 @@
+@@ 0x47fe5d
+func(a1) begin
+	local l1, l2;
+	if (not self:ignoreError(a1.error)) then begin
+			return itemStateMsgs.error
+		end;
+	l2 := a1.state;
+	if a1.Remote then begin
+			l2 := 'Remote
+		end;
+	if l2 then begin
+			l1 := itemStateMsgs.(l2)
+		end;
+	if (l1 = nil) then begin
+			l1 := ""
+		end;
+	l1
+end
+@@end

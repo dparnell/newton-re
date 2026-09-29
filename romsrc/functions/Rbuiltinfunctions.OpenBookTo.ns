@@ -1,0 +1,7 @@
+@@ 0x51cda1
+func(a1, a2) begin
+	c := GetRoot().copperfield;
+	c:OpenBook(a1);
+	c:TurnToSubject(a2)
+end
+@@end

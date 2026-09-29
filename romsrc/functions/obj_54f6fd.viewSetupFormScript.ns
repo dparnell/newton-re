@@ -1,0 +1,9 @@
+@@ 0x54f63d
+func() begin
+	local l1;
+	self.viewValue := GetUserConfig('lcdContrast);
+	l1 := Gestalt('[Array: 33554435, [Array: struct, boolean, long, long], 1]);
+	self.minValue := l1[1];
+	(self.maxValue := l1[2])
+end
+@@end

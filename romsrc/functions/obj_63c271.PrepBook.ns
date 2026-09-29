@@ -1,0 +1,18 @@
+@@ 0x51c42d
+@@const kFunction_51bdf9
+func() begin
+	true
+end
+@@main
+func(a1) begin
+	local l1, l2;
+	self.isbn := a1;
+	l1 := self:GetLibraryEntry(a1);
+	self.curRendering := l1.curRendering;
+	self:PrepBookX(a1);
+	(if ((if ((l2 := self:CurrentBook()).version > 1) then (l2.help = true)) or (if l2.flags then (BAnd(l2.flags, 64) <> 0))) then begin
+			self.ReOrientToScreen := _ReOrientToScreen;
+			(GetRoot().theBrowser.ReOrientToScreen := kFunction_51bdf9)
+		end else RemoveSlot(self, 'ReOrientToScreen))
+end
+@@end

@@ -1,0 +1,70 @@
+@@ 0x48ba8d
+@@const kFunction_48ba25
+func() begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11, l12, l13, l14, l15, l16, l17;
+	l16 := {};
+	l17 := userConfiguration;
+	l1 := GetStores()[0]:GetSoup(@47);
+	(l2 := Clone(@46)).tagspec := {equal: '_ownerNames};
+	l3 := l1:Query(l2);
+	l14 := l17.currentPersona;
+	l16.currentPersona := nil;
+	l16.personae := [Array: ];
+	l15 := l17.currentEmporium;
+	l16.currentEmporium := nil;
+	l16.emporia := [Array: ];
+	l4 := l3:entry();
+	(while l4 do begin
+			if (l4.class = 'owner) then begin
+					AddArraySlot(l16.personae, MakeEntryAlias(l4))
+				end else begin
+					AddArraySlot(l16.emporia, MakeEntryAlias(l4))
+				end;
+			(l4 := l3:Next())
+		end);
+	SetUserConfigEnMasse('personae, l16);
+	if (if (Length(l16.personae) = 0) then StrFilled(Stringer([Array: l17.phone, l17.faxPhone, l17.homePhone, l17.country, l17.mailAccount, l17.name, l17.address, l17.cityZip, l17.company, l17.mailPassword]))) then begin
+			l8 := [Array: ];
+			if l17.phone then begin
+					AddArraySlot(l8, SetClass(Clone(l17.phone), 'workPhone))
+				end;
+			if l17.faxPhone then begin
+					AddArraySlot(l8, SetClass(Clone(l17.faxPhone), 'faxPhone))
+				end;
+			if l17.homePhone then begin
+					AddArraySlot(l8, SetClass(Clone(l17.homePhone), 'homePhone))
+				end;
+			l12 := (if l17.country then SetCountryClass(Clone(l17.country)));
+			l13 := (if (if StrFilled(l17.mailAccount) then (not IsInstance(l17.mailAccount, '|string.email|))) then SetClass(Clone(l17.mailAccount), '|string.email|));
+			l5 := GetRoot().cardfile.conversion:Convert({name: {first: Clone(l17.name)}, address: Clone(l17.address), city: Clone(l17.cityZip), company: Clone(l17.company), country: l12, email: l13, emailPassword: Clone(l17.mailPassword), phones: l8}, 'oneO, 'twoO, nil);
+			GetRoot().cardfile:addcard('owner, l5)
+		end;
+	if (if (Length(l16.emporia) = 0) then (l17.mailNetwork or StrFilled(Stringer([Array: l17.currentAreaCode, l17.country, l17.dialingPrefix, l17.mailPhone])))) then begin
+			l6 := GetRoot().cardfile:addcard('worksite, {place: Clone("Home"), areacode: Clone(l17.currentAreaCode), countrySymbol: l17.currentCountry, country: (if l17.currentCountry then GetCountryEntry(l17.currentCountry)[0].name), dialingPrefix: Clone(l17.dialingPrefix), printer: Clone(l17.currentPrinter), mailAccess: [Array: {mailPhone: Clone(l17.mailPhone), mailNetwork: l17.mailNetwork}]})
+		end;
+	if l6 then begin
+			(l7 := GetAppPrefs('setup, {})).homeWorksite := MakeEntryAlias(l6);
+			EntryChange(l7)
+		end;
+	if (if (if l14 then l16.personae) then (Length(l16.personae) > 0)) then begin
+			if (if (l4 := ResolveEntryAlias(l14)) then IsSubclass(l4.class, 'owner)) then begin
+					SetUserConfig('currentPersona, l14)
+				end else begin
+					SetUserConfig('currentPersona, l16.personae[0])
+				end;
+			UseCurrentPersona()
+		end;
+	(if (if (if l15 then l16.emporia) then (Length(l16.emporia) > 0)) then begin
+			if (if (l4 := ResolveEntryAlias(l15)) then IsSubclass(l4.class, 'worksite)) then begin
+					SetUserConfig('currentEmporium, l15)
+				end else begin
+					SetUserConfig('currentEmporium, l16.emporia[0])
+				end;
+			UseCurrentEmporium()
+		end)
+end
+@@main
+func() begin
+	AddDeferredCall(kFunction_48ba25, '[Array: ])
+end
+@@end

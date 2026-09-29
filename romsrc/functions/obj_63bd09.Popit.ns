@@ -1,0 +1,34 @@
+@@ 0x506ead
+func(a1) begin
+	if ((repeatType = 6) or (if (repeatType = 0) then (mtgInfo = BOr(4064, 31)))) then begin
+			durationPop := '[Array: {item: "2 days", skipDay: 2}, {item: "5 days", skipDay: 5}, {item: "1 week", skipDay: 7}, {item: "2 weeks", skipDay: 14}, {item: "1 month", skipMonth: 1}, {item: "6 months", skipMonth: 6}, {item: "Ongoing", Ongoing: true}]
+		end else begin
+			if (repeatType = 0) then begin
+					durationPop := '[Array: {item: "2 weeks", skipDay: 8}, {item: "3 weeks", skipDay: 15}, {item: "4 weeks", skipDay: 22}, {item: "5 weeks", skipDay: 29}, {item: "6 months", skipDay: 176}, {item: "1 year", skipDay: 365}, {item: "Ongoing", Ongoing: true}]
+				end else begin
+					if (repeatType = 4) then begin
+							durationPop := '[Array: {item: "2 times", skipDay: 15}, {item: "3 times", skipDay: 29}, {item: "4 times", skipDay: 43}, {item: "5 times", skipDay: 57}, {item: "6 months", skipDay: 169}, {item: "1 year", skipDay: 365}, {item: "Ongoing", Ongoing: true}]
+						end else begin
+							if (repeatType = 2) then begin
+									durationPop := '[Array: {item: "2 months", skipMonth: 1, plusDay: true}, {item: "3 months", skipMonth: 2, plusDay: true}, {item: "4 months", skipMonth: 3, plusDay: true}, {item: "6 months", skipMonth: 5, plusDay: true}, {item: "1 year", skipMonth: 11, plusDay: true}, {item: "2 years", skipMonth: 23, plusDay: true}, {item: "Ongoing", Ongoing: true}]
+								end else begin
+									if (repeatType = 1) then begin
+											durationPop := '[Array: {item: "2 months", skipMonth: 1, skipToMonthEnd: true}, {item: "3 months", skipMonth: 2, skipToMonthEnd: true}, {item: "4 months", skipMonth: 3, skipToMonthEnd: true}, {item: "6 months", skipMonth: 5, skipToMonthEnd: true}, {item: "1 year", skipMonth: 11, skipToMonthEnd: true}, {item: "2 years", skipMonth: 23, skipToMonthEnd: true}, {item: "Ongoing", Ongoing: true}]
+										end else begin
+											if (repeatType = 3) then begin
+													durationPop := '[Array: {item: "2 years", skipYear: 1, plusDay: true}, {item: "3 years", skipYear: 2, plusDay: true}, {item: "4 years", skipYear: 3, plusDay: true}, {item: "5 years", skipYear: 4, plusDay: true}, {item: "10 years", skipYear: 9, plusDay: true}, {item: "30 years", skipYear: 29, plusDay: true}, {item: "Ongoing", Ongoing: true}]
+												end else begin
+													if (repeatType = 7) then begin
+															durationPop := '[Array: {item: "2 years", skipYear: 1, skipToMonthEnd: true}, {item: "3 years", skipYear: 2, skipToMonthEnd: true}, {item: "4 years", skipYear: 3, skipToMonthEnd: true}, {item: "5 years", skipYear: 4, skipToMonthEnd: true}, {item: "10 years", skipYear: 9, skipToMonthEnd: true}, {item: "30 years", skipYear: 29, skipToMonthEnd: true}, {item: "Ongoing", Ongoing: true}]
+														end else begin
+															durationPop := nil
+														end
+												end
+										end
+								end
+						end
+				end
+		end;
+	inherited:Popit(a1)
+end
+@@end

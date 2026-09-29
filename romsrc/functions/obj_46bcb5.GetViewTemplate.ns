@@ -1,0 +1,40 @@
+@@ 0x46b931
+func() begin
+	local l1, l2, l3, l4, l5;
+	if (l1 := refCon.form) then begin
+			if ((l2 := BAnd(l1.viewFlags, 33550336)) <> 33550336) then begin
+					if (not (l3 := l1:?viewGetCorrectorTemplate())) then begin
+							l4 := GetLocale();
+							if (l2 = 262144) then begin
+									l3 := l4.phoneFilter
+								end else begin
+									if (l2 = 1048576) then begin
+											l3 := l4.timeFilter
+										end else begin
+											if (l2 = 524288) then begin
+													l3 := l4.dateFilter
+												end else begin
+													if (l2 = 8192) then begin
+															l3 := @782
+														end else begin
+															if (l2 = 16777216) then begin
+																	if (if IsArray((l5 := l1.dictionaries)) then (Length(l5) = 1)) then begin
+																			l5 := l5[0]
+																		end;
+																	if (l5 = 117) then begin
+																			l3 := @782
+																		end
+																end
+														end
+												end
+										end
+								end
+						end;
+					if (not l3) then begin
+							l3 := @780
+						end
+				end
+		end;
+	return l3
+end
+@@end

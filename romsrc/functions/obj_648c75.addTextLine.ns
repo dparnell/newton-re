@@ -1,0 +1,5 @@
+@@ 0x49f019
+func(a1, a2) begin
+	MakeText(a1, 42, (49 + (a2 * lineHeight)), self:LocalBox().right, ((49 + (a2 * lineHeight)) + 10))
+end
+@@end

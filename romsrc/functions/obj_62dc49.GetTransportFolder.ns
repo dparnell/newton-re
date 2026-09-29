@@ -1,0 +1,24 @@
+@@ 0x4b15e1
+func(a1) begin
+	local l1, l2, l3;
+	l1 := GetItemTransport(a1);
+	l2 := l1:?GetFolderName(a1);
+	l3 := nil;
+	if l2 then begin
+			if (ClassOf(l2) <> 'symbol) then begin
+					l3 := GenFolderSym(l2)
+				end else begin
+					l3 := l2
+				end;
+			if (not GetFolderStr(l3)) then begin
+					if IsSymbol(l2) then begin
+							l2 := SPrintObject(l2)
+						end;
+					if IsString(l2) then begin
+							AddFolder(l2, appSymbol)
+						end
+				end
+		end;
+	return l3
+end
+@@end

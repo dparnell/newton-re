@@ -1,0 +1,7 @@
+@@ 0x5b7c69
+func() begin
+	local l1;
+	l1 := GetUserConfig('passwordFrequency);
+	(if ((not GetUserConfig('usepassword)) or (if GetUserConfig('usepassword) then (not l1))) then labelCommands[3] else (if (l1 = 0) then labelCommands[0] else (if (l1 = 60) then labelCommands[1] else (if (l1 = 1440) then labelCommands[2]))))
+end
+@@end

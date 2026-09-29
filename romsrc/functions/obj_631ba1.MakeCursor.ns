@@ -1,0 +1,10 @@
+@@ 0x4eda79
+func(a1, a2) begin
+	local l1;
+	l1 := GetUnionSoup(allSoups.(a1).soupName);
+	if IsSymbol(a2) then begin
+			a2 := {type: 'index, tagspec: {all: a2, none: [Array: 'log, 'Sent]}}
+		end;
+	Query(l1, a2)
+end
+@@end

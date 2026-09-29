@@ -1,0 +1,5 @@
+@@ 0x444e35
+func() begin
+	(viewBounds := stopBounds)
+end
+@@end

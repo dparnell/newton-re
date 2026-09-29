@@ -1,0 +1,10 @@
+@@ 0x6348a9
+func(a1, a2) begin
+	local l1;
+	l1 := self:AddToDefaultStore(a1);
+	if a2 then begin
+			XmitSoupChange(self:GetName(), a2, 'entryAdded, a1)
+		end;
+	l1
+end
+@@end

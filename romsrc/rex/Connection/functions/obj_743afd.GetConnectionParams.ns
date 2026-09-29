@@ -1,0 +1,28 @@
+@@ 0x744505
+func(callback) begin
+	local currentChoice, options, done, myCallback;
+	local l1;
+	deviceSpecificStuff:UpdateMemory();
+	currentChoice := self:GetConnectionType();
+	myCallback := func(a1) begin
+		local l1;
+		(if (not done) then begin
+				if (if (not options) then a1) then begin
+						options := deviceSpecificStuff:GetConnectionOptions(currentChoice, nil)
+					end;
+				l1 := protoContext:PasswordRead();
+				options := (if (if options then IsFrame(options)) then {connectOptions: options, password: l1});
+				done := true;
+				call callback with (options)
+			end)
+	end;
+	(if (not (if (options := deviceSpecificStuff:GetConnectionOptions(currentChoice, myCallback)) then IsFrame(options))) then return nil else (if options.callBeforeConnect then begin
+				options := DeepClone(options);
+				l1 := func(a1) begin
+					options := a1;
+					AddDeferredCall(myCallback, [Array: true])
+				end;
+				options:callBeforeConnect(options, l1)
+			end else (if (not done) then AddDeferredCall(myCallback, [Array: true]))))
+end
+@@end

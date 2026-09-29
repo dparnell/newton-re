@@ -1,0 +1,13 @@
+@@ 0x4a7c15
+func(a1) begin
+	l1 := nil;
+	local l1;
+	local l2;
+	(foreach l3 in (l2 := GetStores()) do begin
+			l1 := (l1 or l3:HasSoup(soupName))
+		end);
+	self.appSymbol := a1;
+	theSoup := RegUnionSoup(a1, {name: soupName, userName: soupName, ownerApp: a1, userDescr: soupDescr, indexes: soupIndices});
+	(if (not l1) then self:FillNewSoup())
+end
+@@end

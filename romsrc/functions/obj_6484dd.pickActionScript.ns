@@ -1,0 +1,6 @@
+@@ 0x45b081
+func(a1) begin
+	place := a1;
+	inherited:pickActionScript(nil)
+end
+@@end

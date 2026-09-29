@@ -1,0 +1,5 @@
+@@ 0x4f9f55
+func() begin
+	(self.createInProgress := true)
+end
+@@end

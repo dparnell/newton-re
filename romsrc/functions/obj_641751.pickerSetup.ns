@@ -1,0 +1,99 @@
+@@ 0x48a329
+func() begin
+	if inPeoplePicker then begin
+			labelNameRefs := nil;
+			l1 := (if useMemory then GetMemoryItems(memory));
+			if (alternatives or l1) then begin
+					l2 := 0;
+					if (if selected then (Length(selected) > 0)) then begin
+							if (Length(selected) = 1) then begin
+									labelNameRefs := Clone(selected)
+								end else begin
+									labelNameRefs := [Array: selected]
+								end;
+							selectedIndex := 0
+						end else begin
+							labelNameRefs := [Array: ]
+						end;
+					if alternatives then begin
+							ArrayMunger(labelNameRefs, 1, 0, alternatives, 0, nil)
+						end;
+					labLen := Length(labelNameRefs);
+					if l1 then begin
+							l3 := 0;
+							l4 := 0;
+							l5 := 0;
+							l2 := Length(l1);
+							l6 := Array(labLen, nil);
+							l7 := Array(l2, nil);
+							l8 := nil;
+							local l1;
+							local l2;
+							local l3;
+							local l4;
+							local l5;
+							local l6;
+							local l7;
+							local l8;
+							(foreach l9, l10 in l1 do begin
+									l12 := l10.item;
+									if (l13 := ArrayPos(labelNameRefs, l12, 0, func(a1, a2) begin
+										self:ToRefEquality(a1, a2)
+									end)) then begin
+											l6[l4] := l12;
+											labelNameRefs[l13] := nil;
+											l3 := (l3 + 1);
+											if (if selectedIndex then (l13 = selectedIndex)) then begin
+													l8 := true;
+													selectedIndex := l4
+												end;
+											l4 := (l4 + 1)
+										end else begin
+											l7[l5] := l12;
+											l5 := (l5 + 1)
+										end
+								end);
+							if (if (not l8) then selectedIndex) then begin
+									selectedIndex := (selectedIndex + l4)
+								end;
+							if (l3 > 0) then begin
+									local l12;
+									local l13;
+									(foreach l10 in labelNameRefs do begin
+											if l10 then begin
+													l6[l4] := l10;
+													l4 := (l4 + 1)
+												end
+										end);
+									labelNameRefs := l6;
+									l2 := (l2 - l3);
+									SetLength(l7, l2)
+								end;
+							if (l2 > 0) then begin
+									if (labLen > 0) then begin
+											SetLength(labelNameRefs, ((labLen + l2) + 1));
+											labelNameRefs[labLen] := nil;
+											labLen := (labLen + 1)
+										end else begin
+											SetLength(labelNameRefs, l2)
+										end;
+									(foreach l10 in l7 do begin
+											labelNameRefs[labLen] := l10;
+											labLen := (labLen + 1)
+										end)
+								end
+						end;
+					labelCommands := Array(((labLen := Length(labelNameRefs)) + 2), nil);
+					(for l9 := 0 to (labLen - 1) do begin
+							labelCommands[l9] := (if (labelNameRefs[l9] = nil) then 'pickseparator else self:PopupSetup(labelNameRefs[l9]))
+						end);
+					labelCommands[labLen] := 'pickseparator;
+					labelCommands[(labLen + 1)] := otherText
+				end else begin
+					labelCommands := nil
+				end;
+			inPeoplePicker := nil
+		end;
+	labelCommands
+end
+@@end

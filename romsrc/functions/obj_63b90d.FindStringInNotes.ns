@@ -1,0 +1,13 @@
+@@ 0x4e7f31
+func(a1, a2) begin
+	l2 := Array(1, nil);
+	local l1;
+	local l2;
+	(foreach l3 in a2 do begin
+			l2[0] := l3;
+			if (l1 := FindStringInFrame(a1, l2, true)) then begin
+					break l1
+				end
+		end)
+end
+@@end

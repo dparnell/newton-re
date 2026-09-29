@@ -1,0 +1,7 @@
+@@ 0x4c9031
+func() begin
+	self:ToRefCheck('|nameRef.fax|);
+	inherited:viewSetupFormScript();
+	self:SetPreviewInfo()
+end
+@@end

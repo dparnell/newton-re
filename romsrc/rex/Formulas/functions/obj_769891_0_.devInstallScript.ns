@@ -1,0 +1,5 @@
+@@ 0x773ea1
+func(a1) begin
+	a1.theForm:InitFormulas()
+end
+@@end

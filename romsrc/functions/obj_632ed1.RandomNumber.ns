@@ -1,0 +1,5 @@
+@@ 0x4e62a1
+func() begin
+	SPrintObject(Random(0, 9999))
+end
+@@end

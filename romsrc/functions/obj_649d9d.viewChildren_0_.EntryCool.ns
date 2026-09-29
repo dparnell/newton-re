@@ -1,0 +1,8 @@
+@@ 0x4c30a9
+func(a1) begin
+	if (currentSoupSymbol = 'inbox) then begin
+			return nil
+		end;
+	inherited:EntryCool(a1)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x4b8e0d
+func() begin
+	(if (if (BAnd(recFlags, 23072768) <> 0) then GetUserConfig('lettersInFieldsOption)) then (recFlags := BOr(recFlags, 16384)))
+end
+@@end

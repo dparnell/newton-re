@@ -1,0 +1,15 @@
+@@ 0x4aeda5
+func() begin
+	layout := self;
+	SetKeyView(self, 0);
+	viewDef := newtAppBase.preferredViewDef;
+	dataSoup := (masterSoup := allSoups.(mastersoupSlot)).theSoup;
+	self:SetupCursor();
+	(if newtAppBase.statusBarSlot then begin
+			if self.menuLeftButtons then begin
+					newtAppBase.(statusBarSlot).menuLeftButtons := menuLeftButtons
+				end;
+			(if self.menuRightButtons then (newtAppBase.(statusBarSlot).menuRightButtons := menuRightButtons))
+		end)
+end
+@@end

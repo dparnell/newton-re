@@ -1,0 +1,5 @@
+@@ 0x770771
+func(a1) begin
+	(if (curMeasurement = 5) then return ((a1[1] * 1.8) + 32) else return (a1[1] / self:GetConversionFactor()))
+end
+@@end

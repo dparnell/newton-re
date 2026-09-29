@@ -1,0 +1,10 @@
+@@ 0x62852d
+func(a1, a2) begin
+	local l1;
+	l1 := GetTaggedEntry(a2);
+	(if a1 then (if (not l1) then AddToSysSoup((l1 := {tag: a2, data: a1})) else begin
+				l1.data := a1;
+				EntryChange(l1)
+			end) else (if l1 then EntryRemoveFromSoup(l1)))
+end
+@@end

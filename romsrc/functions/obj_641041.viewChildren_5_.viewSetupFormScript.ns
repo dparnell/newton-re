@@ -1,0 +1,6 @@
+@@ 0x4d6d41
+func() begin
+	labelCommands := [Array: {item: "High", icon: priorityItems[0], indent: 18}, {item: "Medium", icon: priorityItems[1]}, {item: "Low", icon: priorityItems[2]}, {item: "None", icon: priorityItems[3]}];
+	inherited:?viewSetupFormScript()
+end
+@@end

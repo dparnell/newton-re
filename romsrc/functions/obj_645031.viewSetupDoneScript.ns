@@ -1,0 +1,22 @@
+@@ 0x469525
+func() begin
+	local l1, l2, l3, l4, l5, l6;
+	TieViews(cText, cInk, 'TieChangedScript);
+	(if refConChanged then begin
+			l2 := (l1 := refCon).form;
+			l3 := l1.wordOffset;
+			l4 := 0;
+			if l2.text then begin
+					l5 := GetDynamicValue(l2, 'text, 'string);
+					if (if (l3 > 0) then (not IsWhiteSpace(l5[(l3 - 1)]))) then begin
+							l3 := (l3 - 1)
+						end;
+					l3 := ScanWordStart(l5, l3, 0);
+					l4 := ((l6 := ScanWordEnd(l5, l3, StrLen(l5))) - l3)
+				end;
+			l1.form := nil;
+			self:ViewCaretChangedScript(l2, l3, l4);
+			(refConChanged := nil)
+		end)
+end
+@@end

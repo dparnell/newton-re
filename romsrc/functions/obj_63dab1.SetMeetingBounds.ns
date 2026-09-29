@@ -1,0 +1,70 @@
+@@ 0x4fe1a5
+func(a1, a2) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11, l12, l13, l14, l15;
+	l1 := self.realData.mtgStartDate;
+	l2 := a1;
+	l3 := PositionToTime(dayView, l2.top);
+	if ((l4 := PositionToTime(dayView, l2.bottom)) <= l3) then begin
+			l4 := (l3 + 30)
+		end;
+	if (if (((l5 := self:GetMeetingSlot(self.realData, 'mtgDuration)) mod 30) = 0) then (((l4 - l3) mod 30) = 15)) then begin
+			l4 := (l4 + 15)
+		end;
+	l4 := min(1440, l4);
+	if (if (if (not self:GetMeetingSlot(self.realData, 'viewBounds)) then ((l1 mod 1440) = l3)) then (l5 <> (l4 - l3))) then begin
+			l6 := nil
+		end else begin
+			if (l2.left >= 30) then begin
+					l7 := l2.left;
+					l6 := {left: l2.left, top: TimeToPosition(dayView, l3), right: DayTable.tabWidths, bottom: TimeToPosition(dayView, l4)}
+				end else begin
+					l6 := nil
+				end
+		end;
+	l9 := (l8 := self.realData).repeatTemplate;
+	if ((l10 := l8.viewStationery) = 'RepeatingMeeting) then begin
+			if (if (if l6 then (l6.top = l2.top)) then (l6.bottom = l2.bottom)) then begin
+					if (l6.left < 60) then begin
+							RemoveSlot(l9, 'viewBounds)
+						end else begin
+							l9.viewBounds := l6
+						end
+				end else begin
+					l11 := self:MakeNewExceptionFrame(l9, l1, (displaydate + l3), (l4 - l3));
+					if l6 then begin
+							l11.viewBounds := l6
+						end;
+					self.realData := l11
+				end;
+			self:CarefulChange(RepeatSoup, l9, true)
+		end else begin
+			if (l10 = 'exceptionMeeting) then begin
+					if ((l12 := self:searchExceptionList(l9, l8.originDate)) >= 0) then begin
+							(l14 := (l13 := l9.exceptions[l12])[1]).mtgStartDate := (displaydate + l3);
+							l14.mtgDuration := (l4 - l3);
+							l14.viewBounds := l6;
+							l14.repeatTemplate := l9;
+							self.realData := l14
+						end;
+					self:UpdateInstanceNotesDataTime(l9, l1, (displaydate + l3));
+					self:CarefulChange(RepeatSoup, l9, true)
+				end else begin
+					if l8.mtgAlarm then begin
+							l15 := (l8.mtgStartDate - l8.mtgAlarm);
+							l8.mtgAlarm := ((displaydate + l3) - l15)
+						end;
+					l8.mtgStartDate := (displaydate + l3);
+					l8.mtgDuration := (l4 - l3);
+					l8.viewBounds := l6;
+					self:CarefulChange(MeetingSoup, l8, true)
+				end
+		end;
+	if l6 then begin
+			self.viewBounds := l6
+		end else begin
+			self.viewBounds := LayoutMeeting(self.realData, viewHeight, tabWidths, nil)
+		end;
+	dayView:ReArrangeMeetings();
+	AddUndoAction('SetMeetingBounds, [Array: a2, a1])
+end
+@@end

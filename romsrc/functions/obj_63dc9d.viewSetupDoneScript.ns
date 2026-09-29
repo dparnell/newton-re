@@ -1,0 +1,8 @@
+@@ 0x4d8741
+func() begin
+	if (if (if KeyboardConnected() then (BAnd(self.viewFlags, 130) = 0)) then (if target then (not target.data))) then begin
+			self:PositionCaret(10, (viewOriginY + viewLineSpacing), nil)
+		end;
+	inherited:?viewSetupDoneScript()
+end
+@@end

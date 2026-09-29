@@ -1,0 +1,6 @@
+@@ 0x6301c1
+func() begin
+	cardSoups := [Array: ];
+	BadWickedNaughtyNoot("SetupCardSoups()", 'discontinued)
+end
+@@end

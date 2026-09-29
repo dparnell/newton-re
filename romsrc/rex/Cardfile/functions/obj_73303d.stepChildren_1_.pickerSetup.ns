@@ -1,0 +1,13 @@
+@@ 0x7333b1
+func() begin
+	local l1, l2;
+	if (if target.countrySymbol then (city := appBase:GetCity(target))) then begin
+			l1 := city
+		end else begin
+			l1 := [Array: UserConfiguration.location.country, UserConfiguration.location.name]
+		end;
+	(l2 := self:GlobalBox()).right := (l2.left + indent);
+	@436:new({default: l1}, l2, self);
+	nil
+end
+@@end

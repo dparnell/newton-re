@@ -1,0 +1,5 @@
+@@ 0x50c461
+func() begin
+	GetAppPrefs('calendar, '{eventAlarms: nil, meetingAlarms: nil, internalStore: nil, toDoInternalStore: nil, viewBounds: nil, calendarMainDisplay: scheduleView})
+end
+@@end

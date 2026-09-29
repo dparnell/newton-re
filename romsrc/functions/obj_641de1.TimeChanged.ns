@@ -1,0 +1,18 @@
+@@ 0x432839
+func() begin
+	startTime := max(basedate, start.Time);
+	Time := min((basedate + (if midnite then 1440 else 1439)), Time);
+	if spread then begin
+			stopTime := (stop.Time := min((basedate + 1440), (startTime + spread)));
+			stop:Refresh()
+		end else begin
+			if ((stopTime := stop.Time) < startTime) then begin
+					stop.Time := (stopTime := startTime);
+					stop:Refresh()
+				end;
+			spread := (stopTime - startTime)
+		end;
+	base:Dirty();
+	context:?NewTime(startTime, stopTime)
+end
+@@end

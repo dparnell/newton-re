@@ -1,0 +1,6 @@
+@@ 0x4c6255
+func() begin
+	local l1;
+	(if (if _setupChildrenNow then theFormat) then (if usingCoverPage then (if (l1 := CoverPageRegistry.(fields.coverPage)) then (self.viewChildren := [Array: @82, l1.form])) else (if fields.faxResolution then (self.viewChildren := [Array: @82, theFormat]) else (self.viewChildren := [Array: theFormat]))))
+end
+@@end

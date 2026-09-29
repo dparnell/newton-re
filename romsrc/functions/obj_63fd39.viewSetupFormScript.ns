@@ -1,0 +1,6 @@
+@@ 0x41d3a5
+func() begin
+	inherited:?viewSetupFormScript();
+	(self.viewFormat := 0)
+end
+@@end

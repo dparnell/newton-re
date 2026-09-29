@@ -1,0 +1,14 @@
+@@ 0x569ac9
+func(a1) begin
+	local l1;
+	l1 := GetDefaultStore();
+	SetUserConfig('defaultStoreSig, a1:GetSignature());
+	if (if (a1 = GetStores()[0]) then (not l1:IsReadOnly())) then begin
+			l1:SetInfo('defaultStore, nil)
+		end;
+	if (not a1:IsReadOnly()) then begin
+			a1:SetInfo('defaultStore, true)
+		end;
+	a1
+end
+@@end

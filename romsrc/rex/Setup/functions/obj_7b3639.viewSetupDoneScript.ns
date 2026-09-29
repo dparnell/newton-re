@@ -1,0 +1,9 @@
+@@ 0x7b48cd
+func() begin
+	if (not HasPath(fCompleted, 'congrats)) then begin
+			fCompleted.congrats := true;
+			fCompleted.fully := true
+		end;
+	SetKeyView(self, 0)
+end
+@@end

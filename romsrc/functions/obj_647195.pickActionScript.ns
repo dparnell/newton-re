@@ -1,0 +1,18 @@
+@@ 0x479e6d
+func(a1) begin
+	local l1, l2, l3, l4;
+	if self:?TransportChanged((l1 := EnsureInternal(popup[a1].transportSym))) then begin
+			return inherited:pickCancelledScript()
+		end;
+	if ((l2 := GetUserConfig('transportGroups)) = nil) then begin
+			l2 := {}
+		end;
+	l2.(EnsureInternal(transport.group)) := l1;
+	SetUserConfig('transportGroups, l2);
+	inherited:pickActionScript(a1);
+	(if (transport.appSymbol <> l1) then (if (l3 := GetRoot().(l1)) then begin
+				OpenRoutingSlip((l4 := l3:NewItem(targetView)), base);
+				base:Close()
+			end))
+end
+@@end

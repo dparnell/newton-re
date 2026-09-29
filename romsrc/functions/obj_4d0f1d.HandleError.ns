@@ -1,0 +1,5 @@
+@@ 0x4d0371
+func(a1) begin
+	(if (not self:GetConfig('faxAutoReceive)) then inherited:HandleError(a1))
+end
+@@end

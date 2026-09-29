@@ -1,0 +1,11 @@
+@@ 0x4c5699
+func() begin
+	if (not pieces) then begin
+			self:SetupAbstracts()
+		end;
+	if ((pieces = nil) or (Length(pieces) = 0)) then begin
+			self:DrawShape(self:AppEmpty(), '{})
+		end;
+	inherited:viewDrawScript()
+end
+@@end

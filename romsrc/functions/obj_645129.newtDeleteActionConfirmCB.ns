@@ -1,0 +1,8 @@
+@@ 0x4ab6ed
+func(a1) begin
+	(if a1 then begin
+			self:newtDeleteActionHelper();
+			ClearUndoStacks()
+		end)
+end
+@@end

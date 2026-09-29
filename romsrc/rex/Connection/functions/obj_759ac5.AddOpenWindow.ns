@@ -1,0 +1,16 @@
+@@ 0x75a509
+func(a1) begin
+	if (openWindows = nil) then begin
+			return nil
+		end;
+	local l1;
+	(for l2 := 0 to (Length(openWindows) - 1) do begin
+			if (openWindows[l2] = nil) then begin
+					openWindows[l2] := a1;
+					l1 := true;
+					break
+				end
+		end);
+	(if (not l1) then AddArraySlot(openWindows, a1))
+end
+@@end

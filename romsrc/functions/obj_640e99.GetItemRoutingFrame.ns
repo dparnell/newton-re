@@ -1,0 +1,5 @@
+@@ 0x458095
+func(a1) begin
+	{name: self:Get(a1, primaryPath, 'text)}
+end
+@@end

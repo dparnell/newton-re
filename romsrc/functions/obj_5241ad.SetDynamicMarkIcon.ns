@@ -1,0 +1,18 @@
+@@ 0x51e83d
+func(a1) begin
+	if (state = 'off) then begin
+			if (a1 <> 0) then begin
+					self.icon := offWith
+				end else begin
+					self.icon := off
+				end
+		end else begin
+			if (a1 <> 0) then begin
+					self.icon := onWith
+				end else begin
+					self.icon := on
+				end
+		end;
+	self:Dirty()
+end
+@@end

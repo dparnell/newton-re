@@ -1,0 +1,8 @@
+@@ 0x45a10d
+func() begin
+	local l1;
+	(l1 := self:LocalBox()).left := (l1.left + 5);
+	l1.right := (l1.right - 30);
+	self:DrawShape([Array: MakeTextLines(message, l1, nil, 1058816), '{font: 18435}, MakeText(Stringer([Array: returnKey, $ ]), l1.right, 5, (l1.right + 20), 22)], '{font: 1058816})
+end
+@@end

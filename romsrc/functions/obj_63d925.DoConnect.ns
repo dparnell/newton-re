@@ -1,0 +1,11 @@
+@@ 0x5a3e69
+func(a1, a2, a3, a4, a5) begin
+	self.eworld := {_proto: protoEworld, mode: a4, _parent: self};
+	eworld.request := a3;
+	eworld.transport := self;
+	eworld.listMethod := a5;
+	eworld._worksite := a1;
+	eworld._owner := a2;
+	AddDeferredSend(self, 'ConvertStart, nil)
+end
+@@end

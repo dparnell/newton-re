@@ -1,0 +1,42 @@
+@@ 0x7430d9
+func(a1, a2, a3) begin
+	local l1, l2, l3, l4, l5, l6;
+	l1 := nil;
+	l5 := (l4 := GetRoot().cardfile:GetAppPreferences()).sortBy;
+	if (not a2) then begin
+			if a1.class then begin
+					a2 := a1.class
+				end else begin
+					a2 := allSoups.names.defaultDataType
+				end
+		end;
+	if a1 then begin
+			a1.class := a2
+		end;
+	useInternal := ((a2 = 'owner) or (a2 = 'worksite));
+	if GetRoot().cardfile.viewCObject then begin
+			l1 := inherited:AdoptEntryFromStationery(a1, a2, nil)
+		end else begin
+			if GetDataDefs(a2) then begin
+					l1 := allSoups.names:AdoptEntry(a1, a2);
+					l2 := Clone(allSoups.names);
+					l2:MakeSoup(appSymbol);
+					l2:AddEntry(l1, (if (useInternal or l4.internalStore) then GetStores()[0] else GetDefaultStore()))
+				end else begin
+					Throw('|evt.ex.fr.intrp|, "Unknown datadef")
+				end
+		end;
+	if l1 then begin
+			GetRoot().cardfile:SetCardfileStuff(l1, nil);
+			if (not l1.(l5)) then begin
+					l1.(l5) := "";
+					l6 := GetRoot().cardfile.viewCObject
+				end;
+			EntryChange(l1);
+			if l6 then begin
+					layout.dataCursor:Goto(l1)
+				end
+		end;
+	l1
+end
+@@end

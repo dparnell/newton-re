@@ -1,0 +1,8 @@
+@@ 0x4b9515
+func() begin
+	(if (if (not validDate) then target.(path)) then begin
+			target.(path) := nil;
+			GetRoot():Notify(3, "Date Entry", "The date you entered is invalid and has been erased.")
+		end)
+end
+@@end

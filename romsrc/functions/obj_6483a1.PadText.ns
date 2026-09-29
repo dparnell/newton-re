@@ -1,0 +1,5 @@
+@@ 0x429815
+func(a1) begin
+	(if BeginsWith(a1, "  ") then a1 else (if BeginsWith(a1, " ") then Stringer([Array: " ", a1]) else Stringer([Array: "  ", a1])))
+end
+@@end

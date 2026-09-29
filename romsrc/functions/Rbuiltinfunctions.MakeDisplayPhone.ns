@@ -1,0 +1,18 @@
+@@ 0x4d3bb9
+func(a1) begin
+	local l1, l2;
+	if IsFrame(a1) then begin
+			l1 := a1
+		end else begin
+			if IsInstance(a1, 'string) then begin
+					l1 := ParsePhone(a1)
+				end else begin
+					return nil
+				end
+		end;
+	if (not (l2 := GetUserConfig('phoneFormat))) then begin
+			l2 := "^?0^0 ||^1^?2x^2||"
+		end;
+	ParamStr(l2, [Array: l1.areacode, l1.phone, l1.extension])
+end
+@@end

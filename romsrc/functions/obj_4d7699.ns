@@ -1,0 +1,40 @@
+@@ 0x4d7699
+func(a1, a2) begin
+	if (((l2 := (l1 := (if a2 then DeepClone(a1) else a1)).class) = 'paperroll) or (l2 = 'quadrule)) then begin
+			RemoveSlot(l1, 'class);
+			RemoveSlot(l1, '_version)
+		end else begin
+			if ((l2 = 'list) or (l2 = 'checkList)) then begin
+					if (not l1.topics) then begin
+							return nil
+						end;
+					try begin
+							l3 := {viewStationery: 'paperroll, height: l1.height, timestamp: l1.timestamp, data: [Array: {viewBounds: SetBounds(0, 0, l1.height, 240), viewStationery: 'para, text: GetDataDefs(l2):TextScript(nil, l1), _proto: @193}]}
+						end onexception |evt.ex| do begin
+							return nil
+						end;
+					l1 := l3
+				end else begin
+					return nil
+				end
+		end;
+	if l1.data then begin
+			if (l4 := ConvertChildTemplates(l1.data, 'twoO, 'oneO)) then begin
+					ArrayMunger(l1.data, Length(l1.data), 0, l4, 0, nil)
+				end
+		end;
+	if l1.data then begin
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			local l5;
+			(for l6 := (Length(l1.data) - 1) to 0 by -1 do begin
+					if (if (l5 := l1.data[l6].viewStationery) then (if (l5 <> 'para) then (l5 <> 'poly))) then begin
+							ArrayRemoveCount(l1.data, l6, 1)
+						end
+				end)
+		end;
+	l1
+end
+@@end

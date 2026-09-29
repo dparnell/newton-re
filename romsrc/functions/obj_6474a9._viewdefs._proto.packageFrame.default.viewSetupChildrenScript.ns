@@ -1,0 +1,19 @@
+@@ 0x54a6e9
+func() begin
+	local l1, l2;
+	(if fields then begin
+			l1 := TextBounds(fields.text, {font: GetUserConfig('mailFont)}, SetBounds(0, 0, 636, 0));
+			fields.height := l1.bottom;
+			if ((l2 := (if fields.package then GetPkgRefInfo(fields.package))) = nil) then begin
+					l2 := (if (if target then target.package) then GetPkgRefInfo(target.package))
+				end;
+			if (l2 = nil) then begin
+					l2 := (if (if fields.body then fields.body.package) then GetPkgRefInfo(fields.body.package))
+				end;
+			if l2 then begin
+					filename := l2.title
+				end;
+			(self.viewChildren := [Array: {viewBounds: l1, _proto: @193, viewStationery: 'para, text: (if (l2 = nil) then "No package information available." else ParamStr("Package information:\n\nName: ^0\nSize: ^1 bytes\n^2", [Array: filename, l2.size, l2.copyright])), viewFont: GetUserConfig('mailFont)}])
+		end else (self.viewChildren := [Array: ]))
+end
+@@end

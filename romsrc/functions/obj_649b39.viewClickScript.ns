@@ -1,0 +1,92 @@
+@@ 0x549ce1
+func(a1) begin
+	local v4_xxxxxxxxxxxxxxxxxxwwww, v5_zzzzzzzyyyyyyyyyyyyyyyyyyyyy, v6_qqpppp, v7_xxxxxwwwwwww, v8_zzzzzzy, v9_vvvvvvuuuuuuuu, v10_rrrrrrrrq, v11_wwwwwwwwwwwwwwv, v12_zzyyyyyyyyyyyyyyyyyyy, v13_vvvvvvuuuuuuuuuuu, v16_wwwwwwwwwwwwwwwvvvvvvvvvv, v17_jj, v18_yyyyyyyyyyyyyyyyyyyyyyyyxx, v19_jjji, v20_xwwwwwwwww, v21_zzzzzzzzzzzzzzyy, v22_uuuuuuuuuutt, v23_yxxxxxxxxxxxxxxxxx, v24_zzzzzzzzyyyyy, v25_wwwwwwwwwwwwvvvvvvvv;
+	ShowBusyBox(nil);
+	v11_wwwwwwwwwwwwwwv := (Ticks() + 45);
+	v18_yyyyyyyyyyyyyyyyyyyyyyyyxx := (v23_yxxxxxxxxxxxxxxxxx := self:GlobalBox()).left;
+	v5_zzzzzzzyyyyyyyyyyyyyyyyyyyyy := v23_yxxxxxxxxxxxxxxxxx.top;
+	v9_vvvvvvuuuuuuuu := (v7_xxxxxwwwwwww := GetPoint(6, a1)).x;
+	v25_wwwwwwwwwwwwvvvvvvvv := v7_xxxxxwwwwwww.y;
+	(if (if shape then HitShape(shape, (v9_vvvvvvuuuuuuuu - v18_yyyyyyyyyyyyyyyyyyyyyyyyxx), (v25_wwwwwwwwwwwwvvvvvvvv - v5_zzzzzzzyyyyyyyyyyyyyyyyyyyyy))) then begin
+			InkOffUnHobbled(a1);
+			clicker();
+			if (BAnd(GetViewFlags(self), 33554432) = 0) then begin
+					self:hilite(true);
+					RefreshViews()
+				end;
+			self:?HandleChildClick();
+			v16_wwwwwwwwwwwwwwwvvvvvvvvvv := true;
+			v6_qqpppp := v9_vvvvvvuuuuuuuu;
+			v22_uuuuuuuuuutt := v25_wwwwwwwwwwwwvvvvvvvv;
+			if (((not (v12_zzyyyyyyyyyyyyyyyyyyy := (v13_vvvvvvuuuuuuuuuuu := self.target.fentry).sequence)) or (v12_zzyyyyyyyyyyyyyyyyyyy < 0)) or (if IsSoupEntry(v13_vvvvvvuuuuuuuuuuu) then EntryStore(v13_vvvvvvuuuuuuuuuuu):IsReadOnly())) then begin
+					(while (not StrokeDone(a1)) do begin
+							v4_xxxxxxxxxxxxxxxxxxwwww := (v24_zzzzzzzzyyyyy := GetPoint(8, a1)).x;
+							v17_jj := v24_zzzzzzzzyyyyy.y;
+							(if ((v4_xxxxxxxxxxxxxxxxxxwwww <> v6_qqpppp) or (v17_jj <> v22_uuuuuuuuuutt)) then begin
+									v19_jjji := (HitShape(shape, (v4_xxxxxxxxxxxxxxxxxxwwww - v18_yyyyyyyyyyyyyyyyyyyyyyyyxx), (v17_jj - v5_zzzzzzzyyyyyyyyyyyyyyyyyyyyy)) <> nil);
+									if (v16_wwwwwwwwwwwwwwwvvvvvvvvvv <> v19_jjji) then begin
+											self:hilite(v19_jjji);
+											RefreshViews();
+											v16_wwwwwwwwwwwwwwwvvvvvvvvvv := v19_jjji
+										end;
+									v6_qqpppp := v4_xxxxxxxxxxxxxxxxxxwwww;
+									(v22_uuuuuuuuuutt := v17_jj)
+								end)
+						end)
+				end else begin
+					(while (not StrokeDone(a1)) do begin
+							v4_xxxxxxxxxxxxxxxxxxwwww := (v24_zzzzzzzzyyyyy := GetPoint(8, a1)).x;
+							v17_jj := v24_zzzzzzzzyyyyy.y;
+							if ((v4_xxxxxxxxxxxxxxxxxxwwww <> v6_qqpppp) or (v17_jj <> v22_uuuuuuuuuutt)) then begin
+									if ((abs((v4_xxxxxxxxxxxxxxxxxxwwww - v9_vvvvvvuuuuuuuu)) + abs((v17_jj - v25_wwwwwwwwwwwwvvvvvvvv))) > 32) then begin
+											v16_wwwwwwwwwwwwwwwvvvvvvvvvv := 'Drag;
+											break
+										end;
+									v6_qqpppp := v4_xxxxxxxxxxxxxxxxxxwwww;
+									v22_uuuuuuuuuutt := v17_jj
+								end;
+							(if (Ticks() > v11_wwwwwwwwwwwwwwv) then begin
+									v16_wwwwwwwwwwwwwwwvvvvvvvvvv := 'select;
+									break
+								end)
+						end)
+				end;
+			if (v16_wwwwwwwwwwwwwwwvvvvvvvvvv = 'select) then begin
+					self:hiliter(a1)
+				end else begin
+					if (v16_wwwwwwwwwwwwwwwvvvvvvvvvv = 'Drag) then begin
+							v20_xwwwwwwwww := [Array: ];
+							(foreach v15_yyyyyyyyyyyyyyxxxx in iconSpace:GetChildIconViews() do begin
+									if (BAnd(GetViewFlags(v15_yyyyyyyyyyyyyyxxxx), 33554432) <> 0) then begin
+											v13_vvvvvvuuuuuuuuuuu := v15_yyyyyyyyyyyyyyxxxx.target.fentry;
+											if (if (if (v15_yyyyyyyyyyyyyyxxxx.target:Preflight('Filing, [Array: ]) = 'OK) then IsSoupEntry(v13_vvvvvvuuuuuuuuuuu)) then (not EntryStore(v13_vvvvvvuuuuuuuuuuu):IsReadOnly())) then begin
+													AddArraySlot(v20_xwwwwwwwww, v13_vvvvvvuuuuuuuuuuu)
+												end else begin
+													v15_yyyyyyyyyyyyyyxxxx:hilite(nil);
+													v10_rrrrrrrrq := true
+												end;
+											if v10_rrrrrrrrq then begin
+													RefreshViews()
+												end
+										end
+								end);
+							if (Length(v20_xwwwwwwwww) > 0) then begin
+									v8_zzzzzzy := {droppedEntries: v20_xwwwwwwwww, externalDrop: nil};
+									if ((v21_zzzzzzzzzzzzzzyy := self:DragAndDropLtd(a1, v23_yxxxxxxxxxxxxxxxxx, '{limitBounds: none, pinBounds: none}, nil, [Array: {types: '[Array: icon], dragRef: v8_zzzzzzy}])) = 2) then begin
+											self:RedoIconsAfterDrop(v8_zzzzzzy.externalDrop)
+										end else begin
+											if (v21_zzzzzzzzzzzzzzyy = 1) then begin
+													self:Notify(3, title, "Cannot drag icons there.")
+												end
+										end
+								end
+						end else begin
+							if v16_wwwwwwwwwwwwwwwvvvvvvvvvv then begin
+									self:Launch()
+								end
+						end
+				end;
+			true
+		end)
+end
+@@end

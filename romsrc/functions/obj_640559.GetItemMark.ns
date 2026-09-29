@@ -1,0 +1,20 @@
+@@ 0x44bc69
+func(a1) begin
+	local l1, l2;
+	l1 := nil;
+	l2 := nil;
+	if (ClassOf(self.pickItems[a1]) = 'frame) then begin
+			if HasSlot(self.pickItems[a1], 'item) then begin
+					l1 := true
+				end
+		end;
+	if (l1 = true) then begin
+			if HasSlot(self.pickItems[a1], 'mark) then begin
+					if ((l2 := self.pickItems[a1].mark) = $ ) then begin
+							l2 := nil
+						end
+				end
+		end;
+	l2
+end
+@@end

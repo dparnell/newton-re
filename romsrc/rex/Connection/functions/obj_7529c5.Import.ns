@@ -1,0 +1,5 @@
+@@ 0x7531a1
+func(a1) begin
+	AddDeferredSend(self, 'DoImport, [Array: a1])
+end
+@@end

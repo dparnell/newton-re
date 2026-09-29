@@ -1,0 +1,13 @@
+@@ 0x46f571
+func() begin
+	RemovePowerOffHandler(self);
+	notifyOnClose := nil;
+	chooserNBPTable := nil;
+	startSelection := nil;
+	currentSelection := nil;
+	currentZone := nil;
+	headerText := nil;
+	lookForText := nil;
+	(nbpLookupName := nil)
+end
+@@end

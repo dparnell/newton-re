@@ -1,0 +1,6 @@
+@@ 0x73b0d5
+func() begin
+	self.startTarget := TotalClone(target);
+	inherited:?viewSetupFormScript()
+end
+@@end

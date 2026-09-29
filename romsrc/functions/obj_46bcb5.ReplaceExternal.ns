@@ -1,0 +1,9 @@
+@@ 0x46b339
+func(a1, a2) begin
+	local l1;
+	l1 := hiliteBusy;
+	hiliteBusy := true;
+	self:ReplaceSelection(a1, refCon, a2);
+	(hiliteBusy := l1)
+end
+@@end

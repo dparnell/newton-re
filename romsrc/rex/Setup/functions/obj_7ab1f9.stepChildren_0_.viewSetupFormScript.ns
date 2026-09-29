@@ -1,0 +1,8 @@
+@@ 0x7ab341
+func() begin
+	if (label exists) then begin
+			self.text := label
+		end;
+	(if (labelFont exists) then (self.viewFont := labelFont))
+end
+@@end

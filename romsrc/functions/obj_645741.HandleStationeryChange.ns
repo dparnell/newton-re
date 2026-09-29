@@ -1,0 +1,6 @@
+@@ 0x4bdf71
+func(a1, a2, a3, a4) begin
+	local l1;
+	(if self.viewCObject then (if (l1 := (if (if target then target.class) then (target.class = a3))) then self:DoRetarget()))
+end
+@@end

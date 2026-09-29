@@ -1,0 +1,5 @@
+@@ 0x471b85
+func(a1) begin
+	(if (a1 = 'okToPowerOff) then true else (if (a1 = 'PowerOff) then base:Close()))
+end
+@@end

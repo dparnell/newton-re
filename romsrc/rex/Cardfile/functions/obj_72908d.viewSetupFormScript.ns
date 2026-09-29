@@ -1,0 +1,8 @@
+@@ 0x729189
+func() begin
+	local l1;
+	inherited:viewSetupFormScript();
+	l1 := self.viewBounds;
+	(self.viewBounds := SetBounds(l1.left, 0, l1.right, (l1.bottom - l1.top)))
+end
+@@end

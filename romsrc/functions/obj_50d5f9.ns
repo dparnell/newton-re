@@ -1,0 +1,5 @@
+@@ 0x50d5f9
+func(a1, a2) begin
+	(if (if (not IsString(a2)) then (a1.mtgStartDate = a2.mtgStartDate)) then (((a1 = a2) or (if a1.repeatTemplate then (a1.repeatTemplate = a2.repeatTemplate))) or (if a1.topic then (a1.topicID = a2.topicID))))
+end
+@@end

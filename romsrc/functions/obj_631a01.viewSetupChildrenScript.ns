@@ -1,0 +1,8 @@
+@@ 0x4d3d69
+func() begin
+	if (not StrFilled(inNumber)) then begin
+			inNumber := ""
+		end;
+	self:JamIt()
+end
+@@end

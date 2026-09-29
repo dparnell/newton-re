@@ -1,0 +1,6 @@
+@@ 0x4ce61d
+func() begin
+	target := cards:entry();
+	(if currentForm then currentForm:RedoChildren() else self:UpdateLocationFields())
+end
+@@end

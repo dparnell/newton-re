@@ -1,0 +1,9 @@
+@@ 0x57016d
+func(a1) begin
+	l1 := 0;
+	local l1;
+	local l2;
+	l2 := (foreach l3 in '[Array: 0, 5, 10, 15, 20] collect table[(l3 + a1)]);
+	deck:Eval5(l2)
+end
+@@end

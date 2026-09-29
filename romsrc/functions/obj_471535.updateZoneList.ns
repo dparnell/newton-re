@@ -1,0 +1,25 @@
+@@ 0x4714f5
+func() begin
+	def.tabValues := (if formOpen then GetZoneList());
+	(if formOpen then (if (def.tabValues = nil) then self:CloseAndNotify("No zones were found. The network connection must have been lost.") else begin
+				numZones := Length(def.tabValues);
+				if ((temp := FindStringInArray(def.tabValues, currentZone)) <> nil) then begin
+						if (temp >= 5) then begin
+								vOrg := min(temp, (numZones - 5))
+							end else begin
+								vOrg := 0
+							end;
+						selectedZoneIndex := (temp - vOrg)
+					end;
+				def.tabDown := numZones;
+				if (numZones > 5) then begin
+						zoneScroller.ScrollRect := (zoneScroller.DataRect := SetBounds(0, 0, 0, numZones));
+						zoneScroller.yPos := vOrg;
+						zoneScroller:AdjustArrows();
+						zoneScroller:Show()
+					end;
+				self:RedoChildren();
+				self:selectCurrentZone()
+			end))
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x4e9e81
+func(a1) begin
+	a1.realFinder:SelectItem(a1)
+end
+@@end

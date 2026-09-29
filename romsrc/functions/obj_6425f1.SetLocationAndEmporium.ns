@@ -1,0 +1,25 @@
+@@ 0x4ce8fd
+func(a1, a2) begin
+	AddUndoAction('SetLocationAndEmporium, [Array: userConfiguration.location, userConfiguration.currentEmporium]);
+	SetUserConfig('location, a1);
+	if a1.country then begin
+			SetUserConfig('currentCountry, a1.country)
+		end;
+	SetUserConfig('currentAreaCode, Stringer([Array: a1.areacode]));
+	SetUserConfig('currentEmporium, a2);
+	FlushUserConfig();
+	UseCurrentEmporium();
+	if (l1 := GetRoot().senderList) then begin
+			local l1;
+			(foreach l2 in l1 do begin
+					l2:JamIt()
+				end)
+		end;
+	if viewCObject then begin
+			self:UpdateLocationFields();
+			self:RedoChildren()
+		end;
+	vars.setTimeSeed := Random(1, 1000000);
+	GetRoot():Dirty()
+end
+@@end

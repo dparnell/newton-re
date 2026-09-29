@@ -1,0 +1,12 @@
+@@ 0x51e81d
+func() begin
+	if (state = 'on) then begin
+			self:Parent():HideMarkup();
+			state := 'off
+		end else begin
+			self:Parent():ShowMarkup();
+			state := 'on
+		end;
+	self:SetMarkIcon()
+end
+@@end

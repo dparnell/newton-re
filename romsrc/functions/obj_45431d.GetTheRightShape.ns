@@ -1,0 +1,7 @@
+@@ 0x4542fd
+func(a1, a2) begin
+	local l1;
+	(l1 := Clone(a2)).left := (l1.left + 18);
+	(if (not readOnly) then (if self:isSelected(a1) then [Array: OffsetShape(MakeShape(CheckOn), ((l1.left - 18) + checkBoxHorzOffset), (l1.top + checkBoxVertOffset)), self:Abstract(a1, l1)] else [Array: OffsetShape(MakeShape(CheckOff), ((l1.left - 18) + checkBoxHorzOffset), (l1.top + checkBoxVertOffset)), self:Abstract(a1, l1)]) else self:Abstract(a1, a2))
+end
+@@end

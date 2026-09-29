@@ -1,0 +1,7 @@
+@@ 0x45b3c5
+func(a1, a2) begin
+	longitude := a1;
+	latitude := a2;
+	inherited:pickActionScript(nil)
+end
+@@end

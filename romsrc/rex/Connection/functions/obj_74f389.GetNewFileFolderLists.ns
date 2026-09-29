@@ -1,0 +1,35 @@
+@@ 0x74f849
+func(a1, a2) begin
+	currentFolders := [Array: ];
+	currentFiles := [Array: ];
+	(if (not aborting) then begin
+			if (not a2) then begin
+					if a1 then begin
+							if (a1 = 'drive) then begin
+									l1 := self:GetDriveFromName(currentPath[0].name);
+									l2 := "sdrv"
+								end else begin
+									(l3 := DeepClone((l1 := Clone(currentPath))[0])).name := self:GetDriveFromName(l3.name);
+									l1[0] := l3;
+									l2 := "spth"
+								end
+						end;
+					checkCommandsInIdle := nil;
+					a2 := protoContext:GetNewFiles(endpoint, l1, l2, func(a1) begin
+						(if (a1 <> nil) then (currentPath := a1))
+					end);
+					checkCommandsInIdle := true
+				end;
+			local l1;
+			local l2;
+			local l3;
+			(if (not a2) then (if (not setupDone) then self:StopOpen(-16005)) else (foreach l4 in a2 do begin
+						if (l4.type = 2) then begin
+								AddArraySlot(currentFolders, l4)
+							end else begin
+								AddArraySlot(currentFiles, l4)
+							end
+					end))
+		end)
+end
+@@end

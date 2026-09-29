@@ -1,0 +1,71 @@
+@@ 0x54e531
+@@const kBinaryFromHex
+func(hex, cls) begin
+	local b := MakeBinary(StrLen(hex) div 2, cls);
+	for i := 0 to Length(b) - 1 do begin
+		local h := Ord(hex[2 * i]);
+		local l := Ord(hex[2 * i + 1]);
+		StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+	end;
+	b
+end
+@@const kLiteral_54b9f5
+{bits: call kBinaryFromHex with ("000000000004007a007a025c0095027c000000000000000000000000000000000000000000000000000000000007f000007fff0007ff8ff03fff80fc7fff803e7fff80fe6fff87f661ffbf86643ffc066603e00667f1c00663f1800660f180066001800e7001801e3e0180fc1fc187f003f9bf80007ffc00000fe000", 'bits), bounds: '{left: 0, top: 0, right: 32, bottom: 27}}
+@@main
+func(a1) begin
+	(if a1 then begin
+			l1 := [Array: ];
+			local l1;
+			(foreach l2 in fakeTarget.kids do begin
+					if (l4 := l2.target:LookupSoupPackage()) then begin
+							l5 := l4.packageName;
+							local l4;
+							local l5;
+							local l6;
+							l6 := (foreach l7 in l1 do begin
+									local l9, l10, l11, l12, l13, l14, l15;
+									if StrEqual(l7, l5) then begin
+											break true
+										end
+								end);
+							if (not l6) then begin
+									l9 := l2.target.fentry.text;
+									l10 := GetUnionSoupAlways("Packages"):GetMember(l2.target:store());
+									l11 := l10:Query({type: 'index, indexPath: 'packageName, beginKey: l5, endKey: l5, tagspec: '{any: _icon, none: [Array: _package, _snowflake]}});
+									l12 := nil;
+									l13 := l11:entry();
+									l14 := 0;
+									(while l13 do begin
+											if l12 then begin
+													l15 := StrLen(l12);
+													l12 := ParamStr("^0, ", [Array: l12])
+												end;
+											l12 := Stringer([Array: l12, l13.text]);
+											l14 := (l14 + 1);
+											(l13 := l11:Next())
+										end);
+									if (l14 > 1) then begin
+											l12 := StrMunger(l12, l15, 1, " and", 0, nil);
+											if (not ModalConfirm(ParamStr("The icon, \u201C\u^0\u201D\u, is part of a package that contains multiple parts (^1).  All the parts will be deleted.", [Array: l9, l12]), nil)) then begin
+													return nil
+												end
+										end
+								end;
+							AddArraySlot(l1, l5)
+						end
+				end);
+			DoProgress('vBarber, {barber: true, statusText: "Deleting selected icons.", primary: nil, icon: kLiteral_54b9f5, closeBox: nil}, func(a1) begin
+				(foreach l1 in fakeTarget.kids do begin
+						a1:SetStatus('vBarber, {titleText: ParamStr("Deleting \u201C\u^0\u201D\u", [Array: l1.target.fentry.text]), barber: true});
+						try begin
+								l1.target:delete()
+							end onexception |evt.ex.msg| do begin
+								self:Notify(3, title, CurrentException().message)
+							end
+					end)
+			end);
+			fakeTarget.packs := nil;
+			XmitPackageOp('RemovingInBulk)
+		end)
+end
+@@end

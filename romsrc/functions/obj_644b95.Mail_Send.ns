@@ -1,0 +1,10 @@
+@@ 0x59573d
+func(a1) begin
+	if (not self:StartTransaction(120)) then begin
+			return nil
+		end;
+	eworld.mail_out := a1;
+	self:Mail_SendHeader();
+	(eworld.mail_state := 'send)
+end
+@@end

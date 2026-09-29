@@ -1,0 +1,45 @@
+@@ 0x55b7f1
+func() begin
+	local l1, l2;
+	inherited:?viewSetupFormScript();
+	self.viewBounds := SetBounds(0, -121, min(304, (displayParams.appAreaWidth - 16)), -26);
+	SetKeyView(self, 0);
+	if (not HasSlot(self, 'selectedAppSymbols)) then begin
+			selectedAppSymbols := [Array: ]
+		end;
+	additionalFind := ((l1 := GetView('viewfrontmostapp)).FindSlipAdditions <> nil);
+	appSpecificChildren := nil;
+	if (if (savedScope = 'findFrontmost) then (not (GetVariable(l1, 'find) or additionalFind))) then begin
+			savedScope := (viewExpanded := 'findGlobal);
+			viewBounds := self:ExpandView(0)
+		end;
+	if (if viewExpanded then (savedScope = 'findSelected)) then begin
+			self.stepChildren := spareChildren;
+			viewExpanded := 'findSelected;
+			viewBounds := self:ExpandView(75)
+		end else begin
+			if (if (savedScope = 'findFrontmost) then additionalFind) then begin
+					appSpecificChildren := Clone(l1:FindSlipAdditions());
+					self.stepChildren := [Array: appSpecificChildren];
+					additionalFind := true;
+					l2 := (appSpecificChildren.viewBounds.bottom + 5);
+					if appSpecificChildren.dontIncludeInputLine then begin
+							SetValue(findInput, 'viewFlags, 0);
+							findStatus.viewBounds := RelBounds(0, (findStatus.viewBounds.top + 50), 0, 13);
+							l2 := (l2 - 50)
+						end;
+					viewExpanded := 'findFrontmost;
+					viewBounds := self:ExpandView(l2)
+				end else begin
+					RemoveSlot(self, 'stepChildren);
+					viewBounds := self:ExpandView(0)
+				end
+		end;
+	RegStoreChange('_find, func(a1, a2, a3) begin
+		(if (if ((a2 = 'storeLeaves) or (a2 = 'StoreEnters)) then findOverview.viewCObject) then begin
+				findOverview:Close();
+				(findAllResults := [Array: ])
+			end)
+	end)
+end
+@@end

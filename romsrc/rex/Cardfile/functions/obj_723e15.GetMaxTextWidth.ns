@@ -1,0 +1,21 @@
+@@ 0x725109
+func() begin
+	l2 := 0;
+	l3 := viewFont;
+	local l1;
+	local l2;
+	local l3;
+	(foreach l1 in shapeArray do begin
+			if (ClassOf(l1) = 'text) then begin
+					l2 := max(l2, StrFontWidth(GetShapeInfo(l1).text, l3))
+				end else begin
+					if (ClassOf(l1) = 'frame) then begin
+							if l1.font then begin
+									l3 := l1.font
+								end
+						end
+				end
+		end);
+	l2
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x7642d1
+func(a1, a2) begin
+	(if (if a1.title then (Length(a1.title) > 0)) then a1.title else "Untitled fax")
+end
+@@end

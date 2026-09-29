@@ -1,0 +1,8 @@
+@@ 0x55b92d
+func() begin
+	(if localFinder then begin
+			localFinder:ShowOrdinalItem('Next);
+			self:UpdateStatus()
+		end)
+end
+@@end

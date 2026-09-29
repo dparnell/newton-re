@@ -1,0 +1,22 @@
+@@ 0x43dbb9
+func(a1, a2) begin
+	l1 := (l1 := StripDiacriticals(Stringer([Array: (l1 := Upcase(a1)), ""])))[0];
+	local l1;
+	(for l2 := (numIndices - 1) to 0 by -1 do begin
+			if (letters[l2] <= l1) then begin
+					phaseIndex := l2;
+					phase := (for l5 := (lettersPerTab - 1) to 0 by -1 do begin
+							if (letters[(l2 + (l5 * numIndices))] <= l1) then begin
+									break l5
+								end
+						end);
+					if viewCObject then begin
+							self:DoDrawing('SetHilite, [Array: phaseIndex])
+						end else begin
+							self:SetHilite(phaseIndex)
+						end;
+					break
+				end
+		end)
+end
+@@end

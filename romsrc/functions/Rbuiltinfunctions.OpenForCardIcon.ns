@@ -1,0 +1,56 @@
+@@ 0x497219
+@@const kROM_556
+@556
+@@main
+func() begin
+	l1 := [Array: ];
+	l2 := [Array: ];
+	l3 := 0;
+	l4 := 0;
+	l5 := 0;
+	l7 := GetRoot();
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	local l6;
+	local l7;
+	(foreach l8, l9 in GetCardTypes() do begin
+			if l9 then begin
+					ArrayMunger(l1, Length(l1), nil, GetCardSlotStores(l8), 0, nil);
+					local l11;
+					(foreach l12 in (l11 := (if IsArray(l9) then l9 else [Array: l9])) do begin
+							if (l12 = 'comm) then begin
+									l6 := l8;
+									l3 := (l3 + 1)
+								end else begin
+									if @271.(l12) then begin
+											l5 := (l5 + 1)
+										end else begin
+											if l7.(l12) then begin
+													AddArraySlot(l2, l12)
+												end else begin
+													l4 := (l4 + 1)
+												end
+										end
+								end
+						end)
+				end
+		end);
+	(if ((l15 := ((l14 := ((l3 + l5) + Length(l2))) + l4)) = 0) then l7:Notify(3, kROM_556, "No card is inserted.") else begin
+			local l14;
+			local l15;
+			(foreach l16 in l1 do begin
+					OpenStoreSlip(l16)
+				end);
+			(foreach l12 in l2 do begin
+					l7.(l12):Open()
+				end);
+			if (if (l3 > 0) then (l3 = l14)) then begin
+					CardAlert('CommCardInserted, l6, nil)
+				end;
+			(if (l4 > 0) then l7:Notify(3, -10501, nil))
+		end)
+end
+@@end

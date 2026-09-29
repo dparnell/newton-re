@@ -1,0 +1,6 @@
+@@ 0x4b0315
+func(a1) begin
+	clicker();
+	self:SetBox('outbox)
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x735b99
+func() begin
+	local l1;
+	(l1 := BuildContext(customEditor)).appBase := (l1.newtAppBase := newtAppBase);
+	l1.customInfo := self:GetCustomInfo();
+	newtAppBase:RememberedOpen(l1)
+end
+@@end

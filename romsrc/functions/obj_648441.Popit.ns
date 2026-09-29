@@ -1,0 +1,7 @@
+@@ 0x45aa0d
+func(a1) begin
+	local l1;
+	(l1 := self:GlobalBox()).right := (l1.left + a1);
+	@284:New([Array: startTime, stopTime], increment, l1, self)
+end
+@@end

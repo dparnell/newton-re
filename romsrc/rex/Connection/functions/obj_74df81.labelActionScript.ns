@@ -1,0 +1,12 @@
+@@ 0x74e175
+func(a1) begin
+	l1 := Length(labelCommands);
+	local l1;
+	(for l2 := a1 to (l1 - 1) do begin
+			labelCommands[(l2 - a1)] := labelCommands[l2]
+		end);
+	SetLength(labelCommands, (l1 - a1));
+	SetLength(currentPath, (l1 - a1));
+	fileList:UpdateAndRebuildFileList()
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x420c41
+func(a1) begin
+	local l1;
+	(if (l1 := GetMemorySlot(a1, nil)) then l1.items)
+end
+@@end

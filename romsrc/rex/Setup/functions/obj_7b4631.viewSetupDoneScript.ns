@@ -1,0 +1,12 @@
+@@ 0x7b47a1
+func() begin
+	l1 := nil;
+	local l1;
+	(foreach l2 in GetPackages() do begin
+			if StrEqual(l2.title, "NewtonTour:Newton") then begin
+					l1 := true
+				end
+		end);
+	(if (not l1) then self:Hide())
+end
+@@end

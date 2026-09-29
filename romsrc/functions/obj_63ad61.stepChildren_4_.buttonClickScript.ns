@@ -1,0 +1,7 @@
+@@ 0x45c07d
+func() begin
+	local l1, l2;
+	l1 := (Time mod 1440);
+	(if ((l2 := days:GetSelected()) <> 0) then schedule:Add({hours: (l1 div 60), minutes: (l1 mod 60), days: l2}) else GetRoot():Notify(3, "", "Please choose days"))
+end
+@@end

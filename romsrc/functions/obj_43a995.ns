@@ -1,0 +1,7 @@
+@@ 0x43a995
+func() begin
+	local l1;
+	self:Scroller((l1 := (maxLines - 1)));
+	RefreshViews()
+end
+@@end

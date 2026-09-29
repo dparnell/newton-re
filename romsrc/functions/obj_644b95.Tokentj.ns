@@ -1,0 +1,6 @@
+@@ 0x595655
+func(a1, a2, a3) begin
+	a3 := self:unescape(a2, (a3 + 2));
+	(if (a1.file_in.filesize = 0) then (a1.file_in.filesize := self:getdata(a2, 10, a3, 'long)))
+end
+@@end

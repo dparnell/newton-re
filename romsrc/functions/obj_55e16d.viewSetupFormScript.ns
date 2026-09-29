@@ -1,0 +1,5 @@
+@@ 0x55e0ed
+func() begin
+	((viewBounds := Clone(viewBounds)).right := ((StrFontWidth(text, viewFont) + 4) + viewBounds.left))
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x4622b9
+func() begin
+	(base._defaultButton := self)
+end
+@@end

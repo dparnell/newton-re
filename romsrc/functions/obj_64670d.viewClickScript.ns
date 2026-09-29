@@ -1,0 +1,46 @@
+@@ 0x45e851
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11;
+	if (not (self:ScrollTo exists)) then begin
+			return true
+		end;
+	InkOff(a1);
+	BusyBoxControl(2);
+	self:?PrepareToScroll();
+	l1 := self:GlobalBox();
+	l2 := (GetPoint(0, a1) - l1.left);
+	l3 := (GetPoint(1, a1) - l1.top);
+	l4 := 0;
+	l5 := 0;
+	l7 := ((l6 := self:GetScalingInfo()).extent.right - l6.viewBox.right);
+	l8 := (l6.extent.bottom - l6.viewBox.bottom);
+	l10 := max(min(floor(round(((l9 := max((l6.extent.right / (l1.right - l1.left)), (l6.extent.bottom / (l1.bottom - l1.top)))) * (l2 - ((greyBounds.right - greyBounds.left) div 2))))), l7), 0);
+	l11 := max(min(floor(round((l9 * (l3 - ((greyBounds.bottom - greyBounds.top) div 2))))), l8), 0);
+	(while (not StrokeDone(a1)) do begin
+			l4 := ((GetPoint(4, a1) - l1.left) - l2);
+			l5 := ((GetPoint(5, a1) - l1.top) - l3);
+			l6.offsetX := max(min((l10 + ceiling((l9 * l4))), l7), 0);
+			l6.offsetY := max(min((l11 + ceiling((l9 * l5))), l8), 0);
+			needToUpdate := true;
+			self:LockScreen(true);
+			if trackWhileScrolling then begin
+					self:ScrollTo(l6.offsetX, l6.offsetY);
+					RefreshViews()
+				end;
+			if needToUpdate then begin
+					self:RelocateGreyBox(l6);
+					self:DoDrawing('DrawShape, [Array: theShape, '{transferMode: 0}])
+				end;
+			self:LockScreen(nil)
+		end);
+	needToUpdate := true;
+	l4 := ((GetPoint(4, a1) - l1.left) - l2);
+	l5 := ((GetPoint(5, a1) - l1.top) - l3);
+	self:ScrollTo((l10 + ceiling((l9 * l4))), (l11 + ceiling((l9 * l5))));
+	if needToUpdate then begin
+			self:Update()
+		end;
+	self:?DoneScrolling();
+	true
+end
+@@end

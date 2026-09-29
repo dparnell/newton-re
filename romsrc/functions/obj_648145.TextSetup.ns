@@ -1,0 +1,5 @@
+@@ 0x5acfc9
+func() begin
+	GetUserConfig(configPath)
+end
+@@end

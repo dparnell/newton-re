@@ -1,0 +1,47 @@
+@@ 0x5a553d
+func() begin
+	local l1, l2, l3, l4;
+	l3 := ResolveEntryAlias(GetUserConfig('currentPersona));
+	sendScreen := nil;
+	if (not info) then begin
+			info := Clone('{firstName: nil, lastName: nil, cardfirst: nil, cardlast: nil, address: nil, city: nil, state: nil, zip: nil, country: nil, dayphone: nil, homePhone: nil, mailAccount: nil, mailPassword: nil, creditcard: nil, SleepTime: nil, language: nil});
+			if l3 then begin
+					info.firstName := Clone(l3.name.first);
+					info.lastName := Clone(l3.name.last);
+					info.cardfirst := Clone(info.firstName);
+					info.cardlast := Clone(info.lastName);
+					if StrFilled(l3.address2) then begin
+							info.address := Stringer([Array: l3.address, " ", l3.address2])
+						end else begin
+							info.address := Clone(l3.address)
+						end;
+					info.city := Clone(l3.city);
+					info.state := Clone(l3.region);
+					info.zip := Clone(l3.postal_code);
+					info.country := Clone(l3.country);
+					if (l4 := GetRoot().cardfile:bcPhoneNumber(l3, 'workPhone)) then begin
+							info.dayphone := MakeDisplayPhone(l4[0])
+						end else begin
+							info.dayphone := ""
+						end;
+					if (l4 := GetRoot().cardfile:bcPhoneNumber(l3, 'homePhone)) then begin
+							info.homePhone := MakeDisplayPhone(l4[0])
+						end else begin
+							info.homePhone := ""
+						end
+				end else begin
+					GetRoot().cardfile:addcard('owner, {});
+					addToOwner := true
+				end;
+			info.mailAccount := nil;
+			info.mailPassword := nil;
+			info.creditcard := "VISA"
+		end;
+	info.SleepTime := GetUserConfig('SleepTime);
+	SetUserConfig('SleepTime, 600);
+	AddPowerOffHandler(self);
+	UseCurrentEmporium();
+	willDialNum := self:MungePhone(GetUserConfig('mailPhone), GetUserConfig('currentCountry));
+	(info.language := "English")
+end
+@@end

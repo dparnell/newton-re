@@ -1,0 +1,29 @@
+@@ 0x44bcc1
+func(a1, a2) begin
+	local l1, l2;
+	if (a2 = nil) then begin
+			l2 := $ 
+		end else begin
+			l2 := a2
+		end;
+	if (ClassOf(self.pickItems[a1]) = 'frame) then begin
+			if HasSlot(self.pickItems[a1], 'item) then begin
+					l1 := nil
+				end else begin
+					l1 := true
+				end
+		end else begin
+			l1 := true
+		end;
+	if (l1 = true) then begin
+			actualItem := self.pickItems[a1];
+			self.pickItems[a1] := {item: actualItem, pickable: true, mark: l2}
+		end else begin
+			self.pickItems[a1].mark := l2
+		end;
+	self:SyncView();
+	self:Dirty();
+	RefreshViews();
+	nil
+end
+@@end

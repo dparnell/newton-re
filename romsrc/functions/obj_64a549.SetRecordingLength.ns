@@ -1,0 +1,11 @@
+@@ 0x4233c9
+func(a1, a2) begin
+	local l1;
+	l1 := self:GetSampleSize();
+	if (((IsReadOnly(samples) or (not IsInteger(a1))) or (a1 < 0)) or ((a1 * l1) > Length(samples))) then begin
+			Throw('|evt.ex.msg|, "numSamples invalid")
+		end;
+	self.length := a1;
+	AddDeferredSend(self, 'DeferredSetLength, [Array: a2])
+end
+@@end

@@ -1,0 +1,11 @@
+@@ 0x5aa1ad
+func(a1) begin
+	local l1;
+	Display.realText := Clone(a1);
+	l1 := Display.realText;
+	if expandFlag then begin
+			StrReplace((l1 := Clone(a1)), SPrintObject($\n), "\u00AC\u", nil)
+		end;
+	SetValue(Display, 'text, l1)
+end
+@@end

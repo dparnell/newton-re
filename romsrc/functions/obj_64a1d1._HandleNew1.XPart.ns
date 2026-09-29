@@ -1,0 +1,14 @@
+@@ 0x5536ed
+func(a1) begin
+	local l1, l2;
+	(if (a1.partType = 'form) then begin
+			l1 := @589.|1.XFormEntry|:New();
+			l2 := a1.partFrame;
+			l1.app := EnsureInternal(l2.app);
+			l1.icon := EnsureInternal(l2.icon);
+			l1.text := EnsureInternal(l2.text);
+			l1.packageId := a1.packageId;
+			AddArraySlot(|Parts1.x|, l1)
+		end)
+end
+@@end

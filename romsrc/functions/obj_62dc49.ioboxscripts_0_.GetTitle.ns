@@ -1,0 +1,10 @@
+@@ 0x4b07c9
+func(a1) begin
+	if (GetRoot().iobox.currentSoupSymbol = 'outbox) then begin
+			if (if (if a1 then ((a1.state = 'ready) or (a1.state = 'Sent))) then (not TargetIsCursor(a1))) then begin
+					return "Readdress"
+				end
+		end;
+	nil
+end
+@@end

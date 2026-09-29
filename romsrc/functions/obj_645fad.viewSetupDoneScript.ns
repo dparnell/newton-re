@@ -1,0 +1,12 @@
+@@ 0x4511c1
+func() begin
+	local l1;
+	l1 := func(a1, a2, a3, a4) begin
+		ProtoPerformIfDefined(self, a3, [Array: a1, a4])
+	end;
+	if (if fSoup then soupChangeSymbol) then begin
+			RegSoupChange(fSoup:GetName(), soupChangeSymbol, l1)
+		end;
+	self:Refresh()
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x499281
+func() begin
+	fEndpoint:Listen(fOptionsOut, CallbackSpec);
+	'waitAsync
+end
+@@end

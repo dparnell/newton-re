@@ -1,0 +1,15 @@
+@@ 0x4d24e5
+@@const kLiteral_4d11e1
+"SHARP OZ/IQ"
+@@main
+func(a1) begin
+	(foreach l1 in a1 do begin
+			local l3;
+			if (l3 := {body: l1.body, appSymbol: l1.appSymbol, category: '|beam:newton|, sender: kLiteral_4d11e1, fromRef: {name: {last: kLiteral_4d11e1}}, title: "Unknown"}).body then begin
+					self:ItemCompleted(l3, 'Received, nil)
+				end else begin
+					Throw('|evt.ex.translator|, -8303)
+				end
+		end)
+end
+@@end

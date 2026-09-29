@@ -1,0 +1,6 @@
+@@ 0x4bc955
+func() begin
+	inherited:viewSetupFormScript();
+	(currPhoneNum := filter:PathToText())
+end
+@@end

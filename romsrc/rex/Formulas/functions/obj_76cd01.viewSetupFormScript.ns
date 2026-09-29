@@ -1,0 +1,5 @@
+@@ 0x76cd89
+func() begin
+	((viewBounds := Clone(viewBounds)).right := indent)
+end
+@@end

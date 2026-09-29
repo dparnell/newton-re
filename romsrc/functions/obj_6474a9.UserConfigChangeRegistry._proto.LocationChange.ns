@@ -1,0 +1,6 @@
+@@ 0x41fdd1
+func(a1) begin
+	local l1;
+	(if (a1 = 'location) then SetTimeInSeconds((l1 := (TimeInSeconds() + (DSTVerify(Time()) * 60)))))
+end
+@@end

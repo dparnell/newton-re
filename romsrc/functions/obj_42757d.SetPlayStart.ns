@@ -1,0 +1,9 @@
+@@ 0x4274fd
+func(a1) begin
+	if ((playTime := a1) < 1) then begin
+			playTime := 1
+		end;
+	startSeconds := (TimeInSeconds() - elapsedTime);
+	self:SetCurrentTime()
+end
+@@end

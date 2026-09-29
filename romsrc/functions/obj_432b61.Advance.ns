@@ -1,0 +1,6 @@
+@@ 0x432b2d
+func() begin
+	spread := nil;
+	inherited:Advance()
+end
+@@end

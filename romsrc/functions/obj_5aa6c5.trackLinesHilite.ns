@@ -1,0 +1,22 @@
+@@ 0x5aa4f9
+func(a1) begin
+	local l1, l2, l3;
+	l1 := nil;
+	InkOff(a1);
+	playsound(@51);
+	(l2 := self:GlobalBox()).top := l2.top;
+	l3 := base.selectedIndex;
+	(loop begin
+			if ((l1 := ((GetPoint(5, a1) - l2.top) div lineHeight)) >= window:GetNumberEntries()) then begin
+					l1 := nil
+				end;
+			if (l3 <> l1) then begin
+					self:WordHilite();
+					base:SelectEntry(l1);
+					self:WordHilite();
+					l3 := l1
+				end;
+			(if StrokeDone(a1) then break)
+		end)
+end
+@@end

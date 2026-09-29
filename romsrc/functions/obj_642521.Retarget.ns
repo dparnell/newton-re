@@ -1,0 +1,5 @@
+@@ 0x4bc379
+func() begin
+	self:UpdateText((if (if (if target then path) then target.(path)) then filter:PathToText() else ""))
+end
+@@end

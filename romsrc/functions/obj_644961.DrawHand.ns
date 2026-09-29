@@ -1,0 +1,21 @@
+@@ 0x445afd
+func(a1, a2, a3) begin
+	local l1, l2, l3, l4, l5;
+	l1 := (a1 div 15);
+	l2 := (a1 - (l1 * 15));
+	l4 := sinTable[l2];
+	if ((l1 = 0) or (l1 = 3)) then begin
+			l4 := (-l4)
+		end;
+	l3 := sinTable[(15 - l2)];
+	if (l1 > 1) then begin
+			l3 := (-l3)
+		end;
+	if ((l1 = 1) or (l1 = 3)) then begin
+			l2 := l3;
+			l3 := l4;
+			l4 := l2
+		end;
+	self:DrawShape((l5 := MakeLine((a2 - 2), (a2 - 2), ((a2 + ((l3 * a2) div a3)) - 2), ((a2 + ((l4 * a2) div a3)) - 2))), '{pensize: 4})
+end
+@@end

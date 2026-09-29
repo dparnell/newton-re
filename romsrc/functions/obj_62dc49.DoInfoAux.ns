@@ -1,0 +1,16 @@
+@@ 0x4c1529
+func(a1, a2) begin
+	l1 := a1[a2].transport;
+	if newtAppBase._kiddos then begin
+			local l1;
+			(foreach l2 in newtAppBase._kiddos do begin
+					local l4;
+					if (l2._proto = l1.preferencesForm) then begin
+							return nil
+						end
+				end)
+		end;
+	(l4 := BuildContext(l1.preferencesForm)).transport := l1;
+	self:RememberedOpen(l4)
+end
+@@end

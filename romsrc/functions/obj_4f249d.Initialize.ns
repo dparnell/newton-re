@@ -1,0 +1,9 @@
+@@ 0x4f245d
+func() begin
+	if (mtgInfo = 0) then begin
+			mtgInfo := mtgDate.Date
+		end;
+	selectedDates := [Array: (baseMinutes + (1440 * (mtgDate.Date - 1)))];
+	datepicker:Dirty()
+end
+@@end

@@ -1,0 +1,15 @@
+@@ 0x75a431
+func(a1) begin
+	local l1;
+	if (((l1 := a1:DesktopType()) = nil) or (l1 = 2)) then begin
+			which := "desktop computer"
+		end else begin
+			if (l1 = 0) then begin
+					which := "Mac OS computer"
+				end else begin
+					which := "PC"
+				end
+		end;
+	return which
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x47b0cd
+func() begin
+	self:doTheShuffle();
+	if info then begin
+			text := info.logText;
+			labelCommands := info.logChoices
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

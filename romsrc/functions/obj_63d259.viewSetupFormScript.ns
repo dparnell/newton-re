@@ -1,0 +1,34 @@
+@@ 0x484129
+func() begin
+	local l1, l2;
+	l1 := GetVariable(targetView, 'localFoldersOnly);
+	l2 := GetVariable(targetView, 'systemFoldersToo);
+	folderList := GetAppFolderSyms(GetVariable(targetView, 'appSymbol), l1, l2);
+	if (dontStartWithFolder or target.dontStartWithFolder) then begin
+			newLabels := 42
+		end else begin
+			newLabels := target.labels
+		end;
+	if (if (newLabels <> 42) then (not GetFolderStr(newLabels))) then begin
+			newLabels := 42
+		end;
+	folderClusterHeight := (ceiling(((Length(folderList) + 1) / 2)) * 14);
+	storeClusterHeight := (ceiling((Length(GetStores()) / 2)) * 14);
+	if (doCardRouting = 'onlyCardRouting) then begin
+			viewChildren := kidsJustCardRouting;
+			self.viewBounds := RelBounds(0, -20, 220, (storeClusterHeight + 49))
+		end else begin
+			if (if doCardRouting then (Length(GetStores()) > 1)) then begin
+					viewChildren := kidsWithCardRouting;
+					self.viewBounds := RelBounds(0, 0, 220, ((folderClusterHeight + storeClusterHeight) + 74))
+				end else begin
+					viewChildren := kidsWithoutRouting;
+					self.viewBounds := RelBounds(0, 0, 220, (folderClusterHeight + 49))
+				end
+		end;
+	RegStoreChange('_filing, func(a1, a2, a3) begin
+		(if (if (a2 = 'storeLeaves) then (doCardRouting or (a1 = targetStore))) then AddDeferredSend(self, 'Close, nil))
+	end);
+	SetKeyView(self, 0)
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x4cd20d
+func() begin
+	inherited:?viewQuitScript();
+	(if GetRoot().(ownerSymbol) then (GetRoot().(ownerSymbol).alarmSlip := nil))
+end
+@@end

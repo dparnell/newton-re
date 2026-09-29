@@ -1,0 +1,43 @@
+@@ 0x503c21
+func() begin
+	local l1, l2, l3, l4, l5;
+	l1 := selectedMeeting;
+	RepeatingView.meetingInstance := l1;
+	if (l1.viewStationery = 'cribNote) then begin
+			selectedSingleSoup := notes;
+			selectedRepeatSoup := RepeatNotes
+		end else begin
+			selectedSingleSoup := MeetingSoup;
+			selectedRepeatSoup := RepeatSoup
+		end;
+	l3 := (l2 := GetMeetingTypeInfo(l1)).label;
+	if (not (l4 := l2.memory)) then begin
+			if ((l5 := l1.viewStationery) <> 'cribNote) then begin
+					l5 := 'meeting
+				end;
+			l4 := meetingTypeRegistry.(l5).memory
+		end;
+	if (if self:IsExceptionMeeting(l1) then (((l2 = 'meeting) or (l2 = 'cribNote)) or (l2 = 'default))) then begin
+			l3 := ParamStr("Exception ^0", [Array: l3])
+		end;
+	newHeaderText := l3;
+	newHeaderIcon := (if l2.smallIcon then l2.smallIcon else l2.icon);
+	newHeaderMemory := l4;
+	newTitle := self:GetMeetingText(l1);
+	newMtgDate := (originalMtgDate := l1.mtgStartDate);
+	if repeatingViewQuitting then begin
+			if l1.repeatTemplate then begin
+					newFirstDate := GetNextMeetingTime(l1.repeatTemplate, 0)
+				end else begin
+					newFirstDate := originalMtgDate
+				end
+		end;
+	newMtgDuration := self:GetMeetingSlot(l1, 'mtgDuration);
+	newtMtgStopTime := ((newtMtgStartTime := (newMtgDate mod 1440)) + newMtgDuration);
+	MinHourSpec := @66.shortTimeStrSpec;
+	alarmTime := self:GetMeetingSlot(l1, 'mtgAlarm);
+	inviteesAliases := Clone(self:GetMeetingSlot(l1, 'mtgInvitees));
+	locationAlias := self:GetMeetingSlot(l1, 'mtgLocation);
+	(newSplitRepeatTemplate := nil)
+end
+@@end

@@ -1,0 +1,15 @@
+@@ 0x526bc1
+func(a1) begin
+	l1 := 0;
+	local l1;
+	(foreach l2, l3 in a1 do begin
+			if (ObjEntryClass(l3.alias) <> 'group) then begin
+					if (l1 <> l2) then begin
+							a1[l1] := a1[l2]
+						end;
+					l1 := (l1 + 1)
+				end
+		end);
+	SetLength(a1, l1)
+end
+@@end

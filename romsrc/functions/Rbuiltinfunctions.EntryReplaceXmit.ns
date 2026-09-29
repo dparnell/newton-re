@@ -1,0 +1,11 @@
+@@ 0x62d1b1
+func(a1, a2, a3) begin
+	local l1, l2;
+	l1 := EntrySoup(a1):GetName();
+	l2 := EntryReplace(a1, a2);
+	if a3 then begin
+			XmitSoupChange(l1, a3, 'entryReplaced, {oldEntry: a1, entry: a2})
+		end;
+	l2
+end
+@@end

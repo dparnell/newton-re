@@ -1,0 +1,5 @@
+@@ 0x447121
+func(a1) begin
+	(abs(a1) div 600)
+end
+@@end

@@ -1,0 +1,28 @@
+@@ 0x4f7999
+func(a1) begin
+	local l1, l2, l3;
+	l2 := 0;
+	RemoveAppAlarms(":calendar");
+	(l1 := Clone(@3)).beginKey := (Time() + 1);
+	alarmTime := 536870911;
+	if (not (l3 := MeetingSoup)) then begin
+			l3 := GetUnionSoupAlways(@23)
+		end;
+	l2 := self:getNextSingleAlarm(Query(l3, l1), l1.beginKey, l2);
+	if (not (l3 := notes)) then begin
+			l3 := GetUnionSoupAlways(@22)
+		end;
+	l2 := self:getNextSingleAlarm(Query(l3, l1), l1.beginKey, l2);
+	if (not (l3 := RepeatSoup)) then begin
+			l3 := GetUnionSoupAlways(@239)
+		end;
+	l1.beginKey := 0;
+	l2 := self:getNextRepeatingAlarm(Query(l3, l1), l2);
+	if (not (l3 := RepeatNotes)) then begin
+			l3 := GetUnionSoupAlways(@242)
+		end;
+	l1.beginKey := -540;
+	l2 := self:getNextRepeatingAlarm(Query(l3, l1), l2);
+	nil
+end
+@@end

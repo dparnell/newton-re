@@ -1,0 +1,11 @@
+@@ 0x4c7f59
+func(a1, a2) begin
+	a2.error := self:SetupFormat(a1.fields);
+	(if (a2.error = nil) then begin
+			a1:Open();
+			a1:Render();
+			a1:Close();
+			(a2.error := a1.fields.error)
+		end)
+end
+@@end

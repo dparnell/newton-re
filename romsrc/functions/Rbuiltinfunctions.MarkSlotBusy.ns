@@ -1,0 +1,6 @@
+@@ 0x56a171
+func(a1, a2, a3) begin
+	ArrayInsert(BusySlots[a2], EnsureInternal({appSymbol: a1, appName: a3}), 0);
+	true
+end
+@@end

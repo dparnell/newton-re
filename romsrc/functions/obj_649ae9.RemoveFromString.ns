@@ -1,0 +1,18 @@
+@@ 0x526ef5
+func(a1, a2, a3) begin
+	local l1, l2, l3, l4;
+	l1 := StrLen(a2);
+	if ((l2 := StrPos(a1, a2, 0)) > 0) then begin
+			if (if (l3 := self:prevStr(a1, l2)) then self:IsNoise(l3)) then begin
+					l4 := (StrLen(l3) + 1);
+					l2 := (l2 - l4);
+					l1 := (l1 + l4)
+				end
+		end;
+	if ((l2 + l1) < StrLen(a1)) then begin
+			l1 := (l1 + 1)
+		end;
+	StrMunger(a1, l2, l1, nil, 0, 0);
+	return a1
+end
+@@end

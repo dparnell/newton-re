@@ -1,0 +1,6 @@
+@@ 0x4993e1
+func() begin
+	fEndpoint:Dispose();
+	'DoCompletion
+end
+@@end

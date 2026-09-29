@@ -1,0 +1,12 @@
+@@ 0x757511
+func() begin
+	self.prefsFrame := GetRoot().Connection:ConnectionPrefsRead('autoDockAddr);
+	if (not prefsFrame) then begin
+			self.prefsFrame := {type: 'serial}
+		end;
+	inherited:viewSetupFormScript();
+	self.protoContext := self;
+	self.HideIfVisible := GetRoot().Connection.HideIfVisible;
+	(self.ShowIfNotVisible := GetRoot().Connection.ShowIfNotVisible)
+end
+@@end

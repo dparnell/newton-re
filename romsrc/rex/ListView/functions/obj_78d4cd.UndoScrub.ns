@@ -1,0 +1,27 @@
+@@ 0x78cc95 names
+func(aList, aDeletedTopics, anOldCurTopic) begin
+	if ((nItems := Length(aList)) > 1) then begin
+			Sort(aList, '|<|, nil)
+		end;
+	local nItems;
+	local i;
+	local top;
+	local newIndex;
+	local theTopic;
+	local height;
+	(for i := 0 to (nItems - 1) do begin
+			newIndex := aList[i];
+			height := self:TopicHeight((theTopic := aDeletedTopics[i]));
+			if (newIndex < nTopics) then begin
+					top := topics[newIndex].viewBounds.top
+				end else begin
+					top := self:ListBottom()
+				end;
+			self:AppendTopic(theTopic, newIndex, top, 0);
+			self:SetDone(newIndex, topics[newIndex], topics[newIndex].mtgDone, true, nil)
+		end);
+	self:UpdateMultipleStores(true);
+	self:RedoChildren();
+	(if (curTopic := anOldCurTopic) then SetKeyView(self:TopicIndexToView(curTopic), 99999))
+end
+@@end

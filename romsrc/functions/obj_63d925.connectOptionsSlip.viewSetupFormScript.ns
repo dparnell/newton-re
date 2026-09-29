@@ -1,0 +1,7 @@
+@@ 0x59ee8d
+func() begin
+	listMethod := 'Mail_ListUnread;
+	willDialNum := self:MungePhone(GetUserConfig('mailPhone), GetUserConfig('currentCountry));
+	inherited:?viewSetupFormScript()
+end
+@@end

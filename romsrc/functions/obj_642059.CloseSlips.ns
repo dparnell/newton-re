@@ -1,0 +1,5 @@
+@@ 0x41a4a1
+func(a1) begin
+	(if (filingSlip.targetView = a1) then filingSlip:Close())
+end
+@@end

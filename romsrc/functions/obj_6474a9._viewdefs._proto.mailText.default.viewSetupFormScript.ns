@@ -1,0 +1,7 @@
+@@ 0x59ba0d
+func() begin
+	viewLineSpacing := FontHeight((viewFont := GetUserConfig('mailFont)));
+	height := self:Parent():LocalBox().bottom;
+	((viewBounds := Clone(viewBounds)).bottom := ((height div viewLineSpacing) * viewLineSpacing))
+end
+@@end

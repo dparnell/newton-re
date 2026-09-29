@@ -1,0 +1,8 @@
+@@ 0x72b609
+func() begin
+	if (selectedPath <> true) then begin
+			RemoveSlot(self, 'viewChangedScript)
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

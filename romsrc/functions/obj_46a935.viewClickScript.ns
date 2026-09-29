@@ -1,0 +1,53 @@
+@@ 0x46a915
+func(a1) begin
+	InkOff(a1);
+	playsound(@51);
+	l1 := StrWidth(separator);
+	if ((l2 := StrWidth(title)) > 0) then begin
+			l2 := l2
+		end;
+	(loop begin
+			l3 := GetPoint(4, a1);
+			l4 := GetPoint(5, a1);
+			(l5 := self:GlobalBox()).left := (l5.left + l2);
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			local l5;
+			local l6;
+			local l7;
+			local l8;
+			l8 := (foreach l9, l10 in altItems do begin
+					local l12;
+					if (l9 < numChoices) then begin
+							l5.right := (l5.left + StrWidth(altItems[l9]));
+							if (if (l3 >= l5.left) then (l3 < l5.right)) then begin
+									break l9
+								end;
+							if ((l4 < l5.top) or (l4 > l5.bottom)) then begin
+									break
+								end;
+							l5.left := (l5.right + l1)
+						end
+				end);
+			if (l8 <> l7) then begin
+					if l7 then begin
+							GetRoot():q_vairegerpg(l6.left, l6.top, l6.right, l6.bottom)
+						end;
+					if l8 then begin
+							GetRoot():q_vairegerpg((l6 := Clone(l5)).left, l6.top, l6.right, l6.bottom)
+						end;
+					l7 := l8
+				end;
+			(if StrokeDone(a1) then break)
+		end);
+	(if l7 then begin
+			l12 := Clone(altItems[l7]);
+			ArrayMunger(pickItems, l7, 1, nil, 0, 0);
+			ArrayInsert(pickItems, l12, 0);
+			correct.cText:SetupAll(l12, 'pickItems, nil, true);
+			self:Dirty()
+		end)
+end
+@@end

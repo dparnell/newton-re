@@ -1,0 +1,20 @@
+@@ 0x49cdd1
+func() begin
+	local l1;
+	l1 := dataCursor;
+	hiliteCount := 0;
+	hilitedIndex := nil;
+	if (not cursor) then begin
+			hilitedIndex := nil;
+			hiliteEntry := l1:entry();
+			if centerTarget then begin
+					if (not l1:move((-((maxLines := (self:LocalBox().bottom div lineHeight)) div 2)))) then begin
+							l1:Next()
+						end
+				end
+		end;
+	inherited:viewSetupChildrenScript();
+	self:SetupAbstracts(l1:clone());
+	(self.cursor := l1)
+end
+@@end

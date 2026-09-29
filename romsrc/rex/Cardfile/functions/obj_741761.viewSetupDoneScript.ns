@@ -1,0 +1,21 @@
+@@ 0x7418e9
+func() begin
+	local l1, l2;
+	inherited:?viewSetupDoneScript();
+	if (if (l2 := self:ChildViewFrames()) then (Length(l2) > 0)) then begin
+			allinfoHeight := ((l1 := (childToScroll := l2[0]):GlobalBox()).bottom - l1.top);
+			childBottom := childToScroll:GetBottom()
+		end;
+	(if (childBottom <= allinfoHeight) then (if scrollArrows.viewCObject then scrollArrows:Hide()) else begin
+			scrollArrows.scrollRect := (scrollArrows.dataRect := SetBounds(0, 0, 0, childBottom));
+			scrollArrows.viewRect := SetBounds(0, 0, 0, allinfoHeight);
+			scrollArrows.yPos := 0;
+			if scrollArrows.viewCObject then begin
+					scrollArrows:Show()
+				end else begin
+					scrollArrows:Open()
+				end;
+			scrollArrows:AdjustArrows()
+		end)
+end
+@@end

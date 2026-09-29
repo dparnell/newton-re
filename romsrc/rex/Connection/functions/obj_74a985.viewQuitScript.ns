@@ -1,0 +1,11 @@
+@@ 0x74af05
+func() begin
+	endpoint:StopIdle(self);
+	UnRegStoreChange('Connection);
+	if (endpoint.protocolVersion > 10) then begin
+			endpoint:WriteCommand("ntic", nil, true)
+		end;
+	protoContext:RemoveOpenWindow(self);
+	(if (not closing) then endpoint:ConnectionDone(0))
+end
+@@end

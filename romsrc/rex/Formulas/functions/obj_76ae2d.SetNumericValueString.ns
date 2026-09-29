@@ -1,0 +1,7 @@
+@@ 0x76bdf9
+func(a1) begin
+	changeInProgress := true;
+	SetValue(value, 'text, Clone(a1));
+	(changeInProgress := nil)
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x48ab85
+func(a1) begin
+	if (not (a1 := DeepClone(a1)).place) then begin
+			a1.place := a1.name
+		end;
+	GetRoot().worldClock:SetLocation(a1)
+end
+@@end

@@ -1,0 +1,64 @@
+@@ 0x5a39ad
+func(a1, a2, a3) begin
+	if (if HasPath(GetRoot(), 'MotoConvertEmail) then ((not IsString(a1.toEmailAddress)) or (not IsString(a1.fromName)))) then begin
+			return GetRoot():MotoConvertEmail(a1, a2, a3)
+		end;
+	if (a3 = 'oneO) then begin
+			return nil
+		end;
+	(l1 := Clone(a1)).class := 'mailText;
+	l2 := nil;
+	l3 := nil;
+	if IsArray(a1.fromName) then begin
+			a1.fromName := a1.fromName[0]
+		end;
+	if (if a1.fromName then (not IsString(a1.fromName))) then begin
+			l4 := ClassOf(a1.fromName);
+			SetClass(a1.fromName, Intern(Stringer([Array: "string.email.", l4])))
+		end;
+	if (if a1.fromName then StrFilled(a1.fromName)) then begin
+			if (if (l5 := StrPos((l3 := TrimString(a1.fromName)), " ", 0)) then (l5 > 0)) then begin
+					l2 := Substr(l3, (l5 + 1), StrLen(l3));
+					l3 := Substr(l3, 0, l5)
+				end
+		end;
+	l6 := GetDataDefs('|nameRef.email|);
+	l1.fromRef := l6:MakeNameRef({name: {first: l3, last: l2}, email: SetClass(a1.fromEmailAddress, '|string.email.aol|)}, '|nameRef.email|);
+	l1.toRef := [Array: ];
+	if a1.toEmailAddress then begin
+			if IsArray(a1.toEmailAddress) then begin
+					a1.toEmailAddress := a1.toEmailAddress[0]
+				end;
+			if (not IsString(a1.toEmailAddress)) then begin
+					l4 := ClassOf(a1.toEmailAddress);
+					SetClass(a1.toEmailAddress, Intern(Stringer([Array: "string.email.", l4])));
+					if a1.ccEmailAddress then begin
+							a1.ccEmailAddress := nil
+						end;
+					if a1.bccEmailAddress then begin
+							a1.bccEmailAddress := nil
+						end
+				end;
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			local l5;
+			local l6;
+			local l7;
+			(foreach l8 in (l7 := StrParseTrimmed(a1.toEmailAddress, ",")) do begin
+					AddArraySlot(l1.toRef, l6:MakeNameRef({name: l8, email: SetClass(l8, '|string.email|)}, '|nameRef.email|))
+				end)
+		end;
+	if (Length(l1.toRef) = 0) then begin
+			l8 := Clone("unknown");
+			AddArraySlot(l1.toRef, l6:MakeNameRef({name: l8, email: SetClass(l8, '|string.email|)}, '|nameRef.email|))
+		end;
+	l1.currentFormat := 'targetFrameFormat;
+	l1.cc := [Array: ];
+	l1.bcc := [Array: ];
+	RemoveSlot(l1, 'fromEmailAddress);
+	RemoveSlot(l1, 'toEmailAddress);
+	l1
+end
+@@end

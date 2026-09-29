@@ -1,0 +1,7 @@
+@@ 0x5acd65
+func(a1) begin
+	local l1;
+	l1 := GetStores()[0]:GetSoup(@276);
+	l1:Add(a1)
+end
+@@end

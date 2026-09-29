@@ -1,0 +1,21 @@
+@@ 0x4fe7f5
+func() begin
+	local l1;
+	if (l1 := realData).repeatTemplate then begin
+			l1 := l1.repeatTemplate
+		end;
+	if (l1.version <> 2) then begin
+			if (not EntryStore(l1):IsReadOnly()) then begin
+					self:Convert10to20(l1, nil);
+					EntryChangeXmit(l1, 'calendar);
+					if realData.repeatTemplate then begin
+							realData := self:MakeInstanceOfRepeatingMeeting(l1, realData.mtgStartDate)
+						end
+				end
+		end;
+	target := self.realData;
+	targetView := self;
+	viewBounds := SetBounds(2, 0, 0, cribLineSpacing);
+	inherited:viewSetupFormScript()
+end
+@@end

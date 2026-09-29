@@ -1,0 +1,18 @@
+@@ 0x59536d
+func(a1, a2, a3, a4, a5, a6) begin
+	local l1;
+	l1 := true;
+	if ((((not a1) or (StrLen(a1) < 1)) or (not a2)) or (StrLen(a2) < 1)) then begin
+			self:Notify(3, serviceName, msgOwner);
+			l1 := nil
+		end;
+	if (if a3 then IsInteger(a3)) then begin
+			a3 := SPrintObject(a3)
+		end;
+	if (((not a3) or (StrLen(a3) < 1)) or (not a4)) then begin
+			self:Notify(3, serviceName, msgWorksite);
+			l1 := nil
+		end;
+	l1
+end
+@@end

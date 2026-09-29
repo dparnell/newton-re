@@ -1,0 +1,17 @@
+@@ 0x59549d
+func(a1) begin
+	self.newCollection := [Array: ];
+	self.collectionHostID := a1;
+	self:StartTransaction(120);
+	(if (a1.subType = 'formFolder) then begin
+			self:StartStream("K1");
+			self:atom(0, 14, a1.idNumber, nil);
+			self:SendStream()
+		end else begin
+			self:StartStream("eB");
+			self:atom(1, ATOM_MAN_SET_RESPONSE_ID, 7, nil);
+			self:atom(3, 1, a1.idNumber, nil);
+			self:SendStream()
+		end)
+end
+@@end

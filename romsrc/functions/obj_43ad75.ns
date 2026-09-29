@@ -1,0 +1,9 @@
+@@ 0x43ad75
+func(a1) begin
+	local l1;
+	if (l1 := self:DoDrawing('trackOverview, [Array: a1])) then begin
+			SendWithStrokesOff(self, 'HitItem, [Array: l1[0], l1[1], l1[2]])
+		end;
+	true
+end
+@@end

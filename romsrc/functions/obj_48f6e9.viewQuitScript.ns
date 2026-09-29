@@ -1,0 +1,8 @@
+@@ 0x48f6a9
+func() begin
+	if (prefsCache.(prefsSlot) = 'Partial) then begin
+			self:stashItems(soupNameList)
+		end;
+	EntryChangeXmit(prefsCache, 'backup)
+end
+@@end

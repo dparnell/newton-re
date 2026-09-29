@@ -1,0 +1,68 @@
+@@ 0x495ed1
+@@const kLiteral_488691
+"Backup"
+@@const kLiteral_47dd29
+"There was not enough space to backup \u201C\u^0\u201D\u. Some items may not have been backed up."
+@@const kLiteral_47e431
+"There was an error while backing up \u201C\u^0\u201D\u. Some items may not have been backed up."
+@@const kFunction_48e3a1
+func(a1, a2) begin
+	a1:Query({type: 'index, indexPath: 'name, beginKey: a2, endKey: a2})
+end
+@@main
+func(a1, a2, a3, a4) begin
+	local l1, l2, l3, l4, l5;
+	l1 := Stringer([Array: "BACKUP_", a3]);
+	try begin
+			self:moveSoup(a1, a2, a3, l1)
+		end onexception |evt.ex.cancel| do begin
+			Rethrow()
+		end onexception |evt.ex.fr.store| do begin
+			if (if HasSlot((l4 := CurrentException()), 'error) then (l4.error = -10617)) then begin
+					GetRoot():Notify(3, kLiteral_488691, ParamStr(kLiteral_47dd29, [Array: a4]))
+				end else begin
+					GetRoot():Notify(3, kLiteral_488691, ParamStr(kLiteral_47e431, [Array: a4]))
+				end;
+			Rethrow()
+		end onexception |evt.ex| do begin
+			GetRoot():Notify(3, kLiteral_488691, ParamStr(kLiteral_47e431, [Array: a4]));
+			Rethrow()
+		end;
+	if StrEqual(a3, @276) then begin
+			backupMachine := Gestalt(16777219).machineType
+		end;
+	(if (l3 := (l2 := call (kFunction_48e3a1) with (backupSoup, a3)):entry()) then begin
+			l3.backupDate := Time();
+			if HasSlot(l3, 'indexes) then begin
+					RemoveSlot(l3, 'indexes)
+				end;
+			if HasSlot(l3, 'allInfo) then begin
+					RemoveSlot(l3, 'allInfo)
+				end;
+			l3.version := 'twoO;
+			(try begin
+					EntryChangeXmit(l3, 'backup)
+				end onexception |evt.ex.fr.store| do begin
+					nil
+				end)
+		end else begin
+			l3 := {name: a3, backupDate: Time(), version: 'twoO};
+			(try begin
+					backupSoup:AddXmit(l3, 'backup)
+				end onexception |evt.ex| do begin
+					if (if HasSlot((l4 := CurrentException()), 'error) then (l4.error = -10617)) then begin
+							GetRoot():Notify(3, kLiteral_488691, ParamStr(kLiteral_47dd29, [Array: a4]))
+						end else begin
+							GetRoot():Notify(3, kLiteral_488691, ParamStr(kLiteral_47e431, [Array: a4]))
+						end;
+					l5 := a2:GetSoup(l1);
+					try begin
+							if l5 then begin
+									l5:RemoveFromStore()
+								end
+						end onexception |evt.ex| do begin end;
+					Rethrow()
+				end)
+		end)
+end
+@@end

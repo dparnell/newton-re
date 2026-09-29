@@ -1,0 +1,13 @@
+@@ 0x4b9189
+func(a1) begin
+	local l1;
+	(if ((not StrFilled(a1)) or IsRichString(a1)) then a1 else begin
+			if (not (l1 := StringToNumber(StringFilter(a1, " ", 'rejectAll)))) then begin
+					if (not (l1 := StringToNumber(StringFilter(a1, "0123456789.,-", 'passAll)))) then begin
+							l1 := 0
+						end
+				end;
+			(if integerOnly then floor((l1 + 0.5)) else l1)
+		end)
+end
+@@end

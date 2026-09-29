@@ -1,0 +1,13 @@
+@@ 0x7aa77d
+func() begin
+	local l1, l2;
+	(if (not (feedbackTop exists)) then begin
+			l1 := (if (feedbackWidth exists) then feedbackWidth else 240);
+			(if ((l2 := TextBounds(text, {font: viewFont}, RelBounds(0, 0, l1, 0))).bottom > self:LocalBox().bottom) then begin
+					l2.top := ((-l2.bottom) - 30);
+					l2.bottom := -30;
+					SetValue(self, 'viewBounds, l2)
+				end)
+		end)
+end
+@@end

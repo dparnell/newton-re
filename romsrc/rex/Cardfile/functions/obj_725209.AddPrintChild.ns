@@ -1,0 +1,35 @@
+@@ 0x725465
+func(a1, a2, a3, a4) begin
+	local l1, l2, l3;
+	if (currentLetter = 'none) then begin
+			if (if (not IsRichString(a2.sorton)) then StrFilled(a2.sorton)) then begin
+					return nil
+				end
+		end else begin
+			if (StrCompare(SPrintObject(a2.sorton[0]), SPrintObject(currentLetter)) > 0) then begin
+					return nil
+				end
+		end;
+	l1 := {_proto: infoDisplay, target: a2, viewSetupFormScript: func() begin
+		local l1, l2;
+		(if (if target then target.class) then begin
+				if (not layouts) then begin
+						layouts := {}
+					end;
+				if (not layouts.(target.class)) then begin
+						layouts.(target.class) := call GetRoot().cardfile.kViewsToDisplay with (target)
+					end;
+				SetRemove(layouts.(target.class), 'phone);
+				SetRemove(layouts.(target.class), 'pager);
+				(if (GetVariable(self, 'newtAppBase) <> GetRoot().cardfile) then (self.viewFlags := 1))
+			end)
+	end, viewBounds: RelBounds(a3, a4, 150, 2000), viewJustify: 0, showMultipleData: true, boldTitle: true};
+	l3 := (l2 := AddStepView(self, l1)):GetBottom();
+	RemoveStepView(self, l2);
+	self.stepChildren := Clone(self.stepChildren);
+	l1.viewBounds := RelBounds(a3, a4, 150, l3);
+	AddArraySlot(stepChildren, l1);
+	AddArraySlot(stepChildren, {_proto: infoDisplay, target: a2, viewBounds: RelBounds(((a3 + 150) + 20), a4, 150, l3), viewJustify: 0, layouts: {person: '[Array: phone, pager], owner: '[Array: phone], company: '[Array: phone]}, showMultipleData: true});
+	{bottom: l3, right: 320}
+end
+@@end

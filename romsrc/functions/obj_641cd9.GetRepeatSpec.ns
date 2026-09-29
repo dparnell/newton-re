@@ -1,0 +1,37 @@
+@@ 0x4f1c05
+func() begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9;
+	(if ((if ((l1 := meetingInstance.repeatTemplate) = nil) then (repeatType = 5)) or (if (if l1 then (l1.mtgInfo = mtgInfo)) then (l1.repeatType = repeatType))) then l1 else (if (repeatType = 5) then nil else begin
+				l4 := Date((l3 := ((l2 := newMtgDate) - (l2 mod 1440))));
+				if ((l5 := (if l1 then Clone(l1) else Clone(meetingInstance))).viewStationery = 'meeting) then begin
+						l5.viewStationery := 'RepeatingMeeting
+					end;
+				if (not (l6 := l5.mtgStopDate)) then begin
+						l6 := 536870911
+					end;
+				l7 := (if IsSoupEntry(meetingInstance) then EntryStore(meetingInstance));
+				GetRoot().calendar:ConvertToRepeating(l5, repeatType, mtgInfo, l6, l7);
+				if ((if (repeatType = 0) then (self:NumberOfDays(BAnd(mtgInfo, 4064), 1) = 1)) or (repeatType = 4)) then begin
+						if (not (l8 := GetUserConfig('firstDayOfWeek))) then begin
+								l8 := GetLocale().firstDayOfWeek
+							end;
+						if (not l8) then begin
+								l8 := 0
+							end;
+						l4.Date := ((l4.Date - l4.dayOfWeek) + l8)
+					end else begin
+						if ((repeatType = 2) or (repeatType = 1)) then begin
+								l4.Date := 1
+							end else begin
+								if ((repeatType = 3) or (repeatType = 7)) then begin
+										l4.month := 1;
+										l4.Date := 1
+									end
+							end
+					end;
+				l9 := TotalMinutes(l4);
+				l5.mtgStartDate := NextMeeting(l9, l5);
+				(l5 := DeepClone(l5))
+			end))
+end
+@@end

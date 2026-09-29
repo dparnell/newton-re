@@ -1,0 +1,34 @@
+@@ 0x482551
+func(a1, a2, a3, a4) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9;
+	l1 := SetBounds(a1, a2, a3, a4);
+	l2 := 0;
+	l3 := 0;
+	l5 := (((l4 := GetAppParams()).appAreaLeft + l4.appAreaWidth) - slop);
+	if (l1.right > l5) then begin
+			l2 := (-(l1.right - l5))
+		end;
+	l6 := ((l4.appAreaTop + l4.appAreaHeight) - slop);
+	if (l1.bottom > l6) then begin
+			l3 := (-(l1.bottom - l6))
+		end;
+	if (if (l7 := self:Parent()) then (l7 <> GetRoot())) then begin
+			l8 := l7:GlobalBox();
+			l2 := (l2 - l8.left);
+			l3 := (l3 - l8.top)
+		end;
+	if ((l2 <> 0) or (l3 <> 0)) then begin
+			if (((l1 := OffsetRect(l1, l2, l3)).left < (l4.appAreaLeft + slop)) or (l1.top < (l4.appAreaTop + slop))) then begin
+					Throw(exRootException, -8501)
+				end
+		end;
+	if (if screenRelativeH then (displayParams.appAreaWidth <> displayParams.scrWidth)) then begin
+			l9 := ((displayParams.scrWidth - displayParams.appAreaWidth) div 2);
+			if (displayParams.appAreaGlobalLeft <> 0) then begin
+					l9 := (-l9)
+				end;
+			l1 := OffsetRect(l1, l9, 0)
+		end;
+	l1
+end
+@@end

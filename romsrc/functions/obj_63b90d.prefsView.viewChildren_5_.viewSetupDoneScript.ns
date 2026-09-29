@@ -1,0 +1,6 @@
+@@ 0x50c009
+func() begin
+	inherited:?viewSetupDoneScript();
+	self:Initialize(selected, singleSelect)
+end
+@@end

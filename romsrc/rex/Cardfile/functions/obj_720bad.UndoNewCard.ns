@@ -1,0 +1,10 @@
+@@ 0x738b9d
+func(a1, a2) begin
+	layout:KillEntry(a1);
+	if a2 then begin
+			layout.dataCursor:Goto(a2);
+			layout:NewTarget()
+		end;
+	true
+end
+@@end

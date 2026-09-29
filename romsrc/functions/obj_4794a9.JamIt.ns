@@ -1,0 +1,9 @@
+@@ 0x479489
+func() begin
+	if fields.fromRef then begin
+			fields.fromRef := GetUserConfig('currentPersona)
+		end;
+	self:?OwnerInfoChanged();
+	inherited:?JamIt()
+end
+@@end

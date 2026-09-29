@@ -1,0 +1,9 @@
+@@ 0x78d39d names
+func(anIndex) begin
+	local mom;
+	(if (if (topics[anIndex].hideCount <> 0) then (topics[anIndex].hideCount <> nil)) then begin
+			self:RevealTopic((mom := self:Mother(anIndex)));
+			self:ExpandTopic(mom, true)
+		end)
+end
+@@end

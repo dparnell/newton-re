@@ -1,0 +1,9 @@
+@@ 0x48a4e9
+func() begin
+	text := self:SetupText();
+	if (not GetRoot().senderList) then begin
+			GetRoot().senderList := [Array: ]
+		end;
+	SetAdd(senderList, self, true)
+end
+@@end

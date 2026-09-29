@@ -1,0 +1,17 @@
+@@ 0x4b16e5
+func() begin
+	l1 := self:GetSpec('transport, {all: '_fileit}, nil);
+	local l1;
+	(foreach l2, l3 in allSoups do begin
+			local l5;
+			l5 := self:MakeCursor(l2, l1);
+			(while (item := l5:entry()) do begin
+					item.labels := item._newFolder;
+					RemoveSlot(item, '_newFolder);
+					self:Fileit(item);
+					EntryChange(item);
+					l5:Next()
+				end)
+		end)
+end
+@@end

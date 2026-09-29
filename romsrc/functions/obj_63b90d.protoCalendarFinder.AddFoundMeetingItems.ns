@@ -1,0 +1,29 @@
+@@ 0x4ea761
+func(a1, a2, a3) begin
+	local l1, l2, l3, l4, l5, l6;
+	self:Reset();
+	if (a2 > 0) then begin
+			self:move(a2)
+		end;
+	l1 := 0;
+	l2 := self:GetCurrentItem();
+	l5 := owner;
+	(while (if (l2 <> nil) then (l1 < a3)) do (try begin
+				if l2.repeatTemplate then begin
+						l3 := l2.repeatTemplate
+					end else begin
+						l3 := l2
+					end;
+				if (StrLen((l4 := l5:FindSoupExcerpt(l2, l3, self))) > 50) then begin
+						l4 := Substr(l4, 0, 50)
+					end;
+				(l6 := {_proto: @178, finder: self, realFinder: currentMeetingSoupFinder, entryID: l3._uniqueID, soup: EntrySoup(l3), storeID: EntryStore(l3):GetSignature(), selected: nil, itemIndex: (l1 + a2), title: l4, instanceTime: l2.mtgStartDate}).selected := currentMeetingSoupFinder:isSelected({_uniqueID: l6.entryID, _storeID: l6.storeID, instanceTime: l6.instanceTime});
+				AddArraySlot(a1, l6);
+				l1 := (l1 + 1);
+				(l2 := self:GetNextItem())
+			end onexception |evt.ex| do begin
+				(l3 := nil)
+			end));
+	l1
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x4d9a7d
+func() begin
+	self.stepChildren := (if (self.reflowStart = 0) then page1guts else page2Guts);
+	inherited:viewSetupChildrenScript()
+end
+@@end

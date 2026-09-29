@@ -1,0 +1,22 @@
+@@ 0x4d0efd
+func() begin
+	local l1;
+	(try begin
+			(if (status = 'idle) then begin
+					ep := {_proto: epFax, _parent: self};
+					RegCommConfigChange(appSymbol, func(a1, a2) begin
+						(if (a1 = "mods") then self:RedoTheBind())
+					end);
+					l1 := configOptions;
+					if (self:AnySet(manualReceive) or self:GetConfig('hideAutoPref)) then begin
+							SetLength((l1 := Clone(configOptions)), configOffsets.serviceSpecific)
+						end;
+					ep:Instantiate(ep, l1);
+					self:ChangeState('preparing);
+					ep:Bind(nil, bindSpec)
+				end)
+		end onexception |evt.ex| do begin
+			(if self:HandleThrow() then self:DoDispose(nil))
+		end)
+end
+@@end

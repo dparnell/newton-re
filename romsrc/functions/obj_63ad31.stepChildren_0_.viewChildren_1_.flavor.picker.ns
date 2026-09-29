@@ -1,0 +1,5 @@
+@@ 0x4d8fed
+func() begin
+	@371:New({_proto: GetDataDefs('|nameRef.people|), singleSelect: true}, nil, self, nil)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x5b327d
+func() begin
+	SetUserConfig('blinddialing, (not viewValue))
+end
+@@end

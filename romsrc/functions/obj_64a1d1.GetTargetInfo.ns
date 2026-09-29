@@ -1,0 +1,5 @@
+@@ 0x54cfed
+func(a1) begin
+	{target: (if (a1 = 'Routing) then fakeTarget.packs else fakeTarget), targetType: 'package, targetView: base, targetStore: fakeTarget.targetStore}
+end
+@@end

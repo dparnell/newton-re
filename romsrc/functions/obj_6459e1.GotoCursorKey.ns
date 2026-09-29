@@ -1,0 +1,14 @@
+@@ 0x4a85b9
+func(a1) begin
+	local l1;
+	if (not theCursor) then begin
+			self:SetupCursor()
+		end;
+	if (not (l1 := theCursor:GotoKey(a1))) then begin
+			if (not (l1 := theCursor:prev())) then begin
+					l1 := theCursor:Reset()
+				end
+		end;
+	l1
+end
+@@end

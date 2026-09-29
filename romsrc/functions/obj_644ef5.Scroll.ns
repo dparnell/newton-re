@@ -1,0 +1,37 @@
+@@ 0x44f38d
+func(a1) begin
+	local l1, l2, l3, l4;
+	l1 := nil;
+	l2 := dispLeft;
+	if (a1 > 0) then begin
+			if self:FixedWord() then begin
+					l3 := wordRight;
+					l4 := maxChars
+				end else begin
+					l3 := (wordRight + 1);
+					l4 := 3
+				end;
+			if (l3 > (l2 + maxChars)) then begin
+					dispLeft := (l2 := min((l2 := (l2 + maxChars)), (wordRight - l4)));
+					self:TrimLeft();
+					self:PadRight();
+					l1 := true
+				end
+		end else begin
+			if (a1 < 0) then begin
+					if (l2 > 0) then begin
+							dispLeft := 0;
+							l1 := true
+						end
+				end
+		end;
+	if l1 then begin
+			self:InvalDrawCache('chars);
+			if self:FixedWord() then begin
+					self:InvalDrawCache('lines)
+				end;
+			self:Dirty()
+		end;
+	return l1
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x7977dd names
+func() begin
+	self:RedoTopics()
+end
+@@end

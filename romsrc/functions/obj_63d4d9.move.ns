@@ -1,0 +1,16 @@
+@@ 0x44fe95
+func(a1) begin
+	if (a1 > 0) then begin
+			(while (a1 > 0) do begin
+					a1 := (a1 - 1);
+					self:Next()
+				end)
+		end else begin
+			(while (a1 < 0) do begin
+					a1 := (a1 + 1);
+					self:prev()
+				end)
+		end;
+	self:entry()
+end
+@@end

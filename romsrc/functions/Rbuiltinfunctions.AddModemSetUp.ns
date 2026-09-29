@@ -1,0 +1,18 @@
+@@ 0x56832d
+func(a1) begin
+	local l1, l2;
+	if (l1 := |GetModemSetUpAndXvert1.X|(a1.modemName, nil)) then begin
+			if (l1.version >= a1.version) then begin
+					return nil
+				end else begin
+					if IsSoupEntry(l1) then begin
+							EntryRemoveFromSoupXmit(l1, '_newt)
+						end
+				end
+		end;
+	(l2 := GetStores()[0]:GetSoup(@276):Add(a1)).tag := Stringer([Array: l2.modemName, ":ModemConfig"]);
+	EntryFlush(l2);
+	XmitSoupChange(@276, '_newt, 'entryAdded, l2);
+	true
+end
+@@end

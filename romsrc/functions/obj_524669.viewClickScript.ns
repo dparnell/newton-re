@@ -1,0 +1,6 @@
+@@ 0x522d1d
+func(a1) begin
+	InkOff(a1);
+	nil
+end
+@@end

@@ -1,0 +1,16 @@
+@@ 0x462b59
+func(a1) begin
+	(if self:TrackHilite(a1) then (if ((not messageList) or (Length(messageList) = 0)) then begin
+				self:hilite(nil);
+				AddDeferredSend(self, 'Close, nil)
+			end else (if (if (Length(messageList) = 1) then (ClassOf(messageList[0]) <> 'NotifyAction)) then begin
+					self:hilite(nil);
+					AddDeferredSend(self, 'Close, nil);
+					self:ExecMessage(0)
+				end else begin
+					local l1;
+					l1 := (foreach l2 in messageList collect l2.overview);
+					(poppedView := self:PopupMenu(l1, nil))
+				end)))
+end
+@@end

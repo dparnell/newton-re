@@ -1,0 +1,9 @@
+@@ 0x5b94c9
+func() begin
+	local l1;
+	(l1 := self:PrivateClone()).currentEntry := Clone(currentEntry);
+	l1.index := Clone(index);
+	l1.validTest := Clone(validTest);
+	return l1
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x443cc5
+func() begin
+	if (not selectedDates) then begin
+			selectedDates := [Array: Time()]
+		end;
+	value := Date(selectedDates[0]).year;
+	(calendar.singleDay := singleDay)
+end
+@@end

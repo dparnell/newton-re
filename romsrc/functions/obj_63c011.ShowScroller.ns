@@ -1,0 +1,6 @@
+@@ 0x52279d
+func() begin
+	local l1;
+	(l1 := self:ChildViewFrames())[1]:Show()
+end
+@@end

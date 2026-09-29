@@ -1,0 +1,5 @@
+@@ 0x767e31
+func() begin
+	pagePalette:ScrollBy(-1)
+end
+@@end

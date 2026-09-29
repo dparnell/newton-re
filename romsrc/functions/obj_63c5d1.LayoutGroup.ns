@@ -1,0 +1,58 @@
+@@ 0x4fca85
+func(a1, a2, a3, a4, a5) begin
+	local v8_wwwwwwvvvvvvvvvvvvv, v9_xxxxxxwwwwwwwwwwwwwwwwwwwwwww, v12_jiiii, v13_zzzzzzzzzyyyyy, v14_onnnnnn, v15_zzzzzzzzzzzzzzzzzzzzyyyyyyy, v16_vvvvvvvvvvvvvvvuuuuu, v17_zzzzzzzzzzzzzzzy, v18_lkkkkk, v19_yyyyyyyyyyyyyyyyyyyyyyy, v20_yyyyyyyyyyyy, v21_yyyyyxxxxxxxxxxxxxx, v22_wvvvvvvv, v24_xxxxxxxxxxxwwwwwwwwww, v25_wwwwwwwwwwwwv, v26_uuttt;
+	v21_yyyyyxxxxxxxxxxxxxx := Array(((v25_wwwwwwwwwwwwv := (a4 - a3)) + 1), nil);
+	v15_zzzzzzzzzzzzzzzzzzzzyyyyyyy := a5;
+	v18_lkkkkk := 0;
+	(for v10_zzyyyyyyyyyyyyyyyyyy := 0 to v25_wwwwwwwwwwwwv do begin
+			v19_yyyyyyyyyyyyyyyyyyyyyyy := (v10_zzyyyyyyyyyyyyyyyyyy + a3);
+			if (v16_vvvvvvvvvvvvvvvuuuuu := (v24_xxxxxxxxxxxwwwwwwwwww := a1[v19_yyyyyyyyyyyyyyyyyyyyyyy]).viewBounds) then begin
+					a2[v19_yyyyyyyyyyyyyyyyyyyyyyy] := self:MeetingBounds(v24_xxxxxxxxxxxwwwwwwwwww, 0, a5);
+					v15_zzzzzzzzzzzzzzzzzzzzyyyyyyy := min(v15_zzzzzzzzzzzzzzzzzzzzyyyyyyy, v16_vvvvvvvvvvvvvvvuuuuu.left)
+				end else begin
+					v21_yyyyyxxxxxxxxxxxxxx[v18_lkkkkk] := {index: v19_yyyyyyyyyyyyyyyyyyyyyyy, kid: v24_xxxxxxxxxxxwwwwwwwwww};
+					v18_lkkkkk := (v18_lkkkkk + 1)
+				end
+		end);
+	SetLength(v21_yyyyyxxxxxxxxxxxxxx, v18_lkkkkk);
+	if ((a4 := (v18_lkkkkk - 1)) = 0) then begin
+			v24_xxxxxxxxxxxwwwwwwwwww := v21_yyyyyxxxxxxxxxxxxxx[0].kid;
+			v20_yyyyyyyyyyyy := v21_yyyyyxxxxxxxxxxxxxx[0].index;
+			a2[v20_yyyyyyyyyyyy] := self:MeetingBounds(v24_xxxxxxxxxxxwwwwwwwwww, 0, v15_zzzzzzzzzzzzzzzzzzzzyyyyyyy);
+			return nil
+		end;
+	(for v10_zzyyyyyyyyyyyyyyyyyy := 0 to a4 do begin
+			if (not v22_wvvvvvvv) then begin
+					v22_wvvvvvvv := v21_yyyyyxxxxxxxxxxxxxx[v10_zzyyyyyyyyyyyyyyyyyy].kid;
+					v14_onnnnnn := v21_yyyyyxxxxxxxxxxxxxx[v10_zzyyyyyyyyyyyyyyyyyy].index;
+					v12_jiiii := (v22_wvvvvvvv.mtgStartDate + self:GetMeetingSlot(v22_wvvvvvvv, 'mtgDuration))
+				end else begin
+					v17_zzzzzzzzzzzzzzzy := v21_yyyyyxxxxxxxxxxxxxx[v10_zzyyyyyyyyyyyyyyyyyy].kid;
+					v13_zzzzzzzzzyyyyy := v21_yyyyyxxxxxxxxxxxxxx[v10_zzyyyyyyyyyyyyyyyyyy].index;
+					if ((v9_xxxxxxwwwwwwwwwwwwwwwwwwwwwww := v17_zzzzzzzzzzzzzzzy.mtgStartDate) >= v12_jiiii) then begin
+							v26_uuttt := (v10_zzyyyyyyyyyyyyyyyyyy - 1);
+							if v8_wwwwwwvvvvvvvvvvvvv then begin
+									self:DistributeBounds(v21_yyyyyxxxxxxxxxxxxxx, a2, v8_wwwwwwvvvvvvvvvvvvv, v26_uuttt, v15_zzzzzzzzzzzzzzzzzzzzyyyyyyy);
+									v8_wwwwwwvvvvvvvvvvvvv := nil
+								end else begin
+									a2[v14_onnnnnn] := self:MeetingBounds(v22_wvvvvvvv, 0, v15_zzzzzzzzzzzzzzzzzzzzyyyyyyy)
+								end;
+							if (v10_zzyyyyyyyyyyyyyyyyyy = a4) then begin
+									a2[v13_zzzzzzzzzyyyyy] := self:MeetingBounds(v17_zzzzzzzzzzzzzzzy, 0, v15_zzzzzzzzzzzzzzzzzzzzyyyyyyy)
+								end
+						end else begin
+							if (not v8_wwwwwwvvvvvvvvvvvvv) then begin
+									v8_wwwwwwvvvvvvvvvvvvv := (v10_zzyyyyyyyyyyyyyyyyyy - 1)
+								end;
+							if (v10_zzyyyyyyyyyyyyyyyyyy = a4) then begin
+									self:DistributeBounds(v21_yyyyyxxxxxxxxxxxxxx, a2, v8_wwwwwwvvvvvvvvvvvvv, a4, v15_zzzzzzzzzzzzzzzzzzzzyyyyyyy)
+								end
+						end;
+					v22_wvvvvvvv := v17_zzzzzzzzzzzzzzzy;
+					v12_jiiii := max(v12_jiiii, (v9_xxxxxxwwwwwwwwwwwwwwwwwwwwwww + self:GetMeetingSlot(v17_zzzzzzzzzzzzzzzy, 'mtgDuration)));
+					v14_onnnnnn := v13_zzzzzzzzzyyyyy
+				end
+		end);
+	(if (if (a4 >= 0) then (not a2[a4])) then (a2[a4] := self:MeetingBounds(v17_zzzzzzzzzzzzzzzy, 0, v15_zzzzzzzzzzzzzzzzzzzzyyyyyyy)))
+end
+@@end

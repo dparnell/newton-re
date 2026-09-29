@@ -1,0 +1,6 @@
+@@ 0x442e2d
+func() begin
+	SetValue(monthYearLabel, 'text, self:JamIt());
+	monthYearLabel:Dirty()
+end
+@@end

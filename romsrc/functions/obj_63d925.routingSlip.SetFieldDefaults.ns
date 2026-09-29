@@ -1,0 +1,86 @@
+@@ 0x599445
+func() begin
+	l1 := ResolveEntryAlias(GetUserConfig('currentPersona));
+	if (not fields.reply) then begin
+			fields.attachment := (not GetUserConfig('mailTextOnly))
+		end;
+	if l1 then begin
+			fields.fromName := GetRoot():PrimaryName(l1);
+			if (l2 := GetRoot().cardfile:bcEMailAddress(l1, addressSymbols)) then begin
+					fields.fromRef := Clone(l2[0])
+				end
+		end;
+	fields.dateStr := LongDateStr(Time(), @66.longDateStrSpec);
+	if TargetIsCursor(target) then begin
+			if ((l3 := GetTargetCursor(target, nil)):CountEntries() = 1) then begin
+					target := l3:entry();
+					fields.body := target;
+					l4 := nil;
+					if ((l5 := GetViewDefs(DataClassOf(target))) <> nil) then begin
+							if ((l4 := l5.prFrameFormat) = nil) then begin
+									local l1;
+									local l2;
+									local l3;
+									local l4;
+									local l5;
+									(foreach l6 in l5 do begin
+											local l8, l9, l10, l11, l12, l13, l14, l15;
+											if (if (if l6 then ((l6.routingType = 'frame) or (l6.routingType = 'view))) then (not l6.usesCursors)) then begin
+													l4 := l6;
+													break
+												end
+										end)
+								end
+						end;
+					if l4 then begin
+							l8 := {fields: fields, target: target, targetView: targetView};
+							fields.currentFormat := l4.symbol;
+							if HasSlot(l4, 'SetupSlip) then begin
+									l4:?SetupSlip(l8, l8.fields)
+								end else begin
+									l4:?SetupItem(fields, l8)
+								end;
+							activeFormat := l4
+						end
+				end else begin
+					fields.title := 'multiple;
+					l9 := nil;
+					l10 := (if fields.appSymbol then GetVariable(self, fields.appSymbol));
+					l11 := activeFormat.TextScript;
+					l12 := GetItemTransport(fields);
+					l13 := l3:entry();
+					(while (if l13 then (not l9)) do begin
+							if (not (l14 := l12:?GetItemTitle(l13))) then begin
+									l14 := l12:?GetItemTitle(fields)
+								end;
+							if ((not l14) or (not StrFilled(l14))) then begin
+									l14 := " "
+								end;
+							if IsRichString(l14) then begin
+									l9 := true
+								end else begin
+									l15 := " ";
+									if l11 then begin
+											if (if IsSymbol(l11) then l10) then begin
+													l15 := Perform(l10, l11, [Array: fields, l13])
+												end else begin
+													if IsFunction(l11) then begin
+															l15 := call l11 with (fields, l13)
+														end
+												end
+										end;
+									if IsRichString(l15) then begin
+											l9 := true
+										end
+								end;
+							(l13 := l3:Next())
+						end);
+					l3:Reset();
+					if l9 then begin
+							self:Notify(3, appName, "Some of the items contain ink, which will be replaced with the word \u201C\u-ink-\u201D\u.")
+						end
+				end
+		end;
+	(if (not fields.title) then self:SetupTitle())
+end
+@@end

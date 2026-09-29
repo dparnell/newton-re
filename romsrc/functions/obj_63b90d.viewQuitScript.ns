@@ -1,0 +1,21 @@
+@@ 0x4f7ab9
+func() begin
+	UnRegSoupChange(@23, 'calendar);
+	UnRegSoupChange(@239, 'calendar);
+	UnRegSoupChange(@22, 'calendar);
+	UnRegSoupChange(@242, 'calendar);
+	lastOpenedMainDisplay := self:GetCurrentMainView();
+	mainDisplay := nil;
+	previousMainDataDisplay := nil;
+	saveWhat := nil;
+	saveWhatView := nil;
+	lastFormats := nil;
+	if openNonchildViews then begin
+			(foreach l1 in openNonchildViews do begin
+					l1:Close()
+				end);
+			openNonchildViews := nil
+		end;
+	'postQuit
+end
+@@end

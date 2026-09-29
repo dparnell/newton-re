@@ -1,0 +1,7 @@
+@@ 0x51c8b9
+func(a1) begin
+	browser.paneIndex := a1;
+	browser.curIndex := 0;
+	browser:Open()
+end
+@@end

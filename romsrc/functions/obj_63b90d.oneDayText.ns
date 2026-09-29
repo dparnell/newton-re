@@ -1,0 +1,7 @@
+@@ 0x5161f5
+func(a1, a2) begin
+	local l1, l2;
+	l2 := (if IsArray((l1 := GetRoot().calendar.selectedDates)) then l1[0] else a1.body.startDate);
+	self:meetingsText(a1, a2, l2, 1, true)
+end
+@@end

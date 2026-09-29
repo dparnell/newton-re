@@ -1,0 +1,18 @@
+@@ 0x48475d
+func() begin
+	self.viewBounds := SetBounds(5, 4, -5, (storeClusterHeight + 4));
+	itemTitles := Array(Length((l1 := GetStores())), nil);
+	local l1;
+	(foreach l2, l3 in l1 do begin
+			local l5;
+			if StrFilled((l5 := l3:GetName())) then begin
+					itemTitles[l2] := l5
+				end else begin
+					itemTitles[l2] := "Unnamed Card"
+				end;
+			if (l3 = targetStore) then begin
+					clusterValue := l2
+				end
+		end)
+end
+@@end

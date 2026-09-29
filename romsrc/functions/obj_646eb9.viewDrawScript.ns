@@ -1,0 +1,15 @@
+@@ 0x446eed
+@@const kROM_603
+@603
+@@main
+func() begin
+	local l1, l2;
+	if minuteIncrement then begin
+			minutes1.increment;
+			if (minuteIncrement > 10) then begin
+					minutes10.increment := minuteIncrement
+				end
+		end;
+	(if ((l1 := GetLocale().timeformat).timeSepStr1[0] = $:) then DrawXBitmap((l2 := RelBounds((((((l2 := self:LocalBox()).right - 23) - 23) - 6) - 1), ((l2.bottom - 15) div 2), 6, 15)), kROM_603, 0, 0))
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x74b61d
+func() begin
+	if (not packagesCheckboxVisible) then begin
+			protoContext:HideIfVisible(self)
+		end;
+	inherited:?viewSetupDoneScript()
+end
+@@end

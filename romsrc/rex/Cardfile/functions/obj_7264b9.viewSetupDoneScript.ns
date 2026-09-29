@@ -1,0 +1,6 @@
+@@ 0x7265cd
+func() begin
+	AddDeferredCall(functions.KeyIn, [Array: 56, nil]);
+	inherited:?viewSetupDoneScript()
+end
+@@end

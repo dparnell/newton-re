@@ -1,0 +1,29 @@
+@@ 0x495f31
+func() begin
+	local l1;
+	UnRegSoupChange("BackupInfo", whoAmI);
+	UnRegSoupChange(@276, whoAmI);
+	UnRegUserConfigChange(whoAmI);
+	if (l1 := LSearch(StoreSlipRegistry.storeSlips, self, 0, '|=|, nil)) then begin
+			RemoveSlot(StoreSlipRegistry.storeSlips, l1)
+		end;
+	if openEraseSlip then begin
+			openEraseSlip:Close()
+		end;
+	if openBackupPrefsSlip then begin
+			openBackupPrefsSlip:Close()
+		end;
+	if openRestorePrefsSlip then begin
+			openRestorePrefsSlip:Close()
+		end;
+	infoShapes := nil;
+	lockShape := nil;
+	unlockShape := nil;
+	cardSlotIcon := nil;
+	cardSlotIconBounds := nil;
+	screenOrientation := nil;
+	restoredSoups := nil;
+	backupMachine := nil;
+	(progressSlip := nil)
+end
+@@end

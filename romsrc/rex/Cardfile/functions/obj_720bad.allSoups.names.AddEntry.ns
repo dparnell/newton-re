@@ -1,0 +1,22 @@
+@@ 0x739295
+func(a1, a2) begin
+	local l1, l2;
+	if (((l2 := a1.class) = 'owner) or (l2 = 'worksite)) then begin
+			a1.labels := '_ownerNames
+		end;
+	if (ClassOf(theSoup) = 'PlainSoup) then begin
+			l1 := theSoup:AddXmit(a1, 'cardfile)
+		end else begin
+			l1 := inherited:AddEntry(a1, a2);
+			XmitSoupChange(soupName, 'cardfile, 'entryAdded, a1)
+		end;
+	if (l2 = 'owner) then begin
+			AddPersona(a1)
+		end else begin
+			if (l2 = 'worksite) then begin
+					AddEmporium(a1)
+				end
+		end;
+	l1
+end
+@@end

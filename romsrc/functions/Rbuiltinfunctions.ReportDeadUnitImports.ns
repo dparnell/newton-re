@@ -1,0 +1,12 @@
+@@ 0x557c05
+func(a1) begin
+	(foreach l1 in a1 do begin
+			local l3;
+			try begin
+					if ((l3 := l1.client:?ImportDisabled(l1.name, l1.major, l1.minor)) = 'thrillMeChillMeFulfillMe) then begin
+							FulfillImportTable(l1.client._ImportTable)
+						end
+				end onexception |evt.ex| do begin end
+		end)
+end
+@@end

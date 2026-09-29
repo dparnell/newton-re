@@ -1,0 +1,8 @@
+@@ 0x4e1ed5
+func() begin
+	(if (index < (30 - maxLines)) then begin
+			index := (index + 1);
+			self:calcPaperDisplay()
+		end)
+end
+@@end

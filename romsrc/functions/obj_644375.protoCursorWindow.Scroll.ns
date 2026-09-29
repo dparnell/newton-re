@@ -1,0 +1,22 @@
+@@ 0x5b9d59
+func(a1) begin
+	local l1, l2;
+	if (if (dipStick > 0) then (not cursor:entry())) then begin
+			Throw('|evt.ex.msg|, "cursorLoc out of whack before Scroll")
+		end;
+	l1 := 0;
+	l1 := self:MoveCursor((a1 - cursorLoc));
+	if (not cursor:entry()) then begin
+			if (a1 < 0) then begin
+					self:MoveCursor(1)
+				end else begin
+					self:MoveCursor(-1)
+				end
+		end;
+	self:FillBuffer();
+	if (if (dipStick > 0) then (not cursor:entry())) then begin
+			Throw('|evt.ex.msg|, "cursorLoc out of whack after Scroll")
+		end;
+	return l1
+end
+@@end

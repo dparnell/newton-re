@@ -1,0 +1,22 @@
+@@ 0x439269
+func() begin
+	local l1, l2, l3, l4;
+	l1 := FullResolutionBounds(myImage);
+	fullSize := ShapeBounds(myImage);
+	if drawGrayScaled then begin
+			if (l2 := GetShapeInfo(myImage)).resolution then begin
+					l3 := ceiling((l2.resolution[0] / 72));
+					fullSize.right := floor((l1.right / l3));
+					fullSize.bottom := floor((l1.bottom / l3))
+				end
+		end;
+	l4 := self:LocalBox();
+	if (BAnd(viewJustify, 2) <> 0) then begin
+			l4.right := (l4.right - 2)
+		end;
+	if (BAnd(viewJustify, 4) <> 0) then begin
+			l4.bottom := (l4.bottom - 2)
+		end;
+	(usefulSizes := {fitInWindow: FitToBox(fullSize, l4, 0), fullSize: fullSize, fullResolution: l1, twiceFullResolution: RelBounds(0, 0, (2 * l1.right), (2 * l1.bottom))})
+end
+@@end

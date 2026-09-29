@@ -1,0 +1,16 @@
+@@ 0x75b5ed
+func(a1) begin
+	local l1, l2, l3;
+	(try begin
+			a1:WriteCommand("opca", nil, nil);
+			(repeat l2 := a1:ReadCommandHeader(true); if StrEqual("ocaa", l2.command) then begin
+						l1 := true
+					end else begin
+						a1:FlushCommandData()
+					end until l1)
+		end onexception |evt.ex| do begin
+			l3 := CurrentException().error;
+			AddDeferredSend(a1, 'ConnectionDone, [Array: l3])
+		end)
+end
+@@end

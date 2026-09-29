@@ -1,0 +1,6 @@
+@@ 0x73f5d1
+func() begin
+	inherited:?viewQuitScript();
+	newtAppBase.layout:Retarget(true)
+end
+@@end

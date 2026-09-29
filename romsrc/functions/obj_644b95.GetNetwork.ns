@@ -1,0 +1,12 @@
+@@ 0x59580d
+func(a1) begin
+	local l1;
+	if (not (l1 := self.transport)) then begin
+			l1 := GetRoot().mailSlip
+		end;
+	(if userConfiguration.mailNetwork then begin
+			GetGlobals().mailnavigator := FindMailNetwork(l1.mailNetworks, userConfiguration.mailNetwork);
+			(if (not GetGlobals().mailnavigator) then self:Notify(3, serviceName, "The mail network selected for your current worksite is not valid."))
+		end else (GetGlobals().mailnavigator := nil))
+end
+@@end

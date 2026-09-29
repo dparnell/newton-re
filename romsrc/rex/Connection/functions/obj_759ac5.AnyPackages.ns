@@ -1,0 +1,21 @@
+@@ 0x75e319
+func(a1) begin
+	if a1 then begin
+			l1 := [Array: a1]
+		end else begin
+			l1 := GetStores()
+		end;
+	local l1;
+	local l2;
+	(foreach l3 in l1 do begin
+			local l5;
+			if (l5 := GetBackupAllPackagesCursor(l3)) then begin
+					l2 := (l5:entry() <> nil)
+				end;
+			if l2 then begin
+					break
+				end
+		end);
+	l2
+end
+@@end

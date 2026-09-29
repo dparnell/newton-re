@@ -1,0 +1,11 @@
+@@ 0x558f11
+func(a1) begin
+	(foreach l1 in GetPackages() do begin
+			if (l1.store = a1) then begin
+					try begin
+							|DeActivate1.XPackage|(l1.id)
+						end onexception |evt.ex| do begin end
+				end
+		end)
+end
+@@end

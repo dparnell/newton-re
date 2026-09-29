@@ -1,0 +1,8 @@
+@@ 0x738a35
+func(a1, a2, a3) begin
+	if (if a1.class then (GetDataDefs(a1.class).superSymbol <> 'names)) then begin
+			return nil
+		end;
+	(if EntryStore(a1):IsReadOnly() then EntryCopy(a1, a3) else EntryMove(a1, a3))
+end
+@@end

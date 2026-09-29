@@ -1,0 +1,22 @@
+@@ 0x5ab901
+func(a1, tag) begin
+	l1 := func(a1) begin
+		(StrCompare(a1.tag, tag) <> 0)
+	end;
+	l2 := {type: 'index, indexPath: 'tag, startKey: tag, endTest: l1};
+	(if (l4 := Query((l3 := GetStores()[0]:GetSoup(@276)), l2):entry()) then begin
+			SetDictionaryData(a1, l4.data);
+			(if (if HasPath(l4, 'custom) then l4.custom) then begin
+					l5 := GetDictionary(a1);
+					local l1;
+					local l2;
+					local l3;
+					local l4;
+					local l5;
+					(foreach l6, l7 in l4.custom do begin
+							l5.(l6) := l4.custom.(l6)
+						end)
+				end)
+		end)
+end
+@@end

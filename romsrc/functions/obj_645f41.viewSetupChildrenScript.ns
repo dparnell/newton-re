@@ -1,0 +1,28 @@
+@@ 0x4ad66d
+func() begin
+	viewChildren := nil;
+	(if menuButtons then begin
+			l1 := Clone(menuButtons);
+			l2 := -7;
+			local l1;
+			local l2;
+			local l3;
+			(foreach l4, l5 in menuButtons do begin
+					if (if HasPath(l5, 'text) then l5.text) then begin
+							l3 := (StrFontWidth(l5.text, l5.viewFont) + outset)
+						end else begin
+							l3 := (l5.viewBounds.right - l5.viewBounds.left)
+						end;
+					l1[l4] := l3;
+					l2 := ((l2 + l3) + 7)
+				end);
+			right := (((left := (((((l7 := self:Parent():LocalBox()).right - l7.left) - l2) - 16) div 2)) + l2) + 14);
+			viewChildren := Clone(menuButtons);
+			(foreach l4, l5 in menuButtons do begin
+					local l7;
+					l3 := l1[l4];
+					viewChildren[l4] := (if (l4 > 0) then {_proto: l5, viewBounds: RelBounds(7, 0, l3, height), viewJustify: 8406022} else {_proto: l5, viewBounds: RelBounds((left + 7), 4, l3, height), viewJustify: 8388614})
+				end)
+		end)
+end
+@@end

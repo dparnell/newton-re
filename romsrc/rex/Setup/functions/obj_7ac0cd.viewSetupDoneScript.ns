@@ -1,0 +1,6 @@
+@@ 0x7ac5a1
+func() begin
+	pickBase:Refresh();
+	SetKeyView(self, 0)
+end
+@@end

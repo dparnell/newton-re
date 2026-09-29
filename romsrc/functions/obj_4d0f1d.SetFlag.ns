@@ -1,0 +1,5 @@
+@@ 0x4d0445
+func(a1) begin
+	(faxFlags := BOr(faxFlags, a1))
+end
+@@end

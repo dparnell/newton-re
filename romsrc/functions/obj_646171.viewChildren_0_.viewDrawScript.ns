@@ -1,0 +1,48 @@
+@@ 0x446941
+@@const kROM_651
+@651
+@@const kROM_622
+@622
+@@const kROM_603
+@603
+@@const kROM_604
+@604
+@@main
+func() begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11;
+	l1 := GetLocale().timeformat;
+	l2 := (if useAmPm then 4 else 9);
+	l5 := 0;
+	l6 := (if (increment < 5) then 1 else 0);
+	l8 := ((l7 := (Time mod 1440)) div 60);
+	if useAmPm then begin
+			l8 := (l8 mod 12)
+		end;
+	if (if (l8 = 0) then (l1.midNightForm <> 0)) then begin
+			l8 := 12
+		end;
+	l9 := (l7 mod 60);
+	l10 := (l8 div 10);
+	l11 := ((l1.hourLeadingZ <> 1) or (if (l1.hourLeadingZ = 1) then (l10 <> 0)));
+	if useAmPm then begin
+			l3 := '{left: 9, top: 2, right: 26, bottom: 26};
+			l4 := (if l11 then '{left: 24, top: 2, right: 41, bottom: 26} else '{left: 18, top: 2, right: 35, bottom: 26});
+			l5 := 2
+		end else begin
+			l3 := '{left: 3, top: 2, right: 20, bottom: 26};
+			l4 := '{left: 25, top: 2, right: 42, bottom: 26}
+		end;
+	DrawXBitmap('{left: 0, top: 0, right: 45, bottom: 28}, kROM_651, l5, 0);
+	if l11 then begin
+			DrawXBitmap(l3, kROM_622, l10, 1)
+		end;
+	DrawXBitmap(l4, kROM_622, (l8 mod 10), 1);
+	if (l1.timeSepStr1[0] = $:) then begin
+			DrawXBitmap('{left: 46, top: 6, right: 52, bottom: 21}, kROM_603, 0, 0)
+		end;
+	DrawXBitmap('{left: 52, top: 0, right: 97, bottom: 28}, kROM_651, l6, 0);
+	DrawXBitmap('{left: 55, top: 2, right: 72, bottom: 26}, kROM_622, (l9 div 10), 1);
+	DrawXBitmap('{left: 77, top: 2, right: 94, bottom: 26}, kROM_622, (l9 mod 10), 1);
+	(if useAmPm then DrawXBitmap('{left: 100, top: 0, right: 119, bottom: 28}, kROM_604, (l7 div 720), 0))
+end
+@@end

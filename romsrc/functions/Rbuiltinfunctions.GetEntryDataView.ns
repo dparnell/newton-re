@@ -1,0 +1,6 @@
+@@ 0x4a8add
+func(a1, a2) begin
+	local l1, l2;
+	(if ((not (l2 := (if (l1 := DataClassOf(a1)) then _viewdefs.(l1)))) or (if l2 then (not l2.(a2)))) then GetDataView(l1, a2) else l2.(a2))
+end
+@@end

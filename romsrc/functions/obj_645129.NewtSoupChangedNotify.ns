@@ -1,0 +1,13 @@
+@@ 0x4a992d
+func(a1, a2, a3, a4) begin
+	if (if (a3 = 'soupCreated) then (a4:GetStore() = GetStores()[0])) then begin
+			return nil
+		end;
+	(if ((a3 = 'SoupLeaves) or (a3 = 'SoupEnters)) then begin
+			(foreach l1, l2 in allSoups do begin
+					self:RestoreFolderPosition(l1, l2, labelsFilter)
+				end);
+			self:FilterChanged()
+		end else (if (if layout then (a2 <> appSymbol)) then AddProcrastinatedSend(Intern(Stringer([Array: appSymbol, "NewtSoupChangeForApp"])), self, 'FilterChanged, '[Array: ], 0)))
+end
+@@end

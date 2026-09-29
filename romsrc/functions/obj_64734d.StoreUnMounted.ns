@@ -1,0 +1,13 @@
+@@ 0x56b345
+func(a1) begin
+	local l1;
+	if (if (l1 := GetKeyView()) then (not IsValid(l1._proto))) then begin
+			SetKeyView(nil, 0)
+		end;
+	CloseStoreSlip(a1);
+	DeActivateStorePackages(a1);
+	AddDeferredCall(functions.CallFrameBasedRegistryFns, [Array: StoreChangeRegistry, [Array: a1, 'storeLeaves, a1:GetName()]]);
+	XmitStoreSoupsLeaving(a1);
+	true
+end
+@@end

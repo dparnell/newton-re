@@ -1,0 +1,12 @@
+@@ 0x5a5671
+func(a1, a2, a3) begin
+	local l1, l2;
+	if (not a1) then begin
+			return nil
+		end;
+	if IsRichString((l1 := GetUserConfig('mailPhoneFull))) then begin
+			SetUserConfig('mailPhoneFull, a2)
+		end;
+	(if (not (l2 := eworld:Register(nil, nil))) then (GetRoot().mailSlip.eworld := nil))
+end
+@@end

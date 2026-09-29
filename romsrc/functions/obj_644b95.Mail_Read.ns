@@ -1,0 +1,14 @@
+@@ 0x595265
+func(a1, a2) begin
+	if (not self:StartTransaction(120)) then begin
+			return nil
+		end;
+	eworld.cancelling := nil;
+	eworld.statusView := a2;
+	self:output("m6", nil, true);
+	self:output(a1, nil, true);
+	self:send(true);
+	eworld.mail_state := 'Read;
+	(eworld.lastMailID := a1)
+end
+@@end

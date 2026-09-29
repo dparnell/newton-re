@@ -1,0 +1,10 @@
+@@ 0x4ea701
+func(a1) begin
+	local l1;
+	l1 := a1.topicIndex;
+	currentItem := a1.itemIndex;
+	currentMeetingSoupFinder := a1.realFinder;
+	currentMeetingSoupFinder:ShowFoundItem(a1);
+	(if (not l1) then self:SyncMeetingSoupFinders(a1))
+end
+@@end

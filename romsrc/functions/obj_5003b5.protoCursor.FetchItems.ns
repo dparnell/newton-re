@@ -1,0 +1,28 @@
+@@ 0x50e7d9
+func(a1, a2) begin
+	local l1, l2, l3;
+	l1 := nil;
+	l2 := nil;
+	l3 := nil;
+	if calendar:IsDisplayingMeetings() then begin
+			l1 := GetAllMeetings(calendar.notes, calendar.RepeatNotes, a1, a2);
+			l2 := GetAllMeetings(calendar.MeetingSoup, calendar.RepeatSoup, a1, a2)
+		end;
+	if (if (l1 = nil) then (l2 = nil)) then begin end else begin
+			if (l1 = nil) then begin
+					l3 := l2
+				end else begin
+					if (l2 = nil) then begin
+							l3 := l1
+						end else begin
+							StableSort((l3 := ArrayMunger(l1, 0, 0, l2, 0, nil)), '|<|, 'mtgStartDate)
+						end
+				end;
+			self:InsertDateLabels(l3)
+		end;
+	if calendar:IsDisplayingToDoItems() then begin
+			l3 := self:InsertToDoItems(l3, a1, a2)
+		end;
+	l3
+end
+@@end

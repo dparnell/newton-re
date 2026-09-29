@@ -1,0 +1,17 @@
+@@ 0x4b269d
+func(a1, a2) begin
+	local l1, l2;
+	if (if a1 then IsFrame(a1.target)) then begin
+			if (not (l2 := (if IsFrame((l1 := a1.target).body) then l1.body._ioAlias))) then begin
+					a1.targetEntry := l1
+				end;
+			a1.targetTitle := l1.title;
+			if TargetIsCursor(l1) then begin
+					a1.target.targetpath := 'body
+				end else begin
+					a1.target := self:GetTargetFromEntry(l1)
+				end
+		end;
+	a1
+end
+@@end

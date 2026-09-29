@@ -1,0 +1,8 @@
+@@ 0x46f5f1
+func() begin
+	(if (BatteryStatus(0).acPower = 'yes) then return true else begin
+			self:CloseAndNotify("The chooser has been closed to conserve battery power.");
+			return nil
+		end)
+end
+@@end

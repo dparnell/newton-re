@@ -1,0 +1,12 @@
+@@ 0x55e12d
+func(a1) begin
+	local l1;
+	l1 := ShortDateStr(a1[0], 0);
+	if (a1[0] >= 61011360) then begin
+			l1 := StrMunger(l1, (StrLen(l1) - 2), 0, "20", 0, nil)
+		end;
+	SetValue(findInput.entryLine, 'text, l1);
+	selectedDates := a1;
+	self:hilite(nil)
+end
+@@end

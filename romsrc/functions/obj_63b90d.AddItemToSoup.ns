@@ -1,0 +1,7 @@
+@@ 0x4f7c89
+func(a1, a2) begin
+	self:CarefulAdd(a1, a2, true);
+	AddProcrastinatedSend('calendar, calendar, 'redisplayScript, [Array: ], 100);
+	AddUndoAction('RemoveItemFromSoup, [Array: a1, a2, true])
+end
+@@end

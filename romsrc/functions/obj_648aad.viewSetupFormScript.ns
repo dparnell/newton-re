@@ -1,0 +1,11 @@
+@@ 0x45509d
+func() begin
+	if (not self.appSymbol) then begin
+			self.appSymbol := GetRoot().cardfile.appSymbol
+		end;
+	(if IsFrame(dataClass) then begin
+			self.pickerDef := dataClass;
+			(dataClass := ClassOf(pickerDef))
+		end else (self.pickerDef := GetDataDefs(dataClass)))
+end
+@@end

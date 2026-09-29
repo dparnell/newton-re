@@ -1,0 +1,6 @@
+@@ 0x7b4599
+func() begin
+	(viewBounds := Clone(viewBounds)).left := ((viewBounds.right - StrFontWidth(text, viewFont)) - 6);
+	(viewBounds.top := (viewBounds.bottom - fontHeight(viewFont)))
+end
+@@end

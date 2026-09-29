@@ -1,0 +1,28 @@
+@@ 0x440691
+func(a1, a2) begin
+	local l1, l2;
+	a2.axis := (if ((a1 = 'left) or (a1 = 'right)) then 'horizontal else 'vertical);
+	l1 := (if (a2.tap = 'double) then ScrollAmounts[2] else (if (a2.count >= PageThreshold) then ScrollAmounts[1] else ScrollAmounts[0]));
+	l2 := (if (a2.axis = 'horizontal) then scrollXUnits else scrollYUnits);
+	a2.amount := (if ((a1 = 'left) or (a1 = 'up)) then ((-l1) * l2) else (l1 * l2));
+	(if ScrollRect then (if (a2.axis = 'horizontal) then begin
+				if ((xPos + a2.amount) < 0) then begin
+						a2.amount := (-xPos)
+					end else begin
+						if ((xPos + a2.amount) >= (ScrollRect.right - (ViewRect.right - ViewRect.left))) then begin
+								a2.amount := ((ScrollRect.right - (ViewRect.right - ViewRect.left)) - xPos)
+							end
+					end;
+				(xPos := (xPos + a2.amount))
+			end else begin
+				if ((yPos + a2.amount) < 0) then begin
+						a2.amount := (-yPos)
+					end else begin
+						if ((yPos + a2.amount) > (ScrollRect.bottom - (ViewRect.bottom - ViewRect.top))) then begin
+								a2.amount := ((ScrollRect.bottom - (ViewRect.bottom - ViewRect.top)) - yPos)
+							end
+					end;
+				(yPos := (yPos + a2.amount))
+			end))
+end
+@@end

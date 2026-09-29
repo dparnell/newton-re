@@ -1,0 +1,6 @@
+@@ 0x49c4c1
+func() begin
+	local l1;
+	(if (if (l1 := self:ChildViewFrames()) then (Length(l1) > 0)) then l1[0].targetView)
+end
+@@end

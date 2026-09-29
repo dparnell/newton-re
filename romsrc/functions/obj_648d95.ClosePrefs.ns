@@ -1,0 +1,6 @@
+@@ 0x47b889
+func() begin
+	local l1;
+	(if (if (l1 := GetRoot().(transport.owner)) then l1.viewCObject) then AddDeferredSend(l1, 'RememberedClose, [Array: self]) else self:Close())
+end
+@@end

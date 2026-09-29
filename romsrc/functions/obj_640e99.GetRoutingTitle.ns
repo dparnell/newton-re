@@ -1,0 +1,31 @@
+@@ 0x458375
+func(a1, a2, a3) begin
+	if (if a1 then (IsArray(a1) = nil)) then begin
+			l1 := self:Get(a1, primaryPath, 'text)
+		end else begin
+			if (if a1 then (Length(a1) > 0)) then begin
+					local l1;
+					(foreach l2 in a1 do begin
+							local l4;
+							l4 := self:Get(l2, primaryPath, 'text);
+							if (if l1 then StrFilled(l1)) then begin
+									l1 := ParamStr("^0, ^1", [Array: l1, l4])
+								end else begin
+									l1 := l4
+								end;
+							if (if a3 then a2) then begin
+									if (StrFontWidth(l1, a3) > a2) then begin
+											break
+										end
+								end
+						end);
+					if (if (if (if l1 then StrFilled(l1)) then a3) then a2) then begin
+							l1 := StyledStrTruncate(Clone(l1), a2, a3)
+						end
+				end else begin
+					l1 := "None"
+				end
+		end;
+	l1
+end
+@@end

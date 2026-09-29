@@ -1,0 +1,6 @@
+@@ 0x4ddf39
+func(a1) begin
+	cards := GetLocationSoup(@251):Query('{type: index, indexPath: [Array: country, name, region]});
+	(if (if a1 then (a1 <> 'deleted)) then cards:Goto(a1))
+end
+@@end

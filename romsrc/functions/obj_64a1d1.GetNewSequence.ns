@@ -1,0 +1,7 @@
+@@ 0x54ed85
+func(a1) begin
+	local l1;
+	(l1 := GetUnionSoup("Packages"):Query(self:GetQuerySpec(a1))):ResetToEnd();
+	(if l1:entry() then (l1:entry().sequence + 1) else 0)
+end
+@@end

@@ -1,0 +1,20 @@
+@@ 0x49cc39
+func() begin
+	local l1, l2;
+	(if (if (not forceNewEntry) then (not dataCursor:entry())) then self:DrawShape(self:AppEmpty(), '{}) else begin
+			if (not viewStyle) then begin
+					viewStyle := {font: viewFont}
+				end;
+			if pieces then begin
+					self:DrawShape(pieces, viewStyle)
+				end;
+			if (if dividerLine then (not nothingCheckable)) then begin
+					self:DrawShape(MakeRect((selectIndent - dividerLine), 0, selectIndent, (maxLines * lineHeight)), '{penPattern: 0, fillPattern: 3})
+				end;
+			(if hilitedIndex then begin
+					(l1 := self:LocalBox()).bottom := lineHeight;
+					self:hiliter((l2 := self:GetHiliteShape(19, l1)), hilitedIndex, 'off)
+				end)
+		end)
+end
+@@end

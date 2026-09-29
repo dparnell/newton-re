@@ -1,0 +1,5 @@
+@@ 0x5b9809
+func() begin
+	self:PrivateEntry(nil)
+end
+@@end

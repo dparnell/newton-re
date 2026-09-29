@@ -1,0 +1,30 @@
+@@ 0x55fbd9
+func(labels) begin
+	local somethingLockedSoNotFiled, somethingFiled;
+	(if selected then begin
+			if (Length(selected) = 1) then begin
+					self:ForEachSelected(func(a1) begin
+						(if EntryStore(a1):IsReadOnly() then (somethingLockedSoNotFiled := true) else begin
+								a1.labels := labels;
+								EntryChangeXmit(a1, 'find)
+							end)
+					end)
+				end else begin
+					self:ForEachSelected(func(a1) begin
+						(if EntryStore(a1):IsReadOnly() then (somethingLockedSoNotFiled := true) else begin
+								somethingFiled := true;
+								a1.labels := labels;
+								EntryChange(a1)
+							end)
+					end);
+					if somethingFiled then begin
+							XmitSoupChange(cursor:soup():GetName(), 'unknown, 'whatThe, nil)
+						end
+				end;
+			if (not (if owner.doCardRouting then waitToUnSelect)) then begin
+					selected := nil
+				end;
+			(if somethingLockedSoNotFiled then GetRoot():Notify(3, "Find", "At least one item was not filed because it is on a write-protected store."))
+		end)
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x726851
+func() begin
+	local l1;
+	label := (l1 := GetLocale()).cityLabel;
+	newDictionaries := l1.recogCityDictionaries;
+	inherited:?viewSetupFormScript()
+end
+@@end

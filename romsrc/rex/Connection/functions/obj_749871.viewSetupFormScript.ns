@@ -1,0 +1,6 @@
+@@ 0x7498e1
+func() begin
+	self.viewBounds := SetBounds(picker:LocalBox().right, 0, 0, 0);
+	(self.text := LFetch(popup, selectedStore, 0, '|=|, 'store).item)
+end
+@@end

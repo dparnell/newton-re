@@ -1,0 +1,40 @@
+@@ 0x4b5241
+func(a1, a2, a3) begin
+	local l1, l2, l3, l4;
+	l1 := nil;
+	if a1 then begin
+			if (l2 := GetVariable(GetRoot(), a1)) then begin
+					l3 := nil;
+					try begin
+							if (l2:PutAwayScript exists) then begin
+									if deleteAfterPutaway then begin
+											l3 := EntryStore(a2);
+											EntryRemoveFromSoup(a2)
+										end;
+									l1 := l2:PutAwayScript(a2)
+								end else begin
+									if (l2:PutAway exists) then begin
+											l1 := true;
+											l2:PutAway(a2)
+										end
+								end
+						end onexception |evt.ex| do begin
+							l1 := nil;
+							if l3 then begin
+									l4 := allSoups.((if self:IsInItem(a2) then 'inbox else 'outbox));
+									l4:AddEntry(a2, l3)
+								end;
+							Rethrow()
+						end;
+					if (if (not l1) then l3) then begin
+							l4 := allSoups.((if self:IsInItem(a2) then 'inbox else 'outbox));
+							l4:AddEntry(a2, l3)
+						end
+				end
+		end;
+	if l1 then begin
+			self:PutAwayCompleted(a2)
+		end;
+	l1
+end
+@@end

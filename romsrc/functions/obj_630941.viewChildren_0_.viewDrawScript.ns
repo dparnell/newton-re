@@ -1,0 +1,11 @@
+@@ 0x5b7079
+func() begin
+	local l1, l2, l3;
+	(if (not self:DrawGraphic(self:GlobalBox())) then begin
+			l2 := ShapeBounds((l1 := MakeShape(@320)));
+			l3 := self:LocalBox();
+			OffsetShape(l1, (((l3.left + l3.right) - (l2.left + l2.right)) div 2), (((l3.top + l3.bottom) - (l2.top + l2.bottom)) div 2));
+			self:DrawShape(l1, nil)
+		end)
+end
+@@end

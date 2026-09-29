@@ -1,0 +1,5 @@
+@@ 0x5b1871
+func() begin
+	(viewValue := GetUserConfig('actionSoundEffects))
+end
+@@end

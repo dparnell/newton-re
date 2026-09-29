@@ -1,0 +1,34 @@
+@@ 0x495e15
+func(a1) begin
+	l6 := self:getDestStore();
+	l3 := self:getSrcStore();
+	l7 := progressSlip;
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	local l6;
+	local l7;
+	(foreach l8 in a1 do begin
+			if IsFrame(l8) then begin
+					l2 := l8.name;
+					l5 := l8.soups
+				end else begin
+					l2 := l8;
+					l5 := [Array: l8]
+				end;
+			if self:|soupWillFit?|(l6, l3, l8, nil) then begin
+					(foreach l10 in l5 do begin
+							if (not LSearch('[Array: "Packages"], l10, 0, '|str=|, nil)) then begin
+									l7:SetStatus('vBarber, {titleText: ParamStr("Restoring \u201C\u^0\u201D\u\u2026\u", [Array: l2]), barber: true});
+									self:restore1Soup(l2, l10)
+								end
+						end)
+				end else begin
+					GetRoot():Notify(3, "Restore", ParamStr("There is not enough space to restore \u201C\u^0\u201D\u. Some items may not have been restored.", [Array: l2]));
+					Throw('|evt.ex.nofit|, -123)
+				end
+		end)
+end
+@@end

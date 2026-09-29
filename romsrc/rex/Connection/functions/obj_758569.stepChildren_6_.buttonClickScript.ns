@@ -1,0 +1,11 @@
+@@ 0x759159
+@@const kROM_8269
+@8269
+@@main
+func() begin
+	endpoint:SetState(2);
+	endpoint:WriteCommand("sync", nil, nil);
+	kROM_8269:OpenOnEndpoint('all, endpoint, nil);
+	self:DoneForNow()
+end
+@@end

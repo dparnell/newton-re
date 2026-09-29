@@ -1,0 +1,6 @@
+@@ 0x4592dd
+func(a1) begin
+	local l1;
+	((((IsSubclass((l1 := ClassOf(a1)), 'person) or IsSubclass(l1, 'company)) or IsSubclass(l1, 'owner)) or (if IsSubclass(l1, 'group) then IsInstance(a1.members, '|nameRef.fax|))) or (l1 = 'frame))
+end
+@@end

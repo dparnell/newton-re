@@ -1,0 +1,38 @@
+@@ 0x486519
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11;
+	l2 := (l1 := self:GetTargetInfo('Filing)).targetView;
+	l3 := GetStores();
+	l7 := (((l6 := ((l5 := (((l4 := 2) + Length(folderList)) - 1)) + 4)) + Length(l3)) - 1);
+	l8 := GetVariable(l2, 'labelsFilter);
+	l9 := GetVariable(l2, 'storesFilter);
+	l10 := l8;
+	l11 := l9;
+	if (a1 = 0) then begin
+			l10 := nil
+		end else begin
+			if (a1 <= l5) then begin
+					l10 := folderList[(a1 - l4)]
+				end else begin
+					if (a1 = (l5 + 2)) then begin
+							l10 := '_all
+						end else begin
+							if (a1 <= l7) then begin
+									l11 := l3[(a1 - l6)]
+								end else begin
+									if (a1 = (l7 + 2)) then begin
+											l11 := nil
+										end
+								end
+						end
+				end
+		end;
+	if (l10 <> l8) then begin
+			self:SetNewFilter(l2, 'labelsFilter, l10)
+		end;
+	if (l11 <> l9) then begin
+			self:SetNewFilter(l2, 'storesFilter, l11)
+		end;
+	self:pickCancelledScript()
+end
+@@end

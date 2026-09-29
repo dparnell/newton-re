@@ -1,0 +1,33 @@
+@@ 0x42d261
+func() begin
+	l1 := Length(items);
+	l2 := self:LocalBox().bottom;
+	if allCollapsed then begin
+			self.collapsedHeight := overViewItemProto.height;
+			self._maxIndex := max(0, (l1 - (l2 div collapsedHeight)));
+			self._curItems := Array(l1, nil);
+			local l1;
+			local l2;
+			(for l3 := 0 to (l1 - 1) do begin
+					_curItems[l3] := {itemIndex: l3, _proto: overViewItemProto}
+				end)
+		end else begin
+			self._maxIndex := (l1 - 1);
+			self._curItems := items;
+			if (l1 > 1) then begin
+					self._maxIndex := (l1 - 1);
+					l6 := items[(l1 - 1)].height;
+					(for l3 := (l1 - 2) to 0 by -1 do begin
+							local l6;
+							if ((l6 := (l6 + items[l3].height)) <= l2) then begin
+									self._maxIndex := l3
+								end else begin
+									break
+								end
+						end)
+				end
+		end;
+	index := min(_maxIndex, index);
+	(self.viewChildren := self:LayoutColumn(_curItems, index))
+end
+@@end

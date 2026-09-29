@@ -1,0 +1,5 @@
+@@ 0x4c1f2d
+func() begin
+	self:PrepScroller(true)
+end
+@@end

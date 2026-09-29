@@ -1,0 +1,9 @@
+@@ 0x4b5c15
+func(a1) begin
+	inherited:pickActionScript(a1);
+	(if (self:GetAppPreferences().sortby <> popup[a1].val) then begin
+			self:GetAppPreferences().sortby := popup[a1].val;
+			self:FilterChanged()
+		end)
+end
+@@end

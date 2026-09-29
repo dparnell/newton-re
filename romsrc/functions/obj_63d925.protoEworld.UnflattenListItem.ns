@@ -1,0 +1,29 @@
+@@ 0x59e4d9
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6;
+	l1 := Clone('{id: nil, Display: nil, label: nil, Date: nil, from: nil, title: nil});
+	l2 := ExtractLong(a1, 0);
+	l1.id := ExtractLong(a1, 4);
+	l1.Display := ExtractLong(a1, 8);
+	l1.label := ExtractBytes(a1, 12, (l2 - 12), 'string);
+	if (Length((l3 := StrParse(l1.label, "\t"))) = 3) then begin
+			l1.Date := l3[0];
+			l1.from := l3[1];
+			l1.title := l3[2];
+			if l1.Date then begin
+					if (Length((l4 := StrParse(l1.Date, "/"))) > 1) then begin
+							if ((l6 := {year: (l5 := Date(Time())).year, month: floor(StringToNumber(l4[0])), Date: floor(StringToNumber(l4[1])), hour: 0, minute: 0, second: 0}).month > l5.month) then begin
+									l6.year := (l6.year - 1)
+								end;
+							l1.timestamp := TotalMinutes(l6)
+						end else begin
+							l1.timestamp := Time()
+						end
+				end
+		end else begin
+			l1.Date := (l1.from := (l1.title := ""))
+		end;
+	BinaryMunger(a1, 0, l2, nil, 0, nil);
+	l1
+end
+@@end

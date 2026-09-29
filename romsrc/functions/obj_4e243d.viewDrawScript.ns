@@ -1,0 +1,10 @@
+@@ 0x4e241d
+func() begin
+	(if memory then begin
+			if (not pix) then begin
+					pix := [Array: MakeText("M", 3, -2, 16, 11), MakeRect(1, 1, 15, 13)]
+				end;
+			self:DrawShape(pix, '{font: 1058816})
+		end)
+end
+@@end

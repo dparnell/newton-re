@@ -1,0 +1,12 @@
+@@ 0x55dd0d
+func(a1) begin
+	if (a1 <> curLabelCommand) then begin
+			savedLabelCommand := (curLabelCommand := (findType := a1));
+			self:SetMessage("");
+			findInput:RedoChildren();
+			findDate:SyncView();
+			self:AdjustForDate()
+		end;
+	true
+end
+@@end

@@ -1,0 +1,14 @@
+@@ 0x56121d
+func(a1) begin
+	local l1, l2, l3, l4;
+	(if (if (not (l1 := items[a1]).category) then GetVariable(l1.finder, 'SelectItem)) then begin
+			l1.finder:SelectItem(l1);
+			(l2 := self:LocalBox()).bottom := ((l2.top := (lineHeight * a1)) + lineHeight);
+			l3 := MakeShape((if self:IsThisItemSelected(l1) then CheckOn else CheckOff));
+			l4 := self:GetThisCategoryItem(a1);
+			pieces[l1.listIndex][(((l1.itemIndex - l4.skip) * 2) + 1)] := OffsetShape(l3, (l2.left + checkBoxHorzOffset), (l2.top + checkBoxVertOffset));
+			self:Dirty();
+			RefreshViews()
+		end else self:Dirty())
+end
+@@end

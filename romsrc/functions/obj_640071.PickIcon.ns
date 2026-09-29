@@ -1,0 +1,6 @@
+@@ 0x4856a5
+func() begin
+	local l1;
+	(if (((not (l1 := self:GetTargetInfo('Filing))) or (not l1.targetStore)) or (l1.targetStore = GetStores()[0])) then iconInt else iconExt)
+end
+@@end

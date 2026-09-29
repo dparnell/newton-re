@@ -1,0 +1,7 @@
+@@ 0x55af09
+func(a1) begin
+	local l1;
+	(l1 := BuildContext(onlineForm)).transport := self;
+	l1:Open()
+end
+@@end

@@ -1,0 +1,26 @@
+@@ 0x797d7d names
+func(aDate, aTask) begin
+	local newTask, oldLen, text, reminder;
+	reminder := nil;
+	self:GetToDoSoup();
+	if aTask.remindForDate then begin
+			reminder := aTask.remindForDate
+		end;
+	if (if HasPath(aTask, 'repeatInfo) then (aDate <> 0)) then begin
+			aDate := 0
+		end;
+	if ((oldLen := StrLen(aTask.text)) > 0) then begin
+			text := ParamStr("copy of ^0", [Array: MakeRichString(aTask.text, aTask.styles)])
+		end else begin
+			text := "copy of blank task"
+		end;
+	newTask := self:AddTask(text, aDate, aTask.mtgPriority, aTask.mtgDone, reminder);
+	if HasPath(aTask, 'repeatInfo) then begin
+			newTask.topic.repeatInfo := Clone(aTask.repeatInfo);
+			newTask.topic.repeatDone := Clone(aTask.repeatDone);
+			EntryChangeXmit(newTask.Entry, nil)
+		end;
+	AddUndoAction('DeleteTask, [Array: aDate, newTask.topic, true]);
+	newTask
+end
+@@end

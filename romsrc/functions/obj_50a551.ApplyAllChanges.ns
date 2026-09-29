@@ -1,0 +1,48 @@
+@@ 0x5097f9
+func() begin
+	local l1, l2, l3, l4, l5, l6;
+	(try begin
+			self:UpdateText();
+			self:UpdateTime();
+			self:UpdateInviteesAndLocation();
+			self:UpdateFrequency();
+			self:UpdateDateRange();
+			l1 := self:UpdateAlarmSpec();
+			if (l2 := selectedMeeting.repeatTemplate) then begin
+					self:CarefulChange(EntrySoup(l2), l2, true)
+				end else begin
+					self:CarefulChange(EntrySoup(selectedMeeting), selectedMeeting, true)
+				end;
+			if newSplitRepeatTemplate then begin
+					selectedMeeting := self:MakeInstanceOfRepeatingMeeting(newSplitRepeatTemplate, newSplitRepeatTemplate.mtgStartDate);
+					self:InitCachedMeetingSlots()
+				end;
+			if (l1 = 'initializeAlarms) then begin
+					self:initializeAlarms()
+				end;
+			(dirtyFlag := nil)
+		end onexception |evt.ex.fr.store| do begin
+			if selectedMeeting.repeatTemplate then begin
+					l3 := selectedMeeting.repeatTemplate
+				end else begin
+					l3 := selectedMeeting
+				end;
+			l4 := CurrentException().error;
+			l5 := EntryStore(l3):GetName();
+			if (l4 = -10605) then begin
+					l6 := "^0 changes could not be saved (\u201C\u^1\u201D\u is write-protected)"
+				end else begin
+					if (l4 = -10617) then begin
+							l6 := "^0 changes could not be saved (\u201C\u^1\u201D\u is full)"
+						end
+				end;
+			if l6 then begin
+					self:Notify(3, title, ParamStr(l6, [Array: title, l5]))
+				end else begin
+					Rethrow()
+				end;
+			EntryUndoChanges(l3);
+			(dirtyFlag := nil)
+		end)
+end
+@@end

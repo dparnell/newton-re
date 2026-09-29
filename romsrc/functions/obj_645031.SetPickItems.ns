@@ -1,0 +1,8 @@
+@@ 0x46ad41
+func() begin
+	local l1;
+	l1 := cText.wordSource;
+	savedPickItems := Clone(pickItems);
+	(if (l1 = 'single) then self:SetSinglePickItems() else (if (l1 = 'external) then self:SetExternalPickItems() else (if (l1 = 'Editing) then self:SetInternalPickItems() else (if (l1 = 'pickItems) then (pickItems := pickItems) else (if (l1 = 'none) then (pickItems := nil))))))
+end
+@@end

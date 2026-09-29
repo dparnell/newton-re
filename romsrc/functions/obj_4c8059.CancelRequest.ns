@@ -1,0 +1,9 @@
+@@ 0x4c8039
+func(a1) begin
+	(if (printView = nil) then true else begin
+			inherited:CancelRequest(a1);
+			PostCommand(printView, 57);
+			nil
+		end)
+end
+@@end

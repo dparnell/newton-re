@@ -1,0 +1,15 @@
+@@ 0x519481
+func(a1) begin
+	local l1;
+	if a1.class then begin
+			l1 := a1.class
+		end else begin
+			if (ClassOf(a1.sorton) = 'name) then begin
+					l1 := 'person
+				end else begin
+					l1 := 'company
+				end
+		end;
+	GetDataDefs(l1):StringExtract(a1, 1)
+end
+@@end

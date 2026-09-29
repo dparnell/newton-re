@@ -1,0 +1,9 @@
+@@ 0x4325d1
+func() begin
+	start.Time := startTime;
+	stop.Time := stopTime;
+	start.increment := increment;
+	stop.increment := increment;
+	(basedate := (startTime - (startTime mod 1440)))
+end
+@@end

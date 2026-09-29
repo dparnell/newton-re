@@ -1,0 +1,5 @@
+@@ 0x4177a9
+func() begin
+	(if (if target then path) then target.(path) else defaultValue)
+end
+@@end

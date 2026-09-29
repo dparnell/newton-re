@@ -1,0 +1,7 @@
+@@ 0x4c8329
+func(a1) begin
+	fields.coverPage := labelCommandsId[a1];
+	userConfiguration.currentcoverpage := labelCommandsId[a1];
+	(if (if labelCommandsId[a1] then CoverPageRegistry.(labelCommandsId[a1]).hasNotes) then notes:Show() else notes:Hide())
+end
+@@end

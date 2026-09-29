@@ -1,0 +1,5 @@
+@@ 0x728c19
+func() begin
+	GetGlobals().EmailSystems.emailClasses
+end
+@@end

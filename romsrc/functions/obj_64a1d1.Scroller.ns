@@ -1,0 +1,30 @@
+@@ 0x54ccf1
+func(a1) begin
+	local l1, l2, l3, l4;
+	l1 := (((displayParams.appAreaHeight - 13) - 50) div vSpacing);
+	l2 := (self:LocalBox().right div hSpacing);
+	l3 := (l1 * l2);
+	l4 := folderItemsLen;
+	(if (((if overUp then topIndexText else topIndexIcon) + l4) > l3) then begin
+			if a1 then begin
+					if overUp then begin
+							topIndexText := max(((topIndexText - l3) + 1), 0)
+						end else begin
+							topIndexIcon := max((topIndexIcon - l3), 0)
+						end
+				end else begin
+					if overUp then begin
+							if (((topIndexText + l3) - 1) < l4) then begin
+									topIndexText := ((topIndexText + l3) - 1)
+								end
+						end else begin
+							if ((topIndexIcon + l3) < l4) then begin
+									topIndexIcon := (topIndexIcon + l3)
+								end
+						end
+				end;
+			needsRecalc := (if folderItems then 'Scroll else 'all);
+			iconSpace:RedoChildren()
+		end)
+end
+@@end

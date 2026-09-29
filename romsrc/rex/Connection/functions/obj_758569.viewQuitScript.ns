@@ -1,0 +1,9 @@
+@@ 0x7595e5
+func() begin
+	endpoint:StopIdle(self);
+	protoContext:RemoveOpenWindow(self);
+	whichConnectionOpen := nil;
+	protoContext:WhichConnectionDone();
+	(if (not closing) then endpoint:ConnectionDone(0))
+end
+@@end

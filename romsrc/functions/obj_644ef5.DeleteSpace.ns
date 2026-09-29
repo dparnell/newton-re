@@ -1,0 +1,5 @@
+@@ 0x44efc9
+func(a1, a2) begin
+	return nil
+end
+@@end

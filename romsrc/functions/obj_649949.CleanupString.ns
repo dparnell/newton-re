@@ -1,0 +1,13 @@
+@@ 0x44d835
+func(a1) begin
+	local l1;
+	StrReplace(a1, " ", "", nil);
+	StrReplace(a1, ")-", ")", 1);
+	StrReplace(a1, "()", "", 1);
+	StrReplace(a1, ")", ") ", 1);
+	if (((l1 := StrPos(a1, "-", 0)) = 0) or (l1 = (StrLen(a1) - 1))) then begin
+			StrReplace(a1, "-", "", 1)
+		end;
+	return a1
+end
+@@end

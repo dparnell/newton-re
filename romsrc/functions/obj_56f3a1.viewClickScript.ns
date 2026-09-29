@@ -1,0 +1,11 @@
+@@ 0x56f361
+func(a1) begin
+	local l1;
+	l1 := (BAnd(GetViewFlags(self), 33554432) <> 0);
+	(if (if (gameState = 'dealt) then self:TrackHilite(a1)) then begin
+			self:hilite((not l1));
+			self:Dirty();
+			true
+		end)
+end
+@@end

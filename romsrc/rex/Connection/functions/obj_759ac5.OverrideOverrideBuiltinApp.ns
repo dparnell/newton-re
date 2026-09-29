@@ -1,0 +1,10 @@
+@@ 0x75b6c1
+func(a1) begin
+	if ((not a1) or (a1 = GetRoot().Connection)) then begin
+			overrideApp := nil
+		end else begin
+			overrideApp := a1
+		end;
+	nil
+end
+@@end

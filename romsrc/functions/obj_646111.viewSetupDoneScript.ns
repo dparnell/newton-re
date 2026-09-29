@@ -1,0 +1,31 @@
+@@ 0x441a6d
+func() begin
+	local l1, l2, l3;
+	currentIndex := self:GetIndex(value);
+	if (not (canHideDigits exists)) then begin
+			self.canHideDigits := nil
+		end;
+	(if (not digitFrame) then begin
+			(digitFrame := SetBounds(0, 0, (digits.bounds.right - digits.bounds.left), (digits.bounds.bottom - digits.bounds.top))).right := (digitFrame.right div totalFrames);
+			l1 := self:LocalBox();
+			if (BAnd((l2 := viewJustify), 1) <> 0) then begin
+					digitFrame.left := (l1.right - digitFrame.right);
+					digitFrame.right := l1.right
+				end else begin
+					if (BAnd(l2, 2) <> 0) then begin
+							l3 := ((l1.right - digitFrame.right) div 2);
+							digitFrame.left := l3;
+							digitFrame.right := (digitFrame.right + l3)
+						end
+				end;
+			(if (BAnd(l2, 8) <> 0) then begin
+					digitFrame.top := (l1.bottom - digitFrame.bottom);
+					(digitFrame.bottom := l1.bottom)
+				end else (if (BAnd(l2, 4) <> 0) then begin
+						l3 := ((l1.bottom - digitFrame.bottom) div 2);
+						digitFrame.top := l3;
+						(digitFrame.bottom := (digitFrame.bottom + l3))
+					end))
+		end)
+end
+@@end

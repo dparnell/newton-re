@@ -1,0 +1,53 @@
+@@ 0x501211
+@@const kFunction_500ee1
+func(a1) begin
+	((a1 = nil) or (if IsArray(a1) then (not (foreach l1 in a1 do begin
+					if ((not IsFrame(l1)) or (not (((l1.viewStationery = 'para) or (l1.viewStationery = 'poly)) or l1.ink))) then begin
+							break true
+						end
+				end))))
+end
+@@main
+func(a1) begin
+	if (not IsFrame(a1)) then begin
+			return 1
+		end;
+	l1 := a1.viewStationery;
+	l2 := a1.viewBounds;
+	l3 := a1.mtgAlarm;
+	if (not LSearch('[Array: meeting, RepeatingMeeting, exceptionMeeting, cribNote], l1, 0, '|=|, nil)) then begin
+			return 2
+		end;
+	if (((((((if (a1.class <> nil) then (a1.class <> 'meeting)) or ((not IsInteger(a1.mtgStartDate)) or (a1.mtgStartDate <= 0))) or (if (a1.mtgDuration <> nil) then (not IsInteger(a1.mtgDuration)))) or (if (a1.mtgAlarm <> nil) then (not IsInteger(a1.mtgAlarm)))) or (if (a1.mtgIconType <> nil) then (not LSearch('[Array: meeting, WeeklyMeeting, event, MultiDayEvent, annualEvent], a1.mtgIconType, 0, '|=|, nil)))) or (not call (kFunction_500ee1) with (a1.NotesData))) or (if (l2 <> nil) then ((not IsFrame(l2)) or ((((not IsInteger(l2.left)) or (not IsInteger(l2.right))) or (not IsInteger(l2.top))) or (not IsInteger(l2.bottom)))))) then begin
+			return nil
+		end;
+	if (l1 = 'cribNote) then begin
+			l4 := a1.mtgStartDate;
+			a1.mtgStartDate := (l4 - (l4 mod 1440));
+			a1.mtgDuration := 0;
+			if (a1.mtgInvitees or a1.mtgLocation) then begin
+					return nil
+				end
+		end else begin
+			if ((if ((l5 := a1.mtgDuration) = nil) then (l1 <> 'exceptionMeeting)) or (if l5 then (l5 <= 0))) then begin
+					return nil
+				end;
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			local l5;
+			if (if (a1.mtgInvitees <> nil) then ((not IsArray(a1.mtgInvitees)) or (foreach l6 in a1.mtgInvitees do begin
+							if (not IsNameRef(l6)) then begin
+									break true
+								end
+						end))) then begin
+					return nil
+				end;
+			if (if (a1.mtgLocation <> nil) then (not IsNameRef(a1.mtgLocation))) then begin
+					return nil
+				end
+		end;
+	return 0
+end
+@@end

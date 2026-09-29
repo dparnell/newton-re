@@ -1,0 +1,43 @@
+@@ 0x52bed9
+func(a1) begin
+	l1 := 0;
+	local l1;
+	(foreach l2, l3 in a1.connectSpeeds do begin
+			if (index := SetContains('[Array: 300, 1200, 2400, 4800, 7200, 9600, 12000, 14400, 16800, 19200, 21600, 24000, 26400, 28800], l3)) then begin
+					l1 := BOr(l1, '[Array: 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192][index])
+				end
+		end);
+	l5 := (if a1.ModemIDStr then StrLen(a1.ModemIDStr) else 0);
+	l6 := (if a1.ConfigStrNoEC then StrLen(a1.ConfigStrNoEC) else 0);
+	l7 := (if a1.ConfigStrECOnly then StrLen(a1.ConfigStrECOnly) else 0);
+	l8 := (if a1.ConfigStrECAndFallback then StrLen(a1.ConfigStrECAndFallback) else 0);
+	l9 := (if a1.ConfigStrCellular then StrLen(a1.ConfigStrCellular) else 0);
+	l10 := (if a1.ConfigStrDirectConnect then StrLen(a1.ConfigStrDirectConnect) else 0);
+	l11 := ((((((l5 + l6) + l7) + l8) + l9) + l10) + 6);
+	l13 := Length((l12 := [Array: (if a1.supportsCellular then 1 else 0), (if a1.supportsEC then 1 else 0), (if a1.supportsLCS then 1 else 0), (if a1.directConnectOnly then 1 else 0), (l1 >> 24), BAnd((l1 >> 16), 255), BAnd((l1 >> 8), 255), BAnd(l1, 255), (a1.configSpeed >> 24), BAnd((a1.configSpeed >> 16), 255), BAnd((a1.configSpeed >> 8), 255), BAnd(a1.configSpeed, 255), (a1.commandTimeout >> 24), BAnd((a1.commandTimeout >> 16), 255), BAnd((a1.commandTimeout >> 8), 255), BAnd(a1.commandTimeout, 255), (a1.maxCharsPerLine >> 24), BAnd((a1.maxCharsPerLine >> 16), 255), BAnd((a1.maxCharsPerLine >> 8), 255), BAnd(a1.maxCharsPerLine, 255), (a1.interCmdDelay >> 24), BAnd((a1.interCmdDelay >> 16), 255), BAnd((a1.interCmdDelay >> 8), 255), BAnd(a1.interCmdDelay, 255), (l11 >> 24), BAnd((l11 >> 16), 255), BAnd((l11 >> 8), 255), BAnd(l11, 255)]));
+	SetLength(l12, (l13 + l11));
+	local l5;
+	local l6;
+	local l7;
+	local l8;
+	local l9;
+	local l10;
+	local l11;
+	local l12;
+	local l13;
+	(foreach l14 in '[Array: ModemIDStr, ConfigStrNoEC, ConfigStrECOnly, ConfigStrECAndFallback, ConfigStrCellular, ConfigStrDirectConnect] do begin
+			l16 := 0;
+			if a1.(l14) then begin
+					l16 := StrLen(a1.(l14));
+					local l16;
+					(for l2 := 0 to (l16 - 1) do begin
+							l12[(l13 + l2)] := ORD(a1.(l14)[l2])
+						end)
+				end;
+			l13 := (l13 + l16);
+			l12[l13] := 0;
+			l13 := (l13 + 1)
+		end);
+	{label: "mpro", type: 'option, form: 'bytes, opCode: 256, data: l12}
+end
+@@end

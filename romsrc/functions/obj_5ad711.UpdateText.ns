@@ -1,0 +1,5 @@
+@@ 0x5ad6d1
+func() begin
+	SetValue(self, 'text, ParamStr("I write this '^0'", [Array: SPrintObject(displayOrigin)]))
+end
+@@end

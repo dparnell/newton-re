@@ -1,0 +1,12 @@
+@@ 0x552b21
+func() begin
+	local l1;
+	l1 := self:ChildViewFrames();
+	if ((displayParams.buttonBarControlsPosition = 'top) or (displayParams.buttonBarControlsPosition = 'left)) then begin
+			RemoveSlot(l1, 0)
+		end else begin
+			RemoveSlot(l1, (Length(l1) - 1))
+		end;
+	l1
+end
+@@end

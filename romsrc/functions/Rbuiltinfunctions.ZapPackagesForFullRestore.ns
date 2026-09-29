@@ -1,0 +1,18 @@
+@@ 0x55a5d5
+func(a1) begin
+	local l1, l2, l3;
+	(if (l1 := GetBackupAllPackagesCursor(a1)) then begin
+			l2 := l1:entry();
+			(while l2 do begin
+					l3 := (if IsPackageEntry(l2) then l2.pkgRef);
+					EntryRemoveFromSoup(l2);
+					if IsPackageActive(l3) then begin
+							try begin
+									DeActivatePackage(l3)
+								end onexception |evt.ex| do begin end
+						end;
+					(l2 := l1:Next())
+				end)
+		end)
+end
+@@end

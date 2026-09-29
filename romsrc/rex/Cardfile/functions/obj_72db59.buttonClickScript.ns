@@ -1,0 +1,8 @@
+@@ 0x72dbb9
+func() begin
+	target.cardType := cardType;
+	appBase.allSoups.names.defaultCardType := cardType;
+	self:StartFlush();
+	self:SelectBizcard(self)
+end
+@@end

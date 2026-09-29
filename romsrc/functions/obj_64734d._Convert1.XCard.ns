@@ -1,0 +1,6 @@
+@@ 0x56b171
+func(a1) begin
+	local l1;
+	(if ((l1 := ModalCardAlert('|Convert1.XCard?|, a1, nil)) = true) then ModalCardAlert('|Convert1.XCardReally?|, a1, nil) else l1)
+end
+@@end

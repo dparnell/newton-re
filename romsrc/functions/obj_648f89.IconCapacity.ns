@@ -1,0 +1,20 @@
+@@ 0x552495
+func() begin
+	local l1, l2;
+	if (l1 := GetUserConfig('buttonBarIconSpacingH)) then begin
+			self.iconSpacingH := l1
+		end else begin
+			if self.iconSpacingH then begin
+					RemoveSlot(self, 'iconSpacingH)
+				end
+		end;
+	if (l2 := GetUserConfig('buttonBarIconSpacingV)) then begin
+			self.iconSpacingV := l2
+		end else begin
+			if self.iconSpacingV then begin
+					RemoveSlot(self, 'iconSpacingV)
+				end
+		end;
+	(if self.viewCObject then (if ((displayParams.buttonBarPosition = 'right) or (displayParams.buttonBarPosition = 'left)) then (max(0, ((displayParams.buttonBarBounds.bottom - displayParams.buttonBarBounds.top) - 40)) div iconSpacingV) else (max(0, ((displayParams.buttonBarBounds.right - displayParams.buttonBarBounds.left) - 40)) div iconSpacingH)) else 0)
+end
+@@end

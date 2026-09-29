@@ -1,0 +1,11 @@
+@@ 0x47a1a5
+func() begin
+	if GetVariable(self, 'formats) then begin
+			labelCommands := (foreach l1 in formats collect l1.title);
+			if activeFormat then begin
+					return activeFormat.title
+				end
+		end;
+	"Format Missing"
+end
+@@end

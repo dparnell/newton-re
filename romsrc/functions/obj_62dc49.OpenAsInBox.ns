@@ -1,0 +1,8 @@
+@@ 0x4b5969
+func() begin
+	local l1;
+	(l1 := self:GetAppPreferences()).whichSoup := 'inbox;
+	self:Open();
+	self:MoveBehind(nil)
+end
+@@end

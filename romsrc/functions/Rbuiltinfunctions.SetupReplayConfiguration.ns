@@ -1,0 +1,10 @@
+@@ 0x629855
+func(a1) begin
+	userConfiguration.doShapeRecognition := nil;
+	userConfiguration.SleepTime := nil;
+	userConfiguration.letterSetSelection := a1;
+	ReadCursiveOptions();
+	ReadDomainOptions();
+	RefreshViews()
+end
+@@end

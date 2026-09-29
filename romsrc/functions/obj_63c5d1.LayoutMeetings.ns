@@ -1,0 +1,53 @@
+@@ 0x4fca45
+@@const kLiteral_4f3f81
+'[Array: meeting, RepeatingMeeting, exceptionMeeting, cribNote]
+@@main
+func(a1, a2, a3, a4, a5) begin
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	local l6;
+	local l7;
+	local l8;
+	(for l1 := a3 to a4 do begin
+			local l11;
+			l5 := a1[l1];
+			if LSearch(kLiteral_4f3f81, l5.viewStationery, 0, '|=|, nil) then begin
+					l7 := l1;
+					if (not l2) then begin
+							l3 := ((l2 := a1[l1]).mtgStartDate + self:GetMeetingSlot(l2, 'mtgDuration))
+						end else begin
+							if ((l6 := l5.mtgStartDate) >= l3) then begin
+									if l8 then begin
+											self:LayoutGroup(a1, a2, l8, l4, a5);
+											l8 := nil
+										end else begin
+											if (not a2[l4]) then begin
+													a2[l4] := self:MeetingBounds(a1[l4], 0, a5)
+												end
+										end
+								end else begin
+									if (not l8) then begin
+											l8 := (l1 - 1)
+										end;
+									if (l1 = a4) then begin
+											self:LayoutGroup(a1, a2, l8, a4, a5)
+										end
+								end;
+							l3 := max(l3, (l6 + self:GetMeetingSlot(l5, 'mtgDuration)))
+						end;
+					l4 := l1
+				end else begin
+					if (if (if l8 then (l1 = a4)) then l7) then begin
+							self:LayoutGroup(a1, a2, l8, l7, a5)
+						end
+				end
+		end);
+	(if (not a2[a4]) then begin
+			l11 := a1[a4];
+			(if LSearch(kLiteral_4f3f81, l11.viewStationery, 0, '|=|, nil) then (a2[a4] := self:MeetingBounds(l11, 0, a5)) else (a2[a4] := l11.viewBounds))
+		end)
+end
+@@end

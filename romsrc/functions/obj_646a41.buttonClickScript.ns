@@ -1,0 +1,10 @@
+@@ 0x48af11
+func() begin
+	(if (if (l2 := GetUserConfig('personae)) then (Length(l2) > 1)) then begin
+			local l1;
+			local l2;
+			popup := (foreach l3 in l2 collect (if (l1 := self:PrimaryName(ResolveEntryAlias(l3))) then l1 else "(unnamed owner)"));
+			inherited:buttonClickScript()
+		end else self:hilite(nil))
+end
+@@end

@@ -1,0 +1,14 @@
+@@ 0x5ba179
+func(a1) begin
+	l1 := (bufferSize - a1);
+	local l1;
+	(for l2 := 0 to (l1 - 1) do begin
+			buffer[l2] := buffer[(l2 + a1)]
+		end);
+	(for l2 := l1 to (bufferSize - 1) do begin
+			buffer[l2] := nil
+		end);
+	cursorLoc := (cursorLoc - a1);
+	(dipStick := (dipStick - a1))
+end
+@@end

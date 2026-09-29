@@ -1,0 +1,5 @@
+@@ 0x56fd21
+func(a1) begin
+	(if a1 then (a1:Parent() = self:Parent()))
+end
+@@end

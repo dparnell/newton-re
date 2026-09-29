@@ -1,0 +1,20 @@
+@@ 0x43cd11
+func(a1) begin
+	local l1, l2;
+	InkOff(a1);
+	l1 := self:GlobalBox();
+	(loop begin
+			if _vertical then begin
+					l2 := ((((GetPoint(5, a1) - startLeft) - l1.top) * numIndices) div iconBBox.bottom)
+				end else begin
+					l2 := ((((GetPoint(4, a1) - startLeft) - l1.left) * numIndices) div iconBBox.right)
+				end;
+			if (l2 >= numIndices) then begin
+					l2 := -1
+				end;
+			self:SetHilite(l2);
+			(if StrokeDone(a1) then break)
+		end);
+	(if (curIndex >= 0) then curIndex)
+end
+@@end

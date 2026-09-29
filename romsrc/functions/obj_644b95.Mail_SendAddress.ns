@@ -1,0 +1,8 @@
+@@ 0x59586d
+func(a1) begin
+	local l1;
+	(if IsString((l1 := self:normalizeAddress(a1))) then self:atom(17, 9, l1, nil) else (foreach l2 in l1 do begin
+				self:Mail_SendAddress(l2)
+			end))
+end
+@@end

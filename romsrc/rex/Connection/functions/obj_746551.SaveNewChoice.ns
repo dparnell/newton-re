@@ -1,0 +1,14 @@
+@@ 0x74703d
+func(a1) begin
+	local l1, l2, l3;
+	if (if (l3 := self:GetConfig()) then (a1 < Length(l3))) then begin
+			l1 := l3[a1]
+		end else begin
+			l2 := self:GetWorksite((l1 := labelCommands[a1]))
+		end;
+	protoContext:ConnectionPrefsWrite(currentChoiceUserconfigTag, l1);
+	(if l2 then self:CallValidate(l2, func(a1) begin
+			self:SetNewWillDialText()
+		end) else self:SetNewWillDialText())
+end
+@@end

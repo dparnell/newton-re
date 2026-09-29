@@ -1,0 +1,7 @@
+@@ 0x46bb6d
+func(a1, a2, a3, a4) begin
+	self:SetNewWord(a1, a2);
+	self:SetNewTemplate(a3);
+	self:UseNewTemplate(a4)
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x513be1
+func(a1) begin
+	local l1;
+	if ((l1 := self) <> AgendaView) then begin
+			l1 := AgendaView:GetToDoAgendaView()
+		end;
+	l1:DoDrawing('trackOverview, [Array: a1]);
+	true
+end
+@@end

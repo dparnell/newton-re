@@ -1,0 +1,11 @@
+@@ 0x74146d
+func() begin
+	if (superSymbol = 'ownerNames) then begin
+			if IsReadOnly(viewBounds) then begin
+					viewBounds := Clone(viewBounds)
+				end;
+			viewBounds.top := 3
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

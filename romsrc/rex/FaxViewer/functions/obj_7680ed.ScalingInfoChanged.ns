@@ -1,0 +1,8 @@
+@@ 0x768b45
+func(a1) begin
+	if (a1 <> 'scroll) then begin
+			self:UpdateScrollers()
+		end;
+	vThumbFloater:Update()
+end
+@@end

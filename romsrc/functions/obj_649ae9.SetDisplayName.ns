@@ -1,0 +1,22 @@
+@@ 0x526949
+func(a1, a2, a3) begin
+	local l1, l2, l3;
+	if ((l1 := ClassOf(a2)) = 'custom) then begin
+			a1.name := {last: Clone(a3.(a2.path))};
+			l2 := true
+		end else begin
+			if (l1 = 'affiliate) then begin
+					l2 := true;
+					l3 := a3.names[a2.path];
+					if (ObjEntryClass(a1) = 'company) then begin
+							a1.company := Clone(GetRoot():bcFullName(l3))
+						end else begin
+							if (ObjEntryClass(a1) = 'person) then begin
+									a1.name := l3
+								end
+						end
+				end
+		end;
+	return l2
+end
+@@end

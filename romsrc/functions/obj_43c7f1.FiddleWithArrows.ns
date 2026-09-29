@@ -1,0 +1,6 @@
+@@ 0x43c7b1
+func() begin
+	self:SetArrow('up, (if cityList.canScrollUp then 'more else 'normal));
+	self:SetArrow('down, (if cityList.canScrollDown then 'more else 'normal))
+end
+@@end

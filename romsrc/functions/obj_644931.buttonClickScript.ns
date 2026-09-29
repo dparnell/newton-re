@@ -1,0 +1,29 @@
+@@ 0x43e905
+func() begin
+	l1 := StringFilter(text, " ", 'rejectBeginning);
+	l2 := 0;
+	local l1;
+	local l2;
+	(foreach l3, l4 in popup do begin
+			local l6;
+			if (ClassOf(l4) <> 'symbol) then begin
+					if StrEqual((l6 := (if IsFrame(l4) then l4.item else l4)), l1) then begin
+							if IsReadOnly(popup) then begin
+									popup := Clone(popup)
+								end;
+							if IsFrame(l4) then begin
+									(popup[l3] := Clone(l4)).mark := $\uFC0B
+								end else begin
+									popup[l3] := {item: l4, mark: $\uFC0B}
+								end;
+							l2 := ((-l3) * FontHeight(viewFont))
+						end else begin
+							if (if IsFrame(l4) then (not IsReadOnly(l4))) then begin
+									RemoveSlot(l4, 'mark)
+								end
+						end
+				end
+		end);
+	inherited:buttonClickScript()
+end
+@@end

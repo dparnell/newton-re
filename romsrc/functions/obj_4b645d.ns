@@ -1,0 +1,5 @@
+@@ 0x4b645d
+func() begin
+	(info := nil)
+end
+@@end

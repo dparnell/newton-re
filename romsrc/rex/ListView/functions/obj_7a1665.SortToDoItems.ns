@@ -1,0 +1,12 @@
+@@ 0x79669d names
+func(anEntry) begin
+	if EntryStore(anEntry):IsReadOnly() then begin
+			return nil
+		end;
+	StableSort(anEntry.topics, '|<|, func(t) begin
+		(t.mtgPriority + (if t.mtgDone then 10 else 0))
+	end);
+	anEntry.needsSort := nil;
+	EntryChangeXmit(anEntry, 'todo)
+end
+@@end

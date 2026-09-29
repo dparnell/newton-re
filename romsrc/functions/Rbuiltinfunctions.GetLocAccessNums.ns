@@ -1,0 +1,55 @@
+@@ 0x4808fd
+func(a1, a2) begin
+	l1 := [Array: ];
+	if a1 then begin
+			if IsEntryAlias(a1) then begin
+					a1 := ResolveEntryAlias(a1)
+				end;
+			if IsInstance(a1, 'worksite) then begin
+					l3 := ResolveEntryAlias((l2 := a1).cityAlias)
+				end else begin
+					l2 := nil;
+					l3 := a1
+				end
+		end else begin
+			if IsEntryAlias((l2 := GetUserConfig('currentEmporium))) then begin
+					l2 := ResolveEntryAlias(l2)
+				end;
+			if l2 then begin
+					l3 := ResolveEntryAlias(l2.cityAlias)
+				end else begin
+					if IsEntryAlias((l3 := GetUserConfig('location))) then begin
+							l3 := ResolveEntryAlias(l3)
+						end
+				end
+		end;
+	if (not IsArray(a2)) then begin
+			a2 := [Array: a2]
+		end;
+	if (if l2 then l2.mailAccess) then begin
+			local l1;
+			local l2;
+			local l3;
+			(foreach l4 in l2.mailAccess do begin
+					if SetContains(a2, l4.mailNetwork) then begin
+							AddArraySlot(l1, Clone(l4))
+						end
+				end)
+		end;
+	local l6;
+	l6 := (foreach l7 in l1 collect StringFilter(strtophone(l7.mailPhone), "0123456789", 'passAll));
+	(foreach l11 in a2 do begin
+			if IsArray((l13 := DialinNetworkRegistry.(l11):?GetAccessNumbers(l2, l3))) then begin
+					(foreach l7 in l13 do begin
+							local l13, l14;
+							l14 := StringFilter(strtophone(l7.mailPhone), "0123456789", 'passAll);
+							if (not LSearch(l6, l14, 0, '|str=|, nil)) then begin
+									AddArraySlot(l1, l7);
+									AddArraySlot(l6, l14)
+								end
+						end)
+				end
+		end);
+	l1
+end
+@@end

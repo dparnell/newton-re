@@ -1,0 +1,10 @@
+@@ 0x63004d
+func(a1, a2, a3, a4) begin
+	local l1, l2, l3;
+	BadWickedNaughtyNoot(Stringer([Array: "CreateAppSoup(\"", a1, ", ...)"]), 'undocumented);
+	l1 := a3[0];
+	l2 := {name: a1, userName: a1, ownerApp: l1, ownerAppName: GetAppName(l1), userDescr: a4[1], indexes: a2};
+	l3 := GetStores()[0];
+	(if (not l3:HasSoup(a1)) then CreateSoupFromSoupDef(l2, l3, l1))
+end
+@@end

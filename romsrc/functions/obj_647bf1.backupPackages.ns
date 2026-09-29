@@ -1,0 +1,101 @@
+@@ 0x495e75
+@@const kLiteral_4889e9
+"Checking size of \u201C\u^0\u201D\u\u2026\u"
+@@const kLiteral_4888e9
+"packages"
+@@main
+func(a1, a2) begin
+	local newXSoup;
+	(if (if (l2 := GetBackupAllPackagesCursor(a1)) then l2:entry()) then begin
+			l6 := progressSlip;
+			l7 := true;
+			l8 := ((a2:TotalSize() - a2:UsedSize()) - theFudgeFactor);
+			l9 := 0;
+			l10 := l2:entry();
+			(while l10 do begin
+					l6:SetStatus('vBarber, {titleText: ParamStr(kLiteral_4889e9, [Array: kLiteral_4888e9]), barber: true});
+					l9 := (l9 + EntrySize(l10));
+					(l10 := l2:Next())
+				end);
+			l2:Reset();
+			l6:SetStatus('vBarber, {titleText: ParamStr(kLiteral_4889e9, [Array: kLiteral_4888e9]), barber: true});
+			newXSoup := a2:GetSoup("BACKUP_Packages");
+			if (l8 < l9) then begin
+					l11 := 0;
+					l6:SetStatus('vBarber, {titleText: ParamStr(kLiteral_4889e9, [Array: kLiteral_4888e9]), barber: true});
+					if newXSoup then begin
+							l11 := newXSoup:GetSize()
+						end;
+					if ((l8 + l11) < l9) then begin
+							if backupCursor then begin
+									l6:SetStatus('vBarber, {titleText: ParamStr(kLiteral_4889e9, [Array: kLiteral_4888e9]), barber: true});
+									backupCursor:Reset();
+									l12 := backupSoup:Query(nil);
+									l6:SetStatus('vBarber, {titleText: ParamStr(kLiteral_4889e9, [Array: kLiteral_4888e9]), barber: true});
+									l1 := backupCursor:entry();
+									(while l1 do begin
+											l6:SetStatus('vBarber, {titleText: ParamStr(kLiteral_4889e9, [Array: kLiteral_4888e9]), barber: true});
+											if (l1.package or l1.segmentedPackage) then begin
+													l11 := (l11 + EntrySize(l1));
+													if l1.segmentedPackage then begin
+															local l1;
+															local l2;
+															local l3;
+															local l4;
+															local l5;
+															local l6;
+															local l7;
+															local l8;
+															local l9;
+															local l10;
+															local l11;
+															local l12;
+															(foreach l13 in l1.segmentedPackage do begin
+																	local l15;
+																	l6:SetStatus('vBarber, {titleText: ParamStr(kLiteral_4889e9, [Array: kLiteral_4888e9]), barber: true});
+																	if (l15 := l12:GotoKey(l13)) then begin
+																			l11 := (l11 + EntrySize(l15))
+																		end
+																end)
+														end
+												end;
+											(l1 := backupCursor:Next())
+										end);
+									if ((l8 + l11) < l9) then begin
+											l7 := nil
+										end
+								end else begin
+									l7 := nil
+								end
+						end
+				end;
+			(if l7 then begin
+					if backupCursor then begin
+							backupCursor:Reset();
+							l1 := backupCursor:entry();
+							(while l1 do begin
+									if ((l1.package or l1.segmentedPackage) or l1.patches) then begin
+											EntryRemoveFromSoupXmit(l1, 'backup)
+										end;
+									(l1 := backupCursor:Next())
+								end)
+						end;
+					l6:SetStatus('vBarber, {titleText: "Backing up packages\u2026\u", barber: true});
+					l5 := (l3 := EntrySoup(l2:entry())):GetName();
+					if newXSoup then begin
+							newXSoup:RemoveAllEntries()
+						end else begin
+							l4 := l3:GetIndexes();
+							newXSoup := a2:CreateSoup("BACKUP_Packages", l4)
+						end;
+					MapCursor(l2, func(a1) begin
+						EntryCopy(a1, newXSoup);
+						nil
+					end)
+				end else begin
+					GetRoot():Notify(3, "Backup", ParamStr("There was not enough space to backup \u201C\u^0\u201D\u. Some items may not have been backed up.", [Array: kLiteral_4888e9]));
+					Throw('|evt.ex.nofit|, -123)
+				end)
+		end)
+end
+@@end

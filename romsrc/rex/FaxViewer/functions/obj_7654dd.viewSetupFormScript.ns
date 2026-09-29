@@ -1,0 +1,17 @@
+@@ 0x76579d
+func() begin
+	self.numVisiblePages := min(9, Length(target.pages));
+	l1 := (numVisiblePages + (if (numVisiblePages > 1) then 2 else 0));
+	self.popup := Array(l1, nil);
+	local l1;
+	(for l2 := 1 to numVisiblePages do begin
+			local l5;
+			l5 := ParamStr("Page ^0", [Array: l2]);
+			popup[(l2 - 1)] := {item: l5}
+		end);
+	(if (numVisiblePages > 1) then begin
+			popup[numVisiblePages] := 'pickSeparator;
+			(popup[(numVisiblePages + 1)] := "Show Previewer")
+		end)
+end
+@@end

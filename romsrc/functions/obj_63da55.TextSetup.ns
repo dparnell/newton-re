@@ -1,0 +1,45 @@
+@@ 0x4f10a1
+func() begin
+	local l1, l2, l3;
+	if (l1 := meetingInstance.repeatTemplate) then begin
+			RepeatingView.repeatType := l1.repeatType;
+			RepeatingView.mtgInfo := l1.mtgInfo
+		end;
+	l3 := Date(meetingInstance.mtgStartDate);
+	if (l1 = nil) then begin
+			l2 := 0
+		end else begin
+			if (if (l1.repeatType = 0) then (l1.mtgInfo = BOr(4064, 31))) then begin
+					l2 := 1
+				end else begin
+					if (if (l1.repeatType = 0) then (l1.mtgInfo = BOr((2048 >> l3.dayOfWeek), 31))) then begin
+							l2 := 2
+						end else begin
+							if (l1.repeatType = 4) then begin
+									l2 := 3
+								end else begin
+									if (l1.repeatType = 2) then begin
+											l2 := 4
+										end else begin
+											if (if (l1.repeatType = 1) then (l1.mtgInfo = BOr((16 >> ((l3.Date - 1) div 7)), (2048 >> l3.dayOfWeek)))) then begin
+													l2 := 5
+												end else begin
+													if (l1.repeatType = 3) then begin
+															l2 := 6
+														end else begin
+															if (l1.repeatType = 7) then begin
+																	l2 := 7
+																end else begin
+																	l2 := 8
+																end
+														end
+												end
+										end
+								end
+						end
+				end
+		end;
+	currentLabelIndex := l2;
+	labelCommands[l2]
+end
+@@end

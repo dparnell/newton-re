@@ -1,0 +1,21 @@
+@@ 0x459731
+@@const kLiteral_450465
+SetClass(Clone("--"), '|string.noData|)
+@@main
+func(a1, a2, a3) begin
+	local l1, l2;
+	l1 := inherited:Get(a1, a2, a3);
+	if (a2 = 'email) then begin
+			if (if (not (ObjEntryClass(a1) = 'group)) then a1.email) then begin
+					l1 := a1.email
+				end;
+			if ((not l1) or IsInstance(l1, '|string.noData|)) then begin
+					l1 := (if (if (l1 := (if (l2 := EntryFromObj(a1)) then GetRoot().cardfile:bcEMailAddress(l2, preferredRouting))) then (Length(l1) > 0)) then begin
+							SortByClass(l1, preferredRouting, 'email);
+							l1[0].email
+						end else (if (a3 = 'text) then kLiteral_450465))
+				end
+		end;
+	l1
+end
+@@end

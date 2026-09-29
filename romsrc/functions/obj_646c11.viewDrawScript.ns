@@ -1,0 +1,10 @@
+@@ 0x433ad9
+func() begin
+	local l1, l2;
+	if ((l2 := (if (((l1 := (Time mod 1440)) >= 1080) or (l1 < 360)) then iconMoon else iconSun)) <> icon) then begin
+			icon := l2;
+			pix := nil
+		end;
+	inherited:viewDrawScript()
+end
+@@end

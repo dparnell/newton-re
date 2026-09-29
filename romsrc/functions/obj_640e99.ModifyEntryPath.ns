@@ -1,0 +1,14 @@
+@@ 0x457bad
+@@const kLiteral_4559fd
+{person: SetClass(Clone("Untitled Person"), '|string.noData|), owner: SetClass(Clone("Untitled Owner"), '|string.noData|), company: SetClass(Clone("Untitled Company"), '|string.noData|), group: SetClass(Clone("Untitled Group"), '|string.noData|), worksite: SetClass(Clone("Untitled Worksite"), '|string.noData|)}
+@@main
+func(a1, a2, a3) begin
+	local l1, l2;
+	l1 := ObjEntryClass(a1);
+	(if (a3 = primaryPathMapper.(l1)) then begin
+			l2 := (a2.(a3) := a1.(a3));
+			a2.sorton := (if l2 then (if ((l1 = 'person) or (l1 = 'owner)) then (if l2.last then ParamStr("^1 ^0", [Array: l2.first, l2.last]) else (if l2.first then l2.first)) else l2) else Clone(kLiteral_4559fd.(l1)));
+			GetRoot().cardfile:SetIAClass(a2)
+		end else (a2.(a3) := a1.(a3)))
+end
+@@end

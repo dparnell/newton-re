@@ -1,0 +1,6 @@
+@@ 0x5b3589
+func() begin
+	items := ModemLocations;
+	inherited:viewSetupFormScript()
+end
+@@end

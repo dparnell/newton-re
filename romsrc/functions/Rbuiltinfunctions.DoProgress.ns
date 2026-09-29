@@ -1,0 +1,38 @@
+@@ 0x480d95
+@@const kNativeFuncClass
+call func(f) if IsFrame(f) then f.class else f[0] with (GetGlobalFn('StrLen))
+@@const kLiteral_480b19
+{class: kNativeFuncClass, funcPtr: 7028204, numArgs: 0}
+@@const kFunction_480bf5
+func(a1, a2) begin
+	self:viewSet({name: a1, values: a2});
+	call kLiteral_480b19 with ();
+	(if (self.runFlag = nil) then Throw('|evt.ex.cancel|, 666))
+end
+@@const kFunction_480c15
+func(a1) begin
+	(self.runFlag := nil)
+end
+@@const kLiteral_480c35
+{modalStatus: true, runFlag: true, icon: @14, SetStatus: kFunction_480bf5, CancelRequest: kFunction_480c15, _proto: @467}
+@@const kLiteral_41954d
+{class: kNativeFuncClass, funcPtr: 7027162, numArgs: 2}
+@@main
+func(a1, a2, a3) begin
+	local l1, l2;
+	(l1 := BuildContext(kLiteral_480c35)).initialSetup := {name: a1, values: a2, appSymbol: 'progressSlip};
+	l1:FilterDialog();
+	try begin
+			l2 := call kLiteral_41954d with (a3, [Array: l1])
+		end onexception |evt.ex.cancel| do begin
+			l2 := 'Cancel
+		end onexception |evt.ex| do begin
+			RemoveSlot(GetRoot(), 'progressSlip);
+			l1:Close();
+			Rethrow()
+		end;
+	RemoveSlot(GetRoot(), 'progressSlip);
+	l1:Close();
+	l2
+end
+@@end

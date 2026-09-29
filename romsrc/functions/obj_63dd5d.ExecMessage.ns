@@ -1,0 +1,11 @@
+@@ 0x462ac5
+func(a1) begin
+	local l1;
+	l1 := messageList[a1];
+	RemoveSlot(messageList, a1);
+	if (Length(messageList) = 0) then begin
+			AddDeferredSend(self, 'Close, nil)
+		end;
+	(if (ClassOf(l1) = 'NotifyAction) then Apply(l1.fn, l1.args) else notification:ShowItem(l1, nil))
+end
+@@end

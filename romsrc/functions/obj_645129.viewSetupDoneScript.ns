@@ -1,0 +1,11 @@
+@@ 0x4a9cc1
+func() begin
+	(if allSoups then (foreach l1 in allSoups do begin
+				if l1.soupName then begin
+						RegSoupChange(l1.soupName, appSymbol, func(a1, a2, a3, a4) begin
+							self:NewtSoupChangedNotify(a1, a2, a3, a4)
+						end)
+					end
+			end))
+end
+@@end

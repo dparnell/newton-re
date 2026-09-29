@@ -1,0 +1,12 @@
+@@ 0x44d4a5
+func(a1) begin
+	local l1;
+	if (not (l1 := StringToTime(a1))) then begin
+			l1 := Time()
+		end;
+	if ((a1 := HourMinute(l1))[1] = $:) then begin
+			StrMunger(a1, 0, 0, "0", 0, 1)
+		end;
+	return a1
+end
+@@end

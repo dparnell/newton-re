@@ -1,0 +1,9 @@
+@@ 0x48417d
+func(a1) begin
+	(if Visible(self) then begin
+			filingSlip:SyncView();
+			filingSlip:RedoChildren();
+			(if (doCardRouting <> 'onlyCardRouting) then fileArea.folderCluster:SetToFolder(a1))
+		end)
+end
+@@end

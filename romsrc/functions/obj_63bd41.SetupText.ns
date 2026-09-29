@@ -1,0 +1,31 @@
+@@ 0x48a7d9
+func() begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10;
+	l1 := (self:Parent():LocalBox().right div 2);
+	l3 := 0;
+	l4 := 0;
+	if (if (if self:Parent() then self:Parent().fields) then IsEntryAlias(self:Parent().fields.fromRef)) then begin
+			l5 := self:Parent().fields.fromRef
+		end else begin
+			l5 := GetUserConfig('currentPersona)
+		end;
+	if l5 then begin
+			l6 := ResolveEntryAlias(l5);
+			l3 := StrFontWidth((l2 := StrTruncate(Stringer([Array: $\uFC02, self:PrimaryName(l6)]), l1)), viewFont);
+			l4 := (l4 + 1)
+		end;
+	l7 := GetUserConfig('currentEmporium);
+	l8 := StrTruncate((l8 := Stringer([Array: $\uFC02, (if l7 then ResolveEntryAlias(l7).place else GetUserConfig('location).name)])), l1);
+	l2 := Stringer([Array: (if l2 then Stringer([Array: l2, $\n])), l8]);
+	l3 := max(l3, StrFontWidth(l8, viewFont));
+	l4 := (l4 + 1);
+	l9 := self:GlobalBox();
+	if (l3 <> (l9.right - l9.left)) then begin
+			(l10 := (viewBounds := Clone(viewBounds))).right := (l10.left + l3)
+		end;
+	if ((l4 := (l4 * FontHeight(viewFont))) <> (l9.bottom - l9.top)) then begin
+			(l10 := (viewBounds := Clone(viewBounds))).bottom := (l10.top + l4)
+		end;
+	l2
+end
+@@end

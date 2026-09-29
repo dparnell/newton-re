@@ -1,0 +1,17 @@
+@@ 0x74ed19
+func() begin
+	local l1, l2;
+	(if (currentSelection <> nil) then (if self:VerifyAlias((l1 := currentFiles[currentIndex])) then begin
+				if HasPath(l1, 'whichVol) then begin
+						l2 := {name: l1.name, whichVol: l1.whichVol}
+					end else begin
+						l2 := l1.name
+					end;
+				checkCommandsInIdle := nil;
+				protoContext:OpenGetInfoDialog(endpoint, l2, currentSelection, currentPath);
+				AddDeferredCall(func() begin
+					(checkCommandsInIdle := true)
+				end, [Array: ])
+			end))
+end
+@@end

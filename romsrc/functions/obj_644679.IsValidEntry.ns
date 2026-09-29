@@ -1,0 +1,14 @@
+@@ 0x4d7955
+func(a1) begin
+	if (not IsFrame(a1)) then begin
+			return 1
+		end;
+	if (not (if (if HasSlot(a1, 'viewStationery) then HasSlot(a1, 'class)) then HasSlot(a1, 'height))) then begin
+			return 2
+		end;
+	if (a1.height < 0) then begin
+			return 3
+		end;
+	a1
+end
+@@end

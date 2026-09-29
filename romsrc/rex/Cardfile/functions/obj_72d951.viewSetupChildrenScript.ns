@@ -1,0 +1,43 @@
+@@ 0x72dc55
+func() begin
+	l1 := 20;
+	l2 := 15;
+	l4 := (l3 := self:LocalBox()).right;
+	l5 := l3.bottom;
+	self.stepChildren := Clone(stepChildren);
+	l8 := Length(stepChildren);
+	l7 := stepChildren[(l8 - 1)];
+	SetLength(stepChildren, (l8 - 1));
+	if (not (l10 := target.cardType)) then begin
+			l10 := 0
+		end;
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	local l6;
+	local l7;
+	local l8;
+	local l9;
+	local l10;
+	(foreach l6 in GetViewDefs(target.class) do begin
+			if (l6.type = 'bizcard) then begin
+					if (l10 = l6.bizCardNum) then begin
+							l9 := stylesViewFormat
+						end else begin
+							l9 := 0
+						end;
+					BInsertRight(stepChildren, {_proto: l7, icon: l6.bizCardIcon, cardType: l6.bizCardNum, viewJustify: 0, viewFormat: l9}, '|<|, 'cardType, nil)
+				end
+		end);
+	(foreach l12 in stepChildren do begin
+			if ((l2 + 38) >= l4) then begin
+					l2 := 15;
+					l1 := ((l1 + 23) + 20)
+				end;
+			l12.viewBounds := RelBounds(l2, l1, 38, 23);
+			l2 := ((l2 + 38) + 15)
+		end)
+end
+@@end

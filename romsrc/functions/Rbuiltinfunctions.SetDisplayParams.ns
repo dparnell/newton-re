@@ -1,0 +1,9 @@
+@@ 0x419645
+func(a1) begin
+	SetUserConfig('screenOrientation, a1.orientation);
+	SetOrientation(a1.orientation);
+	displayParams := a1;
+	GetRoot():FixupDisplay();
+	VerifyCalibration()
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x54cda5
+func(a1) begin
+	topIndexIcon := 0;
+	topIndexText := 0;
+	self:SavePrefs();
+	self:RedoIcons()
+end
+@@end

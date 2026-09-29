@@ -1,0 +1,9 @@
+@@ 0x7613fd
+func() begin
+	local l1, l2;
+	(if phonenumber then phonenumber else begin
+			l1 := GetRoot().Connection;
+			(if (if (l2 := l1:GetWorksite(prefsFrame.phoneCurrentChoice)) then l2.connectionPhone) then self:MungePhone(MakePhone({areacode: l2.areacode, phone: l2.connectionPhone}), l1:WorksiteToCountry(l2)) else "")
+		end)
+end
+@@end

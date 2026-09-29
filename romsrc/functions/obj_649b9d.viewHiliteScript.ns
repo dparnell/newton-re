@@ -1,0 +1,8 @@
+@@ 0x54b779
+func(a1) begin
+	if (not checked) then begin
+			self:DrawShape(MakeRect(20, 0, hSpacing, vSpacing), '{transferMode: 2, penPattern: 0, fillPattern: 5})
+		end;
+	true
+end
+@@end

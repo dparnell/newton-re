@@ -1,0 +1,56 @@
+@@ 0x5953ed
+func() begin
+	local l1, l2, l3, l4;
+	(if (l1 := eworld.mail_out) then begin
+			self:StartStream("m5");
+			if l1.attachment then begin
+					if (not l1.IsPackage) then begin
+							l2 := l1.text;
+							l3 := l1.labels;
+							if (l4 := l1.fromRef.emailPassword) then begin
+									l1.fromRef.emailPassword := nil
+								end;
+							if (not userConfiguration.mailSendText) then begin
+									l1.text := nil
+								end;
+							if l1.labels then begin
+									l1.labels := nil
+								end;
+							try begin
+									eworld.file_out := self:frametofile(l1)
+								end onexception |evt.ex| do begin
+									self:HandleThrow()
+								end;
+							eworld.file_out.filename := "newton";
+							eworld.file_out.type := "newt";
+							eworld.file_out.creator := "DOCK";
+							l1.text := l2;
+							if l4 then begin
+									l1.fromRef.emailPassword := l4
+								end;
+							if l3 then begin
+									l1.labels := l3
+								end
+						end else begin
+							eworld.file_out := l1.body
+						end;
+					self:atom(17, 7, nil, nil);
+					self:atom(17, 20, 1, nil);
+					self:atom(17, 21, eworld.file_out.filename, nil);
+					self:atom(17, 23, 247, nil);
+					self:atom(17, 22, eworld.file_out.filesize, nil);
+					self:atom(17, 8, nil, nil)
+				end;
+			if l1.receipt then begin
+					self:atom(17, 26, 1, nil)
+				end;
+			if ((not l1.text) or (StrLen(l1.text) = 0)) then begin
+					self:atom(17, 11, " ", 'encoded)
+				end else begin
+					self:atom(17, 11, l1.text, 'encoded)
+				end;
+			self:atom(17, 2, nil, nil);
+			self:SendStream()
+		end)
+end
+@@end

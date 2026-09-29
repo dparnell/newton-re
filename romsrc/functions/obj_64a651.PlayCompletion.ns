@@ -1,0 +1,10 @@
+@@ 0x426211
+func(a1, a2) begin
+	inherited:PlayCompletion(a1, a2);
+	(if self:TestState(1) then begin
+			self:FastForward();
+			RefreshViews();
+			self:Rewind()
+		end)
+end
+@@end

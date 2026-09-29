@@ -1,0 +1,15 @@
+@@ 0x49d6c1
+func(a1, a2, a3) begin
+	(if (a2 < selectIndent) then begin
+			self:SelectItem(a1);
+			checkAllPrimed := nil;
+			hilitedIndex := nil;
+			true
+		end else begin
+			hiliteEntry := nil;
+			cursor:move(a1);
+			dataCursor:Goto(cursor:entry());
+			newtAppBase:ShowLayout(nil)
+		end)
+end
+@@end

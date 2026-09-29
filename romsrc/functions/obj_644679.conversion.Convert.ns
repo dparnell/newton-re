@@ -1,0 +1,7 @@
+@@ 0x4d7889
+func(a1, a2, a3, a4) begin
+	local l1, l2;
+	l1 := self:GetCurrentVersion(a1);
+	(if SetContains((l2 := [Array: 'oneO, 'twoO]), a3) then (if (if (l1 <> 'twoO) then (a3 = 'twoO)) then self:ConvertEntryto20(a1, true, a4) else (if (if (l1 <> 'oneO) then (a3 = 'oneO)) then self:ConvertEntryto10(a1, true) else a1)))
+end
+@@end

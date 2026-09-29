@@ -1,0 +1,9 @@
+@@ 0x48a369
+func() begin
+	if (if pickerSlip then pickerSlip.viewCObject) then begin
+			return nil
+		end;
+	inPeoplePicker := true;
+	(pickerSlip := _picker:New(class, DeepClone(selected), self, nil))
+end
+@@end

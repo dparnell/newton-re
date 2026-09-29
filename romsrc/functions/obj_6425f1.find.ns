@@ -1,0 +1,37 @@
+@@ 0x4ddd09
+func(a1, a2, a3, a4) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10;
+	if a4 then begin
+			a4:SetStatus(Stringer([Array: "Searching in", " ", worldClock.title, $\u2026]))
+		end;
+	if (ClassOf(a1) = 'Array) then begin
+			l5 := a1
+		end else begin
+			l5 := SplitString(a1)
+		end;
+	l1 := [Array: ];
+	l6 := GetLocationSoup(@251):Query({type: 'words, words: l5});
+	l7 := GetLocationSoup(@251):Query('{type: index, indexPath: [Array: country, name, region]});
+	l3 := l6:entry();
+	(while l3 do begin
+			l8 := true;
+			if (not l3.kind) then begin
+					l7:Goto(l3);
+					if (if (l9 := l7.realCurs:prev()) then ((l9.kind = 'delete) or (l9.kind = 'Replace))) then begin
+							l8 := nil
+						end
+				end else begin
+					if (l3.kind = 'delete) then begin
+							l8 := nil
+						end
+				end;
+			if l8 then begin
+					l4 := FindStringInFrame(l3, l5, true);
+					l10 := (if l3.country then GetCountryEntry(l3.country)[0]);
+					AddArraySlot(l1, {title: ParamStr("^0^?1 ^1||^?2, ^3||", [Array: l3.name, l3.region, (not StrEqual(l3.name, l10.name)), l10.name]), owner: worldClock, entry: MakeEntryAlias(l3), entryID: EntryUniqueID(l3), storeID: EntryStore(l3):GetSignature(), found: l4})
+				end;
+			(l3 := l6.realCurs:Next())
+		end);
+	(if (Length(l1) > 0) then AddArraySlot(a2, {_proto: wcCompatibleFinder, owner: self, cursor: l6, findWhat: l5, items: l1}))
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x4708f5
+func() begin
+	zoneLabel:Hide();
+	zoneName:Hide();
+	zonesButton:Hide()
+end
+@@end

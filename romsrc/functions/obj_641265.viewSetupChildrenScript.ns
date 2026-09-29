@@ -1,0 +1,8 @@
+@@ 0x5a9221
+func() begin
+	self:SetUpDictionary();
+	self:RebuildCursorWindow("");
+	self:SelectFirst();
+	(A2Z.curIndex := 0)
+end
+@@end

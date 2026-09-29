@@ -1,0 +1,8 @@
+@@ 0x49e955
+func() begin
+	if keyButton then begin
+			newtAppBase.(keyButton) := self
+		end;
+	inherited:?viewSetupDoneScript()
+end
+@@end

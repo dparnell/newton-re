@@ -1,0 +1,6 @@
+@@ 0x5227bd
+func() begin
+	local l1;
+	(l1 := self:ChildViewFrames())[1]:Hide()
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x5169e9
+func() begin
+	(if (not drawShapes) then (try begin
+				self:CreateShapes()
+			end onexception |evt.ex.nextpage| do begin
+				nil
+			end))
+end
+@@end

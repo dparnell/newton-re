@@ -1,0 +1,6 @@
+@@ 0x4d4d31
+func(a1, a2) begin
+	local l1;
+	ArrayMunger((l1 := Array((a2 - 1), nil)), 0, (a2 - 1), a1, 1, nil)
+end
+@@end

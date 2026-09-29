@@ -1,0 +1,6 @@
+@@ 0x452fb5
+func(a1) begin
+	InkOff(a1);
+	(if readOnly then true else inherited:viewClickScript(a1))
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x432ded
+func(a1) begin
+	selectedDates[0] := (Time := (((Time mod 1440) + a1[0]) - (a1[0] mod 1440)));
+	context:?NewTime(Time)
+end
+@@end

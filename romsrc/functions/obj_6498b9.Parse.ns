@@ -1,0 +1,13 @@
+@@ 0x44d2e5
+func(a1) begin
+	local l1, l2, l3;
+	l1 := @783;
+	if (l2 := StringToDate(a1)) then begin
+			l3 := ShortDateStr(l2, 0)
+		end;
+	if ((if (if a1 then l3) then StrEqual(a1, l3)) or (StrLen(a1) = 0)) then begin
+			l1 := @786
+		end;
+	return l1
+end
+@@end

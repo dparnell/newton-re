@@ -1,0 +1,20 @@
+@@ 0x42b7fd
+func() begin
+	l4 := tabbase:ChildViewFrames();
+	l1 := (vOrg * (hOrg + 1));
+	if l4 then begin
+			l2 := Length(l4)
+		end else begin
+			l2 := 0
+		end;
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	(foreach l3 in tabbase.selectedCells do begin
+			if (if (l3 >= l1) then ((l3 - l1) < l2)) then begin
+					l4[(l3 - l1)]:hilite(true)
+				end
+		end)
+end
+@@end

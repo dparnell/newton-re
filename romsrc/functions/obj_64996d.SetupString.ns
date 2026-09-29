@@ -1,0 +1,5 @@
+@@ 0x44dc5d
+func(a1) begin
+	(if HasPath(curTemplate, 'SetupString) then curTemplate:SetupString(self, a1) else a1)
+end
+@@end

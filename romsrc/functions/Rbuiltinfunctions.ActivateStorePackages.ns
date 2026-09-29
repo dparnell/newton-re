@@ -1,0 +1,33 @@
+@@ 0x558e8d
+func(a1) begin
+	local l1, l2, l3, l4, l5;
+	l1 := a1:GetName();
+	l2 := true;
+	l3 := (a1 = GetStores()[0]);
+	if (if (l4 := PenPos()) then ((l4.x < 40) or (l4.y < 40))) then begin
+			if l3 then begin
+					l2 := ModalConfirm("Do you want to activate the packages on the internal store?", '[Array: {value: true, text: "Activate"}, {value: nil, text: "No"}])
+				end else begin
+					l2 := ModalCardAlert('|ActivatePackages?|, a1:CardSlot(), l1)
+				end
+		end;
+	if (l2 = true) then begin
+			if (l5 := (try begin
+					(if (a1.version >= 4) then |ActivateStore2.XPackages|(a1) else |ActivateStore1.XPackages|(a1))
+				end onexception |evt.ex| do begin
+					{errList: ""}
+				end)).dupList then begin
+					GetRoot():Notify(3, "Newton", ParamStr("Some packages on the store \u201C\u^0\u201D\u conflict with the names of packages already in use: ^1", [Array: l1, l5.dupList]))
+				end;
+			if l5.errList then begin
+					GetRoot():Notify(3, "Newton", ParamStr("Errors occurred activating packages on the store \u201C\u^0\u201D\u: ^1", [Array: l1, l5.errList]))
+				end
+		end else begin
+			if (if l3 then (l4.y < 40)) then begin
+					call @808 with ()
+				end
+		end;
+	XmitPackageOp('ActivateStorePackages);
+	return l2
+end
+@@end

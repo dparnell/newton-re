@@ -1,0 +1,6 @@
+@@ 0x77140d
+func() begin
+	TotalPayments:SetNumericValueString(nil);
+	TotalInterest:SetNumericValueString(nil)
+end
+@@end

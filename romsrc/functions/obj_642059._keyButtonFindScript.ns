@@ -1,0 +1,6 @@
+@@ 0x44a889
+func(a1) begin
+	clicker();
+	GetRoot().findDrawer:PrimeAndOpen()
+end
+@@end

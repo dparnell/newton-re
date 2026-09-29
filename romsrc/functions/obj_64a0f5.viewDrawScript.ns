@@ -1,0 +1,22 @@
+@@ 0x56f201
+@@const kBinaryFromHex
+func(hex, cls) begin
+	local b := MakeBinary(StrLen(hex) div 2, cls);
+	for i := 0 to Length(b) - 1 do begin
+		local h := Ord(hex[2 * i]);
+		local l := Ord(hex[2 * i + 1]);
+		StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+	end;
+	b
+end
+@@const kLiteral_56f01d
+{bounds: '{left: 0, top: 0, right: 36, bottom: 10}, bits: call kBinaryFromHex with ("000000000008000000000000000a0024000000000000000036040201000000007f0e0703800000007f1f0707c00000007f3f9acfe00000007f3fbfefe00000003e359ac7c00000001c0e070380000000081f0f81000000000000000000000000", 'bits), colordata: [Array: {cbits: call kBinaryFromHex with ("000000000014000000000000000a002400000000000000000000000000000000000000000077077000000f00000000f00000000700000000077777770000fff000000fff000000777000000007777777000fffff00000fff00000777770000000777777700fffffff00ff0f0ff007777777000000777777700fffffff0fffffffff07777777000000077777000ff0f0ff00ff0f0ff00077777000000000777000000fff000000fff000000777000000000007000000fffff0000fffff0000007000000000000000000000000000000000000000000000000", 'cbits), bitdepth: 4}, {cbits: call kBinaryFromHex with ("000000000008000000000000000a0024000000000000000036040201000000007f0e0703800000007f1f0707c00000007f3f9acfe00000007f3fbfefe00000003e359ac7c00000001c0e070380000000081f0f81000000000000000000000000", 'bits), bitdepth: 1}]}
+@@main
+func() begin
+	local l1, l2;
+	l2 := ((l1 := self:GetCard()) div 13);
+	DrawXBitmap('{left: 2, top: 2, right: 11, bottom: 12}, kLiteral_56f01d, l2, 0);
+	DrawXBitmap('{left: 19, top: 33, right: 28, bottom: 43}, kLiteral_56f01d, l2, 0);
+	self:DrawShape(MakeText('[Array: "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"][(l1 mod 13)], 0, 16, 30, 28), '[Array: {font: @91, justification: center, textPattern: 277383304}, {font: @91, justification: center}, {font: @91, justification: center}, {font: @91, justification: center, textPattern: 277383304}][l2])
+end
+@@end

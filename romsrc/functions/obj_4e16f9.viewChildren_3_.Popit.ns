@@ -1,0 +1,6 @@
+@@ 0x4df4f1
+func(a1) begin
+	params := {spots: country.regions, zoomer: country.continent, default: fullName};
+	inherited:Popit(a1)
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x76e0a1
+func(a1) begin
+	calcLineValue := a1;
+	self:RedoChildren()
+end
+@@end

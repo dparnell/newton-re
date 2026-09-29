@@ -1,0 +1,11 @@
+@@ 0x440639
+func(a1) begin
+	l1 := scrollerState[DirMap.(a1)];
+	local l1;
+	(foreach l2, l3 in StateMap do begin
+			if (l3 = l1) then begin
+					break l2
+				end
+		end)
+end
+@@end

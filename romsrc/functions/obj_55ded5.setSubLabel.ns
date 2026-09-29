@@ -1,0 +1,15 @@
+@@ 0x55deb5
+func() begin
+	local l1, l2;
+	if (curLabelCommand = 0) then begin
+			SetValue(findDate, 'text, "");
+			entryFlags := (findTextFlags + self:CheckFlags())
+		end else begin
+			SetValue(findDate, 'text, Stringer([Array: " ", " ", labelCommands[curLabelCommand]]));
+			entryFlags := findDateFlags
+		end;
+	l2 := (StrFontWidth(labelLine.text, labelFont) + 6);
+	l1 := (StrFontWidth(findDate.text, labelFont) + 6);
+	(indent := max(l2, l1))
+end
+@@end

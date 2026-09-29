@@ -1,0 +1,10 @@
+@@ 0x750609
+func() begin
+	local l1;
+	(if (currentSelection <> nil) then (if self:VerifyAlias((l1 := currentFiles[currentIndex])) then begin
+				closing := true;
+				protoContext:FileBrowserClose(endpoint);
+				(if (callWhenDone exists) then call callWhenDone with (endpoint, nil, whichFiles, currentSelection, currentPath))
+			end))
+end
+@@end

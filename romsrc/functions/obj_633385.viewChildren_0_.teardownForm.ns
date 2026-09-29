@@ -1,0 +1,8 @@
+@@ 0x4cada9
+func() begin
+	if notesArea.notesDirty then begin
+			fields.comments := notesArea.target.data
+		end;
+	(fields := nil)
+end
+@@end

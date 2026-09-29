@@ -1,0 +1,6 @@
+@@ 0x3c6965
+func(a1, a2) begin
+	SetTimeRegistry.(EnsureInternal(a1)) := a2;
+	nil
+end
+@@end

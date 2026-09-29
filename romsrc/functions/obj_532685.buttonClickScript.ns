@@ -1,0 +1,12 @@
+@@ 0x532645
+func() begin
+	if optionsUp then begin
+			callOptionsSlip:Close()
+		end;
+	optionsUp := nil;
+	(foreach l1 in selected do begin
+			RemoveSlot(l1, 'asIsPhone)
+		end);
+	inherited:buttonClickScript()
+end
+@@end

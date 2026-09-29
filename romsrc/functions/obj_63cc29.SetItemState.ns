@@ -1,0 +1,5 @@
+@@ 0x42ae8d
+func(a1, a2) begin
+	(if (childrenType = 'radioButton) then self:SetClusterValue(a1) else self:ChildViewFrames()[a1]:SetCheck(a2))
+end
+@@end

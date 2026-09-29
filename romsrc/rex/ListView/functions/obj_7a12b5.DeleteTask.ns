@@ -1,0 +1,6 @@
+@@ 0x79f03d names
+func(aDate, aTask, aRedraw) begin
+	list:DeleteTask(aDate, aTask, aRedraw);
+	base:Close()
+end
+@@end

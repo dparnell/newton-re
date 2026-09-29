@@ -1,0 +1,6 @@
+@@ 0x42e889
+func() begin
+	inherited:TextSetup();
+	(if target.(path) then ShortDateStr(target.(path), Date))
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x4ded6d
+func() begin
+	closestKey := nil;
+	self:flush()
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x47fd7d
+func(a1) begin
+	GetRoot().(owner):ioDeleteScript(a1.target, a1.targetView)
+end
+@@end

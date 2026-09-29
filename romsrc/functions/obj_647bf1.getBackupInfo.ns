@@ -1,0 +1,29 @@
+@@ 0x496099
+@@const kFunction_48e42d
+func(a1) begin
+	local l1;
+	(not (if (l1 := a1:GetAllInfo()) then l1.version))
+end
+@@const kROM_556
+@556
+@@main
+func() begin
+	local l1, l2;
+	(if (l1 := call (kFunction_48e42d) with (backupSoup)) then begin
+			(l2 := backupCursor:clone()):Reset();
+			(if (backupInfo := l2:entry()) then begin
+					(while (if backupInfo then (not backupInfo.backupDate)) do (backupInfo := l2:Next()));
+					(if (not backupInfo) then begin
+							GetRoot():Notify(3, kROM_556, "Some items in the backup info seem to be incorrect. Restore at your own risk!");
+							(if (not backupInfo) then begin
+									l2:Reset();
+									((backupInfo := l2:entry()).backupDate := 13584276)
+								end)
+						end)
+				end else (backupInfo := nil))
+		end else (if (if (if (backupInfo := backupSoup:GetAllInfo()) then (not backupInfo.backupDate)) then backupInfo.soupType) then begin
+				GetRoot():Notify(3, kROM_556, "The backup info seems to be incorrect. Restore at your own risk!");
+				(backupInfo.backupDate := 13584276)
+			end))
+end
+@@end

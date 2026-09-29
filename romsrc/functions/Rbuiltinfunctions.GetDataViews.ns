@@ -1,0 +1,6 @@
+@@ 0x4a8b41
+func(a1) begin
+	local l1;
+	(if (not (l1 := (if a1 then _viewdefs.(a1)))) then {default: GetDataView(a1, 'default)} else l1)
+end
+@@end

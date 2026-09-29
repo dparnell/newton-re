@@ -1,0 +1,9 @@
+@@ 0x481cb9
+func() begin
+	local l1, l2;
+	(if (if (l1 := self:path()) then HasSlot(l1, name)) then (icon := l1.(name)) else begin
+			l2 := GetRoot();
+			(if (if appSymbol then HasSlot(l2, appSymbol)) then (icon := l2.(appSymbol).icon))
+		end)
+end
+@@end

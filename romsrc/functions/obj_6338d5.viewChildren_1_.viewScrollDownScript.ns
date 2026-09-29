@@ -1,0 +1,6 @@
+@@ 0x5b4f1d
+func() begin
+	local l1;
+	(if ((l1 := min(((Length(cursor.things) - cursor.index) - maxLines), (maxLines - 1))) > 0) then self:SlideEffect(((-l1) * lineHeight), 0, @85, 'Scroller, [Array: l1]))
+end
+@@end

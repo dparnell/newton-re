@@ -1,0 +1,5 @@
+@@ 0x5a3f61
+func(a1) begin
+	(if a1.fromRef then GetDataDefs(addressingClass):GetRoutingTitle(a1.fromRef, nil, nil) else a1.from)
+end
+@@end

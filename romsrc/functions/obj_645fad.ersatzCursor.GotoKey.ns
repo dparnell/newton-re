@@ -1,0 +1,13 @@
+@@ 0x45040d
+@@const kFunction_4503ad
+func(a1, a2) begin
+	(if BeginsWith(a2, a1) then 0 else StrCompare(a1, a2))
+end
+@@main
+func(a1) begin
+	local l1;
+	inherited:GotoKey((l1 := (if IsInstance(a1, 'string) then BSearchLeft(things, a1, kFunction_4503ad, func(a1) begin
+			pickerDef:Get(a1, pickerDef._sortPath, 'sortText)
+		end) else a1)))
+end
+@@end

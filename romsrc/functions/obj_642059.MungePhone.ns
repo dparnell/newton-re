@@ -1,0 +1,208 @@
+@@ 0x4d3789
+@@const kLiteral_480691
+"0123456789"
+@@const kFunction_4d2a45
+func(a1, a2) begin
+	local l1, l2, l3, l4;
+	l1 := StrLen(a2);
+	(if StrEqual((l3 := Substr((l2 := (if a1.areacode then a1.areacode else a1.digitPhone)), 0, l1)), a2) then begin
+			l4 := Substr(l2, l1, nil);
+			if (l2 = a1.areacode) then begin
+					a1.areacode := l4
+				end else begin
+					a1.digitPhone := l4;
+					a1.phone := StripDigits(a1.phone, l1, true)
+				end;
+			return true
+		end)
+end
+@@const kFunction_4d2ab1
+func(a1, a2) begin
+	(a1.prefix := Stringer([Array: a2, " ", a1.prefix]))
+end
+@@const kFunction_4d2b19
+func(a1, a2) begin
+	(a1.suffix := Stringer([Array: a1.suffix, a2]))
+end
+@@const kLiteral_4d2969
+"0123456789>!,#*wp"
+@@main
+func(a1, a2) begin
+	local v5_zzzzzzzyyyyyyyyyyyy, v6_xwwwwwwwwwww, v7_wwwvvvvvvvvvvvvv, v8_qqqqqqppp, v9_yyyyxxxxxxxx, v10_jjjii, v11_yyyyyyyyyyyxxxxxxxxxxxxxxx, v12_wwwwwwwwwwwwvvvvvvv, v13_zzzzzzzzzzzzzzzzzzzzzz, v14_yyyyyyyxxxxxxxx, v15_uutttttt, v16_tttttttttttt, v17_yyyx, v18_xxxxxxxxxxxxxxxxxxxxxxxxww, v19_vvvvvvvvvvvvvvvvvvu, v20_zzzzzzzzzzzzzzzzzzyyyy, v21_yyyxxxxxxxxxxxx, v22_xxxxwwwwwwwwwwwwwww, v23_ttttttttssss, v24_xxxw, v25_vvvvvuuu, v26_uuuuuuuuuuut, v27_zzzzzyyyyyyyyyyyyyyyyy;
+	v9_yyyyxxxxxxxx := (if userConfiguration.currentEmporium then ResolveEntryAlias(userConfiguration.currentEmporium) else {});
+	if IsRichString(a1) then begin
+			return Clone("")
+		end;
+	if (if (if StrFilled((v26_uuuuuuuuuuut := userConfiguration).dialingPrefix) then StrFilled(a1)) then BeginsWith(a1, v26_uuuuuuuuuuut.dialingPrefix)) then begin
+			a1 := Substr(a1, StrLen(v26_uuuuuuuuuuut.dialingPrefix), nil)
+		end;
+	v6_xwwwwwwwwwww := Stringer([Array: $ , (if StrFilled(v9_yyyyxxxxxxxx.CCDelay) then v9_yyyyxxxxxxxx.CCDelay else ",,,,"), " ", v26_uuuuuuuuuuut.callingCard]);
+	if (if (if StrFilled(v26_uuuuuuuuuuut.callingCard) then StrFilled(a1)) then EndsWith(a1, v6_xwwwwwwwwwww)) then begin
+			a1 := Substr(a1, 0, (StrLen(a1) - StrLen(v6_xwwwwwwwwwww)))
+		end;
+	if (v27_zzzzzyyyyyyyyyyyyyyyyy := ParsePhone(a1)).areacode then begin
+			v27_zzzzzyyyyyyyyyyyyyyyyy.areacode := StringFilter(strtophone(v27_zzzzzyyyyyyyyyyyyyyyyy.areacode), "0123456789!", 'passAll)
+		end;
+	v27_zzzzzyyyyyyyyyyyyyyyyy.phone := strtophone(v27_zzzzzyyyyyyyyyyyyyyyyy.phone);
+	if ((v25_vvvvvuuu := v26_uuuuuuuuuuut.currentCountry) = 'Canada) then begin
+			v25_vvvvvuuu := 'USA
+		end;
+	v27_zzzzzyyyyyyyyyyyyyyyyy.digitPhone := StringFilter(v27_zzzzzyyyyyyyyyyyyyyyyy.phone, kLiteral_480691, 'passAll);
+	if (ClassOf(a2) = 'symbol) then begin
+			v11_yyyyyyyyyyyxxxxxxxxxxxxxxx := a2
+		end else begin
+			if StrFilled(a2) then begin
+					v11_yyyyyyyyyyyxxxxxxxxxxxxxxx := self:CountryLookup(a2)
+				end else begin
+					v11_yyyyyyyyyyyxxxxxxxxxxxxxxx := v26_uuuuuuuuuuut.countrySlot
+				end
+		end;
+	if (v11_yyyyyyyyyyyxxxxxxxxxxxxxxx = 'Canada) then begin
+			v11_yyyyyyyyyyyxxxxxxxxxxxxxxx := 'USA
+		end;
+	v24_xxxw := (Time() >= 48808740);
+	if (if (v11_yyyyyyyyyyyxxxxxxxxxxxxxxx = 'HongKong) then (StrLen(v27_zzzzzyyyyyyyyyyyyyyyyy.digitPhone) = 7)) then begin
+			v27_zzzzzyyyyyyyyyyyyyyyyy.digitPhone := Stringer([Array: $2, v27_zzzzzyyyyyyyyyyyyyyyyy.digitPhone]);
+			v27_zzzzzyyyyyyyyyyyyyyyyy.phone := Stringer([Array: $2, v27_zzzzzyyyyyyyyyyyyyyyyy.phone])
+		end;
+	v22_xxxxwwwwwwwwwwwwwww := (if (if (v22_xxxxwwwwwwwwwwwwwww := GetCountryEntry(v11_yyyyyyyyyyyxxxxxxxxxxxxxxx)) then (Length(v22_xxxxwwwwwwwwwwwwwww) > 0)) then v22_xxxxwwwwwwwwwwwwwww[0] else {});
+	v14_yyyyyyyxxxxxxxx := (if (if (v14_yyyyyyyxxxxxxxx := GetCountryEntry(v25_vvvvvuuu)) then (Length(v14_yyyyyyyxxxxxxxx) > 0)) then v14_yyyyyyyxxxxxxxx[0] else {});
+	if v11_yyyyyyyyyyyxxxxxxxxxxxxxxx then begin
+			v23_ttttttttssss := v22_xxxxwwwwwwwwwwwwwww.inPrefix
+		end;
+	if (if v24_xxxw then (v11_yyyyyyyyyyyxxxxxxxxxxxxxxx = 'France)) then begin
+			v23_ttttttttssss := "0"
+		end;
+	v17_yyyx := ((not v23_ttttttttssss) or (if (if v23_ttttttttssss then (v11_yyyyyyyyyyyxxxxxxxxxxxxxxx <> 'USA)) then call (kFunction_4d2a45) with (v27_zzzzzyyyyyyyyyyyyyyyyy, v23_ttttttttssss)));
+	if (if (if v11_yyyyyyyyyyyxxxxxxxxxxxxxxx then v25_vvvvvuuu) then (v11_yyyyyyyyyyyxxxxxxxxxxxxxxx <> v25_vvvvvuuu)) then begin
+			if (if (v11_yyyyyyyyyyyxxxxxxxxxxxxxxx = 'Austria) then call (kFunction_4d2a45) with (v27_zzzzzyyyyyyyyyyyyyyyyy, "222")) then begin
+					call (kFunction_4d2ab1) with (v27_zzzzzyyyyyyyyyyyyyyyyy, $1)
+				end;
+			v18_xxxxxxxxxxxxxxxxxxxxxxxxww := v22_xxxxwwwwwwwwwwwwwww.countryCode;
+			v19_vvvvvvvvvvvvvvvvvvu := v14_yyyyyyyxxxxxxxx.outgoing;
+			if (if v26_uuuuuuuuuuut.longDistanceCarrier then HasSlot(v26_uuuuuuuuuuut.accessNumbers, v26_uuuuuuuuuuut.longDistanceCarrier)) then begin
+					v15_uutttttt := v26_uuuuuuuuuuut.accessNumbers.(v26_uuuuuuuuuuut.longDistanceCarrier);
+					if (if v25_vvvvvuuu then v15_uutttttt.(v25_vvvvvuuu)) then begin
+							v19_vvvvvvvvvvvvvvvvvvu := v15_uutttttt.(v25_vvvvvuuu)
+						end;
+					if (if (if (v25_vvvvvuuu = 'USA) then v9_yyyyxxxxxxxx.use800s) then v15_uutttttt.USA800) then begin
+							v19_vvvvvvvvvvvvvvvvvvu := v15_uutttttt.USA800
+						end;
+					v19_vvvvvvvvvvvvvvvvvvu := Stringer([Array: v19_vvvvvvvvvvvvvvvvvvu, (if StrFilled(v9_yyyyxxxxxxxx.LDAccessDelay) then v9_yyyyxxxxxxxx.LDAccessDelay else $,)]);
+					if (v11_yyyyyyyyyyyxxxxxxxxxxxxxxx = 'USA) then begin
+							v18_xxxxxxxxxxxxxxxxxxxxxxxxww := nil
+						end
+				end else begin
+					if StrFilled(v26_uuuuuuuuuuut.longDistanceAccess) then begin
+							v19_vvvvvvvvvvvvvvvvvvu := Stringer([Array: StringFilter(v26_uuuuuuuuuuut.longDistanceAccess, allDigitsPlus, 'passAll), ","])
+						end
+				end;
+			if (if StrFilled(v26_uuuuuuuuuuut.callingCard) then v14_yyyyyyyxxxxxxxx.outgoingCC) then begin
+					call (kFunction_4d2ab1) with (v27_zzzzzyyyyyyyyyyyyyyyyy, Stringer([Array: v19_vvvvvvvvvvvvvvvvvvu, " ", v14_yyyyyyyxxxxxxxx.outgoingCC, " ", v18_xxxxxxxxxxxxxxxxxxxxxxxxww]))
+				end else begin
+					call (kFunction_4d2ab1) with (v27_zzzzzyyyyyyyyyyyyyyyyy, Stringer([Array: v19_vvvvvvvvvvvvvvvvvvu, " ", v18_xxxxxxxxxxxxxxxxxxxxxxxxww]))
+				end;
+			if (if (v25_vvvvvuuu = 'USA) then (not StrFilled(v26_uuuuuuuuuuut.dialingPrefix))) then begin
+					call (kFunction_4d2b19) with (v27_zzzzzyyyyyyyyyyyyyyyyy, " #")
+				end
+		end else begin
+			if (v11_yyyyyyyyyyyxxxxxxxxxxxxxxx = v25_vvvvvuuu) then begin
+					v19_vvvvvvvvvvvvvvvvvvu := v23_ttttttttssss;
+					if (if (v11_yyyyyyyyyyyxxxxxxxxxxxxxxx = 'USA) then StrFilled(v26_uuuuuuuuuuut.callingCard)) then begin
+							v19_vvvvvvvvvvvvvvvvvvu := $0
+						end;
+					if (if v26_uuuuuuuuuuut.longDistanceCarrier then HasSlot(v26_uuuuuuuuuuut.accessNumbers, v26_uuuuuuuuuuut.longDistanceCarrier)) then begin
+							v15_uutttttt := v26_uuuuuuuuuuut.accessNumbers.(v26_uuuuuuuuuuut.longDistanceCarrier);
+							if (if v25_vvvvvuuu then v15_uutttttt.(v25_vvvvvuuu)) then begin
+									v20_zzzzzzzzzzzzzzzzzzyyyy := v15_uutttttt.(v25_vvvvvuuu)
+								end;
+							if (if (if (v25_vvvvvuuu = 'USA) then v9_yyyyxxxxxxxx.use800s) then v15_uutttttt.USA800) then begin
+									v20_zzzzzzzzzzzzzzzzzzyyyy := v15_uutttttt.USA800
+								end;
+							v20_zzzzzzzzzzzzzzzzzzyyyy := Stringer([Array: v20_zzzzzzzzzzzzzzzzzzyyyy, (if StrFilled(v9_yyyyxxxxxxxx.LDAccessDelay) then v9_yyyyxxxxxxxx.LDAccessDelay else $,)])
+						end else begin
+							if StrFilled(v26_uuuuuuuuuuut.longDistanceAccess) then begin
+									v20_zzzzzzzzzzzzzzzzzzyyyy := Stringer([Array: StringFilter(v26_uuuuuuuuuuut.longDistanceAccess, kLiteral_4d2969, 'passAll), $,])
+								end
+						end;
+					if (not StrFilled((v10_jjjii := (if v26_uuuuuuuuuuut.currentAreaCode then v26_uuuuuuuuuuut.currentAreaCode else "")))) then begin
+							if (if (if v26_uuuuuuuuuuut.phone then (v7_wwwvvvvvvvvvvvvv := ParsePhone(v26_uuuuuuuuuuut.phone))) then v7_wwwvvvvvvvvvvvvv.areacode) then begin
+									v10_jjjii := v7_wwwvvvvvvvvvvvvv.areacode
+								end else begin
+									if (if (if v26_uuuuuuuuuuut.homePhone then (v7_wwwvvvvvvvvvvvvv := ParsePhone(v26_uuuuuuuuuuut.homePhone))) then v7_wwwvvvvvvvvvvvvv.areacode) then begin
+											v10_jjjii := v7_wwwvvvvvvvvvvvvv.areacode
+										end else begin
+											if (if (if v26_uuuuuuuuuuut.faxPhone then (v7_wwwvvvvvvvvvvvvv := ParsePhone(v26_uuuuuuuuuuut.faxPhone))) then v7_wwwvvvvvvvvvvvvv.areacode) then begin
+													v10_jjjii := v7_wwwvvvvvvvvvvvvv.areacode
+												end
+										end
+								end
+						end;
+					v10_jjjii := StringFilter(v10_jjjii, kLiteral_480691, 'passAll);
+					if v23_ttttttttssss then begin
+							v13_zzzzzzzzzzzzzzzzzzzzzz := StrLen(v23_ttttttttssss);
+							if StrEqual(Substr(v10_jjjii, 0, v13_zzzzzzzzzzzzzzzzzzzzzz), v23_ttttttttssss) then begin
+									v10_jjjii := Substr(v10_jjjii, v13_zzzzzzzzzzzzzzzzzzzzzz, nil)
+								end
+						end;
+					if (not v27_zzzzzyyyyyyyyyyyyyyyyy.areacode) then begin
+							v16_tttttttttttt := 0;
+							if (if (v11_yyyyyyyyyyyxxxxxxxxxxxxxxx = 'USA) then (StrLen(v27_zzzzzyyyyyyyyyyyyyyyyy.digitPhone) > 7)) then begin
+									call (kFunction_4d2a45) with (v27_zzzzzyyyyyyyyyyyyyyyyy, "1");
+									v16_tttttttttttt := 3
+								end else begin
+									if v17_yyyx then begin
+											v16_tttttttttttt := StrLen(v10_jjjii)
+										end
+								end;
+							v8_qqqqqqppp := Substr(v27_zzzzzyyyyyyyyyyyyyyyyy.digitPhone, 0, v16_tttttttttttt);
+							call (kFunction_4d2a45) with (v27_zzzzzyyyyyyyyyyyyyyyyy, v8_qqqqqqppp);
+							v27_zzzzzyyyyyyyyyyyyyyyyy.areacode := v8_qqqqqqppp;
+							if (if (if StrFilled(v26_uuuuuuuuuuut.callingCard) then (not StrFilled(v27_zzzzzyyyyyyyyyyyyyyyyy.areacode))) then StrFilled(v27_zzzzzyyyyyyyyyyyyyyyyy.phone)) then begin
+									v27_zzzzzyyyyyyyyyyyyyyyyy.areacode := v10_jjjii
+								end
+						end;
+					if (if (v11_yyyyyyyyyyyxxxxxxxxxxxxxxx = 'USA) then StrEqual(v27_zzzzzyyyyyyyyyyyyyyyyy.areacode, "800")) then begin
+							call (kFunction_4d2ab1) with (v27_zzzzzyyyyyyyyyyyyyyyyy, $1)
+						end else begin
+							if (if (if StrFilled(v10_jjjii) then StrEqual(v10_jjjii, v27_zzzzzyyyyyyyyyyyyyyyyy.areacode)) then (not StrFilled(v26_uuuuuuuuuuut.callingCard))) then begin
+									v27_zzzzzyyyyyyyyyyyyyyyyy.areacode := nil
+								end else begin
+									if (StrFilled(v27_zzzzzyyyyyyyyyyyyyyyyy.areacode) or v27_zzzzzyyyyyyyyyyyyyyyyy.prefix) then begin
+											if (if StrFilled(v27_zzzzzyyyyyyyyyyyyyyyyy.phone) then (v27_zzzzzyyyyyyyyyyyyyyyyy.phone[0] = $()) then begin
+													v27_zzzzzyyyyyyyyyyyyyyyyy.phone := Substr(v27_zzzzzyyyyyyyyyyyyyyyyy.phone, 1, nil);
+													v19_vvvvvvvvvvvvvvvvvvu := Stringer([Array: $(, v19_vvvvvvvvvvvvvvvvvvu])
+												end;
+											call (kFunction_4d2ab1) with (v27_zzzzzyyyyyyyyyyyyyyyyy, v19_vvvvvvvvvvvvvvvvvvu)
+										end
+								end
+						end;
+					if StrFilled(v27_zzzzzyyyyyyyyyyyyyyyyy.phone) then begin
+							call (kFunction_4d2ab1) with (v27_zzzzzyyyyyyyyyyyyyyyyy, v20_zzzzzzzzzzzzzzzzzzyyyy)
+						end;
+					if (if v24_xxxw then (v25_vvvvvuuu = 'France)) then begin
+							call (kFunction_4d2ab1) with (v27_zzzzzyyyyyyyyyyyyyyyyy, $0)
+						end
+				end
+		end;
+	if StrFilled(v27_zzzzzyyyyyyyyyyyyyyyyy.areacode) then begin
+			v27_zzzzzyyyyyyyyyyyyyyyyy.areacode := Stringer([Array: StringFilter(v27_zzzzzyyyyyyyyyyyyyyyyy.areacode, kLiteral_480691, 'passAll), $ ])
+		end;
+	if (if StrFilled((v5_zzzzzzzyyyyyyyyyyyy := Stringer([Array: v27_zzzzzyyyyyyyyyyyyyyyyy.prefix, v27_zzzzzyyyyyyyyyyyyyyyyy.areacode, v27_zzzzzyyyyyyyyyyyyyyyyy.phone]))) then StrFilled(v26_uuuuuuuuuuut.dialingPrefix)) then begin
+			v5_zzzzzzzyyyyyyyyyyyy := Stringer([Array: StringFilter(v26_uuuuuuuuuuut.dialingPrefix, kLiteral_4d2969, 'passAll), " ", v5_zzzzzzzyyyyyyyyyyyy])
+		end;
+	if v27_zzzzzyyyyyyyyyyyyyyyyy.suffix then begin
+			v5_zzzzzzzyyyyyyyyyyyy := Stringer([Array: v5_zzzzzzzyyyyyyyyyyyy, v27_zzzzzyyyyyyyyyyyyyyyyy.suffix])
+		end;
+	v12_wwwwwwwwwwwwvvvvvvv := (if StrFilled(v26_uuuuuuuuuuut.callingCard) then v6_xwwwwwwwwwww);
+	if v27_zzzzzyyyyyyyyyyyyyyyyy.extension then begin
+			if StrFilled(v5_zzzzzzzyyyyyyyyyyyy) then begin
+					v21_yyyxxxxxxxxxxxx := Stringer([Array: " ,,,,", " ", v27_zzzzzyyyyyyyyyyyyyyyyy.extension])
+				end else begin
+					v12_wwwwwwwwwwwwvvvvvvv := nil;
+					v5_zzzzzzzyyyyyyyyyyyy := Clone(v27_zzzzzyyyyyyyyyyyyyyyyy.extension)
+				end
+		end;
+	Stringer([Array: v5_zzzzzzzyyyyyyyyyyyy, v12_wwwwwwwwwwwwvvvvvvv, v21_yyyxxxxxxxxxxxx])
+end
+@@end

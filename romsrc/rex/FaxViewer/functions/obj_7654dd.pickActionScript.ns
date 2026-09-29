@@ -1,0 +1,10 @@
+@@ 0x765919
+func(a1) begin
+	if ((a1 + 1) <= numVisiblePages) then begin
+			imageContainer:GotoPage((a1 + 1))
+		end else begin
+			vPageNavigator:ToggleNavigator(imageContainer:GetCurrentPage())
+		end;
+	self:hilite(nil)
+end
+@@end

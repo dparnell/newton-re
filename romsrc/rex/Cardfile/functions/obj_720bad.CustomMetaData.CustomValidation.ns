@@ -1,0 +1,14 @@
+@@ 0x736685
+func(a1) begin
+	local l1;
+	local l2;
+	(foreach l3, l4 in (l2 := '[Array: custom1, custom2, custom3, custom4, custom5, custom6, custom7, custom8, custom9, custom10]) do begin
+			if (l1 := a1.(l4)) then begin
+					if (not IsInstance(l1, 'string)) then begin
+							RemoveSlot(a1, l3)
+						end;
+					SetClass(l1, '|string.custom|)
+				end
+		end)
+end
+@@end

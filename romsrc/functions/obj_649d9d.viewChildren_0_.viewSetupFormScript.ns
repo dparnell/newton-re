@@ -1,0 +1,41 @@
+@@ 0x4c3009
+func() begin
+	local l1, l2, l3, l4, l5;
+	if firstTime then begin
+			inherited:?viewSetupFormScript();
+			viewBounds := Clone(viewBounds)
+		end;
+	if target then begin
+			l1 := target;
+			if (if (if targetViewDef then targetViewDef.rollScrolling) then l1.height) then begin
+					viewJustify := 48;
+					viewBounds.bottom := l1.height;
+					l3 := ((l2 := self:Parent():LocalBox()).bottom - l2.top);
+					if (currentSoupSymbol = 'outbox) then begin
+							l4 := (l3 div 3);
+							viewBounds.bottom := (viewBounds.bottom + l4)
+						end;
+					if (viewBounds.bottom < (viewOriginY + l3)) then begin
+							viewBounds.bottom := (viewOriginY + l3)
+						end
+				end else begin
+					viewJustify := 240;
+					viewBounds.bottom := 0
+				end;
+			if firstTime then begin
+					transport := GetItemTransport(target);
+					if (if (if target then transport) then (not transport:ignoreError(target.error))) then begin
+							l5 := transport:TranslateError(target.error);
+							self:Notify(3, "Last error detected:", l5);
+							target.error := nil;
+							EntryChange(target)
+						end;
+					if target.Remote then begin
+							self:DoRequest(transport, 'ReceiveRequest, 'Remote, target)
+						end;
+					firstTime := nil
+				end
+		end;
+	(newtAppBase.ioEntryView := self)
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x740afd
+func() begin
+	inherited:?viewSetupFormScript();
+	self:Retarget(nil)
+end
+@@end

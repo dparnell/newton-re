@@ -1,0 +1,17 @@
+@@ 0x63d7e5
+func() begin
+	local l1, l2;
+	if (userConfiguration.letterSetSelection <> 2) then begin
+			if (if (l2 := GetTaggedEntry("LetterWeights2.0")) then l2.data) then begin
+					SetLetterWeights(l2.data);
+					l1 := true
+				end;
+			if userConfiguration.bigLearningEnabled then begin
+					if (if (l2 := GetTaggedEntry("LearningData2.0")) then l2.data) then begin
+							SetLearningData(l2.data)
+						end
+				end
+		end;
+	l1
+end
+@@end

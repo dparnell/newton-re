@@ -1,0 +1,6 @@
+@@ 0x530a65
+func(a1) begin
+	local l1;
+	(if (if a1 then (l1 := CommConfigRegistry.(a1))) then l1 else {name: "Telephone"})
+end
+@@end

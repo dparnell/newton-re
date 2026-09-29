@@ -1,0 +1,10 @@
+@@ 0x47fc31
+@@const kFunction_47f521
+func(a1) begin
+	GetRoot().(a1):ResurrectStatusDialog()
+end
+@@main
+func() begin
+	(if (activeNotify = nil) then (activeNotify := GetRoot().notifyIcon:AddAction(title, kFunction_47f521, [Array: appSymbol])))
+end
+@@end

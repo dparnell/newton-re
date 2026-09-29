@@ -1,0 +1,5 @@
+@@ 0x523001
+func() begin
+	self:DrawShape(aboutText, nil)
+end
+@@end

@@ -1,0 +1,15 @@
+@@ 0x753d2d
+func() begin
+	if fSetup.SingleSelectOnly then begin
+			self.useMultipleSelections := nil
+		end;
+	if fSetup.AppListInfo.selected then begin
+			self.selectedItems := Clone(fSetup.AppListInfo.selected)
+		end;
+	self:SetupList();
+	fResults.appList := Array(Length(self.selectedItems), nil);
+	(foreach l1, l2 in self.selectedItems do begin
+			fResults.appList[l1] := self.listItems[l2]
+		end)
+end
+@@end

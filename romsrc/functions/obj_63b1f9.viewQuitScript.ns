@@ -1,0 +1,6 @@
+@@ 0x56e4e1
+func() begin
+	SetRemove(OpenCardViews, self);
+	inherited:?viewQuitScript()
+end
+@@end

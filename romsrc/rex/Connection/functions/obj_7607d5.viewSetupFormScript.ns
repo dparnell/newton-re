@@ -1,0 +1,6 @@
+@@ 0x760909
+func() begin
+	self.text := configOptions.buttonTitle;
+	(self.viewBounds := {left: (((-StrWidth(text)) - 6) - 7), top: 0, right: -7, bottom: 0})
+end
+@@end

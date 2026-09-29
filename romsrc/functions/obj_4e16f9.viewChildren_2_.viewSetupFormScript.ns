@@ -1,0 +1,8 @@
+@@ 0x4df1ad
+func() begin
+	local l1;
+	place := (l1 := ResolveEntryAlias(closestKey)).name;
+	params := {spots: @251, default: l1, result: nil};
+	inherited:?viewSetupFormScript()
+end
+@@end

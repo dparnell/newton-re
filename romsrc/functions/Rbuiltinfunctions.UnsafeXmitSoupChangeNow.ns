@@ -1,0 +1,7 @@
+@@ 0x569d41
+func(a1, a2, a3, a4) begin
+	(foreach l1 in GetSoupChangeCallBacks(a1, nil) do begin
+			call l1 with (a1, a2, a3, a4)
+		end)
+end
+@@end

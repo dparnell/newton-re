@@ -1,0 +1,6 @@
+@@ 0x4263b1
+func(a1, a2) begin
+	inherited:RecordCompletion(a1, a2);
+	(if self:TestState(1) then self:Rewind())
+end
+@@end

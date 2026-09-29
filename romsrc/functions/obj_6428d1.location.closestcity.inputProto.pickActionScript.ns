@@ -1,0 +1,16 @@
+@@ 0x48df05
+func(a1) begin
+	target.cityAlias := [Array: a1.name, a1.longitude, a1.latitude];
+	if (not target.countrySymbol) then begin
+			target.countrySymbol := a1.country
+		end;
+	if (not target.areacode) then begin
+			target.areacode := a1.areacode
+		end;
+	if (not StrFilled(target.country)) then begin
+			target.country := GetCountryEntry(a1.country)[0].name
+		end;
+	self:StartFlush();
+	inherited:pickActionScript(a1.name)
+end
+@@end

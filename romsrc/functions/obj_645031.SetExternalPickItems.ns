@@ -1,0 +1,8 @@
+@@ 0x46abf5
+func() begin
+	local l1, l2;
+	l2 := correctInfo:FindNew((l1 := refCon).form, l1.wordOffset, l1.wordLength);
+	pickItems := nil;
+	(if l2 then (pickItems := l2:GetWords()))
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x5b3f05
+func() begin
+	labelCommands := SoundList();
+	inherited:?viewSetupFormScript()
+end
+@@end

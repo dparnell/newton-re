@@ -1,0 +1,6 @@
+@@ 0x51a71d
+func() begin
+	CuPage := self;
+	SetKeyView(self, 0)
+end
+@@end

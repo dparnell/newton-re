@@ -1,0 +1,8 @@
+@@ 0x73598d
+func() begin
+	superSymbol := 'ownerNames;
+	RemoveSlot(self, 'viewBounds);
+	RemoveSlot(self, 'viewJustify);
+	self:Open()
+end
+@@end

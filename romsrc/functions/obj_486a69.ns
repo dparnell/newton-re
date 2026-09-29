@@ -1,0 +1,5 @@
+@@ 0x486a69
+func() begin
+	Stringer([Array: TimeStr(Time(), @66.shortestTimeStrSpec), " ", ShortDate(nil)])
+end
+@@end

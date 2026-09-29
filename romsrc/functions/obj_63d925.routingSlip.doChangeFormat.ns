@@ -1,0 +1,11 @@
+@@ 0x599285
+func(a1) begin
+	(if a1 then begin
+			fields.edited := nil;
+			RemoveSlot(fields, 'text);
+			fields.currentFormat := chosenFormat.symbol;
+			chosenFormat := nil;
+			self:changeformat()
+		end else formatPicker:revertCommand())
+end
+@@end

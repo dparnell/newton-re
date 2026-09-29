@@ -1,0 +1,7 @@
+@@ 0x442e0d
+func() begin
+	self:Dirty();
+	self:SetTitle();
+	self:?DateChanged(selectedDates)
+end
+@@end

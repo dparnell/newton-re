@@ -1,0 +1,14 @@
+@@ 0x7325f9
+func() begin
+	local l1;
+	self.selected := target.members;
+	if (ClassOf(target.members) = 'Array) then begin
+			SetClass(target.members, dataClass)
+		end;
+	self.dataClass := ClassOf(target.members);
+	if (self.reviewSelections := (target.groupInfo.nowShowing = 'selected)) then begin
+			selectedOnly.viewValue := true
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

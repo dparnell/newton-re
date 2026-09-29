@@ -1,0 +1,25 @@
+@@ 0x4de485
+func() begin
+	local l1;
+	if currentForm then begin
+			currentForm:?flush();
+			if (currentForm <> cityForm) then begin
+					currentForm:Close()
+				end
+		end;
+	self:ShrinkyDink(cityForm.bigSized);
+	closestKey := MakeEntryAlias(target);
+	(l1 := Clone(cards:entry())).name := Clone("");
+	RemoveSlot(l1, '_uniqueID);
+	if l1.airport then begin
+			RemoveSlot(l1, 'airport)
+		end;
+	if l1.notes then begin
+			RemoveSlot(l1, 'notes)
+		end;
+	self:AddToCities(l1, nil);
+	cards:Goto(l1);
+	self:Retarget();
+	(if (currentForm <> cityForm) then self:SetForm('cityForm) else currentForm:RedoChildren())
+end
+@@end

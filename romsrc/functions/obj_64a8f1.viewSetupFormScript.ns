@@ -1,0 +1,12 @@
+@@ 0x4da7cd
+func() begin
+	inherited:viewSetupFormScript();
+	if fields.coverPage then begin
+			viewBounds := SetBounds(60, 20, -60, 0)
+		end else begin
+			viewBounds := SetBounds(60, 40, -60, -40)
+		end;
+	self.data := target.data;
+	(self.reflowStart := 0)
+end
+@@end

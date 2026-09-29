@@ -1,0 +1,28 @@
+@@ 0x41a441
+func(a1) begin
+	local l1, l2, l3;
+	(if (if (if (l1 := self.(a1)) then (not l1.noBackdrop)) then (userConfiguration.blessedapp <> a1)) then begin
+			self:LockScreen(true);
+			l2 := userConfiguration.blessedapp;
+			if (l3 := self.(l2)) then begin
+					RemoveSlot(l3, 'Close);
+					RemoveSlot(l3, 'Hide);
+					RemoveSlot(l3, 'Toggle);
+					RemoveSlot(l3, 'viewFlags);
+					l3:Close()
+				end;
+			SetUserConfig('blessedapp, EnsureInternal(a1));
+			ExtrasDrawer:InvalIcons();
+			l1:Close();
+			try begin
+					self:_BlessedOpen(l1)
+				end onexception |evt.ex| do begin
+					self:LockScreen(nil);
+					self:Notify(3, "Backdrop", ParamStr("The new Backdrop^?0, \u201C\u^0\u201D\u|| failed to open so it was not set.", [Array: l1.title]));
+					SetUserConfig('blessedapp, l2);
+					AddDeferredSend(self, '_BlessedOpen, [Array: l3])
+				end;
+			self:LockScreen(nil)
+		end)
+end
+@@end

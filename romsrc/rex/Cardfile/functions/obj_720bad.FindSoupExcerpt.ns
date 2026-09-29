@@ -1,0 +1,8 @@
+@@ 0x73fec5
+func(a1, a2) begin
+	if (not a1.class) then begin
+			call GetRoot().cardfile.kUpdateClass with (a1)
+		end;
+	GetDataDefs(a1.class):StringExtract(a1, 1)
+end
+@@end

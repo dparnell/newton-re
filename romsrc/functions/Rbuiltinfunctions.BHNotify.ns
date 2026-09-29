@@ -1,0 +1,24 @@
+@@ 0x462d35
+func(a1, a2, a3, a4, a5) begin
+	local l1, l2;
+	l1 := {_proto: (if (a1 = 9) then @86 else @127), timestamp: Time(), nfType: a1, nfText: EnsureInternal(a3), overview: EnsureInternal(a2), seenByUser: nil, sound: a4, volume: a5};
+	if (if (not a4) then BFind('[Array: 2, 3, 5, 9], a1, '|<|, nil)) then begin
+			l1.sound := GetRegisteredSound(GetUserConfig('beepSound))
+		end;
+	l2 := GetRoot().notification;
+	if ((a1 = 5) or (a1 = 6)) then begin
+			l2:ShowItem(l1, nil)
+		end else begin
+			if (a1 = 2) then begin
+					AddDeferredSend(GetRoot().notifyIcon, 'AddMessage, [Array: l1])
+				end else begin
+					if (a1 = 1) then begin
+							AddDeferredSend(l2, 'AddItem, [Array: l1, true])
+						end else begin
+							AddDeferredSend(l2, 'ShowItem, [Array: l1, nil])
+						end
+				end
+		end;
+	l1
+end
+@@end

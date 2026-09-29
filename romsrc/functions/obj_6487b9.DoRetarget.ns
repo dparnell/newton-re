@@ -1,0 +1,9 @@
+@@ 0x4b7c41
+func() begin
+	entryViewDefs := [Array: GetEntryDataView((target := GetVariable(parentView, targetSlot)), viewDef)];
+	targetViewDef := (currentViewDef := nil);
+	targetDataDef := (currentDataDef := nil);
+	currentStatView := nil;
+	targetView:RedoChildren()
+end
+@@end

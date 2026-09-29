@@ -1,0 +1,9 @@
+@@ 0x44b061
+func(a1) begin
+	(if (HiliteOwner() or a1.hilitedData) then (try begin
+				a1:ClipboardCommand(1)
+			end onexception |evt.ex.outofmem| do begin
+				GetRoot():Notify(3, "Copy", "Newton does not have enough memory to copy the entire selection to the clipboard. Try copying several smaller pieces of information, one at a time.")
+			end))
+end
+@@end

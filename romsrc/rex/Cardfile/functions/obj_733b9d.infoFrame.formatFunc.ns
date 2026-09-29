@@ -1,0 +1,5 @@
+@@ 0x733d45
+func(a1) begin
+	ParamStr("^?1^1\n||^?0Modem Phone: ^0||", [Array: MakeDisplayPhone(a1[0]), GetNames(a1[1])])
+end
+@@end

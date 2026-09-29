@@ -1,0 +1,5 @@
+@@ 0x49f821
+func() begin
+	(if newtAppBase then (newtAppBase._titleKeyButton := self))
+end
+@@end

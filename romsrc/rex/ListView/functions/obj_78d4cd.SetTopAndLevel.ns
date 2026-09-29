@@ -1,0 +1,12 @@
+@@ 0x78d1bd names
+func(aTopic, aNewTop, aDLevel) begin
+	local oldTop, delta, dH, bounds, newBounds;
+	bounds := self:LocalBox();
+	oldTop := aTopic.viewBounds.top;
+	delta := (aNewTop - oldTop);
+	dH := (aDLevel * 20);
+	(newBounds := OffsetRect(aTopic.viewBounds, dH, delta)).right := bounds.right;
+	aTopic.viewBounds := newBounds;
+	(if (aDLevel <> 0) then (if (aTopic.level = nil) then (aTopic.level := (1 + aDLevel)) else (aTopic.level := (aTopic.level + aDLevel))))
+end
+@@end

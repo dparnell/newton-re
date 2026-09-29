@@ -1,0 +1,18 @@
+@@ 0x42fc65
+func(a1) begin
+	l1 := EmailSystems.emailText.|string.email|;
+	if a1 then begin
+			l2 := ClassOf(a1.(path));
+			labelCommands := [Array: ];
+			local l1;
+			local l2;
+			(foreach l3, l4 in (labelSymbols := EmailSystems.emailClasses) do begin
+					AddArraySlot(labelCommands, EmailSystems.emailText.(l4));
+					if (l4 = l2) then begin
+							l1 := labelCommands[l3]
+						end
+				end)
+		end;
+	l1
+end
+@@end

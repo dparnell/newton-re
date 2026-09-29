@@ -1,0 +1,44 @@
+@@ 0x5541bd
+@@const kLiteral_5a74d1
+"Packages"
+@@const kFunction_554015
+func(a1, a2) begin
+	if IsSymbol(a1) then begin
+			a1 := [Array: a1]
+		end;
+	if IsSymbol(a2) then begin
+			a2 := [Array: a2]
+		end;
+	SetUnion(a1, a2, true)
+end
+@@main
+func(a1, a2, a3) begin
+	(if (l1 := (if a2 then a2:GetSoup(kLiteral_5a74d1) else GetUnionSoupAlways(kLiteral_5a74d1))) then begin
+			l2 := self:GetQuerySpec((if IsFrame(a3) then '_all else a3));
+			l3 := kFunction_554015;
+			if IsFrame(a3) then begin
+					local l1;
+					local l2;
+					local l3;
+					local l4;
+					(foreach l5, l6 in a3 do begin
+							if ((l6 = '_buttonBar) or (if IsArray(l6) then SetContains(l6, '_buttonBar))) then begin
+									l4 := true
+								end;
+							l2.tagspec.(l5) := call l3 with (l2.tagspec.(l5), l6)
+						end)
+				end else begin
+					l4 := (a3 = '_buttonBar)
+				end;
+			if (not l4) then begin
+					l2.tagspec.none := call l3 with (l2.tagspec.none, '[Array: _buttonBar])
+				end;
+			if a1 then begin
+					l2.indexPath := 'packageName;
+					l2.startKey := a1;
+					l2.endKey := a1
+				end;
+			l1:Query(l2)
+		end)
+end
+@@end

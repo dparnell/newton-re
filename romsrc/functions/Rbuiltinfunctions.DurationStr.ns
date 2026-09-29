@@ -1,0 +1,17 @@
+@@ 0x4200f1
+func(a1) begin
+	local l1, l2, l3, l4;
+	if (a1 < 0) then begin
+			a1 := 0
+		end;
+	(if ((l1 := (a1 div 1440)) = 0) then begin
+			l2 := (a1 div 60);
+			l3 := (a1 mod 60);
+			[Array: (if (l2 > 1) then ParamStr("^0 hours", [Array: l2]) else (if (l2 = 1) then "1 hour" else "")), (if (l3 > 1) then ParamStr("^0 minutes", [Array: l3]) else (if (l3 = 1) then "1 minute" else ""))]
+		end else begin
+			l4 := (l1 div 7);
+			l1 := (l1 mod 7);
+			[Array: (if (l4 > 1) then ParamStr("^0 weeks", [Array: l4]) else (if (l4 = 1) then "1 week" else "")), (if (l1 > 1) then ParamStr("^0 days", [Array: l1]) else (if (l1 = 1) then "1 day" else ""))]
+		end)
+end
+@@end

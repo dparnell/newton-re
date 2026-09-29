@@ -1,0 +1,11 @@
+@@ 0x73acb9
+func(a1) begin
+	if IsRichString(a1) then begin
+			inkDialog := true;
+			target.sorton := nil
+		end else begin
+			target.sorton := a1
+		end;
+	header:Retarget()
+end
+@@end

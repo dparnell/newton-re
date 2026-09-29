@@ -1,0 +1,12 @@
+@@ 0x449dd5
+func(a1, a2) begin
+	local l1, l2;
+	(if IsSoupEntry(a1) then begin
+			if (not (l2 := a2:GetSoup((l1 := EntrySoup(a1):GetName())))) then begin
+					l2 := CreateUSoupMember(l1, a2)
+				end;
+			self:SetActionDescription(-8101);
+			(if EntryStore(a1):IsReadOnly() then EntryCopyXmit(a1, l2, '_newt) else EntryMoveXmit(a1, l2, '_newt))
+		end)
+end
+@@end

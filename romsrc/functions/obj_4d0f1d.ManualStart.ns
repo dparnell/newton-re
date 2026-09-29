@@ -1,0 +1,14 @@
+@@ 0x4d0909
+func() begin
+	(if (status = 'idle) then begin
+			self:SetFlag(manualReceive);
+			self:SetupListen()
+		end else (if (status = 'Listening) then begin
+				self:SetFlag(manualOnAuto);
+				self:ChangeState('Listening)
+			end else begin
+				GetRoot():SysBeep();
+				self:CloseStatusDialog(nil)
+			end))
+end
+@@end

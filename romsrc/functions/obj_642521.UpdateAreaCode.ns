@@ -1,0 +1,8 @@
+@@ 0x4bc2fd
+func(a1) begin
+	(if areacode then begin
+			areacode.changed := true;
+			(if areacode.viewCObject then SetValue(areacode, 'text, a1) else (currAreaCode := a1))
+		end)
+end
+@@end

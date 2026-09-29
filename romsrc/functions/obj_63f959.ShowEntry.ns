@@ -1,0 +1,16 @@
+@@ 0x4eab41
+func(a1) begin
+	if ((a1 = 'deleted) or (a1 = nil)) then begin
+			self.isReset := nil;
+			a1 := nil
+		end else begin
+			self.isReset := nil
+		end;
+	(if (a1 <> nil) then begin
+			if (owner.viewCObject = nil) then begin
+					owner:Open()
+				end;
+			(if owner.viewCObject then owner:ShowFoundItem(a1, a1.mtgStartDate, self))
+		end)
+end
+@@end

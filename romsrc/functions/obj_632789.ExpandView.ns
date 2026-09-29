@@ -1,0 +1,17 @@
+@@ 0x55d6d5
+func(a1) begin
+	local l1, l2;
+	l1 := Clone(viewBounds);
+	if (viewExpanded = 'findGlobal) then begin
+			l1.top := (l1.bottom - 95)
+		end else begin
+			l2 := GetAppParams().appAreaHeight;
+			if (((95 + a1) - viewBounds.bottom) > l2) then begin
+					l1.bottom := (((l1.top := ((-l2) + 8)) + 95) + a1)
+				end else begin
+					l1.top := ((l1.bottom - 95) - a1)
+				end
+		end;
+	return l1
+end
+@@end

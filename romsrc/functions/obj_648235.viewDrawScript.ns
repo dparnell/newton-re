@@ -1,0 +1,7 @@
+@@ 0x4bd9f5
+func() begin
+	local l1;
+	(l1 := self:LocalBox()).left := 16;
+	TextBox(text, {font: viewFont, justification: 'left}, l1)
+end
+@@end

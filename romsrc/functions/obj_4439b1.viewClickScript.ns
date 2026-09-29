@@ -1,0 +1,48 @@
+@@ 0x44389d
+@@const kFunction_443495
+func(a1, a2, a3) begin
+	(if (((a1 = 0) or (a1 = 1)) or (a3 = 0)) then LongDateStr(a2, 12) else "")
+end
+@@main
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10;
+	self:hilite(true);
+	clicker();
+	(l1 := Date(selectedDates[0])).month := monthView.month;
+	l1.year := monthView.year;
+	l1.Date := 1;
+	l2 := l1.month;
+	l3 := Array(15, nil);
+	l4 := (if (selectedDates[0] <= 129600) then l2 else 3);
+	l5 := (l2 - l4);
+	l6 := 0;
+	l7 := 0;
+	(while (l7 < 12) do begin
+			l1.month := l5;
+			l9 := Date((l8 := TotalMinutes(l1))).month;
+			l10 := ParamStr("^0^?1 ^1||", [Array: LongDateStr(l8, monthSpec), (if (l1.year <> 2920) then call (kFunction_443495) with (l9, l8, l7))]);
+			if (if (l9 = 1) then (l6 > 0)) then begin
+					l3[l6] := 'pickseparator;
+					l6 := (l6 + 1)
+				end;
+			l3[l6] := {item: l10, inc: (l5 - l2)};
+			if (l5 = l2) then begin
+					l3[l6].mark := $\uFC0B
+				end;
+			l5 := (l5 + 1);
+			l6 := (l6 + 1);
+			(l7 := (l7 + 1))
+		end);
+	if noTodayShow then begin
+			l6 := (l6 - 1)
+		end else begin
+			l3[l6] := 'pickseparator;
+			l6 := (l6 + 1);
+			l3[l6] := "Today";
+			todayItem := l6
+		end;
+	SetLength(l3, (l6 + 1));
+	DoPopup((popup := l3), 4, 0, self);
+	return true
+end
+@@end

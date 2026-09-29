@@ -1,0 +1,5 @@
+@@ 0x4d0d95
+func(a1) begin
+	(faxFlags := BAnd(faxFlags, bnot(a1)))
+end
+@@end

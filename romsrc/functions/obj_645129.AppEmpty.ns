@@ -1,0 +1,7 @@
+@@ 0x4aa421
+func() begin
+	local l1;
+	l1 := self:LocalBox();
+	(appEmptyStr := [Array: '{font: 1058816, justification: center}, MakeText(ParamStr("There are no ^0 in this folder.", [Array: appObject[1]]), l1.left, l1.top, l1.right, (l1.top + 40))])
+end
+@@end

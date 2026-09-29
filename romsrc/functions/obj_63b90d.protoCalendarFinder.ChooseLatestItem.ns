@@ -1,0 +1,67 @@
+@@ 0x4ea801
+func() begin
+	l1 := nil;
+	l2 := 0;
+	l3 := nil;
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	(foreach l6 in meetingSoupFinders do begin
+			local l8, l9, l10, l11, l12;
+			l8 := nil;
+			if (l9 := l6:GetCurrentItem()) then begin
+					l10 := l9.mtgStartDate;
+					l11 := (l9.viewStationery = 'cribNote)
+				end;
+			if (not l9) then begin
+					l8 := nil
+				end else begin
+					if (l1 = nil) then begin
+							l8 := true
+						end else begin
+							if (l10 > l2) then begin
+									l8 := true
+								end else begin
+									if (l10 = l2) then begin
+											l12 := (l9.repeatTemplate <> nil);
+											if (if l4 then (not l5)) then begin
+													if (not (if (if l11 then (not l12)) then (l9._uniqueID <= l1._uniqueID))) then begin
+															l8 := true
+														end
+												end else begin
+													if (if l4 then l5) then begin
+															if ((not l11) or (if l12 then (l9._uniqueID > l1._uniqueID))) then begin
+																	l8 := true
+																end
+														end else begin
+															if (if (not l4) then (not l5)) then begin
+																	if (if (not l11) then (l12 or (l9._uniqueID > l1._uniqueID))) then begin
+																			l8 := true
+																		end
+																end else begin
+																	if (if (if (not l11) then l12) then (l9._uniqueID > l1._uniqueID)) then begin
+																			l8 := true
+																		end
+																end
+														end
+												end
+										end
+								end
+						end
+				end;
+			if l8 then begin
+					l1 := l9;
+					l2 := l9.mtgStartDate;
+					l3 := l6;
+					l4 := (l1.viewStationery = 'cribNote);
+					l5 := (l1.repeatTemplate <> nil)
+				end
+		end);
+	if l3 then begin
+			self.currentMeetingSoupFinder := l3
+		end;
+	l1
+end
+@@end

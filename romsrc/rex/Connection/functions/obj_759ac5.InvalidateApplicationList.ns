@@ -1,0 +1,5 @@
+@@ 0x75d119
+func() begin
+	(self.applications := nil)
+end
+@@end

@@ -1,0 +1,17 @@
+@@ 0x4e2d95
+func() begin
+	valueFactor := 10.0;
+	digitCount := 0;
+	keyFactor := 1.0;
+	value := 0.0;
+	stack := 0.0;
+	pendingOp := 108;
+	memory := nil;
+	unary := nil;
+	isUnary := nil;
+	playsound(grind);
+	base:printToPaper(" ");
+	self:UpdateDisplay();
+	paperDisplay:Dirty()
+end
+@@end

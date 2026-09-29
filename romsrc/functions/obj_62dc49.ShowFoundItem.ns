@@ -1,0 +1,6 @@
+@@ 0x4b2ded
+func(a1, a2) begin
+	self:ShowItem(a1, 'itemLayout);
+	layout:?ShowFoundItem(a1, a2)
+end
+@@end

@@ -1,0 +1,16 @@
+@@ 0x52ec75
+func(a1, a2) begin
+	local l1, l2;
+	if IsArray(a1) then begin
+			l1 := a1[0].label
+		end else begin
+			l1 := a1.label
+		end;
+	if (not a2) then begin
+			if (l2 := self:CheckOptionResult(a1)) then begin
+					a2 := l2.result
+				end
+		end else nil;
+	(if StrEqual(l1, "outg") then self:?MakeOutgoingDone(a2) else (if StrEqual(l1, "sdgt") then self:?SendDigitDone(a2) else (if StrEqual(l1, "answ") then self:?AnswerIncomingDone(a2) else (if StrEqual(l1, "disc") then self:?HangUpDone(a2) else (if StrEqual(l1, "answ") then self:?AnswerIncomingDone(a2) else (if StrEqual(l1, "hold") then self:?HoldDone(a2) else (if StrEqual(l1, "unho") then self:?UnHoldDone(a2) else (if StrEqual(l1, "forw") then self:?ForwardDone(a2) else (if StrEqual(l1, "focr") then self:?ForwardClearDone(a2) else (if StrEqual(l1, "tran") then self:?TransferDone(a2) else (if StrEqual(l1, "tasp") then self:?SetSpeakerDone(a2) else self:?UnknownDone(a1, a2))))))))))))
+end
+@@end

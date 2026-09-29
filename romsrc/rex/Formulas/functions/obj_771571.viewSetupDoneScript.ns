@@ -1,0 +1,10 @@
+@@ 0x771ad5
+func() begin
+	AddArraySlot((FSViews := [Array: ]), Periods);
+	AddArraySlot(FSViews, InterestRate);
+	AddArraySlot(FSViews, PresentValue);
+	AddArraySlot(FSViews, FutureValue);
+	AddArraySlot(FSViews, Payment);
+	inherited:?viewSetupDoneScript()
+end
+@@end

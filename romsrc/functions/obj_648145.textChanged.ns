@@ -1,0 +1,5 @@
+@@ 0x5acfe9
+func() begin
+	SetUserConfig(configPath, text)
+end
+@@end

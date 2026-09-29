@@ -1,0 +1,18 @@
+@@ 0x771fbd
+@@const kLiteral_771cbd
+"Currency Exchange"
+@@main
+func() begin
+	local l1;
+	l1 := GetExchangeRate(Country1Field.country, Country2Field.country);
+	if (Country1Field.country = Country2Field.country) then begin
+			l1 := 1;
+			self:Notify(3, kLiteral_771cbd, "Choose two different countries to calculate exchange rates.")
+		end;
+	if (l1 = nil) then begin
+			self:ClearAllFields();
+			self:Notify(3, kLiteral_771cbd, ParamStr("The exchange rate between ^0 and ^1 is unknown.", [Array: GetCountryEntry(Country1Field.country)[0].name, GetCountryEntry(Country2Field.country)[0].name]))
+		end;
+	ExchangeRateField:SetNumericValue(l1)
+end
+@@end

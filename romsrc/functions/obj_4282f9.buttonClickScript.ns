@@ -1,0 +1,9 @@
+@@ 0x4282b9
+func() begin
+	(if RecordEngine:TestState(9) then RecordEngine:play() else (if RecordEngine:TestState(4) then RecordEngine:pause() else (if RecordEngine:TestState(2) then begin
+					RecordEngine:stop();
+					RecordEngine:Rewind();
+					RecordEngine:play()
+				end else playsound(@262))))
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x56c7dd
+func(a1) begin
+	ParamStr("Activate packages on card \u201C\u^0\u201D\u?", [Array: a1])
+end
+@@end

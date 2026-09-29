@@ -1,0 +1,5 @@
+@@ 0x42b87d
+func(a1, a2) begin
+	(if (a1 = 'up) then self:viewScrollUpScript() else (if (a1 = 'down) then self:viewScrollDownScript()))
+end
+@@end

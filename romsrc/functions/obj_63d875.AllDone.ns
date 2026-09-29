@@ -1,0 +1,27 @@
+@@ 0x5a555d
+func(a1) begin
+	local l1, l2, l3;
+	l1 := GetRoot().mailSlip;
+	if eworld then begin
+			eworld:ConnectionAbort()
+		end;
+	if pleaseWaitForm.viewCObject then begin
+			pleaseWaitForm:Close()
+		end;
+	SetUserConfig('SleepTime, info.SleepTime);
+	RemovePowerOffHandler(base);
+	if a1 then begin
+			GetRoot().mailRegister.info := nil
+		end;
+	pages := nil;
+	index := 0;
+	sendScreen := nil;
+	l1.eworld := nil;
+	if (if request then a1) then begin
+			l2 := ResolveEntryAlias(userConfiguration.currentEmporium);
+			l3 := ResolveEntryAlias(userConfiguration.currentPersona);
+			AddDeferredSend(l1, 'DoConnect, [Array: l2, l3, request, GetUserConfig('mailMode), GetUserConfig('mailListMethod)])
+		end;
+	base:Close()
+end
+@@end

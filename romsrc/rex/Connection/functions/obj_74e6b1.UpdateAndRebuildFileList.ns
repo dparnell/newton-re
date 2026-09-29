@@ -1,0 +1,10 @@
+@@ 0x74e9b5
+func() begin
+	selection := nil;
+	self:SetOrigin(0, 0);
+	(if self:RebuildFileList(true, true) then begin
+			protoContext:HideIfVisible(getinfoButton);
+			protoContext:HideIfVisible(doitButton)
+		end)
+end
+@@end

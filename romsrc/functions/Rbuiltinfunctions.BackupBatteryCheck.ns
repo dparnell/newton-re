@@ -1,0 +1,30 @@
+@@ 0x5639b5
+@@const kLiteral_43c4c5
+"Battery"
+@@main
+func() begin
+	local l1, l2, l3, l4;
+	if (vars.quicklooklives or (BatteryCount() < 2)) then begin
+			return nil
+		end;
+	l1 := BatteryStatus(1);
+	if GetRoot().GetBatteryMessages then begin
+			l2 := GetRoot():GetBatteryMessages()
+		end;
+	(if (l1.batteryCapacity <= l1.batteryDead) then begin
+			if (if l2 then l2.backupBatteryDeadMessage) then begin
+					l3 := l2.backupBatteryDeadMessage
+				end else begin
+					l3 := "The backup battery is dead or missing. You need to replace the backup battery immediately or you will lose the information in your Newton."
+				end;
+			((l4 := GetRoot():Notify(4, kLiteral_43c4c5, l3)).batteryAlert := true)
+		end else (if (l1.batteryCapacity <= l1.batteryLow) then begin
+				if (if l2 then l2.backupBatteryLowMessage) then begin
+						l3 := l2.backupBatteryLowMessage
+					end else begin
+						l3 := "The backup battery is running low. You need to replace the backup battery soon or you may lose the information in your Newton."
+					end;
+				((l4 := GetRoot():Notify(4, kLiteral_43c4c5, l3)).batteryAlert := true)
+			end))
+end
+@@end

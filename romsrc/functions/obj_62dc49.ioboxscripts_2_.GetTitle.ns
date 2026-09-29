@@ -1,0 +1,10 @@
+@@ 0x4b0859
+func(a1) begin
+	if (GetRoot().iobox.currentSoupSymbol = 'inbox) then begin
+			if (if (if a1 then (not GetRoot().iobox:IsLogItem(a1))) then (not a1.Remote)) then begin
+					return "Log"
+				end
+		end;
+	nil
+end
+@@end

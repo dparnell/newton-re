@@ -1,0 +1,5 @@
+@@ 0x487e59
+func(a1) begin
+	PressButton(deleteButton)
+end
+@@end

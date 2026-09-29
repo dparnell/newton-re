@@ -1,0 +1,6 @@
+@@ 0x3c6169
+func(a1) begin
+	RemoveSlot(SoupBackupRegistry, a1);
+	nil
+end
+@@end

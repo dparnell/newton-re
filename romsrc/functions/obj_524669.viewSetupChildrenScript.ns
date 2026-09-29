@@ -1,0 +1,40 @@
+@@ 0x522fe1
+func() begin
+	local l1, l2;
+	(if secret then begin
+			self.viewChildren := Clone(viewChildren);
+			AddArraySlot(viewChildren, {viewClass: 76, viewBounds: newtPictBnds, icon: newtPict, viewFlags: 515, viewJustify: 144, viewClickScript: func(a1) begin
+				self:HideStoryCard();
+				true
+			end});
+			(aboutText := [Array: {font: @88, justification: 'center}, MakeText("\u201C\uI only ask for information\u201D\u", 10, 6, 180, 18), MakeText("- Copperfield", 10, 22, 180, 36)])
+		end else begin
+			l1 := self:CurrentBook();
+			self.aboutText := [Array: ];
+			AddArraySlot(aboutText, {font: @88, justification: 'center});
+			l2 := MakeText(self:BookTitle(), 5, 6, 195, 18);
+			AddArraySlot(aboutText, l2);
+			if (if HasPath(l1, 'author) then (StrLen(l1.author) > 0)) then begin
+					AddArraySlot(aboutText, {font: @87, justification: 'center});
+					l2 := MakeText(Stringer([Array: "by ", l1.author]), 5, 24, 185, 38);
+					AddArraySlot(aboutText, l2)
+				end;
+			if HasPath(l1, 'publisher) then begin
+					l2 := MakeText(l1.publisher, 5, 40, 180, 54);
+					AddArraySlot(aboutText, l2)
+				end;
+			if HasPath(l1, 'copyright) then begin
+					l2 := MakeText(l1.copyright, 5, 56, 185, 70);
+					AddArraySlot(aboutText, l2)
+				end;
+			if HasPath(l1, 'publicationDate) then begin
+					l2 := MakeText(LongDateStr(l1.publicationDate, dateShort), 5, 72, 185, 86);
+					AddArraySlot(aboutText, l2)
+				end;
+			(if HasPath(l1, 'expirationDate) then begin
+					l2 := MakeText(Stringer([Array: "Expires: ", LongDateStr(l1.expirationDate, dateShort)]), 5, 88, 185, 102);
+					AddArraySlot(aboutText, l2)
+				end)
+		end)
+end
+@@end

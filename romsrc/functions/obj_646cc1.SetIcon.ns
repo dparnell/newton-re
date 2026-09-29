@@ -1,0 +1,10 @@
+@@ 0x4b7f21
+func() begin
+	(if target then (try begin
+				EntryStore(target):CheckWriteProtect();
+				(icon := nil)
+			end onexception |evt.ex.fr.store| do begin
+				(icon := lockedIcon)
+			end))
+end
+@@end

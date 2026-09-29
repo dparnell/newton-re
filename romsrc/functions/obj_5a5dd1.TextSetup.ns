@@ -1,0 +1,8 @@
+@@ 0x5a5d71
+func() begin
+	(if (if IsRichString(info.(configPath)) then deferRec) then begin
+			AddDeferredSend(self, 'Recognize, nil);
+			""
+		end else info.(configPath))
+end
+@@end

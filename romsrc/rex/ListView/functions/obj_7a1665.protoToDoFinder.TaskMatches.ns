@@ -1,0 +1,27 @@
+@@ 0x79b55d names
+func(aTask) begin
+	local date, match;
+	if (findType = 'dateBefore) then begin
+			date := NextMeeting(0, aTask.repeatInfo)
+		end else begin
+			if (findType = 'dateAfter) then begin
+					date := NextMeeting((findWords + 1), aTask.repeatInfo)
+				end else begin
+					date := NextMeeting(findWords, aTask.repeatInfo)
+				end
+		end;
+	if aTask.repeatInfo.reminderInterval then begin
+			date := (date - aTask.repeatInfo.reminderInterval)
+		end;
+	if (findType = 'dateBefore) then begin
+			match := (date < findWords)
+		end else begin
+			if (findType = 'dateAfter) then begin
+					match := (date > 0)
+				end else begin
+					match := (date = findWords)
+				end
+		end;
+	(if match then date)
+end
+@@end

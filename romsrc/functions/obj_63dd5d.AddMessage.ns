@@ -1,0 +1,17 @@
+@@ 0x462b39
+func(a1) begin
+	if (if poppedView then (poppedView = GetPopup())) then begin
+			poppedView:Close();
+			poppedView := nil
+		end;
+	if (not messageList) then begin
+			messageList := [Array: ]
+		end;
+	ArrayInsert(messageList, a1, 0);
+	AddDeferredSend(self, func() begin
+		self:Open();
+		self:StartBlinking()
+	end, nil);
+	a1
+end
+@@end

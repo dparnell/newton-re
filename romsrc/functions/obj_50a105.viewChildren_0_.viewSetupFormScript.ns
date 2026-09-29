@@ -1,0 +1,11 @@
+@@ 0x509bd1
+func() begin
+	local l1;
+	if (selectedMeeting.viewStationery = 'cribNote) then begin
+			l1 := "This is a repeating event."
+		end else begin
+			l1 := "This is a repeating meeting."
+		end;
+	(text := ParamStr("^0  ^1", [Array: l1, headerText]))
+end
+@@end

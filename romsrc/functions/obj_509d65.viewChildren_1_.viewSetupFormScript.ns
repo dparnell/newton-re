@@ -1,0 +1,5 @@
+@@ 0x509e7d
+func() begin
+	(if (selectedMeeting.viewStationery = 'cribNote) then (text := "This and all future events") else (text := "This and all future meetings"))
+end
+@@end

@@ -1,0 +1,12 @@
+@@ 0x5aaa41
+func(a1) begin
+	local l1;
+	window:Reposition((l1 := Stringer([Array: letters[a1]])));
+	if (not window:GetEntry(0)) then begin
+			base:viewScrollUpScript()
+		end;
+	base:SelectFirst();
+	words:Dirty();
+	RefreshViews()
+end
+@@end

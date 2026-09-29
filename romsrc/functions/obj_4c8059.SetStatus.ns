@@ -1,0 +1,70 @@
+@@ 0x4c7fd9
+@@const kROM_56
+@56
+@@main
+func(a1, a2) begin
+	if (if (status = 'Canceling) then (a1 <> 'idle)) then begin
+			a1 := 'Canceling
+		end;
+	l2 := nil;
+	if ((a1 = 'Connecting) or (a1 = 'preparing)) then begin
+			l1 := 'vStatusTitle;
+			l3 := currentRecipient.phoneNumber;
+			if ((a1 = 'preparing) or (not StrFilled(l3))) then begin
+					l2 := ParamStr("\u201C\u^0\u201D\u", [Array: self:GetItemTitle(currentItem)])
+				end else begin
+					l2 := l3
+				end
+		end else begin
+			if ((a1 = 'Sending) or (a1 = 'Confirming)) then begin
+					l1 := 'vProgress;
+					l2 := ParamStr("\u201C\u^0\u201D\u", [Array: self:GetItemTitle(currentItem)])
+				end else begin
+					if (a1 = 'Canceling) then begin
+							l1 := 'vStatus;
+							a2 := {primary: nil}
+						end else begin
+							l1 := 'vStatus
+						end
+				end
+		end;
+	l4 := {titleText: l2};
+	if (modalStatus = true) then begin
+			l4.closeBox := nil
+		end;
+	if (if a2 then IsFrame(a2)) then begin
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			(foreach l5, l6 in a2 do begin
+					local l8, l9, l10, l11;
+					l4.(l5) := l6
+				end)
+		end else begin
+			if StrFilled(a2) then begin
+					l4.statusText := a2
+				end else begin
+					if (a1 = 'Connecting) then begin
+							l8 := status;
+							status := a1;
+							if StrFilled((l9 := currentRecipient.name)) then begin
+									l4.statusText := ParamStr(self:GetStatusString(), [Array: l9])
+								end else begin
+									if (appSymbol = '|print:newton|) then begin
+											if (not (l10 := currentItem.printer)) then begin
+													l10 := GetUserConfig('currentPrinter)
+												end;
+											l11 := (if StrFilled(l10.printerName) then GetNames(l10.printerName) else GetNames(l10.name));
+											l4.statusText := ParamStr(self:GetStatusString(), [Array: l11])
+										end else begin
+											l4.statusText := kROM_56
+										end
+								end;
+							status := l8
+						end
+				end
+		end;
+	inherited:?SetStatusDialog(a1, l1, l4)
+end
+@@end

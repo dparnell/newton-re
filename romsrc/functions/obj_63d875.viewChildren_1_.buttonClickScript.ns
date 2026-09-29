@@ -1,0 +1,5 @@
+@@ 0x5a5a01
+func() begin
+	(if (if (not eworld) then (index = 3)) then self:Confirm("Mail Registration", "Make sure your modem is ready then tap OK to create your new account.", self, 'ConfirmCallback) else self:doContinue())
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x4ae19d
+func(a1) begin
+	local l1;
+	l1 := statArray[a1];
+	inherited:pickActionScript(a1);
+	self:statScript(l1);
+	popup := nil;
+	(statArray := nil)
+end
+@@end

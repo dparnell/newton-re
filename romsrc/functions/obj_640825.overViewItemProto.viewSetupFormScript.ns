@@ -1,0 +1,5 @@
+@@ 0x42ce6d
+func() begin
+	(self.text := Stringer([Array: $\u2022, " ", items[itemIndex].overview]))
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x74c075
+func() begin
+	(if (Length(listItems) = Length(selectedItems)) then (selectedItems := [Array: ]) else begin
+			selectedItems := (foreach l1, l2 in listItems collect l1);
+			selectedItems
+		end)
+end
+@@end

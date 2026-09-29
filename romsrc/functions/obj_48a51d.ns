@@ -1,0 +1,5 @@
+@@ 0x48a51d
+func() begin
+	SetRemove(senderList, self)
+end
+@@end

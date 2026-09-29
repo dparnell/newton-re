@@ -1,0 +1,34 @@
+@@ 0x736d2d
+func(a1, a2) begin
+	if (not IsArray(a2)) then begin
+			a2 := [Array: a2]
+		end;
+	l6 := SetContains(a2, 'phone);
+	l7 := SetContains(a2, '|string.phone|);
+	if ((if l6 then (not l7)) or (if l7 then (not l6))) then begin
+			if IsReadOnly(a2) then begin
+					a2 := Clone(a2)
+				end;
+			AddArraySlot(a2, (if l6 then '|string.phone| else 'phone))
+		end;
+	l1 := self:bcHelper(a1, a2, '[Array: phones], nil);
+	if (l2 := self:bcHelper(a1, a2, '[Array: pagers], '[Array: pagerNum, pagerPin])) then begin
+			if (not l1) then begin
+					l1 := [Array: ]
+				end;
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			local l5;
+			local l6;
+			local l7;
+			(for l8 := 0 to (Length(l2) - 1) do begin
+					(l5 := ParsePhone((l4 := l2[l8].pagerNum))).extension := ParamStr("^?0^0^?1 ^1|||^?1^1|", [Array: l5.extension, l2[l8].pagerPin]);
+					SetClass((l3 := MakePhone(l5)), ClassOf(l4));
+					AddArraySlot(l1, l3)
+				end)
+		end;
+	l1
+end
+@@end

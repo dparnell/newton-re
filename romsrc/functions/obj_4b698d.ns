@@ -1,0 +1,83 @@
+@@ 0x4b698d
+@@const kLiteral_3c5eed
+'{transferMode: 2, penPattern: 0, fillPattern: 5}
+@@main
+func(a1) begin
+	(if target then begin
+			l1 := self:GlobalBox();
+			if (((l2 := GetPoint(0, a1)) - l1.left) < 20) then begin
+					InkOff(a1);
+					playsound(@51);
+					l4 := OffsetShape(MakeRect((l3 := headerIcon.bounds).left, l3.top, l3.right, l3.bottom), 1, ((15 - (l3.bottom - l3.top)) div 2));
+					l6 := ((GetPoint(0, a1) - l1.left) < 20);
+					(loop begin
+							if (l5 <> l6) then begin
+									self:DrawShape(l4, kLiteral_3c5eed);
+									l5 := l6
+								end;
+							if StrokeDone(a1) then begin
+									break
+								end;
+							(l6 := ((GetPoint(4, a1) - l1.left) < 20))
+						end);
+					if l6 then begin
+							self:DrawShape(l4, kLiteral_3c5eed);
+							if (not info) then begin
+									self:Popit(true)
+								end
+						end
+				end else begin
+					if (if ((l1.right - l2) > 40) then resizable) then begin
+							playsound(@51);
+							l7 := dataCursor:clone();
+							l7:Goto(target);
+							if (if (l5 := l7:prev()) then l5.height) then begin
+									self:hilite(true);
+									l9 := (l8 := self:GlobalBox()).top;
+									l10 := 0;
+									local l1;
+									local l2;
+									local l3;
+									local l4;
+									local l5;
+									local l6;
+									local l7;
+									local l8;
+									local l9;
+									local l10;
+									local l11;
+									local l12;
+									l12 := (foreach l13, l14 in (l11 := targetView:Parent():ChildViewFrames()) do begin
+											local l16, l17, l18;
+											if (if (l13 > 0) then (l14 = targetView)) then begin
+													break l11[(l13 - 1)]
+												end
+										end);
+									if l12 then begin
+											if (l16 := l12.targetViewDef:?MinimalBounds(l5)) then begin
+													l10 := (l10 + l16.bottom)
+												end;
+											l10 := (l10 + l12.minimumHeight)
+										end;
+									l17 := layout:GlobalBox();
+									l8.top := max(((l8.top - l5.height) + l10), l17.top);
+									l8.bottom := l17.bottom;
+									self:Drag(a1, l8);
+									l18 := self:GlobalBox();
+									if (target = dataCursor:entry()) then begin
+											dataCursor:Goto(l5);
+											layout.viewOriginY := l5.height
+										end;
+									if (if (dataCursor:entry() = l5) then (layout.viewOriginY = ((l5.height + l18.top) - l9))) then begin
+											dataCursor:Next();
+											layout.viewOriginY := 0
+										end;
+									self:SetAndSaveNoteHeight(l5, ((l5.height + l18.top) - l9));
+									self:hilite(nil)
+								end
+						end
+				end;
+			true
+		end)
+end
+@@end

@@ -1,0 +1,14 @@
+@@ 0x746b51
+func(a1, a2) begin
+	local l1, l2;
+	(if GetNames(a1) then begin
+			if (a2 = nil) then begin
+					l1 := "*"
+				end else begin
+					l1 := a2
+				end;
+			l2 := Stringer([Array: a1, ":", NBPLookupType, "@", l1]);
+			(if viewCObject then self:setNewItem(l2))
+		end)
+end
+@@end

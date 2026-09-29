@@ -1,0 +1,6 @@
+@@ 0x4801cd
+func(a1) begin
+	RemoveSlot(userConfiguration, a1);
+	FlushUserConfig()
+end
+@@end

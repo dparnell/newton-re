@@ -1,0 +1,16 @@
+@@ 0x5ab2e9
+func() begin
+	local l1, l2;
+	self:GrabCaret();
+	if expandFlag then begin
+			self:ExpandOff()
+		end;
+	(if selectedEntry then begin
+			dictionary:DecodeRecognitionWord((l1 := Clone(selectedWord)), selectedEntry.attribute);
+			self:RemoveWord(l1)
+		end else begin
+			l2 := (if (window:GetNumberEntries() = 0) then "There are no more words to remove." else "Tap on a word in the list above and then tap \u201C\uRemove.\u201D\u");
+			self:Notify(3, notifyTitle, l2)
+		end)
+end
+@@end

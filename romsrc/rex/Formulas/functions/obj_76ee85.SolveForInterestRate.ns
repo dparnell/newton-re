@@ -1,0 +1,33 @@
+@@ 0x76f0f5
+func(a1, a2, a3, a4) begin
+	l1 := nil;
+	if (not ((((if (if (a2 >= 0.0) then (a3 >= 0.0)) then (a4 >= 0.0)) or (if (if (a2 <= 0.0) then (a3 <= 0.0)) then (a4 <= 0.0))) or (if (a2 = 0.0) then (a3 = 0.0))) or (a1 < 0))) then begin
+			l2 := 0;
+			l3 := 0.001;
+			l4 := 0.01;
+			l6 := ((a2 + (a4 * annuity(l3, a1))) + (a3 / compound(l3, a1)));
+			l7 := ((a2 + (a4 * annuity(l4, a1))) + (a3 / compound(l4, a1)));
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			local l5;
+			local l6;
+			local l7;
+			(for l2 := 1 to 50 do begin
+					if (abs(((l3 - l4) / l4)) < 1.0e-07) then begin
+							l1 := (l4 * 100);
+							break
+						end;
+					if ((l5 := (l4 - (l7 * ((l4 - l3) / (l7 - l6))))) <= (-1.0)) then begin
+							l5 := ((l4 - 1.0) / 2.0)
+						end;
+					l3 := l4;
+					l6 := l7;
+					l4 := l5;
+					l7 := ((a2 + (a4 * annuity(l4, a1))) + (a3 / compound(l4, a1)))
+				end)
+		end;
+	return l1
+end
+@@end

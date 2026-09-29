@@ -1,0 +1,5 @@
+@@ 0x42ae2d
+func(a1, a2) begin
+	SetValue(self:ChildViewFrames()[itemText], 'text, Clone(a2))
+end
+@@end

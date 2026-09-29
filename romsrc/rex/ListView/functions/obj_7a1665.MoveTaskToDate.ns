@@ -1,0 +1,15 @@
+@@ 0x79777d names
+func(aTask, aTarget, anOldDate, aDate) begin
+	local Entry;
+	if ((if HasPath(aTask, 'source) then (aTask.source = nil)) or (ClassOf(aTask.source) = 'symbol)) then begin
+			self:Notify(3, title, "Can\u2019\ut move a 1.x formatted To Do item");
+			return nil
+		end;
+	self:DeleteTask(anOldDate, aTask, 'noUndoOrDraw);
+	AddArraySlot((Entry := self:GetToDoEntryDefaultStore(aDate, nil).Entry).topics, aTask);
+	Entry.needsSort := true;
+	EntryChangeXmit(Entry, 'todo);
+	self:GetTarget(nil);
+	(if Visible(self) then self:AddUndoAction('UndoMoveTaskToDate, [Array: aTask, aTarget, aDate, anOldDate]))
+end
+@@end

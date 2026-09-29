@@ -1,0 +1,17 @@
+@@ 0x50446d
+func(a1, a2) begin
+	local l1;
+	l1 := true;
+	if (if a1.repeatTemplate then a2) then begin
+			DeleteRepeatingMeetingDialog:Open();
+			l1 := nil
+		end else begin
+			if a1.repeatTemplate then begin
+					self:DeleteRepeatingMeetingInstance(a1)
+				end else begin
+					calendar:RemoveItemFromSoup(EntrySoup(a1), a1, nil)
+				end
+		end;
+	l1
+end
+@@end

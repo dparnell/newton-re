@@ -1,0 +1,25 @@
+@@ 0x559891
+func(a1) begin
+	local l1, l2, l3, l4;
+	if IsPackageEntry(a1) then begin
+			l1 := a1
+		end else begin
+			if IsFrame(a1) then begin
+					l2 := a1.title;
+					l3 := a1.store
+				end else begin
+					if (ClassOf(a1) = 'int) then begin
+							a1 := PidToPkgRef(a1)
+						end;
+					if IsPackage(a1) then begin
+							l2 := (l4 := GetPkgRefInfo(a1)).title;
+							l3 := l4.store
+						end
+				end;
+			if (if l2 then l3) then begin
+					l1 := GetPackageEntry(l2, l3)
+				end
+		end;
+	l1
+end
+@@end

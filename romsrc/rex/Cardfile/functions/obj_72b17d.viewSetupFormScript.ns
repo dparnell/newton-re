@@ -1,0 +1,14 @@
+@@ 0x72b26d
+@@const kFunction_72b339
+func(a1) begin
+	true
+end
+@@main
+func() begin
+	if target then begin
+			self.viewDef := GetRoot().cardfile:GetBCLayout(target).slot
+		end;
+	inherited:viewSetupFormScript();
+	(if (GetVariable(self, 'newtAppBase) <> GetRoot().cardfile) then AddArraySlot(viewChildren, {viewClass: 74, viewBounds: viewChildren[0].viewBounds, viewFormat: 0, viewFlags: 513, viewClickScript: kFunction_72b339}))
+end
+@@end

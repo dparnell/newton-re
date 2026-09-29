@@ -1,0 +1,5 @@
+@@ 0x79f625 names
+func() begin
+	(if readOnly then (icon := lockedIcon) else (icon := nil))
+end
+@@end

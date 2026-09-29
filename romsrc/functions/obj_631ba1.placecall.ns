@@ -1,0 +1,29 @@
+@@ 0x4eced5
+func() begin
+	local l1, l2;
+	self.target := targetView.target;
+	target.state := nil;
+	target.startTime := 0;
+	target.endTime := 0;
+	target.appSymbol := appSymbol;
+	if (not target.toRef) then begin
+			target.toRef := [Array: ]
+		end;
+	if (Length(target.toRef) = 0) then begin
+			l1 := GetDataDefs('|nameRef.phone|):MakeNameRef(nil, '|nameRef.phone|);
+			AddArraySlot(target.toRef, l1)
+		end else begin
+			l1 := target.toRef[0]
+		end;
+	if StrFilled(target.name) then begin
+			if ((not (l2 := GetDataDefs('|nameRef.phone|):Get(l1, 'name, 'text))) or (not StrEqual(l2, target.name))) then begin
+					l1.name := {first: nil, last: (if StrFilled(target.name) then target.name else "")}
+				end
+		end;
+	l1.phone := (if StrFilled(target.phoneNumber) then target.phoneNumber);
+	if (not target.callDate) then begin
+			target.callDate := Time()
+		end;
+	(if (if l1 then IsRichString(l1.phone)) then self:ConvertInkText(l1.phone, 'phone, 262144, "Converting Phone Number", "Please verify that the ink text was converted correctly\u2026\u", 'InkConvert, 'ConversionComplete, target) else (slipUp := self:OpenRoutingSlip(target)))
+end
+@@end

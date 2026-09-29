@@ -1,0 +1,86 @@
+@@ 0x59ec89
+func(a1) begin
+	l1 := GetRoot().iobox;
+	if (if (mode = 'interactive) then (not l1.viewCObject)) then begin
+			l1:OpenAsInBox()
+		end else begin
+			if l1.viewCObject then begin
+					l1:SetBox('inbox)
+				end
+		end;
+	self:?SetStatusDialog('Storing, 'vStatusTitle, {titleText: a1.title});
+	a1.category := appSymbol;
+	a1.class := 'mailText;
+	if (mode = 'batch) then begin
+			a1.progress := "";
+			a1.state := 'Received
+		end else begin
+			a1.Remote := nil
+		end;
+	if a1.dateStr then begin
+			if (Length((l2 := StrParse(a1.dateStr, " "))) > 1) then begin
+					l3 := StrParse(l2[0], "-");
+					l4 := StrParse(l2[1], ":");
+					if (if (Length(l3) = 3) then (Length(l4) = 3)) then begin
+							if ((l5 := {year: floor(StringToNumber(l3[0])), month: floor(StringToNumber(l3[1])), Date: floor(StringToNumber(l3[2])), hour: floor(StringToNumber(l4[0])), minute: floor(StringToNumber(l4[1])), second: floor(StringToNumber(l4[2]))}).year >= 95) then begin
+									l5.year := (l5.year + 1900)
+								end else begin
+									l5.year := (l5.year + 2000)
+								end;
+							a1.timestamp := TotalMinutes(l5)
+						end else begin
+							a1.timestamp := Time()
+						end
+				end
+		end;
+	if (if a1.text then (StrLen(a1.text) > 4096)) then begin
+			l6 := [Array: 0];
+			l7 := 4095;
+			l8 := a1.text;
+			a1.text := nil;
+			(while (l7 < StrLen(l8)) do begin
+					(while (not IsWhiteSpace(l8[l7])) do (l7 := (l7 - 1)));
+					AddArraySlot(l6, (l7 * 2));
+					(l7 := (l7 + 4096))
+				end);
+			AddArraySlot(l6, (StrLen(l8) * 2));
+			l10 := (Length(l6) - 1);
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			local l5;
+			local l6;
+			local l7;
+			local l8;
+			local l9;
+			local l10;
+			(for l7 := 0 to (Length(l6) - 2) do begin
+					if (l7 = 0) then begin
+							a1 := DeepClone((l9 := a1))
+						end else begin
+							l9 := DeepClone(a1)
+						end;
+					l9.title := Stringer([Array: (l7 + 1), $/, l10, " ", l9.title]);
+					l9.text := self:GetDefaultOwnerStore():NewVBO('string, 2);
+					BinaryMunger(l9.text, 0, 0, l8, l6[l7], (l6[(l7 + 1)] - l6[l7]));
+					if (if (l7 = 0) then (mode = 'interactive)) then begin
+							self:?ItemCompleted(l9, 'Received, nil)
+						end else begin
+							self:?ItemCommit(l9)
+						end
+				end)
+		end else begin
+			if (mode = 'batch) then begin
+					self:?ItemCommit(a1)
+				end else begin
+					self:?ItemCompleted(a1, 'Received, nil)
+				end
+		end;
+	if (mode = 'interactive) then begin
+			l1:Refresh();
+			self.message := nil
+		end;
+	self:GetNextMessage()
+end
+@@end

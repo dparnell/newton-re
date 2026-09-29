@@ -1,0 +1,25 @@
+@@ 0x45c799
+func() begin
+	local l1, l2, l3, l4;
+	if (l1 := (verifyPassword = 'verifyOnly)) then begin
+			self.viewChildren := Clone(verifyOnlyKids);
+			height := (height - 52);
+			_defaultButton := closeBox
+		end else begin
+			self.viewChildren := Clone(kids)
+		end;
+	if (if verifyPassword then (l1 or self:CurrentPassword())) then begin
+			ArrayMunger(viewChildren, 0, 0, oldPassKids, 0, nil);
+			height := (height + 26)
+		end;
+	if (not KeyboardConnected()) then begin
+			l4 := AddArraySlot(viewChildren, {_proto: @375});
+			height := ((height - l4.viewBounds.top) + 5);
+			width := (l4.viewBounds.right - l4.viewBounds.left);
+			l4.viewBounds := Clone(l4.viewBounds);
+			l4.viewBounds.top := (l4.viewBounds.top - 23);
+			l4.viewBounds.bottom := (l4.viewBounds.bottom - 23)
+		end;
+	(self.viewBounds := RelBounds(0, 0, width, height))
+end
+@@end

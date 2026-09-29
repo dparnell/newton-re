@@ -1,0 +1,9 @@
+@@ 0x466755
+func(a1) begin
+	local l1;
+	if ((l1 := GetAppFormats(GetVariable(self, 'appSymbol))) = nil) then begin
+			l1 := GetRouteFormats(a1.target)
+		end;
+	return GetFormatTransports(l1, a1.target)
+end
+@@end

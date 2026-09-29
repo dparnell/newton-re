@@ -1,0 +1,7 @@
+@@ 0x56b225
+func(a1, a2) begin
+	local l1;
+	l1 := ModalCardAlert('|FormatAfterMountError?|, a1, a2);
+	HandleCardEvent('|FormatReallyNoCancel?|, [Array: a1, l1])
+end
+@@end

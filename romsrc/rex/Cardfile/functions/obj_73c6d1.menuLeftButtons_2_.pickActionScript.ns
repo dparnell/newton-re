@@ -1,0 +1,16 @@
+@@ 0x73cb91
+func(a1) begin
+	local l1, l2;
+	if (popup[a1].slot = customEditor) then begin
+			self:EditCustomLabels()
+		end else begin
+			if ((l1 := popup[a1].slot) = 'custom) then begin
+					l2 := popup[a1].custom
+				end else begin
+					l2 := self:GetNewPath(target, l1)
+				end;
+			newtAppBase:ShowEditSlip(l1, l2, nil, true, nil)
+		end;
+	inherited:?pickActionScript(a1)
+end
+@@end

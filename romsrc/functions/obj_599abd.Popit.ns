@@ -1,0 +1,16 @@
+@@ 0x599a9d
+func(a1) begin
+	self:hilite(nil);
+	(if (fields.title = 'multiple) then self:Notify(3, appName, "The Subject for multiple items can\u2019\ut be changed.") else self:editSubject(func(a1) begin
+			if a1 then begin
+					if (StrLen((a1 := SubstituteChars(a1, "\n\t", " "))) > 61) then begin
+							a1 := Substr(a1, 0, 61);
+							self:Notify(3, appName, ParamStr("The Subject is limited to ^0 characters and has been truncated.", [Array: 61]))
+						end
+				end;
+			fields.title := a1;
+			self:viewSetupChildrenScript();
+			base:Dirty()
+		end))
+end
+@@end

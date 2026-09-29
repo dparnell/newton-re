@@ -1,0 +1,42 @@
+@@ 0x470915
+func() begin
+	local l1, l2, l3;
+	l1 := 0;
+	if formOpen then begin
+			if ((timeoutCounter := (timeoutCounter - idleFrequency)) < 0) then begin
+					l2 := self:timesUpScript()
+				end else begin
+					l2 := true
+				end;
+			if l2 then begin
+					l3 := (if formOpen then HaveZones());
+					if formOpen then begin
+							if (HaveZones <> l3) then begin
+									zoneTimer := 0;
+									if l3 then begin
+											self:ShowZoneStuff()
+										end else begin
+											self:hideZoneStuff()
+										end;
+									HaveZones := l3
+								end;
+							zoneTimer := (zoneTimer + 1);
+							if HaveZones then begin
+									l1 := self:chooserIdleFrequency(3)
+								end else begin
+									if (zoneTimer > 30) then begin
+											l1 := self:chooserIdleFrequency(2)
+										end else begin
+											if (zoneTimer > 20) then begin
+													l1 := self:chooserIdleFrequency(1)
+												end else begin
+													l1 := self:chooserIdleFrequency(0)
+												end
+										end
+								end
+						end
+				end
+		end;
+	return l1
+end
+@@end

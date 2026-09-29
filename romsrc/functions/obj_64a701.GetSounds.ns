@@ -1,0 +1,9 @@
+@@ 0x427cf9
+func() begin
+	local l1;
+	(foreach l2 in (l1 := RecordEngine.fSoundArray) do begin
+			l2.callback := nil
+		end);
+	l1
+end
+@@end

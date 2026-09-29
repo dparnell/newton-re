@@ -1,0 +1,20 @@
+@@ 0x530f29
+func() begin
+	l1 := GetLocale().speakerless;
+	l2 := GetCommConfig(nil, "TAPI", nil);
+	labelCommands := [Array: ];
+	local l1;
+	local l2;
+	(foreach l3 in l2 do begin
+			local l5;
+			if (if (if (if (if (if (l5 := CommConfigRegistry.(l3)) then l5.config) then l5.config.supportsMakeOutgoing) then l5.config.supportsSendDigit) then ((not onlyIncoming) or (if onlyIncoming then l5.config.supportsEventIncoming))) then ((not l1) or (if l1 then l5.serviceId))) then begin
+					AddArraySlot(labelCommands, {item: Clone(l5.name), slot: l3})
+				end
+		end);
+	if (Length(labelCommands) >= 1) then begin
+			AddArraySlot((labelCommands := Sort(labelCommands, '|str<|, 'item)), 'pickseparator)
+		end;
+	AddArraySlot(labelCommands, {item: "Telephone", slot: nil});
+	inherited:?viewSetupFormScript()
+end
+@@end

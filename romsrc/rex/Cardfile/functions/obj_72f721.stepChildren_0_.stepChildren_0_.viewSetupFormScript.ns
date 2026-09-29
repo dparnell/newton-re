@@ -1,0 +1,6 @@
+@@ 0x72fcb9
+func() begin
+	scrollToBottom := addingData;
+	inherited:?viewSetupFormScript()
+end
+@@end

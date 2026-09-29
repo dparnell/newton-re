@@ -1,0 +1,15 @@
+@@ 0x441c0d
+func(a1) begin
+	local l1, l2, l3;
+	InkOff(a1);
+	self:?PrepareForClick();
+	l1 := self:GlobalBox();
+	l2 := (if (GetPoint(1, a1) > ((l1.bottom + l1.top) div 2)) then (-increment) else increment);
+	l3 := (Ticks() + firstTapDelay);
+	(repeat self:Advance(l2); if ((l3 := (l3 - Ticks())) > 0) then begin
+				Sleep(l3)
+			end; l3 := (Ticks() + repeatingTapDelay) until StrokeDone(a1));
+	self:?ClickDone();
+	return true
+end
+@@end

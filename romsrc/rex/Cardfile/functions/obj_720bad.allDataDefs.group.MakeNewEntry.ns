@@ -1,0 +1,6 @@
+@@ 0x73e0a1
+func() begin
+	local l1;
+	return (l1 := TotalClone('{version: 2, class: group, cardType: nil, group: nil, notes: nil, members: [Array: ], groupInfo: {}, name: {honorific: nil, first: "", last: nil, title: nil}, company: nil, postal_code: nil, sorton: "Untitled Group"}))
+end
+@@end

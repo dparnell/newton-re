@@ -1,0 +1,22 @@
+@@ 0x485c7d
+func() begin
+	local l1, l2, l3;
+	if (not (l3 := GetVariable((l2 := (l1 := self:GetTargetInfo('Filing)).targetView), 'labelsFilter))) then begin
+			if (l2:AppObjectUnfiled exists) then begin
+					text := Stringer([Array: $\uFC01, GetVariable(l2, 'AppObjectUnfiled)])
+				end else begin
+					text := Stringer([Array: $\uFC01, ParamStr(unfiled, [Array: GetVariable(l2, 'appObject)[1]])])
+				end
+		end else begin
+			if (l3 = '_all) then begin
+					text := Stringer([Array: $\uFC01, GetVariable(l2, 'AppAll)])
+				end else begin
+					text := Stringer([Array: $\uFC01, GetFolderStr(l3)])
+				end
+		end;
+	showBarText.text := StrTruncate(text, 137);
+	showBarText.width := (StrFontWidth(text, viewFont) + 16);
+	showBarText.viewBounds := SetBounds(0, 1, showBarText.width, 13);
+	self:Dirty()
+end
+@@end

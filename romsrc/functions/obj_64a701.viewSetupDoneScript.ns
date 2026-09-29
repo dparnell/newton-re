@@ -1,0 +1,5 @@
+@@ 0x427a41
+func() begin
+	(if (not sounds) then (RecordEngine := @851:New({_parent: self})) else (RecordEngine := @851:New({_parent: self, fSoundArray: sounds, fDirection: 'play})))
+end
+@@end

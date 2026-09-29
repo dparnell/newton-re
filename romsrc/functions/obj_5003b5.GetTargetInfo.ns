@@ -1,0 +1,6 @@
+@@ 0x4ff419
+func(a1) begin
+	local l1, l2, l3, l4;
+	(if ((l1 := (if selected then Length(selected) else 0)) > 0) then {target: {_cursor: selected, class: 'CalendarOverview}, targetView: self, targetStore: (if (l1 = 1) then (if (l3 := (l2 := selected[0]).entryAlias) then (if (l4 := ResolveEntryAlias(l3)) then EntryStore(l4)) else self:GetToDo():TaskStore(l2.topic)))} else {target: nil, targetView: self, targetStore: nil})
+end
+@@end

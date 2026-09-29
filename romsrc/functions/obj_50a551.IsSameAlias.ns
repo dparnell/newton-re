@@ -1,0 +1,5 @@
+@@ 0x5038d5
+func(a1, a2) begin
+	(a1 = a2)
+end
+@@end

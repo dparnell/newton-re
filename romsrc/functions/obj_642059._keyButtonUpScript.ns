@@ -1,0 +1,9 @@
+@@ 0x44a661
+func(a1) begin
+	if (not InRepeatedKeyCommand()) then begin
+			clicker()
+		end;
+	PostCommand('viewfrontmost, 45);
+	RefreshViews()
+end
+@@end

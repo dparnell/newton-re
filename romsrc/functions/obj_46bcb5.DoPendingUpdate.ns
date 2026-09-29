@@ -1,0 +1,11 @@
+@@ 0x46b279
+func() begin
+	(if updatePending then begin
+			if GetRoot().correct.viewCObject then begin
+					AddUndoAction('RestoreUndoState, [Array: updatePending]);
+					self:RealDisplayExternal(true)
+				end;
+			(updatePending := nil)
+		end)
+end
+@@end

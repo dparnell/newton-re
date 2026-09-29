@@ -1,0 +1,5 @@
+@@ 0x550f09
+func() begin
+	(self.viewBounds := OffsetRect(displayParams.buttonBarBounds, (-displayParams.appAreaGlobalLeft), (-displayParams.appAreaGlobalTop)))
+end
+@@end

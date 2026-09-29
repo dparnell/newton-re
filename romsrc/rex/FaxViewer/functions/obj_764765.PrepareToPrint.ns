@@ -1,0 +1,10 @@
+@@ 0x7648ed
+func(a1) begin
+	local l1;
+	(if (a1 < target.info.pageCount) then begin
+			ImageTarget:setup((l1 := target.pages[a1]).image, l1.annotations, nil);
+			ImageTarget:ZoomTo('fitInWindow);
+			true
+		end)
+end
+@@end

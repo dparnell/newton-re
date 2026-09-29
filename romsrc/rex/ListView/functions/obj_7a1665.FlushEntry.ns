@@ -1,0 +1,24 @@
+@@ 0x7972e5 names
+func(Entry) begin
+	local where, error, msg;
+	(if EntryValid(Entry) then (try begin
+				EntryChangeXmit(Entry, 'todo)
+			end onexception |evt.ex.fr.store| do begin
+				error := CurrentException().error;
+				where := EntryStore(Entry):GetName();
+				if (error = -10605) then begin
+						msg := "To Do changes could not be saved (\u201C\u^0\u201D\u is write-protected)"
+					end else begin
+						if (error = -10617) then begin
+								msg := "To Do changes could not be saved (\u201C\u^0\u201D\u is full)"
+							end
+					end;
+				if msg then begin
+						self:Notify(3, "To Do", ParamStr(msg, [Array: where]))
+					end else begin
+						Rethrow()
+					end;
+				EntryUndoChanges(Entry)
+			end))
+end
+@@end

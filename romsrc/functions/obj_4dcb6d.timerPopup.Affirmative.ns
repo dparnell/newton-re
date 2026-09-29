@@ -1,0 +1,5 @@
+@@ 0x4dc66d
+func() begin
+	context:SetNewTimer(value)
+end
+@@end

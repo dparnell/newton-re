@@ -1,0 +1,5 @@
+@@ 0x4f34c9
+func() begin
+	self:AddWeek(8)
+end
+@@end

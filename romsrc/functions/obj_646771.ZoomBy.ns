@@ -1,0 +1,5 @@
+@@ 0x45fc71
+func(a1) begin
+	self:ZoomTo(zoomStops[self:ZoomByDest(a1)])
+end
+@@end

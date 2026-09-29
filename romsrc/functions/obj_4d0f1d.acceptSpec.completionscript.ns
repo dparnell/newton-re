@@ -1,0 +1,5 @@
+@@ 0x4cfab9
+func(a1, a2, a3) begin
+	a1:CheckAcceptResult(a3)
+end
+@@end

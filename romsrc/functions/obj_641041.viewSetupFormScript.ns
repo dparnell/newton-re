@@ -1,0 +1,6 @@
+@@ 0x4d6671
+func() begin
+	rotationInProgress := nil;
+	inherited:?viewSetupFormScript()
+end
+@@end

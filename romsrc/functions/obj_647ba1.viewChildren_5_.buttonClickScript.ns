@@ -1,0 +1,15 @@
+@@ 0x4906f5
+func() begin
+	local l1;
+	if (not (l1 := packageList).checkAll) then begin
+			prefsCache.restorePackages := 'all
+		end else begin
+			prefsCache.restorePackages := 'Partial;
+			prefsCache.restorePackNames := [Array: ]
+		end;
+	l1.checkAll := (not l1.checkAll);
+	EntryChangeXmit(prefsCache, 'backup);
+	l1:figureAllItems();
+	l1:RedoChildren()
+end
+@@end

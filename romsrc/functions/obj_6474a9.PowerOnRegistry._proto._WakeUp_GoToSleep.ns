@@ -1,0 +1,6 @@
+@@ 0x419715
+func(a1) begin
+	GetRoot().wokeFromAlarmOrGPI := (if ((a1 = 'alarm) or (a1 = 'serialgpi)) then Ticks());
+	(if (a1 = 'user) then DSTVerify(Time()))
+end
+@@end

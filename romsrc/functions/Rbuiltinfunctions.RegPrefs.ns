@@ -1,0 +1,9 @@
+@@ 0x5b50ad
+func(a1, a2) begin
+	PrefsRegistry.(EnsureInternal(a1)) := a2;
+	if GetRoot().preferenceRoll.viewCObject then begin
+			GetRoot().preferenceRoll:RedoChildren()
+		end;
+	nil
+end
+@@end

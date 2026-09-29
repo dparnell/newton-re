@@ -1,0 +1,37 @@
+@@ 0x425905
+func() begin
+	local l1;
+	fEngineError := 0;
+	fCompletionCount := 0;
+	self:SetState(2);
+	try begin
+			if fSoundChannel:isPaused() then begin
+					fSoundChannel:pause();
+					l1 := true
+				end else begin
+					self:SetRecordingQuality();
+					fCompletionCount := 0;
+					fSoundArray := [Array: ];
+					fSoundChannel:Close();
+					(fSoundChannel := @431:newRecording()).inputDevice := fInputDevice;
+					fSoundChannel.outputDevice := fOutputDevice;
+					fSoundChannel.inputGain := fInputGain;
+					fSoundChannel:Open();
+					if (if (self:TestStore() = 0) then self:ScheduleInputBlock()) then begin
+							fSoundChannel:start(true);
+							if (self:TestStore() = 0) then begin
+									AddDeferredSend(self, 'ScheduleInputBlock, nil)
+								end;
+							l1 := true
+						end
+				end
+		end onexception |evt.ex| do begin
+			self:CleanUpAfterError()
+		end;
+	if (not l1) then begin
+			self:SetState(32);
+			self:SetState(1)
+		end;
+	l1
+end
+@@end

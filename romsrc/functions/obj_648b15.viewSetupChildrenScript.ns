@@ -1,0 +1,20 @@
+@@ 0x4b75b5
+func() begin
+	local l1;
+	viewChildren := (target := nil);
+	if (parentTarget := GetVariable((parentView := self:Parent()), 'target)) then begin
+			targetDataDef := (currentDataDef := GetEntryDataDef((target := self:GetTargetFromEntry(parentTarget))));
+			if (viewDef <> nil) then begin
+					targetViewDef := (currentViewDef := GetEntryDataView(target, viewDef))
+				end else begin
+					targetViewDef := parentView.targetViewDef
+				end;
+			if (l1 := Clone(targetViewDef)) then begin
+					l1.realData := target;
+					l1:?SetupForm(target, self);
+					viewChildren := [Array: l1]
+				end
+		end;
+	(targetView := self)
+end
+@@end

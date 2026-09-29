@@ -1,0 +1,18 @@
+@@ 0x599425
+func() begin
+	local l1;
+	l1 := (foreach l2, l3 in fields collect (if (not l3) then l2));
+	(foreach l2 in l1 do begin
+			if l2 then begin
+					RemoveSlot(fields, l2)
+				end
+		end);
+	RemoveSlot(fields, 'formats);
+	RemoveSlot(fields, 'targetBox);
+	RemoveSlot(fields, 'alternatives);
+	RemoveSlot(fields, 'pageCount);
+	RemoveSlot(fields, 'pageID);
+	RemoveSlot(fields, 'pageNumber);
+	(if (fields.state = 'pending) then RemoveSlot(fields, 'Connect))
+end
+@@end

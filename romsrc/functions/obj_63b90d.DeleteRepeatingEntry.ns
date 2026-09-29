@@ -1,0 +1,19 @@
+@@ 0x510291
+func(a1, a2, a3) begin
+	if (not ((a3 = true) or (a3 = nil))) then begin
+			ThrowBadTypeWithFrameData(-48424, a3)
+		end;
+	local l1;
+	(foreach l2 in (l1 := self:IdentifyAppointments(a1, a2, '[Array: RepeatingMeeting, RepeatingEvent], a3)) do begin
+			local l4;
+			l4 := l2;
+			if l2.repeatTemplate then begin
+					l4 := l2.repeatTemplate
+				end;
+			if IsSoupEntry(l4) then begin
+					EntryRemoveFromSoupXmit(l4, 'calendarAPI)
+				end
+		end);
+	nil
+end
+@@end

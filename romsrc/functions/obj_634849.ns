@@ -1,0 +1,10 @@
+@@ 0x634849
+func(a1, a2, a3) begin
+	local l1;
+	l1 := self:ModifyTag(a1, a2);
+	if a3 then begin
+			XmitSoupChange(self:GetName(), a3, 'soupTagsChanged, self)
+		end;
+	l1
+end
+@@end

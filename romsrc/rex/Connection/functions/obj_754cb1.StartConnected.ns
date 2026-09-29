@@ -1,0 +1,10 @@
+@@ 0x755b49
+func() begin
+	if (not IsFrame(syncOptions)) then begin
+			syncOptions := protoContext:BuildDefaultSyncOpts(syncOptions)
+		end;
+	endpoint.packageName := nil;
+	endpoint.percentDone := 0;
+	AddDeferredSend(self, 'DeferredConnected, nil)
+end
+@@end

@@ -1,0 +1,35 @@
+@@ 0x514e29
+func(a1, a2, a3) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8;
+	l1 := [Array: ];
+	if ((ClassOf(a1) = 'meeting) or a1.mtgText) then begin
+			l2 := OffsetShape(MakeShape(GetMeetingIcon(a1)), 20, (a2 + 1));
+			ArrayInsert(l1, l2, 0);
+			a2 := (a2 + LineHt);
+			l3 := (a1.mtgStartDate + self:GetMeetingSlot(a1, 'mtgDuration));
+			l4 := Stringer([Array: TimeStr(a1.mtgStartDate, TimeSpec), " ", $-, " ", TimeStr(l3, TimeSpec)]);
+			ArrayInsert(l1, MakeText(l4, 42, a2, 145, (a2 + 1)), 0);
+			if (if (l5 := self:GetMeetingText(a1)) then (StrLen(l5) > 0)) then begin
+					StyledStrTruncate((l5 := Clone(l5)), (a3 - 145), bodyFont);
+					ArrayInsert(l1, MakeText(l5, 145, a2, a3, (a2 + 1)), 0)
+				end;
+			if (if (l6 := self:GetNotesData(a1)[1]) then (Length(l6) > 0)) then begin
+					a2 := (a2 + LineHt);
+					l4 := ExtractData(l6, " ", 100);
+					StyledStrTruncate((l4 := ParamStr("\u2022\u ^0", [Array: l4])), (a3 - 145), bodyFont);
+					ArrayInsert(l1, MakeText(l4, 145, a2, a3, (a2 + 1)), 0)
+				end;
+			if (l7 := self:GetMeetingSlot(a1, 'mtgLocation)) then begin
+					a2 := (a2 + LineHt);
+					StyledStrTruncate((l4 := ParamStr("@ ^0", [Array: self:getNameOfLocation(l7)])), (a3 - 145), bodyFont);
+					ArrayInsert(l1, MakeText(l4, 145, a2, a3, (a2 + 1)), 0)
+				end;
+			if (l8 := self:GetMeetingSlot(a1, 'mtgInvitees)) then begin
+					a2 := (a2 + LineHt);
+					StyledStrTruncate((l4 := ParamStr("with ^0", [Array: self:GetNamesOfInvitees(l8, nil)])), (a3 - 145), bodyFont);
+					ArrayInsert(l1, MakeText(l4, 145, a2, a3, (a2 + 1)), 0)
+				end
+		end;
+	l1
+end
+@@end

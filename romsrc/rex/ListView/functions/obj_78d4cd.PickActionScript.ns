@@ -1,0 +1,10 @@
+@@ 0x78d16d names
+func(anAction) begin
+	local theTopic, oldPriority;
+	(if ((not HasPath((theTopic := topics[curTopic]), 'mtgPriority)) or (theTopic.mtgPriority <> anAction)) then begin
+			oldPriority := theTopic.mtgPriority;
+			curTopic := self:SetPriority(curTopic, anAction, nil);
+			AddUndoAction('SetPriority, [Array: curTopic, oldPriority, true])
+		end)
+end
+@@end

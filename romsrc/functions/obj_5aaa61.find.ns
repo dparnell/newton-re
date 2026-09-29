@@ -1,0 +1,19 @@
+@@ 0x5aaa01
+func(a1) begin
+	l1 := SPrintObject(a1);
+	l2 := SPrintObject($a);
+	local l1;
+	local l2;
+	local l3;
+	l3 := (if (StrCompare(l1, "a") <= 0) then 0 else (if (StrCompare(l1, "z") >= 0) then 25 else (for l4 := 1 to 24 do begin
+					l2[0] := letters[l4];
+					if (StrCompare(l1, l2) = 0) then begin
+							break l4
+						end
+				end)));
+	if (not l3) then begin
+			l3 := 0
+		end;
+	l3
+end
+@@end

@@ -1,0 +1,15 @@
+@@ 0x4f2e7d
+func(a1) begin
+	(if self:TrackHilite(a1) then begin
+			if singleSelect then begin
+					selected := self.dayOfWeek
+				end else begin
+					if (BAnd((selected := bxor(selected, self.dayOfWeek)), 4064) = 0) then begin
+							selected := self.dayOfWeek
+						end
+				end;
+			self:Parent():?HitItem(self.dayIndex);
+			self:Parent():Initialize(selected, singleSelect)
+		end)
+end
+@@end

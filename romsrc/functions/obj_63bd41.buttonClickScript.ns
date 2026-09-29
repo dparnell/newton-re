@@ -1,0 +1,46 @@
+@@ 0x48aa85
+@@const kLiteral_3c5f65
+"Other City"
+@@main
+func() begin
+	if (if (l4 := GetUserConfig('personae)) then (Length(l4) > 1)) then begin
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			l1 := (foreach l5 in l4 collect self:PrimaryName(ResolveEntryAlias(l5)))
+		end;
+	if (l9 := GetUserConfig('emporia)) then begin
+			l2 := [Array: ];
+			(foreach l5 in l9 do begin
+					local l9, l10;
+					if StrFilled((l10 := ResolveEntryAlias(l5)).place) then begin
+							AddArraySlot(l2, {item: l10.place, value: l5})
+						end
+				end);
+			if (Length(l2) = 0) then begin
+					AddArraySlot(l2, {item: GetUserConfig('location).name, value: nil})
+				end;
+			Sort(l2, '|str<|, 'item);
+			if (not GetVariable(self, 'hideOtherCity)) then begin
+					if (Length(l2) > 0) then begin
+							AddArraySlot(l2, 'pickseparator)
+						end;
+					AddArraySlot(l2, kLiteral_3c5f65)
+				end
+		end else begin
+			if (not GetVariable(self, 'hideOtherCity)) then begin
+					l2 := [Array: kLiteral_3c5f65]
+				end
+		end;
+	if l1 then begin
+			l3 := ArrayMunger(ArrayInsert(l2, 'pickseparator, 0), 0, 0, l1, 0, nil)
+		end else begin
+			l3 := l2
+		end;
+	(if l3 then begin
+			popup := l3;
+			inherited:buttonClickScript()
+		end else self:hilite(nil))
+end
+@@end

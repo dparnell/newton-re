@@ -1,0 +1,29 @@
+@@ 0x553f89
+@@const kLiteral_5a74d1
+"Packages"
+@@main
+func(a1) begin
+	local appSymbol;
+	local l1, l2, l3, l4, l5, l6, l7;
+	if (if IsSoupEntry(a1) then StrEqual(EntrySoup(a1):GetName(), kLiteral_5a74d1)) then begin
+			l1 := a1
+		end else begin
+			if (ClassOf(a1) = 'symbol) then begin
+					a1 := {appSymbol: a1}
+				end;
+			l2 := a1.store;
+			appSymbol := a1.appSymbol;
+			l3 := a1.packageName;
+			if (l4 := (if l2 then l2:GetSoup(kLiteral_5a74d1) else GetUnionSoup(kLiteral_5a74d1))) then begin
+					l5 := func(a1) begin
+						(a1.app = appSymbol)
+					end;
+					l1 := (l7 := l4:Query((l6 := (if l3 then {tagspec: '{all: _icon}, validTest: l5, indexPath: 'packageName, beginKey: l3, endKey: l3} else {tagspec: '{all: _icon}, validTest: l5})))):entry()
+				end;
+			if (not l1) then begin
+					l1 := LFetch(|Parts1.x|, appSymbol, 0, '|=|, 'app)
+				end
+		end;
+	l1
+end
+@@end

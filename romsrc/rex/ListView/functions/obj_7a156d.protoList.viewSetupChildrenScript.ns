@@ -1,0 +1,11 @@
+@@ 0x78dc65 names
+func() begin
+	local numKids;
+	inherited:viewSetupChildrenScript();
+	(if (symbol = 'listLetterFormat) then (if ((printAddExtra = true) or (nTopics = 0)) then begin
+				self.viewChildren := [Array: @236];
+				printAddExtra := 'done;
+				(topics := [Array: ])
+			end else (if (((numKids := Length(viewChildren)) + reflowStart) >= nTopics) then (if ((self:LocalBox().bottom - self:TopicBottom(topics[(nTopics - 1)])) >= 80) then AddArraySlot(self.viewChildren, @236) else (printAddExtra := true)))))
+end
+@@end

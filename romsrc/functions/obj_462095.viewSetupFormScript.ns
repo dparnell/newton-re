@@ -1,0 +1,6 @@
+@@ 0x462075
+func() begin
+	self.text := nfText;
+	(self.viewBounds := SetBounds(0, 14, 0, 0))
+end
+@@end

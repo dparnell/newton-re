@@ -1,0 +1,15 @@
+@@ 0x44a1b1
+func(a1, a2) begin
+	local l1, l2;
+	if a2 then begin
+			if (not (l1 := a2.indent)) then begin
+					if (not (l1 := a2.bounds)) then begin
+							if (l1 := a2.left) then begin
+									l2 := a2.top
+								end
+						end
+				end
+		end;
+	GetView(DoPopup(a1, l1, l2, self))
+end
+@@end

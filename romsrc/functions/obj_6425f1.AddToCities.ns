@@ -1,0 +1,9 @@
+@@ 0x4de315
+func(a1, a2) begin
+	self:VerifyUniqueLocation(a1);
+	if LocationEntryAdd(@251, a1) then begin
+			self:RebuildCardCursor(cards:entry())
+		end;
+	(if a2 then AddEmporium(a1))
+end
+@@end

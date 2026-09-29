@@ -1,0 +1,14 @@
+@@ 0x7598a5
+func(a1) begin
+	local l1, l2, l3;
+	(if (if layout then layout.(a1)) then begin
+			l2 := (l1 := layout.(a1)).row;
+			l3 := l1.col;
+			self.viewBounds := Clone(viewBounds);
+			viewBounds.left := (10 + ((l3 - 1) * 55));
+			viewBounds.right := (viewBounds.left + 50);
+			viewBounds.top := (27 + ((l2 - 1) * 55));
+			(viewBounds.bottom := (viewBounds.top + 50))
+		end)
+end
+@@end

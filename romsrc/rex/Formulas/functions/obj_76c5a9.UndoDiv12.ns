@@ -1,0 +1,7 @@
+@@ 0x76c8dd
+func(a1) begin
+	AddUndoAction('UndoDiv12, [Array: self:GetNumericValue()]);
+	self:SetNumericValue(a1);
+	self:SolveFormula(lineNumber)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x42134d
+func() begin
+	SetValue(entryLine, 'text, richText)
+end
+@@end

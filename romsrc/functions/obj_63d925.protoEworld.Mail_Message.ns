@@ -1,0 +1,24 @@
+@@ 0x59ec69
+func(a1) begin
+	(if (mode = 'batch) then begin
+			if (not a1) then begin
+					return self:GetNextMessage()
+				end;
+			(if a1.hasfile then begin
+					self:?SetStatusDialog('ReceiveFile, 'vGauge, {titleText: a1.title, gauge: [Array: 0, 0, a1.filesize]});
+					self:Mail_Download(a1, transport)
+				end else self:submit(a1))
+		end else begin
+			if ((a1 = nil) or (message = nil)) then begin
+					return self:GetNextMessage()
+				end;
+			(foreach l1, l2 in a1 do begin
+					message.(l1) := l2
+				end);
+			(if message.hasfile then begin
+					self:?SetStatusDialog('ReceiveFile, 'vGauge, {titleText: a1.title, gauge: [Array: 0, 0, a1.filesize]});
+					self:Mail_Download(message, transport)
+				end else self:submit(message))
+		end)
+end
+@@end

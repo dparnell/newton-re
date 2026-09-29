@@ -1,0 +1,41 @@
+@@ 0x7232b1
+func() begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11, l12, l13, l14;
+	l5 := (l4 := self:LocalBox()).right;
+	l6 := l4.bottom;
+	l8 := nil;
+	self.stepChildren := [Array: ];
+	l1 := 20;
+	if (l9 := self:?AddHeader()) then begin
+			l1 := (l1 + l9)
+		end;
+	l2 := l1;
+	(while target do begin
+			l9 := 0;
+			l3 := 50;
+			(while target do begin
+					l7 := GetRoot().cardfile:GetBCLayout(target).layout;
+					l12 := Length(stepChildren);
+					if (l11 := self:AddPrintChild(l7, target, l3, l1)) then begin
+							if ((if ((l11.bottom + l1) > l6) then (l1 > l2)) or ((l11.right + l3) > l5)) then begin
+									l14 := Length(stepChildren);
+									SetLength(stepChildren, l12);
+									break (l8 := (if ((l11.bottom + l1) > l6) then (l1 > l2)))
+								end else begin
+									l9 := max(l9, l11.bottom);
+									l10 := l11.right
+								end
+						end else begin
+							break (l8 := true)
+						end;
+					l3 := ((l3 + l10) + 20);
+					(if (if (target := targetCursor:Next()) then (not target.class)) then call GetRoot().cardfile.kUpdateClass with (target))
+				end);
+			if l8 then begin
+					break
+				end;
+			(l1 := ((l1 + l9) + 20))
+		end);
+	inherited:?viewSetupChildrenScript()
+end
+@@end

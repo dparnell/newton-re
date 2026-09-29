@@ -1,0 +1,11 @@
+@@ 0x453645
+func(a1, a2, a3) begin
+	local l1, l2;
+	if fColumn then begin
+			hilitedIndex := nil;
+			self:SetTapInfo((l2 := self:FetchNameRef((l1 := cursor:clone():move(a1)))), a1, fTapBox, fColumn.fieldPath);
+			fOpenEditor := pickerDef:HitItem(fTapinfo, self)
+		end;
+	true
+end
+@@end

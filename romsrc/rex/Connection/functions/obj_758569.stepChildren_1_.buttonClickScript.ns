@@ -1,0 +1,22 @@
+@@ 0x7587bd
+func() begin
+	local l1;
+	closing := true;
+	protoContext:RemoveOpenWindow(base);
+	l1 := 0;
+	try begin
+			endpoint.disconnecting := true;
+			endpoint:WriteCommand("disc", nil, nil)
+		end onexception |evt.ex| do begin
+			l1 := CurrentException().error
+		end;
+	if (l1 = 0) then begin
+			AddDelayedCall(func() begin
+				endpoint:ConnectionDone(0)
+			end, nil, 1000)
+		end else begin
+			endpoint:ConnectionDone(l1)
+		end;
+	inherited:?buttonClickScript()
+end
+@@end

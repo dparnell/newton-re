@@ -1,0 +1,55 @@
+@@ 0x55cfd9
+@@const kLiteral_546201
+"Find"
+@@main
+func(a1, a2, a3) begin
+	local l1, l2, l3, l4, l5, l6, l7;
+	if (not findType) then begin
+			findType := findInput.curLabelCommand
+		end;
+	l2 := findType;
+	l3 := Dispatcher[l2].function;
+	l1 := GetVariable(a1, l3);
+	if GetUserConfig('KSimpleMode) then begin
+			if (l4 := GetVariable(a1, 'appSymbol)) then begin
+					l5 := GetRoot().ExtrasDrawer:GetPartEntry(l4)
+				end;
+			if l5 then begin
+					l6 := GetRoot().ExtrasDrawer:GetPartCursor(nil, nil, {none: [Array: '_snowflake], any: [Array: '_Classroom]});
+					l7 := l6:Goto(l5)
+				end;
+			l1 := (if l1 then (l7 or (GetUserConfig('blessedapp) = l4)))
+		end;
+	if l1 then begin
+			try begin
+					if (l3 = 'find) then begin
+							if a3 then begin
+									a1:FindTargeted(findText, findAllResults, a2, self, a3)
+								end else begin
+									a1:find(findText, findAllResults, a2, self)
+								end
+						end else begin
+							if (l3 = 'DateFind) then begin
+									if a3 then begin
+											a1:DateFindTargeted(findTime, Dispatcher[l2].filter, findAllResults, a2, self, a3)
+										end else begin
+											a1:DateFind(findTime, Dispatcher[l2].filter, findAllResults, a2, self)
+										end
+								end else begin
+									self:Notify(3, kLiteral_546201, ParamStr("An internal error occured (unknown function in Dispatcher [^0]).", [Array: SPrintObject(l3)]));
+									return nil
+								end
+						end
+				end onexception |evt.ex.outofmem| do begin
+					self:Notify(3, kLiteral_546201, "Too many matching items were found. Try narrowing the search.");
+					findDrawer.findAllResults := nil;
+					return nil
+				end
+		end else begin
+			if (a2 = 'localFind) then begin
+					self:Notify(3, kLiteral_546201, Dispatcher[l2].error)
+				end
+		end;
+	true
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x75aac1
+func(a1, a2) begin
+	(if (a1 = -16005) then self:OpenWhichConnection(a2) else a2:ConnectionDone(a1))
+end
+@@end

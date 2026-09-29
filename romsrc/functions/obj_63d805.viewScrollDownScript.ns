@@ -1,0 +1,5 @@
+@@ 0x596efd
+func() begin
+	messageHolder:viewScrollDownScript()
+end
+@@end

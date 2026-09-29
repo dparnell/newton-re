@@ -1,0 +1,30 @@
+@@ 0x4c57a5
+func() begin
+	if (currentSoupSymbol = 'outbox) then begin
+			self.checkSlot := 'SendRequest
+		end else begin
+			self.checkSlot := 'ReceiveRequest
+		end;
+	l1 := masterSoup.theCursor:entry();
+	masterSoup:SetupCursor();
+	dataCursor := masterSoup:GetCursor();
+	if IsSoupEntry(l1) then begin
+			dataCursor:Goto(l1)
+		end;
+	l2 := [Array: ];
+	l3 := dataCursor:clone();
+	if selected then begin
+			local l1;
+			local l2;
+			local l3;
+			(foreach l4 in selected do begin
+					local l6;
+					if (if IsSoupEntry((l6 := ResolveEntryAlias(l4))) then l3:Goto(l6)) then begin
+							AddArraySlot(l2, l4)
+						end
+				end);
+			selected := l2
+		end;
+	self:Retarget(true)
+end
+@@end

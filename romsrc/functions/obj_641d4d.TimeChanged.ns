@@ -1,0 +1,14 @@
+@@ 0x431f1d
+func() begin
+	if (setter.hours >= 12) then begin
+			if (ampmButtons.clusterValue = 'morningStr) then begin
+					ampmButtons:SetClusterValue('eveningStr)
+				end
+		end else begin
+			if (ampmButtons.clusterValue = 'eveningStr) then begin
+					ampmButtons:SetClusterValue('morningStr)
+				end
+		end;
+	context:?NewTime(Time)
+end
+@@end

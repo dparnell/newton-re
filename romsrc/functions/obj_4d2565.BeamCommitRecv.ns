@@ -1,0 +1,14 @@
+@@ 0x4d23f9
+func(a1, a2, a3) begin
+	local l1;
+	if ((l1 := self:NewFromItem(a1)).fromRef = nil) then begin
+			l1.fromRef := {name: {last: tempItem.sender}}
+		end;
+	if a2 then begin
+			l1.body := ConvertFrame(l1.appSymbol, nil, a2, 'twoO, l1.body, nil)
+		end;
+	l1.typeBeam := (if a1.typeBeam then a1.typeBeam else tempItem.typeBeam);
+	self:ItemCompleted(l1, 'Received, a3);
+	(tempItem := nil)
+end
+@@end

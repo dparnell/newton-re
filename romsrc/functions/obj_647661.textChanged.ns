@@ -1,0 +1,21 @@
+@@ 0x45c339
+func() begin
+	l2 := StrLen((l1 := entryLine.text));
+	l3 := StrLen(realText);
+	l4 := GetCaretInfo().info.offset;
+	(if (l2 < l3) then (realText := Stringer([Array: Substr(realText, 0, l4), Substr(realText, ((l4 + l3) - l2), l3)])) else (if (l2 > l3) then begin
+				l5 := (l2 - l3);
+				realText := Stringer([Array: Substr(realText, 0, (l4 - l5)), Substr(l1, (l4 - l5), l5), Substr(realText, (l4 - l5), ((l3 - l4) + l5))]);
+				local l1;
+				local l2;
+				local l3;
+				local l4;
+				local l5;
+				(for l6 := (-l5) to -1 do begin
+						l1[(l4 + l6)] := dummyChar
+					end);
+				SetValue(entryLine, 'text, l1);
+				SetKeyView(entryLine, l4)
+			end))
+end
+@@end

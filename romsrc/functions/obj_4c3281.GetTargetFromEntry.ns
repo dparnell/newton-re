@@ -1,0 +1,5 @@
+@@ 0x4c31f5
+func(a1) begin
+	GetTargetFromEntry(a1)
+end
+@@end

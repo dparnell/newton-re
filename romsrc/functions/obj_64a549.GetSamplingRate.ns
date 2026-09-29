@@ -1,0 +1,5 @@
+@@ 0x423389
+func() begin
+	(if samplingRate then samplingRate else 22026.43172)
+end
+@@end

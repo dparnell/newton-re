@@ -1,0 +1,9 @@
+@@ 0x461b69
+func(a1, a2) begin
+	local l1;
+	if (not (l1 := Notifications[a1]).seenByUser) then begin
+			l1.seenByUser := true
+		end;
+	(if (if (if (if a2 then viewCObject) then (roll.index = a1)) then (not roll.allCollapsed)) then AddDeferredSend(self, 'Close, nil))
+end
+@@end

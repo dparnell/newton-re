@@ -1,0 +1,52 @@
+@@ 0x753249
+@@const kLiteral_74aef5
+'[pathExpr: name]
+@@const kROM_8268
+@8268
+@@main
+func(a1) begin
+	l1 := "";
+	if a1 then begin
+			protoContext:BuildApplicationList(func() begin
+				endpoint:IdleConnection(true)
+			end);
+			l2 := [Array: ];
+			local l1;
+			local l2;
+			(foreach l3 in soupChangeInfo do begin
+					(foreach l5 in protoContext.applications do begin
+							if (l7 := BFetch(l5.soups, l3.soupName, '|str<|, nil)) then begin
+									if (not (l8 := BFetch(l2, l5.name, '|str<|, kLiteral_74aef5))) then begin
+											l8 := BInsert(l2, {name: l5.name, dtCount: 0, newtCount: 0}, '|str<|, kLiteral_74aef5, 'returnElt)
+										end;
+									l8.dtCount := (l8.dtCount + l3.count);
+									if (if (l9 := BFetch(a1, l7, '|str<|, kLiteral_74aef5)) then l9.added) then begin
+											l8.newtCount := (l8.newtCount + l9.added)
+										end;
+									break
+								end
+						end)
+				end);
+			(foreach l5 in l2 do begin
+					local l7, l8, l9, l10, l11;
+					if (l5.newtCount > 0) then begin
+							if (l5.newtCount = 1) then begin
+									l10 := "item"
+								end else begin
+									l10 := "items"
+								end;
+							l1 := Stringer([Array: l1, ParamStr("^0 ^1 added to ^2.", [Array: NumberStr(l5.newtCount), l10, l5.name]), "\n"])
+						end
+				end)
+		end;
+	if (StrLen(l1) = 0) then begin
+			l1 := "No information was imported."
+		end;
+	self:Close();
+	protoContext:ReopenBlessed();
+	(l11 := BuildContext(kROM_8268)).resultsText := l1;
+	l11.endpoint := endpoint;
+	l11.callWhenDone := callWhenDone;
+	l11:FilterDialog()
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x561485
+func(a1) begin
+	(if (a1.category or (not GetVariable(a1.finder, 'SelectItem))) then 'NotCheckable else (if GetVariable(a1.finder, 'CheckState) then a1.finder:CheckState(a1) else self:IsThisItemSelected(a1)))
+end
+@@end

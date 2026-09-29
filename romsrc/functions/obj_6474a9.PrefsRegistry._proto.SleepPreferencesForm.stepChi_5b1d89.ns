@@ -1,0 +1,5 @@
+@@ 0x5b1d89
+func() begin
+	SetUserConfig('powerSleep, (not viewValue))
+end
+@@end

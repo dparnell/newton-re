@@ -1,0 +1,5 @@
+@@ 0x48e789
+func() begin
+	ReBoot()
+end
+@@end

@@ -1,0 +1,16 @@
+@@ 0x50e719
+func(a1, a2, a3) begin
+	l1 := (a3 + 1440);
+	l2 := Length(a1);
+	local l1;
+	local l2;
+	(for l3 := a2 to (l2 - 1) do begin
+			if IsString(a1[l3]) then begin
+					if (a1[(l3 + 1)].mtgStartDate >= l1) then begin
+							return l3
+						end
+				end
+		end);
+	l2
+end
+@@end

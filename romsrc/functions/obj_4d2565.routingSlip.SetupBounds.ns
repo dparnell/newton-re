@@ -1,0 +1,6 @@
+@@ 0x4d1b59
+func(a1, a2) begin
+	inherited:SetupBounds(a1, a2);
+	AddArraySlot(pix, [Array: '{font: 12289}, MakeText("To recipient", 65, 50, 180, 69)])
+end
+@@end

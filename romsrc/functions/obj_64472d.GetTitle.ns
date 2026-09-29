@@ -1,0 +1,5 @@
+@@ 0x449f51
+func(a1) begin
+	(if (if a1 then (Length(GetStores()) > 1)) then (if (EntryStore(a1) = GetStores()[0]) then "Move to card" else (if EntryStore(a1):IsReadOnly() then "Copy from card" else "Move from card")))
+end
+@@end

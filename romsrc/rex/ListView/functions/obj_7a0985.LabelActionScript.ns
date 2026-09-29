@@ -1,0 +1,19 @@
+@@ 0x7a095d names
+func(index) begin
+	local repeatingPicked;
+	dirtyFlag := true;
+	inherited:LabelActionScript(index);
+	if (index = 0) then begin
+			newStopDate := 536870911
+		end;
+	savedFrequencyIndex := currentLabelIndex;
+	repeatingPicked := (repeatingView.repeatType <> 5);
+	(if (if hideDateRangeFields then repeatingPicked) then begin
+			killRepeating := nil;
+			todoSlip:RelayoutSlip(true)
+		end else (if (if (not hideDateRangeFields) then (not repeatingPicked)) then begin
+				killRepeating := true;
+				todoSlip:RelayoutSlip(nil)
+			end))
+end
+@@end

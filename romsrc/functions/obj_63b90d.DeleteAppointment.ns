@@ -1,0 +1,10 @@
+@@ 0x51018d
+func(a1, a2, a3) begin
+	local l1;
+	if (not ((a3 = true) or (a3 = nil))) then begin
+			ThrowBadTypeWithFrameData(-48424, a3)
+		end;
+	self:RealDeleteAppointment((l1 := self:IdentifyAppointments(a1, a2, '[Array: meeting, RepeatingMeeting], a3)));
+	nil
+end
+@@end

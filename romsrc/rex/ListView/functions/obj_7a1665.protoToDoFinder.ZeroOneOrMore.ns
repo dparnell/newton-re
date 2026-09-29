@@ -1,0 +1,5 @@
+@@ 0x79b675 names
+func() begin
+	(if self.cacheCount then cacheCount else (if self.zeroOneOrMoreResult then zeroOneOrMoreResult else (self.zeroOneOrMoreResult := self:Count())))
+end
+@@end

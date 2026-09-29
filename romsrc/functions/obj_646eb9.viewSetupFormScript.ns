@@ -1,0 +1,5 @@
+@@ 0x446ecd
+func() begin
+	(if (minValue >= 0) then (plusminus.viewFlags := 0))
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x46b2e1
+func(a1) begin
+	if (not updatePending) then begin
+			updatePending := a1
+		end;
+	AddProcrastinatedSend('Corrector, self, 'DoPendingUpdate, '[Array: ], 0)
+end
+@@end

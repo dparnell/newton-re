@@ -1,0 +1,8 @@
+@@ 0x74a8f5
+func() begin
+	packageTitle:SetupViewflags();
+	packageList:SetupViewflags();
+	checkAllPackages:SetupViewflags();
+	storePicker:SetupViewflags()
+end
+@@end

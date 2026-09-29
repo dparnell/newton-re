@@ -1,0 +1,8 @@
+@@ 0x79f475 names
+func() begin
+	dateValue:ShouldHide(hideDateField);
+	frequencyPicker:ShouldHide(hideFrequencyField);
+	seriesMsgHeader:ShouldHide(hideSeriesMsgHeader);
+	recurInterval:ShouldHide(hideDateRangeFields)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x5a3e09
+func() begin
+	self:SetStatus(status, {barber: true})
+end
+@@end

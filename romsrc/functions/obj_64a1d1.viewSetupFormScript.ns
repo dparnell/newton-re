@@ -1,0 +1,55 @@
+@@ 0x54c635
+@@const kBinaryFromHex
+func(hex, cls) begin
+	local b := MakeBinary(StrLen(hex) div 2, cls);
+	for i := 0 to Length(b) - 1 do begin
+		local h := Ord(hex[2 * i]);
+		local l := Ord(hex[2 * i + 1]);
+		StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+	end;
+	b
+end
+@@const kLiteral_54bbb5
+[Array: '{title: "Make Backdrop", icon: @762, routeScript: BlessActionScript}, {title: "Freeze", icon: {bits: call kBinaryFromHex with ("0000000000040128012801a6013701b60180000005a00000d7eb0000f3cf0000799e0000fdbf0000eff7000003c00000eff70000fdbf0000799e0000f3cf0000d7eb000005a0000001800000", 'bits), bounds: '{left: 0, top: 0, right: 16, bottom: 15}}, routeScript: 'FreezeActionScript}, '{title: "Delete", icon: @291, routeScript: DeleteActionScript}]
+@@const kFunction_54c2cd
+func(a1, a2, a3) begin
+	(if (a2 = 'storeReNamed) then GetRoot().ExtrasDrawer:InvalIcons())
+end
+@@main
+func() begin
+	local l1, l2;
+	needsRecalc := 'all;
+	labelsFilter := (prefsEntry := GetAppPrefs('extras, '{})).labelsFilter;
+	overUp := prefsEntry.overUp;
+	if (userConfiguration.blessedapp = 'ExtrasDrawer) then begin
+			viewBounds := blessedBounds;
+			viewJustify := 240;
+			Show._proto := @670
+		end else begin
+			if (Show._proto <> @211) then begin
+					RemoveSlot(self, 'viewJustify);
+					nRows := 0;
+					Show._proto := @211
+				end
+		end;
+	if (not (if (l1 := Gestalt('[Array: 33554435, [Array: struct, boolean, long, long], 1])) then l1[0])) then begin
+			contrastSlider.viewFlags := 0;
+			contrastSliderTweakLeft.viewFlags := 0;
+			contrastSliderTweakRight.viewFlags := 0
+		end;
+	if (if (l2 := Gestalt('[Array: 33554441, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1])) then l2[2]) then begin
+			VolumeSlider.viewFlags := 0
+		end;
+	if GetUserConfig('ExtraPackageFreezing) then begin
+			self.routeScripts := kLiteral_54bbb5
+		end else begin
+			RemoveSlot(self, 'routeScripts)
+		end;
+	fakeTarget := {class: 'packageFrame, labels: nil, kids: nil, targetStore: nil, packs: nil, newStore: nil, blessedapp: nil, labelsChanged: nil, storeChanged: nil};
+	targetView := self;
+	RegFolderChanged(appSymbol, func(a1, a2) begin
+		self:FolderChanged(a1, a2)
+	end);
+	RegStoreChange(appSymbol, kFunction_54c2cd)
+end
+@@end

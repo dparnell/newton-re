@@ -1,0 +1,14 @@
+@@ 0x75d965
+func(a1, a2, a3) begin
+	self:HideIfVisible(connPhoneAssist);
+	self:HideIfVisible(special);
+	self:HideIfVisible(connSenderPopup);
+	connPhoneAssist.hidden := true;
+	special.hidden := true;
+	(if (a2 = 'modem) then begin
+			self:ShowIfNotVisible(connPhoneAssist);
+			self:ShowIfNotVisible(connSenderPopup);
+			(connPhoneAssist.hidden := nil)
+		end else special:setup(a3))
+end
+@@end

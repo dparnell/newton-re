@@ -1,0 +1,8 @@
+@@ 0x773549
+func() begin
+	if openChild then begin
+			openChild:Close()
+		end;
+	(openChild := nil)
+end
+@@end

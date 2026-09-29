@@ -1,0 +1,20 @@
+@@ 0x5a40a1
+func(a1, a2) begin
+	a1.dateStr := Clone(a2.dateStr);
+	a1.fromRef := Clone(a2.fromRef);
+	a1.filename := Clone(a2.filename);
+	a1.fromName := Clone(a2.fromName);
+	a1.cc := DeepClone(a2.cc);
+	a1.bcc := DeepClone(a2.bcc);
+	if HasSlot(a2, 'body) then begin
+			a1.body := nil
+		end;
+	if HasSlot(a2, 'package) then begin
+			a1.package := nil
+		end;
+	if HasSlot(a2, 'sentTimeStamp) then begin
+			a1.sentTimeStamp := a2.sentTimeStamp
+		end;
+	inherited:MakeLogEntry(a1, a2)
+end
+@@end

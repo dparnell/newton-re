@@ -1,0 +1,5 @@
+@@ 0x564951
+func(a1) begin
+	(if GetGlobalVar('realPaperSizes) then realPaperSizes.(a1) else '{a4: {width: 594, height: 840}, eightByEleven: {width: 612, height: 792}}.(a1))
+end
+@@end

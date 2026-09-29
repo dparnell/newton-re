@@ -1,0 +1,23 @@
+@@ 0x4f437d
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6;
+	(if ((l1 := a1.repeatTemplate) <> nil) then (if (l1.version = nil) then [Array: 'NotesData, l1.NotesData] else begin
+				if IsSoupEntry(l1) then begin
+						l2 := EntrySoup(l1):GetName();
+						if (if l1.NotesData then (if (not EntryStore(l1):IsReadOnly()) then (StrEqual(l2, @239) or StrEqual(l2, @242)))) then begin
+								self:StoreLocalNotes(l1, a1.mtgStartDate, l1.NotesData, nil);
+								l1.NotesData := nil;
+								EntryChangeXmit(l1, 'calendar)
+							end
+					end;
+				(if HasSlot(l1, 'InstanceNotesData) then begin
+						l3 := l1.InstanceNotesData;
+						l4 := nil;
+						if l3 then begin
+								l4 := BFind(l3, a1.mtgStartDate, '|<|, 0)
+							end;
+						(if l4 then (if (l5 := l3[l4][1]) then (if IsEntryAlias(l5) then (if (l6 := ResolveEntryAlias(l5)) then [Array: 'InstanceNotesData, l6.notes] else [Array: 'InstanceNotesData, nil]) else [Array: 'InstanceNotesData, l5]) else [Array: 'InstanceNotesData, nil]) else [Array: 'InstanceNotesData, nil])
+					end else [Array: 'NotesData, l1.NotesData])
+			end) else [Array: 'NotesData, a1.NotesData])
+end
+@@end

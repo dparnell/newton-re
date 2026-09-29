@@ -1,0 +1,7 @@
+@@ 0x5b2ac1
+func() begin
+	self.items := international.locales;
+	self.labelCommands := (foreach l1 in international.locales collect l1.title);
+	inherited:viewSetupFormScript()
+end
+@@end

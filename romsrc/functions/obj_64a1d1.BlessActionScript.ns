@@ -1,0 +1,6 @@
+@@ 0x54dab1
+func(a1, a2) begin
+	fakeTarget.blessedapp := fakeTarget.kids[0].target.fentry.app;
+	self:GenericActionScript('Backdrop, 'BlessSelectedIcon, nil, "make ^1 the backdrop", "This icon can\u2019\ut be the backdrop^?0 because it is ^0||.", "Only one icon can be the backdrop. Try again with just one.")
+end
+@@end

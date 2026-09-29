@@ -1,0 +1,6 @@
+@@ 0x5ad265
+func(a1) begin
+	self:UpdateText(labelCommands[self:LabelIndex(a1)]);
+	self:LabelActionScript(self:LabelIndex(a1))
+end
+@@end

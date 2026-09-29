@@ -1,0 +1,7 @@
+@@ 0x42c325
+func() begin
+	local l1;
+	l1 := self:LocalBox();
+	self:DrawShape([Array: MakeRect(0, (l1.bottom - 3), l1.right, (l1.bottom - 1)), MakeLine(1, (l1.bottom - 1), (l1.right - 2), (l1.bottom - 1)), (if titleicon then OffsetShape(MakeShape(titleicon), 1, ((l1.bottom - (titleicon.bounds.bottom - titleicon.bounds.top)) div 2)))], nil)
+end
+@@end

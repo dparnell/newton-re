@@ -1,0 +1,22 @@
+@@ 0x4e2985
+@@const kROM_736
+@736
+@@main
+func() begin
+	if ((l1 := GetLocale().numberformat.decimalpoint)[0] <> $.) then begin
+			self.keyDefinitions := Clone(self.keyDefinitions);
+			self.keyDefinitions[4] := Clone(self.keyDefinitions[4]);
+			self.keyDefinitions[4][5] := (if (l1[0] = $,) then kROM_736 else l1[0]);
+			base.lookup := Clone(base.lookup);
+			local l1;
+			(for l2 := 0 to (Length(base.lookup) - 1) do begin
+					if (base.lookup[l2][0] = $.) then begin
+							base.lookup[l2] := Clone(base.lookup[l2]);
+							base.lookup[l2][0] := l1[0];
+							break
+						end
+				end)
+		end;
+	(if rotated then (viewBounds := RelBounds(138, 1, 168, 142)))
+end
+@@end

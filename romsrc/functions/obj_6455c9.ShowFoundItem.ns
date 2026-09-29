@@ -1,0 +1,5 @@
+@@ 0x49e1d5
+func(a1, a2) begin
+	(if (if targetViewDef then HasPath(targetViewDef, 'ShowFoundItem)) then currentStatView:ShowFoundItem(a1, a2))
+end
+@@end

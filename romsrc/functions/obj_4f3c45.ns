@@ -1,0 +1,64 @@
+@@ 0x4f3c45
+func(a1, a2, a3) begin
+	l1 := a1.viewStationery;
+	l2 := a1.repeatTemplate;
+	l3 := a1.repeatTemplate.InstanceNotesData;
+	l4 := (if l2 then EntrySoup(l2));
+	(if (a2 = 'mtgFirstDate) then begin
+			self:ConvertAnnotatedMeetingsBeforeStartDate(l2, a3);
+			setSlot(l2, 'mtgStartDate, a3)
+		end else (if (if self:IsExceptionMeeting(a1) then ArrayPos('[Array: mtgStartDate, mtgDuration, mtgInvitees, mtgLocation], a2, 0, nil)) then setSlot(a1, a2, a3) else (if (a2 = 'InstanceNotesData) then self:StoreLocalNotes(l2, a1.mtgStartDate, a3, nil) else (if (a2 = 'mtgStopDate) then begin
+						if l3 then begin
+								self:ConvertAnnotatedMeetingsAfterStopDate(l2, a3)
+							end;
+						setSlot(l2, a2, a3)
+					end else (if ((l1 = 'RepeatingMeeting) or (l1 = 'exceptionMeeting)) then begin
+							if (if (a2 = 'mtgAlarm) then a3) then begin
+									a3 := (a1.mtgStartDate - a3)
+								end;
+							if (if (if (l1 = 'RepeatingMeeting) then (a2 = 'mtgStartDate)) then l2.exceptions) then begin
+									l5 := (a3 mod 1440);
+									local l1;
+									local l2;
+									local l3;
+									local l4;
+									local l5;
+									(foreach l6 in l2.exceptions do begin
+											local l8, l9, l10, l11;
+											l8 := ((l8 := l6[0]) - (l8 mod 1440));
+											l6[0] := (l8 + l5);
+											if l6[1] then begin
+													l6[1].originDate := l6[0]
+												end
+										end)
+								end;
+							setSlot(l2, a2, a3)
+						end else (if (l1 = 'cribNote) then (if l2 then begin
+									if (if (a2 = 'mtgAlarm) then a3) then begin
+											a3 := (a1.mtgStartDate - a3)
+										end;
+									setSlot(l2, a2, a3)
+								end else setSlot(a1, a2, a3)) else begin
+								if (if (a2 = 'mtgStartDate) then a1.mtgAlarm) then begin
+										a1.mtgAlarm := (a1.mtgAlarm + (a3 - a1.mtgStartDate))
+									end;
+								if (if a1.viewBounds then ((a2 = 'mtgStartDate) or (a2 = 'mtgDuration))) then begin
+										l9 := a1.(a2);
+										l10 := a1.viewBounds;
+										if (l9 <> a3) then begin
+												l11 := (((a3 - l9) div 30) * 16);
+												if (a2 = 'mtgStartDate) then begin
+														l10.top := (l10.top + l11);
+														l10.bottom := (l10.bottom + l11)
+													end else begin
+														if (a2 = 'mtgDuration) then begin
+																l10.bottom := (l10.bottom + l11)
+															end
+													end;
+												setSlot(a1, 'viewBounds, l10)
+											end
+									end;
+								setSlot(a1, a2, a3)
+							end))))))
+end
+@@end

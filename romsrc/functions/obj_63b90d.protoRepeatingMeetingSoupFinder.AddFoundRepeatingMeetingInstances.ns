@@ -1,0 +1,58 @@
+@@ 0x4ec6ad
+func(a1, a2, a3, a4, a5) begin
+	l1 := findType;
+	l2 := owner;
+	l4 := [Array: ];
+	if (l1 = 'text) then begin
+			if (l2:FindStringInTitleInviteesLocation(a1, findWhat, nil) or (if a1.NotesData then FindStringInFrame(a1.NotesData, findWhat, nil))) then begin
+					l3 := NextMeeting(a4, a1);
+					if ((l3 := self:NextMeetingThatMatches(a1, l3, true)) = 0) then begin
+							l3 := PrevMeeting(a4, a1)
+						end;
+					if ((l3 := self:NextMeetingThatMatches(a1, l3, nil)) > 0) then begin
+							AddArraySlot(l4, l3)
+						end
+				end else begin
+					a5[0] := a1.mtgText;
+					if a1.exceptions then begin
+							local l1;
+							local l2;
+							local l3;
+							local l4;
+							(foreach l5 in a1.exceptions do begin
+									local l7, l8;
+									if (l7 := l5[1]) then begin
+											a5[1] := l2:GetMeetingSlot(l7, 'mtgInvitees);
+											a5[2] := l2:GetMeetingSlot(l7, 'mtgLocation);
+											if FindStringInFrame(a5, findWhat, nil) then begin
+													AddArraySlot(l4, l7.mtgStartDate)
+												end
+										end
+								end)
+						end
+				end
+		end else begin
+			if (l1 = 'dateBefore) then begin
+					if ((l3 := PrevMeeting(a2, a1)) > 0) then begin
+							AddArraySlot(l4, l3)
+						end
+				end else begin
+					if (l1 = 'dateAfter) then begin
+							if ((l3 := NextMeeting(a3, a1)) > 0) then begin
+									AddArraySlot(l4, l3)
+								end
+						end else begin
+							if (l1 = 'dateOn) then begin
+									if ((l3 := NextMeeting(a2, a1)) < a3) then begin
+											AddArraySlot(l4, l3)
+										end
+								end
+						end
+				end
+		end;
+	if ((l8 := Length(l4)) > 0) then begin
+			AddArraySlot(repeatingEntryFinders, {_proto: owner.protoRepeatingEntryFinder, entryAlias: MakeEntryAlias(a1), EntryUniqueID: a1._uniqueID, instancesDates: l4, currentInstance: 0, instancesCount: l8})
+		end;
+	l8
+end
+@@end

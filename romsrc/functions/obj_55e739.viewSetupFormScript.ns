@@ -1,0 +1,8 @@
+@@ 0x55e3d9
+func() begin
+	local l1;
+	l1 := ((findDrawer:GlobalBox().right - 8) - self:GlobalBox().left);
+	viewBounds := RelBounds(4, 0, l1, 28);
+	inherited:?viewSetupFormScript()
+end
+@@end

@@ -1,0 +1,62 @@
+@@ 0x7351c5
+func(a1, a2, a3, a4) begin
+	local v10_xxxxxxxxxxxwwwwwwww, v13_wwwvvvvvvvvvvvvvvvv, v14_uuuuuuuuuutt, v15_uttttttttttt, v16_ttttssssssss, v17_zzzzzzzzzzzzzzzzzzzzyy, v20_iiihh;
+	v10_xxxxxxxxxxxwwwwwwww := [Array: ];
+	v15_uttttttttttt := a1;
+	v13_wwwvvvvvvvvvvvvvvvv := a2;
+	if (not v15_uttttttttttt) then begin
+			v15_uttttttttttt := UserConfiguration.currentPersona
+		end;
+	if IsEntryAlias(v15_uttttttttttt) then begin
+			v15_uttttttttttt := ResolveEntryAlias(v15_uttttttttttt)
+		end;
+	if v15_uttttttttttt then begin
+			if (v15_uttttttttttt.class = 'group) then begin
+					(foreach v22_yyyyyyyyyyyyxxx in v15_uttttttttttt.members do begin
+							if (v16_ttttssssssss := self:bcHelper(v22_yyyyyyyyyyyyxxx._alias, v13_wwwvvvvvvvvvvvvvvvv, a3, a4)) then begin
+									ArrayMunger(v10_xxxxxxxxxxxwwwwwwww, Length(v10_xxxxxxxxxxxwwwwwwww), 0, v16_ttttssssssss, 0, nil)
+								end
+						end)
+				end else begin
+					if (not IsArray(v13_wwwvvvvvvvvvvvvvvvv)) then begin
+							v13_wwwvvvvvvvvvvvvvvvv := [Array: v13_wwwvvvvvvvvvvvvvvvv]
+						end;
+					if a4 then begin
+							if v15_uttttttttttt.(a4[0]) then begin
+									v17_zzzzzzzzzzzzzzzzzzzzyy := (foreach v12_wwwwwwwwwwwwvvvvvvv in v13_wwwvvvvvvvvvvvvvvvv do begin
+											if IsInstance(v15_uttttttttttt.(a4[0]), v12_wwwwwwwwwwwwvvvvvvv) then begin
+													break true
+												end
+										end);
+									if v17_zzzzzzzzzzzzzzzzzzzzyy then begin
+											v20_iiihh := {};
+											(foreach v7_xxwwwwwwwwwwwwwwwwwwww in a4 do begin
+													if v15_uttttttttttt.(v7_xxwwwwwwwwwwwwwwwwwwww) then begin
+															v20_iiihh.(v7_xxwwwwwwwwwwwwwwwwwwww) := Clone(v15_uttttttttttt.(v7_xxwwwwwwwwwwwwwwwwwwww))
+														end
+												end);
+											AddArraySlot(v10_xxxxxxxxxxxwwwwwwww, v20_iiihh)
+										end
+								end
+						end;
+					(foreach v9_qqqqqpppp in a3 do begin
+							if v15_uttttttttttt.(v9_qqqqqpppp) then begin
+									(foreach v19_iiihh in v15_uttttttttttt.(v9_qqqqqpppp) do begin
+											if (v14_uuuuuuuuuutt := (if a4 then v19_iiihh.(a4[0]) else v19_iiihh)) then begin
+													v17_zzzzzzzzzzzzzzzzzzzzyy := (foreach v12_wwwwwwwwwwwwvvvvvvv in v13_wwwvvvvvvvvvvvvvvvv do begin
+															if IsInstance(v14_uuuuuuuuuutt, v12_wwwwwwwwwwwwvvvvvvv) then begin
+																	break true
+																end
+														end);
+													if v17_zzzzzzzzzzzzzzzzzzzzyy then begin
+															AddArraySlot(v10_xxxxxxxxxxxwwwwwwww, Clone(v19_iiihh))
+														end
+												end
+										end)
+								end
+						end)
+				end
+		end;
+	(if (Length(v10_xxxxxxxxxxxwwwwwwww) > 0) then v10_xxxxxxxxxxxwwwwwwww)
+end
+@@end

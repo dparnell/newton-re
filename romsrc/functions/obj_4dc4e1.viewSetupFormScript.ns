@@ -1,0 +1,5 @@
+@@ 0x4dc48d
+func() begin
+	(viewValue := alarmed)
+end
+@@end

@@ -1,0 +1,24 @@
+@@ 0x439b99
+func() begin
+	if useMultipleSelections then begin
+			self.inset := 18
+		end;
+	TextBase:SetChild(self);
+	l1 := [Array: {font: viewFont}];
+	l2 := self:GetLineHeight();
+	l3 := FontAscent(viewFont);
+	l4 := 0;
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	(foreach l5 in ListItems do begin
+			local l7;
+			OffsetShape((l7 := Clone(l5)), 0, l4);
+			AddArraySlot(l1, l7);
+			l4 := (l4 + l2)
+		end);
+	self.icon := l1;
+	(self.viewBounds := SetBounds(inset, 0, (-inset), (Length(ListItems) * l2)))
+end
+@@end

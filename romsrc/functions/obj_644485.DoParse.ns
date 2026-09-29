@@ -1,0 +1,5 @@
+@@ 0x525165
+func() begin
+	(if (if (not ParseUtter(assistLine.entryLine.text)) then self.viewCObject) then self:Duh(nil))
+end
+@@end

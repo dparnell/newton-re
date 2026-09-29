@@ -1,0 +1,37 @@
+@@ 0x515dfd
+func() begin
+	viewBounds := SetBounds(18, (MeetingBottom + 10), 0, 0);
+	l2 := ((l1 := displaydate) + startTime);
+	l3 := (l1 + stopTime);
+	l4 := GetAllMeetings(MeetingSoup, RepeatSoup, l1, l2);
+	l5 := GetAllMeetings(MeetingSoup, RepeatSoup, (l3 - 30), (l1 + 1440));
+	l6 := (if (if l4 then l5) then ArrayMunger(l4, Length(l4), nil, l5, 0, nil) else (if l4 then l4 else (if l5 then l5 else [Array: ])));
+	l7 := Array(0, nil);
+	l8 := 0;
+	l9 := GetFontSize(viewFont);
+	l10 := self:LocalBox().right;
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	local l6;
+	local l7;
+	local l8;
+	local l9;
+	local l10;
+	(foreach l11 in l6 do begin
+			local l13, l14, l15, l16;
+			if ((ClassOf(l11) = 'meeting) or l11.mtgText) then begin
+					if (((l14 := ((l13 := self:GetMeetingSlot(l11, 'mtgStartDate)) + self:GetMeetingSlot(l11, 'mtgDuration))) > l3) or (l13 < l2)) then begin
+							l8 := (l8 + l9);
+							l15 := TimeStr(l13, TimeSpec);
+							l16 := self:GetMeetingText(l11);
+							l16 := StyledStrTruncate(Stringer([Array: l15, " ", l16]), l10, viewFont);
+							ArrayInsert(l7, MakeText(l16, 0, l8, l10, (l8 + 1)), 0)
+						end
+				end
+		end);
+	(shapes := l7)
+end
+@@end

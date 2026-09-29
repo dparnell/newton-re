@@ -1,0 +1,11 @@
+@@ 0x46bc95
+func(a1) begin
+	hiliteBusy := true;
+	undoInProgress := true;
+	self:SaveUndoState(nil);
+	self:SetStartLen(a1.parm.offset, a1.parm.length);
+	inherited:RestoreUndoState(a1);
+	undoInProgress := nil;
+	(hiliteBusy := nil)
+end
+@@end

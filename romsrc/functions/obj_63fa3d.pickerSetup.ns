@@ -1,0 +1,14 @@
+@@ 0x4724f5
+func() begin
+	if (userConfiguration.printers = nil) then begin
+			labelCommands := [Array: self:TextSetup()]
+		end else begin
+			labelCommands := GetNames((foreach l1 in userConfiguration.printers collect l1.printerName))
+		end;
+	printersInList := Length(labelCommands);
+	AddArraySlot(labelCommands, 'pickseparator);
+	AddArraySlot(labelCommands, "Choose Network LaserWriter");
+	AddArraySlot(labelCommands, "Choose Other Printer");
+	true
+end
+@@end

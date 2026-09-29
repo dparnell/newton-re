@@ -1,0 +1,5 @@
+@@ 0x48811d
+func() begin
+	(text := (if ((if doLocalFolders then (not doGlobalFolders)) or SetContains(GetFolderList(theApp, true), oldSymbol)) then ParamStr("Shown in ^0", [Array: GetAppName(theApp)]) else "Shown everywhere"))
+end
+@@end

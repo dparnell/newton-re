@@ -1,0 +1,38 @@
+@@ 0x427849
+func(a1, a2, a3) begin
+	local l1;
+	l1 := nil;
+	if (a2 = 1) then begin
+			if (GetUserConfig('inputDevice) <> nil) then begin
+					if a3 then begin
+							l1 := "Ready to play or record."
+						end else begin
+							l1 := "Ready to record."
+						end
+				end else begin
+					if a3 then begin
+							l1 := "Ready to play."
+						end else begin
+							l1 := "No recording source set."
+						end
+				end
+		end else begin
+			if (a2 = 4) then begin
+					l1 := "Playing..."
+				end else begin
+					if (a2 = 2) then begin
+							l1 := "Recording..."
+						end else begin
+							if (a2 = 8) then begin
+									l1 := "Paused..."
+								end else begin
+									if (a2 = 16) then begin
+											l1 := "Paused..."
+										end
+								end
+						end
+				end
+		end;
+	(if (if l1 then (not StrEqual(self.text, l1))) then SetValue(self, 'text, l1))
+end
+@@end

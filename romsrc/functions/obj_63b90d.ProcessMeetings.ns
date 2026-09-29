@@ -1,0 +1,38 @@
+@@ 0x503f21
+func(a1, a2) begin
+	l1 := Clone(protoInstanceOfRepeatingMeeting);
+	local l1;
+	local l2;
+	(foreach l3 in a1._cursor do begin
+			local l5;
+			if l3.entryAlias then begin
+					if (l5 := ResolveEntryAlias(l3.entryAlias)) then begin
+							if l5.repeatType then begin
+									if (not (l2 := self:FindException(l3.instanceTime, l5))) then begin
+											(l2 := l1).viewStationery := l5.viewStationery;
+											l2.mtgStartDate := l3.instanceTime;
+											l2.repeatTemplate := l5
+										end
+								end else begin
+									l2 := l5
+								end;
+							if (a2 = 'delete) then begin
+									self:DeleteMeeting(l2, nil)
+								end else begin
+									self:DuplicateMeeting(l2)
+								end
+						end
+				end else begin
+					if (a2 = 'delete) then begin
+							mainDisplay:DeleteCheckedTask(l3.instanceTime, l3.topic)
+						end else begin
+							mainDisplay:DuplicateTask(l3.instanceTime, l3.topic)
+						end
+				end
+		end);
+	(if (mainDisplay = AgendaView) then begin
+			AgendaView.currentItem := 0;
+			AgendaView:SetOrigin(0, 0)
+		end)
+end
+@@end

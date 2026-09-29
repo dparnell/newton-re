@@ -1,0 +1,5 @@
+@@ 0x62d811
+func(a1) begin
+	(ObjectPid(a1) <> nil)
+end
+@@end

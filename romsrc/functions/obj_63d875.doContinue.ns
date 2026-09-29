@@ -1,0 +1,25 @@
+@@ 0x5a54fd
+func() begin
+	if (if eworld then eworld.Busy) then begin
+			return nil
+		end;
+	(if eworld then begin
+			pleaseWaitForm:Open();
+			(if sendScreen then eworld:SendName() else eworld:SendInfo())
+		end else (if (index = 3) then begin
+				self:Register();
+				if backBtn then begin
+						backBtn:Hide()
+					end;
+				if callassist then begin
+						callassist:Hide()
+					end;
+				(if callOptionsSlip.viewCObject then callOptionsSlip:Close())
+			end else begin
+				pages[index]:Hide();
+				index := (index + 1);
+				pages[index]:Show();
+				(if (index = 1) then backBtn:Show())
+			end))
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x4e63b9
+func() begin
+	ShortDateStr(Random(28583304, 50491464), 0)
+end
+@@end

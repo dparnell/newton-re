@@ -1,0 +1,62 @@
+@@ 0x553d41
+func(a1, a2) begin
+	if (l2 := self:GetPartEntry(a1)) then begin
+			if (if a2 then (Length(a2) > 0)) then begin
+					if (if HasSlot(a2, 'labels) then (a2.labels <> l2.labels)) then begin
+							l3 := a2.labels;
+							if (if (l2.labels = '_buttonBar) then (l2.sequence < 0)) then begin
+									l2.sequence := self:GetNewSequence(l3)
+								end;
+							if (l3 = '_buttonBar) then begin
+									if (Length((l4 := GetRoot().buttons:GetPartEntries()).mobile) > 0) then begin
+											l2.sequence := max(0, (l4.mobile[0].sequence - 1))
+										end else begin
+											l2.sequence := 0
+										end
+								end;
+							l2._tagList := Clone(l2._tagList);
+							self:ChangeTagListAndLabels(l2, l3)
+						end;
+					local l1;
+					local l2;
+					local l3;
+					local l4;
+					(foreach l5 in extrasInfoSlots do begin
+							if HasSlot(a2, l5) then begin
+									l2.(l5) := a2.(l5)
+								end
+						end);
+					if (l7 := a2.AddTags) then begin
+							if (not IsArray(l7)) then begin
+									l7 := [Array: l7]
+								end;
+							l2._tagList := SetUnion(l2._tagList, l7, true)
+						end;
+					if (l8 := a2.RemoveTags) then begin
+							if (not IsArray(l8)) then begin
+									l8 := [Array: l8]
+								end;
+							l2._tagList := SetDifference(l2._tagList, l8)
+						end;
+					if IsSoupEntry(l2) then begin
+							EntryChangeXmit(l2, 'ExtrasDrawer)
+						end;
+					self:InvalIcons()
+				end;
+			l1 := {};
+			(foreach l5 in extrasInfoSlots do begin
+					local l7, l8;
+					if HasSlot(l2, l5) then begin
+							l1.(l5) := l2.(l5)
+						end
+				end);
+			if IsNumber(l1.icon) then begin
+					l1.icon := @233[l1.icon].icon
+				end;
+			if IsNumber(l1.iconPro) then begin
+					l1.iconPro := @233[l1.iconPro].iconPro
+				end
+		end;
+	l1
+end
+@@end

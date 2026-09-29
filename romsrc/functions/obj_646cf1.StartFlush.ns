@@ -1,0 +1,5 @@
+@@ 0x4a0051
+func() begin
+	(if base.viewCObject then base:SetupIdle(5000))
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x7343e1
+func() begin
+	labelCommands := [Array: ];
+	labelCommands := GetDialinNetworkSlot('title);
+	inherited:?viewSetupFormScript()
+end
+@@end

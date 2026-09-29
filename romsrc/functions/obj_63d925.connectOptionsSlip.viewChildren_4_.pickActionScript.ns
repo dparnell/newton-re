@@ -1,0 +1,11 @@
+@@ 0x59faa9
+func(a1) begin
+	local l1;
+	if ((l1 := LSearch(popup, listMethod, 0, '|=|, 'val)) <> a1) then begin
+			RemoveSlot(popup[l1], 'mark);
+			popup[a1].mark := $\uFC0B;
+			listMethod := popup[a1].val
+		end;
+	inherited:pickActionScript(a1)
+end
+@@end

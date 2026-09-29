@@ -1,0 +1,23 @@
+@@ 0x48544d
+func() begin
+	(if (if (l2 := storeSelector:GetSelectedStore()) then (targetStore <> l2)) then begin
+			if target._cursor then begin
+					local l1;
+					local l2;
+					(foreach l3 in target._cursor do begin
+							if (ClassOf(l3) = 'alias) then begin
+									l1 := ResolveEntryAlias(l3)
+								end else begin
+									l1 := l3
+								end;
+							if l1 then begin
+									targetView:MoveTarget(l1, l2)
+								end
+						end)
+				end else begin
+					targetView:MoveTarget(target, l2)
+				end;
+			filingButton:?Update()
+		end)
+end
+@@end

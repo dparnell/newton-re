@@ -1,0 +1,7 @@
+@@ 0x7b3929
+func() begin
+	local l1;
+	l1 := $\n;
+	(self.text := Stringer([Array: self.text, " ", (if (StrLen(fFirstName) > 9) then l1 else Stringer([Array: "", fFirstName, ""]))]))
+end
+@@end

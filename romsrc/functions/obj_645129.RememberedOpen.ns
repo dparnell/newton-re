@@ -1,0 +1,11 @@
+@@ 0x4ac3f5
+func(a1) begin
+	(if a1.viewCObject then self:RememberedClose(a1) else begin
+			a1:Open();
+			if (not newtAppBase._kiddos) then begin
+					newtAppBase._kiddos := [Array: ]
+				end;
+			SetAdd(newtAppBase._kiddos, GetView(a1), true)
+		end)
+end
+@@end

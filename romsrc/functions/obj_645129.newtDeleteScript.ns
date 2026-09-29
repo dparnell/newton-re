@@ -1,0 +1,7 @@
+@@ 0x4ab69d
+func(a1, a2) begin
+	saveWhat := a1;
+	saveWhatView := a2;
+	(if (not a1) then self:Notify(3, title, "There is nothing to delete.") else (if (currentLayout = 'overview) then self:Confirm(title, "Delete all selected items? (Can\u2019\ut Undo)", self, 'newtDeleteActionConfirmCB) else self:newtDeleteActionHelper()))
+end
+@@end

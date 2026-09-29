@@ -1,0 +1,6 @@
+@@ 0x511af1
+func(a1) begin
+	RemoveSlot(infoAuxRegistry, a1);
+	nil
+end
+@@end

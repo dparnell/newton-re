@@ -1,0 +1,14 @@
+@@ 0x456a19
+func(a1, a2) begin
+	local l1, l2, l3;
+	self._context := a2;
+	self._tapinfo := a1;
+	self._selectOnly := nil;
+	(if (l1 := self:MakePopup(a1.nameRef, a1.fieldPath)) then begin
+			a1.popup := l1;
+			l2 := a2:GlobalBox();
+			l3 := SetBounds((a1.bbox.left + 13), (a1.bbox.bottom - l2.top), (a1.bbox.left + 13), (a1.bbox.bottom - l2.top));
+			a2:PopupMenu(l1, {bounds: l3})
+		end else (if self.OpenEditor then self:OpenEditor(a1, a2, 'edit) else (if (if validationFrame then a1.nameRef._Unselected) then self:DefaultOpenEditor(a1, a2, 'edit) else a2:Tapped('Toggle))))
+end
+@@end

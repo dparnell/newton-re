@@ -1,0 +1,22 @@
+@@ 0x50409d
+func(a1) begin
+	local l1, l2;
+	if a1.repeatTemplate then begin
+			l1 := self:ConvertToNonrepeating(a1, true)
+		end else begin
+			l1 := DeepClone(a1)
+		end;
+	l2 := (l1.viewStationery = 'cribNote);
+	if (StrLen(l1.mtgText) > 0) then begin
+			l1.mtgText := ParamStr("copy of ^0", [Array: l1.mtgText])
+		end else begin
+			if l2 then begin
+					l1.mtgText := "copy of untitled event"
+				end else begin
+					l1.mtgText := "copy of untitled meeting"
+				end
+		end;
+	self:CarefulAdd((if l2 then notes else MeetingSoup), l1, true);
+	l1
+end
+@@end

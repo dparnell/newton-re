@@ -1,0 +1,14 @@
+@@ 0x73322d
+func(a1) begin
+	local l1;
+	self:UpdateText(Clone(a1.name));
+	base:hilite(nil);
+	target.cityAlias := [Array: a1.name, a1.longitude, a1.latitude];
+	target.countrySymbol := a1.country;
+	target.country := GetCountryEntry(a1.country)[0].name;
+	if (not target.areacode) then begin
+			areacode:UpdateText(SPrintObject(a1.areacode))
+		end;
+	self:StartFlush()
+end
+@@end

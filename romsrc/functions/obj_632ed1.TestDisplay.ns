@@ -1,0 +1,5 @@
+@@ 0x4e60f5
+func() begin
+	(Length(matchedWords) > 0)
+end
+@@end

@@ -1,0 +1,32 @@
+@@ 0x453581
+func(a1, a2, a3, a4) begin
+	if (l3 := pickerDef.primaryPath) then begin
+			l1 := Clone(fEditPaths);
+			l2 := Clone(fRequiredPaths);
+			if (not (l4 := pickerDef:GetPrimaryPath(a1))) then begin
+					l4 := l3
+				end;
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			(foreach l5, l6 in l1 do begin
+					if (l6 = pickerDef.primaryPath) then begin
+							l1[l5] := l4
+						end
+				end);
+			(foreach l5, l6 in l2 do begin
+					local l8;
+					if (l6 = pickerDef.primaryPath) then begin
+							l2[l5] := l4
+						end
+				end)
+		end else begin
+			l1 := fEditPaths;
+			l2 := fRequiredPaths
+		end;
+	pickBase:MaskTaps(true);
+	l8 := self:GlobalBox();
+	(fTapinfo := {nameRef: a1, tapIndex: a2, bbox: (if a3 then OffsetRect(a3, 0, ((a2 * lineHeight) + l8.top))), fieldPath: a4, editPaths: l1, _reqPaths: l2, _sortValue: Clone(pickerDef:Get(a1, pickerDef._sortPath, 'sortText)), popup: nil})
+end
+@@end

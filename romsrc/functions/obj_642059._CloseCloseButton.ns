@@ -1,0 +1,12 @@
+@@ 0x44a4b9
+func() begin
+	local l1;
+	(if (l1 := self._closeBox) then begin
+			if (l1 = 'closeBox) then begin
+					l1 := self
+				end;
+			PressButton(l1);
+			return true
+		end)
+end
+@@end

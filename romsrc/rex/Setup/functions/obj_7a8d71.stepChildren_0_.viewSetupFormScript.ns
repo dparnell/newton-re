@@ -1,0 +1,10 @@
+@@ 0x7aac7d
+func() begin
+	(if (if (if HasPath(self, 'stepChildren) then (stepChildren <> nil)) then (Length(fSonOfStepChildren) > 0)) then begin
+			if IsReadOnly(stepChildren) then begin
+					self.stepChildren := Clone(stepChildren)
+				end;
+			ArrayMunger(stepChildren, Length(stepChildren), nil, fSonOfStepChildren, 0, Length(fSonOfStepChildren))
+		end)
+end
+@@end

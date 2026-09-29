@@ -1,0 +1,22 @@
+@@ 0x55fe2d
+func(toStore) begin
+	local toSoup;
+	local l1;
+	(if (if selected then toStore:IsReadOnly()) then GetRoot():Notify(3, "Find", "Can not file items to a write-protected store.") else (if selected then begin
+				l1 := cursor:soup():GetName();
+				toSoup := GetUnionSoupAlways(l1):GetMember(toStore);
+				if (Length(selected) = 1) then begin
+						self:ForEachSelected(func(a1) begin
+							(if (EntryStore(a1) <> toStore) then EntryMoveXmit(a1, toSoup, 'find))
+						end)
+					end else begin
+						self:ForEachSelected(func(a1) begin
+							(if (EntryStore(a1) <> toStore) then EntryMove(a1, toSoup))
+						end);
+						XmitSoupChange(cursor:soup():GetName(), 'unknown, 'whatThe, nil)
+					end;
+				selected := nil;
+				(waitToUnSelect := nil)
+			end))
+end
+@@end

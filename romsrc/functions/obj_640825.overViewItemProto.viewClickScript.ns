@@ -1,0 +1,8 @@
+@@ 0x42ce8d
+func(a1) begin
+	if (if (StrLen(text) > 0) then self:TrackHilite(a1)) then begin
+			self:Parent():ShowItem(itemIndex)
+		end;
+	true
+end
+@@end

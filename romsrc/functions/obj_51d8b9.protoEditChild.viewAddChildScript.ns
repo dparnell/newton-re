@@ -1,0 +1,8 @@
+@@ 0x51d7fd
+func(a1) begin
+	if (Length(viewChildren) = 0) then begin
+			markupButton:SetDynamicMarkIcon(1)
+		end;
+	nil
+end
+@@end

@@ -1,0 +1,13 @@
+@@ 0x5a8525
+func(a1, a2) begin
+	local l1, l2;
+	if a2 then begin
+			if (not (l1 := GetRoot().(a2))) then begin
+					if (l2 := GetDataDefs(a1)) then begin
+							l1 := l2.(a2)
+						end
+				end
+		end;
+	return l1
+end
+@@end

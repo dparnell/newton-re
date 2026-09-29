@@ -1,0 +1,22 @@
+@@ 0x726cb9
+func(a1) begin
+	local l1;
+	l1 := inherited:TextToPath(a1);
+	target.(path) := l1;
+	if ((target.class = 'person) or (target.class = 'owner)) then begin
+			if StrFilled(target.name.last) then begin
+					self:SetSorton(ParamStr("^0 ^1", [Array: target.name.last, target.name.first]))
+				end else begin
+					if StrFilled(target.name.first) then begin
+							self:SetSorton(target.name.first)
+						end else begin
+							self:SetSorton(Clone(""))
+						end
+				end
+		end else begin
+			self:SetSorton(target.(path))
+		end;
+	GetRoot().cardfile:SetIAClass(target);
+	l1
+end
+@@end

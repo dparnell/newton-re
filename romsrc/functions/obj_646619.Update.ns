@@ -1,0 +1,5 @@
+@@ 0x45eb09
+func() begin
+	actualThumbnail:Update()
+end
+@@end

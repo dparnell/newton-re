@@ -1,0 +1,17 @@
+@@ 0x500395
+func() begin
+	local l1;
+	(if cursor.atEndOfCursor then begin
+			Sleep(30);
+			clicker()
+		end else (if (maxLines <> 0) then begin
+				l1 := cursor.baseIndex;
+				BusyBoxControl(1);
+				self:Scroller(maxLines);
+				if (l1 = cursor.baseIndex) then begin
+						clicker()
+					end;
+				RefreshViews()
+			end))
+end
+@@end

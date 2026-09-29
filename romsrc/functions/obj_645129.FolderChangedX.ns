@@ -1,0 +1,49 @@
+@@ 0x4ab021
+func(a1, oldFolder, a3) begin
+	if (not GetStores()[0]:HasSoup(a1)) then begin
+			return nil
+		end;
+	(if (l5 := GetUnionSoup(a1)) then begin
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			local l5;
+			(foreach l6 in l5:GetSoupList() do begin
+					local l8;
+					if (l8 := l6:GetStore()):IsReadOnly() then begin
+							self:Notify(3, title, ParamStr("Items from the card \u201C\u^0\u201D\u cannot be moved because it is locked.", [Array: l8:GetName()]))
+						end else begin
+							try begin
+									if l6:HasTags() then begin
+											if a3 then begin
+													if oldFolder then begin
+															l6:ModifyTag(oldFolder, a3)
+														end else begin
+															l6:AddTags(a3)
+														end
+												end else begin
+													if oldFolder then begin
+															l6:RemoveTags([Array: oldFolder])
+														end
+												end
+										end else begin
+											l3 := (l1 := l6:Query({type: 'index, validTest: func(a1) begin
+												(a1.labels = oldFolder)
+											end})):entry();
+											(while l3 do begin
+													l3.labels := a3;
+													l4 := l1:Next();
+													EntryChange(l3);
+													(l3 := l4)
+												end)
+										end
+								end onexception |evt.ex| do begin
+									l2 := true
+								end
+						end
+				end);
+			(if l2 then self:Notify(3, title, "Some items could not be moved to the new folder."))
+		end)
+end
+@@end

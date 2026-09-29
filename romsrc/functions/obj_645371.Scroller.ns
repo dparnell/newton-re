@@ -1,0 +1,9 @@
+@@ 0x4af601
+func(a1) begin
+	if HiliteOwner() then begin
+			PostCommand(HiliteOwner(), 48)
+		end;
+	layout:ScrollCursor(a1);
+	layout:NewTarget()
+end
+@@end

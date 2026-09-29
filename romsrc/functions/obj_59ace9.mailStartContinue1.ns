@@ -1,0 +1,14 @@
+@@ 0x59ac69
+func() begin
+	(if (mailEndPoint.curstate = 'waitForTerminal) then begin
+			try begin
+					mailEndPoint:output($D, nil, {async: true})
+				end onexception |evt.ex| do begin
+					self:quit()
+				end;
+			AddDelayedCall(func() begin
+				self:mailStartContinue2()
+			end, nil, 300)
+		end)
+end
+@@end

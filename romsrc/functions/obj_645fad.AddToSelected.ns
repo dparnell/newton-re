@@ -1,0 +1,16 @@
+@@ 0x451875
+func(a1) begin
+	local l1;
+	if selected then begin
+			l1 := ersatzCursor:entry();
+			BInsert(selected, a1, '|str<|, func(a1) begin
+				pickerDef:Get(a1, pickerDef._sortPath, 'sortText)
+			end, nil);
+			ersatzCursor:Goto(l1)
+		end else begin
+			selected := [Array: a1]
+		end;
+	pickBase:UpdateCursor();
+	selected
+end
+@@end

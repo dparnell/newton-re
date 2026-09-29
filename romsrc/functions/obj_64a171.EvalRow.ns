@@ -1,0 +1,7 @@
+@@ 0x57018d
+func(a1) begin
+	local l1, l2;
+	l1 := 0;
+	deck:Eval5((l2 := ArrayMunger([Array: ], 0, nil, table, (5 * a1), 5)))
+end
+@@end

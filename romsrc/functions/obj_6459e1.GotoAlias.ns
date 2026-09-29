@@ -1,0 +1,11 @@
+@@ 0x4a8499
+func(a1) begin
+	local l1;
+	(if a1 then begin
+			if (not theCursor) then begin
+					self:SetupCursor()
+				end;
+			(if (l1 := ResolveEntryAlias(a1)) then theCursor:Goto(l1))
+		end)
+end
+@@end

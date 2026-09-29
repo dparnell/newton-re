@@ -1,0 +1,5 @@
+@@ 0x509155
+func() begin
+	SetKeyView(self, 0)
+end
+@@end

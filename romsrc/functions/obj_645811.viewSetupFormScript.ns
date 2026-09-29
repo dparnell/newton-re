@@ -1,0 +1,6 @@
+@@ 0x4bd539
+func() begin
+	inherited:?viewSetupFormScript();
+	(if (not self:EntryCool(nil)) then (self.viewFlags := BOr(self.viewFlags, 128)))
+end
+@@end

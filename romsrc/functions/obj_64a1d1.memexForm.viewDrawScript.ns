@@ -1,0 +1,38 @@
+@@ 0x5505d9
+@@const kLiteral_536791
+'{font: 9216}
+@@const kLiteral_5367b5
+'{font: 1058816}
+@@main
+func() begin
+	l1 := self:LocalBox();
+	l2 := 10;
+	l3 := (l1.right div 2);
+	l4 := ((3 * l1.right) div 4);
+	l5 := (l1.right - 10);
+	l6 := Length(GetStores());
+	l7 := [Array: '{font: 1058816, justification: center}, MakeText("Memory Info", l2, 5, l5, 13), kLiteral_536791, MakeText("Name", l2, 20, l3, 30), '{font: 9216, justification: right}, MakeText("Used", l3, 20, l4, 30), MakeText("Free", l4, 20, l5, 30), MakeLine(l2, 32, l5, 32), kLiteral_5367b5];
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	local l6;
+	local l7;
+	(foreach l8, l9 in GetStores() do begin
+			local l11, l12, l13, l14, l15, l16;
+			l11 := (l9:UsedSize() div 1024);
+			if ((l12 := ((l9:TotalSize() div 1024) - l11)) < 0) then begin
+					l12 := 0
+				end;
+			l13 := (l3 - l2);
+			l14 := StyledStrTruncate(Clone(l9:GetName()), l13, 1058816);
+			l15 := (35 + (l8 * 16));
+			AddArraySlot(l7, [Array: MakeText(l14, l2, l15, l3, (l15 + 10)), '{font: 1058816, justification: right}, MakeText(Stringer([Array: l11, "K"]), l3, l15, l4, (l15 + 10)), MakeText(Stringer([Array: l12, "K"]), l4, l15, l5, (l15 + 10))])
+		end);
+	l16 := Gestalt(16777219);
+	l15 := (l15 + 22);
+	AddArraySlot(l7, [Array: kLiteral_536791, MakeText(ParamStr("ROM Version ^0-^1", [Array: l16.ROMversionstring, l16.patchVersion]), l2, l15, l5, (l15 + 10)), MakeText(ParamStr("System RAM Installed ^0K", [Array: (l16.RAMSize div 1024)]), l2, (l15 + 16), l5, (l15 + 22)), MakeLine(l2, (l15 + 28), l5, (l15 + 28))]);
+	self:DrawShape(l7, kLiteral_5367b5)
+end
+@@end

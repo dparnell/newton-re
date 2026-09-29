@@ -1,0 +1,23 @@
+@@ 0x440619
+func() begin
+	local l1;
+	(if ScrollRect then begin
+			if DirMap.left then begin
+					l1 := (if (if DataRect then (xPos > DataRect.left)) then 'more else 'normal);
+					self:SetArrow('left, l1)
+				end;
+			if DirMap.right then begin
+					l1 := (if ((xPos + (ViewRect.right - ViewRect.left)) < DataRect.right) then 'more else 'normal);
+					self:SetArrow('right, l1)
+				end;
+			if DirMap.up then begin
+					l1 := (if (DataRect.bottom = 9999) then 'normal else (if (yPos > DataRect.top) then 'more else 'normal));
+					self:SetArrow('up, l1)
+				end;
+			(if DirMap.down then begin
+					l1 := (if (DataRect.bottom = 9999) then 'normal else (if ((yPos + (ViewRect.bottom - ViewRect.top)) < DataRect.bottom) then 'more else 'normal));
+					self:SetArrow('down, l1)
+				end)
+		end)
+end
+@@end

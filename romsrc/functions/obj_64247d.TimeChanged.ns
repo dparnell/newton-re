@@ -1,0 +1,6 @@
+@@ 0x432e0d
+func() begin
+	selectedDates[0] := Time;
+	context:?NewTime(Time)
+end
+@@end

@@ -1,0 +1,28 @@
+@@ 0x59ac49
+func() begin
+	mailEndPoint.curstate := 'waitForTerminal;
+	mailEndPoint:SetInputSpec(mailEndPoint.waitForTerminal);
+	speed := [Array: {label: "mspd", type: 'option, opCode: 1024, data: {arglist: [Array: 0], typelist: [Array: 10, 1]}}];
+	try begin
+			speed := mailEndPoint:option(speed, nil)
+		end onexception |evt.ex| do begin
+			self:quit()
+		end;
+	speed := speed[0].data.arglist[0];
+	if (transport exists) then begin
+			transport:?SetStatusDialog('Connecting, 'vStatusTitle, {titleText: Stringer([Array: title, " ", "-", " ", speed, " ", "baud"])})
+		end;
+	try begin
+			if ((speed > 1200) or (speed = 0)) then begin
+					mailEndPoint:output($@, nil, {async: true})
+				end else begin
+					mailEndPoint:output($\n, nil, {async: true})
+				end
+		end onexception |evt.ex| do begin
+			self:quit()
+		end;
+	AddDelayedCall(func() begin
+		self:mailStartContinue1()
+	end, nil, 300)
+end
+@@end

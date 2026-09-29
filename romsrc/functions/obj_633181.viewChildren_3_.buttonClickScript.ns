@@ -1,0 +1,6 @@
+@@ 0x4ca72d
+func() begin
+	AddDeferredCall(deferredFax, [Array: message]);
+	base:Close()
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x59ebc9
+func(a1) begin
+	self:?SetStatusDialog('SendFile, 'vGauge, {titleText: msg.title, gauge: [Array: 0, 0, a1.filesize]});
+	self:uploadfile(a1.data, a1.filesize, transport, a1.type, a1.creator);
+	(if a1.reply then self:output(a1.reply, nil, nil))
+end
+@@end

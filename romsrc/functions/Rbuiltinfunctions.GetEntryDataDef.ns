@@ -1,0 +1,6 @@
+@@ 0x4a8861
+func(a1) begin
+	local l1;
+	(if (l1 := DataClassOf(a1)) then _dataDefs.(l1))
+end
+@@end

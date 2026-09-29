@@ -1,0 +1,66 @@
+@@ 0x79963d names
+func(aWhat, aFindType, aSoupFinders, aMasterFinder, aContext) begin
+	aContext:SetStatus("Searching in To Do\u2026\u");
+	self:GetToDoSoup();
+	self:EndFlush();
+	if (aFindType = 'dateBefore) then begin
+			singleTest := func(item) begin
+				(if (item.date < aWhat) then (item.date > 0))
+			end;
+			repeatTest := func(item) begin
+				local date;
+				date := NextMeeting(0, item);
+				if item.reminderInterval then begin
+						date := (date - item.reminderInterval)
+					end;
+				(date < aWhat)
+			end;
+			startKey := 1
+		end else begin
+			if (aFindType = 'dateAfter) then begin
+					singleTest := func(item) begin
+						(item.date > aWhat)
+					end;
+					repeatTest := func(item) begin
+						local date;
+						date := NextMeeting((aWhat + 1), item);
+						if item.reminderInterval then begin
+								date := (date - item.reminderInterval)
+							end;
+						(date > 0)
+					end;
+					startKey := aWhat
+				end else begin
+					singleTest := func(item) begin
+						(item.date = aWhat)
+					end;
+					repeatTest := func(item) begin
+						local date;
+						date := NextMeeting(aWhat, item);
+						if item.reminderInterval then begin
+								date := (date - item.reminderInterval)
+							end;
+						(date = aWhat)
+					end;
+					startKey := aWhat
+				end
+		end;
+	if (cursor := dataSoup:Query({type: 'index, indexPath: 'date, startKey: startKey, validTest: singleTest})):Entry() then begin
+			AddArraySlot(aSoupFinders, {_proto: protoToDoFinder, masterFinder: aMasterFinder, owner: GetRoot().calendar, findType: aFindType, findWords: aWhat, cursor: cursor})
+		end;
+	local cursor;
+	local Entry;
+	local task;
+	local repeatTargets;
+	(if (repeatTargets := MapCursor((cursor := dataSoup:Query({type: 'index, startKey: 0, indexPath: 'date, endTest: func(e) begin
+		(e.date > 0)
+	end})), nil)) then (foreach Entry in repeatTargets do begin
+				(foreach task in Entry.topics do begin
+						if call repeatTest with (task.repeatInfo) then begin
+								AddArraySlot(aSoupFinders, {_proto: protoToDoFinder, masterFinder: aMasterFinder, owner: GetRoot().calendar, findType: aFindType, findWords: aWhat, cursor: cursor});
+								break
+							end
+					end)
+			end))
+end
+@@end

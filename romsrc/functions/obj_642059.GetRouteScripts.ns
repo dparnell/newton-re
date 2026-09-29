@@ -1,0 +1,5 @@
+@@ 0x4667f1
+func(a1) begin
+	GetVariable(self, 'routeScripts)
+end
+@@end

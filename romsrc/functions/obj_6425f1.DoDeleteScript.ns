@@ -1,0 +1,18 @@
+@@ 0x4de08d
+func(a1) begin
+	local l1;
+	AddUndoAction('UnDeleteScript, [Array: a1]);
+	if (not cards:Next()) then begin
+			cards:ResetToEnd();
+			cards:prev()
+		end;
+	if cards.romOnly then begin
+			l1 := cards:entry()
+		end;
+	LocationEntryRemoveFromSoup(a1);
+	if cards.romOnly then begin
+			self:RebuildCardCursor(l1)
+		end;
+	self:Retarget()
+end
+@@end

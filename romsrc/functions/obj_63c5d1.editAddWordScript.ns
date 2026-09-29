@@ -1,0 +1,29 @@
+@@ 0x4fc945
+func(a1, a2) begin
+	local l1, l2, l3, l4, l5, l6, l7;
+	l1 := a1;
+	l2 := a2;
+	if (if GetRemoteWriting() then (GetKeyView() = dayView)) then begin
+			l2 := a1.viewBounds
+		end;
+	l3 := PositionToTime(dayView, l2.top);
+	l4 := PositionToTime(dayView, l2.bottom);
+	if ((l3 mod 30) = 15) then begin
+			l3 := (l3 + 15)
+		end;
+	l3 := max(startTime, l3);
+	if ((l4 - l3) < 60) then begin
+			l4 := (l3 + 60)
+		end;
+	if (l4 > 1440) then begin
+			l4 := 1440
+		end;
+	l5 := nil;
+	if (l2.left >= 60) then begin
+			l5 := {left: (l6 := max(0, min((DayTable.tabWidths - 100), l2.left))), top: TimeToPosition(dayView, l3), right: DayTable.tabWidths, bottom: TimeToPosition(dayView, l4)}
+		end;
+	l7 := MakeRichString(a1.text, a1.styles);
+	(l1 := self:MakeNewMeetingFrame('meeting, l7, (displaydate + l3), (l4 - l3))).viewBounds := l5;
+	l1
+end
+@@end

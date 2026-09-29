@@ -1,0 +1,6 @@
+@@ 0x5af671
+func() begin
+	userConfiguration.timeoutCursiveOption := (15 + (viewValue * 5));
+	ReadCursiveOptions()
+end
+@@end

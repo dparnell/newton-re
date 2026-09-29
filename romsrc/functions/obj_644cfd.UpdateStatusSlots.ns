@@ -1,0 +1,61 @@
+@@ 0x47faf1
+func(a1, a2, a3) begin
+	if (status = nil) then begin
+			status := 'idle
+		end;
+	if (a1 = nil) then begin
+			a1 := status
+		end;
+	if (if (status = 'idle) then (a1 <> 'idle)) then begin
+			userClosedStatus := nil;
+			self:BeginIO()
+		end else begin
+			if (if (status <> 'idle) then (a1 = 'idle)) then begin
+					self:EndIO();
+					userClosedStatus := nil
+				end
+		end;
+	status := EnsureInternal(a1);
+	if (a3 <> nil) then begin
+			if IsFrame(a3) then begin
+					l1 := a3
+				end else begin
+					if IsString(a3) then begin
+							l1 := {statusText: a3}
+						end else begin
+							l1 := {}
+						end
+				end
+		end else begin
+			l1 := {}
+		end;
+	if (not HasSlot(l1, 'statusText)) then begin
+			l1.statusText := self:GetStatusString()
+		end;
+	if (a2 = nil) then begin
+			if ((statusSetup = nil) or (statusSetup.name = nil)) then begin
+					a2 := 'vStatus
+				end else begin
+					a2 := statusSetup.name
+				end
+		end;
+	l2 := {name: a2, appSymbol: appSymbol, values: l1};
+	if (statusSetup = nil) then begin
+			statusSetup := l2
+		end else begin
+			if (statusSetup.name <> a2) then begin
+					statusSetup.values := l1;
+					statusSetup.name := a2
+				end else begin
+					if l1 then begin
+							local l1;
+							local l2;
+							(foreach l3, l4 in l1 do begin
+									statusSetup.values.(l3) := l4
+								end)
+						end
+				end
+		end;
+	return l2
+end
+@@end

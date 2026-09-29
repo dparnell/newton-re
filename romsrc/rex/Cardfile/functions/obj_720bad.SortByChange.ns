@@ -1,0 +1,42 @@
+@@ 0x737199
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6;
+	l4 := (l3 := allSoups.names).theSoup;
+	l6 := (l5 := self:GetAppPreferences()).sortBy;
+	if (a1 <> 'sorton) then begin
+			if (a1 = 'class) then begin
+					l1 := 'symbol
+				end else begin
+					l1 := 'string
+				end;
+			try begin
+					l4:AddIndex({structure: 'multiSlot, path: [Array: a1, 'sorton], type: [Array: l1, 'string]})
+				end onexception |evt.ex.fr.store| do begin
+					if (CurrentException().error = -10605) then begin
+							self:Notify(3, title, "You cannot change the sort order on a locked card.  Please unlock the card, reinsert it, and try again.")
+						end else begin
+							self:Notify(3, title, ParamStr("The sort order was not changed because an error occurred. \n(^0)", [Array: self:TranslateError(CurrentException().error)]))
+						end;
+					return nil
+				end
+		end;
+	if (l6 <> 'sorton) then begin
+			try begin
+					l3.theSoup:RemoveIndex([Array: l6, 'sorton])
+				end onexception |evt.ex| do begin end
+		end;
+	l5.sortBy := a1;
+	EntryChange(l5);
+	if IsReadOnly(l3.soupQuery) then begin
+			l3.soupQuery := Clone(l3.soupQuery)
+		end;
+	if (a1 = 'sorton) then begin
+			l3.soupQuery.IndexPath := 'sorton
+		end else begin
+			l3.soupQuery.IndexPath := [Array: a1, 'sorton]
+		end;
+	l3:SetupCursor();
+	layout:SetupCursor();
+	layout:Retarget(true)
+end
+@@end

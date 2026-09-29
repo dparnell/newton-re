@@ -1,0 +1,5 @@
+@@ 0x4bd18d
+func() begin
+	self:RedoChildren()
+end
+@@end

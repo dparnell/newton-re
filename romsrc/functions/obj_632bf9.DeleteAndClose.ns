@@ -1,0 +1,14 @@
+@@ 0x487e39
+func() begin
+	local l1;
+	newName := "";
+	newSymbol := nil;
+	newApp := oldApp;
+	l1 := GetUserConfig('userFolderGroups);
+	(if oldSymbol then (if (if (if (oldApp <> '_Global) then l1._Global) then SetContains(l1._Global, oldSymbol)) then begin
+				RemoveFolder(oldSymbol, oldApp);
+				self:Close();
+				GetRoot().filingSlip:UpdateToFolder(newSymbol)
+			end else self:Confirm("Filing", ParamStr("Are you sure you want to remove the \u201C\u^0\u201D\u folder?  Items in this folder will be moved to Unfiled.", [Array: oldName]), self, 'ConfirmChange)) else self:Close())
+end
+@@end

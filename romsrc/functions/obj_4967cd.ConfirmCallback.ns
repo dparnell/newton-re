@@ -1,0 +1,8 @@
+@@ 0x49674d
+func(a1) begin
+	(if a1 then AddDeferredCall(func() begin
+			self:doEraseCard();
+			self:hilite(nil)
+		end, '[Array: ]) else self:hilite(nil))
+end
+@@end

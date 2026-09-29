@@ -1,0 +1,35 @@
+@@ 0x4c7101
+@@const kFunction_4c6865
+func(a1, a2) begin
+	local l1, l2;
+	l2 := (l1 := Clone(a1)).bottom;
+	l1.bottom := l1.right;
+	l1.right := l2;
+	l2 := l1.left;
+	l1.left := l1.top;
+	l1.top := l2;
+	l1.orientation := a2;
+	l1
+end
+@@main
+func(a1) begin
+	local l1, l2, l3, l4;
+	(if useFullPage then begin
+			if (not (l2 := a1.printer)) then begin
+					l2 := GetUserConfig('currentPrinter)
+				end;
+			(if (if l2.printerPageBounds then (l1 := l2.printerPageBounds.(a1.printerPageBounds.id))) then begin
+					a1.printerPageBounds := Clone(a1.printerPageBounds);
+					a1.printerPageBounds.bottom := l1.bottom;
+					a1.printerPageBounds.right := l1.right;
+					l3 := GetRealPaperSize(a1.printerPageBounds.id);
+					(l4 := (a1.printableMargin := Clone(l2.printableOrigin))).right := ((l3.width - l1.right) - l4.left);
+					l4.bottom := ((l3.height - l1.bottom) - l4.top);
+					(if (orientation <> 'portrait) then begin
+							a1.printerPageBounds := call (kFunction_4c6865) with (a1.printerPageBounds, orientation);
+							(a1.printableMargin := call (kFunction_4c6865) with (a1.printableMargin, orientation))
+						end)
+				end)
+		end)
+end
+@@end

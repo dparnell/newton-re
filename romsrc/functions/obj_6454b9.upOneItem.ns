@@ -1,0 +1,22 @@
+@@ 0x49d7a5
+func(a1) begin
+	local l1, l2;
+	clicker();
+	if (if hiliteEntry then IsSoupEntry(hiliteEntry)) then begin
+			l1 := cursor:clone();
+			l1:Goto(hiliteEntry);
+			if (l2 := l1:prev()) then begin
+					hiliteEntry := l2;
+					if ((not hilitedIndex) or (hilitedIndex <= 0)) then begin
+							hilitedIndex := 0;
+							cursor:Goto(l2);
+							self:RedoChildren()
+						end else begin
+							hilitedIndex := (hilitedIndex - 1);
+							self:Dirty()
+						end
+				end
+		end;
+	RefreshViews()
+end
+@@end

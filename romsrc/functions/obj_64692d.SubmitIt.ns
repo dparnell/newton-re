@@ -1,0 +1,26 @@
+@@ 0x477f45
+func(a1) begin
+	local l1;
+	l1 := fields;
+	if (a1 = 'readdress) then begin
+			base:Close();
+			transport:itemchanged(l1);
+			return nil
+		end;
+	if activeFormat then begin
+			l1 := activeFormat:ParseCursor(l1, {target: target, targetView: targetView})
+		end;
+	if (a1 = 'Now) then begin
+			l1.Connect := true
+		end else begin
+			if l1.Connect then begin
+					l1.Connect := nil
+				end
+		end;
+	if (l1.state = 'pending) then begin
+			l1.state := 'ready
+		end;
+	base:Close();
+	transport:ItemSubmit(l1)
+end
+@@end

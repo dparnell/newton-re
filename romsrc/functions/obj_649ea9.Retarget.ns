@@ -1,0 +1,24 @@
+@@ 0x4c5845
+func(a1) begin
+	if (((l1 := dataCursor:entry()) = 'deleted) or (l1 = nil)) then begin
+			dataCursor:Next();
+			if (dataCursor:entry() = nil) then begin
+					dataCursor:prev()
+				end
+		end;
+	if a1 then begin
+			scrollOrigin := -1;
+			if (a1 = 'sync) then begin
+					self:SyncItems()
+				end else begin
+					self:SetupItems()
+				end;
+			pieces := nil;
+			self:Dirty()
+		end;
+	local l1;
+	(if retargetChain then (foreach l2 in retargetChain do begin
+				l2:RetargetNotify()
+			end))
+end
+@@end

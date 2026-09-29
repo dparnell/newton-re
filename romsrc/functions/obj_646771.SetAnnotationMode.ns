@@ -1,0 +1,23 @@
+@@ 0x45f5b9
+func(a1) begin
+	local l1;
+	(if (a1 = 'Hide) then begin
+			if Visible(vAnnotations) then begin
+					vAnnotations:Hide()
+				end;
+			fAnnoShape := nil;
+			(fAnnotateMode := a1)
+		end else (if (a1 = 'Show) then begin
+				vAnnotations:Open();
+				fAnnoShape := true;
+				l1 := ShapeBounds((fAnnoShape := MakeShape(vAnnotations)));
+				OffsetShape(fAnnoShape, (-l1.left), (-l1.top));
+				vAnnotations:Hide();
+				(fAnnotateMode := a1)
+			end else (if (if (if (a1 = 'edit) then (fZoomedTo = 'fullSize)) then (BAnd(viewFlags, 128) = 0)) then begin
+					vAnnotations:Open();
+					fAnnoShape := nil;
+					(fAnnotateMode := a1)
+				end)))
+end
+@@end

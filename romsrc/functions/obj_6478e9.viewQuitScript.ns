@@ -1,0 +1,8 @@
+@@ 0x4bb8c5
+func() begin
+	local l1;
+	l1 := entryLine:GetRichString();
+	inherited:viewQuitScript();
+	(if ((not lastPicked) or (not StrEqual(lastPicked, l1))) then AddMemoryItem(memory, l1))
+end
+@@end

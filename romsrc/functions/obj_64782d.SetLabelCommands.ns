@@ -1,0 +1,20 @@
+@@ 0x4bb2fd
+func(a1) begin
+	local l1;
+	(if (access <> 'readOnly) then begin
+			if (if (l1 := GetMemoryItems(memory)) then (not a1)) then begin
+					a1 := l1;
+					if filter.picker then begin
+							AddArraySlot((a1 := Clone(a1)), 'pickseparator);
+							AddArraySlot(a1, "Other")
+						end
+				end;
+			(if (a1 <> oldLabelCommands) then begin
+					labelCommands := a1;
+					self:SetLabelText(label);
+					self:Dirty();
+					(oldLabelCommands := labelCommands)
+				end)
+		end)
+end
+@@end

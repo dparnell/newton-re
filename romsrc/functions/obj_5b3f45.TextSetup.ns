@@ -1,0 +1,5 @@
+@@ 0x5b3ec9
+func() begin
+	GetRegisteredSound(GetUserConfig('alarmSound)).userName
+end
+@@end

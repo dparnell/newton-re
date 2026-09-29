@@ -1,0 +1,5 @@
+@@ 0x79edcd names
+func() begin
+	SetKeyView(Header.MeetingTitle.entryLine, 9999)
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x798d6d names
+func() begin
+	local agendaView;
+	(if ((agendaView := self:parent()).viewOriginY <= agendaView.calendarBottom) then agendaView:CalculateScrollRects() else inherited:CalculateScrollRects())
+end
+@@end

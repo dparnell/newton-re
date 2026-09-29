@@ -1,0 +1,60 @@
+@@ 0x418be5
+func(a1) begin
+	local l1, l2, l3;
+	if (not a1) then begin
+			a1 := GetOrientation()
+		end;
+	l2 := (l1 := GetRawDisplayParams(a1));
+	if (l3 := GetBBParams(a1)) then begin
+			l2 := {_proto: l1, appAreaWidth: nil, appAreaHeight: nil, buttonBarBounds: nil, buttonBarPosition: nil, appAreaBounds: nil};
+			if (l3.buttonBarPosition = 'right) then begin
+					l2.appAreaWidth := (l1.rootBounds.right - l3.buttonBarThickness);
+					l2.appAreaHeight := l1.rootBounds.bottom;
+					l2.buttonBarBounds := Clone(l1.rootBounds);
+					l2.buttonBarBounds.left := (l1.rootBounds.right - l3.buttonBarThickness);
+					l2.buttonBarPosition := 'right
+				end else begin
+					if (l3.buttonBarPosition = 'left) then begin
+							l2.appAreaWidth := (l1.rootBounds.right - l3.buttonBarThickness);
+							l2.appAreaHeight := l1.rootBounds.bottom;
+							l2.appAreaGlobalLeft := l3.buttonBarThickness;
+							l2.buttonBarBounds := Clone(l1.rootBounds);
+							l2.buttonBarBounds.right := l3.buttonBarThickness;
+							l2.buttonBarPosition := 'left
+						end else begin
+							if (l3.buttonBarPosition = 'top) then begin
+									l2.appAreaWidth := l1.rootBounds.right;
+									l2.appAreaHeight := (l1.rootBounds.bottom - l3.buttonBarThickness);
+									l2.appAreaGlobalTop := l3.buttonBarThickness;
+									l2.buttonBarBounds := Clone(l1.rootBounds);
+									l2.buttonBarBounds.bottom := l3.buttonBarThickness;
+									l2.buttonBarPosition := 'top
+								end else begin
+									if (l3.buttonBarPosition = 'bottom) then begin
+											l2.appAreaWidth := l1.rootBounds.right;
+											l2.appAreaHeight := (l1.rootBounds.bottom - l3.buttonBarThickness);
+											l2.buttonBarBounds := Clone(l1.rootBounds);
+											l2.buttonBarBounds.top := (l1.rootBounds.bottom - l3.buttonBarThickness);
+											l2.buttonBarPosition := 'bottom
+										end else begin
+											if (l3.buttonBarPosition = 'none) then begin
+													l2.appAreaHeight := l1.rootBounds.bottom;
+													l2.appAreaWidth := l1.rootBounds.right;
+													l2.buttonBarBounds := '{left: 0, top: 0, right: 0, bottom: 0};
+													l2.buttonBarPosition := 'none
+												end
+										end
+								end
+						end
+				end;
+			l2.appAreaBounds := RelBounds(l2.appAreaLeft, l2.appAreaTop, l2.appAreaWidth, l2.appAreaHeight);
+			if (if l3.buttonBarControlsPosition then (l3.buttonBarControlsPosition <> l2.buttonBarControlsPosition)) then begin
+					l2.buttonBarControlsPosition := l3.buttonBarControlsPosition
+				end;
+			if (if l3.bellyButtonPosition then (l3.bellyButtonPosition <> l2.bellyButtonPosition)) then begin
+					l2.bellyButtonPosition := l3.bellyButtonPosition
+				end
+		end;
+	l2
+end
+@@end

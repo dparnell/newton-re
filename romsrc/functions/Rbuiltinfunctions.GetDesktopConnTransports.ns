@@ -1,0 +1,5 @@
+@@ 0x473d69
+func() begin
+	GetAppPrefs('ConnTransports, '{tag: "ConnTransports", transports: {}})
+end
+@@end

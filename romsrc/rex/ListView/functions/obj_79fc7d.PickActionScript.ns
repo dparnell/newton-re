@@ -1,0 +1,11 @@
+@@ 0x79fc2d names
+func(aNewValue) begin
+	dirtyFlag := true;
+	inherited:PickActionScript(aNewValue);
+	(if (date <> newMtgDate) then begin
+			newMtgDate := date;
+			newFirstDate := date;
+			reminderPicker:SetupRange()
+		end)
+end
+@@end

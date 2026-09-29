@@ -1,0 +1,11 @@
+@@ 0x4bc975
+func(a1, a2) begin
+	local l1;
+	currPhoneNum := a2:GetRichString();
+	target.(path) := filter:TextToPath((if StrFilled(currPhoneNum) then currPhoneNum));
+	if (if currPhoneType then target.(path)) then begin
+			SetClass(target.(path), currPhoneType)
+		end;
+	self:StartFlush()
+end
+@@end

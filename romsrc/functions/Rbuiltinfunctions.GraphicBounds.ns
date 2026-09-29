@@ -1,0 +1,5 @@
+@@ 0x3c56f9
+func(a1) begin
+	(if (if IsBinary(a1) then IsInstance(a1, 'picture)) then SetBounds(ExtractWord(a1, 4), ExtractWord(a1, 2), ExtractWord(a1, 8), ExtractWord(a1, 6)) else (if (if IsFrame(a1) then IsFrame(a1.bounds)) then a1.bounds else ShapeBounds(a1)))
+end
+@@end

@@ -1,0 +1,18 @@
+@@ 0x44f2a1
+func(a1) begin
+	local l1;
+	l1 := nil;
+	if (if (a1 <= wordRight) then (not self:FixedWord())) then begin
+			self:SaveUndoState(nil);
+			StrMunger(text, a1, 0, " ", 0, 1);
+			ArrayInsert(altChars, nil, a1);
+			wordRight := (wordRight + 1);
+			l1 := true;
+			wordSource := 'single;
+			self:InvalDrawCache('chars);
+			self:DisplayExternal(true);
+			self:Dirty()
+		end;
+	return l1
+end
+@@end

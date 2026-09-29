@@ -1,0 +1,22 @@
+@@ 0x444571
+func(a1, a2, a3) begin
+	(l1 := self:Init()).startTime := a1[0];
+	l1.Ongoing := (a1[1] = 536870911);
+	l1.stopTime := a1[(if l1.Ongoing then 0 else 1)];
+	l1.spread := (l1.stopTime - l1.startTime);
+	l1.context := a3;
+	if a3.durationPop then begin
+			l1.pop := a3.durationPop
+		end;
+	if a3.GetDuration then begin
+			l1.GetDuration := a3.GetDuration
+		end;
+	if (displayParams.appAreaHeight < 320) then begin
+			local l1;
+			(foreach l2, l3 in wideBodied do begin
+					l1.(l2) := l3
+				end)
+		end;
+	l1:popup(a2)
+end
+@@end

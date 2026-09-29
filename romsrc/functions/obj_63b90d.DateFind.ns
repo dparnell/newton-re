@@ -1,0 +1,64 @@
+@@ 0x4e883d
+@@const kROM_255
+@255
+@@const kROM_256
+@256
+@@main
+func(what, a2, a3, a4, a5) begin
+	local midnightNextDay;
+	a5:SetStatus(ParamStr("^0^1^2", [Array: kROM_255, GetVariable(self, 'title), kROM_256]));
+	if (a2 = 'dateBefore) then begin
+			l1 := func(a1) begin
+				(a1.mtgStartDate < what)
+			end;
+			l2 := func(a1) begin
+				(NextMeeting(0, a1) < what)
+			end;
+			l3 := 0
+		end else begin
+			if (a2 = 'dateAfter) then begin
+					l1 := func(a1) begin
+						(a1.mtgStartDate > what)
+					end;
+					l2 := func(a1) begin
+						(NextMeeting((what + 1), a1) > 0)
+					end;
+					l3 := what
+				end else begin
+					midnightNextDay := (what + 1440);
+					l1 := func(a1) begin
+						(if (a1.mtgStartDate >= what) then (a1.mtgStartDate < midnightNextDay))
+					end;
+					l2 := func(a1) begin
+						local l1;
+						(if ((l1 := NextMeeting(what, a1)) > 0) then (l1 < midnightNextDay))
+					end;
+					l3 := what
+				end
+		end;
+	l4 := [Array: ];
+	l5 := [Array: ];
+	l6 := {_proto: protoCalendarFinder, owner: GetRoot().calendar, meetingSoupFinders: l4, todoSoupFinders: l5};
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	local l6;
+	(foreach l7 in soupIndexArray do begin
+			local l9, l10, l11, l12;
+			if (l7[1] = 'mtgStartDate) then begin
+					l9 := l3;
+					l10 := l1
+				end else begin
+					l9 := 0;
+					l10 := l2
+				end;
+			l11 := Query(GetUnionSoup(l7[0]), {type: 'index, indexPath: l7[1], beginKey: l9, validTest: l10});
+			self:AddFinder(l4, l11, l6, a2, what)
+		end);
+	l12 := self:GetToDo();
+	l12:?DateFind(what, a2, l5, l6, a5);
+	(if ((Length(l4) > 0) or (Length(l5) > 0)) then AddArraySlot(a3, l6))
+end
+@@end

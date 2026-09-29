@@ -1,0 +1,10 @@
+@@ 0x7568a5
+func(a1, a2, a3, a4) begin
+	local l1;
+	(l1 := BuildContext(self)).password := a1;
+	l1.connectOptions := a2;
+	l1.endpoint := a3;
+	l1.autodock := a4;
+	l1:FilterDialog()
+end
+@@end

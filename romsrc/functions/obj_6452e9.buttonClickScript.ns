@@ -1,0 +1,18 @@
+@@ 0x4acc81
+func() begin
+	l1 := self:GlobalBox();
+	popup := [Array: ];
+	local l1;
+	(foreach l2 deeply in GetGlobals()._dataDefs do begin
+			local l4;
+			if (l2.superSymbol = superSymbol) then begin
+					l4 := (if l2.title then l2.title else l2.name);
+					AddArraySlot(popup, {item: l4, icon: l2.icon, symbol: l2.symbol, indent: 24})
+				end
+		end);
+	if sorter then begin
+			Sort(popup, sorter, 'item)
+		end;
+	inherited:buttonClickScript()
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x5b8f5d
+func(a1) begin
+	local l1;
+	l1 := {_proto: @171};
+	l1:Initialize(15, 1);
+	l1.status := 0;
+	l1.custom := a1;
+	l1:Register()
+end
+@@end

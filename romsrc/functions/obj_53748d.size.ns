@@ -1,0 +1,5 @@
+@@ 0x53732d
+func() begin
+	Stringer([Array: (EntrySize(self:LookupSoupPackage()) div 1024), "K"])
+end
+@@end

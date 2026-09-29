@@ -1,0 +1,29 @@
+@@ 0x46d81d
+func(a1, a2) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11;
+	l1 := correctInfo;
+	l2 := refCon;
+	(l3 := self.wordInfo):AutoRemove();
+	if a2 then begin
+			l3:Learn(a1)
+		end;
+	l4 := DeepClone(l3);
+	if (a1 > 0) then begin
+			self:MoveToFirst(l4, a1)
+		end;
+	l5 := l2.form;
+	l6 := l2.wordOffset;
+	l7 := l2.wordLength;
+	if (l8 := GetRoot().correct).viewCObject then begin
+			l9 := true;
+			l8:SetCaret(l2.wordOffset)
+		end;
+	l10 := l5:GetStyleAtOffset(l6);
+	l5:HandleInsertItems((l11 := {insertItems: l4, insertOffset: l6, replaceChars: l7, defaultFontSpec: l10, addspace: nil, moveCaret: l9}));
+	if l9 then begin
+			l2.wordOffset := l8.refCon.wordOffset;
+			l2.wordLength := l8.refCon.wordLength
+		end;
+	return l4
+end
+@@end

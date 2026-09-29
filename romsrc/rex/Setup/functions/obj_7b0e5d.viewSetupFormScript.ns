@@ -1,0 +1,6 @@
+@@ 0x7b0eb5
+func() begin
+	self.vInputLine.viewFlags := (self.vInputLine.viewFlags + 8388608);
+	AddDelayedCall(functions.KeyIn, [Array: 56, nil], 100)
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x753ca9
+func(a1) begin
+	fResults.appList := Array(Length(self.selectedItems), nil);
+	(foreach l1, l2 in self.selectedItems do begin
+			fResults.appList[l1] := self.listItems[l2]
+		end)
+end
+@@end

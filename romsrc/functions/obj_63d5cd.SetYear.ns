@@ -1,0 +1,10 @@
+@@ 0x4425f9
+func(a1) begin
+	(if (value <> a1) then begin
+			value := a1;
+			years:Update();
+			decades:Update();
+			centuries:Update()
+		end)
+end
+@@end

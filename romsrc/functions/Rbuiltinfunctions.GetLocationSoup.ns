@@ -1,0 +1,21 @@
+@@ 0x436f89
+@@const kFunction_436e51
+func(a1) begin
+	{_proto: @258, realCurs: self:stdQuery(a1), romOnly: (Length(soupList) = 1)}
+end
+@@main
+func(a1) begin
+	local l1, l2, l3, l4;
+	if (not (l1 := GetPackageStore("WorldData"))) then begin
+			return nil
+		end;
+	l2 := [Array: l1:GetSoup(a1)];
+	l3 := l1:GetSoup(a1);
+	if (l4 := GetStores()[0]:GetSoup(a1)) then begin
+			l2 := [Array: l4, l3]
+		end else begin
+			l2 := [Array: l3]
+		end;
+	{_parent: @232._parent, class: 'UnionSoup, soupList: l2, cursors: NewWeakArray(8), theName: a1, stdQuery: @232._parent.Query, Query: kFunction_436e51, locationCursor: @258}
+end
+@@end

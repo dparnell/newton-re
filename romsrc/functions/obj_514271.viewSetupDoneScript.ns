@@ -1,0 +1,5 @@
+@@ 0x512491
+func() begin
+	self:calculateScrollRects()
+end
+@@end

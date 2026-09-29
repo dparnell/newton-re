@@ -1,0 +1,5 @@
+@@ 0x59ef9d
+func() begin
+	(if (connectionType = 'send) then (text := "Send mail for") else (text := "Receive mail for"))
+end
+@@end

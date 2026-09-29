@@ -1,0 +1,12 @@
+@@ 0x634159
+func() begin
+	BadWickedNaughtyNoot("GetAllFolders()", 'undocumented);
+	l1 := {};
+	local l1;
+	local l2;
+	(foreach l3 in (l2 := GetFolderList(nil, nil)) do begin
+			l1.(l3) := GetFolderStr(l3)
+		end);
+	l1
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x5aa221
+func() begin
+	local l1, l2;
+	(if (if Display then (GetKeyView() <> Display)) then begin
+			l2 := (if (l1 := self:GetWord()) then StrLen(l1) else 0);
+			SetKeyView(Display, l2)
+		end)
+end
+@@end

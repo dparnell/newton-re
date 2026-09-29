@@ -1,0 +1,8 @@
+@@ 0x635aad
+func(a1) begin
+	local l1;
+	l1 := self:SetAllInfoQT(a1);
+	CallFrameBasedRegistryFns(StoreChangeRegistry, [Array: self, 'storeInfoChanged, nil]);
+	l1
+end
+@@end

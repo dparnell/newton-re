@@ -1,0 +1,9 @@
+@@ 0x5632b5
+func(a1) begin
+	if (if PowerOffFenceSitters then (PowerOffFenceSitters[0] = a1)) then begin
+			RemoveSlot(PowerOffFenceSitters, 0);
+			AddDeferredCall(functions.PowerOffYobiKaiGi, '[Array: nil])
+		end;
+	nil
+end
+@@end

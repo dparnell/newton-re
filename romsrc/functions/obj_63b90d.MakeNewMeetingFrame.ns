@@ -1,0 +1,24 @@
+@@ 0x500ca5
+func(a1, a2, a3, a4) begin
+	local l1, l2, l3;
+	l1 := self:GetAppPreferences().eventAlarms;
+	l2 := self:GetAppPreferences().meetingAlarms;
+	if (a1 = 'cribNote) then begin
+			l3 := Clone(protoCribNote)
+		end else begin
+			l3 := Clone(protoMeeting)
+		end;
+	l3.viewStationery := a1;
+	l3.mtgText := a2;
+	l3.mtgStartDate := a3;
+	l3.mtgDuration := a4;
+	if (if l1 then (a1 = 'cribNote)) then begin
+			l3.mtgAlarm := self:ComputeCribMtgAlarm(l3.mtgStartDate, l1)
+		end else begin
+			if (if l2 then (a1 <> 'cribNote)) then begin
+					l3.mtgAlarm := (l3.mtgStartDate - l2)
+				end
+		end;
+	l3
+end
+@@end

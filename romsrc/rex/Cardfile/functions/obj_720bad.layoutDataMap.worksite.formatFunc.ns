@@ -1,0 +1,31 @@
+@@ 0x742775
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7;
+	l2 := (if (if a1[0] then StrFilled(a1[0])) then a1[0] else "None");
+	if a1[2] then begin
+			if IsEntryAlias(a1[2]) then begin
+					if (l4 := ResolveEntryAlias(a1[2])) then begin
+							l3 := l4.name
+						end
+				end else begin
+					l3 := a1[2][0]
+				end
+		end;
+	l1 := ParamStr("^?0Dialing Prefix: ^0\n||^?1Area Code: ^1\n||^?2City: ^2\n||", [Array: l2, a1[1], l3]);
+	if (if (if a1[3] then (l5 := GetCountryEntry(a1[3]))) then (Length(l5) > 0)) then begin
+			l1 := Stringer([Array: l1, ParamStr("Country: ^0\n", [Array: l5[0].name])])
+		end;
+	l7 := "No Printer";
+	if (l6 := a1[4]) then begin
+			if (if (if l6.printerName then l6.name) then (not StrEqual(l6.printerName, l6.name))) then begin
+					l7 := ParamStr("^0 (^1)", [Array: GetNames(l6.printerName), l6.name])
+				end else begin
+					if l6.name then begin
+							l7 := l6.name
+						end
+				end
+		end;
+	TrimString((l1 := Stringer([Array: l1, l7])));
+	l1
+end
+@@end

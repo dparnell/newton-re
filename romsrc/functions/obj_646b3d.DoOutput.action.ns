@@ -1,0 +1,8 @@
+@@ 0x4992b9
+func() begin
+	local l1;
+	fEndpoint:output((l1 := {dataArray: Clone(fOutgoingData)}), fOptionsOut, CallbackSpec);
+	fOutgoingData := [Array: ];
+	'waitAsync
+end
+@@end

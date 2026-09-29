@@ -1,0 +1,5 @@
+@@ 0x41ece1
+func(a1) begin
+	(if (if a1.labels then (ClassOf(a1.labels) = 'symbol)) then (if (SetContains(GetFolderList(nil, nil), a1.labels) = nil) then (a1.labels := nil)))
+end
+@@end

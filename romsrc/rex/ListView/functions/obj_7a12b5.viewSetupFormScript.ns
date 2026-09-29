@@ -1,0 +1,33 @@
+@@ 0x79f0b5 names
+func() begin
+	local dp, repeatTemplate;
+	if relayoutInProgress then begin
+			return nil
+		end;
+	newTitle := MakeRichString(task.text, task.styles);
+	newMtgDate := originalMtgDate;
+	newFirstDate := originalMtgDate;
+	if task.repeatInfo then begin
+			newStopDate := task.repeatInfo.mtgStopDate
+		end;
+	if (not newStopDate) then begin
+			newStopDate := 536870911
+		end;
+	if HasPath(task, 'repeatInfo) then begin
+			newFirstDate := GetNextMeetingTime(task.repeatInfo, 0)
+		end;
+	dp := displayParams;
+	self.slipHeight := Min(280, (dp.appAreaHeight - 16));
+	self.viewBounds := RelBounds(0, 0, Min(264, (dp.appAreaWidth - 16)), slipHeight);
+	self.targetView := self;
+	selectedMeeting := {mtgStartDate: newMtgDate, mtgStopDate: newStopDate};
+	if (repeatTemplate := task.repeatInfo) then begin
+			selectedMeeting.repeatType := repeatTemplate.repeatType;
+			selectedMeeting.mtgInfo := repeatTemplate.mtgInfo
+		end;
+	mainViewLastMailFormat := calendar.lastMailFormat;
+	calendar.lastMailFormat := nil;
+	self:LayoutSlip(HasPath(task, 'repeatInfo));
+	(dirtyFlag := nil)
+end
+@@end

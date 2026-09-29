@@ -1,0 +1,10 @@
+@@ 0x4b7195
+func(a1, a2) begin
+	AddUndoAction('SetAndSaveNoteHeight, [Array: a1, a1.height]);
+	a1.height := a2;
+	settingHeight := true;
+	self:FlushEntry(a1);
+	settingHeight := nil;
+	layout:Retarget(true)
+end
+@@end

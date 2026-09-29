@@ -1,0 +1,10 @@
+@@ 0x59774d
+func(a1, a2) begin
+	a1.viewFont := viewFont;
+	if (path = 'text) then begin
+			message.edited := true
+		end;
+	changed := true;
+	a1
+end
+@@end

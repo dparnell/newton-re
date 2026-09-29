@@ -1,0 +1,7 @@
+@@ 0x4c90f1
+func() begin
+	fields.toRef := callPhoneLine.selected;
+	self:SetPreviewInfo();
+	willDial:SetWillDial()
+end
+@@end

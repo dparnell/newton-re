@@ -1,0 +1,17 @@
+@@ 0x4f3ef5
+func(a1, a2, a3) begin
+	l1 := a1.InstanceNotesData;
+	l2 := a1.mtgDuration;
+	local l1;
+	local l2;
+	(for l3 := a2 to a3 do begin
+			local l6, l7, l8;
+			l7 := (l6 := l1[l3])[0];
+			l8 := l6[1];
+			if (not self:FindException(l7, a1)) then begin
+					self:MakeNewExceptionFrame(a1, l7, l7, l2)
+				end
+		end);
+	self:CarefulChange(EntrySoup(a1), a1, true)
+end
+@@end

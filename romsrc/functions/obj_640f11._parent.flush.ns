@@ -1,0 +1,6 @@
+@@ 0x62b359
+func() begin
+	BadWickedNaughtyNoot(Stringer([Array: "usoup:Flush(\"", self:GetName(), "\")"]), 'discontinued);
+	self:NaughtyFlush()
+end
+@@end

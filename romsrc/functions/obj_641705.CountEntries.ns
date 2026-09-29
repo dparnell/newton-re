@@ -1,0 +1,13 @@
+@@ 0x4361d1
+func() begin
+	local l1, l2, l3, l4;
+	if romOnly then begin
+			return realCurs:CountEntries()
+		end;
+	l1 := realCurs:CountEntries();
+	l2 := realCurs:indexPath();
+	l3 := GetStores()[0]:GetSoup(realCurs:soup():GetName());
+	l4 := l3:Query({type: 'index, indexPath: 'kind, beginKey: 'delete, endKey: 'Replace});
+	(l1 - l4:CountEntries())
+end
+@@end

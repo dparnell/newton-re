@@ -1,0 +1,15 @@
+@@ 0x4bb231
+func(a1) begin
+	local l1, l2;
+	l1 := (if (if (labelCommands or filter.picker) then (access <> 'readOnly)) then Stringer([Array: $\uFC01, a1]) else Stringer([Array: $\uFC02, a1]));
+	if ((not dontResizeLabel) or (not indent)) then begin
+			indent := (StrFontWidth(l1, labelFont) + 6)
+		end;
+	if ((not dontResizeLabel) or (not labelBox)) then begin
+			l2 := self:LocalBox();
+			labelBox := RelBounds(0, ((viewLineSpacing - FontAscent(labelFont)) - 1), indent, height)
+		end;
+	pix := MakeText(l1, labelBox.left, labelBox.top, labelBox.right, (labelBox.top + FontAscent(labelFont)));
+	l1
+end
+@@end

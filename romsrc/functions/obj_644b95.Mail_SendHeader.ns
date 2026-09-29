@@ -1,0 +1,30 @@
+@@ 0x5955a5
+func() begin
+	(if (l1 := eworld.mail_out) then begin
+			self:StartStream("m4");
+			self:atom(17, 0, nil, nil);
+			if (if l1.toRef then (Length(l1.toRef) > 0)) then begin
+					self:atom(17, 19, 0, nil);
+					local l1;
+					(foreach l2, l3 in l1.toRef do begin
+							self:Mail_SendAddress(l3)
+						end)
+				end;
+			if (if l1.cc then (Length(l1.cc) > 0)) then begin
+					self:atom(17, 19, 1, nil);
+					(foreach l2, l3 in l1.cc do begin
+							self:Mail_SendAddress(l3)
+						end)
+				end;
+			if (if l1.bcc then (Length(l1.bcc) > 0)) then begin
+					self:atom(17, 19, 2, nil);
+					(foreach l2, l3 in l1.bcc do begin
+							self:Mail_SendAddress(l3)
+						end)
+				end;
+			self:atom(17, 10, l1.title, nil);
+			self:atom(17, 1, nil, nil);
+			self:SendStream()
+		end)
+end
+@@end

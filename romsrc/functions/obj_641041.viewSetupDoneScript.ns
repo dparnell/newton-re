@@ -1,0 +1,6 @@
+@@ 0x4d6691
+func() begin
+	local l1;
+	SetKeyView((l1 := meetingTitle.entryLine), 9999)
+end
+@@end

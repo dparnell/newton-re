@@ -1,0 +1,106 @@
+@@ 0x4dd6b5
+@@const kLiteral_3c5eed
+'{transferMode: 2, penPattern: 0, fillPattern: 5}
+@@const kLiteral_4ceb59
+'{width: 214, height: 107}
+@@main
+func(a1) begin
+	(if (not inherited:viewClickScript(a1)) then (if (not currentForm) then begin
+				InkOff(a1);
+				playsound(@51);
+				l3 := MakeRect(0, 0, 218, 30);
+				l4 := MakeRect(0, 146, 218, 177);
+				BusyBoxControl(2);
+				l7 := self:GlobalBox();
+				(loop begin
+						l1 := (GetPoint(4, a1) - l7.left);
+						if (if ((l2 := (GetPoint(5, a1) - l7.top)) > 0) then (l2 < 25)) then begin
+								l6 := l3
+							end else begin
+								if (if (l2 > 152) then (l2 < 185)) then begin
+										l6 := l4
+									end else begin
+										l6 := nil
+									end
+							end;
+						if (l5 <> l6) then begin
+								if l5 then begin
+										self:DoDrawing('DrawShape, [Array: l5, kLiteral_3c5eed])
+									end;
+								if (l5 := l6) then begin
+										self:DoDrawing('DrawShape, [Array: l5, kLiteral_3c5eed])
+									end
+							end;
+						(if StrokeDone(a1) then break)
+					end);
+				if (if (l2 > 39) then (l2 < 146)) then begin
+						if (Length((list := ClosestLocations(GetLocationSoup(@251), 12, 1000, (l1 - shift), (l2 - 39), kLiteral_4ceb59))) > 0) then begin
+								local l1;
+								local l2;
+								local l3;
+								local l4;
+								local l5;
+								local l6;
+								local l7;
+								(foreach l8 in list do begin
+										if StrFilled((l10 := l8.place.region)) then begin
+												l8.item := Stringer([Array: l8.item, " ", l10])
+											end
+									end)
+							end else begin
+								AddArraySlot(list, {item: "Middle of Nowhere"})
+							end;
+						DoPopup(list, l1, l2, {_parent: self, pickActionScript: func(a1) begin
+							local l1;
+							(if (l1 := list[a1].place) then begin
+									if (if (l1.latitude = 55526371) then (l1.longitude = 364152580)) then begin
+											InitiatePlan9()
+										end;
+									self:SetNewLocation(l1)
+								end)
+						end})
+					end else begin
+						if l5 then begin
+								if (l5 = l3) then begin
+										list := (if userConfiguration.emporia then begin
+												l11 := [Array: ];
+												local l10;
+												local l11;
+												local l12;
+												local l13;
+												local l14;
+												(foreach l15 in userConfiguration.emporia do begin
+														local l17, l18;
+														if (if (l12 := ResolveEntryAlias(l15)) then StrFilled(l12.place)) then begin
+																AddArraySlot(l11, {item: l12.place, alias: l15})
+															end
+													end);
+												(if (Length(l11) > 0) then begin
+														AddArraySlot(l11, 'pickseparator);
+														AddArraySlot(l11, {item: "Other City", home: (l5 = l3)});
+														l11
+													end)
+											end);
+										if list then begin
+												DoPopup(list, 0, 32, self)
+											end else begin
+												self:SelectHomeCity()
+											end
+									end else begin
+										self:SelectAwayCity()
+									end;
+								self:DoDrawing('DrawShape, [Array: l5, kLiteral_3c5eed])
+							end else begin
+								if (l1 < 8) then begin
+										l17 := ((LongitudeToCoordinate(userConfiguration.location.longitude, 214) + 107) mod 214);
+										l18 := ((107 - LatitudeToCoordinate(userConfiguration.location.latitude, 107)) mod 107);
+										if (Length((list := ClosestLocations(GetLocationSoup(@251), 1, 7000, l17, l18, kLiteral_4ceb59))) > 0) then begin
+												self:SetNewLocation(list[0].place)
+											end
+									end
+							end
+					end;
+				true
+			end))
+end
+@@end

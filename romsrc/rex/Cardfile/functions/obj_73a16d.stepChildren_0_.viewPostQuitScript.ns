@@ -1,0 +1,32 @@
+@@ 0x73ae49
+func() begin
+	local l1, l2, l3, l4;
+	self:EndFlush();
+	if (not EntryValid(target)) then begin
+			return nil
+		end;
+	if (not self:HasData(nil, target)) then begin
+			l4 := target;
+			if saveEntry then begin
+					appBase.layout.dataCursor:Goto(saveEntry)
+				end;
+			appBase.layout:KillEntry(l4)
+		end else begin
+			if (target.class = 'owner) then begin
+					UseCurrentPersona()
+				end else begin
+					if (target.class = 'worksite) then begin
+							UseCurrentEmporium()
+						end
+				end;
+			if makingNewCard then begin
+					appBase:AddUndoAction('UndoNewCard, [Array: target, saveEntry])
+				end else begin
+					appBase:AddUndoAction('UndoAddData, [Array: target, startTarget])
+				end;
+			appBase.layout.dataCursor:Goto(target);
+			appBase.layout:Retarget(true)
+		end;
+	(appBase._recogSettings := _recogSettings)
+end
+@@end

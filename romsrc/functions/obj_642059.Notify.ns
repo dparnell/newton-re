@@ -1,0 +1,12 @@
+@@ 0x462dd1
+func(a1, a2, a3) begin
+	if (ClassOf(a2) = 'int) then begin
+			if self:SpecialOutOfMemoryAlert(a2) then begin
+					return nil
+				end;
+			a3 := self:TranslateToMessage(a2);
+			a2 := self:TranslateToOverview(a2)
+		end;
+	BHNotify(a1, a2, a3, nil, nil)
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x454225
+func(a1) begin
+	if freshest then begin
+			freshest.index := nil
+		end;
+	inherited:SetupAbstracts(a1)
+end
+@@end

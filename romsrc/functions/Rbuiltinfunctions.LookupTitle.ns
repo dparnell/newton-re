@@ -1,0 +1,13 @@
+@@ 0x5acdfd
+func(a1, a2) begin
+	l1 := nil;
+	local l1;
+	(foreach l2 in a1 do begin
+			if StrEqual(l2.title, a2) then begin
+					l1 := l2;
+					break
+				end
+		end);
+	l1
+end
+@@end

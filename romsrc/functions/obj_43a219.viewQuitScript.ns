@@ -1,0 +1,7 @@
+@@ 0x43a1e1
+func() begin
+	self.scrollersSetup := nil;
+	viewFlags := savedViewFlags;
+	(scrollersHidden := nil)
+end
+@@end

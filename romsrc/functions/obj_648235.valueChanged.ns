@@ -1,0 +1,5 @@
+@@ 0x4bd991
+func() begin
+	(if target then (target.(path) := (if viewValue then assert else negate)))
+end
+@@end

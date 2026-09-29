@@ -1,0 +1,14 @@
+@@ 0x4480a1
+func() begin
+	local l1;
+	if myImage then begin
+			if drawGrayScaled then begin
+					l1 := {transferMode: 0, transform: [Array: fullSize, currentSize], grayLevels: [Array: 100, 200, 250]};
+					self:GrayShrink(myUnscaledImage, l1)
+				end else begin
+					self:DrawShape(myImage, {transferMode: 0, transform: [Array: imageSize, currentSize]})
+				end
+		end;
+	(if fAnnoShape then self:DrawShape(fAnnoShape, {transform: [Array: usefulSizes.fullSize, currentSize]}))
+end
+@@end

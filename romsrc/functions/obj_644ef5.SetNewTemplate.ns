@@ -1,0 +1,14 @@
+@@ 0x465c8d
+func(a1) begin
+	if (not a1) then begin
+			a1 := @780
+		end;
+	if (template <> a1) then begin
+			self:InvalDrawCache('all);
+			if ((not HasPath(a1, '_RAMBased)) or (if template then (template._proto <> a1))) then begin
+					a1 := {_parent: self, _proto: a1, _RAMBased: true}
+				end
+		end;
+	(template := a1)
+end
+@@end

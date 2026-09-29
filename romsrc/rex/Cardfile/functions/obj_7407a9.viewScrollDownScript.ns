@@ -1,0 +1,5 @@
+@@ 0x740a29
+func() begin
+	entryView:Effect(77725696, true, @85, 'Scroller, [Array: 1])
+end
+@@end

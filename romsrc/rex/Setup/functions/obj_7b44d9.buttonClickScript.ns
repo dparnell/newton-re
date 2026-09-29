@@ -1,0 +1,6 @@
+@@ 0x7b4535
+func() begin
+	base:SetupClose();
+	true
+end
+@@end

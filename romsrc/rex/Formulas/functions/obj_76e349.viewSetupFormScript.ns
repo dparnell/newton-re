@@ -1,0 +1,8 @@
+@@ 0x76e4ad
+func() begin
+	(viewBounds := Clone(viewBounds)).bottom := -5;
+	viewBounds.top := (viewBounds.bottom - 13);
+	viewBounds.left := 0;
+	(viewBounds.right := StdButtonWidth(text))
+end
+@@end

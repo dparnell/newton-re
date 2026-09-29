@@ -1,0 +1,6 @@
+@@ 0x438bf1
+func() begin
+	lat.value := latitude;
+	(long.value := longitude)
+end
+@@end

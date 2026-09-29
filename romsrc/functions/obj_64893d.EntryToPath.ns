@@ -1,0 +1,5 @@
+@@ 0x4ba661
+func(a1) begin
+	(target.(path) := a1.company)
+end
+@@end

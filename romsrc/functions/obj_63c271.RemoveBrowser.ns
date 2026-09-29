@@ -1,0 +1,15 @@
+@@ 0x51c629
+func(a1) begin
+	(foreach l1 in browsers do begin
+			if (l1.refNum = a1) then begin
+					if browser.viewCObject then begin
+							if (browsers[browser.paneIndex] = l1) then begin
+									browser:Close()
+								end
+						end;
+					SetRemove(browsers, l1)
+				end
+		end);
+	nil
+end
+@@end

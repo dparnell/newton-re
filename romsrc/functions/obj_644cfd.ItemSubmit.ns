@@ -1,0 +1,5 @@
+@@ 0x47fc91
+func(a1) begin
+	GetRoot().(owner):submit(a1)
+end
+@@end

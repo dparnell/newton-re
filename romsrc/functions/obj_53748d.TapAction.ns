@@ -1,0 +1,5 @@
+@@ 0x53744d
+func() begin
+	(if self:LookupSoupPackageAndActivate() then (if fentry:?TapAction() then (if fentry.closeControl then (fentry.closeControl = 'alwaysClose) else GetUserConfig('ExtraAlwaysClose)) else self:_Open(GetRoot().(fentry.app))))
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x430d25
+func() begin
+	(if moreBelow then roll:SlideEffect(((-(scrollAmount + 2)) * 14), 0, scrollDownSound, 'doscrollscript, [Array: scrollAmount]))
+end
+@@end

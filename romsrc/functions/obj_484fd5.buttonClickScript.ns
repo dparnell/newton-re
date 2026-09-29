@@ -1,0 +1,9 @@
+@@ 0x484fb5
+func() begin
+	if ((fileArea.folderCluster.clusterValue = 0) or (Length(SetDifference(GetFolderGroups(newLabels), '[Array: _System])) = 0)) then begin
+			self:Notify(3, "Filing", "This folder name cannot be edited.");
+			return nil
+		end;
+	folderEdit:OpenForUser(newLabels, GetVariable(targetView, 'appSymbol), GetVariable(targetView, 'localFoldersOnly), GetVariable(targetView, 'globalFoldersOnly))
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x59780d
+func(a1, a2) begin
+	(if (a1 = 'text) then begin
+			changed := true;
+			(if (path = 'text) then (message.edited := true) else (if (StrLen(self:Parent():GetTheText()) > 61) then self:Notify(3, appName, ParamStr("The Subject is limited to ^0 characters.", [Array: 61]))))
+		end)
+end
+@@end

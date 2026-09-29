@@ -1,0 +1,25 @@
+@@ 0x4eeedd
+func() begin
+	local calendar;
+	(if selected then begin
+			calendar := masterFinder.owner;
+			self:ForEachSelected(func(a1, a2) begin
+				local l1, l2;
+				(if a1.repeatType then begin
+						if (l2 := calendar:FindException(a2, a1)) then begin
+								l1 := l2
+							end else begin
+								l1 := calendar:MakeInstanceOfRepeatingMeeting(a1, a2)
+							end;
+						calendar:RealDeleteAppointment([Array: l1])
+					end else EntryRemoveFromSoup(a1))
+			end);
+			XmitSoupChange(cursor:soup():GetName(), 'unknown, 'whatThe, nil);
+			selected := nil;
+			self.zeroOneOrMoreResult := nil;
+			masterFinder.zeroOneOrMoreResult := nil;
+			self.cacheCount := nil;
+			(masterFinder.cacheCount := nil)
+		end)
+end
+@@end

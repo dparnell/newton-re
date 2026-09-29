@@ -1,0 +1,20 @@
+@@ 0x5b2b41
+func(soup, a2, a3, busybox) begin
+	local newIndexSpec, indexSpec;
+	(foreach indexSpec in (indexes := soup:GetIndexes()) do begin
+			local l2;
+			if (if (a3 <> indexSpec.sortID) then (indexSpec.type = 'string)) then begin
+					newIndexSpec := Clone(indexSpec);
+					if (not a3) then begin
+							RemoveSlot(newIndexSpec, 'sortID)
+						end;
+					l2 := soup:GetStore();
+					l2:AtomicAction(func() begin
+						soup:RemoveIndex(indexSpec.path);
+						busybox:SetStatus('vBarber, {barber: true});
+						soup:AddIndex(newIndexSpec)
+					end)
+				end
+		end)
+end
+@@end

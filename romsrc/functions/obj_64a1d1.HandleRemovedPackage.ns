@@ -1,0 +1,10 @@
+@@ 0x553369
+func(a1) begin
+	local l1, l2, l3, l4;
+	l4 := (l3 := a1.oldSoup:Query((l2 := {beginKey: (l1 := a1.entry.packageName), endKey: l1, indexPath: 'packageName, tagspec: '{none: _package}}))):entry();
+	(while l4 do begin
+			EntryRemoveFromSoupXmit(l4, 'ExtrasDrawer);
+			(l4 := l3:Next())
+		end)
+end
+@@end

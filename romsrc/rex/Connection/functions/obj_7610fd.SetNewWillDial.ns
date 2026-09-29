@@ -1,0 +1,6 @@
+@@ 0x761391
+func(a1) begin
+	phonenumber := a1;
+	SetValue(willDial, 'text, Stringer([Array: "Will dial: ", " ", self:GetPhone()]))
+end
+@@end

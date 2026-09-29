@@ -1,0 +1,7 @@
+@@ 0x74ccb9
+func(a1) begin
+	local l1;
+	(l1 := Clone(a1.viewBounds)).left := (l1.right - min(90, max(15, (StrWidth(a1.text) + 7))));
+	(a1.viewBounds := l1)
+end
+@@end

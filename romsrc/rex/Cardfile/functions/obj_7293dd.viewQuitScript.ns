@@ -1,0 +1,19 @@
+@@ 0x729d75
+func() begin
+	local l1, l2, l3, l4;
+	(if (if self.extension.viewCObject then (l2 := target.phones[0])) then begin
+			l4 := ClassOf(l2);
+			l1 := ParsePhone(l2).areacode;
+			l2 := ParsePhone(l2).phone;
+			l3 := TrimString(extension.entryLine:GetRichString());
+			savePhoneNum := MakePhone({areacode: l1, phone: l2, extension: l3});
+			if (if l4 then StrFilled(savePhoneNum)) then begin
+					SetClass(savePhoneNum, l4)
+				end else begin
+					savePhoneNum := nil
+				end;
+			target.phones[0] := savePhoneNum;
+			targetView:StartFlush()
+		end)
+end
+@@end

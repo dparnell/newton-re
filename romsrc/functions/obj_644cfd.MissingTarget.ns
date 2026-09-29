@@ -1,0 +1,5 @@
+@@ 0x47fdfd
+func(a1) begin
+	self:Notify(3, title, "Nothing to Send")
+end
+@@end

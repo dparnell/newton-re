@@ -1,0 +1,5 @@
+@@ 0x74c801
+func() begin
+	(if (not config.xButton) then self:Hide())
+end
+@@end

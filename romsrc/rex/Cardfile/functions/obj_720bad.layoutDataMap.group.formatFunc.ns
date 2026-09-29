@@ -1,0 +1,14 @@
+@@ 0x74251d
+func(a1) begin
+	l3 := GetDataDefs(ClassOf(a1[0]));
+	l1 := "";
+	local l1;
+	local l2;
+	local l3;
+	(foreach l4 in a1[0] do begin
+			l2 := ResolveEntryAlias(l4._alias);
+			l1 := Stringer([Array: l1, "\n+", l3:Get(l4, 'name, 'text)])
+		end);
+	l1
+end
+@@end

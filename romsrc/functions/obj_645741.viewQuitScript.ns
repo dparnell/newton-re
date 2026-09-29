@@ -1,0 +1,6 @@
+@@ 0x4bdfe1
+func() begin
+	UnRegStationeryChange(Intern(Stringer([Array: viewCObject, ":StationeryView:", GetVariable(self, 'appSymbol)])));
+	inherited:?viewQuitScript()
+end
+@@end

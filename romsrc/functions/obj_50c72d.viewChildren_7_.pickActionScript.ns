@@ -1,0 +1,19 @@
+@@ 0x50749d
+func(a1) begin
+	local l1;
+	if (not self:IsSameListOfAliases(inviteesAliases, a1)) then begin
+			inviteesAliases := a1;
+			dirtyFlag := true;
+			if ClosingFromQuitScript then begin
+					MeetingNotes.needToChangeThisOrFutureOccurrences := 'ThisOneOnly
+				end else begin
+					self:UpdateText(self:GetNamesOfInvitees(inviteesAliases, (220 - self.indent)));
+					self:CarefulAskUser()
+				end
+		end;
+	if openNonchildViews then begin
+			l1 := LSearch(openNonchildViews, peoplePopup, 0, '|=|, nil)
+		end;
+	(if l1 then ArrayRemoveCount(openNonchildViews, l1, 1))
+end
+@@end

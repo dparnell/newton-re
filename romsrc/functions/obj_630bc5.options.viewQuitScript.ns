@@ -1,0 +1,5 @@
+@@ 0x4dccb1
+func() begin
+	(if alarm then alarm:?Affirmative())
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x4429b9
+func(a1, a2, a3) begin
+	local l1;
+	(l1 := self:Init()).context := a3;
+	l1.value := (if a1 then a1 else Date(Time()).year);
+	l1:popup(a2)
+end
+@@end

@@ -1,0 +1,13 @@
+@@ 0x59b271
+func() begin
+	speed := (speed := mailEndPoint:option((speed := [Array: {label: "mspd", type: 'option, opCode: 1024, data: {arglist: [Array: 0], typelist: [Array: 10, 1]}}]), nil))[0].data.arglist[0];
+	if (transport exists) then begin
+			transport:?SetStatusDialog('Connecting, 'vStatusTitle, {titleText: Stringer([Array: title, " ", "-", " ", speed, " ", "baud"])})
+		end;
+	mailEndPoint.curstate := 'waitForLogin;
+	mailEndPoint:SetInputSpec(mailEndPoint.waitForLogin);
+	AddDelayedCall(func() begin
+		self:mailStartContinue()
+	end, nil, 10000)
+end
+@@end

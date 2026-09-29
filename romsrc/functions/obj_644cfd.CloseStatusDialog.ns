@@ -1,0 +1,13 @@
+@@ 0x47fb71
+func(a1) begin
+	if statusDialog then begin
+			statusDialog:Close();
+			if (if (status <> 'idle) then (not manualStatus)) then begin
+					self:StatusNotify()
+				end
+		end;
+	statusDialog := nil;
+	lastError := nil;
+	(userClosedStatus := a1)
+end
+@@end

@@ -1,0 +1,16 @@
+@@ 0x4ceac1
+func(a1) begin
+	local l1, l2;
+	if (a1 = (Length(list) - 1)) then begin
+			self:SelectHomeCity()
+		end else begin
+			if ((not (l1 := ResolveEntryAlias(list[a1].alias)).cityAlias) or (not (l2 := GetCityFromAlias(l1.cityAlias)))) then begin
+					self.newOne := list[a1].alias;
+					self:ValidateConfig('location, l1, '[Array: closestcity], "This worksite is incomplete.  Please choose the closest city", 'validateDialog, 'ValidateDone)
+				end else begin
+					self:SetLocationAndEmporium(l2, list[a1].alias)
+				end
+		end;
+	(list := nil)
+end
+@@end

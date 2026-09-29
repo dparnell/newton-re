@@ -1,0 +1,64 @@
+@@ 0x4c575d
+func() begin
+	local sortby, theTagSpec, lastItem, dayEnd;
+	pieces := nil;
+	sortby := self:GetAppPreferences().sortby;
+	SetClass((headings := [Array: ]), sortby);
+	theTagSpec := {none: hideFilter};
+	if (storesFilter exists) then begin
+			theTagSpec.storesFilter := storesFilter
+		end;
+	if (not labelsFilter) then begin
+			theTagSpec.all := '_unfiled
+		end else begin
+			if (labelsFilter <> '_all) then begin
+					theTagSpec.all := labelsFilter
+				end
+		end;
+	local l1;
+	(if (sortby = 'Date) then begin
+			lastItem := -1;
+			dayEnd := (dayStart := 0);
+			(l1 := self:GetSpec(sortby, theTagSpec, nil)).IndexValidTest := func(a1) begin
+				local l1, l2;
+				if ((a1 >= dayEnd) or (a1 < dayStart)) then begin
+						dayEnd := ((dayStart := ((l2 := (a1 div 1440)) * 1440)) + 1440);
+						(l1 := Clone('{title: nil, collapsed: nil, count: 1, spec: nil})).sortTag := dayStart;
+						l1.title := LongDateStr(dayStart, 0);
+						l1.spec := self:GetSpec(sortby, theTagSpec, a1);
+						AddArraySlot(headings, l1);
+						lastItem := (lastItem + 1)
+					end else begin
+						(l1 := headings[lastItem]).count := (l1.count + 1);
+						if sortUp then begin
+								l1.spec.endKey := a1
+							end else begin
+								l1.spec.beginKey := a1
+							end
+					end;
+				return nil
+			end;
+			self:MakeCursor(currentSoupSymbol, l1)
+		end else (if (sortby = 'transport) then (foreach l2 in transports do begin
+					local l4, l5, l6, l7;
+					if (if (if (l4 := GetRoot().(l2)) then l4.(checkSlot)) then (l4.owner = appSymbol)) then begin
+							(l5 := Clone('{title: nil, collapsed: nil, count: 1, spec: nil})).title := l4.title;
+							l6 := (l5.spec := self:GetSpec(sortby, theTagSpec, l2));
+							l7 := self:MakeCursor(currentSoupSymbol, l6);
+							l5.count := l7:CountEntries();
+							l5.sortTag := l2;
+							l5.collapsed := l4:GetConfig(collapsedSym);
+							AddArraySlot(headings, l5)
+						end
+				end) else (if (sortby = 'status) then (if (currentSoupSymbol = 'outbox) then begin
+						self:AddStateHeading('pending, theTagSpec);
+						self:AddStateHeading('ready, theTagSpec);
+						self:AddStateHeading('Sent, theTagSpec);
+						(if (not SetContains(hideFilter, 'log)) then self:AddStateHeading('OutLog, theTagSpec))
+					end else begin
+						self:AddStateHeading('Received, theTagSpec);
+						self:AddStateHeading('Read, theTagSpec);
+						(if (not SetContains(hideFilter, 'log)) then self:AddStateHeading('InLog, theTagSpec))
+					end))))
+end
+@@end

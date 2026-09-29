@@ -1,0 +1,16 @@
+@@ 0x484c59
+func() begin
+	itemTitles := [Array: "None (Unfiled)"];
+	clusterValue := nil;
+	(foreach l1, l2 in folderList do begin
+			AddArraySlot(itemTitles, StyledStrTruncate(Clone(GetFolderStr(l2)), 76, viewFont));
+			if (if (if newLabels then (newLabels <> 42)) then (target.labels = l2)) then begin
+					clusterValue := (l1 + 1)
+				end
+		end);
+	if (not (dontStartWithFolder or clusterValue)) then begin
+			clusterValue := 0
+		end;
+	(self.viewBounds := SetBounds(5, 4, -5, (folderClusterHeight + 4)))
+end
+@@end

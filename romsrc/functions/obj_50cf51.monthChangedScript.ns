@@ -1,0 +1,11 @@
+@@ 0x50cddd
+func() begin
+	calendar.selectedDates := selectedDates;
+	if previousMainDataDisplay then begin
+			self:changeViewTo(previousMainDataDisplay)
+		end else begin
+			self:changeViewTo(scheduleView)
+		end;
+	calendar:redisplayScript()
+end
+@@end

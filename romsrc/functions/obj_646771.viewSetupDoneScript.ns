@@ -1,0 +1,8 @@
+@@ 0x437b55
+func() begin
+	local l1;
+	l1 := ShapeBounds((handShape := MakeShape(GrabbyHand)));
+	OffsetShape(handShape, ((-l1.right) div 2), ((-l1.bottom) div 2));
+	(if tempOpen then self:setup(tempImage, tempAnnotes, tempScales) else self:setup(image, annotations, scalingInfo))
+end
+@@end

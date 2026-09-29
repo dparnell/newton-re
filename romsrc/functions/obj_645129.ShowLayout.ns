@@ -1,0 +1,14 @@
+@@ 0x4aa2bd
+func(a1) begin
+	local l1;
+	if (not a1) then begin
+			a1 := previousLayout
+		end;
+	if (currentLayout <> 'overview) then begin
+			previousLayout := currentLayout
+		end;
+	currentLayout := a1;
+	AddDeferredSend(self, 'RedoChildren, nil);
+	(if (if (l1 := GetUserConfig('blessedapp)) then (GetRoot().(l1) = newtAppBase)) then AddProcrastinatedSend('SaveAppState, self, 'SaveAppState, [Array: ], 10000))
+end
+@@end

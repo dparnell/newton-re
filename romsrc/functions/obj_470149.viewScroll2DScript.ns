@@ -1,0 +1,7 @@
+@@ 0x470129
+func(a1, a2) begin
+	timeoutCounter := 300000;
+	inherited:viewScroll2DScript(a1, a2);
+	RefreshViews()
+end
+@@end

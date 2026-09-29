@@ -1,0 +1,9 @@
+@@ 0x4382e5
+func(a1) begin
+	if list[a1].place then begin
+			self:?PickWorld(list[a1].place)
+		end;
+	list := nil;
+	(if autoClose then base:Close())
+end
+@@end

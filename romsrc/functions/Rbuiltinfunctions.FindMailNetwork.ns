@@ -1,0 +1,15 @@
+@@ 0x590f49
+func(a1, a2) begin
+	l1 := nil;
+	l2 := (Length(a1) - 1);
+	local l1;
+	local l2;
+	(for l3 := 0 to l2 do begin
+			if (a1[l3].id = a2) then begin
+					l1 := Clone(a1[l3]);
+					break
+				end
+		end);
+	l1
+end
+@@end

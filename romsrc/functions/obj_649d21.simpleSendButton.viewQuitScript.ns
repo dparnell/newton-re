@@ -1,0 +1,5 @@
+@@ 0x4c2841
+func() begin
+	(_sendKeyButton := nil)
+end
+@@end

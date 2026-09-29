@@ -1,0 +1,46 @@
+@@ 0x5495f9
+@@const kLiteral_3c5eed
+'{transferMode: 2, penPattern: 0, fillPattern: 5}
+@@main
+func() begin
+	local l1, l2, l3, l4, l5, l6, l7;
+	if IsInteger((l1 := target.fentry).iconPro) then begin
+			l1 := @233[l1.iconPro]
+		end else begin
+			if IsInteger(l1.icon) then begin
+					l1 := @233[l1.icon]
+				end
+		end;
+	if l1.iconPro then begin
+			if (l4 := l1.iconPro).hilited then begin
+					l2 := MakeShape(l4.hilited)
+				end else begin
+					l3 := MakeShape(l4.unhilited)
+				end
+		end else begin
+			if (if (l5 := l1.icon).mask then (not hasBackground)) then begin
+					(l6 := Clone(l5)).bits := l5.mask;
+					l2 := [Array: MakeShape(l5), kLiteral_3c5eed, MakeShape(l6)]
+				end else begin
+					l3 := MakeShape(l5)
+				end
+		end;
+	if (not l2) then begin
+			if hasBackground then begin
+					l2 := [Array: '{transferMode: 1}, l3]
+				end else begin
+					l2 := [Array: l3, kLiteral_3c5eed, MakeShape(ShapeBounds(l3))]
+				end
+		end;
+	l7 := [Array: l2];
+	if target.notActive then begin
+			AddArraySlot(l7, MakeShape(@233[10].icon))
+		end;
+	self:CenterIconShape(l7);
+	AddArraySlot(l7, self:GetIconShapeTextHilited());
+	if IsSoupEntry(target.fentry) then begin
+			EntryUndoChanges(target.fentry)
+		end;
+	l7
+end
+@@end

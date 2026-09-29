@@ -1,0 +1,6 @@
+@@ 0x550745
+func() begin
+	newBlessed := 'ExtrasDrawer;
+	base:Close()
+end
+@@end

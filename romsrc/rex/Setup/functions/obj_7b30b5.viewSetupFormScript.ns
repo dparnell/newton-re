@@ -1,0 +1,5 @@
+@@ 0x7b314d
+func() begin
+	(if fPersona.owner.signature then (self.viewChildren := fPersona.owner.signature))
+end
+@@end

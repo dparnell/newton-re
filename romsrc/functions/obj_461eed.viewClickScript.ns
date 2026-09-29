@@ -1,0 +1,6 @@
+@@ 0x461ecd
+func(a1) begin
+	timeStampField:Open();
+	true
+end
+@@end

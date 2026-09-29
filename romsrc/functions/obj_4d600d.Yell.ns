@@ -1,0 +1,10 @@
+@@ 0x5548c9
+func() begin
+	try begin
+			(foreach l1 in target.soupNames do begin
+					XmitSoupChangeNow(l1, 'soupervisor, 'whatThe, nil)
+				end)
+		end onexception |evt.ex| do begin end;
+	GetRoot().ExtrasDrawer:InvalIcons()
+end
+@@end

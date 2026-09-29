@@ -1,0 +1,11 @@
+@@ 0x7b17d1
+func() begin
+	SetKeyView(vAddr1.vInputLine, 0);
+	inherited:?viewSetupDoneScript();
+	vAddr1:SetText(fPersona.address);
+	vAddr2:SetText(fPersona.address2);
+	vCity:SetText(fPersona.city);
+	vRegion:SetText(fPersona.region);
+	vZipInput:SetText(fPersona.postal_code)
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x43d1b9
+func() begin
+	local l1;
+	l1 := OffsetRect(self:GlobalBox(), 15, 15);
+	@436:New({spots: @295, result: 'symbol, default: GetCountryEntry(currentCountry)[0]}, l1, self);
+	self:hilite(nil)
+end
+@@end

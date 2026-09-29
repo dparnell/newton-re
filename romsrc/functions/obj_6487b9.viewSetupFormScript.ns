@@ -1,0 +1,13 @@
+@@ 0x4b7c81
+func() begin
+	local l1, l2;
+	target := GetVariable((parentView := self:Parent()), targetSlot);
+	targetView := self;
+	dataCursor := GetVariable(parentView, dataCursorSlot);
+	dataSoup := GetVariable(parentView, dataSoupSlot);
+	soupQuery := GetVariable(parentView, soupQuerySlot);
+	targetViewDef := (entryViewDefs := [Array: (l1 := GetEntryDataView(target, viewDef))]);
+	viewDef := l1.symbol;
+	(if (l2 := GetDataDefs(DataClassOf(target))) then l2:?SetupForm(target, self))
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x45f409
+func() begin
+	(Length(vAnnotations.viewChildren) > 0)
+end
+@@end

@@ -1,0 +1,22 @@
+@@ 0x50fff1
+func(a1, a2, a3, a4) begin
+	local l1, l2;
+	(if IsFrame(a1) then begin
+			if (not LSearch('[Array: meeting, RepeatingMeeting, exceptionMeeting, cribNote], a1.viewStationery, 0, '|=|, nil)) then begin
+					ThrowBadTypeWithFrameData(-48416, a1)
+				end;
+			[Array: a1]
+		end else begin
+			self:ValidateTitleAndDatetimeArgs(a1, a2);
+			l1 := (if a4 then 2);
+			if ((l2 := self:FindAppointment(a1, nil, a2, a3, l1)) = nil) then begin
+					ThrowBadTypeWithFrameData(-48418, l2)
+				end else begin
+					if (if a4 then (Length(l2) > 1)) then begin
+							ThrowBadTypeWithFrameData(-48418, l2)
+						end
+				end;
+			l2
+		end)
+end
+@@end

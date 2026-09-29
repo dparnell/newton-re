@@ -1,0 +1,9 @@
+@@ 0x4c70a1
+func(a1, a2) begin
+	local l1;
+	(l1 := BuildContext(@355)).fields := a1;
+	l1:Open();
+	l1:Close();
+	a1.pageCount
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x79b9b5 names
+func() begin
+	(if (if (contentText := self:GetContent()) then (StrLen(contentText) > 0)) then (if (not viewBounds) then (viewBounds := SetBounds(10, 0, -10, height))) else (viewBounds := SetBounds(0, 0, 0, 0)))
+end
+@@end

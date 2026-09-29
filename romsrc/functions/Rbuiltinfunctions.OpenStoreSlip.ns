@@ -1,0 +1,21 @@
+@@ 0x496f95
+@@const kROM_556
+@556
+@@main
+func(a1) begin
+	(if a1 then begin
+			l1 := LFetch(StoreSlipRegistry.storeSlips, a1, 0, '|=|, '_openedForStore);
+			l3 := (if ((l2 := a1:cardType()) <> '|rom |) then @271.(l2));
+			local l1;
+			local l2;
+			local l3;
+			(if l1 then (if l1.viewCObject then l1:MoveBehind(nil) else l1:Open()) else (if l3 then begin
+						l1 := BuildContext(@579);
+						l1:setDestStore(a1);
+						l1:Open()
+					end else (if (l1 := GetRoot().(l2)) then (if l1.viewCObject then l1:MoveBehind(nil) else l1:Open()) else (if (Length(StoreSlipRegistry.miscSlips) > 0) then (foreach l4 in StoreSlipRegistry.miscSlips do begin
+									l4:Open()
+								end) else GetRoot():Notify(3, kROM_556, ParamStr("No slip is available for the card \u201C\u^0\u201D\u.", [Array: a1:GetName()]))))))
+		end)
+end
+@@end

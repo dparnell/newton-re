@@ -1,0 +1,6 @@
+@@ 0x7a05a5 names
+func() begin
+	self:SetupRange();
+	inherited:?viewSetupFormScript()
+end
+@@end

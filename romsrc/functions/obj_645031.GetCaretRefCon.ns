@@ -1,0 +1,17 @@
+@@ 0x4693d9
+func() begin
+	local l1, l2, l3, l4;
+	if (l2 := GetCaretBox()) then begin
+			l1 := {form: (l3 := l2.view), wordOffset: 0, wordLength: 0};
+			if (if HasPath(l3, 'text) then (l2.offset >= 0)) then begin
+					l1.wordOffset := l2.offset
+				end
+		end;
+	if (not l1) then begin
+			if (l4 := GetHiliteOffsets()) then begin
+					l1 := {form: (l4 := l4[0])[0], wordOffset: l4[1], wordLength: (l4[2] - l4[1])}
+				end
+		end;
+	l1
+end
+@@end

@@ -1,0 +1,22 @@
+@@ 0x50b135
+func(a1, a2) begin
+	local l1, l2, l3;
+	l1 := nil;
+	(if (a1 = 'text) then (if (not StrEqual(a2.text, "")) then begin
+				if ((not (l3 := StringToNumber(a2.text))) or (trunc(l3) <> l3)) then begin
+						l1 := true;
+						l2 := "The value for the advance notice must be a whole number."
+					end else begin
+						if (not LimitInt(l3, 0, 999)) then begin
+								l1 := true;
+								l2 := "The value for the advance notice must be between 0 and 999."
+							end
+					end;
+				(if (not l1) then (oldValue := Clone(a2.text)) else begin
+						self:Notify(3, "Alarm", l2);
+						text := Clone(oldValue);
+						self:Dirty()
+					end)
+			end))
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x47a64d
+func() begin
+	transport:GetItemTitle(target)
+end
+@@end

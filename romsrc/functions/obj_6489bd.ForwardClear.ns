@@ -1,0 +1,5 @@
+@@ 0x52ea21
+func(a1, a2) begin
+	self:SendOption("focr", a1, a2)
+end
+@@end

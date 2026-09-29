@@ -1,0 +1,53 @@
+@@ 0x7974d5 names
+func(aTopicList, aStart) begin
+	local tomorrow, itemDate;
+	local today, querySpec, spec, cursor, pastTest, presentTest, futureTest, Entry, task, result;
+	querySpec := '{type: index, indexPath: mtgStartDate, startKey: 0, validTest: nil};
+	today := ((today := Time()) - (today mod 1440));
+	pastTest := func(item) begin
+		itemDate := item.mtgStartDate;
+		item.mtgDone
+	end;
+	presentTest := func(item) begin
+		itemDate := item.mtgStartDate;
+		((not item.mtgDone) or (itemDate >= aStart))
+	end;
+	futureTest := func(item) begin
+		true
+	end;
+	endTest := func(item) begin
+		itemDate := item.mtgStartDate;
+		(item.mtgStartDate >= tomorrow)
+	end;
+	(spec := Clone(querySpec)).endTest := endTest;
+	if (today = aStart) then begin
+			spec.validTest := presentTest;
+			spec.startKey := 0
+		end else begin
+			if (today < aStart) then begin
+					spec.validTest := futureTest;
+					spec.startKey := aStart
+				end else begin
+					spec.validTest := pastTest;
+					spec.startKey := aStart
+				end
+		end;
+	tomorrow := (aStart + 1440);
+	if ((cursor := oldTodoSoup:Query(spec)):CountEntries() > 0) then begin
+			Entry := cursor:Entry();
+			(while Entry do begin
+					if HasPath(Entry, 'converted) then begin
+							AddArraySlot(aTopicList, self:MoveConvertedEntry(Entry));
+							result := true
+						end else begin
+							if (task := GetDataDefs('convertTodo):ConvertOldEntry(Entry)) then begin
+									AddArraySlot(aTopicList, task);
+									result := true
+								end
+						end;
+					(Entry := cursor:Next())
+				end)
+		end;
+	return result
+end
+@@end

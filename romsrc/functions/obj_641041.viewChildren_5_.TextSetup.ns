@@ -1,0 +1,5 @@
+@@ 0x4d6da1
+func() begin
+	return labelCommands[3].item
+end
+@@end

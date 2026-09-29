@@ -1,0 +1,8 @@
+@@ 0x496955
+@@const kROM_556
+@556
+@@main
+func(a1) begin
+	(if (if (not viewValue) then self:getDestStore():IsReadOnly()) then GetRoot():Notify(3, kROM_556, "This card is locked, you cannot store new items on it.") else inherited:viewClickScript(a1))
+end
+@@end

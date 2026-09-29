@@ -1,0 +1,6 @@
+@@ 0x635b2d
+func(a1, a2) begin
+	local l1;
+	(if (l1 := self:CardSlot()) then MarkSlotBusy(a1, l1, a2))
+end
+@@end

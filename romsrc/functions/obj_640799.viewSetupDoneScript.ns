@@ -1,0 +1,12 @@
+@@ 0x42a299
+func() begin
+	local l1;
+	(foreach l2 in (l1 := self:ChildViewFrames()) do begin
+			if (clusterValue = l2.buttonValue) then begin
+					clusterChild := l2;
+					l2.viewValue := l2.buttonValue;
+					l2:UpdateBitmap()
+				end
+		end)
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x78ce4d names
+func(anEntry, aFinder) begin
+	local found, ti;
+	(if (aFinder.findType = 'text) then (if (found := FindStringInFrame(anEntry.topics, aFinder.findWords, 'first)) then begin
+				self:ShowFoundTopic((ti := found[1][0]), found[2], aFinder);
+				self:EnsureVisibleTopic(ti)
+			end))
+end
+@@end

@@ -1,0 +1,17 @@
+@@ 0x54c6f9
+func() begin
+	prefsEntry := nil;
+	folderItems := nil;
+	visibleItems := nil;
+	fakeTarget := nil;
+	if memex then begin
+			memex:Close()
+		end;
+	if legalese then begin
+			legalese:Close()
+		end;
+	pieces := nil;
+	UnRegFolderChanged(appSymbol);
+	UnRegStoreChange(appSymbol)
+end
+@@end

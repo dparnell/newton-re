@@ -1,0 +1,46 @@
+@@ 0x78cb7d names
+func(anOptions) begin
+	kids := Array(nTopics, nil);
+	ki := 0;
+	top := 0;
+	image := self:LocalBox();
+	lastTopic := reflowStart;
+	topics := DeepClone(topics);
+	self:LockScreen(true);
+	local kids;
+	local ti;
+	local ki;
+	local top;
+	local height;
+	local template;
+	local topic;
+	local view;
+	local image;
+	(for ti := reflowStart to (nTopics - 1) do begin
+			topic := topics[ti];
+			if (((anOptions = nil) or (topic.hideCount = 0)) or (topic.hideCount = nil)) then begin
+					template := (kids[ki] := self:ChildTemplateFromTopic(topic));
+					height := (topic.viewBounds.bottom - topic.viewBounds.top);
+					template.viewBounds.top := top;
+					template.viewBounds.bottom := (top + height);
+					template.viewBounds.right := image.right;
+					template.viewFlags := 9;
+					template.styles := self:MungeStyles(template.styles, 12289);
+					if (view := AddStepView(self, template)) then begin
+							height := view:LocalBox().bottom;
+							RemoveStepView(self, view);
+							self:SetTopAndLevel(topic, top, 0)
+						end;
+					if (if ((top := (top + height)) > image.bottom) then (ki <> 0)) then begin
+							break
+						end;
+					lastTopic := ti;
+					ki := (ki + 1)
+				end
+		end);
+	self:LockScreen(nil);
+	setlength(kids, ki);
+	self.stepChildren := nil;
+	kids
+end
+@@end

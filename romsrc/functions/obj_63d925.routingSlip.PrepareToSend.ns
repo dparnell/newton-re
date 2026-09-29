@@ -1,0 +1,35 @@
+@@ 0x5993e5
+func(a1) begin
+	noworlater := a1;
+	fields.toRef := toLine.selected;
+	fields.cc := ccLine.selected;
+	fields.bcc := bccLine.selected;
+	if ((not fields.toRef) or (Length(fields.toRef) = 0)) then begin
+			self:Notify(3, appName, "You have not chosen a recipient. Please fill in the 'To' address and try again.");
+			return nil
+		end;
+	inkCount := 0;
+	l1 := GetDataDefs('|nameRef.email|);
+	local l1;
+	(foreach l2, l3 in fields.toRef do begin
+			if self:BadAddress(l1, l3) then begin
+					return nil
+				end
+		end);
+	if (if fields.cc then (Length(fields.cc) > 0)) then begin
+			(foreach l2, l3 in fields.cc do begin
+					if self:BadAddress(l1, l3) then begin
+							return nil
+						end
+				end)
+		end;
+	if (if fields.bcc then (Length(fields.bcc) > 0)) then begin
+			(foreach l2, l3 in fields.bcc do begin
+					if self:BadAddress(l1, l3) then begin
+							return nil
+						end
+				end)
+		end;
+	(if (if IsString(fields.title) then IsRichString(fields.title)) then self:ConvertInkText(fields.title, 'alpha, nil, "Converting e-mail subject", "Please verify that the ink text was converted correctly.", 'InkConvert, 'PrepareToSend2, nil) else self:PrepareToSend2(true, fields.title, nil))
+end
+@@end

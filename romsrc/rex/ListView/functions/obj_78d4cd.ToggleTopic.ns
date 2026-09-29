@@ -1,0 +1,15 @@
+@@ 0x78d195 names
+func(anIndex) begin
+	curTopic := anIndex;
+	if self:HasKids(anIndex) then begin
+			if self:IsCollapsed(anIndex) then begin
+					self:ExpandTopic(anIndex, true);
+					self:EnsureVisibleTopic(anIndex)
+				end else begin
+					self:CollapseTopic(anIndex, true)
+				end;
+			self:StartFlush()
+		end;
+	self:ActiveTopic(anIndex)
+end
+@@end

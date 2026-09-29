@@ -1,0 +1,40 @@
+@@ 0x4421c5
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8;
+	if (((l1 := (value + a1)) > maxValue) or (l1 < minValue)) then begin
+			return nil
+		end;
+	l3 := (l2 := self):GlobalBox();
+	l4 := l2:GetIndex(l1);
+	l5 := nil;
+	l6 := nil;
+	(loop begin
+			if (if (if ((if (l2.ArrayPos > hiOrd) then (l4 <> 0)) or (if (l2.ArrayPos = hiOrd) then (l4 = 0))) then (not showLeadingZeros)) then (not l5)) then begin
+					l5 := digitBase.hiOrd;
+					l6 := digitBase:ScanForHiOrd(l1)
+				end;
+			if (l4 <> l2:GetIndex(value)) then begin
+					l2.currentIndex := l4;
+					l3.left := min(l3.left, l2:GlobalBox().left)
+				end else begin
+					break
+				end;
+			if (l7 := l2.nextDigit) then begin
+					l2 := (if (ClassOf(l7) = 'symbol) then digitBase.(l7) else l7)
+				end else begin
+					break
+				end;
+			(l4 := l2:GetIndex(l1))
+		end);
+	value := l1;
+	if (l6 <> l5) then begin
+			l5 := GetView(viewChildren[l5]):GlobalBox();
+			l6 := GetView(viewChildren[l6]):GlobalBox();
+			l3.left := min(min(l5.left, l6.left), l3.left);
+			l3.right := max(max(l6.left, l5.left), l3.right)
+		end;
+	l8 := digitBase:GlobalBox();
+	digitBase:RevealEffect(((l3 := RelBounds((l3.left - l8.left), (l3.top - l8.top), (l3.right - l3.left), (l3.bottom - l3.top))).bottom * (if (a1 > 0) then -1 else 1)), l3, @51, nil, nil);
+	l1
+end
+@@end

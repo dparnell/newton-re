@@ -1,0 +1,5 @@
+@@ 0x4a6ed5
+func() begin
+	self:CopyBits(creditPict, 0, (-viewOriginY), 0)
+end
+@@end

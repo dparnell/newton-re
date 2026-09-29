@@ -1,0 +1,5 @@
+@@ 0x5463f9
+func() begin
+	PostCommand('viewfrontmost, 51)
+end
+@@end

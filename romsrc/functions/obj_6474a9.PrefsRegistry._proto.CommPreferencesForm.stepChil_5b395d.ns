@@ -1,0 +1,14 @@
+@@ 0x5b395d
+func() begin
+	SetUserConfig('dialing, 'touchtone);
+	SetUserConfig('blinddialing, nil);
+	SetUserConfig('cellularConnection, nil);
+	SetUserConfig('manualDialing, nil);
+	SetUserConfig('commaDelay, 2);
+	SetUserConfig('carrierdelay, 55);
+	SetUserConfig('modemSoundVolume, 2);
+	modemPicker:LabelActionScript(0);
+	connectPicker:LabelActionScript(0);
+	modemPref:RedoChildren()
+end
+@@end

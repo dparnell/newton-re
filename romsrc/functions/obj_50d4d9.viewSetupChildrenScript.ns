@@ -1,0 +1,54 @@
+@@ 0x50d4b9
+@@const kFunction_50cddd
+func() begin
+	calendar.selectedDates := selectedDates;
+	if previousMainDataDisplay then begin
+			self:changeViewTo(previousMainDataDisplay)
+		end else begin
+			self:changeViewTo(scheduleView)
+		end;
+	calendar:redisplayScript()
+end
+@@const kFunction_50ced9
+func(a1) begin
+	local l1;
+	l1 := self:LocalBox();
+	self:DrawShape(MakeRect(0, 0, l1.right, l1.bottom), '{fillPattern: 5, transferMode: 2});
+	calendar.selectedDates := [Array: selectedDates[0]];
+	self:changeViewTo(MonthOverView);
+	calendar:redisplayScript();
+	true
+end
+@@const kFunction_50d011
+func() begin
+	(self.singleDay := monthController.singleDay)
+end
+@@const kLiteral_50cf51
+{debug: 45552, viewClass: 74, viewFlags: 513, selectedDates: nil, NoSelection: true, monthChangedScript: kFunction_50cddd, viewChildren: [viewChildren: {debug: 38757, viewClass: 98, viewBounds: '{left: 0, top: 0, right: 115, bottom: 11}, viewFont: 1057792, viewFlags: 515, viewJustify: 8388610, text: nil, viewClickScript: kFunction_50ced9, preallocatedContext: 'monthName}, {debug: 77100, viewClass: 80, viewFlags: 513, viewBounds: '{left: 0, top: 11, right: 115, bottom: 73}, labelFont: 1057792, datesFont: 9216, singleDay: nil, viewSetupFormScript: kFunction_50d011}], monthName: nil, allocateContext: [Array: 'monthName, {debug: 38757, viewClass: 98, viewBounds: '{left: 0, top: 0, right: 115, bottom: 11}, viewFont: 1057792, viewFlags: 515, viewJustify: 8388610, text: nil, viewClickScript: kFunction_50ced9, preallocatedContext: 'monthName}]}
+@@main
+func() begin
+	l3 := ((l2 := ((l1 := self:Parent():LocalBox().right) div 115)) + 1);
+	l4 := ((l1 - (l2 * 115)) div l3);
+	l7 := ((l6 := ((l5 := (self:Parent():LocalBox().bottom - 18)) div 73)) - 1);
+	l8 := ((l5 - (l6 * 73)) div l7);
+	self.stepChildren := Array((l6 * l2), nil);
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	local l6;
+	local l7;
+	local l8;
+	(for l9 := 0 to (l6 - 1) do begin
+			(for l12 := 0 to (l2 - 1) do begin
+					local l15, l16, l17, l18;
+					l15 := ((l12 * 115) + ((l12 + 1) * l4));
+					l16 := ((l9 * 73) + (l9 * l8));
+					l17 := (l15 + 115);
+					l18 := (l16 + 73);
+					stepChildren[((l9 * l2) + l12)] := {_proto: kLiteral_50cf51, viewBounds: {left: l15, top: l16, right: l17, bottom: l18}}
+				end)
+		end)
+end
+@@end

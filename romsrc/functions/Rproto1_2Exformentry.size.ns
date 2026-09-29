@@ -1,0 +1,11 @@
+@@ 0x537725
+@@const kFunction_537665
+func(a1, a2) begin
+	(a1 = a2.id)
+end
+@@main
+func() begin
+	local l1, l2;
+	(if (if (l2 := ArrayPos((l1 := GetPackages()), fentry.packageId, 0, kFunction_537665)) then l1[l2].size) then Stringer([Array: (l1[l2].size div 1024), "K"]) else "")
+end
+@@end

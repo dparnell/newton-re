@@ -1,0 +1,34 @@
+@@ 0x4b29d9
+func(a1) begin
+	if a1.xlabels then begin
+			needsRefresh := SetOverlaps(a1.xlabels, [Array: '_pending, '_remote])
+		end;
+	if (a1.labels = nil) then begin
+			a1.xlabels := [Array: '_unfiled]
+		end else begin
+			if IsArray(a1.labels) then begin
+					a1.xlabels := Clone(a1.labels)
+				end else begin
+					a1.xlabels := [Array: a1.labels]
+				end
+		end;
+	if ((a1.state = 'ready) or (a1.state = 'Received)) then begin
+			AddArraySlot(a1.xlabels, '_new)
+		end else begin
+			if (a1.state = 'pending) then begin
+					AddArraySlot(a1.xlabels, '_pending)
+				end else begin
+					if ((a1.state = 'InLog) or (a1.state = 'OutLog)) then begin
+							AddArraySlot(a1.xlabels, 'log)
+						end
+				end
+		end;
+	if a1.hidden then begin
+			AddArraySlot(a1.xlabels, 'hidden)
+		end;
+	if HasPath(a1, '_newFolder) then begin
+			AddArraySlot(a1.xlabels, '_fileit)
+		end;
+	(if a1.Remote then AddArraySlot(a1.xlabels, '_remote))
+end
+@@end

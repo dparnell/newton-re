@@ -1,0 +1,5 @@
+@@ 0x4cff71
+func(a1, a2) begin
+	(a1.body := {sender: Clone(a2.body.sender), info: Clone(a2.body.info)})
+end
+@@end

@@ -1,0 +1,29 @@
+@@ 0x48012d
+func(a1, a2) begin
+	if (a1 := EnsureInternal(a1)) then begin
+			(l1 := (GetRoot().(a1) := BuildContext(a2))).appSymbol := a1;
+			l1.ownerApp := GetRoot().(l1.owner);
+			l1:?InstallScript(a1);
+			SetAdd(transports, a1, true);
+			if a2.registeredAddresses then begin
+					if IsFrame(a2.registeredAddresses) then begin
+							RegisterMailService(a2.registeredAddresses)
+						end else begin
+							local l1;
+							(foreach l2 in a2.registeredAddresses do begin
+									local l4;
+									RegisterMailService(l2)
+								end)
+						end
+				end;
+			if (if a2.group then (not GetUserConfig(a1))) then begin
+					if ((l4 := GetUserConfig('transportGroups)) = nil) then begin
+							l4 := {}
+						end;
+					l4.(EnsureInternal(a2.group)) := EnsureInternal(a2.appSymbol);
+					SetUserConfig('transportGroups, l4)
+				end
+		end;
+	a1
+end
+@@end

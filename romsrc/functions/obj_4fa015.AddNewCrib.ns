@@ -1,0 +1,73 @@
+@@ 0x4f9fb5
+func(a1, a2) begin
+	if (if ((l1 := a1.viewStationery) = 'cribNote) then a1.repeatTemplate) then begin
+			l2 := a1.repeatTemplate;
+			l3 := a1.mtgStartDate;
+			l4 := selectedDates[0];
+			l5 := l2.scrubbedDates;
+			l6 := l2.exceptions;
+			if (not EntryValid(l2)) then begin
+					self:CarefulAdd(RepeatNotes, l2, true)
+				end;
+			if (if (if l5 then l6) then (Length(SetDifference(l5, selectedDates)) = 0)) then begin
+					local l1;
+					local l2;
+					local l3;
+					local l4;
+					local l5;
+					local l6;
+					(foreach l7 in l5 do begin
+							local l9, l10, l11, l12, l13, l14;
+							if (l9 := self:searchExceptionList(l2, l7)) then begin
+									ArrayRemoveCount(l2.exceptions, l9, 1)
+								end
+						end);
+					RemoveSlot(l2, 'scrubbedDates)
+				end else begin
+					a1 := self:MakeNewExceptionFrame(l2, l3, l4, 0)
+				end;
+			self:CarefulChange(RepeatNotes, l2, true)
+		end else begin
+			if (l1 <> 'cribNote) then begin
+					a1.viewStationery := 'cribNote;
+					a1.mtgIconType := nil;
+					if a1.mtgAlarm then begin
+							a1.mtgAlarm := self:ComputeCribMtgAlarm(a1.mtgStartDate, 0)
+						end
+				end;
+			if ((l11 := Length((l10 := selectedDates))) > 1) then begin
+					l2 := DeepClone(a1);
+					l12 := ((l10[(l11 - 1)] + 1440) - 1);
+					if ((l10[1] - l10[0]) = 1440) then begin
+							self:ConvertToRepeating(l2, 0, 4095, l12, nil)
+						end else begin
+							l13 := ((2048 >> Date(l10[0]).dayOfWeek) + 31);
+							self:ConvertToRepeating(l2, 0, l13, l12, nil)
+						end;
+					a1.repeatTemplate := l2;
+					RemoveSlot(a1, 'mtgText);
+					RemoveSlot(a1, 'mtgDuration);
+					RemoveSlot(a1, 'mtgAlarm);
+					RemoveSlot(a1, 'mtgIconType);
+					RemoveSlot(a1, 'NotesData);
+					RemoveSlot(a1, 'viewBounds);
+					self:CarefulAdd(RepeatNotes, l2, true)
+				end else begin
+					self:CarefulAdd(notes, a1, true)
+				end
+		end;
+	if a1.mtgAlarm then begin
+			self:initializeAlarms()
+		end;
+	SetKeyView((l14 := AddView(cribView, a1)).textView, 1000);
+	self:UpdateMoreIndicator(nil);
+	cribView:Dirty();
+	if a2 then begin
+			cribView:AddUndoAction('KillCrib, [Array: a1, true])
+		end;
+	if (mainDisplay = MonthOverView) then begin
+			MonthOverView:RedoChildren()
+		end;
+	a1
+end
+@@end

@@ -1,0 +1,29 @@
+@@ 0x47fb91
+func(a1) begin
+	local l1, l2, l3, l4, l5;
+	l1 := "Untitled";
+	if a1 then begin
+			l1 := nil;
+			if IsString(a1.title) then begin
+					l1 := a1.title
+				end else begin
+					if (l4 := GetDataDefs(DataClassOf((l3 := GetTargetFromEntry(a1))))) then begin
+							if (l5 := l4:?StringExtract(l3, 1)) then begin
+									l1 := l5
+								end
+						end;
+					if (if (if (not l1) then IsFrame(l3)) then StrFilled(l3.title)) then begin
+							l1 := Clone(l3.title)
+						end
+				end;
+			if (l1 = nil) then begin
+					if TargetIsCursor(a1.body) then begin
+							l1 := "Selected Items"
+						end else begin
+							l1 := ParamStr("Untitled ^0", [Array: self:GetItemType(a1)])
+						end
+				end
+		end;
+	l1
+end
+@@end

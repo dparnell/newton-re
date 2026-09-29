@@ -1,0 +1,42 @@
+@@ 0x4830d9
+@@const kFunction_482d35
+func() begin
+	local l1;
+	if IsReadOnly((l1 := GetUserConfig('userFolderGroups))) then begin
+			l1 := (userConfiguration.userFolderGroups := DeepClone(l1))
+		end;
+	l1
+end
+@@const kFunction_482cd5
+func() begin
+	local l1;
+	if IsReadOnly((l1 := GetUserConfig('userFolders))) then begin
+			l1 := (userConfiguration.userFolders := Clone(l1))
+		end;
+	l1
+end
+@@main
+func(a1) begin
+	l1 := call (kFunction_482d35) with ();
+	l2 := call (kFunction_482cd5) with ();
+	local l1;
+	local l2;
+	(foreach l3, l4 in l1 do begin
+			if (l3 <> '_System) then begin
+					RemoveSlot(l1, l3)
+				end
+		end);
+	l1._Global := [Array: ];
+	(foreach l3, l4 in l2 do begin
+			if (not SetContains(l1._System, l3)) then begin
+					RemoveSlot(l2, l3)
+				end
+		end);
+	(foreach l3, l4 in a1 do begin
+			local l6;
+			l6 := GenFolderSym(l4);
+			l2.(l6) := l4;
+			SetAdd(l1._Global, l6, true)
+		end)
+end
+@@end

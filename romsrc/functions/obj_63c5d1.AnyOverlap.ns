@@ -1,0 +1,24 @@
+@@ 0x4fc985
+func(a1) begin
+	if ((l1 := (if a1 then (Length(a1) - 1) else 0)) <= 0) then begin
+			return nil
+		end;
+	l2 := nil;
+	l3 := 0;
+	l4 := GetMeetingSlot;
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	(foreach l5 in a1 do begin
+			if LSearch('[Array: meeting, RepeatingMeeting, exceptionMeeting, cribNote], l5.viewStationery, 0, '|=|, nil) then begin
+					if (l5.mtgStartDate < l3) then begin
+							break (l2 := true)
+						end else begin
+							l3 := (l5.mtgStartDate + call l4 with (l5, 'mtgDuration))
+						end
+				end
+		end);
+	l2
+end
+@@end

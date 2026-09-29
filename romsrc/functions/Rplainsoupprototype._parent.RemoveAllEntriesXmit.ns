@@ -1,0 +1,10 @@
+@@ 0x634e35
+func(a1) begin
+	local l1;
+	l1 := self:RemoveAllEntries();
+	if a1 then begin
+			XmitSoupChange(self:GetName(), a1, 'whatThe, nil)
+		end;
+	l1
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x451985
+func() begin
+	(if viewCObject then begin
+			listBase:SetupAbstracts(cursor:clone());
+			upDownScroller:Update();
+			self:Refresh()
+		end)
+end
+@@end

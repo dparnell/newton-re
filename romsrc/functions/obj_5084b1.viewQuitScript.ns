@@ -1,0 +1,19 @@
+@@ 0x508491
+func() begin
+	(if Visible(MeetingNotes) then begin
+			if dirtyFlag then begin
+					try begin
+							repeatingViewQuitting := true;
+							MeetingNotes:CarefulSave();
+							repeatingViewQuitting := nil
+						end onexception |evt.ex| do begin
+							repeatingViewQuitting := nil
+						end
+				end;
+			(if (repeatType = 5) then begin
+					MeetingNotes.savedFrequencyIndex := 0;
+					MeetingNotes:RelayoutSlip(nil)
+				end else MeetingNotes:RelayoutSlip(true))
+		end)
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x5956cd
+func(a1) begin
+	(try begin
+			self:uploadfile(a1.data, a1.filesize, a1.statusView, a1.type, a1.creator);
+			(if (if a1.reply then (not self:GetEWError())) then self:output(a1.reply, nil, nil))
+		end onexception |evt.ex| do begin
+			nil
+		end)
+end
+@@end

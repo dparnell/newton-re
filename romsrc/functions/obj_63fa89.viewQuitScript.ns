@@ -1,0 +1,6 @@
+@@ 0x4718d1
+func() begin
+	notifyOnClose := nil;
+	(currentSelection := nil)
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x4df511
+func(a1) begin
+	target.region := (if a1.abbrev then a1.abbrev else a1.name);
+	self:StartFlush();
+	inherited:pickActionScript(target.region)
+end
+@@end

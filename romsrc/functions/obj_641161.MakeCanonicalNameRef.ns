@@ -1,0 +1,12 @@
+@@ 0x456621
+func(a1, a2) begin
+	local l1, l2, l3, l4;
+	l1 := (if a2 then a2 else ClassOf(self));
+	l2 := EntryFromObj(a1);
+	l3 := (if IsFrame(a1) then a1 else '{});
+	if (not (l4 := {class: l1, _alias: AliasFromObj(a1), _entryClass: ObjEntryClass(a1), _Unselected: l3._Unselected, _fakeID: l3._fakeID, labels: l3.labels})._entryClass) then begin
+			l4._entryClass := entryType
+		end;
+	l4
+end
+@@end

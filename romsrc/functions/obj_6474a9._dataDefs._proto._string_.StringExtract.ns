@@ -1,0 +1,5 @@
+@@ 0x476ecd
+func(a1, a2) begin
+	Substr(a1, 0, 30)
+end
+@@end

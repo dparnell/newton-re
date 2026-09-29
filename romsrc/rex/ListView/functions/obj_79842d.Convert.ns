@@ -1,0 +1,5 @@
+@@ 0x7983b5 names
+func(aFrame, srcFormat, dstFormat) begin
+	(if (if SetContains(supportTypes, srcFormat) then SetContains(supportTypes, dstFormat)) then (if (if (srcFormat = 'oneO) then (dstFormat = 'twoO)) then self:Convert10to20(aFrame) else (if (if (srcFormat = 'twoO) then (dstFormat = 'oneO)) then self:Convert20to10(aFrame) else aFrame)))
+end
+@@end

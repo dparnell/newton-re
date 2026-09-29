@@ -1,0 +1,6 @@
+@@ 0x4d56f1
+func() begin
+	viewBounds := RelBounds(0, dpSlip.dateFieldTop, 220, 18);
+	(Date := newMtgDate)
+end
+@@end

@@ -1,0 +1,32 @@
+@@ 0x495fd1
+@@const kLiteral_488675
+"Restore"
+@@const kLiteral_47e2b9
+"There was an error while restoring \u201C\u^0\u201D\u. Some items may not have been restored."
+@@main
+func(a1, a2) begin
+	local l1, l2, l3;
+	try begin
+			self:moveSoup(self:getDestStore(), self:getSrcStore(), Stringer([Array: "BACKUP_", a2]), a2);
+			AddArraySlot(restoredSoups, a2)
+		end onexception |evt.ex.cancel| do begin
+			Rethrow()
+		end onexception |evt.ex.fr.store| do begin
+			if (if HasSlot((l3 := CurrentException()), 'error) then (l3.error = -10617)) then begin
+					GetRoot():Notify(3, kLiteral_488675, ParamStr("There is not enough space to restore \u201C\u^0\u201D\u. Some items may not have been restored.", [Array: a1]))
+				end else begin
+					GetRoot():Notify(3, kLiteral_488675, ParamStr(kLiteral_47e2b9, [Array: a1]))
+				end;
+			Rethrow()
+		end onexception |evt.ex| do begin
+			GetRoot():Notify(3, kLiteral_488675, ParamStr(kLiteral_47e2b9, [Array: a1]));
+			Rethrow()
+		end;
+	(if backupCursor then begin
+			if ((if (not (l2 := backupCursor:GotoKey(a2)).version) then StrEqual(l2.name, "inbox")) or StrEqual(l2.name, "outbox")) then begin
+					l2.allInfo := {applications: [Array: 'iobox]}
+				end;
+			(if (if (if StrEqual(l2.name, a2) then (not l2.version)) then HasPath(l2, 'allInfo.applications)) then self:convertSoup((l1 := l2.allInfo.applications), a1, a2))
+		end)
+end
+@@end

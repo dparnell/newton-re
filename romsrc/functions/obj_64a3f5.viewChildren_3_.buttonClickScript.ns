@@ -1,0 +1,6 @@
+@@ 0x570a2d
+func() begin
+	base:Close();
+	CallFrameBasedRegistryFns(AutoDockRegistry, [Array: dockMessage])
+end
+@@end

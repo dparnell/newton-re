@@ -1,0 +1,5 @@
+@@ 0x51a60d
+func(a1) begin
+	self:TurnToPage(self:FindPageBySubject(a1))
+end
+@@end

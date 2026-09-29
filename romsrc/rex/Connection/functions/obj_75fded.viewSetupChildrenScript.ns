@@ -1,0 +1,44 @@
+@@ 0x760075
+@@const kLiteral_76021d
+"Guest"
+@@main
+func() begin
+	if IsFunction(configOptions.memory) then begin
+			self.labelCommands := (l1 := call configOptions.memory with ());
+			local l1;
+			local l2;
+			(foreach l3, l4 in labelCommands do begin
+					if (if IsFrame(l4) then l4.mark) then begin
+							break (l2 := l3)
+						end
+				end)
+		end else begin
+			self.memory := configOptions.memory;
+			l1 := GetMemoryItems(memory)
+		end;
+	if (if IsArray(l1) then (Length(l1) > 0)) then begin
+			if l2 then begin
+					self.curLabelCommand := l2
+				end else begin
+					self.curLabelCommand := 0
+				end;
+			inherited:?viewSetupChildrenScript();
+			if configOptions.|guest?| then begin
+					AddArraySlot((labelCommands := Clone(labelCommands)), 'pickseparator);
+					AddArraySlot(labelCommands, kLiteral_76021d)
+				end
+		end else begin
+			if configOptions.|guest?| then begin
+					self.labelCommands := [Array: kLiteral_76021d]
+				end;
+			if (if IsArray(labelCommands) then (Length(labelCommands) > 0)) then begin
+					self.curLabelCommand := 0
+				end;
+			inherited:?viewSetupChildrenScript()
+		end;
+	if (if configOptions.|guest?| then (curLabelCommand = (Length(labelCommands) - 1))) then begin
+			guestMode := true
+		end;
+	(labelLine.viewClickScript := labelLineFix)
+end
+@@end

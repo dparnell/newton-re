@@ -1,0 +1,5 @@
+@@ 0x4864d9
+func(a1) begin
+	(if self:TrackHilite(a1) then self:buttonClickScript())
+end
+@@end

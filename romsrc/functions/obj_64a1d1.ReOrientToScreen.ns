@@ -1,0 +1,9 @@
+@@ 0x54c981
+func() begin
+	pieces := nil;
+	topIndexIcon := 0;
+	topIndexText := 0;
+	self:_Close();
+	self:Open()
+end
+@@end

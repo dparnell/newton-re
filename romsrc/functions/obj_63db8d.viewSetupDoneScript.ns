@@ -1,0 +1,9 @@
+@@ 0x470895
+func() begin
+	SetKeyView(self, 0);
+	timeoutCounter := 300000;
+	nbpScroller:Hide();
+	self:hideZoneStuff();
+	AddDeferredSend(self, 'deferredSetupScript, [Array: ])
+end
+@@end

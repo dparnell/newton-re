@@ -1,0 +1,9 @@
+@@ 0x4d1a21
+func() begin
+	local l1, l2;
+	(if transport:IsInItem(target) then (if (l1 := GetDataDefs(transport.addressingClass)) then begin
+				l2 := l1:GetRoutingTitle(target.fromRef, nil, nil);
+				self:addText(ParamStr("From: ^0", [Array: l2]))
+			end))
+end
+@@end

@@ -1,0 +1,14 @@
+@@ 0x4d9901
+func() begin
+	if (firstPage = 'top) then begin
+			viewJustify := 98320
+		end else begin
+			if (firstPage = 'center) then begin
+					viewJustify := 98384
+				end else begin
+					viewJustify := 98448
+				end
+		end;
+	(self.viewBounds := RelBounds(0, 0, pageWidth, (pageHeight - bottomMargin)))
+end
+@@end

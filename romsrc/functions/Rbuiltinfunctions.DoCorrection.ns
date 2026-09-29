@@ -1,0 +1,19 @@
+@@ 0x46db09
+func(a1, a2, a3, a4) begin
+	local l1, l2, l3, l4, l5, l6;
+	l1 := GetRoot().currentKeyboard;
+	l2 := GetRoot().correct;
+	(if (if l1 then (l1 <> l2)) then a1:SetHiliteNoUpdate(a2, (a2 + a3), true) else (if HasPath(a1, 'text) then (if (StrLen(GetDynamicValue(a1, 'text, 'string)) = 0) then OpenKeypadFor(a1) else begin
+					(l3 := Clone(@167)).form := a1;
+					l3.wordOffset := a2;
+					l3.wordLength := a3;
+					(l4 := Clone(@30)).bounds := a4;
+					l4.refCon := l3;
+					l5 := correctInfo:FindNew(a1, a2, a3);
+					l4.wordInfo := l5;
+					l6 := l5:GetWords();
+					l4.pickItems := l6;
+					(if (not a1:?viewCorrectionPopupScript(l4)) then (l4 := BuildContext(l4)):Open())
+				end)))
+end
+@@end

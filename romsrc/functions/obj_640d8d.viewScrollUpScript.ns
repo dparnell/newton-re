@@ -1,0 +1,5 @@
+@@ 0x4397e5
+func() begin
+	self:doscrollscript((-lineHeight))
+end
+@@end

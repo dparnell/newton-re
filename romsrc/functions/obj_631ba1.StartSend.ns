@@ -1,0 +1,17 @@
+@@ 0x4edbdd
+func(transport, a2, a3, a4) begin
+	local request;
+	local l1;
+	l1 := nil;
+	if transport then begin
+			request := {cause: a2, item: a3, cursor: (if (a3 = nil) then self:MakeCursor('calls, (if a4 then a4 else transport.key)))};
+			if (a3 or (if request.cursor then (request.cursor:entry() <> nil))) then begin
+					AddDeferredCall(func() begin
+						transport:SendRequest(request)
+					end, nil);
+					l1 := true
+				end
+		end;
+	l1
+end
+@@end

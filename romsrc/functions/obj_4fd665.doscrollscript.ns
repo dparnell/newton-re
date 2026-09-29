@@ -1,0 +1,10 @@
+@@ 0x4fd625
+func(a1, a2) begin
+	local l1;
+	upDownScroller:AdjustArrows();
+	self:SetOrigin(0, (viewOriginY + a1));
+	l1 := (a2 * 60);
+	startTime := (startTime + l1);
+	(stopTime := (stopTime + l1))
+end
+@@end

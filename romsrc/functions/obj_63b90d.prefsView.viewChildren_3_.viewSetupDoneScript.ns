@@ -1,0 +1,17 @@
+@@ 0x50bdb1
+func() begin
+	local l1, l2;
+	inherited:?viewSetupDoneScript();
+	if (not theApp.prefsCache) then begin
+			l1 := theApp:GetAppPreferences().eventAlarms
+		end else begin
+			l1 := theApp.prefsCache.eventAlarms
+		end;
+	(if l1 then (if (l2 := ArrayPos(labelWarningTimes, l1, 0, nil)) then SetValue(textDisplay, 'text, choices[l2]) else begin
+				SetValue(otherInput, 'text, NumberStr(l1));
+				otherPicker:Show();
+				otherInput:Show();
+				SetValue(textDisplay, 'text, choices[(Length(choices) - 1)])
+			end) else SetValue(textDisplay, 'text, choices[0]))
+end
+@@end

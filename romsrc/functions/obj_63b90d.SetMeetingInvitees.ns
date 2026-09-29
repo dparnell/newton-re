@@ -1,0 +1,23 @@
+@@ 0x510c1d
+func(a1, a2, a3) begin
+	self:ValidateTitleAndDatetimeArgs(a1, a2);
+	l1 := self:FindExactlyOneAppointment(a1, nil, a2, nil);
+	if (a3 = nil) then begin
+			l2 := nil
+		end else begin
+			local l1;
+			local l2;
+			l2 := (foreach l3 in a3 collect begin
+				local l7, l8;
+				self:GetNameRef(l3, '|nameRef.people|)
+			end)
+		end;
+	self:ChangeMeeting(l1, 'mtgInvitees, l2);
+	if (l7 := l1.repeatTemplate) then begin
+			self:CarefulChange((l8 := EntrySoup(l7)), l7, nil)
+		end else begin
+			self:CarefulChange(EntrySoup(l1), l1, nil)
+		end;
+	nil
+end
+@@end

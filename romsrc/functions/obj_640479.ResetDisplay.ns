@@ -1,0 +1,9 @@
+@@ 0x5b5b19
+func() begin
+	pin := "";
+	if PINDisplay then begin
+			SetValue(PINDisplay, 'text, "")
+		end;
+	(numKeys := 0)
+end
+@@end

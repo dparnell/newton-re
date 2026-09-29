@@ -1,0 +1,5 @@
+@@ 0x53897d
+func(a1, a2) begin
+	(if (if (not fentry.emptyInternal) then ((a1 = 'route) or (a1 = 'delete))) then 'OK else "the wrong kind")
+end
+@@end

@@ -1,0 +1,93 @@
+@@ 0x7a808d
+func() begin
+	l2 := GetAppPrefs(appSymbol, '{});
+	if (IsSoupEntry(fWorkSite) or IsSoupEntry(fWorkworksite)) then begin
+			l6 := true
+		end else begin
+			l6 := ((not (l5 := GetUserConfig('emporia))) or (Length(l5) = 0))
+		end;
+	if (fCompleted.name = true) then begin
+			if (l4 := self:SaveWorksiteInfo(fWorkSite, l6)) then begin
+					fWorkSite := l4;
+					l2.homeWorksite := MakeEntryAlias(fWorkSite)
+				end;
+			if IsSoupEntry(fPersona) then begin
+					EntryChange(fPersona);
+					UseCurrentPersona()
+				end else begin
+					fPersona := GetRoot().cardfile:AddCard('owner, fPersona)
+				end;
+			if fPersona then begin
+					AddPersona(fPersona)
+				end
+		end;
+	if (fCompleted.PhoneWork = true) then begin
+			if (l4 := self:SaveWorksiteInfo(fWorkworksite, l6)) then begin
+					fWorkworksite := l4;
+					l2.workWorksite := MakeEntryAlias(fWorkworksite)
+				end
+		end;
+	EntryChange(l2);
+	l8 := Time();
+	if GetRoot().worldClock.SetLocation then begin
+			if fPersona.city then begin
+					if ((l10 := Length((l11 := GetCityEntry(fPersona.city)))) > 0) then begin
+							if (l10 = 1) then begin
+									l1 := l11[0]
+								end else begin
+									if (l10 > 1) then begin
+											local l1;
+											local l2;
+											local l3;
+											local l4;
+											local l5;
+											local l6;
+											local l7;
+											local l8;
+											local l9;
+											local l10;
+											local l11;
+											(for l9 := 0 to (l10 - 1) do begin
+													if ((l11[l9].country = mapCountry) or (not mapCountry)) then begin
+															break (l1 := l11[l9])
+														end
+												end)
+										end
+								end
+						end
+				end;
+			if (not l1) then begin
+					if mapCountry then begin
+							if (if fWorkSite then StrFilled(fWorkSite.AreaCode)) then begin
+									if (NewCity := self:GetCityFromAreacode(fWorkSite.AreaCode, mapCountry)) then begin
+											l1 := NewCity
+										end
+								end;
+							if (if (if (not l1) then fWorkworksite) then StrFilled(fWorkworksite.AreaCode)) then begin
+									if (NewCity := self:GetCityFromAreacode(fWorkworksite.AreaCode, mapCountry)) then begin
+											l1 := NewCity
+										end
+								end;
+							if l1 then begin
+									if (if IsSoupEntry(fWorkSite) then StrEqual(l1.AreaCode, fWorkSite.AreaCode)) then begin
+											l7 := MakeEntryAlias(fWorkSite)
+										end else begin
+											if IsSoupEntry(fWorkworksite) then begin
+													l7 := MakeEntryAlias(fWorkworksite)
+												end
+										end;
+									if l7 then begin
+											SetUserConfig('currentEmporium, l7);
+											UseCurrentEmporium()
+										end
+								end
+						end
+				end else begin
+					GetRoot().worldClock:SetLocation(l1)
+				end
+		end;
+	SetTime(l8);
+	BusyBoxControl(1);
+	'postQuit
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x43b6f9
+func(a1) begin
+	(if selected then (foreach l1 in selected do begin
+				local l3;
+				if (l3 := ResolveEntryAlias(l1)) then begin
+						call a1 with (l3)
+					end
+			end))
+end
+@@end

@@ -1,0 +1,17 @@
+@@ 0x5542c9
+func(a1) begin
+	local l1, l2, l3, l4;
+	l1 := (if IsSoupEntry(a1) then (not EntryIsResident(a1)));
+	if IsInteger((l2 := a1.icon)) then begin
+			l2 := @233[l2].icon
+		end;
+	if IsInteger((l3 := a1.iconPro)) then begin
+			l3 := @233[l3].iconPro
+		end;
+	l4 := {icon: l2, iconPro: l3, text: a1.text, labels: a1.labels, appSymbol: a1.app, packageName: a1.packageName};
+	if l1 then begin
+			EntryUndoChanges(a1)
+		end;
+	l4
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x470855
+func() begin
+	(if ((currentZone = nil) or StrEqual(currentZone, "*")) then (currentZone := GetMyZone()))
+end
+@@end

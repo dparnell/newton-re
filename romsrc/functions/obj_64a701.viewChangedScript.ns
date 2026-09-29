@@ -1,0 +1,8 @@
+@@ 0x427b81
+func(a1, a2) begin
+	(if (a1 = 'sounds) then begin
+			RecordEngine.fSoundArray := self.sounds;
+			RecordEngine:SetState(RecordEngine.fSoundState)
+		end)
+end
+@@end

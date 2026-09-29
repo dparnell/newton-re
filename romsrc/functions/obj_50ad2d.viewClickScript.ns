@@ -1,0 +1,13 @@
+@@ 0x50ad0d
+func(a1) begin
+	local l1, l2;
+	(if self:TrackHilite(a1) then begin
+			if (l1 := self:currentChoice()) then begin
+					(l2 := Clone(choices))[l1] := {item: l2[l1], mark: $\uFC0B}
+				end else begin
+					l2 := choices
+				end;
+			DoPopup(l2, 15, 0, self:Parent())
+		end)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x453691
+func() begin
+	pickerDef:?pickCancelledScript(fTapinfo, self)
+end
+@@end

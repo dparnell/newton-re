@@ -1,0 +1,5 @@
+@@ 0x56c71d
+func(a1) begin
+	ParamStr("Card \u201C\u^0\u201D\u is locked. New information cannot be saved on it. Remove the card, unlock it, then reinsert the card.", [Array: a1])
+end
+@@end

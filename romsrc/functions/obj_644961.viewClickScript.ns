@@ -1,0 +1,100 @@
+@@ 0x446145
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11, l12, l13, l14;
+	l6 := ((l5 := ((l4 := self:GlobalBox()).right - l4.left)) div 2);
+	l7 := ((GetPoint(0, a1) - l4.left) - l6);
+	l8 := (l6 - (GetPoint(1, a1) - l4.top));
+	l9 := (if (l7 < 0) then (-l7) else l7);
+	l10 := (if (l8 < 0) then (-l8) else l8);
+	if (l9 > l10) then begin
+			l2 := (l9 + (l10 div 2))
+		end else begin
+			l2 := (l10 + (l9 div 2))
+		end;
+	l11 := (l2 < (l5 div 8));
+	playsound(@299);
+	if (not l11) then begin
+			InkOff(a1)
+		end;
+	(repeat l7 := ((GetPoint(4, a1) - l4.left) - l6); l8 := (l6 - (GetPoint(5, a1) - l4.top)); l9 := (if (l7 < 0) then (-l7) else l7); l10 := (if (l8 < 0) then (-l8) else l8); l1 := (15 - self:FastEnoughAtan(l9, l10)); if ((l7 * l8) < 0) then begin
+				l1 := (30 - l1)
+			end; if ((l7 < 0) or (if (l7 = 0) then (l8 < 0))) then begin
+				l1 := (l1 + 30)
+			end; if (l1 = 60) then begin
+				l1 := 0
+			end; if (l9 > l10) then begin
+				l2 := (l9 + (l10 div 2))
+			end else begin
+				l2 := (l10 + (l9 div 2))
+			end; if (not l11) then begin
+				if (l3 = nil) then begin
+						if (l2 > (l5 div 4)) then begin
+								l3 := 'minutes
+							end else begin
+								l3 := 'hours
+							end
+					end;
+				if (l3 = 'minutes) then begin
+						if (not l14) then begin
+								l14 := minutes
+							end;
+						if (if (l14 <= 10) then (l1 >= 50)) then begin
+								if ((hours := (hours - 1)) < 0) then begin
+										hours := 23
+									end;
+								playsound(@301)
+							end else begin
+								if (if (l14 >= 50) then (l1 <= 10)) then begin
+										if ((hours := (hours + 1)) >= 24) then begin
+												hours := 0
+											end;
+										playsound(@301)
+									end
+							end;
+						if quantize then begin
+								l1 := ((l1 := (l1 + (quantize div 2))) - (l1 mod quantize))
+							end;
+						minutes := l1
+					end else begin
+						if (not l14) then begin
+								l14 := l1
+							end;
+						exactHour := true;
+						hours := ((if (hours > 11) then 12 else 0) + ((l1 div 5) mod 60));
+						if ((if (l14 <= 10) then (l1 >= 50)) or (if (l14 >= 50) then (l1 <= 10))) then begin
+								if (hours > 11) then begin
+										hours := (hours - 12)
+									end else begin
+										hours := (hours + 12)
+									end;
+								playsound(@301)
+							end
+					end;
+				l14 := l1;
+				Time := ((((Time div 1440) * 1440) + (hours * 60)) + minutes);
+				self:?TimeChanged();
+				self:Dirty();
+				RefreshViews()
+			end until StrokeDone(a1));
+	if l11 then begin
+			if (l2 > (l5 div 4)) then begin
+					minutes := l1
+				end else begin
+					hours := ((if (hours > 11) then 12 else 0) + ((l1 div 5) mod 60))
+				end;
+			Time := ((((Time div 1440) * 1440) + (hours * 60)) + minutes);
+			self:?TimeChanged();
+			self:Dirty();
+			RefreshViews()
+		end;
+	if exactHour then begin
+			Time := ((((Time div 1440) * 1440) + (hours * 60)) + minutes);
+			self:?TimeChanged();
+			self:Dirty();
+			RefreshViews()
+		end;
+	exactHour := nil;
+	playsound(@300);
+	true
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x5b2199
+func() begin
+	(if localeChanged then begin
+			vars.setTimeSeed := Random(0, 10000000);
+			AddDeferredSend(GetRoot(), 'RedoChildren, [Array: ])
+		end)
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x76f915
+func() begin
+	AddArraySlot((FSViews := [Array: ]), US);
+	AddArraySlot(FSViews, Metric);
+	self:InitFieldBasedOnMeasurement();
+	inherited:?viewSetupDoneScript()
+end
+@@end

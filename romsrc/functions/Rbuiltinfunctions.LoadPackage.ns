@@ -1,0 +1,13 @@
+@@ 0x556b4d
+@@const kNativeFuncClass
+call func(f) if IsFrame(f) then f.class else f[0] with (GetGlobalFn('StrLen))
+@@const kLiteral_556ac1
+{class: kNativeFuncClass, funcPtr: 7039836, numArgs: 3}
+@@main
+func(a1) begin
+	if ((not a1) or (ClassOf(a1) = 'string)) then begin
+			a1 := {file: a1}
+		end;
+	call kLiteral_556ac1 with (a1.file, (if a1.store then a1.store else GetDefaultStore()), a1)
+end
+@@end

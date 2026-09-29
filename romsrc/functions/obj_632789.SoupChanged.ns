@@ -1,0 +1,8 @@
+@@ 0x55d541
+func(a1) begin
+	if findAllResults then begin
+			self:ClearResults()
+		end;
+	(if findOverview.closeWhenSoupsChange then findOverview:Close())
+end
+@@end

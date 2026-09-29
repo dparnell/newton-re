@@ -1,0 +1,9 @@
+@@ 0x5b0fc1
+func(a1) begin
+	local l1;
+	if (not (l1 := SoundRegistry.(a1))) then begin
+			l1 := SoundRegistry.simpleBeep
+		end;
+	return l1
+end
+@@end

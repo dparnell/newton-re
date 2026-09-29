@@ -1,0 +1,7 @@
+@@ 0x5a8fc1
+func(a1) begin
+	window:Scroll(a1);
+	self:SelectFirst();
+	self:Dirty()
+end
+@@end

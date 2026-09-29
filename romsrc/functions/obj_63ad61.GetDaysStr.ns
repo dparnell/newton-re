@@ -1,0 +1,53 @@
+@@ 0x45ba25
+func(a1) begin
+	l1 := GetLocale().longDateFormat;
+	if (a1 = 4064) then begin
+			return "Everyday"
+		end;
+	if (a1 = 1984) then begin
+			return "Weekdays"
+		end;
+	if (a1 = 2080) then begin
+			return "Weekends"
+		end;
+	if (a1 = 2048) then begin
+			return l1.abbrDofWeek[0]
+		end;
+	if (a1 = 1024) then begin
+			return l1.abbrDofWeek[1]
+		end;
+	if (a1 = 512) then begin
+			return l1.abbrDofWeek[2]
+		end;
+	if (a1 = 256) then begin
+			return l1.abbrDofWeek[3]
+		end;
+	if (a1 = 128) then begin
+			return l1.abbrDofWeek[4]
+		end;
+	if (a1 = 64) then begin
+			return l1.abbrDofWeek[5]
+		end;
+	if (a1 = 32) then begin
+			return l1.abbrDofWeek[6]
+		end;
+	if (a1 = 0) then begin
+			return "Never"
+		end;
+	l2 := Clone("       ");
+	if (not (l3 := GetLocale().firstDayOfWeek)) then begin
+			l3 := 0
+		end;
+	local l1;
+	local l2;
+	local l3;
+	(for l4 := 0 to 6 do begin
+			local l7;
+			if (BAnd(a1, '[Array: 2048, 1024, 512, 256, 128, 64, 32, 2048, 1024, 512, 256, 128, 64, 32][l4]) <> 0) then begin
+					l7 := (((l4 - l3) + 7) mod 7);
+					l2[l7] := l1.shortDofWeek[l4][0]
+				end
+		end);
+	return StringFilter(l2, " ", 'rejectAll)
+end
+@@end

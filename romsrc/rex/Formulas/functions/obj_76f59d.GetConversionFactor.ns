@@ -1,0 +1,25 @@
+@@ 0x76f86d
+func() begin
+	local l1;
+	if (curMeasurement = 0) then begin
+			l1 := lengthTable
+		end else begin
+			if (curMeasurement = 1) then begin
+					l1 := areaTable
+				end else begin
+					if (curMeasurement = 2) then begin
+							l1 := weightTable
+						end else begin
+							if (curMeasurement = 3) then begin
+									l1 := USLiquidTable
+								end else begin
+									if (curMeasurement = 4) then begin
+											l1 := BritishLiquidTable
+										end
+								end
+						end
+				end
+		end;
+	return l1[Metric:GetPickerItemNumber()][US:GetPickerItemNumber()]
+end
+@@end

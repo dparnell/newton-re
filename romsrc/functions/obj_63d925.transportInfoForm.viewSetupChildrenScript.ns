@@ -1,0 +1,10 @@
+@@ 0x59691d
+func() begin
+	(if (addedHeight < 20) then begin
+			toLine.viewFlags := 0;
+			ccLine.viewFlags := 0;
+			bccLine.viewFlags := 0;
+			(if (addedHeight = 0) then (labelLine.viewFlags := 0))
+		end)
+end
+@@end

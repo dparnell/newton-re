@@ -1,0 +1,5 @@
+@@ 0x4883a5
+func() begin
+	(text := ParamStr("Show only in ^0", [Array: GetAppName(theApp)]))
+end
+@@end

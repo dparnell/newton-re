@@ -1,0 +1,8 @@
+@@ 0x599d05
+func(a1) begin
+	if (not (allowable := a1)) then begin
+			SetValue(self, 'viewValue, true)
+		end;
+	self:UpdateBitmap()
+end
+@@end

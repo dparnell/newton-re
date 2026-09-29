@@ -1,0 +1,12 @@
+@@ 0x50f5e5
+func(a1, a2, a3) begin
+	(if (not IsArray(a1)) then nil else (if (if (not a3) then (Length(a1) = 0)) then nil else begin
+				(foreach l1 in a1 do begin
+						if (not IsInstance(l1, a2)) then begin
+								return nil
+							end
+					end);
+				true
+			end))
+end
+@@end

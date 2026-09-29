@@ -1,0 +1,21 @@
+@@ 0x47a9bd
+func() begin
+	local l1, l2, l3;
+	l1 := nil;
+	if (if (not info) then infoSymbol) then begin
+			info := base.(infoSymbol)
+		end;
+	if info then begin
+			if HasPath((l2 := self:GetTransport()), info.testMethod) then begin
+					l1 := true
+				end
+		end;
+	if (not l1) then begin
+			self.viewFlags := BAnd(viewFlags, bnot(1))
+		end;
+	(if (if info then info.sibling) then (if (if (l3 := base.(info.sibling)) then (not (BAnd(l3.viewFlags, 1) = 1))) then begin
+				self.viewBounds := l3.viewBounds;
+				(self.viewJustify := l3.viewJustify)
+			end))
+end
+@@end

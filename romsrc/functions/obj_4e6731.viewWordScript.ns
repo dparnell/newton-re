@@ -1,0 +1,6 @@
+@@ 0x4e66f1
+func(a1) begin
+	base:NewWordRecognized(a1);
+	true
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x461ccd
+func() begin
+	if (not allCollapsed) then begin
+			self:MarkItemSeen(index, nil)
+		end;
+	inherited:?viewScrollDownScript()
+end
+@@end

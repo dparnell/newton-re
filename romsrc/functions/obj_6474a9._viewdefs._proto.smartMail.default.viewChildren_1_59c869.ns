@@ -1,0 +1,5 @@
+@@ 0x59c869
+func() begin
+	(viewLineSpacing := FontHeight((viewFont := GetUserConfig('mailFont))))
+end
+@@end

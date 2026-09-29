@@ -1,0 +1,6 @@
+@@ 0x7a8ae1
+func() begin
+	inherited:?viewPostQuitScript();
+	self:ClearCut()
+end
+@@end

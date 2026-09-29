@@ -1,0 +1,9 @@
+@@ 0x4dc0d1
+func() begin
+	local l1;
+	if (not Visible((l1 := GetRoot().alarm))) then begin
+			l1:Open()
+		end;
+	l1.alarm:Jangle()
+end
+@@end

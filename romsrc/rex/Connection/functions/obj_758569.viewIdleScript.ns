@@ -1,0 +1,39 @@
+@@ 0x759681
+@@const kROM_8269
+@8269
+@@main
+func() begin
+	local l1, l2, l3, l4, l5;
+	if (endpoint.idleUseCount = 0) then begin
+			return 0
+		end;
+	try begin
+			l1 := endpoint:BytesAvailable()
+		end onexception |evt.ex| do begin
+			endpoint:ConnectionDone(CurrentException().error)
+		end;
+	l2 := true;
+	l3 := nil;
+	if (l1 >= 2) then begin
+			l4 := 0;
+			try begin
+					l5 := endpoint:ReadCommandHeader(nil);
+					l3 := endpoint:ProcessBuiltinCommand()
+				end onexception |evt.ex| do begin
+					l4 := CurrentException().error
+				end;
+			l2 := nil;
+			if ((l4 <> 0) or l3) then begin
+					endpoint:ConnectionDone(l4)
+				end else begin
+					if (StrEqual(l5.command, "opca") or StrEqual(l5.command, "opdn")) then begin
+							l2 := true
+						end else begin
+							kROM_8269:OpenOnEndpoint('allWithSoups, endpoint, nil);
+							self:DoneForNow()
+						end
+				end
+		end;
+	(if l2 then return endpoint:IdleConnection(nil) else return 0)
+end
+@@end

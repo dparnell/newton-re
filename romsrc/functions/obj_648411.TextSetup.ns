@@ -1,0 +1,5 @@
+@@ 0x45a8c5
+func() begin
+	TimeStr(Time, @66.(format))
+end
+@@end

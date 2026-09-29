@@ -1,0 +1,10 @@
+@@ 0x72ca89
+func() begin
+	local l1;
+	newDictionaries := (l1 := GetLocale()).recogCompanyDictionaries;
+	if (selectedPath <> true) then begin
+			RemoveSlot(self, 'viewChangedScript)
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

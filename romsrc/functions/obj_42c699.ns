@@ -1,0 +1,6 @@
+@@ 0x42c699
+func(a1) begin
+	local l1;
+	(if (l1 := GetVariable(a1, '_defaultButton)) then PressButton(l1))
+end
+@@end

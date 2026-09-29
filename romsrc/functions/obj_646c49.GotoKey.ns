@@ -1,0 +1,22 @@
+@@ 0x4a76e9
+func(a1) begin
+	local l1;
+	if (ClassOf(a1) = 'int) then begin
+			index := a1
+		end else begin
+			index := -1
+		end;
+	l1 := self:entry();
+	(loop begin
+			if (not (l1 = 'deleted)) then begin
+					if ((not l1) or (not validTest)) then begin
+							break l1
+						end;
+					if call validTest with (l1) then begin
+							break l1
+						end
+				end;
+			(l1 := self:move(1))
+		end)
+end
+@@end

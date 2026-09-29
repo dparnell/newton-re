@@ -1,0 +1,12 @@
+@@ 0x4d7a15
+func(a1) begin
+	local l1, l2;
+	if (if ((l1 := self:GetCurrentVersion(a1.body)) <> 'twoO) then (l1 <> nil)) then begin
+			self:ConvertEntryto20(a1.body, nil, nil)
+		end;
+	(if IsInstance(a1.body, 'text) then begin
+			(l2 := DeepClone(a1)).body := self:MakeTextNote(l2.body.text, nil);
+			inherited:PutAwayScript(l2)
+		end else inherited:PutAwayScript(a1))
+end
+@@end

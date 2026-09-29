@@ -1,0 +1,691 @@
+# the objects' area: 0x763ab4, 0x5cbc bytes; the byte between objects; the objects' alignment
+area	763ab4	5cbc	bf	4
+763ab4	obj_763ab5	41	gc=1
+763ac4	obj_763ab5[0]	43	map=map_763ae1
+763ae0	map_763ae1	41
+763b00	'installScript	40
+763b20	'devInstallScript	40
+763b44	'devRemoveScript	40
+763b64	'partData	40
+763b80	obj_763ab5[0].installScript	43	map=map_763ba1
+763ba0	map_763ba1	41
+763bc4	'class	40
+763bdc	'instructions	40
+763bfc	'literals	40
+763c18	'argFrame	40
+763c34	'numArgs	40
+763c4c	obj_763ab5[0].installScript.instructions	40
+763c68	obj_763ab5[0].installScript.literals	41
+763c84	obj_763ab5[0].installScript.literals[1]	41
+763c98	'removeScript	40
+763cb8	'EnsureInternal	40
+763cd8	obj_763ab5[0].devInstallScript	43	map=map_763ba1
+763cf8	obj_763ab5[0].devInstallScript.instructions	40
+763d20	obj_763ab5[0].devInstallScript.literals	41
+763d48	'ImageView	40
+763d64	obj_763ab5[0].devInstallScript.literals[1]	41
+763d78	'pathExpr	40
+763d94	'ImageDataDef	40
+763db4	'RegDataDef	40
+763dd0	obj_763ab5[0].devInstallScript.literals[3]	41
+763de4	'ImageViewerDef	40
+763e04	'RegDataView	40
+763e20	obj_763ab5[0].devInstallScript.literals[5]	41
+763e34	'ImagePrintFormat	40
+763e58	obj_763ab5[0].devInstallScript.literals[6]	41
+763e6c	'faxViewerRouteFormat	40
+763e94	obj_763ab5[0].devRemoveScript	43	map=map_763ba1
+763eb4	obj_763ab5[0].devRemoveScript.instructions	40
+763ed4	obj_763ab5[0].devRemoveScript.literals	41
+763ef8	'UnRegDataDef	40
+763f18	'default	40
+763f30	'UnRegDataView	40
+763f50	'ImagePrintFormatSym	40
+763f74	'imageRouteFormat	40
+763f98	obj_763ab5[0].partData	43	map=map_763fb5
+763fb4	map_763fb5	41
+763fd4	obj_763ab5[0].partData.faxViewerRouteFormat	43	map=map_763ff5
+763ff4	map_763ff5	41
+764018	'_proto	40
+764030	'symbol	40
+764048	'storeAlias	40
+764064	'sizeLimit	40
+764080	'dataTypes	40
+76409c	obj_763ab5[0].partData.faxViewerRouteFormat.dataTypes	41
+7640ac	'|Array|	40
+7640c4	'frame	40
+7640dc	obj_763ab5[0].partData.ImageDataDef	43	map=map_764111
+764110	map_764111	41
+764148	'name	40
+764160	'superSymbol	40
+76417c	'description	40
+764198	'icon	40
+7641b0	'version	40
+7641c8	'metadata	40
+7641e4	'SetupForm	40
+764200	'StringExtract	40
+764220	'viewClass	40
+76423c	obj_76423d	40
+764254	'|string|	40
+76426c	'imagery	40
+764284	obj_763ab5[0].partData.ImageDataDef.description	40
+7642a0	obj_763ab5[0].partData.ImageDataDef.SetupForm	43	map=map_763ba1
+7642c0	obj_763ab5[0].partData.ImageDataDef.SetupForm.instructions	40
+7642d0	obj_763ab5[0].partData.ImageDataDef.StringExtract	43	map=map_763ba1
+7642f0	obj_763ab5[0].partData.ImageDataDef.StringExtract.instructions	40
+76431c	obj_763ab5[0].partData.ImageDataDef.StringExtract.literals	41
+764330	'title	40
+764348	obj_763ab5[0].partData.ImageDataDef.StringExtract.literals[1]	40
+764370	obj_763ab5[0].partData.ImagePrintFormat	43	map=map_7643c9
+7643c8	map_7643c9	41
+764424	'viewBounds	40
+764440	'stepChildren	40
+764460	'printNextPageScript	40
+764484	'fPageIndex	40
+7644a0	'margins	40
+7644b8	'CountPages	40
+7644d4	'declareSelf	40
+7644f0	'viewSetupFormScript	40
+764514	'PrintType	40
+764530	'nodata	40
+764548	'stepAllocateContext	40
+76456c	'ImageTarget	40
+764588	obj_763ab5[0].partData.ImagePrintFormat.viewBounds	43	map=map_7645a5
+7645a4	map_7645a5	41
+7645c4	'left	40
+7645dc	'top	40
+7645f0	'right	40
+764608	'bottom	40
+764620	obj_763ab5[0].partData.ImagePrintFormat.stepChildren	41
+764634	obj_764635	43	map=map_76465d
+76465c	map_76465d	41
+764688	'text	40
+7646a0	'viewFlags	40
+7646bc	'viewFont	40
+7646d8	'viewJustify	40
+7646f4	'preAllocatedContext	40
+764718	obj_764719	40
+764748	obj_764635.viewBounds	43	map=map_7645a5
+764764	obj_764765	43	map=map_7647a5
+7647a4	map_7647a5	41
+7647e8	'annotations	40
+764804	'image	40
+76481c	'PrepareToPrint	40
+76483c	'scalingInfo	40
+764858	'viewFormat	40
+764874	'viewSetupDoneScript	40
+764898	'fImage	40
+7648b0	'fAnnotations	40
+7648d0	'imageFormat	40
+7648ec	obj_764765.PrepareToPrint	43	map=map_763ba1
+76490c	obj_764765.PrepareToPrint.instructions	40
+764944	obj_764765.PrepareToPrint.literals	41
+764974	'target	40
+76498c	obj_764765.PrepareToPrint.literals[1]	41
+7649a0	'info	40
+7649b8	'pageCount	40
+7649d4	'pages	40
+7649ec	'setup	40
+764a04	'fitInWindow	40
+764a20	'ZoomTo	40
+764a38	obj_764765.viewBounds	43	map=map_7645a5
+764a54	obj_764765.viewSetupDoneScript	43	map=map_763ba1
+764a74	obj_764765.viewSetupDoneScript.instructions	40
+764a88	obj_764765.viewSetupDoneScript.literals	41
+764a9c	obj_763ab5[0].partData.ImagePrintFormat.printNextPageScript	43	map=map_763ba1
+764abc	obj_763ab5[0].partData.ImagePrintFormat.printNextPageScript.instructions	40
+764adc	obj_763ab5[0].partData.ImagePrintFormat.printNextPageScript.literals	41
+764af8	obj_763ab5[0].partData.ImagePrintFormat.margins	43	map=map_7645a5
+764b14	obj_763ab5[0].partData.ImagePrintFormat.CountPages	43	map=map_763ba1
+764b34	obj_763ab5[0].partData.ImagePrintFormat.CountPages.instructions	40
+764b48	obj_763ab5[0].partData.ImagePrintFormat.CountPages.literals	41
+764b58	'printBase	40
+764b74	obj_763ab5[0].partData.ImagePrintFormat.viewSetupFormScript	43	map=map_763ba1
+764b94	obj_763ab5[0].partData.ImagePrintFormat.viewSetupFormScript.instructions	40
+764bbc	obj_763ab5[0].partData.ImagePrintFormat.viewSetupFormScript.literals	41
+764bdc	'ReceivedFax	40
+764bf8	obj_763ab5[0].partData.ImagePrintFormat.stepAllocateContext	41
+764c14	obj_763ab5[0].partData.ImageViewerDef	43	map=map_764c75
+764c74	map_764c75	41
+764cd8	'type	40
+764cf0	'fEntryStore	40
+764d0c	'PageButton	40
+764d28	'vPageNavigator	40
+764d48	'ShowFoundItem	40
+764d68	'imageContainer	40
+764d88	'pagePalette	40
+764da4	'vScrollers	40
+764dc0	'floatingBar	40
+764ddc	'editor	40
+764df4	obj_763ab5[0].partData.ImageViewerDef.viewBounds	43	map=map_7645a5
+764e10	obj_763ab5[0].partData.ImageViewerDef.ShowFoundItem	43	map=map_763ba1
+764e30	obj_763ab5[0].partData.ImageViewerDef.ShowFoundItem.instructions	40
+764f5c	obj_763ab5[0].partData.ImageViewerDef.ShowFoundItem.literals	41
+764fb0	'findType	40
+764fcc	'findWords	40
+764fe8	'FindStringInFrame	40
+76500c	'GotoPage	40
+765028	'fullSize	40
+765044	'LocalBox	40
+765060	'ScrollTo	40
+76507c	obj_763ab5[0].partData.ImageViewerDef.stepAllocateContext	41
+7650c8	obj_7650c9	43	map=map_76465d
+7650f0	obj_7650c9.viewBounds	43	map=map_7645a5
+76510c	obj_76510d	43	map=map_765139
+765138	map_765139	41
+765168	'Update	40
+765180	'ViewScrollDoneScript	40
+7651a8	'hidden	40
+7651c0	obj_76510d.viewSetupFormScript	43	map=map_763ba1
+7651e0	obj_76510d.viewSetupFormScript.instructions	40
+7651f4	obj_76510d.viewSetupFormScript.literals	41
+76520c	'scrollView	40
+765228	obj_76510d.Update	43	map=map_763ba1
+765248	obj_76510d.Update.instructions	40
+76529c	obj_76510d.Update.literals	41
+7652e4	'zoomedTo	40
+765300	'Hide	40
+765318	'Open	40
+765330	'extent	40
+765348	'scrollRect	40
+765364	'dataRect	40
+765380	'viewBox	40
+765398	'viewRect	40
+7653b4	'OffsetX	40
+7653cc	'xPos	40
+7653e4	'OffsetY	40
+7653fc	'yPos	40
+765414	'AdjustArrows	40
+765434	obj_76510d.ViewScrollDoneScript	43	map=map_763ba1
+765454	obj_76510d.ViewScrollDoneScript.instructions	40
+765468	obj_76510d.ViewScrollDoneScript.literals	41
+765480	'GetScalingInfo	40
+7654a0	obj_76510d.viewBounds	43	map=map_7654bd
+7654bc	map_7654bd	41
+7654dc	obj_7654dd	43	map=map_76552d
+76552c	map_76552d	41
+765580	'popup	40
+765598	'pickActionScript	40
+7655bc	'buttonClickScript	40
+7655e0	'fPageProto	40
+7655fc	'markedPage	40
+765618	'numVisiblePages	40
+765638	'viewClickScript	40
+765658	'pickCancelledScript	40
+76567c	obj_7654dd.viewBounds	43	map=map_765699
+765698	map_765699	41
+7656b8	obj_7654dd.Update	43	map=map_763ba1
+7656d8	obj_7654dd.Update.instructions	40
+7656f8	obj_7654dd.Update.literals	41
+765724	obj_7654dd.Update.literals[1]	40
+765748	obj_7654dd.Update.literals[2]	40
+765758	'ParamStr	40
+765774	'SetValue	40
+765790	obj_7654dd.popup	41
+76579c	obj_7654dd.viewSetupFormScript	43	map=map_763ba1
+7657bc	obj_7654dd.viewSetupFormScript.instructions	40
+765838	obj_7654dd.viewSetupFormScript.literals	41
+765870	'min	40
+765884	obj_765885	40
+7658a0	obj_7654dd.viewSetupFormScript.literals[8]	41
+7658b4	'item	40
+7658cc	'pickSeparator	40
+7658ec	obj_7654dd.viewSetupFormScript.literals[10]	40
+765918	obj_7654dd.pickActionScript	43	map=map_763ba1
+765938	obj_7654dd.pickActionScript.instructions	40
+765964	obj_7654dd.pickActionScript.literals	41
+76598c	'GetCurrentPage	40
+7659ac	'ToggleNavigator	40
+7659cc	'hilite	40
+7659e4	obj_7654dd.buttonClickScript	43	map=map_763ba1
+765a04	obj_7654dd.buttonClickScript.instructions	40
+765a6c	obj_7654dd.buttonClickScript.literals	41
+765ab0	'mark	40
+765ac8	'Visible	40
+765ae0	obj_7654dd.buttonClickScript.literals[9]	40
+765b0c	obj_7654dd.buttonClickScript.literals[10]	40
+765b38	'DoPopup	40
+765b50	obj_7654dd.fPageProto	43	map=map_765b6d
+765b6c	map_765b6d	41
+765b8c	'page	40
+765ba4	'doit	40
+765bbc	obj_7654dd.fPageProto.item	40
+765bcc	obj_7654dd.fPageProto.doit	43	map=map_763ba1
+765bec	obj_7654dd.fPageProto.doit.instructions	40
+765c00	obj_7654dd.fPageProto.doit.literals	41
+765c18	obj_7654dd.text	40
+765c40	obj_7654dd.viewClickScript	43	map=map_763ba1
+765c60	obj_7654dd.viewClickScript.instructions	40
+765c7c	obj_7654dd.viewClickScript.literals	41
+765c90	'TrackHilite	40
+765cac	obj_7654dd.pickCancelledScript	43	map=map_763ba1
+765ccc	obj_7654dd.pickCancelledScript.instructions	40
+765ce0	obj_7654dd.pickCancelledScript.literals	41
+765cf0	obj_765cf1	43	map=map_765d21
+765d20	map_765d21	41
+765d54	'FaxTools	40
+765d70	obj_765cf1.viewBounds	43	map=map_765d8d
+765d8c	map_765d8d	41
+765dac	obj_765cf1.stepChildren	41
+765dc4	obj_765dc5	43	map=map_765e25
+765e24	map_765e25	41
+765e88	'popItem_FitInWindow	40
+765eac	'popItem_FullRes	40
+765ecc	'popItem_FullSize	40
+765ef0	'popItem_Rotate180	40
+765f14	'popItem_ShowThumb	40
+765f38	'popItem_Drag	40
+765f58	'popItem_Reduce	40
+765f78	'popItem_RotateLeft	40
+765f9c	'popItem_Annotate	40
+765fc0	'popItem_Enlarge	40
+765fe0	'popItem_RotateRight	40
+766004	'popSizeItems	40
+766024	obj_765dc5.popItem_FitInWindow	43	map=map_766041
+766040	map_766041	41
+766060	'zoomStop	40
+76607c	obj_765dc5.popItem_FitInWindow.item	40
+7660a4	obj_765dc5.popItem_FitInWindow.doit	43	map=map_763ba1
+7660c4	obj_7660c5	40
+7660f0	obj_765dc5.popItem_FitInWindow.doit.literals	41
+76611c	'GetVariable	40
+766138	'Show	40
+766150	'SetAnnotationMode	40
+766174	obj_765dc5.popItem_FullRes	43	map=map_766041
+766190	obj_765dc5.popItem_FullRes.item	40
+7661bc	'fullResolution	40
+7661dc	obj_765dc5.popItem_FullRes.doit	43	map=map_763ba1
+7661fc	obj_765dc5.popItem_FullRes.doit.literals	41
+766228	obj_765dc5.popItem_FullSize	43	map=map_766041
+766244	obj_765dc5.popItem_FullSize.item	40
+76626c	obj_765dc5.popItem_FullSize.doit	43	map=map_763ba1
+76628c	obj_765dc5.popItem_FullSize.doit.literals	41
+7662b8	obj_765dc5.buttonClickScript	43	map=map_763ba1
+7662d8	obj_765dc5.buttonClickScript.instructions	40
+766454	obj_765dc5.buttonClickScript.literals	41
+7664ec	'vThumbFloater	40
+76650c	obj_765dc5.buttonClickScript.literals[4]	40
+766538	obj_765dc5.buttonClickScript.literals[5]	40
+766564	obj_765dc5.buttonClickScript.literals[6]	41
+76657c	'zoomStops	40
+766598	'ArrayPos	40
+7665b4	obj_765dc5.buttonClickScript.literals[19]	41
+7665d0	'CanZoomBy	40
+7665ec	'EntryCool	40
+766608	'GetAnnotationMode	40
+76662c	'edit	40
+766644	'IsReadOnly	40
+766660	obj_765dc5.viewBounds	43	map=map_765699
+76667c	obj_765dc5.popItem_Rotate180	43	map=map_766695
+766694	map_766695	41
+7666b0	obj_765dc5.popItem_Rotate180.item	40
+7666d4	obj_765dc5.popItem_Rotate180.doit	43	map=map_763ba1
+7666f4	obj_7666f5	40
+766708	obj_765dc5.popItem_Rotate180.doit.literals	41
+76671c	'rotate180	40
+766738	'DoMunge	40
+766750	obj_765dc5.popItem_ShowThumb	43	map=map_766765
+766764	map_766765	41
+76677c	obj_765dc5.popItem_ShowThumb.item	40
+76678c	obj_765dc5.popItem_ShowThumb.doit	43	map=map_763ba1
+7667ac	obj_765dc5.popItem_ShowThumb.doit.instructions	40
+7667c8	obj_765dc5.popItem_ShowThumb.doit.literals	41
+7667e8	'MakeAndStashThumbnail	40
+766810	'ToggleThumbnail	40
+766830	obj_765dc5.popItem_Drag	43	map=map_766695
+766848	obj_765dc5.popItem_Drag.item	40
+766878	obj_765dc5.popItem_Drag.doit	43	map=map_763ba1
+766898	obj_765dc5.popItem_Drag.doit.instructions	40
+7668ac	obj_765dc5.popItem_Drag.doit.literals	41
+7668c8	obj_765dc5.popItem_Reduce	43	map=map_766765
+7668dc	obj_765dc5.popItem_Reduce.item	40
+766900	obj_765dc5.popItem_Reduce.doit	43	map=map_763ba1
+766920	obj_765dc5.popItem_Reduce.doit.instructions	40
+766940	obj_765dc5.popItem_Reduce.doit.literals	41
+766960	'ZoomBy	40
+766978	obj_765dc5.popItem_RotateLeft	43	map=map_766695
+766990	obj_765dc5.popItem_RotateLeft.item	40
+7669b4	obj_765dc5.popItem_RotateLeft.doit	43	map=map_763ba1
+7669d4	obj_765dc5.popItem_RotateLeft.doit.literals	41
+7669e8	'rotateLeft	40
+766a04	obj_765dc5.popup	41
+766a10	obj_765dc5.popItem_Annotate	43	map=map_766695
+766a28	obj_765dc5.popItem_Annotate.item	40
+766a58	obj_765dc5.popItem_Annotate.doit	43	map=map_763ba1
+766a78	obj_765dc5.popItem_Annotate.doit.instructions	40
+766aa0	obj_765dc5.popItem_Annotate.doit.literals	41
+766acc	obj_765dc5.pickActionScript	43	map=map_763ba1
+766aec	obj_765dc5.pickActionScript.instructions	40
+766b18	obj_765dc5.pickActionScript.literals	41
+766b38	'IsFrame	40
+766b50	obj_765dc5.text	40
+766b6c	obj_765dc5.popItem_Enlarge	43	map=map_766765
+766b80	obj_765dc5.popItem_Enlarge.item	40
+766ba4	obj_765dc5.popItem_Enlarge.doit	43	map=map_763ba1
+766bc4	obj_765dc5.popItem_Enlarge.doit.instructions	40
+766be0	obj_765dc5.popItem_Enlarge.doit.literals	41
+766c00	obj_765dc5.popItem_RotateRight	43	map=map_766695
+766c18	obj_765dc5.popItem_RotateRight.item	40
+766c40	obj_765dc5.popItem_RotateRight.doit	43	map=map_763ba1
+766c60	obj_765dc5.popItem_RotateRight.doit.literals	41
+766c74	'rotateRight	40
+766c90	obj_765dc5.popSizeItems	41
+766ca8	obj_765cf1.stepAllocateContext	41
+766cbc	obj_766cbd	43	map=map_766d01
+766d00	map_766d01	41
+766d48	'ScalingInfoChanged	40
+766d6c	'cacheScaledImage	40
+766d90	'dragCorridor	40
+766db0	'dragAcceleration	40
+766dd4	'TargetChanged	40
+766df4	obj_766cbd.viewBounds	43	map=map_7645a5
+766e10	obj_766cbd.ScalingInfoChanged	43	map=map_763ba1
+766e30	obj_766cbd.ScalingInfoChanged.instructions	40
+766e70	obj_766cbd.ScalingInfoChanged.literals	41
+766ea4	'CanScroll	40
+766ec0	'Close	40
+766ed8	'dirty	40
+766ef0	obj_766cbd.ZoomTo	43	map=map_763ba1
+766f10	obj_766cbd.ZoomTo.instructions	40
+766f54	obj_766cbd.ZoomTo.literals	41
+766f84	'initializing	40
+766fa4	'WarningDialog	40
+766fc4	obj_766fc5	43	map=map_766fed
+766fec	map_766fed	41
+767018	'OpenDlog	40
+767034	'viewIdleScript	40
+767054	'fTitle	40
+76706c	'warningName	40
+767088	'viewEffect	40
+7670a4	obj_766fc5.OpenDlog	43	map=map_763ba1
+7670c4	obj_766fc5.OpenDlog.instructions	40
+767140	obj_766fc5.OpenDlog.literals	41
+767178	'vBarber	40
+767190	'vGauge	40
+7671a8	obj_766fc5.OpenDlog.literals[6]	41
+7671d4	'statusText	40
+7671f0	'titleText	40
+76720c	'barber	40
+767224	'gauge	40
+76723c	'closeBox	40
+767258	'primary	40
+767270	obj_767271	41
+767288	'values	40
+7672a0	'viewset	40
+7672b8	'SetupIdle	40
+7672d4	obj_766fc5.Update	43	map=map_763ba1
+7672f4	obj_766fc5.Update.instructions	40
+767330	obj_766fc5.Update.literals	41
+767354	obj_766fc5.Update.literals[3]	41
+76736c	'UpdateIndicator	40
+76738c	obj_766fc5.viewIdleScript	43	map=map_763ba1
+7673ac	obj_766fc5.viewIdleScript.instructions	40
+7673c4	obj_766fc5.viewIdleScript.literals	41
+7673d4	'BuildContext	40
+7673f4	'vStatus	40
+76740c	obj_76740d	40
+767448	obj_766cbd.ZoomBy	43	map=map_763ba1
+767468	obj_766cbd.ZoomBy.instructions	40
+76749c	obj_766cbd.ZoomBy.literals	41
+7674c8	obj_766cbd.viewSetupFormScript	43	map=map_763ba1
+7674e8	obj_766cbd.viewSetupFormScript.instructions	40
+767510	obj_766cbd.viewSetupFormScript.literals	41
+767530	'GetDefaultStore	40
+767550	'bitmapStore	40
+76756c	obj_766cbd.TargetChanged	43	map=map_763ba1
+76758c	obj_76758d	40
+76759c	obj_766cbd.TargetChanged.literals	41
+7675ac	'StoreCurrentFaxPage	40
+7675d0	obj_7675d1	43	map=map_767611
+767610	map_767611	41
+767654	'tileSize	40
+767670	'Scrolled	40
+76768c	'GetItemCount	40
+7676ac	'Abstract	40
+7676c8	'SelectItem	40
+7676e4	'SetPage	40
+7676fc	obj_7675d1.viewBounds	43	map=map_7654bd
+767718	obj_7675d1.Scrolled	43	map=map_763ba1
+767738	obj_7675d1.Scrolled.instructions	40
+767758	obj_7675d1.Scrolled.literals	41
+76777c	'leftArrow	40
+767798	'firstVisibleItem	40
+7677bc	'arrowContainer	40
+7677dc	'ShowArrow	40
+7677f8	'rightArrow	40
+767814	'maxFirstItem	40
+767834	obj_7675d1.GetItemCount	43	map=map_763ba1
+767854	obj_7675d1.GetItemCount.instructions	40
+767868	obj_7675d1.GetItemCount.literals	41
+76787c	obj_7675d1.Abstract	43	map=map_763ba1
+76789c	obj_7675d1.Abstract.instructions	40
+767970	obj_7675d1.Abstract.literals	41
+7679d0	'RelBounds	40
+7679ec	'ShapeBounds	40
+767a08	'FitToBox	40
+767a24	'MakeShape	40
+767a40	'NumberStr	40
+767a5c	'fontHeight	40
+767a78	'MakeText	40
+767a94	'center	40
+767aac	obj_7675d1.Abstract.literals[19]	41
+767ac4	'justification	40
+767ae4	'font	40
+767afc	obj_767afd	41
+767b10	'transform	40
+767b2c	obj_7675d1.SelectItem	43	map=map_763ba1
+767b4c	obj_767b4d	40
+767b60	obj_7675d1.SelectItem.literals	41
+767b74	obj_7675d1.viewSetupFormScript	43	map=map_763ba1
+767b94	obj_7675d1.viewSetupFormScript.instructions	40
+767ba8	obj_7675d1.viewSetupFormScript.literals	41
+767bc4	'selectedItem	40
+767be4	obj_7675d1.SetPage	43	map=map_763ba1
+767c04	obj_7675d1.SetPage.instructions	40
+767c18	obj_7675d1.SetPage.literals	41
+767c2c	obj_767c2d	43	map=map_767c65
+767c64	map_767c65	41
+767ca0	'OpenNavigator	40
+767cc0	obj_767c2d.viewBounds	43	map=map_7654bd
+767cdc	obj_767c2d.stepChildren	41
+767cf0	obj_767cf1	43	map=map_767d29
+767d28	map_767d29	41
+767d64	obj_767cf1.viewBounds	43	map=map_7654bd
+767d80	obj_767cf1.stepChildren	41
+767d94	obj_767d95	43	map=map_767dc1
+767dc0	map_767dc1	41
+767df0	'buttonPressedScript	40
+767e14	obj_767d95.viewBounds	43	map=map_7654bd
+767e30	obj_767d95.buttonPressedScript	43	map=map_763ba1
+767e50	obj_767d95.buttonPressedScript.instructions	40
+767e64	obj_767d95.buttonPressedScript.literals	41
+767e78	'ScrollBy	40
+767e94	obj_767e95	43	map=map_767ebd
+767ebc	map_767ebd	41
+767ee8	obj_767e95.viewBounds	43	map=map_7654bd
+767f04	obj_767e95.buttonPressedScript	43	map=map_763ba1
+767f24	obj_767e95.buttonPressedScript.instructions	40
+767f38	obj_767e95.buttonPressedScript.literals	41
+767f4c	obj_767cf1.ShowArrow	43	map=map_763ba1
+767f6c	obj_767cf1.ShowArrow.instructions	40
+767f94	obj_767cf1.ShowArrow.literals	41
+767fac	obj_767cf1.stepAllocateContext	41
+767fc8	obj_767c2d.ToggleNavigator	43	map=map_763ba1
+767fe8	obj_767c2d.ToggleNavigator.instructions	40
+768010	obj_767c2d.ToggleNavigator.literals	41
+768028	obj_767c2d.OpenNavigator	43	map=map_763ba1
+768048	obj_767c2d.OpenNavigator.instructions	40
+76805c	obj_767c2d.OpenNavigator.literals	41
+768074	'selectedPage	40
+768094	obj_767c2d.viewSetupDoneScript	43	map=map_763ba1
+7680b4	obj_767c2d.viewSetupDoneScript.instructions	40
+7680c4	obj_767c2d.viewSetupDoneScript.literals	41
+7680d8	obj_767c2d.stepAllocateContext	41
+7680ec	obj_7680ed	43	map=map_768195
+768194	map_768195	41
+768240	'SelectPage	40
+76825c	'fPageScrollHeight	40
+768280	'DoMungeREally	40
+7682a0	'viewQuitScript	40
+7682c0	'NextPage	40
+7682dc	'RedoPage	40
+7682f8	'fPage	40
+768310	'UpdateScrollers	40
+768330	'ViewScroll2DScript	40
+768354	'fPageNum	40
+768370	'mungeType	40
+76838c	'UpdatePage	40
+7683a8	'fPageScrollWidth	40
+7683cc	'PriorPage	40
+7683e8	'GetCurrentImage	40
+768408	obj_7680ed.SelectPage	43	map=map_763ba1
+768428	obj_7680ed.SelectPage.instructions	40
+768458	obj_7680ed.SelectPage.literals	41
+768480	'max	40
+768494	obj_7680ed.viewSetupDoneScript	43	map=map_763ba1
+7684b4	obj_7680ed.viewSetupDoneScript.instructions	40
+768530	obj_7680ed.viewSetupDoneScript.literals	41
+768584	'GetAppPreferences	40
+7685a8	'|dFaxViewer:Dondo|	40
+7685cc	'RelocateGreyBox	40
+7685ec	'AddDeferredSend	40
+76860c	obj_7680ed.MakeAndStashThumbnail	43	map=map_763ba1
+76862c	obj_7680ed.MakeAndStashThumbnail.instructions	40
+76868c	obj_7680ed.MakeAndStashThumbnail.literals	41
+7686d0	'thumbnail	40
+7686ec	obj_7680ed.MakeAndStashThumbnail.literals[5]	43	map=map_765699
+768708	'MakeBitmap	40
+768724	'DrawIntoBitmap	40
+768744	'StartFlush	40
+768760	obj_7680ed.DoMungeREally	43	map=map_763ba1
+768780	obj_7680ed.DoMungeREally.instructions	40
+768808	obj_7680ed.DoMungeREally.literals	41
+76886c	obj_7680ed.DoMungeREally.literals[7]	40
+76889c	obj_7680ed.DoMungeREally.literals[11]	41
+7688b4	'receiver	40
+7688d0	'message	40
+7688e8	obj_7680ed.DoMungeREally.literals[12]	43	map=map_763ba1
+768908	obj_7680ed.DoMungeREally.literals[12].literals	41
+76891c	obj_7680ed.DoMungeREally.literals[12].argFrame	43	map=map_768935
+768934	map_768935	41
+768950	'_nextArgFrame	40
+768970	'_parent	40
+768988	'_implementor	40
+7689a8	obj_7680ed.DoMungeREally.literals[15]	41
+7689bc	'callback	40
+7689d8	'MungeBitmap	40
+7689f4	obj_7680ed.DoMungeREally.literals[18]	40
+768a18	obj_7680ed.viewQuitScript	43	map=map_763ba1
+768a38	obj_7680ed.viewQuitScript.instructions	40
+768a70	obj_7680ed.viewQuitScript.literals	41
+768aa8	'EndFlush	40
+768ac4	'ShowThumbnail	40
+768ae4	'scaling	40
+768afc	obj_7680ed.NextPage	43	map=map_763ba1
+768b1c	obj_7680ed.NextPage.instructions	40
+768b30	obj_7680ed.NextPage.literals	41
+768b44	obj_7680ed.ScalingInfoChanged	43	map=map_763ba1
+768b64	obj_7680ed.ScalingInfoChanged.instructions	40
+768b80	obj_7680ed.ScalingInfoChanged.literals	41
+768b9c	'scroll	40
+768bb4	obj_7680ed.RedoPage	43	map=map_763ba1
+768bd4	obj_7680ed.RedoPage.instructions	40
+768be8	obj_7680ed.RedoPage.literals	41
+768bfc	obj_7680ed.viewBounds	43	map=map_765d8d
+768c18	obj_7680ed.StoreCurrentFaxPage	43	map=map_763ba1
+768c38	obj_7680ed.StoreCurrentFaxPage.instructions	40
+768c5c	obj_7680ed.StoreCurrentFaxPage.literals	41
+768c80	'GetAnnotations	40
+768ca0	obj_7680ed.ViewScrollDoneScript	43	map=map_763ba1
+768cc0	obj_7680ed.ViewScrollDoneScript.literals	41
+768cd0	obj_7680ed.UpdateScrollers	43	map=map_763ba1
+768cf0	obj_7680ed.UpdateScrollers.instructions	40
+768d20	obj_7680ed.UpdateScrollers.literals	41
+768d4c	obj_7680ed.GotoPage	43	map=map_763ba1
+768d6c	obj_7680ed.GotoPage.instructions	40
+768dcc	obj_7680ed.GotoPage.literals	41
+768e10	obj_7680ed.GotoPage.literals[5]	40
+768e48	obj_7680ed.ViewScroll2DScript	43	map=map_763ba1
+768e68	obj_7680ed.ViewScroll2DScript.instructions	40
+768ef4	obj_7680ed.ViewScroll2DScript.literals	41
+768f48	'negate	40
+768f60	'up	40
+768f74	'down	40
+768f8c	'LockScreen	40
+768fa8	'done	40
+768fc0	'SetArrow	40
+768fdc	'count	40
+768ff4	obj_7680ed.ViewScroll2DScript.literals[14]	43	map=map_769011
+769010	map_769011	41
+769030	'more	40
+769048	'RefreshViews	40
+769068	obj_7680ed.GetCurrentPage	43	map=map_763ba1
+769088	obj_7680ed.GetCurrentPage.instructions	40
+769098	obj_7680ed.GetCurrentPage.literals	41
+7690a8	obj_7680ed.stepAllocateContext	41
+7690bc	obj_7690bd	43	map=map_7690d9
+7690d8	map_7690d9	41
+7690f8	obj_7690bd.GetScalingInfo	43	map=map_763ba1
+769118	obj_7690bd.GetScalingInfo.instructions	40
+769134	obj_7690bd.GetScalingInfo.literals	41
+76914c	'viewCObject	40
+769168	obj_7690bd.ScrollTo	43	map=map_763ba1
+769188	obj_7690bd.ScrollTo.instructions	40
+7691a0	obj_7690bd.ScrollTo.literals	41
+7691bc	obj_7680ed.DoMunge	43	map=map_763ba1
+7691dc	obj_7680ed.DoMunge.instructions	40
+769210	obj_7680ed.DoMunge.literals	41
+76923c	obj_7680ed.DoMunge.literals[3]	40
+769264	obj_7680ed.DoMunge.literals[4]	40
+769300	'GetRoot	40
+769318	'Confirm	40
+769330	obj_7680ed.viewSetupFormScript	43	map=map_763ba1
+769350	obj_7680ed.viewSetupFormScript.instructions	40
+7693fc	obj_7680ed.viewSetupFormScript.literals	41
+76946c	'vStatusTitle	40
+76948c	obj_7680ed.viewSetupFormScript.literals[4]	40
+7694c4	obj_7680ed.viewSetupFormScript.literals[5]	40
+7694f4	'newtAppBase	40
+769510	'EntryStore	40
+76952c	obj_7680ed.viewSetupFormScript.literals[13]	43	map=map_769541
+769540	map_769541	41
+769558	obj_7680ed.Update	43	map=map_763ba1
+769578	obj_7680ed.Update.instructions	40
+769594	obj_7680ed.Update.literals	41
+7695b4	obj_7680ed.stepChildren	41
+7695cc	obj_7680ed.UpdatePage	43	map=map_763ba1
+7695ec	obj_7680ed.UpdatePage.instructions	40
+769628	obj_7680ed.UpdatePage.literals	41
+769660	obj_7680ed.PriorPage	43	map=map_763ba1
+769680	obj_7680ed.PriorPage.instructions	40
+769694	obj_7680ed.PriorPage.literals	41
+7696a8	obj_7680ed.GetCurrentImage	43	map=map_763ba1
+7696c8	obj_7680ed.GetCurrentImage.instructions	40
+7696dc	obj_7680ed.GetCurrentImage.literals	41
+7696f0	obj_763ab5[0].partData.ImageViewerDef.viewSetupFormScript	43	map=map_763ba1
+769710	obj_763ab5[0].partData.ImageViewerDef.viewSetupFormScript.instructions	40
+769738	obj_763ab5[0].partData.ImageViewerDef.viewSetupFormScript.literals	41
+769758	obj_763ab5[0].partData.ImageViewerDef.stepChildren	41
+alias	obj_7654dd.viewSetupFormScript.literals[6]	obj_765885
+alias	obj_765dc5.popItem_FitInWindow.doit.instructions	obj_7660c5
+alias	obj_765dc5.popItem_FullRes.doit.instructions	obj_7660c5
+alias	obj_765dc5.popItem_FullSize.doit.instructions	obj_7660c5
+alias	obj_765dc5.popItem_Rotate180.doit.instructions	obj_7666f5
+alias	obj_765dc5.popItem_RotateLeft.doit.instructions	obj_7666f5
+alias	obj_765dc5.popItem_RotateRight.doit.instructions	obj_7666f5
+alias	obj_766cbd.ZoomTo.literals[2]	obj_766fc5
+alias	obj_766cbd.ZoomTo.literals[5]	obj_76740d
+alias	obj_766cbd.ZoomBy.literals[1]	obj_766fc5
+alias	obj_766cbd.ZoomBy.literals[4]	obj_76740d
+alias	obj_766cbd.TargetChanged.instructions	obj_76758d
+alias	obj_766fc5.OpenDlog.literals[7]	obj_767271
+alias	obj_766fc5.Update.literals[4]	obj_767271
+alias	obj_7675d1.Abstract.literals[10]	obj_765885
+alias	obj_7675d1.Abstract.literals[20]	obj_767afd
+alias	obj_7675d1.SelectItem.instructions	obj_767b4d
+alias	obj_7680ed.MakeAndStashThumbnail.literals[11]	obj_767afd
+alias	obj_7680ed.DoMungeREally.literals[4]	obj_766fc5
+alias	obj_7680ed.DoMungeREally.literals[12].instructions	obj_767b4d
+alias	obj_7680ed.ViewScrollDoneScript.instructions	obj_76758d
+alias	obj_7680ed.GotoPage.literals[2]	obj_766fc5
+alias	obj_7680ed.viewSetupFormScript.literals[1]	obj_766fc5

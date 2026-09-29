@@ -1,0 +1,6 @@
+@@ 0x549799
+func(a1) begin
+	self:DrawShape(self.hilitedShape, iconStyle);
+	true
+end
+@@end

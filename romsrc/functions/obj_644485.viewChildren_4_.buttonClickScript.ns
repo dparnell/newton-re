@@ -1,0 +1,21 @@
+@@ 0x5259e5
+func() begin
+	local l1, l2, l3;
+	GetRoot().assistant:Close();
+	if (l2 := GetView('viewfrontmost)) then begin
+			l1 := l2.viewHelpTopic;
+			if l2.HelpIndex then begin
+					l1 := l2.HelpIndex
+				end;
+			if l2.HelpManual then begin
+					l3 := GetRoot().TinyTim;
+					if l1 then begin
+							l3:OpenManualTo(l2.HelpManual, l1)
+						end else begin
+							l3:OpenManual(l2.HelpManual)
+						end
+				end
+		end;
+	(if l1 then OpenHelpTo(l1) else ShowManual())
+end
+@@end

@@ -1,0 +1,18 @@
+@@ 0x4e8f25
+@@const kROM_256
+@256
+@@const kROM_256_9
+@256
+@@main
+func(a1, a2, a3) begin
+	local l1, l2, l3, l4, l5, l6;
+	l1 := a1.mtgStartDate;
+	l3 := (if (l2 := self:GetMeetingText(a1)) then (if (if (l4 := self:GetNotesData(a1)[1]) then (Length(l4) > 0)) then ParamStr("^0^1^2", [Array: l2, " \u2022\u ", ExtractData(l4, kROM_256, 30)]) else l2) else ExtractData([Array: a2], kROM_256_9, 30));
+	l5 := a1.viewStationery;
+	l6 := (if (Date(l1).year = Date(Time()).year) then ShortDate(l1) else ParamStr("^0 ^1", [Array: LongDateStr(l1, @66.abbrDayOfWeekStrSpec), ShortDateStr(l1, @66.numericDateStrSpec)]));
+	if (((l5 = 'meeting) or (l5 = 'RepeatingMeeting)) or (l5 = 'exceptionMeeting)) then begin
+			l6 := ParamStr("^0, ^1", [Array: l6, TimeStr(l1, @66.shortTimeStrSpec)])
+		end;
+	Stringer([Array: l6, " ", l3])
+end
+@@end

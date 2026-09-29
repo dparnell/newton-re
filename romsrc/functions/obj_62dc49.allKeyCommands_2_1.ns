@@ -1,0 +1,5 @@
+@@ 0x4b0369
+func(a1) begin
+	(if (if _titleKeyButton then _titleKeyButton.viewCObject) then PressButton(_titleKeyButton))
+end
+@@end

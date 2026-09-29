@@ -1,0 +1,15 @@
+@@ 0x48f885
+func() begin
+	local l1;
+	if (not (l1 := scrollList).checkAll) then begin
+			prefsCache.(prefsSlot) := 'all
+		end else begin
+			prefsCache.(prefsSlot) := 'Partial;
+			prefsCache.(prefsArray) := [Array: ]
+		end;
+	l1.checkAll := (not l1.checkAll);
+	EntryChangeXmit(prefsCache, 'backup);
+	l1:figureAllItems(l1.ListItems, l1.selectedItems);
+	l1:RedoChildren()
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x78f62d names
+func(anEntry, aFinder) begin
+	editor:ShowFoundItem(anEntry, aFinder)
+end
+@@end

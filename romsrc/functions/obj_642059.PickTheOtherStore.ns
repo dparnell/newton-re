@@ -1,0 +1,22 @@
+@@ 0x44a02d
+func(a1) begin
+	l2 := (l1 := GetStores())[0];
+	l3 := GetDefaultStore();
+	if (a1 <> l3) then begin
+			l2 := l3
+		end else begin
+			local l1;
+			local l2;
+			local l3;
+			(for l4 := (Length(l1) - 1) to 0 by -1 do begin
+					local l7;
+					l7 := l1[l4];
+					if (if (a1 <> l7) then (not l7:IsReadOnly())) then begin
+							l2 := l7;
+							break
+						end
+				end)
+		end;
+	(if (l2 <> a1) then l2)
+end
+@@end

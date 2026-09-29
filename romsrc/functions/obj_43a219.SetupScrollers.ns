@@ -1,0 +1,17 @@
+@@ 0x43a121
+func() begin
+	local l1, l2;
+	self.scrollersSetup := true;
+	l1 := TextBase:GetTotalLines();
+	(if (totalItems <> l1) then begin
+			self.totalItems := l1;
+			l2 := SetBounds(0, 0, 0, l1);
+			self.ScrollRect := l2;
+			self.DataRect := l2;
+			if TextBase.ScrollAmounts then begin
+					self.ScrollAmounts := TextBase.ScrollAmounts
+				end;
+			(self.yPos := (self:Parent().viewOriginY div lineHeight))
+		end)
+end
+@@end

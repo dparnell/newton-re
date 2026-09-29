@@ -1,0 +1,19 @@
+@@ 0x750515
+func() begin
+	if (if currentPath then (Length(currentPath) > 0)) then begin
+			l1 := self:GetDriveFromName(currentPath[0].name);
+			if ((l2 := Length(currentPath)) = 0) then begin
+					l1 := Stringer([Array: l1, "\\"])
+				end else begin
+					local l1;
+					local l2;
+					(for l3 := 1 to (l2 - 1) do begin
+							l1 := Stringer([Array: l1, "\\", currentPath[l3].name])
+						end)
+				end
+		end else begin
+			l1 := ""
+		end;
+	SetValue(self, 'text, l1)
+end
+@@end

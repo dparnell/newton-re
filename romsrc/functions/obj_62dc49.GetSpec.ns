@@ -1,0 +1,13 @@
+@@ 0x4b3999
+func(a1, a2, a3) begin
+	if ((a1 := Clone(SoupSpecs.(a1))) = nil) then begin
+			a1 := SoupSpecs.Date
+		end;
+	a1.tagspec := a2;
+	if a3 then begin
+			a1.beginKey := a3;
+			a1.endKey := a3
+		end;
+	a1
+end
+@@end

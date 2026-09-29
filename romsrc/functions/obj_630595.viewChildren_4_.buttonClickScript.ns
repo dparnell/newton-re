@@ -1,0 +1,8 @@
+@@ 0x5ac809
+func() begin
+	local l1;
+	(if selectedEntry then (if (if self:IsCapitalized((l1 := selectedEntry.word)) then (not self:IsAllCaps(l1))) then AsyncConfirm(ParamStr("Should '^0' always be capitalized?", [Array: l1]), 'yesNoDefaultYes, func(a1) begin
+				(if a1 then self:AddWordAsIs() else self:AddDowncase())
+			end) else self:AddWordAsIs()))
+end
+@@end

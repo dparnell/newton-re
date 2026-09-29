@@ -1,0 +1,11 @@
+@@ 0x469bc1
+func() begin
+	local l1, l2;
+	if HasPath((l2 := refCon), 'form.text) then begin
+			SetClass((l1 := Substr((l1 := GetDynamicValue(l2.form, 'text, 'string)), l2.wordOffset, l2.wordLength)), 'string)
+		end else begin
+			l1 := SPrintObject("")
+		end;
+	l1
+end
+@@end

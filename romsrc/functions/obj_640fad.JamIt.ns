@@ -1,0 +1,11 @@
+@@ 0x47edc1
+func(a1) begin
+	(foreach l1, l2 in popup do begin
+			if (if (ClassOf(l2) = 'frame) then (l2.symbol = a1)) then begin
+					self:PickItem(l2);
+					self:UpdateTogglers();
+					break
+				end
+		end)
+end
+@@end

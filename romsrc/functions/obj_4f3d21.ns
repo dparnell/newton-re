@@ -1,0 +1,11 @@
+@@ 0x4f3d21
+@@const kFunction_4f3d01
+func(a1, a2) begin
+	(a2[0] > a1)
+end
+@@main
+func(a1, a2) begin
+	local l1, l2;
+	(if (l1 := a1.InstanceNotesData) then (if (l2 := ArrayPos(l1, a2, 0, kFunction_4f3d01)) then self:ConvertAnnotatedMeetingsToExceptions(a1, l2, (Length(l1) - 1))))
+end
+@@end

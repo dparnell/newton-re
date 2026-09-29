@@ -1,0 +1,22 @@
+@@ 0x4f7da9
+func(a1, a2) begin
+	local l1, l2, l3;
+	l1 := a1;
+	l2 := ((if (a2 = 'dayView) then (l1.viewStationery <> 'cribNote)) or (if (a2 = 'cribView) then (l1.viewStationery = 'cribNote)));
+	if (if (l3 := ResolveEntryAlias(l1.repeatTemplateAlias)) then l2) then begin
+			l1.repeatTemplate := l3;
+			if l1.NotesData then begin
+					self:ChangeMeeting(l1, 'InstanceNotesData, l1.NotesData);
+					self:CarefulChange(EntrySoup(l3), l3, true)
+				end;
+			RemoveSlot(l1, 'NotesData);
+			RemoveSlot(l1, 'repeatTemplateAlias)
+		end else begin
+			l1 := self:ConvertToNonrepeating(a1, nil);
+			if a1.NotesData then begin
+					l1.NotesData := a1.NotesData
+				end
+		end;
+	l1
+end
+@@end

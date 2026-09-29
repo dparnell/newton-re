@@ -1,0 +1,6 @@
+@@ 0x59f6a5
+func() begin
+	local l1, l2;
+	(if StrFilled(GetUserConfig('mailPhone)) then GetUserConfig('mailPhone) else (if IsFrame(labelCommands[0]) then (if (l2 := StrPos((l1 := labelCommands[0].item), "(", 0)) then Substr(l1, 0, (l2 - 1)) else l1) else "(no number)"))
+end
+@@end

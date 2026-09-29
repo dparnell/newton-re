@@ -1,0 +1,13 @@
+@@ 0x487eb9
+func(a1) begin
+	if a1 then begin
+			if (not newSymbol) then begin
+					RemoveFolder(oldSymbol, oldApp)
+				end else begin
+					RenameFolder(oldSymbol, newName, oldApp)
+				end;
+			GetRoot().filingSlip:UpdateToFolder(newSymbol)
+		end;
+	self:Close()
+end
+@@end

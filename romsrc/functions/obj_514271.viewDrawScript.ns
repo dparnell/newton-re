@@ -1,0 +1,18 @@
+@@ 0x512c81
+func() begin
+	(if boringDay then self:DrawShape(boringDay, {font: 12291, justification: 'center}) else (if (l1 := pieces) then begin
+				l2 := self:LocalBox().bottom;
+				l3 := 0;
+				local l1;
+				local l2;
+				local l3;
+				(for l4 := currentItem to (numberOfItems - 1) do begin
+						if (l3 >= l2) then begin
+								break
+							end;
+						self:DrawShape(l1[l4], {transform: [Array: 0, (-viewOriginY)]});
+						l3 := (l3 + itemHeights[l4])
+					end)
+			end))
+end
+@@end

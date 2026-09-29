@@ -1,0 +1,9 @@
+@@ 0x5952c5
+func() begin
+	if (not self:StartTransaction(120)) then begin
+			return nil
+		end;
+	self:output("m7", nil, nil);
+	(eworld.mail_state := 'list)
+end
+@@end

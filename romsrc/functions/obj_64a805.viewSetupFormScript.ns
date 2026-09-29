@@ -1,0 +1,19 @@
+@@ 0x553085
+func() begin
+	local l1, l2, l3, l4;
+	l1 := displayParams.buttonBarPosition;
+	l2 := displayParams.bellyButtonPosition;
+	l3 := displayParams.buttonBarControlsPosition;
+	if (l2 = 'outside) then begin
+			l2 := (if ((l1 = 'right) or (l3 = 'right)) then 'right else 'left)
+		end else begin
+			if (l2 = 'inside) then begin
+					l2 := (if ((l1 = 'left) or (l3 = 'left)) then 'right else 'left)
+				end
+		end;
+	(if (l2 = 'right) then begin
+			l4 := self._proto.viewBounds;
+			(self.viewBounds := RelBounds((-l4.left), l4.top, (l4.right - l4.left), (l4.bottom - l4.top)))
+		end)
+end
+@@end

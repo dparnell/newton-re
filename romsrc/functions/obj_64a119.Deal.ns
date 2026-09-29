@@ -1,0 +1,12 @@
+@@ 0x56f835
+func() begin
+	gameState := 'dealt;
+	deck:Shuffle();
+	hand := deck:Deal(5);
+	money := (money - bet);
+	SetValue(handValue, 'text, "");
+	SetValue(dButton, 'text, "Draw");
+	SetValue(bankroll, 'text, Stringer([Array: $$, money]));
+	cardHolder:Dirty()
+end
+@@end

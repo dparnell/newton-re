@@ -1,0 +1,9 @@
+@@ 0x54f24d
+func() begin
+	local l1;
+	if (not (l1 := self:SetupFakeTargetHelper())) then begin
+			self:Notify(3, title, "Nothing is selected.")
+		end;
+	l1
+end
+@@end

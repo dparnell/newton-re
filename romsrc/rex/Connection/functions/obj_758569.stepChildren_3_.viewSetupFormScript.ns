@@ -1,0 +1,6 @@
+@@ 0x758d55
+func() begin
+	self:SetupViewBounds('Restore);
+	self:SetupButton()
+end
+@@end

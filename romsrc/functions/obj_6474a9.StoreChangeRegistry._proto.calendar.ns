@@ -1,0 +1,5 @@
+@@ 0x4f4579
+func(a1, a2, a3) begin
+	(if ((a2 = 'StoreEnters) or (a2 = 'storeLeaves)) then (if (not Visible(GetRoot().calendar)) then GetRoot().calendar:initializeAlarms()))
+end
+@@end

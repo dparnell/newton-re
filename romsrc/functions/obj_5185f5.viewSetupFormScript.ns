@@ -1,0 +1,6 @@
+@@ 0x5177dd
+func() begin
+	inherited:?viewSetupFormScript();
+	SetKeyView(self, 0)
+end
+@@end

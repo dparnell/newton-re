@@ -1,0 +1,10 @@
+@@ 0x748e61
+func() begin
+	if (Length(appsList.selectedItems) = Length(appsList.listItems)) then begin
+			appsList.selectedItems := [Array: ]
+		end else begin
+			self:SelectAll(appsList)
+		end;
+	appsList:DrawHilite()
+end
+@@end

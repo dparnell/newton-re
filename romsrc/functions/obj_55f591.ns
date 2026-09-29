@@ -1,0 +1,21 @@
+@@ 0x55f591
+func(a1) begin
+	(if selected then begin
+			l1 := Query(cursor:soup(), '{type: index});
+			local l1;
+			(foreach l2 in selected do begin
+					local l4;
+					l4 := l1:GotoKey(l2._uniqueID);
+					(loop begin
+							if (l4._uniqueID <> l2._uniqueID) then begin
+									break (l4 := nil)
+								end;
+							(if (EntryStore(l4):GetSignature() <> l2._storeID) then (l4 := l1:Next()) else break)
+						end);
+					if l4 then begin
+							call a1 with (l4)
+						end else nil
+				end)
+		end)
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x48f399
+func() begin
+	godParent.(whoAmI) := self;
+	SetKeyView(self, 0)
+end
+@@end

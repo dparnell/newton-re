@@ -1,0 +1,18 @@
+@@ 0x42a2f9
+func(a1) begin
+	l2 := nil;
+	local l1;
+	local l2;
+	(foreach l3 in (l1 := self:ChildViewFrames()) do begin
+			if (a1 = l3.buttonValue) then begin
+					l2 := true;
+					self:InitCluster(l3)
+				end
+		end);
+	(if (if (not l2) then clusterChild) then begin
+			clusterChild.viewValue := nil;
+			clusterChild:UpdateBitmap();
+			(clusterChild := nil)
+		end)
+end
+@@end

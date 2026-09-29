@@ -1,0 +1,7 @@
+@@ 0x42b271
+func(a1) begin
+	currentSelection := text;
+	self:selectThisCell(self);
+	true
+end
+@@end

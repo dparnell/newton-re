@@ -1,0 +1,6 @@
+@@ 0x7b04d5
+func() begin
+	self.fReadyToQuit := nil;
+	(if (fCurrentPageIndex = 0) then return self:ShowPage(fCurrentPageIndex) else return self:ShowPage((fCurrentPageIndex - 1)))
+end
+@@end

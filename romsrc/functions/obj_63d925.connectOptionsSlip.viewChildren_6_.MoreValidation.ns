@@ -1,0 +1,9 @@
+@@ 0x59ffbd
+func(a1) begin
+	local l1;
+	(if a1 then begin
+			setEmporia := nil;
+			(if (if (l1 := GetUserConfig('mailPhoneFull)) then StrFilled(l1)) then self:ValidationComplete(true) else (setEmporia := (not self:ValidateConfig('location, nil, '[Array: mailPhone], msgValidateNumber, 'ValidateSlip, 'ValidationComplete))))
+		end)
+end
+@@end

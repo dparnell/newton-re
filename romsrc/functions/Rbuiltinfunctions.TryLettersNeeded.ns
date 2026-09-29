@@ -1,0 +1,16 @@
+@@ 0x46d971
+func(a1, a2) begin
+	if (if (if a2.strokes then a2:TestFlags(2)) then StrEqual("XRWR", userConfiguration.currentwordrecognizer)) then begin
+			if (BAnd(a1.viewFlags, 25096192) <> 0) then begin
+					return (BAnd(a1.viewFlags, 23089152) <> 0)
+				end;
+			if (BAnd((a1 := a1:Parent()).viewFlags, 25096192) <> 0) then begin
+					return (BAnd(a1.viewFlags, 23089152) <> 0)
+				end;
+			if (BAnd((a1 := a1:Parent()).viewFlags, 25096192) <> 0) then begin
+					return (BAnd(a1.viewFlags, 23089152) <> 0)
+				end
+		end;
+	return nil
+end
+@@end

@@ -1,0 +1,25 @@
+@@ 0x5b870d
+func(a1, a2) begin
+	local l1, l2, l3;
+	if HasPath(self, 'limit) then begin
+			l1 := self.limit
+		end;
+	if HasPath(self, 'count) then begin
+			l2 := self.count
+		end;
+	if (if (if l1 then l2) then (l2 >= l1)) then begin
+			if (if cursors then (Length(cursors) > 0)) then begin
+					GetRoot():Notify(3, "Word List", "The word was not added because the word list is getting too full.  Please remove some words and try again.")
+				end;
+			return -15
+		end;
+	if BAnd(a2, 192) then begin
+			self:DecodeRecognitionWord((a1 := Clone(a1)), a2);
+			a2 := BAnd(a2, -193)
+		end;
+	if (if ((l3 := self:PrivateAddWord(a1, a2)) = 0) then l2) then begin
+			self.count := (l2 + 1)
+		end;
+	return l3
+end
+@@end

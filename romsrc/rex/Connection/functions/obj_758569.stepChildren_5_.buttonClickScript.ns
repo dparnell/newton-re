@@ -1,0 +1,11 @@
+@@ 0x758fb5
+func() begin
+	endpoint:SetState(8);
+	self:DoneForNow();
+	(try begin
+			ConnOpenFileBrowser(endpoint, 1, '[Array: "Dock", "Select a file to import", "Import"], 'Import, protoContext.FileBrowserDone)
+		end onexception |evt.ex| do begin
+			endpoint:ConnectionDone(CurrentException().error)
+		end)
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x43fcf1
+func(a1) begin
+	local l1;
+	l1 := BAnd((GetOrientation() + a1), 3);
+	(if (GetOrientation() <> l1) then SetScreenOrientation(l1))
+end
+@@end

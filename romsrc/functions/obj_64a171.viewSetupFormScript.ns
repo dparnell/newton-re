@@ -1,0 +1,5 @@
+@@ 0x57010d
+func() begin
+	(self.rowViews := [Array: ])
+end
+@@end

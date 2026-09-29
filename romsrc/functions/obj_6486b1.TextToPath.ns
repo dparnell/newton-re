@@ -1,0 +1,6 @@
+@@ 0x4b99c9
+func(a1) begin
+	local l1;
+	(if ((not StrFilled(a1)) or IsRichString(a1)) then a1 else (if (l1 := StringToDate(a1)) then l1))
+end
+@@end

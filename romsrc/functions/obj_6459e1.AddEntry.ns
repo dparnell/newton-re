@@ -1,0 +1,12 @@
+@@ 0x4a7f4d
+func(a1, a2) begin
+	local l1;
+	if ((a2 = nil) or (not a2:IsValid())) then begin
+			l1 := theSoup:AddToDefaultStore(a1)
+		end else begin
+			l1 := theSoup:AddToStore(a1, a2)
+		end;
+	XmitSoupChange(soupName, appSymbol, 'entryAdded, a1);
+	l1
+end
+@@end

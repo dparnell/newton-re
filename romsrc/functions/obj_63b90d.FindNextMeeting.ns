@@ -1,0 +1,8 @@
+@@ 0x5117cd
+func(a1) begin
+	local l1, l2;
+	l1 := self:FindNextNonRepeatingMeeting(a1);
+	l2 := self:FindNextRepeatingMeeting(a1);
+	(if (not l1) then l2 else (if (not l2) then l1 else (if (l1[0] < l2[0]) then l1 else (if (l2[0] < l1[0]) then l2 else (if (l1[1] > l2[1]) then l1 else l2)))))
+end
+@@end

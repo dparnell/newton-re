@@ -1,0 +1,11 @@
+@@ 0x76e565
+func() begin
+	l1 := self:GetFormulaValues();
+	local l1;
+	(foreach l2, l3 in FSViews do begin
+			l1.(formulaSymbol).values[l2] := l3:GetNumericValue()
+		end);
+	l1.(formulaSymbol).solvedFor := solvedFor;
+	EntryChange(l1)
+end
+@@end

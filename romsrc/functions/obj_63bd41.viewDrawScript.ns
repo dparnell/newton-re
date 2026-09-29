@@ -1,0 +1,5 @@
+@@ 0x48a84d
+func() begin
+	self:DrawShape(MakeText("\uFC01\u", 0, 0, 16, ((self:LocalBox().bottom div 2) + 4)), {font: viewFont})
+end
+@@end

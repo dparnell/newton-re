@@ -1,0 +1,26 @@
+@@ 0x47fab1
+func(a1, a2, a3) begin
+	local l1, l2, l3, l4;
+	l2 := self:GetItemTime(a1);
+	a2 := (a2 - StrFontWidth(Stringer([Array: " ", l2]), a3));
+	if self:IsInItem(a1) then begin
+			l1 := self:?GetFromText(a1)
+		end else begin
+			l1 := self:?GetToText(a1)
+		end;
+	if l1 then begin
+			l1 := StyledStrTruncate(Clone(l1), a2, a3)
+		end else begin
+			if (l3 := GetDataDefs(addressingClass)) then begin
+					l1 := l3:GetRoutingTitle((l4 := (if self:IsInItem(a1) then a1.fromRef else a1.toRef)), a2, a3)
+				end
+		end;
+	if (not l1) then begin
+			l1 := (if self:IsInItem(a1) then a1.fromName else a1.name)
+		end;
+	if (not l1) then begin
+			l1 := "Unaddressed"
+		end;
+	(if StrFilled(l1) then Stringer([Array: l1, " ", l2]) else l2)
+end
+@@end

@@ -1,0 +1,14 @@
+@@ 0x73703d
+func(a1, a2, a3) begin
+	(foreach l1 in a2 do begin
+			if a1.(l1) then begin
+					if (a3 or IsInstance(a1.(l1), 'string)) then begin
+							return StrFilled(a1.(l1))
+						end else begin
+							return true
+						end
+				end
+		end);
+	nil
+end
+@@end

@@ -1,0 +1,22 @@
+@@ 0x56e82d
+func() begin
+	l1 := Array(52, nil);
+	local l1;
+	(for l2 := 0 to 51 do begin
+			l1[l2] := l2
+		end);
+	(for l5 := 1 to 6 do begin
+			(for l2 := 0 to 25 do begin
+					local l8, l9;
+					if (Random(0, 10000) < 5000) then begin
+							l8 := Random(0, 51);
+							l9 := l1[l2];
+							l1[l2] := l1[l8];
+							l1[l8] := l9
+						end
+				end)
+		end);
+	self.deck := l1;
+	(self.top := 52)
+end
+@@end

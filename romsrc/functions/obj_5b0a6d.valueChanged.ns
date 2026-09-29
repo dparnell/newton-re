@@ -1,0 +1,14 @@
+@@ 0x5b0a4d
+func() begin
+	userConfiguration.guestAccessOption := viewValue;
+	if viewValue then begin
+			userConfiguration.savedWritingStyleOptions := GetUserSettings();
+			SetDefaultUserSettings()
+		end else begin
+			SetDefaultUserSettings();
+			SetUserSettings(userConfiguration.savedWritingStyleOptions);
+			userConfiguration.savedWritingStyleOptions := nil
+		end;
+	panel:RedoChildren()
+end
+@@end

@@ -1,0 +1,64 @@
+@@ 0x4f7d09
+func(a1) begin
+	ClearUndoStacks();
+	(if ((l1 := self:GetCurrentMainView()) = 'YearView) then (if a1 then mainDisplay:viewScrollUpScript() else mainDisplay:viewScrollDownScript()) else begin
+			l3 := Length((l2 := selectedDates));
+			l4 := 1440;
+			(if (l1 = 'MonthOverView) then begin
+					if a1 then begin
+							l4 := -1
+						end else begin
+							l4 := 1
+						end;
+					local l1;
+					local l2;
+					local l3;
+					local l4;
+					(for l5 := 0 to (l3 - 1) do begin
+							l2[l5] := IncrementMonth(l2[l5], l4)
+						end);
+					self:redisplayScript()
+				end else begin
+					if (l1 = 'WeekView) then begin
+							l4 := (l4 * 7)
+						end else begin
+							if (if (l3 > 1) then ((l2[1] - l2[0]) = 1440)) then begin
+									l4 := (l4 * l3)
+								end
+						end;
+					if a1 then begin
+							l4 := (-l4)
+						end;
+					(for l5 := 0 to (l3 - 1) do begin
+							local l8, l9, l10, l11, l12, l13, l14;
+							l2[l5] := (l2[l5] + l4)
+						end);
+					if (l3 > 1) then begin
+							l8 := Date(l2[0]);
+							l9 := Date(l2[(l3 - 1)]);
+							(l10 := Clone(l8)).month := monthController.monthView.month;
+							l10.year := monthController.monthView.year;
+							l10.Date := 1;
+							(l11 := Clone((l10 := Date(TotalMinutes(l10))))).Date := l10.daysInMonth;
+							l11 := Date(TotalMinutes(l11));
+							if (not (l12 := GetUserConfig('firstDayOfWeek))) then begin
+									l12 := GetLocale().firstDayOfWeek
+								end;
+							if (not l12) then begin
+									l12 := 0
+								end;
+							l13 := (((l10.dayOfWeek - l12) + 7) mod 7);
+							l14 := ((((l12 - l11.dayOfWeek) + 7) mod 7) - 1);
+							if (if (l8.month <> l10.month) then (((l8.daysInMonth - l8.Date) + 1) > l13)) then begin
+									selectedDates := [Array: l2[0]]
+								end else begin
+									if (if (l9.month <> l10.month) then (l9.Date > l14)) then begin
+											selectedDates := [Array: l2[(l3 - 1)]]
+										end
+								end
+						end;
+					self:redisplayScript()
+				end)
+		end)
+end
+@@end

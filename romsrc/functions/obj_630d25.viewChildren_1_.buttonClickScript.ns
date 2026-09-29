@@ -1,0 +1,6 @@
+@@ 0x49a569
+func() begin
+	reviewDict:Open();
+	alphaKeyboard:Close()
+end
+@@end

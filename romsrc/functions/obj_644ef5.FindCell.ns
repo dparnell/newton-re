@@ -1,0 +1,30 @@
+@@ 0x4669a5
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7;
+	cell := Clone('{hit: nil, bounds: nil, edge: nil, edgeX: nil});
+	l1 := self:GlobalBox();
+	l2 := cellWidth;
+	l3 := (l1.left + dispIndent);
+	l4 := ((a1 - l3) div l2);
+	l5 := ((a1 - l3) mod l2);
+	l6 := (if self:FixedWord() then wordRight else maxChars);
+	l7 := (l3 + (l2 * l6));
+	if (if (a1 >= l3) then (a1 < l7)) then begin
+			cell.hit := l4;
+			cell.bounds := Clone(l1);
+			cell.bounds.left := ((l3 + (l2 * l4)) + (cellGap div 2));
+			cell.bounds.right := ((cell.bounds.left + l2) - cellGap)
+		end;
+	cell.edge := l4;
+	if (l5 > (l2 div 2)) then begin
+			cell.edge := (l4 + 1)
+		end;
+	if ((cell.edge < 0) or (cell.edge > l6)) then begin
+			cell.edge := nil
+		end;
+	if cell.edge then begin
+			cell.edgeX := (l3 + (l2 * cell.edge))
+		end;
+	return cell
+end
+@@end

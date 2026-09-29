@@ -1,0 +1,21 @@
+@@ 0x557a71
+func(a1, a2) begin
+	local l1, l2, l3;
+	(if a2 then begin
+			a2._proto := nil;
+			try begin
+					if a2.removeScript then begin
+							a2:removeScript(a2)
+						end
+				end onexception |evt.ex| do begin end;
+			l1 := GetRoot();
+			l2 := a2.app;
+			try begin
+					if (l3 := l1.(l2)).viewCObject then begin
+							l3:Close()
+						end
+				end onexception |evt.ex| do begin end;
+			RemoveSlot(l1, l2)
+		end)
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x4b9555
+func(a1) begin
+	if target then begin
+			target.(path) := a1[0];
+			baseLine:Retarget()
+		end;
+	baseLine:hilite(nil)
+end
+@@end

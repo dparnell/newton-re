@@ -1,0 +1,11 @@
+@@ 0x42fca5
+func(a1) begin
+	self:SetLabelText(labelCommands[a1]);
+	labelLine:Dirty();
+	if (not target.(path)) then begin
+			target.(path) := Clone("")
+		end;
+	SetClass(target.(path), labelSymbols[a1]);
+	true
+end
+@@end

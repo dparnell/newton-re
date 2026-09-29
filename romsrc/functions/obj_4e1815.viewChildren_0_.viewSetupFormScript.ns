@@ -1,0 +1,6 @@
+@@ 0x4e147d
+func() begin
+	Time := Time();
+	(place := userConfiguration.location)
+end
+@@end

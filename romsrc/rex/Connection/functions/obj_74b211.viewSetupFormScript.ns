@@ -1,0 +1,29 @@
+@@ 0x74b299
+func() begin
+	l2 := Length((l1 := protoContext.applications));
+	l3 := (if protoContext.applications[0].packages then 1 else 0);
+	l4 := Array((l2 - l3), nil);
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	(for l5 := l3 to (l2 - 1) do begin
+			l4[(l5 - l3)] := l1[l5].name
+		end);
+	self.listItems := l4;
+	self.selectedItems := [Array: ];
+	l8 := protoContext:ConnectionPrefsRead('allApps);
+	if soupOptions then begin
+			local l8;
+			(foreach l9, l10 in l4 do begin
+					if (LSearch(soupOptions, l10, 0, '|str<|, nil) or (if l8 then (not LSearch(l8, l10, 0, '|str<|, nil)))) then begin
+							AddArraySlot(selectedItems, l9)
+						end
+				end)
+		end else begin
+			self:|SelectAll?|()
+		end;
+	self:SetupList();
+	inherited:?viewSetupFormScript()
+end
+@@end

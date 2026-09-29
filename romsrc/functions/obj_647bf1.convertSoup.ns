@@ -1,0 +1,76 @@
+@@ 0x496305
+@@const kLiteral_488675
+"Restore"
+@@const kLiteral_47e209
+"There was an error while converting \u201C\u^0\u201D\u. Some items may not have been restored."
+@@main
+func(a1, a2, a3) begin
+	status := progressSlip;
+	(foreach l1 in a1 do begin
+			local l3, l4, l5, l6, l7, l8, l9, l10;
+			try begin
+					l3 := GetConversionFrame(l1)
+				end onexception |evt.ex| do begin end;
+			if l3 then begin
+					break
+				end
+		end);
+	(if l3 then begin
+			l4 := (StrEqual(a3, @276) or StrEqual(a3, @129));
+			l5 := self:getSrcStore():GetSoup(a3);
+			if l4 then begin
+					l6 := self:getDestStore():GetSoup(Stringer([Array: "BACKUP_", a3])):Query(nil)
+				end else begin
+					l6 := l5:Query(nil)
+				end;
+			status:SetStatus('vBarber, {titleText: ParamStr("Converting \u201C\u^0\u201D\u\u2026\u", [Array: a2]), barber: true});
+			l7 := l6:entry();
+			(while l7 do begin
+					try begin
+							status:SetStatus('vBarber, {barber: true});
+							try begin
+									l8 := ConvertFrame(l1, l3, 'oneO, 'twoO, l7, true)
+								end onexception |evt.ex| do begin
+									l8 := nil;
+									l9 := ParamStr("\u201C\u^0\u201D\u", [Array: a2]);
+									if (not LSearch(convertProblems, l9, 0, '|str=|, nil)) then begin
+											AddArraySlot(convertProblems, l9)
+										end
+								end;
+							status:SetStatus('vBarber, {barber: true});
+							if l8 then begin
+									try begin
+											if l4 then begin
+													l5:Add(l8)
+												end else begin
+													EntryReplace(l7, l8)
+												end
+										end onexception |evt.ex| do begin
+											l8 := nil;
+											l9 := ParamStr("\u201C\u^0\u201D\u", [Array: a2]);
+											if (not LSearch(convertProblems, l9, 0, '|str=|, nil)) then begin
+													AddArraySlot(convertProblems, l9)
+												end
+										end
+								end;
+							if (if (not l8) then (not l4)) then begin
+									EntryRemoveFromSoup(l7)
+								end
+						end onexception |evt.ex.cancel| do begin
+							Rethrow()
+						end onexception |evt.ex.fr.store| do begin
+							if (if HasSlot((l10 := CurrentException()), 'error) then (l10.error = -10617)) then begin
+									GetRoot():Notify(3, kLiteral_488675, ParamStr("There was not enough space to convert \u201C\u^0\u201D\u. Some items may not have been restored.", [Array: a3]))
+								end else begin
+									GetRoot():Notify(3, kLiteral_488675, ParamStr(kLiteral_47e209, [Array: a3]))
+								end;
+							Rethrow()
+						end onexception |evt.ex| do begin
+							GetRoot():Notify(3, kLiteral_488675, ParamStr(kLiteral_47e209, [Array: a3]));
+							Rethrow()
+						end;
+					(l7 := l6:Next())
+				end)
+		end)
+end
+@@end

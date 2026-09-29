@@ -1,0 +1,11 @@
+@@ 0x7348e9
+func() begin
+	local l1;
+	inherited:?viewSetupChildrenScript();
+	allNetworks := GetAllDialinNetworks();
+	if (not (l1 := target.(networkChooser.path))) then begin
+			l1 := (target.(networkChooser.path) := allNetworks[0].id)
+		end;
+	self:UpdateNetwork(l1)
+end
+@@end

@@ -1,0 +1,24 @@
+@@ 0x7977a5 names
+func(aDate, aMakeNewEntry) begin
+	local Entry, dataCursor, cachedSoup, soup;
+	aDate := ((aDate div 1440) * 1440);
+	if ((cachedSoup := dataSoup) = nil) then begin
+			soup := Clone(masterSoup);
+			soup:MakeSoup('toDoApp);
+			cachedSoup := soup.theSoup
+		end;
+	if (if ((Entry := (dataCursor := cachedSoup:Query({type: 'index, beginKey: aDate, indexPath: 'date, endKey: aDate})):Entry()) = nil) then aMakeNewEntry) then begin
+			(Entry := masterSoup:CreateBlankEntry()).date := aDate;
+			if (aDate = 0) then begin
+					Entry.lastRollover := ((Time() div 1440) * 1440)
+				end;
+			try begin
+					cachedSoup:AddToDefaultStoreXmit(Entry, 'todo)
+				end onexception |evt.ex.fr.store| do begin
+					GetStores()[0]:GetSoup("To Do List"):AddXmit(Entry, 'todo)
+				end;
+			return [Array: Entry]
+		end;
+	(if Entry then MapCursor(dataCursor, nil))
+end
+@@end

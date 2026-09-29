@@ -1,0 +1,15 @@
+@@ 0x45eb69
+func(a1) begin
+	local l1;
+	if Visible(self) then begin
+			self:setup(a1);
+			return nil
+		end;
+	if HasSlot(self, 'image) then begin
+			l1 := true
+		end;
+	self.image := a1;
+	self:Open();
+	(if l1 then RemoveSlot(self, 'image))
+end
+@@end

@@ -1,0 +1,13 @@
+@@ 0x74110d
+func(a1, a2, a3) begin
+	local l1, l2, l3;
+	(if (if (a2 > phoneIndent) then (newtAppBase.superSymbol <> 'ownerNames)) then begin
+			l2 := cursor:clone();
+			(if (if HasSlot((l3 := l2:Move(a1)), 'phones) then (Length(l3.phones) > 0)) then begin
+					self.hilitItem := l3;
+					call kDoCallSlip with (self, l3, l3.phones[0]);
+					(self.hilitItem := nil)
+				end else inherited:HitItem(a1, a2, a3))
+		end else inherited:HitItem(a1, a2, a3))
+end
+@@end

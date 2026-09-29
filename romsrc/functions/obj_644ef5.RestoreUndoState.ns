@@ -1,0 +1,8 @@
+@@ 0x46805d
+func(a1) begin
+	self:SetNewWord(a1.word, a1.wordSource);
+	self:SetNewTemplate(a1.template);
+	self:UseNewTemplate(nil);
+	(altChars := a1.alts)
+end
+@@end

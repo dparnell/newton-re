@@ -1,0 +1,16 @@
+@@ 0x41de1d
+func(a1) begin
+	local l1;
+	if (not self:LabelActionScript(a1)) then begin
+			if IsFrame((l1 := labelCommands[a1])) then begin
+					if (if (not l1.item) then l1.keyMessage) then begin
+							l1 := MatchKeyMessage(self, l1.keyMessage).name
+						end else begin
+							l1 := l1.item
+						end
+				end;
+			self:UpdateText(Clone(l1))
+		end;
+	self:hilite(nil)
+end
+@@end

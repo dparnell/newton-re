@@ -1,0 +1,17 @@
+@@ 0x5aeaa1
+func() begin
+	if (not (l1 := currentItem)) then begin
+			l1 := 1;
+			l2 := userConfiguration.inkWordScaling;
+			local l1;
+			local l2;
+			(for l3 := 0 to (Length(labelCommands) - 1) do begin
+					if (labelCommands[l3].value = l2) then begin
+							break (l1 := l3)
+						end
+				end)
+		end;
+	currentItem := l1;
+	labelCommands[l1].item
+end
+@@end

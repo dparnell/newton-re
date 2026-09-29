@@ -1,0 +1,7 @@
+@@ 0x753a45
+func() begin
+	protoContext:RemoveOpenWindow(self);
+	endpoint:StopIdle(self);
+	(if (not closing) then call ImportParametersDoneScript with (nil))
+end
+@@end

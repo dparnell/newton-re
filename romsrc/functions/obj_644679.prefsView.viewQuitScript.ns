@@ -1,0 +1,6 @@
+@@ 0x4d7e8d
+func() begin
+	inherited:?viewQuitScript();
+	(if (if theApp then theApp.prefsCache) then AddDeferredCall(functions.EntryChangeXmit, [Array: theApp.prefsCache, 'paperroll]))
+end
+@@end

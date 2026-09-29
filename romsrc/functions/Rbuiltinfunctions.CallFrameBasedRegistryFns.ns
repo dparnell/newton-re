@@ -1,0 +1,11 @@
+@@ 0x3c6fcd
+func(a1, a2) begin
+	(foreach l1, l2 deeply in a1 do begin
+			if (l2 = a1.(l1)) then begin
+					try begin
+							Apply(l2, a2)
+						end onexception |evt.ex| do begin end
+				end
+		end)
+end
+@@end

@@ -1,0 +1,12 @@
+@@ 0x734351
+func() begin
+	l1 := (if labelCommands then labelCommands[0] else "");
+	local l1;
+	(foreach l2 in allNetworks do begin
+			if (l2.id = target.(path)) then begin
+					break (l1 := l2.title)
+				end
+		end);
+	l1
+end
+@@end

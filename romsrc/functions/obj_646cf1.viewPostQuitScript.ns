@@ -1,0 +1,5 @@
+@@ 0x4a0091
+func() begin
+	self:EndFlush()
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x51c899
+func(a1) begin
+	local l1;
+	(l1 := self:GetLibraryEntry(a1)).curpage := 1;
+	l1.prevpage := 1;
+	EntryChange(l1)
+end
+@@end

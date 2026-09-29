@@ -1,0 +1,11 @@
+@@ 0x5a4041
+func(a1, a2) begin
+	local l1, l2, l3;
+	l1 := Length(GetPackages());
+	GetRoot().mailSlip:GetDefaultOwnerStore():RestorePackage(a1.package);
+	(if (Length(GetPackages()) > l1) then begin
+			l3 := (l2 := GetPkgRefInfo(a1.package)).title;
+			GetRoot():Notify(3, title, ParamStr("The package ^0 has been loaded in Extras.", [Array: l3]))
+		end)
+end
+@@end

@@ -1,0 +1,19 @@
+@@ 0x4e3db5
+func() begin
+	if (l1 := GetHiliteOffsets()) then begin
+			local l1;
+			(foreach l2 in l1 do begin
+					local l4, l5;
+					l4 := l2[0]:GetStylesOfRange(l2[1], (l2[2] - l2[1]), nil);
+					l5 := 1;
+					(while (l5 < Length(l4)) do begin
+							if (ClassOf(l4[l5]) = 'inkWord) then begin
+									return true
+								end;
+							(l5 := (l5 + 2))
+						end)
+				end)
+		end;
+	return nil
+end
+@@end

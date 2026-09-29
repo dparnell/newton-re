@@ -1,0 +1,61 @@
+@@ 0x526f55
+func(a1, a2) begin
+	(if (a1.candidates <> nil) then begin
+			l2 := HasSlot(a1, 'dialdirect);
+			l3 := true;
+			l4 := 0;
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			(foreach l5, l6 in a1.candidates do begin
+					if (not (l9 := IsSubclass(ObjEntryClass((l8 := ResolveEntryAlias(l6.alias))), 'group))) then begin
+							l10 := self:GetSelectedPhones(a1, l8)
+						end;
+					if ((l9 or l10) or l2) then begin
+							if self:SetDisplayName((l1 := GetDataDefs(a2):MakeNameRef(l8, a2)), l6, l8) then begin
+									l1._alias := nil
+								end;
+							if (not l9) then begin
+									dsSetCandidatePhone(a1, l1, l10)
+								end;
+							if (l3 <> nil) then begin
+									a1.toRef := [Array: l1];
+									l3 := nil
+								end else begin
+									if (not a1.alternatives) then begin
+											a1.alternatives := [Array: ]
+										end;
+									ArrayInsert(a1.alternatives, l1, l4);
+									l4 := (l4 + 1)
+								end;
+							l11 := 0;
+							if l10 then begin
+									l11 := Length(l10)
+								end;
+							if (l11 > 1) then begin
+									local l8;
+									local l9;
+									local l10;
+									local l11;
+									(for l5 := 1 to (l11 - 1) do begin
+											local l14, l15;
+											l14 := l10[l5];
+											(l15 := Clone(l1)).name := Clone(l15.name);
+											l15.phone := l14;
+											if (not a1.alternatives) then begin
+													a1.alternatives := [Array: ]
+												end;
+											ArrayInsert(a1.alternatives, l15, l4);
+											l4 := (l4 + 1)
+										end)
+								end
+						end
+				end)
+		end else (if ((a1.rawtext <> nil) or (a1.dialdirect <> nil)) then begin
+				l1 := GetDataDefs(a2):MakeNameRef({name: {last: a1.rawtext}}, a2);
+				dsSetCandidatePhone(a1, l1, nil);
+				(a1.toRef := [Array: l1])
+			end))
+end
+@@end

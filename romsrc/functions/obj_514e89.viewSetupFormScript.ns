@@ -1,0 +1,41 @@
+@@ 0x514e49
+func() begin
+	inherited:viewSetupFormScript();
+	self.MeetingSoup := GetUnionSoup(@23);
+	self.RepeatSoup := GetUnionSoup(@239);
+	self.notes := GetUnionSoup(@22);
+	self.RepeatNotes := GetUnionSoup(@242);
+	printForm := self;
+	meetingTypeRegistry := calendar.meetingTypeRegistry;
+	l1 := target.startDate;
+	if (numDays > 1) then begin
+			l2 := Date(l1).dayOfWeek;
+			if (not (l3 := GetUserConfig('firstDayOfWeek))) then begin
+					l3 := GetLocale().firstDayOfWeek
+				end;
+			if (not l3) then begin
+					l3 := 0
+				end;
+			l4 := (((l2 + 7) - l3) mod 7);
+			l1 := (l1 - (l4 * 1440))
+		end;
+	l5 := Array(numDays, nil);
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	(for l6 := 0 to (numDays - 1) do begin
+			local l9, l10, l11, l12;
+			l5[l6] := (l1 + (l6 * 1440))
+		end);
+	l9 := (Length((selectedDates := l5)) - 1);
+	l10 := selectedDates[0];
+	l11 := (selectedDates[l9] + 1440);
+	if (l12 := GetAllMeetings(notes, RepeatNotes, l10, l11)) then begin
+			ShowCribNotes := true
+		end;
+	LineHt := (GetFontSize(bodyFont) + 2);
+	(headerHt := ((HeaderTextHt := GetFontSize(headerStyle.font)) + 3))
+end
+@@end

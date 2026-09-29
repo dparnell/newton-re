@@ -1,0 +1,11 @@
+@@ 0x79edf5 names
+func() begin
+	(if HasPath(task, 'repeatInfo) then begin
+			task.repeatInfo.mtgStartDate := newFirstDate;
+			task.repeatInfo.mtgStopDate := newStopDate;
+			RemoveSlot(task.repeatInfo, 'exceptions);
+			RemoveSlot(task.repeatInfo, 'instanceNotesData);
+			RemoveSlot(task.repeatInfo, 'viewStationery)
+		end)
+end
+@@end

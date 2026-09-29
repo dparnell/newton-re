@@ -1,0 +1,9 @@
+@@ 0x531dd5
+func(a1) begin
+	local l1;
+	(if a1 then begin
+			fields.serviceProvider := newProvider;
+			(if (not transport:GetConfig('phoneAutoReceive)) then SetUserConfig('currentDialSpeaker, newProvider))
+		end else self:UpdateText((l1 := transport.transportProvider).name))
+end
+@@end

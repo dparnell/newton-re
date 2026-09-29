@@ -1,0 +1,11 @@
+@@ 0x44f8fd
+func(a1, a2) begin
+	(for l1 := 0 to (finalCurse - 1) do begin
+			if (curses[l1].id = a1) then begin
+					curses[l1].cursor := a2;
+					return true
+				end
+		end);
+	nil
+end
+@@end

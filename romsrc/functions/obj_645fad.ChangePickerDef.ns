@@ -1,0 +1,28 @@
+@@ 0x451529
+func(a1) begin
+	self:SetupPickerDef(a1);
+	listBase:SetupColumns();
+	if folderTabs.viewCObject then begin
+			SetValue(folderTabs.title, 'text, pickerDef.name)
+		end;
+	l1 := ClassOf(a1);
+	l2 := 0;
+	local l1;
+	local l2;
+	(for l3 := 0 to (Length(selected) - 1) do begin
+			local l6, l7;
+			if (not IsSubclass((l6 := selected[l3])._entryClass, l1)) then begin
+					(l7 := (selected[l3] := pickerDef:MakeNameRef(l6, l1)))._Unselected := (l6._Unselected or (Length(pickerDef:Validate(l7, listBase.fRequiredPaths)) > 0));
+					l7._fakeID := l6._fakeID;
+					l6 := l7
+				end;
+			if (not l6._Unselected) then begin
+					listBase.freshest := {nameRef: l6};
+					l2 := (l2 + 1)
+				end
+		end);
+	totalSelected := l2;
+	listBase:SetupAbstracts(cursor:clone());
+	self:Dirty()
+end
+@@end

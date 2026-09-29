@@ -1,0 +1,5 @@
+@@ 0x4826a1
+func() begin
+	(base.cancelButton := nil)
+end
+@@end

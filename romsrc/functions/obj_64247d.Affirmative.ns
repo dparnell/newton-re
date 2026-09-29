@@ -1,0 +1,5 @@
+@@ 0x432e2d
+func() begin
+	context:?pickActionScript(selectedDates[0])
+end
+@@end

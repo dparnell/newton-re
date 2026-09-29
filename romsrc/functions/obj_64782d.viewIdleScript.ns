@@ -1,0 +1,49 @@
+@@ 0x4bb4c9
+func() begin
+	local l1, l2, l3, l4, l5, l6;
+	(if StrFilled((l1 := filter:PathToText())) then begin
+			l3 := filter:PathQuery((l2 := filter:PreQuery(l1)));
+			if (if usePopup then l3) then begin
+					l4 := nil;
+					l5 := l3:entry();
+					(loop begin
+							if (not l5) then begin
+									break
+								end;
+							if (l6 := filter:QueryItem(l5, l2)) then begin
+									if (not l4) then begin
+											l4 := [Array: ]
+										end;
+									self:?ChangePopup(l6, l5);
+									AddArraySlot(l4, l6)
+								end;
+							(l5 := l3:Next())
+						end);
+					if (if l4 then (access = 'queryOnly)) then begin
+							filter:ResolveItem(l4[0])
+						end;
+					if (if l4 then filter.picker) then begin
+							AddArraySlot(l4, 'pickseparator);
+							AddArraySlot(l4, "Other")
+						end;
+					self:SetLabelCommands(l4)
+				end else begin
+					if l3 then begin
+							if (l5 := l3:entry()) then begin
+									dataCursor:Goto(l5);
+									self:DoRetarget()
+								end
+						end else begin
+							if (access = 'queryOnly) then begin
+									self:UpdateText("")
+								end
+						end
+				end;
+			nil
+		end else (if (access <> 'readOnly) then begin
+				labelCommands := nil;
+				self:SetupCommands();
+				nil
+			end))
+end
+@@end

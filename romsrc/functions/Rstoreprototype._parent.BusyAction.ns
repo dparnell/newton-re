@@ -1,0 +1,14 @@
+@@ 0x6359dd
+func(a1, a2, a3) begin
+	local l1;
+	try begin
+			self:MarkBusy(a1, a2);
+			l1 := call a3 with ();
+			self:MarkNotBusy(a1)
+		end onexception |evt.ex| do begin
+			self:MarkNotBusy(a1);
+			Rethrow()
+		end;
+	l1
+end
+@@end

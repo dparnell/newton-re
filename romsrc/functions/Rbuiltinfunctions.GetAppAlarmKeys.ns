@@ -1,0 +1,10 @@
+@@ 0x422099
+func(alarmKeySuffix) begin
+	Sort((l2 := MapCursor((l1 := GetStores()[0]:GetSoup("SystemAlarmSoup"):Query({indexPath: 'key, IndexValidTest: func(a1) begin
+		EndsWith(a1, alarmKeySuffix)
+	end})), nil)), '|<|, 'TimeInSeconds);
+	local l1;
+	local l2;
+	(foreach l3 in l2 collect l3.key)
+end
+@@end

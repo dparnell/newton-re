@@ -1,0 +1,7 @@
+@@ 0x4bc509
+func(a1, a2) begin
+	currAreaCode := self:GetRichString();
+	changed := true;
+	baseLine:viewChangedScript(a1, a2)
+end
+@@end

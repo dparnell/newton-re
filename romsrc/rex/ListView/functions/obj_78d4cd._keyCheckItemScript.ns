@@ -1,0 +1,10 @@
+@@ 0x78cb2d names
+func(keyView) begin
+	local theIndex, theTopic;
+	(if (BAnd(listViewFlags, 2) <> 0) then (if curTopic then begin
+				theIndex := curTopic;
+				theTopic := topics[curTopic];
+				self:HandleCheck(theIndex, theTopic)
+			end))
+end
+@@end

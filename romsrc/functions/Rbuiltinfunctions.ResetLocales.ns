@@ -1,0 +1,11 @@
+@@ 0x4a6339
+func() begin
+	if (if HasPath(international, 'locales) then (not IsReadOnly(international.locales))) then begin
+			RemoveSlot(international, 'locales)
+		end;
+	if (if HasPath(international, 'localeTable) then (not IsReadOnly(international.localeTable))) then begin
+			RemoveSlot(international, 'localeTable)
+		end;
+	return true
+end
+@@end

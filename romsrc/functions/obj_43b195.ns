@@ -1,0 +1,72 @@
+@@ 0x43b195
+@@const kLiteral_3c5eed
+'{transferMode: 2, penPattern: 0, fillPattern: 5}
+@@main
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10;
+	InkOff(a1);
+	playsound(@51);
+	BusyBoxControl(2);
+	l1 := self:GlobalBox();
+	if ((l2 := ((GetPoint(5, a1) - l1.top) div lineHeight)) >= numLines) then begin
+			return nil
+		end;
+	(l3 := self:LocalBox()).bottom := lineHeight;
+	l5 := ((l4 := GetPoint(4, a1)) - l1.left);
+	(l7 := ShapeBounds((l6 := (if (if items then items[l2].category) then [Array: kLiteral_3c5eed, MakeShape(Clone(l3))] else self:GetHiliteShape(l5, l3))))).left := (l7.left + l1.left);
+	l7.right := (l7.right + l1.left);
+	(loop begin
+			l4 := GetPoint(4, a1);
+			l2 := ((l8 := (GetPoint(5, a1) - l1.top)) div lineHeight);
+			if (l8 < 0) then begin
+					self:hiliter(l6, hilitedIndex, 'off);
+					hilitedIndex := (l2 := nil);
+					self:viewScrollUpScript()
+				end else begin
+					if ((l2 >= maxLines) or (l2 >= numLines)) then begin
+							self:hiliter(l6, hilitedIndex, 'off);
+							hilitedIndex := nil;
+							if (l2 >= maxLines) then begin
+									self:viewScrollDownScript()
+								end;
+							l2 := nil
+						end else begin
+							if ((l4 < l7.left) or (l4 > l7.right)) then begin
+									if (if (l4 > l1.left) then (l4 < l1.right)) then begin
+											self:hiliter(l6, hilitedIndex, 'off);
+											l5 := (l4 - l1.left);
+											(l7 := ShapeBounds((l6 := (if (if items then items[l2].category) then [Array: kLiteral_3c5eed, MakeShape(Clone(l3))] else self:GetHiliteShape(l5, l3))))).left := (l7.left + l1.left);
+											l7.right := (l7.right + l1.left);
+											self:hiliter(l6, (hilitedIndex := l2), 'on)
+										end else begin
+											l2 := nil
+										end
+								end
+						end
+				end;
+			if (l2 <> hilitedIndex) then begin
+					self:hiliter(l6, hilitedIndex, 'off);
+					if l2 then begin
+							l5 := (l4 - l1.left);
+							(l7 := ShapeBounds((l6 := (if (if items then items[l2].category) then [Array: kLiteral_3c5eed, MakeShape(Clone(l3))] else self:GetHiliteShape(l5, l3))))).left := (l7.left + l1.left);
+							l7.right := (l7.right + l1.left);
+							self:hiliter(l6, (hilitedIndex := l2), 'on)
+						end;
+					hilitedIndex := l2
+				end;
+			(if StrokeDone(a1) then break)
+		end);
+	(if l2 then begin
+			l9 := ((GetPoint(5, a1) - l1.top) mod lineHeight);
+			l10 := (self:GlobalBox().left - self:LocalBox().left);
+			if (l4 < (selectIndent + l10)) then begin
+					hilitedIndex := nil
+				end;
+			if (autoDeselect or (l5 < selectIndent)) then begin
+					self:hiliter(l6, hilitedIndex, 'off);
+					hilitedIndex := nil
+				end;
+			[Array: l2, l5, l9]
+		end)
+end
+@@end

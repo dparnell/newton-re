@@ -1,0 +1,17 @@
+@@ 0x4d9921
+func() begin
+	local l1, l2, l3;
+	if (not kids) then begin
+			kids := Clone(headerKids);
+			(l1 := self:LocalBox()).top := (l1.top + headerHeight);
+			l1.bottom := (l1.bottom - bottomMargin);
+			(l2 := InsetRect(fields.printerPageBounds, 60, 0)).top := (l2.top + bottomMargin);
+			l2.bottom := (l2.bottom - bottomMargin);
+			if (not (l3 := Clone(reflowParams)).pageBounds) then begin
+					l3.pageBounds := l2
+				end;
+			ArrayMunger(kids, Length(headerKids), 0, ReFlow(data, l3, fields.targetBox, l1), 0, nil)
+		end;
+	(if kids then (self.stepChildren := ArrayMunger([Array: ], 0, 0, kids, reflowStart, nil)))
+end
+@@end

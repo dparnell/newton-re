@@ -1,0 +1,38 @@
+@@ 0x45fe69
+func(a1, a2) begin
+	local l1;
+	a1 := max(0, min(a1, fMaxX));
+	a2 := max(0, min(a2, fMaxY));
+	l1 := self:LocalBox();
+	if (currentSize.right < l1.right) then begin
+			if (BAnd(viewJustify, 2) <> 0) then begin
+					a1 := (a1 - ((l1.right - currentSize.right) div 2))
+				end else begin
+					if (BAnd(viewJustify, 1) <> 0) then begin
+							a1 := ((a1 - l1.right) - currentSize.right)
+						end
+				end
+		end;
+	if (currentSize.bottom < l1.bottom) then begin
+			if (BAnd(viewJustify, 4) <> 0) then begin
+					a2 := (a2 - ((l1.bottom - currentSize.bottom) div 2))
+				end else begin
+					if (BAnd(viewJustify, 8) <> 0) then begin
+							a2 := ((a2 - l1.bottom) - currentSize.bottom)
+						end
+				end
+		end;
+	(if ((a1 <> fXOffset) or (a2 <> fYOffset)) then begin
+			if (not quiet) then begin
+					AddUndoAction('DoUndo, [Array: fZoomedTo, fXOffset, fYOffset])
+				end;
+			fXOffset := a1;
+			fYOffset := a2;
+			self:SetOrigin(fXOffset, fYOffset);
+			if (not quiet) then begin
+					self:?ScalingInfoChanged('Scroll)
+				end;
+			true
+		end)
+end
+@@end

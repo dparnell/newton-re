@@ -1,0 +1,8 @@
+@@ 0x7b0649
+func(a1) begin
+	PlaySound(@51);
+	(while (not StrokeDone(a1)) do nil);
+	self:LeaveWelcomeScreen();
+	true
+end
+@@end

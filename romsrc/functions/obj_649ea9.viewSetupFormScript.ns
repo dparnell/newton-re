@@ -1,0 +1,8 @@
+@@ 0x4c58c5
+func() begin
+	local l1;
+	mastersoupSlot := currentSoupSymbol;
+	masterSoup := allSoups.(mastersoupSlot);
+	(if (if (l1 := GetUserConfig('blessedapp)) then (GetRoot().(l1) = newtAppBase)) then newtAppBase:FileUsedItems())
+end
+@@end

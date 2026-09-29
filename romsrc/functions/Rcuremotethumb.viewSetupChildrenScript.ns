@@ -1,0 +1,15 @@
+@@ 0x5210e5
+func() begin
+	(l3 := Clone(protoStubby))._proto := contentArea;
+	l4 := {_proto: l3, preallocatedContext: nil, isbn: isbn, viewChildren: form};
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	(for l2 := 0 to (Length(scripts) - 1) by 2 do begin
+			l1 := scripts[l2];
+			l4.(l1) := scripts[(l2 + 1)]
+		end);
+	(self.viewChildren := [Array: {_proto: protoRemotee, viewChildren: [Array: {_proto: protoRemotee, viewChildren: [Array: l4]}]}])
+end
+@@end

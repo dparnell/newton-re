@@ -1,0 +1,19 @@
+@@ 0x4b232d
+func(a1, a2) begin
+	local l1;
+	if (a1.state = 'Sent) then begin
+			if ((l1 := self:GetTransportFolder(a1)) <> a1.labels) then begin
+					a1._newFolder := l1
+				end
+		end;
+	(if ((a2 = nil) or (if (a2 = 'log) then a1.covert)) then begin
+			if IsSoupEntry(a1) then begin
+					EntryRemoveFromSoup(a1)
+				end;
+			(if layout then (if (currentLayout = 'itemLayout) then newtAppBase:ShowLayout('overview) else layout:NewTarget()))
+		end else (if (a2 = 'log) then begin
+				self:MakeLogEntry(a1);
+				(if layout then layout:Retarget(true))
+			end else (if (a1.state = 'pending) then self:ShowItem((a1 := self:AddItem('outbox, a1)), 'itemLayout) else self:AddItem('inbox, a1))))
+end
+@@end

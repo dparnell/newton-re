@@ -1,0 +1,11 @@
+@@ 0x44786d
+func(a1) begin
+	local l1, l2;
+	dragAcceleration := a1;
+	l1 := self:LocalBox();
+	horMult := (((currentSize.right + 10) / l1.right) - 1);
+	vertMult := (((currentSize.bottom + 10) / l1.bottom) - 1);
+	l2 := (if IsInstance(a1, 'int) then (if (a1 > 0) then (a1 / 100) else 0) else (if IsInstance(a1, 'Real) then a1 else 0));
+	(vertMult := ((((horMult := (((horMult - 1) * l2) + 1)) - 1) * l2) + 1))
+end
+@@end

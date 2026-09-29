@@ -1,0 +1,7 @@
+@@ 0x4c9909
+func() begin
+	(viewBounds := DeepClone(viewBounds)).top := (((envelopeHeight + bottomIndent) - 58) - 2);
+	viewBounds.bottom := (viewBounds.top + 13);
+	inherited:viewSetupFormScript()
+end
+@@end

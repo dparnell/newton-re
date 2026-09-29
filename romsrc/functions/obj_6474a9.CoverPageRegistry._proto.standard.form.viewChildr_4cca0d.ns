@@ -1,0 +1,10 @@
+@@ 0x4cca0d
+func() begin
+	local l1, l2, l3;
+	l3 := ((l2 := Clone((l1 := icon.bounds))).right div 4);
+	l2.right := (l2.right - l3);
+	l2.left := (l2.left + l3);
+	l2.bottom := (l2.bottom div 2);
+	ScaleShape((icon := MakeShape(icon)), l1, l2)
+end
+@@end

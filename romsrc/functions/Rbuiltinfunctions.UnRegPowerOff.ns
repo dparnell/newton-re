@@ -1,0 +1,16 @@
+@@ 0x562eb9
+func(a1) begin
+	local l1;
+	if PowerOffFenceSitters then begin
+			if (l1 := LSearch(PowerOffFenceSitters, a1, 0, '|=|, nil)) then begin
+					if (l1 = 0) then begin
+							PowerOffResume(a1)
+						end else begin
+							RemoveSlot(PowerOffFenceSitters, l1)
+						end
+				end
+		end;
+	RemoveSlot(PowerOffRegistry, a1);
+	nil
+end
+@@end

@@ -1,0 +1,39 @@
+@@ 0x4ee491
+func(a1, a2) begin
+	l1 := {top: 0, left: 0, bottom: 0, right: 0};
+	if a2.notes then begin
+			local l1;
+			(foreach l2 in a2.notes do begin
+					local l4, l5, l6, l7, l8, l9, l10;
+					l1 := UnionRect(l1, l2.viewBounds)
+				end)
+		end;
+	l4 := l1.bottom;
+	if (not a2.notes) then begin
+			a2.notes := [Array: ]
+		end;
+	(l5 := Clone('{viewStationery: para, viewFont: 1058817, text: nil, viewJustify: 8388662, viewFormat: 593, viewBounds: nil, copyprotection: 2, viewFlags: 129, viewLineSpacing: 14})).text := a1;
+	l5.viewBounds := RelBounds(0, (l4 + (if (a2.state = 'ready) then 16 else 8)), 1, (FontHeight(1058817) + 2));
+	AddArraySlot(a2.notes, l5);
+	(if (if (l6 := GetRoot().callapp).viewCObject then (l6.currentLayout = 'default)) then begin
+			l7 := l6.targetView;
+			if (if targetView.currentStatView then targetView.currentStatView.notesfield) then begin
+					l7 := targetView.currentStatView.notesfield;
+					l8 := true
+				end;
+			l7:StartFlushWithChild(l5);
+			l9 := ((125 + l4) - layout.viewOriginY);
+			l10 := (self:LocalBox().bottom div 3);
+			if (if (a2.state <> 'Sent) then (l9 > (2 * l10))) then begin
+					layout:PixelScrollBy(0, (l9 - l10))
+				end;
+			if l7.viewCObject then begin
+					l7:RedoChildren();
+					if l8 then begin
+							l7:PositionCaret(10, (l5.viewBounds.bottom + 28), nil)
+						end
+				end;
+			RefreshViews()
+		end)
+end
+@@end

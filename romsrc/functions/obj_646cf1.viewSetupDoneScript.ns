@@ -1,0 +1,16 @@
+@@ 0x4a0031
+func() begin
+	local l1, l2, l3, l4, l5, l6;
+	l5 := GetAppParams().appAreaHeight;
+	l6 := self:LocalBox();
+	l4 := (Length((l2 := self:ChildViewFrames())) - (if kbdType then 3 else 1));
+	if (if kbdType then ((l6.bottom - l6.top) > l5)) then begin
+			RemoveStepView(self, l2[(l4 + 1)]);
+			extraHeight := 20
+		end;
+	(l1 := Clone(self.viewBounds)).bottom := ((l2[l4]:GlobalBox().bottom - self:GlobalBox().top) + extraHeight);
+	SetValue(self, 'viewBounds, l1);
+	inherited:?viewSetupDoneScript();
+	(if (l3 := NextKeyView(l2[0], 0, 0)) then SetKeyView(l3, 0))
+end
+@@end

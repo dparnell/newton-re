@@ -1,0 +1,18 @@
+@@ 0x4280e9
+@@const kBinaryFromHex
+func(hex, cls) begin
+	local b := MakeBinary(StrLen(hex) div 2, cls);
+	for i := 0 to Length(b) - 1 do begin
+		local h := Ord(hex[2 * i]);
+		local l := Ord(hex[2 * i + 1]);
+		StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+	end;
+	b
+end
+@@const kLiteral_423fad
+{bits: call kBinaryFromHex with ("000000000004004e004e01950059019ee3800000e3800000e3800000e3800000e3800000e3800000e3800000e3800000e3800000e3800000e3800000", 'bits), bounds: '{left: 0, top: 0, right: 9, bottom: 11}}
+@@main
+func(a1, a2, a3) begin
+	(if (a2 = 2) then (if (self.icon <> kLiteral_423fad) then SetValue(self, 'icon, kLiteral_423fad)) else (if (self.icon <> self:GetIcon()) then SetValue(self, 'icon, self:GetIcon())))
+end
+@@end

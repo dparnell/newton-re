@@ -1,0 +1,5 @@
+@@ 0x4b8e6d
+func(a1, a2) begin
+	(if (if a1.(path) then FindStringInFrame(a1.(path), a2, nil)) then {item: a1.(path), id: MakeEntryAlias(a1)})
+end
+@@end

@@ -1,0 +1,46 @@
+@@ 0x452e59
+func() begin
+	l1 := self:LocalBox();
+	(if (fColumns := pickerDef.columns) then begin
+			if IsReadOnly(fColumns) then begin
+					fColumns := Clone(fColumns)
+				end;
+			fEditPaths := Array((l3 := Length(fColumns)), nil);
+			fRequiredPaths := Array(l3, nil);
+			l4 := 0;
+			l6 := selectIndent;
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			local l5;
+			local l6;
+			(foreach l5, l2 in fColumns do begin
+					local l8;
+					if IsReadOnly(l2) then begin
+							fColumns[l5] := (l2 := Clone(l2))
+						end;
+					fEditPaths[l5] := l2.fieldPath;
+					if (not l2.optional) then begin
+							fRequiredPaths[l4] := l2.fieldPath;
+							l4 := (l4 + 1)
+						end;
+					l8 := l6;
+					l6 := (l6 + l2.tapWidth);
+					if (l2.tapWidth <= 0) then begin
+							l6 := (l1.right + l2.tapWidth)
+						end;
+					l2.left := l8;
+					l2.right := l6;
+					if l2.doRowHilite then begin
+							l2.hiLeft := 0;
+							l2.hiRight := l1.right
+						end else begin
+							l2.hiLeft := l2.left;
+							l2.hiRight := l2.right
+						end
+				end);
+			(if (l4 < l3) then ArrayRemoveCount(fRequiredPaths, l4, (l3 - l4)))
+		end)
+end
+@@end

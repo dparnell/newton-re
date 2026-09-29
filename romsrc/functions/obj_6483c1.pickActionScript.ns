@@ -1,0 +1,7 @@
+@@ 0x45a7d9
+func(a1) begin
+	self:viewSetupChildrenScript();
+	self:hilite(nil);
+	self:Dirty()
+end
+@@end

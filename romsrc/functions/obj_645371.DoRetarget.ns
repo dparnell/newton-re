@@ -1,0 +1,5 @@
+@@ 0x4af295
+func() begin
+	layout:Retarget(true)
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x7230b5
+func(a1, a2, a3, a4) begin
+	AddArraySlot(stepChildren, {_proto: a1, target: a2, viewBounds: RelBounds(a3, a4, 225, 160), viewJustify: 0});
+	{bottom: 160, right: 225}
+end
+@@end

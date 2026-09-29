@@ -1,0 +1,13 @@
+@@ 0x437195
+func(a1) begin
+	local l1, l2, l3;
+	if (not (l1 := GetLocationSoup(@658))) then begin
+			return nil
+		end;
+	if IsInstance(a1, 'string) then begin
+			a1 := Intern(a1)
+		end;
+	l3 := l1:Query((l2 := {type: 'index, indexPath: 'symbol, beginKey: a1, endKey: a1}));
+	l3:map(nil)
+end
+@@end

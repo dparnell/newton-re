@@ -1,0 +1,28 @@
+@@ 0x59693d
+func() begin
+	if target.Remote then begin
+			return self:addText("Remote Message")
+		end;
+	if (l1 := (if target.package then ParamStr("Enclosed: ^0 (^1 bytes)", [Array: target.filename, Length(target.package)]) else (if (if (if StrFilled(target.filename) then HasSlot(target, 'package)) then (target.state = 'InLog)) then ParamStr("Was Enclosed: ^0", [Array: target.filename]) else (if (not HasSlot(target, 'body)) then "Text only message")))) then begin
+			self:addText(l1)
+		end;
+	(if transport:IsInItem(target) then begin
+			self:addText(Stringer([Array: "Sent: ", (if StrFilled(target.dateStr) then target.dateStr else "--")]));
+			self:addText((l2 := ParamStr("From: ^0", [Array: target.fromRef.email])));
+			(if (((Length(target.toRef) > 0) or (Length(target.cc) > 0)) or (Length(target.bcc) > 0)) then (addedHeight := 93) else (addedHeight := 18))
+		end else (if target.toRef then begin
+				l3 := GetDataDefs('|nameRef.email|):GetRoutingInfo(target.toRef);
+				l4 := "";
+				local l1;
+				local l2;
+				local l3;
+				local l4;
+				(foreach l5 in l3 do begin
+						if (if HasSlot(l5, 'email) then StrFilled(l5.email)) then begin
+								l4 := (if StrFilled(l4) then ParamStr("^0, ^1", [Array: l4, l5.email]) else l5.email)
+							end
+					end);
+				(if StrFilled(l4) then self:addText(ParamStr("To: ^0", [Array: l4])))
+			end))
+end
+@@end

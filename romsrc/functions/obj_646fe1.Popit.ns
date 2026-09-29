@@ -1,0 +1,7 @@
+@@ 0x45b229
+func(a1) begin
+	local l1;
+	(l1 := self:GlobalBox()).right := (l1.left + a1);
+	@517:New(Time, {increment: increment, minValue: minValue}, l1, self)
+end
+@@end

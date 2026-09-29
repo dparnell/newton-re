@@ -1,0 +1,9 @@
+@@ 0x736751
+func(a1, a2) begin
+	local l1, l2;
+	if ((not (l2 := GetViewDefs(a2).(a1))) or (not (l1 := l2.infoFrame))) then begin
+			l1 := GetRoot().cardfile.layoutDataMap.(a1)
+		end;
+	l1
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x47ff05
+func(a1, a2) begin
+	a1.title := self:GetItemTitle(a2);
+	(if HasSlot(a2, 'sentTimeStamp) then (a1.sentTimeStamp := a2.sentTimeStamp))
+end
+@@end

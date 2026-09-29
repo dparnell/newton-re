@@ -1,0 +1,8 @@
+@@ 0x5a9bc9
+func(a1) begin
+	expandFlag := a1;
+	SetValue(displayText, 'text, "Expand to:");
+	self:SetWord("");
+	(if self:GetExpandedWord(a1) then self:RemoveExpandedWord(a1))
+end
+@@end

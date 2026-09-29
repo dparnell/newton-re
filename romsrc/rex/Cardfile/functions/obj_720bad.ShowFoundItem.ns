@@ -1,0 +1,30 @@
+@@ 0x738c61
+func(a1, a2) begin
+	local l1, l2, l3;
+	if (if a2 then a2.findWords) then begin
+			if FindStringInFrame([Array: (l2 := Stringer([Array: GetRoot():PrimaryName(a1), " ", GetRoot():secondaryName(a1)]))], a2.findWords, nil) then begin
+					if (currentLayout = 'allinfo) then begin
+							l1 := 'allinfo
+						end else begin
+							l1 := 'default
+						end
+				end else begin
+					if FindStringInFrame([Array: a1.notes], a2.findWords, nil) then begin
+							l1 := currentLayout;
+							l3 := true
+						end else begin
+							l1 := 'allinfo
+						end
+				end
+		end;
+	if (if l1 then (l1 <> currentLayout)) then begin
+			self:ShowLayout(l1)
+		end;
+	if (if (if (not l3) then editSlipLayout) then editSlipLayout.viewCObject) then begin
+			self:RememberedClose(editSlipLayout);
+			editSlipLayout := nil
+		end;
+	inherited:ShowFoundItem(a1, a2);
+	(if l3 then self:ShowEditSlip('editNotes, true, nil, nil, nil))
+end
+@@end

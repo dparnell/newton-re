@@ -1,0 +1,11 @@
+@@ 0x4d2925
+func(a1) begin
+	local l1;
+	(if StrFilled(a1) then begin
+			StrReplace((l1 := SubstituteChars((l1 := Clone(a1)), "ADGJMPTWBEHKNRUXCFILOSVY", "23456789")), "ext", ",,,,", nil);
+			StrReplace(l1, "ex", ",,,,", nil);
+			StrReplace(l1, "x", ",,,,", nil);
+			StringFilter(l1, "abcdefghijklmnoqrstuvyz", 'rejectAll)
+		end else "")
+end
+@@end

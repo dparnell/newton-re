@@ -1,0 +1,28 @@
+@@ 0x495e55
+func(a1, a2, a3) begin
+	l1 := progressSlip;
+	local l1;
+	(foreach l2 in a3 do begin
+			if IsFrame(l2) then begin
+					l4 := l2.name;
+					l5 := l2.soups
+				end else begin
+					l4 := l2;
+					l5 := [Array: l2]
+				end;
+			if self:|soupWillFit?|(a1, a2, l2, true) then begin
+					local l4;
+					local l5;
+					(foreach l6 in l5 do begin
+							if (not LSearch('[Array: "Packages"], l6, 0, '|str=|, nil)) then begin
+									l1:SetStatus('vBarber, {titleText: ParamStr("Backing up \u201C\u^0\u201D\u\u2026\u", [Array: l4]), barber: true});
+									self:backup1Soup(a1, a2, l6, l4)
+								end
+						end)
+				end else begin
+					GetRoot():Notify(3, "Backup", ParamStr("There was not enough space to backup \u201C\u^0\u201D\u. Some items may not have been backed up.", [Array: l4]));
+					Throw('|evt.ex.nofit|, -123)
+				end
+		end)
+end
+@@end

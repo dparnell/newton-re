@@ -1,0 +1,12 @@
+@@ 0x5b8d75
+func(a1, a2) begin
+	local l1, l2, l3;
+	l1 := Clone(a1);
+	l2 := -13;
+	l3 := self:EncodeRecognitionWord(l1);
+	if (StrLen(l1) > 0) then begin
+			l2 := self:AddOneEncodedWord(l1, l3, a2)
+		end;
+	return l2
+end
+@@end

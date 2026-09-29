@@ -1,0 +1,9 @@
+@@ 0x73f3c1
+func() begin
+	appBase:AddUndoAction('UndoCustomChange, [Array: customInfo]);
+	appBase:SetCustomInfo(target);
+	(if lastChanged then (if (if (if target then target.(lastChanged)) then StrFilled(target.(lastChanged).label)) then AddDeferredSend(appBase, func(a1, a2) begin
+				(if self.viewCObject then self:ShowEditSlip(a1, a2, nil, true, nil))
+			end, [Array: 'custom, [pathExpr: lastChanged]])))
+end
+@@end

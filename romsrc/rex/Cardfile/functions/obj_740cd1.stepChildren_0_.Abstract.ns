@@ -1,0 +1,34 @@
+@@ 0x740ef1
+func(a1, a2) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9;
+	l5 := "";
+	l6 := a2.left;
+	l7 := a2.right;
+	l8 := a2.top;
+	l9 := (a2.bottom - 2);
+	if (if (not hilitedIndex) then (a1 = hiliteEntry)) then begin
+			hilitedIndex := hiliteCount
+		end;
+	if a1.class then begin
+			l1 := GetDataDefs(a1.class)
+		end else begin
+			if (ClassOf(a1.sorton) = 'name) then begin
+					l1 := GetDataDefs('person)
+				end else begin
+					l1 := GetDataDefs('company)
+				end
+		end;
+	(if l1 then begin
+			hiliteCount := (hiliteCount + 1);
+			if (l3 := StrPos((l2 := l1:StringExtract(a1, 2)), "\n", 0)) then begin
+					l4 := Substr(l2, 0, l3);
+					l5 := Substr(l2, l3, Length(l2));
+					phoneIndent := (l7 - 95)
+				end else begin
+					l4 := l2;
+					phoneIndent := l7
+				end;
+			[Array: OffsetShape(MakeShape(l1.overviewIcon), l6, l8), MakeText(l4, (l6 + 20), l8, phoneIndent, l9), MakeText(l5, phoneIndent, l8, l7, l9)]
+		end else inherited:Abstract(a1, a2))
+end
+@@end

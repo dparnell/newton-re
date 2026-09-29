@@ -1,0 +1,13 @@
+@@ 0x563f3d
+func(a1, a2) begin
+	local l1;
+	(if (a1 = 'backupSlip) then OverrideCardSlipHack(a2) else begin
+			if (if (l1 := GetRoot().(a1)) then l1.overrideOverrideBuiltinApp) then begin
+					l1:overrideOverrideBuiltinApp(a2)
+				end else begin
+					GetRoot().(a1) := a2
+				end;
+			l1
+		end)
+end
+@@end

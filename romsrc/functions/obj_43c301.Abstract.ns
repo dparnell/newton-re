@@ -1,0 +1,11 @@
+@@ 0x43c245
+func(a1, a2) begin
+	if hiliteHack then begin
+			if (a1 = result) then begin
+					hilitedIndex := hiliteHack
+				end;
+			hiliteHack := (hiliteHack + 1)
+		end;
+	MakeText(Stringer([Array: a1.name, (if countryAndName then Stringer([Array: $ , " ", a1.region]))]), 2, a2.top, a2.right, (a2.top + 10))
+end
+@@end

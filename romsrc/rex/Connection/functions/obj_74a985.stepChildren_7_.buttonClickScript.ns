@@ -1,0 +1,8 @@
+@@ 0x74bca1
+func() begin
+	closing := true;
+	self:SaveOptions();
+	inherited:?buttonClickScript();
+	protoContext:OpenWhichConnection(endpoint)
+end
+@@end

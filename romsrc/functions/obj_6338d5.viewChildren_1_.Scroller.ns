@@ -1,0 +1,6 @@
+@@ 0x5b4f3d
+func(a1) begin
+	cursor:move(a1);
+	self:RedoChildren()
+end
+@@end

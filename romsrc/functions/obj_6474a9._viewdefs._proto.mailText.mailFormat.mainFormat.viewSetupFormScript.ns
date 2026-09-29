@@ -1,0 +1,15 @@
+@@ 0x59bcad
+func() begin
+	local l1, l2, l3, l4, l5, l6, l7, l8;
+	inherited:viewSetupFormScript();
+	l2 := FontHeight((l1 := SetFontSize((l1 := GetUserConfig('mailFont)), 10)));
+	l3 := 4;
+	l5 := self:GlobalBox();
+	viewBounds := SetBounds(max((60 - l5.left), 0), max((60 - l5.top), 0), (viewBounds.right - 30), (viewBounds.bottom - 30));
+	l6 := ((l5.right - l5.left) - 6);
+	l7 := GetRoot().mailSlip:TextHeader(target);
+	l8 := ((l3 := (((4 + Length(target.toRef)) + Length(target.cc)) + Length(target.bcc))) * l2);
+	self.data := [Array: {_proto: @193, viewBounds: SetBounds(0, 0, (l6 - 4), l8), viewStationery: 'para, text: l7, viewFont: l1}, {_proto: @193, viewBounds: RelBounds(0, (l8 + l2), (l6 - 4), l2), viewStationery: 'para, text: target.text, viewFont: l1}];
+	(self.reflowStart := 0)
+end
+@@end

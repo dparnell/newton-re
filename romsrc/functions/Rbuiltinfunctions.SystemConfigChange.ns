@@ -1,0 +1,67 @@
+@@ 0x5658d1
+@@const kFunction_557d99
+func() begin
+	SetLCDContrast(GetUserConfig('lcdContrast))
+end
+@@const kFunction_557db9
+func() begin
+	local l1;
+	(if ((l1 := GetUserConfig('alarmVolume)) <> DecibelsToVolume(GetUserConfig('alarmVolumeDb))) then SetUserConfig('alarmVolumeDb, VolumeToDecibels(l1)))
+end
+@@const kFunction_557dd9
+func() begin
+	local l1;
+	(if ((l1 := DecibelsToVolume(GetUserConfig('alarmVolumeDb))) <> GetUserConfig('alarmVolume)) then SetUserConfig('alarmVolume, l1))
+end
+@@const kFunction_557df9
+func() begin
+	local l1, l2;
+	l1 := GetVolume();
+	if ((l2 := GetUserConfig('soundVolume)) <> l1) then begin
+			SetVolume(l2)
+		end;
+	(if (l2 <> DecibelsToVolume(GetUserConfig('soundVolumeDb))) then SetUserConfig('soundVolumeDb, VolumeToDecibels(l2)))
+end
+@@const kFunction_557e19
+func() begin
+	local l1, l2, l3;
+	l1 := GetSystemVolume();
+	if ((l2 := GetUserConfig('soundVolumeDb)) <> l1) then begin
+			SetSystemVolume(l2)
+		end;
+	(if ((l3 := DecibelsToVolume(l2)) <> GetUserConfig('soundVolume)) then SetUserConfig('soundVolume, l3))
+end
+@@const kFunction_557e39
+func() begin
+	local l1;
+	if IsInteger((l1 := GetUserConfig('inputGain))) then begin
+			if (l1 < 0) then begin
+					l1 := 0
+				end else begin
+					if (l1 > 255) then begin
+							l1 := 255
+						end
+				end
+		end else begin
+			l1 := 128
+		end;
+	(if ((l1 := SetInputGain(l1)) <> userConfiguration.inputGain) then begin
+			userConfiguration.inputGain := l1;
+			FlushUserConfig()
+		end)
+end
+@@const kFunction_557e59
+func() begin
+	local l1;
+	(if ((l1 := SetOutputDevice((l1 := GetUserConfig('outputDevice)))) <> userConfiguration.outputDevice) then begin
+			userConfiguration.outputDevice := l1;
+			FlushUserConfig()
+		end)
+end
+@@const kLiteral_557e79
+{lcdContrast: kFunction_557d99, alarmVolume: kFunction_557db9, alarmVolumeDb: kFunction_557dd9, soundVolume: kFunction_557df9, soundVolumeDb: kFunction_557e19, inputGain: kFunction_557e39, outputDevice: kFunction_557e59}
+@@main
+func(a1) begin
+	PerformIfDefined(kLiteral_557e79, a1, nil)
+end
+@@end

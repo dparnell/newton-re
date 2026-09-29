@@ -1,0 +1,5 @@
+@@ 0x431405
+func(a1) begin
+	(if a1 then SetValue(self, 'icon, self.upperCaseIcon) else SetValue(self, 'icon, self.lowerCaseIcon))
+end
+@@end

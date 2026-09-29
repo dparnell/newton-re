@@ -1,0 +1,5 @@
+@@ 0x477ee5
+func() begin
+	(if when then self:PrepareForSubmission(when) else inherited:buttonClickScript())
+end
+@@end

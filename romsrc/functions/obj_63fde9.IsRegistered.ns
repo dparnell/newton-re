@@ -1,0 +1,5 @@
+@@ 0x5b87f5
+func() begin
+	(if (if (dictID exists) then dictID) then true)
+end
+@@end

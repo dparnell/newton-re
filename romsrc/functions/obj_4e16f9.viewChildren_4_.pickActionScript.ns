@@ -1,0 +1,14 @@
+@@ 0x4df785
+func(a1) begin
+	local l1;
+	l1 := country.regions;
+	target.country := a1.symbol;
+	if (not country.regions) then begin
+			RemoveSlot(target, 'region)
+		end;
+	country := GetCountryEntry(target.country)[0];
+	self:StartFlush();
+	inherited:pickActionScript(a1.name);
+	(if (l1 <> country.regions) then currentForm:RedoChildren())
+end
+@@end

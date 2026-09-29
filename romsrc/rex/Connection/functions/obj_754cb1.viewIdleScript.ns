@@ -1,0 +1,81 @@
+@@ 0x755c25
+func() begin
+	local l1, l2, l3, l4;
+	if stopping then begin
+			return 0
+		end;
+	(if endpoint.connected then begin
+			try begin
+					l2 := (l1 := endpoint:GetState()).State
+				end onexception |evt.ex| do begin end;
+			if (l2 = 2) then begin
+					if (not restoreRoot) then begin
+							try begin
+									protoContext:CloseAllButMe(self)
+								end onexception |evt.ex| do begin end;
+							restoreRoot := true
+						end;
+					if l1.Soup then begin
+							newText := ParamStr("Backing up ^0", [Array: protoContext:SoupNameToAppName(l1.Soup:GetName())])
+						end else begin
+							newText := "Backing up information..."
+						end;
+					l3 := StrEqual(newText, currentStatusSetup.values.titleText)
+				end else begin
+					if (l2 = 4) then begin
+							if (endpoint.percentDone < currentStatusSetup.values.gauge) then begin
+									nameSet := nil
+								end;
+							l4 := nameSet;
+							currentStatusSetup.values.gauge := endpoint.percentDone;
+							if (if (not nameSet) then endpoint.packageName) then begin
+									nameSet := true;
+									newText := ParamStr("Installing ^0", [Array: endpoint.packageName])
+								end else begin
+									newText := "Installing package..."
+								end;
+							if (if (l4 or StrEqual(newText, currentStatusSetup.values.titleText)) then (currentStatusSetup.name = 'vGauge)) then begin
+									l3 := true
+								end else begin
+									currentStatusSetup.name := 'vGauge
+								end
+						end else begin
+							if (l2 = 3) then begin
+									if (not restoreRoot) then begin
+											try begin
+													protoContext:CloseAllButMe(self)
+												end onexception |evt.ex| do begin end;
+											restoreRoot := true
+										end;
+									restoring := true;
+									if l1.Soup then begin
+											newText := ParamStr("Restoring ^0", [Array: protoContext:SoupNameToAppName(l1.Soup:GetName())])
+										end else begin
+											newText := "Restoring information..."
+										end;
+									if StrEqual(newText, currentStatusSetup.values.titleText) then begin
+											l3 := true
+										end
+								end else begin
+									l3 := true;
+									if (l2 = 5) then begin
+											newText := "Testing communications..."
+										end else begin
+											newText := "Waiting for a response..."
+										end
+								end
+						end
+				end;
+			if l3 then begin
+					self:updateIndicator(currentStatusSetup)
+				end else begin
+					currentStatusSetup.values.titleText := newText;
+					self:viewSet(currentStatusSetup)
+				end;
+			return 2000
+		end else begin
+			self:updateIndicator(currentStatusSetup);
+			return 500
+		end)
+end
+@@end

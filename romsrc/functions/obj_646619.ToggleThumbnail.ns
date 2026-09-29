@@ -1,0 +1,15 @@
+@@ 0x45eb49
+func(a1) begin
+	local l1;
+	if HasSlot(self, 'image) then begin
+			l1 := true
+		end;
+	self.image := a1;
+	if (not image) then begin
+			self:Close()
+		end else begin
+			self:Toggle()
+		end;
+	(if l1 then RemoveSlot(self, 'image))
+end
+@@end

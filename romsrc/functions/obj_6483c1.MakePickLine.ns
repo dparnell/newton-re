@@ -1,0 +1,13 @@
+@@ 0x45a739
+func(a1, a2, a3) begin
+	local l1, l2, l3;
+	a1 := self:LocalBox();
+	if (not indent) then begin
+			indent := (StrFontWidth(label, labelFont) + 6)
+		end;
+	l1 := FontHeight(labelFont);
+	l2 := (((a1.bottom - l1) >> 1) + FontAscent(labelFont));
+	l3 := (((a1.bottom - FontHeight(entryFont)) >> 1) + FontAscent(entryFont));
+	(pix := [Array: {font: labelFont}, MakeText(a2, a1.left, a1.top, (a1.left + indent), (a1.top + l2)), {font: entryFont}, MakeText(a3, (a1.left + indent), a1.top, a1.right, (a1.top + l3))])
+end
+@@end

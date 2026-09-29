@@ -1,0 +1,5 @@
+@@ 0x4509fd
+func(a1) begin
+	(self.cursor := a1)
+end
+@@end

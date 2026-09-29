@@ -1,0 +1,11 @@
+@@ 0x599ce5
+func() begin
+	(if allowable then begin
+			fields.attachment := (not viewValue);
+			SetUserConfig('mailTextOnly, viewValue)
+		end else (if (viewValue = nil) then begin
+				SetValue(self, 'viewValue, true);
+				self:Notify(3, appName, "Sorry, only text is supported by your chosen format!")
+			end))
+end
+@@end

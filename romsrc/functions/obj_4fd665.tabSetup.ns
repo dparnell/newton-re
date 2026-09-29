@@ -1,0 +1,5 @@
+@@ 0x4fd5e5
+func(a1, a2, a3) begin
+	(a1.viewBounds.bottom := viewHeight)
+end
+@@end

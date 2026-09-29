@@ -1,0 +1,5 @@
+@@ 0x4d232d
+func(a1) begin
+	(tempItem := DeepClone(a1))
+end
+@@end

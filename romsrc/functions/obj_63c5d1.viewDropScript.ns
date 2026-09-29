@@ -1,0 +1,16 @@
+@@ 0x4fc9c5
+func(a1, a2, a3) begin
+	local l1, l2;
+	l2 := PositionToTime(dayView, a2.viewBounds.top);
+	if (a1 = 'text) then begin
+			(l1 := self:ConvertParagraphToMeeting(a2, 'meeting, (displaydate + l2))).mtgDuration := 60;
+			l1.viewBounds.bottom := TimeToPosition(dayView, (l2 + 60))
+		end else begin
+			if (l1 := a2).repeatTemplate then begin
+					l1 := self:FixupDroppedRepeatingMeeting(l1, 'dayView)
+				end
+		end;
+	self:AddMeetingToDate(l1, (displaydate + l2), true);
+	true
+end
+@@end

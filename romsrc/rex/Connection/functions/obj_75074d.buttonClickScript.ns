@@ -1,0 +1,12 @@
+@@ 0x750775
+func() begin
+	local l1;
+	(if (currentSelection <> nil) then (if self:VerifyAlias((l1 := currentFiles[currentIndex])) then begin
+				checkCommandsInIdle := nil;
+				protoContext:OpenGetInfoDialog(endpoint, currentSelection, currentSelection, currentPath);
+				AddDeferredCall(func() begin
+					(checkCommandsInIdle := true)
+				end, nil)
+			end))
+end
+@@end

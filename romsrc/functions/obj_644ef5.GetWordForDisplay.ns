@@ -1,0 +1,10 @@
+@@ 0x44ed0d
+func() begin
+	local l1;
+	l1 := self:CurrentWord();
+	if (if template then HasPath(template, 'CleanupString)) then begin
+			l1 := template:CleanupString(l1)
+		end;
+	return l1
+end
+@@end

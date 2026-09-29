@@ -1,0 +1,5 @@
+@@ 0x757669
+func(a1) begin
+	(if (a1 = nil) then prefsFrame else prefsFrame.(a1))
+end
+@@end

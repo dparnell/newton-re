@@ -1,0 +1,20 @@
+@@ 0x4d04bd
+func() begin
+	local l1, l2, l3;
+	l1 := CurrentException();
+	l2 := 0;
+	if HasSlot(l1, 'error) then begin
+			l2 := l1.error
+		end else begin
+			if HasSlot(l1.data, 'errorCode) then begin
+					l2 := l1.data.errorCode
+				end else begin
+					l2 := -1
+				end
+		end;
+	if (if (l3 := (not self:ignoreError(l2))) then (not self:AnySet(modemRetry))) then begin
+			self:CommitSession(l2)
+		end;
+	l3
+end
+@@end

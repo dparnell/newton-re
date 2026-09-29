@@ -1,0 +1,6 @@
+@@ 0x4cac6d
+func() begin
+	local l1;
+	(if ((l1 := GetAppParams().appAreaHeight) < 245) then (self.viewBounds := RelBounds(0, 10, 208, 217)) else (self.viewBounds := RelBounds(0, 10, 208, 245)))
+end
+@@end

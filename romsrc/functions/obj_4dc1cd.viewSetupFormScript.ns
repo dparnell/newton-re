@@ -1,0 +1,6 @@
+@@ 0x4dc10d
+func() begin
+	Time := Time();
+	inherited:viewSetupFormScript()
+end
+@@end

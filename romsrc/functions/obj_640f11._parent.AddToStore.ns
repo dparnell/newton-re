@@ -1,0 +1,5 @@
+@@ 0x6341a1
+func(a1, a2) begin
+	self:GetMember(a2):Add(a1)
+end
+@@end

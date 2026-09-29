@@ -1,0 +1,5 @@
+@@ 0x4b9b35
+func() begin
+	(if IsString(target.(path)) then Clone(target.(path)) else (if textFrame then (if textFramePath then textFrame.(target.(path)).(textFramePath) else textFrame.(target.(path))) else Stringer([Array: target.(path)])))
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x4fd52d
+func() begin
+	local l1;
+	(if (if (not Visible(MeetingNotes)) then (not Visible(ToDoSlip))) then begin
+			l1 := self:ChildViewFrames()[0];
+			l1:PositionCaret(10, (viewOriginY + l1.viewLineSpacing), nil)
+		end)
+end
+@@end

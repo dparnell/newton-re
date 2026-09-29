@@ -1,0 +1,28 @@
+@@ 0x4f3285
+func() begin
+	l2 := RepeatingView.mtgInfo;
+	l1 := repeatType;
+	if (l2 = 0) then begin
+			l3 := ((mtgDate.Date - 1) div 7);
+			l2 := (weekBit[l3] + (2048 >> mtgDate.dayOfWeek));
+			RepeatingView.mtgInfo := l2
+		end;
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	(foreach l6 in (l4 := WeekPicker:ChildViewFrames()) do begin
+			l6.viewValue := nil
+		end);
+	(for l8 := 0 to 4 do begin
+			l5 := l4[l8];
+			if (BAnd(weekBit[l8], l2) > 0) then begin
+					l5.viewValue := true
+				end else begin
+					l5.viewValue := nil
+				end;
+			l5:UpdateBitmap()
+		end)
+end
+@@end

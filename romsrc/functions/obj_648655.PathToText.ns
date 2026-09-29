@@ -1,0 +1,5 @@
+@@ 0x4b94d5
+func() begin
+	(if IsString(target.(path)) then Clone(target.(path)) else (if longFormat then LongDateStr(target.(path), longFormat) else ShortDateStr(target.(path), shortFormat)))
+end
+@@end

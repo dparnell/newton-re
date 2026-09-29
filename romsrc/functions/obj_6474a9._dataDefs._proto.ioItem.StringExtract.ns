@@ -1,0 +1,5 @@
+@@ 0x4c3491
+func(a1, a2) begin
+	(if a1.title then a1.title else (if a1.appSymbol then Stringer([Array: "Item from:", " ", a1.appSymbol])))
+end
+@@end

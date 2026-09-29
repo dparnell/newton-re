@@ -1,0 +1,40 @@
+@@ 0x798405 names
+func(anEntry) begin
+	local text, task, date, today;
+	if anEntry.data then begin
+			text := ExtractData(anEntry.data, "...", 256)
+		end else begin
+			return nil
+		end;
+	if (StrLen(text) = 0) then begin
+			return nil
+		end;
+	task := self:StringToTopic(text, 0);
+	if IsSoupEntry(anEntry) then begin
+			task.source := '[Array: RO0, RO1, RO2, RO3, RO4][SetContains(GetStores(), EntrySoup(anEntry):GetStore())]
+		end else begin
+			task.source := nil
+		end;
+	if anEntry.mtgPriority then begin
+			task.mtgPriority := anEntry.mtgPriority
+		end;
+	if anEntry.mtgDone then begin
+			task.mtgDone := anEntry.mtgDone
+		end;
+	today := ((today := Time()) - (today mod 1440));
+	if anEntry.mtgStartDate then begin
+			date := ((anEntry.mtgStartDate div 1440) * 1440)
+		end else begin
+			date := today
+		end;
+	if (if (date < today) then (anEntry.mtgDone = nil)) then begin
+			task.date := today
+		end else begin
+			task.date := date
+		end;
+	task.mtgStartDate := task.date;
+	task.converted := true;
+	task.class := 'todo;
+	task
+end
+@@end

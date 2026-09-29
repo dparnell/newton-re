@@ -1,0 +1,19 @@
+@@ 0x435efd
+func() begin
+	local l1, l2;
+	l1 := realCurs:ResetToEnd();
+	if romOnly then begin
+			return l1
+		end;
+	if (not (l2 := realCurs:move(-1))) then begin
+			return realCurs:ResetToEnd()
+		end;
+	if (l2.kind = 'delete) then begin
+			return self:prev()
+		end;
+	if (l2.kind = 'Replace) then begin
+			return l2
+		end;
+	realCurs:move(1)
+end
+@@end

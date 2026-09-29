@@ -1,0 +1,7 @@
+@@ 0x46a695
+func() begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10;
+	l1 := pickItems;
+	(l4 := (title := self:GetTitle()))
+end
+@@end

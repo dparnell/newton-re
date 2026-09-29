@@ -1,0 +1,9 @@
+@@ 0x429d21
+func(a1) begin
+	(if (viewValue <> a1) then begin
+			viewValue := (if a1 then buttonValue);
+			self:valueChanged();
+			self:UpdateBitmap()
+		end)
+end
+@@end

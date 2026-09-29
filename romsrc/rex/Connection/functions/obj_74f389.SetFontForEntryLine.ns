@@ -1,0 +1,12 @@
+@@ 0x74fb41
+func(a1) begin
+	local l1, l2;
+	l1 := a1.viewBounds;
+	if (StrFontWidth(a1.text, 10241) > (l1.right - l1.left)) then begin
+			l2 := 9217
+		end else begin
+			l2 := 10241
+		end;
+	(if (l2 <> a1.viewFont) then SetValue(a1, 'viewFont, l2))
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x533889
+func() begin
+	local l1;
+	(if (l1 := self:path()).(name) then self:Show() else self:Hide())
+end
+@@end

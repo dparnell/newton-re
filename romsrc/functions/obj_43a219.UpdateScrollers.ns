@@ -1,0 +1,15 @@
+@@ 0x43a1a1
+func(a1) begin
+	(if (if scrollersSetup then (not inScrollArrow)) then begin
+			if (a1 = 0) then begin
+					self:SetupScrollers();
+					self:ShowHideScrollers();
+					self.yPos := 0;
+					self:SetOrigin(0, 0)
+				end else begin
+					self.yPos := (yPos + a1)
+				end;
+			self:AdjustArrows()
+		end)
+end
+@@end

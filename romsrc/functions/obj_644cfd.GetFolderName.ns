@@ -1,0 +1,9 @@
+@@ 0x47fc11
+func(a1) begin
+	local l1;
+	if ((l1 := self:GetConfig((if self:IsInItem(a1) then 'inboxFiling else 'outboxFiling))) = 'same) then begin
+			l1 := a1.labels
+		end;
+	return l1
+end
+@@end

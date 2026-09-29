@@ -1,0 +1,41 @@
+@@ 0x78cf15 names
+func(anIndex, aTopic, aDone, aPropagateUp, aPropagateDown) begin
+	if ((level := aTopic.level) = nil) then begin
+			level := 1
+		end;
+	aTopic.mtgDone := aDone;
+	if aPropagateDown then begin
+			local ti;
+			local mom;
+			local level;
+			local theTopic;
+			local momDone;
+			(for ti := (anIndex + 1) to (nTopics - 1) do begin
+					if (((theTopic := topics[ti]).level = nil) or (theTopic.level <= level)) then begin
+							break
+						end;
+					if (theTopic.mtgDone <> aDone) then begin
+							theTopic.mtgDone := aDone
+						end
+				end)
+		end;
+	if (if (level <> 1) then aPropagateUp) then begin
+			mom := self:Mother(anIndex);
+			if (topics[mom].mtgDone <> aDone) then begin
+					momDone := true;
+					(for ti := (mom + 1) to (nTopics - 1) do begin
+							if (((theTopic := topics[ti]).level = nil) or (theTopic.level < level)) then begin
+									break
+								end;
+							if (theTopic.level = level) then begin
+									momDone := (if momDone then theTopic.mtgDone)
+								end
+						end);
+					if (momDone <> topics[mom].mtgDone) then begin
+							self:SetDone(mom, topics[mom], momDone, true, nil)
+						end
+				end
+		end;
+	(if (BAnd(listViewFlags, 2) <> 0) then self:Dirty())
+end
+@@end

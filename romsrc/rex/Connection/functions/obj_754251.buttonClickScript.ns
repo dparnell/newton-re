@@ -1,0 +1,7 @@
+@@ 0x7542f5
+func() begin
+	closing := true;
+	call ImportParametersDoneScript with (fResults);
+	base:Close()
+end
+@@end

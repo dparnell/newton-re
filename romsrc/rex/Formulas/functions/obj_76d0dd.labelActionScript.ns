@@ -1,0 +1,7 @@
+@@ 0x76d2c1
+func(a1) begin
+	pickerItemNumber := a1;
+	SetValue(self, 'text, Stringer([Array: $\uFC01, labelCommands[a1]]));
+	self:ClearAllFields()
+end
+@@end

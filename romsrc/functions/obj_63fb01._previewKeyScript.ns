@@ -1,0 +1,5 @@
+@@ 0x4c86b9
+func(a1) begin
+	PressButton(_previewButton)
+end
+@@end

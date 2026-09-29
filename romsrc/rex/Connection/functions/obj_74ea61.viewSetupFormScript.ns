@@ -1,0 +1,6 @@
+@@ 0x74ebc9
+func() begin
+	self.text := labels[2];
+	(self.viewBounds := SetBounds(((viewBounds.right - StrWidth(text)) - 7), viewBounds.top, viewBounds.right, viewBounds.bottom))
+end
+@@end

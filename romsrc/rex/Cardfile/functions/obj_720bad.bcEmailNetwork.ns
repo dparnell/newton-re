@@ -1,0 +1,17 @@
+@@ 0x735735
+func(a1, a2) begin
+	l1 := [Array: ];
+	if (not IsArray(a2)) then begin
+			a2 := [Array: a2]
+		end;
+	if a1.mailAccess then begin
+			local l1;
+			(foreach l2 in a1.mailAccess do begin
+					if SetContains(a2, l2.mailNetwork) then begin
+							AddArraySlot(l1, Clone(l2))
+						end
+				end)
+		end;
+	(if (Length(l1) > 0) then l1)
+end
+@@end

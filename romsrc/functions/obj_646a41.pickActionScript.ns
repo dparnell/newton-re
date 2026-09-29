@@ -1,0 +1,7 @@
+@@ 0x48af95
+func(a1) begin
+	SetUserConfig('currentPersona, GetUserConfig('personae)[a1]);
+	UseCurrentPersona();
+	self:hilite(nil)
+end
+@@end

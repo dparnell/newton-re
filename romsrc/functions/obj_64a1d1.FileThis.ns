@@ -1,0 +1,16 @@
+@@ 0x54d379
+func(a1, a2, a3, a4, a5) begin
+	if (not self.viewCObject) then begin
+			return nil
+		end;
+	a1.labelsChanged := a2;
+	a1.storeChanged := a4;
+	if a2 then begin
+			a1.labels := a3
+		end;
+	if a4 then begin
+			a1.newStore := a5
+		end;
+	self:Fileit()
+end
+@@end

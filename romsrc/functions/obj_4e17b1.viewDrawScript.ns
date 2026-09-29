@@ -1,0 +1,101 @@
+@@ 0x4e0d75
+@@const kLiteral_4e03b1
+'{font: 1060865, justification: center}
+@@const kLiteral_4e03dd
+'{font: 10241, justification: left}
+@@main
+func() begin
+	local v3_zzzzzzzzzyyyyyyyyyy, v4_xxxwwwwwwwww, v5_wwwwwvvvvvvvvvvv, v6_qqqqqqqqp, v7_yyyyyyxxxxxx, v8_rrrrq, v9_zzzzzzzzzzzzzzzzzzzzzzzzzz, v10_wwwwwwwwwwwwwwvvvvv, v11_wwwwvvvvvvvvvvvvvvvvvvv, v12_yyyyyyyyyxxxxxx, v13_uuuutttt, v14_uutttttttttt, v15_zyyy, v16_xxxxxxxxxxxxxxxxxxxxxxxxxx, v17_wvvvvvvvvvvvvvvvvvv, v18_zzzzzzzzzzzyyyyyyyyyyy, v19_xxxxxxxxxxxwwww, v20_xxxxxxwwwwwwwwwwwww, v21_ttttttttttss, v22_yxxx, v23_vvvvvvvu, v24_vuuuuuuuuuuu, v25_zzzzzzzyyyyyyyyyyyyyyy;
+	if (not pix) then begin
+			v11_wwwwvvvvvvvvvvvvvvvvvvv := (v20_xxxxxxwwwwwwwwwwwww := self:LocalBox()).right;
+			v25_zzzzzzzyyyyyyyyyyyyyyy := GetLocale();
+			v3_zzzzzzzzzyyyyyyyyyy := (if (v15_zyyy := (v22_yxxx := cards:entry()).country) then GetCountryEntry(v15_zyyy)[0]);
+			v21_ttttttttttss := 30;
+			v14_uutttttttttt := Array(15, nil);
+			v16_xxxxxxxxxxxxxxxxxxxxxxxxxx := 3;
+			v14_uutttttttttt[0] := kLiteral_4e03b1;
+			v14_uutttttttttt[1] := MakeText(v22_yxxx.name, 0, 0, v11_wwwwvvvvvvvvvvvvvvvvvvv, 12);
+			v14_uutttttttttt[2] := kLiteral_4e03dd;
+			if StrFilled(v22_yxxx.region) then begin
+					v24_vuuuuuuuuuuu := v22_yxxx.region;
+					if ((v22_yxxx.country = 'USA) or (v22_yxxx.country = 'Canada)) then begin
+							if (v19_xxxxxxxxxxxwwww := (v12_yyyyyyyyyxxxxxx := Query((v5_wwwwwvvvvvvvvvvv := GetLocationSoup((if (v22_yxxx.country = 'USA) then @452 else @453))), {type: 'index, indexPath: 'abbrev, beginKey: v24_vuuuuuuuuuuu, endKey: v24_vuuuuuuuuuuu})):entry()) then begin
+									v24_vuuuuuuuuuuu := ParamStr("^0 (^1)", [Array: v19_xxxxxxxxxxxwwww.name, v24_vuuuuuuuuuuu])
+								end
+						end;
+					v14_uutttttttttt[v16_xxxxxxxxxxxxxxxxxxxxxxxxxx] := MakeText(ParamStr("^0: ^1", [Array: (if v3_zzzzzzzzzyyyyyyyyyy then v3_zzzzzzzzzyyyyyyyyyy.regionName else v25_zzzzzzzyyyyyyyyyyyyyyy.regionLabel), v24_vuuuuuuuuuuu]), 0, (v21_ttttttttttss - 12), v11_wwwwvvvvvvvvvvvvvvvvvvv, v21_ttttttttttss);
+					v16_xxxxxxxxxxxxxxxxxxxxxxxxxx := (v16_xxxxxxxxxxxxxxxxxxxxxxxxxx + 1);
+					v21_ttttttttttss := (v21_ttttttttttss + 12)
+				end;
+			v14_uutttttttttt[v16_xxxxxxxxxxxxxxxxxxxxxxxxxx] := MakeText(ParamStr("Latitude/Longitude: ^0  ^1", [Array: LatitudeToString(v22_yxxx.latitude), LongitudeToString(v22_yxxx.longitude)]), 0, (v21_ttttttttttss - 12), v11_wwwwvvvvvvvvvvvvvvvvvvv, v21_ttttttttttss);
+			v16_xxxxxxxxxxxxxxxxxxxxxxxxxx := (v16_xxxxxxxxxxxxxxxxxxxxxxxxxx + 1);
+			v21_ttttttttttss := (v21_ttttttttttss + 12);
+			if v22_yxxx.areacode then begin
+					v14_uutttttttttt[v16_xxxxxxxxxxxxxxxxxxxxxxxxxx] := MakeText(ParamStr("^0: ^1", [Array: v25_zzzzzzzyyyyyyyyyyyyyyy.areacodeLabel, v22_yxxx.areacode]), 0, (v21_ttttttttttss - 12), v11_wwwwvvvvvvvvvvvvvvvvvvv, v21_ttttttttttss);
+					v16_xxxxxxxxxxxxxxxxxxxxxxxxxx := (v16_xxxxxxxxxxxxxxxxxxxxxxxxxx + 1);
+					v21_ttttttttttss := (v21_ttttttttttss + 12)
+				end;
+			if v22_yxxx.airport then begin
+					v14_uutttttttttt[v16_xxxxxxxxxxxxxxxxxxxxxxxxxx] := MakeText(ParamStr("Airport^?0s||: ^1", [Array: (StrLen(v22_yxxx.airport) > 3), v22_yxxx.airport]), 0, (v21_ttttttttttss - 12), v11_wwwwvvvvvvvvvvvvvvvvvvv, v21_ttttttttttss);
+					v16_xxxxxxxxxxxxxxxxxxxxxxxxxx := (v16_xxxxxxxxxxxxxxxxxxxxxxxxxx + 1);
+					v21_ttttttttttss := (v21_ttttttttttss + 12)
+				end;
+			v10_wwwwwwwwwwwwwwvvvvv := abs((v22_yxxx.gmt mod 3600));
+			v4_xxxwwwwwwwww := abs(((v6_qqqqqqqqp := ((((v22_yxxx.gmt - userConfiguration.location.gmt) - userConfiguration.daylightsavings) div 60) + DSTOffset(Time(), v22_yxxx))) mod 60));
+			v14_uutttttttttt[v16_xxxxxxxxxxxxxxxxxxxxxxxxxx] := MakeText(ParamStr("Time Zone: ^?0+||^1^?2:^3|| (GMT ^?4+||^5^?6:^7||)", [Array: (v6_qqqqqqqqp >= 0), (v6_qqqqqqqqp div 60), (v4_xxxwwwwwwwww <> 0), v4_xxxwwwwwwwww, (v22_yxxx.gmt >= 0), (v22_yxxx.gmt div 3600), (v10_wwwwwwwwwwwwwwvvvvv <> 0), (v10_wwwwwwwwwwwwwwvvvvv div 60)]), 0, (v21_ttttttttttss - 12), v11_wwwwvvvvvvvvvvvvvvvvvvv, v21_ttttttttttss);
+			v16_xxxxxxxxxxxxxxxxxxxxxxxxxx := (v16_xxxxxxxxxxxxxxxxxxxxxxxxxx + 1);
+			v21_ttttttttttss := (v21_ttttttttttss + 12);
+			if (v18_zzzzzzzzzzzyyyyyyyyyyy := (if HasPath(v22_yxxx, 'daylight) then v22_yxxx.daylight else (if v3_zzzzzzzzzyyyyyyyyyy then v3_zzzzzzzzzyyyyyyyyyy.daylight))) then begin
+					v14_uutttttttttt[v16_xxxxxxxxxxxxxxxxxxxxxxxxxx] := MakeTextLines(ParamStr("^0: ^1", [Array: v25_zzzzzzzyyyyyyyyyyyyyyy.daylightSavingsLabel, DSTExplain(v22_yxxx)]), SetBounds(0, (v21_ttttttttttss - 10), v11_wwwwvvvvvvvvvvvvvvvvvvv, (v21_ttttttttttss + 36)), 12, 10241);
+					v9_zzzzzzzzzzzzzzzzzzzzzzzzzz := Length(v14_uutttttttttt[v16_xxxxxxxxxxxxxxxxxxxxxxxxxx]);
+					v21_ttttttttttss := (v21_ttttttttttss + (12 * v9_zzzzzzzzzzzzzzzzzzzzzzzzzz));
+					v16_xxxxxxxxxxxxxxxxxxxxxxxxxx := (v16_xxxxxxxxxxxxxxxxxxxxxxxxxx + v9_zzzzzzzzzzzzzzzzzzzzzzzzzz)
+				end;
+			SetLength(v14_uutttttttttt, v16_xxxxxxxxxxxxxxxxxxxxxxxxxx);
+			if v3_zzzzzzzzzyyyyyyyyyy then begin
+					v17_wvvvvvvvvvvvvvvvvvv := Array(12, nil);
+					v16_xxxxxxxxxxxxxxxxxxxxxxxxxx := 3;
+					v21_ttttttttttss := (v21_ttttttttttss + 12);
+					v17_wvvvvvvvvvvvvvvvvvv[0] := kLiteral_4e03b1;
+					v17_wvvvvvvvvvvvvvvvvvv[1] := MakeText(v3_zzzzzzzzzyyyyyyyyyy.name, 0, (v21_ttttttttttss - 18), v11_wwwwvvvvvvvvvvvvvvvvvvv, v21_ttttttttttss);
+					v17_wvvvvvvvvvvvvvvvvvv[2] := kLiteral_4e03dd;
+					v21_ttttttttttss := (v21_ttttttttttss + 18);
+					v17_wvvvvvvvvvvvvvvvvvv[v16_xxxxxxxxxxxxxxxxxxxxxxxxxx] := MakeText(ParamStr("Country Code: ^0", [Array: v3_zzzzzzzzzyyyyyyyyyy.countryCode]), 0, (v21_ttttttttttss - 12), v11_wwwwvvvvvvvvvvvvvvvvvvv, v21_ttttttttttss);
+					v16_xxxxxxxxxxxxxxxxxxxxxxxxxx := (v16_xxxxxxxxxxxxxxxxxxxxxxxxxx + 1);
+					v21_ttttttttttss := (v21_ttttttttttss + 12);
+					v17_wvvvvvvvvvvvvvvvvvv[v16_xxxxxxxxxxxxxxxxxxxxxxxxxx] := MakeText(ParamStr("International LD Prefix: ^0", [Array: v3_zzzzzzzzzyyyyyyyyyy.outgoing]), 0, (v21_ttttttttttss - 12), v11_wwwwvvvvvvvvvvvvvvvvvvv, v21_ttttttttttss);
+					v16_xxxxxxxxxxxxxxxxxxxxxxxxxx := (v16_xxxxxxxxxxxxxxxxxxxxxxxxxx + 1);
+					v21_ttttttttttss := (v21_ttttttttttss + 12);
+					if v3_zzzzzzzzzyyyyyyyyyy.inPrefix then begin
+							v17_wvvvvvvvvvvvvvvvvvv[v16_xxxxxxxxxxxxxxxxxxxxxxxxxx] := MakeText(ParamStr("Internal LD Prefix: ^0", [Array: v3_zzzzzzzzzyyyyyyyyyy.inPrefix]), 0, (v21_ttttttttttss - 12), v11_wwwwvvvvvvvvvvvvvvvvvvv, v21_ttttttttttss);
+							v16_xxxxxxxxxxxxxxxxxxxxxxxxxx := (v16_xxxxxxxxxxxxxxxxxxxxxxxxxx + 1);
+							v21_ttttttttttss := (v21_ttttttttttss + 12)
+						end;
+					if (v8_rrrrq := userConfiguration.location).country then begin
+							v23_vvvvvvvu := v8_rrrrq.country
+						end;
+					if v23_vvvvvvvu then begin
+							v7_yyyyyyxxxxxx := GetCountryEntry(v23_vvvvvvvu)[0]
+						end;
+					if v3_zzzzzzzzzyyyyyyyyyy.currency then begin
+							v17_wvvvvvvvvvvvvvvvvvv[v16_xxxxxxxxxxxxxxxxxxxxxxxxxx] := MakeText(ParamStr("Currency: ^0", [Array: v3_zzzzzzzzzyyyyyyyyyy.currency]), 0, (v21_ttttttttttss - 12), v11_wwwwvvvvvvvvvvvvvvvvvvv, v21_ttttttttttss);
+							v16_xxxxxxxxxxxxxxxxxxxxxxxxxx := (v16_xxxxxxxxxxxxxxxxxxxxxxxxxx + 1);
+							v21_ttttttttttss := (v21_ttttttttttss + 12);
+							if (v8_rrrrq := userConfiguration.location).country then begin
+									v23_vvvvvvvu := v8_rrrrq.country
+								end;
+							if v23_vvvvvvvu then begin
+									if (v13_uuuutttt := GetExchangeRate(v23_vvvvvvvu, v15_zyyy)) then begin
+											v17_wvvvvvvvvvvvvvvvvvv[v16_xxxxxxxxxxxxxxxxxxxxxxxxxx] := MakeText(ParamStr("Exchange: ^0 per ^1", [Array: FormattedNumberStr(v13_uuuutttt, "%.2f"), v7_yyyyyyxxxxxx.currency]), 0, (v21_ttttttttttss - 12), v11_wwwwvvvvvvvvvvvvvvvvvvv, v21_ttttttttttss);
+											v16_xxxxxxxxxxxxxxxxxxxxxxxxxx := (v16_xxxxxxxxxxxxxxxxxxxxxxxxxx + 1);
+											v21_ttttttttttss := (v21_ttttttttttss + 12)
+										end
+								end
+						end
+				end;
+			SetLength(v17_wvvvvvvvvvvvvvvvvvv, v16_xxxxxxxxxxxxxxxxxxxxxxxxxx);
+			pix := [Array: v14_uutttttttttt, v17_wvvvvvvvvvvvvvvvvvv]
+		end;
+	self:DrawShape(pix, {})
+end
+@@end

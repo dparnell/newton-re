@@ -1,0 +1,5 @@
+@@ 0x43a589
+func(a1) begin
+	(if (if self.isSelected then a1) then self:isSelected(a1))
+end
+@@end

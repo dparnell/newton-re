@@ -1,0 +1,22 @@
+@@ 0x4e1e25
+func() begin
+	if (not paper) then begin
+			paper := Clone(initPaper)
+		end;
+	if (GetAppParams().appAreaHeight < 257) then begin
+			self.rotated := true;
+			viewBounds := SetBounds(0, 0, 304, 144);
+			maxLines := 8;
+			index := (30 - maxLines)
+		end else begin
+			if (if self.rotated then (GetAppParams().appAreaHeight > 257)) then begin
+					self.rotated := nil;
+					viewBounds := SetBounds(0, 0, 170, 257);
+					maxLines := 6;
+					index := 24
+				end
+		end;
+	SetKeyView(self, 0);
+	self:calcPaperDisplay()
+end
+@@end

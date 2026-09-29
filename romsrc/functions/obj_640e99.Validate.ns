@@ -1,0 +1,17 @@
+@@ 0x458009
+func(a1, a2) begin
+	l1 := self:GetPrimaryPath(a1);
+	l2 := Clone(a2);
+	if (ObjEntryClass(a1) = 'group) then begin
+			return [Array: ]
+		end;
+	local l1;
+	local l2;
+	(foreach l3, l4 in l2 do begin
+			if (l4 = primaryPath) then begin
+					l2[l3] := l1
+				end
+		end);
+	ValidityCheck(a1, validationFrame, l2, nil, nil)
+end
+@@end

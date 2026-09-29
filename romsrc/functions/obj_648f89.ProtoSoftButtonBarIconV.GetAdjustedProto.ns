@@ -1,0 +1,13 @@
+@@ 0x55211d
+func() begin
+	local l1, l2;
+	l1 := inherited:GetAdjustedProto();
+	if ((l2 := GetRoot().buttons.iconSpacingV) <> 40) then begin
+			if IsReadOnly(l1) then begin
+					l1 := {_proto: l1, viewBounds: nil}
+				end;
+			l1.viewBounds := SetBounds(0, 0, 0, l2)
+		end;
+	l1
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x4fcd5d
+func(a1) begin
+	DayTable:viewScrollUpScript(a1)
+end
+@@end

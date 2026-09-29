@@ -1,0 +1,19 @@
+@@ 0x4d0889
+func(a1) begin
+	nextinputspec := nil;
+	activeInputSpec := nil;
+	sessionInfo := nil;
+	try begin
+			ep:Dispose();
+			ep := nil
+		end onexception |evt.ex| do begin end;
+	(if self:AnySet(modemRetry) then (if (if statusDialog then statusDialog.viewCObject) then self:ShowRetryDialog() else begin
+				self:ChangeState('idle);
+				(activeNotify := GetRoot().notifyIcon:AddAction(title, retryHook.doNotifyFunc, [Array: appSymbol]))
+			end) else (if self:AnySet(redoBind) then begin
+				self:ChangeState('idle);
+				self:RemoveFlag(redoBind);
+				self:SetupListen()
+			end else self:Wrapup()))
+end
+@@end

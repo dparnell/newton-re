@@ -1,0 +1,17 @@
+@@ 0x75c4f9
+@@const kROM_8267
+@8267
+@@main
+func(a1, a2) begin
+	local result;
+	local l1, l2;
+	l1 := GetRoot().Connection;
+	(l2 := BuildContext(kROM_8267)).fSetup := a2;
+	l2.endpoint := a1;
+	l2.ImportParametersDoneScript := func(a1) begin
+		(result := a1)
+	end;
+	l2:ModalDialog();
+	return result
+end
+@@end

@@ -1,0 +1,12 @@
+@@ 0x5ad915
+func() begin
+	if (clusterValue <> GetLetterHilite()) then begin
+			SetLetterHilite(clusterValue)
+		end;
+	if (clusterValue <> GetLetterHilite()) then begin
+			self:getNewSetting();
+			self:Notify(3, notifyTitle, "Each letter must have at least one shape set to \u201C\uOften.\u201D\u")
+		end;
+	letterShapes:Dirty()
+end
+@@end

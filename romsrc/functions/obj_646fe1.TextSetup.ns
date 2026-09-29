@@ -1,0 +1,5 @@
+@@ 0x45b249
+func() begin
+	Stringer([Array: (if (Time < 0) then $-), TimerToString(abs(Time))])
+end
+@@end

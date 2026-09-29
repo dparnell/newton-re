@@ -1,0 +1,5 @@
+@@ 0x4a8dfd
+func(a1, a2) begin
+	UnRegDataView(a2, a1)
+end
+@@end

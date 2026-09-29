@@ -1,0 +1,17 @@
+@@ 0x4cb5b5
+func(a1, a2, a3) begin
+	a1 := inherited:Convert(a1, a2, a3);
+	if (if (a2 = 'oneO) then (a3 = 'twoO)) then begin
+			a1.toRef := [Array: {name: {last: a1.name}, phone: a1.phoneNumber, country: "USA", asIsPhone: a1.phoneNumber}];
+			if a1.comments then begin
+					a1.comments := [Array: {viewStationery: 'para, viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, text: a1.comments}]
+				end;
+			a1.coverPage := GetUserConfig('currentcoverpage);
+			a1.printer := @81;
+			a1.name := "";
+			a1.phoneNumber := "";
+			a1.displayNumber := ""
+		end;
+	a1
+end
+@@end

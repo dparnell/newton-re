@@ -1,0 +1,7 @@
+@@ 0x749d49
+func() begin
+	protoContext:SendCancelToDesktop(endpoint);
+	protoContext:OpenWhichConnection(endpoint);
+	inherited:?buttonClickScript()
+end
+@@end

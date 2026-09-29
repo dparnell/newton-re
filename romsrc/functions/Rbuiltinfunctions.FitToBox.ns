@@ -1,0 +1,36 @@
+@@ 0x45d301
+@@const kLiteral_45d171
+1.0e-13
+@@main
+func(a1, a2, a3) begin
+	local l1, l2, l3, l4;
+	l1 := Clone(a2);
+	l2 := (a1.right - a1.left);
+	l3 := (a1.bottom - a1.top);
+	if ((l4 := max((l2 / (a2.right - a2.left)), (l3 / (a2.bottom - a2.top)))) > 1) then begin
+			l2 := ceiling(((l2 / l4) - kLiteral_45d171));
+			l3 := ceiling(((l3 / l4) - kLiteral_45d171))
+		end;
+	if (if a3 then ((BAnd(a3, 1) <> 0) or (BAnd(a3, 32) <> 0))) then begin
+			l1.left := (l1.right - l2)
+		end else begin
+			if (if a3 then (BAnd(a3, 2) <> 0)) then begin
+					l1.left := (((l1.left + l1.right) - l2) div 2);
+					l1.right := (l1.left + l2)
+				end else begin
+					l1.right := (l1.left + l2)
+				end
+		end;
+	if (if a3 then ((BAnd(a3, 8) <> 0) or (BAnd(a3, 128) <> 0))) then begin
+			l1.top := (l1.bottom - l3)
+		end else begin
+			if (if a3 then (BAnd(a3, 4) <> 0)) then begin
+					l1.top := (((l1.top + l1.bottom) - l3) div 2);
+					l1.bottom := (l1.top + l3)
+				end else begin
+					l1.bottom := (l1.top + l3)
+				end
+		end;
+	l1
+end
+@@end

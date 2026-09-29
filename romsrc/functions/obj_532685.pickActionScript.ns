@@ -1,0 +1,6 @@
+@@ 0x532665
+func(a1) begin
+	inherited:?pickActionScript(a1);
+	self:Retarget()
+end
+@@end

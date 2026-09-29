@@ -1,0 +1,5 @@
+@@ 0x47be39
+func(a1) begin
+	(if info then self:GetTransport():SetConfig(info.routeConfig, info.routeActions[a1]))
+end
+@@end

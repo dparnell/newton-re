@@ -1,0 +1,7 @@
+@@ 0x7319d5
+func() begin
+	local l1;
+	newDictionaries := (l1 := GetLocale()).recogCompanyDictionaries;
+	inherited:?viewSetupFormScript()
+end
+@@end

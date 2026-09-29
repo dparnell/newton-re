@@ -1,0 +1,16 @@
+@@ 0x45beb5
+func() begin
+	self.ListItems := [Array: ];
+	l1 := (StrLen(ownerName) + 1);
+	local l1;
+	(foreach l2 in GetAppAlarmKeys(ownerName) do begin
+			AddArraySlot(self.ListItems, Substr(l2, 0, (StrLen(l2) - l1)))
+		end);
+	if (Length(self.ListItems) > 0) then begin
+			self.Selection := 0
+		end else begin
+			self.Selection := nil
+		end;
+	self:SetupList()
+end
+@@end

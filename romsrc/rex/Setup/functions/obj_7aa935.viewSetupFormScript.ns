@@ -1,0 +1,8 @@
+@@ 0x7aa99d
+func() begin
+	local l1;
+	l1 := self:parent():LocalBox().right;
+	self.text := titleTExt;
+	(self.viewBounds := TextBounds(text, {font: viewFont}, RelBounds(0, viewBounds.top, l1, 0)))
+end
+@@end

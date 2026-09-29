@@ -1,0 +1,12 @@
+@@ 0x59776d
+func() begin
+	local l1;
+	viewOriginY := 0;
+	if (not (l1 := message.(path))) then begin
+			message.(path) := (l1 := "")
+		end;
+	(while (if (StrLen(l1) > 0) then (l1[(StrLen(l1) - 1)] = $\n)) do (l1 := Substr(l1, 0, (StrLen(l1) - 1))));
+	message.(path) := l1;
+	(self.viewChildren := [Array: {_proto: @193, viewBounds: SetBounds(0, 0, 636, (displayParams.appAreaHeight - 34)), viewStationery: 'para, text: (if IsRichString(l1) then "" else l1), viewFont: viewFont, viewLineSpacing: viewLineSpacing}])
+end
+@@end

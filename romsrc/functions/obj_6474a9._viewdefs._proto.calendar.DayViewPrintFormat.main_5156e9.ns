@@ -1,0 +1,5 @@
+@@ 0x5156e9
+func() begin
+	(if (Length(selectedDates) > 1) then (self.text := LongDateStr(displaydate, DateSpec)))
+end
+@@end

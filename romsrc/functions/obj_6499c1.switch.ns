@@ -1,0 +1,5 @@
+@@ 0x44df7d
+func(a1, a2) begin
+	self:SetTemplate(templateArray[a1])
+end
+@@end

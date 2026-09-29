@@ -1,0 +1,5 @@
+@@ 0x5ac7cd
+func(a1) begin
+	(StrExactCompare(a1, Upcase(Clone(a1))) = 0)
+end
+@@end

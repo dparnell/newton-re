@@ -1,0 +1,30 @@
+@@ 0x476dcd
+@@const kFunction_476d49
+func(a1, a2, a3) begin
+	if (a2 <> 'storeLeaves) then begin
+			return nil
+		end;
+	(if entryForms then begin
+			local l1;
+			(foreach l2 in entryForms do begin
+					if (l1 := GetView(l2)) then begin
+							l1:Close()
+						end
+				end);
+			entryForms := nil;
+			UnRegStoreChange('_routing)
+		end)
+end
+@@main
+func(a1, a2) begin
+	(if (GetGlobals().entryForms = nil) then begin
+			GetGlobals().entryForms := [Array: a1];
+			RegStoreChange('_routing, kFunction_476d49)
+		end else begin
+			if (Length(entryForms) > 5) then begin
+					ArrayRemoveCount(entryForms, 0, 1)
+				end;
+			AddArraySlot(entryForms, a1)
+		end)
+end
+@@end

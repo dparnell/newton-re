@@ -1,0 +1,6 @@
+@@ 0x525125
+func() begin
+	SetValue(assistMsg, 'text, "");
+	RefreshViews()
+end
+@@end

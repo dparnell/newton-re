@@ -1,0 +1,56 @@
+@@ 0x508fe5
+func() begin
+	local l1, l2, l3, l4, l5, l6, l7;
+	l2 := (l1 := selectedMeeting).repeatTemplate;
+	newSplitRepeatTemplate := nil;
+	if (if (if isNewMeeting then (not dirtyFlag)) then (not self:GetMeetingSlot(l1, 'meetingType))) then begin
+			if l2 then begin
+					EntryRemoveFromSoupXmit(l2, 'calendar)
+				end else begin
+					EntryRemoveFromSoupXmit(l1, 'calendar)
+				end;
+			selectedMeeting := (l1 := nil)
+		end else begin
+			if (if isNewMeeting then l2) then begin
+					needToChangeThisOrFutureOccurrences := 'ThisAndFuture;
+					self:ChangeThisOrFutureOccurrences();
+					l4 := ((l3 := (newFirstDate - (newFirstDate mod 1440))) + newtMtgStartTime);
+					if (l2.mtgStartDate <> l4) then begin
+							l5 := Date(l1.mtgStartDate);
+							l6 := Date(l4);
+							if (l2.repeatType = 0) then begin
+									l7 := nil;
+									if (l2.mtgInfo = BOr(4064, 31)) then begin
+											l7 := 'Daily
+										end else begin
+											if (l2.mtgInfo = BOr((2048 >> l5.dayOfWeek), 31)) then begin
+													l7 := 'Weekly
+												end
+										end;
+									if l7 then begin
+											l1.mtgStartDate := l4;
+											l2.mtgStartDate := l4;
+											if (l7 = 'Weekly) then begin
+													l2.mtgInfo := BOr((2048 >> l6.dayOfWeek), 31);
+													RepeatingView.mtgInfo := l2.mtgInfo
+												end
+										end;
+									EntryChangeXmit(l2, 'calendar)
+								end else begin
+									if (l2.repeatType = 3) then begin
+											l1.mtgStartDate := l4;
+											l2.mtgStartDate := l4;
+											l2.mtgInfo := ((l6.month << 8) + l6.Date);
+											RepeatingView.mtgInfo := l2.mtgInfo;
+											EntryChangeXmit(l2, 'calendar)
+										end
+								end
+						end;
+					self:ApplyAllChanges()
+				end else begin
+					self:ApplyAllChanges()
+				end
+		end;
+	(isNewMeeting := nil)
+end
+@@end

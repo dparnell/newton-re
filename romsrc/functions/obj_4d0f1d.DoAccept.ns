@@ -1,0 +1,33 @@
+@@ 0x4d0db5
+func(a1, a2) begin
+	local l1, l2;
+	(try begin
+			if a2 then begin
+					Throw('|evt.ex.comm|, a2)
+				end;
+			if (((a1[0].result <> nil) or (a1[1].result <> nil)) or (a1[2].result <> nil)) then begin
+					l1 := {errorCode: -36002, data: a1};
+					Throw('|evt.ex.comm|, l1)
+				end;
+			(sessionInfo := self:NewItem(nil)).body := {};
+			sessionInfo.body.class := 'ImageView;
+			sessionInfo.body.pages := [Array: ];
+			sessionInfo.body.info := Clone(infoTemplate);
+			sessionInfo.body.info.pageCount := 0;
+			sessionInfo.body.info.startTime := TimeInSeconds();
+			l2 := a1[listenOffsets.faxSession].data.arglist;
+			sessionInfo.body.info.resolution := [Array: l2[0], l2[1]];
+			sessionInfo.body.info.pixelWidth := l2[3];
+			sessionInfo.body.info.pixelHeight := ceiling((l2[1] * 11.69));
+			sessionInfo.body.info.dataRate := l2[4];
+			l2 := a1[listenOffsets.remoteId].data.arglist;
+			sessionInfo.title := ParamStr("From \u201C\u^0\u201D\u", [Array: (if StrFilled(l2[0]) then l2[0] else "Unknown")]);
+			sessionInfo.body.sender := l2[0];
+			self:ChangeState('accepting);
+			nextinputspec := self:SetupPage();
+			ep:Accept(nil, acceptSpec)
+		end onexception |evt.ex| do begin
+			(if self:HandleThrow() then self:DoDisconnect(nil))
+		end)
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x766acd
+func(a1) begin
+	local l1;
+	if (if IsFrame((l1 := popup[a1])) then l1.doit) then begin
+			l1:doit(imageContainer)
+		end;
+	inherited:?pickActionScript(a1)
+end
+@@end

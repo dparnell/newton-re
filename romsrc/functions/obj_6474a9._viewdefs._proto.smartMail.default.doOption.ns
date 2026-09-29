@@ -1,0 +1,7 @@
+@@ 0x59c385
+func(a1) begin
+	local l1;
+	l1 := GetRoot().(a1.app);
+	call l1.(a1.path) with (fields, target.arg)
+end
+@@end

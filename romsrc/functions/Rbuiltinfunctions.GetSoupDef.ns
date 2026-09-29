@@ -1,0 +1,17 @@
+@@ 0x569785
+func(a1) begin
+	if (l1 := BFetch(UnionSoupRegistry, a1, '|str<|, 'soupDef.name)) then begin
+			return l1.soupDef
+		end;
+	local l1;
+	(foreach l2 in GetStores() do begin
+			local l4;
+			if l2:HasSoup(a1) then begin
+					if (l4 := l2:GetSoup(a1):GetInfo('soupDef)) then begin
+							return l4
+						end
+				end
+		end);
+	nil
+end
+@@end

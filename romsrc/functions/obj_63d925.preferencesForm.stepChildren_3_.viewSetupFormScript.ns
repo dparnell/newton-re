@@ -1,0 +1,5 @@
+@@ 0x59d6e5
+func() begin
+	(viewValue := GetUserConfig('mailStripHeaders))
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x509315
+func() begin
+	local l1;
+	l1 := (if (selectedMeeting.viewStationery = 'cribNote) then eventItems else mtgItems);
+	(text := ParamStr("This is a repeating ^0.  Change only this ^0 or this and future ^1?", l1))
+end
+@@end

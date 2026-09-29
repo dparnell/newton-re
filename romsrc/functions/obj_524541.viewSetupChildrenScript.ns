@@ -1,0 +1,29 @@
+@@ 0x5217c5
+func() begin
+	local l1, l2, l3, l4, l5, l6;
+	l1 := self:LocalBox();
+	l2 := [Array: ];
+	l3 := 8;
+	l4 := 8;
+	AddArraySlot(l2, {_proto: @41, viewFont: 10241, viewBounds: RelBounds(l4, l3, 200, 16), viewJustify: 0, text: fields.body.title});
+	AddArraySlot(l2, {_proto: @41, viewFont: 10241, viewBounds: RelBounds(-208, l3, 200, 16), viewJustify: 33, text: bookRef.author});
+	l3 := (l3 + 18);
+	(loop begin
+			l5 := SetBounds(l4, l3, (l4 + cuPageSize.width), (l3 + cuPageSize.height));
+			l6 := {_proto: @201, viewBounds: l5, bookRef: bookRef, pageNum: bookPage, printData: fields.body.printData};
+			if showMarks then begin
+					l6.showMarks := true
+				end;
+			AddArraySlot(l2, l6);
+			if (((l4 := (l5.right + 8)) + cuPageSize.width) > l1.right) then begin
+					l3 := ((l5.bottom + 8) + 12);
+					l4 := 8
+				end;
+			if ((bookPage := (bookPage + 1)) > printTo) then begin
+					break
+				end;
+			(if ((l3 + cuPageSize.height) > l1.bottom) then break)
+		end);
+	(self.viewChildren := l2)
+end
+@@end

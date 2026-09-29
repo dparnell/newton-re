@@ -1,0 +1,9 @@
+@@ 0x5b6bc9
+func() begin
+	self.viewBounds := OffsetRect(displayParams.rootBounds, (-displayParams.appAreaGlobalLeft), (-displayParams.appAreaGlobalTop));
+	local l1;
+	(if (l1 := GetClipboardIcon()) then (foreach l2 in l1 do begin
+				l2:Hide()
+			end))
+end
+@@end

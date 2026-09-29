@@ -1,0 +1,8 @@
+@@ 0x59b2b1
+func(a1) begin
+	if (curerror = nil) then begin
+			curerror := a1.data
+		end;
+	self:quit()
+end
+@@end

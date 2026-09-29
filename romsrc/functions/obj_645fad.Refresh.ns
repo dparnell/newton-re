@@ -1,0 +1,9 @@
+@@ 0x4519e9
+func() begin
+	if (not viewCObject) then begin
+			return nil
+		end;
+	selCountText:Update(totalSelected);
+	pickBase:Dirty()
+end
+@@end

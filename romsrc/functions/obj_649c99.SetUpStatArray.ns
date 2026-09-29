@@ -1,0 +1,5 @@
+@@ 0x4ae4e5
+func() begin
+	GetDefs(form, [Array: superSymbol], nil)
+end
+@@end

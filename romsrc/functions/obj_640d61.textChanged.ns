@@ -1,0 +1,14 @@
+@@ 0x42e665
+func() begin
+	dirtyLine := true;
+	if (ClassOf(path) = 'pathExpr) then begin
+			if (Length(path) > 1) then begin
+					if (not HasPath(target, path[0])) then begin
+							target.(path[0]) := {}
+						end
+				end
+		end;
+	target.(path) := entryLine.text;
+	(if (specialClass exists) then SetClass(entryLine.text, specialClass))
+end
+@@end

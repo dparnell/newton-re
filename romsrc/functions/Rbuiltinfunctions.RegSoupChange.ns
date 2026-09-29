@@ -1,0 +1,7 @@
+@@ 0x569c55
+func(a1, a2, a3) begin
+	local l1;
+	(l1 := GetSoupChangeCallBacks(a1, true)).(EnsureInternal(a2)) := a3;
+	nil
+end
+@@end

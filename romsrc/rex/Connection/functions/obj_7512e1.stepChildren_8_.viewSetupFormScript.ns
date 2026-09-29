@@ -1,0 +1,5 @@
+@@ 0x751ac5
+func() begin
+	(if fileInfo.modified then (text := DateNTime(fileInfo.modified)) else (text := "Unknown"))
+end
+@@end

@@ -1,0 +1,14 @@
+@@ 0x55e419
+func() begin
+	if (if (clusterValue = 'findFrontmost) then additionalFind) then begin
+			viewExpanded := nil
+		end else begin
+			if (if appSpecificChildren then appSpecificChildren.dontIncludeInputLine) then begin
+					SetValue(findInput, 'viewFlags, findInput.findTextFlags);
+					RemoveSlot(findStatus, 'viewBounds)
+				end;
+			appSpecificChildren := nil
+		end;
+	base:ShrinkyDink((base.savedScope := clusterValue))
+end
+@@end

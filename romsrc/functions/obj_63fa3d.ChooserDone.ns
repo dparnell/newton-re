@@ -1,0 +1,6 @@
+@@ 0x472535
+func(a1, a2, a3) begin
+	self:saveNew(a1, a2, a3);
+	self:UpdateText(self:TextSetup())
+end
+@@end

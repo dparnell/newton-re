@@ -1,0 +1,36 @@
+@@ 0x73f761
+func(a1, a2, a3, a4) begin
+	local l1;
+	if (if ((l1 := self:GetAppPreferences().sortBy) <> 'sorton) then (a3 = 'soupEnters)) then begin
+			if (not self:CheckSortBy(a4, l1)) then begin
+					self:Notify(3, title, "Your sorting prefs have been reset to the default sort order.");
+					self:SortByChange('sorton)
+				end
+		end;
+	if self.viewCObject then begin
+			inherited:NewtSoupChangedNotify(a1, a2, a3, a4)
+		end;
+	if (if editSlipLayout then editSlipLayout.viewCObject) then begin
+			if '{soupLeaves: true, entryMoved: true, entryReplaced: true, entryRemoved: true}.(a3) then begin
+					AddDeferredSend(self, 'RememberedClose, [Array: editSlipLayout]);
+					editSlipLayout := nil
+				end
+		end;
+	if (a3 <> 'soupCreated) then begin
+			SyncPersonae();
+			SyncEmporia()
+		end;
+	(if (a2 <> appSymbol) then (if (newChangeInfo := '{entryAdded: {type: singleEntry}, entryChanged: {type: singleEntry}, entryMoved: {type: singleEntry, path: entry}, entryReplaced: {type: singleEntry, path: entry}, soupEnters: {type: multipleEntries}, soupCreated: {type: multipleEntries}, whatThe: {type: multipleEntries}}.(a3)) then (if (newChangeInfo.type = 'singleEntry) then begin
+					if newChangeInfo.path then begin
+							a4 := a4.(newChangeInfo.path)
+						end;
+					(if a4.bday then begin
+							if (not newBdays) then begin
+									newBdays := [Array: ]
+								end;
+							AddArraySlot(newBdays, {entry: MakeEntryAlias(a4), path: nil});
+							self:SaveAppState()
+						end)
+				end else (if (if (a2 = 'Connection) then (newChangeInfo.type = 'multipleEntries)) then self:CheckAllBdays()))))
+end
+@@end

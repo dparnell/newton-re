@@ -1,0 +1,7 @@
+@@ 0x7421ed
+func() begin
+	local l1;
+	(l1 := inherited:GetDefaultState()).sortBy := 'sorton;
+	l1
+end
+@@end

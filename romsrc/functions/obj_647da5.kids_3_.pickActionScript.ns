@@ -1,0 +1,10 @@
+@@ 0x533549
+func(a1) begin
+	local l1;
+	inherited:pickActionScript(a1);
+	(if StrFilled((l1 := popup[a1].value)) then begin
+			keyedDigits:AddKey((l1 := strtophone(l1)), true);
+			GetRoot().(appSymbol).callEndpoint:MakeOutgoing(l1, true)
+		end)
+end
+@@end

@@ -1,0 +1,11 @@
+@@ 0x798de5 names
+func(aY, aHitFrame) begin
+	local r;
+	r := self:ResolveClick(100, aY);
+	aHitFrame.index := r.topicIndex;
+	if r.topicIndex then begin
+			aHitFrame.top := topics[r.topicIndex].viewBounds.top
+		end;
+	(aHitFrame.ht := viewLineSpacing)
+end
+@@end

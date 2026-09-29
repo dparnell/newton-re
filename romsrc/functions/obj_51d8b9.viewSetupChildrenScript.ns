@@ -1,0 +1,36 @@
+@@ 0x51d859
+func() begin
+	local l1, l2, l3, l4;
+	self.viewChildren := [Array: ];
+	l1 := self:PageSize(nil);
+	l2 := self:CurrentPage();
+	l3 := {_proto: protoEditChild, page: l2};
+	(if (pagesShowing = 1) then begin
+			l3.viewBounds := RelBounds(0, 0, l1.width, l1.height);
+			l3.viewChildren := self:InkMarks(l3.page);
+			AddArraySlot(viewChildren, l3)
+		end else (if (l2 = 1) then begin
+				l3.viewBounds := RelBounds((l1.width + 15), 0, l1.width, l1.height);
+				l3.viewChildren := self:InkMarks(l3.page);
+				AddArraySlot(viewChildren, l3)
+			end else (if ((l2 = Stringer([Array: self:CountPages(), " ", (l2 mod 2)])) = 0) then begin
+					l3.viewBounds := RelBounds(0, 0, l1.width, l1.height);
+					l3.viewChildren := self:InkMarks(l3.page);
+					AddArraySlot(viewChildren, l3)
+				end else begin
+					l3.viewBounds := RelBounds(0, 0, l1.width, l1.height);
+					if ((l2 mod 2) = 1) then begin
+							l3.page := (l2 - 1)
+						end;
+					l3.viewChildren := self:InkMarks(l3.page);
+					AddArraySlot(viewChildren, l3);
+					l4 := {_proto: protoEditChild};
+					if ((l2 mod 2) = 0) then begin
+							l4.page := (l2 + 1)
+						end;
+					l4.viewBounds := RelBounds((l1.width + 15), 0, l1.width, l1.height);
+					l4.viewChildren := self:InkMarks(l4.page);
+					AddArraySlot(viewChildren, l4)
+				end)))
+end
+@@end

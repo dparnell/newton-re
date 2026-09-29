@@ -1,0 +1,5 @@
+@@ 0x44a431
+func(a1) begin
+	GetRoot():_DoCloseButton()
+end
+@@end

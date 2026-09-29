@@ -1,0 +1,29 @@
+@@ 0x50a0b9
+func() begin
+	local l1, l2, l3;
+	l1 := selectedMeeting.repeatTemplate;
+	if (RepeatCluster.clusterValue = 'ThisAndFuture) then begin
+			if (selectedMeeting.mtgStartDate = NextMeeting(0, l1)) then begin
+					self:StoreLocalNotes(l1, nil, nil, nil);
+					EntryRemoveFromSoupXmit(l1, 'calendar)
+				end else begin
+					l2 := (((l2 := ((l2 := PrevMeeting(selectedMeeting.mtgStartDate, l1)) - (l2 mod 1440))) + 1440) - 1);
+					if (l3 := (if l1.exceptions then LFetch(l1.exceptions, selectedMeeting.mtgStartDate, 0, '|=|, '[pathExpr: 1, mtgStartDate]))) then begin
+							l3[1] := nil
+						end;
+					if l1.InstanceNotesData then begin
+							self:StoreLocalNotes(l1, selectedMeeting.mtgStartDate, nil, nil)
+						end;
+					self:ChangeMeeting(selectedMeeting, 'mtgStopDate, l2);
+					EntryChangeXmit(l1, 'calendar)
+				end
+		end else begin
+			self:DeleteRepeatingMeetingInstance(selectedMeeting)
+		end;
+	if (if (selectedMeeting.viewStationery = 'cribNote) then Visible(cribView)) then begin
+			cribView:RedoChildren()
+		end;
+	base.viewEffect := nil;
+	MeetingNotes:delete('changeViewTo, [Array: mainDisplay])
+end
+@@end

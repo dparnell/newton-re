@@ -1,0 +1,5 @@
+@@ 0x4f8ee1
+func() begin
+	(if (mainDisplay = scheduleView) then scheduleView:?calculateScrollRects() else (if (mainDisplay = ToDoListView) then ToDoListView:?calculateScrollRects() else (if (mainDisplay = AgendaView) then AgendaView:?calculateScrollRects())))
+end
+@@end

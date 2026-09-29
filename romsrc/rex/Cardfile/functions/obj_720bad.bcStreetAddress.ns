@@ -1,0 +1,5 @@
+@@ 0x738801
+func(a1, a2) begin
+	self:bcHelper(a1, a2, '[Array: addresses], '[Array: address, address2, city, region, postal_code, country])
+end
+@@end

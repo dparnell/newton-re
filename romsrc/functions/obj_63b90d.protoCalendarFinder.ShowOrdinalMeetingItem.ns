@@ -1,0 +1,17 @@
+@@ 0x4ea7a1
+func(a1) begin
+	(if (a1 = 'first) then begin
+			if (currentItem <> 0) then begin
+					self:Reset()
+				end;
+			currentMeetingSoupFinder:ShowCurrentItem()
+		end else (if (a1 = 'last) then begin
+				self:GoToLastMeeting();
+				currentMeetingSoupFinder:ShowCurrentItem()
+			end else (if (a1 <> currentItem) then begin
+					self:move((a1 - currentItem));
+					currentItem := a1;
+					currentMeetingSoupFinder:ShowCurrentItem()
+				end)))
+end
+@@end

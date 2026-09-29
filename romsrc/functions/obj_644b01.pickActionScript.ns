@@ -1,0 +1,5 @@
+@@ 0x43e759
+func(a1) begin
+	self:hilite(nil)
+end
+@@end

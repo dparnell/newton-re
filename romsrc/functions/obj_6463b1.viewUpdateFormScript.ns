@@ -1,0 +1,10 @@
+@@ 0x481b29
+func() begin
+	self:viewSetupFormScript();
+	self:viewSetupDoneScript();
+	(if (if visibleAction then (visibleAction = 'makeVisible)) then begin
+			SetValue(self, 'text, text);
+			SetValue(self, 'viewBounds, viewBounds)
+		end)
+end
+@@end

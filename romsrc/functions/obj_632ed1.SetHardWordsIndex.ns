@@ -1,0 +1,5 @@
+@@ 0x4e6059
+func() begin
+	(self.LastHardWordIndex := (if LastHardWordIndex then ((LastHardWordIndex + 1) mod Length(hardWords)) else Random(0, (Length(hardWords) - 1))))
+end
+@@end

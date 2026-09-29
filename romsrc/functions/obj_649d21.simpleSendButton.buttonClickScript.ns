@@ -1,0 +1,6 @@
+@@ 0x4c2821
+func() begin
+	local l1;
+	(if (fields.state = 'pending) then OpenRoutingSlip(fields, nil) else (if (l1 := GetItemTransport(fields)) then self:DoRequest(l1, 'SendRequest, 'user, fields)))
+end
+@@end

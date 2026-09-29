@@ -1,0 +1,30 @@
+@@ 0x4c974d
+func() begin
+	local theInfo;
+	l1 := "";
+	if (if (if (not fields.manualDialing) then fields.toRef) then (Length(fields.toRef) > 0)) then begin
+			l2 := GetDataDefs('|nameRef.phone|):GetRoutingInfo(fields.toRef);
+			l3 := true;
+			local l1;
+			local l2;
+			local l3;
+			(foreach l4, theInfo in l2 do begin
+					if IsRichString(theInfo.rawNumber) then begin
+							AddDeferredCall(func() begin
+								self:ConvertStart(theInfo)
+							end, nil);
+							break
+						end else begin
+							if (l4 = 0) then begin
+									l1 := theInfo.phoneNumber
+								end else begin
+									if (l4 = 1) then begin
+											l1 := ParamStr("^0\u2026\u", [Array: l1])
+										end
+								end
+						end
+				end)
+		end;
+	l1
+end
+@@end

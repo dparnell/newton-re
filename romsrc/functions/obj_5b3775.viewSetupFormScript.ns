@@ -1,0 +1,6 @@
+@@ 0x5b3735
+func() begin
+	labelCommands := GetModemPopUpList();
+	inherited:?viewSetupFormScript()
+end
+@@end

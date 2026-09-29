@@ -1,0 +1,9 @@
+@@ 0x4b2391
+func(a1, a2) begin
+	self:Fileit(a1);
+	if IsSoupEntry(a1) then begin
+			EntryChange(a1)
+		end;
+	(if a2 then self:Refresh())
+end
+@@end

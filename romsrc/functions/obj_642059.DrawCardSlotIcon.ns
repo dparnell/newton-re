@@ -1,0 +1,5 @@
+@@ 0x56e5b9
+func(a1, a2, a3) begin
+	DrawXBitmap(a2, CardSlotIcons[a1], GetUserConfig('screenOrientation), a3)
+end
+@@end

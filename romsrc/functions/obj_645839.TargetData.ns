@@ -1,0 +1,5 @@
+@@ 0x4b80c5
+func() begin
+	(if (if target then path) then Clone(target.(path)) else "")
+end
+@@end

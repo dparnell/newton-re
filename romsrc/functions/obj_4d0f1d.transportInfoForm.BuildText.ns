@@ -1,0 +1,34 @@
+@@ 0x4ce01d
+@@const kLiteral_4c34e9
+"Unknown"
+@@main
+func() begin
+	local l1, l2, l3, l4, l5, l6;
+	(if target.body then begin
+			if (l1 := target.body.info) then begin
+					if l1.resolution then begin
+							if (l1.resolution[1] > 150) then begin
+									l2 := "fine"
+								end else begin
+									l2 := "standard"
+								end
+						end else begin
+							l2 := kLiteral_4c34e9
+						end;
+					self:addText(ParamStr("Resolution: ^0", [Array: l2]));
+					if (if l1.endTime then (l1.endTime <> 0)) then begin
+							l4 := NumberStr(((l3 := (target.body.info.endTime - target.body.info.startTime)) div 60));
+							l5 := NumberStr((l3 mod 60));
+							l2 := ParamStr("^0^1^2^3", [Array: l4, GetLocale().timeformat.timeSepStr2, (if (StrLen(l5) = 1) then $0), l5])
+						end else begin
+							l2 := "--"
+						end;
+					self:addText(ParamStr("Duration: ^0 minutes", [Array: l2]))
+				end;
+			if (not StrFilled((l6 := target.body.sender))) then begin
+					l6 := kLiteral_4c34e9
+				end;
+			self:addText(ParamStr("From: ^0", [Array: l6]))
+		end)
+end
+@@end

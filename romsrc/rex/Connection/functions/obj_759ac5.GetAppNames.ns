@@ -1,0 +1,14 @@
+@@ 0x75c2f5
+func(a1, a2) begin
+	local l1, l2;
+	if (BAnd(a2, 1) = 0) then begin
+			l1 := nil
+		end else begin
+			if (not (l1 := a1:GetCurrentStore())) then begin
+					return '[Array: ]
+				end
+		end;
+	self:AddDefaultApps((l2 := self:GetApplicationNames(l1, (BAnd(a2, 2) = 0))), l1);
+	return l2
+end
+@@end

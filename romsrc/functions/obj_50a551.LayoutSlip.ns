@@ -1,0 +1,88 @@
+@@ 0x503b01
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11;
+	self.dpSlip := {};
+	(l1 := dpSlip).slipTitleHt := 13;
+	l1.titleFieldHt := 70;
+	l1.dateFieldHt := 21;
+	l1.timeFieldHt := 21;
+	l1.peopleFieldHt := 21;
+	l1.locFieldHt := 21;
+	l1.alarmFieldHt := 21;
+	l1.freqFieldHt := 21;
+	l1.mtgMsgHeaderTop := 0;
+	l1.dateFieldTop := 0;
+	l1.timeFieldTop := 0;
+	l1.peopleFieldTop := 0;
+	l1.locFieldTop := 0;
+	l1.seriesMsgHeaderTop := 0;
+	l1.dateRangeTop := 0;
+	l1.freqFieldTop := 0;
+	if (if Header then Header.DateValue) then begin
+			Header.DateValue.viewFlags := BOr(Header.DateValue.viewFlags, 1)
+		end;
+	hideMtgMsgHeader := true;
+	hideDateField := true;
+	hideTimeFields := true;
+	hideInviteesField := true;
+	hideLocationField := true;
+	hideSeriesMsgHeader := true;
+	hideDateRangeFields := true;
+	hideFrequencyField := true;
+	l2 := selectedMeeting;
+	l3 := isNewMeeting;
+	l4 := (l2.viewStationery = 'cribNote);
+	l5 := (l2.repeatTemplate <> nil);
+	l6 := self:IsExceptionMeeting(l2);
+	l7 := (self:GetMeetingSlot(l2, 'mtgIconType) <> nil);
+	l8 := (if (not l5) then a1);
+	l9 := 12;
+	l10 := 2;
+	l11 := l1.slipTitleHt;
+	l1.titleFieldTop := l11;
+	l11 := (l11 + l1.titleFieldHt);
+	if (if (if l5 then (not l3)) then a1) then begin
+			hideMtgMsgHeader := nil;
+			l1.currentHt := (l11 + l10);
+			l1.mtgMsgHeaderTop := l11;
+			l11 := (l11 + l9)
+		end;
+	if (if (not (if l3 then l7)) then (not l8)) then begin
+			hideDateField := nil;
+			l1.dateFieldTop := l11;
+			l11 := (l11 + l1.dateFieldHt)
+		end;
+	if (not l4) then begin
+			hideTimeFields := nil;
+			l1.timeFieldTop := l11;
+			l11 := ((l11 + l1.timeFieldHt) + 2);
+			hideInviteesField := nil;
+			l1.peopleFieldTop := l11;
+			l11 := (l11 + l1.peopleFieldHt);
+			hideLocationField := nil;
+			l1.locFieldTop := l11;
+			l11 := (l11 + l1.locFieldHt)
+		end else begin
+			if (not hideDateField) then begin
+					l11 := (l11 + 2)
+				end
+		end;
+	l1.alarmFieldTop := l11;
+	l11 := (l11 + l1.alarmFieldHt);
+	if (not l7) then begin
+			hideFrequencyField := nil;
+			l1.freqFieldTop := l11;
+			l11 := (l11 + l1.freqFieldHt)
+		end;
+	if (if (l5 or l8) then a1) then begin
+			hideSeriesMsgHeader := nil;
+			l11 := (l11 + l10);
+			l1.seriesMsgHeaderTop := l11;
+			l11 := (l11 + l9);
+			hideDateRangeFields := nil;
+			l1.dateRangeTop := l11;
+			l11 := (l11 + l1.dateFieldHt)
+		end;
+	(l1.headerHt := l11)
+end
+@@end

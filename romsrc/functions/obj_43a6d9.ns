@@ -1,0 +1,10 @@
+@@ 0x43a6d9
+func(a1, a2) begin
+	local l1, l2;
+	(l1 := Clone(a2)).left := (l1.left + 18);
+	if nothingCheckable then begin
+			return self:Abstract(a1, a2)
+		end;
+	(if ((l2 := self:CheckState(a1)) = 'NotCheckable) then return self:Abstract(a1, l1) else (if l2 then return [Array: OffsetShape(MakeShape(CheckOn), ((l1.left - 18) + checkBoxHorzOffset), (l1.top + checkBoxVertOffset)), self:Abstract(a1, l1)] else return [Array: OffsetShape(MakeShape(CheckOff), ((l1.left - 18) + checkBoxHorzOffset), (l1.top + checkBoxVertOffset)), self:Abstract(a1, l1)]))
+end
+@@end

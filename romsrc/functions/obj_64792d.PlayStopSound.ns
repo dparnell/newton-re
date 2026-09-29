@@ -1,0 +1,5 @@
+@@ 0x4405f9
+func() begin
+	playsound(@300)
+end
+@@end

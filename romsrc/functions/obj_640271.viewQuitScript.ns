@@ -1,0 +1,5 @@
+@@ 0x49a1dd
+func() begin
+	self:UnregisterOpenKeyboard()
+end
+@@end

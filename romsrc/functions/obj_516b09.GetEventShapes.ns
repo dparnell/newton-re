@@ -1,0 +1,14 @@
+@@ 0x516a49
+func(a1, a2, a3) begin
+	(if (l1 := GetAllMeetings(notes, RepeatNotes, a1, (a1 + 1440))) then begin
+			local l1;
+			local l2;
+			l2 := (foreach l3 in l1 collect begin
+				local l7;
+				a2 := (ShapeBounds((l7 := self:GetSingleEventShape(l3, a2, a3))).bottom + 2);
+				l7
+			end);
+			ArrayInsert(l2, bodyStyle, 0)
+		end)
+end
+@@end

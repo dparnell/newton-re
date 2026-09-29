@@ -1,0 +1,9 @@
+@@ 0x751225
+func() begin
+	local l1;
+	inherited:?viewSetupChildrenScript();
+	entryLine.viewFont := 10241;
+	l1 := entryLine.viewBounds;
+	(if (StrFontWidth(entryLine.text, entryLine.viewFont) > (l1.right - l1.left)) then (entryLine.viewFont := 9217))
+end
+@@end

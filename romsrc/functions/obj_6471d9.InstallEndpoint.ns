@@ -1,0 +1,17 @@
+@@ 0x5354c9
+func(a1, a2) begin
+	abortCall := nil;
+	if a1.serviceId then begin
+			self:SetStatusDialog('Connecting, 'vStatus, {primary: {text: "Stop", script: func() begin
+				(GetRoot().(appSymbol).abortCall := true)
+			end}})
+		end;
+	callEndpoint := {_proto: @662, _parent: self, configOptions: a1.config.configOptions, afterOptions: a1.config.afterOptions, serviceId: a1.serviceId};
+	callEndpoint:Open(a2);
+	(if abortCall then begin
+			status := 'cancelling;
+			self:CancelRequest('userCancel);
+			Throw('|evt.ex.comm|, -16005)
+		end)
+end
+@@end

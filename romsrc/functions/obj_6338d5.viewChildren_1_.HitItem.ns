@@ -1,0 +1,12 @@
+@@ 0x5b4e7d
+func(a1, a2, a3) begin
+	local l1, l2;
+	l1 := cursor:clone();
+	l1:move(a1);
+	l2 := l1:entry();
+	if openChild then begin
+			openChild:Close()
+		end;
+	(openChild := OpenPrefsTo(l2))
+end
+@@end

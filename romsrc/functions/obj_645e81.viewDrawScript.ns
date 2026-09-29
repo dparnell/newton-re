@@ -1,0 +1,5 @@
+@@ 0x438275
+func() begin
+	self:DrawShape(shape, '{font: 1057792, fillPattern: 5, transferMode: 0, penPattern: 0})
+end
+@@end

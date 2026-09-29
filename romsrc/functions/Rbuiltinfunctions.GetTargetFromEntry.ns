@@ -1,0 +1,18 @@
+@@ 0x4b2595
+func(a1) begin
+	local l1, l2;
+	if (not a1) then begin
+			return nil
+		end;
+	l1 := (if a1.body then a1.body else a1);
+	if a1.needsResolve then begin
+			if (l2 := GetCurrentFormat(a1)) then begin
+					l1 := l2:ResolveBody(a1)
+				end;
+			if (not l1) then begin
+					GetRoot():Notify(3, "InOut Box", "This item cannot be routed; the original has been removed or deleted.")
+				end
+		end;
+	l1
+end
+@@end

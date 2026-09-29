@@ -1,0 +1,9 @@
+@@ 0x757b39
+func() begin
+	(if (error <> 0) then begin
+			self.text := "The restore operation stopped before it was completed so some of your data was not restored.  Your Newton device needs to be restarted to use the restored information.";
+			self.viewBounds := Clone(viewBounds);
+			(viewBounds.bottom := (viewBounds.bottom + 20))
+		end else (self.text := "Your Newton device needs to be restarted to use the restored information."))
+end
+@@end

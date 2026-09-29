@@ -1,0 +1,5 @@
+@@ 0x76c459
+func() begin
+	SetValue(label, 'text, calcLineLabel)
+end
+@@end

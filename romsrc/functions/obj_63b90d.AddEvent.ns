@@ -1,0 +1,20 @@
+@@ 0x510389
+func(a1, a2, a3, a4) begin
+	local l1, l2, l3;
+	self:ValidateTitleAndDatetimeArgs(a1, a2);
+	self:ValidatePeriod(a2, a3, a4);
+	if ((l1 := Date(a2)).year = 2920) then begin
+			l1.year := Date(Time()).year;
+			a2 := TotalMinutes(l1)
+		end;
+	l2 := (a2 - (a2 mod 1440));
+	l3 := self:MakeNewMeetingFrame('cribNote, a1, l2, 0);
+	self:InitializeRepeatInfo(a3, a4, a2, l3);
+	if l3.repeatType then begin
+			self:CarefulAdd(GetUnionSoupAlways(@242), l3, nil)
+		end else begin
+			self:CarefulAdd(GetUnionSoupAlways(@22), l3, nil)
+		end;
+	l3
+end
+@@end

@@ -1,0 +1,14 @@
+@@ 0x462a89
+func() begin
+	local l1;
+	l1 := Length(blinkList);
+	SetValue(self, 'icon, blinkList[(blinkCount mod l1)]);
+	(if (blinkCount < (blinkReps * l1)) then begin
+			blinkCount := (blinkCount + 1);
+			blinkRate
+		end else begin
+			blinkCount := 0;
+			(blinkDelay := min((blinkDelay * 2), maxDelay))
+		end)
+end
+@@end

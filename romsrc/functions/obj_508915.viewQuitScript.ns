@@ -1,0 +1,21 @@
+@@ 0x508895
+func() begin
+	local l1, l2, l3;
+	(if notesDirty then begin
+			dirtyFlag := true;
+			l1 := self:GetNotesData(selectedMeeting)[0];
+			if (if (l2 := target.data) then (Length(l2) = 0)) then begin
+					l2 := nil
+				end;
+			self:ChangeMeeting(selectedMeeting, l1, l2);
+			(if Visible(MeetingNotes) then notesButton:SyncView() else begin
+					if selectedMeeting.repeatTemplate then begin
+							l3 := selectedMeeting.repeatTemplate
+						end else begin
+							l3 := selectedMeeting
+						end;
+					EntryChangeXmit(l3, 'calendar)
+				end)
+		end)
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x728fd5
+func() begin
+	local l1;
+	(l1 := BuildContext(setpasswordslip)).target := target;
+	l1.path := path;
+	appBase:RememberedOpen(l1)
+end
+@@end

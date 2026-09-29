@@ -1,0 +1,31 @@
+@@ 0x487dd9
+func(a1, a2, a3, a4) begin
+	local l1;
+	l1 := GetUserConfig('userFolderGroups);
+	theApp := a2;
+	oldApp := (if (if l1._Global then SetContains(l1._Global, a1)) then '_Global else a2);
+	oldName := (if (oldSymbol := a1) then GetFolderStr(oldSymbol) else "");
+	if (if a4 then a3) then begin
+			doLocalFolders := (doGlobalFolders := true)
+		end else begin
+			doLocalFolders := (not a4);
+			doGlobalFolders := (not a3)
+		end;
+	if (not a1) then begin
+			if (if l1._Global then (Length(l1._Global) >= 12)) then begin
+					doGlobalFolders := nil
+				end;
+			if (if (if doLocalFolders then l1.(theApp)) then (Length(l1.(theApp)) >= 12)) then begin
+					doLocalFolders := nil
+				end;
+			if (if (not doLocalFolders) then (not doGlobalFolders)) then begin
+					self:Notify(3, "Filing", "Can't create any more folders.  Edit or Delete an existing one.");
+					return nil
+				end;
+			title := "New Folder Title"
+		end else begin
+			title := "Edit Folder Title"
+		end;
+	self:Open()
+end
+@@end

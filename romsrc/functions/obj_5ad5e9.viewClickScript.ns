@@ -1,0 +1,12 @@
+@@ 0x5ad5c9
+func(a1) begin
+	local l1;
+	clicker();
+	(if (l1 := ClickLetterScript(a1)) then begin
+			displayOrigin := l1;
+			hiliteIndex := GetHiliteIndex();
+			letterShapeLabel:UpdateText();
+			enableCluster:getNewSetting()
+		end)
+end
+@@end

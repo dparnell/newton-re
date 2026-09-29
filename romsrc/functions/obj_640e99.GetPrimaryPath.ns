@@ -1,0 +1,9 @@
+@@ 0x4576c5
+func(a1) begin
+	local l1, l2;
+	if (l1 := ObjEntryClass(a1)) then begin
+			l2 := primaryPathMapper.(l1)
+		end;
+	(if l2 then l2 else primaryPath)
+end
+@@end

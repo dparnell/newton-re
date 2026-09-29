@@ -1,0 +1,12 @@
+@@ 0x555d35
+func() begin
+	localFoldersOnly := theApp.localFoldersOnly;
+	appSymbol := theApp.appSymbol;
+	doCardRouting := (theApp.soupervisor.type <> 'fileOnly);
+	if (theApp.soupervisor.type = 'moveOnly) then begin
+			doCardRouting := 'onlyCardRouting
+		end;
+	target.store := nil;
+	inherited:buttonClickScript()
+end
+@@end

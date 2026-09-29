@@ -1,0 +1,8 @@
+@@ 0x4ccc61
+func() begin
+	if (if fields.comments then (Length(fields.comments) > 0)) then begin
+			viewFormat := (viewFormat + 48)
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

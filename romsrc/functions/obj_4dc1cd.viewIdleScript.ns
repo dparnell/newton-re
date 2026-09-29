@@ -1,0 +1,13 @@
+@@ 0x4dc18d
+func() begin
+	(if jangling then begin
+			if (jangling < 0) then begin
+					jangling := nil
+				end else begin
+					jangling := (jangling - 1)
+				end;
+			PlaySoundIrregardlessAtVolume(@301, 4);
+			750
+		end else inherited:viewIdleScript())
+end
+@@end

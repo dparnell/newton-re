@@ -1,0 +1,30 @@
+@@ 0x54f3bd
+func(a1) begin
+	l1 := [Array: ];
+	l2 := [Array: ];
+	local l1;
+	local l2;
+	(foreach l3 in a1 do begin
+			local l5;
+			if (if (l3.target:Preflight('route, a1) = 'OK) then (not l3.target.fentry.locked)) then begin
+					if (if (l5 := l3.target:LookupSoupPackage()) then (not l3.target:copyprotected())) then begin
+							SetAdd(l2, {class: 'packageFrame, package: l5.pkgRef}, true)
+						end;
+					SetAdd(l1, l3, true)
+				end
+		end);
+	(if (Length(l1) > 0) then begin
+			if (Length(l2) = 1) then begin
+					fakeTarget.packs := l2[0]
+				end else begin
+					if (Length(l2) > 1) then begin
+							fakeTarget.packs := CreateTargetCursor('packageList, l2)
+						end
+				end;
+			true
+		end else begin
+			fakeTarget.packs := nil;
+			nil
+		end)
+end
+@@end

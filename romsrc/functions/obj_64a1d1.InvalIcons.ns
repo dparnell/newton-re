@@ -1,0 +1,5 @@
+@@ 0x54c83d
+func() begin
+	AddProcrastinatedSend('_extrasdrawer, self, 'RedoIcons, [Array: ], 0)
+end
+@@end

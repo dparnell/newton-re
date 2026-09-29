@@ -1,0 +1,6 @@
+@@ 0x78d325 names
+func(anIndex) begin
+	local bounds;
+	RelBounds((((bounds := self:MarkerBounds(topics[anIndex])).left + 2) - 1), ((bounds.top + 4) - 1), 14, self:TopicHeight(topics[anIndex]))
+end
+@@end

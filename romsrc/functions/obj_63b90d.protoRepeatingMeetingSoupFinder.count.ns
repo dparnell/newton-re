@@ -1,0 +1,8 @@
+@@ 0x4edc95
+func() begin
+	if (not cacheCount) then begin
+			self:Initialize()
+		end;
+	cacheCount
+end
+@@end

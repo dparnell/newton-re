@@ -1,0 +1,70 @@
+@@ 0x46422d
+func(a1) begin
+	l1 := [Array: ];
+	l2 := nil;
+	if (not (l3 := (if a1 then GetRoot().(a1)))) then begin
+			l3 := GetRoot()
+		end;
+	if (if (a1 <> nil) then (Routing.(a1) <> nil)) then begin
+			l2 := [Array: ];
+			l4 := nil;
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			(foreach l5 in Routing.(a1) do begin
+					if l5 then begin
+							if ((l5.routeform = 'printSlip) or (l5.routeform = 'faxSlip)) then begin
+									l7 := 'Print;
+									if (l5.routeform = 'faxSlip) then begin
+											l7 := 'fax
+										end;
+									local l7;
+									(foreach l8 in l5.formats do begin
+											if (ClassOf(l8) = 'symbol) then begin
+													l4 := l8;
+													l8 := GetVariable(l3, l8)
+												end;
+											if (l8 <> nil) then begin
+													l10 := {_proto: l8, symbol: l4, noDefaults: true, dataTypes: [Array: l7]};
+													SetAdd(l2, l10, true)
+												end
+										end)
+								end else begin
+									if (l5.routeform = 'mailSlip) then begin
+											(foreach l8 in l5.formats do begin
+													if (ClassOf(l8) = 'symbol) then begin
+															l4 := l8;
+															l8 := GetVariable(l3, l8)
+														end;
+													if (l8 <> nil) then begin
+															(l10 := Clone(l8)).type := 'printFormat;
+															l10.symbol := l4;
+															l10.noDefaults := true;
+															l10.dataTypes := [Array: 'mail];
+															SetAdd(l2, l10, true)
+														end
+												end)
+										end else begin
+											if (l5.routeform = 'zapSlip) then begin
+													l10 := {_proto: @490, noDefaults: true, dataTypes: [Array: 'beam]};
+													SetAdd(l2, l10, true)
+												end else begin
+													if l5.routeform then begin end
+												end
+										end
+								end
+						end
+				end)
+		end;
+	if l2 then begin
+			(foreach l8 in l2 do begin
+					local l10;
+					if (l8 <> nil) then begin
+							SetAdd(l1, l8, true)
+						end
+				end)
+		end;
+	(if (Length(l1) > 0) then l1)
+end
+@@end

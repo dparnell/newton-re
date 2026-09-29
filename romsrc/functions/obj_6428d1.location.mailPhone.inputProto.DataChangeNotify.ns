@@ -1,0 +1,6 @@
+@@ 0x48d339
+func(a1, a2) begin
+	local l1, l2;
+	(if (a1 = 'mailNetwork) then (if (if (l1 := GetCityFromAlias(target.cityAlias)) then (l2 := GetRoot().cardfile:bcEmailNetwork(l1, a2))) then mailPhone:UpdateText(ConvertIntToPhone(l2[0].mailPhone))))
+end
+@@end

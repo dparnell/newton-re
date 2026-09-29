@@ -1,0 +1,11 @@
+@@ 0x599365
+func(a1) begin
+	chosenFormat := a1;
+	if fields.edited then begin
+			self:Confirm(appName, "Changing the format will cause your text changes to be lost. Do you want to continue?", self, 'doChangeFormat)
+		end else begin
+			self:doChangeFormat(true)
+		end;
+	true
+end
+@@end

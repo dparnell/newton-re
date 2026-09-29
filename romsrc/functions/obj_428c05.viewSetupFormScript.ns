@@ -1,0 +1,10 @@
+@@ 0x428ba5
+func() begin
+	if (Gestalt(16777219).cputype = 'strongarm) then begin
+			labelCommands := [Array: {item: "Voice (2K/sec)", symbol: 'GSM8K16Codec}, {item: "Voice (4K/sec)", symbol: 'IMA8K16Codec}, {item: "Music (5K/sec)", symbol: 'IMA10K16Codec}]
+		end else begin
+			labelCommands := [Array: {item: "Low (4K/sec)", symbol: 'IMA8K16Codec}, {item: "High (5K/sec)", symbol: 'IMA10K16Codec}]
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

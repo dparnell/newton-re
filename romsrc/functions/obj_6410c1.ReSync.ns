@@ -1,0 +1,8 @@
+@@ 0x55eec9
+func() begin
+	cacheCount := nil;
+	currentItem := 0;
+	self:Reset();
+	(zeroOneOrMoreResult := nil)
+end
+@@end

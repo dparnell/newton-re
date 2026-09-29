@@ -1,0 +1,6 @@
+@@ 0x44f709
+func(a1, a2, a3) begin
+	local l1;
+	(if (a3 = '|=|) then IsSameEntry(a1, a2) else ((if ((l1 := StrCompare(a1.sorton, a2.sorton)) < 0) then (a3 = '|<|)) or (if (l1 > 0) then (a3 = '|>|))))
+end
+@@end

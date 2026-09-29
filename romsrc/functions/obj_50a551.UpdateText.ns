@@ -1,0 +1,5 @@
+@@ 0x503b7d
+func() begin
+	(if (not BinEqual(newTitle, self:GetMeetingText(selectedMeeting))) then self:ChangeMeeting(selectedMeeting, 'mtgText, newTitle))
+end
+@@end

@@ -1,0 +1,12 @@
+@@ 0x496b19
+func() begin
+	local l1;
+	inherited:?viewSetupFormScript();
+	l1 := self:getDestStore();
+	self.text := Clone(l1:GetName());
+	(if l1:IsReadOnly() then begin
+			self.viewFlags := BAnd(self.viewFlags, bnot(14848));
+			(self.viewFormat := BAnd(self.viewFormat, bnot(143616)))
+		end)
+end
+@@end

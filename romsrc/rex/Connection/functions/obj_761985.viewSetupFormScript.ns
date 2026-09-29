@@ -1,0 +1,10 @@
+@@ 0x761a29
+func() begin
+	local l1;
+	(if options.button then begin
+			self.text := options.button.buttonTitle;
+			(l1 := Clone(viewBounds)).left := ((viewBounds.right - StrWidth(text)) - 7);
+			(self.viewBounds := l1)
+		end)
+end
+@@end

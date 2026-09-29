@@ -1,0 +1,7 @@
+@@ 0x7a0e35 names
+func(x) begin
+	repeatType := repeatingView.repeatType;
+	mtgInfo := repeatingView.mtgInfo;
+	inherited:popit(x)
+end
+@@end

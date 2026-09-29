@@ -1,0 +1,44 @@
+@@ 0x74d751
+func(a1, a2) begin
+	fileList.listItems := [Array: ];
+	if aborting then begin
+			return true
+		end;
+	l1 := (if a2 then "spth");
+	checkCommandsInIdle := nil;
+	l2 := protoContext:GetNewFiles(endpoint, currentPath, l1, func(a1) begin
+		browseFolder:SetNewPath(a1)
+	end);
+	checkCommandsInIdle := true;
+	(if l2 then begin
+			currentFiles := l2;
+			l3 := [Array: ];
+			l4 := FontAscent(fileList.viewFont);
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			(foreach l5 in currentFiles do begin
+					local l7, l8, l9, l10;
+					l7 := macIcons[1];
+					if (if (l5.type >= 0) then (l5.type <= 9)) then begin
+							l7 := macIcons[l5.type]
+						end;
+					l8 := DeepClone(l7);
+					l9 := MakeText(l5.name, 16, 0, (StrFontWidth(l5.name, fileList.viewFont) + 16), l4);
+					if HasPath(l5, 'alias) then begin
+							l10 := [Array: l8, DeepClone(fileList.italicStyle), l9]
+						end else begin
+							l10 := [Array: l8, l9]
+						end;
+					AddArraySlot(l3, l10)
+				end);
+			fileList.listItems := l3;
+			fileList:SetupList();
+			if a1 then begin
+					fileList:RedoChildren()
+				end;
+			return true
+		end else return nil)
+end
+@@end

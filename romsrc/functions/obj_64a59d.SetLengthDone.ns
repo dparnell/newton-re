@@ -1,0 +1,11 @@
+@@ 0x425ca1
+func() begin
+	if (fSetLengthInProgress = 'play) then begin
+			self:DoPlay()
+		end;
+	if (fSetLengthInProgress = 'record) then begin
+			self:DoRecord()
+		end;
+	(fSetLengthInProgress := nil)
+end
+@@end

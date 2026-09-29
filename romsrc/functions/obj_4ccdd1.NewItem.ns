@@ -1,0 +1,18 @@
+@@ 0x4cb5d5
+func(a1) begin
+	local l1, l2;
+	l1 := inherited:NewItem(a1);
+	l2 := userConfiguration;
+	l1.fromRef := l2.currentPersona;
+	l1.fromTitle := l2.currentFaxTitle;
+	l1.localId := MakeDisplayPhone(l2.faxPhone);
+	l1.coverPage := l2.currentcoverpage;
+	l1.faxResolution := l2.faxResolution;
+	l1.printer := @81;
+	self:SetPageBounds(l1);
+	l1.name := "";
+	l1.phoneNumber := "";
+	l1.displayNumber := "";
+	l1
+end
+@@end

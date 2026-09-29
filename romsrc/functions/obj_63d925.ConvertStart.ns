@@ -1,0 +1,5 @@
+@@ 0x5a3fc1
+func() begin
+	self:ConvertInkText(GetUserConfig('mailAccount), 'alpha, nil, "Converting e-mail account", "Please verify that the ink text was converted correctly.", 'InkConvert, 'ConvertedAccount, nil)
+end
+@@end

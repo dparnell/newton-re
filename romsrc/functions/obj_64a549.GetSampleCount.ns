@@ -1,0 +1,5 @@
+@@ 0x423349
+func() begin
+	(if self.length then self.length else (if samples then (Length(samples) div self:GetSampleSize()) else 0))
+end
+@@end

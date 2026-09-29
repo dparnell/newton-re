@@ -1,0 +1,9 @@
+@@ 0x764b75
+func() begin
+	inherited:?viewSetupFormScript();
+	(if (not target) then begin
+			nodata.viewFlags := BOr(nodata.viewFlags, 1);
+			(ImageTarget.viewFlags := 0)
+		end)
+end
+@@end

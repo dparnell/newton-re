@@ -1,0 +1,7 @@
+@@ 0x55d4dd
+func(a1) begin
+	findText := a1;
+	SetValue(findStatus, 'text, "");
+	(findAllResults := nil)
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x495f51
+func() begin
+	local l1;
+	l1 := self:getDestStore();
+	self:DrawShape(infoShapes, {font: viewFont});
+	self:DrawShape([Array: (if lastROValue then lockShape else unlockShape)], nil);
+	DrawXBitmap(cardSlotIconBounds, cardSlotIcon, screenOrientation, 0)
+end
+@@end

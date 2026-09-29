@@ -1,0 +1,5 @@
+@@ 0x5b14f9
+func() begin
+	GetRegisteredSound(GetUserConfig('beepSound)).userName
+end
+@@end

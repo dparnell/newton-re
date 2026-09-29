@@ -1,0 +1,8 @@
+@@ 0x48dbd1
+func(a1, a2) begin
+	if ((not a1.mailAccess) or (Length(a1.mailAccess) < 1)) then begin
+			a1.mailAccess := [Array: {}]
+		end;
+	'[pathExpr: mailAccess, 0]
+end
+@@end

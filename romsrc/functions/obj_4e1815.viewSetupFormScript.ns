@@ -1,0 +1,6 @@
+@@ 0x4e10ed
+func() begin
+	currentForm := self;
+	SetKeyView(self, 0)
+end
+@@end

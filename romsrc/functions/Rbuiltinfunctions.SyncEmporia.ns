@@ -1,0 +1,33 @@
+@@ 0x48bd9d
+@@const kFunction_48bc21
+func(a1, a2) begin
+	(if (l3 := GetUserConfig(a1)) then begin
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			local l5;
+			(foreach l1, l2 in l3 do begin
+					local l7;
+					if (not ResolveEntryAlias(l2)) then begin
+							ArrayRemoveCount(l3, l1, 1);
+							l4 := true
+						end
+				end);
+			if l4 then begin
+					SetUserConfig(a1, l3)
+				end;
+			(if ((not (l7 := GetUserConfig(a2))) or (not ResolveEntryAlias(l7))) then (if (a2 = 'currentPersona) then (if (Length(l3) > 0) then begin
+							SetUserConfig('currentPersona, l3[0]);
+							UseCurrentPersona()
+						end else begin
+							(l5 := {name: Clone(""), address: Clone(""), cityZip: Clone(""), company: Clone(""), signature: nil, mailAccount: Clone(""), mailPassword: nil, homePhone: nil, faxPhone: nil, phone: nil}).(a2) := nil;
+							SetUserConfigEnMasse('personae, l5)
+						end) else (if l7 then SetUserConfig(a2, nil))))
+		end)
+end
+@@main
+func() begin
+	call (kFunction_48bc21) with ('emporia, 'currentEmporium)
+end
+@@end

@@ -1,0 +1,12 @@
+@@ 0x45258d
+func() begin
+	local l1, l2;
+	if (if IsFrame(fOpenEditor) then (l1 := GetView(fOpenEditor))) then begin
+			l1:Close()
+		end;
+	fTapinfo := nil;
+	l2 := (not (pickerDef.dontPurge or dontPurge));
+	listBase:CleanupSelected(selected, l2);
+	(if (if fSoup then soupChangeSymbol) then UnRegSoupChange(fSoup:GetName(), soupChangeSymbol))
+end
+@@end

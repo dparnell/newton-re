@@ -1,0 +1,23 @@
+@@ 0x416825
+func(a1, a2) begin
+	if ((not a2) or (Length(a2) = 0)) then begin
+			a2 := '[Array: 9, 10, 12, 18]
+		end;
+	l1 := [Array: ];
+	local l1;
+	(foreach l2, l3 in a2 do begin
+			local l5, l6;
+			if (l2 = 0) then begin
+					l5 := ParamStr("^0 point", [Array: l3])
+				end else begin
+					l5 := SPrintObject(l3)
+				end;
+			l6 := {item: l5, size: l3};
+			if (a1 = l3) then begin
+					l6.mark := $\uFC0B
+				end;
+			AddArraySlot(l1, l6)
+		end);
+	l1
+end
+@@end

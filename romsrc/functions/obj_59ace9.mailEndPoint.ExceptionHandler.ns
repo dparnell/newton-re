@@ -1,0 +1,11 @@
+@@ 0x59aad9
+func(a1) begin
+	if (mailEndPoint.curstate = nil) then begin
+			return nil
+		end;
+	if (curerror = nil) then begin
+			curerror := a1.data
+		end;
+	AddDeferredSend(ep, 'stopCCL, nil)
+end
+@@end

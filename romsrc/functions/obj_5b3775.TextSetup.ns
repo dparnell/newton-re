@@ -1,0 +1,5 @@
+@@ 0x5b36cd
+func() begin
+	GetUserConfig('currentModem)
+end
+@@end

@@ -1,0 +1,11 @@
+@@ 0x476e3d
+func(a1) begin
+	(if GetGlobals().entryForms then begin
+			SetRemove(entryForms, a1);
+			(if (Length(entryForms) = 0) then begin
+					entryForms := nil;
+					UnRegStoreChange('_routing)
+				end)
+		end)
+end
+@@end

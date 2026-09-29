@@ -1,0 +1,5 @@
+@@ 0x4f7f55
+func(a1) begin
+	self:_localCommonScrollScript('down, {amount: 1})
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x5b1d69
+func() begin
+	(viewValue := (not GetUserConfig('powerSleep)))
+end
+@@end

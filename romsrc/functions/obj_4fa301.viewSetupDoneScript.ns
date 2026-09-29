@@ -1,0 +1,22 @@
+@@ 0x4fa2c1
+func() begin
+	local l1, l2;
+	if (mainDisplay = scheduleView) then begin
+			l1 := (ViewDuration div 60);
+			yPos := (startTime div 60);
+			ViewRect := SetBounds(0, 0, 0, l1);
+			DataRect := SetBounds(0, 9999, 0, 9999);
+			ScrollRect := SetBounds(0, 0, 0, 24)
+		end else begin
+			if (mainDisplay = ToDoListView) then begin end else begin
+					if (mainDisplay = AgendaView) then begin
+							yPos := 0;
+							ScrollRect := (l2 := SetBounds(0, 0, 0, 7));
+							DataRect := l2;
+							ViewRect := l2
+						end
+				end
+		end;
+	inherited:?viewSetupDoneScript()
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x42a435
+func(a1) begin
+	if self:TrackHilite(a1) then begin
+			self:radioClickScript(a1);
+			self:hilite(nil)
+		end;
+	true
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x4fc905
+func(a1) begin
+	local l1, l2;
+	(if ((((l2 := (l1 := (if a1.realData then a1.realData else a1)).viewStationery) = 'meeting) or (l2 = 'RepeatingMeeting)) or (l2 = 'exceptionMeeting)) then begin
+			self:RemoveMeetingFromDate(a1, displaydate, true);
+			true
+		end)
+end
+@@end

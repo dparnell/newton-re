@@ -1,0 +1,5 @@
+@@ 0x4cfff1
+func(a1, a2, a3) begin
+	a1:DoListen(a3)
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x5a8375
+func(a1) begin
+	local l1;
+	(if (l1 := GetDirectoryEntry(a1)) then EntryRemoveFromSoup(l1))
+end
+@@end

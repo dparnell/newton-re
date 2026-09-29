@@ -1,0 +1,30 @@
+@@ 0x5153bd
+func() begin
+	l1 := self:LocalBox();
+	tabAcross := numDays;
+	tabWidths := ((viewWidth := l1.right) div tabAcross);
+	tabValues := selectedDates;
+	self.stepChildren := self:LayoutTable(self, 0, 0);
+	l2 := tabValues[0];
+	l3 := (tabValues[(numDays - 1)] + 1440);
+	l4 := GetAllMeetings(MeetingSoup, RepeatSoup, l2, l3);
+	l5 := 0;
+	l6 := 0;
+	self.SubKids := Array(numDays, nil);
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	local l6;
+	local l7;
+	local l8;
+	(if l4 then (for l9 := 0 to (numDays - 1) do begin
+				l8 := (tabValues[l9] + 1440);
+				if ((l7 := BSearchRight(l4, l8, '|<|, 'mtgStartDate)) >= l5) then begin
+						SubKids[l9] := ArrayMunger([Array: ], 0, nil, l4, l5, ((l7 - l5) + 1));
+						l5 := (l7 + 1)
+					end
+			end))
+end
+@@end

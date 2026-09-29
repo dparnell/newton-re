@@ -1,0 +1,6 @@
+@@ 0x7acff1
+func(a1, a2) begin
+	self:?textChanged();
+	(if (if (if (StrLen(self.text) = 3) then fPersona.country) then StrEqual(fPersona.country, "USA")) then AddDeferredSend(self, 'moveKeyView, nil))
+end
+@@end

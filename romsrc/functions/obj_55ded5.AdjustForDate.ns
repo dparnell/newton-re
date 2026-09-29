@@ -1,0 +1,17 @@
+@@ 0x55dc85
+func() begin
+	(if (curLabelCommand <> 0) then begin
+			if (if entryLine.text then (not StringToDate(entryLine.text))) then begin
+					findDate.selectedDates := [Array: Time()];
+					SetValue(entryLine, 'text, ShortDateStr(findDate.selectedDates[0], 0))
+				end;
+			SetValue(findDate, 'viewFlags, 515);
+			SetValue(entryLine, 'viewFormat, 0)
+		end else begin
+			SetValue(entryLine, 'text, "");
+			SetValue(entryLine, 'viewFormat, 12288);
+			SetKeyView(entryLine, 0);
+			SetValue(findDate, 'viewFlags, 3)
+		end)
+end
+@@end

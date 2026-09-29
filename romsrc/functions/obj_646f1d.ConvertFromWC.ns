@@ -1,0 +1,9 @@
+@@ 0x438429
+func(a1) begin
+	local l1;
+	if ((l1 := (a1 div 24855)) > 10800) then begin
+			l1 := (l1 - 21600)
+		end;
+	l1
+end
+@@end

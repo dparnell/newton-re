@@ -1,0 +1,38 @@
+@@ 0x503a41
+func() begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9;
+	(if (RepeatingView.repeatType <> 5) then begin
+			if ((l1 := selectedMeeting.repeatTemplate) = nil) then begin
+					return nil
+				end;
+			if (not IsSoupEntry(l1)) then begin
+					l1 := nil
+				end;
+			if l1 then begin
+					l6 := ((l5 := l1.mtgStartDate) mod 1440);
+					l7 := ((l2 := (newFirstDate - (newFirstDate mod 1440))) + l6);
+					if (l1.mtgStartDate <> l7) then begin
+							self:ChangeMeeting(selectedMeeting, 'mtgFirstDate, l7);
+							l3 := true
+						end
+				end;
+			if (newStopDate = 536870911) then begin
+					l8 := 536870911
+				end else begin
+					l8 := (((l2 := (newStopDate - (newStopDate mod 1440))) + 1440) - 1)
+				end;
+			if newSplitRepeatTemplate then begin
+					if (newSplitRepeatTemplate.mtgStopDate <> l8) then begin
+							newSplitRepeatTemplate.mtgStopDate := l8;
+							self:CarefulChange(selectedRepeatSoup, newSplitRepeatTemplate, true)
+						end
+				end else begin
+					if (if l1 then (l1.mtgStopDate <> l8)) then begin
+							self:ChangeMeeting(selectedMeeting, 'mtgStopDate, l8);
+							l4 := true
+						end
+				end;
+			(if ((if l3 then (l1.mtgStartDate > selectedMeeting.mtgStartDate)) or (if l4 then (l1.mtgStopDate < selectedMeeting.mtgStartDate))) then (if ((l9 := NextMeeting(0, l1)) <> 0) then (selectedMeeting.mtgStartDate := l9)))
+		end)
+end
+@@end

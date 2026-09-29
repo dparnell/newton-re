@@ -1,0 +1,33 @@
+@@ 0x45f39d
+func(a1, a2, a3) begin
+	if (a1 = nil) then begin
+			return nil
+		end;
+	if (not bitmapStore) then begin
+			bitmapStore := GetDefaultStore()
+		end;
+	myImage := (myUnscaledImage := a1);
+	self:CalculateUsefulSizes();
+	self:SetupZoomStops();
+	vAnnotations:Close();
+	SetValue(vAnnotations, 'viewBounds, fullSize);
+	if (a2 <> nil) then begin
+			vAnnotations.viewChildren := a2
+		end else begin
+			vAnnotations.viewChildren := [Array: ]
+		end;
+	quiet := true;
+	currentSize := RelBounds(0, 0, 1, 1);
+	if a3 then begin
+			self:ZoomTo(a3.zoomedTo);
+			self:ScrollTo(a3.offsetX, a3.offsetY)
+		end else begin
+			self:ZoomTo(fZoomedTo)
+		end;
+	quiet := nil;
+	if (not self:SetAnnotationMode(fAnnotateMode)) then begin
+			self:SetAnnotationMode('Show)
+		end;
+	ClearUndoStacks()
+end
+@@end

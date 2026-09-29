@@ -1,0 +1,12 @@
+@@ 0x55f411
+@@const kFunction_55f3f1
+func(a1, a2) begin
+	(if (a1._uniqueID = a2._uniqueID) then (a1._storeID = a2._storeID))
+end
+@@main
+func(a1) begin
+	local l1, l2;
+	l1 := {_uniqueID: a1.entryID, _storeID: a1.storeID};
+	(if selected then (if (l2 := ArrayPos(selected, l1, 0, kFunction_55f3f1)) then RemoveSlot(selected, l2) else AddArraySlot(selected, l1)) else (selected := [Array: l1]))
+end
+@@end

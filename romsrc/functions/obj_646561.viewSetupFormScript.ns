@@ -1,0 +1,17 @@
+@@ 0x47a62d
+func() begin
+	textWidth := (((displayParams.appAreaWidth - 42) - 10) - 18);
+	currentOffset := 1;
+	pix := [Array: self:addIcon(icon, 0), self:addIconLine(description, 0), self:addTextLine(ParamStr("Size: ^0 bytes (^1)", [Array: EntrySize(target), EntryStore(target):GetName()]), 1)];
+	if (if ((target.state = 'Sent) or (target.state = 'OutLog)) then HasSlot(target, 'sentTimeStamp)) then begin
+			self:addText(ParamStr("Sent: ^2 ^0 ^1", [Array: LongDateStr(target.sentTimeStamp, @66.abbrDayOfWeekStrSpec), ShortDateStr(target.sentTimeStamp, @66.numericDateStrSpec), HourMinute(target.sentTimeStamp)]))
+		end;
+	self:?BuildText();
+	height := ((68 + (currentOffset * 16)) + addedHeight);
+	viewBounds := self:CalcBounds(bbox);
+	if EntryStore(target):IsReadOnly() then begin
+			viewFlags := (viewFlags + 128)
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

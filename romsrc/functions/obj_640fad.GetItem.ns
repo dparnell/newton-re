@@ -1,0 +1,6 @@
+@@ 0x47eebd
+func() begin
+	local l1;
+	(if (l1 := SetContains(_recogPopup, _cachedSettings.curItem)) then popup[l1])
+end
+@@end

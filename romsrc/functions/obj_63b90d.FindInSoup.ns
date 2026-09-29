@@ -1,0 +1,46 @@
+@@ 0x50f91d
+func(title, findWords, dateRange, a4, a5, a6, a7) begin
+	local tempSearchTarget, startDate, stopDate;
+	local l1, l2, l3, l4;
+	tempSearchTarget := [Array: nil, nil];
+	if ((dateRange = nil) or IsInteger(dateRange)) then begin
+			dateRange := self:NormalizeDateRange(dateRange, a5)
+		end;
+	startDate := dateRange[0];
+	stopDate := dateRange[1];
+	l1 := func(a1) begin
+		local l1;
+		if (not LSearch('[Array: meeting, RepeatingMeeting, exceptionMeeting, cribNote], a1.viewStationery, 0, '|=|, nil)) then begin
+				return nil
+			end;
+		l1 := true;
+		if title then begin
+				l1 := StrEqual(self:GetMeetingText(a1), title)
+			end;
+		if (not l1) then begin
+				return nil
+			end;
+		if findWords then begin
+				tempSearchTarget[0] := a1.mtgText;
+				tempSearchTarget[1] := a1.NotesData;
+				l1 := FindStringInFrame(tempSearchTarget, findWords, nil)
+			end;
+		if (not l1) then begin
+				return nil
+			end;
+		if dateRange then begin
+				l1 := (if (a1.mtgStartDate >= startDate) then (a1.mtgStartDate <= stopDate))
+			end;
+		l1
+	end;
+	l3 := (l2 := Query(a4, {type: 'index, indexPath: 'mtgStartDate, beginKey: startDate, validTest: l1})):entry();
+	l4 := 0;
+	(while l3 do begin
+			AddArraySlot(a7, l3);
+			if ((l4 := (l4 + 1)) >= a6) then begin
+					break
+				end;
+			(l3 := l2:Next())
+		end)
+end
+@@end

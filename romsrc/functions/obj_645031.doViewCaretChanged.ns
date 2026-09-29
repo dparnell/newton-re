@@ -1,0 +1,49 @@
+@@ 0x46a001
+func() begin
+	local l1, l2, l3, l4, l5, l6, l7;
+	view := hiliteParms[0];
+	off := hiliteParms[1];
+	len := hiliteParms[2];
+	hiliteParms := nil;
+	if view.text then begin
+			l2 := StrLen((l1 := GetDynamicValue(view, 'text, 'string)))
+		end;
+	if (if l1 then (off > l2)) then begin
+			off := min(1, l2)
+		end;
+	l3 := off;
+	l4 := len;
+	if (if l1 then (len = 0)) then begin
+			if (if (l3 > 0) then (not IsWhiteSpace(l1[(l3 - 1)]))) then begin
+					l3 := (l3 - 1);
+					l3 := ScanWordStart(l1, l3, 0)
+				end;
+			l4 := (ScanWordEnd(l1, l3, l2) - l3)
+		end;
+	l5 := refCon;
+	if (((l6 := (view <> l5.form)) or (off <> l5.wordOffset)) or (len <> l5.wordLength)) then begin
+			l5.form := view;
+			l5.wordOffset := l3;
+			if (l7 := cText:TemplateChanged()) then begin
+					l5.wordLength := l4;
+					cText:SetNewWord(self:GetExternalWord(), 'external);
+					cText:SetNewTemplate(l7);
+					cText:SyncView();
+					l4 := l5.wordLength;
+					hiliteBusy := nil;
+					return nil
+				end;
+			if ((l5.wordLength <> 0) or (l4 <> 0)) then begin
+					l5.wordLength := l4;
+					self:UseExternalWord()
+				end else begin
+					if l6 then begin
+							cText.wordSource := 'none;
+							cText:DisplayExternal(nil)
+						end
+				end
+		end;
+	hiliteBusy := nil;
+	0
+end
+@@end

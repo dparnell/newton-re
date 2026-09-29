@@ -1,0 +1,5 @@
+@@ 0x759319
+func() begin
+	self:MyHide('Keyboard)
+end
+@@end

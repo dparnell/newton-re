@@ -1,0 +1,19 @@
+@@ 0x54b2ad
+func(a1, a2, a3) begin
+	l1 := Perform(NewPartMakers, a1, [Array: a1, a2]);
+	if HasSlot(a2, 'labels) then begin
+			l1._tagList := Clone(l1._tagList);
+			self:ChangeTagListAndLabels(l1, a2.labels)
+		end;
+	local l1;
+	(foreach l2 in specifiablePartSlots do begin
+			if HasSlot(a2, l2) then begin
+					l1.(l2) := a2.(l2)
+				end
+		end);
+	if (not StrFilled(l1.text)) then begin
+			l1.text := a3
+		end;
+	l1
+end
+@@end

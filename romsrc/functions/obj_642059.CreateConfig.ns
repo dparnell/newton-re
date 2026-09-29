@@ -1,0 +1,14 @@
+@@ 0x4a0a49
+func(a1, a2, a3, a4, a5) begin
+	local l1;
+	if (a1 = 'location) then begin
+			l1 := GetRoot().cardfile:addcard('worksite, nil)
+		end else begin
+			if (a1 = 'owner) then begin
+					l1 := GetRoot().cardfile:addcard('owner, nil)
+				end
+		end;
+	self:ValidateConfig(a1, l1, a2, a3, a4, a5);
+	l1
+end
+@@end

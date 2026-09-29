@@ -1,0 +1,18 @@
+@@ 0x458abd
+@@const kLiteral_450465
+SetClass(Clone("--"), '|string.noData|)
+@@main
+func(a1, a2, a3) begin
+	local l1, l2;
+	l1 := inherited:Get(a1, a2, a3);
+	(if (a2 = 'phone) then begin
+			if ((not l1) or IsInstance(l1, '|string.noData|)) then begin
+					l1 := (if (if (l1 := (if (l2 := EntryFromObj(a1)) then GetRoot().cardfile:bcPhoneNumber(l2, preferredRouting))) then (Length(l1) > 0)) then begin
+							SortByClass(l1, preferredRouting, nil);
+							l1[0]
+						end else (if (a3 = 'text) then kLiteral_450465))
+				end;
+			(if (if (if (a3 = 'text) then l1) then (not IsInstance(l1, '|string.noData|))) then MakeDisplayPhone(l1) else l1)
+		end else l1)
+end
+@@end

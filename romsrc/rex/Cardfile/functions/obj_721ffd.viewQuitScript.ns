@@ -1,0 +1,10 @@
+@@ 0x722451
+func() begin
+	if (clusterValue = 'first) then begin
+			clusterValue := 'name.first
+		end;
+	(if (not theApp:SortPathMatches(clusterValue, theApp:GetAppPreferences().sortBy)) then DoProgress('vStatus, {statusText: "Changing sort order.", primary: nil, closeBox: nil}, func(a1) begin
+			theApp:SortByChange(clusterValue)
+		end))
+end
+@@end

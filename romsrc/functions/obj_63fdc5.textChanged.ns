@@ -1,0 +1,6 @@
+@@ 0x42e8a9
+func() begin
+	inherited:textChanged();
+	(if (StrLen(entryLine.text) = 0) then (target.(path) := nil) else (target.(path) := StringToDate(entryLine.text)))
+end
+@@end

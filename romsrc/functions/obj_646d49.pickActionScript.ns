@@ -1,0 +1,15 @@
+@@ 0x48cddd
+func(a1) begin
+	local l1, l2;
+	base:hilite(nil);
+	(if (l1 := labelCommands[a1].action) then (if (l1 = 'Clear) then begin
+				target.(path) := nil;
+				self:UpdateText("");
+				self:StartFlush()
+			end else GetRoot().netChooser:openNetChooser((l2 := nil), Stringer([Array: "=:", NBPLookupType, "@"]), labelCommands[0].item, self, "Use Mac OS computer", "Mac OS computer", "Mac OS computers")) else begin
+			target.(path) := labelCommands[a1].realStr;
+			self:UpdateText(GetNames(target.(path)));
+			self:StartFlush()
+		end)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x4bb971
+func(a1, a2) begin
+	(if (a1 = 'text) then baseLine:viewChangedScript(a1, a2))
+end
+@@end

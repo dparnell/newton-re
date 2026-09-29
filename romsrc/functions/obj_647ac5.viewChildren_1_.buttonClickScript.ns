@@ -1,0 +1,14 @@
+@@ 0x48ee91
+func() begin
+	local l1, l2, l3;
+	l1 := GetVariable(self:Parent(), eraseTypeCluster.clusterValue);
+	if (StrLen((l2 := godParent:getDestStore():GetName())) = 0) then begin
+			l2 := godParent:getDestStore():GetKind()
+		end;
+	l3 := eraseStrs.(eraseTypeCluster.clusterValue);
+	if (not ModalConfirm(ParamStr("Warning! Erase will remove ^0 on \u201C\u^1\u201D\u. Are you sure you want to do this?", [Array: l3, l2]), nil)) then begin
+			l1 := nil
+		end;
+	(if l1 then AddDeferredCall(l1, [Array: base, godParent, store]))
+end
+@@end

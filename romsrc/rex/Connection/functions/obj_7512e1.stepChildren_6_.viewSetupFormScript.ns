@@ -1,0 +1,5 @@
+@@ 0x751999
+func() begin
+	(if fileInfo.size then (text := NumberStr(fileInfo.size)) else (text := "Unknown"))
+end
+@@end

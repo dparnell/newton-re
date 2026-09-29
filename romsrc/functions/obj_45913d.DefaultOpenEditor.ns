@@ -1,0 +1,18 @@
+@@ 0x458efd
+func(a1, a2, a3) begin
+	local l1, l2, l3;
+	editTitle := defaultEditTitle;
+	if (not (a1.fieldPath = 'New)) then begin
+			if (not IsInstance((l2 := self:Get((l1 := a1.nameRef), primaryPath, 'text)), '|string.noData|)) then begin
+					editTitle := ParamStr("New phone for ^0", [Array: l2])
+				end else begin
+					if (Length((l3 := ValidityCheck(a1.nameRef, validationFrame, '[Array: phone], nil, nil))) < 1) then begin
+							editTitle := "Add Name"
+						end else begin
+							editTitle := "Add Phone"
+						end
+				end
+		end;
+	inherited:DefaultOpenEditor(a1, a2, a3)
+end
+@@end

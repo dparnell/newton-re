@@ -1,0 +1,16 @@
+@@ 0x75c3cd
+func(endpoint, a2, a3) begin
+	killMyself := func(a1, a2) begin
+		local l1;
+		if Visible(a1) then begin
+				a1:Close()
+			end;
+		a1:LockScreen(nil);
+		l1 := GetRoot().Connection;
+		l1:RemoveOpenWindow(a1);
+		(if (if (a2 <> 0) then (a2 <> -16005)) then endpoint:ConnectionDone(a2))
+	end;
+	a2:LockScreen(true);
+	AddDeferredCall(killMyself, [Array: a2, a3])
+end
+@@end

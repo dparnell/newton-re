@@ -1,0 +1,18 @@
+@@ 0x4ae8c9
+func() begin
+	local l1;
+	l1 := (foreach l2 in layout.entries collect (if l2 then l2.class));
+	l6 := GetDefs(form, l1, types);
+	l7 := [Array: ];
+	local l6;
+	local l7;
+	(foreach l8 in l6 do begin
+			if (not SetContains(l7, l8.symbol)) then begin
+					SetAdd(l7, l8.symbol, true)
+				end else begin
+					SetRemove(l6, l8)
+				end
+		end);
+	l6
+end
+@@end

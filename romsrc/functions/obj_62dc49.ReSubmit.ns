@@ -1,0 +1,5 @@
+@@ 0x4b3c2d
+func(a1) begin
+	EntryChange(a1)
+end
+@@end

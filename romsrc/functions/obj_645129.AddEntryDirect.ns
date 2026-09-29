@@ -1,0 +1,7 @@
+@@ 0x4ac2ed
+func(a1, a2) begin
+	local l1;
+	(if (currentLayout = 'overview) then newtAppBase else layout):Effect(178391040, nil, @85, '_HackAddEntryDirect, [Array: a1, a2]);
+	(if (if (l1 := GetUserConfig('blessedapp)) then (GetRoot().(l1) = newtAppBase)) then AddProcrastinatedSend('SaveAppState, self, 'SaveAppState, [Array: ], 10000))
+end
+@@end

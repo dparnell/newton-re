@@ -1,0 +1,23 @@
+@@ 0x468e5d
+func(a1) begin
+	l1 := nil;
+	if ((l2 := GetViewDefs(DataClassOf(a1))) <> nil) then begin
+			if defaultFormat then begin
+					l1 := l2.(defaultFormat)
+				end else begin
+					l1 := l2.(symbol)
+				end;
+			if (l1 = nil) then begin
+					local l1;
+					local l2;
+					(foreach l3 in l2 do begin
+							if (if (if (if l3 then l3.dataTypes) then SetOverlaps(l3.dataTypes, dataTypes)) then (not l3.usesCursors)) then begin
+									l1 := l3;
+									break
+								end
+						end)
+				end
+		end;
+	l1
+end
+@@end

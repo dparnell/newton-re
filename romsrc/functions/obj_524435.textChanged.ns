@@ -1,0 +1,12 @@
+@@ 0x520155
+func() begin
+	local l1, l2;
+	(if (not StrEqual(text, "")) then begin
+			l1 := 0;
+			if (l2 := StringToNumber(text)) then begin
+					l1 := floor(l2)
+				end;
+			(if (if (l1 > 0) then (l1 <= maxValue)) then self:NumberEntered(l1) else self:Parent():BadText())
+		end)
+end
+@@end

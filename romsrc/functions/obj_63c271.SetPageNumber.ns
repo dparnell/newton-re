@@ -1,0 +1,6 @@
+@@ 0x51c791
+func(a1, a2) begin
+	pageNumsShowing := [Array: a1, a2];
+	(if (panelOpen = true) then pageNumber:SetPageNumber(a1, a2))
+end
+@@end

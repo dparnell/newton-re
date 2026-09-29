@@ -1,0 +1,5 @@
+@@ 0x4329c5
+func(a1) begin
+	(if (if ((GetPoint(1, a1) - self:GlobalBox().top) > 96) then ((GetPoint(0, a1) - self:GlobalBox().left) < 99)) then DoPopup(pop, 4, 96, self))
+end
+@@end

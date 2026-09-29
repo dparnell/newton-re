@@ -1,0 +1,25 @@
+@@ 0x75b069
+func(a1) begin
+	local l1;
+	l1 := nil;
+	if overrideApp then begin
+			l1 := true;
+			overrideApp:ButtonToggle()
+		end else begin
+			if self.theEndpoint then begin
+					if theEndpoint.disconnecting then begin
+							l1 := true;
+							AddDelayedSend(GetRoot().Connection, 'ButtonToggle, nil, 1000)
+						end else begin
+							l1 := true;
+							if keyPassthroughOn then begin
+									self:ToggleKeyboardPassthrough(nil)
+								end else begin
+									self:OpenWhichConnection(theEndpoint)
+								end
+						end
+				end
+		end;
+	return l1
+end
+@@end

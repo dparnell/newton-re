@@ -1,0 +1,6 @@
+@@ 0x7b26d5
+func() begin
+	SetKeyView(vVoice.vInputCityCode, 0);
+	inherited:?viewSetupDoneScript()
+end
+@@end

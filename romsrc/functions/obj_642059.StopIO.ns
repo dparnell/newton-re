@@ -1,0 +1,6 @@
+@@ 0x4be5b1
+func() begin
+	vars.ioStopping := true;
+	SendAbort()
+end
+@@end

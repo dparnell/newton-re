@@ -1,0 +1,16 @@
+@@ 0x5695f9
+func(a1, a2) begin
+	local l1, l2;
+	l1 := BFetch(UnionSoupRegistry, a2.name, '|str<|, 'soupDef.name);
+	a1 := EnsureInternal(a1);
+	if l1 then begin
+			if (not IsReadOnly(l1)) then begin
+					BInsert(l1.apps, a1, '|sym<|, nil, true)
+				end
+		end else begin
+			l2 := {soupDef: EnsureInternal(a2), apps: [Array: a1]};
+			BInsert(UnionSoupRegistry, l2, '|str<|, 'soupDef.name, (a1 <> '_RegisterCardSoup))
+		end;
+	GetUnionSoupAlways(a2.name)
+end
+@@end

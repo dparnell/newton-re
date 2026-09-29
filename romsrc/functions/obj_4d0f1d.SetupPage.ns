@@ -1,0 +1,18 @@
+@@ 0x4d0ebd
+func() begin
+	local l1, l2, l3, l4, l5;
+	l2 := GetBitmapInfo((l1 := MakeBitmap(sessionInfo.body.info.pixelWidth, sessionInfo.body.info.pixelHeight, {resolution: sessionInfo.body.info.resolution, store: self:GetDefaultOwnerStore()})));
+	(l3 := DeepClone(faxReceiveSpec)).target.data := l2.bits;
+	l3.target.offset := l2.scanOffset;
+	if (((l4 := self:GetConfig('lineIncrement)) = 0) or (l4 = nil)) then begin
+			l4 := defaultConfiguration.lineIncrement
+		end;
+	if (if (l5 := self:GetConfig('maxResolution)) then (l5 = 2)) then begin
+			l4 := (l4 * 2)
+		end;
+	l3.termination := {byteCount: ((sessionInfo.body.info.pixelWidth div 8) * l4)};
+	AddArraySlot(sessionInfo.body.pages, {image: l1, annotations: nil});
+	sessionInfo.body.info.maxSize := Length(l2.bits);
+	l3
+end
+@@end

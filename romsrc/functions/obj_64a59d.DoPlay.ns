@@ -1,0 +1,39 @@
+@@ 0x42565d
+func() begin
+	local engine;
+	fEngineError := 0;
+	fCompletionCount := 0;
+	if self:HasSoundFrames() then begin
+			self:SetState(4);
+			try begin
+					if fSoundChannel:isPaused() then begin
+							fSoundChannel:pause()
+						end else begin
+							fCompletionCount := 0;
+							fSoundChannel:Close();
+							fSoundChannel.direction := 'play;
+							fSoundChannel.inputDevice := fInputDevice;
+							fSoundChannel.outputDevice := fOutputDevice;
+							fSoundChannel.inputGain := fInputGain;
+							fSoundChannel:Open();
+							engine := self;
+							l2 := func(a1, a2) begin
+								engine:PlayCompletion(a1, a2)
+							end;
+							local l1;
+							local l2;
+							(foreach l3 in fSoundArray do begin
+									local l5, l6;
+									l5 := (if (if HasPath(l3, 'volume) then l3.volume) then l3.volume else GetUserConfig('soundVolumeDb));
+									fSoundChannel:schedule((l6 := {_proto: l3, callback: l2, volume: l5}))
+								end);
+							fSoundChannel:start(true)
+						end;
+					l1 := true
+				end onexception |evt.ex| do begin
+					self:CleanUpAfterError()
+				end
+		end;
+	l1
+end
+@@end

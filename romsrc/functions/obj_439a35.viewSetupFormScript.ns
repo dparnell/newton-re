@@ -1,0 +1,14 @@
+@@ 0x4399f5
+func() begin
+	if useMultipleSelections then begin
+			self.inset := 18
+		end;
+	TextBase:SetChild(self);
+	local l1;
+	(foreach l2 in ListItems do begin
+			l1 := Stringer([Array: l1, l2, "\n"])
+		end);
+	self.text := l1;
+	(self.viewBounds := SetBounds(inset, 0, 1000, (Length(ListItems) * self:GetLineHeight())))
+end
+@@end

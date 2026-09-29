@@ -1,0 +1,6 @@
+@@ 0x42bad5
+func() begin
+	self.text := ParamStr(" ^0        Battery", [Array: DateNTime(Time())]);
+	(self.viewBounds := RelBounds(25, 2, (StrFontWidth(self.text, viewFont) + 50), 13))
+end
+@@end

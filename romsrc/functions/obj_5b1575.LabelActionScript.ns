@@ -1,0 +1,6 @@
+@@ 0x5b1555
+func(a1) begin
+	SetUserConfig('beepSound, labelCommands[a1].soundSymbol);
+	self:SysBeep()
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x44b41d
+func(a1) begin
+	local l1, l2;
+	(if ((((l1 := a1.viewClass) = 81) or ((l1 - 65535) = 81)) or ((l1 - 65536) = 81)) then begin
+			l2 := StrLen(a1.text);
+			a1:SetHilite(0, l2, true)
+		end)
+end
+@@end

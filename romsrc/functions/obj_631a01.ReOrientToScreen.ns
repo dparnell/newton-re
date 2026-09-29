@@ -1,0 +1,6 @@
+@@ 0x4d3c69
+func() begin
+	invoker := nil;
+	self:Close()
+end
+@@end

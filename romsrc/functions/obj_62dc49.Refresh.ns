@@ -1,0 +1,9 @@
+@@ 0x4b3679
+func() begin
+	(if viewCObject then begin
+			refreshInProgress := true;
+			layout:Retarget(true);
+			(refreshInProgress := nil)
+		end)
+end
+@@end

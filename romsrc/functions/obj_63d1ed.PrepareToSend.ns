@@ -1,0 +1,6 @@
+@@ 0x4c9091
+func(a1) begin
+	noworlater := a1;
+	self:ValidateConfig('location, nil, '[Array: areacode, country], "Your configuration is incomplete. Please identify your faxing location:", 'validateDialog, 'DoTheSend)
+end
+@@end

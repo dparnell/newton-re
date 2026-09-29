@@ -1,0 +1,36 @@
+@@ 0x4e3bb9
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6;
+	l1 := {};
+	l2 := GetDefaultFont(GetView('viewfrontkey));
+	if family then begin
+			l1.family := family
+		end else begin
+			family := GetFontFamilySym(l2)
+		end;
+	if size then begin
+			l1.size := size
+		end else begin
+			size := GetFontSize(l2)
+		end;
+	if face then begin
+			l1.face := face
+		end else begin
+			face := GetFontFace(l2)
+		end;
+	l3 := GetKeyView();
+	l4 := l3:?viewChangeStyleScript(l1);
+	l5 := MakeCompactFont(family, size, face);
+	l6 := GetHilitedTextItems();
+	if (if (not l4) then l3) then begin
+			if a1 then begin
+					PostCommandParam(l3:Parent(), 73, l1)
+				end
+		end;
+	if (not l6) then begin
+			GetGlobals().nextStyle := l5;
+			SetUserConfig('userFont, l5)
+		end;
+	self:LoadFontCache()
+end
+@@end

@@ -1,0 +1,18 @@
+@@ 0x5a2be5
+func(a1) begin
+	local l1, l2, l3, l4;
+	l1 := "";
+	if a1 then begin
+			if StrFilled(a1.title) then begin
+					l1 := a1.title
+				end else begin
+					if (l3 := GetDataDefs(DataClassOf((l2 := GetTargetFromEntry(a1))))) then begin
+							if (l4 := l3:?StringExtract(l2, 1)) then begin
+									l1 := (if (StrLen(l4) > 32) then Stringer([Array: Substr(l4, 0, 31), $\u2026]) else l4)
+								end
+						end
+				end
+		end;
+	Clone(l1)
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x4c3251
+func() begin
+	inherited:viewSetupChildrenScript();
+	(self.fields := parentTarget)
+end
+@@end

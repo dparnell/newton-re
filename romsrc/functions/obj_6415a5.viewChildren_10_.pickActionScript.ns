@@ -1,0 +1,11 @@
+@@ 0x4d6431
+func(a1, a2) begin
+	newFirstDate := a1;
+	newStopDate := a2;
+	if (newFirstDate > newMtgDate) then begin
+			DateValue.Date := newFirstDate;
+			DateValue:viewSetupChildrenScript()
+		end;
+	inherited:pickActionScript(a1, a2)
+end
+@@end

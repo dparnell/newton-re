@@ -1,0 +1,8 @@
+@@ 0x76e021
+func() begin
+	(if (calcLineValue = nil) then return Clone("") else begin
+			self.Date := calcLineValue;
+			return LongDateStr(Date, 80468)
+		end)
+end
+@@end

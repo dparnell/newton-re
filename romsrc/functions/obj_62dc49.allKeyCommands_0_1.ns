@@ -1,0 +1,6 @@
+@@ 0x4b02c1
+func(a1) begin
+	clicker();
+	self:SetBox('inbox)
+end
+@@end

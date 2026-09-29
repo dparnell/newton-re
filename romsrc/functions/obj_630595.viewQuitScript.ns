@@ -1,0 +1,14 @@
+@@ 0x5abe1d
+func() begin
+	if (not selectedEntry) then begin
+			self.warningRaised := nil
+		end;
+	if (if (window exists) then window) then begin
+			window:GetCursor():Dispose();
+			RemoveSlot(self, 'window)
+		end;
+	(foreach l1 in [Array: 'lineHeight, 'dictionary, 'selectedEntry, 'selectedIndex, 'viewFlags] do begin
+			RemoveSlot(self, l1)
+		end)
+end
+@@end

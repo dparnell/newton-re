@@ -1,0 +1,5 @@
+@@ 0x56c75d
+func(a1) begin
+	ParamStr("Card \u201C\u^0\u201D\u is formatted for a different language. Do you want to update it?", [Array: a1])
+end
+@@end

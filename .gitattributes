@@ -15,3 +15,16 @@ fixtures/** binary
 *.pdf binary
 *.exe binary
 *.dll binary
+
+# The ROM source tree (romsrc/, docs/rom-free/README.md): its resources byte
+# for byte, its source and manifests LF on every system (the builder reads
+# them, and the byte-identical build must not depend on the checkout)
+romsrc/**/*.bin binary
+romsrc/**/*.png binary
+romsrc/**/*.wav binary
+romsrc/**/*.pict binary
+romsrc/**/*.ttf binary
+romsrc/**/*.pkg binary
+romsrc/**/*.ns text eol=lf
+romsrc/**/*.tsv text eol=lf
+romsrc/**/*.md text eol=lf

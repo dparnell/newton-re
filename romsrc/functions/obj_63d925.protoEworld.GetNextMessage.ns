@@ -1,0 +1,24 @@
+@@ 0x59ec49
+func() begin
+	local l1;
+	(if (mode = 'batch) then (if (Length(mail_list.items) > 0) then begin
+				l1 := self:UnflattenListItem(mail_list.items);
+				(while (if (l1.id = 0) then (Length(mail_list.items) > 0)) do (l1 := self:UnflattenListItem(mail_list.items)));
+				self:?SetStatusDialog('Receiving, 'vBarber, {titleText: Stringer([Array: l1.from, ", ", l1.title]), barber: true});
+				self:Mail_Read(l1.id, transport)
+			end else begin
+				eworld.msg := nil;
+				eworld.mail_list := nil;
+				self:ConnectionAbort()
+			end) else begin
+			self.message := self:ItemRequest(eworld.request);
+			(if message then begin
+					self:?SetStatusDialog('Receiving, 'vBarber, {titleText: message.label, barber: true});
+					self:Mail_Read(message.id, transport)
+				end else begin
+					self:?SetStatusDialog('connected, 'vStatus, nil);
+					self:?CloseStatusDialog(nil)
+				end)
+		end)
+end
+@@end

@@ -1,0 +1,14 @@
+@@ 0x45dd59
+func(a1) begin
+	local l1;
+	l1 := firstVisibleItem;
+	(if ((firstVisibleItem := max(1, min((firstVisibleItem + a1), maxFirstItem))) <> l1) then begin
+			self:LockScreen(true);
+			self:SetupPieces();
+			self:Update();
+			self:?Scrolled();
+			RefreshViews();
+			self:LockScreen(nil)
+		end)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x4b882d
+func(a1, a2) begin
+	(if (if (not hack) then (a1 = 'text)) then self:SetupIdle(1000))
+end
+@@end

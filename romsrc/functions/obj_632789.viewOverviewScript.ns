@@ -1,0 +1,10 @@
+@@ 0x55ba61
+func() begin
+	(if (if findAllResults then (Length(findAllResults) <> 0)) then begin
+			findOverview.findAllResults := findAllResults;
+			findOverview.titleText := findText;
+			findOverview.savedScrollOrigin := nil;
+			findOverview:Open()
+		end else (if (not findAllResults) then self:Notify(3, "Find Overview", "You have to find something first.")))
+end
+@@end

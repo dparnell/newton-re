@@ -1,0 +1,7 @@
+@@ 0x54c7c9
+func() begin
+	(prefsEntry := GetAppPrefs('extras, '{})).labelsFilter := labelsFilter;
+	prefsEntry.overUp := overUp;
+	AddProcrastinatedCall('_SaveExtrasPrefs, functions.EntryFlush, [Array: prefsEntry], 0)
+end
+@@end

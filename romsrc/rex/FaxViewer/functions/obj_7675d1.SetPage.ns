@@ -1,0 +1,6 @@
+@@ 0x767be5
+func(a1) begin
+	selectedItem := a1;
+	self:Update()
+end
+@@end

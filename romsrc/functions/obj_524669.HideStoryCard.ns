@@ -1,0 +1,5 @@
+@@ 0x522fc1
+func() begin
+	base:Close()
+end
+@@end

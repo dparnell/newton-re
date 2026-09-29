@@ -1,0 +1,5 @@
+@@ 0x43e3a9
+func(a1, a2) begin
+	(if (a1 > a2) then return (a1 + (a2 div 2)) else return (a2 + (a1 div 2)))
+end
+@@end

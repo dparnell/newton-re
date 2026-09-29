@@ -1,0 +1,12 @@
+@@ 0x514e69
+func(a1, a2, a3) begin
+	local l1, l2;
+	ArrayInsert((l1 := [Array: ]), MakeLine(0, a2, a3, a2), 0);
+	ArrayInsert(l1, '{penPattern: 3, pensize: 1}, 0);
+	a2 := (a2 + HeaderTextHt);
+	l2 := LongDateStr(a1, 0);
+	ArrayInsert(l1, MakeText(l2, 0, (a2 - 2), a3, (a2 + 1)), 0);
+	ArrayInsert(l1, headerStyle, 0);
+	l1
+end
+@@end

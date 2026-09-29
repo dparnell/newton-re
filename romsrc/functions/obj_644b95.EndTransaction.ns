@@ -1,0 +1,7 @@
+@@ 0x5957ed
+func() begin
+	self.activeTransaction := nil;
+	self.activetimeout := nil;
+	(self.transactiontimeout := nil)
+end
+@@end

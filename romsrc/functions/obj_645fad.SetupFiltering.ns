@@ -1,0 +1,17 @@
+@@ 0x451d45
+func(a1) begin
+	local l1;
+	l1 := Clone(a1);
+	if (if fSoup then fSoup:HasTags()) then begin
+			l1.tagspec := (if (labelsFilter <> '_all) then {equal: (if labelsFilter then labelsFilter else [Array: ])});
+			l1.validTest := clientFilter
+		end else begin
+			l1.validTest := (if clientFilter then func(a1) begin
+					(if call clientFilter with (a1) then ((a1.labels = labelsFilter) or (labelsFilter = '_all)))
+				end else func(a1) begin
+					((a1.labels = labelsFilter) or (labelsFilter = '_all))
+				end)
+		end;
+	l1
+end
+@@end

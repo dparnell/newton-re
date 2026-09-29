@@ -1,0 +1,10 @@
+@@ 0x460d89
+func() begin
+	local l1;
+	self.text := message;
+	(if messageHIndent then begin
+			(l1 := Clone(self.viewBounds)).left := (l1.left + messageHIndent);
+			(self.viewBounds := l1)
+		end)
+end
+@@end

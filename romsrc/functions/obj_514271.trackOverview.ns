@@ -1,0 +1,34 @@
+@@ 0x513ddd
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9;
+	InkOff(a1);
+	playsound(@51);
+	l2 := Clone((l1 := {index: nil, top: nil, ht: nil}));
+	l3 := self:GlobalBox();
+	(loop begin
+			l5 := GetPoint(4, a1);
+			l6 := GetPoint(5, a1);
+			if (not l4) then begin
+					l4 := (l5 - l3.left);
+					(l7 := self:LocalBox()).bottom := lineHeight;
+					l8 := self:GetHiliteShape(l7)
+				end;
+			if ((((l5 < l3.left) or (l5 > l3.right)) or (l6 < l3.top)) or (l6 > l3.bottom)) then begin
+					l1.index := nil
+				end else begin
+					self:HitTest((l6 - l3.top), l1)
+				end;
+			if (l1.index <> l2.index) then begin
+					l9 := l2;
+					self:hiliter(l8, l2);
+					self:hiliter(l8, (l2 := l1));
+					l1 := l9
+				end;
+			(if StrokeDone(a1) then break)
+		end);
+	(if l2.index then begin
+			AddDeferredSend(self, self.HitItem, [Array: l2, l4, (GetPoint(5, a1) - l3.top)]);
+			self:hiliter(l8, l2)
+		end)
+end
+@@end

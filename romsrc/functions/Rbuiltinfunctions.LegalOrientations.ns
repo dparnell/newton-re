@@ -1,0 +1,12 @@
+@@ 0x418791
+func() begin
+	l1 := [Array: ];
+	local l1;
+	(foreach l2, l3 in GetAllRawDisplayParams() do begin
+			if l3 then begin
+					AddArraySlot(l1, l2)
+				end
+		end);
+	l1
+end
+@@end

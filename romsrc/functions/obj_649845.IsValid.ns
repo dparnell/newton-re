@@ -1,0 +1,20 @@
+@@ 0x44cdd1
+func(a1) begin
+	local l1, l2, l3;
+	StrReplace((l1 := Clone(a1)), " ", "", nil);
+	if (if (l2 := StringToDateFrame(l1)) then (l2.status >= 0)) then begin
+			l3 := 0;
+			if l2.month then begin
+					l3 := (l3 + 1)
+				end;
+			if l2.Date then begin
+					l3 := (l3 + 1)
+				end;
+			if l2.year then begin
+					l3 := (l3 + 1)
+				end;
+			return (l3 > 1)
+		end;
+	return nil
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x4e634d
+func() begin
+	local l1;
+	l1 := Stringer([Array: SPrintObject(Random(2, 9)), SPrintObject(Random(0, 1)), SPrintObject(Random(0, 9))]);
+	return Stringer([Array: "(", l1, ")", SPrintObject(Random(100, 199)), "-", SPrintObject(Random(1000, 9999))])
+end
+@@end

@@ -1,0 +1,15 @@
+@@ 0x4dbe89
+func(a1, a2) begin
+	SetUserConfig('alarmClockTime, a1);
+	SetUserConfig('alarmClockOn, a2);
+	if a2 then begin
+			self:SetAlarm(a1)
+		end else begin
+			RemoveAlarm("Alarm:AlarmClock")
+		end;
+	self:RedoChildren();
+	alarmOn := a2;
+	alarmTime := a1;
+	FlushUserConfig()
+end
+@@end

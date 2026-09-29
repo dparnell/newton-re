@@ -1,0 +1,11 @@
+@@ 0x4b0b89
+func() begin
+	(if (currentLayout = 'overview) then begin
+			self.stepChildren := [Array: clockShowBar, soupcluster, statusbar];
+			inherited:viewSetupChildrenScript()
+		end else begin
+			self.viewChildren := [Array: ioItemview];
+			(self.stepChildren := [Array: ])
+		end)
+end
+@@end

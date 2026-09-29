@@ -1,0 +1,15 @@
+@@ 0x4708d5
+func() begin
+	self:getZoneName();
+	(if formOpen then begin
+			if ((currentZone = nil) or StrEqual(currentZone, "*")) then begin
+					SetValue(zoneName, 'text, "")
+				end else begin
+					SetValue(zoneName, 'text, currentZone);
+					zoneLabel:Show();
+					zoneName:Show()
+				end;
+			zonesButton:Show()
+		end)
+end
+@@end

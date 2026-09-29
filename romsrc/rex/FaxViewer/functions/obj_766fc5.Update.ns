@@ -1,0 +1,5 @@
+@@ 0x7672d5
+func(a1) begin
+	(if ((warningName = 'vGauge) or (warningName = 'vBarber)) then self:UpdateIndicator({name: warningName, values: {gauge: (if (warningName = 'vGauge) then a1[0]), barber: (warningName = 'vBarber)}}))
+end
+@@end

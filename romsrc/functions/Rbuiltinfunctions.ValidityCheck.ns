@@ -1,0 +1,20 @@
+@@ 0x4a03ed
+func(a1, a2, a3, a4, a5) begin
+	l1 := [Array: ];
+	local l1;
+	(foreach l2 in a3 do begin
+			local l4, l5, l6;
+			l4 := nil;
+			l4 := (if (dataFunc := (l5 := a2.(l2)).getPath) then call dataFunc with (a1, a5) else (if l5.dataPath then l5.dataPath else l2));
+			l6 := a1.(l4);
+			if (not (HasData := (if l5.HasData then call l5.HasData with (a1) else (if IsInstance(l6, 'string) then StrFilled(l6) else l6)))) then begin
+					if a4 then begin
+							call a4 with (l5, l4, l2)
+						end else begin
+							AddArraySlot(l1, l2)
+						end
+				end
+		end);
+	(if (not a4) then l1)
+end
+@@end

@@ -1,0 +1,12 @@
+@@ 0x4e6095
+func(a1) begin
+	strokes := [Array: ];
+	self:Dirty();
+	if a1 then begin
+			self.requestedWord := a1
+		end;
+	self:ClearWords();
+	writeTheWord:UpdateText();
+	metrics:RedoChildren()
+end
+@@end

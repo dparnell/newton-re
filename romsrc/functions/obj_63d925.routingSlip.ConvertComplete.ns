@@ -1,0 +1,14 @@
+@@ 0x599345
+func(a1, a2, a3) begin
+	local l1, l2;
+	InkConvert := nil;
+	(if (if a1 then a2) then begin
+			l1 := a3.addr.email;
+			a3.addr.email := SetClass(a2, a3.type);
+			if (l2 := ResolveEntryAlias(a3.addr._alias)) then begin
+					GetRoot().cardfile:ReplaceInkData(l2, 'email, l1, 'email, a2)
+				end;
+			(if ((inkCount := (inkCount - 1)) < 1) then self:PrepareToSend(noworlater))
+		end)
+end
+@@end

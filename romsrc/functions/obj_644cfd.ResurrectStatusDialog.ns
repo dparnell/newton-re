@@ -1,0 +1,7 @@
+@@ 0x47fd5d
+func() begin
+	self:CancelStatusNotify();
+	userClosedStatus := nil;
+	(if (if (status <> 'idle) then statusSetup) then self:UpdateStatusDialog(statusSetup))
+end
+@@end

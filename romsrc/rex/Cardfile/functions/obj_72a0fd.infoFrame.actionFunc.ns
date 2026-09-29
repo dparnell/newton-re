@@ -1,0 +1,12 @@
+@@ 0x72aa21
+func(a1, a2, a3, a4, a5, a6, a7) begin
+	local l1, l2, l3, l4;
+	l3 := fontHeight(a3.viewFont);
+	l1 := (a2 div l3);
+	a4.top := (a4.top + (l1 * l3));
+	a4.bottom := (a4.top + l3);
+	a3:DoDrawing('Hiliter, [Array: MakeShape(a4)]);
+	GetRoot().cardfile:ShowEditSlip('custom, a7[l1], nil, nil, nil);
+	true
+end
+@@end

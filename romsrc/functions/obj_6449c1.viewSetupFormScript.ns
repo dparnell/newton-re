@@ -1,0 +1,6 @@
+@@ 0x4462a9
+func() begin
+	local l1;
+	(if (BAnd((l1 := (Time div 720)), 1) = 0) then (clusterValue := 'morningStr) else (clusterValue := 'eveningStr))
+end
+@@end

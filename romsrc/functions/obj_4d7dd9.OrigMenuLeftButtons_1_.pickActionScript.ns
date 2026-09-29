@@ -1,0 +1,6 @@
+@@ 0x4d7c31
+func(a1) begin
+	inherited:pickActionScript(a1);
+	(if (if newtAppBase.newtInfoBoxSlip then newtAppBase.newtInfoBoxSlip.viewCObject) then (newtAppBase.newtInfoBoxSlip._recogSettings := newtAppBase._recogSettings))
+end
+@@end

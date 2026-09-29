@@ -1,0 +1,13 @@
+@@ 0x49cce1
+func() begin
+	if hiliteEntry then begin
+			if IsSoupEntry(hiliteEntry) then begin
+					masterSoup:GetCursor():Goto(hiliteEntry)
+				end
+		end;
+	dontStartWithFolder := nil;
+	hiliteEntry := nil;
+	UnRegStationeryChange(Intern(Stringer([Array: viewCObject, ":Overview:", GetVariable(self, 'appSymbol)])));
+	inherited:?viewQuitScript()
+end
+@@end

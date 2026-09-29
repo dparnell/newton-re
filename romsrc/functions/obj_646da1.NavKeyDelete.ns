@@ -1,0 +1,5 @@
+@@ 0x548a15
+func(a1, a2) begin
+	(if self:SetupFakeTarget() then self:DeleteActionScript(nil, self))
+end
+@@end

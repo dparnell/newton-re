@@ -1,0 +1,6 @@
+@@ 0x4995a9
+func() begin
+	fStage := 0;
+	(if (fMode = 'InputFrame) then 'DoListen else (if ((fMode = 'OutputFrame) or (fMode = 'AutoInAndOut)) then 'DoConnect))
+end
+@@end

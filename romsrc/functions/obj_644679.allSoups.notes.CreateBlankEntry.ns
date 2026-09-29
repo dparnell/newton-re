@@ -1,0 +1,7 @@
+@@ 0x4d6fb9
+func() begin
+	local l1;
+	(l1 := Clone(@382)).timestamp := Time();
+	l1
+end
+@@end

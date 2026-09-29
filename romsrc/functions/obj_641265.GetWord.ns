@@ -1,0 +1,5 @@
+@@ 0x5aa12d
+func() begin
+	Display.realText
+end
+@@end

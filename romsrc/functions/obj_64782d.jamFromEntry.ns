@@ -1,0 +1,6 @@
+@@ 0x4baf3d
+func(a1) begin
+	target.(path) := nil;
+	(if a1 then filter:EntryToPath(a1))
+end
+@@end

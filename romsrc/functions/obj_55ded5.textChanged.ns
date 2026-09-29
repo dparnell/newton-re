@@ -1,0 +1,5 @@
+@@ 0x55db9d
+func() begin
+	base:UpdateFindText(text)
+end
+@@end

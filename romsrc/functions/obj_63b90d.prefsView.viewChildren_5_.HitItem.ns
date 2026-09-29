@@ -1,0 +1,17 @@
+@@ 0x50c029
+func(a1) begin
+	local l1;
+	if (a1 = GetLocale().firstDayOfWeek) then begin
+			a1 := nil
+		end;
+	SetUserConfig('firstDayOfWeek, a1);
+	if (Visible((l1 := GetRoot().calendar).YearView) or Visible(l1.MonthOverView)) then begin
+			l1:RedoChildren()
+		end else begin
+			if Visible(l1.monthController) then begin
+					l1.monthController:RedoChildren()
+				end
+		end;
+	self:RedoChildren()
+end
+@@end

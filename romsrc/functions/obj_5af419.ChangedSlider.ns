@@ -1,0 +1,6 @@
+@@ 0x5af3f9
+func() begin
+	userConfiguration.speedCursiveOption := viewValue;
+	ReadCursiveOptions()
+end
+@@end

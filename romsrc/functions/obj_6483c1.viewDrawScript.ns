@@ -1,0 +1,5 @@
+@@ 0x45a779
+func() begin
+	self:DrawShape(pix, nil)
+end
+@@end

@@ -1,0 +1,13 @@
+@@ 0x4b7709
+func() begin
+	target := self:GetTargetFromEntry(parentTarget);
+	targetViewDef := (currentViewDef := nil);
+	targetDataDef := (currentDataDef := nil);
+	currentStatView := nil;
+	(foreach l1 in self:ChildViewFrames() do begin
+			if HasPath(l1, 'Retarget) then begin
+					l1:Retarget()
+				end
+		end)
+end
+@@end

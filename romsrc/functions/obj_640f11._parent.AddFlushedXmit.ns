@@ -1,0 +1,5 @@
+@@ 0x634751
+func(a1, a2) begin
+	self:AddToStoreFlushedXmit(a1, GetDefaultStore(), a2)
+end
+@@end

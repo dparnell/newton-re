@@ -1,0 +1,9 @@
+@@ 0x55bb15
+func(a1) begin
+	(foreach l1 in findApps do begin
+			if (if (if (l1 <> GetUserConfig('blessedapp)) then (l1 <> a1.appSymbol)) then GetRoot().(l1)) then begin
+					GetVariable(self, l1):Close()
+				end
+		end)
+end
+@@end

@@ -1,0 +1,13 @@
+@@ 0x4ea601
+func() begin
+	(foreach l1 in meetingSoupFinders do begin
+			l1:Reset()
+		end);
+	(foreach l1 in todoSoupFinders do begin
+			l1:Reset()
+		end);
+	currentItem := 0;
+	scrollingForward := true;
+	self:ChooseEarliestItem()
+end
+@@end

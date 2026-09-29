@@ -1,0 +1,7 @@
+@@ 0x76ed21
+func(a1, a2) begin
+	solvingFormula := true;
+	FSViews[a1]:SetNumericValue(a2);
+	(solvingFormula := nil)
+end
+@@end

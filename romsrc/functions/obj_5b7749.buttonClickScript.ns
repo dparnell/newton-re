@@ -1,0 +1,15 @@
+@@ 0x5b7729
+func() begin
+	AddDeferredCall(func() begin
+		local l1;
+		(if (l1 := ModalChangePIN(GetUserConfig('passwordkey))) then begin
+				SetUserConfig('passwordkey, l1);
+				if (not GetUserConfig('usepassword)) then begin
+						SetUserConfig('usepassword, true);
+						SetUserConfig('passwordFrequency, 0)
+					end;
+				base:RedoChildren()
+			end)
+	end, nil)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x47be19
+func() begin
+	(if info then ArrayPos(info.routeActions, self:GetTransport():GetConfig(info.routeConfig), 0, nil))
+end
+@@end

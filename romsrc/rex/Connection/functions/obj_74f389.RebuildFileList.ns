@@ -1,0 +1,8 @@
+@@ 0x74f775
+func(a1, a2) begin
+	self:GetNewFileFolderLists(a1, a2);
+	fileNameList:UpdateFileList(true);
+	folderList:UpdateFolderList(true);
+	directory:UpdateDirectoryText()
+end
+@@end

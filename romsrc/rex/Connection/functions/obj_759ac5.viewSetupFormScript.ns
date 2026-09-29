@@ -1,0 +1,16 @@
+@@ 0x75e131
+func() begin
+	self.startingConnection := nil;
+	self.applications := nil;
+	self.reopenMainSlip := nil;
+	self.closeBoxTapped := nil;
+	self.keyPassthroughOn := nil;
+	self.openWindows := [Array: ];
+	self:AddOpenWindow(self);
+	if (GetUserConfig('blessedApp) = 'Connection) then begin
+			closeBox.viewFlags := BAnd(closeBox.viewFlags, -2)
+		end;
+	SetKeyView(self, 0);
+	inherited:?viewSetupFormScript()
+end
+@@end

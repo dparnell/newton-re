@@ -1,0 +1,9 @@
+@@ 0x7606fd
+func(a1) begin
+	(if (not passwordVisible) then inherited:UpdateText(a1) else begin
+			AddUndoAction('UpdateText, [Array: Clone(entryLine.text)]);
+			SetValue(entryLine, 'text, a1);
+			entryLine:SetHilite(9999, 9999, true)
+		end)
+end
+@@end

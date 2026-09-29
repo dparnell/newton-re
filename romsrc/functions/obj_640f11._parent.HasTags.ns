@@ -1,0 +1,21 @@
+@@ 0x6342bd
+func() begin
+	local l1, l2, l3;
+	if ((l1 := Length(self.soupList)) <> 0) then begin
+			(repeat l1 := (l1 - 1); if (not self.soupList[l1]:HasTags()) then begin
+						return nil
+					end until (l1 = 0));
+			return true
+		end;
+	if (l2 := GetSoupDef(self:GetName())) then begin
+			if (l3 := l2.indexes) then begin
+					l1 := Length(l3);
+					(while (l1 > 0) do begin
+							l1 := (l1 - 1);
+							(if (l3[l1].type = 'tags) then return true)
+						end)
+				end
+		end;
+	nil
+end
+@@end

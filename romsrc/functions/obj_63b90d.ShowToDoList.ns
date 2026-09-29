@@ -1,0 +1,7 @@
+@@ 0x4f7be9
+func(a1) begin
+	selectedDates := [Array: (a1 - (a1 mod 1440))];
+	self:changeViewTo(ToDoListView);
+	ToDoListView:calculateScrollRects()
+end
+@@end

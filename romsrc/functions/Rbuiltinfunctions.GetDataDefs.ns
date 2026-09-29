@@ -1,0 +1,5 @@
+@@ 0x4a8781
+func(a1) begin
+	(if a1 then _dataDefs.(a1))
+end
+@@end

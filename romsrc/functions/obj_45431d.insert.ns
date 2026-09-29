@@ -1,0 +1,29 @@
+@@ 0x453ae1
+@@const kFunction_450079
+func(a1) begin
+	local l1;
+	if (not a1) then begin
+			return nil
+		end;
+	(if IsInstance(a1, 'alias) then ResolveEntryAlias(a1) else (if (if IsFrame(a1) then a1._alias) then (if (l1 := ResolveEntryAlias(a1._alias)) then l1 else a1) else a1))
+end
+@@main
+func(a1, a2) begin
+	if (a2 = 'select) then begin
+			self:DoSelectObj(a1, nil)
+		end else begin
+			if ((not a1._alias) or (not ResolveEntryAlias(a1._entryAlias))) then begin
+					a1._fakeID := self:GetUniqueFakeID();
+					a1._Unselected := true;
+					self:AddToSelected(a1)
+				end
+		end;
+	cursor:GotoKey((fCurrentKey := self:IndexStr(call (kFunction_450079) with (a1))));
+	AZTabs:Update();
+	listBase:Update();
+	listBase:MarkCursorPosition();
+	pickBase:MaskTaps(nil);
+	fTapinfo := nil;
+	(fOpenEditor := nil)
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x508339
+func(a1) begin
+	local l1;
+	dirtyFlag := true;
+	inherited:LabelActionScript(a1);
+	savedFrequencyIndex := currentLabelIndex;
+	l1 := (RepeatingView.repeatType <> 5);
+	(if (if hideDateRangeFields then l1) then MeetingNotes:RelayoutSlip(true) else (if (if (not hideDateRangeFields) then (not l1)) then MeetingNotes:RelayoutSlip(nil)))
+end
+@@end

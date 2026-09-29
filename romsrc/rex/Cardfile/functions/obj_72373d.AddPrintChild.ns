@@ -1,0 +1,7 @@
+@@ 0x723819
+func(a1, a2, a3, a4) begin
+	AddArraySlot(stepChildren, {_proto: a1, target: a2, viewBounds: RelBounds(a3, a4, 225, 160), viewJustify: 0});
+	AddArraySlot(stepChildren, {_proto: @652, viewBounds: RelBounds(((a3 + 225) + 20), a4, 225, 160), viewJustify: 0, stepChildren: [Array: {_proto: @413, viewBounds: SetBounds(0, 0, 0, 0), viewJustify: 240, target: a2, path: 'notes, viewFormat: notesViewFormat}]});
+	{bottom: 160, right: 470}
+end
+@@end

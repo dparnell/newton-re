@@ -1,0 +1,8 @@
+@@ 0x43ea49
+func(a1) begin
+	local l1, l2;
+	inherited:pickActionScript(a1);
+	self:SetText((l2 := (if IsFrame((l1 := popup[a1])) then l1.item else l1)));
+	self:SyncView()
+end
+@@end

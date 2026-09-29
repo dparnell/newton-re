@@ -1,0 +1,5 @@
+@@ 0x5256c5
+func() begin
+	(entryFlags := BOr(assistFlags, self:CheckFlags()))
+end
+@@end

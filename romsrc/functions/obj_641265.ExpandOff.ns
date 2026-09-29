@@ -1,0 +1,9 @@
+@@ 0x5a9c35
+func() begin
+	(if expandFlag then begin
+			expandFlag := nil;
+			SetValue(displayText, 'text, addText);
+			self:SetWord("")
+		end)
+end
+@@end

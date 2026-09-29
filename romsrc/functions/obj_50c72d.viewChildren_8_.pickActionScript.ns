@@ -1,0 +1,23 @@
+@@ 0x507999
+func(a1) begin
+	local l1, l2;
+	l1 := nil;
+	if (if a1 then (Length(a1) > 0)) then begin
+			l1 := a1[0]
+		end;
+	if (not self:IsSameAlias(locationAlias, l1)) then begin
+			locationAlias := l1;
+			dirtyFlag := true;
+			if ClosingFromQuitScript then begin
+					MeetingNotes.needToChangeThisOrFutureOccurrences := 'ThisOneOnly
+				end else begin
+					self:UpdateText(StyledStrTruncate(self:getNameOfLocation(locationAlias), (220 - self.indent), 10243));
+					self:CarefulAskUser()
+				end
+		end;
+	if openNonchildViews then begin
+			l2 := LSearch(openNonchildViews, placePopup, 0, '|=|, nil)
+		end;
+	(if l2 then ArrayRemoveCount(openNonchildViews, l2, 1))
+end
+@@end

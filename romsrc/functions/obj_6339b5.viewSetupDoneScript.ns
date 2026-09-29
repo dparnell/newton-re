@@ -1,0 +1,5 @@
+@@ 0x4cb6cd
+func() begin
+	(if retryAllowed then retryButton:Open())
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x5aca89
+func() begin
+	local l1, l2;
+	l1 := '{count: 0};
+	(l2 := GetDictionary(36)).count := l2:Walk("", nil);
+	SaveDictionary(36, "AutoAdd", l1)
+end
+@@end

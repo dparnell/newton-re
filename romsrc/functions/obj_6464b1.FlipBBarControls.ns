@@ -1,0 +1,10 @@
+@@ 0x43fd31
+func(a1) begin
+	local l1;
+	if (not (l1 := GetUserConfig('buttonBarControlsPositions))) then begin
+			l1 := Array(4, nil)
+		end;
+	l1[GetOrientation()] := a1;
+	SetUserConfig('buttonBarControlsPositions, l1)
+end
+@@end

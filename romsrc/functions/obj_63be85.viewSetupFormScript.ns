@@ -1,0 +1,6 @@
+@@ 0x4bbb35
+func() begin
+	inherited:viewSetupFormScript();
+	(entryLine._keyboard := GetRoot().phoneKeyboard)
+end
+@@end

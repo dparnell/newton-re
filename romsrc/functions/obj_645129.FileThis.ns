@@ -1,0 +1,44 @@
+@@ 0x4ab561
+func(a1, a2, a3, a4, a5) begin
+	if IsSoupEntry(a1) then begin
+			if a2 then begin
+					a1.labels := a3;
+					EntryChange(a1);
+					l1 := true
+				end;
+			if a4 then begin
+					if EntryStore(a1):IsReadOnly() then begin
+							if (if layout then layout.viewCObject) then begin
+									layout:Effect(178324480, nil, @380, 'DuplicateEntryGuts, [Array: a1, a5])
+								end else begin
+									if allSoups then begin
+											local l1;
+											(foreach l2 in allSoups do begin
+													local l4, l5, l6;
+													l4 := Clone(l2);
+													l5 := EntrySoup(a1);
+													l4:MakeSoup(appSymbol);
+													if LSearch((l6 := l4.theSoup:GetSoupList()), l5, 0, '|=|, nil) then begin
+															l4:DuplicateEntry(a1, a5);
+															l4:DoneWithSoup(appSymbol);
+															break
+														end;
+													l4:DoneWithSoup(appSymbol)
+												end)
+										end
+								end
+						end else begin
+							self:MoveTarget(a1, a5)
+						end
+				end
+		end else begin
+			if (if layout then layout.FileThis) then begin
+					layout:FileThis(a1, a2, a3, a4, a5);
+					l1 := true
+				end else begin
+					self:Notify(3, title, "There is nothing to file.")
+				end
+		end;
+	(if l1 then self:filingChanged())
+end
+@@end

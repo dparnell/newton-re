@@ -1,0 +1,28 @@
+@@ 0x595f05
+func() begin
+	Busy := true;
+	if (not self:StartTransaction(120)) then begin
+			return nil
+		end;
+	self:StartStream("D3");
+	self:SendSlot(1, 'certificate);
+	self:SendSlot(2, 'certificatepassword);
+	self:SendSlot(3, 'firstName);
+	self:SendSlot(4, 'lastName);
+	self:SendSlot(5, 'address);
+	self:SendSlot(6, 'city);
+	self:SendSlot(7, 'state);
+	self:SendSlot(8, 'zip);
+	self:SendSlot(23, 'country);
+	self:SendSlot(24, 'language);
+	self:SendSlot(9, 'homePhone);
+	self:SendSlot(15, 'dayphone);
+	self:SendSlot(10, 'creditcard);
+	self:SendSlot(11, 'creditexper);
+	self:SendSlot(12, 'creditnumber);
+	self:SendSlot(13, 'cardfirst);
+	self:SendSlot(14, 'cardlast);
+	self:SendSlot(25, 'backuppassword);
+	self:SendStream()
+end
+@@end

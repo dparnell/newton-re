@@ -1,0 +1,8 @@
+@@ 0x549ff1
+func(a1, a2, a3) begin
+	local l1;
+	l1 := self:AddIconEntryQT(a1, a2, a3);
+	self:InvalIcons();
+	l1
+end
+@@end

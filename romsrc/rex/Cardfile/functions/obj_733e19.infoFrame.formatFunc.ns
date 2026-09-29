@@ -1,0 +1,13 @@
+@@ 0x734081
+func(a1) begin
+	local l1, l2;
+	if (ClassOf((l2 := a1[1])) = 'int) then begin
+			l2 := NumberStr(l2)
+		end;
+	l1 := ParamStr("^?0Access Number: ^0||^?1 [^1]||", [Array: a1[0], l2]);
+	if (if a1[2] then GlobalVarExists('DialinNetworkRegistry)) then begin
+			l1 := Stringer([Array: l1, ParamStr("\n Network: ^0", [Array: DialinNetworkRegistry.(a1[2]).title])])
+		end;
+	l1
+end
+@@end

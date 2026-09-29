@@ -1,0 +1,15 @@
+@@ 0x5530e5
+func(a1) begin
+	if a1 then begin
+			if self.justHilited then begin
+					RemoveSlot(self, 'justHilited)
+				end else begin
+					self.justHilited := true;
+					self:Dirty()
+				end
+		end else begin
+			self:Dirty()
+		end;
+	true
+end
+@@end

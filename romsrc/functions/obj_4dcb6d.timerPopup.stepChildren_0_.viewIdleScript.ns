@@ -1,0 +1,15 @@
+@@ 0x4dc7d9
+func() begin
+	(if userConfiguration.alarmClockTimerOn then begin
+			if (count = 60) then begin
+					value := (value - 1);
+					AddDeferredSend(self, 'RedoChildren, [Array: ]);
+					count := 1
+				end else begin
+					count := (count + 1)
+				end;
+			PlaySoundIrregardless((if ((count mod 2) = 0) then @299 else @300));
+			1000
+		end)
+end
+@@end

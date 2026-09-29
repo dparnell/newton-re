@@ -1,0 +1,29 @@
+@@ 0x5ae421
+func() begin
+	if (A2Z.curIndex > 0) then begin
+			A2Z.curIndex := (A2Z.curIndex - 1)
+		end else begin
+			if (A2Z.curIndex = 0) then begin
+					A2Z.curIndex := -1;
+					Zero2Nine.curIndex := (Zero2Nine.numIndices - 1)
+				end else begin
+					if (Zero2Nine.curIndex > 0) then begin
+							Zero2Nine.curIndex := (Zero2Nine.curIndex - 1)
+						end else begin
+							if (Zero2Nine.curIndex = 0) then begin
+									Zero2Nine.curIndex := -1;
+									A2Z.curIndex := (A2Z.numIndices - 1)
+								end
+						end
+				end
+		end;
+	if (A2Z.curIndex >= 0) then begin
+			A2Z:IndexClickScript(A2Z.curIndex)
+		end else begin
+			Zero2Nine:IndexClickScript(Zero2Nine.curIndex)
+		end;
+	A2Z:Dirty();
+	Zero2Nine:Dirty();
+	true
+end
+@@end

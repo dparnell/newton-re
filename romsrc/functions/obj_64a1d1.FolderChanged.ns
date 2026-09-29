@@ -1,0 +1,17 @@
+@@ 0x54cec9
+func(a1, a2) begin
+	local l1, l2, l3;
+	(if a1 then begin
+			l3 := (l2 := GetUnionSoup("Packages"):Query({type: 'index, indexPath: '_uniqueID, tagspec: '{any: _icon}})):entry();
+			(while l3 do begin
+					if (if (l3.labels = a1) then (not EntryStore(l3):IsReadOnly())) then begin
+							self:ChangeTagListAndLabels(l3, a2);
+							EntryChange(l3);
+							l1 := true
+						end;
+					(l3 := l2:Next())
+				end);
+			(if l1 then self:RedoIcons())
+		end)
+end
+@@end

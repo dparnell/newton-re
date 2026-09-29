@@ -1,0 +1,27 @@
+@@ 0x4dfdf1
+func(a1) begin
+	l1 := GetLocationSoup(@658);
+	l3 := (l2 := l1:Query({type: 'index})):entry();
+	pop := [Array: ];
+	(loop begin
+			if (not l3) then begin
+					break
+				end;
+			AddArraySlot(pop, {item: l3.name, symbol: l3.symbol});
+			(l3 := l2:Next())
+		end);
+	AddArraySlot(pop, 'pickseparator);
+	AddArraySlot(pop, {item: "none", symbol: nil});
+	l4 := (if HasPath(target, 'daylight) then target.daylight else (if country then country.daylight));
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	(foreach l5 in pop do begin
+			if (if IsFrame(l5) then (l4 = l5.symbol)) then begin
+					l5.mark := $\uFC0B
+				end
+		end);
+	self:PopupMenu(pop, {left: indent, top: 2})
+end
+@@end

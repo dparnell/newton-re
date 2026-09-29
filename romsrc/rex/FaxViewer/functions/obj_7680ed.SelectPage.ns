@@ -1,0 +1,9 @@
+@@ 0x768409
+func(a1) begin
+	if (fPage <> nil) then begin
+			self:StoreCurrentFaxPage()
+		end;
+	fPageNum := max(1, min(a1, Length(target.pages)));
+	(fPage := target.pages[(fPageNum - 1)])
+end
+@@end

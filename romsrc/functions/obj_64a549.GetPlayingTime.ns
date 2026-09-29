@@ -1,0 +1,10 @@
+@@ 0x4233a9
+func() begin
+	local l1;
+	l1 := self:GetSampleCount();
+	if (compressionRatio exists) then begin
+			l1 := (l1 * compressionRatio)
+		end;
+	(l1 / self:GetSamplingRate())
+end
+@@end

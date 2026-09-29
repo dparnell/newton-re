@@ -1,0 +1,10 @@
+@@ 0x45eba5
+func() begin
+	(if image then begin
+			self.viewBounds := FitToBox(ShapeBounds(image), Clone(baseBounds), viewJustify);
+			viewBounds.right := (viewBounds.right + 4);
+			viewBounds.bottom := ((viewBounds.bottom + 4) + 14);
+			(actualThumbnail.trackWhileScrolling := trackWhileScrolling)
+		end)
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x4cf6ed
+func(a1, a2, a3) begin
+	a1:CommitSession(nil);
+	a1:DoDisconnect(a3)
+end
+@@end

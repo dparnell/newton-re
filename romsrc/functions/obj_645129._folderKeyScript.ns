@@ -1,0 +1,5 @@
+@@ 0x4ac8e9
+func(a1) begin
+	(if newtAppBase.filterBar then PressButton(newtAppBase.filterBar.showBarText))
+end
+@@end

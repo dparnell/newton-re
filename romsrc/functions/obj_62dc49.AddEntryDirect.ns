@@ -1,0 +1,7 @@
+@@ 0x4b3399
+func(a1, a2) begin
+	local l1;
+	l1 := allSoups.(currentSoupSymbol);
+	l1:AddEntry(a1, a2)
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x48acd9
+func() begin
+	SetValue(self, 'text, self:SetupText());
+	self:SyncView()
+end
+@@end

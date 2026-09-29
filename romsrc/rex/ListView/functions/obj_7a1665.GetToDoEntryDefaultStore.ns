@@ -1,0 +1,37 @@
+@@ 0x79763d names
+@@const kLiteral_785d9d
+"To Do List"
+@@main
+func(aDate, aSeedStore) begin
+	local Entry, dataCursor, storeIndex;
+	storeIndex := 0;
+	if (not aSeedStore) then begin
+			if self:GetAppPreferences().toDoInternalStore then begin
+					aSeedStore := GetStores()[0]
+				end else begin
+					aSeedStore := GetDefaultStore()
+				end
+		end;
+	if aSeedStore:IsReadOnly() then begin
+			aSeedStore := GetStores()[0]
+		end;
+	if (not aSeedStore:HasSoup(kLiteral_785d9d)) then begin
+			aSeedStore:CreateSoup(kLiteral_785d9d, masterSoup.soupIndices)
+		end;
+	Entry := (dataCursor := dataSoup:Query({type: 'index, startKey: aDate, indexPath: 'date, endTest: func(e) begin
+		(e.date > aDate)
+	end})):Entry();
+	(while (if (Entry <> nil) then (EntryStore(Entry) <> aSeedStore)) do begin
+			Entry := dataCursor:Next();
+			(storeIndex := (storeIndex + 1))
+		end);
+	if (Entry = nil) then begin
+			(Entry := masterSoup:CreateBlankEntry()).date := aDate;
+			if (aDate = 0) then begin
+					Entry.lastRollover := ((Time() div 1440) * 1440)
+				end;
+			aSeedStore:GetSoup(kLiteral_785d9d):AddXmit(Entry, 'todo)
+		end;
+	return {Entry: Entry, storeIndex: storeIndex}
+end
+@@end

@@ -1,0 +1,22 @@
+@@ 0x55d331
+func() begin
+	local l1, l2;
+	l1 := "";
+	if (if (SplitString(findText)[0] = nil) then (not additionalFind)) then begin
+			localFinder := nil
+		end else begin
+			if localFinder then begin
+					if ((l2 := localFinder:count()) = 0) then begin
+							l1 := "No items were found."
+						end else begin
+							if (l2 = 1) then begin
+									l1 := "One item was found."
+								end else begin
+									l1 := Stringer([Array: ParamStr("This is item ^0.", [Array: (localFinder.currentItem + 1)]), " ", (if ((localFinder.currentItem + 1) = l2) then "It is the last item found." else "There are more items.")])
+								end
+						end
+				end
+		end;
+	self:SetMessage(l1)
+end
+@@end

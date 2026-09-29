@@ -1,0 +1,30 @@
+@@ 0x48d1c1
+func() begin
+	l2 := GetRoot().mailcategory.mailNetworks;
+	l3 := self:GetSymArray();
+	labelCommands := [Array: ];
+	local l1;
+	local l2;
+	local l3;
+	(foreach l4 in l3 do begin
+			local l6;
+			if (l1 := FindMailNetwork(l2, l4)) then begin
+					AddArraySlot(labelCommands, l1.title)
+				end else begin
+					AddArraySlot(labelCommands, "Unknown")
+				end
+		end);
+	if (not target.(path)) then begin
+			if (l6 := GetUserConfig('mailNetwork)) then begin
+					target.(path) := l6
+				end else begin
+					target.(path) := GetRoot().mailcategory.mailNetworks[0].id
+				end;
+			self:StartFlush()
+		end;
+	(if (l1 := FindMailNetwork(l2, target.(path))) then begin
+			self:Parent():?DataChangeNotify('mailNetwork, target.(path));
+			l1.title
+		end else "")
+end
+@@end

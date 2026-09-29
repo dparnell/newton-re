@@ -1,0 +1,25 @@
+@@ 0x45b55d
+@@const kLiteral_45b419
+'[Array: 2048, 1024, 512, 256, 128, 64, 32, 2048, 1024, 512, 256, 128, 64, 32]
+@@main
+func(a1) begin
+	l2 := Date((l1 := Time())).dayOfWeek;
+	l3 := (l1 - (l1 mod 1440));
+	l4 := ((a1.hours * 60) + a1.minutes);
+	if (if (BAnd(a1.days, kLiteral_45b419[l2]) <> 0) then ((l3 + l4) > l1)) then begin
+			nextTime := (l3 + l4)
+		end else begin
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			(for l5 := (l2 + 1) to (l2 + 8) do begin
+					if (BAnd(a1.days, kLiteral_45b419[l5]) <> 0) then begin
+							nextTime := ((l3 + (1440 * (l5 - l2))) + l4);
+							break
+						end
+				end)
+		end;
+	(a1.Time := nextTime)
+end
+@@end

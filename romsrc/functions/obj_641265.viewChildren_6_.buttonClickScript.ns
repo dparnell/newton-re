@@ -1,0 +1,5 @@
+@@ 0x5ab085
+func() begin
+	(if icon then AddDeferredSend(base, 'SafeQuit, [Array: ]))
+end
+@@end

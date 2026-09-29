@@ -1,0 +1,14 @@
+@@ 0x44a549
+func() begin
+	local l1;
+	(for l2 := (Length((l1 := self:ChildViewFrames())) - 1) to 0 by -1 do begin
+			local l5;
+			if (l5 := l1[l2]).viewCObject then begin
+					if l5:_DoCloseButton() then begin
+							return true
+						end
+				end
+		end);
+	(if self:_CloseCloseButton() then return true)
+end
+@@end

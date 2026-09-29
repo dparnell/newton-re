@@ -1,0 +1,21 @@
+@@ 0x52af79
+@@const kBinaryFromHex
+func(hex, cls) begin
+	local b := MakeBinary(StrLen(hex) div 2, cls);
+	for i := 0 to Length(b) - 1 do begin
+		local h := Ord(hex[2 * i]);
+		local l := Ord(hex[2 * i + 1]);
+		StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+	end;
+	b
+end
+@@const kLiteral_52ac79
+{mask: call kBinaryFromHex with ("00000000000400970097004b00b40066000000000000000000000000000000000000000000000000180406001e001e000b8474000d002c0007003800041e080000798000007c800000fdc0001475000000bc8a00007dc0000074c00000300000041d0800070038000d002c000b8874001e001e0018080600000000000000000000000000", 'mask), bits: call kBinaryFromHex with ("00000000000400970097004b00b40066000000000000000000000000000c0000000c0000001e0000181a06001e3f1e000bfbf4000dffec0006e1d800078c7800070038000f0c3c003e0c1f00ea8c5fc0fe9c55c03e0e1f000f073c000701b800078c780006e1d8000dffec000bf7f4001e3f1e0018160600001e0000000c0000000c0000", 'bits), bounds: '{left: 0, top: 0, right: 27, bottom: 29}}
+@@main
+func(a1, a2) begin
+	local l1, l2;
+	l1 := ResolveEntryAlias(a1.entry);
+	l2 := LocalTime(nil, l1);
+	[Array: MakeText(a1.title, (a2.left + 37), a2.top, a2.right, (a2.top + 11)), MakeText(Stringer([Array: HourMinute(l2), "  ", ShortDate(l2)]), (a2.left + 37), ((a2.top + 11) + 2), a2.right, ((a2.top + 22) + 2)), ScaleShape(MakeShape(kLiteral_52ac79), nil, RelBounds((a2.left + 10), (a2.top + 4), 16, 16))]
+end
+@@end

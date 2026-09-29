@@ -1,0 +1,7 @@
+@@ 0x4b1c45
+func(a1, a2) begin
+	saveWhat := a1;
+	saveWhatView := a2;
+	(if (not a1) then self:Notify(3, title, "There is nothing to Log.") else (if TargetIsCursor(a1) then self:Confirm(title, "Log all selected items? Doing this will delete the originals and can\u2019\ut be undone.", self, 'LogActionConfirmCB) else self:Confirm(title, "Log this item? Doing this will delete the original.", self, 'LogActionConfirmCB)))
+end
+@@end

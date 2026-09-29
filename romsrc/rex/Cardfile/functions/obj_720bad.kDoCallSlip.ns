@@ -1,0 +1,38 @@
+@@ 0x73c359
+func(a1, a2, a3) begin
+	a1:dirty();
+	(if ((not (l3 := GetRoot().cardfile.callSlip)) or (not l3.viewCObject)) then begin
+			l1 := GetRoot().|phonehome:newton|:NewItem(a1);
+			l2 := GetDataDefs('|nameRef.phone|):MakeNameRef(a2, '|nameRef.phone|);
+			if a3 then begin
+					l2.phone := a3
+				end else begin
+					l5 := true
+				end;
+			l1.toRef := [Array: l2];
+			if (l4 := GetRoot().cardfile:bcPhoneNumber(a2, '[Array: string])) then begin
+					l1.alternatives := [Array: ];
+					local l1;
+					local l2;
+					local l3;
+					local l4;
+					local l5;
+					(foreach l6 in l4 do begin
+							local l8;
+							if l6 then begin
+									if l5 then begin
+											l2.phone := (a3 := l6);
+											l5 := nil
+										end else begin
+											if (not StrEqual(l6, a3)) then begin
+													(l8 := Clone(l2)).suffix := (l8.phone := l6);
+													AddArraySlot(l1.alternatives, l8)
+												end
+										end
+								end
+						end)
+				end;
+			(GetRoot().cardfile.callSlip := a1:OpenRoutingSlip(l1))
+		end)
+end
+@@end

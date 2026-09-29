@@ -1,0 +1,9 @@
+@@ 0x51711d
+func() begin
+	inherited:?viewSetupFormScript();
+	InsertionSort((cursor := target._cursor), '|<|, '[pathExpr: index]);
+	cursorIndex := 0;
+	cursorLength := Length(cursor);
+	(repeatingInstance := Clone(protoInstanceOfRepeatingMeeting))
+end
+@@end

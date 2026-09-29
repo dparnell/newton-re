@@ -1,0 +1,20 @@
+@@ 0x42e319
+func(a1, a2) begin
+	local l1;
+	if (a1 = $\t) then begin
+			if (BAnd(a2, 67108864) <> 0) then begin
+					if ((l1 := (split - 1)) < 0) then begin
+							l1 := (numLines - 1)
+						end
+				end else begin
+					if ((l1 := (split + 1)) >= numLines) then begin
+							l1 := 0
+						end
+				end
+		end;
+	if l1 then begin
+			AddDeferredAction(SetLine, [Array: l1])
+		end;
+	l1
+end
+@@end

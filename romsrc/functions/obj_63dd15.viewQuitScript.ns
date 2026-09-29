@@ -1,0 +1,13 @@
+@@ 0x461b89
+func() begin
+	self:MarkItemSeen(roll.index, nil);
+	(foreach l1 in Notifications do begin
+			if (not l1.seenByUser) then begin
+					SetRemove(Notifications, l1);
+					AddDeferredSend(self, 'ShowItem, [Array: l1, nil]);
+					break
+				end
+		end);
+	inherited:?viewQuitScript()
+end
+@@end

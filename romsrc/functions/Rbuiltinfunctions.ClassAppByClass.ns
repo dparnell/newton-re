@@ -1,0 +1,15 @@
+@@ 0x468fcd
+func(a1) begin
+	l1 := [Array: ];
+	local l1;
+	(foreach l2, l3 deeply in AppClassesRegistry do begin
+			(foreach l5 in l3 do begin
+					if (a1 = l5) then begin
+							SetAdd(l1, l2, true);
+							break
+						end
+				end)
+		end);
+	(if (Length(l1) = 0) then return nil else return l1)
+end
+@@end

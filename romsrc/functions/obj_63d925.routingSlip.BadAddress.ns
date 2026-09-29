@@ -1,0 +1,30 @@
+@@ 0x5992a5
+func(a1, addr) begin
+	local name;
+	l1 := a1:Get(addr, 'email, nil);
+	name := a1:Get(addr, 'name, 'text);
+	if IsArray(l1) then begin
+			local l1;
+			(foreach l2 in l1 do begin
+					if self:BadAddress(a1, l2) then begin
+							return true
+						end
+				end);
+			return nil
+		end else begin
+			if (((not l1) or (not IsString(l1))) or (not StrFilled(l1))) then begin
+					self:Notify(3, appName, ParamStr("^0 does not have an e-mail address.", [Array: name]))
+				end else begin
+					if IsRichString(l1) then begin
+							inkCount := (inkCount + 1);
+							AddDeferredCall(func() begin
+								self:ConvertStart({addr: addr, name: name})
+							end, nil)
+						end else begin
+							return nil
+						end
+				end
+		end;
+	true
+end
+@@end

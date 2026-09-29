@@ -1,0 +1,6 @@
+@@ 0x4431a5
+func(a1) begin
+	lastPressTime := 0;
+	inherited:viewClickScript(a1)
+end
+@@end

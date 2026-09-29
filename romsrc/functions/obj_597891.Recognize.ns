@@ -1,0 +1,8 @@
+@@ 0x5977ed
+func() begin
+	if IsRichString(message.(path)) then begin
+			SetValue(viewChildren[0], 'text, message.(path))
+		end;
+	AddProcrastinatedCall('_SetKeyView, functions.SetKeyView, [Array: self.viewChildren[0], 99999], 1000)
+end
+@@end

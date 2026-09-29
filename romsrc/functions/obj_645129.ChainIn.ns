@@ -1,0 +1,8 @@
+@@ 0x4a9fc5
+func(a1) begin
+	if (not newtAppBase.(a1)) then begin
+			newtAppBase.(a1) := [Array: ]
+		end;
+	SetAdd(newtAppBase.(a1), self, true)
+end
+@@end

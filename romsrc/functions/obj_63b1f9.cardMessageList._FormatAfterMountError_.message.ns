@@ -1,0 +1,5 @@
+@@ 0x56c7bd
+func(a1) begin
+	ParamStr("This card cannot be read due to an error (^0). To use this card you must first erase it.", [Array: GetRoot():TranslateError(a1)])
+end
+@@end

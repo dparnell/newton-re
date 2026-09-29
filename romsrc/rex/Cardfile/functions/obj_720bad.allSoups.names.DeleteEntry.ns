@@ -1,0 +1,13 @@
+@@ 0x739469
+func(a1) begin
+	local l1, l2;
+	EntryRemoveFromSoupXmit(a1, 'cardfile);
+	if a1.bdayEvent then begin
+			GetRoot().cardfile:RemoveBdayFromCalendar(a1)
+		end;
+	if (a1.class = 'owner) then begin
+			SyncPersonae()
+		end;
+	(if (a1.class = 'worksite) then SyncEmporia())
+end
+@@end

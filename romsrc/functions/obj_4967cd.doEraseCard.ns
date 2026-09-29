@@ -1,0 +1,10 @@
+@@ 0x49676d
+func() begin
+	(try begin
+			base:eraseStore(self:getDestStore())
+		end onexception |evt.ex| do begin
+			base:Close();
+			Rethrow()
+		end)
+end
+@@end

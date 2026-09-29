@@ -1,0 +1,46 @@
+@@ 0x551e99
+func(a1) begin
+	l1 := GetRoot().ExtrasDrawer;
+	l2 := self:GetPartEntries();
+	l3 := (l1:GetNewSequence(nil) - 1);
+	local l1;
+	local l2;
+	local l3;
+	(foreach l4 in l2.fixed do begin
+			if (not EntryStore(l4):IsReadOnly()) then begin
+					l4.sequence := (l3 := (l3 + 1));
+					self:ChangeTagListAndLabels(l4, nil);
+					EntryChange(l4)
+				end
+		end);
+	(foreach l4 in l2.mobile do begin
+			if (not EntryStore(l4):IsReadOnly()) then begin
+					l4.sequence := (l3 := (l3 + 1));
+					self:ChangeTagListAndLabels(l4, nil);
+					EntryChange(l4)
+				end
+		end);
+	l6 := [Array: ];
+	if a1.fixed then begin
+			(foreach l4 in a1.fixed do begin
+					if (if (l7 := l1:GetPartEntry(l4)) then (not EntryStore(l7):IsReadOnly())) then begin
+							self:ChangeTagListAndLabels(l7, '_buttonBar);
+							AddArraySlot(l6, l7)
+						end
+				end)
+		end;
+	l8 := [Array: ];
+	if a1.mobile then begin
+			(foreach l4 in a1.mobile do begin
+					local l6, l7, l8;
+					if (if (l7 := l1:GetPartEntry(l4)) then (not EntryStore(l7):IsReadOnly())) then begin
+							self:ChangeTagListAndLabels(l7, '_buttonBar);
+							AddArraySlot(l8, l7)
+						end
+				end)
+		end;
+	self:ResequencePartEntriesQT(l6, l8);
+	XmitSoupChange("Packages", 'ButtonBar, 'whatThe, nil);
+	nil
+end
+@@end

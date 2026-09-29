@@ -1,0 +1,8 @@
+@@ 0x4c7c55
+func(a1) begin
+	if (not a1) then begin
+			return nil
+		end;
+	(a1.printerPageBounds := GetUserConfig('paperSize))
+end
+@@end

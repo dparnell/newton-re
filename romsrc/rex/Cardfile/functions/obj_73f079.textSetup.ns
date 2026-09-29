@@ -1,0 +1,7 @@
+@@ 0x73f1c1
+func() begin
+	entryLine.viewFormat := framer;
+	AddDeferredCall(functions.SetKeyView, [Array: self.entryLine, 99999]);
+	(if (if target then target.(path)) then target.(path).label else "")
+end
+@@end

@@ -1,0 +1,20 @@
+@@ 0x427f55
+@@const kBinaryFromHex
+func(hex, cls) begin
+	local b := MakeBinary(StrLen(hex) div 2, cls);
+	for i := 0 to Length(b) - 1 do begin
+		local h := Ord(hex[2 * i]);
+		local l := Ord(hex[2 * i + 1]);
+		StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+	end;
+	b
+end
+@@const kLiteral_42409d
+{bits: call kBinaryFromHex with ("000000000004003b003b00420046004d0e0000003f8000007fc000007fc00000ffe00000ffe00000ffe000007fc000007fc000003f8000000e000000", 'bits), bounds: '{left: 0, top: 0, right: 11, bottom: 11}}
+@@const kLiteral_424115
+{bits: call kBinaryFromHex with ("0000000000040067006700430072004e150000002a80000055400000aaa0000055400000aaa0000055400000aaa00000554000002a80000015000000", 'bits), bounds: '{left: 0, top: 0, right: 11, bottom: 11}}
+@@main
+func() begin
+	(if (GetUserConfig('inputDevice) <> nil) then kLiteral_42409d else kLiteral_424115)
+end
+@@end

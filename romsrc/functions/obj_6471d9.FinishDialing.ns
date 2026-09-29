@@ -1,0 +1,10 @@
+@@ 0x5357f9
+func() begin
+	(try begin
+			self:SetStatusDialog('DialingTo, 'vStatusTitle, {primary: nil, titleText: currentItem.numberToDial});
+			callEndpoint:MakeOutgoing(currentItem.numberToDial, true)
+		end onexception |evt.ex| do begin
+			(if self:HandleThrow() then self:Shutdown())
+		end)
+end
+@@end

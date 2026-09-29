@@ -1,0 +1,6 @@
+@@ 0x727c39
+func() begin
+	self.stepChildren := [Array: GetRoot().cardfile:GetBCLayout(target).layout];
+	inherited:viewSetupChildrenScript()
+end
+@@end

@@ -1,0 +1,98 @@
+@@ 0x4e306d
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6;
+	l2 := nil;
+	l3 := value;
+	l5 := true;
+	if (a1 = 101) then begin
+			if isUnary then begin
+					if (value < 0) then begin
+							pendingOp := 114;
+							value := ((stack * (-value)) / 100);
+							l3 := (-l3)
+						end else begin
+							pendingOp := 113;
+							value := ((stack * value) / 100)
+						end;
+					isUnary := nil
+				end else begin
+					if ((pendingOp = 115) or (pendingOp = 116)) then begin
+							value := (value / 100)
+						end else begin
+							value := ((stack * value) / 100)
+						end
+				end;
+			l4 := $%;
+			a1 := 108
+		end;
+	if (a1 = 152) then begin
+			if (value >= 0.0) then begin
+					value := sqrt(value)
+				end else begin
+					l5 := nil;
+					self:SysBeep();
+					value := 0.0
+				end;
+			l2 := $\u221A;
+			a1 := 108
+		end;
+	if (pendingOp = 113) then begin
+			value := (stack + value);
+			l1 := $+
+		end else begin
+			if (pendingOp = 114) then begin
+					value := (stack - value);
+					l1 := $-
+				end else begin
+					if (pendingOp = 115) then begin
+							value := (stack * value);
+							l1 := $*
+						end else begin
+							if (pendingOp = 116) then begin
+									if (value <> 0.0) then begin
+											value := (stack / value)
+										end else begin
+											l5 := nil;
+											GetRoot():SysBeep();
+											value := 0.0
+										end;
+									l1 := $\F7
+								end else begin
+									if isUnary then begin
+											l1 := (if (value < 0) then $- else $+);
+											value := (stack + value);
+											if (l1 = $-) then begin
+													l3 := (-l3)
+												end
+										end
+								end
+						end
+				end
+		end;
+	if (pendingOp <> 0) then begin
+			if l5 then begin
+					playsound(grind)
+				end;
+			if l2 then begin
+					l6 := Stringer([Array: l1, " ", l2, " ", self:CalcFormattedNumberStr(l3), l4])
+				end else begin
+					l6 := Stringer([Array: l1, " ", self:CalcFormattedNumberStr(l3), l4])
+				end;
+			base:printToPaper(l6)
+		end;
+	if (a1 = 108) then begin
+			base:printToPaper(Stringer([Array: $=, " ", self:CalcFormattedNumberStr(value)]));
+			self:JamDisplay(self:CalcFormattedNumberStr(value));
+			inputKeys := ""
+		end else begin
+			if (if (a1 >= 113) then (a1 <= 116)) then begin
+					self:JamDisplay((inputKeys := "+-x\u00F7\u"[(a1 - 113)]))
+				end
+		end;
+	stack := value;
+	pendingOp := a1;
+	Clear := true;
+	unary := nil;
+	(isUnary := nil)
+end
+@@end

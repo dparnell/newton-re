@@ -1,0 +1,5 @@
+@@ 0x74cb09
+func() begin
+	self:HandleClick(3)
+end
+@@end

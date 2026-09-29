@@ -1,0 +1,10 @@
+@@ 0x54b7f1
+func(a1) begin
+	(if (checked <> a1) then begin
+			checked := a1;
+			shape := nil;
+			SetValue(self, 'viewFlags, bxor(GetViewFlags(self), 33554432));
+			self:Dirty()
+		end)
+end
+@@end

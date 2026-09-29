@@ -1,0 +1,26 @@
+@@ 0x73ad61
+func(a1, a2) begin
+	l3 := nil;
+	if (IsFrame(a2) or IsArray(a2)) then begin
+			local l1;
+			local l2;
+			local l3;
+			(foreach l1, l2 in a2 do begin
+					if self:HasData(l1, l2) then begin
+							break (l3 := l1)
+						end
+				end)
+		end else begin
+			if ((not IsInstance(a1, 'symbol)) or (not appBase.kDatalessSlots.(a1))) then begin
+					if IsInstance(a2, 'string) then begin
+							l3 := StrFilled(a2)
+						end else begin
+							if a2 then begin
+									l3 := a1
+								end
+						end
+				end
+		end;
+	l3
+end
+@@end

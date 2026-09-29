@@ -1,0 +1,16 @@
+@@ 0x766e11
+func(a1) begin
+	if Visible(vThumbFloater) then begin
+			vThumbFloater:Update()
+		end;
+	if ImageTarget:CanScroll() then begin
+			if (not Visible(vScrollers)) then begin
+					vScrollers:Open()
+				end;
+			vScrollers:Update(ImageTarget:GetScalingInfo())
+		end else begin
+			vScrollers:Close()
+		end;
+	ImageTarget:dirty()
+end
+@@end

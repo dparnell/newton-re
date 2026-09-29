@@ -1,0 +1,6 @@
+@@ 0x62fb5d
+func(a1) begin
+	RemoveSlot(functions, a1);
+	nil
+end
+@@end

@@ -1,0 +1,11 @@
+@@ 0x429461
+func() begin
+	local l1;
+	l1 := self:LocalBox();
+	if HasPath(self, 'viewLineSpacing) then begin
+			l1.top := (viewLineSpacing - FontAscent(viewFont));
+			l1.bottom := (l1.top + FontHeight(viewFont))
+		end;
+	l1
+end
+@@end

@@ -1,0 +1,15 @@
+@@ 0x47a9dd
+func() begin
+	entryLine.text := self:TextSetup();
+	self.viewChildren := [Array: entryLine];
+	if HasPath(self, 'viewLineSpacing) then begin
+			entryLine.viewLineSpacing := self.viewLineSpacing
+		end else begin
+			self.viewLineSpacing := 10
+		end;
+	(if (self:LocalBox().bottom > 16) then begin
+			entryLine.viewBounds := SetBounds(13, ((-self.viewLineSpacing) - 6), self:LocalBox().right, (self.viewLineSpacing + 6));
+			(entryLine.viewJustify := 8388736)
+		end)
+end
+@@end

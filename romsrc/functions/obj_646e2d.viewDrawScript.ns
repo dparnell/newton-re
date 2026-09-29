@@ -1,0 +1,7 @@
+@@ 0x4390b5
+func() begin
+	local l1;
+	l1 := self:LocalBox();
+	self:DrawShape(MakeRoundRect(0, 0, l1.right, l1.bottom, 8), '{penPattern: 5, pensize: 2, fillPattern: 0})
+end
+@@end

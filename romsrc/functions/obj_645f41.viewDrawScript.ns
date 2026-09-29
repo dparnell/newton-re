@@ -1,0 +1,5 @@
+@@ 0x4ad499
+func() begin
+	self:DrawShape(MakeRoundRect(left, 6, right, 10, 4), '{fillPattern: 5, penPattern: 0})
+end
+@@end

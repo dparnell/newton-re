@@ -1,0 +1,5 @@
+@@ 0x51c46d
+func() begin
+	(if Visible(markupLayer) then markupLayer:SaveMarks())
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x550ec9
+func() begin
+	(if (displayParams.buttonBarPosition <> 'none) then self:Open())
+end
+@@end

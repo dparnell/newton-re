@@ -1,0 +1,5 @@
+@@ 0x76e109
+func() begin
+	return calcLineValue
+end
+@@end

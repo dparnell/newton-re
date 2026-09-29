@@ -1,0 +1,17 @@
+@@ 0x556a41
+func(a1, a2, a3) begin
+	local l1;
+	if vars.SirNotAppearingInThisROM then begin
+			l1 := BFetch(SirNotAppearingInThisROM, a1, '|str<|, 'packageName)
+		end;
+	if (not l1) then begin
+			l1 := BFetch(@215, a1, '|str<|, 'packageName)
+		end;
+	(if (if l1 then (a2 <= l1.version)) then begin
+			if l1.message then begin
+					GetRoot():Notify(3, "Newton", ParamStr('{install: "The package \u201C\u^0\u201D\u was not installed because it does not work with this system. ^1", activate: "The package \u201C\u^0\u201D\u was not activated because it does not work with this system. ^1", Convert: "The package \u201C\u^0\u201D\u was not converted because it does not work with this system. ^1"}.(a3), [Array: a1, l1.message]))
+				end;
+			true
+		end)
+end
+@@end

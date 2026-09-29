@@ -1,0 +1,11 @@
+@@ 0x4af2f9
+func() begin
+	if HasPath(self, 'viewOriginX) then begin
+			viewOriginX := 0
+		end;
+	if HasPath(self, 'viewOriginY) then begin
+			viewOriginY := 0
+		end;
+	layout:Retarget(true)
+end
+@@end

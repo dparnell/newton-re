@@ -1,0 +1,36 @@
+@@ 0x4bd7a5
+func() begin
+	local l1, l2, l3, l4;
+	(if Visible(editor) then (loop begin
+				if ((((not (l2 := GetCaretInfo())) or (not l2.view)) or (not l2.view.viewCObject)) or (BAnd(l2.view.viewClass, 65535) <> 81)) then begin
+						break
+					end;
+				if (not l1) then begin
+						(l1 := editor:GlobalBox()).top := (l1.top + 8);
+						l1.bottom := (l1.bottom - viewLineSpacing)
+					end;
+				if ((not (l3 := l2.view:CaretRelativeToVisibleRect(l1))) or (l3 = 'inbox)) then begin
+						break
+					end;
+				l4 := 0;
+				if (l3 = 'top) then begin
+						l4 := (-scrollYAmount)
+					end else begin
+						if (l3 = 'bottom) then begin
+								l4 := scrollYAmount
+							end
+					end;
+				if (l4 > 0) then begin
+						if scrollerView.ScrollRect then begin
+								l4 := min(((scrollerView.ScrollRect.bottom - viewOriginY) - viewHeight), l4)
+							end
+					end else begin
+						l4 := max((-viewOriginY), l4)
+					end;
+				if (l4 = 0) then begin
+						break
+					end;
+				(if (l3 = 'top) then scrollerView:DoScroll('up) else (if (l3 = 'bottom) then scrollerView:DoScroll('down) else break))
+			end))
+end
+@@end

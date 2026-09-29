@@ -1,0 +1,9 @@
+@@ 0x4c2301
+func(a1) begin
+	if a1 then begin
+			layout:FlushData();
+			title:viewUpdateFormScript()
+		end;
+	(infoSlip := nil)
+end
+@@end

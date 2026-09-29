@@ -1,0 +1,66 @@
+@@ 0x78cf8d names
+func(anIndex, aPriority, anUndo) begin
+	level := (theTopic := topics[anIndex]).level;
+	newPlace := nil;
+	needsPrioritySort := true;
+	if ((if HasPath(theTopic, 'source) then (theTopic.source = nil)) or (ClassOf(theTopic.source) = 'symbol)) then begin
+			self:Notify(3, title, "Can\u2019\ut modify a 1.x formatted To Do item");
+			return nil
+		end;
+	if (level = nil) then begin
+			level := 1
+		end;
+	movingUp := (aPriority < theTopic.mtgPriority);
+	theTopic.mtgPriority := aPriority;
+	if anUndo then begin
+			return anIndex
+		end;
+	if movingUp then begin
+			if (((ti := self:OlderSister(anIndex)) = nil) or (topics[ti].mtgPriority <= aPriority)) then begin
+					needsPrioritySort := nil
+				end
+		end else begin
+			if (((ti := self:YoungerSister(anIndex)) = nil) or (topics[ti].mtgPriority >= aPriority)) then begin
+					needsPrioritySort := nil
+				end
+		end;
+	if needsPrioritySort then begin
+			oldestSis := self:OldestSister(anIndex);
+			youngestSis := anIndex;
+			local theTopic;
+			local oldestSis;
+			local level;
+			local youngestSis;
+			local ti;
+			local newPlace;
+			local dragRef;
+			local movingUp;
+			local topicLevel;
+			local needsPrioritySort;
+			(for ti := (oldestSis + 1) to (nTopics - 1) do begin
+					if ((topicLevel := topics[ti].level) = nil) then begin
+							topicLevel := 1
+						end;
+					if (topicLevel = level) then begin
+							youngestSis := ti
+						end else begin
+							if (topicLevel < level) then begin
+									break
+								end
+						end
+				end);
+			if (oldestSis <> youngestSis) then begin
+					StableSort(topics, '|<|, func(t) begin
+						(t.mtgPriority + (if t.mtgDone then 10 else 0))
+					end);
+					AddProcrastinatedSend(uniqueSymbol, self, 'RedoTopics, nil, 0)
+				end
+		end;
+	if newPlace then begin
+			AddUndoAction('viewDropMoveScript, [Array: self:MakeUndoDragRef(dragRef, {index: (newPlace - 1), level: level}), nil, nil, nil])
+		end;
+	self:StartFlush();
+	self:Dirty();
+	(if newPlace then newPlace else anIndex)
+end
+@@end

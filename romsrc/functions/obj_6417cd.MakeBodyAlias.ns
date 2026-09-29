@@ -1,0 +1,15 @@
+@@ 0x468b21
+func(a1) begin
+	local l1, l2;
+	l1 := a1.targetEntry;
+	l2 := a1.target;
+	if l1 then begin
+			l2 := {class: DataClassOf(l2), _ioAlias: MakeEntryAlias(l1), path: 'body}
+		end else begin
+			if IsSoupEntry(l2) then begin
+					l2 := {class: DataClassOf(l2), _ioAlias: MakeEntryAlias(l2)}
+				end
+		end;
+	l2
+end
+@@end

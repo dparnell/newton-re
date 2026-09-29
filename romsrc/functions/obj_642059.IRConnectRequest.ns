@@ -1,0 +1,5 @@
+@@ 0x4d1439
+func() begin
+	GetRoot().|beam:newton|:ReceiveRequest({})
+end
+@@end

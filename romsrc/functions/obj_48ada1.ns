@@ -1,0 +1,10 @@
+@@ 0x48ada1
+func() begin
+	if (not GetRoot().senderList) then begin
+			GetRoot().senderList := [Array: ]
+		end;
+	SetAdd(senderList, self, true);
+	text := self:SetupText();
+	inherited:viewSetupFormScript()
+end
+@@end

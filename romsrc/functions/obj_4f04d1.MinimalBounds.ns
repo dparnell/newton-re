@@ -1,0 +1,11 @@
+@@ 0x4f0495
+func(a1) begin
+	if a1.notes then begin
+			local l1;
+			(foreach l2 in a1.notes do begin
+					l1 := UnionRect(l1, l2.viewBounds)
+				end)
+		end;
+	l1
+end
+@@end

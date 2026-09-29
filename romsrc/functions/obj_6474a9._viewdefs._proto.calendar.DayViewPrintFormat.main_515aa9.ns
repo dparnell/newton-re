@@ -1,0 +1,10 @@
+@@ 0x515aa9
+func() begin
+	self.tabWidths := (tabWidths - 18);
+	if (displaydate <> selectedDates[0]) then begin
+			labelFont := nil
+		end;
+	viewOriginY := OriginY;
+	(viewBounds := SetBounds(0, MeetingTop, 0, MeetingBottom))
+end
+@@end

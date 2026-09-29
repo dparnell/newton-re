@@ -1,0 +1,10 @@
+@@ 0x55d461
+func(a1) begin
+	local l1;
+	l1 := GetView('viewfrontmostapp);
+	(if findDrawer.viewCObject then begin
+			SetValue(findStatus, 'text, StrTruncate(Clone(a1), base:LocalBox().right));
+			RefreshViews()
+		end else (if (if GetVariable(l1, 'CustomFind) then l1.SetMessage) then l1:SetMessage(a1)))
+end
+@@end

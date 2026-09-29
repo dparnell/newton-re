@@ -1,0 +1,23 @@
+@@ 0x56184d
+func(a1, a2, a3, a4, a5) begin
+	(foreach l1 in findAllResults do begin
+			if (l1.owner:FileThis exists) then begin
+					l1:FileAndMove(a2, a3, a4, a5)
+				end else begin
+					if a2 then begin
+							l1.waitToUnSelect := a4;
+							l1:FileAs(a3)
+						end;
+					if a4 then begin
+							try begin
+									if l1.MoveTo then begin
+											l1:MoveTo(a5)
+										end
+								end onexception |evt.ex.msg| do begin end
+						end
+				end
+		end);
+	self.labels := nil;
+	self:RedoChildren()
+end
+@@end

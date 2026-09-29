@@ -1,0 +1,14 @@
+@@ 0x73a3dd
+func() begin
+	local l1, l2, l3;
+	l1 := GetDataDefs(target.class):StringExtract(target, 1);
+	if (if GetVariable(self, 'selectedLayout) then (selectedLayout <> 'default)) then begin
+			if (l3 := GetViewDefs(target.class).(selectedLayout)) then begin
+					l2 := (if l3.nameByClass then l3.nameByClass.(target.class) else l3.name)
+				end
+		end;
+	self.title := ParamStr("^?0^0 || ^1", [Array: l1, l2]);
+	self.titleIcon := GetDataDefs(target.class).overviewIcon;
+	inherited:?viewSetupFormScript()
+end
+@@end

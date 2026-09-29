@@ -1,0 +1,5 @@
+@@ 0x47efb5
+func(a1) begin
+	return (((a1.state = 'Received) or (a1.state = 'Read)) or (a1.state = 'InLog))
+end
+@@end

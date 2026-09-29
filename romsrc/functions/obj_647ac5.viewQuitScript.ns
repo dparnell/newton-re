@@ -1,0 +1,5 @@
+@@ 0x48ed19
+func() begin
+	(godParent.openEraseSlip := nil)
+end
+@@end

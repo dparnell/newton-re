@@ -1,0 +1,12 @@
+@@ 0x496b39
+func(a1, a2) begin
+	local l1;
+	(if (if (a1 = 'text) then (a2 = self)) then (if (if (l1 := self:getDestStore()):IsValid() then (not l1:IsReadOnly())) then begin
+				l1:SetName(Clone(text));
+				if (not backupInfo) then begin
+						self:Parent():makeLastBackupShape(l1)
+					end;
+				base:Dirty()
+			end))
+end
+@@end

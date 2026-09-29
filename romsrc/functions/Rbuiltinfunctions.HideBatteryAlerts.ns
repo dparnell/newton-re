@@ -1,0 +1,11 @@
+@@ 0x563cf9
+func() begin
+	l1 := GetRoot().notification;
+	local l1;
+	(foreach l2, l3 in Notifications do begin
+			if l3.batteryAltert then begin
+					l1:MarkItemSeen(l2, true)
+				end
+		end)
+end
+@@end

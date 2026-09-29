@@ -1,0 +1,9 @@
+@@ 0x756919
+func(a1, a2, a3) begin
+	local l1;
+	(l1 := BuildContext(self)).syncOptions := a1;
+	l1.endpoint := a2;
+	l1.autodock := a3;
+	l1:FilterDialog()
+end
+@@end

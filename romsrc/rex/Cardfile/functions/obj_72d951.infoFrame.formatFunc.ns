@@ -1,0 +1,5 @@
+@@ 0x72e155
+func(a1) begin
+	ParamStr("Card Style: ^0", [Array: (a1[0] + 1)])
+end
+@@end

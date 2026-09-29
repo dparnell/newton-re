@@ -1,0 +1,5 @@
+@@ 0x4814b9
+func() begin
+	self:DrawShape(box, {penPattern: 3, fillPattern: pattern[index]})
+end
+@@end

@@ -1,0 +1,12 @@
+@@ 0x505bd5
+func() begin
+	if hideMtgMsgHeader then begin
+			viewFlags := BAnd(viewFlags, bnot(1))
+		end else begin
+			if (selectedMeeting.viewStationery = 'cribNote) then begin
+					text := "This event occurs on:"
+				end
+		end;
+	(self.viewBounds := RelBounds(0, dpSlip.mtgMsgHeaderTop, 200, 10))
+end
+@@end

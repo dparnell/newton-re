@@ -1,0 +1,10 @@
+@@ 0x74a339
+func(a1, a2) begin
+	if (not a2) then begin
+			a2 := [Array: ]
+		end;
+	a1.listItems := a2;
+	a1.selectedItems := self:SelectAll(a1);
+	a1:SetupList()
+end
+@@end

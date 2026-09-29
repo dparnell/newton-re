@@ -1,0 +1,9 @@
+@@ 0x732a8d
+func(a1) begin
+	local l1;
+	if (not StrFilled((l1 := ParamStr("^?0^0||", a1)))) then begin
+			l1 := "Untitled Group"
+		end;
+	l1
+end
+@@end

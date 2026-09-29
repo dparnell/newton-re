@@ -1,0 +1,6 @@
+@@ 0x59a871
+func(a1, a2, a3) begin
+	a1:SetInputSpec(nil);
+	AddDeferredSend(a1, 'stopCCL, nil)
+end
+@@end

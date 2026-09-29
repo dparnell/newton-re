@@ -1,0 +1,17 @@
+@@ 0x5971d5
+func() begin
+	l3 := 99999;
+	l4 := 0;
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	(foreach l5 in messageField:ChildViewFrames() do begin
+			l3 := min(l3, l5.viewBounds.top);
+			l4 := max(l4, l5.viewBounds.bottom)
+		end);
+	l2 := ((l4 - l3) + 50);
+	SetValue(messageField, 'viewBounds, SetBounds(2, 0, -2, max(l2, self:LocalBox().bottom)));
+	(if ((l1 := min((l2 - (viewOriginY + self:LocalBox().bottom)), messageField.scrollDy)) > 0) then self:SetOrigin(0, (viewOriginY + l1)))
+end
+@@end

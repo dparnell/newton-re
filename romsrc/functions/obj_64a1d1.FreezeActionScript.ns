@@ -1,0 +1,5 @@
+@@ 0x54dc89
+func(a1, a2) begin
+	self:GenericActionScript('freeze, 'FreezeSelectedIcon, nil, "freeze ^1", "This icon can\u2019\ut be frozen^?0 because it is ^0||.", "These icons can\u2019\ut be frozen^?0 because they are ^0||.")
+end
+@@end

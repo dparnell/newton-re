@@ -1,0 +1,21 @@
+@@ 0x529435
+func() begin
+	l1 := self.input;
+	l2 := GlueStrings(self.OrigPhrase);
+	local l1;
+	local l2;
+	(foreach l3, l4 in l1 do begin
+			if isa(l4, 'remind_act) then begin
+					self:RemoveFromString(l2, self.phrases[l3], nil)
+				end else begin
+					if (if isa(l4, 'when_obj) then HasSlot(l4, 'Date)) then begin
+							self:RemoveFromString(l2, self.phrases[l3], true)
+						end
+				end
+		end);
+	if l2 then begin
+			l2 := TrimString(l2)
+		end;
+	return l2
+end
+@@end

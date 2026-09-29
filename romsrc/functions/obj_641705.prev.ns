@@ -1,0 +1,21 @@
+@@ 0x435e01
+func() begin
+	local l1, l2;
+	if romOnly then begin
+			return realCurs:prev()
+		end;
+	(while true do begin
+			if ((not (l1 := realCurs:prev())) or (l1.kind = 'Add)) then begin
+					return l1
+				end;
+			if (not (l2 := realCurs:prev())) then begin
+					realCurs:Reset();
+					return l1
+				end;
+			if ((not l2.kind) or (l2.kind = 'Add)) then begin
+					return realCurs:Next()
+				end;
+			(if (l2.kind = 'Replace) then return l2)
+		end)
+end
+@@end

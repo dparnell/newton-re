@@ -1,0 +1,42 @@
+@@ 0x5b2b01
+func(a1) begin
+	local newSortID, currentSortID;
+	AddUndoAction('setLabelScript2, [Array: vars.(configPath), userConfiguration.letterSetSelection]);
+	vars.(configPath) := items[a1].title;
+	(if ((l1 := SetLocale(items[a1].title)) <> nil) then begin
+			ReadCursiveOptions();
+			localeChanged := true;
+			if (l2 := GetLocale().defaultPaperSize) then begin
+					local l1;
+					local l2;
+					(foreach l3, l4 in userConfiguration.paperSizes do begin
+							local l6;
+							if (if (l4.id = l2) then (userConfiguration.paperSize <> l4)) then begin
+									userConfiguration.paperSize := l4;
+									paper:pickActionScript(l3)
+								end
+						end)
+				end;
+			newSortID := l1.sortID;
+			currentSortID := GetSortID(nil);
+			(if (newSortID <> currentSortID) then (if ModalConfirm((l6 := ParamStr("The selected locale \u201C\u^0\u201D\u uses a different sorting order; you may choose to use it to rearrange your data.  The conversion process may take a few minutes.  Would you like to switch to this sorting order?", [Array: l1.title])), 'yesNo) then begin
+						SetSortID(newSortID);
+						SetUserConfig('sortID, newSortID);
+						DoProgress('vBarber, {primary: nil, statusText: "Changing Sorting Order", barber: true, closeBox: nil}, func(a1) begin
+							local l1;
+							local l2;
+							(foreach l3 in (l2 := GetStores()) do begin
+									if (not l3:IsReadOnly()) then begin
+											(foreach l5 in (l1 := l3:GetSoupNames()) do begin
+													a1:SetStatus('vBarber, {titleText: ParamStr("Building indexes in ^0\u2026\u", [Array: l5]), barber: true});
+													self:RebuildIndexes(l3:GetSoup(l5), currentSortID, newSortID, a1)
+												end)
+										end else nil
+								end)
+						end);
+						ModalConfirm("Your Newton product needs to be restarted to use the converted indexes.", [Array: "Restart"]);
+						AddDeferredCall(functions.ReBoot, nil)
+					end))
+		end)
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x51537d
+func(a1, a2, a3) begin
+	local l1;
+	l1 := self:Parent():LocalBox();
+	(a1.viewBounds.bottom := (l1.bottom - 15))
+end
+@@end

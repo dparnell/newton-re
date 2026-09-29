@@ -1,0 +1,6 @@
+@@ 0x47fd0d
+func(a1) begin
+	self:SetStatus('Canceling, nil);
+	nil
+end
+@@end

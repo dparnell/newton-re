@@ -1,0 +1,19 @@
+@@ 0x41a481
+func() begin
+	local l1;
+	self.buttons:InitButtonBar();
+	if (not (l1 := self.(userConfiguration.blessedapp))) then begin
+			SetUserConfig('blessedapp, 'paperroll);
+			l1 := paperroll
+		end;
+	self:Dirty();
+	try begin
+			self:_BlessedOpen(l1)
+		end onexception |evt.ex| do begin
+			self:Notify(3, "Backdrop", ParamStr("The Backdrop^?0, \u201C\u^0\u201D\u|| failed to open so it was set to \u201C\uNotes\u201D\u.", [Array: l1.title]));
+			SetUserConfig('blessedapp, 'paperroll);
+			AddDeferredSend(self, '_BlessedOpen, [Array: paperroll])
+		end;
+	GetRoot().SleepScreen:FixKeyView()
+end
+@@end

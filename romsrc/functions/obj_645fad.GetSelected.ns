@@ -1,0 +1,7 @@
+@@ 0x4524c5
+func(a1) begin
+	local l1;
+	listBase:CleanupSelected((l1 := Clone(selected)), a1);
+	l1
+end
+@@end

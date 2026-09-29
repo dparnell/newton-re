@@ -1,0 +1,22 @@
+@@ 0x48921d
+func(a1) begin
+	local l1, l2;
+	l1 := self:itemIndex(a1.curItem);
+	if (l2 := a1.settings).doTextRecognition then begin
+			l1 := BOr(l1, 32)
+		end;
+	if l2.doShapeRecognition then begin
+			l1 := BOr(l1, 128)
+		end;
+	if l2.doInkWordRecognition then begin
+			l1 := BOr(l1, 64)
+		end;
+	if l2.wordsCursiveOption then begin
+			l1 := BOr(l1, 256)
+		end;
+	if l2.numbersCursiveOption then begin
+			l1 := BOr(l1, 512)
+		end;
+	return l1
+end
+@@end

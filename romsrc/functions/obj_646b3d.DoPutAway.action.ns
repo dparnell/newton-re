@@ -1,0 +1,11 @@
+@@ 0x49964d
+func() begin
+	fEndpoint:SetInputSpec(nil);
+	l1 := fCallBack;
+	local l1;
+	(foreach l2 in fIncomingData.dataArray do begin
+			call l1 with ('data, l2)
+		end);
+	'DoAfterInput
+end
+@@end

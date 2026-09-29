@@ -1,0 +1,10 @@
+@@ 0x47ff25
+func(a1) begin
+	local l1;
+	(l1 := GetRoot().(owner):GetDefaultItem()).category := GetVariable(self, 'appSymbol);
+	if a1 then begin
+			l1.appSymbol := GetVariable(a1, 'appSymbol)
+		end;
+	l1
+end
+@@end

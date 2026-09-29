@@ -1,0 +1,20 @@
+@@ 0x46dba9
+func(a1) begin
+	l1 := (StrLen(a1) - 1);
+	local l1;
+	(for l2 := 0 to l1 do begin
+			local l5;
+			if ((l5 := a1[l2]) = $0) then begin
+					a1[l2] := $\uF714
+				end else begin
+					if (l5 = $I) then begin
+							a1[l2] := $\uF715
+						end else begin
+							if (l5 = $l) then begin
+									a1[l2] := $\uF716
+								end
+						end
+				end
+		end)
+end
+@@end

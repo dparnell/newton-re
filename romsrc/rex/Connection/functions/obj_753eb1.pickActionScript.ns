@@ -1,0 +1,8 @@
+@@ 0x7540a5
+func(a1, a2) begin
+	self.startTime := a1;
+	self.stopTime := a2;
+	fResults.Dates := [Array: a1, a2];
+	inherited:?pickActionScript(a1, a2)
+end
+@@end

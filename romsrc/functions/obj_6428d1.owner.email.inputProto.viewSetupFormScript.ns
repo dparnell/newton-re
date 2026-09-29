@@ -1,0 +1,9 @@
+@@ 0x48e009
+func() begin
+	local l1;
+	if (Length((l1 := GetVariable(context, 'addressSymbols))) > 0) then begin
+			emailclass := l1[0]
+		end;
+	inherited:viewSetupFormScript()
+end
+@@end

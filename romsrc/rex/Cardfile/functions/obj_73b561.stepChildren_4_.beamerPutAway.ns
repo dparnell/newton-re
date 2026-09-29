@@ -1,0 +1,12 @@
+@@ 0x73be89
+func(a1, a2) begin
+	local l1, l2;
+	(if (a1 = 'data) then GetUnionSoup(@47):AddToDefaultStoreXmit(a2, 'beaming) else (if (l2 := '{canceled: "Card exchange canceled by user.", error: "An error occurred during card exchange.", complete: "Cards exchanged successfully."}.(a1)) then begin
+				if ((a2 = -16005) or (a2 = -16013)) then begin
+						l2 := "Card exchange canceled by user."
+					end;
+				call GetRoot().cardfile.kDoneWithBeaming with (beamer, GetRoot().cardfile.barber);
+				GetRoot():Notify(3, "Names", l2)
+			end))
+end
+@@end

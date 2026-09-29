@@ -1,0 +1,10 @@
+@@ 0x537cfd
+@@const kLiteral_536a15
+"locked"
+@@const kLiteral_536afd
+"copy protected"
+@@main
+func(a1, a2) begin
+	(if (((a1 = 'Filing) or (a1 = 'delete)) or (a1 = 'freeze)) then (if (not EntryStore(fentry):IsReadOnly()) then 'OK else kLiteral_536a15) else (if (a1 = 'route) then 'OK else (if (a1 = 'move) then (if self:copyprotected() then kLiteral_536afd else (if EntryStore(fentry):IsReadOnly() then kLiteral_536a15 else 'OK)) else (if (a1 = 'send) then (if self:copyprotected() then kLiteral_536afd else 'OK) else "the wrong kind"))))
+end
+@@end

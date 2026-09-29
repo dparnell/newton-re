@@ -1,0 +1,10 @@
+@@ 0x59545d
+func(a1) begin
+	if (eworld.streamid = nil) then begin
+			eworld.streamid := 1
+		end else begin
+			eworld.streamid := (eworld.streamid + 1)
+		end;
+	self:BufferStart(a1, eworld.streamid)
+end
+@@end

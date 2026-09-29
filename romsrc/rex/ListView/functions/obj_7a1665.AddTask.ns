@@ -1,0 +1,30 @@
+@@ 0x797d55 names
+func(aRichString, aDate, aPriority, aComplete, aReminder) begin
+	local topicFrame, Entry, top, nDayTopics, gtdeds;
+	if ((nDayTopics := Length((Entry := (gtdeds := self:GetToDoEntryDefaultStore(aDate, nil)).Entry).topics)) > 0) then begin
+			top := self:TopicBottom(Entry.topics[(nDayTopics - 1)])
+		end else begin
+			top := 0
+		end;
+	(topicFrame := self:StringToTopic(aRichString, top)).source := gtdeds.storeIndex;
+	topicFrame.mtgPriority := Min(aPriority, 3);
+	topicFrame.mtgDone := aComplete;
+	if aReminder then begin
+			topicFrame.remindForDate := aReminder
+		end;
+	if (if (aDate <> 0) then (aDate < ((Time() div 1440) * 1440))) then begin
+			topicFrame.mtgDone := true
+		end;
+	if (nDayTopics > 0) then begin
+			if ((Entry.topics[(nDayTopics - 1)].mtgDone <> topicFrame.mtgDone) or (topicFrame.mtgPriority <> 3)) then begin
+					Entry.needsSort := true
+				end
+		end;
+	AddArraySlot(Entry.topics, topicFrame);
+	if (StrLen(aRichString) > 0) then begin
+			Entry.lastWidth := 0
+		end;
+	EntryChangeXmit(Entry, 'todo);
+	{index: (Length(Entry.topics) - 1), topic: topicFrame, Entry: Entry}
+end
+@@end

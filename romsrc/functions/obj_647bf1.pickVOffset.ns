@@ -1,0 +1,10 @@
+@@ 0x496169
+func(a1, a2) begin
+	(foreach l1 in StoreSlipRegistry.storeSlips do begin
+			if (if (if (l1 <> self) then l1.viewCObject) then (l1:GlobalBox().top = (a1 + a2))) then begin
+					return self:pickVOffset(a1, (a2 + vOffsetIncrement))
+				end
+		end);
+	a2
+end
+@@end

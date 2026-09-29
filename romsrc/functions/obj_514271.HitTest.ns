@@ -1,0 +1,20 @@
+@@ 0x513f79
+func(a1, a2) begin
+	l1 := 0;
+	l2 := (numberOfItems - 1);
+	local l1;
+	local l2;
+	local l3;
+	l3 := (for l4 := 0 to l2 do begin
+			l1 := (l1 + itemHeights[l4]);
+			if (a1 < (l1 - viewOriginY)) then begin
+					break l4
+				end
+		end);
+	(if (not l3) then (a2.index := nil) else begin
+			a2.ht := itemHeights[l3];
+			a2.top := ((l1 - a2.ht) - viewOriginY);
+			(a2.index := l3)
+		end)
+end
+@@end

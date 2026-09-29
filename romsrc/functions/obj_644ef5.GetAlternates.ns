@@ -1,0 +1,24 @@
+@@ 0x467c0d
+func() begin
+	l2 := self:CurrentWord();
+	l3 := (lastChar - wordLeft);
+	if (if (l4 := self:GetFilter(lastChar)) then (StrLen(l4) <= 10)) then begin
+			l1 := self:MakeWordArray(l4)
+		end else begin
+			if altChars[lastChar] then begin
+					l1 := self:MakeWordArray(altChars[lastChar])
+				end
+		end;
+	if l1 then begin
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			(foreach l5, l6 in l1 do begin
+					MapAmbiguousCharacters((l6 := Clone(l6)));
+					l1[l5] := l6
+				end)
+		end;
+	(l1 := Clone(l1))
+end
+@@end

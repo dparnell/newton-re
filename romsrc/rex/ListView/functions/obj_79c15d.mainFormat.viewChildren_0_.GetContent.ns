@@ -1,0 +1,5 @@
+@@ 0x79bcfd names
+func() begin
+	LongDateStr(target.date, @66.longDateStrSpec)
+end
+@@end

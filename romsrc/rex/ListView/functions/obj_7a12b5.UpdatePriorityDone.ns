@@ -1,0 +1,9 @@
+@@ 0x79eebd names
+func() begin
+	if ((task.mtgPriority <> savedPriorityIndex) or (task.mtgDone <> savedDone)) then begin
+			target.needsSort := true
+		end;
+	task.mtgPriority := savedPriorityIndex;
+	(task.mtgDone := savedDone)
+end
+@@end

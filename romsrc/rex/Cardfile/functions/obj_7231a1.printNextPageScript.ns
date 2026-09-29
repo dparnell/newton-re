@@ -1,0 +1,8 @@
+@@ 0x723235
+func() begin
+	(if (if targetCursor then target) then begin
+			self:RedoChildren();
+			true
+		end)
+end
+@@end

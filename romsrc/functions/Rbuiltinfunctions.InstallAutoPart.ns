@@ -1,0 +1,6 @@
+@@ 0x557731
+func(a1) begin
+	local l1;
+	(l1 := a1.partFrame:?InstallScript(a1.partFrame))
+end
+@@end

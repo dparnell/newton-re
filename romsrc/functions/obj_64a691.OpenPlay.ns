@@ -1,0 +1,10 @@
+@@ 0x4267e5
+func(a1) begin
+	if RecordEngine then begin
+			RecordEngine:Done()
+		end;
+	self.openCalled := true;
+	self:Open();
+	(RecordEngine := @851:New({_parent: self, fSoundArray: a1, fDirection: 'play}))
+end
+@@end

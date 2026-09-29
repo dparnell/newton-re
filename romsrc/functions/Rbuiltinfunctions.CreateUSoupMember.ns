@@ -1,0 +1,6 @@
+@@ 0x5699bd
+func(a1, a2) begin
+	local l1;
+	(if (l1 := GetSoupDef(a1)) then CreateSoupFromSoupDef(l1, a2, '_newt) else Throw('|evt.ex.nosoupdef;type.ref|, {errorCode: 0, value: a1}))
+end
+@@end

@@ -1,0 +1,11 @@
+@@ 0x51fce5
+func(a1) begin
+	if HasPath(a1, 'left) then begin
+			leftButtons := a1.left
+		end;
+	if HasPath(a1, 'right) then begin
+			rightButtons := a1.right
+		end;
+	self:RedoChildren()
+end
+@@end

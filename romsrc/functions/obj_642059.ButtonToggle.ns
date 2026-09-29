@@ -1,0 +1,30 @@
+@@ 0x448bb5
+func() begin
+	l1 := (not self.viewCObject);
+	local l1;
+	local l2;
+	local l3;
+	(for l4 := (Length((l3 := GetRoot():ChildViewFrames())) - 1) to 0 by -1 do begin
+			local l7;
+			if (BAnd(GetViewFlags(l3[l4]), 67108864) = 0) then begin
+					l2 := l3[l4];
+					break
+				end
+		end);
+	if self:?buttonToggleScript(l2) then begin
+			return l1
+		end;
+	(if (if Visible(self) then (l2 <> self)) then begin
+			l7 := GetRoot().(userConfiguration.blessedapp);
+			if (self <> l7) then begin
+					self:MoveBehind('skip)
+				end else begin
+					GetRoot():Notify(3, "Newton", ParamStr("\u201C\u^0\u201D\u is currently the Backdrop. You may have to close some applications to reveal it.", [Array: GetAppName(userConfiguration.blessedapp)]))
+				end;
+			nil
+		end else begin
+			self:Toggle();
+			l1
+		end)
+end
+@@end

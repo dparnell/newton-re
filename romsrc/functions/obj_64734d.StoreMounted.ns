@@ -1,0 +1,86 @@
+@@ 0x56b325
+@@const kBinaryFromHex
+func(hex, cls) begin
+	local b := MakeBinary(StrLen(hex) div 2, cls);
+	for i := 0 to Length(b) - 1 do begin
+		local h := Ord(hex[2 * i]);
+		local l := Ord(hex[2 * i + 1]);
+		StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+	end;
+	b
+end
+@@const kLiteral_56a7e9
+call kBinaryFromHex with ("6e5db133590fab4f", 'deskey)
+@@const kLiteral_56a7fd
+call kBinaryFromHex with ("a975975bb33737cb", 'deskey)
+@@main
+func(a1) begin
+	l1 := a1:GetName();
+	l2 := a1:CardSlot();
+	l3 := a1:IsReadOnly();
+	if (l4 := a1:CheckUnion()) then begin
+			if l3 then begin
+					ModalCardAlert('incompatibleSoups, l2, l1)
+				end else begin
+					if ((l5 := ModalCardAlert('|ConvertIncompatibleSoups?|, l2, l1)) = 'cardYanked) then begin
+							return nil
+						end else begin
+							if l5 then begin
+									local l1;
+									local l2;
+									local l3;
+									local l4;
+									local l5;
+									(foreach l6 in l4 do begin
+											local l8, l9, l10;
+											a1:ConvertSoupSortTables(l6)
+										end)
+								end
+						end
+				end
+		end;
+	l8 := (a1:GetSignature() = GetUserConfig('defaultStoreSig));
+	if (not l3) then begin
+			if a1:GetInfo('defaultStore) then begin
+					if (not l8) then begin
+							if ((l9 := ModalCardAlert('|MakeDefaultStore?|, l2, l1)) = 'cardYanked) then begin
+									return nil
+								end else begin
+									if l9 then begin
+											SetDefaultStore(a1);
+											l8 := true
+										end else begin
+											a1:SetInfo('defaultStore, nil)
+										end
+								end
+						end
+				end else begin
+					if l8 then begin
+							a1:SetInfo('defaultStore, true)
+						end
+				end
+		end;
+	if (ActivateStorePackages(a1) = 'cardYanked) then begin
+			return nil
+		end;
+	if (not GetRoot().SleepScreen.viewCObject) then begin
+			l10 := DESCreatePasswordKey(Downcase(Clone(l1)));
+			if BinEqual(kLiteral_56a7e9, l10) then begin
+					BuildContext(@830):Open()
+				end else begin
+					if BinEqual(kLiteral_56a7fd, l10) then begin
+							BuildContext(@831):Open()
+						end else begin
+							OpenStoreSlip(a1)
+						end
+				end
+		end;
+	if (if l3 then l8) then begin
+			CardAlert('LockedDefaultStore, l2, l1)
+		end;
+	CheckCardBattery();
+	CallFrameBasedRegistryFns(StoreChangeRegistry, [Array: a1, 'StoreEnters, nil]);
+	XmitStoreSoupsEntering(a1);
+	true
+end
+@@end

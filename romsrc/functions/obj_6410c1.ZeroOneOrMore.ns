@@ -1,0 +1,27 @@
+@@ 0x55ee75
+func() begin
+	local l1, l2, l3;
+	(if self.cacheCount then cacheCount else begin
+			if self.zeroOneOrMoreResult then begin
+					return self.zeroOneOrMoreResult
+				end;
+			l1 := cursor:entry();
+			if self.isReset then begin
+					l2 := l1
+				end else begin
+					l2 := cursor:Reset()
+				end;
+			l3 := 0;
+			(while (l2 <> nil) do begin
+					if ((l3 := (l3 + 1)) >= 2) then begin
+							break
+						end;
+					(l2 := cursor:Next())
+				end);
+			if l1 then begin
+					cursor:Goto(l1)
+				end;
+			(self.zeroOneOrMoreResult := l3)
+		end)
+end
+@@end

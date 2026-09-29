@@ -1,0 +1,5 @@
+@@ 0x53734d
+func() begin
+	GetPkgRefInfo(self:LookupSoupPackage().pkgRef).copyprotection
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x798885 names
+func(oldTarget) begin
+	topics := [Array: fields.body];
+	nTopics := 1;
+	(target := fields.body)
+end
+@@end

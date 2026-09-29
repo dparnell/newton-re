@@ -1,0 +1,14 @@
+@@ 0x45727d
+func(a1, a2) begin
+	local l1, l2;
+	(if (l1 := a2:GetStoreSoup()) then begin
+			l2 := self:PrepareToAdd(a1);
+			if IsInstance(l1, 'UnionSoup) then begin
+					l1:AddToDefaultStoreXmit(l2, 'entryAdded)
+				end else begin
+					l1:AddXmit(l2, 'entryAdded)
+				end;
+			(if IsSoupEntry(l2) then self:FixupPostAdd(a1, l2))
+		end)
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x471955
+func() begin
+	if (notifyOnClose exists) then begin
+			notifyOnClose:ChooserDone(currentSelection, currentSelection, 'serialSym)
+		end;
+	base:Close()
+end
+@@end

@@ -1,0 +1,13 @@
+@@ 0x50fe1d
+func(a1) begin
+	(if (a1 = nil) then true else (if (if (not IsSymbol(a1)) then (not IsArray(a1))) then nil else begin
+				local l1;
+				(foreach a1 in (l1 := (if IsSymbol(a1) then [Array: a1] else a1)) do begin
+						if (not SetContains('[Array: meeting, event, RepeatingMeeting, RepeatingEvent], a1)) then begin
+								return nil
+							end
+					end);
+				true
+			end))
+end
+@@end

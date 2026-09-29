@@ -1,0 +1,9 @@
+@@ 0x433985
+func() begin
+	local l1;
+	icon := (if (((l1 := (Time mod 1440)) >= 1080) or (l1 < 360)) then iconMoon else iconSun);
+	lastClock := Time();
+	self:SetupIdle(viewIdleFrequency);
+	inherited:viewSetupFormScript()
+end
+@@end

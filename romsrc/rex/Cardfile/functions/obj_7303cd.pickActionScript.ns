@@ -1,0 +1,11 @@
+@@ 0x730541
+func(a1) begin
+	local l1, l2;
+	inherited:pickActionScript(a1);
+	self:UpdateText(Clone(labelCommands[a1].item));
+	(if (l1 := GetGlobals().creditCardTypes.creditCardPhoneNums.(currPhoneType)) then begin
+			creditCardContactNum:UpdateAreaCode((l2 := ParsePhone(l1)).areacode);
+			creditCardContactNum:UpdatePhone(l2.phone)
+		end)
+end
+@@end

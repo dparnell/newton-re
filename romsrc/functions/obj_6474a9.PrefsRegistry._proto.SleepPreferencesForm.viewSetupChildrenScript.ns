@@ -1,0 +1,6 @@
+@@ 0x5b1b19
+func() begin
+	local l1;
+	(if (not (if (l1 := Gestalt('[Array: 33554439, [Array: struct, boolean], 1])) then l1[0])) then (backOff.viewFlags := 0))
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x53740d
+func(a1) begin
+	SafeMovePackageQT(self:LookupSoupPackage(), a1)
+end
+@@end

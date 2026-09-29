@@ -1,0 +1,6 @@
+@@ 0x4f7c49
+func() begin
+	local l1, l2;
+	(if ((l1 := Length((l2 := selectedDates))) > 1) then ParamStr("^0 ^1 ^2", [Array: LongDateStr(l2[0], DateSpecShort), "-", LongDateStr(l2[(l1 - 1)], DateSpecShort)]) else LongDateStr(l2[0], DateSpecLong))
+end
+@@end

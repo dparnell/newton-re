@@ -1,0 +1,16 @@
+@@ 0x4d4321
+@@const kLiteral_4d40e1
+'[Array: {item: "(none)", num: ""}]
+@@main
+func() begin
+	if (l2 := GetRoot().cardfile:bcCreditCards(nil, '|string.card.phonecard|)) then begin
+			local l1;
+			local l2;
+			l1 := (foreach l3 in l2 collect {num: l3.creditCardNum, carrier: l3.creditCardName, item: Stringer([Array: l3.creditCardNum, " ", l3.creditCardName])});
+			labelCommands := ArrayMunger(l1, 0, 0, kLiteral_4d40e1, 0, nil)
+		end else begin
+			labelCommands := kLiteral_4d40e1
+		end;
+	inherited:viewSetupChildrenScript()
+end
+@@end

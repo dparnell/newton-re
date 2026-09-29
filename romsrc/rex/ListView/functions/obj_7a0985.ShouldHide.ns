@@ -1,0 +1,5 @@
+@@ 0x7a090d names
+func(hide) begin
+	(if hide then (viewFlags := BAnd(viewFlags, bnot(1))))
+end
+@@end

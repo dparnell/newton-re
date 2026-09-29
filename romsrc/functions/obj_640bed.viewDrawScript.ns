@@ -1,0 +1,7 @@
+@@ 0x42bf51
+func() begin
+	local l1;
+	l1 := self:LocalBox();
+	self:DrawShape(MakeRect(2, 4, (l1.right - 2), 6), nil)
+end
+@@end

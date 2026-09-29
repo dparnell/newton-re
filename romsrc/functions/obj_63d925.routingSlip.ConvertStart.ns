@@ -1,0 +1,5 @@
+@@ 0x599485
+func(a1) begin
+	self:ConvertInkText(a1.addr.email, 'alpha, nil, ParamStr("eMail address for ^0 ", [Array: a1.name]), ParamStr("Please verify that ^0 is converted correctly.", [Array: a1.addr.email]), 'InkConvert, 'ConvertComplete, {addr: a1.addr, type: ClassOf(a1.addr.email)})
+end
+@@end

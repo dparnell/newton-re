@@ -1,0 +1,5 @@
+@@ 0x78ce25 names
+func(anIndex) begin
+	self:DeleteTopics([Array: anIndex])
+end
+@@end

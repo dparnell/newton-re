@@ -1,0 +1,7 @@
+@@ 0x42fc85
+func() begin
+	local l1;
+	l1 := (if (not target.(path)) then labelSymbols[0] else ClassOf(target.(path)));
+	(target.(path) := SetClass(entryLine.text, l1))
+end
+@@end

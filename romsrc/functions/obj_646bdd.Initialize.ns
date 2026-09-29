@@ -1,0 +1,15 @@
+@@ 0x4998c5
+@@const kLiteral_4984b5
+'{label: "slir", type: service, opCode: 512}
+@@main
+func(a1, a2) begin
+	if (a1 = 'AutoInAndOut) then begin
+			self:SetEndpoint(@383, [Array: DeepClone(kLiteral_4984b5), DeepClone('{label: "irco", type: option, opCode: 256, data: {arglist: [Array: 1], typelist: [Array: 10, 1]}})])
+		end else begin
+			self:SetEndpoint(@383, [Array: DeepClone(kLiteral_4984b5)])
+		end;
+	self:SetMode(a1);
+	self:SetCallback(a2);
+	StopIRSniffing()
+end
+@@end

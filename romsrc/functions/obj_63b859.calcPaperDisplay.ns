@@ -1,0 +1,18 @@
+@@ 0x4e2045
+func() begin
+	l1 := SmartStart(120);
+	l2 := (maxLines - 1);
+	l3 := 0;
+	local l1;
+	local l2;
+	local l3;
+	(for l4 := 0 to l2 do begin
+			l3 := SmartConcat(l1, l3, paper[(index + l4)]);
+			if (l4 <> l2) then begin
+					l3 := SmartConcat(l1, l3, $\n)
+				end
+		end);
+	SmartStop(l1, l3);
+	SetValue(paperDisplay, 'text, l1)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x48e665
+func() begin
+	(self.text := title)
+end
+@@end

@@ -1,0 +1,13 @@
+@@ 0x468ddd
+func(a1) begin
+	local l1, l2;
+	if (if IsFrame((l1 := (if a1.body then a1.body else a1))) then l1._ioAlias) then begin
+			if (l2 := ResolveEntryAlias(l1._ioAlias)) then begin
+					l1 := (if l1.path then l2.(l1.path) else l2)
+				end else begin
+					l1 := nil
+				end
+		end;
+	l1
+end
+@@end

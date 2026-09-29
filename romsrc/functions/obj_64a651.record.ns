@@ -1,0 +1,12 @@
+@@ 0x426359
+func() begin
+	if (if (not self:TestState(16)) then SoundProgressSlider) then begin
+			SoundProgressSlider:ResetSlider()
+		end;
+	(if (if inherited:record() then SoundProgressSlider) then begin
+			SoundProgressSlider:SetRecordStart();
+			AddDelayedSend(base, 'UpdateSlider, [Array: ], 1000);
+			AddDelayedSend(base, 'FlushVBO, [Array: ], 200)
+		end)
+end
+@@end

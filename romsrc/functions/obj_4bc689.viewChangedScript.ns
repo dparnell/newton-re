@@ -1,0 +1,7 @@
+@@ 0x4bc655
+func(a1, a2) begin
+	currPhoneNum := self:GetRichString();
+	changed := true;
+	baseLine:viewChangedScript(a1, a2)
+end
+@@end

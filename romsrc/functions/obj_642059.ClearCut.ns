@@ -1,0 +1,5 @@
+@@ 0x449011
+func() begin
+	(if (not viewCObject) then ReplaceObject(self, (if viewclipper then {_proto: self._proto, _parent: self._parent, viewCObject: nil, viewclipper: viewclipper} else {_proto: self._proto, _parent: self._parent, viewCObject: nil})))
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x4d4f4d
+func() begin
+	local l1;
+	SetKeyView((l1 := ScheduleTitle.entryLine), 9999)
+end
+@@end

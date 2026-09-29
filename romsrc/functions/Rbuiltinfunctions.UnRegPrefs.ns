@@ -1,0 +1,9 @@
+@@ 0x5b5129
+func(a1) begin
+	RemoveSlot(PrefsRegistry, a1);
+	if GetRoot().preferenceRoll.viewCObject then begin
+			GetRoot().preferenceRoll:RedoChildren()
+		end;
+	nil
+end
+@@end

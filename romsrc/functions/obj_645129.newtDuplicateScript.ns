@@ -1,0 +1,5 @@
+@@ 0x4ab839
+func(a1, a2) begin
+	(if a1 then layout:Effect(178324480, nil, @380, 'DuplicateEntry, [Array: a1]) else self:Notify(3, title, "There is nothing to duplicate."))
+end
+@@end

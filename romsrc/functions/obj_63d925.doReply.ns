@@ -1,0 +1,12 @@
+@@ 0x5a3295
+func(a1, a2) begin
+	local l1, l2;
+	l2 := GetRoot().(GetVariable(a2, 'appSymbol));
+	l2:?MarkRead(a1);
+	(a1 := DeepClone(a1)).name := a1.fromName;
+	a1.toRef := [Array: a1.fromRef];
+	a1.cc := '[Array: ];
+	a1.bcc := '[Array: ];
+	GetRoot().mailSlip:ReallyDoReply(a1, a2)
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x4c675d
+func() begin
+	local l1;
+	(if (l1 := (not printView:printNextPageScript())) then pagebase:RedoChildren() else pagebase:Dirty())
+end
+@@end

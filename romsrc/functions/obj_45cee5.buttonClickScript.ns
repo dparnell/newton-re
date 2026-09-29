@@ -1,0 +1,28 @@
+@@ 0x45ce89
+@@const kLiteral_45c7f1
+"Password"
+@@main
+func() begin
+	local l1, l2;
+	if (if verifyPassword then (l2 := self:CurrentPassword())) then begin
+			if (not self:MatchPassword(oldPass.realText, l2)) then begin
+					self:Notify(3, "Incorrect password", "Sorry, the old password you entered is incorrect.");
+					SetKeyView(oldPass.entryLine, 99999);
+					return nil
+				end
+		end;
+	(if (StrLen(newPass.realText) = 0) then (if requirePassword then begin
+				self:Notify(3, kLiteral_45c7f1, "Sorry, a password is required.");
+				SetKeyView(newPass.entryLine, 99999)
+			end else self:Confirm(kLiteral_45c7f1, "Don't require password?", self, 'ConfirmCallback)) else (if BinEqual(newPass.realText, confirmPass.realText) then begin
+				self:SetPassword(newPass.realText);
+				self:MatchedPassword()
+			end else (if (not StrFilled(confirmPass.realText)) then begin
+					self:Notify(3, kLiteral_45c7f1, "Confirm the new password by entering it on the confirmation line.");
+					SetKeyView(confirmPass.entryLine, 99999)
+				end else begin
+					self:Notify(3, kLiteral_45c7f1, "The confirmed password does not match the new password.");
+					SetKeyView(confirmPass.entryLine, 99999)
+				end)))
+end
+@@end

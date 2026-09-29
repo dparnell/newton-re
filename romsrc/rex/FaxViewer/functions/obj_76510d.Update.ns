@@ -1,0 +1,19 @@
+@@ 0x765229
+func(a1) begin
+	(if (a1.zoomedTo = 'fitInWindow) then begin
+			hidden := true;
+			self:Hide();
+			return nil
+		end else begin
+			if hidden then begin
+					self:Open()
+				end;
+			scrollRect := a1.extent;
+			dataRect := a1.extent;
+			viewRect := a1.viewBox;
+			xPos := a1.OffsetX;
+			yPos := a1.OffsetY;
+			self:AdjustArrows()
+		end)
+end
+@@end

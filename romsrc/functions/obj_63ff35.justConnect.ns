@@ -1,0 +1,7 @@
+@@ 0x52f5b1
+func(a1, a2) begin
+	self:AddrOptionGlue(a1, a2, func(a1, a2) begin
+		self:xjustConnect(a1, a2)
+	end)
+end
+@@end

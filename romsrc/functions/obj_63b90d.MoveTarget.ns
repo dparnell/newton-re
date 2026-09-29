@@ -1,0 +1,5 @@
+@@ 0x501931
+func(a1, a2) begin
+	self:MoveTargetXmit(a1, a2, true)
+end
+@@end

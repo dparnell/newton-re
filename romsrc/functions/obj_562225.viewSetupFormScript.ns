@@ -1,0 +1,10 @@
+@@ 0x5621ad
+func() begin
+	caller := GetRoot().findDrawer;
+	self.categoryArray := findAllResults;
+	if base.savedScrollOrigin then begin
+			scrollOrigin := base.savedScrollOrigin
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

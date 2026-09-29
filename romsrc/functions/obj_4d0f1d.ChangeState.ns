@@ -1,0 +1,32 @@
+@@ 0x4d0a41
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7;
+	(if (if (if (a1 <> 'idle) then (not (if (if (a1 = 'Listening) then (not self:AnySet((manualReceive + manualOnAuto)))) then (not self:GetConfig('hideAutoPref))))) then (not (if ((a1 = 'Disconnecting) or (a1 = 'unbinding)) then (not (if statusDialog then statusDialog.viewCObject))))) then begin
+			l1 := 'vStatus;
+			l2 := nil;
+			l3 := nil;
+			l4 := nil;
+			l5 := ((((a1 = 'Confirming) or (a1 = 'accepting)) or (a1 = 'Receiving)) or (a1 = 'writing));
+			l6 := (not (((a1 = 'aborting) or (a1 = 'Disconnecting)) or (a1 = 'unbinding)));
+			l7 := ((a1 = 'accepting) or (a1 = 'Receiving));
+			if (l5 or (a1 = 'aborting)) then begin
+					l1 := (if l5 then 'vProgress);
+					if sessionInfo then begin
+							l2 := ParamStr("^0 at ^1 bps", [Array: sessionInfo.title, NumberStr(sessionInfo.body.info.dataRate)])
+						end
+				end;
+			if l6 then begin
+					l3 := "Stop"
+				end;
+			if l7 then begin
+					l4 := 0
+				end;
+			self:SetStatusDialog(a1, l1, {titleText: l2, closeBox: nil, progress: l4, primary: {text: l3, script: func() begin
+				GetRoot().(appSymbol):CancelRequest('userCancel)
+			end}})
+		end else begin
+			self:CloseStatusDialog(nil);
+			self:UpdateStatusSlots(a1, nil, nil)
+		end)
+end
+@@end

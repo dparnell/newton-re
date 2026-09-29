@@ -1,0 +1,23 @@
+@@ 0x4ab281
+func() begin
+	if HasPath((l1 := self:GetAppPreferences()), 'storesFilter) then begin
+			newtAppBase.storesFilter := nil;
+			local l1;
+			(foreach l2 in GetStores() do begin
+					if (l2:GetSignature() = l1.storesFilter) then begin
+							newtAppBase.storesFilter := l2;
+							break
+						end
+				end)
+		end;
+	labelsFilter := l1.labelsFilter;
+	autoPutawayEnabled := l1.autoPutawayEnabled;
+	currentLayout := l1.currentLayout;
+	previousLayout := l1.previousLayout;
+	_recogSettings := l1._recogSettings;
+	if l1.preferredViewDef then begin
+			preferredViewDef := l1.preferredViewDef
+		end;
+	l1
+end
+@@end

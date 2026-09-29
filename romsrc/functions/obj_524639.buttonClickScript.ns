@@ -1,0 +1,5 @@
+@@ 0x5228f5
+func() begin
+	self:HideStoryCard()
+end
+@@end

@@ -1,0 +1,14 @@
+@@ 0x4570c1
+func(a1) begin
+	local l1, l2;
+	if (l2 := (Length(self:Validate((l1 := _tapinfo.nameRef), _tapinfo.editPaths)) <> Length(_tapinfo.editPaths))) then begin
+			self:NewEntry(l1, _context);
+			_context:insert(l1, (if l2 then 'select))
+		end else begin
+			_context:Tapped(nil)
+		end;
+	_tapinfo := nil;
+	_dirtyPaths := nil;
+	(_dirtyValues := nil)
+end
+@@end

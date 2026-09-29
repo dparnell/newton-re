@@ -1,0 +1,18 @@
+@@ 0x79b64d names
+func(anItem, anEntry) begin
+	if ((anEntry = 'deleted) or (anEntry = nil)) then begin
+			self:ReSync();
+			anEntry := nil
+		end else begin
+			cursor:Goto(anEntry)
+		end;
+	if (not Visible(owner)) then begin
+			if (anEntry <> nil) then begin
+					owner:?viewPreOpenScript(anEntry)
+				end;
+			owner:Open()
+		end;
+	owner:ShowToDoList(anItem.instanceTime);
+	owner.toDoListView:ShowFoundItem(anEntry, anItem.instanceTime, self)
+end
+@@end

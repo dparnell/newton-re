@@ -1,0 +1,6 @@
+@@ 0x431565
+func() begin
+	local l1;
+	(if ((((l1 := {left: (fXOffset > 0), right: (fXOffset < fMaxX), up: (fYOffset > 0), down: (fYOffset < fMaxY)}).left or l1.right) or l1.up) or l1.down) then l1)
+end
+@@end

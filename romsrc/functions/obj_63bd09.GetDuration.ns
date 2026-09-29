@@ -1,0 +1,66 @@
+@@ 0x506ecd
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11, l12;
+	l1 := ((a1 := (a1 + 1440)) div 1440);
+	l2 := context.repeatType;
+	l3 := context.mtgInfo;
+	l4 := context.fakeTemplate;
+	(if (a1 <= 0) then [Array: "", ""] else (if ((l2 = 6) or (if (l2 = 0) then (l3 = BOr(4064, 31)))) then begin
+				l5 := (l1 div 7);
+				l1 := (l1 mod 7);
+				[Array: (if (l5 > 1) then ParamStr("^0 weeks", [Array: l5]) else (if (l5 = 1) then "1 week" else "")), (if (l1 > 1) then ParamStr("^0 days", [Array: l1]) else (if (l1 = 1) then "1 day" else ""))]
+			end else (if (l2 = 0) then [Array: (if ((l5 := ((l1 + 6) div 7)) > 1) then ParamStr("^0 weeks", [Array: l5]) else (if (l5 = 1) then "1 week" else "")), ""] else (if (l2 = 4) then [Array: (if ((l6 := ((l1 + 13) div 14)) > 1) then ParamStr("^0 times", [Array: l6]) else (if (l6 = 1) then "1 time" else "")), ""] else begin
+						l7 := Date(startTime);
+						l8 := Date(stopTime);
+						(if ((l2 = 2) or (l2 = 1)) then begin
+								if (l8.year = l7.year) then begin
+										l9 := ((l8.month - l7.month) + 1)
+									end else begin
+										l9 := (((13 - l7.month) + l8.month) + (((l8.year - l7.year) - 1) * 12))
+									end;
+								if (l2 = 2) then begin
+										if (l8.Date < l7.Date) then begin
+												l9 := (l9 - 1)
+											end
+									end else begin
+										l8.Date := 1;
+										l10 := TotalMinutes(l8);
+										l4.mtgStartDate := (startTime - (startTime mod 1440));
+										l4.repeatType := 1;
+										l4.mtgInfo := l3;
+										l11 := NextMeeting(l10, l4);
+										if (stopTime < l11) then begin
+												l9 := (l9 - 1)
+											end
+									end;
+								l12 := (l9 div 12);
+								l9 := (l9 mod 12);
+								[Array: (if (l12 > 1) then ParamStr("^0 years", [Array: l12]) else (if (l12 = 1) then "1 year" else "")), (if (l9 > 1) then ParamStr("^0 months", [Array: l9]) else (if (l9 = 1) then "1 month" else ""))]
+							end else (if ((l2 = 3) or (l2 = 7)) then begin
+									l12 := ((l8.year - l7.year) + 1);
+									if (l8.month < l7.month) then begin
+											l12 := (l12 - 1)
+										end else begin
+											if (l8.month = l7.month) then begin
+													if (l2 = 3) then begin
+															if (l8.Date < l7.Date) then begin
+																	l12 := (l12 - 1)
+																end
+														end else begin
+															l8.Date := 1;
+															l10 := TotalMinutes(l8);
+															l4.mtgStartDate := (startTime - (startTime mod 1440));
+															l4.repeatType := 7;
+															l4.mtgInfo := l3;
+															l11 := NextMeeting(l10, l4);
+															if (stopTime < l11) then begin
+																	l12 := (l12 - 1)
+																end
+														end
+												end
+										end;
+									[Array: (if (l12 > 1) then ParamStr("^0 years", [Array: l12]) else (if (l12 = 1) then "1 year" else "")), ""]
+								end else inherited:GetDuration((a1 - 1440))))
+					end))))
+end
+@@end

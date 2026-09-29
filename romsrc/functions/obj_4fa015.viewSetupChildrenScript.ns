@@ -1,0 +1,40 @@
+@@ 0x4f9fd5
+func() begin
+	(if (if createInProgress then (mainDisplay <> scheduleView)) then (self.viewChildren := nil) else begin
+			l1 := Length(selectedDates);
+			l2 := selectedDates[0];
+			if (l1 > 1) then begin
+					l3 := (selectedDates[(l1 - 1)] + 1440);
+					if ((selectedDates[1] - selectedDates[0]) > 1440) then begin
+							l4 := true
+						end
+				end;
+			if l4 then begin
+					l5 := [Array: ];
+					local l1;
+					local l2;
+					local l3;
+					local l4;
+					local l5;
+					(foreach l6 in selectedDates do begin
+							if (l8 := GetAllMeetings(notes, RepeatNotes, l6, nil)) then begin
+									local l8;
+									(foreach l9 in l8 do begin
+											if (not l9.repeatTemplate) then begin
+													AddArraySlot(l5, l9)
+												end else begin
+													if (not LSearch(l5, l9.repeatTemplate, 0, '|=|, 'repeatTemplate)) then begin
+															AddArraySlot(l5, l9)
+														end
+												end
+										end)
+								end
+						end);
+					self.viewChildren := l5
+				end else begin
+					self.viewChildren := GetAllMeetingsUnique(notes, RepeatNotes, l2, l3)
+				end;
+			(if createInProgress then (if (if viewChildren then ((Length(viewChildren) * viewLineSpacing) > 50)) then (cribMoreIndicator.viewFlags := BOr(cribMoreIndicator.viewFlags, 1))) else self:UpdateMoreIndicator(true))
+		end)
+end
+@@end

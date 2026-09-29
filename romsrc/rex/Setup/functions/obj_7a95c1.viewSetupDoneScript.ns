@@ -1,0 +1,5 @@
+@@ 0x7a960d
+func() begin
+	(if (not (fformat = 'wide)) then self:Hide() else self:Show())
+end
+@@end

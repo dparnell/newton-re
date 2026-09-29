@@ -1,0 +1,18 @@
+@@ 0x5b4e01
+@@const kBinaryFromHex
+func(hex, cls) begin
+	local b := MakeBinary(StrLen(hex) div 2, cls);
+	for i := 0 to Length(b) - 1 do begin
+		local h := Ord(hex[2 * i]);
+		local l := Ord(hex[2 * i + 1]);
+		StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+	end;
+	b
+end
+@@const kLiteral_5b49f5
+{bits: call kBinaryFromHex with ("000000000004009b009b009200bc00ae000000000000000000000000000000000000000000000000000000000000000000000000000002000000070000000e0000000c0007c0d8000fe078000c6030000c6030000c6000000feffe0007cffe000000000007c000000fe000000c6000000c6000000c6000000feffe0007cffe000000000000000000000000000000000000000000", 'bits), bounds: '{left: 0, top: 0, right: 28, bottom: 33}}
+@@main
+func(a1, a2) begin
+	[Array: MakeText(a1.overview, (a2.left + 25), a2.top, a2.right, (a2.top + 11)), (if a1.icon then OffsetShape(MakeShape(a1.icon), (a2.left + ((25 - a1.icon.bounds.right) div 2)), (a2.top + 2)) else ScaleShape(MakeShape(kLiteral_5b49f5), nil, RelBounds((a2.left + 10), a2.top, 16, 16)))]
+end
+@@end

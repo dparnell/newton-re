@@ -1,0 +1,22 @@
+@@ 0x472915
+@@const kFunction_4728f5
+func(a1, a2) begin
+	(if ((if a1.appSymbol then (not a2.appSymbol)) or (a1.appSymbol = 'buttons)) then -1 else (if ((if (not a1.appSymbol) then a2.appSymbol) or (a2.appSymbol = 'buttons)) then 1 else 0))
+end
+@@main
+func(a1) begin
+	StableSort((l1 := GetRoot():ChildViewFrames()), kFunction_4728f5, nil);
+	l2 := [Array: ];
+	local l1;
+	local l2;
+	(foreach l3 in l1 do begin
+			if (if l3.viewCObject then ((not a1) or (not LSearch(a1, l3, 0, '|=|, nil)))) then begin
+					AddArraySlot(l2, l3);
+					l3:_Close()
+				end
+		end);
+	RemoveSlot(GetRoot().buttons, 'viewFlags);
+	GetRoot():SyncView();
+	return l2
+end
+@@end

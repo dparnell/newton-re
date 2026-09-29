@@ -1,0 +1,80 @@
+@@ 0x446d09
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10;
+	InkOff(a1);
+	l1 := self:GlobalBox();
+	if ((l3 := (GetPoint(0, a1) - l1.left)) > 100) then begin
+			l2 := 720
+		end else begin
+			if (l3 <= 45) then begin
+					l2 := 60
+				end else begin
+					if (increment < 5) then begin
+							l2 := (if (l3 <= 77) then 10 else increment)
+						end else begin
+							l2 := increment
+						end
+				end
+		end;
+	if (l3 > 100) then begin
+			if (((Time mod 1440) div 720) > 0) then begin
+					l2 := (-l2);
+					l4 := -28
+				end else begin
+					l4 := 28
+				end
+		end else begin
+			if (GetPoint(1, a1) > ((l1.bottom + l1.top) div 2)) then begin
+					l2 := (-l2);
+					l4 := -28
+				end else begin
+					l4 := 28
+				end
+		end;
+	l5 := (Time mod 1440);
+	basedate := ((Time - l5) + (if (if midnite then (l5 = 0)) then -1440 else 0));
+	l6 := (Ticks() + firstTapDelay);
+	(repeat l7 := Time; if (if (not wrapping) then (increment <> 1)) then begin
+				if midnite then begin
+						if (Time = (basedate + 1)) then begin
+								Time := (Time - 1)
+							end
+					end else begin
+						if (Time = ((basedate + 1440) - 1)) then begin
+								Time := (Time + 1)
+							end
+					end
+			end; Time := (Time + l2); if wrapping then begin
+				if (Time > (basedate + (if midnite then 1440 else 1439))) then begin
+						Time := (Time - 1440)
+					end;
+				if (Time < (basedate + (if midnite then 1 else 0))) then begin
+						Time := (Time + 1440)
+					end
+			end else begin
+				Time := min((basedate + (if midnite then 1440 else 1439)), Time);
+				Time := max((basedate + (if midnite then 1 else 0)), Time)
+			end; l8 := 9999; l9 := 0; if ((l7 mod 10) <> (Time mod 10)) then begin
+				l8 := 77;
+				l9 := 94
+			end; if (((l7 mod 60) div 10) <> ((Time mod 60) div 10)) then begin
+				l8 := min(l8, 55);
+				l9 := max(l9, 72)
+			end; if ((l7 div 60) <> (Time div 60)) then begin
+				l8 := 3;
+				l9 := max(l9, 42)
+			end; if (if useAmPm then ((l7 div 720) <> (Time div 720))) then begin
+				l8 := min(l8, 100);
+				l9 := 119;
+				if (abs(l2) = 720) then begin
+						l8 := 100
+					end
+			end; (l10 := Clone('{left: 77, top: 2, right: 94, bottom: 26})).left := l8; l10.right := l9; if (l9 <> 0) then begin
+				self:RevealEffect(l4, l10, @51, 'Advance, nil)
+			end; if ((l6 := (l6 - Ticks())) > 0) then begin
+				Sleep(l6)
+			end; l6 := (Ticks() + repeatingTapDelay) until StrokeDone(a1));
+	self:?TimeChanged();
+	true
+end
+@@end

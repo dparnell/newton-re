@@ -1,0 +1,6 @@
+@@ 0x453c69
+func(a1) begin
+	local l1;
+	(if (l1 := self:FindNameRefPos(a1)) then selected[l1])
+end
+@@end

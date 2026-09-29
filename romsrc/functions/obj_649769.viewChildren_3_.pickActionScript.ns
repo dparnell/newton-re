@@ -1,0 +1,6 @@
+@@ 0x4b4ed1
+func(a1) begin
+	theAppToRun := theApps[a1];
+	inherited:pickActionScript(a1)
+end
+@@end

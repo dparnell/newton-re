@@ -1,0 +1,6 @@
+@@ 0x727225
+func() begin
+	inherited:?Retarget();
+	addressView:UpdateCountryInfo()
+end
+@@end

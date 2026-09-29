@@ -1,0 +1,19 @@
+@@ 0x726fed
+func() begin
+	if (if (if (not (l1 := (if StrFilled(target.country) then target.country))) then (l2 := target.addresses)) then ((l3 := Length(l2)) > 0)) then begin
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			(for l5 := 0 to (l3 - 1) do begin
+					if (if l2[l5] then StrFilled(l2[l5].country)) then begin
+							break (l1 := l2[l5].country)
+						end
+				end)
+		end;
+	if (not l1) then begin
+			l1 := UserConfiguration.currentCountry
+		end;
+	@436:new({default: (if (Length((l4 := GetCountryEntry(l1))) > 0) then l4[0]), spots: @295, result: 'name}, self:GlobalLabelBounds(), self)
+end
+@@end

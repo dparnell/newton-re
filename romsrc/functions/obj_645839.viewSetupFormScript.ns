@@ -1,0 +1,5 @@
+@@ 0x4b7fd9
+func() begin
+	(self.text := self:TargetData())
+end
+@@end

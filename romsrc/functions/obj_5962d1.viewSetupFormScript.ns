@@ -1,0 +1,6 @@
+@@ 0x596291
+func() begin
+	selected := fields.(path);
+	inherited:?viewSetupFormScript()
+end
+@@end

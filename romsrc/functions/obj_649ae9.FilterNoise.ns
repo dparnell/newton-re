@@ -1,0 +1,10 @@
+@@ 0x526701
+func(a1, a2) begin
+	(foreach l1, l2 in a1 do begin
+			if (FindStringInArray(a2, l2) <> nil) then begin
+					a1 := FilterStrings(l2, a1)
+				end
+		end);
+	(if (Length(a1) = 0) then return nil else return a1)
+end
+@@end

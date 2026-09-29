@@ -1,0 +1,5 @@
+@@ 0x5279ed
+func(a1) begin
+	return ParamStr("Anniv.: ^0", [Array: GetDataDefs('|nameRef.people|):Get(a1, 'name, 'text)])
+end
+@@end

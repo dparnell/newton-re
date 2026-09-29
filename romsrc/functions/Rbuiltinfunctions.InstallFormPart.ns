@@ -1,0 +1,23 @@
+@@ 0x5579c1
+func(a1) begin
+	local l1, l2, l3, l4, l5;
+	l1 := a1.partFrame;
+	l2 := GetRoot();
+	l3 := EnsureInternal(l1.app);
+	(if l2.(l3) then begin
+			l2:Notify(3, "Newton", ParamStr("An application by the name \u201C\u^0\u201D\u ('^1) is already installed.", [Array: GetAppName(l3), l3]));
+			nil
+		end else begin
+			if (l4 := {_proto: l1, app: l3, InstallScript: EnsureInternal((if l1.devInstallScript then l1.devInstallScript else (if l1.InstallScript then l1.InstallScript))), removeScript: EnsureInternal((if l1.devRemoveScript then l1.devRemoveScript else (if l1.removeScript then l1.removeScript)))}).InstallScript then begin
+					l4:InstallScript(l4)
+				end;
+			l5 := BuildContext(l1.theForm);
+			l2.(l3) := l5;
+			if (a1.deviceKind = 1) then begin
+					l5.cardSocket := deviceNumber
+				end;
+			l4.InstallScript := nil;
+			l4
+		end)
+end
+@@end

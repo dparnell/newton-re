@@ -1,0 +1,25 @@
+@@ 0x63d7c5
+func() begin
+	local l1, l2, l3;
+	l1 := GetStores()[0];
+	if (l2 := l1:GetSoup(@276)) then begin
+			l3 := l2:Query({indexPath: 'tag, beginKey: "userConfiguration", endKey: "userConfiguration"}):entry()
+		end;
+	if (not l3) then begin
+			DefGlobalVar('userConfiguration, {_proto: @285, tag: "userConfiguration", lcdContrast: GetLCDContrast()});
+			SetSortID(GetUserConfig('sortID))
+		end else begin
+			l3._proto := @285;
+			DefGlobalVar('userConfiguration, l3)
+		end;
+	if (not l2) then begin
+			l2 := l1:CreateSoup(@276, @275)
+		end;
+	if (not l3) then begin
+			l2:Add(userConfiguration)
+		end;
+	SetLCDContrast(GetUserConfig('lcdContrast));
+	SetSystemVolume(GetUserConfig('soundVolumeDb));
+	nil
+end
+@@end

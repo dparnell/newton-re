@@ -1,0 +1,5 @@
+@@ 0x5a39e1
+func(a1, a2) begin
+	AddDeferredSend(GetRoot().mailSlip, 'RegisterStart, nil)
+end
+@@end

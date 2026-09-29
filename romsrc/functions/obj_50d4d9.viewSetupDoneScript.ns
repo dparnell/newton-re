@@ -1,0 +1,5 @@
+@@ 0x50d439
+func() begin
+	self:setupChildMonths((startDate := IncrementMonth(calendar.selectedDates[0], -2)))
+end
+@@end

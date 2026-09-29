@@ -1,0 +1,7 @@
+@@ 0x4eadb1
+func() begin
+	inherited:delete();
+	masterFinder.zeroOneOrMoreResult := nil;
+	(masterFinder.cacheCount := nil)
+end
+@@end

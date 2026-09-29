@@ -1,0 +1,13 @@
+@@ 0x469a71
+func(a1, a2) begin
+	local l1, l2, l3, l4;
+	l1 := refCon;
+	l2 := a1;
+	if a2 then begin
+			l2 := Clone(@615);
+			l2:SetWords(pickItems)
+		end;
+	l3 := l1.form:GetStyleAtOffset(l1.wordOffset);
+	l1.form:HandleInsertItems((l4 := {insertItems: l2, insertOffset: l1.wordOffset, replaceChars: l1.wordLength, defaultFontSpec: l3, addspace: nil, moveCaret: nil}))
+end
+@@end

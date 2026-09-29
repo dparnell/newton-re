@@ -1,0 +1,5 @@
+@@ 0x46475d
+func(a1, a2) begin
+	(if (if self.lastFormats then self.lastFormats.(a1)) then self.lastFormats.(a1))
+end
+@@end

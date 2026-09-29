@@ -1,0 +1,18 @@
+@@ 0x75bda5
+func(a1) begin
+	l1 := [Array: ];
+	l2 := (a1 = 'allWithSoups);
+	l3 := self:GetBackupStoreVersion();
+	l4 := (not self:ConnectionPrefsRead('neverSyncPackages));
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	(foreach l5 in GetStores() do begin
+			if (l5.version > l3) then begin
+					AddArraySlot(l1, self:BuildStoreFrame(l5, l2, true))
+				end
+		end);
+	return {packages: l4, syncall: true, stores: l1}
+end
+@@end

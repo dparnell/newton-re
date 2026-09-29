@@ -1,0 +1,8 @@
+@@ 0x46bed5
+func() begin
+	local l1;
+	l1 := Ticks();
+	cText:Scroll(1);
+	(if ((l1 := (Ticks() - l1)) < 20) then Sleep((20 - l1)))
+end
+@@end

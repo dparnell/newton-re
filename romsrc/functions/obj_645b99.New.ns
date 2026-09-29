@@ -1,0 +1,17 @@
+@@ 0x44e7e9
+func(a1, a2, a3) begin
+	local l1;
+	(l1 := self:Init()).context := a3;
+	if a1.spots then begin
+			l1.spots := a1.spots
+		end;
+	l1.initialSpot := a1.default;
+	l1.returnSlot := a1.result;
+	if HasPath(a1, 'nameBased) then begin
+			l1.countryAndName := (not nameBased)
+		end else begin
+			l1.countryAndName := (l1.spots = @251)
+		end;
+	l1:popup(a2)
+end
+@@end

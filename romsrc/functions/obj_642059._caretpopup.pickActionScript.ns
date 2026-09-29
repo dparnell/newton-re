@@ -1,0 +1,13 @@
+@@ 0x46e579
+func(a1) begin
+	local l1, l2, l3;
+	l2 := (l1 := popup[a1.index]).words[((a1.y * l1.width) + a1.x)];
+	l3 := GetView('viewfrontkey);
+	if (l2[0] = $\u2022) then begin
+			if (if (if (if l3 then l3.text) then GetCaretInfo().info) then (GetCaretInfo().info.offset > 0)) then begin
+					l2 := Stringer([Array: $\n, l2])
+				end
+		end;
+	PostKeyString(l3, l2)
+end
+@@end

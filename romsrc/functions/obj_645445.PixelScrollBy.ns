@@ -1,0 +1,19 @@
+@@ 0x48c851
+func(a1, a2) begin
+	local l1, l2;
+	duringScroll := 'item;
+	try begin
+			self:DropHilites();
+			RefreshViews();
+			l2 := (l1 := self:LocalBox()).bottom;
+			l1.bottom := (l1.bottom - 20);
+			self:RevealEffect((-a2), l1, @85, 'PixelScroller, [Array: a1, a2]);
+			(l1 := self:GlobalBox()).top := (l1.bottom - 20);
+			self:DirtyBox(l1)
+		end onexception |evt.ex| do begin
+			duringScroll := nil;
+			Rethrow()
+		end;
+	(duringScroll := nil)
+end
+@@end

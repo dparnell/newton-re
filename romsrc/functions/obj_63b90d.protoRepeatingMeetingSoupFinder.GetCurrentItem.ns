@@ -1,0 +1,16 @@
+@@ 0x4ef289
+func() begin
+	local l1, l2, l3, l4;
+	if ((not (l1 := currentRepeatingEntryFinder)) or (l1.instancesCount = 0)) then begin
+			return nil
+		end;
+	if (l1.currentInstance = l1.instancesCount) then begin
+			return nil
+		end;
+	(if (if (l1.currentInstance >= 0) then (l1.currentInstance < l1.instancesCount)) then begin
+			l2 := l1.instancesDates[l1.currentInstance];
+			l3 := ResolveEntryAlias(l1.entryAlias);
+			(if (l4 := owner:FindException(l2, l3)) then l4 else owner:MakeInstanceOfRepeatingMeeting(l3, l2))
+		end)
+end
+@@end

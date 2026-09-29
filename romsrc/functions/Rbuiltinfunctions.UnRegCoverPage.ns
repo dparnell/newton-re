@@ -1,0 +1,6 @@
+@@ 0x3c6cd1
+func(a1) begin
+	RemoveSlot(CoverPageRegistry, a1);
+	nil
+end
+@@end

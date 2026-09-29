@@ -1,0 +1,5 @@
+@@ 0x4cd7e1
+func() begin
+	GetRoot().(appSymbol):SetConfig('faxAutoReceive, viewValue)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x7ad1f5
+func(a1, a2) begin
+	self:?textChanged()
+end
+@@end

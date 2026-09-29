@@ -1,0 +1,12 @@
+@@ 0x43d8dd
+func() begin
+	local l1;
+	if (((l1 := self:LocalBox()).right - l1.left) < (iconBBox.right - iconBBox.left)) then begin
+			iconBBox := ShapeBounds(MakeShape((icon := @560)));
+			hiliteIcon := @561;
+			hiliteIconA := @562;
+			indent := 2
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

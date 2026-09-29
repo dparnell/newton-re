@@ -1,0 +1,12 @@
+@@ 0x500d0d
+func(a1, a2) begin
+	local l1;
+	l1 := Clone(protoInstanceOfRepeatingMeeting);
+	if (a1.viewStationery = 'cribNote) then begin
+			l1.viewStationery := 'cribNote
+		end;
+	l1.mtgStartDate := a2;
+	l1.repeatTemplate := a1;
+	l1
+end
+@@end

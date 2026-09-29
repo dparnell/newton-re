@@ -1,0 +1,5 @@
+@@ 0x4bb0e9
+func() begin
+	Stringer([Array: label, " ", (if (if (if target then path) then target.(path)) then filter:PathToText() else "")])
+end
+@@end

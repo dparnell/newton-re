@@ -1,0 +1,22 @@
+@@ 0x47fee5
+func(a1) begin
+	lastError := nil;
+	if (if statusDialog then statusDialog.viewCObject) then begin
+			statusDialog:viewSet(a1)
+		end else begin
+			if (statusDialog = nil) then begin
+					if (not HasSlot(GetRoot(), 'stepChildren)) then begin
+							GetRoot().stepChildren := Clone(GetRoot().stepChildren)
+						end;
+					statusDialog := BuildContext(statusTemplate);
+					statusDialog:viewSet(a1);
+					if modalStatus then begin
+							statusDialog:FilterDialog()
+						end else begin
+							statusDialog:Open()
+						end
+				end
+		end;
+	self:CancelStatusNotify()
+end
+@@end

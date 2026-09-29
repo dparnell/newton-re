@@ -1,0 +1,6 @@
+@@ 0x5951f5
+func(a1, a2, a3) begin
+	self:output("eJ", nil, true);
+	self:output(0, 'byte, nil)
+end
+@@end

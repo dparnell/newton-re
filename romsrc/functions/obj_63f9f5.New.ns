@@ -1,0 +1,12 @@
+@@ 0x4a67f9
+func(a1, a2, a3) begin
+	local l1;
+	(l1 := BuildContext(@152)).theApp := a1;
+	l1.theSoups := a2;
+	if a3 then begin
+			l1.viewBounds := a3
+		end;
+	l1:Open();
+	l1
+end
+@@end

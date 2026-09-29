@@ -1,0 +1,8 @@
+@@ 0x54a2e5
+func(a1, a2, a3) begin
+	local l1, l2, l3;
+	l1 := specifiableExtraIconTypes.(a1);
+	l2 := a3:GetSoup("Packages");
+	(if (if l1 then l2) then MapCursor(l2:Query((l3 := {beginKey: a2, endKey: a2, indexPath: 'packageName, tagspec: {all: l1, none: '_package}})), nil))
+end
+@@end

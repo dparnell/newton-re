@@ -1,0 +1,14 @@
+@@ 0x51378d
+func() begin
+	local l1, l2, l3;
+	(if (l1 := self:LastItemBottom()) then (if (l2 := self:GetToDoAgendaView()) then begin
+				l2.newBounds := Clone(l2.viewBounds);
+				l2.newBounds.top := l1;
+				l2:SyncView()
+			end else begin
+				l3 := self:MakeToDoAgendaTemplate(l1);
+				AddStepView(self, l3);
+				self:GetToDoAgendaView():Dirty()
+			end))
+end
+@@end

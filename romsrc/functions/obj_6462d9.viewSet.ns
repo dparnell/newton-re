@@ -1,0 +1,30 @@
+@@ 0x482571
+func(a1) begin
+	self:EventPause(true);
+	(if (valueData := a1) then begin
+			if HasSlot(valueData, 'appSymbol) then begin
+					appSymbol := valueData.appSymbol
+				end;
+			if (if valueData.values then HasSlot(valueData.values, 'screenRelativeH)) then begin
+					screenRelativeH := valueData.values.screenRelativeH
+				end;
+			(if ((curView = nil) or (if valueData.name then (curView.name <> valueData.name))) then begin
+					curView := self.(valueData.name);
+					self.stepChildren := curView.kids;
+					(if (if self.viewCObject then (not initialSetup)) then begin
+							l1 := self.viewBounds;
+							SetValue(self, 'viewBounds, self:MungeBounds(l1.left, l1.top, l1.right, (l1.top + curView.height)));
+							self:RedoChildren()
+						end)
+				end else (if self.viewCObject then begin
+						local l1;
+						(foreach l2 in self:ChildViewFrames() do begin
+								if (if l2.name then HasSlot(valueData.values, l2.name)) then begin
+										l2:?viewUpdateFormScript()
+									end
+							end);
+						RefreshViews()
+					end))
+		end)
+end
+@@end

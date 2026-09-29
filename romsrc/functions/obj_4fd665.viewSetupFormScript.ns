@@ -1,0 +1,6 @@
+@@ 0x4fd605
+func() begin
+	self.viewOriginY := ((startTime div 30) * lineHeight);
+	(self.viewBounds := SetBounds(0, 12, 0, 0))
+end
+@@end

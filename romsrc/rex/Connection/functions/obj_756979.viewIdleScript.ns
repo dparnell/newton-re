@@ -1,0 +1,14 @@
+@@ 0x756a01
+func() begin
+	(if (not protoContext.keyPassthroughOn) then begin
+			AddDeferredSend(base, 'Close, nil);
+			if doneCallback then begin
+					call doneCallback with ()
+				end;
+			return 0
+		end else begin
+			self:updateIndicator(initialSetup);
+			500
+		end)
+end
+@@end

@@ -1,0 +1,29 @@
+@@ 0x4c70c1
+@@const kFunction_4c6865
+func(a1, a2) begin
+	local l1, l2;
+	l2 := (l1 := Clone(a1)).bottom;
+	l1.bottom := l1.right;
+	l1.right := l2;
+	l2 := l1.left;
+	l1.left := l1.top;
+	l1.top := l2;
+	l1.orientation := a2;
+	l1
+end
+@@main
+func(a1, a2) begin
+	local l1;
+	inherited:SetupItem(a1, a2);
+	if (not a1.printerPageBounds) then begin
+			GetItemTransport(a1):?SetPageBounds(a1)
+		end;
+	if (not (l1 := a1.printerPageBounds.orientation)) then begin
+			l1 := 'portrait
+		end;
+	if (orientation <> l1) then begin
+			a1.printerPageBounds := call (kFunction_4c6865) with (a1.printerPageBounds, orientation)
+		end;
+	a1
+end
+@@end

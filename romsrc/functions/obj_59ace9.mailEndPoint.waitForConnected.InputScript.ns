@@ -1,0 +1,9 @@
+@@ 0x59a891
+func(a1, a2, a3, a4) begin
+	(if (a1.curstate = 'waitForConnected) then begin
+			a1.curstate := nil;
+			a1:SetInputSpec(nil);
+			AddDeferredSend(a1, 'stopCCL, nil)
+		end)
+end
+@@end

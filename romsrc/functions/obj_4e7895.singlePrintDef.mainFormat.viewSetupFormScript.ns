@@ -1,0 +1,13 @@
+@@ 0x518ae5
+func() begin
+	printForm := self;
+	self.meeting := fields.body;
+	self.NotesData := self:GetNotesData(meeting)[1];
+	self.DataRect := SetBounds(0, 0, 0, 0);
+	self.currentY := 0;
+	self.pageNumber := 1;
+	(if (if NotesData then (Length(NotesData) > 0)) then (foreach l1 in NotesData do begin
+				DataRect := UnionRect(DataRect, l1.viewBounds)
+			end))
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x749519
+func() begin
+	(self.viewBounds := SetBounds(0, 0, StdButtonWidth(text), 0))
+end
+@@end

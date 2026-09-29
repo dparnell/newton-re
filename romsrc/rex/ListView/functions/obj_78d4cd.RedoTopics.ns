@@ -1,0 +1,5 @@
+@@ 0x78cba5 names
+func() begin
+	(if Visible(self) then self:RedoChildren())
+end
+@@end

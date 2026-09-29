@@ -1,0 +1,6 @@
+@@ 0x429e8d
+func() begin
+	viewBounds := Clone(viewBounds);
+	(self.viewBounds.right := (((self.viewBounds.left + indent) + onBitmap.bounds.right) - onBitmap.bounds.left))
+end
+@@end

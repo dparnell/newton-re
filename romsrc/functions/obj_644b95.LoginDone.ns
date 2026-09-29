@@ -1,0 +1,6 @@
+@@ 0x595705
+func() begin
+	connectState := 'Login;
+	self:?LoginDoneScript()
+end
+@@end

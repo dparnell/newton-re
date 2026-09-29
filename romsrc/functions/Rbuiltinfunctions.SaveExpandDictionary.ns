@@ -1,0 +1,8 @@
+@@ 0x5ab755
+func() begin
+	local l1, l2;
+	l1 := '{list: [Array: ], count: 0};
+	(l2 := GetDictionary(35)).count := l2:Walk("", nil);
+	SaveDictionary(35, "ExpandDictionary", l1)
+end
+@@end

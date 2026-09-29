@@ -1,0 +1,16 @@
+@@ 0x4e2bc5
+func(a1) begin
+	value := 0.0;
+	valueFactor := 10.0;
+	digitCount := 0;
+	keyFactor := 1.0;
+	(if a1 then begin
+			inputKeys := (if (if (pendingOp >= 113) then (pendingOp <= 116)) then "+-x\u00F7\u"[(pendingOp - 113)] else "");
+			if unary then begin
+					inputKeys := Stringer([Array: inputKeys, (if (unary = 114) then " -" else " +")])
+				end;
+			self:JamDisplay(inputKeys);
+			(digitCount := 0)
+		end)
+end
+@@end

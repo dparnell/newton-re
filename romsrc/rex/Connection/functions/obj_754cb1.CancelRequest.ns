@@ -1,0 +1,17 @@
+@@ 0x7561f1
+func(a1) begin
+	local StopIt;
+	(if (not stopping) then begin
+			stopping := true;
+			currentStatusSetup.values.titleText := "Stopping...";
+			self:viewSet(currentStatusSetup);
+			(if restoring then AddDelayedCall((StopIt := func(a1) begin
+					local l1;
+					try begin
+							l1 := endpoint:GetState()
+						end onexception |evt.ex| do begin end;
+					(if ((((a1 > 10) or (not l1)) or (not l1.Soup)) or (not StrEqual(l1.Soup:GetName(), "System"))) then protoContext:StopOperation(endpoint) else AddDelayedCall(StopIt, [Array: (a1 + 1)], 1000))
+				end), [Array: 0], 1000) else protoContext:StopOperation(endpoint))
+		end)
+end
+@@end

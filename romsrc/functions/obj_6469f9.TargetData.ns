@@ -1,0 +1,5 @@
+@@ 0x4b8685
+func() begin
+	(if (if (if target then path) then target.(path)) then (if textFrame then (if textFramePath then textFrame.(target.(path)).(textFramePath) else textFrame.(target.(path))) else Stringer([Array: target.(path)])) else "")
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x4f7f75
+func(a1) begin
+	self:FilterChanged(a1, 'calendarAPI, 'whatThe, nil)
+end
+@@end

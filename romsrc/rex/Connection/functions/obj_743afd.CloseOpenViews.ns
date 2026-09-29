@@ -1,0 +1,10 @@
+@@ 0x744245
+func() begin
+	local l1;
+	AddDeferredCall((l1 := func() begin
+		(foreach l1 in subViewsOpen do begin
+				l1:Close()
+			end)
+	end), nil)
+end
+@@end

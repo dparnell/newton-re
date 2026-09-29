@@ -1,0 +1,5 @@
+@@ 0x41cf05
+func(a1, a2) begin
+	StrMunger(a1, StrLen(a1), nil, a2, 0, nil)
+end
+@@end

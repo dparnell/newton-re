@@ -1,0 +1,15 @@
+@@ 0x54ecf1
+@@const kLiteral_54ebbd
+'{type: index, indexPath: sequence, startKey: nil, endKey: nil, tagspec: {all: _icon, none: [Array: _soups, _frozen]}}
+@@main
+func(a1) begin
+	local l1;
+	(if (a1 = '_all) then DeepClone(kLiteral_54ebbd) else (if (not a1) then begin
+				(l1 := DeepClone(kLiteral_54ebbd)).tagspec.none := SetUnion(l1.tagspec.none, GetAppFolderSyms('ExtrasDrawer, true, true), true);
+				l1
+			end else begin
+				(l1 := DeepClone('{type: index, indexPath: sequence, startKey: nil, endKey: nil, tagspec: {all: [Array: _icon, nil], none: [Array: _frozen]}})).tagspec.all[1] := a1;
+				l1
+			end))
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x47a9fd
+func() begin
+	(if (if info then info.transport) then GetRoot().(info.transport) else GetRoot().(appSymbol))
+end
+@@end

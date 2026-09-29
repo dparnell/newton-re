@@ -1,0 +1,8 @@
+@@ 0x45ca0d
+func() begin
+	(if self:MatchPassword(oldPass.realText, self:CurrentPassword()) then self:MatchedPassword() else begin
+			base:Close();
+			self:Notify(3, "Password", "Sorry, the password you entered is incorrect.")
+		end)
+end
+@@end

@@ -1,0 +1,24 @@
+@@ 0x453319
+func(a1, a2) begin
+	fColumn := nil;
+	fTapBox := Clone(a2);
+	l1 := nil;
+	if fColumns then begin
+			l2 := nil;
+			local l1;
+			local l2;
+			(foreach l3 in fColumns do begin
+					if (l3.right > a1) then begin
+							l2 := true;
+							break
+						end
+				end);
+			if l2 then begin
+					fColumn := l3;
+					fTapBox.left := l3.hiLeft;
+					fTapBox.right := l3.hiRight
+				end
+		end;
+	[Array: '{transferMode: 2, penPattern: 0, fillPattern: 5}, MakeRect(fTapBox.left, 0, fTapBox.right, lineHeight)]
+end
+@@end

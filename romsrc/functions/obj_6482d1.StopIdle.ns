@@ -1,0 +1,10 @@
+@@ 0x473261
+func(a1) begin
+	local l1;
+	(if (idleUseCount > 0) then (if (not a1) then (idleUseCount := (idleUseCount - 1)) else (if (l1 := LSearch(idlingViews, a1, 0, '|=|, nil)) then begin
+					ArrayRemoveCount(idlingViews, l1, 1);
+					idleUseCount := (idleUseCount - 1);
+					a1:SetupIdle(0)
+				end)))
+end
+@@end

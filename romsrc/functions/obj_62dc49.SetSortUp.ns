@@ -1,0 +1,25 @@
+@@ 0x4c1221
+func(a1) begin
+	(foreach l1 in @114 do begin
+			if (not a1) then begin
+					(l1 := Clone(l1)).order := Clone(l1.order);
+					if IsArray(l1.order) then begin
+							l1.order[1] := 'descending
+						end else begin
+							l1.order := 'descending
+						end
+				end;
+			(foreach l3 in allSoups do begin
+					local l5;
+					l5 := GetUnionSoupAlways(l3.soupName);
+					l5:RemoveIndex(l1.path);
+					l5:AddIndex(l1)
+				end)
+		end);
+	sortUp := a1;
+	if Visible(GetRoot().iobox) then begin
+			GetRoot().iobox:RedoChildren()
+		end;
+	self:SaveAppState()
+end
+@@end

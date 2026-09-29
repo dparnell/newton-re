@@ -1,0 +1,11 @@
+@@ 0x595305
+func(a1, a2, a3) begin
+	self:FIle_DownloadPart(a1, a2, a3);
+	if a1.file_in.reply then begin
+			self:output(a1.file_in.reply, nil, true);
+			self:output(0, 'byte, nil)
+		end;
+	self:File_DownloadDone(a1.file_in);
+	(a1.file_in := nil)
+end
+@@end

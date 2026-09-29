@@ -1,0 +1,45 @@
+@@ 0x4f7ef5
+@@const kFunction_4f402d
+func() begin
+	AddProcrastinatedSend('calendarAlarm, GetRoot().calendar, 'nextCalendarAlarm, '[Array: nil], 0)
+end
+@@main
+func(a1, a2) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8;
+	l3 := 'undefined;
+	l1 := Time();
+	(loop begin
+			if ((l2 := a1:entry()) = nil) then begin
+					break
+				end;
+			a1:Next();
+			if (l3 = 'undefined) then begin
+					l3 := (l2.viewStationery = 'cribNote)
+				end;
+			(if l2.mtgAlarm then begin
+					l4 := l1;
+					(loop begin
+							if ((l4 := GetNextMeetingTime(l2, l4)) = 0) then begin
+									break
+								end;
+							(if ((l5 := (l4 - l2.mtgAlarm)) <= l1) then (l4 := (l4 + 1)) else begin
+									if (l5 < alarmTime) then begin
+											RemoveAppAlarms(":calendar");
+											a2 := 0;
+											alarmTime := l5
+										end;
+									if (l5 <= alarmTime) then begin
+											l7 := (if (l6 := self:GetMeetingSlot(l2, 'mtgLocation)) then Stringer([Array: " @", " ", self:getNameOfLocation(l6)]));
+											alarmText := Stringer([Array: self:CreateShortDateString(l4, (not l3)), " ", l2.mtgText, l7]);
+											l8 := [Array: "Reminder", alarmText];
+											AddAlarm(Stringer([Array: NumberStr(a2), ":calendar"]), alarmTime, l8, kFunction_4f402d, '[Array: ]);
+											a2 := (a2 + 1)
+										end;
+									break
+								end)
+						end)
+				end)
+		end);
+	a2
+end
+@@end

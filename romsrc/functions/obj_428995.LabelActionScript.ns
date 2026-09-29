@@ -1,0 +1,8 @@
+@@ 0x428975
+func(a1) begin
+	local l1;
+	l1 := labelCommands[a1].value;
+	SetUserConfig('inputDevice, l1);
+	(if (l1 = 16) then self:Notify(3, "Recording source", "If you don't have an external microphone connected, you should change this setting back to \u201C\uNone\u201D\u or \u201C\uMicrophone\u201D\u."))
+end
+@@end

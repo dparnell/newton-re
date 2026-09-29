@@ -1,0 +1,6 @@
+@@ 0x758b19
+func() begin
+	self:SetupViewBounds('backup);
+	self:SetupButton()
+end
+@@end

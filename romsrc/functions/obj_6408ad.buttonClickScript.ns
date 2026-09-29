@@ -1,0 +1,74 @@
+@@ 0x4666f5
+func() begin
+	if ((actionList := self:GetActionTransports((targetInfo := self:GetTargetInfo('Routing)))) = nil) then begin
+			actionList := [Array: ]
+		end;
+	l1 := (Length(actionList) > 0);
+	l2 := self:GetActionScripts(targetInfo);
+	l3 := nil;
+	if l2 then begin
+			local l1;
+			local l2;
+			local l3;
+			(foreach l4, l5 in l2 do begin
+					if ((l5 = nil) or (l5 = 'pickseparator)) then begin
+							AddArraySlot(actionList, nil)
+						end else begin
+							if (ClassOf(l5) = 'symbol) then begin
+									l5 := GetVariable(self, l5)
+								end;
+							if (if ((l7 := (if l5 then l5.title)) = nil) then l5.GetTitle) then begin
+									if (l7 := l5:GetTitle(targetInfo.target)) then begin
+											(l5 := Clone(l5)).title := l7
+										end
+								end;
+							if (if l5 then l7) then begin
+									if (if (not l3) then (Length(actionList) > 0)) then begin
+											AddArraySlot(actionList, nil)
+										end;
+									AddArraySlot(actionList, l5);
+									l3 := true
+								end
+						end
+				end)
+		end;
+	l8 := [Array: ];
+	local l7;
+	local l8;
+	(foreach l9 in actionList do begin
+			local l11, l12, l13, l14, l15, l16, l17;
+			if l9 then begin
+					l11 := StrEqual((l7 := (if (if l9.group then l9.groupTitle) then l9.groupTitle else l9.title)), "Print");
+					if (if (if l1 then (Length(l8) = 0)) then GetVariable(self, 'appObject)) then begin
+							l12 := targetInfo.target;
+							l13 := 0;
+							if TargetIsCursor(l12) then begin
+									l13 := 1
+								end;
+							l7 := Stringer([Array: l7, " ", GetVariable(self, 'appObject)[l13]])
+						end;
+					l14 := (if (if l9.group then l9.groupIcon) then l9.groupIcon else l9.icon);
+					l15 := {item: l7, icon: l14, indent: 24, fixedHeight: 18};
+					if l11 then begin
+							l15.keyMessage := '_keyButtonPrintScript
+						end;
+					AddArraySlot(l8, l15)
+				end else begin
+					AddArraySlot(l8, 'pickseparator)
+				end
+		end);
+	if (Length(l8) = 0) then begin
+			if ((l16 := GetVariable(self, 'title)) = nil) then begin
+					l16 := "Routing"
+				end;
+			l17 := "There are no actions available for the selected items";
+			if (targetInfo.target = nil) then begin
+					l17 := "Nothing is selected."
+				end;
+			self:Notify(3, l16, l17);
+			self:hilite(nil);
+			return nil
+		end;
+	(if (popupForm := DoPopup(l8, nil, nil, self)) then OpenedEntryForm(popupForm, nil) else self:hilite(nil))
+end
+@@end

@@ -1,0 +1,12 @@
+@@ 0x4f06b5
+func() begin
+	local l1, l2, l3;
+	if (l1 := self:MinimalBounds(target)) then begin
+			l2 := self:Parent():LocalBox();
+			if ((l3 := (l1.right - l2.right)) > 0) then begin
+					viewBounds := SetBounds(0, 0, l3, 0)
+				end
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

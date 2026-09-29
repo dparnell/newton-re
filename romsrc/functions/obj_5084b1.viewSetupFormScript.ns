@@ -1,0 +1,8 @@
+@@ 0x508471
+func() begin
+	inherited:viewSetupFormScript();
+	self.viewBounds := Clone(self.viewBounds);
+	viewBounds.top := ((-(viewBounds.bottom - viewBounds.top)) - 8);
+	(viewBounds.bottom := -8)
+end
+@@end

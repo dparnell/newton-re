@@ -1,0 +1,28 @@
+@@ 0x55a2a5
+func(a1) begin
+	local entry, oldSoup;
+	if (not (entry := PackageEntryFromThingy(a1))) then begin
+			return nil
+		end;
+	oldSoup := EntrySoup(entry);
+	l1 := EntryStore(entry);
+	local l1;
+	local l2;
+	local l3;
+	(foreach l4 in (l3 := GetPkgRefInfo((l2 := entry.pkgRef))).parts do begin
+			if (if IsFrame(l4) then l4.DeletionScript) then begin
+					try begin
+							l4:DeletionScript()
+						end onexception |evt.ex| do begin end
+				end
+		end);
+	if IsPackageActive(l2) then begin
+			DeActivatePackage(l2)
+		end;
+	l1:AtomicAction(func() begin
+		EntryRemoveFromSoup(entry);
+		UnsafeXmitSoupChangeNow("Packages", '_newt, 'entryRemoved, {oldSoup: oldSoup, entry: entry})
+	end);
+	true
+end
+@@end

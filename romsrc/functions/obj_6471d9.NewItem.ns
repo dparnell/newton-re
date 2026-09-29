@@ -1,0 +1,19 @@
+@@ 0x535779
+func(a1) begin
+	local l1;
+	(l1 := inherited:NewItem(a1)).toRef := nil;
+	l1.fromRef := nil;
+	l1.phoneNumber := "";
+	l1.name := "";
+	l1.numberToDial := "";
+	l1.callDate := nil;
+	l1.startTime := 0;
+	l1.endTime := 0;
+	l1.serviceProvider := GetUserConfig('currentDialSpeaker);
+	l1.saveAsLog := (not self:GetConfig('phonenocalllogging));
+	l1.fromCallApp := nil;
+	l1.state := nil;
+	l1.Connect := true;
+	l1
+end
+@@end

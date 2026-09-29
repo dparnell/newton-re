@@ -1,0 +1,13 @@
+@@ 0x74fbd5
+func() begin
+	local l1;
+	if (if ((l1 := endpoint:IdleConnection(checkCommandsInIdle)) = 0) then (not endpoint.closingDown)) then begin
+			closing := true;
+			protoContext:FileBrowserClose(endpoint);
+			if (callWhenDone exists) then begin
+					call callWhenDone with (endpoint, true, nil, nil, nil)
+				end
+		end;
+	return l1
+end
+@@end

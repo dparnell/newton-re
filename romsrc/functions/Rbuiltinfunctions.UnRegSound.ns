@@ -1,0 +1,6 @@
+@@ 0x3c65f1
+func(a1) begin
+	RemoveSlot(SoundRegistry, a1);
+	nil
+end
+@@end

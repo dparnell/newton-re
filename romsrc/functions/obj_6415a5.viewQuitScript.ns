@@ -1,0 +1,20 @@
+@@ 0x4d4f6d
+func() begin
+	if (not rotationInProgress) then begin
+			nameEntries := nil;
+			locationEntries := nil;
+			selectedNames := nil;
+			alternativeNames := nil;
+			selectedLocations := nil;
+			alternativeLocations := nil;
+			newHeaderText := nil;
+			newTitle := nil;
+			dpSlip := nil;
+			newMtgStartTime := nil;
+			newMtgStopTime := nil;
+			newMtgDate := nil;
+			totMin := nil
+		end;
+	(if HasSlot(self, 'viewBounds) then RemoveSlot(self, 'viewBounds))
+end
+@@end

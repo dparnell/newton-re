@@ -1,0 +1,17 @@
+@@ 0x560609
+func(a1) begin
+	local l1, l2;
+	currentItem := a1;
+	l2 := self:ConvertToSoupEntry((l1 := items[a1]));
+	if l1.EntryHit then begin
+			self.EntryHit := l1.EntryHit
+		end;
+	(if owner.OpenTo then owner:OpenTo(l2, self) else begin
+			if (owner.viewCObject = nil) then begin
+					owner:?viewPreOpenScript(items[a1]);
+					owner:Open()
+				end;
+			(if owner.viewCObject then (if (GetFunctionArgCount(owner.ShowFoundItem) = 2) then owner:ShowFoundItem(l2, self) else owner:ShowFoundItem(l2)))
+		end)
+end
+@@end

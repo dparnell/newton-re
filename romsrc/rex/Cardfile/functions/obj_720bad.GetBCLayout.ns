@@ -1,0 +1,31 @@
+@@ 0x734f0d
+func(a1) begin
+	l3 := nil;
+	if a1.class then begin
+			l4 := a1.class
+		end else begin
+			l4 := 'person
+		end;
+	if (l6 := GetViewDefs(l4)) then begin
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			local l5;
+			local l6;
+			(foreach l1, l2 in GetViewDefs(l4) do begin
+					if (if (not l3) then (l2.type = 'bizcard)) then begin
+							l3 := l1
+						end;
+					if (if (l2.type = 'bizcard) then (l2.bizCardNum = a1.cardType)) then begin
+							l3 := l1;
+							break
+						end
+				end)
+		end;
+	(if (not l3) then begin
+			(l5 := GetDataView(l4, 'noBizCard)).type := 'bizcard;
+			{slot: 'noBizCard, layout: l5}
+		end else {slot: l3, layout: l6.(l3)})
+end
+@@end

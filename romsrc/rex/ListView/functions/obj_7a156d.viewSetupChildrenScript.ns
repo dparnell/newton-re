@@ -1,0 +1,30 @@
+@@ 0x78e565 names
+func() begin
+	if (if (symbol = 'listMemoFormat) then (reflowStart = 0)) then begin
+			stepChildren := [Array: {_proto: @489, viewBounds: RelBounds(0, 0, 200, 30), viewJustify: 16, text: "\u2022\uMemo\u2022\u"}, {viewClass: 98, viewBounds: SetBounds(20, 40, -20, 80), viewFlags: 3, viewFormat: 0, viewJustify: 48, viewFont: 12289, viewSetupFormScript: func() begin
+				self.text := "";
+				if StrFilled(fields.toName) then begin
+						self.text := Stringer([Array: self.text, "To:", " ", fields.toName, $\n])
+					end;
+				(if StrFilled(fields.title) then (self.text := Stringer([Array: self.text, "Subject:", " ", SubStr(fields.title, 0, 32)])))
+			end}, {viewClass: 98, viewBounds: SetBounds(20, 40, -20, 80), viewFlags: 3, viewFormat: 0, viewJustify: 49, viewFont: 12289, viewSetupFormScript: func() begin
+				self.text := "";
+				if StrFilled(fields.fromName) then begin
+						self.text := Stringer([Array: "From:", " ", fields.fromName, $\n])
+					end;
+				(self.text := Stringer([Array: self.text, LongDateStr(fields.timestamp, @66.yearMonthDayStrSpec)]))
+			end}, {_proto: protoList, viewBounds: SetBounds(-12, 100, 0, 0)}]
+		end else begin
+			if (symbol = 'listLetterFormat) then begin
+					if (reflowStart = 0) then begin
+							stepChildren := [Array: GetUserConfig('letterheadForm), @247, {_proto: protoList, viewBounds: SetBounds(-12, 172, 0, 0)}]
+						end else begin
+							stepChildren := [Array: {_proto: protoList, viewBounds: SetBounds(-12, 36, 0, 0)}]
+						end
+				end else begin
+					stepChildren := [Array: {_proto: protoList, viewBounds: SetBounds(-12, 36, 0, 0)}]
+				end
+		end;
+	inherited:viewSetupChildrenScript()
+end
+@@end

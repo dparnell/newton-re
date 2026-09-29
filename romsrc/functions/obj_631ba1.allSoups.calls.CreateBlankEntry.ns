@@ -1,0 +1,5 @@
+@@ 0x4ebf01
+func() begin
+	{class: 'calllog, height: 175, timestamp: Time(), name: "", phoneNumber: "", notes: nil, callDate: nil, hangupreason: nil}
+end
+@@end

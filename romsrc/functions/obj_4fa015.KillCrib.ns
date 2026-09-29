@@ -1,0 +1,59 @@
+@@ 0x4f9ef5
+func(a1, a2) begin
+	if a1.repeatTemplate then begin
+			l1 := (if a1.originDate then a1.originDate else a1.mtgStartDate);
+			if (not (l2 := a1.repeatTemplate).exceptions) then begin
+					l2.exceptions := [Array: ]
+				end;
+			if (Length(selectedDates) > 1) then begin
+					l2.scrubbedDates := Clone(selectedDates)
+				end else begin
+					RemoveSlot(l2, 'scrubbedDates)
+				end;
+			l3 := (l1 mod 1440);
+			local l1;
+			local l2;
+			local l3;
+			(foreach l4 in selectedDates do begin
+					l7 := NextMeeting((l6 := (l4 + l3)), l2);
+					if (l6 = l7) then begin
+							l8 := nil;
+							if l2.exceptions then begin
+									local l6;
+									local l7;
+									local l8;
+									(foreach l9 in l2.exceptions do begin
+											if (if l9[1] then (l9[1].mtgStartDate = l7)) then begin
+													l8 := true;
+													l9[1] := nil
+												end
+										end)
+								end;
+							if (not l8) then begin
+									AddArraySlot(l2.exceptions, [Array: l6, nil])
+								end
+						end;
+					EntryChangeXmit(l2, 'calendar)
+				end);
+			self:UpdateInstanceNotesDataTime(l2, l1, nil);
+			self:CarefulChange(RepeatNotes, l2, true)
+		end else begin
+			self:CarefulRemove(a1, 'calendar)
+		end;
+	if (l11 := cribView:ChildViewFrames()) then begin
+			local l11;
+			(foreach l12 in l11 do begin
+					if (l12.realData = a1) then begin
+							RemoveView(cribView, l12)
+						end else begin
+							l12:SyncView()
+						end
+				end)
+		end;
+	self:UpdateMoreIndicator(nil);
+	if a2 then begin
+			cribView:AddUndoAction('AddNewCrib, [Array: a1, true])
+		end;
+	(if (mainDisplay = MonthOverView) then MonthOverView:RedoChildren())
+end
+@@end

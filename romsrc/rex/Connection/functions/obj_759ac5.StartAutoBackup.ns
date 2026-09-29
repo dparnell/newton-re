@@ -1,0 +1,9 @@
+@@ 0x75add1
+@@const kROM_8269
+@8269
+@@main
+func(a1) begin
+	a1:SetState(2);
+	kROM_8269:OpenOnEndpoint('all, a1, true)
+end
+@@end

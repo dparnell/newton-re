@@ -1,0 +1,13 @@
+@@ 0x47936d
+func(when) begin
+	(if (when = 'readdress) then begin
+			transport:itemchanged(fields);
+			base:Close()
+		end else begin
+			base:AnimateSend();
+			AddDelayedCall(func() begin
+				(if sendButton then sendButton:SubmitIt(when))
+			end, nil, 1000)
+		end)
+end
+@@end

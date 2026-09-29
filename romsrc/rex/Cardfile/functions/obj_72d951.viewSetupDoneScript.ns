@@ -1,0 +1,13 @@
+@@ 0x72dee5
+func() begin
+	l3 := Length((l1 := self:ChildViewFrames()));
+	local l1;
+	local l2;
+	local l3;
+	(for l2 := 0 to (l3 - 1) do begin
+			if (l1[l2].viewFormat <> 0) then begin
+					break (selectedCard := l1[l2])
+				end
+		end)
+end
+@@end

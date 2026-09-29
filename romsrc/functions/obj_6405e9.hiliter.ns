@@ -1,0 +1,5 @@
+@@ 0x43ca2d
+func(a1) begin
+	(if (if viewCObject then (a1 >= 0)) then (if _vertical then self:InvertRect(0, (startLeft + ((a1 * iconBBox.bottom) div numIndices)), viewBBox.right, (startLeft + (((a1 + 1) * iconBBox.bottom) div numIndices))) else self:InvertRect((startLeft + ((a1 * iconBBox.right) div numIndices)), 0, (startLeft + (((a1 + 1) * iconBBox.right) div numIndices)), viewBBox.bottom)))
+end
+@@end

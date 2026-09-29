@@ -1,0 +1,12 @@
+@@ 0x507979
+func() begin
+	if (if placePopup then Visible(placePopup)) then begin
+			placePopup:MoveBehind(nil)
+		end else begin
+			originalLocationAlias := TotalClone(locationAlias);
+			placePopup := @392:New('|nameRef.meetingPlace|, self:GetInitialSelectionPlusInvitees(), self, nil)
+		end;
+	self:hilite(nil);
+	nil
+end
+@@end

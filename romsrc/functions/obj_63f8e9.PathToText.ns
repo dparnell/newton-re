@@ -1,0 +1,6 @@
+@@ 0x4b9f89
+func() begin
+	local l1;
+	(l1 := GetCountryEntry(target.(path)))[0].name
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x503ae1
+func(a1) begin
+	PressButton(actionButton)
+end
+@@end

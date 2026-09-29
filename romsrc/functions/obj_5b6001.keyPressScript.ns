@@ -1,0 +1,19 @@
+@@ 0x5b5fc9
+func(a1) begin
+	playsound(@51);
+	if ((if (a1 = $<) then (numKeys = 0)) or (state = 'InActive)) then begin
+			return nil
+		end;
+	(if (if (a1 = $<) then (numKeys > 0)) then begin
+			numKeys := (numKeys - 1);
+			if PINDisplay then begin
+					SetValue(PINDisplay, 'text, Substr(PINDisplay.text, 0, numKeys))
+				end;
+			(pin := Substr(pin, 0, numKeys))
+		end else (if (if (a1 = $E) then (numKeys > 0)) then self:Parent():FinishedPIN() else (if (if (a1 <> $E) then (a1 <> $<)) then begin
+					pin := Stringer([Array: pin, a1]);
+					numKeys := (numKeys + 1);
+					(if PINDisplay then SetValue(PINDisplay, 'text, Stringer([Array: PINDisplay.text, $\u2022])))
+				end)))
+end
+@@end

@@ -1,0 +1,11 @@
+@@ 0x54b365
+func(a1, a2, a3, a4) begin
+	local l1;
+	(if (l1 := self:MakeNewPart(a2, a3, a4)) then begin
+			l1.sequence := self:GetNewSequence(nil);
+			l1.packageName := a4;
+			GetUnionSoupAlways("Packages"):GetMember(a1):AddFlushedXmit(l1, 'ExtrasDrawer);
+			true
+		end)
+end
+@@end

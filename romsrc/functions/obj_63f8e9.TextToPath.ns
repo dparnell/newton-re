@@ -1,0 +1,6 @@
+@@ 0x4b9f49
+func(a1) begin
+	local l1;
+	(if (not StrFilled(a1)) then a1 else (l1 := GetCountryEntry(a1))[0].symbol)
+end
+@@end

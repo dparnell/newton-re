@@ -1,0 +1,12 @@
+@@ 0x6287c1
+func() begin
+	local l1, l2;
+	if ((l1 := GetTaggedEntry("LetterWeights2.0")) = nil) then begin
+			l2 := ConvertMPLetterWeights()
+		end;
+	if l2 then begin
+			SetLetterWeights(l2)
+		end;
+	DeleteMPLetterWeights()
+end
+@@end

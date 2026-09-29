@@ -1,0 +1,12 @@
+@@ 0x45c359
+func(a1) begin
+	l1 := Clone(a1);
+	realText := a1;
+	local l1;
+	(for l2 := 0 to (StrLen(l1) - 1) do begin
+			l1[l2] := dummyChar
+		end);
+	SetValue(entryLine, 'text, l1);
+	entryLine:SetHilite(9999, 9999, true)
+end
+@@end

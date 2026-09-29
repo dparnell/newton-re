@@ -1,0 +1,5 @@
+@@ 0x4c8309
+func() begin
+	(if fields.coverPage then return CoverPageRegistry.(fields.coverPage).name else return labelCommands[0])
+end
+@@end

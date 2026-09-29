@@ -1,0 +1,15 @@
+@@ 0x45dc1d
+func() begin
+	local l1, l2;
+	if (not viewStyle) then begin
+			viewStyle := {font: viewFont}
+		end;
+	if pieces then begin
+			self:DrawShape(pieces, viewStyle)
+		end;
+	(if hilitedIndex then begin
+			(l1 := self:LocalBox()).(direction) := tileSize;
+			self:hiliter((l2 := self:GetHiliteShape(0, 0, l1)), hilitedIndex)
+		end)
+end
+@@end

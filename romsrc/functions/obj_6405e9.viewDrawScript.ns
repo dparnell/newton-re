@@ -1,0 +1,5 @@
+@@ 0x43caf5
+func() begin
+	self:hiliter(curIndex)
+end
+@@end

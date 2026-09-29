@@ -1,0 +1,12 @@
+@@ 0x5480cd
+func() begin
+	l1 := [Array: ];
+	local l1;
+	(foreach l2 in self:GetChildIconViews() do begin
+			if (BAnd(GetViewFlags(l2), 33554432) <> 0) then begin
+					AddArraySlot(l1, l2)
+				end
+		end);
+	l1
+end
+@@end

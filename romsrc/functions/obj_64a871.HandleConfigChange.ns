@@ -1,0 +1,13 @@
+@@ 0x423a55
+func(a1) begin
+	local l1, l2;
+	(if (a1 = 'outputDevice) then begin
+			l1 := Gestalt('[Array: 33554441, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1]);
+			SetValue(self, 'maxValue, (l1[5] + 1));
+			(self.dbIncr := (l1[4] / (maxValue - 1)))
+		end else (if (a1 = userConfigSlot) then begin
+				l2 := self:DbToViewValue(GetUserConfig(userConfigSlot));
+				(if (viewValue <> l2) then SetValue(self, 'viewValue, l2))
+			end))
+end
+@@end

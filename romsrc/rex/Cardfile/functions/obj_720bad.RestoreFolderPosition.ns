@@ -1,0 +1,5 @@
+@@ 0x741d9d
+func(a1, a2, a3) begin
+	(if (superSymbol <> 'ownerNames) then inherited:RestoreFolderPosition(a1, a2, a3))
+end
+@@end

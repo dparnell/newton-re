@@ -1,0 +1,5 @@
+@@ 0x5aa069
+func() begin
+	self:SelectEntry(0)
+end
+@@end

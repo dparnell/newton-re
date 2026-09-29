@@ -1,0 +1,13 @@
+@@ 0x5291e5
+func() begin
+	local l1, l2, l3;
+	(l2 := (l1 := GetRoot()).findDrawer):Open();
+	l1.assistant:Close();
+	l3 := Clone(OrigPhrase);
+	if (l3 := self:FilterAction(input, phrases, l3, 'find_act)) then begin
+			l3 := GlueStrings(l3)
+		end;
+	l2:setfindtext(l3);
+	RefreshViews()
+end
+@@end

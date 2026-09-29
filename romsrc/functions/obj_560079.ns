@@ -1,0 +1,27 @@
+@@ 0x560079
+func() begin
+	local somethingLockedSoNotDeleted, somethingDeleted;
+	(if selected then begin
+			if (Length(selected) = 1) then begin
+					self:ForEachSelected(func(a1) begin
+						(if EntryStore(a1):IsReadOnly() then (somethingLockedSoNotDeleted := true) else EntryRemoveFromSoupXmit(a1, 'find))
+					end)
+				end else begin
+					self:ForEachSelected(func(a1) begin
+						(if EntryStore(a1):IsReadOnly() then (somethingLockedSoNotDeleted := true) else begin
+								somethingDeleted := true;
+								EntryRemoveFromSoup(a1)
+							end)
+					end);
+					if somethingDeleted then begin
+							XmitSoupChange(cursor:soup():GetName(), 'unknown, 'whatThe, nil)
+						end
+				end;
+			selected := nil;
+			self.isReset := nil;
+			self.zeroOneOrMoreResult := nil;
+			self.cacheCount := nil;
+			(if somethingLockedSoNotDeleted then GetRoot():Notify(3, "Find", "At least one item was not deleted because it is on a write-protected store."))
+		end)
+end
+@@end

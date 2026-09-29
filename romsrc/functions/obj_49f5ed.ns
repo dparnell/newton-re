@@ -1,0 +1,21 @@
+@@ 0x49f5ed
+func(a1, a2, a3) begin
+	local l1;
+	l1 := a1.tagspec;
+	if a3 then begin
+			if (not l1) then begin
+					l1 := {}
+				end;
+			if l1.(a2) then begin
+					if (ClassOf(l1.(a2)) = 'symbol) then begin
+							l1.(a2) := [Array: l1.(a2)]
+						end;
+					SetAdd(l1.(a2), a3, true)
+				end else begin
+					l1.(a2) := [Array: a3]
+				end;
+			a1.tagspec := l1
+		end;
+	return l1
+end
+@@end

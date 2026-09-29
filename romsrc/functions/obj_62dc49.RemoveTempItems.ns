@@ -1,0 +1,33 @@
+@@ 0x4b58ed
+func(a1) begin
+	local l1, l2, l3, l4;
+	if (not (l2 := (l1 := self:MakeCursor('inbox, self:GetSpec('transport, {all: '_remote}, a1))):entry())) then begin
+			return nil
+		end;
+	try begin
+			(while l2 do begin
+					if (l2 = target) then begin
+							needsRefresh := true
+						end;
+					EntryRemoveFromSoup(l2);
+					(l2 := l1:Next())
+				end)
+		end onexception |evt.ex| do begin end;
+	if (if newtAppBase then newtAppBase.layout) then begin
+			l4 := (l3 := newtAppBase.layout.masterSoup).theCursor:entry();
+			l3:SetupCursor();
+			if IsSoupEntry(l4) then begin
+					l3.theCursor:Goto(l4)
+				end
+		end;
+	layout.selected := nil;
+	if (if (if layout then ((currentLayout <> 'itemLayout) or needsRefresh)) then viewCObject) then begin
+			if (if needsRefresh then (currentLayout = 'itemLayout)) then begin
+					newtAppBase:ShowLayout('overview)
+				end else begin
+					self:UpdateLayout()
+				end
+		end;
+	nil
+end
+@@end

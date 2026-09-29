@@ -1,0 +1,27 @@
+@@ 0x47fcd1
+func() begin
+	local appSym;
+	appSym := EnsureInternal(appSymbol);
+	powerOnCallback := func(a1) begin
+		(if (a1 = 'emergencyPowerOn) then GetRoot().(appSym):CancelRequest(a1))
+	end;
+	RegPowerOn(appSymbol, powerOnCallback);
+	powerOffCallback := func(a1, a2) begin
+		if (a1 = 'okToPowerOff) then begin
+				return GetRoot().(appSym):PowerOffCheck(a2)
+			end;
+		if (a1 = 'PowerOff) then begin
+				if (GetRoot().(appSym):CancelRequest(a1) = nil) then begin
+						return 'holdYourHorses
+					end
+			end;
+		return nil
+	end;
+	RegPowerOff(appSymbol, powerOffCallback);
+	if (not manualStatus) then begin
+			self:StatusNotify()
+		end;
+	GetRoot().(owner):?ActivateTransport(self);
+	nil
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x4398a5
+func() begin
+	local l1;
+	(if useMultipleSelections then (for l2 := (l1 := (viewOriginY div lineHeight)) to ((l1 + viewLines) - 1) do begin
+				self:InvertLine(l2, SetContains(selectedItems, l2))
+			end) else self:InvertLine(Selection, true))
+end
+@@end

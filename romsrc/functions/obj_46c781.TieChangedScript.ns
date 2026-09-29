@@ -1,0 +1,5 @@
+@@ 0x46c135
+func(a1, a2) begin
+	(if (a2 = 'viewBounds) then (self.viewBounds := a1.viewBounds))
+end
+@@end

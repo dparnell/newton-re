@@ -1,0 +1,14 @@
+@@ 0x41febd
+func(a1) begin
+	local l1, l2, l3, l4;
+	l3 := DSTVerify((l2 := TimeInSecondsToTime((l1 := (if IsFrame(a1) then TotalSeconds(a1) else a1)))));
+	SetTimeHardware(l1);
+	vars.setTimeSeed := Random(0, 10000000);
+	CallFrameBasedRegistryFns(SetTimeRegistry, [Array: l2]);
+	if (if (l4 := GetRoot()) then l4.viewCObject) then begin
+			l4:Dirty()
+		end;
+	SetNextAlarm();
+	nil
+end
+@@end

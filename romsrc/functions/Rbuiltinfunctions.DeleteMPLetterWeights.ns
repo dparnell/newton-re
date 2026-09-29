@@ -1,0 +1,6 @@
+@@ 0x6286e9
+func() begin
+	local l1;
+	(if (l1 := GetTaggedEntry("LetterWeights")) then EntryRemoveFromSoup(l1))
+end
+@@end

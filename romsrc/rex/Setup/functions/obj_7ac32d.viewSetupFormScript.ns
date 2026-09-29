@@ -1,0 +1,13 @@
+@@ 0x7ac4d5
+func() begin
+	local l1;
+	if StrFilled(fPersona.country) then begin
+			initialSpot := fPersona.country
+		end else begin
+			if (if (l1 := GetCountryEntry(GetUserConfig('countrySlot))) then (Length(l1) > 0)) then begin
+					initialSpot := l1[0].name
+				end
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

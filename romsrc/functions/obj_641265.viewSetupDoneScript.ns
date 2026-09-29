@@ -1,0 +1,6 @@
+@@ 0x5a92dd
+func() begin
+	self:GrabCaret();
+	(if (if (if (if (auto := GetDictionary(36)) then auto.count) then (auto.count > 0)) then GetRoot().AutoAdd) then AddDeferredSend(GetRoot().AutoAdd, 'Open, [Array: ]))
+end
+@@end

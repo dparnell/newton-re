@@ -1,0 +1,9 @@
+@@ 0x59c3a5
+func() begin
+	local l1;
+	(if target.setup then begin
+			l1 := GetRoot().(target.setup.app);
+			call l1.(target.setup.path) with (fields, target.arg)
+		end)
+end
+@@end

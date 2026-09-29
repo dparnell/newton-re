@@ -1,0 +1,16 @@
+@@ 0x478fa9
+func() begin
+	if auxUp then begin
+			auxUp:Close()
+		end;
+	if notesUp then begin
+			notesSlip:Close()
+		end;
+	if optionsUp then begin
+			callOptionsSlip:Close()
+		end;
+	auxUp := nil;
+	notesUp := nil;
+	(optionsUp := nil)
+end
+@@end

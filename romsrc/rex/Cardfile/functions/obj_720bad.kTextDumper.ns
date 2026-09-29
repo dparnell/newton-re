@@ -1,0 +1,24 @@
+@@ 0x735c21
+func(a1, a2, a3, a4) begin
+	if (l1 := GetRoot().cardfile:MakeDataPaths(a3, a2.checkPaths, a2.stringData)) then begin
+			local l1;
+			local l2;
+			local l3;
+			l3 := (foreach l4 in l1 collect a1.(l4));
+			if a2.formatFunc then begin
+					l2 := a2:formatFunc(l3)
+				end else begin
+					l2 := ParamStr(a2.format, l3)
+				end;
+			TrimString(l2)
+		end;
+	if (if l2 then StrFilled(l2)) then begin
+			if a4 then begin
+					a4 := Stringer([Array: a4, "\n", l2])
+				end else begin
+					a4 := l2
+				end
+		end;
+	a4
+end
+@@end

@@ -1,0 +1,11 @@
+@@ 0x42e2a1
+func() begin
+	if insert then begin
+			self:CloseEdit(insert)
+		end;
+	(if keys then begin
+			keys:Close();
+			(keys := nil)
+		end)
+end
+@@end

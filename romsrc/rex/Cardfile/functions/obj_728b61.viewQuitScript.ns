@@ -1,0 +1,6 @@
+@@ 0x728d51
+func() begin
+	inherited:viewQuitScript();
+	(if (if (not StrFilled(target.(path))) then (target.class = 'owner)) then (target.(mailpassword.path) := nil))
+end
+@@end

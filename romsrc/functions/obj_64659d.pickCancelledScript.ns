@@ -1,0 +1,8 @@
+@@ 0x431485
+func() begin
+	self:hilite(nil);
+	items := nil;
+	auxItems := nil;
+	(popUpView := nil)
+end
+@@end

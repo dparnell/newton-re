@@ -1,0 +1,11 @@
+@@ 0x797b45 names
+func(aNewOne) begin
+	if (selectedDates[0] < ((Time() div 1440) * 1440)) then begin
+			aNewOne.mtgDone := true
+		end;
+	aNewOne.mtgPriority := 3;
+	inherited:viewAddChildScript(aNewOne);
+	lastTopic := (Length(topics) - 1);
+	self:CalculateScrollRects()
+end
+@@end

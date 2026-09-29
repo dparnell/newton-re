@@ -1,0 +1,12 @@
+@@ 0x5a4021
+func(a1) begin
+	if (if GetUserConfig('mailautodisconnect) then (GetRoot().iobox:NumItemsToSend(GetRoot().mailSlip, nil) = 0)) then begin
+			return nil
+		end;
+	GetRoot():SysBeep();
+	GetRoot():SysBeep();
+	GetRoot():SysBeep();
+	GetRoot():SysBeep();
+	GetRoot().iobox:StartSend(self, 'periodic, nil, nil)
+end
+@@end

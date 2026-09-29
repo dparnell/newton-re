@@ -1,0 +1,19 @@
+@@ 0x797485 names
+func() begin
+	if (if todoSlip then Visible(todoSlip)) then begin
+			todoSlip:ApplyAllChanges();
+			self:UpdateMultipleStores(true)
+		end;
+	self:EndFlush();
+	UnRegSoupChange("To Do", 'todo);
+	UnRegSoupChange("To Do List", 'todo);
+	self.viewChildren := nil;
+	RemoveSlot(self, 'masterSoup);
+	self.dataSoup := nil;
+	self.oldTodoSoup := nil;
+	self.target := nil;
+	self.targets := nil;
+	self.repeatTargets := nil;
+	(self.topics := nil)
+end
+@@end

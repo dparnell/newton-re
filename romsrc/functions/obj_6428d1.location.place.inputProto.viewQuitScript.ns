@@ -1,0 +1,6 @@
+@@ 0x48ddd1
+func() begin
+	target.sorton := target.(path);
+	self:StartFlush()
+end
+@@end

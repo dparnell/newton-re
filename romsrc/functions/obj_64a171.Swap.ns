@@ -1,0 +1,12 @@
+@@ 0x5701cd
+func(a1, a2) begin
+	local l1;
+	l1 := table[a1.cardIndex];
+	table[a1.cardIndex] := table[a2.cardIndex];
+	table[a2.cardIndex] := l1;
+	a1:Dirty();
+	a2:Dirty();
+	base:EvalTable();
+	base:AddUndoAction('Swap, [Array: a1, a2])
+end
+@@end

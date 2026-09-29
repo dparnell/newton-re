@@ -1,0 +1,5 @@
+@@ 0x4d9521
+func() begin
+	(self.viewBounds := self:Parent():LocalBox())
+end
+@@end

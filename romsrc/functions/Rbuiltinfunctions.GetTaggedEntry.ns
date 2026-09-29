@@ -1,0 +1,8 @@
+@@ 0x628479
+func(key) begin
+	local l1, l2;
+	(l2 := Query((l1 := GetStores()[0]:GetSoup(@276)), {type: 'index, indexPath: 'tag, startKey: key, validTest: func(a1) begin
+		StrEqual(a1.tag, key)
+	end})):entry()
+end
+@@end

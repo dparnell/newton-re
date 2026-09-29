@@ -1,0 +1,13 @@
+@@ 0x760ebd
+func() begin
+	if Visible(nameInput) then begin
+			SetKeyView(nameInput.entryLine, 9999)
+		end else begin
+			if Visible(passwordInput) then begin
+					SetKeyView(passwordInput.entryLine, 0)
+				end
+		end;
+	inherited:?viewSetupDoneScript();
+	nameInput:ShowHidePasswordInput(nameInput.guestMode)
+end
+@@end

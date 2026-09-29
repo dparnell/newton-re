@@ -1,0 +1,5 @@
+@@ 0x533529
+func() begin
+	(if (if popup then (Length(popup) > 0)) then inherited:?viewSetupDoneScript() else self:Hide())
+end
+@@end

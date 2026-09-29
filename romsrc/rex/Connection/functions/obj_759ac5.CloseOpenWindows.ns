@@ -1,0 +1,14 @@
+@@ 0x75b745
+func(a1) begin
+	l1 := (if (if (if a1 then self.whichConnection) then whichConnection.whichConnectionOpen) then whichConnection);
+	if openWindows then begin
+			local l1;
+			(foreach l2 in Clone(openWindows) do begin
+					if (if l2 then (l2 <> l1)) then begin
+							l2:Close()
+						end
+				end)
+		end;
+	(openWindows := (if l1 then [Array: l1] else [Array: ]))
+end
+@@end

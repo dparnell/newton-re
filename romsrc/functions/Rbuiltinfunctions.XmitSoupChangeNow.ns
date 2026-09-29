@@ -1,0 +1,22 @@
+@@ 0x569e4d
+func(a1, a2, a3, a4) begin
+	l1 := GetRoot();
+	try begin
+			local l1;
+			(for l2 := 0 to (Length(soupNotify) - 2) by 2 do begin
+					if (((l5 := soupNotify[l2]) = 'all) or StrEqual(l5, a1)) then begin
+							if (l6 := l1.(soupNotify[(l2 + 1)])) then begin
+									l6:?SoupChanged(a1)
+								end
+						end
+				end)
+		end onexception |evt.ex| do begin end;
+	local l5;
+	local l6;
+	(foreach l7 in GetSoupChangeCallBacks(a1, nil) do begin
+			try begin
+					call l7 with (a1, a2, a3, a4)
+				end onexception |evt.ex| do begin end
+		end)
+end
+@@end

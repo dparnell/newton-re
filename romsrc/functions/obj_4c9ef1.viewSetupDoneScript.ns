@@ -1,0 +1,5 @@
+@@ 0x4c9eb1
+func() begin
+	(if (not (if fields.coverPage then CoverPageRegistry.(fields.coverPage).hasNotes)) then self:Hide())
+end
+@@end

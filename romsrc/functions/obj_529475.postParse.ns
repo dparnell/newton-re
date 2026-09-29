@@ -1,0 +1,10 @@
+@@ 0x529455
+func() begin
+	local l1, l2, l3;
+	l1 := {givenTime: nil, usualTime: nil, usualValue: nil, currentTime: Time(), hasDate: nil, hasTime: nil};
+	(l3 := (l2 := GetRoot()).(taskSlip)).totMin := self:GetTime(self.when, l1);
+	l3.title := self:SetTitle();
+	l3:Open();
+	l2.assistant:Close()
+end
+@@end

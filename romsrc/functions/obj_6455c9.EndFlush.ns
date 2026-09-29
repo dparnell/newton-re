@@ -1,0 +1,10 @@
+@@ 0x49e481
+func() begin
+	(if entryChanged then begin
+			self:FlushEntry(target);
+			entryChanged := nil;
+			entryDirtied := true;
+			self:BroadcastChange('flush, target)
+		end)
+end
+@@end

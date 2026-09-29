@@ -1,0 +1,79 @@
+@@ 0x4faec5
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8;
+	if Visible(MeetingNotes) then begin
+			MeetingNotes:Close()
+		end;
+	if Visible(ToDoSlip) then begin
+			ToDoSlip:Close()
+		end;
+	l1 := Clone("");
+	l2 := selectedDates[0];
+	l3 := true;
+	if ((a1 <= 1) or (a1 > 6)) then begin
+			l2 := (l2 + startTime)
+		end;
+	if (a1 = 0) then begin
+			selectedMeeting := self:AddAppointment(l1, l2, 60, nil, nil)
+		end else begin
+			if (a1 = 1) then begin
+					(selectedMeeting := self:AddAppointment(l1, l2, 60, 'Weekly, nil)).mtgIconType := 'WeeklyMeeting
+				end else begin
+					if (a1 = 2) then begin
+							selectedMeeting := self:AddEvent(l1, l2, nil, nil)
+						end else begin
+							if (a1 = 3) then begin
+									(selectedMeeting := self:AddEvent(l1, l2, 'Daily, nil)).mtgIconType := 'MultiDayEvent
+								end else begin
+									if (a1 = 4) then begin
+											(selectedMeeting := self:AddEvent(l1, l2, 'yearly, nil)).mtgIconType := 'annualEvent
+										end else begin
+											if (a1 = 6) then begin
+													if Visible(DatesOverviewForm) then begin
+															DatesOverviewForm:Close()
+														end;
+													if (if (mainDisplay <> ToDoListView) then (mainDisplay <> AgendaView)) then begin
+															self:ShowToDoList(l2)
+														end;
+													l4 := self:CreateToDoItem(l2, "", nil, nil);
+													isNewToDo := true;
+													if (mainDisplay = AgendaView) then begin
+															if (AgendaView:GetToDoAgendaView() = nil) then begin
+																	AgendaView:RedoChildren()
+																end;
+															AgendaView:GetToDoAgendaView():ToggleTopic(l4)
+														end else begin
+															ToDoListView:ToggleTopic(l4)
+														end;
+													l3 := nil
+												end else begin
+													if (l5 := popup[a1]:newMeeting(l2, base:GlobalBox())) then begin
+															selectedMeeting := l5
+														end else begin
+															l3 := nil;
+															self:redisplayScript()
+														end
+												end
+										end
+								end
+						end
+				end
+		end;
+	if l3 then begin
+			if selectedMeeting.repeatType then begin
+					if (selectedMeeting.viewStationery = 'cribNote) then begin
+							l2 := selectedDates[0]
+						end;
+					selectedMeeting := self:MakeInstanceOfRepeatingMeeting(selectedMeeting, l2);
+					if (a1 = 3) then begin
+							l6 := (((l6 := ((l6 := selectedMeeting.mtgStartDate) - (l6 mod 1440))) + 10080) - 1);
+							self:ChangeMeeting(selectedMeeting, 'mtgStopDate, l6);
+							self:CarefulChange((l8 := EntrySoup((l7 := selectedMeeting.repeatTemplate))), l7, true)
+						end
+				end;
+			isNewMeeting := true;
+			self:OpenMeetingSlip(selectedMeeting, nil, true)
+		end;
+	inherited:pickActionScript(a1)
+end
+@@end

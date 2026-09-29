@@ -1,0 +1,5 @@
+@@ 0x754af5
+func() begin
+	(self.text := resultsText)
+end
+@@end

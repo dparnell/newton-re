@@ -1,0 +1,6 @@
+@@ 0x730ebd
+func(a1, a2) begin
+	local l1;
+	(if (l1 := a1.(a2[0])) then (Length(l1) > 0))
+end
+@@end

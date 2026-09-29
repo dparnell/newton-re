@@ -1,0 +1,11 @@
+@@ 0x461bcd
+func(a1) begin
+	local l1, l2, l3;
+	l1 := Time();
+	l2 := roll.index;
+	l3 := Notifications[l2];
+	self:MarkItemSeen(l2, nil);
+	AddAlarm(Stringer([Array: l1, ":snooze"]), (l1 + a1), [Array: l3.overview, l3.nfText], nil, nil);
+	AddDeferredSend(self, 'Close, nil)
+end
+@@end

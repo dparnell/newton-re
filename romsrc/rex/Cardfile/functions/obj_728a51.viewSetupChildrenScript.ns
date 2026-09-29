@@ -1,0 +1,10 @@
+@@ 0x729355
+func() begin
+	if (target.class = 'owner) then begin
+			stepChildren := saveChildren
+		end else begin
+			stepChildren := [Array: saveChildren[0]]
+		end;
+	inherited:viewSetupChildrenScript()
+end
+@@end

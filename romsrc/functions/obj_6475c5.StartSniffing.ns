@@ -1,0 +1,5 @@
+@@ 0x4d13e5
+func() begin
+	(if userConfiguration.zapAutoReceive then AddDeferredCall(functions.StartIRSniffing, nil))
+end
+@@end

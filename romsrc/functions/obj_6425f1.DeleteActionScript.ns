@@ -1,0 +1,6 @@
+@@ 0x4ddfc5
+func(a1, a2) begin
+	currentForm:?flush();
+	appBase:delete('DoDeleteScript, [Array: appBase.cards:entry()])
+end
+@@end

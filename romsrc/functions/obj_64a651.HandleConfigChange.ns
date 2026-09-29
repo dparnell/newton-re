@@ -1,0 +1,5 @@
+@@ 0x4260e1
+func(a1) begin
+	(if (a1 = 'inputDevice) then self:SetState(fSoundState))
+end
+@@end

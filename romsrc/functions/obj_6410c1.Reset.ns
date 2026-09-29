@@ -1,0 +1,8 @@
+@@ 0x55edbd
+func() begin
+	(if self.isReset then cursor:entry() else begin
+			self.isReset := true;
+			cursor:Reset()
+		end)
+end
+@@end

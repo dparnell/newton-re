@@ -1,0 +1,19 @@
+@@ 0x503c41
+func() begin
+	local l1, l2, l3;
+	l1 := newtMtgStartTime;
+	l2 := newtMtgStopTime;
+	newMtgDate := ((l3 := (newMtgDate - (newMtgDate mod 1440))) + l1);
+	newMtgDuration := (l2 - l1);
+	if (if (selectedMeeting.viewStationery <> 'cribNote) then (newMtgDuration < 30)) then begin
+			newMtgDuration := 30
+		end;
+	(if self:IsNonExceptionRepeatingMeeting(selectedMeeting) then (if needToChangeThisOrFutureOccurrences then self:ChangeThisOrFutureOccurrences()) else begin
+			if (newMtgDate <> selectedMeeting.mtgStartDate) then begin
+					self:UpdateNotesData(selectedMeeting.repeatTemplate, selectedMeeting.mtgStartDate, newMtgDate);
+					self:ChangeMeeting(selectedMeeting, 'mtgStartDate, newMtgDate)
+				end;
+			(if (newMtgDuration <> self:GetMeetingSlot(selectedMeeting, 'mtgDuration)) then self:ChangeMeeting(selectedMeeting, 'mtgDuration, newMtgDuration))
+		end)
+end
+@@end

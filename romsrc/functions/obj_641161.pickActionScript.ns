@@ -1,0 +1,21 @@
+@@ 0x456c15
+func(a1, a2, a3) begin
+	local l1, l2, l3, l4;
+	l1 := a2.popup;
+	l2 := a2.nameRef;
+	l3 := a2.fieldPath;
+	(if (if ((l4 := self:PopVal(l1[a1])) = 'OpenEditor) then (self.OpenEditor or validationFrame)) then begin
+			a2.cryoNameRefData := DeepClone(l2.(l3));
+			l2.(l3) := nil;
+			a2.editPaths := [Array: l3];
+			_selectOnly := true;
+			(if self.OpenEditor then self:OpenEditor(a2, a3, 'edit) else self:DefaultOpenEditor(a2, a3, 'edit))
+		end else begin
+			l2.(l3) := l4;
+			a3:Tapped('select);
+			_tapinfo := nil;
+			_dirtyPaths := nil;
+			(_dirtyValues := nil)
+		end)
+end
+@@end

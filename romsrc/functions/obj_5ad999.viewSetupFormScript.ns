@@ -1,0 +1,5 @@
+@@ 0x5ad8f5
+func() begin
+	(clusterValue := GetLetterHilite())
+end
+@@end

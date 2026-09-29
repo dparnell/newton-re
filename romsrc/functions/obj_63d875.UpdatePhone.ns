@@ -1,0 +1,5 @@
+@@ 0x5a54a1
+func() begin
+	(willDialNum := callOptionsSlip.outNumber.text)
+end
+@@end

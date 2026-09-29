@@ -1,0 +1,5 @@
+@@ 0x468dfd
+func(a1) begin
+	(if a1.targetEntry then EntrySize(a1.targetEntry) else (if IsSoupEntry(a1.target) then EntrySize(a1.target)))
+end
+@@end

@@ -1,0 +1,12 @@
+@@ 0x44fda9
+func() begin
+	(l1 := Clone(self)).metaCursor := Clone(metaCursor);
+	l1.curses := Clone(l1.curses);
+	local l1;
+	(for l2 := 0 to (finalCurse - 1) do begin
+			l1.curses[l2] := Clone(curses[l2]);
+			l1.curses[l2].cursor := l1.curses[l2].cursor:clone()
+		end);
+	l1
+end
+@@end

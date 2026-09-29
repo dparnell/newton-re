@@ -1,0 +1,19 @@
+@@ 0x4d7b71
+func(a1) begin
+	local l1, l2, l3, l4;
+	l1 := "...";
+	l2 := a1.title;
+	l3 := GetEntryDataDef(a1);
+	if (if (not l2) then l3) then begin
+			l2 := l3:StringExtract(a1, 1)
+		end;
+	if (not l2) then begin
+			l2 := "-empty-"
+		end;
+	if (StrLen(l2) >= 30) then begin
+			l2 := Stringer([Array: Substr(l2, 0, 30), l1])
+		end;
+	l4 := ParamStr("The note \"^0\" is too large. Work with another note or create a new one.", [Array: l2]);
+	self:Notify(3, title, l4)
+end
+@@end

@@ -1,0 +1,30 @@
+@@ 0x529fdd
+func() begin
+	local l1, l2, l3, l4, l5, l6;
+	l1 := GetRoot();
+	if (not (l2 := GetGroupTransport(taskType))) then begin
+			l1:Notify(3, "Assist", "No fax transport installed.");
+			return nil
+		end;
+	if ((l4 := self:iaGetTargetInfo((l3 := GetView('viewfrontmostapp)), l2, transportStr)) = nil) then begin
+			l1.assistant:Close();
+			return nil
+		end;
+	if (l5 := GetMatchedEntries('allEntries, self.entries)) then begin
+			self:RemoveGroupsExcept(l5, '|nameRef.fax|)
+		end;
+	(if (if l5 then (Length(l5) = 0)) then l1:Notify(3, "Assist", "Cannot fax a group that is not a Faxes type group.") else begin
+			if ((l2 := l1.(l2):NewItem(l3)) <> nil) then begin
+					PhoneUtility(l2, self);
+					if (not HasSlot(l2, 'dialdirect)) then begin
+							l2.phoneTag := self:GetFaxTags(l2)
+						end;
+					l2.candidates := l5;
+					self:FillPhoneSlip(l2, '|nameRef.fax|);
+					l6 := OpenRoutingSlip(l2, l4);
+					l1.assistant:Close()
+				end;
+			(if (not l6) then l1:Notify(3, "Assist", "There is nothing to fax."))
+		end)
+end
+@@end

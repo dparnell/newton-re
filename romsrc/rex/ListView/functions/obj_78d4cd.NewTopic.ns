@@ -1,0 +1,37 @@
+@@ 0x78ccbd names
+func(aLevel, aText) begin
+	local level, theIndex, height, newTopicFont, theTopic, oldCurTopic, curTopicLevel;
+	oldCurTopic := curTopic;
+	if curTopic then begin
+			curTopicLevel := 1;
+			if topics[curTopic].level then begin
+					curTopicLevel := topics[curTopic].level
+				end;
+			if (if self:IsCollapsed(curTopic) then (aLevel > curTopicLevel)) then begin
+					self:ExpandTopic(curTopic, true)
+				end;
+			theIndex := (curTopic + 1);
+			level := aLevel;
+			(while (if (if (theIndex < nTopics) then (topics[theIndex].level <> nil)) then (topics[theIndex].level > level)) do (theIndex := (theIndex + 1)))
+		end else begin
+			theIndex := nTopics;
+			level := 1
+		end;
+	if self.topicFont then begin
+			newTopicFont := topicFont
+		end else begin
+			newTopicFont := GetInsertionStyle()
+		end;
+	if (if ((height := FontHeight(newTopicFont)) < viewLineSpacing) then ((height + 6) >= viewLineSpacing)) then begin
+			height := viewLineSpacing
+		end;
+	(theTopic := self:AddEmptyTopic(theIndex, level)).text := Clone(aText);
+	theTopic.styles := [Array: StrLen(aText), Clone(newTopicFont)];
+	theTopic.viewBounds := RelBounds((((leftMarkGap + ((level - 1) * 20)) + 20) + rightMarkGap), 0, rightMargin, height);
+	self:UpdateMultipleStores(true);
+	self:RedoTopics();
+	AddProcrastinatedSend(uniqueSymbol, self, 'EnsureVisibleTopic, [Array: theIndex], 0);
+	self:ActiveTopic(theIndex);
+	AddUndoAction('UndoAddTopic, [Array: theIndex, oldCurTopic])
+end
+@@end

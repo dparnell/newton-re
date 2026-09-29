@@ -1,0 +1,25 @@
+@@ 0x4dbea9
+@@const kLiteral_4e7345
+"Timer:AlarmClock"
+@@const kFunction_4e7475
+func() begin
+	local l1;
+	l1 := GetRoot().alarm;
+	SetUserConfig('alarmClockTimer, (l1.timerTime := 0));
+	SetUserConfig('alarmClockTimerOn, nil)
+end
+@@main
+func(a1) begin
+	local l1;
+	l1 := (TimeInSeconds() + (a1 * 60));
+	if (a1 > 0) then begin
+			AddAlarmInSeconds(kLiteral_4e7345, l1, [Array: "Clock", "The minute timer is up"], kFunction_4e7475, nil);
+			SetUserConfig('alarmClockTimerOn, true)
+		end else begin
+			RemoveAlarm(kLiteral_4e7345);
+			SetUserConfig('alarmClockTimerOn, nil)
+		end;
+	self:RedoChildren();
+	SetUserConfig('alarmClockTimer, (timerTime := l1))
+end
+@@end

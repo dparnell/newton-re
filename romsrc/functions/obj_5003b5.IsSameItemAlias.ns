@@ -1,0 +1,6 @@
+@@ 0x50d68d
+func(a1, a2) begin
+	local l1;
+	(if (a1.topic or a2.topic) then (a1.topicID = a2.topicID) else (if IsSameEntry((l1 := (if a1.repeatTemplate then a1.repeatTemplate else a1)), a2.entryAlias) then (a1.mtgStartDate = a2.instanceTime)))
+end
+@@end

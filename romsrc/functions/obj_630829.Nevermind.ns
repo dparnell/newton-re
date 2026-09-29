@@ -1,0 +1,6 @@
+@@ 0x4637e9
+func() begin
+	self:Close();
+	(msgText := nil)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x537ad1
+func() begin
+	EntryRemoveFromSoup(fentry)
+end
+@@end

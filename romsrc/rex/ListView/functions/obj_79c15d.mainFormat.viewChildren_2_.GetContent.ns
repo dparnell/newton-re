@@ -1,0 +1,5 @@
+@@ 0x79be4d names
+func() begin
+	'[Array: "High", "Medium", "Low", "None"][task.mtgPriority]
+end
+@@end

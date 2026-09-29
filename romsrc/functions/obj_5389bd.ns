@@ -1,0 +1,9 @@
+@@ 0x5389bd
+func() begin
+	local l1;
+	(if (l1 := GetRoot().soupervisor) then begin
+			l1:OpenTo(fentry);
+			(if fentry.closeControl then (fentry.closeControl = 'alwaysClose) else GetUserConfig('ExtraAlwaysClose))
+		end)
+end
+@@end

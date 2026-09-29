@@ -1,0 +1,12 @@
+@@ 0x4c22e1
+func() begin
+	if (infoSlip <> nil) then begin
+			infoSlip:Close();
+			infoSlip := nil
+		end;
+	(if (routeSlip <> nil) then begin
+			routeSlip:Close();
+			(routeSlip := nil)
+		end)
+end
+@@end

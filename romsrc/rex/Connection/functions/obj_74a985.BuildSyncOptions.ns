@@ -1,0 +1,46 @@
+@@ 0x74c111
+func() begin
+	l1 := {packages: nil, syncall: true, stores: [Array: ]};
+	protoContext:BuildApplicationList(func() begin
+		endpoint:IdleConnection(true)
+	end);
+	if (not protoContext:ConnectionPrefsRead('neverSyncPackages)) then begin
+			l1.packages := protoContext:ConnectionPrefsRead('backupPackages)
+		end;
+	l2 := protoContext:ConnectionPrefsRead('soupOptions);
+	l3 := [Array: ];
+	if l2 then begin
+			l1.syncall := nil;
+			l4 := protoContext.applications;
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			(foreach l5 in l2 do begin
+					if (l7 := LFetch(l4, l5, 0, '|str=|, '[pathExpr: name])) then begin
+							soups := BMerge(l3, l7.soups, '|str<|, nil, true)
+						end
+				end);
+			if l1.packages then begin
+					BInsert(l3, "Packages", '|str<|, nil, true)
+				end
+		end;
+	local l7;
+	local l8;
+	l8 := (foreach l9 in storeList.selectedItems collect StoreMap[l9]);
+	(foreach l13 in l8 do begin
+			(l15 := protoContext:BuildStoreFrame(l13, nil, true)).soups := [Array: ];
+			l15.signatures := [Array: ];
+			local l15;
+			(foreach l16 in l3 do begin
+					local l18;
+					if (l18 := l13:GetSoup(l16)) then begin
+							AddArraySlot(l15.soups, l16);
+							AddArraySlot(l15.signatures, l18:GetSignature())
+						end
+				end);
+			AddArraySlot(l1.stores, l15)
+		end);
+	l1
+end
+@@end

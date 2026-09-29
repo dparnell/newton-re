@@ -1,0 +1,8 @@
+@@ 0x45a3e5
+func(a1) begin
+	returnKey := a1;
+	base:Dirty();
+	playsound(click);
+	true
+end
+@@end

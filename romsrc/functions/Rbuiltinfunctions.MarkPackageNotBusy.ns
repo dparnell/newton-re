@@ -1,0 +1,10 @@
+@@ 0x55941d
+func(a1) begin
+	local l1;
+	(if (l1 := LSearch(BusyPackages, a1, 0, '|=|, 'pkgRef)) then begin
+			RemoveSlot(BusyPackages, l1);
+			GetVBOStore(a1):MarkNotBusy('_newt);
+			true
+		end)
+end
+@@end

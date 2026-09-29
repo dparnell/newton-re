@@ -1,0 +1,13 @@
+@@ 0x468e7d
+func(a1) begin
+	local l1;
+	if a1.needsResolve then begin
+			if ((l1 := self:ResolveBody(a1)) = nil) then begin
+					return nil
+				end;
+			a1._saveBodyAlias := a1.body;
+			a1.body := l1
+		end;
+	a1
+end
+@@end

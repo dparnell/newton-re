@@ -1,0 +1,5 @@
+@@ 0x5287fd
+func(a1, a2) begin
+	(if (Length(a2.noisewords) <> 0) then (a1.rawtext := GlueStrings(a2.noisewords)) else (a1.rawtext := ScanForWackyName(a2.raw, a2.phrases)))
+end
+@@end

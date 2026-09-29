@@ -1,0 +1,17 @@
+@@ 0x5ab47d
+func() begin
+	local l1, l2, l3;
+	self:GrabCaret();
+	l1 := self:GetWord();
+	(if expandFlag then (if StrFilled(l1) then self:AddWord(l1) else self:ExpandOff()) else begin
+			l2 := true;
+			if StrFilled(l1) then begin
+					l2 := self:AddWord(l1)
+				end;
+			(if l2 then (if selectedEntry then self:ExpandOn(selectedWord) else begin
+						l3 := (if (window:GetNumberEntries() = 0) then "There are no more words to expand." else "Tap on a word in the list above and then tap \u201C\uExpand.\u201D\u");
+						self:Notify(3, notifyTitle, l3)
+					end) else self:SetWord(""))
+		end)
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x4dfe31
+func(a1) begin
+	target.daylight := pop[a1].symbol;
+	self:StartFlush();
+	inherited:pickActionScript(a1)
+end
+@@end

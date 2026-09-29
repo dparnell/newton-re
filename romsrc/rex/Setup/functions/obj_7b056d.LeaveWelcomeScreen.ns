@@ -1,0 +1,5 @@
+@@ 0x7b0c49
+func() begin
+	(if (not CalibrateTablet()) then (if (nil = base:NextPage()) then AddDeferredSend(base, 'Close, nil)))
+end
+@@end

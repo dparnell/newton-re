@@ -1,0 +1,20 @@
+@@ 0x4397c5
+@@const kLiteral_3c5eed
+'{transferMode: 2, penPattern: 0, fillPattern: 5}
+@@main
+func(a1, a2) begin
+	local l1, l2, l3;
+	(if (if (if a1 then (a1 < numItems)) then (a1 >= 0)) then (if (if ((l1 := (a1 * lineHeight)) >= viewOriginY) then (l1 < (viewOriginY + viewHeight))) then (if useMultipleSelections then begin
+					l1 := (l1 - viewOriginY);
+					(if a2 then self:DoDrawing('CopyBits, [Array: CheckOn, 4, l1, 0]) else self:DoDrawing('CopyBits, [Array: CheckOff, 4, l1, 0]))
+				end else (if self:ShowScrollers() then begin
+						l1 := (l1 - viewOriginY);
+						l3 := MakeRegion([Array: (l2 := MakeRect(0, l1, viewWidth, (l1 + lineHeight))), MakeRect((viewWidth + textListScrollers.viewBounds.left), textListScrollers.viewBounds.top, viewWidth, textListScrollers.viewBounds.bottom)]);
+						self:DrawShape(l2, {_proto: kLiteral_3c5eed, clipping: l3})
+					end else begin
+						l1 := (l1 - viewOriginY);
+						l2 := MakeRect(0, l1, viewWidth, (l1 + lineHeight));
+						self:DoDrawing('DrawShape, [Array: l2, kLiteral_3c5eed])
+					end))))
+end
+@@end

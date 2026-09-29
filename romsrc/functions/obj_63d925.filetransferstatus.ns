@@ -1,0 +1,5 @@
+@@ 0x5a41a1
+func(a1, a2) begin
+	self:SetStatus(status, {gauge: a1})
+end
+@@end

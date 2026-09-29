@@ -1,0 +1,6 @@
+@@ 0x523ad9
+func(a1) begin
+	self:Open();
+	Outline:TopicByName(a1)
+end
+@@end

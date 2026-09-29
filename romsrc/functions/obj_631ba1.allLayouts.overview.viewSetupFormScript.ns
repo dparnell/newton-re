@@ -1,0 +1,7 @@
+@@ 0x4ee84d
+func() begin
+	status.menuRightButtons := '[Array: @439, @440, @872];
+	newtAppBase:FileUsedItems();
+	inherited:?viewSetupFormScript()
+end
+@@end

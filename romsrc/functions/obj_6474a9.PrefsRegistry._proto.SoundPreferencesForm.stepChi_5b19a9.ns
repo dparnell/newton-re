@@ -1,0 +1,5 @@
+@@ 0x5b19a9
+func() begin
+	SetUserConfig('penSoundEffects, viewValue)
+end
+@@end

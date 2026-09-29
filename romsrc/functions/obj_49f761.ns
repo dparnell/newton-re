@@ -1,0 +1,13 @@
+@@ 0x49f761
+func() begin
+	local l1, l2, l3;
+	l1 := {none: GetRoot().iobox.hideFilter};
+	(l2 := Clone(soupQuery)).tagspec := l1;
+	self:FolderTag(l2);
+	l3 := (if (if storesFilter then storesFilter:IsValid()) then theSoup:GetMember(storesFilter) else begin
+			storesFilter := nil;
+			theSoup
+		end);
+	(theCursor := l3:Query(l2))
+end
+@@end

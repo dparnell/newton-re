@@ -1,0 +1,9 @@
+@@ 0x64288d
+func(a1) begin
+	(try begin
+			a1:SetStatus('vBarber, '{barber: true})
+		end onexception |evt.ex.cancel| do begin
+			Rethrow()
+		end)
+end
+@@end

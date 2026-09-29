@@ -1,0 +1,20 @@
+@@ 0x519405
+func(a1) begin
+	local l1;
+	l1 := "";
+	if a1 then begin
+			if (if StrFilled(a1.last) then StrFilled(a1.first)) then begin
+					l1 := Stringer([Array: a1.first, " ", a1.last])
+				end else begin
+					if StrFilled(a1.first) then begin
+							l1 := a1.first
+						end else begin
+							if StrFilled(a1.last) then begin
+									l1 := a1.last
+								end
+						end
+				end
+		end;
+	l1
+end
+@@end

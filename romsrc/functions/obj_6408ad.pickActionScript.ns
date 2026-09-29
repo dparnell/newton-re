@@ -1,0 +1,34 @@
+@@ 0x466715
+func(a1) begin
+	local l1, l2, l3;
+	if popupForm then begin
+			ClosedEntryForm(popupForm)
+		end;
+	try begin
+			if HasPath(actionList[a1], 'routeScript) then begin
+					if (ClassOf((l1 := actionList[a1].routeScript)) = 'symbol) then begin
+							if (l2 := actionList[a1].appSymbol) then begin
+									l2 := GetRoot().(l2)
+								end;
+							if (l2 = nil) then begin
+									l2 := self
+								end;
+							Perform(l2, l1, [Array: targetInfo.target, targetInfo.targetView])
+						end else begin
+							call l1 with (targetInfo.target, targetInfo.targetView)
+						end
+				end else begin
+					if (OpenRoutingSlip((l3 := actionList[a1]:NewItem(self)), targetInfo) = nil) then begin
+							GetItemTransport(l3):?MissingTarget(nil)
+						end
+				end
+		end onexception |evt.ex| do begin
+			self:hilite(nil);
+			Rethrow()
+		end;
+	actionList := nil;
+	popupForm := nil;
+	targetInfo := nil;
+	self:hilite(nil)
+end
+@@end

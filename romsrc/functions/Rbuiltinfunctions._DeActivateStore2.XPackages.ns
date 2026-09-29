@@ -1,0 +1,11 @@
+@@ 0x558f8d
+func(a1) begin
+	(foreach l1 in ActivePackageList do begin
+			try begin
+					if (GetVBOStore(l1) = a1) then begin
+							DeActivatePackage(l1)
+						end
+				end onexception |evt.ex| do begin end
+		end)
+end
+@@end

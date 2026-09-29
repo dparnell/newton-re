@@ -1,0 +1,38 @@
+@@ 0x55a85d
+func(pieceArray, a2) begin
+	local destSoup;
+	if GetPackageEntry((l1 := pieceArray[0].packageName), a2) then begin
+			Throw('|evt.ex|, -10402)
+		end;
+	l2 := 0;
+	l3 := 0;
+	l4 := true;
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	(foreach l5 in pieceArray do begin
+			if (not StrEqual(l1, l5.packageName)) then begin
+					l4 := nil;
+					break
+				end else begin
+					if (if SetContains(l5._tagList, '_package) then IsVBO(l5.pkgRef)) then begin
+							l2 := (l2 + 1)
+						end else begin
+							if SetContains(l5._tagList, '_scriptIcon) then begin
+									l3 := (l3 + 1)
+								end
+						end
+				end
+		end);
+	if (not (if l4 then ((l2 = 1) or (l3 = Length(pieceArray))))) then begin
+			Throw('|evt.ex|, -10401)
+		end;
+	destSoup := GetUnionSoupAlways("Packages"):GetMember(a2);
+	a2:AtomicAction(func() begin
+		(foreach l1 in pieceArray do begin
+				destSoup:AddFlushed(l1)
+			end)
+	end)
+end
+@@end

@@ -1,0 +1,15 @@
+@@ 0x478f69
+func() begin
+	(if firstTime then begin
+			self:SetupBounds(0, nil);
+			auxUp := nil;
+			notesUp := nil;
+			optionsUp := nil;
+			firstTime := nil;
+			SetKeyView(self, 0);
+			AddDelayedCall(func() begin
+				base:AnimateIndent()
+			end, nil, 0)
+		end)
+end
+@@end

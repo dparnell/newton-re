@@ -1,0 +1,15 @@
+@@ 0x435d25
+func() begin
+	local l1;
+	if romOnly then begin
+			return realCurs:Next()
+		end;
+	if (((not (l1 := self:entry())) or (not l1.kind)) or (l1.kind = 'Add)) then begin
+			l1 := realCurs:Next()
+		end else begin
+			l1 := realCurs:move(2)
+		end;
+	(while (if l1 then (l1.kind = 'delete)) do (l1 := realCurs:move(2)));
+	l1
+end
+@@end

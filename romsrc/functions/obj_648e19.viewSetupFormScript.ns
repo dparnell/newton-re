@@ -1,0 +1,28 @@
+@@ 0x4c6235
+func() begin
+	local l1;
+	printView := self;
+	coverForm := nil;
+	self.viewBounds := Clone(fields.printerPageBounds);
+	target := GetTargetFromEntry(fields);
+	usingCoverPage := (if (not (fields.coverPage = nil)) then (not _counterForm));
+	if (if (not (l1 := (if fields.fromRef then ResolveEntryAlias(fields.fromRef)))) then userConfiguration.currentPersona) then begin
+			l1 := ResolveEntryAlias(userConfiguration.currentPersona)
+		end;
+	fromFrame := {};
+	if l1 then begin
+			SetPersona(l1, fromFrame)
+		end;
+	(if ((theFormat := GetCurrentFormat(fields)) = nil) then self:Notify(3, "Print", "The print format for this item is missing") else begin
+			theFormat := {_proto: theFormat};
+			theFormat:?formatInitScript(fields, target);
+			if (if fields.faxResolution then (not _counterForm)) then begin
+					fields.pageCount := theFormat:?CountPages(fields, target);
+					if fields.coverPage then begin
+							fields.pageCount := (fields.pageCount + 1)
+						end
+				end;
+			(fields.pageNumber := 1)
+		end)
+end
+@@end

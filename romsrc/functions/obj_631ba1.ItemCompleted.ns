@@ -1,0 +1,7 @@
+@@ 0x4ed3a5
+func(a1, a2) begin
+	self:DeactivateCall(a1);
+	self:AddItem('calls, a1, 'complete);
+	(if viewCObject then layout:Retarget(true))
+end
+@@end

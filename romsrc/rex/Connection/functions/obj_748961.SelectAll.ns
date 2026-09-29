@@ -1,0 +1,11 @@
+@@ 0x74a3b9
+func(a1) begin
+	l2 := Array((l1 := Length(a1.listItems)), nil);
+	local l1;
+	local l2;
+	(for l3 := 0 to (l1 - 1) do begin
+			l2[l3] := l3
+		end);
+	(a1.selectedItems := l2)
+end
+@@end

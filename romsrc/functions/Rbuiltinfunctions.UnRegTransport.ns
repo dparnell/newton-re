@@ -1,0 +1,6 @@
+@@ 0x480181
+func(a1) begin
+	SetRemove(transports, a1);
+	RemoveSlot(GetRoot(), a1)
+end
+@@end

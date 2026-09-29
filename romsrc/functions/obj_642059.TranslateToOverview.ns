@@ -1,0 +1,50 @@
+@@ 0x460381
+@@const kROM_556
+@556
+@@main
+func(a1) begin
+	local l1, l2, l3;
+	l1 := "Newton";
+	if ((l2 := ((a1 div 1000) * 1000)) = -12000) then begin
+			l1 := "AppleTalk"
+		end else begin
+			if ((((l2 = -18000) or (l2 = -16000)) or (l2 = -26000)) or (l2 = -36000)) then begin
+					l1 := "Communications"
+				end else begin
+					if (l2 = -22000) then begin
+							l1 := "Fax"
+						end else begin
+							if (l2 = -24000) then begin
+									l1 := "Modem"
+								end else begin
+									if (l2 = -28000) then begin
+											l1 := "Dock"
+										end else begin
+											if (l2 = -38000) then begin
+													l1 := "Beaming"
+												end else begin
+													if (l2 = -40000) then begin
+															l1 := "Enhancement"
+														end else begin
+															if (l2 = -42000) then begin
+																	l1 := "Mail"
+																end
+														end
+												end
+										end
+								end
+						end
+				end
+		end;
+	if (l2 = -10000) then begin
+			if ((l3 := ((a1 div 100) * 100)) = -10500) then begin
+					l1 := kROM_556
+				end else begin
+					if (l3 = -10600) then begin
+							l1 := "Storage"
+						end
+				end
+		end;
+	l1
+end
+@@end

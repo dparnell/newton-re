@@ -1,0 +1,6 @@
+@@ 0x56fd81
+func(a1, a2, a3) begin
+	base:Swap(self, a2.dragee);
+	true
+end
+@@end

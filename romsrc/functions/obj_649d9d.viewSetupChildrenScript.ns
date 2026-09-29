@@ -1,0 +1,55 @@
+@@ 0x4c1ce5
+func() begin
+	nextEntry := 0;
+	if scrolling then begin
+			scrolling := nil;
+			return nil
+		end;
+	target := (theEntry := (l1 := dataCursor:entry()));
+	transport := GetItemTransport((fields := theEntry));
+	activeFormat := GetCurrentFormat(fields);
+	entryViewDefs := nil;
+	routeScripts := Clone(base.routeScripts);
+	entries := (if l1 then [Array: l1] else [Array: ]);
+	if (if (l3 := DataClassOf(l1)) then (l2 := Clone(GetDataViews(l3)))) then begin
+			l4 := 'default;
+			if (if l1 then l1.dataView) then begin
+					l4 := l1.dataView
+				end;
+			if transport then begin
+					if (l5 := transport:?IOBoxExtensions(l1, self:GetTargetFromEntry(l1), l2, routeScripts)) then begin
+							l4 := l5
+						end
+				end;
+			currentViewSymbol := nil;
+			if (if (l6 := l2.(l4)) then (l6.protection <> 'private)) then begin
+					currentViewSymbol := l4
+				end else begin
+					local l1;
+					local l2;
+					local l3;
+					local l4;
+					local l5;
+					(foreach l3, l6 in l2 do begin
+							if (if ((l6.type = 'editor) or (l6.type = 'viewer)) then ((l6.protection = 'public) or (l6.protection = nil))) then begin
+									currentViewSymbol := l3;
+									break
+								end
+						end)
+				end;
+			if currentViewSymbol then begin
+					entryViewDefs := [Array: l2.(currentViewSymbol)]
+				end
+		end else begin
+			entryViewDefs := nil
+		end;
+	viewDefFrame := l2;
+	if transportheader.viewCObject then begin
+			transportheader:RedoChildren()
+		end;
+	if itemStatus.viewCObject then begin
+			itemStatus:RedoChildren()
+		end;
+	(if (l1 = nil) then AddDeferredSend(newtAppBase, 'ShowLayout, [Array: 'overview]))
+end
+@@end

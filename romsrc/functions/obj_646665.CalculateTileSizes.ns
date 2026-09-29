@@ -1,0 +1,11 @@
+@@ 0x45dcd9
+func() begin
+	local l1;
+	self.direction := '{horizontal: right, vertical: bottom}.(orientation);
+	l1 := self:LocalBox();
+	if (not tileSize) then begin
+			self.tileSize := l1.('{right: bottom, bottom: right}.(direction))
+		end;
+	(self.maxTiles := (l1.(direction) div tileSize))
+end
+@@end

@@ -1,0 +1,19 @@
+@@ 0x79ee1d names
+func() begin
+	local newSpec;
+	(if (savedReminderIndex = 0) then begin
+			if HasPath(task, 'remindForDate) then begin
+					RemoveSlot(task, 'remindForDate)
+				end;
+			(if (if HasPath(task, 'repeatInfo) then task.repeatInfo.reminderInterval) then RemoveSlot(task.repeatInfo, 'reminderInterval))
+		end else (if (newSpec := repeatingView:GetRepeatSpec()) then (if HasPath(task, 'remindForDate) then RemoveSlot(task, 'remindForDate)) else (if (if HasPath(task, 'remindForDate) then ((newMtgDate - (1440 * savedReminderIndex)) <= ((Time() div 1440) * 1440))) then begin
+					RemoveSlot(task, 'remindForDate);
+					savedReminderIndex := 0;
+					originalMtgDate := nominalDate;
+					(nominalDate := nil)
+				end else begin
+					task.remindForDate := newMtgDate;
+					(newMtgDate := (newMtgDate - (1440 * savedReminderIndex)))
+				end)))
+end
+@@end

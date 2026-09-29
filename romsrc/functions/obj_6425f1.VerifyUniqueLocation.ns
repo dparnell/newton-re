@@ -1,0 +1,15 @@
+@@ 0x4de2a1
+func(a1) begin
+	local l1, l2, l3;
+	l1 := GetLocationSoup(@251);
+	l2 := l1:Query('{type: index, indexPath: [Array: longitude, latitude]});
+	l2:GotoKey([Array: a1.longitude, a1.latitude]);
+	l3 := l2:entry();
+	(while (if l3 then (a1.latitude = l3.latitude)) do begin
+			if (a1 <> l3) then begin
+					a1.latitude := (a1.latitude + 1)
+				end;
+			(l3 := l2:Next())
+		end)
+end
+@@end

@@ -1,0 +1,11 @@
+@@ 0x51f8bd
+func() begin
+	if (copperfield.panelOpen = nil) then begin
+			copperfield.panelOpen := true;
+			pgButWidth := max((StrFontWidth(Stringer([Array: "p.", SPrintObject(page)]), @226.viewFont) + 6), 30)
+		end else begin
+			copperfield.panelOpen := nil
+		end;
+	self:RedoChildren()
+end
+@@end

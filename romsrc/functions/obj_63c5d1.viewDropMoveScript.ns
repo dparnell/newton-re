@@ -1,0 +1,21 @@
+@@ 0x4fca65
+func(a1, a2, a3, a4) begin
+	local l1, l2, l3, l4, l5, l6, l7;
+	if ((((l2 := (l1 := (if a1.realData then a1.realData else a1)).viewStationery) = 'meeting) or (l2 = 'RepeatingMeeting)) or (l2 = 'exceptionMeeting)) then begin
+			a1:SetMeetingBounds((l5 := OffsetRect((l4 := a1.viewBounds), a2.x, a2.y)), l4);
+			l3 := true
+		end else begin
+			if l1.mtgStartDate then begin
+					l6 := (a1.viewBounds.top + a2.y);
+					l7 := (((l7 := ((l7 := ((l7 := l1.mtgStartDate) - (l7 mod 1440))) + ((l6 * 1440) div 768))) + 8) - ((l7 + 8) mod 15));
+					l1.mtgStartDate := l7;
+					l3 := nil
+				end else begin
+					l3 := nil
+				end
+		end;
+	DayTable:calculateScrollRects();
+	upDownScroller:AdjustArrows();
+	l3
+end
+@@end

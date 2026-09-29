@@ -1,0 +1,6 @@
+@@ 0x550f29
+func(a1) begin
+	InkOffUnHobbled(a1);
+	inherited:?viewClickScript(a1)
+end
+@@end

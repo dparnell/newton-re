@@ -1,0 +1,24 @@
+@@ 0x4a8cd1
+func(a1, a2) begin
+	local l1, l2, l3;
+	if (not (l1 := _viewdefs)) then begin
+			return nil
+		end;
+	if (not (l2 := l1.(a1))) then begin
+			return nil
+		end;
+	if (not (l3 := l2.(a2))) then begin
+			return nil
+		end;
+	if (Length(l2) = 1) then begin
+			RemoveSlot(l1, a1)
+		end else begin
+			if IsReadOnly(l2) then begin
+					l1.(a1) := Clone(l1.(a1))
+				end;
+			RemoveSlot(l2, a2)
+		end;
+	CallFrameBasedRegistryFns(StationeryChangeRegistry, [Array: 'remove, 'viewDef, a1, a2]);
+	l3
+end
+@@end

@@ -1,0 +1,15 @@
+@@ 0x54a97d
+func(a1) begin
+	local l1, l2, l3;
+	if ((a1.target = nil) or (a1.target.package = nil)) then begin
+			return nil
+		end;
+	l2 := GetPackageEntry((l1 := GetPkgRefInfo(a1.target.package)).title, l1.store);
+	if l1 then begin
+			if (l3 := MakeEntryAlias(l2)) then begin
+					return {class: 'packageFrame, _ioAlias: l3}
+				end
+		end;
+	nil
+end
+@@end

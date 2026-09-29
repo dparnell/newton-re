@@ -1,0 +1,20 @@
+@@ 0x45d151
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6;
+	if (l1 := GetShapeInfo(a1)).bitsBounds then begin
+			l2 := (l1.bitsBounds.right - l1.bitsBounds.left);
+			l3 := (l1.bitsBounds.bottom - l1.bitsBounds.top)
+		end else begin
+			l2 := (l1.bounds.right - l1.bounds.left);
+			l3 := (l1.bounds.bottom - l1.bounds.top)
+		end;
+	l4 := 1;
+	l5 := 1;
+	if l1.resolution then begin
+			l4 := l1.resolution[0];
+			l5 := l1.resolution[1]
+		end;
+	l6 := max(l4, l5);
+	RelBounds(0, 0, ((l2 * l6) div l4), ((l3 * l6) div l5))
+end
+@@end

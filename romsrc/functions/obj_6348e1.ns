@@ -1,0 +1,10 @@
+@@ 0x6348e1
+func(a1, a2) begin
+	local l1;
+	l1 := self:RemoveIndex(a1);
+	if a2 then begin
+			XmitSoupChange(self:GetName(), a2, 'soupIndexRemoved, {soup: self, indexPath: a1})
+		end;
+	l1
+end
+@@end

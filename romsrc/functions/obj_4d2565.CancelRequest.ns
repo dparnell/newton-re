@@ -1,0 +1,8 @@
+@@ 0x4d2419
+func(a1) begin
+	if (ep exists) then begin
+			self:BeamCancel(ep)
+		end;
+	(not (ep exists))
+end
+@@end

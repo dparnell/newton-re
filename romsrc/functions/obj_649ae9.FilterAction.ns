@@ -1,0 +1,10 @@
+@@ 0x5266c1
+func(a1, a2, a3, a4) begin
+	(foreach l1, l2 in a1 do begin
+			if (isa(l2, a4) <> nil) then begin
+					a3 := FilterStrings(a2[l1], a3)
+				end
+		end);
+	(if (Length(a3) = 0) then return nil else return a3)
+end
+@@end

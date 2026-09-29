@@ -1,0 +1,13 @@
+@@ 0x535689
+func(a1) begin
+	(if (status = 'Connecting) then begin
+			abortCall := true;
+			nil
+		end else begin
+			abortCall := nil;
+			self:ItemCompleted(currentItem, nil, a1);
+			self:Shutdown();
+			true
+		end)
+end
+@@end

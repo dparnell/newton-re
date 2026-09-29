@@ -1,0 +1,33 @@
+@@ 0x4af59d
+func(a1) begin
+	local l1, l2;
+	l1 := true;
+	l2 := dataCursor;
+	if (if (a1 <> 0) then l2) then begin
+			if (not l2:move(a1)) then begin
+					l1 := nil;
+					if ((scrollingEndBehavior = 'beepAndWrap) or (scrollingEndBehavior = 'beepAndStop)) then begin
+							playsound(@85);
+							Sleep(15);
+							playsound(@85)
+						end;
+					if ((scrollingEndBehavior = 'stop) or (scrollingEndBehavior = 'beepAndStop)) then begin
+							if (a1 > 0) then begin
+									l2:prev()
+								end else begin
+									l2:Next()
+								end
+						end else begin
+							if ((scrollingEndBehavior = 'wrap) or (scrollingEndBehavior = 'beepAndWrap)) then begin
+									if (a1 > 0) then begin
+											l2:Reset()
+										end else begin
+											l2:ResetToEnd()
+										end
+								end
+						end
+				end
+		end;
+	l1
+end
+@@end

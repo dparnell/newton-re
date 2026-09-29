@@ -1,0 +1,5 @@
+@@ 0x79b50d names
+func() begin
+	cursor:Reset()
+end
+@@end

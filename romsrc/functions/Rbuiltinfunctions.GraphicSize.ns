@@ -1,0 +1,7 @@
+@@ 0x3c5761
+func(a1) begin
+	local l1;
+	l1 := GraphicBounds(a1);
+	SetBounds(0, 0, (l1.right - l1.left), (l1.bottom - l1.top))
+end
+@@end

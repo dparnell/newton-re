@@ -1,0 +1,6 @@
+@@ 0x5b615d
+func() begin
+	local l1;
+	(if (l1 := GetRoot().correct).viewCObject then l1:Close())
+end
+@@end

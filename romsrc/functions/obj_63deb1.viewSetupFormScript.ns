@@ -1,0 +1,6 @@
+@@ 0x4ad935
+func() begin
+	newtAppBase.filterBar := self;
+	inherited:?viewSetupFormScript()
+end
+@@end

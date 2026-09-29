@@ -1,0 +1,8 @@
+@@ 0x4963b1
+@@const kROM_576
+@576
+@@main
+func() begin
+	(if (not openBackupPrefsSlip) then kROM_576:New(self:Parent()) else openBackupPrefsSlip:Close())
+end
+@@end

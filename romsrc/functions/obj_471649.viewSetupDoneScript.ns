@@ -1,0 +1,6 @@
+@@ 0x4715fd
+func() begin
+	scrollView := theZoneTable;
+	inherited:?viewSetupDoneScript()
+end
+@@end

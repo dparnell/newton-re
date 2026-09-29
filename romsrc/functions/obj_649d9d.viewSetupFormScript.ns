@@ -1,0 +1,14 @@
+@@ 0x4c1cb9
+func() begin
+	mastersoupSlot := currentSoupSymbol;
+	masterSoup := allSoups.(mastersoupSlot);
+	inherited:?viewSetupFormScript();
+	transport := GetItemTransport((fields := dataCursor:entry()));
+	activeFormat := GetCurrentFormat(fields);
+	theEntry := nil;
+	nextScrollEntry := dataCursor:Next();
+	dataCursor:Goto(fields);
+	prevScrollEntry := dataCursor:prev();
+	dataCursor:Goto(fields)
+end
+@@end

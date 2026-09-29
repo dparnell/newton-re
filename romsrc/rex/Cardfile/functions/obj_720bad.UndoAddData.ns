@@ -1,0 +1,9 @@
+@@ 0x735ae5
+func(a1, a2) begin
+	local l1;
+	l1 := EntryStore(a1);
+	layout:KillEntry(a1);
+	layout:newEntry(a2, true, l1);
+	true
+end
+@@end

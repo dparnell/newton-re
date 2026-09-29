@@ -1,0 +1,11 @@
+@@ 0x595945
+func() begin
+	(if eworld then begin
+			self:?LogoutScript();
+			eworld.connected := nil;
+			self:output("LO", nil, nil);
+			RemoveSlot(self, 'curAccount);
+			self:LogoutDone()
+		end)
+end
+@@end

@@ -1,0 +1,30 @@
+@@ 0x52eb95
+@@const kFunction_52e295
+func(a1, a2, a3) begin
+	a1:ReturnOption(a2, a3)
+end
+@@main
+func(command, stringOrBool, a3) begin
+	local l1, l2, l3, l4, l5;
+	if (if (l1 := (if (stringOrBool <> 'ignore) then ((if (not IsImmediate(stringOrBool)) then StrFilled(stringOrBool)) or (ClassOf(stringOrBool) = 'char)))) then (ClassOf(stringOrBool) = 'char)) then begin
+			stringOrBool := Stringer([Array: "", stringOrBool])
+		end;
+	(if (currentDevice = nil) then (if l1 then (if (not a3) then self:SpeakerOption(command, stringOrBool, 0, nil) else AddDeferredCall(func() begin
+					self:SpeakerOption(command, stringOrBool, 0, true)
+				end, nil)) else self:SpeakerOptionDone(command, nil, a3)) else (if (currentDevice <> nil) then begin
+				l2 := {label: command, type: 'option, opCode: 512};
+				if (if (stringOrBool <> 'ignore) then IsImmediate(stringOrBool)) then begin
+						l2.data := {arglist: [Array: stringOrBool], typelist: [Array: 'struct, 'boolean]}
+					end;
+				l3 := nil;
+				if a3 then begin
+						l3 := {async: true, completionscript: kFunction_52e295}
+					end;
+				if l1 then begin
+						l2 := [Array: l2, MakePhoneOption(stringOrBool)]
+					end;
+				l4 := self:option(l2, l3);
+				(if (if (not a3) then ((l5 := self:CheckOptionResult(l4)) <> nil)) then Throw('|evt.ex.comm|, l5.result))
+			end))
+end
+@@end

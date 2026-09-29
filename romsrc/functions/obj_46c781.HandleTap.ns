@@ -1,0 +1,24 @@
+@@ 0x46c655
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6;
+	l1 := StrokeBounds(a1);
+	l2 := self:GlobalBox();
+	AddArraySlot((popChars := [Array: ]), {item: "Recognize", code: 0});
+	AddArraySlot(popChars, {item: "Delete", code: 1, unit: a1});
+	if (l3 := GetDynamicValue((rc := correct.refCon).form, 'text, 'string)) then begin
+			if ((l4 := rc.wordOffset) > 0) then begin
+					if (if (if (l5 := ScanPrevWordEnd(l3, (l4 - 1), 0)) then (l5 > 0)) then IsInk(l3[(l5 - 1)])) then begin
+							l6 := (l4 - l5);
+							AddArraySlot(popChars, {item: "Join Left", code: 3, left: (cText.wordLeft - l6), right: cText.wordLeft})
+						end
+				end;
+			l4 := (rc.wordOffset + rc.wordLength);
+			if (if (l5 := ScanNextWord(l3, l4, StrLen(l3))) then IsInk(l3[l5])) then begin
+					l6 := (l5 - l4);
+					AddArraySlot(popChars, {item: "Join Right", code: 2, left: cText.wordRight, right: (cText.wordRight + l6)})
+				end
+		end;
+	DoPopup(popChars, (l1.right - l2.left), (l1.top - l2.top), self);
+	true
+end
+@@end

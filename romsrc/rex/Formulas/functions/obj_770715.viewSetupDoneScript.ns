@@ -1,0 +1,6 @@
+@@ 0x770839
+func() begin
+	inherited:?viewSetupDoneScript();
+	SetKeyView(self.value.value, 9999)
+end
+@@end

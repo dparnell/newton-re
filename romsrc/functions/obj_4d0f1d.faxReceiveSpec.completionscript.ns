@@ -1,0 +1,8 @@
+@@ 0x4cffb1
+func(a1, a2, a3) begin
+	(if (not a1:ignoreError(a3)) then begin
+			a1:CommitSession(a3);
+			a1:DoDisconnect(nil)
+		end)
+end
+@@end

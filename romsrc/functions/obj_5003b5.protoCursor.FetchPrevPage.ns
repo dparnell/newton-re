@@ -1,0 +1,75 @@
+@@ 0x50e871
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11, l12, l13, l14, l15, l16;
+	atBeginningOfCursor := nil;
+	if a1 then begin
+			l1 := a1.mtgStartDate
+		end else begin
+			if calendar:IsDisplayingMeetings() then begin
+					l2 := calendar:FindLastAppointmentDate(536870911)
+				end;
+			if calendar:IsDisplayingToDoItems() then begin
+					l3 := calendar.ToDoListView:lastToDoDate(536870911)
+				end;
+			l1 := (if (if l2 then (not l3)) then l2 else (if (if (not l2) then l3) then l3 else (if (if l2 then l3) then max(l2, l3))))
+		end;
+	if (not l1) then begin
+			atBeginningOfCursor := true;
+			return nil
+		end;
+	l4 := [Array: ];
+	l5 := 0;
+	l6 := true;
+	l8 := ((l8 := ((l7 := (l1 + 1)) - 10080)) - (l8 mod 1440));
+	(while ((Length(l4) - l5) < maxNumberPerPage) do (if (l9 := self:FetchItems(l8, l7)) then begin
+				if (if l6 then a1) then begin
+						if (not (l10 := LSearch(l9, a1, 0, IsSameItem, nil))) then begin
+								l10 := (Length(l9) - 1)
+							end;
+						l5 := (Length(l9) - l10)
+					end;
+				l6 := nil;
+				ArrayMunger(l4, 0, 0, l9, 0, nil);
+				(l8 := ((l7 := l8) - 10080))
+			end else begin
+				l11 := 0;
+				l12 := 0;
+				if calendar:IsDisplayingMeetings() then begin
+						l11 := calendar:FindLastAppointmentDate(l8)
+					end;
+				if calendar:IsDisplayingToDoItems() then begin
+						if ((l12 := calendar.ToDoListView:?lastToDoDate(l8)) = nil) then begin
+								l12 := 0
+							end
+					end;
+				(if ((l13 := max(l11, l12)) > 0) then (l8 := ((l8 := ((l7 := (l13 + 1)) - 10080)) - (l8 mod 1440))) else begin
+						atBeginningOfCursor := true;
+						break
+					end)
+			end));
+	if a1 then begin
+			ArrayRemoveCount(l4, (Length(l4) - l5), l5)
+		end;
+	if ((l14 := Length(l4)) = 1) then begin
+			ArrayRemoveCount(l4, 0, 1);
+			l14 := 0
+		end;
+	(if (l14 = 0) then nil else begin
+			if (l14 > maxNumberPerPage) then begin
+					l16 := ((l15 := (l14 - maxNumberPerPage)) + 1);
+					if (not IsString(l4[l15])) then begin
+							if (not IsString(l4[l16])) then begin
+									l4[l15] := LongDateStr(l4[l16].mtgStartDate, @66.abbrDateStrSpec)
+								end else begin
+									l15 := l16;
+									if a1 then begin
+											AddArraySlot(l4, a1)
+										end
+								end
+						end;
+					ArrayRemoveCount(l4, 0, l15)
+				end;
+			l4
+		end)
+end
+@@end

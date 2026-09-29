@@ -1,0 +1,5 @@
+@@ 0x51dc31
+func() begin
+	(self.viewChildren := Clone(kids))
+end
+@@end

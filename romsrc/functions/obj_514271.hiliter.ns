@@ -1,0 +1,9 @@
+@@ 0x513ebd
+func(a1, a2) begin
+	local l1;
+	(if a2.index then begin
+			ScaleShape((l1 := DeepClone(a1)), RelBounds(0, 0, 1, lineHeight), RelBounds(0, 0, 1, a2.ht));
+			self:DrawShape(l1, {transform: [Array: 0, a2.top]})
+		end)
+end
+@@end

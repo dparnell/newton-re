@@ -1,0 +1,13 @@
+@@ 0x73391d
+func() begin
+	if target then begin
+			if noneIsChosen then begin
+					target.printer := nil
+				end else begin
+					target.printer := UserConfiguration.currentPrinter
+				end;
+			targetView:StartFlush()
+		end;
+	(UserConfiguration.currentPrinter := saveCurrentPrinter)
+end
+@@end

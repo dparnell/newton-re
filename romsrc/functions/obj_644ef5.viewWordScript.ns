@@ -1,0 +1,32 @@
+@@ 0x467a35
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8;
+	l1 := Stringer(GetEditArray(a1));
+	l4 := self:FindCell((((l3 := StrokeBounds(a1)).left + l3.right) div 2));
+	l5 := nil;
+	if l4.hit then begin
+			if (not self:CellLocked((l6 := (l4.hit + dispLeft)))) then begin
+					if (l6 <> lastChar) then begin
+							ClearTryString()
+						end;
+					lastChar := l6;
+					l2 := (if (l7 := self:GetFilter(l6)) then StringFilter(l1, l7, 'passAll) else l1);
+					if (not l7) then begin
+							self:SortMatches(l2, a1, template.bias)
+						end;
+					if (l8 := self:PickBestChar(l2)) then begin
+							self:AddUpperCase(l2);
+							self:ReplaceChar(lastChar, l2, l8);
+							if (if (l4.hit = (maxChars - 1)) then (not (if self:FixedWord() then (l6 = (wordRight - 1))))) then begin
+									self:Scroll(1)
+								end;
+							l5 := true
+						end
+				end
+		end;
+	if (not l5) then begin
+			DoScrubEffect(a1)
+		end;
+	true
+end
+@@end

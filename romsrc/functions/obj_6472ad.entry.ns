@@ -1,0 +1,11 @@
+@@ 0x4a7961
+func() begin
+	local l1;
+	(if (if (index >= 0) then (index < Length(things))) then begin
+			if (ClassOf((l1 := things[index])) = 'alias) then begin
+					l1 := ResolveEntryAlias(l1)
+				end;
+			(if l1 then (if (if (if targetpath then IsFrame(l1)) then l1.(targetpath)) then l1.(targetpath) else l1) else 'deleted)
+		end)
+end
+@@end

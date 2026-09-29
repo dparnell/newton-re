@@ -1,0 +1,17 @@
+@@ 0x4d731d
+func(a1, a2, a3) begin
+	local l1;
+	(if layout then layout:NewEntry(a1, a2, a3) else begin
+			if IsReadOnly(allSoups) then begin
+					allSoups := Clone(allSoups)
+				end;
+			if IsReadOnly(allSoups.notes) then begin
+					allSoups.notes := Clone(allSoups.notes)
+				end;
+			l1 := allSoups.notes;
+			l1:MakeSoup(appSymbol);
+			l1:AddEntry(a1, a3);
+			l1:DoneWithSoup(appSymbol)
+		end)
+end
+@@end

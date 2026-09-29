@@ -1,0 +1,19 @@
+@@ 0x4fb429
+func() begin
+	local l1;
+	ClearUndoStacks();
+	selectedDates := [Array: (l1 := ((l1 := Time()) - (l1 mod 1440)))];
+	if Visible(DatesOverviewForm) then begin
+			if ((mainDisplay = MonthOverView) or (mainDisplay = YearView)) then begin
+					self:changeViewTo(previousMainDataDisplay)
+				end else begin
+					self:changeViewTo(mainDisplay)
+				end
+		end else begin
+			if ((mainDisplay = MonthOverView) or (mainDisplay = YearView)) then begin
+					self:changeViewTo(previousMainDataDisplay)
+				end
+		end;
+	self:redisplayScript()
+end
+@@end

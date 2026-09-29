@@ -1,0 +1,9 @@
+@@ 0x59d46d
+func() begin
+	local l1;
+	if ((l1 := LSearch(labelValues, GetUserConfig('mailMode), 0, '|=|, nil)) = nil) then begin
+			l1 := 0
+		end;
+	l1
+end
+@@end

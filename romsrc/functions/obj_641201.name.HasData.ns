@@ -1,0 +1,5 @@
+@@ 0x4561c1
+func(a1) begin
+	(if a1.name then (a1.name.first or a1.name.last))
+end
+@@end

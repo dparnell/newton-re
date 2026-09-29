@@ -1,0 +1,17 @@
+@@ 0x51c4cd
+func(a1) begin
+	local l1;
+	self:SaveMarkup();
+	(l1 := {}).class := 'copperfield;
+	l1.title := self:BookTitle();
+	l1.isbn := isbn;
+	l1.CurrentPage := self:CurrentPage();
+	l1.fromPage := l1.CurrentPage;
+	l1.nPages := self:CountPages();
+	l1.toPage := l1.nPages;
+	l1.printData := contentArea:?BookPrint();
+	l1.curRendering := curRendering;
+	l1.printMarks := copperfield:InkMarks(nil);
+	{target: l1, targetView: targetView}
+end
+@@end

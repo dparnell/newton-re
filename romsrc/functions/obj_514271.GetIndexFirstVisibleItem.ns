@@ -1,0 +1,5 @@
+@@ 0x513ad1
+func() begin
+	(if (indexFirstVisibleItem < numberOfItems) then indexFirstVisibleItem else (numberOfItems + self:GetToDoAgendaView().firstTopic))
+end
+@@end

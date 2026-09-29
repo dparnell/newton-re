@@ -1,0 +1,6 @@
+@@ 0x78ca8d names
+func() begin
+	rightMargin := (self:LocalBox().right + rightIndent);
+	(self.uniqueSymbol := Intern(Stringer([Array: "ListView", viewCObject])))
+end
+@@end

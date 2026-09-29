@@ -1,0 +1,11 @@
+@@ 0x443f1d
+func(a1, a2, a3) begin
+	local l1, l2;
+	(l1 := self:Init()).context := a3;
+	l1.dates := a1;
+	if (Date((l2 := (if a1 then a1 else [Array: Time()]))[0]).year = 2920) then begin
+			l1.viewBounds := RelBounds(0, 0, 135, 128)
+		end;
+	l1:popup(a2)
+end
+@@end

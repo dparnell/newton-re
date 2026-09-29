@@ -1,0 +1,5 @@
+@@ 0x4bd92d
+func() begin
+	self:SetCheck((if target then (target.(path) = assert)))
+end
+@@end

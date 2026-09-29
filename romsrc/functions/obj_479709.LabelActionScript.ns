@@ -1,0 +1,13 @@
+@@ 0x4796c9
+func(a1) begin
+	lastCmd := a1;
+	if self:?FormatChanged(formats[a1]) then begin
+			return nil
+		end;
+	if auxUp then begin
+			auxUp:Close()
+		end;
+	auxUp := nil;
+	inherited:LabelActionScript(a1)
+end
+@@end

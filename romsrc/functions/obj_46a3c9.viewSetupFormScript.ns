@@ -1,0 +1,6 @@
+@@ 0x46a331
+func() begin
+	self:ShowView((labelCommands := cText.template.templateArray));
+	inherited:viewSetupFormScript()
+end
+@@end

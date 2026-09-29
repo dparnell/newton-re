@@ -1,0 +1,16 @@
+@@ 0x78cce5 names
+func(anX) begin
+	local theLevel, topicLevel;
+	if (nTopics = 0) then begin
+			return 1
+		end;
+	theLevel := Max(1, ((((((anX - 20) - leftMarkGap) - rightMarkGap) + 20) - 1) div 20));
+	if (nTopics > 0) then begin
+			if ((topicLevel := topics[(nTopics - 1)].level) = nil) then begin
+					topicLevel := 1
+				end;
+			theLevel := Min(theLevel, (topicLevel + 1))
+		end;
+	return theLevel
+end
+@@end

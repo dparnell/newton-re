@@ -1,0 +1,5 @@
+@@ 0x7960cd names
+func(aEntry) begin
+	(if (if (if (aEntry.class = 'todo) then aEntry.topics) then aEntry.date) then aEntry)
+end
+@@end

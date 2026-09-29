@@ -1,0 +1,19 @@
+@@ 0x480a35
+func(a1, a2) begin
+	l1 := [Array: ];
+	if (if a1 then IsEntryAlias(a1.cityAlias)) then begin
+			a2 := ResolveEntryAlias(a1.cityAlias)
+		end;
+	if (if (if a2 then a2.mailAccess) then IsArray(a2.mailAccess)) then begin
+			local l1;
+			(foreach l2 in a2.mailAccess do begin
+					local l4;
+					if (l2.mailNetwork = id) then begin
+							(l4 := TotalClone(l2)).mailPhone := ConvertIntToPhone(l4.mailPhone);
+							AddArraySlot(l1, l4)
+						end
+				end)
+		end;
+	(if (Length(l1) > 0) then return l1 else return nil)
+end
+@@end

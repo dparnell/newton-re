@@ -1,0 +1,22 @@
+@@ 0x4b3d09
+func(a1) begin
+	(foreach l1, l2 deeply in InboxApps do begin
+			local l4;
+			try begin
+					l4 := nil;
+					if (ClassOf(l2) = 'string) then begin
+							if (ClassOf(a1.title) = 'string) then begin
+									l4 := BeginsWith(a1.title, l2)
+								end
+						end else begin
+							l4 := call l2 with (a1)
+						end;
+					if l4 then begin
+							a1.appSymbol := l1
+						end
+				end onexception |evt.ex| do begin
+					self:Notify(3, "InOut Box", Stringer([Array: "Error in InboxApp Script", " ", l1]))
+				end
+		end)
+end
+@@end

@@ -1,0 +1,19 @@
+@@ 0x75c61d
+func() begin
+	local l1, l2, l3, l4;
+	if (l1 := GetUserConfig('docker)) then begin
+			l2 := old.names;
+			l3 := old.type;
+			SetUserConfig('docker, nil);
+			FlushUserConfig()
+		end;
+	l4 := {tag: "Connection", savePassword: true, timeoutConnection: true, autodock: nil};
+	if l2 then begin
+			l4.names := l2
+		end;
+	if l3 then begin
+			l4.type := l3
+		end;
+	(connectionPrefs := GetAppPrefs('Connection, l4))
+end
+@@end

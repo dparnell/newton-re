@@ -1,0 +1,6 @@
+@@ 0x4e7e89
+func(a1, a2, a3) begin
+	local l1;
+	FindStringInFrame((l1 := [Array: self:GetMeetingText(a1), self:GetMeetingSlot(a1, 'mtgInvitees), self:GetMeetingSlot(a1, 'mtgLocation)]), a2, a3)
+end
+@@end

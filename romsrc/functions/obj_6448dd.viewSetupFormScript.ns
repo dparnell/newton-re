@@ -1,0 +1,6 @@
+@@ 0x49a4dd
+func() begin
+	inherited:viewSetupFormScript();
+	(keyDefinitions := (if (international.currentlocalebundle.keyboardLayout = 'ISO) then keyDefinitionsISO else keyDefinitionsUS))
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x761cb1
+func(a1, a2) begin
+	self.thecallback := a2;
+	return self:ValidateConfig('location, a1, [Array: WorksiteNetworkSlot], "Choose a computer to connect with.", 'validateDialog, 'ValidateDone)
+end
+@@end

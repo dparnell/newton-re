@@ -1,0 +1,5 @@
+@@ 0x552311
+func(a1) begin
+	'{type: index, indexPath: sequence, tagspec: {all: [Array: _icon, _buttonBar], none: [Array: _soups, _frozen]}}
+end
+@@end

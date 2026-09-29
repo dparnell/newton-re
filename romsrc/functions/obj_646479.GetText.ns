@@ -1,0 +1,5 @@
+@@ 0x480f31
+func() begin
+	self:path().(name)
+end
+@@end

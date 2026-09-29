@@ -1,0 +1,6 @@
+@@ 0x4dc14d
+func(a1) begin
+	jangling := nil;
+	base:DragWindow(a1)
+end
+@@end

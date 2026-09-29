@@ -1,0 +1,7 @@
+@@ 0x553779
+func(a1) begin
+	local l1;
+	l1 := 0;
+	(while (l1 := LSearch(|Parts1.x|, a1, l1, '|=|, 'packageId)) do ArrayRemoveCount(|Parts1.x|, l1, 1))
+end
+@@end

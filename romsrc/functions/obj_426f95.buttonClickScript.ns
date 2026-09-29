@@ -1,0 +1,29 @@
+@@ 0x426e5d
+@@const kFunction_426ded
+func(a1) begin
+	(if a1 then OpenPrefsTo("Recording"))
+end
+@@main
+func() begin
+	local l1;
+	if (GetUserConfig('inputDevice) = nil) then begin
+			AsyncConfirm("To record, you must pick a recording source from the \u201C\uRecording\u201D\u preference.  Would you like to open the \u201C\uRecording\u201D\u preference now?", 'yesNoDefaultYes, kFunction_426ded);
+			return nil
+		end;
+	if RecordEngine:TestState(1) then begin
+			RecordEngine:SetState(64);
+			RecordEngine:SetState(1)
+		end;
+	if (not RecordEngine:TestState(16)) then begin
+			if ((l1 := RecordEngine:TestStore()) = 3) then begin
+					self:Notify(3, notifyTitle, "Sorry, you must unlock the card before recording.");
+					return nil
+				end;
+			if (l1 = 1) then begin
+					self:Notify(3, notifyTitle, "Sorry, there is not enough memory available for a new recording. The internal memory or storage card is almost full.");
+					return nil
+				end
+		end;
+	(if RecordEngine:TestState(17) then RecordEngine:record() else (if RecordEngine:TestState(2) then RecordEngine:pause() else playsound(@262)))
+end
+@@end

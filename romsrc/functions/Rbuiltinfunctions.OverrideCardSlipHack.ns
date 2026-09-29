@@ -1,0 +1,16 @@
+@@ 0x497469
+func(a1) begin
+	local l1, l2;
+	(if (l2 := LSearch((l1 := StoreSlipRegistry.miscSlips), a1, 0, '|=|, nil)) then begin
+			a1 := l1[l2];
+			ArrayRemoveCount(l1, l2, 1);
+			if a1.viewCObject then begin
+					a1:Close()
+				end;
+			nil
+		end else begin
+			AddArraySlot(l1, a1);
+			a1
+		end)
+end
+@@end

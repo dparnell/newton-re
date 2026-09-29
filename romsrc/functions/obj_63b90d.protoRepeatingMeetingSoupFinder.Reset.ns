@@ -1,0 +1,8 @@
+@@ 0x4edd85
+func() begin
+	(foreach l1 in repeatingEntryFinders do begin
+			l1.currentInstance := 0
+		end);
+	self:ChooseEarliestInstance()
+end
+@@end

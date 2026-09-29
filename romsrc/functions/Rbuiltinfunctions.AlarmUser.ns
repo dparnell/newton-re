@@ -1,0 +1,6 @@
+@@ 0x422825
+func(a1, a2) begin
+	BHNotify(9, a1, a2, GetRegisteredSound(GetUserConfig('alarmSound)), GetAlarmVolume());
+	(if GetUserConfig('AlarmAnnoyOn) then AddDeferredCall(functions.AnnoyUserRepeatedly, [Array: 0]))
+end
+@@end

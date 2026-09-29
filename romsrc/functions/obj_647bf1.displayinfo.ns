@@ -1,0 +1,10 @@
+@@ 0x496059
+func() begin
+	local l1, l2, l3, l4, l5, l6;
+	l3 := StrTruncate((storeKind := (l1 := self:getDestStore()):GetKind()), 170);
+	infoShapes[0] := MakeText(l3, 31, 60, 185, 73);
+	self:makeMemoryInfoShape(l1);
+	self:makeLastBackupShape(l1);
+	base:Dirty()
+end
+@@end

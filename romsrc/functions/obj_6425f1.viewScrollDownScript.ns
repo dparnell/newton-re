@@ -1,0 +1,11 @@
+@@ 0x4db485
+func() begin
+	currentForm:?flush();
+	(if (if currentForm then currentForm.viewScrollUpScript) then currentForm:viewScrollDownScript() else begin
+			if (not cards:Next()) then begin
+					cards:ResetToEnd()
+				end;
+			self:Retarget()
+		end)
+end
+@@end

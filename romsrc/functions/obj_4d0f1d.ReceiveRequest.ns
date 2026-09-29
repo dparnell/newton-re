@@ -1,0 +1,17 @@
+@@ 0x4d03d1
+func(a1) begin
+	self:SetStatusDialog(status, 'vConfirm, {statusText: "Do you want to wait for a call, or are you manually connecting?", primary: {text: "Wait For Call", script: func() begin
+		GetRoot().(appSymbol):ManualStart()
+	end}, secondary: {text: "Manually Connect", script: func() begin
+		manualDialingForm.message := nil;
+		manualDialingForm.fManualReceive := true;
+		manualDialingForm.deferredFax := func(a1) begin
+			GetRoot().(appSymbol):ManualStartOffHook()
+		end;
+		manualDialingForm:Open();
+		GetRoot().(appSymbol):CloseStatusDialog(nil)
+	end}, closeBox: func() begin
+		GetRoot().(appSymbol):CloseStatusDialog(nil)
+	end})
+end
+@@end

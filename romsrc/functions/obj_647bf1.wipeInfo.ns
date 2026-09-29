@@ -1,0 +1,80 @@
+@@ 0x495ff1
+@@const kBinaryFromHex
+func(hex, cls) begin
+	local b := MakeBinary(StrLen(hex) div 2, cls);
+	for i := 0 to Length(b) - 1 do begin
+		local h := Ord(hex[2 * i]);
+		local l := Ord(hex[2 * i + 1]);
+		StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+	end;
+	b
+end
+@@const kLiteral_48e1c9
+{statusText: "Erase Information", titleText: "Erasing information\u2026\u", icon: {mask: call kBinaryFromHex with ("000000000004010901090174011e018100000000000000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe0000000000000000000000000000000000000", 'mask), bits: call kBinaryFromHex with ("000000000004010901090174011e01817ff00000fff80000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000dfd80000cf980000c7180000c2180000c0180000fff800007ff000000000000000000000", 'bits), bounds: '{left: 0, top: 0, right: 13, bottom: 21}}, barber: true, closeBox: nil}
+@@const kLiteral_488a25
+"Erasing info for \u201C\u^0\u201D\u\u2026\u"
+@@const kLiteral_4887dd
+"Erase Information"
+@@main
+func(store) begin
+	local error, soup, soupNames;
+	local l1, l2, l3;
+	(if store:IsValid() then begin
+			store:MarkBusy(whoAmI, nil);
+			try begin
+					try begin
+							soupNames := GetApplicationNames(store, true)
+						end onexception |evt.ex| do begin
+							error := true
+						end;
+					if (not error) then begin
+							if (l3 := LSearch(soupNames, 'cardBackupFrame, 0, '|=|, 'class)) then begin
+									ArrayRemoveCount(soupNames, l3, 1)
+								end
+						end;
+					if (if (Length(soupNames) > 0) then (not error)) then begin
+							try begin
+									if (DoProgress('vBarber, kLiteral_48e1c9, func(a1) begin
+										a1:SetStatus('vBarber, {titleText: "Getting card information\u2026\u", barber: true});
+										(foreach l1 in soupNames do begin
+												if IsFrame(l1) then begin
+														l3 := l1.soups;
+														l4 := l1.name
+													end else begin
+														l3 := [Array: l1];
+														l4 := l1
+													end;
+												local l3;
+												local l4;
+												(foreach l5 in l3 do begin
+														a1:SetStatus('vBarber, {titleText: ParamStr(kLiteral_488a25, [Array: l4]), barber: true});
+														soup := store:GetSoup(l5);
+														a1:SetStatus('vBarber, {titleText: ParamStr(kLiteral_488a25, [Array: l4]), barber: true});
+														try begin
+																soup:RemoveFromStoreXmit('backup)
+															end onexception |evt.ex| do begin
+																error := true
+															end
+													end)
+											end)
+									end) = 'Cancel) then begin
+											GetRoot():Notify(3, kLiteral_4887dd, "Warning! Part of your information has been erased.")
+										end
+								end onexception |evt.ex| do begin
+									error := true
+								end;
+							if error then begin
+									GetRoot():Notify(3, kLiteral_4887dd, "There was an error while erasing the information.")
+								end
+						end else begin
+							if (not error) then begin
+									GetRoot():Notify(3, kLiteral_4887dd, "There is no information on this card to erase.")
+								end else begin
+									GetRoot():Notify(3, kLiteral_4887dd, "There was an error before erasing the information.  Your information was left untouched.")
+								end
+						end
+				end onexception |evt.ex| do begin end;
+			store:MarkNotBusy(whoAmI)
+		end)
+end
+@@end

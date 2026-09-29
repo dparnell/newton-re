@@ -1,0 +1,10 @@
+@@ 0x45b699
+func(a1) begin
+	local l1;
+	l1 := GetRoot().(a1.owner);
+	if (if (abs((a1.Time - Time())) < a1.tolerance) then l1:?AlarmsEnabled()) then begin
+			l1:PeriodicAlarm(a1)
+		end;
+	AddAlarm(Stringer([Array: a1.name, $:, a1.ownerName]), UpdatePeriodicAlarmTime(a1), nil, functions.PeriodicAlarmFunc, [Array: a1])
+end
+@@end

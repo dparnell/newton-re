@@ -1,0 +1,6 @@
+@@ 0x78d145 names
+func(aLevel) begin
+	aLevel := Max(1, aLevel);
+	(if (BAnd(listViewFlags, 12) <> 0) then (if (BAnd(listViewFlags, 2) <> 0) then {level: aLevel, hideCount: 0, mtgPriority: 3, mtgDone: nil, text: nil, styles: nil, viewBounds: nil} else {level: aLevel, hideCount: 0, mtgPriority: 3, text: nil, styles: nil, viewBounds: nil}) else (if (BAnd(listViewFlags, 2) <> 0) then {level: aLevel, hideCount: 0, mtgDone: nil, text: nil, styles: nil, viewBounds: nil} else {level: aLevel, hideCount: 0, text: nil, styles: nil, viewBounds: nil}))
+end
+@@end

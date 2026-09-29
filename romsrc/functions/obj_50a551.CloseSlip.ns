@@ -1,0 +1,56 @@
+@@ 0x509a71
+func() begin
+	isNewMeeting := nil;
+	if (mainDisplay = ToDoListView) then begin
+			self:changeViewTo(scheduleView)
+		end else begin
+			self:changeViewTo(mainDisplay)
+		end;
+	(if selectedMeeting then begin
+			l1 := selectedMeeting.mtgStartDate;
+			l2 := nil;
+			local l1;
+			local l2;
+			(foreach l3 in calendar.selectedDates do begin
+					if (if (l1 >= l3) then (l1 < (l3 + 1440))) then begin
+							l2 := true;
+							break
+						end
+				end);
+			if (not l2) then begin
+					calendar.selectedDates := [Array: (l1 - (l1 mod 1440))];
+					calendar:redisplayScript()
+				end;
+			mainDisplay:?ScrollTo(selectedMeeting);
+			(if (mainDisplay = scheduleView) then begin
+					if ((l5 := selectedMeeting).viewStationery = 'cribNote) then begin
+							l6 := cribView
+						end else begin
+							l7 := ((l7 := l5.mtgStartDate) - (l7 mod 1440));
+							local l5;
+							local l6;
+							local l7;
+							local l8;
+							l8 := (foreach l9, l10 in selectedDates do begin
+									if (l10 = l7) then begin
+											break l9
+										end
+								end);
+							if l8 then begin
+									l6 := scheduleView.DayTable:ChildViewFrames()[l8]
+								end
+						end;
+					(if l6 then (foreach l12 in l6:ChildViewFrames() do begin
+								local l14, l15;
+								if (((l14 := l12.realData) = l5) or (if (if l5.repeatTemplate then (l14.repeatTemplate = l5.repeatTemplate)) then (l14.mtgStartDate = l5.mtgStartDate))) then begin
+										SetKeyView((l15 := l12.textView), 9999);
+										if (l15:CaretRelativeToVisibleRect(l15:GlobalBox()) <> 'inbox) then begin
+												SetKeyView(l15, 0)
+											end;
+										break
+									end
+							end))
+				end)
+		end)
+end
+@@end

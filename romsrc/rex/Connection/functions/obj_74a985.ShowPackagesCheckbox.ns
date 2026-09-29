@@ -1,0 +1,6 @@
+@@ 0x74aced
+func() begin
+	local l1;
+	return (if (l1 := protoContext:ConnectionPrefsRead('neverSyncPackages)) then nil else protoContext.applications[0].packages)
+end
+@@end

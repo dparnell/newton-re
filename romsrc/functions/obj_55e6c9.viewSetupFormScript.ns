@@ -1,0 +1,18 @@
+@@ 0x55e691
+func() begin
+	local l1, l2, l3;
+	inherited:?viewSetupFormScript();
+	if (l1 := GetVariable(GetView('viewfrontmostapp), 'appSymbol)) then begin
+			self.text := GetAppName(l1)
+		end else begin
+			self.text := "Frontmost app"
+		end;
+	RemoveSlot(self, 'viewJustify);
+	l2 := (self:Parent():GlobalBox().right - self:GlobalBox().left);
+	l3 := (StrFontWidth(text, viewFont) > l2);
+	(if ((GetRoot().findDrawer:LocalBox().right < 300) or l3) then begin
+			viewJustify := 8244;
+			(viewBounds := SetBounds(0, 0, 0, 13))
+		end else (viewBounds := SetBounds(0, 0, l2, 13)))
+end
+@@end

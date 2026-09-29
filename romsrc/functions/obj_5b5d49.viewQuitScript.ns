@@ -1,0 +1,5 @@
+@@ 0x5b5ccd
+func() begin
+	ShowCaret()
+end
+@@end

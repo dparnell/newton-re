@@ -1,0 +1,7 @@
+@@ 0x49766d
+func(a1, a2, a3) begin
+	local l1;
+	(l1 := a1.stateMachine).fOptionsIn := a2;
+	l1:AsyncWaitComplete(a3)
+end
+@@end

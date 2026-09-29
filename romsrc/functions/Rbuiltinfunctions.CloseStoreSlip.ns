@@ -1,0 +1,13 @@
+@@ 0x4972a9
+func(a1) begin
+	if (l1 := LFetch(StoreSlipRegistry.storeSlips, a1, 0, '|=|, '_openedForStore)) then begin
+			l1:Close()
+		end;
+	local l1;
+	(foreach l2 in StoreSlipRegistry.miscSlips do begin
+			if l2.viewCObject then begin
+					l2:Close()
+				end
+		end)
+end
+@@end

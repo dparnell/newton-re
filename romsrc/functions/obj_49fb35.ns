@@ -1,0 +1,30 @@
+@@ 0x49fb35
+func() begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9;
+	if (if (not pieces) then target) then begin
+			headerText := appObject[0];
+			if targetDataDef then begin
+					if (l1 := targetDataDef.icon) then begin
+							headerIcon := l1
+						end;
+					headerText := targetDataDef.description
+				end;
+			l2 := "";
+			if (if (labelsFilter = '_all) then target.labels) then begin
+					if (l3 := userConfiguration.userFolders.(target.labels)) then begin
+							l2 := StrTruncate(Clone(l3), 100)
+						end
+				end;
+			l4 := StrFontWidth(l2, viewFont);
+			l6 := (((l5 := layout:LocalBox()).right - l4) - 4);
+			if hasFiling then begin
+					l6 := (l6 - 35)
+				end;
+			l7 := self:GetTitle();
+			l8 := (headerIcon.bounds.right + 4);
+			l9 := (StrFontWidth((l7 := StrTruncate(l7, ((l6 - 2) - l8))), viewFont) + 2);
+			pieces := [Array: OffsetShape(MakeShape(headerIcon), 1, ((15 - (headerIcon.bounds.bottom - headerIcon.bounds.top)) div 2)), '{fillPattern: 5}, MakeRect(((l8 + l9) + 2), 6, l6, 9), {transferMode: 0, font: viewFont}, MakeText(l7, l8, 2, (l8 + l9), 11), MakeText(l2, (l6 + 2), 2, ((l6 + l4) + 4), 11)]
+		end;
+	(if pieces then self:DrawShape(pieces, nil))
+end
+@@end

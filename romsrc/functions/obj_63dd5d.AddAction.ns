@@ -1,0 +1,5 @@
+@@ 0x462b99
+func(a1, a2, a3) begin
+	self:AddMessage({class: 'NotifyAction, fn: a2, args: a3, overview: a1})
+end
+@@end

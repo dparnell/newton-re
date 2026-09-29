@@ -1,0 +1,5 @@
+@@ 0x54bf79
+func(a1) begin
+	GetRoot().ExtrasDrawer:RestoreBuiltInExtrasState(a1)
+end
+@@end

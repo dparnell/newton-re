@@ -1,0 +1,28 @@
+@@ 0x5a5651
+func() begin
+	local l1, l2;
+	pleaseWaitForm:Close();
+	l1 := GetRoot().cardfile;
+	l1:AddCardData((l2 := ResolveEntryAlias(GetUserConfig('currentPersona))), 'email, {email: SetClass(info.mailAccount, '|string.email.aol|), emailPassword: info.mailPassword});
+	if addToOwner then begin
+			l2.name := {first: info.firstName, last: info.lastName};
+			l2.address := info.address;
+			l2.city := info.city;
+			l2.region := info.state;
+			l2.postal_code := info.zip;
+			l2.country := info.country;
+			l2.phones := [Array: ];
+			if StrFilled(info.dayphone) then begin
+					AddArraySlot(l2.phones, SetClass(info.dayphone, 'workPhone))
+				end;
+			if StrFilled(info.homePhone) then begin
+					AddArraySlot(l2.phones, SetClass(info.homePhone, 'homePhone))
+				end;
+			l2.sorton := Stringer([Array: info.lastName, " ", info.firstName]);
+			EntryChange(l2)
+		end;
+	UseCurrentPersona();
+	self:Notify(3, "Mail Registration", "Your account has been created.  You are now ready to send and receive mail.");
+	self:AllDone(true)
+end
+@@end

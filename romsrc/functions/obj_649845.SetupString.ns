@@ -1,0 +1,15 @@
+@@ 0x44ce21
+func(a1) begin
+	local l1, l2;
+	l1 := Clone("  /  /  ");
+	StrReplace(a1, " ", "", nil);
+	if (if (if (l2 := StringToDateFrame(a1)) then (l2.status >= 0)) then ((l2.month or l2.Date) or l2.year)) then begin
+			DateMunger(l1, l2.month, offsets[0]);
+			DateMunger(l1, l2.Date, offsets[1]);
+			if (l2.year < 2920) then begin
+					DateMunger(l1, l2.year, offsets[2])
+				end
+		end;
+	return l1
+end
+@@end

@@ -1,0 +1,14 @@
+@@ 0x4c715d
+func() begin
+	local l1;
+	l1 := nil;
+	if targetCursor then begin
+			if ((l1 := targetCursor:entry()) = 'deleted) then begin
+					self:Notify(3, title, "Cannot print: The data has been removed or deleted");
+					return nil
+				end;
+			targetCursor:Next()
+		end;
+	return l1
+end
+@@end

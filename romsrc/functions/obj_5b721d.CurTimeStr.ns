@@ -1,0 +1,5 @@
+@@ 0x5b7181
+func() begin
+	Stringer([Array: GetUserConfig('name), $\n, MakeDisplayPhone(GetUserConfig('phone)), $\n, DateNTime(nil)])
+end
+@@end

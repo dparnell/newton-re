@@ -1,0 +1,9 @@
+@@ 0x5b0d39
+func() begin
+	local l1;
+	popup := (foreach l2 in (l1 := (useList := (if StrEqual("WREC", userConfiguration.currentwordrecognizer) then rosForms else paraForms))) collect l2.overview);
+	AddArraySlot(popup, 'pickseparator);
+	AddArraySlot(popup, "Use default settings");
+	inherited:buttonClickScript()
+end
+@@end

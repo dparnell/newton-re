@@ -1,0 +1,5 @@
+@@ 0x52eb35
+func(a1, a2) begin
+	self:SendOption("forw", a1, a2)
+end
+@@end

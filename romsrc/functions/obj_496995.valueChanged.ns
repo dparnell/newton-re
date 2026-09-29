@@ -1,0 +1,7 @@
+@@ 0x496975
+func() begin
+	local l1;
+	l1 := self:getDestStore();
+	(if viewValue then SetDefaultStore(l1) else (if (l1 = GetDefaultStore()) then SetDefaultStore(GetStores()[0])))
+end
+@@end

@@ -1,0 +1,20 @@
+@@ 0x79794d names
+func(aRichString, aTop) begin
+	local topicFrame, height, newTopicFont, wealth, rightMargin;
+	rightMargin := 240;
+	if (if (if (appSymbol exists) then (appSymbol = 'calendar)) then Visible(self:parent())) then begin
+			rightMargin := self:parent():LocalBox().right
+		end;
+	topicFrame := self:MakeTopicFrame(1);
+	newTopicFont := topicFont;
+	height := viewLineSpacing;
+	wealth := DecodeRichString(aRichString, newTopicFont);
+	topicFrame.text := wealth.text;
+	topicFrame.styles := wealth.styles;
+	if (StrFontWidth(topicFrame.text, newTopicFont) > rightMargin) then begin
+			height := (height * 2)
+		end;
+	topicFrame.viewBounds := SetBounds((((baseLeftGap + 13) + 2) + 20), aTop, rightMargin, (aTop + height));
+	topicFrame
+end
+@@end

@@ -1,0 +1,17 @@
+@@ 0x456829
+@@const kLiteral_450465
+SetClass(Clone("--"), '|string.noData|)
+@@main
+func(a1, a2, a3) begin
+	local l1;
+	if (if (not a1) then ((a3 = 'text) or (a3 = 'sortText))) then begin
+			return ""
+		end else begin
+			if (not a1) then begin
+					return nil
+				end
+		end;
+	l1 := self:GetObjSlot(a1, a2);
+	(if ((a3 = 'text) or (a3 = 'sortText)) then (if l1 then (if IsInstance(l1, 'string) then return l1 else return SPrintObject(l1)) else return kLiteral_450465) else l1)
+end
+@@end

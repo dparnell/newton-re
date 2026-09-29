@@ -1,0 +1,29 @@
+@@ 0x516145
+func(a1, a2, a3, a4, a5) begin
+	l8 := ((a3 + (a4 * 1440)) - 1);
+	l2 := " ";
+	ld := nil;
+	if (not (l9 := GetAllMeetings(GetUnionSoup(@23), GetUnionSoup(@239), a3, l8))) then begin
+			return l2
+		end;
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	local l6;
+	local l7;
+	local l8;
+	local l9;
+	(for l5 := 0 to (Length(l9) - 1) do begin
+			if (((l7 := Date((l1 := l9[l5]).mtgStartDate)).month <> l3) or (l7.Date <> l4)) then begin
+					l4 := l7.Date;
+					l3 := l7.month;
+					l7 := LongDateStr(l1.mtgStartDate, @66.longDateStrSpec);
+					l2 := Stringer([Array: l2, "\n", l7, "\n"])
+				end;
+			l2 := Stringer([Array: l2, self:meetingText(l1, a5), "\n"])
+		end);
+	l2
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x52ad45
+func() begin
+	inherited:?viewSetupFormScript();
+	self.overview.items := items;
+	(self.title.title := ParamStr("Time in ^0", [Array: city]))
+end
+@@end

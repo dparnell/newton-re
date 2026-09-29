@@ -1,0 +1,35 @@
+@@ 0x453225
+func(a1, a2) begin
+	if (not (l1 := self:FindNameRefInSelected(a1))) then begin
+			l1 := a1
+		end;
+	if (l1 = freshest) then begin
+			local l1;
+			freshest.index := (for l2 := (Length(pieces) - 1) to 0 by -1 do begin
+					if (pieces[l2] <> nil) then begin
+							break l2
+						end
+				end)
+		end;
+	if fColumns then begin
+			(l7 := Clone(a2)).right := firstColumnTextIndent;
+			l8 := 'text;
+			local l5;
+			local l6;
+			local l7;
+			local l8;
+			l5 := (foreach l6 in fColumns collect begin
+				local l12;
+				l7.left := l7.right;
+				l7.right := l6.right;
+				l12 := pickerDef:Get(l1, l6.fieldPath, l8);
+				l8 := 'text;
+				if (if (not l6.noPopup) then pickerDef:?MakePopup(l1, l6.fieldPath)) then begin
+						l12 := Stringer([Array: $\uFC01, l12])
+					end;
+				(if IsInstance(l12, 'string) then MakeText((l12 := StrTruncate(Clone(l12), (l7.right - l7.left))), l7.left, (l7.top - 2), l7.right, (l7.bottom - 2)) else OffsetShape(l12, l7.left, l7.top))
+			end)
+		end;
+	l5
+end
+@@end

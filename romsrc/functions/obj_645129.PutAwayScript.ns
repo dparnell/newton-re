@@ -1,0 +1,13 @@
+@@ 0x4aa5b5
+func(a1) begin
+	local l1, l2;
+	try begin
+			(l1 := a1.body).labels := nil;
+			l1 := self:AddEntry(l1);
+			AddProcrastinatedSend(Intern(Stringer([Array: "_putaway_", appSymbol])), self, 'putAwayXMit, [Array: ], 0)
+		end onexception |evt.ex| do begin
+			return nil
+		end;
+	l1
+end
+@@end

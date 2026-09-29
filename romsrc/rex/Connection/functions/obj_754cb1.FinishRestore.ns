@@ -1,0 +1,49 @@
+@@ 0x754fcd
+@@const kROM_8272
+@8272
+@@main
+func(a1, a2, a3) begin
+	if (a2 = 0) then begin
+			try begin
+					a1:WriteCommand("disc", nil, nil)
+				end onexception |evt.ex| do begin end
+		end;
+	a1.connected := nil;
+	a1:ConnectionDone(0);
+	if (if a3 then IsArray(a3)) then begin
+			if (l1 := LSearch(a3, @276, 0, '|str=|, 'name)) then begin
+					l3 := (l2 := GetStores()[0]:GetSoup(@276):Query({IndexPath: 'tag, beginKey: "Calibration", endKey: "Calibration"})):entry();
+					(while (if l3 then (not l3.data)) do (l3 := l2:Next()));
+					if l3 then begin
+							EntryRemoveFromSoup(l3)
+						end
+				end
+		end;
+	(l4 := BuildContext(kROM_8272)).error := a2;
+	l4:Open();
+	(if (a2 <> 0) then protoContext:ShowError(a1, a2, true) else (if (if a3 then IsArray(a3)) then begin
+				l5 := [Array: ];
+				local l1;
+				local l2;
+				local l3;
+				local l4;
+				local l5;
+				(foreach l6 in a3 do begin
+						if l6.conversionError then begin
+								if (if (l8 := protoContext:SoupNameToAppName(l6.name)) then (StrLen(l8) > 0)) then begin
+										BInsert(l5, l8, '|str<|, nil, true)
+									end
+							end
+					end);
+				(if (Length(l5) > 0) then begin
+						l9 := nil;
+						local l8;
+						local l9;
+						(foreach l10 in l5 do begin
+								l9 := StrConcatDelimited(l9, ", ", l10)
+							end);
+						(if l9 then AddDeferredSend(self, 'Notify, [Array: 5, "Dock", ParamStr("Errors occurred converting data for applications: ^0", [Array: l9])]))
+					end)
+			end))
+end
+@@end

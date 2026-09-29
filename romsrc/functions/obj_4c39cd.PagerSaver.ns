@@ -1,0 +1,5 @@
+@@ 0x4c398d
+func() begin
+	(if GetRoot().|pager:Newton| then GetRoot().|pager:Newton|:?ListenRequest({cause: 'oldPager}) else GetRoot():Notify(3, "InOut Box", "Application not compatable"))
+end
+@@end

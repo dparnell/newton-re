@@ -1,0 +1,23 @@
+@@ 0x4ed69d
+func(a1) begin
+	local l1, l2, l3, l4, l5;
+	l1 := 0;
+	if (if (l2 := ResolveEntryAlias(a1.repeatingMeetingAlias)) then l2.InstanceNotesData) then begin
+			if (not (l3 := LFetch(l2.InstanceNotesData, a1, 0, functions.IsSameEntry, '[pathExpr: 1]))) then begin
+					return 0
+				end;
+			l4 := l3[0];
+			if (l5 := LFetch(repeatingEntryFinders, a1.repeatingMeetingAlias, 0, functions.IsSameEntry, '[pathExpr: entryAlias])) then begin
+					if (not BFind(l5.instancesDates, l4, '|<|, nil)) then begin
+							BInsert(l5.instancesDates, l4, '|<|, nil, true);
+							l5.instancesCount := (l5.instancesCount + 1);
+							l1 := 1
+						end
+				end else begin
+					AddArraySlot(repeatingEntryFinders, {_proto: owner.protoRepeatingEntryFinder, entryAlias: a1.repeatingMeetingAlias, EntryUniqueID: EntryUniqueID(l2), instancesDates: [Array: l4], currentInstance: 0, instancesCount: 1});
+					l1 := 1
+				end
+		end;
+	l1
+end
+@@end

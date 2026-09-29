@@ -1,0 +1,5 @@
+@@ 0x532aed
+func(a1) begin
+	self:ConvertInkText(a1.rawNumber, 'phone, 262144, ParamStr("Phone for ^0 ", [Array: a1.name]), ParamStr("Please verify that ^0 is converted correctly", [Array: a1.rawNumber]), 'InkConvert, 'ConvertComplete, a1)
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x523b19
+func(a1, a2) begin
+	self:OpenManual(a1);
+	Outline:TopicByName(a2)
+end
+@@end

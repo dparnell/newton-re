@@ -1,0 +1,15 @@
+obj_505fdd := same("obj_63bd09.Popit.literals[2][3].item");
+obj_505ff9 := same("obj_63bd09.Popit.literals[2][4].item");
+obj_50611d := same("obj_63bd09.Popit.literals[2][5].item");
+obj_506279 := same("obj_63bd09.Popit.literals[4][5].item");
+obj_506349 := same("obj_63bd09.Popit.literals[6][0].item");
+obj_506369 := same("obj_63bd09.Popit.literals[6][1].item");
+obj_5063a5 := same("obj_63bd09.Popit.literals[6][2].item");
+obj_5064c5 := same("obj_63bd09.Popit.literals[6][5].item");
+obj_5065ad := same("obj_63bd09.Popit.literals[8][3].item");
+obj_5065c9 := same("obj_63bd09.Popit.literals[8][4].item");
+obj_5066ed := same("obj_63bd09.Popit.literals[8][1].item");
+obj_506709 := same("obj_63bd09.Popit.literals[8][2].item");
+obj_506725 := same("obj_63bd09.Popit.literals[8][5].item");
+obj_5068ad := same("obj_63bd09.GetDuration.literals[31]");
+obj_63bd09 := {viewJustify: 0, longFormat: nil, shortFormat: 'numericDateStrSpec, repeatType: nil, mtgInfo: nil, durationPop: nil, fakeTemplate: {mtgStartDate: nil, mtgStopDate: 536870911, repeatType: nil, mtgInfo: nil}, viewSetupFormScript: function("functions/obj_63bd09.viewSetupFormScript.ns"), Popit: function("functions/obj_63bd09.Popit.ns"), GetDuration: function("functions/obj_63bd09.GetDuration.ns"), _proto: @607};

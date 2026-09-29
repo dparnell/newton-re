@@ -1,0 +1,11 @@
+@@ 0x45ba81
+func() begin
+	local l1, l2;
+	inherited:?viewSetupDoneScript();
+	self:Dirty();
+	(if (Length((l1 := GetAppAlarmKeys(ownerName))) > 0) then begin
+			clock:ShowTime((l2 := GetAlarm(l1[0]).callBackParams[0]).hours, l2.minutes);
+			days:Initialize(l2.days, nil)
+		end else days:Initialize(4064, nil))
+end
+@@end

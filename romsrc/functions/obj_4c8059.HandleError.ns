@@ -1,0 +1,18 @@
+@@ 0x4c7ff9
+func(a1) begin
+	local l1, l2, l3;
+	lastError := a1;
+	(if (l1 := self:TranslateError(a1)) then begin
+			l2 := "";
+			if currentRecipient then begin
+					if (not StrFilled((l3 := currentRecipient.name))) then begin
+							l3 := currentRecipient.phoneNumber
+						end;
+					if (if StrFilled(l3) then (appSymbol = '|faxsend:newton|)) then begin
+							l2 := ParamStr("Faxing to ^0 failed.  ", [Array: l3])
+						end
+				end;
+			self:Notify(3, title, Stringer([Array: l2, l1]))
+		end)
+end
+@@end

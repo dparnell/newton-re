@@ -1,0 +1,12 @@
+@@ 0x59aab9
+func() begin
+	if (not mailEndPoint.curstate) then begin
+			return nil
+		end;
+	mailEndPoint.curstate := nil;
+	(if (curerror = nil) then begin
+			mailEndPoint:Cancel(cancelSpec);
+			(curerror := -16005)
+		end else AddDeferredSend(mailEndPoint, 'stopCCL, nil))
+end
+@@end

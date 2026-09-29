@@ -1,0 +1,5 @@
+@@ 0x56b245
+func(a1, a2) begin
+	(if (a2 = true) then ModalCardAlert('|FormatReallyNoCancel?|, a1, nil) else a2)
+end
+@@end

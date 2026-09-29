@@ -1,0 +1,5 @@
+@@ 0x7441fd
+func() begin
+	return conntype.currentChoice
+end
+@@end

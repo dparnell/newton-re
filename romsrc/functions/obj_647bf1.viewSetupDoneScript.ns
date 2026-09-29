@@ -1,0 +1,61 @@
+@@ 0x495eb1
+@@const kLiteral_48e271
+"BackupInfo"
+@@const kFunction_48e335
+func(a1) begin
+	(not StrEqual(a1, "Patch2.0"))
+end
+@@const kLiteral_48e355
+{type: 'index, indexPath: 'name, IndexValidTest: kFunction_48e335}
+@@const kROM_601
+@601
+@@const kROM_600
+@600
+@@main
+func() begin
+	local l1;
+	RegSoupChange("BackupInfo", whoAmI, func(a1, a2, a3, a4) begin
+		(if StrEqual(a1, kLiteral_48e271) then (if (if ((a3 = 'SoupLeaves) or (a3 = 'soupDeleted)) then (not self:getDestStore():GetSoup(kLiteral_48e271))) then begin
+					backupCursor := nil;
+					backupSoup := nil;
+					backupInfo := nil;
+					restoreButton:Hide();
+					self:displayinfo()
+				end else (if (a3 = 'soupCreated) then begin
+						backupSoup := a4;
+						backupCursor := backupSoup:Query(kLiteral_48e355);
+						self:getBackupInfo();
+						restoreButton:Show();
+						self:displayinfo()
+					end)))
+	end);
+	RegSoupChange(@276, whoAmI, func(a1, a2, a3, a4) begin
+		(if StrEqual(a1, @276) then (if (if (if IsFrame(a4) then a4.tag) then StrEqual(a4.tag, "Backup")) then self:displayinfo()))
+	end);
+	RegUserConfigChange(whoAmI, func(a1) begin
+		local l1, l2;
+		(if (a1 = 'defaultStoreSig) then begin
+				l1 := GetDefaultStore();
+				l2 := defaultStoreCheckBox.viewValue;
+				(if (if (l1 = _openedForStore) then (not l2)) then defaultStoreCheckBox:toggleCheck() else (if (if (l1 <> _openedForStore) then l2) then defaultStoreCheckBox:toggleCheck()))
+			end)
+	end);
+	infoShapes := Array(3, nil);
+	lockShape := OffsetShape(MakeShape(kROM_601), 15, 62);
+	unlockShape := OffsetShape(MakeShape(kROM_600), 15, 62);
+	screenOrientation := GetUserConfig('screenOrientation);
+	l1 := self:getDestStore();
+	cardSlotIcon := CardSlotIcons[l1:CardSlot()];
+	cardSlotIconBounds := {left: 5, top: 6, right: (5 + (cardSlotIcon.bounds.right div 4)), bottom: (6 + cardSlotIcon.bounds.bottom)};
+	self:displayinfo();
+	if l1:IsReadOnly() then begin
+			backupButton:Hide();
+			eraseButton:Hide();
+			SetKeyView(self, 0)
+		end else begin
+			SetKeyView(nameInput, 9999)
+		end;
+	lastROValue := self:getDestStore():IsReadOnly();
+	self:SetupIdle(1)
+end
+@@end

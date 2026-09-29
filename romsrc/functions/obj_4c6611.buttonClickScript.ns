@@ -1,0 +1,7 @@
+@@ 0x4c65d9
+func() begin
+	local l1;
+	l1 := true;
+	(if (l1 := (not printView:printNextPageScript())) then base:Close() else base:Dirty())
+end
+@@end

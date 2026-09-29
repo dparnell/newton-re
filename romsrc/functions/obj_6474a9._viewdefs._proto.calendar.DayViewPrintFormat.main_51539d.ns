@@ -1,0 +1,6 @@
+@@ 0x51539d
+func() begin
+	inherited:viewSetupFormScript();
+	(MeetingBottom := ((MeetingTop := (if ShowCribNotes then 106 else 26)) + MeetingHeight))
+end
+@@end

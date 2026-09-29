@@ -1,0 +1,7 @@
+@@ 0x7583a1
+func() begin
+	context:Import(selectedTranslator);
+	closing := true;
+	base:Close()
+end
+@@end

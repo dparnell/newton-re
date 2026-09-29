@@ -1,0 +1,14 @@
+@@ 0x4a77c9
+func() begin
+	(if (not validTest) then Length(things) else begin
+			l1 := 0;
+			local l1;
+			(foreach l2 in things do begin
+					if call validTest with (l2) then begin
+							l1 := (l1 + 1)
+						end
+				end);
+			l1
+		end)
+end
+@@end

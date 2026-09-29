@@ -1,0 +1,12 @@
+@@ 0x3c6f11
+func() begin
+	popup := Clone(_recogPopup);
+	l1 := self:GetUserChoices();
+	local l1;
+	(foreach l2, l3 in popup do begin
+			if (l3 <> 'pickseparator) then begin
+					popup[l2] := l1.(l3)
+				end
+		end)
+end
+@@end

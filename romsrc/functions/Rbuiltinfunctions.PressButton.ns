@@ -1,0 +1,15 @@
+@@ 0x41f8f1
+func(a1) begin
+	(if (if (if a1 then a1.viewCObject) then (BAnd(a1.viewFlags, 1) <> 0)) then begin
+			vars._hiliteMenuItem := true;
+			a1:TrackHilite(nil);
+			if (if a1.viewCObject then (BAnd(a1.viewFlags, 1) <> 0)) then begin
+					a1:buttonClickScript()
+				end;
+			if (if a1.viewCObject then (BAnd(a1.viewFlags, 1) <> 0)) then begin
+					a1:hilite(nil)
+				end;
+			(vars._hiliteMenuItem := nil)
+		end)
+end
+@@end

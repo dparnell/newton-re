@@ -1,0 +1,9 @@
+@@ 0x73e161
+func(a1, a2) begin
+	local l1;
+	if (not StrFilled((l1 := a1.group))) then begin
+			l1 := "Untitled Group"
+		end;
+	l1
+end
+@@end

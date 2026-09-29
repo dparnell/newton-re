@@ -1,0 +1,13 @@
+@@ 0x479009
+func() begin
+	local l1, l2;
+	l1 := self:GlobalBox();
+	(l2 := self:LocalBox()).top := (l2.bottom - bottomIndent);
+	self:SetupBounds(0, true);
+	self:SyncView();
+	self:RevealEffect((l2.top - l2.bottom), l2, indentSound, nil, nil);
+	playsound(cancelSound);
+	GetRoot():DirtyBox(l1);
+	(base.hideSound := @314)
+end
+@@end

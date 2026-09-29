@@ -1,0 +1,21 @@
+@@ 0x45230d
+func() begin
+	if fSoup then begin
+			pickBase.myQuerySpec := self:SetupFiltering(myQuerySpec);
+			soupCursor := fSoup:Query(myQuerySpec);
+			if multiCursor then begin
+					multiCursor:ReplaceCursor(0, soupCursor)
+				end
+		end;
+	self:UpdateCursor();
+	if fCurrentKey then begin
+			cursor:GotoKey(fCurrentKey)
+		end else begin
+			cursor:Reset()
+		end;
+	self:LockScreen(true);
+	AZTabs:Update();
+	listBase:Update();
+	self:LockScreen(nil)
+end
+@@end

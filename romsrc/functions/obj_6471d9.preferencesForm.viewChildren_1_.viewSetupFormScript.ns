@@ -1,0 +1,5 @@
+@@ 0x53133d
+func() begin
+	(viewValue := GetRoot().(transport.owner):GetAppPreferences().internalStore)
+end
+@@end

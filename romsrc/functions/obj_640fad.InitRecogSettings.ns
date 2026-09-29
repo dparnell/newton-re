@@ -1,0 +1,17 @@
+@@ 0x488fcd
+func() begin
+	if (not (_recogSettings exists)) then begin
+			GetRoot()._recogSettings := nil
+		end;
+	if (not self:ValidItem(defaultItem)) then begin
+			defaultItem := _recogPopup[0]
+		end;
+	if (not _recogSettings) then begin
+			_recogSettings := self:itemIndex(defaultItem)
+		end;
+	if IsFrame(_recogSettings) then begin
+			_recogSettings := self:CompactSettingsFrame(_recogSettings)
+		end;
+	(self._cachedSettings := self:ExpandSettingsFrame(_recogSettings))
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x596bb1
+func() begin
+	local l1;
+	if (not pix) then begin
+			pix := MakeLine((l1 := self:LocalBox()).left, l1.top, l1.right, l1.top)
+		end;
+	self:DrawShape(pix, nil)
+end
+@@end

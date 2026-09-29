@@ -1,0 +1,10 @@
+@@ 0x721d05
+func(a1, a2, a3) begin
+	viewJustify := a1;
+	viewBounds := a2;
+	syncing := true;
+	SetValue(self, 'viewFormat, a3);
+	syncing := nil;
+	self:RedoChildren()
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x4ca1f5
+func() begin
+	message := nil;
+	deferredFax := nil;
+	(if fManualReceive then (fManualReceive := nil))
+end
+@@end

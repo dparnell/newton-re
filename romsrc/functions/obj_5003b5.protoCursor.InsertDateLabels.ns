@@ -1,0 +1,23 @@
+@@ 0x50e201
+func(a1) begin
+	l1 := Length(a1);
+	l2 := Array(1, nil);
+	l3 := -1;
+	l4 := 0;
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	(for l5 := 1 to l1 do begin
+			local l8;
+			if ((l8 := a1[l4].mtgStartDate) >= l3) then begin
+					l2[0] := LongDateStr(l8, @66.abbrDateStrSpec);
+					ArrayMunger(a1, l4, 0, l2, 0, 1);
+					l4 := (l4 + 1);
+					l3 := ((l8 - (l8 mod 1440)) + 1440)
+				end;
+			l4 := (l4 + 1)
+		end);
+	a1
+end
+@@end

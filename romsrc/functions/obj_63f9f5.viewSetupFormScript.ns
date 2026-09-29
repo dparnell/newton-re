@@ -1,0 +1,11 @@
+@@ 0x4a6835
+func() begin
+	if (not theSoups) then begin
+			theSoups := (foreach l1 in theApp.allSoups collect l1.theSoup)
+		end;
+	if theApp.aboutInfo.credits then begin
+			self:SetupIdle(8000)
+		end;
+	SetKeyView(self, 0)
+end
+@@end

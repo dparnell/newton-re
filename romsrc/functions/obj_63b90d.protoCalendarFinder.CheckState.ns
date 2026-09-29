@@ -1,0 +1,5 @@
+@@ 0x4ea145
+func(a1) begin
+	(if a1.realFinder.CheckState then a1.realFinder:CheckState(a1) else a1.realFinder:isSelected(a1))
+end
+@@end

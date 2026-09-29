@@ -1,0 +1,27 @@
+@@ 0x78ed7d names
+func(fields, target) begin
+	local topic;
+	local t;
+	local theText;
+	local bullet;
+	(foreach topic in target.topics do begin
+			if topic.mtgDone then begin
+					bullet := mailBulletDone
+				end else begin
+					bullet := mailBulletNotDone
+				end;
+			if theText then begin
+					theText := Stringer([Array: theText, "\n"]);
+					if topic.level then begin
+							(for t := 2 to topic.level do begin
+									theText := Stringer([Array: theText, "\t"])
+								end)
+						end;
+					theText := Stringer([Array: theText, bullet, MakeRichString(topic.text, topic.styles)])
+				end else begin
+					theText := Stringer([Array: bullet, MakeRichString(topic.text, topic.styles)])
+				end
+		end);
+	theText
+end
+@@end

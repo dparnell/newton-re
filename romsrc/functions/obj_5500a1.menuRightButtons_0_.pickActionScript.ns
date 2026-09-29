@@ -1,0 +1,6 @@
+@@ 0x54fef5
+func(a1) begin
+	inherited:pickActionScript(a1);
+	iconSpace:SelectNone()
+end
+@@end

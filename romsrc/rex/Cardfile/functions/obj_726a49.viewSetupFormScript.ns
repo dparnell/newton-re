@@ -1,0 +1,9 @@
+@@ 0x726b01
+func() begin
+	label := GetLocale().postalCodeLabel;
+	if (selectedPath <> true) then begin
+			RemoveSlot(self, 'viewChangedScript)
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

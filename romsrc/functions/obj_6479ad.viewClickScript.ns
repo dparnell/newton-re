@@ -1,0 +1,35 @@
+@@ 0x440bc9
+func(a1) begin
+	local l1;
+	InkOff(a1);
+	l1 := self:GetArrow(arrowDirection);
+	hilite := true;
+	self:DoDrawing('viewDrawScript, [Array: ]);
+	if self:EndOfTheLine(arrowDirection) then begin
+			hilite := nil;
+			self:DoDrawing('viewDrawScript, [Array: ]);
+			return true
+		end;
+	clicker();
+	(extras := Clone(baseFrame)).unit := a1;
+	if ((Ticks() - lastTap) < 60) then begin
+			extras.tap := 'double
+		end;
+	lastTap := Ticks();
+	(loop begin
+			if self:EndOfTheLine(arrowDirection) then begin
+					break
+				end;
+			self:SetupExtras(arrowDirection, extras);
+			scrollView:?viewScroll2DScript(arrowDirection, extras);
+			self:AdjustArrows();
+			l1 := self:GetArrow(arrowDirection);
+			extras.count := (extras.count + 1);
+			(if StrokeDone(a1) then break)
+		end);
+	scrollView:?viewScrollDoneScript();
+	hilite := nil;
+	self:DoDrawing('viewDrawScript, [Array: ]);
+	true
+end
+@@end

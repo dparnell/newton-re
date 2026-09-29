@@ -1,0 +1,14 @@
+@@ 0x4fd8c1
+func(a1, a2) begin
+	local l1, l2, l3, l4, l5, l6;
+	(if (a2 = 49) then (if ((l1 := Length(selectedDates)) > 1) then begin
+				l2 := self:GlobalBox();
+				l3 := (GetPoint(0, a1) - l2.left);
+				l4 := ((l2.right - l2.left) div l1);
+				l5 := (l3 div l4);
+				self:DrawShape(MakeRect((l6 := ((l5 := min(l1, l5)) * l4)), 0, (l6 + l4), (l2.bottom - l2.top)), '{fillPattern: 5, transferMode: 2});
+				selectedDates := [Array: selectedDates[l5]];
+				calendar:redisplayScript()
+			end))
+end
+@@end

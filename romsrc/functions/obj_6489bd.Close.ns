@@ -1,0 +1,16 @@
+@@ 0x52e955
+func() begin
+	(if (currentDevice <> nil) then begin
+			try begin
+					self:Disconnect(true, nil)
+				end onexception |evt.ex| do begin end;
+			try begin
+					self:Unbind(nil)
+				end onexception |evt.ex| do begin end;
+			try begin
+					self:Dispose()
+				end onexception |evt.ex| do begin end;
+			(currentDevice := nil)
+		end)
+end
+@@end

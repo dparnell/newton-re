@@ -1,0 +1,14 @@
+@@ 0x5618e9
+func() begin
+	l1 := nil;
+	if findAllResults then begin
+			local l1;
+			(foreach l2 in findAllResults do begin
+					if ((if l2.IsAnythingSelected then l2:IsAnythingSelected()) or (if l2.selected then (Length(l2.selected) > 0))) then begin
+							break (l1 := true)
+						end
+				end)
+		end;
+	l1
+end
+@@end

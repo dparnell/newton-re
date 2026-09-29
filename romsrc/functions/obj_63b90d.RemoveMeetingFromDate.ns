@@ -1,0 +1,56 @@
+@@ 0x4f7e29
+func(a1, a2, a3) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11;
+	if a1.realData then begin
+			l1 := a1;
+			l2 := a1.realData
+		end else begin
+			l2 := a1
+		end;
+	l3 := l2.originDate;
+	if ((l4 := l2.viewStationery) = 'exceptionMeeting) then begin
+			if ((l6 := self:searchExceptionList((l5 := l2.repeatTemplate), l3)) >= 0) then begin
+					if ((l7 := l5.exceptions[l6])[1] = nil) then begin end else begin
+							if (l7[1].mtgStartDate = l2.mtgStartDate) then begin
+									l7[1] := nil;
+									self:UpdateInstanceNotesDataTime(l5, l2.mtgStartDate, nil);
+									self:CarefulChange(RepeatSoup, l5, true)
+								end else nil
+						end
+				end
+		end else begin
+			if (l4 = 'RepeatingMeeting) then begin
+					l5 := l2.repeatTemplate;
+					l3 := l2.mtgStartDate;
+					if ((l6 := self:searchExceptionList(l5, l3)) >= 0) then begin end else begin
+							if (not l5.exceptions) then begin
+									l5.exceptions := [Array: ]
+								end;
+							AddArraySlot(l5.exceptions, [Array: l3, nil]);
+							self:UpdateInstanceNotesDataTime(l5, l3, nil);
+							self:CarefulChange(RepeatSoup, l5, true)
+						end
+				end else begin
+					self:CarefulRemove(l2, 'calendar)
+				end
+		end;
+	if Visible((l8 := scheduleView.DayTable)) then begin
+			if (l10 := (if (l9 := l8:ChildViewFrames()) then LSearch(l9, a2, 0, '|=|, 'displaydate))) then begin
+					l10 := l9[l10];
+					if (if (if l1 then l1.viewCObject) then Visible(l1)) then begin
+							RemoveView(l10, l1)
+						end;
+					if (l11 := LSearch(l10.viewChildren, l2, 0, '|=|, nil)) then begin
+							ArrayRemoveCount(l10.viewChildren, l11, 1)
+						end;
+					l10:ReArrangeMeetings()
+				end
+		end;
+	self:calculateScrollingRects();
+	upDownScroller:AdjustArrows();
+	if self:GetMeetingSlot(l2, 'mtgAlarm) then begin
+			self:initializeAlarms()
+		end;
+	(if a3 then calendar:AddUndoAction('AddMeetingToDate, [Array: l2, l2.mtgStartDate, true]))
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x49946d
+func() begin
+	fStage := (fStage + 1);
+	(if (if (fMode = 'AutoInAndOut) then (fStage < 2)) then 'DoInputSpec else 'DoDisconnect)
+end
+@@end

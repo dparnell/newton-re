@@ -1,0 +1,7 @@
+@@ 0x48dbf1
+func(a1) begin
+	local l1;
+	l1 := ConvertIntToPhone(a1.mailAccess[0].mailPhone);
+	(if a1.mailAccess[0].mailNetwork then StrFilled(l1))
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x477f05
+func(a1) begin
+	self:hilite(nil);
+	self:PrepareForSubmission((if (a1 = 0) then 'Now else 'Later))
+end
+@@end

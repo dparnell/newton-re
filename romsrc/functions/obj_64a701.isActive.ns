@@ -1,0 +1,5 @@
+@@ 0x427da9
+func() begin
+	(not RecordEngine:TestState(1))
+end
+@@end

@@ -1,0 +1,11 @@
+@@ 0x62d1d1
+func(a1, a2) begin
+	local l1, l2, l3;
+	l2 := (l1 := EntrySoup(a1)):GetName();
+	l3 := EntryRemoveFromSoup(a1);
+	if a2 then begin
+			XmitSoupChange(l2, a2, 'entryRemoved, {oldSoup: l1, entry: a1})
+		end;
+	l3
+end
+@@end

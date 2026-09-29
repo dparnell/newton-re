@@ -1,0 +1,5 @@
+@@ 0x4848c1
+func() begin
+	(self.viewBounds := SetBounds(5, 5, -5, (folderClusterHeight + 23)))
+end
+@@end

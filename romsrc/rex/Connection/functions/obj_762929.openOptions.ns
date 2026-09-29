@@ -1,0 +1,5 @@
+@@ 0x762955
+func() begin
+	return [Array: {label: "irda", type: 'service, opCode: 512}, {label: "irci", type: 'option, opCode: 512, result: nil, form: 'template, data: {arglist: [Array: 0, 0, 14, 6, "NewtConnection", "Docker"], typeList: [Array: 10, 2, 2, 2, 2, [Array: 11, 13, 0], [Array: 11, 13, 0]]}}]
+end
+@@end

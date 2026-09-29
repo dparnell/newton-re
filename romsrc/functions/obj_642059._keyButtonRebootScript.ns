@@ -1,0 +1,11 @@
+@@ 0x44b569
+@@const kFunction_44b549
+func(a1) begin
+	(if a1 then ReBoot())
+end
+@@main
+func(a1) begin
+	clicker();
+	AsyncConfirm("Reset your Newton device?", 'yesNoDefaultYes, kFunction_44b549)
+end
+@@end

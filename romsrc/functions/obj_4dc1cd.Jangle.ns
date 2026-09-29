@@ -1,0 +1,7 @@
+@@ 0x4dc16d
+func() begin
+	jangling := 40;
+	self:SetAlarm(alarmTime);
+	self:SetupIdle(1)
+end
+@@end

@@ -1,0 +1,63 @@
+@@ 0x797af5 names
+func(aDate) begin
+	earliestDate := 536870911;
+	self:GetToDoSoup();
+	if ((aDate := ((aDate div 1440) * 1440)) = 0) then begin
+			aDate := 1440
+		end;
+	yesterday := (((aDate div 1440) * 1440) - 1440);
+	(cursor := dataSoup:Query({type: 'index, indexPath: 'date, beginKey: 1, endKey: yesterday})):ResetToEnd();
+	Entry := cursor:Entry();
+	(while Entry do begin
+			if (if Entry.topics then (Length(Entry.topics) > 0)) then begin
+					earliestDate := Entry.date;
+					break
+				end;
+			(Entry := cursor:Prev())
+		end);
+	if (earliestDate = yesterday) then begin
+			return earliestDate
+		end;
+	if oldTodoSoup then begin
+			(cursor := oldTodoSoup:Query({type: 'index, indexPath: 'mtgStartDate, beginKey: 1, endKey: yesterday})):ResetToEnd();
+			Entry := cursor:Entry();
+			(while Entry do begin
+					if (if Entry.topics then (Length(Entry.topics) > 0)) then begin
+							break
+						end;
+					(Entry := cursor:Prev())
+				end)
+		end;
+	if (if Entry then (Entry.mtgStartDate < earliestDate)) then begin
+			earliestDate := Entry.mtgStartDate
+		end;
+	if (earliestDate = yesterday) then begin
+			return earliestDate
+		end;
+	Entry := (cursor := dataSoup:Query({type: 'index, indexPath: 'date, startKey: 0, endTest: func(e) begin
+		(e.date > 0)
+	end})):Entry();
+	(while Entry do begin
+			local cursor;
+			local Entry;
+			local earliestDate;
+			local date;
+			local t;
+			local yesterday;
+			(foreach t in Entry.topics do begin
+					date := PrevMeeting(aDate, t.repeatInfo);
+					if t.repeatInfo.reminderInterval then begin
+							date := (date - t.repeatInfo.reminderInterval)
+						end;
+					if (if (date <> 0) then (date = yesterday)) then begin
+							return yesterday
+						end;
+					if (if (date <> 0) then (date < earliestDate)) then begin
+							earliestDate := date
+						end
+				end);
+			(Entry := cursor:Next())
+		end);
+	(if (earliestDate = 536870911) then nil else earliestDate)
+end
+@@end

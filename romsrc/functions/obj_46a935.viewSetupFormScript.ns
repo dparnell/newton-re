@@ -1,0 +1,8 @@
+@@ 0x46a53d
+func() begin
+	if (not firstTime) then begin
+			SetValue(self, 'text, self:Build())
+		end;
+	(firstTime := nil)
+end
+@@end

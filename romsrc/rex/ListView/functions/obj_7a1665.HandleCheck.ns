@@ -1,0 +1,19 @@
+@@ 0x797bbd names
+func(anIndex, aTopic) begin
+	local checkTarget, lastChecked;
+	if HasPath(aTopic, 'repeatInfo) then begin
+			checkTarget := repeatTargets
+		end else begin
+			checkTarget := targets
+		end;
+	if self:CheckReadOnly(checkTarget[aTopic.source]) then begin
+			return nil
+		end;
+	target.needsSort := true;
+	inherited:HandleCheck(anIndex, aTopic);
+	(if (not aTopic.mtgDone) then begin
+			lastChecked := GetUserConfig('lastRollover);
+			(if (selectedDates[0] < lastChecked) then SetUserConfig(EnsureInternal('lastRollover), selectedDates[0]))
+		end)
+end
+@@end

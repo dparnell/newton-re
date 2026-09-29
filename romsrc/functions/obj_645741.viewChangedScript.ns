@@ -1,0 +1,9 @@
+@@ 0x4bdef5
+func(a1, a2) begin
+	(foreach l1 in self:ChildViewFrames() do begin
+			if HasPath(l1, 'viewChangedScript) then begin
+					l1:viewChangedScript(a1, a2)
+				end
+		end)
+end
+@@end

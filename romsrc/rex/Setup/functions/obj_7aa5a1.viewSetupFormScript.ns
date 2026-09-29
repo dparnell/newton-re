@@ -1,0 +1,9 @@
+@@ 0x7aa6d5
+func() begin
+	if (feedbackTop exists) then begin
+			self.viewBounds := Clone(viewBounds);
+			viewBounds.top := feedbackTop
+		end;
+	(self.viewLineSpacing := fontHeight(viewFont))
+end
+@@end

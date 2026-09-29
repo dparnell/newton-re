@@ -1,0 +1,8 @@
+@@ 0x4177e9
+func(a1) begin
+	(if jamSlot then begin
+			target.(path) := nil;
+			(if a1 then (target.(path) := a1.(jamSlot)))
+		end)
+end
+@@end

@@ -1,0 +1,18 @@
+@@ 0x4642ed
+func(a1) begin
+	l1 := [Array: ];
+	if a1 then begin
+			if (l3 := GetViewDefs((l2 := DataClassOf(a1)))) then begin
+					local l1;
+					local l2;
+					local l3;
+					(foreach l4 in l3 do begin
+							if ((l4.type = 'printFormat) or (l4.type = 'routeFormat)) then begin
+									SetAdd(l1, l4, true)
+								end
+						end)
+				end
+		end;
+	(if (Length(l1) > 0) then l1)
+end
+@@end

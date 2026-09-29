@@ -1,0 +1,14 @@
+@@ 0x487e99
+func() begin
+	local l1;
+	l1 := GetUserConfig('userFolderGroups);
+	if (oldSymbol or (not (if doLocalFolders then doGlobalFolders))) then begin
+			localOnlyCheckBox.viewFlags := 0
+		end else begin
+			localOnlyCheckBox.viewValue := (not (if l1._Global then SetContains(l1._Global, oldSymbol)));
+			localOnlyText.viewFlags := 0
+		end;
+	SetKeyView(self, nil);
+	inherited:?viewSetupFormScript()
+end
+@@end

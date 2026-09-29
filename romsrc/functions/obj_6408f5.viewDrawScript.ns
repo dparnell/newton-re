@@ -1,0 +1,11 @@
+@@ 0x43e631
+func() begin
+	local l1, l2;
+	l2 := ((l1 := (viewBounds.right - viewBounds.left)) div 2);
+	l1 := ((hours * 5) mod 60);
+	if (minutes > 30) then begin
+			l1 := (l1 + 2)
+		end;
+	self:DrawShape([Array: MakeOval((l2 - 2), (l2 - 2), (l2 + 2), (l2 + 2)), self:GetHandShape(minutes, l2, 11000), self:GetHandShape(l1, l2, 18000)], nil)
+end
+@@end

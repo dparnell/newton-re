@@ -1,0 +1,11 @@
+@@ 0x647ddd
+func() begin
+	local l1, l2;
+	l1 := self:GlobalBox();
+	self:_Close();
+	if ((((((l2 := displayParams).appAreaGlobalLeft + l2.appAreaWidth) < l1.right) or ((l2.appAreaGlobalLeft + l2.appAreaHeight) < l1.bottom)) or (l2.appAreaGlobalLeft > l1.left)) or (l2.appAreaGlobalLeft > l1.top)) then begin
+			RemoveSlot(self, 'viewBounds)
+		end;
+	self:Open()
+end
+@@end

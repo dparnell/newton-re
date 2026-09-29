@@ -1,0 +1,8 @@
+@@ 0x7721bd
+func() begin
+	local l1;
+	(l1 := self:GetFormulaValues()).(formulaSymbol).country1 := Country1Field.country;
+	l1.(formulaSymbol).country2 := Country2Field.country;
+	inherited:?viewQuitScript()
+end
+@@end

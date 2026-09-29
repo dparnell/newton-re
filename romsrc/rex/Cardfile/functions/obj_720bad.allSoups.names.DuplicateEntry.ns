@@ -1,0 +1,8 @@
+@@ 0x739415
+func(a1, a2) begin
+	if a1.bdayEvent then begin
+			(a1 := Clone(a1)).bdayEvent := nil
+		end;
+	inherited:DuplicateEntry(a1, a2)
+end
+@@end

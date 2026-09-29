@@ -1,0 +1,114 @@
+@@ 0x41f50d
+@@const kFunction_41f401
+func(a1) begin
+	local l1;
+	(if (if a1 then a1.viewFont) then (if ((not (l1 := GetFontFamilyNum(a1.viewFont))) or (l1 >= 3)) then (a1.viewFont := SetFontFamily(a1.viewFont, 1))))
+end
+@@main
+func(a1, a2, a3) begin
+	local childWidth, createdChildren, layoutView;
+	l1 := (if (a3 = 'two0) then 'ink2 else 'ink);
+	createdChildren := [Array: ];
+	layoutView := func(a1) begin
+		local l1;
+		if ((a1.left + a1.newWidth) > childWidth) then begin
+				a1.left := a1.lMargin;
+				a1.top := (a1.top + a1.curLineHeight);
+				a1.curLineHeight := 26
+			end;
+		l1 := a1.child;
+		if (a1.newHeight > a1.curLineHeight) then begin
+				a1.curLineHeight := a1.newHeight
+			end;
+		l1.viewBounds.left := a1.left;
+		l1.viewBounds.top := (a1.top + ((a1.curLineHeight - a1.newHeight) div 2));
+		l1.viewBounds.right := (a1.left + a1.newWidth);
+		l1.viewBounds.bottom := (a1.top + a1.newHeight);
+		(a1.left := (a1.left + a1.newWidth))
+	end;
+	l2 := func(a1) begin
+		if (if a1 then a1.styles) then begin
+				local l1;
+				local l2;
+				(for l3 := 1 to (Length(a1.styles) - 1) by 2 do begin
+						if (ClassOf(a1.styles[l3]) = 'inkWord) then begin
+								break (l2 := true)
+							end
+					end);
+				if (not l2) then begin
+						(for l3 := 1 to (Length(a1.styles) - 1) by 2 do begin
+								if ((not (l6 := GetFontFamilyNum(a1.styles[l3]))) or (l6 >= 3)) then begin
+										a1.styles[l3] := SetFontFamily(a1.styles[l3], 1)
+									end
+							end)
+					end else begin
+						l7 := 0;
+						l8 := {left: a1.viewBounds.left, top: a1.viewBounds.top, newWidth: 0, newHeight: 0, curLineHeight: 26, child: nil, lMargin: a1.viewBounds.left};
+						childWidth := a1.viewBounds.right;
+						(for l3 := 1 to (Length(a1.styles) - 1) by 2 do begin
+								if (ClassOf(a1.styles[l3]) = 'inkWord) then begin
+										l9 := {_proto: @199, viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, ink: InkConvert(a1.styles[l3], 'ink)};
+										l10 := GetInkWordInfo(a1.styles[l3]);
+										l8.newWidth := (l10.origWidth + 10);
+										l8.newHeight := ((l10.origAscent + l10.origDescent) + 4);
+										l8.child := l9;
+										call layoutView with (l8);
+										AddArraySlot(createdChildren, l9);
+										l1 := true
+									end else begin
+										if (l11 := Substr(a1.text, l7, a1.styles[(l3 - 1)])) then begin
+												if (if (if (l12 := SplitString(l11)) then (Length(l12) > 0)) then (l12[0] <> nil)) then begin
+														local l6;
+														local l7;
+														local l8;
+														local l9;
+														local l10;
+														local l11;
+														local l12;
+														(foreach l13 in l12 do begin
+																l9 := {_proto: @193, viewStationery: 'para, viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, text: l13};
+																l8.newWidth := (StrFontWidth(l13, 18433) + 5);
+																l8.newHeight := 18;
+																l8.child := l9;
+																call layoutView with (l8);
+																AddArraySlot(createdChildren, l9);
+																l1 := true
+															end)
+													end
+											end
+									end;
+								l7 := (l7 + a1.styles[(l3 - 1)])
+							end)
+					end
+			end;
+		l1
+	end;
+	l3 := kFunction_41f401;
+	if (ClassOf(a1) = 'frame) then begin
+			if (l4 := a1).ink then begin
+					l4.ink := InkConvert(l4.ink, l1)
+				end;
+			call l3 with (l4);
+			call l2 with (l4)
+		end else begin
+			if (ClassOf(a1) = 'Array) then begin
+					if (Length(a1) > 0) then begin
+							local l1;
+							local l2;
+							local l3;
+							local l4;
+							(for l5 := (Length(a1) - 1) to 0 by -1 do begin
+									if (l4 := a1[l5]).ink then begin
+											l4.ink := InkConvert(l4.ink, l1)
+										end;
+									call l3 with (l4);
+									if call l2 with (l4) then begin
+											ArrayRemoveCount(a1, l5, 1)
+										end
+								end)
+						end
+				end
+		end;
+	(if (Length(createdChildren) = 0) then nil else createdChildren)
+end
+@@end

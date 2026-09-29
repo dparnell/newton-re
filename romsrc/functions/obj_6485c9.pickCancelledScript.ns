@@ -1,0 +1,5 @@
+@@ 0x4b8eed
+func() begin
+	baseLine:hilite(nil)
+end
+@@end

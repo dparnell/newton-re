@@ -1,0 +1,8 @@
+@@ 0x78c9ed names
+func(anIndex) begin
+	if (StrLen(topics[anIndex].text) = 0) then begin
+			return true
+		end;
+	nil
+end
+@@end

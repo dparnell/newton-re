@@ -1,0 +1,7 @@
+@@ 0x523a79
+func() begin
+	bookRef := nil;
+	isbn := nil;
+	RemoveSlot(self, 'viewFormat)
+end
+@@end

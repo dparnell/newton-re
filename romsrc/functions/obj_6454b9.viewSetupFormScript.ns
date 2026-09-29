@@ -1,0 +1,11 @@
+@@ 0x49c9cd
+func() begin
+	local l1;
+	inherited:viewSetupFormScript();
+	if (l1 := dataCursor:entry()) then begin
+			hiliteEntry := l1
+		end;
+	dontStartWithFolder := true;
+	SetKeyView(self, 0)
+end
+@@end

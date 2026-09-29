@@ -1,0 +1,10 @@
+@@ 0x62cb79
+func(a1, a2) begin
+	local l1;
+	l1 := EntryChangeWithModTime(a1);
+	if a2 then begin
+			XmitSoupChange(EntrySoup(a1):GetName(), a2, 'entryChanged, a1)
+		end;
+	l1
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x7422ad
+func(a1) begin
+	local l1;
+	(l1 := ParamStr("^?0^0, ||# members: ^1", [Array: GetDataDefs(ClassOf(a1[0])).name, Length(a1[0])]))
+end
+@@end

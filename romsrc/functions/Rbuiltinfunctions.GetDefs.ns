@@ -1,0 +1,39 @@
+@@ 0x4a9041
+func(a1, a2, a3) begin
+	l1 := [Array: ];
+	if (a1 = 'dataDef) then begin
+			if a2 then begin
+					local l1;
+					(foreach l2 deeply in _dataDefs do begin
+							if SetContains(a2, l2.superSymbol) then begin
+									AddArraySlot(l1, l2)
+								end
+						end)
+				end else begin
+					(foreach l2 deeply in _dataDefs do begin
+							if l2.superSymbol then begin
+									AddArraySlot(l1, l2)
+								end
+						end)
+				end
+		end else begin
+			if (a1 = 'viewDef) then begin
+					if a2 then begin
+							(foreach l4 in a2 do begin
+									local l6;
+									(foreach l7 in (l6 := GetViewDefs(l4)) do begin
+											if a3 then begin
+													if SetContains(a3, l7.type) then begin
+															AddArraySlot(l1, l7)
+														end
+												end else begin
+													AddArraySlot(l1, l7)
+												end
+										end)
+								end)
+						end
+				end
+		end;
+	l1
+end
+@@end

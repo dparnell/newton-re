@@ -1,0 +1,12 @@
+@@ 0x76e8e5
+@@const kLiteral_76e9d9
+"Formulas:Apple"
+@@main
+func() begin
+	local l1, l2;
+	if ((l2 := Query((l1 := GetStores()[0]:GetSoup(@276)), {type: 'index, IndexPath: 'tag, beginKey: kLiteral_76e9d9, endKey: kLiteral_76e9d9}):entry()) = nil) then begin
+			l2 := l1:Add({tag: kLiteral_76e9d9, LoanPayment: nil, NetPresentValue: nil, CurrencyExchange: nil, DateCalculator: nil, DateConversion: nil})
+		end;
+	return l2
+end
+@@end

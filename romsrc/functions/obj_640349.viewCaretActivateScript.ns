@@ -1,0 +1,13 @@
+@@ 0x429441
+func(a1) begin
+	local l1;
+	(if a1 then begin
+			if indent then begin
+					l1 := (indent - 2)
+				end else begin
+					l1 := 0
+				end;
+			self:Popit(l1)
+		end)
+end
+@@end

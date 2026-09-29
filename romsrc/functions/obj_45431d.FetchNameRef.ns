@@ -1,0 +1,9 @@
+@@ 0x453cd9
+func(a1) begin
+	local l1;
+	if (not (l1 := self:FindNameRefInSelected(a1))) then begin
+			(l1 := (if IsNameRef(a1) then a1 else pickerDef:MakeNameRef(a1, nil)))._Unselected := 'totally
+		end;
+	l1
+end
+@@end

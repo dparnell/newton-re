@@ -1,0 +1,16 @@
+@@ 0x751b61
+func() begin
+	local l1;
+	self.protoContext := GetRoot().Connection;
+	protoContext:AddOpenWindow(self);
+	(try begin
+			if (not IsFrame((l1 := protoContext:CallReadCommand(endpoint, "finf")).data)) then begin
+					Throw('|evt.ex.error|, -28012)
+				end;
+			(fileInfo := l1.data)
+		end onexception |evt.ex| do begin
+			protoContext:HandleErrorDuringStartup(endpoint, self, CurrentException().error);
+			(fileInfo := {})
+		end)
+end
+@@end

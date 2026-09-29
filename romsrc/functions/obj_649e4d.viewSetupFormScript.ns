@@ -1,0 +1,6 @@
+@@ 0x4b6b6d
+func() begin
+	_tagKeyButton := self;
+	inherited:?viewSetupFormScript()
+end
+@@end

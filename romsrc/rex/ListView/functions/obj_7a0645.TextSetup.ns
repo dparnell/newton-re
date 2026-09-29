@@ -1,0 +1,28 @@
+@@ 0x7a05f5 names
+func() begin
+	local index, date;
+	if relayoutInProgress then begin
+			return labelCommands[savedReminderIndex]
+		end;
+	if (if HasPath(task, 'repeatInfo) then task.repeatInfo.reminderInterval) then begin
+			index := Min(7, (task.repeatInfo.reminderInterval div 1440))
+		end else begin
+			if (not HasPath(task, 'remindForDate)) then begin
+					index := 0
+				end else begin
+					if (newMtgDate <> originalMtgDate) then begin
+							date := newMtgDate
+						end else begin
+							if nominalDate then begin
+									date := nominalDate
+								end else begin
+									date := originalMtgDate
+								end
+						end;
+					index := Min(7, Max(0, ((task.remindForDate - date) div 1440)))
+				end
+		end;
+	savedReminderIndex := index;
+	labelCommands[index]
+end
+@@end

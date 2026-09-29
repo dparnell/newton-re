@@ -1,0 +1,7 @@
+@@ 0x45dc99
+func(a1, a2, a3) begin
+	selectedItem := a1;
+	self:SelectItem(a1);
+	true
+end
+@@end

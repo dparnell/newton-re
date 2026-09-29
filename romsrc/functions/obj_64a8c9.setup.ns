@@ -1,0 +1,5 @@
+@@ 0x4e505d
+func() begin
+	self:GetSelectionPenSize()
+end
+@@end

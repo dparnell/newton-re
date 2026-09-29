@@ -1,0 +1,7 @@
+@@ 0x4aa1ed
+func() begin
+	local l1;
+	layout:viewScrollDownScript();
+	(if (if (l1 := GetUserConfig('blessedapp)) then (GetRoot().(l1) = newtAppBase)) then AddProcrastinatedSend('SaveAppState, self, 'SaveAppState, [Array: ], 10000))
+end
+@@end

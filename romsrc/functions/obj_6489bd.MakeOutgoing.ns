@@ -1,0 +1,5 @@
+@@ 0x52ec55
+func(a1, a2) begin
+	self:SendOption("outg", a1, a2)
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x473e25
+func(a1) begin
+	local l1;
+	RemoveSlot((l1 := GetDesktopConnTransports()).transports, a1);
+	EntryChangeXmit(l1, 'whatThe);
+	return l1
+end
+@@end

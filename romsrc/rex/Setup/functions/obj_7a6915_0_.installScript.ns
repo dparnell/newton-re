@@ -1,0 +1,9 @@
+@@ 0x7b4c69
+func(a1) begin
+	a1:?devInstallScript(a1);
+	if HasSlot(a1, 'devInstallScript) then begin
+			RemoveSlot(a1, 'devInstallScript)
+		end;
+	(a1.installScript := nil)
+end
+@@end

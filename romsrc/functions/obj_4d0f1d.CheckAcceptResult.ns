@@ -1,0 +1,12 @@
+@@ 0x4d075d
+func(a1) begin
+	(try begin
+			if a1 then begin
+					Throw('|evt.ex.comm|, a1)
+				end;
+			ep:SetInputSpec((activeInputSpec := self:GetNextSpec()))
+		end onexception |evt.ex| do begin
+			(if self:HandleThrow() then self:DoDisconnect(nil))
+		end)
+end
+@@end

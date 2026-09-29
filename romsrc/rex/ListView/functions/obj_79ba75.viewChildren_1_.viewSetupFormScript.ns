@@ -1,0 +1,6 @@
+@@ 0x79bb2d names
+func() begin
+	text := displayLine.contentText;
+	(viewBounds := SetBounds(110, 0, 0, height))
+end
+@@end

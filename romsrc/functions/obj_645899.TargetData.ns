@@ -1,0 +1,5 @@
+@@ 0x4b8241
+func() begin
+	(if (if (if target then path) then target.(path)) then FormattedNumberStr(target.(path), format) else "")
+end
+@@end

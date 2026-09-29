@@ -1,0 +1,61 @@
+@@ 0x452211
+@@const kFunction_450079
+func(a1) begin
+	local l1;
+	if (not a1) then begin
+			return nil
+		end;
+	(if IsInstance(a1, 'alias) then ResolveEntryAlias(a1) else (if (if IsFrame(a1) then a1._alias) then (if (l1 := ResolveEntryAlias(a1._alias)) then l1 else a1) else a1))
+end
+@@main
+func(a1) begin
+	local l1, l2, l3, l4;
+	l1 := self;
+	if (not (l2 := soupToQuery)) then begin
+			if pickerDef.soupToQuery then begin
+					l2 := pickerDef.soupToQuery;
+					l1 := pickerDef
+				end
+		end;
+	self.fSoup := (if l2 then (if IsInstance(l2, 'string) then GetUnionSoup(l2) else l1:soupToQuery()));
+	self.myQuerySpec := (if querySpec then querySpec else (if pickerDef.querySpec then pickerDef.querySpec else '{type: index, indexPath: sorton}));
+	self.clientFilter := myQuerySpec.validTest;
+	if fSoup then begin
+			self.myQuerySpec := self:SetupFiltering(myQuerySpec);
+			self.soupCursor := fSoup:Query(myQuerySpec)
+		end;
+	if (not selected) then begin
+			selected := [Array: ]
+		end;
+	ersatzCursor := ersatzCursor:New({context: self}, selected);
+	self.validAlways := func(a1) begin
+		((a1.labels = labelsFilter) or (labelsFilter = '_all))
+	end;
+	self.validIfSelected := func(a1) begin
+		(if (not a1._Unselected) then ((a1.labels = labelsFilter) or (labelsFilter = '_all)))
+	end;
+	self.validIfFake := func(a1) begin
+		(if a1._fakeID then ((a1.labels = labelsFilter) or (labelsFilter = '_all)))
+	end;
+	if fSoup then begin
+			l3 := func(a1, a2, a3) begin
+				local l1, l2, l3, l4, l5;
+				(if (a3 = '|=|) then (if IsNameRef(a1) then ((if a1._fakeID then (a1._fakeID = a2._fakeID)) or (if (if a1._alias then a2._alias) then IsSameEntry(a1._alias, a2._alias))) else begin
+							l1 := EntryFromObj(a1);
+							l2 := EntryFromObj(a2);
+							(if (if l1 then l2) then IsSameEntry(l1, l2))
+						end) else begin
+						l3 := (if IsNameRef(a1) then pickerDef:Get(a1, pickerDef._sortPath, 'sortText) else a1.sorton);
+						l4 := (if IsNameRef(a2) then pickerDef:Get(a2, pickerDef._sortPath, 'sortText) else a2.sorton);
+						((if ((l5 := StrCompare(l3, l4)) < 0) then (a3 = '|<|)) or (if (l5 > 0) then (a3 = '|>|)))
+					end)
+			end;
+			self.multiCursor := @103:New([Array: soupCursor, ersatzCursor], l3)
+		end;
+	self:UpdateCursor();
+	(if (if a1 then pickerDef.singleSelect) then cursor:GotoKey((fCurrentKey := self:IndexStr((l4 := call (kFunction_450079) with (a1))))) else begin
+			cursor:Reset();
+			(fCurrentKey := nil)
+		end)
+end
+@@end

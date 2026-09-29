@@ -1,0 +1,5 @@
+@@ 0x4480d5
+func(a1) begin
+	imagebase:pendown(a1)
+end
+@@end

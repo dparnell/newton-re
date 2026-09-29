@@ -1,0 +1,5 @@
+@@ 0x564bcd
+func() begin
+	(self.viewChildren := self.data)
+end
+@@end

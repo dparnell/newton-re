@@ -1,0 +1,17 @@
+@@ 0x535669
+func(a1) begin
+	local l1;
+	RegCommConfigChange(appSymbol, func(a1, a2) begin
+		self:Redo(a1)
+	end);
+	l1 := transportProvider;
+	if (if (if (if a1 then l1) then l1.symbol) then (a1 <> l1.symbol)) then begin
+			self:SetConfig('phoneAutoReceive, nil);
+			if callEndpoint then begin
+					callEndpoint:Close();
+					callEndpoint := nil
+				end
+		end;
+	((transportProvider := DeepClone(GetTAPICommFrame(a1))).symbol := a1)
+end
+@@end

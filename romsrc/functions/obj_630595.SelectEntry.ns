@@ -1,0 +1,13 @@
+@@ 0x5ac045
+func(a1) begin
+	selectedEntry := nil;
+	selectedIndex := nil;
+	if a1 then begin
+			selectedEntry := window:GetEntry(a1)
+		end;
+	if selectedEntry then begin
+			selectedIndex := a1
+		end;
+	SelectEntry
+end
+@@end

@@ -1,0 +1,13 @@
+@@ 0x446125
+func() begin
+	if (not (Time exists)) then begin
+			self.Time := Time()
+		end;
+	hours := ((Time div 60) mod 24);
+	minutes := (Time mod 60);
+	if (not (annotations exists)) then begin
+			self.annotations := [Array: "12", "3", "6", "9"]
+		end;
+	(if (not (clockFont exists)) then (self.clockFont := @90))
+end
+@@end

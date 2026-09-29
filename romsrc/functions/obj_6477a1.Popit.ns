@@ -1,0 +1,11 @@
+@@ 0x47aa1d
+func(a1) begin
+	local l1, l2, l3;
+	l1 := Clone(labelCommands);
+	l2 := self:GetIndex();
+	l1[l2] := {item: l1[l2], mark: $\uFC0B};
+	l3 := (if HasPath(self, 'viewLineSpacing) then ((viewLineSpacing - FontAscent(viewFont)) - 2) else -2);
+	DoPopup(l1, a1, l3, self);
+	true
+end
+@@end

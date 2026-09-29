@@ -1,0 +1,12 @@
+@@ 0x482bc5
+func(a1) begin
+	l1 := [Array: ];
+	local l1;
+	(foreach l2, l3 in GetUserConfig('userFolderGroups) do begin
+			if SetContains(l3, a1) then begin
+					AddArraySlot(l1, l2)
+				end
+		end);
+	l1
+end
+@@end

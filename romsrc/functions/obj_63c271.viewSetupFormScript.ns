@@ -1,0 +1,22 @@
+@@ 0x51c861
+func() begin
+	self:BuildDisplayParams();
+	self.viewBounds := RelBounds(dpCu.left, dpCu.top, dpCu.width, dpCu.height);
+	if (floating = 'Partial) then begin
+			viewFormat := 131665;
+			viewEffect := 133120
+		end else begin
+			if (floating = nil) then begin
+					viewFormat := 81;
+					viewEffect := 133120
+				end else begin
+					RemoveSlot(self, 'viewFormat);
+					RemoveSlot(self, 'viewEffect)
+				end
+		end;
+	CuPage := self;
+	self.browser := GetRoot().theBrowser;
+	self.title := self:BookTitle();
+	SetKeyView(self, 0)
+end
+@@end

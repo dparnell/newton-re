@@ -1,0 +1,16 @@
+@@ 0x4ace19
+func() begin
+	popup := [Array: ];
+	(foreach l1, l2 in allLayouts do begin
+			local l4;
+			if (l1 <> 'overview) then begin
+					l4 := {item: l2.name, slot: l1};
+					if (l1 = currentLayout) then begin
+							l4.mark := $\uFC0B
+						end;
+					AddArraySlot(popup, l4)
+				end
+		end);
+	inherited:buttonClickScript()
+end
+@@end

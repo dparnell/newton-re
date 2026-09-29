@@ -1,0 +1,6 @@
+@@ 0x79885d names
+func() begin
+	selectedDates := [Array: fields.body.date];
+	inherited:viewSetupFormScript()
+end
+@@end

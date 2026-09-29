@@ -1,0 +1,12 @@
+@@ 0x7ab8c1
+func() begin
+	local l1;
+	self:LockScreen(true);
+	fCompleted.name := true;
+	vFirstName:SetText(fPersona.name.first);
+	vLastName:SetText(fPersona.name.last);
+	vCompanyName:SetText(fPersona.company);
+	SetKeyView(vFirstName.vInputLine, 0);
+	self:LockScreen(nil)
+end
+@@end

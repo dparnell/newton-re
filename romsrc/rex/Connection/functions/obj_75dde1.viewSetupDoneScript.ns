@@ -1,0 +1,8 @@
+@@ 0x75de59
+func() begin
+	if self.hidden then begin
+			self:Hide()
+		end;
+	inherited:?viewSetupDoneScript()
+end
+@@end

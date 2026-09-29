@@ -1,0 +1,22 @@
+@@ 0x48dce1
+func(a1, a2) begin
+	l2 := GetVariable(a2, 'addressSymbols);
+	(if (if (if a1.email then (Length(l2) > 0)) then IsInstance(a1.email, l2[0])) then return 'email else begin
+			local l1;
+			local l2;
+			(foreach l3, l4 in a1.emailAddrs do begin
+					if (not l4.email) then begin
+							l1 := [pathExpr: 'emailAddrs, l3, 'email]
+						end else begin
+							if (if (Length(l2) > 0) then IsInstance(l4.email, l2[0])) then begin
+									return [pathExpr: 'emailAddrs, l3, 'email]
+								end
+						end
+				end);
+			(if (not a1.email) then return 'email else (if l1 then return l1 else begin
+						AddArraySlot(a1.emailAddrs, {});
+						return [pathExpr: 'emailAddrs, (Length(a1.emailAddrs) - 1), 'email]
+					end))
+		end)
+end
+@@end

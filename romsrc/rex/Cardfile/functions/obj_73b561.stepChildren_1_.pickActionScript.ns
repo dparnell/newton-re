@@ -1,0 +1,7 @@
+@@ 0x73b6c1
+func(a1) begin
+	theEntry := ResolveEntryAlias(UserConfiguration.personae[a1]);
+	SetValue(self, 'text, Stringer([Array: $\uFC01, popup[a1]]));
+	self:hilite(nil)
+end
+@@end

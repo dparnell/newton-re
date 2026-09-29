@@ -1,0 +1,11 @@
+@@ 0x5a9135
+func() begin
+	(if (not dictionary) then begin
+			self.dictionary := GetDictionary(31);
+			if (not dictionary) then begin
+					Throw('|evt.ex.msg|, "couldn't find user dictionary!")
+				end;
+			self:SetupExpand()
+		end)
+end
+@@end

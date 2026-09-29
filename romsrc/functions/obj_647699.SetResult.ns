@@ -1,0 +1,5 @@
+@@ 0x44e979
+func(a1) begin
+	self:?PickWorld(a1)
+end
+@@end

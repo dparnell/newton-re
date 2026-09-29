@@ -1,0 +1,5 @@
+@@ 0x78cd35 names
+func(anIndex, aStatus) begin
+	(if aStatus then (topics[anIndex].source := nil) else RemoveSlot(topics[anIndex], 'source))
+end
+@@end

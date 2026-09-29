@@ -1,0 +1,19 @@
+@@ 0x5373cd
+@@const kLiteral_536a15
+"locked"
+@@const kLiteral_536afd
+"copy protected"
+@@main
+func(a1, a2) begin
+	local l1;
+	(if (a1 = 'Backdrop) then (if (Length(a2) = 1) then begin
+				if (l1 := GetRoot().(fentry.app)).noBackdrop then begin
+						return "the wrong kind"
+					end;
+				if (if (displayParams.appAreaHeight < 320) then (not l1.ReOrientToScreen)) then begin
+						return "not designed for this orientation"
+					end;
+				(if (EntryStore(fentry) = GetStores()[0]) then 'OK else "not stored internally")
+			end) else (if (((a1 = 'Filing) or (a1 = 'delete)) or (a1 = 'freeze)) then (if (not EntryStore(fentry):IsReadOnly()) then 'OK else kLiteral_536a15) else (if (a1 = 'move) then (if self:copyprotected() then kLiteral_536afd else (if EntryStore(fentry):IsReadOnly() then kLiteral_536a15 else 'OK)) else (if (a1 = 'send) then (if self:copyprotected() then kLiteral_536afd else 'OK) else 'OK))))
+end
+@@end

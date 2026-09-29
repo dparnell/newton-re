@@ -1,0 +1,5 @@
+@@ 0x518bd9
+func() begin
+	self:GetMeetingText(meeting)
+end
+@@end

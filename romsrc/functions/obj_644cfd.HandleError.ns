@@ -1,0 +1,7 @@
+@@ 0x47f965
+func(a1) begin
+	local l1;
+	lastError := a1;
+	(if (l1 := self:TranslateError(a1)) then self:Notify(3, title, l1))
+end
+@@end

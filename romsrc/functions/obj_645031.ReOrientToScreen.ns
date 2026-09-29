@@ -1,0 +1,5 @@
+@@ 0x4690fd
+func() begin
+	self:Close()
+end
+@@end

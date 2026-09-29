@@ -1,0 +1,5 @@
+@@ 0x4e211d
+func() begin
+	(if rotated then self:DrawShape(MakeRoundRect(1, 1, 138, (((1 + (15 * maxLines)) + 18) + 4), 5), '{pensize: 2, fillPattern: 0}) else self:DrawShape(MakeRoundRect(1, 1, 169, (((1 + (15 * maxLines)) + 18) + 4), 5), '{pensize: 2, fillPattern: 0}))
+end
+@@end

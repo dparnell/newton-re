@@ -1,0 +1,18 @@
+@@ 0x482511
+func() begin
+	local l1, l2, l3, l4;
+	if (if initialSetup then (not valueData)) then begin
+			self:viewSet(initialSetup);
+			initialSetup := nil
+		end;
+	if ((not HasSlot(self, 'viewBounds)) or (curView = nil)) then begin
+			self.viewJustify := 0;
+			l1 := GetUserConfig('screenOrientation);
+			l3 := (((l2 := GetAppParams()).appAreaWidth - width) >> 1);
+			l4 := (if curView then (topValues[l1] + curView.height) else 0);
+			self.viewBounds := self:MungeBounds(l3, topValues[l1], (l3 + width), l4)
+		end;
+	inherited:?viewSetupFormScript();
+	SetKeyView(self, 0)
+end
+@@end

@@ -1,0 +1,12 @@
+@@ 0x4bce95
+func() begin
+	if (l1 := editor:ChildViewFrames()) then begin
+			local l1;
+			local l2;
+			(foreach l3 in l1 do begin
+					l2 := UnionRect(l2, l3.viewBounds)
+				end)
+		end;
+	(if l2 then (self.DataRect := l2))
+end
+@@end

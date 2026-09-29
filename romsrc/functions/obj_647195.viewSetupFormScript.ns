@@ -1,0 +1,37 @@
+@@ 0x479bc9
+func() begin
+	showit := nil;
+	routingTypes := [Array: ];
+	if IsArray(formats) then begin
+			(foreach l1 in formats do begin
+					if (if (l1.title or l1:?GetTitle(target)) then IsArray(l1.dataTypes)) then begin
+							(foreach l3 in l1.dataTypes do begin
+									SetAdd(routingTypes, l3, true)
+								end)
+						end
+				end)
+		end;
+	if (if transport.group then (not Editing)) then begin
+			(foreach l5 in transports do begin
+					local l7, l8, l9, l10;
+					if (if (if (if (l7 := GetRoot().(l5)) then (l7.group = transport.group)) then (l7.appSymbol <> transport.appSymbol)) then SetOverlaps(routingTypes, l7.dataTypes)) then begin
+							showit := true;
+							break
+						end
+				end)
+		end;
+	if (not text) then begin
+			text := transport.title
+		end;
+	if (not text) then begin
+			text := ""
+		end;
+	if showit then begin
+			text := Stringer([Array: $\uFC01, text])
+		end;
+	l8 := ((envelopeWidth - 31) - 10);
+	l9 := (StrFontWidth(text, viewFont) + 8);
+	l10 := FontHeight(viewFont);
+	(viewBounds := RelBounds((l8 - l9), (23 - (l10 div 2)), l9, l10))
+end
+@@end

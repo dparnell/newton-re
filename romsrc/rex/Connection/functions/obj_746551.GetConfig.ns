@@ -1,0 +1,17 @@
+@@ 0x746915
+func() begin
+	if (not configCache) then begin
+			l1 := GetMemoryItems('connAppleTalk);
+			if (not StrEqual(NBPLookupType, "Docker")) then begin
+					l1 := GetMemoryItems(Intern(NBPLookupType))
+				end;
+			if l1 then begin
+					local l1;
+					self.configCache := (foreach l2 in l1 collect l2.item)
+				end else begin
+					self.configCache := nil
+				end
+		end;
+	return configCache
+end
+@@end

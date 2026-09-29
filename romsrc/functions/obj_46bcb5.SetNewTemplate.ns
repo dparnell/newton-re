@@ -1,0 +1,22 @@
+@@ 0x46ba81
+func(a1) begin
+	local l1;
+	if (not a1) then begin
+			a1 := @780
+		end;
+	if (not HasPath(a1, '_MultiWord)) then begin
+			self:SetNewWord((l1 := GetDynamicValue(refCon.form, 'text, 'string)), 'single);
+			self:SetStartLen(0, StrLen(l1))
+		end;
+	if HasPath(a1, 'templateArray) then begin
+			if (template <> a1) then begin
+					if (not HasPath(a1, '_RAMBased)) then begin
+							a1 := {_parent: self, _proto: a1, _RAMBased: true}
+						end;
+					a1:Init(self:CurrentWord())
+				end
+		end;
+	inherited:SetNewTemplate(a1);
+	template
+end
+@@end

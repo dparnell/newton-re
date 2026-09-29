@@ -1,0 +1,7 @@
+@@ 0x75d15d
+func() begin
+	applications := nil;
+	openWindows := nil;
+	(connectionPrefs := nil)
+end
+@@end

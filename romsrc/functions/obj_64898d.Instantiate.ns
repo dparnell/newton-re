@@ -1,0 +1,12 @@
+@@ 0x52ceb5
+func() begin
+	self._traceMap := {};
+	(foreach l1, l2 in traceElements do begin
+			local l4;
+			if (l4 := l2.label) then begin
+					_traceMap.(l4) := l1
+				end
+		end);
+	self:cfinstantiate()
+end
+@@end

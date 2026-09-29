@@ -1,0 +1,25 @@
+@@ 0x4fc925
+func() begin
+	if ((l2 := Length((l1 := self:ChildViewFrames()))) = 0) then begin
+			return nil
+		end;
+	l3 := Array(l2, nil);
+	local l1;
+	local l2;
+	local l3;
+	(for l4 := 0 to (l2 - 1) do begin
+			l3[l4] := l1[l4].realData
+		end);
+	InsertionSort(l3, '|<|, 'mtgStartDate);
+	InsertionSort(l1, '|<|, 'realData.mtgStartDate);
+	kidBounds := Array(l2, nil);
+	self:LayoutMeetings(l3, kidBounds, 0, (l2 - 1), tabWidths);
+	(for l4 := 0 to (l2 - 1) do begin
+			local l7;
+			if (l7 := kidBounds[l4]) then begin
+					SetValue(l1[l4], 'viewBounds, l7)
+				end
+		end);
+	dayView:Dirty()
+end
+@@end

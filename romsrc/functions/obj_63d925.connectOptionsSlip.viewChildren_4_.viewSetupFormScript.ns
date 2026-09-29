@@ -1,0 +1,6 @@
+@@ 0x59fa89
+func() begin
+	popup := DeepClone(pop);
+	inherited:viewSetupFormScript()
+end
+@@end

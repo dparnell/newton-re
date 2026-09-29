@@ -1,0 +1,59 @@
+@@ 0x41f819
+func(a1, a2) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10;
+	l4 := a2.viewBounds;
+	if (a1 = 'shape) then begin
+			l1 := a2.shape
+		end else begin
+			if ((a1 = 'polygon) or (a1 = 'ink)) then begin
+					if (a1 = 'polygon) then begin
+							l1 := MakeShape(a2.points)
+						end else begin
+							l1 := MakeInk(a2.ink, l4.left, l4.top, l4.right, l4.bottom)
+						end;
+					if (l3 := a2.viewFormat) then begin
+							l2 := {fillPattern: BAnd(l3, 15), pensize: (BAnd(l3, 3840) >> 8)}
+						end else begin
+							l2 := '{pensize: 2}
+						end
+				end else begin
+					if (a1 = 'picture) then begin
+							l1 := PictToShape(a2.icon.data, ShapeBounds(a2.icon))
+						end else begin
+							if (if (a1 = 'text) then a2.text) then begin
+									if a2.viewFont then begin
+											l5 := a2.viewFont
+										end else begin
+											l5 := GetUserConfig('userFont)
+										end;
+									if (l6 := RecognizeTextInStyles(a2, l5)).styles then begin
+											l5 := l6.styles[1]
+										end;
+									l7 := l6.text;
+									l9 := (l8 := a2.viewBounds).right;
+									l8.bottom := l8.top;
+									l8.right := l8.left;
+									if ((l8 := TextBounds(l7, l5, l8)).right > l9) then begin
+											l8.right := l9;
+											l8.bottom := l8.top;
+											l8 := TextBounds(l7, l5, l8)
+										end;
+									l1 := [Array: {font: l5}, MakeTextBox(l7, l8.left, l8.top, l8.right, l8.bottom)]
+								end
+						end
+				end
+		end;
+	(if l1 then begin
+			l10 := ShapeBounds(l1);
+			OffsetShape(l1, (l4.left - l10.left), (l4.top - l10.top));
+			if l2 then begin
+					if IsArray(l1) then begin
+							AddArraySlot(l1, l2)
+						end else begin
+							l1 := [Array: l2, l1]
+						end
+				end;
+			l1
+		end)
+end
+@@end

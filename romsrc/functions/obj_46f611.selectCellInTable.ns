@@ -1,0 +1,6 @@
+@@ 0x46f591
+func() begin
+	local l1;
+	(if (selectedIndex <> nil) then (if (if ((l1 := theTable:ChildViewFrames()) <> nil) then (selectedIndex < Length(l1))) then theTable:selectThisCell(l1[selectedIndex])))
+end
+@@end

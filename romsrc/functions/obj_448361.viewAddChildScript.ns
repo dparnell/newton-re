@@ -1,0 +1,6 @@
+@@ 0x44830d
+func(a1) begin
+	vAnnotations:SetupIdle(500);
+	nil
+end
+@@end

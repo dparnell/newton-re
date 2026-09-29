@@ -1,0 +1,8 @@
+@@ 0x4ee631
+func(a1, a2) begin
+	if (not a2.viewCObject) then begin
+			a1 := (a2 := newtAppBase.targetView).target
+		end;
+	self:newtDeleteScript(a1, a2)
+end
+@@end

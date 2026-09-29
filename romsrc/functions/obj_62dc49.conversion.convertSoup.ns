@@ -1,0 +1,7 @@
+@@ 0x4b465d
+func(a1, a2, a3) begin
+	(if (not a1:HasTags()) then (foreach l1 in @114 do begin
+				a1:AddIndex(l1)
+			end))
+end
+@@end

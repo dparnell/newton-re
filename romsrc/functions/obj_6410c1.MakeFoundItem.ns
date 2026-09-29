@@ -1,0 +1,11 @@
+@@ 0x55f1f1
+func(a1, a2) begin
+	local l1;
+	if a2 then begin
+			if (StrLen((l1 := a2:FindSoupExcerpt(a1, self))) > 50) then begin
+					l1 := Substr(l1, 0, 80)
+				end
+		end;
+	{_proto: @178, finder: (if self.masterFinder then masterFinder else self), realFinder: self, entryID: EntryUniqueID(a1), soup: EntrySoup(a1), storeID: EntryStore(a1):GetSignature(), selected: nil, itemIndex: nil, title: l1}
+end
+@@end

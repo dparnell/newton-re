@@ -1,0 +1,6 @@
+@@ 0x4c075d
+func() begin
+	self:ChainIn('retargetChain);
+	inherited:?viewSetupDoneScript()
+end
+@@end

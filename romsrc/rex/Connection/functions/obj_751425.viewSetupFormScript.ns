@@ -1,0 +1,13 @@
+@@ 0x7514c5
+func() begin
+	newIcon := MakeBitmap(32, 32, nil);
+	if (if fileInfo.icon then (Length(fileInfo.icon) = 128)) then begin
+			l1 := GetBitmapInfo(newIcon);
+			local l1;
+			(for l2 := 0 to 63 do begin
+					StuffWord(l1.bits, ((l2 * 2) + l1.scanOffset), ExtractWord(fileInfo.icon, (l2 * 2)))
+				end)
+		end;
+	(self.icon := newIcon)
+end
+@@end

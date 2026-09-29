@@ -1,0 +1,8 @@
+@@ 0x50571d
+func() begin
+	if (not slipTooTall) then begin
+			self.viewFlags := BAnd(viewFlags, bnot(1))
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

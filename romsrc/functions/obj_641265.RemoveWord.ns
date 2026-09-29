@@ -1,0 +1,30 @@
+@@ 0x5a9ad5
+func(a1) begin
+	local l1, l2, l3, l4;
+	self:SetUpDictionary();
+	if ((l1 := dictionary:DeleteEncodedWord(a1)) = 0) then begin
+			dictionary:EncodeRecognitionWord((l2 := Clone(a1)));
+			if self:GetExpandedWord(l2) then begin
+					self:RemoveExpandedWord(l2)
+				end;
+			AddUndoAction('AddWord, [Array: a1]);
+			if self.viewCObject then begin
+					self:RebuildCursorWindow((l3 := window:EntryKey(0)));
+					if (if selectedEntry then StrEqual(a1, selectedWord)) then begin
+							self:SelectEntry(selectedIndex);
+							if (not selectedEntry) then begin
+									if ((l4 := window:GetNumberEntries()) <= 0) then begin
+											self:viewScrollUpScript();
+											l4 := window:GetNumberEntries()
+										end;
+									if (l4 > 0) then begin
+											self:SelectEntry((l4 - 1))
+										end
+								end
+						end;
+					words:Dirty()
+				end
+		end;
+	return (l1 = 0)
+end
+@@end

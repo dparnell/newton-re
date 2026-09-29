@@ -1,0 +1,11 @@
+@@ 0x42b85d
+func() begin
+	(if (vOrg > 0) then begin
+			if ((vOrg := (vOrg - scrollAmount)) < 0) then begin
+					vOrg := 0
+				end;
+			tabbase:RedoChildren();
+			self:updateSelection()
+		end)
+end
+@@end

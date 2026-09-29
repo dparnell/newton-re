@@ -1,0 +1,25 @@
+@@ 0x44fa29
+func(a1) begin
+	local l1;
+	(for l2 := 0 to (Length(curses) - 1) do begin
+			local l5, l6, l7;
+			l5 := curses[l2];
+			l6 := '{passed: {prev: prev, Next: entry}, resident: {prev: prev, Next: Next}, prior: {prev: entry, Next: Next}}.(l5.state).(a1);
+			l7 := Perform(l5.cursor, l6, [Array: ]);
+			(while (l7 = 'deleted) do (l7 := Perform(l5.cursor, l6, [Array: ])));
+			if (l6 = a1) then begin
+					l5.state := '{Next: passed, prev: prior}.(a1)
+				end;
+			if l7 then begin
+					if ((not l1) or call comparator with (l1, l7, '{Next: |>|, prev: |<|}.(a1))) then begin
+							metaCursor := l5;
+							l1 := l7
+						end
+				end
+		end);
+	if metaCursor then begin
+			metaCursor.state := 'resident
+		end;
+	l1
+end
+@@end

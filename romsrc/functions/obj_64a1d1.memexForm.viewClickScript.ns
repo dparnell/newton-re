@@ -1,0 +1,6 @@
+@@ 0x55060d
+func(a1) begin
+	InkOff(a1);
+	inherited:?viewClickScript(a1)
+end
+@@end

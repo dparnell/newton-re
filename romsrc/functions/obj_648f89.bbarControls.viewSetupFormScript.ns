@@ -1,0 +1,8 @@
+@@ 0x552ce1
+func() begin
+	local l1;
+	l1 := justifcationAndBounds.(displayParams.buttonBarControlsPosition);
+	self.viewJustify := l1.viewJustify;
+	(self.viewBounds := l1.viewBounds)
+end
+@@end

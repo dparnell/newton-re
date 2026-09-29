@@ -1,0 +1,10 @@
+@@ 0x73a75d
+func() begin
+	(if (if targetView.inkDialog then (not StrFilled(target.sorton))) then @435:new("What letter should this entry be sorted under?", $A, self:GlobalBox(), base) else begin
+			if (appBase.editSlipLayout = base) then begin
+					appBase.editSlipLayout := nil
+				end;
+			AddDeferredSend(appBase, 'RememberedClose, [Array: base])
+		end)
+end
+@@end

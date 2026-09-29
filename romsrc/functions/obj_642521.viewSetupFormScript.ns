@@ -1,0 +1,16 @@
+@@ 0x4bc3b9
+func() begin
+	local l1, l2;
+	inherited:viewSetupFormScript();
+	if self.viewLineSpacing then begin
+			areacode.viewLineSpacing := self.viewLineSpacing;
+			phone.viewLineSpacing := self.viewLineSpacing
+		end;
+	if StrFilled((l2 := filter:PathToText())) then begin
+			currAreaCode := (l1 := ParsePhone(l2)).areacode;
+			currPhoneNum := l1.phone
+		end;
+	parenWidth := (StrFontWidth("(", viewFont) + 2);
+	(if suppressAreaCode then (currAreaCode := nil))
+end
+@@end

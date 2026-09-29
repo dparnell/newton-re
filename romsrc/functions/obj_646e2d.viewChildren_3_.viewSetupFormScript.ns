@@ -1,0 +1,5 @@
+@@ 0x43d199
+func() begin
+	(if countryAndName then (text := Stringer([Array: $\uFC01, GetCountryEntry(currentCountry)[0].name])) else (viewBounds := SetBounds(3, -300, 4, -290)))
+end
+@@end

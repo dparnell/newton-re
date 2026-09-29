@@ -1,0 +1,9 @@
+@@ 0x50c6cd
+func() begin
+	local l1;
+	(if ((not alarmOn) or (unitsValue = -1)) then nil else (if (selectedMeeting.viewStationery = 'cribNote) then self:ComputeCribMtgAlarm(selectedMeeting.mtgStartDate, unitsValue) else begin
+				l1 := (if (unitsIndex = 0) then unitsValue else (if (unitsIndex = 1) then (unitsValue * 60) else (unitsValue * 1440)));
+				(selectedMeeting.mtgStartDate - l1)
+			end))
+end
+@@end

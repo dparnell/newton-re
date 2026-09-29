@@ -1,0 +1,26 @@
+@@ 0x49af59
+func(a1) begin
+	local l1;
+	if (a1 = $*) then begin
+			l1 := 10
+		end else begin
+			if (a1 = $#) then begin
+					l1 := 11
+				end else begin
+					if (if ((l1 := ORD(a1)) >= 48) then (l1 <= 57)) then begin
+							l1 := (l1 - 48)
+						end else begin
+							l1 := nil
+						end
+				end
+		end;
+	if (if l1 then (not GetLocale().speakerless)) then begin
+			if (GetVolume() > 0) then begin
+					PlaySoundAtVolume(@68[l1], 4)
+				end
+		end else begin
+			playsound(typewriter)
+		end;
+	nil
+end
+@@end

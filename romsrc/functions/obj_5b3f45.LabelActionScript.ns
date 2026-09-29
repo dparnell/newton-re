@@ -1,0 +1,6 @@
+@@ 0x5b3f25
+func(a1) begin
+	SetUserConfig('alarmSound, labelCommands[a1].soundSymbol);
+	PlaySoundIrregardlessAtVolume(GetRegisteredSound(labelCommands[a1].soundSymbol), GetAlarmVolume())
+end
+@@end

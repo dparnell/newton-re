@@ -1,0 +1,10 @@
+@@ 0x435f9d
+func() begin
+	local l1;
+	l1 := realCurs:entry();
+	if (not romOnly) then begin
+			(while (if l1 then ((l1 = 'deleted) or (l1.kind = 'delete))) do (if (l1 = 'deleted) then (l1 := realCurs:Next()) else (l1 := realCurs:move(2))))
+		end;
+	l1
+end
+@@end

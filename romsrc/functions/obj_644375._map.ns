@@ -1,0 +1,10 @@
+@@ 0x5b971d
+func(a1) begin
+	self:Reset();
+	(while self:ThisWord() do begin
+			call a1 with (currentEntry);
+			self:Next()
+		end);
+	return nil
+end
+@@end

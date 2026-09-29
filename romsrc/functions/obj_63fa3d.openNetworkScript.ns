@@ -1,0 +1,6 @@
+@@ 0x472575
+func() begin
+	local l1;
+	netChooser:openNetChooser((l1 := nil), Stringer([Array: "=:", self:nbpString(), "@"]), self:TextSetup(), self, "Use printer", "Printer", "printers")
+end
+@@end

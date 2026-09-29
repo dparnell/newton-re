@@ -1,0 +1,11 @@
+@@ 0x4c5865
+func() begin
+	(if (if (numItems > maxLines) then (scrollOrigin > 0)) then begin
+			atEnd := nil;
+			self:Scroller((-(maxLines - 1)))
+		end else (if (not atEnd) then begin
+				atEnd := true;
+				playsound(@300)
+			end))
+end
+@@end

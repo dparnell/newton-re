@@ -1,0 +1,18 @@
+@@ 0x4af091
+func() begin
+	local l1;
+	dataCursor := masterSoup:GetCursor();
+	try begin
+			l1 := dataCursor:entry()
+		end onexception |evt.ex| do begin
+			l1 := nil
+		end;
+	if l1 then begin end else begin
+			if forceNewEntry then begin
+					self:AddBlankEntry();
+					dataCursor:Reset()
+				end
+		end;
+	dataCursor
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x44744d
+func() begin
+	analogClock:Refresh();
+	self:Parent():?TimeChanged()
+end
+@@end

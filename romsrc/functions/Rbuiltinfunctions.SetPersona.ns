@@ -1,0 +1,37 @@
+@@ 0x48c149
+func(a1, a2) begin
+	local l1, l2, l3, l4;
+	a2.name := GetRoot():PrimaryName(a1);
+	a2.address := Clone(a1.address);
+	a2.cityZip := Stringer([Array: a1.city, " ", a1.region, " ", a1.postal_code]);
+	a2.company := (if a1.company then Clone(a1.company));
+	if a1.country then begin
+			a2.country := Clone(a1.country);
+			a2.countrySlot := GetRoot():CountryLookup(a1.country)
+		end;
+	a2.signature := (if a1.owner.signature then Clone(a1.owner.signature));
+	if (l3 := GetRoot().cardfile:bcEMailAddress(a1, '[Array: |string.email|])) then begin
+			a2.mailAccount := l3[0].email;
+			a2.mailPassword := l3[0].emailPassword
+		end else begin
+			a2.mailAccount := "";
+			a2.mailPassword := nil
+		end;
+	if (l1 := GetRoot().cardfile:bcPhoneNumber(a1, 'phone)) then begin
+			l1 := l1[0]
+		end else begin
+			l1 := nil
+		end;
+	if (l2 := GetRoot().cardfile:bcPhoneNumber(a1, 'homePhone)) then begin
+			a2.homePhone := l2[0]
+		end else begin
+			a2.homePhone := l1
+		end;
+	if (l2 := GetRoot().cardfile:bcPhoneNumber(a1, 'faxPhone)) then begin
+			a2.faxPhone := l2[0]
+		end else begin
+			a2.faxPhone := l1
+		end;
+	(if (l2 := GetRoot().cardfile:bcPhoneNumber(a1, 'workPhone)) then (a2.phone := l2[0]) else (a2.phone := l1))
+end
+@@end

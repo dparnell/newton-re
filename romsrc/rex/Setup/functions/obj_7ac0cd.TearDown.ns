@@ -1,0 +1,5 @@
+@@ 0x7ac281
+func() begin
+	(if IsSoupEntry(fPersona) then EntryChangeXmit(fPersona, '|Setup:Newton|))
+end
+@@end

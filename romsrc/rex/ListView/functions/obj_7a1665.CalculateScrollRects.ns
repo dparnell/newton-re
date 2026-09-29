@@ -1,0 +1,25 @@
+@@ 0x797575 names
+func() begin
+	local scroller;
+	(scroller := upDownScroller).scrollRect := (scroller.dataRect := (scroller.viewRect := nil));
+	if (firstTopic > 0) then begin
+			scroller:SetArrow('up, 'more)
+		end else begin
+			scroller:SetArrow('up, 'normal)
+		end;
+	if (nTopics = 0) then begin
+			scroller:SetArrow('down, 'normal)
+		end else begin
+			if (lastTopic = (nTopics - 1)) then begin
+					if (topics[lastTopic].viewBounds.bottom < self:LocalBox().bottom) then begin
+							scroller:SetArrow('down, 'normal)
+						end else begin
+							scroller:SetArrow('down, 'more)
+						end
+				end else begin
+					scroller:SetArrow('down, 'more)
+				end
+		end;
+	scroller:Dirty()
+end
+@@end

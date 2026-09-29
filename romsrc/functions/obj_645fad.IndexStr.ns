@@ -1,0 +1,6 @@
+@@ 0x451a95
+func(a1) begin
+	local l1, l2;
+	(if a1 then (if StrFilled((l1 := pickerDef:Get(a1, pickerDef._sortPath, 'sortText))) then (if (l2 := StrPos(l1, ",", 0)) then Substr(l1, 0, l2) else l1) else " "))
+end
+@@end

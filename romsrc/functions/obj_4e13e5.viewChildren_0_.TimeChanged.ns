@@ -1,0 +1,6 @@
+@@ 0x4e1381
+func() begin
+	clocker.pix := nil;
+	clocker:Dirty()
+end
+@@end

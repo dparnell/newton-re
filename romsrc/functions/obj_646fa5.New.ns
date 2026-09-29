@@ -1,0 +1,16 @@
+@@ 0x438bd1
+func(a1, a2, a3, a4, a5) begin
+	local l1;
+	l1 := self:Init();
+	if a3 then begin
+			l1.longitude := @519:ConvertFromWC(a1);
+			l1.latitude := @519:ConvertFromWC(a2)
+		end else begin
+			l1.longitude := a1;
+			l1.latitude := a2
+		end;
+	l1.worldClock := a3;
+	l1.context := a5;
+	l1:popup(a4)
+end
+@@end

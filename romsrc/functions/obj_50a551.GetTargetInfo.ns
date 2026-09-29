@@ -1,0 +1,9 @@
+@@ 0x503a01
+func(a1) begin
+	local l1;
+	if dirtyFlag then begin
+			self:CarefulSave()
+		end;
+	{target: (l1 := selectedMeeting), targetView: targetView, targetStore: (if l1.repeatTemplate then EntryStore(l1.repeatTemplate) else EntryStore(l1))}
+end
+@@end

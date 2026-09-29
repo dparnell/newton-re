@@ -1,0 +1,10 @@
+@@ 0x79607d names
+func(aSoupName, anAppSymbol, aChangeType, aChangeData) begin
+	local cal, theToDo;
+	(theToDo := (cal := GetRoot().calendar):GetToDo()).oldTodoSoup := GetUnionSoup("To Do");
+	(if ((((aChangeType = 'soupLeaves) or (aChangeType = 'soupCreated)) or (aChangeType = 'soupEnters)) or (aChangeType = 'soupDeleted)) then (if Visible(cal) then begin
+				theToDo:ConvertToDoSoup();
+				cal:RedisplayScript()
+			end))
+end
+@@end

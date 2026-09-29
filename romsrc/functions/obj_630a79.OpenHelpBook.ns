@@ -1,0 +1,7 @@
+@@ 0x523a99
+func(a1) begin
+	isbn := a1;
+	self:Open();
+	self:RefreshTopics(Outline, 0)
+end
+@@end

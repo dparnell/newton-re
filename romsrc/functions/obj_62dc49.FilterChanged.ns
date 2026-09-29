@@ -1,0 +1,8 @@
+@@ 0x4b12e9
+func() begin
+	(foreach l1, l2 in allSoups do begin
+			l2.hideFilter := hideFilter
+		end);
+	inherited:FilterChanged()
+end
+@@end

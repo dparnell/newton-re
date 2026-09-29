@@ -1,0 +1,12 @@
+@@ 0x78eba5 names
+@@const kLiteral_785c65
+"-empty-"
+@@main
+func(anEntry, nLines) begin
+	local guts;
+	if (StrLen((guts := (if (if anEntry.topics then (Length(anEntry.topics) > 0)) then ExtractData(anEntry.topics, "...", 50) else kLiteral_785c65))) = 0) then begin
+			guts := kLiteral_785c65
+		end;
+	(if anEntry.title then Stringer([Array: anEntry.title, " ", guts]) else guts)
+end
+@@end

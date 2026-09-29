@@ -1,0 +1,9 @@
+@@ 0x426969
+func() begin
+	self:EventPause(true);
+	(if RecordEngine:TestState(6) then (if SoundProgressSlider then begin
+				SoundProgressSlider:SetCurrentTime();
+				AddDelayedSend(base, 'UpdateSlider, [Array: ], 1000)
+			end))
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x4c1c7d
+func() begin
+	self:SetupCursor();
+	self:SyncView();
+	self:NewTarget()
+end
+@@end

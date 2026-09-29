@@ -1,0 +1,8 @@
+@@ 0x42f865
+func(a1) begin
+	if (not StrPos((a1 := StringFilter(a1, " ", 'rejectAll)), "@aol.com", 0)) then begin
+			a1 := Stringer([Array: a1, "@aol.com"])
+		end;
+	a1
+end
+@@end

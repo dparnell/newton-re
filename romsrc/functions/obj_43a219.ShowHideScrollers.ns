@@ -1,0 +1,11 @@
+@@ 0x43a1c1
+func() begin
+	(if TextBase:ShowScrollers() then (if scrollersHidden then begin
+				self.scrollersHidden := nil;
+				self:Show()
+			end) else (if (not scrollersHidden) then begin
+				self.scrollersHidden := true;
+				self:Hide()
+			end))
+end
+@@end

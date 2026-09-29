@@ -1,0 +1,13 @@
+@@ 0x568439
+func() begin
+	local l1, l2, l3;
+	|Convert1.XModemSetUps|();
+	l1 := [Array: ];
+	l3 := (l2 := GetStores()[0]:GetSoup(@276):Query({indexPath: 'modemName})):entry();
+	(while l3 do begin
+			AddArraySlot(l1, l2:EntryKey());
+			(l3 := l2:Next())
+		end);
+	l1
+end
+@@end

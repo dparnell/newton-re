@@ -1,0 +1,20 @@
+@@ 0x4f26bd
+func(a1) begin
+	local l1, l2;
+	l1 := Date(selectedDates[0]);
+	if (repeatType = 3) then begin
+			mtgInfo := ((l1.month << 8) + l1.Date)
+		end else begin
+			if self:IsAmbiguousWeek(l1) then begin
+					l2 := LastWeekPicker.clusterValue;
+					LastWeekPicker:Show()
+				end else begin
+					l2 := (16 >> ((l1.Date - 1) div 7));
+					LastWeekPicker:Hide()
+				end;
+			mtgInfo := (((l1.month << 12) + (2048 >> l1.dayOfWeek)) + l2)
+		end;
+	self:UpdateText();
+	self:Dirty()
+end
+@@end

@@ -1,0 +1,13 @@
+@@ 0x59cea9
+func() begin
+	if (if fontPickerUp then fontPickerUp.viewCObject) then begin
+			fontPickerUp:Close()
+		end;
+	fontPickerUp := nil;
+	if (if alarmsUp then alarmsUp.viewCObject) then begin
+			alarmsUp:Close()
+		end;
+	alarmsUp := nil;
+	inherited:?viewQuitScript()
+end
+@@end

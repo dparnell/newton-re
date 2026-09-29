@@ -1,0 +1,6 @@
+@@ 0x55ec09
+func() begin
+	inherited:?viewSetupDoneScript();
+	(if (if (Length(selectedItems) > 0) then (selectedItems[0] > (viewLines - 1))) then self:doscrollscript(((selectedItems[0] - (viewLines - 1)) * lineHeight)))
+end
+@@end

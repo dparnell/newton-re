@@ -1,0 +1,12 @@
+@@ 0x430869
+func(a1) begin
+	(if self:TrackHilite(a1) then begin
+			if (category.collapsed := (not category.collapsed)) then begin
+					roll.scrollOrigin := (((roll.scrollOrigin - skip) div roll.scrollAmount) * roll.scrollAmount)
+				end;
+			roll:recalc();
+			self:hilite(nil);
+			true
+		end)
+end
+@@end

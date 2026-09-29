@@ -1,0 +1,17 @@
+@@ 0x4bc359
+func(a1, a2) begin
+	local l1, l2, l3;
+	inherited:viewChangedScript(a1, a2);
+	l2 := (if (if (not StrFilled((l1 := (if currPhoneNum then TrimString(currPhoneNum))))) then (not areacode.changed)) then nil else (if currAreaCode then TrimString(currAreaCode)));
+	if (StrFilled(l1) or StrFilled(l2)) then begin
+			l3 := MakePhone({areacode: l2, phone: l1})
+		end else begin
+			l3 := nil
+		end;
+	target.(path) := filter:TextToPath(l3);
+	if (if currPhoneType then target.(path)) then begin
+			SetClass(target.(path), currPhoneType)
+		end;
+	self:StartFlush()
+end
+@@end

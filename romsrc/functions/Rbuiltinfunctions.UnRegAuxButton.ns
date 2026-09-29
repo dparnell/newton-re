@@ -1,0 +1,19 @@
+@@ 0x4d81f1
+func(a1) begin
+	local l1, l2, l3, l4, l5;
+	(if (l1 := LSearch(AuxButtonRegistry, a1, 0, '|=|, 'appSymbol)) then begin
+			l2 := AuxButtonRegistry[l1].destApp;
+			RemoveSlot(AuxButtonRegistry, l1);
+			if l2 then begin
+					if (l3 := GetRoot().(l2)) then begin
+							l3:?RemoveAuxButton(a1)
+						end
+				end else begin
+					if (l5 := (if (l4 := GetUserConfig('blessedapp)) then GetRoot().(l4))) then begin
+							l5:?RemoveAuxButton(a1)
+						end
+				end;
+			a1
+		end)
+end
+@@end

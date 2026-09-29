@@ -1,0 +1,16 @@
+@@ 0x4589b9
+func(a1) begin
+	local l1, l2;
+	if (l1 := self:Get(a1, 'phone, nil)) then begin
+			if IsSubclass((l2 := ClassOf(l1)), '|string.pager|) then begin
+					l2 := PagerTypes.pagerText.(l2)
+				end else begin
+					l2 := PhoneTypes.phoneText.(l2)
+				end;
+			if StrFilled(l2) then begin
+					return ParamStr("(^0)", [Array: l2])
+				end
+		end;
+	return nil
+end
+@@end

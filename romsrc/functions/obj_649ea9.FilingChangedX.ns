@@ -1,0 +1,10 @@
+@@ 0x4c5905
+func() begin
+	(if IsSoupEntry(target) then begin
+			self:Fileit(target);
+			EntryChange(target);
+			selected := nil;
+			layout:Retarget(true)
+		end)
+end
+@@end

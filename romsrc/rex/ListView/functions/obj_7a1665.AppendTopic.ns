@@ -1,0 +1,15 @@
+@@ 0x797a15 names
+func(aTopic, aNewIndex, aTop, aLevelDelta) begin
+	local gtdeds;
+	gtdeds := self:GetToDoEntryDefaultStore(selectedDates[0], nil);
+	SetAdd(targets, gtdeds.Entry, true);
+	if ((if HasPath(aTopic, 'source) then (aTopic.source <> nil)) or (ClassOf(aTopic.source) <> 'symbol)) then begin
+			if (((Length(targets) - 1) < aTopic.source) or EntryStore(targets[aTopic.source]):IsReadOnly()) then begin
+					aTopic.source := gtdeds.storeIndex
+				end
+		end else begin
+			aTopic.source := gtdeds.storeIndex
+		end;
+	inherited:AppendTopic(aTopic, aNewIndex, aTop, aLevelDelta)
+end
+@@end

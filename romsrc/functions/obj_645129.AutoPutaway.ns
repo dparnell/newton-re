@@ -1,0 +1,5 @@
+@@ 0x4aa691
+func(a1) begin
+	(if autoPutawayEnabled then self:PutAwayScript(a1))
+end
+@@end

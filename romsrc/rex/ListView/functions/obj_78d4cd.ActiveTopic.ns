@@ -1,0 +1,6 @@
+@@ 0x78cb05 names
+func(anIndex) begin
+	curTopic := anIndex;
+	(if (anIndex <> nil) then SetKeyView(self:TopicIndexToView(anIndex), 99999))
+end
+@@end

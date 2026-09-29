@@ -1,0 +1,6 @@
+@@ 0x4e4ba9
+func() begin
+	local l1;
+	(if ((l1 := self:GetSelectionFont()).face = -536870912) then nil else GetFontFace(l1))
+end
+@@end

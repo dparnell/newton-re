@@ -1,0 +1,48 @@
+@@ 0x4f10e1
+func(a1) begin
+	local l1;
+	l1 := Date(newMtgDate);
+	if (a1 = 0) then begin
+			RepeatingView.repeatType := 5;
+			RepeatingView.mtgInfo := 0
+		end else begin
+			if (a1 = 1) then begin
+					RepeatingView.repeatType := 0;
+					RepeatingView.mtgInfo := BOr(4064, 31)
+				end else begin
+					if (a1 = 2) then begin
+							RepeatingView.repeatType := 0;
+							RepeatingView.mtgInfo := BOr((2048 >> l1.dayOfWeek), 31)
+						end else begin
+							if (a1 = 3) then begin
+									RepeatingView.repeatType := 4;
+									RepeatingView.mtgInfo := (((newMtgDate div 1440) << 8) + 14)
+								end else begin
+									if (a1 = 4) then begin
+											RepeatingView.repeatType := 2;
+											RepeatingView.mtgInfo := l1.Date
+										end else begin
+											if (a1 = 5) then begin
+													RepeatingView.repeatType := 1;
+													RepeatingView.mtgInfo := BOr((16 >> ((l1.Date - 1) div 7)), (2048 >> l1.dayOfWeek))
+												end else begin
+													if (a1 = 6) then begin
+															RepeatingView.repeatType := 3;
+															RepeatingView.mtgInfo := ((l1.month << 8) + l1.Date)
+														end else begin
+															if (a1 = 7) then begin
+																	RepeatingView.repeatType := 7;
+																	RepeatingView.mtgInfo := (((l1.month << 12) + (2048 >> l1.dayOfWeek)) + (16 >> ((l1.Date - 1) div 7)))
+																end else begin
+																	RepeatingView:Open()
+																end
+														end
+												end
+										end
+								end
+						end
+				end
+		end;
+	(currentLabelIndex := a1)
+end
+@@end

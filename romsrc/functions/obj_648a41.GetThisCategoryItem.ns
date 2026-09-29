@@ -1,0 +1,9 @@
+@@ 0x561285
+func(a1) begin
+	local l1, l2;
+	l1 := nil;
+	l2 := a1;
+	(while (not l1) do (if items[l2].category then (l1 := true) else (l2 := (l2 - 1))));
+	items[l2]
+end
+@@end

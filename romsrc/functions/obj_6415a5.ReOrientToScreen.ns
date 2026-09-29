@@ -1,0 +1,7 @@
+@@ 0x4d4fad
+func() begin
+	rotationInProgress := true;
+	self:Close();
+	self:Open()
+end
+@@end

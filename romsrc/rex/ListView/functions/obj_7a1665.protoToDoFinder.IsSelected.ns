@@ -1,0 +1,7 @@
+@@ 0x79b77d names
+func(itemAlias) begin
+	(if selected then ArrayPos(selected, itemAlias, 0, func(e, test) begin
+			(if (if (if (e._uniqueID = test._uniqueID) then (e._storeID = test._storeID)) then (e.instanceTime = test.instanceTime)) then (e.topicIndex = test.topicIndex))
+		end))
+end
+@@end

@@ -1,0 +1,13 @@
+@@ 0x490505
+func() begin
+	inherited:?viewSetupFormScript();
+	if (Length(pkgNames) > 0) then begin
+			self:figureAllItems()
+		end else begin
+			self.ListItems := '[Array: ];
+			self.selectedItems := '[Array: ]
+		end;
+	self.checkAll := (prefsCache.restorePackages = 'all);
+	self:SetupList()
+end
+@@end

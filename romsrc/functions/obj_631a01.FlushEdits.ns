@@ -1,0 +1,5 @@
+@@ 0x4d3c49
+func() begin
+	(if invoker then invoker:?UpdatePhone())
+end
+@@end

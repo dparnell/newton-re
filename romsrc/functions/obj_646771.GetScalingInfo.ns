@@ -1,0 +1,5 @@
+@@ 0x4315fd
+func() begin
+	(if viewCObject then {offsetX: max(0, fXOffset), offsetY: max(0, fYOffset), zoomedTo: fZoomedTo, extent: currentSize, viewBox: self:LocalBox()})
+end
+@@end

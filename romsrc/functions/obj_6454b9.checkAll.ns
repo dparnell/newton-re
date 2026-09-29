@@ -1,0 +1,18 @@
+@@ 0x49db2d
+@@const kFunction_49dabd
+func(a1) begin
+	MakeEntryAlias(a1)
+end
+@@main
+func() begin
+	hilitedIndex := nil;
+	(curse := cursor:clone()):Reset();
+	try begin
+			selected := MapCursor(curse, kFunction_49dabd)
+		end onexception |evt.ex| do begin
+			self:Notify(3, title, "There was not enough memory to select all items. Some items may still be unselected.")
+		end;
+	AddUndoSend(layout, 'UnCheckAll, [Array: ]);
+	layout:DoRetarget()
+end
+@@end

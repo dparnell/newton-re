@@ -1,0 +1,11 @@
+@@ 0x629ab5
+func(a1, a2) begin
+	local l1;
+	if a2 then begin
+			l1 := GetDictionary(31);
+			l1:DeleteEncodedWord(a2);
+			a1.saveUserDict := true
+		end;
+	nil
+end
+@@end

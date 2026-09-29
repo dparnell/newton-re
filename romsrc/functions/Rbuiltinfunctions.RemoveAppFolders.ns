@@ -1,0 +1,16 @@
+@@ 0x482b41
+func(a1) begin
+	l1 := GetUserConfig('userFolderGroups);
+	l2 := GetUserConfig('userFolders);
+	(if (if (if l1.(a1) then (a1 <> '_Global)) then (a1 <> '_System)) then begin
+			local l1;
+			local l2;
+			(foreach l3 in l1.(a1) do begin
+					if (Length(GetFolderGroups(l3)) = 1) then begin
+							RemoveSlot(l2, l3)
+						end
+				end);
+			RemoveSlot(l1, a1)
+		end)
+end
+@@end

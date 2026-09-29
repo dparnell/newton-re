@@ -1,0 +1,8 @@
+@@ 0x47bf65
+func() begin
+	(if (silentPrefs = nil) then (self.viewFlags := BAnd(viewFlags, bnot(1))) else begin
+			viewValue := GetRoot().(appSymbol):GetConfig(silentPrefs.configuration);
+			(text := silentPrefs.text)
+		end)
+end
+@@end

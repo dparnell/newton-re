@@ -1,0 +1,6 @@
+@@ 0x4df725
+func() begin
+	place := country.name;
+	inherited:?viewSetupFormScript()
+end
+@@end

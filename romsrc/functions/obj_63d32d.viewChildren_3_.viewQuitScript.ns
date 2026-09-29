@@ -1,0 +1,5 @@
+@@ 0x4622d9
+func() begin
+	RemoveSlot(base, '_defaultButton)
+end
+@@end

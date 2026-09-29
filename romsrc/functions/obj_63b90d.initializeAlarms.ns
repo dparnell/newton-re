@@ -1,0 +1,5 @@
+@@ 0x4f7f15
+func() begin
+	AddProcrastinatedSend('calendarAlarm, calendar, 'nextCalendarAlarm, [Array: nil], 1000)
+end
+@@end

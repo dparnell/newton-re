@@ -1,0 +1,6 @@
+@@ 0x44a5bd
+func(a1) begin
+	clicker();
+	PostCommand('viewfrontmost, 51)
+end
+@@end

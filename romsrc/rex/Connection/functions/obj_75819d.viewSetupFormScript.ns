@@ -1,0 +1,7 @@
+@@ 0x758215
+func() begin
+	self.listItems := translators;
+	self:SetupList();
+	(selectedTranslator := 0)
+end
+@@end

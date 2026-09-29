@@ -1,0 +1,12 @@
+@@ 0x73d8ad
+func(a1, a2) begin
+	local l1;
+	if (not StrFilled((l1 := ParamStr("^?0^?1^0, ^1|^0||^1|", [Array: a1.name.last, a1.name.first])))) then begin
+			l1 := "Untitled Owner"
+		end;
+	if (a2 > 1) then begin
+			l1 := Stringer([Array: l1, "\n ", "Owner"])
+		end;
+	l1
+end
+@@end

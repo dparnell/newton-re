@@ -1,0 +1,13 @@
+@@ 0x595545
+func(a1, a2) begin
+	self.mailmessage := a1;
+	if (not self:StartTransaction(120)) then begin
+			return nil
+		end;
+	eworld.file_in := {id: a1.id, filetype: a1.filetype, filesize: a1.filesize, filename: a1.filename, statusView: a2, doneScript: 'Mail_DownloadDone};
+	self:StartStream("eD");
+	self:atom(1, 7, 0, nil);
+	self:atom(3, 1, a1.id, nil);
+	self:SendStream()
+end
+@@end

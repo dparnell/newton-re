@@ -1,0 +1,11 @@
+@@ 0x51c4ed
+func() begin
+	local l1;
+	browserRefnum := (Length((browsers := Clone((l1 := self:CurrentBook()).browsers))) - 1);
+	self.targetView := contentArea;
+	if HasPath(l1, 'flags) then begin
+			self.bookFlags := l1.flags
+		end;
+	(if (self:CurrentPage() = 0) then self:TurnToPage(1) else self:ScrollPage(0))
+end
+@@end

@@ -1,0 +1,15 @@
+@@ 0x75c209
+func() begin
+	local l1;
+	l1 := 0;
+	try begin
+			theEndpoint.disconnecting := true;
+			theEndpoint:WriteCommand("disc", nil, nil)
+		end onexception |evt.ex| do begin
+			l1 := CurrentException().error
+		end;
+	(if (l1 = 0) then AddDelayedCall(func() begin
+			theEndpoint:ConnectionDone(0)
+		end, nil, 1000) else theEndpoint:ConnectionDone(l1))
+end
+@@end

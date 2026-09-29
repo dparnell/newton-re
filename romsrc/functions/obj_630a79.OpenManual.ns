@@ -1,0 +1,7 @@
+@@ 0x523af9
+func(a1) begin
+	bookRef := a1;
+	self:Open();
+	self:RefreshTopics(Outline, 0)
+end
+@@end

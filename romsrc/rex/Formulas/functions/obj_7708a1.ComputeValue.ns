@@ -1,0 +1,5 @@
+@@ 0x7708f5
+func(a1) begin
+	(if (curMeasurement = 5) then return ((a1[0] - 32) / 1.8) else return (a1[0] * self:GetConversionFactor()))
+end
+@@end

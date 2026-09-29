@@ -1,0 +1,22 @@
+@@ 0x75f42d
+func(a1, a2) begin
+	local l1, l2;
+	l1 := true;
+	(while (l1 = true) do (if ((l2 := a1:ReadCommandHeader(true)) = nil) then Throw('|evt.ex.error|, -28009) else (if StrEqual("opca", l2.command) then begin
+					done := a1:ProcessBuiltinCommand();
+					Throw('|evt.ex.error|, -16005)
+				end else (if a2 then (if StrEqual(a2, l2.command) then begin
+							l2.data := a1:ReadCommandData();
+							(l1 := nil)
+						end else (if (done := a1:ProcessBuiltinCommand()) then Throw('|evt.ex.error|, -28030))) else begin
+						l1 := nil;
+						l2.data := a1:ReadCommandData();
+						(if StrEqual("ress", l2.command) then begin
+								a1.desktopresult := l2.data;
+								l2.command := "dres";
+								(l2.data := -28028)
+							end)
+					end))));
+	return l2
+end
+@@end

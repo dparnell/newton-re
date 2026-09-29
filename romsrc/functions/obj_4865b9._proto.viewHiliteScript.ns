@@ -1,0 +1,9 @@
+@@ 0x486499
+func(a1) begin
+	local l1, l2;
+	l1 := self:LocalBox();
+	l2 := leftHiliteBits.bounds.right;
+	self:DrawShape([Array: OffsetShape(MakeShape(leftHiliteBits), l1.left, 1), MakeRect((l1.left + l2), 0, (l1.right - l2), l1.bottom), OffsetShape(MakeShape(rightHiliteBits), (l1.right - l2), 1)], '{transferMode: 2, penPattern: 0, fillPattern: 5});
+	true
+end
+@@end

@@ -1,0 +1,12 @@
+@@ 0x526f15
+func(a1, a2) begin
+	if a1 then begin
+			a2.givenTime := self:GetUserTime(a1, a2)
+		end else begin
+			if a2.usualTime then begin
+					a2.givenTime := a2.usualTime
+				end
+		end;
+	(if a2.givenTime then return self:GetActionTime(a2) else return a2.currentTime)
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x54fff5
+func() begin
+	local l1;
+	if (not (l1 := iconSpace:SetupFakeTarget())) then begin
+			self:hilite(nil);
+			return nil
+		end;
+	inherited:buttonClickScript()
+end
+@@end

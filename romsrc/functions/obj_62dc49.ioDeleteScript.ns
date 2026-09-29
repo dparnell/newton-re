@@ -1,0 +1,5 @@
+@@ 0x4b56f5
+func(a1, a2) begin
+	self:newtDeleteScript(a1, a2)
+end
+@@end

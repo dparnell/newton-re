@@ -1,0 +1,8 @@
+@@ 0x4ee721
+func(a1) begin
+	local l1, l2;
+	l1 := NumberStr((a1 div 60));
+	l2 := NumberStr(abs((a1 mod 60)));
+	(str := ParamStr("^0^1^2^3", [Array: l1, GetLocale().timeformat.timeSepStr2, (if (StrLen(l2) = 1) then $0), l2]))
+end
+@@end

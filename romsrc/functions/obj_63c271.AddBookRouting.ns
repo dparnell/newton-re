@@ -1,0 +1,20 @@
+@@ 0x51c5ad
+func(a1) begin
+	local scriptSym;
+	if HasPath(base, 'routeScripts) then begin
+			(foreach l1 in routeScripts do begin
+					RemoveSlot(base, l1.routeScript)
+				end);
+			RemoveSlot(base, 'routeScripts)
+		end;
+	(if (Length(a1) > 0) then begin
+			base.routeScripts := TotalClone(a1);
+			(foreach l1 in base.routeScripts do begin
+					scriptSym := l1.routeScript;
+					base.(scriptSym) := func(a1, a2) begin
+						Perform(contentArea, scriptSym, [Array: a1, a2])
+					end
+				end)
+		end)
+end
+@@end

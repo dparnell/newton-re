@@ -1,0 +1,5 @@
+@@ 0x764b15
+func(a1, a2) begin
+	Length(a2.pages)
+end
+@@end

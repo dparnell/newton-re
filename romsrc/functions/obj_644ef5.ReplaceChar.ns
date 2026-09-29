@@ -1,0 +1,37 @@
+@@ 0x467811
+func(a1, a2, a3) begin
+	local l1;
+	(if (if (not self:CellLocked(a1)) then a3) then begin
+			self:SaveUndoState(nil);
+			if ((l1 := (wordRight - wordLeft)) = 0) then begin
+					wordLeft := a1;
+					wordRight := a1;
+					trailers := (StrLen(text) - wordRight)
+				end;
+			text[a1] := a3;
+			if (a1 < wordLeft) then begin
+					wordLeft := a1
+				end else begin
+					if (if (if (a1 > wordRight) then (AddNewWord exists)) then HasPath(template, '_MultiWord)) then begin
+							a1 := (a1 - dispLeft);
+							self:AddNewWord(1);
+							lastChar := a1;
+							wordLeft := a1;
+							wordRight := (a1 + 1);
+							trailers := (StrLen(text) - wordRight);
+							text[a1] := a3
+						end else begin
+							if (a1 >= wordRight) then begin
+									wordRight := (a1 + 1);
+									trailers := (StrLen(text) - wordRight)
+								end
+						end
+				end;
+			altChars[a1] := a2;
+			wordSource := 'Editing;
+			self:InvalDrawCache('chars);
+			self:DisplayExternal(true);
+			self:Dirty()
+		end)
+end
+@@end

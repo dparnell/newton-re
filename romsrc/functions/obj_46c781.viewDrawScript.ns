@@ -1,0 +1,9 @@
+@@ 0x46c0e5
+func() begin
+	local l1, l2;
+	(if (l1 := self:GetInkStrokes()) then begin
+			l2 := InsetRect(self:GlobalBox(), 10, 8);
+			(itemBox := DrawOriginal(l1, l2))
+		end)
+end
+@@end

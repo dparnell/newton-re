@@ -1,0 +1,21 @@
+@@ 0x4e3701
+func(a1) begin
+	if (l1 := HiliteOwner()) then begin
+			l2 := GetHiliteOffsets();
+			l3 := vars.lastPolyHiliteChanged;
+			if l2 then begin
+					local l1;
+					local l2;
+					local l3;
+					(foreach l4 in l2 do begin
+							l4[0]:ChangeStylesOfRange(l4[1], (l4[2] - l4[1]), {pensize: a1}, true)
+						end)
+				end;
+			if (if (if l3 then l3.viewCObject) then l3.hilites) then begin
+					PostCommandParam(l3:Parent(), 75, a1)
+				end
+		end;
+	SetUserConfig('userPenSize, a1);
+	SetInkerPenSize(a1)
+end
+@@end

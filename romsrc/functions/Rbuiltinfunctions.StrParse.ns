@@ -1,0 +1,16 @@
+@@ 0x590e39
+func(a1, a2) begin
+	local l1, l2, l3, l4;
+	l3 := a1;
+	l4 := [Array: ];
+	(while (l1 := StrPos(l3, a2, 0)) do begin
+			l2 := Substr(l3, 0, l1);
+			l3 := Substr(l3, (l1 + 1), StrLen(l3));
+			(if (StrLen(l2) > 0) then AddArraySlot(l4, l2))
+		end);
+	if (StrLen(l3) > 0) then begin
+			AddArraySlot(l4, l3)
+		end;
+	l4
+end
+@@end

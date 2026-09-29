@@ -1,0 +1,9 @@
+@@ 0x458175
+func(a1, a2) begin
+	(if (a2 = nil) then return nil else (if IsArray(a2) then (foreach l1 in a2 do begin
+					self:RealGetRoutingInfo(a1, l1)
+				end) else (if (ObjEntryClass(a2) = 'group) then (foreach l1 in self:Get(a2, routePath, nil) do begin
+						self:RealGetRoutingInfo(a1, l1)
+					end) else AddArraySlot(a1, self:GetItemRoutingFrame(a2)))))
+end
+@@end

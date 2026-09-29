@@ -1,0 +1,10 @@
+@@ 0x7388e5
+func(a1, a2) begin
+	local l1;
+	l1 := layout.masterSoup;
+	l1:AddEntry(a1, a2);
+	layout.dataCursor:Goto(a1);
+	layout:Retarget(nil);
+	(newtAppBase.target := a1)
+end
+@@end

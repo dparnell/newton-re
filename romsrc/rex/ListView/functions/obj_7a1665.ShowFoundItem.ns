@@ -1,0 +1,12 @@
+@@ 0x797885 names
+func(anEntry, itemTime, aFinder) begin
+	local ti, topic, hit;
+	if (not HasPath((hit := aFinder.items[aFinder.currentItem]), 'topicIndex)) then begin
+			Write("ToDo ShowFoundItem - non todo item");
+			return nil
+		end;
+	topic := anEntry.topics[hit.topicIndex];
+	self:EnsureVisibleTopic((ti := ArrayPos(topics, topic, 0, nil)));
+	self:ShowFoundTopic(ti, hit.offset, aFinder)
+end
+@@end

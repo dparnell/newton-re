@@ -1,0 +1,38 @@
+@@ 0x468625
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9;
+	l1 := nil;
+	l2 := StrokeBounds(a1);
+	l3 := (cellWidth - cellGap);
+	l4 := CountGesturePoints(a1);
+	if ((l5 := (l2.right - l2.left)) > l3) then begin
+			l6 := self:FindCell(l2.left);
+			l7 := self:FindCell(l2.right);
+			l8 := l6.edge;
+			l9 := l7.edge;
+			if (if l8 then l9) then begin
+					if ((l8 + 1) = l9) then begin
+							if ((l2.left - l6.edgeX) > (l3 div 3)) then begin
+									l8 := (l8 + 1)
+								end
+						end;
+					if (l9 > l8) then begin
+							l1 := true
+						end
+				end
+		end else begin
+			if (l4 >= 7) then begin
+					l9 := ((l8 := (l6 := self:FindCell(l2.left)).hit) + 1);
+					l1 := true
+				end
+		end;
+	if l1 then begin
+			l1 := nil;
+			if self:DeleteText((l8 + dispLeft), (l9 + dispLeft)) then begin
+					DoScrubEffect(a1);
+					l1 := true
+				end
+		end;
+	return l1
+end
+@@end

@@ -1,0 +1,11 @@
+@@ 0x43c949
+func() begin
+	viewBBox := self:LocalBox();
+	if _vertical then begin
+			startLeft := ((viewBBox.bottom - iconBBox.bottom) div 2)
+		end else begin
+			startLeft := ((viewBBox.right - iconBBox.right) div 2)
+		end;
+	(if (startLeft < 0) then (startLeft := 0))
+end
+@@end

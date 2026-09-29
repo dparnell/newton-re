@@ -1,0 +1,5 @@
+@@ 0x5187e9
+func() begin
+	(text := DisplayLine.labelText)
+end
+@@end

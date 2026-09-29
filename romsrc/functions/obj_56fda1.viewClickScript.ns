@@ -1,0 +1,6 @@
+@@ 0x56fd01
+func(a1) begin
+	self:DragAndDropLtd(a1, self:GlobalOuterBox(), base:GlobalBox(), nil, [Array: {types: '[Array: card], dragRef: cardIndex, dragView: self}]);
+	true
+end
+@@end

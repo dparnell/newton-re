@@ -1,0 +1,5 @@
+@@ 0x4d7119
+func(a1, a2) begin
+	self:MakeTextNoteFont(a1, a2, GetUserConfig('userFont))
+end
+@@end

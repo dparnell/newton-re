@@ -1,0 +1,60 @@
+@@ 0x48c565
+func() begin
+	l5 := ResolveEntryAlias(GetUserConfig('currentEmporium));
+	l6 := {};
+	if l5 then begin
+			l3 := (if l5.cityAlias then GetCityFromAlias(l5.cityAlias))
+		end else begin
+			l5 := GetUserConfig('location);
+			l4 := true
+		end;
+	l6.currentAreaCode := Stringer([Array: l5.areacode]);
+	if l5.countrySymbol then begin
+			l6.currentCountry := l5.countrySymbol
+		end;
+	if ((not l4) or StrFilled(l5.dialingPrefix)) then begin
+			l6.dialingPrefix := Clone(l5.dialingPrefix)
+		end;
+	if l5.printer then begin
+			l6.currentPrinter := Clone(l5.printer)
+		end;
+	if (l1 := GetRoot().cardfile:bcEmailNetwork(l5, 'sprint)) then begin
+			l2 := ConvertIntToPhone(l1[0].mailPhone);
+			l6.mailPhone := l2;
+			l6.mailPhoneFull := l2;
+			l6.mailNetwork := l1[0].mailNetwork
+		end else begin
+			if (l1 := GetRoot().cardfile:bcEmailNetwork(l5, 'concert)) then begin
+					l2 := ConvertIntToPhone(l1[0].mailPhone);
+					l6.mailPhone := l2;
+					l6.mailPhoneFull := l2;
+					l6.mailNetwork := l1[0].mailNetwork
+				end else begin
+					l6.mailPhone := "";
+					l6.mailPhoneFull := "";
+					l6.mailNetwork := nil
+				end
+		end;
+	if l3 then begin
+			SetUserConfig('location, l3);
+			if (if (l7 := GetRoot().worldClock) then l7.viewCObject) then begin
+					l7:UpdateLocationFields();
+					l7:RedoChildren()
+				end;
+			DSTVerify(Time());
+			vars.setTimeSeed := Random(1, 1000000);
+			GetRoot():Dirty()
+		end;
+	SetUserConfigEnMasse('emporia, l6);
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	local l6;
+	local l7;
+	(if GetRoot().senderList then (foreach l8 in GetRoot().senderList do begin
+				l8:JamIt()
+			end))
+end
+@@end

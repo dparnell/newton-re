@@ -1,0 +1,5 @@
+@@ 0x525629
+func() begin
+	entryLine:SetHiliteNoUpdate(9999, 9999, true)
+end
+@@end

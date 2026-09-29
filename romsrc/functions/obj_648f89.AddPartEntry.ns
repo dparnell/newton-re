@@ -1,0 +1,31 @@
+@@ 0x551c55
+func(a1, a2, a3) begin
+	local l1, l2;
+	l1 := GetRoot().ExtrasDrawer:GetPartEntry(a1);
+	l2 := self:GetPartEntries();
+	if (l1.labels = '_buttonBar) then begin
+			if (l1.sequence < 0) then begin
+					SetRemove(l2.fixed, l1)
+				end else begin
+					SetRemove(l2.mobile, l1)
+				end
+		end else begin
+			self:ChangeTagListAndLabels(l1, '_buttonBar)
+		end;
+	if a3 then begin
+			if (not a2) then begin
+					a2 := Length(l2.fixed)
+				end;
+			ArrayInsert(l2.fixed, l1, a2);
+			self:ResequencePartEntriesQT(l2.fixed, nil)
+		end else begin
+			if (not a2) then begin
+					a2 := Length(l2.mobile)
+				end;
+			ArrayInsert(l2.mobile, l1, a2);
+			self:ResequencePartEntriesQT(nil, l2.mobile)
+		end;
+	XmitSoupChange("Packages", 'ButtonBar, 'whatThe, nil);
+	nil
+end
+@@end

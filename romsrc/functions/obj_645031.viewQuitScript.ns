@@ -1,0 +1,26 @@
+@@ 0x469721
+func() begin
+	if (l1 := refCon).form then begin
+			cText:DoPendingUpdate()
+		end;
+	if (not self.gotoKeyboard) then begin
+			if (if l1.form then l1.form.text) then begin
+					hiliteBusy := true;
+					self:SetCaret(StrLen((l2 := GetDynamicValue(l1.form, 'text, 'string))));
+					self:SetHilite();
+					hiliteBusy := nil
+				end
+		end;
+	self:UnregisterOpenKeyboard();
+	inherited:viewQuitScript();
+	local l1;
+	local l2;
+	(foreach l3 in [Array: 'alternates, 'cText, 'cInk, 'recognizeButton, 'Keyboard, 'viewBounds, 'viewFlags, 'hiliteBusy, 'savedPickItems, 'hiliteParms] do begin
+			RemoveSlot(self, l3)
+		end);
+	self.refCon := nil;
+	self.pickItems := nil;
+	self.wordInfo := nil;
+	ClearTryString()
+end
+@@end

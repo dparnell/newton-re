@@ -1,0 +1,9 @@
+@@ 0x4584cd
+func(a1) begin
+	local l1;
+	if (not (if (l1 := self:Get(a1, primaryPath, 'text)) then StrFilled(l1))) then begin
+			l1 := "Anonymous"
+		end;
+	l1
+end
+@@end

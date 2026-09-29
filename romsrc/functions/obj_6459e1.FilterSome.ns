@@ -1,0 +1,5 @@
+@@ 0x4a832d
+func(a1, a2) begin
+	(a1.labels = a2)
+end
+@@end

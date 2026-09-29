@@ -1,0 +1,11 @@
+@@ 0x426471
+func() begin
+	if (if (not self:TestState(8)) then SoundProgressSlider) then begin
+			SoundProgressSlider:ResetSlider()
+		end;
+	(if (if inherited:play() then SoundProgressSlider) then begin
+			SoundProgressSlider:SetPlayStart(self:GetPlayingTime());
+			AddDelayedSend(base, 'UpdateSlider, [Array: ], 1000)
+		end)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x79bdb5 names
+func() begin
+	(if task.mtgDone then "Yes" else "No")
+end
+@@end

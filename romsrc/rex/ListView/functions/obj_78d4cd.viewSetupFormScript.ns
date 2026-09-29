@@ -1,0 +1,12 @@
+@@ 0x78d07d names
+func() begin
+	curTopic := nil;
+	self.viewFlags := BOr(viewFlags, self:CheckFlags());
+	if (not self:EntryCool(nil)) then begin
+			self.viewFlags := BOr(self.viewFlags, 128);
+			menuButtons.viewFlags := BAnd(menuButtons.viewFlags, bnot(1))
+		end;
+	leftMarkGap := baseLeftGap;
+	(if (BAnd(listViewFlags, 2) <> 0) then (leftMarkGap := ((leftMarkGap + 13) + 2)))
+end
+@@end

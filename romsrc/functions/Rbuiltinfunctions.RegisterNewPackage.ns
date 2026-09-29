@@ -1,0 +1,37 @@
+@@ 0x557391
+func(pkgRef, a2, a3) begin
+	local packageName, soup;
+	if IsSirNotAppearingInThisROM((packageName := (l1 := GetPkgRefInfo(pkgRef)).title), l1.version, 'install) then begin
+			return nil
+		end;
+	try begin
+			local l1;
+			(foreach l2, l3 in l1.parts do begin
+					local l5, l6;
+					if (if IsFrame(l3) then l3:?DoNotInstall()) then begin
+							return nil
+						end
+				end)
+		end onexception |evt.ex| do begin
+			GetRoot():Notify(3, "Newton", ParamStr("An error occurred installing the package \u201C\u^0\u201D\u. It may not work with this system. Contact the software publisher for further information. (Part ^1, Type ^2)", [Array: packageName, l2, l1.parttypes[l2]]));
+			return nil
+		end;
+	if GetPackageEntry(packageName, a2) then begin
+			GetRoot():Notify(3, "Newton", ParamStr("The package \u201C\u^0\u201D\u was not installed because a package by the same name is already installed on the store \u201C\u^1\u201D\u.", [Array: packageName, a2:GetName()]));
+			return nil
+		end;
+	if (not ((l6 := (if (Length((l5 := l1.parttypes)) > 0) then '{tsps: true, tspt: true}.(l5[0]))) or l1.dispatchonly)) then begin
+			soup := GetUnionSoupAlways("Packages"):GetMember(a2);
+			a2:AtomicAction(func() begin
+				local l1;
+				pkgRef := (l1 := soup:Add({pkgRef: pkgRef, _tagList: [Array: '_package], packageName: packageName})).pkgRef;
+				UnsafeXmitSoupChangeNow("Packages", '_newt, 'entryAdded, l1)
+			end)
+		end;
+	if a3 then begin
+			SafeActivatePackageQT(pkgRef, packageName, a2)
+		end;
+	XmitPackageOp('RegisterNewPackage);
+	pkgRef
+end
+@@end

@@ -1,0 +1,75 @@
+@@ 0x4f7ba9
+func(a1) begin
+	local l1;
+	l1 := nil;
+	if ((Visible(MeetingNotes) or Visible(DatesOverviewForm)) or Visible(ToDoSlip)) then begin
+			l1 := true;
+			MeetingNotes:Close();
+			DatesOverviewForm:Close();
+			ToDoSlip:Close()
+		end else begin
+			ClearUndoStacks()
+		end;
+	if (a1 <> mainDisplay) then begin
+			if (if (a1 <> DatesOverviewForm) then (a1 <> calendar.MeetingNotes)) then begin
+					if (if ((a1 = MonthOverView) or (a1 = YearView)) then (if (mainDisplay <> MonthOverView) then (mainDisplay <> YearView))) then begin
+							previousMainDataDisplay := mainDisplay;
+							upDownScroller:Hide()
+						end;
+					if (if (a1 <> MonthOverView) then (a1 <> YearView)) then begin
+							if upDownScroller.viewCObject then begin
+									upDownScroller:Show()
+								end else begin
+									upDownScroller:Open()
+								end
+						end;
+					if ((a1 = ToDoListView) or (a1 = AgendaView)) then begin
+							cribView:Hide();
+							cribMoreIndicator:Close();
+							monthController.singleDay := true;
+							monthController:Refresh();
+							SetValue(DateView, 'text, self:CreateDateString())
+						end else begin
+							if (if (a1 = MonthOverView) then ((previousMainDataDisplay = ToDoListView) or (previousMainDataDisplay = AgendaView))) then begin
+									a1.singleDay := true;
+									monthController.singleDay := true;
+									monthController:Refresh()
+								end else begin
+									cribView:Show();
+									cribView:RedoChildren();
+									if (a1 <> YearView) then begin
+											monthController.singleDay := nil;
+											monthController:Refresh();
+											SetValue(DateView, 'text, self:CreateDateString())
+										end else begin
+											monthController.singleDay := true
+										end
+								end
+						end;
+					mainDisplay:Close();
+					a1:Open();
+					a1:?calculateScrollRects();
+					if Visible(upDownScroller) then begin
+							upDownScroller:AdjustArrows()
+						end;
+					mainDisplay := a1
+				end else begin
+					if (a1 = DatesOverviewForm) then begin
+							upDownScroller:Hide()
+						end;
+					a1:Open()
+				end;
+			if mainDisplay.appSymbol then begin
+					appSymbol := mainDisplay.appSymbol
+				end;
+			l1 := nil
+		end else begin
+			if (if (a1 <> MonthOverView) then (a1 <> YearView)) then begin
+					upDownScroller:Show()
+				end;
+			l1 := true
+		end;
+	self:SetupDefaultPrintFormat(a1);
+	(if l1 then self:redisplayScript())
+end
+@@end

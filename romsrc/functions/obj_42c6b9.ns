@@ -1,0 +1,8 @@
+@@ 0x42c6b9
+func(a1, a2) begin
+	(if (if ((a1 = $\n) or (a1 = $\03)) then (BAnd(a2, -234881024) = 0)) then begin
+			SendKeyMessage(self, '_DoDefaultButton);
+			true
+		end)
+end
+@@end

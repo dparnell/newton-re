@@ -1,0 +1,5 @@
+@@ 0x757611
+func() begin
+	GetRoot().Connection:ConnectionPrefsWrite('autoDockAddr, prefsFrame)
+end
+@@end

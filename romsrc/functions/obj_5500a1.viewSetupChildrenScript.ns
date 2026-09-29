@@ -1,0 +1,14 @@
+@@ 0x54fd31
+func() begin
+	if (Length((l1 := GetAuxButtons(appSymbol))) > 0) then begin
+			menuLeftButtons := Clone(OrigMenuLeftButtons);
+			local l1;
+			local l2;
+			l2 := (foreach l3 deeply in l1 collect l3.butt);
+			ArrayMunger(menuLeftButtons, Length(menuLeftButtons), nil, l2, 0, nil)
+		end else begin
+			menuLeftButtons := OrigMenuLeftButtons
+		end;
+	inherited:?viewSetupChildrenScript()
+end
+@@end

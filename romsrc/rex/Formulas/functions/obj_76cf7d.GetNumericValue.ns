@@ -1,0 +1,5 @@
+@@ 0x76d3c5
+func() begin
+	return value:GetNumericValue()
+end
+@@end

@@ -1,0 +1,11 @@
+@@ 0x49d92d
+func(a1) begin
+	(if (if hilitedIndex then hiliteEntry) then begin
+			clicker();
+			self:SelectItem(hilitedIndex);
+			hilitedIndex := nil;
+			checkAllPrimed := nil;
+			RefreshViews()
+		end)
+end
+@@end

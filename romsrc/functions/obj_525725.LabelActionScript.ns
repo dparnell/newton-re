@@ -1,0 +1,15 @@
+@@ 0x525609
+func(a1) begin
+	local l1;
+	if IsFrame((l1 := labelCommands[a1])) then begin
+			l1 := Clone(l1.item)
+		end else begin
+			if StrFilled(entryLine.text) then begin
+					l1 := Stringer([Array: l1, " ", entryLine.text])
+				end
+		end;
+	self:UpdateText(l1);
+	defaultChoices := nil;
+	self:SetLabelCommands(Sort(Clone((defaultFullCommands := GenFullCommands())), '|str<|, nil))
+end
+@@end

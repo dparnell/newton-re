@@ -1,0 +1,6 @@
+@@ 0x76dfb5
+func() begin
+	self.Date := nil;
+	(self.indent := self:parent().indent)
+end
+@@end

@@ -1,0 +1,16 @@
+@@ 0x72fac1
+func() begin
+	local l1;
+	if scrollToBottom then begin
+			if ((l1 := min((initialDataRect.bottom - 30), (scrollerView.scrollRect.bottom - (scrollerView.viewRect.bottom - scrollerView.viewRect.top)))) > 0) then begin
+					self:SetOrigin(viewOriginX, l1);
+					scrollerView.yPos := l1
+				end
+		end;
+	scrollerView:AdjustArrows();
+	if (BAnd(self.viewFlags, 130) = 0) then begin
+			self:PositionCaret(10, (viewOriginY + 10), nil)
+		end;
+	inherited:?viewSetupDoneScript()
+end
+@@end

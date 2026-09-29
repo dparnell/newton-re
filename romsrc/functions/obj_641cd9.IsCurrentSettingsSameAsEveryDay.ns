@@ -1,0 +1,5 @@
+@@ 0x4f1b49
+func() begin
+	(if (repeatType = 0) then (mtgInfo = BOr(4064, 31)))
+end
+@@end

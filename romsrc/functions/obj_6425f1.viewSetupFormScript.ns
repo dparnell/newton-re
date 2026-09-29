@@ -1,0 +1,32 @@
+@@ 0x4db2f9
+@@const kROM_251
+@251
+@@const kFunction_4db189
+func(a1, a2, a3, a4) begin
+	GetRoot().worldClock:Validate()
+end
+@@main
+func() begin
+	local l1, l2, l3, l4;
+	viewBounds := Clone(viewBounds);
+	l1 := displayParams;
+	if ((l2 := ((self:GlobalBox().top - l1.appAreaTop) - 8)) < 0) then begin
+			viewBounds.top := (viewBounds.top - l2)
+		end;
+	viewBounds.bottom := (viewBounds.top + expanded);
+	if ((l2 := (self:GlobalBox().bottom - ((l1.appAreaTop + l1.appAreaHeight) - 8))) > 0) then begin
+			viewBounds.top := (viewBounds.top - l2);
+			viewBounds.bottom := (viewBounds.top + expanded)
+		end;
+	appBase := self;
+	l3 := GetLocationSoup(@251);
+	if (not cards) then begin
+			cards := l3:Query('{type: index, indexPath: [Array: country, name, region]});
+			cards:Goto((if (l4 := (if awayKey then ResolveEntryAlias(awayKey))) then l4 else l3:Query('{type: index, indexPath: [Array: name, country, region]}):GotoKey("Tokyo")))
+		end;
+	self:SetupIdle(60000);
+	self:UpdateLocationFields();
+	RegSoupChange(kROM_251, appSymbol, kFunction_4db189);
+	SetKeyView(self, 0)
+end
+@@end

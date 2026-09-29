@@ -1,0 +1,17 @@
+@@ 0x42ef65
+func() begin
+	keys := nil;
+	if self.Keyboard then begin
+			keys := GetVariable(self, self.Keyboard)
+		end;
+	AddDeferredAction(ExpandKeys, [Array: self.entryLine]);
+	labelCommands := (foreach l1 in (labelSymbols := PhoneTypes.phoneClasses) collect PhoneTypes.phoneText.(l1));
+	labelLine.viewBounds := RelBounds(0, 0, indent, height);
+	entryLine.viewBounds.top := (entryLine.viewBounds.top + height);
+	entryLine.viewBounds.left := 4;
+	entryLine.viewFormat := framer;
+	dirtyLine := true;
+	self:SetLabelText(self:setup1(target));
+	(if (phoneIndex < Length(target.(path))) then target.(path)[phoneIndex])
+end
+@@end

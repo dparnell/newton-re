@@ -1,0 +1,15 @@
+@@ 0x734751
+func() begin
+	l1 := (if labelCommands then labelCommands[0].item else "");
+	local l1;
+	(foreach l2 in labelCommands do begin
+			if (l2.baudRate = target.(path)) then begin
+					break (l1 := l2.item)
+				end
+		end);
+	if (if (not target.(path)) then labelCommands) then begin
+			target.(path) := labelCommands[0].baudRate
+		end;
+	l1
+end
+@@end

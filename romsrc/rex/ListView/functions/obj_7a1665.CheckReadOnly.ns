@@ -1,0 +1,11 @@
+@@ 0x797be5 names
+func(aEntry) begin
+	local whatStore, name;
+	if (whatStore := EntryStore(aEntry)):IsReadOnly() then begin
+			name := whatStore:GetName();
+			self:Notify(3, "To Do", ParamStr("To Do changes could not be saved (\u201C\u^0\u201D\u is write-protected)", [Array: name]));
+			return true
+		end;
+	nil
+end
+@@end

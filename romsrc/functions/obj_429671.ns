@@ -1,0 +1,9 @@
+@@ 0x429671
+func(a1) begin
+	if self:TrackHilite(a1) then begin
+			self:buttonClickScript();
+			self:hilite(nil)
+		end;
+	true
+end
+@@end

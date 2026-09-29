@@ -1,0 +1,6 @@
+@@ 0x56e4c1
+func() begin
+	inherited:?viewSetupDoneScript();
+	(if cardMessage.keepSlotPowered then self:SetupIdle(1))
+end
+@@end

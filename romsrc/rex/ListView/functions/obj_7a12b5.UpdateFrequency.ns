@@ -1,0 +1,31 @@
+@@ 0x79ee95 names
+func() begin
+	local oldSpec, newSpec;
+	oldSpec := task.repeatInfo;
+	newSpec := repeatingView:GetRepeatSpec();
+	if (if (oldSpec = nil) then (newSpec = nil)) then begin
+			return nil
+		end;
+	(if (if (if (if oldSpec then newSpec) then (oldSpec.repeatType = newSpec.repeatType)) then (oldSpec.mtgInfo = newSpec.mtgInfo)) then (if (savedReminderIndex <> 0) then (task.repeatInfo.reminderInterval := (1440 * savedReminderIndex))) else (if (if newSpec then (not oldSpec)) then begin
+				Print(newSpec);
+				task.repeatInfo := newSpec;
+				task.repeatDone := [Array: ];
+				if (savedReminderIndex <> 0) then begin
+						task.repeatInfo.reminderInterval := (1440 * savedReminderIndex)
+					end;
+				task.repeatInfo.mtgStartDate := newFirstDate;
+				task.repeatInfo.mtgStopDate := newStopDate;
+				ClearUndoStacks();
+				list:MoveTaskToDate(task, target, originalMtgDate, 0)
+			end else (if (if (killRepeating or (not newSpec)) then oldSpec) then begin
+					RemoveSlot(task, 'repeatInfo);
+					RemoveSlot(task, 'repeatDone);
+					ClearUndoStacks();
+					list:MoveTaskToDate(task, target, 0, newMtgDate)
+				end else begin
+					task.repeatInfo.repeatType := newSpec.repeatType;
+					task.repeatInfo.mtgInfo := newSpec.mtgInfo;
+					(if (savedReminderIndex <> 0) then (task.repeatInfo.reminderInterval := (1440 * savedReminderIndex)))
+				end)))
+end
+@@end

@@ -1,0 +1,21 @@
+@@ 0x478b01
+@@const kROM_732
+@732
+@@const kROM_725
+@725
+@@main
+func(a1, a2) begin
+	local l1, l2, l3, l4, l5;
+	l1 := ((a1 - bottomIndent) div 2);
+	viewBounds := SetBounds(0, l1, envelopeWidth, ((envelopeHeight + l1) + a1));
+	viewJustify := 80;
+	l2 := SetBounds(0, 0, envelopeWidth, (envelopeHeight + a1));
+	if (not (l3 := transport.icon)) then begin
+			l3 := kROM_732
+		end;
+	l4 := l3.bounds;
+	l5 := ((l2.right - 31) - 10);
+	pix := [Array: '{penPattern: "\u8205\u\u0A14\u\u2850\u\uA041\u", pensize: 8}, MakeRect(0, 0, l2.right, (l2.bottom - a1)), OffsetShape(MakeShape(kROM_725), l5, 10), OffsetShape(MakeShape(l3), (l5 + ((31 - l4.right) div 2)), (10 + ((27 - l4.bottom) div 2))), '{penPattern: 5, fillPattern: 0, pensize: 2}, MakeRect(0, 0, l2.right, (l2.bottom - a1)), MakeRect(4, ((l2.bottom - a1) - 2), (l2.right - 4), l2.bottom), '{penPattern: 3, pensize: 4, transferMode: 1}, MakeLine(2, (l2.bottom - a1), ((l2.right - 4) - 2), (l2.bottom - a1))];
+	(if a2 then ArrayInsert(pix, OffsetShape(MakeShape(@779), (l5 - 55), 10), 0))
+end
+@@end

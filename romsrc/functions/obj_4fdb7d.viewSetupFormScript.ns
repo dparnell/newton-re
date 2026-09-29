@@ -1,0 +1,6 @@
+@@ 0x4fdb1d
+func() begin
+	local l1;
+	(iconShape := (l1 := GetMeetingTypeInfo(realData)).shape)
+end
+@@end

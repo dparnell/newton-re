@@ -1,0 +1,23 @@
+@@ 0x45406d
+@@const kFunction_450079
+func(a1) begin
+	local l1;
+	if (not a1) then begin
+			return nil
+		end;
+	(if IsInstance(a1, 'alias) then ResolveEntryAlias(a1) else (if (if IsFrame(a1) then a1._alias) then (if (l1 := ResolveEntryAlias(a1._alias)) then l1 else a1) else a1))
+end
+@@main
+func(a1, a2) begin
+	local l1, l2, l3;
+	(l1 := self:LocalBox()).bottom := ((l1.top := (a1 * lineHeight)) + lineHeight);
+	self:LockScreen(true);
+	l2 := (pieces[a1] := self:GetTheRightShape(call (kFunction_450079) with (a2), l1));
+	l3 := MakeShape(l1);
+	self:DoDrawing('DrawShape, [Array: [Array: l3, viewStyle, l2], '{fillPattern: 5, penPattern: 5, transferMode: 3}]);
+	if (hilitedIndex = a1) then begin
+			hilitedIndex := nil
+		end;
+	self:LockScreen(nil)
+end
+@@end

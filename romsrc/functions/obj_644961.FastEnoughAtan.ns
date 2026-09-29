@@ -1,0 +1,20 @@
+@@ 0x4460e5
+func(a1, a2) begin
+	local l1, l2;
+	if (a1 = 0) then begin
+			return 15
+		end;
+	if (a2 = 0) then begin
+			return 0
+		end;
+	l1 := ((a2 * 10000) div a1);
+	l2 := 0;
+	(while (l2 < 15) do begin
+			if (l1 < atanTable[l2]) then begin
+					break
+				end;
+			(l2 := (l2 + 1))
+		end);
+	return l2
+end
+@@end

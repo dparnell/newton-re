@@ -1,0 +1,31 @@
+@@ 0x78d2ad names
+func(aRelation) begin
+	local level, theIndex;
+	if curTopic then begin
+			theIndex := (curTopic + 1);
+			level := topics[curTopic].level;
+			if (aRelation = 'aunt) then begin
+					level := Max(1, (level - 1))
+				end else begin
+					if (aRelation = 'daughter) then begin
+							level := Min(maxLevel, (level + 1))
+						end
+				end
+		end else begin
+			theIndex := nTopics;
+			if (nTopics = 0) then begin
+					level := 1
+				end else begin
+					level := topics[(theIndex - 1)].level;
+					if (aRelation = 'aunt) then begin
+							level := Max(1, (level - 1))
+						end else begin
+							if (aRelation = 'daughter) then begin
+									level := Min(maxLevel, (level + 1))
+								end
+						end
+				end
+		end;
+	self:NewTopic(level, "")
+end
+@@end

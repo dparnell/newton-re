@@ -1,0 +1,9 @@
+@@ 0x4d0425
+func(a1) begin
+	local l1;
+	if (if (l1 := GetUserConfig(appSymbol)) then (l1.version <> defaultConfiguration.version)) then begin
+			SetUserConfig(appSymbol, nil)
+		end;
+	inherited:GetConfig(a1)
+end
+@@end

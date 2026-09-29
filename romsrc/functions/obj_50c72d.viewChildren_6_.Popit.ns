@@ -1,0 +1,7 @@
+@@ 0x507091
+func(a1) begin
+	repeatType := RepeatingView.repeatType;
+	mtgInfo := RepeatingView.mtgInfo;
+	inherited:Popit(a1)
+end
+@@end

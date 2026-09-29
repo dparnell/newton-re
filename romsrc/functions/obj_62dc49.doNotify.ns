@@ -1,0 +1,10 @@
+@@ 0x4b2a89
+@@const kFunction_4b2a69
+func(a1) begin
+	GetRoot().iobox:ShowItem(a1, 'overview)
+end
+@@main
+func() begin
+	kFunction_4b2a69
+end
+@@end

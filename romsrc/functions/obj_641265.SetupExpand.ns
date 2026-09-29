@@ -1,0 +1,7 @@
+@@ 0x5a9199
+func() begin
+	local l1;
+	expandDict := (l1 := GetDictionary(35));
+	(if (not l1.list) then (l1.list := [Array: ]))
+end
+@@end

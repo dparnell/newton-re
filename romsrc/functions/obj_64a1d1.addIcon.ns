@@ -1,0 +1,7 @@
+@@ 0x54eaa5
+func(a1) begin
+	RemoveSlot(a1, '_proto);
+	AddArraySlot(|Parts1.x|, self:MakeIconEntry('|1.XBookEntry|, a1));
+	self:InvalIcons()
+end
+@@end

@@ -1,0 +1,11 @@
+@@ 0x4d5f41
+func() begin
+	if event then begin
+			viewFlags := BAnd(viewFlags, bnot(1))
+		end;
+	self.viewBounds := RelBounds(0, dpSlip.locFieldTop, 0, 18);
+	selected := selectedLocations;
+	alternatives := alternativeLocations;
+	inherited:?viewSetupFormScript()
+end
+@@end

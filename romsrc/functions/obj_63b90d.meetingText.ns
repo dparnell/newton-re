@@ -1,0 +1,22 @@
+@@ 0x515fb9
+func(a1, a2) begin
+	local l1, l2, l3, l4, l5;
+	l4 := self:GetMeetingSlot(a1, 'mtgDuration);
+	l5 := self:GetMeetingText(a1);
+	if (l4 > 0) then begin
+			if (StrLen((l1 := TimeStr(a1.mtgStartDate, @66.shortTimeStrSpec))) < 8) then begin
+					l1 := Stringer([Array: " ", l1])
+				end;
+			if (StrLen((l2 := TimeStr((a1.mtgStartDate + l4), @66.shortTimeStrSpec))) < 8) then begin
+					l2 := Stringer([Array: " ", l2])
+				end;
+			l3 := Stringer([Array: l1, "-", l2, " ", l5, "\n"])
+		end else begin
+			l3 := Stringer([Array: l5, "\n"])
+		end;
+	if (if a2 then a1.NotesData) then begin
+			l3 := Stringer([Array: l3, notesText(a1.NotesData)])
+		end;
+	l3
+end
+@@end

@@ -1,0 +1,25 @@
+@@ 0x79b69d names
+func() begin
+	local delList;
+	local index;
+	self:ForEachSelected(func(Entry, topicIndex) begin
+		if (not Entry.deleteList) then begin
+				Entry.deleteList := [Array: ]
+			end;
+		AddArraySlot(Entry.deleteList, topicIndex)
+	end);
+	self:ForEachSelected(func(Entry, topicIndex) begin
+		(if Entry.deleteList then begin
+				delList := Entry.deleteList;
+				RemoveSlot(Entry, 'deleteList);
+				GetRoot().calendar:GetToDo():DeleteRolledTopics(Entry, delList)
+			end)
+	end);
+	selected := nil;
+	self.zeroOneOrMoreResult := nil;
+	masterFinder.zeroOneOrMoreResult := nil;
+	self.cacheCount := nil;
+	masterFinder.cacheCount := nil;
+	GetRoot().calendar:GetToDo():ShowChanges()
+end
+@@end

@@ -1,0 +1,71 @@
+@@ 0x49620d
+func(a1) begin
+	local soupNameList, soupName;
+	soupNameList := [Array: ];
+	l1 := func(a1) begin
+		local l1;
+		if (not (l1 := BInsert(soupNameList, {name: a1}, '|str<|, '[pathExpr: name], 'returnElt)).soups) then begin
+				l1.soups := [Array: soupName]
+			end else begin
+				BInsert(l1.soups, soupName, '|str<|, nil, true)
+			end;
+		l1
+	end;
+	l2 := a1:entry();
+	(while l2 do begin
+			if (if (if (if (not l2.package) then (not l2.segmentedPackage)) then (not l2.patches)) then (not l2.patch20)) then begin
+					soupName := l2.name;
+					try begin
+							if BFind('[Array: @129, "Library", @276, "SystemAlarmSoup"], l2.name, '|str<|, nil) then begin
+									l5 := call l1 with ("System information");
+									if (not l3) then begin
+											l3 := SetClass(l5, 'systemFrame)
+										end
+								end else begin
+									l6 := nil;
+									if (not (l7 := self:getSrcStore():GetSoup(l2.name))) then begin
+											l7 := self:getDestStore():GetSoup(Stringer([Array: "BACKUP_", l2.name]))
+										end;
+									if l7 then begin
+											l6 := l7:GetInfo('soupDef)
+										end;
+									if (not l6) then begin
+											l6 := l2.allInfo.applications
+										end;
+									if (if l6 then (not IsArray(l6))) then begin
+											if (l6.ownerApp <> 'SystemScratch) then begin
+													if (not (l8 := l6.ownerAppName)) then begin
+															l8 := GetAppName(l6.ownerApp)
+														end;
+													call l1 with (l8)
+												end
+										end else begin
+											if (if IsArray(l6) then (Length(l6) > 0)) then begin
+													local l1;
+													local l2;
+													local l3;
+													local l4;
+													local l5;
+													local l6;
+													local l7;
+													local l8;
+													(foreach l9 in l6 do begin
+															call l1 with (GetAppName(l9))
+														end)
+												end else begin
+													l5 := call l1 with ("Other information");
+													if (not l4) then begin
+															l4 := SetClass(l5, 'otherFrame)
+														end
+												end
+										end
+								end
+						end onexception |evt.ex| do begin
+							call l1 with (soupName)
+						end
+				end;
+			(l2 := a1:Next())
+		end);
+	soupNameList
+end
+@@end

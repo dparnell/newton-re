@@ -1,0 +1,8 @@
+@@ 0x75d1a9
+func(a1) begin
+	if (connectionPrefs = nil) then begin
+			self:ConnectionPrefsInit()
+		end;
+	(if (a1 = nil) then return connectionPrefs else return connectionPrefs.(a1))
+end
+@@end

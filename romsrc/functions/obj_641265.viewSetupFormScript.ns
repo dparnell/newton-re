@@ -1,0 +1,21 @@
+@@ 0x5a8f29
+func() begin
+	local l1, l2, l3, l4, l5, l6, l7;
+	self:SetupExpand();
+	l1 := displayParams.appAreaHeight;
+	l2 := displayParams.appAreaWidth;
+	numLines := (if (l1 >= 320) then 6 else 4);
+	lineHeight := FontHeight(1058816);
+	l3 := (170 + (numLines * lineHeight));
+	l4 := 226;
+	l5 := (l2 div 14);
+	if (BAnd((l7 := min((l7 := min((l6 := (16 + ((l1 - l3) div 5))), l5)), 20)), 1) > 0) then begin
+			l7 := (l7 - 1)
+		end;
+	if (l7 > 16) then begin
+			l4 := ((l4 + ((l7 - 16) * 14)) + 3);
+			l3 := (l3 + ((l7 - 16) * 5))
+		end;
+	(viewBounds := RelBounds(0, 0, l4, l3))
+end
+@@end

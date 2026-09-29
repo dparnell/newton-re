@@ -1,0 +1,5 @@
+@@ 0x5950e5
+func(a1) begin
+	((((a1 = nil) or (a1 = 0)) or (a1 = -16005)) or (a1 = 1))
+end
+@@end

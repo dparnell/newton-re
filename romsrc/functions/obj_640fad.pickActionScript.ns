@@ -1,0 +1,16 @@
+@@ 0x489785
+func(a1) begin
+	local l1;
+	_cachedSettings := self:ExpandSettingsFrame(_recogSettings);
+	if IsFrame((l1 := popup[a1])) then begin
+			if (l1.symbol = 'recToggleSettings) then begin
+					OpenPrefsTo(PrefsRegistry.HWRecPreferencesForm)
+				end else begin
+					self:PickItem(l1);
+					self:UpdateTogglers()
+				end;
+			inherited:pickActionScript(a1)
+		end;
+	(_cachedSettings := nil)
+end
+@@end

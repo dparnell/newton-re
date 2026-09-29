@@ -1,0 +1,9 @@
+@@ 0x733879
+func() begin
+	saveCurrentPrinter := UserConfiguration.currentPrinter;
+	if (not (noneIsChosen := (not target.printer))) then begin
+			UserConfiguration.currentPrinter := target.printer
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

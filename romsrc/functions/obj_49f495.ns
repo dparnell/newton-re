@@ -1,0 +1,5 @@
+@@ 0x49f495
+func() begin
+	(hideFilter := GetRoot().iobox.hideFilter)
+end
+@@end

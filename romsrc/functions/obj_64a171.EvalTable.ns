@@ -1,0 +1,14 @@
+@@ 0x5701ad
+func() begin
+	l1 := 0;
+	local l1;
+	(for l2 := 0 to 4 do begin
+			l1 := (l1 + deck.SoloPayOffs.(self:EvalRow(l2)))
+		end);
+	(for l5 := 0 to 4 do begin
+			l1 := (l1 + deck.SoloPayOffs.(self:EvalCol(l5)))
+		end);
+	SetValue(handValue, 'text, Stringer([Array: "", l1]));
+	l1
+end
+@@end

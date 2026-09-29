@@ -1,0 +1,10 @@
+@@ 0x44e1e1
+func(a1) begin
+	local l1;
+	if IsUpper(a1) then begin
+			Downcase((l1 := SPrintObject(a1)));
+			a1 := l1[0]
+		end;
+	return a1
+end
+@@end

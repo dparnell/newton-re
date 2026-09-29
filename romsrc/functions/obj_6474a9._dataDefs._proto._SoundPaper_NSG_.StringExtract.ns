@@ -1,0 +1,13 @@
+@@ 0x417085
+func(a1, a2) begin
+	local l1, l2, l3;
+	l1 := (if StrEqual((l1 := a1.|SoundPaper:NSG|.soundData.description), "00:00") then "No recording" else Stringer([Array: "Playing time:", " ", l1]));
+	if a1.data then begin
+			l2 := ExtractData(a1.data, "...", 50)
+		end;
+	if a1.title then begin
+			l3 := Stringer([Array: a1.title, " -- "])
+		end;
+	(l3 := (if l2 then Stringer([Array: l3, l2]) else Stringer([Array: l3, l1])))
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x4ada85
+func() begin
+	local l1;
+	(if (l1 := layout.dataCursor:entry()) then AddDeferredSend(self, 'setLetter, [Array: l1.(layout.dataCursor:indexPath())[0], true]))
+end
+@@end

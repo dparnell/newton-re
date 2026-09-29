@@ -1,0 +1,9 @@
+@@ 0x4f7bc9
+func(a1, a2, a3) begin
+	EntryRemoveFromSoupXmit(a2, 'calendar);
+	if a3 then begin
+			AddProcrastinatedSend('calendar, calendar, 'redisplayScript, [Array: ], 100)
+		end;
+	AddUndoAction('AddItemToSoup, [Array: a1, a2])
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x4f0325
+func(a1) begin
+	if (not target.toRef) then begin
+			target.toRef := [Array: ]
+		end;
+	(if (Length(target.toRef) < 1) then AddArraySlot(target.toRef, GetDataDefs('|nameRef.phone|):MakeNameRef(a1, '|nameRef.phone|)))
+end
+@@end

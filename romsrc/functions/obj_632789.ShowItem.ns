@@ -1,0 +1,19 @@
+@@ 0x55d12d
+func(a1, a2) begin
+	target := a1.owner;
+	localFinder := a1;
+	try begin
+			closeWhenSoupsChange := nil;
+			if (a2 = 'first) then begin
+					a1:ShowOrdinalItem(a2)
+				end else begin
+					a1:ShowFoundItem(a2)
+				end;
+			closeWhenSoupsChange := true
+		end onexception |evt.ex| do begin
+			self:Notify(3, "Find", "An error occurred trying to display the found item.");
+			a1:ReSync()
+		end;
+	self:UpdateStatus()
+end
+@@end

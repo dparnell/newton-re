@@ -1,0 +1,17 @@
+@@ 0x431425
+func(a1) begin
+	if self:TrackHilite(a1) then begin
+			if (not (auxItems := self:?GenInfoAuxItems())) then begin
+					auxItems := '[Array: ]
+				end;
+			if (Length((items := self:GenInfoItems(auxItems))) > 0) then begin
+					popUpView := self:PopupMenu(items, nil)
+				end else begin
+					self:hilite(nil)
+				end
+		end else begin
+			self:hilite(nil)
+		end;
+	true
+end
+@@end

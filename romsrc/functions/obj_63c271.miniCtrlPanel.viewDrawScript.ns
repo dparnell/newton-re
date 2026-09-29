@@ -1,0 +1,5 @@
+@@ 0x51f769
+func() begin
+	self:DrawShape(MakeRect(2, 4, (self:LocalBox().right - 2), 6), nil)
+end
+@@end

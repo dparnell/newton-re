@@ -1,0 +1,15 @@
+@@ 0x5ac97d
+func() begin
+	local l1;
+	if selectedEntry then begin
+			l1 := selectedEntry.word;
+			self:RemoveSelection();
+			reviewDict:SetUpDictionary();
+			reviewDict:RemoveWord(l1)
+		end;
+	(if (not selectedEntry) then begin
+			dictionary.count := 0;
+			AutoAdd:Close()
+		end)
+end
+@@end

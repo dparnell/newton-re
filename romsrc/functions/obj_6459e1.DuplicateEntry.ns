@@ -1,0 +1,6 @@
+@@ 0x4a80ed
+func(a1, a2) begin
+	EntryUndoChanges((New := self:AddEntry(Clone(a1), a2)));
+	New
+end
+@@end

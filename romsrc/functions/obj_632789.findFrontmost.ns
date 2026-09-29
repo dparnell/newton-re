@@ -1,0 +1,15 @@
+@@ 0x55c805
+func() begin
+	local l1, l2;
+	target := GetView('viewfrontmostapp);
+	if (l2 := GetView('viewfrontmostapp).appSymbol) then begin
+			l1 := GetAppName(l2)
+		end else begin
+			l1 := "Frontmost app"
+		end;
+	if (if l1 then (not StrEqual(l1, radioCluster.frontMostAppRadioButton.text))) then begin
+			radioCluster:RedoChildren()
+		end;
+	self:Find1(target, 'localFind, nil)
+end
+@@end

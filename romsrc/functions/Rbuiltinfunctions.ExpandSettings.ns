@@ -1,0 +1,25 @@
+@@ 0x48916d
+func(a1) begin
+	local l1;
+	if IsFrame(a1) then begin
+			return a1.settings
+		end;
+	l1 := Clone('{_proto: nil, doTextRecognition: nil, doShapeRecognition: nil, doInkWordRecognition: nil, wordsCursiveOption: nil, numbersCursiveOption: nil});
+	if (BAnd(a1, 32) <> 0) then begin
+			l1.doTextRecognition := true
+		end;
+	if (BAnd(a1, 128) <> 0) then begin
+			l1.doShapeRecognition := true
+		end;
+	if (BAnd(a1, 64) <> 0) then begin
+			l1.doInkWordRecognition := true
+		end;
+	if (BAnd(a1, 256) <> 0) then begin
+			l1.wordsCursiveOption := true
+		end;
+	if (BAnd(a1, 512) <> 0) then begin
+			l1.numbersCursiveOption := true
+		end;
+	return l1
+end
+@@end

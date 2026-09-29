@@ -1,0 +1,5 @@
+@@ 0x559091
+func(a1) begin
+	(if (if IsSoupEntry(a1) then a1._tagList) then LFetch(a1._tagList, '_package, 0, '|=|, nil))
+end
+@@end

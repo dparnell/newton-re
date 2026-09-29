@@ -1,0 +1,5 @@
+@@ 0x5195f9
+func(a1) begin
+	(if (if a1 then ((a1.class = 'person) or (a1.class = 'owner))) then (if a1.company then a1.company else "") else (if (if a1 then a1.name) then self:bcFullName(a1.name) else ""))
+end
+@@end

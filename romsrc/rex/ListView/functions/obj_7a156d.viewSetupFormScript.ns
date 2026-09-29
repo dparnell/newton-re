@@ -1,0 +1,6 @@
+@@ 0x78e52d names
+func() begin
+	self.reflowStart := 0;
+	inherited:viewSetupFormScript()
+end
+@@end

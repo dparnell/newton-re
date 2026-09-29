@@ -1,0 +1,5 @@
+@@ 0x50745d
+func() begin
+	(if (if inviteesAliases then (Length(inviteesAliases) > 0)) then self:GetNamesOfInvitees(inviteesAliases, (220 - self.indent)) else "")
+end
+@@end

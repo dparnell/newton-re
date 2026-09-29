@@ -1,0 +1,7 @@
+@@ 0x4ace79
+func(a1) begin
+	inherited:pickActionScript(a1);
+	newtAppBase:ShowLayout(popup[a1].slot);
+	(popup := nil)
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x4f1d89
+func() begin
+	(if (clusterValue <> lastClusterValue) then begin
+			RepeatingView.mtgInfo := 0;
+			self:SetupRepeatViews(clusterValue);
+			lastClusterValue := clusterValue;
+			self:UpdateText()
+		end)
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x741c81
+func(a1) begin
+	local l1;
+	(if (l1 := GetStores()[0]:GetSoup(allSoups.names.soupName)) then begin
+			l1:SetInfo('customFields, a1);
+			UnregMetaDataExtension('cardfile, 'cardfile);
+			RegMetaDataExtension('cardfile, 'cardfile, 'cardfile.CustomMetaData)
+		end)
+end
+@@end

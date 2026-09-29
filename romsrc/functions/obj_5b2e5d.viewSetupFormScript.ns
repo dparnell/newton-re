@@ -1,0 +1,7 @@
+@@ 0x5b2e25
+func() begin
+	self.items := GetUserConfig('paperSizes);
+	self.labelCommands := (foreach l1 in items collect l1.title);
+	inherited:viewSetupFormScript()
+end
+@@end

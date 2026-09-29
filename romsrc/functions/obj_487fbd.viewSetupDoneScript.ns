@@ -1,0 +1,6 @@
+@@ 0x487f9d
+func() begin
+	inherited:?viewSetupDoneScript();
+	SetKeyView(self.entryLine, 9999)
+end
+@@end

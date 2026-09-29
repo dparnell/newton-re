@@ -1,0 +1,7 @@
+@@ 0x440b89
+func() begin
+	local l1;
+	l1 := (if hilite then (StateMap.hilite + arrowIndex) else (scrollerState[arrowIndex] + arrowIndex));
+	DrawXBitmap(self:LocalBox(), Arrows, l1, 0)
+end
+@@end

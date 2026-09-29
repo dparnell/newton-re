@@ -1,0 +1,60 @@
+@@ 0x75bb01
+@@const kLiteral_75bd2d
+"gfil"
+@@const kLiteral_7511b9
+"file"
+@@main
+func(a1, a2, a3, a4) begin
+	l1 := [Array: ];
+	try begin
+			if a3 then begin
+					if IsInstance(a2, 'string) then begin
+							l2 := a2
+						end else begin
+							l2 := [Array: ];
+							local l1;
+							local l2;
+							(foreach l3 in a2 do begin
+									local l5, l6;
+									if HasPath(l3, 'whichVol) then begin
+											AddArraySlot(l2, {name: l3.name, whichVol: l3.whichVol})
+										end else begin
+											AddArraySlot(l2, l3.name)
+										end
+								end)
+						end;
+					a1:WriteCommand(a3, l2, true)
+				end else begin
+					a1:WriteCommand(kLiteral_75bd2d, nil, nil)
+				end;
+			l5 := self:CallReadCommand(a1, nil);
+			if StrEqual(kLiteral_7511b9, l5.command) then begin
+					l1 := l5.data
+				end else begin
+					if StrEqual("path", l5.command) then begin
+							if a4 then begin
+									call a4 with (l5.data)
+								end;
+							a1:WriteCommand(kLiteral_75bd2d, nil, nil);
+							l1 := (l5 := self:CallReadCommand(a1, kLiteral_7511b9)).data
+						end else begin
+							if StrEqual("dres", l5.command) then begin
+									if (l5.data = -28031) then begin
+											self:Notify(3, "Dock", "You don\u2019\ut have enough access privileges.");
+											l1 := [Array: ]
+										end else begin
+											Throw('|evt.ex.error|, l5.data)
+										end
+								end else begin
+									Throw('|evt.ex.error|, -28012)
+								end
+						end
+				end
+		end onexception |evt.ex| do begin
+			l1 := nil;
+			l6 := CurrentException().error;
+			AddDeferredSend(GetRoot().Connection, 'HandleException, [Array: l6, a1])
+		end;
+	return l1
+end
+@@end

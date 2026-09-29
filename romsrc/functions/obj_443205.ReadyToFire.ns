@@ -1,0 +1,14 @@
+@@ 0x4431c5
+func() begin
+	if (not lastPressTime) then begin
+			lastPressTime := Ticks()
+		end else begin
+			if (Ticks() < (lastPressTime + 30)) then begin
+					return nil
+				end else begin
+					lastPressTime := Ticks()
+				end
+		end;
+	true
+end
+@@end

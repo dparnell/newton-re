@@ -1,0 +1,35 @@
+@@ 0x63ccd5
+func() begin
+	local l1, l2, l3, l4, l5;
+	l2 := (self.viewBounds.bottom - self.viewBounds.top);
+	l1 := (self.viewBounds.right - self.viewBounds.left);
+	inherited:?viewDrawScript();
+	l3 := [Array: ];
+	if (BAnd(look, 256) <> 0) then begin
+			AddArraySlot(l3, MakeLine(-1, ((-edgeWidth) - 1), (l1 + 1), ((-edgeWidth) - 1)))
+		end;
+	if (BAnd(look, 512) <> 0) then begin
+			AddArraySlot(l3, MakeLine(((-edgeWidth) - 1), -1, ((-edgeWidth) - 1), (l2 + 1)))
+		end;
+	if (BAnd(look, 1024) <> 0) then begin
+			AddArraySlot(l3, MakeLine(-1, (l2 + 1), (l1 + 1), (l2 + 1)))
+		end;
+	if (BAnd(look, 2048) <> 0) then begin
+			AddArraySlot(l3, MakeLine((l1 + 1), -1, (l1 + 1), (l2 + 1)))
+		end;
+	(if (Length(l3) > 0) then begin
+			l4 := [Array: self.drawPenSizeX, self.drawPenSizeY];
+			l5 := 5;
+			if self.drawPenPat then begin
+					l5 := self.drawPenPat
+				end;
+			if (not l4[0]) then begin
+					l4[0] := 1
+				end;
+			if (not l4[1]) then begin
+					l4[1] := 1
+				end;
+			self:DrawShape(l3, {pensize: l4, penPattern: l5})
+		end)
+end
+@@end

@@ -1,0 +1,36 @@
+@@ 0x526d29
+func(a1, a2) begin
+	if HasSlot(a1, 'phoneTag) then begin
+			if (l2 := GetRoot().cardfile:bcPhoneNumber(a2, '[Array: string])) then begin
+					l1 := Array(Length(l2), nil);
+					l3 := 0;
+					local l1;
+					local l2;
+					local l3;
+					(foreach l4 in a1.phoneTag do begin
+							(foreach l6 in l2 do begin
+									if l6 then begin
+											if (l4 = 'phone) then begin
+													if ((ClassOf(l6) = 'phone) or (ClassOf(l6) = '|string.phone|)) then begin
+															l1[l3] := l6;
+															l3 := (l3 + 1)
+														end
+												end else begin
+													if IsInstance(l6, l4) then begin
+															l1[l3] := l6;
+															l3 := (l3 + 1)
+														end
+												end
+										end
+								end)
+						end);
+					if (l3 > 0) then begin
+							SetLength(l1, l3)
+						end else begin
+							l1 := nil
+						end
+				end
+		end;
+	l1
+end
+@@end

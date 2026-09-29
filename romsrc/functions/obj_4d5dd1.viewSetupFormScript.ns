@@ -1,0 +1,11 @@
+@@ 0x4d5d91
+func() begin
+	if event then begin
+			singleSelect := true
+		end;
+	self.viewBounds := RelBounds(0, dpSlip.peopleFieldTop, 0, 18);
+	selected := selectedNames;
+	alternatives := alternativeNames;
+	inherited:?viewSetupFormScript()
+end
+@@end

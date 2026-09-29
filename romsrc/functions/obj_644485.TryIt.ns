@@ -1,0 +1,9 @@
+@@ 0x525241
+func(a1) begin
+	local l1;
+	(if (ClassOf(a1) = 'string) then (if (Length(a1) <= 2) then assistant:ButtonToggle() else begin
+				assistant:Open();
+				(if (if (not ParseUtter((l1 := CleanString(Clone(a1))))) then assistant.viewCObject) then assistant:Duh(l1) else true)
+			end) else assistant:ButtonToggle())
+end
+@@end

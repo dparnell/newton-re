@@ -1,0 +1,39 @@
+@@ 0x72c769
+func() begin
+	if StrFilled(target.(path)) then begin
+			l1 := ParsePhone(target.(path));
+			if self.areacode then begin
+					areacode.text := l1.areacode
+				end;
+			if self.phoneNum then begin
+					phoneNum.text := l1.phone
+				end;
+			if self.extension then begin
+					extension.text := l1.extension
+				end
+		end else begin
+			if self.areacode then begin
+					if (if (l5 := target.phones) then ((l4 := Length(l5)) > 0)) then begin
+							local l1;
+							local l2;
+							local l3;
+							local l4;
+							local l5;
+							(for l3 := 0 to (l4 - 1) do begin
+									if (if (if l5[l3] then (l1 := ParsePhone(l5[l3]))) then l1.areacode) then begin
+											break (l2 := l1.areacode)
+										end
+								end)
+						end;
+					if (not l2) then begin
+							l2 := UserConfiguration.currentAreaCode
+						end;
+					if l2 then begin
+							areacode.text := Clone(l2)
+						end;
+					hiliteAreaCode := true
+				end
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

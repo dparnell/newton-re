@@ -1,0 +1,5 @@
+@@ 0x422af9
+func() begin
+	(if (userConfiguration.beepSound <> 'none) then playsound(GetRegisteredSound(userConfiguration.beepSound)))
+end
+@@end

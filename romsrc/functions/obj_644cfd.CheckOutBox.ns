@@ -1,0 +1,5 @@
+@@ 0x47fd2d
+func() begin
+	GetRoot().(owner):StartSend(self, 'user, nil, nil)
+end
+@@end

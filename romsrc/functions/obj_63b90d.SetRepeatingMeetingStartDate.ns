@@ -1,0 +1,57 @@
+@@ 0x4f7c09
+func(a1, a2, a3) begin
+	if (l1 := a1.InstanceNotesData) then begin
+			local l1;
+			(for l2 := 0 to (Length(l1) - 1) do begin
+					if (l1[l2][0] >= a2) then begin
+							break
+						end else begin
+							if a3 then begin
+									if (l5 := ResolveEntryAlias(l1[l2][1])) then begin
+											EntryRemoveFromSoupXmit(l5, 'calendar)
+										end
+								end
+						end
+				end);
+			ArrayRemoveCount(l1, 0, l2);
+			if (Length(l1) = 0) then begin
+					a1.InstanceNotesData := nil
+				end
+		end;
+	if (l6 := a1.exceptions) then begin
+			local l5;
+			local l6;
+			(foreach l7 in l6 do begin
+					if (if l7[1] then (l7[1].mtgStartDate < a2)) then begin
+							l7[1] := nil
+						end
+				end);
+			(for l9 := (Length(l6) - 1) to 0 by -1 do begin
+					local l12;
+					if (if ((l7 := l6[l9])[0] < a2) then (l7[1] = nil)) then begin
+							ArrayRemoveCount(l6, l9, 1)
+						end
+				end)
+		end;
+	if self:FindException(a2, a1) then begin
+			l6 := a1.exceptions;
+			a1.exceptions := nil;
+			l12 := NextMeeting(a2, a1);
+			a1.exceptions := l6;
+			if (l12 <> 0) then begin
+					a2 := l12
+				end else begin
+					a1.exceptions := nil;
+					l12 := PrevMeeting(a2, a1);
+					a1.exceptions := l6;
+					if (l12 <> 0) then begin
+							if (not LSearch(l6, l12, 0, '|=|, '[pathExpr: 0])) then begin
+									AddArraySlot(l6, [Array: l12, nil]);
+									a2 := l12
+								end
+						end
+				end
+		end;
+	(a1.mtgStartDate := a2)
+end
+@@end

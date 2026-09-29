@@ -1,0 +1,5 @@
+@@ 0x4cbcf1
+func() begin
+	(text := Stringer([Array: userConfiguration.address, $\n, userConfiguration.cityZip]))
+end
+@@end

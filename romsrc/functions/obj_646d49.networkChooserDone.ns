@@ -1,0 +1,16 @@
+@@ 0x48cdfd
+func(a1, a2) begin
+	local l1, l2;
+	(if viewCObject then (if (l2 := GetNames(a1)) then begin
+				if (a2 = nil) then begin
+						l1 := "*"
+					end else begin
+						l1 := a2
+					end;
+				target.(path) := Stringer([Array: l2, ":", NBPLookupType, "@", l1]);
+				AddMemoryItem(memory, target.(path));
+				self:UpdateText(l2);
+				self:StartFlush()
+			end))
+end
+@@end

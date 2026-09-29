@@ -1,0 +1,5 @@
+@@ 0x4257b5
+func() begin
+	(if (if fSetLengthInProgress then (fSetLengthInProgress <> 'doItNow)) then (fSetLengthInProgress := 'record) else self:DoRecord())
+end
+@@end

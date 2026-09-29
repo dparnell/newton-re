@@ -1,0 +1,12 @@
+@@ 0x531db5
+func(a1) begin
+	local l1, l2, l3;
+	l1 := transport.transportProvider.symbol;
+	newProvider := a1;
+	(if (if (if transport:GetConfig('phoneAutoReceive) then a1) then (a1 <> l1)) then begin
+			l2 := GetTAPICommFrame(a1);
+			l3 := transport.transportProvider;
+			self:Confirm("PhoneHome", ParamStr("Changing the service to \u201C\u^0\u201D\u will turn off your preference to receive calls using the \u201C\u^1\u201D\u service.", [Array: l2.name, l3.name]), self, 'ConfirmChange)
+		end else self:ConfirmChange(true))
+end
+@@end

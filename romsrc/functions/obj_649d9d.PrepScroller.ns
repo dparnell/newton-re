@@ -1,0 +1,41 @@
+@@ 0x4c212d
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6;
+	scrolling := nil;
+	l1 := nil;
+	l2 := nil;
+	l4 := ((l3 := self:LocalBox()).bottom - 16);
+	l5 := dataCursor:entry();
+	if (((not entryViewDefs) or (not l5)) or (l5 = 'deleted)) then begin
+			l1 := true
+		end else begin
+			if a1 then begin
+					if (((l6 := (if (if entryViewDefs[0].rollScrolling then l5.height) then (l5.height + (l3.bottom div 3)) else 0)) - viewOriginY) <= l3.bottom) then begin
+							l2 := nextScrollEntry
+						end else begin
+							scrolling := true;
+							viewOriginY := (viewOriginY + l4)
+						end
+				end else begin
+					if (viewOriginY > 0) then begin
+							scrolling := true;
+							viewOriginY := max(0, (viewOriginY - l4))
+						end else begin
+							l2 := prevScrollEntry
+						end
+				end
+		end;
+	if l2 then begin
+			viewOriginY := 0;
+			dataCursor:Goto(l2);
+			nextScrollEntry := dataCursor:Next();
+			dataCursor:Goto(l2);
+			prevScrollEntry := dataCursor:prev();
+			dataCursor:Goto(l2)
+		end;
+	(if (l1 or (if (not l2) then (not scrolling))) then begin
+			self:Retarget(nil);
+			newtAppBase:ShowLayout('overview)
+		end else (if a1 then self:Effect(77725696, true, @85, 'Scroller, [Array: 1]) else self:Effect(77725696, nil, @85, 'Scroller, [Array: -1])))
+end
+@@end

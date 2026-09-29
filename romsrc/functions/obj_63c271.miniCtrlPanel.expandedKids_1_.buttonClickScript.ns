@@ -1,0 +1,8 @@
+@@ 0x51f12d
+func() begin
+	if Visible(markupLayer) then begin
+			self:HideMarkup()
+		end;
+	cntrlPanel:ChangeState()
+end
+@@end

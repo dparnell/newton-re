@@ -1,0 +1,8 @@
+@@ 0x4aa9e5
+func() begin
+	if (not prefsCache) then begin
+			prefsCache := GetAppPrefs(appSymbol, self:GetDefaultState())
+		end;
+	prefsCache
+end
+@@end

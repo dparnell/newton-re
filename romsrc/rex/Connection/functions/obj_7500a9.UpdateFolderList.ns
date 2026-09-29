@@ -1,0 +1,38 @@
+@@ 0x750245
+func(a1) begin
+	self:SetOrigin(0, 0);
+	l1 := "";
+	l2 := [Array: ];
+	l3 := FontAscent(viewFont);
+	l4 := true;
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	(foreach l5 in currentPath do begin
+			l7 := StrFontWidth(l1, viewFont);
+			OffsetShape((l8 := DeepClone(windowsOpenFolder)), l7, 0);
+			l9 := l5.name;
+			if l4 then begin
+					l4 := nil;
+					l9 := Stringer([Array: self:GetDriveFromName(l9), "\\"])
+				end;
+			l10 := [Array: l8, MakeText(l9, (l7 + 16), 0, ((StrFontWidth(l9, viewFont) + l7) + 16), l3)];
+			AddArraySlot(l2, l10);
+			l1 := Stringer([Array: l1, "    "])
+		end);
+	l7 := StrFontWidth(l1, viewFont);
+	OffsetShape((l8 := DeepClone(windowsFolder)), l7, 0);
+	local l7;
+	local l8;
+	local l9;
+	local l10;
+	(foreach l11 in currentFolders do begin
+			l10 := [Array: DeepClone(l8), MakeText(l11.name, (l7 + 16), 0, ((StrFontWidth(l11.name, viewFont) + l7) + 16), l3)];
+			AddArraySlot(l2, l10)
+		end);
+	self.listItems := l2;
+	self:SetupList();
+	(if a1 then self:RedoChildren())
+end
+@@end

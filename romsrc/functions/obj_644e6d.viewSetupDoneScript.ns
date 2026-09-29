@@ -1,0 +1,12 @@
+@@ 0x42132d
+func() begin
+	local l1, l2, l3, l4;
+	l2 := self:ChildViewFrames();
+	l1 := Clone(self.viewBounds);
+	l4 := (Length(l2) - (if kbdType then 2 else 1));
+	l1.bottom := ((l2[l4]:GlobalBox().bottom - self:GlobalBox().top) + extraHeight);
+	SetValue(self, 'viewBounds, l1);
+	inherited:?viewSetupDoneScript();
+	SetKeyView(entryLine, 0)
+end
+@@end

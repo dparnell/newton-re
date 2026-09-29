@@ -1,0 +1,16 @@
+@@ 0x54b475
+func(a1) begin
+	l1 := 0;
+	local l1;
+	local l2;
+	(foreach l3, l4 in (l2 := GetPkgRefInfo(a1.pkgRef)).parttypes do begin
+			local l6;
+			if (if IsFrame((l6 := l2.parts[l3])) then (l6.text or (l4 = 'Book))) then begin
+					if self:HandleNewPartEntry(l2.store, l4, l6, a1.packageName) then begin
+							l1 := (l1 + 1)
+						end
+				end
+		end);
+	(if (l1 = 0) then self:HandleNewPartEntry(l2.store, '|????|, '{}, a1.packageName))
+end
+@@end

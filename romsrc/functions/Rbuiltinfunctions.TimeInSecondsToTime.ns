@@ -1,0 +1,5 @@
+@@ 0x42079d
+func(a1) begin
+	(46811520 + (a1 div 60))
+end
+@@end

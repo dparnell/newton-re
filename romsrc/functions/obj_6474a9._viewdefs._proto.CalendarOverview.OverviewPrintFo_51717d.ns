@@ -1,0 +1,9 @@
+@@ 0x51717d
+func() begin
+	drawShapes := nil;
+	if (cursorIndex := indexFirstShapeThatDidntFit) then begin
+			self:CreateShapes()
+		end;
+	drawShapes
+end
+@@end

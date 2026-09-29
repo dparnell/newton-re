@@ -1,0 +1,11 @@
+@@ 0x758dd5
+func() begin
+	endpoint:SetState(4);
+	self:DoneForNow();
+	(try begin
+			ConnOpenFileBrowser(endpoint, 0, '[Array: "Dock", "Select a package to install", "Install"], 'packages, protoContext.FileBrowserDone)
+		end onexception |evt.ex| do begin
+			endpoint:ConnectionDone(CurrentException().error)
+		end)
+end
+@@end

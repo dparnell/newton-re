@@ -1,0 +1,18 @@
+@@ 0x4ddea5
+func(a1, a2) begin
+	local l1;
+	if (not viewCObject) then begin
+			self:Open()
+		end;
+	self:SetNewLocation(ResolveEntryAlias(a1.entry));
+	if (if a1.found then (ClassOf(a1.found[1]) <> 'symbol)) then begin
+			l1 := 'notesform
+		end else begin
+			if ((not a1.found) or (a1.found[1] <> 'name)) then begin
+					l1 := 'allform
+				end
+		end;
+	self:SetForm(l1);
+	(if (l1 = 'notesform) then currentForm.notes:ScrollToWord(a2.findWhat, true))
+end
+@@end

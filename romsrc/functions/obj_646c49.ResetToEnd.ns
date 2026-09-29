@@ -1,0 +1,18 @@
+@@ 0x4a7769
+func() begin
+	local l1;
+	index := (Length(things) - 1);
+	l1 := things[index];
+	(loop begin
+			if (not (l1 = 'deleted)) then begin
+					if ((not l1) or (not validTest)) then begin
+							break l1
+						end;
+					if call validTest with (l1) then begin
+							break l1
+						end
+				end;
+			(l1 := self:move(-1))
+		end)
+end
+@@end

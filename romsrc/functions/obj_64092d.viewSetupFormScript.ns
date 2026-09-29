@@ -1,0 +1,7 @@
+@@ 0x485bfd
+func() begin
+	RegFolderChanged((folderChangeSym := Intern(Stringer([Array: "showBar.", viewCObject]))), func(a1, a2) begin
+		(if (if a1 then (labelsFilter = a1)) then showBarText:SetNewFilter(targetView, 'labelsFilter, a2))
+	end)
+end
+@@end

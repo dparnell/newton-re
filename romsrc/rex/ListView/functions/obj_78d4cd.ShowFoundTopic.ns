@@ -1,0 +1,17 @@
+@@ 0x78d375 names
+func(anIndex, anOffset, aFinder) begin
+	local topic, view;
+	curTopic := anIndex;
+	if (if ((topic := topics[anIndex]).hideCount <> 0) then (topic.hideCount <> nil)) then begin
+			self:RevealTopic(anIndex);
+			self:StartFlush()
+		end;
+	(if anOffset then begin
+			if (view := HiliteOwner()) then begin
+					view:hilite(nil)
+				end;
+			view := self:TopicIndexToView(anIndex);
+			view:SetHilite(anOffset, (anOffset + StrLen(aFinder.findWords[0])), true)
+		end else self:ActiveTopic(anIndex))
+end
+@@end

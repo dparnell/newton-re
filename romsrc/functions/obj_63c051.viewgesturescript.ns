@@ -1,0 +1,10 @@
+@@ 0x5220f1
+func(a1, a2) begin
+	local l1;
+	l1 := nil;
+	if (a2 = 49) then begin
+			l1 := self:?buttonClickScript()
+		end;
+	l1
+end
+@@end

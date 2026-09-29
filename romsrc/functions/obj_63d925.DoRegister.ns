@@ -1,0 +1,18 @@
+@@ 0x5a3f81
+func(a1) begin
+	local l1;
+	if (not self:GetConfig('onlineRegEnabled)) then begin
+			self:Notify(4, title, "Your mail account information is not complete or is not valid.  Please make sure you have a valid America Online account and all the account settings are correct.");
+			return nil
+		end;
+	(if ((not userConfiguration.mailAccount) or (not StrFilled(userConfiguration.mailAccount))) then begin
+			(l1 := BuildContext(newAccountSlip)).request := a1;
+			l1.theApp := GetRoot().(owner);
+			l1.theTransport := self;
+			l1:Open()
+		end else begin
+			mailRegister.request := a1;
+			mailRegister:Open()
+		end)
+end
+@@end

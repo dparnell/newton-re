@@ -1,0 +1,17 @@
+@@ 0x768e49
+func(a1, a2) begin
+	local l1, l2;
+	l1 := (if (a1 = 'left) then (-fPageScrollWidth) else (if (a1 = 'right) then fPageScrollWidth else 0));
+	l2 := (if (a1 = 'up) then (-fPageScrollHeight) else (if (a1 = 'down) then fPageScrollHeight else 0));
+	self:LockScreen(true);
+	if (not ImageTarget:ScrollBy(l1, l2)) then begin
+			vScrollers:SetArrow(a1, 'done)
+		end;
+	if (a2.count = 0) then begin
+			vScrollers:SetArrow('{left: right, right: left, up: down, down: up}.(a1), 'more)
+		end;
+	vScrollers:dirty();
+	RefreshViews();
+	self:LockScreen(nil)
+end
+@@end

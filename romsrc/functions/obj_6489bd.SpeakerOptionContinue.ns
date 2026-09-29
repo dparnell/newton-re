@@ -1,0 +1,5 @@
+@@ 0x52eb55
+func(a1) begin
+	(if a1 then self:SpeakerOption(confirmStore.command, confirmStore.phone, confirmStore.idx, true) else self:SpeakerOptionDone(confirmStore.command, -16005, true))
+end
+@@end

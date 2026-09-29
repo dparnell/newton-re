@@ -1,0 +1,8 @@
+@@ 0x79c645 names
+func(item, target) begin
+	local text, task, date;
+	date := LongDateStr(item.startDate, @66.longDateStrSpec);
+	task := item.body;
+	(text := Stringer([Array: (text := Stringer([Array: (text := Stringer([Array: date, "\n", task.text])), "\n", "Priority", ":", " ", '[Array: "High", "Medium", "Low", "None"][task.mtgPriority]])), "\n", "Completed", ":", " ", (if task.mtgDone then "Yes" else "No")]))
+end
+@@end

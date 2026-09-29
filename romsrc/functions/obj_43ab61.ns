@@ -1,0 +1,10 @@
+@@ 0x43ab61
+func(a1) begin
+	local l1;
+	(if cursor then begin
+			l1 := cursor:clone();
+			l1:move(a1);
+			l1:entry()
+		end)
+end
+@@end

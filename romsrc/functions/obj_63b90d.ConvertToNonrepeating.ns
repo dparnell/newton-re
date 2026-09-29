@@ -1,0 +1,39 @@
+@@ 0x5016a1
+func(a1, a2) begin
+	local l1;
+	l1 := a1.repeatTemplate;
+	if a2 then begin
+			l1 := Clone(l1)
+		end;
+	if (l1.viewStationery = 'RepeatingMeeting) then begin
+			l1.viewStationery := 'meeting
+		end;
+	l1.mtgIconType := nil;
+	l1.mtgStartDate := a1.mtgStartDate;
+	if a1.mtgDuration then begin
+			l1.mtgDuration := a1.mtgDuration
+		end;
+	if a1.mtgInvitees then begin
+			l1.mtgInvitees := a1.mtgInvitees
+		end;
+	if a1.mtgLocation then begin
+			l1.mtgLocation := a1.mtgLocation
+		end;
+	if a1.viewBounds then begin
+			l1.viewBounds := a1.viewBounds
+		end;
+	l1.NotesData := self:GetNotesData(a1)[1];
+	if l1.mtgAlarm then begin
+			l1.mtgAlarm := (l1.mtgStartDate - l1.mtgAlarm)
+		end;
+	RemoveSlot(l1, 'repeatType);
+	RemoveSlot(l1, 'mtgInfo);
+	RemoveSlot(l1, 'mtgStopDate);
+	RemoveSlot(l1, 'exceptions);
+	RemoveSlot(l1, 'InstanceNotesData);
+	if a2 then begin
+			l1 := DeepClone(l1)
+		end;
+	l1
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x549011
+func() begin
+	PostCommand('viewfrontmost, 46);
+	RefreshViews()
+end
+@@end

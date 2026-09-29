@@ -1,0 +1,19 @@
+@@ 0x503b5d
+func(a1) begin
+	relayoutInProgress := true;
+	try begin
+			self:LayoutSlip(a1);
+			savedAlarmUnitsValue := Header.WarningView.unitsValue;
+			savedAlarmUnitsIndex := Header.WarningView.unitsIndex;
+			Header:RedoChildren()
+		end onexception |evt.ex| do begin
+			relayoutInProgress := nil;
+			savedAlarmUnitsValue := nil;
+			savedAlarmUnitsIndex := nil;
+			Rethrow()
+		end;
+	relayoutInProgress := nil;
+	savedAlarmUnitsValue := nil;
+	(savedAlarmUnitsIndex := nil)
+end
+@@end

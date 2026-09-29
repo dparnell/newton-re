@@ -1,0 +1,14 @@
+@@ 0x761d4d
+func(a1) begin
+	local l1, l2;
+	if (if a1 then a1.country) then begin
+			if (if (l2 := GetCountryEntry(a1.country)) then (Length(l2) > 0)) then begin
+					l1 := l2[0].name
+				end
+		end;
+	if (not l1) then begin
+			l1 := "USA"
+		end;
+	return l1
+end
+@@end

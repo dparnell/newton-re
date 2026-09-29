@@ -1,0 +1,7 @@
+@@ 0x5b6759
+func(a1) begin
+	local l1;
+	(l1 := BuildContext(self)).promptText := a1;
+	l1
+end
+@@end

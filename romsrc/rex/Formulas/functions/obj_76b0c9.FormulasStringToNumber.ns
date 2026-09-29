@@ -1,0 +1,18 @@
+@@ 0x76b735
+func(a1) begin
+	local l1, l2, l3, l4, l5;
+	l3 := StrEqual((l2 := Substr((l1 := StringFilter(a1, " ", 'rejectAll)), 0, 1)), "-");
+	if (StrEqual(l2, "+") or l3) then begin
+			l1 := Substr(l1, 1, (StrLen(l1) - 1))
+		end else begin
+			l2 := nil
+		end;
+	if ((l5 := StringToNumber((l4 := StringFilter(l1, GetLocale().numberFormat.groupSepStr, 'rejectAll)))) = nil) then begin
+			return l5
+		end;
+	if l3 then begin
+			l5 := (-l5)
+		end;
+	return l5
+end
+@@end

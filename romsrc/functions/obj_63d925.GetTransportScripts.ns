@@ -1,0 +1,46 @@
+@@ 0x5a3fa1
+@@const kFunction_5a3471
+func(a1) begin
+	"Reply"
+end
+@@const kROM_756
+@756
+@@const kFunction_5a3491
+func(a1) begin
+	"Reply to All"
+end
+@@const kFunction_5a34b1
+func(a1) begin
+	"Forward"
+end
+@@const kROM_771
+@771
+@@const kFunction_5a356d
+func(a1) begin
+	"Add to Names"
+end
+@@const kROM_772
+@772
+@@main
+func(a1) begin
+	local l1, l2, l3;
+	if ((a1.state = 'pending) or (a1.state = 'ready)) then begin
+			return nil
+		end;
+	l1 := [Array: ];
+	if a1.account then begin
+			AddArraySlot(l1, {GetTitle: kFunction_5a3471, routeScript: doReply, icon: kROM_756});
+			if (((if IsArray(a1.toRef) then (Length(a1.toRef) > 1)) or (if IsArray(a1.cc) then (Length(a1.cc) > 0))) or (if IsArray(a1.bcc) then (Length(a1.bcc) > 0))) then begin
+					AddArraySlot(l1, {GetTitle: kFunction_5a3491, routeScript: doReplyAll, icon: kROM_756})
+				end;
+			AddArraySlot(l1, {GetTitle: kFunction_5a34b1, routeScript: doForward, icon: kROM_771})
+		end;
+	if a1.fromRef then begin
+			l2 := GetUnionSoup(@47);
+			if ((l3 := l2:Query({type: 'words, words: [Array: a1.fromRef.email]})):CountEntries() = 0) then begin
+					AddArraySlot(l1, {GetTitle: kFunction_5a356d, routeScript: saveAddress, icon: kROM_772})
+				end
+		end;
+	(if (Length(l1) > 0) then l1)
+end
+@@end

@@ -1,0 +1,12 @@
+@@ 0x4de821
+func() begin
+	popup := (foreach l1 in pop collect begin
+		local l5;
+		(if (if IsFrame(l1) then (currentForm = (if l1.form then GetVariable(self, l1.form)))) then begin
+				(l5 := Clone(l1)).mark := $\uFC0B;
+				l5
+			end else l1)
+	end);
+	inherited:buttonClickScript()
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x47f871
+func(a1) begin
+	Stringer([Array: ShortDate(a1.timestamp), " ", HourMinute(a1.timestamp)])
+end
+@@end

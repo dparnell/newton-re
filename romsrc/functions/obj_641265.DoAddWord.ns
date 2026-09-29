@@ -1,0 +1,20 @@
+@@ 0x5a98c1
+func(a1, a2) begin
+	local l1;
+	if (if a2 then self.viewCObject) then begin
+			self:RemoveWord(a2)
+		end;
+	if ((l1 := dictionary:AddEncodedWord(a1, true)) = 0) then begin
+			if self.viewCObject then begin
+					window:Reposition(a1);
+					base:SelectFirst();
+					words:Dirty();
+					if a2 then begin
+							self:AddExpandWord(selectedWord, a1)
+						end
+				end;
+			AddUndoAction('RemoveWord, [Array: a1])
+		end;
+	return (l1 = 0)
+end
+@@end

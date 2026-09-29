@@ -1,0 +1,5 @@
+@@ 0x55e10d
+func(a1) begin
+	(if self:TrackHilite(a1) then @317:New(selectedDates, self:GlobalBox(), self) else self:hilite(nil))
+end
+@@end

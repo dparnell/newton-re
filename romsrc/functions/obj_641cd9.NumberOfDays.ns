@@ -1,0 +1,18 @@
+@@ 0x4f16a9
+func(a1, a2) begin
+	l1 := 0;
+	l2 := 2048;
+	local l1;
+	local l2;
+	(for l3 := 1 to 7 do begin
+			if (BAnd(a1, l2) <> 0) then begin
+					l1 := (l1 + 1)
+				end;
+			if (l1 > a2) then begin
+					break
+				end;
+			l2 := (l2 >> 1)
+		end);
+	l1
+end
+@@end

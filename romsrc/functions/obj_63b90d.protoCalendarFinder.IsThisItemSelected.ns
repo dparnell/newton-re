@@ -1,0 +1,6 @@
+@@ 0x4e9e61
+func(a1) begin
+	local l1;
+	(if a1.topicIndex then a1.realFinder:IsThisItemSelected(a1) else (if a1.realFinder:isSelected((l1 := {_uniqueID: a1.entryID, _storeID: a1.storeID, instanceTime: a1.instanceTime})) then true))
+end
+@@end

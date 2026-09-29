@@ -1,0 +1,10 @@
+@@ 0x4d5881
+func() begin
+	if event then begin
+			viewFlags := BAnd(viewFlags, bnot(1))
+		end;
+	viewBounds := RelBounds(0, dpSlip.timeFieldTop, 220, 18);
+	startTime := newMtgStartTime;
+	(stopTime := newMtgStopTime)
+end
+@@end

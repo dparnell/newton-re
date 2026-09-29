@@ -1,0 +1,21 @@
+@@ 0x468e3d
+func(a1, a2) begin
+	local l1, l2, l3, l4, l5;
+	l1 := a2.target;
+	if (l2 := self:TargetSize(a2)) then begin
+			if (not (l3 := (if sizeLimit then (l2 > sizeLimit)))) then begin
+					l5 := ((l4 := GetItemTransport(a1):GetDefaultOwnerStore()):TotalSize() - l4:UsedSize());
+					l3 := (l2 > (l5 - 1000))
+				end;
+			if l3 then begin
+					if (l1 := self:MakeBodyAlias(a2)) then begin
+							a1.needsResolve := true;
+							if showMessage then begin
+									GetRoot():Notify(3, "Routing", "To save storage space, this item will have references to the original.  Make sure the original is available when this item is sent.")
+								end
+						end
+				end
+		end;
+	l1
+end
+@@end

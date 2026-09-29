@@ -1,0 +1,9 @@
+@@ 0x44ec01
+func(a1, a2) begin
+	(if (a1 = 'text) then begin
+			self:SetNewWord(text, 'single);
+			self:SetNewTemplate(nil);
+			self:UseNewTemplate(true)
+		end else (if (a1 = 'template) then self:SetNewTemplate(template)))
+end
+@@end

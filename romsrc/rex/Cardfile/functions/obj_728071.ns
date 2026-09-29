@@ -1,0 +1,13 @@
+@@ 0x728071
+func() begin
+	local l1, l2;
+	if (if self.changed then (ClassOf(target.(path)) <> 'string)) then begin
+			appBase:AddBdayToCalendar(target, path, eventPath, eventStr)
+		end else begin
+			if (if (not target.(path)) then target.(eventPath)) then begin
+					appBase:RemoveBdayFromCalendar(target)
+				end
+		end;
+	inherited:?viewQuitScript()
+end
+@@end

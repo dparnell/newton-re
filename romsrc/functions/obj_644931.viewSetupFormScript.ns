@@ -1,0 +1,6 @@
+@@ 0x43e939
+func() begin
+	inherited:viewSetupFormScript();
+	self:SetBounds()
+end
+@@end

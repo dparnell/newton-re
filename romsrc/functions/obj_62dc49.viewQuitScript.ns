@@ -1,0 +1,15 @@
+@@ 0x4b0d85
+func() begin
+	self:SetupIdle(0);
+	try begin
+			TransportNotify('_all, 'AppClosed, [Array: appSymbol])
+		end onexception |evt.ex| do begin
+			self:Notify(3, "InOut Box", "Error in transport script")
+		end;
+	self:FileUsedItems();
+	if pap then begin
+			pap:Close()
+		end;
+	inherited:viewQuitScript()
+end
+@@end

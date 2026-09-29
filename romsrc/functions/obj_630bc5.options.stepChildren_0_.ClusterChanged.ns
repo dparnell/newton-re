@@ -1,0 +1,13 @@
+@@ 0x4dce89
+func() begin
+	local l1;
+	if (l1 := GetUserConfig('timeformat)) then begin
+			l1 := Clone(l1)
+		end else begin
+			l1 := {}
+		end;
+	l1.timeCycle := clusterValue;
+	l1.midNightForm := clusterValue;
+	SetUserConfig('timeformat, l1)
+end
+@@end

@@ -1,0 +1,21 @@
+@@ 0x7376ad
+func(a1) begin
+	local l1;
+	if (if self.viewCObject then (currentLayout = a1)) then begin
+			self:ShowLayout('default)
+		end;
+	if ((l1 := self:GetAppPreferences()).currentLayout = a1) then begin
+			l1.currentLayout := 'default
+		end;
+	if (l1.previousLayout = a1) then begin
+			l1.previousLayout := 'default
+		end;
+	EntryChange(l1);
+	(if allLayouts.(a1) then begin
+			if IsReadOnly(allLayouts) then begin
+					allLayouts := Clone(allLayouts)
+				end;
+			RemoveSlot(allLayouts, a1)
+		end)
+end
+@@end

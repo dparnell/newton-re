@@ -1,0 +1,9 @@
+@@ 0x62875d
+func() begin
+	local l1, l2;
+	if (l1 := GetTaggedEntry("LetterWeights")) then begin
+			SaveDataToEntry((l2 := ConvertFromMP(l1.data, userConfiguration.letterSetSelection)), "LetterWeights2.0")
+		end;
+	l2
+end
+@@end

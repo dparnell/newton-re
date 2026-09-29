@@ -1,0 +1,11 @@
+@@ 0x78f245 names
+func() begin
+	inherited:viewSetupDoneScript();
+	(if HasPath(target, 'makeNewTopic) then begin
+			if (Length(topics) < 1) then begin
+					AddDeferredSend(self, 'NewTopic, [Array: 1, ""])
+				end;
+			RemoveSlot(target, 'makeNewTopic)
+		end)
+end
+@@end

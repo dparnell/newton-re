@@ -1,0 +1,6 @@
+@@ 0x518d91
+func() begin
+	local l1;
+	(if (l1 := self:GetMeetingSlot(meeting, 'mtgInvitees)) then self:GetNamesOfInvitees(l1, nil))
+end
+@@end

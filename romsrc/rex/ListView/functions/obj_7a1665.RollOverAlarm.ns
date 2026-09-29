@@ -1,0 +1,10 @@
+@@ 0x797615 names
+func() begin
+	local nextAlarm;
+	self:GetToDo():RollItemsOver(true);
+	nextAlarm := (((nextAlarm := (Time() + 1440)) - (nextAlarm mod 1440)) + 180);
+	AddAlarm("To Do", nextAlarm, nil, func() begin
+		GetRoot().calendar:RollOverAlarm()
+	end, [Array: ])
+end
+@@end

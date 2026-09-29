@@ -1,0 +1,5 @@
+@@ 0x745c71
+func() begin
+	return nil
+end
+@@end

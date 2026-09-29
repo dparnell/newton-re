@@ -1,0 +1,11 @@
+@@ 0x634ef5
+func(a1) begin
+	local l1, l2;
+	l1 := self:GetStore();
+	l2 := self:RemoveFromStore();
+	if a1 then begin
+			XmitSoupChange(self:GetName(), a1, 'soupDeleted, l1)
+		end;
+	l2
+end
+@@end

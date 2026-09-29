@@ -1,0 +1,14 @@
+@@ 0x78ca3d names
+func(aDragRef) begin
+	local undoDragTo;
+	(if (if IsFrame(aDragRef) then HasPath(aDragRef, 'viewCObject)) then nil else begin
+			undoDragTo := {index: (aDragRef.index[0] - 1), level: topics[aDragRef.index[0]].level};
+			self:RemoveTopicDragDrop(aDragRef, nil);
+			self:RedoTopics();
+			self.dragTo := nil;
+			aDragRef.dragTo := undoDragTo;
+			AddUndoAction('UndoDropRemove, [Array: aDragRef]);
+			true
+		end)
+end
+@@end

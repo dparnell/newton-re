@@ -1,0 +1,12 @@
+@@ 0x561355
+func(a1) begin
+	cat := {_proto: @177, skip: 0, title: nil, count: 0, category: a1};
+	if a1.title then begin
+			cat.title := Substr(a1.title, 0, StrPos(a1.title, ",", 0))
+		end else begin
+			cat.title := GetVariable(a1.owner, 'title)
+		end;
+	cat.count := a1:count();
+	cat
+end
+@@end

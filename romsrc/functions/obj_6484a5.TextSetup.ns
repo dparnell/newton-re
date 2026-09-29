@@ -1,0 +1,5 @@
+@@ 0x45af31
+func() begin
+	Stringer([Array: (if longFormat then LongDateStr(Date, @66.(longFormat)) else ShortDateStr(Date, @66.(shortFormat))), " ", TimeStr(Date, @66.(format))])
+end
+@@end

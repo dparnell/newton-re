@@ -1,0 +1,65 @@
+@@ 0x553a69
+func(a1) begin
+	l1 := IsPackageEntryFrozen(a1);
+	l2 := a1.packageName;
+	l3 := EntryStore(a1);
+	l6 := (l5 := l3:GetSoup("Packages"):Query((l4 := {beginKey: l2, endKey: l2, indexPath: 'packageName, tagspec: '{none: _package}}))):entry();
+	l7 := [Array: ];
+	l8 := [Array: ];
+	l9 := [Array: ];
+	l10 := (if Visible(ExtrasDrawer) then ExtrasDrawer.labelsFilter else -1);
+	l13 := [Array: ];
+	(while l6 do begin
+			if (l6.class = 'FrozenEntry) then begin
+					l12 := l6;
+					EntryRemoveFromSoup(l6)
+				end else begin
+					if l1 then begin
+							SetAdd(l6._tagList, '_frozen, true);
+							AddArraySlot(l9, l6.text);
+							if (not l11) then begin
+									if (l10 = l6.labels) then begin
+											l7 := [Array: l6.labels];
+											l8 := [Array: l6.sequence];
+											l11 := true
+										end else begin
+											SetAdd(l7, l6.labels, true);
+											SetAdd(l8, l6.sequence, true)
+										end
+								end
+						end else begin
+							SetRemove(l6._tagList, '_frozen);
+							AddArraySlot(l13, l6);
+							SetAdd(l7, l6.labels, true)
+						end;
+					EntryFlushXmit(l6, 'ExtrasDrawer)
+				end;
+			(l6 := l5:Next())
+		end);
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	local l6;
+	local l7;
+	local l8;
+	local l9;
+	local l10;
+	local l11;
+	local l12;
+	local l13;
+	local l14;
+	local l15;
+	local l16;
+	(if l1 then begin
+			l14 := (if (Length(l7) = 1) then l7[0]);
+			l15 := (if (Length(l8) = 1) then l8[0]);
+			l16 := (if (Length(l9) = 1) then l9[0] else l2);
+			self:AddIconEntryQT('FrozenEntry, {text: l16, packageName: l2, labels: l14, sequence: l15}, l3)
+		end else (if (if (if l12 then (Length(l7) = 1)) then (l12.labels <> l7[0])) then (foreach l6 in l13 do begin
+					self:ChangeTagListAndLabels(l6, l12.labels);
+					EntryFlush(l6)
+				end)))
+end
+@@end

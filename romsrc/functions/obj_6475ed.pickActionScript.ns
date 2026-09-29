@@ -1,0 +1,15 @@
+@@ 0x50ab5d
+func(a1) begin
+	pickChild:hilite(nil);
+	SetValue(textDisplay, 'text, choices[a1]);
+	(if (a1 = (Length(choices) - 1)) then begin
+			otherPicker:Show();
+			otherInput:Show();
+			-1
+		end else begin
+			otherPicker:Hide();
+			otherInput:Hide();
+			a1
+		end)
+end
+@@end

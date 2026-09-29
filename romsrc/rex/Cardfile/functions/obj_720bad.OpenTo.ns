@@ -1,0 +1,23 @@
+@@ 0x741ef5
+func(a1, a2) begin
+	local l1;
+	if (l1 := GetDataDefs(a1.class)) then begin
+			newSuperSym := l1.superSymbol
+		end else begin
+			newSuperSym := 'names
+		end;
+	if (newSuperSym <> superSymbol) then begin
+			if self.viewCObject then begin
+					self:Close()
+				end;
+			if (newSuperSym = 'ownerNames) then begin
+					self:OpenAsOwner(nil)
+				end else begin
+					self:Open()
+				end
+		end else begin
+			self:Open()
+		end;
+	(if self.viewCObject then self:ShowFoundItem(a1, a2))
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x45a759
+func() begin
+	self:MakePickLine(self:LocalBox(), label, self:TextSetup())
+end
+@@end

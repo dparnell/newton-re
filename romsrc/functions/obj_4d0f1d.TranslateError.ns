@@ -1,0 +1,14 @@
+@@ 0x4d0869
+func(a1) begin
+	local l1, l2;
+	l1 := nil;
+	if (a1 = -1) then begin
+			if HasSlot((l2 := CurrentException()), 'message) then begin
+					l1 := l2.message
+				end else begin
+					l1 := "Something went wrong"
+				end
+		end;
+	return inherited:TranslateError(a1)
+end
+@@end

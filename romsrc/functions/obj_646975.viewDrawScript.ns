@@ -1,0 +1,25 @@
+@@ 0x4cbb75
+func() begin
+	l1 := StrLen(text);
+	l2 := self:LocalBox();
+	l3 := Clone(" ");
+	l4 := (((FontAscent(viewFont) + l2.bottom) - FontDescent(viewFont)) div 2);
+	l5 := Array((l1 + 2), nil);
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	(for l6 := 0 to (l1 - 1) do begin
+			local l9;
+			l3[0] := text[l6];
+			l9 := (((l6 * l2.right) div l1) - ((StrWidth(l3) - (l2.right div l1)) div 2));
+			l5[l6] := MakeText(l3, l9, (l4 - 20), l2.right, l4)
+		end);
+	l6 := (l2.right - drawPenSizeX);
+	l5[l1] := MakeLine(0, 0, l6, 0);
+	l4 := (l2.bottom - drawPenSizeY);
+	l5[(l1 + 1)] := MakeLine(0, l4, l6, l4);
+	self:DrawShape(l5, {pensize: [Array: drawPenSizeX, drawPenSizeY], font: viewFont})
+end
+@@end

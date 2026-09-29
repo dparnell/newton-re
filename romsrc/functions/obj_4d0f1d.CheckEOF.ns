@@ -1,0 +1,19 @@
+@@ 0x4d03b1
+func(a1, a2) begin
+	local l1;
+	(try begin
+			if a2 then begin
+					Throw('|evt.ex.comm|, a2)
+				end;
+			if (a1[0].data.arglist[1] <> 0) then begin
+					Throw('|evt.ex.comm|, a1[0].data.arglist[1])
+				end;
+			(if a1[0].data.arglist[2] then begin
+					self:CommitSession(nil);
+					self:DoDisconnect(nil)
+				end else ep:SetInputSpec((activeInputSpec := self:GetNextSpec())))
+		end onexception |evt.ex| do begin
+			(if self:HandleThrow() then self:DoDisconnect(nil))
+		end)
+end
+@@end

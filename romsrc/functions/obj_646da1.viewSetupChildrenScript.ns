@@ -1,0 +1,163 @@
+@@ 0x54802d
+func() begin
+	local v5_xxxxxxxxxxxxxxxxxxxxxwww, v7_xxxwwwwwwwwwwwwwwwww, v8_zyy, v9_zzzzzzzzyyyyyyyy, v10_qqqqq, v11_wwwwwwwwwwwwwwwwwwwwwww, v13_yyyxxxxxxxxxxxxxxxxxxxxxx, v18_kkkjj, v22_wwwwwwwwww, v23_zzzzzzzzzzzzzzzzzzzzzy, v24_tttttt, v25_llll, v27_xxxxxxxxxxxxxxxxxxwwwwwwwwww, v29_ppppoo, v30_wwwwwwwwwwwwwwwwwwwvvvvv, v32_zzzzzzzzzzzzzzzzzzyyyyyyy, v33_vvvuuuuuu, v34_zzzzzzzzyyyyyyyyyyyyy, v35_qqppp, v36_yyyyyyyyyyyyyyyxx, v39_uuuuuuutttttttt, v40_yyyyyyyyyxxxxxxxxxxxxxxxxxx, v41_ssssssssrrr, v42_xxxxxxxxxxxxxxxxxxwwwww, v43_nnnnnmm, v44_wwwwwwwwwwwwwwwwwww, v45_yy, v47_yxxxxxxxxxxxxxxx, v48_ttttttttsss, v50_wwwwwwwwwwwvvvvvvvvvvvvvv, v51_vvvvvvuu, v53_ttttttttsssss, v54_zzzzzyyyyyyyyyyyyyy, v55_wwwvvvvvvvvvvvvvvv, v56_yxxxxxxxxxxxxxxxxxx, v57_uuuuuuuuuttttt;
+	v55_wwwvvvvvvvvvvvvvvv := (if (v56_yxxxxxxxxxxxxxxxxxx := GetRoot().buttons.visibleItems) then (foreach v17_wwwwwwwwwvvvvvvvv in v56_yxxxxxxxxxxxxxxxxxx collect v17_wwwwwwwwwvvvvvvvv.fentry) else '[Array: ]);
+	v44_wwwwwwwwwwwwwwwwwww := userConfiguration.blessedapp;
+	v57_uuuuuuuuuttttt := self:LocalBox();
+	if overUp then begin
+			v11_wwwwwwwwwwwwwwwwwwwwwww := baseListSmall;
+			hSpacing := v57_uuuuuuuuuttttt.right;
+			vSpacing := 16;
+			v39_uuuuuuutttttttt := topIndexText
+		end else begin
+			if ((v29_ppppoo := displayParams.appAreaWidth) <= 240) then begin
+					v11_wwwwwwwwwwwwwwwwwwwwwww := baseIconSmall:GetAdjustedProto();
+					hSpacing := 46;
+					vSpacing := 51
+				end else begin
+					v11_wwwwwwwwwwwwwwwwwwwwwww := baseIcon:GetAdjustedProto();
+					hSpacing := 64;
+					vSpacing := 52
+				end;
+			if (v45_yy := GetUserConfig('extrasIconSpacingH)) then begin
+					hSpacing := v45_yy
+				end;
+			if (v25_llll := GetUserConfig('extrasIconSpacingV)) then begin
+					vSpacing := v25_llll
+				end;
+			hSpacing := (v29_ppppoo div (v29_ppppoo div hSpacing));
+			v39_uuuuuuutttttttt := topIndexIcon
+		end;
+	v36_yyyyyyyyyyyyyyyxx := ((v35_qqppp := ((displayParams.appAreaHeight - 13) - 50)) div vSpacing);
+	v53_ttttttttsssss := (v57_uuuuuuuuuttttt.right div hSpacing);
+	if (needsRecalc = 'all) then begin
+			if (if storesFilter then (not storesFilter:IsValid())) then begin
+					storesFilter := nil
+				end;
+			v43_nnnnnmm := (if (if storesFilter then (labelsFilter <> '_soups)) then [Array: storesFilter] else GetValidStores());
+			v32_zzzzzzzzzzzzzzzzzzyyyyyyy := [Array: ];
+			(foreach v28_wwwwvvvvvvvvvvvvv in v43_nnnnnmm do begin
+					if (v4_ttttssssssss := v28_wwwwvvvvvvvvvvvvv:GetSoup("Packages")) then begin
+							AddArraySlot(v32_zzzzzzzzzzzzzzzzzzyyyyyyy, v4_ttttssssssss)
+						end
+				end);
+			v9_zzzzzzzzyyyyyyyy := 0;
+			if (Length(v32_zzzzzzzzzzzzzzzzzzyyyyyyy) > 0) then begin
+					v40_yyyyyyyyyxxxxxxxxxxxxxxxxxx := Array(13, nil);
+					(foreach v15_xxxxxxxxxxwwwwwwwwwww in v32_zzzzzzzzzzzzzzzzzzyyyyyyy do begin
+							v22_wwwwwwwwww := v15_xxxxxxxxxxwwwwwwwwwww:Query('{indexPath: packageName, tagspec: {none: _frozen, all: _package}});
+							v30_wwwwwwwwwwwwwwwwwwwvvvvv := (v23_zzzzzzzzzzzzzzzzzzzzzy := v15_xxxxxxxxxxwwwwwwwwwww:Query(self:GetQuerySpec(labelsFilter))):entry();
+							(while v30_wwwwwwwwwwwwwwwwwwwvvvvv do begin
+									if (v30_wwwwwwwwwwwwwwwwwwwvvvvv.app <> v44_wwwwwwwwwwwwwwwwwww) then begin
+											if (v47_yxxxxxxxxxxxxxxx := ((v30_wwwwwwwwwwwwwwwwwwwvvvvv.labels <> '_buttonBar) or (not SetContains(v55_wwwvvvvvvvvvvvvvvv, v30_wwwwwwwwwwwwwwwwwwwvvvvv)))) then begin
+													v27_xxxxxxxxxxxxxxxxxxwwwwwwwwww := nil;
+													if v30_wwwwwwwwwwwwwwwwwwwvvvvv.packageName then begin
+															try begin
+																	v27_xxxxxxxxxxxxxxxxxxwwwwwwwwww := (if (if (v34_zzzzzzzzyyyyyyyyyyyyy := v22_wwwwwwwwww:GotoKey(v30_wwwwwwwwwwwwwwwwwwwvvvvv.packageName)) then StrEqual(v22_wwwwwwwwww:EntryKey(), v30_wwwwwwwwwwwwwwwwwwwvvvvv.packageName)) then (not IsPackageActive(v34_zzzzzzzzyyyyyyyyyyyyy.pkgRef)))
+																end onexception |evt.ex| do begin
+																	v27_xxxxxxxxxxxxxxxxxxwwwwwwwwww := true
+																end
+														end;
+													v40_yyyyyyyyyxxxxxxxxxxxxxxxxxx[v9_zzzzzzzzyyyyyyyy] := {_proto: @589.(v30_wwwwwwwwwwwwwwwwwwwvvvvv.class), fentry: v30_wwwwwwwwwwwwwwwwwwwvvvvv, notActive: v27_xxxxxxxxxxxxxxxxxxwwwwwwwwww};
+													if ((v9_zzzzzzzzyyyyyyyy := (v9_zzzzzzzzyyyyyyyy + 1)) >= Length(v40_yyyyyyyyyxxxxxxxxxxxxxxxxxx)) then begin
+															SetLength(v40_yyyyyyyyyxxxxxxxxxxxxxxxxxx, (Length(v40_yyyyyyyyyxxxxxxxxxxxxxxxxxx) + 13))
+														end
+												end
+										end;
+									(v30_wwwwwwwwwwwwwwwwwwwvvvvv := v23_zzzzzzzzzzzzzzzzzzzzzy:Next())
+								end)
+						end);
+					SetLength(v40_yyyyyyyyyxxxxxxxxxxxxxxxxxx, v9_zzzzzzzzyyyyyyyy);
+					if (if (Length(v32_zzzzzzzzzzzzzzzzzzyyyyyyy) > 1) then (not overUp)) then begin
+							InsertionSort(v40_yyyyyyyyyxxxxxxxxxxxxxxxxxx, '|<|, 'fentry.sequence)
+						end
+				end else begin
+					v40_yyyyyyyyyxxxxxxxxxxxxxxxxxx := [Array: ]
+				end;
+			if (labelsFilter = '_soups) then begin
+					v18_kkkjj := Clone(skipStarter);
+					(foreach v38_yxxxxxxxxxxxx in v40_yyyyyyyyyxxxxxxxxxxxxxxxxxx do begin
+							if v38_yxxxxxxxxxxxx.fentry.soupNames then begin
+									(foreach v4_ttttssssssss in v38_yxxxxxxxxxxxx.fentry.soupNames do begin
+											BInsert(v18_kkkjj, v4_ttttssssssss, '|str<|, nil, true)
+										end)
+								end
+						end);
+					(foreach v28_wwwwvvvvvvvvvvvvv in (if storesFilter then [Array: storesFilter] else GetValidStores()) do begin
+							(foreach v4_ttttssssssss in v28_wwwwvvvvvvvvvvvvv:GetSoupNames() do begin
+									if (if (not BeginsWith(v4_ttttssssssss, "BACKUP_")) then (not EndsWith(v4_ttttssssssss, ":RS71A"))) then begin
+											if BInsert(v18_kkkjj, v4_ttttssssssss, '|str<|, nil, true) then begin
+													v13_yyyxxxxxxxxxxxxxxxxxxxxxx := v4_ttttssssssss;
+													if (if (v54_zzzzzyyyyyyyyyyyyyy := GetSoupDef(v4_ttttssssssss)) then StrFilled(v54_zzzzzyyyyyyyyyyyyyy.userName)) then begin
+															v13_yyyxxxxxxxxxxxxxxxxxxxxxx := v54_zzzzzyyyyyyyyyyyyyy.userName
+														end;
+													v30_wwwwwwwwwwwwwwwwwwwvvvvv := self:MakeIconEntry('SoupEntry, {text: v13_yyyxxxxxxxxxxxxxxxxxxxxxx, soupNames: [Array: v4_ttttssssssss]});
+													AddArraySlot(v40_yyyyyyyyyxxxxxxxxxxxxxxxxxx, {_proto: @589.SoupEntry, fentry: v30_wwwwwwwwwwwwwwwwwwwvvvvv})
+												end
+										end
+								end)
+						end)
+				end;
+			(foreach v21_wwwwwwwwwwwwwwwwwwwwwwwvvvv in |Parts1.x| do begin
+					if ((v21_wwwwwwwwwwwwwwwwwwwwwwwvvvv.labels = labelsFilter) or (labelsFilter = '_all)) then begin
+							v38_yxxxxxxxxxxxx := {_proto: @589.(v21_wwwwwwwwwwwwwwwwwwwwwwwvvvv.class), fentry: v21_wwwwwwwwwwwwwwwwwwwwwwwvvvv};
+							if ((not storesFilter) or (storesFilter = v38_yxxxxxxxxxxxx:store())) then begin
+									AddArraySlot(v40_yyyyyyyyyxxxxxxxxxxxxxxxxxx, v38_yxxxxxxxxxxxx)
+								end
+						end
+				end);
+			folderItems := v40_yyyyyyyyyxxxxxxxxxxxxxxxxxx
+		end;
+	v51_vvvvvvuu := (folderItemsLen := Length(folderItems));
+	if (v39_uuuuuuutttttttt > v51_vvvvvvuu) then begin
+			v39_uuuuuuutttttttt := 0;
+			topIndexIcon := 0;
+			topIndexText := 0
+		end;
+	v7_xxxwwwwwwwwwwwwwwwww := min((v36_yyyyyyyyyyyyyyyxx * v53_ttttttttsssss), (v51_vvvvvvuu - v39_uuuuuuutttttttt));
+	if (overUp or (labelsFilter = '_all)) then begin
+			StableSort(folderItems, '|str<|, 'fentry.text)
+		end;
+	visibleItems := (if (v7_xxxwwwwwwwwwwwwwwwww = v51_vvvvvvuu) then folderItems else begin
+			(for v6_ppoooooo := 0 to (v39_uuuuuuutttttttt - 1) do begin
+					if IsSoupEntry((v42_xxxxxxxxxxxxxxxxxxwwwww := folderItems[v6_ppoooooo].fentry)) then begin
+							EntryUndoChanges(v42_xxxxxxxxxxxxxxxxxxwwwww)
+						end
+				end);
+			(for v6_ppoooooo := (v39_uuuuuuutttttttt + v7_xxxwwwwwwwwwwwwwwwww) to (v51_vvvvvvuu - 1) do begin
+					if IsSoupEntry((v42_xxxxxxxxxxxxxxxxxxwwwww := folderItems[v6_ppoooooo].fentry)) then begin
+							EntryUndoChanges(v42_xxxxxxxxxxxxxxxxxxwwwww)
+						end
+				end);
+			ArrayMunger([Array: ], 0, 0, folderItems, v39_uuuuuuutttttttt, v7_xxxwwwwwwwwwwwwwwwww)
+		end);
+	viewChildren := nil;
+	viewChildren := Array(v7_xxxwwwwwwwwwwwwwwwww, nil);
+	v50_wwwwwwwwwwwvvvvvvvvvvvvvv := ((v57_uuuuuuuuuttttt.right mod hSpacing) >> 1);
+	v48_ttttttttsss := (v53_ttttttttsssss * hSpacing);
+	v33_vvvuuuuuu := v50_wwwwwwwwwwwvvvvvvvvvvvvvv;
+	v8_zyy := 1;
+	v24_tttttt := 0;
+	if (v44_wwwwwwwwwwwwwwwwwww = 'ExtrasDrawer) then begin
+			v24_tttttt := ((v41_ssssssssrrr := (v35_qqppp - (v36_yyyyyyyyyyyyyyyxx * vSpacing))) div (v36_yyyyyyyyyyyyyyyxx + 1));
+			v8_zyy := ((6 + v24_tttttt) + (v41_ssssssssrrr mod (v36_yyyyyyyyyyyyyyyxx + 1)))
+		end;
+	(foreach v6_ppoooooo, v46_vvvvvvvvvvvvuuu in visibleItems do begin
+			(v5_xxxxxxxxxxxxxxxxxxxxxwww := (self.viewChildren[v6_ppoooooo] := Clone(v11_wwwwwwwwwwwwwwwwwwwwwww))).target := v46_vvvvvvvvvvvvuuu;
+			v5_xxxxxxxxxxxxxxxxxxxxxwww.viewBounds := RelBounds(v33_vvvuuuuuu, v8_zyy, hSpacing, vSpacing);
+			if ((v33_vvvuuuuuu := (v33_vvvuuuuuu + hSpacing)) >= v48_ttttttttsss) then begin
+					v33_vvvuuuuuu := v50_wwwwwwwwwwwvvvvvvvvvvvvvv;
+					v8_zyy := ((v8_zyy + vSpacing) + v24_tttttt)
+				end
+		end);
+	if ((v10_qqqqq := min(v36_yyyyyyyyyyyyyyyxx, (((v51_vvvvvvuu + v53_ttttttttsssss) - 1) div v53_ttttttttsssss))) = 0) then begin
+			v10_qqqqq := 1
+		end;
+	if (if (if (v10_qqqqq <> nRows) then (needsRecalc = 'all)) then (v44_wwwwwwwwwwwwwwwwwww <> 'ExtrasDrawer)) then begin
+			self:LockScreen(true);
+			base:SizeForRows(v10_qqqqq);
+			self:LockScreen(nil)
+		end;
+	(needsRecalc := nil)
+end
+@@end

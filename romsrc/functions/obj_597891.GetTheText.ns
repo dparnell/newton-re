@@ -1,0 +1,11 @@
+@@ 0x59778d
+func() begin
+	local l1, l2;
+	if (not (l1 := self:?ChildViewFrames())) then begin
+			l1 := viewChildren
+		end;
+	l2 := notesText(l1);
+	(while (if (StrLen(l2) > 0) then (l2[(StrLen(l2) - 1)] = $\n)) do (l2 := Substr(l2, 0, (StrLen(l2) - 1))));
+	l2
+end
+@@end

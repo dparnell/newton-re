@@ -1,0 +1,5 @@
+@@ 0x45aa2d
+func() begin
+	ParamStr("^0 - ^1", [Array: TimeStr(startTime, @66.(format)), TimeStr(stopTime, @66.(format))])
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x426595
+func() begin
+	inherited:FastForward();
+	(if SoundProgressSlider then SoundProgressSlider:SlideToRight())
+end
+@@end

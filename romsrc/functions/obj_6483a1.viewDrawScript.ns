@@ -1,0 +1,10 @@
+@@ 0x429875
+@@const kROM_594
+@594
+@@main
+func() begin
+	local l1;
+	l1 := self:LocalBox();
+	self:DrawShape(OffsetShape(MakeShape(kROM_594), 1, ((l1.bottom - 5) >> 1)), '{transferMode: 1})
+end
+@@end

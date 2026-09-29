@@ -1,0 +1,9 @@
+@@ 0x4812a1
+func() begin
+	(if ((data := self:path().(name)) = nil) then (viewValue := maxValue) else (if (ClassOf(data) = 'Array) then begin
+				viewValue := data[0];
+				minValue := data[1];
+				(maxValue := data[2])
+			end else (viewValue := data)))
+end
+@@end

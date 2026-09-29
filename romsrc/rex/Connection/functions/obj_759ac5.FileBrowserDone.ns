@@ -1,0 +1,46 @@
+@@ 0x75bef1
+@@const kROM_8265
+@8265
+@@const kROM_8269
+@8269
+@@main
+func(endpoint, a2, a3, a4, a5) begin
+	local context;
+	local l1, l2, l3, l4, l5;
+	context := GetRoot().Connection;
+	(if a2 then context:OpenWhichConnection(endpoint) else begin
+			l1 := 0;
+			(if (a3 = 1) then (try begin
+						ConnImportFile(endpoint, a4, a5, func() begin
+							context:OpenWhichConnection(endpoint)
+						end)
+					end onexception |evt.ex| do begin
+						endpoint:ConnectionDone((l1 := CurrentException().error))
+					end) else begin
+					try begin
+							if IsInstance(a4, 'string) then begin
+									l2 := a4
+								end else begin
+									l2 := a4.name
+								end;
+							if (a3 = 2) then begin
+									l3 := "rsfl"
+								end else begin
+									l3 := "lpfl"
+								end;
+							endpoint:WriteCommand(l3, a4, true);
+							if (a3 = 2) then begin
+									l4 := endpoint:ReadCommandHeader(true);
+									endpoint:ProcessBuiltinCommand()
+								end
+						end onexception |evt.ex| do begin
+							endpoint:ConnectionDone((l1 := CurrentException().error))
+						end;
+					(if (l1 = 0) then (if (a3 = 2) then begin
+								(l5 := BuildContext(kROM_8265)).endpoint := endpoint;
+								l5:FilterDialog()
+							end else kROM_8269:OpenOnEndpoint(nil, endpoint, nil)))
+				end)
+		end)
+end
+@@end

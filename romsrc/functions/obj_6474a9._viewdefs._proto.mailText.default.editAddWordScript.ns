@@ -1,0 +1,11 @@
+@@ 0x59b9ad
+func(a1, a2) begin
+	a1.viewFont := viewFont;
+	if inBody then begin
+			fields.body.edited := true
+		end else begin
+			fields.edited := true
+		end;
+	a1
+end
+@@end

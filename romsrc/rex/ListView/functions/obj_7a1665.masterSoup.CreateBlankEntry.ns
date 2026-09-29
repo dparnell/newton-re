@@ -1,0 +1,5 @@
+@@ 0x794425 names
+func() begin
+	{class: 'todo, date: ((Time() div 1440) * 1440), needsSort: nil, topics: [Array: ]}
+end
+@@end

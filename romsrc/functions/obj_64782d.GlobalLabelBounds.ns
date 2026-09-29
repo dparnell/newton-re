@@ -1,0 +1,8 @@
+@@ 0x4baa99
+func() begin
+	local l1;
+	(l1 := OffsetRect(self:GlobalBox(), labelBox.left, labelBox.top)).right := (l1.left + (labelBox.right - labelBox.left));
+	l1.bottom := (l1.top + (labelBox.bottom - labelBox.top));
+	l1
+end
+@@end

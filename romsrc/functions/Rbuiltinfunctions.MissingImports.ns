@@ -1,0 +1,12 @@
+@@ 0x62d191
+func(a1) begin
+	l1 := [Array: ];
+	local l1;
+	(foreach l2 in PendingImports() do begin
+			if (l2.client = a1) then begin
+					AddArraySlot(l1, l2)
+				end
+		end);
+	(if (Length(l1) > 0) then l1)
+end
+@@end

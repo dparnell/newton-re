@@ -1,0 +1,17 @@
+@@ 0x490185
+func() begin
+	local tempPkgNames;
+	local l1, l2;
+	tempPkgNames := [Array: ];
+	if (l2 := godParent:getDestStore():GetSoup("BACKUP_Packages")) then begin
+			tempPkgNames := GetBackedUpPackageNames(l2)
+		end;
+	if (l1 := godParent.backupCursor:clone()) then begin
+			l1:Reset();
+			MapCursor(l1, func(a1) begin
+				(if (if (a1.package or a1.segmentedPackage) then (not a1.patches)) then AddArraySlot(tempPkgNames, a1.name))
+			end)
+		end;
+	(self.pkgNames := tempPkgNames)
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x4fe4ed
+func() begin
+	if unsavedContext then begin
+			self:updateAndSave(unsavedContext);
+			self.unsavedContext := nil
+		end;
+	nil
+end
+@@end

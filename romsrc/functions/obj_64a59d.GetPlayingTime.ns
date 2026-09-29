@@ -1,0 +1,10 @@
+@@ 0x425739
+func() begin
+	l1 := 0;
+	local l1;
+	(foreach l2 in fSoundArray do begin
+			l1 := (l1 + l2:GetPlayingTime())
+		end);
+	return l1
+end
+@@end

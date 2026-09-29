@@ -1,0 +1,20 @@
+@@ 0x5593a1
+func(a1, a2, a3) begin
+	local l1;
+	(if (if IsPackage(a1) then IsPackageActive(a1)) then begin
+			if (not a3) then begin
+					a3 := "This operation may cause serious problems."
+				end;
+			if (not a2) then begin
+					a2 := GetPkgRefInfo(a1).title
+				end;
+			if (l1 := LFetch(BusyPackages, a1, 0, '|=|, 'pkgRef)) then begin
+					l1.appName := a2
+				end else begin
+					AddArraySlot(BusyPackages, {pkgRef: a1, appName: a2, reason: a3})
+				end;
+			GetVBOStore(a1):MarkBusy('_newt, a2);
+			true
+		end)
+end
+@@end

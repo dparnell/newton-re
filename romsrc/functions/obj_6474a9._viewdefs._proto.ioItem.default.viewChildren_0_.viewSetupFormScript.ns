@@ -1,0 +1,10 @@
+@@ 0x4c3679
+func() begin
+	(if (if fields then fields.Remote) then (text := "") else begin
+			if (not target) then begin
+					return nil
+				end;
+			(if self:IsLogItem(fields) then (if fields.logText then (text := fields.logText) else (text := "This Item has been logged.")))
+		end)
+end
+@@end

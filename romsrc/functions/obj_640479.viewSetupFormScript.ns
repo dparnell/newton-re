@@ -1,0 +1,12 @@
+@@ 0x5b5ad9
+func() begin
+	local l1;
+	if (l1 := GetRoot().correct).viewCObject then begin
+			l1:Close()
+		end;
+	if (not passwordkey) then begin
+			passwordkey := GetUserConfig('passwordkey)
+		end;
+	(if (not state) then self:ChangeState('getpassword))
+end
+@@end

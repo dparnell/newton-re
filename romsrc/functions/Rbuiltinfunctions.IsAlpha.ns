@@ -1,0 +1,5 @@
+@@ 0x44e081
+func(a1) begin
+	((if (a1 >= $a) then (a1 <= $z)) or (if (a1 >= $A) then (a1 <= $Z)))
+end
+@@end

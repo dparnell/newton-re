@@ -1,0 +1,18 @@
+@@ 0x4baec1
+func(a1) begin
+	local l1;
+	if (if ((((access = 'readWrite) or (access = 'Query)) or (access = 'queryOnly)) or (access = 'pickOnly)) then labelCommands) then begin
+			if (curLabelCommand = nil) then begin
+					l1 := labelCommands
+				end else begin
+					(l1 := Clone(labelCommands))[curLabelCommand] := {item: l1[curLabelCommand], mark: $\uFC0B}
+				end;
+			self:PopupMenu(l1, {bounds: labelBox})
+		end else begin
+			if (if filter.picker then (access <> 'readOnly)) then begin
+					filter:picker()
+				end
+		end;
+	true
+end
+@@end

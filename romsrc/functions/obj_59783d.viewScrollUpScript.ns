@@ -1,0 +1,6 @@
+@@ 0x5971b5
+func() begin
+	local l1;
+	(if ((l1 := min(messageField.scrollDy, viewOriginY)) > 0) then self:SetOrigin(0, (viewOriginY - l1)))
+end
+@@end

@@ -1,0 +1,22 @@
+@@ 0x514de1
+func(a1, a2, a3) begin
+	local l1, l2, l3, l4, l5, l6, l7;
+	l1 := [Array: ];
+	l2 := OffsetShape(MakeShape(GetMeetingIcon(a1)), 20, (a2 + 1));
+	ArrayInsert(l1, l2, 0);
+	l3 := (a2 + LineHt);
+	if (if (l4 := self:GetMeetingText(a1)) then (StrLen(l4) > 0)) then begin
+			l5 := Clone(l4);
+			l6 := 98;
+			StyledStrTruncate(l5, l6, bodyFont);
+			ArrayInsert(l1, MakeText(l5, 42, l3, a3, (l3 + 1)), 0)
+		end;
+	if (if (l7 := self:GetNotesData(a1)[1]) then (Length(l7) > 0)) then begin
+			a2 := (a2 + LineHt);
+			l5 := ExtractData(l7, " ", 100);
+			StyledStrTruncate((l5 := ParamStr("\u2022\u ^0", [Array: l5])), (a3 - 145), bodyFont);
+			ArrayInsert(l1, MakeText(l5, 145, a2, a3, (a2 + 1)), 0)
+		end;
+	l1
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x436dc5
+func() begin
+	local l1;
+	(if (l1 := GetPackageStore("WorldData")) then l1:GetSoupNames())
+end
+@@end

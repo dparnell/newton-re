@@ -1,0 +1,10 @@
+@@ 0x47bb3d
+func() begin
+	local l1;
+	if ((l1 := self:Parent().title) = nil) then begin
+			l1 := GetRoot().(appSymbol).title
+		end;
+	title := ParamStr("^0 Preferences", [Array: l1]);
+	inherited:viewSetupFormScript()
+end
+@@end

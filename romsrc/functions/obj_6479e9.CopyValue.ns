@@ -1,0 +1,12 @@
+@@ 0x5a7a35
+func(a1, a2, a3) begin
+	if (ClassOf(a3) <> 'Array) then begin
+			a3 := [Array: a3]
+		end;
+	(foreach l1 in a3 do begin
+			if HasSlot(a2, l1) then begin
+					a1.(l1) := a2.(l1)
+				end
+		end)
+end
+@@end

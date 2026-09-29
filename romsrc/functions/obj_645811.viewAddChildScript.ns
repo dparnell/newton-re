@@ -1,0 +1,10 @@
+@@ 0x4bd80d
+func(a1) begin
+	if (target.(path) = nil) then begin
+			target.(path) := [Array: ];
+			self.viewChildren := target.(path)
+		end;
+	self:StartFlushWithChild(a1);
+	nil
+end
+@@end

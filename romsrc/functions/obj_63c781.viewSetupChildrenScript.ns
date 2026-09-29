@@ -1,0 +1,34 @@
+@@ 0x4ad289
+func() begin
+	viewChildren := [Array: ];
+	l1 := 0;
+	l2 := 0;
+	if menuLeftButtons then begin
+			SetLength(viewChildren, (l2 + Length(menuLeftButtons)));
+			local l1;
+			local l2;
+			(foreach l3, l4 in menuLeftButtons do begin
+					l6 := self:CalcWidth(l4);
+					l1 := ((l1 + l6) + 8);
+					viewChildren[l2] := (if (l3 > 0) then {_proto: l4, viewBounds: RelBounds(spacing, 0, l6, height), viewJustify: 8406022} else {_proto: l4, viewBounds: RelBounds(firstLeft, 2, l6, height), viewJustify: 8388614});
+					l2 := (l2 + 1)
+				end)
+		end;
+	l7 := l2;
+	(if menuRightButtons then begin
+			SetLength(viewChildren, (l2 + Length(menuRightButtons)));
+			(foreach l3, l4 in menuRightButtons do begin
+					local l6, l7, l8;
+					l6 := self:CalcWidth(l4);
+					l1 := ((l1 + l6) + 8);
+					viewChildren[l2] := (if (l3 > 0) then {_proto: l4, viewBounds: RelBounds(((-l6) - spacing), 0, l6, height), viewJustify: 8407046} else begin
+							if (not (l8 := firstRight)) then begin
+									l8 := -5
+								end;
+							{_proto: l4, viewBounds: RelBounds(((-l6) + l8), 2, l6, height), viewJustify: 8388646}
+						end);
+					l2 := (l2 + 1)
+				end)
+		end)
+end
+@@end

@@ -1,0 +1,25 @@
+@@ 0x4aa891
+func(a1) begin
+	l2 := {appSymbol: (l1 := a1.appSymbol), NewtRemoveScript: GetVariable(a1, 'NewtRemoveScript), allDataDefs: [Array: ], allViewDefs: '{}};
+	RegFindApps(l1);
+	if a1.allDataDefs then begin
+			local l1;
+			local l2;
+			(foreach l3 in a1.allDataDefs do begin
+					RegisterDataDef(l3);
+					AddArraySlot(l2.allDataDefs, l3.symbol)
+				end)
+		end;
+	RegAppClasses(l1, l2.allDataDefs);
+	if a1.allViewDefs then begin
+			l2.allViewDefs := Clone(a1.allViewDefs);
+			(foreach l5, l6 in a1.allViewDefs do begin
+					l2.allViewDefs.(l5) := (foreach l8 in l6 collect begin
+						RegisterViewDef(l8, l5);
+						l8.symbol
+					end)
+				end)
+		end;
+	EnsureInternal(l2)
+end
+@@end

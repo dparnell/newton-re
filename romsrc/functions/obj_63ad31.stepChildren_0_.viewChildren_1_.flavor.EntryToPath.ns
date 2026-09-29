@@ -1,0 +1,9 @@
+@@ 0x4d8fcd
+func(a1) begin
+	local l1;
+	target.toName := self:PrimaryName(a1);
+	l1 := GetRoot().cardfile:bcStreetAddress(a1, 'string);
+	target.(path) := self:PrimaryName(a1);
+	(if l1 then (target.(path) := Stringer([Array: target.(path), $\n, self:bcFullAddress(l1[0])])))
+end
+@@end

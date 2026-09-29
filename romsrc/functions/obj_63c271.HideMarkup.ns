@@ -1,0 +1,7 @@
+@@ 0x51c4ad
+func() begin
+	self:SaveMarkup();
+	contentArea:HideMarkup();
+	markupLayer:Close()
+end
+@@end

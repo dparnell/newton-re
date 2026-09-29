@@ -1,0 +1,5 @@
+@@ 0x441855
+func(a1) begin
+	(a1 mod 10)
+end
+@@end

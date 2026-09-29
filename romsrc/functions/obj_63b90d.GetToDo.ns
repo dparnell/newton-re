@@ -1,0 +1,15 @@
+@@ 0x4f79b9
+func() begin
+	local l1;
+	if Visible(AgendaView) then begin
+			l1 := AgendaView:GetToDoAgendaView()
+		end;
+	if (l1 = nil) then begin
+			l1 := ToDoListView
+		end;
+	if (l1 = nil) then begin
+			l1 := {_proto: protoToDoAgendaView, _parent: self}
+		end;
+	l1
+end
+@@end

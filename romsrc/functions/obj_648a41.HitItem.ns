@@ -1,0 +1,22 @@
+@@ 0x560f95
+func(a1, a2, a3) begin
+	local l1;
+	if (not inherited:HitItem(a1, a2, a3)) then begin
+			if (l1 := items[a1]).category then begin
+					if (l1.category.collapsed := (not l1.category.collapsed)) then begin
+							scrollOrigin := (((scrollOrigin - l1.skip) div scrollAmount) * scrollAmount)
+						end;
+					self:RedoChildren()
+				end else begin
+					if doUpdates then begin
+							caller:HideOtherApps(l1.finder.owner);
+							SetValue(caller.radioCluster.frontMostAppRadioButton, 'text, (if l1.finder.owner.title then l1.finder.owner.title else "Frontmost app"))
+						end;
+					base.savedScrollOrigin := scrollOrigin;
+					caller:ShowItem(l1.finder, l1);
+					AddDeferredSend(base, 'Close, nil)
+				end
+		end;
+	true
+end
+@@end

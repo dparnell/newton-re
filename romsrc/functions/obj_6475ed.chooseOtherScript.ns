@@ -1,0 +1,7 @@
+@@ 0x50ab7d
+func(a1) begin
+	otherPicker:hilite(nil);
+	otherSelection := a1;
+	(if (Length(otherChoices) > 1) then SetValue(otherPicker, 'text, Stringer([Array: "\uFC01\u", " ", otherChoices[a1]])) else SetValue(otherPicker, 'text, otherChoices[a1]))
+end
+@@end

@@ -1,0 +1,23 @@
+@@ 0x4250f1
+func() begin
+	local engine;
+	try begin
+			engine := self;
+			l1 := func(a1, a2) begin
+				engine:RecordCompletion(a1, a2)
+			end;
+			fSoundChannel.recordingStore := self:GetStore();
+			l2 := fSoundChannel:newInputBlock(l1);
+			local l1;
+			local l2;
+			(foreach l3, l4 in fSoundFrameSlots do begin
+					l2.(l3) := l4
+				end);
+			AddArraySlot(fSoundArray, l2);
+			fSoundChannel:schedule(l2)
+		end onexception |evt.ex| do begin
+			l2 := nil
+		end;
+	l2
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x7a0e0d names
+func() begin
+	startTime := newFirstDate;
+	stopTime := newStopDate;
+	inherited:?viewSetupFormScript()
+end
+@@end

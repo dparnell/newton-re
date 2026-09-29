@@ -1,0 +1,12 @@
+@@ 0x559025
+func(a1) begin
+	try begin
+			if (a1.version >= 4) then begin
+					|DeActivateStore2.XPackages|(a1)
+				end else begin
+					|DeActivateStore1.XPackages|(a1)
+				end
+		end onexception |evt.ex| do begin end;
+	AddDeferredCall(functions.XmitPackageOp, '[Array: DeActivateStorePackages])
+end
+@@end

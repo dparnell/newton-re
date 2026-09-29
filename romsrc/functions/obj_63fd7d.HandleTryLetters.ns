@@ -1,0 +1,24 @@
+@@ 0x46d7fd
+func() begin
+	local l1, l2, l3, l4, l5, l6;
+	l1 := Clone(self.bounds);
+	l4 := ((l3 := Clone((l2 := GetRoot().busyDialog).viewBounds)).bottom - l3.top);
+	l3.top := ((l1.top + 4) - l4);
+	if (l3.top < 32) then begin
+			l3.top := (l1.bottom - 4)
+		end;
+	l3.bottom := (l3.top + l4);
+	l2:Open();
+	l5 := Recognize([Array: wordInfo.strokes], @446, nil);
+	l2:Close();
+	if (Length(l5.info) = 1) then begin
+			self:FindNewGuess((l6 := l5.info[0]));
+			self.wordInfo := l6;
+			l6 := self:ReplaceWord(0, nil)
+		end else nil;
+	if l6 then begin
+			l6:ClearFlags(2)
+		end;
+	l6
+end
+@@end

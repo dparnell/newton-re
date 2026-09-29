@@ -1,0 +1,13 @@
+@@ 0x4b38d9
+func(a1) begin
+	l2 := Clone((l1 := allSoups.(currentSoupSymbol)).soupQuery);
+	if a1 then begin
+			local l1;
+			local l2;
+			(foreach l3, l4 in a1 do begin
+					l2.(l3) := l4
+				end)
+		end;
+	return l1.theSoup:Query(l2)
+end
+@@end

@@ -1,0 +1,11 @@
+@@ 0x4d24c5
+func(a1, a2) begin
+	local l1;
+	if a2 then begin
+			l1 := 'ready
+		end else begin
+			l1 := 'Sent
+		end;
+	(if tempItem then self:ItemCompleted(tempItem, l1, a2))
+end
+@@end

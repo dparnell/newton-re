@@ -1,0 +1,29 @@
+@@ 0x7609d5
+func() begin
+	local l1, l2, l3;
+	l1 := configOptions;
+	l2 := 0;
+	if (not l1.|name?|) then begin
+			nameInput.viewFlags := BAnd(nameInput.viewFlags, -2);
+			l2 := (l2 + 55)
+		end;
+	l3 := true;
+	if ((if (not l1.|password?|.guest) then (not l1.|password?|.users)) or (if (not l1.|guest?|) then (not l1.|password?|.users))) then begin
+			passwordInput.viewFlags := BAnd(passwordInput.viewFlags, -2);
+			l3 := nil;
+			l2 := (l2 + 55)
+		end;
+	if (not l1.buttonTitle) then begin
+			cancelButton.viewFlags := BAnd(cancelButton.viewFlags, -2)
+		end;
+	if ((not l1.Keyboard) or (if (not l1.|name?|) then (not l3))) then begin
+			Keyboard.viewFlags := BAnd(Keyboard.viewFlags, -2);
+			l2 := (l2 + 91)
+		end;
+	if (l2 > 0) then begin
+			self.viewBounds := Clone(viewBounds);
+			viewBounds.bottom := (viewBounds.bottom - l2)
+		end;
+	(if endpoint then endpoint:StartIdle(self, 2000))
+end
+@@end

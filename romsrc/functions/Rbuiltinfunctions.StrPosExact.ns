@@ -1,0 +1,8 @@
+@@ 0x4d3935
+func(a1, a2, a3) begin
+	local l1;
+	l1 := a3;
+	(while (l1 := StrPos(a1, a2, l1)) do (if (a1[l1] = a2[0]) then break else (l1 := (l1 + 1))));
+	l1
+end
+@@end

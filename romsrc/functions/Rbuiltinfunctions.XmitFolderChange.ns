@@ -1,0 +1,5 @@
+@@ 0x48354d
+func(a1, a2, a3) begin
+	GetRoot().folderEdit:BroadcastFolderChange(a1, a2, a3)
+end
+@@end

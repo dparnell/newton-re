@@ -1,0 +1,7 @@
+@@ 0x4ad9c5
+func() begin
+	self:ChainIn('retargetChain);
+	inherited:viewSetupDoneScript();
+	self:RetargetNotify()
+end
+@@end

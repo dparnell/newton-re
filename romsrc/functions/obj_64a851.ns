@@ -1,0 +1,36 @@
+@@ 0x64a851
+@@const kFunction_637e69
+func(a1) begin
+	(if (a1 = 1) then true else (if ((a1 mod 2) = 0) then (a1 = 2) else begin
+				(for l1 := 3 to floor(sqrt(a1)) by 2 do begin
+						if ((a1 mod l1) = 0) then begin
+								return nil
+							end
+					end);
+				return true
+			end))
+end
+@@main
+func() begin
+	local assistSlip, prime, start, count, ShowNextPersonFn;
+	local l1;
+	(if (assistSlip := GetRoot().assistant).assistLine.entryLine then begin
+			SetValue(assistSlip.assistLine.entryLine, 'text, ParamStr("What about ^0?", [Array: "Newton"]));
+			RefreshViews();
+			l1 := kFunction_637e69;
+			if (((prime := Random(187, 23167)) mod 2) = 0) then begin
+					prime := (prime + 1)
+				end;
+			(while (not call l1 with (prime)) do (prime := (prime + 2)));
+			start := Random(0, 185);
+			count := 0;
+			AddDelayedCall((ShowNextPersonFn := func() begin
+				(if assistSlip.assistLine.entryLine then (if (count < 186) then begin
+							SetValue(assistSlip.assistLine.entryLine, 'text, ParamStr("What about ^0?", [Array: '[Array: "#25", "Adrian", "Alfred", "Amy", "Andreas", "Arash", "Avi", "Barney", "Bentley", "Beth", "Bill", "Bob", "Breman", "Bruce", "Bubenheim", "Cami", "Capener", "Chadburn", "Chiavetta", "Chip", "Christina", "Christine", "Christopher", "Conrad", "Corbett", "Crane", "Culbert-san", "DK", "DanC", "Danielle", "DaveP", "Diane", "Dick", "Dooney", "Dottie", "Duret", "Ed", "Erfert", "Ernie", "Fedor", "Flash", "GMills", "Gabriel", "Garth", "GaryH", "Gen", "Gene", "George", "Gerry", "Gicqu\u00E8\u", "Giulia", "Glen", "Greg", "HSJennings3", "Henry", "Huynh", "ISpammie", "Ilia", "Ingrid", "Ivan", "J.Tate", "JCanepa", "JOROZE", "JTang", "James", "Jane", "JasonT", "Jeff", "JeffB", "Jen", "Jodie", "JohnA", "Jonathan", "Julie", "Kelly", "Kondrk", "Leeski", "Les", "Lieh-Wuu", "Linda", "Lon", "Lucien", "Lundgren", "Lysa", "Marge", "Margo", "Marie", "Marino", "Matt", "Maurice", "McEntee", "Michelle", "Mike", "MikeSam", "Mimi", "Minnie", "MonkeyMan", "Mori-san", "Mr Mike", "Nave", "Norberg", "Noroyan", "Patti", "Patty", "Paul", "Perry", "Pete", "Phantom", "Ping", "Polina", "Q", "RSirota", "RWFII", "Raff", "Raphael", "Rea", "Rendon", "Ric", "Rich", "Richard", "Rob", "Robin", "Rubeen", "Ryan", "Sandy", "Sasha", "Scheuer", "Schoeny", "Schroder", "Scott", "Storey", "Stuart", "Sue", "SusanP.", "Sylvia", "Szeto", "T.B.Roberts", "Ted", "Tom", "Ton-Yun", "Tony", "Tracy", "Tricia", "Tripp", "Uncle-Jay", "Vernon", "Vivian", "Vroman", "Wayne", "Wendy", "Yannick", "Yatsuzuka-san", "Yoyodyne", "Yun", "Zhou", "beaver", "cate3", "charlie", "christie", "cmE", "curiousg", "cy", "dg", "dld", "dotson", "engber", "hjcr", "hlee", "h\u00E9\ul\u00E8\une", "jXopher", "jerk", "jghiii", "jood", "kenyon", "korey", "krusty", "larryy", "mon.cherie", "rarick", "rkl3", "roger", "scott", "temkin", "timbus", "william", "wyld"][((start + (count * prime)) mod 186)]]));
+							count := (count + 1);
+							AddDelayedCall(ShowNextPersonFn, nil, 1000)
+						end else assistSlip:Close()))
+			end), nil, 3000)
+		end)
+end
+@@end

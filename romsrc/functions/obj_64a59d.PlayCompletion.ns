@@ -1,0 +1,5 @@
+@@ 0x4256d5
+func(a1, a2) begin
+	(if ((fCompletionCount := (fCompletionCount + 1)) >= Length(fSoundArray)) then self:SetState(1))
+end
+@@end

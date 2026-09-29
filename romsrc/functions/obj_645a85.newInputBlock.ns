@@ -1,0 +1,9 @@
+@@ 0x422e89
+func(a1) begin
+	local l1, l2;
+	if (not (l1 := self.recordingStore)) then begin
+			l1 := GetDefaultStore()
+		end;
+	(l2 := {_proto: @849, samples: l1:NewVBO('samples, inputBlockSize), callback: a1, dataType: 8, compressionType: 1, samplingRate: 10800})
+end
+@@end

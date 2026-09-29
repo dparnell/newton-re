@@ -1,0 +1,5 @@
+@@ 0x508bc5
+func() begin
+	(if (not Visible(MeetingNotesSlip)) then MeetingNotesSlip:Open())
+end
+@@end

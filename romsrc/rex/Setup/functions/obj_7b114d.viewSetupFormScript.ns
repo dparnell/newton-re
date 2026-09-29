@@ -1,0 +1,6 @@
+@@ 0x7b11a1
+func() begin
+	label := GetLocale().regionLabel;
+	(self.vInputLine.viewFlags := (self.vInputLine.viewFlags + 8388608))
+end
+@@end

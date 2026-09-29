@@ -1,0 +1,8 @@
+@@ 0x42daf5
+func(a1) begin
+	if (viewValue = nil) then begin
+			cluster:SetCluster(base)
+		end;
+	true
+end
+@@end

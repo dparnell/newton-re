@@ -1,0 +1,7 @@
+@@ 0x4dc1ad
+func() begin
+	hours := (((Time := Time()) div 60) mod 24);
+	minutes := (Time mod 60);
+	inherited:viewDrawScript()
+end
+@@end

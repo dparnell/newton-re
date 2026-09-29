@@ -1,0 +1,39 @@
+@@ 0x4f7ec9
+func() begin
+	local l1, l2, l3;
+	l1 := GetAppParams();
+	self.viewBounds := l1.appAreaBounds;
+	MeetingSoup := GetUnionSoupAlways(@23);
+	RepeatSoup := GetUnionSoupAlways(@239);
+	notes := GetUnionSoupAlways(@22);
+	RepeatNotes := GetUnionSoupAlways(@242);
+	self.targetView := self;
+	self.lastFormats := Clone(ROMlastFormats);
+	if GetLocale().useWeekNumber then begin
+			WeekNumber.viewFlags := BOr(WeekNumber.viewFlags, 1)
+		end;
+	l3 := ((l2 := Time()) mod 1440);
+	selectedDates := [Array: (l2 := (l2 - l3))];
+	startTime := (l3 := (((l3 := max((l3 - 60), 0)) div 60) * 60));
+	ViewDuration := ((((viewBounds.bottom - 74) - 18) div 32) * 60);
+	if ((stopTime := (startTime + ViewDuration)) > 1440) then begin
+			startTime := (1440 - ViewDuration);
+			stopTime := 1440
+		end;
+	if lastOpenedMainDisplay then begin
+			mainDisplay := lastOpenedMainDisplay
+		end else begin
+			mainDisplay := 'scheduleView
+		end;
+	if (mainDisplay = 'WeekView) then begin
+			selectedDates := self:FindWorkWeekContainingDate(selectedDates[0]);
+			mainDisplay := scheduleView
+		end else begin
+			mainDisplay := self.(mainDisplay)
+		end;
+	mainDisplay.viewFlags := BOr(mainDisplay.viewFlags, 1);
+	previousMainDataDisplay := scheduleView;
+	self:SetupDefaultPrintFormat(mainDisplay);
+	(if (((mainDisplay = ToDoListView) or (mainDisplay = AgendaView)) or (mainDisplay = YearView)) then (monthController.singleDay := true))
+end
+@@end

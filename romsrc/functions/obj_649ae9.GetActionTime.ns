@@ -1,0 +1,24 @@
+@@ 0x526f35
+func(a1) begin
+	local l1, l2, l3, l4;
+	l1 := a1.givenTime;
+	l2 := a1.usualTime;
+	if (a1.givenTime <> nil) then begin
+			if (((l3 := self:delayTime(a1)) > 0) or (l3 < 0)) then begin
+					if (l3 > 0) then begin
+							l1 := (l1 + l3)
+						end else begin
+							if a1.hasDate then begin
+									(l4 := Date(l1)).year := (l4.year + 1);
+									l1 := TotalMinutes(l4)
+								end else begin
+									l1 := (a1.givenTime + 1440)
+								end
+						end
+				end
+		end else begin
+			l1 := a1.currentTime
+		end;
+	return l1
+end
+@@end

@@ -1,0 +1,28 @@
+@@ 0x4ea7e1
+func(a1) begin
+	local l1;
+	if (a1 = 'first) then begin
+			l1 := 0
+		end else begin
+			if (a1 = 'prev) then begin
+					l1 := (currentItem - 1)
+				end else begin
+					if (a1 = 'Next) then begin
+							l1 := (currentItem + 1)
+						end else begin
+							l1 := a1
+						end
+				end
+		end;
+	(if ((l1 := min(max(l1, 0), (self:count() - 1))) < cacheMeetingsCount) then begin
+			if (a1 = 'first) then begin
+					l1 := 'first
+				end else begin
+					if (if (a1 = 'prev) then (l1 = (cacheMeetingsCount - 1))) then begin
+							l1 := 'last
+						end
+				end;
+			self:ShowOrdinalMeetingItem(l1)
+		end else self:ShowOrdinalToDoItem(l1))
+end
+@@end

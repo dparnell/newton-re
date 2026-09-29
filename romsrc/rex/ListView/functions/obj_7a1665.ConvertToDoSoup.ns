@@ -1,0 +1,64 @@
+@@ 0x7978d5 names
+@@const kLiteral_785d9d
+"To Do List"
+@@main
+func() begin
+	local cursor, oldEntry, Entry, task, converted, whatStore, theSoup, error, where, msg;
+	converted := nil;
+	if (oldEntry := (cursor := oldTodoSoup:Query({type: 'index})):Entry()) then begin
+			if (whatStore := EntryStore(oldEntry)):IsReadOnly() then begin
+					return converted
+				end;
+			converted := true;
+			if (not whatStore:HasSoup(kLiteral_785d9d)) then begin
+					theSoup := whatStore:CreateSoup(kLiteral_785d9d, masterSoup.soupIndices)
+				end
+		end;
+	(while oldEntry do begin
+			if (if (oldEntry <> 'deleted) then (not whatStore:IsReadOnly())) then begin
+					if (not oldEntry.converted) then begin
+							task := GetDataDefs('convertTodo):ConvertOldEntry(oldEntry)
+						end else begin
+							(task := {}).text := oldEntry.text;
+							task.styles := oldEntry.styles;
+							task.viewBounds := oldEntry.viewBounds;
+							task.mtgPriority := oldEntry.mtgPriority;
+							task.mtgDone := oldEntry.mtgDone;
+							task.mtgStartDate := oldEntry.mtgStartDate
+						end;
+					if task then begin
+							AddArraySlot((Entry := self:GetToDoEntryDefaultStore(task.mtgStartDate, whatStore).Entry).topics, task);
+							Entry.needsSort := true;
+							try begin
+									EntryChangeXmit(Entry, nil)
+								end onexception |evt.ex.fr.store| do begin
+									error := CurrentException().error;
+									where := EntryStore(Entry):GetName();
+									if (error = -10605) then begin
+											msg := "To Do changes could not be saved (\u201C\u^0\u201D\u is write-protected)"
+										end else begin
+											if (error = -10617) then begin
+													msg := "To Do changes could not be saved (\u201C\u^0\u201D\u is full)"
+												end
+										end;
+									if msg then begin
+											self:Notify(3, "To Do", ParamStr(msg, [Array: where]))
+										end else begin
+											Rethrow()
+										end;
+									EntryUndoChanges(Entry);
+									self:RedoTopics();
+									return nil
+								end
+						end;
+					EntryRemoveFromSoupXmit(oldEntry, 'todo)
+				end;
+			(oldEntry := cursor:Next())
+		end);
+	if converted then begin
+			XmitSoupChange(kLiteral_785d9d, 'todo, 'whatThe, nil);
+			XmitSoupChange("To do", 'todo, 'whatThe, nil)
+		end;
+	converted
+end
+@@end

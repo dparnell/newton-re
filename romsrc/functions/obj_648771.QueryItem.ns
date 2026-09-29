@@ -1,0 +1,5 @@
+@@ 0x4ba269
+func(a1, a2) begin
+	(if FindStringInFrame(a1, a2, nil) then {item: GetRoot():PrimaryName(a1), id: MakeEntryAlias(a1)})
+end
+@@end

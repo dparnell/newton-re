@@ -1,0 +1,26 @@
+@@ 0x42130d
+func() begin
+	local l1, l2, l3, l4;
+	l3 := 'symbol;
+	infoText.text := userText;
+	headerText.title := userTitle;
+	l2 := StrFontWidth(headerText.title, headerText.viewFont);
+	headerText.viewBounds := SetBounds(0, 5, l2, 15);
+	if (kbdType = 'alpha) then begin
+			l4 := '{_proto: @375, viewBounds: {left: 1, top: -101, right: 226, bottom: -20}, viewJustify: 144}
+		end else begin
+			if (kbdType = 'phone) then begin
+					l4 := '{_proto: @676, viewBounds: {left: 0, top: -146, right: 124, bottom: -20}, viewJustify: 144};
+					entryLine.viewFlags := 264705
+				end
+		end;
+	if recFlags then begin
+			entryLine.viewFlags := BOr(2561, recFlags)
+		end;
+	if l4 then begin
+			self.stepChildren := [Array: l4];
+			extraHeight := (((extraHeight + 10) + l4.viewBounds.bottom) - l4.viewBounds.top)
+		end;
+	inherited:?viewSetupChildrenScript()
+end
+@@end

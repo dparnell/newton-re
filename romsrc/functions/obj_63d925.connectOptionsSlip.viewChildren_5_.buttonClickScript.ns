@@ -1,0 +1,13 @@
+@@ 0x59fb9d
+func() begin
+	if theApp.viewCObject then begin
+			AddDeferredSend(theApp, 'RememberedClose, [Array: base])
+		end else begin
+			base:Close()
+		end;
+	if callOptionsSlip.viewCObject then begin
+			callOptionsSlip:Close()
+		end;
+	(if clearOnClose then (theTransport.(clearOnClose) := nil))
+end
+@@end

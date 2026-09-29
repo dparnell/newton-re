@@ -1,0 +1,11 @@
+@@ 0x514045
+func() begin
+	local l1;
+	if (not cachedToDoAgendaView) then begin
+			if (if (l1 := self:ChildViewFrames()) then (Length(l1) > 0)) then begin
+					cachedToDoAgendaView := l1[0]
+				end
+		end;
+	cachedToDoAgendaView
+end
+@@end

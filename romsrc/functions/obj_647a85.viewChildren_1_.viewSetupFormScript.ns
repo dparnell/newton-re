@@ -1,0 +1,5 @@
+@@ 0x48e6d5
+func() begin
+	(self.text := message)
+end
+@@end

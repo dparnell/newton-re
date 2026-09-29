@@ -1,0 +1,8 @@
+@@ 0x4fe4cd
+func(a1, a2) begin
+	(if (a1 = 'text) then begin
+			self.unsavedContext := a2;
+			self:SetupIdle(500)
+		end)
+end
+@@end

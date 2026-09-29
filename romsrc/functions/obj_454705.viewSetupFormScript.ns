@@ -1,0 +1,6 @@
+@@ 0x4546c5
+func() begin
+	self.viewValue := (nowShowing = 'selected);
+	inherited:?viewSetupFormScript()
+end
+@@end

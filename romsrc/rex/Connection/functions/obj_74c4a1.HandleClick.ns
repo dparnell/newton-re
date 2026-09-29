@@ -1,0 +1,9 @@
+@@ 0x74cd65
+func(a1) begin
+	(if (not clickHandled) then begin
+			clickHandled := true;
+			call DesktopInputDone with (a1);
+			(if (a1 <> 0) then base:Close())
+		end)
+end
+@@end

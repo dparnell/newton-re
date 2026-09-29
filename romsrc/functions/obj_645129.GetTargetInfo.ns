@@ -1,0 +1,19 @@
+@@ 0x4aa4e1
+func(a1) begin
+	local l1;
+	l1 := {};
+	if (currentLayout = 'overview) then begin
+			l1 := layout:GetTargetInfo(a1)
+		end else begin
+			if (a1 = 'Filing) then begin
+					l1.targetView := targetApp
+				end;
+			if (not l1.targetView) then begin
+					l1.targetView := targetView
+				end;
+			l1.target := target;
+			l1.targetStore := (if (if target then IsSoupEntry(target)) then EntryStore(target))
+		end;
+	l1
+end
+@@end

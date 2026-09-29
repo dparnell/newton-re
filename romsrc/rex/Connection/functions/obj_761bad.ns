@@ -1,0 +1,13 @@
+@@ 0x761bad
+func(a1) begin
+	if a1 then begin
+			(foreach l1 in self:GetWorksites() do begin
+					local l3;
+					if (if (if (l3 := ResolveEntryAlias(l1)) then l3.place) then StrEqual(l3.place, a1)) then begin
+							return l3
+						end
+				end)
+		end;
+	return nil
+end
+@@end

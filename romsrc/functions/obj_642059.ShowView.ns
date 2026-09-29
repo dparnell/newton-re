@@ -1,0 +1,8 @@
+@@ 0x44e291
+func(a1) begin
+	local l1, l2;
+	l1 := (BAnd(viewFlags, 1) = 1);
+	l2 := viewCObject;
+	(if a1 then (if l2 then (if (not l1) then self:Show()) else self:Open()) else (if l2 then (if l1 then self:Hide()) else (viewFlags := BAnd(viewFlags, bnot(1)))))
+end
+@@end

@@ -1,0 +1,12 @@
+@@ 0x451285
+func(a1, a2) begin
+	if selected then begin
+			(foreach l1 in selected do begin
+					if (if (if l1._fakeID then l1._alias) then ResolveEntryAlias(l1._alias)) then begin
+							l1._fakeID := nil
+						end
+				end)
+		end;
+	self:RedoCursor()
+end
+@@end

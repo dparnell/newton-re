@@ -1,0 +1,14 @@
+@@ 0x421495
+func() begin
+	local l1;
+	l1 := Clone(entryLine:GetRichString());
+	if phoneCvt then begin
+			StrReplace(l1, "(", "(", 1);
+			StrReplace(l1, ")", ")", 1)
+		end;
+	if compMsg then begin
+			Perform(compView, compMsg, [Array: (not IsRichString(l1)), l1, userData])
+		end;
+	base:Close()
+end
+@@end

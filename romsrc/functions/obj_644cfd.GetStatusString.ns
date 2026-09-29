@@ -1,0 +1,9 @@
+@@ 0x47fd9d
+func() begin
+	local l1;
+	if ((l1 := dialogStatusMsgs.(status)) = nil) then begin
+			l1 := ""
+		end;
+	l1
+end
+@@end

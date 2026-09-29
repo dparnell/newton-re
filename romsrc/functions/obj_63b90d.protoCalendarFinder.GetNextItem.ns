@@ -1,0 +1,15 @@
+@@ 0x4ea8f5
+func() begin
+	(if (currentItem = self:count()) then return nil else begin
+			if scrollingForward then begin
+					currentMeetingSoupFinder:GetNextItem()
+				end else begin
+					(foreach l1 in meetingSoupFinders do begin
+							l1:GetNextItem()
+						end);
+					scrollingForward := true
+				end;
+			self:ChooseEarliestItem()
+		end)
+end
+@@end

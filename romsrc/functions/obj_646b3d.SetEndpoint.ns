@@ -1,0 +1,5 @@
+@@ 0x499369
+func(a1, a2) begin
+	(if (fEndpoint := {_proto: a1, configOptions: a2, ExceptionHandler: StdExceptionHandler, stateMachine: self})._parent then (fEndpoint._parent := fEndpoint._parent))
+end
+@@end

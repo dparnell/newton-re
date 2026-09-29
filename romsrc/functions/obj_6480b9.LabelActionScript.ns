@@ -1,0 +1,7 @@
+@@ 0x5304d9
+func(a1) begin
+	AddUndoAction('setLabelScript, [Array: GetUserConfig(configSlot)]);
+	SetUserConfig(configSlot, items[a1].id);
+	self:?PickItem(items[a1].id)
+end
+@@end

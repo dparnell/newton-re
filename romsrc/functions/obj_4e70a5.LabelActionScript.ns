@@ -1,0 +1,9 @@
+@@ 0x4e7085
+func(a1) begin
+	local l1;
+	l1 := labelCommands[a1];
+	SetValue(inputArea, 'viewFlags, (baseFlags + l1.flags));
+	randomProc := l1.randomProc;
+	handwritingpractice:NewWordRequested(handwritingpractice:GetRandom())
+end
+@@end

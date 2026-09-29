@@ -1,0 +1,10 @@
+@@ 0x45e8b1
+func(a1) begin
+	if Visible(self) then begin
+			self:setup(a1);
+			return nil
+		end;
+	tempImage := a1;
+	self:Open()
+end
+@@end

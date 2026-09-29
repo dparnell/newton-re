@@ -1,0 +1,34 @@
+@@ 0x52a84d
+func() begin
+	local l1, l2, l3, l4, l5;
+	l1 := GetRoot();
+	if (l2 := GetMatchedEntries('allEntries, self.entries)) then begin
+			self:RemoveAllGroups(l2)
+		end;
+	if (if l2 then (Length(l2) = 0)) then begin
+			l1:Notify(3, "Assist", "Cannot call a group.")
+		end else begin
+			l4 := (l3 := GetView('viewfrontmostapp)):GetActiveView();
+			l5 := l1.(taskSlip):NewItem(l3);
+			if l4 then begin
+					if (not (l4 := l4:GetTargetInfo('Routing)).view) then begin
+							l4.view := {}
+						end;
+					if (not l4.target) then begin
+							l4.target := {}
+						end
+				end else begin
+					l4 := {view: {}, target: {}}
+				end;
+			l5.candidates := l2;
+			PhoneUtility(l5, self);
+			if (not HasSlot(l5, 'dialdirect)) then begin
+					l5.phoneTag := self:GetPhoneTags(l5)
+				end;
+			self:FillPhoneSlip(l5, '|nameRef.phone|);
+			l5.assistnoverify := true;
+			OpenRoutingSlip(l5, l4)
+		end;
+	l1.assistant:Close()
+end
+@@end

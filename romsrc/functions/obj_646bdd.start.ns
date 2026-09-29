@@ -1,0 +1,5 @@
+@@ 0x4998e5
+func() begin
+	inherited:start('DoInstantiate)
+end
+@@end

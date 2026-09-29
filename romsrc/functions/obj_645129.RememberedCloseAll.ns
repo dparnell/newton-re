@@ -1,0 +1,12 @@
+@@ 0x4ac4c5
+func() begin
+	if newtAppBase._kiddos then begin
+			(foreach l1 in newtAppBase._kiddos do begin
+					if l1 then begin
+							l1:Close()
+						end
+				end)
+		end;
+	(newtAppBase._kiddos := nil)
+end
+@@end

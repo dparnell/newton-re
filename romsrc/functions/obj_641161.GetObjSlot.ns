@@ -1,0 +1,21 @@
+@@ 0x45674d
+func(a1, a2) begin
+	local l1;
+	if (not a1) then begin
+			return nil
+		end;
+	if IsNameRef(a1) then begin
+			l1 := EntryFromObj(a1)
+		end;
+	if ((not l1) or (not HasSlot(l1, a2))) then begin
+			l1 := a1;
+			if IsEntryAlias(a1) then begin
+					l1 := ResolveEntryAlias(a1)
+				end;
+			if (not l1) then begin
+					l1 := a1
+				end
+		end;
+	l1.(a2)
+end
+@@end

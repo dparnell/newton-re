@@ -1,0 +1,41 @@
+@@ 0x511351
+func(a1, a2, a3, a4) begin
+	local l1, l2, l3, l4, l5, l6;
+	self:ValidateTitleAndDatetimeArgs(a1, a2);
+	if (if a3 then ((not IsInteger(a3)) or (a3 <= 0))) then begin
+			ThrowBadTypeWithFrameData(-48418, a3)
+		end;
+	if (if a4 then ((not IsInteger(a4)) or (a4 <= 0))) then begin
+			ThrowBadTypeWithFrameData(-48418, a4)
+		end;
+	l2 := (l1 := self:FindExactlyOneAppointment(a1, nil, a2, nil)).repeatTemplate;
+	if (l1.viewStationery = 'cribNote) then begin
+			a3 := (a3 - (a3 mod 1440))
+		end;
+	l3 := (if a3 then (a3 <> l1.mtgStartDate));
+	l4 := (if (if a4 then (a4 <> self:GetMeetingSlot(l1, 'mtgDuration))) then (l1.viewStationery <> 'cribNote));
+	if (l3 or l4) then begin
+			if ((l1.viewStationery = 'RepeatingMeeting) or (if (if (l1.viewStationery = 'cribNote) then l2) then (l1.originDate = nil))) then begin
+					self:MakeNewExceptionFrame(l2, l1.mtgStartDate, a3, a4)
+				end else begin
+					if l3 then begin
+							self:ChangeMeeting(l1, 'mtgStartDate, a3);
+							if (l5 := l1.repeatTemplate) then begin
+									self:CarefulChange((l6 := EntrySoup(l5)), l5, nil)
+								end else begin
+									self:CarefulChange(EntrySoup(l1), l1, nil)
+								end
+						end;
+					if l4 then begin
+							self:ChangeMeeting(l1, 'mtgDuration, a4);
+							if (l5 := l1.repeatTemplate) then begin
+									self:CarefulChange((l6 := EntrySoup(l5)), l5, nil)
+								end else begin
+									self:CarefulChange(EntrySoup(l1), l1, nil)
+								end
+						end
+				end
+		end;
+	nil
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x4d83f1
+func() begin
+	status.menuRightButtons := '[Array: @439, @440, @872];
+	inherited:?viewSetupFormScript()
+end
+@@end

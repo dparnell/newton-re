@@ -1,0 +1,13 @@
+@@ 0x4c1481
+func() begin
+	l1 := [Array: ];
+	local l1;
+	(foreach l2 in transports do begin
+			local l4;
+			if (if (if (l4 := GetRoot().(l2)) then l4.preferencesForm) then (l4.owner = 'iobox)) then begin
+					AddArraySlot(l1, {item: ParamStr("^0 Prefs", [Array: l4.title]), transport: l4})
+				end
+		end);
+	l1
+end
+@@end

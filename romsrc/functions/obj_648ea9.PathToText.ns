@@ -1,0 +1,23 @@
+@@ 0x4b96f1
+func() begin
+	local l1, l2, l3, l4;
+	(if IsString((l1 := target.(path))) then Clone(l1) else begin
+			l3 := (if (l2 := Date(l1).year) then (l2 < 2920));
+			(if longFormat then begin
+					if l3 then begin
+							l4 := @66.yearMonthDayStrSpec
+						end else begin
+							l4 := longFormat
+						end;
+					LongDateStr(l1, l4)
+				end else begin
+					if l3 then begin
+							l4 := @66.yearMonthDayStrSpec
+						end else begin
+							l4 := shortFormat
+						end;
+					ShortDateStr(l1, l4)
+				end)
+		end)
+end
+@@end

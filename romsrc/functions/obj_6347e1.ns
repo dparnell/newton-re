@@ -1,0 +1,10 @@
+@@ 0x6347e1
+func(a1, a2) begin
+	local l1;
+	l1 := self:AddIndex(a1);
+	if a2 then begin
+			XmitSoupChange(self:GetName(), a2, 'soupIndexAdded, {soup: self, indexPath: a1.path})
+		end;
+	l1
+end
+@@end

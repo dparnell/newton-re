@@ -1,0 +1,7 @@
+@@ 0x4d24a5
+func() begin
+	local l1, l2;
+	l1 := GetUserConfig('currentPersona);
+	(if (l2 := GetDataDefs(addressingClass)) then return {name: l2:Get(l1, 'name, nil)})
+end
+@@end

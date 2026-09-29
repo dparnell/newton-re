@@ -1,0 +1,12 @@
+@@ 0x4b1515
+@@const kROM_256
+@256
+@@main
+func(a1, a2) begin
+	local l1;
+	(if (a2.findType = 'text) then FindStringInFrame(a1, a2.findWords, 'first)[0] else (if (if a1.body then a1.body.data) then ExtractData(a1.body.data, kROM_256, 30) else begin
+				l1 := GetItemTransport(a1);
+				l1:GetItemTitle(a1)
+			end))
+end
+@@end

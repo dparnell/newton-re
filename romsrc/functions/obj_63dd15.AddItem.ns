@@ -1,0 +1,36 @@
+@@ 0x461b49
+func(a1, a2) begin
+	local l1, l2;
+	if (not IsValid((l1 := a1.sound))) then begin
+			l1 := 'simpleBeep
+		end;
+	if (if l1 then (l1 <> '_stfu)) then begin
+			if (ClassOf(l1) = 'symbol) then begin
+					l1 := GetRegisteredSound(l1)
+				end;
+			PlaySoundIrregardlessAtVolume(l1, a1.volume)
+		end;
+	if (not (l2 := LFetch(Notifications, a1, 0, func(a1, a2) begin
+		(if (not a2.seenByUser) then self:IsSimilarItem(a1, a2))
+	end, nil))) then begin
+			ArrayInsert(Notifications, a1, 0);
+			if a2 then begin
+					self:MarkItemSeen(0, nil)
+				end;
+			if (Length(Notifications) > maxNotifications) then begin
+					SetLength(Notifications, maxNotifications)
+				end;
+			l2 := a1
+		end;
+	if viewCObject then begin
+			self:SyncView();
+			roll.index := 0;
+			roll:RedoChildren();
+			self:MoveBehind('skip);
+			if gyreOn then begin
+					self:GyreStart()
+				end
+		end;
+	l2
+end
+@@end

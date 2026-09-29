@@ -1,0 +1,14 @@
+@@ 0x5a5631
+func() begin
+	local l1;
+	if (l1 := ((eworld := {_proto: @388.protoEWorldReg, _parent: GetRoot().mailRegister}).transport := GetRoot().mailSlip)).eworld then begin
+			l1.eworld:ConnectionAbort()
+		end;
+	l1.eworld := eworld;
+	eworld.streamid := 0;
+	if (not StrEqual(willDialNum, GetUserConfig('mailPhoneFull))) then begin
+			SetUserConfig('mailPhoneFull, willDialNum)
+		end;
+	self:ConvertInkText(GetUserConfig('mailPhoneFull), 'phone, 262144, "Converting network phone number", "Please verify that the ink text was converted correctly.", 'InkConvert, 'ConvertedMailPhone, nil)
+end
+@@end

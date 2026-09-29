@@ -1,0 +1,7 @@
+@@ 0x761259
+func() begin
+	inherited:?JamIt();
+	modemStuff.phonenumber := nil;
+	self:SetNewWillDial(self:GetPhone())
+end
+@@end

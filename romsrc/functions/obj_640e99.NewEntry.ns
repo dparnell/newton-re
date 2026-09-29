@@ -1,0 +1,9 @@
+@@ 0x457cc9
+func(a1, a2) begin
+	local l1;
+	(l1 := GetRoot().cardfile:addcard((l1 := self:PrepareToAdd(a1)).class, l1)).labels := a1.labels;
+	self:FixupPostAdd(a1, l1);
+	EntryChangeXmit(l1, 'entryAdded);
+	l1
+end
+@@end

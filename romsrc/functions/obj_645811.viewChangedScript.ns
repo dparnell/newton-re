@@ -1,0 +1,8 @@
+@@ 0x4bd5a9
+func(a1, a2) begin
+	(if (self <> editor) then begin
+			editor:StartFlushWithChild(self);
+			(if scrollerView then AddProcrastinatedSend('checkCaret, self, 'checkCaret, nil, 500))
+		end)
+end
+@@end

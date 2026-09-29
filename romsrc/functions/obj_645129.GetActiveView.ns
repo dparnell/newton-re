@@ -1,0 +1,5 @@
+@@ 0x4ac6f5
+func() begin
+	layout:?GetActiveViewX()
+end
+@@end

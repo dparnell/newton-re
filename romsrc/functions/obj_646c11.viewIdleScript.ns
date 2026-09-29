@@ -1,0 +1,14 @@
+@@ 0x433a51
+func() begin
+	local l1;
+	if ((l1 := (Time() - lastClock)) <> 0) then begin
+			lastClock := Time();
+			hours := (((Time := (Time + l1)) div 60) mod 24);
+			minutes := (Time mod 60);
+			playsound((tickTock := (if (tickTock = @300) then @299 else @300)));
+			self:?TimeChanged();
+			self:Dirty()
+		end;
+	viewIdleFrequency
+end
+@@end

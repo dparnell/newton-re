@@ -1,0 +1,77 @@
+@@ 0x487e79
+func(a1, a2, a3) begin
+	l1 := self.viewCObject;
+	l2 := GetRoot().MsgBox;
+	if (not a3) then begin
+			a3 := '_Global
+		end;
+	if a1 then begin
+			if (a3 = '_Global) then begin
+					local l1;
+					local l2;
+					(for l3 := 0 to (Length(soupNotify) - 2) by 2 do begin
+							l6 := soupNotify[(l3 + 1)];
+							if (if (if (l7 := GetRoot().(l6)) then l7.FolderChanged) then (not FolderChangedRegistry.(l6))) then begin
+									if l1 then begin
+											l2:Bother(ParamStr(changeMsgStr, [Array: GetAppName(l6)]))
+										end;
+									try begin
+											l7:FolderChanged(soupNotify[l3], a1, a2)
+										end onexception |evt.ex| do begin end
+								end
+						end)
+				end else begin
+					if (if (if (l7 := GetRoot().(a3)) then l7.FolderChanged) then (not FolderChangedRegistry.(a3))) then begin
+							if (l8 := LSearch(soupNotify, a3, 0, '|=|, nil)) then begin
+									if l1 then begin
+											l2:Bother(ParamStr(changeMsgStr, [Array: GetAppName(a3)]))
+										end;
+									try begin
+											l7:FolderChanged(soupNotify[(l8 - 1)], a1, a2)
+										end onexception |evt.ex| do begin end
+								end
+						end
+				end
+		end;
+	l9 := {};
+	l10 := GetUserConfig('userFolderGroups);
+	if (a3 = '_Global) then begin
+			local l6;
+			local l7;
+			local l8;
+			local l9;
+			local l10;
+			(foreach l6, l11 deeply in FolderChangedRegistry do begin
+					if (if (l11 = FolderChangedRegistry.(l6)) then (not (if l10.(l6) then SetContains(l10.(l6), (if a1 then a1 else a2))))) then begin
+							l9.(l6) := l11
+						end
+				end)
+		end else begin
+			if (l11 := FolderChangedRegistry.(a3)) then begin
+					l9.(a3) := l11
+				end;
+			(foreach l7, l11 in FolderChangedRegistry do begin
+					if IsSubclass(l7, 'showBar) then begin
+							l9.(l7) := l11
+						end
+				end)
+		end;
+	if SetContains(l10._System, (if a1 then a1 else a2)) then begin
+			(foreach l6, l11 in l9 do begin
+					if (if (l14 := GetRoot().(l6)) then l14.systemFoldersToo) then begin
+							RemoveSlot(l9, l6)
+						end
+				end)
+		end;
+	(foreach l6, l11 in l9 do begin
+			local l14;
+			if (if (not IsSubclass(l6, 'showBar)) then l1) then begin
+					l2:Bother(ParamStr(changeMsgStr, [Array: GetAppName(l6)]))
+				end;
+			try begin
+					call l11 with (a1, a2)
+				end onexception |evt.ex| do begin end
+		end);
+	(if l1 then l2:Nevermind())
+end
+@@end

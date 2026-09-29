@@ -1,0 +1,11 @@
+@@ 0x747349
+func() begin
+	local l1, l2;
+	if (l1 := GetUserConfig('currentEmporium)) then begin
+			if (l2 := ResolveEntryAlias(l1)) then begin
+					return l2.place
+				end
+		end;
+	return nil
+end
+@@end

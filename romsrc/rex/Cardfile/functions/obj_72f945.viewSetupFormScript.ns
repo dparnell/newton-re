@@ -1,0 +1,17 @@
+@@ 0x72fa29
+@@const kFunction_72faa1
+func(a1) begin
+	true
+end
+@@main
+func() begin
+	local l1, l2, l3, l4, l5;
+	l3 := 0;
+	l4 := 0;
+	if (GetVariable(self, 'newtAppBase) <> GetRoot().cardfile) then begin
+			self.viewFlags := 513;
+			self.viewClickScript := kFunction_72faa1
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

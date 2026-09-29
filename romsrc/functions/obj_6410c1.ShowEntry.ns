@@ -1,0 +1,21 @@
+@@ 0x55efc1
+func(a1) begin
+	if ((a1 = 'deleted) or (a1 = nil)) then begin
+			currentItem := 0;
+			cacheCount := nil;
+			self.isReset := nil;
+			a1 := self:Reset();
+			self.zeroOneOrMoreResult := nil
+		end else begin
+			cursor:Goto(a1);
+			self.isReset := nil
+		end;
+	(if (a1 <> nil) then (if owner.OpenTo then owner:OpenTo(a1, self) else begin
+				if (owner.viewCObject = nil) then begin
+						owner:?viewPreOpenScript(a1);
+						owner:Open()
+					end;
+				(if owner.viewCObject then owner:ShowFoundItem(a1, self))
+			end))
+end
+@@end

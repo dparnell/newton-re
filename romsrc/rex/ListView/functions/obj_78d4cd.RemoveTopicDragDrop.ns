@@ -1,0 +1,81 @@
+@@ 0x78d3c5 names
+func(aDragRef, aRemoveFromSelf) begin
+	height := aDragRef.height;
+	indices := aDragRef.index;
+	hasFamily := nil;
+	self.dragTo := nil;
+	if (indices = nil) then begin
+			return true
+		end;
+	theIndex := indices[0];
+	if (if aRemoveFromSelf then self.moveInSelf) then begin
+			offset := moveInSelf.offset
+		end else begin
+			offset := 0
+		end;
+	nItems := Length(indices);
+	local height;
+	local indices;
+	local theIndex;
+	local nItems;
+	local topic;
+	local i;
+	local ri;
+	local offset;
+	local mom;
+	local j;
+	local familyDone;
+	local level;
+	local hasFamily;
+	(for i := 0 to (nItems - 1) do begin
+			ri := (indices[i] + offset);
+			if (curTopic = ri) then begin
+					curTopic := nil
+				end else begin
+					if (if (curTopic <> nil) then (curTopic > ri)) then begin
+							curTopic := (curTopic - 1)
+						end
+				end;
+			if ((((topic := topics[ri]).level = 1) or (topic.level = nil)) or topic.mtgDone) then begin
+					mom := nil
+				end else begin
+					if (i = 0) then begin
+							mom := self:Mother((ri - offset))
+						end
+				end
+		end);
+	theIndex := (theIndex + offset);
+	ArrayRemoveCount(topics, theIndex, nItems);
+	nTopics := (nTopics - nItems);
+	if (if self.moveInSelf then HasPath(moveInSelf, 'Mother)) then begin
+			mom := moveInSelf.Mother
+		end;
+	if mom then begin
+			if ((topic := topics[mom]).mtgDone = nil) then begin
+					if ((level := topic.level) = nil) then begin
+							level := 1
+						end;
+					familyDone := true;
+					(for j := (mom + 1) to (nTopics - 1) do begin
+							if ((topics[j].level = nil) or (topics[j].level <= level)) then begin
+									break
+								end;
+							if (topics[j].mtgDone = nil) then begin
+									familyDone := nil;
+									break
+								end;
+							hasFamily := true
+						end);
+					if (if familyDone then hasFamily) then begin
+							self:SetDone(mom, topics[mom], true, true, nil)
+						end
+				end
+		end;
+	if (nTopics = 0) then begin
+			curTopic := nil
+		end;
+	self.moveInSelf := nil;
+	self:UpdateMultipleStores(true);
+	true
+end
+@@end

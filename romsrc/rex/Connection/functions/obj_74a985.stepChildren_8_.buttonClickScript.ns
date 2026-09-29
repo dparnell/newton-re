@@ -1,0 +1,23 @@
+@@ 0x74bd61
+@@const kLiteral_745f61
+"Dock"
+@@const kROM_8269
+@8269
+@@main
+func() begin
+	local l1, l2;
+	self:SaveOptions();
+	(if (Length(storeList.selectedItems) = 0) then begin
+			l1 := "You must check Internal or a card checkbox before proceeding.";
+			if (numStores = 1) then begin
+					l1 := "You must check the Internal checkbox before proceeding."
+				end;
+			AddDeferredSend(GetRoot(), 'Notify, [Array: 5, kLiteral_745f61, l1])
+		end else (if (if (Length(appList.selectedItems) = 0) then (not backupPackages.viewValue)) then AddDeferredSend(GetRoot(), 'Notify, [Array: 5, kLiteral_745f61, "You didn\u2019\ut select anything to backup."]) else begin
+				l2 := self:BuildSyncOptions();
+				closing := true;
+				base:Close();
+				kROM_8269:OpenOnEndpoint(l2, endpoint, nil)
+			end))
+end
+@@end

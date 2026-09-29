@@ -1,0 +1,6 @@
+@@ 0x48ec7d
+func(a1, a2, a3) begin
+	a1:Close();
+	a2:wipeInfo(a3)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x535609
+func() begin
+	(if (if (status = 'RingingFrom) then currentItem) then GetRoot().(appSymbol):receiveRequestComplete())
+end
+@@end

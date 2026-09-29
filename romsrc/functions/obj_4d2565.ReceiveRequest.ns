@@ -1,0 +1,5 @@
+@@ 0x4d234d
+func(a1) begin
+	(if (status = 'idle) then self:BeamReceive(self))
+end
+@@end

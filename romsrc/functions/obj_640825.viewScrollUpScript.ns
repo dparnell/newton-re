@@ -1,0 +1,5 @@
+@@ 0x42d2a1
+func() begin
+	roll:SyncScroll(_curItems, index, -1)
+end
+@@end

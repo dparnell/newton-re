@@ -1,0 +1,12 @@
+@@ 0x4b544d
+func(a1, a2) begin
+	(if putAwayInfo then begin
+			(pap := BuildContext(@775)).theAppToRun := putAwayInfo.theApp;
+			pap.theApps := putAwayInfo.appList;
+			putAwayInfo := nil;
+			pap.theItem := a1;
+			pap.targetView := a2;
+			pap:Open()
+		end)
+end
+@@end

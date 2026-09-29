@@ -1,0 +1,34 @@
+@@ 0x56ece1
+func(a1) begin
+	Sort((a1 := Clone(a1)), '|<|, nil);
+	l1 := ((a1[0] div 13) = (a1[4] div 13));
+	local l1;
+	(foreach l2, l3 in a1 do begin
+			a1[l2] := (l3 mod 13)
+		end);
+	l5 := Array(13, 0);
+	local l5;
+	(foreach l3 in a1 do begin
+			l5[l3] := (l5[l3] + 1)
+		end);
+	l7 := Array(5, 0);
+	local l7;
+	(foreach l8 in l5 do begin
+			l7[l8] := (l7[l8] + 1)
+		end);
+	if (l7[1] = 5) then begin
+			Sort(a1, '|<|, nil);
+			l10 := (((l11 := (a1[4] - a1[0])) = 4) or (if (if (l11 = 12) then (a1[1] = 1)) then (a1[3] = 3)))
+		end;
+	(if (if l1 then l10) then (if (if (a1[0] = 8) then (a1[4] = 12)) then '|royal flush| else '|straight flush|) else (if (l7[4] = 1) then '|4 of a kind| else (if (if (l7[3] = 1) then (l7[2] = 1)) then '|full house| else (if l1 then 'flush else (if l10 then 'straight else (if (l7[3] = 1) then '|3 of a kind| else (if (l7[2] = 2) then '|two pair| else (if (l7[2] = 1) then begin
+										local l10;
+										local l11;
+										(for l2 := 9 to 12 do begin
+												if (l5[l2] = 2) then begin
+														return 'pair
+													end
+											end);
+										'|sm pair|
+									end else 'zilch))))))))
+end
+@@end

@@ -1,0 +1,14 @@
+@@ 0x5a74b1
+func(a1) begin
+	if ((a1.backupInfo = 'modelSpecific) or (a1.backupInfo = 'dontbackup)) then begin
+			return nil
+		end else begin
+			if StrEqual(a1.tag, "Userconfiguration") then begin
+					(foreach l1 in '[Array: lcdContrast, screenOrientation] do begin
+							RemoveSlot(a1, l1)
+						end)
+				end
+		end;
+	return a1
+end
+@@end

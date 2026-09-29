@@ -1,0 +1,15 @@
+@@ 0x4ea741
+func() begin
+	(if (currentItem = 0) then currentMeetingSoupFinder:GetCurrentItem() else begin
+			if (not scrollingForward) then begin
+					currentMeetingSoupFinder:GetPrevItem()
+				end else begin
+					(foreach l1 in meetingSoupFinders do begin
+							l1:GetPrevItem()
+						end);
+					scrollingForward := nil
+				end;
+			self:ChooseLatestItem()
+		end)
+end
+@@end

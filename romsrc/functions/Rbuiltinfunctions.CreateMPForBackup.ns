@@ -1,0 +1,11 @@
+@@ 0x628695
+func() begin
+	local l1;
+	(if (l1 := GetLetterWeights()) then begin
+			if IsArray(l1) then begin
+					l1 := l1[userConfiguration.letterSetSelection]
+				end;
+			SaveDataToEntry((l1 := ConvertForMP(l1, userConfiguration.letterSetSelection)), "LetterWeights")
+		end)
+end
+@@end

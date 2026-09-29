@@ -1,0 +1,9 @@
+@@ 0x44c071
+func() begin
+	if Visible(scrollers) then begin
+			scrollingSleepTime := GetUserConfig('_ScrollingPopupSleepTime);
+			self:SetScrollers()
+		end;
+	self:SetPopup()
+end
+@@end

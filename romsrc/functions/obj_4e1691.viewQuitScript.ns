@@ -1,0 +1,5 @@
+@@ 0x4e0e91
+func() begin
+	self:flush()
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x4239b5
+func() begin
+	local l1;
+	if ((l1 := self:DbToViewValue(GetSystemVolume())) <> self.viewValue) then begin
+			SetValue(self, 'viewValue, l1)
+		end;
+	return hwUpdateFreq
+end
+@@end

@@ -1,0 +1,20 @@
+@@ 0x4191c1
+func(a1, a2) begin
+	local l1, l2, l3, l4;
+	if HasSlot(a2, 'buttonBarPositions) then begin
+			l1 := true
+		end;
+	if (HasSlot(a2, 'buttonBarControlsPositions) or HasSlot(a2, 'bellyButtonPositions)) then begin
+			l2 := (l3 := true)
+		end;
+	if ((((HasSlot(a2, 'buttonBarIconSpacingH) or HasSlot(a2, 'buttonBarIconSpacingV)) or HasSlot(a2, 'extrasIconSpacingH)) or HasSlot(a2, 'extrasIconSpacingV)) or HasSlot(a2, 'extraFont)) then begin
+			l4 := (l3 := true)
+		end;
+	(if l1 then SafeSetDisplayParams(CreateDisplayParams(nil)) else begin
+			if l2 then begin
+					displayParams := CreateDisplayParams(nil)
+				end;
+			(if l4 then GetRoot().ExtrasDrawer:InvalIcons() else (if l3 then GetRoot().buttons:RedoIcons()))
+		end)
+end
+@@end

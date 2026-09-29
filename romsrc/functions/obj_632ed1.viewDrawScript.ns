@@ -1,0 +1,7 @@
+@@ 0x4e6039
+func() begin
+	drawPenSizeX := userConfiguration.userPenSize;
+	drawPenSizeY := userConfiguration.userPenSize;
+	self:DrawPolygons(strokes)
+end
+@@end

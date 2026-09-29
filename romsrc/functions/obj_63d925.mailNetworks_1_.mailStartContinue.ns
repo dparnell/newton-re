@@ -1,0 +1,9 @@
+@@ 0x59b291
+func() begin
+	(if (mailEndPoint.curstate = 'waitForLogin) then (try begin
+				mailEndPoint:output($A, nil, {async: true})
+			end onexception |evt.ex| do begin
+				self:quit()
+			end))
+end
+@@end

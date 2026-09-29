@@ -1,0 +1,5 @@
+@@ 0x461b09
+func(a1, a2) begin
+	((a1 = a2) or (if (if (a1.nfType = a2.nfType) then StrEqual(a1.overview, a2.overview)) then StrEqual(a1.nfText, a2.nfText)))
+end
+@@end

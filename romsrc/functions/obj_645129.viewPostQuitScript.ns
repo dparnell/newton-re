@@ -1,0 +1,5 @@
+@@ 0x4a9eb5
+func() begin
+	(self.target := (self.targetView := nil))
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x75e3dd
+func() begin
+	(self.whichConnection := nil)
+end
+@@end

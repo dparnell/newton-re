@@ -1,0 +1,8 @@
+@@ 0x72de69
+func(a1) begin
+	SetValue(selectedCard, 'viewFormat, 0);
+	SetValue(a1, 'viewFormat, stylesViewFormat);
+	selectedCard := a1;
+	AddDeferredSend(self:parent(), 'dirty, '[Array: ])
+end
+@@end

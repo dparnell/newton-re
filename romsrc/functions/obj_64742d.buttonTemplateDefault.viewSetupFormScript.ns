@@ -1,0 +1,8 @@
+@@ 0x460c69
+func() begin
+	local l1;
+	l1 := StdButtonWidth(text);
+	self.viewBounds := SetBounds((-(l1 + 6)), 0, -7, 0);
+	(base._defaultButton := self)
+end
+@@end

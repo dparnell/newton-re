@@ -1,0 +1,10 @@
+@@ 0x7460c5
+func(a1) begin
+	if IsInstance(a1, 'string) then begin
+			SetValue(entryLine, 'text, a1)
+		end else begin
+			SetValue(entryLine, 'text, "")
+		end;
+	self:textChanged()
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x454599
+func(a1) begin
+	if (not Visible(self)) then begin
+			return nil
+		end;
+	SetValue(self, 'text, (if (a1 > 0) then ParamStr("^0 Selected", [Array: NumberStr(a1)]) else ""))
+end
+@@end

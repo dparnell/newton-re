@@ -1,0 +1,5 @@
+@@ 0x4fd50d
+func() begin
+	DayTable:DrawShape(MakeRect(0, lineHeight, 15, (2 * lineHeight)), whitePat)
+end
+@@end

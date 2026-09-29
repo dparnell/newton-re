@@ -1,0 +1,85 @@
+@@ 0x78d005 names
+func(aDragRef, aDropOnSelf, aDoPrioritize) begin
+	moveList := aDragRef.topics;
+	dragTo := self.dragTo;
+	if (self.dragTo = nil) then begin
+			dragTo := aDragRef.dragTo
+		end;
+	if (dragTo.index = -2) then begin
+			return nil
+		end;
+	if (if ((newIndex := (dragTo.index + 1)) <= aDragRef.index[0]) then aDropOnSelf) then begin
+			self.moveInSelf := {offset: Length(aDragRef.index)};
+			if (mom := self:Mother(aDragRef.index[0])) then begin
+					if (newIndex = aDragRef.index[0]) then begin
+							moveInSelf.Mother := mom
+						end else begin
+							moveInSelf.Mother := (mom + moveInSelf.offset)
+						end
+				end
+		end;
+	nItems := Length(moveList);
+	if (newIndex >= nTopics) then begin
+			top := self:ListBottom()
+		end else begin
+			top := topics[newIndex].viewBounds.top
+		end;
+	if (dragTo.level = nil) then begin
+			dragTo.level := 1
+		end;
+	if (moveList[0].level = nil) then begin
+			dLevel := (dragTo.level - 1)
+		end else begin
+			dLevel := (dragTo.level - moveList[0].level)
+		end;
+	if (dragTo.level > 1) then begin
+			local moveList;
+			local dragTo;
+			local newIndex;
+			local mom;
+			local nItems;
+			local top;
+			local dLevel;
+			local topic;
+			local i;
+			(for ti := dragTo.index to 0 by -1 do begin
+					if ((topics[ti].level = nil) or (topics[ti].level < dragTo.level)) then begin
+							self:ExpandTopic(ti, nil);
+							break
+						end
+				end)
+		end;
+	(for i := 0 to (nItems - 1) do begin
+			local setSomething;
+			topic := moveList[i];
+			if (not aDropOnSelf) then begin
+					RemoveSlot(topic, 'repeatInfo);
+					RemoveSlot(topic, 'repeatDone)
+				end;
+			self:AppendTopic((topic := Clone(topic)), (newIndex + i), top, dLevel);
+			top := self:TopicBottom(topic)
+		end);
+	self.dragTo := nil;
+	self:SetDone(newIndex, topics[newIndex], topics[newIndex].mtgDone, true, nil);
+	if aDoPrioritize then begin
+			if (nTopics > 1) then begin
+					topic := moveList[0];
+					if ((i := self:OlderSister(newIndex)) = nil) then begin
+							i := self:YoungerSister(newIndex)
+						end;
+					if (if i then topics[i].mtgPriority) then begin
+							setSomething := true;
+							self:SetPriority(newIndex, topics[i].mtgPriority, true)
+						end;
+					if (if (not setSomething) then topics[newIndex].mtgPriority) then begin
+							self:SetPriority(newIndex, topics[newIndex].mtgPriority, true)
+						end
+				end
+		end;
+	if (mom := self:Mother(newIndex)) then begin
+			self:RevealTopic(mom);
+			self:ExpandTopic(mom, nil)
+		end;
+	self:UpdateMultipleStores(true)
+end
+@@end

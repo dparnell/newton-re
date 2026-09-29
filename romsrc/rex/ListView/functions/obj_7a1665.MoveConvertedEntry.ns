@@ -1,0 +1,7 @@
+@@ 0x7936ed names
+func(anEntry) begin
+	local theStore;
+	theStore := EntryStore(anEntry);
+	anEntry
+end
+@@end

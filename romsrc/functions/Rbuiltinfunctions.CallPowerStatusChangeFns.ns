@@ -1,0 +1,5 @@
+@@ 0x562d21
+func() begin
+	CallFrameBasedRegistryFns(PowerStatusChangeRegistry, [Array: BatteryStatus(0)])
+end
+@@end

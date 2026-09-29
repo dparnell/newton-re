@@ -1,0 +1,8 @@
+@@ 0x417769
+func() begin
+	if recorder.RecordEngine then begin
+			recorder.RecordEngine:StopNow()
+		end;
+	inherited:?viewQuitScript()
+end
+@@end

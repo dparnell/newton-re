@@ -1,0 +1,5 @@
+@@ 0x56c77d
+func(a1) begin
+	ParamStr("Save new information and packages on card \u201C\u^0\u201D\u?", [Array: a1])
+end
+@@end

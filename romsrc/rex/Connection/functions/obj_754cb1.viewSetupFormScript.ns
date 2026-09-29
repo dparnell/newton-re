@@ -1,0 +1,31 @@
+@@ 0x756469
+func() begin
+	if (not inited) then begin
+			BusyBoxControl(0);
+			self.currentStatusSetup := DeepClone(initialSetup);
+			self.inited := true;
+			stopping := nil;
+			restoring := nil;
+			restoreRoot := nil;
+			currentState := 0;
+			self.protoContext := GetRoot().Connection;
+			protoContext:AddOpenWindow(self);
+			if endpoint.connected then begin
+					self:StartConnected()
+				end else begin
+					self:StartConnect()
+				end;
+			try begin
+					endpoint:InstallAnyProtocolExtension("stxt", func(a1) begin
+						local l1;
+						l1 := a1:ReadCommandData();
+						currentStatusSetup.values.titleText := l1;
+						self:viewSet(currentStatusSetup);
+						endpoint:WriteCommand("dres", 0, true)
+					end)
+				end onexception |evt.ex| do begin end;
+			endpoint:StartIdle(self, 500)
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

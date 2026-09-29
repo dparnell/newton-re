@@ -1,0 +1,11 @@
+@@ 0x761b05
+func() begin
+	if options.button then begin
+			dialAssist.viewFlags := BAnd(dialAssist.viewFlags, -2);
+			modemStuff.viewFlags := BAnd(modemStuff.viewFlags, -2)
+		end else begin
+			special.viewFlags := BAnd(special.viewFlags, -2)
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

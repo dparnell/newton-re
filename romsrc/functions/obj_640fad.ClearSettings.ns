@@ -1,0 +1,18 @@
+@@ 0x48931d
+func() begin
+	l1 := self:GetRecognizers();
+	l2 := self:GetSettings();
+	local l1;
+	local l2;
+	(foreach l3, l4 in l1 do begin
+			l2.(l4.symbol) := nil;
+			if l4.all then begin
+					(foreach l6 in l4.all do begin
+							l2.(l6) := nil
+						end)
+				end else begin
+					l2.(l4.targetSymbol) := nil
+				end
+		end)
+end
+@@end

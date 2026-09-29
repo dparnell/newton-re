@@ -1,0 +1,15 @@
+@@ 0x51c9e1
+func(a1) begin
+	if (self.viewCObject = nil) then begin
+			self:PrepBook(a1);
+			self:Open()
+		end else begin
+			if (if (self.isbn <> nil) then (not StrEqual(a1, self.isbn))) then begin
+					self:Close();
+					self:PrepBook(a1);
+					self:Open()
+				end
+		end;
+	RefreshViews()
+end
+@@end

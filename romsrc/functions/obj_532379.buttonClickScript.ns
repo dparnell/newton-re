@@ -1,0 +1,5 @@
+@@ 0x532339
+func() begin
+	self:ValidateConfig('location, nil, '[Array: areacode, country], "Where are you calling from?", 'validateDialog, 'DoCall)
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x5462ed
+func() begin
+	GetRoot().assistant:PrimeAndOpen();
+	GetUserConfig('ExtraAlwaysClose)
+end
+@@end

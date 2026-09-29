@@ -1,0 +1,10 @@
+@@ 0x5090b9
+func() begin
+	local l1;
+	(if (if (if (not isNewMeeting) then selectedMeeting.repeatTemplate) then (not alreadyAsked)) then (if (alreadyAsked := self:NeedConfirmForChangingRepeatingMeeting()) then begin
+				(l1 := BuildContext(AskThisOrAll)).selectedMeeting := selectedMeeting;
+				l1.MeetingNotes := MeetingNotes;
+				AddDeferredSend(l1, 'ModalDialog, '[Array: ])
+			end))
+end
+@@end

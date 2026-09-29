@@ -1,0 +1,5 @@
+@@ 0x79613d names
+func(aLevel) begin
+	{unique: (((TimeInSeconds() * 4) + (Ticks() mod 4)) - 60000000), mtgPriority: 3, mtgDone: nil, text: nil, styles: nil, viewBounds: nil, source: 0}
+end
+@@end

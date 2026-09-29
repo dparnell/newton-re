@@ -1,0 +1,14 @@
+@@ 0x5a2fb9
+func(a1, a2, a3, a4) begin
+	if ((a1.class = 'smartMail) or (a1.state = 'InLog)) then begin
+			return nil
+		end;
+	if a1.package then begin
+			a3.packageTextView := GetViewDefs('packageFrame).default
+		end;
+	(if ((if a1.edited then (not IsInstance(a2, 'mailText))) or (if (Length(a3) = 0) then a1.text)) then begin
+			a3.mailTextView := GetViewDefs('mailText).default;
+			'mailTextView
+		end)
+end
+@@end

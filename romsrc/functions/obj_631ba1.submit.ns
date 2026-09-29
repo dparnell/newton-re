@@ -1,0 +1,11 @@
+@@ 0x4ed48d
+func(a1) begin
+	if (if activeTransport then a1.saveAsLog) then begin
+			if (not viewCObject) then begin
+					self:Open()
+				end;
+			activeTransport:CancelRequest(nil)
+		end;
+	self:AddItem('calls, a1, 'submit)
+end
+@@end

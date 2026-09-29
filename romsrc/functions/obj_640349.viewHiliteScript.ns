@@ -1,0 +1,8 @@
+@@ 0x429401
+func(a1) begin
+	local l1;
+	l1 := self:PopupHiliteBox();
+	self:DrawShape(MakeRoundRect(-2, l1.top, indent, l1.bottom, 4), '{transferMode: 2, penPattern: 0, fillPattern: 5});
+	true
+end
+@@end

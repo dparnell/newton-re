@@ -1,0 +1,5 @@
+@@ 0x4cd8bd
+func(a1) begin
+	SetUserConfig('faxringstoanswer, (a1 + 1))
+end
+@@end

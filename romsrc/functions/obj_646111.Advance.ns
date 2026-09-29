@@ -1,0 +1,25 @@
+@@ 0x441d65
+func(a1) begin
+	if (((l1 := (value + a1)) > maxValue) or (l1 < minValue)) then begin
+			return nil
+		end;
+	l2 := self:GlobalBox();
+	local l1;
+	local l2;
+	(foreach l3 in digitBase:ChildViewFrames() do begin
+			local l5, l6;
+			if (l3 <> self) then begin
+					if ((l5 := l3:?GetIndex(l1)) <> l3.currentIndex) then begin
+							l3.currentIndex := l5;
+							l2 := UnionRect(l2, l3:GlobalBox())
+						end
+				end
+		end);
+	value := l1;
+	currentIndex := self:GetIndex(l1);
+	l6 := digitBase:GlobalBox();
+	l2 := OffsetRect(l2, (-l6.left), (-l6.top));
+	digitBase:RevealEffect((if (a1 > 0) then (-l2.bottom) else l2.bottom), l2, @51, nil, nil);
+	l1
+end
+@@end

@@ -1,0 +1,22 @@
+@@ 0x79f08d names
+func(meeting, whatView) begin
+	local taskDate, dupTask, index;
+	self:LockScreen(true);
+	if (if task.remindForDate then nominalDate) then begin
+			taskDate := nominalDate
+		end else begin
+			taskDate := newMtgDate
+		end;
+	dupTask := list:DuplicateTask(taskDate, task);
+	list:GetTarget(list.target);
+	self:LockScreen(nil);
+	(if (index := SetContains(list.topics, dupTask.topic)) then begin
+			dirtyFlag := true;
+			list:ToggleTopic(index)
+		end else begin
+			self:CloseSlip();
+			selectedDates[0] := taskDate;
+			self:RedisplayScript()
+		end)
+end
+@@end

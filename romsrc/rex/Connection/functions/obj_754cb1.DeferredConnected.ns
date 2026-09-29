@@ -1,0 +1,47 @@
+@@ 0x756615
+func() begin
+	local l1, l2, l3, l4, l5;
+	l1 := 0;
+	l2 := true;
+	if (l3 := stopping) then begin
+			l2 := nil;
+			protoContext:SendCancelToDesktop(endpoint)
+		end else begin
+			try begin
+					l2 := endpoint:DoConnection(nil, syncOptions)
+				end onexception |evt.ex| do begin
+					l1 := CurrentException().error
+				end
+		end;
+	l4 := self.inited;
+	protoContext:InvalidateApplicationList();
+	if (if (if l4 then (not l3)) then (currentStatusSetup.name = 'vGauge)) then begin
+			currentStatusSetup.values.gauge := 100;
+			self:updateIndicator(currentStatusSetup)
+		end;
+	l5 := true;
+	if restoring then begin
+			try begin
+					l5 := endpoint:GetSyncChanges()
+				end onexception |evt.ex| do begin end
+		end;
+	(if (if (if (if (not l3) then restoring) then (l1 <> -28014)) then l5) then self:FinishRestore(endpoint, l1, l5) else begin
+			if protoContext.keyPassthroughOn then begin
+					protoContext:ToggleKeyboardPassthrough(true)
+				end;
+			if (l2 or (l1 <> 0)) then begin
+					protoContext:HandleException(l1, endpoint)
+				end else begin
+					if (not autodock) then begin
+							AddDeferredSend(protoContext, 'OpenWhichConnection, [Array: endpoint])
+						end else begin
+							protoContext:DoAutoDockFinish()
+						end
+				end;
+			(if l4 then begin
+					self:Close();
+					(if (if restoreRoot then (((not restoring) or (l1 = -28014)) or (not l5))) then protoContext:ReopenBlessed())
+				end)
+		end)
+end
+@@end

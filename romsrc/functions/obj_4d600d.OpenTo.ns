@@ -1,0 +1,16 @@
+@@ 0x554611
+@@const kFunction_55454d
+func(a1, a2, a3, a4) begin
+	AddProcrastinatedSend('soupervisor, GetRoot().soupervisor, 'Dirty, '[Array: ], 0)
+end
+@@main
+func(a1) begin
+	if (not (theApp := (if (target := {_proto: a1, labels: nil, store: nil}).ownerApp then GetRoot().(target.ownerApp)))) then begin
+			theApp := self
+		end;
+	(foreach l1 in target.soupNames do begin
+			RegSoupChange(l1, 'soupervisor, kFunction_55454d)
+		end);
+	self:Open()
+end
+@@end

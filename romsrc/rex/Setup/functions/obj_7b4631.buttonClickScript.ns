@@ -1,0 +1,7 @@
+@@ 0x7b469d
+func() begin
+	base:SetupClose();
+	GetRoot().|NewtonTour:Newton|:Open();
+	true
+end
+@@end

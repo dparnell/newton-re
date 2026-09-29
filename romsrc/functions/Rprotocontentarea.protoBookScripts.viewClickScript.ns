@@ -1,0 +1,6 @@
+@@ 0x51d379
+func(a1) begin
+	self:buttonClickScript();
+	true
+end
+@@end

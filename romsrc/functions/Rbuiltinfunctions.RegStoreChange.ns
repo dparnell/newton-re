@@ -1,0 +1,6 @@
+@@ 0x3c637d
+func(a1, a2) begin
+	StoreChangeRegistry.(EnsureInternal(a1)) := a2;
+	nil
+end
+@@end

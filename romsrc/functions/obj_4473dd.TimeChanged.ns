@@ -1,0 +1,6 @@
+@@ 0x4473bd
+func() begin
+	DigitalClock:Refresh();
+	self:Parent():?TimeChanged()
+end
+@@end

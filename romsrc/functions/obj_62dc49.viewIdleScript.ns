@@ -1,0 +1,15 @@
+@@ 0x4b0e95
+func() begin
+	local l1;
+	if ((l1 := (self = GetView('viewfrontmostapp))) <> lastFrontMost) then begin
+			lastFrontMost := l1;
+			try begin
+					TransportNotify('_all, 'AppInFront, [Array: l1, appSymbol])
+				end onexception |evt.ex| do begin
+					self:Notify(3, "InOut Box", "Error in transport script");
+					return nil
+				end
+		end;
+	(kIdleConst * 1000)
+end
+@@end

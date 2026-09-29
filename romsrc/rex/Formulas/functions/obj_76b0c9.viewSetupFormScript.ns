@@ -1,0 +1,6 @@
+@@ 0x76bb95
+func() begin
+	self._keyboard := GetRoot().numericKeyboard;
+	inherited:?viewSetupFormScript()
+end
+@@end

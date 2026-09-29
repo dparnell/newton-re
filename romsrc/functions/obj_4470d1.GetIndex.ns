@@ -1,0 +1,5 @@
+@@ 0x447095
+func(a1) begin
+	((abs(a1) div 60) mod 10)
+end
+@@end

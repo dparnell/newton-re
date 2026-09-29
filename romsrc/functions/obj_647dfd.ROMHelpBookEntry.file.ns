@@ -1,0 +1,6 @@
+@@ 0x538fb5
+func(a1) begin
+	fentry.labels := a1;
+	true
+end
+@@end

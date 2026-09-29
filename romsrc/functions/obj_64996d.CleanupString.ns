@@ -1,0 +1,5 @@
+@@ 0x44dc7d
+func(a1) begin
+	(if HasPath(curTemplate, 'CleanupString) then curTemplate:CleanupString(a1) else a1)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x56fd61
+func(a1, a2) begin
+	{dragee: self}
+end
+@@end

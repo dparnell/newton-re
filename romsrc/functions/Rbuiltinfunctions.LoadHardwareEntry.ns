@@ -1,0 +1,14 @@
+@@ 0x530075
+func() begin
+	local l1, l2, l3;
+	l1 := GetUserConfig('modemHardwareLocation);
+	l2 := GetUserConfig('appletalkLink);
+	l3 := {_proto: @499};
+	l3:Instantiate("mods", "DefHWLoc");
+	l3:setdefaultConfig((if StrFilled(l1) then l1));
+	l3:Dispose();
+	l3:Instantiate("atlk", "DefATLink");
+	l3:setdefaultConfig((if StrFilled(l2) then l2 else "llap"));
+	l3:Dispose()
+end
+@@end

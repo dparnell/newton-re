@@ -1,0 +1,21 @@
+@@ 0x47b12d
+func() begin
+	local l1, l2, l3;
+	l1 := self:GetIndex();
+	if (not info) then begin
+			return ""
+		end;
+	if l1 then begin
+			if info.fileChoices[l1] then begin
+					l3 := StrTruncate(Clone(self:GetFolderString()), 120);
+					l2 := ParamStr("^0 in \u201C\u^1\u201D\u", [Array: info.logChoices[l1], l3])
+				end else begin
+					l2 := info.logChoices[l1]
+				end
+		end else begin
+			l3 := StrTruncate(Clone(self:GetFolderString()), 150);
+			l2 := ParamStr("\u201C\u^0\u201D\u", [Array: l3])
+		end;
+	return l2
+end
+@@end

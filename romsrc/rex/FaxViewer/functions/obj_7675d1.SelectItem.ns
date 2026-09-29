@@ -1,0 +1,5 @@
+@@ 0x767b2d
+func(a1) begin
+	imageContainer:GotoPage(a1)
+end
+@@end

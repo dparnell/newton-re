@@ -1,0 +1,13 @@
+@@ 0x7732b5
+func(a1) begin
+	local l1, l2, l3, l4;
+	selection := nil;
+	if openChild then begin
+			openChild:Close()
+		end;
+	l1 := formulasList[a1];
+	l2 := mainFormulasView:GlobalBox();
+	l3 := mainFormulasView:LocalBox();
+	(openChild := BuildContext({viewBounds: (l4 := {left: l2.left, top: (l2.top + 25), right: (l3.right + l2.left), bottom: ((l2.top + 25) + l1.viewBounds.bottom)}), _proto: l1})):Open()
+end
+@@end

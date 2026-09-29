@@ -1,0 +1,9 @@
+@@ 0x531f9d
+func() begin
+	fields.saveAsLog := viewValue;
+	if (viewValue = true) then begin
+			fields.fromCallApp := true
+		end;
+	(if (viewValue = transport:GetConfig('phonenocalllogging)) then transport:SetConfig('phonenocalllogging, (not viewValue)))
+end
+@@end

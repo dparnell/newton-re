@@ -1,0 +1,6 @@
+@@ 0x4edd21
+func(a1) begin
+	activeTransport := nil;
+	(if (if (if viewCObject then a1) then a1.saveAsLog) then status:RedoChildren())
+end
+@@end

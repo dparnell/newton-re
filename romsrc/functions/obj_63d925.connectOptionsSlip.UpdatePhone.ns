@@ -1,0 +1,6 @@
+@@ 0x59eead
+func() begin
+	willDialNum := callOptionsSlip.outNumber.text;
+	SetValue(willDial, 'text, willDialNum)
+end
+@@end

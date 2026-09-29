@@ -1,0 +1,9 @@
+@@ 0x75841d
+func() begin
+	self.protoContext := GetRoot().Connection;
+	protoContext:AddOpenWindow(self);
+	self.closing := nil;
+	translateFileName.text := translateWhich;
+	endpoint:StartIdle(self, 2000)
+end
+@@end

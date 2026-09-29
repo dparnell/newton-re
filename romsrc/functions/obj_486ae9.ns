@@ -1,0 +1,10 @@
+@@ 0x486ae9
+func() begin
+	local l1, l2;
+	if (l2 := title:TimeBox((l1 := self:TimeString()))) then begin
+			SetValue(title, 'viewBounds, l2)
+		end;
+	SetValue(title, 'text, l1);
+	30000
+end
+@@end

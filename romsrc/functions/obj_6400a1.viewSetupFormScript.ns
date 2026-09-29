@@ -1,0 +1,6 @@
+@@ 0x561f65
+func() begin
+	text := (title := StrTruncate(Clone(title), 132));
+	(if (skip <> 0) then (text := Stringer([Array: text, $\u2026])))
+end
+@@end

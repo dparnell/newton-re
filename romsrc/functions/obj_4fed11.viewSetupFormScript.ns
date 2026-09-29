@@ -1,0 +1,8 @@
+@@ 0x4fec91
+func() begin
+	self.month := monthController.monthView.month;
+	self.year := monthController.monthView.year;
+	self.singleDay := monthController.singleDay;
+	(self.holdDates := Clone(selectedDates))
+end
+@@end

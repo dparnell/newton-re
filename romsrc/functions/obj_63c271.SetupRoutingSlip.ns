@@ -1,0 +1,10 @@
+@@ 0x51c8f1
+func(a1) begin
+	if (isbn = nil) then begin
+			self:Notify(3, "Book", "No book open to print");
+			return nil
+		end;
+	a1.title := self:BookTitle();
+	self:SaveMarkup()
+end
+@@end

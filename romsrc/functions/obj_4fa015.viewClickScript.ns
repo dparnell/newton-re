@@ -1,0 +1,9 @@
+@@ 0x4f9f95
+func(a1) begin
+	(foreach l1 in self:ChildViewFrames() do begin
+			if (if (l1.viewClass = 95) then l1:HandleUnit(11, a1)) then begin
+					break true
+				end
+		end)
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x5aeac1
+func(a1) begin
+	AddUndoAction('pickActionScript, [Array: currentItem]);
+	userConfiguration.inkWordScaling := labelCommands[a1].value;
+	(currentItem := a1)
+end
+@@end

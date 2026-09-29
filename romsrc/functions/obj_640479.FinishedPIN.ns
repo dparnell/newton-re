@@ -1,0 +1,21 @@
+@@ 0x5b5b79
+@@const kLiteral_5b554d
+"Security"
+@@main
+func() begin
+	local l1;
+	(if (state = 'getpassword) then (if self:CheckPassword() then self:passwordPasses() else begin
+				self:Notify(3, kLiteral_5b554d, "An incorrect PIN has been entered. Please try again.");
+				self:ResetDisplay()
+			end) else (if (state = 'changePassword) then (if self:CheckPassword() then self:ChangeState('SetPassword) else begin
+					self:Notify(3, kLiteral_5b554d, "An incorrect PIN has been entered. Please try again.");
+					self:ResetDisplay()
+				end) else (if (state = 'SetPassword) then begin
+					tempPassword := DESCreatePasswordKey(pin);
+					self:ChangeState('verifyPassword)
+				end else (if (state = 'verifyPassword) then (if BinEqual((l1 := DESCreatePasswordKey(pin)), tempPassword) then self:passwordChanged(l1) else begin
+							self:Notify(3, kLiteral_5b554d, "New PIN's do not match. Please try again.");
+							self:ChangeState('SetPassword)
+						end)))))
+end
+@@end

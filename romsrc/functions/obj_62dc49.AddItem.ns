@@ -1,0 +1,29 @@
+@@ 0x4b3349
+func(a1, a2) begin
+	if (ClassOf(a2) = 'ioCursor) then begin
+			a2.state := 'ready
+		end else begin
+			a2 := self:addOneItem(a1, a2)
+		end;
+	if (if (if (if a2 then (a1 = 'inbox)) then (a2.state = 'Received)) then (not a2.Remote)) then begin
+			if (not inQueue) then begin
+					inQueue := CreateTargetCursor('ioCursor, [Array: ])
+				end;
+			AddArraySlot(inQueue._cursor, (if IsSoupEntry(a2) then MakeEntryAlias(a2) else a2));
+			AddProcrastinatedSend('ioboxin, self, 'AfterCommit, '[Array: ], 0)
+		end else begin
+			if (if (if a2 then (a1 = 'outbox)) then (a2.state = 'ready)) then begin
+					if (not outQueue) then begin
+							outQueue := CreateTargetCursor('ioCursor, [Array: ])
+						end;
+					AddArraySlot(outQueue._cursor, (if IsSoupEntry(a2) then MakeEntryAlias(a2) else a2));
+					AddProcrastinatedSend('ioboxOut, self, 'AfterSubmit, '[Array: ], 0)
+				end
+		end;
+	if (if (viewCObject <> nil) then ((currentLayout <> 'itemLayout) or needsRefresh)) then begin
+			needsRefresh := nil;
+			AddProcrastinatedSend(appSymbol, self, 'UpdateLayout, '[Array: ], 0)
+		end;
+	a2
+end
+@@end

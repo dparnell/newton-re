@@ -1,0 +1,5 @@
+@@ 0x4c3231
+func() begin
+	(if self:Parent():EntryCool(nil) then (viewFlags := 33))
+end
+@@end

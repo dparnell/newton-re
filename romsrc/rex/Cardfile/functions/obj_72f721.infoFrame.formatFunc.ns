@@ -1,0 +1,18 @@
+@@ 0x72ff89
+func(a1) begin
+	l1 := "";
+	if a1[0] then begin
+			local l1;
+			(foreach l2 in a1[0] do begin
+					if l2.text then begin
+							if (not StrFilled(l1)) then begin
+									l1 := ParamStr("\"^0\"", [Array: MakeRichString(l2.text, l2.styles)])
+								end
+						end else begin
+							break (l1 := "[notes]")
+						end
+				end)
+		end;
+	l1
+end
+@@end

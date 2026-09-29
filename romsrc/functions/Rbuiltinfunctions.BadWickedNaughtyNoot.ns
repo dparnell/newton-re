@@ -1,0 +1,10 @@
+@@ 0x63ac05
+func(a1, a2) begin
+	local l1;
+	l1 := (if IsInteger(a1) then Stringer([Array: "Nasty practice #", a1, (if a2 then Stringer([Array: $(, a2, $)])), $\n]) else Stringer([Array: "\nUse of", " ", a2, " ", "API:\n-  ", a1, $\n]));
+	(if vars.NoEvilLiveOn then begin
+			Write(l1);
+			BreakLoop()
+		end else (if (a2 <> 'obsolete) then Write(l1)))
+end
+@@end

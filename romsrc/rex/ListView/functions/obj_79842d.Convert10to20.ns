@@ -1,0 +1,6 @@
+@@ 0x7983dd names
+func(aEntry) begin
+	local task;
+	(task := self:ConvertOldEntry(aEntry))
+end
+@@end

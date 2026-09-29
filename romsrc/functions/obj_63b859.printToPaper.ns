@@ -1,0 +1,11 @@
+@@ 0x4e1f99
+func(a1) begin
+	(for l1 := 1 to 29 do begin
+			paper[(l1 - 1)] := paper[l1]
+		end);
+	paper[29] := a1;
+	index := (30 - maxLines);
+	self:calcPaperDisplay();
+	paperDisplay:Dirty()
+end
+@@end

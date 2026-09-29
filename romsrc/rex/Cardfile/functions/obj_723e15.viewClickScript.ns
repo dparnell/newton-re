@@ -1,0 +1,39 @@
+@@ 0x724d69
+func(a1) begin
+	l2 := (Length(hitArray) - 1);
+	InkOff(a1);
+	l3 := ((GetPoint(5, a1) + viewOriginY) - origin);
+	l4 := (GetPoint(4, a1) - self:GlobalBox().left);
+	l5 := 0;
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	local l6;
+	local l7;
+	local l8;
+	(for l1 := 0 to l2 do begin
+			if (l3 <= hitArray[l1].vOffset) then begin
+					PlaySound(@51);
+					l6 := hitArray[l1].layout;
+					(l7 := self:LocalBox()).top := (if (l1 = 0) then 0 else (hitArray[(l1 - 1)].vOffset - viewOriginY));
+					l7.bottom := (hitArray[l1].vOffset - viewOriginY);
+					if (l8 := newtAppBase:GetInfoFrame(l6, target.class)).actionFunc then begin
+							if l8:actionFunc(l4, (l3 - l5), self, l7, target, hitArray[l1].path, hitArray[l1].misc) then begin
+									return true
+								end
+						end;
+					self:DoDrawing('Hiliter, [Array: MakeShape(l7)]);
+					if (l6 = target.class) then begin
+							l6 := 'default
+						end;
+					newtAppBase:ShowEditSlip(l6, hitArray[l1].path, nil, nil, nil);
+					self:dirty();
+					return true
+				end;
+			l5 := hitArray[l1].vOffset
+		end);
+	nil
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x484e31
+func() begin
+	folderEdit:OpenForUser(nil, GetVariable(targetView, 'appSymbol), GetVariable(targetView, 'localFoldersOnly), GetVariable(targetView, 'globalFoldersOnly))
+end
+@@end

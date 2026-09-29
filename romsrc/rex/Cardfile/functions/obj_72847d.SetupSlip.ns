@@ -1,0 +1,21 @@
+@@ 0x7284cd
+func(a1, a2) begin
+	a2.body := DeepClone(a1.target);
+	RemoveSlot(a2.body, 'bdayEvent);
+	RemoveSlot(a2.body, 'anniversaryEvent);
+	if (not GetRoot().cardfile:GetAppPreferences().beamNotes) then begin
+			RemoveSlot(a2.body, 'notes)
+		end;
+	(if (a1.target.class = 'owner) then begin
+			RemoveSlot(a2.body, 'owner);
+			a2.body.labels := nil;
+			a2.body.class := 'person;
+			RemoveSlot(a2.body, 'emailPassword);
+			(if a2.body.emailAddrs then (foreach l1 in a2.body.emailAddrs do begin
+						if l1.emailPassword then begin
+								RemoveSlot(l1, 'emailPassword)
+							end
+					end))
+		end)
+end
+@@end

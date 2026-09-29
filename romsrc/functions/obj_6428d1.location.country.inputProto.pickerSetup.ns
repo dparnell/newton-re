@@ -1,0 +1,8 @@
+@@ 0x48de51
+func() begin
+	local l1;
+	(l1 := self:GlobalBox()).right := ((l1.left + indent) - 2);
+	@436:New({default: GetCountryEntry(GetUserConfig('currentCountry))[0], spots: @295, result: 'symbol}, l1, self);
+	nil
+end
+@@end

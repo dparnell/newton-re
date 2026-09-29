@@ -1,0 +1,6 @@
+@@ 0x56235d
+func(a1) begin
+	SetAdd(findApps, EnsureInternal(a1), true);
+	nil
+end
+@@end

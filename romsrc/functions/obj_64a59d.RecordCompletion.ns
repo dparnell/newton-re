@@ -1,0 +1,18 @@
+@@ 0x4259e1
+func(a1, a2) begin
+	if (if (a2 <> 0) then (a2 <> -30011)) then begin
+			fEngineError := 2;
+			return nil
+		end;
+	(if self:TestState(2) then (if ((fCompletionCount := (fCompletionCount + 1)) >= Length(fSoundArray)) then begin
+				if (fEngineError = 0) then begin
+						fEngineError := 2
+					end;
+				if fSoundChannel:isActive() then begin
+						fSoundChannel:stop()
+					end;
+				self:SetState(32);
+				self:SetState(1)
+			end else (if (self:TestStore() = 0) then self:ScheduleInputBlock() else (fEngineError := self:TestStore()))))
+end
+@@end

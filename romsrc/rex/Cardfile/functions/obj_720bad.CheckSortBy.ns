@@ -1,0 +1,14 @@
+@@ 0x73fe11
+func(a1, a2) begin
+	local l1;
+	local l2;
+	(foreach l3 in (l2 := a1:GetIndexes()) do begin
+			if (l3.structure = 'multiSlot) then begin
+					if self:SortPathMatches(l3.path[0], a2) then begin
+							break (l1 := true)
+						end
+				end
+		end);
+	l1
+end
+@@end

@@ -1,0 +1,77 @@
+@@ 0x495e35
+@@const kLiteral_48e235
+"BACKUP_"
+@@const kLiteral_488675
+"Restore"
+@@const kLiteral_47e2b9
+"There was an error while restoring \u201C\u^0\u201D\u. Some items may not have been restored."
+@@main
+func(a1, a2) begin
+	local l1, l2, l3, l4, l5, l6, l7;
+	(if (not LSearch('[Array: @276, @129], a2, 0, '|str=|, nil)) then self:restoreOrdSoup(a1, a2) else begin
+			l1 := self:getSrcStore():GetSoup(a2);
+			l2 := self:getDestStore():GetSoup(Stringer([Array: kLiteral_48e235, a2]));
+			backupCursor:GotoKey(a2);
+			if (not (l3 := backupCursor:entry()).version) then begin
+					AddArraySlot(restoredSoups, a2);
+					if StrEqual(a2, @129) then begin
+							RemAllButBuiltinFromDir();
+							l4 := '[Array: systemDirectory]
+						end else begin
+							self:getSrcStore():GetSoup(a2):RemoveFromStore();
+							call @118 with ();
+							l4 := '[Array: system]
+						end;
+					try begin
+							self:convertSoup(l4, a1, a2)
+						end onexception |evt.ex| do begin
+							if StrEqual(a2, @276) then begin
+									self:fixUserConfig()
+								end;
+							Rethrow()
+						end
+				end else begin
+					try begin
+							self:moveSoup(self:getDestStore(), self:getSrcStore(), Stringer([Array: kLiteral_48e235, a2]), a2);
+							AddArraySlot(restoredSoups, a2)
+						end onexception |evt.ex.cancel| do begin
+							if StrEqual(a2, @276) then begin
+									self:fixUserConfig()
+								end;
+							Rethrow()
+						end onexception |evt.ex.fr.store| do begin
+							if (if HasSlot((l5 := CurrentException()), 'error) then (l5.error = -10617)) then begin
+									GetRoot():Notify(3, kLiteral_488675, ParamStr("There is not enough space to restore \u201C\u^0\u201D\u. Some items may not have been restored.", [Array: a2]))
+								end else begin
+									GetRoot():Notify(3, kLiteral_488675, ParamStr(kLiteral_47e2b9, [Array: a2]))
+								end;
+							if StrEqual(a2, @276) then begin
+									self:fixUserConfig()
+								end;
+							Rethrow()
+						end onexception |evt.ex| do begin
+							GetRoot():Notify(3, kLiteral_488675, ParamStr(kLiteral_47e2b9, [Array: a2]));
+							if StrEqual(a2, @276) then begin
+									self:fixUserConfig()
+								end;
+							Rethrow()
+						end;
+					if StrEqual(a2, @276) then begin
+							ConvertLetterWeights();
+							l7 := (l6 := self:getSrcStore():GetSoup(@276):Query({indexPath: 'tag, beginKey: "UserDictionary", endKey: "UserDictionary"})):entry();
+							(while (if l7 then (not l7.data)) do (l7 := l6:Next()));
+							if (if l7 then l7.data) then begin
+									ConvertDictionaryData(l7.data);
+									EntryChange(l7)
+								end;
+							l7 := (l6 := self:getSrcStore():GetSoup(@276):Query({indexPath: 'tag, beginKey: "Calibration", endKey: "Calibration"})):entry();
+							(while (if l7 then (not l7.data)) do (l7 := l6:Next()));
+							if l7 then begin
+									EntryRemoveFromSoup(l7)
+								end
+						end
+				end;
+			(if StrEqual(a2, @276) then self:fixUserConfig())
+		end)
+end
+@@end

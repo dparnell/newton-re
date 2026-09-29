@@ -1,0 +1,31 @@
+@@ 0x548759
+func(a1, a2, a3) begin
+	local l1, l2, l3, l4;
+	(if (if (a1 <> $\00) then (not IsCommandKeystroke(a1, a2))) then (if (l1 := BFetch(NavKeys, a1, '|chr<|, 'char)) then begin
+				l3 := Length((l2 := self:GetSelectedIconsAndIndexes(a3)).icons);
+				l4 := (if (if (BAnd(a2, 67108864) <> 0) then l1.shiftCommand) then l1.shiftCommand else l1.command);
+				if (l3 = 1) then begin
+						Perform(self, l4, [Array: l2, a3])
+					end else begin
+						if (l3 > 1) then begin
+								if (not l1.noMultiSelect) then begin
+										Perform(self, l4, [Array: l2, a3])
+									end else begin
+										if (l1.noMultiSelect = 'first) then begin
+												self:ChangeSelection(l2.icons[0], l2.icons)
+											end else begin
+												if (l1.noMultiSelect = 'last) then begin
+														self:ChangeSelection(l2.icons[(l3 - 1)], l2.icons)
+													end
+											end
+									end
+							end else begin
+								if l1.NoSelection then begin
+										Perform(self, l4, [Array: l2, a3])
+									end
+							end
+					end;
+				true
+			end))
+end
+@@end

@@ -1,0 +1,15 @@
+@@ 0x5b962d
+func(a1) begin
+	local l1, l2, l3;
+	l1 := (if (a1 < 0) then 'prev else 'Next);
+	l2 := 0;
+	l3 := abs(a1);
+	(while (l2 < l3) do begin
+			if (not Perform(self, l1, [Array: ])) then begin
+					break
+				end;
+			(l2 := (l2 + 1))
+		end);
+	return (l2 * (if (a1 < 0) then -1 else 1))
+end
+@@end

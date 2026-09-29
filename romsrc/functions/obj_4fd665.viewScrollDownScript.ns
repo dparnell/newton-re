@@ -1,0 +1,9 @@
+@@ 0x4fd5a5
+func(a1) begin
+	local l1;
+	(if (stopTime < 1440) then begin
+			DayTable:SlideEffect((-(l1 := ((2 * lineHeight) * a1))), 0, nil, 'doscrollscript, [Array: l1, a1]);
+			self:Dirty()
+		end)
+end
+@@end

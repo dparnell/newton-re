@@ -1,0 +1,6 @@
+@@ 0x4c9a35
+func() begin
+	fields.faxResolution := (if viewValue then 'fine else 'normal);
+	SetUserConfig('faxResolution, fields.faxResolution)
+end
+@@end

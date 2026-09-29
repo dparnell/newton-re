@@ -1,0 +1,29 @@
+@@ 0x4cb0d9
+func() begin
+	if HasSlot(target, 'faxResolution) then begin
+			l1 := (if (target.faxResolution = 'fine) then "fine" else "standard");
+			self:addText(ParamStr("Resolution: ^0", [Array: l1]))
+		end;
+	if (if ((target.state = 'Sent) or (target.state = 'OutLog)) then HasSlot(target, 'duration)) then begin
+			l2 := NumberStr((target.duration div 60));
+			l3 := NumberStr((target.duration mod 60));
+			l1 := ParamStr("^0^1^2^3", [Array: l2, GetLocale().timeformat.timeSepStr2, (if (StrLen(l3) = 1) then $0), l3]);
+			self:addText(ParamStr("Duration: ^0 minutes", [Array: l1]))
+		end;
+	(if target.toRef then begin
+			l4 := GetDataDefs('|nameRef.fax|):GetRoutingInfo(target.toRef);
+			l5 := "";
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			local l5;
+			(foreach l6 in l4 do begin
+					if (if HasSlot(l6, 'displayNumber) then StrFilled(l6.displayNumber)) then begin
+							l5 := (if StrFilled(l5) then ParamStr("^0, ^1", [Array: l5, l6.displayNumber]) else l6.displayNumber)
+						end
+				end);
+			(if StrFilled(l5) then self:addText(ParamStr("Phone: ^0", [Array: l5])))
+		end)
+end
+@@end

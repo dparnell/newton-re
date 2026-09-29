@@ -1,0 +1,5 @@
+@@ 0x599ef5
+func() begin
+	(if (not userConfiguration.mailReceipt) then self:Hide())
+end
+@@end

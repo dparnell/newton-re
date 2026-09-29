@@ -1,0 +1,28 @@
+@@ 0x4eb37d
+func(a1, a2) begin
+	if selected then begin
+			l1 := Query(cursor:soup(), '{type: index});
+			l2 := masterFinder.owner;
+			local l1;
+			local l2;
+			(foreach l3 in selected do begin
+					local l5, l6;
+					l5 := l1:GotoKey(l3._uniqueID);
+					(loop begin
+							if (l5._uniqueID <> l3._uniqueID) then begin
+									break (l5 := nil)
+								end;
+							(if (EntryStore(l5):GetSignature() <> l3._storeID) then (l5 := l1:Next()) else break)
+						end);
+					if l5 then begin
+							(l6 := Clone(l2.canonicalOverviewSelectedItem)).index := a2;
+							l6.instanceTime := l5.mtgStartDate;
+							l6.entryAlias := MakeEntryAlias(l5);
+							AddArraySlot(a1, l6);
+							a2 := (a2 + 1)
+						end
+				end)
+		end;
+	a2
+end
+@@end

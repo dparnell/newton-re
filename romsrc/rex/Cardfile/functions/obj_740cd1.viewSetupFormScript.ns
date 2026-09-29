@@ -1,0 +1,11 @@
+@@ 0x74152d
+func() begin
+	if (superSymbol = 'ownerNames) then begin
+			if IsReadOnly(stepChildren) then begin
+					stepChildren := Clone(stepChildren)
+				end;
+			RemoveSlot(stepChildren, 1)
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

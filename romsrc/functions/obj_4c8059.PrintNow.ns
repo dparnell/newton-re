@@ -1,0 +1,39 @@
+@@ 0x4c7f39
+func(a1) begin
+	currentItem := a1;
+	l1 := TimeInSeconds();
+	if (l2 := GetCurrentFormat(a1)) then begin
+			l2:LastChanceToSetup(a1)
+		end;
+	printView := BuildContext(@341);
+	if (a1.printer = nil) then begin
+			printView.fields := Clone(a1);
+			printView.fields.printer := userConfiguration.currentPrinter
+		end else begin
+			printView.fields := Clone(a1)
+		end;
+	if a1.toRef then begin
+			local l1;
+			local l2;
+			local l3;
+			(foreach l4 in (l3 := GetDataDefs('|nameRef.fax|):GetRoutingInfo(a1.toRef)) do begin
+					local l6;
+					currentRecipient := l4;
+					self:SetupAddressInfo(printView.fields, l4);
+					self:RenderIt(printView, a1);
+					if a1.error then begin
+							break
+						end
+				end)
+		end else begin
+			currentRecipient := currentItem;
+			self:RenderIt(printView, a1)
+		end;
+	printView := nil;
+	if ((l6 := (if ((a1.error = nil) or (a1.error = 0)) then 'Sent else 'ready)) = 'Sent) then begin
+			a1.duration := (TimeInSeconds() - l1)
+		end;
+	self:ItemCompleted(a1, l6, a1.error);
+	a1.error
+end
+@@end

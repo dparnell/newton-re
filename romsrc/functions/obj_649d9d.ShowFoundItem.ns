@@ -1,0 +1,5 @@
+@@ 0x4c1d69
+func(a1, a2) begin
+	(if (if ioEntryView then ioEntryView.entryview) then ioEntryView.entryview:?ShowFoundItem(self:GetTargetFromEntry(a1), a2))
+end
+@@end

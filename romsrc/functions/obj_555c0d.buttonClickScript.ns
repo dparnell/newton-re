@@ -1,0 +1,15 @@
+@@ 0x555bcd
+func() begin
+	local l1;
+	local l2;
+	local l3;
+	l3 := (foreach l4 in (l2 := (if (l1 := GetRoot().ExtrasDrawer.storesFilter) then [Array: l1] else GetStores())) do begin
+			local l6;
+			if l4:IsReadOnly() then begin
+					break true
+				end
+		end);
+	l6 := (if l3 then "\n\nNote - Data on locked cards will be left untouched.");
+	self:Confirm("Packages", ParamStr("Are you sure you want to delete all storage for \u201C\u^0\u201D\u?^1", [Array: target.text, l6]), self, 'Kill)
+end
+@@end

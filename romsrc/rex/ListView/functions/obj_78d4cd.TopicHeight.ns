@@ -1,0 +1,5 @@
+@@ 0x78cc45 names
+func(aTopic) begin
+	(self:TopicBottom(aTopic) - aTopic.viewBounds.top)
+end
+@@end

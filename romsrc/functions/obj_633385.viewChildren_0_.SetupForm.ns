@@ -1,0 +1,6 @@
+@@ 0x4cad89
+func() begin
+	notesArea.optionFlags := nil;
+	(notesArea.target := {data: (if (if fields.comments then (Length(fields.comments) > 0)) then fields.comments else [Array: ])})
+end
+@@end

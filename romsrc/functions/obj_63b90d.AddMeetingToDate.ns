@@ -1,0 +1,53 @@
+@@ 0x4f7ea9
+func(a1, a2, a3) begin
+	local l1, l2, l3, l4, l5, l6, l7;
+	l1 := scheduleView.DayTable:ChildViewFrames();
+	l2 := (a2 - (a2 mod 1440));
+	if (l3 := (if l1 then LSearch(l1, l2, 0, '|=|, 'displaydate))) then begin
+			l3 := l1[l3]
+		end;
+	if l3 then begin
+			if (if a1.viewBounds then (a1.viewBounds.left < 30)) then begin
+					a1.viewBounds := nil
+				end;
+			l4 := a1.viewStationery;
+			l5 := a1.mtgStartDate;
+			a1.mtgStartDate := a2;
+			if ((l4 = 'exceptionMeeting) or (l4 = 'RepeatingMeeting)) then begin
+					if (l4 = 'exceptionMeeting) then begin
+							l5 := a1.originDate
+						end;
+					a1 := self:MakeNewExceptionFrame((l6 := a1.repeatTemplate), l5, a1.mtgStartDate, self:GetMeetingSlot(a1, 'mtgDuration));
+					self:CarefulChange(RepeatSoup, l6, true)
+				end else begin
+					if (l4 = 'cribNote) then begin
+							a1.viewStationery := 'meeting;
+							a1.mtgIconType := nil;
+							a1.mtgDuration := 30;
+							a1.viewBounds := nil;
+							if a1.mtgAlarm then begin
+									a1.mtgAlarm := (a1.mtgStartDate - 10)
+								end
+						end else begin
+							if a1.mtgAlarm then begin
+									a1.mtgAlarm := (a1.mtgStartDate - (l5 - a1.mtgAlarm))
+								end
+						end;
+					self:CarefulAdd(MeetingSoup, a1, true)
+				end;
+			if a1.mtgAlarm then begin
+					self:initializeAlarms()
+				end;
+			l7 := AddView(l3, a1);
+			l3:ReArrangeMeetings();
+			SetKeyView(l7.textView, 1000);
+			l7:Dirty();
+			self:calculateScrollingRects();
+			upDownScroller:AdjustArrows();
+			if a3 then begin
+					calendar:AddUndoAction('RemoveMeetingFromDate, [Array: l7, l2, true])
+				end
+		end else nil;
+	a1
+end
+@@end

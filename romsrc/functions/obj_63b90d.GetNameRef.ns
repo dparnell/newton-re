@@ -1,0 +1,5 @@
+@@ 0x510ae1
+func(a1, a2) begin
+	(if IsNameRef(a1) then a1 else GetDataDefs(a2):MakeNameRef(a1, nil))
+end
+@@end

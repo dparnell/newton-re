@@ -1,0 +1,14 @@
+@@ 0x5308c1
+func(a1, a2, a3) begin
+	l2 := [Array: ];
+	local l1;
+	local l2;
+	local l3;
+	(foreach l3, l1 deeply in CommConfigRegistry do begin
+			if (if (if (if ((a2 = nil) or (if (l1.type <> nil) then StrEqual(l1.type, a2))) then ((a3 = nil) or (if (l1.serviceId <> nil) then StrEqual(l1.serviceId, a3)))) then ((a1 = nil) or (if (l1.name <> nil) then StrEqual(l1.name, a1)))) then (not SetContains(l2, l3))) then begin
+					AddArraySlot(l2, l3)
+				end
+		end);
+	return l2
+end
+@@end

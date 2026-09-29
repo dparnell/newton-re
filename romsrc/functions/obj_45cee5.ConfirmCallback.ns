@@ -1,0 +1,8 @@
+@@ 0x45cea9
+func(a1) begin
+	(if a1 then begin
+			self:SetPassword(newPass.realText);
+			self:MatchedPassword()
+		end)
+end
+@@end

@@ -1,0 +1,18 @@
+@@ 0x4f0141
+func(a1, a2, a3) begin
+	local l1, l2, l3;
+	if (l1 := a1.exceptions) then begin
+			l2 := owner;
+			(while (a2 <> 0) do begin
+					if (not (l3 := LFetch(l1, a2, 0, '|=|, '[pathExpr: 1, mtgStartDate]))) then begin
+							break
+						end;
+					if l2:FindStringInTitleInviteesLocation(l3[1], findWhat, nil) then begin
+							break
+						end;
+					(if a3 then (a2 := NextMeeting((a2 + 1), a1)) else (a2 := PrevMeeting(a2, a1)))
+				end)
+		end;
+	a2
+end
+@@end

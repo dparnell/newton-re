@@ -1,0 +1,25 @@
+@@ 0x4e403d
+func(a1) begin
+	local l1;
+	l1 := {};
+	if family then begin
+			l1.family := family
+		end else begin
+			family := GetFontFamilySym(font)
+		end;
+	if size then begin
+			l1.size := size
+		end else begin
+			size := GetFontSize(font)
+		end;
+	if face then begin
+			l1.face := face
+		end else begin
+			face := GetFontFace(font)
+		end;
+	font := (frame.(slot) := MakeCompactFont(family, size, face));
+	self:LoadFontCache();
+	example.viewFont := font;
+	example:Dirty()
+end
+@@end

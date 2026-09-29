@@ -1,0 +1,16 @@
+@@ 0x560649
+func(a1) begin
+	if (a1 = 'first) then begin
+			a1 := 0
+		end else begin
+			if (a1 = 'prev) then begin
+					a1 := max((currentItem - 1), 0)
+				end else begin
+					if (a1 = 'Next) then begin
+							a1 := min((currentItem + 1), (Length(items) - 1))
+						end
+				end
+		end;
+	self:ShowFakeEntry(a1)
+end
+@@end

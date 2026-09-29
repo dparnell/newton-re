@@ -1,0 +1,7 @@
+@@ 0x649c21
+func() begin
+	local l1;
+	(l1 := GetRoot()).assistant:Close();
+	l1:Notify(3, "Assist", "The Assistant request was cancelled")
+end
+@@end

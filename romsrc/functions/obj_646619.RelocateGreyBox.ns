@@ -1,0 +1,5 @@
+@@ 0x45eb29
+func(a1) begin
+	actualThumbnail:RelocateGreyBox(a1)
+end
+@@end

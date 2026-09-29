@@ -1,0 +1,13 @@
+@@ 0x484a59
+func() begin
+	local l1;
+	(text := (if ((not doCardRouting) or (Length(GetStores()) <= 1)) then (if (targetView:appObjectFileThisIn exists) then GetVariable(targetView, 'appObjectFileThisIn) else begin
+				if ((not target._cursor) or (Length(target._cursor) = 1)) then begin
+						l1 := ParamStr("File this ^0 in", [Array: GetVariable(targetView, 'appObject)[0]])
+					end else begin
+						l1 := ParamStr("File the selected ^0 in", [Array: GetVariable(targetView, 'appObject)[1]])
+					end;
+				l1
+			end) else "And file in"))
+end
+@@end

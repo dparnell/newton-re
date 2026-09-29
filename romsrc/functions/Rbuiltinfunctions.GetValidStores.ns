@@ -1,0 +1,12 @@
+@@ 0x56a079
+func() begin
+	l1 := [Array: ];
+	local l1;
+	(foreach l2 in GetStores() do begin
+			if l2:IsValid() then begin
+					AddArraySlot(l1, l2)
+				end
+		end);
+	l1
+end
+@@end

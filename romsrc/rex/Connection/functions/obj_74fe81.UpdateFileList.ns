@@ -1,0 +1,11 @@
+@@ 0x74ffb5
+func(a1) begin
+	self.listItems := (foreach l1 in currentFiles collect l1.name);
+	self:SetupList();
+	self:SetOrigin(0, 0);
+	selection := nil;
+	protoContext:HideIfVisible(getinfoButton);
+	protoContext:HideIfVisible(doitButton);
+	(if a1 then self:RedoChildren())
+end
+@@end

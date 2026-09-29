@@ -1,0 +1,35 @@
+@@ 0x48542d
+func() begin
+	local l1, l2, l3, l4;
+	if (not (fileArea.folderCluster.clusterValue or storeSelector.storeCluster.clusterValue)) then begin
+			self:Notify(3, "Filing", "A folder or store must be chosen to continue.");
+			return nil
+		end;
+	l2 := (if (if (l1 := storeSelector:GetSelectedStore()) then doCardRouting) then (targetStore <> l1));
+	l3 := (if (if (doCardRouting <> 'onlyCardRouting) then ((target.labels <> newLabels) or TargetIsCursor(target))) then (newLabels <> 42));
+	if ((if otherOtherTargetView then (otherOtherTargetView:FileThis exists)) or (targetView:FileThis exists)) then begin
+			l4 := (if otherOtherTargetView then otherOtherTargetView else targetView);
+			try begin
+					l4:FileThis(target, l3, newLabels, l2, l1)
+				end onexception |evt.ex| do begin
+					self:hilite(nil);
+					Rethrow()
+				end;
+			if l2 then begin
+					filingButton:?Update()
+				end
+		end else begin
+			if l3 then begin
+					target.labels := newLabels;
+					if ((not doCardRouting) or (doCardRouting <> 'onlyCardRouting)) then begin
+							targetView:?filingChanged()
+						end;
+					targetView:?filingChanged()
+				end;
+			if l2 then begin
+					self:UpdateTargetStore()
+				end
+		end;
+	base:Close()
+end
+@@end

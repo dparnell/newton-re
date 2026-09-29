@@ -1,0 +1,12 @@
+@@ 0x452921
+func(a1) begin
+	if StrEqual(a1, " ") then begin
+			cursor:Reset()
+		end else begin
+			cursor:GotoKey(a1)
+		end;
+	self:Update();
+	listBase:Update();
+	listBase:MarkCursorPosition()
+end
+@@end

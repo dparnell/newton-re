@@ -1,0 +1,5 @@
+@@ 0x4fecd1
+func() begin
+	self:realScrollScript(nil)
+end
+@@end

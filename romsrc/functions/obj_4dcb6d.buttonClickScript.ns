@@ -1,0 +1,13 @@
+@@ 0x4dcb0d
+func() begin
+	alarm.jangling := nil;
+	popup := Clone(pop);
+	if alarmOn then begin
+			popup[0] := {item: popup[0], mark: $\uFC0B}
+		end;
+	if userConfiguration.alarmClockTimerOn then begin
+			popup[1] := {item: popup[1], mark: $\uFC0B}
+		end;
+	inherited:buttonClickScript()
+end
+@@end

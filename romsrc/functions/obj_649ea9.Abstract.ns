@@ -1,0 +1,31 @@
+@@ 0x4c5721
+func(a1, a2) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8;
+	if (a1 >= numItems) then begin
+			return nil
+		end;
+	l4 := (Length(headings) - 1);
+	(while (headings[l4].index > a1) do (l4 := (l4 - 1)));
+	if (a1 = headings[l4].index) then begin
+			l3 := [Array: (l5 := (if (headings[l4].collapsed or overviewMode) then '{fillPattern: 5} else '{pensize: 2})), MakeOval(((a2.left - selectIndent) + 3), (a2.bottom - 17), ((a2.left - selectIndent) + 11), (a2.bottom - 9)), '{pensize: 1, fillPattern: 0, font: 1058816}, MakeText(headings[l4].title, (a2.left + 1), a2.top, a2.right, (a2.bottom - 8))];
+			l2 := StrWidth((l1 := ParamStr("^0 ^1", [Array: headings[l4].count, (if (headings[l4].count = 1) then "Item" else "Items")])));
+			AddArraySlot(l3, MakeText(l1, ((a2.right - l2) - 5), a2.top, a2.right, (a2.bottom - 8)));
+			AddArraySlot(l3, MakeLine((a2.left + 1), (a2.bottom - 4), a2.right, (a2.bottom - 4)))
+		end else begin
+			if headings[l4].curs then begin
+					headings[l4].curs:Reset()
+				end else begin
+					headings[l4].curs := self:MakeCursor(currentSoupSymbol, headings[l4].spec)
+				end;
+			l7 := GetItemTransport((l6 := headings[l4].curs:move(((a1 - headings[l4].index) - 1))));
+			(l8 := Clone(a2)).left := (a2.left + 30);
+			l8.right := a2.right;
+			try begin
+					l3 := [Array: OffsetShape(MakeShape(l7.icon), a2.left, (a2.top + 2)), l7:GetTitleInfoShape(l6, l8)]
+				end onexception |evt.ex| do begin
+					l3 := [Array: ]
+				end
+		end;
+	l3
+end
+@@end

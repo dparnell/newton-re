@@ -1,0 +1,1146 @@
+# the objects' area: 0x7a6914, 0xe40c bytes; the byte between objects; the objects' alignment
+area	7a6914	e40c	bf	4
+7a6914	obj_7a6915	41	gc=1
+7a6924	obj_7a6915[0]	43	map=map_7a695d
+7a695c	map_7a695d	41
+7a6998	'sequence	40
+7a69b4	'labels	40
+7a69cc	'_taglist	40
+7a69e8	'iconPro	40
+7a6a00	'_ExportTable	40
+7a6a20	'app	40
+7a6a34	'text	40
+7a6a4c	'icon	40
+7a6a64	'theForm	40
+7a6a7c	'autoClose	40
+7a6a98	'installScript	40
+7a6ab8	'_Setup	40
+7a6ad0	obj_7a6915[0]._taglist	41
+7a6ae8	'|Array|	40
+7a6b00	'_icon	40
+7a6b18	'_nobackup	40
+7a6b34	obj_7a6915[0].iconPro	43	map=map_7a6b49
+7a6b48	map_7a6b49	41
+7a6b5c	map_7a6b5d	41
+7a6b70	'unhilited	40
+7a6b8c	'hilited	40
+7a6ba4	obj_7a6915[0].iconPro.unhilited	43	map=map_7a6bbd
+7a6bbc	map_7a6bbd	41
+7a6bd8	'bounds	40
+7a6bf0	'mask	40
+7a6c08	'colorData	40
+7a6c24	obj_7a6915[0].iconPro.unhilited.bounds	43	map=map_7a6c41
+7a6c40	map_7a6c41	41
+7a6c60	'left	40
+7a6c78	'top	40
+7a6c8c	'right	40
+7a6ca4	'bottom	40
+7a6cbc	obj_7a6915[0].iconPro.unhilited.mask	40
+7a6da8	obj_7a6915[0].iconPro.unhilited.colorData	41
+7a6dbc	obj_7a6915[0].iconPro.unhilited.colorData[0]	43	map=map_7a6dd1
+7a6dd0	map_7a6dd1	41
+7a6de8	'cbits	40
+7a6e00	'bitDepth	40
+7a6e1c	obj_7a6915[0].iconPro.unhilited.colorData[0].cbits	40
+7a7040	obj_7a6915[0].iconPro.unhilited.colorData[1]	43	map=map_7a6dd1
+7a7054	obj_7a6915[0].iconPro.unhilited.colorData[1].cbits	40
+7a7140	'bits	40
+7a7158	obj_7a6915[0].iconPro.hilited	43	map=map_7a6bbd
+7a7170	obj_7a6915[0].iconPro.hilited.bounds	43	map=map_7a6c41
+7a718c	obj_7a6915[0].iconPro.hilited.mask	40
+7a7278	obj_7a6915[0].iconPro.hilited.colorData	41
+7a728c	obj_7a6915[0].iconPro.hilited.colorData[0]	43	map=map_7a6dd1
+7a72a0	obj_7a6915[0].iconPro.hilited.colorData[0].cbits	40
+7a74c4	obj_7a6915[0].iconPro.hilited.colorData[1]	43	map=map_7a6dd1
+7a74d8	obj_7a6915[0].iconPro.hilited.colorData[1].cbits	40
+7a75c4	obj_7a6915[0]._ExportTable	41
+7a75d4	obj_7a6915[0]._ExportTable[0]	43	map=map_7a75f1
+7a75f0	map_7a75f1	41
+7a7610	'name	40
+7a7628	'major	40
+7a7640	'minor	40
+7a7658	'objects	40
+7a7670	'SetUp	40
+7a7688	obj_7a6915[0]._ExportTable[0].objects	41
+7a76e0	obj_7a76e1	43	map=map_7a7795
+7a7794	map_7a7795	41
+7a784c	'viewSetupDoneScript	40
+7a7870	'fBizCard	40
+7a788c	'viewFormat	40
+7a78a8	'fFirstName	40
+7a78c4	'fReadyToQuit	40
+7a78e4	'viewQuitScript	40
+7a7904	'CountryPicker	40
+7a7924	'PhoneWork	40
+7a7940	'viewFlags	40
+7a795c	'SaveWorksiteInfo	40
+7a7980	'NextPage	40
+7a799c	'viewBounds	40
+7a79b8	'datePicker	40
+7a79d4	'fCurrentPage	40
+7a79f4	'fWorkworksite	40
+7a7a14	'viewOverviewScript	40
+7a7a38	'fPersona	40
+7a7a54	'ShowPage	40
+7a7a70	'appSymbol	40
+7a7a8c	'viewJustify	40
+7a7aa8	'viewPostQuitScript	40
+7a7acc	'fFirstPage	40
+7a7ae8	'stepAllocateContext	40
+7a7b0c	'fPages	40
+7a7b24	'fformat	40
+7a7b3c	'declareSelf	40
+7a7b58	'viewSetupFormScript	40
+7a7b7c	'fCompleted	40
+7a7b98	'mapCountry	40
+7a7bb4	'fFirstTime	40
+7a7bd0	'GetCityFromAreacode	40
+7a7bf4	'fScreenSize	40
+7a7c10	'viewClass	40
+7a7c2c	'PreviousPage	40
+7a7c4c	'fCurrentPageIndex	40
+7a7c70	'stepChildren	40
+7a7c90	'fWorkSite	40
+7a7cac	'TimePicker	40
+7a7cc8	'savedBlessed	40
+7a7ce8	'fReviewDone	40
+7a7d04	'SetupClose	40
+7a7d20	obj_7a76e1.viewSetupDoneScript	43	map=map_7a7d41
+7a7d40	map_7a7d41	41
+7a7d64	'class	40
+7a7d7c	'instructions	40
+7a7d9c	'literals	40
+7a7db8	'argFrame	40
+7a7dd4	'numArgs	40
+7a7dec	obj_7a76e1.viewSetupDoneScript.instructions	40
+7a7e70	obj_7a76e1.viewSetupDoneScript.literals	41
+7a7ed4	'currentPersona	40
+7a7ef4	'GetUserConfig	40
+7a7f14	'ResolveEntryAlias	40
+7a7f38	obj_7a7f39	40
+7a7f48	'|string|	40
+7a7f60	obj_7a76e1.viewSetupDoneScript.literals[6]	41
+7a7f78	'first	40
+7a7f90	'last	40
+7a7fa8	obj_7a76e1.viewSetupDoneScript.literals[8]	41
+7a7fc0	'phones	40
+7a7fd8	obj_7a76e1.viewSetupDoneScript.literals[10]	43	map=map_7a7fe5
+7a7fe4	map_7a7fe5	41
+7a7ff4	'GetAppPrefs	40
+7a8010	'homeWorksite	40
+7a8030	'workWorksite	40
+7a8050	'MoveBehind	40
+7a806c	'AddDeferredSend	40
+7a808c	obj_7a76e1.viewQuitScript	43	map=map_7a7d41
+7a80ac	obj_7a76e1.viewQuitScript.instructions	40
+7a8318	obj_7a76e1.viewQuitScript.literals	41
+7a83cc	obj_7a76e1.viewQuitScript.literals[1]	43	map=map_7a83d9
+7a83d8	map_7a83d9	41
+7a83e8	'IsSoupEntry	40
+7a8404	'emporia	40
+7a841c	'MakeEntryAlias	40
+7a843c	'EntryChange	40
+7a8458	'UseCurrentPersona	40
+7a847c	'owner	40
+7a8494	'GetRoot	40
+7a84ac	'cardfile	40
+7a84c8	'AddCard	40
+7a84e0	'AddPersona	40
+7a84fc	'Time	40
+7a8514	obj_7a76e1.viewQuitScript.literals[24]	41
+7a8528	'pathExpr	40
+7a8544	'worldClock	40
+7a8560	'SetLocation	40
+7a857c	'city	40
+7a8594	'GetCityEntry	40
+7a85b4	'country	40
+7a85cc	'AreaCode	40
+7a85e8	'StrFilled	40
+7a8604	'NewCity	40
+7a861c	'StrEqual	40
+7a8638	'currentEmporium	40
+7a8658	'SetUserConfig	40
+7a8678	'UseCurrentEmporium	40
+7a869c	'SetTime	40
+7a86b4	'BusyBoxControl	40
+7a86d4	'postQuit	40
+7a86f0	obj_7a76e1.SaveWorksiteInfo	43	map=map_7a7d41
+7a8710	obj_7a76e1.SaveWorksiteInfo.instructions	40
+7a8790	obj_7a76e1.SaveWorksiteInfo.literals	41
+7a87d8	'cityAlias	40
+7a87f4	'GetCountryEntry	40
+7a8814	'countrySymbol	40
+7a8834	'worksite	40
+7a8850	obj_7a76e1.NextPage	43	map=map_7a7d41
+7a8870	obj_7a76e1.NextPage.instructions	40
+7a88b4	obj_7a76e1.NextPage.literals	41
+7a88dc	'fully	40
+7a88f4	obj_7a76e1.viewBounds	43	map=map_7a8911
+7a8910	map_7a8911	41
+7a8930	obj_7a76e1.viewOverviewScript	43	map=map_7a7d41
+7a8950	obj_7a76e1.viewOverviewScript.instructions	40
+7a8974	obj_7a76e1.viewOverviewScript.literals	41
+7a898c	'PlaySound	40
+7a89a8	obj_7a76e1.ShowPage	43	map=map_7a7d41
+7a89c8	obj_7a76e1.ShowPage.instructions	40
+7a8a24	obj_7a76e1.ShowPage.literals	41
+7a8a58	'LockScreen	40
+7a8a74	'RemoveStepView	40
+7a8a94	'AddStepView	40
+7a8ab0	'Open	40
+7a8ac8	'dirty	40
+7a8ae0	obj_7a76e1.viewPostQuitScript	43	map=map_7a7d41
+7a8b00	obj_7a76e1.viewPostQuitScript.instructions	40
+7a8b14	obj_7a76e1.viewPostQuitScript.literals	41
+7a8b28	'ClearCut	40
+7a8b44	obj_7a76e1.stepAllocateContext	41
+7a8b78	obj_7a8b79	43	map=map_7a8bc1
+7a8bc0	map_7a8bc1	41
+7a8c0c	'TearDown	40
+7a8c28	'titleTExt	40
+7a8c44	'description	40
+7a8c60	'AddWordsToDict	40
+7a8c80	'debug	40
+7a8c98	'_proto	40
+7a8cb0	'vFirstName	40
+7a8ccc	'vLastName	40
+7a8ce8	'vCompanyName	40
+7a8d08	'vAlphaKeyboard	40
+7a8d28	'preAllocatedContext	40
+7a8d4c	obj_7a8b79.stepChildren	41
+7a8d70	obj_7a8d71	43	map=map_7a8d99
+7a8d98	map_7a8d99	41
+7a8dc4	obj_7a8d71.viewBounds	43	map=map_7a8de1
+7a8de0	map_7a8de1	41
+7a8e00	obj_7a8d71.stepChildren	41
+7a8e10	obj_7a8d71.stepChildren[0]	43	map=map_7a8e3d
+7a8e3c	map_7a8e3d	41
+7a8e6c	obj_7a8d71.stepChildren[0].viewBounds	43	map=map_7a8de1
+7a8e88	obj_7a8d71.stepChildren[0].stepChildren	41
+7a8eb8	obj_7a8d71.stepChildren[0].stepChildren[0]	43	map=map_7a8ec9
+7a8ec8	map_7a8ec9	41
+7a8edc	obj_7a8edd	43	map=map_7a8f0d
+7a8f0c	map_7a8f0d	41
+7a8f40	'viewTransferMode	40
+7a8f64	'viewClickScript	40
+7a8f84	obj_7a8edd.viewBounds	43	map=map_7a8911
+7a8fa0	obj_7a8edd.viewSetupDoneScript	43	map=map_7a7d41
+7a8fc0	obj_7a8fc1	40
+7a8fdc	obj_7a8edd.viewSetupDoneScript.literals	41
+7a8ff8	'wide	40
+7a9010	'Hide	40
+7a9028	'Show	40
+7a9040	obj_7a8edd.viewClickScript	43	map=map_7a7d41
+7a9060	obj_7a9061	40
+7a9074	obj_7a8edd.viewClickScript.literals	41
+7a9084	obj_7a8edd.icon	40
+7a9598	'picture	40
+7a95b0	obj_7a8d71.stepChildren[0].stepChildren[1]	43	map=map_7a8ec9
+7a95c0	obj_7a95c1	43	map=map_7a8f0d
+7a95f0	obj_7a95c1.viewBounds	43	map=map_7a8911
+7a960c	obj_7a95c1.viewSetupDoneScript	43	map=map_7a7d41
+7a962c	obj_7a95c1.viewSetupDoneScript.instructions	40
+7a964c	obj_7a95c1.viewSetupDoneScript.literals	41
+7a9668	obj_7a95c1.viewClickScript	43	map=map_7a7d41
+7a9688	obj_7a95c1.viewClickScript.literals	41
+7a9698	obj_7a95c1.icon	40
+7a9e5c	obj_7a8d71.stepChildren[0].stepChildren[2]	43	map=map_7a8ec9
+7a9e6c	obj_7a9e6d	43	map=map_7a9e99
+7a9e98	map_7a9e99	41
+7a9ec8	obj_7a9e6d.viewBounds	43	map=map_7a9ee5
+7a9ee4	map_7a9ee5	41
+7a9f04	obj_7a9e6d.viewSetupDoneScript	43	map=map_7a7d41
+7a9f24	obj_7a9e6d.viewSetupDoneScript.literals	41
+7a9f40	obj_7a9e6d.icon	40
+7aa0a8	obj_7aa0a9	43	map=map_7aa0d5
+7aa0d4	map_7aa0d5	41
+7aa104	'buttonClickScript	40
+7aa128	'viewFont	40
+7aa144	obj_7aa0a9.viewBounds	43	map=map_7a9ee5
+7aa160	obj_7aa0a9.viewSetupFormScript	43	map=map_7a7d41
+7aa180	obj_7aa0a9.viewSetupFormScript.instructions	40
+7aa1dc	obj_7aa0a9.viewSetupFormScript.literals	41
+7aa21c	'buttonText	40
+7aa238	'hasVar	40
+7aa250	obj_7aa251	40
+7aa270	'StrFontWidth	40
+7aa290	'fontHeight	40
+7aa2ac	obj_7aa0a9.buttonClickScript	43	map=map_7a7d41
+7aa2cc	obj_7aa2cd	40
+7aa2f0	obj_7aa0a9.buttonClickScript.literals	41
+7aa30c	'base	40
+7aa324	'_defaultButton	40
+7aa344	obj_7aa345	43	map=map_7aa371
+7aa370	map_7aa371	41
+7aa3a0	obj_7aa345.viewBounds	43	map=map_7a9ee5
+7aa3bc	obj_7aa345.viewSetupFormScript	43	map=map_7a7d41
+7aa3dc	obj_7aa345.viewSetupFormScript.instructions	40
+7aa424	obj_7aa345.viewSetupFormScript.literals	41
+7aa460	obj_7aa345.viewSetupFormScript.literals[3]	40
+7aa47c	obj_7aa345.buttonClickScript	43	map=map_7a7d41
+7aa49c	obj_7aa345.buttonClickScript.literals	41
+7aa4b8	'vGoBackButton	40
+7aa4d8	obj_7aa4d9	43	map=map_7aa4f9
+7aa4f8	map_7aa4f9	41
+7aa51c	obj_7aa4d9.buttonClickScript	43	map=map_7a7d41
+7aa53c	obj_7aa4d9.buttonClickScript.instructions	40
+7aa554	obj_7aa4d9.buttonClickScript.literals	41
+7aa56c	obj_7aa4d9.viewBounds	43	map=map_7a9ee5
+7aa588	'vCloser	40
+7aa5a0	obj_7aa5a1	43	map=map_7aa5d9
+7aa5d8	map_7aa5d9	41
+7aa614	'SetText	40
+7aa62c	'AdjustHeight	40
+7aa64c	obj_7aa5a1.viewBounds	43	map=map_7a9ee5
+7aa668	obj_7aa5a1.SetText	43	map=map_7a7d41
+7aa688	obj_7aa5a1.SetText.instructions	40
+7aa6a0	obj_7aa5a1.SetText.literals	41
+7aa6b8	'SetValue	40
+7aa6d4	obj_7aa5a1.viewSetupFormScript	43	map=map_7a7d41
+7aa6f4	obj_7aa5a1.viewSetupFormScript.instructions	40
+7aa718	obj_7aa5a1.viewSetupFormScript.literals	41
+7aa740	'feedbackTop	40
+7aa75c	'viewLineSpacing	40
+7aa77c	obj_7aa5a1.AdjustHeight	43	map=map_7a7d41
+7aa79c	obj_7aa5a1.AdjustHeight.instructions	40
+7aa80c	obj_7aa5a1.AdjustHeight.literals	41
+7aa850	'feedbackWidth	40
+7aa870	obj_7aa871	41
+7aa884	'font	40
+7aa89c	'RelBounds	40
+7aa8b8	'TextBounds	40
+7aa8d4	'LocalBox	40
+7aa8f0	'negate	40
+7aa908	'vFeedback	40
+7aa924	obj_7a8d71.stepChildren[0].stepChildren[7]	43	map=map_7a8ec9
+7aa934	obj_7aa935	43	map=map_7aa959
+7aa958	map_7aa959	41
+7aa980	obj_7aa935.viewBounds	43	map=map_7a8de1
+7aa99c	obj_7aa935.viewSetupFormScript	43	map=map_7a7d41
+7aa9bc	obj_7aa935.viewSetupFormScript.instructions	40
+7aa9f0	obj_7aa935.viewSetupFormScript.literals	41
+7aaa28	'parent	40
+7aaa40	obj_7a8d71.stepChildren[0].stepChildren[8]	43	map=map_7aaa6d
+7aaa6c	map_7aaa6d	41
+7aaa9c	obj_7a8d71.stepChildren[0].stepChildren[8].viewBounds	43	map=map_7a8de1
+7aaab8	obj_7aaab9	43	map=map_7aaad1
+7aaad0	map_7aaad1	41
+7aaaec	'family	40
+7aab04	'face	40
+7aab1c	'size	40
+7aab34	'espy	40
+7aab4c	obj_7a8d71.stepChildren[0].stepChildren[8].viewSetupFormScript	43	map=map_7a7d41
+7aab6c	obj_7a8d71.stepChildren[0].stepChildren[8].viewSetupFormScript.instructions	40
+7aabc8	obj_7a8d71.stepChildren[0].stepChildren[8].viewSetupFormScript.literals	41
+7aac10	'descriptionHeight	40
+7aac34	'width	40
+7aac4c	obj_7a8d71.stepChildren[0].stepChildren[8].viewSetupDoneScript	43	map=map_7a7d41
+7aac6c	obj_7aac6d	40
+7aac7c	obj_7a8d71.stepChildren[0].viewSetupFormScript	43	map=map_7a7d41
+7aac9c	obj_7a8d71.stepChildren[0].viewSetupFormScript.instructions	40
+7aacec	obj_7a8d71.stepChildren[0].viewSetupFormScript.literals	41
+7aad08	'fSonOfStepChildren	40
+7aad2c	'IsReadOnly	40
+7aad48	'ArrayMunger	40
+7aad64	obj_7a8d71.stepChildren[0].viewSetupDoneScript	43	map=map_7a7d41
+7aad84	obj_7a8d71.stepChildren[0].viewSetupDoneScript.instructions	40
+7aad9c	obj_7a8d71.stepChildren[0].viewSetupDoneScript.literals	41
+7aadb4	obj_7a8d71.viewSetupFormScript	43	map=map_7a7d41
+7aadd4	obj_7a8b79.stepChildren[1]	43	map=map_7aadfd
+7aadfc	map_7aadfd	41
+7aae28	obj_7a8b79.stepChildren[1].viewBounds	43	map=map_7a6c41
+7aae44	obj_7a8b79.stepChildren[1].icon	40
+7ab0d4	obj_7ab0d5	43	map=map_7ab0f5
+7ab0f4	map_7ab0f5	41
+7ab118	'label	40
+7ab130	obj_7ab0d5.viewBounds	43	map=map_7a9ee5
+7ab14c	obj_7ab0d5.label	40
+7ab164	obj_7ab0d5.viewSetupFormScript	43	map=map_7a7d41
+7ab184	obj_7ab185	40
+7ab19c	obj_7ab0d5.viewSetupFormScript.literals	41
+7ab1b4	obj_7ab0d5.viewSetupFormScript.literals[0]	41
+7ab1c8	'vInputLine	40
+7ab1e4	obj_7ab0d5.viewSetupFormScript.literals[1]	41
+7ab1f8	obj_7ab1f9	43	map=map_7ab235
+7ab234	map_7ab235	41
+7ab274	'TextLength	40
+7ab290	'GetText	40
+7ab2a8	obj_7ab1f9.viewBounds	43	map=map_7a8de1
+7ab2c4	obj_7ab1f9.stepChildren	41
+7ab2d8	obj_7ab1f9.stepChildren[0]	43	map=map_7ab2fd
+7ab2fc	map_7ab2fd	41
+7ab324	obj_7ab1f9.stepChildren[0].viewBounds	43	map=map_7a6c41
+7ab340	obj_7ab1f9.stepChildren[0].viewSetupFormScript	43	map=map_7a7d41
+7ab360	obj_7ab361	40
+7ab388	obj_7ab1f9.stepChildren[0].viewSetupFormScript.literals	41
+7ab3a8	'labelFont	40
+7ab3c4	obj_7ab3c5	43	map=map_7ab3f9
+7ab3f8	map_7ab3f9	41
+7ab430	'viewChangedScript	40
+7ab454	obj_7ab3c5.viewBounds	43	map=map_7a8de1
+7ab470	obj_7ab3c5.viewSetupFormScript	43	map=map_7a7d41
+7ab490	obj_7ab491	40
+7ab4ac	obj_7ab3c5.viewSetupFormScript.literals	41
+7ab4cc	obj_7ab3c5.TextLength	43	map=map_7a7d41
+7ab4ec	obj_7ab4ed	40
+7ab508	obj_7ab3c5.TextLength.literals	41
+7ab51c	'StrLen	40
+7ab534	obj_7ab3c5.viewChangedScript	43	map=map_7a7d41
+7ab554	obj_7ab555	40
+7ab564	obj_7ab3c5.viewChangedScript.literals	41
+7ab574	'textChanged	40
+7ab590	obj_7ab1f9.TextLength	43	map=map_7a7d41
+7ab5b0	obj_7ab1f9.TextLength.instructions	40
+7ab5cc	obj_7ab1f9.TextLength.literals	41
+7ab5e4	obj_7ab1f9.SetText	43	map=map_7a7d41
+7ab604	obj_7ab605	40
+7ab618	obj_7ab1f9.SetText.literals	41
+7ab630	'inputBase	40
+7ab64c	obj_7ab1f9.GetText	43	map=map_7a7d41
+7ab66c	obj_7ab66d	40
+7ab67c	obj_7ab1f9.GetText.literals	41
+7ab690	obj_7ab1f9.stepAllocateContext	41
+7ab6a4	obj_7ab6a5	43	map=map_7ab0f5
+7ab6c4	obj_7ab6a5.viewBounds	43	map=map_7a8de1
+7ab6e0	obj_7ab6a5.label	40
+7ab6f8	obj_7ab6a5.viewSetupFormScript	43	map=map_7a7d41
+7ab718	obj_7ab6a5.viewSetupFormScript.literals	41
+7ab730	obj_7ab6a5.viewSetupFormScript.literals[0]	41
+7ab744	obj_7ab6a5.viewSetupFormScript.literals[1]	41
+7ab758	obj_7ab759	43	map=map_7ab0f5
+7ab778	obj_7ab759.viewBounds	43	map=map_7a8de1
+7ab794	obj_7ab759.label	40
+7ab7b0	obj_7ab759.viewSetupFormScript	43	map=map_7a7d41
+7ab7d0	obj_7ab759.viewSetupFormScript.literals	41
+7ab7e8	obj_7ab759.viewSetupFormScript.literals[0]	41
+7ab7fc	obj_7ab759.viewSetupFormScript.literals[1]	41
+7ab810	obj_7ab811	43	map=map_7ab82d
+7ab82c	map_7ab82d	41
+7ab84c	obj_7ab811.viewBounds	43	map=map_7a9ee5
+7ab868	obj_7ab869	43	map=map_7ab885
+7ab884	map_7ab885	41
+7ab8a4	obj_7ab869.viewBounds	43	map=map_7a9ee5
+7ab8c0	obj_7a8b79.viewSetupDoneScript	43	map=map_7a7d41
+7ab8e0	obj_7a8b79.viewSetupDoneScript.instructions	40
+7ab928	obj_7a8b79.viewSetupDoneScript.literals	41
+7ab968	obj_7a8b79.viewSetupDoneScript.literals[4]	41
+7ab97c	obj_7a8b79.viewSetupDoneScript.literals[7]	41
+7ab990	'company	40
+7ab9a8	'SetKeyView	40
+7ab9c4	obj_7a8b79.TearDown	43	map=map_7a7d41
+7ab9e4	obj_7a8b79.TearDown.instructions	40
+7aba34	obj_7a8b79.TearDown.literals	41
+7aba6c	obj_7a8b79.TearDown.literals[2]	41
+7aba80	obj_7a8b79.TearDown.literals[6]	41
+7aba94	obj_7a8b79.titleTExt	40
+7abac4	obj_7a8b79.description	40
+7abbbc	obj_7a8b79.AddWordsToDict	43	map=map_7a7d41
+7abbdc	obj_7a8b79.AddWordsToDict.instructions	40
+7abc40	obj_7a8b79.AddWordsToDict.literals	41
+7abc70	obj_7a8b79.AddWordsToDict.literals[0]	40
+7abca4	'rejectAll	40
+7abcc0	'StringFilter	40
+7abce0	'SplitString	40
+7abcfc	'LookupWord	40
+7abd18	'ReviewDict	40
+7abd34	'AddWord	40
+7abd4c	'PageBase	40
+7abd68	obj_7a8b79.debug	40
+7abd80	obj_7abd81	43	map=map_7abdcd
+7abdcc	map_7abdcd	41
+7abe1c	'SetFeedback	40
+7abe38	'AllowContinue	40
+7abe58	obj_7abd81.viewBounds	43	map=map_7a8de1
+7abe74	obj_7abd81.stepChildren	41
+7abe84	obj_7abd81.viewSetupFormScript	43	map=map_7a7d41
+7abea4	obj_7abd81.viewSetupFormScript.instructions	40
+7abef4	obj_7abd81.viewSetupFormScript.literals	41
+7abf2c	obj_7abd81.viewSetupFormScript.literals[7]	40
+7abf3c	obj_7abd81.fSonOfStepChildren	41
+7abf48	obj_7abd81.SetFeedback	43	map=map_7a7d41
+7abf68	obj_7abd81.SetFeedback.instructions	40
+7abf7c	obj_7abd81.SetFeedback.literals	41
+7abf90	obj_7abd81.AllowContinue	43	map=map_7a7d41
+7abfb0	obj_7abd81.AllowContinue.instructions	40
+7abfcc	obj_7abd81.AllowContinue.literals	41
+7abfe4	obj_7abd81.viewQuitScript	43	map=map_7a7d41
+7ac004	obj_7abd81.viewQuitScript.instructions	40
+7ac024	obj_7abd81.viewQuitScript.literals	41
+7ac03c	'Intern	40
+7ac054	obj_7abd81.stepAllocateContext	41
+7ac080	obj_7a8b79.stepAllocateContext	41
+7ac0cc	obj_7ac0cd	43	map=map_7ac109
+7ac108	map_7ac109	41
+7ac148	'Refresh	40
+7ac160	'vPicker	40
+7ac178	obj_7ac0cd.description	40
+7ac248	obj_7ac0cd.titleTExt	40
+7ac280	obj_7ac0cd.TearDown	43	map=map_7a7d41
+7ac2a0	obj_7ac0cd.TearDown.instructions	40
+7ac2bc	obj_7ac0cd.TearDown.literals	41
+7ac2d8	'|Setup:Newton|	40
+7ac2f8	'EntryChangeXmit	40
+7ac318	obj_7ac0cd.stepChildren	41
+7ac32c	obj_7ac32d	43	map=map_7ac35d
+7ac35c	map_7ac35d	41
+7ac390	'PickWorld	40
+7ac3ac	'shortCircuit	40
+7ac3cc	obj_7ac32d.viewBounds	43	map=map_7a6c41
+7ac3e8	obj_7ac32d.PickWorld	43	map=map_7a7d41
+7ac408	obj_7ac32d.PickWorld.instructions	40
+7ac44c	obj_7ac32d.PickWorld.literals	41
+7ac484	'symbol	40
+7ac49c	'SetLocale	40
+7ac4b8	'pickBase	40
+7ac4d4	obj_7ac32d.viewSetupFormScript	43	map=map_7a7d41
+7ac4f4	obj_7ac32d.viewSetupFormScript.instructions	40
+7ac538	obj_7ac32d.viewSetupFormScript.literals	41
+7ac568	'initialSpot	40
+7ac584	'countrySlot	40
+7ac5a0	obj_7ac0cd.viewSetupDoneScript	43	map=map_7a7d41
+7ac5c0	obj_7ac0cd.viewSetupDoneScript.instructions	40
+7ac5d8	obj_7ac0cd.viewSetupDoneScript.literals	41
+7ac5f0	obj_7ac0cd.Refresh	43	map=map_7a7d41
+7ac610	obj_7ac0cd.debug	40
+7ac62c	obj_7ac0cd.stepAllocateContext	41
+7ac660	obj_7ac661	43	map=map_7ac69d
+7ac69c	map_7ac69d	41
+7ac6dc	'vVoice	40
+7ac6f4	'vFax	40
+7ac70c	obj_7ac70d	40
+7ac790	obj_7ac661.TearDown	43	map=map_7a7d41
+7ac7b0	obj_7ac661.TearDown.instructions	40
+7ac914	obj_7ac661.TearDown.literals	41
+7ac974	'GetTextArea	40
+7ac990	'GetTextLocal	40
+7ac9b0	obj_7ac9b1	41
+7ac9c8	'phone	40
+7ac9e0	'MakePhone	40
+7ac9fc	'workPhone	40
+7aca18	'faxPhone	40
+7aca34	'place	40
+7aca4c	obj_7ac661.TearDown.literals[20]	40
+7aca64	obj_7ac661.titleTExt	40
+7acab0	obj_7ac661.stepChildren	41
+7acad0	obj_7acad1	43	map=map_7acaf5
+7acaf4	map_7acaf5	41
+7acb1c	'entryFlags	40
+7acb38	obj_7acad1.viewBounds	43	map=map_7a8de1
+7acb54	obj_7acad1.viewSetupFormScript	43	map=map_7a7d41
+7acb74	obj_7acb75	40
+7acc10	obj_7acad1.viewSetupFormScript.literals	41
+7acc4c	'ParsePhone	40
+7acc68	'SetTextArea	40
+7acc84	'SetTextLocal	40
+7acca4	obj_7acad1.label	40
+7accc8	obj_7accc9	43	map=map_7acd11
+7acd10	map_7acd11	41
+7acd5c	'vInputCityCode	40
+7acd7c	'vInputLocalNum	40
+7acd9c	obj_7accc9.viewBounds	43	map=map_7a8de1
+7acdb8	obj_7accc9.stepChildren	41
+7acdd8	obj_7accc9.stepChildren[0]	43	map=map_7ab2fd
+7acdfc	obj_7accc9.stepChildren[0].viewBounds	43	map=map_7a6c41
+7ace18	obj_7accc9.stepChildren[0].viewSetupFormScript	43	map=map_7a7d41
+7ace38	obj_7accc9.stepChildren[0].viewSetupFormScript.literals	41
+7ace58	obj_7accc9.stepChildren[1]	43	map=map_7ace7d
+7ace7c	map_7ace7d	41
+7acea4	obj_7accc9.stepChildren[1].viewBounds	43	map=map_7a6c41
+7acec0	obj_7accc9.stepChildren[1].text	40
+7aced0	obj_7aced1	43	map=map_7acf09
+7acf08	map_7acf09	41
+7acf44	'moveKeyView	40
+7acf60	obj_7aced1.viewBounds	43	map=map_7a6c41
+7acf7c	obj_7aced1.viewSetupFormScript	43	map=map_7a7d41
+7acf9c	obj_7aced1.viewSetupFormScript.literals	41
+7acfbc	obj_7aced1.TextLength	43	map=map_7a7d41
+7acfdc	obj_7aced1.TextLength.literals	41
+7acff0	obj_7aced1.viewChangedScript	43	map=map_7a7d41
+7ad010	obj_7aced1.viewChangedScript.instructions	40
+7ad054	obj_7aced1.viewChangedScript.literals	41
+7ad084	obj_7aced1.viewChangedScript.literals[5]	40
+7ad098	obj_7aced1.moveKeyView	43	map=map_7a7d41
+7ad0b8	obj_7aced1.moveKeyView.instructions	40
+7ad0cc	obj_7aced1.moveKeyView.literals	41
+7ad0e0	obj_7accc9.stepChildren[3]	43	map=map_7ace7d
+7ad104	obj_7accc9.stepChildren[3].viewBounds	43	map=map_7a8de1
+7ad120	obj_7accc9.stepChildren[3].text	40
+7ad130	obj_7ad131	43	map=map_7ab3f9
+7ad164	obj_7ad131.viewBounds	43	map=map_7a6c41
+7ad180	obj_7ad131.viewSetupFormScript	43	map=map_7a7d41
+7ad1a0	obj_7ad131.viewSetupFormScript.literals	41
+7ad1c0	obj_7ad131.TextLength	43	map=map_7a7d41
+7ad1e0	obj_7ad131.TextLength.literals	41
+7ad1f4	obj_7ad131.viewChangedScript	43	map=map_7a7d41
+7ad214	obj_7ad131.viewChangedScript.literals	41
+7ad224	obj_7accc9.TextLength	43	map=map_7a7d41
+7ad244	obj_7accc9.TextLength.instructions	40
+7ad260	obj_7accc9.TextLength.literals	41
+7ad27c	obj_7accc9.GetTextLocal	43	map=map_7a7d41
+7ad29c	obj_7accc9.GetTextLocal.literals	41
+7ad2b0	obj_7accc9.GetTextArea	43	map=map_7a7d41
+7ad2d0	obj_7accc9.GetTextArea.literals	41
+7ad2e4	obj_7accc9.SetTextLocal	43	map=map_7a7d41
+7ad304	obj_7accc9.SetTextLocal.literals	41
+7ad31c	obj_7accc9.SetTextArea	43	map=map_7a7d41
+7ad33c	obj_7accc9.SetTextArea.literals	41
+7ad354	obj_7accc9.stepAllocateContext	41
+7ad370	obj_7ad371	43	map=map_7ad399
+7ad398	map_7ad399	41
+7ad3c4	obj_7ad371.label	40
+7ad3e4	obj_7ad371.textChanged	43	map=map_7a7d41
+7ad404	obj_7ad371.viewBounds	43	map=map_7a8de1
+7ad420	obj_7ad371.viewSetupFormScript	43	map=map_7a7d41
+7ad440	obj_7ad371.viewSetupFormScript.literals	41
+7ad47c	obj_7ac661.stepChildren[3]	43	map=map_7ad4a1
+7ad4a0	map_7ad4a1	41
+7ad4c8	obj_7ac661.stepChildren[3].viewBounds	43	map=map_7a8de1
+7ad4e4	obj_7ac661.stepChildren[3].icon	40
+7ade34	obj_7ac661.stepChildren[4]	43	map=map_7a8ec9
+7ade44	obj_7ade45	43	map=map_7ade61
+7ade60	map_7ade61	41
+7ade80	obj_7ade45.viewSetupFormScript	43	map=map_7a7d41
+7adea0	obj_7ade45.viewBounds	43	map=map_7a8911
+7adebc	obj_7ac661.viewSetupDoneScript	43	map=map_7a7d41
+7adedc	obj_7ac661.viewSetupDoneScript.instructions	40
+7adef8	obj_7ac661.viewSetupDoneScript.literals	41
+7adf1c	obj_7ac661.debug	40
+7adf3c	obj_7ac661.stepAllocateContext	41
+7adf78	obj_7adf79	43	map=map_7adfb9
+7adfb8	map_7adfb9	41
+7adffc	'fullDateSpec	40
+7ae01c	'dateValue	40
+7ae038	obj_7adf79.stepChildren	41
+7ae054	obj_7adf79.stepChildren[1]	43	map=map_7ae07d
+7ae07c	map_7ae07d	41
+7ae0a8	obj_7adf79.stepChildren[1].viewBounds	43	map=map_7a6c41
+7ae0c4	obj_7adf79.stepChildren[1].icon	40
+7aeb64	obj_7adf79.stepChildren[2]	43	map=map_7aeb8d
+7aeb8c	map_7aeb8d	41
+7aebb8	'selectedDates	40
+7aebd8	'noTodayShow	40
+7aebf4	'NewTime	40
+7aec0c	obj_7adf79.stepChildren[2].viewBounds	43	map=map_7a6c41
+7aec28	'removesToday	40
+7aec48	obj_7adf79.stepChildren[2].NewTime	43	map=map_7a7d41
+7aec68	obj_7adf79.stepChildren[2].NewTime.instructions	40
+7aec7c	obj_7adf79.stepChildren[2].NewTime.literals	41
+7aec8c	obj_7adf79.stepChildren[3]	43	map=map_7aecb9
+7aecb8	map_7aecb9	41
+7aece8	obj_7adf79.stepChildren[3].viewBounds	43	map=map_7a6c41
+7aed04	obj_7adf79.stepChildren[3].text	40
+7aed8c	obj_7adf79.titleTExt	40
+7aedc0	obj_7adf79.description	40
+7aee94	obj_7adf79.TearDown	43	map=map_7a7d41
+7aeeb4	obj_7adf79.TearDown.instructions	40
+7aeee0	obj_7adf79.TearDown.literals	41
+7aeefc	'mod	40
+7aef10	obj_7adf79.viewSetupFormScript	43	map=map_7a7d41
+7aef30	obj_7adf79.viewSetupFormScript.instructions	40
+7aef50	obj_7adf79.viewSetupFormScript.literals	41
+7aef78	'value	40
+7aef90	'Date	40
+7aefa8	'year	40
+7aefc0	obj_7adf79.viewSetupDoneScript	43	map=map_7a7d41
+7aefe0	obj_7adf79.viewSetupDoneScript.instructions	40
+7aeff8	obj_7adf79.viewSetupDoneScript.literals	41
+7af00c	obj_7adf79.Refresh	43	map=map_7a7d41
+7af02c	'cover	40
+7af044	obj_7adf79.debug	40
+7af068	obj_7af069	43	map=map_7af0a9
+7af0a8	map_7af0a9	41
+7af0ec	'viewSetupChildrenScript	40
+7af114	'DigitalClock	40
+7af134	obj_7af069.stepChildren	41
+7af14c	obj_7af069.stepChildren[1]	43	map=map_7aadfd
+7af174	obj_7af069.stepChildren[1].viewBounds	43	map=map_7a8de1
+7af190	obj_7af069.stepChildren[1].icon	40
+7afc98	obj_7afc99	43	map=map_7afcbd
+7afcbc	map_7afcbd	41
+7afce4	'timeChanged	40
+7afd00	obj_7afc99.viewBounds	43	map=map_7a8de1
+7afd1c	obj_7afc99.timeChanged	43	map=map_7a7d41
+7afd3c	obj_7afd3d	40
+7afd4c	obj_7afc99.timeChanged.literals	41
+7afd5c	obj_7af069.viewSetupChildrenScript	43	map=map_7a7d41
+7afd7c	obj_7af069.viewSetupChildrenScript.instructions	40
+7afd90	obj_7af069.viewSetupChildrenScript.literals	41
+7afda0	obj_7af069.TearDown	43	map=map_7a7d41
+7afdc0	obj_7af069.TearDown.instructions	40
+7afdd4	obj_7af069.TearDown.literals	41
+7afdec	obj_7af069.description	40
+7aff28	obj_7af069.titleTExt	40
+7aff50	obj_7af069.Refresh	43	map=map_7a7d41
+7aff70	obj_7af069.Refresh.instructions	40
+7aff8c	obj_7af069.Refresh.literals	41
+7affac	obj_7af069.Refresh.literals[0]	40
+7affe4	'HourMinute	40
+7b0000	obj_7af069.debug	40
+7b0024	obj_7af069.viewSetupDoneScript	43	map=map_7a7d41
+7b0044	obj_7b0045	40
+7b0058	obj_7af069.viewSetupDoneScript.literals	41
+7b0068	obj_7af069.stepAllocateContext	41
+7b009c	'normal	40
+7b00b4	obj_7a76e1.viewSetupFormScript	43	map=map_7a7d41
+7b00d4	obj_7a76e1.viewSetupFormScript.instructions	40
+7b0164	obj_7a76e1.viewSetupFormScript.literals	41
+7b01d4	'UserConfiguration	40
+7b01f8	'blessedApp	40
+7b0214	'paperroll	40
+7b0230	'GetAppParams	40
+7b0250	'appAreaWidth	40
+7b0270	'appAreaHeight	40
+7b0290	'displayParams	40
+7b02b0	'rootBounds	40
+7b02cc	'appAreaGlobalLeft	40
+7b02f0	'appAreaGlobalTop	40
+7b0314	'OffsetRect	40
+7b0330	obj_7a76e1.GetCityFromAreacode	43	map=map_7a7d41
+7b0350	obj_7a76e1.GetCityFromAreacode.instructions	40
+7b039c	obj_7a76e1.GetCityFromAreacode.literals	41
+7b03cc	'index	40
+7b03e4	obj_7a76e1.GetCityFromAreacode.literals[3]	41
+7b0404	'type	40
+7b041c	'IndexPath	40
+7b0438	'beginKey	40
+7b0454	'endKey	40
+7b046c	'GetLocationSoup	40
+7b048c	'Query	40
+7b04a4	'entry	40
+7b04bc	'Next	40
+7b04d4	obj_7a76e1.PreviousPage	43	map=map_7a7d41
+7b04f4	obj_7a76e1.PreviousPage.instructions	40
+7b051c	obj_7a76e1.PreviousPage.literals	41
+7b0534	obj_7a76e1.stepChildren	41
+7b056c	obj_7b056d	43	map=map_7b05a9
+7b05a8	map_7b05a9	41
+7b05e8	'LeaveWelcomeScreen	40
+7b060c	'vVisibleCover	40
+7b062c	obj_7b056d.viewBounds	43	map=map_7a8de1
+7b0648	obj_7b056d.viewClickScript	43	map=map_7a7d41
+7b0668	obj_7b056d.viewClickScript.instructions	40
+7b0690	obj_7b056d.viewClickScript.literals	41
+7b06a8	'StrokeDone	40
+7b06c4	obj_7b056d.stepChildren	41
+7b06d4	obj_7b06d5	43	map=map_7b0701
+7b0700	map_7b0701	41
+7b0730	obj_7b06d5.viewBounds	43	map=map_7a8de1
+7b074c	obj_7b06d5.stepChildren	41
+7b075c	obj_7b06d5.stepChildren[0]	43	map=map_7b0785
+7b0784	map_7b0785	41
+7b07b0	obj_7b06d5.stepChildren[0].viewBounds	43	map=map_7a8de1
+7b07cc	obj_7b06d5.stepChildren[0].stepChildren	41
+7b07f4	obj_7b06d5.stepChildren[0].stepChildren[0]	43	map=map_7a8ec9
+7b0804	obj_7b06d5.stepChildren[0].stepChildren[1]	43	map=map_7a8ec9
+7b0814	obj_7b06d5.stepChildren[0].stepChildren[2]	43	map=map_7a8ec9
+7b0824	obj_7b06d5.stepChildren[0].stepChildren[3]	43	map=map_7b0839
+7b0838	map_7b0839	41
+7b0850	obj_7b06d5.stepChildren[0].stepChildren[3].titleTExt	40
+7b086c	obj_7b06d5.stepChildren[0].stepChildren[4]	43	map=map_7b088d
+7b088c	map_7b088d	41
+7b08b0	obj_7b06d5.stepChildren[0].stepChildren[4].viewBounds	43	map=map_7a8de1
+7b08cc	obj_7b06d5.stepChildren[0].stepChildren[4].text	40
+7b0a00	obj_7b0a01	43	map=map_7aa371
+7b0a2c	obj_7b0a01.viewBounds	43	map=map_7a9ee5
+7b0a48	obj_7b0a01.viewSetupFormScript	43	map=map_7a7d41
+7b0a68	obj_7b0a01.viewSetupFormScript.instructions	40
+7b0ac4	obj_7b0a01.viewSetupFormScript.literals	41
+7b0b04	obj_7b0a01.buttonClickScript	43	map=map_7a7d41
+7b0b24	obj_7b0a01.buttonClickScript.literals	41
+7b0b34	obj_7b06d5.stepChildren[0].stepChildren[6]	43	map=map_7b0b51
+7b0b50	map_7b0b51	41
+7b0b70	obj_7b06d5.stepChildren[0].stepChildren[6].viewSetupDoneScript	43	map=map_7a7d41
+7b0b90	obj_7b06d5.stepChildren[0].stepChildren[6].viewSetupDoneScript.instructions	40
+7b0ba8	obj_7b06d5.stepChildren[0].stepChildren[6].viewSetupDoneScript.literals	41
+7b0bbc	obj_7b06d5.stepChildren[0].stepChildren[6].viewBounds	43	map=map_7a8911
+7b0bd8	obj_7b06d5.stepChildren[0].viewSetupFormScript	43	map=map_7a7d41
+7b0bf8	obj_7b06d5.viewSetupFormScript	43	map=map_7a7d41
+7b0c18	obj_7b056d.viewSetupFormScript	43	map=map_7a7d41
+7b0c38	obj_7b056d.viewSetupFormScript.literals	41
+7b0c48	obj_7b056d.LeaveWelcomeScreen	43	map=map_7a7d41
+7b0c68	obj_7b056d.LeaveWelcomeScreen.instructions	40
+7b0c90	obj_7b056d.LeaveWelcomeScreen.literals	41
+7b0cb0	'CalibrateTablet	40
+7b0cd0	'Close	40
+7b0ce8	obj_7b056d.stepAllocateContext	41
+7b0d04	obj_7b0d05	43	map=map_7b0d4d
+7b0d4c	map_7b0d4d	41
+7b0d98	'fieldOrder	40
+7b0db4	'vAddr1	40
+7b0dcc	'vAddr2	40
+7b0de4	'vCity	40
+7b0dfc	'vRegion	40
+7b0e14	'vZipInput	40
+7b0e30	obj_7b0d05.stepChildren	41
+7b0e5c	obj_7b0e5d	43	map=map_7ab0f5
+7b0e7c	obj_7b0e5d.viewBounds	43	map=map_7a8de1
+7b0e98	obj_7b0e5d.label	40
+7b0eb4	obj_7b0e5d.viewSetupFormScript	43	map=map_7a7d41
+7b0ed4	obj_7b0e5d.viewSetupFormScript.instructions	40
+7b0ef8	obj_7b0e5d.viewSetupFormScript.literals	41
+7b0f20	obj_7b0e5d.viewSetupFormScript.literals[0]	41
+7b0f34	obj_7b0e5d.viewSetupFormScript.literals[1]	41
+7b0f48	'functions	40
+7b0f64	'KeyIn	40
+7b0f7c	'AddDelayedCall	40
+7b0f9c	obj_7b0f9d	43	map=map_7ab0f5
+7b0fbc	obj_7b0f9d.viewBounds	43	map=map_7a8de1
+7b0fd8	obj_7b0f9d.viewSetupFormScript	43	map=map_7a7d41
+7b0ff8	obj_7b0f9d.viewSetupFormScript.literals	41
+7b1010	obj_7b0f9d.viewSetupFormScript.literals[0]	41
+7b1024	obj_7b0f9d.viewSetupFormScript.literals[1]	41
+7b1038	obj_7b1039	43	map=map_7ab0f5
+7b1058	obj_7b1039.viewBounds	43	map=map_7a8de1
+7b1074	obj_7b1039.label	40
+7b108c	obj_7b1039.viewSetupFormScript	43	map=map_7a7d41
+7b10ac	obj_7b10ad	40
+7b10c8	obj_7b1039.viewSetupFormScript.literals	41
+7b10ec	'GetLocale	40
+7b1108	'cityLabel	40
+7b1124	obj_7b1039.viewSetupFormScript.literals[3]	41
+7b1138	obj_7b1039.viewSetupFormScript.literals[4]	41
+7b114c	obj_7b114d	43	map=map_7ab0f5
+7b116c	obj_7b114d.viewBounds	43	map=map_7a8de1
+7b1188	obj_7b114d.label	40
+7b11a0	obj_7b114d.viewSetupFormScript	43	map=map_7a7d41
+7b11c0	obj_7b114d.viewSetupFormScript.literals	41
+7b11e4	'regionLabel	40
+7b1200	obj_7b114d.viewSetupFormScript.literals[3]	41
+7b1214	obj_7b114d.viewSetupFormScript.literals[4]	41
+7b1228	obj_7b1229	43	map=map_7ab0f5
+7b1248	obj_7b1229.viewBounds	43	map=map_7a8de1
+7b1264	obj_7b1229.label	40
+7b1284	obj_7b1229.viewSetupFormScript	43	map=map_7a7d41
+7b12a4	obj_7b1229.viewSetupFormScript.instructions	40
+7b12b8	obj_7b1229.viewSetupFormScript.literals	41
+7b12d0	'postalCodeLabel	40
+7b12f0	obj_7b0d05.stepChildren[6]	43	map=map_7b1315
+7b1314	map_7b1315	41
+7b133c	obj_7b0d05.stepChildren[6].viewBounds	43	map=map_7a8de1
+7b1358	obj_7b0d05.stepChildren[6].icon	40
+7b167c	obj_7b0d05.stepChildren[7]	43	map=map_7b1695
+7b1694	map_7b1695	41
+7b16b0	obj_7b0d05.stepChildren[7].viewBounds	43	map=map_7a8911
+7b16cc	obj_7b0d05.TearDown	43	map=map_7a7d41
+7b16ec	obj_7b0d05.TearDown.instructions	40
+7b1728	obj_7b0d05.TearDown.literals	41
+7b1768	'address	40
+7b1780	'address2	40
+7b179c	'region	40
+7b17b4	'postal_code	40
+7b17d0	obj_7b0d05.viewSetupDoneScript	43	map=map_7a7d41
+7b17f0	obj_7b0d05.viewSetupDoneScript.instructions	40
+7b183c	obj_7b0d05.viewSetupDoneScript.literals	41
+7b1884	obj_7b0d05.titleTExt	40
+7b18c8	obj_7b0d05.debug	40
+7b18e4	obj_7b0d05.fieldOrder	41
+7b1910	obj_7b0d05.stepAllocateContext	41
+7b1964	obj_7b1965	43	map=map_7b199d
+7b199c	map_7b199d	41
+7b19d8	obj_7b1965.TearDown	43	map=map_7a7d41
+7b19f8	obj_7b1965.TearDown.instructions	40
+7b1b48	obj_7b1965.TearDown.literals	41
+7b1ba0	'homePhone	40
+7b1bbc	'homefaxPhone	40
+7b1bdc	obj_7b1965.TearDown.literals[18]	40
+7b1bf4	obj_7b1965.titleTExt	40
+7b1c40	obj_7b1965.stepChildren	41
+7b1c60	obj_7b1c61	43	map=map_7acaf5
+7b1c84	obj_7b1c61.viewBounds	43	map=map_7a8de1
+7b1ca0	obj_7b1c61.viewSetupFormScript	43	map=map_7a7d41
+7b1cc0	obj_7b1c61.viewSetupFormScript.literals	41
+7b1cfc	obj_7b1c61.label	40
+7b1d20	obj_7b1d21	43	map=map_7ad399
+7b1d48	obj_7b1d21.label	40
+7b1d68	obj_7b1d21.textChanged	43	map=map_7a7d41
+7b1d88	obj_7b1d21.viewBounds	43	map=map_7a8de1
+7b1da4	obj_7b1d21.viewSetupFormScript	43	map=map_7a7d41
+7b1dc4	obj_7b1d21.viewSetupFormScript.literals	41
+7b1e00	obj_7b1965.stepChildren[3]	43	map=map_7b1e25
+7b1e24	map_7b1e25	41
+7b1e4c	obj_7b1965.stepChildren[3].viewBounds	43	map=map_7a8911
+7b1e68	obj_7b1965.stepChildren[3].icon	40
+7b26c4	obj_7b1965.stepChildren[4]	43	map=map_7a8ec9
+7b26d4	obj_7b1965.viewSetupDoneScript	43	map=map_7a7d41
+7b26f4	obj_7b1965.viewSetupDoneScript.instructions	40
+7b270c	obj_7b1965.viewSetupDoneScript.literals	41
+7b2728	obj_7b1965.debug	40
+7b2740	obj_7b1965.stepAllocateContext	41
+7b277c	obj_7b277d	43	map=map_7b27a5
+7b27a4	map_7b27a5	41
+7b27d0	obj_7b277d.titleTExt	40
+7b2814	obj_7b277d.description	40
+7b2884	obj_7b277d.viewBounds	43	map=map_7a8de1
+7b28a0	'sample	40
+7b28b8	obj_7b277d.stepChildren	41
+7b28cc	obj_7b277d.stepChildren[1]	43	map=map_7b28f1
+7b28f0	map_7b28f1	41
+7b2918	obj_7b277d.stepChildren[1].viewBounds	43	map=map_7a8de1
+7b2934	obj_7b277d.stepChildren[1].viewSetupFormScript	43	map=map_7a7d41
+7b2954	obj_7b277d.stepChildren[1].viewSetupFormScript.instructions	40
+7b2968	obj_7b277d.stepChildren[1].viewSetupFormScript.literals	41
+7b297c	obj_7b277d.stepChildren[1].viewSetupFormScript.literals[0]	41
+7b2990	obj_7b277d.debug	40
+7b29b4	obj_7b29b5	43	map=map_7b29ed
+7b29ec	map_7b29ed	41
+7b2a28	'xline	40
+7b2a40	'sigCapture	40
+7b2a5c	'eraseButton	40
+7b2a78	obj_7b29b5.stepChildren	41
+7b2a98	obj_7b29b5.stepChildren[1]	43	map=map_7ad4a1
+7b2abc	obj_7b29b5.stepChildren[1].viewBounds	43	map=map_7a9ee5
+7b2ad8	obj_7b29b5.stepChildren[1].icon	40
+7b303c	obj_7b303d	43	map=map_7b3061
+7b3060	map_7b3061	41
+7b3088	obj_7b303d.text	40
+7b3098	obj_7b303d.viewBounds	43	map=map_7a8de1
+7b30b4	obj_7b30b5	43	map=map_7b30e5
+7b30e4	map_7b30e5	41
+7b3118	'Erase	40
+7b3130	obj_7b30b5.viewBounds	43	map=map_7a8de1
+7b314c	obj_7b30b5.viewSetupFormScript	43	map=map_7a7d41
+7b316c	obj_7b30b5.viewSetupFormScript.instructions	40
+7b318c	obj_7b30b5.viewSetupFormScript.literals	41
+7b31a8	obj_7b30b5.viewSetupFormScript.literals[1]	41
+7b31bc	'signature	40
+7b31d8	'viewChildren	40
+7b31f8	obj_7b30b5.viewSetupFormScript.literals[3]	41
+7b320c	obj_7b30b5.Erase	43	map=map_7a7d41
+7b322c	obj_7b30b5.Erase.instructions	40
+7b3244	obj_7b30b5.Erase.literals	41
+7b3260	'RedoChildren	40
+7b3280	obj_7b3281	43	map=map_7b32b5
+7b32b4	map_7b32b5	41
+7b32ec	'buttonPressedScript	40
+7b3310	obj_7b3281.text	40
+7b3328	obj_7b3281.viewBounds	43	map=map_7a8de1
+7b3344	obj_7b3281.buttonPressedScript	43	map=map_7a7d41
+7b3364	obj_7b3281.buttonPressedScript.instructions	40
+7b3374	obj_7b3281.buttonPressedScript.literals	41
+7b3388	obj_7b3281.viewSetupFormScript	43	map=map_7a7d41
+7b33a8	obj_7b3281.viewSetupFormScript.instructions	40
+7b33d8	obj_7b3281.viewSetupFormScript.literals	41
+7b3408	obj_7b29b5.TearDown	43	map=map_7a7d41
+7b3428	obj_7b29b5.TearDown.instructions	40
+7b3458	obj_7b29b5.TearDown.literals	41
+7b3484	obj_7b29b5.TearDown.literals[2]	41
+7b3498	obj_7b29b5.TearDown.literals[6]	41
+7b34ac	obj_7b29b5.titleTExt	40
+7b34d8	obj_7b29b5.description	40
+7b35d4	obj_7b29b5.debug	40
+7b35f4	obj_7b29b5.stepAllocateContext	41
+7b3638	obj_7b3639	43	map=map_7b3671
+7b3670	map_7b3671	41
+7b36ac	obj_7b3639.viewBounds	43	map=map_7a8de1
+7b36c8	obj_7b3639.stepChildren	41
+7b36d8	obj_7b36d9	43	map=map_7b3705
+7b3704	map_7b3705	41
+7b3734	obj_7b36d9.viewBounds	43	map=map_7a8de1
+7b3750	obj_7b36d9.viewSetupFormScript	43	map=map_7a7d41
+7b3770	obj_7b36d9.stepChildren	41
+7b3780	obj_7b36d9.stepChildren[0]	43	map=map_7b37b1
+7b37b0	map_7b37b1	41
+7b37e4	'GoToTour	40
+7b3800	obj_7b36d9.stepChildren[0].viewBounds	43	map=map_7a8de1
+7b381c	obj_7b36d9.stepChildren[0].stepChildren	41
+7b385c	obj_7b36d9.stepChildren[0].stepChildren[0]	43	map=map_7a8ec9
+7b386c	obj_7b36d9.stepChildren[0].stepChildren[1]	43	map=map_7a8ec9
+7b387c	obj_7b36d9.stepChildren[0].stepChildren[2]	43	map=map_7b38ad
+7b38ac	map_7b38ad	41
+7b38e0	obj_7b36d9.stepChildren[0].stepChildren[2].viewBounds	43	map=map_7a8de1
+7b38fc	obj_7b36d9.stepChildren[0].stepChildren[2].text	40
+7b3928	obj_7b36d9.stepChildren[0].stepChildren[2].viewSetupFormScript	43	map=map_7a7d41
+7b3948	obj_7b36d9.stepChildren[0].stepChildren[2].viewSetupFormScript.instructions	40
+7b3980	obj_7b36d9.stepChildren[0].stepChildren[2].viewSetupFormScript.literals	41
+7b39a8	obj_7b36d9.stepChildren[0].stepChildren[2].viewSetupFormScript.literals[1]	40
+7b39b8	obj_7b36d9.stepChildren[0].stepChildren[3]	43	map=map_7aecb9
+7b39e4	obj_7b36d9.stepChildren[0].stepChildren[3].viewBounds	43	map=map_7a8de1
+7b3a00	obj_7b36d9.stepChildren[0].stepChildren[3].text	40
+7b3b08	obj_7b36d9.stepChildren[0].stepChildren[4]	43	map=map_7b3b25
+7b3b24	map_7b3b25	41
+7b3b44	'gotoName	40
+7b3b60	obj_7b36d9.stepChildren[0].stepChildren[4].stepChildren	41
+7b3b70	obj_7b36d9.stepChildren[0].stepChildren[4].stepChildren[0]	43	map=map_7b3b91
+7b3b90	map_7b3b91	41
+7b3bb4	obj_7b36d9.stepChildren[0].stepChildren[4].stepChildren[0].text	40
+7b3bdc	obj_7b36d9.stepChildren[0].stepChildren[4].stepChildren[0].viewBounds	43	map=map_7a8de1
+7b3bf8	obj_7b36d9.stepChildren[0].stepChildren[4].gotoName	40
+7b3c1c	obj_7b3c1d	43	map=map_7b3c41
+7b3c40	map_7b3c41	41
+7b3c68	obj_7b3c1d.viewBounds	43	map=map_7a6c41
+7b3c84	obj_7b3c1d.buttonClickScript	43	map=map_7a7d41
+7b3ca4	obj_7b3c1d.buttonClickScript.instructions	40
+7b3cd8	obj_7b3c1d.buttonClickScript.literals	41
+7b3d08	'hilite	40
+7b3d20	obj_7b3c1d.buttonClickScript.literals[3]	43	map=map_7a7d41
+7b3d40	obj_7b3c1d.buttonClickScript.literals[3].instructions	40
+7b3d60	obj_7b3c1d.buttonClickScript.literals[3].literals	41
+7b3d74	'ArrayPos	40
+7b3d90	obj_7b36d9.stepChildren[0].stepChildren[4].icon	40
+7b3e5c	obj_7b36d9.stepChildren[0].stepChildren[5]	43	map=map_7b3b25
+7b3e78	obj_7b36d9.stepChildren[0].stepChildren[5].stepChildren	41
+7b3e88	obj_7b36d9.stepChildren[0].stepChildren[5].stepChildren[0]	43	map=map_7b3b91
+7b3ea8	obj_7b36d9.stepChildren[0].stepChildren[5].stepChildren[0].text	40
+7b3ec8	obj_7b36d9.stepChildren[0].stepChildren[5].stepChildren[0].viewBounds	43	map=map_7a8de1
+7b3ee4	obj_7b36d9.stepChildren[0].stepChildren[5].gotoName	40
+7b3efc	obj_7b36d9.stepChildren[0].stepChildren[5].icon	40
+7b3fc8	obj_7b36d9.stepChildren[0].stepChildren[6]	43	map=map_7b3fe5
+7b3fe4	map_7b3fe5	41
+7b4004	obj_7b36d9.stepChildren[0].stepChildren[6].stepChildren	41
+7b4014	obj_7b36d9.stepChildren[0].stepChildren[6].stepChildren[0]	43	map=map_7b3b91
+7b4034	obj_7b36d9.stepChildren[0].stepChildren[6].stepChildren[0].text	40
+7b4068	obj_7b36d9.stepChildren[0].stepChildren[6].stepChildren[0].viewBounds	43	map=map_7a8de1
+7b4084	obj_7b36d9.stepChildren[0].stepChildren[6].gotoName	40
+7b409c	obj_7b36d9.stepChildren[0].stepChildren[6].icon	40
+7b4140	obj_7b36d9.stepChildren[0].stepChildren[7]	43	map=map_7b3b25
+7b415c	obj_7b36d9.stepChildren[0].stepChildren[7].stepChildren	41
+7b416c	obj_7b36d9.stepChildren[0].stepChildren[7].stepChildren[0]	43	map=map_7b3b91
+7b418c	obj_7b36d9.stepChildren[0].stepChildren[7].stepChildren[0].text	40
+7b41b4	obj_7b36d9.stepChildren[0].stepChildren[7].stepChildren[0].viewBounds	43	map=map_7a8de1
+7b41d0	obj_7b36d9.stepChildren[0].stepChildren[7].gotoName	40
+7b41ec	obj_7b36d9.stepChildren[0].stepChildren[7].icon	40
+7b42a8	obj_7b36d9.stepChildren[0].stepChildren[8]	43	map=map_7b3b25
+7b42c4	obj_7b36d9.stepChildren[0].stepChildren[8].stepChildren	41
+7b42d4	obj_7b36d9.stepChildren[0].stepChildren[8].stepChildren[0]	43	map=map_7b3b91
+7b42f4	obj_7b36d9.stepChildren[0].stepChildren[8].stepChildren[0].text	40
+7b4324	obj_7b36d9.stepChildren[0].stepChildren[8].stepChildren[0].viewBounds	43	map=map_7a8de1
+7b4340	obj_7b36d9.stepChildren[0].stepChildren[8].gotoName	40
+7b4364	obj_7b36d9.stepChildren[0].stepChildren[8].icon	40
+7b4420	obj_7b36d9.stepChildren[0].stepChildren[9]	43	map=map_7b3b91
+7b4440	obj_7b36d9.stepChildren[0].stepChildren[9].text	40
+7b44bc	obj_7b36d9.stepChildren[0].stepChildren[9].viewBounds	43	map=map_7a8de1
+7b44d8	obj_7b44d9	43	map=map_7b4505
+7b4504	map_7b4505	41
+7b4534	obj_7b44d9.buttonClickScript	43	map=map_7a7d41
+7b4554	obj_7b44d9.buttonClickScript.instructions	40
+7b4568	obj_7b44d9.buttonClickScript.literals	41
+7b457c	obj_7b44d9.viewBounds	43	map=map_7a9ee5
+7b4598	obj_7b44d9.viewSetupFormScript	43	map=map_7a7d41
+7b45b8	obj_7b45b9	40
+7b45e8	obj_7b44d9.viewSetupFormScript.literals	41
+7b4618	obj_7b44d9.text	40
+7b4630	obj_7b4631	43	map=map_7b4665
+7b4664	map_7b4665	41
+7b469c	obj_7b4631.buttonClickScript	43	map=map_7a7d41
+7b46bc	obj_7b4631.buttonClickScript.instructions	40
+7b46d8	obj_7b4631.buttonClickScript.literals	41
+7b46f8	'|NewtonTour:Newton|	40
+7b471c	obj_7b4631.viewBounds	43	map=map_7a9ee5
+7b4738	obj_7b4631.viewSetupFormScript	43	map=map_7a7d41
+7b4758	obj_7b4631.viewSetupFormScript.literals	41
+7b4788	obj_7b4631.text	40
+7b47a0	obj_7b4631.viewSetupDoneScript	43	map=map_7a7d41
+7b47c0	obj_7b4631.viewSetupDoneScript.instructions	40
+7b4804	obj_7b4631.viewSetupDoneScript.literals	41
+7b4824	'GetPackages	40
+7b4840	'title	40
+7b4858	obj_7b4631.viewSetupDoneScript.literals[2]	40
+7b4888	obj_7b36d9.stepChildren[0].stepChildren[12]	43	map=map_7a8ec9
+7b4898	obj_7b36d9.stepChildren[0].viewSetupFormScript	43	map=map_7a7d41
+7b48b8	obj_7b36d9.stepChildren[0].stepAllocateContext	41
+7b48cc	obj_7b3639.viewSetupDoneScript	43	map=map_7a7d41
+7b48ec	obj_7b3639.viewSetupDoneScript.instructions	40
+7b4914	obj_7b3639.viewSetupDoneScript.literals	41
+7b4930	'congrats	40
+7b494c	obj_7b3639.viewSetupFormScript	43	map=map_7a7d41
+7b496c	obj_7b3639.stepAllocateContext	41
+7b4988	obj_7a76e1.SetupClose	43	map=map_7a7d41
+7b49a8	obj_7a76e1.SetupClose.instructions	40
+7b49c8	obj_7a76e1.SetupClose.literals	41
+7b49f0	'BlessApp	40
+7b4a0c	obj_7a6915[0].text	40
+7b4a24	obj_7a6915[0].icon	43	map=map_7b4a3d
+7b4a3c	map_7b4a3d	41
+7b4a58	obj_7a6915[0].icon.mask	40
+7b4b44	obj_7a6915[0].icon.bits	40
+7b4c30	obj_7a6915[0].icon.bounds	43	map=map_7a8de1
+7b4c4c	'noAutoclose	40
+7b4c68	obj_7a6915[0].installScript	43	map=map_7a7d41
+7b4c88	obj_7a6915[0].installScript.instructions	40
+7b4cac	obj_7a6915[0].installScript.literals	41
+7b4cc8	'devInstallScript	40
+7b4cec	'HasSlot	40
+7b4d04	'RemoveSlot	40
+alias	obj_7a76e1.viewSetupDoneScript.literals[4]	obj_7a7f39
+alias	obj_7a76e1.viewSetupDoneScript.literals[5]	obj_7a7f39
+alias	obj_7a76e1.viewSetupDoneScript.literals[16]	map_7a7fe5
+alias	obj_7a76e1.viewSetupDoneScript.literals[17]	map_7a7fe5
+alias	obj_7a76e1.viewSetupFormScript.literals[9]	map_7a7fe5
+alias	obj_7a8d71.stepChildren[0].stepChildren[8].viewSetupFormScript.literals[10]	obj_7aa871
+alias	obj_7a8d71.stepChildren[0].stepChildren[8].viewSetupDoneScript.instructions	obj_7aac6d
+alias	obj_7a8d71.viewSetupFormScript.instructions	obj_7aac6d
+alias	obj_7a8edd.viewSetupDoneScript.instructions	obj_7a8fc1
+alias	obj_7a8edd.viewClickScript.instructions	obj_7a9061
+alias	obj_7a95c1.viewClickScript.instructions	obj_7a9061
+alias	obj_7a9e6d.viewSetupDoneScript.instructions	obj_7a8fc1
+alias	obj_7aa0a9.viewSetupFormScript.literals[3]	obj_7aa251
+alias	obj_7aa0a9.buttonClickScript.instructions	obj_7aa2cd
+alias	obj_7aa345.buttonClickScript.instructions	obj_7aa2cd
+alias	obj_7aa5a1.AdjustHeight.literals[5]	obj_7aa871
+alias	obj_7aa935.viewSetupFormScript.literals[7]	obj_7aa871
+alias	obj_7ab0d5.viewSetupFormScript.instructions	obj_7ab185
+alias	obj_7ab1f9.stepChildren[0].viewSetupFormScript.instructions	obj_7ab361
+alias	obj_7ab1f9.SetText.instructions	obj_7ab605
+alias	obj_7ab1f9.GetText.instructions	obj_7ab66d
+alias	obj_7ab3c5.viewSetupFormScript.instructions	obj_7ab491
+alias	obj_7ab3c5.TextLength.instructions	obj_7ab4ed
+alias	obj_7ab3c5.viewChangedScript.instructions	obj_7ab555
+alias	obj_7ab6a5.viewSetupFormScript.instructions	obj_7ab185
+alias	obj_7ab759.viewSetupFormScript.instructions	obj_7ab185
+alias	obj_7ac0cd.Refresh.instructions	obj_7aac6d
+alias	obj_7ac661.TearDown.literals[2]	obj_7a7f39
+alias	obj_7ac661.TearDown.literals[3]	obj_7a7f39
+alias	obj_7ac661.TearDown.literals[10]	obj_7ac9b1
+alias	obj_7ac661.TearDown.literals[13]	obj_7a7f39
+alias	obj_7ac661.TearDown.literals[16]	obj_7ac9b1
+alias	obj_7ac661.TearDown.literals[18]	obj_7a7f39
+alias	obj_7acad1.viewSetupFormScript.instructions	obj_7acb75
+alias	obj_7acad1.viewSetupFormScript.literals[5]	obj_7a7f39
+alias	obj_7acad1.viewSetupFormScript.literals[10]	obj_7a7f39
+alias	obj_7accc9.stepChildren[0].viewSetupFormScript.instructions	obj_7ab361
+alias	obj_7accc9.GetTextLocal.instructions	obj_7ab66d
+alias	obj_7accc9.GetTextArea.instructions	obj_7ab66d
+alias	obj_7accc9.SetTextLocal.instructions	obj_7ab605
+alias	obj_7accc9.SetTextArea.instructions	obj_7ab605
+alias	obj_7aced1.viewSetupFormScript.instructions	obj_7ab491
+alias	obj_7aced1.TextLength.instructions	obj_7ab4ed
+alias	obj_7ad131.viewSetupFormScript.instructions	obj_7ab491
+alias	obj_7ad131.TextLength.instructions	obj_7ab4ed
+alias	obj_7ad131.viewChangedScript.instructions	obj_7ab555
+alias	obj_7ad371.textChanged.instructions	obj_7aac6d
+alias	obj_7ad371.viewSetupFormScript.instructions	obj_7acb75
+alias	obj_7ad371.viewSetupFormScript.literals[5]	obj_7a7f39
+alias	obj_7ad371.viewSetupFormScript.literals[10]	obj_7a7f39
+alias	obj_7ade45.viewSetupFormScript.instructions	obj_7aac6d
+alias	obj_7adf79.Refresh.instructions	obj_7aac6d
+alias	obj_7af069.viewSetupDoneScript.instructions	obj_7b0045
+alias	obj_7afc99.timeChanged.instructions	obj_7afd3d
+alias	obj_7b056d.viewSetupFormScript.instructions	obj_7b0045
+alias	obj_7b06d5.stepChildren[0].viewSetupFormScript.instructions	obj_7aac6d
+alias	obj_7b06d5.viewSetupFormScript.instructions	obj_7aac6d
+alias	obj_7b0a01.viewSetupFormScript.literals[3]	obj_7aa251
+alias	obj_7b0a01.buttonClickScript.instructions	obj_7afd3d
+alias	obj_7b0f9d.viewSetupFormScript.instructions	obj_7ab185
+alias	obj_7b1039.viewSetupFormScript.instructions	obj_7b10ad
+alias	obj_7b114d.viewSetupFormScript.instructions	obj_7b10ad
+alias	obj_7b1965.TearDown.literals[2]	obj_7a7f39
+alias	obj_7b1965.TearDown.literals[8]	obj_7ac9b1
+alias	obj_7b1965.TearDown.literals[11]	obj_7a7f39
+alias	obj_7b1965.TearDown.literals[14]	obj_7ac9b1
+alias	obj_7b1965.TearDown.literals[16]	obj_7a7f39
+alias	obj_7b1c61.viewSetupFormScript.instructions	obj_7acb75
+alias	obj_7b1c61.viewSetupFormScript.literals[5]	obj_7a7f39
+alias	obj_7b1c61.viewSetupFormScript.literals[10]	obj_7a7f39
+alias	obj_7b1d21.textChanged.instructions	obj_7aac6d
+alias	obj_7b1d21.viewSetupFormScript.instructions	obj_7acb75
+alias	obj_7b1d21.viewSetupFormScript.literals[5]	obj_7a7f39
+alias	obj_7b1d21.viewSetupFormScript.literals[10]	obj_7a7f39
+alias	obj_7b277d.stepChildren[1].viewSetupFormScript.literals[1]	obj_7a7f39
+alias	obj_7b29b5.TearDown.literals[5]	map_7a7fe5
+alias	obj_7b3639.viewSetupFormScript.instructions	obj_7aac6d
+alias	obj_7b36d9.viewSetupFormScript.instructions	obj_7aac6d
+alias	obj_7b36d9.stepChildren[0].stepChildren[2].viewSetupFormScript.literals[4]	obj_7a7f39
+alias	obj_7b36d9.stepChildren[0].stepChildren[2].viewSetupFormScript.literals[5]	obj_7a7f39
+alias	obj_7b36d9.stepChildren[0].viewSetupFormScript.instructions	obj_7aac6d
+alias	obj_7b44d9.viewSetupFormScript.instructions	obj_7b45b9
+alias	obj_7b4631.viewSetupFormScript.instructions	obj_7b45b9

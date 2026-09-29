@@ -1,0 +1,12 @@
+@@ 0x44a135
+func(a1, a2) begin
+	local l1, l2, l3;
+	(if ((Length(GetStores()) < 2) or (not (l1 := self:PickTheOtherStore(EntryStore(a1))))) then self:Notify(3, "Move", "The item could not be moved.") else begin
+			if (not (l3 := l1:GetSoup((l2 := EntrySoup(a1):GetName())))) then begin
+					l3 := CreateUSoupMember(l2, l1)
+				end;
+			self:SetActionDescription(-8101);
+			(if EntryStore(a1):IsReadOnly() then EntryCopyXmit(a1, l3, '_newt) else EntryMoveXmit(a1, l3, '_newt))
+		end)
+end
+@@end

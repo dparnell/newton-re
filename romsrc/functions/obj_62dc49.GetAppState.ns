@@ -1,0 +1,24 @@
+@@ 0x4b1281
+func() begin
+	local l1;
+	if (l1 := inherited:GetAppState()).whichSoup then begin
+			currentSoupSymbol := l1.whichSoup
+		end else begin
+			currentSoupSymbol := l1.currentSoupSymbol
+		end;
+	currentLayout := 'overview;
+	previousLayout := 'overview;
+	if IsArray(l1.hideFilter) then begin
+			hideFilter := l1.hideFilter
+		end;
+	sortUp := (not l1.descending);
+	sortPicker := l1.sortPicker;
+	if IsFrame(l1.statesCollapsed) then begin
+			statesCollapsed := l1.statesCollapsed
+		end else begin
+			statesCollapsed := {}
+		end;
+	deleteAfterPutaway := l1.deleteAfterPutaway;
+	l1
+end
+@@end

@@ -1,0 +1,21 @@
+@@ 0x45dc59
+func() begin
+	(l1 := self:LocalBox()).(direction) := tileSize;
+	self.pieces := Array(maxTiles, nil);
+	local l1;
+	local l2;
+	local l3;
+	l3 := (for l4 := 0 to (maxTiles - 1) do begin
+			local l7;
+			if (not (l7 := self:Abstract((l4 + firstVisibleItem), l1))) then begin
+					break l4
+				end;
+			pieces[l4] := l7;
+			l1.(direction) := ((l1.('{right: left, bottom: top}.(direction)) := l1.(direction)) + tileSize)
+		end);
+	if l3 then begin
+			SetLength(pieces, l3)
+		end;
+	(self.numTiles := Length(pieces))
+end
+@@end

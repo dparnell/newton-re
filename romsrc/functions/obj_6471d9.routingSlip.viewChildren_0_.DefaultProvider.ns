@@ -1,0 +1,5 @@
+@@ 0x531d95
+func() begin
+	(if (if HasPath(fields, 'serviceProvider) then (not transport:GetConfig('phoneAutoReceive))) then fields.serviceProvider else (fields.serviceProvider := GetUserConfig('currentDialSpeaker)))
+end
+@@end

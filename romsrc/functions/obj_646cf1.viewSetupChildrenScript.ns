@@ -1,0 +1,36 @@
+@@ 0x4a0011
+func() begin
+	local l1, l2, l3, l4;
+	l2 := 'symbol;
+	targetView := self;
+	if userText then begin
+			infoText.text := userText
+		end else begin
+			infoText.viewFlags := 0
+		end;
+	if (if (not (l4 := titleText)) then (l1 := GetDataDefs(target.class))) then begin
+			l4 := l1:?StringExtract(target, 1)
+		end;
+	if (not l4) then begin
+			l4 := target.name
+		end;
+	if l4 then begin
+			headerText.title := l4
+		end else begin
+			headerText.viewFlags := 0
+		end;
+	if (kbdType = 'alpha) then begin
+			l3 := '{_proto: @375, viewBounds: {left: 1, top: -130, right: 284, bottom: -20}, viewJustify: 144}
+		end else begin
+			if (kbdType = 'number) then begin
+					l3 := '{_proto: @676, viewBounds: {left: 0, top: -141, right: 151, bottom: -20}, viewJustify: 144}
+				end
+		end;
+	if l3 then begin
+			AddArraySlot(stepChildren, l3);
+			extraHeight := (((extraHeight + 10) + l3.viewBounds.bottom) - l3.viewBounds.top);
+			AddArraySlot(stepChildren, '{_proto: @234, viewBounds: {left: 2, top: -18, right: 20, bottom: -5}, viewJustify: 8388742, _recogPopup: [Array: recogText, recogInkText, pickseparator, recToggleSettings]})
+		end;
+	inherited:?viewSetupChildrenScript()
+end
+@@end

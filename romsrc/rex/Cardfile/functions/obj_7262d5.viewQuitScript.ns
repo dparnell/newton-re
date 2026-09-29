@@ -1,0 +1,7 @@
+@@ 0x7275f5
+func() begin
+	local l1, l2;
+	inherited:?viewQuitScript();
+	(if (l2 := target.(country.path)) then SetCountryClass(l2))
+end
+@@end

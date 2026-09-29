@@ -1,0 +1,5 @@
+@@ 0x4cdae1
+func() begin
+	(alarmSlip := BuildContext({_proto: faxAlarmEditor, title: text, ownerName: "FaxSendfaxsend:newton", ownerSymbol: '|faxsend:newton|})):Open()
+end
+@@end

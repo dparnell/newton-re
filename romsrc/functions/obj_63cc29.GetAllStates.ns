@@ -1,0 +1,5 @@
+@@ 0x42aead
+func() begin
+	(foreach l1 in self:ChildViewFrames() collect l1.viewValue)
+end
+@@end

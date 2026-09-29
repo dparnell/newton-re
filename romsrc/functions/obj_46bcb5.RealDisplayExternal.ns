@@ -1,0 +1,25 @@
+@@ 0x46b1ed
+func(a1) begin
+	local l1, l2;
+	l1 := hiliteBusy;
+	hiliteBusy := true;
+	correct:SetPickItems();
+	self:ShowHide();
+	self:SetHilite();
+	if a1 then begin
+			if ((StrLen((l2 := self:GetWordForDisplay())) = 0) or (not IsInk(l2[0]))) then begin
+					self:ReplaceExternal(l2, true)
+				end
+		end;
+	if undoInProgress then begin
+			l2 := self:GetWordForDisplay();
+			refCon.wordLength := StrLen(l2);
+			self:SetHilite()
+		end;
+	self:UsePickItems();
+	if (if templatePicker then templatePicker.viewCObject) then begin
+			templatePicker:SyncView()
+		end;
+	(hiliteBusy := l1)
+end
+@@end

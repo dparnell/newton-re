@@ -1,0 +1,18 @@
+@@ 0x418fb9
+func(a1) begin
+	local l1;
+	l1 := GetRoot().buttons;
+	if a1 then begin
+			DefGlobalVar('ButtonBarParams, a1);
+			if SafeSetDisplayParams(CreateDisplayParams(nil)) then begin
+					l1:Close()
+				end
+		end else begin
+			UnDefGlobalVar('ButtonBarParams);
+			if SafeSetDisplayParams(CreateDisplayParams(nil)) then begin
+					l1:Open()
+				end
+		end;
+	GetRoot().ExtrasDrawer:InvalIcons()
+end
+@@end

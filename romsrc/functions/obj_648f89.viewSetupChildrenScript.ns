@@ -1,0 +1,60 @@
+@@ 0x552aa1
+func() begin
+	local v3_xxxxxxxxxxxxxxxxxxxwww, v6_xxxxxxwwwwww, v7_zzzzzzz, v8_vvvvvvvuuuuuuu, v9_wwwvvvvvv, v11_zzzyyyyyyyyyyyyyyyyyy, v13_xxxxxxxxxxxxxxxxxxwwwww, v14_yyyyyyyyyyyyyyyxxx, v16_kj, v17_yyyyyyyyyyyyyyyyyyyyyyyyyx, v18_jjjj, v19_wwwvvvvvvv, v23_zzzzzzzzzyyyy, v24_wwwwwwwwwwwwwvvvvvvv;
+	needsRecalc := 'all;
+	v24_wwwwwwwwwwwwwvvvvvvv := self:IconCapacity();
+	v8_vvvvvvvuuuuuuu := (if (v14_yyyyyyyyyyyyyyyxxx := ((displayParams.buttonBarPosition = 'right) or (displayParams.buttonBarPosition = 'left))) then ProtoSoftButtonBarIconV else ProtoSoftButtonBarIconH):GetAdjustedProto();
+	v19_wwwvvvvvvv := userConfiguration.blessedapp;
+	v7_zzzzzzz := 0;
+	v23_zzzzzzzzzyyyy := 0;
+	if v14_yyyyyyyyyyyyyyyxxx then begin
+			v23_zzzzzzzzzyyyy := ((((displayParams.buttonBarBounds.bottom - displayParams.buttonBarBounds.top) - 40) mod iconSpacingV) div 2)
+		end else begin
+			v7_zzzzzzz := ((((displayParams.buttonBarBounds.right - displayParams.buttonBarBounds.left) - 40) mod iconSpacingH) div 2)
+		end;
+	if v14_yyyyyyyyyyyyyyyxxx then begin
+			self.hSpacing := (displayParams.buttonBarBounds.right - displayParams.buttonBarBounds.left)
+		end else begin
+			self.hSpacing := iconSpacingH
+		end;
+	v16_kj := [Array: ];
+	v17_yyyyyyyyyyyyyyyyyyyyyyyyyx := [Array: ];
+	(foreach v12_zzzzzzzzzzzzzzzzzzzzzzzyyyy in GetValidStores() do begin
+			if (v3_xxxxxxxxxxxxxxxxxxxwww := v12_zzzzzzzzzzzzzzzzzzzzzzzyyyy:GetSoup("Packages")) then begin
+					AddArraySlot(v17_yyyyyyyyyyyyyyyyyyyyyyyyyx, v3_xxxxxxxxxxxxxxxxxxxwww)
+				end
+		end);
+	(foreach v5_qqqppp in v17_yyyyyyyyyyyyyyyyyyyyyyyyyx do begin
+			v6_xxxxxxwwwwww := v5_qqqppp:Query('{indexPath: packageName, tagspec: {none: _frozen, all: _package}});
+			v13_xxxxxxxxxxxxxxxxxxwwwww := (v9_wwwvvvvvv := v5_qqqppp:Query(self:GetQuerySpec('_buttonBar))):entry();
+			(while v13_xxxxxxxxxxxxxxxxxxwwwww do begin
+					if (v13_xxxxxxxxxxxxxxxxxxwwwww.app <> v19_wwwvvvvvvv) then begin
+							v11_zzzyyyyyyyyyyyyyyyyyy := nil;
+							if v13_xxxxxxxxxxxxxxxxxxwwwww.packageName then begin
+									try begin
+											v11_zzzyyyyyyyyyyyyyyyyyy := (if (if (v18_jjjj := v6_xxxxxxwwwwww:GotoKey(v13_xxxxxxxxxxxxxxxxxxwwwww.packageName)) then StrEqual(v6_xxxxxxwwwwww:EntryKey(), v13_xxxxxxxxxxxxxxxxxxwwwww.packageName)) then (not IsPackageActive(v18_jjjj.pkgRef)))
+										end onexception |evt.ex| do begin
+											v11_zzzyyyyyyyyyyyyyyyyyy := true
+										end
+								end;
+							AddArraySlot(v16_kj, {_proto: v8_vvvvvvvuuuuuuu, target: {_proto: @589.(v13_xxxxxxxxxxxxxxxxxxwwwww.class), fentry: v13_xxxxxxxxxxxxxxxxxxwwwww, notActive: v11_zzzyyyyyyyyyyyyyyyyyy}})
+						end;
+					(v13_xxxxxxxxxxxxxxxxxxwwwww := v9_wwwvvvvvv:Next())
+				end)
+		end);
+	InsertionSort(v16_kj, '|<|, 'target.fentry.sequence);
+	if (Length(v16_kj) > v24_wwwwwwwwwwwwwvvvvvvv) then begin
+			SetLength(v16_kj, v24_wwwwwwwwwwwwwvvvvvvv);
+			if saturationCheck then begin
+					saturationCheck := nil;
+					self:Notify(3, title, "The button bar couldn\u2019\ut hold all the icons.  The overflow will show in \u201C\uUnfiled Icons\u201D\u.")
+				end
+		end;
+	if (if (Length(v16_kj) > 0) then ((v7_zzzzzzz <> 0) or (v23_zzzzzzzzzyyyy <> 0))) then begin
+			v16_kj[0].viewBounds := OffsetRect(v16_kj[0].viewBounds, v7_zzzzzzz, v23_zzzzzzzzzyyyy)
+		end;
+	visibleItems := (foreach v21_zzzzzzyyyyyyyyyyyy in v16_kj collect v21_zzzzzzyyyyyyyyyyyy.target);
+	viewChildren := v16_kj;
+	(if ((displayParams.buttonBarControlsPosition = 'top) or (displayParams.buttonBarControlsPosition = 'left)) then ArrayInsert(viewChildren, bbarControls, 0) else AddArraySlot(viewChildren, bbarControls))
+end
+@@end

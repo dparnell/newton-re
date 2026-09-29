@@ -1,0 +1,29 @@
+@@ 0x4282d9
+@@const kBinaryFromHex
+func(hex, cls) begin
+	local b := MakeBinary(StrLen(hex) div 2, cls);
+	for i := 0 to Length(b) - 1 do begin
+		local h := Ord(hex[2 * i]);
+		local l := Ord(hex[2 * i + 1]);
+		StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+	end;
+	b
+end
+@@const kLiteral_423fad
+{bits: call kBinaryFromHex with ("000000000004004e004e01950059019ee3800000e3800000e3800000e3800000e3800000e3800000e3800000e3800000e3800000e3800000e3800000", 'bits), bounds: '{left: 0, top: 0, right: 9, bottom: 11}}
+@@const kLiteral_423f35
+{bits: call kBinaryFromHex with ("000000000004004d004d016a005a0171c0000000e0000000f0000000f8000000fc000000fe000000fe000000fe000000fc000000f8000000f0000000e0000000c0000000", 'bits), bounds: '{left: 0, top: 0, right: 7, bottom: 13}}
+@@main
+func(a1, a2, a3) begin
+	if (a2 = 4) then begin
+			if (self.icon <> kLiteral_423fad) then begin
+					SetValue(self, 'icon, kLiteral_423fad)
+				end
+		end else begin
+			if (self.icon <> kLiteral_423f35) then begin
+					SetValue(self, 'icon, kLiteral_423f35)
+				end
+		end;
+	(if (a2 = 32) then (if (RecordEngine.fEngineError <> 0) then (if (RecordEngine.fEngineError = 1) then self:Notify(3, notifyTitle, "Sorry, the recording was stopped because the internal memory or storage card is almost full.") else self:Notify(3, notifyTitle, "Sorry, the recording was stopped due to an internal error."))))
+end
+@@end

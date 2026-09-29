@@ -1,0 +1,13 @@
+@@ 0x4528e1
+func() begin
+	local l1;
+	if (not suppressBorder) then begin
+			if (not fBars) then begin
+					l1 := self:LocalBox();
+					fBars := [Array: MakeLine(0, 0, 0, l1.bottom), MakeLine((l1.right - 2), 0, (l1.right - 2), l1.bottom)]
+				end
+		end;
+	self:hiliter(curIndex);
+	(if (not suppressBorder) then self:DrawShape(fBars, {pensize: 2}))
+end
+@@end

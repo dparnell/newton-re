@@ -1,0 +1,5 @@
+@@ 0x4b83f5
+func() begin
+	(if (if (if target then path) then target.(path)) then (if longFormat then LongDateStr(target.(path), longFormat) else ShortDateStr(target.(path), shortFormat)) else "")
+end
+@@end

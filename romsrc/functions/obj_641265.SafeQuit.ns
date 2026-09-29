@@ -1,0 +1,11 @@
+@@ 0x5a9399
+func() begin
+	local l1;
+	self:GrabCaret();
+	if StrFilled((l1 := self:GetWord())) then begin
+			self:AddWord(l1)
+		end;
+	self:ExpandOff();
+	self:Close()
+end
+@@end

@@ -1,0 +1,14 @@
+@@ 0x723cc9
+func() begin
+	local l1, l2;
+	(if (if target then target.class) then begin
+			if (not layouts) then begin
+					layouts := {}
+				end;
+			if (not layouts.(target.class)) then begin
+					layouts.(target.class) := call GetRoot().cardfile.kViewsToDisplay with (target)
+				end;
+			(if (GetVariable(self, 'newtAppBase) <> GetRoot().cardfile) then (self.viewFlags := 1))
+		end)
+end
+@@end

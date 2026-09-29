@@ -1,0 +1,6 @@
+@@ 0x4fb0a1
+func() begin
+	local l1;
+	((((l1 := mainDisplay) = ToDoListView) or (l1 = AgendaView)) or (if ((l1 = MonthOverView) or (l1 = YearView)) then ((previousMainDataDisplay = ToDoListView) or (previousMainDataDisplay = AgendaView))))
+end
+@@end

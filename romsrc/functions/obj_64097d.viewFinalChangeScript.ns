@@ -1,0 +1,11 @@
+@@ 0x42b109
+func(a1, a2) begin
+	(if (a2 <> a1) then begin
+			AddUndoAction('viewFinalChangeScript, [Array: a2, a1]);
+			if (viewValue <> a2) then begin
+					SetValue(baseGauge, 'viewValue, a2)
+				end;
+			self:ChangedSlider()
+		end)
+end
+@@end

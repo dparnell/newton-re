@@ -1,0 +1,14 @@
+@@ 0x760251
+func() begin
+	local l1;
+	if (if configOptions.|guest?| then StrEqual(entryLine.text, labelCommands[(Length(labelCommands) - 1)])) then begin
+			l1 := true;
+			curLabelCommand := (Length(labelCommands) - 1)
+		end else begin
+			l1 := nil;
+			curLabelCommand := nil
+		end;
+	self:ShowHidePasswordInput(l1);
+	(guestMode := l1)
+end
+@@end

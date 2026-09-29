@@ -1,0 +1,5 @@
+@@ 0x4b20cd
+func(a1) begin
+	(if IsFrame(a1) then (a1._cursor <> nil))
+end
+@@end

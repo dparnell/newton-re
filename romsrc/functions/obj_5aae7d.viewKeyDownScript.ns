@@ -1,0 +1,55 @@
+@@ 0x5aae5d
+func(a1, a2) begin
+	local l1, l2, l3;
+	l1 := self:GetWord();
+	self:GrabCaret();
+	if (if (if (theWord := self:GetWord()) then (StrLen(theWord) >= 30)) then (not StrPos("\n\u0003\u\u0008\u\u001C\u\u001D\u", SPrintObject(a1), 0))) then begin
+			return true
+		end;
+	if (if expandFlag then (a1 = $\n)) then begin
+			self:SetWord(Stringer([Array: theWord, SPrintObject(a1)]));
+			AddUndoAction('SetWord, [Array: l1]);
+			return true
+		end;
+	if ((a1 = $\03) or (a1 = $\n)) then begin
+			addButton:buttonClickScript();
+			return true
+		end;
+	if (a1 = $\1E) then begin
+			l2 := 0;
+			if selectedEntry then begin
+					if ((l2 := ((l2 := selectedIndex) - 1)) < 0) then begin
+							self:viewScrollScript(-1);
+							l2 := 0
+						end
+				end;
+			if (l2 < window:GetNumberEntries()) then begin
+					self:SelectEntry(l2);
+					words:Dirty()
+				end;
+			return true
+		end;
+	if (a1 = $\1F) then begin
+			if ((l3 := window:GetNumberEntries()) > 0) then begin
+					l2 := (l3 - 1);
+					if selectedEntry then begin
+							if ((l2 := (selectedIndex + 1)) = numLines) then begin
+									self:viewScrollScript(1);
+									l2 := (window:GetNumberEntries() - 1)
+								end
+						end;
+					if (l2 < window:GetNumberEntries()) then begin
+							self:SelectEntry(l2);
+							words:Dirty()
+						end
+				end;
+			return true
+		end;
+	if (if (ORD(a1) >= 32) then (not IsCommandKeystroke(a1, a2))) then begin
+			self:SetWord(Stringer([Array: theWord, SPrintObject(a1)]));
+			AddUndoAction('SetWord, [Array: l1]);
+			return true
+		end;
+	return nil
+end
+@@end

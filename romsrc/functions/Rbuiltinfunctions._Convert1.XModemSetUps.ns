@@ -1,0 +1,19 @@
+@@ 0x568125
+@@const kLiteral_3c5f31
+"Modems"
+@@main
+func() begin
+	(try begin
+			(if (l2 := (l1 := GetStores()[0]:GetSoup(@276):Query({indexPath: 'tag, beginKey: kLiteral_3c5f31, endKey: kLiteral_3c5f31})):entry()) then begin
+					local l1;
+					local l2;
+					(foreach l3 in l2.modems do begin
+							AddModemSetUp(l3)
+						end);
+					EntryRemoveFromSoup(l2)
+				end)
+		end onexception |evt.ex| do begin
+			nil
+		end)
+end
+@@end

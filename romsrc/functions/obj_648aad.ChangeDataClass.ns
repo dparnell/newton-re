@@ -1,0 +1,10 @@
+@@ 0x455195
+func(a1) begin
+	local l1;
+	dataClass := a1;
+	if (not (l1 := GetDataDefs(a1))) then begin
+			Throw('|evt.ex.msg,invalid.dataClass|, "Invalid dataClass symbol")
+		end;
+	self:ChangePickerDef(l1)
+end
+@@end

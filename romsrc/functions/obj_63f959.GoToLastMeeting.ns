@@ -1,0 +1,5 @@
+@@ 0x4eb205
+func() begin
+	cursor:ResetToEnd()
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x76ca8d
+func() begin
+	self:Times12()
+end
+@@end

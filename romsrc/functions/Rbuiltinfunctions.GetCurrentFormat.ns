@@ -1,0 +1,68 @@
+@@ 0x476a6d
+@@const kFunction_463e65
+func(a1, a2) begin
+	a1
+end
+@@const kLiteral_463e85
+{type: 'routeFormat, symbol: 'bogus, title: "bogus", SetupItem: kFunction_463e65}
+@@main
+func(a1) begin
+	l1 := nil;
+	if (a1 = nil) then begin
+			return nil
+		end;
+	if (a1.currentFormat = 'bogus) then begin
+			return kLiteral_463e85
+		end;
+	if (a1.currentFormat = nil) then begin
+			if (l2 := GetRouteFormats(a1)) then begin
+					l3 := GetItemTransport(a1);
+					local l1;
+					local l2;
+					local l3;
+					(foreach l4 in l2 do begin
+							if SetOverlaps(l3.dataTypes, l4.dataTypes) then begin
+									l1 := l4
+								end
+						end)
+				end;
+			if (if (if (l2 = nil) then a1.appSymbol) then Routing.(a1.appSymbol)) then begin
+					l6 := nil;
+					if a1.faxResolution then begin
+							l7 := 'faxSlip
+						end else begin
+							l7 := 'printSlip
+						end;
+					local l6;
+					local l7;
+					(foreach l8 in Routing.(a1.appSymbol) do begin
+							local l10, l11, l12;
+							if (l8.routeform = l7) then begin
+									l6 := l8
+								end;
+							break
+						end);
+					if (if (if l6 then l6.formats) then (Length(l6.formats) > 0)) then begin
+							l1 := l6.formats[0]
+						end
+				end
+		end else begin
+			if (l10 := DataClassOf(a1)) then begin
+					if (l11 := GetViewDefs(l10)) then begin
+							l1 := l11.(a1.currentFormat)
+						end
+				end;
+			if (l1 = nil) then begin
+					l12 := nil;
+					if a1.appSymbol then begin
+							l12 := GetRoot().(a1.appSymbol)
+						end;
+					if (l12 = nil) then begin
+							l12 := GetRoot()
+						end;
+					l1 := GetVariable(l12, a1.currentFormat)
+				end
+		end;
+	l1
+end
+@@end

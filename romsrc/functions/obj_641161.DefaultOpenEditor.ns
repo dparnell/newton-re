@@ -1,0 +1,20 @@
+@@ 0x456dcd
+func(a1, a2, a3) begin
+	l1 := {titleText: editTitle, context: self, receiver: self, message: '{edit: defaultEditDone, New: defaultNewDone}.(a3)};
+	l2 := a1.nameRef;
+	self._subclass := (if preferredRouting then preferredRouting[0]);
+	self._dirtyPaths := self:Validate(l2, a1.editPaths);
+	_edited := (Length(_dirtyPaths) > 0);
+	l3 := ValidateConfigGuts(l2, validationFrame, a1.editPaths, l1);
+	if _edited then begin
+			self._dirtyValues := {};
+			local l1;
+			local l2;
+			local l3;
+			(foreach l4 in _dirtyPaths do begin
+					self._dirtyValues.(l4) := DeepClone(l2.(l4))
+				end)
+		end;
+	l3.slip
+end
+@@end

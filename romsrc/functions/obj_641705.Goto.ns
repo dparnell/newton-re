@@ -1,0 +1,5 @@
+@@ 0x435bd5
+func(a1) begin
+	realCurs:Goto(a1)
+end
+@@end

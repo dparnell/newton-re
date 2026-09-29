@@ -1,0 +1,43 @@
+@@ 0x59ec09
+func(a1) begin
+	local l1, l2, l3;
+	if (not a1) then begin
+			if ((l1 := GetUserConfig('mailListMethod)) = 'Mail_ListUnread) then begin
+					l2 := "new"
+				end else begin
+					if (l1 = 'Mail_ListRead) then begin
+							l2 := "read"
+						end else begin
+							if (l1 = 'Mail_ListSent) then begin
+									l2 := "sent"
+								end
+						end
+				end;
+			GetRoot():Notify(3, transport.title, ParamStr("No ^0 mail", [Array: l2]))
+		end;
+	(if (mode = 'batch) then begin
+			self.mail_list := a1;
+			(if a1 then self:GetNextMessage() else self:LogoutIfNoRequests())
+		end else begin
+			try begin
+					if (if a1 then a1.items) then begin
+							(while (Length(a1.items) > 0) do begin
+									l3 := self:UnflattenListItem(a1.items);
+									(while (if (l3.id = 0) then (Length(a1.items) > 0)) do (l3 := self:UnflattenListItem(a1.items)));
+									l3.Remote := true;
+									l3.category := appSymbol;
+									self:?SetStatusDialog('Storing, 'vBarber, {titleText: Stringer([Array: l3.from, ", ", l3.title]), barber: true});
+									self:?ItemCompleted(l3, 'Received, nil)
+								end)
+						end
+				end onexception |evt.ex.outofmem| do begin
+					self:?SetStatusDialog('connected, 'vStatus, nil);
+					self:?CloseStatusDialog(nil);
+					GetRoot().(owner):?UpdateLayout();
+					Rethrow()
+				end;
+			self:?SetStatusDialog('connected, 'vStatus, nil);
+			self:?CloseStatusDialog(nil)
+		end)
+end
+@@end

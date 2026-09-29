@@ -1,0 +1,6 @@
+@@ 0x78cfdd names
+func(anOldTarget) begin
+	self.topics := target.topics;
+	(nTopics := Length(topics))
+end
+@@end

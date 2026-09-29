@@ -1,0 +1,13 @@
+@@ 0x4dc64d
+func(a1, a2, a3) begin
+	local l1;
+	l1 := self:Init();
+	if ((not a1) or (a1 > 600)) then begin
+			l1.value := 0
+		end else begin
+			l1.value := a1
+		end;
+	l1.context := a3;
+	l1:popup(a2)
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x5200f5
+func() begin
+	SetValue(entryLine, 'text, "");
+	return 0
+end
+@@end

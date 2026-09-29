@@ -1,0 +1,8 @@
+@@ 0x4f7d49
+func(a1, a2) begin
+	(if (not ((mainDisplay = YearView) or (mainDisplay = MonthOverView))) then begin
+			clicker();
+			upDownScroller:viewScroll2DScript(a1, a2)
+		end)
+end
+@@end

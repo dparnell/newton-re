@@ -1,0 +1,5 @@
+@@ 0x56f381
+func() begin
+	(if (BAnd(GetViewFlags(self), 33554432) = 0) then inherited:viewDrawScript())
+end
+@@end

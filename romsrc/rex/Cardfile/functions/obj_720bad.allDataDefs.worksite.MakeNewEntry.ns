@@ -1,0 +1,7 @@
+@@ 0x73dad1
+func() begin
+	local l1;
+	(l1 := TotalClone('{version: 2, class: worksite, cardType: nil, place: nil, dialingPrefix: nil, areacode: nil, cityAlias: nil, country: nil, countrySymbol: nil, printer: nil, mailAccess: nil, connectionPhone: nil, connectionNetwork: nil, notes: nil, sorton: "Untitled Worksite"})).labels := '_ownerNames;
+	return l1
+end
+@@end

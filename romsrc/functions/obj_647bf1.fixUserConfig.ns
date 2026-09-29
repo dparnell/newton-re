@@ -1,0 +1,8 @@
+@@ 0x4960f9
+func() begin
+	call @118 with ();
+	RemoveSlot(userConfiguration, 'usepassword);
+	RemoveSlot(userConfiguration, 'passwordkey);
+	EntryChange(userConfiguration)
+end
+@@end

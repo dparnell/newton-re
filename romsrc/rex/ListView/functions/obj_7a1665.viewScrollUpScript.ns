@@ -1,0 +1,13 @@
+@@ 0x797acd names
+func() begin
+	local oldFirst;
+	oldFirst := firstTopic;
+	firstTopic := Max(0, ((firstTopic - ((lastTopic - firstTopic) div 2)) - 1));
+	(if (oldFirst <> firstTopic) then begin
+			scrollCausedRedo := true;
+			self:RedoChildren();
+			scrollCausedRedo := nil;
+			ClearUndoStacks()
+		end)
+end
+@@end

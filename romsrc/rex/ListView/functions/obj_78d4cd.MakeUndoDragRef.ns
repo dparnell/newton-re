@@ -1,0 +1,37 @@
+@@ 0x78b95d names
+func(aDragRef, anOldDragTo) begin
+	newDragTo := {};
+	toIndex := (indices := aDragRef.index)[0];
+	from := anOldDragTo.index;
+	topicsMoved := Length(indices);
+	dragRef := DeepClone(aDragRef);
+	if (toIndex > (from + 1)) then begin
+			newDragTo.index := ((toIndex - 1) + topicsMoved)
+		end else begin
+			newDragTo.index := (toIndex - 1)
+		end;
+	newDragTo.level := aDragRef.level;
+	dragRef.dragTo := newDragTo;
+	newIndices := Array(topicsMoved, nil);
+	local dragRef;
+	local newDragTo;
+	local indices;
+	local toIndex;
+	local from;
+	local topicsMoved;
+	local i;
+	local theIndex;
+	local newIndices;
+	(for i := 0 to (topicsMoved - 1) do begin
+			theIndex := indices[i];
+			if (toIndex < from) then begin
+					newIndices[i] := (((from + 1) - topicsMoved) + i)
+				end else begin
+					newIndices[i] := ((from + 1) + i)
+				end
+		end);
+	dragRef.index := newIndices;
+	dragRef.level := anOldDragTo.level;
+	dragRef
+end
+@@end

@@ -1,0 +1,21 @@
+@@ 0x55c921
+func() begin
+	(if (if selectedAppSymbols then (Length(selectedAppSymbols) > 0)) then begin
+			(foreach l1 in selectedAppSymbols do begin
+					if (ClassOf(l1) = 'frame) then begin
+							if (not self:Find1(GetVariable(self, l1.appSymbol), 'globalFind, l1.target)) then begin
+									return nil
+								end
+						end else begin
+							if (not self:Find1(GetVariable(self, l1), 'globalFind, nil)) then begin
+									return nil
+								end
+						end
+				end);
+			true
+		end else begin
+			self:SetMessage("No applications have been selected.");
+			nil
+		end)
+end
+@@end

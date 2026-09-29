@@ -1,0 +1,36 @@
+@@ 0x4a7e2d
+func() begin
+	local l1;
+	querySoup := (if (if storesFilter then storesFilter:IsValid()) then theSoup:GetMember(storesFilter) else begin
+			storesFilter := nil;
+			theSoup
+		end);
+	l1 := soupQuery;
+	if (not soupFilter) then begin
+			l1 := Clone(l1);
+			if theSoup:HasTags() then begin
+					l1.tagspec := {none: GetFolderList(appSymbol, nil)}
+				end else begin
+					RemoveSlot(l1, 'tagspec);
+					l1.validTest := FilterNone
+				end
+		end else begin
+			if (soupFilter <> '_all) then begin
+					l1 := Clone(l1);
+					if theSoup:HasTags() then begin
+							l1.tagspec := {all: soupFilter}
+						end else begin
+							RemoveSlot(l1, 'tagspec);
+							l1.validTest := func(a1) begin
+								call FilterSome with (a1, soupFilter)
+							end
+						end
+				end else begin
+					if (if l1.tagspec then (not theSoup:HasTags())) then begin
+							RemoveSlot((l1 := Clone(l1)), 'tagspec)
+						end
+				end
+		end;
+	(theCursor := querySoup:Query(l1))
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x4f9f35
+func(a1) begin
+	self:KillCrib(a1, nil);
+	true
+end
+@@end

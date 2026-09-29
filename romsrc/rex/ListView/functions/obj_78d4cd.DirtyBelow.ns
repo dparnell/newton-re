@@ -1,0 +1,7 @@
+@@ 0x78d0a5 names
+func(anIndex) begin
+	local bounds;
+	(bounds := self:GlobalBox()).top := (bounds.top + topics[anIndex].viewBounds.top);
+	self:DirtyBox(bounds)
+end
+@@end

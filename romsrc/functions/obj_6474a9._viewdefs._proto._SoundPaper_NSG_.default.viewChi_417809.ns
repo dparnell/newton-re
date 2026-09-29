@@ -1,0 +1,8 @@
+@@ 0x417809
+func(a1, a2) begin
+	(if (if (not inRetarget) then (a1 = 'sounds)) then begin
+			target.(path) := {description: soundDescription.text, sounds: self.sounds};
+			self:StartFlush()
+		end)
+end
+@@end

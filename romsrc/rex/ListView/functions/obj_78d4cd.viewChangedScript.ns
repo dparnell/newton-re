@@ -1,0 +1,17 @@
+@@ 0x78cd0d names
+func(aSlot, aView) begin
+	local theList, topic;
+	if reflow then begin
+			return nil
+		end;
+	if (index = -1) then begin
+			return nil
+		end;
+	(if Visible((theList := list)) then (if ((aSlot = 'text) or (aSlot = 'styles)) then begin
+				theList.curTopic := aView.index;
+				(topic := theList.topics[aView.index]).text := text;
+				topic.styles := styles;
+				theList:StartFlush()
+			end else (if (aSlot = 'viewBounds) then (if doingScrub then AddDeferredSend(theList, 'ChildChanged, [Array: aView]) else theList:ChildChanged(aView)))))
+end
+@@end

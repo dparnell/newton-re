@@ -1,0 +1,25 @@
+@@ 0x4b7119
+func() begin
+	local l1, l2, l3;
+	if OtherViewInUse(nil) then begin
+			AddProcrastinatedSend('checkCaret, targetView, 'checkCaret, nil, 500);
+			return nil
+		end;
+	(loop begin
+			if ((((not (l2 := GetCaretInfo())) or (not l2.view)) or (not l2.view.viewCObject)) or (BAnd(l2.view.viewClass, 65535) <> 81)) then begin
+					break
+				end;
+			if (not ViewContainsCaretView(self)) then begin
+					break
+				end;
+			if (not l1) then begin
+					(l1 := layout:GlobalBox()).top := (l1.top + 8);
+					l1.bottom := (l1.bottom - viewLineSpacing)
+				end;
+			if ((not (l3 := l2.view:CaretRelativeToVisibleRect(l1))) or (l3 = 'inbox)) then begin
+					break
+				end;
+			(if (l3 = 'top) then layout:PixelScrollBy(0, ((l1.top - l1.bottom) + viewLineSpacing)) else (if (l3 = 'bottom) then layout:PixelScrollBy(0, ((l1.bottom - l1.top) - viewLineSpacing)) else break))
+		end)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x4ab315
+func() begin
+	{tag: SPrintObject(appSymbol), labelsFilter: nil, position: nil, currentLayout: currentLayout, previousLayout: previousLayout, _recogSettings: nil, preferredViewDef: preferredViewDef, autoPutawayEnabled: autoPutawayEnabled}
+end
+@@end

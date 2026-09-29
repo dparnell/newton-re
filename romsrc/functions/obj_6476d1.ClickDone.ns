@@ -1,0 +1,10 @@
+@@ 0x443d05
+func() begin
+	local l1;
+	(l1 := Date(selectedDates[0])).year := value;
+	selectedDates[0] := TotalMinutes(l1);
+	calendar:SetTitle();
+	calendar:Dirty();
+	self:?NewTime(selectedDates)
+end
+@@end

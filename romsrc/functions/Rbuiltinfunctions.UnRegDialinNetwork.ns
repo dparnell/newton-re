@@ -1,0 +1,6 @@
+@@ 0x3c6c45
+func(a1) begin
+	RemoveSlot(DialinNetworkRegistry, a1);
+	nil
+end
+@@end

@@ -1,0 +1,76 @@
+@@ 0x4378fd
+@@const kLiteral_435ac1
+'{type: index, indexPath: [Array: longitude, latitude]}
+@@main
+func(a1, count, radius, a4, a5, extra) begin
+	local slot, d, longitude, latitude, list, entry;
+	local v10_wwwwwwvvvvv, v13_fff, v14_ssssrrrrrr, v15_vvvvvvvvvvvvvvuuu, v16_ooonnn;
+	v13_fff := rinttol((((radius / 70) / 180) * 268435456));
+	list := [Array: ];
+	v14_ssssrrrrrr := [Array: ];
+	slot := extra.slot;
+	latitude := BAnd(CoordinateToLatitude(a5, extra.height), 536870911);
+	longitude := BAnd(CoordinateToLongitude(a4, extra.width), 536870911);
+	AddArraySlot(v14_ssssrrrrrr, {s: {x: (longitude - v13_fff), y: 0}, e: {x: (longitude + v13_fff), y: 536870911}});
+	if (v14_ssssrrrrrr[0].s.x < 0) then begin
+			AddArraySlot(v14_ssssrrrrrr, DeepClone(v14_ssssrrrrrr[0]));
+			v14_ssssrrrrrr[0].s.x := 0;
+			v14_ssssrrrrrr[1].s.x := BAnd(v14_ssssrrrrrr[1].s.x, 536870911);
+			v14_ssssrrrrrr[1].e.x := 536870911
+		end else begin
+			if (v14_ssssrrrrrr[0].e.x < 0) then begin
+					AddArraySlot(v14_ssssrrrrrr, DeepClone(v14_ssssrrrrrr[0]));
+					v14_ssssrrrrrr[0].e.x := 536870911;
+					v14_ssssrrrrrr[1].s.x := 0;
+					v14_ssssrrrrrr[1].e.x := BAnd(v14_ssssrrrrrr[1].e.x, 536870911)
+				end
+		end;
+	d := a1.soupList[0]:Query(kLiteral_435ac1);
+	(v10_wwwwwwvvvvv := Clone(kLiteral_435ac1)).IndexValidTest := func(a1) begin
+		local l1, l2, l3, l4;
+		if ((l1 := CircleDistance(longitude, latitude, a1[0], a1[1], 'miles)) < radius) then begin
+				l2 := {x: a1[0], y: a1[1], d: l1};
+				if extra.slot then begin
+						if ((entry := d:GotoKey(a1)).(slot) <> extra.filter) then begin
+								return nil
+							end
+					end;
+				if (not BInsert(list, l2, '|<|, 'd, true)) then begin
+						l3 := BInsert(list, l2, '|<|, 'd, 'returnElt);
+						l4 := LSearch(list, l3.d, 0, '|=|, 'd);
+						(while (l3.d = l1) do begin
+								if (if (l3.x = a1[0]) then (l3.y = a1[1])) then begin
+										if (if (entry := d:GotoKey(a1)) then (entry.kind <> 'Add)) then begin
+												if (entry.kind = 'delete) then begin
+														ArrayRemoveCount(list, l4, 1)
+													end;
+												return nil
+											end
+									end;
+								(if ((l4 := (l4 + 1)) < Length(list)) then (l3 := list[l4]) else (l3.d := 0))
+							end);
+						BInsert(list, l2, '|<|, 'd, nil)
+					end;
+				if (Length(list) > count) then begin
+						SetLength(list, count);
+						radius := list[(count - 1)].d
+					end
+			end;
+		return nil
+	end;
+	(foreach v9_wwwwwwwwwwwwwwwwwwwwww in v14_ssssrrrrrr do begin
+			v10_wwwwwwvvvvv.beginKey := [Array: v9_wwwwwwwwwwwwwwwwwwwwww.s.x, v9_wwwwwwwwwwwwwwwwwwwwww.s.y];
+			v10_wwwwwwvvvvv.endKey := [Array: v9_wwwwwwwwwwwwwwwwwwwwww.e.x, v9_wwwwwwwwwwwwwwwwwwwwww.e.y];
+			v15_vvvvvvvvvvvvvvuuu := a1:Query(v10_wwwwwwvvvvv)
+		end);
+	v15_vvvvvvvvvvvvvvuuu := a1:Query(kLiteral_435ac1);
+	(for v11_wwwwwwwwwwwwwwwwww := 0 to (Length(list) - 1) do begin
+			entry := v15_vvvvvvvvvvvvvvuuu:GotoKey([Array: (v16_ooonnn := list[v11_wwwwwwwwwwwwwwwwww]).x, v16_ooonnn.y]);
+			list[v11_wwwwwwwwwwwwwwwwww] := {distance: v16_ooonnn.d, place: entry, item: entry.name}
+		end);
+	if (Length(list) > 1) then begin
+			Sort(list, '|str<|, 'item)
+		end;
+	list
+end
+@@end

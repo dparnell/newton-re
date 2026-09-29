@@ -1,0 +1,16 @@
+@@ 0x75df7d
+func(a1) begin
+	local l1, l2;
+	if a1 then begin
+			l1 := a1.button
+		end;
+	(if l1 then begin
+			self:ShowIfNotVisible(self);
+			self.hidden := nil;
+			self.options := a1;
+			self.text := l1.buttonTitle;
+			(l2 := Clone(viewBounds)).left := ((viewBounds.right - StrWidth(text)) - 7);
+			SetValue(self, 'viewBounds, l2)
+		end)
+end
+@@end

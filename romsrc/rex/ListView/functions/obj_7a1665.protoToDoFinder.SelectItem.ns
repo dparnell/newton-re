@@ -1,0 +1,9 @@
+@@ 0x79b4e5 names
+func(item) begin
+	local alias, index;
+	alias := {_uniqueID: item.entryID, _storeID: item.storeID, instanceTime: item.instanceTime, topicIndex: item.topicIndex};
+	(if selected then (if (index := ArrayPos(selected, alias, 0, func(e, t) begin
+			(if (if (if (e._uniqueID = t._uniqueID) then (e._storeID = t._storeID)) then (e.instanceTime = t.instanceTime)) then (e.topicIndex = t.topicIndex))
+		end)) then RemoveSlot(selected, index) else AddArraySlot(selected, alias)) else (selected := [Array: alias]))
+end
+@@end

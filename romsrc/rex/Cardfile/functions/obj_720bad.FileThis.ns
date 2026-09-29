@@ -1,0 +1,9 @@
+@@ 0x73fd7d
+func(a1, a2, a3, a4, a5) begin
+	if (if (self:GetAppPreferences().sortBy <> 'sorton) then (not a5:GetSoup(@47))) then begin
+			self:Notify(3, title, "Your sorting prefs have been reset to the default sort order.");
+			self:SortByChange('sorton)
+		end;
+	inherited:FileThis(a1, a2, a3, a4, a5)
+end
+@@end

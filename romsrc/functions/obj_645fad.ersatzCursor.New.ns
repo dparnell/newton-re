@@ -1,0 +1,8 @@
+@@ 0x4503ed
+func(a1, a2) begin
+	local l1;
+	(l1 := inherited:New(a1, a2))._proto := l1._parent;
+	l1._parent := a1.context;
+	l1
+end
+@@end

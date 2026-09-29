@@ -1,0 +1,6 @@
+@@ 0x7541fd
+func() begin
+	fResults.Conflicts := self.labelCommands[0];
+	inherited:?viewSetupFormScript()
+end
+@@end

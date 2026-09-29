@@ -1,0 +1,25 @@
+@@ 0x73fc05
+func(a1) begin
+	local l1, l2, l3, l4, l5;
+	l1 := currentLayout;
+	if (not a1) then begin
+			a1 := previousLayout
+		end;
+	if (if (a1 <> currentLayout) then (a1 <> 'overview)) then begin
+			previousLayout := a1
+		end;
+	currentLayout := a1;
+	l2 := self:LocalBox();
+	l5 := (l4 := call kGetAppSize with (self, a1)).draggerBorder;
+	if (superSymbol = 'ownerNames) then begin
+			l3 := (((l2.bottom - l2.top) - 202) - l5)
+		end else begin
+			if (a1 = 'default) then begin
+					l3 := (((l2.bottom - l2.top) - 220) - l5)
+				end else begin
+					l3 := (((l2.bottom - l2.top) + l4.bounds.top) + l5)
+				end
+		end;
+	(if (l3 <> 0) then self:SlideEffect(l3, (-l3), @85, 'Resize, [Array: l4.justify, l4.bounds, l4.viewFormat]) else self:RedoChildren())
+end
+@@end

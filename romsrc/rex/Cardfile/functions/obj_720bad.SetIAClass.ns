@@ -1,0 +1,16 @@
+@@ 0x7370cd
+func(a1) begin
+	if (if a1.sorton then IsReadOnly(a1.sorton)) then begin
+			a1.sorton := Clone(a1.sorton)
+		end;
+	(if ((a1.class = 'person) or (a1.class = 'owner)) then begin
+			if a1.name then begin
+					if IsReadOnly(a1.name) then begin
+							a1.name := Clone(a1.name)
+						end;
+					SetClass(a1.name, 'person)
+				end;
+			(if a1.sorton then SetClass(a1.sorton, 'name))
+		end else (if a1.sorton then SetClass(a1.sorton, 'company)))
+end
+@@end

@@ -1,0 +1,11 @@
+@@ 0x7257c5
+func(a1) begin
+	local l1, l2;
+	l1 := (if (a1 = 'none) then "Untitled" else SPrintObject(a1));
+	l2 := {family: 'newyork, size: 14, face: 1};
+	AddStepView(self, {_proto: @160, viewJustify: 48, viewBounds: SetBounds(0, 15, 0, 18), viewFormat: 3});
+	AddStepView(self, {_proto: @218, viewBounds: RelBounds(5, 10, (StrFontWidth(l1, l2) + 2), fontHeight(l2)), viewFont: l2, viewFormat: 1, text: l1});
+	currentLetter := a1;
+	25
+end
+@@end

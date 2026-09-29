@@ -1,0 +1,23 @@
+@@ 0x528fb9
+func() begin
+	l1 := self.input;
+	l2 := GlueStrings(self.OrigPhrase);
+	l3 := self.phrases;
+	local l1;
+	local l2;
+	local l3;
+	(foreach l4, l5 in l1 do begin
+			if (if isa(l5, 'schedule_act) then HasSlot(l5, 'removeIt)) then begin
+					self:RemoveFromString(l2, l3[l4], nil)
+				end else begin
+					if isa(l5, 'when_obj) then begin
+							self:RemoveFromString(l2, l3[l4], true)
+						end
+				end
+		end);
+	if l2 then begin
+			l2 := TrimString(l2)
+		end;
+	return l2
+end
+@@end

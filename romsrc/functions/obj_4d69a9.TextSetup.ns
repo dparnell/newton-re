@@ -1,0 +1,5 @@
+@@ 0x4d6969
+func() begin
+	(if (title <> nil) then title else "")
+end
+@@end

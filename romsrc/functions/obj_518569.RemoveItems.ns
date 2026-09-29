@@ -1,0 +1,31 @@
+@@ 0x5184a9
+func(a1) begin
+	local deleteFromDate;
+	local l1;
+	if a1 then begin
+			l1 := Clone(@65);
+			deleteFromDate := DaysValue.DeleteFrom;
+			l1.endExclKey := deleteFromDate;
+			ItemCount := ((ItemCount := ((ItemCount := ((ItemCount := Query(MeetingSoup, l1):CountEntries()) + Query(RepeatSoup, nil):CountEntries())) + Query(notes, l1):CountEntries())) + Query(RepeatNotes, nil):CountEntries());
+			ToDoListView:GetToDoSoup();
+			ItemCount := (ItemCount + Query(ToDoListView.dataSoup, {type: 'index, indexPath: 'Date, beginKey: 1, validTest: func(a1) begin
+				(a1.Date < deleteFromDate)
+			end}):CountEntries());
+			RunningCount := 0;
+			DoProgress('vGauge, '{statusText: "Deleting items...", gauge: 0, closeBox: nil}, func(a1) begin
+				local l1;
+				l1 := ((DaysValue.initialDate - deleteFromDate) div 1440);
+				statusView := a1;
+				if CalendarItems.viewValue then begin
+						self:removeOldCribs(l1);
+						self:removeOldMeetings(l1)
+					end;
+				if ToDoItems.viewValue then begin
+						self:GetToDo():RemoveOldTodoItems(deleteFromDate, 'all, self)
+					end;
+				self:redisplayScript()
+			end)
+		end;
+	base:Close()
+end
+@@end

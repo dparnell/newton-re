@@ -1,0 +1,19 @@
+@@ 0x4d0a21
+func(a1, a2) begin
+	local l1, l2, l3;
+	l1 := GetRoot().|faxsend:newton|;
+	if StrFilled((l2 := l1:NewFromItem(a1)).body.sender) then begin
+			l2.toRef := [Array: GetDataDefs('|nameRef.fax|):MakeNameRef({name: {first: nil, last: "Unknown"}}, '|nameRef.fax|)];
+			l2.toRef[0].phone := l2.body.sender
+		end;
+	if (if (l3 := l2.body.info) then l3.resolution) then begin
+			if (l3.resolution[1] > 150) then begin
+					l2.faxResolution := 'fine
+				end else begin
+					l2.faxResolution := 'normal
+				end
+		end;
+	l2.category := '|faxsend:newton|;
+	self:ItemCompleted(l2, 'pending, nil)
+end
+@@end

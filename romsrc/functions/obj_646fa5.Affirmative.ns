@@ -1,0 +1,5 @@
+@@ 0x438c11
+func() begin
+	(if worldClock then context:?pickActionScript(@519:ConvertToWC(long.value), @519:ConvertToWC(lat.value)) else context:?pickActionScript(long.value, lat.value))
+end
+@@end

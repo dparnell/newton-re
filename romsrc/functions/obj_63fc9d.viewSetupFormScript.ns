@@ -1,0 +1,19 @@
+@@ 0x41d2bd
+func() begin
+	local l1;
+	(if (if (if (l1 := userConfiguration.blessedapp) then (GetRoot().(l1) = GetVariable(self, 'base))) then ((self.buttonClickScript = @163.buttonClickScript) or cool)) then begin
+			icon := nil;
+			viewBounds := Clone(viewBounds);
+			if (BAnd(viewJustify, 32) <> 0) then begin
+					viewBounds.left := (viewBounds.right := 0)
+				end else begin
+					viewBounds.left := viewBounds.right
+				end;
+			(viewFormat := 0)
+		end else (if (icon = nil) then begin
+				RemoveSlot(self, 'icon);
+				RemoveSlot(self, 'viewBounds);
+				RemoveSlot(self, 'viewFormat)
+			end))
+end
+@@end

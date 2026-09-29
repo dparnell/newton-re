@@ -1,0 +1,8 @@
+@@ 0x4e0e61
+func() begin
+	if (not pix) then begin
+			pix := MakeText(target.name, 0, 0, self:LocalBox().right, 12)
+		end;
+	self:DrawShape(pix, '{font: 1060865, justification: center})
+end
+@@end

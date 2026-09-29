@@ -1,0 +1,23 @@
+@@ 0x534c4d
+func(a1) begin
+	local l1, l2, l3;
+	if ((l1 := a1.title) = nil) then begin
+			l2 := (if StrFilled(a1.name) then a1.name else (if StrFilled(a1.phoneNumber) then a1.phoneNumber));
+			l3 := (a1.state = 'Received);
+			if l2 then begin
+					if l3 then begin
+							l1 := ParamStr("Call from ^0", [Array: l2])
+						end else begin
+							l1 := ParamStr("Call to ^0", [Array: l2])
+						end
+				end else begin
+					if l3 then begin
+							l1 := "Call received"
+						end else begin
+							l1 := "Call placed"
+						end
+				end
+		end;
+	l1
+end
+@@end

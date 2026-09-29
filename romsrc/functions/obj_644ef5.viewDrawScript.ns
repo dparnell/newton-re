@@ -1,0 +1,72 @@
+@@ 0x44c675
+@@const kBinaryFromHex
+func(hex, cls) begin
+	local b := MakeBinary(StrLen(hex) div 2, cls);
+	for i := 0 to Length(b) - 1 do begin
+		local h := Ord(hex[2 * i]);
+		local l := Ord(hex[2 * i + 1]);
+		StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+	end;
+	b
+end
+@@const kLiteral_44f3ad
+'{penPattern: 3, fillPattern: 0, transferMode: 1}
+@@const kLiteral_44be59
+{penPattern: call kBinaryFromHex with ("aa55aa55aa55aa550000", 'pattern), fillPattern: 0, transferMode: 1}
+@@main
+func() begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11;
+	l1 := self:LocalBox();
+	l2 := self.maxChars;
+	l3 := ((l1.left + dispIndent) + (cellGap div 2));
+	l4 := (l1.top + viewLineSpacing);
+	if (not lines) then begin
+			l5 := true;
+			lines := Array(l2, nil)
+		end;
+	if (not chars) then begin
+			l6 := true;
+			chars := Array(l2, nil)
+		end;
+	if (not frames) then begin
+			l7 := true;
+			l8 := (l1.left + dispIndent);
+			frames := Array((2 * l2), nil)
+		end;
+	l9 := 0;
+	MapAmbiguousCharacters((l10 := Clone(text)));
+	(while (l9 < l2) do begin
+			if l5 then begin
+					if (not self:CellLocked((dispLeft + l9))) then begin
+							lines[l9] := MakeLine(l3, (l4 + 1), ((l3 + cellWidth) - cellGap), (l4 + 1))
+						end else begin
+							lines[l9] := kLiteral_44f3ad
+						end
+				end;
+			if l6 then begin
+					if IsInk((l11 := l10[(dispLeft + l9)])) then begin
+							l11 := $\uF7FF
+						end;
+					chars[l9] := MakeText(SPrintObject(l11), l3, l1.top, ((l3 + cellWidth) - cellGap), l4)
+				end;
+			if l7 then begin
+					if (not self:CellLocked((dispLeft + l9))) then begin
+							frames[(2 * l9)] := MakeLine(l8, (l4 - 11), l8, (l4 + 8));
+							frames[((2 * l9) + 1)] := MakeLine((l8 + cellWidth), (l4 - 11), (l8 + cellWidth), (l4 + 8))
+						end else begin
+							frames[(2 * l9)] := kLiteral_44be59;
+							frames[((2 * l9) + 1)] := kLiteral_44be59
+						end;
+					l8 := (l8 + cellWidth)
+				end;
+			l3 := (l3 + cellWidth);
+			(l9 := (l9 + 1))
+		end);
+	self:DrawShape(chars, '{font: 18435, justification: center, transferMode: 0});
+	self:DrawShape(lines, kLiteral_44f3ad);
+	if frames then begin
+			self:DrawShape(frames, kLiteral_44be59)
+		end;
+	0
+end
+@@end

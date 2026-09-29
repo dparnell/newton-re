@@ -1,0 +1,8 @@
+@@ 0x48a3a9
+func() begin
+	if (memory = nil) then begin
+			memory := class
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

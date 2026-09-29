@@ -1,0 +1,15 @@
+@@ 0x79ef5d names
+func() begin
+	(if (if (not readOnly) then dirtyFlag) then begin
+			self:UpdateText();
+			self:UpdatePriorityDone();
+			self:UpdateReminderSpec();
+			self:UpdateTime();
+			if (not task.mtgDone) then begin
+					self:UpdateFrequency();
+					self:UpdateDateRange()
+				end;
+			(dirtyFlag := nil)
+		end)
+end
+@@end

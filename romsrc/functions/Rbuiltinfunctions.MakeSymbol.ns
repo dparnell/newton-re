@@ -1,0 +1,6 @@
+@@ 0x62aaf1
+func(a1) begin
+	BadWickedNaughtyNoot(Stringer([Array: "MakeSymbol(\"", a1, "\")"]), 'undocumented);
+	Intern(a1)
+end
+@@end

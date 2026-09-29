@@ -1,0 +1,9 @@
+@@ 0x4ba46d
+func(a1, a2) begin
+	local l1, l2;
+	(if a1.phones then (if (l1 := FindStringInFrame(a1.phones, a2, true)) then begin
+				l2 := a1.phones[l1[1]];
+				{item: ParamStr("^0 ^?1(^1)||", [Array: MakeDisplayPhone(l2), PhoneTypes.phoneText.(ClassOf(l2))]), id: MakeEntryAlias(a1)}
+			end))
+end
+@@end

@@ -1,0 +1,43 @@
+@@ 0x425c21
+func() begin
+	local engine;
+	local l1, l2, l3, l4, l5, l6, l7, l8;
+	if (not self:TestState(1)) then begin
+			l2 := self:TestState(18);
+			l3 := self:TestState(24);
+			self:SetState(32);
+			l1 := fSoundChannel:stop();
+			if l3 then begin
+					l1 := fPauseResult
+				end;
+			if (if l2 then l1) then begin
+					l4 := l1.sound;
+					l5 := l1.index;
+					if (if fTrimAmount then (fTrimAmount > 0)) then begin
+							l6 := floor((fTrimAmount * fSoundFrameSlots.samplingRate));
+							if ((l5 := (l5 - l6)) < 0) then begin
+									l5 := 0
+								end
+						end;
+					if (fSetLengthInProgress = 'doItNow) then begin
+							l4:SetRecordingLengthNow(l5);
+							fSetLengthInProgress := nil
+						end else begin
+							fSetLengthInProgress := true;
+							engine := self;
+							l7 := func() begin
+								engine:SetLengthDone()
+							end;
+							l4:SetRecordingLength(l5, l7)
+						end;
+					l8 := (Length(fSoundArray) - 1);
+					(while (if (l8 > 0) then (fSoundArray[l8] <> l4)) do begin
+							RemoveSlot(fSoundArray, l8);
+							(l8 := (l8 - 1))
+						end)
+				end;
+			self:SetState(1)
+		end;
+	return l1
+end
+@@end

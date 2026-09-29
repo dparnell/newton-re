@@ -1,0 +1,28 @@
+@@ 0x4d0331
+func(a1) begin
+	local l1, l2, l3, l4;
+	(try begin
+			if a1 then begin
+					Throw('|evt.ex.comm|, a1)
+				end;
+			self:ChangeState('Listening);
+			discardPage := nil;
+			l1 := DeepClone(listenOptions);
+			if (not StrFilled((l2 := GetUserConfig('faxPhone)))) then begin
+					l2 := "<unspecified>"
+				end;
+			l1[listenOffsets.localId].data.arglist := [Array: l2];
+			if self:AnySet(offHook) then begin
+					l1[listenOffsets.modemConnect].data.arglist[4] := true
+				end;
+			l1[listenOffsets.modemOption] := MakeModemOption();
+			l3 := self:GetConfig('minScanLineTime);
+			l1[listenOffsets.minScanLine].data := (if l3 then l3 else defaultConfiguration.minScanLineTime);
+			l4 := self:GetConfig('maxResolution);
+			l1[listenOffsets.pageSetup].data.arglist[2] := (if l4 then l4 else defaultConfiguration.maxResolution);
+			ep:Listen(l1, listenSpec)
+		end onexception |evt.ex| do begin
+			(if self:HandleThrow() then self:DoUnbind(nil))
+		end)
+end
+@@end

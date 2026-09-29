@@ -1,0 +1,11 @@
+@@ 0x454acd
+func() begin
+	(if (suppressNew or suppressFind) then begin
+			self.viewBounds := SetBounds(0, -19, 30, -6);
+			if suppressNew then begin
+					newButton.viewFlags := 0
+				end;
+			(if suppressFind then (findButton.viewFlags := 0))
+		end)
+end
+@@end

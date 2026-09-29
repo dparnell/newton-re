@@ -1,0 +1,12 @@
+@@ 0x44bec5
+func(a1) begin
+	(if (a1 = 'all) then begin
+			lines := nil;
+			chars := nil;
+			(frames := nil)
+		end else (if (a1 = 'chars) then (chars := nil) else (if (a1 = 'lines) then begin
+					lines := nil;
+					(frames := nil)
+				end)))
+end
+@@end

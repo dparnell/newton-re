@@ -1,0 +1,112 @@
+@@ 0x4e3445
+func(a1) begin
+	local l1, l2;
+	playsound(click);
+	if (a1 = 117) then begin
+			a1 := 0
+		end;
+	if (if (if (a1 = 114) then Clear) then (lastKey <> 112)) then begin
+			unary := 114;
+			self:ResetValue(true)
+		end else begin
+			if (if (if (a1 = 113) then Clear) then (lastKey <> 112)) then begin
+					unary := 113;
+					self:ResetValue(true)
+				end else begin
+					if (a1 = 111) then begin
+							self:ClearKey()
+						end else begin
+							if (a1 = 112) then begin
+									self:ClearEntry()
+								end else begin
+									if ((a1 = 153) or (a1 = 154)) then begin
+											l1 := (if (a1 = 153) then value else (-value));
+											if memory then begin
+													if ((memory := (memory + l1)) = 0) then begin
+															memory := nil;
+															paperDisplay:Dirty()
+														end
+												end else begin
+													memory := l1;
+													paperDisplay:Dirty()
+												end;
+											self:ResetValue(true)
+										end else begin
+											if (a1 = 102) then begin
+													value := (if memory then memory else 0.0);
+													if (unary = 114) then begin
+															value := (-value);
+															unary := nil;
+															isUnary := true
+														end else begin
+															if unary then begin
+																	unary := nil;
+																	isUnary := true
+																end
+														end;
+													digitCount := StrLen((l2 := self:CalcFormattedNumberStr(value)));
+													if (l2[0] = $-) then begin
+															digitCount := (digitCount - 1)
+														end;
+													if (if (if HasSlot(base, 'pendingOp) then (pendingOp >= 113)) then (pendingOp <= 116)) then begin
+															inputKeys := Stringer([Array: "+-x\u00F7\u"[(pendingOp - 113)], l2])
+														end else begin
+															inputKeys := l2
+														end;
+													self:JamDisplay(inputKeys);
+													Clear := nil
+												end else begin
+													if (a1 > 100) then begin
+															if ((not Clear) or (((pendingOp = 108) or (pendingOp = 0)) or (pendingOp = 115))) then begin
+																	self:DoOp(a1)
+																end else begin
+																	self:SysBeep();
+																	a1 := lastKey
+																end
+														end else begin
+															if (Clear or (lastKey = 102)) then begin
+																	self:ResetValue((lastKey = 102));
+																	Clear := nil
+																end;
+															if (a1 = 100) then begin
+																	if valueFactor then begin
+																			valueFactor := nil;
+																			self:JamDisplay((inputKeys := Stringer([Array: inputKeys, GetLocale().numberformat.decimalpoint])))
+																		end
+																end else begin
+																	if (digitCount >= 10) then begin
+																			self:SysBeep()
+																		end else begin
+																			inputKeys := Stringer([Array: inputKeys, a1]);
+																			digitCount := (digitCount + 1);
+																			if valueFactor then begin
+																					value := (value * valueFactor)
+																				end else begin
+																					keyFactor := (keyFactor / 10.0)
+																				end;
+																			if (if unary then (a1 <> 0)) then begin
+																					if (unary = 114) then begin
+																							a1 := (-a1)
+																						end;
+																					unary := nil;
+																					isUnary := true
+																				end;
+																			if (value < 0) then begin
+																					value := (value - (a1 * keyFactor))
+																				end else begin
+																					value := (value + (a1 * keyFactor))
+																				end;
+																			self:JamDisplay(inputKeys)
+																		end
+																end
+														end
+												end
+										end
+								end
+						end
+				end
+		end;
+	lastKey := a1;
+	true
+end
+@@end

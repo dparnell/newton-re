@@ -1,0 +1,7 @@
+@@ 0x42d46d
+func() begin
+	self.items := rollItems;
+	self.index := rollIndex;
+	(self.allCollapsed := rollCollapsed)
+end
+@@end

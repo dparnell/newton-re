@@ -1,0 +1,6 @@
+@@ 0x4994ad
+func() begin
+	fEndpoint:Unbind(CallbackSpec);
+	'waitAsync
+end
+@@end

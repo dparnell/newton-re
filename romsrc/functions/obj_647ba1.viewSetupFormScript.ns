@@ -1,0 +1,23 @@
+@@ 0x490165
+func() begin
+	local l1, l2, l3;
+	if (l1 := godParent.backupCursor) then begin
+			(l1 := l1:clone()):Reset();
+			self.soupNameList := godParent:getRestoreApplicationNames(l1)
+		end else begin
+			self.soupNameList := '[Array: ]
+		end;
+	self:getPkgNamesFromBackup();
+	l2 := Length(pkgNames);
+	l3 := GetAppParams().appAreaHeight;
+	if ((l2 = 0) or (l3 > 240)) then begin
+			scrollList.viewBounds := SetBounds(18, 5, -18, 97);
+			if (l2 = 0) then begin
+					self.viewBounds := SetBounds(0, 0, 220, 150)
+				end else begin
+					self.viewBounds := SetBounds(0, 0, 220, 250)
+				end
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

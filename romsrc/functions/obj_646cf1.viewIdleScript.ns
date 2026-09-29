@@ -1,0 +1,6 @@
+@@ 0x4a0071
+func() begin
+	self:EndFlush();
+	nil
+end
+@@end

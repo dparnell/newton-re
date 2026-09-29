@@ -1,0 +1,8 @@
+@@ 0x4d1b79
+func(a1) begin
+	if (Routing.(fields.appSymbol) or (if GetRoot().(fields.appSymbol) then (GetRoot().(fields.appSymbol).SetupRoutingSlip exists))) then begin
+			fields.body := target
+		end;
+	inherited:PrepareToSend(a1)
+end
+@@end

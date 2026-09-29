@@ -1,0 +1,34 @@
+@@ 0x4961a9
+@@const kFunction_48e335
+func(a1) begin
+	(not StrEqual(a1, "Patch2.0"))
+end
+@@const kLiteral_48e355
+{type: 'index, indexPath: 'name, IndexValidTest: kFunction_48e335}
+@@const kLiteral_47ece5
+'{soupType: all, packageType: all, partialSoups: [Array: ], restoreType: all, restoreSoups: [Array: ], restorePackages: all, restorePackNames: [Array: ]}
+@@main
+func() begin
+	local l1, l2;
+	AddArraySlot(StoreSlipRegistry.storeSlips, self);
+	l1 := self:pickVOffset(viewBounds.top, 0);
+	self.viewBounds := SetBounds(viewBounds.left, (viewBounds.top + l1), viewBounds.right, (viewBounds.bottom + l1));
+	l2 := self:getDestStore();
+	if (not self.whoAmI) then begin
+			self.whoAmI := Intern(Stringer([Array: "Store", l2:GetSignature()]))
+		end;
+	self.backupSoup := l2:GetSoup("BackupInfo");
+	if backupSoup then begin
+			self.backupCursor := backupSoup:Query(kLiteral_48e355);
+			self:getBackupInfo()
+		end else begin
+			backupCursor := nil;
+			backupInfo := nil
+		end;
+	(try begin
+			(prefsCache := GetAppPrefs('backup, kLiteral_47ece5))
+		end onexception |evt.ex| do begin
+			(prefsCache := kLiteral_47ece5)
+		end)
+end
+@@end

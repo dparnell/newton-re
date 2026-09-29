@@ -1,0 +1,6 @@
+@@ 0x3c6af9
+func(a1) begin
+	RemoveSlot(InboxApps, a1);
+	nil
+end
+@@end

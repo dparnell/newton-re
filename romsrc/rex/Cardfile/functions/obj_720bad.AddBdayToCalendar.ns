@@ -1,0 +1,17 @@
+@@ 0x736b29
+func(a1, a2, a3, a4) begin
+	local l1, l2;
+	l2 := ParamStr(a4, [Array: GetRoot():PrimaryName(a1)]);
+	if a1.(a3) then begin
+			self:RemoveBdayFromCalendar(a1);
+			a1.(a3) := nil;
+			EntryChange(a1)
+		end;
+	(if (if (if a1.(a2) then (not IsInstance(a1.(a2), 'string))) then (not StrEqual("Untitled Person", l2))) then (if (l1 := GetRoot().calendar:AddEvent(l2, a1.(a2), 'yearly, nil)) then begin
+				l1.mtgIconType := 'annualEvent;
+				EntryChangeXmit(l1, 'cardfile);
+				a1.(a3) := MakeEntryAlias(l1);
+				EntryChange(a1)
+			end))
+end
+@@end

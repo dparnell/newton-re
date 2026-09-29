@@ -1,0 +1,14 @@
+@@ 0x5518d5
+func() begin
+	l2 := GraphicSize((l1 := backgrounds.(displayParams.buttonBarPosition)));
+	l3 := self:LocalBox();
+	local l1;
+	local l2;
+	local l3;
+	(for l4 := 0 to l3.right by l2.right do begin
+			(for l7 := 0 to l3.bottom by l2.bottom do begin
+					self:CopyBits(l1, l4, l7, 0)
+				end)
+		end)
+end
+@@end

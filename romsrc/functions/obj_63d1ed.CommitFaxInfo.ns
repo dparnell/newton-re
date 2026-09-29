@@ -1,0 +1,7 @@
+@@ 0x4c90d1
+func() begin
+	fields.fromTitle := GetRoot().(appSymbol):GetItemTitle(fields);
+	fields.fromRef := userConfiguration.currentPersona;
+	(fields.localId := MakeDisplayPhone(userConfiguration.faxPhone))
+end
+@@end

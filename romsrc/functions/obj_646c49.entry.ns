@@ -1,0 +1,5 @@
+@@ 0x4a7789
+func() begin
+	(if (if (index >= 0) then (index < Length(things))) then things[index])
+end
+@@end

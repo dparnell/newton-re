@@ -1,0 +1,5 @@
+@@ 0x5a4061
+func(a1) begin
+	(if (not (if eworld then eworld.connected)) then GetRoot().iobox:RemoveTempItems(appSymbol))
+end
+@@end

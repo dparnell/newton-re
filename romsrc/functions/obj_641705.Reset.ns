@@ -1,0 +1,7 @@
+@@ 0x435e4d
+func() begin
+	local l1;
+	l1 := realCurs:Reset();
+	self:entry()
+end
+@@end

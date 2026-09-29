@@ -1,0 +1,6 @@
+@@ 0x4dce49
+func() begin
+	clusterValue := GetLocale().timeformat.timeCycle;
+	SetKeyView(self, 0)
+end
+@@end

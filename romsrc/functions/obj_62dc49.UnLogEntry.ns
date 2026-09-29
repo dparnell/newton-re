@@ -1,0 +1,6 @@
+@@ 0x4b1a25
+func(a1, a2) begin
+	EntryReplace(a1, a2);
+	(if layout then layout:Retarget(true))
+end
+@@end

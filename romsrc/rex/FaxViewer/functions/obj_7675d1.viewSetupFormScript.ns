@@ -1,0 +1,6 @@
+@@ 0x767b75
+func() begin
+	selectedItem := imageContainer:GetCurrentPage();
+	inherited:?viewSetupFormScript()
+end
+@@end

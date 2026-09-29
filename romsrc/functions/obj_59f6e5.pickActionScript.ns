@@ -1,0 +1,13 @@
+@@ 0x59f685
+func(a1) begin
+	local l1;
+	if IsFrame((l1 := labelCommands[a1])) then begin
+			mailAccess := [Array: {mailPhone: l1.number, mailNetwork: l1.network}];
+			self:JamIt(true)
+		end else begin
+			mailAccess := nil;
+			ValidateConfigGuts(self, 'location, '[Array: mailPhone], {userText: "Enter other E-Mail access number:", titleText: "E-Mail", context: self, receiver: self, message: 'JamIt})
+		end;
+	base:hilite(nil)
+end
+@@end

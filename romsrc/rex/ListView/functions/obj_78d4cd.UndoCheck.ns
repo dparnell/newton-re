@@ -1,0 +1,9 @@
+@@ 0x78d285 names
+func(aList) begin
+	(for ti := 0 to (nTopics - 1) do begin
+			topics[ti].mtgDone := aList[ti]
+		end);
+	self:StartFlush();
+	self:Dirty()
+end
+@@end

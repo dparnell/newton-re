@@ -1,0 +1,9 @@
+@@ 0x48b07d
+func() begin
+	local l1, l2;
+	(if (l1 := GetUserConfig('currentEmporium)) then begin
+			l2 := ResolveEntryAlias(l1);
+			Stringer([Array: $\uFC01, l2.place])
+		end else Stringer([Array: $\uFC01, GetUserConfig('location).name]))
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x7aee95
+func() begin
+	local l1;
+	(if dateValue then SetTime((l1 := (((l1 := dateValue) - (l1 mod 1440)) + (Time() mod 1440)))))
+end
+@@end

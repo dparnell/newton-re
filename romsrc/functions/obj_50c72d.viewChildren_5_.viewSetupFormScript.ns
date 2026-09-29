@@ -1,0 +1,10 @@
+@@ 0x505f19
+func() begin
+	viewBounds := RelBounds(0, dpSlip.timeFieldTop, 220, 18);
+	if hideTimeFields then begin
+			viewFlags := BAnd(viewFlags, bnot(1))
+		end;
+	startTime := newMtgDate;
+	(stopTime := (newMtgDate + newMtgDuration))
+end
+@@end

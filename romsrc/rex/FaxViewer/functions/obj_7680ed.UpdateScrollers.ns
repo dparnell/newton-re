@@ -1,0 +1,8 @@
+@@ 0x768cd1
+func() begin
+	(if ImageTarget:CanScroll() then begin
+			vScrollers:Open();
+			vScrollers:Update(ImageTarget:GetScalingInfo())
+		end else (if Visible(vScrollers) then vScrollers:Hide()))
+end
+@@end

@@ -1,0 +1,16 @@
+@@ 0x4c718d
+func() begin
+	if (coverForm = nil) then begin
+			coverForm := self;
+			if (noDefaults or (symbol = nil)) then begin
+					margins := SetBounds(60, 0, 60, 0)
+				end;
+			self:SetMarginBounds(nil)
+		end;
+	printForm := self;
+	if TargetIsCursor(target) then begin
+			targetCursor := GetTargetCursor(target, nil)
+		end;
+	(if (if (not usesCursors) then TargetIsCursor(target)) then (if (target := targetCursor:entry()) then (mainFormat := coverForm:FindCursorFormat(target))))
+end
+@@end

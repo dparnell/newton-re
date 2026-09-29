@@ -1,0 +1,5 @@
+@@ 0x4f9f75
+func(a1) begin
+	self:AddNewCrib(a1, nil)
+end
+@@end

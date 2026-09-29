@@ -1,0 +1,20 @@
+@@ 0x453ddd
+func(a1, a2) begin
+	local l1, l2;
+	l2 := (Length(pickerDef:Validate((l1 := (if IsNameRef(a1) then a1 else self:FetchNameRef(a1))), fTapinfo._reqPaths)) = 0);
+	if (if pickerDef.singleSelect then l2) then begin
+			self:DeselectFreshest()
+		end;
+	if l2 then begin
+			if l1._Unselected then begin
+					if (l1._Unselected = 'totally) then begin
+							self:AddToSelected(l1)
+						end;
+					l1._Unselected := nil;
+					freshest := {nameRef: l1, index: a2};
+					totalSelected := (totalSelected + 1)
+				end
+		end;
+	(not l1._Unselected)
+end
+@@end

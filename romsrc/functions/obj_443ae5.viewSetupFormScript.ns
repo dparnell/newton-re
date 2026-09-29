@@ -1,0 +1,5 @@
+@@ 0x443ab1
+func() begin
+	((viewBounds := Clone(viewBounds)).top := titleBar.viewBounds.bottom)
+end
+@@end

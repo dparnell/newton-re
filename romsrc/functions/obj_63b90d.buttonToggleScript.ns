@@ -1,0 +1,9 @@
+@@ 0x4f7a99
+func(a1) begin
+	(foreach l1 in '[Array: viewSetupFormScript, viewSetupChildrenScript, viewSetupDoneScript, viewQuitScript, viewHideScript, viewShowScript] do begin
+			RemoveSlot(self, l1)
+		end);
+	self._proto := @18;
+	nil
+end
+@@end

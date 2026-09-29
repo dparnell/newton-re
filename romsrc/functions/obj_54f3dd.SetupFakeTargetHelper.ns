@@ -1,0 +1,30 @@
+@@ 0x54f1b9
+func() begin
+	if (Length((l1 := iconSpace:GetSelectedIcons())) = 0) then begin
+			return (fakeTarget.kids := nil)
+		end;
+	if (Length(l1) > 1) then begin
+			targetView.AppObjectFileThisOn := "File these icons on";
+			targetView.appObjectFileThisIn := "File these icons in"
+		end else begin
+			RemoveSlot(targetView, 'AppObjectFileThisOn);
+			RemoveSlot(targetView, 'appObjectFileThisIn)
+		end;
+	fakeTarget.packs := nil;
+	fakeTarget.labels := l1[0].target.fentry.labels;
+	fakeTarget.targetStore := l1[0].target:store();
+	dontStartWithFolder := nil;
+	local l1;
+	(foreach l2 in l1 do begin
+			if (l2.target.fentry.labels <> fakeTarget.labels) then begin
+					fakeTarget.labels := nil;
+					dontStartWithFolder := true
+				end;
+			if (l2.target:store() <> fakeTarget.targetStore) then begin
+					fakeTarget.targetStore := nil
+				end
+		end);
+	fakeTarget.newStore := nil;
+	(fakeTarget.kids := l1)
+end
+@@end

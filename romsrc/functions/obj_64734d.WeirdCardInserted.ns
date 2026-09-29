@@ -1,0 +1,33 @@
+@@ 0x56b385
+func(a1, a2) begin
+	l1 := nil;
+	l2 := nil;
+	local l1;
+	local l2;
+	(foreach l3 in a2 do begin
+			local l5;
+			if @271.(l3) then begin
+					l2 := true
+				end else begin
+					if (l3 = 'comm) then begin
+							l1 := true
+						end else begin
+							if (l5 := GetRoot().(cardType)) then begin
+									l5:Open();
+									l2 := true
+								end
+						end
+				end
+		end);
+	if (not l2) then begin
+			if l1 then begin
+					if (not AutoDock('Connect, true)) then begin
+							CardAlert('CommCardInserted, a1, nil)
+						end
+				end else begin
+					CardAlert('UnrecognizedCardInserted, a1, nil)
+				end
+		end;
+	AddDeferredCall(functions.CallFrameBasedRegistryFns, [Array: WeirdCardEventRegistry, [Array: a1, 'cardInserted]])
+end
+@@end

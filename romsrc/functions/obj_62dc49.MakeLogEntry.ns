@@ -1,0 +1,29 @@
+@@ 0x4b19b1
+func(a1) begin
+	l1 := {timestamp: a1.timestamp, category: a1.category};
+	local l1;
+	(foreach l2 in logCopySlots do begin
+			if a1.(l2) then begin
+					l1.(l2) := a1.(l2)
+				end
+		end);
+	if self:IsInItem(a1) then begin
+			l1.state := 'InLog
+		end else begin
+			l1.state := 'OutLog
+		end;
+	l1.class := 'ioItem;
+	if (transport := GetItemTransport(a1)) then begin
+			transport:?MakeLogEntry(l1, a1)
+		end;
+	if (if transport then (l1.title = nil)) then begin
+			l1.title := transport:GetItemTitle(a1)
+		end;
+	self:Fileit(l1);
+	EntryReplace(a1, l1);
+	if layout then begin
+			layout:Retarget(true)
+		end;
+	a1
+end
+@@end

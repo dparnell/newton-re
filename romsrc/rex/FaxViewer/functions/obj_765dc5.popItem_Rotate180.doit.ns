@@ -1,0 +1,5 @@
+@@ 0x7666d5
+func(a1) begin
+	a1:DoMunge('rotate180)
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x511fe9
+func(a1) begin
+	local l1;
+	l1 := (if (not self:IsDisplayingMeetings()) then 'day);
+	self:displaydate(a1.mtgStartDate, l1);
+	mainDisplay:ScrollTo(a1)
+end
+@@end

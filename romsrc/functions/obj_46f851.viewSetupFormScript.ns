@@ -1,0 +1,10 @@
+@@ 0x46f831
+func() begin
+	local l1;
+	(if (lookForText exists) then begin
+			self.text := ParamStr("Looking for ^0...", [Array: lookForText]);
+			l1 := StrFontWidth(self.text, viewFont);
+			(self.viewBounds := RelBounds(0, 0, l1, 13))
+		end)
+end
+@@end

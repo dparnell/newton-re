@@ -1,0 +1,7 @@
+@@ 0x51a505
+func() begin
+	local l1;
+	result := (foreach l2 in (l1 := self:GetOnlineBooks()) collect {name: l2.title, target: l2.isbn});
+	result
+end
+@@end

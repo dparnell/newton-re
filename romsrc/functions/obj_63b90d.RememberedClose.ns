@@ -1,0 +1,14 @@
+@@ 0x511e59
+func(a1) begin
+	local l1;
+	l1 := nil;
+	if openNonchildViews then begin
+			l1 := LSearch(openNonchildViews, a1, 0, '|=|, nil)
+		end;
+	if l1 then begin
+			ArrayRemoveCount(openNonchildViews, l1, 1)
+		end;
+	a1:Close();
+	nil
+end
+@@end

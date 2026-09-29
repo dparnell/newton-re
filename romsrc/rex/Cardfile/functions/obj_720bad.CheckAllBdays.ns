@@ -1,0 +1,10 @@
+@@ 0x73e7b9
+func() begin
+	local l1;
+	(if (l1 := self:GetBdayCursor()):entry() then begin
+			newBdays := true;
+			prefsCache := nil;
+			self:SaveAppState()
+		end)
+end
+@@end

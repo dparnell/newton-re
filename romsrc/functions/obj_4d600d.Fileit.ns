@@ -1,0 +1,35 @@
+@@ 0x555355
+@@const kLiteral_5a74d1
+"Packages"
+@@main
+func() begin
+	l2 := (if (l1 := target.store) then SubstituteChars(l1:GetName(), "\n", " "));
+	(if (if l1 then l1:IsReadOnly()) then self:Notify(3, kLiteral_5a74d1, ParamStr("\u201C\u^0\u201D\u is locked so you cannot file to it.", [Array: l2])) else (if (if (theApp.soupervisor.type = 'moveOnly) then (not l1)) then self:Notify(3, kLiteral_5a74d1, "You must choose a place before tapping \u201C\uFile\u201D\u.") else begin
+				if (not HasSlot(target, 'labels)) then begin
+						target.labels := nil
+					end;
+				l4 := (if (if (l3 := target.labels) then (l3 <> 42)) then userConfiguration.userFolders.(l3) else "Unfiled");
+				l5 := SubstituteChars(target.text, "\n", " ");
+				l6 := (if ((theApp.soupervisor.type = 'moveOnly) or (l3 = 42)) then "Are you sure you want to file all the data from ^0 onto \u201C\u^2\u201D\u?^3^5" else (if ((theApp.soupervisor.type = 'fileOnly) or (not l1)) then "Are you sure you want to file all the data from ^0 into the \u201C\u^1\u201D\u folder?^3^4" else "Are you sure you want to file all the data from ^0 into the \u201C\u^1\u201D\u folder on \u201C\u^2\u201D\u?^3^4^5"));
+				local l1;
+				local l2;
+				local l3;
+				local l4;
+				local l5;
+				local l6;
+				local l7;
+				local l8;
+				local l9;
+				l9 := (foreach l10 in (l8 := (if (l7 := GetRoot().ExtrasDrawer.storesFilter) then [Array: l7] else GetStores())) do begin
+						local l12, l13, l14;
+						if l10:IsReadOnly() then begin
+								break true
+							end
+					end);
+				l12 := (if l9 then "Folder changes to locked cards will be ignored. ");
+				l13 := (if (if l9 then l1) then "Data will be copied from locked cards. ");
+				l14 := (if (l12 or l13) then "\n\nNote - ");
+				self:Confirm(kLiteral_5a74d1, ParamStr(l6, [Array: l5, l4, l2, l14, l12, l13]), self, 'fileSoup)
+			end))
+end
+@@end

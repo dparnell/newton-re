@@ -1,0 +1,5 @@
+@@ 0x78eb2d names
+func() begin
+	{class: 'list, height: 200, topics: [Array: ], timestamp: Time(), makeNewTopic: true}
+end
+@@end

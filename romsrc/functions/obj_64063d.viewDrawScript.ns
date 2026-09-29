@@ -1,0 +1,5 @@
+@@ 0x42dab5
+func() begin
+	(if viewValue then self:DrawShape(MakeRect(1, 1, 14, 14), nil))
+end
+@@end

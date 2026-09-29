@@ -1,0 +1,18 @@
+@@ 0x4416d9
+func(a1) begin
+	(if (value <> a1) then begin
+			if (a1 < minValue) then begin
+					value := minValue
+				end else begin
+					if (a1 > maxValue) then begin
+							value := maxValue
+						end else begin
+							value := a1
+						end
+				end;
+			(foreach l1 in self:ChildViewFrames() do begin
+					l1:?Update()
+				end)
+		end)
+end
+@@end

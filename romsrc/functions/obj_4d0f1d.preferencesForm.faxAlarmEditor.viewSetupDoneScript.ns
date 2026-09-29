@@ -1,0 +1,6 @@
+@@ 0x4cd1ed
+func() begin
+	inherited:viewSetupDoneScript();
+	(if (if GetRoot().(ownerSymbol) then GetRoot().(ownerSymbol):AlarmsEnabled()) then enableCheckbox:toggleCheck())
+end
+@@end

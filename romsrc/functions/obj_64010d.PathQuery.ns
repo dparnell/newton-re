@@ -1,0 +1,5 @@
+@@ 0x4ba44d
+func(a1) begin
+	Query(GetUnionSoup(@47), {type: 'words, words: a1})
+end
+@@end

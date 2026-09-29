@@ -1,0 +1,15 @@
+@@ 0x4b859d
+func(a1, a2) begin
+	local l1;
+	(if (if (not GetVariable(a2, 'hack)) then (a1 = 'text)) then begin
+			if StrFilled(a2.(a1)) then begin
+					if (l1 := StringToTime(a2.(a1))) then begin
+							GetVariable(a2, 'target).(path) := l1
+						end
+				end else begin
+					GetVariable(a2, 'target).(path) := nil
+				end;
+			self:StartFlush()
+		end)
+end
+@@end

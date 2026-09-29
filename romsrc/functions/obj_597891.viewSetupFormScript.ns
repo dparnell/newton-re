@@ -1,0 +1,6 @@
+@@ 0x59772d
+func() begin
+	scrollDy := ((150 div viewLineSpacing) * viewLineSpacing);
+	(if GetUserConfig('lettersInFieldsOption) then (viewFlags := BOr(viewFlags, 16384)))
+end
+@@end

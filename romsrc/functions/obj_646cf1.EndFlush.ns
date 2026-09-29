@@ -1,0 +1,8 @@
+@@ 0x4a00b1
+func() begin
+	(if IsSoupEntry(target) then begin
+			EntryChange(target);
+			(if (target.class = 'owner) then UseCurrentPersona() else UseCurrentEmporium())
+		end else (if self.isUserConfig then EntryChange(userConfiguration)))
+end
+@@end

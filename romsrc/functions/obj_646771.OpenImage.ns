@@ -1,0 +1,14 @@
+@@ 0x45f0fd
+func(a1, a2, a3) begin
+	if Visible(self) then begin
+			self:setup(a1, a2, a3);
+			return nil
+		end;
+	tempImage := a1;
+	tempAnnotes := a2;
+	tempScales := a3;
+	tempOpen := true;
+	self:Open();
+	(tempImage := (tempAnnotes := (tempScales := (tempOpen := nil))))
+end
+@@end

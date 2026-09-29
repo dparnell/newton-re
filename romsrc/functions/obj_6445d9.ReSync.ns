@@ -1,0 +1,5 @@
+@@ 0x5605e9
+func() begin
+	(currentItem := 0)
+end
+@@end

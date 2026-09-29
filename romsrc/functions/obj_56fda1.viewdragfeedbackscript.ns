@@ -1,0 +1,10 @@
+@@ 0x56fd41
+func(a1, a2, a3) begin
+	local l1;
+	l1 := a1[0].dragView;
+	if (if (self <> l1) then (self:Parent() = l1:Parent())) then begin
+			self:hilite(a3)
+		end;
+	true
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x750719
+func() begin
+	self:Hide();
+	inherited:?viewSetupDoneScript()
+end
+@@end

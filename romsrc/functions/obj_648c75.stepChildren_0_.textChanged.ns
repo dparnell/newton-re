@@ -1,0 +1,6 @@
+@@ 0x49f211
+func() begin
+	changed := true;
+	(target.title := entryLine:GetRichString())
+end
+@@end

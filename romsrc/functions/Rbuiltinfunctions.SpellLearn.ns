@@ -1,0 +1,45 @@
+@@ 0x6299c9
+func(a1, a2) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10;
+	l3 := StripRecognitionWord((l2 := Clone(a2)));
+	TrimTruncatedString(l2);
+	l4 := (StrExactCompare(a2, Upcase(Clone(a2))) = 0);
+	l5 := (BAnd(l3, 128) <> 0);
+	if (l4 or l5) then begin
+			l2[0] := Upcase(l2[0])
+		end;
+	if (l6 := SpellCheck(a1, l2)) then begin
+			if (not a1.dialogInhibit) then begin
+					if l4 then begin
+							l7 := ParamStr("Should '^0' always be all upper-case?", [Array: l2])
+						end else begin
+							if l5 then begin
+									l7 := ParamStr("Should '^0' always be capitalized?", [Array: l2])
+								end
+						end;
+					if l7 then begin
+							if (not ModalConfirm(l7, 'yesNo)) then begin
+									l2 := Downcase(l2)
+								end
+						end
+				end;
+			if (l9 := ((l8 := GetDictionary(31)).count < l8.limit)) then begin
+					l8:AddEncodedWord(l2, true);
+					a1.saveUserDict := true;
+					l1 := l2
+				end;
+			if (if (l8.count >= l8.limit) then (not a1.dialogInhibit)) then begin
+					l10 := "You will need to remove some words before more can be learned.  Would you like to open it now?";
+					if l9 then begin
+							l7 := "The Personal word list is now full."
+						end else begin
+							l7 := ParamStr("The word '^0' was not added because the Personal word list is full.", [Array: l2])
+						end;
+					if ModalConfirm(Stringer([Array: l7, " ", l10]), 'yesNo) then begin
+							GetRoot().reviewDict:Open()
+						end
+				end
+		end;
+	l1
+end
+@@end

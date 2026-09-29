@@ -1,0 +1,19 @@
+@@ 0x4f2d55
+func(a1, a2) begin
+	selected := a1;
+	singleSelect := a2;
+	l1 := self:ChildViewFrames();
+	local l1;
+	(for l2 := 0 to 6 do begin
+			SetValue(l1[l2], 'viewFlags, BAnd(l1[l2].viewFlags, bnot(33554432)))
+		end);
+	(for l2 := 0 to 6 do begin
+			local l5;
+			if (BAnd(dayBit[l2], selected) > 0) then begin
+					l5 := self:DayOfWeekToColumn(l2);
+					SetValue(l1[l5], 'viewFlags, BOr(l1[l5].viewFlags, 33554432))
+				end
+		end);
+	self:Dirty()
+end
+@@end

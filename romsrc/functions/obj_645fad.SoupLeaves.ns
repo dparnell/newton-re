@@ -1,0 +1,10 @@
+@@ 0x451329
+func(a1, a2) begin
+	(foreach l1 in selected do begin
+			if (if l1._alias then (not ResolveEntryAlias(l1._alias))) then begin
+					l1._fakeID := self:GetUniqueFakeID()
+				end
+		end);
+	self:RedoCursor()
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x482a39
+func(a1, a2) begin
+	GetAppFolderSyms(a1, a2, nil)
+end
+@@end

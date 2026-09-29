@@ -1,0 +1,47 @@
+@@ 0x797b95 names
+func(anIndex) begin
+	local task, Entry;
+	task := topics[anIndex];
+	if Visible(todoSlip) then begin
+			todoSlip:Close()
+		end;
+	todoSlip.list := self;
+	todoSlip.task := task;
+	todoSlip.paraView := self:TopicIndexToView(anIndex);
+	if HasPath(task, 'repeatInfo) then begin
+			if (if (if HasPath(task, 'source) then (task.source <> nil)) then (ClassOf(task.source) <> 'symbol)) then begin
+					todoSlip.target := repeatTargets[task.source]
+				end else begin
+					todoSlip.target := repeatTargets[0]
+				end
+		end else begin
+			if (if (if HasPath(task, 'source) then (task.source <> nil)) then (ClassOf(task.source) <> 'symbol)) then begin
+					todoSlip.target := targets[task.source]
+				end else begin
+					todoSlip.target := target
+				end
+		end;
+	Entry := todoSlip.target;
+	if (((not HasPath(task, 'source)) or (task.source = nil)) or (ClassOf(task.source) = 'symbol)) then begin
+			todoSlip.readOnly := true
+		end else begin
+			if (if IsSoupEntry(Entry) then EntryStore(Entry):IsReadOnly()) then begin
+					todoSlip.readOnly := true
+				end else begin
+					todoSlip.readOnly := nil
+				end
+		end;
+	if (if HasPath(task, 'remindForDate) then (task.remindForDate > selectedDates[0])) then begin
+			todoSlip.originalMtgDate := task.remindForDate;
+			todoSlip.nominalDate := selectedDates[0]
+		end else begin
+			if (if HasPath(task, 'repeatInfo) then task.repeatInfo.reminderInterval) then begin
+					todoSlip.originalMtgDate := (selectedDates[0] + task.repeatInfo.reminderInterval);
+					todoSlip.nominalDate := selectedDates[0]
+				end else begin
+					todoSlip.originalMtgDate := selectedDates[0]
+				end
+		end;
+	todoSlip:Open()
+end
+@@end

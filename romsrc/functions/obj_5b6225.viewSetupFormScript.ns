@@ -1,0 +1,5 @@
+@@ 0x5b6205
+func() begin
+	(text := promptText)
+end
+@@end

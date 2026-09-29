@@ -1,0 +1,10 @@
+@@ 0x508319
+func() begin
+	local l1;
+	(if relayoutInProgress then return labelCommands[savedFrequencyIndex] else begin
+			l1 := inherited:TextSetup();
+			savedFrequencyIndex := currentLabelIndex;
+			l1
+		end)
+end
+@@end

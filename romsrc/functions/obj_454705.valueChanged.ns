@@ -1,0 +1,10 @@
+@@ 0x4546e5
+func() begin
+	if (nowShowing = 'selected) then begin
+			nowShowing := 'all
+		end else begin
+			nowShowing := 'selected
+		end;
+	listBase:RedoCursor()
+end
+@@end

@@ -1,0 +1,11 @@
+@@ 0x629b9d
+func(a1) begin
+	l1 := StrLen(a1);
+	local l1;
+	(for l2 := 0 to (l1 - 1) do begin
+			if (a1[l2] = $\00) then begin
+					break SetLength(a1, (2 * (l2 + 1)))
+				end
+		end)
+end
+@@end

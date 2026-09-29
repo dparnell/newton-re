@@ -1,0 +1,15 @@
+@@ 0x4bdcd9
+func(a1) begin
+	(foreach l1 in self:ChildViewFrames() do begin
+			if HasPath(l1, 'jamFromEntry) then begin
+					l1:jamFromEntry(a1)
+				end else begin
+					(foreach l3 in l1:ChildViewFrames() do begin
+							if HasPath(l3, 'jamFromEntry) then begin
+									l3:jamFromEntry(a1)
+								end
+						end)
+				end
+		end)
+end
+@@end

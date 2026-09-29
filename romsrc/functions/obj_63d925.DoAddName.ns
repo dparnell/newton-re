@@ -1,0 +1,5 @@
+@@ 0x5a32c9
+func(a1) begin
+	@231:NewEntry(GetRoot().mailSlip.nameToAdd, nil)
+end
+@@end

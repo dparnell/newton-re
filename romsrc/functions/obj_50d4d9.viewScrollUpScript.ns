@@ -1,0 +1,10 @@
+@@ 0x50d459
+func() begin
+	local l1;
+	l1 := Ticks();
+	self:setupChildMonths((startDate := IncrementMonth(startDate, -6)));
+	self:SlideEffect(self:LocalBox().bottom, 0, nil, 'bogus, [Array: ]);
+	YearView:Dirty();
+	nil
+end
+@@end

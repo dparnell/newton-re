@@ -1,0 +1,18 @@
+@@ 0x5b8d09
+func(a1, a2, a3) begin
+	local l1, l2, l3, l4;
+	l1 := -13;
+	l2 := {};
+	if (((l3 := self:LookupWord(a1, l2)) = 2) or (l3 = 3)) then begin
+			l1 := l3;
+			if (if a3 then (l2.attribute <> a2)) then begin
+					l4 := BAnd(l2.attribute, -193);
+					self:ChangeAttribute(a1, l4);
+					l1 := 0
+				end
+		end else begin
+			l1 := self:AddWord(a1, a2)
+		end;
+	return l1
+end
+@@end

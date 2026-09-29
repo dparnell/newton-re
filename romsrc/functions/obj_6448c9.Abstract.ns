@@ -1,0 +1,33 @@
+@@ 0x49df81
+@@const kLiteral_49cdf1
+'{font: 9216, justification: right}
+@@main
+func(a1, a2) begin
+	local l1, l2, l3, l4, l5, l6, l7;
+	if (a1 = hiliteEntry) then begin
+			hilitedIndex := hiliteCount
+		end;
+	hiliteCount := (hiliteCount + 1);
+	l1 := [Array: '{font: 9216}, MakeText(Stringer([Array: ShortDate(a1.timestamp), " ", HourMinute(a1.timestamp)]), ((a2.left + 16) + 12), a2.top, a2.right, (a2.top + 25))];
+	if (if (labelsFilter = '_all) then a1.labels) then begin
+			if (l2 := userConfiguration.userFolders.(a1.labels)) then begin
+					AddArraySlot(l1, kLiteral_49cdf1);
+					AddArraySlot(l1, MakeText(l2, ((a2.left + 16) + 12), a2.top, (a2.right - 2), (a2.top + 25)))
+				end
+		end;
+	if (if showStoreName then (Length(GetStores()) > 1)) then begin
+			l3 := EntryStore(a1):GetName();
+			AddArraySlot(l1, kLiteral_49cdf1);
+			AddArraySlot(l1, MakeText(l3, a2.left, a2.top, (a2.right - 2), (a2.top + 11)))
+		end;
+	(if (l4 := GetEntryDataDef(a1)) then begin
+			l5 := l4.icon;
+			l6 := l4:StringExtract(a1, 1);
+			l7 := (a2.right - ((a2.left + 16) + 2));
+			if (if showStoreName then (Length(GetStores()) > 1)) then begin
+					l7 := (l7 - StrFontWidth(l3, 9216))
+				end;
+			[Array: OffsetShape(MakeShape(l5), a2.left, (a2.top + 2)), MakeText(StrTruncate(l6, l7), ((a2.left + 16) + 2), a2.top, a2.right, (a2.top + 11)), l1]
+		end else [Array: OffsetShape(MakeShape(@381), a2.left, (a2.top + 2)), l1])
+end
+@@end

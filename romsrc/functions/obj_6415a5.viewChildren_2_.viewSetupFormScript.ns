@@ -1,0 +1,7 @@
+@@ 0x4d548d
+func() begin
+	title := newHeaderText;
+	titleicon := newHeaderIcon;
+	inherited:viewSetupFormScript()
+end
+@@end

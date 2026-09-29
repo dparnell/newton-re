@@ -1,0 +1,5 @@
+@@ 0x507959
+func() begin
+	(if locationAlias then StyledStrTruncate(self:getNameOfLocation(locationAlias), (220 - self.indent), 10243) else "")
+end
+@@end

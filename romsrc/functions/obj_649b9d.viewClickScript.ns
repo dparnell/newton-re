@@ -1,0 +1,24 @@
+@@ 0x54b8e1
+func(a1) begin
+	local l1, l2, l3;
+	InkOff(a1);
+	l1 := self:GlobalBox();
+	l2 := (GetPoint(4, a1) - l1.left);
+	l3 := (GetPoint(5, a1) - l1.top);
+	(if (if shape then HitShape(shape, l2, l3)) then begin
+			self:?HandleChildClick();
+			if (l2 < 20) then begin
+					clicker();
+					self:Checkit((not checked))
+				end else begin
+					self:Checkit(nil);
+					RefreshViews();
+					if self:TrackHilite(a1) then begin
+							self:hilite(nil);
+							self:Launch()
+						end
+				end;
+			true
+		end)
+end
+@@end

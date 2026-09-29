@@ -1,0 +1,5 @@
+@@ 0x44e021
+func(a1) begin
+	return (a1 = $\uF701)
+end
+@@end

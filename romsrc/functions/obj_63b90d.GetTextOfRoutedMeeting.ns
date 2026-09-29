@@ -1,0 +1,21 @@
+@@ 0x4e7731
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8;
+	l1 := a1.mtgStartDate;
+	l2 := self:GetMeetingSlot(a1, 'mtgDuration);
+	l3 := (l1 mod 1440);
+	l4 := self:GetMeetingSlot(a1, 'mtgInvitees);
+	l5 := self:GetMeetingSlot(a1, 'mtgLocation);
+	l6 := notesText(self:GetNotesData(a1)[1]);
+	if a1.repeatType then begin
+			l3 := ((l1 := NextMeeting(0, a1)) mod 1440);
+			if (l7 := self:FindException(l1, a1)) then begin
+					l2 := self:GetMeetingSlot(l7, 'mtgDuration);
+					l4 := self:GetMeetingSlot(l7, 'mtgInvitees);
+					l5 := self:GetMeetingSlot(l7, 'mtgLocation)
+				end;
+			l6 := notesText(self:GetNotesData((l8 := self:MakeInstanceOfRepeatingMeeting(a1, l1)))[1])
+		end;
+	(if (a1.viewStationery <> 'cribNote) then ParamStr("Meeting:  ^0\nDate:  ^1\nTime:  ^2 to ^3\nWho:  ^4\nWhere:  ^5\nNotes:  ^6", [Array: self:GetMeetingText(a1), ShortDateStr(l1, 0), TimeStr(l3, @66.shortTimeStrSpec), TimeStr((l3 + l2), @66.shortTimeStrSpec), self:GetNamesOfInvitees(l4, nil), self:getNameOfLocation(l5), l6]) else ParamStr("Event:  ^0\nDate:  ^1\nNotes:  ^2", [Array: self:GetMeetingText(a1), ShortDateStr(l1, 0), l6]))
+end
+@@end

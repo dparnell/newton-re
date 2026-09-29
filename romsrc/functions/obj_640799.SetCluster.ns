@@ -1,0 +1,17 @@
+@@ 0x42a2d9
+func(a1) begin
+	(if (clusterChild <> a1) then begin
+			if clusterChild then begin
+					AddUndoAction('UndoAction, [Array: clusterChild]);
+					clusterChild.viewValue := nil;
+					clusterChild:UpdateBitmap()
+				end;
+			clusterChild := a1;
+			clusterValue := a1.buttonValue;
+			a1.viewValue := a1.buttonValue;
+			a1:UpdateBitmap();
+			RefreshViews();
+			self:ClusterChanged()
+		end)
+end
+@@end

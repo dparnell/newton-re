@@ -1,0 +1,14 @@
+@@ 0x4566a9
+func(a1, a2) begin
+	l1 := self:MakeCanonicalNameRef(a1, a2);
+	if IsFrame(a1) then begin
+			local l1;
+			(foreach l2 in columns do begin
+					local l4;
+					l4 := l2.fieldPath;
+					l1.(l4) := a1.(l4)
+				end)
+		end;
+	l1
+end
+@@end

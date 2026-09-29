@@ -1,0 +1,5 @@
+@@ 0x4390d5
+func(a1, a2) begin
+	(if (a1 = 'up) then cityList:viewScrollUpScript() else (if (a1 = 'down) then cityList:viewScrollDownScript()))
+end
+@@end

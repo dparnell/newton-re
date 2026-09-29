@@ -1,0 +1,5 @@
+@@ 0x4482ad
+func() begin
+	(theFill := MakeShape(self:LocalBox()))
+end
+@@end

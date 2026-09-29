@@ -1,0 +1,9 @@
+@@ 0x456201
+func(a1) begin
+	local l1;
+	if (not (l1 := StrFilled(a1.email))) then begin
+			a1.email := nil
+		end;
+	l1
+end
+@@end

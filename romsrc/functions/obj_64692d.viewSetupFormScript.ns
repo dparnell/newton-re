@@ -1,0 +1,18 @@
+@@ 0x477ea5
+func() begin
+	local l1;
+	if GetVariable(self, 'Editing) then begin
+			self.viewFlags := BAnd(self.viewFlags, bnot(1))
+		end else begin
+			if transport then begin
+					when := transport:?ConnectionDetect();
+					text := transport.actionTitle
+				end
+		end;
+	if (not when) then begin
+			text := Stringer([Array: "  ", text])
+		end;
+	viewBounds := RelBounds(((-(l1 := (StrFontWidth(text, viewFont) + 6))) - 7), 0, l1, FontHeight(viewFont));
+	(_defaultButton := self)
+end
+@@end

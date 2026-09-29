@@ -1,0 +1,12 @@
+@@ 0x4ad385
+func() begin
+	local l1;
+	if (if (l1 := GetUserConfig('blessedapp)) then (GetRoot().(l1) = base)) then begin
+			firstRight := @73.firstRight
+		end else begin
+			firstRight := -26
+		end;
+	inherited:viewSetupChildrenScript();
+	(if (not (if l1 then (GetRoot().(l1) = base))) then AddArraySlot(viewChildren, '{viewBounds: {left: -19, top: -16, right: -6, bottom: -3}, _proto: @163}))
+end
+@@end

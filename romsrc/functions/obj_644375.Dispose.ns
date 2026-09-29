@@ -1,0 +1,9 @@
+@@ 0x5b9465
+func() begin
+	if dict then begin
+			SetRemove(dict.cursors, self);
+			RemoveSlot(self, 'dict)
+		end;
+	self:PrivateDispose()
+end
+@@end

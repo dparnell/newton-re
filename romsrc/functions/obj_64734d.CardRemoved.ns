@@ -1,0 +1,6 @@
+@@ 0x56b365
+func(a1) begin
+	AddDeferredCall(functions.CallFrameBasedRegistryFns, [Array: WeirdCardEventRegistry, [Array: a1, 'CardRemoved]]);
+	AbortCardAlerts(a1, 'cardYanked)
+end
+@@end

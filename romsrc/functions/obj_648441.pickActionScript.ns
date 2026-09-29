@@ -1,0 +1,7 @@
+@@ 0x45aa4d
+func(a1, a2) begin
+	startTime := a1;
+	stopTime := a2;
+	inherited:pickActionScript(nil)
+end
+@@end

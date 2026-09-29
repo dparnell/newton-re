@@ -1,0 +1,15 @@
+@@ 0x5481ad
+func(a1) begin
+	l1 := [Array: ];
+	l2 := [Array: ];
+	local l1;
+	local l2;
+	(foreach l3, l4 in a1 do begin
+			if (BAnd(GetViewFlags(l4), 33554432) <> 0) then begin
+					AddArraySlot(l1, l4);
+					AddArraySlot(l2, l3)
+				end
+		end);
+	{icons: l1, indexes: l2}
+end
+@@end

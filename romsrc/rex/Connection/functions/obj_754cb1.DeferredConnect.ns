@@ -1,0 +1,75 @@
+@@ 0x7554bd
+func() begin
+	local l1, l2, l3, l4, l5, l6, l7, l8;
+	l1 := 0;
+	try begin
+			endpoint:connect(connectOptions, password)
+		end onexception |evt.ex| do begin
+			l1 := CurrentException().error
+		end;
+	if (l1 = 0) then begin
+			try begin
+					l3 := (l2 := endpoint:GetState()).State
+				end onexception |evt.ex| do begin
+					l3 := 1
+				end;
+			l4 := true;
+			if (if (if (l5 := l2.desktopApps) then IsArray(l5)) then (Length(l5) > 0)) then begin
+					l7 := l5[0];
+					if ((Length(l5) > 1) or (if (l7.id <> 1) then (l7.id <> 2))) then begin
+							l6 := "You can\u2019\ut connect to \u201C\u^0\u201D\u.";
+							l4 := nil
+						end else begin
+							if (l7.version > 1) then begin
+									l6 := "You can\u2019\ut connect to that version of \u201C\u^0\u201D\u.";
+									l4 := nil
+								end else begin
+									if (if autodock then (not (l7.doesAuto or (l7.id = 1)))) then begin
+											l6 := "This version of \u201C\u^0\u201D\u doesn't support AutoDocking.";
+											l4 := nil
+										end
+								end
+						end;
+					if (not l4) then begin
+							self:Notify(3, "Dock", ParamStr(l6, [Array: l7.name]));
+							endpoint:ConnectionDone(0)
+						end
+				end;
+			if l4 then begin
+					if ((l3 = 1) or (l3 = 9)) then begin
+							if (not autodock) then begin
+									protoContext:OpenWhichConnection(endpoint)
+								end else begin
+									if (if l7 then (l7.id = 1)) then begin
+											protoContext:StartAutoBackup(endpoint)
+										end else begin
+											endpoint:WriteCommand("auto", nil, nil);
+											syncOptions := 'all;
+											self:StartConnected();
+											return nil
+										end
+								end
+						end else begin
+							if ((l3 = 3) or (l3 = 2)) then begin
+									syncOptions := 'all
+								end else begin
+									syncOptions := nil
+								end;
+							self:StartConnected();
+							return nil
+						end
+				end
+		end else begin
+			if (l1 = -28023) then begin
+					l8 := {memory: nil, |guest?|: nil, |name?|: nil, title: nil, buttonTitle: "Cancel", Keyboard: true, |password?|: {guest: nil, users: 'hidden}};
+					ConnOpenUserPsswdSlip(endpoint, protoContext.RetryPasswordScript, l8)
+				end else begin
+					if (not autodock) then begin
+							protoContext:ReopenOnError()
+						end;
+					endpoint:ConnectionDone(l1)
+				end
+		end;
+	(if inited then self:Close())
+end
+@@end

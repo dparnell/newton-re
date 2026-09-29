@@ -1,0 +1,8 @@
+@@ 0x76d45d
+func() begin
+	SetValue(label, 'labelCommands, labelItems);
+	SetValue(label, 'text, Stringer([Array: $\uFC01, labelItems[defaultItem]]));
+	pickerItemNumber := defaultItem;
+	label:UpdateText(labelItems[defaultItem])
+end
+@@end

@@ -1,0 +1,61 @@
+@@ 0x480469
+func(a1, a2) begin
+	l1 := nil;
+	l2 := nil;
+	l3 := nil;
+	l4 := nil;
+	if IsString(a2.text) then begin
+			l6 := a2.text;
+			l7 := a2.textdata;
+			RemoveSlot(a2, 'activeSlot);
+			RemoveSlot(a2, 'text);
+			(l3 := DeepClone(a2)).body := {class: 'text, text: l6, textdata: l7};
+			if l3.SavedAppSymbol then begin
+					RemoveSlot(l3, 'SavedAppSymbol)
+				end;
+			if l7 then begin
+					RemoveSlot(a2, 'textdata)
+				end
+		end;
+	if l3 then begin
+			l5 := [Array: a2, l3]
+		end else begin
+			l5 := [Array: a2]
+		end;
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	local l6;
+	local l7;
+	(foreach l8 in l5 do begin
+			local l10, l11;
+			if l8.SavedAppSymbol then begin
+					l1 := l8.SavedAppSymbol
+				end else begin
+					if (l10 := ClassOf(l8.body)) then begin
+							l11 := ClassAppByClass(l10)
+						end;
+					if (if (if IsArray(l11) then (Length(l11) > 0)) then IsSymbol(l11[0])) then begin
+							l1 := l11[0]
+						end
+				end;
+			if (not (l2 := GetVariable(GetRoot(), l1))) then begin
+					l4 := nil
+				end;
+			if (l2:PutAwayScript exists) then begin
+					l4 := l2:PutAwayScript(l8)
+				end else begin
+					if (l2:PutAway exists) then begin
+							l4 := true;
+							l2:PutAway(l8)
+						end
+				end;
+			if (not l4) then begin
+					break
+				end
+		end);
+	return l4
+end
+@@end

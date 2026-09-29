@@ -1,0 +1,13 @@
+@@ 0x4c1351
+func() begin
+	if (if transport then transport.prefsTemplate) then begin
+			viewChildren := Clone(viewChildren);
+			stepChildren := transport.prefsTemplate.stepChildren;
+			viewBounds := Clone(viewBounds);
+			if transport.prefsTemplate.height then begin
+					viewBounds.bottom := (transport.prefsTemplate.height + 20)
+				end
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

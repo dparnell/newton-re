@@ -1,0 +1,6 @@
+@@ 0x54ffb5
+func() begin
+	filingButton := nil;
+	inherited:?viewQuitScript()
+end
+@@end

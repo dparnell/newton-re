@@ -1,0 +1,40 @@
+@@ 0x4b4529
+@@const kLiteral_4be3e9
+"InOut Box"
+@@main
+func(a1, a2, a3) begin
+	local l1, l2, l3, l4;
+	l1 := nil;
+	l2 := nil;
+	(if a3 then begin
+			l4 := (l3 := GetTargetCursor(a3, nil)):entry();
+			(while l4 do begin
+					if (if IsFrame(l4) then l4.category) then begin
+							if (a1.appSymbol <> l4.category) then begin
+									l2 := true
+								end else begin
+									if (not ((l4.state = 'ready) or l4.Remote)) then begin
+											l1 := true
+										end else begin
+											if (a1.appSymbol <> l4.category) then begin
+													l2 := true
+												end
+										end
+								end
+						end;
+					(l4 := l3:Next())
+				end);
+			if l2 then begin
+					self:Notify(3, kLiteral_4be3e9, "The selected items must match the selected service")
+				end;
+			if l1 then begin
+					if (a2 = 'ReceiveRequest) then begin
+							self:Notify(3, kLiteral_4be3e9, "Some selected items are not remote")
+						end else begin
+							self:Notify(3, kLiteral_4be3e9, "Some selected items are not ready to be sent")
+						end
+				end;
+			(if (if (not l2) then (not l1)) then self:DoRequest(a1, a2, (if (a2 = 'ReceiveRequest) then 'Remote else 'user), a3))
+		end)
+end
+@@end

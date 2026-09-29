@@ -1,0 +1,27 @@
+@@ 0x4c59a5
+func() begin
+	local l1;
+	inherited:?viewSetupChildrenScript();
+	mastersoupSlot := currentSoupSymbol;
+	dataSoup := (masterSoup := allSoups.(mastersoupSlot)).theSoup;
+	l1 := masterSoup:GetCursor():entry();
+	masterSoup.soupQuery := {type: 'index, indexPath: 'timestamp};
+	masterSoup:SetupCursor();
+	dataCursor := masterSoup:GetCursor();
+	if IsSoupEntry(l1) then begin
+			dataCursor:Goto(l1)
+		end;
+	newtAppBase.layout := self;
+	newtAppBase.targetView := self;
+	newtAppBase.target := nil;
+	if (currentSoupSymbol = 'outbox) then begin
+			self.checkSlot := 'SendRequest;
+			self.collapsedSym := 'outHeaderCollapsed
+		end else begin
+			self.checkSlot := 'ReceiveRequest;
+			self.collapsedSym := 'inHeaderCollapsed
+		end;
+	scrollOrigin := -1;
+	self:SetupItems()
+end
+@@end

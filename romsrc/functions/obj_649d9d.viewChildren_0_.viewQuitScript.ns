@@ -1,0 +1,9 @@
+@@ 0x4c3029
+func() begin
+	transport := nil;
+	if (not scrolling) then begin
+			self:?MarkRead(target)
+		end;
+	inherited:?viewQuitScript()
+end
+@@end

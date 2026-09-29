@@ -1,0 +1,9 @@
+@@ 0x7a0015 names
+func() begin
+	if relayoutInProgress then begin
+			return labelCommands[savedPriorityIndex].item
+		end;
+	savedPriorityIndex := task.mtgPriority;
+	labelCommands[savedPriorityIndex].item
+end
+@@end

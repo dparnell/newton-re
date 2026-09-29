@@ -1,0 +1,6 @@
+@@ 0x520135
+func() begin
+	self:SysBeep();
+	self:SetupIdle(1800)
+end
+@@end

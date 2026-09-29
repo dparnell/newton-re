@@ -1,0 +1,7 @@
+@@ 0x41fd31
+func(a1) begin
+	local l1;
+	l1 := Date(a1);
+	ParamStr("^0^1^?20||^3", [Array: l1.hour, GetLocale().timeformat.timeSepStr2, (l1.minute < 10), l1.minute])
+end
+@@end

@@ -1,0 +1,13 @@
+@@ 0x489655
+func(a1) begin
+	self:SetItem(a1.symbol);
+	self:ClearSettings();
+	self:ParseCommands(a1);
+	PurgeAreaCache();
+	if (RecogSettingsChanged exists) then begin
+			self:RecogSettingsChanged(self:BuildInputMask())
+		end;
+	_recogSettings := self:CompactSettingsFrame(_cachedSettings);
+	RecSettingsChanged()
+end
+@@end

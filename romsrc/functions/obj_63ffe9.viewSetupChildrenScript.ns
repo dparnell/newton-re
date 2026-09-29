@@ -1,0 +1,13 @@
+@@ 0x42e3d9
+func() begin
+	if dirtyLine then begin
+			self:FlushEdits()
+		end;
+	dirtyLine := nil;
+	if writeProtected then begin
+			insert := nil;
+			split := 99999
+		end;
+	(if insert then (self.viewChildren := [Array: insert]) else (self.viewChildren := nil))
+end
+@@end

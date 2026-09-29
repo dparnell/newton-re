@@ -1,0 +1,19 @@
+@@ 0x428bc5
+func() begin
+	if (not (l1 := GetUserConfig('recordingQuality))) then begin
+			l1 := (if (Gestalt(16777219).cputype = 'strongarm) then 'GSM8K16Codec else 'IMA8K16Codec)
+		end;
+	local l1;
+	local l2;
+	l2 := (foreach l3 in labelCommands do begin
+			if (l3.symbol = l1) then begin
+					break l3
+				end
+		end);
+	if (not l2) then begin
+			l2 := labelCommands[0];
+			SetUserConfig('recordingQuality, l2.symbol)
+		end;
+	return l2.item
+end
+@@end

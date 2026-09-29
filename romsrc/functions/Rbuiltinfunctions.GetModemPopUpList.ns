@@ -1,0 +1,15 @@
+@@ 0x568565
+@@const kLiteral_56801d
+'[Array: "28.8 and faster", "14.4 Normal", "14.4 Alternate 1", "14.4 Alternate 2"]
+@@main
+func() begin
+	l1 := GetAllModemSetUpNames();
+	local l1;
+	(foreach l2 in kLiteral_56801d do begin
+			BDelete(l1, l2, '|str<|, nil, nil)
+		end);
+	ArrayInsert(l1, 'pickseparator, 0);
+	ArrayMunger(l1, 0, 0, kLiteral_56801d, 0, nil);
+	l1
+end
+@@end

@@ -1,0 +1,21 @@
+@@ 0x532359
+func(a1) begin
+	local l1, l2;
+	fields.title := transport:GetItemTitle(fields);
+	fields.fromRef := GetUserConfig('currentPersona);
+	if ((fields.toRef = nil) or (Length(fields.toRef) = 0)) then begin
+			fields.toRef := [Array: GetDataDefs('|nameRef.phone|):MakeNameRef({}, '|nameRef.phone|)];
+			fields.toRef[0].phone := ""
+		end;
+	l1 := GetDataDefs('|nameRef.phone|):GetRoutingInfo(fields.toRef[0])[0];
+	fields.name := l1.name;
+	fields.phoneNumber := l1.rawNumber;
+	userConfiguration.currentDialNumber := l1.rawNumber;
+	fields.error := nil;
+	fields.hangupreason := nil;
+	fields.state := 'ready;
+	l2 := fields;
+	base:Close();
+	transport:ItemSubmit(l2)
+end
+@@end

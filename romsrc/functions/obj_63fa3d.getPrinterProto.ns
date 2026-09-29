@@ -1,0 +1,9 @@
+@@ 0x47181d
+func(a1, a2) begin
+	local slot;
+	slot := '{networkSym: nbpType, serialSym: name}.(a2);
+	LFetch(AvailablePrinters, a1, 0, '|str=|, func(a1) begin
+		(if a1.(slot) then a1.(slot) else "")
+	end)
+end
+@@end

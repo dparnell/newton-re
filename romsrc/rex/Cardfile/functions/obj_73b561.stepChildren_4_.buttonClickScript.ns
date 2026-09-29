@@ -1,0 +1,21 @@
+@@ 0x73ba81
+func() begin
+	local l1, l2;
+	l1 := {target: theEntry};
+	l2 := {};
+	if theEntry then begin
+			GetViewDefs(theEntry.class).cardfileRouteFormat:SetupSlip(l1, l2)
+		end;
+	if l2.body then begin
+			l2.body.class := 'person;
+			l2.body.labels := nil;
+			beamer:AddSendData(l2.body);
+			beamer:start();
+			appBase.barber := BuildContext(barberDialog);
+			appBase.barber.beamer := beamer;
+			appBase.barber:FilterDialog();
+			appBase.barber:SetupIdle(500)
+		end;
+	AddDeferredSend(appBase, 'RememberedClose, [Array: base])
+end
+@@end

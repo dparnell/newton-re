@@ -1,0 +1,35 @@
+@@ 0x4ea661
+func(a1, a2, a3) begin
+	l1 := 0;
+	l2 := cacheMeetingsCount;
+	l3 := Length(a1);
+	a2 := (a2 - cacheMeetingsCount);
+	local l1;
+	local l2;
+	local l3;
+	(foreach l4 in todoSoupFinders do begin
+			l6 := l4:count();
+			if (a2 > l6) then begin
+					a2 := (a2 - l6);
+					l2 := (l2 + l6)
+				end else begin
+					l7 := l4:AddFoundItems(a1, a2, a3);
+					l1 := (l1 + l7);
+					a2 := 0;
+					a3 := (a3 - l7)
+				end;
+			if (a3 <= 0) then begin
+					break
+				end
+		end);
+	l8 := l3;
+	local l6;
+	local l7;
+	local l8;
+	(for l9 := l3 to ((l3 + l1) - 1) do begin
+			a1[l9].itemIndex := l8;
+			l8 := (l8 + 1)
+		end);
+	l1
+end
+@@end

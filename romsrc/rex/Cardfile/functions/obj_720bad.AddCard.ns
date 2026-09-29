@@ -1,0 +1,12 @@
+@@ 0x739eed
+func(a1, a2) begin
+	local l1, l2, l3;
+	if (not GetStores()[0]:HasSoup((l1 := allSoups.names).soupName)) then begin
+			l2 := Clone(l1);
+			l2:MakeSoup(appSymbol)
+		end;
+	l3 := self:AdoptEntryFromStationery(a2, a1, nil);
+	AddProcrastinatedCall('cardfileAddCard, functions.XmitSoupChange, [Array: l1.soupName, 'cardfileAddCard, 'entryAdded, l3], 0);
+	l3
+end
+@@end

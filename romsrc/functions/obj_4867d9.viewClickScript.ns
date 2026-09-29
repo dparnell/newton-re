@@ -1,0 +1,9 @@
+@@ 0x4867a5
+func(a1) begin
+	if (if titleClickScript then self:TrackHilite(a1)) then begin
+			self:titleClickScript();
+			self:hilite(nil)
+		end;
+	true
+end
+@@end

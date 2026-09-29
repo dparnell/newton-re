@@ -1,0 +1,10 @@
+@@ 0x72b419
+func(a1) begin
+	local l1, l2, l3, l4;
+	(if (Length((l1 := self:ChildViewFrames())) > 0) then begin
+			(l4 := Clone(l1[0].viewBounds)).bottom := (l4.bottom - a1);
+			l1[0].viewJustify := 0;
+			SetValue(l1[0], 'viewBounds, l4)
+		end)
+end
+@@end

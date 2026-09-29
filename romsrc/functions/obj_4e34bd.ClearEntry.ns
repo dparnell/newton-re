@@ -1,0 +1,15 @@
+@@ 0x4e2c75
+func() begin
+	if (pendingOp <> 108) then begin
+			pendingOp := 0
+		end;
+	Clear := true;
+	unary := nil;
+	isUnary := nil;
+	value := stack;
+	(if (digitCount > 0) then begin
+			self:JamDisplay((inputKeys := ""));
+			(digitCount := 0)
+		end)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x5383e5
+func() begin
+	(if self:LookupSoupPackage() then inherited:delete() else EntryRemoveFromSoup(fentry))
+end
+@@end

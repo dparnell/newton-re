@@ -1,0 +1,10 @@
+@@ 0x50ab9d
+@@const kFunction_50ab09
+func(a1, a2) begin
+	StrEqual(a1, a2)
+end
+@@main
+func() begin
+	ArrayPos(choices, textDisplay.text, 0, kFunction_50ab09)
+end
+@@end

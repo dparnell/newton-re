@@ -1,0 +1,11 @@
+@@ 0x74ff41
+func(a1) begin
+	if (a1 >= Length(listItems)) then begin
+			return nil
+		end;
+	currentSelection := listItems[a1];
+	currentIndex := a1;
+	protoContext:ShowIfNotVisible(doitButton);
+	protoContext:ShowIfNotVisible(getinfoButton)
+end
+@@end

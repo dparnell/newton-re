@@ -1,0 +1,75 @@
+@@ 0x496079
+@@const kLiteral_488675
+"Restore"
+@@const kROM_573
+@573
+@@main
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9;
+	if (not GetRoot().Connection:TransportsIdle()) then begin
+			GetRoot():Notify(3, "Erase Card", "Can't restore while communications are busy.");
+			return nil
+		end;
+	(if self:getDestStore():IsValid() then begin
+			l1 := (l3 := prefsCache).restoreSoups;
+			if (l3.restoreType = 'all) then begin
+					(l2 := backupCursor:clone()):Reset();
+					if (if openRestorePrefsSlip then openRestorePrefsSlip.soupNameList) then begin
+							l1 := openRestorePrefsSlip.soupNameList
+						end else begin
+							l1 := self:getRestoreApplicationNames(l2)
+						end
+				end;
+			if (l5 := LFetch(l1, 'systemFrame, 0, '|=|, 'class)) then begin
+					l6 := LSearch(l5.soups, @129, 0, '|str=|, nil);
+					l7 := SetClass({name: "System information", soups: [Array: ]}, 'systemFrame);
+					if l6 then begin
+							ArrayRemoveCount(l5.soups, l6, 1);
+							AddArraySlot(l7.soups, @129)
+						end;
+					if (l8 := LSearch(l5.soups, @276, 0, '|str=|, nil)) then begin
+							ArrayRemoveCount(l5.soups, l8, 1);
+							AddArraySlot(l7.soups, @276)
+						end;
+					if (Length(l7.soups) > 0) then begin
+							AddArraySlot(l1, l7)
+						end
+				end;
+			(if (((Length(l1) > 0) or (l3.restorePackages = 'all)) or (Length(l3.restorePackNames) > 0)) then begin
+					try begin
+							l9 := GetRoot():|KillRootChildren!|([Array: self])
+						end onexception |evt.ex| do begin
+							if (not l9) then begin
+									RemoveSlot(GetRoot().buttons, 'viewFlags);
+									GetRoot():RedoChildren();
+									self:Open()
+								end else begin
+									self:|ResurrectRootChildren!|(l9)
+								end;
+							GetRoot():Notify(3, kLiteral_488675, "The restore encountered an error while trying to close all open applications. Nothing was restored.");
+							self:MoveBehind(nil);
+							return nil
+						end;
+					l4 := Clone(l3.restorePackNames);
+					self:getDestStore():MarkBusy(whoAmI, nil);
+					self:restoreSoupsAndPackages(a1, l3, l1, l4);
+					self:getDestStore():MarkNotBusy(whoAmI);
+					(if (restoredPkgs or (Length(restoredSoups) > 0)) then begin
+							kROM_573:New(kLiteral_488675, "Your Newton device needs to be restarted to use the restored information.");
+							AddDeferredSend(base, 'Close, nil)
+						end else begin
+							if (not l9) then begin
+									RemoveSlot(GetRoot().buttons, 'viewFlags);
+									GetRoot():RedoChildren();
+									self:Open()
+								end else begin
+									self:|ResurrectRootChildren!|(l9)
+								end;
+							GetRoot():Notify(3, kLiteral_488675, "Nothing was restored. All items were left untouched.");
+							self:MoveBehind(nil);
+							return nil
+						end)
+				end else GetRoot():Notify(3, kLiteral_488675, "There is nothing to restore."))
+		end)
+end
+@@end

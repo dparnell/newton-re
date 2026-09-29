@@ -1,0 +1,5 @@
+@@ 0x439765
+func() begin
+	return viewWidth
+end
+@@end

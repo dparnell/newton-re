@@ -1,0 +1,6 @@
+@@ 0x78d2d5 names
+func() begin
+	self:GetTarget(target);
+	(if reflow then (if (not printAddExtra) then (self.viewChildren := self:ReflowTopics(reflowOptions))) else (self.viewChildren := self:SetupVisibleChildren(firstTopic, nil, nil)))
+end
+@@end

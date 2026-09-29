@@ -1,0 +1,7 @@
+@@ 0x4d5c6d
+func() begin
+	(if (if selected then (Length(selected) > 0)) then AddMemoryItemUnique(memory, selected, func(a1, a2) begin
+			self:ToRefEquality(a1, a2)
+		end))
+end
+@@end

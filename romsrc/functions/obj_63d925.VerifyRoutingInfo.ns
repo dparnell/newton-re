@@ -1,0 +1,39 @@
+@@ 0x5a3e49
+func(a1, a2, a3, a4) begin
+	local l1, l2;
+	if (not a1.title) then begin
+			a1.title := self:?GetItemTitle(a3);
+			if (not a1.title) then begin
+					a1.title := self:?GetItemTitle(NewItem)
+				end;
+			if (not a1.title) then begin
+					a1.title := Clone(a2.title)
+				end
+		end;
+	if IsRichString(a1.title) then begin
+			StripInk(a1.title, $\uFC02);
+			StrReplace(a1.title, "\uFC02\u", "-ink-", nil);
+			if (StrLen(a1.title) > 61) then begin
+					a1.title := Substr(a1.title, 0, 61)
+				end
+		end;
+	if a1.reply then begin
+			return nil
+		end;
+	l2 := GetRoot().(a1.appSymbol);
+	l1 := a4.TextScript;
+	a1.text := " ";
+	if l1 then begin
+			if IsSymbol(l1) then begin
+					a1.text := Perform(l2, l1, [Array: a1, a3])
+				end else begin
+					a1.text := call l1 with (a1, a3)
+				end
+		end;
+	if IsRichString(a1.text) then begin
+			StripInk(a1.text, $\uFC02);
+			StrReplace(a1.text, "\uFC02\u", "-ink-", nil)
+		end;
+	(if (if a1.body then (not a1.attachment)) then (a1.body := nil))
+end
+@@end

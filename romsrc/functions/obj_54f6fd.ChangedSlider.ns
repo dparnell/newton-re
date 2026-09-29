@@ -1,0 +1,5 @@
+@@ 0x54f6bd
+func() begin
+	SetUserConfig('lcdContrast, viewValue)
+end
+@@end

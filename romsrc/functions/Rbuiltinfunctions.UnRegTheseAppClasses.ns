@@ -1,0 +1,10 @@
+@@ 0x4c5cc9
+func(a1, a2) begin
+	(if (if IsArray(a2) then AppClassesRegistry.(a1)) then begin
+			(foreach l1 in a2 do begin
+					SetRemove(AppClassesRegistry.(a1), l1)
+				end);
+			(if (Length(AppClassesRegistry.(a1)) = 0) then RemoveSlot(AppClassesRegistry, a1))
+		end)
+end
+@@end

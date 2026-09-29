@@ -1,0 +1,5 @@
+@@ 0x4f80c5
+func(a1) begin
+	self:PutAwayScript(a1)
+end
+@@end

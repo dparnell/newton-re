@@ -1,0 +1,11 @@
+@@ 0x537745
+@@const kFunction_5376a5
+func(a1, a2) begin
+	(a1 = a2.id)
+end
+@@main
+func() begin
+	local l1, l2;
+	(if (l2 := ArrayPos((l1 := GetPackages()), fentry.packageId, 0, kFunction_5376a5)) then l1[l2].store)
+end
+@@end

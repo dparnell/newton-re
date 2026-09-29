@@ -1,0 +1,9 @@
+@@ 0x75fd91
+func() begin
+	self.title := configOptions.title;
+	if (not title) then begin
+			self.title := "Dock"
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

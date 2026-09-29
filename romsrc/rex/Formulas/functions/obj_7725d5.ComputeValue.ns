@@ -1,0 +1,12 @@
+@@ 0x772645
+func(a1) begin
+	local l1, l2, l3;
+	l1 := nil;
+	l2 := a1[1];
+	if self:DateOutOfRange((l1 := ((l3 := a1[2]) - (l2 * 1440)))) then begin
+			l1 := nil;
+			self:Notify(3, "Date Calculator", "The calculated date is out of range.")
+		end;
+	return l1
+end
+@@end

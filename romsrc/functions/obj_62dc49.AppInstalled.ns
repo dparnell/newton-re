@@ -1,0 +1,13 @@
+@@ 0x4b3fdd
+func(appSym) begin
+	local l1, l2, l3;
+	l2 := {type: 'index, validTest: func(a1) begin
+		(a1.appSymbol = appSym)
+	end};
+	l3 := self:MakeCursor('inbox, l2);
+	(while (l1 := l3:entry()) do begin
+			self:AutoFunction(l1);
+			l3:Next()
+		end)
+end
+@@end

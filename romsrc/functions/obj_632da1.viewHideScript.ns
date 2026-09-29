@@ -1,0 +1,10 @@
+@@ 0x4e3efd
+func() begin
+	frame.(slot) := font;
+	if IsSoupEntry(frame) then begin
+			EntryChange(frame)
+		end;
+	frame := nil;
+	(slot := nil)
+end
+@@end

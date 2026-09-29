@@ -1,0 +1,12 @@
+@@ 0x4697d5
+func(a1) begin
+	local l1, l2, l3;
+	l1 := GetPoint(0, a1);
+	l2 := GetPoint(1, a1);
+	l3 := self:GlobalBox();
+	(if (if (if ((l2 - l3.top) < 6) then (abs((l1 - ((l3.left + l3.right) >> 1))) < 7)) then inherited:viewClickScript(a1)) then begin
+			cText:viewSetupDoneScript();
+			true
+		end)
+end
+@@end

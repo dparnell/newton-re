@@ -1,0 +1,23 @@
+@@ 0x5ac14d
+func() begin
+	local l1, l2, l3;
+	(if selectedEntry then begin
+			l1 := selectedEntry.word;
+			l2 := window:EntryKey(0);
+			(if (dictionary:DeleteWord(l1) = 0) then begin
+					dictionary.count := (dictionary.count - 1);
+					SaveAutoAddDictionary();
+					self:RebuildCursorWindow(l2);
+					if (not self:SelectEntry(selectedIndex)) then begin
+							if ((l3 := window:GetNumberEntries()) <= 0) then begin
+									window:Scroll(-5);
+									self:SelectFirst();
+									self:Dirty();
+									l3 := window:GetNumberEntries()
+								end
+						end;
+					words:Dirty()
+				end)
+		end)
+end
+@@end

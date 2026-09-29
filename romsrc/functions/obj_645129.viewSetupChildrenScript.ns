@@ -1,0 +1,5 @@
+@@ 0x4a9d11
+func() begin
+	(viewChildren := [Array: allLayouts.(currentLayout)])
+end
+@@end

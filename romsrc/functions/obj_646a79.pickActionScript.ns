@@ -1,0 +1,11 @@
+@@ 0x48b229
+func(a1) begin
+	if (a1 = (Length(popup) - 1)) then begin
+			self:PickOther()
+		end else begin
+			SetUserConfig('currentEmporium, popup[a1].value);
+			UseCurrentEmporium()
+		end;
+	self:hilite(nil)
+end
+@@end

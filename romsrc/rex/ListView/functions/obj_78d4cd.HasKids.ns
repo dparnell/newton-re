@@ -1,0 +1,10 @@
+@@ 0x78d0cd names
+func(anIndex) begin
+	if (anIndex < (nTopics - 1)) then begin
+			if (topics[(anIndex + 1)].level > topics[anIndex].level) then begin
+					return true
+				end
+		end;
+	nil
+end
+@@end

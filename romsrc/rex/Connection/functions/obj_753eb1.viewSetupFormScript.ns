@@ -1,0 +1,11 @@
+@@ 0x753ff9
+func() begin
+	if ((not self.startTime) or (startTime = 0)) then begin
+			self.startTime := (Time() - 10080)
+		end;
+	if ((not self.stopTime) or (stopTime = 0)) then begin
+			self.stopTime := Time()
+		end;
+	(fResults.Dates := [Array: self.startTime, self.stopTime])
+end
+@@end

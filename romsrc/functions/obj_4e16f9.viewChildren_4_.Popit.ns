@@ -1,0 +1,6 @@
+@@ 0x4df765
+func(a1) begin
+	params := {spots: @295, default: place};
+	inherited:Popit(a1)
+end
+@@end

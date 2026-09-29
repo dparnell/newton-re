@@ -1,0 +1,6 @@
+@@ 0x42e379
+func(a1) begin
+	expando:ExpandLine(a1);
+	expando:RedoChildren()
+end
+@@end

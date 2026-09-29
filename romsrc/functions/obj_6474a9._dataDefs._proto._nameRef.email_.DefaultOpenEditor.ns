@@ -1,0 +1,19 @@
+@@ 0x4598e9
+func(a1, a2, a3) begin
+	local l1, l2;
+	if (if (l2 := self:Get((l1 := a1.nameRef), primaryPath, 'text)) then (not IsInstance(l2, '|string.noData|))) then begin
+			editTitle := ParamStr("New E-Mail address for ^0", [Array: l2])
+		end else begin
+			if (a1.fieldPath = 'name) then begin
+					editTitle := "Add Name"
+				end else begin
+					if (a1.fieldPath = 'email) then begin
+							editTitle := "Add E-Mail address"
+						end else begin
+							editTitle := defaultEditTitle
+						end
+				end
+		end;
+	inherited:DefaultOpenEditor(a1, a2, a3)
+end
+@@end

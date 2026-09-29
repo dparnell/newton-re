@@ -1,0 +1,10 @@
+@@ 0x5adbfd
+func(a1) begin
+	GetVariable(self, other):unhilite();
+	displayOrigin := (origin := letters[a1]);
+	SetHiliteIndex((hiliteIndex := 0));
+	letterShapeLabel:UpdateText();
+	enableCluster:getNewSetting();
+	LetterShapesPreferencesForm:Dirty()
+end
+@@end

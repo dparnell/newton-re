@@ -1,0 +1,6 @@
+@@ 0x4d5db1
+func(a1) begin
+	inherited:pickActionScript(a1);
+	(selectedNames := selected)
+end
+@@end

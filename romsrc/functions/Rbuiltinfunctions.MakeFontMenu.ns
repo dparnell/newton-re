@@ -1,0 +1,79 @@
+@@ 0x416cbd
+func(a1, a2, a3, a4) begin
+	if IsArray(a1) then begin
+			l2 := GetFontFamilySym(a1[0]);
+			local l1;
+			local l2;
+			(foreach l3 in a1 do begin
+					if (l2 <> GetFontFamilySym(l3)) then begin
+							l2 := nil;
+							break
+						end
+				end)
+		end else begin
+			l2 := GetFontFamilySym(a1)
+		end;
+	l5 := [Array: ];
+	if (a2 <> 'none) then begin
+			l6 := GetFontNameItems(l2, a2);
+			ArrayMunger(l5, Length(l5), 0, l6, 0, nil);
+			l1 := true
+		end;
+	if (a3 <> 'none) then begin
+			if IsArray(a1) then begin
+					l7 := GetFontSize(a1[0]);
+					(foreach l3 in a1 do begin
+							if (l7 <> GetFontSize(l3)) then begin
+									l7 := nil;
+									break
+								end
+						end)
+				end else begin
+					if a1 then begin
+							l7 := GetFontSize(a1)
+						end
+				end;
+			if IsArray(a1) then begin
+					a3 := [Array: ];
+					(foreach l3 in a1 do begin
+							l8 := GetFontFamilySym(l3);
+							a3 := SetUnion(a3, fonts.(l8).userSizes, true)
+						end);
+					Sort(a3, '|<|, nil)
+				end else begin
+					if (if l2 then (not a3)) then begin
+							a3 := fonts.(l2).userSizes
+						end
+				end;
+			l9 := GetFontSizeItems(l7, a3);
+			if l1 then begin
+					AddArraySlot(l5, 'pickseparator)
+				end else begin
+					l1 := true
+				end;
+			ArrayMunger(l5, Length(l5), 0, l9, 0, nil)
+		end;
+	if (a4 <> 'none) then begin
+			if IsArray(a1) then begin
+					l10 := GetFontFace(a1[0]);
+					(foreach l3 in a1 do begin
+							local l5, l6, l7, l8, l9, l10, l11;
+							if (l10 <> GetFontFace(l3)) then begin
+									l10 := nil;
+									break
+								end
+						end)
+				end else begin
+					if a1 then begin
+							l10 := GetFontFace(a1)
+						end
+				end;
+			l11 := GetFontStyleItems(l10, a4);
+			if l1 then begin
+					AddArraySlot(l5, 'pickseparator)
+				end;
+			ArrayMunger(l5, Length(l5), 0, l11, 0, nil)
+		end;
+	l5
+end
+@@end

@@ -1,0 +1,32 @@
+@@ 0x560925
+@@const kROM_256
+@256
+@@main
+func(a1, a2) begin
+	local l1, l2, l3, l4;
+	if (a2.findType = 'text) then begin
+			if (if (ClassOf((l2 := (l1 := FindStringInFrame(a1, a2.findWords, 'first))[1])) = 'pathExpr) then (l2[(Length(l2) - 1)] = 'text)) then begin
+					SetLength((l3 := Clone(l2)), (Length(l2) - 1));
+					if a1.(l3).styles then begin
+							l1 := MakeRichString(a1.(l3).text, a1.(l3).styles)
+						end else begin
+							l1 := l1[0]
+						end
+				end else begin
+					l1 := l1[0]
+				end
+		end else begin
+			if (l4 := GetEntryDataDef(a1)) then begin
+					l1 := l4:StringExtract(a1, 1)
+				end
+		end;
+	if (not l1) then begin
+			if a1.data then begin
+					l1 := ExtractData(a1.data, kROM_256, 30)
+				end else begin
+					l1 := "--"
+				end
+		end;
+	l1
+end
+@@end

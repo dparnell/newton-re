@@ -1,0 +1,24 @@
+@@ 0x561e29
+func(a1) begin
+	local l1, l2, l3;
+	l1 := l1;
+	l3 := nil;
+	if (if (if (a1 = 'Routing) then (Length(findAllResults) = 1)) then findAllResults[0].GetTarget) then begin
+			if findAllResults[0].owner then begin
+					l3 := GetVariable(findAllResults[0].owner, 'appSymbol)
+				end;
+			l1 := findAllResults[0]:GetTarget()
+		end else begin
+			if (if (a1 = 'Filing) then self:IsAnythingSelected()) then begin
+					if (Length(findAllResults) = 1) then begin
+							l1 := findAllResults[0]:?GetTarget();
+							l2 := base;
+							targetView := findAllResults[0].owner
+						end else begin
+							l1 := base
+						end
+				end
+		end;
+	{target: l1, targetView: targetView, targetStore: (if (if l1 then IsSoupEntry(l1)) then EntryStore(l1)), otherOtherTargetView: l2, appSymbol: l3}
+end
+@@end

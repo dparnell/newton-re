@@ -1,0 +1,5 @@
+@@ 0x4b7615
+func() begin
+	(currentStatView := (if (if target then viewChildren) then self:ChildViewFrames()[0]))
+end
+@@end

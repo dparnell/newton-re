@@ -1,0 +1,5 @@
+@@ 0x5383c5
+func() begin
+	Stringer([Array: max(1, (EntrySize(fentry) div 1024)), "K"])
+end
+@@end

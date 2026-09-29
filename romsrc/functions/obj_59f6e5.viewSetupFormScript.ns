@@ -1,0 +1,32 @@
+@@ 0x59f665
+func() begin
+	l1 := GetRoot().mailcategory.mailNetworks;
+	labelCommands := Clone(staticLabelCommands);
+	if ((not (l4 := GetUserConfig('currentEmporium))) or (not (l4 := ResolveEntryAlias(l4)))) then begin
+			l4 := GetUserConfig('location)
+		end;
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	l2 := (foreach l6 in l1 collect l6.id);
+	if (l3 := GetRoot().cardfile:bcEmailNetwork(l4, l2)) then begin
+			l5 := (foreach l6 in l3 collect begin
+				local l10, l11, l12;
+				l10 := FindMailNetwork(l1, l6.mailNetwork).title;
+				l11 := (if (if l6.baud then l10) then Stringer([Array: l6.baud, " ", l10]) else (if l6.baud then l6.baud else l10));
+				{item: ParamStr("^0^?1 (^1)||", [Array: ConvertIntToPhone(l6.mailPhone), l11]), number: ConvertIntToPhone(l6.mailPhone), network: l6.mailNetwork}
+			end);
+			AddArraySlot(l5, 'pickseparator);
+			ArrayMunger(labelCommands, 0, 0, l5, 0, nil)
+		end;
+	if (if (Length(labelCommands) > 1) then (not StrFilled(GetUserConfig('mailPhone)))) then begin
+			mailAccess := [Array: {mailPhone: (l12 := labelCommands[0]).number, mailNetwork: l12.network}];
+			self:JamIt(true)
+		end else begin
+			mailAccess := [Array: {mailPhone: GetUserConfig('mailPhone), mailNetwork: GetUserConfig('mailNetwork)}]
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

@@ -1,0 +1,11 @@
+@@ 0x54912d
+func() begin
+	l1 := iconStyle.font;
+	local l1;
+	local l2;
+	(foreach l3 in (l2 := MakeTextLines(target.fentry.text, SetBounds(0, iconBottom, hSpacing, (iconBottom + 20)), (FontAscent(l1) - 1), l1)) do begin
+			SetClass(l3.data, 'string)
+		end);
+	l2
+end
+@@end

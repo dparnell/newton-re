@@ -1,0 +1,9 @@
+@@ 0x52a9d5
+func() begin
+	(if ((choices := GetRelevantTemplates(self.user_obj[0][0])) <> nil) then begin
+			(ass := GetRoot().assistant).assistLine.defaultChoices := choices;
+			ass.assistLine:SetLabelCommands(Sort(Clone(choices), '|str<|, nil));
+			ass:PickOne()
+		end)
+end
+@@end

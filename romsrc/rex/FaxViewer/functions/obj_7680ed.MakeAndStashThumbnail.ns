@@ -1,0 +1,12 @@
+@@ 0x76860d
+func(a1) begin
+	local l1, l2, l3, l4;
+	if (not (l1 := target.pages[(a1 - 1)]).thumbnail) then begin
+			l4 := MakeBitmap((l3 := FitToBox((l2 := ShapeBounds(l1.image)), '{left: 0, top: 0, right: 96, bottom: 96}, nil)).right, l3.bottom, nil);
+			DrawIntoBitmap(l1.image, {transform: [Array: l2, l3]}, l4);
+			l1.thumbnail := l4;
+			self:StartFlush()
+		end;
+	l1.thumbnail
+end
+@@end

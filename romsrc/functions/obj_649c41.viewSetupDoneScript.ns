@@ -1,0 +1,6 @@
+@@ 0x4ae125
+func() begin
+	inherited:?viewSetupDoneScript();
+	(if keyButton then (newtAppBase.(keyButton) := self))
+end
+@@end

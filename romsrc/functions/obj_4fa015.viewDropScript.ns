@@ -1,0 +1,24 @@
+@@ 0x4f9f15
+func(a1, a2, a3) begin
+	local l1, l2, l3;
+	l2 := a2.mtgStartDate;
+	l3 := selectedDates[0];
+	if (a1 = 'text) then begin
+			l1 := self:ConvertParagraphToMeeting(a2, 'cribNote, l3)
+		end else begin
+			(l1 := a2).mtgStartDate := l3;
+			if l1.repeatTemplate then begin
+					l1 := self:FixupDroppedRepeatingMeeting(l1, 'cribView)
+				end else begin
+					if (l1.viewStationery = 'cribNote) then begin
+							if l1.mtgAlarm then begin
+									l1.mtgAlarm := (l3 - (l2 - l1.mtgAlarm))
+								end
+						end
+				end
+		end;
+	l1.viewBounds := nil;
+	self:AddNewCrib(l1, true);
+	true
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x5ae29d
+func() begin
+	AsyncConfirm("Warning: This option erases what Newton has learned about your handwriting. Are you sure you want to do this?", 'yesNoDefaultNo, func(a1) begin
+		(if a1 then self:revertToDefaults())
+	end)
+end
+@@end

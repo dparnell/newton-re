@@ -1,0 +1,12 @@
+@@ 0x3c6e95
+@@const kFunction_54ac09
+func(a1, a2, a3, a4) begin
+	GetRoot().ExtrasDrawer:HandleSoupChange(a1, a2, a3, a4)
+end
+@@const kLiteral_54ac3d
+[Array: {soupName: "Packages", callBacks: {ExtrasDrawer: kFunction_54ac09}}]
+@@main
+func() begin
+	Sort(Clone(kLiteral_54ac3d), '|str<|, 'soupName)
+end
+@@end

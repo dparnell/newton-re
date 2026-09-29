@@ -1,0 +1,6 @@
+@@ 0x47b14d
+func() begin
+	local l1;
+	(if (((l1 := self:GetTransport():GetConfig(info.fileConfig)) = nil) or (GetFolderStr(l1) = nil)) then "Unfiled Items" else GetFolderStr(l1))
+end
+@@end

@@ -1,0 +1,11 @@
+@@ 0x74958d
+func(a1) begin
+	local l1;
+	RemoveSlot((l1 := LFetch(popup, selectedStore, 0, '|=|, 'store)), 'mark);
+	selectedStore := popup[a1].store;
+	restoreOptions.stores := [Array: {name: selectedStore:GetName(), signature: selectedStore:GetSignature()}];
+	popup[a1].mark := $\uFC0B;
+	SetValue(storeName, 'text, popup[a1].item);
+	self:hilite(nil)
+end
+@@end

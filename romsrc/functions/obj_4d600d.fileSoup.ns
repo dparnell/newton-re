@@ -1,0 +1,82 @@
+@@ 0x5557d5
+func(a1) begin
+	(if a1 then begin
+			l2 := (if (l1 := GetRoot().ExtrasDrawer.storesFilter) then [Array: l1] else GetStores());
+			l3 := target.labels;
+			l4 := target.store;
+			l5 := GetRoot().MsgBox;
+			l5:Bother("Filing data.");
+			try begin
+					if theApp.soupervisor.fileSoup then begin
+							theApp.soupervisor:fileSoup(l3, l4)
+						end else begin
+							local l1;
+							local l2;
+							local l3;
+							local l4;
+							local l5;
+							(foreach l6 in target.soupNames do begin
+									if (if (theApp.soupervisor.type <> 'moveOnly) then (l3 <> 42)) then begin
+											if (l8 := GetUnionSoup(l6)) then begin
+													l10 := (l9 := Query(l8, '{type: index, indexPath: _uniqueID})):entry();
+													(while l10 do begin
+															if (if (not (l11 := EntryStore(l10)):IsReadOnly()) then SetContains(storeList, l11)) then begin
+																	if theApp.soupervisor.FileEntry then begin
+																			theApp.soupervisor:FileEntry(l10, l3)
+																		end else begin
+																			if (l10.labels <> l3) then begin
+																					if l3 then begin
+																							l10.labels := l3
+																						end else begin
+																							RemoveSlot(l10, 'labels)
+																						end;
+																					EntryChange(l10)
+																				end
+																		end
+																end;
+															l10 := l9:Next();
+															l5:Tickle()
+														end)
+												end
+										end;
+									if (if l4 then (theApp.soupervisor.type <> 'fileOnly)) then begin
+											local l8;
+											local l9;
+											local l10;
+											(foreach l11 in l2 do begin
+													local l13;
+													if (l11 <> l4) then begin
+															if (l8 := l11:GetSoup(l6)) then begin
+																	l13 := nil;
+																	l10 := (l9 := Query(l8, '{type: index, indexPath: _uniqueID})):entry();
+																	(while l10 do begin
+																			if (not l13) then begin
+																					l13 := GetUnionSoup(l6):GetMember(l4)
+																				end;
+																			if theApp.soupervisor.moveEntry then begin
+																					theApp.soupervisor:moveEntry(l10, l4, l13)
+																				end else begin
+																					if l11:IsReadOnly() then begin
+																							EntryCopy(l10, l13)
+																						end else begin
+																							EntryMove(l10, l13)
+																						end
+																				end;
+																			l10 := l9:Next();
+																			l5:Tickle()
+																		end)
+																end
+														end
+												end)
+										end
+								end)
+						end
+				end onexception |evt.ex| do begin
+					l5:Nevermind();
+					self:Notify(3, "Packages", "Unable to file this data.")
+				end;
+			self:Yell();
+			l5:Nevermind()
+		end)
+end
+@@end

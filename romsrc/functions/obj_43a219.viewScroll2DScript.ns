@@ -1,0 +1,16 @@
+@@ 0x43a181
+func(a1, a2) begin
+	inScrollArrow := true;
+	(for l1 := 1 to abs(a2.amount) do begin
+			if (a1 = 'up) then begin
+					TextBase:viewScrollUpScript()
+				end else begin
+					if (a1 = 'down) then begin
+							TextBase:viewScrollDownScript()
+						end
+				end
+		end);
+	RefreshViews();
+	(inScrollArrow := nil)
+end
+@@end

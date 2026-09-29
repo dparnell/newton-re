@@ -1,0 +1,5 @@
+@@ 0x446639
+func() begin
+	self:Dirty()
+end
+@@end

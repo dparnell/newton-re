@@ -1,0 +1,8 @@
+@@ 0x4ef145
+func(a1, a2) begin
+	local l1, l2;
+	l1 := ShortDate(a1.timestamp);
+	l2 := (if a1.hangupreason then '{lineBusy: "Line Busy", noAnswer: "No Answer", leftMessage: "Left Message", followup: "Followup Needed", completed: "Call Completed"}.(a1.hangupreason));
+	(if (a2 = 1) then (if StrFilled(a1.title) then a1.title else Stringer([Array: a1.name, " ", (if l2 then l2 else Stringer([Array: a1.phoneNumber, " ", l1]))])) else Stringer([Array: a1.title, " ", a1.name, " ", a1.phoneNumber, " ", l2, " ", l1]))
+end
+@@end

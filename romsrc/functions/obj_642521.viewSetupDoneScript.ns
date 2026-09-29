@@ -1,0 +1,8 @@
+@@ 0x4bc2bd
+func() begin
+	if suppressAreaCode then begin
+			areacode:Hide()
+		end;
+	inherited:?viewSetupDoneScript()
+end
+@@end

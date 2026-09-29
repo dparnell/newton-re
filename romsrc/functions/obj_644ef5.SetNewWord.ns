@@ -1,0 +1,10 @@
+@@ 0x46598d
+func(a1, a2) begin
+	text := Clone(a1);
+	wordLeft := 0;
+	wordRight := StrLen(a1);
+	wordSource := a2;
+	self:InvalDrawCache('chars);
+	0
+end
+@@end

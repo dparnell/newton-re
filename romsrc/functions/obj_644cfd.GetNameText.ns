@@ -1,0 +1,6 @@
+@@ 0x47ff45
+func(a1, a2, a3) begin
+	local l1;
+	(if (l1 := GetDataDefs(addressingClass)) then (text := l1:GetRoutingTitle(a1, a2, a3)))
+end
+@@end

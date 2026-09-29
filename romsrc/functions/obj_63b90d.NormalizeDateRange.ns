@@ -1,0 +1,18 @@
+@@ 0x50f685
+func(a1, a2) begin
+	local l1, l2, l3;
+	if (a1 = nil) then begin
+			l1 := 0;
+			l2 := 536870911
+		end else begin
+			if a2 then begin
+					l1 := (l3 := (a1 - (a1 mod 1440)));
+					l2 := ((l3 + 1440) - 1)
+				end else begin
+					l1 := a1;
+					l2 := a1
+				end
+		end;
+	[Array: l1, l2]
+end
+@@end

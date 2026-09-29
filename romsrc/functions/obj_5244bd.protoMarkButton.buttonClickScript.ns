@@ -1,0 +1,9 @@
+@@ 0x520cf1
+func() begin
+	self:AddBookmark(thisPage);
+	base:SyncView();
+	base:RedoChildren();
+	base:Parent():Dirty();
+	RefreshViews()
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x765435
+func() begin
+	self:Update(ImageTarget:GetScalingInfo())
+end
+@@end

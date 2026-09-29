@@ -1,0 +1,8 @@
+@@ 0x560de5
+func(a1) begin
+	if ((a1 < 0) or moreBelow) then begin
+			scrollOrigin := max((scrollOrigin + a1), 0)
+		end;
+	self:RedoChildren()
+end
+@@end

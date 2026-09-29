@@ -1,0 +1,42 @@
+@@ 0x75ee61
+@@const kROM_8277
+@8277
+@@main
+func(callback) begin
+	local prefsFrame, password, options, done, myCallback;
+	local l1;
+	if GetGlobals().ConnectionLikesWorksites then begin
+			if (l1 := GetUserConfig('currentEmporium)) then begin
+					l1 := ResolveEntryAlias(l1)
+				end;
+			if l1 then begin
+					prefsFrame := l1.autoDockAddr
+				end
+		end else begin
+			prefsFrame := self:ConnectionPrefsRead('autoDockAddr)
+		end;
+	if (not prefsFrame) then begin
+			call callback with (nil);
+			return nil
+		end;
+	password := self:PasswordRead();
+	myCallback := func(a1) begin
+		(if (not done) then begin
+				if (if (not options) then a1) then begin
+						options := self:GetAutoDockOptions(prefsFrame, nil)
+					end;
+				if IsFrame(options) then begin
+						options := {connectOptions: options, password: password}
+					end else begin
+						options := nil
+					end;
+				done := true;
+				call callback with (options)
+			end)
+	end;
+	(if (not IsFrame((options := self:GetAutoDockOptions(prefsFrame, myCallback)))) then return nil else (if ((prefsFrame.type = 'modem) or options.button) then kROM_8277:OpenOn(options, prefsFrame, password, callback) else (if options.callBeforeConnect then options:callBeforeConnect((options := DeepClone(options)), func(a1) begin
+					options := a1;
+					AddDeferredCall(myCallback, [Array: true])
+				end) else (if (not done) then AddDeferredCall(myCallback, [Array: true])))))
+end
+@@end

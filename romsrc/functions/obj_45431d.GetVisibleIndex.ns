@@ -1,0 +1,21 @@
+@@ 0x452b4d
+func(a1) begin
+	local l1, l2, l3, l4;
+	l1 := AliasFromObj(a1);
+	l3 := (l2 := cursor:clone()):entry();
+	l4 := 0;
+	(while (if (l4 < maxLines) then l3) do begin
+			if (if l1 then IsSoupEntry(l3)) then begin
+					if IsSameEntry(l1, l3) then begin
+							break l4
+						end
+				end else begin
+					if (a1._fakeID = l3._fakeID) then begin
+							break l4
+						end
+				end;
+			l3 := l2:Next();
+			(l4 := (l4 + 1))
+		end)
+end
+@@end

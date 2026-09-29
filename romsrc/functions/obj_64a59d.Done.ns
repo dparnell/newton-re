@@ -1,0 +1,20 @@
+@@ 0x424eb5
+func() begin
+	self:StopNow();
+	if (if fSoundChannel then fSoundChannel:IsOpen()) then begin
+			fSoundChannel:Close()
+		end;
+	fSoundState := 1;
+	fSoundChannel := nil;
+	fPauseResult := nil;
+	if fCallBack then begin
+			(foreach l1 in fSoundArray do begin
+					l1.callback := nil
+				end);
+			call fCallBack with (fSoundArray)
+		end;
+	fCallBack := nil;
+	RemovePowerOffHandler(self);
+	return true
+end
+@@end

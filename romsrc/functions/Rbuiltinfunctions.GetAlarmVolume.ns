@@ -1,0 +1,5 @@
+@@ 0x422435
+func() begin
+	(if GetUserConfig('AlarmVolumeEqualsSystem) then GetUserConfig('soundVolumeDb) else GetUserConfig('alarmVolumeDb))
+end
+@@end

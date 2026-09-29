@@ -1,0 +1,23 @@
+@@ 0x5123a9
+@@const kFunction_5121c1
+func(a1, a2, a3, a4) begin
+	local l1, l2;
+	(if Visible((l1 := GetRoot().calendar.AgendaView)) then (if (if (not (l2 := l1:GetToDoAgendaView())) then (((a3 = 'SoupEnters) or (a3 = 'SoupLeaves)) or (a3 = 'soupDeleted))) then begin
+				l1:RedoChildren();
+				l1:calculateScrollRects()
+			end else (if (if l2 then (if (l2.nTopics = 0) then (a3 = 'entryChanged))) then begin
+					l1:RedoChildren();
+					l1:calculateScrollRects()
+				end)) else begin
+			UnRegSoupChange(@282, 'calendar);
+			UnRegSoupChange("To Do List", 'calendar)
+		end)
+end
+@@main
+func() begin
+	self.viewOriginY := (self.currentItem := 0);
+	RegSoupChange(@282, 'calendar, kFunction_5121c1);
+	RegSoupChange("To Do List", 'calendar, kFunction_5121c1);
+	SetKeyView(self, 0)
+end
+@@end

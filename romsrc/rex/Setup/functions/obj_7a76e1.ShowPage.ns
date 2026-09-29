@@ -1,0 +1,24 @@
+@@ 0x7a89a9
+func(a1) begin
+	local l1;
+	if (a1 >= Length(fPages)) then begin
+			return nil
+		end;
+	self:LockScreen(true);
+	if fCurrentPage then begin
+			RemoveStepView(self, fCurrentPage);
+			stepChildren := [Array: ];
+			fCurrentPage := nil
+		end;
+	if ((l1 := fPages[a1]) <> nil) then begin
+			fCurrentPageIndex := a1;
+			if (fCurrentPage := AddStepView(self, l1)) then begin
+					fCurrentPage:Open()
+				end;
+			self:dirty()
+		end;
+	self:LockScreen(nil);
+	fCurrentPageIndex := a1;
+	return fCurrentPage
+end
+@@end

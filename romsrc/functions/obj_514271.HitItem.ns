@@ -1,0 +1,8 @@
+@@ 0x513fe1
+func(a1, a2, a3) begin
+	local l1;
+	(l1 := calendar).selectedMeeting := items[a1.index];
+	l1.isNewMeeting := nil;
+	self:OpenMeetingSlip(l1.selectedMeeting, nil, nil)
+end
+@@end

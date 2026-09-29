@@ -1,0 +1,24 @@
+@@ 0x595f85
+func(a1, a2, a3, a4, a5) begin
+	local l1, l2;
+	(if (a3 = 14) then begin
+			if (a1.pending = 2) then begin
+					Busy := nil;
+					l1 := self:getdata(a5, 0, 1, 'integer);
+					l2 := self:getdata(a5, 1, (a4 - 1), 'string);
+					self:EndTransaction();
+					self:RegError(l1, l2);
+					transport:?SetStatus('idle, nil);
+					transport:?CloseStatusDialog(nil)
+				end;
+			(if (a1.pending = 22) then begin
+					Busy := nil;
+					info.mailAccount := self:getdata(a5, 0, a4, 'string);
+					self:EndTransaction();
+					self:RegName();
+					transport:?SetStatus('idle, nil);
+					transport:?CloseStatusDialog(nil)
+				end)
+		end else inherited:Atom00(a1, a2, a3, a4, a5))
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x59eb29
+func() begin
+	local l1;
+	(if (if requestQueue then (Length(requestQueue) > 0)) then begin
+			l1 := requestQueue[0];
+			SetRemove(requestQueue, l1);
+			AddDeferredSend(self, l1.function, [Array: l1])
+		end else self:Logout())
+end
+@@end

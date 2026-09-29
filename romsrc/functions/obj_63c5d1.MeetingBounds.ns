@@ -1,0 +1,11 @@
+@@ 0x4fca05
+func(a1, a2, a3) begin
+	local l1, l2, l3;
+	(if a1.viewBounds then LayoutMeeting(a1, viewHeight, tabWidths, nil) else begin
+			l1 := (a1.mtgStartDate mod 1440);
+			l2 := TimeToPosition(dayView, l1);
+			l3 := TimeToPosition(dayView, (l1 + self:GetMeetingSlot(a1, 'mtgDuration)));
+			SetBounds(a2, l2, a3, l3)
+		end)
+end
+@@end

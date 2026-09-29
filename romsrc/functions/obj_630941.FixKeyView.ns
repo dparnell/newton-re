@@ -1,0 +1,5 @@
+@@ 0x5b6b89
+func() begin
+	(if self.viewCObject then SetKeyView(pin.PINDisplay, 0))
+end
+@@end

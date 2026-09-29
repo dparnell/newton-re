@@ -1,0 +1,6 @@
+@@ 0x52e995
+func(a1, a2, a3) begin
+	Sleep(10);
+	(if a3 then (if (a1 = "outg") then self:?MakeOutgoingDone(a2) else (if (a1 = "sdgt") then self:?SendDigitDone(a2))) else (if a2 then Throw('|evt.ex.comm|, a2)))
+end
+@@end

@@ -1,0 +1,15 @@
+@@ 0x4ea955
+func() begin
+	(foreach l1 in meetingSoupFinders do begin
+			if (if l1.selected then (Length(l1.selected) > 0)) then begin
+					return true
+				end
+		end);
+	(foreach l1 in todoSoupFinders do begin
+			if (if l1.selected then (Length(l1.selected) > 0)) then begin
+					return true
+				end
+		end);
+	nil
+end
+@@end

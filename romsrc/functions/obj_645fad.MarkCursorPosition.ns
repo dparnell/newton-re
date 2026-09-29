@@ -1,0 +1,5 @@
+@@ 0x451b0d
+func() begin
+	(fCurrentKey := self:IndexStr(cursor:entry()))
+end
+@@end

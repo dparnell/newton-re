@@ -1,0 +1,12 @@
+@@ 0x4afb09
+func(a1, a2) begin
+	dataCursor:Goto(a1);
+	layout:NewTarget();
+	(foreach l1 in layout:ChildViewFrames() do begin
+			if (l1.target = a1) then begin
+					l1:?ShowFoundItem(a1, a2);
+					break
+				end
+		end)
+end
+@@end

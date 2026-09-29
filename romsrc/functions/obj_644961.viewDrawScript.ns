@@ -1,0 +1,38 @@
+@@ 0x445ac1
+func() begin
+	local l1, l2, l3, l4, l5, l6, l7;
+	if (not pix) then begin
+			pix := Array(5, nil);
+			l1 := self:LocalBox();
+			ScaleShape((fIconAsShape := MakeShape(icon)), ShapeBounds(fIconAsShape), l1);
+			self.inset := (if (inset exists) then inset else ((l1.right * 1000) div 11600));
+			l3 := (((l2 := ShapeBounds(fIconAsShape).right) div 2) - 2);
+			if (not (suppressAnnotations exists)) then begin
+					pix[0] := fIconAsShape;
+					l4 := FontAscent(clockFont);
+					l6 := StrFontWidth((l5 := annotations[0]), clockFont);
+					OffsetShape((l5 := MakeText(l5, 0, 0, l6, l4)), ((l3 - (l6 div 2)) + 2), (inset - 2));
+					pix[1] := l5;
+					l6 := StrFontWidth((l5 := annotations[1]), clockFont);
+					OffsetShape((l5 := MakeText(l5, 0, 0, l6, l4)), (((l2 - inset) - l6) - 1), (l3 - (l4 div 2)));
+					pix[2] := l5;
+					l6 := StrFontWidth((l5 := annotations[2]), clockFont);
+					OffsetShape((l5 := MakeText(l5, 0, 0, l6, l4)), ((l3 - (l6 div 2)) + 2), (((l2 - inset) - l4) - 2));
+					pix[3] := l5;
+					l6 := StrFontWidth((l5 := annotations[3]), clockFont);
+					OffsetShape((l5 := MakeText(l5, 0, 0, l6, l4)), (inset + 2), (l3 - (l4 div 2)));
+					pix[4] := l5
+				end else begin
+					pix := fIconAsShape
+				end
+		end;
+	self:DrawShape(pix, {font: clockFont});
+	l3 := ((l2 := ((l1 := self:LocalBox()).right - l1.left)) div 2);
+	self:DrawHand(minutes, l3, 13000);
+	l7 := ((hours mod 12) * 5);
+	if (not exactHour) then begin
+			l7 := (l7 + (minutes div 12))
+		end;
+	self:DrawHand(l7, l3, 22000)
+end
+@@end

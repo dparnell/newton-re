@@ -1,0 +1,5 @@
+@@ 0x420755
+func(a1, a2) begin
+	((60 * (a1 - 46811520)) + (if a2 then a2 else 0))
+end
+@@end

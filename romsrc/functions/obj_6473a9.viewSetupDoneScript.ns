@@ -1,0 +1,6 @@
+@@ 0x460655
+func() begin
+	SetKeyView(self, 0);
+	(if gyreOn then self:GyreStart())
+end
+@@end

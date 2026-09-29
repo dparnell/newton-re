@@ -1,0 +1,9 @@
+@@ 0x4b21dd
+func(a1, a2) begin
+	local l1, l2;
+	if (not (l2 := (if (l1 := GetDataDefs(a1)) then l1:?CreateCursor(a2)))) then begin
+			l2 := {class: a1, _cursor: a2}
+		end;
+	l2
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x432371
+func() begin
+	minuteIncrement := params.increment;
+	if params.minValue then begin
+			minValue := params.minValue
+		end;
+	(if params.maxValue then (maxValue := params.maxValue))
+end
+@@end

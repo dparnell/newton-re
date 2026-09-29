@@ -1,0 +1,6 @@
+@@ 0x5b7e5d
+func(a1, a2) begin
+	local l1;
+	(if a2 then (if (l1 := ModalPINPrompt(a1)) then BinEqual(l1, a2)) else true)
+end
+@@end

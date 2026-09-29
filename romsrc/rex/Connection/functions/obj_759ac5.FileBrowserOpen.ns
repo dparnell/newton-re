@@ -1,0 +1,22 @@
+@@ 0x75ec49
+@@const kROM_8264
+@8264
+@@main
+func(a1, a2, a3, a4, a5) begin
+	local context;
+	local l1;
+	if ((context := GetRoot().Connection).openWindows = nil) then begin
+			context.openWindows := [Array: ];
+			a1.secretDoneCallback := func(a1) begin
+				context:FileBrowserClose(a1);
+				(context.openWindows := nil)
+			end
+		end;
+	a1:WriteCommand("rtbr", a4, true);
+	(l1 := BuildContext(kROM_8264)).whichFiles := a2;
+	l1.labels := a3;
+	l1.callWhenDone := a5;
+	l1.endpoint := a1;
+	l1:FilterDialog()
+end
+@@end

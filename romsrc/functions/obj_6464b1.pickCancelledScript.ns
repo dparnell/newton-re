@@ -1,0 +1,6 @@
+@@ 0x43fead
+func() begin
+	RemoveSlot(self, 'popup);
+	inherited:pickCancelledScript()
+end
+@@end

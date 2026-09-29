@@ -1,0 +1,14 @@
+@@ 0x75b1d1
+@@const kROM_8274
+@8274
+@@main
+func(a1) begin
+	local l1;
+	self.keyPassthroughOn := nil;
+	(if (a1.appSymbol = 'Connection) then (if (not (if self.whichConnection then whichConnection.whichConnectionOpen)) then begin
+				(l1 := BuildContext(kROM_8274)).endpoint := a1;
+				self.whichConnection := l1;
+				l1:FilterDialog()
+			end else (if whichConnection.whichConnectionOpen then whichConnection:StartIdle())))
+end
+@@end

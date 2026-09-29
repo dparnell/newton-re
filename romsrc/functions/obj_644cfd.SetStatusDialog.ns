@@ -1,0 +1,10 @@
+@@ 0x47ff85
+func(a1, a2, a3) begin
+	local l1, l2, l3, l4;
+	l1 := self:UpdateStatusSlots(a1, a2, a3);
+	l2 := (if statusDialog then statusDialog.viewCObject);
+	l3 := (if self:GetConfig('autoStatus) then (not manualStatus));
+	l4 := (status = 'idle);
+	(if (if (if (if l3 then (not l2)) then (not l4)) then (not userClosedStatus)) then self:UpdateStatusDialog(l1) else (if (if (if (not manualStatus) then l2) then l4) then self:CloseStatusDialog(nil) else (if (l2 or (if manualStatus then (not userClosedStatus))) then self:UpdateStatusDialog(l1))))
+end
+@@end

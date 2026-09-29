@@ -1,0 +1,13 @@
+@@ 0x4b2b51
+func(a1, a2) begin
+	(if (a1.labels <> a2) then begin
+			if a2 then begin
+					a1.labels := a2
+				end else begin
+					RemoveSlot(a1, 'labels)
+				end;
+			GetRoot().iobox:Fileit(a1);
+			EntryChange(a1)
+		end)
+end
+@@end

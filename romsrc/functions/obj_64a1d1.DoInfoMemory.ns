@@ -1,0 +1,11 @@
+@@ 0x5508c1
+func() begin
+	local l1, l2;
+	(if memex then memex:Close() else begin
+			(l1 := (memex := BuildContext(memexForm))).extras := base;
+			l2 := Length(GetStores());
+			l1.viewBounds := SetBounds(8, (-(121 + (16 * l2))), -8, -8);
+			l1:Open()
+		end)
+end
+@@end

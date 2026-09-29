@@ -1,0 +1,5 @@
+@@ 0x42d2c1
+func() begin
+	(if (index < _maxIndex) then roll:SyncScroll(_curItems, index, 1))
+end
+@@end

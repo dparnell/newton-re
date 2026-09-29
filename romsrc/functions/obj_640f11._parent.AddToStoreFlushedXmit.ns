@@ -1,0 +1,5 @@
+@@ 0x6347a9
+func(a1, a2, a3) begin
+	self:GetMember(a2):AddFlushedXmit(a1, a3)
+end
+@@end

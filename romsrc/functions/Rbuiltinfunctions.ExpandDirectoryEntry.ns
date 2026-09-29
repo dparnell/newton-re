@@ -1,0 +1,25 @@
+@@ 0x5a866d
+func(a1) begin
+	if (l1 := DeepClone(a1)) then begin
+			if HasSlot(l1, 'metadataPath) then begin
+					l1.metaDataFrame := ResolveMetadataPath(l1.app, l1.metadataPath)
+				end;
+			if HasSlot(l1, 'extensionPaths) then begin
+					l2 := {};
+					local l1;
+					local l2;
+					(foreach l3, l4 in l1.extensionPaths do begin
+							local l6;
+							if (l6 := ResolveMetadataPath(l3, l4)).GetExtensionFrame then begin
+									l6 := l6:GetExtensionFrame()
+								end;
+							if l6 then begin
+									l2.(l3) := l6
+								end
+						end);
+					l1.extensionFrames := l2
+				end
+		end;
+	return l1
+end
+@@end

@@ -1,0 +1,92 @@
+@@ 0x4962b5
+@@const kBinaryFromHex
+func(hex, cls) begin
+	local b := MakeBinary(StrLen(hex) div 2, cls);
+	for i := 0 to Length(b) - 1 do begin
+		local h := Ord(hex[2 * i]);
+		local l := Ord(hex[2 * i + 1]);
+		StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+	end;
+	b
+end
+@@const kLiteral_48e189
+{statusText: "Backup", titleText: "Backing up\u2026\u", icon: {mask: call kBinaryFromHex with ("000000000004010901090174011e018100000000000000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe0000000000000000000000000000000000000", 'mask), bits: call kBinaryFromHex with ("000000000004010901090174011e01817ff00000fff80000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000dfd80000cf980000c7180000c2180000c0180000fff800007ff000000000000000000000", 'bits), bounds: '{left: 0, top: 0, right: 13, bottom: 21}}, barber: true, closeBox: nil}
+@@const kLiteral_488691
+"Backup"
+@@const kFunction_48e335
+func(a1) begin
+	(not StrEqual(a1, "Patch2.0"))
+end
+@@const kLiteral_48e355
+{type: 'index, indexPath: 'name, IndexValidTest: kFunction_48e335}
+@@const kLiteral_4888e9
+"packages"
+@@main
+func(prefs, soupsToBackup, packages) begin
+	local error, srcStore, destStore;
+	error := nil;
+	srcStore := self:getSrcStore();
+	destStore := self:getDestStore();
+	(try begin
+			(if (DoProgress('vBarber, kLiteral_48e189, func(a1) begin
+				progressSlip := a1;
+				if (not backupInfo) then begin
+						try begin
+								backupSoup := destStore:CreateSoupXmit("BackupInfo", '[Array: {structure: slot, path: name, type: string}], 'backup)
+							end onexception |evt.ex| do begin
+								if (if HasSlot((l1 := CurrentException()), 'error) then (l1.error = -10617)) then begin
+										GetRoot():Notify(3, kLiteral_488691, "The storage card is full and the backup cannot be created. Nothing was backed up.")
+									end else begin
+										GetRoot():Notify(3, kLiteral_488691, "Something has happened and the backup was unable to be created. Nothing was backed up.")
+									end;
+								error := true
+							end;
+						if (not error) then begin
+								backupCursor := backupSoup:Query(kLiteral_48e355)
+							end
+					end;
+				if (not error) then begin
+						self:setBackupInfo('Partial, nil);
+						self:Dirty();
+						if (Length(soupsToBackup) > 0) then begin
+								l2 := [Array: ];
+								local l1;
+								local l2;
+								(foreach l3 in soupsToBackup do begin
+										local l5;
+										ArrayMunger(l2, 0, 0, l3.soups, 0, nil)
+									end);
+								Sort(l2, '|str<|, nil);
+								CallFrameBasedRegistryFns(SoupBackupRegistry, [Array: l2]);
+								self:backupManySoups(srcStore, destStore, soupsToBackup)
+							end;
+						a1:SetStatus('vBarber, {titleText: "Backing up\u2026\u", barber: true});
+						try begin
+								if (packages = 'all) then begin
+										self:backupPackages(srcStore, destStore)
+									end
+							end onexception |evt.ex.cancel| do begin
+								Rethrow()
+							end onexception |evt.ex.nofit| do begin
+								Rethrow()
+							end onexception |evt.ex| do begin
+								if (if HasSlot((l1 := CurrentException()), 'error) then (l1.error = -10617)) then begin
+										GetRoot():Notify(3, kLiteral_488691, ParamStr("There was not enough space to backup \u201C\u^0\u201D\u. Some items may not have been backed up.", [Array: kLiteral_4888e9]))
+									end else begin
+										GetRoot():Notify(3, kLiteral_488691, ParamStr("There was an error while backing up \u201C\u^0\u201D\u. Some items may not have been backed up.", [Array: kLiteral_4888e9]))
+									end;
+								Rethrow()
+							end;
+						l5 := prefs.packageType;
+						if (not GetBackupAllPackagesCursor(self:getSrcStore()):entry()) then begin
+								l5 := 'all
+							end;
+						self:setBackupInfo(prefs.soupType, l5)
+					end;
+				self:displayinfo()
+			end) = 'Cancel) then GetRoot():Notify(3, "Backup", "The backup was cancelled. Some information was not saved."))
+		end onexception |evt.ex| do begin
+			nil
+		end)
+end
+@@end

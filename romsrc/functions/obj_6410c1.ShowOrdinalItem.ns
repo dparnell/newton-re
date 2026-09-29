@@ -1,0 +1,23 @@
+@@ 0x55f0fd
+func(a1) begin
+	local l1;
+	(if (a1 = 'first) then begin
+			currentItem := 0;
+			self:ShowEntry(self:Reset())
+		end else begin
+			l1 := currentItem;
+			if (a1 = 'prev) then begin
+					currentItem := (currentItem - 1)
+				end else begin
+					if (a1 = 'Next) then begin
+							currentItem := (currentItem + 1)
+						end else begin
+							currentItem := a1
+						end
+				end;
+			currentItem := min(max(currentItem, 0), (self:count() - 1));
+			self.isReset := nil;
+			self:ShowEntry(cursor:move((currentItem - l1)))
+		end)
+end
+@@end

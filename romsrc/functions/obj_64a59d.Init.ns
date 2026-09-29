@@ -1,0 +1,33 @@
+@@ 0x424dd1
+func() begin
+	if (if (fDirection = 'record) then (GetUserConfig('inputDevice) = nil)) then begin
+			fDirection := 'play;
+			fSoundArray := [Array: ]
+		end;
+	if (fDirection = 'record) then begin
+			fSoundChannel := @431:newRecording();
+			fSoundArray := [Array: ]
+		end else begin
+			if (not IsArray(fSoundArray)) then begin
+					fSoundArray := [Array: fSoundArray]
+				end;
+			fSoundArray := (foreach l1 in fSoundArray collect begin
+				l5 := Clone(@849);
+				local l5;
+				(foreach l6, l7 in l1 do begin
+						l5.(l6) := l7
+					end);
+				l5
+			end);
+			fSoundChannel := {_proto: @431, direction: 'play}
+		end;
+	self:SetRecordingQuality();
+	fEngineError := 0;
+	fSoundChannel.inputDevice := fInputDevice;
+	fSoundChannel.outputDevice := fOutputDevice;
+	fSoundChannel.inputGain := fInputGain;
+	fSoundChannel:Open();
+	self:SetState(1);
+	AddPowerOffHandler(self)
+end
+@@end

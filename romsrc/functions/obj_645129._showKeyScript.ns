@@ -1,0 +1,5 @@
+@@ 0x4ac7e9
+func(a1) begin
+	newtAppBase:CommonKeyScript('_showKeyButton)
+end
+@@end

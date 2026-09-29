@@ -1,0 +1,13 @@
+@@ 0x79c135 names
+func(slip, item) begin
+	if slip.target.class then begin
+			item.body := slip.target;
+			item.task := slip.target
+		end else begin
+			item.body := slip.targetView.target;
+			item.body.class := 'todo;
+			item.task := slip.targetView.task
+		end;
+	inherited:SetupSlip(slip, item)
+end
+@@end

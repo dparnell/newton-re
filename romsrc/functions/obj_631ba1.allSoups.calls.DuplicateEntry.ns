@@ -1,0 +1,7 @@
+@@ 0x4ec07d
+func(a1, a2) begin
+	local l1;
+	(l1 := Clone(a1)).timestamp := Time();
+	inherited:DuplicateEntry(l1, a2)
+end
+@@end

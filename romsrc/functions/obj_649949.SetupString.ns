@@ -1,0 +1,21 @@
+@@ 0x44d815
+func(a1, a2) begin
+	local l1, l2, l3;
+	if (if (if (not a1.code) then (not a1.num1)) then (not a1.num2)) then begin
+			a1:Parse(a2)
+		end;
+	l1 := SPrintObject("   -    ");
+	if a1.num1 then begin
+			l2 := StrLen(a1.num1);
+			StrMunger(l1, (3 - l2), l2, a1.num1, 0, l2)
+		end;
+	if a1.num2 then begin
+			l3 := StrLen(a1.num2);
+			StrMunger(l1, 4, l3, a1.num2, 0, l3)
+		end;
+	a1.code := nil;
+	a1.num1 := nil;
+	a1.num2 := nil;
+	return l1
+end
+@@end

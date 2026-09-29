@@ -1,0 +1,15 @@
+@@ 0x5b0d59
+func(a1) begin
+	if (a1 = (Length(popup) - 1)) then begin
+			self:UseDefault();
+			panel:RedoChildren();
+			if openPanel then begin
+					openPanel:RedoChildren()
+				end
+		end else begin
+			self:CloseOpenPanel();
+			openPanel := OpenPrefsTo(useList[a1])
+		end;
+	inherited:pickActionScript(a1)
+end
+@@end

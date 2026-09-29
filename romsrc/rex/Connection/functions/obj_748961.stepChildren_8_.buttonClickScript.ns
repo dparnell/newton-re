@@ -1,0 +1,14 @@
+@@ 0x749e29
+func() begin
+	(if (not restoring) then begin
+			restoring := true;
+			(if (ModalConfirm("Restore replaces the information on your Newton device with the information in the backup and then restarts. Are you sure you want to do this?", '[Array: {value: Restore, text: "Restore"}, {value: cancel, text: "Cancel"}]) = 'Restore) then begin
+					endpoint:StopIdle(base);
+					protoContext:BuildApplicationList(func() begin
+						endpoint:IdleConnection(true)
+					end);
+					AddDeferredSend(base, 'DoRestore, [Array: ])
+				end else (restoring := nil))
+		end)
+end
+@@end

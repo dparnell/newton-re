@@ -1,0 +1,7 @@
+@@ 0x4a8e65
+func(a1, a2) begin
+	_dataDefs.(EnsureInternal(a1)) := a2;
+	CallFrameBasedRegistryFns(StationeryChangeRegistry, [Array: 'install, 'dataDef, a1, nil]);
+	nil
+end
+@@end

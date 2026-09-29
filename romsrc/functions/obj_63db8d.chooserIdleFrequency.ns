@@ -1,0 +1,20 @@
+@@ 0x470875
+func(a1) begin
+	if (a1 = 0) then begin
+			idleFrequency := 250
+		end else begin
+			if (a1 = 1) then begin
+					idleFrequency := 1000
+				end else begin
+					if (a1 = 2) then begin
+							idleFrequency := 3000
+						end else begin
+							if (a1 = 3) then begin
+									idleFrequency := 10000
+								end
+						end
+				end
+		end;
+	return idleFrequency
+end
+@@end

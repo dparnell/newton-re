@@ -1,0 +1,14 @@
+@@ 0x4523a9
+func() begin
+	(if (nowShowing = 'selected) then begin
+			ersatzCursor.validTest := validIfSelected;
+			(cursor := ersatzCursor)
+		end else (if soupCursor then (if anyFakes then begin
+					ersatzCursor.validTest := validIfFake;
+					(cursor := multiCursor)
+				end else (cursor := soupCursor)) else begin
+				ersatzCursor.validTest := validAlways;
+				(cursor := ersatzCursor)
+			end))
+end
+@@end

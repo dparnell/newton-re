@@ -1,0 +1,6 @@
+@@ 0x3c6d5d
+func(a1) begin
+	RemoveSlot(CommConfigRegistry, a1);
+	nil
+end
+@@end

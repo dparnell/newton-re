@@ -1,0 +1,5 @@
+@@ 0x51c971
+func() begin
+	(if Visible(browser) then browser:Close())
+end
+@@end

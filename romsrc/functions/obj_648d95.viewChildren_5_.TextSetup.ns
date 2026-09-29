@@ -1,0 +1,9 @@
+@@ 0x47be59
+func() begin
+	local l1;
+	(if info then begin
+			l1 := self:GetIndex();
+			ParamStr(info.routeChoices[l1], [Array: info.routeVerb])
+		end)
+end
+@@end

@@ -1,0 +1,22 @@
+@@ 0x4a5f0d
+@@const kFunction_4a5e7d
+func(a1, a2) begin
+	StrEqual(a1, a2.title)
+end
+@@main
+func(a1) begin
+	local l1, l2, l3;
+	l1 := nil;
+	if (ClassOf(a1) = 'symbol) then begin
+			if (l2 := international.localeTable) then begin
+					l1 := l2.(a1)
+				end
+		end;
+	if IsInstance(a1, 'string) then begin
+			if (l3 := ArrayPos(international.locales, a1, 0, kFunction_4a5e7d)) then begin
+					l1 := international.locales[l3]
+				end
+		end;
+	return l1
+end
+@@end

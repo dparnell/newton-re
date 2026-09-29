@@ -1,0 +1,11 @@
+@@ 0x7537ed
+func(a1) begin
+	(try begin
+			endpoint:WriteCommand("tran", a1, true);
+			result := protoContext:CallReadCommand(endpoint, "dimp");
+			self:FinishImport()
+		end onexception |evt.ex| do begin
+			protoContext:HandleException(CurrentException().error, endpoint)
+		end)
+end
+@@end

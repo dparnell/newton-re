@@ -1,0 +1,12 @@
+@@ 0x73e1b5
+func() begin
+	inherited:?viewPostQuitScript();
+	self.callSlip := nil;
+	self.editSlipLayout := nil;
+	RemoveSlot(self, 'viewBounds);
+	RemoveSlot(self, 'routeScripts);
+	self.retargetChain := nil;
+	self.lastFormats := nil;
+	(self.stepChildren := nil)
+end
+@@end

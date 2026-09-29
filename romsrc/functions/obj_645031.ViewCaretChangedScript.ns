@@ -1,0 +1,15 @@
+@@ 0x46a0b9
+func(a1, a2, a3) begin
+	hiliteParms := [Array: a1, a2, a3];
+	if (not a1) then begin
+			cText.updatePending := nil;
+			refCon.form := nil;
+			self:Close();
+			return nil
+		end;
+	(if (if (not hiliteBusy) then (not cText.updatePending)) then begin
+			hiliteBusy := true;
+			self:doViewCaretChanged()
+		end)
+end
+@@end

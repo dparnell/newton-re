@@ -1,0 +1,8 @@
+@@ 0x76d211
+func() begin
+	pickerItemNumber := defaultItem;
+	labelCommands := labelItems;
+	self.text := labelCommands[defaultItem];
+	inherited:?viewSetupFormScript()
+end
+@@end

@@ -1,0 +1,16 @@
+@@ 0x74e36d
+func(a1) begin
+	if (a1 <> nil) then begin
+			currentPath := a1
+		end;
+	labelCommands := [Array: ];
+	(for l1 := (Length(currentPath) - 1) to 0 by -1 do begin
+			local l4;
+			AddArraySlot(labelCommands, self:MakeListItem(currentPath[l1].name, self:GetIcon(currentPath[l1])))
+		end);
+	(if (a1 <> nil) then begin
+			l4 := (Length(currentPath) - 1);
+			browseFolder:MyUpdate(currentPath[l4].name, self:GetIcon(currentPath[l4]))
+		end)
+end
+@@end

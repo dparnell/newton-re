@@ -1,0 +1,6 @@
+@@ 0x4c3089
+func(a1) begin
+	inherited:?FlushEntry(a1);
+	(if (nextEntry = 0) then self:SyncView())
+end
+@@end

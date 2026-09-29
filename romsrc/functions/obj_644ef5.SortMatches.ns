@@ -1,0 +1,24 @@
+@@ 0x467595
+@@const kLiteral_466b49
+"0Oo"
+@@const kLiteral_466c65
+"1Ili|"
+@@main
+func(a1, a2, a3) begin
+	if (StrLen(a1) <= 1) then begin
+			return nil
+		end;
+	if (CountUnitStrokes(a2) > 1) then begin
+			return nil
+		end;
+	(if (a3 = 'numbers) then begin
+			self:BubbleUp(a1, $0, kLiteral_466b49);
+			self:BubbleUp(a1, $1, kLiteral_466c65);
+			self:BubbleUp(a1, $2, "2zZ")
+		end else begin
+			self:BubbleDown(a1, $1, kLiteral_466c65);
+			self:BubbleDown(a1, $|, kLiteral_466c65);
+			self:BubbleDown(a1, $0, kLiteral_466b49)
+		end)
+end
+@@end

@@ -1,0 +1,12 @@
+@@ 0x5a4121
+func(a1, a2, a3) begin
+	local l1;
+	(if a1 then begin
+			if IsRichString((l1 := GetUserConfig('mailPhoneFull))) then begin
+					SetUserConfig('mailPhoneFull, a2)
+				end;
+			eworld.firstTime := true;
+			AddDeferredSend(eworld, 'LoginToHost, [Array: eworld._worksite, eworld._owner, nil, nil, nil, nil])
+		end else (eworld := nil))
+end
+@@end

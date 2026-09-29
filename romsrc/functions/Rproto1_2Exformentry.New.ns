@@ -1,0 +1,5 @@
+@@ 0x537705
+func() begin
+	Clone(iconEntry)
+end
+@@end

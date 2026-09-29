@@ -1,0 +1,6 @@
+@@ 0x4f9ff5
+func(a1) begin
+	local l1;
+	(if (not Visible(self)) then cribMoreIndicator:Close() else (if (if (l1 := (if a1 then self.viewChildren else self:ChildViewFrames())) then ((Length(l1) * viewLineSpacing) > 50)) then cribMoreIndicator:Open() else cribMoreIndicator:Close()))
+end
+@@end

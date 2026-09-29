@@ -1,0 +1,25 @@
+@@ 0x447b61
+func(a1) begin
+	l2 := (Length(zoomStops) - 1);
+	l3 := (if (ClassOf(fZoomedTo) <> 'symbol) then fZoomedTo else ((currentSize.right - currentSize.left) / (fullSize.right - fullSize.left)));
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	l1 := (for l5 := 0 to l2 do begin
+			local l8;
+			if (ClassOf(zoomStops[l5]) = 'symbol) then begin
+					l4 := (((l8 := usefulSizes.(zoomStops[l5])).right - l8.left) - (currentSize.right - currentSize.left))
+				end else begin
+					l4 := (zoomStops[l5] - l3)
+				end;
+			if (l4 >= 0) then begin
+					break (if ((l4 = 0) or (a1 < 0)) then l5 else (l5 - 1))
+				end
+		end);
+	if (not l1) then begin
+			l1 := (l2 + 1)
+		end;
+	max(0, min((l1 + a1), l2))
+end
+@@end

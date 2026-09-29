@@ -1,0 +1,5 @@
+@@ 0x5a5d91
+func() begin
+	(info.(configPath) := text)
+end
+@@end

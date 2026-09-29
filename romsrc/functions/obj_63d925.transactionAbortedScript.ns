@@ -1,0 +1,6 @@
+@@ 0x5a3fe1
+func(a1) begin
+	GetRoot():Notify(3, title, "The host has failed to respond.");
+	self:CancelRequest('hostCancel)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x722785
+func() begin
+	(theApp:GetAppPreferences().beamNotes := viewValue)
+end
+@@end

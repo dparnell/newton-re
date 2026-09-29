@@ -1,0 +1,10 @@
+@@ 0x72c2c5
+func(a1, a2, a3, a4, a5, a6, a7) begin
+	(if (if (if (if (a1 >= a7.bbox.left) then (a1 <= a7.bbox.right)) then (a2 >= a7.bbox.top)) then (a2 <= a7.bbox.bottom)) then begin
+			a4 := SetBounds((a4.left + a7.bbox.left), (a4.top + a7.bbox.top), ((a4.left + a7.bbox.right) - 3), ((a4.top + a7.bbox.bottom) - 3));
+			a3:DoDrawing('Hiliter, [Array: MakeShape(a4)]);
+			call GetRoot().cardfile.kDoCallSlip with (a3, a5, (if a7.phoneNum then a7.phoneNum else a5.(a6)));
+			true
+		end)
+end
+@@end

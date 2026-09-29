@@ -1,0 +1,25 @@
+@@ 0x4b5fb5
+func(a1) begin
+	local l1, l2, l3;
+	l1 := items[a1].transport;
+	items := nil;
+	if ((l2 := self:GetTargetInfo('Routing)).target = nil) then begin
+			if (self.checkSlot = 'ReceiveRequest) then begin
+					if labelsFilter then begin
+							l3 := labelsFilter;
+							labelsFilter := nil;
+							self:FilterChanged();
+							if filterBar then begin
+									filterBar:UpdateFilter(l3, nil)
+								end
+						end;
+					self:TransportCall(l1, 'ReceiveRequest, [Array: {cause: 'user}])
+				end else begin
+					self:StartSend(l1, 'user, nil, nil)
+				end
+		end else begin
+			self:ScriptRequest(l1, self.checkSlot, l2.target)
+		end;
+	inherited:pickActionScript(a1)
+end
+@@end

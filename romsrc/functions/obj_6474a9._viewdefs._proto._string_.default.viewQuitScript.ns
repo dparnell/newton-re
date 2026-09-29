@@ -1,0 +1,6 @@
+@@ 0x4771d1
+func() begin
+	target := notesText(self.viewChildren);
+	(if (if fields.edited then IsSoupEntry(fields)) then EntryChangeXmit(fields, 'mail))
+end
+@@end

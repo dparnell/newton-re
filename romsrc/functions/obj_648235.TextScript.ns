@@ -1,0 +1,5 @@
+@@ 0x4bda75
+func() begin
+	(if viewValue then "true" else "false")
+end
+@@end

@@ -1,0 +1,110 @@
+@@ 0x7735f1
+@@const kFunction_7736e9
+func(a1, a2) begin
+	local l1;
+	FormulasRegistry.(EnsureInternal(a1)) := a2;
+	if (if (l1 := GetRoot().Formulas) then l1.viewCObject) then begin
+			l1:RedoChildren()
+		end;
+	nil
+end
+@@const kFunction_7737f5
+func(a1) begin
+	local l1;
+	RemoveSlot(FormulasRegistry, a1);
+	if (if (l1 := GetRoot().Formulas) then l1.viewCObject) then begin
+			l1:RedoChildren()
+		end;
+	nil
+end
+@@const kLiteral_7739f1
+'[Array: MetricConversion, LoanPayment, NetPresentValue, CurrencyExchange, DateCalculator, DateConversion]
+@@const kFunction_773909
+func() begin
+	l1 := [Array: ];
+	l2 := [Array: ];
+	local l1;
+	local l2;
+	(foreach l3 in kLiteral_7739f1 do begin
+			if (l5 := FormulasRegistry.(l3)) then begin
+					AddArraySlot(l1, l5)
+				end
+		end);
+	(foreach l3, l5 deeply in FormulasRegistry do begin
+			if (if (not SetContains(kLiteral_7739f1, l3)) then (l5 = FormulasRegistry.(l3))) then begin
+					AddArraySlot(l2, l5)
+				end
+		end);
+	Sort(l2, '|str<|, 'overview);
+	ArrayMunger(l1, Length(l1), nil, l2, 0, nil)
+end
+@@const kLiteral_773b31
+"UpdatedExchangeRates:Apple"
+@@const kFunction_773aa5
+func() begin
+	local l1, l2;
+	if ((l2 := Query((l1 := GetStores()[0]:GetSoup(@276)), {type: 'index, IndexPath: 'tag, beginKey: kLiteral_773b31, endKey: kLiteral_773b31}):entry()) = nil) then begin
+			l2 := l1:Add({tag: kLiteral_773b31})
+		end;
+	return l2
+end
+@@const kROM_8294
+@8294
+@@const kFunction_773b89
+func(a1, a2) begin
+	local l1, l2;
+	if (l1 := GetUpdatedExchangeRates()).(a1) then begin
+			if (l2 := l1.(a1).(a2)) then begin
+					return l2
+				end
+		end;
+	if l1.(a2) then begin
+			if (l2 := l1.(a2).(a1)) then begin
+					return (1 / l2)
+				end
+		end;
+	(if ((kROM_8294.(a1) = nil) or (kROM_8294.(a2) = nil)) then return nil else (if (a1 = 'USA) then return kROM_8294.(a2) else return (kROM_8294.(a2) / kROM_8294.(a1))))
+end
+@@const kFunction_773c2d
+func(a1, a2, a3) begin
+	local l1;
+	if (l1 := GetUpdatedExchangeRates()).(a1) then begin
+			if l1.(a1).(a2) then begin
+					l1.(a1).(a2) := a3;
+					EntryChange(l1);
+					return nil
+				end
+		end;
+	if l1.(a2) then begin
+			if l1.(a2).(a1) then begin
+					l1.(a2).(a1) := (1 / a3);
+					EntryChange(l1);
+					return nil
+				end
+		end;
+	if l1.(a1) then begin
+			l1.(a1).(a2) := a3;
+			EntryChange(l1);
+			return nil
+		end;
+	if l1.(a2) then begin
+			l1.(a2).(a1) := (1 / a3);
+			EntryChange(l1);
+			return nil
+		end;
+	l1.(a1) := {};
+	l1.(a1).(a2) := a3;
+	EntryChange(l1)
+end
+@@main
+func() begin
+	functions.RegFormulas := kFunction_7736e9;
+	functions.UnRegFormulas := kFunction_7737f5;
+	FormulasRegistry._proto := '{MetricConversion: @8306, LoanPayment: @8307, NetPresentValue: @8308, CurrencyExchange: @8309, DateCalculator: @8310, DateConversion: @8311};
+	DefGlobalVar('FormulaList, [Array: ]);
+	functions.GetFormulas := kFunction_773909;
+	functions.GetUpdatedExchangeRates := kFunction_773aa5;
+	functions.GetExchangeRate := kFunction_773b89;
+	(functions.SetExchangeRate := kFunction_773c2d)
+end
+@@end

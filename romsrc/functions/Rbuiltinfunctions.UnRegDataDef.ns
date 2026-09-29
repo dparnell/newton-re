@@ -1,0 +1,7 @@
+@@ 0x4a8ecd
+func(a1) begin
+	RemoveSlot(_dataDefs, a1);
+	CallFrameBasedRegistryFns(StationeryChangeRegistry, [Array: 'remove, 'dataDef, a1, nil]);
+	nil
+end
+@@end

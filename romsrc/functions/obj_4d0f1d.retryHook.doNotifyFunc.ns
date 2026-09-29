@@ -1,0 +1,6 @@
+@@ 0x4cf309
+func(a1) begin
+	GetRoot().(a1):CancelStatusNotify();
+	GetRoot().(a1):ShowRetryDialog()
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x74e5b5
+func() begin
+	inherited:?viewSetupChildrenScript();
+	SetValue(self, 'viewBounds, self:GetTextBounds());
+	(entryLine.viewBounds := self:GetEntryLineBounds())
+end
+@@end

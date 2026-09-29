@@ -1,0 +1,5 @@
+@@ 0x4e6185
+func() begin
+	Perform(self, self.randomProc, [Array: ])
+end
+@@end

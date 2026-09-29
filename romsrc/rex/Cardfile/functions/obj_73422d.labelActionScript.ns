@@ -1,0 +1,9 @@
+@@ 0x7342d9
+func(a1) begin
+	local l1;
+	l1 := allNetworks[a1].id;
+	target.(path) := l1;
+	self:StartFlush();
+	self:UpdateNetwork(l1)
+end
+@@end

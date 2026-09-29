@@ -1,0 +1,80 @@
+@@ 0x50fce5
+func(title, findWords, dateRange, a4, a5, a6, a7) begin
+	local tempSearchTarget, startDate, stopDate;
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10;
+	tempSearchTarget := [Array: nil, nil];
+	if ((dateRange = nil) or IsInteger(dateRange)) then begin
+			dateRange := self:NormalizeDateRange(dateRange, a5)
+		end;
+	startDate := dateRange[0];
+	stopDate := dateRange[1];
+	l1 := func(a1) begin
+		l1 := true;
+		if title then begin
+				l1 := StrEqual(self:GetMeetingText(a1), title)
+			end;
+		if (not l1) then begin
+				return nil
+			end;
+		if findWords then begin
+				tempSearchTarget[0] := self:GetMeetingText(a1);
+				l1 := FindStringInFrame(tempSearchTarget, findWords, nil)
+			end;
+		if (if (not l1) then a1.InstanceNotesData) then begin
+				local l1;
+				(foreach l2 in a1.InstanceNotesData do begin
+						local l4, l5;
+						if l2[1] then begin
+								l4 := ResolveEntryAlias(l2[1]);
+								tempSearchTarget[1] := l4;
+								if l4 then begin
+										l1 := FindStringInFrame(tempSearchTarget, findWords, nil)
+									end;
+								if l1 then begin
+										break
+									end
+							end
+					end)
+			end;
+		if (not l1) then begin
+				return nil
+			end;
+		if dateRange then begin
+				l1 := (if ((l5 := NextMeeting(startDate, a1)) > 0) then (l5 <= stopDate))
+			end;
+		l1
+	end;
+	l3 := (l2 := Query(a4, {type: 'index, indexPath: 'mtgStopDate, beginKey: 0, validTest: l1})):entry();
+	l4 := 0;
+	(while l3 do begin
+			l7 := self:MakeInstanceOfRepeatingMeeting(l3, 0);
+			l8 := (if findWords then FindStringInFrame([Array: l3.mtgText], findWords, nil));
+			l9 := startDate;
+			(loop begin
+					if ((l9 := NextMeeting(l9, l3)) = 0) then begin
+							break
+						end;
+					if (l9 > stopDate) then begin
+							break
+						end;
+					if (l6 := self:FindException(l9, l3)) then begin
+							l5 := l6
+						end else begin
+							(l5 := Clone(l7)).mtgStartDate := l9
+						end;
+					l10 := [Array: l3.mtgText, nil];
+					if (((not findWords) or l8) or (if ((l10[1] := self:GetNotesData(l5)[1]) <> nil) then FindStringInFrame(l10, findWords, nil))) then begin
+							AddArraySlot(a7, l5);
+							if ((l4 := (l4 + 1)) >= a6) then begin
+									break
+								end
+						end;
+					(l9 := (l9 + 1))
+				end);
+			if (l4 >= a6) then begin
+					break
+				end;
+			(l3 := l2:Next())
+		end)
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x5a72e9
+func(a1, a2, a3) begin
+	local l1;
+	(l1 := GetRoot().iobox.allDataDefs.smartMail:MakeNewEntry()).options := DeepClone(a1);
+	l1.setup := DeepClone(a2);
+	l1.arg := a3;
+	l1
+end
+@@end

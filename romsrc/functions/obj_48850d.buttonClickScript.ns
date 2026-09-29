@@ -1,0 +1,5 @@
+@@ 0x4884c9
+func() begin
+	base:UpdateAndClose()
+end
+@@end

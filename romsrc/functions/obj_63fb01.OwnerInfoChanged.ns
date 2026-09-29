@@ -1,0 +1,10 @@
+@@ 0x4c85c5
+func() begin
+	local l1;
+	l1 := userConfiguration;
+	fields.fromTitle := l1.currentFaxTitle;
+	printChoose:SyncView();
+	printChoose:RedoChildren();
+	(fields.fromRef := l1.currentPersona)
+end
+@@end

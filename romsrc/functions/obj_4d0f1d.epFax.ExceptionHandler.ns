@@ -1,0 +1,9 @@
+@@ 0x4d0e5d
+func(a1) begin
+	local l1;
+	(if (not ep:ignoreError((l1 := a1.data))) then begin
+			ep:CommitSession(l1);
+			ep:DoDisconnect(nil)
+		end)
+end
+@@end

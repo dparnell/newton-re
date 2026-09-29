@@ -1,0 +1,26 @@
+@@ 0x447a35
+func() begin
+	local l1;
+	l1 := self:LocalBox();
+	self:SetAcceleration(dragAcceleration);
+	fMaxX := max(0, (currentSize.right - l1.right));
+	fMaxY := max(0, (currentSize.bottom - l1.bottom));
+	if (if cacheScaledImage then (currentSize.right < usefulSizes.fullResolution.right)) then begin
+			try begin
+					myImage := nil;
+					myImage := MakeBitmap(currentSize.right, currentSize.bottom, {store: bitmapStore});
+					DrawIntoBitmap(myUnscaledImage, {transform: [Array: fullSize, currentSize]}, myImage);
+					ClearVBOCache(myImage);
+					imageSize := currentSize
+				end onexception |evt.ex.fr.store| do begin
+					ClearVBOCache(myImage);
+					myImage := myUnscaledImage;
+					imageSize := fullSize
+				end
+		end else begin
+			myImage := myUnscaledImage;
+			imageSize := fullSize
+		end;
+	SetValue(vImageContainer, 'viewBounds, currentSize)
+end
+@@end

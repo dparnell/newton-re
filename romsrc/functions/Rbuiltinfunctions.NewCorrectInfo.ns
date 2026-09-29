@@ -1,0 +1,7 @@
+@@ 0x46e1f5
+func() begin
+	local l1;
+	(l1 := Clone(@614)).info := [Array: ];
+	l1
+end
+@@end

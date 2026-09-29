@@ -1,0 +1,9 @@
+@@ 0x4a8529
+func() begin
+	local l1;
+	if (if IsString((l1 := theCursor:EntryKey())) then (StrLen(l1) > 6)) then begin
+			l1 := Substr(l1, 0, 6)
+		end;
+	l1
+end
+@@end

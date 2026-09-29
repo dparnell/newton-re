@@ -1,0 +1,71 @@
+@@ 0x79783d names
+func(aBeforeDate, aRemoveWhich, progressContext) begin
+	self:RollItemsOver(nil);
+	aBeforeDate := (aBeforeDate - (aBeforeDate mod 1440));
+	self:GetToDoSoup();
+	cursor := dataSoup:Query({type: 'index, indexPath: 'date, startKey: 1, validTest: func(e) begin
+		(e.date < aBeforeDate)
+	end});
+	(loop begin
+			if ((Entry := cursor:Entry()) = nil) then begin
+					break
+				end;
+			entryChanged := nil;
+			local cursor;
+			local Entry;
+			local topics;
+			local entryChanged;
+			local nTasks;
+			(for ti := ((nTasks := Length((topics := Entry.topics))) - 1) to 0 by -1 do begin
+					if (aRemoveWhich = 'done) then begin
+							if topics[ti].mtgDone then begin
+									ArrayRemoveCount(topics, ti, 1);
+									entryChanged := true
+								end
+						end else begin
+							ArrayRemoveCount(topics, ti, 1);
+							entryChanged := true
+						end
+				end);
+			if (Length(topics) = 0) then begin
+					EntryRemoveFromSoupXmit(Entry, 'todo)
+				end else begin
+					if entryChanged then begin
+							EntryChangeXmit(Entry, 'todo)
+						end
+				end;
+			cursor:Next();
+			(if progressContext then progressContext:UpdateProgressBar(5))
+		end);
+	cursor := dataSoup:Query({type: 'index, indexPath: 'date, startKey: 0, endTest: func(e) begin
+		(e.date > 0)
+	end});
+	(loop begin
+			if ((Entry := cursor:Entry()) = nil) then begin
+					break
+				end;
+			entryChanged := nil;
+			(for ti := ((nTasks := Length((topics := Entry.topics))) - 1) to 0 by -1 do begin
+					if topics[ti].repeatDone then begin
+							local d;
+							local s;
+							local which;
+							(foreach s, d in topics[ti].repeatDone do begin
+									if (d < aBeforeDate) then begin
+											ArrayRemoveCount(topics[ti].repeatDone, s, 1);
+											entryChanged := true
+										end
+								end)
+						end
+				end);
+			if (Length(topics) = 0) then begin
+					EntryRemoveFromSoupXmit(Entry, 'todo)
+				end else begin
+					if entryChanged then begin
+							EntryChangeXmit(Entry, 'todo)
+						end
+				end;
+			cursor:Next()
+		end)
+end
+@@end

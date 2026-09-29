@@ -1,0 +1,14 @@
+@@ 0x452f5d
+func() begin
+	if (not canScrollDown) then begin
+			return true
+		end;
+	self:LockScreen(true);
+	inherited:?viewScrollDownScript();
+	AZTabs:Update();
+	upDownScroller:Update();
+	self:LockScreen(nil);
+	listBase:MarkCursorPosition();
+	true
+end
+@@end

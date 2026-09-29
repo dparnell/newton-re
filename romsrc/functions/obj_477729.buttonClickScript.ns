@@ -1,0 +1,7 @@
+@@ 0x45bed5
+func(a1) begin
+	local l1;
+	clock:ShowTime((l1 := GetAlarm(Stringer([Array: self.ListItems[a1], $:, ownerName])).callBackParams[0]).hours, l1.minutes);
+	days:Initialize(l1.days, nil)
+end
+@@end

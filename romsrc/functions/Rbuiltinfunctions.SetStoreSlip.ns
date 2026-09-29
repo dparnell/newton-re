@@ -1,0 +1,21 @@
+@@ 0x497375
+func(a1, a2) begin
+	local l1, l2, l3;
+	if IsReadOnly(a1) then begin
+			l1 := GetVBOStore(ObjectPkgRef(a1))
+		end else begin
+			if IsFrame(a1) then begin
+					l1 := a1
+				end
+		end;
+	(if l1 then begin
+			if (l2 := LSearch(StoreSlipRegistry.storeSlips, l1, 0, '|=|, '_openedForStore)) then begin
+					StoreSlipRegistry.storeSlips[l2]:Close();
+					RemoveSlot(StoreSlipRegistry.storeSlips, l2)
+				end;
+			(l3 := BuildContext(a2))._openedForStore := l1;
+			AddArraySlot(StoreSlipRegistry.storeSlips, l3);
+			l3
+		end)
+end
+@@end

@@ -1,0 +1,11 @@
+@@ 0x5b8c31
+func(a1, a2) begin
+	if (BAnd(a2, 128) <> 0) then begin
+			Capitalize(a1)
+		end;
+	if (BAnd(a2, 64) <> 0) then begin
+			Upcase(a1)
+		end;
+	return a1
+end
+@@end

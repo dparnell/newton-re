@@ -1,0 +1,15 @@
+@@ 0x49e175
+func() begin
+	local l1, l2, l3;
+	_entryViewForFiling := self;
+	(if ((l1 := nextEntry) < Length(entries)) then begin
+			l2 := (target := entries[l1]);
+			targetView := self;
+			viewDef := (if (targetViewDef := (if entryViewDefs then entryViewDefs[l1])) then targetViewDef.symbol);
+			if (l3 := GetEntryDataDef(l2)) then begin
+					l3:?SetupForm(l2, self)
+				end;
+			(nextEntry := (l1 + 1))
+		end)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x47fbd1
+func() begin
+	return self:GetConfig('noworlater)
+end
+@@end

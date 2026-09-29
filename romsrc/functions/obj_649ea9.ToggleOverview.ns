@@ -1,0 +1,8 @@
+@@ 0x4c5659
+func() begin
+	overviewMode := (not overviewMode);
+	pieces := nil;
+	scrollOrigin := -1;
+	self:Dirty()
+end
+@@end

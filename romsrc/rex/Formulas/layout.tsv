@@ -1,0 +1,1287 @@
+# the objects' area: 0x769890, 0xa6d0 bytes; the byte between objects; the objects' alignment
+area	769890	a6d0	bf	4
+769890	obj_769891	41	gc=1
+7698a0	obj_769891[0]	43	map=map_7698d1
+7698d0	map_7698d1	41
+769904	'sequence	40
+769920	'iconPro	40
+769938	'_ExportTable	40
+769958	'app	40
+76996c	'text	40
+769984	'icon	40
+76999c	'theForm	40
+7699b4	'devInstallScript	40
+7699d8	'installScript	40
+7699f8	obj_769891[0].iconPro	43	map=map_769a0d
+769a0c	map_769a0d	41
+769a20	map_769a21	41
+769a34	'unhilited	40
+769a50	'hilited	40
+769a68	obj_769891[0].iconPro.unhilited	43	map=map_769a81
+769a80	map_769a81	41
+769a9c	'bounds	40
+769ab4	'mask	40
+769acc	'colorData	40
+769ae8	obj_769891[0].iconPro.unhilited.bounds	43	map=map_769b05
+769b04	map_769b05	41
+769b24	'left	40
+769b3c	'top	40
+769b50	'right	40
+769b68	'bottom	40
+769b80	obj_769891[0].iconPro.unhilited.mask	40
+769c00	obj_769891[0].iconPro.unhilited.colorData	41
+769c14	'|Array|	40
+769c2c	obj_769891[0].iconPro.unhilited.colorData[0]	43	map=map_769c41
+769c40	map_769c41	41
+769c58	'cbits	40
+769c70	'bitDepth	40
+769c8c	obj_769891[0].iconPro.unhilited.colorData[0].cbits	40
+769e38	obj_769891[0].iconPro.unhilited.colorData[1]	43	map=map_769c41
+769e4c	obj_769891[0].iconPro.unhilited.colorData[1].cbits	40
+769ecc	'bits	40
+769ee4	obj_769891[0].iconPro.hilited	43	map=map_769a81
+769efc	obj_769891[0].iconPro.hilited.bounds	43	map=map_769b05
+769f18	obj_769891[0].iconPro.hilited.mask	40
+769f98	obj_769891[0].iconPro.hilited.colorData	41
+769fac	obj_769891[0].iconPro.hilited.colorData[0]	43	map=map_769c41
+769fc0	obj_769891[0].iconPro.hilited.colorData[0].cbits	40
+76a16c	obj_769891[0].iconPro.hilited.colorData[1]	43	map=map_769c41
+76a180	obj_769891[0].iconPro.hilited.colorData[1].cbits	40
+76a200	obj_769891[0]._ExportTable	41
+76a210	obj_769891[0]._ExportTable[0]	43	map=map_76a22d
+76a22c	map_76a22d	41
+76a24c	'name	40
+76a264	'major	40
+76a27c	'minor	40
+76a294	'objects	40
+76a2ac	'FormulasInternal	40
+76a2d0	obj_769891[0]._ExportTable[0].objects	41
+76a328	obj_76a329	43	map=map_76a405
+76a404	map_76a405	41
+76a4e4	'USA	40
+76a4f8	'Australia	40
+76a514	'Thailand	40
+76a530	'Russia	40
+76a548	'Argentinia	40
+76a564	'Turkey	40
+76a57c	'Canada	40
+76a594	'Germany	40
+76a5ac	'Italy	40
+76a5c4	'Spain	40
+76a5dc	'SaudiArabia	40
+76a5f8	'Netherlands	40
+76a614	'Singapore	40
+76a630	'Ecuador	40
+76a648	'Philippines	40
+76a664	'Peru	40
+76a67c	'Uruguay	40
+76a694	'Brazil	40
+76a6ac	'Taiwan	40
+76a6c4	'France	40
+76a6dc	'China	40
+76a6f4	'Portugal	40
+76a710	'Switzerland	40
+76a72c	'NewZealand	40
+76a748	'Malaysia	40
+76a764	'Belgium	40
+76a77c	'Czech	40
+76a794	'Sweden	40
+76a7ac	'Venezuela	40
+76a7c8	'Indonesia	40
+76a7e4	'Chile	40
+76a7fc	'India	40
+76a814	'Jordan	40
+76a82c	'Poland	40
+76a844	'Norway	40
+76a85c	'Denmark	40
+76a874	'HongKong	40
+76a890	'Pakistan	40
+76a8ac	'Colombia	40
+76a8c8	'Japan	40
+76a8e0	'SouthKorea	40
+76a8fc	'Ireland	40
+76a914	'Lebanon	40
+76a92c	'SouthAfrica	40
+76a948	'Israel	40
+76a960	'Austria	40
+76a978	'UK	40
+76a98c	'Egypt	40
+76a9a4	'Greece	40
+76a9bc	'Finland	40
+76a9d4	'Mexico	40
+76a9ec	'Hungary	40
+76aa04	obj_76aa05	40
+76aa18	'|Real|	40
+76aa30	obj_76a329.Australia	40
+76aa44	obj_76a329.Thailand	40
+76aa58	obj_76a329.Russia	40
+76aa6c	obj_76a329.Argentinia	40
+76aa80	obj_76a329.Turkey	40
+76aa94	obj_76a329.Canada	40
+76aaa8	obj_76a329.Germany	40
+76aabc	obj_76a329.Italy	40
+76aad0	obj_76a329.Spain	40
+76aae4	obj_76a329.SaudiArabia	40
+76aaf8	obj_76a329.Netherlands	40
+76ab0c	obj_76a329.Singapore	40
+76ab20	obj_76a329.Ecuador	40
+76ab34	obj_76a329.Philippines	40
+76ab48	obj_76a329.Peru	40
+76ab5c	obj_76a329.Uruguay	40
+76ab70	obj_76a329.Brazil	40
+76ab84	obj_76a329.Taiwan	40
+76ab98	obj_76a329.France	40
+76abac	obj_76a329.China	40
+76abc0	obj_76a329.Portugal	40
+76abd4	obj_76a329.Switzerland	40
+76abe8	obj_76a329.NewZealand	40
+76abfc	obj_76a329.Malaysia	40
+76ac10	obj_76a329.Belgium	40
+76ac24	obj_76a329.Czech	40
+76ac38	obj_76a329.Sweden	40
+76ac4c	obj_76a329.Venezuela	40
+76ac60	obj_76a329.Indonesia	40
+76ac74	obj_76a329.Chile	40
+76ac88	obj_76a329.India	40
+76ac9c	obj_76a329.Jordan	40
+76acb0	obj_76a329.Poland	40
+76acc4	obj_76a329.Norway	40
+76acd8	obj_76a329.Denmark	40
+76acec	obj_76a329.HongKong	40
+76ad00	obj_76a329.Pakistan	40
+76ad14	obj_76a329.Colombia	40
+76ad28	obj_76a329.Japan	40
+76ad3c	obj_76a329.SouthKorea	40
+76ad50	obj_76a329.Ireland	40
+76ad64	obj_76a329.Lebanon	40
+76ad78	obj_76a329.SouthAfrica	40
+76ad8c	obj_76a329.Israel	40
+76ada0	obj_76a329.Austria	40
+76adb4	obj_76a329.UK	40
+76adc8	obj_76a329.Egypt	40
+76addc	obj_76a329.Greece	40
+76adf0	obj_76a329.Finland	40
+76ae04	obj_76a329.Mexico	40
+76ae18	obj_76a329.Hungary	40
+76ae2c	obj_76ae2d	43	map=map_76ae71
+76ae70	map_76ae71	41
+76aeb8	'viewBounds	40
+76aed4	'viewFlags	40
+76aef0	'viewFormat	40
+76af0c	'stepChildren	40
+76af2c	'viewSetupFormScript	40
+76af50	'calcLineValue	40
+76af70	'SetNumericValue	40
+76af90	'SetNumericValueString	40
+76afb8	'GetNumericValue	40
+76afd8	'changeInProgress	40
+76affc	'FormulasNumberToString	40
+76b024	'viewClass	40
+76b040	'value	40
+76b058	'stepAllocateContext	40
+76b07c	obj_76ae2d.viewBounds	43	map=map_76b099
+76b098	map_76b099	41
+76b0b8	obj_76ae2d.stepChildren	41
+76b0c8	obj_76b0c9	43	map=map_76b10d
+76b10c	map_76b10d	41
+76b154	'viewChangedScript	40
+76b178	'viewLineSpacing	40
+76b198	'FormulasStringToNumber	40
+76b1c0	'FormulasStripBadChars	40
+76b1e8	'viewJustify	40
+76b204	'dictionaries	40
+76b224	'ViewRawInkScript	40
+76b248	'OnlyNumbersAllowed	40
+76b26c	'_proto	40
+76b284	'preAllocatedContext	40
+76b2a8	obj_76b0c9.viewBounds	43	map=map_76b099
+76b2c4	obj_76b0c9.viewChangedScript	43	map=map_76b2e5
+76b2e4	map_76b2e5	41
+76b308	'class	40
+76b320	'instructions	40
+76b340	'literals	40
+76b35c	'argFrame	40
+76b378	'numArgs	40
+76b390	obj_76b0c9.viewChangedScript.instructions	40
+76b488	obj_76b0c9.viewChangedScript.literals	41
+76b4fc	'StrLen	40
+76b514	obj_76b515	40
+76b524	'|string|	40
+76b53c	'StrEqual	40
+76b558	obj_76b559	40
+76b568	obj_76b0c9.viewChangedScript.literals[6]	40
+76b578	obj_76b0c9.viewChangedScript.literals[7]	40
+76b58c	obj_76b0c9.viewChangedScript.literals[8]	40
+76b5a0	'AddDeferredSend	40
+76b5c0	obj_76b5c1	40
+76b5e0	obj_76b5e1	40
+76b63c	'Notify	40
+76b654	'integerField	40
+76b674	'floor	40
+76b68c	'lineNumber	40
+76b6a8	'SolveFormula	40
+76b6c8	obj_76b6c9	40
+76b6d8	'rejectAll	40
+76b6f4	'StringFilter	40
+76b714	'ClearFormula	40
+76b734	obj_76b0c9.FormulasStringToNumber	43	map=map_76b2e5
+76b754	obj_76b0c9.FormulasStringToNumber.instructions	40
+76b7cc	obj_76b0c9.FormulasStringToNumber.literals	41
+76b808	'Substr	40
+76b820	'GetLocale	40
+76b83c	obj_76b0c9.FormulasStringToNumber.literals[9]	41
+76b850	'pathExpr	40
+76b86c	'numberFormat	40
+76b88c	'groupSepStr	40
+76b8a8	'StringToNumber	40
+76b8c8	'negate	40
+76b8e0	obj_76b0c9.FormulasStripBadChars	43	map=map_76b2e5
+76b900	obj_76b0c9.FormulasStripBadChars.instructions	40
+76b9e4	obj_76b0c9.FormulasStripBadChars.literals	41
+76ba2c	obj_76b0c9.FormulasStripBadChars.literals[7]	40
+76ba50	'decimalPoint	40
+76ba70	'passAll	40
+76ba88	'StrFilled	40
+76baa4	'StrPos	40
+76babc	obj_76b0c9.dictionaries	41
+76bacc	obj_76b0c9.ViewRawInkScript	43	map=map_76b2e5
+76baec	obj_76b0c9.ViewRawInkScript.instructions	40
+76bb08	obj_76b0c9.ViewRawInkScript.literals	41
+76bb1c	'AddProcrastinatedSend	40
+76bb44	obj_76b0c9.OnlyNumbersAllowed	43	map=map_76b2e5
+76bb64	obj_76b0c9.OnlyNumbersAllowed.instructions	40
+76bb7c	obj_76b0c9.OnlyNumbersAllowed.literals	41
+76bb94	obj_76b0c9.viewSetupFormScript	43	map=map_76b2e5
+76bbb4	obj_76b0c9.viewSetupFormScript.instructions	40
+76bbcc	obj_76b0c9.viewSetupFormScript.literals	41
+76bbe8	'_keyboard	40
+76bc04	'GetRoot	40
+76bc1c	'numericKeyboard	40
+76bc3c	obj_76ae2d.viewSetupFormScript	43	map=map_76b2e5
+76bc5c	obj_76ae2d.viewSetupFormScript.instructions	40
+76bc80	obj_76ae2d.viewSetupFormScript.literals	41
+76bca8	obj_76ae2d.viewSetupFormScript.literals[1]	41
+76bcbc	'indent	40
+76bcd4	obj_76ae2d.viewSetupFormScript.literals[3]	41
+76bce8	obj_76ae2d.viewSetupFormScript.literals[4]	41
+76bcfc	'rightmargin	40
+76bd18	obj_76ae2d.SetNumericValue	43	map=map_76b2e5
+76bd38	obj_76ae2d.SetNumericValue.instructions	40
+76bd70	obj_76ae2d.SetNumericValue.literals	41
+76bd98	'IsFinite	40
+76bdb4	obj_76ae2d.SetNumericValue.literals[3]	40
+76bdf8	obj_76ae2d.SetNumericValueString	43	map=map_76b2e5
+76be18	obj_76ae2d.SetNumericValueString.instructions	40
+76be38	obj_76ae2d.SetNumericValueString.literals	41
+76be54	'SetValue	40
+76be70	obj_76ae2d.GetNumericValue	43	map=map_76b2e5
+76be90	obj_76be91	40
+76bea0	obj_76ae2d.GetNumericValue.literals	41
+76beb0	obj_76ae2d.FormulasNumberToString	43	map=map_76b2e5
+76bed0	obj_76ae2d.FormulasNumberToString.instructions	40
+76bfd4	obj_76ae2d.FormulasNumberToString.literals	41
+76c034	obj_76c035	40
+76c044	obj_76ae2d.FormulasNumberToString.literals[2]	40
+76c05c	'FormattedNumberStr	40
+76c080	'abs	40
+76c094	obj_76c095	40
+76c0a8	obj_76ae2d.FormulasNumberToString.literals[6]	40
+76c0c0	obj_76ae2d.FormulasNumberToString.literals[10]	41
+76c0d4	obj_76ae2d.FormulasNumberToString.literals[11]	40
+76c0f4	'decimalPlaces	40
+76c114	obj_76ae2d.FormulasNumberToString.literals[15]	40
+76c12c	obj_76ae2d.FormulasNumberToString.literals[16]	41
+76c140	obj_76ae2d.FormulasNumberToString.literals[17]	40
+76c158	obj_76c159	40
+76c170	obj_76ae2d.FormulasNumberToString.literals[19]	41
+76c184	obj_76ae2d.FormulasNumberToString.literals[20]	40
+76c198	obj_76ae2d.stepAllocateContext	41
+76c1ac	obj_76c1ad	43	map=map_76c201
+76c200	map_76c201	41
+76c258	'CalcLineLabelClickScript	40
+76c284	'label	40
+76c29c	obj_76c1ad.viewBounds	43	map=map_76b099
+76c2b8	obj_76c1ad.stepChildren	41
+76c2cc	obj_76c2cd	43	map=map_76c2f5
+76c2f4	map_76c2f5	41
+76c320	'viewFont	40
+76c33c	'viewClickScript	40
+76c35c	obj_76c35d	40
+76c380	obj_76c2cd.viewBounds	43	map=map_769b05
+76c39c	obj_76c2cd.viewClickScript	43	map=map_76b2e5
+76c3bc	obj_76c3bd	40
+76c3e0	obj_76c2cd.viewClickScript.literals	41
+76c3f8	'TrackHilite	40
+76c414	'hilite	40
+76c42c	obj_76c42d	43	map=map_76c441
+76c440	map_76c441	41
+76c458	obj_76c1ad.viewSetupFormScript	43	map=map_76b2e5
+76c478	obj_76c479	40
+76c48c	obj_76c1ad.viewSetupFormScript.literals	41
+76c4a8	'calcLineLabel	40
+76c4c8	obj_76c1ad.CalcLineLabelClickScript	43	map=map_76b2e5
+76c4e8	obj_76c1ad.CalcLineLabelClickScript.instructions	40
+76c4fc	obj_76c1ad.GetNumericValue	43	map=map_76b2e5
+76c51c	obj_76c51d	40
+76c530	obj_76c1ad.GetNumericValue.literals	41
+76c544	obj_76c1ad.SetNumericValue	43	map=map_76b2e5
+76c564	obj_76c565	40
+76c578	obj_76c1ad.SetNumericValue.literals	41
+76c58c	obj_76c1ad.stepAllocateContext	41
+76c5a8	obj_76c5a9	43	map=map_76c5e5
+76c5e4	map_76c5e5	41
+76c624	'Div12	40
+76c63c	'UndoDiv12	40
+76c658	'CalcLine	40
+76c674	obj_76c5a9.viewBounds	43	map=map_76b099
+76c690	obj_76c5a9.stepChildren	41
+76c6a4	obj_76c6a5	43	map=map_76c6c1
+76c6c0	map_76c6c1	41
+76c6e0	obj_76c5a9.stepChildren[1]	43	map=map_76c701
+76c700	map_76c701	41
+76c724	'buttonClickScript	40
+76c748	obj_76c5a9.stepChildren[1].buttonClickScript	43	map=map_76b2e5
+76c768	obj_76c769	40
+76c778	obj_76c5a9.stepChildren[1].buttonClickScript.literals	41
+76c788	obj_76c5a9.stepChildren[1].text	40
+76c79c	obj_76c5a9.stepChildren[1].viewBounds	43	map=map_76c7b9
+76c7b8	map_76c7b9	41
+76c7d8	obj_76c5a9.GetNumericValue	43	map=map_76b2e5
+76c7f8	obj_76c5a9.GetNumericValue.literals	41
+76c80c	obj_76c5a9.SetNumericValue	43	map=map_76b2e5
+76c82c	obj_76c5a9.SetNumericValue.literals	41
+76c840	obj_76c5a9.Div12	43	map=map_76b2e5
+76c860	obj_76c5a9.Div12.instructions	40
+76c894	obj_76c5a9.Div12.literals	41
+76c8bc	'AddUndoAction	40
+76c8dc	obj_76c5a9.UndoDiv12	43	map=map_76b2e5
+76c8fc	obj_76c8fd	40
+76c91c	obj_76c5a9.UndoDiv12.literals	41
+76c944	obj_76c5a9.stepAllocateContext	41
+76c958	obj_76c959	43	map=map_76c995
+76c994	map_76c995	41
+76c9d4	'Times12	40
+76c9ec	'UndoTimes12	40
+76ca08	obj_76c959.viewBounds	43	map=map_76b099
+76ca24	obj_76c959.stepChildren	41
+76ca38	obj_76ca39	43	map=map_76ca51
+76ca50	map_76ca51	41
+76ca6c	obj_76c959.stepChildren[1]	43	map=map_76c701
+76ca8c	obj_76c959.stepChildren[1].buttonClickScript	43	map=map_76b2e5
+76caac	obj_76c959.stepChildren[1].buttonClickScript.literals	41
+76cabc	obj_76c959.stepChildren[1].text	40
+76cad0	obj_76c959.stepChildren[1].viewBounds	43	map=map_76c7b9
+76caec	obj_76c959.GetNumericValue	43	map=map_76b2e5
+76cb0c	obj_76c959.GetNumericValue.literals	41
+76cb20	obj_76c959.SetNumericValue	43	map=map_76b2e5
+76cb40	obj_76c959.SetNumericValue.literals	41
+76cb54	obj_76c959.Times12	43	map=map_76b2e5
+76cb74	obj_76c959.Times12.instructions	40
+76cba8	obj_76c959.Times12.literals	41
+76cbd0	obj_76c959.UndoTimes12	43	map=map_76b2e5
+76cbf0	obj_76c959.UndoTimes12.literals	41
+76cc18	obj_76c959.stepAllocateContext	41
+76cc2c	obj_76cc2d	43	map=map_76cc6d
+76cc6c	map_76cc6d	41
+76ccb0	'infoLineLabel	40
+76ccd0	obj_76cc2d.viewBounds	43	map=map_76b099
+76ccec	obj_76cc2d.stepChildren	41
+76cd00	obj_76cd01	43	map=map_76cd25
+76cd24	map_76cd25	41
+76cd4c	obj_76cd4d	40
+76cd6c	obj_76cd01.viewBounds	43	map=map_76b099
+76cd88	obj_76cd01.viewSetupFormScript	43	map=map_76b2e5
+76cda8	obj_76cd01.viewSetupFormScript.instructions	40
+76cdc0	obj_76cd01.viewSetupFormScript.literals	41
+76cdd8	obj_76cdd9	43	map=map_76ce09
+76ce08	map_76ce09	41
+76ce3c	obj_76cdd9.viewBounds	43	map=map_76b099
+76ce58	obj_76cdd9.viewSetupFormScript	43	map=map_76b2e5
+76ce78	obj_76cdd9.viewSetupFormScript.instructions	40
+76cea0	obj_76cdd9.viewSetupFormScript.literals	41
+76cec4	obj_76cc2d.viewSetupFormScript	43	map=map_76b2e5
+76cee4	obj_76cc2d.viewSetupFormScript.literals	41
+76cf00	obj_76cc2d.SetNumericValueString	43	map=map_76b2e5
+76cf20	obj_76cc2d.SetNumericValueString.instructions	40
+76cf44	obj_76cc2d.SetNumericValueString.literals	41
+76cf60	obj_76cc2d.stepAllocateContext	41
+76cf7c	obj_76cf7d	43	map=map_76cfd1
+76cfd0	map_76cfd1	41
+76d028	'pickerItemNumber	40
+76d04c	'GetPickerItemNumber	40
+76d070	'ResetPicker	40
+76d08c	'SetIntegerField	40
+76d0ac	obj_76cf7d.viewBounds	43	map=map_76b099
+76d0c8	obj_76cf7d.stepChildren	41
+76d0dc	obj_76d0dd	43	map=map_76d111
+76d110	map_76d111	41
+76d148	'labelCommands	40
+76d168	'labelActionScript	40
+76d18c	'textSetup	40
+76d1a8	obj_76d0dd.labelCommands	41
+76d1bc	obj_76d0dd.labelCommands[0]	40
+76d1d8	obj_76d0dd.labelCommands[1]	40
+76d1f4	obj_76d0dd.viewBounds	43	map=map_769b05
+76d210	obj_76d0dd.viewSetupFormScript	43	map=map_76b2e5
+76d230	obj_76d0dd.viewSetupFormScript.instructions	40
+76d24c	obj_76d0dd.viewSetupFormScript.literals	41
+76d270	'defaultItem	40
+76d28c	'labelItems	40
+76d2a8	obj_76d0dd.text	40
+76d2c0	obj_76d0dd.labelActionScript	43	map=map_76b2e5
+76d2e0	obj_76d0dd.labelActionScript.instructions	40
+76d300	obj_76d0dd.labelActionScript.literals	41
+76d328	'ClearAllFields	40
+76d348	obj_76d0dd.textSetup	43	map=map_76b2e5
+76d368	obj_76d369	40
+76d37c	obj_76d0dd.textSetup.literals	41
+76d390	obj_76d391	43	map=map_76d3a9
+76d3a8	map_76d3a9	41
+76d3c4	obj_76cf7d.GetNumericValue	43	map=map_76b2e5
+76d3e4	obj_76cf7d.GetNumericValue.literals	41
+76d3f8	obj_76cf7d.SetNumericValue	43	map=map_76b2e5
+76d418	obj_76cf7d.SetNumericValue.literals	41
+76d42c	obj_76cf7d.GetPickerItemNumber	43	map=map_76b2e5
+76d44c	obj_76cf7d.GetPickerItemNumber.literals	41
+76d45c	obj_76cf7d.ResetPicker	43	map=map_76b2e5
+76d47c	obj_76cf7d.ResetPicker.instructions	40
+76d4ac	obj_76cf7d.ResetPicker.literals	41
+76d4e0	'UpdateText	40
+76d4fc	obj_76cf7d.SetIntegerField	43	map=map_76b2e5
+76d51c	obj_76cf7d.SetIntegerField.instructions	40
+76d530	obj_76cf7d.SetIntegerField.literals	41
+76d548	obj_76cf7d.stepAllocateContext	41
+76d564	obj_76d565	43	map=map_76d5bd
+76d5bc	map_76d5bd	41
+76d618	'ChangeCountry	40
+76d638	'Currency	40
+76d654	obj_76d565.viewBounds	43	map=map_76b099
+76d670	obj_76d565.stepChildren	41
+76d688	obj_76d689	43	map=map_76d6b5
+76d6b4	map_76d6b5	41
+76d6e4	'RestyleString	40
+76d704	obj_76d689.viewBounds	43	map=map_76b099
+76d720	obj_76d689.viewClickScript	43	map=map_76b2e5
+76d740	obj_76d689.viewClickScript.literals	41
+76d758	obj_76d689.RestyleString	43	map=map_76b2e5
+76d778	obj_76d779	40
+76d79c	obj_76d689.RestyleString.literals	41
+76d7c0	'StyledStrTruncate	40
+76d7e4	obj_76d7e5	43	map=map_76d80d
+76d80c	map_76d80d	41
+76d838	obj_76d7e5.viewBounds	43	map=map_76b099
+76d854	obj_76d7e5.RestyleString	43	map=map_76b2e5
+76d874	obj_76d7e5.RestyleString.literals	41
+76d898	obj_76d899	43	map=map_76d8b1
+76d8b0	map_76d8b1	41
+76d8cc	obj_76d899.viewBounds	43	map=map_76b099
+76d8e8	obj_76d565.viewSetupFormScript	43	map=map_76b2e5
+76d908	obj_76d565.viewSetupFormScript.instructions	40
+76d940	obj_76d565.viewSetupFormScript.literals	41
+76d974	'country	40
+76d98c	'GetCountryEntry	40
+76d9ac	obj_76d565.CalcLineLabelClickScript	43	map=map_76b2e5
+76d9cc	obj_76d565.CalcLineLabelClickScript.instructions	40
+76da04	obj_76d565.CalcLineLabelClickScript.literals	41
+76da3c	'GlobalBox	40
+76da58	'StrFontWidth	40
+76da78	obj_76d565.CalcLineLabelClickScript.literals[7]	41
+76da8c	'spots	40
+76daa4	obj_76d565.CalcLineLabelClickScript.literals[8]	43	map=map_76b2e5
+76dac4	obj_76d565.CalcLineLabelClickScript.literals[8].instructions	40
+76dad8	obj_76d565.CalcLineLabelClickScript.literals[8].literals	41
+76dae8	obj_76d565.CalcLineLabelClickScript.literals[8].argFrame	43	map=map_76db01
+76db00	map_76db01	41
+76db1c	'_nextArgFrame	40
+76db3c	'_parent	40
+76db54	'_implementor	40
+76db74	obj_76d565.CalcLineLabelClickScript.literals[9]	41
+76db8c	'PickActionScript	40
+76dbb0	'new	40
+76dbc4	obj_76d565.ChangeCountry	43	map=map_76b2e5
+76dbe4	obj_76d565.ChangeCountry.instructions	40
+76dc30	obj_76d565.ChangeCountry.literals	41
+76dc6c	'symbol	40
+76dc84	'ComputeExchangeRate	40
+76dca8	obj_76d565.SetNumericValue	43	map=map_76b2e5
+76dcc8	obj_76d565.SetNumericValue.literals	41
+76dcdc	obj_76d565.GetNumericValue	43	map=map_76b2e5
+76dcfc	obj_76d565.GetNumericValue.literals	41
+76dd10	obj_76d565.stepAllocateContext	41
+76dd34	obj_76dd35	43	map=map_76dd75
+76dd74	map_76dd75	41
+76ddb8	'LabelField	40
+76ddd4	obj_76dd35.viewBounds	43	map=map_76b099
+76ddf0	obj_76dd35.viewSetupFormScript	43	map=map_76b2e5
+76de10	obj_76dd35.viewSetupFormScript.instructions	40
+76de28	obj_76dd35.viewSetupFormScript.literals	41
+76de48	obj_76dd35.stepChildren	41
+76de58	obj_76de59	43	map=map_76de91
+76de90	map_76de91	41
+76decc	'Date	40
+76dee4	'labelFont	40
+76df00	'entryFont	40
+76df1c	obj_76de59.viewBounds	43	map=map_76b099
+76df38	obj_76de59.label	40
+76df50	obj_76de59.PickActionScript	43	map=map_76b2e5
+76df70	obj_76de59.PickActionScript.instructions	40
+76df98	obj_76de59.PickActionScript.literals	41
+76dfb4	obj_76de59.viewSetupFormScript	43	map=map_76b2e5
+76dfd4	obj_76de59.viewSetupFormScript.instructions	40
+76dff0	obj_76de59.viewSetupFormScript.literals	41
+76e008	'parent	40
+76e020	obj_76de59.textSetup	43	map=map_76b2e5
+76e040	obj_76de59.textSetup.instructions	40
+76e064	obj_76de59.textSetup.literals	41
+76e084	'LongDateStr	40
+76e0a0	obj_76dd35.SetNumericValue	43	map=map_76b2e5
+76e0c0	obj_76dd35.SetNumericValue.instructions	40
+76e0d4	obj_76dd35.SetNumericValue.literals	41
+76e0e8	'RedoChildren	40
+76e108	obj_76dd35.GetNumericValue	43	map=map_76b2e5
+76e128	obj_76dd35.GetNumericValue.literals	41
+76e138	obj_76dd35.stepAllocateContext	41
+76e14c	obj_76e14d	43	map=map_76e1a1
+76e1a0	map_76e1a1	41
+76e1f8	'solvedFor	40
+76e214	'viewQuitScript	40
+76e234	'FSViews	40
+76e24c	'GetFormulaValues	40
+76e270	'viewSetupDoneScript	40
+76e294	'solvingFormula	40
+76e2b4	'UndoClear	40
+76e2d0	'FillInTheSolution	40
+76e2f4	'ReOrientToScreen	40
+76e318	obj_76e14d.viewBounds	43	map=map_76b099
+76e334	obj_76e14d.stepChildren	41
+76e348	obj_76e349	43	map=map_76e36d
+76e36c	map_76e36d	41
+76e394	obj_76e349.buttonClickScript	43	map=map_76b2e5
+76e3b4	obj_76e349.buttonClickScript.instructions	40
+76e3f8	obj_76e349.buttonClickScript.literals	41
+76e428	obj_76e349.buttonClickScript.literals[2]	41
+76e440	'values	40
+76e458	obj_76e349.text	40
+76e470	obj_76e349.viewBounds	43	map=map_76e48d
+76e48c	map_76e48d	41
+76e4ac	obj_76e349.viewSetupFormScript	43	map=map_76b2e5
+76e4cc	obj_76e349.viewSetupFormScript.instructions	40
+76e4f8	obj_76e349.viewSetupFormScript.literals	41
+76e520	'StdButtonWidth	40
+76e540	obj_76e541	43	map=map_76e551
+76e550	map_76e551	41
+76e564	obj_76e14d.viewQuitScript	43	map=map_76b2e5
+76e584	obj_76e14d.viewQuitScript.instructions	40
+76e5c8	obj_76e14d.viewQuitScript.literals	41
+76e5f0	'formulaSymbol	40
+76e610	'EntryChange	40
+76e62c	obj_76e14d.ClearAllFields	43	map=map_76b2e5
+76e64c	obj_76e14d.ClearAllFields.instructions	40
+76e680	obj_76e14d.ClearAllFields.literals	41
+76e69c	obj_76e14d.SolveFormula	43	map=map_76b2e5
+76e6bc	obj_76e14d.SolveFormula.instructions	40
+76e7a0	obj_76e14d.SolveFormula.literals	41
+76e7d8	obj_76e14d.SolveFormula.literals[8]	40
+76e894	'ComputeValue	40
+76e8b4	obj_76e14d.ClearFormula	43	map=map_76b2e5
+76e8d4	obj_76e14d.ClearFormula.instructions	40
+76e8e4	obj_76e14d.GetFormulaValues	43	map=map_76b2e5
+76e904	obj_76e14d.GetFormulaValues.instructions	40
+76e944	obj_76e14d.GetFormulaValues.literals	41
+76e978	'GetStores	40
+76e994	'GetSoup	40
+76e9ac	'index	40
+76e9c4	'tag	40
+76e9d8	obj_76e14d.GetFormulaValues.literals[4]	40
+76ea04	obj_76ea05	41
+76ea24	'type	40
+76ea3c	'IndexPath	40
+76ea58	'beginKey	40
+76ea74	'endKey	40
+76ea8c	'Query	40
+76eaa4	'entry	40
+76eabc	obj_76e14d.GetFormulaValues.literals[8]	41
+76eae4	'LoanPayment	40
+76eb00	'NetPresentValue	40
+76eb20	'CurrencyExchange	40
+76eb44	'DateCalculator	40
+76eb64	'DateConversion	40
+76eb84	'Add	40
+76eb98	obj_76e14d.viewSetupDoneScript	43	map=map_76b2e5
+76ebb8	obj_76e14d.viewSetupDoneScript.instructions	40
+76ec38	obj_76e14d.viewSetupDoneScript.literals	41
+76ec70	obj_76e14d.viewSetupDoneScript.literals[4]	41
+76ec88	obj_76e14d.UndoClear	43	map=map_76b2e5
+76eca8	obj_76e14d.UndoClear.instructions	40
+76ecfc	obj_76e14d.UndoClear.literals	41
+76ed20	obj_76e14d.FillInTheSolution	43	map=map_76b2e5
+76ed40	obj_76e14d.FillInTheSolution.instructions	40
+76ed5c	obj_76e14d.FillInTheSolution.literals	41
+76ed74	obj_76e14d.viewSetupFormScript	43	map=map_76b2e5
+76ed94	obj_76e14d.viewSetupFormScript.instructions	40
+76edbc	obj_76e14d.viewSetupFormScript.literals	41
+76ede4	'SetKeyView	40
+76ee00	'GetAppParams	40
+76ee20	'appAreaGlobalLeft	40
+76ee44	'appAreaGlobalTop	40
+76ee68	'OffsetRect	40
+76ee84	obj_76ee85	43	map=map_76eea9
+76eea8	map_76eea9	41
+76eed0	'SolveForPayment	40
+76eef0	'SolveForPeriod	40
+76ef10	'SolveForInterestRate	40
+76ef38	'SolveForPresentValue	40
+76ef60	'SolveForFutureValue	40
+76ef84	obj_76ee85.SolveForPayment	43	map=map_76b2e5
+76efa4	obj_76ee85.SolveForPayment.instructions	40
+76efec	obj_76ee85.SolveForPayment.literals	41
+76f008	'compound	40
+76f024	'annuity	40
+76f03c	obj_76ee85.SolveForPeriod	43	map=map_76b2e5
+76f05c	obj_76ee85.SolveForPeriod.instructions	40
+76f0ac	obj_76ee85.SolveForPeriod.literals	41
+76f0c8	'log	40
+76f0dc	'log1p	40
+76f0f4	obj_76ee85.SolveForInterestRate	43	map=map_76b2e5
+76f114	obj_76ee85.SolveForInterestRate.instructions	40
+76f29c	obj_76ee85.SolveForInterestRate.literals	41
+76f2ec	obj_76f2ed	40
+76f300	obj_76ee85.SolveForInterestRate.literals[8]	40
+76f314	obj_76ee85.SolveForInterestRate.literals[13]	40
+76f328	obj_76ee85.SolveForInterestRate.literals[14]	40
+76f33c	obj_76ee85.SolveForInterestRate.literals[16]	40
+76f350	obj_76ee85.SolveForPresentValue	43	map=map_76b2e5
+76f370	obj_76ee85.SolveForPresentValue.instructions	40
+76f3b8	obj_76ee85.SolveForPresentValue.literals	41
+76f3d4	obj_76ee85.SolveForFutureValue	43	map=map_76b2e5
+76f3f4	obj_76ee85.SolveForFutureValue.instructions	40
+76f43c	obj_76ee85.SolveForFutureValue.literals	41
+76f458	obj_76f459	43	map=map_76f485
+76f484	map_76f485	41
+76f4b4	obj_76f459.viewBounds	43	map=map_76e48d
+76f4d0	obj_76f459.viewSetupFormScript	43	map=map_76b2e5
+76f4f0	obj_76f459.viewSetupFormScript.instructions	40
+76f508	obj_76f459.viewSetupFormScript.literals	41
+76f524	obj_76f525	40
+76f534	obj_76f459.viewClickScript	43	map=map_76b2e5
+76f554	obj_76f459.viewClickScript.instructions	40
+76f56c	obj_76f459.viewClickScript.literals	41
+76f57c	'LaunchFormula	40
+76f59c	obj_76f59d	43	map=map_76f611
+76f610	map_76f611	41
+76f688	'GetConversionFactor	40
+76f6ac	'USLiquidTable	40
+76f6cc	'areaTable	40
+76f6e8	'MetricDefaults	40
+76f708	'MetricLabels	40
+76f728	'InitFieldBasedOnMeasurement	40
+76f754	'weightTable	40
+76f770	'Metric	40
+76f788	'category	40
+76f7a4	'curMeasurement	40
+76f7c4	'lengthTable	40
+76f7e0	'USDefaults	40
+76f7fc	'USLabels	40
+76f818	'BritishLiquidTable	40
+76f83c	'US	40
+76f850	'overview	40
+76f86c	obj_76f59d.GetConversionFactor	43	map=map_76b2e5
+76f88c	obj_76f59d.GetConversionFactor.instructions	40
+76f8e4	obj_76f59d.GetConversionFactor.literals	41
+76f914	obj_76f59d.viewSetupDoneScript	43	map=map_76b2e5
+76f934	obj_76f59d.viewSetupDoneScript.instructions	40
+76f958	obj_76f59d.viewSetupDoneScript.literals	41
+76f97c	obj_76f59d.USLiquidTable	41
+76f990	obj_76f59d.USLiquidTable[0]	41
+76f9ac	obj_76f59d.USLiquidTable[0][0]	40
+76f9c0	obj_76f59d.USLiquidTable[0][1]	40
+76f9d4	obj_76f59d.USLiquidTable[0][2]	40
+76f9e8	obj_76f59d.USLiquidTable[0][3]	40
+76f9fc	obj_76f59d.USLiquidTable[1]	41
+76fa18	obj_76f59d.USLiquidTable[1][0]	40
+76fa2c	obj_76f59d.USLiquidTable[1][1]	40
+76fa40	obj_76f59d.USLiquidTable[1][2]	40
+76fa54	obj_76f59d.USLiquidTable[1][3]	40
+76fa68	obj_76f59d.areaTable	41
+76fa80	obj_76f59d.areaTable[0]	41
+76fa9c	obj_76f59d.areaTable[0][0]	40
+76fab0	obj_76f59d.areaTable[0][1]	40
+76fac4	obj_76f59d.areaTable[0][2]	40
+76fad8	obj_76f59d.areaTable[0][3]	40
+76faec	obj_76f59d.areaTable[1]	41
+76fb08	obj_76f59d.areaTable[1][0]	40
+76fb1c	obj_76f59d.areaTable[1][1]	40
+76fb30	obj_76f59d.areaTable[1][2]	40
+76fb44	obj_76f59d.areaTable[1][3]	40
+76fb58	obj_76f59d.areaTable[2]	41
+76fb74	obj_76f59d.areaTable[2][0]	40
+76fb88	obj_76f59d.areaTable[2][1]	40
+76fb9c	obj_76f59d.areaTable[2][2]	40
+76fbb0	obj_76f59d.areaTable[2][3]	40
+76fbc4	obj_76f59d.viewQuitScript	43	map=map_76b2e5
+76fbe4	obj_76f59d.viewQuitScript.instructions	40
+76fc14	obj_76f59d.viewQuitScript.literals	41
+76fc48	'measurement	40
+76fc64	'USItem	40
+76fc7c	'MetricItem	40
+76fc98	obj_76f59d.MetricDefaults	41
+76fcbc	obj_76f59d.MetricLabels	41
+76fce0	obj_76f59d.MetricLabels[0]	41
+76fcf8	obj_76f59d.MetricLabels[0][0]	40
+76fd1c	obj_76f59d.MetricLabels[0][1]	40
+76fd38	obj_76f59d.MetricLabels[0][2]	40
+76fd5c	obj_76f59d.MetricLabels[1]	41
+76fd74	obj_76f59d.MetricLabels[1][0]	40
+76fd98	obj_76f59d.MetricLabels[1][1]	40
+76fdc0	obj_76f59d.MetricLabels[1][2]	40
+76fde0	obj_76f59d.MetricLabels[2]	41
+76fdf4	obj_76f59d.MetricLabels[2][0]	40
+76fe0c	obj_76f59d.MetricLabels[2][1]	40
+76fe2c	obj_76f59d.MetricLabels[3]	41
+76fe40	obj_76fe41	40
+76fe64	obj_76fe65	40
+76fe80	obj_76f59d.MetricLabels[4]	41
+76fe94	obj_76f59d.MetricLabels[5]	41
+76fea4	obj_76f59d.MetricLabels[5][0]	40
+76fec0	obj_76f59d.InitFieldBasedOnMeasurement	43	map=map_76b2e5
+76fee0	obj_76fee1	40
+76fef8	obj_76f59d.InitFieldBasedOnMeasurement.literals	41
+76ff10	obj_76f59d.weightTable	41
+76ff24	obj_76f59d.weightTable[0]	41
+76ff40	obj_76f59d.weightTable[0][0]	40
+76ff54	obj_76f59d.weightTable[0][1]	40
+76ff68	obj_76f59d.weightTable[0][2]	40
+76ff7c	obj_76f59d.weightTable[0][3]	40
+76ff90	obj_76f59d.weightTable[1]	41
+76ffac	obj_76f59d.weightTable[1][0]	40
+76ffc0	obj_76f59d.weightTable[1][1]	40
+76ffd4	obj_76f59d.weightTable[1][2]	40
+76ffe8	obj_76f59d.weightTable[1][3]	40
+76fffc	obj_76f59d.viewBounds	43	map=map_76b099
+770018	'MetricConversion	40
+77003c	obj_76f59d.lengthTable	41
+770054	obj_76f59d.lengthTable[0]	41
+770070	obj_76f59d.lengthTable[0][0]	40
+770084	obj_76f59d.lengthTable[0][1]	40
+770098	obj_76f59d.lengthTable[0][2]	40
+7700ac	obj_76f59d.lengthTable[0][3]	40
+7700c0	obj_76f59d.lengthTable[1]	41
+7700dc	obj_76f59d.lengthTable[1][0]	40
+7700f0	obj_76f59d.lengthTable[1][1]	40
+770104	obj_76f59d.lengthTable[1][2]	40
+770118	obj_76f59d.lengthTable[1][3]	40
+77012c	obj_76f59d.lengthTable[2]	41
+770148	obj_76f59d.lengthTable[2][0]	40
+77015c	obj_76f59d.lengthTable[2][1]	40
+770170	obj_76f59d.lengthTable[2][2]	40
+770184	obj_76f59d.lengthTable[2][3]	40
+770198	obj_76f59d.USDefaults	41
+7701bc	obj_76f59d.USLabels	41
+7701e0	obj_76f59d.USLabels[0]	41
+7701fc	obj_76f59d.USLabels[0][0]	40
+770218	obj_76f59d.USLabels[0][1]	40
+770230	obj_76f59d.USLabels[0][2]	40
+770248	obj_76f59d.USLabels[0][3]	40
+770260	obj_76f59d.USLabels[1]	41
+77027c	obj_76f59d.USLabels[1][0]	40
+7702a4	obj_76f59d.USLabels[1][1]	40
+7702c8	obj_76f59d.USLabels[1][2]	40
+7702f0	obj_76f59d.USLabels[1][3]	40
+770308	obj_76f59d.USLabels[2]	41
+770324	obj_76f59d.USLabels[2][0]	40
+770340	obj_76f59d.USLabels[2][1]	40
+77035c	obj_76f59d.USLabels[2][2]	40
+770374	obj_76f59d.USLabels[2][3]	40
+770394	obj_76f59d.USLabels[3]	41
+7703b0	obj_7703b1	40
+7703d8	obj_7703d9	40
+7703f0	obj_7703f1	40
+77040c	obj_77040d	40
+770428	obj_76f59d.USLabels[4]	41
+770444	obj_76f59d.USLabels[5]	41
+770454	obj_76f59d.USLabels[5][0]	40
+770478	obj_76f59d.stepAllocateContext	41
+77049c	obj_77049d	43	map=map_7704d1
+7704d0	map_7704d1	41
+770508	obj_77049d.labelCommands	41
+77052c	obj_77049d.labelCommands[0]	40
+770548	obj_77049d.labelCommands[1]	40
+770560	obj_77049d.labelCommands[2]	40
+77057c	obj_77049d.labelCommands[3]	40
+7705a0	obj_77049d.labelCommands[4]	40
+7705cc	obj_77049d.labelCommands[5]	40
+7705f0	obj_77049d.viewBounds	43	map=map_76b099
+77060c	obj_77049d.text	40
+770630	obj_77049d.labelActionScript	43	map=map_76b2e5
+770650	obj_77049d.labelActionScript.instructions	40
+7706a0	obj_77049d.labelActionScript.literals	41
+7706e0	obj_77049d.textSetup	43	map=map_76b2e5
+770700	obj_77049d.textSetup.literals	41
+770714	obj_770715	43	map=map_770741
+770740	map_770741	41
+770770	obj_770715.ComputeValue	43	map=map_76b2e5
+770790	obj_770715.ComputeValue.instructions	40
+7707c0	obj_770715.ComputeValue.literals	41
+7707d8	obj_7707d9	40
+7707ec	obj_770715.viewSetupFormScript	43	map=map_76b2e5
+77080c	obj_77080d	40
+770820	obj_770715.viewSetupFormScript.literals	41
+770838	obj_770715.viewSetupDoneScript	43	map=map_76b2e5
+770858	obj_770859	40
+770870	obj_770715.viewSetupDoneScript.literals	41
+77088c	obj_770715.viewSetupDoneScript.literals[1]	41
+7708a0	obj_7708a1	43	map=map_7708c9
+7708c8	map_7708c9	41
+7708f4	obj_7708a1.ComputeValue	43	map=map_76b2e5
+770914	obj_7708a1.ComputeValue.instructions	40
+770944	obj_7708a1.ComputeValue.literals	41
+77095c	obj_7708a1.viewSetupFormScript	43	map=map_76b2e5
+77097c	obj_7708a1.viewSetupFormScript.literals	41
+770994	obj_76f59d.viewSetupFormScript	43	map=map_76b2e5
+7709b4	obj_76f59d.viewSetupFormScript.instructions	40
+770a30	obj_76f59d.viewSetupFormScript.literals	41
+770a70	obj_76f59d.BritishLiquidTable	41
+770a84	obj_76f59d.BritishLiquidTable[0]	41
+770aa0	obj_76f59d.BritishLiquidTable[0][0]	40
+770ab4	obj_76f59d.BritishLiquidTable[0][1]	40
+770ac8	obj_76f59d.BritishLiquidTable[0][2]	40
+770adc	obj_76f59d.BritishLiquidTable[1]	41
+770af8	obj_76f59d.BritishLiquidTable[1][0]	40
+770b0c	obj_76f59d.BritishLiquidTable[1][1]	40
+770b20	obj_76f59d.BritishLiquidTable[1][2]	40
+770b34	obj_76f59d.BritishLiquidTable[1][3]	40
+770b48	obj_76f59d.stepChildren	41
+770b6c	obj_76f59d.stepChildren[2]	43	map=map_770b85
+770b84	map_770b85	41
+770ba0	'title	40
+770bb8	obj_770bb9	40
+770be8	obj_76f59d.stepChildren[2].viewBounds	43	map=map_76b099
+770c04	obj_770c05	43	map=map_770c59
+770c58	map_770c59	41
+770cb0	'NumberOfYears	40
+770cd0	'InterestRate	40
+770cf0	'LoanAmount	40
+770d0c	'MonthlyPayment	40
+770d2c	'TotalPayments	40
+770d4c	'TotalInterest	40
+770d6c	obj_770c05.viewBounds	43	map=map_76c7b9
+770d88	obj_770c05.stepChildren	41
+770db8	obj_770c05.stepChildren[2]	43	map=map_770b85
+770dd0	obj_770dd1	40
+770df8	obj_770c05.stepChildren[2].viewBounds	43	map=map_76b099
+770e14	obj_770e15	43	map=map_770e39
+770e38	map_770e39	41
+770e60	obj_770e15.calcLineLabel	40
+770e8c	obj_770e15.ComputeValue	43	map=map_76b2e5
+770eac	obj_770e15.ComputeValue.instructions	40
+770f00	obj_770e15.ComputeValue.literals	41
+770f20	obj_770f21	40
+770f48	obj_770e15.viewSetupDoneScript	43	map=map_76b2e5
+770f68	obj_770e15.viewSetupDoneScript.literals	41
+770f84	obj_770e15.viewSetupDoneScript.literals[1]	41
+770f98	obj_770f99	43	map=map_770fbd
+770fbc	map_770fbd	41
+770fe4	obj_770fe5	40
+771014	obj_770f99.ComputeValue	43	map=map_76b2e5
+771034	obj_770f99.ComputeValue.instructions	40
+771078	obj_770f99.ComputeValue.literals	41
+771098	obj_771099	40
+7710dc	obj_7710dd	43	map=map_7710fd
+7710fc	map_7710fd	41
+771120	obj_7710dd.calcLineLabel	40
+771144	obj_7710dd.ComputeValue	43	map=map_76b2e5
+771164	obj_7710dd.ComputeValue.instructions	40
+7711a8	obj_7710dd.ComputeValue.literals	41
+7711cc	obj_7711cd	43	map=map_7710fd
+7711ec	obj_7711cd.calcLineLabel	40
+771218	obj_7711cd.ComputeValue	43	map=map_76b2e5
+771238	obj_7711cd.ComputeValue.instructions	40
+77127c	obj_7711cd.ComputeValue.literals	41
+77129c	obj_77129d	43	map=map_7712b5
+7712b4	map_7712b5	41
+7712d0	obj_77129d.infoLineLabel	40
+7712fc	obj_7712fd	43	map=map_7712b5
+771314	obj_7712fd.infoLineLabel	40
+771340	obj_770c05.viewSetupDoneScript	43	map=map_76b2e5
+771360	obj_770c05.viewSetupDoneScript.instructions	40
+77138c	obj_770c05.viewSetupDoneScript.literals	41
+7713b4	obj_770c05.ClearAllFields	43	map=map_76b2e5
+7713d4	obj_770c05.ClearAllFields.instructions	40
+7713f0	obj_770c05.ClearAllFields.literals	41
+77140c	obj_770c05.ClearFormula	43	map=map_76b2e5
+77142c	obj_770c05.ClearFormula.literals	41
+771444	obj_770c05.FillInTheSolution	43	map=map_76b2e5
+771464	obj_770c05.FillInTheSolution.instructions	40
+771500	obj_770c05.FillInTheSolution.literals	41
+771534	obj_770c05.stepAllocateContext	41
+771570	obj_771571	43	map=map_7715b5
+7715b4	map_7715b5	41
+7715fc	'Periods	40
+771614	'PresentValue	40
+771634	'FutureValue	40
+771650	'Payment	40
+771668	obj_771571.viewBounds	43	map=map_76b099
+771684	obj_771571.stepChildren	41
+7716b0	obj_771571.stepChildren[2]	43	map=map_770b85
+7716c8	obj_7716c9	40
+7716f8	obj_771571.stepChildren[2].viewBounds	43	map=map_76b099
+771714	obj_771715	43	map=map_770e39
+771738	obj_771715.calcLineLabel	40
+771754	obj_771715.ComputeValue	43	map=map_76b2e5
+771774	obj_771715.ComputeValue.instructions	40
+7717b8	obj_771715.ComputeValue.literals	41
+7717d4	obj_771715.viewSetupDoneScript	43	map=map_76b2e5
+7717f4	obj_771715.viewSetupDoneScript.literals	41
+771810	obj_771715.viewSetupDoneScript.literals[1]	41
+771828	obj_771829	43	map=map_7710fd
+771848	obj_771829.ComputeValue	43	map=map_76b2e5
+771868	obj_771829.ComputeValue.instructions	40
+77189c	obj_771829.ComputeValue.literals	41
+7718b8	obj_7718b9	43	map=map_7710fd
+7718d8	obj_7718b9.calcLineLabel	40
+771900	obj_7718b9.ComputeValue	43	map=map_76b2e5
+771920	obj_7718b9.ComputeValue.instructions	40
+771954	obj_7718b9.ComputeValue.literals	41
+771970	obj_771971	43	map=map_7710fd
+771990	obj_771971.calcLineLabel	40
+7719b8	obj_771971.ComputeValue	43	map=map_76b2e5
+7719d8	obj_771971.ComputeValue.instructions	40
+771a0c	obj_771971.ComputeValue.literals	41
+771a28	obj_771a29	43	map=map_7710fd
+771a48	obj_771a29.calcLineLabel	40
+771a64	obj_771a29.ComputeValue	43	map=map_76b2e5
+771a84	obj_771a29.ComputeValue.instructions	40
+771ab8	obj_771a29.ComputeValue.literals	41
+771ad4	obj_771571.viewSetupDoneScript	43	map=map_76b2e5
+771af4	obj_771571.viewSetupDoneScript.instructions	40
+771b28	obj_771571.viewSetupDoneScript.literals	41
+771b54	obj_771571.stepAllocateContext	41
+771b88	obj_771b89	43	map=map_771bd1
+771bd0	map_771bd1	41
+771c1c	'Country1Field	40
+771c3c	'ExchangeRateField	40
+771c60	'Country2Field	40
+771c80	obj_771b89.stepChildren	41
+771ca4	obj_771b89.stepChildren[2]	43	map=map_770b85
+771cbc	obj_771cbd	40
+771cec	obj_771b89.stepChildren[2].viewBounds	43	map=map_76b099
+771d08	obj_771d09	43	map=map_771d2d
+771d2c	map_771d2d	41
+771d54	obj_771d09.ComputeValue	43	map=map_76b2e5
+771d74	obj_771d09.ComputeValue.instructions	40
+771d98	obj_771d09.viewSetupDoneScript	43	map=map_76b2e5
+771db8	obj_771d09.viewSetupDoneScript.literals	41
+771dd4	obj_771d09.viewSetupDoneScript.literals[1]	41
+771de8	obj_771de9	43	map=map_771e11
+771e10	map_771e11	41
+771e3c	obj_771de9.calcLineLabel	40
+771e64	obj_771de9.ComputeValue	43	map=map_76b2e5
+771e84	obj_771de9.ComputeValue.instructions	40
+771ea8	obj_771ea9	43	map=map_771ec9
+771ec8	map_771ec9	41
+771eec	obj_771ea9.ComputeValue	43	map=map_76b2e5
+771f0c	obj_771ea9.ComputeValue.instructions	40
+771f30	obj_771b89.viewBounds	43	map=map_76b099
+771f4c	obj_771b89.viewSetupDoneScript	43	map=map_76b2e5
+771f6c	obj_771b89.viewSetupDoneScript.instructions	40
+771f94	obj_771b89.viewSetupDoneScript.literals	41
+771fbc	obj_771b89.ComputeExchangeRate	43	map=map_76b2e5
+771fdc	obj_771b89.ComputeExchangeRate.instructions	40
+772048	obj_771b89.ComputeExchangeRate.literals	41
+772090	'GetExchangeRate	40
+7720b0	obj_771b89.ComputeExchangeRate.literals[5]	40
+772134	obj_771b89.ComputeExchangeRate.literals[8]	40
+7721a0	'ParamStr	40
+7721bc	obj_771b89.viewQuitScript	43	map=map_76b2e5
+7721dc	obj_771b89.viewQuitScript.instructions	40
+772204	obj_771b89.viewQuitScript.literals	41
+772230	'country1	40
+77224c	'country2	40
+772268	obj_771b89.viewSetupFormScript	43	map=map_76b2e5
+772288	obj_771b89.viewSetupFormScript.instructions	40
+772300	obj_771b89.viewSetupFormScript.literals	41
+772344	obj_771b89.SolveFormula	43	map=map_76b2e5
+772364	obj_771b89.SolveFormula.instructions	40
+77238c	obj_771b89.SolveFormula.literals	41
+7723b4	'SetExchangeRate	40
+7723d4	obj_771b89.ClearAllFields	43	map=map_76b2e5
+7723f4	obj_771b89.ClearAllFields.instructions	40
+772414	obj_771b89.ClearAllFields.literals	41
+772434	obj_771b89.stepAllocateContext	41
+772458	obj_772459	43	map=map_772491
+772490	map_772491	41
+7724cc	'DateOutOfRange	40
+7724ec	'StartDateField	40
+77250c	'NumberOfDaysField	40
+772530	'EndDateField	40
+772550	obj_772459.stepChildren	41
+772574	obj_772459.stepChildren[2]	43	map=map_770b85
+77258c	obj_77258d	40
+7725b8	obj_772459.stepChildren[2].viewBounds	43	map=map_76b099
+7725d4	obj_7725d5	43	map=map_7725f9
+7725f8	map_7725f9	41
+772620	obj_7725d5.calcLineLabel	40
+772644	obj_7725d5.ComputeValue	43	map=map_76b2e5
+772664	obj_7725d5.ComputeValue.instructions	40
+77269c	obj_7725d5.ComputeValue.literals	41
+7726b8	obj_7726b9	40
+772710	obj_772711	43	map=map_77273d
+77273c	map_77273d	41
+77276c	obj_772711.calcLineLabel	40
+77278c	obj_772711.ComputeValue	43	map=map_76b2e5
+7727ac	obj_772711.ComputeValue.instructions	40
+7727d0	obj_772711.viewSetupDoneScript	43	map=map_76b2e5
+7727f0	obj_772711.viewSetupDoneScript.literals	41
+77280c	obj_772711.viewSetupDoneScript.literals[1]	41
+772820	obj_772821	43	map=map_7725f9
+772844	obj_772821.calcLineLabel	40
+772864	obj_772821.ComputeValue	43	map=map_76b2e5
+772884	obj_772821.ComputeValue.instructions	40
+7728b8	obj_772821.ComputeValue.literals	41
+7728d4	obj_772459.viewBounds	43	map=map_76b099
+7728f0	obj_772459.viewSetupDoneScript	43	map=map_76b2e5
+772910	obj_772459.viewSetupDoneScript.instructions	40
+772934	obj_772459.viewSetupDoneScript.literals	41
+772958	obj_772459.DateOutOfRange	43	map=map_76b2e5
+772978	obj_772459.DateOutOfRange.instructions	40
+77299c	obj_772459.DateOutOfRange.literals	41
+7729ac	obj_772459.stepAllocateContext	41
+7729d0	obj_7729d1	43	map=map_772a11
+772a10	map_772a11	41
+772a54	'DateField	40
+772a70	'DayOfWeekField	40
+772a90	'WeekInYearField	40
+772ab0	'DayInYearField	40
+772ad0	obj_7729d1.stepChildren	41
+772af8	obj_7729d1.stepChildren[2]	43	map=map_770b85
+772b10	obj_772b11	40
+772b3c	obj_7729d1.stepChildren[2].viewBounds	43	map=map_76b099
+772b58	obj_772b59	43	map=map_772b79
+772b78	map_772b79	41
+772b9c	obj_772b59.calcLineLabel	40
+772bb4	obj_772bb5	43	map=map_772bd5
+772bd4	map_772bd5	41
+772bf8	obj_772bb5.infoLineLabel	40
+772c1c	obj_772c1d	43	map=map_772c39
+772c38	map_772c39	41
+772c58	obj_772c1d.infoLineLabel	40
+772c80	obj_772c81	43	map=map_772c39
+772c9c	obj_772c81.infoLineLabel	40
+772cc0	obj_7729d1.ClearAllFields	43	map=map_76b2e5
+772ce0	obj_7729d1.ClearAllFields.instructions	40
+772d00	obj_7729d1.ClearAllFields.literals	41
+772d24	obj_7729d1.SolveFormula	43	map=map_76b2e5
+772d44	obj_7729d1.SolveFormula.instructions	40
+772ddc	obj_7729d1.SolveFormula.literals	41
+772e24	'longDayOfWeekStrSpec	40
+772e4c	'WeekNumber	40
+772e68	'month	40
+772e80	'TotalMinutes	40
+772ea0	'NumberStr	40
+772ebc	obj_7729d1.SolveFormula.literals[12]	40
+772ecc	obj_7729d1.viewBounds	43	map=map_76b099
+772ee8	obj_7729d1.viewSetupDoneScript	43	map=map_76b2e5
+772f08	obj_7729d1.viewSetupDoneScript.instructions	40
+772f28	obj_7729d1.viewSetupDoneScript.literals	41
+772f48	obj_7729d1.stepAllocateContext	41
+772f74	obj_772f75	43	map=map_772fc5
+772fc4	map_772fc5	41
+773018	'openChild	40
+773034	'mainFormulasView	40
+773058	'declareSelf	40
+773074	'InitFormulas	40
+773094	'KClassroomAware	40
+7730b4	'FormulasRoll	40
+7730d4	'appSymbol	40
+7730f0	obj_772f75.viewBounds	43	map=map_76b099
+77310c	obj_772f75.stepChildren	41
+773120	obj_772f75.stepChildren[0]	43	map=map_773139
+773138	map_773139	41
+773154	'titleIcon	40
+773170	obj_772f75.stepChildren[0].titleIcon	43	map=map_773185
+773184	map_773185	41
+77319c	obj_772f75.stepChildren[0].titleIcon.bits	40
+7731e8	obj_772f75.stepChildren[0].titleIcon.bounds	43	map=map_76b099
+773204	obj_773205	43	map=map_77323d
+77323c	map_77323d	41
+773278	'viewLines	40
+773294	'formulasList	40
+7732b4	obj_773205.buttonClickScript	43	map=map_76b2e5
+7732d4	obj_773205.buttonClickScript.instructions	40
+773338	obj_773205.buttonClickScript.literals	41
+773380	'selection	40
+77339c	'Close	40
+7733b4	'LocalBox	40
+7733d0	obj_773205.buttonClickScript.literals[10]	41
+7733e4	obj_773205.buttonClickScript.literals[12]	41
+7733fc	'BuildContext	40
+77341c	'Open	40
+773434	obj_773205.viewBounds	43	map=map_76e48d
+773450	obj_773205.viewSetupFormScript	43	map=map_76b2e5
+773470	obj_773205.viewSetupFormScript.instructions	40
+7734c4	obj_773205.viewSetupFormScript.literals	41
+7734f4	'GetFormulas	40
+773510	'listItems	40
+77352c	'SetupList	40
+773548	obj_772f75.viewQuitScript	43	map=map_76b2e5
+773568	obj_772f75.viewQuitScript.instructions	40
+773580	obj_772f75.viewQuitScript.literals	41
+773594	obj_772f75.viewSetupDoneScript	43	map=map_76b2e5
+7735b4	obj_772f75.viewSetupDoneScript.instructions	40
+7735c4	obj_772f75.viewSetupDoneScript.literals	41
+7735d8	'base	40
+7735f0	obj_772f75.InitFormulas	43	map=map_76b2e5
+773610	obj_772f75.InitFormulas.instructions	40
+773658	obj_772f75.InitFormulas.literals	41
+7736b0	'functions	40
+7736cc	'RegFormulas	40
+7736e8	obj_772f75.InitFormulas.literals[2]	43	map=map_76b2e5
+773708	obj_772f75.InitFormulas.literals[2].instructions	40
+773734	obj_772f75.InitFormulas.literals[2].literals	41
+773758	'FormulasRegistry	40
+77377c	'EnsureInternal	40
+77379c	'Formulas	40
+7737b8	'viewCObject	40
+7737d4	'UnRegFormulas	40
+7737f4	obj_772f75.InitFormulas.literals[4]	43	map=map_76b2e5
+773814	obj_772f75.InitFormulas.literals[4].instructions	40
+773840	obj_772f75.InitFormulas.literals[4].literals	41
+773864	'RemoveSlot	40
+773880	obj_772f75.InitFormulas.literals[7]	43	map=map_7738a5
+7738a4	map_7738a5	41
+7738cc	'FormulaList	40
+7738e8	'DefGlobalVar	40
+773908	obj_772f75.InitFormulas.literals[12]	43	map=map_76b2e5
+773928	obj_772f75.InitFormulas.literals[12].instructions	40
+7739c4	obj_772f75.InitFormulas.literals[12].literals	41
+7739f0	obj_772f75.InitFormulas.literals[12].literals[1]	41
+773a14	'SetContains	40
+773a30	'|str<|	40
+773a48	'Sort	40
+773a60	'ArrayMunger	40
+773a7c	'GetUpdatedExchangeRates	40
+773aa4	obj_772f75.InitFormulas.literals[14]	43	map=map_76b2e5
+773ac4	obj_772f75.InitFormulas.literals[14].instructions	40
+773afc	obj_772f75.InitFormulas.literals[14].literals	41
+773b30	obj_772f75.InitFormulas.literals[14].literals[4]	40
+773b74	obj_772f75.InitFormulas.literals[14].literals[8]	41
+773b88	obj_772f75.InitFormulas.literals[16]	43	map=map_76b2e5
+773ba8	obj_772f75.InitFormulas.literals[16].instructions	40
+773c14	obj_772f75.InitFormulas.literals[16].literals	41
+773c2c	obj_772f75.InitFormulas.literals[18]	43	map=map_76b2e5
+773c4c	obj_772f75.InitFormulas.literals[18].instructions	40
+773cd0	obj_772f75.InitFormulas.literals[18].literals	41
+773ce8	obj_772f75.InitFormulas.literals[18].literals[2]	41
+773cf8	obj_772f75.viewSetupFormScript	43	map=map_76b2e5
+773d18	obj_772f75.viewSetupFormScript.instructions	40
+773d2c	obj_772f75.viewSetupFormScript.literals	41
+773d3c	obj_772f75.stepAllocateContext	41
+773d50	obj_769891[0].icon	43	map=map_773d69
+773d68	map_773d69	41
+773d84	obj_769891[0].icon.mask	40
+773e04	obj_769891[0].icon.bits	40
+773e84	obj_769891[0].icon.bounds	43	map=map_76b099
+773ea0	obj_769891[0].devInstallScript	43	map=map_76b2e5
+773ec0	obj_769891[0].devInstallScript.instructions	40
+773ed4	obj_769891[0].devInstallScript.literals	41
+773ee8	obj_769891[0].installScript	43	map=map_76b2e5
+773f08	obj_769891[0].installScript.instructions	40
+773f2c	obj_769891[0].installScript.literals	41
+773f48	'HasSlot	40
+alias	obj_76ae2d.SetNumericValue.literals[2]	obj_76b5c1
+alias	obj_76ae2d.GetNumericValue.instructions	obj_76be91
+alias	obj_76ae2d.FormulasNumberToString.literals[0]	obj_76c035
+alias	obj_76ae2d.FormulasNumberToString.literals[5]	obj_76c095
+alias	obj_76ae2d.FormulasNumberToString.literals[18]	obj_76c159
+alias	obj_76b0c9.viewChangedScript.literals[3]	obj_76b515
+alias	obj_76b0c9.viewChangedScript.literals[5]	obj_76b559
+alias	obj_76b0c9.viewChangedScript.literals[15]	obj_76b5c1
+alias	obj_76b0c9.viewChangedScript.literals[16]	obj_76b5e1
+alias	obj_76b0c9.viewChangedScript.literals[22]	obj_76b6c9
+alias	obj_76b0c9.FormulasStringToNumber.literals[0]	obj_76b6c9
+alias	obj_76b0c9.FormulasStringToNumber.literals[4]	obj_76b559
+alias	obj_76b0c9.FormulasStringToNumber.literals[6]	obj_76b515
+alias	obj_76b0c9.FormulasStripBadChars.literals[1]	obj_76b515
+alias	obj_76b0c9.FormulasStripBadChars.literals[3]	obj_76b559
+alias	obj_76b0c9.OnlyNumbersAllowed.literals[0]	obj_76b5c1
+alias	obj_76b0c9.OnlyNumbersAllowed.literals[1]	obj_76b5e1
+alias	obj_76c1ad.viewSetupFormScript.instructions	obj_76c479
+alias	obj_76c1ad.GetNumericValue.instructions	obj_76c51d
+alias	obj_76c1ad.SetNumericValue.instructions	obj_76c565
+alias	obj_76c2cd.viewClickScript.instructions	obj_76c3bd
+alias	obj_76c5a9.stepChildren[1].buttonClickScript.instructions	obj_76c769
+alias	obj_76c5a9.GetNumericValue.instructions	obj_76c51d
+alias	obj_76c5a9.SetNumericValue.instructions	obj_76c565
+alias	obj_76c5a9.UndoDiv12.instructions	obj_76c8fd
+alias	obj_76c959.stepChildren[1].buttonClickScript.instructions	obj_76c769
+alias	obj_76c959.GetNumericValue.instructions	obj_76c51d
+alias	obj_76c959.SetNumericValue.instructions	obj_76c565
+alias	obj_76c959.UndoTimes12.instructions	obj_76c8fd
+alias	obj_76cc2d.viewSetupFormScript.instructions	obj_76c479
+alias	obj_76cc2d.SetNumericValueString.literals[2]	obj_76c035
+alias	obj_76cf7d.GetNumericValue.instructions	obj_76c51d
+alias	obj_76cf7d.SetNumericValue.instructions	obj_76c565
+alias	obj_76cf7d.GetPickerItemNumber.instructions	obj_76be91
+alias	obj_76d0dd.textSetup.instructions	obj_76d369
+alias	obj_76d565.SetNumericValue.instructions	obj_76c565
+alias	obj_76d565.GetNumericValue.instructions	obj_76c51d
+alias	obj_76d689.viewClickScript.instructions	obj_76c3bd
+alias	obj_76d689.RestyleString.instructions	obj_76d779
+alias	obj_76d7e5.RestyleString.instructions	obj_76d779
+alias	obj_76dd35.GetNumericValue.instructions	obj_76be91
+alias	obj_76de59.textSetup.literals[1]	obj_76c035
+alias	obj_76e14d.SolveFormula.literals[7]	obj_76b5c1
+alias	obj_76e14d.GetFormulaValues.literals[5]	obj_76ea05
+alias	obj_76ee85.SolveForInterestRate.literals[0]	obj_76f2ed
+alias	obj_76ee85.SolveForInterestRate.literals[1]	obj_76f2ed
+alias	obj_76ee85.SolveForInterestRate.literals[2]	obj_76f2ed
+alias	obj_76ee85.SolveForInterestRate.literals[3]	obj_76f2ed
+alias	obj_76ee85.SolveForInterestRate.literals[4]	obj_76f2ed
+alias	obj_76ee85.SolveForInterestRate.literals[5]	obj_76f2ed
+alias	obj_76ee85.SolveForInterestRate.literals[6]	obj_76f2ed
+alias	obj_76ee85.SolveForInterestRate.literals[7]	obj_76f2ed
+alias	obj_76ee85.SolveForInterestRate.literals[9]	obj_76c095
+alias	obj_76ee85.SolveForInterestRate.literals[15]	obj_76aa05
+alias	obj_76f459.viewSetupFormScript.literals[1]	obj_76f525
+alias	obj_76f459.viewSetupFormScript.literals[2]	obj_76b6c9
+alias	obj_76f59d.InitFieldBasedOnMeasurement.instructions	obj_76fee1
+alias	obj_77049d.textSetup.instructions	obj_76d369
+alias	obj_770715.ComputeValue.literals[1]	obj_7707d9
+alias	obj_770715.viewSetupFormScript.instructions	obj_77080d
+alias	obj_770715.viewSetupDoneScript.instructions	obj_770859
+alias	obj_7708a1.ComputeValue.literals[1]	obj_7707d9
+alias	obj_7708a1.viewSetupFormScript.instructions	obj_77080d
+alias	obj_770c05.ClearFormula.instructions	obj_76fee1
+alias	obj_770c05.FillInTheSolution.literals[4]	obj_76c159
+alias	obj_770c05.FillInTheSolution.literals[8]	obj_76c159
+alias	obj_770e15.ComputeValue.literals[2]	obj_770dd1
+alias	obj_770e15.ComputeValue.literals[3]	obj_770f21
+alias	obj_770e15.viewSetupDoneScript.instructions	obj_770859
+alias	obj_770f99.ComputeValue.literals[2]	obj_770dd1
+alias	obj_770f99.ComputeValue.literals[3]	obj_771099
+alias	obj_7710dd.ComputeValue.literals[2]	obj_770dd1
+alias	obj_7710dd.ComputeValue.literals[3]	obj_771099
+alias	obj_7711cd.ComputeValue.literals[1]	obj_770dd1
+alias	obj_7711cd.ComputeValue.literals[2]	obj_770f21
+alias	obj_771715.ComputeValue.literals[1]	obj_7716c9
+alias	obj_771715.ComputeValue.literals[2]	obj_770f21
+alias	obj_771715.viewSetupDoneScript.instructions	obj_770859
+alias	obj_771829.ComputeValue.literals[1]	obj_7716c9
+alias	obj_771829.ComputeValue.literals[2]	obj_771099
+alias	obj_7718b9.ComputeValue.literals[1]	obj_7716c9
+alias	obj_7718b9.ComputeValue.literals[2]	obj_771099
+alias	obj_771971.ComputeValue.literals[1]	obj_7716c9
+alias	obj_771971.ComputeValue.literals[2]	obj_771099
+alias	obj_771a29.ComputeValue.literals[1]	obj_7716c9
+alias	obj_771a29.ComputeValue.literals[2]	obj_770f21
+alias	obj_771b89.ComputeExchangeRate.literals[4]	obj_771cbd
+alias	obj_771d09.viewSetupDoneScript.instructions	obj_770859
+alias	obj_7725d5.ComputeValue.literals[1]	obj_77258d
+alias	obj_7725d5.ComputeValue.literals[2]	obj_7726b9
+alias	obj_772711.viewSetupDoneScript.instructions	obj_770859
+alias	obj_772821.ComputeValue.literals[1]	obj_77258d
+alias	obj_772821.ComputeValue.literals[2]	obj_7726b9
+alias	obj_772f75.InitFormulas.literals[14].literals[5]	obj_76ea05
+alias	obj_773205.buttonClickScript.literals[11]	map_769b05
+alias	obj_773205.viewSetupFormScript.literals[5]	obj_76f525
+alias	obj_773205.viewSetupFormScript.literals[6]	obj_76b6c9

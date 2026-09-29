@@ -1,0 +1,7 @@
+@@ 0x5b3c15
+func(a1) begin
+	inherited:pickActionScript(a1);
+	removeModemIndex := a1;
+	self:Confirm("Modem", ParamStr("Are you sure you want to remove the ^0 Modem Setup?", [Array: popup[removeModemIndex]]), self, 'confirmScript)
+end
+@@end

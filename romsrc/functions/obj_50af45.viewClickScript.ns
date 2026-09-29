@@ -1,0 +1,9 @@
+@@ 0x50af05
+func(a1) begin
+	local l1;
+	(if self:TrackHilite(a1) then begin
+			(l1 := Clone(otherChoices))[otherSelection] := {item: l1[otherSelection], mark: $\uFC0B};
+			DoPopup(l1, 15, 0, self)
+		end)
+end
+@@end

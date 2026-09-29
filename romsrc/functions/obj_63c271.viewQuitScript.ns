@@ -1,0 +1,38 @@
+@@ 0x51c58d
+func() begin
+	self:CloseBrowser();
+	contentArea:bookHideScript();
+	self:SaveMarkup();
+	self:BookClosed();
+	isbn := nil;
+	browsers := nil;
+	targetView := nil;
+	bookFlags := 0;
+	viewChildren := nil;
+	curRendering := 0;
+	if (not floating) then begin
+			RemoveSlot(self, 'viewFormat);
+			RemoveSlot(self, 'viewEffect)
+		end;
+	if (cntrlPanel exists) then begin
+			cntrlPanel := nil
+		end;
+	if (markupButton exists) then begin
+			markupButton := nil
+		end;
+	if (pageNumber exists) then begin
+			pageNumber := nil
+		end;
+	if (bookAbout exists) then begin
+			bookAbout := nil
+		end;
+	RemoveSlot(self, 'pageNumsShowing);
+	RemoveSlot(self, 'title);
+	(if HasPath(self, 'routeScripts) then begin
+			(foreach l1 in routeScripts do begin
+					RemoveSlot(self, l1.routeScript)
+				end);
+			RemoveSlot(self, 'routeScripts)
+		end)
+end
+@@end

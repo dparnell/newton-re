@@ -1,0 +1,14 @@
+@@ 0x4c3049
+func(a1) begin
+	local l1;
+	l1 := viewDefFrame.(a1);
+	(if (targetViewDef <> l1) then begin
+			targetViewDef := l1;
+			layout.entryViewDefs := [Array: targetViewDef];
+			target.dataView := a1;
+			EntryChange(target);
+			self:SyncView();
+			self:RedoChildren()
+		end)
+end
+@@end

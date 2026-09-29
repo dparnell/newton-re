@@ -1,0 +1,6 @@
+@@ 0x732d75
+func(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) begin
+	a8.left := (a8.left + 30);
+	inherited:?AddAllInfoItem(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)
+end
+@@end

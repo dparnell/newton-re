@@ -1,0 +1,14 @@
+@@ 0x5abd65
+func() begin
+	SaveAutoAddDictionary();
+	self:KillNotification();
+	lineHeight := FontHeight(1058816);
+	self.dictionary := GetDictionary(36);
+	if (not dictionary) then begin
+			Throw('|evt.ex.msg|, "couldn't find auto add dictionary!")
+		end;
+	self:RebuildCursorWindow("");
+	self:SelectFirst();
+	self:SetupIdle(1000)
+end
+@@end

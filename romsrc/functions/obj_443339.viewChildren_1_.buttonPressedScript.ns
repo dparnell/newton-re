@@ -1,0 +1,8 @@
+@@ 0x443409
+func() begin
+	(if self:ReadyToFire() then begin
+			selectedDates := [Array: self:CarefullIncrementMonth(selectedDates[0], 1)];
+			inherited:buttonPressedScript()
+		end)
+end
+@@end

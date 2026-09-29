@@ -1,0 +1,38 @@
+@@ 0x43a8d5
+func(a1) begin
+	l1 := self:LocalBox();
+	self.maxLines := (l1.bottom div lineHeight);
+	l1.bottom := lineHeight;
+	if (not checkBoxVertOffset) then begin
+			checkBoxVertOffset := (if (not lineHeight) then max(((lineHeight div 2) - 6), 0) else 2)
+		end;
+	self.pieces := Array(maxLines, nil);
+	if checkScrollability then begin
+			canScrollUp := (if (canScrollUp := a1:prev()) then (canScrollUp <> 'deleted));
+			l3 := a1:Next()
+		end else begin
+			l3 := a1:entry()
+		end;
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	l4 := (for l5 := 0 to (maxLines - 1) do begin
+			if (not l3) then begin
+					break l5
+				end;
+			if (l3 <> 'deleted) then begin
+					pieces[l5] := self:GetTheRightShape(l3, l1);
+					l1.bottom := ((l1.top := l1.bottom) + lineHeight)
+				end;
+			l3 := a1:Next()
+		end);
+	if checkScrollability then begin
+			canScrollDown := (if (canScrollDown := a1:entry()) then (canScrollDown <> 'deleted))
+		end;
+	if l4 then begin
+			SetLength(pieces, l4)
+		end;
+	(self.numLines := Length(pieces))
+end
+@@end

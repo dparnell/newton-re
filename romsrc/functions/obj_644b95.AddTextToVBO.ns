@@ -1,0 +1,15 @@
+@@ 0x595635
+func(a1, a2, a3) begin
+	try begin
+			BinaryMunger(a2.text, (Length(a2.text) - 2), 0, a3, 0, (Length(a3) - 2))
+		end onexception |evt.ex.fr.store| do begin
+			if a1 then begin
+					a1.cancelling := true
+				end;
+			a2.text := "Not enough free space in the default soup to save the message.";
+			GetRoot():Notify(3, serviceName, a2.text);
+			return nil
+		end;
+	return true
+end
+@@end

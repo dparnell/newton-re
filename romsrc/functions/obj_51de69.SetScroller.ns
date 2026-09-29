@@ -1,0 +1,18 @@
+@@ 0x51de49
+func(a1, a2, a3, a4) begin
+	(if Visible(broScroll) then begin
+			broScroll.ScrollRect := (broScroll.DataRect := (broScroll.ViewRect := nil));
+			if (a4 > 0) then begin
+					broScroll:SetArrow('up, 'more)
+				end else begin
+					broScroll:SetArrow('up, 'normal)
+				end;
+			if ((a4 + a3) < a2) then begin
+					broScroll:SetArrow('down, 'more)
+				end else begin
+					broScroll:SetArrow('down, 'normal)
+				end;
+			broScroll:Dirty()
+		end)
+end
+@@end

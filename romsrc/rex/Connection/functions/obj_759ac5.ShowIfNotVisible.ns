@@ -1,0 +1,5 @@
+@@ 0x75ed9d
+func(a1) begin
+	(if (if (not Visible(a1)) then a1.viewCObject) then a1:Show())
+end
+@@end

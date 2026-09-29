@@ -1,0 +1,47 @@
+@@ 0x52ebd5
+func(a1, a2, a3, a4) begin
+	l1 := nil;
+	l2 := nil;
+	try begin
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			(for l3 := a3 to (StrLen(a2) - 1) do begin
+					local l7;
+					l4 := a2[l3];
+					toneIndex := -1;
+					if (if (l4 >= $0) then (l4 <= $9)) then begin
+							toneIndex := (ORD(l4) - ORD($0))
+						end else begin
+							if (l4 = $*) then begin
+									toneIndex := 10
+								end else begin
+									if (l4 = $#) then begin
+											toneIndex := 11
+										end else begin
+											if ((l4 = $,) or (l4 = $p)) then begin
+													Sleep((userConfiguration.commaDelay * 60))
+												end else begin
+													if (l4 = $w) then begin
+															l2 := true;
+															confirmStore := {command: a1, phone: a2, idx: (l3 + 1)};
+															GetRoot():Confirm("", "Waiting for a second dial tone. Tap \u201C\uOK\u201D\u to continue dialing.", self, 'SpeakerOptionContinue);
+															break
+														end
+												end
+										end
+								end
+						end;
+					if (toneIndex >= 0) then begin
+							(l7 := ConvertToSoundFrame(@68[toneIndex])).volume := 4;
+							PlaySoundSync(l7)
+						end
+				end)
+		end onexception |evt.ex| do begin
+			nextIndex := 0;
+			l1 := CurrentException().error
+		end;
+	(if (not l2) then self:SpeakerOptionDone(a1, l1, a4))
+end
+@@end

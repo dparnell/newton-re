@@ -1,0 +1,58 @@
+@@ 0x55c711
+@@const kBinaryFromHex
+func(hex, cls) begin
+	local b := MakeBinary(StrLen(hex) div 2, cls);
+	for i := 0 to Length(b) - 1 do begin
+		local h := Ord(hex[2 * i]);
+		local l := Ord(hex[2 * i + 1]);
+		StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+	end;
+	b
+end
+@@const kLiteral_55bfe5
+{bits: call kBinaryFromHex with ("00000000000400d200d2026300e6027700fe000003ff80000783c0000e00e0000c0060001c0070001801300018033000180370001807b000180f70001c3ef0001c7d60000e2ae0000f83c0003fff80007bfe0000f8000000f0000000e0000000", 'bits), bounds: '{left: 0, top: 0, right: 20, bottom: 20}}
+@@main
+func(scope) begin
+	local Show;
+	local l1, l2;
+	if (if ((not findText) or (if findText then (SplitString(findText)[0] = nil))) then (not (if appSpecificChildren then appSpecificChildren.dontIncludeInputLine))) then begin
+			self:SetMessage("No text to search for.")
+		end else begin
+			if (scope <> radioCluster.clusterValue) then begin
+					radioCluster:SetClusterValue(scope)
+				end;
+			l1 := nil;
+			l2 := nil;
+			if (if (if (if (not (if appSpecificChildren then appSpecificChildren.dontIncludeInputLine)) then findInput) then (findInput.curLabelCommand > 0)) then (not (l1 := self:ConvertTextToDate(findText, findInput.curLabelCommand)))) then begin
+					return nil
+				end;
+			if l1 then begin
+					self:setfindtext(l1.findText);
+					l2 := l1.findTime
+				end;
+			findAllResults := [Array: ];
+			localFinder := nil;
+			self.busybox := nil;
+			Show := nil;
+			if additionalFind then begin
+					self:DoAdditionalFind()
+				end else begin
+					if ((scope = 'findFrontmost) or (if (if (scope = 'findSelected) then selectedAppSymbols) then (Length(selectedAppSymbols) = 1))) then begin
+							Show := Perform(self, scope, [Array: ])
+						end else begin
+							if (DoProgress('vBarber, {statusText: "Find", barber: true, icon: kLiteral_55bfe5, closeBox: nil}, func(a1) begin
+								self.busybox := a1;
+								Show := Perform(self, scope, [Array: ]);
+								(self.busybox := nil)
+							end) = 'Cancel) then begin
+									self:Notify(3, "Find", "The Find action was cancelled")
+								end
+						end
+				end;
+			if Show then begin
+					self:ShowFound(scope)
+				end
+		end;
+	(busybox := nil)
+end
+@@end

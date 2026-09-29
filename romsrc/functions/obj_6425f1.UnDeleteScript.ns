@@ -1,0 +1,23 @@
+@@ 0x4de1d1
+func(a1) begin
+	local l1, l2, l3, l4;
+	AddUndoAction('DoDeleteScript, [Array: a1]);
+	l1 := GetLocationSoup(@251);
+	(l2 := DeepClone('{type: index, indexPath: [Array: name, country, region]})).beginKey := (l2.endKey := [Array: a1.name, a1.country, a1.region]);
+	l3 := l1:Query(l2);
+	(loop begin
+			if (not (l4 := l3.realCurs:entry())) then begin
+					break
+				end;
+			(if (if (if (l4.longitude = a1.longitude) then (l4.latitude = a1.latitude)) then (l4.kind = 'delete)) then begin
+					EntryRemoveFromSoup(l4);
+					self:RebuildCardCursor(a1);
+					self:Retarget();
+					return nil
+				end)
+		end);
+	self:AddToCities(a1, nil);
+	self:RebuildCardCursor(a1);
+	self:Retarget()
+end
+@@end

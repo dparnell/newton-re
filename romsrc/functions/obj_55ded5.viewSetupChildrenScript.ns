@@ -1,0 +1,7 @@
+@@ 0x55da75
+func() begin
+	self:SetLabelText(label);
+	self:setSubLabel();
+	inherited:?viewSetupChildrenScript()
+end
+@@end

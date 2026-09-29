@@ -1,0 +1,15 @@
+@@ 0x46c3b1
+func(a1) begin
+	local l1;
+	l1 := nil;
+	if cText:DeleteText(cText.wordLeft, cText.wordRight) then begin
+			if a1 then begin
+					DoScrubEffect(a1)
+				end;
+			correct:Dirty();
+			cText:Scroll(1);
+			l1 := true
+		end;
+	return l1
+end
+@@end

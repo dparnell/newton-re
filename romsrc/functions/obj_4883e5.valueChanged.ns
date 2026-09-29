@@ -1,0 +1,15 @@
+@@ 0x4883c5
+func() begin
+	local l1;
+	l1 := GetUserConfig('userFolderGroups);
+	(if ((if (if viewValue then l1.(theApp)) then (Length(l1.(theApp)) >= 12)) or (if (if (not viewValue) then l1._Global) then (Length(l1._Global) >= 12))) then begin
+			self:Notify(3, "Filing", ParamStr("Can't create any more ^0 folders. Edit or Delete and existing one.", [Array: (if viewValue then GetAppName(theApp) else "global")]));
+			if (viewValue = nil) then begin
+					viewValue := buttonValue
+				end else begin
+					viewValue := nil
+				end;
+			AddDeferredSend(self, 'UpdateBitmap, nil)
+		end)
+end
+@@end

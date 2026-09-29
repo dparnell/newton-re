@@ -1,0 +1,5 @@
+@@ 0x79f125 names
+func() begin
+	self:Notify(3, "To Do", "This task is already completed. Reminder and Repeat can\u2019\ut be changed")
+end
+@@end

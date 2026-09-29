@@ -1,0 +1,11 @@
+@@ 0x472b61
+func(a1, a2) begin
+	(if a1 then begin
+			soups := (foreach l1 in a2 collect l1.name);
+			Sort(soups, '|str<|, nil);
+			CallFrameBasedRegistryFns(SoupRestoreRegistry, [Array: soups])
+		end else (foreach l1 in a2 do begin
+				XmitSoupChangeNow(l1.name, 'Connection, 'whatThe, nil)
+			end))
+end
+@@end

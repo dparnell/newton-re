@@ -1,0 +1,9 @@
+@@ 0x746739
+func() begin
+	local target;
+	target := self:CreateConfig('location, [Array: 'place, WorksiteNetworkSlot], "Choose a computer to connect with.", 'validateDialog, 'ValidateDone);
+	(self.thecallback := func(a1) begin
+		self:SetWorksite(target)
+	end)
+end
+@@end

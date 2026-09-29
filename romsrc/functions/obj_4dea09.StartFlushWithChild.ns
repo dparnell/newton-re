@@ -1,0 +1,5 @@
+@@ 0x4de9e9
+func(a1) begin
+	self:StartFlush()
+end
+@@end

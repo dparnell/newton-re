@@ -1,0 +1,10 @@
+@@ 0x4b6331
+func(a1, a2) begin
+	local l1;
+	l1 := {item: (if a2.title then a2.title else a2.name), symbol: a1};
+	if (a1 = currentViewSymbol) then begin
+			l1.mark := $\uFC0B
+		end;
+	AddArraySlot(popup, l1)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x4da4d1
+func() begin
+	(self.viewBounds := RelBounds(0, 20, pageWidth, ((pageHeight - 120) - 60)))
+end
+@@end

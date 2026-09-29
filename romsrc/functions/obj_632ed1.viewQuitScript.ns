@@ -1,0 +1,8 @@
+@@ 0x4e6019
+func() begin
+	(foreach l1 in '[Array: strokes, matchedWords, matchedValues, recognizedWord, requestedWord, lastWordEndTime, randomProc, drawPenSizeX, drawPenSizeY, viewFlags] do begin
+			RemoveSlot(self, l1)
+		end);
+	saveLetterWeights()
+end
+@@end

@@ -1,0 +1,19 @@
+@@ 0x7a05cd names
+func() begin
+	local remindRange;
+	self.labelCommands := reminderLabels;
+	(if (not HasPath(task, 'remindForDate)) then (if ((remindRange := ((remindRange := (newMtgDate - ((Time() div 1440) * 1440))) div 1440)) < 8) then begin
+				if (remindRange < 0) then begin
+						remindRange := 0
+					end;
+				if (if savedFrequencyIndex then (savedFrequencyIndex > 0)) then begin
+						remindRange := 7
+					end;
+				self.labelCommands := Clone(reminderLabels);
+				setlength(labelCommands, (remindRange + 1));
+				index := 0;
+				savedReminderIndex := 0;
+				SetValue(entryLine, 'text, labelCommands[0])
+			end))
+end
+@@end

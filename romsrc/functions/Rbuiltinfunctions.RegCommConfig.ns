@@ -1,0 +1,6 @@
+@@ 0x3c6d29
+func(a1, a2) begin
+	CommConfigRegistry.(EnsureInternal(a1)) := a2;
+	nil
+end
+@@end

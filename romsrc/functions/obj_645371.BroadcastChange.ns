@@ -1,0 +1,5 @@
+@@ 0x4af425
+func(a1, a2) begin
+	(if (a1 = 'quit) then XmitSoupChangeNow(masterSoup.soupName, appSymbol, 'whatThe, a2))
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x79ffed names
+func(index) begin
+	dirtyFlag := true;
+	(savedPriorityIndex := index)
+end
+@@end

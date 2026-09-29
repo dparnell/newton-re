@@ -1,0 +1,10 @@
+@@ 0x569fc1
+func(a1) begin
+	local l1;
+	(foreach l2 in (l1 := a1:SoupsInUse()) do begin
+			if l2 then begin
+					XmitSoupChange(l2:GetName(), '_newt, 'SoupLeaves, l2)
+				end
+		end)
+end
+@@end

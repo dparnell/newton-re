@@ -1,0 +1,5 @@
+@@ 0x4b9169
+func(a1, a2) begin
+	(if (a1.(path) = a2) then {item: self:PathToText(), id: MakeEntryAlias(a1)})
+end
+@@end

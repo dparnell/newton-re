@@ -1,0 +1,13 @@
+@@ 0x4bc399
+func(a1) begin
+	local l1;
+	if (not a1) then begin
+			a1 := ""
+		end;
+	self:AddUndoAction('UpdateText, [Array: MakePhone({phone: Clone(phone:GetRichString()), areacode: Clone(areacode:GetRichString())})]);
+	(if IsInteger(a1) then self:UpdatePhone(SPrintObject(a1)) else begin
+			self:UpdatePhone((l1 := ParsePhone(a1)).phone);
+			self:UpdateAreaCode(l1.areacode)
+		end)
+end
+@@end

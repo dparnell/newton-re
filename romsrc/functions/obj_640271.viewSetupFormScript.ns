@@ -1,0 +1,5 @@
+@@ 0x49a1bd
+func() begin
+	self:RegisterOpenKeyboard(5)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x4cbe95
+func() begin
+	(self.text := ParamStr("Page ^0 of ^1", [Array: fields.pageNumber, fields.pageCount]))
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x4d99c9
+func() begin
+	(if (if kids then (reflowStart < Length(kids))) then self:RedoChildren())
+end
+@@end

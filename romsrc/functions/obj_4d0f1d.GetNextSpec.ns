@@ -1,0 +1,28 @@
+@@ 0x4d07dd
+func() begin
+	local l1, l2;
+	if discardPage then begin
+			self:SetStatus('Receiving, {progress: [Array: 0, 0, sessionInfo.body.info.maxSize]});
+			discardPage := nil;
+			return activeInputSpec
+		end else begin
+			if nextinputspec then begin
+					l1 := nextinputspec;
+					nextinputspec := nil;
+					if self:GetConfig('preCreatePages) then begin
+							AddDelayedCall(func() begin
+								(nextinputspec := self:SetupPage())
+							end, nil, 500)
+						end
+				end else begin
+					l1 := self:SetupPage()
+				end
+		end;
+	if ((l2 := sessionInfo.body.info.pageCount) > 0) then begin
+			ClearVBOCache(sessionInfo.body.pages[(l2 - 1)].image)
+		end;
+	sessionInfo.body.info.pageCount := (l2 + 1);
+	self:SetStatus('Receiving, {progress: [Array: 0, 0, sessionInfo.body.info.maxSize]});
+	l1
+end
+@@end

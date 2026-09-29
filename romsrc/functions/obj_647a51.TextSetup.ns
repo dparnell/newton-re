@@ -1,0 +1,16 @@
+@@ 0x530f49
+func() begin
+	l1 := (Length(labelCommands) - 1);
+	l2 := self:DefaultProvider();
+	local l1;
+	local l2;
+	(foreach l3, l4 in labelCommands do begin
+			if (if (l4 <> 'pickseparator) then (l2 = l4.slot)) then begin
+					l1 := l3;
+					break
+				end
+		end);
+	self:SetProvider(labelCommands[l1].slot);
+	labelCommands[l1].item
+end
+@@end

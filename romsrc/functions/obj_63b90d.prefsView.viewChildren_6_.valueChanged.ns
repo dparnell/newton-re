@@ -1,0 +1,5 @@
+@@ 0x50c16d
+func() begin
+	(if theApp.prefsCache then (theApp.prefsCache.internalStore := viewValue) else (theApp:GetAppPreferences().internalStore := viewValue))
+end
+@@end

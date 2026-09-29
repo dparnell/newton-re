@@ -1,0 +1,5 @@
+@@ 0x484c79
+func() begin
+	(if (clusterValue = 0) then (newLabels := nil) else (newLabels := folderList[(clusterValue - 1)]))
+end
+@@end

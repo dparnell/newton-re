@@ -1,0 +1,5 @@
+@@ 0x5258d1
+func() begin
+	AddDeferredSend(assistant, DoParse, nil)
+end
+@@end

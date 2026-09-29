@@ -1,0 +1,19 @@
+@@ 0x4c59c5
+@@const kLiteral_3c5eed
+'{transferMode: 2, penPattern: 0, fillPattern: 5}
+@@main
+func(a1, a2, a3) begin
+	local l1, l2, l3, l4;
+	l1 := ShapeBounds(a1);
+	(if a2 then (if (l1.left < selectIndent) then begin
+				l2 := self:CheckState((a2 + scrollOrigin));
+				(l3 := Clone(kLiteral_3c5eed)).fillPattern := 5;
+				(if (l2 = 'NotCheckable) then self:DrawShape(OffsetShape((l4 := [Array: l3, MakeOval((l1.left + 5), (l1.bottom - 15), (l1.left + 9), (l1.bottom - 11))]), l1.left, (l1.top + (a2 * lineHeight))), kLiteral_3c5eed) else begin
+						if (a3 = 'on) then begin
+								l2 := (not l2)
+							end;
+						self:DrawShape(OffsetShape((l4 := (if l2 then MakeShape(CheckOn) else MakeShape(CheckOff))), (l1.left + checkBoxHorzOffset), ((l1.top + checkBoxVertOffset) + (a2 * lineHeight))), '{transferMode: 0, penPattern: 0, fillPattern: 1})
+					end)
+			end else self:DrawShape(a1, {transform: [Array: 0, (a2 * lineHeight)]})))
+end
+@@end

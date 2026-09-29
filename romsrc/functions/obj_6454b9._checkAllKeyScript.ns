@@ -1,0 +1,7 @@
+@@ 0x49d981
+func(a1) begin
+	clicker();
+	self:checkAll();
+	(checkAllPrimed := true)
+end
+@@end

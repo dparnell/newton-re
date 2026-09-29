@@ -1,0 +1,16 @@
+@@ 0x4f7ce9
+func() begin
+	if Visible(MonthOverView) then begin
+			if previousMainDataDisplay then begin
+					self:changeViewTo(previousMainDataDisplay)
+				end else begin
+					self:changeViewTo(scheduleView)
+				end
+		end;
+	ClearUndoStacks();
+	if Visible(MeetingNotes) then begin
+			MeetingNotes:Close()
+		end;
+	self:minimalRedisplay()
+end
+@@end

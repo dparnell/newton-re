@@ -1,0 +1,8 @@
+@@ 0x44f84d
+func(a1, a2) begin
+	local l1;
+	l1 := {cursor: a1, id: (if a2 then a2 else finalCurse), state: 'passed};
+	ArrayInsert(curses, l1, finalCurse);
+	(finalCurse := (finalCurse + 1))
+end
+@@end

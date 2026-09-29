@@ -1,0 +1,9 @@
+@@ 0x4b9b55
+func(a1) begin
+	(if ((not StrFilled(a1)) or IsRichString(a1)) then a1 else (if textFrame then (foreach l1, l2 in textFrame do begin
+					if StrEqual((if textFramePath then l2.(textFramePath) else l2), a1) then begin
+							break l1
+						end
+				end) else Intern(a1)))
+end
+@@end

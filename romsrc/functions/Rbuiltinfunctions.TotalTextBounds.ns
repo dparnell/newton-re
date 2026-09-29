@@ -1,0 +1,37 @@
+@@ 0x4219e1
+@@const kLiteral_421835
+'{viewClass: 77, viewFlags: 134217728, viewFormat: 0, viewBounds: {left: 0, top: 0, right: 0, bottom: 0}, ReOrientToScreen: @588}
+@@main
+func(a1, a2) begin
+	l1 := {_proto: '{viewClass: 81, viewFormat: 0, viewFlags: 134217736}};
+	local l1;
+	(foreach l2 in '[Array: text, styles, viewBounds, viewFont, textFlags, recConfig, viewLineSpacing] do begin
+			if a1.(l2) then begin
+					l1.(l2) := a1.(l2)
+				end
+		end);
+	if a1.viewFlags then begin
+			l1.viewFlags := BOr(BAnd(a1.viewFlags, -2), 134217736)
+		end;
+	if a1.textFlags then begin
+			l1.textFlags := BAnd(a1.textFlags, 56)
+		end;
+	l4 := kLiteral_421835;
+	if a2 then begin
+			l4 := {_proto: kLiteral_421835};
+			(foreach l2 in '[Array: textFlags, recConfig, viewLineSpacing] do begin
+					local l4, l5, l6;
+					if a2.(l2) then begin
+							l4.(l2) := a2.(l2)
+						end
+				end);
+			if a2.viewFlags then begin
+					l4.viewFlags := BOr(BAnd(a2.viewFlags, -2), 134217728)
+				end
+		end;
+	(l5 := BuildContext(l4)):Open();
+	l6 := AddView(l5, l1);
+	l5:Close();
+	l6.viewBounds
+end
+@@end

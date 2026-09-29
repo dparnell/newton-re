@@ -1,0 +1,10 @@
+@@ 0x4f408d
+@@const kFunction_4f402d
+func() begin
+	AddProcrastinatedSend('calendarAlarm, GetRoot().calendar, 'nextCalendarAlarm, '[Array: nil], 0)
+end
+@@main
+func(a1) begin
+	(if (if GetRoot() then HasSlot(GetRoot(), 'calendar)) then call (kFunction_4f402d) with ())
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x527a0d
+func(a1, a2, a3) begin
+	(if GetRoot().cardfile:AddCardData(a1, 'personal, {anniversary: a2}) then begin
+			a1.anniversaryEvent := MakeEntryAlias(a3);
+			EntryChange(a1)
+		end)
+end
+@@end

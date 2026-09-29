@@ -1,0 +1,10 @@
+@@ 0x4d6411
+func() begin
+	viewBounds := RelBounds(0, dpSlip.dateRangeTop, 220, 18);
+	if (event = nil) then begin
+			viewFlags := BAnd(viewFlags, bnot(1))
+		end;
+	startTime := newFirstDate;
+	(stopTime := newStopDate)
+end
+@@end

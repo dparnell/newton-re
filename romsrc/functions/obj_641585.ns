@@ -1,0 +1,14 @@
+@@ 0x641585
+func() begin
+	local l1;
+	(if (userConfiguration.letterSetSelection <> 2) then begin
+			SaveDataToEntry((l1 := GetLetterWeights()), "LetterWeights2.0");
+			(if userConfiguration.bigLearningEnabled then begin
+					if l1 then begin
+							l1 := GetLearningData()
+						end;
+					SaveDataToEntry(l1, "LearningData2.0")
+				end)
+		end)
+end
+@@end

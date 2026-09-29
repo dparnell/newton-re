@@ -1,0 +1,8 @@
+@@ 0x4b655d
+func(a1) begin
+	if (if target then (not EntryStore(target):IsReadOnly())) then begin
+			self:EndFlush()
+		end;
+	(if target then (info := infoBox:New(target, headerIcon, headerText, self:GlobalBox(), self)))
+end
+@@end

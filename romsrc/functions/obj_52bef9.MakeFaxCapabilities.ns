@@ -1,0 +1,5 @@
+@@ 0x52be39
+func(a1) begin
+	{label: "mfax", type: 'option, form: 'template, opCode: 512, data: {arglist: [Array: nil, 0, (if a1.serviceClass then a1.serviceClass else 15), (if a1.transmitDataMod then a1.transmitDataMod else 8190), (if a1.transmitHDLCDataMod then a1.transmitHDLCDataMod else 1), (if a1.receiveDataMod then a1.receiveDataMod else 8190), (if a1.receiveHDLCDataMod then a1.receiveHDLCDataMod else 1)], typelist: [Array: 'struct, 'uLong, 'uLong, 'uLong, 'uLong, 'uLong, 'uLong, 'uLong]}}
+end
+@@end

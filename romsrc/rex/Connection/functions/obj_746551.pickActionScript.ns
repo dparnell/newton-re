@@ -1,0 +1,25 @@
+@@ 0x747125
+func(a1) begin
+	local l1, l2, l3, l4, l5;
+	l1 := Length(labelCommands);
+	if (a1 = (l1 - 2)) then begin
+			if (if (l2 := self:GetConfig()) then (curLabelCommand < Length(l2))) then begin
+					l3 := GetNames((l5 := self:GetNetworkAddress()));
+					l4 := nil
+				end;
+			GetRoot().NetChooser:OpenNetChooser(l4, Stringer([Array: "=:", NBPLookupType, "@"]), l3, self, "Use Mac OS computer", "Mac OS computer", "Mac OS computers");
+			a1 := self.curLabelCommand
+		end else begin
+			if (a1 = (l1 - 1)) then begin
+					a1 := curLabelCommand;
+					self:CreateWorksite()
+				end else begin
+					if (not (if (a1 = 1) then StrEqual("(none)", labelCommands[0]))) then begin
+							self:SaveNewChoice(a1)
+						end
+				end
+		end;
+	self.curLabelCommand := a1;
+	inherited:?pickActionScript(a1)
+end
+@@end

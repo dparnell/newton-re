@@ -1,0 +1,5 @@
+@@ 0x5b9181
+func(a1) begin
+	AddWordToDictionary(31, a1)
+end
+@@end

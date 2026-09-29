@@ -1,0 +1,7 @@
+@@ 0x4b4b05
+func() begin
+	local l1;
+	l1 := GetRoot().iobox:DoPutAway((if IsFrame(theAppToRun) then theAppToRun.appSymbol else theAppToRun), theItem, targetView);
+	AddDeferredSend(GetRoot().iobox.pap, 'Close, nil)
+end
+@@end

@@ -1,0 +1,13 @@
+@@ 0x4a8a61
+func(a1, a2) begin
+	local l1, l2;
+	(if (if (if (l1 := (if a1 then _viewdefs.(a1))) then a2) then l1.(a2)) then l1.(a2) else (if (if l1 then l1.default) then l1.default else begin
+				l1 := Clone(@590);
+				if (l2 := GetDataDefs(a1)) then begin
+						a1 := l2.name
+					end;
+				l1.text := ParamStr("This uses stationery that is not installed and\ncannot be displayed. (^0)", [Array: a1]);
+				l1
+			end))
+end
+@@end

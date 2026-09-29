@@ -1,0 +1,5 @@
+@@ 0x745351
+func() begin
+	(if (currentlyShowing = 'AppleTalk) then AppleTalkPicker:UpdateMemory() else phonePicker:UpdateMemory())
+end
+@@end

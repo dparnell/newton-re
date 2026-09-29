@@ -1,0 +1,7 @@
+@@ 0x518ec9
+func() begin
+	self.viewChildren := NotesData;
+	self:SetOrigin(0, currentY);
+	(currentY := (currentY + 400))
+end
+@@end

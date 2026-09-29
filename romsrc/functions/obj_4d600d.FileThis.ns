@@ -1,0 +1,13 @@
+@@ 0x554cb5
+func(a1, a2, a3, a4, a5) begin
+	if a2 then begin
+			a1.labels := a3
+		end else begin
+			a1.labels := 42
+		end;
+	if a4 then begin
+			a1.store := a5
+		end;
+	self:Fileit()
+end
+@@end

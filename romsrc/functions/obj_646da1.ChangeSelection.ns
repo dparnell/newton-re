@@ -1,0 +1,45 @@
+@@ 0x548389
+func(a1, a2) begin
+	self:LockScreen(true);
+	if overUp then begin
+			if IsArray(a2) then begin
+					(foreach l1 in a2 do begin
+							l1:Checkit(nil)
+						end)
+				end else begin
+					if a2 then begin
+							a2:Checkit(nil)
+						end
+				end;
+			if IsArray(a1) then begin
+					(foreach l1 in a1 do begin
+							l1:Checkit(true)
+						end)
+				end else begin
+					if a1 then begin
+							a1:Checkit(true)
+						end
+				end
+		end else begin
+			if IsArray(a2) then begin
+					(foreach l1 in a2 do begin
+							l1:hilite(nil)
+						end)
+				end else begin
+					if a2 then begin
+							a2:hilite(nil)
+						end
+				end;
+			if IsArray(a1) then begin
+					(foreach l1 in a1 do begin
+							l1:hilite(true)
+						end)
+				end else begin
+					if a1 then begin
+							a1:hilite(true)
+						end
+				end
+		end;
+	self:LockScreen(nil)
+end
+@@end

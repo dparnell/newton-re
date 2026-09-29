@@ -1,0 +1,19 @@
+@@ 0x44cdb1
+func(a1) begin
+	if (a1[3] = $0) then begin
+			a1[3] := $ ;
+			if (a1[3] = $0) then begin
+					a1[3] := $ 
+				end
+		end;
+	if (a1[0] = $0) then begin
+			a1[0] := $ ;
+			if (a1[0] = $0) then begin
+					a1[0] := $ 
+				end
+		end;
+	StrReplace(a1, "  /", "", nil);
+	StrReplace(a1, "/  ", "", nil);
+	return (a1 := StringFilter(a1, " ", 'rejectAll))
+end
+@@end

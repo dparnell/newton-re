@@ -1,0 +1,10 @@
+@@ 0x511ded
+func(a1) begin
+	if (not openNonchildViews) then begin
+			openNonchildViews := [Array: ]
+		end;
+	AddArraySlot(openNonchildViews, a1);
+	a1:Open();
+	nil
+end
+@@end

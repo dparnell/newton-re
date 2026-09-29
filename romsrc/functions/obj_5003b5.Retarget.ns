@@ -1,0 +1,8 @@
+@@ 0x4ffc99
+func() begin
+	cursor := nil;
+	selected := nil;
+	emptyOverviewText := nil;
+	self:RedoChildren()
+end
+@@end

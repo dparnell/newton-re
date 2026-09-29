@@ -1,0 +1,22 @@
+@@ 0x5468a9
+func(a1, a2) begin
+	(if (a2 = 47) then begin
+			self:HiliteViewChildren(a1);
+			self:LockScreen(true);
+			(foreach l1 in self:GetChildIconViews() do begin
+					local l3;
+					if (if l1.target then l1.hilites) then begin
+							RemoveSlot(l1, 'hilites);
+							if ((not (l3 := l1.target.fentry.sequence)) or (l3 >= 0)) then begin
+									if overUp then begin
+											l1:Checkit(true)
+										end else begin
+											l1:hilite(true)
+										end
+								end
+						end
+				end);
+			self:LockScreen(nil)
+		end else (if (a2 = 49) then self:SelectNone()))
+end
+@@end

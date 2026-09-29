@@ -1,0 +1,5 @@
+@@ 0x518ce1
+func() begin
+	Stringer([Array: TimeStr(meeting.mtgStartDate, TimeSpec), " ", $-, " ", TimeStr((meeting.mtgStartDate + self:GetMeetingSlot(meeting, 'mtgDuration)), TimeSpec), "\n", LongDateStr(meeting.mtgStartDate, @66.longDateStrSpec)])
+end
+@@end

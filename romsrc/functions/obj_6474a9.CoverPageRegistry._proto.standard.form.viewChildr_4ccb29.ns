@@ -1,0 +1,23 @@
+@@ 0x4ccb29
+func() begin
+	local l1, l2;
+	self.text := Stringer([Array: fromFrame.name, $\n, fromFrame.company, $\n]);
+	if IsEntryAlias((l1 := GetUserConfig('currentPersona))) then begin
+			l1 := ResolveEntryAlias(l1)
+		end;
+	if (not l1) then begin
+			return nil
+		end;
+	if (if (l2 := GetRoot().cardfile:bcPhoneNumber(l1, 'faxPhone)) then StrFilled(l2[0])) then begin
+			self.text := Stringer([Array: self.text, MakeDisplayPhone(l2[0]), " fax\n"]);
+			if (if (l2 := GetRoot().cardfile:bcPhoneNumber(l1, 'workPhone)) then StrFilled(l2[0])) then begin
+					self.text := Stringer([Array: self.text, MakeDisplayPhone(l2[0]), " voice"])
+				end;
+			return nil
+		end;
+	(if (if (l2 := GetRoot().cardfile:bcPhoneNumber(l1, 'homefaxPhone)) then StrFilled(l2[0])) then begin
+			self.text := Stringer([Array: self.text, MakeDisplayPhone(l2[0]), " fax\n"]);
+			(if (if (l2 := GetRoot().cardfile:bcPhoneNumber(l1, 'homePhone)) then StrFilled(l2[0])) then (self.text := Stringer([Array: self.text, MakeDisplayPhone(l2[0]), " voice"])))
+		end)
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x41df81
+func(a1) begin
+	(if (if (not self:labelClick(a1)) then labelCommands) then begin
+			if self:TrackHilite(a1) then begin
+					self:Popit()
+				end;
+			true
+		end)
+end
+@@end

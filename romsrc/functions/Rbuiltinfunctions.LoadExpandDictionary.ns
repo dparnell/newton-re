@@ -1,0 +1,5 @@
+@@ 0x5ab6b1
+func() begin
+	LoadDictionary(35, "ExpandDictionary")
+end
+@@end

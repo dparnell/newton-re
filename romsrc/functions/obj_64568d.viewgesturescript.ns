@@ -1,0 +1,45 @@
+@@ 0x4b73f5
+func(a1, a2) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11, l12;
+	if (a2 = 16) then begin
+			l2 := StrokeBounds(a1);
+			l3 := GetPoint(5, a1);
+			l4 := GetPoint(1, a1);
+			if (if (if ((l2.right - l2.left) > cutoffMinWidth) then ((l2.bottom - l2.top) < cutoffMaxHeight)) then (abs((l3 - l4)) < cutoffMaxDY)) then begin
+					l5 := target.height;
+					l6 := ((l3 + l4) div 2);
+					l7 := minimumHeight;
+					if (l8 := targetViewDef:?MinimalBounds(target)) then begin
+							l7 := (l7 + l8.bottom)
+						end;
+					if (not EntryStore(target):IsReadOnly()) then begin
+							self:SetAndSaveNoteHeight(target, max((l6 - self:GlobalBox().top), l7))
+						end;
+					l9 := layout.masterSoup:AdoptEntry(nil, target.class);
+					if (if labelsFilter then (labelsFilter <> '_all)) then begin
+							l9.labels := labelsFilter
+						end;
+					if (target = lastItem) then begin
+							l10 := (l9.timestamp < lastItem.timestamp)
+						end else begin
+							l9.timestamp := target.timestamp;
+							l9.height := max((l5 - target.height), minimumHeight);
+							l10 := nil
+						end;
+					if (GetAppPreferences exists) then begin
+							if (l12 := self:GetAppPreferences().internalStore) then begin
+									l11 := GetStores()[0]
+								end else begin
+									l11 := GetDefaultStore()
+								end;
+							if (if l11 then l11:IsReadOnly()) then begin
+									l11 := nil
+								end
+						end;
+					self:NewEntry(l9, l10, l11);
+					l1 := true
+				end
+		end;
+	l1
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x4b26e9
+func() begin
+	allSoups.inbox:CreateBlankEntry()
+end
+@@end

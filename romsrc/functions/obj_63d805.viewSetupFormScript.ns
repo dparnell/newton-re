@@ -1,0 +1,11 @@
+@@ 0x596e9d
+func() begin
+	(if (path = 'title) then begin
+			viewJustify := 112;
+			(viewBounds := titleBounds)
+		end else begin
+			viewJustify := 240;
+			(viewBounds := fullBounds)
+		end)
+end
+@@end

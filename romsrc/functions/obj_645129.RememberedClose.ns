@@ -1,0 +1,8 @@
+@@ 0x4ac451
+func(a1) begin
+	if newtAppBase._kiddos then begin
+			SetRemove(newtAppBase._kiddos, a1)
+		end;
+	a1:Close()
+end
+@@end

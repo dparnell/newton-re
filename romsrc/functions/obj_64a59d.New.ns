@@ -1,0 +1,13 @@
+@@ 0x424c0d
+func(a1) begin
+	l1 := Clone(self);
+	if a1 then begin
+			local l1;
+			(foreach l2, l3 in a1 do begin
+					l1.(l2) := l3
+				end)
+		end;
+	l1:Init();
+	return l1
+end
+@@end

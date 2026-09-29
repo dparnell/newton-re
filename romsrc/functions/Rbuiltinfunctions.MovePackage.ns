@@ -1,0 +1,39 @@
+@@ 0x559fa9
+@@const kLiteral_5a74d1
+"Packages"
+@@main
+func(a1, destStore) begin
+	local entry, oldSoup;
+	local l1, l2, l3, l4;
+	if (not (entry := PackageEntryFromThingy(a1))) then begin
+			return nil
+		end;
+	oldSoup := EntrySoup(entry);
+	l1 := EntryStore(entry);
+	l2 := entry.pkgRef;
+	if GetPackageEntry((l3 := entry.packageName), destStore) then begin
+			GetRoot():Notify(3, "Newton", ParamStr("The package \u201C\u^0\u201D\u was not moved because a package by the same name is already installed on the store \u201C\u^1\u201D\u.", [Array: l3, destStore:GetName()]));
+			return nil
+		end;
+	if (l4 := IsPackageActive((l2 := entry.pkgRef))) then begin
+			DeActivatePackage(l2)
+		end;
+	try begin
+			l1:AtomicAction(func() begin
+				destStore:AtomicAction(func() begin
+					EntryMove(entry, GetUnionSoupAlways(kLiteral_5a74d1):GetMember(destStore));
+					UnsafeXmitSoupChangeNow(kLiteral_5a74d1, '_newt, 'entryMoved, {oldSoup: oldSoup, entry: entry})
+				end)
+			end)
+		end onexception |evt.ex| do begin
+			if l4 then begin
+					ActivatePackage(l2)
+				end;
+			Rethrow()
+		end;
+	if l4 then begin
+			ActivatePackage(entry.pkgRef)
+		end;
+	true
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x7ad2e5
+func(a1) begin
+	SetValue(vInputLocalNum, 'text, a1)
+end
+@@end

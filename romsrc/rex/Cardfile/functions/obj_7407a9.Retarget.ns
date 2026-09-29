@@ -1,0 +1,31 @@
+@@ 0x7408d5
+func(a1) begin
+	local l1;
+	if (((l1 := dataCursor:entry()) = 'deleted) or (not l1)) then begin
+			if (not (l1 := dataCursor:Next())) then begin
+					l1 := dataCursor:Prev()
+				end;
+			if (not l1) then begin
+					self:SetupCursor();
+					l1 := dataCursor:entry()
+				end
+		end;
+	if (if l1 then (not l1.class)) then begin
+			if (ClassOf(l1.sorton) = 'name) then begin
+					l1.class := 'person
+				end else begin
+					l1.class := 'company
+				end
+		end;
+	target := dataCursor:entry();
+	inherited:Retarget(nil);
+	if a1 then begin
+			entryView:?viewQuitScript();
+			self:viewSetupChildrenScript();
+			entryView:?viewSetupFormScript();
+			entryView:RedoChildren();
+			entryView:?viewSetupDoneScript()
+		end;
+	SetKeyView(self, 0)
+end
+@@end

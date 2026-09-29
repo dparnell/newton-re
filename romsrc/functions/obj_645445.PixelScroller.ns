@@ -1,0 +1,131 @@
+@@ 0x49c251
+func(a1, a2) begin
+	local v5_xxxxxxxxxxxxxxxwwwwww, v6_zzzzzzyyyyyyyyyyyyyyyyyyyy, v11_uuuuuuuuttttt, v13_zyyyyyyyyyyy, v14_ppppppp, v16_yxxxxx, v18_ssssss, v19_yyyyyyyyxxx, v20_vvvvvvvvvvuuuuu, v21_kjjj, v23_tttttttttts, v24_xxxxxxxxxwwwwwww, v25_zzzzzzzzzzyyyyyyyyyyy, v26_vvvvvvvvvvuuuuuu, v27_xxxxxxxxxxxxxxxxxxxxx, v28_zzzzyyyyyyyyyyy, v29_wwwwwwwwwwwvvvvvvvvvv;
+	v27_xxxxxxxxxxxxxxxxxxxxx := self:LocalBox();
+	v25_zzzzzzzzzzyyyyyyyyyyy := Length(entries);
+	v14_ppppppp := (if viewOriginY then viewOriginY else 0);
+	v16_yxxxxx := 0;
+	v11_uuuuuuuuttttt := 0;
+	(if (a2 > 0) then begin
+			if (v25_zzzzzzzzzzyyyyyyyyyyy > 1) then begin
+					v20_vvvvvvvvvvuuuuu := (-v14_ppppppp);
+					v19_yyyyyyyyxxx := (foreach v7_hgg, v10_yyyyyyyyyyyyyyyyyyyxxxxxx in entries do begin
+							if ((v20_vvvvvvvvvvuuuuu + v10_yyyyyyyyyyyyyyyyyyyxxxxxx.height) > a2) then begin
+									break v7_hgg
+								end;
+							if (not dataCursor:Next()) then begin
+									dataCursor:prev();
+									break v7_hgg
+								end;
+							RemoveView(self, viewChildren[0]);
+							viewOriginY := (viewOriginY - v10_yyyyyyyyyyyyyyyyyyyxxxxxx.height);
+							v20_vvvvvvvvvvuuuuu := (v20_vvvvvvvvvvuuuuu + v10_yyyyyyyyyyyyyyyyyyyxxxxxx.height)
+						end);
+					if (if v19_yyyyyyyyxxx then (v19_yyyyyyyyxxx > 0)) then begin
+							ArrayMunger(entries, 0, v19_yyyyyyyyxxx, nil, 0, 0);
+							ArrayMunger(entryViewDefs, 0, v19_yyyyyyyyxxx, nil, 0, 0)
+						end
+				end;
+			v11_uuuuuuuuttttt := (-(viewOriginY := (viewOriginY + a2)));
+			v16_yxxxxx := 0;
+			(foreach v10_yyyyyyyyyyyyyyyyyyyxxxxxx in entries do begin
+					v11_uuuuuuuuttttt := (v11_uuuuuuuuttttt + (v16_yxxxxx := v10_yyyyyyyyyyyyyyyyyyyxxxxxx.height))
+				end);
+			v21_kjjj := Length(entries);
+			(while (v11_uuuuuuuuttttt <= v27_xxxxxxxxxxxxxxxxxxxxx.bottom) do begin
+					if (not v23_tttttttttts) then begin
+							v23_tttttttttts := dataCursor:clone();
+							v23_tttttttttts:move(v21_kjjj);
+							v10_yyyyyyyyyyyyyyyyyyyxxxxxx := v23_tttttttttts:entry()
+						end;
+					if (not v10_yyyyyyyyyyyyyyyyyyyxxxxxx) then begin
+							break
+						end;
+					v11_uuuuuuuuttttt := (v11_uuuuuuuuttttt + (v16_yxxxxx := v10_yyyyyyyyyyyyyyyyyyyxxxxxx.height));
+					AddArraySlot(entries, v10_yyyyyyyyyyyyyyyyyyyxxxxxx);
+					AddArraySlot(entryViewDefs, GetEntryDataView(v10_yyyyyyyyyyyyyyyyyyyxxxxxx, 'default));
+					(v10_yyyyyyyyyyyyyyyyyyyxxxxxx := v23_tttttttttts:Next())
+				end);
+			v5_xxxxxxxxxxxxxxxwwwwww := (v28_zzzzyyyyyyyyyyy := self:ChildViewFrames())[(nextEntry := (Length(v28_zzzzyyyyyyyyyyy) - 1))];
+			if (a2 <> 0) then begin
+					(foreach v7_hgg, v17_ttttttttttts in v28_zzzzyyyyyyyyyyy do begin
+							if (v17_ttttttttttts <> v5_xxxxxxxxxxxxxxxwwwwww) then begin
+									v17_ttttttttttts:OffsetView(0, (-a2))
+								end
+						end)
+				end;
+			lastHeight := ((v27_xxxxxxxxxxxxxxxxxxxxx.bottom - viewOriginY) - (v11_uuuuuuuuttttt - v16_yxxxxx));
+			v5_xxxxxxxxxxxxxxxwwwwww:SyncView();
+			v6_zzzzzzyyyyyyyyyyyyyyyyyyyy := Length(entries);
+			(if (v21_kjjj <> v6_zzzzzzyyyyyyyyyyyyyyyyyyyy) then begin
+					nextEntry := v21_kjjj;
+					(for v7_hgg := v21_kjjj to (v6_zzzzzzyyyyyyyyyyyyyyyyyyyy - 1) do begin
+							AddView(self, protoChild)
+						end)
+				end)
+		end else (if (a2 < 0) then begin
+				v18_ssssss := 0;
+				if ((-a2) > v14_ppppppp) then begin
+						viewOriginY := 0;
+						v20_vvvvvvvvvvuuuuu := v14_ppppppp;
+						(loop begin
+								if (not (v10_yyyyyyyyyyyyyyyyyyyxxxxxx := dataCursor:prev())) then begin
+										dataCursor:Next();
+										a2 := (-v20_vvvvvvvvvvuuuuu);
+										break
+									end;
+								v18_ssssss := (v18_ssssss + 1);
+								ArrayInsert(entries, v10_yyyyyyyyyyyyyyyyyyyxxxxxx, 0);
+								ArrayInsert(entryViewDefs, GetEntryDataView(v10_yyyyyyyyyyyyyyyyyyyxxxxxx, 'default), 0);
+								(if ((v20_vvvvvvvvvvuuuuu := (v20_vvvvvvvvvvuuuuu + v10_yyyyyyyyyyyyyyyyyyyxxxxxx.height)) >= (-a2)) then begin
+										viewOriginY := (v20_vvvvvvvvvvuuuuu + a2);
+										break
+									end)
+							end);
+						v29_wwwwwwwwwwwvvvvvvvvvv := self:ChildViewFrames()[0];
+						v26_vvvvvvvvvvuuuuuu := (self:GlobalBox().top - viewOriginY);
+						nextEntry := 0;
+						(for v7_hgg := 0 to (v18_ssssss - 1) do begin
+								v24_xxxxxxxxxwwwwwww := AddView(self, protoChild);
+								v24_xxxxxxxxxwwwwwww:MoveBehind(v29_wwwwwwwwwwwvvvvvvvvvv);
+								v24_xxxxxxxxxwwwwwww:OffsetView(0, (v26_vvvvvvvvvvuuuuuu - v24_xxxxxxxxxwwwwwww:GlobalBox().top));
+								v26_vvvvvvvvvvuuuuuu := v24_xxxxxxxxxwwwwwww:GlobalBox().bottom
+							end);
+						v29_wwwwwwwwwwwvvvvvvvvvv:SyncView()
+					end else begin
+						viewOriginY := (v14_ppppppp + a2);
+						if (v25_zzzzzzzzzzyyyyyyyyyyy > 1) then begin
+								nextEntry := 0;
+								self:ChildViewFrames()[0]:SyncView()
+							end
+					end;
+				v11_uuuuuuuuttttt := (-viewOriginY);
+				v16_yxxxxx := 0;
+				v13_zyyyyyyyyyyy := 0;
+				v6_zzzzzzyyyyyyyyyyyyyyyyyyyy := Length(entries);
+				(while (if (v11_uuuuuuuuttttt <= v27_xxxxxxxxxxxxxxxxxxxxx.bottom) then (v13_zyyyyyyyyyyy < v6_zzzzzzyyyyyyyyyyyyyyyyyyyy)) do begin
+						v10_yyyyyyyyyyyyyyyyyyyxxxxxx := entries[v13_zyyyyyyyyyyy];
+						v11_uuuuuuuuttttt := (v11_uuuuuuuuttttt + (v16_yxxxxx := v10_yyyyyyyyyyyyyyyyyyyxxxxxx.height));
+						(v13_zyyyyyyyyyyy := (v13_zyyyyyyyyyyy + 1))
+					end);
+				if (v13_zyyyyyyyyyyy < v6_zzzzzzyyyyyyyyyyyyyyyyyyyy) then begin
+						SetLength(entries, v13_zyyyyyyyyyyy);
+						SetLength(entryViewDefs, v13_zyyyyyyyyyyy);
+						v28_zzzzyyyyyyyyyyy := self:ChildViewFrames();
+						(for v7_hgg := (v6_zzzzzzyyyyyyyyyyyyyyyyyyyy - 1) to v13_zyyyyyyyyyyy by -1 do begin
+								RemoveView(self, v28_zzzzyyyyyyyyyyy[v7_hgg])
+							end)
+					end;
+				v5_xxxxxxxxxxxxxxxwwwwww := (v28_zzzzyyyyyyyyyyy := self:ChildViewFrames())[(nextEntry := (Length(v28_zzzzyyyyyyyyyyy) - 1))];
+				if (a2 <> 0) then begin
+						(foreach v7_hgg, v17_ttttttttttts in v28_zzzzyyyyyyyyyyy do begin
+								if (if (v7_hgg > v18_ssssss) then (v17_ttttttttttts <> v5_xxxxxxxxxxxxxxxwwwwww)) then begin
+										v17_ttttttttttts:OffsetView(0, (-a2))
+									end
+							end)
+					end;
+				lastHeight := ((v27_xxxxxxxxxxxxxxxxxxxxx.bottom - viewOriginY) - (v11_uuuuuuuuttttt - v16_yxxxxx));
+				v5_xxxxxxxxxxxxxxxwwwwww:SyncView()
+			end))
+end
+@@end

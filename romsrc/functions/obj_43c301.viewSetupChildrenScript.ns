@@ -1,0 +1,10 @@
+@@ 0x43c2e1
+func() begin
+	local l1, l2;
+	hiliteHack := 0;
+	inherited:viewSetupChildrenScript();
+	hiliteHack := nil;
+	prevCountry := nil;
+	tabs:setLetter((l2 := (if (if (l1 := cursor:entry()) then StrFilled(l1.name)) then l1.name[0] else $A)), nil)
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x73ed45
+func(a1, a2) begin
+	if a2 then begin
+			a2:Close();
+			GetRoot().cardfile.barber := nil
+		end;
+	a1:TearDown()
+end
+@@end

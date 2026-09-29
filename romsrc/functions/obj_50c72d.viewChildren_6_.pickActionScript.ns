@@ -1,0 +1,14 @@
+@@ 0x5070b1
+func(a1, a2) begin
+	dirtyFlag := true;
+	newFirstDate := a1;
+	newStopDate := a2;
+	if (newFirstDate > newMtgDate) then begin
+			DateValue.Date := newFirstDate;
+			DateValue:viewSetupChildrenScript();
+			DateValue:Dirty()
+		end;
+	inherited:pickActionScript(a1, a2);
+	self:CarefulAskUser()
+end
+@@end

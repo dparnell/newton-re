@@ -1,0 +1,5 @@
+@@ 0x428be5
+func(a1) begin
+	SetUserConfig('recordingQuality, labelCommands[a1].symbol)
+end
+@@end

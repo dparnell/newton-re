@@ -1,0 +1,5 @@
+@@ 0x4482ed
+func(a1, a2) begin
+	vAnnotations:SetupIdle(500)
+end
+@@end

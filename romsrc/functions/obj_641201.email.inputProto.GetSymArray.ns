@@ -1,0 +1,5 @@
+@@ 0x455e15
+func() begin
+	GetGlobals().EmailSystems.emailClasses
+end
+@@end

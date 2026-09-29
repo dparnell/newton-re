@@ -1,0 +1,7 @@
+@@ 0x5b2cc5
+func() begin
+	self.items := international.keyboards;
+	self.labelCommands := (foreach l1 in international.keyboards collect l1.title);
+	inherited:viewSetupFormScript()
+end
+@@end

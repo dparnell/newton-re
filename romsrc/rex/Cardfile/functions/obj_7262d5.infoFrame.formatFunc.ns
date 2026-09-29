@@ -1,0 +1,5 @@
+@@ 0x7274ad
+func(a1) begin
+	(if (if StrFilled(a1[2]) then StrFilled(a1[3])) then ParamStr("^?0^0\n||^?1^1\n||^?2^2, ||^?3^3 ||^?4^4||^?5\n^5||", a1) else ParamStr("^?0^0\n||^?1^1\n||^?2^2 ||^?3^3 ||^?4^4||^?5\n^5||", a1))
+end
+@@end

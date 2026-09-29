@@ -1,0 +1,12 @@
+@@ 0x4b5f95
+func() begin
+	items := [Array: ];
+	(foreach l1 in transports do begin
+			local l3;
+			if (if (if (l3 := GetRoot().(l1)) then l3.(checkSlot)) then (l3.owner = appSymbol)) then begin
+					AddArraySlot(items, {item: l3.title, icon: l3.icon, indent: 28, transport: l3})
+				end
+		end);
+	(connectPopup := GetView(DoPopup(items, (width + 2), 0, self)))
+end
+@@end

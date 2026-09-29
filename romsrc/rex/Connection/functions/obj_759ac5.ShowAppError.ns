@@ -1,0 +1,28 @@
+@@ 0x75f779
+@@const kLiteral_75f8dd
+"^0 (^1)"
+@@main
+func(a1, a2, a3, a4) begin
+	local l1, l2;
+	if (not a3) then begin
+			a3 := -1
+		end;
+	(if (not SetContains('[Array: -16013, -16005, -10039, -28013], a3)) then begin
+			l1 := self:GetDesktopString(a2);
+			if (if (a3 = -28028) then a2.desktopresult) then begin
+					text := ParamStr(kLiteral_75f8dd, [Array: a2.desktopresult.errorString, Stringer([Array: "", a2.desktopresult.desktopError])])
+				end else begin
+					if (text := TableLookup(connectionErrorTable, a3)) then begin
+							text := ParamStr(text, [Array: l1])
+						end else begin
+							text := ParamStr(kLiteral_75f8dd, [Array: "A connection error has occurred.   ", self:TranslateError(a3)])
+						end
+				end;
+			l2 := 3;
+			if a4 then begin
+					l2 := 5
+				end;
+			AddDeferredSend(self, 'Notify, [Array: l2, a1, text])
+		end)
+end
+@@end

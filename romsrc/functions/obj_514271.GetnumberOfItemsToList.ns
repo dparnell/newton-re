@@ -1,0 +1,24 @@
+@@ 0x513a41
+func() begin
+	local l1, l2, l3, l4;
+	l1 := GetAllMeetings(notes, RepeatNotes, displaydate, nil);
+	l2 := GetAllMeetings(MeetingSoup, RepeatSoup, displaydate, nil);
+	l3 := 0;
+	l4 := 0;
+	if (if (not l1) then (not l2)) then begin
+			l3 := 0
+		end else begin
+			if (if l1 then (not l2)) then begin
+					l4 := l1
+				end else begin
+					if (if (not l1) then l2) then begin
+							l4 := l2
+						end else begin
+							ArrayMunger((l4 := l1), Length(l4), 0, l2, 0, nil)
+						end
+				end;
+			l3 := Length(l4)
+		end;
+	l3
+end
+@@end

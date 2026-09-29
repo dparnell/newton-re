@@ -1,0 +1,13 @@
+@@ 0x7ab9c5
+func() begin
+	local l1;
+	fReviewDone := true;
+	fFirstName := (fPersona.name.first := vFirstName:GetText());
+	l1 := (fPersona.name.last := vLastName:GetText());
+	fPersona.company := vCompanyName:GetText();
+	if (fFirstName <> nil) then begin
+			self:AddWordsToDict(fFirstName, 48)
+		end;
+	(if (l1 <> nil) then self:AddWordsToDict(l1, 7))
+end
+@@end

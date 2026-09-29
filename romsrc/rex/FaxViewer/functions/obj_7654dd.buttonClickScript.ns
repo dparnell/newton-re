@@ -1,0 +1,17 @@
+@@ 0x7659e5
+func() begin
+	local l1;
+	if markedPage then begin
+			popup[markedPage].mark := $ 
+		end;
+	markedPage := nil;
+	if ((l1 := imageContainer:GetCurrentPage()) <= numVisiblePages) then begin
+			markedPage := (l1 - 1);
+			popup[markedPage].mark := $\uFC0B
+		end;
+	if (numVisiblePages > 1) then begin
+			popup[(Length(popup) - 1)] := (if Visible(vPageNavigator) then "Hide Page View" else "Show Page View")
+		end;
+	DoPopup(popup, self:LocalBox().right, 2, self)
+end
+@@end

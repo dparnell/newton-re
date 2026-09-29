@@ -1,0 +1,5 @@
+@@ 0x4e3f71
+func() begin
+	{family: GetFontFamilySym(font), size: GetFontSize(font), face: GetFontFace(font)}
+end
+@@end

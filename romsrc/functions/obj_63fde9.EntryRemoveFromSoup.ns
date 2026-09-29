@@ -1,0 +1,5 @@
+@@ 0x5b8aed
+func(a1) begin
+	self:RemoveWord(a1.word)
+end
+@@end

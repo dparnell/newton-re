@@ -1,0 +1,45 @@
+@@ 0x4f7f35
+@@const kFunction_4f780d
+func(a1, a2) begin
+	(a2:GetSignature() = a1)
+end
+@@main
+func(a1, a2, a3) begin
+	local l1, l2, l3;
+	try begin
+			l1 := (if a3 then 'calendar else 'calendarAPI);
+			if a2.storeSig then begin
+					l3 := LFetch(GetStores(), a2.storeSig, 0, kFunction_4f780d, nil);
+					RemoveSlot(a2, 'storeSig)
+				end;
+			if (ClassOf(a1) <> 'UnionSoup) then begin
+					l2 := a1:AddXmit(a2, l1)
+				end else begin
+					if l3 then begin
+							l2 := a1:GetMember(l3):AddXmit(a2, l1)
+						end else begin
+							if self:GetAppPreferences().internalStore then begin
+									l2 := a1:GetMember(GetStores()[0]):AddXmit(a2, l1)
+								end else begin
+									l2 := a1:AddToDefaultStoreXmit(a2, l1)
+								end
+						end
+				end;
+			if (not l2) then begin
+					AddProcrastinatedSend('calendar, calendar, 'redisplayScript, [Array: ], 100);
+					self:NotifyStoreError()
+				end else begin
+					if (if a3 then a2.mtgAlarm) then begin
+							self:initializeAlarms()
+						end
+				end
+		end onexception |evt.ex.fr.store| do begin
+			self:redisplayScript();
+			Rethrow()
+		end;
+	(if Visible(upDownScroller) then begin
+			self:calculateScrollingRects();
+			upDownScroller:AdjustArrows()
+		end)
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x4fa595
+func(a1, a2) begin
+	local l1, l2;
+	l2 := WeekNumber((l1 := selectedDates[0]), firstDayOfWeek);
+	SetValue(self, 'text, Stringer([Array: "Week: ", l2]))
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x51d879
+func() begin
+	local l1;
+	l1 := self:PageSize(nil);
+	(if (pagesShowing = 1) then (self.viewBounds := RelBounds(0, 0, l1.width, l1.height)) else (self.viewBounds := RelBounds(0, 0, ((l1.width * 2) + 15), l1.height)))
+end
+@@end

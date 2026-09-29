@@ -1,0 +1,9 @@
+@@ 0x44fb41
+func() begin
+	(foreach l1 in curses do begin
+			l1.cursor:Reset();
+			l1.state := 'passed
+		end);
+	self:Next()
+end
+@@end

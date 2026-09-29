@@ -1,0 +1,29 @@
+@@ 0x735d51
+func(a1) begin
+	local newCursor, progressData;
+	progressData := {barber: true, statusText: "Adding new birthdays to the Date Book.", primary: nil, closeBox: nil};
+	if a1 then begin
+			if (newBdays = true) then begin
+					newCursor := self:GetBdayCursor();
+					DoProgress('vBarber, progressData, func(a1) begin
+						local l1;
+						l1 := newCursor:entry();
+						(while l1 do begin
+								self:AddBdayToCalendar(l1, 'bday, 'bdayEvent, "Bday: ^0");
+								l1 := newCursor:Next();
+								a1:UpdateIndicator(progressData)
+							end)
+					end)
+				end else begin
+					local l1;
+					local l2;
+					(foreach l3 in newBdays do begin
+							if (l1 := ResolveEntryAlias(l3.entry)) then begin
+									self:AddBdayToCalendar(l1, 'bday, 'bdayEvent, "Bday: ^0")
+								end
+						end)
+				end
+		end;
+	(newBdays := nil)
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x4d9a05
+func() begin
+	local l1;
+	l1 := self:GlobalBox();
+	(viewBounds := SetBounds(max((60 - l1.left), 0), max((60 - l1.top), 0), 0, 0))
+end
+@@end

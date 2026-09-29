@@ -1,0 +1,6 @@
+@@ 0x498305
+func(a1) begin
+	local l1, l2;
+	(if a1 then (if (l1 := self:DoError(a1)) then self:Run(l1)) else (if (occupancy <= 1) then (if (l2 := self.(fState).WaitComplete) then self:Run(l2) else Throw('|evt.ex.proto|, -8603)) else (occupancy := (occupancy - 1))))
+end
+@@end

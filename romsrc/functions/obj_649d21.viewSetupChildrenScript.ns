@@ -1,0 +1,25 @@
+@@ 0x4c2b25
+func() begin
+	local l1, l2;
+	self.menuLeftButtons := menuLeftButtonsDef;
+	self.menuRightButtons := Clone(menuRightButtonsDef);
+	if (currentSoupSymbol = 'outbox) then begin
+			if (if layout.entryViewDefs then (layout.entryViewDefs[0].type = 'editor)) then begin
+					menuLeftButtons := Clone(menuLeftButtons);
+					if (((l1 := layout.entryViewDefs[0].IOEditFlags) = nil) or (BAnd(l1, 2) <> 0)) then begin
+							ArrayInsert(menuLeftButtons, {_proto: @624}, 0)
+						end;
+					if ((l1 = nil) or (BAnd(l1, 1) <> 0)) then begin
+							ArrayInsert(menuLeftButtons, {_proto: @234}, 0);
+							if layout.entryViewDefs[0]._recogPopup then begin
+									menuLeftButtons[0] := {_proto: @234, _recogPopup: layout.entryViewDefs[0]._recogPopup}
+								end
+						end
+				end;
+			if (if (l2 := layout.dataCursor:entry()) then ((l2.state = 'ready) or (l2.state = 'pending))) then begin
+					AddArraySlot(menuRightButtons, simpleSendButton)
+				end
+		end;
+	inherited:?viewSetupChildrenScript()
+end
+@@end

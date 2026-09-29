@@ -1,0 +1,9 @@
+@@ 0x51d899
+func() begin
+	(foreach l1 in viewChildren do begin
+			if l1.viewChildren then begin
+					self:AddInkMarks(l1.page, l1.viewChildren)
+				end
+		end)
+end
+@@end

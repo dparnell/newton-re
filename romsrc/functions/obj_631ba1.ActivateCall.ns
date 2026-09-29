@@ -1,0 +1,6 @@
+@@ 0x4edcb5
+func(a1, a2) begin
+	activeTransport := a1;
+	(if (if (if viewCObject then a2) then a2.saveAsLog) then status:RedoChildren())
+end
+@@end

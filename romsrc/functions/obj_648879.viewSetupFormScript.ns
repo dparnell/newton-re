@@ -1,0 +1,13 @@
+@@ 0x47932d
+func() begin
+	if firstTime then begin
+			if (if formats then (Length(formats) > 1)) then begin
+					bottomIndent := ((bottomIndent + 13) + 8)
+				end;
+			if GetUserConfig('KSimpleMode) then begin
+					senderPopup.viewFlags := 0
+				end
+		end;
+	inherited:viewSetupFormScript()
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x78dc8d names
+func() begin
+	listViewFlags := printListViewFlags;
+	editor := self;
+	firstTopic := reflowStart;
+	inherited:viewSetupFormScript()
+end
+@@end

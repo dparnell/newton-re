@@ -1,0 +1,13 @@
+@@ 0x54ff15
+func() begin
+	local l1;
+	if (not (l1 := iconSpace:SetupFakeTarget())) then begin
+			self:hilite(nil);
+			return nil
+		end;
+	(if iconSpace:PostSetupFakeTarget(l1) then inherited:buttonClickScript() else begin
+			self:Notify(3, title, (if (Length(l1) > 1) then "Can\u2019\ut route these types of icons." else "Can\u2019\ut route this type of icon."));
+			self:hilite(nil)
+		end)
+end
+@@end

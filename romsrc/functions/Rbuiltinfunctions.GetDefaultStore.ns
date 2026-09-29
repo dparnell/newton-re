@@ -1,0 +1,13 @@
+@@ 0x569a35
+func() begin
+	l1 := GetUserConfig('defaultStoreSig);
+	local l1;
+	local l2;
+	(foreach l3 in (l2 := GetStores()) do begin
+			if (l3:GetSignature() = l1) then begin
+					return l3
+				end
+		end);
+	l2[0]
+end
+@@end

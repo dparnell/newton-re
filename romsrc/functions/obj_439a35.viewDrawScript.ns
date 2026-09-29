@@ -1,0 +1,5 @@
+@@ 0x439a15
+func() begin
+	self:Parent():drawHilite()
+end
+@@end

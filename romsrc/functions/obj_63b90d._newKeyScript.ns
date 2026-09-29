@@ -1,0 +1,5 @@
+@@ 0x4f7ad9
+func(a1) begin
+	PressButton(statusbar.newButton)
+end
+@@end

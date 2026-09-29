@@ -1,0 +1,8 @@
+@@ 0x473dc5
+func(a1, a2) begin
+	local l1;
+	(l1 := GetDesktopConnTransports()).transports.(a1) := a2;
+	EntryChangeXmit(l1, 'whatThe);
+	return l1
+end
+@@end

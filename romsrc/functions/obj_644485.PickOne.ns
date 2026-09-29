@@ -1,0 +1,6 @@
+@@ 0x525145
+func() begin
+	SetValue(assistMsg, 'text, "Tap \u2018\uPlease\u2019\u for more options.");
+	RefreshViews()
+end
+@@end

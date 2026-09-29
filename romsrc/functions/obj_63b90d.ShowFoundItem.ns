@@ -1,0 +1,105 @@
+@@ 0x4e8d65
+func(a1, a2, a3) begin
+	local v6_wwwwwwwwwwwwwvvvvvvvvvvvv, v7_llllk, v8_06z, v9_ssssssssrrrr, v12_wwwvvvvvvvvvvvvv, v13_xxxxwwwwwwwwwwwwwwwwwwwww, v16_tttttttttttt, v18_vvvvvvuuuuuuuuuuuuu, v19_zzzzzzzzzzyyyyyy, v20_zzzzzzzzzzzzzzzzzzyyyyyyy, v21_zzzzzzzzzyyyyyyyyyyyyyy, v22_dddd, v23_zzzzyyyyyyyy, v24_yyyyyxxxxx, v25_yyyyyyyyyyyyyxxxxxx, v26_yyxxxxxxxxxxxxxxx;
+	if (a1 = nil) then begin
+			return nil
+		end;
+	v12_wwwvvvvvvvvvvvvv := (a2 - (a2 mod 1440));
+	v20_zzzzzzzzzzzzzzzzzzyyyyyyy := ((v20_zzzzzzzzzzzzzzzzzzyyyyyyy := Time()) - (v20_zzzzzzzzzzzzzzzzzzyyyyyyy mod 1440));
+	v6_wwwwwwwwwwwwwvvvvvvvvvvvv := a1.viewStationery;
+	if LSearch('[Array: meeting, RepeatingMeeting, exceptionMeeting, cribNote], v6_wwwwwwwwwwwwwvvvvvvvvvvvv, 0, '|=|, nil) then begin
+			v25_yyyyyyyyyyyyyxxxxxx := a1;
+			if a1.repeatType then begin
+					if (v18_vvvvvvuuuuuuuuuuuuu := self:FindException(a2, a1)) then begin
+							v25_yyyyyyyyyyyyyxxxxxx := v18_vvvvvvuuuuuuuuuuuuu
+						end else begin
+							v25_yyyyyyyyyyyyyxxxxxx := self:MakeInstanceOfRepeatingMeeting(a1, a2)
+						end
+				end;
+			if (a3.findType = 'text) then begin
+					if (not (v24_yyyyyxxxxx := FindStringInFrame([Array: a1.mtgText], a3.findWhat, true))) then begin
+							if (v24_yyyyyxxxxx := self:FindStringInTitleInviteesLocation(v25_yyyyyyyyyyyyyxxxxxx, a3.findWhat, true)) then begin
+									v9_ssssssssrrrr := true
+								end else begin
+									if (v13_xxxxwwwwwwwwwwwwwwwwwwwww := self:GetNotesData(v25_yyyyyyyyyyyyyxxxxxx)[1]) then begin
+											if (v24_yyyyyxxxxx := self:FindStringInNotes(v13_xxxxwwwwwwwwwwwwwwwwwwwww, a3.findWhat)) then begin
+													v8_06z := true
+												end
+										end
+								end
+						end
+				end;
+			if (if (mainDisplay <> scheduleView) then (mainDisplay <> AgendaView)) then begin
+					self:changeViewTo(scheduleView)
+				end;
+			v22_dddd := mainDisplay;
+			if Visible(MeetingNotes) then begin
+					MeetingNotes:Close()
+				end;
+			selectedMeeting := v25_yyyyyyyyyyyyyxxxxxx;
+			if (v9_ssssssssrrrr or v8_06z) then begin
+					v22_dddd := MeetingNotes
+				end
+		end else begin
+			if (mainDisplay <> scheduleView) then begin
+					self:changeViewTo(scheduleView)
+				end;
+			v22_dddd := mainDisplay;
+			selectedMeeting := nil;
+			if (a2 = (v12_wwwvvvvvvvvvvvvv + 1)) then begin
+					a2 := ((a1.viewBounds.top * 1440) div 768)
+				end
+		end;
+	if (selectedDates[0] <> v12_wwwvvvvvvvvvvvvv) then begin
+			selectedDates := [Array: v12_wwwvvvvvvvvvvvvv];
+			self:redisplayScript()
+		end;
+	if v22_dddd then begin
+			if selectedMeeting then begin
+					v22_dddd:?ScrollTo(selectedMeeting)
+				end else begin
+					v22_dddd:?ScrollTo({mtgStartDate: a2})
+				end;
+			self:changeViewTo(v22_dddd);
+			if v8_06z then begin
+					MeetingNotes.MeetingNotesSlip:Open()
+				end
+		end;
+	(if v24_yyyyyxxxxx then begin
+			v23_zzzzyyyyyyyy := v24_yyyyyxxxxx[0];
+			v7_llllk := v24_yyyyyxxxxx[2];
+			if (v19_zzzzzzzzzzyyyyyy := HiliteOwner()) then begin
+					v19_zzzzzzzzzzyyyyyy:hilite(nil)
+				end;
+			v19_zzzzzzzzzzyyyyyy := nil;
+			if v8_06z then begin
+					MeetingNotes.MeetingNotesSlip.MeetingNotesArea:ScrollToWord(a3.findWhat, true)
+				end else begin
+					if Visible(MeetingNotes) then begin
+							v16_tttttttttttt := (for v10_vuuuuuuuu := 1 to Length(v24_yyyyyxxxxx) by 3 do begin
+									if (v24_yyyyyxxxxx[v10_vuuuuuuuu] = 0) then begin
+											break v10_vuuuuuuuu
+										end
+								end);
+							if v16_tttttttttttt then begin
+									v19_zzzzzzzzzzyyyyyy := MeetingNotes.Header.meetingTitle.entryLine;
+									v23_zzzzyyyyyyyy := v24_yyyyyxxxxx[(v16_tttttttttttt - 1)];
+									v7_llllk := v24_yyyyyxxxxx[(v16_tttttttttttt + 1)]
+								end
+						end else begin
+							if Visible(scheduleView) then begin
+									v19_zzzzzzzzzzyyyyyy := LFetch((v21_zzzzzzzzzyyyyyyyyyyyyyy := (if (v6_wwwwwwwwwwwwwvvvvvvvvvvvv = 'cribNote) then cribView else scheduleView.DayTable:ChildViewFrames()[0])):ChildViewFrames(), a1, 0, '|=|, (if a1.repeatType then 'realData.repeatTemplate else 'realData))
+								end
+						end
+				end;
+			(if v19_zzzzzzzzzzyyyyyy then begin
+					v26_yyxxxxxxxxxxxxxxx := (foreach v15_fee in a3.findWhat do begin
+							if (StrPos(v23_zzzzyyyyyyyy, v15_fee, v7_llllk) = v7_llllk) then begin
+									break StrLen(v15_fee)
+								end
+						end);
+					v19_zzzzzzzzzzyyyyyy:SetHilite(v7_llllk, (v7_llllk + v26_yyxxxxxxxxxxxxxxx), true)
+				end)
+		end)
+end
+@@end

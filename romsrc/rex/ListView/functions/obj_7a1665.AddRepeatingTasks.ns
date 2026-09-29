@@ -1,0 +1,47 @@
+@@ 0x797d2d names
+func(aTopicList, aDate) begin
+	store := 0;
+	curWidth := GetRoot():GlobalBox().right;
+	today := ((Time() div 1440) * 1440);
+	if (aDate < today) then begin
+			return nil
+		end;
+	local Entry;
+	local t;
+	local addedTasks;
+	local date;
+	local today;
+	local store;
+	local curWidth;
+	(foreach Entry in repeatTargets do begin
+			(foreach t in Entry.topics do begin
+					local nextDate;
+					date := NextMeeting(aDate, t.repeatInfo);
+					if t.repeatInfo.reminderInterval then begin
+							date := (date - t.repeatInfo.reminderInterval)
+						end;
+					if (date < aDate) then begin
+							nextDate := aDate;
+							(while (date < aDate) do begin
+									if ((date := NextMeeting((nextDate := (nextDate + 1440)), t.repeatInfo)) = 0) then begin
+											break
+										end;
+									(date := (date - t.repeatInfo.reminderInterval))
+								end)
+						end;
+					if (date = aDate) then begin
+							if ArrayPos(t.repeatDone, date, 0, nil) then begin
+									t.mtgDone := true
+								end else begin
+									t.mtgDone := nil
+								end;
+							t.source := store;
+							AddArraySlot(aTopicList, t);
+							addedTasks := true
+						end
+				end);
+			store := (store + 1)
+		end);
+	addedTasks
+end
+@@end

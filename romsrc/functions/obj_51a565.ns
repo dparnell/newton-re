@@ -1,0 +1,12 @@
+@@ 0x51a565
+func(a1) begin
+	self:HideStoryCard();
+	if Visible(pageDialog) then begin
+			pageDialog:Close()
+		end;
+	if Visible(pageNumberDialog) then begin
+			pageNumberDialog:Close()
+		end;
+	self:AddToContentArea(a1)
+end
+@@end

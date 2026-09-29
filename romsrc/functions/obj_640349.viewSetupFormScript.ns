@@ -1,0 +1,36 @@
+@@ 0x4293a1
+func() begin
+	local l1, l2;
+	if (not (if text then BeginsWith(text, "\uFC01\u"))) then begin
+			text := Stringer([Array: $\uFC01, text])
+		end;
+	if (not indent) then begin
+			indent := (StrFontWidth(text, viewFont) + 6)
+		end;
+	if (if iconBounds then (not iconIndent)) then begin
+			iconIndent := 3
+		end;
+	if iconBounds then begin
+			l1 := (iconBounds.bottom - iconBounds.top)
+		end else begin
+			l1 := 0
+		end;
+	entryLine.text := self:TextSetup();
+	textIndent := indent;
+	if iconBounds then begin
+			entryLineIcon.icon := self:iconSetup();
+			l2 := (iconBounds.right - iconBounds.left);
+			entryLineIcon.viewBounds := SetBounds(textIndent, 0, (textIndent + l2), (iconBounds.bottom - iconBounds.top));
+			textIndent := ((textIndent + l2) + iconIndent)
+		end else begin
+			self.viewChildren := [Array: entryLine]
+		end;
+	entryLine.viewBounds := SetBounds(textIndent, 0, self:LocalBox().right, 0);
+	if HasPath(self, 'viewLineSpacing) then begin
+			entryLine.viewLineSpacing := self.viewLineSpacing
+		end else begin
+			self.viewLineSpacing := 10
+		end;
+	(height := FontHeight(viewFont))
+end
+@@end

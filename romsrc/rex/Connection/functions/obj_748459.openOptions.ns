@@ -1,0 +1,5 @@
+@@ 0x7484a9
+func() begin
+	return [Array: {label: "mnps", type: 'service, opCode: 512}, {label: "siop", type: 'option, opCode: 256, data: {arglist: [Array: 0, 0, 8, speedOption], typeList: [Array: 10, 1, 2, 1, 1]}}, {label: "mnpn", type: 'option, opCode: 256, data: {arglist: [Array: 57600], typeList: [Array: 10, 1]}}, {label: "mnpc", type: 'option, opCode: 512, data: {arglist: [Array: 11], typeList: [Array: 10, 1]}}, {label: "mnpa", type: 'option, opCode: 512, data: {arglist: [Array: true], typeList: [Array: 10, 5]}}, {label: "eter", type: 'option, opCode: 256, data: {arglist: [Array: speedOption], typeList: [Array: 10, 1]}}]
+end
+@@end

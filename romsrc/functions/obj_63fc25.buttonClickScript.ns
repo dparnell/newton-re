@@ -1,0 +1,6 @@
+@@ 0x5229c1
+func() begin
+	base:Close();
+	self:TurnToPage(pageNumber)
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x4f79f9
+func(a1) begin
+	local l1;
+	if (l1 := (if Visible(DatesOverviewForm) then DatesOverviewForm:GetTargetInfo(a1) else {target: target, targetView: targetView, targetStore: nil})).target then begin
+			l1.target := Clone(l1.target);
+			l1.target.startDate := selectedDates[0]
+		end;
+	l1
+end
+@@end

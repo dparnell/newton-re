@@ -1,0 +1,8 @@
+@@ 0x48f379
+func(a1) begin
+	local l1;
+	(l1 := BuildContext(self)).godParent := a1;
+	l1.prefsCache := a1.prefsCache;
+	l1:FilterDialog()
+end
+@@end

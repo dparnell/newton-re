@@ -1,0 +1,7 @@
+@@ 0x7531ed
+func() begin
+	endpoint:StopIdle(self);
+	protoContext:RemoveOpenWindow(self);
+	(inited := nil)
+end
+@@end

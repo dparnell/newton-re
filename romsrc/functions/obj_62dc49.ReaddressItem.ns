@@ -1,0 +1,5 @@
+@@ 0x4b1dd9
+func(a1, a2) begin
+	OpenRoutingSlip(a1, nil)
+end
+@@end

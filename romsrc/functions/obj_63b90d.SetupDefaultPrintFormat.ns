@@ -1,0 +1,8 @@
+@@ 0x4f7a79
+func(a1) begin
+	local l1;
+	l1 := (if (a1 = ToDoListView) then 'ToDoListPrintFormat else (if (a1 = AgendaView) then 'AgendaListPrintFormat else (if (Length(selectedDates) > 1) then 'WeekViewPrintFormat else 'DayViewPrintFormat)));
+	lastFormats.|print:newton| := l1;
+	(lastFormats.|faxsend:newton| := l1)
+end
+@@end

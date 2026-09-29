@@ -1,0 +1,5 @@
+@@ 0x42a759
+func() begin
+	(self.text := labelText)
+end
+@@end

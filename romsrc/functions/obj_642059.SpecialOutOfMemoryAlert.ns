@@ -1,0 +1,8 @@
+@@ 0x46354d
+func(a1) begin
+	(if SetContains('[Array: -7000, -108, -48216, -10007], a1) then begin
+			AddDeferredSend(OutOfMemoryAlert, 'FilterDialog, nil);
+			true
+		end)
+end
+@@end

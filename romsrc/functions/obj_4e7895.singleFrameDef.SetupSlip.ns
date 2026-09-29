@@ -1,0 +1,57 @@
+@@ 0x4e4f81
+func(a1, a2) begin
+	l1 := GetRoot().calendar;
+	if (l2 := a1.target).entryAlias then begin
+			l3 := ResolveEntryAlias(l2.entryAlias);
+			l4 := l2.instanceTime;
+			if l3 then begin
+					if l3.repeatType then begin
+							if (not (l5 := l1:FindException(l4, l3))) then begin
+									l5 := l1:MakeInstanceOfRepeatingMeeting(l3, l4)
+								end;
+							a1.target := l1:ConvertToNonrepeating(l5, true)
+						end else begin
+							a1.target := l3
+						end
+				end
+		end;
+	a2.body := DeepClone(a1.target);
+	a2.title := Clone(l1:GetMeetingText(a1.target));
+	if (l6 := a2.body.repeatTemplate) then begin
+			l1:SetRepeatingMeetingStartDate(l6, a2.body.mtgStartDate, nil);
+			if (l7 := l6.InstanceNotesData) then begin
+					try begin
+							local l1;
+							local l2;
+							local l3;
+							local l4;
+							local l5;
+							local l6;
+							local l7;
+							(foreach l8 in l7 do begin
+									if (l10 := l8[1]) then begin
+											if (l3 := ResolveEntryAlias(l10)) then begin
+													l8[1] := l3.notes
+												end else begin
+													l8[1] := nil
+												end
+										end
+								end)
+						end onexception |evt.ex| do begin
+							SetLength(l6.InstanceNotesData, 1);
+							l6 := (a1.target := l1:ConvertToNonrepeating(a1.target, true));
+							GetRoot():Notify(3, "Dates", "Unable to send entire repeating meeting and all its notes.  Just this occurrence will be sent.")
+						end
+				end;
+			a2.body := l6
+		end;
+	self:PrepareForRouting((l11 := a2.body));
+	local l10;
+	local l11;
+	(if l11.exceptions then (foreach l12 in l11.exceptions do begin
+				if l12[1] then begin
+						self:PrepareForRouting(l12[1])
+					end
+			end))
+end
+@@end

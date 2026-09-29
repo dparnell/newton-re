@@ -1,0 +1,42 @@
+@@ 0x5abb9d
+func(a1, tag, a3) begin
+	l1 := func(a1) begin
+		(StrCompare(a1.tag, tag) <> 0)
+	end;
+	l2 := {type: 'index, indexPath: 'tag, startKey: tag, endTest: l1};
+	if ((l4 := Query((l3 := GetStores()[0]:GetSoup(@276)), l2):entry()) = nil) then begin
+			AddToSysSoup((l4 := {tag: tag, data: nil, custom: Clone(a3)}))
+		end else begin
+			l4.data := nil;
+			if (if HasPath(l4, 'custom) then l4.custom) then begin
+					local l1;
+					local l2;
+					local l3;
+					local l4;
+					(foreach l5, l6 in l4.custom do begin
+							l4.custom.(l5) := nil
+						end)
+				end
+		end;
+	l4.data := GetDictionaryData(a1);
+	if a3 then begin
+			if ((not HasPath(l4, 'custom)) or (not l4.custom)) then begin
+					l4.custom := Clone(a3)
+				end;
+			l8 := GetDictionary(a1);
+			(foreach l5, l6 in a3 do begin
+					local l8;
+					l4.custom.(l5) := l8.(l5)
+				end)
+		end;
+	(try begin
+			EntryChange(l4)
+		end onexception |evt.ex| do begin
+			EntryUndoChanges(l4);
+			l3 := (l8 := (l4 := (l2 := (l1 := nil))));
+			gc();
+			LoadDictionary(a1, tag);
+			Rethrow()
+		end)
+end
+@@end

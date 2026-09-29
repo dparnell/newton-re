@@ -1,0 +1,19 @@
+@@ 0x48a409
+func(a1) begin
+	local l1, l2, l3;
+	l1 := GetDataDefs(class);
+	l2 := l1:GetRoutingTitle(a1, nil, nil);
+	l3 := nil;
+	if (if IsArray(a1) then (Length(a1) = 1)) then begin
+			l3 := l1:GetSuffix(a1[0])
+		end else begin
+			if IsFrame(a1) then begin
+					l3 := l1:GetSuffix(a1)
+				end
+		end;
+	if l3 then begin
+			l2 := ParamStr("^0 ^1", [Array: l2, l3])
+		end;
+	l2
+end
+@@end

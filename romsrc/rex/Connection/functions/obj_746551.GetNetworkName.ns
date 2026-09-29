@@ -1,0 +1,9 @@
+@@ 0x746d75
+func() begin
+	local l1;
+	if (not (l1 := self:GetUserVisible(self:GetNetworkAddress()))) then begin
+			l1 := ""
+		end;
+	return l1
+end
+@@end

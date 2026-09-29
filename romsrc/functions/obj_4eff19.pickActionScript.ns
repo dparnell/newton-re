@@ -1,0 +1,32 @@
+@@ 0x4efef9
+func(a1) begin
+	local l1;
+	if HasPath(labelCommands[a1], 'id) then begin
+			filter:ResolveItem(labelCommands[a1]);
+			self:hilite(nil)
+		end else begin
+			if (if filter.picker then (a1 = (Length(labelCommands) - 1))) then begin
+					filter:picker()
+				end else begin
+					if (not filter:?ChooseItem(a1)) then begin
+							if lastPicked then begin
+									labelCommands[lastPicked].mark := nil
+								end;
+							if IsFrame((l1 := labelCommands[a1])) then begin
+									l1.mark := $\uFC0B;
+									l1 := (if l1.value then l1.value else l1.item)
+								end;
+							lastPicked := a1;
+							self:UpdateText(Clone(l1));
+							self:hilite(nil)
+						end
+				end
+		end;
+	(if (currPhoneType := labelCommands[a1].class) then begin
+			if target.(path) then begin
+					SetClass(target.(path), currPhoneType)
+				end;
+			self:StartFlush()
+		end else SetClass(target.(path), 'phone))
+end
+@@end

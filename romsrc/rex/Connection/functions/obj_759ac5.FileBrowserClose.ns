@@ -1,0 +1,6 @@
+@@ 0x75ee15
+func(a1) begin
+	self:CloseOpenWindows(true);
+	(a1.secretDoneCallback := nil)
+end
+@@end

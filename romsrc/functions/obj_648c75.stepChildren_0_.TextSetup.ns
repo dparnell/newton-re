@@ -1,0 +1,6 @@
+@@ 0x49f1f1
+func() begin
+	entryLine.dictionaries := '[Array: 48, 7, 31, 0];
+	self:GetTitle()
+end
+@@end

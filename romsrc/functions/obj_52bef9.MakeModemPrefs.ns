@@ -1,0 +1,7 @@
+@@ 0x52be19
+func(a1) begin
+	local l1;
+	l1 := [Array: 0, (if a1.idModem then 1 else 0), 0, (if a1.useHardwareCD then 1 else 0), 0, (if a1.useConfigString then 1 else 0), (if a1.useDialOptions then 1 else 0), (if a1.hangUpAtDisconnect then 1 else 0), 0, 0, 0, 0, 0, 0, 75, 0, 0, 0, 0, 3, 0, 0, 0, 15, (if (if HasPath(a1, 'RemoveDialStrWhitespace) then (not a1.RemoveDialStrWhitespace)) then 0 else 1)];
+	{label: "mpre", type: 'option, form: 'bytes, opCode: 256, data: l1}
+end
+@@end

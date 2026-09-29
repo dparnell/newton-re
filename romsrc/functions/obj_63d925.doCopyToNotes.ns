@@ -1,0 +1,6 @@
+@@ 0x5a29ad
+func(a1, a2) begin
+	playsound(@313);
+	GetRoot().paperroll:MakeTextNote(a1.text, true)
+end
+@@end

@@ -1,0 +1,16 @@
+@@ 0x5a9599
+@@const kFunction_5a9579
+func(a1) begin
+	a1.word
+end
+@@main
+func(a1) begin
+	local l1;
+	if (if (window exists) then window) then begin
+			window:GetCursor():Dispose()
+		end;
+	l1 := dictionary:MakeCursor(a1, nil, 'first);
+	(window := l1:MakeWindow(numLines)).entryFilter := kFunction_5a9579;
+	return nil
+end
+@@end

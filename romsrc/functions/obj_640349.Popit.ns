@@ -1,0 +1,30 @@
+@@ 0x4293c1
+func(a1) begin
+	(if self:pickerSetup() then begin
+			l1 := Clone(labelCommands);
+			if checkCurrentItem then begin
+					local l1;
+					(foreach l2, l3 in l1 do begin
+							local l5, l6, l7;
+							l5 := l3;
+							if IsFrame(l3) then begin
+									if (if (not (l5 := l3.item)) then l3.keyMessage) then begin
+											l5 := MatchKeyMessage(self, l3.keyMessage).name
+										end
+								end;
+							if (if IsString(l5) then StrEqual(entryLine.text, l5)) then begin
+									if IsFrame(l3) then begin
+											(l6 := Clone(l1[l2])).mark := $\uFC0B
+										end else begin
+											l6 := {item: l5, mark: $\uFC0B}
+										end;
+									l1[l2] := l6
+								end
+						end)
+				end;
+			(l7 := self:PopupHiliteBox()).right := a1;
+			self:PopupMenu(l1, {bounds: l7});
+			true
+		end)
+end
+@@end

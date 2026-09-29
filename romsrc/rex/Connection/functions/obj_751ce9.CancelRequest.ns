@@ -1,0 +1,13 @@
+@@ 0x752235
+func(a1) begin
+	(if (not stopping) then begin
+			stopping := true;
+			currentStatusSetup.values.titleText := "Stopping...";
+			self:viewSet(currentStatusSetup);
+			if self.theFileBrowser then begin
+					theFileBrowser:StopOpen(0)
+				end;
+			protoContext:StopOperation(endpoint)
+		end)
+end
+@@end

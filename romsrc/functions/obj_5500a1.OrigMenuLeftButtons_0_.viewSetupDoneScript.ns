@@ -1,0 +1,6 @@
+@@ 0x54fda9
+func() begin
+	inherited:?viewSetupDoneScript();
+	(if (if (LicenseeInfoItem exists) then (not LSearch(stdItems, LicenseeInfoItem.item, 0, '|str=|, 'item))) then AddArraySlot((stdItems := Clone(stdItems)), {item: LicenseeInfoItem.item, msg: 'DoInfoLicensee}))
+end
+@@end

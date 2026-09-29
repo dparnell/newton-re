@@ -1,0 +1,36 @@
+@@ 0x41952d
+func(a1) begin
+	if (not SetContains(LegalOrientations(), a1.orientation)) then begin
+			return nil
+		end;
+	if (l1 := (a1.appAreaHeight < 320)) then begin
+			l2 := GetRoot();
+			if (if (l3 := GetUserConfig('blessedapp)) then (not l2.(l3).ReOrientToScreen)) then begin
+					l2:Notify(3, "Rotate", ParamStr("The backdrop icon^?0,\u201C\u^0\u201D\u,|| cannot operate while rotated.", [Array: GetAppName(l3)]));
+					return nil
+				end;
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			l4 := (foreach l5 in GetRoot():ChildViewFrames() do begin
+					if (not l5.ReOrientToScreen) then begin
+							break true
+						end
+				end);
+			if l4 then begin
+					if ModalConfirm("Some functions will not show after rotation because they can\u2019\ut operate while rotated.", 'okCancelDefaultOk) then begin
+							(foreach l5 in GetRoot():ChildViewFrames() do begin
+									if (not l5.ReOrientToScreen) then begin
+											l5:Close()
+										end else begin
+											return nil
+										end
+								end)
+						end
+				end
+		end;
+	SetDisplayParams(a1);
+	true
+end
+@@end

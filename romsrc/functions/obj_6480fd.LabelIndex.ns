@@ -1,0 +1,26 @@
+@@ 0x5ad285
+func(a1) begin
+	l1 := 0;
+	local l1;
+	(for l2 := 0 to (Length(items) - 1) do begin
+			if (ClassOf(a1) = 'string) then begin
+					if StrEqual(a1, items[l2].title) then begin
+							l1 := l2;
+							break
+						end
+				end else begin
+					if (if IsFrame(a1) then a1.title) then begin
+							if (if items[l2].title then StrEqual(a1.title, items[l2].title)) then begin
+									l1 := l2;
+									break
+								end
+						end
+				end;
+			if (a1 = items[l2]) then begin
+					l1 := l2;
+					break
+				end
+		end);
+	l1
+end
+@@end

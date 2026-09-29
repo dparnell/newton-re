@@ -1,0 +1,5 @@
+@@ 0x42ba15
+func(a1) begin
+	self:Close()
+end
+@@end

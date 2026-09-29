@@ -1,0 +1,19 @@
+@@ 0x78e505 names
+func() begin
+	if (printAddExtra = 'done) then begin
+			return nil
+		end;
+	if editor.viewChildren then begin
+			reflowStart := (reflowStart + Length(editor.viewChildren))
+		end;
+	if (printAddExtra = true) then begin
+			self:RedoChildren();
+			return true
+		end;
+	if (if editor.topics then (reflowStart < totalKids)) then begin
+			self:RedoChildren();
+			return true
+		end;
+	nil
+end
+@@end

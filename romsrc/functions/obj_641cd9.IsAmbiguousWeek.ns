@@ -1,0 +1,6 @@
+@@ 0x4f1ba5
+func(a1) begin
+	local l1;
+	(if ((l1 := (((a1.Date - 1) div 7) + 1)) = 4) then ((a1.Date + 7) > self:daysInMonth(a1.month, a1.year)))
+end
+@@end

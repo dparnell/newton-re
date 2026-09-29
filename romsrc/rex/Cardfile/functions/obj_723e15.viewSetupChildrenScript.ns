@@ -1,0 +1,66 @@
+@@ 0x724889
+func() begin
+	l12 := BAnd(viewJustify, 3);
+	l13 := true;
+	hitArray := [Array: ];
+	shapeArray := [Array: ];
+	origin := self:GlobalBox().top;
+	(l8 := self:LocalBox()).left := (if (showBullet or boldTitle) then 19 else 0);
+	l9 := 0;
+	if (l12 = 0) then begin
+			viewJustSym := 'left
+		end else begin
+			if (l12 = 1) then begin
+					viewJustSym := 'right
+				end else begin
+					if (l12 = 2) then begin
+							viewJustSym := 'center
+						end else begin
+							if (l12 = 3) then begin
+									viewJustSym := 'full
+								end
+						end
+				end
+		end;
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	local l6;
+	local l7;
+	local l8;
+	local l9;
+	local l10;
+	local l11;
+	local l12;
+	local l13;
+	local l14;
+	local l15;
+	(if (if target then (l3 := layouts.(target.class))) then (for l16 := 0 to (Length(l3) - 1) do begin
+				l2 := GetRoot().cardfile:GetInfoFrame((l1 := l3[l16]), target.class);
+				l14 := l9;
+				if (l4 := GetRoot().cardfile:MakeDataPaths(l2.checkPrefix[0], l2.checkPaths, l2.stringData)) then begin
+						l9 := self:AddAllInfoItem(l4, l2.checkPrefix[0], shapeArray, hitArray, l2, l1, l9, l8, (if l13 then boldTitle), {justification: viewJustSym, font: viewFont})
+					end;
+				l13 := nil;
+				if (if (if (l6 := l2.checkPrefix[1]) then (l7 := target.(l6))) then (showMultipleData or (l9 = l14))) then begin
+						if showMultipleData then begin
+								l15 := Length(l7)
+							end else begin
+								l15 := 1
+							end;
+						(for l10 := 0 to (l15 - 1) do begin
+								AddArraySlot((l5 := Clone(l2.checkPrefix[1])), l10);
+								if (if (not canScroll) then (((l8.top + l9) + fontHeight(viewFont)) > l8.bottom)) then begin
+										break
+									end else begin
+										if (l4 := GetRoot().cardfile:MakeDataPaths(l5, l2.checkPaths, l2.stringData)) then begin
+												l9 := self:AddAllInfoItem(l4, l5, shapeArray, hitArray, l2, l1, l9, l8, nil, {justification: viewJustSym, font: viewFont})
+											end
+									end
+							end)
+					end
+			end))
+end
+@@end

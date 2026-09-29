@@ -1,0 +1,14 @@
+@@ 0x41aa3d
+func(a1, a2) begin
+	local l1, l2;
+	(if (l1 := CommConfigRegistry.(a2)) then begin
+			l2 := {_proto: @662, _parent: self, configOptions: l1.config.configOptions, serviceId: l1.serviceId};
+			l2:Open(true);
+			l2:MakeOutgoing(a1, nil);
+			if (if l1.serviceId then (l1.supportsLineCurrentSense = nil)) then begin
+					GetRoot():Notify(6, GetRoot():TranslateToOverview(-8005), GetRoot():TranslateToMessage(-8005))
+				end;
+			l2:Close()
+		end)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x426705
+func() begin
+	(if (not openCalled) then (RecordEngine := @851:New({_parent: self})) else (self.openCalled := nil))
+end
+@@end

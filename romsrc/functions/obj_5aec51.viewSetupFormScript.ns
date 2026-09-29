@@ -1,0 +1,6 @@
+@@ 0x5ae8b1
+func() begin
+	local l1;
+	(if (if (l1 := Gestalt('[Array: 33554443, [Array: struct, boolean], 1])) then l1[0]) then (remoteWriting.viewFlags := 0))
+end
+@@end

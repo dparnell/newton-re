@@ -1,0 +1,14 @@
+@@ 0x505d45
+func(a1) begin
+	local l1, l2;
+	dirtyFlag := true;
+	l1 := a1[0];
+	l2 := (newMtgDate mod 1440);
+	newMtgDate := ((l1 := (l1 - (l1 mod 1440))) + l2);
+	if (not selectedMeeting.repeatTemplate) then begin
+			newFirstDate := newMtgDate
+		end;
+	inherited:pickActionScript(a1);
+	self:CarefulAskUser()
+end
+@@end

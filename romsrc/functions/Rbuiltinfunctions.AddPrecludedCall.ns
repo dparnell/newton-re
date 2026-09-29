@@ -1,0 +1,5 @@
+@@ 0x41c801
+func(a1, a2, a3, a4) begin
+	(if (not ProcrastinatedActions.(a1)) then AddProcrastinatedCall(a1, a2, a3, a4))
+end
+@@end

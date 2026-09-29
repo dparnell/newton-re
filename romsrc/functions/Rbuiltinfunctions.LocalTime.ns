@@ -1,0 +1,9 @@
+@@ 0x42017d
+func(a1, a2) begin
+	local l1;
+	if (not a1) then begin
+			a1 := Time()
+		end;
+	(l1 := ((l1 := (a1 + (((a2.gmt - userConfiguration.location.gmt) - userConfiguration.daylightsavings) div 60))) + DSTOffset(l1, a2)))
+end
+@@end

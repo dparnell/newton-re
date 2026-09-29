@@ -1,0 +1,6 @@
+@@ 0x4ca9e9
+func(a1) begin
+	notesDirty := true;
+	nil
+end
+@@end

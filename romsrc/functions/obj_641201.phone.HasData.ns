@@ -1,0 +1,9 @@
+@@ 0x4561e1
+func(a1) begin
+	local l1;
+	if (not (l1 := StrFilled(a1.phone))) then begin
+			a1.phone := nil
+		end;
+	l1
+end
+@@end

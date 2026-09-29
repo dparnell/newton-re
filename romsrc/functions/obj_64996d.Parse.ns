@@ -1,0 +1,63 @@
+@@ 0x44dc1d
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8;
+	l1 := @791;
+	StrReplace(a1, "(", " ", nil);
+	StrReplace(a1, ")", " ", nil);
+	StrReplace(a1, "-", " ", nil);
+	l2 := StrLen(a1);
+	l3 := true;
+	if (StrLen(StringFilter(a1, Stringer([Array: digits, " "]), 'passAll)) <> l2) then begin
+			l3 := nil
+		end;
+	self.code := nil;
+	self.num1 := nil;
+	self.num2 := nil;
+	l4 := ScanNextWord(a1, 0, l2);
+	if (if l3 then l4) then begin
+			l5 := ScanWordEnd(a1, l4, l2);
+			code := Substr(a1, l4, (l5 - l4));
+			if (l5 < l2) then begin
+					if (l4 := ScanNextWord(a1, l5, l2)) then begin
+							l5 := ScanWordEnd(a1, l4, l2);
+							num1 := Substr(a1, l4, (l5 - l4));
+							if (l5 < l2) then begin
+									if (l4 := ScanNextWord(a1, l5, l2)) then begin
+											l5 := ScanWordEnd(a1, l4, l2);
+											num2 := Substr(a1, l4, (l5 - l4));
+											l3 := (not (l4 := ScanNextWord(a1, l5, l2)))
+										end
+								end
+						end
+				end
+		end;
+	if l3 then begin
+			if (not num2) then begin
+					num2 := num1;
+					num1 := code;
+					code := nil
+				end;
+			if (not num2) then begin
+					num2 := num1;
+					num1 := code;
+					code := nil
+				end;
+			if code then begin
+					l6 := StrLen(code)
+				end;
+			if num1 then begin
+					l7 := StrLen(num1)
+				end;
+			if num2 then begin
+					l8 := StrLen(num2)
+				end;
+			if ((((if code then (l6 > 3)) or (if l7 then (l7 > 3))) or (if (if num2 then (not num1)) then (not code))) or (if l8 then (l8 > 4))) then begin
+					l3 := nil
+				end
+		end;
+	if l3 then begin
+			l1 := @792
+		end;
+	return l1
+end
+@@end

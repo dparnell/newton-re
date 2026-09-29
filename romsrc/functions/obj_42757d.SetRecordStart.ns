@@ -1,0 +1,7 @@
+@@ 0x4274bd
+func() begin
+	playTime := nil;
+	startSeconds := (TimeInSeconds() - elapsedTime);
+	self:SetCurrentTime()
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x5b6c35
+func(a1) begin
+	RemoveSlot(loginRegistry, a1);
+	nil
+end
+@@end

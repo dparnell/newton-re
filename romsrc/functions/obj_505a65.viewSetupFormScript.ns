@@ -1,0 +1,16 @@
+@@ 0x505a25
+func() begin
+	local l1;
+	text := Clone(newTitle);
+	memory := newHeaderMemory;
+	if selectedMeeting.repeatTemplate then begin
+			l1 := selectedMeeting.repeatTemplate
+		end else begin
+			l1 := selectedMeeting
+		end;
+	if (if IsSoupEntry(l1) then EntryStore(l1):IsReadOnly()) then begin
+			self.viewFlags := BOr(viewFlags, 128)
+		end;
+	(entryLine.viewJustify := BAnd(entryLine.viewJustify, bnot(8388608)))
+end
+@@end

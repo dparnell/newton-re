@@ -1,0 +1,8 @@
+@@ 0x5228c5
+func() begin
+	if Visible(pageDialog) then begin
+			pageDialog:Close()
+		end;
+	(if Visible(pageNumberDialog) then pageNumberDialog:Close())
+end
+@@end

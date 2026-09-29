@@ -1,0 +1,10 @@
+@@ 0x421e71
+func(a1) begin
+	local l1, l2;
+	if (l2 := (l1 := GetStores()[0]:GetSoup("SystemAlarmSoup"):Query({indexPath: 'key, beginKey: a1, endKey: a1})):entry()) then begin
+			EntryRemoveFromSoup(l2);
+			SetNextAlarm()
+		end;
+	l2
+end
+@@end

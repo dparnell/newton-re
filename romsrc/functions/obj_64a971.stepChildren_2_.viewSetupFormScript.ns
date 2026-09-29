@@ -1,0 +1,9 @@
+@@ 0x4d9e15
+func() begin
+	self.text := "";
+	if StrFilled(fields.fromName) then begin
+			self.text := Stringer([Array: "From:", " ", fields.fromName, $\n])
+		end;
+	(self.text := Stringer([Array: self.text, "", LongDateStr(fields.timestamp, @66.yearMonthDayStrSpec)]))
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x42cc71
+func() begin
+	(if (not beenThereDoneThat) then begin
+			beenThereDoneThat := true;
+			self:Notify(3, "Up Arrow", noScroll)
+		end)
+end
+@@end

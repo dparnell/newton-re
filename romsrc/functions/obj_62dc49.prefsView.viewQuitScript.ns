@@ -1,0 +1,5 @@
+@@ 0x4c0be1
+func() begin
+	(if (if Visible(GetRoot().iobox) then changed) then theApp:FilterChanged())
+end
+@@end

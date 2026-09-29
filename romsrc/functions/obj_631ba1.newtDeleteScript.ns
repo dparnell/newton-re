@@ -1,0 +1,8 @@
+@@ 0x4ee59d
+func(a1, a2) begin
+	(if (if (if activeTransport then (activeTransport.status <> 'idle)) then (activeTransport.currentItem = a1)) then begin
+			activeTransport:CancelRequest(nil);
+			AddDeferredSend(self, 'DoDelete, [Array: a1, a2])
+		end else inherited:newtDeleteScript(a1, a2))
+end
+@@end

@@ -1,0 +1,14 @@
+@@ 0x570675
+func() begin
+	if ((money := (money + base:EvalTable())) < bet) then begin
+			GetRoot():Notify(3, "Poker Solitaire", "Your line of credit has been terminated.");
+			AddDeferredSend(base, 'Close, nil)
+		end else begin
+			if (money > bankLimit) then begin
+					GetRoot():Notify(3, "Poker Solitaire", "Congratulations! You broke the bank.");
+					AddDeferredSend(base, 'Close, nil)
+				end
+		end;
+	base:Deal()
+end
+@@end

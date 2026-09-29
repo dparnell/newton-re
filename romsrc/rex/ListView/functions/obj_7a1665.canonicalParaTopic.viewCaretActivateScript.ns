@@ -1,0 +1,5 @@
+@@ 0x797a75 names
+func(state) begin
+	(if state then (curTopic := index))
+end
+@@end

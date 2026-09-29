@@ -1,0 +1,6 @@
+@@ 0x5b0e31
+func() begin
+	self:hilite(nil);
+	CalibrateTablet()
+end
+@@end

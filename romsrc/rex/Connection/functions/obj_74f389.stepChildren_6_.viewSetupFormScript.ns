@@ -1,0 +1,10 @@
+@@ 0x750ced
+func() begin
+	if currentDevices then begin
+			self.labelCommands := (foreach l1 in currentDevices collect l1.name)
+		end else begin
+			self.labelCommands := '[Array: ]
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

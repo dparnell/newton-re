@@ -1,0 +1,6 @@
+@@ 0x461f9d
+func() begin
+	self.text := Stringer([Array: $ , DateNTime(timestamp)]);
+	(self.viewBounds := RelBounds(15, 0, StrFontWidth(text, viewFont), 12))
+end
+@@end

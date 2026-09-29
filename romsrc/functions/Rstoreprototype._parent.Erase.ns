@@ -1,0 +1,9 @@
+@@ 0x635b65
+func() begin
+	local l1, l2;
+	l1 := self:GetName();
+	l2 := self:EraseQT();
+	CallFrameBasedRegistryFns(StoreChangeRegistry, [Array: self, 'storeErased, l1]);
+	l2
+end
+@@end

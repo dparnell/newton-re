@@ -1,0 +1,14 @@
+@@ 0x5b05c5
+func() begin
+	self:CloseOpenPanel();
+	(foreach l1 in '[Array: letterSetSelection, lineAtATime, letterSpaceCursiveOption, speedCursiveOption, timeoutCursiveOption, wordsCursiveOption, lettersCursiveOption, lettersInFieldsOption, numbersCursiveOption, punctuationcursiveoption, remoteWriting, inkWordScaling, doAutoAdd, learningEnabledOption] do begin
+			RemoveSlot(userConfiguration, l1)
+		end);
+	ReadCursiveOptions();
+	SetRemoteWriting(GetRemoteWriting());
+	(if userConfiguration.guestAccessOption then (if ModalConfirm("The guest user settings have been reset.  Would you like to turn off guest user and reset the main settings as well?", 'yesNoDefaultNo) then begin
+				userConfiguration.guestAccessOption := nil;
+				(userConfiguration.savedWritingStyleOptions := nil)
+			end))
+end
+@@end

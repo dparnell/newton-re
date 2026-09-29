@@ -1,0 +1,12 @@
+@@ 0x74f1e9
+func() begin
+	closing := true;
+	endpoint:StopIdle(self:parent());
+	protoContext:SendCancelToDesktop(endpoint);
+	protoContext:FileBrowserClose(endpoint);
+	if (callWhenDone exists) then begin
+			call callWhenDone with (endpoint, true, nil, nil, nil)
+		end;
+	inherited:?buttonClickScript()
+end
+@@end

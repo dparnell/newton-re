@@ -1,0 +1,27 @@
+@@ 0x5a551d
+@@const kLiteral_5a450d
+"Mail Registration"
+@@main
+func(a1, a2) begin
+	local l1;
+	pleaseWaitForm:Close();
+	if a2 then begin
+			self:Notify(3, kLiteral_5a450d, a2)
+		end else begin
+			if (a1 < 0) then begin
+					self:Notify(3, a1, kLiteral_5a450d)
+				end
+		end;
+	(if (not sendScreen) then begin
+			l1 := -1;
+			if (if (a1 > 0) then (a1 <= 25)) then begin
+					l1 := scrIds[a1]
+				end;
+			(if (if (index <> l1) then (l1 <> -1)) then begin
+					pages[index]:Hide();
+					index := l1;
+					pages[index]:Show()
+				end)
+		end)
+end
+@@end

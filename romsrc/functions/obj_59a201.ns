@@ -1,0 +1,11 @@
+@@ 0x59a201
+func(a1, a2, a3) begin
+	if (a3 = -16005) then begin
+			a3 := -38001
+		end;
+	if (if a3 then (a1._parent.curerror = nil)) then begin
+			a1._parent.curerror := a3
+		end;
+	(if a1.curstate then AddDeferredSend(a1, 'stopCCL, nil))
+end
+@@end

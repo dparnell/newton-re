@@ -1,0 +1,56 @@
+@@ 0x50e891
+func(a1, a2) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11;
+	if IsInteger(a1) then begin
+			l2 := nil;
+			l1 := a1
+		end else begin
+			l1 := (l2 := a1).mtgStartDate
+		end;
+	l3 := (l2 <> nil);
+	l4 := [Array: ];
+	atEndOfCursor := nil;
+	l5 := ((l5 := (l1 + 10080)) - (l5 mod 1440));
+	(while (Length(l4) < maxNumberPerPage) do (if (l6 := self:FetchItems(l1, l5)) then begin
+				if l3 then begin
+						if (l7 := LSearch(l6, l2, 0, IsSameItem, nil)) then begin
+								if a2 then begin
+										l7 := (l7 - 1)
+									end;
+								ArrayRemoveCount(l6, 1, l7);
+								removedItemsBeforeStartItem := nil
+							end
+					end;
+				ArrayMunger(l4, Length(l4), 0, l6, 0, nil);
+				if (if (Length(l4) > 1) then IsString(l4[1])) then begin
+						ArrayRemoveCount(l4, 0, 1)
+					end;
+				(l5 := ((l1 := l5) + 10080))
+			end else begin
+				l8 := 536870911;
+				l9 := 536870911;
+				if calendar:IsDisplayingMeetings() then begin
+						l8 := calendar:FindFirstAppointmentDate(l5)
+					end;
+				if calendar:IsDisplayingToDoItems() then begin
+						if ((l9 := calendar.ToDoListView:nextToDoDate(l5)) = nil) then begin
+								l9 := 536870911
+							end
+					end;
+				(if ((l10 := min(l8, l9)) <> 536870911) then (l5 := ((l1 := l10) + 10080)) else begin
+						atEndOfCursor := true;
+						break
+					end)
+			end));
+	if ((l11 := Length(l4)) = 1) then begin
+			ArrayRemoveCount(l4, 0, 1);
+			l11 := 0
+		end;
+	(if (l11 = 0) then nil else begin
+			if (l11 > maxNumberPerPage) then begin
+					SetLength(l4, maxNumberPerPage)
+				end;
+			l4
+		end)
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x4fe98d
+func() begin
+	text := self:GetMeetingText(realData);
+	self.viewFont := cribFont;
+	(self.viewLineSpacing := cribLineSpacing)
+end
+@@end

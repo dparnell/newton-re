@@ -1,0 +1,5 @@
+@@ 0x4ccc81
+func() begin
+	(if (if fields.comments then (Length(fields.comments) > 0)) then (self.viewChildren := fields.comments))
+end
+@@end

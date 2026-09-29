@@ -1,0 +1,5 @@
+@@ 0x539269
+func() begin
+	GetRoot():Notify(3, "Newton", "This package uses information that is no longer supported. Contact the software publisher for further information.")
+end
+@@end

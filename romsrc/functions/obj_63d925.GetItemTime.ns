@@ -1,0 +1,5 @@
+@@ 0x5a431d
+func(a1) begin
+	(if a1.Remote then ShortDate(a1.timestamp) else Stringer([Array: ShortDate(a1.timestamp), " ", HourMinute(a1.timestamp)]))
+end
+@@end

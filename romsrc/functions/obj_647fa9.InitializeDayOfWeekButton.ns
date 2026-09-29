@@ -1,0 +1,9 @@
+@@ 0x4f2d35
+func(a1) begin
+	local l1;
+	l1 := [Array: "s", "m", "t", "w", "t", "f", "s"];
+	dayIndex := self:ColumnToDayOfWeek(a1);
+	dayOfWeek := (2048 >> dayIndex);
+	(text := l1[dayIndex])
+end
+@@end

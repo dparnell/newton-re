@@ -1,0 +1,16 @@
+@@ 0x5a42ad
+@@const kROM_144
+@144
+@@main
+func(a1) begin
+	local l1;
+	l1 := nil;
+	if (if a1.text then ((a1.edited or (a1.class = 'smartMail)) or (if (not a1.body) then (not a1.package)))) then begin
+			l1 := kROM_144
+		end;
+	if a1.package then begin
+			l1 := (if l1 then "Notes and Extras" else "Extras")
+		end;
+	(if l1 then {appName: l1, appSymbol: appSymbol})
+end
+@@end

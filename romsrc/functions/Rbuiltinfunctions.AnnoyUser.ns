@@ -1,0 +1,17 @@
+@@ 0x4225b1
+func() begin
+	l1 := GetAlarmVolume();
+	(if (GetUserConfig('alarmSoundEffects) or GetUserConfig('AlarmVolumeEqualsSystem)) then begin
+			l2 := GetUserConfig('AlarmAnnoyPause);
+			l3 := GetRegisteredSound(GetUserConfig('alarmSound));
+			Sleep(l2);
+			local l1;
+			local l2;
+			local l3;
+			(for l4 := 1 to GetUserConfig('AlarmAnnoyReps) do begin
+					PlaySoundSync({_proto: l3, volume: l1});
+					Sleep(l2)
+				end)
+		end)
+end
+@@end

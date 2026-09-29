@@ -1,0 +1,14 @@
+@@ 0x50747d
+func() begin
+	local l1;
+	if (if peoplePopup then Visible(peoplePopup)) then begin
+			peoplePopup:MoveBehind(nil)
+		end else begin
+			originalInviteesAliases := TotalClone(inviteesAliases);
+			l1 := Clone(inviteesAliases);
+			peoplePopup := @371:New('|nameRef.people|, l1, self, nil)
+		end;
+	self:hilite(nil);
+	nil
+end
+@@end

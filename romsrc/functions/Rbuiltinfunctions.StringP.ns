@@ -1,0 +1,6 @@
+@@ 0x62aa85
+func(a1) begin
+	BadWickedNaughtyNoot(Stringer([Array: "StringP(", a1, ")"]), 'undocumented);
+	IsString(a1)
+end
+@@end

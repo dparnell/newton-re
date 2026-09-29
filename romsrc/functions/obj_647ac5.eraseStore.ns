@@ -1,0 +1,11 @@
+@@ 0x48ec3d
+func(a1, a2, a3) begin
+	a1:Close();
+	(try begin
+			a2:eraseStore(a3)
+		end onexception |evt.ex| do begin
+			a2:Close();
+			Rethrow()
+		end)
+end
+@@end

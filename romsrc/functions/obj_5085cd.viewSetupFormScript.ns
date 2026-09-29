@@ -1,0 +1,10 @@
+@@ 0x5085ad
+func() begin
+	if (selectedMeeting.viewStationery = 'cribNote) then begin
+			title := "Event Notes"
+		end else begin
+			title := "Meeting Notes"
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

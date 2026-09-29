@@ -1,0 +1,5 @@
+@@ 0x4fa7d5
+func(a1, a2) begin
+	a1[a2]:doAction()
+end
+@@end

@@ -1,0 +1,30 @@
+@@ 0x496325
+func(a1, a2) begin
+	local l1, l2, l3, l4;
+	if (if (a1 = a2) then (a1 = 'all)) then begin
+			l1 := self:getSrcStore():GetAllInfo()
+		end else begin
+			l1 := backupSoup:GetInfo('storeInfo)
+		end;
+	if backupMachine then begin
+			l3 := backupMachine
+		end else begin
+			if backupInfo then begin
+					l3 := backupInfo.machineType
+				end
+		end;
+	if (not a2) then begin
+			if (if backupInfo then backupInfo.packageType) then begin
+					l4 := backupInfo.packageType
+				end else begin
+					l4 := 'none
+				end
+		end else begin
+			l4 := a2
+		end;
+	l2 := {backupDate: Time(), soupType: a1, packageType: l4, storeInfo: l1, version: 'twoO, machineType: l3};
+	backupMachine := nil;
+	backupSoup:SetAllInfo(l2);
+	self:getBackupInfo()
+end
+@@end

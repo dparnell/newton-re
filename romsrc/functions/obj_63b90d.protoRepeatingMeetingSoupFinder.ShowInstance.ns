@@ -1,0 +1,13 @@
+@@ 0x4ede5d
+func(a1, a2) begin
+	if ((a1 = 'deleted) or (a1 = nil)) then begin
+			a1 := nil
+		end;
+	(if (a1 <> nil) then begin
+			if (owner.viewCObject = nil) then begin
+					owner:Open()
+				end;
+			(if owner.viewCObject then owner:ShowFoundItem(a1, a2, self))
+		end)
+end
+@@end

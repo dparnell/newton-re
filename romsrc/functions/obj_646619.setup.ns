@@ -1,0 +1,12 @@
+@@ 0x45eae9
+func(a1) begin
+	local l1;
+	if HasSlot(self, 'image) then begin
+			l1 := true
+		end;
+	self.image := a1;
+	self:SyncView();
+	self:RedoChildren();
+	(if l1 then RemoveSlot(self, 'image))
+end
+@@end

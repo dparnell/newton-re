@@ -1,0 +1,6 @@
+@@ 0x4622f9
+func() begin
+	popup := (foreach l1 in snoozeARoos collect (if (l1 = 60) then "1 hour" else (if (l1 = 1440) then "1 day" else (if (l1 < 60) then ParamStr("^0 minutes", [Array: l1]) else (if (l1 < 1440) then ParamStr("^0 hours", ([Array: l1] div 60)) else ParamStr("^0 days", ([Array: l1] div 1440)))))));
+	inherited:buttonClickScript()
+end
+@@end

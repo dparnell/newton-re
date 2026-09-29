@@ -1,0 +1,14 @@
+@@ 0x590ec5
+func(a1, a2) begin
+	l2 := [Array: ];
+	local l1;
+	local l2;
+	(foreach l3 in StrParse(a1, a2) do begin
+			l1 := TrimString(l3);
+			if (StrLen(l3) > 0) then begin
+					AddArraySlot(l2, l1)
+				end
+		end);
+	l2
+end
+@@end

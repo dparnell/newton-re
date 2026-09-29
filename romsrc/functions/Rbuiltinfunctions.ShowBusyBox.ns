@@ -1,0 +1,5 @@
+@@ 0x41a7f1
+func(a1) begin
+	BusyBoxControl((if a1 then -2 else 2))
+end
+@@end

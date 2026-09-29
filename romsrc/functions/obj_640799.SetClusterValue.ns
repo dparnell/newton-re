@@ -1,0 +1,10 @@
+@@ 0x42a2b9
+func(a1) begin
+	local l1;
+	(foreach l2 in (l1 := self:ChildViewFrames()) do begin
+			if (a1 = l2.buttonValue) then begin
+					self:SetCluster(l2)
+				end
+		end)
+end
+@@end

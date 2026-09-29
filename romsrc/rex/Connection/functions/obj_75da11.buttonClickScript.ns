@@ -1,0 +1,8 @@
+@@ 0x75da45
+func() begin
+	self:RemoveOpenWindow(base);
+	self:CloseOpenWindows(nil);
+	closeBoxTapped := true;
+	inherited:?buttonClickScript()
+end
+@@end

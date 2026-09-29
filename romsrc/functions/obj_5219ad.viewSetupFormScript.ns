@@ -1,0 +1,5 @@
+@@ 0x52197d
+func() begin
+	(self.viewBounds := RelBounds(0, 0, cuPageSize.width, cuPageSize.height))
+end
+@@end

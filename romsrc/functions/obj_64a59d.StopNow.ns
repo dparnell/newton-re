@@ -1,0 +1,7 @@
+@@ 0x425a31
+func() begin
+	fSetLengthInProgress := 'doItNow;
+	self:stop();
+	(fSetLengthInProgress := nil)
+end
+@@end

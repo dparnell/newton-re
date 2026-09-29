@@ -1,0 +1,25 @@
+@@ 0x4b1d95
+func() begin
+	local l1, l2, l3, l4, l5, l6, l7;
+	l1 := saveWhat;
+	l2 := saveWhatView;
+	if (currentLayout = 'itemLayout) then begin
+			l2:EndFlush()
+		end;
+	l5 := (l4 := GetTargetCursor(l1, nil)):entry();
+	if (l4:CountEntries() = 1) then begin
+			l6 := Clone(l5);
+			l7 := self:MakeLogEntry(l5);
+			AddUndoSend(newtAppBase, 'UnLogEntry, [Array: l7, l6])
+		end else begin
+			(while l5 do begin
+					self:MakeLogEntry(l5);
+					(l5 := l4:Next())
+				end)
+		end;
+	if layout then begin
+			layout:Retarget(true)
+		end;
+	(saveWhat := (saveWhatView := nil))
+end
+@@end

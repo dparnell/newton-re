@@ -1,0 +1,13 @@
+@@ 0x422291
+func(a1) begin
+	local l1;
+	(try begin
+			if a1.callBackFn then begin
+					Apply(a1.callBackFn, a1.callBackParams)
+				end;
+			(if (l1 := a1.notifyArgs) then (if (Length(l1) = 2) then Apply(functions.AlarmUser, l1) else Perform(GetRoot(), 'Notify, l1)))
+		end onexception |evt.ex| do begin
+			nil
+		end)
+end
+@@end

@@ -1,0 +1,32 @@
+@@ 0x470089
+func() begin
+	local l1, l2;
+	def.tabValues := NBPGetNames(nbpCookie);
+	Sort(def.tabValues, '|str<|, nil);
+	def.tabDown := (if (def.tabValues <> nil) then Length(def.tabValues) else 0);
+	if (def.tabDown > 7) then begin
+			nbpScroller.ScrollRect := (nbpScroller.DataRect := SetBounds(0, 0, 0, def.tabDown));
+			l1 := true
+		end else begin
+			nbpScroller:Hide()
+		end;
+	if (currentSelection <> nil) then begin
+			if ((l2 := FindStringInArray(def.tabValues, currentSelection)) <> nil) then begin
+					if (l2 >= visibleItems) then begin
+							vOrg := min(l2, (def.tabDown - visibleItems))
+						end else begin
+							vOrg := 0
+						end;
+					selectedIndex := (l2 - vOrg);
+					nbpScroller.yPos := vOrg;
+					l1 := true
+				end
+		end;
+	if l1 then begin
+			nbpScroller:AdjustArrows();
+			nbpScroller:Show()
+		end;
+	theTable:RedoChildren();
+	self:selectCellInTable()
+end
+@@end

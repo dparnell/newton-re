@@ -1,0 +1,8 @@
+@@ 0x47ba4d
+func() begin
+	if theAboutBox then begin
+			theAboutBox:Close()
+		end;
+	(theAboutBox := nil)
+end
+@@end

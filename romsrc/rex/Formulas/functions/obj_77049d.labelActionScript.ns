@@ -1,0 +1,13 @@
+@@ 0x770631
+func(a1) begin
+	curMeasurement := a1;
+	self:ClearAllFields();
+	SetValue(US, 'labelItems, USLabels[a1]);
+	SetValue(US, 'defaultItem, USDefaults[a1]);
+	US:ResetPicker();
+	SetValue(Metric, 'labelItems, MetricLabels[a1]);
+	SetValue(Metric, 'defaultItem, MetricDefaults[a1]);
+	Metric:ResetPicker();
+	self:InitFieldBasedOnMeasurement()
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x526721
+func(a1, a2) begin
+	local l1, l2;
+	a2 := (a2 - 2);
+	if ((l2 := PrevSubStr(a1, a2)) < a2) then begin
+			l1 := Substr(a1, l2, ((a2 + 1) - l2))
+		end;
+	return l1
+end
+@@end

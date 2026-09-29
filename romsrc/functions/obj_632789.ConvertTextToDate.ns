@@ -1,0 +1,14 @@
+@@ 0x55d629
+func(a1, a2) begin
+	local l1;
+	if (not (l1 := StringToDate(a1))) then begin
+			self:SetMessage("Can\u2019\ut understand this date.");
+			return nil
+		end;
+	findTime := (l1 - (l1 mod 1440));
+	if (a2 = 4) then begin
+			findTime := ((findTime + 1440) - 1)
+		end;
+	{findText: ShortDateStr(findTime, dateFormat), findTime: findTime}
+end
+@@end

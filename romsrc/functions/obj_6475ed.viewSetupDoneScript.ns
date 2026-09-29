@@ -1,0 +1,6 @@
+@@ 0x50abbd
+func() begin
+	otherPicker:Hide();
+	otherInput:Hide()
+end
+@@end

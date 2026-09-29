@@ -1,0 +1,8 @@
+@@ 0x5aabf1
+func(a1, a2) begin
+	(if (a1 = 'text) then begin
+			realText := text;
+			(if expandFlag then StrReplace((realText := Clone(realText)), "\u00AC\u", SPrintObject($\n), nil))
+		end)
+end
+@@end

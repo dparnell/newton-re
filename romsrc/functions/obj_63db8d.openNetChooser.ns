@@ -1,0 +1,16 @@
+@@ 0x470835
+func(a1, a2, a3, a4, a5, a6, a7) begin
+	(if Visible(netChooser) then self:Notify(3, "Chooser", "The network chooser is already open") else begin
+			if (if a1 then (StrLen(a1) = 0)) then begin
+					a1 := nil
+				end;
+			netChooser.currentZone := a1;
+			netChooser.nbpLookupName := a2;
+			netChooser.startSelection := a3;
+			netChooser.notifyOnClose := a4;
+			netChooser.headerText := a6;
+			netChooser.lookForText := a7;
+			netChooser:Open()
+		end)
+end
+@@end

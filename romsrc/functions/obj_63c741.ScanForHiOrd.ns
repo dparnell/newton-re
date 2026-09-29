@@ -1,0 +1,12 @@
+@@ 0x442469
+func(a1) begin
+	local l1, l2;
+	l1 := (a1 div 10);
+	l2 := 0;
+	(while (l1 <> 0) do begin
+			l1 := (l1 div 10);
+			(l2 := (l2 + 1))
+		end);
+	(hiOrd := l2)
+end
+@@end

@@ -1,0 +1,39 @@
+@@ 0x4b2f51
+func(a1, a2) begin
+	local l1, l2, l3;
+	activeNotify := nil;
+	if (viewCObject = nil) then begin
+			GetRoot().iobox:Open()
+		end;
+	if (if a1 then IsSoupEntry(a1)) then begin
+			l1 := Intern(EntrySoup(a1).theName);
+			if (l2 := allSoups.(l1)) then begin
+					l3 := labelsFilter;
+					labelsFilter := '_all;
+					l2.soupFilter := labelsFilter;
+					l2:SetupCursor();
+					l2.theCursor:Goto(a1);
+					if (l1 <> currentSoupSymbol) then begin
+							self:SetBox(l1);
+							if (a2 <> currentLayout) then begin
+									self:ShowLayout(a2)
+								end;
+							if syncAlso then begin
+									syncAlso:SyncChildren();
+									syncAlso:Dirty()
+								end
+						end else begin
+							layout:FilterChanged();
+							if filterBar then begin
+									filterBar:UpdateFilter(l3, '_all)
+								end;
+							if (a2 <> currentLayout) then begin
+									self:ShowLayout(a2)
+								end
+						end;
+					return nil
+				end
+		end;
+	nil
+end
+@@end

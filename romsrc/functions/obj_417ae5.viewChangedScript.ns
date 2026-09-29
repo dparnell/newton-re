@@ -1,0 +1,9 @@
+@@ 0x417ac5
+func(a1, a2) begin
+	local l1;
+	(if (a1 = 'elapsedTime) then begin
+			l1 := self:GetTimeString(self.elapsedTime);
+			SetValue(soundDescription, 'text, l1)
+		end else (if (a1 = 'sounds) then inherited:?viewChangedScript(a1, a2)))
+end
+@@end

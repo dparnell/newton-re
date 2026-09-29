@@ -1,0 +1,54 @@
+@@ 0x54e9f1
+func(a1, a2, a3, a4, a5, a6) begin
+	local v9_yyyyyyyxxxxx, v10_zzyyyyyyyyyyyyy, v11_wwwwwwwwwwwwwwwwvvv, v12_jiiii, v13_uuuuuuut, v16_tttttttttttt, v17_yxxxxxxxxxxxxxx, v20_xxxxxxwwwwwwwwwwwww, v21_zzzzzzzzzzzzzzyyyyyyyy, v22_vvvvvvvv, v23_tttttsssssss;
+	if (not fakeTarget.kids) then begin
+			return nil
+		end;
+	v13_uuuuuuut := nil;
+	v12_jiiii := 0;
+	v17_yxxxxxxxxxxxxxx := [Array: ];
+	v16_tttttttttttt := [Array: ];
+	(foreach v19_xxww in fakeTarget.kids do begin
+			if ((v11_wwwwwwwwwwwwwwwwvvv := (if (ClassOf(a1) = 'symbol) then v19_xxww.target:Preflight(a1, fakeTarget.kids) else call a1 with (v19_xxww))) = 'OK) then begin
+					if v13_uuuuuuut then begin
+							v22_vvvvvvvv := StrLen(v13_uuuuuuut);
+							v13_uuuuuuut := ParamStr("^0, ", [Array: v13_uuuuuuut])
+						end;
+					v13_uuuuuuut := Stringer([Array: v13_uuuuuuut, v19_xxww.target:name()]);
+					AddArraySlot(v16_tttttttttttt, v19_xxww)
+				end else begin
+					v12_jiiii := (v12_jiiii + 1);
+					if v11_wwwwwwwwwwwwwwwwvvv then begin
+							SetAdd(v17_yxxxxxxxxxxxxxx, v11_wwwwwwwwwwwwwwwwvvv, true)
+						end
+				end
+		end);
+	fakeTarget.kids := v16_tttttttttttt;
+	(foreach v15_yyyyxxxxxxxxxxxxxxxxxxxxxx in v17_yxxxxxxxxxxxxxx do begin
+			if v23_tttttsssssss then begin
+					v20_xxxxxxwwwwwwwwwwwww := StrLen(v23_tttttsssssss);
+					v23_tttttsssssss := ParamStr("^0, ^1", [Array: v23_tttttsssssss, v15_yyyyxxxxxxxxxxxxxxxxxxxxxx])
+				end else begin
+					v23_tttttsssssss := v15_yyyyxxxxxxxxxxxxxxxxxxxxxx
+				end
+		end);
+	if v20_xxxxxxwwwwwwwwwwwww then begin
+			v23_tttttsssssss := StrMunger(v23_tttttsssssss, v20_xxxxxxwwwwwwwwwwwww, 1, " or", 0, nil)
+		end;
+	(if (Length(v16_tttttttttttt) > 0) then begin
+			v10_zzyyyyyyyyyyyyy := (if (v12_jiiii = 0) then 100 else 75);
+			if (StrLen(v13_uuuuuuut) > v10_zzyyyyyyyyyyyyy) then begin
+					v13_uuuuuuut := "the selected icons"
+				end else begin
+					if v22_vvvvvvvv then begin
+							v13_uuuuuuut := StrMunger(v13_uuuuuuut, v22_vvvvvvvv, 1, " and", 0, nil)
+						end
+				end;
+			v13_uuuuuuut := SubstituteChars(v13_uuuuuuut, "\n", " ");
+			(if ((not a3) or (v12_jiiii > 0)) then begin
+					v9_yyyyyyyxxxxx := ModalConfirm(ParamStr((v21_zzzzzzzzzzzzzzyyyyyyyy := (if (v12_jiiii = 0) then "Are you sure you want to ^0?" else (if (v12_jiiii = 1) then "Are you sure you want to ^0?\n\nNote -- One icon was skipped because it is ^2." else "Are you sure you want to ^0?\n\nNote -- Some icons were skipped because they are ^2."))), [Array: a4, v13_uuuuuuut, v23_tttttsssssss]), 'okCancelDefaultCancel);
+					Perform(self, a2, [Array: v9_yyyyyyyxxxxx])
+				end else Perform(self, a2, [Array: true]))
+		end else self:Notify(3, title, ParamStr((if (v12_jiiii = 1) then a5 else a6), [Array: v23_tttttsssssss])))
+end
+@@end

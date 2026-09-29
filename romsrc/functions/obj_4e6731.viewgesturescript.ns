@@ -1,0 +1,9 @@
+@@ 0x4e6711
+func(a1, a2) begin
+	(if (if (a2 = 13) then base:TestDisplay()) then begin
+			base:ClearDisplay();
+			DoScrubEffect(a1);
+			true
+		end)
+end
+@@end

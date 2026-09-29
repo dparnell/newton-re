@@ -1,0 +1,7 @@
+@@ 0x4856e5
+func() begin
+	local l1;
+	l1 := self:PickIcon();
+	(if (icon <> l1) then SetValue(self, 'icon, l1))
+end
+@@end

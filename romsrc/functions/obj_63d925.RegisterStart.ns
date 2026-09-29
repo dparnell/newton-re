@@ -1,0 +1,9 @@
+@@ 0x5a4001
+func() begin
+	local l1;
+	if (l1 := GetRoot().iobox).viewCObject then begin
+			l1:Close()
+		end;
+	(GetRoot().mailSlip.setEmporia := (not self:ValidateConfig('location, nil, '[Array: mailPhone], msgValidateNumber, 'ValidateSlip, 'RegisterValidationComplete)))
+end
+@@end

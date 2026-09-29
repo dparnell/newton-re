@@ -1,0 +1,8 @@
+@@ 0x530479
+func() begin
+	(if (server = nil) then begin
+			server := {_proto: @499};
+			server:Instantiate(configService, configType)
+		end)
+end
+@@end

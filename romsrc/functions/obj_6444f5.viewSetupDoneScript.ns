@@ -1,0 +1,8 @@
+@@ 0x4c63a5
+func() begin
+	local l1;
+	l1 := 1;
+	(while self:printNextPageScript() do (l1 := (l1 + 1)));
+	(fields.pageCount := l1)
+end
+@@end

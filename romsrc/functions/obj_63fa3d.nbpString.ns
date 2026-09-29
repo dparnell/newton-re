@@ -1,0 +1,10 @@
+@@ 0x4724b5
+func() begin
+	local l1;
+	l1 := "LaserWriter";
+	if userConfiguration.currentPrinter.npbType then begin
+			l1 := userConfiguration.currentPrinter.nbpType
+		end;
+	l1
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x79eda5 names
+func(targetType) begin
+	local beamTarget;
+	(beamTarget := Clone(task)).mtgDone := savedDone;
+	beamTarget.mtgPriority := savedPriorityIndex;
+	beamTarget.class := 'todo;
+	beamTarget.date := newMtgDate;
+	{target: beamTarget, targetView: targetView, targetStore: (if ((not HasPath(task, 'source)) or (task.source = nil)) then nil else (if (ClassOf(task.source) = 'symbol) then GetStores()[SetContains('[Array: RO0, RO1, RO2, RO3, RO4], task.source)] else EntryStore(target)))}
+end
+@@end

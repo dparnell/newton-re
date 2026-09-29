@@ -1,0 +1,19 @@
+@@ 0x5a3f29
+func(a1) begin
+	self:?SetStatusDialog('Canceling, 'vStatus, {primary: nil});
+	if eworld then begin
+			if eworld.navigator then begin
+					eworld.navigator:quit()
+				end else begin
+					if (eworld.connectState = 'Bind) then begin
+							eworld:Cancel(nil)
+						end else begin
+							eworld:ConnectionAbort()
+						end
+				end
+		end else begin
+			self:SetStatus('idle, nil)
+		end;
+	(not eworld)
+end
+@@end

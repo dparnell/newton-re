@@ -1,0 +1,5 @@
+@@ 0x4170e5
+func() begin
+	self:FillNewEntry({data: nil})
+end
+@@end

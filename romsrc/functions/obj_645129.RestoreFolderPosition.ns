@@ -1,0 +1,10 @@
+@@ 0x4aac21
+func(a1, a2, a3) begin
+	local l1, l2, l3, l4;
+	if ((not (l2 := (l1 := self:GetAppPreferences()).folderPositions)) or (not HasSlot(l2, a1))) then begin
+			return nil
+		end;
+	l3 := (if a3 then a3 else 'unfiled);
+	(if (l4 := l2.(a1).(l3)) then (if (if (not a2:GotoAlias(l4)) then l2.environs) then (if (l4 := l2.environs.(a1).(l3)) then a2:GotoCursorKey(l4))))
+end
+@@end

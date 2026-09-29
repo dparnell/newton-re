@@ -1,0 +1,11 @@
+@@ 0x4c82e9
+func() begin
+	labelCommands := [Array: "None", 'pickseparator];
+	labelCommandsId := [Array: nil, nil];
+	(foreach l1, l2 deeply in CoverPageRegistry do begin
+			AddArraySlot(labelCommands, l2.name);
+			AddArraySlot(labelCommandsId, l1)
+		end);
+	inherited:?viewSetupFormScript()
+end
+@@end

@@ -1,0 +1,7 @@
+@@ 0x56b1c5
+func(a1) begin
+	local l1;
+	l1 := ModalCardAlert('|Format?|, a1, nil);
+	HandleCardEvent('|FormatReallyNoCancel?|, [Array: a1, l1])
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x4322e9
+func() begin
+	context:?pickActionScript(value)
+end
+@@end

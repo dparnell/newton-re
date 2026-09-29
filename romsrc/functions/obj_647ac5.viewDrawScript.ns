@@ -1,0 +1,5 @@
+@@ 0x48ecf9
+func() begin
+	DrawXBitmap(iconBounds, icon, screenOrientation, 0)
+end
+@@end

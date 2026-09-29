@@ -1,0 +1,8 @@
+@@ 0x72cc31
+func(a1) begin
+	local l1, l2;
+	l1 := StrFilled(a1[0]);
+	l2 := StrFilled(a1[1]);
+	(if (if l1 then l2) then ParamStr("^1, ^0", a1) else (if l1 then a1[0] else (if l2 then a1[1] else "")))
+end
+@@end

@@ -1,0 +1,66 @@
+@@ 0x449c39
+@@const kFunction_44998d
+func(a1, a2) begin
+	(if (if a1.appSymbol then (not a2.appSymbol)) then -1 else (if (if (not a1.appSymbol) then a2.appSymbol) then 1 else 0))
+end
+@@main
+func() begin
+	l1 := GetRoot():ChildViewFrames();
+	local l1;
+	(foreach l2 in GetStores() do begin
+			l2:MarkBusy('_newt, nil)
+		end);
+	try begin
+			l4 := GetRoot().MsgBox;
+			BusyBoxControl(2);
+			self:DrawShape(MakeRect(-10000, -10000, 10000, 10000), {fillPattern: 5});
+			l4:BotherScreenCentered("Rebuilding display, please wait a few seconds\u2026\u");
+			SetVolume(0);
+			StableSort(l1, kFunction_44998d, nil);
+			self:LockScreen(true);
+			local l4;
+			(foreach l5 in l1 do begin
+					if (not l5.ReOrientToScreen) then begin
+							try begin
+									l5:_Close()
+								end onexception |evt.ex| do begin end
+						end
+				end);
+			self:SyncView();
+			(foreach l5 in l1 do begin
+					try begin
+							if l5.ReOrientToScreen then begin
+									if l5.viewCObject then begin
+											l5:ReOrientToScreen()
+										end
+								end else begin
+									l5:Open()
+								end
+						end onexception |evt.ex| do begin end
+				end);
+			if (l7 := GetUserConfig('blessedapp)) then begin
+					l7 := GetRoot().(l7)
+				end;
+			if (if l7 then l7.viewCObject) then begin
+					l7:MoveBehind(GetRoot():ChildViewFrames()[0])
+				end;
+			l4:Nevermind();
+			PlaySoundSync(@302);
+			Sleep(8);
+			SetSystemVolume(GetUserConfig('soundVolumeDb));
+			self:LockScreen(nil);
+			self:Dirty();
+			RefreshViews()
+		end onexception |evt.ex| do begin
+			(foreach l2 in GetStores() do begin
+					l2:MarkNotBusy('_newt)
+				end);
+			SetSystemVolume(GetUserConfig('soundVolumeDb));
+			Rethrow()
+		end;
+	(foreach l2 in GetStores() do begin
+			local l7;
+			l2:MarkNotBusy('_newt)
+		end)
+end
+@@end

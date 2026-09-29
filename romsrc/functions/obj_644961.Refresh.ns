@@ -1,0 +1,7 @@
+@@ 0x446105
+func() begin
+	hours := ((Time div 60) mod 24);
+	minutes := (Time mod 60);
+	self:Dirty()
+end
+@@end

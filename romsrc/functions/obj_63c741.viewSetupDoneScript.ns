@@ -1,0 +1,26 @@
+@@ 0x442449
+@@const kROM_685
+@685
+@@const kROM_686
+@686
+@@main
+func() begin
+	local l1, l2, l3, l4, l5, l6;
+	l1 := AddView(self, {_proto: fDigitsProto, viewJustify: 102, viewBounds: SetBounds(-23, 0, 0, 28), icon: kROM_685, nextDigit: nil, ArrayPos: 0});
+	l2 := (value div 10);
+	l3 := (maxValue div 10);
+	l4 := 10;
+	l5 := 1;
+	(while (l3 <> 0) do begin
+			l6 := {_proto: fDigitsProto, increment: l4, nextDigit: nil, ArrayPos: l5, icon: kROM_686};
+			l6 := AddView(self, l6);
+			l1.nextDigit := l6;
+			l1 := l6;
+			l2 := (l2 div 10);
+			l3 := (l3 div 10);
+			l4 := (l4 * 10);
+			(l5 := (l5 + 1))
+		end);
+	self:ScanForHiOrd(value)
+end
+@@end

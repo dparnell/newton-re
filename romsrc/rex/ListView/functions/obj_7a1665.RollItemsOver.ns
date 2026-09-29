@@ -1,0 +1,54 @@
+@@ 0x7975c5 names
+@@const kLiteral_791bbd
+"To Do"
+@@main
+func(aFromAlarm) begin
+	lastChecked := GetUserConfig('lastRollover);
+	protectError := nil;
+	if ((today := ((today := Time()) - (today mod 1440))) > lastChecked) then begin
+			self:GetToDoSoup();
+			dataCursor := dataSoup:Query({type: 'index, beginKey: Max(1, lastChecked), indexPath: 'date, endKey: (today - 1)});
+			try begin
+					rollEm := MapCursor(dataCursor, nil);
+					dataCursor := nil;
+					local today;
+					local oldDate;
+					local Entry;
+					local repeatEntries;
+					local dataCursor;
+					local lastChecked;
+					local rollEm;
+					local protectError;
+					local result;
+					(foreach Entry in rollEm do begin
+							if Entry then begin
+									if (self:RollEntryOver(Entry, today) = nil) then begin
+											protectError := true
+										end
+								end
+						end);
+					if (lastChecked <> 0) then begin
+							if (repeatEntries := self:GetToDoEntry(0, nil)) then begin
+									(foreach Entry in repeatEntries do begin
+											if Entry then begin
+													if (self:RollRepeatOver(Entry, today, lastChecked) = nil) then begin
+															protectError := true
+														end
+												end
+										end)
+								end
+						end
+				end onexception |evt.ex| do begin
+					rollEm := nil;
+					self:Notify(3, kLiteral_791bbd, "There was not enough memory to roll tasks over so they were left untouched. Marking completed tasks may help.");
+					return nil
+				end;
+			if (if aFromAlarm then Visible(self)) then begin
+					self:RedoTopics()
+				end
+		end;
+	SetUserConfig(EnsureInternal('lastRollover), today);
+	FlushUserConfig();
+	(if protectError then self:Notify(3, kLiteral_791bbd, "Couldn\u2019\ut roll some tasks over because they were write-protected"))
+end
+@@end

@@ -1,0 +1,26 @@
+@@ 0x4af945
+func(a1) begin
+	local l1, l2, l3, l4;
+	if TargetIsCursor(a1) then begin
+			l2 := (l1 := GetTargetCursor(a1, nil)):entry();
+			(while l2 do begin
+					if (l3 := GetEntryDataDef(l2)) then begin
+							l3:?AboutToDeleteEntry(l2)
+						end;
+					masterSoup:DeleteEntry(l2);
+					(l2 := l1:Next())
+				end);
+			selected := nil
+		end else begin
+			if a1 then begin
+					l4 := EntryStore(a1);
+					if (l3 := GetEntryDataDef(a1)) then begin
+							l3:?AboutToDeleteEntry(a1)
+						end;
+					masterSoup:DeleteEntry(a1);
+					AddUndoSend(layout, 'NewEntry, [Array: a1, true, l4])
+				end
+		end;
+	layout:Retarget(true)
+end
+@@end

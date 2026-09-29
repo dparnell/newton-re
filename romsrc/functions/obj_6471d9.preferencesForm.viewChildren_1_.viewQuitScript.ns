@@ -1,0 +1,5 @@
+@@ 0x53135d
+func() begin
+	(if GetRoot().(transport.owner).prefsCache then (GetRoot().(transport.owner).prefsCache.internalStore := viewValue))
+end
+@@end

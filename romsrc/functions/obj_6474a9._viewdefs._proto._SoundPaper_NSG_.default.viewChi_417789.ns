@@ -1,0 +1,7 @@
+@@ 0x417789
+func() begin
+	local l1;
+	l1 := self:TargetData();
+	self:Retarget()
+end
+@@end

@@ -1,0 +1,11 @@
+@@ 0x42be25
+func() begin
+	local l1;
+	hours := ((minutes := ((l1 := TimeInSeconds()) div 60)) div 60);
+	if ((minutes := ((minutes mod 60) div 5)) > 6) then begin
+			hours := (hours + 1)
+		end;
+	hours := (hours mod 12);
+	((300 - (l1 mod 300)) * 1000)
+end
+@@end

@@ -1,0 +1,14 @@
+@@ 0x43da91
+func(a1) begin
+	pickedSameTab := (phaseIndex = a1);
+	if (phaseIndex = a1) then begin
+			if ((phase := (phase + 1)) = lettersPerTab) then begin
+					phase := 0
+				end
+		end else begin
+			phase := 0;
+			phaseIndex := a1
+		end;
+	self:?PickLetterScript(Substr(letters, ((phase * numIndices) + a1), 1))
+end
+@@end

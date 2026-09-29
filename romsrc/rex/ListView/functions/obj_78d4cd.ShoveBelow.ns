@@ -1,0 +1,17 @@
+@@ 0x78cd85 names
+func(anIndex, aDelta) begin
+	local topic, kid;
+	topic := topics[anIndex];
+	(while (if (topic.hideCount <> nil) then (topic.hideCount > 0)) do begin
+			if ((anIndex := (anIndex + 1)) >= nTopics) then begin
+					return nil
+				end;
+			(topic := topics[anIndex])
+		end);
+	if ((kid := self:TopicIndexToView(anIndex)) = nil) then begin
+			return nil
+		end;
+	kid.realData.viewBounds := OffsetRect(kid.viewBounds, 0, aDelta);
+	SetValue(kid, 'viewBounds, kid.realData.viewBounds)
+end
+@@end

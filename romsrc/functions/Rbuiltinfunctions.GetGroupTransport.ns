@@ -1,0 +1,22 @@
+@@ 0x46465d
+func(a1) begin
+	if (a1 = nil) then begin
+			return nil
+		end;
+	if ((l1 := GetUserConfig('transportGroups)) = nil) then begin
+			l1 := {}
+		end;
+	if (((l2 := l1.(a1)) = nil) or (GetRoot().(l2) = nil)) then begin
+			local l1;
+			local l2;
+			(foreach l3 in transports do begin
+					local l5;
+					if (if (l5 := GetRoot().(l3)) then (l5.group = a1)) then begin
+							l2 := (l1.(EnsureInternal(a1)) := EnsureInternal(l5.appSymbol));
+							SetUserConfig('transportGroups, l1)
+						end
+				end)
+		end;
+	l2
+end
+@@end

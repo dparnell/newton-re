@@ -1,0 +1,23 @@
+@@ 0x4a6c11
+func() begin
+	l1 := theApp.aboutInfo;
+	l2 := l1:?extraInfo(theApp);
+	l3 := 0;
+	l4 := 0;
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	(foreach l5 in theSoups do begin
+			local l7;
+			l7 := l5:Query(nil);
+			l4 := (l4 + l7:CountEntries());
+			l3 := (l3 + l5:GetSize())
+		end);
+	text := ParamStr("^?0^0\n\n||^?1^1\n||^?2^2\n||^?3^3\n||^?4^4\n||^?5^5\n||", [Array: l1.tagline, l1.version, l1.Date, l1.copyright, l1.trademarks, l2]);
+	(if (l3 > 0) then begin
+			l3 := max((l3 div 1024), 1);
+			(text := Stringer([Array: text, (if (l4 = 0) then ParamStr("\n^0K storage used", [Array: l3]) else (if (l4 = 1) then ParamStr("\n^0K storage used for 1 ^1", [Array: l3, theApp.appObject[0]]) else ParamStr("\n^0K storage used for ^1 ^2", [Array: l3, l4, theApp.appObject[1]])))]))
+		end)
+end
+@@end

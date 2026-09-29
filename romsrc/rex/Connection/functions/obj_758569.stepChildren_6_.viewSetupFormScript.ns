@@ -1,0 +1,6 @@
+@@ 0x759231
+func() begin
+	self:SetupViewBounds('sync);
+	self:SetupButton()
+end
+@@end

@@ -1,0 +1,32 @@
+@@ 0x54b711
+@@const kBinaryFromHex
+func(hex, cls) begin
+	local b := MakeBinary(StrLen(hex) div 2, cls);
+	for i := 0 to Length(b) - 1 do begin
+		local h := Ord(hex[2 * i]);
+		local l := Ord(hex[2 * i + 1]);
+		StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+	end;
+	b
+end
+@@const kLiteral_3c8abd
+{mask: call kBinaryFromHex with ("0000000000040019001900360026004300080000003000000000000000c00000198000003b8000000f0000000f0000000600000004000000000000000000000000000000", 'mask), bits: call kBinaryFromHex with ("000000000004003400340013004100200008000000300000db60000000c0000099a00000bba000000f0000008f2000008620000004000000db6000000000000000000000", 'bits), bounds: '{left: 0, top: 0, right: 13, bottom: 13}}
+@@const kLiteral_3c8b41
+{mask: call kBinaryFromHex with ("0000000000040019001900360026004300080000003000000000000000c00000198000003b8000000f0000000f0000000600000004000000000000000000000000000000", 'mask), bits: call kBinaryFromHex with ("000000000004001900190013002600200000000000000000db60000000000000802000008020000000000000802000008020000000000000db6000000000000000000000", 'bits), bounds: '{left: 0, top: 0, right: 13, bottom: 13}}
+@@main
+func() begin
+	local l1, l2, l3, l4, l5;
+	if (not shape) then begin
+			l1 := target:where();
+			l2 := target:size();
+			l3 := (if (labelsFilter = '_all) then ParamStr("^0 ^?1(^1)||", [Array: l1, (if target.fentry.labels then (if (l4 := userConfiguration.userFolders.(target.fentry.labels)) then StringFilter(l4, "_", 'rejectBeginning)) else "Unfiled")]) else l1);
+			l5 := ((2 * hSpacing) div 3);
+			l3 := StyledStrTruncate(l3, (hSpacing - l5), 9216);
+			SetClass((shape := [Array: (if (target.fentry.class = 'FrozenEntry) then '{font: 10240} else (if target.notActive then '{font: 2107392} else '{font: 1058816})), MakeText(target.fentry.text, 20, 0, (hSpacing div 2), 11), '{font: 9216, justification: right}, MakeText(l2, (hSpacing div 2), 0, (l5 - 8), 11), '{font: 9216, justification: left}, MakeText((if l3 then l3 else ""), l5, 0, hSpacing, 11), OffsetShape(MakeShape((if checked then kLiteral_3c8abd else kLiteral_3c8b41)), 5, 0)])[1].data, 'string);
+			if IsSoupEntry(target.fentry) then begin
+					EntryUndoChanges(target.fentry)
+				end
+		end;
+	(if shape then self:DrawShape(shape, nil))
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x548f81
+func() begin
+	local l1, l2;
+	(if (if (l1 := GetUserConfig('extraFont)) then (iconStyle.font <> l1)) then begin
+			(l2 := Clone(iconStyle)).font := l1;
+			{_proto: self, iconStyle: l2}
+		end else self)
+end
+@@end

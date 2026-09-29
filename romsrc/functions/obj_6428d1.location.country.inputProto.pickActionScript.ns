@@ -1,0 +1,15 @@
+@@ 0x48de71
+func(a1) begin
+	local l1;
+	l1 := GetCountryEntry(a1)[0].name;
+	if (target = GetUserConfig('location)) then begin
+			target.country := a1
+		end else begin
+			target.countrySymbol := a1;
+			target.country := l1
+		end;
+	self:UpdateText(l1);
+	self:hilite(nil);
+	self:StartFlush()
+end
+@@end

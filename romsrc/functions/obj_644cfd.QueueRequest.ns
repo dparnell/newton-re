@@ -1,0 +1,16 @@
+@@ 0x47fb11
+func(a1, a2) begin
+	if IsSymbol(a1) then begin
+			a2.function := a1;
+			a1 := GetRoot().(appSymbol)
+		end;
+	if a1 then begin
+			if a1.requestQueue then begin
+					AddArraySlot(a1.requestQueue, a2)
+				end else begin
+					a1.requestQueue := [Array: a2]
+				end
+		end;
+	a2
+end
+@@end

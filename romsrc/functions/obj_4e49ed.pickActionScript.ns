@@ -1,0 +1,8 @@
+@@ 0x4e4991
+func(a1) begin
+	(if (ClassOf(popup[a1].size) = 'symbol) then begin
+			self:ScaleChanged(({Scale50: 50, Scale75: 75, Scale100: 100}).(popup[a1].size));
+			self:hilite(nil)
+		end else inherited:pickActionScript(a1))
+end
+@@end

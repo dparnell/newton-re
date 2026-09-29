@@ -1,0 +1,48 @@
+@@ 0x44777d
+@@const kLiteral_439289
+1.25
+@@const kLiteral_43929d
+0.75
+@@main
+func() begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9, l10;
+	zoomStops := [Array: ];
+	l1 := usefulSizes.fullSize.right;
+	l2 := usefulSizes.fullSize.bottom;
+	l3 := (usefulSizes.fitInWindow.right - usefulSizes.fitInWindow.left);
+	l4 := (usefulSizes.fitInWindow.bottom - usefulSizes.fitInWindow.top);
+	l5 := 0.5;
+	(while (((l1 * l5) > (kLiteral_439289 * l3)) or ((l2 * l5) > (kLiteral_439289 * l4))) do begin
+			ArrayInsert(zoomStops, l5, 0);
+			(l5 := (l5 / 2))
+		end);
+	if ((l1 > l3) or (l2 > l4)) then begin
+			ArrayInsert(zoomStops, 'fitInWindow, 0)
+		end;
+	AddArraySlot(zoomStops, 'fullSize);
+	l6 := usefulSizes.fullResolution.right;
+	l7 := usefulSizes.fullResolution.bottom;
+	l5 := 2;
+	if drawGrayScaled then begin
+			l8 := FullResolutionBounds(myImage);
+			if (l9 := GetShapeInfo(myImage)).resolution then begin
+					l10 := floor((l9.resolution[0] / 72));
+					l1 := floor((l8.right / l10));
+					l2 := floor((l8.bottom / l10));
+					if ((l1 < (l6 * kLiteral_43929d)) or (l2 < (l7 * kLiteral_43929d))) then begin
+							AddArraySlot(zoomStops, 1);
+							(zoomUpSize := Clone(usefulSizes.fullSize)).right := l1;
+							zoomUpSize.bottom := l2
+						end
+				end
+		end;
+	(while (((l1 * l5) < (l6 * kLiteral_43929d)) or ((l2 * l5) < (l7 * kLiteral_43929d))) do begin
+			AddArraySlot(zoomStops, l5);
+			(l5 := (l5 * 2))
+		end);
+	if ((l1 <> l6) or (l2 <> l7)) then begin
+			AddArraySlot(zoomStops, 'fullResolution)
+		end;
+	AddArraySlot(zoomStops, 'twiceFullResolution)
+end
+@@end

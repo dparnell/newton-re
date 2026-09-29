@@ -1,0 +1,26 @@
+@@ 0x4b6f79
+func(a1) begin
+	if (if (l1 := GetCaretInfo()) then (l1.view = a1)) then begin
+			AddProcrastinatedSend('checkCaret, targetView, 'checkCaret, nil, 500)
+		end;
+	if (((l2 := (a1.viewBounds.bottom + minimumHeight)) > target.height) or (if (if path then (Length(target.(path)) = 0)) then (target = lastItem))) then begin
+			l3 := (l2 - target.height);
+			target.height := l2;
+			(l4 := Clone(targetView.viewBounds)).bottom := (l4.bottom + l3);
+			targetView.viewBounds := l4;
+			l5 := nextEntry;
+			nextEntry := 0;
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			local l5;
+			(foreach l6 in layout:ChildViewFrames() do begin
+					l6:SyncView()
+				end);
+			nextEntry := l5;
+			AddProcrastinatedSend('Dirty, layout, 'Dirty, nil, 500)
+		end;
+	self:StartFlush()
+end
+@@end

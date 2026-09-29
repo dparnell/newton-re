@@ -1,0 +1,11 @@
+@@ 0x596b91
+func() begin
+	(if (addedHeight < 20) then begin
+			text := "Internet Mail Item";
+			(viewJustify := 186)
+		end else begin
+			text := "Addressees";
+			(viewJustify := 16442)
+		end)
+end
+@@end

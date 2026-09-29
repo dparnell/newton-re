@@ -1,0 +1,32 @@
+@@ 0x425d61
+func() begin
+	local l1;
+	fPauseResult := nil;
+	try begin
+			if (not self:TestState(1)) then begin
+					if self:TestState(2) then begin
+							l1 := 16
+						end else begin
+							if self:TestState(4) then begin
+									l1 := 8
+								end else begin
+									if self:TestState(16) then begin
+											l1 := 2
+										end else begin
+											if self:TestState(8) then begin
+													l1 := 4
+												end
+										end
+								end
+						end;
+					if l1 then begin
+							fPauseResult := fSoundChannel:pause();
+							self:SetState(l1)
+						end
+				end
+		end onexception |evt.ex| do begin
+			self:CleanUpAfterError()
+		end;
+	return fPauseResult
+end
+@@end

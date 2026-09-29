@@ -1,0 +1,5 @@
+@@ 0x51c54d
+func(a1) begin
+	(scrollStealer := a1)
+end
+@@end

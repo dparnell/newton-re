@@ -1,0 +1,7 @@
+@@ 0x599265
+func() begin
+	inherited:viewSetupDoneScript();
+	self:changeformat();
+	(if (not fields.edited) then self:generateText())
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x5a0b1d
+func(a1) begin
+	(if a1 then begin
+			mailRegister.request := request;
+			base:Close();
+			mailRegister:Open()
+		end)
+end
+@@end

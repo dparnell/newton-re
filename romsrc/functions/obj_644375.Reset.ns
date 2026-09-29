@@ -1,0 +1,11 @@
+@@ 0x5b9405
+func() begin
+	if (not prefix) then begin
+			self.prefix := "";
+			self.pin := true;
+			self.loc := 'first
+		end;
+	self.currentEntry := {word: nil, attribute: nil, terminalClass: nil};
+	self:PrivateReset(prefix, pin, loc)
+end
+@@end

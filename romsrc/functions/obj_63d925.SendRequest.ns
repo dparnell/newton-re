@@ -1,0 +1,45 @@
+@@ 0x5a4101
+func(a1) begin
+	local l1, l2;
+	(if (a1.cause <> 'submit) then begin
+			if (if eworld then eworld.connected) then begin
+					if (a1.cause = 'periodic) then begin
+							return nil
+						end;
+					if (status = 'connected) then begin
+							eworld.request := a1;
+							eworld:SendNextMessage()
+						end else begin
+							if (lastRequest = 'SendRequest) then begin
+									self:QueueRequest(eworld.request, a1)
+								end else begin
+									self:QueueRequest('SendRequest, a1);
+									return nil
+								end
+						end
+				end else begin
+					if (a1.cause = 'periodic) then begin
+							l1 := ResolveEntryAlias(userConfiguration.currentEmporium);
+							l2 := ResolveEntryAlias(userConfiguration.currentPersona);
+							AddDeferredSend(self, 'DoConnect, [Array: l1, l2, a1, 'batch, 'Mail_ListUnread])
+						end else begin
+							if (if (not (if connectSlip then connectSlip.viewCObject)) then (status = 'idle)) then begin
+									(connectSlip := BuildContext(connectOptionsSlip)).request := a1;
+									connectSlip.theApp := GetRoot().(owner);
+									connectSlip.theTransport := self;
+									connectSlip.connectionType := 'send;
+									connectSlip.clearOnClose := 'connectSlip;
+									if connectSlip.theApp.viewCObject then begin
+											connectSlip.theApp:RememberedOpen(connectSlip)
+										end else begin
+											connectSlip:Open()
+										end
+								end else begin
+									return nil
+								end
+						end
+				end;
+			(lastRequest := 'SendRequest)
+		end)
+end
+@@end

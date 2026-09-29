@@ -1,0 +1,5 @@
+@@ 0x45feb9
+func(a1, a2) begin
+	self:ScrollTo((fXOffset + a1), (fYOffset + a2))
+end
+@@end

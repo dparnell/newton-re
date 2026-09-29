@@ -1,0 +1,19 @@
+@@ 0x51e3e5
+func() begin
+	l2 := 0;
+	pickItems := [Array: ];
+	local l1;
+	local l2;
+	(foreach l1 in browsers do begin
+			if (not HasSlot(l1, 'Header)) then begin
+					if (browsers[paneIndex] = l1) then begin
+							AddArraySlot(pickItems, {item: l1.name, mark: $\uFC0B, paneIndex: l2})
+						end else begin
+							AddArraySlot(pickItems, {item: l1.name, mark: $ , paneIndex: l2})
+						end
+				end;
+			l2 := (l2 + 1)
+		end);
+	DoPopup(pickItems, 0, 2, self)
+end
+@@end

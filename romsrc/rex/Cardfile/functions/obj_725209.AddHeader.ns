@@ -1,0 +1,19 @@
+@@ 0x725331
+func() begin
+	local l1, l2;
+	l2 := 0;
+	l1 := target;
+	if (not currentLetter) then begin
+			if (IsRichString(l1.sorton) or (not StrFilled(l1.sorton))) then begin
+					l2 := self:StartNewLetter('none)
+				end else begin
+					l2 := self:StartNewLetter(l1.sorton[0])
+				end
+		end else begin
+			if ((currentLetter = 'none) or (StrCompare(SPrintObject(l1.sorton[0]), SPrintObject(currentLetter)) > 0)) then begin
+					l2 := self:StartNewLetter(l1.sorton[0])
+				end
+		end;
+	l2
+end
+@@end

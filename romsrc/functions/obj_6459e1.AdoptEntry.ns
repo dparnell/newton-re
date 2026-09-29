@@ -1,0 +1,46 @@
+@@ 0x4a82a5
+func(a1, a2) begin
+	l1 := a2;
+	if (if a1 then a1.class) then begin
+			l1 := a1.class
+		end;
+	if (not l1) then begin
+			l1 := defaultDataType
+		end;
+	l2 := self:CreateBlankEntry();
+	if l1 then begin
+			l2.class := l1
+		end;
+	if (l3 := GetDataDefs(l1)) then begin
+			if HasPath(l3, 'FillNewEntry) then begin
+					l2 := l3:FillNewEntry(l2)
+				end else begin
+					if (l4 := l3:?MakeNewEntry()) then begin
+							local l1;
+							local l2;
+							local l3;
+							local l4;
+							(foreach l5, l6 in l4 do begin
+									l2.(l5) := l6
+								end)
+						end
+				end
+		end;
+	if (if UseNilLabelsAsUnfiled then (not l2.labels)) then begin
+			l2.labels := nil
+		end else begin
+			if (if (if (not l2.labels) then soupFilter) then (soupFilter <> '_all)) then begin
+					l2.labels := soupFilter
+				end
+		end;
+	if a1 then begin
+			(foreach l5, l6 in a1 do begin
+					l2.(l5) := l6
+				end)
+		end;
+	if l3 then begin
+			l3:?CheckNewEntry(l2)
+		end;
+	l2
+end
+@@end

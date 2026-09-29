@@ -1,0 +1,5 @@
+@@ 0x4ed01d
+func() begin
+	(if activeTransport then activeTransport:ResurrectStatusDialog())
+end
+@@end

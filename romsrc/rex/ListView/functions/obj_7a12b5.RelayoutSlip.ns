@@ -1,0 +1,13 @@
+@@ 0x79f015 names
+func(aShowRepeatingFields) begin
+	relayoutInProgress := true;
+	try begin
+			self:LayoutSlip(aShowRepeatingFields);
+			self:RedoChildren()
+		end onexception |evt.ex| do begin
+			relayoutInProgress := nil;
+			Rethrow()
+		end;
+	(relayoutInProgress := nil)
+end
+@@end

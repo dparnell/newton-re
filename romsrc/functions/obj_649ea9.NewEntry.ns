@@ -1,0 +1,9 @@
+@@ 0x4c5639
+func(a1, a2, a3) begin
+	masterSoup:AddEntry(a1, a3);
+	if a2 then begin
+			dataCursor:Goto(a1)
+		end;
+	AddProcrastinatedSend(appSymbol, layout, 'Retarget, '[Array: true], 0)
+end
+@@end

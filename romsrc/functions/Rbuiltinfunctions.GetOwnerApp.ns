@@ -1,0 +1,21 @@
+@@ 0x5a7d65
+func(a1) begin
+	local l1, l2, l3, l4;
+	if IsInstance(a1, 'string) then begin
+			if (l2 := LSearch('[Array: @23, @22, @129, @111, "Library", @47, @144, @139, @239, @242, @276, @282], a1, 0, '|str=|, nil)) then begin
+					l1 := '[Array: calendar, calendar, systemDirectory, iobox, systemLibrary, cardfile, paperroll, iobox, calendar, calendar, system, calendar][l2]
+				end else begin
+					if (l3 := GetStores()[0]:GetSoup(a1)) then begin
+							if (l4 := l3:GetInfo('soupDef)) then begin
+									l1 := l4.ownerApp
+								end else begin
+									if (if (if (l4 := l3:GetInfo('applications)) then IsArray(l4)) then (Length(l4) > 0)) then begin
+											l1 := l4[0]
+										end
+								end
+						end
+				end
+		end;
+	return l1
+end
+@@end

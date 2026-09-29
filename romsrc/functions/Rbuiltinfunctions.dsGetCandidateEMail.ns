@@ -1,0 +1,17 @@
+@@ 0x52a3e1
+func(a1, a2) begin
+	if (a2 <> nil) then begin
+			if (if (l1 := GetRoot().cardfile:bcEMailAddress(a2, '[Array: |string.email|])) then HasSlot(a1, 'mailTag)) then begin
+					local l1;
+					(foreach l2 in a1.mailTag do begin
+							(foreach l4 in l1 do begin
+									if (if (ClassOf((str := l4.email)) = l2) then StrFilled(str)) then begin
+											return str
+										end
+								end)
+						end)
+				end
+		end;
+	return nil
+end
+@@end

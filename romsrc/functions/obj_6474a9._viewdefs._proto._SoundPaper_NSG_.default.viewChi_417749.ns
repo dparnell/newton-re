@@ -1,0 +1,20 @@
+@@ 0x417749
+func(a1) begin
+	self.sounds := a1;
+	if self:HasSounds() then begin
+			l1 := 0;
+			if a1 then begin
+					local l1;
+					(foreach l2 in a1 do begin
+							l1 := (l1 + l2:GetPlayingTime())
+						end)
+				end;
+			target.|SoundPaper:NSG|.soundData.description := self:GetTimeString(l1);
+			SetValue(soundDescription, 'text, target.|SoundPaper:NSG|.soundData.description)
+		end else begin
+			RemoveSlot(soundDescription, 'text)
+		end;
+	SetValue(self, 'sounds, a1);
+	RefreshViews()
+end
+@@end

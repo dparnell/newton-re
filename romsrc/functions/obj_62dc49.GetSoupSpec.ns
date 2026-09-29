@@ -1,0 +1,6 @@
+@@ 0x4b3821
+func(a1) begin
+	local l1;
+	return Clone((l1 := allSoups.(a1)).soupQuery)
+end
+@@end

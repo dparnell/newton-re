@@ -1,0 +1,6 @@
+@@ 0x42dc11
+func() begin
+	userConfiguration.(config) := viewValue;
+	self:RecalcRecognition()
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x79f26d names
+func() begin
+	(if (repeatType = 5) then nil else {repeatType: repeatType, mtgInfo: mtgInfo, mtgStartDate: originalMtgDate, mtgStopDate: mtgStopDate})
+end
+@@end

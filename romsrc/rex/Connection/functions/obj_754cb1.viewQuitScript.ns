@@ -1,0 +1,13 @@
+@@ 0x754f05
+func() begin
+	try begin
+			if endpoint.connected then begin
+					endpoint:RemoveProtocolExtension("stxt")
+				end
+		end onexception |evt.ex| do begin end;
+	endpoint:StopIdle(self);
+	protoContext:RemoveOpenWindow(self);
+	inited := nil;
+	BusyBoxControl(1)
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x430d45
+func(a1) begin
+	scrollOrigin := (scrollOrigin + a1);
+	roll:recalc()
+end
+@@end

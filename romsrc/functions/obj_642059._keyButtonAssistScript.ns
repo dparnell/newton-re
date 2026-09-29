@@ -1,0 +1,6 @@
+@@ 0x44a925
+func(a1) begin
+	clicker();
+	GetRoot().assistant:PrimeAndOpen()
+end
+@@end

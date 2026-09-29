@@ -1,0 +1,8 @@
+@@ 0x447f59
+func() begin
+	if imageFormat then begin
+			self.viewFormat := imageFormat
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

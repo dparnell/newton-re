@@ -1,0 +1,6 @@
+@@ 0x76bacd
+func(a1) begin
+	AddProcrastinatedSend('OnlyNumbersAllowed, self, 'OnlyNumbersAllowed, nil, 500);
+	return true
+end
+@@end

@@ -1,0 +1,52 @@
+@@ 0x79754d names
+func(anEntry, aNewDate, aPrevDate) begin
+	changed := nil;
+	rollDate := aPrevDate;
+	if EntryStore(anEntry):IsReadOnly() then begin
+			return nil
+		end;
+	newTopics := (newEntry := self:GetToDoEntryDefaultStore(aNewDate, nil).Entry).topics;
+	if anEntry.lastRollover then begin
+			rollDate := anEntry.lastRollover
+		end;
+	local date;
+	local topic;
+	local newEntry;
+	local newTopics;
+	local checkedEntry;
+	local doneIndex;
+	local changed;
+	local rollDate;
+	(foreach topic in anEntry.topics do begin
+			date := NextMeeting(rollDate, topic.repeatInfo);
+			if topic.repeatInfo.reminderInterval then begin
+					date := (date - topic.repeatInfo.reminderInterval)
+				end;
+			if (if (doneIndex := ArrayPos(topic.repeatDone, date, 0, nil)) then (date < aNewDate)) then begin
+					ArrayRemoveCount(topic.repeatDone, doneIndex, 1);
+					changed := true;
+					checkedEntry := self:GetToDoEntryDefaultStore(date, nil).Entry;
+					RemoveSlot((topic := DeepClone(topic)), 'repeatInfo);
+					RemoveSlot(topic, 'repeatDone);
+					topic.mtgDone := true;
+					AddArraySlot(checkedEntry.topics, topic);
+					EntryChangeXmit(checkedEntry, 'todo)
+				end else begin
+					if (date < aNewDate) then begin
+							RemoveSlot((topic := DeepClone(topic)), 'repeatInfo);
+							RemoveSlot(topic, 'repeatDone);
+							topic.mtgDone := nil;
+							AddArraySlot(newEntry.topics, topic);
+							changed := true
+						end
+				end
+		end);
+	anEntry.lastRollover := aNewDate;
+	EntryChangeXmit(anEntry, 'todo);
+	if changed then begin
+			newEntry.needsSort := true;
+			EntryChangeXmit(newEntry, 'todo)
+		end;
+	true
+end
+@@end

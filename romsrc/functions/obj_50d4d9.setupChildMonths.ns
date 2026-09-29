@@ -1,0 +1,11 @@
+@@ 0x50d499
+func(a1) begin
+	l1 := a1;
+	local l1;
+	(foreach l2 in self:ChildViewFrames() do begin
+			l1 := IncrementMonth(l1, 1);
+			l2.selectedDates := [Array: l1];
+			SetValue(l2.monthName, 'text, LongDateStr(l1, @66.yearMonthStrSpec))
+		end)
+end
+@@end

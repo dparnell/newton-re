@@ -1,0 +1,13 @@
+@@ 0x48a2e9
+func() begin
+	if (if (if useMemory then selected) then (Length(selected) > 0)) then begin
+			AddMemoryItemUnique(memory, selected, func(a1, a2) begin
+				self:ToRefEquality(a1, a2)
+			end)
+		end;
+	if (if pickerSlip then pickerSlip.viewCObject) then begin
+			pickerSlip:Close()
+		end;
+	(pickerSlip := nil)
+end
+@@end

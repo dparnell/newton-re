@@ -1,0 +1,10 @@
+@@ 0x7344bd
+func() begin
+	inherited:?viewQuitScript();
+	(if (not StrFilled(target.(path))) then begin
+			target.(networkChooser.path) := nil;
+			target.(baudChooser.path) := nil;
+			(target.(path) := nil)
+		end)
+end
+@@end

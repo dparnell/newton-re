@@ -1,0 +1,6 @@
+@@ 0x7614d5
+func() begin
+	GetRoot().Connection.theEndpoint:ConnectionDone(0);
+	inherited:?buttonClickScript()
+end
+@@end

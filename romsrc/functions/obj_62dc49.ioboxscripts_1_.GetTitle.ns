@@ -1,0 +1,13 @@
+@@ 0x4b0825
+func(a1) begin
+	if (GetRoot().iobox.currentSoupSymbol = 'inbox) then begin
+			if (if (if a1 then (not (a1.state = 'InLog))) then (not a1.Remote)) then begin
+					GetRoot().iobox.putAwayInfo := GetRoot().iobox:GetPutAwayInfo(a1);
+					if GetRoot().iobox.putAwayInfo then begin
+							return "Put Away"
+						end
+				end
+		end;
+	nil
+end
+@@end

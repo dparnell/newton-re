@@ -1,0 +1,8 @@
+@@ 0x5b9a25
+func(a1) begin
+	local l1;
+	l1 := {_proto: protoCursorWindow};
+	l1:Initialize(self, a1);
+	return l1
+end
+@@end

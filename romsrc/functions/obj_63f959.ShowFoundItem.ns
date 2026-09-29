@@ -1,0 +1,9 @@
+@@ 0x4ead5d
+func(a1) begin
+	local l1, l2;
+	(if (l2 := (l1 := Query(a1.soup, {type: 'index, indexPath: '_uniqueID, beginKey: a1.entryID})):entry()) then begin
+			cursor:Goto(l2);
+			self:ShowEntry(l2)
+		end)
+end
+@@end

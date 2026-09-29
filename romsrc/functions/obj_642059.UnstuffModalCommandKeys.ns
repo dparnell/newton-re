@@ -1,0 +1,12 @@
+@@ 0x46122d
+func() begin
+	(if (ClassOf(self._keyCommands) = 'modalKeyCmds) then begin
+			(foreach l1 in _addedKeyCommands do begin
+					RemoveSlot(self, l1)
+				end);
+			RemoveSlot(self, '_addedKeyCommands);
+			RemoveSlot(self, '_keyCommands);
+			RemoveSlot(self, '_nextKeyView)
+		end)
+end
+@@end

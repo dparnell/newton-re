@@ -1,0 +1,8 @@
+@@ 0x41a461
+func() begin
+	vars.setTimeSeed := Random(0, 10000000);
+	calendar:initializeAlarms();
+	SleepScreen:PasswordCheck();
+	self:SetupIdle(viewIdleFrequency)
+end
+@@end

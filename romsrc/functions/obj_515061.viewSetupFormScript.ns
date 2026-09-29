@@ -1,0 +1,5 @@
+@@ 0x515041
+func() begin
+	(self.text := ParamStr("^0 ^1 ^2", [Array: "printed", LongDateStr(Time(), 0), TimeStr(Time(), TimeSpec)]))
+end
+@@end

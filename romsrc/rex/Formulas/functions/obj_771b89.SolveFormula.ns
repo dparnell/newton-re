@@ -1,0 +1,6 @@
+@@ 0x772345
+func(a1) begin
+	inherited:SolveFormula(a1);
+	(if (a1 = 1) then SetExchangeRate(Country1Field.country, Country2Field.country, ExchangeRateField:GetNumericValue()))
+end
+@@end

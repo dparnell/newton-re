@@ -1,0 +1,20 @@
+@@ 0x522669
+func(a1, a2, a3) begin
+	local l1;
+	l1 := ((viewBounds.right - viewBounds.left) - a2);
+	if (a2 < a3) then begin
+			if (l1 < a3) then begin
+					self:ChangeScrolledOrigin(0, (-scrollDelta))
+				end else begin
+					self:ChangeScrolledOrigin(scrollDelta, 0)
+				end
+		end else begin
+			if (l1 < a3) then begin
+					self:ChangeScrolledOrigin((-scrollDelta), 0)
+				end else begin
+					self:ChangeScrolledOrigin(0, scrollDelta)
+				end
+		end;
+	true
+end
+@@end

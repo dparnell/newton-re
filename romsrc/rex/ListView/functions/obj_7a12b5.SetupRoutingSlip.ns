@@ -1,0 +1,6 @@
+@@ 0x79f14d names
+func(aRoutingSlip) begin
+	aRoutingSlip.title := "To Do";
+	(aRoutingSlip.mtgDate := newMtgDate)
+end
+@@end

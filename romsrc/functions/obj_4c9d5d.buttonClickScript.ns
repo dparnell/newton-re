@@ -1,0 +1,5 @@
+@@ 0x4c9d1d
+func() begin
+	self:ValidateConfig('location, nil, '[Array: areacode, country], "Your configuration is not complete. Please identify your faxing location:", 'validateDialog, 'DoThePreview)
+end
+@@end

@@ -1,0 +1,11 @@
+@@ 0x42aded
+func(a1, a2) begin
+	local l1, l2;
+	if (if itemViewBounds then (itemViewBounds.right <> 0)) then begin
+			l1 := itemViewBounds.right
+		end else begin
+			l1 := (self:LocalBox().right div a1.numColumns)
+		end;
+	RelBounds((l2 := (itemViewBounds.left + ((a2 div a1.numRows) * l1))), itemViewBounds.top, l1, itemViewBounds.bottom)
+end
+@@end

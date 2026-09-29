@@ -1,0 +1,18 @@
+@@ 0x43fe8d
+func() begin
+	local l1, l2;
+	if (displayParams.buttonBarPosition <> 'none) then begin
+			l1 := bBarControlsItems.(displayParams.buttonBarControlsPosition);
+			if ((l2 := bBarItems.(displayParams.buttonBarPosition)) or l1) then begin
+					AddArraySlot((popup := Clone(popup)), 'pickseparator);
+					if l1 then begin
+							AddArraySlot(popup, l1)
+						end;
+					if l2 then begin
+							AddArraySlot(popup, l2)
+						end
+				end
+		end;
+	inherited:?buttonClickScript()
+end
+@@end

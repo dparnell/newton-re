@@ -1,0 +1,12 @@
+@@ 0x75ba65
+func(a1) begin
+	(try begin
+			a1:Stop()
+		end onexception |evt.ex| do begin
+			if ((error := CurrentException().error) = -28009) then begin
+					error := 0
+				end;
+			a1:ConnectionDone(error)
+		end)
+end
+@@end

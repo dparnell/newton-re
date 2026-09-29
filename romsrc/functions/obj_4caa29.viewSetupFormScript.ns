@@ -1,0 +1,8 @@
+@@ 0x4ca989
+func() begin
+	self:SetupForm();
+	inherited:?viewSetupFormScript();
+	notesDirty := nil;
+	self:?setupOther()
+end
+@@end

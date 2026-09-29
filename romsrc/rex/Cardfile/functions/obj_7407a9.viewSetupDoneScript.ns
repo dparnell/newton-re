@@ -1,0 +1,9 @@
+@@ 0x740b45
+func() begin
+	(if (superSymbol = 'ownerNames) then AddDeferredCall(func() begin
+			(if retargetChain then (foreach l1 in retargetChain do begin
+						l1:RetargetNotify()
+					end))
+		end, '[Array: ]))
+end
+@@end

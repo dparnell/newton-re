@@ -1,0 +1,18 @@
+@@ 0x4b09e5
+func(a1) begin
+	if (not a1) then begin
+			a1 := previousLayout
+		end;
+	previousLayout := currentLayout;
+	(if (currentLayout <> a1) then begin
+			currentLayout := a1;
+			(try begin
+					self:RedoChildren()
+				end onexception |evt.ex| do begin
+					newtAppBase:ShowLayout('overview);
+					self:Notify(3, title, "Sorry.  There was a problem with the selected item's viewer.");
+					Rethrow()
+				end)
+		end)
+end
+@@end

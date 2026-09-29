@@ -1,0 +1,21 @@
+@@ 0x41c6e1
+func(a1, a2, a3, a4) begin
+	local l1, l2, l3;
+	l1 := ProcrastinatedActions.(a1);
+	l2 := (Ticks() + ((a4 * 60) div 1000));
+	if l1 then begin
+			l3 := (l2 < l1.timeToRun);
+			l1.receiverOrClosure := a2;
+			l1.argArray := a3;
+			l1.message := nil;
+			l1.timeToRun := l2;
+			if l3 then begin
+					AddDelayedCall(functions.ExecuteProcrastinatedCall, [Array: a1], a4)
+				end
+		end else begin
+			ProcrastinatedActions.(EnsureInternal(a1)) := {receiverOrClosure: a2, argArray: a3, message: nil, timeToRun: l2};
+			AddDelayedCall(functions.ExecuteProcrastinatedCall, [Array: a1], a4)
+		end;
+	l2
+end
+@@end

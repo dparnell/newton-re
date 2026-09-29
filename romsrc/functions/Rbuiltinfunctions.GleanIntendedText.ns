@@ -1,0 +1,28 @@
+@@ 0x41fa65
+func() begin
+	local l1, l2, l3, l4, l5, l6, l7, l8;
+	if (if (l2 := GetHilitedTextItems()) then (Length(l2) > 0)) then begin
+			l1 := l2[0]
+		end else begin
+			if (if (if (l3 := GetCaretInfo()) then l3.view) then l3.info) then begin
+					l6 := l3.view;
+					if ((l7 := l3.info).class = 'paraCaret) then begin
+							if (l6.viewClass = 108) then begin
+									l4 := l6:GetRangeData((l8 := l6:GetLineRange(l7.offset)), 'text);
+									l5 := l6:GetRangeData(l8, 'styles)
+								end else begin
+									l4 := l6.text;
+									l5 := l6.styles
+								end;
+							if (not l5) then begin
+									l5 := {}
+								end;
+							if StrFilled(l4) then begin
+									l1 := MakeRichString(l4, l5)
+								end
+						end
+				end
+		end;
+	l1
+end
+@@end

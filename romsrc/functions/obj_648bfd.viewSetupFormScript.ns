@@ -1,0 +1,7 @@
+@@ 0x486bc9
+func() begin
+	title.text := self:TimeString();
+	self:SetupIdle(30000);
+	inherited:viewSetupFormScript()
+end
+@@end

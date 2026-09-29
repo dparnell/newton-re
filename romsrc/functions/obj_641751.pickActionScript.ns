@@ -1,0 +1,25 @@
+@@ 0x48a429
+func(a1) begin
+	local l1;
+	(if inPeoplePicker then begin
+			selected := a1;
+			self:UpdateText(self:EntryLineSetup());
+			base:hilite(nil);
+			(pickerSlip := nil)
+		end else begin
+			l1 := Length(labelNameRefs);
+			(if (a1 < l1) then begin
+					selected := labelNameRefs[a1];
+					selectedIndex := a1;
+					if (not IsArray(selected)) then begin
+							selected := [Array: selected]
+						end;
+					self:UpdateText(self:EntryLineSetup());
+					base:hilite(nil)
+				end else begin
+					alternatives := nil;
+					self:DoOpenPicker()
+				end)
+		end)
+end
+@@end

@@ -1,0 +1,59 @@
+@@ 0x495f91
+@@const kFunction_48e3a1
+func(a1, a2) begin
+	a1:Query({type: 'index, indexPath: 'name, beginKey: a2, endKey: a2})
+end
+@@main
+func(a1, a2, a3, a4) begin
+	local newSoup, status;
+	local l1, l2, l3, l4, l5, l6, l7;
+	(if (l1 := a1:GetSoup(a3)) then begin
+			if (l2 := a2:GetSoup(a4)) then begin
+					l2:RemoveFromStore()
+				end;
+			l4 := (l3 := call (kFunction_48e3a1) with (backupSoup, a4)):entry();
+			(while (if l4 then (not (l4.version or l4.indexes))) do (l4 := l3:Next()));
+			l5 := nil;
+			if (if l4 then l4.indexes) then begin
+					if (not (l5 := GetSoupDef(a4))) then begin
+							newSoup := a2:CreateSoup(a4, l4.indexes)
+						end else begin
+							newSoup := a2:CreateSoup(a4, GetSoupIndexesFromSoupDef(a4))
+						end
+				end else begin
+					newSoup := a2:CreateSoup(a4, l1:GetIndexes())
+				end;
+			(if newSoup then begin
+					newSoup:SetSignature(l1:GetSignature());
+					if (if (if StrEqual(a3, Stringer([Array: "BACKUP_", @276])) then StrEqual(a4, @276)) then (backupInfo.machineType <> Gestalt(16777219).machineType)) then begin
+							MapCursor((l7 := l1:Query(nil)), func(a1) begin
+								local l1;
+								if (l1 := |Restore2.0SystemEntry|(a1)) then begin
+										newSoup:Add(l1)
+									end;
+								nil
+							end)
+						end else begin
+							try begin
+									status := progressSlip;
+									l1:CopyEntriesWithCallback(newSoup, func() begin
+										status:SetStatus('vBarber, {barber: true})
+									end, 1000)
+								end onexception |evt.ex.cancel| do begin
+									newSoup:RemoveFromStore();
+									Rethrow()
+								end
+						end;
+					if (if (if (not l5) then l4) then l4.allInfo) then begin
+							l6 := l4.allInfo
+						end else begin
+							l6 := l1:GetAllInfo()
+						end;
+					if l6 then begin
+							newSoup:SetAllInfo(l6)
+						end;
+					(if l5 then newSoup:SetInfo('soupDef, l5))
+				end)
+		end)
+end
+@@end

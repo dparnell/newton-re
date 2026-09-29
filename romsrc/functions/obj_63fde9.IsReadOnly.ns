@@ -1,0 +1,5 @@
+@@ 0x5b885d
+func() begin
+	return (BAnd(self:PrivateType(), 8) = 0)
+end
+@@end

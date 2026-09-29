@@ -1,0 +1,5 @@
+@@ 0x477f25
+func(a1) begin
+	self:SubmitIt(a1)
+end
+@@end

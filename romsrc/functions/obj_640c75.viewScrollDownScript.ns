@@ -1,0 +1,13 @@
+@@ 0x42b83d
+func() begin
+	local l1;
+	l1 := max(0, ((def.tabDown - ((viewBounds.bottom - viewBounds.top) div def.tabHeights)) - 1));
+	(if (vOrg < l1) then begin
+			if ((vOrg := (vOrg + scrollAmount)) > l1) then begin
+					vOrg := l1
+				end;
+			tabbase:RedoChildren();
+			self:updateSelection()
+		end)
+end
+@@end

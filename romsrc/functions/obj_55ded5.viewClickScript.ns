@@ -1,0 +1,12 @@
+@@ 0x55ddd1
+func(a1) begin
+	local l1;
+	(if (curLabelCommand <> 0) then begin
+			l1 := RelBounds(0, (entryLine.viewLineSpacing - FontAscent(entryLine.viewFont)), StrFontWidth(entryLine.text, entryLine.viewFont), FontHeight(entryLine.viewFont));
+			(if self:TrackRect(a1, l1) then begin
+					@317:New(findDate.selectedDates, findDate:GlobalBox(), findDate);
+					true
+				end)
+		end)
+end
+@@end

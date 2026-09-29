@@ -1,0 +1,7 @@
+@@ 0x51c56d
+func() begin
+	self:HideStoryCard();
+	contentArea:ShowMarkup();
+	markupLayer:Open()
+end
+@@end

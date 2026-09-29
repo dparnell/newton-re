@@ -1,0 +1,85 @@
+@@ 0x501db1
+func(a1, a2, a3) begin
+	local allNotesData;
+	local v6_wwwwwwwwwwwwwvvvvvvvvvvvv, v7_llllk, v8_06z, v9_ssssssssrrrr, v11_wwwwwwwwwwwwwwwwww, v15_fee, v17_fffe, v19_zzyyyyyyyyyyyyyyyyy, v20_zzyyyyyy, v21_zzzzzzzzzyyyyyyyyyyyyyy, v22_dddd, v23_zzzzyyyyyyyy, v24_yyyyyxxxxx, v25_yyyyyyyyyyyyyxxxxxx, v26_yyxxxxxxxxxxxxxxx;
+	(if ((v11_wwwwwwwwwwwwwwwwww := a1.repeatTemplate) or a1.repeatType) then begin
+			if v11_wwwwwwwwwwwwwwwwww then begin
+					a1 := v11_wwwwwwwwwwwwwwwwww
+				end;
+			v7_llllk := (v8_06z := EntryStore(a1)):IsReadOnly();
+			v23_zzzzyyyyyyyy := GetRoot():MoveTarget(a1, a2);
+			if (not v7_llllk) then begin
+					v23_zzzzyyyyyyyy := a1
+				end;
+			(if ((v25_yyyyyyyyyyyyyxxxxxx := EntryStore(v23_zzzzyyyyyyyy)) <> v8_06z) then begin
+					v17_fffe := EntrySoup(v23_zzzzyyyyyyyy);
+					v20_zzyyyyyy := MakeEntryAlias(v23_zzzzyyyyyyyy);
+					(if (allNotesData := v23_zzzzyyyyyyyy.InstanceNotesData) then begin
+							v22_dddd := func(a1, a2, a3, a4, a5, a6) begin
+								local l1;
+								l1 := a4;
+								if a6 then begin
+										l1 := EntryCopyXmit(a4, a3, 'calendar)
+									end else begin
+										EntryMoveXmit(a4, a3, 'calendar)
+									end;
+								l1.repeatingMeetingAlias := a2;
+								EntryChangeXmit(l1, 'calendar);
+								allNotesData[a5][1] := MakeEntryAlias(l1);
+								EntryChangeXmit(a1, 'calendar)
+							end;
+							v21_zzzzzzzzzyyyyyyyyyyyyyy := func(a1, a2, a3, a4, a5, a6) begin
+								local l1;
+								l1 := a4;
+								if a6 then begin
+										l1 := EntryCopy(a4, a3)
+									end else begin
+										EntryMove(a4, a3)
+									end;
+								l1.repeatingMeetingAlias := a2;
+								EntryChange(l1);
+								allNotesData[a5][1] := MakeEntryAlias(l1);
+								EntryChange(a1)
+							end;
+							(for v13_xxxxwwwwwwwwwwwwwwwwwwwww := 0 to (Length(allNotesData) - 1) do begin
+									if (v15_fee := ResolveEntryAlias(allNotesData[v13_xxxxwwwwwwwwwwwwwwwwwwwww][1])) then begin
+											try begin
+													call (if a3 then v22_dddd else v21_zzzzzzzzzyyyyyyyyyyyyyy) with (v23_zzzzyyyyyyyy, v20_zzyyyyyy, v17_fffe, v15_fee, v13_xxxxwwwwwwwwwwwwwwwwwwwww, v7_llllk);
+													v23_zzzzyyyyyyyy
+												end onexception |evt.ex.fr.store| do begin
+													v9_ssssssssrrrr := v25_yyyyyyyyyyyyyxxxxxx:GetName();
+													v19_zzyyyyyyyyyyyyyyyyy := "^0 changes could not be saved (\u201C\u^1\u201D\u is full)";
+													GetRoot():Notify(3, title, ParamStr(v19_zzyyyyyyyyyyyyyyyyy, [Array: title, v9_ssssssssrrrr]));
+													if (not v7_llllk) then begin
+															GetRoot():MoveTarget(v23_zzzzyyyyyyyy, v8_06z);
+															v26_yyxxxxxxxxxxxxxxx := MakeEntryAlias((v6_wwwwwwwwwwwwwvvvvvvvvvvvv := v23_zzzzyyyyyyyy));
+															v24_yyyyyxxxxx := EntrySoup(v6_wwwwwwwwwwwwwvvvvvvvvvvvv)
+														end else begin
+															if a3 then begin
+																	EntryRemoveFromSoupXmit(v23_zzzzyyyyyyyy, 'calendar)
+																end else begin
+																	EntryRemoveFromSoup(v23_zzzzyyyyyyyy)
+																end
+														end;
+													(for v10_vuuuuuuuu := 0 to v13_xxxxwwwwwwwwwwwwwwwwwwwww do begin
+															if (v15_fee := ResolveEntryAlias(allNotesData[v10_vuuuuuuuu][1])) then begin
+																	if (not v7_llllk) then begin
+																			call (if a3 then v22_dddd else v21_zzzzzzzzzyyyyyyyyyyyyyy) with (v6_wwwwwwwwwwwwwvvvvvvvvvvvv, v26_yyxxxxxxxxxxxxxxx, v24_yyyyyxxxxx, v15_fee, v10_vuuuuuuuu, nil)
+																		end else begin
+																			if a3 then begin
+																					EntryRemoveFromSoupXmit(v15_fee, 'calendar)
+																				end else begin
+																					EntryRemoveFromSoup(v15_fee)
+																				end
+																		end
+																end
+														end);
+													return nil
+												end
+										end
+								end)
+						end)
+				end)
+		end else GetRoot():MoveTarget(a1, a2))
+end
+@@end

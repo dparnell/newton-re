@@ -1,0 +1,14 @@
+@@ 0x46a28d
+func() begin
+	local l1, l2, l3, l4, l5, l6, l7;
+	l3 := GetDynamicValue((l2 := (l1 := refCon).form), 'text, 'string);
+	l4 := l1.wordOffset;
+	(if (if IsInk(l3[l4]) then IsInk(l3[(l4 + 1)])) then begin
+			l5 := GetInkAt(l2, l4);
+			l6 := GetInkAt(l2, (l4 + 1));
+			l7 := MergeInk(l5, l6);
+			InsertStyledText(l2, l4, 2, "\uF701\u", [styles: 1, l7.ink]);
+			(l1.wordLength := (l1.wordLength - 1))
+		end)
+end
+@@end

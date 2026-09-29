@@ -1,0 +1,6 @@
+@@ 0x455749
+func() begin
+	inherited:?viewQuitScript();
+	(if (if context then context.pickActionScript) then 'postQuit)
+end
+@@end

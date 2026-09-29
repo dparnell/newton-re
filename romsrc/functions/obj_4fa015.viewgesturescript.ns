@@ -1,0 +1,41 @@
+@@ 0x4f9e99
+func(a1, a2) begin
+	l1 := nil;
+	if (a2 = 16) then begin
+			if ((l2 := (GetPoint(4, a1) - GetPoint(0, a1))) < 0) then begin
+					l2 := (-l2)
+				end;
+			l4 := GetPoint(1, a1);
+			if ((l3 := ((l5 := GetPoint(5, a1)) - l4)) < 0) then begin
+					l3 := (-l3)
+				end;
+			l6 := ((l4 + l5) div 2);
+			l7 := true;
+			if (if self.viewChildren then (Length(self.viewChildren) > 0)) then begin
+					local l1;
+					local l2;
+					local l3;
+					local l4;
+					local l5;
+					local l6;
+					local l7;
+					(foreach l8 in self:ChildViewFrames() do begin
+							local l10, l11;
+							l10 := l8:GlobalBox();
+							if (if (l6 >= l10.top) then (l6 <= l10.bottom)) then begin
+									l7 := nil;
+									break
+								end
+						end)
+				end;
+			if l7 then begin
+					if (if (l3 > (2 * l2)) then (l3 > 5)) then begin
+							self:AddNewCrib((l11 := self:MakeNewMeetingFrame('cribNote, Clone(""), selectedDates[0], 0)), true);
+							cribView:Dirty();
+							l1 := true
+						end
+				end
+		end;
+	l1
+end
+@@end

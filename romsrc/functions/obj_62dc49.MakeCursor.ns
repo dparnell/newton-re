@@ -1,0 +1,14 @@
+@@ 0x4b37b9
+func(a1, a2) begin
+	local l1;
+	l1 := GetUnionSoupAlways(allSoups.(a1).soupName);
+	if (ClassOf(a2) = 'symbol) then begin
+			a2 := {type: 'index, tagspec: {all: a2, none: [Array: 'log, 'Sent]}}
+		end;
+	if (if (if a2.tagspec then a2.tagspec.storesFilter) then a2.tagspec.storesFilter:IsValid()) then begin
+			l1 := l1:GetMember(a2.tagspec.storesFilter);
+			RemoveSlot(a2.tagspec, 'storesFilter)
+		end;
+	Query(l1, a2)
+end
+@@end

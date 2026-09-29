@@ -1,0 +1,13 @@
+@@ 0x468e1d
+func(a1, a2) begin
+	if noDefaults then begin
+			return a1
+		end;
+	if storeAlias then begin
+			a1.body := self:ProcessAlias(a1, a2)
+		end else begin
+			a1.body := a2.target
+		end;
+	a1
+end
+@@end

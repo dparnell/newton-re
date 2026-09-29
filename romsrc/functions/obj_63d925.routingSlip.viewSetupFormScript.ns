@@ -1,0 +1,7 @@
+@@ 0x599465
+func() begin
+	self:ToRefCheck('|nameRef.email|);
+	inherited:viewSetupFormScript();
+	self:SetFieldDefaults()
+end
+@@end

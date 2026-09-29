@@ -1,0 +1,11 @@
+@@ 0x4a7689
+func(a1, a2) begin
+	local l1;
+	l1 := {_parent: self, things: a2, index: 0, validTest: nil};
+	if a1 then begin
+			l1.validTest := a1.validTest
+		end;
+	l1:GotoKey(0);
+	l1
+end
+@@end

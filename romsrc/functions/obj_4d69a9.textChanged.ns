@@ -1,0 +1,5 @@
+@@ 0x4d6989
+func() begin
+	(title := MakeRichString(text, styles))
+end
+@@end

@@ -1,0 +1,14 @@
+@@ 0x569cd5
+func(a1, a2) begin
+	local l1, l2;
+	if (l1 := GetSoupChangeWatcher(a1, nil)) then begin
+			if (l2 := l1.callBacks).(a2) then begin
+					RemoveSlot(l2, a2);
+					if (Length(l2) = 0) then begin
+							BDelete(SoupChangeRegistry, a1, '|str<|, 'soupName, nil)
+						end
+				end
+		end;
+	nil
+end
+@@end

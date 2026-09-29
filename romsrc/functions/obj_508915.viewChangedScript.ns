@@ -1,0 +1,5 @@
+@@ 0x5088b5
+func(a1, a2) begin
+	(if (notesDirty := (BAnd(MeetingNotesArea.viewFlags, 130) = 0)) then inherited:viewChangedScript(a1, a2))
+end
+@@end

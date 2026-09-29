@@ -1,0 +1,11 @@
+@@ 0x4176bd
+func(a1) begin
+	local l1, l2, l3, l4;
+	l1 := floor((a1 + 0.5));
+	l2 := floor((a1 / 60));
+	l1 := (l1 mod 60);
+	l3 := Stringer([Array: (if (l2 < 10) then "0"), l2]);
+	l4 := Stringer([Array: (if (l1 < 10) then "0"), l1]);
+	return Stringer([Array: (if (l2 < 10) then "0"), l2, ":", (if (l1 < 10) then "0"), l1])
+end
+@@end

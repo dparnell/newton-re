@@ -1,0 +1,11 @@
+@@ 0x4c9051
+func() begin
+	local l1;
+	if (if (if callOptionsSlip.viewCObject then fields.toRef) then (Length(fields.toRef) > 0)) then begin
+			if (if (if (l1 := GetDataDefs('|nameRef.fax|):GetRoutingInfo(fields.toRef[0])[0]) then l1.phoneNumber) then (StrCompare(l1.phoneNumber, callOptionsSlip.outNumber.text) <> 0)) then begin
+					fields.toRef[0].asIsPhone := callOptionsSlip.outNumber.text
+				end
+		end;
+	self:Retarget()
+end
+@@end

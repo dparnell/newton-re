@@ -1,0 +1,10 @@
+@@ 0x4711a5
+func(a1) begin
+	timeoutCounter := 300000;
+	currentZone := text;
+	(if (chooserNBPTable:stopScript() = 0) then (if (chooserNBPTable:startScript() = 0) then begin
+				self:selectThisCell(self);
+				(selectedZoneIndex := (self.vIndex - vOrg))
+			end))
+end
+@@end

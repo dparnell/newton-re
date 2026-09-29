@@ -1,0 +1,5 @@
+@@ 0x5355a9
+func() begin
+	self:CancelRequest(0)
+end
+@@end

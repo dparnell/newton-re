@@ -1,0 +1,5 @@
+@@ 0x480f51
+func() begin
+	(if (if StrFilled(text) then (StrWidth(text) < (viewBounds.right - viewBounds.left))) then BOr(self.viewJustify, 4) else BAnd(self.viewJustify, bnot(4)))
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x51c40d
+func() begin
+	local l1, l2;
+	l1 := GetStores()[0];
+	if ((l2 := l1:GetSoup("Library")) = nil) then begin
+			l2 := l1:CreateSoup("Library", [Array: {structure: 'slot, path: 'isbn, type: 'string}, {structure: 'slot, path: 'bookPresent, type: 'int}])
+		end;
+	l2
+end
+@@end

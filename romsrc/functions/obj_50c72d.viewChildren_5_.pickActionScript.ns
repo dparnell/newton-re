@@ -1,0 +1,23 @@
+@@ 0x505f39
+func(a1, a2) begin
+	local l1, l2;
+	dirtyFlag := true;
+	newtMtgStartTime := (a1 mod 1440);
+	l1 := (a1 - newtMtgStartTime);
+	newtMtgStopTime := min((newtMtgStopTime := (a2 - l1)), 1440);
+	a2 := (l1 + newtMtgStopTime);
+	l2 := 1410;
+	if (newtMtgStartTime > l2) then begin
+			newtMtgStartTime := l2;
+			a1 := (l1 + newtMtgStartTime)
+		end;
+	if (newtMtgStopTime < newtMtgStartTime) then begin
+			newtMtgStopTime := min(1440, (newtMtgStartTime + 60));
+			a2 := (l1 + newtMtgStopTime)
+		end;
+	newMtgDate := ((newMtgDate - (newMtgDate mod 1440)) + newtMtgStartTime);
+	newMtgDuration := (newtMtgStopTime - newtMtgStartTime);
+	inherited:pickActionScript(a1, a2);
+	self:CarefulAskUser()
+end
+@@end

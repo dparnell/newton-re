@@ -1,0 +1,24 @@
+@@ 0x439705
+func() begin
+	local l1, l2, l3, l4;
+	if (if useMultipleSelections then (not selectedItems)) then begin
+			selectedItems := [Array: ]
+		end;
+	numItems := Length(ListItems);
+	if (if isShapeList then (Length(ListItems) > 0)) then begin
+			lineHeight := (((l1 := ShapeBounds(ListItems[0])).bottom - l1.top) + 1)
+		end else begin
+			lineHeight := FontHeight(viewFont)
+		end;
+	l2 := self:setViewHeight();
+	l3 := Clone(viewBounds);
+	l4 := self:LocalBox();
+	if useMultipleSelections then begin
+			l3.bottom := ((l3.bottom + viewHeight) - l4.bottom)
+		end else begin
+			l3.bottom := (l3.top + l2)
+		end;
+	self.viewBounds := l3;
+	(viewWidth := l4.right)
+end
+@@end

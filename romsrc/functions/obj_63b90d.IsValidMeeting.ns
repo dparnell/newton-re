@@ -1,0 +1,57 @@
+@@ 0x501555
+func(a1) begin
+	if (not IsFrame(a1)) then begin
+			return 1
+		end;
+	l1 := a1.viewStationery;
+	l2 := a1.viewBounds;
+	l3 := a1.mtgAlarm;
+	if (not LSearch('[Array: cribNote, meeting, RepeatingMeeting], l1, 0, '|=|, nil)) then begin
+			return 2
+		end;
+	if (not IsInstance(a1.mtgText, 'string)) then begin
+			return 3
+		end;
+	if ((l4 := self:HasValidCoreMeetingSlots(a1)) <> 0) then begin
+			return l4
+		end;
+	if (not IsInteger(a1.mtgDuration)) then begin
+			return 4
+		end;
+	if ((l1 = 'RepeatingMeeting) or (if (l1 = 'cribNote) then a1.repeatType)) then begin
+			if ((((not IsInteger(a1.repeatType)) or (not (if (a1.repeatType >= 0) then (a1.repeatType <= 7)))) or (not IsInteger(a1.mtgInfo))) or ((not IsInteger(a1.mtgStopDate)) or (a1.mtgStopDate <= 0))) then begin
+					return nil
+				end;
+			if a1.exceptions then begin
+					local l1;
+					local l2;
+					local l3;
+					local l4;
+					if ((not IsArray(a1.exceptions)) or (foreach l5 in a1.exceptions do begin
+								local l7;
+								if (((not IsArray(l5)) or (Length(l5) <> 2)) or (not IsInteger(l5[0]))) then begin
+										break true
+									end;
+								if (l7 := l5[1]) then begin
+										if (((((not IsFrame(l7)) or (l7.viewStationery <> 'exceptionMeeting)) or (not self:HasValidCoreMeetingSlots(l7))) or ((not IsInteger(l7.originDate)) or (l7.originDate <= 0))) or (l7.repeatTemplate <> a1)) then begin
+												break true
+											end
+									end
+							end)) then begin
+							return nil
+						end
+				end;
+			if (if l3 then (l3 > 2880000)) then begin
+					return nil
+				end
+		end else begin
+			if (((((a1.repeatType or a1.mtgInfo) or a1.mtgStopDate) or a1.exceptions) or a1.InstanceNotesData) or a1.repeatTemplate) then begin
+					return nil
+				end;
+			if (if l3 then (l3 < 2880000)) then begin
+					return nil
+				end
+		end;
+	a1
+end
+@@end

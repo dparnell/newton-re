@@ -1,0 +1,7 @@
+@@ 0x4ffce9
+func() begin
+	BusyBoxControl(1);
+	selected := nil;
+	self:RedoChildren()
+end
+@@end

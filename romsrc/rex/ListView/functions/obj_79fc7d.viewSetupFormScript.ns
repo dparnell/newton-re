@@ -1,0 +1,6 @@
+@@ 0x79fc05 names
+func() begin
+	date := newMtgDate;
+	inherited:?viewSetupFormScript()
+end
+@@end

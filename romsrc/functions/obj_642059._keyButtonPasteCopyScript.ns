@@ -1,0 +1,9 @@
+@@ 0x44b31d
+func(a1) begin
+	(try begin
+			a1:ClipboardCommand(3)
+		end onexception |evt.ex.outofmem| do begin
+			GetRoot():Notify(3, "Paste", "Newton does not have enough memory to paste the contents of the clipboard. Try copying and pasting smaller pieces of information, one at a time.")
+		end)
+end
+@@end

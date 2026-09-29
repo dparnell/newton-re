@@ -1,0 +1,10 @@
+@@ 0x4c0ffd
+func() begin
+	if viewValue then begin
+			SetRemove(GetRoot().iobox.hideFilter, slot)
+		end else begin
+			SetAdd(GetRoot().iobox.hideFilter, slot, true)
+		end;
+	(changed := true)
+end
+@@end

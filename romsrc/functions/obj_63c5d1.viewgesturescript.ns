@@ -1,0 +1,71 @@
+@@ 0x4fc965
+func(a1, a2) begin
+	local v5_xxxxxxxxxxxxxxxxxwwwww, v6_zzzzzzyyyyyyyyyyyyyyyyyyyyyy, v7_qppppp, v8_xxxxwwwwwwww, v9_zzzzzyy, v10_yyyyyyyyyyyyx, v11_rrrrrrrqq, v12_wwwwwwwwwwwwwvv, v13_zyyyyyyyyyyyyyyyyyyyy, v14_vvvvvuuuuuuuuuuuu, v15_xxxxxxxxxxxxxxxxwwwwwww, v18_ji, v19_yyyyyyyyyyyyyyyyyyyyyyyxxx, v20_lllk, v21_wwwwwwwwww, v22_zzzzzzzzzzzzzyyy, v23_uuuuuuuuuttt, v24_xxxxxxxxxxxxxxxxxx, v25_zzzzzzzyyyyyy, v26_wwwwwwwwwwwvvvvvvvvv;
+	v7_qppppp := nil;
+	if (a2 = 16) then begin
+			v5_xxxxxxxxxxxxxxxxxwwwww := dayView:GlobalBox();
+			v13_zyyyyyyyyyyyyyyyyyyyy := GetPoint(1, a1);
+			v25_zzzzzzzyyyyyy := GetPoint(5, a1);
+			v26_wwwwwwwwwwwvvvvvvvvv := min(v13_zyyyyyyyyyyyyyyyyyyyy, v25_zzzzzzzyyyyyy);
+			v8_xxxxwwwwwwww := max(v13_zyyyyyyyyyyyyyyyyyyyy, v25_zzzzzzzyyyyyy);
+			v19_yyyyyyyyyyyyyyyyyyyyyyyxxx := GetPoint(0, a1);
+			v12_wwwwwwwwwwwwwvv := GetPoint(4, a1);
+			v15_xxxxxxxxxxxxxxxxwwwwwww := (max(v19_yyyyyyyyyyyyyyyyyyyyyyyxxx, v12_wwwwwwwwwwwwwvv) - min(v19_yyyyyyyyyyyyyyyyyyyyyyyxxx, v12_wwwwwwwwwwwwwvv));
+			if (if ((v6_zzzzzzyyyyyyyyyyyyyyyyyyyyyy := (v8_xxxxwwwwwwww - v26_wwwwwwwwwwwvvvvvvvvv)) > (2 * v15_xxxxxxxxxxxxxxxxwwwwwww)) then (v6_zzzzzzyyyyyyyyyyyyyyyyyyyyyy > 10)) then begin
+					if (if (v20_lllk := dayView:ChildViewFrames()) then (v6_zzzzzzyyyyyyyyyyyyyyyyyyyyyy < (3 * viewLineSpacing))) then begin
+							v10_yyyyyyyyyyyyx := (v26_wwwwwwwwwwwvvvvvvvvv + (v6_zzzzzzyyyyyyyyyyyyyyyyyyyyyy div 2));
+							(foreach v17_wwwwwwwwwwwwwwvvvvvvvvvvv in v20_lllk do begin
+									if IsPtInRect(v19_yyyyyyyyyyyyyyyyyyyyyyyxxx, v10_yyyyyyyyyyyyx, v17_wwwwwwwwwwwwwwvvvvvvvvvvv:GlobalBox()) then begin
+											if (if (if (v22_zzzzzzzzzzzzzyyy := GetCaretInfo()) then (v22_zzzzzzzzzzzzzyyy.view = v17_wwwwwwwwwwwwwwvvvvvvvvvvv.textView)) then (v22_zzzzzzzzzzzzzyyy.info.length > 0)) then begin
+													return nil
+												end else begin
+													if (v6_zzzzzzyyyyyyyyyyyyyyyyyyyyyy < (2 * viewLineSpacing)) then begin
+															return nil
+														end else begin
+															break
+														end
+												end
+										end
+								end)
+						end;
+					v21_wwwwwwwwww := ((v19_yyyyyyyyyyyyyyyyyyyyyyyxxx - v5_xxxxxxxxxxxxxxxxxwwwww.left) - 12);
+					v9_zzzzzyy := (v26_wwwwwwwwwwwvvvvvvvvv - v5_xxxxxxxxxxxxxxxxxwwwww.top);
+					if ((v23_uuuuuuuuuttt := (v8_xxxxwwwwwwww - v5_xxxxxxxxxxxxxxxxxwwwww.top)) < v9_zzzzzyy) then begin
+							v18_ji := v23_uuuuuuuuuttt;
+							v23_uuuuuuuuuttt := v9_zzzzzyy;
+							v9_zzzzzyy := v18_ji
+						end;
+					start := PositionToTime(dayView, v9_zzzzzyy);
+					stop := PositionToTime(dayView, v23_uuuuuuuuuttt);
+					if ((start mod 30) = 15) then begin
+							start := (start - 15)
+						end;
+					if ((stop mod 30) = 15) then begin
+							stop := (stop + 15)
+						end;
+					if (((stop := min(stopTime, stop)) - start) < 30) then begin
+							if (stop = stopTime) then begin
+									start := (stop - 30)
+								end else begin
+									stop := (start + 30)
+								end
+						end;
+					v11_rrrrrrrqq := nil;
+					if (v21_wwwwwwwwww >= 30) then begin
+							v11_rrrrrrrqq := {left: v21_wwwwwwwwww, top: TimeToPosition(dayView, start), right: min(DayTable.tabWidths, (v21_wwwwwwwwww + 100)), bottom: TimeToPosition(dayView, stop)}
+						end;
+					(v14_vvvvvuuuuuuuuuuuu := self:MakeNewMeetingFrame('meeting, Clone(""), (displaydate + start), (stop - start))).viewBounds := v11_rrrrrrrqq;
+					try begin
+							self:AddMeetingToDate(v14_vvvvvuuuuuuuuuuuu, v14_vvvvvuuuuuuuuuuuu.mtgStartDate, true);
+							dayView:Dirty()
+						end onexception |evt.ex.fr.store| do begin
+							if HasSlot((v24_xxxxxxxxxxxxxxxxxx := CurrentException()), 'error) then begin
+									self:Notify(3, self:TranslateToOverview(v24_xxxxxxxxxxxxxxxxxx.error), ParamStr("^0\n(^1)", [Array: "Sorry, a problem has occurred.", self:TranslateToMessage(v24_xxxxxxxxxxxxxxxxxx.error)]))
+								end
+						end;
+					v7_qppppp := true
+				end
+		end;
+	v7_qppppp
+end
+@@end

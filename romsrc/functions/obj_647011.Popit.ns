@@ -1,0 +1,7 @@
+@@ 0x45b385
+func(a1) begin
+	local l1;
+	(l1 := self:GlobalBox()).right := (l1.left + a1);
+	@521:New(longitude, latitude, worldClock, l1, self)
+end
+@@end

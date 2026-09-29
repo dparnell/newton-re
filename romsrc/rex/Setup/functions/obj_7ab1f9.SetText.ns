@@ -1,0 +1,5 @@
+@@ 0x7ab5e5
+func(a1) begin
+	SetValue(vInputLine, 'text, a1)
+end
+@@end

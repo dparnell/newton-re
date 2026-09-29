@@ -1,0 +1,21 @@
+@@ 0x4d2451
+func(a1, a2) begin
+	local l1;
+	if ((tempItem := self:ItemRequest(a1)) = nil) then begin
+			return 'ItemMissing
+		end;
+	(l1 := Clone(tempItem)).title := self:GetItemTitle(l1);
+	l1.typeBeam := self:GetItemType(l1);
+	if (if l1 then a2) then begin
+			StripInk(l1.title, $*);
+			l1.category := 'zapSlip;
+			if l1.body then begin
+					l1.body := ConvertFrame(l1.appSymbol, nil, 'twoO, a2, l1.body, nil);
+					if (l1.body = nil) then begin
+							l1 := nil
+						end
+				end
+		end;
+	(if (if (if l1 then l1.body) then (a2 = 'wizard)) then return l1.body else return l1)
+end
+@@end

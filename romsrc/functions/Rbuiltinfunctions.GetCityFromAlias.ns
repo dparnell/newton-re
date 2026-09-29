@@ -1,0 +1,20 @@
+@@ 0x48c225
+func(a1) begin
+	(if IsEntryAlias(a1) then ResolveEntryAlias(a1) else (if IsArray(a1) then begin
+				if ((l2 := Length((l1 := GetCityEntry(a1[0])))) > 1) then begin
+						local l1;
+						local l2;
+						local l3;
+						(foreach l4 in l1 do begin
+								if (if (l4.longitude = a1[1]) then (l4.latitude = a1[2])) then begin
+										break (l3 := l4)
+									end
+							end)
+					end;
+				if (if (not l3) then (l2 > 0)) then begin
+						l3 := l1[0]
+					end;
+				l3
+			end))
+end
+@@end

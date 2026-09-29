@@ -1,0 +1,7 @@
+@@ 0x5b4899
+func() begin
+	title := overview;
+	titleicon := icon;
+	inherited:viewSetupFormScript()
+end
+@@end

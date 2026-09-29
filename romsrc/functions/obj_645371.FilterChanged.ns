@@ -1,0 +1,6 @@
+@@ 0x4af171
+func() begin
+	self:SetupCursor();
+	self:NewTarget()
+end
+@@end

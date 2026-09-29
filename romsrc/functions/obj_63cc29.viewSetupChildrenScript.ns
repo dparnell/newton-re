@@ -1,0 +1,23 @@
+@@ 0x42ae0d
+func() begin
+	if (if (childrenType <> 'radioButton) then (childrenType <> 'checkBox)) then begin
+			childrenType := 'radioButton
+		end;
+	l1 := self:getLayout();
+	l2 := {_proto: nil, viewBounds: RelBounds(0, itemViewBounds.top, 0, itemViewBounds.bottom), viewJustify: 9728};
+	l3 := {_proto: nil, viewJustify: 0};
+	if (childrenType = 'radioButton) then begin
+			l2._proto := @202;
+			l3._proto := @202
+		end else begin
+			if (childrenType = 'checkBox) then begin
+					l2._proto := @164;
+					l3._proto := @164
+				end
+		end;
+	local l1;
+	local l2;
+	local l3;
+	(self.viewChildren := (foreach l4, l5 in itemTitles collect (if ((l4 mod l1.numRows) = 0) then {_proto: l3, viewBounds: self:GetTopColumnViewBounds(l1, l4), text: l5, buttonValue: l4} else {_proto: l2, text: l5, buttonValue: l4})))
+end
+@@end

@@ -1,0 +1,13 @@
+@@ 0x5304f9
+func(a1) begin
+	l1 := 0;
+	local l1;
+	(for l2 := 0 to (Length(items) - 1) do begin
+			if (if (if a1 then items[l2].id) then StrEqual(a1, items[l2].id)) then begin
+					l1 := l2;
+					break
+				end
+		end);
+	l1
+end
+@@end

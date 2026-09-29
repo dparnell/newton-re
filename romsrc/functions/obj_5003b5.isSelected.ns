@@ -1,0 +1,5 @@
+@@ 0x4ff8e9
+func(a1) begin
+	(if selected then ArrayPos(selected, a1, 0, IsSameItemAlias))
+end
+@@end

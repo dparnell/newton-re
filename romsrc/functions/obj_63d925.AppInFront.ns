@@ -1,0 +1,5 @@
+@@ 0x5a3e29
+func(a1, a2) begin
+	(if (not a1) then self:AppClosed(a2))
+end
+@@end

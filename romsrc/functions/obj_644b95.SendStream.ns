@@ -1,0 +1,6 @@
+@@ 0x5955c5
+func() begin
+	self:atom(0, 2, nil, nil);
+	self:send(nil)
+end
+@@end

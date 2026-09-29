@@ -1,0 +1,16 @@
+@@ 0x745e65
+func(a1) begin
+	local l1, l2;
+	if (if (if (l1 := connWillDialText.text) then (StrLen(l1) > 0)) then (not StrEqual(l1, self:GetPhoneNumber()))) then begin
+			return l1
+		end;
+	if (not (l2 := self:GetWorksite(protoContext:ConnectionPrefsRead('phoneCurrentChoice)))) then begin
+			self:Notify(3, "Dock", "You must choose a worksite before connecting.")
+		end else begin
+			if self:CallValidate(l2, a1) then begin
+					return self:GetPhoneNumber()
+				end
+		end;
+	return nil
+end
+@@end

@@ -1,0 +1,18 @@
+@@ 0x4fca25
+func(a1, a2, a3, a4, a5) begin
+	(if ((l1 := ((a4 - a3) + 1)) > 0) then begin
+			l3 := (a5 div l1);
+			l4 := 0;
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			(for l2 := a3 to a4 do begin
+					local l7, l8;
+					l8 := (l7 := a1[l2]).index;
+					a2[l8] := self:MeetingBounds(l7.kid, l4, (l4 + l3));
+					l4 := (l4 + l3)
+				end)
+		end)
+end
+@@end

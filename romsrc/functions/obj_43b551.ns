@@ -1,0 +1,10 @@
+@@ 0x43b551
+@@const kFunction_43b531
+func(a1, a2) begin
+	IsSameEntry(a1, a2)
+end
+@@main
+func(a1) begin
+	(if selected then LSearch(selected, a1, 0, kFunction_43b531, nil))
+end
+@@end

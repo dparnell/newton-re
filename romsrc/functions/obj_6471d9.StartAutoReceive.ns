@@ -1,0 +1,17 @@
+@@ 0x535719
+func() begin
+	if currentItem then begin
+			self:ItemCompleted(currentItem, nil, nil)
+		end;
+	(try begin
+			self:SetTransportProvider(GetUserConfig('currentDialSpeaker));
+			if (not callEndpoint) then begin
+					self:InstallEndpoint(transportProvider, nil);
+					self:CloseStatusDialog(nil)
+				end;
+			self:UpdateStatusSlots('Listening, nil, nil)
+		end onexception |evt.ex| do begin
+			(if self:HandleThrow() then self:Shutdown())
+		end)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x4798bd
+func(a1) begin
+	self:PrepareToSend(a1)
+end
+@@end

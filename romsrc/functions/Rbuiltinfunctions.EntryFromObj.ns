@@ -1,0 +1,9 @@
+@@ 0x450109
+func(a1) begin
+	local l1;
+	if (not a1) then begin
+			return nil
+		end;
+	(if IsInstance(a1, 'alias) then ResolveEntryAlias(a1) else (if (if IsFrame(a1) then IsEntryAlias(a1._alias)) then ResolveEntryAlias(a1._alias) else (if IsSoupEntry(a1) then a1)))
+end
+@@end

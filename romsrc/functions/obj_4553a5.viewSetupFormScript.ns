@@ -1,0 +1,10 @@
+@@ 0x455335
+func() begin
+	if options then begin
+			(foreach l1, l2 in options do begin
+					self.(l1) := l2
+				end)
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

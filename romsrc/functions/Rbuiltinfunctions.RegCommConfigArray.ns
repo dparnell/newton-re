@@ -1,0 +1,12 @@
+@@ 0x530955
+func(a1) begin
+	if IsArray(a1) then begin
+			(foreach l1 in a1 do begin
+					RegCommConfig(l1.uniqueId, l1)
+				end)
+		end else begin
+			RegCommConfig(a1.uniqueId, a1)
+		end;
+	nil
+end
+@@end

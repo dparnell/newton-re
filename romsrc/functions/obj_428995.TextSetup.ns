@@ -1,0 +1,17 @@
+@@ 0x428955
+func() begin
+	l1 := GetUserConfig('inputDevice);
+	local l1;
+	local l2;
+	l2 := (foreach l3 in labelCommands do begin
+			if (l3.value = l1) then begin
+					break l3
+				end
+		end);
+	if (not l2) then begin
+			l2 := labelCommands[0];
+			SetUserConfig('inputDevice, l2.value)
+		end;
+	return l2.item
+end
+@@end

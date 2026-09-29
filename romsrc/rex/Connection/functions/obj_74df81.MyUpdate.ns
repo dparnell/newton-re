@@ -1,0 +1,7 @@
+@@ 0x74e2e1
+func(a1, a2) begin
+	self:UpdateText(a1);
+	self:UpdateIcon(a2);
+	self:ReCenter()
+end
+@@end

@@ -1,0 +1,41 @@
+@@ 0x50edad
+@@const kFunction_50ed8d
+func(a1, a2) begin
+	local l1, l2, l3, l4;
+	l1 := Query(a1, '{type: index, indexPath: mtgStopDate, beginKey: 0});
+	l2 := 0;
+	l3 := l1:entry();
+	(while l3 do begin
+			if (if (a2 = 536870911) then (l3.mtgStopDate = 536870911)) then begin
+					l2 := 536870911;
+					break
+				end;
+			l4 := PrevMeeting(a2, l3);
+			l2 := max(l2, l4);
+			(l3 := l1:Next())
+		end);
+	l2
+end
+@@main
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7;
+	l1 := func(a1, a2) begin
+		local l1;
+		l1 := Query(a1, '{type: index, indexPath: mtgStartDate, beginKey: 0});
+		if (a2 = 536870911) then begin
+				entry := l1:ResetToEnd()
+			end else begin
+				entry := l1:GotoKey(a2);
+				entry := l1:prev()
+			end;
+		(if entry then entry.mtgStartDate else 0)
+	end;
+	l2 := kFunction_50ed8d;
+	l3 := call l1 with (MeetingSoup, a1);
+	l4 := call l1 with (notes, a1);
+	l5 := call l2 with (RepeatSoup, a1);
+	l6 := call l2 with (RepeatNotes, a1);
+	l7 := 0;
+	(l7 := max((l7 := max((l7 := max(l3, l4)), l5)), l6))
+end
+@@end

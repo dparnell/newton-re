@@ -1,0 +1,52 @@
+@@ 0x4f89e9
+func(a1, a2) begin
+	l2 := (l1 := (if a2 then DeepClone(a1) else a1)).viewStationery;
+	if l1.viewBounds then begin
+			self:Convert20BoundsTo10(l1)
+		end;
+	if LSearch('[Array: meeting, RepeatingMeeting, exceptionMeeting, cribNote], l2, 0, '|=|, nil) then begin
+			RemoveSlot(l1, 'class);
+			RemoveSlot(l1, 'mtgIconType);
+			l1.version := nil;
+			RemoveSlot(l1, 'mtgInvitees);
+			RemoveSlot(l1, 'mtgLocation);
+			StripInk(l1.mtgText, $*);
+			if (l2 = 'cribNote) then begin
+					l1.mtgStartDate := (l1.mtgStartDate + 1)
+				end;
+			if l1.repeatType then begin
+					RemoveSlot(l1, 'InstanceNotesData);
+					if l1.exceptions then begin
+							local l1;
+							local l2;
+							(foreach l3 in l1.exceptions do begin
+									local l5, l6;
+									if (l5 := l3[1]) then begin
+											l5.mtgText := l1.mtgText;
+											if (l2 = 'cribNote) then begin
+													l5.mtgStartDate := (l5.mtgStartDate + 1)
+												end;
+											if (not l5.mtgDuration) then begin
+													l5.mtgDuration := l1.mtgDuration
+												end;
+											RemoveSlot(l5, 'mtgInvitees);
+											RemoveSlot(l5, 'mtgLocation);
+											if l5.viewBounds then begin
+													self:Convert20BoundsTo10(l5)
+												end
+										end
+								end)
+						end
+				end;
+			if l1.NotesData then begin
+					if (l6 := ConvertChildTemplates(l1.NotesData, 'twoO, 'oneO)) then begin
+							ArrayMunger(l1.NotesData, Length(l1.NotesData), 0, l6, 0, nil)
+						end
+				end
+		end else begin
+			ConvertChildTemplates(l1, 'twoO, 'oneO);
+			RemoveSlot(l1, '_DatesVersion)
+		end;
+	l1
+end
+@@end

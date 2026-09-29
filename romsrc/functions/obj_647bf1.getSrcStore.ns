@@ -1,0 +1,5 @@
+@@ 0x49347d
+func() begin
+	GetStores()[0]
+end
+@@end

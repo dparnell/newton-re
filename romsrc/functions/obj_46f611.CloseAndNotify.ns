@@ -1,0 +1,16 @@
+@@ 0x46f5b1
+func(a1) begin
+	formOpen := nil;
+	if chooserNBPTable then begin
+			chooserNBPTable:stopScript()
+		end;
+	if appleTalkOpen then begin
+			CloseAppleTalk();
+			appleTalkOpen := nil
+		end;
+	if (a1 <> nil) then begin
+			self:Notify(3, "Chooser", a1)
+		end;
+	base:Close()
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x78cdad names
+func(anIndex) begin
+	local topic;
+	(if (((anIndex = nil) or (anIndex >= nTopics)) or (anIndex < 0)) then nil else {text: (topic := topics[anIndex]).text, styles: topic.styles})
+end
+@@end

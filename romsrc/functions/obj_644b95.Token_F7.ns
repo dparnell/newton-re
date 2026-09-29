@@ -1,0 +1,6 @@
+@@ 0x595905
+func(a1, a2, a3) begin
+	self:FIle_DownloadPart(a1, a2, a3);
+	self:output("xG", nil, nil)
+end
+@@end

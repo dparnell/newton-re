@@ -1,0 +1,5 @@
+@@ 0x4e23dd
+func() begin
+	(if rotated then (viewBounds := RelBounds(3, 3, 133, (15 * maxLines))))
+end
+@@end

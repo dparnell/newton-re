@@ -1,0 +1,9 @@
+@@ 0x537d1d
+func() begin
+	local l1;
+	(if (l1 := self:LookupSoupPackageAndActivate()) then (if fentry.TapAction then fentry:TapAction() else (if (l1 <> 'justActivated) then begin
+					GetRoot():Notify(3, "Packages", "Tapping this does nothing.");
+					nil
+				end)))
+end
+@@end

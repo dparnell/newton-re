@@ -1,0 +1,62 @@
+@@ 0x513145
+@@const kROM_256
+@256
+@@main
+func(a1, a2) begin
+	local v5_yyyyyyyyyyyyyyyyyyyyyxxxxxx, v6_xxxxxxxwwwwwwwwwwwwwwwwwwwww, v7_yyyyyyxxxxxxxxxxx, v8_vvvvvvvvvvvvvvvvvv, v9_yyyyyyyyyyxxxxxxxx, v10_yyyyyyyyyyyyyyyyyx, v11_wwwwwwwwwwwwwvvvvvv, v12_zzyyyyyyyyyyyyyyyyy, v13_wwwwwwwwwwwwwwwwwwwv, v14_zzzzzyyyyyyyyyyyyyyy, v15_xxxxwwwwwwwwwwwwwwwww, v16_zzzzzzzzyyyyyyyyyyyyy, v17_xxxxxxxxxwwwwwwwwwwwww, v18_zzzzzzzzzzzyyyyyyyyyyy, v19_xxxxxxxxxxxxxxwwwwwwwww, v20_zzzzzzzzzzzzzzzzzzzzzzz, v21_yyyyxxxxxxxxxxxxxxxxxxxx, v22_wwwwwwwwwwwwvvvvvvvvvvvvv, v23_yyyyyyyyxxxxxxxxxxxxxxxxx, v24_wwwwwwwwwwwwwwwwwwvvvvvvvv;
+	if ((v5_yyyyyyyyyyyyyyyyyyyyyxxxxxx := a1.viewStationery) = 'cribNote) then begin
+			v8_vvvvvvvvvvvvvvvvvv := nil
+		end else begin
+			v8_vvvvvvvvvvvvvvvvvv := ParamStr("^0 - ^1", [Array: HourMinute(a1.mtgStartDate), HourMinute((a1.mtgStartDate + self:GetMeetingSlot(a1, 'mtgDuration)))])
+		end;
+	v17_xxxxxxxxxwwwwwwwwwwwww := Clone(self:GetMeetingText(a1));
+	if (if (v9_yyyyyyyyyyxxxxxxxx := self:GetNotesData(a1)[1]) then (Length(v9_yyyyyyyyyyxxxxxxxx) > 0)) then begin
+			v17_xxxxxxxxxwwwwwwwwwwwww := ParamStr("^0 \u2022\u ^1", [Array: v17_xxxxxxxxxwwwwwwwwwwwww, ExtractData(v9_yyyyyyyyyyxxxxxxxx, kROM_256, 80)])
+		end;
+	v21_yyyyxxxxxxxxxxxxxxxxxxxx := (v19_xxxxxxxxxxxxxxwwwwwwwww := GetMeetingIcon(a1)).bounds;
+	v7_yyyyyyxxxxxxxxxxx := ((24 - (v21_yyyyxxxxxxxxxxxxxxxxxxxx.right - v21_yyyyxxxxxxxxxxxxxxxxxxxx.left)) div 2);
+	v18_zzzzzzzzzzzyyyyyyyyyyy := ((16 - (v21_yyyyxxxxxxxxxxxxxxxxxxxx.bottom - v21_yyyyxxxxxxxxxxxxxxxxxxxx.top)) div 2);
+	v10_yyyyyyyyyyyyyyyyyx := a2.top;
+	v23_yyyyyyyyxxxxxxxxxxxxxxxxx := a2.bottom;
+	v24_wwwwwwwwwwwwwwwwwwvvvvvvvv := ((a2.left + 24) + 2);
+	v12_zzyyyyyyyyyyyyyyyyy := ((v6_xxxxxxxwwwwwwwwwwwwwwwwwwwww := a2.right) - v24_wwwwwwwwwwwwwwwwwwvvvvvvvv);
+	(v22_wwwwwwwwwwwwvvvvvvvvvvvvv := Array(5, nil))[0] := '{font: 12291};
+	v22_wwwwwwwwwwwwvvvvvvvvvvvvv[1] := OffsetShape(MakeShape(v19_xxxxxxxxxxxxxxwwwwwwwww), (a2.left + v7_yyyyyyxxxxxxxxxxx), (v10_yyyyyyyyyyyyyyyyyx + v18_zzzzzzzzzzzyyyyyyyyyyy));
+	v13_wwwwwwwwwwwwwwwwwwwv := 2;
+	if v8_vvvvvvvvvvvvvvvvvv then begin
+			v22_wwwwwwwwwwwwvvvvvvvvvvvvv[v13_wwwwwwwwwwwwwwwwwwwv] := [Array: '{font: 10243}, MakeText(v8_vvvvvvvvvvvvvvvvvv, v24_wwwwwwwwwwwwwwwwwwvvvvvvvv, v10_yyyyyyyyyyyyyyyyyx, v6_xxxxxxxwwwwwwwwwwwwwwwwwwwww, (v23_yyyyyyyyxxxxxxxxxxxxxxxxx - 4))];
+			v10_yyyyyyyyyyyyyyyyyx := v23_yyyyyyyyxxxxxxxxxxxxxxxxx;
+			v23_yyyyyyyyxxxxxxxxxxxxxxxxx := (v23_yyyyyyyyxxxxxxxxxxxxxxxxx + lineHeight);
+			v13_wwwwwwwwwwwwwwwwwwwv := (v13_wwwwwwwwwwwwwwwwwwwv + 1)
+		end;
+	if v17_xxxxxxxxxwwwwwwwwwwwww then begin
+			StrReplace(v17_xxxxxxxxxwwwwwwwwwwwww, "\n", " ", nil);
+			v15_xxxxwwwwwwwwwwwwwwwww := self:GetMeetingSlot(a1, 'mtgLocation);
+			v20_zzzzzzzzzzzzzzzzzzzzzzz := Clone(v17_xxxxxxxxxwwwwwwwwwwwww);
+			v11_wwwwwwwwwwwwwvvvvvv := StrLen(v17_xxxxxxxxxwwwwwwwwwwwww);
+			if v15_xxxxwwwwwwwwwwwwwwwww then begin
+					StyledStrTruncate(v20_zzzzzzzzzzzzzzzzzzzzzzz, v12_zzyyyyyyyyyyyyyyyyy, 12291)
+				end else begin
+					self:TruncateAtWordBoundary(v20_zzzzzzzzzzzzzzzzzzzzzzz, v12_zzyyyyyyyyyyyyyyyyy, 12291);
+					v14_zzzzzyyyyyyyyyyyyyyy := StrLen(v20_zzzzzzzzzzzzzzzzzzzzzzz)
+				end;
+			v22_wwwwwwwwwwwwvvvvvvvvvvvvv[v13_wwwwwwwwwwwwwwwwwwwv] := MakeText(v20_zzzzzzzzzzzzzzzzzzzzzzz, v24_wwwwwwwwwwwwwwwwwwvvvvvvvv, v10_yyyyyyyyyyyyyyyyyx, v6_xxxxxxxwwwwwwwwwwwwwwwwwwwww, (v23_yyyyyyyyxxxxxxxxxxxxxxxxx - 4));
+			v10_yyyyyyyyyyyyyyyyyx := v23_yyyyyyyyxxxxxxxxxxxxxxxxx;
+			v23_yyyyyyyyxxxxxxxxxxxxxxxxx := (v23_yyyyyyyyxxxxxxxxxxxxxxxxx + lineHeight);
+			v13_wwwwwwwwwwwwwwwwwwwv := (v13_wwwwwwwwwwwwwwwwwwwv + 1);
+			if v15_xxxxwwwwwwwwwwwwwwwww then begin
+					StyledStrTruncate((v15_xxxxwwwwwwwwwwwwwwwww := ParamStr("@ ^0", [Array: self:getNameOfLocation(v15_xxxxwwwwwwwwwwwwwwwww)])), v12_zzyyyyyyyyyyyyyyyyy, 12291);
+					v22_wwwwwwwwwwwwvvvvvvvvvvvvv[v13_wwwwwwwwwwwwwwwwwwwv] := MakeText(v15_xxxxwwwwwwwwwwwwwwwww, v24_wwwwwwwwwwwwwwwwwwvvvvvvvv, v10_yyyyyyyyyyyyyyyyyx, v6_xxxxxxxwwwwwwwwwwwwwwwwwwwww, (v23_yyyyyyyyxxxxxxxxxxxxxxxxx - 4));
+					v10_yyyyyyyyyyyyyyyyyx := v23_yyyyyyyyxxxxxxxxxxxxxxxxx
+				end else begin
+					if (v14_zzzzzyyyyyyyyyyyyyyy < v11_wwwwwwwwwwwwwvvvvvv) then begin
+							StyledStrTruncate(TrimString((v16_zzzzzzzzyyyyyyyyyyyyy := Substr(v17_xxxxxxxxxwwwwwwwwwwwww, v14_zzzzzyyyyyyyyyyyyyyy, (v11_wwwwwwwwwwwwwvvvvvv - v14_zzzzzyyyyyyyyyyyyyyy)))), v12_zzyyyyyyyyyyyyyyyyy, 12291);
+							v22_wwwwwwwwwwwwvvvvvvvvvvvvv[v13_wwwwwwwwwwwwwwwwwwwv] := MakeText(v16_zzzzzzzzyyyyyyyyyyyyy, v24_wwwwwwwwwwwwwwwwwwvvvvvvvv, v10_yyyyyyyyyyyyyyyyyx, v6_xxxxxxxwwwwwwwwwwwwwwwwwwwww, (v23_yyyyyyyyxxxxxxxxxxxxxxxxx - 4));
+							v10_yyyyyyyyyyyyyyyyyx := v23_yyyyyyyyxxxxxxxxxxxxxxxxx
+						end
+				end
+		end;
+	a2.bottom := v10_yyyyyyyyyyyyyyyyyx;
+	v22_wwwwwwwwwwwwvvvvvvvvvvvvv
+end
+@@end

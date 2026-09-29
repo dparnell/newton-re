@@ -1,0 +1,23 @@
+@@ 0x4ec971
+func() begin
+	l2 := (l1 := GetRoot().callapp).activeTransport.currentItem;
+	l1:Open();
+	if (l2.labels <> l1.labelsFilter) then begin
+			l3 := l1.labelsFilter;
+			l1.labelsFilter := l2.labels;
+			local l1;
+			local l2;
+			local l3;
+			(foreach l4, l5 in l1.allSoups do begin
+					l5.soupFilter := l1.labelsFilter;
+					l5:SetupCursor()
+				end);
+			l1.layout:FilterChanged();
+			if l1.filterBar then begin
+					l1.filterBar:UpdateFilter(l3, l1.labelsFilter)
+				end
+		end;
+	l1.allSoups.calls.theCursor:Goto(l2);
+	l1.layout:Retarget(true)
+end
+@@end

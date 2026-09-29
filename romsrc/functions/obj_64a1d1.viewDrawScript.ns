@@ -1,0 +1,16 @@
+@@ 0x54caed
+func() begin
+	local l1;
+	l1 := self:LocalBox();
+	if (not pieces) then begin
+			pieces := [Array: '{pensize: 0, penPattern: 5, fillPattern: 5}, MakeRect(4, 0, (l1.right - 4), 1), '{font: 9216, justification: center}];
+			if (VolumeSlider.viewFlags <> 0) then begin
+					AddArraySlot(pieces, MakeText("Volume", 12, 13, 65, 23))
+				end;
+			if (contrastSlider.viewFlags <> 0) then begin
+					AddArraySlot(pieces, MakeText("Contrast", 90, 13, (l1.right - 90), 23))
+				end
+		end;
+	self:DrawShape(pieces, {transform: [Array: 0, ((l1.bottom - 50) + 6)]})
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x4967ad
+func() begin
+	local l1;
+	if (StrLen((l1 := self:getDestStore():GetName())) = 0) then begin
+			l1 := self:getDestStore():GetKind()
+		end;
+	GetRoot():Confirm("Erase Card", ParamStr("Warning! Erase will remove all the information and packages on \u201C\u^0\u201D\u. Are you sure you want to do this?", [Array: l1]), self, 'ConfirmCallback)
+end
+@@end

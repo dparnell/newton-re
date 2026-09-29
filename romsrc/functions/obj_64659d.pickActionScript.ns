@@ -1,0 +1,12 @@
+@@ 0x431465
+func(a1) begin
+	local l1;
+	l1 := (Length(items) - Length(auxItems));
+	if (a1 < l1) then begin
+			Perform(self, items[a1].msg, '[Array: ])
+		end else begin
+			self:DoInfoAux(auxItems, (a1 - l1))
+		end;
+	self:pickCancelledScript()
+end
+@@end

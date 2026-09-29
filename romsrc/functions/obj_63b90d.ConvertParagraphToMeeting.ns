@@ -1,0 +1,8 @@
+@@ 0x4f7e89
+func(a1, a2, a3) begin
+	local l1;
+	(l1 := self:MakeNewMeetingFrame(a2, MakeRichString(a1.text, a1.styles), a3, 0)).viewBounds := a1.viewBounds;
+	l1.viewBounds.right := (l1.viewBounds.right + 72);
+	l1
+end
+@@end

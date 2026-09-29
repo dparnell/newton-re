@@ -1,0 +1,5 @@
+@@ 0x4b3429
+func(a1) begin
+	self:AddItem('outbox, a1)
+end
+@@end

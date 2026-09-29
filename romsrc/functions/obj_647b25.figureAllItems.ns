@@ -1,0 +1,45 @@
+@@ 0x48f359
+@@const kFunction_48e4dd
+func(a1, a2) begin
+	l1 := true;
+	(if (if StrEqual(a1.name, a2.name) then (Length(a1.soups) = Length(a2.soups))) then begin
+			local l1;
+			(foreach l2 in a1.soups do begin
+					if (not LSearch(a2.soups, l2, 0, '|str=|, nil)) then begin
+							break (l1 := nil)
+						end
+				end);
+			l1
+		end)
+end
+@@main
+func(a1, a2) begin
+	SetLength(a1, 0);
+	SetLength(a2, 0);
+	l4 := soupNameList;
+	l6 := prefsCache;
+	l5 := prefsSlot;
+	l7 := prefsArray;
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	local l6;
+	local l7;
+	local l8;
+	(foreach l3, l2 in l4 do begin
+			BInsert(a1, l2.name, '|str<|, nil, nil);
+			if (if (l6.(l5) = 'Partial) then LSearch(l6.(l7), l2, 0, kFunction_48e4dd, nil)) then begin
+					AddArraySlot(a2, l3)
+				end
+		end);
+	(if (l6.(l5) = 'all) then begin
+			l8 := Length(a1);
+			SetLength(a2, l8);
+			(for l1 := 0 to (l8 - 1) do begin
+					a2[l1] := l1
+				end)
+		end)
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x746ac1
+func(a1) begin
+	if (not StrEqual(NBPLookupType, "Docker")) then begin
+			AddMemoryItem(Intern(NBPLookupType), a1)
+		end else begin
+			AddMemoryItem('connAppleTalk, a1)
+		end;
+	(self.configCache := nil)
+end
+@@end

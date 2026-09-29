@@ -1,0 +1,6 @@
+@@ 0x5ad245
+func(a1) begin
+	AddUndoAction('setLabelScript, [Array: vars.(configPath)]);
+	(vars.(configPath) := items[a1])
+end
+@@end

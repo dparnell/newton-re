@@ -1,0 +1,5 @@
+@@ 0x5383a5
+func(a1, a2) begin
+	(if (((a1 = 'Filing) or (a1 = 'move)) or (a1 = 'delete)) then (if (not EntryStore(fentry):IsReadOnly()) then 'OK else "locked") else (if (a1 = 'route) then 'OK else (if (if self:LookupSoupPackage() then (a1 = 'freeze)) then 'OK else "the wrong kind")))
+end
+@@end

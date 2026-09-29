@@ -1,0 +1,5 @@
+@@ 0x5b8931
+func(a1) begin
+	self:AddWord(a1.word, a1.attribute)
+end
+@@end

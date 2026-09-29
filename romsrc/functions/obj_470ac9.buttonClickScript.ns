@@ -1,0 +1,22 @@
+@@ 0x470aa9
+func() begin
+	(if ((err := chooserNBPTable:stopScript()) = 0) then begin
+			zoneChooser.startSelection := currentSelection;
+			zoneChooser.currentZone := currentZone;
+			zoneChooser.appleTalkOpen := appleTalkOpen;
+			appleTalkOpen := nil;
+			zoneChooser.nbpLookupName := nbpLookupName;
+			if (notifyOnClose exists) then begin
+					zoneChooser.notifyOnClose := notifyOnClose
+				end;
+			if (headerText exists) then begin
+					zoneChooser.headerText := headerText
+				end;
+			if (lookForText exists) then begin
+					zoneChooser.lookForText := lookForText
+				end;
+			zoneChooser:Open();
+			base:Close()
+		end)
+end
+@@end

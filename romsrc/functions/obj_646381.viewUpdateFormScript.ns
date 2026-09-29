@@ -1,0 +1,5 @@
+@@ 0x481cd9
+func() begin
+	SetValue(self, 'icon, self:path().(name))
+end
+@@end

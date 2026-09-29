@@ -1,0 +1,16 @@
+@@ 0x44395d
+func(a1) begin
+	local l1, l2, l3;
+	if (a1 = todayItem) then begin
+			selectedDates := [Array: ((l3 := Time()) - (l3 mod 1440))]
+		end else begin
+			self:?MonthPicked();
+			selectedDates := [Array: self:CarefullIncrementMonth(selectedDates[0], popup[a1].inc)]
+		end;
+	pickerBase:Dirty();
+	self:hilite(nil);
+	self:SetTitle();
+	self:?DateChanged(selectedDates);
+	(popup := nil)
+end
+@@end

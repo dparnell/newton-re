@@ -1,0 +1,5 @@
+@@ 0x4b8e2d
+func() begin
+	Clone(target.(path))
+end
+@@end

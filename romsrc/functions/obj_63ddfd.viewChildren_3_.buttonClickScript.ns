@@ -1,0 +1,8 @@
+@@ 0x55ad29
+func() begin
+	local l1;
+	l1 := strtophone((l1 := phoneNum.entryLine.text));
+	base:Close();
+	AddDeferredSend(transport, 'ConnectNow, [Array: l1])
+end
+@@end

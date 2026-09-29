@@ -1,0 +1,39 @@
+@@ 0x4a6605
+@@const kFunction_4a64f5
+func() begin
+	(if (l1 := GetUserConfig('timeformat)) then begin
+			l1 := Clone(l1);
+			l2 := GetLocale().timeformat;
+			local l1;
+			local l2;
+			(foreach l3, l4 in l1 do begin
+					if (l2.(l3) = l4) then begin
+							RemoveSlot(l1, l3)
+						end
+				end);
+			(if (Length(l1) > 0) then begin
+					if IsReadOnly(international.currentlocalebundle) then begin
+							international.currentlocalebundle := {_proto: international.currentlocalebundle}
+						end;
+					if IsReadOnly(international.currentlocalebundle.timeformat) then begin
+							international.currentlocalebundle.timeformat := {_proto: international.currentlocalebundle.timeformat}
+						end;
+					l2 := GetLocale().timeformat;
+					(foreach l3, l4 in l1 do begin
+							local l6;
+							l2.(EnsureInternal(l3)) := EnsureInternal(l4)
+						end);
+					vars.setTimeSeed := Random(0, 10000000);
+					(if (l6 := GetRoot()) then l6:Dirty())
+				end)
+		end)
+end
+@@const kLiteral_4a6515
+{timeformat: kFunction_4a64f5}
+@@main
+func() begin
+	(foreach l1 in kLiteral_4a6515 do begin
+			call l1 with ()
+		end)
+end
+@@end

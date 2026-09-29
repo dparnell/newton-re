@@ -1,0 +1,10 @@
+@@ 0x4581ed
+func(a1) begin
+	local l1;
+	if (a1 = nil) then begin
+			return [Array: ]
+		end;
+	self:RealGetRoutingInfo((l1 := [Array: ]), a1);
+	l1
+end
+@@end

@@ -1,0 +1,16 @@
+@@ 0x629cd9
+func(a1, a2) begin
+	local l1;
+	try begin
+			BlockStrokes();
+			l1 := Apply(a1, a2)
+		end onexception |evt.ex| do begin
+			UnblockStrokes();
+			FlushStrokes();
+			Rethrow()
+		end;
+	UnblockStrokes();
+	FlushStrokes();
+	l1
+end
+@@end

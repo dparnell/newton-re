@@ -1,0 +1,5 @@
+@@ 0x7292a9
+func(a1) begin
+	(if StrFilled(a1[0]) then ParamStr("^?0^0: ||^1", [Array: GetGlobals().EmailSystems.emailText.(ClassOf(a1[0])), a1[0]]) else "")
+end
+@@end

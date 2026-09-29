@@ -1,0 +1,6 @@
+@@ 0x48dee5
+func() begin
+	params := {spots: @251, result: nil};
+	inherited:?viewSetupFormScript()
+end
+@@end

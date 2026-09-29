@@ -1,0 +1,5 @@
+@@ 0x42753d
+func() begin
+	(if (elapsedTime > 0) then elapsedTime else (TimeInSeconds() - startSeconds))
+end
+@@end

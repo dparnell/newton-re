@@ -1,0 +1,5 @@
+@@ 0x757245
+func() begin
+	(viewValue := protoContext:ConnectionPrefsRead('autodock))
+end
+@@end

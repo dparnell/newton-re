@@ -1,0 +1,28 @@
+@@ 0x59ff9d
+func() begin
+	if spasticUser then begin
+			return nil
+		end;
+	spasticUser := true;
+	if (listMethod <> GetUserConfig('mailListMethod)) then begin
+			SetUserConfig('mailListMethod, listMethod)
+		end;
+	if (not StrEqual(willDialNum, GetUserConfig('mailPhoneFull))) then begin
+			SetUserConfig('mailPhoneFull, willDialNum)
+		end;
+	(if ((not userConfiguration.mailAccount) or (not StrFilled(userConfiguration.mailAccount))) then begin
+			if theApp.viewCObject then begin
+					AddDeferredSend(theApp, 'RememberedClose, [Array: base])
+				end else begin
+					base:Close()
+				end;
+			if callOptionsSlip.viewCObject then begin
+					callOptionsSlip:Close()
+				end;
+			if clearOnClose then begin
+					theTransport.(clearOnClose) := nil
+				end;
+			AddDeferredSend(theTransport, 'DoRegister, [Array: request])
+		end else (SetPersona := (not self:ValidateConfig('owner, nil, '[Array: email, emailPassword], msgValidateSource, 'ValidateSlip, 'MoreValidation))))
+end
+@@end

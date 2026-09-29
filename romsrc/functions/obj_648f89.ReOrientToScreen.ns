@@ -1,0 +1,7 @@
+@@ 0x551ed1
+func() begin
+	saturationCheck := true;
+	self:_Close();
+	self:Open()
+end
+@@end

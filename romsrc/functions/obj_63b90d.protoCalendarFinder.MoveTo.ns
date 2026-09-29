@@ -1,0 +1,10 @@
+@@ 0x4ea935
+func(a1) begin
+	(foreach l1 in meetingSoupFinders do begin
+			l1:MoveTo(a1)
+		end);
+	(foreach l1 in todoSoupFinders do begin
+			l1:MoveTo(a1)
+		end)
+end
+@@end

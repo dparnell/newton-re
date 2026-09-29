@@ -1,0 +1,6 @@
+@@ 0x7a061d names
+func(index) begin
+	dirtyFlag := true;
+	(savedReminderIndex := index)
+end
+@@end

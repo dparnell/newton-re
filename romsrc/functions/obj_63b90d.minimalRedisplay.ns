@@ -1,0 +1,12 @@
+@@ 0x4f7a39
+func() begin
+	BusyBoxControl(1);
+	SetValue(DateView, 'text, self:CreateDateString());
+	cribView:RedoChildren();
+	if (mainDisplay <> YearView) then begin
+			mainDisplay:RedoChildren()
+		end;
+	self:calculateScrollingRects();
+	upDownScroller:AdjustArrows()
+end
+@@end

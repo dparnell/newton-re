@@ -1,0 +1,5 @@
+@@ 0x4ccbb1
+func() begin
+	(self.text := Stringer([Array: fields.pageCount, " ", "pages (including cover)", "\n", DateNTime(Time())]))
+end
+@@end

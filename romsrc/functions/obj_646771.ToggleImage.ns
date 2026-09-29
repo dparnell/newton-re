@@ -1,0 +1,5 @@
+@@ 0x45f17d
+func(a1, a2, a3) begin
+	(if ((not image) or viewCObject) then self:Close() else self:OpenImage(a1, a2, a3))
+end
+@@end

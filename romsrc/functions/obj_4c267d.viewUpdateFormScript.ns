@@ -1,0 +1,5 @@
+@@ 0x4c2629
+func() begin
+	(if target then SetValue(self, 'bits, transport:GetTitleInfoShape(target, self:LocalBox())))
+end
+@@end

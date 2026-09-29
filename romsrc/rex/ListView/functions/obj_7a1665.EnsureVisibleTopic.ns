@@ -1,0 +1,11 @@
+@@ 0x797b6d names
+func(anIndex) begin
+	(if (anIndex < firstTopic) then begin
+			firstTopic := anIndex;
+			self:RedoChildren()
+		end else (if (anIndex > lastTopic) then begin
+				firstTopic := ((firstTopic + anIndex) - lastTopic);
+				self:RedoChildren()
+			end))
+end
+@@end

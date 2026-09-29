@@ -1,0 +1,31 @@
+@@ 0x4c5925
+func(a1, a2, a3) begin
+	local l1;
+	(if ((a1 + scrollOrigin) < numItems) then begin
+			if (if (a2 < selectIndent) then (not overviewMode)) then begin
+					self:SelectItem(a1)
+				end else begin
+					if (l1 := self:GetIndexEntry((a1 + scrollOrigin))) then begin
+							if (self:GetAppPreferences().sortby <> 'Date) then begin
+									masterSoup.soupQuery := headings[currentHeadingIndex].spec;
+									masterSoup:SetupCursor();
+									dataCursor := masterSoup:GetCursor()
+								end;
+							dataCursor:Goto(l1);
+							if overviewMode then begin
+									overviewMode := nil;
+									pieces := nil;
+									scrollOrigin := -1;
+									self:Dirty()
+								end else begin
+									newtAppBase:ShowLayout('itemLayout)
+								end
+						end else begin
+							pieces := nil;
+							self:Dirty()
+						end
+				end;
+			true
+		end)
+end
+@@end

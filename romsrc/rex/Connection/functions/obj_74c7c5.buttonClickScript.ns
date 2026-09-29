@@ -1,0 +1,6 @@
+@@ 0x74c839
+func() begin
+	self:HandleClick(0);
+	inherited:?buttonClickScript()
+end
+@@end

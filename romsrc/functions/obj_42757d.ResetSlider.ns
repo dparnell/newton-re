@@ -1,0 +1,6 @@
+@@ 0x42747d
+func() begin
+	elapsedTime := 0;
+	self:SetRecordStart()
+end
+@@end

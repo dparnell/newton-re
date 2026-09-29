@@ -1,0 +1,26 @@
+@@ 0x535799
+func() begin
+	lastRing := Ticks();
+	if (if (not dismissCall) then (status <> 'AnswerInProgress)) then begin
+			playsound(@102)
+		end;
+	(if (if (status <> 'RingingFrom) then (not currentItem)) then begin
+			(currentItem := self:NewItem(nil)).callDate := Time();
+			currentItem.state := 'Received;
+			currentItem.saveAsLog := true;
+			RemoveSlot(currentItem, 'Connect);
+			if transportProvider.config.supportsCallerId then begin
+					currentItem.phoneNumber := callEndpoint:GetCallerId()
+				end;
+			self:SetStatusDialog('RingingFrom, 'vStatus, {primary: {text: "Take Call", script: func() begin
+				GetRoot().(appSymbol):receiveRequestComplete()
+			end}, closeBox: func() begin
+				GetRoot().(appSymbol).dismissCall := true;
+				GetRoot().(appSymbol):CloseStatusDialog(nil)
+			end});
+			AddDelayedCall(func() begin
+				self:StopEventIncoming()
+			end, nil, 8000)
+		end)
+end
+@@end

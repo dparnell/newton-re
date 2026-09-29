@@ -1,0 +1,11 @@
+@@ 0x426a01
+func() begin
+	local l1, l2;
+	(if RecordEngine:TestState(6) then begin
+			if ((l1 := (Length(RecordEngine.fSoundArray) - 2)) >= 0) then begin
+					ClearVBOCache((l2 := RecordEngine.fSoundArray[l1]).samples)
+				end;
+			AddDelayedSend(base, 'FlushVBO, [Array: ], 200)
+		end)
+end
+@@end

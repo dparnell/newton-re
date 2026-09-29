@@ -1,0 +1,12 @@
+@@ 0x416565
+func() begin
+	l1 := [Array: ];
+	local l1;
+	(foreach l2 deeply in fonts do begin
+			if ((if HasPath(l2, 'usable) then l2.usable) or (not HasPath(l2, 'usable))) then begin
+					AddArraySlot(l1, l2)
+				end
+		end);
+	l1
+end
+@@end

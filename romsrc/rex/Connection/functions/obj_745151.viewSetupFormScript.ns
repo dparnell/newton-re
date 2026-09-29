@@ -1,0 +1,7 @@
+@@ 0x747b81
+func() begin
+	self.viewBounds := Clone(viewBounds);
+	self.viewBounds.right := (_currentWidth - 25);
+	(currentlyShowing := nil)
+end
+@@end

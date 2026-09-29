@@ -1,0 +1,10 @@
+@@ 0x59ebe9
+func(a1) begin
+	if a1 then begin
+			self:?ItemCompleted(eworld.msg, nil, a1)
+		end else begin
+			self:?ItemCompleted(eworld.msg, 'Sent, nil)
+		end;
+	self:SendNextMessage()
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x4bb885
+func() begin
+	SetValue(self.entryLine, 'text, (if (if (if target then path) then target.(path)) then filter:PathToText() else ""));
+	entryLine:viewChangedScript('text, entryLine)
+end
+@@end

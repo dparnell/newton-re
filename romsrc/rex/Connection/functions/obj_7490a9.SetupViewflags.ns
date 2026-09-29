@@ -1,0 +1,6 @@
+@@ 0x749175
+func() begin
+	local l1;
+	(if ((not (l1 := restoreOptions.packages)) or (Length(l1) = 0)) then (self.viewFlags := (viewFlags - 1)))
+end
+@@end

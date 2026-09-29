@@ -1,0 +1,32 @@
+@@ 0x5a4181
+func(a1, a2, a3) begin
+	local l1, l2;
+	l1 := nil;
+	if (a1 = 'connected) then begin
+			l1 := "Disconnect";
+			if (if requestQueue then (Length(requestQueue) > 0)) then begin
+					l2 := requestQueue[0];
+					SetRemove(requestQueue, l2);
+					AddDeferredSend(self, l2.function, [Array: l2])
+				end
+		end else begin
+			if (status = 'connected) then begin
+					l1 := "Stop"
+				end
+		end;
+	if l1 then begin
+			if (a3 = nil) then begin
+					a3 := {}
+				end;
+			if (not (a3:primary exists)) then begin
+					a3.primary := {text: l1, script: func() begin
+						GetRoot().(appSymbol):CancelRequest('userCancel)
+					end}
+				end
+		end;
+	if (if IsFrame(a3) then StrFilled(a3.titleText)) then begin
+			a3.titleText := ParamStr("^0", [Array: a3.titleText])
+		end;
+	inherited:SetStatusDialog(a1, a2, a3)
+end
+@@end

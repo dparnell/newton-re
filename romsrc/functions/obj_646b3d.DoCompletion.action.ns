@@ -1,0 +1,20 @@
+@@ 0x499551
+@@const kLiteral_4974a9
+"Data Exchange"
+@@main
+func() begin
+	if autoNotify then begin
+			if fException then begin
+					GetRoot():Notify(4, kLiteral_4974a9, EnsureInternal(Stringer([Array: "Data Exchange (", fException.data, ")"])))
+				end else begin
+					GetRoot():Notify(4, kLiteral_4974a9, "Data Exchange completed successfully")
+				end
+		end;
+	if fException then begin
+			call fCallBack with ('error, fException)
+		end else begin
+			call fCallBack with ('complete, nil)
+		end;
+	'exit
+end
+@@end

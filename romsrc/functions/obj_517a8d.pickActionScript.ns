@@ -1,0 +1,6 @@
+@@ 0x517a6d
+func(a1) begin
+	DeleteFrom := a1[0];
+	inherited:pickActionScript(a1)
+end
+@@end

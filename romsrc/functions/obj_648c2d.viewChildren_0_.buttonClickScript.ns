@@ -1,0 +1,6 @@
+@@ 0x43f531
+func() begin
+	cancelled := nil;
+	inherited:buttonClickScript()
+end
+@@end

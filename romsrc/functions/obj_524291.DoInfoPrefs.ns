@@ -1,0 +1,5 @@
+@@ 0x51edb9
+func() begin
+	bookPrefs:Open()
+end
+@@end

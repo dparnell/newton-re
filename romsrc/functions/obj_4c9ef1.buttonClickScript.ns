@@ -1,0 +1,7 @@
+@@ 0x4c9ed1
+func() begin
+	notesSlip.fields := fields;
+	notesSlip:Toggle();
+	(notesUp := notesSlip.viewCObject)
+end
+@@end

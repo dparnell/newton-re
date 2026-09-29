@@ -1,0 +1,7 @@
+@@ 0x429835
+func() begin
+	local l1;
+	l1 := self:PadText(text);
+	(if (text <> l1) then (text := l1))
+end
+@@end

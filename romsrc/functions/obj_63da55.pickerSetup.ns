@@ -1,0 +1,9 @@
+@@ 0x4f10c1
+func() begin
+	(if GetRoot().calendar:IsExceptionMeeting(meetingInstance) then begin
+			self:Notify(3, (if appSymbol then GetAppName(appSymbol) else ""), (if (meetingInstance.viewStationery = 'cribNote) then "You cannot change the repeat frequency of an exception event." else "You cannot change the repeat frequency of an exception meeting."));
+			self:hilite(nil);
+			nil
+		end else true)
+end
+@@end

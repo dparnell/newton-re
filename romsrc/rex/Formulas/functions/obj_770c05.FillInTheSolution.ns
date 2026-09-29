@@ -1,0 +1,15 @@
+@@ 0x771445
+func(a1, a2) begin
+	local l1, l2, l3, l4;
+	inherited:FillInTheSolution(a1, a2);
+	l1 := FSViews[0]:GetNumericValue();
+	l2 := FSViews[1]:GetNumericValue();
+	l3 := FSViews[2]:GetNumericValue();
+	l4 := FSViews[3]:GetNumericValue();
+	(if (if (if (if (l1 <> nil) then (l2 <> nil)) then (l3 <> nil)) then (l4 <> nil)) then begin
+			l4 := abs(l4);
+			TotalPayments:SetNumericValueString(FormattedNumberStr(((l1 * 12) * l4), "%.2f"));
+			TotalInterest:SetNumericValueString(FormattedNumberStr((((l1 * 12) * l4) - l3), "%.2f"))
+		end)
+end
+@@end

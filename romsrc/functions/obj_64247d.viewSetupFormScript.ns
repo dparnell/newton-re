@@ -1,0 +1,5 @@
+@@ 0x432dcd
+func() begin
+	(clock.increment := increment)
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x59acc9
+func(a1) begin
+	curerror := nil;
+	self:mailSetup(a1);
+	self:mailStart();
+	self:startCCL();
+	self:mailCleanup();
+	curerror
+end
+@@end

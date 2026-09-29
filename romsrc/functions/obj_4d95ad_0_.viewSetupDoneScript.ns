@@ -1,0 +1,5 @@
+@@ 0x4d9561
+func() begin
+	(if self.stepChildren then (reflowStart := (reflowStart + Length(self.stepChildren))))
+end
+@@end

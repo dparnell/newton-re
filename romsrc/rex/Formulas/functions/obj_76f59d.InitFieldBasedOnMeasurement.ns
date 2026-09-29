@@ -1,0 +1,6 @@
+@@ 0x76fec1
+func() begin
+	US:SetIntegerField(nil);
+	Metric:SetIntegerField(nil)
+end
+@@end

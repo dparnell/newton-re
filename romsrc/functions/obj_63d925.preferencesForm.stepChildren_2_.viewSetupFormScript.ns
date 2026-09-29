@@ -1,0 +1,5 @@
+@@ 0x59d5e9
+func() begin
+	(viewValue := GetUserConfig('mailautodisconnect))
+end
+@@end

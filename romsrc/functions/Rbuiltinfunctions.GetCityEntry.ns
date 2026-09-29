@@ -1,0 +1,10 @@
+@@ 0x436ff9
+func(a1) begin
+	local l1, l2;
+	if (not (l1 := GetLocationSoup(@251))) then begin
+			return nil
+		end;
+	l2 := l1:Query({type: 'index, indexPath: 'name, beginKey: a1, endKey: a1});
+	l2:map(nil)
+end
+@@end

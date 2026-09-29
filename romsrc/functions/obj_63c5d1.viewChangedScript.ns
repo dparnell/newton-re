@@ -1,0 +1,6 @@
+@@ 0x4fc9a5
+func(a1, a2) begin
+	local l1;
+	(if (if (if (if (l1 := a2.realData) then (ClassOf(l1) <> 'meeting)) then IsSoupEntry(l1)) then (not EntryStore(l1):IsReadOnly())) then self:CarefulChange(MeetingSoup, l1, true))
+end
+@@end

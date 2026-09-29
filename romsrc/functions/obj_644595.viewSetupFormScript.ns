@@ -1,0 +1,13 @@
+@@ 0x444141
+func() begin
+	inherited:?viewSetupFormScript();
+	(picker.viewSetupFormScript := func() begin
+		selectedDates := dates;
+		inherited:?viewSetupFormScript();
+		if (Date(selectedDates[0]).year = 2920) then begin
+				calendar.viewBounds := SetBounds(0, 0, 0, -2)
+			end;
+		(calendar.singleDay := nil)
+	end)
+end
+@@end

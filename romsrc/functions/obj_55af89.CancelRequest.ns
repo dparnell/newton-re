@@ -1,0 +1,7 @@
+@@ 0x55af69
+func(a1) begin
+	CancelOnlineService();
+	self:SetStatus('idle, nil);
+	nil
+end
+@@end

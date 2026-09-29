@@ -1,0 +1,6 @@
+@@ 0x73d389
+func() begin
+	local l1;
+	return (l1 := TotalClone('{address2: nil, addresses: [Array: ], pagers: [Array: ], address: nil, class: person, postal_code: nil, cardType: nil, anniversary: nil, region: nil, companyReading: nil, section: nil, city: nil, email: nil, bdayEvent: nil, title: nil, country: nil, name: {honorific: nil, first: "", last: nil, title: nil}, company: nil, emailAddrs: [Array: ], companies: [Array: ], sorton: "Untitled Person", notes: nil, anniversaryEvent: nil, names: [Array: ], phones: [Array: ], version: 2, bday: nil, emailPassword: nil}))
+end
+@@end

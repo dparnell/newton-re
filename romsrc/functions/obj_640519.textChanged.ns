@@ -1,0 +1,10 @@
+@@ 0x42ef85
+func() begin
+	(if (phoneIndex < Length(target.(path))) then (target.(path)[phoneIndex] := SetClass(entryLine.text, ClassOf(target.(path)[phoneIndex]))) else begin
+			(for l1 := (Length(target.(path)) + 1) to phoneIndex do begin
+					AddArraySlot(target.(path), SetClass(Clone(""), 'phone))
+				end);
+			AddArraySlot(target.(path), SetClass(entryLine.text, 'phone))
+		end)
+end
+@@end

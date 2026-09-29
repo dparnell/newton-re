@@ -1,0 +1,12 @@
+@@ 0x5b02e5
+func() begin
+	local l1;
+	(if ((l1 := userConfiguration.letterSetSelection) = 2) then begin
+			charSpace := printedCharSpace;
+			(wordSpace := printedWordSpace)
+		end else begin
+			charSpace := cursiveCharSpace;
+			(wordSpace := cursiveWordSpace)
+		end)
+end
+@@end

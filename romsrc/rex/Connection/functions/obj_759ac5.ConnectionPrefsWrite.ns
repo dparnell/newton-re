@@ -1,0 +1,13 @@
+@@ 0x75b32d
+func(a1, a2) begin
+	if (connectionPrefs = nil) then begin
+			self:ConnectionPrefsInit()
+		end;
+	connectionPrefs.(a1) := a2;
+	(try begin
+			EntryChange(connectionPrefs)
+		end onexception |evt.ex| do begin
+			nil
+		end)
+end
+@@end

@@ -1,0 +1,13 @@
+@@ 0x454cb9
+func() begin
+	local l1, l2, l3, l4;
+	l1 := BuildContext(pseudoFinder);
+	if (Length((l2 := pickBase:FindSelections())) = 1) then begin
+			if (Length((l4 := l2[0]).items) = 1) then begin
+					pickBase:ShowItem(@359, l4.items[0]);
+					l3 := true
+				end
+		end;
+	(if (not l3) then (fOpenEditor := l1:OpenFind(l2, pickerDef.findTitle, pickBase)))
+end
+@@end

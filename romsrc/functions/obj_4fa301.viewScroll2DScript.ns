@@ -1,0 +1,18 @@
+@@ 0x4fa2e1
+func(a1, a2) begin
+	if (mainDisplay = ToDoListView) then begin
+			if (a1 = 'up) then begin
+					mainDisplay:viewScrollUpScript()
+				end else begin
+					mainDisplay:viewScrollDownScript()
+				end
+		end else begin
+			if (a2.amount < 0) then begin
+					mainDisplay:viewScrollUpScript(a2.amount)
+				end else begin
+					mainDisplay:viewScrollDownScript(a2.amount)
+				end
+		end;
+	RefreshViews()
+end
+@@end

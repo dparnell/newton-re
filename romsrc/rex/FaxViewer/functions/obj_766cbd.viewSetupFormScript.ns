@@ -1,0 +1,6 @@
+@@ 0x7674c9
+func() begin
+	bitmapStore := (if ((not fEntryStore) or fEntryStore:IsReadOnly()) then GetDefaultStore() else fEntryStore);
+	inherited:?viewSetupFormScript()
+end
+@@end

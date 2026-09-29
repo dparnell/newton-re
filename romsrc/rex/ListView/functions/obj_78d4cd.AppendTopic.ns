@@ -1,0 +1,7 @@
+@@ 0x78cfb5 names
+func(aTopic, aNewIndex, aTop, aLevelDelta) begin
+	ArrayInsert(topics, aTopic, aNewIndex);
+	self:SetTopAndLevel(aTopic, aTop, aLevelDelta);
+	(nTopics := (nTopics + 1))
+end
+@@end

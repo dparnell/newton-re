@@ -1,0 +1,13 @@
+@@ 0x59b9ed
+func() begin
+	local l1, l2;
+	(if (not (((l1 := (if inBody then fields.body else fields)).state = 'Read) or (l1.state = 'Received))) then begin
+			l2 := notesText(self:ChildViewFrames());
+			if (if (not (l1.text = l2)) then (((not l1.text) or (not l2)) or (StrExactCompare(l1.text, l2) <> 0))) then begin
+					l1.text := l2;
+					l1.edited := true
+				end;
+			(if (if (if l1.edited then IsSoupEntry(fields)) then FrameDirty(fields)) then self:itemchanged(fields, nil))
+		end)
+end
+@@end

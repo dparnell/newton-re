@@ -1,0 +1,30 @@
+@@ 0x4c5679
+@@const kFunction_4c44f5
+func(a1, a2) begin
+	IsSameEntry(a1, a2)
+end
+@@main
+func(a1) begin
+	local l1, l2, l3, l4;
+	if (l2 := self:GetIndexEntry((l1 := (a1 + scrollOrigin)))) then begin
+			l3 := MakeEntryAlias(l2);
+			if self.selected then begin
+					if (l1 := ArrayPos(self.selected, l3, 0, kFunction_4c44f5)) then begin
+							RemoveSlot(self.selected, l1)
+						end else begin
+							AddArraySlot(self.selected, l3)
+						end
+				end else begin
+					self.selected := [Array: l3]
+				end;
+			(l4 := self:LocalBox()).bottom := ((l4.top := (a1 * lineHeight)) + lineHeight);
+			if (if selected then (Length(selected) > 0)) then begin
+					newtAppBase.target := ResolveEntryAlias(selected[0])
+				end;
+			pieces[a1] := self:GetTheRightShape((a1 + scrollOrigin), l4)
+		end else begin
+			pieces := nil
+		end;
+	self:Dirty()
+end
+@@end

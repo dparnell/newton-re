@@ -1,0 +1,7 @@
+@@ 0x4bb8a5
+func(a1) begin
+	AddUndoAction('UpdateText, [Array: Clone(entryLine:GetRichString())]);
+	SetValue(entryLine, 'text, a1);
+	entryLine:viewChangedScript('text, entryLine)
+end
+@@end

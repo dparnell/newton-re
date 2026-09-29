@@ -1,0 +1,55 @@
+@@ 0x797525 names
+func(anEntry, aNewDate) begin
+	deleteList := [Array: ];
+	if EntryStore(anEntry):IsReadOnly() then begin
+			EntryUndoChanges(anEntry);
+			return nil
+		end;
+	if (Length(anEntry.topics) = 0) then begin
+			EntryRemoveFromSoupXmit(anEntry, 'todo);
+			return true
+		end;
+	local topic;
+	local doneItems;
+	local notDoneItems;
+	local newEntry;
+	local newTopics;
+	local ti;
+	local ki;
+	local nToDelete;
+	local deleteList;
+	(foreach topic in anEntry.topics do begin
+			if ((topic.level = nil) or (topic.level = 1)) then begin
+					if topic.mtgDone then begin
+							doneItems := true
+						end else begin
+							notDoneItems := true
+						end
+				end
+		end);
+	if (if doneItems then notDoneItems) then begin
+			newTopics := (newEntry := self:GetToDoEntryDefaultStore(aNewDate, nil).Entry).topics;
+			(for ti := 0 to (Length(anEntry.topics) - 1) do begin
+					if (((topic := anEntry.topics[ti]).level = nil) or (topic.level = 1)) then begin
+							if (topic.mtgDone = nil) then begin
+									AddArraySlot(deleteList, ti);
+									AddArraySlot(newTopics, topic)
+								end
+						end
+				end);
+			if ((nToDelete := Length(deleteList)) > 0) then begin
+					self:DeleteRolledTopics(anEntry, deleteList)
+				end;
+			newEntry.needsSort := true;
+			EntryChangeXmit(newEntry, 'todo)
+		end else begin
+			if notDoneItems then begin
+					anEntry.date := aNewDate;
+					EntryChangeXmit(anEntry, 'todo)
+				end else begin
+					EntryUndoChanges(anEntry)
+				end
+		end;
+	true
+end
+@@end

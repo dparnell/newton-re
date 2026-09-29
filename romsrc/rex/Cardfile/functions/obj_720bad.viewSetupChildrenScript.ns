@@ -1,0 +1,42 @@
+@@ 0x742b6d
+@@const kFunction_742d55
+func() begin
+	self:ChainIn('retargetChain);
+	inherited:?viewSetupDoneScript()
+end
+@@const kFunction_742db9
+func() begin
+	self:ChainOut('retargetChain);
+	inherited:?viewQuitScript()
+end
+@@const kFunction_742e0d
+func() begin
+	local l1, l2, l3;
+	(if (l2 := self:GetTargetInfo(nil)).target then begin
+			if ((l3 := l2.target.class) = 'worksite) then begin
+					l1 := "Worksite"
+				end else begin
+					if (l3 = 'owner) then begin
+							l1 := "Owner"
+						end
+				end;
+			(if l1 then SetValue(self, 'text, Stringer([Array: l1, " "])))
+		end)
+end
+@@const kLiteral_742cd5
+{_proto: @218, viewBounds: '{left: -54, top: 5, right: -3, bottom: 21}, viewJustify: 8388645, viewFont: 1058816, viewFormat: 5, viewTransferMode: 3, viewSetupDoneScript: kFunction_742d55, viewQuitScript: kFunction_742db9, RetargetNotify: kFunction_742e0d}
+@@main
+func() begin
+	stepChildren := theChildren;
+	if (superSymbol = 'ownerNames) then begin
+			if IsReadOnly(stepChildren) then begin
+					stepChildren := Clone(stepChildren)
+				end;
+			ArrayMunger(stepChildren, 0, 1, [Array: '{_proto: @218, text: " Owner Info", viewBounds: {left: 0, top: 5, right: 0, bottom: 21}, viewJustify: 8388660, viewFont: @88, viewFormat: 5, viewTransferMode: 3}, kLiteral_742cd5], 0, nil)
+		end;
+	if (not allLayouts.(currentLayout)) then begin
+			currentLayout := (previousLayout := 'default)
+		end;
+	inherited:viewSetupChildrenScript()
+end
+@@end

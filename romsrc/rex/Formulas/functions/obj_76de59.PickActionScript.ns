@@ -1,0 +1,7 @@
+@@ 0x76df51
+func(a1) begin
+	calcLineValue := ((a1[0] div 1440) * 1440);
+	inherited:?PickActionScript(a1);
+	self:SolveFormula(lineNumber)
+end
+@@end

@@ -1,0 +1,12 @@
+@@ 0x54d301
+func(a1, a2) begin
+	local l1;
+	(if (fakeTarget = nil) then a1 else begin
+			l1 := {_proto: self, beam: func(a1) begin
+				(yep := a1)
+			end, yep: nil};
+			l1:GenericActionScript('send, 'beam, true, SubstituteChars(Downcase(ParamStr("^0 \u2022\u1", [Array: GetItemTransport(a2).actionTitle])), "\u2022\u", "^"), "This icon can\u2019\ut be sent^?0 because it is ^0||.", "These icons can\u2019\ut be sent^?0 because they are ^0||.");
+			(if l1.yep then a1)
+		end)
+end
+@@end

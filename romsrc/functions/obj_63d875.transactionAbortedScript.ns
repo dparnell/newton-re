@@ -1,0 +1,7 @@
+@@ 0x5a559d
+func(a1) begin
+	pleaseWaitForm:Close();
+	self:Notify(3, "Mail Registration", "Host failed to respond. Please try again.");
+	self:AllDone(nil)
+end
+@@end

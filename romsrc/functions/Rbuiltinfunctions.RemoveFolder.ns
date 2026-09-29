@@ -1,0 +1,42 @@
+@@ 0x483359
+@@const kFunction_482d35
+func() begin
+	local l1;
+	if IsReadOnly((l1 := GetUserConfig('userFolderGroups))) then begin
+			l1 := (userConfiguration.userFolderGroups := DeepClone(l1))
+		end;
+	l1
+end
+@@const kFunction_482cd5
+func() begin
+	local l1;
+	if IsReadOnly((l1 := GetUserConfig('userFolders))) then begin
+			l1 := (userConfiguration.userFolders := Clone(l1))
+		end;
+	l1
+end
+@@main
+func(a1, a2) begin
+	local l1, l2, l3;
+	if (not a1) then begin
+			return nil
+		end;
+	(if (if GetUserConfig('userFolders).(a1) then (a2 <> '_System)) then begin
+			l1 := call (kFunction_482d35) with ();
+			if (not a2) then begin
+					a2 := '_Global
+				end;
+			(if (l2 := (if l1.(a2) then (if SetRemove(l1.(a2), a1) then (if (if (Length(l1.(a2)) = 0) then (a2 <> '_Global)) then RemoveSlot(l1, a2) else true)))) then begin
+					l3 := call (kFunction_482cd5) with ();
+					if (Length(GetFolderGroups(a1)) = 0) then begin
+							RemoveSlot(l3, a1)
+						end;
+					EntryChange(userConfiguration);
+					if ((a2 = '_Global) or (not (if l1._Global then SetContains(l1._Global, a1)))) then begin
+							XmitFolderChange(a1, nil, a2)
+						end;
+					a1
+				end)
+		end)
+end
+@@end

@@ -1,0 +1,8 @@
+@@ 0x4666d5
+func(a1) begin
+	if self:TrackHilite(a1) then begin
+			self:buttonClickScript()
+		end;
+	true
+end
+@@end

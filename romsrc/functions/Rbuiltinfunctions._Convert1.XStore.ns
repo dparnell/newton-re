@@ -1,0 +1,35 @@
+@@ 0x56a5f1
+@@const kBinaryFromHex
+func(hex, cls) begin
+	local b := MakeBinary(StrLen(hex) div 2, cls);
+	for i := 0 to Length(b) - 1 do begin
+		local h := Ord(hex[2 * i]);
+		local l := Ord(hex[2 * i + 1]);
+		StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+	end;
+	b
+end
+@@const kLiteral_484299
+{mask: call kBinaryFromHex with ("000000000004010901090174011e018100000000000000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe000003fe0000000000000000000000000000000000000", 'mask), bits: call kBinaryFromHex with ("000000000004010901090174011e01817ff00000fff80000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000c0180000dfd80000cf980000c7180000c2180000c0180000fff800007ff000000000000000000000", 'bits), bounds: '{left: 0, top: 0, right: 13, bottom: 21}}
+@@main
+func(store, a2) begin
+	local storeName;
+	storeName := store:GetName();
+	DoProgress('vBarber, {barber: true, icon: kLiteral_484299, primary: nil, closeBox: nil}, func(a1) begin
+		a1:SetStatus('vBarber, {statusText: ParamStr("Converting packages on the store \u201C\u^0\u201D\u", [Array: storeName]), barber: true});
+		try begin
+				|Convert1.XPackages|(store, a1)
+			end onexception |evt.ex| do begin
+				GetRoot():Notify(3, "Newton", ParamStr("Errors occurred converting packages on the store \u201C\u^0\u201D\u.", [Array: storeName]));
+				return nil
+			end;
+		a1:SetStatus('vBarber, {statusText: ParamStr("Converting soups on the store \u201C\u^0\u201D\u", [Array: storeName]), barber: true});
+		(try begin
+				|Convert1.XStoreData|(store, a1)
+			end onexception |evt.ex| do begin
+				GetRoot():Notify(3, "Newton", ParamStr("Errors occurred converting soups on the store \u201C\u^0\u201D\u.", [Array: storeName]));
+				return nil
+			end)
+	end)
+end
+@@end

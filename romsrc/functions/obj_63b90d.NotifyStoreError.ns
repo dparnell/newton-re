@@ -1,0 +1,13 @@
+@@ 0x4f7af9
+func() begin
+	local l1, l2;
+	if ((l1 := CurrentException().error) = -10605) then begin
+			l2 := "^0 changes could not be saved because the card is write-protected."
+		end else begin
+			if (l1 = -10617) then begin
+					l2 := "^0 changes could not be saved because the memory is full."
+				end
+		end;
+	(if l2 then self:Notify(3, title, ParamStr(l2, [Array: title])))
+end
+@@end

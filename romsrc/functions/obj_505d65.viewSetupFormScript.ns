@@ -1,0 +1,9 @@
+@@ 0x505d25
+func() begin
+	viewBounds := RelBounds(0, dpSlip.dateFieldTop, 220, 18);
+	if hideDateField then begin
+			viewFlags := BAnd(viewFlags, bnot(1))
+		end;
+	(Date := newMtgDate)
+end
+@@end

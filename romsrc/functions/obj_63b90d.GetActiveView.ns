@@ -1,0 +1,5 @@
+@@ 0x4f7dc9
+func() begin
+	(if Visible(MeetingNotes) then MeetingNotes else (if Visible(ToDoSlip) then ToDoSlip else self))
+end
+@@end

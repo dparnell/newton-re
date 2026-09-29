@@ -1,0 +1,14 @@
+@@ 0x481df1
+func() begin
+	local l1, l2;
+	inherited:?viewSetupFormScript();
+	l1 := self:path();
+	visibleAction := nil;
+	(if (if l1 then HasSlot(l1, name)) then begin
+			if (l2 := l1.(name)) then begin
+					buttonClickScript := l2
+				end;
+			(if l2 then (visibleAction := 'makeVisible) else (visibleAction := 'makeInvisible))
+		end)
+end
+@@end

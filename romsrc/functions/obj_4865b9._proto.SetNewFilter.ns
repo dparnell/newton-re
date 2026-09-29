@@ -1,0 +1,9 @@
+@@ 0x4864f9
+func(a1, a2, a3) begin
+	AddUndoAction('SetNewFilter, [Array: a1, a2, GetVariable(a1, a2)]);
+	SetVariable(a1, a2, a3);
+	self:hilite(nil);
+	self:SyncView();
+	(if (a1:NewFilingFilter exists) then a1:NewFilingFilter(a2) else a1:?FilterChanged())
+end
+@@end

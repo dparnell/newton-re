@@ -1,0 +1,59 @@
+@@ 0x473135
+@@const kLiteral_472c5d
+"helo"
+@@main
+func(a1) begin
+	local l1, l2, l3;
+	if (((idleUseCount = 0) or closingDown) or (not connected)) then begin
+			return 0
+		end;
+	if a1 then begin
+			try begin
+					if (self:BytesAvailable() >= 2) then begin
+							l1 := self:ReadCommand(nil);
+							if StrEqual("opca", l1.command) then begin
+									self:WriteCommand("ocaa", nil, nil);
+									return 0
+								end else begin
+									if StrEqual("disc", l1.command) then begin
+											self:ConnectionDone(0);
+											return 0
+										end else begin
+											if (not StrEqual(kLiteral_472c5d, l1.command)) then begin
+													Throw('|evt.ex.error|, -28012)
+												end
+										end
+								end
+						end
+				end onexception |evt.ex| do begin
+					if ((l2 := CurrentException().error) <> -28009) then begin
+							self:ConnectionDone(l2)
+						end
+				end;
+			if closingDown then begin
+					return 0
+				end
+		end;
+	if (if (if (maxIdleTime <> nil) then ((TimeInSeconds() - lastcommunicationwithdesktop) > maxIdleTime)) then (BatteryStatus(0).acPower <> 'yes)) then begin
+			self:ConnectionDone(-28024);
+			return 0
+		end;
+	if (lastHello < lastcommunicationwithdesktop) then begin
+			lastHello := lastcommunicationwithdesktop
+		end;
+	if ((l3 := ((TimeInSeconds() - lastHello) * 1000)) < 0) then begin
+			lastHello := TimeInSeconds()
+		end;
+	if (l3 >= 5000) then begin
+			try begin
+					self:WriteCommand(kLiteral_472c5d, nil, nil);
+					lastHello := TimeInSeconds()
+				end onexception |evt.ex| do begin
+					if ((l2 := CurrentException().error) <> -28009) then begin
+							self:ConnectionDone(l2)
+						end
+				end
+		end;
+	return 1000
+end
+@@end

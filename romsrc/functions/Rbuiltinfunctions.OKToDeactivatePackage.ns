@@ -1,0 +1,35 @@
+@@ 0x5596fd
+func(a1, a2, a3) begin
+	l1 := [Array: ];
+	local l1;
+	(foreach l2 in BusyPackages do begin
+			if (l2.pkgRef = a1) then begin
+					AddArraySlot(l1, {name: l2.appName, message: l2.reason})
+				end
+		end);
+	local l4;
+	(foreach l5 in (l4 := GetPkgRefInfo(a1)).parts do begin
+			if (if IsFrame(l5) then l5._ExportTable) then begin
+					(foreach l7 in l5._ExportTable do begin
+							(foreach l9 in GetExportTableClients(l7.objects) do begin
+									try begin
+											if (l11 := l9.client:?RemovalApproval(l9.name, l9.major, l9.minor)) then begin
+													AddArraySlot(l1, {name: a2, message: l11})
+												end
+										end onexception |evt.ex| do begin end
+								end)
+						end)
+				end
+		end);
+	if (if (Length(l1) = 0) then IsProtocolPartInUse(a1)) then begin
+			AddArraySlot(l1, {name: a2, message: "This operation may cause serious problems."})
+		end;
+	local l11;
+	(foreach l12 in l1 do begin
+			if (not ModalConfirm(ParamStr("\u201C\u^0\u201D\u is currently in use. ^1 ^2", [Array: l12.name, l12.message, a3]), 'okCancelDefaultCancel)) then begin
+					return nil
+				end
+		end);
+	true
+end
+@@end

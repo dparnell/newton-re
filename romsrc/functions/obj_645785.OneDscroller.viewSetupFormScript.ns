@@ -1,0 +1,6 @@
+@@ 0x4bd009
+func() begin
+	inherited:?viewSetupFormScript();
+	self:CommonScrollerSetupFormScript()
+end
+@@end

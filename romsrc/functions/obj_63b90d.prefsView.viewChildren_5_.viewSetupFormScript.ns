@@ -1,0 +1,13 @@
+@@ 0x50bfe9
+func() begin
+	local l1;
+	if (not (l1 := GetUserConfig('firstDayOfWeek))) then begin
+			l1 := GetLocale().firstDayOfWeek
+		end;
+	if (not l1) then begin
+			l1 := 0
+		end;
+	self.selected := dayBit[l1];
+	inherited:?viewSetupFormScript()
+end
+@@end

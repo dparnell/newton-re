@@ -1,0 +1,5 @@
+@@ 0x51e3a5
+func(a1) begin
+	(if (nBrowsers > 1) then (if self:TrackHilite(a1) then self:buttonClickScript()))
+end
+@@end

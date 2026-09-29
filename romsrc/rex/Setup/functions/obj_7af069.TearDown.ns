@@ -1,0 +1,6 @@
+@@ 0x7afda1
+func() begin
+	fReviewDone := true;
+	SetTime(Time)
+end
+@@end

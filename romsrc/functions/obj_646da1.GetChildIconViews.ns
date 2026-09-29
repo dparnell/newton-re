@@ -1,0 +1,5 @@
+@@ 0x54674d
+func() begin
+	self:ChildViewFrames()
+end
+@@end

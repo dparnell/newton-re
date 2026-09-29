@@ -1,0 +1,40 @@
+@@ 0x754439
+func() begin
+	local l1;
+	self.protoContext := GetRoot().Connection;
+	protoContext:AddOpenWindow(self);
+	self.fResults := {};
+	self.closing := nil;
+	SlipTitle.text := fSetup.SlipTitle;
+	fileName.text := fSetup.fileName;
+	l1 := (SlipTitle.viewBounds.bottom + fileName.viewBounds.bottom);
+	if HasSlot(fSetup, 'AppListInfo) then begin
+			AppListTitle.text := fSetup.AppListInfo.title;
+			appList.listItems := fSetup.AppListInfo.listItems;
+			l1 := ((l1 + AppListTitle.viewBounds.bottom) + appList.viewBounds.bottom)
+		end else begin
+			AppListTitle.viewFlags := BAnd(AppListTitle.viewFlags, -2);
+			appList.viewFlags := BAnd(appList.viewFlags, -2)
+		end;
+	if HasSlot(fSetup, 'ConflictsInfo) then begin
+			Conflicts.text := fSetup.ConflictsInfo.text;
+			Conflicts.labelCommands := fSetup.ConflictsInfo.labelCommands;
+			l1 := (l1 + Conflicts.viewBounds.bottom)
+		end else begin
+			Conflicts.viewFlags := BAnd(viewFlags, -2)
+		end;
+	if HasSlot(fSetup, 'DatesInfo) then begin
+			DatesTitle.text := fSetup.DatesInfo.title;
+			l1 := ((l1 + DatesTitle.viewBounds.bottom) + Dates.viewBounds.bottom);
+			Dates.label := Stringer([Array: $\uFC01, fSetup.DatesInfo.text]);
+			Dates.startTime := fSetup.DatesInfo.startTime;
+			Dates.stopTime := fSetup.DatesInfo.stopTime
+		end else begin
+			DatesTitle.viewFlags := BAnd(DatesTitle.viewFlags, -2);
+			Dates.viewFlags := BAnd(Dates.viewFlags, -2)
+		end;
+	Import.text := fSetup.ImportInfo.title;
+	self.viewBounds := SetBounds(self.viewBounds.left, self.viewBounds.top, self.viewBounds.right, (l1 + 65));
+	endpoint:StartIdle(self, 2000)
+end
+@@end

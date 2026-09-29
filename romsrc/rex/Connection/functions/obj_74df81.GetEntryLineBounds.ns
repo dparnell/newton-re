@@ -1,0 +1,7 @@
+@@ 0x74e425
+func() begin
+	local l1;
+	(l1 := Clone(entryLine.viewBounds)).right := self:LocalBox().right;
+	return l1
+end
+@@end

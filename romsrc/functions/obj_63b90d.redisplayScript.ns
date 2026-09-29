@@ -1,0 +1,6 @@
+@@ 0x4f7b49
+func() begin
+	monthController:Refresh();
+	self:minimalRedisplay()
+end
+@@end

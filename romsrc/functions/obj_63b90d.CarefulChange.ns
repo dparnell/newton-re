@@ -1,0 +1,29 @@
+@@ 0x4f7d29
+func(a1, a2, a3) begin
+	(if (if a2.repeatType then (NextMeeting(0, a2) = 0)) then begin
+			if a3 then begin
+					self:CarefulRemove(a2, 'calendar)
+				end else begin
+					self:CarefulRemove(a2, 'calendarAPI)
+				end;
+			if a2.mtgAlarm then begin
+					self:initializeAlarms()
+				end;
+			(if Visible(upDownScroller) then begin
+					self:calculateScrollingRects();
+					upDownScroller:AdjustArrows()
+				end)
+		end else (try begin
+				if a3 then begin
+						EntryChangeXmit(a2, 'calendar)
+					end else begin
+						EntryChangeXmit(a2, 'calendarAPI)
+					end;
+				(if a2.mtgAlarm then self:initializeAlarms())
+			end onexception |evt.ex.fr.store| do begin
+				EntryUndoChanges(a2);
+				AddProcrastinatedSend('calendar, calendar, 'redisplayScript, [Array: ], 100);
+				self:NotifyStoreError()
+			end))
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x484415
+func() begin
+	(self.viewBounds := SetBounds(5, 5, -5, (storeClusterHeight + 23)))
+end
+@@end

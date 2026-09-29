@@ -1,0 +1,5 @@
+@@ 0x557775
+func(a1, a2) begin
+	a2:?removeScript(a2)
+end
+@@end

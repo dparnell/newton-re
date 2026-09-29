@@ -1,0 +1,16 @@
+@@ 0x7227f1
+@@const kFunction_7228c5
+func(a1, a2) begin
+	(a2._proto = @164)
+end
+@@main
+func() begin
+	local l1;
+	inherited:?viewSetupChildrenScript();
+	(if (theApp.superSymbol = 'ownerNames) then begin
+			l1 := ArrayPos(viewChildren, nil, 0, kFunction_7228c5);
+			ArrayRemoveCount((viewChildren := Clone(viewChildren)), l1, 1);
+			(stepChildren := [Array: usePasswordCheckBox])
+		end)
+end
+@@end

@@ -1,0 +1,6 @@
+@@ 0x44e8c5
+func() begin
+	cancelled := nil;
+	inherited:buttonClickScript()
+end
+@@end

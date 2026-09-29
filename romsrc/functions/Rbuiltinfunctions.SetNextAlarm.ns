@@ -1,0 +1,14 @@
+@@ 0x422395
+func() begin
+	local l1, l2, l3;
+	SetSysAlarm(nil, nil, nil);
+	l1 := GetStores()[0]:GetSoup("SystemAlarmSoup");
+	l3 := (l2 := l1:Query('{indexPath: TimeInSeconds})):entry();
+	(while (if l3 then (l2:EntryKey() <= TimeInSeconds())) do begin
+			EntryRemoveFromSoup(l3);
+			XAlarm(l3);
+			(l3 := l2:Next())
+		end);
+	(if l3 then SetSysAlarm(l3.TimeInSeconds, functions.SetNextAlarm, nil))
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x48ecd9
+func() begin
+	godParent.openEraseSlip := self;
+	self.slot := store:CardSlot();
+	self.icon := CardSlotIcons[slot];
+	self.screenOrientation := GetUserConfig('screenOrientation);
+	self.iconBounds := {left: 5, top: 5, right: (5 + (icon.bounds.right div 4)), bottom: (5 + icon.bounds.bottom)};
+	SetKeyView(self, 0)
+end
+@@end

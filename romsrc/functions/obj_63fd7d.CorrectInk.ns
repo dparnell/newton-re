@@ -1,0 +1,9 @@
+@@ 0x46d83d
+func(a1) begin
+	local l1, l2;
+	(if ViewAllowsInkWords((l1 := refCon).form) then begin
+			l1.form:HandleInsertItems((l2 := {insertItems: StrokeBundleToInkWord(a1.strokelist), insertOffset: l1.wordOffset, replaceChars: l1.wordLength, addspace: nil, moveCaret: nil}));
+			(l1.wordLength := 1)
+		end)
+end
+@@end

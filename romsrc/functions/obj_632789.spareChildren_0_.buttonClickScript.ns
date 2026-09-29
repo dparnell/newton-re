@@ -1,0 +1,7 @@
+@@ 0x55ec29
+func(a1) begin
+	Sort(selectedItems, '|<|, nil);
+	selectedAppSymbols := (foreach l1 in selectedItems collect ListSymbols[l1]);
+	selectedAppSymbols
+end
+@@end

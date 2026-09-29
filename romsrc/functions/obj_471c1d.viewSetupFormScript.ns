@@ -1,0 +1,16 @@
+@@ 0x471ba5
+func() begin
+	AddPowerOffHandler(self);
+	ListItems := [Array: ];
+	(foreach l1 in AvailablePrinters do begin
+			if (l1.type = 'serialSym) then begin
+					AddArraySlot(ListItems, l1.name)
+				end
+		end);
+	self:SetupList();
+	(if (if (currentSelection <> nil) then (not StrEqual(currentSelection, ""))) then begin
+			Selection := (temp := FindStringInArray(ListItems, currentSelection));
+			self:HiliteLine(temp)
+		end)
+end
+@@end

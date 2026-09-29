@@ -1,0 +1,6 @@
+@@ 0x518e09
+func() begin
+	local l1;
+	(if (l1 := self:GetMeetingSlot(meeting, 'mtgLocation)) then self:getNameOfLocation(l1))
+end
+@@end

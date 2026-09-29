@@ -1,0 +1,97 @@
+@@ 0x4f878d
+func(a1, a2) begin
+	l2 := (if (l1 := (a1.repeatTemplate <> nil)) then a1.repeatTemplate else a1);
+	if a2 then begin
+			l2 := DeepClone(l2)
+		end;
+	l3 := l2.viewStationery;
+	if (not l2.viewBounds) then begin
+			l2.viewBounds := nil
+		end else begin
+			self:Convert10BoundsTo20(l2)
+		end;
+	if LSearch('[Array: meeting, RepeatingMeeting, exceptionMeeting, cribNote], l3, 0, '|=|, nil) then begin
+			l2.class := 'meeting;
+			l2.mtgIconType := nil;
+			l2.version := 2;
+			if (l3 = 'cribNote) then begin
+					l4 := ((l4 := l2.mtgStartDate) - (l4 mod 1440));
+					l2.mtgStartDate := l4
+				end else begin
+					l2.mtgInvitees := nil;
+					l2.mtgLocation := nil
+				end;
+			self:ValidateMeeting(l2);
+			if l2.NotesData then begin
+					if (Length(l2.NotesData) = 0) then begin
+							l2.NotesData := nil
+						end else begin
+							local l1;
+							local l2;
+							local l3;
+							local l4;
+							(foreach l5 in l2.NotesData do begin
+									ConvertChildTemplates(l5, 'oneO, 'twoO)
+								end)
+						end
+				end;
+			if l2.repeatType then begin
+					(l7 := l2).InstanceNotesData := nil;
+					if (not l7.exceptions) then begin
+							l7.exceptions := nil
+						end else begin
+							local l7;
+							(foreach l8 in l7.exceptions do begin
+									local l10, l11, l12, l13;
+									if (l3 = 'cribNote) then begin
+											l4 := ((l4 := l8[0]) - (l4 mod 1440));
+											l8[0] := l4
+										end;
+									if (l10 := l8[1]) then begin
+											l10.class := 'meeting;
+											RemoveSlot(l10, 'mtgText);
+											RemoveSlot(l10, 'NotesData);
+											RemoveSlot(l10, 'mtgInfo);
+											RemoveSlot(l10, 'repeatType);
+											RemoveSlot(l10, 'mtgStopDate);
+											RemoveSlot(l10, 'mtgAlarm);
+											RemoveSlot(l10, 'exceptions);
+											if (l3 = 'cribNote) then begin
+													RemoveSlot(l10, 'mtgDuration);
+													l4 := ((l4 := l10.originDate) - (l4 mod 1440));
+													l10.originDate := l4;
+													l4 := ((l4 := l10.mtgStartDate) - (l4 mod 1440));
+													l10.mtgStartDate := l4
+												end else begin
+													if ((not HasSlot(l10, 'mtgDuration)) or (l10.mtgDuration = l7.mtgDuration)) then begin
+															l10.mtgDuration := nil
+														end;
+													l10.mtgInvitees := nil
+												end;
+											if (not l10.viewBounds) then begin
+													l10.viewBounds := nil
+												end else begin
+													self:Convert10BoundsTo20(l10)
+												end
+										end
+								end)
+						end
+				end
+		end else begin
+			ConvertChildTemplates(l2, 'oneO, 'twoO);
+			l2._DatesVersion := 2
+		end;
+	if l1 then begin
+			l11 := a1.mtgStartDate;
+			l12 := GetRoot().calendar;
+			if (l3 = 'cribNote) then begin
+					l11 := (l11 - (l11 mod 1440))
+				end;
+			if (not (l13 := l12:FindException(l11, l2))) then begin
+					l13 := l12:MakeInstanceOfRepeatingMeeting(l2, l11)
+				end;
+			l2 := l13
+		end;
+	l2
+end
+@@end

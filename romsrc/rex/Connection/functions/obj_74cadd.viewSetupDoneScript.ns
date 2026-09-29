@@ -1,0 +1,5 @@
+@@ 0x74cb99
+func() begin
+	(if (not config.button3) then self:Hide())
+end
+@@end

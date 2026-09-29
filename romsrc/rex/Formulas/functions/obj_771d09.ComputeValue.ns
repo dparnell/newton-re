@@ -1,0 +1,8 @@
+@@ 0x771d55
+func(a1) begin
+	local l1, l2, l3;
+	l1 := a1[0];
+	l2 := a1[1];
+	return ((l3 := a1[2]) / l2)
+end
+@@end

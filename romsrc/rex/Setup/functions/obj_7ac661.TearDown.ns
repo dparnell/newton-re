@@ -1,0 +1,47 @@
+@@ 0x7ac791
+func() begin
+	l2 := Length((l1 := fPersona.phones));
+	l3 := nil;
+	l4 := nil;
+	l6 := "";
+	l7 := "";
+	fReviewDone := true;
+	fWorkworksite.AreaCode := vVoice:GetTextArea();
+	SetClass((l6 := MakePhone({AreaCode: vVoice:GetTextArea(), phone: vVoice:GetTextLocal()})), 'workPhone);
+	if (l2 > 0) then begin
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			local l5;
+			local l6;
+			local l7;
+			(for l5 := 0 to (l2 - 1) do begin
+					if (ClassOf(l1[l5]) = 'workPhone) then begin
+							l1[l5] := l6;
+							l3 := true
+						end
+				end)
+		end;
+	if ((l3 = nil) or (l2 = 0)) then begin
+			if (not StrEqual(l6, "")) then begin
+					AddArraySlot(fPersona.phones, l6)
+				end
+		end;
+	SetClass((l7 := MakePhone({AreaCode: vFax:GetTextArea(), phone: vFax:GetTextLocal()})), 'faxPhone);
+	if (l2 > 0) then begin
+			(for l5 := 0 to (l2 - 1) do begin
+					if (ClassOf(l1[l5]) = 'faxPhone) then begin
+							l1[l5] := l7;
+							l4 := true
+						end
+				end)
+		end;
+	if ((l4 = nil) or (l2 = 0)) then begin
+			if (not StrEqual(l7, "")) then begin
+					AddArraySlot(fPersona.phones, l7)
+				end
+		end;
+	(fWorkworksite.place := "Work")
+end
+@@end

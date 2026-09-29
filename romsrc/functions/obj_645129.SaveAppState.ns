@@ -1,0 +1,19 @@
+@@ 0x4ab1ad
+func() begin
+	l1 := self:GetAppPreferences();
+	local l1;
+	(foreach l2, l3 in allSoups do begin
+			self:SaveFolderPosition(l2, l3, labelsFilter)
+		end);
+	if (storesFilter exists) then begin
+			l1.storesFilter := (if storesFilter then storesFilter:GetSignature())
+		end;
+	l1.autoPutawayEnabled := autoPutawayEnabled;
+	l1.labelsFilter := labelsFilter;
+	l1.currentLayout := currentLayout;
+	l1.previousLayout := previousLayout;
+	l1._recogSettings := _recogSettings;
+	l1.preferredViewDef := preferredViewDef;
+	EntryChange(l1)
+end
+@@end

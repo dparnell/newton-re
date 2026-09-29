@@ -1,0 +1,9 @@
+@@ 0x49e369
+func() begin
+	self:EndFlush();
+	(if entryDirtied then begin
+			entryDirtied := nil;
+			self:BroadcastChange('quit, target)
+		end)
+end
+@@end

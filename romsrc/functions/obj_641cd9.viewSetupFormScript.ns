@@ -1,0 +1,7 @@
+@@ 0x4f1be5
+func() begin
+	MinHourSpec := @66.shortTimeStrSpec;
+	MonthList := GetLocale().longDateFormat.longMonth;
+	(mtgDate := Date(meetingInstance.mtgStartDate))
+end
+@@end

@@ -1,0 +1,17 @@
+map_774099 := map(0, nil, 'book, 'help);
+map_774119 := map(2, nil, 'version, 'isbn, 'title, 'author, 'publicationDate, 'help, 'contents, 'styles, 'browsers, 'templates, 'rendering);
+map_7745d1 := map(2, nil, 'data, 'layout, 'name);
+map_7746a1 := map(2, nil, 'data, 'viewFont, 'layout);
+map_774749 := map(2, nil, 'family, 'face, 'size);
+map_7747e1 := map(2, nil, 'data, 'viewFont);
+map_7748c9 := map(2, nil, 'data);
+map_77c589 := map(2, nil, 'data, 'viewFont, 'layout, 'name);
+map_7824c9 := map(2, nil, 'name, 'list);
+map_782689 := map(2, nil, 'item);
+map_7826d1 := map(2, nil, 'level, 'item);
+map_782e81 := map(2, nil, 'nColumns, 'column);
+map_782ef9 := map(2, nil, 'width, 'type);
+map_782f69 := map(2, nil, 'pageSize, 'pages);
+map_782fd9 := map(2, nil, 'left, 'top, 'right, 'bottom);
+map_7831a1 := map(2, nil, 'template, 'blocks);
+map_783229 := map(2, nil, 'bounds, 'item);

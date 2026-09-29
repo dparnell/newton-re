@@ -1,0 +1,5 @@
+@@ 0x4829f5
+func(a1) begin
+	(if (not a1) then "Unfiled" else GetUserConfig('userFolders).(a1))
+end
+@@end

@@ -1,0 +1,23 @@
+@@ 0x78cdd5 names
+func(anX, y) begin
+	if ((y > self:ListBottom()) or (nTopics = 0)) then begin
+			return {topicIndex: nil}
+		end;
+	local bounds;
+	(for ti := firstTopic to (nTopics - 1) do begin
+			bounds := self:ClickBounds(ti);
+			if (if (y >= bounds.top) then (y <= bounds.bottom)) then begin
+					if (anX > bounds.right) then begin
+							return {topicIndex: ti, where: 'topic}
+						end;
+					return {topicIndex: ti, where: 'marker}
+				end
+		end);
+	(for ti := 0 to (nTopics - 1) do begin
+			if (y < (self:MarkerBounds(topics[ti]).top + 4)) then begin
+					return {topicIndex: ti, where: nil}
+				end
+		end);
+	{topicIndex: (nTopics - 1), where: nil}
+end
+@@end

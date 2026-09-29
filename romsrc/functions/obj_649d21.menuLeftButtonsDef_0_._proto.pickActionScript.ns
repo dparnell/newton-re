@@ -1,0 +1,19 @@
+@@ 0x4b6311
+func(a1) begin
+	inherited:pickActionScript(a1);
+	currentViewSymbol := popup[a1].symbol;
+	(foreach l1 in popup do begin
+			if (l1.symbol = currentViewSymbol) then begin
+					l1.mark := $\uFC0B
+				end else begin
+					if l1.mark then begin
+							RemoveSlot(l1, 'mark)
+						end
+				end
+		end);
+	(if (ioEntryView exists) then begin
+			ioEntryView:SetViewDef(popup[a1].symbol);
+			(if itemStatus.viewCObject then itemStatus:RedoChildren())
+		end)
+end
+@@end

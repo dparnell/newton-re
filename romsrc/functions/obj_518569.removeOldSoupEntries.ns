@@ -1,0 +1,68 @@
+@@ 0x518525
+func(a1, a2, a3) begin
+	local v6_yyyyyyyyyyyyyyyyyyyyyxxxxxxx, v7_vvvvvvvvvvvvvvvvvvu, v8_vu, v9_mmll, v10_qqppp, v11_zzzyyy, v15_zzzzzzzzzyyy, v17_zzzzzzzzzzzzyyy, v18_xxxwwwwwwwwwwwwww, v20_yxxxxxxxxxxxxxxxxxxx, v21_wwwwvvvvvvvvvvvvvvvvvv, v22_yyyyyyyxxxxxxxxxxxxxxxx, v23_wwwwwwwwwwwwwwwwvvvvvvvvv;
+	v10_qqppp := floor((v10_qqppp := ((v10_qqppp := ((v10_qqppp := Time()) - (v10_qqppp mod 1440))) - (a1 * 1440))));
+	v23_wwwwwwwwwwwwwwwwvvvvvvvvv := 0;
+	(v20_yxxxxxxxxxxxxxxxxxxx := Clone(@65)).endExclKey := v10_qqppp;
+	v6_yyyyyyyyyyyyyyyyyyyyyxxxxxxx := Query(a2, v20_yxxxxxxxxxxxxxxxxxxx);
+	(while v6_yyyyyyyyyyyyyyyyyyyyyxxxxxxx:entry() do begin
+			EntryRemoveFromSoup(v6_yyyyyyyyyyyyyyyyyyyyyxxxxxxx:entry());
+			if ((v23_wwwwwwwwwwwwwwwwvvvvvvvvv := (v23_wwwwwwwwwwwwwwwwvvvvvvvvv + 1)) >= 5) then begin
+					self:UpdateProgressBar(5);
+					v23_wwwwwwwwwwwwwwwwvvvvvvvvv := 0
+				end;
+			v6_yyyyyyyyyyyyyyyyyyyyyxxxxxxx:Next()
+		end);
+	v21_wwwwvvvvvvvvvvvvvvvvvv := Query(a3, {type: 'index, indexPath: 'mtgStopDate, beginKey: 0});
+	v23_wwwwwwwwwwwwwwwwvvvvvvvvv := 0;
+	(loop begin
+			if ((v8_vu := v21_wwwwvvvvvvvvvvvvvvvvvv:entry()) = nil) then begin
+					break
+				end;
+			if (v23_wwwwwwwwwwwwwwwwvvvvvvvvv >= 5) then begin
+					self:UpdateProgressBar(5);
+					v23_wwwwwwwwwwwwwwwwvvvvvvvvv := 0
+				end;
+			v23_wwwwwwwwwwwwwwwwvvvvvvvvv := (v23_wwwwwwwwwwwwwwwwvvvvvvvvv + 1);
+			if (v8_vu.mtgStopDate < v10_qqppp) then begin
+					self:StoreLocalNotes(v8_vu, nil, nil, nil);
+					EntryRemoveFromSoup(v8_vu)
+				end else begin
+					if (v8_vu.mtgStartDate < v10_qqppp) then begin
+							v15_zzzzzzzzzyyy := ((v18_xxxwwwwwwwwwwwwww := v8_vu.mtgStartDate) mod 1440);
+							v8_vu.mtgStartDate := (v10_qqppp + v15_zzzzzzzzzyyy);
+							v22_yyyyyyyxxxxxxxxxxxxxxxx := v8_vu.exceptions;
+							v12_tttttttt := 0;
+							if v22_yyyyyyyxxxxxxxxxxxxxxxx then begin
+									(foreach v16_vvvvvvvvvvvvvvvvuuu in v22_yyyyyyyxxxxxxxxxxxxxxxx do begin
+											if (v16_vvvvvvvvvvvvvvvvuuu[0] < v10_qqppp) then begin
+													ArrayRemoveCount(v22_yyyyyyyxxxxxxxxxxxxxxxx, v12_tttttttt, 1)
+												end else begin
+													v12_tttttttt := (v12_tttttttt + 1)
+												end
+										end)
+								end;
+							if (v9_mmll := v8_vu.InstanceNotesData) then begin
+									(for v12_tttttttt := 0 to (Length(v9_mmll) - 1) do begin
+											if (v9_mmll[v12_tttttttt][0] >= v10_qqppp) then begin
+													break
+												end else begin
+													if (v17_zzzzzzzzzzzzyyy := ResolveEntryAlias(v9_mmll[v12_tttttttt][1])) then begin
+															EntryRemoveFromSoupXmit(v17_zzzzzzzzzzzzyyy, 'calendar)
+														end
+												end
+										end);
+									ArrayRemoveCount(v9_mmll, 0, v12_tttttttt);
+									if (Length(v9_mmll) = 0) then begin
+											v8_vu.InstanceNotesData := nil
+										end
+								end;
+							self:CarefulChange(a3, v8_vu, true)
+						end
+				end;
+			v21_wwwwvvvvvvvvvvvvvvvvvv:Next()
+		end);
+	self:calculateScrollingRects();
+	upDownScroller:AdjustArrows()
+end
+@@end

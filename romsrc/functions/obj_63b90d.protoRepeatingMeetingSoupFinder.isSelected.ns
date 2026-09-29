@@ -1,0 +1,10 @@
+@@ 0x4ee0fd
+@@const kFunction_4ee0dd
+func(a1, a2) begin
+	(if (if (a1._uniqueID = a2._uniqueID) then (a1._storeID = a2._storeID)) then (a1.instanceTime = a2.instanceTime))
+end
+@@main
+func(a1) begin
+	(if selected then LSearch(selected, a1, 0, kFunction_4ee0dd, nil))
+end
+@@end

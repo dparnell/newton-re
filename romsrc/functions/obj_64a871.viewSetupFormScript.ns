@@ -1,0 +1,13 @@
+@@ 0x423995
+func() begin
+	local l1;
+	l1 := Gestalt('[Array: 33554441, [Array: struct, boolean, boolean, boolean, boolean, Real, long, long], 1]);
+	self.maxValue := (l1[5] + 1);
+	self.dbIncr := (l1[4] / (maxValue - 1));
+	(if (if hwSavy then l1[2]) then begin
+			self.viewFlags := ((viewFlags - 512) + 2);
+			self.viewValue := self:DbToViewValue(GetSystemVolume());
+			self:SetupIdle(hwUpdateFreq)
+		end else (self.viewValue := self:DbToViewValue(GetUserConfig(userConfigSlot))))
+end
+@@end

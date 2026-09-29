@@ -1,0 +1,37 @@
+@@ 0x5b5b39
+func(a1) begin
+	local l1;
+	if (not state) then begin
+			state := a1
+		end;
+	if (if (numKeys <> 0) then (state = 'getpassword)) then begin
+			return nil
+		end;
+	state := a1;
+	self:ResetDisplay();
+	if (state = 'getpassword) then begin
+			if prompt then begin
+					l1 := prompt
+				end else begin
+					l1 := "Enter PIN"
+				end
+		end else begin
+			if (state = 'SetPassword) then begin
+					l1 := "Enter new PIN"
+				end else begin
+					if (state = 'changePassword) then begin
+							l1 := "Enter old PIN"
+						end else begin
+							if (state = 'verifyPassword) then begin
+									l1 := "Confirm new PIN"
+								end else begin
+									if (if (state = 'InActive) then promptLine) then begin
+											l1 := ""
+										end
+								end
+						end
+				end
+		end;
+	SetValue(promptLine, 'text, l1)
+end
+@@end

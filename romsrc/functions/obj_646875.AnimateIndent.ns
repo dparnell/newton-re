@@ -1,0 +1,9 @@
+@@ 0x478fe9
+func() begin
+	local l1;
+	self:SetupBounds(bottomIndent, nil);
+	self:SyncView();
+	(l1 := self:LocalBox()).top := (l1.bottom - bottomIndent);
+	self:RevealEffect((l1.bottom - l1.top), l1, indentSound, nil, nil)
+end
+@@end

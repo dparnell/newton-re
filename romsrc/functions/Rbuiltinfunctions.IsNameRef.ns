@@ -1,0 +1,5 @@
+@@ 0x44ff41
+func(a1) begin
+	IsInstance(a1, 'nameRef)
+end
+@@end

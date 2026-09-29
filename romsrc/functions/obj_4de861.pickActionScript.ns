@@ -1,0 +1,6 @@
+@@ 0x4de841
+func(a1) begin
+	self:hilite(nil);
+	self:SetForm(pop[a1].form)
+end
+@@end

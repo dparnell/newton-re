@@ -1,0 +1,7 @@
+@@ 0x4e643d
+func() begin
+	local l1;
+	StrReplace((l1 := HourMinute(Random(28583304, 28584744))), " ", "", nil);
+	return l1
+end
+@@end

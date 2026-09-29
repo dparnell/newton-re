@@ -1,0 +1,5 @@
+@@ 0x44df5d
+func(a1) begin
+	self:SetTemplate(@794)
+end
+@@end

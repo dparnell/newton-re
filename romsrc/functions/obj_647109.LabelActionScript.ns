@@ -1,0 +1,10 @@
+@@ 0x48d1e1
+func(a1) begin
+	local l1, l2;
+	(if (l1 := GetRoot().mailcategory.mailNetworks[a1]) then begin
+			target.(path) := l1.id;
+			self:Parent():?DataChangeNotify('mailNetwork, l1.id);
+			self:StartFlush()
+		end)
+end
+@@end

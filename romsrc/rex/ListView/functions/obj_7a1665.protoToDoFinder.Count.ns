@@ -1,0 +1,26 @@
+@@ 0x79b6e5 names
+func() begin
+	local c, i, Entry, instanceCount;
+	(if cacheEntryCount then cacheEntryCount else begin
+			cacheInstanceArrayCount := nil;
+			(c := cursor:clone()):Reset();
+			i := 0;
+			Entry := c:Entry();
+			(loop begin
+					if (Entry = nil) then begin
+							break
+						end;
+					if (cacheInstanceArrayCount = nil) then begin
+							cacheInstanceArrayCount := [Array: ]
+						end;
+					if ((instanceCount := self:CountTasks(Entry)) = 0) then begin
+							Print("**** entry has 0 instances! ****")
+						end;
+					AddArraySlot(cacheInstanceArrayCount, instanceCount);
+					i := (i + instanceCount);
+					(Entry := c:Next())
+				end);
+			(cacheEntryCount := i)
+		end)
+end
+@@end

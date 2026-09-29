@@ -1,0 +1,27 @@
+@@ 0x4a9e6d
+func() begin
+	self:RememberedCloseAll();
+	self:SaveAppState();
+	ClearUndoStacks();
+	prefsCache := nil;
+	layout := nil;
+	filterBar := nil;
+	viewChildren := nil;
+	saveWhatView := nil;
+	saveWhat := nil;
+	if allKeyCommands then begin
+			(foreach l1 in allKeyCommands do begin
+					RemoveSlot(newtAppBase, l1[0].keyMessage)
+				end)
+		end;
+	RemoveSlot(self, '_keyCommands);
+	UnRegFolderChanged(appSymbol);
+	if allSoups then begin
+			(foreach l3 in allSoups do begin
+					l3:DoneWithSoup(appSymbol)
+				end);
+			RemoveSlot(self, 'allSoups)
+		end;
+	'postQuit
+end
+@@end

@@ -1,0 +1,23 @@
+@@ 0x78cbf5 names
+func(aDragType, aDragRef) begin
+	(if ((aDragType = 'topic) or (aDragType = 'task)) then aDragRef else (if (if (aDragType = 'text) then (not (if IsFrame(aDragRef) then HasPath(aDragRef, 'viewCObject)))) then begin
+				local theText;
+				local notFirst;
+				(foreach topic in aDragRef.topics do begin
+						if notFirst then begin
+								theText := Stringer([Array: theText, "\n"]);
+								if topic.level then begin
+										(for t := 1 to (topic.level - aDragRef.level) do begin
+												theText := Stringer([Array: theText, "\t"])
+											end)
+									end;
+								theText := Stringer([Array: theText, "\u2022\u", " ", MakeRichString(topic.text, topic.styles)])
+							end else begin
+								theText := Stringer([Array: "\u2022\u", " ", MakeRichString(topic.text, topic.styles)]);
+								notFirst := true
+							end
+					end);
+				{text: theText, viewBounds: RelBounds(0, 0, rightMargin, aDragRef.height)}
+			end))
+end
+@@end

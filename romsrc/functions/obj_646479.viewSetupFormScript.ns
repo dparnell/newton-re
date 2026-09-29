@@ -1,0 +1,6 @@
+@@ 0x480f71
+func() begin
+	text := self:GetText();
+	(self.viewJustify := self:GetJustify())
+end
+@@end

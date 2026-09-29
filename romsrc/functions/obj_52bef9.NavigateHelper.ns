@@ -1,0 +1,38 @@
+@@ 0x52be59
+func(a1, a2) begin
+	modemEndpoint := {_proto: @383, _parent: self};
+	l1 := nil;
+	try begin
+			modemEndpoint:instantiateFromTEndpoint(modemEndpoint, nil, a1);
+			l2 := [Array: self:MakeModemPrefs(a2.modemprefs), self:MakeModemProfile(a2.ModemProfile)];
+			if a2.FaxProfile then begin
+					AddArraySlot(l2, self:MakeFaxCapabilities(a2.FaxProfile))
+				end;
+			local l1;
+			local l2;
+			local l3;
+			(foreach l4 in (l3 := modemEndpoint:option(l2, nil)) do begin
+					local l6;
+					if l4.result then begin
+							l1 := l4.result;
+							break
+						end
+				end);
+			modemEndpoint:disposeLeavingTEndpoint()
+		end onexception |evt.ex| do begin
+			if HasSlot((l6 := CurrentException()), 'error) then begin
+					l1 := l6.error
+				end else begin
+					if HasSlot(l6.data, 'errorCode) then begin
+							l1 := l6.data.errorCode
+						end else begin
+							l1 := -1
+						end
+				end;
+			if modemEndpoint then begin
+					modemEndpoint:disposeLeavingTEndpoint()
+				end
+		end;
+	l1
+end
+@@end

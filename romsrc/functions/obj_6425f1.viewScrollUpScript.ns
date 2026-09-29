@@ -1,0 +1,11 @@
+@@ 0x4db401
+func() begin
+	currentForm:?flush();
+	(if (if currentForm then currentForm.viewScrollUpScript) then currentForm:viewScrollUpScript() else begin
+			if (not cards:prev()) then begin
+					cards:Reset()
+				end;
+			self:Retarget()
+		end)
+end
+@@end

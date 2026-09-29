@@ -1,0 +1,18 @@
+@@ 0x4bc3d9
+func(a1) begin
+	local l1;
+	l1 := filter:PathToText();
+	(if (currPhoneType := labelCommands[a1].class) then begin
+			self:SetLabelText(labelCommands[a1].item);
+			self:hilite(nil);
+			target.(path) := filter:TextToPath(l1);
+			if (if currPhoneType then target.(path)) then begin
+					SetClass(target.(path), currPhoneType)
+				end;
+			self:StartFlush();
+			shapes := nil;
+			self:RedoChildren();
+			SetKeyView(phone, 0)
+		end else inherited:pickActionScript(a1))
+end
+@@end

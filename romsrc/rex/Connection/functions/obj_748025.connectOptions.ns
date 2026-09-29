@@ -1,0 +1,7 @@
+@@ 0x748351
+func() begin
+	(result := [Array: {label: "rout", type: 'address, opCode: 512, data: {arglist: [Array: 3, 0, ""], typeList: [Array: 10, 1, 2, [Array: 11, 13, 0]]}}])[0].data.arglist[1] := StrLen(self.phonenumber);
+	result[0].data.arglist[2] := self.phonenumber;
+	return result
+end
+@@end

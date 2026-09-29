@@ -1,0 +1,19 @@
+@@ 0x62e5bd
+func(str, delimiters) begin
+	local pos;
+	if IsInstance(delimiters, 'char) then begin
+			delimiters := Stringer([Array: delimiters, ""])
+		end;
+	pos := 0;
+	func() begin
+		local l1, l2;
+		l1 := StrLen(str);
+		(if (pos < l1) then begin
+				(while CharPos(delimiters, str[pos], 0) do (if ((pos := (pos + 1)) = l1) then return nil));
+				l2 := pos;
+				(repeat  until (((pos := (pos + 1)) = l1) or CharPos(delimiters, str[pos], 0)));
+				Substr(str, l2, (pos - l2))
+			end)
+	end
+end
+@@end

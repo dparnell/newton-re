@@ -1,0 +1,9 @@
+@@ 0x44fb85
+func() begin
+	(foreach l1 in curses do begin
+			l1.cursor:ResetToEnd();
+			l1.state := 'prior
+		end);
+	self:prev()
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x4ea641
+func(a1) begin
+	(if (a1 > 0) then (for l1 := 1 to a1 do begin
+				self:GetNextItem()
+			end) else (for l1 := 1 to (-a1) do begin
+				self:GetPrevItem()
+			end))
+end
+@@end

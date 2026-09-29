@@ -1,0 +1,27 @@
+@@ 0x75cf41
+@@const kROM_8266
+@8266
+@@main
+func(a1, a2, a3, a4) begin
+	local context;
+	local l1, l2;
+	if ((context := GetRoot().Connection).openWindows = nil) then begin
+			context.openWindows := [Array: ];
+			a1.secretDoneCallback := func(a1) begin
+				context:ImportFileClose(a1);
+				(context.openWindows := nil)
+			end
+		end;
+	if IsInstance(a2, 'string) then begin
+			l1 := a2
+		end else begin
+			l1 := a2.name
+		end;
+	a1:WriteCommand("impt", a2, true);
+	(l2 := BuildContext(kROM_8266)).file := l1;
+	l2.dtPath := a3;
+	l2.callWhenDone := a4;
+	l2.endpoint := a1;
+	l2:FilterDialog()
+end
+@@end

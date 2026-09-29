@@ -1,0 +1,15 @@
+@@ 0x74642d
+func(a1) begin
+	fullNumber := nil;
+	if (a1 = (Length(labelCommands) - 1)) then begin
+			self:CreateWorksite();
+			a1 := curLabelCommand
+		end else begin
+			if (not (if (a1 = 1) then StrEqual("(none)", labelCommands[0]))) then begin
+					self:SaveNewChoice(a1)
+				end
+		end;
+	self.curLabelCommand := a1;
+	inherited:?pickActionScript(a1)
+end
+@@end

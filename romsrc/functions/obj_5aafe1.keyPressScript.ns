@@ -1,0 +1,6 @@
+@@ 0x5aafc1
+func(a1) begin
+	self:GrabCaret();
+	nil
+end
+@@end

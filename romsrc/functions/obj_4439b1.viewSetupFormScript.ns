@@ -1,0 +1,9 @@
+@@ 0x443589
+func() begin
+	if (titleFont exists) then begin
+			viewFont := titleFont
+		end;
+	(viewBounds := Clone(viewBounds)).left := 12;
+	(viewBounds.right := -12)
+end
+@@end

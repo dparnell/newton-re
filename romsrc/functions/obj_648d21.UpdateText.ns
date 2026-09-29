@@ -1,0 +1,7 @@
+@@ 0x41e261
+func(a1) begin
+	AddUndoAction('UpdateText, [Array: Clone(entryLine:GetRichString())]);
+	SetValue(entryLine, 'text, a1);
+	entryLine:SetHilite(9999, 9999, true)
+end
+@@end

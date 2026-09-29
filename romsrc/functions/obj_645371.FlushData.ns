@@ -1,0 +1,9 @@
+@@ 0x4af389
+func() begin
+	(foreach l1 in self:ChildViewFrames() do begin
+			if HasPath(l1, 'FlushEntry) then begin
+					l1:FlushEntry(GetVariable(l1, 'target))
+				end
+		end)
+end
+@@end

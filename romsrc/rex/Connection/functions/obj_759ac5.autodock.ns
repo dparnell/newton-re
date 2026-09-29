@@ -1,0 +1,24 @@
+@@ 0x75a591
+@@const kROM_8269
+@8269
+@@main
+func() begin
+	(if (not self:TransportsIdle()) then self:Notify(3, "Dock", "You can\u2019\ut start a connection when other communications are in progress.") else begin
+			if (not theEndpoint) then begin
+					self:SetupEndpoint()
+				end;
+			if (self:ConnectionPrefsRead('timeoutConnection) = nil) then begin
+					theEndpoint.maxIdleTime := nil
+				end;
+			(if (not startingConnection) then self:BuildAutoDockParams(func(a1) begin
+					(if (not startingConnection) then (if a1 then begin
+								startingConnection := true;
+								kROM_8269:OpenForSync(a1.password, a1.connectOptions, theEndpoint, true)
+							end else begin
+								self:Notify(3, "Dock", "The necessary connection options weren\u2019\ut filled in.");
+								theEndpoint:ConnectionDone(0)
+							end))
+				end))
+		end)
+end
+@@end

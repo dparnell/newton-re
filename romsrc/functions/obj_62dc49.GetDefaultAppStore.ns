@@ -1,0 +1,5 @@
+@@ 0x4b33f5
+func() begin
+	(if self:GetAppPreferences().internalStore then GetStores()[0] else GetDefaultStore())
+end
+@@end

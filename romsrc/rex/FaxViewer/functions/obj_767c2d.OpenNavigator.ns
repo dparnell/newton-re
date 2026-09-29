@@ -1,0 +1,6 @@
+@@ 0x768029
+func(a1) begin
+	pagePalette.selectedPage := a1;
+	self:Open()
+end
+@@end

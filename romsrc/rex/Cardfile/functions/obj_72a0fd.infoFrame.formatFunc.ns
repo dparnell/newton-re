@@ -1,0 +1,19 @@
+@@ 0x72a73d
+func(a1) begin
+	l3 := "";
+	if (l1 := GetRoot().cardfile:GetCustomInfo()) then begin
+			local l1;
+			local l2;
+			local l3;
+			(foreach l4, l5 in a1 do begin
+					if (if (if StrFilled(l5) then (l2 := l1.(checkPaths[l4]))) then StrFilled(l2.label)) then begin
+							if StrFilled(l3) then begin
+									l3 := Stringer([Array: l3, "\n"])
+								end;
+							l3 := Stringer([Array: l3, ParamStr("^0: ^1", [Array: l1.(checkPaths[l4]).label, l5])])
+						end
+				end)
+		end;
+	l3
+end
+@@end

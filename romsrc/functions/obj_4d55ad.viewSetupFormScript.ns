@@ -1,0 +1,5 @@
+@@ 0x4d556d
+func() begin
+	(text := Clone(newTitle))
+end
+@@end

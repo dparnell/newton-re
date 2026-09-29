@@ -1,0 +1,16 @@
+@@ 0x4da4f1
+func() begin
+	local l1, l2, l3;
+	if (if (not kids) then data) then begin
+			if (Length((l1 := ReflowPreflight(data)).family) = 1) then begin
+					self.viewFont := {family: l1.family[0], face: 0, size: 12}
+				end;
+			kids := (if fields.fromSignature then [Array: @247, @236] else [Array: @247]);
+			(l2 := self:LocalBox()).top := (l2.top + 100);
+			l2.bottom := (l2.bottom - 60);
+			(l3 := InsetRect(fields.printerPageBounds, 60, 0)).bottom := (l3.bottom - 60);
+			ArrayMunger(kids, 1, 0, ReFlow(data, {reflowFont: 12289, unistyle: 'font, graphicsGutter: 16, textGutter: -16, viewLineSpacing: 28, pageBounds: l3}, fields.targetBox, l2), 0, nil)
+		end;
+	(if kids then (self.stepChildren := ArrayMunger([Array: ], 0, 0, kids, reflowStart, nil)))
+end
+@@end

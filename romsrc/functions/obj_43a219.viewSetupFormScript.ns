@@ -1,0 +1,21 @@
+@@ 0x43a141
+func() begin
+	local l1, l2, l3, l4;
+	if (not scrollersSetup) then begin
+			self.savedViewFlags := viewFlags;
+			l1 := (viewBounds.bottom - viewBounds.top);
+			l2 := TextBase:GetViewHeight();
+			(l3 := Clone(viewBounds)).top := ((l2 div 2) - (l1 div 2));
+			l3.bottom := (l3.top + l1);
+			l3.left := l3.left;
+			l3.right := l3.right;
+			self.viewBounds := l3;
+			self.viewJustify := anchoredViewJustify;
+			if ((l4 := TextBase:GetVisibleLines()) > 0) then begin
+					self.ViewRect := SetBounds(0, 0, 0, l4);
+					self:SetupScrollers()
+				end
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

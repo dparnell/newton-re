@@ -1,0 +1,5 @@
+@@ 0x75af11
+func(a1, a2) begin
+	(if a1 then self:GetAppsForStore([Array: a1], a2) else self:GetAppsForStore(GetStores(), a2))
+end
+@@end

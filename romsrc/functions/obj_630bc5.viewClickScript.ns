@@ -1,0 +1,5 @@
+@@ 0x4dbe49
+func(a1) begin
+	base:DragWindow(a1)
+end
+@@end

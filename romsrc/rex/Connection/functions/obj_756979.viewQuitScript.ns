@@ -1,0 +1,5 @@
+@@ 0x7569cd
+func() begin
+	protoContext:RemoveOpenWindow(self)
+end
+@@end

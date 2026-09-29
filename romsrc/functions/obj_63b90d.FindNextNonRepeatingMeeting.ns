@@ -1,0 +1,16 @@
+@@ 0x5118dd
+func(a1) begin
+	local l1, l2, l3, l4;
+	(if (l2 := (l1 := Query(GetUnionSoupAlways(@23), {type: 'index, indexPath: 'mtgStartDate, beginExclKey: a1})):entry()) then begin
+			l3 := l2.mtgStartDate;
+			l4 := l2.mtgDuration;
+			(while (if l2 then (l2.mtgStartDate = l3)) do begin
+					if (l2.mtgDuration > l4) then begin
+							l4 := l2.mtgDuration
+						end;
+					(l2 := l1:Next())
+				end);
+			[Array: l3, l4]
+		end)
+end
+@@end

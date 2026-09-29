@@ -1,0 +1,17 @@
+@@ 0x45858d
+func(a1) begin
+	if IsNameRef(a1) then begin
+			a1._alias := nil
+		end else begin
+			if ObjEntryClass(a1) then begin
+					if (if (l1 := self:Get(a1, routePath, nil)) then (Length(l1) > 0)) then begin
+							local l1;
+							(foreach l2 in l1 do begin
+									self:PrepareForRouting(a1)
+								end)
+						end
+				end
+		end;
+	a1
+end
+@@end

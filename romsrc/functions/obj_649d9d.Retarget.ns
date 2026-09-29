@@ -1,0 +1,24 @@
+@@ 0x4c1ead
+func(a1) begin
+	if (((l1 := dataCursor:entry()) = 'deleted) or (l1 = nil)) then begin
+			dataCursor:Next();
+			if (dataCursor:entry() = nil) then begin
+					dataCursor:prev()
+				end;
+			if (dataCursor:entry() = nil) then begin
+					self:SetupCursor()
+				end
+		end;
+	if a1 then begin
+			if (not dataCursor:entry()) then begin
+					newtAppBase:ShowLayout('overview)
+				end else begin
+					self:RedoChildren()
+				end
+		end;
+	local l1;
+	(if retargetChain then (foreach l2 in retargetChain do begin
+				l2:RetargetNotify()
+			end))
+end
+@@end

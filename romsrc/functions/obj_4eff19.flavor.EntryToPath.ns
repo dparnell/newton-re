@@ -1,0 +1,45 @@
+@@ 0x4efba9
+func(a1) begin
+	target.(path) := nil;
+	country := nil;
+	l1 := nil;
+	if (if a1 then a1.phones) then begin
+			l2 := 0;
+			l3 := (if (if target.toRef then (Length(target.toRef) > 0)) then target.toRef[0]);
+			local l1;
+			local l2;
+			local l3;
+			(foreach l4, l5 in a1.phones do begin
+					local l7, l8;
+					if StrFilled(l5) then begin
+							l7 := ClassOf(l5);
+							l8 := {item: ParamStr("^0 ^?1(^1)||", [Array: MakeDisplayPhone(l5), PhoneTypes.phoneText.(l7)]), value: l5, class: l7, country: a1.country};
+							if (if l3 then l3.phone) then begin
+									if StrEqual(l3.phone, l5) then begin
+											baseLine.lastPicked := (l2 := l4);
+											l8.mark := $\uFC0B
+										end
+								end else begin
+									if (l7 = kind) then begin
+											baseLine.lastPicked := (l2 := l4);
+											l8.mark := $\uFC0B
+										end
+								end;
+							if (not l1) then begin
+									l1 := [Array: ]
+								end;
+							AddArraySlot(l1, l8)
+						end
+				end);
+			if (Length(a1.phones) > l2) then begin
+					target.(path) := a1.phones[l2];
+					currPhoneType := ClassOf(a1.phones[l2]);
+					country := a1.country
+				end
+		end;
+	if (if l1 then (Length(l1) = 1)) then begin
+			l1 := nil
+		end;
+	self:SetLabelCommands(l1)
+end
+@@end

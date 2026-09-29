@@ -1,0 +1,6 @@
+@@ 0x430d05
+func() begin
+	local l1;
+	(if (scrollOrigin > 0) then roll:SlideEffect(((-((l1 := (max((scrollOrigin - scrollAmount), 0) - scrollOrigin)) - 2)) * 14), 0, scrollUpSound, 'doscrollscript, [Array: l1]))
+end
+@@end

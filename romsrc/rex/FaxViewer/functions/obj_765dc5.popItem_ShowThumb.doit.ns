@@ -1,0 +1,5 @@
+@@ 0x76678d
+func(a1) begin
+	GetVariable(a1, 'vThumbFloater):ToggleThumbnail(a1:MakeAndStashThumbnail(a1:GetCurrentPage()))
+end
+@@end

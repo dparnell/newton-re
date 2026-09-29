@@ -1,0 +1,7 @@
+@@ 0x49f039
+func() begin
+	context:?InfoChanged(changed);
+	context:?InfoClosed();
+	(if theApp then (GetRoot().(theApp).newtInfoBoxSlip := nil))
+end
+@@end

@@ -1,0 +1,24 @@
+@@ 0x478fc9
+func() begin
+	local l1, l2;
+	(if fields then (if (if (l1 := activeFormat) then l1.auxForm) then begin
+				if IsSymbol(l1.auxForm) then begin
+						if (not (l2 := GetRoot().(l1.auxForm)).closeGadget) then begin
+								if l2.stepChildren then begin
+										l2.stepChildren := Clone(l2.stepChildren)
+									end else begin
+										l2.stepChildren := [Array: ]
+									end;
+								AddArraySlot(l2.stepChildren, closeGadgetForm);
+								l2.closeGadget := true
+							end
+					end else begin
+						l2 := BuildContext(Clone(l1.auxForm))
+					end;
+				l2.fields := fields;
+				l2.target := target;
+				l2:Open();
+				(auxUp := l2)
+			end))
+end
+@@end

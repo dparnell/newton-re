@@ -1,0 +1,25 @@
+@@ 0x4708b5
+func() begin
+	local l1;
+	if (l1 := inherited:deferredSetupScript()) then begin
+			zoneTimer := 0;
+			HaveZones := (if formOpen then HaveZones());
+			if formOpen then begin
+					if (not HaveZones) then begin
+							base:SetupIdle(self:chooserIdleFrequency(0))
+						end else begin
+							self:ShowZoneStuff();
+							self:getZoneName();
+							if formOpen then begin
+									SetValue(zoneName, 'text, currentZone);
+									base:SetupIdle(self:chooserIdleFrequency(3))
+								end
+						end
+				end;
+			if formOpen then begin
+					chooserNBPTable:startScript()
+				end
+		end;
+	return l1
+end
+@@end

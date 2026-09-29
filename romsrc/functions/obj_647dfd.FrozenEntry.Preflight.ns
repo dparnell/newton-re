@@ -1,0 +1,8 @@
+@@ 0x53809d
+@@const kLiteral_536a15
+"locked"
+@@main
+func(a1, a2) begin
+	(if ((a1 = 'Filing) or (a1 = 'delete)) then (if (not EntryStore(fentry):IsReadOnly()) then 'OK else kLiteral_536a15) else (if (a1 = 'move) then (if self:copyprotected() then "copy protected" else (if EntryStore(fentry):IsReadOnly() then kLiteral_536a15 else 'OK)) else (if (a1 = 'route) then 'OK else (if (a1 = 'freeze) then "already frozen" else "frozen"))))
+end
+@@end

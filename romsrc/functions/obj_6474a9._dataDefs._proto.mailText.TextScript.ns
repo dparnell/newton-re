@@ -1,0 +1,5 @@
+@@ 0x59b59d
+func(a1, a2) begin
+	(if a2.text then a2.text else (if IsFrame(a2.body) then a2.body.text else ""))
+end
+@@end

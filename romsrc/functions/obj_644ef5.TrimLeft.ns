@@ -1,0 +1,22 @@
+@@ 0x44ee25
+func() begin
+	local l1, l2, l3;
+	l1 := self.text;
+	l2 := self.dispLeft;
+	(if (not self:FixedWord()) then begin
+			l3 := 0;
+			(while (if (l3 < l2) then (l1[l3] = $ )) do (l3 := (l3 + 1)));
+			if (wordLeft < l3) then begin
+					l3 := wordLeft
+				end;
+			(if (l3 > 0) then begin
+					StrMunger(l1, 0, l3, nil, 0, 0);
+					ArrayMunger(altChars, 0, l3, nil, 0, 0);
+					dispLeft := (l2 - l3);
+					wordLeft := (wordLeft - l3);
+					wordRight := (wordRight - l3);
+					(if lastChar then (lastChar := (lastChar - l3)))
+				end)
+		end)
+end
+@@end

@@ -1,0 +1,19 @@
+@@ 0x7637d1
+@@const kFunction_7638d9
+func(a1, a2) begin
+	GetRoot().Connection:GetApplicationNames(a1, a2)
+end
+@@const kFunction_757359
+func(a1) begin
+	(if (a1 = 'connect) then GetRoot().Connection:autodock())
+end
+@@main
+func(a1) begin
+	local l1;
+	functions.ConnOpenFileBrowser := a1.theForm.FileBrowserOpen;
+	functions.ConnOpenUserPsswdSlip := a1.theForm.OpenUsernameSlip;
+	functions.ConnImportFile := a1.theForm.ImportFile;
+	functions.GetApplicationNames := kFunction_7638d9;
+	(if (l1 := GetAppPrefs('Connection, '{type: serial})).autodock then RegAutoDock('Connection, kFunction_757359))
+end
+@@end

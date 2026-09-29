@@ -1,0 +1,5 @@
+@@ 0x43c2c1
+func(a1, a2, a3) begin
+	(if (a1 >= 0) then self:SetResult(cursor:clone():move(a1)))
+end
+@@end

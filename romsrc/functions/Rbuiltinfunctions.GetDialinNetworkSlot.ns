@@ -1,0 +1,5 @@
+@@ 0x4805d9
+func(a1) begin
+	(foreach l1 in GetAllDialinNetworks() collect l1.(a1))
+end
+@@end

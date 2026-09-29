@@ -1,0 +1,17 @@
+@@ 0x78cb55 names
+func(anIndex) begin
+	if (anIndex >= nTopics) then begin
+			return nil
+		end;
+	if (((level := topics[anIndex].level) = nil) or (level <= 1)) then begin
+			return nil
+		end;
+	local level;
+	(for ti := (anIndex - 1) to 0 by -1 do begin
+			if ((topics[ti].level = nil) or (topics[ti].level < level)) then begin
+					return ti
+				end
+		end);
+	nil
+end
+@@end

@@ -1,0 +1,67 @@
+@@ 0x4960b9
+@@const kLiteral_488691
+"Backup"
+@@const kFunction_48e335
+func(a1) begin
+	(not StrEqual(a1, "Patch2.0"))
+end
+@@const kLiteral_48e355
+{type: 'index, indexPath: 'name, IndexValidTest: kFunction_48e335}
+@@main
+func() begin
+	local l1, l2, l3, l4, l5, l6, l7;
+	if (not GetRoot().Connection:TransportsIdle()) then begin
+			GetRoot():Notify(3, "Erase Card", "Can't backup while communications are busy.");
+			return nil
+		end;
+	(if (l1 := self:getDestStore()):IsValid() then begin
+			l6 := self:getSrcStore();
+			l4 := prefsCache;
+			l3 := GetBackupAllPackagesCursor(l6);
+			(if (((l4.soupType = 'all) or (Length(l4.partialSoups) > 0)) or (if (l4.packageType = 'all) then l3:entry())) then begin
+					if (l4.soupType = 'all) then begin
+							try begin
+									l5 := GetApplicationNames(l6, true)
+								end onexception |evt.ex| do begin
+									GetRoot():Notify(3, kLiteral_488691, "There was an error before the backup started. Nothing was backed up.");
+									return nil
+								end
+						end else begin
+							l5 := Clone(l4.partialSoups)
+						end;
+					try begin
+							l7 := GetRoot():|KillRootChildren!|([Array: self])
+						end onexception |evt.ex| do begin
+							if (not l7) then begin
+									RemoveSlot(GetRoot().buttons, 'viewFlags);
+									GetRoot():RedoChildren();
+									self:Open()
+								end else begin
+									self:|ResurrectRootChildren!|(l7)
+								end;
+							GetRoot():Notify(3, kLiteral_488691, "The backup encountered an error while trying to close all open applications. Nothing was backed up.");
+							self:MoveBehind(nil);
+							return nil
+						end;
+					l1:MarkBusy(whoAmI, nil);
+					self:backupSoupsAndPackages(l4, l5, l4.packageType);
+					l1:MarkNotBusy(whoAmI);
+					if (l2 := l1:GetSoup("BackupInfo")) then begin
+							if (if (not (newBackupQuery := l2:Query(kLiteral_48e355)):entry()) then (not l1:HasSoup("BACKUP_Packages"))) then begin
+									l2:RemoveFromStoreXmit('backup)
+								end
+						end;
+					self:LockScreen(true);
+					if (not l7) then begin
+							RemoveSlot(GetRoot().buttons, 'viewFlags);
+							GetRoot():RedoChildren();
+							self:Open()
+						end else begin
+							self:|ResurrectRootChildren!|(l7)
+						end;
+					self:MoveBehind(nil);
+					self:LockScreen(nil)
+				end else GetRoot():Notify(3, kLiteral_488691, "You must select something in order to backup."))
+		end)
+end
+@@end

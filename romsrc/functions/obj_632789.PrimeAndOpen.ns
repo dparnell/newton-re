@@ -1,0 +1,25 @@
+@@ 0x55b345
+func() begin
+	local l1, l2, l3;
+	if (if ((l1 := GetView('viewfrontmostapp)):CustomFind exists) then (not (l1.FindSlipAdditions or viewCObject))) then begin
+			l1:CustomFind();
+			return nil
+		end;
+	if (not viewCObject) then begin
+			if ((not (l3 := GetHilitedTextItems())) or (Length(l3) < 1)) then begin
+					if (not StrFilled(findText)) then begin
+							l2 := GleanIntendedText()
+						end
+				end else begin
+					l2 := l3[0]
+				end;
+			if l2 then begin
+					findText := "";
+					AddDeferredSend(self, 'setfindtext, [Array: l2]);
+					savedLabelCommand := 0;
+					findType := 0
+				end
+		end;
+	(if self:ButtonToggle() then assistant:Close() else (if findOverview.viewCObject then findOverview:Close()))
+end
+@@end

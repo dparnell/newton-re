@@ -1,0 +1,5 @@
+@@ 0x7abf49
+func(a1) begin
+	vFeedback:SetText(a1)
+end
+@@end

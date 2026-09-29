@@ -1,0 +1,5 @@
+@@ 0x47fddd
+func(a1) begin
+	GetRoot().(owner):Commit(a1)
+end
+@@end

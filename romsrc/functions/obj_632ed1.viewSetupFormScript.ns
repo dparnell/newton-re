@@ -1,0 +1,6 @@
+@@ 0x4e60d5
+func() begin
+	self:ClearWords();
+	(requestedWord := self:GetRandom())
+end
+@@end

@@ -1,0 +1,23 @@
+@@ 0x5aa9e1
+@@const kBinaryFromHex
+func(hex, cls) begin
+	local b := MakeBinary(StrLen(hex) div 2, cls);
+	for i := 0 to Length(b) - 1 do begin
+		local h := Ord(hex[2 * i]);
+		local l := Ord(hex[2 * i + 1]);
+		StuffByte(b, i, (if h >= 97 then h - 87 else h - 48) * 16 + (if l >= 97 then l - 87 else l - 48))
+	end;
+	b
+end
+@@const kLiteral_3d69c9
+{bits: call kBinaryFromHex with ("00000000001c0180018000620189012d0000000000000000000000000000000000000000000000414280000010f073878f0722101112044c8c3c30f0e3e448a0a244f8a0000000001088824408082210112206cc92224889108448a0a24408408380000028890224081022101142054aa122848900844895142810408440000028f102270e133e101182044aa13c84f0e0844515081020a1444000007c8902240811221011420449a12084a01084450a141040a144400000448882440809221011220449922048911084420a221081f3e440000044f07387880722106113c4488c203088e083820a2210f9122380000000000000000000000000000000000c00000000000000000000000000", 'bits), bounds: '{left: 0, top: 0, right: 203, bottom: 9}}
+@@main
+func() begin
+	(if (GetLocale().enabledlanguage = 'Swedish) then begin
+			icon := kLiteral_3d69c9;
+			iconBBox := '{left: 0, top: 0, right: 203, bottom: 9};
+			letters := " bcdefghijklmnopqrstuvwxyz\u00E5\u\u00E4\u\u00F6\u";
+			(numIndices := 29)
+		end)
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x7433a9
+func(a1) begin
+	self:SetCustomInfo(a1)
+end
+@@end

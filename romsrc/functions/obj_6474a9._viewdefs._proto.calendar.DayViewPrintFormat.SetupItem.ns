@@ -1,0 +1,6 @@
+@@ 0x5172e1
+func(a1, a2) begin
+	inherited:SetupItem(a1, a2);
+	(a1.title := title)
+end
+@@end

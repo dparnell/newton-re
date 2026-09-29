@@ -1,0 +1,5 @@
+@@ 0x75ffa9
+func() begin
+	(if (not guestMode) then inherited:?viewQuitScript())
+end
+@@end

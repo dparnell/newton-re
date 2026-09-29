@@ -1,0 +1,8 @@
+@@ 0x763b81
+func(a1) begin
+	local l1;
+	l1 := EnsureInternal({removeScript: a1.devRemoveScript});
+	a1:devInstallScript(a1, l1);
+	l1
+end
+@@end

@@ -1,0 +1,11 @@
+@@ 0x51d339
+func() begin
+	local l1;
+	local l2;
+	(foreach l1 in (l2 := self:ChildViewFrames()) do begin
+			if l1.Scroller then begin
+					l1:ShowScroller()
+				end
+		end)
+end
+@@end

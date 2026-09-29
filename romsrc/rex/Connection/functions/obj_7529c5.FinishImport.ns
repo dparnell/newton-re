@@ -1,0 +1,49 @@
+@@ 0x752e25
+@@const kLiteral_753081
+"schg"
+@@main
+func() begin
+	local l1, l2, l3, l4;
+	currentStatusSetup.values.titleText := "Importing information...";
+	self:viewSet(currentStatusSetup);
+	l1 := func(a1) begin
+		soupChangeInfo := a1:ReadCommandData();
+		return true
+	end;
+	l3 := 0;
+	l4 := true;
+	try begin
+			endpoint:InstallAnyProtocolExtension(kLiteral_753081, l1)
+		end onexception |evt.ex| do begin
+			l3 := CurrentException().error
+		end;
+	if (l3 = -28020) then begin
+			l3 := 0
+		end;
+	if (l3 = 0) then begin
+			try begin
+					protoContext:CloseAllButMe(self);
+					l4 := endpoint:DoConnection(protoContext:ConnectionPrefsRead('removedups), nil);
+					l2 := endpoint:GetSyncChanges()
+				end onexception |evt.ex| do begin
+					l3 := CurrentException().error
+				end;
+			try begin
+					endpoint:RemoveProtocolExtension(kLiteral_753081)
+				end onexception |evt.ex| do begin
+					if (l3 = 0) then begin
+							l3 := CurrentException().error
+						end
+				end
+		end;
+	if (l4 or (l3 <> 0)) then begin
+			protoContext:HandleException(l3, endpoint)
+		end;
+	(if (soupChangeInfo = nil) then begin
+			if Visible(self) then begin
+					self:Close()
+				end;
+			protoContext:ReopenBlessed()
+		end else self:DisplayResult(l2))
+end
+@@end

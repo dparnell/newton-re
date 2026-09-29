@@ -1,0 +1,8 @@
+@@ 0x7a0e5d names
+func(aStart, aStop) begin
+	dirtyFlag := true;
+	newFirstDate := aStart;
+	newStopDate := aStop;
+	inherited:PickActionScript(aStart, aStop)
+end
+@@end

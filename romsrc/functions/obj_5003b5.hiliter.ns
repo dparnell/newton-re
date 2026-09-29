@@ -1,0 +1,5 @@
+@@ 0x4ff895
+func(a1, a2, a3) begin
+	(if (if a2 then (not IsString(cursor.items[a2]))) then inherited:hiliter(a1, a2, a3))
+end
+@@end

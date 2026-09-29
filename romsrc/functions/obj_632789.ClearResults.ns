@@ -1,0 +1,7 @@
+@@ 0x55b441
+func() begin
+	findAllResults := nil;
+	localFinder := nil;
+	self:SetMessage("")
+end
+@@end

@@ -1,0 +1,16 @@
+@@ 0x4eca31
+@@const kFunction_4eca11
+func() begin
+	GetRoot().callapp:OpenToActive()
+end
+@@main
+func() begin
+	if activeTransport then begin
+			activeNotify := GetRoot().notifyIcon:AddAction(title, kFunction_4eca11, nil)
+		end;
+	self:FileUsedItems();
+	slipUp := nil;
+	prefsUp := nil;
+	inherited:viewQuitScript()
+end
+@@end

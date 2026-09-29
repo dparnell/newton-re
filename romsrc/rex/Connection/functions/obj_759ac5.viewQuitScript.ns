@@ -1,0 +1,6 @@
+@@ 0x75b159
+func() begin
+	self:RemoveOpenWindow(self);
+	(if (if (not startingConnection) then theEndpoint) then theEndpoint:ConnectionDone(0) else (if closeBoxTapped then self:TossStuff()))
+end
+@@end

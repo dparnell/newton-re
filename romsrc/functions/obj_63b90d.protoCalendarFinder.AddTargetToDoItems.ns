@@ -1,0 +1,31 @@
+@@ 0x4ea721
+func(a1, a2) begin
+	l1 := owner.canonicalOverviewSelectedItem;
+	l2 := owner:GetToDo();
+	local l1;
+	local l2;
+	(foreach l3 in todoSoupFinders do begin
+			if l3.selected then begin
+					l5 := nil;
+					local l5;
+					local l6;
+					(foreach l7 in l3.selected do begin
+							local l9, l10;
+							l9 := Clone(l1);
+							l10 := l7.instanceTime;
+							l9.class := 'todo;
+							l9.index := a2;
+							l9.instanceTime := l10;
+							if (l10 <> l5) then begin
+									l6 := l2:GetToDoItemsForThisDate(l10);
+									l5 := l10
+								end;
+							l9.topic := l6[l7.topicIndex];
+							AddArraySlot(a1, l9);
+							a2 := (a2 + 1)
+						end)
+				end
+		end);
+	a2
+end
+@@end

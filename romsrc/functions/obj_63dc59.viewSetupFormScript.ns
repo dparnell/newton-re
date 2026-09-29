@@ -1,0 +1,6 @@
+@@ 0x42cc51
+func() begin
+	local l1, l2;
+	(if (l1 := self:?GlobalBox()) then (if ((((((l2 := displayParams).appAreaGlobalLeft + l2.appAreaWidth) < l1.right) or ((l2.appAreaGlobalTop + l2.appAreaHeight) < l1.bottom)) or (l2.appAreaGlobalLeft > l1.left)) or (l2.appAreaGlobalTop > l1.top)) then RemoveSlot(self, 'viewBounds)))
+end
+@@end

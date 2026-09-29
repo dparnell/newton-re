@@ -1,0 +1,14 @@
+@@ 0x4af7a5
+func(a1, a2) begin
+	duringScroll := 'pixel;
+	try begin
+			layout:DropHilites();
+			layout:SetOrigin(((if HasPath(layout, 'viewOriginX) then layout.viewOriginX else 0) + a1), ((if HasPath(layout, 'viewOriginY) then layout.viewOriginY else 0) + a2));
+			layout:?Jogged()
+		end onexception |evt.ex| do begin
+			duringScroll := nil;
+			Rethrow()
+		end;
+	(duringScroll := nil)
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x550c75
+func() begin
+	local l1;
+	(if legalese then legalese:Close() else begin
+			(l1 := (legalese := BuildContext(fineprint))).extras := base;
+			l1:Open()
+		end)
+end
+@@end

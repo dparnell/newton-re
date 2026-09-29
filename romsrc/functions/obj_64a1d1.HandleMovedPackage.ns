@@ -1,0 +1,14 @@
+@@ 0x553465
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7;
+	l1 := a1.entry;
+	l2 := a1.oldSoup;
+	(if ((l3 := EntrySoup(l1)) <> l2) then begin
+			l7 := (l6 := l2:Query((l5 := {beginKey: (l4 := l1.packageName), endKey: l4, indexPath: 'packageName, tagspec: '{none: _package}}))):entry();
+			(while l7 do begin
+					EntryMoveXmit(l7, l3, 'ExtrasDrawer);
+					(l7 := l6:Next())
+				end)
+		end)
+end
+@@end

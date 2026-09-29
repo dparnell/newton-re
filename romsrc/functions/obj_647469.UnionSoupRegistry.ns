@@ -1,0 +1,5 @@
+@@ 0x3c6e01
+func() begin
+	Sort(Clone('[Array: {soupDef: {name: "SystemAlarmSoup", userName: "Alarms", ownerApp: alarms, ownerAppName: "Alarms", userDescr: "alarm data", indexes: [Array: {structure: slot, type: int, path: TimeInSeconds}, {structure: slot, type: int, path: Time}, {structure: slot, type: string, path: key}]}, apps: [Array: alarms]}, {soupDef: @538, apps: [Array: iobox]}, {soupDef: @539, apps: [Array: iobox]}, {soupDef: @307, apps: [Array: ExtrasDrawer]}, {soupDef: @365, apps: [Array: calendar]}, {soupDef: @366, apps: [Array: calendar]}, {soupDef: @368, apps: [Array: calendar]}, {soupDef: @367, apps: [Array: calendar]}, {soupDef: @369, apps: [Array: calendar]}, {soupDef: @370, apps: [Array: calendar]}, {soupDef: @364, apps: [Array: paperroll]}, {soupDef: @361, apps: [Array: cardfile]}]), '|str<|, 'soupDef.name)
+end
+@@end

@@ -1,0 +1,27 @@
+@@ 0x498385
+func(a1) begin
+	local l1, l2, l3, l4;
+	l1 := fState;
+	if a1 then begin
+			l1 := self.(fState).(a1)
+		end;
+	l2 := nil;
+	if l1 then begin
+			if (l3 := self.(l1)) then begin
+					if (IsReadOnly(l3) or (not HasSlot(l3, '_parent))) then begin
+							l4 := l3._parent;
+							l3 := {_proto: l3, _parent: self};
+							if l4 then begin
+									l3._parent := l4
+								end;
+							self.(l1) := l3
+						end;
+					fState := l1;
+					l2 := l3:?action()
+				end else begin
+					Throw('|evt.ex.proto|, -8601)
+				end
+		end;
+	l2
+end
+@@end

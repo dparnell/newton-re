@@ -1,0 +1,6 @@
+@@ 0x4d9fcd
+func() begin
+	self.viewBounds := RelBounds(0, 0, pageWidth, 120);
+	(self.text := Stringer([Array: LongDateStr(fields.timestamp, @66.yearMonthDayStrSpec), $\n, $\n, fields.toFullAddress]))
+end
+@@end

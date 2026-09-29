@@ -1,0 +1,67 @@
+@@ 0x5a7875
+func(a1, a2) begin
+	l1 := nil;
+	l2 := a1:GetSoupNames();
+	local l1;
+	local l2;
+	(foreach l3 in @578 do begin
+			if (l5 := LSearch(l2, l3, 0, '|str=|, nil)) then begin
+					RemoveSlot(l2, l5)
+				end
+		end);
+	(foreach l3 in l2 do begin
+			local l5, l6, l7, l8, l9, l10, l11, l12, l13, l14;
+			l6 := nil;
+			l7 := 0;
+			try begin
+					l9 := GetConversionFrame((l8 := GetOwnerApp(l3)));
+					if (if (if l8 then (l8 <> 'SystemScratch)) then l9) then begin
+							l10 := a1:GetSoup(l3);
+							a2:?SetStatus('vBarber, {titleText: Stringer([Array: $\u201C, l3, $\u201D]), barber: true});
+							l9:?convertSoup(l10, 'oneO, 'twoO);
+							l12 := (l11 := l10:Query('{})):entry();
+							(while l12 do begin
+									try begin
+											a2:?SetStatus('vBarber, '{barber: true});
+											l13 := nil;
+											try begin
+													l14 := ConvertFrame(l8, l9, 'oneO, 'twoO, l12, true)
+												end onexception |evt.ex| do begin
+													l7 := (l7 + 1);
+													l13 := true;
+													l14 := nil
+												end;
+											try begin
+													if l14 then begin
+															if (l14 = l12) then begin
+																	EntryChange(l12)
+																end else begin
+																	EntryReplace(l12, l14)
+																end
+														end
+												end onexception |evt.ex| do begin
+													l7 := (l7 + 1);
+													l13 := true;
+													l14 := nil
+												end;
+											if (not l14) then begin
+													EntryRemoveFromSoup(l12)
+												end
+										end onexception |evt.ex| do begin
+											if (not l13) then begin
+													l7 := (l7 + 1)
+												end
+										end;
+									(l12 := l11:Next())
+								end)
+						end
+				end onexception |evt.ex| do begin
+					l6 := true
+				end;
+			if (l6 or (l7 > 0)) then begin
+					l1 := StrConcatDelimited(l1, ", ", Stringer([Array: $\u201C, l3, $\u201D]))
+				end
+		end);
+	(if l1 then GetRoot():Notify(3, "Newton", ParamStr("Errors occurred converting soups on the store \u201C\u^0\u201D\u: ^1", [Array: a1:GetName(), l1])))
+end
+@@end

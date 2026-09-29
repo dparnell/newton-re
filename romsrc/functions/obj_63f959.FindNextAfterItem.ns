@@ -1,0 +1,16 @@
+@@ 0x4eb199
+func(a1, a2) begin
+	local l1, l2;
+	l1 := ((l1 := a2) - (l1 mod 1440));
+	if (meetingType = 'meeting) then begin
+			if (a1 = 'cribNote) then begin
+					l2 := l1
+				end else begin
+					l2 := (a2 + 1)
+				end
+		end else begin
+			l2 := (l1 + 1440)
+		end;
+	cursor:GotoKey(l2)
+end
+@@end

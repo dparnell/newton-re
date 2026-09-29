@@ -1,0 +1,9 @@
+@@ 0x7aa2ad
+func() begin
+	self:?TearDown();
+	if (nil = base:NextPage()) then begin
+			base:SetupClose()
+		end;
+	return true
+end
+@@end

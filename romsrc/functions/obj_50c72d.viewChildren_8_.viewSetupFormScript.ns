@@ -1,0 +1,10 @@
+@@ 0x507939
+func() begin
+	self.viewBounds := RelBounds(0, dpSlip.locFieldTop, 220, 18);
+	if hideLocationField then begin
+			viewFlags := BAnd(viewFlags, bnot(1))
+		end;
+	inherited:?viewSetupFormScript();
+	(entryLine.viewFont := 10243)
+end
+@@end

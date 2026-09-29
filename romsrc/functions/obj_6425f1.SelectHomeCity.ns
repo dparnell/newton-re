@@ -1,0 +1,9 @@
+@@ 0x4dd7ad
+func() begin
+	local l1;
+	l1 := OffsetRect(self:GlobalBox(), -20, 0);
+	@436:New({default: [Array: userConfiguration.location.country, userConfiguration.location.name]}, l1, {_parent: self, pickActionScript: func(a1) begin
+		self:SetLocation(a1)
+	end})
+end
+@@end

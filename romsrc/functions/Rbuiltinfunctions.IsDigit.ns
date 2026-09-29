@@ -1,0 +1,5 @@
+@@ 0x44e0c5
+func(a1) begin
+	(if (a1 >= $0) then (a1 <= $9))
+end
+@@end

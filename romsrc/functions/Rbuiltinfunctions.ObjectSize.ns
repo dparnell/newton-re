@@ -1,0 +1,99 @@
+@@ 0x535f35
+@@const kNativeFuncClass
+call func(f) if IsFrame(f) then f.class else f[0] with (GetGlobalFn('StrLen))
+@@const kLiteral_5358f1
+{class: kNativeFuncClass, funcPtr: 7035605, numArgs: 2}
+@@main
+func(a1, a2, a3, a4) begin
+	if (IsImmediate(a1) or IsReadOnly(a1)) then begin
+			return nil
+		end;
+	if (if a2.reference then (a1 = a2.reference)) then begin
+			AddArraySlot(a2.capture, {path: Clone(a4), object: a1, class: ClassOf(a1), size: 0, sizeAll: 0})
+		end;
+	if SetContains(a3, a1) then begin
+			return nil
+		end;
+	if (ClassOf((l1 := ClassOf(a1))) = 'int) then begin
+			l1 := 'map
+		end;
+	if IsImmediate(l1) then begin
+			return nil
+		end;
+	l2 := a2.objects.size;
+	SetAdd(a3, a1, true);
+	l3 := PrimClassOf(a1);
+	if IsSubclass(l1, 'string) then begin
+			l1 := 'string
+		end;
+	if '{rectangle: true, line: true, roundrectangle: true, oval: true, wedge: true, region: true, polygon: true, text: true, picture: true}.(l1) then begin
+			l1 := 'shape
+		end;
+	if (not HasSlot(a2, l1)) then begin
+			l1 := l3
+		end;
+	if (l3 = 'frame) then begin
+			if (l4 := call kLiteral_5358f1 with (a1, 0)) then begin
+					AddArraySlot((l5 := Clone(a4)), 'map);
+					ObjectSize(l4, a2, a3, l5)
+				end;
+			if (l6 := call kLiteral_5358f1 with (a1, 1)) then begin
+					AddArraySlot((l5 := Clone(a4)), 'faultSoup);
+					ObjectSize(l6, a2, a3, l5)
+				end;
+			local l1;
+			local l2;
+			local l3;
+			local l4;
+			local l5;
+			local l6;
+			(foreach l7, l8 in a1 do begin
+					if (if (l7 <> '_parent) then (l7 <> 'viewCObject)) then begin
+							if (not IsReadOnly(l7)) then begin
+									AddArraySlot((l5 := Clone(a4)), 'slot);
+									ObjectSize(l7, a2, a3, l5)
+								end;
+							if (if (not IsImmediate(l8)) then (not IsReadOnly(l8))) then begin
+									AddArraySlot((l5 := Clone(a4)), l7);
+									ObjectSize(l8, a2, a3, l5)
+								end
+						end
+				end);
+			if HasSlot(a1, 'viewCObject) then begin
+					if (l8 := a1.viewCObject) then begin
+							if (Length((l8 := a1:ChildViewFrames())) > 0) then begin
+									AddArraySlot((l5 := Clone(a4)), 'kids);
+									ObjectSize(a1:ChildViewFrames(), a2, a3, l5)
+								end
+						end
+				end;
+			l10 := (12 + (Length(a1) * 4))
+		end else begin
+			if (l3 = 'Array) then begin
+					local l10;
+					(foreach l11, l8 in a1 do begin
+							if (if (not IsImmediate(l8)) then (not IsReadOnly(l8))) then begin
+									AddArraySlot((l5 := Clone(a4)), l11);
+									ObjectSize(l8, a2, a3, l5)
+								end
+						end);
+					l10 := (12 + (Length(a1) * 4))
+				end else begin
+					if (l3 = 'binary) then begin
+							l10 := (Length(a1) + 12)
+						end else begin
+							l10 := 0
+						end
+				end
+		end;
+	if (if (l3 <> 'frame) then (not IsReadOnly(l1))) then begin
+			AddArraySlot((l5 := Clone(a4)), 'binary);
+			ObjectSize(l1, a2, a3, l5)
+		end;
+	a2.(l1).count := (a2.(l1).count + 1);
+	a2.(l1).size := (a2.(l1).size + l10);
+	a2.objects.count := (a2.objects.count + 1);
+	a2.objects.size := (a2.objects.size + l10);
+	(if (a2.capture = 'Print) then nil else (if a2.capture then (if (if (not a2.reference) then (((if (if (a2.filter <> 'all) then (a2.filter <> 'allKids)) then (l1 = a2.filter)) or (a2.filter = 'all)) or (a2.filter = 'allKids))) then AddArraySlot(a2.capture, {path: Clone(a4), object: a1, class: l1, size: l10, sizeAll: (a2.objects.size - l2)}))))
+end
+@@end

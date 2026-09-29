@@ -1,0 +1,12 @@
+@@ 0x75cdc9
+func() begin
+	if keyPassthroughOn then begin
+			if keyboardCookie then begin
+					GetRoot().NotifyIcon:KillAction(keyboardCookie);
+					keyboardCookie := nil
+				end;
+			ConnectPassthruKeyboard(nil)
+		end;
+	(keyPassthroughOn := nil)
+end
+@@end

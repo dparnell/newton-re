@@ -1,0 +1,18 @@
+@@ 0x42e645
+func() begin
+	if (entryFont exists) then begin
+			entryLine.viewFont := entryFont
+		end;
+	keys := nil;
+	if self.Keyboard then begin
+			keys := GetVariable(self, self.Keyboard)
+		end;
+	AddDeferredAction(ExpandKeys, [Array: self.entryLine]);
+	labelLine.viewFlags := (if labelCommands then 515 else 3);
+	labelLine.viewBounds := RelBounds(0, 0, indent, height);
+	entryLine.viewBounds.top := (entryLine.viewBounds.top + height);
+	entryLine.viewBounds.left := 4;
+	entryLine.viewFormat := framer;
+	target.(path)
+end
+@@end

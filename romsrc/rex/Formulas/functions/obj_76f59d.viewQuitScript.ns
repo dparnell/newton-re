@@ -1,0 +1,9 @@
+@@ 0x76fbc5
+func() begin
+	local l1;
+	(l1 := self:GetFormulaValues()).(formulaSymbol).measurement := curMeasurement;
+	l1.(formulaSymbol).USItem := US:GetPickerItemNumber();
+	l1.(formulaSymbol).MetricItem := Metric:GetPickerItemNumber();
+	inherited:?viewQuitScript()
+end
+@@end

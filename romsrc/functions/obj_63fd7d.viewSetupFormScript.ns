@@ -1,0 +1,54 @@
+@@ 0x46d79d
+func() begin
+	local v4_mmlll, v6_sssssssssssr, v7_zzzzzzzyy, v13_uuuttttttttt, v14_ssssrrrrrr, v15_vvvvvvvvvuuuuuuuuuu, v18_zzzyyyyyyyyyyyyyyyyyyyy, v19_yyx, v20_zzzzzzzyyyyy, v21_yyyyyyyyxx, v22_yyyyyyyyyyyyyyyyxxx, v23_yyyyyxxxxxxxxxxxx;
+	v4_mmlll := refCon;
+	v19_yyx := self.wordInfo;
+	v15_vvvvvvvvvuuuuuuuuuu := self.pickItems;
+	if v19_yyx then begin
+			v19_yyx:RemoveAddedEntries(1);
+			v23_yyyyyxxxxxxxxxxxx := Length(v19_yyx.words);
+			v19_yyx:AddCapitalized();
+			v15_vvvvvvvvvuuuuuuuuuu := v19_yyx:GetWords();
+			if (v23_yyyyyxxxxxxxxxxxx = 1) then begin
+					if (v14_ssssrrrrrr := SpellCorrect((v20_zzzzzzzyyyyy := SpellDocBegin()), Clone(v15_vvvvvvvvvuuuuuuuuuu[0]))) then begin
+							(foreach v11_ssssssssss, v16_zzzzzzzzzzzzzyyy in v14_ssssrrrrrr do begin
+									v23_yyyyyxxxxxxxxxxxx := Length(v15_vvvvvvvvvuuuuuuuuuu);
+									v13_uuuttttttttt := (for v9_yyyyyyyyyyyyyxxx := 0 to (v23_yyyyyxxxxxxxxxxxx - 1) do begin
+											if (StrExactCompare(v16_zzzzzzzzzzzzzyyy, v15_vvvvvvvvvuuuuuuuuuu[v9_yyyyyyyyyyyyyxxx]) = 0) then begin
+													break v9_yyyyyyyyyyyyyxxx
+												end
+										end);
+									if (not v13_uuuttttttttt) then begin
+											(v21_yyyyyyyyxx := Clone(@616)).word := v16_zzzzzzzzzzzzzyyy;
+											v21_yyyyyyyyxx.index := -2;
+											AddArraySlot(v19_yyx.words, v21_yyyyyyyyxx)
+										end;
+									if (v11_ssssssssss = 4) then begin
+											break
+										end
+								end)
+						end;
+					SpellDocEnd(v20_zzzzzzzyyyyy);
+					v15_vvvvvvvvvuuuuuuuuuu := v19_yyx:GetWords()
+				end;
+			(foreach v5_aaa, v8_zzzzzzyyyyyyyyyyyy in v15_vvvvvvvvvuuuuuuuuuu do begin
+					MapAmbiguousCharacters((v22_yyyyyyyyyyyyyyyyxxx := Clone(v8_zzzzzzyyyyyyyyyyyy)));
+					v15_vvvvvvvvvuuuuuuuuuu[v5_aaa] := v22_yyyyyyyyyyyyyyyyxxx
+				end);
+			if v19_yyx.strokes then begin
+					(v7_zzzzzzzyy := Clone(@222)).bounds := v19_yyx.strokes.bounds;
+					v7_zzzzzzzyy.strokelist := v19_yyx.strokes;
+					v7_zzzzzzzyy.pickable := true;
+					AddArraySlot(v15_vvvvvvvvvuuuuuuuuuu, v7_zzzzzzzyy)
+				end;
+			if TryLettersNeeded(v4_mmlll.form, v19_yyx) then begin
+					AddArraySlot(v15_vvvvvvvvvuuuuuuuuuu, @801)
+				end
+		end;
+	AddArraySlot(v15_vvvvvvvvvuuuuuuuuuu, @800);
+	if (v6_sssssssssssr := (if (v18_zzzyyyyyyyyyyyyyyyyyyyy := GetView('viewfrontmost)) then v18_zzzyyyyyyyyyyyyyyyyyyyy:?CorrectorItems())) then begin
+			ArrayMunger(v15_vvvvvvvvvuuuuuuuuuu, Length(pickItems), 0, v6_sssssssssssr, 0, nil)
+		end;
+	(self.pickItems := v15_vvvvvvvvvuuuuuuuuuu)
+end
+@@end

@@ -1,0 +1,22 @@
+@@ 0x79c59d names
+func(slip, item) begin
+	local date;
+	if slip.target.topic then begin
+			Print("Using topic, must be from overview or Find");
+			date := slip.target.instanceTime;
+			item.body := slip.target.topic;
+			item.body.date := date;
+			item.title := MakeRichString(item.body.text, item.body.styles)
+		end else begin
+			if slip.targetView.task then begin
+					item.body := slip.targetView.task
+				end else begin
+					item.body := slip.target
+				end;
+			item.body.date := slip.target.date;
+			item.title := MakeRichString(item.body.text, item.body.styles)
+		end;
+	item.body.class := 'todo;
+	(item.appSymbol := 'calendar)
+end
+@@end

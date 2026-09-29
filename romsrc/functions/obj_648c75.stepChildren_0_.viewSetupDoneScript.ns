@@ -1,0 +1,5 @@
+@@ 0x49f231
+func() begin
+	AddDeferredSend(entryLine, 'SetHilite, [Array: 0, 9999, true])
+end
+@@end

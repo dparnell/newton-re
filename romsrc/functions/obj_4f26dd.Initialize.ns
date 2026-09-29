@@ -1,0 +1,16 @@
+@@ 0x4f269d
+func() begin
+	local l1;
+	if (mtgInfo = 0) then begin
+			if (repeatType = 3) then begin
+					mtgInfo := ((mtgDate.month << 8) + mtgDate.Date)
+				end else begin
+					l1 := ((mtgDate.Date - 1) div 7);
+					mtgInfo := (((mtgDate.month << 12) + (2048 >> mtgDate.dayOfWeek)) + (16 >> l1))
+				end
+		end;
+	selectedDates := [Array: TotalMinutes(mtgDate)];
+	self:SetTitle();
+	DateAndMonthPicker:Dirty()
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x4ab951
+func(a1) begin
+	if (owner.viewCObject = nil) then begin
+			owner:?viewPreOpenScript(items[a1]);
+			owner:Open()
+		end;
+	currentItem := a1;
+	owner:ShowFoundItem(items[a1].entry, owner)
+end
+@@end

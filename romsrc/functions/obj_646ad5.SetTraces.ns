@@ -1,0 +1,5 @@
+@@ 0x4983e5
+func(a1) begin
+	(traceArray := a1)
+end
+@@end

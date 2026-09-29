@@ -1,0 +1,6 @@
+@@ 0x470fb5
+func() begin
+	local l1;
+	(if (selectedZoneIndex <> nil) then (if (if ((l1 := theZoneTable:ChildViewFrames()) <> nil) then (selectedZoneIndex < Length(l1))) then theZoneTable:selectThisCell(l1[selectedZoneIndex])))
+end
+@@end

@@ -1,0 +1,36 @@
+@@ 0x5601fd
+func() begin
+	l1 := [Array: ];
+	if selected then begin
+			l2 := Query(cursor:soup(), '{type: index});
+			local l1;
+			local l2;
+			(foreach l3 in selected do begin
+					local l5, l6;
+					l5 := l2:GotoKey(l3._uniqueID);
+					(loop begin
+							if (l5._uniqueID <> l3._uniqueID) then begin
+									break (l5 := nil)
+								end;
+							(if (EntryStore(l5):GetSignature() <> l3._storeID) then (l5 := l2:Next()) else break)
+						end);
+					if l5 then begin
+							AddArraySlot(l1, MakeEntryAlias(l5))
+						end
+				end)
+		end;
+	if (Length(l1) = 0) then begin
+			return nil
+		end;
+	if (Length(l1) = 1) then begin
+			return ResolveEntryAlias(l1[0])
+		end;
+	if owner then begin
+			l6 := GetVariable(owner, 'overviewTargetClass)
+		end;
+	if (l6 = nil) then begin
+			l6 := 'newtOverview
+		end;
+	CreateTargetCursor(l6, l1)
+end
+@@end

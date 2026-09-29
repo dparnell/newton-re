@@ -1,0 +1,6 @@
+@@ 0x757ee5
+func() begin
+	inherited:?viewSetupDoneScript();
+	SetKeyView(self, 0)
+end
+@@end

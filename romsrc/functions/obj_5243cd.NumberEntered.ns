@@ -1,0 +1,8 @@
+@@ 0x51fed1
+func(a1) begin
+	if Visible(pageDialog) then begin
+			pageDialog:Close()
+		end;
+	self:TurnToPage(a1)
+end
+@@end

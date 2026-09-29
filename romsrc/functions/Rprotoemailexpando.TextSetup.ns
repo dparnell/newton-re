@@ -1,0 +1,6 @@
+@@ 0x42fc45
+func() begin
+	self:SetLabelText(self:setup1(target));
+	inherited:TextSetup()
+end
+@@end

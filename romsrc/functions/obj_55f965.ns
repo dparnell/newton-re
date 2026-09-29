@@ -1,0 +1,19 @@
+@@ 0x55f965
+@@const kLiteral_546201
+"Find"
+@@main
+func(labelsChanged, newLabel, storeChanged, newStore) begin
+	local somethingLockedSoNotFiled;
+	if (if storeChanged then newStore:IsReadOnly()) then begin
+			GetRoot():Notify(3, kLiteral_546201, "Can not file items to a write-protected store.")
+		end else begin
+			if selected then begin
+					self:ForEachSelected(func(a1) begin
+						(if (if labelsChanged then EntryStore(a1):IsReadOnly()) then (somethingLockedSoNotFiled := true) else owner:FileThis(a1, labelsChanged, newLabel, storeChanged, newStore))
+					end)
+				end
+		end;
+	selected := nil;
+	(if somethingLockedSoNotFiled then GetRoot():Notify(3, kLiteral_546201, "At least one item was not filed because it is on a write-protected store."))
+end
+@@end

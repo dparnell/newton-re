@@ -1,0 +1,8 @@
+@@ 0x50fec9
+func(a1, a2) begin
+	if (not IsInstance(a1, 'string)) then begin
+			ThrowBadTypeWithFrameData(-48402, a1)
+		end;
+	(if ((not IsInteger(a2)) or (a2 <= 0)) then ThrowBadTypeWithFrameData(-48418, a2))
+end
+@@end

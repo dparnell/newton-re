@@ -1,0 +1,5 @@
+@@ 0x49f0f9
+func(a1, a2) begin
+	OffsetShape(MakeShape(a1), 42, (47 + (a2 * lineHeight)))
+end
+@@end

@@ -1,0 +1,17 @@
+@@ 0x5a9cbd
+func() begin
+	l2 := (Length((l1 := expandDict.list)) - 1);
+	local l1;
+	local l2;
+	(for l3 := 0 to l2 do begin
+			if (not l1[l3]) then begin
+					return l3
+				end
+		end);
+	if ((l2 := (l2 + 1)) >= 255) then begin
+			return nil
+		end;
+	AddArraySlot(l1, nil);
+	l2
+end
+@@end

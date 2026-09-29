@@ -1,0 +1,5 @@
+@@ 0x75e03d
+func() begin
+	(if self.hidden then self:Hide())
+end
+@@end

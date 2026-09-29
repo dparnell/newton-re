@@ -1,0 +1,32 @@
+@@ 0x752b35
+@@const kROM_8273
+@8273
+@@main
+func() begin
+	if (not inited) then begin
+			self.stopping := nil;
+			inited := true;
+			self.currentStatusSetup := DeepClone(initialSetup);
+			self.protoContext := GetRoot().Connection;
+			protoContext:AddOpenWindow(self);
+			AddDeferredCall((temp := func(a1, a2) begin
+				local l1;
+				(try begin
+						result := protoContext:CallReadCommand(endpoint, nil);
+						(if StrEqual("trnl", result.command) then begin
+								(l1 := BuildContext(kROM_8273)).translateWhich := Clone(a1);
+								l1.context := self;
+								l1.translators := result.data;
+								l1.endpoint := endpoint;
+								l1.callWhenDone := callWhenDone;
+								l1:FilterDialog()
+							end else (if StrEqual("dimp", result.command) then self:FinishImport() else (if StrEqual("dres", result.command) then Throw('|evt.ex.error|, result.data) else Throw('|evt.ex.error|, -28012))))
+					end onexception |evt.ex| do begin
+						protoContext:HandleException(CurrentException().error, endpoint)
+					end)
+			end), [Array: file, dtPath]);
+			endpoint:StartIdle(self, 500)
+		end;
+	inherited:?viewSetupFormScript()
+end
+@@end

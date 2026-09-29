@@ -1,0 +1,8 @@
+@@ 0x43cc1d
+func(a1) begin
+	(if (if (a1 <> curIndex) then (a1 >= 0)) then begin
+			self:hiliter(curIndex);
+			self:hiliter((curIndex := a1))
+		end)
+end
+@@end

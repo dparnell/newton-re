@@ -1,0 +1,8 @@
+@@ 0x4defb1
+func() begin
+	local l1;
+	country := GetCountryEntry(target.country)[0];
+	label := (l1 := GetLocale()).areacodeLabel;
+	inherited:?viewSetupFormScript()
+end
+@@end

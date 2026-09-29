@@ -1,0 +1,18 @@
+@@ 0x7425c9
+func(a1, a2, a3, a4, a5, a6, a7) begin
+	local l1, l2, l3, l4;
+	l3 := fontHeight(a3.viewFont);
+	l1 := (a2 div l3);
+	l4 := ResolveEntryAlias(a5.members[l1]._alias);
+	a4.top := (a4.top + (l1 * l3));
+	a4.bottom := (a4.top + l3);
+	a3:DoDrawing('Hiliter, [Array: MakeShape(a4)]);
+	a3:dirty();
+	if l4 then begin
+			GetRoot().cardfile:OpenTo(l4, nil)
+		end else begin
+			a3:Notify(3, GetVariable(a3, 'title), "The group member cannot be found.")
+		end;
+	true
+end
+@@end

@@ -1,0 +1,10 @@
+@@ 0x797435 names
+func() begin
+	if (dataSoup = nil) then begin
+			masterSoup := Clone(masterSoup);
+			masterSoup:MakeSoup('toDoApp);
+			dataSoup := masterSoup.theSoup
+		end;
+	(if (oldTodoSoup = nil) then (oldTodoSoup := GetUnionSoup("To Do")))
+end
+@@end

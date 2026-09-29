@@ -1,0 +1,5 @@
+@@ 0x4ad0c5
+func(a1) begin
+	(if (if HasPath(a1, 'text) then a1.text) then (StrFontWidth(a1.text, a1.viewFont) + outset) else (a1.viewBounds.right - a1.viewBounds.left))
+end
+@@end

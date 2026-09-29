@@ -1,0 +1,36 @@
+@@ 0x4700e9
+func() begin
+	local l1, l2;
+	def.tabValues := nil;
+	selectedIndex := nil;
+	selectedCells := [Array: ];
+	vOrg := 0;
+	nbpScroller.yPos := 0;
+	nbpScroller:AdjustArrows();
+	if (currentZone = nil) then begin
+			l1 := "*"
+		end else begin
+			l1 := currentZone
+		end;
+	l2 := 0;
+	if (not nbpCookie) then begin
+			nbpCookie := NBPStart(Stringer([Array: nbpLookupName, l1]))
+		end else begin
+			l2 := -12310
+		end;
+	if (not nbpCookie) then begin
+			l2 := -12000
+		end;
+	if (l2 <> 0) then begin
+			self:showError(l2)
+		end else begin
+			if formOpen then begin
+					currentChecks := 0;
+					currentNames := 0;
+					theTable:SetupIdle(self:getIdleFrequency(0));
+					self:CopyNBPNamesToTable()
+				end
+		end;
+	return l2
+end
+@@end

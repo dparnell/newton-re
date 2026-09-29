@@ -1,0 +1,15 @@
+@@ 0x5950c5
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6;
+	l1 := GetUnionSoup(@47);
+	l2 := l1:Query({type: 'words, words: [Array: a1]});
+	l3 := GetDataDefs('|nameRef.email|);
+	l4 := SetClass(a1, (if StrPos(a1, "@", 0) then '|string.email.internet| else '|string.email.aol|));
+	l5 := l2:entry();
+	(while (if l5 then (not (StrEqual(l5.email, a1) or (if l5.emailAddrs then (FindStringInFrame(l5.emailAddrs, [Array: a1], 'first) <> nil))))) do (l5 := l2:Next()));
+	(if l5 then begin
+			(l6 := l3:MakeNameRef(l5, '|nameRef.email|)).email := l4;
+			l6
+		end else l3:MakeNameRef({name: {last: a1}, email: l4}, '|nameRef.email|))
+end
+@@end

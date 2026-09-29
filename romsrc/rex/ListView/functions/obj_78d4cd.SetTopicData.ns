@@ -1,0 +1,16 @@
+@@ 0x78d235 names
+func(anIndex, aText, aStyles) begin
+	local topic;
+	if (((anIndex = nil) or (anIndex >= nTopics)) or (anIndex < 0)) then begin
+			return nil
+		end;
+	if ((aText = nil) or (aStyles = nil)) then begin
+			return nil
+		end;
+	(topic := topics[anIndex]).text := aText;
+	topic.styles := aStyles;
+	self:StartFlush();
+	self:RedoChildren();
+	true
+end
+@@end

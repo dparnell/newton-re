@@ -1,0 +1,5 @@
+@@ 0x436325
+func() begin
+	realCurs:indexPath()
+end
+@@end

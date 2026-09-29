@@ -1,0 +1,7 @@
+@@ 0x59ba2d
+func(a1, a2) begin
+	local l1;
+	l1 := (if inBody then fields.body else fields);
+	(if (a1 = 'text) then (l1.edited := true))
+end
+@@end

@@ -1,0 +1,12 @@
+@@ 0x5080f9
+func() begin
+	self.viewBounds := RelBounds(0, dpSlip.alarmFieldTop, 200, 18);
+	if (selectedMeeting.viewStationery = 'cribNote) then begin
+			labelCommands := '[Array: "None", "9am on day of event", "1 day", "2 days", "3 days", "Other"];
+			labelWarningTimes := [Array: 0, 0, 1, 2, 3];
+			labelWarningUnits := 2
+		end;
+	inherited:?viewSetupFormScript();
+	(entryLine.viewFont := 10243)
+end
+@@end

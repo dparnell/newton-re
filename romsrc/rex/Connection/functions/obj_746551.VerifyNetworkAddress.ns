@@ -1,0 +1,17 @@
+@@ 0x746c61
+func(a1) begin
+	local l1, l2, l3;
+	if (l1 := protoContext:ConnectionPrefsRead(currentChoiceUserconfigTag)) then begin
+			l2 := self:GetWorksite(l1)
+		end;
+	if l2 then begin
+			if (not self:CallValidate(l2, a1)) then begin
+					return nil
+				end
+		end;
+	if (not (l3 := self:GetNetworkAddress())) then begin
+			self:Notify(3, "Dock", "You must choose a computer or worksite before connecting.")
+		end;
+	return l3
+end
+@@end

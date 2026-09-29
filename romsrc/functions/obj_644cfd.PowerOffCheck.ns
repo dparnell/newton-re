@@ -1,0 +1,5 @@
+@@ 0x47f945
+func(a1) begin
+	(if (a1 = 'idle) then nil else ModalConfirm(ParamStr("Are you sure you want to turn off the power while ^0 is active?", [Array: title]), 'okCancelDefaultCancel))
+end
+@@end

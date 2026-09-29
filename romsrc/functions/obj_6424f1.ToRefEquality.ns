@@ -1,0 +1,9 @@
+@@ 0x4d5c8d
+func(a1, a2) begin
+	local l1, l2, l3;
+	l1 := GetDataDefs(class);
+	l2 := self:TextFromRef(a1);
+	l3 := self:TextFromRef(a2);
+	(if (if StrFilled(l2) then StrFilled(l3)) then StrEqual(l2, l3))
+end
+@@end

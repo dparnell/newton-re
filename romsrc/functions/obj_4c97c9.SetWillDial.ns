@@ -1,0 +1,5 @@
+@@ 0x4c972d
+func() begin
+	SetValue(self, 'text, self:GetPhoneText())
+end
+@@end

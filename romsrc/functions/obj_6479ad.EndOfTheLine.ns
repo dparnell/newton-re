@@ -1,0 +1,9 @@
+@@ 0x440ba9
+func(a1) begin
+	(if (if ScrollRect then ViewRect) then (if ((((if (a1 = 'up) then (yPos <= ScrollRect.top)) or (if (a1 = 'down) then (yPos >= (ScrollRect.bottom - (ViewRect.bottom - ViewRect.top))))) or (if (a1 = 'left) then (xPos <= ScrollRect.left))) or (if (a1 = 'right) then (xPos >= (ScrollRect.right - (ViewRect.right - ViewRect.left))))) then begin
+				self:PlayStopSound();
+				Sleep(10);
+				true
+			end))
+end
+@@end

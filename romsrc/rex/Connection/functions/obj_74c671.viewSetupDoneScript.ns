@@ -1,0 +1,5 @@
+@@ 0x74c6e1
+func() begin
+	(if (not config.title) then self:Hide())
+end
+@@end

@@ -1,0 +1,19 @@
+@@ 0x79cb4d names
+func(aShapes, aTask, aYOffset, aWidth, aFont) begin
+	local box, left, shapes, iconShape, height, textShapes;
+	if (aShapes = nil) then begin
+			shapes := [Array: {font: aFont, justification: 'left}]
+		end else begin
+			shapes := aShapes
+		end;
+	iconShape := OffsetShape(MakeShape(checkBitmaps[(if aTask.mtgDone then 1 else 0)]), 20, (aYOffset + 1));
+	AddArraySlot(shapes, iconShape);
+	iconShape := OffsetShape(MakeShape(priorityItems[aTask.mtgPriority]), 35, (aYOffset + 1));
+	AddArraySlot(shapes, iconShape);
+	box := SetBounds(55, (aYOffset + 1), aWidth, 9999);
+	textShapes := MakeTextLines(MakeRichString(aTask.text, aTask.styles), box, nil, aFont);
+	AddArraySlot(shapes, textShapes);
+	height := Max(((box := ShapeBounds(textShapes)).bottom - box.top), GetFontSize(aFont));
+	{shapes: shapes, height: height}
+end
+@@end

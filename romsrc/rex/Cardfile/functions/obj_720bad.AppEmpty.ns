@@ -1,0 +1,20 @@
+@@ 0x73e2b5
+@@const kLiteral_73e3bd
+'{font: 1058816, justification: center}
+@@main
+func() begin
+	local l1, l2;
+	l1 := self:LocalBox();
+	if ((not appEmptyStr) or (if (l2 := ShapeBounds(appEmptyStr)) then (l1.right <> l2.right))) then begin
+			l1.top := 20;
+			l1.bottom := 100;
+			if (superSymbol = 'ownerNames) then begin
+					appEmptyStr := [Array: kLiteral_73e3bd, MakeTextLines("There are no Owners or Worksites.\n Go through Setup in Extras, or \ntap the New button.", l1, fontHeight(1058816), 1058816)]
+				end else begin
+					l1.top := 40;
+					appEmptyStr := [Array: kLiteral_73e3bd, MakeTextLines("There are no Names in this folder.", l1, fontHeight(1058816), 1058816)]
+				end
+		end;
+	appEmptyStr
+end
+@@end

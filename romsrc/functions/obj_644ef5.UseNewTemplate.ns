@@ -1,0 +1,12 @@
+@@ 0x465d5d
+func(a1) begin
+	if HasPath(template, 'SetupString) then begin
+			self:SetNewWord(template:?SetupString(self:CurrentWord()), wordSource)
+		end else begin
+			self:SetNewWord(text, wordSource)
+		end;
+	self:UseNewWord();
+	self:DisplayExternal(a1);
+	self:Dirty()
+end
+@@end

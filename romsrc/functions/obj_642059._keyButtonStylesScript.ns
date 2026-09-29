@@ -1,0 +1,6 @@
+@@ 0x44a9c9
+func(a1) begin
+	clicker();
+	GetRoot().stylePalette:ButtonToggle()
+end
+@@end

@@ -1,0 +1,5 @@
+@@ 0x569ea1
+func(a1, a2, a3, a4) begin
+	AddDeferredCall(functions.XmitSoupChangeNow, [Array: a1, a2, a3, a4])
+end
+@@end

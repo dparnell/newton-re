@@ -1,0 +1,8 @@
+@@ 0x4c5c11
+func(a1, a2) begin
+	if (not IsArray(a2)) then begin
+			return nil
+		end;
+	(if AppClassesRegistry.(a1) then (AppClassesRegistry.(a1) := SetUnion(AppClassesRegistry.(a1), a2, nil)) else (AppClassesRegistry.(EnsureInternal(a1)) := a2))
+end
+@@end

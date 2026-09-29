@@ -1,0 +1,19 @@
+@@ 0x5610c1
+@@const kFunction_5610a1
+func(a1, a2) begin
+	(if (a1._uniqueID = a2._uniqueID) then (a1._storeID = a2._storeID))
+end
+@@main
+func(a1) begin
+	local l1, l2;
+	(if a1.finder.IsThisItemSelected then a1.finder:IsThisItemSelected(a1) else begin
+			l1 := {_uniqueID: a1.entryID, _storeID: a1.storeID};
+			if a1.finder.selected then begin
+					if (l2 := ArrayPos(a1.finder.selected, l1, 0, kFunction_5610a1)) then begin
+							return true
+						end
+				end;
+			nil
+		end)
+end
+@@end

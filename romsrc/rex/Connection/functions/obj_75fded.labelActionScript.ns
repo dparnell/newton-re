@@ -1,0 +1,9 @@
+@@ 0x75ff39
+func(a1) begin
+	local l1;
+	self:ShowHidePasswordInput((l1 := (if configOptions.|guest?| then (a1 = (Length(labelCommands) - 1)))));
+	guestMode := l1;
+	curLabelCommand := a1;
+	nil
+end
+@@end

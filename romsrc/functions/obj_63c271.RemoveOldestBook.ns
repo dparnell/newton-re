@@ -1,0 +1,19 @@
+@@ 0x51c44d
+func() begin
+	l1 := 535999999;
+	l2 := 0;
+	local l1;
+	local l2;
+	local l3;
+	local l4;
+	local l5;
+	(foreach l6 in (l5 := self:GetOfflineBooks()) do begin
+			l2 := (l2 + 1);
+			if ((l3 := EntryModTime(l6)) < l1) then begin
+					l1 := l3;
+					l4 := l6
+				end
+		end);
+	(if (l2 = 8) then EntryRemoveFromSoup(l4))
+end
+@@end

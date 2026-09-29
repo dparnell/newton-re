@@ -1,0 +1,19 @@
+@@ 0x79ef35 names
+func(aShowRepeatingFields) begin
+	local isRepeating, isConvertToRepeating;
+	hideMtgMsgHeader := true;
+	hideDateField := true;
+	hideSeriesMsgHeader := true;
+	hideDateRangeFields := true;
+	hideFrequencyField := true;
+	isConvertToRepeating := (if (not (isRepeating := HasPath(task, 'repeatInfo))) then aShowRepeatingFields);
+	if (if (killRepeating or (not isRepeating)) then (not isConvertToRepeating)) then begin
+			hideDateField := nil
+		end;
+	if (if (isRepeating or isConvertToRepeating) then aShowRepeatingFields) then begin
+			hideDateRangeFields := nil;
+			hideSeriesMsgHeader := nil
+		end;
+	(hideFrequencyField := nil)
+end
+@@end

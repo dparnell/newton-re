@@ -1,0 +1,5 @@
+@@ 0x45fcdd
+func(a1) begin
+	(fZoomedTo <> zoomStops[self:ZoomByDest(a1)])
+end
+@@end

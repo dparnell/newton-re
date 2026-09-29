@@ -1,0 +1,11 @@
+@@ 0x78cec5 names
+func(anIndex, anOldCurTopic) begin
+	local topic;
+	topic := topics[anIndex];
+	self:DeleteTopics([Array: anIndex]);
+	if (curTopic := anOldCurTopic) then begin
+			SetKeyView(self:TopicIndexToView(curTopic), 99999)
+		end;
+	AddUndoAction('NewTopic, [Array: topic.level, topic.text])
+end
+@@end

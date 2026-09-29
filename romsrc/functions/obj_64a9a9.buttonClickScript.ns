@@ -1,0 +1,12 @@
+@@ 0x4adfcd
+func() begin
+	(if (newtAppBase.currentLayout = 'overview) then begin
+			if layout.checkAllPrimed then begin
+					layout:UnCheckAll()
+				end else begin
+					layout:checkAll()
+				end;
+			(layout.checkAllPrimed := (not layout.checkAllPrimed))
+		end)
+end
+@@end

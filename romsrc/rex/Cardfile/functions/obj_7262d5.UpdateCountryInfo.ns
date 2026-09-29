@@ -1,0 +1,13 @@
+@@ 0x72728d
+func() begin
+	local l1, l2, l3;
+	l1 := GetLocale();
+	l3 := true;
+	if target.(country.path) then begin
+			if (Length((l2 := GetCountryEntry(target.(country.path)))) > 0) then begin
+					l3 := (l2[0].symbol = 'USA)
+				end
+		end;
+	(if l3 then SetValue(State.entryLine, 'dictionaries, l1.recogStateDictionaries) else SetValue(State.entryLine, 'viewFlags, 12618241))
+end
+@@end

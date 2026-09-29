@@ -1,0 +1,41 @@
+@@ 0x41a4f5
+@@const kFunction_41979d
+func() begin
+	local l1;
+	l1 := GetRoot().(userConfiguration.blessedapp);
+	(if (self <> l1) then self:_Close())
+end
+@@const kFunction_4197f1
+func() begin
+	local l1;
+	l1 := GetRoot().(userConfiguration.blessedapp);
+	(if (self <> l1) then self:_Hide())
+end
+@@const kFunction_41986d
+func() begin
+	local l1;
+	l1 := GetRoot().(userConfiguration.blessedapp);
+	(if (self <> l1) then self:_Toggle() else self:Open())
+end
+@@main
+func(a1) begin
+	a1.viewFlags := BAnd(a1.viewFlags, -65);
+	a1.Close := kFunction_41979d;
+	a1.Hide := kFunction_4197f1;
+	a1.Toggle := kFunction_41986d;
+	self:LockScreen(true);
+	try begin
+			a1:Open();
+			a1:MoveBehind(GetRoot():ChildViewFrames()[0])
+		end onexception |evt.ex| do begin
+			a1:Close();
+			self:LockScreen(nil);
+			RemoveSlot(a1, 'Close);
+			RemoveSlot(a1, 'Hide);
+			RemoveSlot(a1, 'Toggle);
+			RemoveSlot(a1, 'viewFlags);
+			Rethrow()
+		end;
+	self:LockScreen(nil)
+end
+@@end

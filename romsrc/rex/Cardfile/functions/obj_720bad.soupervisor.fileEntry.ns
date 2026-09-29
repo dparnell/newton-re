@@ -1,0 +1,15 @@
+@@ 0x738af5
+func(a1, a2) begin
+	if (if a1.class then (GetDataDefs(a1.class).superSymbol <> 'names)) then begin
+			return nil
+		end;
+	(if (not EntryStore(a1):IsReadOnly()) then (if (a1.labels <> a2) then begin
+				if a2 then begin
+						a1.labels := a2
+					end else begin
+						RemoveSlot(a1, 'labels)
+					end;
+				EntryChange(a1)
+			end))
+end
+@@end

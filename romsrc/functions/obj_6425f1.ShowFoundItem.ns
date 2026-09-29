@@ -1,0 +1,5 @@
+@@ 0x4ddd59
+func(a1) begin
+	self:SetNewLocation(ResolveEntryAlias(a1.entry))
+end
+@@end

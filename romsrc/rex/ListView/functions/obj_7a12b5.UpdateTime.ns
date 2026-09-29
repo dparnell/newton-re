@@ -1,0 +1,19 @@
+@@ 0x79f19d names
+func() begin
+	local date, today;
+	today := ((Time() div 1440) * 1440);
+	if (if ((newMtgDate := (newMtgDate - (newMtgDate mod 1440))) < today) then (not savedDone)) then begin
+			newMtgDate := today
+		end;
+	if nominalDate then begin
+			date := nominalDate
+		end else begin
+			date := originalMtgDate
+		end;
+	(if (if (if (not killRepeating) then (not repeatingView:GetRepeatSpec())) then (not task.repeatInfo)) then (if (newMtgDate <> date) then begin
+				Print(Stringer([Array: "UpdateTime changed to", " ", LongDateStr(newMtgDate, 80492)]));
+				ClearUndoStacks();
+				list:MoveTaskToDate(task, target, date, newMtgDate)
+			end))
+end
+@@end

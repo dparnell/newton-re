@@ -1,0 +1,5 @@
+@@ 0x7abfe5
+func() begin
+	(if fCompleted then (fCompleted.(Intern(debug)) := true))
+end
+@@end

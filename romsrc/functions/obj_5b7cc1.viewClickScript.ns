@@ -1,0 +1,16 @@
+@@ 0x5b7c89
+func(a1) begin
+	if (not self:TrackHilite(a1)) then begin
+			return nil
+		end;
+	if GetUserConfig('passwordkey) then begin
+			AddDeferredCall(func() begin
+				(if ModalCheckPIN("Enter PIN", GetUserConfig('passwordkey)) then self:Popit((indent - 2)) else self:Notify(3, "PIN Entry", "An incorrect PIN has been entered. Please try again."))
+			end, nil)
+		end else begin
+			self:Popit((indent - 2))
+		end;
+	self:hilite(nil);
+	true
+end
+@@end

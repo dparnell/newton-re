@@ -1,0 +1,22 @@
+@@ 0x75ab19
+func() begin
+	local l1;
+	l1 := (if self.whichConnection then whichConnection.whichConnectionOpen);
+	self:LockScreen(true);
+	try begin
+			if l1 then begin
+					whichConnection.closing := true;
+					whichConnection:Close()
+				end;
+			self:|ResurrectRootChildren!|(savedChildren);
+			self.savedChildren := nil;
+			if l1 then begin
+					self:OpenWhichConnection(theEndpoint)
+				end
+		end onexception |evt.ex| do begin
+			self:LockScreen(nil);
+			Rethrow()
+		end;
+	self:LockScreen(nil)
+end
+@@end

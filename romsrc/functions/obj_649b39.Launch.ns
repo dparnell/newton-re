@@ -1,0 +1,12 @@
+@@ 0x549dbd
+func() begin
+	try begin
+			if (if self.target:TapAction() then closeable) then begin
+					base:Close()
+				end
+		end onexception |evt.ex.msg| do begin
+			self:Notify(3, title, CurrentException().message)
+		end;
+	(if (if iconSpace then iconSpace.viewCObject) then iconSpace:SelectNone())
+end
+@@end

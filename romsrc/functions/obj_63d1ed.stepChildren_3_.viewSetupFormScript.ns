@@ -1,0 +1,5 @@
+@@ 0x4c9a15
+func() begin
+	(viewValue := (fields.faxResolution = 'fine))
+end
+@@end

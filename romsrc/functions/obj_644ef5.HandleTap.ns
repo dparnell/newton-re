@@ -1,0 +1,60 @@
+@@ 0x467fc1
+func(a1) begin
+	local l1, l2, l3, l4, l5, l6, l7, l8, l9;
+	l1 := nil;
+	if popChars then begin
+			return true
+		end;
+	if (l4 := self:FindCell((l3 := (((l2 := StrokeBounds(a1)).left + l2.right) div 2)))).hit then begin
+			l5 := l4.hit;
+			l6 := l4.bounds;
+			l7 := self:GlobalBox();
+			if (not self:CellLocked((l5 := (l5 + dispLeft)))) then begin
+					lastChar := l5;
+					if (if (not (popChars := self:GetAlternates())) then (not self:FixedWord())) then begin
+							if (l5 = wordRight) then begin
+									AddArraySlot((popChars := [Array: ]), @799)
+								end else begin
+									if (l5 = (wordLeft - 1)) then begin
+											AddArraySlot((popChars := [Array: ]), @797)
+										end else begin
+											if (if (l5 >= wordLeft) then (l5 < wordRight)) then begin
+													AddArraySlot((popChars := [Array: ]), @798)
+												end
+										end
+								end
+						end;
+					if popChars then begin
+							AddArraySlot(popChars, 'pickseparator);
+							if self:FixedWord() then begin
+									AddArraySlot(popChars, {item: "Clear", action: 'deleteItem})
+								end else begin
+									AddArraySlot(popChars, {item: "Delete", action: 'deleteItem});
+									AddArraySlot(popChars, {item: "Insert", action: 'insertItem});
+									if (AddNewWord exists) then begin
+											if (l5 = wordRight) then begin
+													l8 := {item: "Add Word", action: 'appendWord}
+												end else begin
+													if (l5 = (wordLeft - 1)) then begin
+															l9 := {item: "Add Word", action: 'insertWord}
+														end
+												end;
+											if (l8 or l9) then begin
+													AddArraySlot(popChars, 'pickseparator)
+												end;
+											if l8 then begin
+													AddArraySlot(popChars, l8)
+												end;
+											if l9 then begin
+													AddArraySlot(popChars, l9)
+												end
+										end
+								end;
+							DoPopup(popChars, (l6.right - l7.left), (((l6.top - l7.top) + viewLineSpacing) - 30), self);
+							l1 := true
+						end
+				end
+		end;
+	return l1
+end
+@@end

@@ -1,0 +1,9 @@
+@@ 0x4fe9ad
+func(a1, a2) begin
+	local l1;
+	(if (a1 = 'text) then begin
+			l1 := MakeRichString(a2.text, a2.styles);
+			AddProcrastinatedSend('calendar, cribView, 'changeNote, [Array: realData, 'mtgText, l1], 500)
+		end)
+end
+@@end

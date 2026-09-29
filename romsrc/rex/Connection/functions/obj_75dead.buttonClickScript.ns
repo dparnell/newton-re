@@ -1,0 +1,5 @@
+@@ 0x75df11
+func() begin
+	(if options.buttonClickScript then call options.buttonClickScript with (options))
+end
+@@end

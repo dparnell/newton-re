@@ -1,0 +1,18 @@
+@@ 0x49f099
+func(a1, a2, a3, a4, a5) begin
+	local l1, l2;
+	(l1 := BuildContext(self)).target := a1;
+	l1.icon := a2;
+	l1.description := a3;
+	l1.context := a5;
+	l1.viewBounds := l1:CalcBounds(a4);
+	if (if a5 then (a5:appSymbol exists)) then begin
+			l2 := GetVariable(a5, 'appSymbol);
+			l1.theApp := l2;
+			l1._recogSettings := GetRoot().(l2)._recogSettings;
+			GetRoot().(l2).newtInfoBoxSlip := l1
+		end;
+	l1:Open();
+	l1
+end
+@@end

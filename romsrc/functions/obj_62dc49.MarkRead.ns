@@ -1,0 +1,13 @@
+@@ 0x4b2469
+func(a1) begin
+	local l1;
+	(if (if (if (if a1 then (a1.state = 'Received)) then (not a1.Remote)) then (not refreshInProgress)) then begin
+			a1.state := 'Read;
+			if ((l1 := self:GetTransportFolder(a1)) <> a1.labels) then begin
+					a1._newFolder := l1
+				end;
+			self:Fileit(a1);
+			(if IsSoupEntry(a1) then EntryChange(a1))
+		end)
+end
+@@end

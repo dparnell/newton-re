@@ -1,0 +1,6 @@
+@@ 0x5b1891
+func() begin
+	SetUserConfig('actionSoundEffects, viewValue);
+	PlaySoundEffect(sounds[Random(0, 3)], nil, 'action)
+end
+@@end

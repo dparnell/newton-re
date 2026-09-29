@@ -1,0 +1,10 @@
+@@ 0x75f5d9
+@@const kFunction_75f621
+func() begin
+	nil
+end
+@@main
+func(a1, a2) begin
+	self:GetAppsForStoreWithCallback(a1, a2, kFunction_75f621)
+end
+@@end

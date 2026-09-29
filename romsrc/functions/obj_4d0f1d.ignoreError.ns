@@ -1,0 +1,13 @@
+@@ 0x4d0de9
+func(a1) begin
+	local l1;
+	l1 := ((((a1 = nil) or (a1 = -16005)) or (a1 = -36003)) or (a1 = 0));
+	if (if (a1 = -24000) then ((status = 'Listening) or (status = 'preparing))) then begin
+			self:SetFlag(modemRetry)
+		end;
+	if (if (if (not l1) then (status = 'Listening)) then (not ((((((((a1 = -22001) or (a1 = -22002)) or (a1 = -22003)) or (a1 = -22005)) or (a1 = -22006)) or (a1 = -22007)) or (a1 = -24002)) or (a1 = -24006)))) then begin
+			self:SetFlag(bailAuto)
+		end;
+	l1
+end
+@@end

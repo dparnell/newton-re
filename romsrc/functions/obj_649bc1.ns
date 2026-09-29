@@ -1,0 +1,6 @@
+@@ 0x649bc1
+func() begin
+	userConfiguration.blessedapp := 'paperroll;
+	EntryChange(userConfiguration)
+end
+@@end

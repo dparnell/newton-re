@@ -1,0 +1,62 @@
+@@ 0x50f1b1
+func(a1, a2, a3) begin
+	if (a2 = nil) then begin
+			if (a3 <> nil) then begin
+					ThrowBadTypeWithFrameData(-48422, a3)
+				end
+		end else begin
+			if ((not IsSymbol(a2)) or (not SetContains('[Array: Daily, Weekly, biweekly, monthlyByWeek, monthly, yearly, yearlyByWeek], a2))) then begin
+					ThrowBadTypeWithFrameData(-48418, a2)
+				end else begin
+					if (if (if (a2 <> 'Weekly) then (a2 <> 'monthlyByWeek)) then (a2 <> 'yearlyByWeek)) then begin
+							if (a3 <> nil) then begin
+									ThrowBadTypeWithFrameData(-48422, a3)
+								end
+						end else begin
+							if (not ((a3 = nil) or (if IsArray(a3) then (Length(a3) > 0)))) then begin
+									ThrowBadTypeWithFrameData(-48413, a3)
+								end else begin
+									if (if (a2 = 'yearlyByWeek) then (not ((a3 = nil) or (Length(a3) = 1)))) then begin
+											ThrowBadTypeWithFrameData(-48413, a3)
+										end else begin
+											if (a3 <> nil) then begin
+													l1 := (a2 = 'Weekly);
+													l2 := Date(a1);
+													l3 := nil;
+													local l1;
+													local l2;
+													local l3;
+													(foreach l4 in a3 do begin
+															if (not IsInteger(l4)) then begin
+																	ThrowBadTypeWithFrameData(-48401, a3)
+																end;
+															if l1 then begin
+																	if ((l4 < 0) or (l4 > 6)) then begin
+																			ThrowBadTypeWithFrameData(-48418, a3)
+																		end else begin
+																			if (l4 = l2.dayOfWeek) then begin
+																					l3 := true
+																				end
+																		end
+																end else begin
+																	if ((l4 < 1) or (l4 > 5)) then begin
+																			ThrowBadTypeWithFrameData(-48418, a3)
+																		end else begin
+																			if ((l4 = (((l2.Date - 1) div 7) + 1)) or (if (l4 = 5) then (l2.Date > (l2.daysInMonth - 7)))) then begin
+																					l3 := true
+																				end
+																		end
+																end
+														end);
+													if (not l3) then begin
+															ThrowBadTypeWithFrameData(-48418, a1)
+														end
+												end
+										end
+								end
+						end
+				end
+		end;
+	true
+end
+@@end

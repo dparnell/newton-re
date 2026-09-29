@@ -1,0 +1,9 @@
+@@ 0x76d9ad
+func(a1) begin
+	local l1;
+	(l1 := label:GlobalBox()).right := (l1.left + StrFontWidth(label.text, label.viewFont));
+	@436:new({spots: @295}, l1, {_parent: self, PickActionScript: func(a1) begin
+		self:ChangeCountry(a1)
+	end})
+end
+@@end

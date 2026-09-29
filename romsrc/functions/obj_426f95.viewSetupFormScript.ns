@@ -1,0 +1,6 @@
+@@ 0x426d81
+func() begin
+	icon := self:GetIcon();
+	inherited:?viewSetupFormScript()
+end
+@@end

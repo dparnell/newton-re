@@ -1,0 +1,5 @@
+@@ 0x56b285
+func(a1, a2) begin
+	(if (a2 = -10621) then CardAlert('RepairLockedCardError, a1, nil) else CardAlert('SmileAfterMountError, a1, a2))
+end
+@@end

@@ -1,0 +1,16 @@
+@@ 0x5993a5
+func() begin
+	local l1;
+	(if TargetIsCursor(target) then (fields.title := 'multiple) else begin
+			l1 := GetItemTransport(fields);
+			fields.title := l1:?GetItemTitle(target);
+			if (not fields.title) then begin
+					fields.title := l1:?GetItemTitle(fields)
+				end;
+			if ((not fields.title) or (not StrFilled(fields.title))) then begin
+					fields.title := " "
+				end;
+			(if (StrLen(fields.title) > 61) then (fields.title := Substr(fields.title, 0, 61)))
+		end)
+end
+@@end

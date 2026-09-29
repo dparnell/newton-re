@@ -1,0 +1,15 @@
+@@ 0x4bb585
+func(a1, a2) begin
+	local l1;
+	(if (a1 = 'text) then begin
+			if ((access = 'Query) or (access = 'queryOnly)) then begin
+					self:SetupIdle(500)
+				end;
+			(if (access <> 'queryOnly) then begin
+					l1 := filter:TextToPath(a2:GetRichString());
+					target.(path) := (if StrFilled(a2.text) then l1);
+					self:StartFlush()
+				end)
+		end)
+end
+@@end

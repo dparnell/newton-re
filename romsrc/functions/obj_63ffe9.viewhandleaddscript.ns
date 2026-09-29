@@ -1,0 +1,8 @@
+@@ 0x42e2f9
+func(a1) begin
+	self:SetLine(0);
+	RefreshViews();
+	SetValue(self:ChildViewFrames()[0].entryLine, 'text, a1.text);
+	nil
+end
+@@end
