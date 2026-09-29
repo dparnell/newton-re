@@ -33,6 +33,15 @@ long	gCompilerCompatibility = 0;		// 0x0c1022e0
 Ref		gFreqFuncNames = NILREF;		// 0x0c1022e4
 Ref		gConstFuncFrame = NILREF;		// 0x0c1023b8
 long	gPrintLiteralsFlag = 0;			// 0x0c1023c0 gPrintLiterals
+
+// Host: the NTK's code for a build-time constant.  The NTK, which built the
+// ROM's NewtonScript, pushed a global constant whose value is a magic
+// pointer (a ROM object) as a literal, where a magic pointer written in the
+// source - and every constant here, as the ROM's own compiler does it - is
+// pushed with push-constant.  Set by the decompiler's round trip
+// (host/NSRoundTrip.cpp) to compile the ROM's functions back as they were
+// built; never by anything the ROM does.
+Boolean	gCompilerNTKConstants = false;
 static Boolean	gCompilerInited = false;	// 0x0c1023bc
 
 extern Ref		gCodeBlockPrototype;		// Interpreter.cpp
@@ -2045,7 +2054,13 @@ TCompiler::WalkForCode(RefArg node, Boolean isEffect)
 
 	case tokenSYMBOL:
 		if (fFunctionState->IsConstant(a1))
-			EmitPush(RefVar(fFunctionState->GetConstantValue(a1, nil)));
+		{
+			RefVar value(fFunctionState->GetConstantValue(a1, nil));
+			if (gCompilerNTKConstants && ISMAGICPTR(value) && FrameHasSlotRef(gConstantsFrame, a1))
+				fFunctionState->Emit(kBCPush, fFunctionState->LitOffset(value));	// (host: the NTK's)
+			else
+				EmitPush(value);
+		}
 		else
 			EmitVarGet(a1);
 		break;

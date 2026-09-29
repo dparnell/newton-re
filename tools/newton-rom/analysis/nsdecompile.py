@@ -268,6 +268,15 @@ class Decompiled:
 		self.loop_exits = []
 		self.body = None
 
+	def repeated_literals(self):
+		"""The objects whose literal is pushed more than once (one literal
+		slot, not the same object in two: the ROM's build shared equal
+		objects, but each use in the source had a literal of its own)."""
+		if not hasattr(self, "_repeated"):
+			seen = collections.Counter(i.b for i in self.instrs if i.a == OP_PUSH and i.b < len(self.literals))
+			self._repeated = {self.literals[b] for b, n in seen.items() if n > 1}
+		return self._repeated
+
 	# ---- names
 
 	def local_name(self, index):
@@ -887,6 +896,20 @@ class Writer:
 		if isinstance(node, Lit):
 			if node.immediate:
 				return self.immediate(node.ref)
+			if node.ref & 3 == 3:
+				# a magic pointer pushed as a literal: an NTK constant
+				name = "kROM_%d" % (node.ref >> 2)
+				if name not in dict(self.constants):
+					self.constants.append((name, "@%d" % (node.ref >> 2)))
+				return name
+			if self.rom.is_ptr(node.ref) and self.rom.symname(node.ref) is None and node.ref in fn.repeated_literals():
+				# one object pushed in more than one place (one literal): a
+				# constant of the NTK's, which the compiler pushes as the same
+				# object each time; written quoted, it would be two
+				name = "kLiteral_%x" % node.ref
+				if name not in dict(self.constants):
+					self.constants.append((name, self.constant(node.ref)))
+				return name
 			return self.constant(node.ref)
 		if isinstance(node, Local):
 			return ident(fn.local_name(node.index))
@@ -937,7 +960,7 @@ class Writer:
 		if isinstance(node, MakeFrame):
 			return "{" + ", ".join("%s: %s" % (ident(t), w(v)) for t, v in zip(node.tags, node.values)) + "}"
 		if isinstance(node, Func):
-			if not getattr(node, "lexical", False) and uses_environment(node.fn.body):
+			if not getattr(node, "lexical", False) and (uses_environment(node.fn.body) or node.fn.ref in fn.repeated_literals()):
 				# compiled on its own (a constant of the NTK's): a global constant here
 				name = "kFunction_%x" % node.fn.ref
 				if name not in dict(self.constants):
@@ -1159,17 +1182,24 @@ def declarations(fn):
 	expected = [first]
 
 	def walk(n):
-		names = loop_names(n)
+		names = [x for x in loop_names(n) if x is not None]
 		new = [x for x in names if x not in declared]
 		if new:
-			while expected[0] < min(new):
+			# the loop appends the names it has not seen, in its own order;
+			# those that must come earlier (a variable declared before it
+			# and reused, a local in between) are declared with `local`
+			# first, so that what the loop adds is the next run of indices
+			j = len(new) - 1
+			while j > 0 and new[j - 1] == new[j] - 1:
+				j -= 1
+			while expected[0] < new[j]:
 				if expected[0] not in declared:
 					wanted.append((expected[0], n))
 					declared.append(expected[0])
 				expected[0] += 1
-			for x in new:
+			for x in new[j:]:
 				declared.append(x)
-			expected[0] = max(expected[0], max(new) + 1)
+			expected[0] = max(expected[0], new[-1] + 1)
 		for c in children(n):
 			if isinstance(c, Node):
 				walk(c)
@@ -1203,11 +1233,19 @@ def insert_declarations(body, decls):
 		# (place_before changes the statement lists in place)
 	late = [d for d, where in decls if where is None]
 	if late:
-		# (at the start when no loop declares a local, else after everything)
-		if before or any(loop_names(n) for n in walk_all(Block(stmts, final))):
-			stmts.append(LocalDecl(late))
-		else:
+		# at the start when no loop declares a local; else at the start of the
+		# last such loop's body, which comes after every loop's declarations
+		# (nothing after it declares any)
+		loops = [n for n in walk_all(Block(stmts, final)) if loop_names(n)]
+		if not loops:
 			stmts.insert(1 if closed else 0, LocalDecl(late))
+		else:
+			last = loops[-1]
+			b = last.body
+			if isinstance(b, Block):
+				b.stmts.insert(0, LocalDecl(late))
+			else:
+				last.body = Block([LocalDecl(late)], b)
 	body = Block(stmts, final)
 	body._late = late
 	return body

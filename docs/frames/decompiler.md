@@ -82,6 +82,27 @@ func(a1) begin ... a1.Close := kFunction_41979d; ... end
 @@end
 ```
 
+### The NTK's constants
+
+Three things in the ROM's code come from constants the NTK evaluated when
+the project was built. The ROM's own compiler, which the reconstruction
+has, does not make them from source.
+
+- **A literal pushed from more than one place:** the same literal slot is
+  pushed at each place. A quoted literal written twice makes two slots.
+  The decompiler writes the object once, as a global constant
+  (`kLiteral_<address>`, a `@@const` of the value). The compiler pushes a
+  constant's value, the same object each time, as one literal.
+- **The same object in two slots:** the ROM's build shared equal objects
+  (two `"Paused..."` strings are one object with two literals). This is
+  written quoted at each place.
+- **A magic pointer pushed as a literal:** the NTK pushed a global constant
+  whose value is a ROM object as a literal, where `@n` in source, and every
+  constant in the ROM's compiler, is `push-constant`. These are written as
+  a constant `kROM_<n>` bound to `@n`. `gCompilerNTKConstants`, a host flag
+  in `frames/Compiler.cpp` that the round trip sets, makes the compiler
+  push such a constant as the NTK did. Nothing the ROM does sets it.
+
 ## The round trip
 
 `newtonscript --roundtrip records results` does two things for each
@@ -109,6 +130,7 @@ by side.
 |---|---|---|---|
 | 1 | 5398 of 5507 | 5122 (93.0%) | the first version |
 | 2 | 5398 of 5507 | 5200 (94.4%) | functions compiled at the top level; pushed literal functions as constants; `foreach ... deeply in` |
+| 3 | 5398 of 5507 | 5372 (97.5%) | locals a loop reuses declared first; the late locals put in the last loop's body; the NTK's constants (below) |
 
 The 5507 functions are every top-level NewtonScript function in the ROM's
 object area; functions that are literals of others are decompiled inside

@@ -21,11 +21,15 @@
 
 	Each function is compiled as the NTK compiled the functions of a
 	project, on its own at the top level (CompileFunctionString), with the
-	variables' names not kept (dbgNoVarNames).  A @@const section is a
+	variables' names not kept (dbgNoVarNames) and the NTK's constants
+	(gCompilerNTKConstants).  A @@const section is a
 	function the ROM's pushes as a literal it did not close over - which
 	the NTK made from a constant evaluated when the project was built - and
 	is compiled first and bound as a global constant of that name, so that
-	the main function's reference to it pushes the same literal.
+	the main function's reference to it pushes the same literal.  A
+	section that is not a func is a value evaluated: a magic pointer or an
+	object the ROM's pushes as a literal where the compiler would push an
+	immediate or make a new literal each time - an NTK constant too.
 
 	and the output a line per record: `0x<ref> OK`, or `0x<ref> FAIL
 	<category> <detail>` with the category one of compile (the source
@@ -232,7 +236,15 @@ CompileRecord(char* source, RefArg names)
 		if (next == nil)
 			break;
 		*next = 0;
-		RefVar fn(CompileFunctionString(RefVar(MakeString(body))));
+		// a function compiled on its own, or any other value evaluated
+		char* start = body;
+		while (*start == ' ' || *start == '\t' || *start == '\n')
+			start++;
+		RefVar fn;
+		if (strncmp(start, "func", 4) == 0)
+			fn = CompileFunctionString(RefVar(MakeString(body)));
+		else
+			fn = InterpretBlock(RefVar(ParseString(RefVar(MakeString(body)))), RefVar(NILREF));
 		RefVar sym(Intern(name));
 		SetFrameSlot(RefVar(gConstantsFrame), sym, fn);
 		AddArraySlot(names, sym);
@@ -272,6 +284,7 @@ RunRoundTrip(const char* inputPath, const char* outputPath)
 	Boolean inRecord = false;
 	// as the NTK built the ROM: no variable names kept in the functions
 	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "dbgNoVarNames")), RefVar(TRUEREF));
+	gCompilerNTKConstants = true;
 	RefVar constants(AllocateArray(RSSYMarray, 0));
 	while (fgets(line, sizeof(line), in) != nil)
 	{
