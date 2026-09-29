@@ -55,9 +55,9 @@ struct TextBoundsInfo
 	Fixed		fTop;			// +0x04
 	Fixed		fRight;			// +0x08
 	Fixed		fBottom;		// +0x0c
-	Fixed		fBaseline;		// +0x10
+	Fixed		fLeading;		// +0x10  the fonts' greatest leading (DispatchCalcBounds)
 	Fixed		fWidth;			// +0x14  the advance
-	Fixed		fHeight;		// +0x18  ascent and descent
+	Fixed		fAdvanceY;		// +0x18  the vertical advance (nought for text along a line)
 };
 
 // the layout options of a text object (the ROM's 0x1c bytes): a width to

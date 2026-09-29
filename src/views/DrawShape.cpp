@@ -930,7 +930,7 @@ FMakeTextLines(RefArg /*rcvr*/, RefArg text, RefArg boundsFrame, RefArg lineHeig
 	FromObject(boundsFrame, bounds);
 	TRichString rich(text);
 	StyleRecord style;
-	style.fFontPattern = NILREF;
+	style.fFontPattern = 0;
 	style.fPattern = nil;
 	CreateTextStyleRecord(font, &style);
 	FontInfo info;

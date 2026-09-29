@@ -27,6 +27,7 @@ struct TextLayout
 	long	fCount;
 	Fixed	fWidth;			// the advances' sum
 	long	fSpaces;
+	Fixed*	fRunScales;		// per run, the font engine's fScaleX (the ROM's +0x40 cache); nil for none
 };
 
 // Every character's advance in its run's font; with a width to fit, the
@@ -35,5 +36,18 @@ long	MeasureGlyphWidths(const UniChar* chars, long length, StyleRecord** styles,
 // The slack spread over the characters; ==> the offset of the text's
 // start.  (Text.cpp)
 Fixed	JustifyText(const UniChar* chars, long length, TextOptions* options, TextLayout* layout);	// ROM 0x0035b6d8 JustifyText__Fl
+
+struct TextObject;
+
+// (host) The object's text laid out for a question: MeasureGlyphWidths at
+// the object's scales, then JustifyText, whose start comes back in
+// `start`.  ==> false if there was no room; HostDoneLayOut gives the
+// arrays back.  (TextObject.cpp)
+Boolean	HostLayOut(TextObject* obj, TextLayout* layout, Fixed* start);
+void	HostDoneLayOut(TextLayout* layout);
+
+// The advance of the first `count` characters, each run's sum at its
+// font's scale - CalcTextAdvance over a layout in hand.  (TextObject.cpp)
+Fixed	LayoutAdvance(TextObject* obj, const TextLayout* layout, long count);
 
 #endif	/* __TEXTLAYOUT_H */

@@ -401,7 +401,7 @@ CreateParagraphStyleRecord(RefArg fontSpec, StyleRecord* style, ULong textFlags,
 			style->fFontFace = text.fFontFace;
 			DisposeStyleRecord(&text);
 		}
-		style->fFontPattern = NILREF;
+		style->fFontPattern = 0;
 		style->fTransferMode = 0;
 		style->fReserved14 = 0;
 		style->fReserved18 = 0;

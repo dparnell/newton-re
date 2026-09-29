@@ -10,6 +10,7 @@
 #include "TextObject.h"
 #include "TextLayout.h"
 #include "Ports.h"
+#include "Fonts.h"
 #include "FixedMath.h"
 #include "NewtonMemory.h"
 #include "Regions.h"
@@ -139,15 +140,16 @@ DrawTextObj(TextObjectRef text)
 
 
 // (host) The object's text laid out as the drawing lays it out: every
-// character's advance (MeasureGlyphWidths, the length cut to what fits
-// the options' width, as the ROM's is) and the justification spread
-// over them (JustifyText), whose answer - where the text starts from its
-// location - comes back through `start`.  The ROM keeps this in the
-// object's caches (+0x20, +0x28) and the start at +0x2c; the host keeps
-// no caches (the DEVIATION above) and works it out for each question.
-// ==> false when there was no room for it; the caller gives the arrays
-// back with HostDoneLayOut.
-static Boolean
+// character's advance (MeasureGlyphWidths at the object's scales, the
+// length cut to what fits the options' width, as the ROM's is), each
+// run's font scale, and the justification spread over them
+// (JustifyText), whose answer - where the text starts from its location -
+// comes back through `start`.  The ROM keeps this in the object's caches
+// (+0x20, +0x28, +0x40) and the start at +0x2c; the host keeps no caches
+// (the DEVIATION above) and works it out for each question.  ==> false
+// when there was no room for it; the caller gives the arrays back with
+// HostDoneLayOut.
+Boolean
 HostLayOut(TextObject* obj, TextLayout* layout, Fixed* start)
 {
 	long length = obj->fLength;
@@ -155,14 +157,17 @@ HostLayOut(TextObject* obj, TextLayout* layout, Fixed* start)
 		length = 0;
 	layout->fAdvances = (Fixed*) QDNewTempPtr((length + 1) * sizeof(Fixed));
 	layout->fRuns = (long*) QDNewTempPtr((length + 1) * sizeof(long));
-	if (layout->fAdvances == nil || layout->fRuns == nil)
+	layout->fRunScales = (Fixed*) QDNewTempPtr((length + 1) * sizeof(Fixed));
+	if (layout->fAdvances == nil || layout->fRuns == nil || layout->fRunScales == nil)
 	{
-		QDDisposeTempPtr(layout->fAdvances);
-		QDDisposeTempPtr(layout->fRuns);
+		HostDoneLayOut(layout);
 		return false;
 	}
 	const UniChar* chars = (const UniChar*) obj->fText;
-	long fitted = MeasureGlyphWidths(chars, length, obj->fStyles, obj->fRunLengths, obj->fOptions, layout, GetCurrentPort(), 0x10000, 0x10000, obj->fFlags);
+	// (the scales UpdateLayoutState set; an object never asked yet is at 1.0)
+	Fixed hScale = (obj->fHScale != 0) ? obj->fHScale : 0x10000;
+	Fixed vScale = (obj->fVScale != 0) ? obj->fVScale : 0x10000;
+	long fitted = MeasureGlyphWidths(chars, length, obj->fStyles, obj->fRunLengths, obj->fOptions, layout, GetCurrentPort(), hScale, vScale, obj->fFlags);
 	if (fitted < length)
 	{
 		layout->fWidth = 0;
@@ -177,11 +182,55 @@ HostLayOut(TextObject* obj, TextLayout* layout, Fixed* start)
 }
 
 
-static void
+void
 HostDoneLayOut(TextLayout* layout)
 {
 	QDDisposeTempPtr(layout->fAdvances);
 	QDDisposeTempPtr(layout->fRuns);
+	QDDisposeTempPtr(layout->fRunScales);
+	layout->fAdvances = nil;
+	layout->fRuns = nil;
+	layout->fRunScales = nil;
+}
+
+
+// (host) CalcTextAdvance's sum over a layout in hand: the widths of the
+// first `count` characters added up a run at a time, each run's sum
+// scaled by its font's scale (the ROM's +0x40 cache, a scale for each run;
+// +0x44 when there is one run) when that is not 1.0.
+Fixed
+LayoutAdvance(TextObject* obj, const TextLayout* layout, long count)
+{
+	if (count > layout->fCount)
+		count = layout->fCount;
+	const short* runLengths = obj->fRunLengths;
+	long left = (runLengths != nil) ? runLengths[0] : count;
+	long run = 0;
+	Fixed total = 0;
+	Fixed sum = 0;
+	for (long i = 0; i < count; i++)
+	{
+		sum += layout->fAdvances[i];
+		if (--left == 0)
+		{
+			if (layout->fRunScales[run] != 0x10000)
+				sum = FixedMultiply(sum, layout->fRunScales[run]);
+			total += sum;
+			sum = 0;
+			if (count - i > 1)
+			{
+				run++;
+				left = runLengths[run];
+			}
+		}
+	}
+	if (sum != 0)
+	{
+		if (layout->fRunScales[run] != 0x10000)
+			sum = FixedMultiply(sum, layout->fRunScales[run]);
+		total += sum;
+	}
+	return total;
 }
 
 
@@ -224,8 +273,9 @@ RemapCharWidths(TextObjectRef /*text*/)
 
 // ROM 0x0035b220 CalcTextAdvance__FlP6FPointT1
 // The advance of the first `count` characters (at most the laid-out
-// length): each character's width, a run's sum scaled by the run's scale
-// (host: none - every run is at 1.0).
+// length): each character's width, a run's sum scaled by the run's font
+// scale (a strike stretched to the size asked for).  The vertical advance
+// is nought.
 void
 CalcTextAdvance(TextObjectRef text, FPoint* advance, long count)
 {
@@ -238,13 +288,93 @@ CalcTextAdvance(TextObjectRef text, FPoint* advance, long count)
 	Fixed start;
 	if (!HostLayOut(obj, &layout, &start))
 		return;
-	if (count > layout.fCount)
-		count = layout.fCount;
-	Fixed x = 0;
-	for (long i = 0; i < count; i++)
-		x += layout.fAdvances[i];
-	advance->x = x;
+	if (count > 0)
+		advance->x = LayoutAdvance(TextObj(text), &layout, count);
 	HostDoneLayOut(&layout);
+}
+
+
+// ROM 0x0035b3f8 CalcTextBounds__FlPvN21
+// The text object's bounds, into the six words at `result`: where the
+// justification starts it, its advance (x and y), and the greatest
+// ascent, descent and leading of its runs' fonts - opened at the object's
+// scales, the font engine's own scale applied to a stretched strike's -
+// all taken back to the scales asked for.
+void
+CalcTextBounds(TextObjectRef text, void* result, Fixed hScale, Fixed vScale)
+{
+	if (text == 0)
+		return;
+	TextObject* obj = TextObj(text);
+	TextLayout layout;
+	Fixed start;
+	if (!HostLayOut(obj, &layout, &start))
+		return;
+	obj = TextObj(text);
+	long count = layout.fCount;			// (the ROM's +0x24, else the length)
+	if (count == 0)
+		count = obj->fLength;
+	HostDoneLayOut(&layout);
+	Fixed ascent = 0;
+	Fixed descent = 0;
+	Fixed leading = 0;
+	GrafPort* port = GetCurrentPort();
+	FPoint advance;
+	CalcTextAdvance(text, &advance, count);
+	obj = TextObj(text);
+	StyleRecord** styles = obj->fStyles;
+	const short* runLengths = obj->fRunLengths;
+	while (count > 0)
+	{
+		FontEngineInfo info;
+		if (OpenFont(&port->portBits, *styles, obj->fHScale, obj->fVScale, &info) != 3)
+		{
+			Fixed a = (Fixed) ((ULong32) info.fAscent << 16);
+			Fixed d = (Fixed) ((ULong32) info.fDescent << 16);
+			Fixed l = (Fixed) ((ULong32) info.fLeading << 16);
+			if (info.fScaleY != 0x10000)
+			{
+				a = FixedMultiply(a, info.fScaleY);
+				d = FixedMultiply(d, info.fScaleY);
+				l = FixedMultiply(l, info.fScaleY);
+			}
+			if (ascent < a)
+				ascent = a;
+			if (descent < d)
+				descent = d;
+			if (leading < l)
+				leading = l;
+			CloseFont(&info);
+		}
+		// (host: a run with no font has nothing to measure - the ROM
+		//  reads the engine's info regardless)
+		obj = TextObj(text);
+		styles++;
+		if (runLengths == nil)
+			count = 0;
+		else
+			count -= *runLengths++;
+	}
+	Fixed offset = start;
+	if (hScale != 0x10000)
+	{
+		offset = FixedDivide(offset, hScale);
+		advance.x = FixedDivide(advance.x, hScale);
+	}
+	if (vScale != 0x10000)
+	{
+		advance.y = FixedDivide(advance.y, vScale);
+		ascent = FixedDivide(ascent, vScale);
+		descent = FixedDivide(descent, vScale);
+		leading = FixedDivide(leading, vScale);
+	}
+	Fixed* answer = (Fixed*) result;
+	answer[0] = offset;
+	answer[1] = advance.x;
+	answer[2] = advance.y;
+	answer[3] = ascent;
+	answer[4] = descent;
+	answer[5] = leading;
 }
 
 
@@ -484,9 +614,10 @@ TQDLibraryDriver::PointToChar(TextObjectRef text, FPoint point)
 // Drawing is recorded into an open picture and then drawn; the fitted
 // length is the object's length once it is laid out (it is cut to what
 // fits); CharToPoint and PointToChar are answered into the arguments the
-// object's +0x4c points at.  NOT YET RECONSTRUCTED: the bounds (0x200:
-// CalcTextBounds - Text.cpp measures for itself meanwhile), the layout's
-// three numbers (0x400) and TextArrow (0x2000).
+// object's +0x4c points at, and so are the bounds (0x200: CalcTextBounds,
+// or -1 for both advances when there is no layout).  NOT YET
+// RECONSTRUCTED: the layout's three numbers (0x400) and TextArrow
+// (0x2000).
 extern "C" void
 StdText(TextObjectRef text, Fixed hScale, Fixed vScale)
 {
@@ -507,6 +638,16 @@ StdText(TextObjectRef text, Fixed hScale, Fixed vScale)
 			obj = TextObj(text);
 			*(long*) obj->fResult = obj->fLength;
 		}
+		break;
+	case kTextObjOpBounds:
+		if (!UpdateLayoutState(text, 2, hScale, vScale))
+		{
+			Fixed* answer = (Fixed*) TextObj(text)->fResult;
+			answer[1] = -1;
+			answer[2] = -1;
+		}
+		else
+			CalcTextBounds(text, TextObj(text)->fResult, hScale, vScale);
 		break;
 	case kTextObjOpCharToPoint:
 		DoCharToPoint(text, hScale, vScale);

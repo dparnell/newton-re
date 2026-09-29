@@ -104,7 +104,7 @@ BlitPixels(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRec
 			Boolean visible = true;
 			for (long m = 0; m < maskCount && visible; m++)
 			{
-				long bit = x - masks[m]->fOrigin;
+				long bit = (x - masks[m]->fOrigin) * masks[m]->fDepth;	// (the mask is at the port's depth)
 				if (!(masks[m]->fScan[bit >> 5] & (0x80000000u >> (bit & 31))))
 					visible = false;
 			}
@@ -167,7 +167,11 @@ RgnBlt(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRect, l
 		QDStopDrawing(dst, &clipped);
 		return;
 	}
-	long words = ((clipped.right - clipped.left) >> 5) + 2;
+	// (the masks are at the current port's depth - InitRgnRec)
+	long maskDepth = GetCurrentPort()->portBits.pixMapFlags & kPixMapDepth;
+	if (maskDepth == 0 || maskDepth > 32)
+		maskDepth = 1;
+	long words = (((clipped.right - clipped.left) * maskDepth) >> 5) + 2;
 	RgnState states[3];
 	RgnState* masks[3];
 	char* scans[3] = { nil, nil, nil };

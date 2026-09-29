@@ -1890,7 +1890,7 @@ TestInkFont()
 	style.fFontFamily = word;
 	style.fFontSize = ToFixed(info.fScaledFontSize);
 	style.fFontFace = 0;
-	style.fFontPattern = NILREF;
+	style.fFontPattern = 0;
 	style.fPattern = nil;
 	style.fTransferMode = 0;
 
@@ -1940,7 +1940,7 @@ TestInkFont()
 	small.fFontFamily = word;
 	small.fFontSize = ToFixed(info.fFontSize / 2);
 	small.fFontFace = 0;
-	small.fFontPattern = NILREF;
+	small.fFontPattern = 0;
 	small.fPattern = nil;
 	small.fTransferMode = 0;
 	FontEngineInfo smallFont;
@@ -2003,7 +2003,7 @@ TestInkWordPicture()
 	first.fFontFamily = across;
 	first.fFontSize = ToFixed(info.fScaledFontSize);
 	first.fFontFace = 0;
-	first.fFontPattern = NILREF;
+	first.fFontPattern = 0;
 	first.fPattern = nil;
 	first.fTransferMode = 0;
 	second = first;

@@ -21,14 +21,14 @@
 				only throws the caches away.
 
 	DEVIATION: the host keeps no caches (the glyph widths are worked out
-	afresh by each pass), so the cache fields stay nought; DrText is
-	Text.cpp's layout, drawing a glyph at a time.  NOT YET RECONSTRUCTED:
-	the bounds (0x200: CalcTextBounds) and the layout's three numbers
-	(0x400), TextArrow (0x2000), text at an angle (the options' +0x0c) in
-	DoPointToChar, and text drawn at a scale other than 1.0 (DrText draws
-	at full size whatever the scales).  The fitted length (0x100),
-	CharToPoint (0x800) and PointToChar (0x1000) are here, over the
-	host's layout (TextLayout.h) worked out afresh for each question.
+	afresh by each pass), so the cache fields stay nought.  NOT YET
+	RECONSTRUCTED: the layout's three numbers (0x400), TextArrow
+	(0x2000) and text at an angle (the options' +0x0c) in DoPointToChar.
+	The drawing (DrText.cpp: each style run composed into a slab and
+	stretched onto the port), the fitted length (0x100), the bounds
+	(0x200: CalcTextBounds), CharToPoint (0x800) and PointToChar
+	(0x1000) are here, over the host's layout (TextLayout.h) worked out
+	afresh for each question.
 
 	Reconstructed from the MP2x00 US ROM (0x0035a60c, 0x0035b07c,
 	0x0035b624, 0x0035bfc4, 0x0035dc94, 0x0035df74); each function cites
@@ -91,7 +91,7 @@ void			InvalCachedTextInfo(TextObjectRef text);					// ROM 0x0035b624 InvalCache
 void			DrawTextObj(TextObjectRef text);							// ROM 0x0035df74 DrawTextObj__Fl
 void			CallDrawText(TextObjectRef text, Fixed hScale, Fixed vScale);	// ROM 0x0035a60c CallDrawText__FlN21
 extern "C" void	StdText(TextObjectRef text, Fixed hScale, Fixed vScale);	// ROM 0x0035b07c StdText
-void			DrText(TextObjectRef text, Fixed hScale, Fixed vScale);	// (Text.cpp) the drawing
+void			DrText(TextObjectRef text, Fixed hScale, Fixed vScale);	// ROM 0x0035c530 DrText__FlN21 - the drawing (DrText.cpp)
 
 // What a text object is asked (GetTextObjField).
 enum TextObjectField
@@ -112,6 +112,7 @@ void			CharToPoint(TextObjectRef text, long offset, FPoint* point);	// ROM 0x003
 long			PointToChar(TextObjectRef text, FPoint point);			// ROM 0x00359d40 PointToChar__Fl6FPoint - the character boundary nearest the point
 Boolean			UpdateLayoutState(TextObjectRef text, long level, Fixed hScale, Fixed vScale);	// ROM 0x0035c080 UpdateLayoutState__FlN31 - ==> whether the layout could be brought to the level
 Boolean			RemapCharWidths(TextObjectRef text);						// ROM 0x0035bfbc RemapCharWidths__Fl
+void			CalcTextBounds(TextObjectRef text, void* result, Fixed hScale, Fixed vScale);	// ROM 0x0035b3f8 CalcTextBounds__FlPvN21 - six Fixeds: start, advance x and y, ascent, descent, leading
 void			CalcTextAdvance(TextObjectRef text, FPoint* advance, long count);	// ROM 0x0035b220 CalcTextAdvance__FlP6FPointT1 - the first `count` characters' advance
 void			DoCharToPoint(TextObjectRef text, Fixed hScale, Fixed vScale);	// ROM 0x0035e13c DoCharToPoint__FlN21
 void			DoPointToChar(TextObjectRef text, Fixed hScale, Fixed vScale);	// ROM 0x00359d80 DoPointToChar__FlN21

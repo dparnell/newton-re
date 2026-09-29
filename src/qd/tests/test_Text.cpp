@@ -138,8 +138,9 @@ TestDrawing()
 	TextBoundsInfo bounds;
 	Clear();
 	Draw("Hello Wg!", kEspy, 12, 0, &bounds);
-	EXPECT(bounds.fWidth == (51 << 16) && bounds.fHeight == (16 << 16) && bounds.fLeft == (2 << 16) && bounds.fRight == (53 << 16));
-	EXPECT(bounds.fTop == (2 << 16) && bounds.fBottom == (18 << 16) && bounds.fBaseline == (14 << 16));
+	EXPECT(bounds.fWidth == (51 << 16) && bounds.fAdvanceY == 0 && bounds.fLeft == (2 << 16) && bounds.fRight == (53 << 16));
+	EXPECT(bounds.fTop == (2 << 16) && bounds.fBottom == (18 << 16));
+	EXPECT(bounds.fLeading == 0);
 	EXPECT(PictureIs(2, 5, 50, 12,
 		"#.....#........#.#............#...#...#.........#.\n"
 		"#.....#........#.#............#...#...#.........#.\n"
@@ -187,13 +188,45 @@ TestDrawing()
 	long plainWidth = bounds.fWidth >> 16;
 	Draw("Hello", kGeneva, 10, kBoldFace, &bounds);
 	EXPECT((bounds.fWidth >> 16) == plainWidth + 5);			// a pixel wider per glyph
-	// the pen's mode and pattern apply; a hidden pen draws nothing
+	// the pen's mode does not apply (DrText takes the options' mode, srcOr
+	// with none); the options' srcBic clears the glyph out of black
 	Clear();
 	PaintRect(&gMap.bounds);
 	PenMode(patBic);
 	Draw("H", kEspy, 12, 0, &bounds);
 	PenNormal();
+	EXPECT(GetPixel(&gMap, 2, 5) != 0 && GetPixel(&gMap, 3, 5) != 0 && GetPixel(&gMap, 2, 4) != 0);
+	{
+		UniChar h[2] = { 'H', 0 };
+		StyleRecord style;
+		CreateTextStyleRecord(RefVar(MAKEINT(PackFont(kEspy, 12, 0))), &style);
+		StyleRecord* styles[1] = { &style };
+		FPoint where = { 2 << 16, 14 << 16 };
+		TextOptions options;
+		memset(&options, 0, sizeof(options));
+		options.fTransferMode = srcBic;
+		DrawTextOnce(h, 1, styles, nil, where, &options, nil);
+		DisposeStyleRecord(&style);
+	}
 	EXPECT(GetPixel(&gMap, 2, 5) == 0 && GetPixel(&gMap, 3, 5) != 0 && GetPixel(&gMap, 2, 4) != 0);
+	// srcCopy composes the run in a slab and copies it whole, the blank
+	// round the glyphs included
+	Clear();
+	PaintRect(&gMap.bounds);
+	{
+		UniChar h[8] = { 'H', 'H', 'H', 'H', 'H', 'H', 'H', 0 };
+		StyleRecord style;
+		CreateTextStyleRecord(RefVar(MAKEINT(PackFont(kEspy, 12, 0))), &style);
+		StyleRecord* styles[1] = { &style };
+		FPoint where = { 19 << 16, 14 << 16 };
+		TextOptions options;
+		memset(&options, 0, sizeof(options));
+		options.fTransferMode = srcCopy;
+		DrawTextOnce(h, 7, styles, nil, where, &options, nil);
+		DisposeStyleRecord(&style);
+	}
+	EXPECT(GetPixel(&gMap, 17, 2) != 0 && GetPixel(&gMap, 18, 2) == 0 && GetPixel(&gMap, 75, 19) == 0 && GetPixel(&gMap, 76, 19) != 0);
+	EXPECT(GetPixel(&gMap, 19, 5) != 0 && GetPixel(&gMap, 20, 5) == 0 && GetPixel(&gMap, 17, 1) != 0);
 	Clear();
 	HidePen();
 	Draw("H", kEspy, 12, 0, &bounds);

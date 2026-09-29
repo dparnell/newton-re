@@ -69,14 +69,14 @@ struct StyleRecord
 	// leaves an ordinary `new StyleRecord` uninitialised, so a garbage
 	// fPattern is disposed as a pattern handle.)
 					StyleRecord()
-						: fFontSize(0), fFontFace(0), fFontPattern(NILREF),
+						: fFontSize(0), fFontFace(0), fFontPattern(0),
 						  fTransferMode(0), fReserved14(0), fReserved18(0),
 						  fPattern(nil)	{ }
 
 	RefStruct		fFontFamily;	// +0x00  the font family frame
 	Fixed			fFontSize;		// +0x04  16.16
 	long			fFontFace;		// +0x08
-	Ref				fFontPattern;	// +0x0c  the pattern as a Ref (AddressToRef), nil for the port's
+	Ref				fFontPattern;	// +0x0c  the pattern as a Ref (AddressToRef), 0 for none (the ROM clears the word - not nil)
 	long			fTransferMode;	// +0x10  (0: the port's pen mode)
 	long			fReserved14;	// +0x14
 	long			fReserved18;	// +0x18

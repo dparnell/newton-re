@@ -326,6 +326,24 @@ TestBits()
 	SetRect(&twice, 0, 2, 32, 3);
 	CopyBits(&src, &gray, &row, &twice, srcCopy, nil);
 	EXPECT(GetPixel(&gray, 0, 2) == 15 && GetPixel(&gray, 1, 2) == 15 && GetPixel(&gray, 2, 2) == 0);
+	// through a visible region that is not a rectangle (two rectangles), a
+	// solid block one bit to four: the pixels in the region all 15
+	memset(srcBits, 0, sizeof(srcBits));
+	for (long y = 0; y < 40; y++)
+		for (long x = 0; x < 50; x++)
+			SetPixel(&src, x, y, 1);
+	memset(grayBits, 0, sizeof(grayBits));
+	RgnHandle a = NewRgn();
+	RgnHandle b = NewRgn();
+	SetRectRgn(a, 4, 4, 20, 20);
+	SetRectRgn(b, 12, 12, 40, 30);
+	UnionRgn(a, b, port.visRgn);
+	Rect whole;
+	SetRect(&whole, 0, 0, 50, 40);
+	CopyBits(&src, &gray, &whole, &whole, srcCopy, nil);
+	EXPECT(MapIs(&gray, [](long x, long y) -> long { return ExpTwoRects(x, y) ? 15 : 0; }, "one bit to four through a region"));
+	DisposeRgn(a);
+	DisposeRgn(b);
 	ClosePort(&port);
 }
 

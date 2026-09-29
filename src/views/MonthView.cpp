@@ -241,7 +241,7 @@ TMonthView::DrawLabels(void)
 	options.fAlignment = 0x8000;					// centred
 	options.fWidth = ToFixed(fCellWidth);
 	StyleRecord style;
-	style.fFontPattern = NILREF;		// (the ROM clears them before asking)
+	style.fFontPattern = 0;		// (the ROM clears them before asking)
 	style.fPattern = nil;
 	CreateTextStyleRecord(fLabelFont, &style);
 	StyleRecord* styles = &style;
@@ -277,7 +277,7 @@ TMonthView::DrawDates(void)
 	options.fWidth = ToFixed(fCellWidth);
 	options.fTransferMode = srcOr;
 	StyleRecord style;
-	style.fFontPattern = NILREF;
+	style.fFontPattern = 0;
 	style.fPattern = nil;
 	CreateTextStyleRecord(ISNIL(RefVar((Ref) fDatesFont)) ? RefVar(Rfontsystem9) : fDatesFont, &style);
 	StyleRecord* styles = &style;

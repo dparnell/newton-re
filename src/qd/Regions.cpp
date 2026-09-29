@@ -18,6 +18,7 @@
 */
 
 #include "Regions.h"
+#include "Ports.h"
 #include "OSErrors.h"
 #include <string.h>
 
@@ -43,12 +44,17 @@ RgnRows(Region* rgn)
 }
 
 
-// The current port's bits per pixel.  NOT YET RECONSTRUCTED: the port
-// (GetCurrentPort()->portBits.pixMapFlags & kPixMapDepth); one bit here.
+// The current port's bits per pixel, which a region's mask is made at
+// (InitRgnRec 0x003428f0 reads the port's pixMapFlags); one bit when
+// there is no port yet (host).
 static long
 CurrentPortDepth(void)
 {
-	return 1;
+	GrafPort* port = GetCurrentPort();
+	if (port == nil)
+		return 1;
+	long depth = port->portBits.pixMapFlags & kPixMapDepth;
+	return (depth != 0 && depth <= 32) ? depth : 1;
 }
 
 

@@ -843,7 +843,7 @@ MakeSimpleStyle(StyleRecord* style, RefArg fontFamily, long size, long face)
 	style->fFontFamily = (Ref) fontFamily;
 	style->fFontSize = (Fixed) size;
 	style->fFontFace = face;
-	style->fFontPattern = NILREF;
+	style->fFontPattern = 0;
 	style->fTransferMode = 0;
 	style->fReserved14 = 0;
 	style->fReserved18 = 0;
@@ -1083,7 +1083,7 @@ PackedFontFamilyFrame(long font)
 void
 CreateTextStyleRecord(RefArg fontSpec, StyleRecord* style)
 {
-	style->fFontPattern = NILREF;
+	style->fFontPattern = 0;
 	style->fPattern = nil;
 	long inkSize = 0;
 	long inkFace = 0;

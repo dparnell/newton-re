@@ -18,6 +18,7 @@ add_library(qd STATIC
     Polygons.cpp
     Fonts.cpp
     Text.cpp
+    DrText.cpp
     Pictures.cpp
     MungeBitmap.cpp
     BitFlipTable.cpp
@@ -42,4 +43,4 @@ target_include_directories(qd PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(tests)
 # the row stretchers shift signed words as the ARM does (Stretch.cpp)
-set_source_files_properties(Stretch.cpp PROPERTIES COMPILE_OPTIONS "-fwrapv")
+set_source_files_properties(Stretch.cpp DrText.cpp PROPERTIES COMPILE_OPTIONS "-fwrapv")
