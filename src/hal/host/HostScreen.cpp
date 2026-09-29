@@ -81,29 +81,6 @@ void	THostScreenDriver::EnterIdleMode(void)		{ }
 void	THostScreenDriver::ExitIdleMode(void)		{ }
 
 
-// a pixel of a map: its rows big-endian, 1, 2, 4 or 8 bits deep (as
-// qd/Ports.cpp's GetPixel reads them; not linked from here)
-static long
-MapPixel(const PixelMap* map, long x, long y)
-{
-	long depth = map->pixMapFlags & kPixMapDepth;
-	const unsigned char* bits;
-	ULong storage = map->pixMapFlags & kPixMapStorage;
-	if (storage == kPixMapPtr)
-		bits = (const unsigned char*) map->baseAddr;
-	else if (storage == kPixMapHandle)
-		bits = (const unsigned char*) *(Handle) map->baseAddr;
-	else
-		bits = (const unsigned char*) map + (intptr_t) map->baseAddr;
-	const unsigned char* row = bits + (y - map->bounds.top) * map->rowBytes;
-	long bit = (x - map->bounds.left) * depth;
-	if (depth == 8)
-		return row[bit >> 3];
-	long shift = 8 - depth - (bit & 7);
-	return (row[bit >> 3] >> shift) & ((1 << depth) - 1);
-}
-
-
 // The rectangle of the map shown: each pixel's value scaled to a gray
 // (all ones black), at the same place on the display (dst names where;
 // src and dst are the same rectangle in the ROM's use).
@@ -118,20 +95,47 @@ THostScreenDriver::Blit(PixelMap* map, Rect* src, Rect* dst, long mode)
 	long maxValue = (1 << depth) - 1;
 	long width = Width();
 	long height = Height();
+	// (the rows and the run of each row that lie on both the map and the
+	//  display worked out once, and each pixel read along the row and
+	//  turned to its gray through a table, rather than looked up alone -
+	//  the display is updated after every drawing, so this is on the path
+	//  of everything drawn)
+	long xFrom = src->left, xTo = src->right;
+	if (xFrom < map->bounds.left)
+		xFrom = map->bounds.left;
+	if (xTo > map->bounds.right)
+		xTo = map->bounds.right;
+	if (dst->left + (xFrom - src->left) < 0)
+		xFrom = src->left - dst->left;
+	if (dst->left + (xTo - src->left) > width)
+		xTo = width - dst->left + src->left;
+	if (xFrom >= xTo)
+		return;
+	unsigned char gray[256];
+	for (long v = 0; v <= maxValue && v < 256; v++)
+		gray[v] = (unsigned char) ((v * 255) / maxValue);
+	const unsigned char* bits;
+	ULong storage = map->pixMapFlags & kPixMapStorage;
+	if (storage == kPixMapPtr)
+		bits = (const unsigned char*) map->baseAddr;
+	else if (storage == kPixMapHandle)
+		bits = (const unsigned char*) *(Handle) map->baseAddr;
+	else
+		bits = (const unsigned char*) map + (intptr_t) map->baseAddr;
 	for (long y = src->top; y < src->bottom; y++)
 	{
 		long dy = dst->top + (y - src->top);
 		if (dy < 0 || dy >= height || y < map->bounds.top || y >= map->bounds.bottom)
 			continue;
-		for (long x = src->left; x < src->right; x++)
+		const unsigned char* row = bits + (y - map->bounds.top) * map->rowBytes;
+		unsigned char* out = fPixels + dy * width + dst->left + (xFrom - src->left);
+		long bit = (xFrom - map->bounds.left) * depth;
+		for (long x = xFrom; x < xTo; x++, bit += depth, out++)
 		{
-			long dx = dst->left + (x - src->left);
-			if (dx < 0 || dx >= width || x < map->bounds.left || x >= map->bounds.right)
-				continue;
-			long value = MapPixel(map, x, y);
+			long value = (depth == 8) ? row[bit >> 3] : (row[bit >> 3] >> (8 - depth - (bit & 7))) & maxValue;
 			if (mode == srcOr && value == 0)
 				continue;			// the live inker's: only its ink put on the display
-			fPixels[dy * width + dx] = (unsigned char) ((value * 255) / maxValue);
+			*out = gray[value];
 		}
 	}
 }

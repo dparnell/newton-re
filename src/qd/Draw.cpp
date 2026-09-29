@@ -147,12 +147,40 @@ SetRowPixel(unsigned char* row, long bit, long depth, long value)
 }
 
 
+// the widest pattern whose row is worked out once a row
+enum { kPatternValuesMax = 64 };
+
+
+// The masks' scan rows ANDed into one byte a pixel for the width from x
+// (the masks at their own depth, as BlitPixelsSlow tests them); ==>
+// whether every pixel is visible.
+static Boolean
+VisibleRow(RgnState** masks, long maskCount, long x, long width, unsigned char* visible)
+{
+	memset(visible, 1, width);
+	for (long m = 0; m < maskCount; m++)
+	{
+		const ULong32* scan = masks[m]->fScan;
+		long mdepth = masks[m]->fDepth;
+		long bit = (x - masks[m]->fOrigin) * mdepth;
+		for (long i = 0; i < width; i++, bit += mdepth)
+			if (!(scan[bit >> 5] & (0x80000000u >> (bit & 31))))
+				visible[i] = 0;
+	}
+	for (long i = 0; i < width; i++)
+		if (!visible[i])
+			return false;
+	return true;
+}
+
+
 // Host: BlitPixelsSlow's pixels, a row at a time.  The maps' bits, depths
 // and origins, the pattern and its alignment are looked up once rather
 // than for every pixel; a row's source values are read along the row with
 // the bit offset stepped; the masks are ANDed into one visibility row; and
-// the common cases - every pixel of the row visible, or a run of them, in
-// copy mode at the same depth - are written a byte at a time.  Everything
+// the common cases are written a byte at a time: a copy between maps of one
+// depth whose pixels line up in their bytes moves each visible run's bytes,
+// and a copy row every pixel of which is visible is packed.  Everything
 // else is written pixel by pixel through the same Transfer.
 // DEVIATION (performance): the ROM's own BB* routines are word-at-a-time
 // assembly; this reproduces BlitPixelsSlow's output bit for bit
@@ -202,6 +230,12 @@ BlitPixelsFast(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* ds
 		patRowBytes = pm->rowBytes;
 		align = GetCurrentPort()->patAlign;
 	}
+	// A copy between maps of one depth whose pixels lie at the same place
+	// in their bytes moves the bytes of each visible run (the ends pixel by
+	// pixel), without the row buffer - except within one row of one map,
+	// where the row must be read whole before it is written.
+	Boolean alignedCopy = !usePattern && srcDepth == depth && op == 0 && !invert && srcBit0 >= 0
+					   && (srcBit0 & 7) == (dstBit0 & 7) && !(sameBits && dv == 0);
 	// one byte per pixel of the row: whether the masks let it through
 	unsigned char visibleRow[1024];
 	unsigned char* visible = (width <= (long) sizeof(visibleRow)) ? visibleRow : (unsigned char*) QDNewTempPtr(width);
@@ -210,20 +244,86 @@ BlitPixelsFast(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* ds
 
 	for (; y != yEnd; y += yStep)
 	{
+		if (alignedCopy)
+		{
+			const unsigned char* srow = srcBits + (y + dv - src->bounds.top) * srcRowBytes;
+			unsigned char* drow = dstBits + (y - dst->bounds.top) * dstRowBytes;
+			if (maskCount > 0)
+			{
+				for (long m = 0; m < maskCount; m++)
+					SeekRgn(masks[m], y);
+				VisibleRow(masks, maskCount, clipped->left, width, visible);
+			}
+			long i = 0;
+			while (i < width)
+			{
+				// the next run of visible pixels
+				if (maskCount > 0)
+				{
+					while (i < width && !visible[i])
+						i++;
+					if (i == width)
+						break;
+				}
+				long end = i;
+				if (maskCount > 0)
+					while (end < width && visible[end])
+						end++;
+				else
+					end = width;
+				long dbit = dstBit0 + i * depth;
+				long sbit = srcBit0 + i * depth;
+				long k = i;
+				for (; k < end && (dbit & 7) != 0; k++, dbit += depth, sbit += depth)
+					SetRowPixel(drow, dbit, depth, RowPixel(srow, sbit, depth));
+				long bytes = ((end - k) * depth) >> 3;
+				if (bytes > 0)
+				{
+					memmove(drow + (dbit >> 3), srow + (sbit >> 3), bytes);
+					k += (bytes << 3) / depth;
+					dbit += bytes << 3;
+					sbit += bytes << 3;
+				}
+				for (; k < end; k++, dbit += depth, sbit += depth)
+					SetRowPixel(drow, dbit, depth, RowPixel(srow, sbit, depth));
+				i = end;
+			}
+			continue;
+		}
+
 		// the source row (read in full first: it may overlap the destination row)
 		if (usePattern)
 		{
 			const unsigned char* prow = patBits + ((((y + align.v) % patHeight) + patHeight) % patHeight) * patRowBytes;
 			long px = (((clipped->left + align.h) % patWidth) + patWidth) % patWidth;
-			for (long i = 0; i < width; i++)
+			if (patWidth <= kPatternValuesMax)
 			{
-				long value = RowPixel(prow, px * patDepth, patDepth);
-				if (patDepth != depth)
-					value = value ? maxValue : 0;
-				row[i] = invert ? value ^ maxValue : value;
-				if (++px == patWidth)
-					px = 0;
+				// (the pattern's row worked out once, then repeated)
+				long values[kPatternValuesMax];
+				for (long k = 0; k < patWidth; k++)
+				{
+					long value = RowPixel(prow, k * patDepth, patDepth);
+					if (patDepth != depth)
+						value = value ? maxValue : 0;
+					values[k] = invert ? value ^ maxValue : value;
+				}
+				for (long i = 0; i < width; i++)
+				{
+					row[i] = values[px];
+					if (++px == patWidth)
+						px = 0;
+				}
 			}
+			else
+				for (long i = 0; i < width; i++)
+				{
+					long value = RowPixel(prow, px * patDepth, patDepth);
+					if (patDepth != depth)
+						value = value ? maxValue : 0;
+					row[i] = invert ? value ^ maxValue : value;
+					if (++px == patWidth)
+						px = 0;
+				}
 		}
 		else
 		{
@@ -253,19 +353,7 @@ BlitPixelsFast(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* ds
 		{
 			for (long m = 0; m < maskCount; m++)
 				SeekRgn(masks[m], y);
-			memset(visible, 1, width);
-			for (long m = 0; m < maskCount; m++)
-			{
-				const ULong32* scan = masks[m]->fScan;
-				long mdepth = masks[m]->fDepth;
-				long bit = (clipped->left - masks[m]->fOrigin) * mdepth;
-				for (long i = 0; i < width; i++, bit += mdepth)
-					if (!(scan[bit >> 5] & (0x80000000u >> (bit & 31))))
-						visible[i] = 0;
-			}
-			for (long i = 0; i < width && allVisible; i++)
-				if (!visible[i])
-					allVisible = false;
+			allVisible = VisibleRow(masks, maskCount, clipped->left, width, visible);
 		}
 
 		// the destination row

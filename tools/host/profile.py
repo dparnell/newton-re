@@ -19,6 +19,7 @@ and profile the process meanwhile.  Windows only; standard library only.
 """
 
 import argparse
+import bisect
 import collections
 import ctypes
 import os
@@ -68,12 +69,23 @@ def main(argv):
 	exe = a.exe or path
 	image = open(exe, "rb").read()
 	sections = wf.pe_sections(image)
-	bounds_of = {}
+	# the functions' bounds, from the .pdata table once, sorted (a lookup is
+	# a bisection - whichfunction's linear scan is too slow to sample with)
+	pdata = next(s for s in sections if s[0] == ".pdata")
+	starts, ends = [], []
+	for i in range(pdata[4] // 12):
+		begin, end_, _ = struct.unpack_from("<III", image, pdata[3] + i * 12)
+		starts.append(begin)
+		ends.append(end_)
+	order = sorted(range(len(starts)), key=lambda k: starts[k])
+	starts = [starts[k] for k in order]
+	ends = [ends[k] for k in order]
 
 	def function(rva):
-		if rva not in bounds_of:
-			bounds_of[rva] = wf.function_bounds(image, sections, rva)
-		return bounds_of[rva]
+		k = bisect.bisect_right(starts, rva) - 1
+		if k >= 0 and rva < ends[k]:
+			return (starts[k], ends[k])
+		return None
 
 	handles = {}
 	selfs = collections.Counter()
