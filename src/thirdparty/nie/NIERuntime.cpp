@@ -17,6 +17,7 @@ Ref FEqual(RefArg rcvr, RefArg a, RefArg b);			// frames/Builtins.cpp
 Ref FGreaterThan(RefArg rcvr, RefArg a, RefArg b);	// frames/Builtins.cpp
 Ref FUnorderedLessOrGreater(RefArg rcvr, RefArg a, RefArg b);
 Ref FAdd(RefArg rcvr, RefArg a, RefArg b);
+Ref FLessThan(RefArg rcvr, RefArg a, RefArg b);
 void IncrementCurrentStackPos(void);				// frames/ObjectHeap.cpp
 void DecrementCurrentStackPos(void);
 void ClearRefHandles(void);
@@ -207,4 +208,14 @@ NIEAdd(RefArg a, RefArg b)
 	if (ISINT(a) && ISINT(b))
 		return MAKEINT((long) ((ULong) RINT(a) + (ULong) RINT(b)));
 	return FAdd(RefVar(), a, b);
+}
+
+
+// NIE inetenbl.pkg part 1 +0x1a2c (<)
+bool
+NIELessThan(RefArg a, RefArg b)
+{
+	if (ISINT(a) && ISINT(b))
+		return RINT(a) < RINT(b);
+	return NOTNIL(FLessThan(RefVar(), a, b));
 }

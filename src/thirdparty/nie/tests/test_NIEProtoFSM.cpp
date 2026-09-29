@@ -460,6 +460,83 @@ TestLoop(void)
 }
 
 
+// ObjectToString's f, for the test: what it can see, then "x: 1, "
+static const ULong kProbeOffset = 0x10;		// (inside GetGInterpreter's code: no function starts there)
+
+static Ref
+ProbePrinter(RefArg rcvr, RefArg x, RefArg depth, RefArg closure)
+{
+	RefVar env(NIEEnvironment(closure));
+	RefVar seen(MakeArray(7));
+	SetArraySlot(seen, 0, x);
+	SetArraySlot(seen, 1, depth);
+	for (long i = 0; i < 5; i++)
+		SetArraySlot(seen, 2 + i, RefVar(NIEFindVariable(env, RefVar(NIELiteral(closure, i)))));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Sym("seen")), seen);
+	if (EQRef(x, Sym("boom")))
+		ThrowMsg((char*) "no");
+	if (EQRef(x, Sym("mem")))
+		Throw((ExceptionName) "evt.ex.outofmem", nil, nil);
+	return MakeString("x: 1, ");
+}
+
+
+static void
+TestObjectToString(void)
+{
+	static const char* const kObj[] = { "backIndex", "Array", "backList", "printProto", "GetGlobalVar",
+		"runProto", "printParent", "runParent", "printReal", "floatFormat",
+		"IsString", "fmt", "printDepth", "maxDepth", "IsNumber",
+		"n", "printLength", "maxLength", "p", "p",
+		"f", "f", "evt.ex.outofmem", "evt.ex", "nomem", "exc" };
+	static const char* const kTrim[] = { "sep", "EndsWith", "StrLen", "StrMunger" };
+
+	RefVar fn(NativeFunction(0xc498, 1, kObj, 26));
+	// the closure with the function's locals after its literals, as NTK lays it out
+	RefVar lits(GetFrameSlot(RefVar(GetArraySlot(fn, 3)), RefVar(Sym("_literals"))));
+	RefVar closure(Eval("{_nextArgFrame: nil, _parent: nil, _implementor: nil, _literals: nil, backIndex: nil,"
+		" backList: nil, maxDepth: nil, maxLength: nil, runParent: nil, runProto: nil, f: nil, p: nil, floatFormat: nil}"));
+	SetFrameSlot(closure, RefVar(Sym("_literals")), lits);
+	SetArraySlot(fn, 3, closure);
+	SetLiteral(fn, 11, "\"%.16e\"");
+	SetLiteral(fn, 15, "65535");
+	SetLiteral(fn, 24, "\"<insufficient memory>\"");
+	SetLiteral(fn, 25, "\"<exception occurred>\"");
+	RefVar trim(NativeFunction(0x8670, 1, kTrim, 4));
+	SetLiteral(trim, 0, "\", \"");
+	SetArraySlot(lits, 18, trim);
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Sym("objToString")), fn);
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Sym("vars")), RefVar(gVarFrame));		// (GetGlobalVar reads vars)
+	Eval("seen := nil; printDepth := nil; printLength := nil; printReal := nil; printProto := nil; printParent := nil");
+
+	// f, a test double in native code (registered at an offset of the
+	// binary no function uses), sees the settings through its lexical scope
+	// as the package's own printer does
+	static const char* const kProbe[] = { "maxDepth", "maxLength", "floatFormat", "runProto", "backList" };
+	RefVar probe(NativeFunction(kProbeOffset, 2, kProbe, 5));
+	SetArraySlot(lits, 20, probe);
+	EXPECT(NOTNIL(Eval("StrEqual(call objToString with ('a), \"x: 1\")")));
+	EXPECT(EQRef(Eval("seen[0]"), Sym("a")));
+	EXPECT(RINT(Eval("seen[1]")) == 0);
+	EXPECT(RINT(Eval("seen[2]")) == 65535);
+	EXPECT(RINT(Eval("seen[3]")) == 65535);
+	EXPECT(NOTNIL(Eval("StrEqual(seen[4], \"%.16e\")")));
+	EXPECT(ISNIL(Eval("seen[5]")));
+	EXPECT(RINT(Eval("Length(seen[6])")) == 1);
+	// the global settings
+	Eval("printDepth := 3; printLength := -1; printReal := \"%g\"; printProto := 'yes");
+	Eval("call objToString with ('a)");
+	EXPECT(RINT(Eval("seen[2]")) == 3);
+	EXPECT(RINT(Eval("seen[3]")) == 65535);
+	EXPECT(NOTNIL(Eval("StrEqual(seen[4], \"%g\")")));
+	EXPECT(NOTNIL(Eval("seen[5]")));
+	Eval("printDepth := nil; printLength := nil; printReal := nil; printProto := nil");
+	// exceptions become a message
+	EXPECT(NOTNIL(Eval("StrEqual(call objToString with ('boom), \"<exception occurred>\")")));
+	EXPECT(NOTNIL(Eval("StrEqual(call objToString with ('mem), \"<insufficient memory>\")")));
+}
+
+
 int
 main()
 {
@@ -489,6 +566,7 @@ main()
 	memcpy(BinaryData(gCode), code, kNIECodeLength);
 
 	RegisterNIENatives();
+	RegisterPackageNative(kNIECodeLength, kNIECodeHash, kProbeOffset, (void*) ProbePrinter, 3, "(test) f");
 	newton_try
 	{
 		TestQueue();
@@ -497,6 +575,7 @@ main()
 		TestPeriodic();
 		TestProtoClone();
 		TestLoop();
+		TestObjectToString();
 	}
 	newton_catch_all
 	{
@@ -504,7 +583,12 @@ main()
 		printf("FAIL: exception %s\n", CurrentException()->name);
 		RefStruct* data = (RefStruct*) CurrentException()->data;
 		if (data != nil && IsFrame(*data))
+		{
 			printf("  errorCode %ld\n", (long) RINT(GetFrameSlot(*data, RSSYMerrorcode)));
+			RefVar sym(GetFrameSlot(*data, RefVar(Sym("symbol"))));
+			if (IsSymbol(sym))
+				printf("  symbol %s\n", SymbolName(sym));
+		}
 	}
 	end_try;
 

@@ -26,6 +26,7 @@ RegisterNIENatives(void)
 	REGISTER(0x8004, NIEQueueIsEmpty, 1, "QueueTemplate.IsEmpty");
 	REGISTER(0x8124, NIEProtoClone, 2, "(0x133e1, ProtoClone)");
 	REGISTER(0x8670, NIETrimSeparator, 2, "(0x14535)");
+	REGISTER(0xc498, NIEObjectToString, 2, "_proto.ObjectToString");
 	REGISTER(0xd4cc, NIEDoEventCheck, 2, "_proto.DoEvent_Check");
 	REGISTER(0xd5e4, NIEPeriodicViewIdleScript, 1, "PeriodicTemplate.viewIdleScript");
 	REGISTER(0xdbdc, NIEPeriodicViewSetupDoneScript, 1, "PeriodicTemplate.viewSetupDoneScript");
