@@ -782,7 +782,12 @@ class Decompiled:
 		target = self.index_of_pc(i.b)
 		before = ins[target - 1]
 		if i.a == OP_BIF:
-			if before.a == OP_BRANCH and before.b > before.pc and not (self.loop_exits and before.b == self.loop_exits[-1]
+			# (a branch to the target itself is an empty else - unless a
+			# construct inside the then also ends there, whose branch it is:
+			# `if a then (if b then x else nil)`, the outer if with no else)
+			inner_ends_here = before.b == ins[target].pc and any(
+				j.a in (OP_BRANCH, OP_BIF, OP_BIT) and j.b == ins[target].pc for j in ins[k + 1:target - 1])
+			if before.a == OP_BRANCH and before.b > before.pc and not inner_ends_here and not (self.loop_exits and before.b == self.loop_exits[-1]
 																	   and not self.else_fits(target, before)):
 				els_end = self.index_of_pc(before.b)
 				then_stmts, then_stack = self.parse(k + 1, target - 1, [])
