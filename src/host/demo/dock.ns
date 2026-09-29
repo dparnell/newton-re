@@ -23,14 +23,21 @@ app:ConnectionPrefsWrite('autoDockAddr, {type: 'serial});
 Print("dock: autodock");
 app:autodock();
 
-call waitFor with ("dock: the package", func() Length(GetPackages()) > before, func() begin
-	local packages := GetPackages();
-	local p := packages[Length(packages) - 1];
-	Print("dock: installed " & p.title);
-	call waitFor with ("dock: the connection over",
-		func() not app.theEndpoint or not app.theEndpoint.connected or not app.theEndpoint.conncobject,
-		func() begin
-			Print("dock: done");
-			HostQuit();
-		end, 60);
-end, 150);
+// (The connection is waited on through the docker's own slots: asking the
+// package manager for its packages meanwhile - GetPackages - while the
+// docker's world is forked and reading from the desktop has been seen to
+// leave the two worlds waiting on each other under load; see
+// docs/comms/README.md, "The desktop connection".)
+connected := nil;
+call waitFor with ("dock: the connection",
+	func() begin
+		if app.theEndpoint and app.theEndpoint.connected then connected := true;
+		connected and not (app.theEndpoint and app.theEndpoint.connected and app.theEndpoint.conncobject)
+	end,
+	func() begin
+		local packages := GetPackages();
+		if Length(packages) > before then
+			Print("dock: installed " & packages[Length(packages) - 1].title);
+		Print("dock: done");
+		HostQuit();
+	end, 150);

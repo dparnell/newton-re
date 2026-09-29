@@ -308,6 +308,21 @@ The order, each a verified piece:
    ctest `host.NewtonDock`.  A real desktop (NCX, UnixNPI with a TCP serial
    bridge) connects to `localhost:3679` the way it connects to Einstein.
 
+**A deadlock seen under load (not yet understood).** While the Connection
+application's docker is working - its world forked by `DoConnection`, or
+blocked in `Connect` reading from the desktop - a script that asked the
+package manager for its packages (`GetPackages()`, which `TPMIterator::Init`
+answers) was seen twice in about 40 stressed runs (`tools/host/stress.py
+--hogs 8`) to leave the process with every task waiting: the forked world
+waiting on the world's mutex in `TForkWorld::AcquireMutex`, the script's
+task in `TULockingSemaphore::Acquire` under `TPMIterator::Init`, and the
+docker never reading what the desktop had already sent (the MNP link acked
+it) - two or three threads each taking a core as the baton goes round.
+`src/host/demo/dock.ns` therefore waits on the docker's own slots and asks
+for the packages only when the connection is over.  Which lock is held
+across the other's wait is still to be found (the package manager and the
+fork world, not the docker).
+
 ## Status
 
 | piece | state |
