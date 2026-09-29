@@ -17,8 +17,11 @@
 	       [--package file.pkg]... [--microphone-tone hz] [--tcp-echo port]
 
 	--headless runs without a window for the seconds (a snapshot of the
-	display can be written by the script: ScreenSnapshot).  The sound it
-	plays is kept (hal/host/HostSoundDriver.h) and counted at the end;
+	display can be written by the script: ScreenSnapshot), or until the
+	script calls HostQuit() - so the seconds are a limit, and a test that
+	waits on what it is waiting for rather than for a fixed time ends as
+	soon as it is done.  The sound it plays is kept
+	(hal/host/HostSoundDriver.h) and counted at the end;
 	with --microphone-tone the microphone hears a sine of that frequency,
 	and the end says how much of what was played was that tone.
 
@@ -58,7 +61,10 @@
 #include "HostLink.h"
 #include "os600/kernel/host/TaskRuntime.h"
 #include "REPTranslators.h"
+#include "Frames.h"
+#include "ObjectHeap.h"
 #include "Interpreter.h"
+#include <atomic>
 #include <math.h>
 #include <stdio.h>
 #include <signal.h>
@@ -94,6 +100,7 @@ static long gScale = 1;
 static long gHeadlessSeconds = 0;
 static long gToneFrequency = 0;			// --microphone-tone: the null microphone's test tone
 static Boolean gWindowed = true;
+static std::atomic<bool> gScriptQuit(false);	// HostQuit(): the run ended by the script
 
 
 static int
@@ -119,11 +126,25 @@ NewtonBoot(void)
 }
 
 
-// PreMain's host hook: the program's globals, and the host's link for the
-// Newton Internet Enabler (comms/host/HostLink.h: it waits for the NIE)
+// HostQuit(): the run ended, as closing the window or the headless time
+// running out ends it
+static Ref
+FHostQuit(RefArg /*rcvr*/)
+{
+	gScriptQuit.store(true);
+	if (gWindowed)
+		HostKeyboardQuit();
+	return NILREF;
+}
+
+
+// PreMain's host hook: the program's globals (HostQuit among them), and the
+// host's link for the Newton Internet Enabler (comms/host/HostLink.h: it
+// waits for the NIE)
 static void
 NewtonPreMain(void)
 {
+	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostQuit")), RefVar(MakeCFunction((void*) FHostQuit, 0, nil)));
 	HostInstallPackageGlobal();
 	HostLinkStart();
 }
@@ -138,7 +159,7 @@ HeadlessTimer(void)
 	// (a tenth of a second at a time, the queued packages sent to the
 	// world between; a TTimeout is 32 bits of 3.6864 MHz ticks, which is
 	// under ten minutes, so a long run could not be slept in one anyway)
-	for (ULong left = gHeadlessSeconds * 10; left > 0; left--)
+	for (ULong left = gHeadlessSeconds * 10; left > 0 && !gScriptQuit.load(); left--)
 	{
 		HostSendQueuedPackages();
 		Sleep(100 * kMilliseconds);

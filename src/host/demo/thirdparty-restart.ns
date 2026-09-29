@@ -16,4 +16,5 @@ AddDelayedCall(func() begin
 	Print({restartStored: stored, restartEntries: entries, restartActive: active,
 		fontsGone: not (vars.fonts.Monaco exists)});
 	Print("thirdparty-restart: done");
+	HostQuit();
 end, nil, 6000);

@@ -216,16 +216,16 @@ if(EXISTS ${THIRDPARTY_DIR}/apps/RPNcalc/rpncalc.pkg)
     endforeach()
     add_test(NAME host.NewtonThirdPartyPackages
              COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --erase
-                     --store ${CMAKE_CURRENT_BINARY_DIR}/thirdparty.store --headless 40
+                     --store ${CMAKE_CURRENT_BINARY_DIR}/thirdparty.store --headless 240
                      ${THIRDPARTY_ARGS} --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/thirdparty.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
-    set_tests_properties(host.NewtonThirdPartyPackages PROPERTIES TIMEOUT 240
+    set_tests_properties(host.NewtonThirdPartyPackages PROPERTIES TIMEOUT 300
                          FIXTURES_SETUP host_thirdparty_store
                          PASS_REGULAR_EXPRESSION "MDaleks1.pkg: not installed.*entries: 18,[^}]*wrong: \\[\\],[^}]*missing: \\[\\]}.*fonts: TRUE.*rpnOpened: TRUE.*removedPackages: 18, stored: 0, entriesLeft: 0, active: 0, fontsGone: TRUE, declawed: TRUE, freed: TRUE.*thirdparty: done"
                          FAIL_REGULAR_EXPRESSION "fell over")
     add_test(NAME host.NewtonThirdPartyPackages.restart
              COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480
-                     --store ${CMAKE_CURRENT_BINARY_DIR}/thirdparty.store --headless 10
+                     --store ${CMAKE_CURRENT_BINARY_DIR}/thirdparty.store --headless 60
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/thirdparty-restart.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonThirdPartyPackages.restart PROPERTIES TIMEOUT 120
@@ -238,7 +238,7 @@ if(EXISTS ${THIRDPARTY_DIR}/apps/RPNcalc/rpncalc.pkg)
     # Register picks a program), snapshot as tmp/thirdparty-apps-<n>.pgm
     add_test(NAME host.NewtonThirdPartyApps
              COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --erase
-                     --store ${CMAKE_CURRENT_BINARY_DIR}/thirdparty-apps.store --headless 140
+                     --store ${CMAKE_CURRENT_BINARY_DIR}/thirdparty-apps.store --headless 280
                      --package ${THIRDPARTY_DIR}/apps/RPNcalc/rpncalc.pkg
                      --package ${THIRDPARTY_DIR}/games/Daleks/Daleks1.pkg
                      --package ${THIRDPARTY_DIR}/games/Mahjongg2.1/Mahjongg.pkg
@@ -247,7 +247,7 @@ if(EXISTS ${THIRDPARTY_DIR}/apps/RPNcalc/rpncalc.pkg)
                      --package ${THIRDPARTY_DIR}/games/NewtHack1_1/register.pkg
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/thirdparty-apps.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
-    set_tests_properties(host.NewtonThirdPartyApps PROPERTIES TIMEOUT 300
+    set_tests_properties(host.NewtonThirdPartyApps PROPERTIES TIMEOUT 340
                          PASS_REGULAR_EXPRESSION "RPNcalc:NMad open.*daleksMoved: TRUE.*mahjonggTilesRemaining: 142.*Mahjongg:Scrawl open.*NewtHack:ChrisDopp open.*Register:FlaSheridn open.*thirdparty-apps: done, 0 failed"
                          FAIL_REGULAR_EXPRESSION "is not answered|stopped \\(|fell over")
 else()
@@ -360,7 +360,7 @@ if(EXISTS ${NIE_DIR}/REGPKGS/inetenbl.pkg)
     # inetsetup-N.pgm)
     add_test(NAME host.NewtonInetSetup
              COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --erase
-                     --store ${CMAKE_CURRENT_BINARY_DIR}/inetsetup.store --headless 24
+                     --store ${CMAKE_CURRENT_BINARY_DIR}/inetsetup.store --headless 120
                      --package ${NIE_DIR}/ENETSUP/newtdev.pkg --package ${NIE_DIR}/REGPKGS/inetenbl.pkg
                      --package ${NIE_DIR}/REGPKGS/inetstup.pkg
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/inetsetup.ns

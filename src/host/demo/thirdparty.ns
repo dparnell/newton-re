@@ -20,6 +20,10 @@
 //    does), or RemovePackage - leaves no stored package and no entry, no
 //    font family, a part frame kept by a script declawed, and its store
 //    objects freed.
+//
+// The packages are installed one after the other while the script runs,
+// so it waits until every entry is there before looking (waitFor), and
+// ends the run itself when it is done (HostQuit).
 
 expected := {
 	|RPNcalc:NMad|: 'FormEntry, |Daleks:Avarice|: 'FormEntry, |Mahjongg:Scrawl|: 'FormEntry,
@@ -53,7 +57,40 @@ entryCount := func() begin
 	n
 end;
 
-AddDelayedCall(func() begin
+// Waiting on something asynchronous - the packages `newton --package` sends
+// the machine one at a time, however long each takes to store and install
+// - is done by asking until it is so (or the limit, in ticks, is reached),
+// never by waiting a fixed time: under load a fixed time is not enough.
+waitFor := func(test, andThen, limit) begin
+	local start := Ticks();
+	local poll;
+	poll := func() begin
+		if call test with () or Ticks() - start > limit then
+			call andThen with ()
+		else
+			AddDelayedCall(poll, nil, 250);
+	end;
+	AddDelayedCall(poll, nil, 250);
+end;
+
+fontsThere := func()
+	vars.fonts.Monaco exists and vars.fonts.|Klingon Font:Prism| exists and vars.fonts.Times exists
+		and vars.fonts.|Zapf Chancery| exists and vars.fonts.|Zapf Dingbats| exists;
+
+// every expected package's drawer entry there, and the fonts' families
+// (a package's entry is made before its parts are installed)
+allEntered := func() begin
+	local n := 0;
+	local c := Query(GetUnionSoupAlways("Packages"), {type: 'index});
+	local e := c:Entry();
+	while e do begin
+		if e.packageName and not e.pkgRef and expected.(Intern(e.packageName)) then n := n + 1;
+		e := c:Next();
+	end;
+	n >= Length(expected) and call fontsThere with ()
+end;
+
+call waitFor with (allEntered, func() begin
 	// the drawer's entries
 	local wrong := [];
 	local seen := 0;
@@ -72,8 +109,7 @@ AddDelayedCall(func() begin
 	local missingNames := [];
 	foreach tag, v in missing do AddArraySlot(missingNames, tag);
 	Print({entries: seen, expected: Length(expected), wrong: wrong, missing: missingNames});
-	Print({fonts: vars.fonts.Monaco exists and vars.fonts.|Klingon Font:Prism| exists and vars.fonts.Times exists
-		and vars.fonts.|Zapf Chancery| exists and vars.fonts.|Zapf Dingbats| exists});
+	Print({fonts: call fontsThere with ()});
 
 	// RPNcalc: 7 Enter 8 +
 	local rpn := GetRoot().|RPNcalc:NMad|;
@@ -93,7 +129,7 @@ AddDelayedCall(func() begin
 		end;
 	end;
 	AddDelayedCall(tapNext, nil, 1000);
-end, nil, 14000);
+end, 120 * 60);
 
 removeAll := func() begin
 	local before := GetStores()[0]:UsedSize();
@@ -124,5 +160,6 @@ removeAll := func() begin
 			active: active, fontsGone: not (vars.fonts.Monaco exists), declawed: declawed,
 			freed: before - GetStores()[0]:UsedSize() >= onStore});
 		Print("thirdparty: done");
+		HostQuit();
 	end, nil, 1000);
 end;

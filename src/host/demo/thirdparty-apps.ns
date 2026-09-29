@@ -18,8 +18,11 @@
 // Each application: its app symbol, where its icon is in the Extras drawer
 // (Unfiled Icons, after the built-in ones, once the Notepad is the backdrop), and what is done once it is
 // open - a list of [x, y] taps, each followed by a pause of a second or so
-// ([wait, ms] waits longer; a function is called instead, and can tap for
-// itself).  The snapshots are tmp/thirdparty-apps-<n>.pgm.
+// ([wait, ms] waits longer; [await, fn] waits until the function answers
+// true - for what happens asynchronously, which a fixed wait would miss
+// under load; a function is called instead, and can tap for itself).  The
+// snapshots are tmp/thirdparty-apps-<n>.pgm, and the script ends the run
+// when it is done (HostQuit).
 
 apps := [
 	{sym: '|RPNcalc:NMad|, icon: [32, 350],
@@ -30,13 +33,17 @@ apps := [
 	        func() Print({daleksMoved: GetRoot().|Daleks:Avarice|.gameView.gameBoard.human <> daleksHuman,
 	                      daleksHuman: GetRoot().|Daleks:Avarice|.gameView.gameBoard.human})]},
 	{sym: '|Mahjongg:Scrawl|, icon: [156, 350],
-	 taps: [['wait, 4000], [228, 272], ['wait, 9000],				// Rotate (the board wants a landscape screen)
+	 taps: [['wait, 4000], [228, 272],								// Rotate (the board wants a landscape screen)
+	        ['await, func() GetOrientation() <> portrait and GetRoot().|Mahjongg:Scrawl|.viewCObject
+	                        and GetRoot().|Mahjongg:Scrawl|.tilesRemaining = 144],
+	        ['wait, 2000],
 	        func() mahjonggPair := call findPair with (),
 	        func() call tapTile with (mahjonggPair[0]),
 	        func() call tapTile with (mahjonggPair[1]),
 	        func() Print({mahjonggTilesRemaining: GetRoot().|Mahjongg:Scrawl|.tilesRemaining})]},
 	{sym: '|NewtHack:ChrisDopp|, icon: [218, 350],
-	 taps: [['wait, 3000], [229, 293], ['wait, 8000], [200, 300], ['wait, 3000], [230, 290], ['wait, 3000]]},
+	 // (the random generator seeded first: see the note on the generator below)
+	 taps: [['wait, 3000], func() SetRandomSeed(1), [229, 293], ['wait, 8000], [200, 300], ['wait, 3000], [230, 290], ['wait, 3000]]},
 	{sym: '|Register:FlaSheridn|, icon: [280, 350],
 	 taps: [[70, 33], ['wait, 2000], [100, 255], ['wait, 1500]]}];		// the Program picker: Mahjongg
 
@@ -54,6 +61,16 @@ tap := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
 // application's view, which is at the screen's origin.  The board wants a
 // landscape screen: the game says so and offers to turn it, which is taken
 // (and the screen turned back for the next application)
+// The random generator is one for the whole machine, and Mahjongg - the
+// unregistered copy - seeds it with TimeInSeconds() mod 5 + 1 when it
+// deals.  TimeInSeconds counts from 1993 in a NewtonScript integer, which
+// it outgrew in 2010, so today it is negative and so is the remainder: one
+// second in five the seed is 0, Park and Miller's fixed point, after which
+// every Random answers its low bound - and NewtHack, next, builds a level
+// of one room and looks for ever for a second place to put the stairs.
+// (Faithful: a Newton with its clock set to now does the same.)  So
+// NewtHack is given a seed of its own rather than whatever the second
+// Mahjongg dealt at left.
 mahjonggPair := nil;
 daleksHuman := nil;
 findPair := func()
@@ -80,7 +97,24 @@ tapNext := func()
 			begin
 				local t := taps[0];
 				ArrayRemoveCount(taps, 0, 1);
-				if IsFunction(t) then
+				if IsArray(t) and t[0] = 'await then
+					begin
+						local test := t[1];
+						local start := Ticks();
+						local poll;
+						poll := func()
+							if call test with () then
+								AddDelayedCall(tapNext, nil, 500)
+							else if Ticks() - start > 90 * 60 then
+								begin
+									AddArraySlot(failures, current.sym & ": waited in vain");
+									AddDelayedCall(tapNext, nil, 500);
+								end
+							else
+								AddDelayedCall(poll, nil, 250);
+						AddDelayedCall(poll, nil, 250);
+					end
+				else if IsFunction(t) then
 					begin
 						try
 							call t with ()
@@ -142,6 +176,7 @@ next := func()
 			begin
 				foreach failure in failures do Print("thirdparty-apps: FAILED " & failure);
 				Print("thirdparty-apps: done, " & NumberStr(Length(failures)) & " failed");
+				HostQuit();
 			end;
 	end;
 
@@ -170,5 +205,18 @@ AddDelayedCall(func() begin
 			end, nil, 2000);
 	end, nil, 3000);
 
-AddDelayedCall(next, nil, 30000);
+// the applications begin once every one of them is installed (the packages
+// arrive one after the other) and the Setup assistant has been walked
+installed := func() begin
+	local all := page >= 10;
+	foreach app in apps do if not GetRoot().(app.sym) then all := nil;
+	all
+end;
+startTicks := Ticks();
+waitInstalled := func()
+	if call installed with () or Ticks() - startTicks > 120 * 60 then
+		AddDelayedCall(next, nil, 3000)
+	else
+		AddDelayedCall(waitInstalled, nil, 250);
+AddDelayedCall(waitInstalled, nil, 1000);
 Print("thirdparty-apps: the script is loaded");

@@ -2160,3 +2160,31 @@ those entries out for each page has an end test that compares a pointer
 plus the entries' size with the same pointer, so it never ends: it walks
 on past the last entry until something in memory happens to look like an
 entry for a later page.  (`packages/StorePackages.cpp`.)
+
+---
+
+## Mahjongg can freeze NewtHack one second in five
+
+The machine has one random-number generator, the C library's Park-Miller
+`rand` (`utility/Random.cpp`), shared by every application. The
+unregistered copy of Mahjongg Solitaire 2.1 (`shuffleTiles`, package offset
+0x9e11) seeds it with `TimeInSeconds() mod 5 + 1` whenever it deals, so an
+unregistered player gets only five different deals.
+
+`TimeInSeconds` counts seconds from 1 January 1993 and returns them as a
+NewtonScript integer, which holds 30 bits. The count passed 2^29 in 2010,
+so the value has wrapped round and is now negative (`intl/Dates.cpp`,
+exactly as the ROM does it). NewtonScript's `mod` takes the sign of the
+dividend, so the seed is now anything from -3 to 1, and one second in
+five it is **0**. Nought is Park-Miller's fixed point: every later `rand`
+answers 0, so every `Random(lo, hi)` answers `lo`.
+
+The next program to want random numbers suffers. NewtHack's level builder
+(`CreateRandomRooms`, then `ConnectRooms`) puts every room in the same
+block and gets a level of one room. It puts the up stairs on the room's
+lowest corner, then looks for a floor square for the down stairs. The
+square it tries is always that same corner, now the stairs, so it looks
+forever. A Newton with its clock set to the present day would hang the
+same way. `src/host/demo/thirdparty-apps.ns` gives NewtHack a seed of its
+own. That test hung only under load, because load decided which second
+Mahjongg happened to deal in.
