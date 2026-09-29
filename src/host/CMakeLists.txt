@@ -45,7 +45,7 @@ set_tests_properties(host.Newton PROPERTIES TIMEOUT 120)
 # LoadFontCache, an expando drawn (DrawExpando), QuickLookDone
 add_test(NAME host.NewtonNatives COMMAND newton --rom ${NEWTON_ROM_BIN} --headless 30 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/natives.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(host.NewtonNatives PROPERTIES TIMEOUT 120
-    PASS_REGULAR_EXPRESSION "Every Monday and Thursday.*Every day.*The second and last Friday of every month.*The 15th of every month.*Every March 4.*Every other Saturday.*The first Monday of every September.*kind 5., ...*fits., .3.14159.*cut., .3.14.\].*whole., NIL.*too narrow., NIL.*left: 29, top: 14, right: 69, bottom: 34.*left: 4, top: 39, right: 44, bottom: 59.*bad bundle., .bad strokeBounds.*fonts loaded.*expando asked.*Name., .Phone.*debugger., -10005, 0, 0, -10005, 0.*natives: done")
+    PASS_REGULAR_EXPRESSION "Every Monday and Thursday.*Every day.*The second and last Friday of every month.*The 15th of every month.*Every March 4.*Every other Saturday.*The first Monday of every September.*kind 5., ...*fits., .3.14159.*cut., .3.14.\].*whole., NIL.*too narrow., NIL.*left: 29, top: 14, right: 69, bottom: 34.*left: 4, top: 39, right: 44, bottom: 59.*bad bundle., .bad strokeBounds.*fonts loaded.*expando asked.*Name., .Phone.*debugger., -10005, 0, 0, -10005, 0.*dispatch., -10005.*dispatch marshal., .evt.ex.marshal.type.*natives: done")
 # a script's own gestalt registered, read back and replaced; UnmountCard's
 # argument checks; BootSucceeded's file (made in the build directory)
 add_test(NAME host.NewtonGestalt COMMAND newton --rom ${NEWTON_ROM_BIN} --headless 30 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/gestalt.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})

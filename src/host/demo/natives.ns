@@ -6,6 +6,8 @@
 //   DrawOriginal       a stroke bundle's writing drawn into a box
 //   LoadFontCache      the font table loaded again
 //   an expando's viewDrawScript (DrawExpando)
+//   InitSerialDebugging, PreInitSerialDebugging (no debugger on the host)
+//   instance:Dispatch (a protocol method by its number)
 //
 //   build/host/host/newton --rom build/MP2x00US/rom.bin --headless 30 --script src/host/demo/natives.ns
 
@@ -58,6 +60,14 @@ Print(["expando asked", kAsked]);
 // card answer nought
 Print(["debugger", InitSerialDebugging("extr", 10), InitSerialDebugging("extr", 0),
 	InitSerialDebugging("extr", 2), PreInitSerialDebugging("extr", 57600, 1), PreInitSerialDebugging("extr", 57600, -1)]);
+
+// a protocol instance's method by its number: a host protocol that is not
+// a monitor has no numbered methods (-10005); a value that will not
+// marshal throws evt.ex.marshal.type
+kCodec := NewByName("TSoundCodec", "TMuLawCodec", nil);
+try kCodec:Dispatch([1], ['long], 3, 'long) onexception |evt.ex.fr| do Print(["dispatch", CurrentException().error]);
+try kCodec:Dispatch(["x"], ['long], 3, 'long) onexception |evt.ex.marshal| do Print(["dispatch marshal", CurrentException().name]);
+kCodec:Destroy();
 
 QuickLookDone(nil);
 Print("natives: done");

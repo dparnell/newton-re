@@ -1088,6 +1088,59 @@ FHasCapability(RefArg rcvr, RefArg name)
 }
 
 
+// ROM 0x000ce480 PrimCallProtocolFromFrames__FRC6RefVarN41
+// A protocol instance's method called from NewtonScript: the arguments
+// marshalled by their types (Marshalling.h; a value that will not marshal
+// throws evt.ex.marshal.type), the method at dispatch slot selector + 1
+// called with them - the instance in the first register, the arguments'
+// words after it (CallProtocolMethodWithArgsOnStack 0x003ae508) - and its
+// answer, a word, unmarshalled by the result type.
+//
+// NOT YET, and a DEVIATION where it can be done: the host's protocol
+// methods are C++ virtual functions (protocols/Protocols.h), which cannot
+// be called by their dispatch slot's number.  A monitor's can - its entry
+// takes a selector, dispatch slot n being monitor selector n - 2 - so a
+// monitor instance's method is called with up to four argument words, as
+// its glue would pass them; any other instance throws
+// kError_Call_Not_Implemented.
+static Ref
+PrimCallProtocolFromFrames(RefArg args, RefArg argTypes, TProtocol* instance, long selector, RefArg resultType)
+{
+	void* block = nil;
+	long err = MarshalArguments(args, argTypes, &block, 2);
+	if (err != noErr)
+		Throw((ExceptionName) "evt.ex.marshal.type", (void*) (intptr_t) err, nil);
+	ULong size = 0;
+	MarshalArgumentSize(args, argTypes, &size, 2);
+	ProtocolMonitorArgs callArgs;
+	memset(&callArgs, 0, sizeof(callArgs));
+	// (the block is the device's words: MarshalOut.cpp)
+	for (ULong i = 0; i < 4 && (i + 1) * 4 <= size; i++)
+		callArgs.fArg[i] = GetBigEndianWord((const UByte*) block + i * 4);
+	free(block);
+	if (instance == nil || instance->GetMonitorId() == 0 || selector + 1 < 2)
+		Throw(exFrames, (void*) (intptr_t) kError_Call_Not_Implemented, nil);
+	Long result = instance->MonitorCall((ULong) (selector + 1 - 2), &callArgs);
+	UByte word[4];
+	PutBigEndianWord(word, (ULong32) result);
+	void* p = word;
+	long failed = 0;
+	return UnmarshalValue(&p, resultType, 1, &failed, 2);
+}
+
+
+// ROM 0x00195228 FDispatchProtocol
+// instance:Dispatch(args, argTypes, selector, resultType) - one of the
+// instance's methods called by its number (PrimCallProtocolFromFrames).
+static Ref
+FDispatchProtocol(RefArg rcvr, RefArg args, RefArg argTypes, RefArg selector, RefArg resultType)
+{
+	RefVar held(GetVariable(rcvr, RSSYM_instance, nil, 0));
+	TProtocol* instance = ISNIL(held) ? nil : (TProtocol*) RefToAddress(held);
+	return PrimCallProtocolFromFrames(args, argTypes, instance, RINT(selector), resultType);
+}
+
+
 // ROM 0x00194c40 FNewProtocol
 // info:New() - an instance of that implementation, as the frame a
 // script holds it in; nil when it cannot be made.
@@ -1104,6 +1157,7 @@ RegisterSystemNatives(void)
 {
 	RegisterNativeFunction("FGetSerialNumber", (void*) FGetSerialNumber, 0);
 	RegisterNativeFunction("FGestalt", (void*) FGestalt, 1);
+	RegisterNativeFunction("FDispatchProtocol", (void*) FDispatchProtocol, 4);
 	RegisterNativeFunction("FRegisterGestalt", (void*) FRegisterGestalt, 4);
 	RegisterNativeFunction("FReplaceGestalt", (void*) FReplaceGestalt, 4);
 	RegisterNativeFunction("FBootSucceeded", (void*) FBootSucceeded, 1);
