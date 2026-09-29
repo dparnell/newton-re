@@ -9,6 +9,18 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-30: the Sound Recorder plays to the end
+
+- The recorder stayed at "Playing...": the sound server answered a pause
+  or stop with the ROM's 0x20/0x14 bytes, which on the host (a
+  pointer-sized `ULong`) stopped short of the node id and position, so
+  Stop reported nothing played, the recorder never cut its recording to
+  length (`SetRecordingLength`), and Play played the whole 64K buffer.
+  The sizes now come from the struct (`kSndShortReplySize`,
+  `kSndNodeReplySize`, DEVIATION; 6aef861).  `demo/recorder.ns` waits for
+  the playback to finish; `host.NewtonRecorder` requires "finished: Ready
+  to play or record".
+
 ## 2026-09-30: the host demos wait on conditions
 
 - `tools/host/stress.py` (`tools/host/README.md`): copies of one ctest
