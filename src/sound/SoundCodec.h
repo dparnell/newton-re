@@ -19,8 +19,9 @@
 				up; Start, Stop and Init are the hooks a codec with state of
 				its own needs, and are empty in the mu-law one.
 
-				TDTMFCodec (the touch tones' synthesiser) is here too;
-				TGSMCodec is NOT YET.  The sound server's codec channel
+				TGSMCodec (GSM 06.10, what the Sound Recorder records
+				with, over sound/GSM.h) and TDTMFCodec (the touch tones'
+				synthesiser) are here too.  The sound server's codec channel
 				(SoundServer.h, TCodecChannel) drives them.
 
 	Not in the DDK; the interface follows the ROM's dispatch table
@@ -183,6 +184,42 @@ public:
 // the ROM's does - the sound hardware, the sound server, and the two codecs
 // beside these.
 void	InitializeSound(void);				// ROM 0x001e89f4 InitializeSound__Fv
+
+
+/*------------------------------------------------------------------------------
+	T G S M C o d e c
+	GSM 06.10 full rate (sound/GSM.h) behind the codec protocol - what the
+	Sound Recorder records with: 160 16-bit samples (320 bytes) to a
+	33-byte frame and back, a whole frame at a time.
+------------------------------------------------------------------------------*/
+
+struct gsm_state;
+
+PROTOCOL TGSMCodec : public TSoundCodec
+{
+public:
+	PROTOCOL_IMPL_HEADER_MACRO(TGSMCodec);
+
+	TGSMCodec*		New();									// ROM 0x000d87f8 New__9TGSMCodecFv
+	void			Delete();								// ROM 0x000d8808 Delete__9TGSMCodecFv
+
+	NewtonErr		Init(CodecBlock* block);				// ROM 0x000d8824 Init__9TGSMCodecFP10CodecBlock
+	NewtonErr		Reset(CodecBlock* block);				// ROM 0x000d885c Reset__9TGSMCodecFP10CodecBlock
+	NewtonErr		Produce(void* dst, ULong* dstSize, ULong* codedSize, CodecBlock* block);				// ROM 0x000d8894 Produce__9TGSMCodecFPvPUlT2P10CodecBlock
+	NewtonErr		Consume(const void* src, ULong* srcSize, ULong* codedSize, const CodecBlock* block);	// ROM 0x000d8978 Consume__9TGSMCodecFPCvPUlT2PC10CodecBlock
+	void			Start();								// ROM 0x000d8a40 Start__9TGSMCodecFv
+	void			Stop(int reason);						// ROM 0x000d8a44 Stop__9TGSMCodecFi
+	Boolean			BufferCompleted();						// ROM 0x000d8a48 BufferCompleted__9TGSMCodecFv
+
+	gsm_state*		fState;				// +0x10  the coder's
+	ULong			fStateTag;			// +0x14  'aloc' when fState was made, 'dead' when it could not be
+	void*			fBuffer;			// +0x18  the coded frames
+	ULong			fSize;				// +0x1c  its size in bytes
+	ULong			fPosition;			// +0x20  how much of it has been used
+	ULong			fFormat;			// +0x24
+	ULong			fSampleRate;		// +0x28
+	ULong			fSampleBits;		// +0x2c
+};
 
 
 /*------------------------------------------------------------------------------

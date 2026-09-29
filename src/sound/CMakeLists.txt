@@ -1,6 +1,6 @@
 # Sound: the codecs (IMACodec.h; SampleConvert.h's mu-law and
-# offset-binary 8-bit; the TSoundCodec protocol with its mu-law, IMA and
-# DTMF implementations, SoundCodec.h, DTMFCodec.cpp), the sample-rate
+# offset-binary 8-bit; the TSoundCodec protocol with its mu-law, IMA, GSM
+# and DTMF implementations, SoundCodec.h, DTMFCodec.cpp), the sample-rate
 # converters (Resample.h), the sound server (SoundServer.h over the
 # PSoundDriver of SoundDriver.h), its clients (SoundChannel.h,
 # FrameSoundChannel.h) and the NewtonScript sound functions
@@ -18,6 +18,9 @@ add_library(sound STATIC
     SoundCodec.cpp
     DTMFCodec.cpp
     DTMFTables.cpp
+    GSM.cpp
+    GSMCodec.cpp
+    GSMTables.cpp
     SoundChannel.cpp
     FrameSoundChannel.cpp
     SoundSettings.cpp

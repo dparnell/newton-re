@@ -38,3 +38,8 @@ target_link_libraries(test_PlaySound PRIVATE newt host_views hal_host_display ha
 target_compile_definitions(test_PlaySound PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
 add_test(NAME sound.PlaySound COMMAND test_PlaySound)
 set_tests_properties(sound.PlaySound PROPERTIES TIMEOUT 120)
+
+add_executable(test_GSM test_GSM.cpp)
+target_link_libraries(test_GSM PRIVATE sound)
+add_test(NAME sound.GSM COMMAND test_GSM)
+set_tests_properties(sound.GSM PROPERTIES TIMEOUT 60)
