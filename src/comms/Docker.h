@@ -30,15 +30,21 @@
 				sends the other's challenge encrypted under its own key
 				(utility/DES.h; the empty password's key is accepted too).
 				Then ProcessCommand carries out the desktop's commands:
-				packages ('lpkg'), the session's kind ('ssyn', 'rrst',
-				'rins', 'dsnc'), the time, the timeout, the icons,
-				cancelling, and the protocol extensions (a function the
-				Connection application installed for a command).
+				packages (loading, listing, restoring, removing), the
+				session's kind, the time, the timeout, the icons,
+				cancelling, the stores and soups (choosing, making, their
+				info, backing up and sending), cursors and entries, the
+				class inheritance, the sync options, test echoes, remote
+				function calls, the Connection application's slips, and
+				protocol extensions (a function installed for a command,
+				by the application or the desktop).  The application reads
+				and writes the link itself too (ReadCommand, WriteCommand,
+				...), and the keyboard passthrough types the desktop's
+				keys into the Newton's key view.
 
-				NOT YET: the soup, entry, cursor, store, package-list,
-				patch, slip and function commands - each is answered
-				'unkn', as a Newton that does not know it would; the
-				keyboard passthrough.
+				NOT YET: 'rpat' (a system patch installed into the ROM,
+				which the host cannot) and BackupPatches (the host has no
+				patches, so 'gpat' answers none).
 
 				The ROM's class; its declaration is not in the DDK, so the
 				names of the fields are ours, their order the ROM's (0xb8
