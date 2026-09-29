@@ -108,7 +108,11 @@ enum
 	kDockErrNoCurrentSoup		= -28006,		// a soup command with no current soup
 	kDockErrNoStore				= -28014,		// no store of the name and kind
 	kDockErrNoSuchSoup			= -28015,		// no soup of the name
-	kDockErrNoCurrentStore		= -28015		// (the ROM uses the same number) no current store
+	kDockErrNoCurrentStore		= -28015,		// (the ROM uses the same number) no current store
+	kDockErrNoEntry				= -28005,		// an entry command with no entry
+	kDockErrNoSuchEntry			= -28008,		// no entry of the id
+	kDockErrEntryNotFound		= -28002,		// an entry to change that is not there
+	kDockErrBadCursor			= -28026		// no cursor of the number
 };
 
 // the session's states (eDockingState)
@@ -156,7 +160,20 @@ public:
 };
 
 
-class TCursorArray;
+// The cursors a desktop opened ('qury'), by the number it was given: an
+// array whose free slots are nil.
+class TCursorArray
+{
+public:
+					TCursorArray();
+					~TCursorArray();
+
+	ULong			Add(RefArg cursor);
+	Ref				Get(ULong index);
+	void			Remove(ULong index);
+
+	RefStruct		fCursors;				// +0x00  (the ROM's own RefHandle)
+};
 
 class TDocker : public TEzPipeProtocol
 {
@@ -236,6 +253,39 @@ public:
 	void			SetSoupInfoFrame(void);
 	void			SetSoupSignature(void);
 
+	// cursors
+	void			ValidateQuery(void);
+	void			RemoteQuery(void);
+	Ref				RemoteGetCursor(void);
+	void			RemoteCursorGotoKey(void);
+	void			RemoteCursorMap(void);
+	void			RemoteCursorEntry(void);
+	void			RemoteCursorMove(void);
+	void			RemoteCursorNext(void);
+	void			RemoteCursorPrev(void);
+	void			RemoteCursorReset(void);
+	void			RemoteCursorResetToEnd(void);
+	void			RemoteCursorCountEntries(void);
+	void			RemoteCursorWhichEnd(void);
+	void			RemoteCursorFree(void);
+	// entries
+	Ref				GetEntryFromID(ULong id);
+	void			WriteEntry(ULong command, RefArg entry);
+	void			ReturnEntry(ULong command);
+	void			AddEntry(Boolean withUniqueID);
+	Ref				ConvertEntry(RefArg entry);
+	Boolean			IsDuplicateEntry(RefArg entry);
+	void			ChangeEntry(void);
+	void			ReplaceEntryContents(RefArg entry);
+	void			DeleteEntries(void);
+	void			EmptyOrDelete(ULong command);
+	void			AddChangedSoup(RefArg change, ULong count);
+	void			ReadSourceVersion(void);
+	Boolean			ShouldBackupEntry(RefArg entry);
+	long			GetSoupIDCount(RefArg cursor);
+	void			WriteSoupIDs(void);
+	void			WriteChangedIDs(void);
+
 	void			ProcessCommand(Boolean* done, Boolean* operationDone);
 	Boolean			CheckProtocolExtension(ULong command, Boolean* result);
 	Boolean			CheckProtocolPatch(ULong command, Boolean* result);
@@ -250,7 +300,7 @@ public:
 	RefStruct		fCallback;				// +0x1c  the package callback
 	RefStruct		fConnection;			// +0x20  the protocol frame
 	RefStruct		fField24;				// +0x24
-	RefStruct		fField28;				// +0x28
+	RefStruct		fQuery;					// +0x28  a cursor over the whole current soup (ValidateQuery)
 	Boolean			fIsDirectorySoup;		// +0x2c  the current soup is the store's directory (the metasoup)
 	Boolean			fIsSystemSoup;			// +0x2d  the System soup
 	Boolean			fIsPackageSoup;			// +0x2e  the Extras (packages) soup
@@ -269,14 +319,14 @@ public:
 	TCursorArray*	fCursors;				// +0x54
 	ULong			fManufacturer;			// +0x58  the Newton's, as its name says them
 	ULong			fMachineType;			// +0x5c
-	long			fField60;				// +0x60  (1: a restore that keeps the soups' own info)
-	long			fField64;				// +0x64
-	long			fField68;				// +0x68
-	RefStruct		fField6c;				// +0x6c
-	RefStruct		fField70;				// +0x70
+	long			fSourceVersion;			// +0x60  'sver': the version of the Newton the data came from (2 unless told)
+	ULong			fSourceManufacturer;	// +0x64  and its manufacturer and machine
+	ULong			fSourceMachineType;		// +0x68
+	RefStruct		fConversionFrame;		// +0x6c  ConvertEntry's (NOT YET)
+	RefStruct		fOwnerApp;				// +0x70
 	ULong			fDesktopTime;			// +0x74  'stme': the desktop's clock (minutes)
 	ULong			fTimeSet;				// +0x78  and ours when it said so
-	TDockerDynArray*	fDynArray7c;		// +0x7c
+	TDockerDynArray*	fChangedIDs;		// +0x7c  the entries changed since the desktop's time ('gids', 'gcid')
 	TDockerDynArray*	fExtensionCommands;	// +0x80  the protocol extensions' commands
 	RefStruct		fExtensions;			// +0x84  and their functions, in the same order
 	RefStruct		fDesktopApps;			// +0x88

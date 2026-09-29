@@ -15,6 +15,8 @@
 #include "NewtWorld.h"
 #include "Dates.h"
 #include "Soups.h"
+#include "Cursors.h"
+#include "Entries.h"
 #include "RichString.h"
 #include "ROMConstants.h"
 #include "ObjectStreamer.h"
@@ -299,7 +301,7 @@ TDocker::TDocker()
 	fIsDirectorySoup = false;
 	fIsSystemSoup = false;
 	fIsPackageSoup = false;
-	fField28 = NILREF;
+	fQuery = NILREF;
 	fSessionStarted = false;
 	fInExtension = false;
 	fField38 = 0;
@@ -309,15 +311,15 @@ TDocker::TDocker()
 	fVBOCompression = 2;
 	fHasArg1 = false;
 	fLoadPackageOnly = false;
-	fDynArray7c = nil;
+	fChangedIDs = nil;
 	fExtensionCommands = nil;
 	fManufacturer = 0;
-	fField60 = 2;
+	fSourceVersion = 2;
 	fMachineType = 0;
-	fField64 = 0;
-	fField68 = 0;
-	fField6c = NILREF;
-	fField70 = NILREF;
+	fSourceManufacturer = 0;
+	fSourceMachineType = 0;
+	fConversionFrame = NILREF;
+	fOwnerApp = NILREF;
 	fCleanedUp = false;
 	fFieldb4 = false;
 	fState = kDockStateNone;
@@ -664,18 +666,27 @@ TDocker::TossDataStructures(void)
 		end_try;
 		fPipe = nil;
 	}
-	// NOT YET: the cursor array (fCursors) is made by a docking session's
-	// soup commands, which are not reconstructed, so it is always nil here
-	if (fDynArray7c != nil)
+	if (fCursors != nil)
 	{
 		newton_try
 		{
-			delete fDynArray7c;
+			delete fCursors;
 		}
 		newton_catch_all
 		{ }
 		end_try;
-		fDynArray7c = nil;
+		fCursors = nil;
+	}
+	if (fChangedIDs != nil)
+	{
+		newton_try
+		{
+			delete fChangedIDs;
+		}
+		newton_catch_all
+		{ }
+		end_try;
+		fChangedIDs = nil;
 	}
 	if (fExtensionCommands != nil)
 	{
@@ -1053,12 +1064,12 @@ TDocker::DoConnection(RefArg arg1, RefArg arg2, RefArg callback, Boolean* done)
 		if (fError == -16005)
 			fError = noErr;
 	}
-	fField6c = NILREF;
-	fField70 = NILREF;
-	fField60 = 2;
+	fConversionFrame = NILREF;
+	fOwnerApp = NILREF;
+	fSourceVersion = 2;
 	FreeCurrentStore();
 	fCurrentSoup = NILREF;
-	fField28 = NILREF;
+	fQuery = NILREF;
 	CleanUpIfError(*done);
 	UnlockTDocker();
 	return fError;
@@ -1855,12 +1866,12 @@ TDocker::ReadCurrentSoup(void)
 void
 TDocker::SetupSoup(void)
 {
-	fField6c = NILREF;
-	fField70 = NILREF;
+	fConversionFrame = NILREF;
+	fOwnerApp = NILREF;
 	fIsDirectorySoup = false;
 	fIsSystemSoup = false;
 	fIsPackageSoup = false;
-	fField28 = NILREF;
+	fQuery = NILREF;
 	if (ISNIL(fCurrentSoup))
 	{
 		if (fError == noErr)
@@ -1951,7 +1962,7 @@ TDocker::WriteIndexDescription(Boolean ifChanged)
 
 // ROM 0x00099634 SetSoupInfoFrame__7TDockerFv
 // 'sinf' from the desktop: the current soup's info replaced - unless this
-// is a restore that keeps the soups' own (fField60 1) and the soup has a
+// is a restore that keeps the soups' own (fSourceVersion 1: from a 1.x Newton) and the soup has a
 // soupDef.
 void
 TDocker::SetSoupInfoFrame(void)
@@ -1959,7 +1970,7 @@ TDocker::SetSoupInfoFrame(void)
 	RefVar info(ReadRef(fCurrentStore));
 	VerifySoup();
 	Boolean set = true;
-	if (fState == kDockStateRestore && fField60 == 1)
+	if (fState == kDockStateRestore && fSourceVersion == 1)
 		set = ISNIL(SoupGetInfo(fCurrentSoup, RSSYMsoupdef));
 	if (ISNIL(info))
 		info = AllocateFrame();
@@ -1981,13 +1992,702 @@ TDocker::SetSoupSignature(void)
 }
 
 
+// ------------------------------------------------------------------------
+//	TCursorArray
+// ------------------------------------------------------------------------
+
+// ROM 0x000940a4 __ct__12TCursorArrayFv
+TCursorArray::TCursorArray()
+{
+	fCursors = AllocateArray(RSSYMarray, 0);
+}
+
+
+// ROM 0x000947b8 __dt__12TCursorArrayFv
+TCursorArray::~TCursorArray()
+{ }
+
+
+// ROM 0x00095824 Add__12TCursorArrayFRC6RefVar
+// The cursor in the first free slot, or at the end.  ==> its number.
+ULong
+TCursorArray::Add(RefArg cursor)
+{
+	ULong length = Length(fCursors);
+	for (ULong slot = 0; slot < length; slot++)
+		if (ISNIL(GetArraySlot(fCursors, slot)))
+		{
+			SetArraySlot(fCursors, slot, cursor);
+			return slot;
+		}
+	AddArraySlot(fCursors, cursor);
+	return length;
+}
+
+
+// ROM 0x00096cb0 Get__12TCursorArrayFUl
+// ==> the cursor of the number, nil if there is none.
+Ref
+TCursorArray::Get(ULong index)
+{
+	if (index >= (ULong) Length(fCursors))
+		return NILREF;
+	return GetArraySlot(fCursors, index);
+}
+
+
+// ROM 0x000966bc Remove__12TCursorArrayFUl
+// The number freed: the slot made nil, or the array cut short there when no
+// cursor follows it.
+void
+TCursorArray::Remove(ULong index)
+{
+	ULong length = Length(fCursors);
+	if (index >= length)
+		return;
+	for (ULong slot = index + 1; slot < length; slot++)
+		if (NOTNIL(GetArraySlot(fCursors, slot)))
+		{
+			SetArraySlot(fCursors, index, RefVar(NILREF));
+			return;
+		}
+	SetLength(fCursors, index);
+}
+
+
+// ------------------------------------------------------------------------
+//	The cursors
+// ------------------------------------------------------------------------
+
+// ROM 0x00098f3c ValidateQuery__7TDockerFv
+// A cursor over the whole current soup, made the first time it is wanted.
+void
+TDocker::ValidateQuery(void)
+{
+	if (ISNIL(fQuery))
+		fQuery = SoupQuery(fCurrentSoup, RefVar(NILREF));
+}
+
+
+// ROM 0x00092e44 RemoteQuery__7TDockerFv
+// 'qury': a cursor the desktop keeps - a frame of the query spec and,
+// if it is not the current soup, the soup's name.  ==> 'ldta' its number.
+void
+TDocker::RemoteQuery(void)
+{
+	RefVar frame(ReadRef(fCurrentStore));
+	RefVar querySpec(GetFrameSlot(frame, RSSYMqueryspec));
+	RefVar soupName(GetFrameSlot(frame, RSSYMsoupname));
+	if (NOTNIL(soupName) && IsString(soupName) && Ustrlen(GetCString(soupName)) != 0)
+	{
+		fCurrentSoup = StoreGetSoup(fCurrentStore, soupName);
+		if (ISNIL(fCurrentSoup))
+		{
+			WriteResult(kDockErrNoSuchSoup);
+			return;
+		}
+		SetupSoup();
+	}
+	VerifySoup();
+	RefVar cursor(SoupQuery(fCurrentSoup, querySpec));
+	if (fCursors == nil)
+	{
+		fCursors = new TCursorArray;
+		if (fCursors == nil)
+			OutOfMemory();
+	}
+	WriteLong('ldta', fCursors->Add(cursor));
+}
+
+
+// ROM 0x00092fb0 RemoteGetCursor__7TDockerFv
+// The cursor the command names (its first word); kDockErrBadCursor if
+// there is none of the number.
+Ref
+TDocker::RemoteGetCursor(void)
+{
+	unsigned long number;
+	*fPipe >> number;
+	if (fCursors == nil)
+		Throw(exLongErrorException, (void*) (intptr_t) kDockErrBadCursor, nil);
+	RefVar cursor(fCursors->Get(number));
+	if (ISNIL(cursor))
+		Throw(exLongErrorException, (void*) (intptr_t) kDockErrBadCursor, nil);
+	return cursor;
+}
+
+
+// ROM 0x00093040 RemoteCursorGotoKey__7TDockerFv
+// 'goto': the cursor moved to the key.  ==> 'entr' the entry there.
+void
+TDocker::RemoteCursorGotoKey(void)
+{
+	RefVar cursor(RemoteGetCursor());
+	RefVar key(ReadRef(fCurrentStore));
+	RefVar entry(CursorGotoKey(cursor, key));
+	WriteEntry('entr', entry);
+}
+
+
+// ROM 0x000930b8 RemoteCursorMap__7TDockerFv
+// 'cmap': a function mapped over the cursor's entries (MapCursor).
+// ==> 'ref ' what it answers.
+void
+TDocker::RemoteCursorMap(void)
+{
+	RefVar cursor(RemoteGetCursor());
+	RefVar fn(ReadRef(fCurrentStore));
+	RefVar result(NSCallGlobalFn(RefVar(RSSYMmapcursor), cursor, fn));
+	WriteRef('ref ', result);
+}
+
+
+// ROM 0x00093138 RemoteCursorEntry__7TDockerFv
+// 'crsr': ==> 'entr' the cursor's entry (as it is: no directory
+// expansion, unlike 'goto').
+void
+TDocker::RemoteCursorEntry(void)
+{
+	RefVar cursor(RemoteGetCursor());
+	RefVar entry(CursorEntry(cursor));
+	WriteRef('entr', entry);
+}
+
+
+// ROM 0x00093190 RemoteCursorMove__7TDockerFv
+// 'move': the cursor moved so many entries.  ==> 'entr'.
+void
+TDocker::RemoteCursorMove(void)
+{
+	RefVar cursor(RemoteGetCursor());
+	unsigned long count;
+	*fPipe >> count;
+	RefVar entry(CursorMove(cursor, (long) (Long32) count));
+	WriteRef('entr', entry);
+}
+
+
+// ROM 0x000931f8 RemoteCursorNext__7TDockerFv
+// 'next': ==> 'entr' the next entry.
+void
+TDocker::RemoteCursorNext(void)
+{
+	RefVar cursor(RemoteGetCursor());
+	RefVar entry(CursorNext(cursor));
+	WriteRef('entr', entry);
+}
+
+
+// ROM 0x00093250 RemoteCursorPrev__7TDockerFv
+// 'prev': ==> 'entr' the previous entry.
+void
+TDocker::RemoteCursorPrev(void)
+{
+	RefVar cursor(RemoteGetCursor());
+	RefVar entry(CursorPrev(cursor));
+	WriteRef('entr', entry);
+}
+
+
+// ROM 0x000932a8 RemoteCursorReset__7TDockerFv
+// 'rset'
+void
+TDocker::RemoteCursorReset(void)
+{
+	RefVar cursor(RemoteGetCursor());
+	CursorReset(cursor);
+	WriteResult(noErr);
+}
+
+
+// ROM 0x00093330 RemoteCursorResetToEnd__7TDockerFv
+// 'rend'
+void
+TDocker::RemoteCursorResetToEnd(void)
+{
+	RefVar cursor(RemoteGetCursor());
+	CursorResetToEnd(cursor);
+	WriteResult(noErr);
+}
+
+
+// ROM 0x00093370 RemoteCursorCountEntries__7TDockerFv
+// 'cnt ': ==> 'ldta' how many entries the cursor has.
+void
+TDocker::RemoteCursorCountEntries(void)
+{
+	RefVar cursor(RemoteGetCursor());
+	WriteLong('ldta', RINT(CursorCountEntries(cursor)));
+}
+
+
+// ROM 0x000933c8 RemoteCursorWhichEnd__7TDockerFv
+// 'whch': ==> 'ldta' which end the cursor is off - 0 neither, 1 the
+// beginning, 2 the end.
+void
+TDocker::RemoteCursorWhichEnd(void)
+{
+	RefVar cursor(RemoteGetCursor());
+	RefVar end(CursorWhichEnd(cursor));
+	ULong which = 0;
+	if (NOTNIL(end))
+	{
+		which = EQRef(end, RSSYMbegin) ? 1 : 0;
+		if (which == 0 && EQRef(end, RSSYMend))
+			which = 2;
+	}
+	WriteLong('ldta', which);
+}
+
+
+// ROM 0x00093470 RemoteCursorFree__7TDockerFv
+// 'cfre': the cursor's number freed.
+void
+TDocker::RemoteCursorFree(void)
+{
+	unsigned long number;
+	*fPipe >> number;
+	if (fCursors != nil)
+		fCursors->Remove(number);
+	WriteResult(noErr);
+}
+
+
+// ------------------------------------------------------------------------
+//	The entries
+// ------------------------------------------------------------------------
+
+// ROM 0x00099fd8 GetEntryFromID__7TDockerFUl
+// The current soup's entry of the unique id, or nil.
+Ref
+TDocker::GetEntryFromID(ULong id)
+{
+	VerifySoup();
+	ValidateQuery();
+	return CursorGotoKey(fQuery, RefVar(MAKEINT(id)));
+}
+
+
+// ROM 0x00099f6c WriteEntry__7TDockerFUlRC6RefVar
+// An entry sent - a directory (metasoup) entry expanded first.
+void
+TDocker::WriteEntry(ULong command, RefArg entry)
+{
+	RefVar obj(entry);
+	if (fIsDirectorySoup)
+		obj = NSCallGlobalFn(RefVar(RSSYMexpanddirectoryentry), entry);
+	WriteRef(command, obj);
+}
+
+
+// ROM 0x0009b1b4 ReturnEntry__7TDockerFUl
+// 'rete' ('entr') / 'rcen' ('cent'): the entry of the id sent back
+// (kDockErrNoSuchEntry if there is none).
+void
+TDocker::ReturnEntry(ULong command)
+{
+	unsigned long id;
+	*fPipe >> id;
+	RefVar entry(GetEntryFromID(id));
+	if (ISNIL(entry))
+		Throw(exLongErrorException, (void*) (intptr_t) kDockErrNoSuchEntry, nil);
+	else
+		WriteEntry(command, entry);
+}
+
+
+// ROM 0x0009a600 IsDuplicateEntry__7TDockerFRC6RefVar
+// NOT YET: whether a restored entry is already in the soup (a selective
+// restore - DoConnection's first argument - compares it by the soup's
+// indexes); answers no, so every entry is added.
+Boolean
+TDocker::IsDuplicateEntry(RefArg /*entry*/)
+{
+	return false;
+}
+
+
+// ROM 0x0009aa08 ConvertEntry__7TDockerFRC6RefVar
+// NOT YET: a 1.x Newton's entry converted by its application's conversion
+// frame; the entry is refused as the ROM refuses one whose conversion
+// fails (a 'conversionError noted, nothing added).
+Ref
+TDocker::ConvertEntry(RefArg /*entry*/)
+{
+	AddChangedSoup(RefVar(RSSYMconversionerror), 1);
+	return NILREF;
+}
+
+
+// ROM 0x0009ac3c AddEntry__7TDockerFUc
+// 'adde' / 'auni': an entry the desktop sends added to the current soup
+// (with its own unique id, for 'auni', if it has one).  An entry from a
+// 1.x Newton is converted first; a System soup entry from another kind of
+// Newton goes through Restore2.0SystemEntry, and the user configuration
+// entry replaces the machine's own (its password dropped) and the globals
+// are loaded again.  ==> 'adid' the new id ('adde') or 'dres' ('auni').
+void
+TDocker::AddEntry(Boolean withUniqueID)
+{
+	VerifySoup();
+	RefVar entry(ReadRef(fCurrentStore));
+	if (ISNIL(entry))
+		Throw(exLongErrorException, (void*) (intptr_t) kDockErrNoEntry, nil);
+	Boolean reloadGlobals = false;
+	Boolean converted = false;
+	long id = -1;
+	if (fSourceVersion != 2)
+	{
+		converted = true;
+		entry = ConvertEntry(entry);
+	}
+	else if (fIsSystemSoup)
+	{
+		if (!(fMachineType == fSourceMachineType && fManufacturer == fSourceManufacturer))
+			entry = NSCallGlobalFn(RefVar(RSSYMrestore2_2E0systementry), entry);
+		if (NOTNIL(entry))
+		{
+			RefVar tag(GetFrameSlot(entry, RSSYMtag));
+			if (NOTNIL(tag))
+			{
+				RefVar userConfiguration(MakeString("Userconfiguration"));
+				TRichString wanted(userConfiguration);
+				TRichString given(tag);
+				if (given.CompareSubStringCommon(wanted, 0, -1, false) == 0)
+				{
+					RefVar current(GetFrameSlot(RefVar(gVarFrame), RSSYMuserconfiguration));
+					if (IsSoupEntry(current))
+						EntryRemoveFromSoup(current);
+					RemoveSlot(entry, RSSYMusepassword);
+					RemoveSlot(entry, RSSYMpasswordkey);
+					reloadGlobals = true;
+				}
+			}
+		}
+	}
+	Boolean add = NOTNIL(entry);
+	if (add && fHasArg1)
+		add = !IsDuplicateEntry(entry);
+	if (add)
+	{
+		newton_try
+		{
+			if (withUniqueID && FrameHasSlot(entry, RSSYM_uniqueid))
+				SoupAddFlushedWithUniqueId(fCurrentSoup, entry);
+			else
+			{
+				SoupAddFlushed(fCurrentSoup, entry);
+				id = EntryUniqueID(entry);
+			}
+		}
+		newton_catch_all
+		{
+			if (converted)
+				AddChangedSoup(RefVar(RSSYMconversionerror), 1);
+			else
+				rethrow;
+		}
+		end_try;
+	}
+	if (reloadGlobals)
+		NSCall(RefVar(Rloadglobals));
+	if (withUniqueID)
+		WriteResult(fError);
+	else
+		WriteLong('adid', id);
+	if (add)
+		AddChangedSoup(RefVar(RSSYMadded), 1);
+}
+
+
+// ROM 0x0009afd4 ReplaceEntryContents__7TDockerFRC6RefVar
+// The current soup's entry of the new contents' _uniqueID replaced by them,
+// keeping the modification time they carry (kDockErrEntryNotFound if
+// there is no such entry).
+void
+TDocker::ReplaceEntryContents(RefArg entry)
+{
+	RefVar id(GetFrameSlot(entry, RSSYM_uniqueid));
+	if (ISNIL(id))
+		Throw(exLongErrorException, (void*) (intptr_t) kDockErrEntryNotFound, nil);
+	RefVar current(GetEntryFromID(RINT(id)));
+	if (ISNIL(current))
+		Throw(exLongErrorException, (void*) (intptr_t) kDockErrEntryNotFound, nil);
+	SetFrameSlot(entry, RSSYM_modtime, RefVar(MAKEINT(RINT(GetFrameSlot(entry, RSSYM_modtime)))));
+	EntryReplaceWithModTime(current, entry);
+}
+
+
+// ROM 0x0009b128 ChangeEntry__7TDockerFv
+// 'cent': an entry the desktop changed put back.
+void
+TDocker::ChangeEntry(void)
+{
+	VerifySoup();
+	RefVar entry(ReadRef(fCurrentStore));
+	if (ISNIL(entry))
+		Throw(exLongErrorException, (void*) (intptr_t) kDockErrNoEntry, nil);
+	ReplaceEntryContents(entry);
+	WriteResult(noErr);
+	AddChangedSoup(RefVar(RSSYMchanged), 1);
+}
+
+
+// ROM 0x0009a058 DeleteEntries__7TDockerFv
+// 'dele': a count and that many unique ids, each such entry of the current
+// soup removed.
+void
+TDocker::DeleteEntries(void)
+{
+	VerifySoup();
+	UByte* ids = (UByte*) NewPtr(fLength);
+	if (ids == nil)
+		OutOfMemory();
+	long deleted = 0;
+	ReadChunk(ids, fLength, true);
+	RefVar entry;
+	// DEVIATION: the words are the desktop's, big-endian
+	ULong count = GetBigEndianWord(ids);
+	for (ULong i = 0; i < count; i++)
+	{
+		entry = GetEntryFromID(GetBigEndianWord(ids + 4 + i * 4));
+		if (NOTNIL(entry))
+		{
+			deleted++;
+			EntryRemoveFromSoup(entry);
+		}
+	}
+	DisposPtr((Ptr) ids);
+	WriteResult(noErr);
+	if (deleted != 0)
+		AddChangedSoup(RefVar(RSSYMdeleted), deleted);
+}
+
+
+// ROM 0x0009b238 EmptyOrDelete__7TDockerFUl
+// 'esou' / 'dsou': the current soup emptied, or removed from its store -
+// the directory, for a 1.x restore, emptied of all but the built-in soups
+// instead; the packages soup's packages zapped for a full restore instead;
+// the globals loaded again after the System soup.
+void
+TDocker::EmptyOrDelete(ULong command)
+{
+	VerifySoup();
+	Boolean plain = true;
+	if (fSourceVersion == 1 && fIsDirectorySoup)
+	{
+		NSCallGlobalFn(RefVar(RSSYMremallbutbuiltinfromdir));
+		plain = false;
+	}
+	if (!fIsPackageSoup)
+	{
+		if (plain)
+		{
+			if (command == 'dsou')
+				SoupRemoveFromStore(fCurrentSoup);
+			else
+				SoupRemoveAllEntries(fCurrentSoup);
+			if (fIsSystemSoup)
+				NSCall(RefVar(Rloadglobals));
+		}
+	}
+	else
+	{
+		NSCallGlobalFn(RefVar(RSSYMzappackagesforfullrestore), fCurrentStore);
+		plain = false;
+	}
+	WriteResult(noErr);
+	if (plain || fIsDirectorySoup)
+		AddChangedSoup(RefVar(RSSYMemptied), 1);
+}
+
+
+// ROM 0x00098684 AddChangedSoup__7TDockerFRC6RefVarUl
+// What happened to the current soup noted for BroadcastChanges
+// (ConnAddChangedSoup(changes, name, kind, count)).
+void
+TDocker::AddChangedSoup(RefArg change, ULong count)
+{
+	if (ISNIL(fCurrentSoup))
+		return;
+	RefVar name(SoupGetName(fCurrentSoup));
+	if (ISNIL(fSyncChanges))
+		fSyncChanges = AllocateArray(RSSYMarray, 0);
+	// (the ROM's four-argument NSCallGlobalFn, which the host has not got)
+	RefVar fn(NSGetGlobalFn(RefVar(RSSYMconnaddchangedsoup)));
+	NSCall(fn, fSyncChanges, name, change, RefVar(MAKEINT(count)));
+}
+
+
+// ROM 0x0009bba8 ReadSourceVersion__7TDockerFv
+// 'sver': the version of the Newton the data comes from, and (if the
+// command is long enough) its manufacturer and machine.
+void
+TDocker::ReadSourceVersion(void)
+{
+	unsigned long word;
+	*fPipe >> word;
+	fSourceVersion = (long) word;
+	if (fLength < 5)
+	{
+		fSourceManufacturer = 0;
+		fSourceMachineType = 0;
+	}
+	else
+	{
+		*fPipe >> word;
+		fSourceManufacturer = word;
+		*fPipe >> word;
+		fSourceMachineType = word;
+	}
+	WriteResult(noErr);
+}
+
+
+// ROM 0x00098d54 ShouldBackupEntry__7TDockerFRC6RefVar
+// A System soup entry whose backupInfo says 'dontBackup is left out.
+Boolean
+TDocker::ShouldBackupEntry(RefArg entry)
+{
+	if (!fIsSystemSoup)
+		return true;
+	RefVar info(GetFrameSlot(entry, RSSYMbackupinfo));
+	return ISNIL(info) || !EQRef(info, RSSYMdontbackup);
+}
+
+
+// ROM 0x00098e98 GetSoupIDCount__7TDockerFRC6RefVar
+// How many of the cursor's entries are backed up.
+long
+TDocker::GetSoupIDCount(RefArg cursor)
+{
+	if (fIsSystemSoup)
+	{
+		long count = 0;
+		RefVar entry(CursorEntry(cursor));
+		while (NOTNIL(entry))
+		{
+			if (ShouldBackupEntry(entry))
+				count++;
+			entry = CursorNext(cursor);
+		}
+		CursorReset(cursor);
+		return count;
+	}
+	return RINT(CursorCountEntries(cursor));
+}
+
+
+// ROM 0x0009984c WriteSoupIDs__7TDockerFv
+// 'gids' -> 'sids': the unique ids of the entries backed up (for the
+// packages soup, those of the packages a backup takes), thirty at a time;
+// and, if the desktop gave its time, the ones changed since noted for
+// 'gcid'.
+void
+TDocker::WriteSoupIDs(void)
+{
+	VerifySoup();
+	RefVar cursor;
+	if (!fIsPackageSoup)
+	{
+		ValidateQuery();
+		CursorReset(fQuery);
+		cursor = fQuery;
+	}
+	else
+		cursor = NSCallGlobalFn(RefVar(RSSYMgetbackupallpackagescursor), fCurrentStore);
+	WriteDockerHeader('sids', false);
+	ULong count = ISNIL(cursor) ? 0 : GetSoupIDCount(cursor);
+	*fPipe << (unsigned long) (count * 4 + 4);
+	*fPipe << (unsigned long) count;
+	if (fChangedIDs != nil)
+	{
+		delete fChangedIDs;
+		fChangedIDs = nil;
+	}
+	if (ISNIL(cursor))
+	{
+		fPipe->FlushWrite();
+		return;
+	}
+	RefVar entry(CursorEntry(cursor));
+	UByte ids[30 * 4];
+	long n = 0;
+	while (NOTNIL(entry))
+	{
+		if (ShouldBackupEntry(entry))
+		{
+			// DEVIATION: the words written big-endian, as the ROM's are
+			PutBigEndianWord(ids + n * 4, (unsigned int) EntryUniqueID(entry));
+			if (++n == 30)
+			{
+				n = 0;
+				fPipe->WriteChunk(ids, sizeof(ids), false);
+			}
+		}
+		entry = CursorNext(cursor);
+	}
+	if (n != 0)
+		fPipe->WriteChunk(ids, n * 4, false);
+	fPipe->FlushWrite();
+	if (fDesktopTime != 0)
+	{
+		CursorReset(cursor);
+		for (entry = CursorEntry(cursor); NOTNIL(entry); entry = CursorNext(cursor))
+		{
+			if (fDesktopTime <= (ULong) EntryModTime(entry) && ShouldBackupEntry(entry))
+			{
+				if (fChangedIDs == nil)
+				{
+					fChangedIDs = new TDockerDynArray;
+					if (fChangedIDs == nil)
+						OutOfMemory();
+				}
+				if (fChangedIDs->Add(EntryUniqueID(entry)) != noErr)
+					// ROM BUG: the id is added a second time to find the
+					// error to throw
+					Throw(exLongErrorException, (void*) (intptr_t) fChangedIDs->Add(EntryUniqueID(entry)), nil);
+			}
+		}
+	}
+}
+
+
+// ROM 0x00099b24 WriteChangedIDs__7TDockerFv
+// 'gcid' -> 'cids': the ids 'gids' found changed since the desktop's time
+// (then forgotten), or none.
+void
+TDocker::WriteChangedIDs(void)
+{
+	WriteDockerHeader('cids', false);
+	if (fChangedIDs != nil && fChangedIDs->fCount != 0 && fChangedIDs->fWords != nil)
+	{
+		HLock(fChangedIDs->fWords);
+		ULong count = fChangedIDs->fCount;
+		*fPipe << (unsigned long) (count * 4 + 4);
+		*fPipe << (unsigned long) count;
+		// DEVIATION: the words written big-endian, as the ROM's are
+		for (ULong i = 0; i < count; i++)
+			*fPipe << (unsigned long) ((ULong*) *fChangedIDs->fWords)[i];
+		delete fChangedIDs;
+		fChangedIDs = nil;
+	}
+	else
+	{
+		*fPipe << (long) 4;
+		*fPipe << (long) 0;
+	}
+	fPipe->FlushWrite();
+}
+
+
 // ROM 0x000934b0 ProcessCommand__7TDockerFRUcT1
 // One of the desktop's commands carried out.  done: the session is over
 // ('disc'); operationDone: the operation the session was for is over, and
 // the command loop ends without disconnecting (an extension answered,
 // 'opca', 'opdn', a package loaded on protocol 10).
-// The stores' and soups' commands are here too.  NOT YET: the entry,
-// cursor, soup-creating, backup, package-list, patch, slip and function
+// The stores', soups', cursors' and entries' commands are here too.  NOT
+// YET: the soup-creating, backup, package-list, patch, slip and function
 // commands - each is answered 'unkn' as a command the Newton does not know
 // is, which a desktop takes as a Newton too old to do it.
 void
@@ -2115,6 +2815,73 @@ TDocker::ProcessCommand(Boolean* done, Boolean* operationDone)
 			break;
 		case 'ssos':
 			SetSoupSignature();
+			break;
+		case 'qury':
+			RemoteQuery();
+			break;
+		case 'cmap':
+			RemoteCursorMap();
+			break;
+		case 'goto':
+			RemoteCursorGotoKey();
+			break;
+		case 'crsr':
+			RemoteCursorEntry();
+			break;
+		case 'move':
+			RemoteCursorMove();
+			break;
+		case 'next':
+			RemoteCursorNext();
+			break;
+		case 'prev':
+			RemoteCursorPrev();
+			break;
+		case 'rset':
+			RemoteCursorReset();
+			break;
+		case 'rend':
+			RemoteCursorResetToEnd();
+			break;
+		case 'cnt ':
+			RemoteCursorCountEntries();
+			break;
+		case 'whch':
+			RemoteCursorWhichEnd();
+			break;
+		case 'cfre':
+			RemoteCursorFree();
+			break;
+		case 'rete':
+			ReturnEntry('entr');
+			break;
+		case 'rcen':
+			ReturnEntry('cent');
+			break;
+		case 'adde':
+			AddEntry(false);
+			break;
+		case 'auni':
+			AddEntry(true);
+			break;
+		case 'cent':
+			ChangeEntry();
+			break;
+		case 'dele':
+			DeleteEntries();
+			break;
+		case 'esou':
+		case 'dsou':
+			EmptyOrDelete(fCommand);
+			break;
+		case 'sver':
+			ReadSourceVersion();
+			break;
+		case 'gids':
+			WriteSoupIDs();
+			break;
+		case 'gcid':
+			WriteChangedIDs();
 			break;
 		case kDSetTime:
 		{

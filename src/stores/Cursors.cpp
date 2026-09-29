@@ -2311,7 +2311,7 @@ FCursorReset(RefArg rcvr)
 
 
 // ROM 0x002d09c0 CursorResetToEnd
-static Ref
+Ref
 CursorResetToEnd(RefArg rcvr)
 {
 	return CursorObj(rcvr)->ResetToEnd();
@@ -2327,7 +2327,7 @@ FCursorClone(RefArg rcvr)
 
 
 // ROM 0x002d09f4 CursorCountEntries
-static Ref
+Ref
 CursorCountEntries(RefArg rcvr)
 {
 	return MAKEINT(CursorObj(rcvr)->CountEntries());
@@ -2335,7 +2335,7 @@ CursorCountEntries(RefArg rcvr)
 
 
 // ROM 0x002d0a18 CursorWhichEnd
-static Ref
+Ref
 CursorWhichEnd(RefArg rcvr)
 {
 	return CursorObj(rcvr)->IsParked();

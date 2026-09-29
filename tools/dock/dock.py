@@ -144,6 +144,57 @@ class DockSession:
         self.write_command(b"gsin")
         info = nsof.decode(self.expect(b"sinf"))
         print("dock.py: the System soup's info: %s" % (type(info).__name__))
+        print("dock.py: the soups: %s" % ", ".join(names))
+
+    def word(self, cmd, data=b""):
+        """A command answered by one word ('ldta', 'adid', 'dres'...)."""
+        self.write_command(cmd, data)
+        reply, answer = self.read_command()
+        return reply, struct.unpack(">i", answer[:4])[0]
+
+    def look_at_entries(self, soup="Notes"):
+        """In a session: a cursor over a soup ('qury'), counted, walked and
+        freed; its ids ('gids'); an entry added ('adde'), read back
+        ('rete'), changed ('cent') and deleted ('dele').  The soup is left
+        as it was.  ==> True if it all came out as it should."""
+        ok = True
+        reply, cursor = self.word(b"qury", nsof.encode({Symbol("querySpec"): None, Symbol("soupName"): soup}))
+        _, count = self.word(b"cnt ", struct.pack(">I", cursor))
+        print("dock.py: %s: cursor %d, %d entries" % (soup, cursor, count))
+        added = self.word(b"adde", nsof.encode({Symbol("class"): Symbol("paragraph"),
+                                                Symbol("text"): "written by dock.py",
+                                                Symbol("viewBounds"): {Symbol("left"): 0, Symbol("top"): 0,
+                                                                       Symbol("right"): 100, Symbol("bottom"): 20}}))[1]
+        print("dock.py: added entry %d" % added)
+        _, count2 = self.word(b"cnt ", struct.pack(">I", cursor))
+        ok = ok and count2 == count + 1
+        self.write_command(b"gids")
+        data = self.expect(b"sids")
+        ids = struct.unpack(">%dI" % struct.unpack(">I", data[:4])[0], data[4:])
+        ok = ok and added in ids and len(ids) == count2
+        print("dock.py: %d ids, the new one %s" % (len(ids), "among them" if added in ids else "missing"))
+        self.write_command(b"rete", struct.pack(">I", added))
+        entry = nsof.decode(self.expect(b"entr"))
+        print("dock.py: entry %d reads %r" % (added, entry.get(Symbol("text"))))
+        ok = ok and entry.get(Symbol("text")) == "written by dock.py"
+        entry[Symbol("text")] = "changed by dock.py"
+        _, result = self.word(b"cent", nsof.encode(entry))
+        self.write_command(b"rete", struct.pack(">I", added))
+        entry = nsof.decode(self.expect(b"entr"))
+        print("dock.py: after 'cent' it reads %r" % entry.get(Symbol("text")))
+        ok = ok and result == 0 and entry.get(Symbol("text")) == "changed by dock.py"
+        self.write_command(b"rset", struct.pack(">I", cursor))
+        self.expect(b"dres")
+        self.write_command(b"crsr", struct.pack(">I", cursor))
+        first = nsof.decode(self.expect(b"entr"))
+        _, end = self.word(b"whch", struct.pack(">I", cursor))
+        _, result = self.word(b"dele", struct.pack(">II", 1, added))
+        _, count3 = self.word(b"cnt ", struct.pack(">I", cursor))
+        _, freed = self.word(b"cfre", struct.pack(">I", cursor))
+        ok = ok and result == 0 and count3 == count and freed == 0 and isinstance(first, dict)
+        print("dock.py: deleted (%d), %d entries again, cursor at end %d, freed; entries %s"
+              % (result, count3, end, "all right" if ok else "WRONG"))
+        return ok
 
     def load_packages(self, packages, session=False):
         """The package loader's session, or (session) a docking session
@@ -153,6 +204,8 @@ class DockSession:
         if session:
             self.docking_session()
             self.look_at_stores()
+            if not self.look_at_entries():
+                raise RuntimeError("the entry commands went wrong")
         results = []
         for path in packages:
             with open(path, "rb") as f:
