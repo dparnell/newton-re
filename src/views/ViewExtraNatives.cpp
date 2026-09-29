@@ -28,6 +28,7 @@
 #include "Rects.h"
 #include "Screen.h"			// StartDrawing, StopDrawing
 #include "Locale.h"			// GetPreference, SetPreference
+#include "SplashScreen.h"	// DrawSplashGraphic
 
 
 // ROM 0x001ea130 FDV
@@ -179,6 +180,24 @@ FGrayShrink(RefArg rcvr, RefArg bitmap, RefArg style)
 }
 
 
+// ROM 0x0014708c FDisplaySplashGraphic
+// view:DrawGraphic(box): the maker's splash picture drawn centred in the
+// box (DrawSplashGraphic).  ==> true when there was one - the script
+// that asks draws its own default picture when there is not, which on
+// the MP2x00, with no TMainSplashScreenInfo registered, is always.
+static Ref
+FDisplaySplashGraphic(RefArg /*rcvr*/, RefArg bounds)
+{
+	Rect box;
+	FromObject(bounds, box);
+	UChar drawn;
+	TSplashScreenInfo* info = DrawSplashGraphic(&drawn, box);
+	if (info != nil)
+		info->Delete();
+	return drawn ? TRUEREF : NILREF;
+}
+
+
 // ROM 0x001eaf74 FSyncScrollX
 // roll:SyncScroll(items, index, direction) - a roll's items scrolled a
 // step (TView::SyncScroll); items a soup cursor (a frame) go through
@@ -201,6 +220,7 @@ void
 RegisterViewExtraNatives(void)
 {
 	RegisterNativeFunction("FSyncScrollX", (void*) FSyncScrollX, 3);
+	RegisterNativeFunction("FDisplaySplashGraphic", (void*) FDisplaySplashGraphic, 1);
 	RegisterNativeFunction("FGrayShrink", (void*) FGrayShrink, 2);
 	RegisterNativeFunction("FDV", (void*) FDV, 1);
 	RegisterNativeFunction("FViewAutopsy", (void*) FViewAutopsy, 1);
