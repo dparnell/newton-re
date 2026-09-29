@@ -1245,6 +1245,15 @@ TCodecChannel::InitNode(ChannelNode* node)
 		codecState->fBufferCount = 0;
 		codecState->fIndex = 0;
 		codecState->fDone = false;
+		// ROM BUG, kept: fError and fState are not set here (the ROM's
+		// operator new(0x48) leaves them as the heap had them).  A
+		// compressor's state is the channel's one, and the node being
+		// recorded when Stop comes is let go by WaitForNextBuffer as its
+		// last buffer returns (Abort) without ever going through FreeNode,
+		// which is what sets them - so the recording's node is answered
+		// with whatever error word the heap held (seen on the host as
+		// 19333588).  The Sound Recorder's RecordCompletion then takes an
+		// error other than 0 or -30011 as its engine error 2.
 	}
 	if ((fFlags & kSndChannelInput) != 0 || (fFlags & kSndChannelCompressor) != 0)
 	{

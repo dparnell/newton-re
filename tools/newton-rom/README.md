@@ -39,6 +39,10 @@ tools/newton-rom/
     coverage.py           which ROM functions src/ cites, and that the citations are right
     portfields.py         every src/ function that touches a port's visRgn/clipRgn, checked against the ROM
                           (Ghidra's GrafPort lacks QD_Gray's word: its clipRgn is the ROM's visRgn, its fgPat the clip)
+    romsizes.py           ROM byte counts used as the size of something pointer-sized on the host: hex sizes
+                          given to Send/Reply/SetReply/NewPtr/memcpy/... next to a struct holding a ULong, Ref,
+                          pointer or TRegister (WIDE), [--all] [--wide-only] [--lp64 for Linux's 64-bit long];
+                          python tools/newton-rom/analysis/romsizes.py [src]; tests/test_romsizes.py
     natives.py            which of the ROM's 1326 native functions src/ answers, by area;
                           --unbound [--ready], --check, --csv
     symbols.py            search the symbol table by regex (address, mangled name, signature)
