@@ -283,6 +283,51 @@ TestPeriodic(void)
 }
 
 
+static void
+TestProtoClone(void)
+{
+	static const char* const kClone[] = { "IsFrame", "IsFunction", "evt.ex.msg", "message", "Throw", "map", "f" };
+	RefVar clone(NativeFunction(0x8124, 1, kClone, 7));
+	SetLiteral(clone, 3, "\"ProtoClone only works with frames.\"");
+	RefVar closure(GetArraySlot(clone, 3));
+	RefVar lits(GetFrameSlot(closure, RefVar(Sym("_literals"))));
+	SetArraySlot(lits, 5, RefVar(SharedFrameMap(RefVar(Eval("{_proto: nil}")))));
+	// f, as the package has it: the function itself, in its closure
+	SetFrameSlot(closure, RefVar(Sym("f")), clone);
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Sym("protoClone")), clone);
+
+	Eval("orig := {a: 1, sub: {b: 2, deep: {c: 3}}, fn: func() 4, arr: [5]}");
+	RefVar c(Eval("copy := call protoClone with (orig)"));
+	EXPECT(IsFrame(c));
+	EXPECT(EQRef(Eval("copy._proto"), Eval("orig")));
+	EXPECT(RINT(Eval("copy.a")) == 1);						// through _proto
+	EXPECT(ISNIL(Eval("GetSlot(copy, 'a)")));
+	EXPECT(NOTNIL(Eval("GetSlot(copy, 'sub)")));				// frames copied
+	EXPECT(EQRef(Eval("copy.sub._proto"), Eval("orig.sub")));
+	EXPECT(EQRef(Eval("copy.sub.deep._proto"), Eval("orig.sub.deep")));
+	EXPECT(ISNIL(Eval("GetSlot(copy, 'fn)")));				// functions not
+	EXPECT(ISNIL(Eval("GetSlot(copy, 'arr)")));				// nor arrays
+	Eval("copy.sub.b := 20");
+	EXPECT(RINT(Eval("orig.sub.b")) == 2);
+
+	// not a frame: evt.ex.msg with the message
+	Ref thrown = NILREF;
+	newton_try
+	{
+		Eval("call protoClone with ([1])");
+	}
+	newton_catch_all
+	{
+		if (Subexception(_info.exception.name, "evt.ex.msg"))
+			thrown = TRUEREF;
+	}
+	end_try;
+	EXPECT(NOTNIL(thrown));
+	long caught = RINT(Eval("try call protoClone with (func() 1) onexception |evt.ex.msg| do 1"));
+	EXPECT(caught == 1);
+}
+
+
 int
 main()
 {
@@ -318,6 +363,7 @@ main()
 		TestEngine();
 		TestEvents();
 		TestPeriodic();
+		TestProtoClone();
 	}
 	newton_catch_all
 	{

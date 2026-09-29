@@ -41,6 +41,9 @@ Ref		NIETrimSeparator(RefArg rcvr, RefArg s, RefArg closure);
 Ref		NIEPeriodicViewIdleScript(RefArg rcvr, RefArg closure);
 Ref		NIEKillPeriodicEvent(RefArg rcvr, RefArg event, RefArg closure);
 
+// ProtoClone (ProtoFSMClone.cpp)
+Ref		NIEProtoClone(RefArg rcvr, RefArg obj, RefArg closure);
+
 void	RegisterNIENatives(void);
 
 #endif
