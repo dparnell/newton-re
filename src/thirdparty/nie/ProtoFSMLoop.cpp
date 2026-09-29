@@ -348,6 +348,12 @@ NIEDoEventLoop(RefArg rcvr, RefArg closure)
 				RefVar level(NIEAdd(RefVar(GetFramePath(ctx, RefVar(Lit(closure, kLitLevel)))), RefVar(MAKEINT(1))));
 				SetFrameSlot(ctx, RefVar(Lit(closure, kLitLevel)), level);
 				NIETryEvtEx(PerformAction, ActionFailed, &st);
+				// NIE BUG (kept): an action that disposes of its own machine
+				// (the link manager's CleanUp, when its last link goes) has
+				// emptied the context by now, and level - 1 of its nil level
+				// throws -48404 "not a number" out of DoEvent_Loop; the NIE's
+				// own ARM does the same (the CPU oracle: NEWTON_NIE_ON_CPU
+				// with demo/inetfsm.ns)
 				level = NIESubtract(RefVar(GetFramePath(ctx, RefVar(Lit(closure, kLitLevel)))), RefVar(MAKEINT(1)));
 				SetFrameSlot(ctx, RefVar(Lit(closure, kLitLevel)), level);
 				TraceAction(closure, self, ctx, kLitPostAction);

@@ -5,11 +5,17 @@
 				its offset in the NIE's native code binary.  (The offsets and
 				argument counts are the function objects', tools/newton-rom/
 				analysis/pkgns.py --natives; the count includes the closure.)
+
+				NEWTON_NIE_ON_CPU in the environment registers none, so the
+				NIE's own ARM runs on the CPU fallback (src/armcpu) - the
+				oracle a whole run of the host can be compared against.
 */
 
 #include "NIENatives.h"
 #include "NIERuntime.h"
 #include "PackageNatives.h"
+
+#include <stdlib.h>
 
 #define REGISTER(offset, fn, numArgs, name) \
 	RegisterPackageNative(kNIECodeLength, kNIECodeHash, offset, (void*) fn, numArgs, name)
@@ -17,6 +23,8 @@
 void
 RegisterNIENatives(void)
 {
+	if (getenv("NEWTON_NIE_ON_CPU") != NULL)
+		return;
 	REGISTER(0x29ec, NIEDoEvent, 3, "_proto.DoEvent");
 	REGISTER(0x2ff8, NIEDoEventLoop, 1, "_proto.DoEvent_Loop");
 	REGISTER(0x7a1c, NIEQueuePeek, 1, "QueueTemplate.Peek");
