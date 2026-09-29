@@ -1,0 +1,25 @@
+// A gestalt of a script's own: RegisterGestalt puts a parameter block with
+// the gestalt server, Gestalt's array form reads it back, ReplaceGestalt
+// gives it new values - and a selector of the system's is refused.  Then
+// UnmountCard's arguments are checked (there is no card server to send the
+// card away), a socket has no stores, and BootSucceeded, which an automated
+// boot test watches for, makes its file.
+// (ctest host.NewtonGestalt)
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --headless 30 --script src/host/demo/gestalt.ns
+
+constant kMine := 0x03000123;
+kTemplate := ['struct, 'long, 'long, 'boolean];
+
+Print(["register", RegisterGestalt(kMine, [12, -34, true], kTemplate, 0)]);
+Print(["read", Gestalt([kMine, kTemplate, 0])]);
+Print(["replace", ReplaceGestalt(kMine, [56, 78, nil], kTemplate, 0)]);
+Print(["read again", Gestalt([kMine, kTemplate, 0])]);
+Print(["a system selector", RegisterGestalt(0x01000003, [1], ['struct, 'long], 0)]);
+Print(["not a selector", RegisterGestalt('x, [1], ['struct, 'long], 0)]);
+Print(["unmount, not a function", UnmountCard(3, 0)]);
+Print(["unmount, no card server", UnmountCard(func(r) nil, 0)]);
+Print(["card slot stores", GetCardSlotStores(0)]);
+BootSucceeded(true);
+Print("gestalt: done");
+HostQuit();

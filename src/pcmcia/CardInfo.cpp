@@ -11,6 +11,8 @@
 #include "ROMConstants.h"
 #include "RSSymbols.h"
 #include "ObjectHeap.h"
+#include "Interpreter.h"
+#include "OSErrors.h"
 
 
 // The version the frame says it is (the ROM's literal, 0x00080800 as a Ref).
@@ -75,10 +77,33 @@ FGetCardTypes(RefArg /*rcvr*/)
 }
 
 
+// ROM 0x0030c6b8 FUnmountCard
+// UnmountCard(callback, socket): the card in the socket put away, the
+// callback called when the card server has done it.  The ROM checks its
+// arguments - a function and an integer, else kError_Bad_Parameters - and
+// sends a TCardAsyncMsg (0x6f, the socket, the callback held in a RefHandle)
+// to the card server through gCardEventHandler, answering nil when it went
+// and the error when it did not (kError_No_Memory when the message or the
+// holder could not be made).
+//
+// NOT YET RECONSTRUCTED: the card server and its event handler.  A machine
+// with no card hardware has no socket to put a card away from, so the
+// message has nowhere to go: this answers kError_Call_Not_Implemented after
+// the ROM's own argument checks, and the callback is never called.
+Ref
+FUnmountCard(RefArg /*rcvr*/, RefArg callback, RefArg socket)
+{
+	if (!IsFunction(callback) || !ISINT((Ref) socket))
+		return MAKEINT(kError_Bad_Parameters);
+	return MAKEINT(kError_Call_Not_Implemented);
+}
+
+
 void
 RegisterCardNatives(void)
 {
 	RegisterNativeFunction("FGetCardInfo", (void*) FGetCardInfo, 0);
 	RegisterNativeFunction("FCheckCardBattery", (void*) FCheckCardBattery, 0);
 	RegisterNativeFunction("FGetCardTypes", (void*) FGetCardTypes, 0);
+	RegisterNativeFunction("FUnmountCard", (void*) FUnmountCard, 2);
 }

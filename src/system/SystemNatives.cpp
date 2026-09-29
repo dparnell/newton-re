@@ -73,6 +73,24 @@ FGetSerialNumber(RefArg /*rcvr*/)
 // (ROM 0x0c104c54, in gLastWakeupTime's neighbourhood.)
 static long	gExtendedGestaltSize = 0;
 
+// DEVIATION: the selectors a script registered (RegisterGestalt): their
+// blocks were marshalled in the MessagePad's byte order (frames/
+// MarshalOut.cpp writes the device's bytes), where a block the system's C
+// code registers is in the host's; Gestalt's array form reads each in the
+// order it was written.  On the MessagePad the two are the same.
+static const long	kScriptGestaltsMax = 32;
+static ULong		gScriptGestalts[kScriptGestaltsMax];
+static long			gScriptGestaltCount = 0;
+
+static Boolean
+IsScriptGestalt(ULong selector)
+{
+	for (long i = 0; i < gScriptGestaltCount; i++)
+		if (gScriptGestalts[i] == selector)
+			return true;
+	return false;
+}
+
 
 // ROM 0x00201bfc ExtendedGestalt
 // Gestalt([selector, template, encoding]) - the array form, which is how
@@ -120,12 +138,101 @@ ExtendedGestalt(RefArg args)
 		if (err == noErr)
 		{
 			long failed = 0;
-			result = ConstructReturnValue(block, RefVar(GetArraySlotRef(args, 1)),
-										  &failed, (int) RINT(GetArraySlotRef(args, 2)));
+			if (IsScriptGestalt((ULong) selector))
+				result = ConstructReturnValueFromDevice(block, RefVar(GetArraySlotRef(args, 1)),
+														&failed, (int) RINT(GetArraySlotRef(args, 2)));
+			else
+				result = ConstructReturnValue(block, RefVar(GetArraySlotRef(args, 1)),
+											  &failed, (int) RINT(GetArraySlotRef(args, 2)));
 		}
 		free(block);
 	}
 	return err == noErr ? (Ref) result : NILREF;
+}
+
+
+// ROM 0x002028e4 UpdateGestalt
+// What RegisterGestalt and ReplaceGestalt share: a selector of the
+// script's own, its parameter block made out of values and the template
+// saying what they are (Marshalling.h, as Gestalt's array form reads them
+// back), registered - or put in place of what is there - with the gestalt
+// server.  ==> true when it was, nil when the arguments were not an integer
+// selector, two arrays and an integer encoding, or the block could not be
+// made or registered.
+//
+// The size of the block is remembered in gExtendedGestaltSize when it is
+// the largest yet, so that Gestalt's first guess at a buffer for it is big
+// enough.
+//
+// ROM BUG, kept: the block MarshalArguments allocates is never freed - the
+// gestalt server copies it, and the ROM leaves its own copy behind on
+// every call.
+static Ref
+UpdateGestalt(RefArg selector, RefArg args, RefArg types, RefArg encoding, Boolean replace)
+{
+	TUGestalt gestalt;
+	long err = 1;
+	if (ISINT(selector) && ISINT(encoding) && IsArray(args) && IsArray(types))
+	{
+		ULong size;
+		err = MarshalArgumentSize(args, types, &size, (int) RINT(encoding));
+		if (err == noErr)
+		{
+			if ((long) size > gExtendedGestaltSize)
+				gExtendedGestaltSize = (long) size;
+			void* block;
+			err = MarshalArguments(args, types, &block, (int) RINT(encoding));
+			if (err == noErr)
+			{
+				if (!replace)
+					err = gestalt.RegisterGestalt((GestaltSelector) RINT(selector), block, size);
+				else
+					err = gestalt.ReplaceGestalt((GestaltSelector) RINT(selector), block, size);
+				if (err == noErr && !IsScriptGestalt((ULong) RINT(selector)) && gScriptGestaltCount < kScriptGestaltsMax)
+					gScriptGestalts[gScriptGestaltCount++] = (ULong) RINT(selector);		// (host: its byte order, above)
+			}
+		}
+	}
+	return err == noErr ? TRUEREF : NILREF;
+}
+
+
+// ROM 0x00202a74 FRegisterGestalt
+// RegisterGestalt(selector, values, template, encoding): a new gestalt.
+static Ref
+FRegisterGestalt(RefArg /*rcvr*/, RefArg selector, RefArg args, RefArg types, RefArg encoding)
+{
+	return UpdateGestalt(selector, args, types, encoding, false);
+}
+
+
+// ROM 0x00202aac FReplaceGestalt
+// ReplaceGestalt(selector, values, template, encoding): one already there,
+// given new values.
+static Ref
+FReplaceGestalt(RefArg /*rcvr*/, RefArg selector, RefArg args, RefArg types, RefArg encoding)
+{
+	return UpdateGestalt(selector, args, types, encoding, true);
+}
+
+
+// ROM 0x0030d0bc FBootSucceeded
+// BootSucceeded(ok): what an automated boot test watches for - a file
+// "bootResults" made when the boot went well, "bootFailure" when ok is nil,
+// through the C library, which on a Newton with the debugger connected
+// writes it on the desktop.  Then the REP's output goes back to stdout if
+// the boot had it going through a translator of its own (gBootOut).
+//
+// The host has no gBootOut (frames/Printer.cpp: the boot's REP output is
+// the host's own), so that half does nothing; the file is made in the
+// working directory, which is the host's desktop.
+static Ref
+FBootSucceeded(RefArg /*rcvr*/, RefArg ok)
+{
+	FILE* f = fopen(ISNIL(ok) ? "bootFailure" : "bootResults", "w");
+	if (f != nil)
+		fclose(f);
+	return NILREF;
 }
 
 
@@ -997,6 +1104,9 @@ RegisterSystemNatives(void)
 {
 	RegisterNativeFunction("FGetSerialNumber", (void*) FGetSerialNumber, 0);
 	RegisterNativeFunction("FGestalt", (void*) FGestalt, 1);
+	RegisterNativeFunction("FRegisterGestalt", (void*) FRegisterGestalt, 4);
+	RegisterNativeFunction("FReplaceGestalt", (void*) FReplaceGestalt, 4);
+	RegisterNativeFunction("FBootSucceeded", (void*) FBootSucceeded, 1);
 	RegisterNativeFunction("FBatteryStatus", (void*) FBatteryStatus, 1);
 	RegisterNativeFunction("FBatteryRawStatus", (void*) FBatteryRawStatus, 1);
 	RegisterNativeFunction("FBatteryLevel__FRC6RefVarT1", (void*) FBatteryLevel, 1);

@@ -41,6 +41,11 @@ target_compile_definitions(newton PRIVATE "NEWTON_DEFAULT_ROM_IMAGE=\"${NEWTON_R
 # boot script (needs the ROM image)
 add_test(NAME host.Newton COMMAND newton --rom ${NEWTON_ROM_BIN} --headless 2 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/newton.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.Newton PROPERTIES TIMEOUT 120)
+# a script's own gestalt registered, read back and replaced; UnmountCard's
+# argument checks; BootSucceeded's file (made in the build directory)
+add_test(NAME host.NewtonGestalt COMMAND newton --rom ${NEWTON_ROM_BIN} --headless 30 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/gestalt.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(host.NewtonGestalt PROPERTIES TIMEOUT 120
+    PASS_REGULAR_EXPRESSION "12, -34, TRUE.*replace., TRUE.*56, 78, NIL.*a system selector., NIL.*not a selector., NIL.*not a function., -10006.*no card server., -10005.*card slot stores., NIL.*gestalt: done")
 # the docker's natives (comms/Docker.h) on the Connection application's
 # protocol frame, with no desktop
 add_test(NAME host.NewtonDocker COMMAND newton --rom ${NEWTON_ROM_BIN} --serial-port none --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/docker.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)

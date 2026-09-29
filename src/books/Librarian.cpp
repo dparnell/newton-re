@@ -23,6 +23,7 @@
 #include "RSSymbols.h"
 #include "Unicode.h"
 #include "NewtonExceptions.h"
+#include <stdio.h>
 #include <string.h>
 
 Ref		FCloseX(RefArg rcvr);			// views/ViewNatives.cpp: view:Close()
@@ -946,10 +947,29 @@ BookClosed(RefArg rcvr)
 }
 
 
+// ROM 0x001ea1d4 FQuickLookDone
+// QuickLookDone(ok): the book reader's QuickLook test finished - a file
+// "bootResults" made when it went well, through the C library (on a Newton
+// with the debugger connected, on the desktop; on the host, in the working
+// directory), as BootSucceeded does for the boot.
+static Ref
+FQuickLookDone(RefArg /*rcvr*/, RefArg ok)
+{
+	if (NOTNIL(ok))
+	{
+		FILE* f = fopen("bootResults", "w");
+		if (f != nil)
+			fclose(f);
+	}
+	return NILREF;
+}
+
+
 void
 RegisterBookNatives(void)
 {
 	RegisterNativeFunction("FBookAvailable", (void*) FBookAvailable, 2);
+	RegisterNativeFunction("FQuickLookDone", (void*) FQuickLookDone, 1);
 	RegisterNativeFunction("FBookRemoved", (void*) FBookRemoved, 1);
 	RegisterNativeFunction("BookTitle", (void*) BookTitle, 0);
 	RegisterNativeFunction("CountPages", (void*) CountPages, 0);
