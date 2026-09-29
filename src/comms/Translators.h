@@ -92,7 +92,7 @@ FormType	GetDataForm(RefArg form, FormUser user);
 #define kCommScriptErrBadForm			(-54001)	// a value the form cannot take, or no form
 #define kCommScriptErrNoData			(-54002)	// nothing came of it
 #define kCommScriptErrNotAnOption		(-54004)	// not a frame, no label, or a type this does not know
-#define kCommScriptErrBadTypelist		(-54005)	// an option's template data has no typelist
+#define kCommScriptErrBadTypelist		(-54011)	// an option's template data has no typelist (the ROM's 0xffff2d05)
 #define kCommScriptErrBadTemplate		(-54011)	// a 'template with no arglist or typelist
 #define kCommScriptOptionResultBase		(-54020)
 

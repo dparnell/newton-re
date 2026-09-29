@@ -14,7 +14,7 @@
 
 	newton [--rom image] [--heap bytes] [--display WxH[xdepth]] [--scale n]
 	       [--script file.ns] [--headless seconds] [--store file] [--erase]
-	       [--package file.pkg]... [--microphone-tone hz]
+	       [--package file.pkg]... [--microphone-tone hz] [--tcp-echo port]
 
 	--headless runs without a window for the seconds (a snapshot of the
 	display can be written by the script: ScreenSnapshot).  The sound it
@@ -27,6 +27,10 @@
 	every boot after that comes up on the Notepad.  --erase throws that
 	file away first and starts again at the Setup assistant, which is what
 	holding the power switch down through a reset does on the machine.
+
+	--tcp-echo runs a TCP echo server on 127.0.0.1 at the port, for a
+	script's endpoint to talk to (comms/host/HostEchoServer.h,
+	src/host/demo/echo.ns).
 
 	--package installs a package once the machine is up, onto the internal
 	store as one arriving from the Newton Connection is (as many as wanted,
@@ -50,6 +54,7 @@
 #include "HostPackages.h"
 #include "HostHeapCheck.h"
 #include "HostSoundDriver.h"
+#include "HostEchoServer.h"
 #include "os600/kernel/host/TaskRuntime.h"
 #include "REPTranslators.h"
 #include "Interpreter.h"
@@ -95,7 +100,7 @@ Usage(void)
 {
 	fprintf(stderr, "usage: newton [--rom image] [--heap bytes] [--display WxH[xdepth]] [--scale n]\n"
 					"              [--script file.ns] [--headless seconds] [--store file] [--erase]\n"
-					"              [--package file.pkg]... [--microphone-tone hz]\n");
+					"              [--package file.pkg]... [--microphone-tone hz] [--tcp-echo port]\n");
 	return 2;
 }
 
@@ -235,6 +240,12 @@ main(int argc, char** argv)
 			script = argv[++i];
 		else if (strcmp(argv[i], "--microphone-tone") == 0 && i + 1 < argc)
 			gToneFrequency = strtol(argv[++i], nil, 0);
+		else if (strcmp(argv[i], "--tcp-echo") == 0 && i + 1 < argc)
+		{
+			long port = strtol(argv[++i], nil, 0);
+			if (HostStartEchoServer((uint16_t) port) == 0)
+				fprintf(stderr, "newton: no echo server on port %ld\n", port);
+		}
 		else if (strcmp(argv[i], "--headless") == 0 && i + 1 < argc)
 		{
 			gHeadlessSeconds = strtol(argv[++i], nil, 0);
@@ -286,6 +297,7 @@ main(int argc, char** argv)
 		}
 	}
 	OsBoot();
+	HostStopEchoServer();
 	HostWindowStop();
 	if (hearing)
 		HostMicrophoneClose();

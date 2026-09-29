@@ -52,6 +52,7 @@
 #include "LetterShapes.h"
 #include "Journal.h"
 #include "TestAgent.h"
+#include "NewScriptEndpoint.h"
 
 
 void
@@ -121,6 +122,9 @@ RegisterAllNatives(void)
 
 	// the Intelligent Assistant
 	RegisterAllAssistantNatives();
+
+	// the NewtonScript endpoint (protoBasicEndpoint's methods)
+	RegisterCommsNatives();
 
 	// the machine itself
 	RegisterSystemNatives();

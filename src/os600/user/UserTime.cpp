@@ -115,6 +115,16 @@ TTime::ConvertTo(TimeUnits units)
 }
 
 
+// ROM 0x0025c4f0 TTimeToMilliseconds__F5TTime
+// The time in milliseconds, truncated (3686 ticks to the millisecond).
+ULong
+TTimeToMilliseconds(TTime t)
+{
+	long remainder;
+	return CompDiv(&t.time, 3686, &remainder);
+}
+
+
 /* -------------------------------------------------------------------------------
 	The real-time clock (seconds and minutes since 1 Jan 1904).
 	NOT YET RECONSTRUCTED: TURealTimeAlarm (the RTC hardware) and the

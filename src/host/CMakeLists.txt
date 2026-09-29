@@ -6,7 +6,7 @@
 # the view system on the host (HostViews.h), for newtonscript and the newt
 # world's boot
 add_library(host_views STATIC HostViews.cpp HostNatives.cpp HostStores.cpp FactorySoups.cpp)
-target_link_libraries(host_views PUBLIC frames views recognition pcmcia sound system stores packages intl intl_meetings assist hal_host_display hal_host_tablet)
+target_link_libraries(host_views PUBLIC frames comms_script views recognition pcmcia sound system stores packages intl intl_meetings assist hal_host_display hal_host_tablet)
 target_include_directories(host_views PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_executable(newtonscript newtonscript.cpp)
@@ -296,3 +296,10 @@ set_tests_properties(host.NewtonTXPages PROPERTIES TIMEOUT 120
 add_test(NAME host.NewtonRecorder COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 45 --microphone-tone 1000 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/recorder.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(host.NewtonRecorder PROPERTIES TIMEOUT 180
                      PASS_REGULAR_EXPRESSION "test tone makes up (8[0-9]|9[0-9]|100)% of what was played.*recorder: opened: Ready to record.*recorder: recording: Recording.*recorder: stopped: Ready to play or record.*recorder: played: Playing.*recorder: done")
+
+# a protoBasicEndpoint over TCP (comms/NewScriptEndpoint.h): the NIE's
+# 'inet service and 'itrs remote socket, to the echo server newton runs
+# (--tcp-echo), written and read back synchronously and asynchronously
+add_test(NAME host.NewtonEcho COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 8 --tcp-echo 52371 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/echo.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(host.NewtonEcho PROPERTIES TIMEOUT 120
+                     PASS_REGULAR_EXPRESSION "echo: connected, state 5.*echo: received hello .byteCount 5.*echo: sent asynchronously, done.*echo: line 15 characters, ended by endsequence.*echo: disconnected, state 2.*echo: unbound, state 1.*echo: done")

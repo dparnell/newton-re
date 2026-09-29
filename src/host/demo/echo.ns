@@ -1,0 +1,68 @@
+// Echo: a protoBasicEndpoint (@383) talking TCP through the host's network
+// stack - the NIE's options, as an Internet script writes them: the 'inet
+// service, and the remote socket 'itrs (four address bytes and a port,
+// marshalled big-endian).  Instantiated, bound and connected
+// synchronously; "hello" written and read back through an input spec
+// (a string terminated after five bytes); then a second line sent
+// asynchronously, its completionScript told, and read back to its end
+// sequence (a newline); then the receive still outstanding cancelled -
+// which the input spec's completion reports to the exceptionHandler as
+// -16005, the request cancelled - and the endpoint disconnected, unbound
+// and disposed.
+//
+// It talks to the echo server newton runs with --tcp-echo:
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//       --tcp-echo 52371 --script src/host/demo/echo.ns --headless 8
+
+kEchoPort := 52371;
+
+ep := {_proto: @383,
+	exceptionHandler: func(e) begin
+		Print("echo: exception " & e.name & " " & e.data);
+		true;
+	end};
+
+options := [
+	{label: "inet", type: 'service, opCode: 512},
+	{label: "itrs", type: 'option, opCode: 512,
+	 data: {arglist: [[127, 0, 0, 1], kEchoPort],
+	        typelist: ['struct, ['array, 'byte, 4], 'short]}}];
+
+Print("echo: instantiating");
+ep:Instantiate(ep, options);
+Print("echo: instantiated, state " & ep:State());
+ep:Bind(nil, nil);
+Print("echo: bound, state " & ep:State());
+ep:Connect(nil, nil);
+Print("echo: connected, state " & ep:State());
+
+ep:SetInputSpec({
+	form: 'string,
+	termination: {byteCount: 5},
+	inputScript: func(endpoint, data, terminator, options) begin
+		Print("echo: received " & data & " (" & terminator.condition & " " & terminator.byteCount & ")");
+		endpoint:SetInputSpec({
+			form: 'string,
+			termination: {endSequence: $\n},
+			inputScript: func(endpoint, data, terminator, options) begin
+				Print("echo: line " & StrLen(data) & " characters, ended by " & terminator.condition);
+				AddDelayedCall(func() begin
+					endpoint:Cancel(nil);
+					Print("echo: cancelled");
+					endpoint:Disconnect(true, nil);
+					Print("echo: disconnected, state " & endpoint:State());
+					endpoint:Unbind(nil);
+					Print("echo: unbound, state " & endpoint:State());
+					endpoint:Dispose();
+					Print("echo: done");
+				end, nil, 100);
+			end});
+		endpoint:Output("goodbye, world\n", nil,
+			{async: true,
+			 completionScript: func(endpoint, options, result)
+				Print("echo: sent asynchronously, " & (if result then "error " & result else "done"))});
+	end});
+
+ep:Output("hello", nil, nil);
+Print("echo: sent hello");

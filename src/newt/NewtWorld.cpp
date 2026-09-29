@@ -25,6 +25,9 @@
 #include "Locale.h"
 #include "Fonts.h"
 #include "Screen.h"
+#include "CommManager.h"
+#include "HostServices.h"
+#include "Translators.h"
 #include "RegionVars.h"
 #include "Loader.h"
 #include "ROMPackages.h"
@@ -191,7 +194,7 @@ TNewtWorld::ForkSwitch(Boolean in)
 // with the OS running NewCoder makes them by name through the registry
 // rather than straight off their class info.
 // NOT YET RECONSTRUCTED: the real-time alarm
-// name, InitTranslators, NTKInit, REPInit/ResetREPIdler, InitExternal,
+// name, NTKInit, REPInit/ResetREPIdler, InitExternal,
 // HandleCardEvents,
 // HandleTestAgentEvent, FMinimumBatteryCheck, LoadInkerCalibration,
 // AllocateEarlyStuff (the sort tables).
@@ -222,6 +225,11 @@ TNewtWorld::MainConstructor()
 	// codecs and the volume information it registers are wanted by the
 	// time a script runs, so the newt world does it here instead.
 	InitializeSound();
+	// DEVIATION: the communications manager likewise (TLoader::TheMain
+	// starts it in the ROM), with the host's own services behind it - the
+	// network is the host's TCP/IP (comms/host/HostServices.h)
+	InitializeCommManager();
+	RegisterHostCommServices();
 	if (gNewtHostBoot != nil)
 		gNewtHostBoot();
 	else
@@ -231,6 +239,7 @@ TNewtWorld::MainConstructor()
 		InitGraf();
 		InitFonts();
 	}
+	InitTranslators();			// (comms/Translators.h: its flatten and stream translators NOT YET)
 	if (gREPout == nil)
 		HostInitREP(stdout, nil);
 	fGlobals.fInterpreter = gInterpreter;
