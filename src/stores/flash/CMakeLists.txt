@@ -6,9 +6,15 @@
 add_library(flash STATIC
     FlashRange.cpp
     InternalFlash.cpp
+    FlashStore.cpp
+    FlashStoreObjects.cpp
+    FlashStoreParts.cpp
+    FlashStoreTables.cpp
+    FlashBlock.cpp
+    FlashIterator.cpp
     host/HostFlashDriver.cpp
 )
-target_link_libraries(flash PUBLIC newton_config protocols memory os600_user os600_kernel hal_host hal_timers packages toolbox)
+target_link_libraries(flash PUBLIC newton_config protocols memory os600_user os600_kernel hal_host hal_timers packages stores toolbox utility)
 target_include_directories(flash PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/hal/host)
 
 add_subdirectory(tests)

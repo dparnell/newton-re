@@ -613,6 +613,17 @@ CommitObjects(TStore* store)
 }
 
 
+// ROM 0x0027a318 XIPObjectHasMoved__FP6TStoreUl
+void
+XIPObjectHasMoved(TStore* store, PSSId id)
+{
+	RDMParams params;
+	params.fStore = store;
+	params.fObjectId = id;
+	ROMDomainUserRequest(kRDMXIPObjectHasMoved, &params);
+}
+
+
 /*------------------------------------------------------------------------------
 	F i n d i n g   o u t
 ------------------------------------------------------------------------------*/

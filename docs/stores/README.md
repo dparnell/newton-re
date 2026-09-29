@@ -918,12 +918,13 @@ Each step comes with its host tests.
    and its 8/16/32-bit forms, and `TNewInternalFlash`.
    - Test: `Read`/`Write`/`Erase` through `TFlash` land in the file where
      Einstein's layout puts them.
-2. **The flash store's format, read-only.**
+2. **The flash store's format, read-only.** DONE with step 3 (2026-09-30):
+   "The flash store" below; ctest `stores.FlashStore`.
    - `TFlashStore::Init`/`Mount`, the log scans, `TFlashBlock`, lookup,
      `Read`, `GetObjectSize`, `NextObject`.
    - Test: a flash image Einstein wrote (or one the ROM formatted in a
      later step) mounts, and its objects read back.
-3. **The flash store, writing.**
+3. **The flash store, writing.** DONE (see step 2).
    - `Format`, `NewObject`, `Write`, `SetObjectSize`, `DeleteObject`,
      `ReplaceObject`, the lookup cache, compaction, wear levelling.
    - Then transactions: `StartTransaction`, the transaction bits,
@@ -1009,6 +1010,67 @@ wraps a length shorter than a region's header; `CheckEraseCompletion`
 always says "not complete" on an instance with no lock; and an Erase
 interrupted between its first two writes is recovered into a state the
 next start wipes (`test_Flash` shows it; `docs/curiosities.md`).
+
+## The flash store
+
+`TFlashStore` (`stores/flash/FlashStore.h`; `FlashStore.cpp`, `FlashStoreObjects.cpp`,
+`FlashBlock.cpp`, `FlashIterator.cpp`, `FlashStoreParts.cpp`) is the ROM's
+store on flash, reconstructed whole for the internal flash; a card's and a
+RAM store's parts (`TStoreDriver`, the compaction in place, the power and
+write-protect alerts) are NOT YET, and `Init` refuses those stores.
+
+**The format.** A store is *blocks*, each one erase region of the flash
+(on the MP2x00 128 KB, 30 of them, one always kept spare). A block starts
+(after four bytes it leaves alone - the internal flash's region header)
+with its *root directory*, an object of id 3: `fBlockSize >> 11` buckets
+of sixteen four-byte directory entries, hashed by object id, a full
+bucket continued in another id-3 object linked from its last two slots.
+Objects follow: an eight-byte header - the id (28 bits), a 16-bit size,
+the transaction bits, the separate-transaction and execute-in-place flags -
+and the data to a word. The last 0x400 bytes of every physical block are
+its *log*: entries guarded by their own address XORed with "dyer" and
+"foo!" and the word "newt", saying that this physical block holds logical
+block so-and-so ('fblk: with its root directory, its erase count, and the
+random number and time of the format that together identify the store),
+that a block was erased ('eblk), or that one is reserved ('zblk). Mount
+reads the latest entry (by log sequence number) of each kind for each block.
+
+**Ids.** An id's top bits are the block it was made in
+(`0x1C - CeilLog2(blocks)` of them), so lookup starts there; an object
+committed elsewhere leaves a *migrated* directory entry behind. Ids with a
+single bit set, or a single bit clear, are never handed out
+(`IsValidPSSID`), so no single bit going wrong on the flash turns one id
+into another.
+
+**Transactions.** Flash only clears bits, so every state an object goes
+through is a code whose bits include the last's (`gObjectStateToTransBits`,
+read back by `gObjectTransBitsToState`: new, committed, superceded,
+superceder, deleted, and the clones in between). A change to a committed
+object makes a copy - the *superceder* - and marks the original
+*superceded*; a new object is written in place while its bytes are still
+blank. Object 0x17 is the transaction record: all ones while a
+transaction is under way, written to noughts at its commit point, so a
+start after the power went knows whether to abort (`DoAbort`) or finish
+(`DoCommit`) it. Separate transactions (a large object's blocks) keep two
+header bits of their own. Every entry point locks the store around
+itself, so a change made with no lock of the caller's commits at once;
+`TMuxStore` (next) is what serialises the tasks.
+
+**Compaction.** When no block has room, the block with the best
+`EraseHeuristic` - what compacting would yield, squared, plus how far its
+erase count is below the average, cubed - has its live objects copied into
+the spare physical block through the store's last logical block
+(`DummyBlock`), and becomes the spare itself (`TFlashPhysBlock::SetSpare`,
+which writes the erase entry into the *new* block's log since its own is
+about to go).
+
+The words of these structures are big-endian on the flash (DEVIATION: the
+host converts at every read and write, `ReadWords`/`WriteWords`; a
+`FlashWord` is 32 bits whatever the host's ULong). `test_FlashStore`
+formats the internal flash, runs objects through transactions and
+separate transactions, churns 1200 4 KB objects to force compactions, and
+reads the store back from the file - including a transaction left under
+way, undone at the next start.
 
 ## Not yet
 

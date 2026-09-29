@@ -2273,3 +2273,17 @@ logical region with nowhere to live. Nothing is lost yet. At the *next*
 start the headers show two erased regions, which is not one of the five,
 and the whole flash is wiped (`Clobber`) and the store told to format.
 `test_Flash` walks through it. Ported as it is.
+
+---
+
+## The flash store never gives out an id one bit away from another
+
+`IsValidPSSID` (ROM 0x000c509c, `stores/flash/FlashStoreParts.cpp`) turns
+down an object id that is nought, all ones, or has only one bit set - or
+only one bit clear. `TFlashBlock::NextPSSID` steps over them. Flash
+changes by clearing bits, and an id written into a header or a directory
+entry that lost a bit on the way could otherwise land on another valid id;
+these are the ids a single stuck bit could turn a blank word into. The
+store's log entries are guarded the same way, by their own address
+XORed with "dyer" and, complemented, with "foo!" - so an entry copied or
+left over somewhere else is never valid there.

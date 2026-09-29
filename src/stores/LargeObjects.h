@@ -150,7 +150,8 @@ enum
 	kRDMInfo				= 13,		// address -> store, id, package id, size, read-only, dirty
 	kRDMAddress				= 14,		// store, id -> address, size
 	kRDMObjectAt			= 15,		// an address within an object -> its base, store, id, ...
-	kRDMEndSession			= 16		// address
+	kRDMEndSession			= 16,		// address
+	kRDMXIPObjectHasMoved	= 17		// store, id: an execute-in-place object was moved by a compaction
 };
 
 // The ROM domain manager's user monitor (TROMDomainManager1K::UserRequest,
@@ -210,6 +211,12 @@ NewtonErr	AbortObject(TStore* store, PSSId id);							// ROM 0x00103028 AbortObj
 NewtonErr	AbortObjects(TStore* store);									// ROM 0x001030e4 AbortObjects__FP6TStore
 NewtonErr	CommitObject(ULong address);									// ROM 0x0010313c CommitObject__FUl
 NewtonErr	CommitObjects(TStore* store);									// ROM 0x00103194 CommitObjects__FP6TStore
+
+// A flash store's compaction moved an execute-in-place object (a package
+// run where it lies on a card): the domain manager must map it afresh.
+// DEVIATION: the host's domain manager maps copies (host/HostLargeObjects.cpp),
+// never an object where it lies, so it has nothing to do (its default case).
+void		XIPObjectHasMoved(TStore* store, PSSId id);						// ROM 0x0027a318 XIPObjectHasMoved__FP6TStoreUl
 
 // Finding out
 NewtonErr	VAddrToStore(TStore** store, ULong* id, ULong address);		// ROM 0x001031ec VAddrToStore__FPP6TStorePUlUl
