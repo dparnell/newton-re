@@ -140,9 +140,14 @@ worked through.  What could come next (not ranked; the owner chooses):
   Package native code: the owner's decision is host re-expressions for
   the NIE and the ARM interpreter (`src/armcpu/`) as the fallback for
   other packages, both behind `frames/PackageNatives.h`.
-  Next: `InetStartUp`/`DNSGetAddressFromName` run end to end from the
-  NIE's own scripts; `ictl` (link control), read by running the NIE's
-  link state machine; the modem navigator.  `test_NIEProtoFSM` also runs
+  **The NIE works end to end on the host through its own API**:
+  `InetGrabLink`, `DNSGetAddressFromName`, a TCP echo, release and
+  disconnect (ctest `host.NewtonInet`), over the host's own link
+  (`comms/host/HostLink.ns`, embedded; the `ictl`, `dnst` and `inet`
+  services).  Next: Internet Setup's own UI listing and picking the
+  "Host network" entry (not yet driven); the NIE's protoEndpointFSM
+  (0x15cf9); NIE client applications (a mail or web client) - none are
+  among the fixtures yet; the modem navigator.  `test_NIEProtoFSM` also runs
   each check on the package's own ARM code through armcpu, and the two
   agree (2ae6d73).  armcpu left: frames in a code binary; protocol parts
   through the CPU - no fixture needs them yet (every protocol part among

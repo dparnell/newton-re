@@ -9,6 +9,33 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: comms, round 9 - the NIE end to end over the host's own link
+
+- The oracle is counted: all seven groups of `test_NIEProtoFSM` agree
+  run on the NIE's own ARM code under armcpu (which now answers the 123
+  ROM entries the fixtures' native code reaches, 5dde85e) and on the
+  re-expressions (2ae6d73).  The one failure left was the test's: a host
+  stand-in registered at an unused offset, which the ARM code jumped
+  straight into.
+- `ictl`: `THostLinkService`/`THostLinkTool` answer every
+  connection-control option with success (DEVIATION, 225fb90).
+- The host's link (6cca01f, DEVIATION): `comms/host/HostLink.ns`,
+  compiled in by `src/cmake/EmbedText.cmake` and started from newton's
+  PreMain hook, watches the "Packages" soup and, once the NIE's
+  `InetServices:NIE` exists, registers a physical and a link service
+  answering each step the link machine asks for, and a "Host network"
+  setup in the "Internet Setups" soup (made the default link when there
+  is none).  It never calls `InetStartUp` - doing so from the watcher
+  hung package removal.
+- `src/host/demo/inet.ns` (ctest `host.NewtonInet`): `InetGrabLink` runs
+  the NIE's link state machine to connected, `DNSGetAddressFromName
+  ("localhost")` answers 127.0.0.1, a TCP endpoint on the link echoes
+  "hello", and `InetReleaseLink`/`InetDisconnectLink` take it back down.
+- Found: the NIE's globals appear only after a "Packages" soup change
+  and a procrastinated call, so a script must wait for them;
+  `NEWTON_TRACE_PACKAGE_NATIVES` lists a package native with nothing
+  registered (f1aa955).
+
 ## 2026-09-29: comms, round 8 - the whole protoFSM, and an oracle
 
 - The printer `f` (0x14649, 15 KB) re-expressed, so all 19 of the NIE's
