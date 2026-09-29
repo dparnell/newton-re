@@ -195,4 +195,7 @@ extern TObjectId		gSndPort;			// ROM 0x0c101b10 gSndPort
 // GlobalSoundChannel makes it)
 extern TUSoundChannel*	gSoundChannel;		// ROM 0x0c101b08 gSoundChannel
 
+// Everything playing stopped (a package going: its sounds are its bytes).
+void	StopFrameSound(void);
+
 #endif	/* __SOUNDCHANNEL_H */

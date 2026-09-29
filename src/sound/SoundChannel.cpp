@@ -706,3 +706,26 @@ TUSoundChannel::AbortBusy(void)
 	}
 	fBusyNodes = nil;
 }
+
+
+// ROM 0x0025a6fc StopFrameSound__Fv
+// Everything the sound server is playing stopped (its command 1, sent and
+// not waited for), with the world's mutex let go meanwhile - what a
+// package does before it goes, since its sounds are in its own bytes.
+void
+StopFrameSound(void)
+{
+	if (gSndPort == 0)
+		return;
+	TUSoundNodeRequest request;
+	request.fEvent.fAEventClass = kNewtEventClass;
+	request.fEvent.fAEventID = kSoundEventId;
+	request.fChannel = 0;
+	request.fCommand = kSndStopAll;
+	request.fNodeId = 0;
+	TForkWorld* world = (TForkWorld*) GetGlobals();
+	world->ReleaseMutex();
+	TUPort port(gSndPort);
+	port.Send(&request, offsetof(TUSoundNodeRequest, fBlock), 0);
+	world->AcquireMutex();
+}

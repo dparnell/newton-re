@@ -33,6 +33,8 @@
 #ifndef __SOUNDCODEC_H
 #define __SOUNDCODEC_H
 
+#include <stdint.h>
+
 #ifndef __PROTOCOLS_H
 #include "Protocols.h"
 #endif
@@ -181,5 +183,51 @@ public:
 // the ROM's does - the sound hardware, the sound server, and the two codecs
 // beside these.
 void	InitializeSound(void);				// ROM 0x001e89f4 InitializeSound__Fv
+
+
+/*------------------------------------------------------------------------------
+	T D T M F C o d e c
+	Not a codec at all but a tone synthesiser: the "coded" data is a score -
+	a version (1), an algorithm, a repeat count and up to twelve tones, each
+	a frequency (16.16 Hz), a peak level, an envelope of six stretches in
+	milliseconds (silence, attack to the peak, decay to the sustain level,
+	sustain, release, and a tail) and a sustain level - which Produce plays
+	by FM synthesis, the algorithm saying how the tones are grouped into
+	operators: 0 each tone on its own, 1 pairs (a modulator on a carrier),
+	2 threes (two modulators on one carrier), 3 threes in a chain, 4 fours
+	in a chain.  The phone dialler's touch tones are two tones on their own.
+	It never consumes (records) anything.
+------------------------------------------------------------------------------*/
+
+PROTOCOL TDTMFCodec : public TSoundCodec
+{
+public:
+	PROTOCOL_IMPL_HEADER_MACRO(TDTMFCodec);
+
+	TDTMFCodec*		New();									// ROM 0x00088130 New__10TDTMFCodecFv
+	void			Delete();								// ROM 0x00088310 Delete__10TDTMFCodecFv
+
+	NewtonErr		Init(CodecBlock* block);				// ROM 0x00088314 Init__10TDTMFCodecFP10CodecBlock
+	NewtonErr		Reset(CodecBlock* block);				// ROM 0x0008831c Reset__10TDTMFCodecFP10CodecBlock
+	NewtonErr		Produce(void* dst, ULong* dstSize, ULong* codedSize, CodecBlock* block);				// ROM 0x00088388 Produce__10TDTMFCodecFPvPUlT2P10CodecBlock
+	NewtonErr		Consume(const void* src, ULong* srcSize, ULong* codedSize, const CodecBlock* block);	// ROM 0x00089a5c Consume__10TDTMFCodecFPCvPUlT2PC10CodecBlock
+	void			Start();								// ROM 0x00089a78 Start__10TDTMFCodecFv
+	void			Stop(int reason);						// ROM 0x00089a7c Stop__10TDTMFCodecFi
+	Boolean			BufferCompleted();						// ROM 0x00089a80 BufferCompleted__10TDTMFCodecFv
+
+	// The synthesiser's state, a word at each of the ROM's offsets from
+	// +0x10 to +0x2c0 (the instance is 0x2c0 bytes): the per-tone arrays of
+	// twelve are indexed past their ends by the chained algorithms, as the
+	// ROM's are, so they are kept as one array (W(offset) is the word at
+	// that offset).  The two pointers are kept apart.
+	int32_t			fWords[(0x2c0 - 0x10) / 4];
+	int32_t&		W(long offset)		{ return fWords[(offset - 0x10) / 4]; }
+	const unsigned char*	fScore;		// +0x294  the score (the block's buffer)
+};
+
+extern const int	quarterSineWaveTable[721];		// (DTMFTables.cpp)
+long	SinTable(long degrees);				// ROM 0x00088140 SinTable__Fl
+long	SinTableInterp(long degrees);		// ROM 0x000881e4 SinTableInterp__Fl
+
 
 #endif	/* __SOUNDCODEC_H */

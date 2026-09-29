@@ -67,6 +67,70 @@ static const long			kIMASamples = 21600 / 64 * 64;
 static short*				gIMAExpected = nil;
 static const char* const	kRecordSource = (const char*) 2;
 static const char* const	kIMACheckSource = (const char*) 3;
+static const char* const	kDTMFSource = (const char*) 4;
+
+// a touch tone, as TDTMFCodec's score: version 1, algorithm 0 (each tone
+// on its own), no repeats, two tones - 697 Hz and 1209 Hz, the "1" key -
+// each rising over 5 ms to 0x3000, falling over 5 ms to 0x2000, held
+// 80 ms and released over 10 ms: 100 ms, 2200 samples (22 a millisecond)
+static void
+PutHalf(unsigned char* p, unsigned v)
+{
+	p[0] = (unsigned char) (v >> 8);
+	p[1] = (unsigned char) v;
+}
+
+static long
+PlayDTMF(void)
+{
+	RefVar samples(AllocateBinary(RSSYMsamples, 0x0a + 2 * 0x14));
+	unsigned char* score = (unsigned char*) BinaryData(samples);
+	memset(score, 0, 0x0a + 2 * 0x14);
+	PutHalf(score + 0, 1);
+	PutHalf(score + 2, 0);
+	PutHalf(score + 6, 0);
+	PutHalf(score + 8, 2);
+	const unsigned frequencies[2] = { 697, 1209 };
+	for (int k = 0; k < 2; k++)
+	{
+		unsigned char* tone = score + k * 0x14;
+		PutHalf(tone + 0x0a, frequencies[k]);		// 16.16 Hz
+		PutHalf(tone + 0x0c, 0);
+		PutHalf(tone + 0x0e, 0x2000);				// the sustain level
+		PutHalf(tone + 0x10, 0);					// silent
+		PutHalf(tone + 0x12, 5);					// attack
+		PutHalf(tone + 0x14, 5);					// decay
+		PutHalf(tone + 0x16, 80);					// sustain
+		PutHalf(tone + 0x18, 10);					// release
+		PutHalf(tone + 0x1a, 0x3000);				// the peak
+		PutHalf(tone + 0x1c, 0);					// tail
+	}
+	RefVar frame(AllocateFrame());
+	SetFrameSlot(frame, RSSYMsndframetype, RSSYMcodec);
+	SetFrameSlot(frame, RSSYMcodecname, RefVar(MakeString("TDTMFCodec")));
+	SetFrameSlot(frame, RSSYMsamples, samples);
+	SetFrameSlot(frame, RSSYMcompressiontype, RefVar(MAKEINT(6)));
+	SetFrameSlot(frame, RSSYMdatatype, RefVar(MAKEINT(16)));
+	SetFrameSlot(frame, RSSYMsamplingrate, RefVar(MAKEINT(kHostSoundRate)));
+	SetFrameSlot(frame, RSSYMbuffersize, RefVar(MAKEINT(4096)));
+	SetFrameSlot(frame, RSSYMbuffercount, RefVar(MAKEINT(2)));
+	RefVar result(FPlaySoundSync(RefVar(NILREF), frame));
+	return NOTNIL(result) ? 1 : 0;
+}
+
+// the power of one frequency in a run of samples (Goertzel)
+static double
+Power(const short* x, long n, double frequency)
+{
+	double w = 2 * 3.14159265358979 * frequency / kHostSoundRate, c = 2 * cos(w), s1 = 0, s2 = 0;
+	for (long i = 0; i < n; i++)
+	{
+		double s0 = x[i] + c * s1 - s2;
+		s2 = s1;
+		s1 = s0;
+	}
+	return s1 * s1 + s2 * s2 - c * s1 * s2;
+}
 
 static long
 PlayIMA(void)
@@ -126,7 +190,9 @@ public:
 		play->fResult = 0;
 		newton_try
 		{
-			if (play->fSource == kIMACheckSource)
+			if (play->fSource == kDTMFSource)
+				play->fResult = PlayDTMF();
+			else if (play->fSource == kIMACheckSource)
 			{
 				RefVar coded(GetFrameSlotRef(gVarFrame, RefVar(MakeSymbol("recIMA"))));
 				long bytes = kRecordSamples / kIMABlockSize * kIMABlockBytes;
@@ -291,6 +357,22 @@ Scenario(void)
 	printf("IMA: %ld samples played of %ld\n", count, kIMASamples);
 	EXPECT(count == kIMASamples);
 	EXPECT(gIMAExpected != nil && played != nil && memcmp(played, gIMAExpected, kIMASamples * sizeof(short)) == 0);
+
+	// a touch tone synthesised by TDTMFCodec: the two frequencies are
+	// there, and the tone ends when its envelope does
+	HostSoundClearCapture();
+	EXPECT(Send(newtPort, kDTMFSource) == 1);
+	WaitForSilence();
+	played = HostSoundCaptured(&count);
+	long lastSound = -1;
+	for (long i = 0; i < count; i++)
+		if (played[i] > 64 || played[i] < -64)
+			lastSound = i;
+	double low = Power(played, 2000, 697), high = Power(played, 2000, 1209), between = Power(played, 2000, 950);
+	printf("DTMF: %ld samples, sound to %ld; power at 697 Hz %.3g, 1209 Hz %.3g, 950 Hz %.3g\n", count, lastSound, low, high, between);
+	EXPECT(count == 4096);
+	EXPECT(lastSound > 2150 && lastSound <= 2201);		// (the ROM rounds 21.6 samples a millisecond to 22: 100 ms is 2200)
+	EXPECT(low > 100 * between && high > 100 * between);
 
 	// recording, plain: 16-bit samples at the hardware's rate, so what is
 	// recorded is the source itself

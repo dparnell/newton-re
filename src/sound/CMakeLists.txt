@@ -16,6 +16,8 @@ add_library(sound STATIC
     Resample.cpp
     ResampleTables.cpp
     SoundCodec.cpp
+    DTMFCodec.cpp
+    DTMFTables.cpp
     SoundChannel.cpp
     FrameSoundChannel.cpp
     SoundSettings.cpp

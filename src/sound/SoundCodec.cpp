@@ -476,7 +476,7 @@ TIMACodec::BufferCompleted()
 // ('sndm, which opens gSndPort), the codecs registered, and how many
 // filtered (sinc) resamplings may run at once set from the processor: six
 // on a StrongARM, none on anything slower.
-// NOT YET: TGSMCodec and TDTMFCodec, which the ROM registers beside these.
+// NOT YET: TGSMCodec, which the ROM registers beside these.
 // DEVIATION: the ROM powers the sound hardware down first (IOPowerOff 0x19
 // and 0x18: the machine's power switches, which the host driver has none
 // of); and starts the server whether or not there is a driver, where a
@@ -493,6 +493,7 @@ InitializeSound(void)
 	}
 	TMuLawCodec::ClassInfo()->Register();
 	TIMACodec::ClassInfo()->Register();
+	TDTMFCodec::ClassInfo()->Register();
 	gMaxFilterNodes = (gMainCPUType == 3) ? 6 : 0;
 	// DEVIATION: the volume information the ROM's sound driver registers
 	// (SoundChannel.h), which the host has no driver to register
