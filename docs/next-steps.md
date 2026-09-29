@@ -177,13 +177,15 @@ worked through.  What could come next (not ranked; the owner chooses):
   `comms.SerialTool`), layer 3 done (MNP with class 5 compression,
   `tools/dock/mnp.py` the desktop end; `comms.MNP`,
   `comms.MNPLongHeaders`, `comms.MNPClass5`; V.42bis's coder NOT YET,
-  wanted only if a real desktop asks for it).  Next, layer 4: `TDocker`
-  (0x92000-0x9c500), `TEzPipeProtocol`, `TDockerDynArray` and the
-  `FConn*` natives over 'mnps; then `tools/dock/dock.py` over `mnp.py`
-  (the newtdockrtdk handshake, `lpkg` with a fixture package) and ctest
-  `host.NewtonDock`.  The `newton` binary still needs `InitFIQTimer`,
-  `HostSerialChipInstall`, `RegisterSerialCommServices` and
-  `RegisterMNPService` at boot.  `test_NIEProtoFSM` also runs
+  wanted only if a real desktop asks for it).  Layer 4 part 1 done:
+  `TDocker`'s package-loading path, the protocol extensions, 13 `Conn*`
+  natives, `newton --serial-port` (default 3679) starting the serial port
+  and services at boot (`host.NewtonDocker`).  Next: the end-to-end
+  package load through the Connection app's autodock (`host.NewtonDock`
+  over `tools/dock/dock.py` - autodock does not yet reach its endpoint),
+  then the 'dock' session (`ReadInitiateDocking`, the password exchange,
+  `ProcessCommand`), without which a desktop's docking session is
+  refused.  `test_NIEProtoFSM` also runs
   each check on the package's own ARM code through armcpu, and the two
   agree (2ae6d73).  armcpu left: frames in a code binary; protocol parts
   through the CPU - no fixture needs them yet (every protocol part among

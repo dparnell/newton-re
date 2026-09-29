@@ -9,6 +9,23 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-30: the desktop connection, layer 4 part 1 - TDocker
+
+- `TEzEndpointPipe` and the modem navigator (4567d7a); `CBufferPipe::Init`
+  now makes both segments - a virtual call had cut its decompile short
+  (118b200).
+- `comms/Docker.h` (library `comms_dock`): `TEzPipeProtocol` (the 'newt'
+  'dock' headers), `TDocker` - Connect ('rtdk' 9, then 'lpkg'),
+  DoConnection (forking the world), the package loader's session
+  (`CompatabilityHacks`/`ReadPackage`: `SuckPackageThruPipe`, 'dres',
+  then 'lpkg' or 'disc'), stopping and aborting - `TDockerDynArray` and
+  the protocol extensions (the Connection app's `SetupEndpoint` wanted
+  `InstallAnyProtocolExtension`), and 13 `Conn*` natives
+  (`RegisterDockerNatives`) (cdb5e39).
+- `newton --serial-port port|none` (default 3679, loopback only) starts
+  the FIQ timer, the host serial chip and the serial and MNP services at
+  boot (ctest `host.NewtonDocker`).
+
 ## 2026-09-30: the Sound Recorder plays to the end
 
 - The recorder stayed at "Playing...": the sound server answered a pause
