@@ -9,6 +9,26 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-30: the desktop connection, layer 2 - the serial tools
+
+- `hal/FIQTimer.h` (the machine's fast timers) and `TDelayTimer`
+  (`hal/DelayTimer.cpp`) (ctest `hal.FIQTimer`, 53914aa).
+- The name server's resource arbitration, NOT YET until now - an
+  endpoint's Bind failed with -10005 without it (c8e8e5d).
+- `comms/SerialTool.h` (library `comms_serial`): `TSerTool` claims a chip
+  through the registry and the arbitration, `TAsyncSerTool` streams bytes
+  between two TCircleBufs from the chip's interrupts, the 'aser service
+  is `TAsyncService`; an 'aser endpoint echoes "hello" and 1000 bytes
+  through the socket (ctest `comms.SerialTool`, 9f2d072).  ROM bugs kept:
+  `SetEventEnables` clears fIntMask's output-done and input-ready bits
+  (masking with the event mask, not its complement);
+  `SetOutputFlowControl` sets the modem interrupts before recording the
+  new hardware-flow setting; the first byte of a repeated break-framed
+  frame is not masked to the data bits.
+- Host bug found: the host chip must deliver a desktop's bytes at the
+  line's speed - a socket's whole window at once overran the tool's
+  512-byte buffer (a soft overrun, -18003).
+
 ## 2026-09-29: the desktop connection, layer 1 - the serial chip over TCP
 
 - `hal/HALSerialChip.h`: the DDK's TSerialChip and PSerialChipRegistry
