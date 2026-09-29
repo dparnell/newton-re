@@ -190,7 +190,19 @@ reported as the decompiler's was.
        for an edited sound.
      - 19 are `TDTMFCodec` parameters: the ring tones as tone sequences,
        50 bytes each. That is a table, not sampled sound.
-5. **Pictures and fonts**: PICT files, and the `sfnt` files as they are.
+5. **Pictures and fonts. Done.**
+   - The 7 QuickDraw pictures (version 1, opcode 0x1101) are `.pict`
+     files: 512 bytes of nought, then the picture, which is the form a
+     Macintosh drawing program reads and writes. They are written as
+     `pict('picture, "resources/picture/<addr>.pict")`, and the builder
+     drops the 512 bytes. No PNG is made beside them yet: that waits on
+     the host drawing a picture's text (`qd/PicPlay.h`).
+   - The 13 fonts are `.ttf` files, byte for byte the `sfnt` binary.
+     fontTools opens them:
+     - five are bitmap fonts (`bdat`, `bloc`, `cmap`, `head`, `hhea`,
+       `hmtx`, `hsty`, `maxp`, `name`, `post`; "Roman Regular" is the
+       first);
+     - eight are 2080-byte metric-only fonts with no `name` table.
 6. **The ROM extension's ten packages** (`analysis/packages.py`), each
    extracted to the same form and rebuilt as a package.
 7. **The loader side (step 4):** `frames/ROMImport.cpp` reads the builder's
@@ -242,8 +254,8 @@ manifest and 7 MB of resources.
 What it is not yet:
 
 - 362 nested functions are still bytecode (stage 2).
-- The compressed sounds, the pictures and the fonts are still `.bin`
-  files.
+- The compressed sounds (IMA ADPCM), the ring tones' `TDTMFCodec`
+  parameters and the tables are still `.bin` files.
 - The files are cut by address, not by what they belong to (the
   dominator grouping above).
 - Resources are opaque, and inline objects are named by path, so an edit

@@ -55,6 +55,11 @@ constructors of its own):
                     simple sound (8-bit, uncompressed: offset binary, as a
                     WAV file's 8-bit samples are); the sampling rate stays
                     in the sound frame
+    pict('picture, "resources/picture/addr.pict")   a QuickDraw picture: a
+                    PICT file (512 bytes of nought, then the picture), as a
+                    Macintosh drawing program reads and writes it
+    (a font, 'sfnt, is binary('sfnt, "resources/sfnt/addr.ttf"): the
+    binary is the font file, which font tools read)
     function("functions/addr.ns")   a function, compiled from that source
     {tag: value, ...}      a frame (its map is the manifest's)
     [cls: value, ...]      an array whose class is the symbol cls
@@ -93,6 +98,7 @@ import png							# noqa: E402
 import wave							# noqa: E402
 
 BITMAP_CLASSES = ("bits", "mask", "cbits")
+PICT_HEADER = 512					# a PICT file's header: nought, before the picture
 
 PAD = 0xba						# the bytes between objects
 PER_FILE = 400					# definitions in one objects/NNN.ns
@@ -330,7 +336,13 @@ class Extractor:
 				w.setframerate(self.simple_sounds[o])
 				w.writeframes(data)
 			return "sound(%s, \"%s\")" % (self.value(cls, path + "^"), rel)
-		rel = "resources/%s/%x.bin" % (folder, o)
+		if cname == "picture" and not self.in_function:
+			rel = "resources/%s/%x.pict" % (folder, o)
+			os.makedirs(os.path.join(self.out, os.path.dirname(rel)), exist_ok=True)
+			with open(os.path.join(self.out, rel), "wb") as f:
+				f.write(bytes(PICT_HEADER) + data)
+			return "pict(%s, \"%s\")" % (self.value(cls, path + "^"), rel)
+		rel = "resources/%s/%x.%s" % (folder, o, "ttf" if cname == "sfnt" else "bin")
 		if self.in_function:
 			return "binary(%s, \"%s\")" % (self.value(cls, path + "^"), rel)	# (compiled, not written)
 		os.makedirs(os.path.join(self.out, os.path.dirname(rel)), exist_ok=True)
@@ -580,7 +592,7 @@ class Reader:
 		if kind == "name" and text in ("nil", "true"):
 			self.take()
 			return Imm(2 if text == "nil" else 0x1a)
-		if kind == "name" and text in ("real", "string", "binary", "array", "map", "bytes", "function", "bitmap", "sound") \
+		if kind == "name" and text in ("real", "string", "binary", "array", "map", "bytes", "function", "bitmap", "sound", "pict") \
 				and self.toks[self.i + 1][1] == "(":
 			self.take()
 			self.take("(")
@@ -588,7 +600,7 @@ class Reader:
 			while self.peek()[1] != ")":
 				if text in ("real",) and self.peek()[0] == "number":
 					args.append(float(self.take()[1]))
-				elif text in ("string", "binary", "bytes", "function", "bitmap", "sound") and self.peek()[0] == "string":
+				elif text in ("string", "binary", "bytes", "function", "bitmap", "sound", "pict") and self.peek()[0] == "string":
 					args.append(self.take()[1])
 				elif text == "bitmap" and self.peek()[0] == "number":
 					args.append(self.take()[1])
@@ -605,6 +617,9 @@ class Reader:
 			if text == "binary":
 				with open(os.path.join(self.root, args[1][1:-1]), "rb") as f:
 					return Obj("binary", args[0], data=f.read())
+			if text == "pict":
+				with open(os.path.join(self.root, args[1][1:-1]), "rb") as f:
+					return Obj("binary", args[0], data=f.read()[PICT_HEADER:])
 			if text == "sound":
 				return Obj("binary", args[0], data=wav_samples(os.path.join(self.root, args[1][1:-1])))
 			if text == "bitmap":
