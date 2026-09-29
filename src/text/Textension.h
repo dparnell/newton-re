@@ -26,10 +26,10 @@
 				and `UpdateRangeRulers` restyle a selection, and `Format`
 				reformats.  `Click` hands the pen to the hilite.
 
-				The ROM's object is 0x2c bytes.  NOT YET: the container
-				(TXContainer: a document read from and written to a
-				stream - Export, and ReplaceRange's container path) and the
-				edit commands with undo.
+				A stretch moves in and out as a container (TXContainer.h):
+				`Export` writes one, and ReplaceRange puts one in.
+
+				The ROM's object is 0x2c bytes.
 
 	Reconstructed from the MP2x00 US ROM (0x00252af4-0x002540c0); each
 	function cites its origin.
@@ -76,9 +76,11 @@ struct TXReplaceParams : public TXTextDescriptor
 					TXReplaceParams();								// ROM 0x00253d34 __ct__15TXReplaceParamsFv
 					TXReplaceParams(const TXTextDescriptor& text);	// ROM 0x00253d84 __ct__15TXReplaceParamsFRC16TXTextDescriptor
 					TXReplaceParams(const TXTextDescriptor& text, TXRun* run, Boolean reference);	// ROM 0x00253e44 __ct__15TXReplaceParamsFRC16TXTextDescriptorP5TXRunUc
+					// the values of `types` the container has
+					TXReplaceParams(TXContainer* container, unsigned char types);	// ROM 0x00253de4 __ct__15TXReplaceParamsFP11TXContainerUc
 
-	TXContainer*	fContainer;		// +0x14  NOT YET
-	unsigned char	fTypes;			// +0x18
+	TXContainer*	fContainer;		// +0x14
+	unsigned char	fTypes;			// +0x18  the container's values to take (kTXImport...)
 	TXRun*			fRun;			// +0x1c  nil: the text run at the start
 	unsigned long	fFlags;			// +0x20
 };
@@ -125,6 +127,9 @@ public:
 	NewtonErr		UpdateFormatter(unsigned long changed, const TXOffsetRange& range, long* first, long* last);	// ROM 0x00253a44 UpdateFormatter__10TextensionFlRC13TXOffsetRangePlT3
 	NewtonErr		UpdateRangeRuns(const TXOffsetRange& range, const TXAttrValues* values, long how);	// ROM 0x00253ae8 UpdateRangeRuns__10TextensionFRC13TXOffsetRangePC12TXAttrValuesl
 	NewtonErr		UpdateRangeRulers(const TXOffsetRange& range, const TXAttrValues* values, long how);	// ROM 0x00253c68 UpdateRangeRulers__10TextensionFRC13TXOffsetRangePC12TXAttrValuesl
+	// The range's values (`types`) written into `container`; rulers alone
+	// widen the range to whole paragraphs.
+	NewtonErr		Export(TXOffsetRange* range, TXContainer* container, unsigned char types);	// ROM 0x00253be0 Export__10TextensionFP13TXOffsetRangeP11TXContainerUc
 
 	static TXAttrValues*	fDefaultRunAttrValues;					// ROM 0x0c104ed8 fDefaultRunAttrValues__10Textension
 

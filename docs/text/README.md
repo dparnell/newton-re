@@ -703,8 +703,9 @@ ends' parts, with the display bracketed round them; typing is `KeyDown`
 over it (characters replace the selection in the *pending run* - the
 style typing uses, taken from the text at the caret whenever the
 selection has moved - backspace and escape clear, the arrows move).
-The container (a document on a stream) and the edit commands with undo
-are NOT YET.
+A stretch of a document moves in and out as a *container*: `Export`
+writes the stretch's runs, rulers and text into one, and `ReplaceRange`
+takes one in place of characters (`TXReplaceParams(container, types)`).
 
 `test_TXDisplay` fills a document by an edit, draws it offscreen (the
 same bits as drawing each line itself), taps a caret into it, hilites
@@ -712,6 +713,78 @@ same bits as drawing each line itself), taps a caret into it, hilites
 selection from "quick" to "fox", moves it with the arrows, scrolls a
 line (the same bits as drawing the scrolled view afresh), and types
 and backspaces.
+
+## The containers (`text/TXContainer.h`)
+
+A container is a piece of a document as up to three *values*: 'TEXT'
+(the characters), 'txrn' (the runs - or a picture's run by its public
+type, 'shap') and 'txrl' (the rulers).  `Import` copies the values one
+container has into another, runs first, then rulers, then text,
+bracketed by `BeginWrite`/`EndWrite`; `TXContainerImportInfo` says which
+values to take and answers which were, and how many of each.  A value
+the source lacks (-102) is skipped; any other error ends the write as
+failed.
+
+- `TXStdContainer` keeps its values on a TXStream: a count and a table
+  of three (type, count, size) entries, 0x28 bytes, then the values one
+  after another.  The characters' value has a count of nought - only
+  `WriteObject` counts - and a size of two bytes a character.  (Host:
+  the table's words are big-endian.)
+- `TXLocalContainer` is what an undo buffer is: each object is a length
+  and a pointer to the object itself, a reference taken, so it only
+  lives as long as the objects do; a failed write, and `FreeObjects`,
+  give the references back.  (DEVIATION: the pointer is the host's
+  eight bytes.)
+- `TXPrivateContainer` is a stretch of a live document.  Reading it
+  reads the document's characters and objects in place (each run's
+  length clipped to the stretch); writing to it *replaces* the stretch -
+  the characters at once, the runs and rulers gathered into ranges of
+  their own and put in when the write ends.  A picture written on its
+  own (by its public type, with no text) brings the character that
+  stands for it, U+2206 (`gTXGraphicsRunChar`).
+
+`Textension::ReplaceRange` from a container imports it over the stretch
+first: with all three values the rulers are only checked
+(`ValidateRulerRange`), with runs or rulers but no text the lines are
+simply formatted again (and the pending run is to be worked out
+afresh), and with text alone the runs are filled in as for plain
+characters.
+
+`test_TXContainer` exports "big" in bold into a local container on a
+handle stream and checks its table word by word, imports it into
+another document whole, as text alone and as runs alone, puts a picture
+in on its own, and checks that a failed import gives back its
+references.
+
+## The edit commands (`text/TXCommand.h`)
+
+`TXCommand::Execute` does a command the first time, undoes it the
+second and redoes it the third, going round the states 0 (to do),
+1 (done), 2 (undone); 4 is a command that failed or cannot be undone.
+`TXEditCommand` is how the engine's own edits undo: before the edit,
+the stretch it changes is exported into a local container on a
+temporary stream (from `TXGetTempStreamFactory` when there is text, a
+handle stream otherwise), and the rulers of the paragraph at its end
+into a second; undoing puts the container back over what the edit made,
+having first saved that the same way (the redo container).  What is
+kept depends on the edit - the runs for a restyle (kind 2), the rulers
+for a paragraph change (3), everything otherwise.  An empty range keeps
+nothing: undoing is then only taking away.  When the container cannot
+be made (no memory), the command is done but cannot be undone.
+
+- `TXKeyCommand` (1) is typing: one command for as long as the keys
+  follow on from each other (`NewKey` answers 3 for a key that does not,
+  which starts a command of its own), typed as they come, so the first
+  Execute undoes it.  A delete key widens what is kept back to the start
+  of the line before, since backspacing may reach it, and the selection
+  shown after an undo starts where the deleting reached.
+- `TXMoveTextCommand` (4) moves or copies a stretch through a container
+  of its own.  A move swaps its two places over, so undoing a move is
+  doing it again; undoing a copy takes it away.
+- `TXReplaceTextCommand` (5) is ReplaceRange undoably.
+
+`test_TXCommand` does, undoes and redoes a replacement, a restyle,
+typing and backspacing, a move and a copy.
 
 ## Not yet reconstructed - the plan
 
@@ -755,12 +828,12 @@ Bottom up, in the order the layers need each other:
 5. DONE: `TXDisplay` and `TXHilite` (with `qd/ScrollRect.h`).  The
    Newton subclasses `TXNewtDisplay`/`TXNewtHilite` (a TView's visible
    region, the root view's caret and key view) come with `TXView`.
-6. `Textension` (the document: `TextensionStart` makes `gTXTempRegions`
-   and the registered runs and rulers) and the edit commands
-   (`TXCommand`, `TXEditCommand`, `TXReplaceTextCommand`,
-   `TXMoveTextCommand`) with undo.
-7. `TXView` and the 39 natives, `TXContainer` (reading and writing a
-   document), the ruler UI (`ShowRuler`), `TXVBOChars` (the text kept in
+6. DONE: `Textension`, the containers (`TXContainer`,
+   `TXStdContainer`, `TXLocalContainer`, `TXPrivateContainer`) and the
+   edit commands (`TXCommand`, `TXEditCommand`, `TXKeyCommand`,
+   `TXReplaceTextCommand`, `TXMoveTextCommand`) with undo.
+7. `TXView` and the 39 natives, `TXNewtContainer` (a document as a
+   NewtonScript frame), the ruler UI (`ShowRuler`), `TXVBOChars` (the text kept in
    a large binary - `stores/LargeBinaries.h` is there now) and
    `TXNewtStreamFactory`.  The demo: a `protoTXView` on the host with
    text set and typed, drawn and looked at.

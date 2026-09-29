@@ -12,11 +12,14 @@ add_library(text STATIC
     TXArray.cpp
     TXAttributes.cpp
     TXChars.cpp
+    TXCommand.cpp
+    TXContainer.cpp
     TXDisplay.cpp
     TXFrameFormatter.cpp
     TXFormatter.cpp
     TXFrames.cpp
     TXGraphicsRun.cpp
+    TXGraphicsRunChar.cpp
     TXHilite.cpp
     TXLine.cpp
     TXLinesHeights.cpp

@@ -10,6 +10,7 @@
 #include "Textension.h"
 #include "TXRulerRange.h"
 #include "TXUtilities.h"
+#include "TXContainer.h"
 #include "OSErrors.h"
 
 
@@ -44,6 +45,16 @@ TXReplaceParams::TXReplaceParams(const TXTextDescriptor& text)
 	fRun = nil;
 	fFlags = 7;
 	fTypes = 1;
+}
+
+
+// ROM 0x00253de4 __ct__15TXReplaceParamsFP11TXContainerUc
+TXReplaceParams::TXReplaceParams(TXContainer* container, unsigned char types)
+{
+	fRun = nil;
+	fFlags = 7;
+	fContainer = container;
+	fTypes = container->GetAvailTypes() & types;
 }
 
 
@@ -373,8 +384,12 @@ Textension::UpdatePendingRun(void)
 // [start, end) replaced by the parameters' characters in their run (or
 // the text run at `start`, or the pending run): the rulers', runs' and
 // characters' parts, then the line ends, with the display bracketed
-// round it; the caret goes after what was put in.  NOT YET: a container
-// (params->fContainer) - the host has no TXContainer.
+// round it; the caret goes after what was put in.  From a container
+// (params->fContainer), the values it has are imported over the stretch
+// (TXPrivateContainer) first: with everything in it the rulers are only
+// checked, with runs or rulers but no text the lines are simply formatted
+// again, and what it did not bring (the runs, for text alone) is filled in
+// as for plain characters.
 NewtonErr
 Textension::ReplaceRange(TXOffset start, TXOffset end, TXReplaceParams* params)
 {
@@ -383,8 +398,44 @@ Textension::ReplaceRange(TXOffset start, TXOffset end, TXReplaceParams* params)
 	fDisplay->BeginEdit(&info);
 	TXAttrObject* pendingRuler = nil;
 	long extra = fRulers->GetReplaceExtraChars(start, end, &pendingRuler);
-	unsigned char type = 0;
-	long count = params->fCount;
+	TXContainerImportInfo imported(kTXImportAll);
+	NewtonErr err;
+	long first, last;
+	if (params->fContainer == nil)
+	{
+		imported.fTypes = 0;
+		imported.fTextCount = params->fCount;
+	}
+	else
+	{
+		imported.fTypes = params->fTypes;
+		TXPrivateContainer here(start, length, fRuns, fRulers, fChars, fFormatter);
+		err = here.Import(params->fContainer, &imported);
+		if (err != noErr)
+		{
+			info.fDoEdit = false;
+			EndEdit(info, 0, 0, nil);
+			return err;
+		}
+		if (imported.fTypes == kTXImportAll)
+		{
+			extra = fRulers->ValidateRulerRange(start, imported.fTextCount);
+			goto format;
+		}
+		if (imported.fTypes == 2 || imported.fTypes == 4 || imported.fTypes == 6)
+		{
+			err = fFormatter->Format(start, end, &first, &last);
+			EndEdit(info, first, last, nil);
+			Compact();
+			fPendingRunInvalid = true;
+			return err;
+		}
+		if (imported.fTypes != 0 && imported.fTypes != 3 && imported.fTypes != 1)
+			goto format;
+	}
+	{
+	unsigned char type = imported.fTypes;
+	long count = imported.fTextCount;
 	fRulers->ReplaceRange(start, length + extra, count + extra, pendingRuler, true);
 	if (type != 3)
 	{
@@ -411,10 +462,11 @@ Textension::ReplaceRange(TXOffset start, TXOffset end, TXReplaceParams* params)
 			}
 		}
 	}
-	long first, last;
-	NewtonErr err = fFormatter->ReplaceRange(start, length + extra, count + extra, params->fFlags, &first, &last);
+	}
+format:
+	err = fFormatter->ReplaceRange(start, length + extra, imported.fTextCount + extra, params->fFlags, &first, &last);
 	TXOffsetPos caret;
-	caret.fOffset = count + start;
+	caret.fOffset = imported.fTextCount + start;
 	caret.fAtStart = (params->fFlags & kTXReplaceCaretAtStart) != 0;
 	EndEdit(info, first, last, &caret);
 	if (params->fContainer != nil)
@@ -680,4 +732,16 @@ Textension::UpdateRangeRulers(const TXOffsetRange& range, const TXAttrValues* va
 	NewtonErr err = UpdateFormatter(changed, paras, &first, &last);
 	EndEdit(info, first, last, nil);
 	return err;
+}
+
+
+// ROM 0x00253be0 Export__10TextensionFP13TXOffsetRangeP11TXContainerUc
+NewtonErr
+Textension::Export(TXOffsetRange* range, TXContainer* container, unsigned char types)
+{
+	TXContainerImportInfo info(types);
+	if (types == kTXImportRulers)
+		fRulers->CharRangeToParagRange(&range->fStart, &range->fEnd);
+	TXPrivateContainer here(range->fStart.fOffset, range->fEnd.fOffset - range->fStart.fOffset, fRuns, fRulers, fChars, fFormatter);
+	return container->Import(&here, &info);
 }
