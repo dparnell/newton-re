@@ -237,19 +237,24 @@ manifest does not know (a frame added by an edit).
 ## Stage 1: what the source is and is not yet
 
 `python tools/newton-rom/analysis/romsrc.py extract build/MP2x00US -o <dir>`
-(or `cmake --build <build> --target romsrc`) writes the tree. It takes
-about 4 seconds, and `build <dir> --check build/MP2x00US` takes about 2.
+(or `cmake --build <build> --target romsrc`) writes the tree, and `build
+<dir> --check build/MP2x00US --newtonscript <exe>` builds it back. The
+ctest `host.ROMSourceRoundTrip` does both in about 25 seconds, most of it
+the decompiler.
 
 The tree holds:
 
 - 3038 definitions in `objects/NNN.ns`, 400 to a file in address order;
+- 5480 functions in `functions/`;
 - the 8336 maps in `maps.ns`;
-- `layout.tsv`, one line per object;
-- about 3900 `.bin` files: the 4681 instruction strings are most of
-  them.
+- `layout.tsv`, one line per object, and the aliases;
+- the resources: 525 PNGs, 2 WAVs, 7 PICTs, 13 fonts, and 461 `.bin`
+  files (the 362 nested functions' bytecode, the compressed sounds and
+  the tables).
 
-On disk it is about 2.3 MB of object source, 0.8 MB of maps, 1.8 MB of
-manifest and 7 MB of resources.
+There are some 6,500 files, about 19 MB on disk (NTFS). In bytes that is
+1.2 MB of object source, 8.3 MB of function source, 0.8 MB of maps,
+2.1 MB of manifest and 2 MB of resources.
 
 What it is not yet:
 
@@ -269,7 +274,7 @@ In short, it is a faithful and readable dump, and not yet a tree to edit.
 is a tree worth editing.** What is committed now is the tools, the
 ctest, and the `romsrc` make target.
 
-- **Size.** A generated tree is about 12 MB in some 12,000 files. Each
+- **Size.** A generated tree is about 19 MB on disk in some 6,500 files. Each
   re-extraction after a tool change would rewrite most of it, so every
   improvement to the extractor would be a multi-MB commit of churn, and
   the history would be the extractor's rather than anyone's edits.
