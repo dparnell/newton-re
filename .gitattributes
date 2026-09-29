@@ -28,3 +28,4 @@ romsrc/**/*.pkg binary
 romsrc/**/*.ns text eol=lf
 romsrc/**/*.tsv text eol=lf
 romsrc/**/*.md text eol=lf
+romsrc/**/*.txt text eol=lf

@@ -54,11 +54,36 @@ what each class is, and the form planned for it:
 | `UniC`, `Sort`, `kchr`, `Intl`, `table`, `Comp` | 23 | Unicode, collation, keyboard and locale tables | tables (below) |
 | `AirusA`, `DTEM`, `DTEH`, `PPDB`, `Trigram`, `Trigrams`, `letterimages` | 13 | the recognisers' dictionaries and trained data | tables (below) |
 
-A **table** is written at first as the raw bytes (a `.bin` file) with a
-note of what reads it. Each one gets an editing tool of its own only when
-someone wants to change it. The dictionaries, for example, are tries that
-`recognition/Airus.h` walks, and a word list is the form to edit them in.
-Getting the whole area out and back comes first.
+A **table** is written as text where it has a structure worth reading,
+and otherwise as its raw bytes (a `.bin` file). Each form is checked:
+the extractor rebuilds the bytes from the text and compares before
+choosing it.
+
+- **As text now:**
+  - the touch-tone scores (`TDTMFCodec` and the dialler's `samples`, 36 of
+    them) as `tonescore(...)`: the header (version, algorithm, repeats)
+    and each tone's frequency, peak, envelope times in milliseconds and
+    sustain level, as `sound/DTMFCodec.cpp`'s `Produce` reads them;
+  - the shapes of 16-bit values (`boundsRect`, `roundRectangle`,
+    `polygonShape`) as `shorts(...)`;
+  - the 16.16 numbers as `fixed(...)`;
+  - the three keyboard layouts (`kchr`, Macintosh KCHR) and the two
+    256-entry `table`s as `hexfile(...)` text files. Their bytes are in
+    hex, 16 to a line, under comments saying what each part is (the
+    modifier table; each key table with its characters spelt out beside
+    it).
+- **Still `.bin` (32), and why:**
+  - the recognisers' data, where the edit form would be a generator, not
+    the bytes: the Airus dictionaries (`AirusA`, 7, tries that
+    `recognition/Airus.h` walks; a word list and a trie builder are the
+    form to edit them in), the trained tables (`DTEM`, `DTEH`, `PPDB`,
+    `Trigram`, `Trigrams`, `letterimages`);
+  - the Unicode, collation and locale data (`UniC` 12, `Sort` 2, `Intl`
+    2), whose formats (`frames/UnicodeTables.h`, `frames/SortTables.h`)
+    are known but not yet written out as text;
+  - the compression dictionaries (`Comp`, 2);
+  - one shared `instructions` binary in Cardfile, referenced from outside
+    functions as well.
 
 ## The form of the extraction
 

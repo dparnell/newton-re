@@ -90,6 +90,23 @@ constructors of its own):
                     PCM; compressed on build by the ROM's own codec
                     (newtonscript --ima-compress), which gives back the ROM's
                     bytes for every one the ROM has
+    tonescore('samples, {version: 1, algorithm: 0, reserved: 0, repeats: 0},
+              [tones: {frequency: 750, fraction: 0, peak: 20000, delay: 0,
+                       attack: 10, decay: 10, hold: 100, release: 500,
+                       sustain: 32768, tail: 0}, ...])
+                    a score of the touch-tone synthesiser (TDTMFCodec,
+                    sound/DTMFCodec.cpp: the ring tones and the dialler's
+                    tones): its header's halfwords and each tone's - the
+                    frequency in Hz and its 16-bit fraction, the peak level,
+                    the envelope's times in milliseconds, the sustain level
+    shorts('boundsRect, 0, 0, 31, 218)   a binary of 16-bit signed values (a
+                    rectangle - top, left, bottom, right - a round
+                    rectangle, a polygon's points)
+    fixed('fixed, 22050.5)   a 16.16 fixed-point number
+    hexfile('kchr, "resources/kchr/addr.txt")   a table as text: its bytes in
+                    hex, 16 to a line, under # comments saying what each
+                    part is (a 'kchr keyboard layout's modifier table and
+                    key tables; a 'table of 256 entries)
     sound('samples, "resources/samples/addr.wav")   the samples of a
                     simple sound (8-bit, uncompressed: offset binary, as a
                     WAV file's 8-bit samples are); the sampling rate stays
@@ -144,6 +161,8 @@ import png							# noqa: E402
 import wave							# noqa: E402
 
 BITMAP_CLASSES = ("bits", "mask", "cbits")
+# the binaries of 16-bit values (IsHalfwordShapeClass in frames/ObjectAreaImport.cpp)
+HALFWORD_CLASSES = {"boundsrect", "rectangle", "oval", "roundrectangle", "line", "polygonshape", "polygondata", "regiondata"}
 PICT_HEADER = 512					# a PICT file's header: nought, before the picture
 
 PAD = 0xba						# the bytes between objects
@@ -802,6 +821,25 @@ class Extractor:
 				w.setframerate(self.simple_sounds[o])
 				w.writeframes(data)
 			return "sound(%s, \"%s\")" % (self.value(cls, path + "^"), rel)
+		if cname is not None and cname.lower() in HALFWORD_CLASSES and len(data) % 2 == 0 and data and not self.in_function:
+			values = struct.unpack(">%dh" % (len(data) // 2), data)
+			return "shorts(%s, %s)" % (self.value(cls, path + "^"), ", ".join(str(v) for v in values))
+		if cname == "fixed" and len(data) == 4 and not self.in_function:
+			v = struct.unpack(">i", data)[0] / 65536
+			if struct.pack(">i", int(round(float(repr(v)) * 65536))) == data:
+				return "fixed(%s, %r)" % (self.value(cls, path + "^"), v)
+		if cname in HEX_TABLES and not self.in_function:
+			text = HEX_TABLES[cname](data)
+			if text is not None and hex_file_bytes(text) == data:
+				rel = "resources/%s/%x.txt" % (folder, o)
+				os.makedirs(os.path.join(self.out, os.path.dirname(rel)), exist_ok=True)
+				with open(os.path.join(self.out, rel), "w", encoding="utf-8", newline="\n") as f:
+					f.write(text)
+				return "hexfile(%s, \"%s\")" % (self.value(cls, path + "^"), rel)
+		if cname in ("samples", "TDTMFCodec") and not self.in_function:
+			text = tone_score_text(data)
+			if text is not None:
+				return "tonescore(%s, %s)" % (self.value(cls, path + "^"), text)
 		if o in self.ima_sounds and not self.in_function:
 			pcm = self.ima_pcm(data)
 			if pcm is not None:
@@ -988,6 +1026,94 @@ def bitmap_bytes(header, depth, rows):
 
 NEWTONSCRIPT = None					# (set by the builder: the host tool the IMA sounds are compressed with)
 
+def hex_rows(data, width=16):
+	return "".join(" ".join("%02x" % b for b in data[i:i + width]) + "\n" for i in range(0, len(data), width))
+
+
+def hex_file_bytes(text):
+	"""A hexfile's bytes: every line not a # comment, as hex byte pairs."""
+	out = bytearray()
+	for line in text.split("\n"):
+		line = line.split("#", 1)[0].strip()
+		if line:
+			out += bytes.fromhex(line)
+	return bytes(out)
+
+
+def kchr_text(data):
+	"""A Macintosh 'KCHR keyboard layout (Inside Macintosh: Text) as text:
+	its version, the modifier table (the key table each combination of the
+	modifier bits uses), the key tables (the Mac OS Roman character each of
+	128 key codes gives), then the dead keys."""
+	if len(data) < 262:
+		return None
+	count = struct.unpack(">H", data[258:260])[0]
+	end = 260 + 128 * count
+	if end + 2 > len(data):
+		return None
+	text = "# a 'kchr keyboard layout (Macintosh KCHR): views/Keyboard.h's TranslateKey reads it\n"
+	text += "# version\n" + hex_rows(data[0:2])
+	text += "# the modifier table: for each of the 256 combinations of the modifier bits\n"
+	text += "# (views/Keyboard.h's kCommandModifier..), the key table it uses\n" + hex_rows(data[2:258])
+	text += "# the number of key tables\n" + hex_rows(data[258:260])
+	for i in range(count):
+		table = data[260 + 128 * i:260 + 128 * (i + 1)]
+		text += "# key table %d: the character (Mac OS Roman) of each key code 00-7f; here as text: %s\n" % (
+			i, "".join(chr(b) if 0x20 <= b < 0x7f else "." for b in table))
+		text += hex_rows(table)
+	text += "# the dead keys: their count, then each one's record\n" + hex_rows(data[end:])
+	return text
+
+
+def table_text(data):
+	"""A 256-entry 'table as text: 16 entries to a line, row by row."""
+	if len(data) != 256:
+		return None
+	return "# a 256-entry table: entry 0x00 first, 16 to a line\n" + hex_rows(data)
+
+
+HEX_TABLES = {"kchr": kchr_text, "table": table_text}
+
+SCORE_HEADER = ("version", "algorithm", "reserved", "repeats")
+SCORE_TONE = ("frequency", "fraction", "peak", "delay", "attack", "decay", "hold", "release", "sustain", "tail")
+
+
+def tone_score_text(data):
+	"""A touch-tone score (TDTMFCodec::Produce 0x00088388: the version 1,
+	the algorithm, a reserved halfword, the repeat count and the number of
+	tones, then 0x14 bytes a tone: its frequency as 16.16 fixed, peak level,
+	delay, attack, decay, hold and release in milliseconds, sustain level,
+	and the tail after the release) as the notation's tonescore, or None
+	when the bytes are not one (or would not come back the same)."""
+	if len(data) < 10 or len(data) % 2:
+		return None
+	halves = struct.unpack(">%dH" % (len(data) // 2), data)
+	if halves[0] != 1 or len(data) != 10 + 0x14 * halves[4]:
+		return None
+	header = "{" + ", ".join("%s: %d" % (n, v) for n, v in zip(SCORE_HEADER, halves[:4])) + "}"
+	tones = []
+	for k in range(halves[4]):
+		t = halves[5 + 10 * k:15 + 10 * k]
+		tones.append("{" + ", ".join("%s: %d" % (n, v) for n, v in zip(SCORE_TONE, t)) + "}")
+	text = "%s, [tones: %s]" % (header, ", ".join(tones))
+	return text if tone_score_bytes_of(halves) == data else None
+
+
+def tone_score_bytes_of(halves):
+	return struct.pack(">%dH" % len(halves), *halves)
+
+
+def tone_score_bytes(header, tones):
+	"""A tonescore's bytes: its header (a frame of SCORE_HEADER's slots) and
+	tones (frames of SCORE_TONE's), the tone count worked out."""
+	def value(frame, name):
+		v = frame.items[[t.lower() for t in frame.tags].index(name.lower())]
+		return v.ref >> 2
+	halves = [value(header, n) for n in SCORE_HEADER] + [len(tones.items)]
+	for tone in tones.items:
+		halves += [value(tone, n) for n in SCORE_TONE]
+	return tone_score_bytes_of(halves)
+
 
 def ima_compress(path):
 	"""A WAV file as an IMA/DVI ADPCM sound's samples: its samples as 16-bit
@@ -1168,15 +1294,15 @@ class Reader:
 		if kind == "name" and text in ("nil", "true"):
 			self.take()
 			return Imm(2 if text == "nil" else 0x1a)
-		if kind == "name" and text in ("real", "string", "binary", "array", "map", "bytes", "function", "bitmap", "sound", "pict", "same", "imasound") \
+		if kind == "name" and text in ("real", "string", "binary", "array", "map", "bytes", "function", "bitmap", "sound", "pict", "same", "imasound", "tonescore", "shorts", "fixed", "hexfile") \
 				and self.toks[self.i + 1][1] == "(":
 			self.take()
 			self.take("(")
 			args = []
 			while self.peek()[1] != ")":
-				if text in ("real",) and self.peek()[0] == "number":
+				if text in ("real", "fixed") and self.peek()[0] == "number":
 					args.append(float(self.take()[1]))
-				elif text in ("string", "binary", "bytes", "function", "bitmap", "sound", "pict", "same", "imasound") and self.peek()[0] == "string":
+				elif text in ("string", "binary", "bytes", "function", "bitmap", "sound", "pict", "same", "imasound", "hexfile") and self.peek()[0] == "string":
 					args.append(self.take()[1])
 				elif text == "bitmap" and self.peek()[0] == "number":
 					args.append(self.take()[1])
@@ -1200,6 +1326,15 @@ class Reader:
 					return Obj("binary", args[0], data=f.read()[PICT_HEADER:])
 			if text == "sound":
 				return Obj("binary", args[0], data=wav_samples(os.path.join(self.root, args[1][1:-1])))
+			if text == "hexfile":
+				with open(os.path.join(self.root, args[1][1:-1]), encoding="utf-8") as f:
+					return Obj("binary", args[0], data=hex_file_bytes(f.read()))
+			if text == "shorts":
+				return Obj("binary", args[0], data=struct.pack(">%dh" % (len(args) - 1), *[(v.ref >> 2) - ((v.ref >> 2) & 0x20000000) * 2 for v in args[1:]]))
+			if text == "fixed":
+				return Obj("binary", args[0], data=struct.pack(">i", int(round(args[1] * 65536))))
+			if text == "tonescore":
+				return Obj("binary", args[0], data=tone_score_bytes(args[1], args[2]))
 			if text == "imasound":
 				return Obj("binary", args[0], data=ima_compress(os.path.join(self.root, args[1][1:-1])))
 			if text == "bitmap":
