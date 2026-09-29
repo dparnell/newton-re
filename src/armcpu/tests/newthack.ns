@@ -1,0 +1,21 @@
+// NewtHack 1.1's native function run on the ARM interpreter
+// (armcpu/PackageNativeCPU.h): moveCreatures - which runs every turn -
+// finds the creatures in view with a five-argument NewtonScript function
+// NTK compiled native.  The game is opened, Play tapped on the new-game
+// dialog, and the player moved twice by taps on the map; each move runs
+// the native function.  With NEWTON_TRACE_ARMCPU=1 each native call prints
+// how it ended; the ctest wants it to have returned (stop 1) and nothing
+// the adapter does not answer.  tmp/armcpu-newthack.pgm is the map after.
+//
+//   NEWTON_TRACE_ARMCPU=1 build/host/host/newton --rom <rom.bin> --display 320x480 --erase \
+//       --store tmp/newthack.store --headless 32 --package fixtures/packages/games/NewtHack1_1/newthack.pkg \
+//       --package fixtures/packages/games/NewtHack1_1/nhsounds.pkg --script src/armcpu/tests/newthack.ns
+
+AddDelayedCall(func() begin GetRoot().|NewtHack:ChrisDopp|:Open(); end, nil, 3000);
+AddDelayedCall(func() begin PenDown(229, 293); PenUp(); IdleStrokes(); end, nil, 7000);		// Play
+AddDelayedCall(func() begin PenDown(200, 300); PenUp(); IdleStrokes(); end, nil, 16000);	// a step
+AddDelayedCall(func() begin PenDown(230, 290); PenUp(); IdleStrokes(); end, nil, 20000);	// and another
+AddDelayedCall(func() begin
+    ScreenSnapshot("tmp/armcpu-newthack.pgm");
+    Print("newthack: done");
+  end, nil, 26000);
