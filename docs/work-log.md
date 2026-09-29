@@ -9,6 +9,18 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-30: the rest of the docker's commands
+
+- Package restore and removal ('rpkg' `DoRestorePackage`, 'rmvp'
+  `DoRemovePackage`), 'ginh' (the inheritance frame), 'gsyn' (the sync
+  options), 'test'/'rtst' echoes, remote function calls ('cgfn'/'crmf'),
+  the Connection app's slips ('dslp', 'islp', 'gpwd'), the desktop's
+  protocol extensions ('pext'/'rpex'), 'ress' (a0966b4).  ROM bug kept:
+  `TestRefMessage` writes its header twice.  `dock.py --session` echoes,
+  reads the 13-class inheritance frame and the sync options, calls
+  Max(3, 7) on the Newton, installs and removes an extension, and removes
+  and reloads a package.
+
 ## 2026-09-30: the docker backs up soups and lists packages
 
 - 'csop' (CreateSoup), 'cdsp' (CreateSoupFromSoupDef, swallowing
