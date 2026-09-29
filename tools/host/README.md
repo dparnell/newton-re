@@ -146,3 +146,28 @@ The three races of 2026-09-30 were found this way; `docs/work-log.md`
 records them. Before the fix, 10 copies of `host.NewtonInetSetup` beside 8
 hogs passed 0 of 10; after it they pass 10 of 10. The cure is always the
 same: wait on a condition, and end the run with `HostQuit()`.
+
+## profile.py - where a running host's time goes
+
+A sampling profiler for a host build that is busy but not stuck:
+
+    python tools/host/profile.py <pid> [--seconds N] [--interval MS] [--top N]
+
+At each interval it suspends every thread of the process in turn. A
+thread whose instruction pointer is inside the executable, rather than
+waiting in the system, counts as one sample:
+
+- its function once as *self*;
+- every function with a return address on its stack once as *inclusive*.
+  The stack is scanned the same way `stacksample.py` does it.
+
+Functions are found by bisecting the image's `.pdata` table and named
+with `whichfunction.py`'s object-file matching. The output lists the
+functions by self time and by inclusive time, each as a percentage of the
+samples.
+
+Inclusive figures include stale words found on the stack, so read them as
+upper bounds. The drawing work was measured this way
+(`docs/qd/README.md`, "Drawing speed"): run
+`src/host/demo/drawbench.ns` with more rounds and profile the process
+while it runs.
