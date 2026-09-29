@@ -281,6 +281,8 @@ class Decompiled:
 	# ---- names
 
 	def local_name(self, index):
+		if isinstance(index, str):
+			return index				# closed over: its own name
 		if index in self.arg_names:
 			return self.arg_names[index]
 		if getattr(self, "chosen_names", None) and index in self.chosen_names:
@@ -740,14 +742,18 @@ class Decompiled:
 		def expect(cond, what):
 			if not cond:
 				raise DecompileError("foreach's " + what)
+		# (a variable an inner function closes over is in the argFrame, set
+		# by name: find-and-set-var)
+		def loop_var(i):
+			return i.b if i.a == OP_SETVAR else self.symbol(self.lit(i.b))
 		expect(ins[p].a == OP_GETVAR and ins[p].b == it and ins[p + 1].a == OP_PUSHCONST and ins[p + 1].b == 4
-			   and ins[p + 2].a == OP_FREQ and ins[p + 2].b == 2 and ins[p + 3].a == OP_SETVAR, "value")
-		val = ins[p + 3].b
+			   and ins[p + 2].a == OP_FREQ and ins[p + 2].b == 2 and ins[p + 3].a in (OP_SETVAR, OP_FINDSETVAR), "value")
+		val = loop_var(ins[p + 3])
 		p += 4
 		slot = None
 		if ins[p].a == OP_GETVAR and ins[p].b == it and ins[p + 1].a == OP_PUSHCONST and ins[p + 1].b == 0 \
-				and ins[p + 2].a == OP_FREQ and ins[p + 2].b == 2 and ins[p + 3].a == OP_SETVAR:
-			slot = ins[p + 3].b
+				and ins[p + 2].a == OP_FREQ and ins[p + 2].b == 2 and ins[p + 3].a in (OP_SETVAR, OP_FINDSETVAR):
+			slot = loop_var(ins[p + 3])
 			p += 4
 		expect(ins[test - 2].a == OP_GETVAR and ins[test - 2].b == it and ins[test - 1].simple(ITERNEXT), "step")
 		body_end = test - 2
@@ -1383,7 +1389,8 @@ def loop_names(node):
 		names = ([node.slot] if node.slot is not None else []) + [node.val, node.iter]
 		if node.collect:
 			names += [node.index, node.result]
-		return names
+		# (a closed-over variable, a name, is not on the stack)
+		return [x for x in names if not isinstance(x, str)]
 	return []
 
 
