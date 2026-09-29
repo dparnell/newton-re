@@ -719,7 +719,7 @@ TCMEventHandler::SetLastPackage(TCMEvent* event)
 void
 TCMSystemEventHandler::PowerOn(TAEvent* event)
 {
-	SetReply(0xC, event);
+	SetReply(sizeof(TAESystemEvent), event);		// DEVIATION: the ROM's 0xC (three words), which is short on an LP64 host
 	ReplyImmed();
 	TCMWorld* world = (TCMWorld*) GetGlobals();
 	if (!gSCPDevicePackageBusy)
@@ -734,7 +734,7 @@ TCMSystemEventHandler::PowerOn(TAEvent* event)
 void
 TCMSystemEventHandler::PowerOff(TAEvent* event)
 {
-	SetReply(0xC, event);
+	SetReply(sizeof(TAESystemEvent), event);		// DEVIATION: the ROM's 0xC (three words), which is short on an LP64 host
 	((TAppWorld*) GetGlobals())->AEReplyImmed();
 }
 
@@ -743,7 +743,7 @@ TCMSystemEventHandler::PowerOff(TAEvent* event)
 void
 TCMSystemEventHandler::AppAlive(TAEvent* event)
 {
-	SetReply(0xC, event);
+	SetReply(sizeof(TAESystemEvent), event);		// DEVIATION: the ROM's 0xC (three words), which is short on an LP64 host
 	ReplyImmed();
 	TCMWorld* world = (TCMWorld*) GetGlobals();
 	if (!gSCPDevicePackageBusy)
