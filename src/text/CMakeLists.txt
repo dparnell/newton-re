@@ -12,6 +12,8 @@ add_library(text STATIC
     TXArray.cpp
     TXAttributes.cpp
     TXChars.cpp
+    TXFrameFormatter.cpp
+    TXFrames.cpp
     TXGraphicsRun.cpp
     TXLine.cpp
     TXLinesHeights.cpp

@@ -57,3 +57,8 @@ target_link_libraries(test_TXLine PRIVATE text memory)
 target_compile_definitions(test_TXLine PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
 add_test(NAME text.TXLine COMMAND test_TXLine)
 set_tests_properties(text.TXLine PROPERTIES TIMEOUT 120)
+
+add_executable(test_TXFrames test_TXFrames.cpp)
+target_link_libraries(test_TXFrames PRIVATE text memory)
+add_test(NAME text.TXFrames COMMAND test_TXFrames)
+set_tests_properties(text.TXFrames PROPERTIES TIMEOUT 120)
