@@ -1814,8 +1814,9 @@ TSoundServer::MainConstructor()
 	err = fHandler.Init(this);
 	if (err != noErr)
 		return err;
-	// NOT YET RECONSTRUCTED: TSoundPowerHandler::Init (the hardware powered
-	// down when the machine is)
+	err = fPowerHandler.Init(this);
+	if (err != noErr)
+		return err;
 	gSndPort = *GetMyPort();
 	for (long i = 0; i < 2; i++)
 	{
@@ -2281,6 +2282,44 @@ TSoundServer::StopDecompressor(long /*hardware*/)
 {
 	for (TSoundChannel* channel = fDecompressorChannels; channel != nil; channel = channel->fNext)
 		channel->Stop(nil, kSndErrStopped);
+}
+
+
+/*------------------------------------------------------------------------------
+	T S o u n d P o w e r H a n d l e r
+------------------------------------------------------------------------------*/
+
+// ROM 0x001e996c __ct__18TSoundPowerHandlerFv
+TSoundPowerHandler::TSoundPowerHandler()
+{
+	fServer = nil;
+}
+
+
+// ROM 0x001e99b4 Init__18TSoundPowerHandlerFP12TSoundServer
+// Registered for the power-off system event ('powf).
+NewtonErr
+TSoundPowerHandler::Init(TSoundServer* server)
+{
+	fServer = server;
+	return TSystemEventHandler::Init('powf');
+}
+
+
+// ROM 0x001e99c8 PowerOff__18TSoundPowerHandlerFP7TAEvent
+// The machine going off: every channel stopped, and output and input
+// stopped and powered down.
+void
+TSoundPowerHandler::PowerOff(TAEvent* /*event*/)
+{
+	TSoundServer* server = fServer;
+	server->StopCompressor(1);
+	server->StopDecompressor(1);
+	server->StopOutput(1);
+	for (TSoundChannel* channel = server->fInputChannels; channel != nil; channel = channel->fNext)
+		channel->Stop(nil, kSndErrStopped);
+	gSndDriver->StopInput();
+	gSndDriver->PowerInputOff();
 }
 
 

@@ -36,7 +36,8 @@
 	TCodecChannel's task and loops (MainEventLoop, DecompressLoop,
 	FillDMABuffer, InitCodecNodes, ...: a codec's sound is not played -
 	sound/SoundChannel.h's TFrameSoundChannel says so), and
-	TSoundPowerHandler (the hardware powered down on a power-off event).
+	(TSoundPowerHandler, the hardware powered down on a power-off event,
+	is done.)
 
 	Reconstructed from the MP2x00 US ROM (0x001e36fc-0x001e6170,
 	0x001e7380, 0x001e7ef0-0x001e99f0); each function cites its origin.
@@ -355,6 +356,18 @@ public:
 };
 
 // The event an interrupt handler sends the server (0x14 bytes of content).
+// The server's hold on the machine's power: a power-off event stops
+// everything and powers the sound hardware down.
+class TSoundPowerHandler : public TSystemEventHandler
+{
+public:
+						TSoundPowerHandler();									// ROM 0x001e996c __ct__18TSoundPowerHandlerFv
+	NewtonErr			Init(TSoundServer* server);								// ROM 0x001e99b4 Init__18TSoundPowerHandlerFP12TSoundServer
+	virtual void		PowerOff(TAEvent* event);								// ROM 0x001e99c8 PowerOff__18TSoundPowerHandlerFP7TAEvent
+
+	TSoundServer*		fServer;				// +0x18
+};
+
 struct TSoundIntEvent
 {
 	TAEvent				fEvent;			// +0x00  'newt'/'usnd'
@@ -416,6 +429,7 @@ public:
 	TSoundIntMessage*	fInputIntMessage;		// +0x74
 	ULong				fLastId;				// +0x78
 	TSoundServerHandler	fHandler;				// +0x7c
+	TSoundPowerHandler	fPowerHandler;			// +0x94
 	void*				fMixBuffer;				// +0xb8
 	void				(*fMix)(void*, void*, long);	// +0xbc
 	long				fSilence;				// +0xc0
