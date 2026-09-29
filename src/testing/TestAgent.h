@@ -287,6 +287,7 @@ extern long	gStdioOffCount;								// ROM 0x0c10553c
 void	StdioOn(void);									// ROM 0x003193ac StdioOn__Fv
 void	StdioOff(void);									// ROM 0x00319018 StdioOff__Fv
 
+void	RegisterSerialDebuggerNatives(void);				// SerialDebugger.cpp: InitSerialDebugging, PreInitSerialDebugging (registered by RegisterTestAgentNatives)
 void	RegisterTestAgentNatives(void);					// ActivateTestAgent, the Test* natives, StdioOn/Off, debug, ...
 
 #endif	/* __TESTAGENT_H */

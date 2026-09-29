@@ -53,6 +53,12 @@ expando := AddView(GetRoot(), {_proto: @175, viewBounds: {left: 10, top: 300, ri
 expando:viewDrawScript();
 Print(["expando asked", kAsked]);
 
+// the serial debugger: none on the host, so starting it answers
+// kError_Call_Not_Implemented (-10005); stopping it and reading the debug
+// card answer nought
+Print(["debugger", InitSerialDebugging("extr", 10), InitSerialDebugging("extr", 0),
+	InitSerialDebugging("extr", 2), PreInitSerialDebugging("extr", 57600, 1), PreInitSerialDebugging("extr", 57600, -1)]);
+
 QuickLookDone(nil);
 Print("natives: done");
 HostQuit();

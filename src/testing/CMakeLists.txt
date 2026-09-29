@@ -7,6 +7,7 @@ add_library(testing STATIC
     Journal.cpp
     TestAgent.cpp
     TestNatives.cpp
+    SerialDebugger.cpp
 )
 target_include_directories(testing PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(testing PUBLIC newton_config frames recognition os600_user views newt packages intl utility)

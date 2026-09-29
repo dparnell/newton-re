@@ -770,6 +770,7 @@ FHobbleTablet(RefArg rcvr)
 void
 RegisterTestAgentNatives(void)
 {
+	RegisterSerialDebuggerNatives();
 	RegisterNativeFunction("FActivateTestAgent", (void*) FActivateTestAgent, 2);
 	RegisterNativeFunction("FDeactivateTestAgent", (void*) FDeactivateTestAgent, 0);
 	RegisterNativeFunction("FTestGetParameterString", (void*) FTestGetParameterString, 0);
