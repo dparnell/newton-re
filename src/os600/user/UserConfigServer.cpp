@@ -33,6 +33,23 @@ TUConfigServer::ULongStrToCStr(ULong name, char* nameStr)
 }
 
 
+// ROM 0x000e5fec GetDefaultHWLoc__14TUConfigServerFUlPUlT2
+// A service's default hardware location: its "DefHWLoc" configuration.
+NewtonErr
+TUConfigServer::GetDefaultHWLoc(ULong serviceID, ULong* hwLocIDPtr, ULong* flagsPtr)
+{
+	return GetDefaultConfig(serviceID, (char*) "DefHWLoc", hwLocIDPtr, flagsPtr);
+}
+
+
+// ROM 0x000e623c SetDefaultHWLoc__14TUConfigServerFUlN21
+NewtonErr
+TUConfigServer::SetDefaultHWLoc(ULong serviceID, ULong hwLocID, ULong flags)
+{
+	return SetDefaultConfig(serviceID, (char*) "DefHWLoc", hwLocID, flags);
+}
+
+
 // ROM 0x000e61e8 GetDefaultConfig__14TUConfigServerFUlPcPUlT3
 // The configuration registered for a service; flagsPtr may be nil, and
 // the ROM still asks for the flags into a place of its own.

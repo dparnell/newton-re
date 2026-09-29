@@ -4,6 +4,7 @@
 # network behind a host comm tool).
 add_library(comms STATIC
     Options.cpp
+    SerialOptions.cpp
     CommTools.cpp
     CommManager.cpp
     Endpoint.cpp

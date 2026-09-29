@@ -50,3 +50,24 @@ target_include_directories(hal_host_sockets PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/h
 if(WIN32)
     target_link_libraries(hal_host_sockets PUBLIC ws2_32)
 endif()
+
+# The serial chips' seam (HALSerialChip.h): the TSerialChip and
+# PSerialChipRegistry protocols and the ROM's registry, PTheSerChipRegistry;
+# the serial tools find their chip here (docs/comms/README.md, "The desktop
+# connection").  Over the options (comms) and the name server (os600_user).
+add_library(hal_serial STATIC
+    SerialChipRegistry.cpp
+)
+target_link_libraries(hal_serial PUBLIC newton_config protocols comms os600_user)
+target_include_directories(hal_serial PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+# The host's serial port (host/HostSerialChip.h): a TSerialChip registered
+# as the external port whose wire is a TCP socket - a desktop that connects
+# is a cable plugged in (Einstein's port, 3679, by default).
+add_library(hal_host_serial STATIC
+    host/HostSerialChip.cpp
+)
+target_link_libraries(hal_host_serial PUBLIC newton_config hal_serial hal_host hal_host_sockets)
+target_include_directories(hal_host_serial PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/host)
+
+add_subdirectory(tests)
