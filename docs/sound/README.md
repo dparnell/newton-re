@@ -315,14 +315,53 @@ a waiting start answered - when its last samples have gone *into a DMA
 buffer*, not when they have been heard; up to two buffers are still to
 play (`test_SoundServer` waits for the output to stop).
 
+## The client: channels and sound frames (`SoundChannel.h`, `FrameSoundChannel.h`)
+
+A `TUSoundChannel` is a pair of the server's channels - an output channel
+and a decompressor feeding it (`Open` asks for both) - and an event
+handler: a block is scheduled as a `SoundNode`, the request, its reply and
+an asynchronous message whose collector is the task's own app world, and
+when the server answers (the block has gone to the hardware) the answer
+comes back through the world's event loop to `AECompletionProc`, which
+hands it to the block's `TUSoundCallback`.  `Start(0)` is the server's
+command 10, answered only when everything scheduled has been played -
+which is what makes `PlaySoundSync` synchronous; `Start(1)` is command 9
+and marks the channel running, and only a running channel can be stopped.
+
+`TFrameSoundChannel::Convert` is where a sound frame becomes a block: the
+samples binary locked, `compressionType` (0, 1 or 6), `dataType` (8/1 or
+16/2 bits), the count, `samplingRate` (an integer, a real, or a binary
+holding a 16.16 number; nothing at all means 22026.43), `start`, `count`,
+`loops` and `volume` (a setting, or decibels as a real); anything else
+throws `evt.ex.fr` -30009.  The block's refCon holds the frame, and
+`TFrameSoundCallback` lets it go, unlocks the samples and sends the frame
+its `callback` method with the state and the error.  `GlobalSoundChannel`
+is the one `PlaySound`, `PlaySoundSync`, `PlaySoundEffect` and the clicker
+use, opened on `userConfiguration.outputDevice`; the twelve
+`protoSoundChannel` natives (`FSoundOpen` .. `FGetChannelInputGain`) keep
+a script's own channel in its `_channel` slot.  `NEWTON_TRACE_SOUND=1`
+says why a frame could not be played.
+
+`test_PlaySound` boots the Newt world with the null driver and plays the
+ROM's click (magic pointer 51: 267 samples, 8-bit, 22026.43 a second):
+260 samples reach the driver, correlated 0.965 with the click's own
+(the filtered resampler at work); `src/host/demo/sound.ns` (ctest
+`host.NewtonSound`) plays it with `PlaySoundSync` and through a
+`protoSoundChannel` (@431) whose callback is answered 0, 0.  The windowed
+`newton` plays through the loudspeaker (`host/win32/HostAudio.cpp`,
+waveOut, built without the Newton include paths); headless it keeps the
+samples and says how many there were.
+
+The host-only departures: with no sound server (no driver registered)
+the channel plays nothing and answers noErr, as the host always did; a
+coded frame is completed at once as cancelled, the codec channel not
+decompressing yet.
+
 ## Not yet
 
-`TGSMCodec` and `TDTMFCodec`; the client side - `TUSoundChannel`'s
-opening, scheduling (`SoundNode`) and callbacks, `TFrameSoundChannel`
-(the subclass that plays NewtonScript sound frames) and the
-`protoSoundChannel` natives, so no script plays a sound yet; the server's
-input and compressor channels (`SoundInputIH`, `EmptyDMABuffer`), the
-codec channel's decompressing task (`TCodecChannel::InitNode` and its
-loop) and `TSoundPowerHandler`; a host backend that makes a noise
-(waveOut); and `NewWiredPtr` (memory), for which the DMA buffers fall
-back on `NewPtr`.
+`TGSMCodec` and `TDTMFCodec`; the server's input and compressor channels
+(`SoundInputIH`, `EmptyDMABuffer`) and so recording - the Sound Recorder;
+the codec channel's decompressing task (`TCodecChannel::InitNode` and its
+loop), so coded sound (and speech, `TMacintalkCodec`) is not heard;
+`TSoundPowerHandler`; and `NewWiredPtr` (memory), for which the DMA
+buffers fall back on `NewPtr`.
