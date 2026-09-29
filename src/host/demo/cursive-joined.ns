@@ -17,32 +17,11 @@
 // the script prints each line of the page's text at the end (ctest
 // host.NewtonCursiveJoined).  build/cursive-joined.pgm is the page.
 
-tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
-typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
+
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
 
 name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
 
-page := 0;
-nextPage := func()
-  begin
-    page := page + 1;
-    if page < 10 then
-      begin
-        call tapAt with (293, 468);			// Continue
-        AddDelayedCall(nextPage, nil, 1800);
-      end
-    else
-      call tapAt with (297, 468);			// Done, on "Congratulations"
-  end;
-
-AddDelayedCall(func() begin
-    call tapAt with (293, 468);				// past "Welcome"
-    AddDelayedCall(func() begin
-        call tapAt with (200, 150);			// the caret into the First line
-        foreach c in name do call typeKey with (c);
-        AddDelayedCall(nextPage, nil, 1500);
-      end, nil, 2000);
-  end, nil, 3000);
 
 // One stroke: the pen put down on the first point, moved through the
 // rest, and lifted.
@@ -167,26 +146,35 @@ write := func(word, x, base)
   end;
 
 words := [["on", 200], ["no", 250], ["mum", 300], ["to", 350], ["nun", 400]];
-AddDelayedCall(func() begin
+// each word written once the one before it has reached the page (the
+// page's text has changed), and the page read once the last has
+writeNext := func(i)
+  begin
+    if i < Length(words) then
+      begin
+        local word := words[i][0];
+        local before := call allText with (GetRoot());
+        Print("cursive-joined: writing \"" & word & "\"");
+        call write with (word, 60, words[i][1]);
+        IdleStrokes();
+        call waitFor with ("cursive-joined: " & word & " read",
+          func() not StrEqual(call allText with (GetRoot()), before),
+          func() call writeNext with (i + 1), 60);
+      end
+    else
+      begin
+        ScreenSnapshot("build/cursive-joined.pgm");
+        Print("cursive-joined: written build/cursive-joined.pgm");
+        Print("cursive-joined: the page reads \"" & call allText with (GetRoot()) & "\"");
+        Print("cursive-joined: done");
+        HostQuit();
+      end;
+  end;
+
+call walkSetup with (name, func() begin
     SetUserConfig('letterSetSelection, 0);
     ReadCursiveOptions();
     Print("cursive-joined: the letter set is" && GetUserConfig('letterSetSelection));
-    local delay := 0;
-    foreach w in words do
-      begin
-        AddDelayedCall(func(word, base) begin
-            Print("cursive-joined: writing \"" & word & "\"");
-            call write with (word, 60, base);
-          end, [w[0], w[1]], delay);
-        delay := delay + 4000;
-      end;
-    AddDelayedCall(func() begin
-        IdleStrokes();
-        AddDelayedCall(func() begin
-            ScreenSnapshot("build/cursive-joined.pgm");
-            Print("cursive-joined: written build/cursive-joined.pgm");
-            Print("cursive-joined: the page reads \"" & call allText with (GetRoot()) & "\"");
-          end, nil, 6000);
-      end, nil, delay);
-  end, nil, 27000);
+    call writeNext with (0);
+  end);
 Print("cursive-joined: the script is loaded");

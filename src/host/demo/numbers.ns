@@ -14,32 +14,11 @@
 // and build/numbers.pgm is the page.  The digits are drawn as test_Chunk
 // draws them, twenty pixels high.  Otherwise as src/host/demo/cursive.ns.
 
-tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
-typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
+
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
 
 name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
 
-page := 0;
-nextPage := func()
-  begin
-    page := page + 1;
-    if page < 10 then
-      begin
-        call tapAt with (293, 468);			// Continue
-        AddDelayedCall(nextPage, nil, 1800);
-      end
-    else
-      call tapAt with (297, 468);			// Done, on "Congratulations"
-  end;
-
-AddDelayedCall(func() begin
-    call tapAt with (293, 468);				// past "Welcome"
-    AddDelayedCall(func() begin
-        call tapAt with (200, 150);			// the caret into the First line
-        foreach c in name do call typeKey with (c);
-        AddDelayedCall(nextPage, nil, 1500);
-      end, nil, 2000);
-  end, nil, 3000);
 
 // One stroke: the pen put down on the first point, moved through the
 // rest, and lifted.
@@ -151,23 +130,40 @@ zero := func(x, y)
 
 // "42" on a baseline at y = 200 from x = 60, the letter set made cursive
 // first; "10" and "217" further along, a little later each
-AddDelayedCall(func() begin
+// whether the page's text has `s` in it
+reads := func(s) begin
+    local text := call findText with (GetRoot(), "");
+    text and StrPos(text, s, 0);
+  end;
+
+call walkSetup with (name, func() begin
     local top := 180;
     SetUserConfig('letterSetSelection, 0);
     ReadCursiveOptions();
     Print("numbers: the letter set is" && GetUserConfig('letterSetSelection));
     call four with (60, top);
     call two with (82, top);
-    AddDelayedCall(func() begin
+    // (each number once the one before it has been read)
+    call waitFor with ("numbers: 42 read", func() call findText with (GetRoot(), "42"), func() begin
         call one with (140, top);
         call zero with (154, top);
-      end, nil, 3000);
-    AddDelayedCall(func() begin
-        written217 := [];
-        call two with (210, top);
-        call one with (228, top);
-        call seven with (242, top);
-      end, nil, 6000);
+        IdleStrokes();
+        call waitFor with ("numbers: 10 read", func() call reads with ("10"), func() begin
+            written217 := [];
+            call two with (210, top);
+            call one with (228, top);
+            call seven with (242, top);
+            IdleStrokes();
+            call waitFor with ("numbers: 217 read", func() call reads with ("217"), func() begin
+                ScreenSnapshot("build/numbers.pgm");
+                Print("numbers: written build/numbers.pgm");
+                Print("numbers: the page reads \"" & call findText with (GetRoot(), "") & "\"");
+                call readAgain with ();
+                Print("numbers: done");
+                HostQuit();
+              end, 60);
+          end, 60);
+      end, 60);
     // "217" read again (Recognize) to see all its readings: the digit
     // reader's date check offers "2/7" after it
     readAgain := func()
@@ -184,14 +180,5 @@ AddDelayedCall(func() begin
         else
           Print("numbers: 217 read again as nothing");
       end;
-    AddDelayedCall(func() begin
-        IdleStrokes();
-        AddDelayedCall(func() begin
-            ScreenSnapshot("build/numbers.pgm");
-            Print("numbers: written build/numbers.pgm");
-            Print("numbers: the page reads \"" & call findText with (GetRoot(), "") & "\"");
-            call readAgain with ();
-          end, nil, 6000);
-      end, nil, 7500);
-  end, nil, 27000);
+  end);
 Print("numbers: the script is loaded");

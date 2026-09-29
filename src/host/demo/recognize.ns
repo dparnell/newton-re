@@ -32,32 +32,9 @@
 // Each prints a line starting "recognize:"; ctest's host.NewtonRecognize
 // checks them.
 
-tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
-typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
 
 name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
-
-page := 0;
-nextPage := func()
-  begin
-    page := page + 1;
-    if page < 10 then
-      begin
-        call tapAt with (293, 468);			// Continue
-        AddDelayedCall(nextPage, nil, 1800);
-      end
-    else
-      call tapAt with (297, 468);			// Done, on "Congratulations"
-  end;
-
-AddDelayedCall(func() begin
-    call tapAt with (293, 468);				// past "Welcome"
-    AddDelayedCall(func() begin
-        call tapAt with (200, 150);			// the caret into the First line
-        foreach c in name do call typeKey with (c);
-        AddDelayedCall(nextPage, nil, 1500);
-      end, nil, 2000);
-  end, nil, 3000);
 
 // One stroke, x and y alternating: the pen down on the first point,
 // moved through the rest, and lifted.
@@ -131,6 +108,7 @@ inkOnly := func()
         viewRawInkScript: func(strokes)
           begin
             Print("recognize: ink came back as a piece of " & Length(strokes.strokes) & " strokes");
+            inkPieces := inkPieces + 1;
             true;
           end});
     v:Dirty();
@@ -148,14 +126,20 @@ inkOnly := func()
               call stroke with (moved);
             end;
         IdleStrokes();
+        call waitFor with ("recognize: the two pieces of ink", func() inkPieces >= 2, func() begin
+            Print("recognize: done");
+            HostQuit();
+          end, 60);
       end, nil, 1000);
   end;
+inkPieces := 0;
 
-AddDelayedCall(func() begin
+call walkSetup with (name, func() begin
     foreach s in ton do call stroke with (s);
-    AddDelayedCall(func() begin
-        IdleStrokes();
-        AddDelayedCall(func() begin
+    IdleStrokes();
+    // (once the recogniser has finished with the word: its page then has
+    // a paragraph "ton")
+    call waitFor with ("recognize: the word read", func() call findParagraph with (GetRoot(), "ton"), func() begin
             local para := call findParagraph with (GetRoot(), "ton");
             Print("recognize: the paragraph is " & (if para then "there" else "missing"));
 
@@ -198,7 +182,6 @@ AddDelayedCall(func() begin
                 Print("recognize: written build/recognize.pgm");
                 call inkOnly with ();
               end, nil, 2000);
-          end, nil, 6000);
-      end, nil, 3000);
-  end, nil, 27000);
+          end, 60);
+  end);
 Print("recognize: the script is loaded");

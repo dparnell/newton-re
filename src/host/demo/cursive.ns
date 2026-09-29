@@ -24,32 +24,9 @@
 // host's larger header over the next block (fixed; NEWTON_HEAPCHECK,
 // host/HostHeapCheck.h, is how it was found).
 
-tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
-typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
 
 name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
-
-page := 0;
-nextPage := func()
-  begin
-    page := page + 1;
-    if page < 10 then
-      begin
-        call tapAt with (293, 468);			// Continue
-        AddDelayedCall(nextPage, nil, 1800);
-      end
-    else
-      call tapAt with (297, 468);			// Done, on "Congratulations"
-  end;
-
-AddDelayedCall(func() begin
-    call tapAt with (293, 468);				// past "Welcome"
-    AddDelayedCall(func() begin
-        call tapAt with (200, 150);			// the caret into the First line
-        foreach c in name do call typeKey with (c);
-        AddDelayedCall(nextPage, nil, 1500);
-      end, nil, 2000);
-  end, nil, 3000);
 
 // One stroke: the pen put down on the first point, moved through the
 // rest, and lifted.
@@ -138,11 +115,13 @@ learn := func()
       end
     else
       Print("cursive: read again as nothing");
+    Print("cursive: done");
+    HostQuit();
   end;
 
 // "ton", on a baseline at y = 200, from x = 60 - the letter set made
 // cursive first
-AddDelayedCall(func() begin
+call walkSetup with (name, func() begin
     local base := 200;
     SetUserConfig('letterSetSelection, 0);
     ReadCursiveOptions();
@@ -156,24 +135,22 @@ AddDelayedCall(func() begin
                     95, base - 11, 97, base - 13, 100, base - 14, 103, base - 13,
                     104, base - 10, 104, base - 5, 104, base]];
     foreach s in tonStrokes do call stroke with (s);
-    // "to", a word's gap further along the line, a little later - the
-    // recogniser has put "ton" down by then
-    AddDelayedCall(func() begin
+    // "to", a word's gap further along the line, once the recogniser has
+    // put "ton" down
+    call waitFor with ("cursive: ton read", func() call findText with (GetRoot(), "ton"), func() begin
         local x := 130;
         call stroke with ([x + 6, base - 24, x + 6, base - 18, x + 6, base - 12, x + 6, base - 6, x + 6, base]);
         call stroke with ([x, base - 14, x + 4, base - 14, x + 8, base - 14, x + 12, base - 14]);
         call stroke with (call oval with (x + 22, base - 7, 6, 7));
-      end, nil, 3000);
-    AddDelayedCall(func() begin
         ScreenSnapshot("build/cursive-ink.pgm");
         Print("cursive: written build/cursive-ink.pgm");
         IdleStrokes();
-        AddDelayedCall(func() begin
+        call waitFor with ("cursive: to read", func() StrEqual(call findText with (GetRoot(), ""), "ton to"), func() begin
             ScreenSnapshot("build/cursive.pgm");
             Print("cursive: written build/cursive.pgm");
             Print("cursive: the page reads \"" & call findText with (GetRoot(), "") & "\"");
             call learn with ();
-          end, nil, 6000);
-      end, nil, 4500);
-  end, nil, 27000);
+          end, 60);
+      end, 60);
+  end);
 Print("cursive: the script is loaded");

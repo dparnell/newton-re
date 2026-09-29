@@ -24,32 +24,9 @@
 // Each prints a line starting "alternatives:"; ctest's
 // host.NewtonAlternatives checks them.
 
-tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
-typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
 
 name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
-
-page := 0;
-nextPage := func()
-  begin
-    page := page + 1;
-    if page < 10 then
-      begin
-        call tapAt with (293, 468);			// Continue
-        AddDelayedCall(nextPage, nil, 1800);
-      end
-    else
-      call tapAt with (297, 468);			// Done, on "Congratulations"
-  end;
-
-AddDelayedCall(func() begin
-    call tapAt with (293, 468);				// past "Welcome"
-    AddDelayedCall(func() begin
-        call tapAt with (200, 150);			// the caret into the First line
-        foreach c in name do call typeKey with (c);
-        AddDelayedCall(nextPage, nil, 1500);
-      end, nil, 2000);
-  end, nil, 3000);
 
 stroke := func(points)
   begin
@@ -115,6 +92,8 @@ voteView := func()
                 Print("alternatives: VoteOnWordUnit answered " & (if IsInteger(vote) then "an integer" else "something else"));
                 local took := :HandleUnit(0x12, unit);		// aeWord, back to this view
                 Print("alternatives: HandleUnit answered " & (if took then "true" else "nil"));
+                Print("alternatives: done");
+                HostQuit();
               end;
             true;
           end});
@@ -129,11 +108,12 @@ voteView := func()
       end, nil, 1000);
   end;
 
-AddDelayedCall(func() begin
+call walkSetup with (name, func() begin
     foreach s in call ton with (200) do call stroke with (s);
-    AddDelayedCall(func() begin
-        IdleStrokes();
-        AddDelayedCall(func() begin
+    IdleStrokes();
+    // (once the recogniser has finished with the word: its page then has
+    // a paragraph "ton")
+    call waitFor with ("alternatives: the word read", func() call findParagraph with (GetRoot(), "ton"), func() begin
             para := call findParagraph with (GetRoot(), "ton");
             Print("alternatives: the paragraph is " & (if para then "there" else "missing"));
 
@@ -151,7 +131,6 @@ AddDelayedCall(func() begin
             Print("alternatives: insert put the range back");
 
             call voteView with ();
-          end, nil, 6000);
-      end, nil, 3000);
-  end, nil, 27000);
+          end, 60);
+  end);
 Print("alternatives: the script is loaded");

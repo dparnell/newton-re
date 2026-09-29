@@ -1,0 +1,72 @@
+// What the demos share, run by `HostInclude("common.ns")` at the top of one
+// (the host's HostInclude runs a file beside the --script file):
+//
+//   tapAt(x, y)             a tap of the pen, delivered at once
+//   typeKey(code)           a key of the hardware keyboard, down and up
+//   waitFor(what, test, andThen, seconds)
+//                           asks test() every quarter of a second until it
+//                           answers true, then calls andThen(); after the
+//                           seconds it prints "<what>: waited in vain" and
+//                           calls andThen() anyway, so the run goes on and
+//                           the test's own checks fail
+//   walkSetup(name, andThen)
+//                           the Setup assistant a fresh store starts with,
+//                           walked through to the Notepad: Continue on the
+//                           Welcome page, the name typed (ADB key codes),
+//                           then Continue each time the page has changed,
+//                           and Done on the last - then andThen()
+//
+// A demo that is a ctest waits on what it waits for - a package installed,
+// a word read, a page turned - and never for a fixed time, which a loaded
+// machine (a parallel ctest; tools/host/stress.py) does not keep to; and
+// it ends the run with HostQuit() when it is done, so --headless is only
+// a limit.
+
+tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
+
+typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
+
+waitFor := func(what, test, andThen, seconds) begin
+	local start := Ticks();
+	local poll;
+	poll := func() begin
+		local ok := nil;
+		try
+			ok := call test with ()
+		onexception |evt.ex| do
+			ok := nil;
+		if ok then
+			call andThen with ()
+		else if Ticks() - start > seconds * 60 then begin
+			Print(what & ": waited in vain");
+			call andThen with ();
+		end else
+			AddDelayedCall(poll, nil, 250);
+	end;
+	AddDelayedCall(poll, nil, 250);
+end;
+
+walkSetup := func(name, andThen) begin
+	local setupOpen := func() GetRoot().setup and GetRoot().setup.viewCObject;
+	local page := func() if call setupOpen with () then GetRoot().setup.fCurrentPageIndex;
+	local next;
+	next := func() begin
+		if not call setupOpen with () then
+			call waitFor with ("setup", func() GetRoot().paperroll and GetRoot().paperroll.viewCObject,
+				andThen, 60)
+		else begin
+			local was := call page with ();
+			call tapAt with (295, 468);				// Continue (Done on the last page)
+			call waitFor with ("setup page " & was, func() call page with () <> was, next, 60);
+		end;
+	end;
+	call waitFor with ("setup", setupOpen, func() begin
+		local was := call page with ();
+		call tapAt with (293, 468);					// past "Welcome"
+		call waitFor with ("setup name page", func() call page with () <> was, func() begin
+			call tapAt with (200, 150);				// the caret into the First line
+			foreach c in name do call typeKey with (c);
+			call next with ();
+		end, 60);
+	end, 60);
+end;

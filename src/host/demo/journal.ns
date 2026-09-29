@@ -32,32 +32,11 @@
 // It prints lines starting "journal:"; ctest's host.NewtonJournal checks
 // them.  build/journal.pgm is the page at the end.
 
-tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
-typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
+
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
 
 name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
 
-page := 0;
-nextPage := func()
-  begin
-    page := page + 1;
-    if page < 10 then
-      begin
-        call tapAt with (293, 468);			// Continue
-        AddDelayedCall(nextPage, nil, 1800);
-      end
-    else
-      call tapAt with (297, 468);			// Done, on "Congratulations"
-  end;
-
-AddDelayedCall(func() begin
-    call tapAt with (293, 468);				// past "Welcome"
-    AddDelayedCall(func() begin
-        call tapAt with (200, 150);			// the caret into the First line
-        foreach c in name do call typeKey with (c);
-        AddDelayedCall(nextPage, nil, 1500);
-      end, nil, 2000);
-  end, nil, 3000);
 
 stroke := func(points)
   begin
@@ -139,31 +118,34 @@ replay := func()
       if JournalReplayBusy() then
         AddDelayedCall(waitForIt, nil, 100)
       else
-        AddDelayedCall(func() begin
-            IdleStrokes();
-            AddDelayedCall(func() begin
+        begin
+          IdleStrokes();
+          // (once the replayed word has been read and put after "ton")
+          call waitFor with ("journal: the replayed word read",
+            func() StrLen(call findText with (GetRoot(), "ton")) > 3, func() begin
                 Print("journal: after the replay the page reads \"" & call findText with (GetRoot(), "ton") & "\"");
                 ScreenSnapshot("build/journal.pgm");
                 DeactivateTestAgent();
                 Print("journal: done");
-              end, nil, 5000);
-          end, nil, 1000);
+                HostQuit();
+              end, 60);
+        end;
     AddDelayedCall(waitForIt, nil, 100);
   end;
 
-AddDelayedCall(func() begin
+call walkSetup with (name, func() begin
     Print("journal: recording " & (if recorder:Start() = 0 then "started" else "refused"));
     foreach s in ton do call stroke with (s);
-    AddDelayedCall(func() begin
-        IdleStrokes();
+    IdleStrokes();
+    call waitFor with ("journal: the four strokes recorded", func() Length(recorder.strokes) >= 4, func() begin
         JournalStopRecord();
         Print("journal: " & Length(recorder.strokes) & " strokes recorded");
-        AddDelayedCall(func() begin
+        call waitFor with ("journal: the word read", func() call findText with (GetRoot(), "ton"), func() begin
             Print("journal: before the replay the page reads \"" & call findText with (GetRoot(), "ton") & "\"");
             ScreenSnapshot("build/journal-before.pgm");
             testMgr:Start();
             call replay with ();
-          end, nil, 3000);
-      end, nil, 1500);
-  end, nil, 27000);
+          end, 60);
+      end, 60);
+  end);
 Print("journal: the script is loaded");

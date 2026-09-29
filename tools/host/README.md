@@ -130,7 +130,7 @@ now and then:
 - **`--test`** runs copies of one ctest test at the same time.
   - Each copy runs in its own directory, `tmp/stress/<test>/<n>/`, with its
     own store. Output a script writes under `tmp/` lands there too.
-  - The command line, working directory, pass and fail expressions and
+  - The command line, environment, pass and fail expressions and
     timeout are read from `ctest --show-only=json-v1`.
   - It prints how many copies passed, and the tail of each failed copy's
     output. The full output is in `output.txt` in that copy's directory.

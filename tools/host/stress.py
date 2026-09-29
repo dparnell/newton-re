@@ -8,7 +8,7 @@ Usage:
 
 --test runs N copies of one ctest test at once, each in a directory of its
 own under tmp/stress/<name>/<copy> with its own store (the test's command
-line, working directory, pass/fail expressions and timeout are read from
+line, environment, pass/fail expressions and timeout are read from
 `ctest --show-only=json-v1`; a `--store` argument is moved into the copy's
 directory, and relative output such as a script's tmp/x.pgm lands there
 too), and says how many passed; the output of each failed copy is printed.
@@ -83,8 +83,12 @@ def run_copies(build, name, copies):
         for k in range(len(args) - 1):
             if args[k] == '--store':
                 args[k + 1] = os.path.join(where, os.path.basename(args[k + 1]))
+        env = dict(os.environ)
+        for setting in props.get('ENVIRONMENT', []):
+            k, _, v = setting.partition('=')
+            env[k] = v
         log = open(os.path.join(where, 'output.txt'), 'w')
-        procs.append((subprocess.Popen(args, cwd=where, stdout=log, stderr=subprocess.STDOUT), log, where))
+        procs.append((subprocess.Popen(args, cwd=where, env=env, stdout=log, stderr=subprocess.STDOUT), log, where))
     timeout = float(props.get('TIMEOUT', 600))
     started = time.time()
     passes = []

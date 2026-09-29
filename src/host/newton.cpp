@@ -64,6 +64,8 @@
 #include "Frames.h"
 #include "ObjectHeap.h"
 #include "Interpreter.h"
+#include "Compiler.h"
+#include "NSErrors.h"
 #include <atomic>
 #include <math.h>
 #include <stdio.h>
@@ -101,6 +103,7 @@ static long gHeadlessSeconds = 0;
 static long gToneFrequency = 0;			// --microphone-tone: the null microphone's test tone
 static Boolean gWindowed = true;
 static std::atomic<bool> gScriptQuit(false);	// HostQuit(): the run ended by the script
+static const char* gScriptPath = nil;			// --script: HostInclude's names are beside it
 
 
 static int
@@ -138,6 +141,32 @@ FHostQuit(RefArg /*rcvr*/)
 }
 
 
+// HostInclude(name): the NewtonScript file of that name in the --script
+// file's own directory run, as the script itself is - which is how the
+// demos share src/host/demo/common.ns (the pen and keys, the waits on a
+// condition, the Setup assistant walked).  ==> the last form's result.
+static Ref
+FHostInclude(RefArg /*rcvr*/, RefArg name)
+{
+	if (!IsString(name))
+		ThrowBadTypeWithFrameData(kNSErrNotAString, name);
+	char file[512];
+	long n = Length(name) / 2 - 1;
+	const UniChar* text = (const UniChar*) BinaryData(name);
+	char path[1024];
+	for (long i = 0; i < n && i < (long) sizeof(file) - 1; i++)
+		file[i] = (char) text[i];
+	file[n < (long) sizeof(file) - 1 ? n : (long) sizeof(file) - 1] = 0;
+	const char* dir = gScriptPath != nil ? gScriptPath : "";
+	const char* slash = strrchr(dir, '/');
+	const char* back = strrchr(dir, '\\');
+	if (back != nil && (slash == nil || back > slash))
+		slash = back;
+	snprintf(path, sizeof(path), "%.*s%s", slash != nil ? (int) (slash - dir + 1) : 0, dir, file);
+	return ParseFile(path);
+}
+
+
 // PreMain's host hook: the program's globals (HostQuit among them), and the
 // host's link for the Newton Internet Enabler (comms/host/HostLink.h: it
 // waits for the NIE)
@@ -145,6 +174,7 @@ static void
 NewtonPreMain(void)
 {
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostQuit")), RefVar(MakeCFunction((void*) FHostQuit, 0, nil)));
+	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostInclude")), RefVar(MakeCFunction((void*) FHostInclude, 1, nil)));
 	HostInstallPackageGlobal();
 	HostLinkStart();
 }
@@ -302,6 +332,7 @@ main(int argc, char** argv)
 	HostUseRealClock(true);
 	HostConfigureNewtWorld(romImage, heapSize, width, height, depth);
 	gNewtBootTestScript = script;
+	gScriptPath = script;
 	gNewtHostBoot = NewtonBoot;
 	gNewtHostPreMain = NewtonPreMain;
 	NewtInstallUserMain();
