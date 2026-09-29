@@ -9,7 +9,8 @@
 //
 // build/txview-1.pgm: the text as put in and typed into, the typed word in
 // bold (the caret at the end having scrolled the text up); build/txview-2.pgm:
-// the same scrolled back to the start.  Each check
+// the same scrolled back to the start; build/txview-3.pgm: "hello" cut to a
+// clipping (its icon at the screen's left edge) and pasted at the start.  Each check
 // prints "txview: FAILED ..." when it does not hold (the ctest looks for
 // that), and the last line says how the view came out.
 //
@@ -64,6 +65,17 @@ AddDelayedCall(func() begin
 		if scrolled.y <> 0 then Print("txview: FAILED - scrolled back to " & scrolled.y);
 		RefreshViews();
 		ScreenSnapshot("build/txview-2.pgm");
+
+		// "hello" cut to a clipping, and pasted at the start
+		tx:SetHiliteRange({first: count + 1, last: count + 6}, nil, nil);
+		tx:Cut();
+		if tx:GetCountCharacters() <> count + 1 then Print("txview: FAILED - cut left " & tx:GetCountCharacters());
+		tx:SetHiliteRange({first: 0, last: 0}, nil, nil);
+		tx:Paste();
+		local pasted := tx:GetRangeData({first: 0, last: 5}, 'text);
+		if not StrEqual(pasted, "hello") then Print("txview: FAILED - pasted \"" & pasted & "\"");
+		RefreshViews();
+		ScreenSnapshot("build/txview-3.pgm");
 		Print("txview: " & tx:GetCountCharacters() & " characters, " & height.first & "-" & height.last & " the last line, scrolled from " & before.y & " to " & scrolled.y);
 	  end, nil, 1500);
   end, nil, 2500);								// after the boot

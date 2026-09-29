@@ -33,8 +33,7 @@
 
 				The 39 protoTXView methods are TXViewNatives.cpp.
 
-				NOT YET: the ruler bar (TXRulerUI, ShowRuler), the drag and
-				drop of text, the clipboard (Copy, Paste), the scrub and
+				NOT YET: the ruler bar (TXRulerUI, ShowRuler), the scrub and
 				caret gestures, the pages (TXPageFrames) and TXVBOChars
 				(the text on a store) - each marked where it would be.
 
@@ -53,6 +52,9 @@
 #endif
 #ifndef __REGIONVARS_H
 #include "RegionVars.h"
+#endif
+#ifndef __TXCOMMAND_H
+#include "TXCommand.h"
 #endif
 
 class TStrokePublic;
@@ -104,6 +106,16 @@ public:
 	virtual void	NarrowVisByIntersectingObscuringSiblingsAndUncles(TView* upTo, Rect* bounds);	// ROM 0x0024c158 NarrowVisByIntersectingObscuringSiblingsAndUncles__6TXViewFP5TViewP5TRect
 	virtual long	Idle(long arg);									// ROM 0x0024b5e4 Idle__6TXViewFl
 	virtual void	RealDraw(Rect& bounds);							// ROM 0x0024b57c RealDraw__6TXViewFR5TRect
+	virtual Ref		GetDropData(RefArg dragType, RefArg dragRef);	// ROM 0x002489d4 GetDropData__6TXViewFRC6RefVarT1
+	virtual Boolean	DrawDragBackground(const Rect& bounds, Boolean copy);	// ROM 0x002489cc DrawDragBackground__6TXViewFRC5TRectUc
+	virtual void	DrawDragData(const Rect& bounds);				// ROM 0x00248948 DrawDragData__6TXViewFRC5TRect
+	virtual Ref		GetClipboardDataBits(Rect* bounds);				// ROM 0x002486e8 GetClipboardDataBits__6TXViewFP5TRect
+	virtual Boolean	AcceptDrop(const TDragInfo& info, const Point& pt);	// ROM 0x00248f40 AcceptDrop__6TXViewFRC9TDragInfoRC6TPoint
+	virtual Boolean	Drop(RefArg dropType, RefArg dropData, Point* dropPt);	// ROM 0x00249184 Drop__6TXViewFRC6RefVarT1P6TPoint
+	virtual Boolean	DropMove(RefArg dragRef, const Point& oldPt, const Point& newPt, Boolean copy);	// ROM 0x00248f58 DropMove__6TXViewFRC6RefVarRC6TPointT2Uc
+	virtual Boolean	DropRemove(RefArg dragRef);						// ROM 0x00249028 DropRemove__6TXViewFRC6RefVar
+	virtual Boolean	DragFeedback(const TDragInfo& info, const Point& pt, Boolean show);	// ROM 0x00248e80 DragFeedback__6TXViewFRC9TDragInfoRC6TPointUc
+	virtual Ref		GetSupportedDropTypes(const Point& pt);			// ROM 0x00248e08 GetSupportedDropTypes__6TXViewFRC6TPoint
 
 	// the document
 	void			CreateNewTextension(void);						// ROM 0x0024d1bc CreateNewTextension__6TXViewFv
@@ -159,6 +171,14 @@ public:
 	Boolean			Paste(void);									// ROM 0x002495d4 Paste__6TXViewFv
 	void			Clear(void);									// ROM 0x00249678 Clear__6TXViewFv
 	long			FindString(UniChar* find, long start);			// ROM 0x0024d6ac FindString__6TXViewFPUsl
+
+	// drag and drop, and the clipboard
+	void			AddTextDragItem(TDragInfo* info, long start, long length, int* count);	// ROM 0x00247d34 AddTextDragItem__6TXViewFP9TDragInfolT2Pi
+	long			GetDragInfo(TDragInfo* info);					// ROM 0x0024803c GetDragInfo__6TXViewFP9TDragInfo
+	Textension*		GetClipboardDataText(int height);				// ROM 0x002484d4 GetClipboardDataText__6TXViewFi
+	long			GetDropOffset(const Point& pt);					// ROM 0x00248cd4 GetDropOffset__6TXViewFRC6TPoint
+	Ref				GetSupportedDropTypes(void);					// ROM 0x00248d4c GetSupportedDropTypes__6TXViewFv
+	void			NewPasteCommand(void);							// ROM 0x002471d8 NewPasteCommand__6TXViewFv
 	// After an edit: the hilite shown (its end, or its start), the
 	// scrollers told when the text's height changed.
 	void			Edited(Boolean show, Boolean end, Boolean scrollers);	// ROM 0x00246e78 Edited__6TXViewFUcN21
@@ -248,6 +268,16 @@ public:
 };
 
 
+// The paste: a replacement whose data is the front clipping's.  The ROM's
+// object is 0x7c bytes.
+class TXNewtPasteCommand : public TXReplaceTextCommand
+{
+public:
+	virtual NewtonErr DoMainAction(void);							// ROM 0x002492a8 DoMainAction__18TXNewtPasteCommandFv
+};
+
+
+Ref		FixupDropData(RefArg type, RefArg data);				// ROM 0x00249068 FixupDropData__FRC6RefVarT1
 void	ClickLoop(unsigned char inLoop, void* scroll, void* view);	// ROM 0x0024b694 ClickLoop__FUcPvT2
 void	GCDeleteTXCommand(void* command);						// ROM 0x002465a4 GCDeleteTXCommand__FPv
 void	GCDeleteTXChars(void* chars);							// ROM 0x00249d38 GCDeleteTXChars__FPv

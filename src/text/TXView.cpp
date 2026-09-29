@@ -40,6 +40,12 @@
 #include "Unicode.h"
 #include "SortTables.h"
 #include "Frames.h"
+#include "DragDrop.h"
+#include "ClipboardView.h"
+#include "Rerecognize.h"
+#include "Bits.h"
+#include "Draw.h"
+#include "Shapes.h"
 #include "Objects.h"
 #include "ObjectHeap.h"
 #include "RSSymbols.h"
@@ -51,6 +57,7 @@
 
 #include <new>
 #include <string.h>
+
 
 // the errors a protoTXView throws (evt.ex)
 const NewtonErr	kTXViewErrBadData		= -8701;	// replacement data that does not add up
@@ -693,16 +700,6 @@ TXView::RulerClick(TXNewtPen* /*pen*/)
 }
 
 
-// ROM 0x002483ec CheckDrag__6TXViewFP9TXNewtPen
-// NOT YET RECONSTRUCTED: the selection dragged out of the view
-// (GetDragInfo, AddTextDragItem, DragAndDrop) - no drag is started.
-Boolean
-TXView::CheckDrag(TXNewtPen* /*pen*/)
-{
-	return false;
-}
-
-
 // ROM 0x00246a34 HandleCaretGesture__6TXViewFP11TUnitPublic
 // NOT YET RECONSTRUCTED: a caret gesture opening space in the text - the
 // gesture goes on to TView.
@@ -1300,21 +1297,41 @@ TXView::Cut(void)
 
 
 // ROM 0x00249550 Copy__6TXViewFv
-// NOT YET RECONSTRUCTED: the selection made a clipping (GetDragInfo and
-// TClipboard::NewClipboard over GetHiliteBounds) - nothing is copied.
+// The selection made a clipping.
 void
 TXView::Copy(void)
 {
+	TXOffsetRange selection;
+	fText->fHilite->GetHiliteRange(&selection);
+	if (selection.fEnd.fOffset != selection.fStart.fOffset)
+	{
+		TDragInfo info(0L);
+		GetDragInfo(&info);
+		Rect bounds;
+		GetHiliteBounds(&bounds);
+		TClipboard::NewClipboard(info, this, bounds, nil);
+	}
 }
 
 
 // ROM 0x002495d4 Paste__6TXViewFv
-// NOT YET RECONSTRUCTED: the clipping put in over the selection
-// (TXNewtPasteCommand) - nothing is pasted.
+// The front clipping put in over the selection - when it has something a
+// protoTXView takes.  ==> whether it was.
 Boolean
 TXView::Paste(void)
 {
-	return false;
+	Boolean pasted = false;
+	TClipboard* clipboard;
+	if (!fReadOnly && (clipboard = (TClipboard*) gRootView->GetClipboard()) != nil)
+	{
+		TDragInfo info(0L);
+		clipboard->GetClipboardDataInfo(&info);
+		RefVar types(GetSupportedDropTypes());
+		pasted = info.CheckTypes(types);
+		if (pasted)
+			NewPasteCommand();
+	}
+	return pasted;
 }
 
 
@@ -2107,4 +2124,595 @@ FailGetTXView(RefArg context)
 	if (!view->DerivedFrom(clTXView))
 		ThrowMsg("not a TX view");
 	return (TXView*) view;
+}
+
+
+/*------------------------------------------------------------------------------
+	D r a g   a n d   d r o p ,   a n d   t h e   c l i p b o a r d
+	The selection leaves the view as drag items - a run of text as a
+	'text item whose reference is [start, length, bounds], each picture as
+	a 'shape/'picture item - and data comes in as a frame of text and
+	styles (or a shape made a picture run), put in over the selection or
+	where it was dropped.
+------------------------------------------------------------------------------*/
+
+// ROM 0x00247d34 AddTextDragItem__6TXViewFP9TDragInfolT2Pi
+// Read from the assembly.  A 'text item for [start, start+length): the
+// selection's box, its top and bottom cut to the lines the run begins and
+// ends on, and when both are one line its sides too, relative to the view.
+// ROM BUG: when the run starts with a line feed the top is first worked
+// out from the next line (its point less the line's height) and then
+// overwritten with that next line's point, so the working out is lost;
+// and the item count is never added to.
+void
+TXView::AddTextDragItem(TDragInfo* info, long start, long length, int* /*count*/)
+{
+	RefVar ref;
+	TXFormatter* formatter = fText->fFormatter;
+	Rect bounds;
+	GetHiliteBounds(&bounds);
+	int height;
+	Point first;
+	TXOffsetPos at;
+	at.fAtStart = false;
+	if (length > 0 && formatter->IsLineFeed(start))
+	{
+		at.fOffset = start + 1;
+		first = CharToPoint(at, &height);
+		bounds.top = first.v - height;
+	}
+	else
+	{
+		at.fOffset = start;
+		first = CharToPoint(at, &height);
+	}
+	long end = start + length;
+	Point last;
+	if (length > 0 && formatter->IsLineFeed(end - 1))
+	{
+		at.fOffset = end - 1;
+		last = CharToPoint(at, &height);
+		last.v = last.v + height;
+	}
+	else
+	{
+		at.fOffset = end;
+		last = CharToPoint(at, &height);
+	}
+	bounds.top = first.v;
+	bounds.bottom = last.v + height;
+	if (first.v == last.v)
+	{
+		bounds.left = first.h;
+		bounds.right = last.h;
+	}
+	OffsetRect(&bounds, -viewBounds.left, -viewBounds.top);
+	ref = MakeArray(3);
+	SetArraySlot(ref, 0, RefVar(MAKEINT(start)));
+	SetArraySlot(ref, 1, RefVar(MAKEINT(length)));
+	SetArraySlot(ref, 2, RefVar(ToObject(bounds)));
+	info->AddDragItem(RSSYMtext, ref, RefVar(NILREF));
+}
+
+
+// ROM 0x0024803c GetDragInfo__6TXViewFP9TDragInfo
+// Read from the assembly.  The selection as drag items: each stretch of
+// text between pictures one 'text item, each picture a 'shape/'picture
+// item labelled with the ROM's drawingName.  ==> how many pictures.
+// ROM BUG: the two CharToPoint calls for a picture share their height
+// slot with the first point, so the item's rectangle is made of the
+// second height and a stale stack word: its top is the height's top half
+// (nought), its left the height, its right the picture's right end and its
+// bottom the height's top half plus that stale word.  DEVIATION: the host
+// takes the stale word as nought.
+long
+TXView::GetDragInfo(TDragInfo* info)
+{
+	int count = 0;
+	TXOffsetRange selection;
+	fText->fHilite->GetHiliteRange(&selection);
+	TXObjectIterator* runs = fText->GetHiliteRangeRuns(&selection);
+	if (runs == nil)
+		return count;
+	RefVar types;
+	RefVar label(Rdrawingname);
+	RefVar ref;
+	long left = selection.fEnd.fOffset - selection.fStart.fOffset;
+	long textStart = -1;
+	while (left > 0)
+	{
+		long runStart = runs->fOffset;
+		long runLength = runs->fLength;
+		long runEnd = runStart + runLength;
+		TXOffsetRange run(runStart, runEnd, false, true);
+		if (fText->IsRangeGraphicsRun(&run) == nil)
+		{
+			if (textStart == -1)
+				textStart = runStart;
+		}
+		else
+		{
+			if (textStart != -1)
+			{
+				AddTextDragItem(info, textStart, runStart - textStart, &count);
+				textStart = -1;
+			}
+			types = MakeArray(2);
+			SetArraySlot(types, 0, RSSYMshape);
+			SetArraySlot(types, 1, RSSYMpicture);
+			int height;
+			TXOffsetPos at;
+			at.fAtStart = false;
+			at.fOffset = runStart;
+			(void) CharToPoint(at, &height);
+			at.fOffset = runEnd;
+			Point last = CharToPoint(at, &height);
+			Rect bounds;
+			bounds.top = (short) (height >> 16);
+			bounds.left = (short) height;
+			bounds.bottom = (short) ((height >> 16) + 0);
+			bounds.right = last.h;
+			OffsetRect(&bounds, -viewBounds.left, -viewBounds.top);
+			ref = MakeArray(3);
+			SetArraySlot(ref, 0, RefVar(MAKEINT(runStart)));
+			SetArraySlot(ref, 1, RefVar(MAKEINT(runLength)));
+			SetArraySlot(ref, 2, RefVar(ToObject(bounds)));
+			info->AddDragItem(types, ref, label);
+			count++;
+		}
+		left = left - runLength;
+		runs->Next();
+	}
+	if (textStart != -1)
+		AddTextDragItem(info, textStart, selection.fEnd.fOffset - textStart, &count);
+	delete runs;
+	return count;
+}
+
+
+// ROM 0x002483ec CheckDrag__6TXViewFP9TXNewtPen
+// A click on the selection drags it: a copy when the tap was a pending
+// one, a modifier asks for it, or the view is read-only.
+Boolean
+TXView::CheckDrag(TXNewtPen* pen)
+{
+	Point pt = pen->FirstLocation();
+	if (!fText->fHilite->IsPointInHilite(pt))
+		return false;
+	Boolean copy = true;
+	if ((fTXFlags & kTXViewTapPending) == 0 && (Modifiers(true) & 8) == 0 && !fReadOnly)
+		copy = false;
+	Rect bounds;
+	GetHiliteBounds(&bounds);
+	TDragInfo info(0L);
+	GetDragInfo(&info);
+	return DragAndDrop(pen->fStroke, bounds, &bounds, &bounds, copy, info, nil) != 0;
+}
+
+
+// ROM 0x002484d4 GetClipboardDataText__6TXViewFi
+// A document of the selection's first 128 characters (and an ellipsis
+// when there were more), as wide as this one: what a clipping shows.
+// The caller deletes it.
+Textension*
+TXView::GetClipboardDataText(int /*height*/)
+{
+	TXHandlers handlers;
+	handlers.fChars = new TXBinaryChars(RefVar(NILREF));
+	if (handlers.fChars == nil)
+		Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
+	Textension* text = new Textension;
+	NewtonErr err = text->ITextension(nil, handlers, 0);
+	if (err == noErr)
+	{
+		TXLongPoint size;
+		size.h = GetTotalWidth();
+		size.v = 0;
+		text->fDisplay->fFrames->SetTextBoundsSize(size, nil, 0);
+		TXDisplay* display = fText->fDisplay;
+		display->DisableDrawing();
+		TXOffsetRange selection;
+		fText->fHilite->GetHiliteRange(&selection);
+		long length = selection.fEnd.fOffset - selection.fStart.fOffset;
+		Boolean more = length > 0x80;
+		if (more)
+			length = 0x80;
+		TXPrivateContainer here(selection.fStart.fOffset, length, fText->fRuns, fText->fRulers, fText->fChars, fText->fFormatter);
+		TXReplaceParams params(&here, kTXImportAll);
+		err = text->ReplaceRange(0, 0, &params);
+		if (more && err == noErr)
+		{
+			UniChar ellipsis = 0x2026;				// (U_CONST_CHAR(0xc9): the Mac Roman ellipsis)
+			TXTextDescriptor chars;
+			chars.Set(&ellipsis, 1);
+			TXReplaceParams tail(chars);
+			err = text->ReplaceRange(length, length, &tail);
+		}
+		display->EnableDrawing();
+	}
+	if (err != noErr)
+	{
+		if (text != nil)
+			delete text;
+		Throw(exRootException, (void*) (long) err, nil);
+	}
+	return text;
+}
+
+
+// ROM 0x002486e8 GetClipboardDataBits__6TXViewFP5TRect
+// The picture a clipping keeps: the selection's text drawn afresh into a
+// bitmap as tall as it comes out (the rectangle asked for is first cut to
+// two thirds of twice the screen's width, which the text's height then
+// replaces).
+Ref
+TXView::GetClipboardDataBits(Rect* bounds)
+{
+	long cap = (screenWidth << 1) / 3;
+	Point origin;
+	origin.v = bounds->top;
+	origin.h = bounds->left;
+	OffsetRect(bounds, -bounds->left, -bounds->top);
+	if (bounds->bottom > cap)
+		bounds->bottom = (short) cap;
+	Textension* text = GetClipboardDataText(bounds->bottom);
+	bounds->bottom = (short) text->fDisplay->fFrames->GetTotalHeight();
+	RefVar bits(NILREF);
+	newton_try
+	{
+		PixelMap map;
+		bits = TClipboard::AllocateClipboardBits(*bounds, &map);
+		if (NOTNIL(bits))
+		{
+			LockRef(bits);
+			map.baseAddr = BinaryData(bits);
+			newton_try
+			{
+				TBits offscreen;
+				offscreen.Constructor(map);
+				Point topLeft;
+				topLeft.v = bounds->top;
+				topLeft.h = bounds->left;
+				offscreen.BeginDrawing(topLeft);
+				RgnHandle region = (RgnHandle) gTXTempRegions->Get();
+				RectRgn(region, bounds);
+				text->fDisplay->SetViewRgn(region);
+				gTXTempRegions->Done(region);
+				text->fDisplay->Draw(*bounds);
+				offscreen.RestorePort();
+			}
+			newton_catch_all
+			{
+				UnlockRef(bits);
+				NextHandler(&_info);
+			}
+			end_try;
+			UnlockRef(bits);
+		}
+	}
+	newton_catch_all
+	{
+		delete text;
+		NextHandler(&_info);
+	}
+	end_try;
+	delete text;
+	OffsetRect(bounds, origin.h, origin.v);
+	return bits;
+}
+
+
+// ROM 0x00248948 DrawDragData__6TXViewFRC5TRect
+// What is dragged: the selection's outline in gray.
+void
+TXView::DrawDragData(const Rect& /*bounds*/)
+{
+	RgnHandle rgn = fText->fHilite->GetHiliteRgn(false, false);
+	SectRgn(rgn, fText->fDisplay->fViewRgn, rgn);
+	PenState saved;
+	GetPenState(&saved);
+	PenNormal();
+	SetFgPattern(GetStdPattern(2));
+	PenSize(2, 2);
+	FrameRgn(rgn);
+	SetPenState(&saved);
+	DisposeRgn(rgn);
+}
+
+
+// ROM 0x002489cc DrawDragBackground__6TXViewFRC5TRectUc
+Boolean
+TXView::DrawDragBackground(const Rect& /*bounds*/, Boolean /*copy*/)
+{
+	return true;
+}
+
+
+// ROM 0x002489d4 GetDropData__6TXViewFRC6RefVarT1
+// A drag item's data, unless the view's script gives it: text as a
+// clipboard frame of the stretch (every value), a picture as a shape
+// frame, or for 'picture a picture made of it; with the item's bounds.
+Ref
+TXView::GetDropData(RefArg dragType, RefArg dragRef)
+{
+	RefVar data(TView::GetDropData(dragType, dragRef));
+	if (ISNIL(data))
+	{
+		long start = RINT(GetArraySlotRef(dragRef, 0));
+		long length = RINT(GetArraySlotRef(dragRef, 1));
+		if (EQRef(dragType, RSSYMtext))
+		{
+			data = Clone(RefVar(Rtxclipboardprototype));
+			TXNewtContainer container(data);
+			TXOffsetRange range(start, start + length, false, true);
+			NewtonErr err = fText->Export(&range, &container, kTXImportAll);
+			if (err != noErr)
+				Throw(exRootException, (void*) (long) err, nil);
+		}
+		else
+		{
+			TXAttrObject* run = fText->fRuns->OffsetToObject(start, false);
+			RefVar frame(run->GetNSObject());
+			if (NOTNIL(frame))
+			{
+				RefVar shape(Clone(RefVar(GetFrameSlotRef(frame, RSSYMshape))));
+				if (EQRef(dragType, RSSYMpicture))
+				{
+					data = Clone(RefVar(Rcanonicalpictdragdata));
+					// (the ROM calls FMakePict directly; views/DrawShape.cpp keeps
+					// it static, so the host calls the same native as the global)
+					shape = NSCallGlobalFn(RefVar(Intern((char*) "MakePict")), shape, RefVar(NILREF));
+					SetFrameSlot(data, RSSYMicon, shape);
+				}
+				else
+				{
+					data = Clone(RefVar(Rcanonicalshapedragdata));
+					SetFrameSlot(data, RSSYMshape, shape);
+				}
+			}
+		}
+		if (NOTNIL(data))
+		{
+			RefVar bounds(GetArraySlotRef(dragRef, 2));
+			SetFrameSlot(data, RSSYMviewbounds, RefVar(Clone(bounds)));
+		}
+	}
+	return data;
+}
+
+
+// ROM 0x00248cd4 GetDropOffset__6TXViewFRC6TPoint
+// The character boundary at a point; -1 outside the text.
+long
+TXView::GetDropOffset(const Point& pt)
+{
+	TXOffsetRange range;
+	unsigned char outside, past;
+	fText->fDisplay->PointToChar(pt, &range, &outside, &past);
+	if (outside)
+		range.fStart.fOffset = -1;
+	return range.fStart.fOffset;
+}
+
+
+// ROM 0x00248d4c GetSupportedDropTypes__6TXViewFv
+Ref
+TXView::GetSupportedDropTypes(void)
+{
+	RefVar types(MakeArray(5));
+	SetArraySlot(types, 0, RSSYMtext);
+	SetArraySlot(types, 1, RSSYMshape);
+	SetArraySlot(types, 2, RSSYMpolygon);
+	SetArraySlot(types, 3, RSSYMink);
+	SetArraySlot(types, 4, RSSYMpicture);
+	return types;
+}
+
+
+// ROM 0x00248e08 GetSupportedDropTypes__6TXViewFRC6TPoint
+// Over the text: text, shapes, polygons, ink and pictures, unless the
+// view's script says otherwise.
+Ref
+TXView::GetSupportedDropTypes(const Point& pt)
+{
+	RefVar types(TView::GetSupportedDropTypes(pt));
+	if (ISNIL(types) && GetDropOffset(pt) >= 0)
+	{
+		TXOffsetRange selection;
+		fText->fHilite->GetHiliteRange(&selection);
+		types = GetSupportedDropTypes();
+	}
+	return types;
+}
+
+
+// ROM 0x00248e80 DragFeedback__6TXViewFRC9TDragInfoRC6TPointUc
+// A gray caret where the drop would go.
+Boolean
+TXView::DragFeedback(const TDragInfo& info, const Point& pt, Boolean show)
+{
+	Boolean done = TView::DragFeedback(info, pt, show);
+	if (done)
+		return done;
+	long at = GetDropOffset(pt);
+	long height;
+	Point caret = fText->fDisplay->CharToPoint(at, false, &height, nil);
+	MoveTo(caret.h, caret.v);
+	SetFgPattern(GetStdPattern(4));
+	PenMode(10);
+	PenSize(2, 1);
+	Line(0, height);
+	PenNormal();
+	return true;
+}
+
+
+// ROM 0x00248f40 AcceptDrop__6TXViewFRC9TDragInfoRC6TPoint
+Boolean
+TXView::AcceptDrop(const TDragInfo& /*info*/, const Point& /*pt*/)
+{
+	return !fReadOnly;
+}
+
+
+// ROM 0x00248f58 DropMove__6TXViewFRC6RefVarRC6TPointT2Uc
+// Dragged within the view: the selection moved (or copied) to where it
+// was let go, unless that is inside it.
+Boolean
+TXView::DropMove(RefArg dragRef, const Point& oldPt, const Point& newPt, Boolean copy)
+{
+	if (!TView::DropMove(dragRef, oldPt, newPt, copy))
+	{
+		TXOffsetPos to;
+		to.fOffset = GetDropOffset(newPt);
+		if (to.fOffset >= 0)
+		{
+			gRootView->Update(nil);
+			TXOffsetRange selection;
+			fText->fHilite->GetHiliteRange(&selection);
+			if (selection.fEnd.fOffset == selection.fStart.fOffset
+			 || to.fOffset < selection.fStart.fOffset || selection.fEnd.fOffset < to.fOffset)
+			{
+				to.fAtStart = false;
+				NewMoveTextCommand(selection, to, copy);
+			}
+		}
+	}
+	return true;
+}
+
+
+// ROM 0x00249028 DropRemove__6TXViewFRC6RefVar
+// Dragged away: the selection cleared.
+Boolean
+TXView::DropRemove(RefArg dragRef)
+{
+	if (!TView::DropRemove(dragRef))
+	{
+		gRootView->Update(nil);
+		Clear();
+	}
+	return true;
+}
+
+
+// ROM 0x00249068 FixupDropData__FRC6RefVarT1
+// Dropped data as a protoTXView takes it: text read again into text and
+// styles (RecognizeTextInStyles), anything else a graphics run of its
+// shape (ConvertDropToShape making one of what is not a shape).
+Ref
+FixupDropData(RefArg type, RefArg data)
+{
+	RefVar result;
+	if (EQRef(RSSYMtext, type))
+	{
+		RefVar none(NILREF);
+		result = RecognizeTextInStyles(data, none);
+	}
+	else
+	{
+		if (EQRef(RSSYMshape, type))
+			result = GetFrameSlotRef(data, RSSYMshape);
+		else
+			result = NSCallGlobalFn(RSSYMconvertdroptoshape, type, data);
+		RefVar run(Clone(RefVar(Rtxgraphicsrunprototype)));
+		SetFrameSlot(run, RSSYMshape, result);
+		result = run;
+	}
+	return result;
+}
+
+
+// ROM 0x00249184 Drop__6TXViewFRC6RefVarT1P6TPoint
+// Dropped on the text: put in (undoably, every value) where it landed,
+// and the drop point moved to the selection's start.
+Boolean
+TXView::Drop(RefArg dropType, RefArg dropData, Point* dropPt)
+{
+	if (fReadOnly)
+		return false;
+	if (!TView::Drop(dropType, dropData, dropPt))
+	{
+		long at = GetDropOffset(*dropPt);
+		if (at >= 0)
+		{
+			gRootView->Update(nil);
+			RefVar data(FixupDropData(dropType, dropData));
+			TXOffsetRange range(at, at, false, true);
+			Replace(range, data, true, true);
+			TXOffsetRange selection;
+			fText->fHilite->GetHiliteRange(&selection);
+			*dropPt = fText->fDisplay->CharToPoint(selection.fStart.fOffset, selection.fStart.fAtStart, nil, nil);
+		}
+	}
+	return true;
+}
+
+
+// ROM 0x002471d8 NewPasteCommand__6TXViewFv
+// The clipping put in over the selection, undoably.
+void
+TXView::NewPasteCommand(void)
+{
+	RefVar object;
+	TXNewtPasteCommand* command = NewCommandObject<TXNewtPasteCommand>(&object);
+	TXOffsetRange selection;
+	fText->fHilite->GetHiliteRange(&selection);
+	unsigned char failed;
+	NewtonErr err = command->ITXReplaceTextCommand(fText, selection, nil, &failed);
+	if (failed)
+		err = kError_No_Memory;
+	else if (err == noErr)
+	{
+		ExecuteCommand(object);
+		return;
+	}
+	Throw(exRootException, (void*) (long) err, nil);
+}
+
+
+// ROM 0x002492a8 DoMainAction__18TXNewtPasteCommandFv
+// Each item of the clipping asked for its data as text, a shape, a
+// polygon, ink or a picture - the first it has - and put in, one after
+// the other, where the last one ended.
+NewtonErr
+TXNewtPasteCommand::DoMainAction(void)
+{
+	NewtonErr err = noErr;
+	newton_try
+	{
+		TClipboard* clipboard = (TClipboard*) gRootView->GetClipboard();
+		TDragInfo info(0L);
+		clipboard->GetClipboardDataInfo(&info);
+		TXOffsetRange range = fReplaceRange;
+		Ref types[5] = { RSSYMtext, RSSYMshape, RSSYMpolygon, RSSYMink, RSSYMpicture };
+		long n = Length(RefVar(info.GetItems()));
+		RefVar dragRef, data, type;
+		for (long i = 0; i < n; i++)
+		{
+			dragRef = info.GetItemDragRef(i);
+			for (long j = 0; j < 5; j++)
+			{
+				type = types[j];
+				data = clipboard->GetDropData(type, dragRef);
+				if (NOTNIL(data))
+				{
+					data = FixupDropData(type, data);
+					break;
+				}
+			}
+			TXNewtContainer container(data);
+			TXReplaceParams params(&container, kTXImportAll);
+			err = fText->ReplaceRange(range.fStart.fOffset, range.fEnd.fOffset, &params);
+			fText->fHilite->GetHiliteRange(&range);
+			if (err != noErr)
+				break;
+		}
+	}
+	newton_catch_all
+	{
+		err = GetExceptionErr(&_info.exception);
+	}
+	end_try;
+	return err;
 }
