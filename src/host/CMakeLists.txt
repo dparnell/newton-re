@@ -335,4 +335,17 @@ if(EXISTS ${NIE_DIR}/REGPKGS/inetenbl.pkg)
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(host.NewtonInet PROPERTIES TIMEOUT 180
                          PASS_REGULAR_EXPRESSION "inet: default link Host network.*inet: link connected, connected.*inet: localhost is 127.0.0.1.*inet: connected, state 5.*inet: echoed hello.*inet: endpoint disposed.*inet: link released.*inet: link now disconnected.*inet: done")
+    # Internet Setup's own UI with the host's link (demo/inetsetup.ns): the
+    # Host network setup listed and opened, and a new one made with Host
+    # network picked in New Internet Setup's picker (snapshots in
+    # inetsetup-N.pgm)
+    add_test(NAME host.NewtonInetSetup
+             COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --erase
+                     --store ${CMAKE_CURRENT_BINARY_DIR}/inetsetup.store --headless 24
+                     --package ${NIE_DIR}/ENETSUP/newtdev.pkg --package ${NIE_DIR}/REGPKGS/inetenbl.pkg
+                     --package ${NIE_DIR}/REGPKGS/inetstup.pkg
+                     --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/inetsetup.ns
+             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(host.NewtonInetSetup PROPERTIES TIMEOUT 180
+                         PASS_REGULAR_EXPRESSION "inetsetup: opened yes.*inetsetup: listed Host network.*inetsetup: host setups 2.*inetsetup: done")
 endif()

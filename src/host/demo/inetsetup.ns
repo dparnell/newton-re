@@ -1,0 +1,85 @@
+// Internet Setup (the Newton Internet Enabler's inetstup.pkg) with the
+// host's link: the application opened as Extras opens it, the "Host
+// network" setup the host adds (comms/host/HostLink.ns) listed and opened,
+// and a new setup made with "Host network" picked as its connection
+// method in New Internet Setup's picker.  Screen snapshots of each step go
+// to inetsetup-N.pgm (tools/imaging/pgm2png.py makes PNGs of them).
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//       --erase --store inet.store --headless 24 \
+//       --package fixtures/packages/apple/NIE2/ENETSUP/newtdev.pkg \
+//       --package fixtures/packages/apple/NIE2/REGPKGS/inetenbl.pkg \
+//       --package fixtures/packages/apple/NIE2/REGPKGS/inetstup.pkg \
+//       --script src/host/demo/inetsetup.ns
+//
+// (On a fresh store the Setup assistant's Welcome is behind it: the
+// application floats over it.)
+
+tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
+
+hostSetups := func() begin
+	local n := 0;
+	local c := Query(GetUnionSoupAlways("Internet Setups"), {type: 'index});
+	local e := c:Entry();
+	while e do begin
+		if e.physicalLayer = '|HostNetwork:host| and e.class = '|HostNetwork:host| then n := n + 1;
+		e := c:Next();
+	end;
+	n;
+end;
+
+steps := [
+	// the application opened
+	func() begin
+		local app := GetRoot().|InternetSetup:NIE|;
+		app:Open();
+		Print("inetsetup: opened " & (if app.viewCObject then "yes" else "no"));
+	end,
+	// the overview: the host's setup is listed, as its stationery shows it
+	func() begin
+		ScreenSnapshot("inetsetup-1.pgm");
+		local e := Query(GetUnionSoupAlways("Internet Setups"), {type: 'index}):Entry();
+		local line := GetDataDefs(e.class):StringExtract(e, 1);
+		Print("inetsetup: listed " & line);
+		call tapAt with (70, 151);				// the setup's line
+	end,
+	// the setup opened
+	func() begin
+		ScreenSnapshot("inetsetup-2.pgm");
+		call tapAt with (48, 415);				// New
+	end,
+	func() begin
+		ScreenSnapshot("inetsetup-3.pgm");
+		call tapAt with (70, 369);				// Generic Setup
+	end,
+	func() begin
+		ScreenSnapshot("inetsetup-4.pgm");
+		call tapAt with (60, 196);				// Connect using
+	end,
+	// the connection methods: Host network among them
+	func() begin
+		ScreenSnapshot("inetsetup-5.pgm");
+		call tapAt with (160, 201);				// Host network
+	end,
+	func() begin
+		ScreenSnapshot("inetsetup-6.pgm");
+		call tapAt with (259, 413);				// Continue
+	end,
+	// the new setup made through the host's stationery
+	func() begin
+		ScreenSnapshot("inetsetup-7.pgm");
+		Print("inetsetup: host setups " & call hostSetups with ());
+		GetRoot().|InternetSetup:NIE|:Close();
+		Print("inetsetup: done");
+	end];
+
+nextStep := func() begin
+	if Length(steps) > 0 then begin
+		local step := steps[0];
+		ArrayRemoveCount(steps, 0, 1);
+		call step with ();
+		AddDelayedCall(nextStep, nil, 1500);
+	end;
+end;
+
+AddDelayedCall(nextStep, nil, 7000);

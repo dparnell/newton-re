@@ -67,7 +67,47 @@
 		[{_proto: service, class: 'PhysicalService, symbol: '|HostNetwork:host|,
 		  name: "Host network", description: "The host computer's own network"},
 		 {_proto: service, class: 'LogicalService, symbol: '|HostLink:host|,
-		  name: "Host", description: "The host computer's TCP/IP"}];
+		  name: "Host", description: "The host computer's TCP/IP",
+		  excludeFrom: []}];
+	end,
+
+	// Internet Setup's stationery for the Host network setup.  The
+	// application shows and edits a setup through the data definition named
+	// by the entry's class - one per physical layer, its symbol the
+	// layer's, registered by inetstup.pkg's parts (the Ethernet one,
+	// 0x18e19, and the rest) - so the host registers one for its own layer,
+	// made from Ethernet's (else another's) with the host's names and a
+	// FillNewEntry that picks the host's two layers, and the prototype's
+	// view definitions under its symbol, once Internet Setup's own are there.
+	CheckStationery: func()
+	begin
+		local host := '|HostNetwork:host|;
+		if GetDataDefs(host) then
+			return nil;
+		local base;
+		foreach s in ['|Ethernet:NIE|, '|LocalTalk:NIE|, '|Modem:NIE|, '|Serial:NIE|] do
+			if not base and GetDataDefs(s) then base := s;
+		if not base then
+			return nil;
+		RegDataDef(host, {_proto: GetDataDefs(base),
+			symbol: host,
+			name: "Host network",
+			description: "Host network",
+			helpText: "Use this to connect through the host computer's own network.",
+			// (offered in the New Internet Setup's picker when the layer is
+			// there, as the Ethernet one asks for its service)
+			DependenciesLoaded: func() InetGetService('|HostNetwork:host|) <> nil,
+			FillNewEntry: func(entry) begin
+				entry.setupName := "Host network";
+				entry.physicalLayer := '|HostNetwork:host|;
+				entry.linkLayer := '|HostLink:host|;
+				entry;
+			end});
+		local viewDefs := GetViewDefs(base);
+		if viewDefs then
+			foreach vd in viewDefs do
+				RegisterViewDef(vd, host);
+		true;
 	end,
 
 	// once the NIE's service registry exists (its UnitsInstalledScript makes
@@ -79,6 +119,7 @@
 		// (once: a change to the packages while the host's services are
 		// there - another package, the NIE's own removal - leaves the NIE
 		// alone)
+		:CheckStationery();
 		local registry := GetGlobalVar('|InetServices:NIE|);
 		if not registry or registry.|HostNetwork:host| then
 			return nil;
@@ -110,7 +151,7 @@
 			local linkID := Ticks();
 			while soup:Query({type: 'index, indexPath: 'linkID, beginKey: linkID, endKey: linkID}):Entry() do
 				linkID := linkID + 1;
-			entry := {class: 'INET, version: 2,
+			entry := {class: physical.symbol, version: 2,
 				linkID: linkID,
 				setupName: "Host network",
 				physicalLayer: physical.symbol,
