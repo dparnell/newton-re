@@ -786,6 +786,46 @@ be made (no memory), the command is done but cannot be undone.
 `test_TXCommand` does, undoes and redoes a replacement, a restyle,
 typing and backspacing, a move and a copy.
 
+## The view (`text/TXView.h`)
+
+`TXView` (viewClass 108) is what a `protoTXView` is: a document in a
+view, with the engine's handlers made for the Newton - `TXNewtDisplay`
+draws through the view's visible region and brackets each edit with
+StartDrawing/StopDrawing and the caret hidden, `TXNewtHilite` keeps the
+root view's key view in step with the selection (and takes the
+recogniser's word for how many taps there were), and `TXNewtPen` is a
+stroke still being drawn, or one point.  The first TXView starts the
+engine (the stream factory, TextensionStart, the Newton's text run,
+graphics run and ruler).  The document is made at setup
+(`CreateNewTextension`: the characters in one string, `TXBinaryChars`),
+with the page's size and margins from `SetGeometry` and the view's font
+(or the user's) as the default style.
+
+Editing is undoable: typing, a replacement, a restyle and a move are edit
+commands kept in a C object and posted to the application's undo stack as
+a 0xd3 command to the view (`PostUndo`); undo sends it back, and
+`ExecuteCommand` undoes it the second time and redoes it the third.  Keys
+that follow on go into the command on top of the stack
+(`GetCurrentKeyCommand`, `NewKey`).  A script sees the text as frames
+(`text/TXNewtContainer.h`: `text`, `styles` - pairs of a length and a
+font spec, or `viewFont` for the whole text - and `rulers`; a frame of
+class 'graphics is a picture): `Replace`, `GetRangeData`, and
+`Externalize`/`Internalize`, which also save the line breaks already
+worked out for a long document.
+
+The 39 methods are `TXViewNatives.cpp`.  Two ROM bugs kept:
+`GetCountPages` answers the view's own address when there are no pages,
+and a packed font spec given to `ChangeRangeRuns` (the method) comes out
+with its family four times its number, while the same spec in command
+0x49 goes in with a bare size and face.  NOT YET: the ruler bar
+(TXRulerUI - ShowRuler does nothing), the clipboard (Copy, Paste), the
+drag of a selection, the scrub and caret gestures, pages, and
+`TXVBOChars` (the text on a store).
+
+`src/host/demo/txview.ns` (ctest `host.NewtonTXView`) puts text in, types
+a word at its end, makes it bold, and takes a picture before and after
+scrolling.
+
 ## Not yet reconstructed - the plan
 
 The 39 `protoTXView` methods (`natives.py --unbound --area text`: `Cut`,
@@ -832,11 +872,11 @@ Bottom up, in the order the layers need each other:
    `TXStdContainer`, `TXLocalContainer`, `TXPrivateContainer`) and the
    edit commands (`TXCommand`, `TXEditCommand`, `TXKeyCommand`,
    `TXReplaceTextCommand`, `TXMoveTextCommand`) with undo.
-7. `TXView` and the 39 natives, `TXNewtContainer` (a document as a
-   NewtonScript frame), the ruler UI (`ShowRuler`), `TXVBOChars` (the text kept in
-   a large binary - `stores/LargeBinaries.h` is there now) and
-   `TXNewtStreamFactory`.  The demo: a `protoTXView` on the host with
-   text set and typed, drawn and looked at.
+7. DONE: `TXView` and the 39 natives, `TXNewtContainer`, `TXBinaryChars`.
+   NOT YET: the ruler UI (`ShowRuler`), `TXVBOChars` (the text kept in
+   a large binary - `stores/LargeBinaries.h` is there now), the large
+   binary arm of `TXNewtStreamFactory`, the clipboard, drag and drop and
+   the gestures.
 
 `TXAttrObject::ReadPublicData`/`WritePublicData` are the base's empty
 pair; the subclasses that put a style on a stream come with the runs.

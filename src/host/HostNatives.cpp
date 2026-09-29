@@ -28,6 +28,7 @@
 #include "Soups.h"
 #include "LargeBinaries.h"
 #include "Text.h"
+#include "TXView.h"
 #include "Pictures.h"
 #include "Screen.h"
 #include "RectNatives.h"
@@ -66,6 +67,7 @@ RegisterAllNatives(void)
 
 	// text and the view system
 	RegisterTextNatives();
+	RegisterTXViewNatives();
 	RegisterPortNatives();
 	RegisterScreenNatives();
 	RegisterPictureNatives();

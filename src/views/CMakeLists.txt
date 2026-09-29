@@ -57,7 +57,9 @@ add_library(views STATIC
 # (the view system draws ink, and the ink area reaches the strokes through
 # the recogniser, which draws through the views: the three are mutually
 # dependent, as frames and intl are)
-target_link_libraries(views PUBLIC ink newton_config qd frames intl utility recognition stores sound)
+# (BuildView makes the text engine's TXView, which is itself a view: views
+# and text are mutually dependent)
+target_link_libraries(views PUBLIC ink newton_config qd frames intl utility recognition stores sound text)
 target_include_directories(views PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(tests)

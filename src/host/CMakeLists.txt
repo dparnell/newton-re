@@ -232,3 +232,10 @@ set_tests_properties(host.NewtonCredits PROPERTIES TIMEOUT 150
 add_test(NAME host.NewtonSound COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 3 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/sound.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(host.NewtonSound PROPERTIES TIMEOUT 120
                      PASS_REGULAR_EXPRESSION "sound: 520 samples played.*sound: played.*sound: started, active.*sound: callback state 0 error 0.*sound: closed")
+
+# a protoTXView (text/TXView.h): text put in, typed into, restyled and
+# scrolled, pictures in build/txview-1.pgm and -2.pgm (needs the ROM image)
+add_test(NAME host.NewtonTXView COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 8 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/txview.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonTXView PROPERTIES TIMEOUT 120
+                     FAIL_REGULAR_EXPRESSION "FAILED|Exception"
+                     PASS_REGULAR_EXPRESSION "txview: 176 characters, 142-176 the last line, scrolled from [1-9][0-9]* to 0")

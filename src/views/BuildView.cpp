@@ -33,6 +33,7 @@
 #include "NativeFunctions.h"
 #include "ROMConstants.h"
 #include "NewtonExceptions.h"
+#include "TXView.h"
 
 
 // ROM 0x001ef4c4 BadWickedNaughtyNoot__Fl
@@ -143,11 +144,11 @@ TView::BuildContext(RefArg templ, Boolean forceVisible)
 // RECONSTRUCTED: the subclasses - every class gets a TView (the ROM makes
 // TEditView, TPolygonView, TMathExpView,
 // TMathOpView, TMathLineView, TRemoteView, TPrintView, TMeetingView,
-// TSliderView, TListView, TOutline, THelpOutline, TXView for
+// TSliderView, TListView, TOutline, THelpOutline for
 // classes 75-108, and -8501 for any other); TTextView (97, 98),
 // TPictureView (75, 76), TParagraphView (81), TPolygonView (82), TDataView (83), TPickView
-// (89-91), TGaugeView (92), TKeyboardView (79), TMonthView (80) and
-// TClipboard (101) are
+// (89-91), TGaugeView (92), TKeyboardView (79), TMonthView (80),
+// TClipboard (101) and TXView (108, text/TXView.h) are
 // here.
 TView*
 BuildView(TView* parent, RefArg context)
@@ -164,8 +165,10 @@ BuildView(TView* parent, RefArg context)
 	case clPrintView - 1: case clPrintView:
 	case clOutline - 3: case clOutline - 2: case clOutline - 1: case clOutline:
 	case clHelpOutline - 1: case clHelpOutline:
-	case clTXView:
 		view = new TView;
+		break;
+	case clTXView:
+		view = new TXView;
 		break;
 	case clKeyboardView:
 		view = new TKeyboardView;

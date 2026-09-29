@@ -1,0 +1,70 @@
+// A protoTXView - the text engine's view (src/text/TXView.h) - in the
+// booted Newton world: text put in, a word typed at its end and made bold,
+// drawn, and scrolled, with a picture before and after the scroll.  Run
+// from the repository root:
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//       --headless 8 --script src/host/demo/txview.ns
+//   build/venv/Scripts/python tools/imaging/pgm2png.py build/txview-1.pgm build/txview-1.png
+//
+// build/txview-1.pgm: the text as put in and typed into, the typed word in
+// bold (the caret at the end having scrolled the text up); build/txview-2.pgm:
+// the same scrolled back to the start.  Each check
+// prints "txview: FAILED ..." when it does not hold (the ctest looks for
+// that), and the last line says how the view came out.
+//
+// The key codes are the ADB ones host/HostKeyboard.cpp maps a PC keyboard
+// to; protoTXView is magic pointer 826.
+
+typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
+
+AddDelayedCall(func() begin
+	tx := AddView(GetRoot(), {
+		_proto: @826,						// protoTXView
+		viewFlags: 1,
+		viewBounds: {left: 20, top: 220, right: 300, bottom: 262},
+		viewFormat: 0x151,					// white fill, a one-pixel frame
+		viewFont: 0x2800 });				// espy 10
+	// the page as wide as the view and as tall as it likes: without this
+	// the page is the view's own size, and text below it is not drawn even
+	// when scrolled to (the ROM's GeometryChanged)
+	tx:SetGeometry(nil, 280, 0x7fff, {left: 0, top: 0, right: 0, bottom: 0});
+	tx:Dirty();
+
+	local text := "The Newton's text engine: a document of styled text with rulers, tabs and page breaks, written in C++ over storage of its own, which a script reaches through protoTXView.";
+	tx:Replace({first: 0, last: 0}, {text: text, styles: [StrLen(text), {family: 'espy, size: 12, face: 0}]}, nil);
+	local count := tx:GetCountCharacters();
+	if count <> StrLen(text) then Print("txview: FAILED - the text put in is " & count & " characters");
+
+	// the caret at the end, the view made the key view, and a word typed
+	tx:SetHiliteRange({first: count, last: count}, nil, true);
+	KeyboardConnect(true);
+	foreach c in [49, 4, 14, 37, 37, 31] do			// " hello"
+		call typeKey with (c);
+
+	AddDelayedCall(func() begin
+		local typed := tx:GetRangeData({first: count, last: count + 6}, 'text);
+		if not StrEqual(typed, " hello") then Print("txview: FAILED - typed \"" & typed & "\"");
+
+		// the typed word made bold, undoably
+		tx:ChangeRangeRuns({first: count + 1, last: count + 6}, {family: 'espy, size: 12, face: 1}, nil, true);
+		tx:SetHiliteRange({first: count + 2, last: count + 3}, nil, nil);
+		local style := tx:GetContinuousRun();
+		if style.face <> 1 then Print("txview: FAILED - the word is not bold");
+		RefreshViews();
+		ScreenSnapshot("build/txview-1.pgm");
+
+		// the caret at the end scrolled the text up to show it: scrolled
+		// back to the start
+		local height := tx:GetLineRange(tx:GetCountCharacters());
+		local before := tx:GetScrollValues();
+		if before.y <= 0 then Print("txview: FAILED - the caret did not scroll the text (" & before.y & ")");
+		tx:Scroll({x: 0, y: -before.y});		// the text moved down
+		local scrolled := tx:GetScrollValues();
+		if scrolled.y <> 0 then Print("txview: FAILED - scrolled back to " & scrolled.y);
+		RefreshViews();
+		ScreenSnapshot("build/txview-2.pgm");
+		Print("txview: " & tx:GetCountCharacters() & " characters, " & height.first & "-" & height.last & " the last line, scrolled from " & before.y & " to " & scrolled.y);
+	  end, nil, 1500);
+  end, nil, 2500);								// after the boot
+Print("txview: the script is loaded");

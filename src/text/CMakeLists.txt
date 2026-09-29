@@ -35,6 +35,7 @@ add_library(text STATIC
     TXStream.cpp
     TXUtilities.cpp
     TXView.cpp
+    TXViewNatives.cpp
     Textension.cpp
 )
 # (qd for the clipping helpers; views for the root view they dirty)

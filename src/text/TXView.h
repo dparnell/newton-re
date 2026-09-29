@@ -258,6 +258,6 @@ void	FromObject(RefArg obj, TXOffsetRange* range, TXView* view);	// ROM 0x002499
 TXView*	FailGetTXView(RefArg context);							// ROM 0x0024a35c FailGetTXView__FRC6RefVar
 long	TXFindString(TXChars* chars, UniChar* find, long start);	// ROM 0x0024d54c TXFindString__FP7TXCharsPUsl - -1: not there
 
-void	RegisterTextNatives(void);	// the protoTXView methods (TXViewNatives.cpp)
+void	RegisterTXViewNatives(void);	// the protoTXView methods (TXViewNatives.cpp)
 
 #endif	/* __TXVIEW_H */
