@@ -9,16 +9,16 @@ here - this file says what is *not* done.  The history of how things got
 here, the plans of finished work and the host and ROM bugs found along
 the way are all in `docs/work-log.md`.
 
-## State at 2026-09-29
+## State at 2026-09-30
 
-- `cmake --build build/host` clean, `ctest --test-dir build/host` 130/130
-  (`intl.Dates` fails about one run in ten: it reads the real clock).
-  Several agents work in parallel, each building in its own directory
-  under `tmp/`; the counts here are refreshed as each reports.
-- `analysis/coverage.py build/MP2x00US --check`: 12648 citations, 0 bad;
-  7415 of 16671 functions (44.48%).
-- `analysis/natives.py --unbound`: 1060 of the ROM's 1326 natives
-  answered (79.9%); recognition 125 of 125.
+- A full `ctest` in a parallel agent's build: 209 of 209 (`intl.Dates`
+  fails about one run in ten: it reads the real clock).  Several agents
+  work in parallel, each building in its own directory under `tmp/`.
+- `analysis/coverage.py build/MP2x00US --check`: 15657 citations, 0 bad;
+  10165 of 16671 functions (60.97%).
+- `analysis/natives.py --unbound`: 1214 of the ROM's 1326 natives
+  answered (91.6%); left mostly in comms (58 of 147), then system,
+  intl, testing, qd.
 
 ## What works
 
