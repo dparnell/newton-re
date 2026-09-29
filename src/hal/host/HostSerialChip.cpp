@@ -84,6 +84,7 @@ public:
 	NewtonErr			Listen(unsigned short port);
 	Boolean				Due(Int64* when);
 	void				Poll(void);
+	void				Pace(void);
 
 	unsigned short		fPort;
 	int					fListener;			// the listening socket, or -1
@@ -98,6 +99,8 @@ public:
 	BitRate				fSpeed;
 	UByte				fRx[kRxSize];		// what the desktop sent, not yet read
 	long				fRxHead, fRxCount;
+	long				fRxReady;			// how many of them have arrived at the line's speed
+	uint64_t			fLastPace;			// when they were last counted
 	UByte				fTx[kTxSize];		// what the tool put, not yet sent
 	long				fTxCount;
 	Int64				fNextPoll;			// when the wire is next looked at
@@ -124,6 +127,8 @@ THostSerialChip::New()
 	fOutputs = 0;
 	fSpeed = 38400;
 	fRxHead = fRxCount = 0;
+	fRxReady = 0;
+	fLastPace = 0;
 	fTxCount = 0;
 	fNextPoll.hi = fNextPoll.lo = 0;
 	return this;
@@ -183,17 +188,18 @@ THostSerialChip::ResetTxBEmpty()
 UByte
 THostSerialChip::GetByte()
 {
-	if (fRxCount == 0)
+	if (fRxReady == 0)
 		return 0;
 	UByte b = fRx[fRxHead];
 	fRxHead = (fRxHead + 1) % kRxSize;
 	fRxCount--;
+	fRxReady--;
 	return b;
 }
 
 
 Boolean			THostSerialChip::TxBufEmpty()		{ return fTxCount < kTxSize; }
-Boolean			THostSerialChip::RxBufFull()		{ return fRxCount > 0; }
+Boolean			THostSerialChip::RxBufFull()		{ return fRxReady > 0; }
 RxErrorStatus	THostSerialChip::GetRxErrorStatus()	{ return 0; }
 
 
@@ -201,7 +207,7 @@ SerialStatus
 THostSerialChip::GetSerialStatus()
 {
 	SerialStatus status = 0;
-	if (fRxCount > 0)
+	if (fRxReady > 0)
 		status |= kSerialRxCharAvailable;
 	if (fTxCount < kTxSize)
 		status |= kSerialTxBufferEmpty;
@@ -215,8 +221,10 @@ void				THostSerialChip::ResetSerialStatus()					{ fStatusChanged = false; }
 void				THostSerialChip::SetSerialOutputs(SerialOutputControl c)	{ fOutputs |= c; }
 void				THostSerialChip::ClearSerialOutputs(SerialOutputControl c)	{ fOutputs &= ~c; }
 SerialOutputControl	THostSerialChip::GetSerialOutputs()					{ return fOutputs; }
-void				THostSerialChip::PowerOff()								{ fPowered = false; }
-void				THostSerialChip::PowerOn()								{ fPowered = true; }
+// Powered on, its interrupts are on (as the Voyager chip's PowerOn turns
+// the channel's on); off, off.
+void				THostSerialChip::PowerOff()								{ fPowered = false; fIntEnabled = false; }
+void				THostSerialChip::PowerOn()								{ fPowered = true; fIntEnabled = true; }
 Boolean				THostSerialChip::PowerIsOn()							{ return fPowered; }
 void				THostSerialChip::SetInterruptEnable(Boolean enable)	{ fIntEnabled = enable; }
 
@@ -225,6 +233,7 @@ void
 THostSerialChip::Reset()
 {
 	fRxHead = fRxCount = 0;
+	fRxReady = 0;
 	fTxCount = 0;
 	fTxIntPending = false;
 }
@@ -321,7 +330,7 @@ THostSerialChip::Due(Int64* when)
 {
 	if (fTool == nil || !fIntEnabled)
 		return false;
-	if (fTxIntPending || fRxCount > 0 || fStatusChanged)
+	if (fTxIntPending || fRxReady > 0 || fStatusChanged)
 		GetClock(when);
 	else
 		*when = fNextPoll;
@@ -381,6 +390,35 @@ THostSerialChip::Poll(void)
 }
 
 
+// The bytes the desktop sent released to the tool no faster than the line's
+// speed (ten bits a byte): a desktop on a socket sends a window of frames
+// at once, which a real line would have brought in over a few
+// milliseconds while the tool's task emptied its input buffer - unpaced it
+// overruns the tool's 512 bytes.
+void
+THostSerialChip::Pace(void)
+{
+	Int64 clock;
+	GetClock(&clock);
+	uint64_t now = ((uint64_t) (ULong) clock.hi << 32) | clock.lo;
+	uint64_t perSecond = fSpeed / 10;
+	if (perSecond == 0)
+		perSecond = 1;
+	if (fRxReady >= fRxCount || fLastPace == 0 || now < fLastPace)
+	{
+		fLastPace = now;				// (nothing waiting: no credit is banked)
+		return;
+	}
+	uint64_t bytes = (now - fLastPace) * perSecond / kSeconds;
+	if (bytes == 0)
+		return;
+	fLastPace += bytes * kSeconds / perSecond;
+	if (bytes > (uint64_t) (fRxCount - fRxReady))
+		bytes = fRxCount - fRxReady;
+	fRxReady += (long) bytes;
+}
+
+
 static Boolean
 HostSerialDeadline(Int64* when)
 {
@@ -395,12 +433,15 @@ HostSerialDeliver(void)
 	if (chip == nil || chip->fTool == nil || !chip->fIntEnabled)
 		return;
 	chip->Poll();
+	chip->Pace();
 	if (chip->fStatusChanged && chip->fHandlers.ExtStsIntHandler != nil)
 	{
 		chip->fStatusChanged = false;
 		chip->fHandlers.ExtStsIntHandler(chip->fTool);
 	}
-	if (chip->fRxCount > 0 && chip->fHandlers.RxCAvailIntHandler != nil)
+	// (a real chip interrupts again at once while its FIFO holds bytes; the
+	// tool reads one a time from a chip that cannot say each byte's status)
+	for (long n = 0; chip->fTool != nil && chip->fRxReady > 0 && chip->fHandlers.RxCAvailIntHandler != nil && n < kRxSize; n++)
 		chip->fHandlers.RxCAvailIntHandler(chip->fTool);
 	for (long n = 0; chip->fTool != nil && chip->fTxIntPending && chip->fTxCount < kTxSize && n < kTxSize; n++)
 	{

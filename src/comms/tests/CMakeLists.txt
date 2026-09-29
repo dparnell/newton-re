@@ -23,3 +23,8 @@ target_link_libraries(test_Translators PRIVATE comms_script os600_kernel os600_u
 target_compile_definitions(test_Translators PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
 add_test(NAME comms.Translators COMMAND test_Translators)
 set_tests_properties(comms.Translators PROPERTIES TIMEOUT 60)
+
+add_executable(test_SerialTool test_SerialTool.cpp)
+target_link_libraries(test_SerialTool PRIVATE comms_serial hal_host_serial os600_kernel os600_user)
+add_test(NAME comms.SerialTool COMMAND test_SerialTool)
+set_tests_properties(comms.SerialTool PROPERTIES TIMEOUT 60)

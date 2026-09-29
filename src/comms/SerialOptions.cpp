@@ -201,3 +201,25 @@ TCMOSerialHalfDuplex::TCMOSerialHalfDuplex()
 	SetLength(OPTION_DATA_LENGTH(TCMOSerialHalfDuplex));
 	fHalfDuplex = false;
 }
+
+
+// ROM 0x001ddba0 __ct__20TCMOSerialDTRControlFv
+// 'sdtr: DTR asserted.
+TCMOSerialDTRControl::TCMOSerialDTRControl()
+	: TOption(kOptionType)
+{
+	SetLabel(kCMOSerialDTRControl);
+	SetLength(OPTION_DATA_LENGTH(TCMOSerialDTRControl));
+	fAssertDTR = true;
+}
+
+
+// ROM 0x000e6088 __ct__22THMOHiSpeedClockOptionFv
+// 'hclk: the chip's high-speed clock used.
+THMOHiSpeedClockOption::THMOHiSpeedClockOption()
+	: TOption(kOptionType)
+{
+	SetLabel(kHMOHiSpeedClockOption);
+	SetLength(OPTION_DATA_LENGTH(THMOHiSpeedClockOption));
+	fUseHiSpeedClock = true;
+}

@@ -107,6 +107,20 @@ LockHeapRange(VAddr /*start*/, VAddr /*end*/, Boolean /*wire*/)
 	return noErr;
 }
 
+// LockStack, UnlockStack (the stack locked down for interrupt handlers
+// that run on it): pages are always in
+extern "C" long
+LockStack(TULockStack* /*lockRef*/, ULong /*additionalSpace*/)
+{
+	return noErr;
+}
+
+extern "C" long
+UnlockStack(TULockStack* /*lockRef*/)
+{
+	return noErr;
+}
+
 extern "C" long
 UnlockHeapRange(VAddr /*start*/, VAddr /*end*/)
 {

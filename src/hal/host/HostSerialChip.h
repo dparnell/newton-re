@@ -22,7 +22,11 @@
 				external-status one when a desktop connects or goes.  The
 				interrupts are a host interrupt source
 				(HostInterruptSources.h), polled every few milliseconds while
-				a tool has the chip.
+				a tool has the chip and its power is on.  What the desktop
+				sends reaches the tool no faster than the line's speed (ten
+				bits a byte), as it would down a cable: a socket delivers a
+				window of frames at once, which would overrun the tool's
+				input buffer.
 
 				docs/comms/README.md, "The desktop connection (Dock)".
 */

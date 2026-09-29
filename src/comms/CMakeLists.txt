@@ -21,6 +21,15 @@ add_library(comms STATIC
 target_link_libraries(comms PUBLIC newton_config os600_user memory utility hal_host_sockets)
 target_include_directories(comms PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/host)
 
+# The serial tools (SerialTool.h): TSerTool, TAsyncSerTool and the 'aser
+# service, over a serial chip from the registry (hal_serial) and the
+# machine's timers (hal_timers).
+add_library(comms_serial STATIC
+    SerialTool.cpp
+    AsyncSerialTool.cpp
+)
+target_link_libraries(comms_serial PUBLIC comms hal_serial hal_timers)
+
 # The NewtonScript side: the frame translators (values and option frames
 # to and from bytes and option arrays) and the NewtonScript endpoint.
 # host/HostLink.ns, the host's link for the NIE, is compiled in as a string
