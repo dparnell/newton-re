@@ -484,6 +484,116 @@ thirty-two control characters of a stretch of a paragraph, stopping at
 its line break, so that laying a line out does not search for each tab
 again.
 
+## The text runs (`text/TXNewtTextRun.h`)
+
+A `TXNewtTextRun` is a font family, a size and a face - the whole of a
+style, as the engine sees one.  The family is a NewtonScript Ref (a
+symbol out of `vars.fonts`, or the number of a ROM font) in a RefHandle
+of the run's own, and travels in attribute lists as a
+`TXNewtFontFamilyInfo`, a little object the list owns and deletes, so
+the Ref is always somewhere the collector can see it.  A new run takes
+the user's `userFont` preference.  Faces are added and taken away bit by
+bit (`UpdateAttribute` with `how` 4 or 8), and two faces agree about the
+bits they share, which is what a style slip shows for a mixed selection.
+
+Everything the run does to its characters goes through QuickDraw's text
+objects (`qd/TextObject.h`): `MeasureWidth` is `MeasureTextOnce`, `Draw`
+is `DrawTextOnce` in `or` mode on the line's baseline, `CharToPixel` and
+`PixelToChar` are a text object's `CharToPoint`/`PointToChar` (stretched
+over the run's width and its share of a fully justified line's slack),
+and `LineBreak` asks a text object for the length that fits
+(`GetTextObjField`, field 1) and cuts it back to a word with
+`FindWordBreaks` over the locale's line break table, answering 2 when
+all of it fits (the room it took off the width), 0 when it was cut at a
+word, and 1 when it was cut inside one - which only happens on a line
+with nothing on it yet.  (A ROM quirk kept: a word starting the text on
+a line that may not cut one answers a length of `-start`.)  The height
+is `GetStyleFontInfo`'s, cached until an attribute changes.  What a
+fully justified line may stretch the run by is a thirty-second of its
+point size for every space in it (`FullJustifPortion`).
+
+The options' +0x14 word is set to 9 by `Draw` and 10 by `MeasureWidth`.
+The ROM's `DoTextOnce` reads it as a selector: 9 marks the text object
+(its flag 0x40000) and 10 throws the options away altogether, which is
+why `MeasureWidth` leaves the rest of them as the stack had them.  The
+host's `DoTextOnce` does not read it yet; the run zeroes what the ROM
+leaves, which measures the same.
+
+## The graphics runs (`text/TXGraphicsRun.h`)
+
+A `TXGraphicsRun` is a picture standing in the text as one character: a
+box of a size its subclass answers, all of it above the baseline.  It
+stands for one thing, so its flags have bit 4 (never shared - a
+reference to it is a copy - and never run together with a neighbour)
+and bit 2 (the caret goes over it in one step, and a line hit-tests it
+as one thing: `TXIndivisiblePixelToChar`, where a tap in its middle
+selects it whole and a tap in the quarter at either end, when its
+character is a control character, puts the caret beside it).  One too
+wide for the room left goes on an empty line squeezed by the difference
+(a negative `fExtraWidth`).  Selected, it is framed in a gray pattern in
+XOR, so drawing the frame again takes it away.  `TXNewtGraphicsRun`
+('graf, public type 'shap) is a frame whose `shape` slot is drawn with
+`DrawShape`, two pixels in from its box; 16 by 16 when there is none.
+
+## Styled text (`text/TXStyledText.h`)
+
+`TXStyledText` is the characters and the runs together, with the port
+they are measured in (the current one when it has none), and it owns
+both.  `CharToWord` is a double tap: `FindWordBreaks` over at most 64
+characters either side of the offset, with the spaces after a word taken
+with it or - a tap on the spaces - the word before them.
+`AdvanceOffset` is how far the caret moves: one character, or a whole
+run whose object moves as one.
+
+## A line (`text/TXLine.h`)
+
+`TXLine::DoLineLayout(start, length, width)` lays out one line of a
+styled text.  The line is cut into *pieces*: each run's stretch of it
+(`TXObjectIterator` over the runs), cut again at every control character
+(`gTXParagCtrlChars`), each control character a piece of one character
+whose kind is the character itself - 9 a tab, 13 a line end.  The
+paragraph's ruler (out of the `TXRulerRange`) gives the margins; its
+justification decides the rest:
+
+- *left*: the text starts at the left margin (the indent on a
+  paragraph's first line);
+- *right*: the trailing spaces are left out of the line's visible length
+  and the line moves right by the room left;
+- *centre*: it moves right by half the room;
+- *full*: the trailing spaces are left out and the room is shared among
+  the text pieces after the last tab in proportion to what each says it
+  can take - except on a paragraph's last line (one ending in a line
+  break, or at the end of the text), which is laid out left.  A ruler
+  value of 0x10 stretches the last line too.  ROM BUG kept: the shares
+  are handed out from the line's end backwards one per text piece, but
+  the list of portions holds a nought for each line end among them too.
+
+`DefineRunWidths` measures the pieces: text by its run, a line end as
+nothing, and a tab by the ruler's `GetTabWidth` - a left tab's width at
+once, any other kind *pending* until the text after it is known: a right
+or centre tab when the next tab or the line's end is reached
+(`CalcPendingTabWidth`), a decimal tab as soon as a piece holds its
+character (`CalcAlignTabWidth` - the character is the tab's fill
+character, a full stop unless the ruler says otherwise).  All widths are
+16.16, so the text is placed to a fraction of a pixel and rounded
+only when it is drawn.
+
+The line then answers what a display asks of it: `Draw` (each text
+piece by its run, from the line's left edge; a line of nothing but
+spaces is not drawn at all), `CharacterToPixel` (whole pixels, an
+offset at the start of what follows counting as the end of what
+precedes it), `PixelToCharacter` (a tap: the run's own `PixelToChar`,
+or a whole piece that is one thing, or a line end's start) and
+`GetLineHilite` (the stretch a selection covers, out to the line's edges
+when asked; a caret is one pixel wide).
+
+`test_TXLine` lays out "Name<tab>Value" in two styles with a tab stop at
+60, checks every piece and every character's place against QuickDraw's
+own measurements, draws it into an offscreen port and compares the bits
+with QuickDraw drawing the two strings itself, taps it and hilites it;
+and it tries the right, decimal and centre tabs, the default stops, and
+the four justifications.
+
 ## Not yet reconstructed - the plan
 
 The 39 `protoTXView` methods (`natives.py --unbound --area text`: `Cut`,
@@ -511,15 +621,12 @@ Bottom up, in the order the layers need each other:
 
 1. DONE: `TXOffset`/`TXOffsetRange`, `TXRun`/`TXRunRange`,
    `TXRulerRange`, the helpers, `TXLinesHeights`, `TXParagCtrlChars`.
-2. The concrete runs: `TXNewtTextRun` (0x0023f648-0x0024054c: a style -
-   font, size, face, colour - measured and drawn through `qd/Text.h`) and
-   `TXGraphicsRun` (0x0023ac54-0x0023b124); `TXStyledText` (0x002461bc-0x002464f4: the text and
-   its runs together, `CharToWord`).  Test: a run measures and draws a
-   word into an offscreen port.
-3. `TXLine` (0x0023cba8-0x0023de28): a line's runs, their widths, tabs
-   (through the rulers' `GetTabWidth`/`CalcPendingTabWidth`), full
-   justification, `CharToPixel`/`PixelToChar`.  Test: a line with a tab
-   and two styles laid out and hit-tested.
+2. DONE: the concrete runs, `TXNewtTextRun` and `TXGraphicsRun`
+   (with `TXNewtGraphicsRun`), and `TXStyledText` - over QuickDraw's
+   text-object questions (`qd/TextObject.h`: `CharToPoint`,
+   `PointToChar`, `GetTextObjField`), which came with them.
+3. DONE: `TXLine` (0x0023cba8-0x0023ded4), the pieces, tabs,
+   justification, drawing and hit-testing.
 4. The frames (`TXFrames`, `TXMonoFrame`, `TXSectFrames`, `TXPageFrames`,
    `TXMonoSizeFrames`) and the formatters (`TXFormatter`,
    `TXFrameFormatter`, `TXMonoFrameFormatter`, `TXMultiFrameFormatter`):
