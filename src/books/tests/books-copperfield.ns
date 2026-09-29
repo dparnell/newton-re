@@ -45,6 +45,29 @@ AddDelayedCall(func() begin
         ScreenSnapshot("tmp/books-copperfield.pgm");
         local kids := cf.cuPage.contentArea:ChildViewFrames();
         call check with ("the page has views", Length(kids) >= 2);
+        // a thumbnail of the page: PageCThumbnail's remote view (class 88)
+        // drawn into a 60x80 bitmap, which is shown in the corner
+        local bits := cf:PageThumbnail(5);
+        call check with ("a thumbnail", bits and bits.data);
+        if bits then
+          begin
+            local black := 0;
+            // (the pixels are the last 80 rows of 8 bytes of the binary)
+            local data := bits.data;
+            for i := Length(data) - 640 to Length(data) - 1 do
+              begin
+                local b := ExtractByte(data, i);
+                while b <> 0 do
+                  begin
+                    black := black + (b mod 2);
+                    b := b div 2;
+                  end;
+              end;
+            Print("books-copperfield: thumbnail " & NumberStr(black) & " black pixels");
+            call check with ("something drawn in it", black > 20 and black < 2400);
+            GetRoot():DrawShape(MakeShape(bits), {transform: [250, 400]});
+          end;
+        ScreenSnapshot("tmp/books-thumbnail.pgm");
         Print("books-copperfield: done, " & NumberStr(failures) & " failed");
       end, nil, 2000);
   end, nil, 3000);

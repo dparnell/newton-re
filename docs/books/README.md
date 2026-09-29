@@ -15,7 +15,7 @@ book a package brings (Newton Book Maker and BookMaker's `'book` parts).
 | `FindContentByValue`, `FindPageByContent`, `CompareValues` | `src/books/Librarian.cpp` | done |
 | The search (`TLibrarian::Find` over the hints, `TextSearch`, `ExtractWords`, `CuFind`, `FindPageByValue`/`BySubject`, `FindContentBySlot`, `TurnToContent`) and `AddInkMarks` | `src/books/Search.cpp` | done |
 | `PageContents`, `PageScroll`, `ZoomView` (over `qd/ZoomRect.cpp`'s `ZoomRect`/`FixStep`) | `src/books/Pages.cpp` | done |
-| `PageThumbnail` (a `TRemoteView`, class 88, of the page's blocks) | - | NOT YET: `TRemoteView` is |
+| `PageThumbnail` (a `TRemoteView`, class 88 - `views/RemoteView.h` - of the page's blocks) | `src/books/Pages.cpp` | done; the thumbnail's text comes out about a third as wide as it should (the line spacing is right), which points at the text drawing under `TQDScaler` - NOT YET looked into |
 | Ink marks (`AddInkMarks`) | - | NOT YET |
 
 The booting OS installs the ROM's help book: it is in the library, and the

@@ -9,6 +9,8 @@
 #include "Pages.h"
 #include "Librarian.h"
 #include "ParagraphView.h"
+#include "RemoteView.h"
+#include "RootView.h"
 #include "Animate.h"
 #include "Rects.h"
 #include "Frames.h"
@@ -22,6 +24,7 @@
 
 Ref		FCloseX(RefArg rcvr);			// views/ViewNatives.cpp: view:Close()
 Ref		BookTitle(RefArg rcvr);			// Librarian.cpp
+Ref		FSetContains(RefArg rcvr, RefArg array, RefArg target);	// views/ClipboardView.cpp
 void	ZoomRect(Rect* from, Rect* to, long steps, Boolean zoomIn);	// qd/ZoomRect.cpp (ROM 0x003404e0)
 
 const ULong kTextBlock = 'TEXT';
@@ -681,6 +684,76 @@ ZoomView(RefArg rcvr, RefArg fromView, RefArg toView, RefArg steps, RefArg zoomI
 }
 
 
+// ROM 0x00166744 PageThumbnail
+// reader:PageCThumbnail(page) - a page made small: a remote view
+// (cuRemoteThumb) over the page's size (pageBounds), knowing the reader's
+// content area and ISBN, whose one child is the page - the page
+// template's thumbnailScript's answer, when it has one and it answers,
+// as a view the content area's size, else a view of the page's blocks
+// (MakeBlockView, as when printing, through the content area's
+// mungeContentScript).  The view is made under the root view but not put
+// among its children; the caller draws it into a bitmap and closes it.
+// ==> its context.
+Ref
+PageThumbnail(RefArg rcvr, RefArg pageArg)
+{
+	RefVar page;
+	RefVar index;
+	RefVar scripts;
+	RefVar child;
+	RefVar children;
+	RefVar thumb(AllocateFrame());
+	SetFrameSlot(thumb, RSSYM_proto, RefVar(Rcuremotethumb));
+	RefVar size(TLibrarian::gLibrarian->PageSize(rcvr));
+	RefVar pageBounds(AllocateFrame());
+	SetFrameSlot(pageBounds, RSSYMtop, RefVar(MAKEINT(0)));
+	SetFrameSlot(pageBounds, RSSYMleft, RefVar(MAKEINT(0)));
+	SetFrameSlot(pageBounds, RSSYMbottom, RefVar(GetFrameSlotRef(size, RSSYMbottom)));
+	SetFrameSlot(pageBounds, RSSYMright, RefVar(GetFrameSlotRef(size, RSSYMright)));
+	SetFrameSlot(thumb, RSSYMpagebounds, pageBounds);
+	RefVar cuPage(CuPage(rcvr));
+	RefVar contentArea(GetVariable(cuPage, RSSYMcontentarea, nil, 0));
+	RefVar munge(GetVariable(contentArea, RSSYMmungecontentscript, nil, 0));
+	SetFrameSlot(thumb, RSSYMcontentarea, contentArea);
+	SetFrameSlot(thumb, RSSYMisbn, RefVar(GetVariable(cuPage, RSSYMisbn, nil, 0)));
+	RefVar bounds(GetProtoVariable(thumb, RSSYMviewbounds, nil));		// (asked, and not used)
+	page = TLibrarian::gLibrarian->GetPageN(RINT(pageArg), rcvr);
+	scripts = GetFrameSlotRef(RefVar(GetFrameSlotRef(page, RSSYMtemplate)), RSSYMscripts);
+	Boolean made = false;
+	if (NOTNIL(scripts))
+	{
+		SetFrameSlot(thumb, RSSYMscripts, scripts);
+		index = FSetContains(RefVar(), scripts, RSSYMthumbnailscript);
+		if (NOTNIL(index))
+		{
+			children = AllocateArray(RSSYMviewchildren, 1);
+			RefVar script(GetArraySlotRef(scripts, RINT(index) + 1));
+			RefVar answer(DoBlock(script, RefVar(MakeArray(0))));
+			made = NOTNIL(answer);
+			if (made)
+			{
+				child = AllocateFrame();
+				SetFrameSlot(child, RSSYM_proto, answer);
+				SetFrameSlot(child, RSSYMviewbounds, RefVar(GetVariable(contentArea, RSSYMviewbounds, nil, 0)));
+				SetArraySlotRef(children, 0, child);
+			}
+		}
+	}
+	if (!made)
+	{
+		RefVar blocks(GetFrameSlotRef(page, RSSYMblocks));
+		ULong count = Length(blocks);
+		children = AllocateArray(RSSYMviewchildren, count);
+		for (ULong i = 0; i < count; i++)
+			SetArraySlotRef(children, i, MakeBlockView(blocks, munge, i, true));
+	}
+	SetFrameSlot(thumb, RSSYMform, children);
+	TRemoteView* view = new TRemoteView;
+	view->Constructor(thumb, gRootView);
+	return thumb;
+}
+
+
 // ROM 0x00164c4c TurnToPage
 // reader:TurnToPage(page)
 Ref
@@ -760,4 +833,5 @@ RegisterPageNatives(void)
 	RegisterNativeFunction("PageContents", (void*) PageContents, 1);
 	RegisterNativeFunction("PageScroll", (void*) PageScroll, 1);
 	RegisterNativeFunction("ZoomView", (void*) ZoomView, 4);
+	RegisterNativeFunction("PageThumbnail", (void*) PageThumbnail, 1);
 }
