@@ -29,14 +29,17 @@ CShadowBufferSegment::~CShadowBufferSegment()
 
 
 // ROM 0x001ded0c Init__20CShadowBufferSegmentFUllT2
-void
+// (Declared void in the ROM, but r0 is left as GetSize's result and the
+// comm tools test it; so it answers that.)
+NewtonErr
 CShadowBufferSegment::Init(TObjectId sharedId, Long validOff, Long validCount)
 {
 	fSharedMem.CopyObject(sharedId);
-	fSharedMem.GetSize(&fSize, nil);
+	NewtonErr err = fSharedMem.GetSize(&fSize, nil);
 	fPosition = validOff;
 	fStart = validOff;
 	fLimit = (validCount < 0) ? (Long) fSize : validOff + validCount;
+	return err;
 }
 
 

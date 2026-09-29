@@ -4,8 +4,12 @@
 # network behind a host comm tool).
 add_library(comms STATIC
     Options.cpp
+    CommTools.cpp
+    host/HostTCPTool.cpp
 )
-target_link_libraries(comms PUBLIC newton_config os600_user memory)
-target_include_directories(comms PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+# hal_host_sockets: the host's network, which host/HostTCPTool.cpp (the
+# stand-in for the NIE's TCP tool) works over
+target_link_libraries(comms PUBLIC newton_config os600_user memory utility hal_host_sockets)
+target_include_directories(comms PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/host)
 
 add_subdirectory(tests)

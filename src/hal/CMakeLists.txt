@@ -37,3 +37,16 @@ add_library(hal_host_sound STATIC
 )
 target_link_libraries(hal_host_sound PUBLIC newton_config sound hal_host)
 target_include_directories(hal_host_sound PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/host)
+
+# The host's network (host/HostSockets.h): TCP connections and name
+# resolution over the host's own sockets, for the comm tools that stand in
+# for the Newton Internet Enabler's (docs/comms/README.md).  Built without
+# the Newton include paths - the platform's socket headers and the DDK's
+# names do not mix - so it is a plain C interface over integer handles.
+add_library(hal_host_sockets STATIC
+    host/HostSockets.cpp
+)
+target_include_directories(hal_host_sockets PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/host)
+if(WIN32)
+    target_link_libraries(hal_host_sockets PUBLIC ws2_32)
+endif()

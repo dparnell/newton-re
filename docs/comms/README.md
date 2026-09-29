@@ -3,7 +3,7 @@
 The Newton's communications framework - options, endpoints, the comm
 manager and the comm tools - and how the host reaches its own network
 through it.  Reconstructed in `src/comms/`; the host's side of the seam is
-`hal/host/HostSockets.h` / `host/HostSockets.cpp`.
+`hal/host/HostSockets.h` and `comms/host/`.
 
 ## The owner's decision: the host's TCP/IP, not a TCP/IP stack
 
@@ -58,26 +58,62 @@ are NOT YET; they are not on the way to the network.
 
 ## Where the seam sits
 
-* **What the NIE registers** decides the names: a `TCMService`
-  implementation per service label its NewtonScript asks for (the
-  endpoint options `inet` with `ilid`, `itsv`, `itrs`, `ilpt`, `iexp` are
-  in `inetenbl.pkg`'s code; `ilnk` and `idns` are in the link and module
-  packages' NewtonScript), and possibly a `TEndpoint` implementation named
-  by an `endp` option.  The package manager's side (`analysis/classinfo.py`
-  over a package's protocol parts) gives the exact class and capability
-  names; the host registers its own implementations under those.
-* **The host service** (`TCMService`) starts the host comm tool's task
-  and answers its port, exactly as the ROM's services start theirs; the
-  link services answer "up" at once, since the host's link is the host's
-  business.
-* **The host comm tool** (a `TCommTool` subclass, so the ROM's request
-  handling, option processing and event paths are the ROM's own) turns
-  connect, get and put into the socket calls, polled from the tool's idle.
-* **The sockets** are `hal/host/HostSockets.h`: a plain C interface over
-  int handles, implemented in `host/HostSockets.cpp`, which is built without
-  the Newton include paths (as `host/win32/HostWindow.cpp` is - the DDK's
-  names collide with the platform headers').  Winsock on Windows, BSD
-  sockets elsewhere; name resolution through `getaddrinfo`.
+**What the NIE registers** (from its protocol parts, `analysis/classinfo.py
+--package <pkg>`; also `docs/packages/README.md`) decides the names:
+
+| package | implementation | protocol | capability |
+|---------|----------------|----------|------------|
+| Internet Enabler | `TInetService` | `TCMService` | `serv` = `inet` - the TCP/UDP endpoints |
+|  | `TInetCCEService` | `TCMService` | `serv` = `ictl` - the link controller (`InetGrabLink` and friends) |
+|  | `TDNSService` | `TCMService` | `serv` = `dnst` - name lookups |
+|  | `TDNSTool` | `TCommToolProtocol` | `ctiv` = 2 - the DNS service's tool |
+|  | `PInetToolMux` | `PMuxTool` | the TCP/IP stack's tool, one per link |
+|  | `PInetToolCCE`, `PInetToolCE` | `PConnectionEnd` | its connection ends (the link controller's, an endpoint's) |
+|  | `PSerialDriverModule` | `PStrDriverModule` | the stack's serial driver |
+| Ethernet Module | `PEnetLinkModule`, `PDhcpDynAddrModule`, `PLanternDriverModule` | `PStrLinkModule`, `PStrDynAddrModule`, `PStrDriverModule` | the Ethernet link, DHCP, the card driver |
+| LocalTalk Module | `PMacIPLinkModule`, `PMacIPDriverModule` | `PStrLinkModule`, `PStrDriverModule` | MacIP |
+| Modem & Serial Module | `PPPPLinkModule`, `PSLPLinkModule` | `PStrLinkModule` | PPP and SLIP |
+| Newton Devices | `TLanternDriverAPI`, `TLanternClientAPI`, `TLanternCardHandler`, `TLanternEventWorld`, `PLinkEnet` | the Lantern (Ethernet card) driver API | |
+
+The NewtonScript reaches only the three services (an endpoint's `service`
+option names `inet`, `ictl` or `dnst`, and the comm manager starts the
+`TCMService` whose `serv` capability it is - `TCMEventHandler::StartService`);
+everything below them - the mux tool, the connection ends, the stream
+modules and the Lantern driver - is the stack and its drivers, which the
+host does not need.  So the host registers:
+
+* **`THostInetService`** (`serv` = `inet`): starts a `THostTCPTool`
+  (`comms/host/HostTCPTool.h`), a `TCommTool` subclass, so the ROM's request
+  handling, option processing and abort machinery are the ROM's own; only
+  connect, listen, get, put and the termination are socket calls.
+* **the link controller** (`serv` = `ictl`): answers the link as up at
+  once, the host's link being the host's business.
+* **the DNS service** (`serv` = `dnst`): answers lookups through the host's
+  resolver.
+
+and none of the stack's parts.
+
+**The sockets** are `hal/host/HostSockets.h`: a plain C interface over int
+handles, implemented in `hal/host/HostSockets.cpp` (library
+`hal_host_sockets`), built without the Newton include paths (as
+`host/win32/HostWindow.cpp` is - the DDK's names collide with the platform
+headers').  Winsock on Windows, BSD sockets elsewhere; name resolution
+through `getaddrinfo`.  Every call is non-blocking and the tool polls from
+its `HandleTimerTick`, so its task never waits inside the host where the
+Newton scheduler cannot see it.
+
+### The NIE's endpoint options
+
+The host tool answers the NIE's options with the data a script packs
+(big-endian, as on the device).  Their layout is the NIE API's as far as it
+is known here and wants checking against a real NIE application:
+
+| label | data | |
+|-------|------|-|
+| `itrs` | 4 address bytes, a 2-byte port | the remote TCP socket (connect) |
+| `ilpt` | a 2-byte port | the local port (listen) |
+| `itsv` | a long | the transport service (TCP is served; the value taken for TCP, 1, is a guess) |
+| `ilid` | a long | the link id (accepted, not used) |
 
 ## Host format of an option
 
@@ -108,9 +144,47 @@ and nothing on a store or a wire depends on it.  DEVIATION (pointer size).
 6. The link and DNS services; **M4**: the NIE's own `InetGrabLink` and a
    DNS lookup run unchanged against the host.
 
+## The comm tool (`comms/CommTools.h`)
+
+A tool is a task: `StartCommTool` starts it (priority 13, a 6000-byte stack
+in the ROM) and finds its port through the name server, where the task
+registered it as (its task id in decimal, the service's four characters).
+`TaskMain` takes one request per channel at a time - get, put, control,
+get-event, kill, status, resource arbitration, each sent with its channel's
+bit as the message type - closing the channel until the request is answered
+(`CompleteRequest`).  A control request's options are processed one by one
+(`ProcessOptionsContinue`; a tool answers its own labels in
+`ProcessOptionStart`, and the result goes back into each option: processed,
+or `0xFC` - not processed - for the tool below, if there is one, to be
+forwarded to); then the op code's `...Start`, whose `...Complete` answers
+the request.  Disconnect, release and close of a connected tool are an
+*abort*: `kToolStateWantAbort`, the subclass's termination procs phase by
+phase (`GetNextTermProc`), then `TerminateComplete` answers what is
+outstanding and posts the disconnect event.
+
+ROM bugs kept (commented where they are): an outside connect with data
+fails unless the previous connect left its data behind (`ImportConnectPB`
+tests the old pointer), a disconnect event is lost when no get-event request
+is waiting (`GetCommEvent` looks for -16016 where `PostCommEvent` answers
+-16015), the options are never completed when a `ctso` for another tool is
+the last of them, and `'sid`'s default is a passive claim's.  The request
+classes' constructors leave the 2.0 fields (`fOptions`, `fOptionCount`)
+alone, as the ROM's do: a client sets them.
+
+A host note: the host's clock stands still while tasks run, so
+`TaskMain`'s countdown of its timeout by the time a message took can come
+to nought, which is no timeout at all; the host tool re-arms it in
+`HandleInternalEvent`.
+
 ## Status
 
 | piece | state |
 |-------|-------|
-| options (`TOption`, `TOptionExtended`, `TSubArrayOption`, `TOptionArray`, `TOptionIterator`) | see `src/comms/OptionArray.h` |
-| everything else above | NOT YET |
+| options (`TOption`, `TOptionExtended`, `TSubArrayOption`, `TOptionArray`, `TOptionIterator`) | done: `comms/Options.h`, `test_Options` |
+| `CBufferList`, `CShadowBufferSegment` (what a tool's data comes in) | done: `utility/BufferList.h`, `utility/ShadowBufferSegment.h`, `test_BufferList` |
+| the comm tool: `TCommTool`, the requests and replies, the tool's own options, `StartCommTool`, `ServiceToPort` | done: `comms/CommTools.h` |
+| the host TCP tool and the sockets | done: `comms/host/HostTCPTool.h`, `hal/host/HostSockets.h`; **M0** passes (`test_CommTool`) |
+| `OpenCommTool`, `TAsyncServiceMessage`, the comm manager (`TCMWorld`, `TCMEventHandler`, `CMStartService`, `CMGetEndpoint`) | NOT YET |
+| `CMemObject` (a status request's answer goes through `TUSharedMem` meanwhile) | NOT YET |
+| `TPCommTool`/`StartCommToolProtocol` (a tool as a `TCommToolProtocol`) | NOT YET |
+| the endpoint, the NewtonScript endpoint, the link and DNS services | NOT YET |

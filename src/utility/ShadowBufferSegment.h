@@ -31,7 +31,7 @@ public:
 
 	// the object `sharedId`, from byte `validOff` for `validCount` bytes
 	// (to the end of the object if validCount is negative)
-	void			Init(TObjectId sharedId, Long validOff = 0, Long validCount = -1);
+	NewtonErr		Init(TObjectId sharedId, Long validOff = 0, Long validCount = -1);
 
 	// get primitives
 	virtual int		Peek(void);
