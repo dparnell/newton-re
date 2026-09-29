@@ -106,7 +106,10 @@ bugs and ROM bugs found on the way.
   deletes a running listener's nub without stopping it; a 'code' answer
   carries the command's length, not the result's.  Host bug found:
   `SetPtrName` on a block from the C library's allocator wrote a Newton
-  heap header into the Windows heap - such blocks are left unnamed.
+  heap header into the Windows heap (0xC0000374); the translators now
+  allocate those blocks from the pointer heap, as the ROM's malloc and
+  operator new do (the pipes constructed in place), so they are named as
+  on the device (83843786).
 
 ## 2026-09-30: the last natives outside comms
 
