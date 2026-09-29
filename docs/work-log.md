@@ -9,6 +9,31 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: the text engine - protoTXView with its 39 methods
+
+- Round 1 (`3a06b6e`, `3c413b6`, `ccfdf89`, `f9bc46a`): `TXOffset`, `TXRun`/
+  `TXRunRange`, `TXRulerRange`, the helpers, `TXLinesHeights`.
+- Round 2 (`c27fefb`, `f2e1ca2`, `8e9e996`, `ade7ff9`, `9269a3a`,
+  `71d34a6`, `b12ae2e`, `da24b22`, `f01e06b`, `9ba0071`): QuickDraw's
+  text-object questions (`qd/TextObject.h`: `CharToPoint`, `PointToChar`,
+  `GetTextObjField`), the text and graphics runs, `TXStyledText`,
+  `TXLine`, the frames and frame formatters, `TXFormatter` (reflow after
+  an edit equals formatting from scratch).
+- Round 3 (`c88636a`, `2b2b689`, `3908395`, `2fc557f`): `qd/ScrollRect.h`
+  and `qd/LocalToGlobal.h`, `TXDisplay`, `TXHilite`, `Textension`.
+- Round 4 (`0e2b6d9`, `708e265`, `42cce1c`): the containers
+  (`TXContainer`, `TXStdContainer`, `TXLocalContainer`,
+  `TXPrivateContainer`, `TXNewtContainer`), the edit commands with undo
+  (`TXCommand`, `TXEditCommand`, `TXKeyCommand`, `TXMoveTextCommand`,
+  `TXReplaceTextCommand`), `TXView` (class 108) with
+  `TXNewtDisplay`/`TXNewtHilite`/`TXNewtPen` and `TXBinaryChars`, and all 39
+  `protoTXView` methods; `txview.ns` / `host.NewtonTXView` puts text in,
+  types, makes it bold undoably and scrolls.
+- ROM bugs kept, among them: `ReplaceAll` gives Format a wrong length after
+  the last search; `GetCountPages` answers the view's own address when
+  there are no pages; `OffsetToCaret` ignores its offset and uses the
+  selection; `CheckBounds` swaps offsets but not their flags.
+
 ## 2026-09-29: the sound server, round 3 - coded sounds, recording, the Sound Recorder opens
 
 - The codec channel: coded frames decoded by the `'codc` task a buffer at

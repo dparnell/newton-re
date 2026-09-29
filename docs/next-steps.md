@@ -162,8 +162,8 @@ worked through.  What could come next (not ranked; the owner chooses):
   `TXNewtStreamFactory` (a compressed large binary for a stream above 4K)
   and `RotTiledBitmap` (only a fax page reaches it, so it still waits on
   the comms stack).
-- **The text engine**: being worked (2026-09-29) - the 39 protoTXView
-  methods, bottom up (below).
+- **The text engine**: `protoTXView` works; the clipboard, text on a
+  store, the ruler bar and pages are left (below).
 - **Drawing speed**: the blitter and the lines work a pixel at a time
   through region scan conversion, which is why a busy screen redraws
   slowly on the host.  A faster blitter with identical output is host
@@ -275,33 +275,21 @@ The NOT YET sweep of 2026-09-29 left 20 genuine gaps (40 comments before):
 
 ### The text engine
 
-Being worked on (2026-09-29): the 39 `protoTXView` methods
-(`natives.py --unbound --area text`), which stand on the whole engine -
-292 functions not done, about 45 KB by `callgraph.py` (a lower bound).
-The plan, the size of each class and the order the layers need each
-other in are `docs/text/README.md`'s "Not yet reconstructed - the plan".
-Done so far: `TXOffset`/`TXOffsetRange` (the ROM's two-word TXOffset is
-`TXOffsetPos` where it is passed by address), `TXRun`/`TXRunRange`,
-`TXRulerRange` with the paragraph measures, the helpers
-(`TXUtilities.h`), `TXLinesHeights` and `TXParagCtrlChars`; and layers
-2-4 of the plan for a view's one frame - `TXNewtTextRun`,
-`TXGraphicsRun`/`TXNewtGraphicsRun`, `TXStyledText`, `TXLine`, the frames
-(`TXFrames`, `TXMonoSizeFrames`, `TXMonoFrame`, `TXSectFrames`), the frame
-formatters (`TXFrameFormatter`, `TXMonoFrameFormatter`, `gFramesEditInfo`)
-and `TXFormatter`, over QuickDraw's text-object questions
-(`qd/TextObject.h`: `CharToPoint`, `PointToChar`, `GetTextObjField`).
-Then (round 3): layer 5 and the core of layer 6 - `TXDisplay` and
-`TXHilite` over the new `qd/ScrollRect.h` (and `TXScrollRect`), and
-`Textension` (a document assembled from its handlers; `ReplaceRange`,
-`KeyDown`, the pending run, restyling); `test_TXDisplay` draws, taps,
-selects, drags, scrolls and types.  NOT YET: the containers
-(`TXContainer`, `TXStdContainer`, `TXLocalContainer`,
-`TXPrivateContainer`) and the undoable commands (`TXCommand` and its
-subclasses); `TXNewtDisplay`/`TXNewtHilite`/`TXNewtPen`; `TXView` and the
-39 natives; the paginated side of layer 4 (`TXMultiFrameFormatter`,
-`TXPageFrames`, `TXPageFormatter`, 0x002413e0-0x00242a2c); the global flag
-of `TXHilite::GetHiliteRgn` (waits on QuickDraw's `LocalToGlobal`).  The
-line-break table and `DoTextOnce`'s selector are in `qd/` now (ef99232).
+`protoTXView` works (2026-09-29): the engine from `TXArray` up to `TXView`
+(class 108, made by `BuildView`) with the containers, the undoable edit
+commands and all 39 `protoTXView` methods (`docs/text/README.md`; demo
+`src/host/demo/txview.ns`, ctest `host.NewtonTXView`).  A protoTXView's
+page is the view's height unless `SetGeometry` gives one - ROM
+behaviour: text below it is never drawn.  NOT YET:
+- the clipboard (Copy does nothing, Paste answers false, so Cut only
+  deletes), dragging a selection out, the scrub and caret gestures (they
+  fall through to `TView`);
+- text kept on a store (`TXVBOChars`, the large-binary side of the stream
+  factory; `SetStore`'s store is ignored);
+- the ruler bar (`TXRulerUI`: ShowRuler, HideRuler, UpdateRulerInfo do
+  nothing);
+- the paginated formatters (`TXMultiFrameFormatter`, `TXPageFrames`,
+  `TXPageFormatter`, 0x002413e0-0x00242a2c).
 
 ## The natives still unanswered
 
