@@ -156,7 +156,8 @@ public:
 	virtual long	AddKey(const UniChar* chars, long count, long arrowFlags, unsigned int keyFlags, void* data);	// ROM 0x002335b8 AddKey__12TXKeyCommandFPCUslT2UiPv
 
 	// The command made before the first key (which is then given to NewKey).
-	void			ITXKeyCommand(Textension* text, const UniChar* chars, long count, unsigned int keyFlags, unsigned char* failed);	// ROM 0x002334cc ITXKeyCommand__12TXKeyCommandFP10TextensionPCUslUiPUc
+	// ==> ITXEditCommand's error (the ROM leaves it in r0).
+	NewtonErr		ITXKeyCommand(Textension* text, const UniChar* chars, long count, unsigned int keyFlags, unsigned char* failed);	// ROM 0x002334cc ITXKeyCommand__12TXKeyCommandFP10TextensionPCUslUiPUc
 	// ==> 3: not this command's key; otherwise AddKey's answer.
 	long			NewKey(const UniChar* chars, long count, long arrowFlags, unsigned int keyFlags, void* data);	// ROM 0x0023363c NewKey__12TXKeyCommandFPCUslT2UiPv
 
@@ -175,7 +176,7 @@ public:
 	virtual NewtonErr RedoIt(int* action);							// ROM 0x00233b98 RedoIt__17TXMoveTextCommandFPi
 	virtual void	GetUndoParams(unsigned char* types);			// ROM 0x00233900 GetUndoParams__17TXMoveTextCommandFPUc
 
-	void			ITXMoveTextCommand(Textension* text, const TXOffsetRange& from, TXOffsetPos to, Boolean copy);	// ROM 0x002338a8 ITXMoveTextCommand__17TXMoveTextCommandFP10TextensionRC13TXOffsetRange8TXOffsetUc
+	NewtonErr		ITXMoveTextCommand(Textension* text, const TXOffsetRange& from, TXOffsetPos to, Boolean copy);	// ROM 0x002338a8 ITXMoveTextCommand__17TXMoveTextCommandFP10TextensionRC13TXOffsetRange8TXOffsetUc
 
 	TXOffsetRange	fFrom;			// +0x68  the text (after the move: where it went)
 	TXOffsetPos		fTo;			// +0x78  where it goes (after the move: where it came from)

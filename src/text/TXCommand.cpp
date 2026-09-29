@@ -439,14 +439,15 @@ TXKeyCommand::TXKeyCommand()
 // ROM 0x002334cc ITXKeyCommand__12TXKeyCommandFP10TextensionPCUslUiPUc
 // The selection saved before the first key; the command is then "done",
 // the keys being typed as they come (AddKey).
-void
+NewtonErr
 TXKeyCommand::ITXKeyCommand(Textension* text, const UniChar* /*chars*/, long /*count*/, unsigned int keyFlags, unsigned char* failed)
 {
 	fDeleteStart.fOffset = (keyFlags & 0x10) ? 0x7fffffff : -1;
-	ITXEditCommand(text, kTXKeyCommand, failed);
+	NewtonErr err = ITXEditCommand(text, kTXKeyCommand, failed);
 	fState = (*failed == 0) ? kTXCommandDone : kTXCommandDead;
 	fFirstKey = true;
 	fUndone = false;
+	return err;
 }
 
 
@@ -578,14 +579,16 @@ TXKeyCommand::RedoHilite(Boolean show)
 ------------------------------------------------------------------------------*/
 
 // ROM 0x002338a8 ITXMoveTextCommand__17TXMoveTextCommandFP10TextensionRC13TXOffsetRange8TXOffsetUc
-void
+// (Whether the undo container failed is not asked: a move keeps none.)
+NewtonErr
 TXMoveTextCommand::ITXMoveTextCommand(Textension* text, const TXOffsetRange& from, TXOffsetPos to, Boolean copy)
 {
 	unsigned char failed;
-	ITXEditCommand(text, kTXMoveCommand, &failed);
+	NewtonErr err = ITXEditCommand(text, kTXMoveCommand, &failed);
 	fFrom = from;
 	fTo = to;
 	fCopy = copy;
+	return err;
 }
 
 

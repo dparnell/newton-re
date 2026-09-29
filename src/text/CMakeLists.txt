@@ -11,6 +11,7 @@
 add_library(text STATIC
     TXArray.cpp
     TXAttributes.cpp
+    TXBinaryChars.cpp
     TXChars.cpp
     TXCommand.cpp
     TXContainer.cpp
@@ -23,6 +24,7 @@ add_library(text STATIC
     TXHilite.cpp
     TXLine.cpp
     TXLinesHeights.cpp
+    TXNewtContainer.cpp
     TXNewtTextRun.cpp
     TXObjectRange.cpp
     TXOffset.cpp
@@ -32,6 +34,7 @@ add_library(text STATIC
     TXStyledText.cpp
     TXStream.cpp
     TXUtilities.cpp
+    TXView.cpp
     Textension.cpp
 )
 # (qd for the clipping helpers; views for the root view they dirty)

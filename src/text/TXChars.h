@@ -103,7 +103,6 @@ public:
 	virtual long	SearchCharBack(UniChar c, long at, long count) = 0;
 	virtual long	GetCtrlCharOffset(long at, long count, UniChar* found) = 0;
 	virtual void	Compact(void);									// ROM 0x0023227c Compact__7TXCharsFv
-	virtual NewtonErr Preflight(long chunks) = 0;
 };
 
 
@@ -129,6 +128,7 @@ public:
 	virtual long	SearchCharBack(UniChar c, long at, long count);	// ROM 0x0023244c SearchCharBack__14TXChunkedCharsFUslT2
 	virtual long	GetCtrlCharOffset(long at, long count, UniChar* found);	// ROM 0x00232524 GetCtrlCharOffset__14TXChunkedCharsFlT1PUs
 	virtual void	Compact(void);									// ROM 0x002325f4 Compact__14TXChunkedCharsFv
+	// (TXChunkedChars's own: the base's vtable ends at Compact)
 	virtual NewtonErr Preflight(long chunks);						// ROM 0x00232ac8 Preflight__14TXChunkedCharsFl
 
 	// What the subclass supplies: the chunk's characters (`forWrite`
