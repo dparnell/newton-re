@@ -8,6 +8,7 @@
 
 #include "SoundSettings.h"
 #include "SoundChannel.h"
+#include "FrameSoundChannel.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
 #include "memory/host/KernelHeap.h"
@@ -57,6 +58,11 @@ main()
 	// anything above full is still full
 	EXPECT(DecibelsToVolume(6 * 65536) == 4);
 
+	// (the channel, a TFrameSoundChannel, holds a Ref: the objects first)
+	InitHostStandaloneHeap();
+	gObjectHeapSize = 0x40000;
+	InitObjects();
+
 	// ---- the channel ----------------------------------------------------
 	TUSoundChannel* channel = GlobalSoundChannel();
 	EXPECT(channel != nil && channel == gSoundChannel && GlobalSoundChannel() == channel);
@@ -73,9 +79,6 @@ main()
 	EXPECT(channel->GetInputGain() == 0x40);
 
 	// ---- the NewtonScript functions --------------------------------------
-	InitHostStandaloneHeap();
-	gObjectHeapSize = 0x40000;
-	InitObjects();
 
 	RefVar nilArg(NILREF);
 	EXPECT(fabs(CoerceToDouble(RefVar(FVolumeToDecibels(nilArg, RefVar(MAKEINT(3))))) - -3.0103) < 0.001);

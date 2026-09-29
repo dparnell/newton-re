@@ -17,6 +17,7 @@ add_library(sound STATIC
     ResampleTables.cpp
     SoundCodec.cpp
     SoundChannel.cpp
+    FrameSoundChannel.cpp
     SoundSettings.cpp
     SoundServer.cpp
     SoundDriver.cpp

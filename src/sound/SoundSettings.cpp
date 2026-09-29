@@ -8,6 +8,7 @@
 
 #include "SoundSettings.h"
 #include "SoundChannel.h"
+#include "FrameSoundChannel.h"
 #include "ObjectHeap.h"
 #include "NewtonExceptions.h"
 #include "Locale.h"
@@ -198,10 +199,10 @@ FPlaySoundIrregardless(RefArg /*rcvr*/, RefArg sound)
 {
 	if (ISNIL(sound))
 		return NILREF;
-	TUSoundChannel* channel = GlobalSoundChannel();
+	TFrameSoundChannel* channel = GlobalSoundChannel();
 	if (channel == nil)
 		return NILREF;
-	NewtonErr err = channel->Stop(nil);
+	NewtonErr err = channel->Stop(nil, nil);
 	if (err == noErr)
 		err = channel->Schedule(sound);
 	if (err == noErr)
@@ -219,10 +220,10 @@ FPlaySoundSync(RefArg /*rcvr*/, RefArg sound)
 {
 	if (ISNIL(sound))
 		return TRUEREF;
-	TUSoundChannel* channel = GlobalSoundChannel();
+	TFrameSoundChannel* channel = GlobalSoundChannel();
 	if (channel == nil)
 		return TRUEREF;
-	NewtonErr err = channel->Stop(nil);
+	NewtonErr err = channel->Stop(nil, nil);
 	if (err == noErr)
 		err = channel->Schedule(sound);
 	if (err == noErr)
@@ -357,6 +358,7 @@ FSoundCheck(RefArg /*rcvr*/)
 void
 RegisterSoundNatives(void)
 {
+	RegisterSoundChannelNatives();
 	RegisterNativeFunction("FSoundPlayEnabled", (void*) FSoundPlayEnabled, 1);
 	RegisterNativeFunction("FPlaySoundIrregardless", (void*) FPlaySoundIrregardless, 1);
 	RegisterNativeFunction("FClicker", (void*) FClicker, 0);

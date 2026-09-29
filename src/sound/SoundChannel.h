@@ -1,28 +1,32 @@
 /*
 	File:		sound/SoundChannel.h
 
-	Contains:	TUSoundChannel, the client side of the sound server.
+	Contains:	TUSoundChannel, the client side of the sound server
+				(sound/SoundServer.h), and TFrameSoundChannel, the channel
+				the NewtonScript sound functions play sound frames through.
 
-				A task that wants to make a sound opens a channel on the
-				sound server's port and then talks to it with immediate
-				'newt/'usnd events: schedule this block, start, pause, stop,
-				set the volume.  The channel keeps the settings itself as
-				well as telling the server, so it can answer them without a
-				round trip - which is what makes it useful on a host that
-				has no sound server at all.
+				A task that wants to make a sound opens a channel - two of
+				the server's channels in fact, an output channel and a
+				decompressor feeding it - and talks to the server with
+				immediate 'newt/'usnd events: start, pause, stop, set the
+				volume.  A block of sound is scheduled with an asynchronous
+				request (a SoundNode: the request, the reply and the
+				message that carries them); the server answers it when the
+				block has been played, and the answer comes back through
+				the task's app world to AECompletionProc, which hands it to
+				the block's TUSoundCallback.
 
-				GlobalSoundChannel is the one the NewtonScript sound
-				functions use (sound/SoundSettings.h); the ROM makes it on
-				demand, as a TFrameSoundChannel (the subclass that plays
-				NewtonScript sound frames) and opens it for output.
+				TFrameSoundChannel turns a sound frame into a SoundBlock
+				(Convert: the samples locked, the coding, the rate, the
+				start, count, loops and volume) and back again when it has
+				been played (TFrameSoundCallback: the samples unlocked, the
+				frame's callback method called with the state and error).
+				GlobalSoundChannel is the one PlaySound and its relations
+				use, made and opened the first time.
 
-	NOT YET RECONSTRUCTED: nearly all of it.  The sound server
-	(TSoundServer/TSoundChannel), the driver behind it, the scheduling
-	(SoundBlock, SoundNode, Schedule/Start/Pause/Stop), the callbacks and
-	TFrameSoundChannel are not here; what is here is the channel's own
-	state - the volume, the input gain and the output device - and the
-	message that would carry it to the server, because the boot's
-	SetSystemVolume needs those and nothing else.
+	NOT YET RECONSTRUCTED: coded sound (a frame whose sndFrameType is
+	'codec: the codec is opened, but the server's codec channel does not
+	decompress yet - TCodecChannel::InitNode).
 
 	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
@@ -36,16 +40,16 @@
 #include "UserPorts.h"
 #include "NewtErrors.h"
 #include "objects.h"
+#include "SoundCodec.h"
 
 
 // the sound server's events are 'newt'/'usnd'
 const AEEventID	kSoundEventId = 0x75736e64;			// 'usnd'
 
-// the commands SendImmediate carries (only the ones used here are named)
 // ERRBASE_SOUND - 10: what the ROM answers for a channel that is not open
-// or has nothing scheduled
 const NewtonErr kSoundErrNotOpen = ERRBASE_SOUND - 10;
 
+// the immediate commands the settings send (the rest are SoundServer.h's)
 enum {
 	kSoundSetVolume			= 0x0f,
 	kSoundSetInputGain		= 0x10,
@@ -53,13 +57,14 @@ enum {
 	kSoundGetVolume			= 0x15
 };
 
-// The block a channel sends and the server answers in: a TAEvent and three
-// longs.  The answer to a get is the last of them.
+// An immediate command's reply: a TAEvent, the channel (the id an open
+// answers), the error and a value (0x14 bytes; a pause or stop answers a
+// TUSoundNodeReply, 0x20).
 struct TUSoundReply					// 0x14 bytes
 {
 	TAEvent		fEvent;				// +0x00
-	ULong		fCommand;			// +0x08
-	ULong		fChannelId;			// +0x0c
+	ULong		fChannel;			// +0x08
+	long		fError;				// +0x0c
 	long		fValue;				// +0x10
 };
 
@@ -85,25 +90,64 @@ struct TGestaltVolumeInfo			// 0x14 bytes
 };
 
 // DEVIATION: the ROM's sound driver registers the block above at boot;
-// the host has no sound hardware and no driver, so it registers one of
-// its own with what the reconstruction already knows (sound/
-// SoundSettings.h): five settings, 0 to 4, spanning the 18.0618 decibels
-// between silence-but-audible and full, and no sound server to answer
-// the volume.  Without it the Extras drawer, which asks for this to size
-// its volume slider, gets nothing and cannot open.
+// the host's driver (hal/host/HostSoundDriver.h) does not, so the host
+// registers one of its own with what the reconstruction already knows
+// (sound/SoundSettings.h): five settings, 0 to 4, spanning the 18.0618
+// decibels between silence-but-audible and full, and a server that is
+// not asked the volume.  Without it the Extras drawer, which asks for
+// this to size its volume slider, gets nothing and cannot open.
 void	RegisterHostVolumeInfo(void);
 
 // fFlags (+0x14)
 enum {
 	kSoundChannelOutput			= 0x01,		// opened for output
+	kSoundChannelInput			= 0x02,		// opened for input
+	kSoundChannelRunning		= 0x04,		// started without waiting
+	kSoundChannelPaused			= 0x08,
 	kSoundChannelAskForVolume	= 0x80		// the gestalt says the server answers GetVolume
 };
+
+
+struct SoundBlock;
+struct TUSoundNodeRequest;
+struct TUSoundNodeReply;
+
+
+// What a scheduled block's end is told: Complete(block, state, error).
+class TUSoundCallback
+{
+public:
+					TUSoundCallback();								// ROM 0x0025abec __ct__15TUSoundCallbackFv
+	virtual			~TUSoundCallback();								// ROM 0x0025ac20 __dt__15TUSoundCallbackFv
+	virtual void	Complete(SoundBlock* block, int state, long error) = 0;
+};
+
+// ...by calling a function.
+typedef void (*SoundCallbackProc)(SoundBlock* block, int state, long error);
+
+class TUSoundCallbackProc : public TUSoundCallback
+{
+public:
+					TUSoundCallbackProc();							// ROM 0x0025ac38 __ct__19TUSoundCallbackProcFv
+	virtual			~TUSoundCallbackProc();							// ROM 0x0025acfc __dt__19TUSoundCallbackProcFv
+	void			SetCallback(SoundCallbackProc proc);			// ROM 0x0025ad3c SetCallback__19TUSoundCallbackProcFPFP10SoundBlockil_v
+	virtual void	Complete(SoundBlock* block, int state, long error);	// ROM 0x0025ad44 Complete__19TUSoundCallbackProcFP10SoundBlockil
+
+	SoundCallbackProc	fProc;			// +0x04
+};
+
+
+struct SoundNode;
 
 
 class TUSoundChannel : public TAEventHandler
 {
 public:
 					TUSoundChannel();
+	virtual			~TUSoundChannel();
+
+	NewtonErr		Open(int input, int device);
+	NewtonErr		Close(void);
 
 	// the settings the channel keeps, and tells the server about
 	long			SetVolume(long decibels);		// ==> what the volume ended up as
@@ -113,20 +157,31 @@ public:
 	void			SetOutputDevice(long device);
 
 	// playing
-	NewtonErr		Schedule(RefArg sound);
-	NewtonErr		Start(int wait);
-	NewtonErr		Stop(long* samplesPlayed);
+	NewtonErr		Schedule(SoundBlock* block, TUSoundCallback* callback);
+	NewtonErr		Cancel(ULong refCon);
+	NewtonErr		Start(int async);				// 0: answer when everything has been played
+	NewtonErr		Pause(SoundBlock* block, long* samplesPlayed);
+	NewtonErr		Stop(SoundBlock* block, long* samplesPlayed);
 
 	// one immediate message to the sound server
 	NewtonErr		SendImmediate(ULong command, ULong channelId, ULong value,
 								  TUSoundReply* reply, ULong replySize);
 
+	virtual void	AECompletionProc(TUMsgToken* token, ULong* size, TAEvent* event);
+
+	NewtonErr		MakeNode(SoundNode** node);
+	void			FreeNode(SoundNode* node);
+	SoundNode*		FindNode(ULong id);
+	SoundNode*		FindRefCon(ULong refCon);
+	ULong			UniqueId(void);
+	void			AbortBusy(void);
+
 	ULong			fFlags;				// +0x14
-	ULong			fChannelId;			// +0x18  0 until the channel is open
-	ULong			fUnknown1C;			// +0x1c
-	ULong			fUnknown20;			// +0x20
-	ULong			fUnknown24;			// +0x24  not zero once the channel has been opened: Set/GetVolume then ask the server
-	ULong			fUnknown28;			// +0x28
+	ULong			fChannelId;			// +0x18  the output (or input) channel; 0 until open
+	ULong			fCodecChannelId;	// +0x1c  the decompressor (or compressor) feeding it
+	ULong			fLastNodeId;		// +0x20
+	SoundNode*		fBusyNodes;			// +0x24  scheduled and not yet answered
+	SoundNode*		fFreeNodes;			// +0x28  one kept for the next schedule
 	long			fVolume;			// +0x2c  decibels, 16.16 fixed (0x7fffffff: never set)
 	long			fInputGain;			// +0x30
 	ULong			fUnknown34;			// +0x34
@@ -134,10 +189,10 @@ public:
 };										// 0x3c bytes
 
 
-// the sound server's port (NOT YET RECONSTRUCTED: never opened)
+// the sound server's port (0: no server - the host with no sound driver)
 extern TObjectId		gSndPort;			// ROM 0x0c101b10 gSndPort
+// the channel the NewtonScript sound functions use (FrameSoundChannel.h's
+// GlobalSoundChannel makes it)
 extern TUSoundChannel*	gSoundChannel;		// ROM 0x0c101b08 gSoundChannel
-
-TUSoundChannel*	GlobalSoundChannel(void);
 
 #endif	/* __SOUNDCHANNEL_H */
