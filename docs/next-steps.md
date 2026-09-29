@@ -72,7 +72,7 @@ the way are all in `docs/work-log.md`.
 Done (2026-09-27 to 2026-09-29; `docs/packages/README.md`'s "Status"
 table says what is left and what each piece waits on; the plan as it
 was worked through is in `docs/work-log.md`): 31 of the 32 package
-natives answered.  Left: the `'book` handler (the book reader),
+natives answered (the `'book` handler came with the book reader).  Left:
 `SuckPackageFromEndPoint` (comms), a protocol part's class info (raw
 ARM), a card's `'stor` event and `GetCardReinsertionInfo` (PCMCIA),
 XIP packages (the ROM domain manager's page faulting, about 11 KB).
@@ -122,9 +122,13 @@ worked through.  What could come next (not ranked; the owner chooses):
   Recorder's Rec, Stop, Play); GSM checked bit for bit against the
   standard 06.10 test sequences, if they can be brought in;
   `NewWiredPtr` in `memory/` (the `NewPtr` fallback works).
-- **The book reader** (`TLibrarian`, 49 methods; 19 unanswered `books`
-  natives) - the Newton's books and the help book, and with it the
-  `'book` part handler (the ROM's help book is refused for want of it).
+- **The book reader, round 2** (round 1 done 2026-09-29: the help book
+  installs, opens and draws a page - `docs/books/README.md`): the search
+  (`TLibrarian::Find`, `TextSearch`, `FindPageByValue`/`BySubject`,
+  `FindContentBySlot`, `CuFind`, `TurnToContent`),
+  `PageContents`/`PageScroll`/`PageThumbnail`, `ZoomView` over
+  `ZoomRect`, ink marks (`AddInkMarks`), and a Copperfield book from a
+  package.
 - **The comms stack**: being worked (2026-09-29; `docs/comms/README.md`).
   Networking goes to the host's own TCP/IP stack through host
   implementations of the NIE's services (`inet`, `ictl`, `dnst`) - the
@@ -245,8 +249,6 @@ The NOT YET sweep of 2026-09-29 left 20 genuine gaps (40 comments before):
   stack through an unaligned `ldr` and is worth reading from the
   assembly rather than the decompiler.
 - `MakePict`.
-- `HiliteBlock` 0x00164d64 looks like a view native but is the book
-  reader's: it wants `TLibrarian` and the page frames.
 - `natives.py --unbound --ready` picks out the ones whose ROM function is
   already reconstructed.  `comms` and `books` are subsystems not
   reconstructed at all: a native there is a project of its own rather

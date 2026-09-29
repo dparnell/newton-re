@@ -9,6 +9,25 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: the book reader, round 1 - the help book opens and reads
+
+- `src/books/`: `TLibrarian` (`gLibrarian`, the Library soup,
+  `BookAvailable`/`BookRemoved`, `vars.findApps`) and the `'book` part
+  handler `TBookPartHandler`, registered by `TNewtWorld::MainConstructor`
+  with `RegisterBookNatives`; `TNotebook::Constructor` calls
+  `InitLibrarian`.  The ROM's help book installs at boot and gets its
+  Extras icon (`SetupROMHelpBook`).
+- `Outline.h`: `TOutline`/`THelpOutline` (view classes 102-107), built by
+  `BuildView`; `RefreshTopics`, `TopicByName`, `ScrollToCurrent`.
+- `Pages.h`: `PageTurnTo`, `PageTurnToSpread`, `PageTurnAway`,
+  `MakeBlockView` - a page's blocks made views; `AddToContentArea`,
+  `TurnToPage`, `HiliteBlock`.  26 book natives bound.
+- `views`: `TView::SoundEffect`, `TruncateText`; `FCloseX` no longer
+  static; `views` and `books` link each other.
+- `tinytim:OpenHelpBook` shows the topics, "Learn the Basics" opens and
+  "Erase text, writing, or drawings" draws its text and picture (ctests
+  `books.Library`, `books.HelpBook`).
+
 ## 2026-09-29: comms, round 1 - the comm tool and manager over the host's sockets
 
 - The owner's decision: networking goes to the host's TCP/IP stack
