@@ -137,6 +137,24 @@ Views are 95 of 95 natives bound.
   Built in `tmp/build-text` (in parallel with other agents); ctest there
   130/130, open-apps only the Sound Recorder.
 
+## 2026-09-29: pictures round 3 - MakePict, the credits, word breaks
+
+- `MakePict` (`64a793c`): `FMakePict`, `CommonMakePict`,
+  `ROM_CommonMakePict`, `SetStandAloneBoundsInViewsRecursively`, and
+  `MakeShape` of a view.  The About slip (magic pointer 152) opens its
+  credits view for an application with `aboutInfo.credits`, which makes
+  the lines one picture with `MakePict`; no application in the ROM has
+  credits, so `src/host/demo/credits.ns` supplies one.  On the way:
+  `DrawPicture(RefArg...)` had no shape branch (a picture shape given to
+  `CopyBits` drew nothing), `DrawShape`'s offset workaround went, and the
+  ROM's `ForceScaling` brackets were added to `HitShape`, `PointInShape`,
+  `DrawIntoBitmap` and `MakeRegion`.
+- `FindWordBreaks` (`ef99232`) runs the locale's break table (a Script
+  Manager table: a class table and two state machines) instead of
+  breaking at spaces; `DoTextOnce`'s option selectors 9 and 10.
+- A width to fit is measured with a stretched strike's scaled advances,
+  as the ROM measures it (`test_Views`' espy-18 paragraph updated).
+
 ## 2026-09-29: pictures round 3 - TQDScaler and text at a scale
 
 - `TQDScaler` (`d0d51bb`, `qd/Transform.h`): the scaler takes the port's

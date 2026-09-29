@@ -368,12 +368,27 @@ width.  Paragraphs: `TextBox` 0x0017dd5c/`TextBounds`/`DrawSimpleParagraph`
 0x0017de74 wrap a rich string into a rectangle line by line
 (`DrawSimpleLine` 0x0017e0e4: the text up to a carriage return, as many
 characters as fit, cut back to a word boundary - `FindWordBreaks`
-0x000ed674, the ROM's through the locale's lineBreakTable, the host's at
-spaces - then `SkipUpToTwoSpacesAndCR`), the lines the font's height
+0x000ec09c - then `SkipUpToTwoSpacesAndCR`), the lines the font's height
 apart, a box of no width or height taking the text's; the vertical bits
 move the box down by the room left.  The NewtonScript `TextBox` is here.
 `StyledStrTruncate` 0x001ecf64 (the NewtonScript `StrTruncate` and
 `StyledStrTruncate`) cuts a string to a width with an ellipsis.
+
+`FindWordBreaks` runs the locale's break table (`lineBreakTable` or
+`wordBreakTable`, 'Intl binaries of the Macintosh Script Manager's kind):
+its header gives a class table (a signed class for each Mac Roman
+character) and a backward and a forward state machine, each a table of
+row offsets and rows of signed bytes - the next state, with the top bit
+marking the position.  The backward machine runs from the offset towards
+the start of the text marking where the word may begin (skipped when the
+offset is nearer the start than the table's +0xc says), the forward one
+from there marking where it may end; a word that ends at or before the
+offset starts the scan again after it.  In the U.S. tables a run of
+letters is a word and so is a run of spaces.  (Host: with no table, the
+words run between spaces.)  `DoTextOnce` reads its options' fitted width
+as a selector first: 9 flags the object 0x40000 and 10 does so and drops
+the options; with the flag 0x10000 as well (SetTextObjField's field 8)
+`MeasureGlyphWidths` fits nothing.
 Italic that a family has no strike for is synthesised as the ROM's
 `DrTextChunk` 0x0035c788 shears the one-bit slab it composes a run in:
 the slab's bottom row stays and each row above it moves right by another
@@ -391,9 +406,9 @@ of that size or the nearest one and a ratio to stretch it by; the host
 stretches each glyph row and column to the pixels its edges come to
 (DEVIATION: the ROM composes the run at the strike's size and stretches
 the slab when it blits it) and moves the pen by the advances times the
-ratio.  NOT YET: the ROM measures a width to fit with the stretched
-advances (the host with the strike's own), and `CalcTextBounds`' handling
-of a stretched strike.  Note that espy 24 at 1.0 and espy 12 at 2.0 are
+ratio.  A width to fit is measured with the stretched advances too, as the
+ROM measures it (0x0035be78).  NOT YET: `CalcTextBounds`' handling of a
+stretched strike.  Note that espy 24 at 1.0 and espy 12 at 2.0 are
 not the same pixels: there is no 24-point strike, and the two ratios to
 the 16-point one come out 1.49998 and 1.5.
 
@@ -734,6 +749,30 @@ host's `long` may be wider.
 ROM's table at 0x00380bcc), which is what the scaler starts from when a
 port has none.
 
+### Pictures made (`MakePict`, `views/DrawShape.cpp`)
+
+`MakePict(shapes, style)` (`FMakePict` 0x000dd6a0) records shapes into a
+picture within their bounds: `CommonMakePict` 0x000dc8c0 (a view's
+paragraphs first told to keep bounds of their own and refill their
+caches, `SetStandAloneBoundsInViewsRecursively`) and `ROM_CommonMakePict`
+0x000e3d20, which saves the clip and pen, opens a picture (for the
+Macintosh when the style has a `macPict` slot), clips to the bounds,
+draws the view (a view straight under the root erasing its box first) or
+the shapes with the scaler forced on, closes the picture, and answers a
+clone of `canonicalPictureShape` with the bounds and the picture's bytes
+as a 'pictureData binary.  `MakeShape` of a view makes the view's
+picture the same way.  The one ROM caller is the About slip's credits
+view (the slip is magic pointer 152; after eight seconds idle it closes
+its basic view and opens the credits view when the application's
+`aboutInfo.credits` is a list): each line becomes a `MakeText` shape (a
+line starting with '%' a heading), all of them one picture that the
+view's `viewDrawScript` draws with `CopyBits` and its `viewIdleScript`
+scrolls.  No application in the MP2x00 ROM has credits;
+`src/host/demo/credits.ns` (ctest `host.NewtonCredits`) opens the slip
+for one that has.  `CopyBits` goes through `DrawPicture(RefArg...)`
+0x001897fc, which draws anything that is not a bitmap frame - a picture
+shape among them - as a shape in its transfer mode.
+
 ## Polygons and recording (`src/qd/Polygons.h`)
 
 `OpenRgn` 0x003150f4 makes a point buffer (the globals' `fRgnHandle`,
@@ -873,9 +912,11 @@ scaled while a picture, region or polygon is being recorded
 scaling off.  `GetActualClip`/`GetActualVis`/`ReplaceClip` answer and set
 the clip really drawn through.
 
-`views/DrawShape.cpp` still asks `TQDScaler::Offset()` for an offset to add
-while a transform is in force (its DEVIATION from before the scaler); the
-scaler now answers nothing, the mapping being its own.  `test_Shapes`'
+`views/DrawShape.cpp` draws a shape at the caller's origin only when no
+transform is in force (the first transform holds the origin), and forces
+the scaler on around `HitShape`, `PointInShape` and `DrawIntoBitmap`'s
+drawing (so a region recorded there is mapped like the shape drawn) and
+off around `MakeRegion`'s, as the ROM does.  `test_Shapes`'
 `TestScaling` pins a rectangle, a frame (the pen bug), a clip and a region
 recording under a stretching transform; `test_PicPlay`'s `TestScaledText`
 text under the scaler; `src/host/demo/scaledmap.ns` (ctest

@@ -106,7 +106,7 @@ recording produces.  Sizes are `callgraph.py` lower bounds (not done):
    drawing NOT YET) **Text in pictures**: playing it (`DrawPicText`, `TextCleanup`,
    `NewText`, `CallDrawText`, `DisposeText`, `InvalCachedTextInfo` - 1 KB)
    and recording it (`StdText`'s `DoPutText` 2.5 KB, `UpdateLayoutState`).
-3. **`MakePict`** (`FMakePict`, `CommonMakePict`,
+3. DONE (`64a793c`) **`MakePict`** (`FMakePict`, `CommonMakePict`,
    `SetStandAloneBoundsInViewsRecursively`) - the credits' picture made
    and drawn.
 4. DONE (`3f1d0f8`) **Curves and paths**: drawn and recorded (`MapCurve`/`CallCurve`/
