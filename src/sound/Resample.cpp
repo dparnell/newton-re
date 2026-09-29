@@ -10,6 +10,7 @@
 	exact.
 */
 
+#include "SampleWords.h"
 #include "Resample.h"
 #include "SampleConvert.h"
 
@@ -163,10 +164,10 @@ int
 GetSample(ResampleState* state, long index)
 {
 	if (state->fSrcConvert == nil)
-		return state->fSrcBuffer[index];
-	short sample;
+		return GetSampleAt(state->fSrcBuffer, index);
+	short sample;			// (a sample in memory, big-endian: SampleWords.h)
 	state->fSrcConvert(&sample, (UByte*) state->fSrcBuffer + (index << state->fSrcShift));
-	return sample;
+	return GetSampleWord(&sample);
 }
 
 
@@ -175,9 +176,13 @@ void
 PutSample(ResampleState* state, short value, long index)
 {
 	if (state->fDstConvert == nil)
-		state->fDstBuffer[index] = value;
+		PutSampleAt(state->fDstBuffer, index, value);
 	else
-		state->fDstConvert((UByte*) state->fDstBuffer + (index << state->fDstShift), &value);
+	{
+		short word;			// (a sample in memory, big-endian: SampleWords.h)
+		PutSampleWord(&word, value);
+		state->fDstConvert((UByte*) state->fDstBuffer + (index << state->fDstShift), &word);
+	}
 }
 
 

@@ -18,11 +18,10 @@
 				at a time (srcStride / numChannels select the channel and
 				step over the others).
 
-				The PCM the codec reads and writes is host-native `short`s;
-				the ROM, big-endian, keeps them big-endian in memory, but
-				the sample *values* are what the algorithm preserves (the
+				The 16-bit PCM it reads and writes is big-endian in memory,
+				as the ROM's is, on every host (sound/SampleWords.h); the
 				compressed stream's bytes - the nibbles and the header - are
-				kept exactly as the ROM lays them, so the two interoperate).
+				laid out exactly as the ROM lays them.
 
 	The DDK has no header for these; reconstructed from the MP2x00 US ROM,
 	each function citing its origin.  A TIMACodec (a TSoundCodec) wraps them

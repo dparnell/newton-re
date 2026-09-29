@@ -3,6 +3,7 @@
 // stream that matches ExpandIMA, and CheckState's resync.  Pure functions,
 // so no OS boot is needed.
 
+#include "SampleOrder.h"
 #include "IMACodec.h"
 
 #include <stdio.h>
@@ -85,7 +86,10 @@ TestRoundTrip()
 	signed char compressed[kBlocks * kIMABlockBytes + 16];
 	memset(compressed, 0x5a, sizeof(compressed));
 	IMAState encState;
-	CompressIMA(pcm, compressed, kSamples, &encState, 1, 1);
+	short inMemory[kSamples];
+	memcpy(inMemory, pcm, sizeof(pcm));
+	SamplesToMemory(inMemory, kSamples);
+	CompressIMA(inMemory, compressed, kSamples, &encState, 1, 1);
 
 	// the first block header carries the initial state (predictor 0, index 0)
 	EXPECT((unsigned char) compressed[0] == 0 && (unsigned char) compressed[1] == 0);
@@ -94,6 +98,7 @@ TestRoundTrip()
 	memset(restored, 0, sizeof(restored));
 	IMAState decState;
 	ExpandIMA(compressed, restored, &decState, kBlocks, 1, 2);
+	SamplesFromMemory(restored, kSamples);
 
 	// the smooth signal is tracked: the error stays well inside the wave's amplitude
 	long maxErr = 0, sumErr = 0;

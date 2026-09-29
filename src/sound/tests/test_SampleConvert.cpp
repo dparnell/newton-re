@@ -25,6 +25,7 @@
 // Decoding dithers the two low bits with QuickDraw's Random, so the test
 // seeds it and compares values only above those two bits where it matters.
 
+#include "SampleOrder.h"
 #include "SampleConvert.h"
 #include "Ports.h"
 
@@ -41,14 +42,15 @@ Decode(UByte code)
 	short sample;
 	UByte in = code;
 	SampleConvertMuLawToLin16(&sample, &in);
-	return sample;
+	return GetSampleWord(&sample);
 }
 
 static UByte
 Encode(short sample)
 {
 	UByte code;
-	short in = sample;
+	short in;
+	PutSampleWord(&in, sample);
 	SampleConvertLin16ToMuLaw(&code, &in);
 	return code;
 }
@@ -128,11 +130,14 @@ TestRampRoundTrip()
 static void
 TestBlockConversion()
 {
-	static const short samples[8] = { 0, 100, -100, 4000, -4000, 20000, -20000, 1 };
+	static const short values[8] = { 0, 100, -100, 4000, -4000, 20000, -20000, 1 };
+	short samples[8];
+	memcpy(samples, values, sizeof(samples));
+	SamplesToMemory(samples, 8);
 	UByte codes[8];
 	UByte oneAtATime[8];
 	for (int i = 0; i < 8; i++)
-		oneAtATime[i] = Encode(samples[i]);
+		oneAtATime[i] = Encode(values[i]);
 
 	long dstCount = 8, srcCount = 8;
 	BlockConvertLin16ToMuLaw(codes, &dstCount, (void*) samples, &srcCount);
@@ -154,7 +159,7 @@ TestBlockConversion()
 	BlockConvertMuLawToLin16(out, &dstCount, oneAtATime, &srcCount);
 	EXPECT(dstCount == 8 && srcCount == 8);
 	for (int i = 0; i < 8; i++)
-		EXPECT(Encode(out[i]) == oneAtATime[i]);
+		EXPECT(Encode(GetSampleWord(&out[i])) == oneAtATime[i]);
 
 	dstCount = 8;
 	srcCount = 2;
@@ -209,28 +214,28 @@ TestStd8()
 	UByte code;
 	short sample;
 
-	sample = 0;
+	PutSampleWord(&sample, 0);
 	SampleConvertLin16ToStd8(&code, &sample);
 	EXPECT(code == 0x80);						// silence
-	sample = 32767;
+	PutSampleWord(&sample, 32767);
 	SampleConvertLin16ToStd8(&code, &sample);
 	EXPECT(code == 0xFF);
-	sample = -32768;
+	PutSampleWord(&sample, -32768);
 	SampleConvertLin16ToStd8(&code, &sample);
 	EXPECT(code == 0x00);
 
 	// the shift rounds toward zero, so the values either side of silence are
 	// the codes either side of 0x80 only once they reach a whole step
-	sample = 255;
+	PutSampleWord(&sample, 255);
 	SampleConvertLin16ToStd8(&code, &sample);
 	EXPECT(code == 0x80);
-	sample = 256;
+	PutSampleWord(&sample, 256);
 	SampleConvertLin16ToStd8(&code, &sample);
 	EXPECT(code == 0x81);
-	sample = -255;
+	PutSampleWord(&sample, -255);
 	SampleConvertLin16ToStd8(&code, &sample);
 	EXPECT(code == 0x80);						// toward zero, not down
-	sample = -256;
+	PutSampleWord(&sample, -256);
 	SampleConvertLin16ToStd8(&code, &sample);
 	EXPECT(code == 0x7F);
 
@@ -244,7 +249,7 @@ TestStd8()
 		UByte in = (UByte) c;
 		SampleConvertStd8ToLin16(&sample, &in);
 		long expected = ((long) c << 8) - 0x8000;
-		EXPECT(sample >= expected && sample <= expected + 0x1F);	// the dither, and nothing more
+		EXPECT(GetSampleWord(&sample) >= expected && GetSampleWord(&sample) <= expected + 0x1F);	// the dither, and nothing more
 		SampleConvertLin16ToStd8(&code, &sample);
 		if (c < 0x80)
 			EXPECT(code == (UByte) c || code == (UByte) (c + 1));
@@ -253,7 +258,8 @@ TestStd8()
 	}
 
 	// the block forms match, and answer the smaller of the two counts
-	static const short samples[6] = { 0, 8000, -8000, 32767, -32768, 300 };
+	short samples[6] = { 0, 8000, -8000, 32767, -32768, 300 };
+	SamplesToMemory(samples, 6);
 	UByte codes[6];
 	UByte oneAtATime[6];
 	for (int i = 0; i < 6; i++)

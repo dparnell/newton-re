@@ -20,6 +20,7 @@
 	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
+#include "SampleWords.h"
 #include "IMACodec.h"
 
 
@@ -108,7 +109,7 @@ CompressIMA(const short* src, signed char* dst, ULong numSamples, IMAState* stat
 		ULong held = 0;
 		for (ULong i = 0x40; i != 0; i--)
 		{
-			long delta = (long) *src - predictor;
+			long delta = (long) GetSampleWord(src) - predictor;
 			src += srcStride;
 			ULong code;
 			if (delta < 0)
@@ -233,11 +234,11 @@ ExpandIMA(const signed char* src, void* dst, IMAState* state, ULong numBlocks, U
 				out8 += 2;
 				break;
 			case 2:					// 16-bit, contiguous
-				*out16 = (short) predictor;
+				PutSampleWord(out16, (short) predictor);
 				out16 += 1;
 				break;
 			case 3:					// 16-bit, one channel of a pair
-				*out16 = (short) predictor;
+				PutSampleWord(out16, (short) predictor);
 				out16 += 2;
 				break;
 			}

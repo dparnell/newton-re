@@ -92,11 +92,15 @@ public:
 	Boolean		fRecording;			// fInQueue[0] is filling, and is full at fInEnd
 	Int64		fInEnd;
 	long		fInGain;
+	short*		fPlay;				// a buffer in the host's byte order, for the backend
+	long		fPlaySize;
 };
 
 
 // Where the played samples go.  `play` is handed each buffer as it starts
-// (16-bit samples in the host's byte order, 21600 a second).
+// (16-bit samples in the host's byte order, 21600 a second: the driver
+// swaps them from the big-endian the sound server keeps them in), and
+// `record` fills a buffer the same way round.
 struct HostSoundBackend
 {
 	void	(*play)(const short* samples, long count);

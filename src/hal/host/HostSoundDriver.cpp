@@ -8,6 +8,7 @@
 #include "HostInterruptSources.h"
 #include "CompMath.h"
 #include "hal/Timer.h"
+#include "SampleWords.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -196,6 +197,8 @@ PMainSoundDriver::New()
 	fInEnd.hi = 0;
 	fInEnd.lo = 0;
 	fInGain = 0x80;
+	fPlay = nil;
+	fPlaySize = 0;
 	if (gHostSoundBackend == nil)
 		gHostSoundBackend = &gNullBackend;
 	gHostSoundDriver = this;
@@ -305,8 +308,14 @@ PMainSoundDriver::StartRecording(void)
 	long which = fInQueue[0];
 	long samples = fInQueueSize[0] / 2;
 	short* buffer = (short*) fInBuffer[which];
+	// (the backend's samples are the host's shorts; the buffer's are
+	// big-endian, as the hardware's are - SampleWords.h)
 	if (gHostSoundBackend->record != nil)
+	{
 		gHostSoundBackend->record(buffer, samples);
+		for (long i = 0; i < samples; i++)
+			PutSampleAt(buffer, i, buffer[i]);
+	}
 	else
 		memset(buffer, 0, samples * sizeof(short));
 	GetClock(&fInEnd);
@@ -323,7 +332,20 @@ PMainSoundDriver::StartPlaying(void)
 		return;
 	long which = fQueue[0];
 	long samples = fQueueSize[0] / 2;
-	gHostSoundBackend->play((const short*) fBuffer[which], samples);
+	// (the buffer's samples are big-endian, as the hardware's are; the
+	// backend is handed the host's shorts - SampleWords.h)
+	if (samples > fPlaySize)
+	{
+		free(fPlay);
+		fPlay = (short*) malloc(samples * sizeof(short));
+		fPlaySize = (fPlay != nil) ? samples : 0;
+	}
+	if (fPlay != nil)
+	{
+		for (long i = 0; i < samples; i++)
+			fPlay[i] = GetSampleAt((const void*) fBuffer[which], i);
+		gHostSoundBackend->play(fPlay, samples);
+	}
 	GetClock(&fEnd);
 	Int64 length = { 0, (ULong) (((long long) samples * kSeconds) / kHostSoundRate) };
 	CompAdd(&length, &fEnd);

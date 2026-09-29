@@ -9,6 +9,7 @@
 	envelope times compare unsigned.
 */
 
+#include "SampleWords.h"
 #include "SoundCodec.h"
 #include "FixedMath.h"
 
@@ -319,9 +320,8 @@ TDTMFCodec::Produce(void* dst, ULong* dstSize, ULong* codedSize, CodecBlock* blo
 				W(0x2a4) = 0;
 			}
 		}
-		// (the ROM writes the sample's two bytes high first: the machine's
-		// own order, and so the host's here)
-		*out++ = (short) ((uint32_t) (acc + 0x8000) >> 16);
+		// (the sample's two bytes high first, as the ROM writes them)
+		PutSampleWord(out++, (short) ((uint32_t) (acc + 0x8000) >> 16));
 	}
 	*dstSize = samples << 1;
 	*codedSize = 0;

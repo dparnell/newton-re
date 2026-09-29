@@ -13,6 +13,7 @@
 // side got to, that DC survives a conversion down, and that the coded
 // formats are read and written through the sample converters.
 
+#include "SampleOrder.h"
 #include "Resample.h"
 #include "SampleConvert.h"
 #include "Ports.h"
@@ -80,6 +81,7 @@ TestUnityIsADelay()
 	static short out[32];
 	for (int i = 0; i < 32; i++)
 		in[i] = (short) (1000 + 37 * i);
+	SamplesToMemory(in, 32);
 
 	ResampleState state;
 	Setup(&state, 8000, 8000, 2, 2);
@@ -106,6 +108,7 @@ TestHistoryJoinsTheCalls()
 	static short halves[64];
 	for (int i = 0; i < 64; i++)
 		in[i] = (short) (i * i % 5000 - 2000);
+	SamplesToMemory(in, 64);
 
 	ResampleState state;
 	Setup(&state, 8000, 8000, 2, 2);
@@ -145,6 +148,7 @@ TestDownAndUp()
 
 	for (int i = 0; i < 64; i++)
 		in[i] = 8000;						// DC
+	SamplesToMemory(in, 64);
 
 	Setup(&state, 22050, 11025, 2, 2);
 	state.fSrcBuffer = in;
@@ -155,7 +159,7 @@ TestDownAndUp()
 	EXPECT(state.fPhase == 0);
 	// once the filter is full of the constant the output is the constant
 	for (int i = 24; i < 32; i++)
-		EXPECT(out[i] > 7800 && out[i] < 8200);
+		EXPECT(GetSampleWord(&out[i]) > 7800 && GetSampleWord(&out[i]) < 8200);
 
 	// and up: one in for two out
 	Setup(&state, 11025, 22050, 2, 2);
@@ -165,7 +169,7 @@ TestDownAndUp()
 	srcCount = 32;
 	ResampleFiltered(&state, &dstCount, &srcCount);
 	EXPECT(dstCount == 64 && srcCount == 32);
-	EXPECT(out[63] > 7800 && out[63] < 8200);
+	EXPECT(GetSampleWord(&out[63]) > 7800 && GetSampleWord(&out[63]) < 8200);
 
 	// a destination too small stops the conversion where it ran out
 	Setup(&state, 11025, 22050, 2, 2);
@@ -190,7 +194,7 @@ TestCodedFormats()
 	static UByte out[32];
 	for (int i = 0; i < 32; i++)
 	{
-		samples[i] = (short) (2000 * ((i % 7) - 3));
+		PutSampleWord(&samples[i], (short) (2000 * ((i % 7) - 3)));
 		SampleConvertLin16ToMuLaw(&codes[i], &samples[i]);
 	}
 

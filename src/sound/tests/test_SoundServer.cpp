@@ -13,6 +13,7 @@
 // world and the protocol registry is a monitor.  The driver's buffer
 // interrupts are host interrupt sources falling due on the system clock.
 
+#include "SampleOrder.h"
 #include "SoundServer.h"
 #include "SoundDriver.h"
 #include "SoundCodec.h"
@@ -108,7 +109,10 @@ SoundScenario(void)
 	for (long i = 0; i < 3000; i++)
 		gLinear[i] = (short) ((i * 37) % 20000 - 10000);
 	HostSoundClearCapture();
-	Play(port, channel, gLinear, 3000, 16, kSoundFormatLinear16, kHostSoundRate << 16);
+	static short inMemory[3000];			// (the block's samples big-endian, as the ROM keeps them)
+	memcpy(inMemory, gLinear, sizeof(inMemory));
+	SamplesToMemory(inMemory, 3000);
+	Play(port, channel, inMemory, 3000, 16, kSoundFormatLinear16, kHostSoundRate << 16);
 	long count;
 	const short* played = HostSoundCaptured(&count);
 	printf("16-bit: %ld samples played\n", count);

@@ -12,6 +12,7 @@
 // without waiting, and the frame's callback method called with the state
 // and error when the click has been played; Close.
 
+#include "SampleOrder.h"
 #include "NewtWorld.h"
 #include "HostViews.h"
 #include "HostSoundDriver.h"
@@ -68,6 +69,7 @@ static short*				gIMAExpected = nil;
 static const char* const	kRecordSource = (const char*) 2;
 static const char* const	kIMACheckSource = (const char*) 3;
 static const char* const	kDTMFSource = (const char*) 4;
+static const char* const	kStoredCheckSource = (const char*) 5;
 
 // a touch tone, as TDTMFCodec's score: version 1, algorithm 0 (each tone
 // on its own), no repeats, two tones - 697 Hz and 1209 Hz, the "1" key -
@@ -141,10 +143,12 @@ PlayIMA(void)
 	long bytes = kIMASamples / kIMABlockSize * kIMABlockBytes;
 	RefVar samples(AllocateBinary(RSSYMsamples, bytes));
 	IMAState state;
+	SamplesToMemory(tone, kIMASamples);		// (samples lie big-endian in memory: SampleWords.h)
 	CompressIMA(tone, (signed char*) BinaryData(samples), kIMASamples, &state, 1, 0);
 	gIMAExpected = new short[kIMASamples];
 	IMAState expand;
 	ExpandIMA((const signed char*) BinaryData(samples), gIMAExpected, &expand, kIMASamples / kIMABlockSize, 1, 2);
+	SamplesFromMemory(gIMAExpected, kIMASamples);
 	delete[] tone;
 	RefVar frame(AllocateFrame());
 	SetFrameSlot(frame, RSSYMsndframetype, RSSYMcodec);
@@ -190,7 +194,20 @@ public:
 		play->fResult = 0;
 		newton_try
 		{
-			if (play->fSource == kDTMFSource)
+			if (play->fSource == kStoredCheckSource)
+			{
+				// the stored samples are the source, big-endian
+				RefVar sound(GetFrameSlotRef(gVarFrame, RefVar(MakeSymbol("storedSound"))));
+				RefVar samples(GetFrameSlotRef(sound, RSSYMsamples));
+				const unsigned char* bytes = (const unsigned char*) BinaryData(samples);
+				long same = 0;
+				for (long i = 0; i < kRecordSamples; i++)
+					if (((bytes[2 * i] << 8) | bytes[2 * i + 1]) == (unsigned short) gRecordSource[i])
+						same++;
+				printf("the soup entry's samples: %ld of %ld big-endian as recorded\n", same, kRecordSamples);
+				play->fResult = (Length(samples) == kRecordSamples * 2 && same == kRecordSamples) ? 1 : 0;
+			}
+			else if (play->fSource == kDTMFSource)
 				play->fResult = PlayDTMF();
 			else if (play->fSource == kIMACheckSource)
 			{
@@ -198,7 +215,10 @@ public:
 				long bytes = kRecordSamples / kIMABlockSize * kIMABlockBytes;
 				signed char* expected = new signed char[bytes];
 				IMAState state;
-				CompressIMA(gRecordSource, expected, kRecordSamples, &state, 1, 0);
+				static short inMemory[kRecordSamples];
+				memcpy(inMemory, gRecordSource, sizeof(inMemory));
+				SamplesToMemory(inMemory, kRecordSamples);
+				CompressIMA(inMemory, expected, kRecordSamples, &state, 1, 0);
 				long same = 0;
 				for (long i = 0; i < bytes; i++)
 					if (((const signed char*) BinaryData(coded))[i] == expected[i])
@@ -409,6 +429,32 @@ Scenario(void)
 		if (played[i] == gRecordSource[i])
 			same++;
 	printf("recorded and played back: %ld samples, %ld the same as the source\n", count, same);
+	EXPECT(count == kRecordSamples && same == kRecordSamples);
+
+	// the recording kept in a soup entry and read back: the samples binary
+	// holds them big-endian, as the ROM keeps them (the persistent form, the
+	// same on every host), and plays the same
+	EXPECT(Send(newtPort,
+		"begin "
+		"  local store := GetStores()[0]; "
+		"  local soup := store:GetSoup(\"SoundTest\"); "
+		"  if soup then soup:RemoveFromStoreXmit(nil); "
+		"  soup := store:CreateSoupXmit(\"SoundTest\", [], nil); "
+		"  local snd := GetRoot().rec.snd; "
+		"  soup:AddXmit({sound: {sndFrameType: 'simpleSound, samples: snd.samples, compressionType: 6, dataType: 16, samplingRate: 21600}}, nil); "
+		"  vars.storedSound := Query(soup, {type: 'index}):Entry().sound; "
+		"  1 "
+		"end") == 1);
+	EXPECT(Send(newtPort, kStoredCheckSource) == 1);
+	HostSoundClearCapture();
+	EXPECT(Send(newtPort, "begin PlaySoundSync(vars.storedSound); 1 end") == 1);
+	WaitForSilence();
+	played = HostSoundCaptured(&count);
+	same = 0;
+	for (long i = 0; i < count && i < kRecordSamples; i++)
+		if (played[i] == gRecordSource[i])
+			same++;
+	printf("kept in a soup entry and played back: %ld samples, %ld the same as the source\n", count, same);
 	EXPECT(count == kRecordSamples && same == kRecordSamples);
 
 	// recording through the IMA compressor: the coded bytes are what

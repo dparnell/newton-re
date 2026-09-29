@@ -29,10 +29,9 @@
 
 	The DDK has no header for these; reconstructed from the MP2x00 US ROM
 	(0x001e73f4-0x001e78c0 and 0x001e7e04-0x001e7ec8), each function citing
-	its origin.  The ROM works
-	on samples held in memory big-endian; the reconstruction reads and
-	writes host-native shorts, as sound/IMACodec.h does, so that the sample
-	values are the same on any host.
+	its origin.  16-bit samples are
+	held in memory big-endian, as the ROM holds them, on every host
+	(sound/SampleWords.h).
 */
 
 #ifndef __SAMPLECONVERT_H

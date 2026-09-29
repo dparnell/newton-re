@@ -9,6 +9,7 @@
 	Protocols.h answers with ordinary virtual functions.
 */
 
+#include "SampleWords.h"
 #include "SoundCodec.h"
 #include "SoundChannel.h"
 #include "NewtonExceptions.h"
@@ -224,9 +225,9 @@ TMuLawCodec::Reset(CodecBlock* block)
 void
 TMuLawCodec::BlockConvertMuLawToLin16(void* dst, void* src, long count)
 {
-	short* out = (short*) dst;
+	UByte* out = (UByte*) dst;
 	const UByte* in = (const UByte*) src;
-	for (long i = 0; i < count; i++)
+	for (long i = 0; i < count; i++, out += 2)
 	{
 		ULong bits = (ULong) (UByte) ~*in++;
 		long exponent = (bits >> 4) & 7;
@@ -234,7 +235,7 @@ TMuLawCodec::BlockConvertMuLawToLin16(void* dst, void* src, long count)
 		long value = (long) (short) ((UShort) (((((ULong) mantissa << 1) | kMuLawBias) << exponent) - kMuLawBias));
 		if ((bits & 0x80) != 0)
 			value = (short) -value;
-		*out++ = (short) ((ULong) value << 2);
+		PutSampleWord(out, (short) ((ULong) value << 2));
 	}
 }
 
@@ -247,10 +248,10 @@ void
 TMuLawCodec::BlockConvertLin16ToMuLaw(void* dst, const void* src, long count)
 {
 	UByte* out = (UByte*) dst;
-	const short* in = (const short*) src;
-	for (long i = 0; i < count; i++)
+	const UByte* in = (const UByte*) src;
+	for (long i = 0; i < count; i++, in += 2)
 	{
-		long value = (long) *in++ >> 2;
+		long value = (long) GetSampleWord(in) >> 2;
 		UByte sign = 0;
 		if (value < 0)
 		{

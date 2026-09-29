@@ -10,6 +10,7 @@
 	instruction the same in both.
 */
 
+#include "SampleWords.h"
 #include "SampleConvert.h"
 #include "Ports.h"					// QuickDraw's Random, which the decoder dithers with
 
@@ -27,7 +28,7 @@
 void
 SampleConvertLin16ToStd8(void* dst, void* src)
 {
-	long value = *(const short*) src;
+	long value = GetSampleWord(src);
 	if (value < 0)
 		value += 0xff;
 	*(UByte*) dst = (UByte) ((value >> 8) + 0x80);
@@ -40,7 +41,7 @@ SampleConvertStd8ToLin16(void* dst, void* src)
 {
 	long random = Random();
 	long value = ((long) *(const UByte*) src << 8) - 0x8000;
-	*(short*) dst = (short) ((ULong) value | ((ULong) (random >> 8) & 0x1f));
+	PutSampleWord(dst, (short) ((ULong) value | ((ULong) (random >> 8) & 0x1f)));
 }
 
 
@@ -50,10 +51,10 @@ BlockConvertLin16ToStd8(void* dst, long* dstCount, void* src, long* srcCount)
 {
 	long count = (*dstCount <= *srcCount) ? *dstCount : *srcCount;
 	UByte* out = (UByte*) dst;
-	const short* in = (const short*) src;
-	for (long i = 0; i < count; i++)
+	const UByte* in = (const UByte*) src;
+	for (long i = 0; i < count; i++, in += 2)
 	{
-		long value = *in++;
+		long value = GetSampleWord(in);
 		if (value < 0)
 			value += 0xff;
 		*out++ = (UByte) ((value >> 8) + 0x80);
@@ -68,13 +69,13 @@ void
 BlockConvertStd8ToLin16(void* dst, long* dstCount, void* src, long* srcCount)
 {
 	long count = (*srcCount < *dstCount) ? *srcCount : *dstCount;
-	short* out = (short*) dst;
+	UByte* out = (UByte*) dst;
 	const UByte* in = (const UByte*) src;
-	for (long i = 0; i < count; i++)
+	for (long i = 0; i < count; i++, out += 2)
 	{
 		long random = Random();
 		long value = ((long) *in++ << 8) - 0x8000;
-		*out++ = (short) ((ULong) value | ((ULong) (random >> 8) & 0x1f));
+		PutSampleWord(out, (short) ((ULong) value | ((ULong) (random >> 8) & 0x1f)));
 	}
 	*dstCount = count;
 	*srcCount = count;
@@ -150,7 +151,7 @@ Lin16FromMuLaw(UByte code)
 void
 SampleConvertLin16ToMuLaw(void* dst, void* src)
 {
-	*(UByte*) dst = MuLawFromLin16(*(const short*) src);
+	*(UByte*) dst = MuLawFromLin16(GetSampleWord(src));
 }
 
 
@@ -162,7 +163,7 @@ void
 SampleConvertMuLawToLin16(void* dst, void* src)
 {
 	long value = Lin16FromMuLaw(*(const UByte*) src);
-	*(short*) dst = (short) (((ULong) value << 2) | ((ULong) (Random() >> 8) & 3));
+	PutSampleWord(dst, (short) (((ULong) value << 2) | ((ULong) (Random() >> 8) & 3)));
 }
 
 
@@ -172,9 +173,9 @@ BlockConvertLin16ToMuLaw(void* dst, long* dstCount, void* src, long* srcCount)
 {
 	long count = (*dstCount <= *srcCount) ? *dstCount : *srcCount;
 	UByte* out = (UByte*) dst;
-	const short* in = (const short*) src;
-	for (long i = 0; i < count; i++)
-		*out++ = MuLawFromLin16(*in++);
+	const UByte* in = (const UByte*) src;
+	for (long i = 0; i < count; i++, in += 2)
+		*out++ = MuLawFromLin16(GetSampleWord(in));
 	*dstCount = count;
 	*srcCount = count;
 }
@@ -185,12 +186,12 @@ void
 BlockConvertMuLawToLin16(void* dst, long* dstCount, void* src, long* srcCount)
 {
 	long count = (*srcCount < *dstCount) ? *srcCount : *dstCount;
-	short* out = (short*) dst;
+	UByte* out = (UByte*) dst;
 	const UByte* in = (const UByte*) src;
-	for (long i = 0; i < count; i++)
+	for (long i = 0; i < count; i++, out += 2)
 	{
 		long value = Lin16FromMuLaw(*in++);
-		*out++ = (short) (((ULong) value << 2) | ((ULong) (Random() >> 8) & 3));
+		PutSampleWord(out, (short) (((ULong) value << 2) | ((ULong) (Random() >> 8) & 3)));
 	}
 	*dstCount = count;
 	*srcCount = count;

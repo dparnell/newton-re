@@ -8,6 +8,7 @@
 // test runs as the kernel services task of a booted OS (as
 // stores/tests/test_Store.cpp does).
 
+#include "SampleOrder.h"
 #include "SoundCodec.h"
 #include "SampleConvert.h"
 #include "Ports.h"
@@ -87,8 +88,8 @@ TestProduce()
 		short expected;
 		UByte one = coded[i];
 		SampleConvertMuLawToLin16(&expected, &one);
-		EXPECT((out[i] >> 2) == (expected >> 2));
-		EXPECT((out[i] & 3) == 0);				// the codec's copy leaves them clear
+		EXPECT((GetSampleWord(&out[i]) >> 2) == (GetSampleWord(&expected) >> 2));
+		EXPECT((GetSampleWord(&out[i]) & 3) == 0);	// the codec's copy leaves them clear
 	}
 }
 
@@ -97,7 +98,10 @@ TestProduce()
 static void
 TestConsumeRoundTrip()
 {
-	static const short samples[8] = { 0, 3000, -3000, 12000, -12000, 500, -500, 20000 };
+	static const short values[8] = { 0, 3000, -3000, 12000, -12000, 500, -500, 20000 };
+	short samples[8];
+	memcpy(samples, values, sizeof(samples));
+	SamplesToMemory(samples, 8);
 	UByte coded[8];
 	short back[8];
 
@@ -130,7 +134,7 @@ TestConsumeRoundTrip()
 	{
 		long exponent = (((UByte) ~coded[i]) >> 4) & 7;
 		long step = (1L << exponent) * 4;
-		long error = back[i] - samples[i];
+		long error = GetSampleWord(&back[i]) - values[i];
 		if (error < 0)
 			error = -error;
 		EXPECT(error <= step);
@@ -203,6 +207,7 @@ TestIMACodec()
 		int up = (i + 16) % 64;						// a triangle, starting at silence
 		samples[i] = (short) (((up < 32 ? up : 64 - up) - 16) * 375);
 	}
+	SamplesToMemory(samples, kSamples);
 
 	TIMACodec codec;
 	codec.New();
@@ -238,6 +243,8 @@ TestIMACodec()
 	EXPECT(dstSize == 2 * kSamples && codedSize == kBlocks * kIMABlockBytes);
 	EXPECT(block.fFormat == kSoundFormatLinear16 && block.fSampleBits == 16);
 	EXPECT(codec.BufferCompleted());
+	SamplesFromMemory(samples, kSamples);
+	SamplesFromMemory(back, kSamples);
 
 	long worst = 0;
 	long settled = 0;

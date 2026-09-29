@@ -4,6 +4,7 @@
 	Contains:	The sound server and its channels - see SoundServer.h.
 */
 
+#include "SampleWords.h"
 #include "SoundServer.h"
 #include "SoundCodec.h"
 #include "SoundChannel.h"		// gSndPort, TGestaltVolumeInfo
@@ -2325,21 +2326,20 @@ TSoundPowerHandler::PowerOff(TAEvent* /*event*/)
 
 // ROM 0x001e7380 MixLin16__FPvT1l
 // One buffer of 16-bit samples added into another, clamped to a short.
-// (The samples are the host's own shorts, as sound/SampleConvert.h's are;
-// the ROM's are the ARM's big-endian ones.)
+// (The samples big-endian, as everywhere in memory: SampleWords.h.)
 void
 MixLin16(void* dst, void* src, long count)
 {
-	short* d = (short*) dst;
-	const short* s = (const short*) src;
+	UByte* d = (UByte*) dst;
+	const UByte* s = (const UByte*) src;
 	for (long i = 0; i < count; i++)
 	{
-		long sum = (long) s[i] + (long) d[i];
+		long sum = (long) GetSampleAt(s, i) + (long) GetSampleAt(d, i);
 		if (sum > 0x7fff)
 			sum = 0x7fff;
 		else if (sum < -0x8000)
 			sum = -0x8000;
-		d[i] = (short) sum;
+		PutSampleAt(d, i, (short) sum);
 	}
 }
 
