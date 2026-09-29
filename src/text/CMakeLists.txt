@@ -20,6 +20,7 @@ add_library(text STATIC
     TXRuler.cpp
     TXRulerRange.cpp
     TXRun.cpp
+    TXStyledText.cpp
     TXStream.cpp
     TXUtilities.cpp
 )

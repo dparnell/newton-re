@@ -77,7 +77,7 @@ public:
 
 	virtual Boolean	IsTextRun(void) const				{ return fText; }
 	virtual void	GetHeightInfo(int*, int*, int*)		{ }
-	virtual long	PixelToChar(const TXLineRunDisplayInfo&, long, TXOffsetRange*)	{ return 0; }
+	virtual void	PixelToChar(const TXLineRunDisplayInfo&, Fixed, TXOffsetRange*)	{ }
 	virtual long	CharToPixel(const TXLineRunDisplayInfo&, long)	{ return 0; }
 	virtual void	Draw(const TXLineRunDisplayInfo&, long, const Rect&, int)	{ }
 	virtual long	MeasureWidth(const TXLineRunDisplayInfo&)	{ return 0; }
