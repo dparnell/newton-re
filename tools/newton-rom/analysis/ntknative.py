@@ -276,6 +276,14 @@ class Lister:
                     for r in ("r1", "r2", "r3", "ip", "lr"):
                         self.regs.pop(r, None)
                     self.pending.setdefault(nxt.operands[0].imm, []).append(self.state())
+                    # the fast path runs from the beq to its `b` to the join;
+                    # the interpreted path is wherever the beq goes (the
+                    # compiler may have put other code in between)
+                    k = insns.index(nxt) + 1
+                    while k < len(insns) and k < insns.index(nxt) + 24 and insns[k].mnemonic != "b":
+                        k += 1
+                    if k < len(insns) and insns[k].mnemonic == "b":
+                        return insns[k].address + 4
                     return nxt.operands[0].imm
             self.emit(off, "%sr0 = %s" % (prefix, call))
             for r in ("r0", "r1", "r2", "r3", "ip", "lr"):
