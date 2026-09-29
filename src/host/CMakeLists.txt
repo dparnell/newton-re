@@ -57,6 +57,17 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/dock.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonDock PROPERTIES TIMEOUT 240 PASS_REGULAR_EXPRESSION "the Newton's protocol version is 9.*monaco.pkg: dres 0.*dock: installed Monaco.*dock: done")
+    # the same with a script walking the package list every tick meanwhile
+    # (GetPackages forks the world and waits on gPackageSemaphore while the
+    # docker's world takes and gives up the mutex): the semaphore stub's
+    # retry and the serial interrupt's system call (docs/host-runtime.md)
+    add_test(NAME host.NewtonDockGetPackages
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/dock/dock.py
+                     --package ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monaco.pkg
+                     --spawn $<TARGET_FILE:newton> --rom ${NEWTON_ROM_BIN} --serial-port 0 --headless 150
+                     --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/dock-getpackages.ns
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonDockGetPackages PROPERTIES TIMEOUT 240 PASS_REGULAR_EXPRESSION "monaco.pkg: dres 0.*dock: installed Monaco.*dock: done" FAIL_REGULAR_EXPRESSION "panic|refused|fell over|waited in vain")
     # the same inside a docking session: 'dock', the Newton's name, the
     # desktop's and the Newton's info, and the password exchange first
     add_test(NAME host.NewtonDockSession
@@ -437,10 +448,12 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD}/sym
 
     # the ROM-free track's step 2 (docs/rom-free/README.md): the object area
     # written as source (tools/newton-rom/analysis/romsrc.py) and built back
-    # out of it, byte for byte the ROM's
+    # out of it, byte for byte the ROM's - the functions compiled from their
+    # decompiled source by newtonscript, with no ROM image
     add_test(NAME host.ROMSourceRoundTrip
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/newton-rom/analysis/romsrc.py
                      roundtrip ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD} -o ${CMAKE_BINARY_DIR}/romsrc-test
+                     --newtonscript $<TARGET_FILE:newtonscript>
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.ROMSourceRoundTrip PROPERTIES TIMEOUT 300)
 

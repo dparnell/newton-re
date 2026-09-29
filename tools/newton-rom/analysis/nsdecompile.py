@@ -932,7 +932,10 @@ UNQUOTABLE = re.compile(r"a binary of class|a function inside a literal|an immed
 # function a literal frame calls - the NTK's way to a function with no
 # global name, such as YieldToFork) and of a code block
 SPECIAL_IMMEDIATES = {
-	0x132: ("kNativeFuncClass", "GetGlobalFn('Length).class"),
+	# (a native function is a frame over the ROM's objects, and an array of
+	# the same three slots in a host with no ROM image: either way its
+	# first slot is the class)
+	0x132: ("kNativeFuncClass", "call func(f) if IsFrame(f) then f.class else f[0] with (GetGlobalFn('StrLen))"),
 	0x32: ("kCodeBlockClass", "(func() nil).class"),
 }
 

@@ -172,7 +172,7 @@ by side.
 | 8 | 5447 of 5507 | 5444 (98.9%) | a branch to an `if`'s end that an inner construct's ends there too is the inner's: the outer `if` has no `else` |
 | 9 | 5447 of 5507 | 5446 (98.9%; all but one of those decompiled) | a constant no receiver reference (NTK); `l := <loop>` kept a statement so the loop's locals are declared first |
 | 13 | 5507 of 5507 | 5507 (100%) | a foreach's variable closed over (set by name); a closure the NTK made at build time (below) |
-| 12 | 5505 of 5507 | 5504 (99.9%) | the native-function frames the NTK put in literals (`{class: 0x132, funcPtr, numArgs}`, calling a C function with no global name, such as YieldToFork): the special immediate 0x132 is a constant, `GetGlobalFn('Length).class`; a function's constants come before it |
+| 12 | 5505 of 5507 | 5504 (99.9%) | the native-function frames the NTK put in literals (`{class: 0x132, funcPtr, numArgs}`, calling a C function with no global name, such as YieldToFork): the special immediate 0x132 is a constant, the first slot of `GetGlobalFn('StrLen)` (a frame over the ROM's objects, an array in a host with none); a function's constants come before it |
 | 11 | 5498 of 5507 | 5497 (99.8%) | string subclasses from their text and rectangles from `MakeRect`: the host keeps both in its own byte order |
 | 10 | 5498 of 5507 | 5491 (99.7%) | literals no quoted source makes (binaries; frames and arrays holding a binary or a function) written as constants that build them: `kBinaryFromHex`, `{tag: kFunction_x}` |
 

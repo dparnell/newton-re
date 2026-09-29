@@ -11,16 +11,26 @@ nothing.
 
     python romsrc.py extract build/MP2x00US -o build/MP2x00US/romsrc
     python romsrc.py build build/MP2x00US/romsrc -o build/MP2x00US/objects.bin --check build/MP2x00US
-    python romsrc.py roundtrip build/MP2x00US -o <dir>     # both, as the ctest runs them
+    python romsrc.py roundtrip build/MP2x00US -o <dir> --newtonscript <exe>   # both, as the ctest runs them
 
-The tree (this is stage 1: every binary but strings and reals is kept as
-its bytes; functions are frames with their instructions as a binary):
+`build` needs the host's newtonscript (--newtonscript) to compile the
+functions; it runs it with no ROM image, so nothing of the ROM's is read
+but the tree.
+
+The tree (stage 2: the ROM's NewtonScript functions are source, every
+binary but strings and reals is kept as its bytes):
 
     objects/NNN.ns   the objects, as definitions `name := value;`
+    functions/<addr>.ns   each top-level function as the decompiler writes it
+                     (tools/newton-rom/analysis/nsdecompile.py: its constants,
+                     then the function), compiled by the builder with the
+                     host's compiler (newtonscript --compile-records)
     maps.ns          the frame maps, `map_<addr> := map(class, supermap, 'tag, ...);`
     resources/<class>/<addr>.bin   the binaries' bytes
     layout.tsv       the manifest: every object's address, path and header flags,
-                     and each frame's map
+                     and each frame's map; `alias` lines say which named
+                     object a path inside a compiled function is (an object
+                     the ROM shares, which the compiler makes afresh)
 
 The notation of a value (a subset of NewtonScript's literals, plus a few
 constructors of its own):
@@ -36,6 +46,8 @@ constructors of its own):
     string('cls, "text")   a string of another class
     real(1.5)  real('Real, 1.5)   a real, of class 'real or another
     binary('cls, "resources/cls/addr.bin")   any other binary
+    bytes('cls, "0a1b...")   a binary given in hex (what the host's compiler writes)
+    function("functions/addr.ns")   a function, compiled from that source
     {tag: value, ...}      a frame (its map is the manifest's)
     [cls: value, ...]      an array whose class is the symbol cls
     array(value, value, ...)   an array whose class is not a symbol (the first)
@@ -64,6 +76,8 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import nsfunctions as nf			# noqa: E402
+import nsdecompile as nd			# noqa: E402
+import subprocess					# noqa: E402
 
 PAD = 0xba						# the bytes between objects
 PER_FILE = 400					# definitions in one objects/NNN.ns
@@ -124,6 +138,9 @@ class Extractor:
 		self.names = {}					# object -> definition name
 		self.paths = {}					# object -> path
 		self.layout_extra = {}			# object -> extra manifest fields
+		self.functions = set(nd.rom_functions(rom))
+		self.in_function = 0			# inside a function written as source
+		self.aliases = []				# (path, name): a named object inside a compiled function
 
 	def refs_of(self, o):
 		rom = self.rom
@@ -186,6 +203,8 @@ class Extractor:
 		if self.is_symbol(ref):
 			return "'" + quote_name(rom.symname(ref))
 		if not inline or self.named(ref):
+			if self.in_function:
+				self.aliases.append((path, self.name_of(ref)))
 			return self.name_of(ref)
 		return self.object(ref, path)
 
@@ -196,24 +215,42 @@ class Extractor:
 		self.paths[o] = path
 		f = rom.flags(o)
 		cls = rom.cls(o)
+		if o in self.functions and not self.in_function:
+			# the function's source; its objects walked for their paths and
+			# maps (what the builder lays the compiled function out by)
+			rel = "functions/%x.ns" % o
+			os.makedirs(os.path.join(self.out, "functions"), exist_ok=True)
+			with open(os.path.join(self.out, rel), "w", encoding="utf-8", newline="\n") as out:
+				out.write(nd.record(rom, o))
+			self.in_function += 1
+			try:
+				self.frame_text(o, path)
+			finally:
+				self.in_function -= 1
+			return 'function("%s")' % rel
 		if o in self.maps:
 			s = rom.slots(o)
 			parts = [self.value(cls, path + "^"), self.value(s[0], path + "[0]")]
 			parts += [self.value(t, path + "[%d]" % (i + 1)) for i, t in enumerate(s[1:])]
 			return "map(" + ", ".join(parts) + ")"
 		if f & 3 == 3:
-			self.layout_extra[o] = "map=" + self.name_of(cls)
-			parts = []
-			for tag, value in zip(rom.map_tags(cls), rom.slots(o)):
-				name = rom.symname(tag)
-				parts.append("%s: %s" % (quote_name(name), self.value(value, path + "." + quote_name(name))))
-			return "{" + ", ".join(parts) + "}"
+			return self.frame_text(o, path)
 		if f & 1:
 			items = [self.value(v, path + "[%d]" % i) for i, v in enumerate(rom.slots(o))]
 			if self.is_symbol(cls):
 				return "[" + quote_name(rom.symname(cls)) + ": " + ", ".join(items) + "]"
 			return "array(" + ", ".join([self.value(cls, path + "^")] + items) + ")"
 		return self.binary(o, path)
+
+	def frame_text(self, o, path):
+		rom = self.rom
+		cls = rom.cls(o)
+		self.layout_extra[o] = "map=" + self.name_of(cls)
+		parts = []
+		for tag, value in zip(rom.map_tags(cls), rom.slots(o)):
+			name = rom.symname(tag)
+			parts.append("%s: %s" % (quote_name(name), self.value(value, path + "." + quote_name(name))))
+		return "{" + ", ".join(parts) + "}"
 
 	def binary(self, o, path):
 		rom = self.rom
@@ -236,6 +273,8 @@ class Extractor:
 				return "real(%s)" % text if cname == "real" else "real('%s, %s)" % (quote_name(cname), text)
 		folder = re.sub(r"[^A-Za-z0-9_.-]", "_", cname or "class_%x" % cls)
 		rel = "resources/%s/%x.bin" % (folder, o)
+		if self.in_function:
+			return "binary(%s, \"%s\")" % (self.value(cls, path + "^"), rel)	# (compiled, not written)
 		os.makedirs(os.path.join(self.out, os.path.dirname(rel)), exist_ok=True)
 		with open(os.path.join(self.out, rel), "wb") as f:
 			f.write(data)
@@ -280,6 +319,8 @@ class Extractor:
 				if o in self.layout_extra:
 					fields.append(self.layout_extra[o])
 				f.write("\t".join(fields) + "\n")
+			for path, name in self.aliases:
+				f.write("alias\t%s\t%s\n" % (path, name))
 		return len(defs), len(mapdefs)
 
 
@@ -406,14 +447,15 @@ class Reader:
 		if kind == "name" and text in ("nil", "true"):
 			self.take()
 			return Imm(2 if text == "nil" else 0x1a)
-		if kind == "name" and text in ("real", "string", "binary", "array", "map") and self.toks[self.i + 1][1] == "(":
+		if kind == "name" and text in ("real", "string", "binary", "array", "map", "bytes", "function") \
+				and self.toks[self.i + 1][1] == "(":
 			self.take()
 			self.take("(")
 			args = []
 			while self.peek()[1] != ")":
 				if text in ("real",) and self.peek()[0] == "number":
 					args.append(float(self.take()[1]))
-				elif text in ("string", "binary") and self.peek()[0] == "string":
+				elif text in ("string", "binary", "bytes", "function") and self.peek()[0] == "string":
 					args.append(self.take()[1])
 				else:
 					args.append(self.value())
@@ -428,6 +470,10 @@ class Reader:
 			if text == "binary":
 				with open(os.path.join(self.root, args[1][1:-1]), "rb") as f:
 					return Obj("binary", args[0], data=f.read())
+			if text == "bytes":
+				return Obj("binary", args[0], data=bytes.fromhex(args[1][1:-1]))
+			if text == "function":
+				return Obj("function", data=args[0][1:-1])
 			if text == "array":
 				return Obj("array", args[0], items=args[1:])
 			return Obj("map", args[0], items=args[1:])
@@ -459,8 +505,9 @@ def string_bytes(literal):
 # ---- building
 
 class Builder:
-	def __init__(self, src):
+	def __init__(self, src, newtonscript=None):
 		self.src = src
+		self.newtonscript = newtonscript
 		self.defs = {}
 		files = [os.path.join(src, "maps.ns")]
 		objdir = os.path.join(src, "objects")
@@ -471,48 +518,117 @@ class Builder:
 					if name in self.defs:
 						raise SyntaxError("%s defined twice" % name)
 					self.defs[name] = value
-		# every object by its path
+		self.read_layout()
+		self.compile_functions()
+		# every object by its path (a path the layout says is a named object
+		# - one the ROM shares, which a compiled function made afresh - is
+		# that object)
 		self.by_path = {}
-		for name, value in self.defs.items():
-			self.walk(value, name)
+		for name in list(self.defs):
+			self.defs[name] = self.walk(self.defs[name], name)
 
-	def walk(self, v, path):
-		if not isinstance(v, Obj):
-			return
-		v.path = path
-		self.by_path[path] = v
-		if v.kind == "frame":
-			for tag, item in zip(v.tags, v.items):
-				self.walk(item, path + "." + quote_name(tag))
-		elif v.kind in ("array", "map"):
-			if isinstance(v.cls, Obj):
-				self.walk(v.cls, path + "^")
-			if v.kind == "map":
-				self.walk(v.items[0], path + "[0]")
-				for i, item in enumerate(v.items[1:]):
-					self.walk(item, path + "[%d]" % (i + 1))
-			else:
-				for i, item in enumerate(v.items):
-					self.walk(item, path + "[%d]" % i)
-		elif isinstance(v.cls, Obj):
-			self.walk(v.cls, path + "^")
-
-	def build(self):
-		area_base = area_size = None
-		entries = []
+	def read_layout(self):
+		self.area_base = self.area_size = None
+		self.entries = []
+		self.aliases = {}
 		with open(os.path.join(self.src, "layout.tsv"), encoding="utf-8") as f:
 			for line in f:
 				if line.startswith("#"):
 					continue
 				fields = line.rstrip("\n").split("\t")
 				if fields[0] == "area":
-					area_base, area_size = int(fields[1], 16), int(fields[2], 16)
+					self.area_base, self.area_size = int(fields[1], 16), int(fields[2], 16)
+					continue
+				if fields[0] == "alias":
+					self.aliases[fields[1]] = fields[2]
 					continue
 				extra = dict(x.split("=", 1) for x in fields[3:])
-				entries.append((int(fields[0], 16), fields[1], int(fields[2], 16), extra))
+				self.entries.append((int(fields[0], 16), fields[1], int(fields[2], 16), extra))
+
+	def compile_functions(self):
+		"""Every function(...) compiled by the host's compiler, in one run,
+		and put in its place."""
+		found = []
+
+		def find(v):
+			if isinstance(v, Obj):
+				if v.kind == "function":
+					found.append(v)
+				for x in v.items:
+					find(x)
+				find(v.cls)
+		for v in self.defs.values():
+			find(v)
+		if not found:
+			return
+		if self.newtonscript is None:
+			raise ValueError("the tree has functions: the builder needs --newtonscript to compile them")
+		records = os.path.join(self.src, ".records.txt")
+		compiled = os.path.join(self.src, ".compiled.txt")
+		by_id = {}
+		with open(records, "w", encoding="utf-8", newline="\n") as out:
+			for n, v in enumerate(found):
+				with open(os.path.join(self.src, v.data), encoding="utf-8") as f:
+					text = f.read()
+				# (each record numbered afresh: the file's own @@ line names
+				# the ROM's function, which an edited tree need not have)
+				body = text.split("\n", 1)[1]
+				out.write("@@ %x\n%s" % (n, body))
+				by_id[n] = v
+		env = dict(os.environ, NEWTON_ROM=os.path.join(self.src, "no-rom-image"))
+		result = subprocess.run([nd.newtonscript_path(self.newtonscript), "--compile-records", records, compiled], env=env,
+								stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+		if result.returncode != 0:
+			raise ValueError("the functions did not all compile: %s" % result.stderr.strip()[-500:])
+		with open(compiled, encoding="utf-8") as f:
+			lines = f.read().split("\n")
+		i = 0
+		while i < len(lines):
+			if lines[i].startswith("@@ "):
+				n = int(lines[i][3:], 16)
+				value = Reader(lines[i + 1], "compiled %x" % n, self.src).value()
+				target = by_id.pop(n)
+				target.kind, target.cls, target.items, target.tags, target.data = \
+					value.kind, value.cls, value.items, value.tags, value.data
+				i += 3
+			else:
+				i += 1
+		if by_id:
+			raise ValueError("%d functions came back uncompiled" % len(by_id))
+
+	def walk(self, v, path):
+		if not isinstance(v, Obj):
+			return v
+		if path in self.aliases:
+			name = self.aliases[path]
+			if name not in self.defs:
+				raise ValueError("%s: the alias %s is not defined" % (path, name))
+			return Name(name)
+		v.path = path
+		self.by_path[path] = v
+		if v.kind == "frame":
+			v.items = [self.walk(item, path + "." + quote_name(tag)) for tag, item in zip(v.tags, v.items)]
+		elif v.kind in ("array", "map"):
+			if isinstance(v.cls, Obj):
+				v.cls = self.walk(v.cls, path + "^")
+			if v.kind == "map":
+				v.items = [self.walk(item, path + "[%d]" % i) for i, item in enumerate(v.items)]
+			else:
+				v.items = [self.walk(item, path + "[%d]" % i) for i, item in enumerate(v.items)]
+		elif isinstance(v.cls, Obj):
+			v.cls = self.walk(v.cls, path + "^")
+		return v
+
+	def build(self):
+		area_base, area_size, entries = self.area_base, self.area_size, self.entries
 		addr = {}					# path -> ref
+		symbols = {}				# a symbol's name, in lower case -> ref
 		for a, path, _, _ in entries:
 			addr[path] = a + 1
+			if path.startswith("'"):
+				r = Reader(path, "layout", self.src)
+				r.take("'")
+				symbols[r.name_text().lower()] = a + 1
 		missing = [p for p in self.by_path if p not in addr]
 		if missing:
 			raise ValueError("%d objects the layout does not place, e.g. %s" % (len(missing), missing[:3]))
@@ -521,7 +637,9 @@ class Builder:
 			if isinstance(v, Imm):
 				return v.ref
 			if isinstance(v, Sym):
-				return addr["'" + quote_name(v.name)]
+				# (symbols are one whatever their case: the host's compiler
+				# spells one as the host first interned it)
+				return symbols[v.name.lower()]
 			if isinstance(v, Name):
 				return addr[v.name]
 			return addr[v.path]
@@ -578,22 +696,24 @@ def main(argv=None):
 	b.add_argument("source")
 	b.add_argument("-o", "--output")
 	b.add_argument("--check", metavar="BUILD_DIR", help="compare with that ROM's object area, byte for byte")
+	b.add_argument("--newtonscript", help="the host's newtonscript, which compiles the functions")
 	r = sub.add_parser("roundtrip", help="extract, build and compare")
 	r.add_argument("build_dir")
 	r.add_argument("-o", "--output", required=True, help="where the source tree is written (emptied first)")
+	r.add_argument("--newtonscript", required=True, help="the host's newtonscript, which compiles the functions")
 	a = ap.parse_args(argv)
 	if a.command == "roundtrip":
 		import shutil
 		shutil.rmtree(a.output, ignore_errors=True)
 		if main(["extract", a.build_dir, "-o", a.output]) != 0:
 			return 1
-		return main(["build", a.output, "--check", a.build_dir])
+		return main(["build", a.output, "--check", a.build_dir, "--newtonscript", a.newtonscript])
 	if a.command == "extract":
 		rom = nf.ROM(a.build_dir)
 		n, m = Extractor(rom, a.output).run()
 		print("%d definitions and %d maps written to %s" % (n, m, a.output))
 		return 0
-	builder = Builder(a.source)
+	builder = Builder(a.source, a.newtonscript)
 	base, area = builder.build()
 	if a.output:
 		with open(a.output, "wb") as f:

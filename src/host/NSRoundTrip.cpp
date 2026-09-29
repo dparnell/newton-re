@@ -31,7 +31,15 @@
 	object the ROM's pushes as a literal where the compiler would push an
 	immediate or make a new literal each time - an NTK constant too.
 
-	and the output a line per record: `0x<ref> OK`, or `0x<ref> FAIL
+	RunCompileRecords (newtonscript --compile-records) compiles the same
+	records and writes each function as a value in the notation of the ROM
+	object source (tools/newton-rom/analysis/romsrc.py, whose builder lays
+	it out in the ROM's object area): `@@ 0x<ref>`, the value on one line,
+	`@@end`; or `@@ 0x<ref> FAIL <why>`.  Strings, reals and the shapes
+	kept as shorts are written back in the ROM's byte order, the reverse
+	of frames/ObjectAreaImport.cpp.
+
+	and --roundtrip's output is a line per record: `0x<ref> OK`, or `0x<ref> FAIL
 	<category> <detail>` with the category one of compile (the source
 	does not compile: the message), instructions, literals, argFrame,
 	numArgs or shape (the object's own layout), the detail saying where the
@@ -47,11 +55,20 @@
 #include "RSSymbols.h"
 #include "NewtonExceptions.h"
 
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 
 static char gWhy[512];
+
+static Boolean
+IsBigEndianHost(void)
+{
+	const unsigned short one = 1;
+	return *(const unsigned char*) &one == 0;
+}
 
 static Boolean	Same(Ref oursRef, Ref romRef, const char* where);
 
@@ -375,4 +392,315 @@ RunRoundTrip(const char* inputPath, const char* outputPath)
 	if (out != stdout)
 		fclose(out);
 	return 0;
+}
+
+
+/* -------------------------------------------------------------------------------
+	The compiled functions in the notation of the ROM object source
+------------------------------------------------------------------------------- */
+
+static const char* const kReservedNames[] = { "nil", "true", "real", "string", "binary", "array", "map", "bytes" };
+
+static void
+WriteName(FILE* out, const char* name)
+{
+	Boolean plain = (isalpha((unsigned char) name[0]) || name[0] == '_');
+	for (const char* p = name; *p && plain; p++)
+		if (!isalnum((unsigned char) *p) && *p != '_')
+			plain = false;
+	for (size_t i = 0; plain && i < sizeof(kReservedNames) / sizeof(kReservedNames[0]); i++)
+		if (strcasecmp(name, kReservedNames[i]) == 0)
+			plain = false;
+	if (plain)
+	{
+		fputs(name, out);
+		return;
+	}
+	fputc('|', out);
+	for (const char* p = name; *p; p++)
+	{
+		if (*p == '|' || *p == '\\')
+			fputc('\\', out);
+		fputc(*p, out);
+	}
+	fputc('|', out);
+}
+
+
+// UTF-16 units as the notation's string: printable ones as UTF-8, the
+// rest \uXXXX (as romsrc.py's string_text)
+static void
+WriteStringText(FILE* out, const UniChar* s, long count)
+{
+	fputc('"', out);
+	for (long i = 0; i < count; i++)
+	{
+		unsigned c = s[i];
+		if (c == '"')
+			fputs("\\\"", out);
+		else if (c == '\\')
+			fputs("\\\\", out);
+		else if (c >= 0x20 && c < 0x7f)
+			fputc((int) c, out);
+		else if (c >= 0xa0 && !(c >= 0xd800 && c < 0xe000) && c != 0xfffe && c != 0xffff)
+		{
+			if (c < 0x800)
+			{
+				fputc(0xc0 | (c >> 6), out);
+				fputc(0x80 | (c & 0x3f), out);
+			}
+			else
+			{
+				fputc(0xe0 | (c >> 12), out);
+				fputc(0x80 | ((c >> 6) & 0x3f), out);
+				fputc(0x80 | (c & 0x3f), out);
+			}
+		}
+		else
+			fprintf(out, "\\u%04x", c);
+	}
+	fputc('"', out);
+}
+
+
+static Boolean
+IsClassNamedHost(Ref cls, const char* name)
+{
+	return ISPTR(cls) && IsSymbol(cls) && strcasecmp(SymbolName(cls), name) == 0;
+}
+
+
+// the classes the ROM importer keeps as shorts in host order
+// (IsHalfwordShapeClass in frames/ObjectAreaImport.cpp)
+static Boolean
+IsHalfwordClassHost(Ref cls)
+{
+	static const char* const kClasses[] = { "boundsrect", "rectangle", "oval", "roundrectangle", "line",
+											"polygonshape", "polygondata", "regiondata" };
+	for (size_t i = 0; i < sizeof(kClasses) / sizeof(kClasses[0]); i++)
+		if (IsClassNamedHost(cls, kClasses[i]))
+			return true;
+	return false;
+}
+
+
+static void WriteNotation(FILE* out, RefArg value, int depth);
+
+static void
+WriteBinary(FILE* out, RefArg obj, int depth)
+{
+	RefVar cls(ClassOf(obj));
+	long length = Length(obj);
+	const unsigned char* data = (const unsigned char*) BinaryData(obj);
+	if (ISPTR(cls) && IsSymbol(cls) && IsSubclass(cls, RSSYMstring) && (length % 2) == 0)
+	{
+		// a string: its units, the terminator the ROM's has included
+		// (the notation's string adds it back)
+		const UniChar* s = (const UniChar*) data;
+		long count = length / 2;
+		if (count > 0 && s[count - 1] == 0)
+		{
+			fputs("string('", out);
+			WriteName(out, SymbolName(cls));
+			fputs(", ", out);
+			WriteStringText(out, s, count - 1);
+			fputc(')', out);
+			return;
+		}
+	}
+	if (IsClassNamedHost(cls, "real") && length == 8)
+	{
+		double v;
+		memcpy(&v, data, sizeof(v));
+		fputs("real('", out);
+		WriteName(out, SymbolName(cls));
+		fprintf(out, ", %.17g)", v);
+		return;
+	}
+	fputs("bytes(", out);
+	WriteNotation(out, cls, depth + 1);
+	fputs(", \"", out);
+	Boolean shorts = IsHalfwordClassHost(cls);
+	for (long i = 0; i < length; i++)
+	{
+		// (the host's shorts back into the ROM's order)
+		long k = shorts && (length % 2) == 0 ? (i ^ (IsBigEndianHost() ? 0 : 1)) : i;
+		fprintf(out, "%02x", data[k]);
+	}
+	fputs("\")", out);
+}
+
+
+static void
+WriteNotation(FILE* out, RefArg value, int depth)
+{
+	Ref r = value;
+	if (depth > 64)
+		ThrowExFramesWithBadValue(kNSErrOutOfRange, value);
+	if (ISINT(r))
+	{
+		fprintf(out, "%ld", (long) RINT(r));
+		return;
+	}
+	if (r == NILREF)
+	{
+		fputs("nil", out);
+		return;
+	}
+	if (r == TRUEREF)
+	{
+		fputs("true", out);
+		return;
+	}
+	if (ISCHAR(r))
+	{
+		fprintf(out, "$\\u%04x", (unsigned) RCHAR(r));
+		return;
+	}
+	if ((r & 3) == 3)
+	{
+		// (a magic pointer's tag has the pointer bit too: before ISPTR)
+		fprintf(out, "@%lu", (unsigned long) RVALUE(r));
+		return;
+	}
+	if (!ISPTR(r))
+	{
+		fprintf(out, "#%lx", (unsigned long) (r & 0xffffffff));
+		return;
+	}
+	if (IsSymbol(value))
+	{
+		fputc('\'', out);
+		WriteName(out, SymbolName(value));
+		return;
+	}
+	long flags = ObjectFlags(value);
+	if (!(flags & kObjSlotted))
+	{
+		WriteBinary(out, value, depth);
+		return;
+	}
+	if (flags & kObjFrame)
+	{
+		fputc('{', out);
+		TObjectIterator iter(value);
+		Boolean first = true;
+		for (; !iter.Done(); iter.Next())
+		{
+			if (!first)
+				fputs(", ", out);
+			first = false;
+			WriteName(out, SymbolName(iter.fTag));
+			fputs(": ", out);
+			WriteNotation(out, RefVar(iter.fValue), depth + 1);
+		}
+		fputc('}', out);
+		return;
+	}
+	RefVar cls(ClassOf(value));
+	long count = Length(value);
+	if (ISPTR(cls) && IsSymbol(cls))
+	{
+		fputc('[', out);
+		WriteName(out, SymbolName(cls));
+		fputs(": ", out);
+	}
+	else
+	{
+		fputs("array(", out);
+		WriteNotation(out, cls, depth + 1);
+		if (count > 0)
+			fputs(", ", out);
+	}
+	for (long i = 0; i < count; i++)
+	{
+		if (i > 0)
+			fputs(", ", out);
+		WriteNotation(out, RefVar(GetArraySlotRef(value, i)), depth + 1);
+	}
+	fputc(ISPTR(cls) && IsSymbol(cls) ? ']' : ')', out);
+}
+
+
+int
+RunCompileRecords(const char* inputPath, const char* outputPath)
+{
+	FILE* in = fopen(inputPath, "rb");
+	if (in == nil)
+	{
+		fprintf(stderr, "newtonscript: cannot read %s\n", inputPath);
+		return 1;
+	}
+	FILE* out = strcmp(outputPath, "-") == 0 ? stdout : fopen(outputPath, "wb");
+	if (out == nil)
+	{
+		fprintf(stderr, "newtonscript: cannot write %s\n", outputPath);
+		fclose(in);
+		return 1;
+	}
+	char line[4096];
+	char* source = (char*) malloc(1);
+	size_t length = 0;
+	unsigned long ref = 0;
+	long total = 0, failed = 0;
+	Boolean inRecord = false;
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "dbgNoVarNames")), RefVar(TRUEREF));
+	gCompilerNTKConstants = true;
+	RefVar constants(AllocateArray(RSSYMarray, 0));
+	while (fgets(line, sizeof(line), in) != nil)
+	{
+		size_t lineLength = strlen(line);
+		if (lineLength >= 2 && line[lineLength - 2] == '\r' && line[lineLength - 1] == '\n')
+		{
+			line[lineLength - 2] = '\n';
+			line[lineLength - 1] = 0;
+		}
+		if (strncmp(line, "@@ ", 3) == 0)
+		{
+			ref = strtoul(line + 3, nil, 16);
+			length = 0;
+			source[0] = 0;
+			inRecord = true;
+			continue;
+		}
+		if (strncmp(line, "@@end", 5) == 0 && inRecord)
+		{
+			inRecord = false;
+			total++;
+			newton_try
+			{
+				RefVar fn(CompileRecord(source, constants));
+				fprintf(out, "@@ %#lx\n", ref);
+				WriteNotation(out, fn, 0);
+				fprintf(out, "\n@@end\n");
+			}
+			newton_catch_all
+			{
+				failed++;
+				fprintf(out, "\n@@ %#lx FAIL %s\n", ref, CurrentException()->name);
+			}
+			end_try;
+			for (long k = 0; k < Length(constants); k++)
+				RemoveSlot(RefVar(gConstantsFrame), RefVar(GetArraySlotRef(constants, k)));
+			SetLength(constants, 0);
+			ClearRefHandles();
+			if ((total % 200) == 0)
+				GC();
+			continue;
+		}
+		if (inRecord)
+		{
+			size_t n = strlen(line);
+			source = (char*) realloc(source, length + n + 1);
+			memcpy(source + length, line, n + 1);
+			length += n;
+		}
+	}
+	if (failed != 0)
+		fprintf(stderr, "newtonscript: %ld of %ld functions did not compile\n", failed, total);
+	free(source);
+	fclose(in);
+	if (out != stdout)
+		fclose(out);
+	return failed != 0;
 }

@@ -10,6 +10,7 @@
 	Usage:
 		newtonscript [--rom <image>] [--heap <bytes>] [--display <w>x<h>[x<depth>]] [-e <source>] [file.ns ...]
 		newtonscript [--rom <image>] --roundtrip <records> <results>
+		newtonscript [--rom <image>] --compile-records <records> <output>
 
 	Each file is loaded with ParseFile (each form compiled and run, as the
 	NTK loads a text file); -e compiles and runs a string; with no files
@@ -31,6 +32,8 @@
 	--roundtrip compiles each function the NewtonScript decompiler wrote
 	(tools/newton-rom/analysis/nsdecompile.py) and compares it with the ROM's
 	own, a result line per function (host/NSRoundTrip.cpp).
+	--compile-records compiles such records and writes each function in the
+	notation of the ROM object source, for romsrc.py's builder.
 */
 
 #include "Frames.h"
@@ -69,6 +72,7 @@ FROMConstant(RefArg /*rcvr*/, RefArg name)
 
 
 int		RunRoundTrip(const char* inputPath, const char* outputPath);		// NSRoundTrip.cpp
+int		RunCompileRecords(const char* inputPath, const char* outputPath);	// NSRoundTrip.cpp
 
 
 static int
@@ -91,6 +95,8 @@ main(int argc, char** argv)
 	Boolean ranSomething = false;
 	const char* roundTripIn = nil;
 	const char* roundTripOut = nil;
+	const char* compileIn = nil;
+	const char* compileOut = nil;
 	int first = 1;
 	while (first < argc && argv[first][0] == '-' && argv[first][1] == '-')
 	{
@@ -108,6 +114,12 @@ main(int argc, char** argv)
 		{
 			roundTripIn = argv[first + 1];
 			roundTripOut = argv[first + 2];
+			first += 3;
+		}
+		else if (strcmp(argv[first], "--compile-records") == 0 && first + 2 < argc)
+		{
+			compileIn = argv[first + 1];
+			compileOut = argv[first + 2];
 			first += 3;
 		}
 		else if (strcmp(argv[first], "--display") == 0 && first + 1 < argc)
@@ -135,6 +147,8 @@ main(int argc, char** argv)
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "ROMConstant")), RefVar(MakeCFunction((void*) FROMConstant, 1, nil)));
 	if (roundTripIn != nil)
 		return RunRoundTrip(roundTripIn, roundTripOut);
+	if (compileIn != nil)
+		return RunCompileRecords(compileIn, compileOut);
 	if (displayWidth > 0)
 	{
 		newton_try

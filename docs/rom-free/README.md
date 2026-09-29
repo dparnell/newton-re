@@ -127,10 +127,27 @@ reported as the decompiler's was.
    one of those. `build` writes the area back, and **all 46538 objects
    come out byte for byte the ROM's**. The notation is in the tool's own
    documentation; see "Stage 1" below for what it is not yet.
-2. **Functions as source.** The decompiler's NewtonScript, compiled by the
-   builder. The builder then needs the host's compiler, so from here it
-   moves into the host (`newtonscript --build-romsrc`, serialising the
-   compiled objects into the ROM's layout).
+2. **Functions as source. Done.** Each of the 5480 top-level functions the
+   graph reaches is `functions/<addr>.ns`, the decompiler's record (its
+   constants, then the function).
+   - The builder stays in Python and hands every function, in one run, to
+     `newtonscript --compile-records`. That is the host's own compiler, as
+     the decompiler's round trip uses it, and it writes each compiled
+     function back in the tree's notation. Strings, reals and the shapes
+     kept as shorts go back into the ROM's byte order, the reverse of the
+     importer.
+   - The run has **no ROM image**, so nothing is read but the tree. The
+     object area still comes out byte for byte the ROM's.
+   - Where the ROM shares an object that a compiled function makes afresh
+     (a string two functions push, for example), an `alias` line in the
+     manifest says which named object that path is. There are 3784 of
+     them.
+   - Symbols are matched whatever their case, since the host's compiler
+     spells a symbol as the host first interned it.
+   - Left as bytecode: 362 functions that are named objects inside others
+     (shared, or held in a slot as well as being a literal). They are not
+     top-level, so the decompiler writes them inside their parent, and
+     the tree keeps their definitions as frames of bytecode.
 3. **Bitmaps** (`bits`, `mask`, `cbits`): PNG and back, lossless. The
    first real resource, and the most numerous. `tools/imaging/pgm2png.py`
    is the start of the image side.
@@ -187,7 +204,7 @@ manifest and 7 MB of resources.
 
 What it is not yet:
 
-- Functions are frames with a binary of bytecode, not source (next).
+- 362 nested functions are still bytecode (stage 2).
 - The files are cut by address, not by what they belong to (the
   dominator grouping above).
 - Resources are opaque, and inline objects are named by path, so an edit
