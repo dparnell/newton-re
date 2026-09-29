@@ -106,9 +106,9 @@ TXLinesHeights::SetLineHeightInfo(const TXLineHeightInfo& info, long line, TXFor
 	long inGroup = line;
 	long index;
 	TXLineHeightGroup* group = LineToHeightGroup(&inGroup, &index);
-	if (group->fHeight == info.fHeight && group->fNaturalHeight == info.fNaturalHeight)
+	if (group->fHeight == info.fHeight && group->fAscent == info.fAscent)
 		return noErr;
-	TXLineHeightGroup mine = { 1, info.fHeight, info.fNaturalHeight };
+	TXLineHeightGroup mine = { 1, info.fHeight, info.fAscent };
 	fTotalHeight += info.fHeight - group->fHeight;
 	long count = group->fCount;
 	if (count == 1)
@@ -157,7 +157,7 @@ TXLinesHeights::InsertLine(const TXLineHeightInfo& info, TXFormatReflowLines* re
 		if (group == nil)
 			return kError_No_Memory;
 		group->fCount = 1;
-		group->fNaturalHeight = info.fNaturalHeight;
+		group->fAscent = info.fAscent;
 		group->fHeight = info.fHeight;
 		fTotalHeight = info.fHeight;
 		return noErr;
@@ -354,7 +354,7 @@ TXLinesHeights::GetLineHeightInfo(long line, TXLineHeightInfo* info) const
 {
 	TXLineHeightGroup* group = LineToHeightGroup(&line, nil);
 	info->fHeight = group->fHeight;
-	info->fNaturalHeight = group->fNaturalHeight;
+	info->fAscent = group->fAscent;
 }
 
 
@@ -365,7 +365,7 @@ TXLinesHeights::EqualGroup(long index, const TXLineHeightGroup& group) const
 	if (index < 0 || index >= fCount)
 		return false;
 	const TXLineHeightGroup* here = (const TXLineHeightGroup*) GetElementPtr(index);
-	return group.fHeight == here->fHeight && group.fNaturalHeight == here->fNaturalHeight;
+	return group.fHeight == here->fHeight && group.fAscent == here->fAscent;
 }
 
 

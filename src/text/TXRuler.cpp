@@ -723,7 +723,7 @@ TXAdvancedRuler::AdjustLineHeight(TXLineHeightInfo* info) const
 {
 	if (fLineSpacing == 1)
 		return;
-	long extra = (fLineSpacing - 1) * info->fNaturalHeight;
+	long extra = (fLineSpacing - 1) * info->fAscent;
 	extra = extra + (long) (((unsigned long) extra) >> 31);
 	info->fHeight += extra >> 1;
 }

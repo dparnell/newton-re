@@ -126,7 +126,7 @@ TestBasicRuler()
 	// and a line's height is whatever it was
 	TXLineHeightInfo info;
 	info.fHeight = 14;
-	info.fNaturalHeight = 14;
+	info.fAscent = 14;
 	ruler.AdjustLineHeight(&info);
 	EXPECT(info.fHeight == 14);
 }
@@ -164,7 +164,7 @@ TestAdvancedRuler()
 	// one and a half spacing adds half a line
 	TXLineHeightInfo info;
 	info.fHeight = 14;
-	info.fNaturalHeight = 14;
+	info.fAscent = 14;
 	ruler.AdjustLineHeight(&info);
 	EXPECT(info.fHeight == 21);
 	spacing = 3;

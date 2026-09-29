@@ -8,7 +8,7 @@
 				`TXLinesHeights` keeps the height of every line without a
 				word per line: a TXArray of `TXLineHeightGroup`s, each a
 				run of consecutive lines that share one height (and one
-				natural height), so a document of single-spaced lines in
+				ascent), so a document of single-spaced lines in
 				one font is a single group however long it is.  Setting a
 				line's height splits its group in two or three, or folds
 				it into a neighbour that already has that height
@@ -49,7 +49,7 @@ struct TXLineHeightGroup
 {
 	long			fCount;			// +0x00  lines in the run
 	long			fHeight;		// +0x04  each one's height
-	long			fNaturalHeight;	// +0x08  ... and what it would be at single spacing
+	long			fAscent;		// +0x08  ... and each one's ascent (where its baseline is)
 };
 
 
@@ -73,18 +73,21 @@ class TXLinesHeights : public TXArray
 public:
 					TXLinesHeights();								// ROM 0x002390d4 __ct__14TXLinesHeightsFv
 
-	void			FreeData(void);									// ROM 0x0023912c FreeData__14TXLinesHeightsFv - every line gone
+	// The four the frame formatters override (vtable +0x08 to +0x14, after
+	// the array's destructor and Remove).
+	virtual void	FreeData(void);									// ROM 0x0023912c FreeData__14TXLinesHeightsFv - every line gone
+	// A line added before `line` (-1: at the end) with that height.
+	virtual NewtonErr InsertLine(const TXLineHeightInfo& info, TXFormatReflowLines* reflow, long line);	// ROM 0x002393f8 InsertLine__14TXLinesHeightsFRC16TXLineHeightInfoP19TXFormatReflowLinesl
+	// Line `line` given a height; ==> an error, or noErr.  (The reflow
+	// lines are not looked at, in the ROM either.)
+	virtual NewtonErr SetLineHeightInfo(const TXLineHeightInfo& info, long line, TXFormatReflowLines* reflow);	// ROM 0x00239228 SetLineHeightInfo__14TXLinesHeightsFRC16TXLineHeightInfolP19TXFormatReflowLines
+	virtual void	RemoveLines(long count, long line, TXFormatReflowLines* reflow);	// ROM 0x002394dc RemoveLines__14TXLinesHeightsFlT1P19TXFormatReflowLines
+
 	// Groups `a` and `b` run together when they are equal (group nil: b
 	// added to a; the caller takes b out), or `group` added to whichever
 	// of the two equals it; ==> whether anything was run together.
 	Boolean			Concat(long a, long b, const TXLineHeightGroup* group);	// ROM 0x00239158 Concat__14TXLinesHeightsFlT1PC17TXLineHeightGroup
-	// Line `line` given a height; ==> an error, or noErr.  (The reflow
-	// lines are not looked at, in the ROM either.)
-	NewtonErr		SetLineHeightInfo(const TXLineHeightInfo& info, long line, TXFormatReflowLines* reflow);	// ROM 0x00239228 SetLineHeightInfo__14TXLinesHeightsFRC16TXLineHeightInfolP19TXFormatReflowLines
-	// A line added before `line` (-1: at the end) with that height.
-	NewtonErr		InsertLine(const TXLineHeightInfo& info, TXFormatReflowLines* reflow, long line);	// ROM 0x002393f8 InsertLine__14TXLinesHeightsFRC16TXLineHeightInfoP19TXFormatReflowLinesl
 	NewtonErr		InsertLineHeightInfo(const TXLineHeightInfo& info, long line);	// ROM 0x002394d0 InsertLineHeightInfo__14TXLinesHeightsFRC16TXLineHeightInfol
-	void			RemoveLines(long count, long line, TXFormatReflowLines* reflow);	// ROM 0x002394dc RemoveLines__14TXLinesHeightsFlT1P19TXFormatReflowLines
 	// The group line `*line` is in; `*line` comes back as its place in
 	// the group, `*index` (when asked) as the group's index.
 	TXLineHeightGroup* LineToHeightGroup(long* line, long* index) const;	// ROM 0x00239684 LineToHeightGroup__14TXLinesHeightsCFPlT1

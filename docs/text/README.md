@@ -472,7 +472,7 @@ registered objects (`gRegisteredRuns`/`gRegisteredRulers`).  NOT YET:
 
 `TXLinesHeights` keeps every line's height without a word per line: an
 array of groups, each a run of consecutive lines with one height (and
-one natural height).  Setting a line's height splits its group in three,
+one ascent).  Setting a line's height splits its group in three,
 moves the line to an equal neighbour, or changes the group in place when
 the line is all there is of it; removing lines joins the neighbours of
 an emptied group when they match.  The total height and the last line's

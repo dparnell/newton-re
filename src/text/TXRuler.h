@@ -112,13 +112,13 @@ struct TXPendingTab
 };
 
 
-// What a ruler is asked to make of a line's height.  PROVISIONAL: only
-// the two words `TXAdvancedRuler::AdjustLineHeight` touches are known;
-// the rest comes with the lines (`TXLinesHeights`).
+// A line's height, as the formatter works it out (the tallest ascent,
+// descent and leading of the runs on it: TXFormatter::CalcRunsHeight)
+// and a ruler adjusts it for the line spacing.
 struct TXLineHeightInfo
 {
 	long			fHeight;		// +0x00  the height the line is given
-	long			fNaturalHeight;	// +0x04  what it would be at single spacing
+	long			fAscent;		// +0x04  the tallest run's ascent: where the baseline is, and what the spacing is counted in
 };
 
 
