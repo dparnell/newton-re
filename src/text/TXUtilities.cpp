@@ -7,6 +7,7 @@
 */
 
 #include "TXUtilities.h"
+#include "ScrollRect.h"
 #include "Rects.h"
 #include "Ports.h"
 #include "RootView.h"
@@ -244,4 +245,32 @@ TXGetNewDefaultObject(unsigned long kind)
 {
 	TXRegisteredObjects* registered = kind == kTXRunObjectKind ? gRegisteredRuns : gRegisteredRulers;
 	return registered->GetIndObject(0)->CreateNew();
+}
+
+
+// ROM 0x0023441c TXScrollRect__FRC4RectlT2PP6RegionUc
+Boolean
+TXScrollRect(const Rect& r, long dh, long dv, RgnHandle update, Boolean extend)
+{
+	Rect box = r;
+	if (extend)
+	{
+		if (dv < 0)
+			box.top = TXClipValue(dv + r.top, -0x7fff, 0x7fff);
+		else
+			box.bottom = TXClipValue(dv + r.bottom, -0x7fff, 0x7fff);
+		if (dh < 0)
+			box.left = TXClipValue(dh + box.left, -0x7fff, 0x7fff);
+		else
+			box.right = TXClipValue(dh + box.right, -0x7fff, 0x7fff);
+	}
+	GrafPtr port;
+	GetPort(&port);
+	SectRect(&box, &port->portRect, &box);
+	long height = port->portRect.bottom - port->portRect.top;
+	long width = port->portRect.right - port->portRect.left;
+	short v = (short) TXClipValue(dv, -height, height);
+	short h = (short) TXClipValue(dh, -width, width);
+	ScrollRect(&box, h, v, update);
+	return !EmptyRgn(update);
 }

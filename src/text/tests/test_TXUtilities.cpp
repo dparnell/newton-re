@@ -134,6 +134,28 @@ TestClipping()
 
 	DisposeRgn(two);
 	DisposeRgn(other);
+
+	// scrolling: a black line moved down 4, the strip above it the update
+	ClipRect(&pm.bounds);
+	memset(bits, 0, sizeof(bits));
+	Rect line;
+	SetRect(&line, 0, 20, kSize, 21);
+	PaintRect(&line);
+	RgnHandle update = NewRgn();
+	SetRect(&r, 0, 10, kSize, 40);
+	EXPECT(TXScrollRect(r, 0, 4, update, false));
+	EXPECT(bits[24 * (kSize / 8)] == 0xff && bits[20 * (kSize / 8)] == 0);
+	EXPECT((*update)->rgnBBox.top == 10 && (*update)->rgnBBox.bottom == 14);
+	// widened by the scroll: [10, 20) scrolled up 8 is [2, 20) moved
+	memset(bits, 0, sizeof(bits));
+	SetRect(&line, 0, 15, kSize, 16);
+	PaintRect(&line);
+	SetRect(&r, 0, 10, kSize, 20);
+	EXPECT(TXScrollRect(r, 0, -8, update, true));
+	EXPECT(bits[7 * (kSize / 8)] == 0xff && bits[15 * (kSize / 8)] == 0);
+	EXPECT((*update)->rgnBBox.top == 12 && (*update)->rgnBBox.bottom == 20);
+	EXPECT(!TXScrollRect(r, 0, 0, update, false));		// nothing to scroll
+	DisposeRgn(update);
 	DisposeRgn(saved);
 }
 

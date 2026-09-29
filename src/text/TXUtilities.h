@@ -21,12 +21,11 @@
 				shows; `TXInvalSectRect` marks a rectangle for redrawing
 				on the root view when it shows through a region.
 
-				NOT YET RECONSTRUCTED: TXScrollRect 0x0023441c, over
-				QuickDraw's ScrollRect 0x00340378 (not reconstructed in
-				qd/ yet).
+				`TXScrollRect` scrolls a rectangle of the port (widened by
+				the scroll when asked) over QuickDraw's ScrollRect.
 
 	Reconstructed from the MP2x00 US ROM (0x00233f04-0x00233fd0,
-	0x00234134-0x00234278, 0x00234384-0x002343d0, 0x00234590-0x00234804);
+	0x00234134-0x00234278, 0x00234384-0x002343d0, 0x0023441c-0x00234590, 0x00234590-0x00234804);
 	each function cites its origin.
 */
 
@@ -113,6 +112,11 @@ extern Boolean				gTXHasColor;						// ROM 0x0c104d74 gTXHasColor
 Boolean	TXClipFurther(Rect* rect, RgnHandle savedClip);			// ROM 0x00234590 TXClipFurther__FP4RectPP6Region - ==> whether anything of it shows (rect narrowed; the clip saved into savedClip and narrowed)
 Boolean	TXCalcClipRect(Rect* rect);								// ROM 0x00234680 TXCalcClipRect__FP4Rect - ==> whether anything of it shows
 void	TXInvalSectRect(Rect* rect, RgnHandle rgn);				// ROM 0x00234724 TXInvalSectRect__FP4RectPP6Region - rgn nil: the port's clip
+// The rectangle's bits scrolled by (dh, dv) - no further than the port
+// is tall or wide - over the part of the port it covers; `extend` widens
+// it first by the scroll on the side it moves towards.  The strip left
+// behind comes back in `update`; ==> whether there is one.
+Boolean	TXScrollRect(const Rect& r, long dh, long dv, RgnHandle update, Boolean extend);	// ROM 0x0023441c TXScrollRect__FRC4RectlT2PP6RegionUc
 
 
 // The documents' shared runs and rulers (TXObjectRange.h), made by
