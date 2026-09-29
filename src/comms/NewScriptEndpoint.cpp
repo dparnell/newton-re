@@ -8,6 +8,7 @@
 */
 
 #include "NewScriptEndpoint.h"
+#include "StreamingEndpoint.h"
 #include "SerialEndpoint.h"
 #include "CommManager.h"
 #include "Frames.h"
@@ -2377,6 +2378,7 @@ CIRequestsPending(RefArg rcvr, RefArg which)
 void
 RegisterCommsNatives(void)
 {
+	RegisterStreamingEndpointNatives();
 	RegisterNativeFunction("CINewInstantiate", (void*) CINewInstantiate, 2);
 	RegisterNativeFunction("CINewInstantiateFromEndpoint", (void*) CINewInstantiateFromEndpoint, 3);
 	RegisterNativeFunction("CINewDispose", (void*) CINewDispose, 0);

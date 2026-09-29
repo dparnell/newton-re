@@ -24,8 +24,8 @@ extern const ExceptionName exPipeException;
 // ROM 0x0018a694 __ct__12PipeCallBackFv
 PipeCallBack::PipeCallBack()
 {
-	fUnknown04 = -1;
-	fUnknown08 = -1;
+	fReadTotal = -1;
+	fWriteTotal = -1;
 }
 
 

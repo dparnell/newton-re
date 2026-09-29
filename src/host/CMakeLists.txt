@@ -311,3 +311,9 @@ set_tests_properties(host.NewtonEcho PROPERTIES TIMEOUT 120
 add_test(NAME host.NewtonDNS COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 6 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/dns.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(host.NewtonDNS PROPERTIES TIMEOUT 120
                      PASS_REGULAR_EXPRESSION "dns: instantiated, state 1.*dns: localhost type 1: 127.0.0.1.*dns:  type 12: 0.0.0.0 .. -> ..[A-Za-z].*dns: no-such-host.invalid not found, -60791.*dns: done")
+
+# a protoStreamingEndpoint (comms/StreamingEndpoint.h): a frame streamed
+# out as NSOF and read back over TCP through a TEndpointPipe
+add_test(NAME host.NewtonStream COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 8 --tcp-echo 52372 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/stream.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(host.NewtonStream PROPERTIES TIMEOUT 120
+                     PASS_REGULAR_EXPRESSION "stream: connected, state 5.*stream: sent, progress 1536 of 1854.*stream: received a streamed frame 1996 300 89401 .*progress 1854.*stream: done")

@@ -8,6 +8,7 @@ add_library(comms STATIC
     CommManager.cpp
     Endpoint.cpp
     SerialEndpoint.cpp
+    EndpointPipe.cpp
     host/HostTCPTool.cpp
     host/HostServices.cpp
     host/HostEchoServer.cpp
@@ -23,6 +24,7 @@ target_include_directories(comms PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURR
 add_library(comms_script STATIC
     Translators.cpp
     NewScriptEndpoint.cpp
+    StreamingEndpoint.cpp
 )
 # newt: ExceptionNotify and CheckForDeferredActions; views: the root view
 # brought up to date after an endpoint event

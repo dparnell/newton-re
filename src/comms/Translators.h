@@ -42,10 +42,12 @@
 				the heap or a large binary on a store), and PUnFlattenRef out
 				of one (functions refused when asked).
 
-				InitTranslators puts them in the protocol registry, as the
-				ROM's does (NOT YET: PStreamInRef and PStreamOutRef, NSOF
-				read from and written to an endpoint through a
-				TEndpointPipe).
+				PStreamInRef and PStreamOutRef read NSOF from and write it to
+				an endpoint, through a TEndpointPipe (comms/EndpointPipe.h) -
+				protoStreamingEndpoint's StreamIn and StreamOut.
+
+				InitTranslators puts them all in the protocol registry, as
+				the ROM's does.
 
 	Reconstructed from the MP2x00 US ROM (0x00139e40, 0x0014b9f4-0x0014c49c,
 	0x001cd534-0x001cdf00, 0x00256220, 0x00389f18-0x00389fd4); each
@@ -190,6 +192,18 @@ struct UnflattenRefParms
 };
 
 
+// PStreamInRef's and PStreamOutRef's: the value written (in: the store a
+// large binary read goes to), the endpoint, the timeout, whether framed
+class TEndpoint;
+struct StreamRefParms
+{
+	RefVar		fValue;			// +0x00
+	TEndpoint*	fEndpoint;		// +0x04
+	ULong		fTimeout;		// +0x08
+	Boolean		fFraming;		// +0x0c
+};
+
+
 /* -------------------------------------------------------------------------------
 	The implementations
 ------------------------------------------------------------------------------- */
@@ -278,6 +292,25 @@ public:
 	PUnFlattenRef*	New();
 	void			Delete();
 	Ref				Translate(void* context, PipeCallBack* callback);	// context: UnflattenRefParms
+};
+
+
+PROTOCOL PStreamInRef : public PFrameSource
+{
+public:
+	PROTOCOL_IMPL_HEADER_MACRO(PStreamInRef);
+	PStreamInRef*	New();
+	void			Delete();
+	Ref				Translate(void* context, PipeCallBack* callback);	// context: StreamRefParms
+};
+
+PROTOCOL PStreamOutRef : public PFrameSink
+{
+public:
+	PROTOCOL_IMPL_HEADER_MACRO(PStreamOutRef);
+	PStreamOutRef*	New();
+	void			Delete();
+	void*			Translate(void* context, PipeCallBack* callback);	// context: StreamRefParms ==> nil
 };
 
 

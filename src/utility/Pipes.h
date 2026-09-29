@@ -50,10 +50,13 @@ public:
 					PipeCallBack();
 	virtual			~PipeCallBack();
 
-	virtual void	Status(long count) = 0;		// NOT YET RECONSTRUCTED: no ROM subclass is; the fields' meaning is ours to find
+	// how far a transfer has got (-1: not known); false stops it
+	// (TEndpointPipe answers kError_Call_Aborted) - TStreamingCallBack,
+	// comms/StreamingEndpoint.h, is the ROM's one subclass
+	virtual Boolean	Status(long bytesRead, long bytesWritten) = 0;
 
-	long			fUnknown04;			// +0x04  -1
-	long			fUnknown08;			// +0x08  -1
+	long			fReadTotal;			// +0x04  how much a read will come to (-1: not known)
+	long			fWriteTotal;		// +0x08  how much a write will come to (-1: not known)
 };
 
 

@@ -21,6 +21,7 @@
 #include "toolbox/ByteOrder.h"
 #include "ObjectStreamer.h"
 #include "RefPipe.h"
+#include "EndpointPipe.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -957,14 +958,69 @@ PUnFlattenRef::Translate(void* context, PipeCallBack* callback)
 }
 
 
+PROTOCOL_IMPL_SOURCE_MACRO(PStreamInRef)
+PROTOCOL_CLASSINFO(PStreamInRef, "PFrameSource", "", 0, 0, nil)	// ROM 0x0038a274 ClassInfo__12PStreamInRefSFv
+
+// ROM 0x001fc4c8 New__12PStreamInRefFv
+PStreamInRef*	PStreamInRef::New()			{ return this; }
+// ROM 0x001fc4cc Delete__12PStreamInRefFv
+void			PStreamInRef::Delete()		{ }
+
+
+// ROM 0x001fc4d0 Translate__12PStreamInRefFPvP12PipeCallBack
+// A value read as NSOF from the endpoint (0x200-byte receives).
+Ref
+PStreamInRef::Translate(void* context, PipeCallBack* callback)
+{
+	StreamRefParms* parms = (StreamRefParms*) context;
+	RefVar result;
+	if (parms != nil)
+	{
+		TEndpointPipe pipe;
+		pipe.Init(parms->fEndpoint, 0x200, 0, parms->fTimeout, parms->fFraming, callback);
+		TObjectReader reader(pipe, parms->fValue);
+		result = reader.Read();
+	}
+	return result;
+}
+
+
+PROTOCOL_IMPL_SOURCE_MACRO(PStreamOutRef)
+PROTOCOL_CLASSINFO(PStreamOutRef, "PFrameSink", "", 0, 0, nil)	// ROM 0x0038a1f8 ClassInfo__13PStreamOutRefSFv
+
+// ROM 0x001fc5d8 New__13PStreamOutRefFv
+PStreamOutRef*	PStreamOutRef::New()		{ return this; }
+// ROM 0x001fc5dc Delete__13PStreamOutRefFv
+void			PStreamOutRef::Delete()		{ }
+
+
+// ROM 0x001fc5e0 Translate__13PStreamOutRefFPvP12PipeCallBack
+// A value written as NSOF to the endpoint (0x200-byte sends), the callback
+// told first how much it comes to.
+void*
+PStreamOutRef::Translate(void* context, PipeCallBack* callback)
+{
+	StreamRefParms* parms = (StreamRefParms*) context;
+	if (parms != nil)
+	{
+		TEndpointPipe pipe;
+		pipe.Init(parms->fEndpoint, 0, 0x200, parms->fTimeout, parms->fFraming, callback);
+		TObjectWriter writer(parms->fValue, pipe, false);
+		if (callback != nil)
+			callback->fWriteTotal = writer.Size();
+		writer.Write();
+		pipe.FlushWrite();
+	}
+	return nil;
+}
+
+
 /* -------------------------------------------------------------------------------
 	InitTranslators
 ------------------------------------------------------------------------------- */
 
 // ROM 0x00256220 InitTranslators__Fv
 // The translators into the protocol registry.
-// NOT YET: PStreamInRef and PStreamOutRef (between PUnFlattenRef and
-// PScriptDataIn in the ROM's order).
 void
 InitTranslators(void)
 {
@@ -974,6 +1030,8 @@ InitTranslators(void)
 	PUnFlattenPtr::ClassInfo()->Register();
 	PFlattenRef::ClassInfo()->Register();
 	PUnFlattenRef::ClassInfo()->Register();
+	PStreamInRef::ClassInfo()->Register();
+	PStreamOutRef::ClassInfo()->Register();
 	PScriptDataIn::ClassInfo()->Register();
 	PScriptDataOut::ClassInfo()->Register();
 	POptionDataIn::ClassInfo()->Register();

@@ -57,6 +57,7 @@
 
 // the script endpoint's errors (the translators' are in Translators.h)
 #define kCommScriptErrNoInputSpec		(-54000)	// input asked for with no input spec
+#define kCommScriptErrStreamSpec		(-54003)	// StreamIn with no spec
 #define kCommScriptErrBadEndSequence	(-54005)	// an end sequence element that is not a byte, character, string or binary
 #define kCommScriptErrPartialForm		(-54006)	// a partial for a form that is not 'string or 'bytes
 #define kCommScriptErrTerminationForm	(-54007)	// a termination for a form that takes none

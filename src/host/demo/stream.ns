@@ -1,0 +1,45 @@
+// Stream: a protoStreamingEndpoint (@466) over TCP to the echo server
+// newton runs with --tcp-echo - a whole frame written across the
+// connection as NSOF (StreamOut) and read back (StreamIn), synchronously,
+// each with a progressScript(done, total) told how far it has got after
+// every 0x200 bytes
+// (comms/StreamingEndpoint.h, over comms/EndpointPipe.h).
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//       --tcp-echo 52372 --script src/host/demo/stream.ns --headless 8
+
+ep := {_proto: @466,
+	exceptionHandler: func(e) begin
+		Print("stream: exception " & e.name & " " & e.data);
+		true;
+	end};
+ep:Instantiate(ep, [
+	{label: "inet", type: 'service, opCode: 512},
+	{label: "itrs", type: 'option, opCode: 512,
+	 data: {arglist: [[127, 0, 0, 1], 52372],
+	        typelist: ['struct, ['array, 'byte, 4], 'short]}}]);
+ep:Bind(nil, nil);
+ep:Connect(nil, nil);
+Print("stream: connected, state " & ep:State());
+
+list := Array(300, 0);
+for i := 0 to 299 do list[i] := i * i;
+sent := {title: "a streamed frame", when: 1996, list: list, nested: {ok: true}};
+outProgress := 0;
+ep:StreamOut(sent, {progressScript: func(done, total) begin
+	outProgress := done & " of " & total;
+	true;
+end});
+Print("stream: sent, progress " & outProgress);
+
+inProgress := 0;
+got := ep:StreamIn({form: 'frame, progressScript: func(done, total) begin
+	inProgress := done;
+	true;
+end});
+Print("stream: received " & got.title & " " & got.when & " " & Length(got.list) & " " & got.list[299] & " " & got.nested.ok & ", progress " & inProgress);
+
+ep:Disconnect(true, nil);
+ep:Unbind(nil);
+ep:Dispose();
+Print("stream: done");
