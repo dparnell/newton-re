@@ -302,10 +302,21 @@ What it is not yet:
 
 - The compressed sounds (IMA ADPCM), the ring tones' `TDTMFCodec`
   parameters and the tables are still `.bin` files.
-- Inline objects are named by path in the manifest, so an edit that
-  moves a slot, or adds a frame, also has to change the manifest. An
-  edit within an object, including one that changes its size, needs
-  nothing more: `--relayout`.
+- Inline objects are named by path in the manifest (`obj_x.slot`,
+  `obj_x[2]`), and **an edit that moves them needs no change to the
+  manifest**; `--relayout` does the rest:
+  - a frame's slots put in another order keep their paths, which go by
+    tag, and the frame gets a map in the new order;
+  - an element put into an array moves every later element's path along.
+    Each path is laid out as the object now at it, whatever the manifest
+    said was there: its size, and the kind bits of its header's flags.
+    The paths that are new go at the end;
+  - a renamed slot is a path the manifest does not know, and goes at the
+    end; the old path, gone, is dropped.
+
+  `edit-test` does both of the first two, on @271 (the card types frame:
+  its first two slots swapped) and @113 (an array of month names: an
+  element put at its front). `host.ROMSourceEditMoved` reads them back.
 
 ## Where the tree lives
 

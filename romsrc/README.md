@@ -76,9 +76,11 @@ python tools/newton-rom/analysis/romsrc.py build romsrc --relayout -o build/obje
 the copy still boots (ctests `host.ROMSourceEdit`,
 `host.ROMSourceEditValue`, `host.NewtonEditedSameScreen`).
 
-What an edit cannot do yet: move a slot or an inline object within its
-frame without changing `layout.tsv` to match. The manifest names inline
-objects by their path.
+Nothing in `layout.tsv` needs changing by hand. Slots can be put in
+another order, elements inserted into an array, slots added, renamed or
+taken away, and new frames added; `--relayout` lays out what is there
+now. `layout.tsv` only keeps the unedited tree's addresses and the facts
+the source cannot say (which map a frame shares, a header's flags).
 
 ## Booting from it
 
@@ -97,4 +99,4 @@ exactly what the boot on the ROM image draws: ctest
 | `host.ROMSourceCommitted` | The committed tree still builds byte for byte the ROM's. It passes as the tree was committed. Once someone edits the tree on purpose, it stops being a regression test: it then says only that the tree has left the ROM, and it should be retired, or kept for a branch that tracks the original. |
 | `host.ROMSourceRoundTrip` | The extractor itself: a fresh extraction into the build directory, built back byte for byte. It does not touch this tree. |
 | `host.NewtonNoROM`, `host.NewtonNoROMSameScreen` | The OS booted from this tree's object file, and its screen against the ROM image boot's. |
-| `host.ROMSourceEdit`, `host.ROMSourceEditValue`, `host.NewtonEditedSameScreen` | A copy of this tree edited, built laid out afresh, and booted. |
+| `host.ROMSourceEdit`, `host.ROMSourceEditValue`, `host.ROMSourceEditMoved`, `host.NewtonEditedSameScreen` | A copy of this tree edited (strings lengthened, slots swapped, an array element inserted, a slot holding a new frame added), built laid out afresh, the edits read back, and booted. |

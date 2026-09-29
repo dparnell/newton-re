@@ -24,7 +24,9 @@ and, for each, the ROM's ref and the ref now (build --relayout).
     python romsrc.py roundtrip build/MP2x00US -o <dir> --newtonscript <exe>   # both, as the ctest runs them
     python romsrc.py edit-test <tree> -o <dir> --objects <file> --newtonscript <exe>
 
-edit-test is the test of editability: it copies a tree, adds a slot
+edit-test is the test of editability: it copies a tree, swaps a frame's
+first two slots (@271) and puts an element at the front of an array (@113,
+so every later element's path moves along), adds a slot
 holding a new frame to Rcanonicalinkshape (so the builder must make maps
 and symbols), lengthens a string in the first package's part (so every
 package after it moves), lengthens one string in the object area (the plain string of 12 characters or more with the lowest
@@ -1721,6 +1723,15 @@ class Builder:
 			size = self.object_size(path)
 			if size is None:
 				continue
+			v = self.by_path.get(path.lower())
+			if v is not None:
+				# (an edit may have put another kind of object at a path - an
+				# element inserted in an array moves every later one along:
+				# the header's kind bits follow what is there now)
+				kind = {"frame": 3, "binary": 0}.get(v.kind, 1)
+				if flags & 3 != kind:
+					flags = (flags & ~3) | kind
+					extra = {k: x for k, x in extra.items() if k != "map"}
 			out.append((at, path, flags, extra))
 			if at != a:
 				self.relocations.append((a + 1, at + 1))
@@ -1953,6 +1964,33 @@ def main(argv=None):
 			if lengthen_first_string(tree) != 0:
 				return 1
 		folder = os.path.join(a.output, "objects")
+		# a frame's slots put in another order, and an element put at the
+		# front of an array (every later one's path moves along): the layout
+		# is not touched
+		magic = {}
+		with open(os.path.join(a.output, "magic.tsv"), encoding="utf-8") as f:
+			for line in f:
+				fields = line.rstrip("\n").split("\t")
+				if fields[0].isdigit():
+					magic[int(fields[0])] = fields[1]
+		for name in sorted(os.listdir(folder)):
+			path = os.path.join(folder, name)
+			with open(path, encoding="utf-8") as f:
+				text = f.read()
+			changed = False
+			m = re.search(r"\n%s := \{([^:]+): (\"[^\"]*\"), ([^:]+): (\"[^\"]*\"), " % re.escape(magic.get(271, "-")), text)
+			if m:
+				text = text[:m.start()] + "\n%s := {%s: %s, %s: %s, " % (magic[271], m.group(3), m.group(4), m.group(1), m.group(2)) + text[m.end():]
+				print("edited @271 (%s) in %s: its first two slots swapped" % (magic[271], name))
+				changed = True
+			marker = "\n%s := [|Array|: " % magic.get(113, "-")
+			if marker in text:
+				text = text.replace(marker, marker + '"edit-test", ', 1)
+				print("edited @113 (%s) in %s: an element put at its front" % (magic[113], name))
+				changed = True
+			if changed:
+				with open(path, "w", encoding="utf-8", newline="\n") as f:
+					f.write(text)
 		# and a slot added to a frame, holding a new frame: a map made for
 		# each, and symbols for the new names
 		for name in sorted(os.listdir(folder)):

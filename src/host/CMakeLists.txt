@@ -569,4 +569,13 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../romsrc/layout.tsv)
     set_tests_properties(host.ROMSourceEditValue PROPERTIES TIMEOUT 60 FIXTURES_REQUIRED romsrc_edited
                          ENVIRONMENT "NEWTON_ROM=${CMAKE_BINARY_DIR}/no-rom-image"
                          PASS_REGULAR_EXPRESSION "added by edit-test")
+    # ... and the objects edit-test moved within their frame and array, with
+    # the layout untouched
+    add_test(NAME host.ROMSourceEditMoved
+             COMMAND newtonscript --objects ${CMAKE_BINARY_DIR}/romsrc-edited.bin
+                     -e "Print(@113); Print(@271.sram); Print(@271.flsh)"
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.ROMSourceEditMoved PROPERTIES TIMEOUT 60 FIXTURES_REQUIRED romsrc_edited
+                         ENVIRONMENT "NEWTON_ROM=${CMAKE_BINARY_DIR}/no-rom-image"
+                         PASS_REGULAR_EXPRESSION "edit-test.*may.*june.*april.*jan.*SRAM Card.*Flash Card")
 endif()
