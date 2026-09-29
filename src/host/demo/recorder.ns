@@ -1,0 +1,70 @@
+// The Sound Recorder, driven through its own buttons: after the Setup walk
+// (as setup.ns does) it is opened, Rec is tapped, two seconds of the
+// microphone are recorded, Stop is tapped, then Play, and what the
+// recorder's status line says at each step is printed.  Headless, the
+// microphone is the null sound backend's test tone (newton's
+// --microphone-tone) and what is played is kept, so newton says at the
+// end how much of the playback was that tone.
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//       --script src/host/demo/recorder.ns --headless 45 --microphone-tone 1000
+//
+// The buttons are at the places the recorder puts them on a 320x480
+// screen: Rec (83..130, 182..218), Stop (130..177), Play (177..224).
+
+tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
+typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
+
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+
+page := 0;
+nextPage := func()
+  begin
+    page := page + 1;
+    if page < 10 then
+      begin
+        call tapAt with (293, 468);			// Continue
+        AddDelayedCall(nextPage, nil, 1800);
+      end
+    else
+      call tapAt with (297, 468);			// Done, on "Congratulations"
+  end;
+
+AddDelayedCall(func() begin
+    call tapAt with (293, 468);				// past "Welcome"
+    AddDelayedCall(func() begin
+        call tapAt with (200, 150);			// the caret into the First line
+        foreach c in name do call typeKey with (c);
+        AddDelayedCall(nextPage, nil, 1500);
+      end, nil, 2000);
+  end, nil, 3000);
+
+recorder := nil;
+status := func(step)
+  begin
+    local text := recorder.statusText.text;
+    Print("recorder: " & step & ": " & (if text then text else "-"));
+  end;
+
+AddDelayedCall(func() begin
+    recorder := GetRoot().SoundRecorder;
+    recorder:Open();
+    AddDelayedCall(func() begin
+        call status with ("opened");
+        call tapAt with (106, 200);				// Rec
+        AddDelayedCall(func() begin
+            call status with ("recording");
+            call tapAt with (153, 200);			// Stop
+            AddDelayedCall(func() begin
+                call status with ("stopped");
+                call tapAt with (200, 200);		// Play
+                AddDelayedCall(func() begin
+                    call status with ("played");
+                    recorder:Close();
+                    Print("recorder: done");
+                  end, nil, 4000);
+              end, nil, 1000);
+          end, nil, 2000);
+      end, nil, 2000);
+  end, nil, 30000);
+Print("recorder: the script is loaded");

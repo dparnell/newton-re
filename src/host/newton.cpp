@@ -14,10 +14,13 @@
 
 	newton [--rom image] [--heap bytes] [--display WxH[xdepth]] [--scale n]
 	       [--script file.ns] [--headless seconds] [--store file] [--erase]
-	       [--package file.pkg]...
+	       [--package file.pkg]... [--microphone-tone hz]
 
 	--headless runs without a window for the seconds (a snapshot of the
-	display can be written by the script: ScreenSnapshot).
+	display can be written by the script: ScreenSnapshot).  The sound it
+	plays is kept (hal/host/HostSoundDriver.h) and counted at the end;
+	with --microphone-tone the microphone hears a sine of that frequency,
+	and the end says how much of what was played was that tone.
 
 	--store names the file the internal store is kept in between runs,
 	which is what the flash is on the machine: set the machine up once and
@@ -50,6 +53,7 @@
 #include "os600/kernel/host/TaskRuntime.h"
 #include "REPTranslators.h"
 #include "Interpreter.h"
+#include <math.h>
 #include <stdio.h>
 #include <signal.h>
 
@@ -82,6 +86,7 @@ __declspec(dllimport) void* __stdcall GetModuleHandleA(const char* name);
 
 static long gScale = 1;
 static long gHeadlessSeconds = 0;
+static long gToneFrequency = 0;			// --microphone-tone: the null microphone's test tone
 static Boolean gWindowed = true;
 
 
@@ -90,7 +95,7 @@ Usage(void)
 {
 	fprintf(stderr, "usage: newton [--rom image] [--heap bytes] [--display WxH[xdepth]] [--scale n]\n"
 					"              [--script file.ns] [--headless seconds] [--store file] [--erase]\n"
-					"              [--package file.pkg]...\n");
+					"              [--package file.pkg]... [--microphone-tone hz]\n");
 	return 2;
 }
 
@@ -228,6 +233,8 @@ main(int argc, char** argv)
 			gScale = strtol(argv[++i], nil, 0);
 		else if (strcmp(argv[i], "--script") == 0 && i + 1 < argc)
 			script = argv[++i];
+		else if (strcmp(argv[i], "--microphone-tone") == 0 && i + 1 < argc)
+			gToneFrequency = strtol(argv[++i], nil, 0);
 		else if (strcmp(argv[i], "--headless") == 0 && i + 1 < argc)
 		{
 			gHeadlessSeconds = strtol(argv[++i], nil, 0);
@@ -265,6 +272,19 @@ main(int argc, char** argv)
 	Boolean loud = gWindowed && HostAudioOpen(kHostSoundRate);
 	Boolean hearing = loud && HostMicrophoneOpen(kHostSoundRate);
 	HostInstallSoundDriver(hearing ? &kLoudspeakerAndMicrophone : loud ? &kLoudspeaker : nil);
+	// headless, the null microphone can hear a test tone: a minute of it
+	static short* tone = nil;
+	const long kToneSamples = 60 * kHostSoundRate;
+	if (!hearing && gToneFrequency > 0)
+	{
+		tone = (short*) malloc(kToneSamples * sizeof(short));
+		if (tone != nil)
+		{
+			for (long i = 0; i < kToneSamples; i++)
+				tone[i] = (short) (10000.0 * sin(2 * 3.14159265358979 * gToneFrequency * i / kHostSoundRate));
+			HostSoundSetSource(tone, kToneSamples);
+		}
+	}
 	OsBoot();
 	HostWindowStop();
 	if (hearing)
@@ -272,8 +292,25 @@ main(int argc, char** argv)
 	if (loud)
 		HostAudioClose();
 	long played = 0;
-	HostSoundCaptured(&played);
+	const short* samples = HostSoundCaptured(&played);
 	if (played > 0)
 		fprintf(stderr, "[host] sound: %ld samples played\n", played);
+	if (played > 0 && gToneFrequency > 0)
+	{
+		// how much of what was played is the test tone (Goertzel over the
+		// whole of it, against all the energy there)
+		double w = 2 * 3.14159265358979 * gToneFrequency / kHostSoundRate, c = 2 * cos(w);
+		double s1 = 0, s2 = 0, energy = 0;
+		for (long i = 0; i < played; i++)
+		{
+			double s0 = samples[i] + c * s1 - s2;
+			s2 = s1;
+			s1 = s0;
+			energy += (double) samples[i] * samples[i];
+		}
+		double power = (s1 * s1 + s2 * s2 - c * s1 * s2) * 2 / played;
+		fprintf(stderr, "[host] sound: the %ld Hz test tone makes up %.0f%% of what was played\n",
+				gToneFrequency, energy > 0 ? 100 * power / energy : 0.0);
+	}
 	return 0;
 }
