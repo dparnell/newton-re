@@ -7,6 +7,7 @@
 
 #include "NIENatives.h"
 #include "NIERuntime.h"
+#include "PackageNativeCPU.h"
 #include "PackageNatives.h"
 #include "Interpreter.h"
 #include "Compiler.h"
@@ -588,6 +589,44 @@ TestObjectToString(void)
 }
 
 
+// Each group of checks; an exception stops only its own group.  Answers the
+// number of groups an exception stopped.
+static int
+RunAll(void)
+{
+	static const struct { const char* name; void (*test)(void); } kTests[] = {
+		{ "queue", TestQueue }, { "engine", TestEngine }, { "events", TestEvents },
+		{ "periodic", TestPeriodic }, { "ProtoClone", TestProtoClone }, { "loop", TestLoop },
+		{ "ObjectToString", TestObjectToString } };
+	int stopped = 0;
+	for (size_t i = 0; i < sizeof(kTests) / sizeof(kTests[0]); i++)
+	{
+		newton_try
+		{
+			kTests[i].test();
+		}
+		newton_catch_all
+		{
+			stopped++;
+			failures++;
+			printf("FAIL %s: exception %s\n", kTests[i].name, CurrentException()->name);
+			if (Subexception(CurrentException()->name, "evt.ex.fr"))
+			{
+				RefStruct* data = (RefStruct*) CurrentException()->data;
+				if (data != nil && IsFrame(*data))
+				{
+					printf("  errorCode %ld\n", (long) RINT(GetFrameSlot(*data, RSSYMerrorcode)));
+					RefVar sym(GetFrameSlot(*data, RefVar(Sym("symbol"))));
+					if (IsSymbol(sym))
+						printf("  symbol %s\n", SymbolName(sym));
+				}
+			}
+		}
+		end_try;
+	}
+	return stopped;
+}
+
 int
 main()
 {
@@ -616,8 +655,23 @@ main()
 	gCode = AllocateBinary(RSSYMbinary, kNIECodeLength);
 	memcpy(BinaryData(gCode), code, kNIECodeLength);
 
+	// first the oracle: the package's own ARM code on the CPU interpreter
+	// (src/armcpu), nothing registered but the test's printer double; the
+	// same checks must pass there
+	RegisterPackageNative(kNIECodeLength, kNIECodeHash, kProbeOffset, (void*) ProbePrinter, 3, "(test) f");
+	InstallPackageNativeCPU();
+	// (advisory until the CPU answers every ROM entry the NIE's code calls:
+	// what it cannot run yet is reported, not failed)
+	printf("test_NIEProtoFSM: on the CPU (the package's own code):\n");
+	int before = failures;
+	RunAll();
+	printf("test_NIEProtoFSM: %d check(s) failed on the CPU\n", failures - before);
+	failures = before;
+
+	// then the re-expressions
+	SetPackageNativeFallback(nil);
 	RegisterNIENatives();
-	// the re-expressions are what run: no CPU fallback here (a function the
+	// the re-expressions are what run: no CPU fallback now (a function the
 	// registry missed would throw, not be emulated), and every function the
 	// package holds is found with its own argument count
 	EXPECT(GetPackageNativeFallback() == nil);
@@ -635,31 +689,7 @@ main()
 			EXPECT(fn != nil && numArgs == kAll[i].numArgs);
 		}
 	}
-	RegisterPackageNative(kNIECodeLength, kNIECodeHash, kProbeOffset, (void*) ProbePrinter, 3, "(test) f");
-	newton_try
-	{
-		TestQueue();
-		TestEngine();
-		TestEvents();
-		TestPeriodic();
-		TestProtoClone();
-		TestLoop();
-		TestObjectToString();
-	}
-	newton_catch_all
-	{
-		failures++;
-		printf("FAIL: exception %s\n", CurrentException()->name);
-		RefStruct* data = (RefStruct*) CurrentException()->data;
-		if (data != nil && IsFrame(*data))
-		{
-			printf("  errorCode %ld\n", (long) RINT(GetFrameSlot(*data, RSSYMerrorcode)));
-			RefVar sym(GetFrameSlot(*data, RefVar(Sym("symbol"))));
-			if (IsSymbol(sym))
-				printf("  symbol %s\n", SymbolName(sym));
-		}
-	}
-	end_try;
+	RunAll();
 
 	printf("test_NIEProtoFSM: %s\n", failures == 0 ? "all passed" : "FAILED");
 	return failures != 0;
