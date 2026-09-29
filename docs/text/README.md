@@ -908,11 +908,30 @@ a word at its end, makes it bold, scrolls, cuts "hello" to a clipping and
 pastes it at the start, scrubs it out with the pen, keeps 2100 characters
 on the store and reads them back into another view, shows the ruler bar
 over it and taps a justification on it - six pictures,
-`build/txview-1.pgm` to `-6.pgm`.  `src/host/demo/txpages.ns` (ctest
+`build/txview-1.pgm` to `-6.pgm`.  (The mark at the text's left edge in
+`txview-4.pgm` is the caret - at offset 0 after the scrub, and cut by the
+view's edge - not ink.  Ink the scrub had left was there, but hidden
+under it: the host inked strokes into the screen's bits, where the ROM's
+live inker puts them on the display alone, so the caret saved the ink
+with the screen and put it back when it moved.  The host's live ink is on
+the display only now - `recognition/StrokeQueue.cpp`, with
+`TRootView::PostDraw` drawing the waiting strokes into the bits when an
+update paints over them, as the ROM does.)  `src/host/demo/txpages.ns` (ctest
 `host.NewtonTXPages`) asks for pages of 215 pixels, puts six sentences on
 two of them and a page break after the first, which ends the first page
 there and makes three - `build/txpages-1.pgm` and `-2.pgm`; the
 paginated side is also `test_TXDisplay`'s `TestPages`.
+
+### The ROM's own users
+
+There are none.  `analysis/protousers.py build/MP2x00US @826 --view-class
+108 --packages DIR` walks the ROM's 12838 frames and searches the ten
+built-in packages (`packages.py --extract DIR`): protoTXView is the only
+frame of view class 108, no frame inherits from it, no package mentions
+@826, and no C function refers to `Rprototxview` (`xrefs.py`).  The
+engine was there for packages outside the ROM - Newton Works, the word
+processor that came with the eMate 300 and the MP2100 - so the demos and
+the host tests are what exercise it.
 
 ## Not yet reconstructed - the plan
 

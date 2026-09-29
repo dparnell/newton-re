@@ -11,7 +11,8 @@
 // bold (the caret at the end having scrolled the text up); build/txview-2.pgm:
 // the same scrolled back to the start; build/txview-3.pgm: "hello" cut to a
 // clipping (its icon at the screen's left edge) and pasted at the start;
-// build/txview-4.pgm: "hello" and the next word scrubbed out with the pen;
+// build/txview-4.pgm: "hello" and the next word scrubbed out with the pen
+// (the mark at the text's left edge is the caret, at the start);
 // build/txview-5.pgm: 2100 characters kept on the store (the middle view),
 // saved with Externalize and read into another view (the bottom one);
 // build/txview-6.pgm: that view with the ruler bar shown over it.  Each check
