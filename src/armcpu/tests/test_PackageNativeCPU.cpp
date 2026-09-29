@@ -9,7 +9,8 @@
 				through the public jump table (Length) is answered on the
 				host; an exception thrown out of a host function reaches the
 				ARM code's handler with its data, and a ref the ARM code
-				throws reaches a NewtonScript handler as the ref.
+				throws reaches a NewtonScript handler as the ref; a native
+				of another code binary is called from ARM code.
 */
 
 #include "PackageNativeCPU.h"
@@ -71,8 +72,8 @@ main()
 	InitObjects();
 	InstallPackageNativeCPU();
 
-	RefVar code(AllocateBinary(RSSYMbinary, 0x200));
-	memset(BinaryData(code), 0, 0x200);
+	RefVar code(AllocateBinary(RSSYMbinary, 0x280));
+	memset(BinaryData(code), 0, 0x280);
 	// +0x00: return the string object at +0x40 (a pointer ref: its address + 1)
 	Put(code, 0x00, 0xe28f0039);		// add r0,pc,#0x39    (0x08 + 0x39 = 0x41)
 	Put(code, 0x04, 0xe1a0f00e);		// mov pc,lr
@@ -148,11 +149,36 @@ main()
 	Put(code, 0x1ac, 0x01800b28);		// ThrowRefException__FPcRC6RefVar
 	memcpy((char*) BinaryData(code) + 0x1c0, "evt.ex.fr.intrp;type.ref.frame", 31);
 
+	// +0x1e0: call the function object in the first argument (a native
+	// of another code binary) with the second, through NativeEntry
+	Put(code, 0x1e0, 0xe92d4030);		// stmfd sp!,{r4,r5,lr}
+	Put(code, 0x1e4, 0xe1a04002);		// mov r4,r2           (the second argument's RefVar)
+	Put(code, 0x1e8, 0xe1a00001);		// mov r0,r1           (the first: the function)
+	Put(code, 0x1ec, 0xe3a01001);		// mov r1,#1           (one argument)
+	Put(code, 0x1f0, 0xe3a02000);		// mov r2,#0           (no closure asked for)
+	Put(code, 0x1f4, 0xeb000005);		// bl NativeEntry
+	Put(code, 0x1f8, 0xe1a05000);		// mov r5,r0
+	Put(code, 0x1fc, 0xe3a00000);		// mov r0,#0           (no receiver)
+	Put(code, 0x200, 0xe1a01004);		// mov r1,r4
+	Put(code, 0x204, 0xe1a0e00f);		// mov lr,pc
+	Put(code, 0x208, 0xe1a0f005);		// mov pc,r5
+	Put(code, 0x20c, 0xe8bd8030);		// ldmfd sp!,{r4,r5,pc}
+	Put(code, 0x210, 0xe51ff004);
+	Put(code, 0x214, 0x01802750);		// NativeEntry__FRC6RefVarlPP9RefHandle
+	// another code binary: +0x00 answers its argument plus one
+	RefVar other(AllocateBinary(RSSYMbinary, 0x10));
+	Put(other, 0x00, 0xe5910000);		// ldr r0,[r1]
+	Put(other, 0x04, 0xe5900000);		// ldr r0,[r0]
+	Put(other, 0x08, 0xe2800004);		// add r0,r0,#4       (an integer ref plus one)
+	Put(other, 0x0c, 0xe1a0f00e);		// mov pc,lr
+
 	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "nativeString")), RefVar(MakeBinaryNative(code, 0, 0x00)));
 	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "nativeArray")), RefVar(MakeBinaryNative(code, 0, 0x08)));
 	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "nativeLength")), RefVar(MakeBinaryNative(code, 1, 0x10)));
 	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "nativeCatch")), RefVar(MakeBinaryNative(code, 1, 0xc0)));
 	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "nativeThrow")), RefVar(MakeBinaryNative(code, 1, 0x180)));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "nativeCallOther")), RefVar(MakeBinaryNative(code, 2, 0x1e0)));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "otherPlusOne")), RefVar(MakeBinaryNative(other, 1, 0x00)));
 
 	// a string in the code binary: its UniChars in the host's order, of class 'string
 	RefVar s(Eval("call nativeString with ()"));
@@ -179,6 +205,8 @@ main()
 	// an ARM throw's data out to the host: the ref comes back as the ref
 	RefVar thrown(Eval("try call nativeThrow with ({a: 7}) onexception |evt.ex| do CurrentException().data.a"));
 	EXPECT(RINT(thrown) == 7);
+	// a native of another code binary, called from ARM code
+	EXPECT(RINT(Eval("call nativeCallOther with (otherPlusOne, 41)")) == 42);
 	EXPECT(PackageNativeCPUAnswers("Length__Fl") && PackageNativeCPUEntryCount() > 50);
 
 	if (failures == 0)

@@ -158,10 +158,12 @@ public:
 
 	// host functions handed to the ARM code as addresses to call
 	uint32_t		HostCallback(void* fn, long numArgs);
+	uint32_t		FunctionCallback(RefArg fn, long numArgs);	// a native in another code binary
+	bool			CallFunction(TARMCPU& cpu, RefArg fn, long numArgs);
 	bool			CallHost(TARMCPU& cpu, void* fn, long numArgs);
 
 	const char*		fStoppedIn;				// the entry point that stopped the CPU
-	struct Callback { void* fFn; long fNumArgs; };
+	struct Callback { void* fFn; long fNumArgs; RefStruct* fFunction; };
 	Vec<Callback>	fCallbacks;
 	Vec<uint32_t>	fHandlers;				// innermost last
 	Vec<StackState*>	fStackStates;
@@ -207,6 +209,8 @@ TNativeWorld::~TNativeWorld()
 {
 	for (CodeObjectEntry& e : fCodeObjects)
 		delete e.fObject;
+	for (Callback& c : fCallbacks)
+		delete c.fFunction;
 	for (RefStruct* r : fHandles)
 		delete r;
 	for (Window& w : fWindows)
@@ -716,9 +720,59 @@ TNativeWorld::HostCallback(void* fn, long numArgs)
 	for (uint32_t i = 0; i < fCallbacks.size(); i++)
 		if (fCallbacks[i].fFn == fn)
 			return kCallbacks + i * 4;
-	Callback c = { fn, numArgs };
+	Callback c = { fn, numArgs, nil };
 	fCallbacks.push_back(c);
 	return kCallbacks + (uint32_t) (fCallbacks.size() - 1) * 4;
+}
+
+
+// A native function of another code binary (another package's, or another
+// part's): called from here as the interpreter calls one - its host
+// re-expression if it has one, else a world of its own on another CPU.  The
+// ARM code is handed a callback address; the function's closure, if it has
+// one, comes as the last argument, as the interpreter passes it.
+uint32_t
+TNativeWorld::FunctionCallback(RefArg fn, long numArgs)
+{
+	for (uint32_t i = 0; i < fCallbacks.size(); i++)
+		if (fCallbacks[i].fFunction != nil && EQRef(*fCallbacks[i].fFunction, fn) && fCallbacks[i].fNumArgs == numArgs)
+			return kCallbacks + i * 4;
+	Callback c = { nil, numArgs, new RefStruct(fn) };
+	fCallbacks.push_back(c);
+	return kCallbacks + (uint32_t) (fCallbacks.size() - 1) * 4;
+}
+
+
+bool
+TNativeWorld::CallFunction(TARMCPU& cpu, RefArg fn, long numArgs)
+{
+	if (numArgs > 15)
+		ThrowMsg("armcpu: too many arguments");
+	uint32_t rcvrVar = Arg(cpu, 0);
+	RefVar rcvr(rcvrVar != 0 ? ArgRef(rcvrVar) : NILREF);
+	RefVar a[15];
+	const RefVar* args[15];
+	for (long i = 0; i < numArgs; i++)
+	{
+		a[i] = ArgRef(Arg(cpu, (int) i + 1));
+		args[i] = &a[i];
+	}
+	RefVar code(GetArraySlotRef(fn, 1));
+	ULong offset = (ULong) RINT(GetArraySlotRef(fn, 4));
+	long boundArgs = 0;
+	PackageNativeKey key;
+	void* host = FindPackageNative(code, offset, &boundArgs, &key);
+	Ref result;
+	if (host != nil)
+	{
+		if (boundArgs != numArgs)
+			Throw(exInterpreter, (void*) kNSErrWrongNumberOfArgs, nil);
+		return CallHost(cpu, host, numArgs);
+	}
+	else
+		result = RunPackageNativeOnCPU(code, offset, rcvr, numArgs, args);
+	Return(cpu, ToARM(result));
+	return true;
 }
 
 
@@ -727,7 +781,7 @@ TNativeWorld::HostCallback(void* fn, long numArgs)
 bool
 TNativeWorld::CallHost(TARMCPU& cpu, void* fn, long numArgs)
 {
-	Callback c = { fn, numArgs };
+	Callback c = { fn, numArgs, nil };
 	if (c.fNumArgs > 6)
 		ThrowMsg("armcpu: a host native of more than six arguments");
 	// (NTK passes nought for the receiver of a function that has none - the
@@ -764,7 +818,10 @@ TNativeWorld::Trap(TARMCPU* cpu, uint32_t pc)
 		newton_try
 		{
 			Callback c = fCallbacks[(pc - kCallbacks) / 4];
-			CallHost(*cpu, c.fFn, c.fNumArgs);
+			if (c.fFunction != nil)
+				CallFunction(*cpu, RefVar(*c.fFunction), c.fNumArgs);
+			else
+				CallHost(*cpu, c.fFn, c.fNumArgs);
 		}
 		newton_catch_all
 		{
@@ -1138,12 +1195,14 @@ GLUE(Glue_NativeEntry)
 	}
 	else if (cls == kBinaryNativeFuncClass)
 	{
-		// (the offset in its code binary; only this call's binary is mapped)
+		// (the offset in its code binary; a function of another binary - not
+		//  mapped here - is called through a callback, in a world of its own)
 		RefVar code(GetArraySlotRef(fn, 1));
-		if (Length(code) != (long) w.fCode.size() || memcmp(BinaryData(code), w.fCode.data(), w.fCode.size()) != 0)
-			ThrowMsg("armcpu: a native function in another code binary (NOT YET)");
-		entry = kCodeBase + (uint32_t) RINT(GetArraySlotRef(fn, 4));
 		closure = w.ToARM(GetArraySlotRef(fn, 3));
+		if (Length(code) != (long) w.fCode.size() || memcmp(BinaryData(code), w.fCode.data(), w.fCode.size()) != 0)
+			entry = w.FunctionCallback(fn, numArgs + (closure != NILREF ? 1 : 0));
+		else
+			entry = kCodeBase + (uint32_t) RINT(GetArraySlotRef(fn, 4));
 	}
 	if (closureVar != 0)
 	{
