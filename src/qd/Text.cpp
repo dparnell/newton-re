@@ -26,6 +26,7 @@
 #include "Locale.h"
 #include "OSErrors.h"
 #include "NewtonExceptions.h"
+#include <limits.h>
 #include <string.h>
 
 // the ROM's characters
@@ -912,9 +913,64 @@ FStrWidth(RefArg rcvr, RefArg str)
 }
 
 
+// ROM 0x001fdb38 FMeasuredNumberStr
+// MeasuredNumberStr(number, width, fontSpec): a number's text that fits
+// in width pixels in that font - the text itself when it fits; otherwise
+// the digits after the locale's decimal point cut off one at a time until
+// it does, as long as at least one is left after the point; nil when that
+// is not enough.
+//
+// ROM BUG, kept: the index the cut must stay beyond is held in the register
+// the fontSpec argument came in, and is only set when the text has a
+// decimal point; text with none compares its length against the argument's
+// address, which is larger than any length, so it answers nil - a whole
+// number too wide is never shortened (LONG_MAX stands for the address).
+//
+// ROM BUG, kept: the cut is made in the caller's own string - a terminator
+// written into its characters where the text ends - and the answer is a
+// new string made of what is left, so the string passed in is shortened
+// too (its length is unchanged; its text ends early).
+Ref
+FMeasuredNumberStr(RefArg /*rcvr*/, RefArg number, RefArg width, RefArg fontSpec)
+{
+	RefVar result(number);
+	long maxWidth = RINT(width);
+	LockRef(number);
+	UniChar* text = GetCString(number);
+	long length = Ustrlen(text);
+	UniChar decimalPoint = GetCString(gLocaleCache->fDecimalPoint)[0];
+	StyleRecord style;
+	CreateTextStyleRecord(fontSpec, &style);
+	if (MeasureOnce(text, length, &style) >= maxWidth)
+	{
+		result = NILREF;
+		long keep = LONG_MAX;					// (the ROM's: the fontSpec argument's address)
+		for (long i = 0; i < length; i++)
+		{
+			if (text[i] == decimalPoint)
+			{
+				keep = i + 1;
+				break;
+			}
+		}
+		while (--length != 0 && MeasureOnce(text, length, &style) >= maxWidth)
+			;
+		if (length > keep)
+		{
+			text[length] = 0;
+			result = MakeString(text);
+		}
+	}
+	UnlockRef(number);
+	DisposeStyleRecord(&style);
+	return result;
+}
+
+
 void
 RegisterTextNatives(void)
 {
+	RegisterNativeFunction("FMeasuredNumberStr", (void*) FMeasuredNumberStr, 3);
 	RegisterNativeFunction("FFontAscent__FRC6RefVarT1", (void*) FFontAscent, 1);
 	RegisterNativeFunction("FFontDescent__FRC6RefVarT1", (void*) FFontDescent, 1);
 	RegisterNativeFunction("FFontLeading__FRC6RefVarT1", (void*) FFontLeading, 1);

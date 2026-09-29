@@ -1,0 +1,34 @@
+// The last natives of the ROM outside the communications area, each asked
+// once (ctest host.NewtonNatives):
+//
+//   RepeatInfoToText   a repeating meeting's pattern in words
+//   MeasuredNumberStr  a number's text cut to fit a width
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --headless 30 --script src/host/demo/natives.ns
+
+// the days of the week are bits 0x800 (Sunday) down to 0x20 (Saturday)
+Print(["days", RepeatInfoToText(0x400 + 0x80, 0, nil)]);			// Monday and Thursday
+Print(["every day", RepeatInfoToText(0xfe0, 0, nil)]);
+// a day in weeks of the month: the second and last Friday
+Print(["weeks", RepeatInfoToText(0x40 + 0x08 + 0x01, 1, nil)]);
+// the dates of the month: the 15th
+Print(["date", RepeatInfoToText(15, 2, nil)]);
+// a date in the year: March 4, in the year of the time given
+Print(["in the year", RepeatInfoToText((3 << 8) + 4, 3, Time())]);
+// every other week, from day 34000 since 1904
+Print(["every other", RepeatInfoToText(34000 << 8, 4, nil)]);
+// a day in a week of a month: the first Monday of September
+Print(["week in year", RepeatInfoToText((9 << 12) + 0x400 + 0x10, 7, nil)]);
+Print(["kind 5", RepeatInfoToText(1, 5, nil)]);
+
+// the text cut to fit: digits after the point go first; a whole number
+// too wide, and text that cannot be cut far enough, answer nil
+constant kFont := 0x2800;			// espy 10 point, plain
+Print(["fits", MeasuredNumberStr("3.14159", 200, kFont)]);
+Print(["cut", MeasuredNumberStr("3.14159", StrFontWidth("3.14", kFont) + 1, kFont)]);
+Print(["whole", MeasuredNumberStr("314159", 10, kFont)]);
+Print(["too narrow", MeasuredNumberStr("31.4159", 5, kFont)]);
+
+QuickLookDone(nil);
+Print("natives: done");
+HostQuit();

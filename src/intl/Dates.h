@@ -116,6 +116,8 @@ Ref		FTimeInSeconds(RefArg rcvr);		// TimeInSeconds(): the seconds since 1993
 long	WeekNumCalc(long minutes, long firstDayOfWeek);
 
 void	RegisterDateNatives(void);
+void	RegisterRepeatTextNatives(void);		// RepeatText.cpp: RepeatInfoToText (registered by RegisterDateNatives)
+Ref		FRepeatInfoToText(RefArg rcvr, RefArg pattern, RefArg kind, RefArg time);	// ROM 0x00121ebc FRepeatInfoToText__FRC6RefVarN31
 void	InitDatePrototypes(void);				// host: Rcanonicaldate when no ROM objects are imported
 
 #endif	/* __DATES_H */

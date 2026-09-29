@@ -8,6 +8,7 @@ add_library(intl STATIC
     Dates.cpp
     NumberFormat.cpp
     Coordinates.cpp
+    RepeatText.cpp
 )
 target_link_libraries(intl PUBLIC newton_config frames utility os600_user memory)
 target_include_directories(intl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

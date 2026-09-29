@@ -1221,6 +1221,7 @@ InitDatePrototypes(void)
 void
 RegisterDateNatives(void)
 {
+	RegisterRepeatTextNatives();
 	RegisterNativeFunction("FTime__FRC6RefVar", (void*) FTime, 0);
 	RegisterNativeFunction("FTimeInSeconds__FRC6RefVar", (void*) FTimeInSeconds, 0);
 	RegisterNativeFunction("FTicks__FRC6RefVar", (void*) FTicks, 0);
