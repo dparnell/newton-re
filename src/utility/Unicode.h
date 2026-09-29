@@ -54,6 +54,8 @@ void		Umemset(UniChar* dest, UniChar c, long n);
 void	ConvertToUnicode(const void* src, UniChar* dest, long encoding, long n);
 // UniChars to 8-bit characters (a 0 ends the output), at most n
 void	ConvertFromUnicode(const UniChar* src, void* dest, long encoding, long n);
+long	ConvertUnicodeChar(const UniChar* src, char* dest, long encoding);						// ROM 0x0025668c: one character; ==> the bytes it made
+void	ConvertUnicodeCharacters(const UniChar* src, char* dest, long encoding, long n);		// ROM 0x002566bc: n bytes' worth (encoding 0: n bytes moved)
 // one character each way (the compiler's)
 UniChar	U_CONST_CHAR(unsigned char c);
 char	A_CONST_CHAR(UniChar c);

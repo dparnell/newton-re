@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 static int failures = 0;
 #define EXPECT(cond) do { if (!(cond)) { failures++; fprintf(stderr, "FAIL %s:%d: %s\n", __FILE__, __LINE__, #cond); } } while (0)
@@ -121,6 +122,58 @@ main()
 		long failed = 0;
 		RefVar fields(ConstructReturnValue(block, type, &failed, 0));
 		EXPECT(Length(fields) == 1 && ISNIL(GetArraySlotRef(fields, 0)));
+	}
+
+	// ---- marshalling out: the NIE's remote socket option, as a script
+	// writes it - ['struct, ['array, 'byte, 4], 'short] - big-endian and the
+	// struct rounded up to a word ----
+	{
+		RefVar address(MakeArray(4));
+		SetArraySlot(address, 0, MAKEINT(127));
+		SetArraySlot(address, 1, MAKEINT(0));
+		SetArraySlot(address, 2, MAKEINT(0));
+		SetArraySlot(address, 3, MAKEINT(1));
+		RefVar args(MakeArray(2));
+		SetArraySlot(args, 0, address);
+		SetArraySlot(args, 1, MAKEINT(0x1234));
+		RefVar bytes(MakeArray(3));
+		SetArraySlot(bytes, 0, RefVar(Intern((char*) "array")));
+		SetArraySlot(bytes, 1, RefVar(Intern((char*) "byte")));
+		SetArraySlot(bytes, 2, MAKEINT(4));
+		RefVar type(MakeArray(3));
+		SetArraySlot(type, 0, RefVar(Intern((char*) "struct")));
+		SetArraySlot(type, 1, bytes);
+		SetArraySlot(type, 2, RefVar(Intern((char*) "short")));
+
+		ULong size = 0;
+		EXPECT(MarshalArgumentSize(args, type, &size, 0) == noErr && size == 8);
+		unsigned char block[8];
+		memset(block, 0xee, sizeof(block));
+		EXPECT(MarshalArguments(args, type, block, sizeof(block), 0) == noErr);
+		static const unsigned char kExpected[6] = { 0x7f, 0, 0, 1, 0x12, 0x34 };
+		EXPECT(memcmp(block, kExpected, 6) == 0);
+	}
+
+	// a long and a short packed, the long's word big-endian
+	{
+		static const char* const kTypes[] = { "struct", "long", "short", "byte" };
+		RefVar type(Template(kTypes, 4));
+		RefVar args(MakeArray(3));
+		SetArraySlot(args, 0, MAKEINT(0x01020304));
+		SetArraySlot(args, 1, MAKEINT(-2));
+		SetArraySlot(args, 2, MAKEINT(0x41));
+		void* block = nil;
+		EXPECT(MarshalArguments(args, type, &block, 0) == noErr && block != nil);
+		if (block != nil)
+		{
+			static const unsigned char kExpected[7] = { 1, 2, 3, 4, 0xff, 0xfe, 0x41 };
+			EXPECT(memcmp(block, kExpected, 7) == 0);
+			free(block);
+		}
+		// a value the template cannot take
+		SetArraySlot(args, 0, RefVar(AllocateFrame()));			// a frame is no word
+		ULong size;
+		EXPECT(MarshalArgumentSize(args, type, &size, 0) != noErr);
 	}
 
 	printf("test_Marshalling: %s\n", failures == 0 ? "ok" : "FAILED");

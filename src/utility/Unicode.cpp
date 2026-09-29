@@ -11,6 +11,7 @@
 */
 
 #include "Unicode.h"
+#include <string.h>
 
 
 // ROM 0x002563f0 Ustrcpy
@@ -350,6 +351,49 @@ ConvertFromUnicode(const UniChar* src, void* dest, long encoding, long n)
 		i++;
 	}
 	*d = 0;
+}
+
+
+// ROM 0x0025668c ConvertUnicodeChar__FPUsPcl
+// One character converted; what it answers is how many bytes that made -
+// 1, or 0 for the terminating nought.  (The ROM counts it by walking the
+// source two characters at a time; this is what that walk comes to.)
+long
+ConvertUnicodeChar(const UniChar* src, char* dest, long encoding)
+{
+	ConvertFromUnicode(src, dest, encoding, 1);
+	return (src[0] == 0) ? 0 : 1;
+}
+
+
+// ROM 0x002566bc ConvertUnicodeCharacters__FPUsPclT3
+// n bytes' worth of characters converted, a character at a time, none that
+// would not fit; with encoding nought (Unicode itself) n bytes are simply
+// moved (the ROM's memmove in line).  A terminating nought makes no byte
+// and the walk goes on past it (ROM behaviour: the callers ask for no more
+// than the string has).
+void
+ConvertUnicodeCharacters(const UniChar* src, char* dest, long encoding, long n)
+{
+	if (encoding == 0)
+	{
+		memmove(dest, src, n);
+		return;
+	}
+	long total = 0;
+	while (total < n)
+	{
+		char bytes[4];
+		long k = ConvertUnicodeChar(src, bytes, encoding);
+		total += k;
+		if (total <= n)
+		{
+			*dest++ = bytes[0];
+			if (k == 2)
+				*dest++ = bytes[1];
+		}
+		src++;
+	}
 }
 
 

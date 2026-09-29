@@ -59,6 +59,7 @@ enum
 	kMarshalChar			= 13,
 	kMarshalCString			= 14,
 	kMarshalUniChar			= 15,
+	kMarshalUnicodeString	= 16,		// a Unicode string (behind a pointer, as 'cstring)
 	kMarshalBinary			= 17,
 	kMarshalReal			= 18
 };
@@ -81,5 +82,33 @@ Ref		UnmarshalStruct(void** bytes, RefArg type, long* failed, int encoding);	// 
 
 // What a system call's parameter block says, by its template.
 Ref		ConstructReturnValue(void* bytes, RefArg type, long* failed, int encoding);	// ROM 0x000cf7c0 ConstructReturnValue__FPvRC6RefVarPli
+
+// The marshalling's errors.
+enum
+{
+	kNSErrBadMarshalValue	= -70000,		// a value a scalar cannot be made of
+	kNSErrBadMarshalType	= -70001,		// a type that is not marshalled
+	kNSErrNotAnAggregate	= -70002		// (a template that is not a 'struct or 'array)
+};
+
+// Marshalling the other way (MarshalOut.cpp): values into bytes, by a
+// template - an argument list and a type list, or one value and an
+// aggregate template.  The bytes are the MessagePad's order (big-endian).
+long	RefToULong(RefArg value, ULong* result);																	// ROM 0x000cd750 RefToULong__FRC6RefVarPUl
+void	StuffScalar(ULong value, void** buf, ULong* size, ULong n);													// ROM 0x000ce85c StuffScalar__FUlPPvPUlT1
+void	StuffPtr(void* ptr, void** buf, ULong* size, ULong n);														// ROM 0x000ce9ac StuffPtr__FPvPPvPUlUl
+void	StuffDouble(double value, void** buf, ULong* size);															// ROM 0x000ce918 StuffDouble__FdPPvPUl
+void	AlignBuffer(void** buf, ULong* size, ULong align);															// ROM 0x000ce968 AlignBuffer__FPPvPUlUl
+void	AlignForType(void** buf, ULong* size, RefArg type);															// ROM 0x000ce9b0 AlignForType__FPPvPUlRC6RefVar
+void	MarshalCString(RefArg value, void** buf, void** strBuf, ULong* size, ULong* strSize, int encoding, long max);	// ROM 0x000ceaf0 MarshalCString__FRC6RefVarPPvT2PUlT4il
+long	MarshalAggregrate(RefArg value, RefArg type, void** buf, void** strBuf, ULong* size, ULong* strSize, long step, int encoding, RefArg locked);	// ROM 0x000cece8 MarshalAggregrate__FRC6RefVarT1PPvT3PUlT5liT1
+long	Marshal1(RefArg value, RefArg type, void** buf, void** strBuf, void** regBuf, ULong* size, ULong* strSize, ULong* regSize,
+				 long typeIndex, long valueIndex, long count, long step, int encoding, RefArg locked);						// ROM 0x000cf078 Marshal1__FRC6RefVarT1PPvN23PUlN26lN39iT1
+long	DoMarshal(RefArg value, RefArg type, void** buf, void** strBuf, void** regBuf, ULong* size, ULong* strSize, ULong* regSize,
+				  long typeIndex, long valueIndex, long count, long step, int encoding);										// ROM 0x000cda08 DoMarshal__FRC6RefVarT1PPvN23PUlN26lN39i
+long	AggregateSize(RefArg type, ULong* size);																	// ROM 0x000ce38c AggregateSize__FRC6RefVarPUl
+long	MarshalArgumentSize(RefArg args, RefArg types, ULong* size, int encoding);									// ROM 0x000cf694 MarshalArgumentSize__FRC6RefVarT1PUli
+long	MarshalArguments(RefArg args, RefArg types, void* buf, ULong size, int encoding);							// ROM 0x000cf700 MarshalArguments__FRC6RefVarT1PvUli
+long	MarshalArguments(RefArg args, RefArg types, void** block, int encoding);									// ROM 0x000cd634 MarshalArguments__FRC6RefVarT1PPvi
 
 #endif	/* __MARSHALLING_H */

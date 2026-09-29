@@ -7,6 +7,7 @@
 add_library(frames STATIC
     ObjectHeap.cpp
     Marshalling.cpp
+    MarshalOut.cpp
     GC.cpp
     Objects.cpp
     ScriptBoot.cpp
