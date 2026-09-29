@@ -21,6 +21,8 @@
 #include "UserBoot.h"
 #include "host/TaskRuntime.h"
 
+#include "hal/host/Host.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <thread>
@@ -236,6 +238,10 @@ Boot(void)
 int
 main()
 {
+	// the desktop end is another process on the host's own time: a clock
+	// that jumps to the next deadline whenever the tasks are idle runs the
+	// link's timers out while the peer is still sending (seen under load)
+	HostUseRealClock(true);
 	gHostKernelServicesTask = Boot;
 	OsBoot();
 	sDesktopStop = true;
