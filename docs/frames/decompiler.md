@@ -8,7 +8,8 @@ can be read, edited and compiled back into the same functions.
 - **Round-trip harness:** `newtonscript --roundtrip`, in
   `src/host/NSRoundTrip.cpp`.
 - **ctest:** `host.NSDecompileRoundTrip` runs the round trip over a sample
-  of 600 functions and fails below 96%.
+  of 600 functions and fails below 100%: every function of the ROM
+  round-trips.
 
 ```
 python tools/newton-rom/analysis/nsdecompile.py build/MP2x00US Max 0x3c56f9     # the source of functions
@@ -102,6 +103,17 @@ func(a1) begin ... a1.Close := kFunction_41979d; ... end
 @@end
 ```
 
+### A closure made when the project was built
+
+One function (0x5acf1d, `func() Apply(script, parameters)`) is a closure.
+Its argFrame's `_nextArgFrame` is the argFrame of a call made while the
+project was built, holding `script` (a function) and `parameters` (`[]`).
+The decompiler writes the function that made it as a constant,
+`kClosureMaker_<address>` := `func(script, parameters) <the function>`,
+and the record's main part is a value evaluated rather than a func:
+`call kClosureMaker_5acf1d with (kFunction_5aced1, [])`. The round trip
+evaluates a main part that is not a func, as it does a constant.
+
 ### The NTK's constants
 
 Three things in the ROM's code come from constants the NTK evaluated when
@@ -159,6 +171,7 @@ by side.
 | 7 | 5447 of 5507 | 5442 (98.8%) | repeated literals told apart by slot, not object; an NTK magic-pointer constant a literal per name |
 | 8 | 5447 of 5507 | 5444 (98.9%) | a branch to an `if`'s end that an inner construct's ends there too is the inner's: the outer `if` has no `else` |
 | 9 | 5447 of 5507 | 5446 (98.9%; all but one of those decompiled) | a constant no receiver reference (NTK); `l := <loop>` kept a statement so the loop's locals are declared first |
+| 13 | 5507 of 5507 | 5507 (100%) | a foreach's variable closed over (set by name); a closure the NTK made at build time (below) |
 | 12 | 5505 of 5507 | 5504 (99.9%) | the native-function frames the NTK put in literals (`{class: 0x132, funcPtr, numArgs}`, calling a C function with no global name, such as YieldToFork): the special immediate 0x132 is a constant, `GetGlobalFn('Length).class`; a function's constants come before it |
 | 11 | 5498 of 5507 | 5497 (99.8%) | string subclasses from their text and rectangles from `MakeRect`: the host keeps both in its own byte order |
 | 10 | 5498 of 5507 | 5491 (99.7%) | literals no quoted source makes (binaries; frames and arrays holding a binary or a function) written as constants that build them: `kBinaryFromHex`, `{tag: kFunction_x}` |
@@ -167,7 +180,10 @@ The 5507 functions are every top-level NewtonScript function in the ROM's
 object area; functions that are literals of others are decompiled inside
 them.
 
-### What does not decompile yet
+### The literals no quoted source makes
+
+Everything decompiles and round-trips since round 13. These are the
+literals that take a constant evaluated to make them:
 
 - **Binary literals** are decompiled (since round 10) as constants that
   build them: `kBinaryFromHex` out of the bytes' hex. Two kinds of binary
@@ -178,12 +194,11 @@ them.
   (`IsHalfwordShapeClass`: `'rectangle`, `'boundsRect`, ...), made with
   `MakeRect`. In the end these belong to the ROM-free track's resource
   extraction.
-- **Reals of class `'Real`:** the capitalised class, which the lexer does
-  not make.
+- **Reals of class `'Real`:** the capitalised class (round 4).
 - **Immediates beyond the lexer:** the special immediates such as 0x132
   (a native function's class) have no syntax. They are written as
   constants evaluated from an object that carries one (round 12).
-- **A few branch shapes not yet understood.**
 
-The remaining round-trip failures (instructions) are the next round's work
-(`docs/next-steps.md`).
+Every constant evaluated this way relies on the host's objects, not on
+syntax. The ROM-free track's next step, extracting the resources, is
+what replaces them with source of their own (`docs/rom-free/README.md`).

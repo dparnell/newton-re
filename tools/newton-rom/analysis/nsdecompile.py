@@ -1615,7 +1615,37 @@ def decompile_source(rom, ref, with_constants=False):
 	return src
 
 
+def build_time_closure(rom, ref):
+	"""For a function the NTK made by calling another when the project was
+	built - a closure, its argFrame's _nextArgFrame the argFrame of that
+	call - the source that makes it again: a function of the closed-over
+	names answering this one, called with their values.  None otherwise."""
+	af = rom.slots(ref)[3]
+	if not rom.is_ptr(af):
+		return None
+	outer = rom.slots(af)[0]
+	if not rom.is_ptr(outer) or not rom.flags(outer) & 2:
+		return None
+	slots = rom.frame_slots(outer)
+	if [t for t, _ in slots[:3]] != ["_nextArgFrame", "_parent", "_implementor"] or any(v != 2 for _, v in slots[:3]):
+		raise DecompileError("a closure made at build time in an argFrame not understood")
+	w = Writer(rom)
+	inner = w.function(Decompiled(rom, ref).decompile(), 1)
+	names = [t for t, _ in slots[3:]]
+	values = [w.built(v) for _, v in slots[3:]]
+	maker = "func(%s) %s" % (", ".join(ident(n) for n in names), inner)
+	name = "kClosureMaker_%x" % ref
+	w.constants.append((name, maker))
+	return "call %s with (%s)" % (name, ", ".join(values)), w.constants
+
+
 def record(rom, ref):
+	made = build_time_closure(rom, ref)
+	if made is not None:
+		src, constants = made
+		text = "@@ %#x\n" % ref
+		text += "".join("@@const %s\n%s\n" % c for c in constants) + "@@main\n"
+		return text + src + "\n@@end\n"
 	src, constants = decompile_source(rom, ref, True)
 	text = "@@ %#x\n" % ref
 	if constants:

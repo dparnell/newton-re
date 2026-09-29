@@ -431,7 +431,7 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD}/sym
     add_test(NAME host.NSDecompileRoundTrip
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/newton-rom/analysis/nsdecompile.py
                      ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD} --roundtrip --sample 600
-                     --newtonscript $<TARGET_FILE:newtonscript> --rom ${NEWTON_ROM_BIN} --min-percent 96
+                     --newtonscript $<TARGET_FILE:newtonscript> --rom ${NEWTON_ROM_BIN} --min-percent 100
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NSDecompileRoundTrip PROPERTIES TIMEOUT 300)
 endif()

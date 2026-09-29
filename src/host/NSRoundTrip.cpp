@@ -16,7 +16,7 @@
 		[@@const <name>
 		 <source: one func expression> ...
 		 @@main]
-		<source: one func expression>
+		<source: one func expression, or a value evaluated>
 		@@end
 
 	Each function is compiled as the NTK compiled the functions of a
@@ -256,6 +256,14 @@ CompileRecord(char* source, RefArg names)
 			break;
 		}
 	}
+	// the main function compiled on its own - or, when it is not a func, a
+	// value evaluated: a closure the NTK made when the project was built
+	// (its argFrame's _nextArgFrame the argFrame of the call that made it)
+	char* start = main;
+	while (*start == ' ' || *start == '\t' || *start == '\n')
+		start++;
+	if (strncmp(start, "func", 4) != 0)
+		return InterpretBlock(RefVar(ParseString(RefVar(MakeString(main)))), RefVar(NILREF));
 	return CompileFunctionString(RefVar(MakeString(main)));
 }
 
