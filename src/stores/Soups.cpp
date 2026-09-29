@@ -1230,6 +1230,57 @@ StoreGetObjectSize(RefArg rcvr, RefArg id)
 }
 
 
+// ROM 0x001559bc GetStorePSSInfo__FPC6TStore
+// The PSS manager's record of a store: the socket it is in, the card's
+// type, ... - the manager keeps up to four stores for each socket in
+// 0x50-byte records (TPSSManager::GetStorePSSInfo 0x00155758, asked with
+// 0 for its last argument).  Nil for a store the manager does not know.
+//
+// DEVIATION: TPSSManager is NOT YET RECONSTRUCTED (the host's stores are
+// mounted by HostMountStores), so it knows no store and every answer is
+// nil - which is also what the ROM answers for a store it does not know.
+const StorePSSInfo*
+GetStorePSSInfo(const TStore* /*store*/)
+{
+	return nil;
+}
+
+
+// ROM 0x0035559c FGetStoreCardSlot
+// store:CardSlot(): the socket the store's card is in, nil when the PSS
+// manager does not know the store (on the host: always).
+Ref
+StoreGetCardSlot(RefArg rcvr)
+{
+	TStore* store = StoreFromWrapper(rcvr);
+	const StorePSSInfo* info;
+	if (store != nil && (info = GetStorePSSInfo(store)) != nil)
+		return MAKEINT(info->fSocket);
+	return NILREF;
+}
+
+
+// ROM 0x003555d0 FGetStoreCardType
+// store:CardType(): the card's type as a symbol - its four characters,
+// terminated - nil when the PSS manager does not know the store (on the
+// host: always).
+Ref
+StoreGetCardType(RefArg rcvr)
+{
+	TStore* store = StoreFromWrapper(rcvr);
+	const StorePSSInfo* info;
+	if (store != nil && (info = GetStorePSSInfo(store)) != nil)
+	{
+		char name[5];
+		ULong32 type = info->fCardType;
+		memcpy(name, &type, 4);			// (the ROM stores the word and a nought byte after it, in memory order)
+		name[4] = 0;
+		return Intern(name);
+	}
+	return NILREF;
+}
+
+
 /*------------------------------------------------------------------------------
 	T h e   s o u p   m e s s a g e s
 	What C++ sends a soup, plain or union: the soup frame's method.

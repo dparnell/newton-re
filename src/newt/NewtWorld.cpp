@@ -213,6 +213,7 @@ TNewtWorld::MainConstructor()
 	RegisterPowerNatives();
 	RegisterBusyBoxNatives();		// (host/HostNatives.h's RegisterAllNatives is below this library)
 	RegisterModalDialogNatives();
+	RegisterAppDebugNatives();
 	InitializeCompression();
 	// DEVIATION: the ROM starts the sound manager from the loader
 	// (TLoader::TheMain 0x0011401c), whose services are all NOT YET; the

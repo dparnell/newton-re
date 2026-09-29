@@ -123,6 +123,19 @@ Ref		StoreDeleteObject(RefArg rcvr, RefArg id);								// FDeleteStoreObject
 Ref		StoreSetObjectSize(RefArg rcvr, RefArg id, RefArg size);				// FSetStoreObjectSize
 Ref		StoreGetObjectSize(RefArg rcvr, RefArg id);								// FGetStoreObjectSize
 
+// The PSS manager's record of a store (0x50 bytes in the ROM; only the two
+// words the store frame's methods read are named).
+struct StorePSSInfo
+{
+	UByte		fUnknown00[0x18];
+	ULong32		fSocket;			// +0x18  the socket the card is in
+	UByte		fUnknown1c[0x14];
+	ULong32		fCardType;			// +0x30  the card's type, four characters
+};
+const StorePSSInfo*	GetStorePSSInfo(const TStore* store);	// ROM 0x001559bc GetStorePSSInfo__FPC6TStore (DEVIATION: always nil - TPSSManager is NOT YET)
+Ref		StoreGetCardSlot(RefArg rcvr);											// FGetStoreCardSlot
+Ref		StoreGetCardType(RefArg rcvr);											// FGetStoreCardType
+
 
 /*------------------------------------------------------------------------------
 	S o u p s

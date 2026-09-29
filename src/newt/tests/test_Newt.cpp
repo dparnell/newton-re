@@ -95,6 +95,30 @@ public:
 	}
 };
 static TForkHandler* gForkHandler = nil;
+
+// 'host/'stuf: GetFrameStuff - a method with no name, so no script can
+// reach it - asked each thing it answers; 1 when all is as the ROM's does
+class TFrameStuffHandler : public TAEventHandler
+{
+public:
+	virtual void	AEHandlerProc(TUMsgToken* token, ULong* size, TAEvent* event)
+	{
+		TEvalEvent* eval = (TEvalEvent*) event;
+		RefVar frame(InterpretBlock(RefVar(ParseString(RefVar(MakeString("{a: 1, b: 2}")))), RefVar(gVarFrame)));
+		RefVar map(FGetFrameStuff(RefVar(NILREF), frame, RefVar(MAKEINT(0))));
+		Boolean ok = IsArray(map) && EQ(map, ObjClass(OBJ(frame)));				// a heap frame's map
+		ok = ok && ISNIL(FGetFrameStuff(RefVar(NILREF), RefVar(gRootView->fContext), RefVar(MAKEINT(1))));	// not a fault block
+		ok = ok && EQ(FGetFrameStuff(RefVar(NILREF), frame, RefVar(MAKEINT(2))), gApplication->GetUndoStack(0));
+		ok = ok && EQ(FGetFrameStuff(RefVar(NILREF), frame, RefVar(MAKEINT(3))), gApplication->GetUndoStack(1));
+		ok = ok && ISNIL(FGetFrameStuff(RefVar(NILREF), frame, RefVar(MAKEINT(4))));
+		eval->fResult = ok ? 1 : 0;
+		SetReply(*size, event);
+		if (token != nil && token->GetReplyId() != 0)
+			ReplyImmed();
+	}
+};
+static TFrameStuffHandler* gFrameStuffHandler = nil;
+static Boolean gFrameStuffOk = false;
 static const char* kSetupSource =
 	"begin "
 	"GetRoot().testApp := {"
@@ -273,6 +297,8 @@ TestBoot(void)
 	gEvalHandler->Init('eval', 'host');
 	gForkHandler = new TForkHandler;
 	gForkHandler->Init('fork', 'host');
+	gFrameStuffHandler = new TFrameStuffHandler;
+	gFrameStuffHandler->Init('stuf', 'host');
 }
 
 
@@ -371,6 +397,12 @@ Scenario(void)
 		// the world is the fork - the task that ran the script ends once
 		// it is back in its event loop - so everything below (the typing,
 		// the writing, the redraw and the quit) is the fork's doing
+		TEvalEvent stuff;
+		stuff.fAEventClass = 'host';
+		stuff.fAEventID = 'stuf';
+		stuff.fResult = 0;
+		gFrameStuffOk = newtPort.SendRPC(&replySize, &stuff, sizeof(stuff), &stuff, sizeof(stuff)) == noErr
+						&& stuff.fResult == 1;
 		TEvalEvent fork;
 		fork.fAEventClass = 'host';
 		fork.fAEventID = 'fork';
@@ -483,6 +515,7 @@ int main()
 	EXPECT(gWorldDataOk);
 	EXPECT(gSystemInfoOk);		// the screen and the tablet, through the name server
 	EXPECT(gForkOk);			// ForkScript's function ran and answered
+	EXPECT(gFrameStuffOk);		// GetFrameStuff's map, fault block and undo stacks
 	EXPECT(gTextLength == 10);					// "Typed here"
 	EXPECT(gWritten == 1);						// "to", written with the pen and read
 	EXPECT(gRedraws == 1);

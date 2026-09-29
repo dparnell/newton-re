@@ -181,6 +181,9 @@ TestStoreFrame()
 	// the low-level object methods
 	RefVar id(StoreNewObject(storeObject, RefVar(MAKEINT(6))));
 	EXPECT(RINT(StoreGetObjectSize(storeObject, id)) == 6);
+	// no PSS manager knows a host store: no card slot, no card type
+	EXPECT(GetStorePSSInfo(StoreFromWrapper(storeObject)) == nil);
+	EXPECT(StoreGetCardSlot(storeObject) == NILREF && StoreGetCardType(storeObject) == NILREF);
 	RefVar data(AllocateBinary(RSSYMbinary, 6));
 	memcpy(BinaryData(data), "abcdef", 6);
 	StoreWriteWholeObject(storeObject, id, data, RefVar(NILREF), RefVar(NILREF));

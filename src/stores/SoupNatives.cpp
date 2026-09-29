@@ -503,6 +503,8 @@ RegisterSoupNatives(void)
 	RegisterNativeFunction("FDeleteStoreObject", (void*) StoreDeleteObject, 1);
 	RegisterNativeFunction("FSetStoreObjectSize", (void*) StoreSetObjectSize, 2);
 	RegisterNativeFunction("FGetStoreObjectSize", (void*) StoreGetObjectSize, 1);
+	RegisterNativeFunction("FGetStoreCardSlot", (void*) StoreGetCardSlot, 0);
+	RegisterNativeFunction("FGetStoreCardType", (void*) StoreGetCardType, 0);
 
 	// the plain soup prototype's methods
 	RegisterNativeFunction("CommonSoupGetName", (void*) CommonSoupGetName, 0);

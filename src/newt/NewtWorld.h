@@ -176,6 +176,8 @@ Ref		FExitModalDialog(RefArg rcvr);					// ROM 0x0030e284 FExitModalDialog
 Ref		FForkScript(RefArg rcvr, RefArg fn, RefArg args);	// ROM 0x0030e2a0 FForkScript
 Ref		FYieldToFork(RefArg rcvr);						// ROM 0x0030e390 FYieldToFork
 void	RegisterModalDialogNatives(void);
+Ref		FGetFrameStuff(RefArg rcvr, RefArg object, RefArg which);	// ROM 0x001ea21c FGetFrameStuff (DebugNatives.cpp)
+void	RegisterAppDebugNatives(void);						// GetFrameStuff (DebugNatives.cpp)
 
 class TNewtWorld : public TAppWorld			// 0x94 bytes
 {
