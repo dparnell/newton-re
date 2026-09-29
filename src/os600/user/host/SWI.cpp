@@ -25,6 +25,7 @@
 #include "Semaphore.h"
 #include "GenericSWI.h"
 #include "host/TaskRuntime.h"
+#include "hal/host/Host.h"
 #include "OSErrors.h"
 
 #include <string.h>
@@ -73,6 +74,16 @@ ExitWithResult(TTask* self, long result)
 // and the exit path would hand the baton away and park it, leaving two
 // threads running as the same task over the same heaps.  The window's
 // thread is one of those, and it says so (HostAlienThread).
+//
+// So is a call from an interrupt handler (gHostInterruptLevel, which the
+// task runtime raises while it delivers one): on the MessagePad a handler
+// runs in IRQ mode and never issues a SWI - the dual-mode routines it calls
+// see IsSuperMode and take the supervisor path.  Here the stub would write
+// the *interrupted* task's saved registers - the r0-r4 results of the call
+// it was itself in the middle of - and its exit path could switch tasks
+// from inside the handler.  (Seen before IsSuperMode knew about interrupt
+// level: the serial receive interrupt's GetGlobalTime overwrote a forking
+// task's Receive results, and the fork failed - docs/host-runtime.md.)
 static inline TTask*
 Enter()
 {
@@ -85,6 +96,16 @@ Enter()
 		{
 			told = true;
 			fprintf(stderr, "[host] a system call from a thread that is not a task's, refused\n");
+		}
+		return nil;
+	}
+	if (gHostInterruptLevel > 0)
+	{
+		static Boolean told = false;
+		if (!told)
+		{
+			told = true;
+			fprintf(stderr, "[host] a system call from an interrupt handler, refused\n");
 		}
 		return nil;
 	}
@@ -377,6 +398,22 @@ MonitorFlushSWI(ULong monitorId)
 // is woken: the kernel resumes it at the SWI itself, or one word further on
 // to fail instead (TSemaphore's destructor) - here markers kResumeInStub and
 // kResumeInStub + 4.
+//
+// Only an op that *blocked* is retried.  SWIBoot's case for it (0x003adf04)
+// tells the two apart by gCurrentTask after DoSemaphoreOp: an op that could
+// not proceed without kNoWaitOnBlock has unscheduled the task, which leaves
+// gCurrentTask nil, and only then is the saved pc moved back onto the SWI
+// (`sub lr,lr,#4`); otherwise the call takes the ordinary exit, and a switch
+// there - the time slice, or a task the op itself woke - resumes the task
+// after the SWI with the op done.
+// (Host bug fixed 2026-09-30: the stub retried whenever its exit switched,
+// so an op that had succeeded was done twice when the task was switched out
+// at the exit.  A TULockingSemaphore's release that woke a waiter raised
+// the kernel semaphore again once the waiter had run, and a waiter's wait
+// that had succeeded waited again - the fork world's mutex and
+// gPackageSemaphore handed a wake-up round the waiting tasks for ever, each
+// of them burning a third of a core: the "livelock between TPMIterator::Init
+// and TForkWorld::AcquireMutex" of docs/comms/README.md.)
 extern "C" long
 SemaphoreOpGlue(ULong groupId, ULong listId, ULong flags)
 {
@@ -386,8 +423,9 @@ SemaphoreOpGlue(ULong groupId, ULong listId, ULong flags)
 		if (self == nil)
 			return kError_Call_Aborted;
 		long result = DoSemaphoreOp(groupId, listId, (SemFlags) flags, self);
-		if (!HostSWIExit(self, kResumeInStub))
-			return result;
+		if (gCurrentTask != nil)
+			return ExitWithResult(self, result);
+		HostSWIExit(self, kResumeInStub);
 		if (self->fRegister[kcPC] == kResumeInStub + 4)
 			return (long) self->fRegister[kcR0];
 	}

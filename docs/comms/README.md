@@ -308,20 +308,32 @@ The order, each a verified piece:
    ctest `host.NewtonDock`.  A real desktop (NCX, UnixNPI with a TCP serial
    bridge) connects to `localhost:3679` the way it connects to Einstein.
 
-**A deadlock seen under load (not yet understood).** While the Connection
-application's docker is working - its world forked by `DoConnection`, or
+**A livelock seen under load (a host bug, fixed).** While the Connection
+application's docker was working - its world forked by `DoConnection`, or
 blocked in `Connect` reading from the desktop - a script that asked the
 package manager for its packages (`GetPackages()`, which `TPMIterator::Init`
 answers) was seen twice in about 40 stressed runs (`tools/host/stress.py
---hogs 8`) to leave the process with every task waiting: the forked world
-waiting on the world's mutex in `TForkWorld::AcquireMutex`, the script's
-task in `TULockingSemaphore::Acquire` under `TPMIterator::Init`, and the
-docker never reading what the desktop had already sent (the MNP link acked
-it) - two or three threads each taking a core as the baton goes round.
-`src/host/demo/dock.ns` therefore waits on the docker's own slots and asks
-for the packages only when the connection is over.  Which lock is held
-across the other's wait is still to be found (the package manager and the
-fork world, not the docker).
+--hogs 8`) to leave every task waiting: the forked world on the world's
+mutex in `TForkWorld::AcquireMutex`, the script's task in
+`TULockingSemaphore::Acquire` under `TPMIterator::Init`, two or three
+threads each taking a third of a core.  No lock was held across the
+other's wait - `TPMIterator::Init` lets the mutex go before it waits on
+`gPackageSemaphore`, as the ROM's does (0x0015c08c-0x0015c0a4) - and the
+ROM's code is not at fault: the host's semaphore stub redid a semaphore op
+that had *succeeded* whenever the task was switched out at the call's exit
+(SWIBoot retries only an op that blocked, 0x003adf04), so a release that
+woke a waiter raised the kernel semaphore twice and a wait that had
+succeeded waited again, and a wake-up went round the waiters for ever.  A
+second host bug showed on the way: `IsSuperMode` answered false at
+interrupt level, so the serial receive interrupt's `GetGlobalTime`
+(`TSerTool::IHRequest`) was a system call that overwrote the interrupted
+task's results - a fork being started lost its start message and
+`GetPackages` threw "couldn't fork it over".  Both are in
+`docs/host-runtime.md`; ctest `host.NewtonDockGetPackages`
+(`src/host/demo/dock-getpackages.ns`) polls `GetPackages()` every tick
+while the docker loads a package, and passes 6 of 6 copies beside 8 hogs.
+`dock.ns` still waits on the docker's own slots, which is the better way
+to wait anyway.
 
 ## Status
 

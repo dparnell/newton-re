@@ -28,5 +28,6 @@ extern ULong	gHostResetCount;
 extern void	(*gHostResetHook)(void);			// run by Reset() after recording it; the task runtime ends the run with it
 extern ULong	gHostDomainAccess;
 extern Boolean	gHostPoweredOff;
+extern long		gHostInterruptLevel;	// > 0 while an interrupt is being delivered: the processor is in IRQ/FIQ mode, IsSuperMode answers true
 
 #endif	/* __HAL_HOST_H */

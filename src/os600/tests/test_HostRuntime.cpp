@@ -3,12 +3,20 @@
 // sends three messages to a server task and gets replies, calls a monitor
 // twice, has a receive time out through the timer engine (the idle task
 // advances the controllable clock to the deadline), then ends the run.
+// On the way it raises a semaphore that a higher-priority task is blocked
+// on: the waiter takes the processor at the raise's exit, and the raise -
+// which succeeded - must not be done a second time when the client gets the
+// processor back (SWIBoot retries only an op that blocked; the host stub
+// once retried after any switch, which is what left the fork world's mutex
+// and gPackageSemaphore handing a wake-up round for ever).
 
 #include "Task.h"
 #include "Scheduler.h"
 #include "ObjectTable.h"
 #include "Port.h"
 #include "Monitor.h"
+#include "Semaphore.h"
+#include "KernelTypes.h"
 #include "TimerEngine.h"
 #include "KernelGlobals.h"
 #include "OSErrors.h"
@@ -44,6 +52,14 @@ static int monitorCalls = 0;
 static long timeoutResult = 0;
 static TObjectId monitorSawCaller = 0;
 static Boolean clientFinished = false;
+
+// the semaphore check
+static TObjectId semGroupId, semWaitId, semRaiseId, semIsZeroId, waiterMsgId;
+static TSemaphoreGroup* semGroup;
+static TTask* waiterTask;
+static int waiterWakes = 0;
+static long waiterResult = -1, raiseResult = -1, isZeroResult = -1;
+static long valueAfterRaise = -1;
 
 static TTask* MakeTask(ULong priority, ULong name)
 {
@@ -81,6 +97,16 @@ static void ServerEntry(TRegister, TRegister, TRegister, TRegister)
 	PortReceiveSWI(portId, serverMsgId, kMsgType_MatchAll, 0, nil, nil, nil, nil);
 }
 
+// Waits (s -= 1) on a semaphore that is 0, so it blocks; woken by the
+// client's raise it runs at once (it has the higher priority), then waits
+// for good on the port.
+static void WaiterEntry(TRegister, TRegister, TRegister, TRegister)
+{
+	waiterResult = SemaphoreOpGlue(semGroupId, semWaitId, kWaitOnBlock);
+	waiterWakes++;
+	PortReceiveSWI(portId, waiterMsgId, 0x7fff0000, 0, nil, nil, nil, nil);
+}
+
 static long MonitorProc(void* monitorObject, ULong selector, void* userObject)
 {
 	monitorCalls++;
@@ -91,6 +117,12 @@ static long MonitorProc(void* monitorObject, ULong selector, void* userObject)
 static void ClientEntry(TRegister r0, TRegister, TRegister, TRegister)
 {
 	EXPECT(r0 == 0xC1);
+
+	// the raise wakes the waiter, which runs before this task gets back
+	raiseResult = SemaphoreOpGlue(semGroupId, semRaiseId, kWaitOnBlock);
+	valueAfterRaise = semGroup->fSemaphores[0].fValue;
+	isZeroResult = SemaphoreOpGlue(semGroupId, semIsZeroId, kNoWaitOnBlock);
+
 	for (int i = 0; i < 3; i++)
 		clientReplies[i] = PortSendSWI(portId, clientMsgId, 0, 0x100 + i, 0);
 
@@ -138,6 +170,25 @@ int main()
 	monitor->fMonitorTask->fMonitorId = monitorId;
 	monitor->fMsgId = MakeMsg(monitorId)->fId;
 
+	// a semaphore of one counter at 0, and the three op lists the check uses
+	semGroup = new TSemaphoreGroup;
+	semGroup->Init(1);
+	semGroupId = table.Add(semGroup, kSemGroupType, 1);
+	ULong waitOp = MAKESEMLISTITEM(0, -1), raiseOp = MAKESEMLISTITEM(0, 1), isZeroOp = MAKESEMLISTITEM(0, 0);
+	TSemaphoreOpList* list = new TSemaphoreOpList;
+	list->Init(1, &waitOp);
+	semWaitId = table.Add(list, kSemListType, 1);
+	list = new TSemaphoreOpList;
+	list->Init(1, &raiseOp);
+	semRaiseId = table.Add(list, kSemListType, 1);
+	list = new TSemaphoreOpList;
+	list->Init(1, &isZeroOp);
+	semIsZeroId = table.Add(list, kSemListType, 1);
+	waiterTask = MakeTask(kUserTaskPriority + 1, 'wait');
+	waiterTask->fRegister[kcPC] = (TRegister) WaiterEntry;
+	waiterMsgId = MakeMsg(waiterTask->fId)->fId;
+	ScheduleTask(waiterTask);
+
 	serverTask->fRegister[kcPC] = (TRegister) ServerEntry;
 	clientTask->fRegister[kcPC] = (TRegister) ClientEntry;
 	clientTask->fRegister[kcR0] = 0xC1;
@@ -147,6 +198,10 @@ int main()
 	HostRunTasks(idle);
 
 	EXPECT(clientFinished);
+	EXPECT(waiterWakes == 1 && waiterResult == noErr);
+	EXPECT(raiseResult == noErr);
+	EXPECT(valueAfterRaise == 0);										// raised once, taken once
+	EXPECT(isZeroResult == noErr);
 	EXPECT(serverReceived == 3 && serverTypes[0] == 0x100 && serverTypes[1] == 0x101 && serverTypes[2] == 0x102);
 	EXPECT(clientReplies[0] == 100 && clientReplies[1] == 101 && clientReplies[2] == 102);
 	EXPECT(monitorCalls == 2 && monitorResults[0] == 5 * 2 + 1000 + 7 && monitorResults[1] == 8 * 2 + 1000 + 7);

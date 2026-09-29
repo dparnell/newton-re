@@ -41,12 +41,26 @@ IOPowerOffAll(void)
 	fprintf(stderr, "[host] power off requested\n");
 }
 
-// Every call on the host takes the user-mode path (the system-call stubs),
-// so the dual-mode ROM routines exercise it.
+// ROM 0x00394410 IsSuperMode
+// The CPSR's mode bits are neither user (0x10) nor 26-bit user (0) - so
+// true in SVC, IRQ and FIQ mode alike.
+// DEVIATION: the host has no CPSR.  A task's code - and the kernel glue a
+// system-call stub calls on its behalf - takes the user-mode path, so the
+// dual-mode ROM routines exercise the stubs; but an interrupt handler, which
+// the task runtime runs at a safe point on whichever task's thread holds
+// the baton (HostDeliverInterrupts), is in IRQ mode on the MessagePad and
+// must take the supervisor path.  Answering false there made a dual-mode
+// call from a handler a system call - GetGlobalTime from the serial tool's
+// receive interrupt (TSerTool::IHRequest -> TimeFromNow) was the one seen -
+// whose glue and exit path wrote the *interrupted* task's saved registers
+// (its r0-r2: the results of the system call it was itself in the middle
+// of) and could even switch tasks from inside the handler.
+long gHostInterruptLevel = 0;
+
 extern "C" Boolean
 IsSuperMode(void)
 {
-	return false;
+	return gHostInterruptLevel > 0;
 }
 
 // DEVIATION: the host answers what an MP2x00 measures - a StrongARM at

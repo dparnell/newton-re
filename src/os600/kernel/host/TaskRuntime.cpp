@@ -166,8 +166,24 @@ SwitchTo(TTask* self, TTask* next)
 }
 
 
+static void DeliverDueInterrupts();
+
+// The handlers run in what is IRQ mode on the MessagePad: gHostInterruptLevel
+// makes IsSuperMode say so, so that a dual-mode routine a handler calls
+// (GetGlobalTime, from the serial tool's receive interrupt) takes the
+// supervisor path instead of making a system call on the interrupted task's
+// behalf - which Enter refuses (SWI.cpp).
 void
 HostDeliverInterrupts()
+{
+	gHostInterruptLevel++;
+	DeliverDueInterrupts();
+	gHostInterruptLevel--;
+}
+
+
+static void
+DeliverDueInterrupts()
 {
 	Int64 now;
 	GetClock(&now);
@@ -202,7 +218,10 @@ HostSWIExit(TTask* self, TRegister marker)
 	}
 	SwitchTo(self, next);
 	Resume(self);
-	if (self->fRegister[kcPC] != marker)
+	// (marker + 4 is not a redirection: it is the semaphore stub's "one word
+	// further on" - a blocked op failed by TSemaphore's destructor - which
+	// the stub reads itself)
+	if (self->fRegister[kcPC] != marker && self->fRegister[kcPC] != marker + 4)
 		Redirect(self);
 	return true;
 }

@@ -1,0 +1,55 @@
+// The package manager asked for its packages over and over while the
+// Connection application's docker works in a world of its own: the old
+// dock.ns, polling GetPackages() as fast as delayed calls go (every tick)
+// until the desktop's package is in.  Each GetPackages forks the newt world
+// (FGetPackages) and walks the list under gPackageSemaphore with the world's
+// mutex let go (TPMIterator), while the docker's forked world takes and
+// gives up the same mutex around every read from the serial endpoint - so
+// the fork world's mutex, the package manager's semaphore and the serial
+// receive interrupt are all busy at once.  ctest host.NewtonDockGetPackages
+// runs it under tools/dock/dock.py:
+//
+//   python tools/dock/dock.py --package fixtures/packages/fonts/monaco.pkg \
+//       --spawn build/host/host/newton --rom build/MP2x00US/rom.bin \
+//       --serial-port 0 --headless 120 --script src/host/demo/dock-getpackages.ns
+//
+// Two host bugs showed here (docs/host-runtime.md): the semaphore stub
+// redid an op that had succeeded when the task was switched out at its
+// exit, which left every task waiting on the mutex or the semaphore while
+// a wake-up went round them for ever; and a dual-mode call from the serial
+// interrupt (GetGlobalTime) was made a system call, overwriting a forking
+// task's Receive results, so the fork failed and the script's exception
+// unwound the wrong interpreter.  tools/host/stress.py --test
+// host.NewtonDockGetPackages --copies 6 --hogs 8 is the way to look.
+
+HostInclude("common.ns");			// waitFor
+
+before := Length(GetPackages());
+app := GetRoot().Connection;
+
+app:ConnectionPrefsWrite('autoDockAddr, {type: 'serial});
+Print("dock: autodock");
+app:autodock();
+
+polls := 0;
+start := Ticks();
+poll := func() begin
+	polls := polls + 1;
+	local packages := GetPackages();
+	if Length(packages) > before then begin
+		Print("dock: installed " & packages[Length(packages) - 1].title & " (" & polls & " polls)");
+		call waitFor with ("dock: the connection over",
+			func() not app.theEndpoint or not app.theEndpoint.connected or not app.theEndpoint.conncobject,
+			func() begin
+				// and a few more walks of the list with the docker gone
+				for i := 1 to 20 do GetPackages();
+				Print("dock: done");
+				HostQuit();
+			end, 60);
+	end else if Ticks() - start > 150 * 60 then begin
+		Print("dock: the package: waited in vain");
+		HostQuit();
+	end else
+		AddDelayedCall(poll, nil, 1);
+end;
+AddDelayedCall(poll, nil, 1);

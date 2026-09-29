@@ -6,13 +6,23 @@
 // at exactly that time (on the controllable clock) shows both that the
 // deadline was folded into the idle task's wait and that the interrupt was
 // delivered when it fell due.  A second source registered and removed
-// again is never asked.
+// again is never asked.  The handler runs at interrupt level: IsSuperMode
+// answers true there, as the CPSR's mode bits would in IRQ mode, so a
+// dual-mode routine (GetGlobalTime) reads the clock itself - and a system
+// call made anyway is refused - instead of writing the interrupted task's
+// saved registers (docs/host-runtime.md).
 
 #include "Boot.h"
 #include "CompMath.h"
 #include "hal/host/Host.h"
 #include "hal/host/HostInterruptSources.h"
 #include "hal/Timer.h"
+#include "hal/System.h"
+#include "NewtonTime.h"
+#include "os600/GenericSWISelectors.h"
+#include "OSErrors.h"
+#include "KernelGlobals.h"
+#include "Task.h"
 #include "UserBoot.h"
 #include "UserGlobals.h"
 #include "UserTasks.h"
@@ -28,6 +38,11 @@ static Int64	gDue = { 0, 0 };
 static Int64	gDeliveredAt = { 0, 0 };
 static int		gDeliveries = 0;
 static int		gRemovedAsked = 0;
+static Boolean	gSuperInHandler = false;
+static Boolean	gSuperInTask = true;
+static Int64	gHandlerTime = { 0, 0 };
+static long		gHandlerSWI = 0;
+static TRegister	gTaskR1Before = 0, gTaskR1After = 1;
 
 static Boolean
 FakeDeadline(Int64* when)
@@ -44,6 +59,12 @@ FakeDeliver(void)
 	gArmed = false;						// one-shot, as a hardware interrupt is once taken
 	GetClock(&gDeliveredAt);
 	gDeliveries++;
+	gSuperInHandler = IsSuperMode();
+	gTaskR1Before = gCurrentTask != nil ? gCurrentTask->fRegister[kcR1] : 0;
+	gHandlerTime = GetGlobalTime().time;						// the clock, read directly
+	ULong lo = 0, hi = 0;
+	gHandlerSWI = GenericWithReturnSWI(kGeneric_GetTaskTime, 0, 0, 0, &lo, &hi, nil);	// refused
+	gTaskR1After = gCurrentTask != nil ? gCurrentTask->fRegister[kcR1] : 0;
 }
 
 static Boolean
@@ -63,6 +84,7 @@ static Int64	gWokeAt = { 0, 0 };
 static void
 KernelServices(void)
 {
+	gSuperInTask = IsSuperMode();
 	EXPECT(HostRegisterInterruptSource(RemovedDeadline, RemovedDeliver));
 	HostUnregisterInterruptSource(RemovedDeadline, RemovedDeliver);
 
@@ -93,6 +115,10 @@ main()
 	CompAdd(&slept, &woke);
 	EXPECT(CompCompare(&gWokeAt, &woke) >= 0);			// and the sleep still ran its course
 	EXPECT(gRemovedAsked == 0);
+	EXPECT(gSuperInHandler && !gSuperInTask);
+	EXPECT(CompCompare(&gHandlerTime, &gDeliveredAt) == 0);
+	EXPECT(gHandlerSWI == kError_Call_Aborted);
+	EXPECT(gTaskR1After == gTaskR1Before);				// the interrupted task's registers untouched
 
 	if (failures == 0)
 		printf("test_HostInterruptSources: all passed\n");

@@ -81,6 +81,24 @@ kernel source is unchanged.
   saved r0-r3 as its arguments. A fresh thread starts the same way, at the
   pc `TTask::Init` set; a task proc that returns goes to `BadExit`, which
   is `TaskKillSelf`. The semaphore stub's "+4" is a marker one word higher.
+* **Only a semaphore op that blocked is retried.** SWIBoot's case for SWI 11
+  (0x003adf04) looks at `gCurrentTask` after `DoSemaphoreOp`: an op that
+  could not proceed has unscheduled the task, leaving it nil, and only then
+  is the saved pc moved back onto the SWI (`sub lr,lr,#4`) so the op is
+  tried again when the task is woken. An op that succeeded takes the
+  ordinary exit, and a switch there - the time slice, or the task the op
+  itself woke - resumes the task *after* the SWI. `SemaphoreOpGlue` in
+  `SWI.cpp` makes the same test. (Host bug fixed 2026-09-30: the stub
+  retried whenever its exit switched, so an op that had succeeded was done
+  twice. A `TULockingSemaphore` release that woke a waiter raised the
+  kernel semaphore again once the waiter had run, and a waiter whose wait
+  had succeeded waited again; with the fork world's mutex and
+  `gPackageSemaphore` both busy - a script polling `GetPackages()` while the
+  docker's forked world read from the desktop - every task ended up waiting
+  on one or the other while a wake-up went round them for ever, two or
+  three threads each burning a third of a core. `test_HostRuntime` raises
+  a semaphore a higher-priority task is blocked on and checks it was raised
+  once; ctest `host.NewtonDockGetPackages` is the case that showed it.)
 * **Interrupts are delivered by whoever holds the baton, at safe points.**
   The idle task's host body (`HostIdleTask`) waits for the next timer
   deadline - the timer engine's alarm or the scheduler's time slice - then
@@ -113,6 +131,24 @@ and `deliver`, the interrupt handler.
   with the baton held and at interrupt level: what an ARM handler may do
   (`SendForInterrupt`, setting a flag the deferred-work path reads) and no
   system call.
+* **Interrupt level is supervisor mode.** `HostDeliverInterrupts` raises
+  `gHostInterruptLevel` while it runs the handlers, and the host's
+  `IsSuperMode` answers true then - as the ROM's (0x00394410: the CPSR's
+  mode bits are neither user nor 26-bit user) does in IRQ and FIQ mode - so
+  a dual-mode routine a handler calls takes its supervisor path:
+  `GetGlobalTime` reads the clock itself, as `TSerTool::IHRequest` needs
+  from the serial receive interrupt (`TimeFromNow` for a delayed
+  `SendForInterrupt`). A system call made at interrupt level anyway is
+  refused, with one line on stderr. (Host bug fixed 2026-09-30:
+  `IsSuperMode` always answered false, so that `GetGlobalTime` was a
+  `GenericSWI` whose glue wrote the *interrupted* task's saved r1/r2 and
+  whose exit path could switch tasks inside the handler. The task
+  interrupted was a fork being started, in the middle of its `Receive` of
+  the start message: the sender's message id it read back was the clock,
+  the fork gave up, `Fork` answered `kError_Receiver_Object_No_Longer_Exists`
+  and `GetPackages` threw "couldn't fork it over" with `gInterpreter` no
+  longer the one the call had started on - a crash in `RunCall`'s unwind.
+  `test_HostInterruptSources` checks both halves.)
 * `HostIdleTask` folds the earliest source deadline into the time it sleeps
   until, beside the timer alarm, the time slice and the RTC alarm - so a
   source wakes a machine that has nothing else to do.  On the controllable
