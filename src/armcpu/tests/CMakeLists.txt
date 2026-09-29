@@ -2,6 +2,11 @@ add_executable(test_ARMCPU test_ARMCPU.cpp)
 target_link_libraries(test_ARMCPU PRIVATE armcpu)
 add_test(NAME armcpu.ARMCPU COMMAND test_ARMCPU)
 
+add_executable(test_PackageNativeCPU test_PackageNativeCPU.cpp)
+target_link_libraries(test_PackageNativeCPU PRIVATE armcpu_frames frames)
+target_compile_definitions(test_PackageNativeCPU PRIVATE "NEWTON_ROM_IMAGE=\"${NEWTON_ROM_IMAGE}\"")
+add_test(NAME armcpu.PackageNativeCPU COMMAND test_PackageNativeCPU)
+
 # a package's native functions run through the fallback: Mahjongg deals
 add_test(NAME armcpu.Mahjongg
     COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --erase

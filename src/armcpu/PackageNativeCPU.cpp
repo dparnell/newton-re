@@ -21,6 +21,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+extern const ExceptionName exMsgException;
+
 extern const ExceptionName exInterpreter;
 
 /*------------------------------------------------------------------------------
@@ -133,6 +135,10 @@ public:
 	uint32_t		NewRefVar(Ref ref);				// a RefHandle and a word pointing at it
 	uint32_t		MapData(RefArg obj);			// BinaryData
 	uint32_t		MapSlots(RefArg obj);			// Slots
+	Ref				CodeObject(uint32_t addr);		// an object in the code binary, as a host object
+	static const Ref	kNoObject = (Ref) -1;
+	struct CodeObjectEntry { uint32_t fAddr; RefStruct* fObject; };
+	Vec<CodeObjectEntry>	fCodeObjects;			// translated once each call
 
 	// the arguments of a call out, and its answer
 	uint32_t		Arg(TARMCPU& cpu, int i);
@@ -143,6 +149,8 @@ public:
 	void			AddHandler(uint32_t handler)	{ fHandlers.push_back(handler); }
 	void			ExitHandler(uint32_t handler);
 	bool			Deliver(TARMCPU& cpu, const char* name, uint32_t data);	// ==> false: no ARM handler
+	bool			DeliverHost(TARMCPU& cpu, Exception* e);		// a host exception, its data translated
+	void			ThrowToHost(const char* name, uint32_t data);	// an ARM throw no ARM handler takes
 	uint32_t		CString(const char* s);			// a copy in the arena
 	bool			ReadCString(uint32_t a, char* buffer, size_t size);
 	uint32_t		StackStateToken(StackState* state);
@@ -197,6 +205,8 @@ TNativeWorld::TNativeWorld(RefArg code)
 
 TNativeWorld::~TNativeWorld()
 {
+	for (CodeObjectEntry& e : fCodeObjects)
+		delete e.fObject;
 	for (RefStruct* r : fHandles)
 		delete r;
 	for (Window& w : fWindows)
@@ -377,22 +387,73 @@ TNativeWorld::ToHost(uint32_t ref)
 		if (index > 0 && index < fHandles.size())
 			return *fHandles[index];
 	}
-	if (Code(addr, 16))
+	if (Code(addr, 12))
 	{
-		// an object in the code binary: the ROM's layout (a header word,
-		// the GC's, the class, then the rest); a symbol is interned
-		uint32_t cls = BE32(&fCode[addr - kCodeBase + 8]);
-		if (cls == 0x00055552)
-		{
-			const char* name = (const char*) &fCode[addr - kCodeBase + 16];
-			return Intern((char*) name);
-		}
-		fprintf(stderr, "[armcpu] an object of class %08x in the code binary at +%#x is not translated (NOT YET)\n", cls, addr - kCodeBase);
+		Ref obj = CodeObject(addr);
+		if (obj != kNoObject)
+			return obj;
 	}
 	else
 		fprintf(stderr, "[armcpu] %08x is not a ref of this call\n", ref);
 	ThrowMsg("armcpu: a ref the ARM world does not know");
 	return NILREF;
+}
+
+
+// An object in the code binary - the ROM's layout: a header word (the size
+// in bytes << 8 | the flags: 1 slotted, 2 a frame), the GC's word, the class
+// (or a frame's map), then the data or the slots - as a host object, made
+// once each call: a symbol interned; a binary copied (a string's big-endian
+// UniChars in the host's order); an array with its slots translated.
+// NOT YET: frames (their maps).  NTK puts only four symbols there
+// (_proto, CFunction, binCFunction, string), and those in every fixture's
+// code; a function's own literals come to it through its closure.
+Ref
+TNativeWorld::CodeObject(uint32_t addr)
+{
+	for (CodeObjectEntry& e : fCodeObjects)
+		if (e.fAddr == addr)
+			return *e.fObject;
+	const uint8_t* p = &fCode[addr - kCodeBase];
+	uint32_t header = BE32(p);
+	uint32_t size = header >> 8;
+	uint32_t flags = header & 0xff;
+	uint32_t cls = BE32(p + 8);
+	if (size < 12 || !Code(addr, size))
+	{
+		fprintf(stderr, "[armcpu] an object at +%#x of the code binary runs off its end\n", addr - kCodeBase);
+		return kNoObject;
+	}
+	RefVar obj;
+	if (cls == 0x00055552)
+		obj = Intern((char*) (p + 16));
+	else if ((flags & 1) == 0)
+	{
+		RefVar theClass(ToHost(cls));
+		uint32_t length = size - 12;
+		obj = AllocateBinary(theClass, length);
+		char* data = (char*) BinaryData(obj);
+		if (IsSubclassRef(theClass, RSSYMstring))
+			for (uint32_t i = 0; i + 1 < length; i += 2)
+				*(UniChar*) (data + i) = (UniChar) ((p[12 + i] << 8) | p[12 + i + 1]);
+		else
+			memcpy(data, p + 12, length);
+	}
+	else if ((flags & 2) == 0)
+	{
+		uint32_t count = (size - 12) / 4;
+		obj = AllocateArray(RefVar(ToHost(cls)), count);
+		for (uint32_t i = 0; i < count; i++)
+			SetArraySlot(obj, i, RefVar(ToHost(BE32(p + 12 + i * 4))));
+	}
+	else
+	{
+		fprintf(stderr, "[armcpu] a frame at +%#x of the code binary is not translated (NOT YET)\n", addr - kCodeBase);
+		return kNoObject;
+	}
+	CodeObjectEntry e = { addr, new RefStruct(obj) };
+	fCodeObjects.push_back(e);
+	return obj;
 }
 
 
@@ -581,6 +642,46 @@ TNativeWorld::Deliver(TARMCPU& cpu, const char* name, uint32_t data)
 }
 
 
+// A host exception into the ARM world: a ref exception's data (a RefStruct*)
+// becomes a RefVar of the ARM world's, a message exception's (a C string) a
+// copy in the arena, anything else (an error number) the number.
+bool
+TNativeWorld::DeliverHost(TARMCPU& cpu, Exception* e)
+{
+	if (fHandlers.empty())
+		return false;
+	strncpy(fThrownName, e->name, sizeof(fThrownName) - 1);
+	fThrownName[sizeof(fThrownName) - 1] = 0;
+	uint32_t data;
+	if (Subexception(e->name, (ExceptionName) "type.ref") && e->data != nil)
+		data = NewRefVar(*(RefStruct*) e->data);
+	else if (Subexception(e->name, exMsgException) && e->data != nil)
+		data = CString((const char*) e->data);
+	else
+		data = (uint32_t) (uintptr_t) e->data;
+	return Deliver(cpu, fThrownName, data);
+}
+
+
+// The other way: an exception the ARM code throws (or passes on) that no
+// handler of its takes goes on out to the host, its data translated back.
+void
+TNativeWorld::ThrowToHost(const char* name, uint32_t data)
+{
+	strncpy(fThrownName, name, sizeof(fThrownName) - 1);
+	fThrownName[sizeof(fThrownName) - 1] = 0;
+	if (Subexception((ExceptionName) fThrownName, (ExceptionName) "type.ref") && data != 0)
+		ThrowRefException((ExceptionName) fThrownName, RefVar(ArgRef(data)));
+	if (Subexception((ExceptionName) fThrownName, exMsgException) && data != 0)
+	{
+		static char message[256];
+		ReadCString(data, message, sizeof(message));
+		Throw((ExceptionName) fThrownName, message, nil);
+	}
+	Throw((ExceptionName) fThrownName, (void*) (intptr_t) (int32_t) data, nil);
+}
+
+
 uint32_t
 TNativeWorld::StackStateToken(StackState* state)
 {
@@ -667,9 +768,7 @@ TNativeWorld::Trap(TARMCPU* cpu, uint32_t pc)
 		}
 		newton_catch_all
 		{
-			strncpy(fThrownName, CurrentException()->name, sizeof(fThrownName) - 1);
-			fThrownName[sizeof(fThrownName) - 1] = 0;
-			if (!Deliver(*cpu, fThrownName, 0))
+			if (!DeliverHost(*cpu, CurrentException()))
 				rethrow;
 		}
 		end_try;
@@ -702,9 +801,7 @@ TNativeWorld::Trap(TARMCPU* cpu, uint32_t pc)
 			}
 			newton_catch_all
 			{
-				strncpy(fThrownName, CurrentException()->name, sizeof(fThrownName) - 1);
-				fThrownName[sizeof(fThrownName) - 1] = 0;
-				if (!Deliver(*cpu, fThrownName, 0))
+				if (!DeliverHost(*cpu, CurrentException()))
 					rethrow;
 			}
 			end_try;
@@ -727,10 +824,7 @@ TNativeWorld::Trap(TARMCPU* cpu, uint32_t pc)
 		thrown = CurrentException();
 		if (gTrace)
 			fprintf(stderr, " -> threw %s\n", thrown->name);
-		strncpy(fThrownName, thrown->name, sizeof(fThrownName) - 1);
-		fThrownName[sizeof(fThrownName) - 1] = 0;
-		// (the exception's data is not carried into the ARM world: NOT YET)
-		if (!Deliver(*cpu, fThrownName, 0))
+		if (!DeliverHost(*cpu, thrown))
 			rethrow;
 	}
 	end_try;
@@ -808,8 +902,7 @@ GLUE(Glue_NextHandler)
 	w.ExitHandler(h);
 	if (w.Deliver(cpu, name, data))
 		return true;
-	strcpy(w.fThrownName, name);
-	Throw((ExceptionName) w.fThrownName, nil, nil);
+	w.ThrowToHost(name, data);
 	return true;
 }
 GLUE(Glue_Throw)
@@ -819,8 +912,20 @@ GLUE(Glue_Throw)
 		strcpy(name, "evt.ex");
 	if (w.Deliver(cpu, name, cpu.r[1]))
 		return true;
-	strcpy(w.fThrownName, name);
-	Throw((ExceptionName) w.fThrownName, nil, nil);
+	w.ThrowToHost(name, cpu.r[1]);
+	return true;
+}
+// (the ROM's makes a RefStruct of the ref and throws it; here that is a new
+//  RefVar of the ARM world's, which a host catcher gets back as the ref)
+GLUE(Glue_ThrowRefException)
+{
+	char name[64];
+	if (!w.ReadCString(cpu.r[0], name, sizeof(name)))
+		strcpy(name, "evt.ex");
+	uint32_t data = w.NewRefVar(w.ArgRef(cpu.r[1]));
+	if (w.Deliver(cpu, name, data))
+		return true;
+	w.ThrowToHost(name, data);
 	return true;
 }
 GLUE(Glue_Subexception)
@@ -1102,6 +1207,7 @@ InitGlue(void)
 		{ "ExitHandler", Glue_ExitHandler },
 		{ "NextHandler", Glue_NextHandler },
 		{ "Throw", Glue_Throw },
+		{ "ThrowRefException__FPcRC6RefVar", Glue_ThrowRefException },
 		{ "Subexception", Glue_Subexception },
 		{ "GetStackStateBlock__Fv", Glue_GetStackStateBlock },
 		{ "ResetStackStateBlock__FP10StackState", Glue_ResetStackStateBlock },
