@@ -86,6 +86,24 @@ bugs and ROM bugs found on the way.
   `layout.tsv` manifest, and `rombuild.py` proved by a byte-identical
   rebuild of the area.
 
+## 2026-09-30: beaming planned, and the host's IR chip
+
+- Sized with the new `analysis/classsizes.py build/MP2x00US REGEX` (each
+  class's code size and how much is reconstructed) (f5580c9): the Beam
+  transport (ROM NewtonScript) -> `ZapSend`/`ZapReceive` -> `TBeamer` ->
+  the probe 'pkir' (`TIrProbeTool`, switching between IrDA SIR and
+  Sharp's ASK) -> 'irda' (about 32 KB) between two 2.1s, or 'slir'
+  (`TSharpIRTool`) for older Newtons; the preference zapCommToolId names
+  the service outright.  Every tool is a `TAsyncSerTool` on the chip at
+  'infr', switched by the 'irlk' option.
+- `hal/host/HostIRChip` (1731dbd): a TSerialChip at 'infr' over a TCP
+  connection to another host (`newton --ir-peer listen:PORT` /
+  `HOST:PORT`); each byte crosses with its modulation, a receiver hearing
+  only what 'irlk' tunes it to (both in auto-receive, its status saying
+  which came last - the Voyager's behaviour, which the probe relies on);
+  half duplex; bytes arriving while it is off are lost.  ctest
+  `hal.HostIRChip` runs two chips in one process.
+
 ## 2026-09-30: the OS boots with no ROM image
 
 - `tools.PNG` runs the PNG reader's tests (459ac8e).  No bytecode is left

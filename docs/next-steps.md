@@ -192,7 +192,11 @@ worked through.  What could come next (not ranked; the owner chooses):
   patch, which the host cannot do); V.42bis is in.  Left: 'rpat' and
   `BackupPatches`, V.42bis's internal-buffer mode, tests for 'islp' and
   'gpwd', and a real desktop (NCX, UnixNPI) over localhost:3679 - not
-  yet tried.
+  yet tried.  **Beaming** (being done; `docs/comms/README.md`, "Beaming - the
+  plan"): layer 1, the host IR chip, done (`hal/host/HostIRChip`, `newton
+  --ir-peer`).  Next: `TSharpIRTool` ('slir'), then `TBeamer` and a
+  two-process ctest `host.NewtonBeam` (zapCommToolId "slir"), then the
+  probe 'pkir', then IrDA.
   The livelock between `TPMIterator::Init`'s semaphore and `TForkWorld`'s
   mutex was the host runtime's, fixed (12e55a2; ctest
   `host.NewtonDockGetPackages`).  `test_NIEProtoFSM` also runs
