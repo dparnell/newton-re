@@ -123,11 +123,8 @@ worked through.  What could come next (not ranked; the owner chooses):
   standard 06.10 test sequences, if they can be brought in;
   `NewWiredPtr` in `memory/` (the `NewPtr` fallback works).
 - **The book reader**: its C++ side is complete (2026-09-29;
-  `docs/books/README.md`).  Open: text drawn under a `TQDScaler`
-  transform comes out about a third of its width (line spacing right) -
-  a page thumbnail shows it (`tmp/books-thumbnail.pgm` from ctest
-  `books.Copperfield`); being looked into in qd/text.
-  A package with a `'book` part is wanted in `fixtures/` to test the
+  `docs/books/README.md`).  A package with a `'book` part is wanted in
+  `fixtures/` to test the
   part handler with a real book (Copperfield has only read the help book
   under another ISBN).  The rest of the reader is its NewtonScript side,
   which runs as it is.

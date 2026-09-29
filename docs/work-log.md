@@ -9,6 +9,19 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: the book reader, round 4 - the thumbnail's clipping was the host's
+
+- A page thumbnail showed only its top-left 17x23 pixels.  First taken
+  for a ROM bug from the decompile; checked against the disassembly it
+  was two host transcription errors: the ROM's `GrafPort` has `visRgn`
+  at +0x24 and `clipRgn` at +0x28, and Ghidra's decompile names +0x24
+  `clipRgn`.  `ViewIntoBitmap` sets its fresh port's `portRect` and
+  visible region (0x3f2f8, 0x3f30c), and `TRemoteView::RealDraw` saves
+  the visible region, maps it back into the page's coordinates for the
+  scaler's mapVis and restores it (0x1a67c4, 0x1a684c, 0x1a6978); the
+  host had both on the clip.  Thumbnails now show the whole page;
+  `books.Copperfield` checks the right and lower halves (eead505).
+
 ## 2026-09-29: comms, round 3 - a script's endpoint talks TCP (M3)
 
 - Templates read back in the device's byte order with `'array` fields
