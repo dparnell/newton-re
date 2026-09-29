@@ -387,7 +387,7 @@ failed:
 }
 
 
-// ROM 0x000b0b28 EzSerialOptions__FP12TOptionArrayPPcN21
+// ROM 0x000b0b28 EzSerialOptions__FP12TOptionArrayPPclT3
 // The async serial service at 38400 bps with hardware flow control both
 // ways, and (both sizes given) the buffers.
 NewtonErr
