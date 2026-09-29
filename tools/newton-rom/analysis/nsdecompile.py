@@ -915,6 +915,10 @@ def real_literal(v):
 	return text
 
 
+# the binary classes the host keeps as shorts in its own byte order
+# (IsHalfwordShapeClass in frames/ObjectAreaImport.cpp)
+HALFWORD_CLASSES = {"boundsrect", "rectangle", "oval", "roundrectangle", "line", "polygonshape", "polygondata", "regiondata"}
+
 UNQUOTABLE = re.compile(r"a binary of class|a function inside a literal")
 
 # A binary out of the hex of its bytes, for a constant's source (a literal
@@ -1080,6 +1084,21 @@ class Writer:
 		f = rom.flags(ref)
 		cls = rom.cls(ref)
 		if f & 3 == 0:
+			cname = rom.symname(cls) if rom.is_ptr(cls) else None
+			data = rom.data(ref)
+			if cname is not None and (cname.lower() == "string" or cname.lower().startswith("string.")) \
+					and len(data) % 2 == 0 and data.endswith(b"\0\0"):
+				# a string of a subclass: made from its text, which the host
+				# keeps in its own byte order (as the ROM importer does)
+				return "SetClass(Clone(%s), %s)" % (string_literal(data.decode("utf-16-be")[:-1]), self.constant(cls))
+			if cname is not None and cname.lower() in HALFWORD_CLASSES:
+				# a shape the host keeps as shorts in its own order (as the
+				# ROM importer does): a rectangle's four made by MakeRect
+				if len(data) != 8:
+					raise DecompileError("a halfword binary of class %s" % cname)
+				top, left, bottom, right = struct.unpack(">4h", data)
+				text = "MakeRect(%d, %d, %d, %d)" % (left, top, right, bottom)
+				return text if cname == "rectangle" else "SetClass(%s, %s)" % (text, self.constant(cls))
 			if "kBinaryFromHex" not in dict(self.constants):
 				self.constants.insert(0, ("kBinaryFromHex", BINARY_FROM_HEX))
 			return "call kBinaryFromHex with (\"%s\", %s)" % (rom.data(ref).hex(), self.constant(cls))

@@ -159,6 +159,7 @@ by side.
 | 7 | 5447 of 5507 | 5442 (98.8%) | repeated literals told apart by slot, not object; an NTK magic-pointer constant a literal per name |
 | 8 | 5447 of 5507 | 5444 (98.9%) | a branch to an `if`'s end that an inner construct's ends there too is the inner's: the outer `if` has no `else` |
 | 9 | 5447 of 5507 | 5446 (98.9%; all but one of those decompiled) | a constant no receiver reference (NTK); `l := <loop>` kept a statement so the loop's locals are declared first |
+| 11 | 5498 of 5507 | 5497 (99.8%) | string subclasses from their text and rectangles from `MakeRect`: the host keeps both in its own byte order |
 | 10 | 5498 of 5507 | 5491 (99.7%) | literals no quoted source makes (binaries; frames and arrays holding a binary or a function) written as constants that build them: `kBinaryFromHex`, `{tag: kFunction_x}` |
 
 The 5507 functions are every top-level NewtonScript function in the ROM's
@@ -167,11 +168,14 @@ them.
 
 ### What does not decompile yet
 
-- **Binary literals** (decompiled since round 10, as constants built by
-  `kBinaryFromHex` out of the bytes' hex): a string subclass such as
-  `'string.noData` or `'person` still differs, because the host keeps a
-  string's characters in host order and the helper stuffs them in the
-  ROM's; these belong in the end to the ROM-free track's resource
+- **Binary literals** are decompiled (since round 10) as constants that
+  build them: `kBinaryFromHex` out of the bytes' hex. Two kinds of binary
+  are not kept as the ROM's bytes on the host, because the ROM importer
+  (`frames/ObjectAreaImport.cpp`) turns them into host order: a string of
+  any subclass (`'string.noData`), made instead as
+  `SetClass(Clone("text"), 'class)`; and the shapes kept as shorts
+  (`IsHalfwordShapeClass`: `'rectangle`, `'boundsRect`, ...), made with
+  `MakeRect`. In the end these belong to the ROM-free track's resource
   extraction.
 - **Reals of class `'Real`:** the capitalised class, which the lexer does
   not make.
