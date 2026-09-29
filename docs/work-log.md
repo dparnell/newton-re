@@ -9,6 +9,37 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: the view natives finished - the key-help slip, a roll over a soup, ReFlow
+
+Views are 95 of 95 natives bound.
+- `354ede4`: the key-help slip (`views/KeyHelpSlip.cpp`:
+  `FKeyHelpSlipSetup`, `FKeyHelpSlipDraw` and `GetCommandCharWidth`,
+  `GetModifiersWidth`, `DrawModifierIcons`, `GetSlipWidth`);
+  `src/host/demo/keyhelp.ns` photographs it over the Notepad
+  (`host.NewtonKeyHelp`).  ROM quirks kept: the widest letter is carried
+  from one column to the next, and a truncated name is drawn one
+  character longer than fits.
+- `c302bb3`: `TView::SyncScrollSoup` - a roll whose items are a soup
+  cursor, stepped by the roll's height less `overlapScrollAmount` (else
+  twice the `viewLineSpacing` inherited from the parents, which is what
+  the first try of the demo measured); `src/host/demo/soupscroll.ns`
+  (`host.NewtonSoupScroll`).
+- `6579778`: `ReFlow` and `ReflowPreflight` with `ReflowText`,
+  `SplitStyles`, the three style mungers, `SaveStylee`, the C
+  `SetFontSize` and `TParagraphView::OffsetPastVisible` - the Notepad's
+  print format laying a page out again for the printer
+  (`views/Reflow.cpp`).  The decompiler dropped `ReflowText`'s text walk
+  as unreachable; read from the assembly, it only ever stops at the end
+  of the text, so a paragraph is poured whole and cut only where the page
+  runs out.  ROM bugs kept: the styles of a piece not cut again, the 'all
+  fonts and the ink print scale worked out after the styles slot was set,
+  the room left reset to a whole page after every piece, `SplitStyles`'
+  length for a part inside one run, a gutter test that is never true.
+  `TestReflow`; `src/host/demo/reflow.ns` (`host.NewtonReflow`) walks the
+  setup assistant, reflows a note into a page 160 wide and photographs
+  the groups: a centred group of shapes shows the view lasso moving the
+  group and not its children, which the ROM's Constructor does too.
+
 ## 2026-09-29: the rest of the view natives
 
 - `e58914d`: `TView::SyncScroll` and its native (protoRoll's scrolling -

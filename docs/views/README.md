@@ -2407,9 +2407,17 @@ nsfunctions.py --binary-classes` saying which classes there are).
   (made where missing, put in front when going up, the rest removed), the
   ones scrolled past add their height to the slide, and the slide is
   animated with the scroll sound over the roll less its bottom 5 pixels.
-  NOT YET: `TView::SyncScrollSoup` 0x00263034, the same over a soup
-  cursor (by `overlapScrollAmount`, or twice the line spacing) - a roll
-  over a cursor answers nil.
+  **Over a soup cursor** (`TView::SyncScrollSoup` 0x00263034, when the
+  items are a frame): the step is the roll's height less
+  `overlapScrollAmount` (else twice the `viewLineSpacing` found through
+  the parents, else 16).  Down scrolls on into the entry at the cursor
+  while more than a roll of it is left (or when it is the roll's
+  `lastItem`), else moves the cursor on; up scrolls back up the entry,
+  else moves the cursor back and starts at its last whole step
+  (`h - h % step`); a cursor that runs off either end is reset and the
+  answer is nil.  The children are made again by the roll's
+  `viewSetupChildrenScript` (`src/host/demo/soupscroll.ns`,
+  `host.NewtonSoupScroll`).
 - **GrayShrink** 0x0003ec94: a bitmap shrunk into the view's bounds or the
   second rectangle of the style's `transform`, with the style's
   `grayLevels` in the user's preferences while the bits are copied.  ROM
@@ -2436,23 +2444,65 @@ nsfunctions.py --binary-classes` saying which classes there are).
   (`SplashScreen.h`) - drawn centred in a box.  The MP2x00 registers none,
   so it answers nil and the script draws its default picture.
 
+- **The key-help slip** (`views/KeyHelpSlip.cpp`: `FKeyHelpSlipSetup`
+  0x00183c38 and `FKeyHelpSlipDraw` 0x00184244, the slip's
+  `viewSetupFormScript` and `viewDrawScript`, with `GetCommandCharWidth`,
+  `GetModifiersWidth`, `DrawModifierIcons`, `GetSlipWidth`): the command
+  keys in force gathered and categorised, laid out in two columns of 100
+  pixels (one when the application area is too narrow), the slip centred
+  across and a third of the way down, with scrollers when it is taller
+  than the area less two lines; drawn as each group's name in bold, then
+  its keys - the letter right-aligned in the column, the modifier icons
+  before it, the name truncated to what is left with an ellipsis.  ROM
+  quirks kept: the widest letter is not reset between columns, and the
+  truncated name is drawn one character longer than fits
+  (`src/host/demo/keyhelp.ns`, `host.NewtonKeyHelp`).
+- **ReFlow** 0x001a5e68 and **ReflowPreflight** 0x001a5cd8
+  (`views/Reflow.cpp`): the Notepad's print format lays a page out again
+  for the printer - its `viewSetupChildrenScript` calls
+  `ReFlow(data, {reflowFont, unistyle: 'font, textGutter: 16,
+  graphicsGutter: -16, viewLineSpacing: 28, pageBounds}, targetBox,
+  localBox)`.  The views are gathered into *groups* down the page: the
+  highest one not yet placed starts one, and every view whose top less
+  its gutter (the text gutter for a view with text, the graphics gutter
+  otherwise) is above the group's bottom, and which would not make the
+  group taller than a page, joins it (its bounds one pixel bigger each
+  way, so a line still counts in the union), until the group stops
+  growing.  Each group is a `canonicalGroup` (the first a
+  `canonicalFirstGroup`), `viewJustify` 0xA010 - centred, stacked under
+  the one before, lassoed round its children - holding clones of its
+  views moved to its top left.  A group of one paragraph is instead
+  poured through the width of `localBox` by `ReflowText` 0x001a5014: a
+  copy of the paragraph with only its horizontal justification, its font
+  replaced by `reflowFont` (`unistyle` 'all, or no font of its own) or
+  brought to its size ('font, and the styles too), built as a real view
+  under the root to see where its laid-out lines stop
+  (`TParagraphView::OffsetPastVisible` 0x0016ba24), cut there, and the
+  rest carried on as the next piece, which starts a page (a first
+  group).  The running room left on the page starts a new one when a
+  group and the 20-pixel gap under it do not fit.  `ReflowPreflight`
+  answers a copy of the ROM's `stylePreflight` frame with the different
+  families, sizes, faces and fonts the views and their style runs use -
+  the format sets the page's font from it when there is one family.  ROM
+  bugs kept: the text walk only ever stops at the end of the text (so a
+  paragraph is never split at its returns) and drops a single character
+  left after a cut; a piece keeps the styles split for all the rest of
+  the text; with 'all the fonts, and the ink words' print scale, are
+  worked out after the styles slot was set and never reach the piece;
+  the room left is reset to a whole page after every piece;
+  `SplitStyles` gives a part inside one run the wrong length; and the
+  gutter test compares the text's length, unsigned, with nought, so an
+  empty text counts as text.  The lasso moves a group but not its
+  children (the ROM's `TView::Constructor` as much as the host's), so a
+  centred group of shapes is drawn from the middle of the page.
+  `test_ViewExtraNatives`' `TestReflow`; `src/host/demo/reflow.ns`
+  (`host.NewtonReflow`) reflows a note into a page 160 wide and
+  photographs the groups stacked.
+
 `test_ViewExtraNatives` calls each from NewtonScript over an offscreen root
 (the root the host builds without a template has only `MakeViewMethods`'
 list, so the test copies the ROM's own `viewroot` methods it needs; on the
 machine the root's proto is `viewroot` itself).
-
-NOT YET, measured: the **key-help slip**'s `viewSetupFormScript` and
-`viewDrawScript` (`FKeyHelpSlipSetup` 0x00183c38, 1.5 KB;
-`FKeyHelpSlipDraw` 0x00184244, 2 KB; with `GetCommandCharWidth`,
-`GetModifiersWidth`, `DrawModifierIcons` and `GetSlipWidth`
-0x001839f8-0x00183c38 - the command keys gathered and categorised
-(`GatherKeyCommands`/`CategorizeKeyCommands` are done), laid out in one or
-two columns of 100 pixels, the command letters drawn with the modifier
-icons before them and the names truncated with `StyledStrTruncate`); and
-**ReFlow**/**ReflowPreflight** 0x001a5cd8-0x001a6720 with `ReflowText`,
-`SplitStyles`, `MungeStyles`, `MungeAllStyles`, `MungeInkScale`,
-`SaveStylee` (about 7 KB) - the print and fax formats' reflow of a page's
-paragraphs into `printerPageBounds`.
 
 ## Not yet
 
