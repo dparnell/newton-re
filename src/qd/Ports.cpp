@@ -49,7 +49,7 @@ const long	kPixelMapSize = 0x1c;			// the ROM's PixelMap (GetPixelMapSize)
 // baseAddr and grayTable are pointers), so the handle and the offset to
 // the rows are sized from the host's struct.  (Sized the ROM's way, every
 // pattern made from a binary wrote past its handle and broke the heap.)
-const long	kPatternPixelsOffset = (long) sizeof(PixelMap);
+extern const long	kPatternPixelsOffset = (long) sizeof(PixelMap);
 const long	kPatternHandleSize = kPatternPixelsOffset + 8;
 
 

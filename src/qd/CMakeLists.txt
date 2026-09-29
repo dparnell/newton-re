@@ -26,6 +26,7 @@ add_library(qd STATIC
     TextObject.cpp
     Curves.cpp
     Paths.cpp
+    PixelConvert.cpp
     QDTables.cpp
     Transform.cpp
     Screen.cpp

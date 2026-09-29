@@ -31,6 +31,7 @@
 #include "TextObject.h"
 #include "Curves.h"
 #include "Paths.h"
+#include "PixelConvert.h"
 #include "Frames.h"
 #include <new>
 #include <string.h>
@@ -334,17 +335,86 @@ GetPicGrayTable(long depth, UChar** table)
 }
 
 
+// ROM 0x00334244 ConvertPixPat__FP8PixelMap
+// A pixel pattern out of a picture made the screen's kind, in place: a
+// one-bit one is left as it is; indexed pixels go through the pattern's
+// gray table (two bits stay two, four stay four, eight are packed into
+// four), direct ones are made four-bit grays two to a byte - the rows
+// closed up to the new row bytes.
+void
+ConvertPixPat(PixelMap* pm)
+{
+	long shift = 0;
+	const UChar* table = (const UChar*) pm->grayTable;
+	ULong flags = pm->pixMapFlags;
+	ULong depth = flags & 0xff;
+	long newDepth = 4;
+	PixelConverter convert = ConvertIndex4;
+	if (depth == 8)
+		convert = ConvertIndex8to4;
+	else if (depth < 9)
+	{
+		if (depth == 1)
+			return;
+		if (depth == 2)
+		{
+			convert = ConvertIndex2;
+			newDepth = 2;
+		}
+	}
+	else
+	{
+		if (depth == 0x10)
+		{
+			convert = ConvertDirect16to4;
+			shift = 2;
+			table = nil;
+		}
+		else if (depth == 0x20)
+		{
+			if ((flags & 0x2000000) != 0)
+				convert = ConvertDirectComp32to4;
+			else if ((flags & 0x4000000) != 0)
+				convert = ConvertDirectNoPad32to4;
+			else
+				convert = ConvertDirect32to4;
+			shift = 3;
+			table = nil;
+		}
+	}
+	char* src = (char*) GetPixelMapBits(pm);
+	char* dst = src;
+	long rowBytes = pm->rowBytes;
+	long newRowBytes = rowBytes >> shift;
+	for (long n = pm->bounds.bottom - pm->bounds.top; n > 0; n--)
+	{
+		convert(src, table, rowBytes);
+		BlockMove(src, dst, rowBytes);
+		src += rowBytes;
+		dst += newRowBytes;
+	}
+	pm->rowBytes = (short) newRowBytes;
+	pm->pixMapFlags = (pm->pixMapFlags & 0xffffff00) | newDepth;
+}
+
+
 // ROM 0x00333dc0 GetPicPixPat__Fl
 // A pixel pattern (BkPixPat, PnPixPat, FillPixPat): type 2 is an old
-// pattern and an RGB, made a gray pattern of the port's depth; type 1 a
-// pattern and a pixel map of its own - its header, a colour table for an
-// indexed one, and the rows, unpacked as GetPicBits does.  ==> the
+// pattern and an RGB, made a gray pattern of the port's depth; type 1 an
+// old pattern (passed over) and a pixel map of its own - its header, a
+// colour table for an indexed one (made a gray table), and the rows as
+// they are, or packed a row at a time (UnpackBits, or UnpackWords for 16-
+// bit pixels packed as words) - made a pattern whose pixels follow its
+// header and converted to the screen's kind (ConvertPixPat).  ==> the
 // pattern, nil for anything else.
 //
-// NOT YET RECONSTRUCTED: the type 1 pattern itself - the ROM converts the
-// pixels to the screen's four bits (ConvertPixPat over ConvertIndex2/4,
-// ConvertIndex8to4, ConvertDirect16to4, ConvertDirect32to4...); here its
-// bytes are read and nil answered, so the port keeps the pattern it had.
+// ROM BUGS, kept: a row that is not a multiple of four bytes is laid out
+// two bytes further on than the pattern's row bytes say, so such a pattern
+// (one or two bits deep, eight pixels wide) is read skewed; the pattern's
+// gray table is left pointing at the table given back here; and when the
+// rows cannot be read the exception goes on up without the unpacking
+// buffer or the pattern given back.  (Host: the pixels follow the host's
+// PixelMap, kPatternPixelsOffset - DEVIATION.)
 PatternHandle
 GetPicPixPat(long type)
 {
@@ -361,15 +431,18 @@ GetPicPixPat(long type)
 	}
 	if (type != 1)
 		return nil;
-	long unpacked;
+	char* temp = nil;
+	long noPad = 0;
+	long byComponent = 0;
+	UChar* grayTable = nil;
+	void (*unpack)(char**, char**, long) = UnpackBits;
 	GetPicDiscard(8);
 	unsigned char header[0x32];
 	GetPicData((char*) header, 0x32);
 	long rowBytes = GetBigEndianHalf(header + 4) & 0x7fff;
-	unpacked = rowBytes < 8;
+	long unpacked = rowBytes < 8;
 	long pixelType = (short) GetBigEndianHalf(header + 0x1e);
 	long pixelSize = (short) GetBigEndianHalf(header + 0x20);
-	UChar* grayTable = nil;
 	if (pixelType == 0)
 	{
 		if (pixelSize != 1 && pixelSize != 2 && pixelSize != 4 && pixelSize != 8)
@@ -392,12 +465,15 @@ GetPicPixPat(long type)
 				break;
 			case 2:
 				unpacked = 1;
+				noPad = 1;
 				rowBytes = (rowBytes * 3) >> 2;
 				break;
 			case 3:
 				unpacked = 3;
+				unpack = UnpackWords;
 				break;
 			case 4:
+				byComponent = 1;
 				rowBytes = (rowBytes * 3) >> 2;
 				break;
 			default:
@@ -407,22 +483,80 @@ GetPicPixPat(long type)
 	}
 	long pad = (rowBytes & 3) != 0 ? 2 : 0;
 	long rows = (short) GetBigEndianHalf(header + 0xa) - (short) GetBigEndianHalf(header + 6);
-	if (unpacked == 1)
+	long stride = rowBytes + pad;
+	long size = rows * stride;
+	PatternHandle pattern = (PatternHandle) NewHandle(size + kPatternPixelsOffset);
+	if (pattern == nil)
+		return nil;
+	PixelMap* pm = *pattern;
+	pm->baseAddr = (Ptr) kPatternPixelsOffset;
+	pm->rowBytes = (short) rowBytes;
+	pm->bounds.top = (short) GetBigEndianHalf(header + 6);
+	pm->bounds.left = (short) GetBigEndianHalf(header + 8);
+	pm->bounds.bottom = (short) GetBigEndianHalf(header + 0xa);
+	pm->bounds.right = (short) GetBigEndianHalf(header + 0xc);
+	pm->pixMapFlags = pixelSize + kPixMapOffset;
+	if (noPad)
+		pm->pixMapFlags = (pixelSize + kPixMapOffset) | 0x4000000;
+	if (byComponent)
+		pm->pixMapFlags |= 0x2000000;
+	pm->deviceRes.h = (short) RoundFixed((Fixed) GetBigEndianWord(header + 0x16));
+	pm->deviceRes.v = (short) RoundFixed((Fixed) GetBigEndianWord(header + 0x1a));
+	pm->grayTable = grayTable;
+	// (host: locked while the rows are read - the unpacking buffer's
+	//  allocation may move an unlocked handle on the host's heap)
+	HLock((Handle) pattern);
+	char* dst = (char*) pm + kPatternPixelsOffset;
+	newton_try
 	{
-		if (pad == 0)
-			GetPicDiscard(rows * (rowBytes + pad));
-		else
+		if (unpacked == 1)
+		{
+			if (pad == 0)
+				GetPicData(dst, size);
+			else
+				for (long n = rows; n > 0; n--, dst += stride)
+					GetPicData(dst, rowBytes);
+		}
+		else if (rowBytes < 0xfb)
+		{
+			temp = (char*) QDNewTempPtr(0x100);
+			if (temp == nil)
+				Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
 			for (long n = rows; n > 0; n--)
-				GetPicDiscard(rowBytes);
+			{
+				GetPicData(temp, GetPicUByte());
+				char* from = temp;
+				unpack(&from, &dst, rowBytes);
+				dst += pad;
+			}
+		}
+		else
+		{
+			temp = (char*) QDNewTempPtr(rowBytes);
+			if (temp == nil)
+				Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
+			for (long n = rows; n > 0; n--)
+			{
+				GetPicData(temp, GetPicWord());
+				char* from = temp;
+				unpack(&from, &dst, rowBytes);
+				dst += pad;
+			}
+		}
+		ConvertPixPat(*pattern);
 	}
-	else
+	cleanup
 	{
-		for (long n = rows; n > 0; n--)
-			GetPicDiscard(rowBytes < 0xfb ? GetPicUByte() : GetPicWord());
+		if (grayTable != nil)
+			QDDisposeTempPtr(grayTable);
 	}
+	end_try;
+	HUnlock((Handle) pattern);
+	if (temp != nil)
+		QDDisposeTempPtr(temp);
 	if (grayTable != nil)
 		QDDisposeTempPtr(grayTable);
-	return nil;
+	return pattern;
 }
 
 

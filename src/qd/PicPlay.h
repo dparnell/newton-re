@@ -34,10 +34,9 @@
 				destination and handed to CallCurve/CallPaths - even while
 				the picture is being made into shapes (a ROM quirk kept).
 
-				NOT YET RECONSTRUCTED:
-				pixel patterns (0x12-0x14 type 1: read and the pattern left
-				as it was - ConvertPixPat's converters).  Recording is
-				PicRecord.h.
+				A pixel pattern of type 1 (0x12-0x14) is a pixel map of its
+				own, made the screen's kind by ConvertPixPat (PixelConvert.h's
+				row converters).  Recording is PicRecord.h.
 
 				The picture turned into NewtonScript shapes (DrawPicture's
 				toShapes, which PictToShape asks for) plays the same opcodes
@@ -132,6 +131,7 @@ void		TextCleanup(PicPlay* play, char* families);					// ROM 0x00333cd0 TextClea
 OpcodeProc	LookupOpcodeEntry(ULong opcode, const OpcodeProc* procs);		// ROM 0x00332470 LookupOpcodeEntry__FUlPCPFlP7PicPlayP8GrafPort_v
 long		GetPicBits(long opcode, PicPlay* play, const OpcodeProc* procs);	// ROM 0x003346b4 GetPicBits__FlP7PicPlayPCPFT1T2P8GrafPort_v
 PatternHandle	GetPicPixPat(long type);									// ROM 0x00333dc0 GetPicPixPat__Fl
+void		ConvertPixPat(PixelMap* pm);									// ROM 0x00334244 ConvertPixPat__FP8PixelMap - a pixel pattern made the screen's kind, in place
 long		GetPicGrayTable(long depth, UChar** table);					// ROM 0x00334398 GetPicGrayTable__FlPPUc
 
 // the picture's bytes

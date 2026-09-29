@@ -593,6 +593,179 @@ TestRecordCurves()
 }
 
 
+// a four-bit map, for the pixel patterns
+static unsigned char g4Bits[16 * 8];
+static PixelMap g4Map;
+
+
+// (the port drawing into the four-bit map, or back into the one-bit one)
+static void
+UseMap(PixelMap* map)
+{
+	SetPortBits(map);
+	gPort.portRect = map->bounds;
+	RectRgn(gPort.visRgn, &map->bounds);
+	RectRgn(gPort.clipRgn, &map->bounds);
+}
+
+
+// (a type 1 pixel pattern's header: the pixel map as Apple's format has it)
+static void
+PixPatHeader(PictureWriter& w, long rowBytes, long packType, long pixelType, long pixelSize)
+{
+	w.Word(1);										// type 1
+	for (long i = 0; i < 8; i++)					// the old pattern
+		w.Byte(0);
+	w.Word(0); w.Word(0);							// baseAddr
+	w.Word(0x8000 | rowBytes);
+	w.Rect4(0, 0, 8, 8);
+	w.Word(0);										// version
+	w.Word(packType);
+	w.Word(0); w.Word(0);							// packSize
+	w.Word(72); w.Word(0);							// hRes
+	w.Word(72); w.Word(0);							// vRes
+	w.Word(pixelType);
+	w.Word(pixelSize);
+	w.Word(pixelType == 0 ? 1 : 3);					// cmpCount
+	w.Word(pixelType == 0 ? pixelSize : 8);			// cmpSize
+	for (long i = 0; i < 6; i++)					// planeBytes, pmTable, pmReserved
+		w.Word(0);
+}
+
+
+// (a version 2 picture 8 square painting its frame with the pen pattern
+// that the writer has put after its header)
+static void
+PixPatPicture(PictureWriter& w)
+{
+	w.Rect4(0, 0, 8, 8);
+	w.Word(0x0011);
+	w.Word(0x02ff);
+	w.Word(0x0001);
+	w.Word(10);
+	w.Rect4(0, 0, 8, 8);
+	w.Word(0x0013);									// PnPixPat
+}
+
+
+static void
+PaintPixPat(PictureWriter& w)
+{
+	w.Word(0x0031);									// paintRect
+	w.Rect4(0, 0, 8, 8);
+	w.Word(0x00ff);
+	memset(g4Bits, 0, sizeof(g4Bits));
+	w.Finish();
+	Ptr data = (Ptr) w.fData;
+	Rect dst;
+	SetRect(&dst, 0, 0, 8, 8);
+	DrawPicture((PicHandle) &data, &dst, false);
+}
+
+
+// Pixel patterns of type 1: a direct 32-bit one made four-bit grays, an
+// indexed 8-bit one through its colour table (the first pixel of each pair
+// taking its gray's low four bits: a ROM bug), and a four-bit pattern
+// recorded and played back.
+static void
+TestPixPat()
+{
+	g4Map.baseAddr = (Ptr) g4Bits;
+	g4Map.rowBytes = 8;
+	SetRect(&g4Map.bounds, 0, 0, 16, 16);
+	g4Map.pixMapFlags = kPixMapPtr | 4;
+	g4Map.deviceRes.v = kDefaultDPI;
+	g4Map.deviceRes.h = kDefaultDPI;
+	g4Map.grayTable = nil;
+	UseMap(&g4Map);
+
+	// 32-bit direct: each column a gray of its own
+	{
+		PictureWriter w;
+		PixPatPicture(w);
+		PixPatHeader(w, 32, 1, 16, 32);
+		for (long y = 0; y < 8; y++)
+			for (long x = 0; x < 8; x++)
+			{
+				w.Byte(0);
+				w.Byte(x * 0x24);
+				w.Byte(x * 0x24);
+				w.Byte(x * 0x24);
+			}
+		PaintPixPat(w);
+		for (long x = 0; x < 8; x++)
+		{
+			ULong gray = RGBtoGray((x * 0x24) << 8, (x * 0x24) << 8, (x * 0x24) << 8, 8, 4);
+			EXPECT((ULong) GetPixel(&g4Map, x, 3) == gray);
+		}
+		EXPECT(GetPixel(&g4Map, 0, 0) != GetPixel(&g4Map, 7, 0));
+		EXPECT(GetPixel(&g4Map, 9, 3) == 0);			// outside the rectangle
+	}
+
+	// 8-bit indexed, packed: a gray in every pixel of the colour table's
+	{
+		PictureWriter w;
+		PixPatPicture(w);
+		PixPatHeader(w, 8, 0, 0, 8);
+		w.Word(0); w.Word(0);						// the colour table's seed
+		w.Word(0);									// flags
+		w.Word(1);									// two entries
+		w.Word(0); w.Word(0xffff); w.Word(0xffff); w.Word(0xffff);
+		w.Word(1); w.Word(0x5000); w.Word(0x5000); w.Word(0x5000);
+		for (long y = 0; y < 8; y++)
+		{
+			w.Byte(9);								// the row packed: a literal of eight
+			w.Byte(7);
+			for (long x = 0; x < 8; x++)
+				w.Byte(1);
+		}
+		PaintPixPat(w);
+		ULong gray = RGBtoGray(0x5000, 0x5000, 0x5000, 8, 8);
+		EXPECT((ULong) GetPixel(&g4Map, 0, 2) == (gray & 0xf));	// the low four bits
+		EXPECT((ULong) GetPixel(&g4Map, 1, 2) == (gray >> 4));
+	}
+
+	// a four-bit pattern recorded (FillPixPat, type 1) and played back
+	{
+		const char rows[8] = { 0x55, (char) 0xaa, 0x55, (char) 0xaa, 0x0f, (char) 0xf0, 0x33, (char) 0xcc };
+		PatternHandle pattern = MakeSimpleGrayPattern(rows, 11, 3);
+		EXPECT(((*pattern)->pixMapFlags & 0xff) == 4);
+		Rect r;
+		SetRect(&r, 1, 1, 15, 13);
+		memset(g4Bits, 0, sizeof(g4Bits));
+		FillRect(&r, pattern);
+		unsigned char direct[sizeof(g4Bits)];
+		memcpy(direct, g4Bits, sizeof(g4Bits));
+		EXPECT(GetPixel(&g4Map, 1, 1) == 11 || GetPixel(&g4Map, 1, 1) == 3);
+
+		Rect frame;
+		SetRect(&frame, 0, 0, 16, 16);
+		PicHandle picture = OpenPicture(&frame, false);
+		FillRect(&r, pattern);
+		ClosePicture();
+		EXPECT(CountOpcode(picture, 0x0014) >= 1);
+		memset(g4Bits, 0, sizeof(g4Bits));
+		DrawPicture(picture, &frame, false);
+		// the pattern goes into the picture with a gray ramp for its colour
+		// table (PutColorTable: white first, 0xffff / 15 apart) and comes
+		// back through RGBtoGray, which does not give every gray back as it
+		// was - the ROM's own round trip (3 comes back 2)
+		unsigned char expected[sizeof(g4Bits)];
+		for (long i = 0; i < (long) sizeof(g4Bits); i++)
+		{
+			ULong hi = direct[i] >> 4, lo = direct[i] & 0xf;
+			ULong vhi = 0xffff - hi * 0x1111, vlo = 0xffff - lo * 0x1111;
+			expected[i] = (unsigned char) (RGBtoGray(vhi, vhi, vhi, 4, 4) << 4 | RGBtoGray(vlo, vlo, vlo, 4, 4));
+		}
+		EXPECT(memcmp(expected, g4Bits, sizeof(g4Bits)) == 0);
+		EXPECT(GetPixel(&g4Map, 1, 1) == 2 && GetPixel(&g4Map, 2, 1) == 11);
+		KillPicture(picture);
+		DisposePattern(pattern);
+	}
+	UseMap(&gMap);
+}
+
+
 // PackBits, the ROM's: runs and literals, and back out through UnpackBits
 static void
 TestPackBits()
@@ -670,6 +843,7 @@ main()
 	TestRecord();
 	TestRecordText();
 	TestRecordCurves();
+	TestPixPat();
 
 	ClosePort(&gPort);
 	printf("test_PicPlay: %s\n", failures == 0 ? "ok" : "FAILED");

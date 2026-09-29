@@ -114,6 +114,7 @@ Boolean			MonochromePat(PatternHandle pattern, ULong* gray);	// ROM 0x00328768 M
 void			GrayToRGB(UChar gray, ULong* red, ULong* green, ULong* blue, long depth);	// ROM 0x002bf0ac GrayToRGB__FUcPUlN22l
 PatternHandle	GetFgPattern(void);
 PatternHandle	GetBgPattern(void);
+extern const long	kPatternPixelsOffset;	// host: where a pattern's pixels begin in its handle (after the host's PixelMap - DEVIATION)
 long			PatternPixel(PatternHandle pattern, long x, long y, long depth);	// host: the pattern's pixel for (x, y), in depth
 
 // the graphics library and ports
