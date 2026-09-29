@@ -28,6 +28,7 @@ add_library(utility STATIC
     DES.cpp
     DESTables.cpp
     RingBuffer.cpp
+    TaskSafeRingBuffer.cpp
     CircleBuf.cpp
     Random.cpp
 )
