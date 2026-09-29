@@ -9,6 +9,26 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-30: the ROM-free track, step 2 stage 1 - the object area as source
+
+- How frame maps are shared (`nsfunctions.py --census`): 8336 maps for
+  12838 frames, 282 of them supermaps; only 359 shared by more than one
+  frame (one `left, top, right, bottom` map carries 1096); 5783 belong to
+  NTK code blocks, one per function though their tags are the same; 318
+  sit in ordinary slots.  So a frame's map cannot be worked out from its
+  slots: maps are named objects (`maps.ns`), each frame's map a fact in
+  the manifest.
+- `analysis/romsrc.py` (b9cc001): `extract` writes 3038 definitions
+  (`objects/NNN.ns`, a subset of NewtonScript literals plus `string`,
+  `real`, `binary`, `array`, `map`; shared objects named after the ROM's
+  R constants), `maps.ns` and `layout.tsv` (each object's address, path,
+  header flags and map), binaries other than strings and reals as `.bin`
+  files; `build` lays the area out again, `--check` compares: all 46538
+  objects byte for byte.  ctest `host.ROMSourceRoundTrip` (about 5 s),
+  build target `romsrc`.  The tree (12 MB, 12,000 files) is generated,
+  not committed, until the host builds from it (`docs/rom-free/README.md`,
+  "Where the tree lives").
+
 ## 2026-09-30: the ROM-free track, step 1 - a round-tripping NewtonScript decompiler (100%)
 
 - `analysis/nsdecompile.py build/MP2x00US --roundtrip --newtonscript
