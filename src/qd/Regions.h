@@ -14,9 +14,9 @@
 
 				Membership tests (PtInRgn, RectInRgn) and drawing scan-convert
 				a region a row at a time into a bit mask (RgnState, SeekRgn)
-				whose layout is the current port's pixel depth (NOT YET
-				RECONSTRUCTED: ports; the host uses one bit per pixel).
-				Drawing (FrameRgn, PaintRgn, ...) is NOT YET RECONSTRUCTED.
+				whose layout is the current port's pixel depth (a pixel's
+				bits all set where it is inside).  Drawing (FrameRgn,
+				PaintRgn, ...) is Draw.h's.
 
 	Reconstructed from the MP2x00 US ROM (0x003407cc-0x003408d0,
 	0x00340ff8-0x00342d0c); each function cites its origin.

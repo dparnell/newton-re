@@ -9,9 +9,9 @@
 				viewJustify bits (Justify) and copied to the port (DrawBitmap
 				through a TPixelObj, the ROM's holder of a picture's pixel
 				maps).  DrawPicture is what a picture view and the
-				NewtonScript DrawShape draw with.  NOT YET RECONSTRUCTED:
-				'picture binaries (QuickDraw pictures), shapes (DrawShape,
-				ShapeBounds for them), the colour tables as gray tables.
+				NewtonScript DrawShape draw with ('picture binaries through
+				PicPlay.h, shapes through the views' DrawShape); a colorData
+				entry's colour table becomes the map's gray table.
 
 	Reconstructed from the MP2x00 US ROM (0x0003e7b8-0x0003ead4,
 	0x0003f614-0x0003f86c, 0x00040f28-0x00041530, 0x001895c0-0x00189b10);
@@ -59,7 +59,7 @@ public:
 	PixelMap*	fPixels;			// +0x20  -> fPixMap (or a 'pixels binary's map)
 	PixelMap	fMaskMap;			// +0x24
 	PixelMap*	fMask;				// +0x40  nil for none
-	Ptr			fGrayTable;			// +0x44  from the colour table (NOT YET: nil)
+	Ptr			fGrayTable;			// +0x44  from the colour table (GetFramBitmap), nil for none
 	long		fDepth;				// +0x48  the bits' depth
 	Boolean		fLocked;			// +0x4c  the object is locked
 	RefStruct	fMaskObject;		// host: the mask's bits, locked while the map is in use

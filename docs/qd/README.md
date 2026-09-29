@@ -211,10 +211,42 @@ copying a row ahead of writing it and bottom-up when the source lies
 above the destination in the same map.  `CopyBits` 0x00289898 goes
 through the port's `bitsProc` (`StdBits` 0x00288abc: clipped by the
 port's regions and the mask) when the destination is the current port's
-bits, else straight to `StretchBits` 0x00288eb4 - whose stretching and
-depth-conversion tables are NOT YET (the host samples nearest-neighbour).
+bits, else straight to `StretchBits`.
 `test_Draw` checks every verb, mode, clip and depth pixel by pixel on
 offscreen maps.
+
+### StretchBits (`src/qd/Stretch.cpp`)
+
+`StretchBits` 0x002ada5c is the ROM's blitter between maps of any depth
+and rectangles of any size (maps of one depth and one size with no gray
+table go to `RgnBlt`).  The destination is written a row at a time, top
+down, a vertical Bresenham sum (from `-(srcH >> 1)`, `+= dstH` per source
+row, `-= srcH` per destination row) saying which source rows land on it.
+The first of them is shifted to a word boundary and converted to the
+screen's kind (`SetupConversion` 0x002ae540: an indexed row through its
+gray table, 16- and 32-bit direct colour - padded, unpadded, by
+component - made four-bit grays, `PixelConvert.h`); the rest are folded
+into it (`SetupCombine`: OR for one bit, the darker gray kept for
+indexed rows, the direct `CombineDirect*to4` with the ROM's bugs kept -
+eight-bit colours handed to `RGBtoGray`, the gray ORed in, the
+by-component one comparing the wrong nibble); the row is taken across to
+the destination's width and depth (`SetupStretchRatio`: 33
+`Unscaled`/`Stretch`/`Shrink` routines by source and destination depth,
+the ratio the smaller width over the larger, a running fraction from half
+of it; a ROM bug kept: two bits to four unscaled uses `Unscaled1to2`);
+and it is written into each destination row it covers through the mode
+(`BlitModeCopy`/`Or`/`Xor`/`Bic` and the two- and four-bit `Or`s) under
+the masks of the two clip regions and the mask region (`MSeekMask`
+0x0011b93c; a region's mask is made at the current port's depth, as
+`InitRgnRec` 0x003428f0 makes it - the host had made every mask one bit
+per pixel, which lost pictures and text drawn into a complex visible
+region of the four-bit screen).  The routines work on rows as the ARM's
+memory holds them, through `LW`/`SW`; most are transcribed from Ghidra's
+output by `tools/newton-rom/analysis/transcribe_words.py`.  NOT YET:
+`TGrayShrink` 0x000e471c, which a one-bit map flagged 0x1000000 (an
+anti-aliased ink word) is shrunk into four bits through - with no
+implementation registered the ordinary stretch follows, as on the ROM
+when there is none.
 
 ## Shapes (`src/qd/Shapes.h`)
 
@@ -348,13 +380,11 @@ and drawn a chunk at a time into a one-bit slab that is blitted
 (`DrText` 0x003313d4, `DrTextChunk` 0x00331794).  `DrawTextOnce`/
 `MeasureTextOnce` 0x0032eec8/0x0032ef18 make one for a single use
 (`DoTextOnce` 0x0032f2bc) and fill a `TextBoundsInfo` (0x1c bytes: left,
-top, right, bottom, baseline, width, height in 16.16; `MeasureOnce`
-0x0025fd08 answers the width rounded).  The host draws each glyph as a
-region from its bitmap through `DrawRgn` at its bearing from the
-baseline, advancing by the glyph's width, in the pen's mode with the
-style's or the port's pattern - the same pixels for an unscaled strike
-(`test_Text` pins "Hello Wg!" in espy 12, the bold strike underlined,
-and Geneva 10 bold smeared).  The NewtonScript `FontAscent`/`FontDescent`
+top, right, bottom, the leading, the advance and the vertical advance in
+16.16; `MeasureOnce` 0x0025fd08 answers the width rounded).  The
+drawing is the ROM's (`src/qd/DrText.cpp`, below); `test_Text` pins
+"Hello Wg!" in espy 12, the bold strike underlined, Geneva 10 bold
+smeared, and the outline, underline and italic faces.  The NewtonScript `FontAscent`/`FontDescent`
 /`FontLeading`/`FontHeight` (0x001efeb4..) and `StrFontWidth` 0x001f2648
 are here.  A `TextOptions` (0x1c bytes: the justification - the fraction
 of the slack spread between the characters, spaces nine shares to a
@@ -389,28 +419,68 @@ words run between spaces.)  `DoTextOnce` reads its options' fitted width
 as a selector first: 9 flags the object 0x40000 and 10 does so and drops
 the options; with the flag 0x10000 as well (SetTextObjField's field 8)
 `MeasureGlyphWidths` fits nothing.
-Italic that a family has no strike for is synthesised as the ROM's
-`DrTextChunk` 0x0035c788 shears the one-bit slab it composes a run in:
-the slab's bottom row stays and each row above it moves right by another
-`fStyleAdjust[1]` (8) sixteenths of a pixel, the whole pixels of the
-running sum taken - a row k rows up moves `(k * 8) >> 4`.  The slab ends
-below the baseline by `minAfterBL` and then by `minAfterBL` again (or by
-the underline's reach, if that is lower), so even the baseline row is
-moved: espy 12's is three pixels over (`test_Text`'s `TestItalic`).  The
-host moves each glyph row of the region it draws by as much.
+### Drawing text (`src/qd/DrText.cpp`)
+
+`DrText` 0x0035c530 lays the text object out and hands it a style run
+at a time to `DrTextChunk` 0x0035c788, from the object's location plus
+the justification's start, in the *options'* transfer mode (srcOr with
+no options - the pen's mode does not apply).  `DrTextChunk` composes the
+run as one block at the strike's own size:
+
+- a one-bit slab from the pen plus the strike's `minOriginSB` (less
+  italic's lean below the baseline) to the pen plus the run's advance
+  (plus bold's smear, italic's lean above, the outline's spread, less
+  `minAdvanceSB`), its left edge on a word of the port; from the strike's
+  `maxBeforeBL` above the baseline down to `minAfterBL` below it and then
+  `minAfterBL` again (or the underline's reach if that is lower);
+- the glyphs ORed in at the pen, rounded, and their bearings, their rows
+  clipped to `maxBeforeBL`/`minAfterBL`;
+- bold: the whole slab smeared a pixel right, `fStyleAdjust[0]` times;
+- italic: each row above the bottom one moved right by another
+  `fStyleAdjust[1]` (8) sixteenths of a pixel, the whole pixels of the
+  running sum - so even the baseline row moves (espy 12's by three);
+- underline: `fStyleAdjust[4]` rows `fStyleAdjust[2]` below the baseline,
+  with a gap wherever the ink in the rows around them, widened a pixel
+  each way, would touch it (a descender breaks the line);
+- outline and shadow (`fStyleAdjust[5]` 1 and 2): the slab smeared right
+  and down by one more pixel than that into a block four rows taller, and
+  the original, a pixel right and a row down, XORed out of it (a ROM bug
+  kept: the first word is never ORed down);
+- text whose style has a pattern that is not black (a font spec's
+  `color`, `GetPattern` - registered by the views, which sit above
+  QuickDraw here): `MakeGrayText` 0x0035dcd0 knocks a checkerboard out of
+  the slab on a one-bit port, or makes it a two- or four-bit map in the
+  foreground pattern's first gray;
+- then `StretchBits` onto the port under its visible and clip regions,
+  into the rectangle the slab comes to at the font engine's scale about
+  the run's origin, and the pen moved on by the advance times that scale.
+
+A strike at its own size in srcOr with none of the faces, on a port whose
+regions are rectangles, skips the slab and ORs the glyphs straight into
+the port's bits (one, two or four bits; a deeper port gets nothing - the
+ROM has no loop for it).  A slab over 8000 bytes is drawn as two halves of
+the run, recursively (a ROM bug kept: a single character too big is
+not drawn at all and the pen is left where it was; and the port's
+foreground pattern is left as the style's).  An object flagged 0x10000
+with options is squeezed into their width - a pixel off each advance but
+the first's in turn, the clip box widened by a sixteenth for the drawing.
 
 Text is drawn at the scales its text proc is given (a picture played
 into a rectangle of another size, the scaler): `DrText` opens each font
 at the size times the scale, which the font engine answers with a strike
-of that size or the nearest one and a ratio to stretch it by; the host
-stretches each glyph row and column to the pixels its edges come to
-(DEVIATION: the ROM composes the run at the strike's size and stretches
-the slab when it blits it) and moves the pen by the advances times the
-ratio.  A width to fit is measured with the stretched advances too, as the
-ROM measures it (0x0035be78).  NOT YET: `CalcTextBounds`' handling of a
-stretched strike.  Note that espy 24 at 1.0 and espy 12 at 2.0 are
+of that size or the nearest one and a ratio - which is the stretch the
+slab is given.  A width to fit is measured with the stretched advances
+too (0x0035be78), and `CalcTextAdvance` 0x0035b220 scales each run's sum
+by its font's ratio.  Note that espy 24 at 1.0 and espy 12 at 2.0 are
 not the same pixels: there is no 24-point strike, and the two ratios to
 the 16-point one come out 1.49998 and 1.5.
+
+The bounds are the text proc's operation 0x200: `CalcTextBounds`
+0x0035b3f8 answers six words - the justification's start, the advance
+across and down, and the greatest ascent, descent and leading of the
+runs' fonts (a stretched strike's times its ratio) - and
+`DispatchCalcBounds` 0x0035b32c makes the box of them about the text's
+location (all noughts when there is no layout).
 
 NOT YET: ink words, tabs.
 
@@ -430,9 +500,9 @@ port is a printer's (pixMapFlags kind 0x200) and the operation is not
 drawing.  So one proc sees all the text a port is asked about, which is
 how a printer or an open picture sees it: `StdText`'s drawing is
 `DoPutText` (recording, below) then `DrText` 0x0035c530.  On the host
-`DrText` is Text.cpp's glyph-at-a-time layout and the caches are never
-made (DEVIATION); the operations other than drawing, and drawing at a
-scale other than 1.0, are NOT YET (the bounds are measured directly).
+the caches are never made (DEVIATION: the layout is worked out afresh
+for each question, `TextLayout.h`); the layout's three numbers (0x400)
+and `TextArrow` (0x2000) are NOT YET.
 The DDK's `TextObjProc` takes the object as a `long`; a sync patch makes
 it `Long`, the ARM's word, pointer-sized on a host.
 
@@ -707,9 +777,12 @@ map inside the binary; and the port rect and the **visible** region are
 set to the bitmap's bounds, because a freshly opened port's visible
 region is the screen's, and without that nothing is drawn at all.
 
-NOT YET: a bitmap whose resolution is not 72 dpi (`DrawShapeScaled`),
-`TQDScaler::ForceScaling` around the unscaled case, and
-`ViewIntoBitmap`, which draws a whole view into one.
+A bitmap whose `deviceRes` is given and is not 72 dpi each way is drawn
+into through `DrawShapeScaled` 0x000df8a8: a transform of 72 by 72 onto
+the resolution put in force under the shape's own style, the scaler
+forced on (a 144-dpi bitmap takes a rectangle at twice the size, its
+pen too - `test_Views`); otherwise the scaler is forced on around the
+drawing (a ROM bug kept: a throw leaves it forced).
 
 ## Curves and paths (`src/qd/Curves.h`, `src/qd/Paths.h`)
 
@@ -860,8 +933,8 @@ an orientation of 1.
 
 Arcs of less than a full turn, the text, curves and paths of pictures,
 `ScrollRect`, `ZoomRect`, the screen update task and the alert screen
-info, the per-task globals, `StretchBits` proper, the font cache, text layout
-(justification, wrapping), the `TQDLibraryDriver` protocol.
+info, the per-task globals, `TGrayShrink`, the font cache, the
+`TQDLibraryDriver` protocol.
 
 ## Transforms (`qd/Transform.h`)
 

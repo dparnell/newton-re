@@ -8,11 +8,12 @@
 				StyleRecord (Fonts.h) - or several runs, each with its style
 				- giving back a TextBoundsInfo.  The glyphs come from the
 				style's font (its strike's bitmaps, or nothing for a widths
-				font), drawn through the pen's mode with the style's or the
-				port's pattern; the faces the font lacks are synthesised as
-				the font engine says (bold smeared a pixel right, underline
-				a line below the baseline, italic sheared a row at a time as the
-				ROM shears its slab; outline NOT YET).
+				font), each style run composed into a one-bit slab and
+				stretched onto the port in the options' mode (DrText.cpp);
+				the faces the font lacks are synthesised on the slab as the
+				font engine says (bold smeared a pixel right, italic sheared
+				a row at a time, the underline broken by descenders, outline
+				and shadow), and a style's pattern grays it.
 				MeasureOnce/MeasureOnceFont answer a string's width, the
 				NewtonScript StrFontWidth and Font* functions are here too.
 				A TextOptions asks for layout: the characters that fit a
@@ -30,10 +31,7 @@
 	length, styles and run lengths, the location, options, flags, cached
 	glyph widths) and draws it a chunk at a time into a one-bit slab that
 	is blitted; TextOptions (justification, a width to fit) and the
-	TextBoundsInfo the bounds pass fills are the ROM's.  NOT YET
-	RECONSTRUCTED: text objects that persist (NewText/DisposeText for a
-	caller), justification and the options, ink words, scaled glyphs,
-	recording into a picture (StdText).
+	TextBoundsInfo the bounds pass fills are the ROM's (TextObject.h).
 
 	Reconstructed from the MP2x00 US ROM (0x00261c40-0x00261d2c,
 	0x0035a024-0x0035a54c, 0x0035b32c, 0x0035b6d8, 0x0035baa4,

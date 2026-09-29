@@ -97,47 +97,86 @@ TPixelObj::FramBitMapToPixMap(const FramBitmap& bits, PixelMap* map)
 
 // ROM 0x000410ac GetFramBitmap__9TPixelObjFv
 // The bitmap frame's bits for the port's depth: the bits slot when it has
-// no colorData; else the colorData's (a frame: its bitDepth and cBits; an
-// array: the entry of the port's depth, or the nearest - the deepest not
-// deeper than the port, else the shallowest) with the colour table made
-// a gray table (NOT YET RECONSTRUCTED: the table; the entry's depth is
-// used as it is).
+// no colorData; else the colorData's - a frame: its bitDepth and cBits;
+// an array: the entry of the port's depth, else the shallowest of those
+// deeper than the port, else the deepest of those shallower (a deeper
+// entry, once seen, is always preferred to a shallower one).  An entry
+// deeper than one bit with a colorTable gets a gray table of 2^depth
+// bytes: every entry the foreground pattern's first byte, then the
+// colour table's entries (eight bytes each: a value and red, green, blue
+// halfwords) made grays (RGBtoGray at the entry's depth).
+//
+// ROM BUG, kept: the table is allocated afresh on every call, a table
+// already made left behind.
 Ref
 TPixelObj::GetFramBitmap(void)
 {
+	RefVar bits;
+	RefVar colorTable;
 	RefVar colorData(GetFrameSlotRef(fObject, RSSYMcolordata));
 	if (ISNIL(colorData))
 		return GetFrameSlotRef(fObject, RSSYMbits);
-	long portDepth = PixelMapDepth(&GetCurrentPort()->portBits);
-	RefVar entry;
+	long portDepth = GetCurrentPort()->portBits.pixMapFlags & 0xff;
 	if (!IsArray(colorData))
-		entry = colorData;
+	{
+		fDepth = RINT(GetFrameSlotRef(colorData, RSSYMbitdepth));
+		bits = GetFrameSlotRef(colorData, RSSYMcbits);
+		colorTable = GetFrameSlotRef(colorData, RSSYMcolortable);
+	}
 	else
 	{
-		long bestDepth = 0;
+		long above = 0x7fff;				// the shallowest deeper than the port so far
+		long below = 0;						// the deepest shallower
 		for (long i = 0, count = Length(colorData); i < count; i++)
 		{
-			RefVar candidate(GetArraySlotRef(colorData, i));
-			long depth = RINT(GetFrameSlotRef(candidate, RSSYMbitdepth));
+			RefVar entry(GetArraySlotRef(colorData, i));
+			long depth = RINT(GetFrameSlotRef(entry, RSSYMbitdepth));
 			if (depth == portDepth)
 			{
-				entry = candidate;
+				fDepth = depth;
+				bits = GetFrameSlotRef(entry, RSSYMcbits);
+				colorTable = GetFrameSlotRef(entry, RSSYMcolortable);
 				break;
 			}
-			Boolean better = ISNIL(entry)
-				|| (depth <= portDepth && (bestDepth > portDepth || depth > bestDepth))
-				|| (depth > portDepth && bestDepth > portDepth && depth < bestDepth);
-			if (better)
+			Boolean take = false;
+			if (portDepth < depth && depth < above)
 			{
-				bestDepth = depth;
-				entry = candidate;
+				above = depth;
+				take = true;
+			}
+			else if (above == 0x7fff && depth < portDepth && below != depth && depth >= below)
+			{
+				below = depth;
+				take = true;
+			}
+			if (take)
+			{
+				fDepth = depth;
+				bits = GetFrameSlotRef(entry, RSSYMcbits);
+				colorTable = GetFrameSlotRef(entry, RSSYMcolortable);
 			}
 		}
 	}
-	if (ISNIL(entry))
-		return GetFrameSlotRef(fObject, RSSYMbits);
-	fDepth = RINT(GetFrameSlotRef(entry, RSSYMbitdepth));
-	return GetFrameSlotRef(entry, RSSYMcbits);
+	if (fDepth > 1 && NOTNIL(colorTable))
+	{
+		LockRef(colorTable);
+		long entries = Length(colorTable) / 8;
+		ULong size = (ULong) 1 << (fDepth & 0xff);
+		fGrayTable = NewPtr(size);
+		if (fGrayTable != nil)
+		{
+			if ((ULong) entries > size)
+				entries = size;
+			UChar fill = *(const UChar*) GetPixelMapBits(*GetFgPattern());
+			for (ULong i = 0; i < size; i++)
+				fGrayTable[i] = fill;
+			const UChar* spec = (const UChar*) BinaryData(colorTable);
+			for (long i = 0; i < entries; i++, spec += 8)
+				fGrayTable[i] = (char) RGBtoGray(GetBigEndianHalf(spec + 2), GetBigEndianHalf(spec + 4), GetBigEndianHalf(spec + 6), fDepth, fDepth);
+		}
+		UnlockRef(colorTable);
+	}
+	return bits;
 }
 
 
