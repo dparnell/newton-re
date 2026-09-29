@@ -475,6 +475,8 @@ RegisterSoupNatives(void)
 
 	// the store prototype's methods
 	RegisterNativeFunction("StoreGetName", (void*) StoreGetName, 0);
+	RegisterNativeFunction("StoreHasPassword", (void*) StoreHasPassword, 0);
+	RegisterNativeFunction("StoreSetPassword", (void*) StoreSetPassword, 2);
 	RegisterNativeFunction("StoreSetName", (void*) StoreSetName, 1);
 	RegisterNativeFunction("StoreGetKind", (void*) StoreGetKind, 0);
 	RegisterNativeFunction("StoreGetSignature", (void*) StoreGetSignature, 0);

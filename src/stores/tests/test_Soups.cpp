@@ -1230,6 +1230,43 @@ TestCopyEntries()
 }
 
 
+// store:SetPassword and store:HasPassword, and the check they share: a
+// password set, refused when the old one is wrong, taken away again; the
+// key kept in an object the root data names.
+static void
+TestPasswords()
+{
+	TStore* store = NewStore();
+	RefVar storeObject(RegisterTStore(store));
+	EXPECT(ISNIL(StoreHasPassword(storeObject)));
+	EXPECT(CheckStorePassword(store, RefVar(NILREF)));			// no password: anything opens it
+	EXPECT(StoreSetPassword(storeObject, RefVar(NILREF), RefVar(MakeString("secret"))) == TRUEREF);
+	EXPECT(StoreHasPassword(storeObject) == TRUEREF);
+	RefVar key(StoreGetPasswordKey(store));
+	EXPECT(IsBinary(key) && Length(key) == 8);
+	EXPECT(CheckStorePassword(store, RefVar(MakeString("secret"))));
+	EXPECT(!CheckStorePassword(store, RefVar(MakeString("wrong"))));
+	EXPECT(!CheckStorePassword(store, RefVar(NILREF)));
+	// the wrong old password changes nothing
+	EXPECT(ISNIL(StoreSetPassword(storeObject, RefVar(MakeString("wrong")), RefVar(MakeString("other")))));
+	EXPECT(CheckStorePassword(store, RefVar(MakeString("secret"))));
+	// the right one rewrites the key where it was
+	EXPECT(StoreSetPassword(storeObject, RefVar(MakeString("secret")), RefVar(MakeString("other"))) == TRUEREF);
+	EXPECT(CheckStorePassword(store, RefVar(MakeString("other"))) && !CheckStorePassword(store, RefVar(MakeString("secret"))));
+	// through NewtonScript, and taken away
+	SetFrameSlot(RefVar(gVarFrame), RefVar(SYMBOL("pwStore")), storeObject);
+	EXPECT(Eval("pwStore:HasPassword()") == TRUEREF);
+	EXPECT(Eval("pwStore:SetPassword(\"other\", nil)") == TRUEREF);
+	EXPECT(ISNIL(Eval("pwStore:HasPassword()")));
+	StoreRootData root;
+	long size;
+	ReadStoreRootData(store, 0, &root, &size);
+	EXPECT(size == (long) sizeof(StoreRootData) && root.fExtra == 0);
+	RemoveTStore(store);
+	store->Delete();
+}
+
+
 int
 main()
 {
@@ -1250,6 +1287,7 @@ main()
 		TestTags();
 		TestIndexKeysSurviveTheStore();
 		TestCopyEntries();
+		TestPasswords();
 	}
 	newton_catch_all
 	{

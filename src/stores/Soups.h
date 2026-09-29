@@ -109,6 +109,9 @@ Ref		StoreOverhead(RefArg rcvr);
 Ref		StoreIsReadOnly(RefArg rcvr);
 Ref		StoreGetPasswordKey(RefArg rcvr);
 Ref		StoreGetPasswordKey(TStore* store);
+Boolean	CheckStorePassword(TStore* store, RefArg password);		// ROM 0x0035268c CheckStorePassword__FP6TStoreRC6RefVar
+Ref		StoreHasPassword(RefArg rcvr);							// ROM 0x003527d4 StoreHasPassword
+Ref		StoreSetPassword(RefArg rcvr, RefArg oldPassword, RefArg newPassword);	// ROM 0x003527f4 StoreSetPassword
 Ref		StoreIsValid(RefArg rcvr);
 Ref		StoreLock(RefArg rcvr);
 Ref		StoreUnlock(RefArg rcvr);

@@ -2233,3 +2233,19 @@ forever. A Newton with its clock set to the present day would hang the
 same way. `src/host/demo/thirdparty-apps.ns` gives NewtHack a seed of its
 own. That test hung only under load, because load decided which second
 Mahjongg happened to deal in.
+
+## Every store has a master password
+
+A card store can be given a password (`store:SetPassword(old, new)`). The
+password isn't kept: it goes through `DESCharToKey` into an 8-byte DES key,
+and that key is kept in a store object of its own, which the fifth word of
+the root data names. `CheckStorePassword` (ROM 0x0035268c) then makes the
+key of whatever password it is given and compares the two.
+
+Before it compares, it tries one fixed key: `c1855223 d339abef`. A
+password whose key is that opens every store, whatever its own password
+is. Which string has that key is not known yet. The internal store never
+has a password at all: `StoreSetPassword` (ROM 0x003527f4) refuses it by
+answering nil.
+
+Ported as it is, with the key in `stores/Soups.cpp`.

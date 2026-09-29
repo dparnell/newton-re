@@ -28,6 +28,8 @@
 #include "PackageStore.h"
 #include "LargeBinaries.h"
 #include "protocols/Protocols.h"
+#include "DES.h"
+#include "ByteOrder.h"
 #include <string.h>
 #include <new>
 
@@ -110,6 +112,8 @@ static const PrototypeMethod gStoreMethods[] = {
 	{ "DeleteObject", (void*) StoreDeleteObject, 1 },
 	{ "SetObjectSize", (void*) StoreSetObjectSize, 2 },
 	{ "GetObjectSize", (void*) StoreGetObjectSize, 1 },
+	{ "HasPassword", (void*) StoreHasPassword, 0 },
+	{ "SetPassword", (void*) StoreSetPassword, 2 },
 	{ "NewVBO", (void*) FLBAlloc, 2 },
 	{ "NewCompressedVBO", (void*) FLBAllocCompressed, 4 },
 	{ nil, nil, 0 }
@@ -1064,6 +1068,136 @@ Ref
 StoreGetPasswordKey(RefArg rcvr)
 {
 	return StoreGetPasswordKey(GetStoreWrapper(rcvr)->Store());
+}
+
+
+// The key a password makes: DESCharToKey's two words as an 8-byte 'deskey
+// binary.  The ROM calls the DESCreatePasswordKey native itself here
+// (ROM 0x00097124 FDESCreatePasswordKey, comms/Docker.cpp); the stores
+// area does not link the communications one, so its few lines are here too.
+static Ref
+PasswordKey(RefArg password)
+{
+	LockRef(password);
+	DESWord key[2];
+	DESCharToKey(GetCString(password), key);
+	UnlockRef(password);
+	RefVar binary(AllocateBinary(RSSYMdeskey, 8));
+	LockRef(binary);
+	PutBigEndianWord((UByte*) BinaryData(binary), key[0]);
+	PutBigEndianWord((UByte*) BinaryData(binary) + 4, key[1]);
+	UnlockRef(binary);
+	return binary;
+}
+
+
+// ROM 0x0035268c CheckStorePassword__FP6TStoreRC6RefVar
+// Whether password opens the store: yes when the store has no password; a
+// password that is not a string throws; otherwise its key against the
+// store's.
+//
+// CURIOSITY: a key of c1855223 d339abef opens every store, whatever its
+// password - a master password built into the ROM (the string it is the
+// key of is not known; docs/curiosities.md).
+Boolean
+CheckStorePassword(TStore* store, RefArg password)
+{
+	RefVar storeKey(StoreGetPasswordKey(store));
+	if (ISNIL(storeKey))
+		return true;
+	if (ISNIL(password))
+		return false;
+	if (!IsString(password))
+		ThrowExFramesWithBadValue(kNSErrNotAString, password);
+	RefVar key(PasswordKey(password));
+	static const UByte kMasterKey[8] = { 0xc1, 0x85, 0x52, 0x23, 0xd3, 0x39, 0xab, 0xef };
+	if (memcmp(kMasterKey, BinaryData(key), 8) == 0)
+		return true;
+	long length = Length(key);
+	return Length(storeKey) == length && memcmp(BinaryData(storeKey), BinaryData(key), length) == 0;
+}
+
+
+// ROM 0x003527d4 StoreHasPassword
+// store:HasPassword() - whether a password is set.
+Ref
+StoreHasPassword(RefArg rcvr)
+{
+	return ISNIL(RefVar(StoreGetPasswordKey(rcvr))) ? NILREF : TRUEREF;
+}
+
+
+// ROM 0x003527f4 StoreSetPassword
+// store:SetPassword(oldPassword, newPassword): nil unless oldPassword opens
+// it (the internal store has no password, and answers nil).  The new
+// password's key is kept in an object of its own, named by the fifth word
+// of the root data (a new object, or the old one rewritten); nil takes the
+// password away.  The root data is written back only when that object was
+// made or deleted - growing it to 0x18 bytes first when it was only 0x14.
+// ==> true.
+Ref
+StoreSetPassword(RefArg rcvr, RefArg oldPassword, RefArg newPassword)
+{
+	TStoreWrapper* wrapper = GetStoreWrapper(rcvr);
+	TStore* store = wrapper->Store();
+	if (GetInternalStore() == store || !CheckStorePassword(store, oldPassword))
+		return NILREF;
+	CheckWriteProtect(wrapper->Store());
+	PSSId rootId;
+	OSErrIf(store->GetRootId(&rootId));
+	StoreRootData root;
+	long rootSize;
+	root.fExtra = 0;
+	ReadStoreRootData(store, rootId, &root, &rootSize);
+	OSErrIf(store->LockStore());
+	newton_try
+	{
+		Boolean rewriteRoot = false;
+		if (NOTNIL(newPassword))
+		{
+			if (!IsString(newPassword))
+				ThrowExFramesWithBadValue(kNSErrNotAString, newPassword);
+			RefVar key(PasswordKey(newPassword));
+			long length = Length(key);
+			if (root.fExtra != 0)
+				OSErrIf(store->ReplaceObject(root.fExtra, BinaryData(key), length));
+			else
+			{
+				PSSId keyId;
+				OSErrIf(store->NewObject(BinaryData(key), length, &keyId));
+				root.fExtra = keyId;
+				rewriteRoot = true;
+			}
+		}
+		else if (root.fExtra != 0)
+		{
+			OSErrIf(store->DeleteObject(root.fExtra));
+			root.fExtra = 0;
+			rewriteRoot = true;
+		}
+		if (rewriteRoot)
+		{
+			char bytes[sizeof(StoreRootData)];
+			PutBigEndianWord((UByte*) bytes, root.fSignature);
+			PutBigEndianWord((UByte*) bytes + 4, (ULong32) root.fVersion);
+			PutBigEndianWord((UByte*) bytes + 8, root.fMapTableId);
+			PutBigEndianWord((UByte*) bytes + 12, root.fSymbolTableId);
+			PutBigEndianWord((UByte*) bytes + 16, root.fRootFrameId);
+			PutBigEndianWord((UByte*) bytes + 20, root.fExtra);
+			if (rootSize < (long) sizeof(StoreRootData))
+				OSErrIf(store->ReplaceObject(rootId, bytes, sizeof(StoreRootData)));
+			else
+				OSErrIf(store->Write(rootId, 0, bytes, sizeof(StoreRootData)));
+		}
+	}
+	newton_catch_all
+	{
+		OSErrIf(store->Abort());
+		rethrow;
+	}
+	end_try;
+	OSErrIf(store->UnlockStore());
+	return TRUEREF;
 }
 
 
