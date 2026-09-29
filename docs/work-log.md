@@ -23,8 +23,13 @@ bugs and ROM bugs found on the way.
   pointer-sized fields, so the serial tool set its speed to 4 out of the
   app's 'siop' (0.4 bytes a second).  `comms/HostOptionLayouts.h`
   (DEVIATION) rewrites 'siop', 'mnpn', 'mnpc' and 'eter' word by word
-  both ways; another such option class a script sends needs a line in
-  its table.
+  both ways.  Hardened (914d086): the table lists all 26 option classes
+  the host constructs (pointer-sized words signed and unsigned, 4-byte
+  enums, halfwords, bytes; the host TCP tool's 'itrs'/'ilpt' passed on as
+  they are), a script's option with data no table lists is reported once
+  per label on stderr (`NEWTON_QUIET_OPTIONS` hushes labels), and ctest
+  `comms.HostOptionLayouts` fails on an unlisted class or a field list
+  that does not add up to the class's host size.
 - `CommManager.cpp`'s `SetReply(0xC)` calls are `sizeof(TAESystemEvent)`
   (60335af); `romsizes.py` reports `src/comms` clean with `--lp64`.
 
