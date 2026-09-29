@@ -9,6 +9,31 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: packages round 5 - 1.x packages, TPixelMapCompander, SuckPackageOffDeskTop
+
+- **The 1.x packages** (`c3bf661`; `StorePackageNatives.cpp`): the
+  store's 1.x package directory (a System soup entry listing pssids) and
+  `Activate1.XPackage`, `DeActivate1.XPackage`, `Remove1.XPackage`,
+  `store:1.XPackageToVBO`, the uncalled `StorePackages*Available`, and the
+  1.x `NewPackage` (RestorePatchFromPipe's).  ROM quirk kept:
+  `Activate1.XPackage` answers the id or the error as one integer.  ctest
+  `host.NewtonOneX` (`src/host/demo/onex.ns`).
+- **TPixelMapCompander** (`e8c2e7d`; `stores/PixelMapCompander.cpp`): a
+  store bitmap's default compander - LZ over row-delta filtered pages,
+  the row length from a 0x2c-byte header the first write keeps; registered
+  by `InitQDCompression` from `InitGraf`.  The host's domain manager now
+  passes the object's base as a page's last argument (as the ROM's does)
+  and writes pages from a copy (DEVIATION: the ROM writes a page out as it
+  lets it go, and this compander filters the page in place).  ROM bug
+  found: `FillChunkArray` passes nought as the base, so a bitmap filled
+  from a pipe reads its PixelMap from the vectors page.  `MakeBitmap`'s
+  store bitmaps need no compander named now (`host.NewtonVBO`).
+- **SuckPackageOffDeskTop** (`857813b`) over `utility/StdioPipe.h`'s
+  `CStdioPipe` - the C library's stdio, the desktop's files on the
+  MessagePad and the host's own here (DEVIATION); ROM quirk kept: a read
+  past the end sets the count and eof and still throws -3.
+- The heapcheck failure of round 4 is the entry below.
+
 ## 2026-09-29: a system call's answer lost to a switch at its exit
 
 - The boot's store packages failed to activate whenever `NEWTON_HEAPCHECK`

@@ -676,7 +676,31 @@ NOT YET: the read-only `TStoreDecompressor`/`TSimpleStoreDecompressor`/
 `TLZStoreDecompressor` path and `TStoreCompanderWrapper` that drives it -
 they relocate the NewtonScript frames of an expanded package page
 (`RelocateFramesInPage`, 0x000d2ca4), a separate unit; the Zippy and reloc
-variants, `TXIPStoreCompander` and `TPixelMapCompander`.
+variants, `TXIPStoreCompander`.  (The store decompressors and the
+wrapper are done since - `packages/StorePackages.h`.)
+
+`TPixelMapCompander` (`stores/PixelMapCompander.cpp`, 0x0018a95c-
+0x0018b22c) is a store bitmap's default compander - `MakeBitmap` with a
+store makes a 'pixels large binary with it.  A page is LZ-compressed
+after a *row-delta* filter: walking back from the end of the last whole
+row, each word is XORed with the word a row above it, so rows much like
+the one before come out mostly nought; reading undoes it walking forward.
+The row length is the bitmap's: the first write keeps a copy of the
+PixelMap at the front of the object in the compander's parameter object -
+a 0x2c-byte header, its size and then the Newton's 0x1c-byte PixelMap
+(DEVIATION: made from the host's PixelMap, big-endian).  A page of noughts
+is an empty object.  The domain manager passes the object's base as a
+page's last argument, which is where the PixelMap is read from; ROM BUG:
+`FillChunkArray` (an object filled from a pipe) passes nought, so the ROM
+reads its "PixelMap" from the vectors page (DEVIATION: the host copies
+noughts - no row length, no filter).  ROM quirks kept: `Write` filters
+the caller's page in place (the host's domain manager writes each page
+from a copy, DEVIATION, since it keeps the whole object mapped where the
+ROM writes a page out as it lets it go); a 1-bit map's copy has its
+grayTable word overwritten with the row's words; 0xc of the header's
+bytes are never set.  `InitGraf` registers it (`InitQDCompression`).
+`test_LargeObjects` checks a round trip and that page 0 on the store is
+exactly the LZ of the filtered page.
 
 ## Large objects (`src/stores/LargeObjects.h`)
 

@@ -102,8 +102,10 @@ need first:
    `stores/LargeBinaries.h`, the ephemerals `stores/Ephemerals.h`;
    `docs/stores/README.md`'s "Large objects" and "Large binaries";
    `test_LargeObjects`, `test_LargeBinaries`, ctest `host.NewtonVBO`).
-   Still NOT YET of the object layer: `TLrgObjStore`, objects made from
-   compressed streams (`LODefCreateFromComp`), `TPixelMapCompander`, the
+   `TPixelMapCompander`, a store bitmap's default compander, is DONE too
+   (2026-09-29, `stores/PixelMapCompander.cpp`: LZ over row-delta
+   filtered pages).  Still NOT YET of the object layer: `TLrgObjStore`,
+   objects made from compressed streams (`LODefCreateFromComp`), the
    backup progress callback (`TLOCallback`).
 5. ~~**Packages on a store**~~ - DONE (2026-09-29, `packages/StorePackages.h`,
    `StorePackageNatives.cpp`, `stores/PackageObjects.cpp`;
@@ -113,16 +115,20 @@ need first:
    the next boot activates it again.  Left of it: relocating a page to a
    base (`RelocateFramesInPage`, not needed on the host), XIP packages,
    the progress callback, `LODefCreateFromComp`, a card's 'stor event
-   (`StorageCardInserted`/`MountStore`), `SuckPackageOffDeskTop`,
-   `RestoreSegmentedPackage`, `SuckPackageFromEndpoint` (comms),
-   `CPackageArchivalPipe`, `StopFrameSound`.  (The failure under
+   (`StorageCardInserted`/`MountStore`), `RestoreSegmentedPackage` over
+   `CPackageArchivalPipe` (11 functions, about 1.5 KB at 0x0010d190-
+   0x0010d9xx: a package restored from its segments), `SuckPackageFromEndpoint`
+   (comms), `StopFrameSound`.  `SuckPackageOffDeskTop` is DONE (2026-09-29,
+   over `utility/StdioPipe.h`'s `CStdioPipe` - the host's own files).  (The failure under
    `NEWTON_HEAPCHECK` was a host runtime bug, fixed 2026-09-29: a task
    switched out on its way back from a system call lost the call's answer
    - `docs/work-log.md`; ctest `host.NewtonPackageStoreSlow`.)
-6. **1.x packages** - `Activate1.XPackage`, `DeActivate1.XPackage`,
-   `Remove1.XPackage`, `1.XPackageToVBO`, `PackageAvailable`/
-   `PackageUnavailable`, the store's package directory: 27 functions,
-   3.6 KB, over (4).
+6. ~~**1.x packages**~~ - DONE (2026-09-29, `StorePackageNatives.cpp`,
+   `docs/packages/README.md`'s "The 1.x packages"; ctest `host.NewtonOneX`):
+   `Activate1.XPackage`, `DeActivate1.XPackage`, `Remove1.XPackage`,
+   `1.XPackageToVBO`, the store's package directory and the 1.x
+   `NewPackage`.  `GetCardReinsertionInfo` (a card's patch package) is
+   NOT YET.
 7. **The `'book` part handler** over the book reader - the handler and
    `TLibrarian::BookAvailable`/`BookRemoved` are 11 functions, 5.6 KB, but
    they stand on the book reader itself (`TLibrarian`, 49 methods; the
@@ -149,10 +155,9 @@ could come next (not ranked; the owner chooses):
   sniffing and fax reception (the only real source of the fax-page bitmaps
   `RotTiledBitmap` turns) wait on it.
 - **Now reachable over the large binaries**: the text engine's
-  `TXNewtStreamFactory` (a compressed large binary for a stream above 4K),
-  `TPixelMapCompander` (the default compander of a store bitmap), and
-  `RotTiledBitmap` (only a fax page reaches it, so it still waits on the
-  comms stack).
+  `TXNewtStreamFactory` (a compressed large binary for a stream above 4K)
+  and `RotTiledBitmap` (only a fax page reaches it, so it still waits on
+  the comms stack).
 - **The text engine**: `TXRun` and `TXRunRange`, then `TXRulerRange`
   (below).
 - **Drawing speed**: the blitter and the lines work a pixel at a time
@@ -307,7 +312,7 @@ inside an area).  At 2026-09-28:
 |---|---|---|
 | comms | 120 | endpoints, CCL, AppleTalk (the `...Zone...` natives are AppleTalk's), IR, NTK, the desktop connection |
 | frames | 97 | natives.py's catch-all: a handful each across many areas |
-| packages | 17 | packages on a store (the ROM domain manager, large binaries), 1.x packages |
+| packages | 2 | RestoreSegmentedPackage (CPackageArchivalPipe), SuckPackageFromEndPoint (comms) |
 | books | 19 | the book reader and newspapers (`TLibrarian`) |
 | views | 12 | |
 | sound | 8 | the sound server |

@@ -448,6 +448,37 @@ simple and the LZ decompressor, read back byte for byte, installed,
 taken away and installed again, backed up with `BackupPackage` and
 deleted) and `host.NewtonPackageStore`.
 
+## The 1.x packages (`StorePackageNatives.cpp`)
+
+A Newton 1.x machine kept its packages on a store by a *package
+directory*: an entry of the store's System soup (the one `Rpackagequery`
+finds, made from `Rpackagedirectory`) whose `pssids` slot lists the store
+objects the packages are kept in (`StoreGetPackageDirectory`,
+`StoreMakePackageDirectory`, `StorePackageDirectoryAdd`/`Remove`).  The
+ROM keeps what reads such a store: `Activate1.XPackage(pssid, store)`
+makes the package available and answers its id - or the error, as the
+same integer (a ROM quirk); `DeActivate1.XPackage(id)`;
+`Remove1.XPackage(id or {id, pssid, store})` takes the pssid out of the
+directory (making the directory if there is none) and removes the package
+- by `RemovePackage` given an id, else by deallocating the store object;
+and `store:1.XPackageToVBO(pssid)` wraps the package as a pkgRef (mapping
+it read-only if need be; a store object that is not one throws -48210).
+`StorePackagesAvailable`/`Unavailable`/`StorePackageAvailable` are there
+but nothing in the ROM calls them.  The 1.x `NewPackage(pipe, store, &id)`
+keeps a package the 1.x way - an LZ large object added to the directory -
+and is what `RestorePatchFromPipe` (the patch package put back) uses.
+ctest `host.NewtonOneX` (`src/host/demo/onex.ns`) runs the natives over a
+package stored on the internal store.
+
+`store:SuckPackageOffDeskTop(name, store, parameters)` reads a package
+through the C library's stdio (`utility/StdioPipe.h`'s `CStdioPipe`) - on
+the MessagePad a file on the desktop over the debugging link, with no name
+the desktop asked for one ("dev:StdGetFile"); DEVIATION: on the host the
+host's own files - and keeps it on the store as `SuckPackageFromBinary`
+does; a pipe or frames exception comes back as its error, anything else
+as -10400.  `test_PackageManager` stores a package read from a file this
+way.
+
 ## Not yet
 
 - The `'book` part handler (`TBookPartHandler` over the book reader's
@@ -458,10 +489,10 @@ deleted) and `host.NewtonPackageStore`.
   host's (`RelocateFramesInPage`), XIP packages (`TXIPStoreCompander`,
   `TXIPPackageStore`), the progress callback (`TLOCallback`),
   `CreateFromCompressed` (`LODefCreateFromComp`), the patch package's
-  reboot, a card's 'stor event (`StorageCardInserted`/`MountStore`),
-  `SuckPackageOffDeskTop`, `RestoreSegmentedPackage`, `StopFrameSound`
-  before a package goes, and the 1.x packages (`Activate1.XPackage` and
-  the store's package directory).
+  reboot (`GetCardReinsertionInfo`), a card's 'stor event
+  (`StorageCardInserted`/`MountStore`), `RestoreSegmentedPackage` over
+  `CPackageArchivalPipe` (a package restored from its segments), and
+  `StopFrameSound` before a package goes.
 - The validation driver (`ValidatePackage`), system patches
   (`CheckAndInstallPatch`), backups, `SetCardReinsertReason`.
 
