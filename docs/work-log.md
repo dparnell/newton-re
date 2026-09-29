@@ -9,6 +9,23 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-30: the host demos wait on conditions
+
+- `tools/host/stress.py` (`tools/host/README.md`): copies of one ctest
+  at once, each with its own store (`--test NAME --copies N`), or whole
+  `ctest -j` rounds (`--suite --rounds N`), beside CPU hogs (`--hogs N`)
+  (0bceee7).
+- `src/host/demo/common.ns`, loaded with `HostInclude()`: `tapAt`,
+  `typeKey`, `waitFor` (a condition asked four times a second, "waited in
+  vain" past its limit), `walkSetup` (the Setup assistant by page).  The
+  handwriting demos wait for the page to show what was written (55-76 s
+  down to 6-14 s), the rest wait on what they need and end with
+  `HostQuit()`; every converted ctest requires "<name>: done" and fails
+  on "waited in vain" (4db2463, 138a9b9).
+- The host tests' summed time 896 s to 359 s; a full parallel ctest
+  131-165 s to 104-119 s, 186 of 186; each converted test 6 of 6 copies
+  beside 8 hogs.
+
 ## 2026-09-30: the desktop connection, layer 3 - MNP
 
 - `TFramedAsyncSerTool` ('fser: DLE framing and CRC; 8118a0e), `TMNP`
