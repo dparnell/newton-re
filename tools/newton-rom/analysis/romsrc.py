@@ -61,6 +61,10 @@ constructors of its own):
     (a font, 'sfnt, is binary('sfnt, "resources/sfnt/addr.ttf"): the
     binary is the font file, which font tools read)
     function("functions/addr.ns")   a function, compiled from that source
+    same("path")    the object a compiled function holds at that path: a
+                    shared object only compiled functions use (bytecode two
+                    functions have in common, a function literal of two),
+                    whose source is theirs
     {tag: value, ...}      a frame (its map is the manifest's)
     [cls: value, ...]      an array whose class is the symbol cls
     array(value, value, ...)   an array whose class is not a symbol (the first)
@@ -163,6 +167,8 @@ class Extractor:
 		self.simple_sounds = self.find_simple_sounds()
 		self.in_function = 0			# inside a function written as source
 		self.aliases = []				# (path, name): a named object inside a compiled function
+		self.named_refs = []			# (path, name, the definition being written): every named reference
+		self.current_def = None
 
 	def refs_of(self, o):
 		rom = self.rom
@@ -251,6 +257,8 @@ class Extractor:
 		if not inline or self.named(ref):
 			if self.in_function:
 				self.aliases.append((path, self.name_of(ref)))
+			else:
+				self.named_refs.append((path, self.name_of(ref), self.current_def))
 			return self.name_of(ref)
 		return self.object(ref, path)
 
@@ -362,6 +370,7 @@ class Extractor:
 		while pending:
 			for o in pending:
 				name = self.name_of(o)
+				self.current_def = name
 				text = "%s := %s;" % (name, self.object(o, name))
 				(mapdefs if o in self.maps else defs).append((o, text))
 				written.add(o)
@@ -372,6 +381,36 @@ class Extractor:
 		for o in self.objs:
 			if self.is_symbol(o):
 				self.paths[o] = "'" + quote_name(rom.symname(o))
+		# a named object every reference to which is inside a compiled
+		# function is taken from the compiled function (same): its source is
+		# the functions', and an edit to them is not overridden by a copy
+		inside = collections.defaultdict(list)
+		for path, name in self.aliases:
+			inside[name].append(path)
+		by_name = {n: o for o, n in self.names.items()}
+		same = {}
+		for name, paths in inside.items():
+			o = by_name[name]
+			if self.refcount[o] == len(paths):
+				same[name] = paths[0]
+		defs = [(o, "%s := same(\"%s\");" % (self.names[o], same[self.names[o]])) if self.names.get(o) in same else (o, t)
+				for o, t in defs]
+		mapdefs = [(o, "%s := same(\"%s\");" % (self.names[o], same[self.names[o]])) if self.names.get(o) in same else (o, t)
+				   for o, t in mapdefs]
+		# (the named objects inside such a definition are named where the
+		# compiled function has them inline too)
+		self.aliases += [(path, name) for path, name, owner in self.named_refs if owner in same]
+		# the resources nothing refers to any more (those of the definitions
+		# now taken from the compiled functions)
+		used = set()
+		for _, text in defs + mapdefs:
+			used.update(re.findall(r'"(resources/[^"]+)"', text))
+		for folder, _, files in os.walk(os.path.join(self.out, "resources")):
+			for f in files:
+				rel = os.path.relpath(os.path.join(folder, f), self.out).replace(os.sep, "/")
+				if rel not in used:
+					os.remove(os.path.join(folder, f))
+		self.same_count = len(same)
 		os.makedirs(os.path.join(self.out, "objects"), exist_ok=True)
 		defs.sort()
 		for i in range(0, len(defs), PER_FILE):
@@ -592,7 +631,7 @@ class Reader:
 		if kind == "name" and text in ("nil", "true"):
 			self.take()
 			return Imm(2 if text == "nil" else 0x1a)
-		if kind == "name" and text in ("real", "string", "binary", "array", "map", "bytes", "function", "bitmap", "sound", "pict") \
+		if kind == "name" and text in ("real", "string", "binary", "array", "map", "bytes", "function", "bitmap", "sound", "pict", "same") \
 				and self.toks[self.i + 1][1] == "(":
 			self.take()
 			self.take("(")
@@ -600,7 +639,7 @@ class Reader:
 			while self.peek()[1] != ")":
 				if text in ("real",) and self.peek()[0] == "number":
 					args.append(float(self.take()[1]))
-				elif text in ("string", "binary", "bytes", "function", "bitmap", "sound", "pict") and self.peek()[0] == "string":
+				elif text in ("string", "binary", "bytes", "function", "bitmap", "sound", "pict", "same") and self.peek()[0] == "string":
 					args.append(self.take()[1])
 				elif text == "bitmap" and self.peek()[0] == "number":
 					args.append(self.take()[1])
@@ -617,6 +656,8 @@ class Reader:
 			if text == "binary":
 				with open(os.path.join(self.root, args[1][1:-1]), "rb") as f:
 					return Obj("binary", args[0], data=f.read())
+			if text == "same":
+				return Obj("same", data=args[0][1:-1])
 			if text == "pict":
 				with open(os.path.join(self.root, args[1][1:-1]), "rb") as f:
 					return Obj("binary", args[0], data=f.read()[PICT_HEADER:])
@@ -680,6 +721,8 @@ class Builder:
 					self.defs[name] = value
 		self.read_layout()
 		self.compile_functions()
+		for name in list(self.defs):
+			self.resolve_same(name, set())
 		# every object by its path (a path the layout says is a named object
 		# - one the ROM shares, which a compiled function made afresh - is
 		# that object)
@@ -755,6 +798,38 @@ class Builder:
 				i += 1
 		if by_id:
 			raise ValueError("%d functions came back uncompiled" % len(by_id))
+
+	def resolve_same(self, name, seen):
+		"""A same(path) definition replaced by the object at that path."""
+		v = self.defs[name]
+		if not (isinstance(v, Obj) and v.kind == "same"):
+			return v
+		if name in seen:
+			raise ValueError("same() goes round in a circle at %s" % name)
+		seen.add(name)
+		self.defs[name] = self.at_path(v.data, seen)
+		return self.defs[name]
+
+	def at_path(self, path, seen):
+		m = re.match(r"(\|(?:[^|\\]|\\.)*\||[A-Za-z_][A-Za-z0-9_]*)", path)
+		root = m.group(1)
+		if root.startswith("|"):
+			root = re.sub(r"\\(.)", r"\1", root[1:-1])
+		v = self.resolve_same(root, seen)
+		rest = path[m.end():]
+		for step in re.findall(r"\.(\|(?:[^|\\]|\\.)*\||[A-Za-z_][A-Za-z0-9_]*)|\[(\d+)\]|(\^)", rest):
+			tag, index, cls = step
+			if tag:
+				if tag.startswith("|"):
+					tag = re.sub(r"\\(.)", r"\1", tag[1:-1])
+				v = v.items[v.tags.index(tag)]
+			elif index:
+				v = v.items[int(index)]
+			else:
+				v = v.cls
+			if isinstance(v, Name):
+				v = self.resolve_same(v.name, seen)
+		return v
 
 	def walk(self, v, path):
 		if not isinstance(v, Obj):
@@ -870,8 +945,10 @@ def main(argv=None):
 		return main(["build", a.output, "--check", a.build_dir, "--newtonscript", a.newtonscript])
 	if a.command == "extract":
 		rom = nf.ROM(a.build_dir)
-		n, m = Extractor(rom, a.output).run()
-		print("%d definitions and %d maps written to %s" % (n, m, a.output))
+		e = Extractor(rom, a.output)
+		n, m = e.run()
+		print("%d definitions (%d taken from compiled functions) and %d maps written to %s"
+			  % (n, e.same_count, m, a.output))
 		return 0
 	builder = Builder(a.source, a.newtonscript)
 	base, area = builder.build()

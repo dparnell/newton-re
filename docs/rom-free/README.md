@@ -144,10 +144,19 @@ reported as the decompiler's was.
      them.
    - Symbols are matched whatever their case, since the host's compiler
      spells a symbol as the host first interned it.
-   - Left as bytecode: 362 functions that are named objects inside others
-     (shared, or held in a slot as well as being a literal). They are not
-     top-level, so the decompiler writes them inside their parent, and
-     the tree keeps their definitions as frames of bytecode.
+   - **No bytecode is left in the tree.** The 362 `instructions` binaries
+     that stage 2 still kept were shared: the ROM's build stored equal
+     objects once, so functions with the same code share one binary of
+     bytecode, and 10 nested functions are literals of more than one
+     function.
+     - A named object that is referenced only from inside compiled
+       functions is now written `same("<path>")`: the object that a
+       compiled function holds at that path. For example,
+       `obj_3c5405 := same("obj_6475c5.ReadPreferences.instructions")`.
+     - 721 definitions are written this way: bytecode, shared function
+       literals, and strings and frames that only functions push.
+     - Their source is the functions', so an edit to a function is not
+       overridden by a copy elsewhere.
 3. **Bitmaps. Done:** `bits`, `mask` and `cbits` are PNG and back,
    lossless.
    - The tree has 344 + 121 + 60 PNGs; the other 12 are literals inside
@@ -248,9 +257,9 @@ The tree holds:
 - 5480 functions in `functions/`;
 - the 8336 maps in `maps.ns`;
 - `layout.tsv`, one line per object, and the aliases;
-- the resources: 525 PNGs, 2 WAVs, 7 PICTs, 13 fonts, and 461 `.bin`
-  files (the 362 nested functions' bytecode, the compressed sounds and
-  the tables).
+- the resources: 525 PNGs, 2 WAVs, 7 PICTs, 13 fonts, and 99 `.bin`
+  files (the compressed sounds, the ring tones' parameters, the tables and
+  a few small shapes).
 
 There are some 6,500 files, about 19 MB on disk (NTFS). In bytes that is
 1.2 MB of object source, 8.3 MB of function source, 0.8 MB of maps,
@@ -258,7 +267,6 @@ There are some 6,500 files, about 19 MB on disk (NTFS). In bytes that is
 
 What it is not yet:
 
-- 362 nested functions are still bytecode (stage 2).
 - The compressed sounds (IMA ADPCM), the ring tones' `TDTMFCodec`
   parameters and the tables are still `.bin` files.
 - The files are cut by address, not by what they belong to (the
