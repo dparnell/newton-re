@@ -20,6 +20,7 @@ add_library(utility STATIC
     Unicode.cpp
     BufferSegment.cpp
     Pipes.cpp
+    StdioPipe.cpp
     CRC16.cpp
     CRC16Tables.cpp
     RingBuffer.cpp

@@ -6,6 +6,7 @@
 // big-endian scalar operators and the eof reporting of ReadChunk.
 
 #include "TestPipe.h"
+#include "StdioPipe.h"
 #include "NewtonExceptions.h"
 #include "UCErrors.h"
 #include "memory/host/KernelHeap.h"
@@ -144,12 +145,71 @@ TestPipe()
 }
 
 
+// CStdioPipe (utility/StdioPipe.h) over a host file: written, read back,
+// seeked; a read past the end throws -3 with the count and eof set first
+// (the ROM's quirk); a file that is not there throws -1.
+static long
+PipeError(void (*step)(void*), void* arg)
+{
+	volatile long error = 0;
+	newton_try
+	{
+		step(arg);
+	}
+	newton_catch(exPipeException)
+	{
+		error = (long) (Long) _info.exception.data;
+	}
+	end_try;
+	return error;
+}
+
+static void
+OpenMissing(void*)
+{
+	CStdioPipe pipe("no such directory/no such file", "r");
+}
+
+struct ShortRead { CStdioPipe* fPipe; long fCount; Boolean fEOF; char fBytes[16]; };
+
+static void
+ReadTooMuch(void* arg)
+{
+	ShortRead* s = (ShortRead*) arg;
+	s->fPipe->ReadChunk(s->fBytes, s->fCount, s->fEOF);
+}
+
+static void
+TestStdioPipe(void)
+{
+	const char* path = "test_StdioPipe.tmp";
+	{
+		CStdioPipe pipe(path, "w+b");
+		pipe.WriteChunk("newton pipe", 11, true);
+		EXPECT(pipe.WritePosition() == 11);
+		pipe.Reset();
+		char back[11];
+		long count = 11;
+		Boolean eof = true;
+		pipe.ReadChunk(back, count, eof);
+		EXPECT(count == 11 && !eof && memcmp(back, "newton pipe", 11) == 0);
+		EXPECT(pipe.ReadSeek(7, SEEK_SET) == 7 && pipe.ReadPosition() == 7);
+		ShortRead s = { &pipe, 10, false, { 0 } };
+		EXPECT(PipeError(ReadTooMuch, &s) == -3);
+		EXPECT(s.fCount == 4 && s.fEOF && memcmp(s.fBytes, "pipe", 4) == 0);
+	}
+	EXPECT(PipeError(OpenMissing, nil) == -1);
+	remove(path);
+}
+
+
 int
 main()
 {
 	InitHostStandaloneHeap();
 	TestSegment();
 	TestPipe();
+	TestStdioPipe();
 	if (failures == 0)
 		printf("test_Pipes: all passed\n");
 	return failures != 0;

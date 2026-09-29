@@ -34,6 +34,9 @@
 #include "PartHandler.h"		// RemovePackage
 #include "Compression.h"		// TCallbackCompressor
 #include "NewtErrors.h"			// kNoMemory
+#include "StdioPipe.h"			// SuckPackageOffDeskTop
+#include "Unicode.h"			// ConvertFromUnicode
+#include <stdint.h>
 #include "FramesPart.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
@@ -264,6 +267,54 @@ FSuckPackageFromBinary(RefArg rcvr, RefArg binary, RefArg parameters)
 	MemoryPipe pipe;
 	pipe.Init(&segment, nil, false);
 	return SuckPackageThruPipe(&pipe, rcvr, parameters);
+}
+
+
+// ROM 0x001fb8b0 FSuckPackageOffDeskTop
+// SuckPackageOffDeskTop(name, store, parameters): a package read through
+// the C library's stdio - on the MessagePad a file on the desktop, over
+// the debugging link; with no name the desktop is asked for one
+// ("dev:StdGetFile") - and kept on the store as SuckPackageFromBinary
+// does.  ==> the pkgRef; a pipe or frames exception's data, or -10400 for
+// any other, as an integer instead.
+// ROM BUGS kept: a pipe whose file will not open is left allocated (its
+// constructor throws after the allocation); the name is converted into a
+// 256-byte buffer with no limit (DEVIATION: the host stops at 255
+// characters rather than running over its stack).
+// (CStdioPipe - utility/StdioPipe.h - is the host's C library on the
+// host's own files.)
+static Ref
+FSuckPackageOffDeskTop(RefArg /*rcvr*/, RefArg name, RefArg storeObject, RefArg parameters)
+{
+	RefVar result;
+	CPipe* volatile pipe = nil;
+	volatile long error = 0;
+	newton_try
+	{
+		if (ISNIL(name))
+			pipe = new CStdioPipe("dev:StdGetFile", "r");
+		else
+		{
+			char path[256];
+			ConvertFromUnicode(GetCString(name), path, kMacRomanEncoding, 255);
+			path[255] = 0;
+			pipe = new CStdioPipe(path, "r");
+		}
+		result = AllocatePackage(pipe, storeObject, parameters);
+	}
+	newton_catch_all
+	{
+		if (Subexception(_info.exception.name, exPipeException) || Subexception(_info.exception.name, exFrames))
+			error = (long) (intptr_t) _info.exception.data;
+		else
+			error = -10400;
+	}
+	end_try;
+	if (pipe != nil)
+		delete pipe;
+	if (error != 0)
+		return MAKEINT(error);
+	return result;
 }
 
 
@@ -911,6 +962,7 @@ RegisterStorePackageNatives(void)
 	RegisterNativeFunction("FGetPkgRefInfo", (void*) FGetPkgRefInfo, 1);
 	RegisterNativeFunction("FGetPkgInfoFromPssid", (void*) FGetPkgInfoFromPssid, 2);
 	RegisterNativeFunction("FPidToPackageLite", (void*) FPidToPackageLite, 1);
+	RegisterNativeFunction("FSuckPackageOffDeskTop", (void*) FSuckPackageOffDeskTop, 3);
 	RegisterNativeFunction("FActivate1XPackage", (void*) FActivate1XPackage, 2);
 	RegisterNativeFunction("FDeActivate1XPackage", (void*) FDeActivate1XPackage, 1);
 	RegisterNativeFunction("FRemove1XPackage", (void*) FRemove1XPackage, 1);

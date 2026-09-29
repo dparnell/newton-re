@@ -26,6 +26,7 @@
 // The ROM image is build/MP2x00US/rom.bin.
 
 #include "PackageManager.h"
+#include "StdioPipe.h"
 #include "PackageEvents.h"
 #include "PackageIterator.h"
 #include "PackagePipe.h"
@@ -628,6 +629,34 @@ TestOnStore(void)
 	StoreScenario("TSimpleStoreDecompressor", ntk, size);
 	PutBigEndianWord(ntk + 0x0c, GetBigEndianWord(ntk + 0x0c) & ~0x10000000);
 	StoreScenario("TLZStoreDecompressor", ntk, size);
+
+	// read from a file through the C library, as SuckPackageOffDeskTop
+	// does (utility/StdioPipe.h): stored, and the same bytes come back
+	FILE* f = fopen("test_PackageManager.pkg", "wb");
+	EXPECT(f != nil);
+	if (f != nil)
+	{
+		fwrite(ntk, 1, size, f);
+		fclose(f);
+		TStore* store = (TStore*) THostStore::ClassInfo()->New();
+		EXPECT(store != nil && store->Init(nil, 0x100000, 0, 0, kStoreIsInternal, nil) == noErr);
+		store->Format();
+		ULong id = 0;
+		{
+			CStdioPipe file("test_PackageManager.pkg", "rb");
+			EXPECT(StorePackage(&file, store, nil, &id) == noErr && id != 0);
+		}
+		ULong address = 0;
+		EXPECT(MapLargeObject(&address, store, id, true) == noErr && address != 0);
+		if (address != 0)
+		{
+			EXPECT(memcmp((const UByte*) address, ntk, 0x24) == 0
+				   && memcmp((const UByte*) address + 0x28, ntk + 0x28, size - 0x28) == 0);
+			UnmapLargeObject(address);
+		}
+		store->Delete();
+		remove("test_PackageManager.pkg");
+	}
 	free(ntk);
 }
 
