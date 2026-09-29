@@ -254,6 +254,60 @@ A host note: the host's clock stands still while tasks run, so
 to nought, which is no timeout at all; the host tool re-arms it in
 `HandleInternalEvent`.
 
+## The desktop connection (Dock) - the plan
+
+How a desktop (NCU, NCX, UnixNPI, the Newton Toolkit) connects to a 2.1
+MessagePad, established from the ROM (symbols, `classinfo.py`, the strings of
+the built-in Connection package - `packages.py build/MP2x00US --extract`):
+
+- **The application.** The Connection application ("Dock" in Extras) is a
+  NewtonScript package in the ROM extension (`Connection`, 131 KB, an NTK
+  form part).  Its "Connect via" methods are Serial (and Serial at 2400,
+  4800, 9600), AppleTalk (`'adsp`/`'atlk`), Modem (`'mods` with the MNP
+  options `'mnpa`, `'mnpc`, `'mnpn`) and IrDA (`'irda`).  **There is no
+  TCP/IP method** on 2.1, and the Newton Internet Enabler adds none (its
+  packages carry no dock code).  A desktop reaches a MessagePad over a
+  network only by carrying the serial link: Einstein, the emulator NCX is
+  used with, puts the Newton's serial port on a TCP socket (port 3679), and
+  the desktop speaks the serial dock protocol - MNP - over it.
+- **The docker.** The application makes its connection through a prototype
+  frame in the ROM (`0x006482d1`: `Instantiate`, `Connect`, `DoConnection`,
+  `ReadCommand`, `WriteCommand`, ... - 31 natives `FConn*`, 0x00096464 -
+  0x00097124) over the C++ `TDocker` (0x00092000 - 0x0009c500, about 42 KB,
+  140 functions: the command loop, `ProcessCommand`/`ProcessBuiltinCommand`,
+  the soup and store sync commands, packages (`ReadPackage`,
+  `DoRestorePackage`), passwords, protocol extensions), `TDockerDynArray`
+  and `TEzPipeProtocol` (the command header: `'newtdock'` plus the
+  four-character command and a long length, padded to four).
+- **The transport.** Serial docking runs over MNP: the service `'mnps`
+  (`TMNPService`, 0x001197d0) starts `TMNP` (0x00116b14 - 0x0011b838, about
+  20 KB: LR/LA/LT/LN/LD frames, DLE framing and CRC-16, the class 5
+  compression) over the serial tool `TSerTool`/`TAsyncSerTool` (0x001b8574 -
+  0x001b9cd8, 0x0003913c - 0x0003aeac, about 14 KB), which drives a serial
+  chip through the `TSerialChip` protocol found in the chip registry
+  (`PTheSerChipRegistry`).
+- **The host's part** (the one DEVIATION): a host `TSerialChip`
+  implementation whose "wire" is a TCP socket - `hal/host/HostSerialChip`:
+  it listens on a port (3679, Einstein's, by default), and a desktop that
+  connects is a cable plugged in.  Everything above it - the serial tool,
+  MNP, the docker, the Connection application - is the ROM's, reconstructed.
+
+The order, each a verified piece:
+
+1. `hal/host/HostSerialChip` over a TCP socket, registered in the chip
+   registry (`PTheSerChipRegistry`, reconstructed as far as the tool needs),
+   its interrupts (receive available, transmit empty) delivered through
+   `hal/host/HostInterruptSources.h`; a test writes and reads bytes through it.
+2. `TSerTool`/`TAsyncSerTool` and the `'aser` service (`TAsyncService`): a
+   protoBasicEndpoint with `'aser` echoes through the socket (ctest).
+3. `TMNP` and `TMNPService` (`'mnps`): an MNP link established with a test
+   peer (`tools/dock/mnp.py`, documented) and data through it.
+4. `TDocker`, `TEzPipeProtocol`, `TDockerDynArray` and the `FConn*` natives:
+   the Connection application docks; `tools/dock/dock.py` (the desktop side:
+   MNP, the `newtdockrtdk` handshake, `lpkg` with a fixture package) is
+   ctest `host.NewtonDock`.  A real desktop (NCX, UnixNPI with a TCP serial
+   bridge) connects to `localhost:3679` the way it connects to Einstein.
+
 ## Status
 
 | piece | state |
