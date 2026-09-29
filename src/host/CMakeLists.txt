@@ -89,6 +89,16 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
                      --expect-second "queued: \"Beamed note\".*beam-send: the Out Box is empty"
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonBeam PROPERTIES TIMEOUT 300 PASS_REGULAR_EXPRESSION "twonewtons.py: both ended as expected")
+    # the same over the default path: no zapCommToolId, so the probe and then IrDA
+    add_test(NAME host.NewtonBeamIrDA
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/host/twonewtons.py $<TARGET_FILE:newton>
+                     --rom ${NEWTON_ROM_BIN} --seconds 120
+                     --first ${CMAKE_CURRENT_SOURCE_DIR}/demo/beam-irda-receive.ns
+                     --expect-first "eceived: \"Beamed note\".*text: \"hello from the other Newton\".*beam-receive: the note is in the In Box"
+                     --second ${CMAKE_CURRENT_SOURCE_DIR}/demo/beam-irda-send.ns
+                     --expect-second "queued: \"Beamed note\".*beam-send: the Out Box is empty"
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonBeamIrDA PROPERTIES TIMEOUT 300 PASS_REGULAR_EXPRESSION "twonewtons.py: both ended as expected")
 endif()
 
 # deferred recognition (views/Rerecognize.h): "ton" written, and the

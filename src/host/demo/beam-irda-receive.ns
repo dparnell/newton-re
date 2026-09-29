@@ -1,0 +1,14 @@
+// The other end of src/host/demo/beam-irda-send.ns (ctest
+// host.NewtonBeamIrDA): zapCommToolId nil, so the probe listens first and
+// then the IrDA stack; the In Box's Receive for Beam (the transport's
+// ReceiveRequest), and the run ends when the note is in the In Box.
+HostInclude("common.ns");
+SetUserConfig('zapCommToolId, nil);
+TransportNotify('|beam:Newton|, 'ReceiveRequest, [{cause: 'user}]);
+inbox := GetUnionSoup("InBox");
+call waitFor with ("beam-receive: the In Box", func() inbox:Query(nil):Entry() <> nil, func() begin
+	local e := inbox:Query(nil):Entry();
+	Print({received: e.title, text: e.body.text, from: e.fromRef});
+	Print("beam-receive: the note is in the In Box");
+	HostQuit();
+end, 120);

@@ -1,0 +1,25 @@
+// One host Newton beams a Note to another over the default path (ctest
+// host.NewtonBeamIrDA, run by tools/host/twonewtons.py with
+// src/host/demo/beam-irda-receive.ns on the other newton; the two IR ports
+// face each other over a socket, --ir-peer).
+//
+// zapCommToolId is nil, as it is on a new machine, so the Beam transport
+// asks the probe ('pkir') first, which finds the other side speaks IrDA,
+// and beams over the IrDA stack ('irda'): discovery, the IAS lookup of the
+// other side's class, an LSAP connection.  Otherwise as beam-send.ns: the
+// note routed to Beam, sent as the Out Box's Send button sends it, and the
+// run ends when the Out Box is empty again.
+HostInclude("common.ns");
+SetUserConfig('zapCommToolId, nil);
+note := {appSymbol: 'paperroll, title: "Beamed note",
+		 body: {text: "hello from the other Newton"}};
+Send('beam, note);
+outbox := GetUnionSoup("OutBox");
+call waitFor with ("beam-send: the Out Box", func() outbox:Query(nil):Entry() <> nil, func() begin
+	Print({queued: outbox:Query(nil):Entry().title});
+	TransportNotify('|beam:Newton|, 'SendRequest, [{cause: 'user, item: outbox:Query(nil):Entry()}]);
+	call waitFor with ("beam-send: the note sent", func() outbox:Query(nil):Entry() = nil, func() begin
+		Print("beam-send: the Out Box is empty");
+		HostQuit();
+	end, 60);
+end, 20);
