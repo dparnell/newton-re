@@ -63,6 +63,16 @@
 
 static char gWhy[512];
 
+
+// A record whose header says " names" is compiled with the variables'
+// names kept (dbgNoVarNames nil: the function gets its 'dbg1 DebuggerInfo),
+// as the NTK's debug build compiled ListView; any other without them.
+static void
+KeepNames(Boolean keep)
+{
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "dbgNoVarNames")), RefVar(keep ? NILREF : TRUEREF));
+}
+
 static Boolean
 IsBigEndianHost(void)
 {
@@ -138,6 +148,18 @@ CompareCode(Ref oursRef, Ref romRef, const char* where)
 	snprintf(here, sizeof(here), "%s argFrame", where);
 	if (!Same(GetArraySlotRef(ours, 3), GetArraySlotRef(rom, 3), here))
 		return "argFrame";
+	if (Length(ours) != Length(rom))
+	{
+		snprintf(here, sizeof(here), "%s %ld slots, the ROM's %ld (DebuggerInfo)", where, (long) Length(ours), (long) Length(rom));
+		Differ(here, "differ");
+		return "shape";
+	}
+	if (Length(rom) > 5)
+	{
+		snprintf(here, sizeof(here), "%s DebuggerInfo", where);
+		if (!Same(GetArraySlotRef(ours, 5), GetArraySlotRef(rom, 5), here))
+			return "DebuggerInfo";
+	}
 	if (GetArraySlotRef(ours, 4) != GetArraySlotRef(rom, 4))
 	{
 		snprintf(here, sizeof(here), "%s numArgs %ld, the ROM's %ld", where, (long) RINT(GetArraySlotRef(ours, 4)), (long) RINT(GetArraySlotRef(rom, 4)));
@@ -323,6 +345,7 @@ RunRoundTrip(const char* inputPath, const char* outputPath)
 		if (strncmp(line, "@@ ", 3) == 0)
 		{
 			romRef = strtoul(line + 3, nil, 16);
+			KeepNames(strstr(line, " names") != nil);
 			length = 0;
 			source[0] = 0;
 			inRecord = true;
@@ -658,6 +681,7 @@ RunCompileRecords(const char* inputPath, const char* outputPath)
 		if (strncmp(line, "@@ ", 3) == 0)
 		{
 			ref = strtoul(line + 3, nil, 16);
+			KeepNames(strstr(line, " names") != nil);
 			length = 0;
 			source[0] = 0;
 			inRecord = true;

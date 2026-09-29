@@ -103,6 +103,21 @@ func(a1) begin ... a1.Close := kFunction_41979d; ... end
 @@end
 ```
 
+### Functions compiled with names kept
+
+A function built by the NTK with debugging information (ListView, in the
+ROM extension) has a sixth slot, `DebuggerInfo`: nil, or a `'dbg1`
+array. It holds the count of names from the enclosing argFrames, those
+names, and then each stack variable's name by its index.
+
+- The decompiler takes each variable's real name from it.
+- It marks the record `@@ <addr> names`, which `newtonscript --roundtrip`
+  and `--compile-records` compile with `dbgNoVarNames` nil, so that the
+  compiler makes the same `'dbg1`.
+- A nested function that closes over nothing is written inline in such
+  a function: the NTK compiled it there, and its `'dbg1` names the
+  enclosing variables.
+
 ### A closure made when the project was built
 
 One function (0x5acf1d, `func() Apply(script, parameters)`) is a closure.

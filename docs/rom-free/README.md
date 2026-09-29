@@ -410,7 +410,7 @@ still byte for byte the ROM's.
 | FaxViewer | 666 | 77 | 0 |
 | Formulas | 1188 | 125 | 0 |
 | help book | 834 | (no functions) | |
-| ListView | 2967 | 0 | 266 |
+| ListView | 2967 | 266 | 0 |
 | Setup | 1061 | 119 | 0 |
 
 - **Which functions are source.** A function is written as source only
@@ -425,11 +425,27 @@ still byte for byte the ROM's.
 
   In the object area all 5480 pass. In the packages:
   - 3 do not decompile: corner cases of the sorted variable order;
-  - **ListView's 266 are all different**: that package was built with
-    debugging information, so every function carries a `DebuggerInfo`
-    slot, which the NTK's debug build wrote and the compiler does not
-    make. They stay bytecode until the compiler's debug information is
-    matched to it.
+  - **ListView was built with debugging information, and now round-trips
+    too.** Every one of its functions has a sixth slot, `DebuggerInfo`:
+    nil, or a `'dbg1` array that holds
+    - the count of names from the enclosing argFrames,
+    - those names,
+    - then each stack variable's name by its index.
+
+    It is exactly what the compiler makes when variables' names are kept
+    (`TFunctionState::MakeCodeBlock`, with `dbgNoVarNames` nil); no new
+    flag was needed.
+    - The decompiler reads those names, so **ListView's source has its
+      real variable names** (`func(aList, anIndex, aLevel) ... for ti :=
+      ...`). It marks such a record `@@ <addr> names`, and the round trip
+      and `--compile-records` compile that record with names kept.
+    - One more NTK habit shows in the debug build. A function inside
+      another that closes over nothing was compiled inside it all the
+      same, so its `'dbg1` names the enclosing function's variables, and
+      it is still pushed with no `set-lex-scope`, having no argFrame of its
+      own. Such a function is written inline rather than as a
+      `kFunction_` constant.
+    - `CompareCode` now compares `DebuggerInfo` as well.
 - **Differences from the object area:**
   - A part's objects are aligned from the part's start, to 8 bytes in a
     version 0 package.

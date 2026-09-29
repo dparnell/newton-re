@@ -455,7 +455,8 @@ class Extractor:
 		order = sorted(sources)
 		with open(records, "w", encoding="utf-8", newline="\n") as f:
 			for n, o in enumerate(order):
-				f.write("@@ %x\n%s" % (n, sources[o].split("\n", 1)[1]))
+				head, body = sources[o].split("\n", 1)
+				f.write("@@ %x%s\n%s" % (n, " names" if head.endswith(" names") else "", body))
 		env = dict(os.environ, NEWTON_ROM=os.path.join(self.out, "no-rom-image"))
 		subprocess.run([nd.newtonscript_path(self.newtonscript), "--compile-records", records, compiled], env=env,
 					   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -1182,8 +1183,8 @@ class Builder:
 					text = f.read()
 				# (each record numbered afresh: the file's own @@ line names
 				# the ROM's function, which an edited tree need not have)
-				body = text.split("\n", 1)[1]
-				out.write("@@ %x\n%s" % (n, body))
+				head, body = text.split("\n", 1)
+				out.write("@@ %x%s\n%s" % (n, " names" if head.endswith(" names") else "", body))
 				by_id[n] = v
 		env = dict(os.environ, NEWTON_ROM=os.path.join(self.src, "no-rom-image"))
 		result = subprocess.run([nd.newtonscript_path(self.newtonscript), "--compile-records", records, compiled], env=env,

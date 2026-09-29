@@ -268,6 +268,20 @@ class Decompiled:
 		self.arg_names = {}			# stack index -> name (closed-over arguments)
 		self.loop_exits = []
 		self.body = None
+		# A function compiled with its variables' names kept (the NTK's debug
+		# build: ListView's) has a sixth slot, DebuggerInfo: nil, or a 'dbg1
+		# array of the count of names from the enclosing argFrames, those
+		# names, then each stack variable's name by its index (TFunctionState::
+		# MakeCodeBlock).  Its names are the source's, and the function is
+		# compiled back with names kept.
+		self.keeps_names = len(s) == 6 and [t for t, _ in rom.frame_slots(ref)][5] == "DebuggerInfo"
+		self.debug_names = {}
+		if self.keeps_names and rom.is_ptr(s[5]) and rom.flags(s[5]) & 3 == 1 and rom.symname(rom.cls(s[5])) == "dbg1":
+			info = rom.slots(s[5])
+			count = info[0] >> 2
+			for i, v in enumerate(info[1 + count:]):
+				if rom.is_ptr(v) and rom.symname(v) is not None:
+					self.debug_names[3 + i] = rom.symname(v)
 
 	def repeated_literals(self):
 		"""The literal slots pushed more than once (one literal slot, not the
@@ -285,6 +299,8 @@ class Decompiled:
 			return index				# closed over: its own name
 		if index in self.arg_names:
 			return self.arg_names[index]
+		if index in self.debug_names:
+			return self.debug_names[index]
 		if getattr(self, "chosen_names", None) and index in self.chosen_names:
 			return self.chosen_names[index]
 		if index < 3 + self.num_args:
@@ -324,8 +340,8 @@ class Decompiled:
 		included."""
 		first = 3 + self.num_args
 		closed_locals = [n for n in self.frame_names if n not in self.arg_names.values()]
-		if self.num_args + self.num_locals + len(closed_locals) <= 20:
-			return
+		if self.num_args + self.num_locals + len(closed_locals) <= 20 or self.debug_names:
+			return					# (the source's own names: they sort as they did)
 		derived = {}			# position -> (the free positions its name is made of, the suffix)
 
 		def derive(p, bases, suffix):
@@ -1233,7 +1249,13 @@ class Writer:
 		if isinstance(node, MakeFrame):
 			return "{" + ", ".join("%s: %s" % (ident(t), w(v)) for t, v in zip(node.tags, node.values)) + "}"
 		if isinstance(node, Func):
-			if not getattr(node, "lexical", False):
+			# (in the NTK's debug build a function inside another that closes
+			# over nothing was compiled inside it all the same: its 'dbg1 names
+			# the enclosing argFrames' variables, which only compiling it
+			# there gives it; with no argFrame of its own it is pushed with
+			# no set-lex-scope all the same)
+			inline_debug = node.fn.keeps_names and fn.keeps_names and not uses_environment(node.fn.body)
+			if not getattr(node, "lexical", False) and not inline_debug:
 				# compiled on its own (a constant of the NTK's): a global constant
 				# here.  Written inline it would be closed (set-lex-scope) as soon
 				# as the compiler gave it an argFrame - which a reference to self,
@@ -1651,7 +1673,8 @@ def record(rom, ref):
 		text += "".join("@@const %s\n%s\n" % c for c in constants) + "@@main\n"
 		return text + src + "\n@@end\n"
 	src, constants = decompile_source(rom, ref, True)
-	text = "@@ %#x\n" % ref
+	# (" names": compiled with the variables' names kept, as the NTK's debug build was)
+	text = "@@ %#x%s\n" % (ref, " names" if Decompiled(rom, ref).keeps_names else "")
 	if constants:
 		text += "".join("@@const %s\n%s\n" % c for c in constants) + "@@main\n"
 	return text + src + "\n@@end\n"
