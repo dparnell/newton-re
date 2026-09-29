@@ -22,12 +22,43 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <new>
 
 extern const ExceptionName exTranslatorException;
 
 #define kNTKPause			(50 * kMilliseconds)
 #define kNTKTimeout			(30 * kSeconds)
 #define kErrTranslatorText	(-48211)			// Print's text too long
+
+
+// The ROM's malloc and operator new are the pointer heap's, which
+// SetPtrName tags; the host's are not, so these blocks come from the
+// pointer heap as the ROM's do (the pipe constructed in place).
+static void*
+NTKMalloc(size_t size)
+{
+	return NewPtr(size);
+}
+
+static void
+NTKFree(void* p)
+{
+	DisposPtr((Ptr) p);
+}
+
+static TTaskSafeRingPipe*
+NewNTKPipe(void)
+{
+	void* block = NewPtr(sizeof(TTaskSafeRingPipe));
+	return block != nil ? new (block) TTaskSafeRingPipe : nil;
+}
+
+static void
+DeleteNTKPipe(TTaskSafeRingPipe* pipe)
+{
+	pipe->~TTaskSafeRingPipe();
+	DisposPtr((Ptr) pipe);
+}
 
 
 /*------------------------------------------------------------------------------
@@ -55,7 +86,7 @@ void
 PNTKInTranslator::Delete()
 {
 	if (fPipe != nil)
-		delete fPipe;
+		DeleteNTKPipe(fPipe);
 }
 
 
@@ -70,10 +101,10 @@ PNTKInTranslator::Init(void* context)
 	fPause = c->fPause;
 	fTimeout = c->fTimeout;
 	fBuffer = c->fBuffer;
-	fPipe = new TTaskSafeRingPipe;
+	fPipe = NewNTKPipe();
 	if (fPipe == nil)
 		return MemError();
-	// (the ROM names it 'ntkP': DEVIATION, host blocks are not the pointer heap's)
+	SetPtrName((Ptr) fPipe, 'ntkP');
 	fPipe->Init(fBuffer, false, fPause, fTimeout);
 	return noErr;
 }
@@ -216,9 +247,9 @@ void
 PNTKOutTranslator::Delete()
 {
 	if (fPipe != nil)
-		delete fPipe;
+		DeleteNTKPipe(fPipe);
 	if (fText != nil)
-		free(fText);
+		NTKFree(fText);
 }
 
 
@@ -235,10 +266,10 @@ PNTKOutTranslator::Init(void* context)
 	fTimeout = c->fTimeout;
 	fBuffer = c->fBuffer;
 	fTextSize = c->fTextSize;
-	fText = (char*) malloc(fTextSize);
+	fText = (char*) NTKMalloc(fTextSize);
 	if (fText != nil)
 	{
-		// (the ROM names it 'repb': DEVIATION, host blocks are not the pointer heap's)
+		SetPtrName((Ptr) fText, 'repb');
 		fTextPtr = fText;
 		fTextLeft = fTextSize;
 	}
@@ -248,10 +279,10 @@ PNTKOutTranslator::Init(void* context)
 		if (err != noErr)
 			return err;
 	}
-	fPipe = new TTaskSafeRingPipe;
+	fPipe = NewNTKPipe();
 	if (fPipe == nil)
 		return MemError();
-	// (the ROM names it 'ntkP': DEVIATION, host blocks are not the pointer heap's)
+	SetPtrName((Ptr) fPipe, 'ntkP');
 	fPipe->Init(fBuffer, false, fPause, fTimeout);
 	return noErr;
 }
@@ -514,7 +545,7 @@ void
 PSerialInTranslator::Delete()
 {
 	if (fLine != nil)
-		free(fLine);
+		NTKFree(fLine);
 }
 
 
@@ -527,10 +558,10 @@ PSerialInTranslator::Init(void* context)
 	SerialTranslatorContext* c = (SerialTranslatorContext*) context;
 	fBuffer = c->fBuffer;
 	fSize = c->fSize;
-	fLine = (char*) malloc(fSize);
+	fLine = (char*) NTKMalloc(fSize);
 	if (fLine == nil)
 		return MemError();
-	// (the ROM names it 'repb': DEVIATION, host blocks are not the pointer heap's)
+	SetPtrName((Ptr) fLine, 'repb');
 	return noErr;
 }
 
@@ -626,7 +657,7 @@ void
 PSerialOutTranslator::Delete()
 {
 	if (fText != nil)
-		free(fText);
+		NTKFree(fText);
 }
 
 
@@ -639,10 +670,10 @@ PSerialOutTranslator::Init(void* context)
 	SerialTranslatorContext* c = (SerialTranslatorContext*) context;
 	fBuffer = c->fBuffer;
 	fSize = c->fSize;
-	fText = (char*) malloc(fSize);
+	fText = (char*) NTKMalloc(fSize);
 	if (fText == nil)
 		return MemError();
-	// (the ROM names it 'repb': DEVIATION, host blocks are not the pointer heap's)
+	SetPtrName((Ptr) fText, 'repb');
 	return noErr;
 }
 
