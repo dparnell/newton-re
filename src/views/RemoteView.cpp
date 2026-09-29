@@ -58,6 +58,17 @@ TRemoteView::Constructor(RefArg context, TView* parent)
 // format that uses the full page, as much of it as the print form covers;
 // the clip put back, the child hidden again and the scaling stopped, even
 // when the drawing throws.
+// ROM BUG, kept: the clip is mapped back to the child's coordinates for
+// the scaler to map forward again, but the visible region is not, and the
+// scaler (mapVis: TQDScaler::SetupScalingRegions) maps it forward all the
+// same - so a remote view whose clipper's visible region is its own bounds
+// (one made under the root view, as the book reader's PageThumbnail makes
+// its thumbnail) draws only the part of its child that lands in the
+// top-left corner, the view's bounds scaled down once more.  A 60x80
+// thumbnail of a 206x214 page shows its top-left 17x23 pixels.  (Every
+// step - TView::Constructor's clipper, ViewVisibleChanged, TView::Draw's
+// SetupVisRgn, ViewIntoBitmap's port, StartScaling, SetupScalingRegions -
+// was checked against the ROM's code.)
 void
 TRemoteView::RealDraw(Rect& bounds)
 {
