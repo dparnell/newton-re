@@ -34,6 +34,7 @@
 #include "FramePartHandler.h"
 #include "DictPartHandler.h"
 #include "Librarian.h"
+#include "PackageNativeCPU.h"
 #include "Soups.h"
 #include "ROMConstants.h"
 #include "RSSymbols.h"
@@ -219,6 +220,9 @@ TNewtWorld::MainConstructor()
 	RegisterModalDialogNatives();
 	RegisterAppDebugNatives();
 	RegisterBookNatives();
+	// a package's native functions that have no host re-expression run on
+	// the ARM interpreter (armcpu/PackageNativeCPU.h; host only)
+	InstallPackageNativeCPU();
 	InitializeCompression();
 	// DEVIATION: the ROM starts the sound manager from the loader
 	// (TLoader::TheMain 0x0011401c), whose services are all NOT YET; the

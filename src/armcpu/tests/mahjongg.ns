@@ -1,0 +1,27 @@
+// A third-party package's native code run on the ARM interpreter
+// (armcpu/PackageNativeCPU.h): Mahjongg Solitaire 2.1 (fixtures/packages/
+// games/Mahjongg2.1) keeps two NewtonScript functions compiled native by
+// NTK, which set the game up; nothing on the host re-expresses them, so
+// they run through the fallback.  The game is opened (its title and a
+// modal "the screen is too small" dialog), "Try Anyhow!" tapped, and the
+// board it deals written to tmp/armcpu-mahjongg.pgm.  With
+// NEWTON_TRACE_ARMCPU=1 each native call prints how it ended; the ctest
+// wants both to have returned (stop 1) and nothing the adapter does not
+// answer.
+//
+//   NEWTON_TRACE_ARMCPU=1 build/host/host/newton --rom <rom.bin> --display 320x480 --erase \
+//       --store tmp/mahjongg.store --headless 28 --package fixtures/packages/games/Mahjongg2.1/Mahjongg.pkg \
+//       --script src/armcpu/tests/mahjongg.ns
+
+AddDelayedCall(func() begin
+    GetRoot().|Mahjongg:Scrawl|:Open();		// (waits on its modal dialog)
+  end, nil, 3000);
+AddDelayedCall(func() begin
+    PenDown(129, 272); PenUp(); IdleStrokes();	// Try Anyhow!
+  end, nil, 8000);
+AddDelayedCall(func() begin
+    ScreenSnapshot("tmp/armcpu-mahjongg.pgm");
+    local app := GetRoot().|Mahjongg:Scrawl|;
+    Print("mahjongg: " & (if app.viewCObject then "open" else "closed"));
+    Print("mahjongg: done");
+  end, nil, 20000);

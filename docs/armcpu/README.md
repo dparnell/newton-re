@@ -11,7 +11,14 @@ re-expressed by hand instead - `src/comms`.)
 |---|---|---|
 | The CPU: ARMv4, ARM state, the StrongARM's instruction set | `src/armcpu/ARMCPU.h` | done, `armcpu.ARMCPU` |
 | The public jump table's names | `tools/newton-rom/analysis/gluetable.py` | done |
-| The adapter: a package's native function run through `SetPackageNativeFallback` | `src/armcpu/PackageNativeCPU.h` | in progress |
+| The adapter: a package's native function run through `SetPackageNativeFallback` | `src/armcpu/PackageNativeCPU.h` | Mahjongg's two native functions run, `armcpu.Mahjongg` |
+
+Mahjongg Solitaire 2.1 (`fixtures/packages/games/Mahjongg2.1`) has two
+NewtonScript functions NTK compiled native, which set the game up; with the
+fallback installed (`TNewtWorld::MainConstructor` calls
+`InstallPackageNativeCPU`) they run to their ends on the interpreter - 18,567
+and 323 instructions - and the game deals its board.
+`NEWTON_TRACE_ARMCPU=1` prints a line per native call, `=2` every call out.
 
 ## The CPU
 
@@ -86,3 +93,40 @@ ARM code a 32-bit view:
 
 Only the entry points a package's code actually uses are implemented on the
 host side; an unimplemented one stops the CPU and reports its name.
+
+## Calls out, as the adapter answers them
+
+- **By name** (`InitGlue`): the object functions (`AllocateRefHandle`,
+  `GetFrameSlotRef`, `Slots`, `BinaryData`, `Clone`, ...), the interpreter's
+  (`GetGInterpreter` answers an opaque address, `IsSend`, `GetReceiver`,
+  `SetCallEnv`, `Call`, `Send`, `Run`, the stack-state blocks), the C library
+  (`memcpy`, `memset`, `strlen`, Norcroft's `__rt_sdiv` and friends:
+  divisor in r0, dividend in r1, quotient and remainder back in r0/r1), and
+  exceptions.
+- **Any native the host has**: an entry with no handler of its own whose
+  private jump-table slot (`PublicJumpTable.cpp` records it) resolves through
+  `ResolveNativeFunction` - the same resolution a ROM function object's
+  funcPtr gets - is called as natives are: the receiver in r0 and the
+  arguments by reference.  NTK passes nought as the receiver of a function
+  that has none (`FAref` and the other frequently called functions); that is
+  nil.
+- **`NativeEntry`** hands the code something to call for a function object:
+  a ROM native becomes a trap address (0x70000000 + n) that calls the host
+  function; a function in the same code binary its ARM address (and its
+  closure); a NewtonScript function nought, so the code goes through the
+  interpreter.
+- **Exceptions**: NTK's code keeps `ExceptionHandler` records
+  (`{CatchHeader, jmp_buf of 0x58 bytes, Exception}`, the DDK's layout) on its
+  stack.  The adapter keeps the chain (`AddExceptionHandler`/`ExitHandler`);
+  `setjmp`/`longjmp` save and restore r4-r11, sp and lr; a throw - by the ARM
+  code, or out of a host function it called - fills in the innermost
+  handler's `Exception` (the name copied into the arena) and longjmps to it,
+  or with no ARM handler goes on out to the host.  NOT YET: the exception's
+  data is not carried into the ARM world.
+- **The ROM image at 0**: NTK's runtime routines choose their path by the
+  ROM's version words at 0x13dc/0x13e0 (0x00020002 on this ROM: the 2.x
+  entry points).
+
+NOT YET: a native function in another package's code binary; objects other
+than symbols in the code binary; host exception data in the ARM world;
+protocol parts.
