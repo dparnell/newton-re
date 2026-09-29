@@ -10,6 +10,7 @@
 #include "ObjectHeap.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 
 // (plain arrays: the C++ library's containers bring in <locale>, which
 // intl/Locale.h shadows on a case-insensitive file system)
@@ -120,5 +121,10 @@ FindPackageNative(RefArg code, ULong offset, long* numArgs, PackageNativeKey* ke
 			return e->fFn;
 		}
 	}
+	// NEWTON_TRACE_PACKAGE_NATIVES: the key a function nothing is
+	// registered for was looked up by (why a re-expression did not run)
+	if (getenv("NEWTON_TRACE_PACKAGE_NATIVES") != nil)
+		fprintf(stderr, "[package natives] none for code length %lu, FNV-1a %#010lx, offset %#lx\n",
+			(unsigned long) length, (unsigned long) hash, (unsigned long) offset);
 	return nil;
 }
