@@ -1,5 +1,5 @@
-obj_3c7705 := binary('kchr, "resources/kchr/3c7705.bin");
-obj_3c823d := binary('kchr, "resources/kchr/3c823d.bin");
+obj_3c7705 := hexfile('kchr, "resources/kchr/3c7705.txt");
+obj_3c823d := hexfile('kchr, "resources/kchr/3c823d.txt");
 obj_4a1d1d := binary('AirusA, "resources/AirusA/4a1d1d.bin");
 obj_4a3065 := {versionNumber: 1, decimalpoint: obj_3c5839, groupSepStr: obj_4a3f95, groupWidth: 3, minusPrefix: obj_4a4e4d, minusSuffix: Rucardpositionalertbutton, currencyPrefix: obj_4a3001, currencySuffix: Rucardpositionalertbutton, decimalLeadingZ: 0};
 obj_4a3095 := " pm";
@@ -29,4 +29,4 @@ obj_4a5641 := {recogAddressDictionary: 41, postalCodeLabel: obj_4a5389, longDate
 obj_4a5705 := "km";
 obj_4a5775 := {_proto: obj_4a4d09, title: obj_434ded, localeSym: 'Sweden, versionNumber: 1, recogNumberDictionary: 12, recogNumbersOnlyDictionary: 121, recogMoneyOnlyDictionary: 120, enabledlanguage: 'Swedish, sortID: 7, firstDayOfWeek: 1, useWeekNumber: true, weekNumberType: 1, keyboardLayout: 'ISO, keycodeMapping: obj_3c823d, recogSymbolsDictionary: 126, distanceMeasure: 'kilometers, distanceLabelShort: obj_4a5705, distanceLabel: obj_4a4f55, defaultPaperSize: 'a4};
 obj_4a57cd := {title: obj_4a43d1, mapping: obj_3c7705};
-obj_64137d := {scripts: [|Array|: 'Roman], systemScript: 0, currentScript: 0, locales: [|Array|: obj_4a4d09, obj_4a5029, obj_4a5225, obj_4a5451, obj_4a5641, obj_4a5775], localeTable: {USA: obj_4a4d09, Canada: obj_4a5029, CanadaFr: obj_4a5225, UK: obj_4a5451, Australia: obj_4a5641, Sweden: obj_4a5775}, systemLocaleBundle: obj_4a4d09, currentlocalebundle: obj_4a4d09, keyboards: [|Array|: obj_4a57cd, {title: "British", mapping: binary('kchr, "resources/kchr/3c7ca1.bin")}, {title: "Swedish", mapping: obj_3c823d}], Keyboard: obj_4a57cd};
+obj_64137d := {scripts: [|Array|: 'Roman], systemScript: 0, currentScript: 0, locales: [|Array|: obj_4a4d09, obj_4a5029, obj_4a5225, obj_4a5451, obj_4a5641, obj_4a5775], localeTable: {USA: obj_4a4d09, Canada: obj_4a5029, CanadaFr: obj_4a5225, UK: obj_4a5451, Australia: obj_4a5641, Sweden: obj_4a5775}, systemLocaleBundle: obj_4a4d09, currentlocalebundle: obj_4a4d09, keyboards: [|Array|: obj_4a57cd, {title: "British", mapping: hexfile('kchr, "resources/kchr/3c7ca1.txt")}, {title: "Swedish", mapping: obj_3c823d}], Keyboard: obj_4a57cd};
