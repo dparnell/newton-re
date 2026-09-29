@@ -115,6 +115,21 @@ The damage is then between the allocation named and the one before it.
 walk.  The code is `src/host/HostHeapCheck.cpp`; it is how the cursive
 lock-up was traced to `CreateTrigramHeader` asking for a ROM size.
 
+## samescreen.py - two boots, one screen
+
+    python tools/host/samescreen.py --newton build/host/host/newton \
+        --script src/host/demo/newton.ns --snapshot build/newton-demo.pgm \
+        --run "--rom build/MP2x00US/rom.bin" --run "--objects <object file>"
+
+- **Purpose:** boots `newton` once for each `--run` (its arguments; `--headless 5 --script <script>` added) and compares the
+  screen snapshots the script writes, byte for byte.
+- **How:** each boot runs in a fresh temporary directory, so its snapshot, written at `--snapshot` relative to the working
+  directory, cannot collide with another boot's or another test's.
+- **Output:** "the N boots drew the same screen" and exit 0; or, for each boot that differs from the first, how many bytes
+  differ and where the first is, and exit 1; exit 2 when a boot wrote no snapshot. `--keep DIR` copies the snapshots out.
+- **Used by:** ctest `host.NewtonNoROMSameScreen`, the proof that the OS booted on the object file built from the ROM source
+  tree draws what it draws booted on the ROM image (`docs/rom-free/README.md`).
+
 ## stress.py - host tests under load
 
 A test that waits a fixed time for something asynchronous passes on an

@@ -79,10 +79,9 @@ PackageContaining(const UByte* part, ULong* partOffset)
 		}
 	}
 	ULong limit = 0x20000;
-	ULong imageSize = 0;
-	const UByte* rom = (const UByte*) ROMImageBase(&imageSize);
-	if (rom != nil && part >= rom && part < rom + imageSize)
-		limit = (ULong) (part - rom);
+	const void* region = nil;
+	if (ROMAddressOf(part, nil, &region))
+		limit = (ULong) (part - (const UByte*) region);
 	for (ULong back = kPackageDirectorySize; back <= limit; back += kARMWord)
 	{
 		if (HasPartAt(part - back, back))
@@ -147,11 +146,12 @@ ImportPackagePart(Ptr data, PartInfo* info, Boolean* inROMImage)
 	long align = 4;
 	if (package != nil && ((const PackageDirectory*) package)->fSignature[7] == '0')
 		align = 8;
-	ULong imageSize = 0;
-	const char* rom = (const char*) ROMImageBase(&imageSize);
-	Boolean inROM = rom != nil && data >= rom && data < rom + imageSize;
+	// (a part in the ROM - the image, or the extension an object file
+	// carries - at its ROM address)
+	ULong address = 0;
+	Boolean inROM = ROMAddressOf(data, &address, nil);
 	*inROMImage = inROM;
-	ULong32 refBase = inROM ? (ULong32) (data - rom) : (ULong32) partOffset;
+	ULong32 refBase = inROM ? (ULong32) address : (ULong32) partOffset;
 	TImportedObjectArea* area = ImportFramesPart(data, info->size, refBase, align);
 	if (area == nil)
 	{
@@ -180,9 +180,7 @@ FindOrImportPackagePart(Ptr data, PartInfo* info, Boolean* inROMImage)
 	TImportedObjectArea* area = FindFramesPart((const void*) data);
 	if (area == nil)
 		return ImportPackagePart(data, info, inROMImage);
-	ULong imageSize = 0;
-	const char* rom = (const char*) ROMImageBase(&imageSize);
-	*inROMImage = rom != nil && data >= rom && data < rom + imageSize;
+	*inROMImage = ROMAddressOf(data, nil, nil);
 	return area;
 }
 

@@ -18,7 +18,7 @@ The output (-o) is what the host loads in place of a ROM image
 area's base address and size, the magic-pointer table's address and its
 count - then the area, then the magic pointers as big-endian words, then
 (version 2) the count of other blocks of ROM data and each one's address,
-length and bytes (rounded to a word): the lexicons.
+length and bytes (rounded to a word): the lexicons, and the ROM extension.
     python romsrc.py roundtrip build/MP2x00US -o <dir> --newtonscript <exe>   # both, as the ctest runs them
 
 `build` needs the host's newtonscript (--newtonscript) to compile the
@@ -40,6 +40,12 @@ binary but strings and reals is kept as its bytes):
                      C data outside the object area, some of it in the ROM
                      extension), each its size word then the trie; the .tsv
                      their ROM addresses (tools/newton-rom/analysis/romdicts.py)
+    rex/, rex.tsv    the ROM extension (the "high" file: its header, config
+                     entries and the ten built-in packages), cut into pieces
+                     in address order - each package a .pkg file as the ROM
+                     holds it (its frames parts' refs ROM addresses: see
+                     tools/newton-rom/analysis/packages.py), each config
+                     entry a .bin - which the builder puts back together
     magic.tsv        the magic-pointer table (gROMMagicPointerTable): each
                      entry's index and what it is - an object's path in
                      the layout, or a value
@@ -111,6 +117,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import nsfunctions as nf			# noqa: E402
 import nsdecompile as nd			# noqa: E402
 import romdicts						# noqa: E402
+import packages as rexpackages		# noqa: E402
+import json							# noqa: E402
 import subprocess					# noqa: E402
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "imaging"))
@@ -161,8 +169,9 @@ def string_text(text: str) -> str:
 # ---- extraction
 
 class Extractor:
-	def __init__(self, rom: nf.ROM, out: str):
+	def __init__(self, rom: nf.ROM, out: str, build_dir: str = None):
 		self.rom = rom
+		self.build_dir = build_dir
 		self.out = out
 		self.objs = list(nf.objects(rom))
 		self.inside = set(self.objs)
@@ -219,6 +228,38 @@ class Extractor:
 				hz = rate >> 2
 			found[slots["samples"]] = max(1, int(round(hz)))
 		return found
+
+	def write_rex(self):
+		"""The ROM extension as pieces: every config entry and every package
+		of the package list a file, what lies between them a file too."""
+		layout_path = os.path.join(self.build_dir, "layout.json")
+		with open(layout_path, encoding="utf-8") as f:
+			rex = json.load(f).get("rex")
+		if rex is None:
+			return
+		start, end = rex["start"], rex["start"] + rex["length"]
+		names = {start: "header"}
+		for e in rex["entries"]:
+			names.setdefault(e["address"], "%s_%x" % (re.sub(r"[^A-Za-z0-9]", "_", e["tag"].strip()), e["address"]))
+		_, pkgs = rexpackages.rex_packages(self.build_dir)
+		cuts = {start, end}
+		for e in rex["entries"]:
+			cuts |= {e["address"], e["address"] + e["size"]}
+		for p in pkgs:
+			cuts |= {p["base"], p["base"] + p["size"]}
+			names[p["base"]] = re.sub(r"[^A-Za-z0-9_]", "_", p["name"]) + ".pkg"
+		cuts = sorted(c for c in cuts if start <= c <= end)
+		os.makedirs(os.path.join(self.out, "rex"), exist_ok=True)
+		rom = self.rom.rom
+		with open(os.path.join(self.out, "rex.tsv"), "w", encoding="utf-8", newline="\n") as f:
+			f.write("# the ROM extension: its pieces in address order (address, file)\n")
+			f.write("rex\t%x\t%x\n" % (start, end - start))
+			for a, b in zip(cuts, cuts[1:]):
+				name = names.get(a, "bytes_%x" % a)
+				rel = "rex/" + (name if "." in name else name + ".bin")
+				with open(os.path.join(self.out, rel), "wb") as out:
+					out.write(rom[a:b])
+				f.write("%x\t%s\n" % (a, rel))
 
 	def r_names(self):
 		"""The ROM's object constants: R<name>, whose word holds the ref (with
@@ -459,6 +500,7 @@ class Extractor:
 				with open(os.path.join(self.out, rel), "wb") as out:
 					out.write(rom.rom[address:address + 4 + size])
 				f.write("%x\t%s\t%s\n" % (address, name, rel))
+		self.write_rex()
 		with open(os.path.join(self.out, "magic.tsv"), "w", encoding="utf-8", newline="\n") as f:
 			count = rom.word(rom.mp_table)
 			f.write("# the magic-pointer table: @index, then the object (its path) or value\n")
@@ -948,6 +990,27 @@ class Builder:
 					with open(os.path.join(self.src, rel), "rb") as blob:
 						self.blocks.append((int(address, 16), blob.read()))
 
+		# the ROM extension, put back together
+		rex = os.path.join(self.src, "rex.tsv")
+		if os.path.exists(rex):
+			with open(rex, encoding="utf-8") as f:
+				data = bytearray()
+				base = None
+				for line in f:
+					if line.startswith("#"):
+						continue
+					fields = line.rstrip("\n").split("\t")
+					if fields[0] == "rex":
+						base, length = int(fields[1], 16), int(fields[2], 16)
+						continue
+					if int(fields[0], 16) != base + len(data):
+						raise ValueError("rex.tsv: %s is not where the piece before it ends" % fields[1])
+					with open(os.path.join(self.src, fields[1]), "rb") as piece:
+						data += piece.read()
+				if len(data) != length:
+					raise ValueError("rex.tsv: the pieces make %#x bytes, not %#x" % (len(data), length))
+				self.blocks.append((base, bytes(data)))
+
 		out = bytearray([PAD]) * area_size
 		for a, path, flags, extra in entries:
 			if path.startswith("'"):
@@ -996,7 +1059,7 @@ def check_magic(builder, rom):
 def check_blocks(builder, rom):
 	bad = [a for a, data in builder.blocks if rom.rom[a:a + len(data)] != data]
 	if bad:
-		print("%d lexicons differ from the ROM's, e.g. %#x" % (len(bad), bad[0]), file=sys.stderr)
+		print("%d blocks of ROM data (lexicons, the extension) differ from the ROM's, e.g. %#x" % (len(bad), bad[0]), file=sys.stderr)
 		return 1
 	return 0
 
@@ -1044,7 +1107,7 @@ def main(argv=None):
 					+ (["-o", a.objects] if a.objects else []))
 	if a.command == "extract":
 		rom = nf.ROM(a.build_dir)
-		e = Extractor(rom, a.output)
+		e = Extractor(rom, a.output, a.build_dir)
 		n, m = e.run()
 		print("%d definitions (%d taken from compiled functions) and %d maps written to %s"
 			  % (n, e.same_count, m, a.output))
@@ -1058,7 +1121,7 @@ def main(argv=None):
 	if a.check:
 		rom = nf.ROM(a.check)
 		result = check(base, area, rom, None) | check_magic(builder, rom) | check_blocks(builder, rom)
-		print("the object area, magic pointers and %d lexicons are %s"
+		print("the object area, magic pointers and %d blocks of ROM data (the lexicons, the extension) are %s"
 			  % (len(builder.blocks), "identical to the ROM's" if result == 0 else "NOT the ROM's"))
 		return result
 	return 0

@@ -64,4 +64,12 @@ const void*	ROMImageBase(ULong* size);
 // when neither has them.
 const void*	ROMBytesAt(ULong address, ULong length);
 
+// The places the ROM's bytes are: the image (address 0 on), then each block
+// an object file carries (the lexicons, the ROM extension).  ROMAddressOf
+// says whether a pointer is into one of them, and at what ROM address -
+// what a package in the ROM extension is imported at.
+long		ROMRegionCount(void);
+const void*	ROMRegion(long index, ULong* address, ULong* size);
+Boolean		ROMAddressOf(const void* p, ULong* address, const void** regionStart);
+
 #endif	/* __ROMIMPORT_H */

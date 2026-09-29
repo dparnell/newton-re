@@ -36,8 +36,9 @@
 // such table (os600/kernel/GenericSWI.cpp answers
 // kError_Call_Not_Implemented for that selector).  The extensions are
 // found in the ROM's own bytes instead, which the host keeps for exactly
-// this (frames/ROMImport.h's ROMImageBase); a RExBlock header is looked
-// for on word boundaries, as the signature's comment in
+// this (frames/ROMImport.h's ROMRegion: the image, or the extension an
+// object file built from the ROM source tree carries); a RExBlock header
+// is looked for on word boundaries, as the signature's comment in
 // ddk/ROMExtension.h says it is meant to be.  The answer is where the
 // entry is in the host's copy of the image - the address the package
 // manager and the frames part handlers read it at - rather than its ROM
@@ -47,11 +48,13 @@ GetRExConfigEntry(ULong rexId, ULong tag, ULong* size)
 {
 	if (size != nil)
 		*size = 0;
-	ULong imageSize = 0;
-	const unsigned char* rom = (const unsigned char*) ROMImageBase(&imageSize);
+	for (long region = 0; region < ROMRegionCount(); region++)
+	{
+	ULong base = 0, imageSize = 0;
+	const unsigned char* rom = (const unsigned char*) ROMRegion(region, &base, &imageSize);
 	if (rom == nil)
-		return 0;
-	for (ULong at = 0; at + sizeof(RExHeader) <= imageSize; at += kARMWord)
+		continue;
+	for (ULong at = (4 - (base & 3)) & 3; at + sizeof(RExHeader) <= imageSize; at += kARMWord)
 	{
 		if (GetBigEndianWord(rom + at) != kRExSignatureA || GetBigEndianWord(rom + at + 4) != kRExSignatureB)
 			continue;
@@ -71,6 +74,7 @@ GetRExConfigEntry(ULong rexId, ULong tag, ULong* size)
 			// the offset is from the extension's start
 			return (VAddr) (rom + at + GetBigEndianWord(rom + entry + kARMWord));
 		}
+	}
 	}
 	return 0;
 }

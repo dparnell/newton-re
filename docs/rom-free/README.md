@@ -334,10 +334,13 @@ does it, on the file `host.ROMSourceRoundTrip` writes.
   Names, Dates, Undo, Find, Assist), the date and battery, the Unfiled
   Notes folder tab, and the demo slip with its buttons and a paragraph to
   type in.
-- The same boot under `--rom` comes up on the **Setup assistant's
-  Welcome** instead. The Setup assistant is one of the ROM extension's
-  packages, and the object file has no extension yet. That is the next
-  row of the table, not a flaw in the objects.
+- **With the ROM extension in the tree (below), the boot comes up on the
+  Setup assistant's Welcome**, as the boot on the image does, and **the
+  two screens are the same, pixel for pixel**. ctest
+  `host.NewtonNoROMSameScreen` (`tools/host/samescreen.py`) boots both
+  ways and compares the snapshots. Before the extension came into the
+  tree, the no-image boot came up on the Notepad instead, because the
+  Setup assistant is one of the extension's packages.
 - A first try showed that the recognisers could not do without the
   lexicons (`ReplaceDictionary` over no data). So the lexicons came
   forward from 3d. The tree has them as `lexicons/<name>.bin`, 40 tries
@@ -347,6 +350,50 @@ does it, on the file `host.ROMSourceRoundTrip` writes.
   bytes out of the image or out of those blocks.
   `InitROMDictionaryData` asks it, where it read the image. `--check`
   compares the lexicons with the ROM's too.
+
+### The ROM extension: kept as package files first
+
+The extension ("the high file" in `DebugRom/`, at `ROM$$Size`,
+0x71fc4c, 0xce3fc bytes) is in the tree as `rex/` and `rex.tsv`. It is
+cut at every config entry and every package of the package list, in
+address order:
+
+- the header;
+- `dio`, `gpio`, `ralc`;
+- the ten packages as `.pkg` files (Cardfile, Connection, FaxViewer,
+  Formulas, help book, ListView, ScreenBuffer, ScreenDrivers, Setup,
+  WorldData);
+- `ptpt`, `glpt`, `fexp`, `jump` and the padding between them.
+
+The builder puts the pieces back together as one more block of the
+object file, and `--check` compares it with the ROM's.
+
+On the host:
+
+- `GetRExConfigEntry` looks for the extension's header in every place
+  the ROM's bytes are, through `frames/ROMImport.h`'s `ROMRegion`: the
+  image, or the object file's blocks.
+- A frames part in any of those places is imported at its ROM address
+  (`ROMAddressOf`), as it is from the image.
+
+**Decision: the packages are kept as package files first, not rebuilt
+from decompiled source.**
+
+- A package in the ROM is not in the form an outside package is: its
+  frames parts' refs are ROM addresses. So a `.pkg` here is the ROM's
+  bytes, the unit the package manager loads, and `packages.py
+  --relocatable` makes a loadable copy of one.
+- Kept as bytes, the extension reaches the goal directly: the same boot
+  with and without the image.
+- Rebuilding a package from source is the object area's machinery again,
+  applied to each frames part: its objects as definitions and maps, its
+  functions decompiled, its bitmaps as PNG, laid out at the part's
+  address. It is the next piece of work (step 2's item 6). It touches
+  the four frames packages that are applications (Cardfile, Connection,
+  Formulas, Setup), the help book, FaxViewer, ListView and WorldData's
+  soup. ScreenBuffer and ScreenDrivers are ARM protocol code, which stays
+  bytes until the host has an ARM story for them (the host registers its
+  own screen driver).
 
 ### The plan
 
@@ -368,18 +415,17 @@ does it, on the file `host.ROMSourceRoundTrip` writes.
     that reads one already copes with that.
   - `newtonscript` and `newton` take `--objects <file>` in place of
     `--rom`.
-- **3c. The proof. Done in part.**
+- **3c. The proof. Done.**
   - `host.NewtonNoROM` boots `newton --headless` on the built objects,
     with no image anywhere it could be found.
-  - Comparing the screen with the `--rom` boot waits on the extension's
-    packages (see above).
+  - `host.NewtonNoROMSameScreen` compares its screen with the `--rom`
+    boot's, pixel for pixel.
   - A `newtonscript -e` over the built objects must answer as it does
     over the image, for example `ROMConstant("canonicalTextShape")`.
 - **3d. Then the rows that come back one at a time:**
   - the lexicons (done, above);
-  - **the ROM extension's packages, from the tree: next.** The Setup
-    assistant and the rest of the extension's ten packages. Then the
-    boots with and without `--rom` should draw the same screen;
+  - the ROM extension's packages, from the tree (done, as package files;
+    from source is next);
   - the area laid out freely, with the builder generating
     `ROMConstants.h`.
 

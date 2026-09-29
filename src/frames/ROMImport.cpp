@@ -91,6 +91,55 @@ ROMBytesAt(ULong address, ULong length)
 }
 
 
+long
+ROMRegionCount(void)
+{
+	return (gROMImageBase != nil ? 1 : 0) + gBuiltBlockCount;
+}
+
+
+const void*
+ROMRegion(long index, ULong* address, ULong* size)
+{
+	if (gROMImageBase != nil)
+	{
+		if (index == 0)
+		{
+			*address = 0;
+			*size = gROMImageSize;
+			return gROMImageBase;
+		}
+		index--;
+	}
+	if (index < 0 || index >= gBuiltBlockCount)
+		return nil;
+	*address = gBuiltBlocks[index].fAddress;
+	*size = gBuiltBlocks[index].fLength;
+	return gBuiltBlocks[index].fData;
+}
+
+
+Boolean
+ROMAddressOf(const void* p, ULong* address, const void** regionStart)
+{
+	const unsigned char* q = (const unsigned char*) p;
+	for (long i = 0; i < ROMRegionCount(); i++)
+	{
+		ULong base, size;
+		const unsigned char* region = (const unsigned char*) ROMRegion(i, &base, &size);
+		if (region != nil && q >= region && q < region + size)
+		{
+			if (address != nil)
+				*address = base + (ULong) (q - region);
+			if (regionStart != nil)
+				*regionStart = region;
+			return true;
+		}
+	}
+	return false;
+}
+
+
 const void*
 ROMImageBase(ULong* size)
 {

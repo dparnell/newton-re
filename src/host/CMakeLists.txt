@@ -476,6 +476,18 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD}/sym
                          ENVIRONMENT "NEWTON_ROM=${CMAKE_BINARY_DIR}/no-rom-image"
                          PASS_REGULAR_EXPRESSION "the world is up.*written build/newton-demo.pgm")
 
+    # ... and it draws exactly what the boot on the ROM image draws (the
+    # Setup assistant's Welcome, out of the ROM extension the object file
+    # carries), pixel for pixel (tools/host/samescreen.py)
+    add_test(NAME host.NewtonNoROMSameScreen
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/host/samescreen.py
+                     --newton $<TARGET_FILE:newton> --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/newton.ns
+                     --snapshot build/newton-demo.pgm
+                     --run "--rom ${NEWTON_ROM_BIN}" --run "--objects ${CMAKE_BINARY_DIR}/romsrc-objects.bin"
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonNoROMSameScreen PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED romsrc_objects
+                         ENVIRONMENT "NEWTON_ROM=${CMAKE_BINARY_DIR}/no-rom-image")
+
     # `cmake --build <dir> --target romsrc`: the source tree, generated into
     # the build directory (it is not kept in the repository yet - why is
     # docs/rom-free/README.md's "Where the tree lives")
