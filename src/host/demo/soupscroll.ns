@@ -1,0 +1,65 @@
+// A roll over a soup cursor scrolled (views/View.cpp: TView::SyncScrollSoup,
+// reached through the view method SyncScroll with a cursor for its items):
+// four entries in a soup on the internal store, a roll 50 high
+// whose viewSetupChildrenScript makes a child for the entry at the cursor
+// and the one after; stepped down and up, printing where the cursor and
+// the roll's viewOriginY are after each step.
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//       --headless 20 --script src/host/demo/soupscroll.ns
+//
+// The entries are 30, 80, 30 and 30 high; the roll's overlapScrollAmount
+// is 16, so a
+// step is 50 - 16 = 34.  Down from entry 0 goes on to entry 1 (entry 0
+// fits); down again scrolls into entry 1 (80 is taller than the roll) to
+// 34; down again leaves it (46 left fits) for entry 2 at 0.  Up from there
+// goes back into entry 1 as far as whole steps go, 80 - 80 % 34 = 68; up
+// again a step, 34.  Down from entry 3, the last, goes nowhere and puts
+// the cursor back to its start; up at the first entry goes nowhere
+// either.
+
+AddDelayedCall(func() begin
+	local store := GetStores()[0];
+	local soup := store:GetSoup("SoupScrollDemo");
+	if soup then soup:RemoveFromStoreXmit(nil);
+	soup := store:CreateSoupXmit("SoupScrollDemo", [], nil);
+	foreach i, h in [30, 80, 30, 30] do
+		soup:AddXmit({n: i, height: h}, nil);
+	local cursor := Query(soup, {type: 'index});
+	local roll := AddView(GetRoot(), {viewClass: 74, viewFlags: 1,
+		viewBounds: {left: 10, top: 40, right: 110, bottom: 90},
+		cursor: cursor,
+		overlapScrollAmount: 16,	// (else twice the viewLineSpacing, found through the parents)
+		viewSetupChildrenScript: func() begin
+			local kids := [];
+			local e := cursor:Entry();
+			if e then AddArraySlot(kids, {viewClass: 74, viewFlags: 1,
+				viewBounds: {left: 0, top: 0, right: 90, bottom: e.height}});
+			self.stepChildren := kids;
+		end});
+	RefreshViews();
+	local where := func() cursor:Entry().n;
+	Print("soupscroll: start at " & call where with ());
+	local r := roll:SyncScroll(cursor, 0, 1);
+	Print("soupscroll: down -> " & call where with () & ", answer " & (if r then "something" else "nil"));
+	roll:SyncScroll(cursor, 0, 1);
+	Print("soupscroll: down into the tall one -> " & call where with () & ", origin " & NumberStr(roll.viewOriginY));
+	roll:SyncScroll(cursor, 0, 1);
+	Print("soupscroll: down past it -> " & call where with () & ", origin " & NumberStr(roll.viewOriginY));
+	roll:SyncScroll(cursor, 0, -1);
+	Print("soupscroll: up into the tall one -> " & call where with () & ", origin " & NumberStr(roll.viewOriginY));
+	roll:SyncScroll(cursor, 0, -1);
+	Print("soupscroll: up a step -> " & call where with () & ", origin " & NumberStr(roll.viewOriginY));
+	cursor:Move(2);
+	Print("soupscroll: moved to " & call where with ());
+	roll:SyncScroll(cursor, 0, 1);
+	Print("soupscroll: down past the last -> " & call where with ());
+	roll:SyncScroll(cursor, 0, -1);
+	Print("soupscroll: up at the first -> " & call where with ());
+	cursor:Move(2);
+	roll:SyncScroll(cursor, 0, -1);
+	Print("soupscroll: up from the third -> " & call where with () & ", origin " & NumberStr(roll.viewOriginY));
+	roll:Close();
+	soup:RemoveFromStoreXmit(nil);
+	Print("soupscroll: done");
+end, nil, 3000);

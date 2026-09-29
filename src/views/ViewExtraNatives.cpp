@@ -200,18 +200,14 @@ FDisplaySplashGraphic(RefArg /*rcvr*/, RefArg bounds)
 
 // ROM 0x001eaf74 FSyncScrollX
 // roll:SyncScroll(items, index, direction) - a roll's items scrolled a
-// step (TView::SyncScroll); items a soup cursor (a frame) go through
-// TView::SyncScrollSoup instead.
-//
-// NOT YET RECONSTRUCTED: TView::SyncScrollSoup 0x00263034 (the cursor's
-// entries scrolled by the roll's overlapScrollAmount or twice its line
-// spacing) - a roll over a cursor answers nil and does not move.
+// step (TView::SyncScroll); items that are a soup cursor (a frame) go
+// through TView::SyncScrollSoup instead, which takes no index.
 static Ref
 FSyncScrollX(RefArg rcvr, RefArg items, RefArg index, RefArg direction)
 {
 	TView* view = FailGetView(rcvr);
 	if ((ObjectFlags(items) & kObjFrame) != 0)
-		return NILREF;
+		return view->SyncScrollSoup(items, direction);
 	return view->SyncScroll(items, index, direction);
 }
 

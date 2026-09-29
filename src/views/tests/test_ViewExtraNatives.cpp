@@ -191,8 +191,7 @@ TestSyncScroll()
 	// up at the top: nothing to do
 	Eval("ctxRoll:SyncScroll(rollItems, 1, -1)");
 	EXPECT(ISNIL(RefVar(Eval("ctxRoll:SyncScroll(rollItems, 0, -1)"))));
-	// a cursor for the items (a frame): the soup path is NOT YET, nil
-	EXPECT(ISNIL(RefVar(Eval("ctxRoll:SyncScroll({}, 0, 1)"))));
+	// (a cursor for the items goes through SyncScrollSoup: host.NewtonSoupScroll)
 	Eval("ctxRoll:Close()");
 }
 

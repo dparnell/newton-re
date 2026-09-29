@@ -40,6 +40,7 @@
 #include "PickView.h"		// GetAppAreaBounds
 #include "PolygonView.h"	// AlignPtToGrid
 #include "Animate.h"		// TAnimate (SyncScroll)
+#include "Cursors.h"		// CursorNext etc. (SyncScrollSoup)
 #include "Bits.h"
 #include <string.h>
 
@@ -3086,6 +3087,143 @@ TView::SyncScroll(RefArg items, RefArg indexRef, RefArg directionRef)
 		gRootView->Update(nil);
 	}
 	return showing;
+}
+
+
+// ROM 0x00263034 SyncScrollSoup__5TViewFRC6RefVarT1
+// A roll over a soup cursor scrolled a step: the cursor's entries are the
+// items, each with its `height`, and the roll's viewOriginY is how far
+// into the entry at the cursor it is scrolled.  A step is the roll's
+// height less an overlap (its overlapScrollAmount; else twice its
+// viewLineSpacing; else 16).
+//
+// Down: further into an entry taller than the roll (or the roll's
+// lastItem), a step; else on to the next entry (nothing when there is
+// none - the cursor put back to its start), sliding the rest of this one
+// away.  Up: back up the entry scrolled into, a step (not past its top);
+// else back to the entry before (none: the cursor reset, nothing done) -
+// into it as far as whole steps go when it is taller than the roll.  Then
+// the roll's viewSetupChildrenScript makes its children afresh from the
+// cursor, the views of the ones already showing are kept (by their data),
+// the others made (going up, put in front) and the rest removed, and the
+// slide is animated with the scroll sound over the roll less its bottom 5
+// pixels, or with no slide the roll is simply redrawn.  ==> nil.
+Ref
+TView::SyncScrollSoup(RefArg cursor, RefArg directionRef)
+{
+	RefVar scratch(GetProto(RSSYMoverlapscrollamount));
+	long overlap = 16;
+	if (NOTNIL(scratch))
+		overlap = RINT(scratch);
+	else
+	{
+		scratch = GetVar(RSSYMviewlinespacing);
+		if (NOTNIL(scratch))
+			overlap = RINT(scratch) * 2;
+	}
+	long height = (short) (viewBounds.bottom - viewBounds.top);
+	long direction = RINT(directionRef);
+	scratch = GetCacheProto(kIndexViewOriginY);
+	long scrolled = ISNIL(scratch) ? 0 : RINT(scratch);
+	long origin = 0;
+	long slide;
+	if (direction < 0)
+	{
+		if (scrolled == 0)
+		{
+			scratch = CursorPrev(cursor);
+			if (ISNIL(scratch))
+			{
+				CursorReset(cursor);
+				return NILREF;
+			}
+			long h = RINT(RefVar(GetVariable(scratch, RSSYMheight, nil, 0)));
+			slide = -h;
+			if (h > height)
+			{
+				origin = h - h % (height - overlap);
+				slide = origin - h;
+			}
+		}
+		else
+		{
+			origin = scrolled - (height - overlap);
+			slide = -(height - overlap);
+			if (origin < 0)
+				origin = 0;
+		}
+	}
+	else
+	{
+		scratch = CursorEntry(cursor);
+		long left = RINT(RefVar(GetVariable(scratch, RSSYMheight, nil, 0))) - scrolled;
+		if (left > height || EQ(scratch, RefVar(GetProto(RSSYMlastitem))))
+		{
+			origin = scrolled + height - overlap;
+			slide = height - overlap;
+		}
+		else
+		{
+			slide = left;
+			if (ISNIL(RefVar(CursorNext(cursor))))
+			{
+				CursorReset(cursor);
+				return NILREF;
+			}
+		}
+	}
+	if (origin != scrolled)
+	{
+		InvalidateSlotCache(kIndexViewOriginY);
+		SetContextSlot(RSSYMvieworiginy, RefVar(MAKEINT(origin)));
+	}
+	TAnimate anim;
+	if (slide != 0)
+	{
+		Rect bounds = viewBounds;
+		bounds.bottom -= 5;
+		anim.SetupSlideEffect(this, bounds, -slide, 0);
+	}
+	RunCacheScript(kIndexViewSetupChildrenScript, RefVar(NILREF));
+	RefVar children(Children());
+	long count = ISNIL(children) ? 0 : Length(children);
+	RefVar stepChildren(GetProto(RSSYMstepchildren));
+	long total = count;
+	if (NOTNIL(stepChildren))
+		total += Length(stepChildren);
+	long front = 0;
+	for (long i = 0; i < total; i++)
+	{
+		scratch = i < count ? GetArraySlotRef(children, i) : GetArraySlotRef(stepChildren, i - count);
+		TView* child = DataExists(fChildren, scratch);
+		if (child == nil)
+		{
+			child = AddView(scratch);
+			if (direction < 0)
+			{
+				fChildren->RemoveElementsAt(fChildren->GetArraySize() - 1, 1);
+				fChildren->InsertAt(front++, child);
+			}
+		}
+		child->SetFlags(vIsMarked);
+	}
+	RemoveUnmarked();
+	TViewLoop loop(fChildren);
+	for (TView* child = loop.Next(); child != nil; child = loop.Next())
+		child->RecalcBounds();
+	if (slide != 0)
+	{
+		anim.DoEffect(direction >= 0 ? RefVar(RSSYMscrolldownsound) : RefVar(RSSYMscrollupsound));
+		Rect bounds = viewBounds;
+		bounds.bottom -= 5;
+		gRootView->Invalidate(TRectangularRegion(bounds), this);
+	}
+	else
+	{
+		Dirty(nil);
+		gRootView->Update(nil);
+	}
+	return NILREF;
 }
 
 
