@@ -438,6 +438,15 @@ endif()
 # compiled again by newtonscript (host/NSRoundTrip.cpp) and compared with
 # the ROM's own; the percentage that round-trip must not fall
 find_package(Python3 COMPONENTS Interpreter)
+
+# the pure-Python PNG reader and writer the ROM's bitmaps are extracted with
+# (tools/imaging/png.py)
+if(Python3_FOUND)
+    add_test(NAME tools.PNG
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/imaging/test_png.py
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+endif()
+
 if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD}/symbols.json)
     add_test(NAME host.NSDecompileRoundTrip
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/newton-rom/analysis/nsdecompile.py
