@@ -18,8 +18,10 @@ add_library(text STATIC
     TXRulerRange.cpp
     TXRun.cpp
     TXStream.cpp
+    TXUtilities.cpp
 )
-target_link_libraries(text PUBLIC newton_config utility toolbox frames)
+# (qd for the clipping helpers; views for the root view they dirty)
+target_link_libraries(text PUBLIC newton_config utility toolbox frames qd views)
 target_include_directories(text PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(tests)

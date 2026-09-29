@@ -23,3 +23,8 @@ add_executable(test_TXRunRange test_TXRunRange.cpp)
 target_link_libraries(test_TXRunRange PRIVATE text memory)
 add_test(NAME text.TXRunRange COMMAND test_TXRunRange)
 set_tests_properties(text.TXRunRange PROPERTIES TIMEOUT 120)
+
+add_executable(test_TXUtilities test_TXUtilities.cpp)
+target_link_libraries(test_TXUtilities PRIVATE text memory)
+add_test(NAME text.TXUtilities COMMAND test_TXUtilities)
+set_tests_properties(text.TXUtilities PROPERTIES TIMEOUT 120)
