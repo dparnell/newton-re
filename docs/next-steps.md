@@ -253,12 +253,22 @@ other in are `docs/text/README.md`'s "Not yet reconstructed - the plan".
 Done so far: `TXOffset`/`TXOffsetRange` (the ROM's two-word TXOffset is
 `TXOffsetPos` where it is passed by address), `TXRun`/`TXRunRange`,
 `TXRulerRange` with the paragraph measures, the helpers
-(`TXUtilities.h`), `TXLinesHeights` and `TXParagCtrlChars`.  Next: the
-concrete runs (`TXNewtTextRun`, `TXGraphicsRun`) and `TXStyledText`, then
-`TXLine`, the frames and formatters, the display and hilite,
-`Textension`, and `TXView` with its natives and a demo.  `TXScrollRect`
-waits on QuickDraw's `ScrollRect` (0x00340378), which is not in `qd/`
-yet.
+(`TXUtilities.h`), `TXLinesHeights` and `TXParagCtrlChars`; and layers
+2-4 of the plan for a view's one frame - `TXNewtTextRun`,
+`TXGraphicsRun`/`TXNewtGraphicsRun`, `TXStyledText`, `TXLine`, the frames
+(`TXFrames`, `TXMonoSizeFrames`, `TXMonoFrame`, `TXSectFrames`), the frame
+formatters (`TXFrameFormatter`, `TXMonoFrameFormatter`, `gFramesEditInfo`)
+and `TXFormatter`, over QuickDraw's text-object questions
+(`qd/TextObject.h`: `CharToPoint`, `PointToChar`, `GetTextObjField`).
+NOT YET in layer 4: the paginated side (`TXMultiFrameFormatter`,
+`TXPageFrames`, `TXPageFormatter`, 0x002413e0-0x00242a2c).  Next: layer
+5, `TXDisplay`/`TXNewtDisplay` and `TXHilite`/`TXNewtHilite`; then
+`Textension` and the edit commands, and `TXView` with its natives and a
+demo.  Open in `qd/`: `ScrollRect` (0x00340378, for `TXScrollRect`),
+`DoTextOnce` ignoring the options' +0x14 selector (9: text-object flag
+0x40000; 10: the options discarded), and `FindWordBreaks` with no
+line-break table (a fitted length ending exactly at a word's end breaks
+the line one word early; the text tests work round it).
 
 ## The natives still unanswered
 
