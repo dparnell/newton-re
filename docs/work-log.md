@@ -86,6 +86,39 @@ bugs and ROM bugs found on the way.
   `layout.tsv` manifest, and `rombuild.py` proved by a byte-identical
   rebuild of the area.
 
+## 2026-09-30: a Note beamed from one host to another
+
+- `comms/Beamer.h` (e92e34c): `TBeamer` whole (0x3b6f0-0x3dc10) - Open
+  (the probe, then 'irda' or 'slir', or the service zapCommToolId
+  names), the endpoint opened in a forked world with the ROM's options,
+  the pipe (framed for 'slir'), the item count, a header frame, the
+  receiver's room answer and the item as NSOF with the progress gauge;
+  1.x Newtons through 'oneO form; the Sharp Wizard path failing -50006
+  as on the device (its translators come in a package); `ZapSend`/
+  `ZapReceive`/`ZapCancel` as the Beam transport's natives;
+  `NEWTON_TRACE_BEAM`.
+- `tools/host/twonewtons.py` runs two newtons with their IR ports facing
+  each other, each with its own script and expectations; ctest
+  `host.NewtonBeam`: `beam-send.ns` sends a note from the Out Box,
+  `beam-receive.ns` finds it in the In Box, about 4 s.
+
+## 2026-09-30: the ROM source tree - debug names, new frames, a growing extension
+
+- ListView's functions (8a6d860): its `'dbg1` DebuggerInfo is what the
+  compiler makes when variable names are kept (the ROM's own
+  `dbgNoVarNames` switch), so they decompile with their real names and
+  compile back with names kept (266 of 266); a nested function that
+  closes over nothing was still compiled inside its parent in that debug
+  build, and is written inline.
+- The builder makes maps and symbols for new or changed frames
+  (0d28cdb); `edit-test` adds a frame and `host.ROMSourceEditValue` reads
+  it back.
+- The extension's parts relaid out (f2977b4), the package directories,
+  the REx config table and `'fexp` kept in step; `edit-test` grows a
+  Cardfile string, every later package moves, and the boot still draws
+  the same screen.  The REx header's checksum (0x98e6) is left as it was:
+  no obvious sum reproduces it and the host does not check it.
+
 ## 2026-09-30: the ROM source tree made editable
 
 - The extension's frames packages from source (ef83602): each package's

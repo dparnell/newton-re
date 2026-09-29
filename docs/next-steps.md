@@ -193,11 +193,11 @@ worked through.  What could come next (not ranked; the owner chooses):
   `BackupPatches`, V.42bis's internal-buffer mode, tests for 'islp' and
   'gpwd', and a real desktop (NCX, UnixNPI) over localhost:3679 - not
   yet tried.  **Beaming** (being done; `docs/comms/README.md`, "Beaming - the
-  plan"): layers 1-2 done (`hal/host/HostIRChip`, `newton --ir-peer`;
-  `comms/SharpIRTool.h`, 'slir').  Next: `TBeamer` and
-  `ZapSend`/`ZapReceive`/`ZapCancel`, a two-process ctest
-  `host.NewtonBeam` (zapCommToolId "slir"), then the probe 'pkir', then
-  IrDA.
+  plan"): layers 1-3 done - a Note beams from one host to another over
+  Sharp IR (`host.NewtonBeam`, `tools/host/twonewtons.py`).  Next: the
+  probe 'pkir', then IrDA ('irda', about 32 KB), the default path
+  between two 2.1s; and why a note with `class: 'paperroll` does not
+  show in the receiver's In Box.
   The livelock between `TPMIterator::Init`'s semaphore and `TForkWorld`'s
   mutex was the host runtime's, fixed (12e55a2; ctest
   `host.NewtonDockGetPackages`).  `test_NIEProtoFSM` also runs
@@ -395,12 +395,12 @@ used on the next run.  The pieces, roughly in order:
    the tree, their frames parts as source (`rex/<Package>/`); an edit
    that moves objects still boots to the same screen (`build
    --relayout`; ctests `host.ROMSourceEdit`,
-   `host.NewtonEditedSameScreen`).  Left: ListView's 266 functions carry
-   the NTK's `DebuggerInfo` (bytecode for now), 3 sorted-order decompile
-   cases, new frames without a map (the builder making maps), relayout of
-   the extension's parts, the IMA sounds and tables as editable forms, ROM
-   code for packages with native ARM code - and **whether to commit the
-   tree** (about 19 MB, 6,500 files): the owner's decision.
+   `host.NewtonEditedSameScreen`, `host.ROMSourceEditValue`) - new frames
+   get maps and symbols, the extension's parts relay out.  The owner
+   decided (2026-09-30) to commit the tree as `romsrc/`: being done.
+   Left: 3 decompile edge cases (Cardfile 2, Connection 1), the REx
+   header checksum's algorithm, the IMA sounds and tables as editable
+   forms, ROM code for packages with native ARM code.
 
 Until then the ROM image stays how the reconstruction is checked against
 the original; new run-time dependencies on it are to be avoided or noted.
