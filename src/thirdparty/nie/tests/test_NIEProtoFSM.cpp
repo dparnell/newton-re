@@ -8,6 +8,7 @@
 #include "NIENatives.h"
 #include "NIERuntime.h"
 #include "PackageNativeCPU.h"
+#include "Soups.h"
 #include "PackageNatives.h"
 #include "Interpreter.h"
 #include "Compiler.h"
@@ -558,9 +559,6 @@ TestObjectToString(void)
 		SetArraySlot(printerLits, i, RefVar(Eval(kPrinterLits[i])));
 	SetFrameSlot(RefVar(GetArraySlot(printer, 3)), RefVar(Sym("_literals")), printerLits);
 	SetArraySlot(lits, 20, printer);
-	// (the ROM's FIsValid, 0x0031e09c, is not reconstructed yet: every
-	// object here is valid)
-	SetFrameSlot(RefVar(GetGFunctionFrame()), RefVar(Sym("IsValid")), RefVar(Eval("func(x) true")));
 	Eval("printed := call objToString with ({a: 1, b: \"x\", c: [2, 'y], d: {_parent: 'hidden}, e: nil})");
 	RefVar printed(Eval("printed"));
 	if (IsString(printed))
@@ -638,6 +636,7 @@ main()
 	}
 	gObjectHeapSize = 0x200000;
 	InitObjects();
+	RegisterSoupNatives();		// (IsValid, which the printer asks)
 
 	FILE* f = fopen(NIE_PACKAGE, "rb");
 	if (f == nil)
