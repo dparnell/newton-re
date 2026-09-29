@@ -241,6 +241,21 @@ reach, hardware, or waiting on another area:
   functions and 4 KB of the IR stack not yet done - `callgraph.py`).
 - `HobbleTablet` reaches nothing on the host (no inker port).
 
+### Frames (`docs/frames/README.md`'s "Not yet"; every frames native bound)
+
+The NOT YET sweep of 2026-09-29 left 20 genuine gaps (40 comments before):
+- Reachable from ordinary scripts: `TNumberParser` (`StringToNumber` is
+  `strtod`, not the locale's separators); a store's own sort table; the
+  aggregate and pointer cases of `UnmarshalValue`.
+- Reachable from developer settings or tools: tracing and breakpoints (the
+  printer they need is there now - the natural next frames piece),
+  `NTKStackTrace`, the task stack limits the debugger uses, the GC
+  profiler's hooks.
+- Not reachable, or no effect on behaviour: FastRun1 (what SlowRun already
+  computes), the proto caches (speed), native code stored as ARM code (a
+  host limit), `IsFirstByteOf2Byte` (not for the US ROM), `TRichString::
+  Verify`'s check of the ink words.
+
 ### Natives whose machinery is there, or is one function away
 
 - `Dispatch` (`instance:Dispatch`, 0x00195228), `RegisterGestalt` and

@@ -9,6 +9,25 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: frames - the last natives, and a NOT YET sweep
+
+- The last three frames natives: `GetFrameStuff`, and the store frame's
+  `CardSlot`/`CardType` over `GetStorePSSInfo` (`f438557`).
+- The sweep of `src/frames/` (40 NOT YET comments to 20, all genuine):
+  strings read and written through `TRichString` as the ROM does
+  (`aref`/`setAref`, `StrMunger`, `GetChar`/`SetChar`,
+  `StripDiacriticals`; comparisons collate by the sort tables, so
+  `"a" < "B"` - `0196f25`); `vars.breakOnThrows`' break loop once per
+  exception name, `&` keeping a rich string's ink, and `Stringer`'s
+  trailer written in a byte order the host could not read back
+  (`e83f0ab`); `TNSDebugAPI::Return` throws -48215 as the ROM's does
+  (`17b623e`); `Uriah`/`UriahBinaryObjects`, the heap census (`64b9f97`);
+  the stale reasons reworded and the GC's verbose report through the REP
+  (`f5c8ffa`).
+- Found on the way, for the sound agent: the importer compared class names
+  with strcmp, so the ROM's reals of class 'Real (its own spelling) were
+  never byte-swapped; now compared as symbols compare (`611feca`).
+
 ## 2026-09-29: the sound server, round 2 - sounds played from scripts
 
 - The client `TUSoundChannel`, `TFrameSoundChannel` (`sound/FrameSoundChannel.h`),
