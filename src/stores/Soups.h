@@ -107,6 +107,8 @@ Ref		StoreTotalSize(RefArg rcvr);
 Ref		StoreUsedSize(RefArg rcvr);
 Ref		StoreOverhead(RefArg rcvr);
 Ref		StoreIsReadOnly(RefArg rcvr);
+Ref		StoreGetPasswordKey(RefArg rcvr);
+Ref		StoreGetPasswordKey(TStore* store);
 Ref		StoreIsValid(RefArg rcvr);
 Ref		StoreLock(RefArg rcvr);
 Ref		StoreUnlock(RefArg rcvr);

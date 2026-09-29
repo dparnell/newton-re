@@ -45,6 +45,19 @@ set_tests_properties(host.Newton PROPERTIES TIMEOUT 120)
 # protocol frame, with no desktop
 add_test(NAME host.NewtonDocker COMMAND newton --rom ${NEWTON_ROM_BIN} --serial-port none --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/docker.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonDocker PROPERTIES TIMEOUT 120 PASS_REGULAR_EXPRESSION "docker: made yes.*version 9, state 1.*desktop type 2.*state now 4.*after abort gone.*docker: done")
+# the desktop connection end to end: the Connection application's autodock
+# over the host serial port (TCP) to tools/dock/dock.py, which answers
+# 'rtdk' with a package to load ('lpkg') and says 'disc' after the 'dres'
+find_package(Python3 COMPONENTS Interpreter)
+if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monaco.pkg)
+    add_test(NAME host.NewtonDock
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/dock/dock.py
+                     --package ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monaco.pkg
+                     --spawn $<TARGET_FILE:newton> --rom ${NEWTON_ROM_BIN} --serial-port 0 --headless 150
+                     --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/dock.ns
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonDock PROPERTIES TIMEOUT 240 PASS_REGULAR_EXPRESSION "the Newton's protocol version is 9.*monaco.pkg: dres 0.*dock: installed Monaco.*dock: done")
+endif()
 
 # deferred recognition (views/Rerecognize.h): "ton" written, and the
 # same strokes read again through Recognize, RecognizeInkWord,

@@ -166,7 +166,13 @@ class MNPLink:
                 self.max_data = 256
         reply[0] = len(reply) - 1
         self.write_frame(bytes(reply))
-        body = self.read_frame()
+        # (an LR sent again - the Newton's timer ran out before our answer
+        # came - is answered again)
+        for _ in range(10):
+            body = self.read_frame()
+            if body[1] != LR:
+                break
+            self.write_frame(bytes(reply))
         if body[1] != LA:
             raise MNPError("expected an LA, got %r" % body)
 

@@ -1035,6 +1035,38 @@ StoreIsReadOnly(RefArg rcvr)
 }
 
 
+// ROM 0x00352550 StoreGetPasswordKey__FP6TStore
+// The store's password key: the binary the root data's fifth id names (nil
+// when there is none).  DEVIATION: the host's ReadStoreRootData answers no
+// error, so a root that cannot be read answers nil where the ROM throws.
+Ref
+StoreGetPasswordKey(TStore* store)
+{
+	StoreRootData root;
+	long size;
+	root.fExtra = 0;
+	ReadStoreRootData(store, 0, &root, &size);
+	RefVar key;
+	if (size > 0 && root.fExtra != 0)
+	{
+		long keySize;
+		OSErrIf(store->GetObjectSize(root.fExtra, &keySize));
+		key = AllocateBinary(RefVar(NILREF), keySize);
+		OSErrIf(store->Read(root.fExtra, 0, BinaryData(key), keySize));
+	}
+	return key;
+}
+
+
+// ROM 0x00352670 StoreGetPasswordKey
+// (The same, of a store frame: the ROM writes it out again.)
+Ref
+StoreGetPasswordKey(RefArg rcvr)
+{
+	return StoreGetPasswordKey(GetStoreWrapper(rcvr)->Store());
+}
+
+
 // ROM 0x003521cc StoreIsValid
 // Registered (or a package store) and not killed.
 Ref

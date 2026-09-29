@@ -1,0 +1,36 @@
+// The desktop connection: the Connection application's autodock started
+// (a serial connection, which the host's serial port puts on a TCP
+// socket - hal/host/HostSerialChip.h), and a desktop at the other end
+// (tools/dock/dock.py) answering the Newton's 'rtdk' with a package to
+// load ('lpkg').  The docker (comms/Docker.h) installs it, says 'dres' and
+// the desktop says 'disc'.  ctest host.NewtonDock runs it under dock.py:
+//
+//   python tools/dock/dock.py --package fixtures/packages/fonts/monaco.pkg \
+//       --spawn build/host/host/newton --rom build/MP2x00US/rom.bin \
+//       --serial-port 0 --headless 180 --script src/host/demo/dock.ns
+//
+// It waits for the package to be installed and for the connection to be
+// over, then ends the run.
+
+HostInclude("common.ns");			// waitFor
+
+before := Length(GetPackages());
+app := GetRoot().Connection;
+
+// autodock connects the way the preferences' autoDockAddr says (on a new
+// machine there is none, and it does nothing): a serial connection
+app:ConnectionPrefsWrite('autoDockAddr, {type: 'serial});
+Print("dock: autodock");
+app:autodock();
+
+call waitFor with ("dock: the package", func() Length(GetPackages()) > before, func() begin
+	local packages := GetPackages();
+	local p := packages[Length(packages) - 1];
+	Print("dock: installed " & p.title);
+	call waitFor with ("dock: the connection over",
+		func() not app.theEndpoint or not app.theEndpoint.connected or not app.theEndpoint.conncobject,
+		func() begin
+			Print("dock: done");
+			HostQuit();
+		end, 60);
+end, 150);

@@ -9,6 +9,7 @@
 */
 
 #include "Translators.h"
+#include "HostOptionLayouts.h"
 #include "CommOptions.h"
 #include "Marshalling.h"
 #include "Interpreter.h"
@@ -593,6 +594,14 @@ POptionDataOut::ConvertToOption(RefArg frame, long& error, PFrameSink* sink)
 		else
 			error = kCommScriptErrNotAnOption;
 	}
+	if (error == noErr)
+	{
+		// DEVIATION (pointer size): the device's layout into the host's, for
+		// an option class with pointer-sized fields (HostOptionLayouts.h)
+		option = HostOptionFromDevice(option);
+		if (option == nil)
+			error = MemError();
+	}
 	if (error == noErr && label == kCMOServiceIdentifier && option->Length() >= 8)
 	{
 		// DEVIATION: a 'sid ' option a script writes out itself is the
@@ -741,6 +750,16 @@ POptionDataIn::ConvertFromOption(RefArg frame, TOption* option, PFrameSource* so
 			PutBigEndianWord(sidBytes + 4, (unsigned int) ((TCMOServiceIdentifier*) option)->fPortId);
 			optionData = sidBytes;
 			optionLength = 8;
+		}
+		// DEVIATION (pointer size): an option whose class has pointer-sized
+		// fields on the host is read back in the device's layout
+		// (HostOptionLayouts.h)
+		UByte deviceBytes[64];
+		long deviceLength = HostOptionToDevice(option, deviceBytes, sizeof(deviceBytes));
+		if (deviceLength >= 0)
+		{
+			optionData = deviceBytes;
+			optionLength = deviceLength;
 		}
 		if (err == noErr)
 		{

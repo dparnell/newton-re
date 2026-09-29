@@ -47,6 +47,7 @@ add_custom_command(
     VERBATIM)
 add_library(comms_script STATIC
     Translators.cpp
+    HostOptionLayouts.cpp
     NewScriptEndpoint.cpp
     StreamingEndpoint.cpp
     host/HostLink.cpp
@@ -67,6 +68,6 @@ add_library(comms_dock STATIC
     ModemNavigator.cpp
     Docker.cpp
 )
-target_link_libraries(comms_dock PUBLIC comms_serial comms_script packages newt intl)
+target_link_libraries(comms_dock PUBLIC comms_serial comms_script packages stores newt intl)
 
 add_subdirectory(tests)

@@ -14,6 +14,7 @@
 #include "StorePackages.h"
 #include "NewtWorld.h"
 #include "Dates.h"
+#include "Soups.h"
 #include "AppWorld.h"
 #include "Interpreter.h"
 #include "Frames.h"
@@ -1225,6 +1226,33 @@ FConnDoConnection(RefArg rcvr, RefArg arg1, RefArg arg2)
 }
 
 
+// ROM 0x00096464 FConnBuildStoreFrame
+// ConnBuildStoreFrame(store, withInfo): what the desktop is told of a
+// store - its name, signature, sizes, kind, (its info, if asked for),
+// whether it is read-only, its password key, whether it is the default
+// store, and its version.
+Ref
+FConnBuildStoreFrame(RefArg rcvr, RefArg store, RefArg withInfo)
+{
+	RefVar frame(AllocateFrame());
+	SetFrameSlot(frame, RSSYMname, RefVar(StoreGetName(store)));
+	SetFrameSlot(frame, RSSYMsignature, RefVar(StoreGetSignature(store)));
+	SetFrameSlot(frame, RSSYMtotalsize, RefVar(StoreTotalSize(store)));
+	SetFrameSlot(frame, RSSYMusedsize, RefVar(StoreUsedSize(store)));
+	SetFrameSlot(frame, RSSYMkind, RefVar(StoreGetKind(store)));
+	if (NOTNIL(withInfo))
+		SetFrameSlot(frame, RSSYMinfo, RefVar(StoreGetAllInfo(store)));
+	SetFrameSlot(frame, RSSYMreadonly, RefVar(StoreIsReadOnly(store)));
+	SetFrameSlot(frame, RSSYMstorepassword, RefVar(StoreGetPasswordKey(store)));
+	if (FDefaultStore(RefVar(NILREF)) == (Ref) store)
+		SetFrameSlot(frame, RSSYMdefaultstore, RefVar(TRUEREF));
+	long version = 0;
+	GetStoreVersion(StoreFromWrapper(store), &version);
+	SetFrameSlot(frame, RSSYMstoreversion, RefVar(MAKEINT(version)));
+	return frame;
+}
+
+
 // ROM 0x00096e8c FConnInstallProtocolExtension
 // InstallAnyProtocolExtension(command, function): an extension of the
 // protocol (one already there is not an error).
@@ -1336,6 +1364,7 @@ RegisterDockerNatives(void)
 	RegisterNativeFunction("FConnInstallProtocolExtension", (void*) FConnInstallProtocolExtension, 2);
 	RegisterNativeFunction("FConnRemoveProtocolExtension", (void*) FConnRemoveProtocolExtension, 1);
 	RegisterNativeFunction("FConnStop", (void*) FConnStop, 0);
+	RegisterNativeFunction("FConnBuildStoreFrame", (void*) FConnBuildStoreFrame, 2);
 	RegisterNativeFunction("FConnGetSyncChanges", (void*) FConnGetSyncChanges, 0);
 	RegisterNativeFunction("FConnectionState", (void*) FConnectionState, 0);
 	RegisterNativeFunction("FConnSetState", (void*) FConnSetState, 1);
