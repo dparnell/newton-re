@@ -267,12 +267,62 @@ scripts play would throw, and the boot plays 375 of them.  NOT YET
 RECONSTRUCTED behind them: `TFrameSoundChannel::Convert` (the frame turned
 into a `SoundBlock`, a codec opened for it) and the scheduled nodes.
 
+## The sound server (`SoundServer.h`, `SoundDriver.h`)
+
+The server is the `'sndm` app world `InitializeSound` starts (ROM
+0x001e89f4).  Sized with `analysis/callgraph.py build/MP2x00US` from the
+sound natives (`FSoundOpen` and its neighbours, 0x001e67e8-0x001e70b4) and
+`InitializeSound`: about 105 functions and 13KB of code below them, in
+four layers - the NewtonScript natives and `TFrameSoundChannel`, the
+client `TUSoundChannel`, the server and its channels, and the driver.
+The order chosen puts what is heard first: the server and output first,
+then the client and the frame channel (a ROM sound such as the click
+played by `PlaySoundSync`), then the natives - and only then input, the
+compressor channels and the codec channel's task, which the Sound Recorder
+needs.
+
+**The seam** is `PSoundDriver` (`SoundDriver.h`), the ROM's own protocol
+between the server and the hardware, in its dispatch order: the server
+hands it two DMA buffers of 0xea0 bytes, says which to play next and how
+much of it, and the driver's interrupt at the end of each runs the
+server's callback through `OutputIntHandlerDispatcher`.  The ROM registers
+`PCirrusSoundDriver`; a host registers its own through
+`gHostRegisterSoundDriver`, and the server asks for `PMainSoundDriver`
+first, as the ROM does.  The host's is `hal/host/HostSoundDriver.h`:
+output only, 16-bit at 21600 a second (the MP2x00's top rate, so sounds
+are resampled as they were on the machine), each buffer's end a host
+interrupt source (`docs/host-runtime.md`) due when it would have finished
+playing, which on the controllable clock makes playback deterministic.  A
+backend is handed each buffer as it starts; the null one keeps the
+samples for tests (`HostSoundCaptured`).  With no driver registered
+`InitializeSound` starts no server and `gSndPort` stays 0, as before.
+
+**The server** (`TSoundServer`, 0x104 bytes) answers the client's
+commands (`TSoundServerHandler::AEHandlerProc`: open, close, start, start
+and wait, pause, stop, schedule, cancel, volume) and the interrupts' own
+(command 4: a buffer played).  `FillDMABuffer` is the whole of playback:
+the first active output channel produces into the buffer, silence after
+it, every other active channel is produced into the mixing buffer and
+added in (`MixLin16`, clamped), and the loudest channel's volume goes to
+the hardware; the buffer's size is only what was filled, so the last one
+of a sound is short.  A `TDMAChannel` produces a node's samples copied
+(the hardware's own format and rate), converted (`SampleConvert.h`) or
+resampled - by the plain converter or, while `gMaxFilterNodes` allows (six
+on a StrongARM), the filtered one.
+
+Note what a schedule's answer means: a node is freed - and its request and
+a waiting start answered - when its last samples have gone *into a DMA
+buffer*, not when they have been heard; up to two buffers are still to
+play (`test_SoundServer` waits for the output to stop).
+
 ## Not yet
 
-`TGSMCodec` and `TDTMFCodec`, and the layer that drives the codecs:
-`TSoundServer`/`TSoundChannel`, `TCodecChannel`, `TDMAChannel` and the
-`SoundBlock` a `CodecBlock` is converted from, `TFrameSoundChannel` (the
-subclass that plays NewtonScript sound frames) and the rest of
-`TUSoundChannel` - opening and closing a channel, the scheduling
-(`Schedule`/`Start`/`Pause`/`Stop`, `SoundNode`) and the callbacks - and
-the sound hardware driver the rest of `InitializeSound` starts.
+`TGSMCodec` and `TDTMFCodec`; the client side - `TUSoundChannel`'s
+opening, scheduling (`SoundNode`) and callbacks, `TFrameSoundChannel`
+(the subclass that plays NewtonScript sound frames) and the
+`protoSoundChannel` natives, so no script plays a sound yet; the server's
+input and compressor channels (`SoundInputIH`, `EmptyDMABuffer`), the
+codec channel's decompressing task (`TCodecChannel::InitNode` and its
+loop) and `TSoundPowerHandler`; a host backend that makes a noise
+(waveOut); and `NewWiredPtr` (memory), for which the DMA buffers fall
+back on `NewPtr`.
