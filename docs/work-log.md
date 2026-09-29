@@ -9,6 +9,21 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-30: the desktop connection, layer 3 - MNP
+
+- `TFramedAsyncSerTool` ('fser: DLE framing and CRC; 8118a0e), `TMNP`
+  with class 5 compression and `TMNPService` ('mnps; 350a8c4, b879aa5),
+  read from the disassembly because the decompiler merges tail-called
+  functions (RetransTimeOut ran into XmitLT).  `tools/dock/mnp.py` is the
+  desktop end of the link; ctests `comms.MNP`, `comms.MNPLongHeaders`,
+  `comms.MNPClass5` - the Newton originates the link, as when docking.
+- ROM quirks kept: a failed CCB allocation answers noErr; a speed
+  sub-parameter other than 1 is counted but not read past; XmitLD sends
+  the whole 10-byte LA buffer for the 8-byte LD; the kill flags in
+  KillPutComplete/KillGetComplete look swapped; the current 'mdct option
+  is read without checking there is one; a virtual Disconnect nothing
+  calls.  V.42bis's coder (0x25ce5c-0x25dab0) NOT YET.
+
 ## 2026-09-30: the flaky host tests pinned down
 
 - Reproduced under load (copies in parallel beside CPU hogs); the

@@ -165,11 +165,16 @@ worked through.  What could come next (not ranked; the owner chooses):
   ROM, layer by layer, ending in ctest `host.NewtonDock`.  Layer 1 done
   (the serial chip seam and registry, the host's TCP serial port -
   `hal.HostSerialChip`), layer 2 done (the serial tools and 'aser,
-  `comms.SerialTool`).  Next, layer 3: `TMNP` (0x116b14-0x11b838, with
-  MNP class 5 compression) over `TFramedAsyncSerTool` (0xd2ecc-0xd39c0,
-  DLE framing and CRC), `TMNPService` ('mnps), and `tools/dock/mnp.py` as
-  the test peer.  The `newton` binary does not yet call `InitFIQTimer`/
-  `HostSerialChipInstall`/`RegisterSerialCommServices` (with layer 4).  `test_NIEProtoFSM` also runs
+  `comms.SerialTool`), layer 3 done (MNP with class 5 compression,
+  `tools/dock/mnp.py` the desktop end; `comms.MNP`,
+  `comms.MNPLongHeaders`, `comms.MNPClass5`; V.42bis's coder NOT YET,
+  wanted only if a real desktop asks for it).  Next, layer 4: `TDocker`
+  (0x92000-0x9c500), `TEzPipeProtocol`, `TDockerDynArray` and the
+  `FConn*` natives over 'mnps; then `tools/dock/dock.py` over `mnp.py`
+  (the newtdockrtdk handshake, `lpkg` with a fixture package) and ctest
+  `host.NewtonDock`.  The `newton` binary still needs `InitFIQTimer`,
+  `HostSerialChipInstall`, `RegisterSerialCommServices` and
+  `RegisterMNPService` at boot.  `test_NIEProtoFSM` also runs
   each check on the package's own ARM code through armcpu, and the two
   agree (2ae6d73).  armcpu left: frames in a code binary; protocol parts
   through the CPU - no fixture needs them yet (every protocol part among
