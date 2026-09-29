@@ -1,0 +1,247 @@
+/*
+	File:		comms/Docker.h
+
+	Contains:	The docker: the Newton's side of the desktop connection's
+				'dock' protocol, over a TEzEndpointPipe (EzEndpointPipe.h).
+				A command on the wire is a header - the words 'newt',
+				'dock', the command and the length of its data - then the
+				data, padded to a multiple of four; every word big-endian.
+
+				TEzPipeProtocol is the header's framing (the two protocol
+				words and the pipe); TDocker is the session.  Connect makes
+				the pipe from the Connection application's options frame,
+				says 'rtdk' (ready to dock, protocol version 9) and reads
+				what the desktop answers: 'lpkg' is a package to load (the
+				old package downloader's session, which is all there is to
+				it: CompatabilityHacks), 'dock' a docking session.
+				DoConnection forks the NewtonScript world (so the machine
+				stays responsive meanwhile) and then carries the session
+				out.
+
+				The protocol frame's native methods (the ROM's docker frame
+				0x006482d1, which the Connection application's dtEndpoint
+				is) are FConn*; the docker object hangs off the frame's
+				conncobject slot as an address Ref.
+
+				NOT YET: a docking session ('dock': ReadInitiateDocking,
+				the Newton's name, the desktop info, the icons, the
+				password exchange) and its commands (ProcessCommand and the
+				soup, store, package and keyboard commands); the protocol
+				extensions are recorded (InstallProtocolExtension) but
+				never called, that being ProcessCommand's; the keyboard
+				passthrough.  A desktop that
+				answers 'dock' is told kCommErrMethodNotImplemented.
+
+				The ROM's class; its declaration is not in the DDK, so the
+				names of the fields are ours, their order the ROM's (0xb8
+				bytes on the ARM).
+
+	Reconstructed from the MP2x00 US ROM (0x00092664-0x0009b40c); each
+	function cites its origin.  docs/comms/README.md, "The desktop
+	connection (Dock)".
+*/
+
+#ifndef __COMMS_DOCKER_H
+#define __COMMS_DOCKER_H
+
+#ifndef __COMMS_EZENDPOINTPIPE_H
+#include "EzEndpointPipe.h"
+#endif
+#include "objects.h"
+#include "NewtonExceptions.h"
+
+// the commands (what the words spell)
+enum
+{
+	kDNewtonDock		= 'newt',
+	kDDock				= 'dock',
+	kDRequestToDock		= 'rtdk',
+	kDLoadPackage		= 'lpkg',
+	kDDisconnect		= 'disc',
+	kDResult			= 'dres',
+	kDDesktopInfo		= 'dinf',
+	kDWhichIcons		= 'wicn',
+	kDSetTimeout		= 'stim',
+	kDSync				= 'ssyn',
+	kDRestore			= 'rrst',
+	kDOperationCanceled	= 'opca',
+	kDOpCanceledAck		= 'ocaa'
+};
+
+// the docker's errors
+enum
+{
+	kDockErrBadStoreSignature	= -28001,
+	kDockErrDesktopError		= -28012,		// (-28012 = 0xffff9294: an unexpected command)
+	kDockErrBadHeader			= -28016,		// not 'newt' 'dock', or not what was expected
+	kDockErrNotConnected		= -28022,		// DoConnection before a session was agreed
+	kDockErrAlreadyDocking		= -28023,		// (a connection that is not an error)
+	kDockErrNoDocker			= -28009,		// the frame has no docker
+	kDockErrDisconnected		= -28013,		// stopped while connecting
+	kDockErrRequestToDock		= -28029,		// the desktop said 'rtdk' back
+	kDockErrProtocolVersion		= -28011,		// (-28011 = 0xffff9295)
+	kDockErrBadExtension		= -28020		// no command, or one already extended
+};
+
+// the session's states (eDockingState)
+enum
+{
+	kDockStateNone		= 1,
+	kDockStateSync		= 2,
+	kDockStateRestore	= 3,
+	kDockStateLoadPackage = 4,
+	kDockStateKeyboard	= 9
+};
+
+
+class TEzPipeProtocol
+{
+public:
+	void			ProtocolInit(ULong protocol, ULong subProtocol);
+	void			WriteDockerHeader(ULong command, Boolean flush);
+	void			SendDockerHeader(ULong command, Boolean flush);
+	void			ReadDockerHeader(ULong* command, ULong* length);
+	void			FindDockerHeader(ULong* command, ULong* length);
+
+	TEzEndpointPipe*	fPipe;				// +0x00
+	ULong			fProtocol;				// +0x04  'newt'
+	ULong			fSubProtocol;			// +0x08  'dock'
+};
+
+
+// A growable array of words in a handle, thirty at a time: the command
+// words of the protocol extensions installed.
+class TDockerDynArray
+{
+public:
+					TDockerDynArray();
+					~TDockerDynArray();
+
+	NewtonErr		Add(ULong value);
+	NewtonErr		AddAndReplaceZero(ULong value, long* index);
+	long			Find(long value);
+	void			Replace(long index, ULong value);
+
+	Handle			fWords;					// +0x00
+	ULong			fCount;					// +0x04
+	ULong			fAllocated;				// +0x08
+};
+
+
+class TCursorArray;
+
+class TDocker : public TEzPipeProtocol
+{
+public:
+					TDocker();
+					~TDocker();
+
+	long			Connect(RefArg connection, RefArg options, RefArg password);
+	long			DoConnection(RefArg arg1, RefArg arg2, RefArg callback, Boolean* done);
+	void			Stop(void);
+	Boolean			AbortConnection(long error);
+	Ref				GetState(void);
+	void			SetState(long state);
+	long			GetPlatform(void);
+	Ref				GetSyncChanges(void);
+	Ref				GetCurrentStore(void);
+	ULong			BytesAvailable(Boolean locked);
+	long			BroadcastChanges(void);
+	long			InstallProtocolExtension(RefArg command, RefArg function, ULong commandWord);
+	long			RemoveProtocolExtension(RefArg command, ULong commandWord);
+
+	Boolean			GetTDockerLock(void);
+	Boolean			WaitAndLockTDocker(void);
+	void			UnlockTDocker(void);
+
+	void			ProcessException(Exception* exception);
+	void			CleanUpIfError(Boolean force);
+	Boolean			CleanUpIfStopping(Boolean done);
+	void			TossDataStructures(void);
+	void			WaitForStopToComplete(void);
+	void			WaitForDisconnect(void);
+	void			Delay(ULong ticks);
+	void			OutOfMemory(void);
+
+	void			CompatabilityHacks(void);
+	void			ReadPackage(void);
+	void			FreeCurrentStore(void);
+
+	void			WriteLong(ULong command, ULong value);
+	void			WriteResult(long result);
+	long			ReadResult(void);
+	Boolean			ReadChunk(void* buffer, long length, Boolean flushPadding);
+	void			Pad(ULong length);
+	void			FlushPadding(ULong length);
+	void			FlushCommand(void);
+
+	// DEVIATION: the ROM keeps its Refs in RefHandles it allocates itself
+	// (AllocateRefHandle, stackPos 0); RefStructs are the same thing, made
+	// and given back in the same order
+	RefStruct		fDoConnectionArg;		// +0x0c  DoConnection's second argument
+	RefStruct		fCurrentStore;			// +0x10
+	RefStruct		fCurrentSoup;			// +0x14
+	RefStruct		fField18;				// +0x18
+	RefStruct		fCallback;				// +0x1c  the package callback
+	RefStruct		fConnection;			// +0x20  the protocol frame
+	RefStruct		fField24;				// +0x24
+	RefStruct		fField28;				// +0x28
+	Boolean			fField2c;				// +0x2c
+	Boolean			fField2d;				// +0x2d
+	Boolean			fField2e;				// +0x2e
+	Boolean			fSessionStarted;		// +0x2f  the session is under way (the desktop has spoken)
+	Boolean			fField30;				// +0x30
+	Boolean			fField31;				// +0x31
+	Boolean			fLocked;				// +0x32
+	Ref				fField34;				// +0x34
+	long			fField38;				// +0x38
+	long			fField3c;				// +0x3c
+	RefStruct		fSyncChanges;			// +0x40
+	ULong			fCommand;				// +0x44  the last header read
+	ULong			fLength;				// +0x48
+	ULong			fProtocolVersion;		// +0x4c
+	long			fError;					// +0x50
+	TCursorArray*	fCursors;				// +0x54
+	long			fField58;				// +0x58
+	long			fField5c;				// +0x5c
+	Ref				fField60;				// +0x60
+	long			fField64;				// +0x64
+	long			fField68;				// +0x68
+	RefStruct		fField6c;				// +0x6c
+	RefStruct		fField70;				// +0x70
+	long			fField74;				// +0x74
+	long			fField78;				// +0x78
+	TDockerDynArray*	fDynArray7c;		// +0x7c
+	TDockerDynArray*	fExtensionCommands;	// +0x80  the protocol extensions' commands
+	RefStruct		fExtensions;			// +0x84  and their functions, in the same order
+	RefStruct		fDesktopApps;			// +0x88
+	long			fField8c;				// +0x8c
+	long			fField90;				// +0x90
+	long			fField94;				// +0x94
+	long			fField98;				// +0x98
+	long			fField9c;				// +0x9c
+	long			fFielda0;				// +0xa0
+	long			fState;					// +0xa4
+	long			fPlatform;				// +0xa8
+	Boolean			fSessionAgreed;			// +0xac  DoConnection may go ahead
+	Boolean			fHasArg1;				// +0xad  DoConnection's first argument was not nil
+	Boolean			fLoadPackageOnly;		// +0xae  the desktop said 'lpkg'
+	Boolean			fStopping;				// +0xaf
+	Boolean			fStopDone;				// +0xb0
+	Boolean			fPipeOpen;				// +0xb1
+	Boolean			fSelectiveSyncOK;		// +0xb2
+	Boolean			fCleanedUp;				// +0xb3
+	Boolean			fFieldb4;				// +0xb4
+};
+
+
+// the docker a protocol frame holds (throwing kDockErrNoDocker when asked
+// to and it has none), and a docker kept in it
+TDocker*	GetTheDocker(RefArg connection, Boolean mustExist);
+void		SaveTheDocker(RefArg connection, TDocker* docker);
+void		CleanUpDockerIfError(RefArg connection, long error, Boolean touch, Boolean throwIt);
+Ref			FDefaultStore(RefArg rcvr);
+
+void		RegisterDockerNatives(void);
+
+#endif	/* __COMMS_DOCKER_H */

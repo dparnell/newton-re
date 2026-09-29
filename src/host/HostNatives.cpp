@@ -53,6 +53,7 @@
 #include "Journal.h"
 #include "TestAgent.h"
 #include "NewScriptEndpoint.h"
+#include "Docker.h"
 #include "NIENatives.h"
 
 
@@ -126,6 +127,7 @@ RegisterAllNatives(void)
 
 	// the NewtonScript endpoint (protoBasicEndpoint's methods)
 	RegisterCommsNatives();
+	RegisterDockerNatives();
 
 	// third-party packages' native functions re-expressed (the NIE's)
 	RegisterNIENatives();

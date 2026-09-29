@@ -112,6 +112,7 @@ Boolean	operator==(const TDate& a, const TDate& b);
 
 Ref		ToObject(const TDate& date);			// a canonicalDate frame
 Ref		GetDayName(long dayOfWeek);
+Ref		FTimeInSeconds(RefArg rcvr);		// TimeInSeconds(): the seconds since 1993
 long	WeekNumCalc(long minutes, long firstDayOfWeek);
 
 void	RegisterDateNatives(void);

@@ -15,6 +15,7 @@
 	newton [--rom image] [--heap bytes] [--display WxH[xdepth]] [--scale n]
 	       [--script file.ns] [--headless seconds] [--store file] [--erase]
 	       [--package file.pkg]... [--microphone-tone hz] [--tcp-echo port]
+	       [--serial-port port|none]
 
 	--headless runs without a window for the seconds (a snapshot of the
 	display can be written by the script: ScreenSnapshot), or until the
@@ -34,6 +35,16 @@
 	--tcp-echo runs a TCP echo server on 127.0.0.1 at the port, for a
 	script's endpoint to talk to (comms/host/HostEchoServer.h,
 	src/host/demo/echo.ns).
+
+	--serial-port is the TCP port the Newton's external serial port listens
+	on (hal/host/HostSerialChip.h): 3679 unless given, as Einstein's, so a
+	desktop program that docks with an emulated Newton over TCP (NCX, or
+	UnixNPI with its serial port given as a TCP one) connects to
+	localhost:3679 and speaks the serial dock protocol (MNP, then 'dock')
+	over it; 0 picks a free port, none does without.  Once listening it
+	prints "[host] serial port N" (tools/dock/dock.py waits for that line).
+	The docker is the Connection application's (comms/Docker.h), started
+	by its Connect button or by autodock.
 
 	--package installs a package once the machine is up, onto the internal
 	store as one arriving from the Newton Connection is (as many as wanted,
@@ -58,6 +69,10 @@
 #include "HostHeapCheck.h"
 #include "HostSoundDriver.h"
 #include "HostEchoServer.h"
+#include "HostSerialChip.h"
+#include "FIQTimer.h"
+#include "SerialTool.h"
+#include "MNP.h"
 #include "HostLink.h"
 #include "os600/kernel/host/TaskRuntime.h"
 #include "REPTranslators.h"
@@ -100,6 +115,7 @@ __declspec(dllimport) void* __stdcall GetModuleHandleA(const char* name);
 
 static long gScale = 1;
 static long gHeadlessSeconds = 0;
+static long gSerialPort = kHostSerialPort;	// --serial-port: -1 none
 static long gToneFrequency = 0;			// --microphone-tone: the null microphone's test tone
 static Boolean gWindowed = true;
 static std::atomic<bool> gScriptQuit(false);	// HostQuit(): the run ended by the script
@@ -111,7 +127,8 @@ Usage(void)
 {
 	fprintf(stderr, "usage: newton [--rom image] [--heap bytes] [--display WxH[xdepth]] [--scale n]\n"
 					"              [--script file.ns] [--headless seconds] [--store file] [--erase]\n"
-					"              [--package file.pkg]... [--microphone-tone hz] [--tcp-echo port]\n");
+					"              [--package file.pkg]... [--microphone-tone hz] [--tcp-echo port]\n"
+					"              [--serial-port port|none]\n");
 	return 2;
 }
 
@@ -123,6 +140,24 @@ NewtonBoot(void)
 {
 	HostHeapCheckInstall();		// (NEWTON_HEAPCHECK: host/HostHeapCheck.h)
 	HostBootNewtWorld();
+	// DEVIATION: the ROM's boot starts the timers and the serial hardware
+	// (InitializeCommHardware) and its loader registers the serial and MNP
+	// services; the host does it here, the external port a TCP socket
+	if (gSerialPort >= 0)
+	{
+		NewtonErr err = InitFIQTimer();
+		if (err == noErr)
+			err = HostSerialChipInstall((unsigned short) gSerialPort);
+		if (err == noErr)
+		{
+			RegisterSerialCommServices();
+			RegisterMNPService();
+			printf("[host] serial port %u\n", (unsigned) HostSerialChipPort());
+			fflush(stdout);
+		}
+		else
+			fprintf(stderr, "[host] no serial port on %ld (%ld)\n", gSerialPort, (long) err);
+	}
 	THostScreenDriver* display = HostDisplay();
 	if (gWindowed && !HostWindowStart(display->Width(), display->Height(), display->Pixels(), "Newton", gScale))
 		fprintf(stderr, "newton: no window on this host; running headless\n");
@@ -307,6 +342,11 @@ main(int argc, char** argv)
 			long port = strtol(argv[++i], nil, 0);
 			if (HostStartEchoServer((uint16_t) port) == 0)
 				fprintf(stderr, "newton: no echo server on port %ld\n", port);
+		}
+		else if (strcmp(argv[i], "--serial-port") == 0 && i + 1 < argc)
+		{
+			i++;
+			gSerialPort = strcmp(argv[i], "none") == 0 ? -1 : strtol(argv[i], nil, 0);
 		}
 		else if (strcmp(argv[i], "--headless") == 0 && i + 1 < argc)
 		{

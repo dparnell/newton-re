@@ -28,7 +28,7 @@
 #ifndef __COMMS_OPTIONS_H
 #include "Options.h"
 #endif
-#include "Objects.h"
+#include "objects.h"
 
 enum ConnectionType
 {

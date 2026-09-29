@@ -928,7 +928,7 @@ FTime(RefArg /*rcvr*/)
 
 
 // ROM 0x00089b64 FTimeInSeconds__FRC6RefVar
-static Ref
+Ref
 FTimeInSeconds(RefArg /*rcvr*/)
 {
 	return MAKEINT((long) (Long32) (RealClockSeconds() - kSecondsFrom1904To1993));

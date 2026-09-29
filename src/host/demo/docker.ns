@@ -1,0 +1,21 @@
+// The docker's natives (comms/Docker.h) on the Connection application's
+// dtEndpoint - the ROM's docker protocol frame - with no desktop: a docker
+// made, its state asked, a protocol extension installed (twice, the second
+// time quietly refused) and removed, and the docker aborted, which leaves
+// the frame without one.  ctest host.NewtonDocker.
+
+d := {_proto: GetRoot().Connection.dtEndpoint};
+d:ConnInstantiate();
+Print("docker: made " & (if d.conncobject then "yes" else "no"));
+state := d:GetState();
+Print("docker: version " & state.protocolVersion & ", state " & state.state & ", selectiveSyncOK " & state.selectiveSyncOK);
+Print("docker: desktop type " & d:DesktopType());
+d:InstallAnyProtocolExtension("kybd", func(length) nil);
+d:InstallAnyProtocolExtension("kybd", func(length) nil);
+d:RemoveProtocolExtension("kybd");
+d:SetState(4);
+Print("docker: state now " & d:GetState().state);
+d:Abort(0);
+Print("docker: after abort " & (if d.conncobject then "still there" else "gone") & ", connected " & d.connected);
+Print("docker: done");
+HostQuit();

@@ -6,7 +6,7 @@
 # the view system on the host (HostViews.h), for newtonscript and the newt
 # world's boot
 add_library(host_views STATIC HostViews.cpp HostNatives.cpp HostStores.cpp FactorySoups.cpp)
-target_link_libraries(host_views PUBLIC frames comms_script thirdparty_nie views recognition pcmcia sound system stores packages intl intl_meetings assist hal_host_display hal_host_tablet)
+target_link_libraries(host_views PUBLIC frames comms_script comms_dock thirdparty_nie views recognition pcmcia sound system stores packages intl intl_meetings assist hal_host_display hal_host_tablet)
 target_include_directories(host_views PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_executable(newtonscript newtonscript.cpp)
@@ -34,13 +34,17 @@ if(WIN32)
     target_link_libraries(host_window PUBLIC user32 gdi32 shell32 winmm)
 endif()
 add_executable(newton newton.cpp HostKeyboard.cpp HostPackages.cpp HostHeapCheck.cpp)
-target_link_libraries(newton PRIVATE newt host_views host_window hal_host_sound)
+target_link_libraries(newton PRIVATE newt host_views host_window hal_host_sound hal_timers hal_host_serial)
 target_compile_definitions(newton PRIVATE "NEWTON_DEFAULT_ROM_IMAGE=\"${NEWTON_ROM_BIN}\"")
 
 # the newt world booted headless for two seconds with the views demo as its
 # boot script (needs the ROM image)
 add_test(NAME host.Newton COMMAND newton --rom ${NEWTON_ROM_BIN} --headless 2 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/newton.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.Newton PROPERTIES TIMEOUT 120)
+# the docker's natives (comms/Docker.h) on the Connection application's
+# protocol frame, with no desktop
+add_test(NAME host.NewtonDocker COMMAND newton --rom ${NEWTON_ROM_BIN} --serial-port none --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/docker.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonDocker PROPERTIES TIMEOUT 120 PASS_REGULAR_EXPRESSION "docker: made yes.*version 9, state 1.*desktop type 2.*state now 4.*after abort gone.*docker: done")
 
 # deferred recognition (views/Rerecognize.h): "ton" written, and the
 # same strokes read again through Recognize, RecognizeInkWord,
