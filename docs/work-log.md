@@ -9,6 +9,26 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-30: the flaky host tests pinned down
+
+- Reproduced under load (copies in parallel beside CPU hogs); the
+  scripts now wait on conditions (aec6fe3, 7591dc0).
+  `host.NewtonThirdPartyPackages` checked the drawer before the queued
+  packages (and their fonts) had arrived; `host.NewtonInetSetup` started
+  before the NIE's service registry and HostLink's host network were
+  there; `host.NewtonThirdPartyApps` hung in NewtHack.
+- NewtHack's hang is faithful: unregistered Mahjongg seeds the one
+  random-number generator with `TimeInSeconds() mod 5 + 1`;
+  `TimeInSeconds` (seconds from 1993 in a 30-bit integer) overflowed in
+  2010 and is negative, so one second in five the seed is 0, with which
+  every `Random(lo, hi)` answers `lo` - and NewtHack searches for ever for
+  a free square for its second staircase.  A real Newton set to today
+  would do the same (`docs/curiosities.md`).  The test gives NewtHack a
+  seed of its own.
+- `HostQuit()` ends a run from its script, so `--headless` seconds are a
+  limit: ThirdPartyPackages 56 s to 18 s, ThirdPartyApps 154 s to 110 s.
+  A full parallel ctest: 182 of 182.
+
 ## 2026-09-30: the desktop connection, layer 2 - the serial tools
 
 - `hal/FIQTimer.h` (the machine's fast timers) and `TDelayTimer`

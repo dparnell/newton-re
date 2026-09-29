@@ -106,6 +106,12 @@ anti-aliased ink word into grays - the ordinary stretch stands in, as on a
 ROM with none registered), a text object's layout numbers (0x400) and
 `TextArrow` (0x2000), `ZoomRect`, a `MakeBitmap` kept on a store.
 
+**Host tests wait on conditions**: a demo script polls for what it
+needs (`waitFor`, over `AddDelayedCall`) and ends with `HostQuit()`;
+write new ones the same way, never with a fixed wait for something
+asynchronous - under a parallel ctest the packages `--package` queues
+and the NIE's procrastinated setup arrive late.
+
 ## Candidates for the next piece of work
 
 The owner's order - the package manager, host package loading, the
@@ -174,10 +180,7 @@ worked through.  What could come next (not ranked; the owner chooses):
   connection - which the test server's link, the IR sniffing,
   `SuckPackageFromEndPoint` and fax reception wait on) comes after.
 - **Third-party apps**: all five fixture applications open from Extras
-  and respond (ctest `host.NewtonThirdPartyApps`).  Flaky under a full
-  parallel ctest: `host.NewtonThirdPartyPackages` and
-  `host.NewtonInetSetup` each failed once and pass when rerun - a timing
-  race, being looked into.
+  and respond (ctest `host.NewtonThirdPartyApps`).
 - **Now reachable over the large binaries**: the text engine's
   `TXNewtStreamFactory` (a compressed large binary for a stream above 4K)
   and `RotTiledBitmap` (only a fax page reaches it, so it still waits on
