@@ -2155,6 +2155,89 @@ TCompiler::Compile(void)
 }
 
 
+// Host: a function compiled the way the NTK compiled the functions of a
+// project, each on its own: the source is one func expression, and its
+// function state is the top level - it has no enclosing function, as
+// Compile's wrapper would be - so that a function that uses self or
+// inherited needs no argFrame, and its argFrame's _parent and
+// _implementor are left nil.  The ROM's own NewtonScript was built this
+// way (the decompiler's round trip compiles each function it writes with
+// it: host/NSRoundTrip.cpp); nothing in the ROM does it.  ==> the
+// function, nil when the parse failed.
+Ref
+TCompiler::CompileFunction(void)
+{
+	fFuncDepth = nil;
+	fFunctionState = nil;
+	fFunctionStates = nil;
+	int status = Parser();
+	RefVar tree(AllocatePT1(tokenBEGIN, RefVar(yyval)));
+	yyval = NILREF;
+	yylval = NILREF;
+	if (status != 0)
+		return NILREF;
+	RefVar commands(GetArraySlotRef(tree, 1));
+	if (Length(commands) != 1 || NodeKind(RefVar(GetArraySlotRef(commands, 0))) != tokenFUNC)
+		ThrowMsg((char*) "CompileFunction: the source must be one func expression");
+	RefVar node(GetArraySlotRef(commands, 0));
+	RefVar a1, a2, a3, a4, a5;
+	NodeParts(node, a1, a2, a3, a4, a5);
+	Ref compatibility = GetFrameSlotRef(gVarFrame, Intern((char*) "compilercompatibility"));
+	gCompilerCompatibility = ISINT(compatibility) ? RVALUE(compatibility) : 1;
+	NewFunctionState(a1, nil, fFuncDepth);
+	RefVar codeBlock;
+	newton_try
+	{
+		WalkForDeclarations(a2);
+		Simplify(a2);
+		WalkForClosures(a2);
+		fFunctionState->CopyClosedArgs();
+		WalkForCode(a2, false);
+		codeBlock = EndFunction();
+	}
+	cleanup
+	{
+		while (fFunctionStates != nil)
+		{
+			TFunctionState* state = fFunctionStates;
+			fFunctionStates = state->fNext;
+			delete state;
+		}
+	}
+	end_try;
+	while (fFunctionStates != nil)
+	{
+		TFunctionState* state = fFunctionStates;
+		fFunctionStates = state->fNext;
+		delete state;
+	}
+	return codeBlock;
+}
+
+
+// Host: CompileFunction over a string (the decompiler's round trip)
+Ref
+CompileFunctionString(RefArg str)
+{
+	TStringInputStream* stream = new TStringInputStream(str);
+	TCompiler* compiler = new TCompiler(stream, false);
+	RefVar codeBlock;
+	newton_try
+	{
+		codeBlock = compiler->CompileFunction();
+	}
+	cleanup
+	{
+		delete compiler;
+		delete stream;
+	}
+	end_try;
+	delete compiler;
+	delete stream;
+	return codeBlock;
+}
+
+
 // ROM 0x002c1404 ParseString__FRC6RefVar
 // The forms in a string compiled into one function.  (The ROM's stack
 // objects are destroyed by hand on an exception; here they are made on

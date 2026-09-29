@@ -9,7 +9,7 @@ add_library(host_views STATIC HostViews.cpp HostNatives.cpp HostStores.cpp Facto
 target_link_libraries(host_views PUBLIC frames comms_script comms_dock thirdparty_nie views recognition pcmcia sound system stores packages intl intl_meetings assist hal_host_display hal_host_tablet)
 target_include_directories(host_views PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_executable(newtonscript newtonscript.cpp)
+add_executable(newtonscript newtonscript.cpp NSRoundTrip.cpp)
 target_link_libraries(newtonscript PRIVATE host_views)
 target_compile_definitions(newtonscript PRIVATE "NEWTON_DEFAULT_ROM_IMAGE=\"${NEWTON_ROM_IMAGE}\"")
 
@@ -420,4 +420,18 @@ if(EXISTS ${NIE_DIR}/REGPKGS/inetenbl.pkg)
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(host.NewtonInetFSM PROPERTIES TIMEOUT 180
                          PASS_REGULAR_EXPRESSION "inetfsm: proto protoEndpointFSM.*inetfsm: connected.*inetfsm: echoed hello.*inetfsm: states Connecting Connected Disconnecting Disconnected .*inetfsm: done")
+endif()
+
+# the NewtonScript decompiler's round trip over a sample of the ROM's
+# functions (tools/newton-rom/analysis/nsdecompile.py): each decompiled,
+# compiled again by newtonscript (host/NSRoundTrip.cpp) and compared with
+# the ROM's own; the percentage that round-trip must not fall
+find_package(Python3 COMPONENTS Interpreter)
+if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD}/symbols.json)
+    add_test(NAME host.NSDecompileRoundTrip
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/newton-rom/analysis/nsdecompile.py
+                     ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD} --roundtrip --sample 600
+                     --newtonscript $<TARGET_FILE:newtonscript> --rom ${NEWTON_ROM_BIN} --min-percent 93
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NSDecompileRoundTrip PROPERTIES TIMEOUT 300)
 endif()

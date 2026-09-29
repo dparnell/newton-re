@@ -183,6 +183,7 @@ public:
 	~TCompiler();
 
 	Ref				Compile(void);
+	Ref				CompileFunction(void);		// host: the NTK's way - one func compiled as a function of its own
 
 	// the lexer (Lexer.cpp)
 	int				GetToken(void);
@@ -270,6 +271,7 @@ extern long		gPrintLiteralsFlag;				// 0x0c1023c0  gPrintLiterals: print each fu
 
 long	FreqFuncIndex(RefArg name, long numArgs);
 Ref		ParseString(RefArg str);				// the string's forms compiled into one function
+Ref		CompileFunctionString(RefArg str);		// host: a func expression compiled at the top level, as the NTK compiled each function
 Ref		ParseFile(const char* filename);		// each form compiled and run; ==> the last result
 void	ThrowExCompilerWithBadValue(long error, RefArg value);
 

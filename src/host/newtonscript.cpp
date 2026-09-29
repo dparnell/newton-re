@@ -9,6 +9,7 @@
 
 	Usage:
 		newtonscript [--rom <image>] [--heap <bytes>] [--display <w>x<h>[x<depth>]] [-e <source>] [file.ns ...]
+		newtonscript [--rom <image>] --roundtrip <records> <results>
 
 	Each file is loaded with ParseFile (each form compiled and run, as the
 	NTK loads a text file); -e compiles and runs a string; with no files
@@ -26,6 +27,10 @@
 	MessagePad's, 4 deep): AddView(GetRoot(), template), :Open(),
 	RefreshViews() and ScreenSnapshot("file.pgm") then draw a view
 	hierarchy into an image (host/HostViews.h).
+
+	--roundtrip compiles each function the NewtonScript decompiler wrote
+	(tools/newton-rom/analysis/nsdecompile.py) and compares it with the ROM's
+	own, a result line per function (host/NSRoundTrip.cpp).
 */
 
 #include "Frames.h"
@@ -63,6 +68,9 @@ FROMConstant(RefArg /*rcvr*/, RefArg name)
 }
 
 
+int		RunRoundTrip(const char* inputPath, const char* outputPath);		// NSRoundTrip.cpp
+
+
 static int
 Usage(void)
 {
@@ -81,6 +89,8 @@ main(int argc, char** argv)
 	long displayWidth = 0, displayHeight = 0, displayDepth = 1;
 	Boolean interactive = false;
 	Boolean ranSomething = false;
+	const char* roundTripIn = nil;
+	const char* roundTripOut = nil;
 	int first = 1;
 	while (first < argc && argv[first][0] == '-' && argv[first][1] == '-')
 	{
@@ -93,6 +103,12 @@ main(int argc, char** argv)
 		{
 			heapSize = strtol(argv[first + 1], nil, 0);
 			first += 2;
+		}
+		else if (strcmp(argv[first], "--roundtrip") == 0 && first + 2 < argc)
+		{
+			roundTripIn = argv[first + 1];
+			roundTripOut = argv[first + 2];
+			first += 3;
 		}
 		else if (strcmp(argv[first], "--display") == 0 && first + 1 < argc)
 		{
@@ -117,6 +133,8 @@ main(int argc, char** argv)
 	HostMountStores();
 	HostInitREP(stdout, stdin);
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "ROMConstant")), RefVar(MakeCFunction((void*) FROMConstant, 1, nil)));
+	if (roundTripIn != nil)
+		return RunRoundTrip(roundTripIn, roundTripOut);
 	if (displayWidth > 0)
 	{
 		newton_try
