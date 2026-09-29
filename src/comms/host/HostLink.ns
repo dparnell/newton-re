@@ -25,6 +25,7 @@
 //     'DisengageLinkProtocol [frame, symbol]    answered 'Disengaged
 //     'Disconnect [frame, symbol]               answered 'Disconnected
 //     'Cancel, 'Dispose, 'Abort                 (nothing to undo)
+//   and instance:Release() when the link manager is done with it.
 //   an answer being frame:symbol(InetBuildStatusFrame(linkID, status, nil,
 //   nil, nil, nil)), as enetsup.pkg's Ethernet service answers 'connect
 //   (0x10649).
@@ -59,6 +60,10 @@
 			end;
 			nil;
 		end,
+		// (the link manager's CleanUp, 0x4764d, releases each service's
+		// instance after its Dispose, as protoFSM's Release frees a machine's
+		// engine view: an instance here has none)
+		Release: func() nil,
 	},
 
 	// the two services, made when the NIE is there

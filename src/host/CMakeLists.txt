@@ -353,7 +353,7 @@ if(EXISTS ${NIE_DIR}/REGPKGS/inetenbl.pkg)
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/inet.ns
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(host.NewtonInet PROPERTIES TIMEOUT 180
-                         PASS_REGULAR_EXPRESSION "inet: default link Host network.*inet: link connected, connected.*inet: localhost is 127.0.0.1.*inet: connected, state 5.*inet: echoed hello.*inet: endpoint disposed.*inet: link released.*inet: link now disconnected.*inet: done")
+                         PASS_REGULAR_EXPRESSION "inet: default link Host network.*inet: link connected, connected.*inet: localhost is 127.0.0.1.*inet: connected, state 5.*inet: echoed hello.*inet: endpoint disposed.*inet: link released.*inet: link now idle.*inet: done")
     # Internet Setup's own UI with the host's link (demo/inetsetup.ns): the
     # Host network setup listed and opened, and a new one made with Host
     # network picked in New Internet Setup's picker (snapshots in
@@ -367,4 +367,16 @@ if(EXISTS ${NIE_DIR}/REGPKGS/inetenbl.pkg)
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(host.NewtonInetSetup PROPERTIES TIMEOUT 180
                          PASS_REGULAR_EXPRESSION "inetsetup: opened yes.*inetsetup: listed Host network.*inetsetup: host setups 2.*inetsetup: done")
+    # the NIE's protoEndpointFSM (its 'Inet Protos:NIE unit) as a TCP client
+    # over the host's link (demo/inetfsm.ns): connected through its own
+    # states, "hello" echoed, disconnected
+    add_test(NAME host.NewtonInetFSM
+             COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --erase
+                     --store ${CMAKE_CURRENT_BINARY_DIR}/inetfsm.store --tcp-echo 52374 --headless 22
+                     --package ${NIE_DIR}/ENETSUP/newtdev.pkg --package ${NIE_DIR}/REGPKGS/inetenbl.pkg
+                     --package ${NIE_DIR}/REGPKGS/inetstup.pkg
+                     --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/inetfsm.ns
+             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(host.NewtonInetFSM PROPERTIES TIMEOUT 180
+                         PASS_REGULAR_EXPRESSION "inetfsm: proto protoEndpointFSM.*inetfsm: connected.*inetfsm: echoed hello.*inetfsm: states Connecting Connected Disconnecting Disconnected .*inetfsm: done")
 endif()

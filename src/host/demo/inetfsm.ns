@@ -1,0 +1,99 @@
+// The Newton Internet Enabler's protoEndpointFSM (inetenbl.pkg 0x15cf9, the
+// second object of its 'Inet Protos:NIE unit) over the host's link: a TCP
+// client made from it - its instantiation options the 'inet service, the
+// link and the remote socket - driven through its own states (Instantiate,
+// Bind, connect, Connected; then Disconnect, UnBind, Dispose) by 'connect
+// and 'Disconnect events, its client told each state; while Connected its
+// endpoint echoes "hello" through the echo server.
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//       --erase --store inet.store --tcp-echo 52374 --headless 25 \
+//       --package fixtures/packages/apple/NIE2/ENETSUP/newtdev.pkg \
+//       --package fixtures/packages/apple/NIE2/REGPKGS/inetenbl.pkg \
+//       --package fixtures/packages/apple/NIE2/REGPKGS/inetstup.pkg \
+//       --script src/host/demo/inetfsm.ns
+//
+// (An NTK application imports the proto from the unit; a script finds it
+// in CurrentExports.)
+
+kFSMEchoPort := 52374;
+
+unitExport := func(name, index) begin
+	local found;
+	foreach u in CurrentExports() do
+		if u.name = name then found := u.ExportTable[index];
+	found;
+end;
+
+fsmClient := {
+	linkID: nil,
+	endpointFSM: nil,
+	states: [],
+
+	Linked: func(linkID, status, err)
+	begin
+		if err then
+			Print("inetfsm: link failed, " & err)
+		else if status.linkStatus = 'connected then begin
+			self.linkID := linkID;
+			DNSGetAddressFromName("localhost", self, 'Resolved);
+		end;
+	end,
+
+	Resolved: func(results, err)
+	begin
+		if err or not results then begin
+			Print("inetfsm: localhost not resolved, " & err);
+			return;
+		end;
+		local proto := call unitExport with ('|Inet Protos:NIE|, 1);
+		Print("inetfsm: proto " & proto.declareSelf);
+		// (a machine made from the proto has states of its own, even none:
+		// MBuildAncestorList, 0x159c9, starts the ancestors with the leaf's
+		// fsm_private_states, and the collectors take a path into each)
+		local tcp := {_proto: proto, fsm_private_states: {},
+			fConfigOptions_Instantiate: [
+				{label: "inet", type: 'service, opCode: 512},
+				{label: "ilid", type: 'option, opCode: 512,
+				 data: {arglist: [linkID], typelist: ['struct, 'ulong]}},
+				{label: "itrs", type: 'option, opCode: 512,
+				 data: {arglist: [results[0].resultIPAddress, kFSMEchoPort],
+				        typelist: ['struct, ['array, 'byte, 4], 'short]}}],
+			fConfigOptions_Bind: nil,
+			fConfigOptions_Connect: nil};
+		endpointFSM := tcp:InstantiateAndPerform(nil, 'Create, nil);
+		endpointFSM:DoEvent('connect, [self, 'EndpointState]);
+	end,
+
+	EndpointState: func(state, err)
+	begin
+		if err then
+			Print("inetfsm: " & state & " error " & (if IsFrame(err) then err.name else err));
+		if Length(states) = 0 or states[Length(states) - 1] <> state then
+			AddArraySlot(states, state);
+		if state = 'Connected then begin
+			Print("inetfsm: connected");
+			local ep := endpointFSM:GetEndpoint();
+			ep:SetInputSpec({
+				form: 'string,
+				termination: {byteCount: 5},
+				inputScript: func(endpoint, data, terminator, options) begin
+					Print("inetfsm: echoed " & data);
+					AddDelayedCall(func() fsmClient.endpointFSM:DoEvent('Disconnect, [fsmClient, 'EndpointState]), nil, 100);
+				end});
+			ep:Output("hello", nil, nil);
+		end else if state = 'Disconnected and Length(states) > 2 then begin
+			local names := "";
+			foreach s in states do names := names & s & " ";
+			Print("inetfsm: states " & names);
+			InetDisconnectLink(linkID, self, 'Released);
+		end;
+	end,
+
+	Released: func(linkID, status, err)
+	begin
+		Print("inetfsm: done");
+	end,
+};
+
+AddDelayedCall(func() InetGrabLink(InetGetDefaultLinkID(), fsmClient, 'Linked), nil, 6000);
