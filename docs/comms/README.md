@@ -197,4 +197,6 @@ to nought, which is no timeout at all; the host tool re-arms it in
 | the docking loader (`TSCPLoader`, `SCPLoad`), `TICHandler`, `InitializeCommHardware`, the ROM's own services (`RegisterROMProtcols`) | NOT YET |
 | `CMemObject` (a status request's answer goes through `TUSharedMem` meanwhile) | NOT YET |
 | `TPCommTool`/`StartCommToolProtocol` (a tool as a `TCommToolProtocol`) | NOT YET |
-| the NewtonScript endpoint (`TNewScriptEndpointClient`, the `CINew*` natives), the link and DNS services, `TEndpointPipe` | NOT YET |
+| marshalling out (`MarshalArguments`: a script's `{arglist, typelist}` into bytes, in the MessagePad's byte order) | done: `frames/MarshalOut.cpp`, `test_Marshalling` (the NIE's `itrs` data) |
+| the frame translators: `PFrameSink`/`PFrameSource`, `PScriptDataOut`/`In` (a value by its form - string, char, number as a big-endian long, bytes, binary, template), `POptionDataOut`/`In` (option frames to a `TOptionArray` and back; a `'service` frame becomes a `'sid '` option naming it), `GetDataForm`, `InitTranslators` | done: `comms/Translators.h` (library `comms_script`), `test_Translators`.  NOT YET: reading a `'template` back goes through `ConstructReturnValue`, which cannot read an `'array` field and reads words in the host's order while the bytes are the device's; the six flatten/stream translators `InitTranslators` also registers |
+| the NewtonScript endpoint (`TNewScriptEndpointClient`, the `CINew*` natives, **M3**), the link and DNS services (**M4**), `TEndpointPipe` | NOT YET |
