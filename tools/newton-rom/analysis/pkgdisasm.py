@@ -110,6 +110,45 @@ def glue_stubs(code):
     return stubs
 
 
+# NTK's native-compiled NewtonScript also calls routines of its own at the
+# front of the code binary, most of which check the ROM's version word
+# (0x13dc: 0x20002 on the MP2x00 US 2.1) and, on a 2.x ROM, go straight to
+# a glue stub (the ROM has the runtime support NTK's native code needs:
+# GetGInterpreter, TInterpreter::GetReceiver, IsSend, SetSendEnv...).
+ROM_VERSION = 0x20002
+
+
+def trampoline_target(code, stubs, at, depth=0):
+    """What a call to `at` reaches on this ROM: a glue stub's function, or
+    None for a routine of the binary's own."""
+    if at in stubs:
+        return stubs[at]
+    if depth > 4:
+        return None
+    import re
+    md = capstone.Cs(capstone.CS_ARCH_ARM, capstone.CS_MODE_ARM | capstone.CS_MODE_BIG_ENDIAN)
+    for k in range(16):
+        off = at + 4 * k
+        if off + 4 > len(code):
+            return None
+        insns = list(md.disasm(code[off:off + 4], off))
+        if not insns:
+            return None
+        m, o = insns[0].mnemonic, insns[0].op_str
+        if m in ('bge', 'bgt') and o.startswith('#'):
+            # (the version test's branch taken on a 2.x ROM)
+            return trampoline_target(code, stubs, int(o[1:], 16), depth + 1)
+        if m == 'b' and o.startswith('#') and k > 0:
+            return trampoline_target(code, stubs, int(o[1:], 16), depth + 1)
+        if m == 'ldrgt' and o.startswith('pc'):
+            found = re.search(r'#(0x[0-9a-f]+|\d+)', o)
+            word = struct.unpack_from('>I', code, off + 8 + int(found.group(1), 0))[0]
+            return glue_name(word)
+        if m.startswith('ldm') or m.startswith('pop') or (m == 'mov' and o.startswith('pc')):
+            return None
+    return None
+
+
 def disassemble(code, start, end):
     md = capstone.Cs(capstone.CS_ARCH_ARM, capstone.CS_MODE_ARM | capstone.CS_MODE_BIG_ENDIAN)
     stubs = glue_stubs(code) if _rom is not None else {}
@@ -123,6 +162,10 @@ def disassemble(code, start, end):
             target = int(insns[0].op_str[1:], 16)
             if target in stubs:
                 note = stubs[target]
+            elif _rom is not None:
+                reached = trampoline_target(code, stubs, target)
+                if reached:
+                    note = '(2.x) ' + reached
         elif _rom is not None and glue_name(word):
             note = glue_name(word)
         print('  %06x  %08x  %-40s %s' % (off, word, text, note))
