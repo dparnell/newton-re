@@ -9,6 +9,33 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: the text engine, round 5 - clipboard, gestures, text on a store, the ruler bar
+
+- The clipboard and drag and drop (`04db04e`): Copy makes a clipping of
+  the selection, Cut copies and deletes undoably, Paste puts the front
+  clipping in over the selection; a press on the selection drags it out,
+  a drag inside the view is a move; a drop is re-read into text and
+  styles, anything else becomes a picture run.
+- The gestures (`c5f370f`): a scrub deletes, with a poof, the selection
+  it lands on, else lines it covers at least 30%, else the characters or
+  words it spans; the caret gestures insert a space or a return, or
+  delete a character.
+- Text kept on a store (`774136e`): after `SetStore` the text lives in a
+  large binary; Externalize/Internalize carry it as `txText` and a chunk
+  table; the finder searches it; the stream factory puts undo data of 4K
+  or more into a large binary on the first store.
+- The ruler bar (`9b9b1f0`): drawn from the ROM's own ruler pictures;
+  justification and spacing icons, tabs dragged in, along or off, the
+  margin and indent markers - each an undoable paragraph change.
+  `test_TXStream` updated for the real large-stream path (`7576a16`).
+- `txview.ns` / `host.NewtonTXView` cuts, pastes, scrubs, stores 2100
+  characters and reads them back, puts ~4K of undo on the store and uses
+  the ruler.  Found: a page is the view's height unless `SetGeometry`
+  gives one; the ROM's memcpy is its memmove.  ROM bugs kept: a picture
+  dragged out gets a drag rectangle partly from a stale stack word, some
+  ruler tab changes carry a stack value, a drag that changes nothing
+  loses its list of changes.  Left: pagination.
+
 ## 2026-09-29: the sound server, round 5 - GSM, and the Sound Recorder recording through it
 
 - The GSM 06.10 full-rate coder - the ROM's compiled Toast library,

@@ -234,16 +234,16 @@ The NOT YET sweep of 2026-09-29 left 20 genuine gaps (40 comments before):
 commands and all 39 `protoTXView` methods (`docs/text/README.md`; demo
 `src/host/demo/txview.ns`, ctest `host.NewtonTXView`).  A protoTXView's
 page is the view's height unless `SetGeometry` gives one - ROM
-behaviour: text below it is never drawn.  NOT YET:
-- the clipboard (Copy does nothing, Paste answers false, so Cut only
-  deletes), dragging a selection out, the scrub and caret gestures (they
-  fall through to `TView`);
-- text kept on a store (`TXVBOChars`, the large-binary side of the stream
-  factory; `SetStore`'s store is ignored);
-- the ruler bar (`TXRulerUI`: ShowRuler, HideRuler, UpdateRulerInfo do
-  nothing);
-- the paginated formatters (`TXMultiFrameFormatter`, `TXPageFrames`,
-  `TXPageFormatter`, 0x002413e0-0x00242a2c).
+behaviour: text below it is never drawn.  Round 5 added the clipboard
+(Copy, Cut, Paste), drag and drop, the scrub and caret gestures, the text
+kept on a store (`SetStore`, `TXVBOChars`, the stream factory's
+large-binary side) and the ruler bar (`ShowRuler`, `TXRulerUI`);
+`txview.ns` exercises all of it.  Left: pagination only - the page frames
+and their drawing (`TXPageFrames`, `TXNewtPageFrames`), the multi-frame
+and page formatters (`TXMultiFrameFormatter`, `TXPageFormatter`,
+0x002413e0-0x00242a2c), `SetGeometry`'s paginate, `GetCountPages` and
+what `InsertPageBreak` does to the layout.  (A small mark of a scrub's ink
+is left on screen after its poof - `txview-4.pgm` - not yet looked into.)
 
 ## The natives still unanswered
 
