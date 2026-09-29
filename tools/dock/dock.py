@@ -50,6 +50,8 @@ import threading
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from mnp import MNPLink  # noqa: E402
 import newtondes  # noqa: E402
+import nsof  # noqa: E402
+from nsof import Symbol  # noqa: E402
 
 
 class DockSession:
@@ -119,6 +121,30 @@ class DockSession:
             raise RuntimeError("the Newton refused the session: %d" % result)
         print("dock.py: docked")
 
+    def look_at_stores(self):
+        """In a session: the stores ('gsto'), the default one ('gdfs'),
+        the first made current with its soups ('ssgn'), the System soup
+        made current ('ssou') and its info read ('gsin')."""
+        self.write_command(b"gsto")
+        stores = nsof.decode(self.expect(b"stor"))
+        print("dock.py: stores: %s" % ", ".join("%s (%s)" % (st[Symbol("name")], st[Symbol("kind")]) for st in stores))
+        self.write_command(b"gdfs")
+        default = nsof.decode(self.expect(b"dfst"))
+        print("dock.py: the default store is %s" % default[Symbol("name")])
+        first = stores[0]
+        self.write_command(b"ssgn", nsof.encode({Symbol("name"): first[Symbol("name")],
+                                                 Symbol("kind"): first[Symbol("kind")],
+                                                 Symbol("signature"): first[Symbol("signature")]}))
+        names, signatures = nsof.decode(self.expect(b"soup"), many=True)
+        print("dock.py: %d soups on %s, the System soup %s" % (len(names), first[Symbol("name")],
+                                                              "among them" if "System" in names else "missing"))
+        self.write_command(b"ssou", "System\0".encode("utf-16-be"))
+        result = struct.unpack(">i", self.expect(b"dres")[:4])[0]
+        print("dock.py: the System soup made current: %d" % result)
+        self.write_command(b"gsin")
+        info = nsof.decode(self.expect(b"sinf"))
+        print("dock.py: the System soup's info: %s" % (type(info).__name__))
+
     def load_packages(self, packages, session=False):
         """The package loader's session, or (session) a docking session
         that loads the packages.  ==> the results, one a package."""
@@ -126,6 +152,7 @@ class DockSession:
         print("dock.py: the Newton's protocol version is %d" % struct.unpack(">I", data[:4]))
         if session:
             self.docking_session()
+            self.look_at_stores()
         results = []
         for path in packages:
             with open(path, "rb") as f:

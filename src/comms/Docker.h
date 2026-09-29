@@ -87,7 +87,8 @@ enum
 	kDTime				= 'time',
 	kDSetVBOCompression	= 'cvbo',
 	kDRestoreAll		= 'rins',
-	kDDesktopInControl	= 'dsnc'
+	kDDesktopInControl	= 'dsnc',
+	kDSoupInfo			= 'sinf'
 };
 
 // the docker's errors
@@ -103,7 +104,11 @@ enum
 	kDockErrRequestToDock		= -28029,		// the desktop said 'rtdk' back
 	kDockErrProtocolVersion		= -28011,		// (-28011 = 0xffff9295)
 	kDockErrBadExtension		= -28020,		// no command, or one already extended
-	kDockErrBadLength			= -28007		// a command's data not the length it must be
+	kDockErrBadLength			= -28007,		// a command's data not the length it must be
+	kDockErrNoCurrentSoup		= -28006,		// a soup command with no current soup
+	kDockErrNoStore				= -28014,		// no store of the name and kind
+	kDockErrNoSuchSoup			= -28015,		// no soup of the name
+	kDockErrNoCurrentStore		= -28015		// (the ROM uses the same number) no current store
 };
 
 // the session's states (eDockingState)
@@ -211,7 +216,26 @@ public:
 	void			ReadPassword(void);
 	void			VerifyPassword(void);
 
-	// its commands
+	// its commands: stores
+	Ref				MakeStoreFrame(RefArg store);
+	void			WriteStoreNames(void);
+	void			SetCurrentStore(Boolean andSoups);
+	void			ReserveCurrentStore(RefArg store);
+	void			SetStoreToDefault(void);
+	void			WriteDefaultStore(void);
+	void			SetStoreSignature(void);
+	// soups
+	void			WriteSoupNames(void);
+	Ptr				ReadString(ULong length);
+	void			ReadCurrentSoup(void);
+	void			SetupSoup(void);
+	void			VerifySoup(void);
+	void			SetCurrentSoup(Boolean withInfo);
+	void			WriteSoupInfo(Boolean ifChanged);
+	void			WriteIndexDescription(Boolean ifChanged);
+	void			SetSoupInfoFrame(void);
+	void			SetSoupSignature(void);
+
 	void			ProcessCommand(Boolean* done, Boolean* operationDone);
 	Boolean			CheckProtocolExtension(ULong command, Boolean* result);
 	Boolean			CheckProtocolPatch(ULong command, Boolean* result);
@@ -227,14 +251,14 @@ public:
 	RefStruct		fConnection;			// +0x20  the protocol frame
 	RefStruct		fField24;				// +0x24
 	RefStruct		fField28;				// +0x28
-	Boolean			fField2c;				// +0x2c
-	Boolean			fField2d;				// +0x2d
-	Boolean			fField2e;				// +0x2e
+	Boolean			fIsDirectorySoup;		// +0x2c  the current soup is the store's directory (the metasoup)
+	Boolean			fIsSystemSoup;			// +0x2d  the System soup
+	Boolean			fIsPackageSoup;			// +0x2e  the Extras (packages) soup
 	Boolean			fSessionStarted;		// +0x2f  the session is under way (the desktop has spoken)
 	Boolean			fInExtension;			// +0x30  a protocol extension is running
 	Boolean			fField31;				// +0x31
 	Boolean			fLocked;				// +0x32
-	long			fVBOCompression;		// +0x34  'cvbo': large binaries written compressed (2 always, 1 when fField2e)
+	long			fVBOCompression;		// +0x34  'cvbo': large binaries written compressed (2 always, 1 for the packages soup)
 	long			fField38;				// +0x38
 	long			fField3c;				// +0x3c
 	RefStruct		fSyncChanges;			// +0x40
@@ -245,7 +269,7 @@ public:
 	TCursorArray*	fCursors;				// +0x54
 	ULong			fManufacturer;			// +0x58  the Newton's, as its name says them
 	ULong			fMachineType;			// +0x5c
-	Ref				fField60;				// +0x60
+	long			fField60;				// +0x60  (1: a restore that keeps the soups' own info)
 	long			fField64;				// +0x64
 	long			fField68;				// +0x68
 	RefStruct		fField6c;				// +0x6c

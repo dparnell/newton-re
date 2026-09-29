@@ -15,6 +15,7 @@
 #include "NewtWorld.h"
 #include "Dates.h"
 #include "Soups.h"
+#include "RichString.h"
 #include "ROMConstants.h"
 #include "ObjectStreamer.h"
 #include "Locale.h"
@@ -36,6 +37,8 @@
 #include "Unicode.h"
 
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 extern const ExceptionName exPipeException;
 extern const ExceptionName exLongErrorException;
@@ -46,6 +49,27 @@ extern const ExceptionName exOutOfMemory;
 
 
 static const ExceptionName exRefExceptionName = (ExceptionName) "type.ref";		// ROM 0x00380880 exRefException
+
+
+// NEWTON_TRACE_DOCK (host only): the commands each way, and the errors the
+// docker records, on stderr
+static int
+TracingDock(void)
+{
+	static int tracing = -1;
+	if (tracing < 0)
+		tracing = getenv("NEWTON_TRACE_DOCK") != nil;
+	return tracing;
+}
+
+
+static void
+TraceCommand(const char* direction, ULong command, ULong length)
+{
+	if (TracingDock())
+		fprintf(stderr, "[dock] %s %c%c%c%c (%lu)\n", direction, (char) (command >> 24), (char) (command >> 16),
+			(char) (command >> 8), (char) command, (unsigned long) length);
+}
 
 
 // ROM 0x001fbbe4 FDefaultStore
@@ -82,6 +106,7 @@ TEzPipeProtocol::WriteDockerHeader(ULong command, Boolean flush)
 	PutBigEndianWord(header + 4, fSubProtocol);
 	PutBigEndianWord(header + 8, command);
 	PutBigEndianWord(header + 12, 0);
+	TraceCommand("->", command, 0);
 	if (!flush)
 		fPipe->WriteChunk(header, 12, false);
 	else
@@ -116,6 +141,7 @@ TEzPipeProtocol::ReadDockerHeader(ULong* command, ULong* length)
 	fPipe->ReadChunk(words, count, eof);
 	*command = GetBigEndianWord(words);
 	*length = GetBigEndianWord(words + 4);
+	TraceCommand("<-", *command, *length);
 }
 
 
@@ -270,9 +296,9 @@ TDocker::TDocker()
 	fPipe = nil;
 	fPipeOpen = false;
 	fSelectiveSyncOK = false;
-	fField2c = false;
-	fField2d = false;
-	fField2e = false;
+	fIsDirectorySoup = false;
+	fIsSystemSoup = false;
+	fIsPackageSoup = false;
 	fField28 = NILREF;
 	fSessionStarted = false;
 	fInExtension = false;
@@ -286,7 +312,7 @@ TDocker::TDocker()
 	fDynArray7c = nil;
 	fExtensionCommands = nil;
 	fManufacturer = 0;
-	fField60 = NILREF;
+	fField60 = 2;
 	fMachineType = 0;
 	fField64 = 0;
 	fField68 = 0;
@@ -463,6 +489,8 @@ DockerFramesException(Exception* exception)
 void
 TDocker::ProcessException(Exception* exception)
 {
+	if (TracingDock())
+		fprintf(stderr, "[dock] exception %s (%ld)\n", exception->name, (long) (intptr_t) exception->data);
 	if (Subexception(exception->name, exPipeException)
 	 || Subexception(exception->name, exLongErrorException)
 	 || Subexception(exception->name, exOutOfMemory))
@@ -905,6 +933,8 @@ TDocker::Connect(RefArg connection, RefArg options, RefArg password)
 		ProcessException(CurrentException());
 	}
 	end_try;
+	if (TracingDock())
+		fprintf(stderr, "[dock] connected: error %ld, state %ld, protocol %lu\n", fError, fState, (unsigned long) fProtocolVersion);
 	CleanUpIfError(fStopping);
 	UnlockTDocker();
 	return fError;
@@ -1025,7 +1055,7 @@ TDocker::DoConnection(RefArg arg1, RefArg arg2, RefArg callback, Boolean* done)
 	}
 	fField6c = NILREF;
 	fField70 = NILREF;
-	fField60 = NILREF;
+	fField60 = 2;
 	FreeCurrentStore();
 	fCurrentSoup = NILREF;
 	fField28 = NILREF;
@@ -1194,7 +1224,7 @@ TDocker::WriteRef(ULong command, RefArg obj)
 	if (command != 0)
 	{
 		WriteDockerHeader(command, false);
-		if (fVBOCompression == 2 || (fField2e && fVBOCompression == 1))
+		if (fVBOCompression == 2 || (fIsPackageSoup && fVBOCompression == 1))
 			writer.SetCompressLargeBinaries();
 		long size = writer.Size();
 		*fPipe << size;
@@ -1538,14 +1568,428 @@ TDocker::CheckProtocolPatch(ULong /*command*/, Boolean* /*result*/)
 }
 
 
+// ------------------------------------------------------------------------
+//	The stores
+// ------------------------------------------------------------------------
+
+Ref		FConnBuildStoreFrame(RefArg rcvr, RefArg store, RefArg withInfo);
+
+
+// ROM 0x00097bbc MakeStoreFrame__7TDockerFRC6RefVar
+// What the desktop is told of a store (ConnBuildStoreFrame, with its info).
+Ref
+TDocker::MakeStoreFrame(RefArg store)
+{
+	return FConnBuildStoreFrame(RefVar(NILREF), store, RefVar(TRUEREF));
+}
+
+
+// ROM 0x00097c28 WriteStoreNames__7TDockerFv
+// 'gsto' -> 'stor': every store's frame.
+void
+TDocker::WriteStoreNames(void)
+{
+	RefVar stores(GetStores());
+	RefVar frames(AllocateArray(RSSYMarray, Length(stores)));
+	RefVar frame;
+	long slot = 0;
+	RefVar store;
+	for (long i = 0; i < Length(stores); i++)
+	{
+		store = GetArraySlot(stores, i);
+		frame = MakeStoreFrame(store);
+		SetArraySlot(frames, slot, frame);
+		slot++;
+	}
+	WriteRef('stor', frames);
+}
+
+
+// ROM 0x00098080 ReserveCurrentStore__7TDockerFRC6RefVar
+// The store made the current one, marked busy for the application.
+void
+TDocker::ReserveCurrentStore(RefArg store)
+{
+	if (NOTNIL(fCurrentStore))
+		FreeCurrentStore();
+	fCurrentStore = store;
+	RefVar appName(GetFrameSlot(fConnection, RSSYMappname));
+	RefVar appSymbol(GetFrameSlot(fConnection, RSSYMappsymbol));
+	NSSend(fCurrentStore, RefVar(RSSYMmarkbusy), appSymbol, appName);
+}
+
+
+// ROM 0x0009821c SetCurrentStore__7TDockerFUc
+// 'ssto' / 'ssgn': the store the desktop names (a frame of its name, kind,
+// signature and perhaps info) made the current one - the first of that
+// name and kind, if its signature is the one asked for (or none was).
+// ==> 'dres' (kDockErrBadStoreSignature for the wrong signature, -28014
+// for no such store) or, for 'ssgn', the store's soups ('soup'); and the
+// store given the info, if the frame had any.
+void
+TDocker::SetCurrentStore(Boolean andSoups)
+{
+	RefVar frame(ReadRef(RefVar(NILREF)));
+	RefVar name(GetFrameSlot(frame, RSSYMname));
+	RefVar kind(GetFrameSlot(frame, RSSYMkind));
+	RefVar signatureRef(GetFrameSlot(frame, RSSYMsignature));
+	Boolean hasInfo = FrameHasSlot(frame, RSSYMinfo);
+	RefVar info(GetFrameSlot(frame, RSSYMinfo));
+	RefVar stores(GetStores());
+	RefVar store, storeName, storeKind;
+	long signature = RINT(signatureRef);
+	Boolean wrongSignature = false;
+	TRichString wantedName(name);
+	TRichString wantedKind(kind);
+	FreeCurrentStore();
+	for (short i = 0; i < Length(stores); i++)
+	{
+		store = GetArraySlot(stores, i);
+		storeName = StoreGetName(store);
+		storeKind = StoreGetKind(store);
+		long storeSignature = RINT(StoreGetSignature(store));
+		TRichString thisName(storeName);
+		TRichString thisKind(storeKind);
+		if (thisName.CompareSubStringCommon(wantedName, 0, -1, false) == 0
+		 && thisKind.CompareSubStringCommon(wantedKind, 0, -1, false) == 0)
+		{
+			wrongSignature = signature != 0 && storeSignature != signature;
+			if (!wrongSignature)
+				ReserveCurrentStore(store);
+			break;
+		}
+	}
+	if (ISNIL(fCurrentStore))
+	{
+		fError = wrongSignature ? kDockErrBadStoreSignature : kDockErrNoStore;
+		WriteResult(fError);
+	}
+	else if (fError == noErr && andSoups)
+		WriteSoupNames();
+	else
+		WriteResult(fError);
+	if (NOTNIL(fCurrentStore))
+	{
+		StoreFlush(fCurrentStore);
+		if (hasInfo)
+		{
+			if (ISNIL(info))
+				info = AllocateFrame();
+			StoreSetAllInfo(fCurrentStore, info);
+		}
+	}
+	if (wrongSignature)
+		fError = noErr;
+}
+
+
+// ROM 0x000985c0 SetStoreToDefault__7TDockerFv
+// 'sdef': the default store made the current one.
+void
+TDocker::SetStoreToDefault(void)
+{
+	RefVar store(FDefaultStore(RefVar(NILREF)));
+	ReserveCurrentStore(store);
+}
+
+
+// ROM 0x00098610 WriteDefaultStore__7TDockerFv
+// 'gdfs' -> 'dfst': the default store's frame.
+void
+TDocker::WriteDefaultStore(void)
+{
+	RefVar store(FDefaultStore(RefVar(NILREF)));
+	RefVar frame(MakeStoreFrame(store));
+	WriteRef('dfst', frame);
+}
+
+
+// ROM 0x0009b9c8 SetStoreSignature__7TDockerFv
+// 'ssig': the current store's signature.
+void
+TDocker::SetStoreSignature(void)
+{
+	unsigned long signature;
+	*fPipe >> signature;
+	if (NOTNIL(fCurrentStore))
+		StoreSetSignature(fCurrentStore, RefVar(MAKEINT(signature)));
+	WriteResult(noErr);
+}
+
+
+// ------------------------------------------------------------------------
+//	The soups
+// ------------------------------------------------------------------------
+
+// ROM 0x00097d24 WriteSoupNames__7TDockerFv
+// 'soup': the current store's soups' names and signatures, two arrays one
+// after the other - but not a soup whose soupDef says it belongs to
+// 'SystemScratch.
+void
+TDocker::WriteSoupNames(void)
+{
+	WriteDockerHeader('soup', false);
+	RefVar names(StoreGetSoupNames(fCurrentStore));
+	RefVar soup;
+	long length = Length(names);
+	long count = 0;
+	RefVar kept(AllocateArray(RSSYMarray, length));
+	RefVar signatures(AllocateArray(RSSYMarray, length));
+	RefVar info;
+	RefVar name;
+	for (long i = 0; i < length; i++)
+	{
+		name = GetArraySlot(names, i);
+		soup = StoreGetSoup(fCurrentStore, name);
+		info = SoupGetInfo(soup, RSSYMsoupdef);
+		Boolean keep = ISNIL(info);
+		if (!keep)
+		{
+			info = GetFrameSlot(info, RSSYMownerapp);
+			keep = ISNIL(info) || !EQRef(info, RSSYMsystemscratch);
+		}
+		if (keep)
+		{
+			SetArraySlot(kept, count, name);
+			SetArraySlot(signatures, count, RefVar(SoupGetSignature(soup)));
+			count++;
+		}
+	}
+	if (count != length)
+	{
+		SetLength(kept, count);
+		SetLength(signatures, count);
+	}
+	TObjectWriter nameWriter(kept, *fPipe, false);
+	TObjectWriter signatureWriter(signatures, *fPipe, false);
+	long nameSize = nameWriter.Size();
+	long signatureSize = signatureWriter.Size();
+	*fPipe << (nameSize + signatureSize);
+	nameWriter.Write();
+	signatureWriter.Write();
+	Pad(nameSize + signatureSize);
+	fPipe->FlushWrite();
+}
+
+
+// ROM 0x0009bb1c ReadString__7TDockerFUl
+// The command's data (and padding) in a new Ptr (nil for none).
+Ptr
+TDocker::ReadString(ULong length)
+{
+	Ptr data = nil;
+	if (length != 0)
+	{
+		data = NewPtr(length);
+		if (data == nil)
+			OutOfMemory();
+		newton_try
+		{
+			ReadChunk(data, length, true);
+		}
+		newton_catch_all
+		{
+			DisposPtr(data);
+			rethrow;
+		}
+		end_try;
+	}
+	return data;
+}
+
+
+// ROM 0x00098b78 ReadCurrentSoup__7TDockerFv
+// The soup the desktop names (a string, the command's data) made the
+// current one, in the current store (kDockErrNoCurrentStore without one);
+// a soup of 'SystemScratch is refused (kDockErrNoCurrentSoup), none of the
+// name is -28015.
+void
+TDocker::ReadCurrentSoup(void)
+{
+	Ptr data = ReadString(fLength);
+	newton_try
+	{
+		if (ISNIL(fCurrentStore))
+			Throw(exLongErrorException, (void*) (intptr_t) kDockErrNoCurrentStore, nil);
+		// DEVIATION: the name's UniChars are the desktop's, big-endian
+		long count = fLength / sizeof(UniChar);
+		UniChar* name = (UniChar*) data;
+		for (long i = 0; i < count; i++)
+			name[i] = (UniChar) (((UByte*) data)[i * 2] << 8 | ((UByte*) data)[i * 2 + 1]);
+		RefVar soupName(MakeString(name));
+		fCurrentSoup = StoreGetSoup(fCurrentStore, soupName);
+	}
+	newton_catch_all
+	{
+		DisposPtr(data);
+		rethrow;
+	}
+	end_try;
+	DisposPtr(data);
+	if (NOTNIL(fCurrentSoup))
+	{
+		RefVar info(SoupGetInfo(fCurrentSoup, RSSYMsoupdef));
+		if (NOTNIL(info))
+		{
+			info = GetFrameSlot(info, RSSYMownerapp);
+			if (NOTNIL(info) && EQRef(info, RSSYMsystemscratch))
+			{
+				// ROM BUG: the soup is forgotten by storing 0 - the integer
+				// nought's Ref - rather than nil, so it is not forgotten:
+				// SetupSoup below asks it its name, which throws
+				fCurrentSoup = (Ref) 0;
+				WriteResult(kDockErrNoCurrentSoup);
+			}
+		}
+		if (NOTNIL(fCurrentSoup))
+			SetupSoup();
+		return;
+	}
+	WriteResult(kDockErrNoSuchSoup);
+}
+
+
+// ROM 0x00098730 SetupSoup__7TDockerFv
+// The session's notes about the current soup started afresh: which of the
+// three special soups it is.
+void
+TDocker::SetupSoup(void)
+{
+	fField6c = NILREF;
+	fField70 = NILREF;
+	fIsDirectorySoup = false;
+	fIsSystemSoup = false;
+	fIsPackageSoup = false;
+	fField28 = NILREF;
+	if (ISNIL(fCurrentSoup))
+	{
+		if (fError == noErr)
+			fError = -1;
+		return;
+	}
+	RefVar name(SoupGetName(fCurrentSoup));
+	TRichString soupName(name);
+	RefVar metaName(Rmetasoupname), systemName(Rsystemsoupname), extrasName(Rextrassoupname);
+	TRichString directory(metaName);
+	fIsDirectorySoup = directory.CompareSubStringCommon(soupName, 0, -1, false) == 0;
+	TRichString system(systemName);
+	fIsSystemSoup = system.CompareSubStringCommon(soupName, 0, -1, false) == 0;
+	TRichString extras(extrasName);
+	fIsPackageSoup = extras.CompareSubStringCommon(soupName, 0, -1, false) == 0;
+}
+
+
+// ROM 0x00097954 VerifySoup__7TDockerFv
+// kDockErrNoCurrentSoup unless there is a current soup.
+void
+TDocker::VerifySoup(void)
+{
+	if (ISNIL(fCurrentSoup))
+		Throw(exLongErrorException, (void*) (intptr_t) kDockErrNoCurrentSoup, nil);
+}
+
+
+// ROM 0x00098d0c SetCurrentSoup__7TDockerFUc
+// 'ssou' / 'ssgi': the soup made the current one; 'ssgi' answers its info
+// ('sinf') where 'ssou' answers a result.
+void
+TDocker::SetCurrentSoup(Boolean withInfo)
+{
+	ReadCurrentSoup();
+	if (ISNIL(fCurrentSoup))
+		return;
+	if (!withInfo)
+		WriteResult(fError);
+	else
+		WriteSoupInfo(true);
+}
+
+
+// ROM 0x000996d4 WriteSoupInfo__7TDockerFUc
+// 'sinf': the current soup's info frame - with ifChanged only if it
+// changed since the time the desktop gave ('stme'), else 'dres' 0.
+void
+TDocker::WriteSoupInfo(Boolean ifChanged)
+{
+	VerifySoup();
+	if (ifChanged)
+	{
+		RefVar modTime(SoupGetInfoModTime(fCurrentSoup));
+		Boolean changed = ISNIL(modTime) || fDesktopTime <= (ULong) RINT(modTime);
+		if (!changed)
+		{
+			WriteResult(noErr);
+			return;
+		}
+	}
+	RefVar info(SoupGetAllInfo(fCurrentSoup));
+	WriteRef('sinf', info);
+}
+
+
+// ROM 0x00099790 WriteIndexDescription__7TDockerFUc
+// 'indx': the current soup's indexes - with ifChanged only if they changed
+// since the desktop's time, else 'dres' 0.
+void
+TDocker::WriteIndexDescription(Boolean ifChanged)
+{
+	VerifySoup();
+	if (ifChanged)
+	{
+		RefVar modTime(SoupGetIndexesModTime(fCurrentSoup));
+		Boolean changed = ISNIL(modTime) || fDesktopTime <= (ULong) RINT(modTime);
+		if (!changed)
+		{
+			WriteResult(noErr);
+			return;
+		}
+	}
+	RefVar indexes(SoupGetIndexes(fCurrentSoup));
+	WriteRef('indx', indexes);
+}
+
+
+// ROM 0x00099634 SetSoupInfoFrame__7TDockerFv
+// 'sinf' from the desktop: the current soup's info replaced - unless this
+// is a restore that keeps the soups' own (fField60 1) and the soup has a
+// soupDef.
+void
+TDocker::SetSoupInfoFrame(void)
+{
+	RefVar info(ReadRef(fCurrentStore));
+	VerifySoup();
+	Boolean set = true;
+	if (fState == kDockStateRestore && fField60 == 1)
+		set = ISNIL(SoupGetInfo(fCurrentSoup, RSSYMsoupdef));
+	if (ISNIL(info))
+		info = AllocateFrame();
+	if (set)
+		SoupSetAllInfo(fCurrentSoup, info);
+}
+
+
+// ROM 0x0009ba38 SetSoupSignature__7TDockerFv
+// 'ssos': the current soup's signature.
+void
+TDocker::SetSoupSignature(void)
+{
+	unsigned long signature;
+	*fPipe >> signature;
+	if (NOTNIL(fCurrentSoup))
+		SoupSetSignature(fCurrentSoup, (long) signature);
+	WriteResult(noErr);
+}
+
+
 // ROM 0x000934b0 ProcessCommand__7TDockerFRUcT1
 // One of the desktop's commands carried out.  done: the session is over
 // ('disc'); operationDone: the operation the session was for is over, and
 // the command loop ends without disconnecting (an extension answered,
 // 'opca', 'opdn', a package loaded on protocol 10).
-// NOT YET: the soup, entry, cursor, store, package-list, patch, slip and
-// function commands - each is answered 'unkn' as a command the Newton does
-// not know is, which a desktop takes as a Newton too old to do it.
+// The stores' and soups' commands are here too.  NOT YET: the entry,
+// cursor, soup-creating, backup, package-list, patch, slip and function
+// commands - each is answered 'unkn' as a command the Newton does not know
+// is, which a desktop takes as a Newton too old to do it.
 void
 TDocker::ProcessCommand(Boolean* done, Boolean* operationDone)
 {
@@ -1617,6 +2061,60 @@ TDocker::ProcessCommand(Boolean* done, Boolean* operationDone)
 		case kDDesktopInControl:
 			fState = kDockStateNone;
 			fSessionStarted = false;
+			break;
+		case 'gsto':
+			WriteStoreNames();
+			break;
+		case 'ssto':
+			SetCurrentStore(false);
+			break;
+		case 'ssgn':
+			SetCurrentStore(true);
+			break;
+		case 'sdef':
+			SetStoreToDefault();
+			WriteResult(noErr);
+			break;
+		case 'gdfs':
+			WriteDefaultStore();
+			break;
+		case 'ssig':
+			SetStoreSignature();
+			break;
+		case 'ssna':
+		{
+			RefVar name(ReadRef(fCurrentStore));
+			StoreSetName(fCurrentStore, name);
+			WriteResult(noErr);
+			break;
+		}
+		case 'gets':
+			WriteSoupNames();
+			break;
+		case 'ssou':
+			SetCurrentSoup(false);
+			break;
+		case 'ssgi':
+			SetCurrentSoup(true);
+			break;
+		case 'gsin':
+			WriteSoupInfo(false);
+			break;
+		case 'cinf':
+			WriteSoupInfo(true);
+			break;
+		case 'gind':
+			WriteIndexDescription(false);
+			break;
+		case 'cidx':
+			WriteIndexDescription(true);
+			break;
+		case kDSoupInfo:
+			SetSoupInfoFrame();
+			WriteResult(fError);
+			break;
+		case 'ssos':
+			SetSoupSignature();
 			break;
 		case kDSetTime:
 		{
