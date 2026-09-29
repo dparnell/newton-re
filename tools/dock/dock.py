@@ -206,6 +206,15 @@ class DockSession:
         _, count3 = self.word(b"cnt ", struct.pack(">I", cursor))
         _, freed = self.word(b"cfre", struct.pack(">I", cursor))
         ok = ok and result == 0 and count3 == count and freed == 0 and isinstance(first, dict)
+        # an entry from a 1.x Newton ('sver' 1): converted by Notes' own
+        # conversion (or taken as it is), then the version set back
+        _, result = self.word(b"sver", struct.pack(">I", 1))
+        converted = self.word(b"adde", nsof.encode({Symbol("class"): Symbol("paragraph"), Symbol("text"): "from a 1.x Newton"}))[1]
+        _, result2 = self.word(b"sver", struct.pack(">III", 2, 0x01000000, 0x10003000))
+        print("dock.py: a 1.x entry added as %d" % converted)
+        if converted >= 0:
+            self.word(b"dele", struct.pack(">II", 1, converted))
+        ok = ok and result == 0 and result2 == 0
         print("dock.py: deleted (%d), %d entries again, cursor at end %d, freed; entries %s"
               % (result, count3, end, "all right" if ok else "WRONG"))
         return ok

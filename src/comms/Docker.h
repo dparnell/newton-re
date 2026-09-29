@@ -276,6 +276,9 @@ public:
 	void			AddEntry(Boolean withUniqueID);
 	Ref				ConvertEntry(RefArg entry);
 	Boolean			IsDuplicateEntry(RefArg entry);
+	Boolean			EntriesEqual(RefArg candidate);
+	Boolean			RefsEqual(RefArg a, RefArg b);
+	Boolean			FramesEqual(RefArg a, RefArg b, long slotDifference);
 	void			ChangeEntry(void);
 	void			ReplaceEntryContents(RefArg entry);
 	void			DeleteEntries(void);
@@ -324,10 +327,10 @@ public:
 	RefStruct		fDoConnectionArg;		// +0x0c  DoConnection's second argument
 	RefStruct		fCurrentStore;			// +0x10
 	RefStruct		fCurrentSoup;			// +0x14
-	RefStruct		fField18;				// +0x18
+	RefStruct		fDuplicateOf;			// +0x18  the entry IsDuplicateEntry looks for
 	RefStruct		fCallback;				// +0x1c  the package callback
 	RefStruct		fConnection;			// +0x20  the protocol frame
-	RefStruct		fField24;				// +0x24
+	RefStruct		fIgnoredSlots;			// +0x24  the slots of the soup's entries a duplicate may differ in
 	RefStruct		fQuery;					// +0x28  a cursor over the whole current soup (ValidateQuery)
 	Boolean			fIsDirectorySoup;		// +0x2c  the current soup is the store's directory (the metasoup)
 	Boolean			fIsSystemSoup;			// +0x2d  the System soup
@@ -350,7 +353,7 @@ public:
 	long			fSourceVersion;			// +0x60  'sver': the version of the Newton the data came from (2 unless told)
 	ULong			fSourceManufacturer;	// +0x64  and its manufacturer and machine
 	ULong			fSourceMachineType;		// +0x68
-	RefStruct		fConversionFrame;		// +0x6c  ConvertEntry's (NOT YET)
+	RefStruct		fConversionFrame;		// +0x6c  ConvertEntry's: the owning application's conversion frame
 	RefStruct		fOwnerApp;				// +0x70
 	ULong			fDesktopTime;			// +0x74  'stme': the desktop's clock (minutes)
 	ULong			fTimeSet;				// +0x78  and ours when it said so
@@ -378,6 +381,7 @@ public:
 // the docker a protocol frame holds (throwing kDockErrNoDocker when asked
 // to and it has none), and a docker kept in it
 TDocker*	GetTheDocker(RefArg connection, Boolean mustExist);
+extern TDocker*	gTheDocker;				// the docker whose IsDuplicateEntry query is running (ConnEntriesEqual's)
 void		SaveTheDocker(RefArg connection, TDocker* docker);
 void		CleanUpDockerIfError(RefArg connection, long error, Boolean touch, Boolean throwIt);
 Ref			FDefaultStore(RefArg rcvr);

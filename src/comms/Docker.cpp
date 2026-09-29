@@ -15,6 +15,7 @@
 #include "NewtWorld.h"
 #include "Dates.h"
 #include "Soups.h"
+#include "ROMImport.h"
 #include "PackageManager.h"
 #include "LargeObjects.h"
 #include "Cursors.h"
@@ -75,6 +76,9 @@ TraceCommand(const char* direction, ULong command, ULong length)
 		fprintf(stderr, "[dock] %s %c%c%c%c (%lu)\n", direction, (char) (command >> 24), (char) (command >> 16),
 			(char) (command >> 8), (char) command, (unsigned long) length);
 }
+
+
+TDocker*	gTheDocker = nil;		// ROM 0x0c100cb8 gTheDocker
 
 
 // ROM 0x001fbbe4 FDefaultStore
@@ -282,7 +286,7 @@ TDocker::TDocker()
 	fCurrentSoup = NILREF;
 	fCurrentStore = NILREF;
 	fDoConnectionArg = NILREF;
-	fField18 = NILREF;
+	fDuplicateOf = NILREF;
 	fCallback = NILREF;
 	fExtensions = NILREF;
 	fDesktopApps = NILREF;
@@ -2300,25 +2304,219 @@ TDocker::ReturnEntry(ULong command)
 
 
 // ROM 0x0009a600 IsDuplicateEntry__7TDockerFRC6RefVar
-// NOT YET: whether a restored entry is already in the soup (a selective
-// restore - DoConnection's first argument - compares it by the soup's
-// indexes); answers no, so every entry is added.
+// For a selective restore: whether an entry like this one (its id and
+// time taken out) is already in the current soup - looked for by the first
+// of the soup's indexes that is not a tags or multi-slot index nor one of
+// the slots the soup's entries may differ in (the ROM's table 0x00472c1d,
+// by soup name: Notes' timestamp), else by unique id, each candidate
+// compared slot by slot (ConnectionDupValidTest -> ConnEntriesEqual).
 Boolean
-TDocker::IsDuplicateEntry(RefArg /*entry*/)
+TDocker::IsDuplicateEntry(RefArg entry)
 {
-	return false;
+	RemoveSlot(entry, RSSYM_uniqueid);
+	RemoveSlot(entry, RSSYM_modtime);
+	RefVar querySpec(AllocateFrame());
+	RefVar soupName(SoupGetName(fCurrentSoup));
+	char name[256];
+	ConvertFromUnicode(GetCString(soupName), name, kMacRomanEncoding, 0x7fffffff);
+	// ROM 0x00472c1d (object) the slots each soup's duplicates may differ in
+	RefVar ignored(TranslateROMRef(0x00472c1d));
+	fIgnoredSlots = GetFrameSlot(ignored, RefVar(Intern(name)));
+	RefVar indexes(SoupGetIndexes(fCurrentSoup));
+	RefVar path;
+	if (NOTNIL(indexes) && Length(indexes) > 0)
+	{
+		RefVar index, type, structure;
+		for (long i = 0; i < Length(indexes); i++)
+		{
+			index = GetArraySlot(indexes, i);
+			type = GetFrameSlot(index, RSSYMtype);
+			structure = GetFrameSlot(index, RSSYMstructure);
+			if (!EQRef(type, RSSYMtags) && !EQRef(structure, RSSYMmultislot))
+			{
+				path = GetFrameSlot(GetArraySlot(indexes, i), RSSYMpath);
+				if (NOTNIL(fIgnoredSlots))
+					for (long j = 0; j < Length(fIgnoredSlots); j++)
+						if (EQRef(path, GetArraySlot(fIgnoredSlots, j)))
+						{
+							path = NILREF;
+							break;
+						}
+			}
+			if (NOTNIL(path))
+				break;
+		}
+	}
+	if (ISNIL(path))
+		SetFrameSlot(querySpec, RSSYMindexpath, RSSYM_uniqueid);
+	else
+	{
+		SetFrameSlot(querySpec, RSSYMindexpath, path);
+		RefVar key(GetFramePath(entry, path));
+		SetFrameSlot(querySpec, RSSYMbeginkey, key);
+		SetFrameSlot(querySpec, RSSYMendkey, key);
+	}
+	gTheDocker = this;
+	SetFrameSlot(querySpec, RSSYMvalidtest, RefVar(Rconnectiondupvalidtest));
+	fDuplicateOf = entry;
+	RefVar cursor(SoupQuery(fCurrentSoup, querySpec));
+	Boolean duplicate = false;
+	if (NOTNIL(cursor))
+		duplicate = NOTNIL(CursorEntry(cursor));
+	gTheDocker = nil;
+	fIgnoredSlots = NILREF;
+	return duplicate;
+}
+
+
+// ROM 0x0009a5b0 EntriesEqual__7TDockerFRC6RefVar
+// A soup entry the same as the one being restored: the same slots but its
+// own _uniqueID and _modTime (FramesEqual's ROM code, branched into).
+Boolean
+TDocker::EntriesEqual(RefArg candidate)
+{
+	long difference = FrameHasSlot(candidate, RSSYM_modtime) ? -2 : -1;
+	return FramesEqual(candidate, fDuplicateOf, difference);
+}
+
+
+// ROM 0x0009a128 RefsEqual__7TDockerFRC6RefVarT1
+// Two values the same: frames slot by slot (FramesEqual), arrays element by
+// element, binaries byte by byte (a word at a time when their length is a
+// multiple of four), anything else by identity.
+Boolean
+TDocker::RefsEqual(RefArg a, RefArg b)
+{
+	if (IsFrame(a))
+	{
+		if (IsFrame(b))
+			return FramesEqual(a, b, 0);
+		return false;
+	}
+	if (IsArray(a))
+	{
+		if (IsArray(b) && Length(a) == Length(b))
+		{
+			RefVar x, y;
+			for (long i = 0; i < Length(a); i++)
+			{
+				y = GetArraySlot(b, i);
+				x = GetArraySlot(a, i);
+				if (!RefsEqual(x, y))
+					return false;
+			}
+			return true;
+		}
+		return false;
+	}
+	if (IsBinary(a))
+	{
+		if (IsBinary(b))
+		{
+			ULong length = Length(a);
+			if ((ULong) Length(b) == length)
+			{
+				LockRef(a);
+				LockRef(b);
+				Boolean equal = memcmp(BinaryData(a), BinaryData(b), length) == 0;
+				UnlockRef(a);
+				UnlockRef(b);
+				return equal;
+			}
+		}
+		return false;
+	}
+	return (Ref) a == (Ref) b;
+}
+
+
+// ROM 0x0009a39c FramesEqual__7TDockerFRC6RefVarT1Ul
+// Two frames the same: b's slots (its _proto aside, and the slots the
+// soup's entries may differ in) all in a, each equal (RefsEqual), and a
+// having that many slots more or less slotDifference.
+Boolean
+TDocker::FramesEqual(RefArg a, RefArg b, long slotDifference)
+{
+	if (FrameHasSlot(a, RSSYM_proto))
+		slotDifference--;
+	if (FrameHasSlot(b, RSSYM_proto))
+		slotDifference++;
+	if (Length(a) + slotDifference != Length(b))
+		return false;
+	TObjectIterator iter(b, false);
+	RefVar tag, x;
+	for ( ; !iter.Done(); iter.Next())
+	{
+		tag = iter.Tag();
+		if (EQRef(tag, RSSYM_proto))
+			continue;
+		Boolean ignored = false;
+		if (NOTNIL(fIgnoredSlots))
+			for (long i = 0; i < Length(fIgnoredSlots); i++)
+				if (EQRef(tag, GetArraySlot(fIgnoredSlots, i)))
+				{
+					ignored = true;
+					break;
+				}
+		if (ignored)
+			continue;
+		if (!FrameHasSlot(a, tag))
+			return false;
+		x = GetFrameSlot(a, tag);
+		RefVar value(iter.Value());
+		if (!RefsEqual(x, value))
+			return false;
+	}
+	return true;
 }
 
 
 // ROM 0x0009aa08 ConvertEntry__7TDockerFRC6RefVar
-// NOT YET: a 1.x Newton's entry converted by its application's conversion
-// frame; the entry is refused as the ROM refuses one whose conversion
-// fails (a 'conversionError noted, nothing added).
+// An entry from a 1.x Newton (or of an unknown version) converted by the
+// conversion frame of the application that owns the soup (the System and
+// directory soups' own, else GetOwnerApp's) through ConvertFrame; an entry
+// no application converts is taken as it is.  A conversion that throws is
+// noted ('conversionError) and the entry dropped.
 Ref
-TDocker::ConvertEntry(RefArg /*entry*/)
+TDocker::ConvertEntry(RefArg entry)
 {
-	AddChangedSoup(RefVar(RSSYMconversionerror), 1);
-	return NILREF;
+	RefVar fromVersion(fSourceVersion == 1 ? RSSYMoneo : RSSYMunknown);
+	RefVar result;
+	newton_try
+	{
+		if (ISNIL(fOwnerApp) && ISNIL(fConversionFrame))
+		{
+			if (fIsSystemSoup)
+				fOwnerApp = RSSYMsystem;
+			else if (fIsDirectorySoup)
+				fOwnerApp = RSSYMsystemdirectory;
+			if (ISNIL(fOwnerApp))
+			{
+				RefVar name(SoupGetName(fCurrentSoup));
+				fOwnerApp = NSCallGlobalFn(RefVar(RSSYMgetownerapp), name);
+			}
+			if (ISNIL(fOwnerApp))
+				// (the integer nought, not nil: the question is not asked
+				// again, and nought is not a symbol, so nothing converts)
+				fOwnerApp = (Ref) 0;
+			else
+				fConversionFrame = NSCallGlobalFn(RefVar(RSSYMgetconversionframe), fOwnerApp);
+		}
+		if (ISNIL(fConversionFrame) || !IsSymbol(fOwnerApp))
+			result = entry;
+		else
+		{
+			RefVar fn(NSGetGlobalFn(RefVar(RSSYMconvertframe)));
+			result = NSCall(fn, fOwnerApp, fConversionFrame, fromVersion, RefVar(RSSYMtwoo), entry, RefVar(TRUEREF));
+		}
+	}
+	newton_catch_all
+	{
+		result = NILREF;
+		AddChangedSoup(RefVar(RSSYMconversionerror), 1);
+	}
+	end_try;
+	return result;
 }
 
 
@@ -3791,6 +3989,15 @@ FDESCreatePasswordKey(RefArg /*rcvr*/, RefArg password)
 }
 
 
+// ROM 0x000970f8 FConnEntriesEqual
+// ConnEntriesEqual(entry): the validTest of IsDuplicateEntry's query.
+Ref
+FConnEntriesEqual(RefArg /*rcvr*/, RefArg entry)
+{
+	return gTheDocker->EntriesEqual(entry) ? TRUEREF : NILREF;
+}
+
+
 // ROM 0x00096e8c FConnInstallProtocolExtension
 // InstallAnyProtocolExtension(command, function): an extension of the
 // protocol (one already there is not an error).
@@ -3902,6 +4109,7 @@ RegisterDockerNatives(void)
 	RegisterNativeFunction("FConnInstallProtocolExtension", (void*) FConnInstallProtocolExtension, 2);
 	RegisterNativeFunction("FConnRemoveProtocolExtension", (void*) FConnRemoveProtocolExtension, 1);
 	RegisterNativeFunction("FConnStop", (void*) FConnStop, 0);
+	RegisterNativeFunction("FConnEntriesEqual", (void*) FConnEntriesEqual, 1);
 	RegisterNativeFunction("FConnRetryPassword", (void*) FConnRetryPassword, 1);
 	RegisterNativeFunction("FDESCreatePasswordKey", (void*) FDESCreatePasswordKey, 1);
 	RegisterNativeFunction("FConnBuildStoreFrame", (void*) FConnBuildStoreFrame, 2);
