@@ -515,9 +515,9 @@ point size for every space in it (`FullJustifPortion`).
 The options' +0x14 word is set to 9 by `Draw` and 10 by `MeasureWidth`.
 The ROM's `DoTextOnce` reads it as a selector: 9 marks the text object
 (its flag 0x40000) and 10 throws the options away altogether, which is
-why `MeasureWidth` leaves the rest of them as the stack had them.  The
-host's `DoTextOnce` does not read it yet; the run zeroes what the ROM
-leaves, which measures the same.
+why `MeasureWidth` leaves the rest of them as the stack had them (the
+host zeroes them, since the stack's garbage cannot be reproduced and is
+never read).
 
 ## The graphics runs (`text/TXGraphicsRun.h`)
 
@@ -656,11 +656,62 @@ being at most 128 characters).
 `test_TXFormatter` formats a two-paragraph text into 80 pixels and checks
 every line word by word against the run's own measurements, then inserts
 and deletes text and checks that the incremental reflow comes out the
-same as formatting the edited text afresh.  (Its word-by-word check
-allows for the host's `FindWordBreaks`, which has no break table yet: a
-fitted length ending exactly at a word's end lands on the space, which
-the host takes as the end of the word before, so that line breaks one
-word early.)
+same as formatting the edited text afresh.  The word breaks are the
+locale's line break table's (`FindWordBreaks`), in which a run of spaces
+is a word of its own - so a line that fills exactly to a word's end
+breaks after the spaces that follow it.
+
+## The display and the hilite (`text/TXDisplay.h`, `text/TXHilite.h`)
+
+`TXDisplay` draws the formatted text through a *view region* of the
+port, with the port's origin at nought while it does (`Focus`,
+`UnFocus`, nested through `SetDrawEnv`/`RestoreDrawEnv`).  `Draw`
+erases and draws every line the rectangle crosses, a band of equal
+lines at a time (`TXFrames::SectLines`, then `TXLine::DoLineLayout`
+and `Draw` for each), and the hilite over it.  `Scroll` blits the view
+with QuickDraw's `ScrollRect` (`qd/ScrollRect.h`, added for it) and
+draws only what was uncovered; a scroll never goes past the text
+(`AdjustScrollValues`), and after an edit that shortened it the view
+scrolls back (`CheckScroll`).  An edit is bracketed by `BeginEdit` and
+`EndEdit`, which redraws as little as it can per frame: the lines that
+changed (`FrameEndEdit`), the lines after them moved by a blit when the
+height changed (`ScrollFrame`, `UpdateScrolledArea`), the frame's
+bottom erased when the text got shorter.
+
+`TXHilite` is the selection and a state - hidden, shown, or inactive
+(framed rather than inverted).  All of it is drawn in XOR, so drawing
+it again takes it away: growing a selection inverts only the stretch
+that changed (`SetHiliteStart`, `SetHiliteEnd`), and a selection is
+drawn per frame as a first partial line, a block of whole lines and a
+last partial line.  The caret is *not* drawn here - the Newton's root
+view draws it.  `Click` counts clicks (the pen's double-click time and
+one pixel), selects a boundary, a word or a line by the count, extends
+with the shift flag, and follows the pen (`DragHilite`), scrolling the
+view when the pen leaves it - by 18 pixels, doubled for each second it
+stays out, up to three times.  The arrows move by a character (a
+picture in one step), a word or a line; up and down keep the column
+they started from.
+
+## The document (`text/Textension.h`)
+
+`Textension` is the styled text with its rulers, formatter, display and
+hilite, put together from `TXHandlers` (whichever is nil is made).
+`TextensionStart` makes the engine's globals; the Newton registers its
+default run and ruler (`RegisterRun`, `RegisterRuler`).  An edit is
+`ReplaceRange`: the rulers', the runs', the characters' and the line
+ends' parts, with the display bracketed round them; typing is `KeyDown`
+over it (characters replace the selection in the *pending run* - the
+style typing uses, taken from the text at the caret whenever the
+selection has moved - backspace and escape clear, the arrows move).
+The container (a document on a stream) and the edit commands with undo
+are NOT YET.
+
+`test_TXDisplay` fills a document by an edit, draws it offscreen (the
+same bits as drawing each line itself), taps a caret into it, hilites
+"quick" and checks that exactly its rectangle is inverted, drags a
+selection from "quick" to "fox", moves it with the arrows, scrolls a
+line (the same bits as drawing the scrolled view afresh), and types
+and backspaces.
 
 ## Not yet reconstructed - the plan
 
@@ -701,9 +752,9 @@ Bottom up, in the order the layers need each other:
    the paginated side - `TXMultiFrameFormatter` (0x002415b0-0x00242704),
    `TXPageFrames` and `TXPageFormatter` (0x002413e0-0x00242a2c), which
    only a document laid out on pages needs.
-5. `TXDisplay`/`TXNewtDisplay` and `TXHilite`/`TXNewtHilite`: drawing
-   the lines that show, scrolling (needs QuickDraw's `ScrollRect`, not
-   yet in `qd/`), the selection and caret.
+5. DONE: `TXDisplay` and `TXHilite` (with `qd/ScrollRect.h`).  The
+   Newton subclasses `TXNewtDisplay`/`TXNewtHilite` (a TView's visible
+   region, the root view's caret and key view) come with `TXView`.
 6. `Textension` (the document: `TextensionStart` makes `gTXTempRegions`
    and the registered runs and rulers) and the edit commands
    (`TXCommand`, `TXEditCommand`, `TXReplaceTextCommand`,

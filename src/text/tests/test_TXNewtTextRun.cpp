@@ -248,9 +248,11 @@ TestLineBreak()
 	EXPECT(run->LineBreak(text, length, 0, &width, false, &fitted) == 0);
 	EXPECT(fitted == 6 && width == 0);
 
-	// (A fitted length ending on the space is left out: what the word
-	//  there is depends on the locale's break table, which the host's
-	//  FindWordBreaks does not read yet - qd/Text.cpp's DEVIATION.)
+	// it ends on the space: the spaces are a word of their own (the
+	// locale's break table), so the line breaks after them
+	width = WidthOf(run, text, 5) + 0x100;
+	EXPECT(run->LineBreak(text, length, 0, &width, false, &fitted) == 0);
+	EXPECT(fitted == 6);
 
 	// from part way along: the lengths are from `start`
 	width = WidthOf(run, text + 6, 8) + 0x100;					// "world ag"

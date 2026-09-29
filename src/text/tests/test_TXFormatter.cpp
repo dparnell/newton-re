@@ -182,13 +182,6 @@ CheckLines(Document& doc, const char* what)
 			long next = end;
 			while (next < count && !IsSpace(doc, next) && doc.chars->GetChar(next) != '\r')
 				next++;
-			// (and the space after it: a fitted length ending exactly on a
-			// word's end lands FindWordBreaks on the space, which the host's
-			// FindWordBreaks - qd/Text.cpp's DEVIATION, no break table yet -
-			// takes as the end of the word before it, so the line breaks in
-			// front of that word)
-			if (next < count)
-				next++;
 			if (Width(doc, start, next) <= kLineWidth)
 			{
 				failures++;

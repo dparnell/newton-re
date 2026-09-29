@@ -72,6 +72,12 @@ class TXPointingDevice
 {
 public:
 					TXPointingDevice();								// ROM 0x00234384 __ct__16TXPointingDeviceFv
+	// The ROM's vtable is the four pure entries; the destructor is not in
+	// it.  (Host: virtual, after them, so a subclass is deleted whole.)
+	virtual Point	FirstLocation(void) = 0;						// (pure: +0x00) where the pen went down
+	virtual Point	CurrentLocation(void) = 0;						// (pure: +0x04)
+	virtual Boolean	IsStillDown(void) = 0;							// (pure: +0x08)
+	virtual long	GetDoubleClickTime(void) = 0;					// (pure: +0x0c) in ticks
 	virtual			~TXPointingDevice();							// ROM 0x002343b8 __dt__16TXPointingDeviceFv
 };
 

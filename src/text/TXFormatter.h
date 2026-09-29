@@ -98,7 +98,7 @@ public:
 	NewtonErr		FormatRange(TXOffset start, TXOffset end, long* first, long* last);	// ROM 0x00238574 FormatRange__11TXFormatterFlT1PlT3
 	// `oldLength` characters at `start` became `newLength`.  (Unlike Format,
 	// `first` and `last` must be given: the ROM writes through `first`.)
-	void			ReplaceRange(TXOffset start, long oldLength, long newLength, unsigned long flags, long* first, long* last);	// ROM 0x00238844 ReplaceRange__11TXFormatterFlN21UlPlT5
+	NewtonErr		ReplaceRange(TXOffset start, long oldLength, long newLength, unsigned long flags, long* first, long* last);	// ROM 0x00238844 ReplaceRange__11TXFormatterFlN21UlPlT5 - ==> Format's error
 	// The rulers' margins and tabs brought within the width: a margin
 	// leaving less than 50 pixels goes, and so does a tab past the edge.
 	NewtonErr		CheckRulerSettings(void);						// ROM 0x0023825c CheckRulerSettings__11TXFormatterFv

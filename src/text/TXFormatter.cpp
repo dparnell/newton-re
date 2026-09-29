@@ -611,7 +611,7 @@ TXFormatter::FormatRange(TXOffset start, TXOffset end, long* first, long* last)
 // The line ends after the edit moved by what it added or took away; when
 // text went, the lines wholly inside it removed; then the lines round it
 // formatted again.
-void
+NewtonErr
 TXFormatter::ReplaceRange(TXOffset start, long oldLength, long newLength, unsigned long flags, long* first, long* last)
 {
 	fFrameFormatter->CharRangeChanged(fText->fChars, start, oldLength, newLength, flags);
@@ -629,8 +629,7 @@ TXFormatter::ReplaceRange(TXOffset start, long oldLength, long newLength, unsign
 		long line = fLineEnds->OffsetToRangeIndex(start, false);
 		fLineEnds->GetRangeStart(line);
 		fLineEnds->AddToElements(line, delta, -1);
-		Format(start, end, first, last);
-		return;
+		return Format(start, end, first, last);
 	}
 	TXSectRanges sect;
 	if (fLineEnds->SectRanges(start, oldLength, &sect) > 1)
@@ -663,9 +662,10 @@ TXFormatter::ReplaceRange(TXOffset start, long oldLength, long newLength, unsign
 			end = e;
 		}
 	}
-	Format(start, end, first, last);
+	NewtonErr err = Format(start, end, first, last);
 	if (*first >= sect.fFirstIndex)
 		*first = sect.fFirstIndex;
+	return err;
 }
 
 

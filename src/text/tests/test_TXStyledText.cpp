@@ -113,9 +113,10 @@ TestWords()
 	// the last word: to the end
 	EXPECT(text->CharToWord(17, false, &range, 0));
 	EXPECT(range.fStart.fOffset == 14 && range.fEnd.fOffset == 19);
-	// at the start of a word, looking back: the word before
+	// at the start of a word, looking back: what is before it - the space
+	// (the locale's break table makes a run of spaces a word of its own)
 	EXPECT(text->CharToWord(14, true, &range, kTXWordNoSpaces));
-	EXPECT(range.fStart.fOffset == 8 && range.fEnd.fOffset == 13);
+	EXPECT(range.fStart.fOffset == 13 && range.fEnd.fOffset == 14);
 
 	// no further than 64 characters either way: a long word is cut there
 	char longText[200];

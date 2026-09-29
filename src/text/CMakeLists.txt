@@ -12,10 +12,12 @@ add_library(text STATIC
     TXArray.cpp
     TXAttributes.cpp
     TXChars.cpp
+    TXDisplay.cpp
     TXFrameFormatter.cpp
     TXFormatter.cpp
     TXFrames.cpp
     TXGraphicsRun.cpp
+    TXHilite.cpp
     TXLine.cpp
     TXLinesHeights.cpp
     TXNewtTextRun.cpp
@@ -27,6 +29,7 @@ add_library(text STATIC
     TXStyledText.cpp
     TXStream.cpp
     TXUtilities.cpp
+    Textension.cpp
 )
 # (qd for the clipping helpers; views for the root view they dirty)
 target_link_libraries(text PUBLIC newton_config utility toolbox frames qd views)
