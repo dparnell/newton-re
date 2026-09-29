@@ -19,6 +19,8 @@ add_library(utility STATIC
     AppWorld.cpp
     Unicode.cpp
     BufferSegment.cpp
+    BufferList.cpp
+    ShadowBufferSegment.cpp
     Pipes.cpp
     StdioPipe.cpp
     CRC16.cpp

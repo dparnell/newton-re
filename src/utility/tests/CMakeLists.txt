@@ -22,3 +22,8 @@ set_tests_properties(utility.ShadowRingBuffer PROPERTIES TIMEOUT 30)
 add_executable(test_Random test_Random.cpp)
 target_link_libraries(test_Random PRIVATE utility)
 add_test(NAME utility.Random COMMAND test_Random)
+
+add_executable(test_BufferList test_BufferList.cpp)
+target_link_libraries(test_BufferList PRIVATE utility os600_kernel os600_user)
+add_test(NAME utility.BufferList COMMAND test_BufferList)
+set_tests_properties(utility.BufferList PROPERTIES TIMEOUT 30)

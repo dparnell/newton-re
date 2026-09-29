@@ -37,6 +37,9 @@ REPLACED = {
     # src/utility/BufferSegment.h has the ROM's classes CMinBuffer, CBuffer and
     # CBufferSegment with their virtuals and layout
     "BufferSegment.h": "external interface only; src/utility/BufferSegment.h has the ROM's classes",
+    # BufferList.h likewise (the constructor private); src/utility/BufferList.h
+    # has the ROM's CBufferList with its fields
+    "BufferList.h": "external interface only; src/utility/BufferList.h has the ROM's class",
 }
 
 PATCHES = {
