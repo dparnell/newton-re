@@ -104,6 +104,15 @@ bugs and ROM bugs found on the way.
   boots with no image anywhere to be found, to the Notepad (a55bc3a).
   The `--rom` boot shows the Setup assistant instead, Setup being one of
   the ROM extension's packages, which do not come from the tree yet.
+- The ROM extension in the tree (e7d945c): `rex/` and `rex.tsv` cut at
+  every config entry and package - the header, `dio`/`gpio`/`ralc`, the
+  ten packages as `.pkg` files (kept as the ROM's bytes first: a ROM
+  package's frames parts hold ROM addresses; reasons in
+  `docs/rom-free/README.md`), `ptpt`/`glpt`/`fexp`/`jump` - carried as a
+  block of the object file and found through `ROMRegion`/`ROMAddressOf`.
+  The no-image boot now draws the Setup Welcome pixel for pixel as the
+  `--rom` boot does (ctest `host.NewtonNoROMSameScreen`,
+  `tools/host/samescreen.py`); 201 of 201 ctests.
 
 ## 2026-09-30: V.42bis
 
