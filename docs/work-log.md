@@ -9,6 +9,36 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: the text engine, round 1 - towards protoTXView
+
+- Sized the path to the 39 protoTXView methods natives.py now files
+  under `text`: 292 functions not done, about 45 KB (`callgraph.py`, a
+  lower bound); the plan by class and layer is `docs/text/README.md`'s
+  "Not yet reconstructed - the plan".
+- `text/TXOffset.h`: `TXOffsetPos` (the ROM's two-word TXOffset, for
+  where it is passed by address) and `TXOffsetRange` (CheckBounds' quirk
+  kept: the offsets swap, the flags do not).
+- `text/TXRun.h`: `TXRun`, its virtuals in the ROM's slot order (the pure
+  ones named from TXGraphicsRun's vtable), and `TXRunRange`
+  (`CharToTextRun`: the text run an offset takes its style from).
+- `text/TXRulerRange.h`: the ruler ranges with the pending ruler of the
+  paragraph not yet typed, ValidateRuler/ValidateRulerRange (the
+  discarded recursive answer kept), CharRangeToParagRange,
+  GetReplaceExtraChars, and `TXGetParagStartOffset`/`EndOffset`
+  (SearchChar's 0x0c means any line break).
+- `text/TXUtilities.h`: long rectangles (IsPointInside counts both edges,
+  kept), the scratch region pool, TXClipFurther/TXCalcClipRect/
+  TXInvalSectRect (the root view's vtable +0x54 is `Dirty`, found with
+  `vtable.py --find ClassID__9TRootViewCFv --slot 0`),
+  TXGetNewDefaultObject.  `text` now links `qd` and `views`.  NOT YET:
+  TXScrollRect (QuickDraw's ScrollRect).
+- `text/TXLinesHeights.h`: the lines' heights as groups of equal lines,
+  PixelToLine (it gives back the found line's top), TXFormatReflowLines,
+  TXParagCtrlChars.
+- Tests: `test_TXRunRange`, `test_TXUtilities`, `test_TXLinesHeights`.
+  Built in `tmp/build-text` (in parallel with other agents); ctest there
+  130/130, open-apps only the Sound Recorder.
+
 ## 2026-09-29: pictures round 1 - recording, and text in pictures
 
 - Pictures recorded (`3ef412d`, `qd/PicRecord.h`): `OpenPicture`,

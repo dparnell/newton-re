@@ -144,8 +144,8 @@ worked through.  What could come next (not ranked; the owner chooses):
   `TXNewtStreamFactory` (a compressed large binary for a stream above 4K)
   and `RotTiledBitmap` (only a fax page reaches it, so it still waits on
   the comms stack).
-- **The text engine**: `TXRun` and `TXRunRange`, then `TXRulerRange`
-  (below).
+- **The text engine**: being worked (2026-09-29) - the 39 protoTXView
+  methods, bottom up (below).
 - **Drawing speed**: the blitter and the lines work a pixel at a time
   through region scan conversion, which is why a busy screen redraws
   slowly on the host.  A faster blitter with identical output is host
@@ -262,32 +262,20 @@ Out of the U.S. ROM's reach, hardware, or waiting on another area:
 
 ### The text engine
 
-- The text engine's next piece is `TXRun` (0x00245e64: an abstract
-  attribute object with twelve virtuals, of which only `Assign`,
-  `FullJustifPortion`, `VisibleLen`, `Click`, `SetHilite` and
-  `DrawHilite` have bodies - the rest are pure and answered by
-  `TXTextRun` and `TXGraphicsRun`) and `TXRunRange` (0x00245cc4: a
-  TXObjectRange whose `CharToTextRun` searches backwards and then
-  forwards for a range whose run `IsTextRun`).  Then `TXRulerRange`
-  (0x00242c68), which is a TXObjectRange plus a `TXChars*`, a *pending
-  ruler* and a flag: when the caret sits at the very end of the text
-  after a line break, the ruler a slip sets belongs to the paragraph not
-  yet typed, so it is held in `fDefaultRuler` until a character arrives
-  (`GetPendingRuler` 0x00242eac, `InvalidatePendingRuler`,
-  `NukePendingRuler`, and the `OffsetToObject`/`UpdateRangeObjects` that
-  answer out of it).  It wants `TXGetParagStartOffset`/
-  `TXGetParagEndOffset` as well.
-- **The text engine's `TXOffset` is a two-word struct, not a long.** Its
-  mangled name appears as a class (`...F8TXOffset`), and the ROM passes
-  it in two registers: the offset, and a flag saying whether an offset
-  that falls exactly on a boundary belongs to the range it ends or the
-  one it starts.  `src/text/` renders it as a `long` plus an explicit
-  `atStart` argument, which is right for every function reconstructed so
-  far; but `TXRulerRange::CharRangeToParagRange(TXOffset*, TXOffset*)`
-  takes two of them *by pointer* and writes the flag back, so that one
-  needs the real struct.  Introduce it (offset + atStart) before
-  reconstructing the ruler range, and let the existing two-argument
-  calls keep working.
+Being worked on (2026-09-29): the 39 `protoTXView` methods
+(`natives.py --unbound --area text`), which stand on the whole engine -
+292 functions not done, about 45 KB by `callgraph.py` (a lower bound).
+The plan, the size of each class and the order the layers need each
+other in are `docs/text/README.md`'s "Not yet reconstructed - the plan".
+Done so far: `TXOffset`/`TXOffsetRange` (the ROM's two-word TXOffset is
+`TXOffsetPos` where it is passed by address), `TXRun`/`TXRunRange`,
+`TXRulerRange` with the paragraph measures, the helpers
+(`TXUtilities.h`), `TXLinesHeights` and `TXParagCtrlChars`.  Next: the
+concrete runs (`TXNewtTextRun`, `TXGraphicsRun`) and `TXStyledText`, then
+`TXLine`, the frames and formatters, the display and hilite,
+`Textension`, and `TXView` with its natives and a demo.  `TXScrollRect`
+waits on QuickDraw's `ScrollRect` (0x00340378), which is not in `qd/`
+yet.
 
 ## The natives still unanswered
 

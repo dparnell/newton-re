@@ -405,12 +405,139 @@ document shares — `Textension::RegisterRuler` and `RegisterRun` put them
 there. It is a fixed array of **six** and `Add` does not look at whether
 there is room.
 
-## Not yet reconstructed
+## Places and stretches (`text/TXOffset.h`)
 
-`TXRulerRange` (the rulers a document's paragraphs actually point at)
-and the ruler's user interface — `TXRulerUI` and the icon, tab and
-bitmap-cluster bars a script shows with `ShowRuler`. Above them,
-`Textension` and the runs, the formatter and the lines, `TXView` itself
-and the forty-one `FTX...` natives that are its script face. `TXAttrObject::ReadPublicData` /
-`WritePublicData` are the base's empty pair; the subclasses that
-actually put a style on a stream come with the runs.
+The ROM's `TXOffset` is two words: a character offset and a flag saying
+whether an offset exactly on a boundary belongs to what starts there or
+to what ends there - the caret at the end of one line and at the start
+of the next are the same offset told apart that way.  Most of the engine
+passes it in two registers, which the reconstruction writes as a
+`TXOffset` (a long) and an `atStart` argument; where the ROM passes one
+*by address* and writes the flag back, the struct itself is
+`TXOffsetPos`.  `TXOffsetRange` is two of them, a start and an end;
+ROM quirk kept: `CheckBounds` swaps the offsets of a range that is the
+wrong way round but leaves each end its own flag.
+
+## The runs (`text/TXRun.h`)
+
+A `TXRun` is the attribute object for *what* a stretch of text is: it
+measures, breaks, draws and hit-tests the characters it covers.  It is
+abstract - the text runs (`TXNewtTextRun`, characters in a font) and
+graphics runs (`TXGraphicsRun`, a picture standing in the text as one
+character) are what a document holds - and its virtuals follow the
+ROM's slots from +0x54 (`IsTextRun`, `GetHeightInfo`, `PixelToChar`,
+`CharToPixel`, `Draw`, `FullJustifPortion`, `VisibleLen`,
+`MeasureWidth`, `LineBreak`, `Click`, `SetHilite`, `DrawHilite`; the pure
+ones named from TXGraphicsRun's vtable, since TXRun's shows them as
+`__pvfn`).  `TXRunRange` is the object range of a document's runs:
+`CharToTextRun` answers the text run an offset takes its style from - its
+own, or for an offset in a picture the nearest text run before it, else
+after it.
+
+## The ruler ranges (`text/TXRulerRange.h`)
+
+The rulers a document's paragraphs point at, plus the text (to find
+paragraphs) and a *pending ruler*: in an empty text, or at the very end
+after a line break, the next character typed starts a paragraph with no
+range yet, but a ruler slip must still show it and may change it.
+`GetPendingRuler` answers that ruler for such a place - brought up to
+date the first time it is asked since it was invalidated (a fresh
+default one for an empty text, a copy of the ruler before it otherwise)
+- and `OffsetToObject`/`UpdateRangeObjects` answer out of it there.
+Every range starts a paragraph: `ValidateRuler` runs a range that starts
+mid-paragraph into the one before, `ValidateRulerRange` does so for both
+ends of an edited stretch (ROM quirk kept: after merging the first it
+calls itself again and throws the answer away), and
+`CharRangeToParagRange`/`GetReplaceExtraChars` widen a stretch to whole
+paragraphs.  `TXGetParagStartOffset`/`TXGetParagEndOffset` measure a
+paragraph through the text's own search: `SearchChar` with 0x0c means
+"any line break".
+
+## The small helpers (`text/TXUtilities.h`)
+
+The document is laid out in longs, not QuickDraw's shorts:
+`TXLongRect`/`TXLongPoint` (ROM quirk kept: `IsPointInside` counts both
+edges in).  `TXTempReferences` is a pool of five scratch objects (with
+all five out, `Get` makes one outside the pool and `Done` frees it);
+`gTXTempRegions` is the pool of regions the clipping helpers borrow.
+`TXClipFurther`/`TXCalcClipRect` narrow the port's clip or a rectangle
+(a rectangular clip - `rgnSize == kRectRgnSize` - takes a short cut),
+`TXInvalSectRect` dirties a rectangle on the root view (its vtable +0x54,
+`TRootView::Dirty`) when it shows through a region, and
+`TXGetNewDefaultObject` copies the default run or ruler from the
+registered objects (`gRegisteredRuns`/`gRegisteredRulers`).  NOT YET:
+`TXScrollRect`, over QuickDraw's `ScrollRect`.
+
+## The lines' heights (`text/TXLinesHeights.h`)
+
+`TXLinesHeights` keeps every line's height without a word per line: an
+array of groups, each a run of consecutive lines with one height (and
+one natural height).  Setting a line's height splits its group in three,
+moves the line to an equal neighbour, or changes the group in place when
+the line is all there is of it; removing lines joins the neighbours of
+an emptied group when they match.  The total height and the last line's
+number are kept, so the whole text's height is never summed.
+`PixelToLine` walks the groups to the line a pixel is on and gives back
+that line's top.  (The `TXFormatReflowLines` argument some of these take
+is not read, in the ROM either.)  `TXParagCtrlChars` records up to
+thirty-two control characters of a stretch of a paragraph, stopping at
+its line break, so that laying a line out does not search for each tab
+again.
+
+## Not yet reconstructed - the plan
+
+The 39 `protoTXView` methods (`natives.py --unbound --area text`: `Cut`,
+`Copy`, `Replace`, `PointToChar`, `ShowRuler`, `Scroll`, ... all
+0x00249b7c-0x0024ae90) stand on the whole engine.  Measured on
+2026-09-29 with `analysis/callgraph.py build/MP2x00US <the 39 natives>`:
+**292 functions not done, about 45 KB** - a lower bound, since the engine
+calls through its own vtables a great deal.  By class:
+
+| class | functions | bytes | what it is |
+|---|---|---|---|
+| TXView | 51 | 10 KB | the view: the script's face, editing commands, undo |
+| TXLine | 18 | 4.5 KB | one line: its runs, widths, justification, tabs, hit-testing |
+| TXFormatter (+ Frame/MonoFrame/MultiFrame formatters) | 20 | 4.2 KB | breaking the text into lines and lines into frames |
+| Textension | 21 | 3.6 KB | the document: text, runs, rulers, commands, start-up |
+| TXDisplay (+ TXNewtDisplay) | 22 | 2.8 KB | drawing, scrolling, the edit bracket |
+| TXHilite (+ TXNewtHilite) | 16 | 2.4 KB | the selection and the caret |
+| TXFrames (+ Mono/Sect/Page frames) | 20 | 1.9 KB | where the lines go on the page(s) |
+| TXContainer (+ Private/Newt) | 9 | 1.7 KB | reading and writing a document to a stream |
+| TXRulerUI and its bars | 14 | 1.8 KB | the ruler a script shows with ShowRuler |
+| free functions | ~60 | 9 KB | clipping, scrolling, the default objects, stream helpers |
+| smaller (TXStyledText, commands, TXVBOChars, ...) | ~40 | 3 KB | |
+
+Bottom up, in the order the layers need each other:
+
+1. DONE: `TXOffset`/`TXOffsetRange`, `TXRun`/`TXRunRange`,
+   `TXRulerRange`, the helpers, `TXLinesHeights`, `TXParagCtrlChars`.
+2. The concrete runs: `TXNewtTextRun` (0x0023f648-0x0024054c: a style -
+   font, size, face, colour - measured and drawn through `qd/Text.h`) and
+   `TXGraphicsRun` (0x0023ac54-0x0023b124); `TXStyledText` (0x002461bc-0x002464f4: the text and
+   its runs together, `CharToWord`).  Test: a run measures and draws a
+   word into an offscreen port.
+3. `TXLine` (0x0023cba8-0x0023de28): a line's runs, their widths, tabs
+   (through the rulers' `GetTabWidth`/`CalcPendingTabWidth`), full
+   justification, `CharToPixel`/`PixelToChar`.  Test: a line with a tab
+   and two styles laid out and hit-tested.
+4. The frames (`TXFrames`, `TXMonoFrame`, `TXSectFrames`, `TXPageFrames`,
+   `TXMonoSizeFrames`) and the formatters (`TXFormatter`,
+   `TXFrameFormatter`, `TXMonoFrameFormatter`, `TXMultiFrameFormatter`):
+   the text broken into lines, the lines' heights kept in
+   `TXLinesHeights`, reflowed after an edit (`TXFormatReflowLines`).
+   Test: a paragraph reflowed after an insertion.
+5. `TXDisplay`/`TXNewtDisplay` and `TXHilite`/`TXNewtHilite`: drawing
+   the lines that show, scrolling (needs QuickDraw's `ScrollRect`, not
+   yet in `qd/`), the selection and caret.
+6. `Textension` (the document: `TextensionStart` makes `gTXTempRegions`
+   and the registered runs and rulers) and the edit commands
+   (`TXCommand`, `TXEditCommand`, `TXReplaceTextCommand`,
+   `TXMoveTextCommand`) with undo.
+7. `TXView` and the 39 natives, `TXContainer` (reading and writing a
+   document), the ruler UI (`ShowRuler`), `TXVBOChars` (the text kept in
+   a large binary - `stores/LargeBinaries.h` is there now) and
+   `TXNewtStreamFactory`.  The demo: a `protoTXView` on the host with
+   text set and typed, drawn and looked at.
+
+`TXAttrObject::ReadPublicData`/`WritePublicData` are the base's empty
+pair; the subclasses that put a style on a stream come with the runs.
