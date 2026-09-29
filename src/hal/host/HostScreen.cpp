@@ -114,6 +114,16 @@ THostScreenDriver::Blit(PixelMap* map, Rect* src, Rect* dst, long mode)
 	unsigned char gray[256];
 	for (long v = 0; v <= maxValue && v < 256; v++)
 		gray[v] = (unsigned char) ((v * 255) / maxValue);
+	// a whole byte of pixels at a time where the row allows: each byte's
+	// grays from a table (the live inker's srcOr, which leaves white
+	// pixels alone, goes pixel by pixel)
+	long perByte = 8 / depth;
+	unsigned char expand[256][8];
+	Boolean wholeBytes = mode != srcOr && depth < 8;
+	if (wholeBytes)
+		for (long b = 0; b < 256; b++)
+			for (long k = 0; k < perByte; k++)
+				expand[b][k] = gray[(b >> (8 - depth * (k + 1))) & maxValue];
 	const unsigned char* bits;
 	ULong storage = map->pixMapFlags & kPixMapStorage;
 	if (storage == kPixMapPtr)
@@ -130,7 +140,15 @@ THostScreenDriver::Blit(PixelMap* map, Rect* src, Rect* dst, long mode)
 		const unsigned char* row = bits + (y - map->bounds.top) * map->rowBytes;
 		unsigned char* out = fPixels + dy * width + dst->left + (xFrom - src->left);
 		long bit = (xFrom - map->bounds.left) * depth;
-		for (long x = xFrom; x < xTo; x++, bit += depth, out++)
+		long x = xFrom;
+		if (wholeBytes)
+		{
+			for (; x < xTo && (bit & 7) != 0; x++, bit += depth, out++)
+				*out = gray[(row[bit >> 3] >> (8 - depth - (bit & 7))) & maxValue];
+			for (; x + perByte <= xTo; x += perByte, bit += 8, out += perByte)
+				memcpy(out, expand[row[bit >> 3]], perByte);
+		}
+		for (; x < xTo; x++, bit += depth, out++)
 		{
 			long value = (depth == 8) ? row[bit >> 3] : (row[bit >> 3] >> (8 - depth - (bit & 7))) & maxValue;
 			if (mode == srcOr && value == 0)

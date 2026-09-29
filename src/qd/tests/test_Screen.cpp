@@ -2,7 +2,8 @@
 // map - InitScreen sizing the screen from the driver, the drawing
 // brackets carrying what was drawn to the display (through RgnBlt's
 // QDStartDrawing/QDStopDrawing), the deferral under StartDrawing/
-// StopDrawing, the orientation, GetGrafInfo, and the image written out.
+// StopDrawing, the orientation, GetGrafInfo, and the image written out;
+// and the driver's Blit against a pixel-at-a-time reference.
 // Runs over a standalone kernel heap.
 #include "Screen.h"
 #include "HostScreen.h"
@@ -15,6 +16,73 @@
 
 static int failures = 0;
 #define EXPECT(cond) do { if (!(cond)) { failures++; fprintf(stderr, "FAIL %s:%d: %s\n", __FILE__, __LINE__, #cond); } } while (0)
+
+
+// The display driver's Blit (which reads a whole byte of pixels at a time)
+// against a pixel-at-a-time reference: maps of depths 1, 2, 4 and 8 at odd
+// origins, random pixels, random rectangles partly off the map and the
+// display, srcCopy and the inker's srcOr - every gray compared.
+static unsigned long gSeed = 12345;
+static long Rnd(long n) { gSeed = gSeed * 1103515245u + 12345u; return (long) ((gSeed >> 16) & 0x7fff) % n; }
+
+static void
+TestBlitAgainstReference(void)
+{
+	THostScreenDriver* display = new THostScreenDriver;
+	display->New();
+	display->Configure(61, 37, 1, 100);
+	display->ScreenSetup();
+	long width = display->Width(), height = display->Height();
+	unsigned char* want = new unsigned char[width * height];
+	long wrong = 0;
+	for (long round = 0; round < 400; round++)
+	{
+		long depth = 1 << Rnd(4);
+		long maxValue = (1 << depth) - 1;
+		PixelMap map;
+		long mw = 20 + Rnd(50), mh = 10 + Rnd(40);
+		map.rowBytes = (short) (((mw * depth + 31) / 32) * 4);
+		unsigned char* bits = new unsigned char[map.rowBytes * mh];
+		for (long i = 0; i < map.rowBytes * mh; i++)
+			bits[i] = (unsigned char) Rnd(256);
+		map.baseAddr = (Ptr) bits;
+		long left = Rnd(21) - 10, top = Rnd(21) - 10;
+		SetRect(&map.bounds, left, top, left + mw, top + mh);
+		map.pixMapFlags = kPixMapPtr | depth;
+		Rect src;
+		long l = left + Rnd(mw + 10) - 5, t = top + Rnd(mh + 10) - 5;
+		SetRect(&src, l, t, l + Rnd(mw), t + Rnd(mh));
+		Rect dst = src;
+		OffsetRect(&dst, Rnd(21) - 10, Rnd(21) - 10);
+		long mode = Rnd(2) ? srcCopy : srcOr;
+		// the reference: what is there now, then each pixel alone
+		memcpy(want, display->Pixels(), width * height);
+		for (long y = src.top; y < src.bottom; y++)
+		{
+			long dy = dst.top + (y - src.top);
+			if (dy < 0 || dy >= height || y < map.bounds.top || y >= map.bounds.bottom)
+				continue;
+			for (long x = src.left; x < src.right; x++)
+			{
+				long dx = dst.left + (x - src.left);
+				if (dx < 0 || dx >= width || x < map.bounds.left || x >= map.bounds.right)
+					continue;
+				long bit = (x - map.bounds.left) * depth;
+				const unsigned char* row = bits + (y - map.bounds.top) * map.rowBytes;
+				long value = depth == 8 ? row[bit >> 3] : (row[bit >> 3] >> (8 - depth - (bit & 7))) & maxValue;
+				if (mode == srcOr && value == 0)
+					continue;
+				want[dy * width + dx] = (unsigned char) ((value * 255) / maxValue);
+			}
+		}
+		display->Blit(&map, &src, &dst, mode);
+		if (memcmp(want, display->Pixels(), width * height) != 0)
+			wrong++;
+		delete[] bits;
+	}
+	EXPECT(wrong == 0);
+	delete[] want;
+}
 
 
 int
@@ -100,6 +168,7 @@ main(int argc, char** argv)
 	EXPECT(orientation == 1);
 	SetOrientation(0);
 	EXPECT(screen->bounds.right == 64 && screen->bounds.bottom == 48 && screenWidth == 48 && screenHeight == 64);
+	TestBlitAgainstReference();
 	if (failures == 0)
 		printf("test_Screen: all passed\n");
 	else
