@@ -124,36 +124,15 @@ TXGraphicsRun::LineBreak(const UniChar* /*text*/, long count, long /*start*/, Fi
 Fixed
 TXGraphicsRun::CharToPixel(const TXLineRunDisplayInfo& info, long offset)
 {
-	if (offset == 0)
-		return 0;
-	return info.fWidth + info.fJustifyExtra;
+	return TXIndivisibleCharToPixel(info, offset);
 }
 
 
 // ROM 0x0023ace0 PixelToChar__13TXGraphicsRunFRC20TXLineRunDisplayInfolP13TXOffsetRange
-// Left of the margin: in front of it; right of the other margin: after
-// it; between them: the whole run.  The margins are a quarter of the
-// width when the run's character is a control character, else none.
 void
 TXGraphicsRun::PixelToChar(const TXLineRunDisplayInfo& info, Fixed pixel, TXOffsetRange* range)
 {
-	int width = (short) ((ULong) (info.fWidth + info.fJustifyExtra + 0x8000) >> 16);
-	int margin = 0;
-	if (info.fText[0] < 0x20)
-		margin = width >> 2;
-	long x = pixel >> 16;
-	if (margin < x)
-	{
-		if (x < width - margin)
-		{
-			range->Set(0, info.fLength, false, true);
-			return;
-		}
-		long end = info.fLength;
-		range->Set(end, end, end != 0, end != 0);
-	}
-	else
-		range->Set(0, 0, false, false);
+	TXIndivisiblePixelToChar(info, pixel, range);
 }
 
 

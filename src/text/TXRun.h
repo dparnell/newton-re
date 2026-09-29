@@ -90,6 +90,13 @@ public:
 };
 
 
+// A run that stands for one thing (a picture), as a line hit-tests it:
+// its middle selects it whole, a quarter of it at each end - when its
+// character is a control character - puts the caret beside it; and a
+// caret beside it is at its start or its end.
+void	TXIndivisiblePixelToChar(const TXLineRunDisplayInfo& info, Fixed pixel, TXOffsetRange* range);	// ROM 0x00245c18 TXIndivisiblePixelToChar__FRC20TXLineRunDisplayInfolP13TXOffsetRange
+Fixed	TXIndivisibleCharToPixel(const TXLineRunDisplayInfo& info, long offset);	// ROM 0x00245e4c TXIndivisibleCharToPixel__FRC20TXLineRunDisplayInfol
+
 class TXRunRange : public TXObjectRange
 {
 public:

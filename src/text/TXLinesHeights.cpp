@@ -416,6 +416,9 @@ TXParagCtrlChars::Define(TXChars* chars, long start, long end)
 }
 
 
+TXParagCtrlChars	gTXParagCtrlChars;
+
+
 // ROM 0x00242b1c GetCurrCtrlOffset__16TXParagCtrlCharsFv
 long
 TXParagCtrlChars::GetCurrCtrlOffset(void)

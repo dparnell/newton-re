@@ -59,7 +59,8 @@ const unsigned char	kTXTabRight			= 0xff;
 const char	kTXJustifyLeft		= 1;
 const char	kTXJustifyRight		= 2;
 const char	kTXJustifyCenter	= 4;
-const char	kTXJustifyFull		= 8;
+const char	kTXJustifyFull		= 8;		// but not a paragraph's last line (TXLine::DoLineLayout)
+const char	kTXJustifyFullAll	= 0x10;		// the last line too
 
 
 // One tab stop.  The ROM's is eight bytes of which it uses six - the

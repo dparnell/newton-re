@@ -127,4 +127,8 @@ public:
 };
 
 
+// The one a line being laid out uses (TXLine::DefineRuns).
+extern TXParagCtrlChars	gTXParagCtrlChars;					// ROM 0x0c104de0 gTXParagCtrlChars
+
+
 #endif	/* __TXLINESHEIGHTS_H */
