@@ -296,6 +296,7 @@ public:
 	Boolean			SoupChangedSinceLastBackup(void);
 	void			ClearSoupDirty(void);
 	void			BackupSoup(void);
+	void			GetPackageInfo(void);
 
 	void			ProcessCommand(Boolean* done, Boolean* operationDone);
 	Boolean			CheckProtocolExtension(ULong command, Boolean* result);

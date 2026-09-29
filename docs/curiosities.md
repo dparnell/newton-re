@@ -10,6 +10,28 @@ where it lives, so you can go and read it.
 
 ---
 
+## A backup that cannot be cancelled
+
+While the docker sends a soup to the desktop (`SendSoup`, `BackupSoup`),
+it calls `TDocker::CheckCancel` (ROM 0x00098f94) for each entry. This is
+meant to look at the link at most every 90 ticks and stop if the desktop
+has sent 'opca' (cancel). But the test is back to front:
+
+    if (*lastLook + 90 <= Ticks()) return;
+
+It returns when 90 ticks *have* passed since the last look. The last look
+is recorded only when it does look, and it starts at nought. So once the
+machine has been up for a second and a half, `CheckCancel` never looks
+again, and a backup always runs to the end.
+
+`BackupSoup` has a bug of its own nearby. An id that doesn't fit in a
+short makes it announce a new base ('base'), but the base is never kept.
+The following ids are still sent less nought, so every later id above
+0x7fff makes another 'base'. Both bugs are ported as they are
+(`comms/Docker.cpp`).
+
+---
+
 ## The Newton's DES is not quite the standard's
 
 The desktop connection's password exchange and the store passwords use DES

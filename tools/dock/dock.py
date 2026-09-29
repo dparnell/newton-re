@@ -271,6 +271,12 @@ class DockSession:
             result = struct.unpack(">i", data[:4])[0]
             print("dock.py: %s: dres %d" % (os.path.basename(path), result))
             results.append(result)
+        if session:
+            # the packages on the current store ('gpin' with no name: all)
+            self.write_command(b"gpin", nsof.encode(None))
+            info = nsof.decode(self.expect(b"pinf"))
+            print("dock.py: packages on the store: %s" % ", ".join(
+                "%s (%d bytes, id %d)" % (p[Symbol("name")], p[Symbol("packageSize")], p[Symbol("packageId")]) for p in info))
         self.write_command(b"disc")
         return results
 

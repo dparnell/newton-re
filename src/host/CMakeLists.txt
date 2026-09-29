@@ -65,7 +65,7 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
                      --spawn $<TARGET_FILE:newton> --rom ${NEWTON_ROM_BIN} --serial-port 0 --headless 150
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/dock.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
-    set_tests_properties(host.NewtonDockSession PROPERTIES TIMEOUT 240 PASS_REGULAR_EXPRESSION "the Newton speaks protocol 11.*the Newton knows the password.*docked.*stores: Internal.*the default store is Internal.*soups on Internal, the System soup among them.*the System soup made current: 0.*the System soup.s info.*added entry.*the new one among them.*reads .written by dock.py.*after .cent. it reads .changed by dock.py.*entries all right.*soup .dock.py test. made: 0.*the backup sent ids ..0, -2, -32768...*the soup sent entries .0, 1, 2..*backup all right.*monaco.pkg: dres 0.*dock: installed Monaco.*dock: done")
+    set_tests_properties(host.NewtonDockSession PROPERTIES TIMEOUT 240 PASS_REGULAR_EXPRESSION "the Newton speaks protocol 11.*the Newton knows the password.*docked.*stores: Internal.*the default store is Internal.*soups on Internal, the System soup among them.*the System soup made current: 0.*the System soup.s info.*added entry.*the new one among them.*reads .written by dock.py.*after .cent. it reads .changed by dock.py.*entries all right.*soup .dock.py test. made: 0.*the backup sent ids ..0, -2, -32768...*the soup sent entries .0, 1, 2..*backup all right.*monaco.pkg: dres 0.*packages on the store: Monaco .17064 bytes.*dock: installed Monaco.*dock: done")
 endif()
 
 # deferred recognition (views/Rerecognize.h): "ton" written, and the

@@ -15,6 +15,8 @@
 #include "NewtWorld.h"
 #include "Dates.h"
 #include "Soups.h"
+#include "PackageManager.h"
+#include "LargeObjects.h"
 #include "Cursors.h"
 #include "Entries.h"
 #include "RichString.h"
@@ -2994,14 +2996,75 @@ TDocker::BackupSoup(void)
 }
 
 
+// ROM 0x0009b40c GetPackageInfo__7TDockerFv
+// 'gpin' -> 'pinf': a frame for each package on the current store (or
+// only the one of the name the desktop gives) - its name, size, id,
+// version, source (format, device kind, number and id), modification
+// time, whether it is copy-protected, the length of its name in bytes, and
+// whether it may be removed now.
+void
+TDocker::GetPackageInfo(void)
+{
+	RefVar wanted(ReadRef(RefVar(NILREF)));
+	RefVar info(AllocateArray(RSSYMarray, 0));
+	TRichString wantedName;
+	if (NOTNIL(wanted))
+		wantedName.SetStringData(wanted);
+	TRichString name;
+	TPMIterator iter;
+	iter.Init();
+	fError = noErr;			// (the ROM's Init answers an error, thrown here; the host's cannot fail)
+	RefVar frame;
+	while (iter.More())
+	{
+		TStore* store;
+		PSSId rootId;
+		if (IdToStore(iter.PackageId(), &store, &rootId) == noErr && fCurrentStore == ToObject(store))
+		{
+			Boolean take = true;
+			if (NOTNIL(wanted))
+			{
+				name.SetCPlainStringData(iter.PackageName());
+				take = name.CompareSubStringCommon(wantedName, 0, -1, false) == 0;
+			}
+			if (take)
+			{
+				frame = AllocateFrame();
+				SourceType source = iter.fSourceType;
+				SetFrameSlot(frame, RSSYMname, RefVar(MakeString(iter.PackageName())));
+				SetFrameSlot(frame, RSSYMpackagesize, RefVar(MAKEINT(iter.PackageSize())));
+				SetFrameSlot(frame, RSSYMpackageid, RefVar(MAKEINT(iter.PackageId())));
+				SetFrameSlot(frame, RSSYMpackageversion, RefVar(MAKEINT(iter.fVersion)));
+				SetFrameSlot(frame, RSSYMformat, RefVar(MAKEINT(source.format)));
+				SetFrameSlot(frame, RSSYMdevicekind, RefVar(MAKEINT(source.deviceKind)));
+				SetFrameSlot(frame, RSSYMdevicenumber, RefVar(MAKEINT(source.deviceNumber)));
+				SetFrameSlot(frame, RSSYMdeviceid, RefVar(MAKEINT(source.deviceId)));
+				SetFrameSlot(frame, RSSYMmodtime, RefVar(MAKEINT(iter.fModifyDate)));
+				SetFrameSlot(frame, RSSYMiscopyprotected, RefVar(MAKEINT(iter.IsCopyProtected())));
+				SetFrameSlot(frame, RSSYMlength, RefVar(MAKEINT(Ustrlen(iter.PackageName()) * 2 + 2)));
+				UChar safe = false;
+				if (SafeToDeactivatePackage(iter.PackageId(), &safe) != noErr)
+					// ROM BUG: asked a second time for the error to throw
+					Throw(exLongErrorException, (void*) (intptr_t) SafeToDeactivatePackage(iter.PackageId(), &safe), nil);
+				SetFrameSlot(frame, RSSYMsafetoremove, RefVar(safe ? TRUEREF : NILREF));
+				AddArraySlot(info, frame);
+			}
+		}
+		iter.NextPackage();
+	}
+	iter.Done();
+	WriteRef('pinf', info);
+}
+
+
 // ROM 0x000934b0 ProcessCommand__7TDockerFRUcT1
 // One of the desktop's commands carried out.  done: the session is over
 // ('disc'); operationDone: the operation the session was for is over, and
 // the command loop ends without disconnecting (an extension answered,
 // 'opca', 'opdn', a package loaded on protocol 10).
 // The stores', soups', cursors' and entries' commands are here too, and
-// making, sending and backing up soups.  NOT YET: the package-list, patch,
-// slip and function commands - each is answered 'unkn' as a command the Newton does not know
+// making, sending and backing up soups, and the package list.  NOT YET:
+// the package restore and removal, patch, slip and function commands - each is answered 'unkn' as a command the Newton does not know
 // is, which a desktop takes as a Newton too old to do it.
 void
 TDocker::ProcessCommand(Boolean* done, Boolean* operationDone)
@@ -3207,6 +3270,9 @@ TDocker::ProcessCommand(Boolean* done, Boolean* operationDone)
 			break;
 		case 'bksp':
 			BackupSoup();
+			break;
+		case 'gpin':
+			GetPackageInfo();
 			break;
 		case kDSetTime:
 		{
