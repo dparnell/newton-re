@@ -1,0 +1,50 @@
+// Copperfield, the book reader for books that are not help books: a copy
+// of the ROM's help book under an ISBN of its own is put in the library
+// (BookAvailable, as a package's 'book part is), opened (OpenBook) and
+// turned (TurnToPage, ScrollPage), its reading place kept in the Library
+// soup (CurrentPage, PreviousPage) and bookmarked (AddBookmark).  The
+// display is written to tmp/books-copperfield.pgm (the book's page 5, with
+// the reader's control panel).
+//
+//   build/host/host/newton --rom <image> --display 320x480 --headless 10 --script src/books/tests/books-copperfield.ns
+
+failures := 0;
+check := func(what, ok)
+  begin
+    if not ok then
+      begin
+        Print("books-copperfield: FAILED " & what);
+        failures := failures + 1;
+      end;
+  end;
+
+AddDelayedCall(func() begin
+    local root := GetRoot();
+    local cf := root.copperfield;
+    local book := Clone(cf.library.|GECKO!HDI?|.book);
+    book.isbn := "HELP-COPY";
+    book.title := "Help Copy";
+    RemoveSlot(book, 'help);
+    call check with ("BookAvailable", IsFrame(BookAvailable({book: book}, 5)));
+    cf:OpenBook("HELP-COPY");
+    call check with ("the reader is open", Visible(cf));
+    call check with ("at the book", StrEqual(cf.isbn, "HELP-COPY"));
+    cf:TurnToPage(5);
+    call check with ("at page 5", cf:CurrentPage() = 5);
+    cf:ScrollPage(1);
+    call check with ("a page on", cf:CurrentPage() = 6 and cf:PreviousPage() = 5);
+    cf:ScrollPage(-100);
+    call check with ("not before the first page", cf:CurrentPage() = 6);
+    cf:ScrollPage(-1);
+    call check with ("and back", cf:CurrentPage() = 5);
+    local marks := cf:AddBookmark(5);
+    call check with ("a bookmark", marks and Length(marks) = 1 and marks[0] = 5);
+    call check with ("not twice", cf:AddBookmark(5) = nil);
+    call check with ("the title from the Library soup", StrEqual(cf:BookTitle(), "Help Copy"));
+    AddDelayedCall(func() begin
+        ScreenSnapshot("tmp/books-copperfield.pgm");
+        local kids := cf.cuPage.contentArea:ChildViewFrames();
+        call check with ("the page has views", Length(kids) >= 2);
+        Print("books-copperfield: done, " & NumberStr(failures) & " failed");
+      end, nil, 2000);
+  end, nil, 3000);

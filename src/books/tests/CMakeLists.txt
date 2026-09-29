@@ -11,3 +11,9 @@ add_test(NAME books.HelpBook
     COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 12 --script ${CMAKE_CURRENT_SOURCE_DIR}/books-help.ns
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(books.HelpBook PROPERTIES TIMEOUT 120 PASS_REGULAR_EXPRESSION "books-help: done, 0 failed")
+
+# Copperfield reading a book of the library's (a copy of the help book)
+add_test(NAME books.Copperfield
+    COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 10 --script ${CMAKE_CURRENT_SOURCE_DIR}/books-copperfield.ns
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(books.Copperfield PROPERTIES TIMEOUT 120 PASS_REGULAR_EXPRESSION "books-copperfield: done, 0 failed")
