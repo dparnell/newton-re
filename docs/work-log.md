@@ -9,6 +9,28 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-30: drawing speed
+
+- Measured first: `src/host/demo/drawbench.ns` (Names, Dates, Extras
+  opened and closed, the Notepad scrolled and redrawn, 20 rounds; the
+  processor time from a new `HostCPUTime()`) and `tools/host/profile.py
+  <pid>`, a sampling profiler: `RgnBlt` 77% inclusive, the per-pixel
+  helpers about 60% self; then the host display driver's `Blit`.
+- The oracle: the pixel-at-a-time blitter kept as `BlitPixelsSlow`
+  (`NEWTON_QD_SLOW=1`, `SetQDSlowBlitter`); ctest `qd.Blitter` draws 240
+  random scenes both ways (every verb, the 16 pen modes, patterns,
+  `CopyBits` at depths 1/2/4/8 with masks, overlapping and stretched,
+  `ScrollRect`, complex clips, maps with edges mid-byte) and compares
+  every byte - a planted one-pixel error shows in 65 scenes;
+  `test_Screen` checks the display driver the same way.
+- `BlitPixelsFast` (DEVIATION, performance): the maps and pattern looked
+  up once per call, pattern rows once per row, one combined visibility
+  row, byte moves for aligned same-depth copies, packed copy rows; the
+  display driver's `Blit` through tables of grays (9b68f08, bb12f7d,
+  ab8af8f, 2067c01, b95cb60, ea502ea).  drawbench: 11.0 s to 3.4 s of
+  processor (1.6 s in an optimised build); a Notepad redraw 18.9 ms to
+  6 ms.
+
 ## 2026-09-30: the docking session, and the ROM's DES
 
 - `utility/DES.h` (628b899): the ROM's DES - the key schedule, the

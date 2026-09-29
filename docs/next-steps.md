@@ -201,10 +201,11 @@ worked through.  What could come next (not ranked; the owner chooses):
   and `RotTiledBitmap` (only a fax page reaches it, so it still waits on
   the comms stack).
 - **Text engine: finished** (2026-09-29; below).
-- **Drawing speed**: the blitter and the lines work a pixel at a time
-  through region scan conversion, which is why a busy screen redraws
-  slowly on the host.  A faster blitter with identical output is host
-  work only, but it makes the interactive build pleasant to use.
+- **Drawing speed**: done for the blitter and the display (2026-09-30;
+  `docs/work-log.md`).  What remains is the ROM's own animation pacing and
+  the unoptimised default build - `-DCMAKE_BUILD_TYPE=RelWithDebInfo`
+  roughly halves processor time again for interactive use; `VisibleRow`
+  and `StretchBits`/text are the next hot spots if wanted.
 - **The ROM-free track** (below).
 - Small: the date the Assistant's "tomorrow" comes to ("schedule lunch
   with Daniel tomorrow" puts the meeting on today).
