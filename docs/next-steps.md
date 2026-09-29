@@ -223,7 +223,7 @@ worked through.  What could come next (not ranked; the owner chooses):
   the unoptimised default build - `-DCMAKE_BUILD_TYPE=RelWithDebInfo`
   roughly halves processor time again for interactive use; `VisibleRow`
   and `StretchBits`/text are the next hot spots if wanted.
-- **The ROM-free track** (below): step 1, the decompiler, done; step 2 (the object area as editable source, rebuilt byte-identical) done; **the OS boots with no ROM image** to the same screen as with one (step 3); next the extension's packages from source.
+- **The ROM-free track** (below): step 1, the decompiler, done; step 2 (the object area as editable source, rebuilt byte-identical) done; **the OS boots with no ROM image** to the same screen as with one, from the committed, editable `romsrc/`.
 - Small: the date the Assistant's "tomorrow" comes to ("schedule lunch
   with Daniel tomorrow" puts the meeting on today).
 
@@ -402,10 +402,10 @@ used on the next run.  The pieces, roughly in order:
    2026-09-30; `romsrc/README.md`); the extractor is not run over it
    again, and `host.ROMSourceCommitted` (does it still build the ROM
    byte for byte?) is to be retired at its first intentional edit.
-   Left: 3 decompile edge cases (Cardfile 2, Connection 1), the REx
-   header checksum's algorithm, the IMA sounds and tables as editable
-   forms, moving slots within a frame without editing `layout.tsv`, ROM
-   code for packages with native ARM code.
+   Complete for the object area and the extension.  Optional later: the
+   Unicode, collation and locale tables and the recognisers' dictionaries
+   as text (word lists plus a trie builder); ROM code for packages with
+   native ARM code.
 
 Until then the ROM image stays how the reconstruction is checked against
 the original; new run-time dependencies on it are to be avoided or noted.

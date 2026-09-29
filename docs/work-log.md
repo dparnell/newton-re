@@ -86,6 +86,29 @@ bugs and ROM bugs found on the way.
   `layout.tsv` manifest, and `rombuild.py` proved by a byte-identical
   rebuild of the area.
 
+## 2026-09-30: the ROM source tree's leftovers
+
+- Every function decompiles (a673717e): a greedy solver names a loop's
+  hidden locals where the search gave up, names kept under the lexer's
+  253-character limit; Cardfile 336 and Connection 417 all source.
+- The REx header's checksum is read by nothing in the ROM (28263829):
+  `TestForREx` checks only the signatures and id, and the ROM's own
+  check for a changed ROM is `CalculateROMREXCheckSums`, computed fresh.
+- The 12 IMA sounds are WAV, compressed back byte-identically on build by
+  the reconstruction of the ROM's own codec (`newtonscript --ima-expand`/
+  `--ima-compress`, 9587ffa4).
+- Tables as text where they have structure, each checked against its
+  bytes (d4be0a8b): `tonescore` (the 36 touch-tone scores), `shorts`,
+  `fixed`, `hexfile` (keyboard layouts, 256-entry tables); 32 files
+  stay binary, reasons in `docs/rom-free/README.md`.
+- An edit that reorders slots, inserts array elements or renames slots
+  needs no `layout.tsv` change (e62f2576; ctest
+  `host.ROMSourceEditMoved`).
+- The committed `romsrc/` was brought up to date with these by copying
+  the changed files from a fresh extraction, still byte-identical
+  (b6d918cb, 0347d4ce, df2156f7) - safe only while nobody has edited it
+  by hand.
+
 ## 2026-09-30: the ROM source tree committed as `romsrc/`
 
 - The owner's decision: the tree is committed and is now the source,
