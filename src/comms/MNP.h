@@ -328,8 +328,12 @@ NewtonErr	V42CreateCompressVars(TCompressVars** vars);
 void		V42DisposeCompressVars(TCompressVars* vars);
 void		V42InitCompress(TCompressVars* vars, ULong directions, ULong dictionarySize, ULong maxString,
 							MNPByteProc compressOut, MNPByteProc decompressOut, void* refCon);
-void		BTEncode(void* vars, UByte byte);
-void		BTFlush(void* vars, UByte byte);
-void		BTDecode(void* vars, UByte byte);
+void		BTEncode(TCompressVars* vars, ULong c);			// c: a character, or 0xfffe to flush
+void		BTFlush(TCompressVars* vars);
+long		BTDecode(TCompressVars* vars, ULong byte);
+// (MNP's byte hooks over them)
+void		V42EncodeHook(void* vars, UByte byte);
+void		V42FlushHook(void* vars, UByte byte);
+void		V42DecodeHook(void* vars, UByte byte);
 
 #endif	/* __COMMS_MNP_H */

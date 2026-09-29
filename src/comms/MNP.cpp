@@ -828,14 +828,14 @@ TMNP::ParamNegotiation(Boolean acceptor)
 			if (directions & 1)
 			{
 				fCCB->fCompressRefCon = fCCB->fV42;
-				fCCB->fCompress = BTEncode;
-				fCCB->fFlush = BTFlush;
+				fCCB->fCompress = V42EncodeHook;
+				fCCB->fFlush = V42FlushHook;
 				fCCB->fMinFree = 6;
 			}
 			if (directions & 2)
 			{
 				fCCB->fDecompressRefCon = fCCB->fV42;
-				fCCB->fDecompress = BTDecode;
+				fCCB->fDecompress = V42DecodeHook;
 				fCCB->fMaxExpansion = fCCB->fV42P2;
 			}
 			V42InitCompress(fCCB->fV42, directions, (fCCB->fV42P1Hi << 8) | fCCB->fV42P1Lo, fCCB->fV42P2,

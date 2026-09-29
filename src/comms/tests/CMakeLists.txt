@@ -36,11 +36,19 @@ target_link_libraries(test_SerialTool PRIVATE comms_serial hal_host_serial os600
 add_test(NAME comms.SerialTool COMMAND test_SerialTool)
 set_tests_properties(comms.SerialTool PROPERTIES TIMEOUT 60)
 
+# the ROM's V.42bis coder, checked against tools/dock/v42bis.py's
+add_executable(test_V42bis test_V42bis.cpp)
+target_link_libraries(test_V42bis PRIVATE comms_serial os600_kernel os600_user)
+add_test(NAME comms.V42bisRoundTrip COMMAND test_V42bis)
+
 # MNP against the desktop end in tools/dock/mnp.py (which runs the program)
 add_executable(test_MNP test_MNP.cpp)
 target_link_libraries(test_MNP PRIVATE comms_serial hal_host_serial os600_kernel os600_user)
 find_package(Python3 COMPONENTS Interpreter)
 if(Python3_FOUND)
+    add_test(NAME comms.V42bis
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/dock/v42bis.py --check $<TARGET_FILE:test_V42bis>)
+    set_tests_properties(comms.V42bis PROPERTIES TIMEOUT 300 PASS_REGULAR_EXPRESSION "v42bis.py: all the same")
     add_test(NAME comms.MNP
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/dock/mnp.py --echo --spawn $<TARGET_FILE:test_MNP>)
     set_tests_properties(comms.MNP PROPERTIES TIMEOUT 120)
