@@ -86,6 +86,25 @@ bugs and ROM bugs found on the way.
   `layout.tsv` manifest, and `rombuild.py` proved by a byte-identical
   rebuild of the area.
 
+## 2026-09-30: the OS boots with no ROM image
+
+- `tools.PNG` runs the PNG reader's tests (459ac8e).  No bytecode is left
+  in the source tree: of the "362 nested functions" only 10 were; the
+  rest were bytecode equal functions share (the ROM's build stored equal
+  objects once), now written `same("<path>")` - the object the compiled
+  function holds at that path - 721 definitions (2915178).
+- Step 3 planned in `docs/rom-free/README.md` (bec7fbd): a table of what
+  still reads the image.  `romsrc.py build -o` writes one object file -
+  the object area, the magic-pointer table (`magic.tsv`) and the
+  recognisers' 40 lexicons (`lexicons/`: the first boot without an image
+  crashed in `ReplaceDictionary` without them); `ImportBuiltObjects`
+  loads it and `ROMBytesAt(address, length)` answers ROM bytes from
+  either the image or the file; `newton --objects <file>` (or `--rom`,
+  which recognises it).  ctest `host.NewtonNoROM` builds the file and
+  boots with no image anywhere to be found, to the Notepad (a55bc3a).
+  The `--rom` boot shows the Setup assistant instead, Setup being one of
+  the ROM extension's packages, which do not come from the tree yet.
+
 ## 2026-09-30: V.42bis
 
 - `comms/V42bis.cpp` (d091c7e): the ROM's BTLZ coder (`BTEncode`,

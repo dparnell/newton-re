@@ -217,7 +217,7 @@ worked through.  What could come next (not ranked; the owner chooses):
   the unoptimised default build - `-DCMAKE_BUILD_TYPE=RelWithDebInfo`
   roughly halves processor time again for interactive use; `VisibleRow`
   and `StretchBits`/text are the next hot spots if wanted.
-- **The ROM-free track** (below): step 1, the decompiler, done; step 2 (the object area as editable source, rebuilt byte-identical) done bar details; next step 3, the host loading the built area.
+- **The ROM-free track** (below): step 1, the decompiler, done; step 2 (the object area as editable source, rebuilt byte-identical) done; **the OS boots with no ROM image** (step 3, the ROM extension's packages next).
 - Small: the date the Assistant's "tomorrow" comes to ("schedule lunch
   with Daniel tomorrow" puts the meeting on today).
 
@@ -375,15 +375,21 @@ used on the next run.  The pieces, roughly in order:
    as source - functions as decompiled NewtonScript (compiled back by the
    host with no ROM image), bitmaps as PNG, simple sounds as WAV,
    pictures as PICT, fonts as .ttf - and builds it back byte-identical
-   (ctest `host.ROMSourceRoundTrip`).  Left: 362 nested functions still
-   bytecode; the IMA sounds and the tables opaque; files cut by address
+   (ctest `host.ROMSourceRoundTrip`); no bytecode is left in the tree.
+   Left: the IMA sounds and the tables opaque; files cut by address
    rather than grouped by what they belong to.  The tree is generated,
    not committed, until it is worth editing.
 3. A **builder** that makes the object area (and the packages) from the
    sources and resources, in the form `frames/ROMImport.cpp` reads today.
 4. Booting from that output with no `--rom`, the generated tables that
    already live in `src/` (romtable.py, romconstants.py, nsgrammar.py,
-   ...) supplying the rest.
+   ...) supplying the rest - **the OS boots with no ROM image** to the
+   Notepad (`newton --objects <file>`, ctest `host.NewtonNoROM`).  Next:
+   the ROM extension's ten packages from the tree (Setup among them),
+   after which the `--rom` and `--objects` boots should draw the same
+   screen; then the area laid out freely with `ROMConstants.h` generated
+   by the builder, the file grouping, and ROM code for packages with
+   native ARM code.
 
 Until then the ROM image stays how the reconstruction is checked against
 the original; new run-time dependencies on it are to be avoided or noted.
