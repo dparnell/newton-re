@@ -2035,7 +2035,7 @@ TEditView::ValidateCaret(Boolean scrolled)
 		TRegionVar visible(saved);
 		GrafPort* port;
 		GetPort(&port);
-		RgnHandle clip = port->clipRgn;
+		RgnHandle clip = port->visRgn;		// (the ROM's [port,#0x24] at 0x000aaa5c: the visRgn, which the decompiler calls clipRgn)
 		Rect clipBox = (*clip)->rgnBBox;
 		TRegionVar showing;
 		RectRgn(showing, &caret);
@@ -2050,7 +2050,7 @@ TEditView::ValidateCaret(Boolean scrolled)
 			gRootView->SetKeyView(nil, 0, 0, false);
 		}
 		GetPort(&port);
-		CopyRgn(visible, port->clipRgn);
+		CopyRgn(visible, port->visRgn);		// (0x000aab4c)
 	}
 	return gRootView->fCaretView == this;
 }

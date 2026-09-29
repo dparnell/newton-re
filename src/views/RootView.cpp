@@ -1266,8 +1266,8 @@ TRootView::DrawCaret(Point pt)
 
 
 // ROM 0x001b51c0 RestoreBitsUnderCaret__9TRootViewFv
-// The saved bits put back where the caret was (the port clipped to the
-// whole screen for it); the caret no longer showing.
+// The saved bits put back where the caret was (the port's visible region
+// made the whole screen for it); the caret no longer showing.
 void
 TRootView::RestoreBitsUnderCaret(void)
 {
@@ -1279,13 +1279,13 @@ TRootView::RestoreBitsUnderCaret(void)
 	SetRect(&src, 0, 0, 12, 11);
 	GrafPort* port;
 	GetPort(&port);
-	RgnHandle savedClip = port->clipRgn;
+	RgnHandle savedVis = port->visRgn;		// (the ROM's [port,#0x24] at 0x001b522c, 0x001b5264, 0x001b5288: the visRgn)
 	RgnHandle screenRgn = NewRgn();
 	RectRgn(screenRgn, &port->portBits.bounds);		// the ROM: GetGrafInfo's screen map (the port's map here: the tests draw offscreen)
-	port->clipRgn = screenRgn;
+	port->visRgn = screenRgn;
 	fCaretBits->Draw(src, caretRect, 0, nil);
 	GetPort(&port);
-	port->clipRgn = savedClip;
+	port->visRgn = savedVis;
 	DisposeRgn(screenRgn);
 	fCaretShowing = false;
 }
@@ -1322,7 +1322,7 @@ TRootView::DoCaretClick(TUnitPublic* unit)
 	fCaretDrawnView->NarrowVisByIntersectingObscuringSiblingsAndUncles(clipView, &caretRect);
 	GrafPort* port;
 	GetPort(&port);
-	SectRgn(hitRgn, port->clipRgn, hitRgn);
+	SectRgn(hitRgn, port->visRgn, hitRgn);		// (the ROM's [port,#0x24] at 0x001b53c4: the visRgn just narrowed)
 	if (PtInRgn(first, hitRgn))
 	{
 		// NOT YET RECONSTRUCTED: FClicker

@@ -45,7 +45,7 @@ ZoomRect(Rect* from, Rect* to, long steps, Boolean zoomIn)
 	GetPort(&port);
 	RgnHandle clip = NewRgn();
 	GetClip(clip);
-	SetClip(port->clipRgn);
+	SetClip(port->visRgn);		// (the ROM's [port,#0x24] at 0x00340518: the visRgn)
 	SetFgPattern(stdPatterns[grayPat]);
 	PenMode(notPatXor);
 	if (steps < 5)

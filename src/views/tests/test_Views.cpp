@@ -3275,6 +3275,35 @@ TestClicks()
 	Refresh();
 	EXPECT(MapIs(ExpWhite, "paragraph tap in recognition closed"));
 
+	// a tap on a day of a calendar (TMonthView::HandleClick) leaves the
+	// port's regions as it found them: the visible region SetupVisRgn
+	// narrowed is put back into the visRgn ([port,#0x24] at 0x001209d4),
+	// and the clip is not touched
+	{
+		TMonthView* cal = (TMonthView*) ViewOf("ctxM2 := AddView(GetRoot(), {viewClass: 80, viewFlags: 1 + 0x200, "
+			"viewBounds: {left: 0, top: 0, right: 140, bottom: 90}, labelFont: 0x3000, datesFont: 0x3000, "
+			"firstDayOfWeek: 0, selectedDates: [64530720], singleDay: true})");
+		Eval("ctxM2:Dirty()");
+		Refresh();
+		GrafPort* port;
+		GetPort(&port);
+		TRegionVar visBefore, clipBefore;
+		CopyRgn(port->visRgn, visBefore);
+		CopyRgn(port->clipRgn, clipBefore);
+		Rect day12;
+		cal->DateRect(day12, 12);
+		HostAdvanceClock(kSeconds);
+		HostTabletPenDown((day12.left + day12.right) / 2, (day12.top + day12.bottom) / 2, 0);
+		HostTabletPenUp(0);
+		gRecognition.Idle();
+		GetPort(&port);
+		EXPECT(RINT(Eval("ctxM2.selectedDates[0]")) != 64530720);		// the 12th was picked
+		EXPECT(EqualRgn(port->visRgn, visBefore));
+		EXPECT(EqualRgn(port->clipRgn, clipBefore));
+		Eval("RemoveView(GetRoot(), ctxM2)");
+		Refresh();
+	}
+
 	// drag and drop: a press-drag from a source view carries a 'text item
 	// to a target with a viewDropScript that accepts 'text
 	Eval("dropped := nil");

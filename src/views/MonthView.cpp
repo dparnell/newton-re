@@ -500,7 +500,7 @@ TMonthView::HandleClick(TStrokePublic* stroke)
 
 	GrafPort* port;
 	GetPort(&port);
-	CopyRgn(saved, port->clipRgn);
+	CopyRgn(saved, port->visRgn);		// (the ROM's [port,#0x24] at 0x001209d4: the visRgn SetupVisRgn narrowed)
 	if (picked)
 	{
 		UpdateFrame(singleDay ? last : first, last);

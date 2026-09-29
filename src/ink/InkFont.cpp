@@ -224,9 +224,9 @@ TInkWordGlyph::DrawAt(ULong x, ULong y)
 		//  NOT YET; nothing here records one)
 		Boolean enclosed = false;
 		GetPort(&port);
-		RgnHandle clip = port->clipRgn;
-		if ((*clip)->rgnSize == sizeof(Region) && port->picSave == nil)
-			enclosed = Encloses(&(*clip)->rgnBBox, &box);
+		RgnHandle vis = port->visRgn;		// (the ROM's [port,#0x24] at 0x000dc75c: the visRgn)
+		if ((*vis)->rgnSize == sizeof(Region) && port->picSave == nil)
+			enclosed = Encloses(&(*vis)->rgnBBox, &box);
 		if (scaled)
 		{
 			FRect dst;
