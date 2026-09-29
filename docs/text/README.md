@@ -594,6 +594,74 @@ with QuickDraw drawing the two strings itself, taps it and hilites it;
 and it tries the right, decimal and centre tabs, the default stops, and
 the four justifications.
 
+## The frames (`text/TXFrames.h`, `text/TXFrameFormatter.h`)
+
+A *frame* is one rectangle the text flows through: a view has one, a
+paginated document one per page.  `TXFrames` works in *absolute*
+coordinates - longs, the document's own, which may run far past a
+QuickDraw Rect's sixteen bits - and turns them into *draw* coordinates
+for the port through three origins: where the view has scrolled to
+(`FramesScrolled`), where drawing starts in the port (`SetDrawOrigin`)
+and where the frames start (`SetFramesOrigin`); a draw coordinate is
+clipped to ±0x7fff.  A frame's text rectangle starts at the margins' top
+left and is the size the subclass keeps; the margins lie round it.  The
+lines' heights belong to the *frame formatter*, a `TXLinesHeights`
+(below) that also says which lines are in which frame, so the frames
+answer which line a point is on (`PointToLine`), a line's rectangle
+(`GetLineBounds`) and the lines a rectangle crosses (`SectLines`: one
+`TXSectLine` per band of equal lines - built, in the ROM, in a Rect moved
+on with unaligned word loads, which on the ARM rotate the halfwords, so
+only the low half of each sum is the one meant).
+
+`TXMonoFrame` is a view's one frame: a `TXMonoFrameFormatter` (every line
+in frame 0, the frame 0x7fff pixels tall), a width, and a height that is
+unbounded (0x40000000) until one is given.  An edit leaves a note of the
+frames it touched in `gFramesEditInfo` - which has room for two, and
+`CatchFrame` does not check - with, for the mono formatter, how much the
+text's height changed, which is what a display redraws by.  The
+multi-frame and page formatters and `TXPageFrames` are NOT YET.
+
+## The formatter (`text/TXFormatter.h`)
+
+`TXFormatter` keeps where every line ends (a `TXRanges` of line ends) and
+gives each line's height to the frame formatter.  `BreakLine` puts the
+runs on a line one after another (`BreakRun`): each run fits what it can
+into the room left through its own `LineBreak` (`BreakVisibleChars` - a
+text run may always cut the line's only word, a picture may start a line
+however wide it is), the control characters are stepped over as they
+come (`BreakCtrlChar`: a tab takes the ruler's width at once, or waits on
+what follows as `TXLine` has it, a decimal tab settled by
+`BreakAlignTabChars`), and no line is longer than 128 characters.  The
+line's height is the tallest ascent, descent and leading of the runs on
+it, adjusted by the paragraph's ruler for its spacing - which is why the
+second word of a line's height is the *ascent*: the spacing adds half of
+it a step.
+
+`Format(start, end)` formats the whole text (`FormatAll`) or the lines a
+stretch touches (`FormatRange`): from the line the stretch starts in -
+or the one before when that one does not end a paragraph, since an edit
+may pull its first word back up - breaking each line again, inserting a
+line when the text now wraps onto more of them, setting it when not (and
+removing the lines it has swallowed: `RemoveFormattedLines`), until a
+line comes out ending where it used to, past the stretch.  `ReplaceRange`
+is what an edit calls: the line ends after it moved by what was put in or
+taken out, the lines wholly inside what went removed, then `Format`.  A
+text ending in a line break always has an empty last line
+(`AppendEmptyLine`: the height of the text run at the end, or 12 with an
+ascent of 9).  `CheckRulerSettings` brings the rulers within the width:
+a margin leaving less than 50 pixels goes, and so does a tab past the
+edge.  On a stream the lines are a count and then a byte per line (a line
+being at most 128 characters).
+
+`test_TXFormatter` formats a two-paragraph text into 80 pixels and checks
+every line word by word against the run's own measurements, then inserts
+and deletes text and checks that the incremental reflow comes out the
+same as formatting the edited text afresh.  (Its word-by-word check
+allows for the host's `FindWordBreaks`, which has no break table yet: a
+fitted length ending exactly at a word's end lands on the space, which
+the host takes as the end of the word before, so that line breaks one
+word early.)
+
 ## Not yet reconstructed - the plan
 
 The 39 `protoTXView` methods (`natives.py --unbound --area text`: `Cut`,
@@ -627,12 +695,12 @@ Bottom up, in the order the layers need each other:
    `PointToChar`, `GetTextObjField`), which came with them.
 3. DONE: `TXLine` (0x0023cba8-0x0023ded4), the pieces, tabs,
    justification, drawing and hit-testing.
-4. The frames (`TXFrames`, `TXMonoFrame`, `TXSectFrames`, `TXPageFrames`,
-   `TXMonoSizeFrames`) and the formatters (`TXFormatter`,
-   `TXFrameFormatter`, `TXMonoFrameFormatter`, `TXMultiFrameFormatter`):
-   the text broken into lines, the lines' heights kept in
-   `TXLinesHeights`, reflowed after an edit (`TXFormatReflowLines`).
-   Test: a paragraph reflowed after an insertion.
+4. DONE for a view's one frame: `TXFrames`, `TXMonoSizeFrames`,
+   `TXMonoFrame`, `TXSectFrames`, `TXDisplayChanges`, `TXFrameFormatter`,
+   `TXMonoFrameFormatter`, `gFramesEditInfo` and `TXFormatter`.  NOT YET:
+   the paginated side - `TXMultiFrameFormatter` (0x002415b0-0x00242704),
+   `TXPageFrames` and `TXPageFormatter` (0x002413e0-0x00242a2c), which
+   only a document laid out on pages needs.
 5. `TXDisplay`/`TXNewtDisplay` and `TXHilite`/`TXNewtHilite`: drawing
    the lines that show, scrolling (needs QuickDraw's `ScrollRect`, not
    yet in `qd/`), the selection and caret.
