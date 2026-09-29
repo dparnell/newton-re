@@ -138,15 +138,16 @@ worked through.  What could come next (not ranked; the owner chooses):
   plays through the server (`sound.PlaySound`, `host.NewtonSound`);
   `newton` installs the driver, with a waveOut loudspeaker when windowed
   (`host/win32/HostAudio.cpp` - not yet heard: every test run is
-  headless).  Round 3: the codec channel (0x001e4110-0x001e5a00, ~25
-  functions: `InitNode`, `DecompressLoop`, `ScheduleDMA`, ...) so IMA and
-  mu-law frames are heard (a coded frame is completed at once as
-  cancelled until then, a DEVIATION); input (`SoundInputIH`, input
-  channels, `EmptyDMABuffer`, a capture source on the host driver,
-  `CompressLoop`, `FSoundOpen` 'input) for the Sound Recorder, the smoke
-  run's one failure; `TSoundPowerHandler`, `TGSMCodec`/`TDTMFCodec`,
-  packages' `StopFrameSound`, and `NewWiredPtr` in `memory/` (nil today:
-  the server's buffers fall back on `NewPtr`, a DEVIATION).
+  headless).  Round 3 done: the codec channel (coded frames heard),
+  recording (a test-signal microphone; IMA recording exact), the power
+  handler, `TDTMFCodec`, `StopFrameSound` - the Sound Recorder opens, and
+  open-apps reports 0 failed.  Left: 16-bit samples in binaries are kept
+  in the host's byte order where the project's rule for persistent
+  formats is big-endian (a recording on a store must read the same on
+  every host); a real host microphone (waveIn); a demo driving the Sound
+  Recorder's Record and Play; the loudspeaker heard by ear (`newton
+  --script src/host/demo/sound.ns`, windowed); `TGSMCodec` when something
+  asks for it; `NewWiredPtr` in `memory/` (the `NewPtr` fallback works).
 - **The book reader** (`TLibrarian`, 49 methods; 19 unanswered `books`
   natives) - the Newton's books and the help book, and with it the
   `'book` part handler (the ROM's help book is refused for want of it).

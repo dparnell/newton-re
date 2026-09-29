@@ -9,6 +9,27 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: the sound server, round 3 - coded sounds, recording, the Sound Recorder opens
+
+- The codec channel: coded frames decoded by the `'codc` task a buffer at
+  a time and scheduled on the output channel through the server's port;
+  an IMA frame played with `PlaySoundSync` comes out exactly as
+  `ExpandIMA` makes it (the round-2 coded-frame deviation gone).
+- Recording: the server's input side (input channels, the input
+  interrupt, `EmptyDMABuffer`), the compressor recording through a codec,
+  the host driver's input with a test-signal microphone
+  (`HostSoundSetSource`); a recorded-then-played round trip gives back all
+  9600 samples, and IMA recording is exact against `CompressIMA`.  Bug of
+  its own fixed: `protoSoundChannel`'s record direction is `'record`, not
+  `'input`.  The Sound Recorder opens: open-apps reports 0 failed.
+- `TSoundPowerHandler`; `TDTMFCodec` - an FM synthesiser, not a decoder: a
+  score of up to 12 tones with envelopes, five algorithms, over the ROM's
+  quarter-sine table (the "1" key: power at 697 and 1209 Hz, 2200 samples
+  for its 100 ms envelope); `StopFrameSound`, now called before a package
+  goes out of use (`DeActivatePackage`, `PackageUnavailable`; packages and
+  stores link sound).
+- Commits `5a7210a`, `ed5a2b1`, `5e00f2d`, `73b8ad5`, `5cb73d3`, `395649a`.
+
 ## 2026-09-29: frames - the last natives, and a NOT YET sweep
 
 - The last three frames natives: `GetFrameStuff`, and the store frame's
