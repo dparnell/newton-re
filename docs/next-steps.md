@@ -155,8 +155,12 @@ worked through.  What could come next (not ranked; the owner chooses):
   `SetPackageNativeFallback`, then an error).  Being done now: the NIE's
   protoFSM (19 functions, 60 KB of ARM) re-expressed in
   `src/thirdparty/nie/` - first the code binary's own routines
-  (0xf14-0x2920), then the functions from the smallest up - and the ARM
-  interpreter.  Then `InetStartUp`/`DNSGetAddressFromName` end to end,
+  (0xf14-0x2920), then the functions from the smallest up.  The ARM
+  interpreter is in (`src/armcpu/`, `docs/armcpu/README.md`: Mahjongg's
+  native functions run and it deals, ctest `armcpu.Mahjongg`); left
+  there: NewtHack's native function, a native in another package's code
+  binary, objects other than symbols in a code binary, a host
+  exception's data in the ARM world, then protocol parts.  Then `InetStartUp`/`DNSGetAddressFromName` end to end,
   `ictl` read by running the NIE's link state machine, the modem
   navigator.  The rest of comms (CCL,
   AppleTalk, IR, NTK, the desktop connection - which the test server's

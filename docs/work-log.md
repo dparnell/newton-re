@@ -9,6 +9,28 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: the ARM interpreter for packages' native code
+
+- `src/armcpu/ARMCPU.h`: `TARMCPU`, an ARMv4 interpreter (ARM state, the
+  StrongARM's set with the long multiplies), no Newton dependencies,
+  memory through a callback interface, calls out through traps (test
+  `armcpu.ARMCPU`) (509082e).
+- `analysis/gluetable.py`: 0x018xxxxx is the ROM's public jump table
+  (`gROMPublicJumpTable`, physical 0x13000-0x15e0c, 2947 entries) mapped
+  at 0x01800000, each entry a branch into a named private jump-table
+  slot; `--package` shows which a package's stubs reach, `-o` generates
+  the adapter's table.
+- `PackageNativeCPU.h`: `InstallPackageNativeCPU`, the seam's fallback,
+  installed by `TNewtWorld::MainConstructor` (6a87bc8).  Refs are 32-bit
+  handles into a per-call table the collector sees, immediates pass
+  unchanged; `RefHandle`s, `RefVar`s and the stack in an ARM arena;
+  `BinaryData`/`Slots` are live windows; the ROM image at 0 (NTK's
+  runtime reads the version words at 0x13dc).  Calls out answered by
+  name (about 90) or as the host's natives through `ResolveNativeFunction`;
+  NTK's exception frames with ARM-side setjmp/longjmp.  Mahjongg's two
+  native-compiled functions run and the game deals its 144 tiles (ctest
+  `armcpu.Mahjongg`).
+
 ## 2026-09-29: comms, round 6 - the package-native seam and NTK's glue
 
 - `frames/PackageNatives.h` (f7fcc8b): a package's native-compiled
