@@ -648,3 +648,107 @@ each application:
 
     build/host/host/newton --rom build/MP2x00US/rom.bin --headless 5 \
         --store build/newton.store --script src/host/demo/repair-extras.ns
+
+## Third-party packages (`fixtures/packages`, ctest `host.NewtonThirdPartyPackages`)
+
+The owner's fixtures - RPNcalc, Daleks, Mahjongg, NewtHack (with its
+sounds and Register), five fonts, and Apple's Newton Internet Enabler 2
+(seven packages, up to twelve parts, 'auto and 'form frames parts mixed
+with protocol parts and a 'cdhl card handler, flags 0x46000000:
+copy-protected, a relocation chunk, Zippy) - are each stored on the
+internal store by `newton --package` (`store:SuckPackageFromBinary`, the
+ROM's `RegisterNewPackage`) and installed from there.  What they turned
+up, and how each was established:
+
+- **A large package read from where it had been.**  `FSuckPackageFromBinary`
+  read the package through a memory pipe over the binary's bytes without
+  locking the binary; the store allocates while it writes, a collection
+  moved the binary, and Mahjongg (238K) - and in longer runs Daleks and
+  Times - were stored as garbage and refused -10401.  The ROM holds the
+  binary in a `TObjectPtr`, which locks it; so does the host now.
+- **A package of the same name.**  MDaleks1.pkg is Daleks under another
+  file name ("Daleks:Avarice"): the ROM's `RegisterNewPackage` refuses it
+  ("a package by the same name is already installed on the store") and
+  answers nil, which the host's loader reports as -10401.  ROM behaviour.
+- **Fonts: no 'font part handler.**  -10407 until `TFontPart`
+  (`FontPartHandler.cpp`, ROM 0x002e28b4) - `InitFontLoader`, which
+  `TNotebook::InitToolbox` runs as the ROM does, registers it.  A font
+  part's frames go into `vars.fonts` under their `screenSym` (or
+  `vars.psFonts` under `psSym`); removal takes them out.  The five fonts
+  draw (Monaco, Klingon, Times, Zapf Chancery, Zapf Dingbats).  Their
+  drawer entries are `'????Entry` - extensions - because the drawer's
+  `HandleNewPackage` (0x54b475) makes a part's own entry only for a frame
+  with a `text` slot (or a 'Book), and a font part's has none; ROM
+  behaviour, as is ISP Templates' (an 'auto part with no text).
+- **A later part of a big package imported against the wrong base.**
+  `PackageContaining` looked for a part's package no more than 0x20000
+  bytes back; NIE's ninth part is 0x35960 in, was imported with refBase
+  0, and its refs went nowhere (a crash).  It now asks the domain manager
+  for the mapping round the part (`kRDMObjectAt`) first.
+- **`ObjectPkgRef` of a part's own objects.**  NIE's `DoNotInstall` asks
+  for the package its own frame is in; the host's objects are in an
+  imported area, not in the package, so it answered nil and the package
+  was refused.  DEVIATION: an object of an imported part is taken to lie
+  where the part's bytes do (`FramesPartSource`).
+- **A card handler.**  ' Newton Devices' carries a 'cdhl part
+  (`TLanternCardHandler`); the ROM's card server registers a
+  `TCardPartHandler` for them (`src/pcmcia/CardPartHandler.h`, ROM
+  0x0004feb4).  The card server is NOT YET, so the newt world registers
+  it (DEVIATION); with no sockets it hands the handler to nobody, as the
+  ROM would on such a machine.
+- **Removal.**  Deleting from the drawer (an icon's `delete`, which is
+  `SafeRemovePackageQT` then `RemovePackage`), `SafeRemovePackage`,
+  `DeActivatePackage` + `RemovePackage` and `RemovePackage` all run the
+  parts' `DeletionScript`/`RemoveScript`, take the entries out, free the
+  package's store objects (at the next collection, when the unreferenced
+  large binary's ephemeral object is deleted - ROM behaviour; at the
+  latest when the store is next mounted) and declaw a script's refs into
+  the parts.  One host leak was found: a part imported only so the
+  drawer could look at it (`GetPkgRefInfo` of a stored package before or
+  without its activation) was never removed.  Such an area is now
+  provisional (`frames/FramesPart.h`): the part handler takes it over when
+  the part installs, and it goes with the package's bytes otherwise.  A
+  restart afterwards finds none of the packages.  `NEWTON_HEAPCHECK` is
+  clean along the whole path.
+- **What runs.**  RPNcalc (7 Enter 8 + shows 15), Daleks, NewtHack,
+  Register and Internet Setup open.  Mahjongg's `Open` fails: it holds a
+  native (ARM, NTK-compiled) function, `kNSErrNativeNotReconstructed`.
+
+### Protocol parts the host does not register
+
+The package manager registers a protocol part's class info itself; the
+code is ARM, so the host registers none and says so on stderr
+(`[packages] "<package>" part N: protocol ... not registered`), naming it
+from the class info as it lies in the package (`ROMClassInfo.h`).  The
+host's own implementations are to be registered under these names (the
+comms work, `docs/comms/README.md`).  `tools/newton-rom/analysis/classinfo.py
+--package file.pkg...` produces this table:
+
+| Package | Part | Implementation | Interface | Capabilities |
+|---|---|---|---|---|
+| Newton Devices (newtdev.pkg) | 2 | `TDriverAPI` | `TLanternDriverAPI` | |
+| | 3 | `TClientAPI` | `TLanternClientAPI` | |
+| | 4 ('cdhl) | `TLanternCardHandler` | `TCardHandler` | |
+| | 5 | `TLanternEventWorld` | `TEventWorldAPI` | |
+| | 8 | `PLinkEnet` | `PLink` | `atlk=pnet` |
+| Newton Internet Enabler (inetenbl.pkg) | 2 | `PInetToolMux` | `PMuxTool` | |
+| | 3 | `PInetToolCCE` | `PConnectionEnd` | |
+| | 4 | `PInetToolCE` | `PConnectionEnd` | |
+| | 5 | `TInetCCEService` | `TCMService` | `serv=ictl` |
+| | 6 | `TInetService` | `TCMService` | `serv=inet` |
+| | 7 | `PSerialDriverModule` | `PStrDriverModule` | |
+| | 9 | `TDNSService` | `TCMService` | `serv=dnst` |
+| | 10 | `TDNSTool` | `TCommToolProtocol` | `ctiv=2` |
+| NIE Ethernet Module (enetsup.pkg) | 2 | `PEnetLinkModule` | `PStrLinkModule` | |
+| | 3 | `PDhcpDynAddrModule` | `PStrDynAddrModule` | |
+| | 5 | `PLanternDriverModule` | `PStrDriverModule` | |
+| NIE LocalTalk Module (loctsup.pkg) | 2 | `PMacIPLinkModule` | `PStrLinkModule` | |
+| | 4 | `PMacIPDriverModule` | `PStrDriverModule` | |
+| NIE Modem & Serial Module (modmsup.pkg) | 5 | `PPPPLinkModule` | `PStrLinkModule` | |
+| | 7 | `PSLPLinkModule` | `PStrLinkModule` | |
+
+Everything else in those packages - their 'auto parts' InstallScripts and
+Internet Setup's 'form part - installs and runs; what the scripts will
+fail on is making these by name (`NewByName`, a comm tool's `ctiv`
+lookup, the connection manager's `serv` services) once something uses
+them.
