@@ -187,8 +187,12 @@ worked through.  What could come next (not ranked; the owner chooses):
   the system patches ('gpat'/'rpat') (a0966b4), with `ConvertEntry`,
   `IsDuplicateEntry` (untested: autodock never asks for a selective
   restore) and the app's read/write natives; a desktop's slip is shown
-  and answered headless.  Left: the keyboard passthrough, the patches,
-  tests for 'islp' and 'gpwd'.
+  and answered headless; the keyboard passthrough and 'gpat' are in.  The
+  docker answers every desktop command but 'rpat' (installing a system
+  patch, which the host cannot do).  Open: a rare hang in an in-session
+  'lpkg' under stress (1 in 36), being looked into; V.42bis; a real
+  desktop (NCX, UnixNPI) over localhost:3679 not yet tried; tests for
+  'islp' and 'gpwd'.
   The livelock between `TPMIterator::Init`'s semaphore and `TForkWorld`'s
   mutex was the host runtime's, fixed (12e55a2; ctest
   `host.NewtonDockGetPackages`).  `test_NIEProtoFSM` also runs

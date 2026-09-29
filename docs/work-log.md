@@ -86,6 +86,18 @@ bugs and ROM bugs found on the way.
   `layout.tsv` manifest, and `rombuild.py` proved by a byte-identical
   rebuild of the area.
 
+## 2026-09-30: the keyboard passthrough - the docker complete
+
+- The keyboard passthrough (3f611a7): `DoKeyboardPassthrough`,
+  `KeyboardProcessCommand`, `ConnDoKeyboardPassthrough`; the desktop's
+  'kbds'/'kbdc' keys posted to the key view until 'opdn'/'opca'.  ROM bug
+  kept: the last idle's time is never moved on, so once the interval has
+  passed `IdleConnection` runs after every command.
+  `host.NewtonDockSession` ends by typing "hello!" from the desktop into
+  a paragraph.
+- 'gpat' (`WritePatches` over `SizeOfPatches`, 78687be).  The docker now
+  answers every desktop command but 'rpat'.
+
 ## 2026-09-30: the host runtime's livelock - two host bugs, the ROM innocent
 
 - `TPMIterator::Init`, `TULockingSemaphore` and `TForkWorld`'s mutex all
