@@ -18,6 +18,8 @@ add_library(sound STATIC
     SoundCodec.cpp
     SoundChannel.cpp
     SoundSettings.cpp
+    SoundServer.cpp
+    SoundDriver.cpp
 )
 target_link_libraries(sound PUBLIC newton_config qd protocols frames utility os600_user)
 target_include_directories(sound PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

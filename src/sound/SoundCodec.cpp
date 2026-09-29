@@ -12,6 +12,11 @@
 #include "SoundCodec.h"
 #include "SoundChannel.h"
 #include "NewtonExceptions.h"
+#include "SoundDriver.h"
+#include "SoundServer.h"
+
+// (declared in os600/kernel/KernelGlobals.h)
+extern ULong	gMainCPUType;		// ROM 0x0c1008dc gMainCPUType
 
 
 /*------------------------------------------------------------------------------
@@ -467,15 +472,28 @@ TIMACodec::BufferCompleted()
 
 
 // ROM 0x001e89f4 InitializeSound__Fv
-// NOT YET: the ROM also powers the sound hardware down, registers its
-// driver, starts the TSoundServer app world and sets gMaxFilterNodes from
-// the CPU type; and it registers TGSMCodec and TDTMFCodec beside these two,
-// neither of which is reconstructed.
+// The machine's sound driver registered, the sound server's world started
+// ('sndm, which opens gSndPort), the codecs registered, and how many
+// filtered (sinc) resamplings may run at once set from the processor: six
+// on a StrongARM, none on anything slower.
+// NOT YET: TGSMCodec and TDTMFCodec, which the ROM registers beside these.
+// DEVIATION: the ROM powers the sound hardware down first (IOPowerOff 0x19
+// and 0x18: the machine's power switches, which the host driver has none
+// of); and starts the server whether or not there is a driver, where a
+// host with no driver (gHostRegisterSoundDriver nil) starts none, leaving
+// gSndPort 0 so a channel's Open answers ERRBASE_SOUND as it did before.
 void
 InitializeSound(void)
 {
+	RegisterSoundHardwareDriver();
+	if (gHostRegisterSoundDriver != nil)
+	{
+		TSoundServer server;
+		server.Init('sndm', true, 6000, 0x0c, 0);
+	}
 	TMuLawCodec::ClassInfo()->Register();
 	TIMACodec::ClassInfo()->Register();
+	gMaxFilterNodes = (gMainCPUType == 3) ? 6 : 0;
 	// DEVIATION: the volume information the ROM's sound driver registers
 	// (SoundChannel.h), which the host has no driver to register
 	RegisterHostVolumeInfo();
