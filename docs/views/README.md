@@ -2393,11 +2393,72 @@ object area import now turns the shapes' halfwords round as it already
 did strings and reals (`frames/ObjectAreaImport.cpp`, `analysis/
 nsfunctions.py --binary-classes` saying which classes there are).
 
+## The rest of the view natives (`views/ViewExtraNatives.cpp`, `SplashScreen.h`)
+
+- **A roll scrolled** (`TView::SyncScroll` 0x002635f4, protoRoll's
+  viewScrollUpScript/viewScrollDownScript - the Preferences roll): the
+  roll's `viewOriginY` is how far into the first item showing it is
+  scrolled and `index` that item.  Down goes further into an item taller
+  than the roll, else on to the next; up comes back up it, else back to
+  the item before (taller than the roll: to `h - h % height`).  The items
+  from the lower of the two indexes on are walked while they fill the
+  roll (a collapsed one, or every one under `allCollapsed`, counting as
+  `collapsedHeight`): those from the new index on become the children
+  (made where missing, put in front when going up, the rest removed), the
+  ones scrolled past add their height to the slide, and the slide is
+  animated with the scroll sound over the roll less its bottom 5 pixels.
+  NOT YET: `TView::SyncScrollSoup` 0x00263034, the same over a soup
+  cursor (by `overlapScrollAmount`, or twice the line spacing) - a roll
+  over a cursor answers nil.
+- **GrayShrink** 0x0003ec94: a bitmap shrunk into the view's bounds or the
+  second rectangle of the style's `transform`, with the style's
+  `grayLevels` in the user's preferences while the bits are copied.  ROM
+  bugs kept: the destination is offset by the view's top-left even when it
+  is the (already global) bounds, and a `grayLevels` that is not an array
+  sets the preference to nil on the way out.
+- **FormatVertical** 0x001f0aa4 (a global taking its view from self): the
+  children stacked from a rectangle's top, spaced (ROM bug kept) by the
+  height less the children's total over `ChildrenHeight`'s count, which is
+  one more than there are.
+- **ComputeParagraphHeight** 0x001ecfd0: a paragraph frame's text fitted
+  to a width (`TextBounds`), never under 50 - its box built on the stack
+  as `{top, 0, top, width}` through an unaligned load (read from the
+  assembly).  **ExtractRangeAsRichString** and
+  **ExtractRichStringFromParaSlots**: a range as a rich string (the second
+  only when an ink word falls in it).
+- The picker's **GetScrollerValues** (`TPickView::GetOverflows`, a tail
+  call) and **Scroll**; **KeyboardInput** (the key view, the caret showing,
+  a keyboard active); the Inspector's **DV** (the view dumped and flashed
+  eight times) and **ViewAutopsy** (an integer sets `gSlowMotion`, anything
+  else toggles `gOutlineViews`).
+- **DrawGraphic** 0x0014708c: the maker's splash picture - a
+  `TSplashScreenInfo` implementation named `TMainSplashScreenInfo`
+  (`SplashScreen.h`) - drawn centred in a box.  The MP2x00 registers none,
+  so it answers nil and the script draws its default picture.
+
+`test_ViewExtraNatives` calls each from NewtonScript over an offscreen root
+(the root the host builds without a template has only `MakeViewMethods`'
+list, so the test copies the ROM's own `viewroot` methods it needs; on the
+machine the root's proto is `viewroot` itself).
+
+NOT YET, measured: the **key-help slip**'s `viewSetupFormScript` and
+`viewDrawScript` (`FKeyHelpSlipSetup` 0x00183c38, 1.5 KB;
+`FKeyHelpSlipDraw` 0x00184244, 2 KB; with `GetCommandCharWidth`,
+`GetModifiersWidth`, `DrawModifierIcons` and `GetSlipWidth`
+0x001839f8-0x00183c38 - the command keys gathered and categorised
+(`GatherKeyCommands`/`CategorizeKeyCommands` are done), laid out in one or
+two columns of 100 pixels, the command letters drawn with the modifier
+icons before them and the names truncated with `StyledStrTruncate`); and
+**ReFlow**/**ReflowPreflight** 0x001a5cd8-0x001a6720 with `ReflowText`,
+`SplitStyles`, `MungeStyles`, `MungeAllStyles`, `MungeInkScale`,
+`SaveStylee` (about 7 KB) - the print and fax formats' reflow of a page's
+paragraphs into `printerPageBounds`.
+
 ## Not yet
 
 The rest of the
 paragraph's editing (the hilites typed over, the style and clipboard
 commands, ink words, the correction info, the caret's line moves), the
-key help, the keyboard tool and the on-screen keyboards, the sounds, `SyncScroll`, the popup and
+key help (above), the keyboard tool and the on-screen keyboards, the sounds, the popup and
 modal dialog machinery, the other subclasses, the strokes and words of the recogniser (its controller and
 domains: `docs/recognition/README.md`).

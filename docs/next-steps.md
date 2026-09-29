@@ -270,7 +270,7 @@ inside an area).  At 2026-09-29:
 | comms | 120 | endpoints, CCL, AppleTalk (the `...Zone...` natives are AppleTalk's), IR, NTK, the desktop connection |
 | frames | 95 | natives.py's catch-all: a handful each across many areas |
 | books | 19 | the book reader and newspapers (`TLibrarian`) |
-| views | 12 | |
+| views | 4 | the key-help slip's two scripts, ReFlow/ReflowPreflight (the print formats' reflow) - `docs/views/README.md` |
 | sound | 8 | the sound server |
 | testing, intl | 6 each | testing: the serial debugging, Uriah, the IR sniffing |
 | system | 6 | |

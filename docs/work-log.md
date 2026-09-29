@@ -9,6 +9,29 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: the rest of the view natives
+
+- `e58914d`: `TView::SyncScroll` and its native (protoRoll's scrolling -
+  the Preferences roll), `GrayShrink`, `FormatVertical`,
+  `ExtractRangeAsRichString`, `ExtractRichStringFromParaSlots`,
+  `ComputeParagraphHeight` (its box built through an unaligned load, read
+  from the assembly), the picker's `GetScrollerValues`/`Scroll`,
+  `KeyboardInput`, `DV`, `ViewAutopsy`.  ROM bugs kept: `FormatVertical`'s
+  spread divides by `ChildrenHeight`'s count (one more than the children);
+  `GrayShrink` offsets the view's global bounds a second time and resets a
+  non-array `grayLevels` preference to nil.  New `test_ViewExtraNatives`.
+- `86e36ad`: `DrawGraphic` over the `TSplashScreenInfo` protocol and
+  `DrawSplashGraphic` (no implementation in this ROM: nil, and the script's
+  own picture).
+- natives.py (`6962519`) had filed a dozen view methods under frames;
+  views are 91 of 95.  NOT YET, measured: the key-help slip
+  (3.5 KB), `ReFlow` and its reflow group (about 7 KB, the print formats),
+  `TView::SyncScrollSoup` (1.5 KB) - `docs/views/README.md`.
+- Worked in parallel with the pictures, recognition and text agents in a
+  build directory of its own (`tmp/build-views`); the other agents'
+  in-progress edits to the shared tree broke the build twice (a `qd`
+  function not yet declared, a recognition test) and were waited out.
+
 ## 2026-09-29: the recognition system's last gaps
 
 - The seven unanswered methods (`024ee51`): the correction info's
