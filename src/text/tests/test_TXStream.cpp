@@ -4,6 +4,7 @@
 // factory, text moved through a stream by a TXTextDescriptor, and the
 // chunked storage's chunk lengths written out and read back.
 #include "TXStream.h"
+#include "NSErrors.h"
 #include "TXChars.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
@@ -135,10 +136,12 @@ TestFactory()
 	EXPECT(stream->WriteBytes("x", 1) == noErr);
 	delete stream;
 
-	// NOT YET: a big one wants a large binary on a store, so the factory
-	// answers as the ROM's own does when nothing came of it
+	// a big one wants a large binary on the first store; with no store
+	// mounted here the factory answers the error the attempt threw - the
+	// first of no stores is out of bounds (the large-binary arm itself is
+	// exercised by src/host/demo/txview.ns)
 	stream = nil;
-	EXPECT(factory.Create(&stream, 0x4000) == kError_No_Memory && stream == nil);
+	EXPECT(factory.Create(&stream, 0x4000) == kNSErrOutOfBounds && stream == nil);
 
 	TXSetTempStreamFactory(nil);
 }
