@@ -288,6 +288,11 @@ class DockSession:
         result = nsof.decode(self.expect(b"cres"))
         print("dock.py: Max(3, 7) called on the Newton: %r" % (result,))
         ok = ok and result == 7
+        # the system patches (none: 'patc' of nought bytes)
+        self.write_command(b"gpat")
+        patches = self.expect(b"patc")
+        print("dock.py: the system patches: %d bytes" % len(patches))
+        ok = ok and len(patches) == 0
         # a slip shown by the Connection application; dock.ns taps its first button
         self.write_command(b"dslp", nsof.encode({Symbol("title"): "Dock test", Symbol("message"): "Tap the first button",
                                                  Symbol("button1"): "First", Symbol("button2"): "Second"}))

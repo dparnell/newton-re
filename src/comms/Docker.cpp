@@ -3965,6 +3965,54 @@ TDocker::KeyboardProcessCommand(void)
 }
 
 
+// ROM 0x0016108c (unnamed) the name a backed-up patch's package is given
+// (the pointer to it lives at 0x0c1016e4)
+static const UniChar kPatchName[] = { 'P', 'a', 't', 'c', 'h', 0 };
+
+
+// ROM 0x0016109c SizeOfPatches__Fv
+// How big a backup of the system patches installed would be: a package of
+// their pages (4K each, and one more for each of the second to fifth
+// patches that has pages), its directory and its name; nought with none -
+// which is always so on the host, which patches nothing.
+static long
+SizeOfPatches(void)
+{
+	long nameLength = Ustrlen(kPatchName);
+	TUGestalt gestalt;
+	TGestaltPatchInfo info;
+	memset(&info, 0, sizeof(info));
+	// DEVIATION (pointer size): the ROM asks for 0x54 bytes, its layout
+	gestalt.Gestalt(kGestalt_PatchInfo, &info, sizeof(info));
+	long size = info.fTotalPatchPageCount << 12;
+	for (int i = 0; i < 4; i++)
+		if (info.fPatch[i + 1].fPatchPageCount != 0)
+			size += 0x1000;
+	if (size == 0)
+		return 0;
+	return nameLength * 2 + 0xda + size;
+}
+
+
+// ROM 0x0009b8ec WritePatches__7TDockerFv
+// 'gpat' -> 'patc': the system patches as a package (none on the host).
+// NOT YET: BackupPatches, which writes them, for a machine that has some.
+void
+TDocker::WritePatches(void)
+{
+	WriteDockerHeader('patc', false);
+	long size = SizeOfPatches();
+	*fPipe << size;
+	if (size != 0)
+	{
+		fError = kCommErrMethodNotImplemented;		// (BackupPatches: NOT YET)
+		Throw(exLongErrorException, (void*) (intptr_t) fError, nil);
+	}
+	Pad(size);
+	fPipe->FlushWrite();
+}
+
+
 // ROM 0x000934b0 ProcessCommand__7TDockerFRUcT1
 // One of the desktop's commands carried out.  done: the session is over
 // ('disc'); operationDone: the operation the session was for is over, and
@@ -3973,7 +4021,9 @@ TDocker::KeyboardProcessCommand(void)
 // The stores', soups', cursors' and entries' commands are here too, and
 // making, sending and backing up soups, the package list, restoring and
 // removing packages, calling functions and the Connection application's
-// slips.  NOT YET: the system patches ('gpat', 'rpat') - each is answered 'unkn' as a command the Newton does not know
+// slips.  'gpat' answers the (host's no) system patches.  NOT YET: 'rpat'
+// (RestorePatchFromPipe, a system patch installed from the desktop, which
+// the host cannot apply to its ROM), answered 'unkn' - each is answered 'unkn' as a command the Newton does not know
 // is, which a desktop takes as a Newton too old to do it.
 void
 TDocker::ProcessCommand(Boolean* done, Boolean* operationDone)
@@ -4226,6 +4276,9 @@ TDocker::ProcessCommand(Boolean* done, Boolean* operationDone)
 			break;
 		case 'ress':
 			fError = ReadResultString();
+			break;
+		case 'gpat':
+			WritePatches();
 			break;
 		case kDSetTime:
 		{

@@ -306,6 +306,7 @@ public:
 	void			DoRemovePackage(void);
 	void			WriteInheritanceFrame(void);
 	void			WriteSyncOptions(void);
+	void			WritePatches(void);
 	// the desktop's other requests
 	void			TestMessage(void);
 	void			TestRefMessage(void);
