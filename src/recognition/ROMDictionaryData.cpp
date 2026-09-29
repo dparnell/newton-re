@@ -24,19 +24,19 @@ const UByte*	gROMDictionaryData[kROMDictionaryCount] = { nil };
 //
 // DEVIATION: the ROM's addresses are the machine's own, where the ROM is
 // simply there to be read.  The host reads the image the frames were
-// imported from, so each address is taken as an offset into it; with no
-// image imported the table stays empty and every dictionary of the ROM
-// comes back as nothing, which is the same as a machine whose lexicons
-// could not be built.
+// imported from, or the lexicons an object file built from the ROM source
+// tree carries (frames/ROMImport.h's ROMBytesAt), so each address is taken
+// as the ROM address of those bytes; with neither, the table stays empty.
 void
 InitROMDictionaryData(void)
 {
-	ULong size = 0;
-	const UByte* base = (const UByte*) ROMImageBase(&size);
 	for (long i = 0; i < kROMDictionaryCount; i++)
 	{
 		ULong at = gROMDictionaryTable[i].fAddress;
-		gROMDictionaryData[i] = (base != nil && at != 0 && at < size) ? base + at : nil;
+		const UByte* data = at == 0 ? nil : (const UByte*) ROMBytesAt(at, 4);
+		if (data != nil && ROMBytesAt(at, 4 + GetBigEndianWord(data)) == nil)
+			data = nil;
+		gROMDictionaryData[i] = data;
 	}
 }
 

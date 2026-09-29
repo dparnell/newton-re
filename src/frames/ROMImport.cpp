@@ -21,6 +21,16 @@
 #include <string.h>
 
 static TImportedObjectArea	gROMObjectArea;
+
+// the other blocks of ROM data an object file carries (ImportBuiltObjects)
+struct BuiltBlock
+{
+	ULong					fAddress;
+	ULong					fLength;
+	const unsigned char*	fData;
+};
+static BuiltBlock*			gBuiltBlocks = nil;
+static long					gBuiltBlockCount = 0;
 static const unsigned char*	gROMImageBase = nil;	// the ROM's bytes, address 0 first
 static ULong				gROMImageSize = 0;
 Ref						gROMSymbolTableRef = NILREF;
@@ -70,12 +80,26 @@ TranslateROMRef(ULong32 ref)
 
 
 const void*
+ROMBytesAt(ULong address, ULong length)
+{
+	if (gROMImageBase != nil && address + length <= gROMImageSize && address + length >= address)
+		return gROMImageBase + address;
+	for (long i = 0; i < gBuiltBlockCount; i++)
+		if (address >= gBuiltBlocks[i].fAddress && address + length <= gBuiltBlocks[i].fAddress + gBuiltBlocks[i].fLength)
+			return gBuiltBlocks[i].fData + (address - gBuiltBlocks[i].fAddress);
+	return nil;
+}
+
+
+const void*
 ROMImageBase(ULong* size)
 {
 	if (size != nil)
 		*size = gROMImageSize;
 	return gROMImageBase;
 }
+
+static NewtonErr	ImportObjectArea(const unsigned char* area, const unsigned char* magic, long mpCount);
 
 NewtonErr
 ImportROMObjects(const void* image, ULong imageSize)
@@ -93,21 +117,31 @@ ImportROMObjects(const void* image, ULong imageSize)
 	if ((ULong) kROMSoupBase + kROMSoupSize > imageSize || kROMMagicPointerTable + kARMWord > imageSize)
 		return kError_Bad_Parameters;
 
+	if (kROMMagicPointerTable + kARMWord > imageSize
+	 || kROMMagicPointerTable + (GetBigEndianWord(rom + kROMMagicPointerTable) + 1) * kARMWord > imageSize)
+		return kError_Bad_Parameters;
+	return ImportObjectArea(rom + kROMSoupBase, rom + kROMMagicPointerTable + kARMWord,
+							GetBigEndianWord(rom + kROMMagicPointerTable));
+}
+
+
+// The objects and the magic pointers, wherever they came from: the area's
+// bytes (the ROM's layout, at kROMSoupBase) and the table's big-endian refs.
+static NewtonErr
+ImportObjectArea(const unsigned char* area, const unsigned char* magic, long mpCount)
+{
 	// the objects (every ref points within the area)
-	NewtonErr err = gROMObjectArea.Import(rom + kROMSoupBase, kROMSoupBase, kROMSoupSize, nil, nil);
+	NewtonErr err = gROMObjectArea.Import(area, kROMSoupBase, kROMSoupSize, nil, nil);
 	if (err != noErr)
 		return err;
 
 	// the tables and constants
 	gROMSymbolTableRef = gROMObjectArea.TranslateRef(kROMSymbolTable);
-	long mpCount = GetBigEndianWord(rom + kROMMagicPointerTable);
-	if (kROMMagicPointerTable + (mpCount + 1) * kARMWord > imageSize)
-		return kError_Bad_Parameters;
 	Ref* mpTable = (Ref*) malloc(mpCount * sizeof(Ref));
 	if (mpTable == nil)
 		return kError_No_Memory;
 	for (long j = 0; j < mpCount; j++)
-		mpTable[j] = gROMObjectArea.TranslateRef(GetBigEndianWord(rom + kROMMagicPointerTable + (j + 1) * kARMWord));
+		mpTable[j] = gROMObjectArea.TranslateRef(GetBigEndianWord(magic + j * kARMWord));
 	gMagicPointerTables[0] = mpTable;
 	gMagicPointerTableCounts[0] = mpCount;
 	for (long j = 0; j < gROMConstantCount; j++)
@@ -116,6 +150,79 @@ ImportROMObjects(const void* image, ULong imageSize)
 		*gRSSymbolEntries[j].fRef = gROMObjectArea.TranslateRef(gRSSymbolEntries[j].fROMRef);
 	gROMBuiltinFunctions = Rbuiltinfunctions;
 	return noErr;
+}
+
+
+// The object file the ROM-free track's builder writes (romsrc.py build -o;
+// docs/rom-free/README.md): "NewtObjs", then as big-endian words the
+// version, the area's base and size, the magic-pointer table's address and
+// count; then the area; then the magic pointers.  The area must be where
+// this build's ROMConstants.h says the ROM's is - the constants and the
+// symbols it names are its addresses.  No ROM image is behind it, so
+// ROMImageBase answers nil: the ROM extension's packages, the recognisers'
+// lexicons and the ROM code a package's native code calls are not there.
+NewtonErr
+ImportBuiltObjects(const void* data, ULong size)
+{
+	const unsigned char* p = (const unsigned char*) data;
+	ULong version = size >= 12 ? GetBigEndianWord(p + 8) : 0;
+	if (size < 28 || memcmp(p, "NewtObjs", 8) != 0 || (version != 1 && version != 2))
+		return kError_Bad_Parameters;
+	ULong base = GetBigEndianWord(p + 12);
+	ULong areaSize = GetBigEndianWord(p + 16);
+	long mpCount = GetBigEndianWord(p + 24);
+	if (base != kROMSoupBase || areaSize != kROMSoupSize || 28 + areaSize + mpCount * kARMWord > size)
+		return kError_Bad_Parameters;
+	if (gROMObjectArea.fArea != nil)
+		return noErr;
+	// (version 2) the other blocks of ROM data: the lexicons
+	ULong at = 28 + areaSize + mpCount * kARMWord;
+	if (version >= 2 && at + kARMWord <= size)
+	{
+		long count = GetBigEndianWord(p + at);
+		at += kARMWord;
+		gBuiltBlocks = (BuiltBlock*) calloc(count > 0 ? count : 1, sizeof(BuiltBlock));
+		if (gBuiltBlocks == nil)
+			return kError_No_Memory;
+		for (long i = 0; i < count && at + 2 * kARMWord <= size; i++)
+		{
+			ULong length = GetBigEndianWord(p + at + kARMWord);
+			if (at + 2 * kARMWord + length > size)
+				return kError_Bad_Parameters;
+			gBuiltBlocks[i].fAddress = GetBigEndianWord(p + at);
+			gBuiltBlocks[i].fLength = length;
+			gBuiltBlocks[i].fData = p + at + 2 * kARMWord;
+			gBuiltBlockCount = i + 1;
+			at += 2 * kARMWord + ((length + 3) & ~3);
+		}
+	}
+	return ImportObjectArea(p + 28, p + 28 + areaSize, mpCount);
+}
+
+
+NewtonErr
+ImportBuiltObjectsFromFile(const char* path)
+{
+	FILE* f = fopen(path, "rb");
+	if (f == nil)
+		return kError_Bad_Parameters;
+	fseek(f, 0, SEEK_END);
+	long size = ftell(f);
+	fseek(f, 0, SEEK_SET);
+	void* data = malloc(size);
+	if (data == nil)
+	{
+		fclose(f);
+		return kError_No_Memory;
+	}
+	NewtonErr err = fread(data, 1, size, f) == (size_t) size ? noErr : kError_Bad_Parameters;
+	fclose(f);
+	if (err == noErr)
+		err = ImportBuiltObjects(data, size);
+	if (err != noErr || !ROMObjectsImported())
+		free(data);
+	// else kept, as an image is: the imported objects may point into it
+	return err;
 }
 
 
@@ -195,6 +302,14 @@ ImportROMObjectsFromFile(const char* path)
 	if (fread(image, 1, size, f) != (size_t) size)
 		err = kError_Bad_Parameters;
 	fclose(f);
+	if (err == noErr && size >= 8 && memcmp(image, "NewtObjs", 8) == 0)
+	{
+		// the ROM-free track's object file in place of an image
+		err = ImportBuiltObjects(image, size);
+		if (err != noErr || !ROMObjectsImported())
+			free(image);
+		return err;
+	}
 	if (err == noErr)
 		SpliceROMExtension(path, (unsigned char*) image, size);
 	if (err == noErr)

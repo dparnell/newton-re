@@ -12,10 +12,16 @@
 				file can be run once the world is up, as the ROM's boot
 				runs its bootTestScript.
 
-	newton [--rom image] [--heap bytes] [--display WxH[xdepth]] [--scale n]
+	newton [--rom image | --objects file] [--heap bytes] [--display WxH[xdepth]] [--scale n]
 	       [--script file.ns] [--headless seconds] [--store file] [--erase]
 	       [--package file.pkg]... [--microphone-tone hz] [--tcp-echo port]
 	       [--serial-port port|none]
+
+	--objects boots on the object file built from the ROM source tree
+	(tools/newton-rom/analysis/romsrc.py build -o) with no ROM image: the
+	ROM-free track's step 3 (docs/rom-free/README.md).  Without the image
+	there is no ROM extension, so none of its packages (the Setup
+	assistant among them) is there.
 
 	--headless runs without a window for the seconds (a snapshot of the
 	display can be written by the script: ScreenSnapshot), or until the
@@ -128,7 +134,7 @@ static const char* gScriptPath = nil;			// --script: HostInclude's names are bes
 static int
 Usage(void)
 {
-	fprintf(stderr, "usage: newton [--rom image] [--heap bytes] [--display WxH[xdepth]] [--scale n]\n"
+	fprintf(stderr, "usage: newton [--rom image | --objects file] [--heap bytes] [--display WxH[xdepth]] [--scale n]\n"
 					"              [--script file.ns] [--headless seconds] [--store file] [--erase]\n"
 					"              [--package file.pkg]... [--microphone-tone hz] [--tcp-echo port]\n"
 					"              [--serial-port port|none]\n");
@@ -336,8 +342,8 @@ main(int argc, char** argv)
 	Boolean erase = false;
 	for (int i = 1; i < argc; i++)
 	{
-		if (strcmp(argv[i], "--rom") == 0 && i + 1 < argc)
-			romImage = argv[++i];
+		if ((strcmp(argv[i], "--rom") == 0 || strcmp(argv[i], "--objects") == 0) && i + 1 < argc)
+			romImage = argv[++i];			// (a ROM image, or the object file built from the ROM source tree)
 		else if (strcmp(argv[i], "--heap") == 0 && i + 1 < argc)
 			heapSize = strtol(argv[++i], nil, 0);
 		else if (strcmp(argv[i], "--display") == 0 && i + 1 < argc)

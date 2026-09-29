@@ -29,6 +29,11 @@
 	RefreshViews() and ScreenSnapshot("file.pgm") then draw a view
 	hierarchy into an image (host/HostViews.h).
 
+	--objects <file> (or --rom <file>) loads the object file built from the
+	ROM source tree (tools/newton-rom/analysis/romsrc.py build -o) in place
+	of a ROM image: the object system with no image behind it
+	(docs/rom-free/README.md).
+
 	--roundtrip compiles each function the NewtonScript decompiler wrote
 	(tools/newton-rom/analysis/nsdecompile.py) and compares it with the ROM's
 	own, a result line per function (host/NSRoundTrip.cpp).
@@ -100,7 +105,7 @@ main(int argc, char** argv)
 	int first = 1;
 	while (first < argc && argv[first][0] == '-' && argv[first][1] == '-')
 	{
-		if (strcmp(argv[first], "--rom") == 0 && first + 1 < argc)
+		if ((strcmp(argv[first], "--rom") == 0 || strcmp(argv[first], "--objects") == 0) && first + 1 < argc)
 		{
 			romImage = argv[first + 1];
 			first += 2;

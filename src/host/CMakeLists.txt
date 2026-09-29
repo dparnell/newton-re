@@ -462,9 +462,19 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD}/sym
     add_test(NAME host.ROMSourceRoundTrip
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/newton-rom/analysis/romsrc.py
                      roundtrip ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD} -o ${CMAKE_BINARY_DIR}/romsrc-test
-                     --newtonscript $<TARGET_FILE:newtonscript>
+                     --newtonscript $<TARGET_FILE:newtonscript> --objects ${CMAKE_BINARY_DIR}/romsrc-objects.bin
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
-    set_tests_properties(host.ROMSourceRoundTrip PROPERTIES TIMEOUT 300)
+    set_tests_properties(host.ROMSourceRoundTrip PROPERTIES TIMEOUT 300 FIXTURES_SETUP romsrc_objects)
+
+    # the ROM-free track's step 3: the OS booted on the object file built from
+    # the ROM source tree, with no ROM image anywhere it could be found
+    add_test(NAME host.NewtonNoROM
+             COMMAND newton --objects ${CMAKE_BINARY_DIR}/romsrc-objects.bin --headless 3
+                     --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/newton.ns
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonNoROM PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED romsrc_objects
+                         ENVIRONMENT "NEWTON_ROM=${CMAKE_BINARY_DIR}/no-rom-image"
+                         PASS_REGULAR_EXPRESSION "the world is up.*written build/newton-demo.pgm")
 
     # `cmake --build <dir> --target romsrc`: the source tree, generated into
     # the build directory (it is not kept in the repository yet - why is

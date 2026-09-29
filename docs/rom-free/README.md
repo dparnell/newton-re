@@ -324,9 +324,33 @@ So the first no-`--rom` boot needs only the first two rows from the built
 tree. The later rows are things the machine can do without, and each
 comes back as its own piece of work.
 
+### Where it stands: the OS boots with no ROM image
+
+`newton --objects <file>` boots the OS on the object file built from the
+tree, with no image anywhere it could find one. ctest `host.NewtonNoROM`
+does it, on the file `host.ROMSourceRoundTrip` writes.
+
+- The world comes up on the **Notepad**: its button bar (Extras, InOut,
+  Names, Dates, Undo, Find, Assist), the date and battery, the Unfiled
+  Notes folder tab, and the demo slip with its buttons and a paragraph to
+  type in.
+- The same boot under `--rom` comes up on the **Setup assistant's
+  Welcome** instead. The Setup assistant is one of the ROM extension's
+  packages, and the object file has no extension yet. That is the next
+  row of the table, not a flaw in the objects.
+- A first try showed that the recognisers could not do without the
+  lexicons (`ReplaceDictionary` over no data). So the lexicons came
+  forward from 3d. The tree has them as `lexicons/<name>.bin`, 40 tries
+  in their ROM form, listed with their addresses in `lexicons.tsv`. The
+  object file (version 2) carries them as "other blocks of ROM data",
+  and `frames/ROMImport.h`'s `ROMBytesAt(address, length)` answers ROM
+  bytes out of the image or out of those blocks.
+  `InitROMDictionaryData` asks it, where it read the image. `--check`
+  compares the lexicons with the ROM's too.
+
 ### The plan
 
-- **3a. The builder writes a loadable object file.**
+- **3a. The builder writes a loadable object file. Done.**
   - The extraction also writes the magic-pointer table into the tree,
     as `magic.ns`: each entry is a named object or a value.
   - `romsrc.py build -o objects.bin` writes a container:
@@ -335,23 +359,27 @@ comes back as its own piece of work.
     - the area, byte for byte what `--check` compares;
     - the magic pointers, as big-endian words.
   - The byte-identical ctest checks the table too.
-- **3b. The host loads it.**
+- **3b. The host loads it. Done.** `ImportROMObjectsFromFile` also knows
+  the object file by its signature, so `--rom` works as well as
+  `--objects`.
   - `frames/ROMImport.cpp` gets `ImportBuiltObjects(path)`: the import
     `ImportROMObjects` does, from the container's area and table.
     `ROMImageBase` then answers nil: there is no image, and everything
     that reads one already copes with that.
   - `newtonscript` and `newton` take `--objects <file>` in place of
     `--rom`.
-- **3c. The proof.**
-  - A ctest boots `newton --headless` on the built objects, with no image
-    anywhere it could be found.
-  - It checks that the Notepad comes up and takes a typed word, and it
-    compares the screen with the same boot under `--rom`.
+- **3c. The proof. Done in part.**
+  - `host.NewtonNoROM` boots `newton --headless` on the built objects,
+    with no image anywhere it could be found.
+  - Comparing the screen with the `--rom` boot waits on the extension's
+    packages (see above).
   - A `newtonscript -e` over the built objects must answer as it does
     over the image, for example `ROMConstant("canonicalTextShape")`.
 - **3d. Then the rows that come back one at a time:**
-  - the lexicons, as generated tables in `src/recognition/`;
-  - the ROM extension's packages, from the tree;
+  - the lexicons (done, above);
+  - **the ROM extension's packages, from the tree: next.** The Setup
+    assistant and the rest of the extension's ten packages. Then the
+    boots with and without `--rom` should draw the same screen;
   - the area laid out freely, with the builder generating
     `ROMConstants.h`.
 

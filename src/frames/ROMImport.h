@@ -35,8 +35,16 @@
 // the area cannot be made.
 NewtonErr	ImportROMObjects(const void* rom, ULong romSize);
 
-// the same from a file
+// the same from a file - which may instead be the ROM-free track's object
+// file (below), told by its signature
 NewtonErr	ImportROMObjectsFromFile(const char* path);
+
+// The objects from the ROM-free track's object file instead of a ROM
+// image: the area and the magic pointers built from the ROM source tree
+// (tools/newton-rom/analysis/romsrc.py build -o; docs/rom-free/README.md).
+// There is no image behind them, so ROMImageBase answers nil.
+NewtonErr	ImportBuiltObjects(const void* data, ULong size);
+NewtonErr	ImportBuiltObjectsFromFile(const char* path);
 
 Boolean		ROMObjectsImported(void);
 long		ROMObjectCount(void);
@@ -50,5 +58,10 @@ Ref			TranslateROMRef(ULong32 ref);		// a ROM ref as a host ref (nil: a pointer 
 // objects came from rather than letting it go.  An image handed to
 // ImportROMObjects must outlive the import for this to answer it.
 const void*	ROMImageBase(ULong* size);
+
+// The ROM's bytes at a ROM address, `length` of them: out of the image, or
+// out of the blocks of ROM data an object file carries (the lexicons); nil
+// when neither has them.
+const void*	ROMBytesAt(ULong address, ULong length);
 
 #endif	/* __ROMIMPORT_H */
