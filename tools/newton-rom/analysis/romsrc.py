@@ -18,8 +18,18 @@ The output (-o) is what the host loads in place of a ROM image
 area's base address and size, the magic-pointer table's address and its
 count - then the area, then the magic pointers as big-endian words, then
 (version 2) the count of other blocks of ROM data and each one's address,
-length and bytes (rounded to a word): the lexicons, and the ROM extension.
+length and bytes (rounded to a word): the lexicons, and the ROM extension;
+then (version 3) the count of objects that are not where the ROM has them
+and, for each, the ROM's ref and the ref now (build --relayout).
     python romsrc.py roundtrip build/MP2x00US -o <dir> --newtonscript <exe>   # both, as the ctest runs them
+    python romsrc.py edit-test <tree> -o <dir> --objects <file> --newtonscript <exe>
+
+edit-test is the test of editability: it copies a tree, lengthens one
+string in it (the first definition of a plain string of 12 characters or
+more in objects/000.ns - near the area's start, so that nearly every
+object after it moves), and builds the copy with --relayout into an object
+file, which the host must boot as it boots the ROM's (ctest
+host.NewtonEditedSameScreen).
 
 `build` needs the host's newtonscript (--newtonscript) to compile the
 functions; it runs it with no ROM image, so nothing of the ROM's is read
@@ -963,9 +973,15 @@ def string_bytes(literal):
 # ---- building
 
 class Builder:
-	def __init__(self, src, newtonscript=None):
+	def __init__(self, src, newtonscript=None, relayout=False):
+		"""relayout: the objects laid out afresh, one after another in the
+		layout's order at the sizes they now have (an edit that grows or
+		shrinks one moves every one after it; an object the layout does not
+		know goes at the end), rather than at the layout's addresses."""
 		self.src = src
 		self.newtonscript = newtonscript
+		self.relayout = relayout
+		self.relocations = []			# (the ROM's ref, the ref now) for every object that moved
 		self.defs = {}
 		files = [os.path.join(src, "maps.ns")]
 		objdir = os.path.join(src, "objects")
@@ -1114,6 +1130,43 @@ class Builder:
 			v.cls = self.walk(v.cls, path + "^")
 		return v
 
+	def object_size(self, path):
+		"""The size an object's header and body come to now (None: gone)."""
+		if path.startswith("'"):
+			r = Reader(path, "layout", self.src)
+			r.take("'")
+			return 12 + 4 + len(r.name_text().encode("latin-1")) + 1
+		v = self.by_path.get(path.lower())
+		if v is None:
+			return None
+		if v.kind == "binary":
+			return 12 + len(v.data)
+		return 12 + 4 * len(v.items)
+
+	def lay_out_afresh(self, entries, new_paths):
+		"""The objects one after another from the area's base, each on a word:
+		the layout's in its order, then the new ones.  Every object's old and
+		new refs are kept (self.relocations) for the object file, so that the
+		host's constants, which name the ROM's addresses, find them."""
+		out = []
+		at = self.area_base
+		for a, path, flags, extra in entries:
+			size = self.object_size(path)
+			if size is None:
+				continue
+			out.append((at, path, flags, extra))
+			if at != a:
+				self.relocations.append((a + 1, at + 1))
+			at += (size + 3) & ~3
+		for path in sorted(new_paths):
+			v = self.by_path[path]
+			if v.kind == "frame":
+				raise ValueError("%s: a frame the layout does not know needs a map (NOT YET)" % path)
+			flags = 0x40 if v.kind == "binary" else 0x41
+			out.append((at, v.path, flags, {}))
+			at += (self.object_size(v.path) + 3) & ~3
+		return out, at - self.area_base
+
 	def build(self):
 		area_base, area_size, entries = self.area_base, self.area_size, self.entries
 		addr = {}					# path -> ref
@@ -1125,8 +1178,19 @@ class Builder:
 				r.take("'")
 				symbols[r.name_text().lower()] = a + 1
 		missing = [p for p in self.by_path if p not in addr]
-		if missing:
+		if missing and not self.relayout:
 			raise ValueError("%d objects the layout does not place, e.g. %s" % (len(missing), missing[:3]))
+		if self.relayout:
+			entries, area_size = self.lay_out_afresh(entries, missing)
+			addr = {}
+			symbols = {}
+			for a, path, _, _ in entries:
+				addr[path.lower()] = a + 1
+				if path.startswith("'"):
+					r = Reader(path, "layout", self.src)
+					r.take("'")
+					symbols[r.name_text().lower()] = a + 1
+			self.entries = entries
 
 		def ref(v):
 			if isinstance(v, Imm):
@@ -1230,11 +1294,15 @@ class Builder:
 
 def container(builder, area_base, area):
 	"""The file the host loads: header, area, magic pointers."""
-	header = b"NewtObjs" + struct.pack(">5I", 2, area_base, len(area), builder.magic_base, len(builder.magic))
+	header = b"NewtObjs" + struct.pack(">5I", 3, area_base, len(area), builder.magic_base, len(builder.magic))
 	blocks = struct.pack(">I", len(builder.blocks))
 	for address, data in builder.blocks:
 		blocks += struct.pack(">II", address, len(data)) + data + bytes(-len(data) % 4)
-	return header + area + b"".join(struct.pack(">I", r) for r in builder.magic) + blocks
+	# (version 3) where each object that moved now is: the ROM's ref, then the
+	# ref now, sorted by the first
+	moved = struct.pack(">I", len(builder.relocations))
+	moved += b"".join(struct.pack(">II", old, new) for old, new in sorted(builder.relocations))
+	return header + area + b"".join(struct.pack(">I", r) for r in builder.magic) + blocks + moved
 
 
 def check_magic(builder, rom):
@@ -1285,12 +1353,39 @@ def main(argv=None):
 	b.add_argument("-o", "--output")
 	b.add_argument("--check", metavar="BUILD_DIR", help="compare with that ROM's object area, byte for byte")
 	b.add_argument("--newtonscript", help="the host's newtonscript, which compiles the functions")
+	b.add_argument("--relayout", action="store_true",
+				   help="lay the objects out afresh at the sizes they now have (what an edit needs), not at the layout's addresses")
+	t = sub.add_parser("edit-test", help="copy a tree, lengthen one string, build it laid out afresh")
+	t.add_argument("source")
+	t.add_argument("-o", "--output", required=True, help="where the edited copy goes (emptied first)")
+	t.add_argument("--objects", required=True, help="the object file to write")
+	t.add_argument("--newtonscript", required=True)
 	r = sub.add_parser("roundtrip", help="extract, build and compare")
 	r.add_argument("build_dir")
 	r.add_argument("-o", "--output", required=True, help="where the source tree is written (emptied first)")
 	r.add_argument("--newtonscript", required=True, help="the host's newtonscript, which compiles the functions")
 	r.add_argument("--objects", help="also write the object file the host loads (newton --objects)")
 	a = ap.parse_args(argv)
+	if a.command == "edit-test":
+		import shutil
+		shutil.rmtree(a.output, ignore_errors=True)
+		shutil.copytree(a.source, a.output)
+		path = os.path.join(a.output, "objects", "000.ns")
+		with open(path, encoding="utf-8") as f:
+			lines = f.read().split("\n")
+		for i, line in enumerate(lines):
+			m = re.match(r'([A-Za-z_][A-Za-z0-9_]*) := "([^"\\]{12,})";$', line)
+			if m:
+				lines[i] = '%s := "%s (edited)";' % (m.group(1), m.group(2))
+				print("edited %s: \"%s\" is now \"%s (edited)\"" % (m.group(1), m.group(2), m.group(2)))
+				break
+		else:
+			print("no string to edit in %s" % path)
+			return 1
+		with open(path, "w", encoding="utf-8", newline="\n") as f:
+			f.write("\n".join(lines))
+		result = main(["build", a.output, "-o", a.objects, "--newtonscript", a.newtonscript, "--relayout"])
+		return result
 	if a.command == "roundtrip":
 		import shutil
 		shutil.rmtree(a.output, ignore_errors=True)
@@ -1305,12 +1400,13 @@ def main(argv=None):
 		print("%d definitions (%d taken from compiled functions) and %d maps written to %s"
 			  % (n, e.same_count, m, a.output))
 		return 0
-	builder = Builder(a.source, a.newtonscript)
+	builder = Builder(a.source, a.newtonscript, a.relayout)
 	base, area = builder.build()
 	if a.output:
 		with open(a.output, "wb") as f:
 			f.write(container(builder, base, area))
-	print("built %d objects, %#x bytes at %#x" % (len(builder.by_path), len(area), base))
+	print("built %d objects, %#x bytes at %#x%s" % (len(builder.by_path), len(area), base,
+		  ", %d of them moved" % len(builder.relocations) if a.relayout else ""))
 	if a.check:
 		rom = nf.ROM(a.check)
 		result = check(base, area, rom, None) | check_magic(builder, rom) | check_blocks(builder, rom)

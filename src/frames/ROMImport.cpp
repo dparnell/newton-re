@@ -31,6 +31,34 @@ struct BuiltBlock
 };
 static BuiltBlock*			gBuiltBlocks = nil;
 static long					gBuiltBlockCount = 0;
+
+// the objects an object file laid out afresh has moved: the ROM's ref, then
+// the ref now, sorted by the first (big-endian words, in the file)
+static const unsigned char*	gMoved = nil;
+static long					gMovedCount = 0;
+
+
+// A ROM ref as the object file has it: the ROM's own, unless the object
+// was moved.  The constants the C++ names (ROMConstants.h, RSSymbols.h)
+// are the ROM's addresses; this is how they find their objects in an area
+// laid out afresh.
+static ULong32
+MovedRef(ULong32 ref)
+{
+	long lo = 0, hi = gMovedCount - 1;
+	while (lo <= hi)
+	{
+		long mid = (lo + hi) / 2;
+		ULong32 old = GetBigEndianWord(gMoved + mid * 8);
+		if (old == ref)
+			return GetBigEndianWord(gMoved + mid * 8 + 4);
+		if (old < ref)
+			lo = mid + 1;
+		else
+			hi = mid - 1;
+	}
+	return ref;
+}
 static const unsigned char*	gROMImageBase = nil;	// the ROM's bytes, address 0 first
 static ULong				gROMImageSize = 0;
 Ref						gROMSymbolTableRef = NILREF;
@@ -72,6 +100,7 @@ TranslateROMRef(ULong32 ref)
 {
 	if ((ref & 3) == kTagPointer)
 	{
+		ref = MovedRef(ref);
 		ObjHeader* o = gROMObjectArea.ObjectAt(ref - 1);
 		return o == nil ? NILREF : MAKEPTR(o);
 	}
@@ -148,7 +177,7 @@ ROMImageBase(ULong* size)
 	return gROMImageBase;
 }
 
-static NewtonErr	ImportObjectArea(const unsigned char* area, const unsigned char* magic, long mpCount);
+static NewtonErr	ImportObjectArea(const unsigned char* area, ULong base, ULong size, const unsigned char* magic, long mpCount);
 
 NewtonErr
 ImportROMObjects(const void* image, ULong imageSize)
@@ -169,7 +198,7 @@ ImportROMObjects(const void* image, ULong imageSize)
 	if (kROMMagicPointerTable + kARMWord > imageSize
 	 || kROMMagicPointerTable + (GetBigEndianWord(rom + kROMMagicPointerTable) + 1) * kARMWord > imageSize)
 		return kError_Bad_Parameters;
-	return ImportObjectArea(rom + kROMSoupBase, rom + kROMMagicPointerTable + kARMWord,
+	return ImportObjectArea(rom + kROMSoupBase, kROMSoupBase, kROMSoupSize, rom + kROMMagicPointerTable + kARMWord,
 							GetBigEndianWord(rom + kROMMagicPointerTable));
 }
 
@@ -177,15 +206,16 @@ ImportROMObjects(const void* image, ULong imageSize)
 // The objects and the magic pointers, wherever they came from: the area's
 // bytes (the ROM's layout, at kROMSoupBase) and the table's big-endian refs.
 static NewtonErr
-ImportObjectArea(const unsigned char* area, const unsigned char* magic, long mpCount)
+ImportObjectArea(const unsigned char* area, ULong base, ULong size, const unsigned char* magic, long mpCount)
 {
 	// the objects (every ref points within the area)
-	NewtonErr err = gROMObjectArea.Import(area, kROMSoupBase, kROMSoupSize, nil, nil);
+	NewtonErr err = gROMObjectArea.Import(area, base, size, nil, nil);
 	if (err != noErr)
 		return err;
 
-	// the tables and constants
-	gROMSymbolTableRef = gROMObjectArea.TranslateRef(kROMSymbolTable);
+	// the tables and constants (the ROM's addresses: moved, when the area was
+	// laid out afresh)
+	gROMSymbolTableRef = gROMObjectArea.TranslateRef(MovedRef(kROMSymbolTable));
 	Ref* mpTable = (Ref*) malloc(mpCount * sizeof(Ref));
 	if (mpTable == nil)
 		return kError_No_Memory;
@@ -194,9 +224,9 @@ ImportObjectArea(const unsigned char* area, const unsigned char* magic, long mpC
 	gMagicPointerTables[0] = mpTable;
 	gMagicPointerTableCounts[0] = mpCount;
 	for (long j = 0; j < gROMConstantCount; j++)
-		*gROMConstantEntries[j].fRef = gROMObjectArea.TranslateRef(gROMConstantEntries[j].fROMRef);
+		*gROMConstantEntries[j].fRef = gROMObjectArea.TranslateRef(MovedRef(gROMConstantEntries[j].fROMRef));
 	for (long j = 0; j < gRSSymbolCount; j++)
-		*gRSSymbolEntries[j].fRef = gROMObjectArea.TranslateRef(gRSSymbolEntries[j].fROMRef);
+		*gRSSymbolEntries[j].fRef = gROMObjectArea.TranslateRef(MovedRef(gRSSymbolEntries[j].fROMRef));
 	gROMBuiltinFunctions = Rbuiltinfunctions;
 	return noErr;
 }
@@ -205,9 +235,11 @@ ImportObjectArea(const unsigned char* area, const unsigned char* magic, long mpC
 // The object file the ROM-free track's builder writes (romsrc.py build -o;
 // docs/rom-free/README.md): "NewtObjs", then as big-endian words the
 // version, the area's base and size, the magic-pointer table's address and
-// count; then the area; then the magic pointers.  The area must be where
-// this build's ROMConstants.h says the ROM's is - the constants and the
-// symbols it names are its addresses.  No ROM image is behind it, so
+// count; then the area; then the magic pointers; (2) the other blocks of
+// ROM data; (3) the objects that are not where the ROM has them.  The
+// constants the C++ names are the ROM's addresses, looked up in that last
+// table, so an area laid out afresh (an edit that moves objects) needs no
+// new build of the host.  No ROM image is behind it, so
 // ROMImageBase answers nil: the ROM extension's packages, the recognisers'
 // lexicons and the ROM code a package's native code calls are not there.
 NewtonErr
@@ -215,12 +247,12 @@ ImportBuiltObjects(const void* data, ULong size)
 {
 	const unsigned char* p = (const unsigned char*) data;
 	ULong version = size >= 12 ? GetBigEndianWord(p + 8) : 0;
-	if (size < 28 || memcmp(p, "NewtObjs", 8) != 0 || (version != 1 && version != 2))
+	if (size < 28 || memcmp(p, "NewtObjs", 8) != 0 || version < 1 || version > 3)
 		return kError_Bad_Parameters;
 	ULong base = GetBigEndianWord(p + 12);
 	ULong areaSize = GetBigEndianWord(p + 16);
 	long mpCount = GetBigEndianWord(p + 24);
-	if (base != kROMSoupBase || areaSize != kROMSoupSize || 28 + areaSize + mpCount * kARMWord > size)
+	if (28 + areaSize + mpCount * kARMWord > size)
 		return kError_Bad_Parameters;
 	if (gROMObjectArea.fArea != nil)
 		return noErr;
@@ -245,7 +277,16 @@ ImportBuiltObjects(const void* data, ULong size)
 			at += 2 * kARMWord + ((length + 3) & ~3);
 		}
 	}
-	return ImportObjectArea(p + 28, p + 28 + areaSize, mpCount);
+	// (version 3) the objects laid out afresh: where each that moved is now
+	if (version >= 3 && at + kARMWord <= size)
+	{
+		long count = GetBigEndianWord(p + at);
+		if (at + kARMWord + count * 8 > size)
+			return kError_Bad_Parameters;
+		gMoved = p + at + kARMWord;
+		gMovedCount = count;
+	}
+	return ImportObjectArea(p + 28, base, areaSize, p + 28 + areaSize, mpCount);
 }
 
 

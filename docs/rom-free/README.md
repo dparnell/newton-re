@@ -443,6 +443,38 @@ still byte for byte the ROM's.
 - **Still bytes:** ScreenBuffer and ScreenDrivers (ARM protocol code) and
   WorldData (a soup part).
 
+### An edit that moves objects still boots
+
+`romsrc.py build --relayout` lays the objects out afresh instead of at
+the layout's addresses. They go one after another in the layout's order,
+at the sizes they now have, so an edit that grows or shrinks one object
+moves every object after it. An object the layout does not know goes at
+the end; a frame it does not know needs a map, which is NOT YET.
+
+**Decision: the constants stay the ROM's addresses, and the object file
+says where each object went. The builder does not generate
+`ROMConstants.h`.**
+
+- The C++ names objects by the ROM's addresses: `ROMConstants.h`,
+  `RSSymbols.h`, `kROMSymbolTable`.
+- The object file (version 3) carries a table of every object that is
+  not where the ROM has it: the ROM's ref, then the ref now.
+- `frames/ROMImport.cpp` looks each constant up in that table (`MovedRef`)
+  as it imports, and so does `TranslateROMRef`.
+- Generating `ROMConstants.h` instead would tie each build of the host to
+  one layout of the data. With the table, an edit to the tree needs a
+  new object file and nothing else, which is the point of the tree.
+
+The test of editability is ctest `host.ROMSourceEdit` followed by
+`host.NewtonEditedSameScreen`:
+
+- `romsrc.py edit-test` copies the tree and lengthens one string near the
+  area's start (`obj_3c5f05`, "28.8 and faster", gains " (edited)").
+- It builds the copy with `--relayout`. The area grows by 20 bytes and
+  **43566 objects move**.
+- The OS booted on the result draws the Setup Welcome pixel for pixel as
+  the ROM image's boot does.
+
 ### The plan
 
 - **3a. The builder writes a loadable object file. Done.**
@@ -474,8 +506,8 @@ still byte for byte the ROM's.
   - the lexicons (done, above);
   - the ROM extension's packages, from the tree (done, as package files;
     from source is next);
-  - the area laid out freely, with the builder generating
-    `ROMConstants.h`.
+  - the area laid out freely (done: `--relayout`, and the object file's
+    table of moved objects rather than a generated `ROMConstants.h`).
 
 ## Open questions
 - **mosrun** (https://github.com/MatthiasWM/mosrun) runs Apple's own

@@ -488,6 +488,25 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD}/sym
     set_tests_properties(host.NewtonNoROMSameScreen PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED romsrc_objects
                          ENVIRONMENT "NEWTON_ROM=${CMAKE_BINARY_DIR}/no-rom-image")
 
+    # the test of editability: a string near the area's start lengthened in a
+    # copy of the tree, the copy built laid out afresh (nearly every object
+    # moves), and the OS booted on it draws the same Setup screen
+    add_test(NAME host.ROMSourceEdit
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/newton-rom/analysis/romsrc.py
+                     edit-test ${CMAKE_BINARY_DIR}/romsrc-test -o ${CMAKE_BINARY_DIR}/romsrc-edited
+                     --objects ${CMAKE_BINARY_DIR}/romsrc-edited.bin --newtonscript $<TARGET_FILE:newtonscript>
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.ROMSourceEdit PROPERTIES TIMEOUT 300 FIXTURES_REQUIRED romsrc_objects
+                         FIXTURES_SETUP romsrc_edited PASS_REGULAR_EXPRESSION "edited .*moved")
+    add_test(NAME host.NewtonEditedSameScreen
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/host/samescreen.py
+                     --newton $<TARGET_FILE:newton> --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/newton.ns
+                     --snapshot build/newton-demo.pgm
+                     --run "--rom ${NEWTON_ROM_BIN}" --run "--objects ${CMAKE_BINARY_DIR}/romsrc-edited.bin"
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonEditedSameScreen PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED romsrc_edited
+                         ENVIRONMENT "NEWTON_ROM=${CMAKE_BINARY_DIR}/no-rom-image")
+
     # `cmake --build <dir> --target romsrc`: the source tree, generated into
     # the build directory (it is not kept in the repository yet - why is
     # docs/rom-free/README.md's "Where the tree lives")
