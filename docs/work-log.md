@@ -86,6 +86,18 @@ bugs and ROM bugs found on the way.
   `layout.tsv` manifest, and `rombuild.py` proved by a byte-identical
   rebuild of the area.
 
+## 2026-09-30: beaming over the default path
+
+- ctest `host.NewtonBeamIrDA` (43717fe6): with zapCommToolId nil the probe
+  answers IrDA and a note goes from one host to the other over 'irda' -
+  discovery, the IAS lookup, the LSAP connection - with no code change
+  beyond the IrDA stack.
+- The 'paperroll note was not lost (508c1b82): a beamed note of that
+  class is put away into the receiver's Notes soup at once (the In Box's
+  AutoFunction at 0x4b3ef5 calls the Notes app's `AutoPutaway`, as
+  autoPutawayEnabled asks) - the ROM's behaviour, governed by the Beam
+  preference dontAutoPutAway.
+
 ## 2026-09-30: the IrDA stack
 
 - `comms/irda/` (603569db): `TIrDATool`/`TIrDAService` ('irda') over the

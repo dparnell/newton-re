@@ -196,10 +196,9 @@ worked through.  What could come next (not ranked; the owner chooses):
   plan"): layers 1-3 done - a Note beams from one host to another over
   Sharp IR (`host.NewtonBeam`, `tools/host/twonewtons.py`); the probe
   'pkir' (layer 4) answers IrDA between two 2.1s, and the IrDA stack
-  ('irda', `comms/irda/`, ctest `comms.IrDA`) is in.  Next: the default
-  beam (probe then IrDA, no zapCommToolId) as a second two-newton ctest;
-  why a note with `class: 'paperroll` does not show in the receiver's In
-  Box.
+  ('irda', `comms/irda/`, ctest `comms.IrDA`) is in: **beaming is done**,
+  over Sharp IR (`host.NewtonBeam`) and the default path, probe then IrDA
+  (`host.NewtonBeamIrDA`).
   The livelock between `TPMIterator::Init`'s semaphore and `TForkWorld`'s
   mutex was the host runtime's, fixed (12e55a2; ctest
   `host.NewtonDockGetPackages`).  `test_NIEProtoFSM` also runs
