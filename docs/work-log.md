@@ -86,6 +86,28 @@ bugs and ROM bugs found on the way.
   `layout.tsv` manifest, and `rombuild.py` proved by a byte-identical
   rebuild of the area.
 
+## 2026-09-30: the NTK inspector
+
+- `comms/NTK.h` (library `comms_ntk`; aceda234, 4885defe): the task-safe
+  ring buffer and pipe; `TNTKNub` speaking the 'newt' 'ntp ' protocol
+  (connect, code blocks evaluated and answered, package download and
+  delete, text, exceptions and the break loop, ...) over a `TNTKTask`
+  and `TNTKEndpointClient`; the NTK and serial REP translators;
+  `TREPEventHandler`; `NTKStackTrace`; the six natives.
+  `TNewtWorld::MainConstructor` now calls `NTKInit()` (0x0030d280) and
+  `ResetREPIdler()` (0x0030d29c).  `tools/ntk/inspector.py` is a desktop
+  inspector over MNP on port 3679 - it evaluates expressions (through the
+  Newton's own `Compile`), installs and deletes packages (ctest
+  `host.NewtonNTK`; `--connect 127.0.0.1:3679` interactively).
+- ROM bugs kept: `NTKInit` registers `PStdioInTranslator` twice and never
+  `PStdioOutTranslator`; the nub's destructor frees the buffers without
+  waiting for the task, so an `ntkDownload` straight after
+  `ntkListener(nil)` answers -10068 (the demo retries); `ntkDownload`
+  deletes a running listener's nub without stopping it; a 'code' answer
+  carries the command's length, not the result's.  Host bug found:
+  `SetPtrName` on a block from the C library's allocator wrote a Newton
+  heap header into the Windows heap - such blocks are left unnamed.
+
 ## 2026-09-30: the last natives outside comms
 
 - `store:HasPassword`/`SetPassword` (825c01ab) over the ROM's password

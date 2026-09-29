@@ -201,7 +201,11 @@ worked through.  What could come next (not ranked; the owner chooses):
   'pkir' (layer 4) answers IrDA between two 2.1s, and the IrDA stack
   ('irda', `comms/irda/`, ctest `comms.IrDA`) is in: **beaming is done**,
   over Sharp IR (`host.NewtonBeam`) and the default path, probe then IrDA
-  (`host.NewtonBeamIrDA`).
+  (`host.NewtonBeamIrDA`).  **The NTK inspector** connects over the host
+  serial port (`comms/NTK.h`, `tools/ntk/inspector.py`, ctest
+  `host.NewtonNTK`).  Next in comms: the 42 older endpoint natives
+  (`CI*`); later the NTK's AppleTalk/ADSP connection and the Hammer
+  translators, AppleTalk, the online services, the TV remote, CCL.
   The livelock between `TPMIterator::Init`'s semaphore and `TForkWorld`'s
   mutex was the host runtime's, fixed (12e55a2; ctest
   `host.NewtonDockGetPackages`).  `test_NIEProtoFSM` also runs
