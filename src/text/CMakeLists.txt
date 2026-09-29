@@ -30,6 +30,7 @@ add_library(text STATIC
     TXOffset.cpp
     TXRuler.cpp
     TXRulerRange.cpp
+    TXRulerUI.cpp
     TXRun.cpp
     TXStyledText.cpp
     TXStream.cpp

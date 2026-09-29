@@ -14,6 +14,7 @@
 #include "TXNewtContainer.h"
 #include "TXBinaryChars.h"
 #include "TXVBOChars.h"
+#include "TXRulerUI.h"
 #include "LargeBinaries.h"
 #include "TXNewtTextRun.h"
 #include "TXGraphicsRun.h"
@@ -101,8 +102,8 @@ TXView::~TXView()
 		delete fText;
 	if (fRulerUI != nil)
 	{
-		// NOT YET RECONSTRUCTED: TXRulerUI - the ruler deleted and
-		// gTXRulerPixMaps released (fRulerUI is never set on the host)
+		delete fRulerUI;
+		gTXRulerPixMaps.Release();
 	}
 }
 
@@ -130,8 +131,8 @@ TXView::Constructor(RefArg context, TView* parent)
 		Textension::RegisterRun(new TXNewtTextRun);
 		Textension::RegisterRun(new TXNewtGraphicsRun);
 		Textension::RegisterRuler(new TXAdvancedRuler);
-		// NOT YET RECONSTRUCTED: TXRulerUI::Start({0x16, 0x10, 3}) - the
-		// ruler bar's measurements
+		TXRulerUIData ruler = { 0x16, 0x10, 3, 0xb, 5 };
+		TXRulerUI::Start(ruler);
 		gTXViewStarted = true;
 	}
 	TView::Constructor(context, parent);
@@ -176,16 +177,21 @@ void
 TXView::SyncViewRgn(void)
 {
 	Rect r = viewBounds;
+	Rect ruler;
 	if (fRulerUI != nil)
 	{
-		// NOT YET RECONSTRUCTED: TXRulerUI - the ruler's 0x26 pixels
-		// above the text and its bounds set
+		// the ruler's 0x26 pixels above the text
+		ruler = r;
+		ruler.bottom = ruler.top + 0x26;
+		r.top = ruler.bottom;
 	}
 	fText->fDisplay->fFrames->SetFramesOrigin(r.left, r.top);
 	RgnHandle region = (RgnHandle) gTXTempRegions->Get();
 	RectRgn(region, &r);
 	fText->fDisplay->SetViewRgn(region);
 	gTXTempRegions->Done(region);
+	if (fRulerUI != nil)
+		fRulerUI->SetBounds(ruler);
 	Dirty(nil);
 }
 
@@ -448,8 +454,10 @@ TXView::RealDraw(Rect& bounds)
 {
 	if (fRulerUI != nil)
 	{
-		// NOT YET RECONSTRUCTED: TXRulerUI::Draw where the ruler meets
-		// the rectangle
+		Rect ruler;
+		fRulerUI->GetBounds(&ruler);
+		if (SectRect(&ruler, &bounds, &ruler))
+			fRulerUI->Draw();
 	}
 	fText->fDisplay->Draw(bounds);
 }
@@ -462,8 +470,14 @@ TXView::NarrowVisByIntersectingObscuringSiblingsAndUncles(TView* upTo, Rect* bou
 	TView::NarrowVisByIntersectingObscuringSiblingsAndUncles(upTo, bounds);
 	if (fRulerUI == nil)
 		return;
-	// NOT YET RECONSTRUCTED: TXRulerUI - the ruler's bounds taken out of
-	// the port's clip region
+	// the ruler's bounds taken out of the port's visible region
+	GrafPtr port;
+	GetPort(&port);
+	RgnHandle vis = port->visRgn;
+	Rect ruler;
+	fRulerUI->GetBounds(&ruler);
+	TRectangularRegion rulerRgn(ruler);
+	DiffRgn(vis, rulerRgn, vis);
 }
 
 
@@ -664,9 +678,7 @@ TXView::ClickLoop(Boolean inLoop, void* scroll)
 	if (inLoop != 1)
 		return;
 	if (((TXLongPoint*) scroll)->h != 0 && fRulerUI != nil)
-	{
-		// NOT YET RECONSTRUCTED: TXRulerUI::Scrolled
-	}
+		fRulerUI->Scrolled();
 	if (fTXFlags & kTXViewHasScrollers)
 	{
 		RefVar args(MakeArray(2));
@@ -687,13 +699,27 @@ ClickLoop(unsigned char inLoop, void* scroll, void* view)
 
 
 // ROM 0x0024ba60 RulerClick__6TXViewFP9TXNewtPen
+// A click on the ruler: its change made a paragraph command.
+// ROM BUG: the attribute list is lost when the click changed nothing.
 Boolean
-TXView::RulerClick(TXNewtPen* /*pen*/)
+TXView::RulerClick(TXNewtPen* pen)
 {
-	if (fRulerUI != nil)
+	if (fRulerUI != nil && fRulerUI->HitTest(pen->CurrentLocation()))
 	{
-		// NOT YET RECONSTRUCTED: TXRulerUI::HitTest and Click - the
-		// ruler's changes made a paragraph command (NewAttrCommand 3)
+		TXAttrValues* values = new TXAttrValues;
+		if (values == nil)
+			Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
+		pen->InkOff();
+		FClicker(RefVar(NILREF));
+		BusyBoxSend(0x37);
+		long how;
+		if (fRulerUI->Click(pen, Modifiers(true), values, &how))
+		{
+			TXOffsetRange selection;
+			fText->fHilite->GetHiliteRange(&selection);
+			NewAttrCommand(kTXRulersCommand, selection, values, how);
+		}
+		return true;
 	}
 	return false;
 }
@@ -711,11 +737,9 @@ TXView::Scroll(TXLongPoint* d)
 	fText->fDisplay->Scroll(d);
 	gRootView->ShowCaret();
 	UpdateScrollers(false, true);
+	// (the ROM has TXRulerUI::Scrolled's body inlined here)
 	if (d->h != 0 && fRulerUI != nil)
-	{
-		// NOT YET RECONSTRUCTED: TXRulerUI - the ruler's tab bar redrawn
-		// when the text moved under it
-	}
+		fRulerUI->Scrolled();
 }
 
 
@@ -1489,13 +1513,25 @@ TXView::GetContinuousRun(void)
 ------------------------------------------------------------------------------*/
 
 // ROM 0x0024c6d4 ShowRuler__6TXViewFRC6RefVar
-// NOT YET RECONSTRUCTED: TXNewtRulerUI over gTXRulerPixMaps - no ruler
-// is shown.
+// The ruler bar put above the text (`info`: {type: 'metric} for
+// centimetres).
 void
-TXView::ShowRuler(RefArg /*info*/)
+TXView::ShowRuler(RefArg info)
 {
 	if (fRulerUI != nil)
 		return;
+	PixelMap* maps;
+	NewtonErr err = gTXRulerPixMaps.Get(&maps);
+	if (err != noErr)
+		Throw(exRootException, (void*) (long) err, nil);
+	fRulerUI = new TXNewtRulerUI(this, fText, maps, info);
+	if (fRulerUI == nil)
+	{
+		gTXRulerPixMaps.Release();
+		Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
+	}
+	SyncViewRgn();
+	UpdateRuler(false);
 }
 
 
@@ -1505,29 +1541,33 @@ TXView::HideRuler(void)
 {
 	if (fRulerUI == nil)
 		return;
-	// NOT YET RECONSTRUCTED: TXRulerUI - the ruler deleted, the pixel
-	// maps released, the view region taken back and redrawn
+	delete fRulerUI;
+	gTXRulerPixMaps.Release();
+	fRulerUI = nil;
+	SyncViewRgn();
+	Dirty(nil);
 }
 
 
 // ROM 0x0024c7ec UpdateRulerInfo__6TXViewFRC6RefVar
+// (the ROM has TXRulerUI::UpdateRulerInfo's body inlined here)
 void
-TXView::UpdateRulerInfo(RefArg /*info*/)
+TXView::UpdateRulerInfo(RefArg info)
 {
 	if (fRulerUI == nil)
 		return;
-	// NOT YET RECONSTRUCTED: TXRulerTabsBar::SetRulerMeasure
+	fRulerUI->UpdateRulerInfo(info);
 }
 
 
 // ROM 0x0024bb88 UpdateRuler__6TXViewFUc
+// (the ROM has TXRulerUI::CheckUpdate's body inlined here)
 void
-TXView::UpdateRuler(Boolean /*redraw*/)
+TXView::UpdateRuler(Boolean redraw)
 {
 	if (fRulerUI == nil)
 		return;
-	// NOT YET RECONSTRUCTED: TXRulerUI - the ruler shown for the ruler at
-	// the selection
+	fRulerUI->CheckUpdate(redraw);
 }
 
 

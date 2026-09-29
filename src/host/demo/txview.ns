@@ -4,7 +4,7 @@
 // from the repository root:
 //
 //   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
-//       --headless 14 --script src/host/demo/txview.ns
+//       --headless 16 --script src/host/demo/txview.ns
 //   build/venv/Scripts/python tools/imaging/pgm2png.py build/txview-1.pgm build/txview-1.png
 //
 // build/txview-1.pgm: the text as put in and typed into, the typed word in
@@ -13,7 +13,8 @@
 // clipping (its icon at the screen's left edge) and pasted at the start;
 // build/txview-4.pgm: "hello" and the next word scrubbed out with the pen;
 // build/txview-5.pgm: 2100 characters kept on the store (the middle view),
-// saved with Externalize and read into another view (the bottom one).  Each check
+// saved with Externalize and read into another view (the bottom one);
+// build/txview-6.pgm: that view with the ruler bar shown over it.  Each check
 // prints "txview: FAILED ..." when it does not hold (the ctest looks for
 // that), and the last line says how the view came out.
 //
@@ -113,8 +114,8 @@ AddDelayedCall(func() begin
 				local saved := onStore:Externalize();
 				if not IsVBO(saved.txText) then Print("txview: FAILED - the text is not on the store");
 				local reader := AddView(GetRoot(), {
-					_proto: @826, viewFlags: 1,
-					viewBounds: {left: 20, top: 370, right: 300, bottom: 410},
+					_proto: @826, viewFlags: 0x0A01,
+					viewBounds: {left: 20, top: 370, right: 300, bottom: 452},
 					viewFormat: 0x151 });
 				reader:Internalize(saved);
 				local back := reader:GetRangeData({first: 2086, last: 2100}, 'text);
@@ -122,6 +123,23 @@ AddDelayedCall(func() begin
 				RefreshViews();
 				ScreenSnapshot("build/txview-5.pgm");
 				Print("txview: " & onStore:GetCountCharacters() & " characters on the store, " & reader:GetCountCharacters() & " read back");
+				// the ruler bar over the third view, its first paragraph given a
+				// left margin, an indent, a right margin and two tabs
+				reader:ShowRuler(nil);
+				reader:ChangeRangeRulers({first: 0, last: 0},
+					{leftMargin: 20, indent: 40, rightMargin: 30, justification: 'center, lineSpacing: 2,
+					 tabs: [{value: 100, kind: 'left}, {value: 160, kind: 'right}]}, nil);
+				if not reader:IsRulerShown() then Print("txview: FAILED - no ruler");
+				RefreshViews();
+				ScreenSnapshot("build/txview-6.pgm");
+
+				// the first justification icon (left: the icons at x 199, 221, 243, 265) tapped
+				PenDown(207, 400); PenUp(); IdleStrokes();
+				AddDelayedCall(func() begin
+					local rulers := reader:GetRangeData({first: 0, last: 0}, 'rulers);
+					Print("txview: the ruler's justification is now " & rulers[1].justification);
+				  end, nil, 1000);
+
 				// all of it replaced undoably: the undo keeps 4200 bytes, which
 				// the stream factory puts in a large binary on the store
 				onStore:Replace({first: 0, last: 2100}, {text: "gone"}, true);

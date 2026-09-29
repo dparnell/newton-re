@@ -813,18 +813,53 @@ class 'graphics is a picture): `Replace`, `GetRangeData`, and
 `Externalize`/`Internalize`, which also save the line breaks already
 worked out for a long document.
 
+Drag and drop and the clipboard: the selection leaves as drag items
+(`GetDragInfo`: each stretch of text between pictures a 'text item whose
+reference is [start, length, bounds], each picture a 'shape/'picture
+item), a press on the selection drags it (`CheckDrag`), Copy makes a
+clipping of it, and Paste (`TXNewtPasteCommand`, undoable) and a drop
+(`Drop`, `FixupDropData`: text read again into text and styles, anything
+else a graphics run) put a frame of text and styles in; a drag within the
+view is a move command.  A scrub deletes what it covers - the selection
+when it is on it, else whole lines it covers 30 per cent of, else the
+characters or words it spans (`IsLinesScrub`, `IsCharOrWordsScrub`) -
+with a poof, and the caret gestures put in a space (up), a return (the
+slanted one) or take out a character (down).
+
+With a store (`SetStore`, before the view is set up) the text is kept in
+a large binary on it (`text/TXVBOChars.h`: 512 characters of room a
+chunk, the chunks grown and shrunk in place with MungeLargeBinary, the
+room a chunk gives up cleared so the compander packs it to nothing), and
+Externalize answers the binary as `txText` with the chunk table in
+`txData`.  The stream factory's large-binary arm is real too: an undo
+container of 4K or more is a compressed large binary on the first store.
+
+`ShowRuler` puts the ruler bar above the text (`text/TXRulerUI.h`, 0x26
+pixels): the tabs bar - a measure in inches or centimetres, the tab stops
+and the margin and indent markers - and the icons bar - the four
+justifications, the four tabs to drag up, the line spacing between two
+arrows.  A click on it is a paragraph change handed back as attribute
+values and made an undoable command: an icon tapped, a tab dragged in,
+along or off, a margin marker dragged (the left margin taking the indent
+with it).  The dragging is one loop that xor-draws the icons after the
+pen, keeping each within its bounds and snapping one from the icons bar
+into the ruler or back.  The pictures are the ROM's `rulerPicts`.
+
 The 39 methods are `TXViewNatives.cpp`.  Two ROM bugs kept:
 `GetCountPages` answers the view's own address when there are no pages,
 and a packed font spec given to `ChangeRangeRuns` (the method) comes out
 with its family four times its number, while the same spec in command
-0x49 goes in with a bare size and face.  NOT YET: the ruler bar
-(TXRulerUI - ShowRuler does nothing), the clipboard (Copy, Paste), the
-drag of a selection, the scrub and caret gestures, pages, and
-`TXVBOChars` (the text on a store).
+0x49 goes in with a bare size and face; others are commented where
+they are (the drag rectangle of a picture made of a stale stack word, the
+insertion of a tab whose old value is whatever the stack held).  NOT YET:
+pages (TXPageFrames, TXMultiFrameFormatter).
 
 `src/host/demo/txview.ns` (ctest `host.NewtonTXView`) puts text in, types
-a word at its end, makes it bold, and takes a picture before and after
-scrolling.
+a word at its end, makes it bold, scrolls, cuts "hello" to a clipping and
+pastes it at the start, scrubs it out with the pen, keeps 2100 characters
+on the store and reads them back into another view, shows the ruler bar
+over it and taps a justification on it - six pictures,
+`build/txview-1.pgm` to `-6.pgm`.
 
 ## Not yet reconstructed - the plan
 
@@ -872,11 +907,10 @@ Bottom up, in the order the layers need each other:
    `TXStdContainer`, `TXLocalContainer`, `TXPrivateContainer`) and the
    edit commands (`TXCommand`, `TXEditCommand`, `TXKeyCommand`,
    `TXReplaceTextCommand`, `TXMoveTextCommand`) with undo.
-7. DONE: `TXView` and the 39 natives, `TXNewtContainer`, `TXBinaryChars`.
-   NOT YET: the ruler UI (`ShowRuler`), `TXVBOChars` (the text kept in
-   a large binary - `stores/LargeBinaries.h` is there now), the large
-   binary arm of `TXNewtStreamFactory`, the clipboard, drag and drop and
-   the gestures.
+7. DONE: `TXView` and the 39 natives, `TXNewtContainer`, `TXBinaryChars`,
+   the clipboard, drag and drop and the gestures, `TXVBOChars` and the
+   stream factory's large binaries, and the ruler bar (`TXRulerUI`).
+   What is left of the engine is the paginated side (item 4).
 
 `TXAttrObject::ReadPublicData`/`WritePublicData` are the base's empty
 pair; the subclasses that put a style on a stream come with the runs.

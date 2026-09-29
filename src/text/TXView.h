@@ -42,8 +42,10 @@
 				With a store (SetStore, before the view is set up) the text
 				is kept in a large binary on it (TXVBOChars.h).
 
-				NOT YET: the ruler bar (TXRulerUI, ShowRuler) and the pages
-				(TXPageFrames) - each marked where it would be.
+				ShowRuler puts the ruler bar (TXRulerUI.h) above the text.
+
+				NOT YET: the pages (TXPageFrames), marked where they would
+				be.
 
 	Reconstructed from the MP2x00 US ROM (0x0024659c-0x0024dff4); each
 	function cites its origin.
@@ -69,6 +71,7 @@ class TStrokePublic;
 class TUnitPublic;
 class TDragInfo;
 class TXRulerUI;
+class TXNewtRulerUI;
 class TXNewtPen;
 class TXKeyCommand;
 class TXStream;
@@ -212,7 +215,7 @@ public:
 	Boolean			InternalizeFormattingData(TXStream* stream, char flags);	// ROM 0x0024cc6c InternalizeFormattingData__6TXViewFP8TXStreamc
 
 	Textension*		fText;			// +0x30
-	TXRulerUI*		fRulerUI;		// +0x34  nil: no ruler shown
+	TXNewtRulerUI*	fRulerUI;		// +0x34  nil: no ruler shown
 	long			fPageWidth;		// +0x38  0 or less: the view's
 	long			fPageHeight;	// +0x3c
 	Rect			fMargins;		// +0x40

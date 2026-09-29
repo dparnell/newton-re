@@ -236,15 +236,16 @@ set_tests_properties(host.NewtonSound PROPERTIES TIMEOUT 120
 # a protoTXView (text/TXView.h): text put in, typed into, restyled,
 # scrolled, cut and pasted and scrubbed, pictures in build/txview-1.pgm to
 # -4.pgm (needs the ROM image)
-add_test(NAME host.NewtonTXView COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 14 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/txview.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+add_test(NAME host.NewtonTXView COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 16 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/txview.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonTXView PROPERTIES TIMEOUT 120
                      FAIL_REGULAR_EXPRESSION "FAILED|Exception"
-                     PASS_REGULAR_EXPRESSION "txview: 176 characters, 142-176 the last line, scrolled from [1-9][0-9]* to 0.*txview: scrubbed to 167 characters.*txview: 2100 characters on the store, 2100 read back.*txview: replaced undoably, 4 characters left")
+                     PASS_REGULAR_EXPRESSION "txview: 176 characters, 142-176 the last line, scrolled from [1-9][0-9]* to 0.*txview: scrubbed to 167 characters.*txview: 2100 characters on the store, 2100 read back.*txview: replaced undoably, 4 characters left.*txview: the ruler.s justification is now left")
 
 # the Sound Recorder driven through its Rec, Stop and Play buttons, headless:
 # the null microphone hears a 1000 Hz test tone (newton --microphone-tone)
 # and newton says how much of what was played back was that tone (the
-# rest is the pen's clicks)
+# recorder records through TGSMCodec, GSM 06.10, which is lossy; the rest
+# is the pen's clicks)
 add_test(NAME host.NewtonRecorder COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 45 --microphone-tone 1000 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/recorder.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(host.NewtonRecorder PROPERTIES TIMEOUT 180
-                     PASS_REGULAR_EXPRESSION "test tone makes up ([3-9][0-9]|100)% of what was played.*recorder: opened: Ready to record.*recorder: recording: Recording.*recorder: stopped: Ready to play or record.*recorder: played: Playing.*recorder: done")
+                     PASS_REGULAR_EXPRESSION "test tone makes up (8[0-9]|9[0-9]|100)% of what was played.*recorder: opened: Ready to record.*recorder: recording: Recording.*recorder: stopped: Ready to play or record.*recorder: played: Playing.*recorder: done")
