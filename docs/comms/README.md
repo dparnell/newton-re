@@ -193,7 +193,8 @@ to nought, which is no timeout at all; the host tool re-arms it in
 | the host TCP tool and the sockets | done: `comms/host/HostTCPTool.h`, `hal/host/HostSockets.h`; **M0** passes (`test_CommTool`) |
 | the comm manager: `TCMWorld`, `TCMEventHandler` (starting a service by its `serv` capability), `TStartInfo`, `TAsyncServiceMessage`, `OpenCommTool`, `CMStartService`, the last device and package, `CMGetServiceVersion` | done: `comms/CommManager.h`; **M1** passes (`test_CommManager`) |
 | the host's `inet` service (`THostInetService`) | done: `comms/host/HostServices.h` |
-| `CMGetEndpoint` (needs `TEndpoint`), the docking loader (`TSCPLoader`, `SCPLoad`), `TICHandler`, `InitializeCommHardware`, the ROM's own services (`RegisterROMProtcols`) | NOT YET |
+| the endpoint: `TEndpoint` (the DDK's interface, its methods virtual - `comms/Endpoint.h` replaces the DDK's header), `TEndpointEventHandler`, the endpoint events, `TEndpointClient`, `CMGetEndpoint`; `TSerialEndpoint` and the `TCommTool...PB` parameter blocks | done: `comms/Endpoint.h`, `comms/SerialEndpoint.h`; **M2** passes (`test_Endpoint`: Open, Bind, Connect, Snd, Rcv, Disconnect, UnBind, Close against the echo server) |
+| the docking loader (`TSCPLoader`, `SCPLoad`), `TICHandler`, `InitializeCommHardware`, the ROM's own services (`RegisterROMProtcols`) | NOT YET |
 | `CMemObject` (a status request's answer goes through `TUSharedMem` meanwhile) | NOT YET |
 | `TPCommTool`/`StartCommToolProtocol` (a tool as a `TCommToolProtocol`) | NOT YET |
-| the endpoint, the NewtonScript endpoint, the link and DNS services | NOT YET |
+| the NewtonScript endpoint (`TNewScriptEndpointClient`, the `CINew*` natives), the link and DNS services, `TEndpointPipe` | NOT YET |

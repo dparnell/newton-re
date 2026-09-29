@@ -12,3 +12,8 @@ add_executable(test_CommManager test_CommManager.cpp)
 target_link_libraries(test_CommManager PRIVATE comms os600_kernel os600_user)
 add_test(NAME comms.CommManager COMMAND test_CommManager)
 set_tests_properties(comms.CommManager PROPERTIES TIMEOUT 60)
+
+add_executable(test_Endpoint test_Endpoint.cpp)
+target_link_libraries(test_Endpoint PRIVATE comms os600_kernel os600_user)
+add_test(NAME comms.Endpoint COMMAND test_Endpoint)
+set_tests_properties(comms.Endpoint PROPERTIES TIMEOUT 60)

@@ -40,6 +40,10 @@ REPLACED = {
     # BufferList.h likewise (the constructor private); src/utility/BufferList.h
     # has the ROM's CBufferList with its fields
     "BufferList.h": "external interface only; src/utility/BufferList.h has the ROM's class",
+    # Endpoint.h: TEndpoint is a protocol whose methods src/protocols/Protocols.h
+    # makes virtual; src/comms/Endpoint.h declares them so (and the classes
+    # an endpoint works with, which the DDK leaves out)
+    "Endpoint.h": "a protocol's methods made virtual; src/comms/Endpoint.h",
 }
 
 PATCHES = {

@@ -6,6 +6,8 @@ add_library(comms STATIC
     Options.cpp
     CommTools.cpp
     CommManager.cpp
+    Endpoint.cpp
+    SerialEndpoint.cpp
     host/HostTCPTool.cpp
     host/HostServices.cpp
 )

@@ -13,6 +13,7 @@
 
 #include "CommManager.h"
 #include "CommTools.h"
+#include "SerialEndpoint.h"
 #include "ListIterator.h"
 #include "NameServer.h"
 #include "NewtErrors.h"
@@ -45,15 +46,15 @@ Boolean			gSCPDevicePackageBusy = false;		// ROM 0x0c100b64 gSCPDevicePackageBus
 // ---------------------------------------------------------------------------
 
 // ROM 0x0006ccac RegisterROMProtcols__Fv
-// The ROM's services and endpoint.  NOT YET RECONSTRUCTED, all of them:
+// The ROM's services and endpoint: TSerialEndpoint.  NOT YET RECONSTRUCTED:
 // RegisterNetworkROMProtocols (0x00031b70), TFaxService, TModemService,
 // TMNPService, TAsyncService, TFramedAsyncService, TP3Service,
 // TLocalTalkService, TIrDAService, TIRService, TKeyboardService,
-// TVRemoteService, IRSniffService, IRProbeService, TSerialEndpoint and
-// PMuxServiceStarter.
+// TVRemoteService, IRSniffService, IRProbeService and PMuxServiceStarter.
 static NewtonErr
 RegisterROMProtcols()
 {
+	TSerialEndpoint::ClassInfo()->Register();
 	return noErr;
 }
 
