@@ -47,7 +47,16 @@ struct TXLineRunDisplayInfo
 	Fixed			fWidth;			// +0x08
 	Fixed			fJustifyExtra;	// +0x0c  nought unless the line is fully justified
 };
-struct TXRunPositionInfo;			// a run's place on a line, for its hilite
+// Where a run's piece of a line is: the line's top and height in pixels,
+// and the piece's left edge and width (16.16).  (The first 0x10 bytes of
+// the ROM's; TXLine fills it in.)
+struct TXRunPositionInfo
+{
+	long			fTop;			// +0x00
+	long			fHeight;		// +0x04
+	Fixed			fLeft;			// +0x08
+	Fixed			fWidth;			// +0x0c
+};
 class TXPointingDevice;				// the pen, as the engine's click tracking sees it
 struct TXClickCommandInfo;			// what a click in a run asks for
 
