@@ -115,8 +115,8 @@ class Node:
 
 
 class Lit(Node):
-	def __init__(self, ref, immediate=False):
-		self.ref, self.immediate = ref, immediate
+	def __init__(self, ref, immediate=False, slot=None):
+		self.ref, self.immediate, self.slot = ref, immediate, slot
 
 
 class Local(Node):
@@ -270,12 +270,12 @@ class Decompiled:
 		self.body = None
 
 	def repeated_literals(self):
-		"""The objects whose literal is pushed more than once (one literal
-		slot, not the same object in two: the ROM's build shared equal
-		objects, but each use in the source had a literal of its own)."""
+		"""The literal slots pushed more than once (one literal slot, not the
+		same object in two: the ROM's build shared equal objects, but each
+		use in the source had a literal of its own)."""
 		if not hasattr(self, "_repeated"):
 			seen = collections.Counter(i.b for i in self.instrs if i.a == OP_PUSH and i.b < len(self.literals))
-			self._repeated = {self.literals[b] for b, n in seen.items() if n > 1}
+			self._repeated = {b for b, n in seen.items() if n > 1}
 		return self._repeated
 
 	# ---- names
@@ -505,7 +505,7 @@ class Decompiled:
 						and self.rom.slots(ref)[0] == 0x32 and not (self.rom.flags(ref) & 2 and False):
 					stack.append(Func(Decompiled(self.rom, ref, self).decompile()))
 				else:
-					stack.append(Lit(ref))
+					stack.append(Lit(ref, slot=b))
 				k += 1
 			elif a == OP_PUSHCONST:
 				ref = b
@@ -1049,15 +1049,21 @@ class Writer:
 				return self.immediate(node.ref)
 			if node.ref & 3 == 3:
 				# a magic pointer pushed as a literal: an NTK constant
-				name = "kROM_%d" % (node.ref >> 2)
+				# (another slot of the same pointer: another constant - the
+				# compiler gives each constant's name a literal of its own)
+				same = sorted(s for s, r in enumerate(fn.literals) if r == node.ref)
+				name = "kROM_%d" % (node.ref >> 2) if node.slot is None or node.slot == same[0] else "kROM_%d_%d" % (node.ref >> 2, node.slot)
 				if name not in dict(self.constants):
 					self.constants.append((name, "@%d" % (node.ref >> 2)))
 				return name
-			if self.rom.is_ptr(node.ref) and self.rom.symname(node.ref) is None and node.ref in fn.repeated_literals():
+			if self.rom.is_ptr(node.ref) and self.rom.symname(node.ref) is None and node.slot in fn.repeated_literals():
 				# one object pushed in more than one place (one literal): a
 				# constant of the NTK's, which the compiler pushes as the same
-				# object each time; written quoted, it would be two
-				name = "kLiteral_%x" % node.ref
+				# object each time; written quoted, it would be two.  (Another
+				# slot may hold the same object, shared by the build: a
+				# constant of its own.)
+				same = sorted(s for s in fn.repeated_literals() if fn.literals[s] == node.ref)
+				name = "kLiteral_%x" % node.ref if node.slot == same[0] else "kLiteral_%x_%d" % (node.ref, node.slot)
 				if name not in dict(self.constants):
 					self.constants.append((name, self.constant(node.ref)))
 				return name

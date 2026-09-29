@@ -2057,7 +2057,26 @@ TCompiler::WalkForCode(RefArg node, Boolean isEffect)
 		{
 			RefVar value(fFunctionState->GetConstantValue(a1, nil));
 			if (gCompilerNTKConstants && ISMAGICPTR(value) && FrameHasSlotRef(gConstantsFrame, a1))
-				fFunctionState->Emit(kBCPush, fFunctionState->LitOffset(value));	// (host: the NTK's)
+			{
+				// (host: the NTK's) one literal per constant's name, so two
+				// constants of one value are two literals
+				TFunctionState* state = fFunctionState;
+				if ((Ref) state->fNTKConstantSlots == NILREF)
+					state->fNTKConstantSlots = AllocateFrame();
+				Ref slot = GetFrameSlotRef(state->fNTKConstantSlots, a1);
+				long offset;
+				if (ISINT(slot))
+					offset = RVALUE(slot);
+				else
+				{
+					if (Length(state->fLiterals) <= state->fNumLiterals)
+						SetLength(state->fLiterals, Length(state->fLiterals) + 0x10);
+					SetArraySlotRef(state->fLiterals, state->fNumLiterals, value);
+					offset = state->fNumLiterals++;
+					SetFrameSlot(state->fNTKConstantSlots, a1, RefVar(MAKEINT(offset)));
+				}
+				state->Emit(kBCPush, offset);
+			}
 			else
 				EmitPush(value);
 		}

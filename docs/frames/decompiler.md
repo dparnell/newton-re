@@ -119,7 +119,9 @@ has, does not make them from source.
   constant in the ROM's compiler, is `push-constant`. These are written as
   a constant `kROM_<n>` bound to `@n`. `gCompilerNTKConstants`, a host flag
   in `frames/Compiler.cpp` that the round trip sets, makes the compiler
-  push such a constant as the NTK did. Nothing the ROM does sets it.
+  push such a constant as the NTK did, one literal for each constant's
+  name: one function has two literals of `@256`, two constants of the
+  same value. Nothing the ROM does sets it.
 
 ## The round trip
 
@@ -152,6 +154,7 @@ by side.
 | 4 | 5447 of 5507 | 5418 (98.4%) | no assignment joined to a read across a branch target (a loop's top); quoted paths `'a.b`, `'[pathExpr: x]`; reals of class `'Real` |
 | 5 | 5447 of 5507 | 5434 (98.7%) | names chosen in hash order for functions whose table of variables is sorted (more than 20) |
 | 6 | 5447 of 5507 | 5440 (98.8%) | every function pushed without `set-lex-scope` made a constant; `a.b.(c) exists` (its get-paths are all 0) |
+| 7 | 5447 of 5507 | 5442 (98.8%) | repeated literals told apart by slot, not object; an NTK magic-pointer constant a literal per name |
 
 The 5507 functions are every top-level NewtonScript function in the ROM's
 object area; functions that are literals of others are decompiled inside

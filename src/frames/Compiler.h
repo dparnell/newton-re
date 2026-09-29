@@ -169,6 +169,7 @@ public:
 	Boolean			fKeepVarNames;		// +0x50  debug information wanted
 	TFunctionState*	fEnclosing;			// +0x54
 	TFunctionState*	fNext;				// +0x58  the compiler's list of them
+	RefStruct		fNTKConstantSlots;	// host: constant name -> literal slot (gCompilerNTKConstants)
 };
 
 
