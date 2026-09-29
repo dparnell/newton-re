@@ -86,6 +86,26 @@ bugs and ROM bugs found on the way.
   `layout.tsv` manifest, and `rombuild.py` proved by a byte-identical
   rebuild of the area.
 
+## 2026-09-30: the IrDA stack
+
+- `comms/irda/` (603569db): `TIrDATool`/`TIrDAService` ('irda') over the
+  ROM's whole IrDA engine - `TIrStream` and its event blocks (a request's
+  block travels down the layers and comes back as its own answer, code +
+  1; the glue's run queue drives every state machine from the tool's
+  task), `TIrGlue`, the IAS client and server (GetValueByClass on LSAP
+  0), `TLSAPConn`, `TIrLMP`, `TIrLAPConn`, and `TIrLAP` - XID slot
+  discovery, SNRM/UA with the `TIrQOS` negotiation, the NRM windows,
+  RR/RNR/REJ/FRMR, DISC/RD/UA/DM, TEST, the timers.
+  `NEWTON_TRACE_IRDA` prints every event and frame; ctest `comms.IrDA`:
+  discovery, the IAS lookup, connection, data both ways (a 1500-byte
+  message in three I frames), disconnect.
+- ROM bugs kept: a second address conflict leaves a discovery hanging; a
+  failed put allocation releases requests[n]..[1] (off by one);
+  `LSAPLookupStart` releases a block its client still holds when the IAS
+  server fails.  Host bug found: device addresses are 32-bit, so the
+  ROM's -1 is `kIrAllDevices` (0xffffffff) - with a 64-bit ULong the
+  listener ignored every XID.
+
 ## 2026-09-30: the ROM source tree's leftovers
 
 - Every function decompiles (a673717e): a greedy solver names a loop's
