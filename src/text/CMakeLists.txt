@@ -13,7 +13,10 @@ add_library(text STATIC
     TXAttributes.cpp
     TXChars.cpp
     TXObjectRange.cpp
+    TXOffset.cpp
     TXRuler.cpp
+    TXRulerRange.cpp
+    TXRun.cpp
     TXStream.cpp
 )
 target_link_libraries(text PUBLIC newton_config utility toolbox frames)
