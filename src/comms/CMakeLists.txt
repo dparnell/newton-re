@@ -40,6 +40,13 @@ add_library(comms_serial STATIC
     irda/IrQOS.cpp
     irda/IrDscInfo.cpp
     irda/IrIASService.cpp
+    irda/IrStream.cpp
+    irda/IrGlue.cpp
+    irda/IrIAS.cpp
+    irda/IrLMP.cpp
+    irda/IrLAPConn.cpp
+    irda/IrLAP.cpp
+    irda/IrDATool.cpp
 )
 target_link_libraries(comms_serial PUBLIC comms hal_serial hal_timers)
 # the IrDA stack ('irda': docs/comms/README.md, "Beaming - the plan")

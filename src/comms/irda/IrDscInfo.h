@@ -40,7 +40,7 @@ public:
 
 	ULong				fDevAddr;				// +0x00  the station's address (set by the discovery)
 	ULong				fHints;					// +0x04
-	UByte				fField8;				// +0x08
+	UByte				fVersion;				// +0x08  the XID frame's version byte
 	UByte				fCharSet;				// +0x09
 	char				fNickname[22];			// +0x0a
 };

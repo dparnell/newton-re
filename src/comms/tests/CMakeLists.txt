@@ -58,6 +58,13 @@ target_link_libraries(test_IrProbe PRIVATE comms_serial hal_host_serial os600_ke
 add_test(NAME comms.IrProbe COMMAND test_IrProbe)
 set_tests_properties(comms.IrProbe PROPERTIES TIMEOUT 120)
 
+# the IrDA stack between two host IR chips: discovery, the IAS lookup, a
+# connection and data both ways
+add_executable(test_IrDA test_IrDA.cpp)
+target_link_libraries(test_IrDA PRIVATE comms_serial hal_host_serial os600_kernel os600_user)
+add_test(NAME comms.IrDA COMMAND test_IrDA)
+set_tests_properties(comms.IrDA PROPERTIES TIMEOUT 120)
+
 # MNP against the desktop end in tools/dock/mnp.py (which runs the program)
 add_executable(test_MNP test_MNP.cpp)
 target_link_libraries(test_MNP PRIVATE comms_serial hal_host_serial os600_kernel os600_user)
