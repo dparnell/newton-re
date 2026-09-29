@@ -8,6 +8,7 @@
 */
 
 #include "SharpIRTool.h"
+#include "IrProbeTool.h"
 #include "HALOptions.h"
 #include "BufferList.h"
 #include "NewtErrors.h"
@@ -1762,4 +1763,5 @@ void
 RegisterIRCommServices(void)
 {
 	TIRService::ClassInfo()->Register();
+	IRProbeService::ClassInfo()->Register();
 }

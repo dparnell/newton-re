@@ -47,6 +47,12 @@ target_link_libraries(test_SharpIR PRIVATE comms_serial hal_host_serial os600_ke
 add_test(NAME comms.SharpIR COMMAND test_SharpIR)
 set_tests_properties(comms.SharpIR PROPERTIES TIMEOUT 120)
 
+# the IR probe: probe against probe (IrDA), probe against Sharp IR
+add_executable(test_IrProbe test_IrProbe.cpp)
+target_link_libraries(test_IrProbe PRIVATE comms_serial hal_host_serial os600_kernel os600_user)
+add_test(NAME comms.IrProbe COMMAND test_IrProbe)
+set_tests_properties(comms.IrProbe PROPERTIES TIMEOUT 120)
+
 # MNP against the desktop end in tools/dock/mnp.py (which runs the program)
 add_executable(test_MNP test_MNP.cpp)
 target_link_libraries(test_MNP PRIVATE comms_serial hal_host_serial os600_kernel os600_user)
