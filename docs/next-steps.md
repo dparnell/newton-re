@@ -189,9 +189,12 @@ worked through.  What could come next (not ranked; the owner chooses):
   restore) and the app's read/write natives; a desktop's slip is shown
   and answered headless.  Left: the keyboard passthrough, the patches,
   tests for 'islp' and 'gpwd'.
-  **Open, outside the docker**: a livelock between `TPMIterator::Init`'s
-  semaphore and `TForkWorld`'s mutex - a script polling `GetPackages()`
-  while a forked world works (`docs/comms/README.md`); being looked into.  `test_NIEProtoFSM` also runs
+  The livelock between `TPMIterator::Init`'s semaphore and `TForkWorld`'s
+  mutex was the host runtime's, fixed (12e55a2; ctest
+  `host.NewtonDockGetPackages`).  Seen then, not checked: when a fork's
+  start `Receive` fails, `TUTaskWorld::TaskEntry` runs `TaskDestructor`
+  on a fork whose `fRunsMain` is still true, which deletes the shared
+  `fMutex` - compare with the ROM (0x000cb618).  `test_NIEProtoFSM` also runs
   each check on the package's own ARM code through armcpu, and the two
   agree (2ae6d73).  armcpu left: frames in a code binary; protocol parts
   through the CPU - no fixture needs them yet (every protocol part among

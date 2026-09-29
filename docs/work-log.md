@@ -67,6 +67,28 @@ bugs and ROM bugs found on the way.
   `layout.tsv` manifest, and `rombuild.py` proved by a byte-identical
   rebuild of the area.
 
+## 2026-09-30: the host runtime's livelock - two host bugs, the ROM innocent
+
+- `TPMIterator::Init`, `TULockingSemaphore` and `TForkWorld`'s mutex all
+  match the ROM (Init releases the world mutex before it waits).  Two
+  host bugs made the livelock (12e55a2):
+- `SemaphoreOpGlue` retried a semaphore op whenever its exit switched
+  tasks, where SWIBoot (0x003adf04) retries only one that blocked
+  (`gCurrentTask` nil after `DoSemaphoreOp`): a `TULockingSemaphore`
+  wake-up was raised twice and a satisfied wait waited again, so the fork
+  mutex and `gPackageSemaphore` handed a wake-up round for ever.
+- `IsSuperMode` (0x00394410) answered false at interrupt level, so the
+  serial receive interrupt's `GetGlobalTime` (`TSerTool::IHRequest`) made
+  a real system call that overwrote the interrupted task's r1/r2 - a
+  fork's start `Receive` - so `Fork` failed with -10048 and `GetPackages`
+  threw on a changed interpreter.  `gHostInterruptLevel` now makes
+  `IsSuperMode` true in `HostDeliverInterrupts`, and a system call from a
+  handler is refused.
+- `test_HostRuntime`, `test_HostInterruptSources`, ctest
+  `host.NewtonDockGetPackages` (a script polling `GetPackages()` every
+  tick while the docker loads a package): 54 of 54 copies beside 8 hogs;
+  before, an unstressed crash 2 in 3 and a hang 2 in 6.
+
 ## 2026-09-30: 1.x entries, selective restore, and a desktop's slip
 
 - `ConvertEntry` (a 1.x entry through its owner's conversion frame; ROM
