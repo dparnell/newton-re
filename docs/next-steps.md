@@ -150,9 +150,14 @@ worked through.  What could come next (not ranked; the owner chooses):
   (`pkgns.py --natives`).  The owner's decision (2026-09-29): the NIE's
   native functions are re-expressed as host code, looked up by package
   and function, and other packages' native code falls back on an ARM
-  interpreter - one seam in the interpreter's native entry.  Being done
-  now: the seam and the NIE's protoFSM; the ARM interpreter.  Then
-  `ictl`, read by running the NIE's link state machine; the modem
+  interpreter.  The seam is in (`frames/PackageNatives.h`: host
+  re-expressions keyed by code length, FNV-1a hash and offset, then
+  `SetPackageNativeFallback`, then an error).  Being done now: the NIE's
+  protoFSM (19 functions, 60 KB of ARM) re-expressed in
+  `src/thirdparty/nie/` - first the code binary's own routines
+  (0xf14-0x2920), then the functions from the smallest up - and the ARM
+  interpreter.  Then `InetStartUp`/`DNSGetAddressFromName` end to end,
+  `ictl` read by running the NIE's link state machine, the modem
   navigator.  The rest of comms (CCL,
   AppleTalk, IR, NTK, the desktop connection - which the test server's
   link, the IR sniffing, `SuckPackageFromEndPoint` and fax reception wait

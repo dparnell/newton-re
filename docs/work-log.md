@@ -9,6 +9,28 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: comms, round 6 - the package-native seam and NTK's glue
+
+- `frames/PackageNatives.h` (f7fcc8b): a package's native-compiled
+  function (a 0x232 array or a binCFunction frame) runs a host
+  re-expression registered with `RegisterPackageNative` (keyed by the
+  code binary's length, its FNV-1a hash and the offset, so it survives
+  the package loading anywhere), else the fallback
+  `SetPackageNativeFallback` installs, else throws
+  `kNSErrNativeNotReconstructed`.  `TInterpreter::CallCFunction`
+  reconstructed (ROM 0x002f4da8).  Test `frames.PackageNatives`.
+- NTK's glue decoded (874b041): package native code calls the ROM
+  through `ldr pc,[pc,#-4]; .word 0x018xxxxx`; the ROM maps 0x01800000 +
+  4k onto a table of branches at ROM 0x13000 + 4k (0x13000-0x16000, just
+  after the jump table), each into a jump-table slot - the only base
+  that lands every entry on a slot.  `pkgdisasm.py`/`pkgns.py --rom
+  BUILD` name the calls; it confirmed the DNS tool's `OptionAt`,
+  `RemoveOptionAt`, `InsertVarOptionAt`.
+- Native-compiled NewtonScript's version-checking routines resolve on
+  2.x to the ROM's own support (`GetGInterpreter`,
+  `TInterpreter::IsSend`, `GetReceiver`, `GetImplementor`,
+  `SetSendEnv`) (ef1672b).
+
 ## 2026-09-29: comms, round 5 - the flatteners and the streaming endpoint
 
 - The NIE's DNS tool replaces an answered record through
