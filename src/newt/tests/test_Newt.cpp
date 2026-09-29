@@ -318,6 +318,13 @@ Scenario(void)
 		return;
 	}
 	TUPort newtPort(portId);
+	// the boot over (PreMain sets gNewtIsAliveAndWell as it unblocks the
+	// strokes): the port is registered long before, and a pen put down
+	// while the strokes are still blocked is lost.  (A fixed 50 ms used to
+	// be enough, until the boot grew - InitFontLoader's part handler
+	// registration sleeps 10 ms, as the ROM's does.)
+	for (long tries = 0; tries < 500 && !gNewtIsAliveAndWell; tries++)
+		Sleep(10 * kMilliseconds);
 	Sleep(50 * kMilliseconds);					// the boot's first Run
 
 	// the test's frame put in the root (a 'host/'eval event of the test's own),
