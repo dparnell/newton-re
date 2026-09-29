@@ -443,6 +443,14 @@ add_test(NAME host.NewtonEcho COMMAND newton --rom ${NEWTON_ROM_BIN} --display 3
 set_tests_properties(host.NewtonEcho PROPERTIES TIMEOUT 120
                      PASS_REGULAR_EXPRESSION "echo: connected, state 5.*echo: received hello .byteCount 5.*echo: sent asynchronously, done.*echo: line 15 characters, ended by endsequence.*echo: frame bonjour 4 Array.*echo: disconnected, state 2.*echo: unbound, state 1.*echo: done")
 
+# protoEndpoint, the 1.x NewtonScript endpoint (comms/ScriptEndpoint.h):
+# 1.x option frames, Connect, output and OutputFrame, input specs to a byte
+# count, an end character and the 'frame form, against the echo server
+add_test(NAME host.NewtonProtoEndpoint COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 60 --tcp-echo 52372 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/protoendpoint.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(host.NewtonProtoEndpoint PROPERTIES TIMEOUT 120
+                     PASS_REGULAR_EXPRESSION "Instantiate: NIL, state: 1.*Connect: NIL, state: 5.*protoendpoint: received hello.*protoendpoint: line of 15 characters.*protoendpoint: frame bonjour 4.*outputDone: TRUE.*Disconnect: NIL, state: 0.*protoendpoint: done"
+                     FAIL_REGULAR_EXPRESSION "waited in vain")
+
 # the NIE's DNS protocol ('sid ' naming 'dnst, a 'dnsq query and 'rrcd
 # records) answered by the host's DNS service over the host's resolver
 # (comms/host/HostDNSTool.h): localhost, a reverse lookup, a name that

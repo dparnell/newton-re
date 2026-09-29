@@ -1560,10 +1560,8 @@ failed:
 // ---------------------------------------------------------------------------
 
 // ROM 0x001dbcf4 HandlePutReply__15TSerialEndpointFP14TCommToolPutPB
-// ROM QUIRK: the client's event is only the head of the PB's (the error,
-// the client, the code, the time) - the ROM copies 0x20 bytes to its stack
-// and what follows there is not set; the host passes the PB's own fields
-// after it.
+// The client told of an asynchronous send: the PB's event (0x30 bytes)
+// with the reply's error and the count of bytes put.
 void
 TSerialEndpoint::HandlePutReply(TCommToolPutPB* pb)
 {
@@ -1571,6 +1569,7 @@ TSerialEndpoint::HandlePutReply(TCommToolPutPB* pb)
 	{
 		TSndCompleteEvent event = pb->fEvent;
 		event.fError = pb->fReply.fResult;
+		event.fCount = pb->fReply.fPutBytesCount;
 		event.fClient = fClientRefCon;
 		event.fEventCode = kEndpointEventSndComplete;
 		ReleasePutPB(pb);

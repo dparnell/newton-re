@@ -521,6 +521,85 @@ CMemoryPipe::Underflow(long /*count*/, Boolean& eof)
 
 
 /*------------------------------------------------------------------------------
+	C N u l l P i p e
+------------------------------------------------------------------------------*/
+
+// ROM 0x00147184 __ct__9CNullPipeFl
+CNullPipe::CNullPipe(long growBy)
+{
+	fGrowBy = growBy;
+}
+
+
+// ROM 0x001471cc __dt__9CNullPipeFv
+CNullPipe::~CNullPipe()
+{ }
+
+
+// ROM 0x0014720c FlushRead__9CNullPipeFv
+// What there is to read thrown away.
+void
+CNullPipe::FlushRead(void)
+{
+	if (fReadBuffer == nil)
+		return;
+	fReadBuffer->Reset();
+	fReadBuffer->Seek(0, 1);
+}
+
+
+// ROM 0x0014724c FlushWrite__9CNullPipeFv
+void
+CNullPipe::FlushWrite(void)
+{
+	if (fWriteBuffer != nil)
+		fWriteBuffer->Reset();
+}
+
+
+// ROM 0x001472d4 Reset__9CNullPipeFv
+void
+CNullPipe::Reset(void)
+{
+	CBufferPipe::Reset();
+	if (fReadBuffer != nil)
+	{
+		fReadBuffer->Reset();
+		fReadBuffer->Seek(0, 1);
+	}
+	if (fWriteBuffer != nil)
+		fWriteBuffer->Reset();
+}
+
+
+// ROM 0x00147260 Overflow__9CNullPipeFv
+// The write segment made bigger by fGrowBy, or (growing by nothing) emptied.
+void
+CNullPipe::Overflow(void)
+{
+	if (fWriteBuffer == nil)
+		return;
+	if (fGrowBy <= 0)
+	{
+		fWriteBuffer->Reset();
+		return;
+	}
+	NewtonErr err = fWriteBuffer->SetPhysicalSize(fWriteBuffer->GetPhysicalSize() + fGrowBy);
+	if (err != noErr)
+		Throw(exPipeException, (void*) (Long) err, nil);
+}
+
+
+// ROM 0x001472c8 Underflow__9CNullPipeFlRUc
+// Never the end.
+void
+CNullPipe::Underflow(long /*count*/, Boolean& eof)
+{
+	eof = false;
+}
+
+
+/*------------------------------------------------------------------------------
 	M e m o r y P i p e
 ------------------------------------------------------------------------------*/
 

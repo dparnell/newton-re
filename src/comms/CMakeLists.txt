@@ -80,11 +80,15 @@ target_link_libraries(comms_script PUBLIC comms frames stores views newt)
 # application's options frame (so over comms_script's translators), the
 # modem navigator every such endpoint goes through, and the docker - the
 # 'dock' protocol's session and its natives (over packages, for a package
-# the desktop loads, and newt, whose world it forks).
+# the desktop loads, and newt, whose world it forks); and protoEndpoint, the
+# 1.x NewtonScript endpoint (ScriptEndpoint.h), which runs the modem
+# navigator too.
 add_library(comms_dock STATIC
     EzEndpointPipe.cpp
     ModemNavigator.cpp
     Docker.cpp
+    ModemOptions.cpp
+    ScriptEndpoint.cpp
 )
 target_link_libraries(comms_dock PUBLIC comms_serial comms_script packages stores newt intl qd utility)
 

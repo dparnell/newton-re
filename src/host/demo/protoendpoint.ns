@@ -1,0 +1,63 @@
+// protoEndpoint (@174), the Newton 1.x NewtonScript endpoint an older
+// package uses (comms/ScriptEndpoint.h), talking TCP through the host's
+// network stack to the echo server newton runs with --tcp-echo (ctest
+// host.NewtonProtoEndpoint).  The 1.x option frames: a 'service option
+// naming 'inet, and the remote socket 'itrs as an array of its bytes (the
+// address, the port, two bytes of padding).  Instantiated and connected
+// (bound and connected synchronously, then asynchronous); "hello" written
+// and read back to a byte count, a line to its end character, then a
+// frame written with OutputFrame and read back in the 'frame form; the
+// endpoint disconnected and disposed.
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//       --tcp-echo 52372 --script src/host/demo/protoendpoint.ns --headless 20
+
+HostInclude("common.ns");
+kEchoPort := 52372;
+done := nil;
+
+ep := {_proto: @174,
+	exceptionHandler: func(e) begin
+		Print("protoendpoint: exception " & e.name & " " & e.data);
+		true;
+	end};
+
+options := [
+	{label: "inet", type: 'service, opCode: 512},
+	{label: "itrs", type: 'option, opCode: 512,
+	 data: [127, 0, 0, 1, kEchoPort DIV 256, kEchoPort MOD 256, 0, 0]}];
+
+Print({instantiate: ep:Instantiate(ep, options), state: ep:state()});
+Print({connect: ep:Connect(nil, nil), state: ep:state()});
+
+ep:SetInputSpec({
+	inputForm: 'string,
+	byteCount: 5,
+	inputScript: func(endpoint, data) begin
+		Print("protoendpoint: received " & data);
+		endpoint:SetInputSpec({
+			inputForm: 'string,
+			endCharacter: $\n,
+			inputScript: func(endpoint, data) begin
+				Print("protoendpoint: line of " & StrLen(data) & " characters");
+				endpoint:SetInputSpec({
+					inputForm: 'frame,
+					inputScript: func(endpoint, data) begin
+						Print("protoendpoint: frame " & data.greeting & " " & data.numbers[2]);
+						done := true;
+					end});
+				endpoint:OutputFrame({greeting: "bonjour", numbers: [3, 1, 4, 1, 5]}, nil);
+			end});
+		endpoint:output(["goodbye", $,, " world", $
+], nil);
+	end});
+ep:output("hello", nil);
+Print({output: "hello", outputDone: ep:outputDone()});
+
+call waitFor with ("protoendpoint: the frame", func() done, func() begin
+	Print({outputDone: ep:outputDone(), bytesAvailable: ep:BytesAvailable()});
+	Print({disconnect: ep:Disconnect(), state: ep:state()});
+	ep:Dispose();
+	Print("protoendpoint: done");
+	HostQuit();
+end, 30);

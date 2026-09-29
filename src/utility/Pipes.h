@@ -160,6 +160,30 @@ public:
 
 
 /*------------------------------------------------------------------------------
+	C N u l l P i p e
+	A buffer pipe whose write segment grows by a fixed amount when it fills
+	(or, growing by nothing, is simply emptied again), and whose read side
+	never waits: what the old script endpoint flattens a frame into
+	(comms/ScriptEndpoint.h).  (0x14 bytes in the ROM.)
+------------------------------------------------------------------------------*/
+
+class CNullPipe : public CBufferPipe
+{
+public:
+					CNullPipe(long growBy);
+	virtual			~CNullPipe();
+
+	virtual void	FlushRead(void);
+	virtual void	FlushWrite(void);
+	virtual void	Reset(void);
+	virtual void	Overflow(void);
+	virtual void	Underflow(long count, Boolean& eof);
+
+	long			fGrowBy;			// +0x10
+};
+
+
+/*------------------------------------------------------------------------------
 	M e m o r y P i p e
 	The frames part handler's pipe over a part in memory: the write
 	segment is reused when full, reading past the end waits for nothing.
