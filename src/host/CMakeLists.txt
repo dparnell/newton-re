@@ -518,6 +518,14 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD}/sym
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonEditedSameScreen PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED romsrc_edited
                          ENVIRONMENT "NEWTON_ROM=${CMAKE_BINARY_DIR}/no-rom-image")
+    # ... and the edit is there: the slot edit-test added, holding a new frame
+    add_test(NAME host.ROMSourceEditValue
+             COMMAND newtonscript --objects ${CMAKE_BINARY_DIR}/romsrc-edited.bin
+                     -e "Print(ROMConstant(\"canonicalInkShape\").romsrcEdited.romsrcNote)"
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.ROMSourceEditValue PROPERTIES TIMEOUT 60 FIXTURES_REQUIRED romsrc_edited
+                         ENVIRONMENT "NEWTON_ROM=${CMAKE_BINARY_DIR}/no-rom-image"
+                         PASS_REGULAR_EXPRESSION "added by edit-test")
 
     # `cmake --build <dir> --target romsrc`: the source tree, generated into
     # the build directory (it is not kept in the repository yet - why is

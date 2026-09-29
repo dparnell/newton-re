@@ -464,7 +464,19 @@ still byte for byte the ROM's.
 the layout's addresses. They go one after another in the layout's order,
 at the sizes they now have, so an edit that grows or shrinks one object
 moves every object after it. An object the layout does not know goes at
-the end; a frame it does not know needs a map, which is NOT YET.
+the end.
+
+The builder also makes what an edit needs that the layout does not have:
+
+- **A map for a frame whose slots are no longer its map's**, or for a new
+  frame. This happens when a slot is added, taken away or renamed. The
+  builder reuses a map already there with those very tags and no
+  supermap, or makes a new one (`romsrc_map_N`, class 0: unsorted).
+- **A symbol object** for each name the tree now uses that the area has
+  none for.
+
+New objects take the flags the ROM's own of their kind have: 0x43 for a
+frame, 0x41 for an array or map, 0x40 for a binary or symbol.
 
 **Decision: the constants stay the ROM's addresses, and the object file
 says where each object went. The builder does not generate
@@ -483,12 +495,18 @@ says where each object went. The builder does not generate
 The test of editability is ctest `host.ROMSourceEdit` followed by
 `host.NewtonEditedSameScreen`:
 
-- `romsrc.py edit-test` copies the tree and lengthens one string near the
-  area's start (`obj_3c5f05`, "28.8 and faster", gains " (edited)").
-- It builds the copy with `--relayout`. The area grows by 20 bytes and
-  **43566 objects move**.
+- `romsrc.py edit-test` copies the tree and makes two edits:
+  - it lengthens one string near the area's start (`obj_3c5f05`, "28.8
+    and faster", gains " (edited)");
+  - it adds a slot `romsrcEdited` to `Rcanonicalinkshape` holding a new
+    frame `{romsrcNote: "added by edit-test"}`. That needs two new maps and
+    two new symbols.
+- It builds the copy with `--relayout`, and **43751 objects move**.
 - The OS booted on the result draws the Setup Welcome pixel for pixel as
   the ROM image's boot does.
+- `host.ROMSourceEditValue` reads the edit back:
+  `ROMConstant("canonicalInkShape").romsrcEdited.romsrcNote` is "added by
+  edit-test".
 
 ### The files, by what they belong to
 

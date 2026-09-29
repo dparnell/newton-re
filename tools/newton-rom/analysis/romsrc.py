@@ -24,8 +24,9 @@ and, for each, the ROM's ref and the ref now (build --relayout).
     python romsrc.py roundtrip build/MP2x00US -o <dir> --newtonscript <exe>   # both, as the ctest runs them
     python romsrc.py edit-test <tree> -o <dir> --objects <file> --newtonscript <exe>
 
-edit-test is the test of editability: it copies a tree, lengthens one
-string in it (the plain string of 12 characters or more with the lowest
+edit-test is the test of editability: it copies a tree, adds a slot
+holding a new frame to Rcanonicalinkshape (so the builder must make maps
+and symbols), lengthens one string in it (the plain string of 12 characters or more with the lowest
 address - near the area's start, so that nearly every object after it
 moves), and builds the copy with --relayout into an object
 file, which the host must boot as it boots the ROM's (ctest
@@ -1277,6 +1278,85 @@ class Builder:
 			return 12 + len(v.data)
 		return 12 + 4 * len(v.items)
 
+	def map_tags(self, name):
+		"""A map definition's tags, its supermap's first, in lower case (None:
+		not a map)."""
+		v = self.defs.get(name)
+		if not (isinstance(v, Obj) and v.kind in ("map", "array")) or not v.items:
+			return None
+		sup = v.items[0]
+		tags = []
+		if isinstance(sup, Name):
+			above = self.map_tags(sup.name)
+			if above is None:
+				return None
+			tags = above
+		elif not (isinstance(sup, Imm) and sup.ref == 2):
+			return None
+		for t in v.items[1:]:
+			if not isinstance(t, Sym):
+				return None
+			tags = tags + [t.name.lower()]
+		return tags
+
+	def make_maps_and_symbols(self, entries, missing, symbols):
+		"""What an edit needs that the layout does not have: a map for each
+		frame whose slots are no longer its map's (a slot added, taken away
+		or renamed) or which is new - a map already there with those very
+		tags and no supermap, or a new one - and a symbol object for each
+		name the tree now uses that the area has no symbol for.  ==> the
+		paths of the new objects, the ones missing from the layout added."""
+		frame_map = {}
+		for a, path, flags, extra in entries:
+			if "map" in extra:
+				frame_map[path.lower()] = extra["map"]
+		by_tags = {}
+		for name in self.defs:
+			tags = self.map_tags(name)
+			v = self.defs[name]
+			if tags is not None and isinstance(v.items[0], Imm):
+				by_tags.setdefault(tuple(tags), name)
+		self.frame_maps = {}
+		made = 0
+		for path, v in list(self.by_path.items()):
+			if v.kind != "frame":
+				continue
+			tags = [t.lower() for t in v.tags]
+			current = frame_map.get(path)
+			if current is not None and self.map_tags(current) == tags:
+				continue
+			name = by_tags.get(tuple(tags))
+			if name is None:
+				made += 1
+				name = "romsrc_map_%d" % made
+				m = Obj("map", Imm(0), items=[Imm(2)] + [Sym(t) for t in v.tags])
+				m.path = name
+				self.defs[name] = m
+				self.by_path[name.lower()] = m
+				missing.append(name.lower())
+				by_tags[tuple(tags)] = name
+			self.frame_maps[path] = name
+		# the symbols
+		new_symbols = set()
+
+		def names_in(v):
+			if isinstance(v, Sym):
+				if v.name.lower() not in symbols:
+					new_symbols.add(v.name)
+			elif isinstance(v, Obj):
+				for x in v.items:
+					names_in(x)
+				names_in(v.cls)
+				for t in v.tags:
+					if t.lower() not in symbols:
+						new_symbols.add(t)
+		for v in self.defs.values():
+			names_in(v)
+		for s in sorted(new_symbols, key=str.lower):
+			if s.lower() not in {x.lower() for x in missing if x.startswith("'")}:
+				missing.append("'" + quote_name(s))
+		return missing
+
 	def lay_out_afresh(self, entries, new_paths):
 		"""The objects one after another from the area's base, each on a word:
 		the layout's in its order, then the new ones.  Every object's old and
@@ -1293,10 +1373,12 @@ class Builder:
 				self.relocations.append((a + 1, at + 1))
 			at += (size + 3) & ~3
 		for path in sorted(new_paths):
+			if path.startswith("'"):
+				out.append((at, path, 0x40, {}))				# a symbol
+				at += (self.object_size(path) + 3) & ~3
+				continue
 			v = self.by_path[path]
-			if v.kind == "frame":
-				raise ValueError("%s: a frame the layout does not know needs a map (NOT YET)" % path)
-			flags = 0x40 if v.kind == "binary" else 0x41
+			flags = {"binary": 0x40, "frame": 0x43}.get(v.kind, 0x41)
 			out.append((at, v.path, flags, {}))
 			at += (self.object_size(v.path) + 3) & ~3
 		return out, at - self.area_base
@@ -1315,6 +1397,7 @@ class Builder:
 		if missing and not self.relayout:
 			raise ValueError("%d objects the layout does not place, e.g. %s" % (len(missing), missing[:3]))
 		if self.relayout:
+			missing = self.make_maps_and_symbols(entries, missing, symbols)
 			entries, area_size = self.lay_out_afresh(entries, missing)
 			addr = {}
 			symbols = {}
@@ -1413,7 +1496,7 @@ class Builder:
 					cls = ref(v.cls)
 				elif v.kind == "frame":
 					body = b"".join(struct.pack(">I", ref(x)) for x in v.items)
-					cls = ref(Name(extra["map"]))
+					cls = ref(Name(getattr(self, "frame_maps", {}).get(path.lower(), extra.get("map"))))
 				else:
 					body = b"".join(struct.pack(">I", ref(x)) for x in v.items)
 					cls = ref(v.cls)
@@ -1529,6 +1612,19 @@ def main(argv=None):
 		print("edited %s in %s: \"%s\" is now \"%s (edited)\"" % (what, name, text, text))
 		with open(path, "w", encoding="utf-8", newline="\n") as f:
 			f.write("\n".join(lines))
+		# and a slot added to a frame, holding a new frame: a map made for
+		# each, and symbols for the new names
+		for name in sorted(os.listdir(folder)):
+			path = os.path.join(folder, name)
+			with open(path, encoding="utf-8") as f:
+				text = f.read()
+			marker = "\nRcanonicalinkshape := {"
+			if marker in text:
+				text = text.replace(marker, marker + 'romsrcEdited: {romsrcNote: "added by edit-test"}, ', 1)
+				with open(path, "w", encoding="utf-8", newline="\n") as f:
+					f.write(text)
+				print("edited Rcanonicalinkshape in %s: a slot romsrcEdited added, holding a new frame" % name)
+				break
 		result = main(["build", a.output, "-o", a.objects, "--newtonscript", a.newtonscript, "--relayout"])
 		return result
 	if a.command == "roundtrip":
