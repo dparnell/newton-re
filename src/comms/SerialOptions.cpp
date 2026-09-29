@@ -223,3 +223,13 @@ THMOHiSpeedClockOption::THMOHiSpeedClockOption()
 	SetLength(OPTION_DATA_LENGTH(THMOHiSpeedClockOption));
 	fUseHiSpeedClock = true;
 }
+
+
+// ROM 0x001de71c __ct__24TCMOSerialBytesAvailableFv
+TCMOSerialBytesAvailable::TCMOSerialBytesAvailable()
+	: TOption(kOptionType)
+{
+	SetLabel(kCMOSerialBytesAvailable);
+	SetLength(OPTION_DATA_LENGTH(TCMOSerialBytesAvailable));
+	fBytesAvailable = 0;
+}

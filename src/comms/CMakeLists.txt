@@ -56,4 +56,14 @@ add_library(comms_script STATIC
 # brought up to date after an endpoint event
 target_link_libraries(comms_script PUBLIC comms frames stores views newt)
 
+# The dock (docs/comms/README.md, "The desktop connection"): the easy
+# endpoint pipe the docker talks through, made from the Connection
+# application's options frame (so over comms_script's translators), and the
+# modem navigator every such endpoint goes through.
+add_library(comms_dock STATIC
+    EzEndpointPipe.cpp
+    ModemNavigator.cpp
+)
+target_link_libraries(comms_dock PUBLIC comms_serial comms_script)
+
 add_subdirectory(tests)

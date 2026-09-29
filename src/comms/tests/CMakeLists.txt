@@ -46,3 +46,11 @@ add_executable(test_MNPClass5 test_MNPClass5.cpp)
 target_link_libraries(test_MNPClass5 PRIVATE comms_serial hal_host_serial os600_kernel os600_user)
 add_test(NAME comms.MNPClass5 COMMAND test_MNPClass5)
 set_tests_properties(comms.MNPClass5 PROPERTIES TIMEOUT 60)
+
+add_executable(test_EzEndpointPipe test_EzEndpointPipe.cpp)
+target_link_libraries(test_EzEndpointPipe PRIVATE comms_dock hal_host_serial os600_kernel os600_user)
+if(Python3_FOUND)
+    add_test(NAME comms.EzEndpointPipe
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/dock/mnp.py --echo --spawn $<TARGET_FILE:test_EzEndpointPipe>)
+    set_tests_properties(comms.EzEndpointPipe PROPERTIES TIMEOUT 120)
+endif()
