@@ -141,6 +141,16 @@ RemoveProvisionalFramesParts(const void* start, const void* end)
 }
 
 
+const void*
+FramesPartSource(Ref r)
+{
+	for (FramesPartArea* entry = gFramesParts; entry != nil; entry = entry->fNext)
+		if (!entry->fDoomed && entry->fArea.Contains(r))
+			return entry->fArea.fBytes;
+	return nil;
+}
+
+
 Boolean
 InFramesPartArea(Ref r)
 {

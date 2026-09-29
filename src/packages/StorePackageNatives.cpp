@@ -484,11 +484,28 @@ FIsProtocolPartInUse(RefArg /*rcvr*/, RefArg pkgRef)
 	C o n v e r s i o n s
 ------------------------------------------------------------------------------*/
 
+// Where an object lies, as the domain manager would be asked about it: a
+// large binary's bytes; an object of an imported frames part the bytes
+// that part was imported from (DEVIATION: on the MessagePad the object
+// lies in the package itself); anything else, the object.
+static ULong
+PackageAddressOf(RefArg obj)
+{
+	if (IsLargeBinary(obj))
+		return (ULong) BinaryData(obj);
+	const void* source = FramesPartSource(obj);
+	if (source != nil)
+		return (ULong) source;
+	return (ULong) ObjectPtr(obj);
+}
+
+
 // ROM 0x00321300 FObjectPid
 // ObjectPid(obj): the id of the package an object lies in; nil for an
 // immediate or an object in no package on a store.
-// DEVIATION: the host imports a package's frames into areas of their own,
-// so only the package's own bytes (its pkgRef) lie in its mapping.
+// DEVIATION: the host imports a package's frames into areas of their own;
+// an object of one is taken to lie where the part it came from lies
+// (PackageAddressOf).
 static Ref
 FObjectPid(RefArg /*rcvr*/, RefArg obj)
 {
@@ -499,7 +516,7 @@ FObjectPid(RefArg /*rcvr*/, RefArg obj)
 	else
 		BinaryData(obj);
 	ULong packageId;
-	if (VAddrToId(&packageId, (ULong) BinaryData(obj)) == noErr && packageId != 0)
+	if (VAddrToId(&packageId, PackageAddressOf(obj)) == noErr && packageId != 0)
 		return MAKEINT(packageId);
 	return NILREF;
 }
@@ -512,7 +529,7 @@ FObjectPkgRef(RefArg /*rcvr*/, RefArg obj)
 {
 	if (ISPTR(obj))
 	{
-		ULong address = IsLargeBinary(obj) ? (ULong) BinaryData(obj) : (ULong) ObjectPtr(obj);
+		ULong address = PackageAddressOf(obj);
 		if (VAddrToBase(&address, address) == noErr)
 			return GetEntryFromLargeObjectVAddr(address);
 	}

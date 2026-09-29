@@ -5,6 +5,7 @@ Usage:
     python classinfo.py <build_dir> <address>            one table, at the address
     python classinfo.py <build_dir> --name TFooImpl      the table of an implementation
     python classinfo.py <build_dir> --all [-o file.md]   every implementation in the ROM
+    python classinfo.py --package file.pkg...             each protocol part's, in packages
 
 A Newton "protocol" implementation (ProtocolGen output) describes itself
 with a TClassInfo (headers/OS600/Protocols.h): a relocatable table of
@@ -18,6 +19,13 @@ the instance is started as a monitor) with its selector table (pairs of
 slot n + 2).  Every implementation's
 static `ClassInfo()` is `sub r0,pc,#imm; mov pc,lr`, which is how --name
 and --all find the tables from the `ClassInfo__<n><name>SFv` symbols.
+
+A package's protocol part (kind 0: NTK's native code - a driver, a comms
+tool, a card handler) starts with its class info, which is what the
+package manager registers (TPackageEventHandler::InstallPart); --package
+decodes those, naming a code address by its offset in the part (the host
+cannot run the code, so this is what a replacement must be registered as:
+the implementation and interface names and the capabilities).
 
 Reads rom.bin and symbols.json from the build directory; no Ghidra needed.
 --all -o writes the table docs/protocols/classinfos.md (regenerate it after
@@ -164,6 +172,53 @@ def decode(rom: Rom, at: int) -> dict:
     return info
 
 
+class PartBytes(Rom):
+    """A protocol part's bytes, read as decode() reads the ROM: addresses are
+    offsets in the part, and there are no symbols."""
+
+    def __init__(self, data: bytes):
+        self.rom = data
+        self.slots = {}
+        self.by_addr = {}
+        self.classinfo_fns = {}
+
+    def name(self, addr) -> str:
+        if addr is None:
+            return "(not a branch)"
+        return f"+0x{addr:x}"
+
+
+def package_protocol_parts(path: str):
+    """(part index, part type, the part's bytes) for each protocol part of
+    the package in the file (its parts follow the directory and, when the
+    package has one, the relocation chunk)."""
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import packages
+    with open(path, "rb") as f:
+        data = f.read()
+    p = packages.parse_package(data, 0)
+    base = p["directory_size"]
+    if p["flags"] & 0x04000000:
+        base += struct.unpack(">I", data[base + 4:base + 8])[0]
+    for i, part in enumerate(p["parts"]):
+        if part["flags"] & 3 == 0:
+            start = base + part["offset"]
+            yield i, part["type"], data[start:start + part["size"]]
+
+
+def print_package(path: str) -> None:
+    print(f"{os.path.basename(path)}:")
+    for index, ptype, data in package_protocol_parts(path):
+        info = decode(PartBytes(data), 0)
+        kind = "".join(chr((ptype >> s) & 0xFF) for s in (24, 16, 8, 0)) if ptype else "0"
+        print(f"  part {index} (type {kind!r}, {len(data)} bytes): {info['implementation']} implements "
+              f"{info['interface']}  version {info['fVersion']}  flags 0x{info['fFlags']:x}  "
+              f"size {info['size'] if info['size'] is not None else '?'}  "
+              f"{max(len(info['btable']) - 4, 0)} methods")
+        if info["signature"]:
+            print(f"      capabilities: {info['signature']}")
+
+
 def table_address(rom: Rom, classinfo_fn: int):
     """The table a `sub r0,pc,#imm; mov pc,lr` ClassInfo() returns."""
     w = rom.word(classinfo_fn)
@@ -206,12 +261,19 @@ def markdown(rom: Rom, infos: list) -> str:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("build_dir")
+    ap.add_argument("build_dir", nargs="?")
     ap.add_argument("address", nargs="?", type=lambda s: int(s, 0))
     ap.add_argument("--name", help="implementation class name (its ClassInfo__...SFv symbol is used)")
     ap.add_argument("--all", action="store_true", help="summarise every class info in the ROM")
     ap.add_argument("-o", "--output", help="with --all: write the summary as markdown")
+    ap.add_argument("--package", nargs="+", help="decode the class info of each protocol part of these packages")
     args = ap.parse_args(argv)
+    if args.package:
+        for path in args.package:
+            print_package(path)
+        return 0
+    if args.build_dir is None:
+        ap.error("give the build directory")
     rom = Rom(args.build_dir)
     if args.all:
         infos = []

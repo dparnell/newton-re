@@ -36,6 +36,10 @@
 TImportedObjectArea*	ImportFramesPart(const void* part, ULong size, ULong32 refBase, long align = 4);
 void					RemoveFramesPart(TImportedObjectArea* area);		// refs into it are declawed
 Boolean					InFramesPartArea(Ref r);							// an object of an imported part
+// The bytes the part holding r was imported from - where r lies on the
+// MessagePad, near enough to say which package it is in (ObjectPkgRef,
+// ObjectPid); nil for an object of no imported part.
+const void*				FramesPartSource(Ref r);
 // The imported area of the part whose bytes are at part; nil when it has
 // not been imported (the host's stand-in for finding a part's objects
 // where its package lies).

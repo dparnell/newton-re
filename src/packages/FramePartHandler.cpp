@@ -12,6 +12,7 @@
 #include "FramesPart.h"
 #include "Units.h"
 #include "ROMImport.h"
+#include "LargeObjects.h"		// ROMDomainUserRequest (kRDMObjectAt)
 #include "ROMExtension.h"
 #include "ObjectStreamer.h"
 #include "Pipes.h"
@@ -37,29 +38,57 @@ extern const ExceptionName exPipeException;
 	host object area before its frame can be looked at.
 ------------------------------------------------------------------------------*/
 
-// The package a part in memory belongs to: its directory, looked for
-// backwards from the part a word at a time (a directory, its entries and
-// its data come straight before the first part, and are never more than
-// a few kilobytes).  ==> the package, and the part's offset in it; nil
-// when no package there says it has a part at that address.
+// Whether the package at package has a part at back bytes from its start.
+static Boolean
+HasPartAt(const UByte* package, ULong back)
+{
+	if (!IsPackageHeader(package, back))
+		return false;
+	TPrivatePackageIterator iter;
+	if (iter.Init((void*) package) != noErr)
+		return false;
+	for (ULong i = 0; i < iter.NumberOfParts(); i++)
+		if (iter.GetPartDataOffset(i) == back)
+			return true;
+	return false;
+}
+
+
+// The package a part in memory belongs to.  A package on a store is the
+// large object the domain manager has mapped round the part (a big
+// package's later parts lie far beyond its directory: Newton Internet
+// Enabler's ninth part is 0x35960 bytes in); anything else - the ROM's own
+// packages, one loaded from memory - is looked for backwards from the part
+// a word at a time, as far as the ROM image's start for a part in it, else
+// 0x20000 bytes.  ==> the package, and the part's offset in it; nil when no
+// package there says it has a part at that address.
 static const UByte*
 PackageContaining(const UByte* part, ULong* partOffset)
 {
-	for (ULong back = kPackageDirectorySize; back <= 0x20000; back += kARMWord)
+	RDMParams params;
+	memset(&params, 0, sizeof(params));
+	params.fAddress = (ULong) part;
+	if (ROMDomainUserRequest(kRDMObjectAt, &params) == noErr)
 	{
-		const UByte* package = part - back;
-		if (!IsPackageHeader(package, back))
-			continue;
-		TPrivatePackageIterator iter;
-		if (iter.Init((void*) package) != noErr)
-			continue;
-		for (ULong i = 0; i < iter.NumberOfParts(); i++)
+		const UByte* package = (const UByte*) params.fAddress;
+		ULong back = (ULong) (part - package);
+		if (back >= kPackageDirectorySize && HasPartAt(package, back))
 		{
-			if (iter.GetPartDataOffset(i) == back)
-			{
-				*partOffset = back;
-				return package;
-			}
+			*partOffset = back;
+			return package;
+		}
+	}
+	ULong limit = 0x20000;
+	ULong imageSize = 0;
+	const UByte* rom = (const UByte*) ROMImageBase(&imageSize);
+	if (rom != nil && part >= rom && part < rom + imageSize)
+		limit = (ULong) (part - rom);
+	for (ULong back = kPackageDirectorySize; back <= limit; back += kARMWord)
+	{
+		if (HasPartAt(part - back, back))
+		{
+			*partOffset = back;
+			return part - back;
 		}
 	}
 	return nil;
