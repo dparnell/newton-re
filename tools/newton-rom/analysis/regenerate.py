@@ -81,6 +81,14 @@ GENERATED = [
                      "ArProbDecodeLu:i32:1024",
                      "ArSigLu:i32:355", "ArSigSlopeLu:i32:355",
                      "-o", "src/recognition/ArProbTables.cpp"]),
+    # QuickDraw's per-depth shifts (StdBits' recording) and the text options
+    # a picture begins with (OpenPicture) - qd/PicRecord.cpp, Draw.cpp
+    ("qdtables",
+     "romtable.py", ["{build}", "kDepthPixelsPerWordShift@0x00380c10:u8:33",
+                     "kDepthPixelsPerByteShift@0x00380c31:u8:17",
+                     "kDepthPixelsPerWordMask@0x00380c54:u8:33",
+                     "kPicDefaultTextOptions@0x00380ca0:u32:7",
+                     "-o", "src/qd/QDTables.cpp"]),
     ("crc16",
      "romtable.py", ["{build}", "kCrc16HTbl:u16:16", "kCrc16LTbl:u16:16", "IrCRCLookupTable:u16:256",
                      "-o", "src/utility/CRC16Tables.cpp"]),

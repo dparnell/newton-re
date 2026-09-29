@@ -22,6 +22,9 @@ add_library(qd STATIC
     MungeBitmap.cpp
     BitFlipTable.cpp
     PicPlay.cpp
+    PicRecord.cpp
+    Curves.cpp
+    QDTables.cpp
     Transform.cpp
     Screen.cpp
     ScreenNatives.cpp

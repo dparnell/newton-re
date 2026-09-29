@@ -20,6 +20,7 @@
 #include "NewtQD.h"
 #endif
 
+void	SetPt(Point* pt, long h, long v);							// ROM 0x0033525c SetPt__FP5PointlT2
 // left, top, right, bottom - the Macintosh order
 void	SetRect(Rect* r, long left, long top, long right, long bottom);
 void	SetEmptyRect(Rect* r);

@@ -5,7 +5,7 @@
 				the blitter beneath everything.  A drawing call (PaintRect,
 				FrameRgn, ...) goes through the port's QDProcs when it has
 				them, else the standard procs (StdRect, StdRgn), which record
-				into an open picture or region (NOT YET RECONSTRUCTED) and
+				into an open picture (PicRecord.h) or region and
 				draw with the verb's mode and pattern (PushVerb: frame and
 				paint use the pen's, erase the background pattern copied,
 				invert black xor-ed, fill the port's pattern copied - FillRect

@@ -510,7 +510,7 @@ MonochromePat(PatternHandle pattern, ULong* gray)
 
 // ROM 0x00328d64 CopyPattern__FPP8PixelMap
 // A copy of any pattern with its pixels inside the handle.
-static PatternHandle
+PatternHandle
 CopyPattern(PatternHandle pattern)
 {
 	PixelMap* src = *pattern;

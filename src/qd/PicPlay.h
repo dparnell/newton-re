@@ -26,8 +26,8 @@
 				CallDrawText, DrawPicText, TextCleanup), curves and paths
 				(read, not drawn - MapCurve/CallCurve, MapPaths/CallPaths),
 				pixel patterns (0x12-0x14 type 1: read and the pattern left
-				as it was - ConvertPixPat's converters) and the recording
-				side (OpenPicture, ClosePicture, PutPic*).
+				as it was - ConvertPixPat's converters).  Recording is
+				PicRecord.h.
 
 				The picture turned into NewtonScript shapes (DrawPicture's
 				toShapes, which PictToShape asks for) plays the same opcodes

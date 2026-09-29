@@ -7,6 +7,7 @@
 */
 
 #include "Polygons.h"
+#include "PicRecord.h"
 #include "Rects.h"
 #include "FixedMath.h"
 #include "NewtonMemory.h"
@@ -334,14 +335,20 @@ DrawPoly(PolyHandle poly, long mode, PatternHandle pattern)
 
 
 // ROM 0x003358fc StdPoly
-// The standard polygon proc: framed as its lines in the pen's mode; the
-// other verbs draw the inside (DrawPoly) when its bounds meet the port's
-// clip and visible regions.  NOT YET RECONSTRUCTED: recording into an
-// open picture.
+// The standard polygon proc: recorded into an open picture (0x70 + the
+// verb and the polygon); framed as its lines in the pen's mode; the other
+// verbs draw the inside (DrawPoly) when its bounds meet the port's clip
+// and visible regions.
 void
 StdPoly(GrafVerb verb, PolyHandle poly)
 {
 	GrafPort* port = GetCurrentPort();
+	if (CheckPic())
+	{
+		PutPicVerb(verb);
+		PutPicOpcode(0x70 + verb);
+		PutPicRgn((RgnHandle) poly);
+	}
 	if (verb == frame)
 	{
 		FrPoly(poly, port->pnMode);

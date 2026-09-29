@@ -104,9 +104,10 @@ def main(argv=None) -> int:
                     if name == "(unnamed)":
                         if addr in by_addr:
                             errors.append(f"{where}: {addr:#x} has a symbol ({', '.join(sorted(by_addr[addr]))}); cite it")
-                        # a table of bytes need only be halfword aligned (the angle
-                        # tables' kDegreesOfFraction starts at an odd halfword)
-                        elif addr % 2 or not (addr < rom_size
+                        # a table of bytes need not be aligned at all (the angle
+                        # tables' kDegreesOfFraction starts at an odd halfword,
+                        # QuickDraw's kDepthPixelsPerByteShift at an odd byte)
+                        elif not (addr < rom_size
                                               or ram_init[0] <= addr < ram_init[1]
                                               or ram_zero[0] <= addr < ram_zero[1]):
                             errors.append(f"{where}: {addr:#x} is not a ROM address nor one in the read-write data")

@@ -13,6 +13,12 @@
 */
 
 #include "Draw.h"
+#include "PicRecord.h"
+
+// QuickDraw's per-depth shifts (QDTables.cpp, generated)
+extern const unsigned char	kDepthPixelsPerWordShift[33];
+extern const unsigned char	kDepthPixelsPerByteShift[17];
+extern const unsigned char	kDepthPixelsPerWordMask[33];
 #include "Screen.h"
 #include "FixedMath.h"
 #include "OSErrors.h"
@@ -228,14 +234,117 @@ StretchBits(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRe
 
 
 // ROM 0x002ad664 StdBits
-// The standard bits proc: into the current port, clipped by its visible
-// and clip regions and the mask.  NOT YET RECONSTRUCTED: recording into
-// an open picture.
+// The standard bits proc: recorded into an open picture, then drawn into
+// the current port (unless the pen is hidden), clipped by its visible and
+// clip regions and the mask.
+//
+// What is recorded is the part of the pixels the source rectangle takes:
+// a copy of the pixel map's bounds cut down to it - the top and bottom as
+// they are, the left moved to a whole byte, the right to eight pixels past
+// the left - its row bytes worked out from its width (in halfwords, the
+// per-depth tables), and BitsRect (0x90) or BitsRgn (0x91, with the mask)
+// written, 8 more when the rows are to be packed (eight row bytes or
+// more): a bitmap's row bytes and bounds or a pixel map and its gray
+// table, the two rectangles, the mode, the mask, then the rows as they
+// are or packed, a count byte in front of each.
+//
+// ROM BUG, kept: a packed row's count is always one byte, where Apple's
+// format (and GetPicBits) has a word from 251 row bytes up - a row that
+// packs to more than 255 bytes is recorded with its count cut short.
 void
 StdBits(PixelMap* src, Rect* srcRect, Rect* dstRect, long mode, RgnHandle mask)
 {
 	GrafPort* port = GetCurrentPort();
-	StretchBits(src, &port->portBits, srcRect, dstRect, mode, port->visRgn, port->clipRgn, mask != nil ? mask : wideHandle);
+	if (CheckPic())
+	{
+		long srcRowBytes = src->rowBytes;
+		const char* bits = (const char*) GetPixelMapBits(src);
+		long depth = src->pixMapFlags & 0xff;
+		PixelMap part;
+		part.bounds = src->bounds;
+		long skip = srcRect->top - part.bounds.top;
+		if (skip > 0)
+		{
+			part.bounds.top = (short) (part.bounds.top + skip);
+			bits += srcRowBytes * skip;
+		}
+		if (srcRect->bottom < part.bounds.bottom)
+			part.bounds.bottom = srcRect->bottom;
+		skip = srcRect->left - part.bounds.left;
+		if (skip > 0)
+		{
+			long shift = kDepthPixelsPerByteShift[depth];
+			skip >>= shift;
+			bits += skip;
+			part.bounds.left = (short) (part.bounds.left + (skip << shift));
+		}
+		long right = ((srcRect->right - part.bounds.left + 7) & ~7) + part.bounds.left;
+		if (right < part.bounds.right)
+			part.bounds.right = (short) right;
+		long halfwords = (part.bounds.right - part.bounds.left + (kDepthPixelsPerWordMask[depth] >> 1))
+					   >> (kDepthPixelsPerWordShift[depth] - 1);
+		if (halfwords > 0)
+		{
+			long rowBytes = halfwords * 2;
+			part.rowBytes = (short) rowBytes;
+			long opcode = mask != nil ? 0x91 : 0x90;
+			if (rowBytes >= 8)
+				opcode += 8;
+			PutPicOpcode(opcode);
+			part.deviceRes = src->deviceRes;
+			part.pixMapFlags = src->pixMapFlags;
+			part.grayTable = src->grayTable;
+			if (depth > 1)
+			{
+				PutPixMap(&part);
+				PutGrayTable(&part);
+			}
+			else
+			{
+				PutPicWord(part.rowBytes);
+				PutPicWord(part.bounds.top);
+				PutPicWord(part.bounds.left);
+				PutPicWord(part.bounds.bottom);
+				PutPicWord(part.bounds.right);
+			}
+			PutPicWord(srcRect->top);
+			PutPicWord(srcRect->left);
+			PutPicWord(srcRect->bottom);
+			PutPicWord(srcRect->right);
+			PutPicWord(dstRect->top);
+			PutPicWord(dstRect->left);
+			PutPicWord(dstRect->bottom);
+			PutPicWord(dstRect->right);
+			PutPicWord(mode);
+			if (mask != nil)
+				PutPicRgn(mask);
+			long rows = part.bounds.bottom - part.bounds.top;
+			if (rowBytes < 8)
+			{
+				for ( ; rows > 0; rows--)
+				{
+					PutPicData(bits, rowBytes & 0xff);
+					bits += srcRowBytes;
+				}
+			}
+			else
+			{
+				char packed[0x100];
+				for ( ; rows > 0; rows--)
+				{
+					char* from = (char*) bits;
+					char* to = packed;
+					PackBits(&from, &to, rowBytes);
+					long count = (to - packed) & 0xff;
+					PutPicByte(count);
+					PutPicData(packed, count);
+					bits += srcRowBytes;
+				}
+			}
+		}
+	}
+	if (port->pnVis >= 0)
+		StretchBits(src, &port->portBits, srcRect, dstRect, mode, port->visRgn, port->clipRgn, mask != nil ? mask : wideHandle);
 }
 
 
@@ -348,12 +457,18 @@ FrRect(const Rect* r)
 
 
 // ROM 0x003400b8 StdRect
-// The standard rect proc: frame records the rectangle into an open
-// region (PutRect) and draws the frame, the other verbs fill.  NOT YET
-// RECONSTRUCTED: recording into an open picture.
+// The standard rect proc: recorded into an open picture (the verb's pen
+// state, then the rectangle: 0x30 + the verb); frame records the
+// rectangle into an open region (PutRect) and draws the frame, the other
+// verbs fill.
 void
 StdRect(GrafVerb verb, Rect* r)
 {
+	if (CheckPic())
+	{
+		PutPicVerb(verb);
+		PutPicRect(0x30 + verb, r);
+	}
 	if (verb == frame)
 	{
 		if (GetCurrentPort()->rgnSave != nil)
@@ -462,17 +577,28 @@ FrRgn(RgnHandle rgn, long mode, PatternHandle pattern)
 
 
 // ROM 0x003415c4 StdRgn
-// The standard region proc.  NOT YET RECONSTRUCTED: recording into an
-// open picture or region.
+// The standard region proc: recorded into an open picture (0x80 + the
+// verb and the region); frame records the region into an open region
+// (PutRgn) and draws its outline, the other verbs fill it.
 void
 StdRgn(GrafVerb verb, RgnHandle rgn)
 {
 	GrafPort* port = GetCurrentPort();
+	if (CheckPic())
+	{
+		PutPicVerb(verb);
+		PutPicOpcode(0x80 + verb);
+		PutPicRgn(rgn);
+	}
 	long mode;
 	PatternHandle pattern;
 	PushVerb(verb, &mode, &pattern);
 	if (verb == frame)
+	{
+		if (port->rgnSave != nil)
+			PutRgn(rgn, qdGlobals.fRgnHandle, &qdGlobals.fRgnOffset, &qdGlobals.fRgnSize);
 		FrRgn(rgn, port->pnMode, port->fgPat);
+	}
 	else
 		DrawRgn(rgn, mode, pattern);
 }

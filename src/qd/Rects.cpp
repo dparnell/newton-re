@@ -11,6 +11,15 @@
 #include <stdarg.h>
 
 
+// ROM 0x0033525c SetPt__FP5PointlT2
+void
+SetPt(Point* pt, long h, long v)
+{
+	pt->h = (short) h;
+	pt->v = (short) v;
+}
+
+
 // ROM 0x0033ffb0 SetRect__FP4RectlN32
 void
 SetRect(Rect* r, long left, long top, long right, long bottom)

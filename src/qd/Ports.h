@@ -27,7 +27,8 @@
 	0x003280b0-0x00328268, 0x00328dfc, 0x00329330-0x00329874,
 	0x002af0e0-0x002af1a8); each function cites its origin.  NOT YET
 	RECONSTRUCTED: the screen (InitScreen: the display driver's PixelMap),
-	the per-task globals, pictures, polygons, OpenRgn/CloseRgn.
+	the per-task globals.  (Pictures are PicPlay.h and PicRecord.h,
+	polygons and OpenRgn/CloseRgn Polygons.h.)
 */
 
 #ifndef __PORTS_H
@@ -107,6 +108,7 @@ PatternHandle	GetStdGrayPattern(ULong red, ULong green, ULong blue);		// ROM 0x0
 void			DisposePattern(PatternHandle pattern);		// the standard ones stay
 PatternHandle	MakeGrayPattern(RefArg spec);				// ROM 0x00328fc0 MakeGrayPattern__FRC6RefVar - a 'grayPattern binary (big-endian RGB triples, rows of eight) at the port's depth
 Ref				MakeNSPattern(PixelMap* pm, long count);	// ROM 0x00328238 MakeNSPattern__FP8PixelMapl - the pattern as a 'pattern (one bit) or 'grayPattern binary of count bytes of pixels
+PatternHandle	CopyPattern(PatternHandle pattern);		// ROM 0x00328d64 CopyPattern__FPP8PixelMap - its pixels inside the handle
 long			BlackOrWhitePat(PatternHandle pattern);		// ROM 0x003286e8 BlackOrWhitePat__FPP8PixelMap - 1 all black, 2 all white, else 0
 Boolean			MonochromePat(PatternHandle pattern, ULong* gray);	// ROM 0x00328768 MonochromePat__FPP8PixelMapPUl - every pixel the one gray (answered)
 void			GrayToRGB(UChar gray, ULong* red, ULong* green, ULong* blue, long depth);	// ROM 0x002bf0ac GrayToRGB__FUcPUlN22l

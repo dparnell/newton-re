@@ -76,6 +76,48 @@ ARM), a card's `'stor` event and `GetCardReinsertionInfo` (PCMCIA),
 `StopFrameSound` (the sound server), XIP packages (the ROM domain
 manager's page faulting, about 11 KB).
 
+## Now: finishing pictures
+
+The owner asked (2026-09-29) for the pictures to be finished.  What the
+machine's own pictures use was measured first
+(`analysis/pictures.py build/MP2x00US`, which walks every 'picture in
+the ROM and the extension's packages opcode by opcode): 30 pictures, and
+between them only bitmaps (BitsRect/PackBitsRect), clip regions,
+comments, the pen size and short lines - all of which `DrawPicture`
+already plays.  Text, curves, paths and pixel patterns only ever appear
+in pictures the machine *records* itself: `MakePict` (the ROM's one
+caller is the credits' `creditPict`, `MakeText` shapes recorded into a
+picture) over `OpenPicture`/`ClosePicture` and the recording branches of
+every standard proc.  So the order is recording first, then what
+recording produces.  Sizes are `callgraph.py` lower bounds (not done):
+
+1. **Recording**: `OpenPicture` (788 B), `ClosePicture`, `KillPicture`,
+   `PutPicOpcode`/`Byte`/`Word`/`Long`/`Rect`/`Point`/`Data`/`Rgn`,
+   `PutPicVerb` (the pen, patterns and oval size written only when they
+   changed), `PutPicPat`/`PutPixPat`/`PutPat1Data`/`PutPixMap`/
+   `PutColorTable`, `CheckPic` (the clip region), `EqualPat`, and the
+   recording branches of `StdRect`, `StdRRect`, `StdOval`, `StdArc`,
+   `StdPoly`, `StdRgn`, `StdLine`, `StdBits`, `StdComment` - about 2.5 KB
+   plus the branches.  Test: a picture recorded and played back to the
+   same pixels.
+2. **Text in pictures**: playing it (`DrawPicText`, `TextCleanup`,
+   `NewText`, `CallDrawText`, `DisposeText`, `InvalCachedTextInfo` - 1 KB)
+   and recording it (`StdText`'s `DoPutText` 2.5 KB, `UpdateLayoutState`).
+3. **`MakePict`** (`FMakePict`, `CommonMakePict`,
+   `SetStandAloneBoundsInViewsRecursively`) - the credits' picture made
+   and drawn.
+4. **Curves and paths**: drawn and recorded (`MapCurve`/`CallCurve`/
+   `StdCurve`/`DrawCurve`/`FrCurve`/`GetCurveBounds`/`OffsetCurve`/
+   `ScaleCurve`/`PutPicCurve`/`EqualCurve`; `MapPaths`/`CallPaths`/
+   `StdPaths`/`DrawPaths`/`FrPaths`/`FramePath` and the path walker/
+   `GetPathsBounds`/`OffsetPaths`/`ScalePaths`/`PutPicPaths`) - about 3 KB.
+5. **Pixel patterns of type 1**: `ConvertPixPat` (340 B) and its
+   converters.
+6. The neighbours a picture draws through: arcs of less than a full turn
+   (`Shapes.cpp`) and italic (`Text.h`).
+7. **`TQDScaler`** (0x00196018-0x001973c8, about 5 KB): a picture (or
+   any drawing) under a transform that scales.
+
 ## Candidates for the next piece of work
 
 The owner's order - the package manager, host package loading, the

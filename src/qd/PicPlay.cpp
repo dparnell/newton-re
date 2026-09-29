@@ -13,6 +13,7 @@
 */
 
 #include "PicPlay.h"
+#include "PicRecord.h"
 #include "Draw.h"
 #include "Rects.h"
 #include "Regions.h"
@@ -184,13 +185,21 @@ GetPicResvOpcode(long count, Boolean readCount)
 
 
 // ROM 0x00334fb8 StdComment
-// A comment is only of use to a picture being recorded.  NOT YET
-// RECONSTRUCTED: the recording (PutPicOpcode, PutPicWord, PutPicData).
+// A comment is only of use to a picture being recorded: ShortComment
+// (0xa0) and its kind, or LongComment (0xa1), its kind, size and data.
 extern "C" void
-StdComment(short /*kind*/, short /*size*/, Handle /*data*/)
+StdComment(short kind, short size, Handle data)
 {
 	if (GetCurrentPort()->picSave == nil)
 		return;
+	PutPicOpcode(size < 1 ? 0xa0 : 0xa1);
+	PutPicWord(kind);
+	if (size < 1)
+		return;
+	PutPicWord(size);
+	HLock(data);
+	PutPicData(*data, size);
+	HUnlock(data);
 }
 
 

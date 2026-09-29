@@ -15,6 +15,7 @@
 */
 
 #include "Shapes.h"
+#include "PicRecord.h"
 #include "Polygons.h"
 #include "CompMath.h"
 #include "FixedMath.h"
@@ -254,12 +255,17 @@ DrawArc(const Rect* r, Boolean framed, long ovalWidth, long ovalHeight, long mod
 
 
 // ROM 0x003205b8 StdOval
-// The standard oval proc: the oval fills its rectangle; frame records it
-// into an open region (PutOval).  NOT YET RECONSTRUCTED: recording into
-// an open picture.
+// The standard oval proc: recorded into an open picture (0x50 + the
+// verb); the oval fills its rectangle; frame records it into an open
+// region (PutOval).
 void
 StdOval(GrafVerb verb, Rect* r)
 {
+	if (CheckPic())
+	{
+		PutPicVerb(verb);
+		PutPicRect(0x50 + verb, r);
+	}
 	if (verb == frame && GetCurrentPort()->rgnSave != nil)
 		PutOval(r, r->right - r->left, r->bottom - r->top, qdGlobals.fRgnHandle, &qdGlobals.fRgnOffset, &qdGlobals.fRgnSize);
 	long mode;
@@ -302,12 +308,28 @@ FillOval(const Rect* r, PatternHandle pattern)
 
 
 // ROM 0x00344df4 StdRRect
-// The standard round-rectangle proc; frame records the shape into an
-// open region.  NOT YET RECONSTRUCTED: recording into an open picture.
+// The standard round-rectangle proc: recorded into an open picture (the
+// corners' size, OvSize 0x0b, when it has changed, then 0x40 + the verb);
+// frame records the shape into an open region.
 void
 StdRRect(GrafVerb verb, Rect* r, long ovalWidth, long ovalHeight)
 {
-	if (verb == frame && GetCurrentPort()->rgnSave != nil)
+	GrafPort* port = GetCurrentPort();
+	if (CheckPic())
+	{
+		PicSave* ps = (PicSave*) *port->picSave;
+		PutPicVerb(verb);
+		Point corners;
+		SetPt(&corners, ovalWidth, ovalHeight);
+		if (ps->fOvalSize.v != corners.v || ps->fOvalSize.h != corners.h)
+		{
+			PutPicOpcode(0x0b);
+			PutPicPoint(corners);
+			ps->fOvalSize = corners;
+		}
+		PutPicRect(0x40 + verb, r);
+	}
+	if (verb == frame && port->rgnSave != nil)
 		PutOval(r, ovalWidth, ovalHeight, qdGlobals.fRgnHandle, &qdGlobals.fRgnOffset, &qdGlobals.fRgnSize);
 	long mode;
 	PatternHandle pattern;
@@ -355,11 +377,22 @@ FillRoundRect(const Rect* r, long ovalWidth, long ovalHeight, PatternHandle patt
 
 
 // ROM 0x002aa9a0 StdArc
-// The standard arc proc: the wedge of the oval that fills the rectangle.
-// NOT YET RECONSTRUCTED: recording into an open picture or region.
+// The standard arc proc: recorded into an open picture (0x60 + the verb,
+// the rectangle and the two angles); frame records the whole oval into an
+// open region (PutOval, as the ROM does - not the arc); the wedge of the
+// oval that fills the rectangle drawn.
 void
 StdArc(GrafVerb verb, Rect* r, long startAngle, long arcAngle)
 {
+	if (CheckPic())
+	{
+		PutPicVerb(verb);
+		PutPicRect(0x60 + verb, r);
+		PutPicWord(startAngle);
+		PutPicWord(arcAngle);
+	}
+	if (verb == frame && GetCurrentPort()->rgnSave != nil)
+		PutOval(r, r->right - r->left, r->bottom - r->top, qdGlobals.fRgnHandle, &qdGlobals.fRgnOffset, &qdGlobals.fRgnSize);
 	long mode;
 	PatternHandle pattern;
 	PushVerb(verb, &mode, &pattern);
@@ -460,11 +493,38 @@ DrawLine(Point from, Point to)
 
 // ROM 0x002f76f0 StdLine
 // The standard line proc: the line from the pen's location to the point,
-// which becomes the pen's location - recorded into an open polygon or
-// region (DoLine).  NOT YET RECONSTRUCTED: recording into an open picture.
+// which becomes the pen's location - recorded into an open picture (Line
+// 0x20, or LineFrom 0x21 when it starts where the picture's last line
+// ended; + 2, ShortLine, when the step fits in a signed byte each way)
+// and into an open polygon or region (DoLine).
 void
 StdLine(Point to)
 {
+	GrafPort* port = GetCurrentPort();
+	if (CheckPic())
+	{
+		PicSave* ps = (PicSave*) *port->picSave;
+		Point from = port->pnLoc;
+		long dh = to.h - from.h;
+		long dv = to.v - from.v;
+		PutPicVerb(frame);
+		long opcode = 0x20;
+		if (from.v == ps->fPnLoc.v && from.h == ps->fPnLoc.h)
+			opcode = 0x21;
+		if (dh < 0x80 && dh >= -0x80 && dv < 0x80 && dv >= -0x80)
+			opcode += 2;
+		PutPicOpcode(opcode);
+		if ((opcode & 1) == 0)
+			PutPicPoint(from);
+		if ((opcode & 2) == 0)
+			PutPicPoint(to);
+		else
+		{
+			PutPicByte(dh);
+			PutPicByte(dv);
+		}
+		((PicSave*) *port->picSave)->fPnLoc = to;
+	}
 	DoLine(to);
 }
 

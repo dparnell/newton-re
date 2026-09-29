@@ -2,16 +2,28 @@
 // their big-endian bytes, played into an offscreen one-bit map - a
 // version 1 picture with a clip, a painted rectangle and an unpacked
 // bitmap, the same scaled up, a packed bitmap, a line, the empty clip a
-// picture starts with, and a version 2 picture with its word opcodes.
-// Runs over a standalone kernel heap and an object heap without ROM
-// objects.
+// picture starts with, and a version 2 picture with its word opcodes;
+// then a picture recorded (OpenPicture, every standard proc, ClosePicture)
+// and played back to the same pixels as the scene drawn directly, and
+// PackBits against UnpackBits.  Runs over a standalone kernel heap with
+// the ROM's objects imported (a recorded picture's text style begins in
+// the system font).
 #include "PicPlay.h"
+#include "PicRecord.h"
+#include "Shapes.h"
+#include "Polygons.h"
+#include "Ports.h"
 #include "Draw.h"
 #include "Rects.h"
 #include "Regions.h"
 #include "ByteOrder.h"
 #include "NewtonMemory.h"
 #include "ObjectHeap.h"
+#include "Frames.h"
+#include "RSSymbols.h"
+#include "ROMImport.h"
+#include "ROMConstants.h"
+#include "Fonts.h"
 #include "memory/host/KernelHeap.h"
 
 #include <stdio.h>
@@ -246,12 +258,191 @@ TestUnpackBits()
 }
 
 
+// the scene the recording tests draw: every standard proc a picture
+// records - rectangles in each verb, an oval, a round rectangle, an arc, a
+// polygon, a region, lines long and short, a bitmap packed and one not,
+// a comment - with the pen's size, mode and pattern changing between them
+static unsigned char gSceneBits[4 * 8];		// a 32 x 4 bitmap (packed: 4 row bytes... see below)
+static unsigned char gWideBits[16 * 3];		// a 128 x 3 bitmap: 16 row bytes, packed
+static void
+Scene()
+{
+	PenNormal();
+	Rect r;
+	SetRect(&r, 2, 2, 20, 12);
+	FrameRect(&r);
+	PenSize(2, 2);
+	SetRect(&r, 24, 2, 40, 12);
+	FrameRect(&r);
+	PenSize(1, 1);
+	SetRect(&r, 44, 2, 60, 12);
+	PaintRect(&r);
+	SetRect(&r, 46, 4, 58, 10);
+	EraseRect(&r);
+	SetRect(&r, 48, 5, 56, 9);
+	InvertRect(&r);
+	InvertRect(&r);							// the same rectangle again: recorded as "the same"
+	InvertRect(&r);
+	SetRect(&r, 2, 16, 20, 30);
+	PaintOval(&r);
+	SetRect(&r, 24, 16, 40, 30);
+	FrameRoundRect(&r, 6, 6);
+	SetRect(&r, 44, 16, 60, 30);
+	FillRect(&r, GetStdPattern(grayPat));
+	MoveTo(2, 34);
+	LineTo(60, 34);							// long
+	LineTo(60, 40);							// from where it ended, short
+	MoveTo(2, 40);
+	LineTo(20, 44);
+	PolyHandle poly = OpenPoly();
+	MoveTo(24, 36);
+	LineTo(40, 36);
+	LineTo(32, 44);
+	LineTo(24, 36);
+	ClosePoly();
+	PaintPoly(poly);
+	KillPoly(poly);
+	RgnHandle rgn = NewRgn();
+	SetRect(&r, 44, 36, 60, 44);
+	RectRgn(rgn, &r);
+	PaintRgn(rgn);
+	DisposeRgn(rgn);
+	PixelMap pm;
+	pm.baseAddr = (Ptr) gSceneBits;
+	pm.rowBytes = 4;
+	SetRect(&pm.bounds, 0, 0, 32, 4);
+	pm.pixMapFlags = kPixMapPtr | 1;
+	pm.deviceRes.v = kDefaultDPI;
+	pm.deviceRes.h = kDefaultDPI;
+	pm.grayTable = nil;
+	Rect src, dst;
+	SetRect(&src, 0, 0, 32, 4);
+	SetRect(&dst, 2, 48, 34, 52);
+	CopyBits(&pm, &gMap, &src, &dst, srcCopy, nil);
+	pm.baseAddr = (Ptr) gWideBits;
+	pm.rowBytes = 16;
+	SetRect(&pm.bounds, 0, 0, 128, 3);
+	SetRect(&src, 0, 0, 64, 3);
+	SetRect(&dst, 0, 56, 64, 59);
+	CopyBits(&pm, &gMap, &src, &dst, srcCopy, nil);
+	PicComment(100, 0, nil);
+	PenNormal();
+}
+
+
+// A picture recorded: nothing drawn while it is open, and played back it
+// draws what the scene drew; its opcodes are what the procs write.
+static void
+TestRecord()
+{
+	for (long i = 0; i < (long) sizeof(gSceneBits); i++)
+		gSceneBits[i] = (unsigned char) (i * 37 + 11);
+	for (long i = 0; i < (long) sizeof(gWideBits); i++)
+		gWideBits[i] = (unsigned char) (i < 20 ? 0xff : i * 13);
+	ClearMap();
+	Scene();
+	unsigned char direct[sizeof(gBits)];
+	memcpy(direct, gBits, sizeof(gBits));
+	EXPECT(Ink(0, 0, kSize, kSize) > 500);
+
+	ClearMap();
+	Rect frame;
+	SetRect(&frame, 0, 0, kSize, kSize);
+	PicHandle picture = OpenPicture(&frame, false);
+	EXPECT(picture != nil && gPort.picSave != nil);
+	EXPECT(OpenPicture(&frame, false) == nil);		// one at a time
+	Scene();
+	ClosePicture();
+	EXPECT(gPort.picSave == nil && gPort.pnVis == 0);
+	EXPECT(Ink(0, 0, kSize, kSize) == 0);			// the pen was hidden
+	long size = GetHandleSize((Handle) picture);
+	const unsigned char* p = (const unsigned char*) *picture;
+	EXPECT(GetBigEndianHalf(p) == size && size > 100);
+	EXPECT(GetBigEndianHalf(p + 2) == 0 && GetBigEndianHalf(p + 8) == kSize);
+	EXPECT(GetBigEndianHalf(p + 10) == 0x0011 && GetBigEndianHalf(p + 12) == 0x02ff);
+	EXPECT(GetBigEndianHalf(p + 14) == 0x0001);		// the clip, first
+	EXPECT(p[size - 2] == 0x00 && p[size - 1] == 0xff);
+	// the rectangle inverted three times: invertRect (0x33) once, then
+	// invertSameRect (0x3b) twice with nothing after it
+	long same = 0, packed = 0;
+	for (long i = 10; i + 1 < size; i += 2)
+	{
+		if (GetBigEndianHalf(p + i) == 0x003b)
+			same++;
+		if (GetBigEndianHalf(p + i) == 0x0098)
+			packed++;
+	}
+	EXPECT(same >= 2 && packed >= 1);
+
+	Rect dst = frame;
+	DrawPicture(picture, &dst, false);
+	EXPECT(memcmp(direct, gBits, sizeof(gBits)) == 0);
+	if (memcmp(direct, gBits, sizeof(gBits)) != 0)
+		for (long y = 0; y < kSize; y++)
+			for (long x = 0; x < kSize; x++)
+				if ((GetPixel(&gMap, x, y) != 0) != ((direct[y * 8 + x / 8] & (0x80 >> (x & 7))) != 0))
+				{
+					fprintf(stderr, "  first difference at (%ld,%ld)\n", x, y);
+					y = kSize;
+					break;
+				}
+	KillPicture(picture);
+}
+
+
+// PackBits, the ROM's: runs and literals, and back out through UnpackBits
+static void
+TestPackBits()
+{
+	const unsigned char rows[][16] = {
+		{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 },
+		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+		{ 0xaa, 0xaa, 0xaa, 1, 2, 2, 3, 3, 3, 3, 4, 5, 5, 5, 6, 6 },
+		{ 7, 7, 1, 7, 7, 7, 7, 7, 7, 7, 7, 2, 2, 2, 2, 9 },
+	};
+	for (unsigned long r = 0; r < sizeof(rows) / sizeof(rows[0]); r++)
+	{
+		char packed[64];
+		char* from = (char*) rows[r];
+		char* to = packed;
+		PackBits(&from, &to, 16);
+		EXPECT(from == (char*) rows[r] + 16);
+		char out[16];
+		char* in = packed;
+		char* back = out;
+		UnpackBits(&in, &back, 16);
+		EXPECT(in == to && memcmp(out, rows[r], 16) == 0);
+	}
+	// a row of one byte sixteen times packs to two bytes: -15 and the byte
+	char packed[8];
+	char* from = (char*) rows[1];
+	char* to = packed;
+	PackBits(&from, &to, 16);
+	EXPECT(to == packed + 2 && packed[0] == -15 && packed[1] == 0);
+}
+
+
 int
 main()
 {
 	InitHostStandaloneHeap();
+	// the ROM's objects: a picture being recorded begins with the system
+	// font as its text style (OpenPicture's SearchFont), which is theirs
+	if (ImportROMObjectsFromFile(NEWTON_ROM_BIN) != noErr)
+	{
+		printf("test_PicPlay: cannot import %s\n", NEWTON_ROM_BIN);
+		return 1;
+	}
 	InitObjects();					// (DrawPicture keeps its styles and shapes in Refs, as the ROM's does)
 	InitGraf();
+	InitFonts();
+	// vars.fonts as the boot makes it: the ROM's font families by their
+	// family symbols
+	RefVar fonts(AllocateFrame());
+	RefVar list(Rromfontlist);
+	for (long i = 0; i < Length(list); i++)
+		SetFrameSlot(fonts, RefVar(FamilyNumToSym(i)), RefVar(GetArraySlotRef(list, i)));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(RSSYMfonts), fonts);
 	gMap.baseAddr = (Ptr) gBits;
 	gMap.rowBytes = kSize / 8;
 	SetRect(&gMap.bounds, 0, 0, kSize, kSize);
@@ -272,6 +463,8 @@ main()
 	TestLines();
 	TestVersion2();
 	TestUnpackBits();
+	TestPackBits();
+	TestRecord();
 
 	ClosePort(&gPort);
 	printf("test_PicPlay: %s\n", failures == 0 ? "ok" : "FAILED");

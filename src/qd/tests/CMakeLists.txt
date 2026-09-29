@@ -31,4 +31,5 @@ set_tests_properties(qd.Screen PROPERTIES TIMEOUT 60)
 
 add_executable(test_PicPlay test_PicPlay.cpp)
 target_link_libraries(test_PicPlay PRIVATE qd)
+target_compile_definitions(test_PicPlay PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
 add_test(NAME qd.PicPlay COMMAND test_PicPlay)
