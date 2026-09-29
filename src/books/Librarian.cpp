@@ -970,5 +970,6 @@ RegisterBookNatives(void)
 	RegisterNativeFunction("FindContentByValue", (void*) FindContentByValue, 3);
 	RegisterNativeFunction("FindPageByContent", (void*) FindPageByContent, 3);
 	RegisterOutlineNatives();
+	RegisterSearchNatives();
 	RegisterPageNatives();
 }

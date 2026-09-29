@@ -77,6 +77,14 @@ public:
 	Ref			FindContentByValue(RefArg reader, RefArg slot, RefArg value, RefArg book);
 	long		FindPageByContent(RefArg reader, RefArg item, long offset, long* blockIndex, RefArg book);
 
+	// the search (Search.cpp)
+	Boolean		Encode(const UChar* chars, UShort* code);
+	Boolean		CheckHints(const UShort* codes, const char* hints, long count);
+	Boolean		TextSearch(const UniChar* word, long length, const UniChar* text, long* pos, long end, long* found);
+	Ref			Find(UniChar* word, RefArg owner, RefArg results, RefArg arg4, RefArg status, RefArg books);
+	Ref			FindContentBySlot(RefArg reader, RefArg slot, RefArg book);
+	Ref			FindPageByValue(RefArg reader, RefArg slot, RefArg value, RefArg book);
+
 	static TLibrarian*	gLibrarian;		// (0x0c1010d0)
 
 	RefStruct*	fLibrary;				// +0x04  { isbnSymbol: partFrame, ... }
@@ -100,7 +108,10 @@ private:
 	NewtonErr			InstallBook(RefArg partFrame, const PartId& partId, SourceType sourceType, class TImportedObjectArea** area);
 };
 
+void			ExtractWords(const UniChar* text, long* start, long* end);		// ROM 0x00109220 ExtractWords__FPUsPlT2
+
 // the books' NewtonScript functions
 void			RegisterBookNatives(void);
+void			RegisterSearchNatives(void);		// Search.cpp
 
 #endif	/* __LIBRARIAN_H */

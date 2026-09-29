@@ -9,6 +9,8 @@ add_library(books STATIC
     BookPartHandler.cpp
     Outline.cpp
     Pages.cpp
+    Search.cpp
+    BookTables.cpp
 )
 target_link_libraries(books PUBLIC newton_config frames views stores assist packages package_manager)
 target_include_directories(books PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

@@ -48,6 +48,39 @@ AddDelayedCall(func() begin
     call check with ("the entry says it is present", entry and entry.bookPresent = 1 and entry.packageId = 7);
     call check with ("with a bookmark list per rendering", entry and Length(entry.marks) = 1);
     call check with ("Copperfield is a Find application", LSearch(vars.findApps, 'copperfield, 0, '|=|, nil));
+    // the Find slip's search: the hints are not binaries of class 'data,
+    // so every item's text is searched (TextSearch: cases folded, words'
+    // starts only - "cat" is not in "concatenate")
+    mine.book.contents := [{data: "The black cat sat on the mat.", name: "one"},
+                           {data: "Concatenate strings.", name: "two"},
+                           {data: "A CAT and a cat.", name: "three"}];
+    mine.book.hints := [0, 0, 0];
+    mine.book.rendering[0].pages := [{blocks: []}, {blocks: [{item: mine.book.contents[2]}]}, {blocks: []}];
+    local statusSeen := nil;
+    local status := {SetStatus: func(s) statusSeen := s};
+    local results := [];
+    root.copperfield:CuFind("cat", 'me, results, nil, status, [{isbn: "TEST-0001"}]);
+    call check with ("the status is the book's title in quotes", statusSeen and StrPos(statusSeen, "A Test Book", 0));
+    call check with ("one book found", Length(results) = 1);
+    local items := if Length(results) = 1 then results[0].items else [];
+    call check with ("three places found", Length(items) = 3);
+    if Length(items) = 3 then
+      begin
+        call check with ("the first at character 10", items[0].found.char = 10);
+        call check with ("its title the words round it", StrPos(items[0].title, "black cat", 0));
+        call check with ("the owner kept", items[0].owner = 'me);
+        call check with ("then CAT and cat in item three", items[1].found.char = 2 and items[2].found.char = 12 and StrEqual(items[2].found.item.name, "three"));
+      end;
+    // (the book functions are methods of Copperfield's proto: a reader of
+    // one's own inherits them)
+    local reader := {_proto: root.copperfield, isbn: "TEST-0001", curRendering: 0};
+    call check with ("FindContentBySlot", Length(reader:FindContentBySlot('name, nil)) = 3);
+    local pages := reader:FindPageByValue('name, "three", nil);
+    call check with ("FindPageByValue", Length(pages) = 1 and pages[0] = 2);
+    reader:AddInkMarks(2, ['ink]);
+    call check with ("AddInkMarks", Length(reader:InkMarks(2)) = 1 and reader:InkMarks(2)[0] = 'ink);
+    reader:AddInkMarks(2, []);
+    call check with ("AddInkMarks with none takes them out", Length(reader:InkMarks(nil)) = 0);
     call check with ("BookRemoved answers 0", BookRemoved(removeFrame) = 0);
     call check with ("the book is out of the library", library.|TEST-0001| = nil);
     entry := root.copperfield:GetLibraryEntry("TEST-0001");
