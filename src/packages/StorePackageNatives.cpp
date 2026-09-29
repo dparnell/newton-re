@@ -35,6 +35,7 @@
 #include "Compression.h"		// TCallbackCompressor
 #include "NewtErrors.h"			// kNoMemory
 #include "StdioPipe.h"			// SuckPackageOffDeskTop
+#include "PackageArchivalPipe.h"	// RestoreSegmentedPackage
 #include "Unicode.h"			// ConvertFromUnicode
 #include <stdint.h>
 #include "FramesPart.h"
@@ -267,6 +268,23 @@ FSuckPackageFromBinary(RefArg rcvr, RefArg binary, RefArg parameters)
 	MemoryPipe pipe;
 	pipe.Init(&segment, nil, false);
 	return SuckPackageThruPipe(&pipe, rcvr, parameters);
+}
+
+
+// ROM 0x001fbc78 StoreSegmentedPackageRestore
+// store:RestoreSegmentedPackage(soup, keys): a package archived as a run
+// of chunk entries in a soup (packages/PackageArchivalPipe.h: each entry's
+// PackageEntry binary a piece of it, the keys the entries' unique ids in
+// order) read back through a CPackageArchivalPipe and kept on the store,
+// as SuckPackageFromBinary keeps one - with no callback, and not
+// activated.  ==> the pkgRef.
+Ref
+StoreSegmentedPackageRestore(RefArg rcvr, RefArg soup, RefArg keys)
+{
+	CPackageArchivalPipe pipe;
+	pipe.Init(soup, keys, true, false);
+	RefVar callback;
+	return SuckPackageThruPipe(&pipe, rcvr, callback, 0, 0);
 }
 
 
@@ -963,6 +981,7 @@ RegisterStorePackageNatives(void)
 	RegisterNativeFunction("FGetPkgInfoFromPssid", (void*) FGetPkgInfoFromPssid, 2);
 	RegisterNativeFunction("FPidToPackageLite", (void*) FPidToPackageLite, 1);
 	RegisterNativeFunction("FSuckPackageOffDeskTop", (void*) FSuckPackageOffDeskTop, 3);
+	RegisterNativeFunction("StoreSegmentedPackageRestore", (void*) StoreSegmentedPackageRestore, 2);
 	RegisterNativeFunction("FActivate1XPackage", (void*) FActivate1XPackage, 2);
 	RegisterNativeFunction("FDeActivate1XPackage", (void*) FDeActivate1XPackage, 1);
 	RegisterNativeFunction("FRemove1XPackage", (void*) FRemove1XPackage, 1);

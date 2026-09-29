@@ -405,6 +405,7 @@ Ref			FRemove1XPackage(RefArg rcvr, RefArg package);							// ROM 0x00320eac FRe
 Ref			Store1XPackageToVBO(RefArg rcvr, RefArg pssid);							// ROM 0x00320d38 Store1XPackageToVBO
 Boolean		IsPackage(RefArg obj);													// ROM 0x00321ef8 IsPackage__FRC6RefVar (ROMPackages.cpp)
 Ref			FSuckPackageFromBinary(RefArg rcvr, RefArg binary, RefArg parameters);	// store:SuckPackageFromBinary
+Ref			StoreSegmentedPackageRestore(RefArg rcvr, RefArg soup, RefArg keys);	// store:RestoreSegmentedPackage (PackageArchivalPipe.h)
 void		RegisterStorePackageNatives(void);
 
 #endif	/* __STOREPACKAGES_H */

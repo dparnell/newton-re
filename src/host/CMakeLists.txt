@@ -141,6 +141,23 @@ if(Python3_FOUND)
     set_tests_properties(host.NewtonPackageStore PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED host_package_store
                          PASS_REGULAR_EXPRESSION "afterRestart: TRUE, pssid: [0-9]+, onInternal: TRUE}.*title: \"Formulas2\".*deactivated: TRUE.*activatedAgain: TRUE.*packagestore: done"
                          FAIL_REGULAR_EXPRESSION "FALSE|NIL,")
+    # a package cut into a soup of chunk entries and restored with
+    # store:RestoreSegmentedPackage (packages/PackageArchivalPipe.h), on a
+    # store of its own holding Formulas2
+    add_test(NAME host.NewtonSegmented.install
+             COMMAND newton --rom ${NEWTON_ROM_BIN} --erase --store ${CMAKE_CURRENT_BINARY_DIR}/segmented.store
+                     --headless 4 --package ${HOST_PACKAGE_DIR}/Formulas2.pkg
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonSegmented.install PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED host_package
+                         FIXTURES_SETUP host_segmented_store
+                         PASS_REGULAR_EXPRESSION "Formulas2.pkg: installed as package")
+    add_test(NAME host.NewtonSegmented
+             COMMAND newton --rom ${NEWTON_ROM_BIN} --store ${CMAKE_CURRENT_BINARY_DIR}/segmented.store
+                     --headless 5 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/segmented.ns
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonSegmented PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED host_segmented_store
+                         PASS_REGULAR_EXPRESSION "removed: TRUE}.*chunks: [0-9]+, restored: TRUE, sameBytes: TRUE, title: \"Formulas2\"}.*segmented: done"
+                         FAIL_REGULAR_EXPRESSION "sameBytes: NIL")
     # the same boot slowed by the heap checker's hooks: a task switched out on
     # its way back from a system call once lost the call's answer
     # (os600/user/host/SWI.cpp's ExitWithResult), and the store package

@@ -140,8 +140,12 @@ TestPipe()
 	// the peek/get shortcuts on the read segment
 	pipe.Rewind();
 	EXPECT(pipe.Peek(false) == 1 && pipe.Get() == 1 && pipe.Next() == 3 && pipe.Skip() != -1 && pipe.Get() == 4);
+	// reset: the write segment empty, the read segment's position at its
+	// end - nothing left to read until Underflow brings more (the ROM's
+	// ResetRead seeks to the end after resetting)
 	pipe.Reset();
-	EXPECT(pipe.ReadPosition() == 0 && pipe.WritePosition() == 0);
+	EXPECT(pipe.WritePosition() == 0 && pipe.fReadBuffer->AtEOF()
+		   && pipe.ReadPosition() == (long) pipe.fReadBuffer->GetSize());
 }
 
 

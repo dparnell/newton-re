@@ -36,6 +36,7 @@
 #include "FramePartHandler.h"
 #include "PackageStore.h"
 #include "StorePackages.h"
+#include "PackageArchivalPipe.h"
 #include "host/HostStore.h"
 #include "Soups.h"
 #include "Compression.h"
@@ -661,6 +662,98 @@ TestOnStore(void)
 }
 
 
+// A package archived as chunk entries in a soup (packages/
+// PackageArchivalPipe.h): written through the pipe's write side - a new
+// entry each time the 4K buffer fills, its unique id added to the keys -
+// and read back through the read side, which gives the same bytes.  (The
+// native over it, store:RestoreSegmentedPackage, runs the ROM's own
+// package scripts, which want the booted machine's globals: the demo
+// src/host/demo/packagestore.ns restores a package that way.)
+extern const ExceptionName exPipeException;
+
+static void
+TestSegmented(void)
+{
+	UByte* ntk = AsNTKWritesIt(kCardfile);
+	ULong size = GetBigEndianWord(ntk + 0x1c);
+	TStore* store = (TStore*) THostStore::ClassInfo()->New();
+	EXPECT(store != nil && store->Init(nil, 0x200000, 0, 0, kStoreIsInternal, nil) == noErr);
+	if (store == nil)
+	{
+		free(ntk);
+		return;
+	}
+	store->Format();
+	RefVar storeObject(RegisterTStore(store));
+	RefVar soup(StoreCreateSoup(storeObject, RefVar(MakeString("Segments")), RefVar(NILREF)));
+	RefVar keys(MakeArray(0));
+	{
+		CPackageArchivalPipe out;
+		out.Init(soup, keys, false, true);
+		out.WriteChunk(ntk, (long) size, false);
+		out.FlushWrite();
+		// one key a full 4K buffer, and one for what was left
+		EXPECT(Length(keys) == (long) ((size + 0xfff) / 0x1000));
+	}
+	// each entry's PackageEntry binary is its piece, in the keys' order
+	{
+		CPackageArchivalPipe probe;
+		probe.Init(soup, keys, true, false);
+		UByte* data = nil;
+		ULong length = 0;
+		probe.GetPackageChunk(&data, &length);
+		EXPECT(length == 0x1000 && memcmp(data, ntk, 0x1000) == 0);
+		probe.GetPackageChunk(&data, &length);
+		EXPECT(length == 0x1000 && memcmp(data, ntk + 0x1000, 0x1000) == 0);
+		EXPECT(probe.fIndex == 2);
+	}
+	// read back whole, a buffer at a time
+	{
+		CPackageArchivalPipe in;
+		in.Init(soup, keys, true, false);
+		UByte* back = (UByte*) malloc(size);
+		long count = (long) size;
+		Boolean eof = false;
+		in.ReadChunk(back, count, eof);
+		EXPECT(count == (long) size && memcmp(back, ntk, size) == 0);
+		free(back);
+		// ... and past the last key: the cursor finds no entry, and that
+		// comes out as the pipe exception
+		Boolean threw = false;
+		newton_try
+		{
+			Boolean more = false;
+			in.Underflow(1, more);
+		}
+		newton_catch(exPipeException)
+		{
+			threw = true;
+		}
+		end_try;
+		EXPECT(threw);
+	}
+	// a pipe made only for writing has nothing to read from
+	{
+		CPackageArchivalPipe writeOnly;
+		writeOnly.Init(soup, keys, false, true);
+		Boolean threw = false;
+		newton_try
+		{
+			Boolean eof = false;
+			writeOnly.Underflow(1, eof);
+		}
+		newton_catch(exPipeException)
+		{
+			threw = ((long) (Long) _info.exception.data == -10006);
+		}
+		end_try;
+		EXPECT(threw);
+	}
+	RemoveTStore(store);
+	free(ntk);
+}
+
+
 // the test's own application world: part handlers for 'form and 'auto
 // (the test's) and 'soup (the package store's), then the tests run from
 // PreMain as the newt world loads the ROM's packages; loading forks the
@@ -693,6 +786,7 @@ public:
 			TestPackagePipe();
 			TestManager();
 			TestOnStore();
+			TestSegmented();
 			TestStreamed();
 		}
 		gDone = true;

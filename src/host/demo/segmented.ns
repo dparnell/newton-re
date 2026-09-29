@@ -1,0 +1,45 @@
+// store:RestoreSegmentedPackage (packages/PackageArchivalPipe.h): a
+// package archived as a run of chunk entries in a soup - each entry's
+// PackageEntry binary a 4K piece of it, the keys the entries' unique ids
+// in order - read back through the archival pipe and kept on the store.
+// Run on a store that holds Formulas2 (kept there by an earlier boot's
+// `--package`): its bytes are cut into a soup of chunks here and the
+// package taken off the store (RegisterNewPackage, the ROM's own, refuses
+// a package whose name the store already has), then restored from the
+// chunks and compared with them (all but the four bytes at 0x24, which
+// storing sets).
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --erase --store tmp/s.store \
+//       --package build/host/host/packages/Formulas2.pkg --headless 5
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --store tmp/s.store \
+//       --script src/host/demo/segmented.ns --headless 5
+
+AddDelayedCall(func() begin
+	local p := nil;
+	foreach q in GetPackages() do if q.store and StrEqual(q.title, "Formulas2") then p := q;
+	local pkgRef := PssidToPkgRef(p.pssid, p.store);
+	local size := Length(pkgRef);
+	local store := GetStores()[0];
+	local soup := store:GetSoup("Segments") or store:CreateSoupXmit("Segments", [], nil);
+	local keys := [];
+	local chunks := [];
+	for off := 0 to size - 1 by 4096 do begin
+		local n := Min(4096, size - off);
+		local chunk := MakeBinary(n, 'PackageEntry);
+		BinaryMunger(chunk, 0, n, pkgRef, off, n);
+		local e := soup:AddXmit({PackageEntry: chunk}, nil);
+		AddArraySlot(keys, e._uniqueID);
+		AddArraySlot(chunks, chunk);
+	end;
+	Print({removed: SafeRemovePackage(pkgRef) <> nil});
+	local restored := store:RestoreSegmentedPackage(soup, keys);
+	local same := restored and Length(restored) = size;
+	if same then
+		for i := 0 to size - 1 do
+			if (i < 36 or i >= 40)
+			   and ExtractByte(restored, i) <> ExtractByte(chunks[i div 4096], i mod 4096) then same := nil;
+	Print({chunks: Length(keys), restored: IsPackage(restored), sameBytes: same,
+	       title: GetPkgRefInfo(restored).title});
+	soup:RemoveFromStore();
+	Print("segmented: done");
+end, [], 1000);

@@ -419,12 +419,19 @@ CBufferPipe::Reset(void)
 
 
 // ROM 0x00047060 ResetRead__11CBufferPipeFv
+// The read buffer emptied: reset, then its position put at its end, so
+// the first read finds nothing and asks Underflow for data.  (The host's
+// version once left the seek out, so a fresh read buffer looked full of
+// whatever its block held.)
 void
 CBufferPipe::ResetRead(void)
 {
 	fReadHitEOF = false;
 	if (fReadBuffer != nil)
+	{
 		fReadBuffer->Reset();
+		fReadBuffer->Seek(0, kSeekFromEnd);
+	}
 }
 
 

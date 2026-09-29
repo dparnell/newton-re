@@ -25,6 +25,7 @@ add_library(packages STATIC
     Units.cpp
     StorePackages.cpp
     StorePackageNatives.cpp
+    PackageArchivalPipe.cpp
 )
 # stores: a streamed frames part is read with a TObjectReader, and the
 # package natives answer the package stores
