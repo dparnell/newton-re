@@ -9,6 +9,25 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: the third-party apps used for real
+
+- `src/host/demo/thirdparty-apps.ns` (ctest `host.NewtonThirdPartyApps`)
+  opens each of RPNcalc, Daleks, Mahjongg, NewtHack and Register from its
+  Extras icon, taps it and takes a snapshot: 7 Enter 8 + shows 15; the
+  Dalek player steps; Mahjongg is let turn the screen and a matching pair
+  is taken off (144 to 142), its natives on armcpu; NewtHack plays two
+  steps, its native running each turn; Register's Program picker picks
+  (dcae3e0).
+- Found and fixed: `TView::RecalcBounds` was transcribed inverted (ROM
+  0x2652a4: the bounds are set when viewBounds converts and the
+  children recalculated always), so a view moved by `SyncView` left its
+  children behind - Mahjongg's tiles-remaining digits after rotating
+  (8c8184a).
+- armcpu answers every ROM entry the fixtures' native code reaches that
+  the host has (123, 5dde85e), `TranslateException` over the ARM
+  exception record and `StrEndsWith` (8a40206); not answered: `Debugger`,
+  `EnableFramesFunctionProfiling`, `GetGlobals`, `PublicFiller_236`.
+
 ## 2026-09-29: comms, round 9 - the NIE end to end over the host's own link
 
 - The oracle is counted: all seven groups of `test_NIEProtoFSM` agree

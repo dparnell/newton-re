@@ -157,6 +157,11 @@ worked through.  What could come next (not ranked; the owner chooses):
   re-expression.  The rest of comms (CCL, AppleTalk, IR, NTK, the desktop
   connection - which the test server's link, the IR sniffing,
   `SuckPackageFromEndPoint` and fax reception wait on) comes after.
+- **Third-party apps**: all five fixture applications open from Extras
+  and respond (ctest `host.NewtonThirdPartyApps`).  Flaky under a full
+  parallel ctest: `host.NewtonThirdPartyPackages` and
+  `host.NewtonInetSetup` each failed once and pass when rerun - a timing
+  race, being looked into.
 - **Now reachable over the large binaries**: the text engine's
   `TXNewtStreamFactory` (a compressed large binary for a stream above 4K)
   and `RotTiledBitmap` (only a fax page reaches it, so it still waits on
