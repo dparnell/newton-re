@@ -253,7 +253,7 @@ CBufferPipe::~CBufferPipe()
 
 // ROM 0x00046f2c Init__11CBufferPipeFlT1
 // A read segment of readSize bytes (positioned at its end: nothing to
-// read yet) or, when that is 0, a write segment of writeSize.
+// read yet) and a write segment of writeSize (either size 0: none).
 void
 CBufferPipe::Init(long readSize, long writeSize)
 {
@@ -269,7 +269,7 @@ CBufferPipe::Init(long readSize, long writeSize)
 			Throw(exPipeException, (void*) (Long) err, nil);
 		fReadBuffer->Seek(0, kSeekFromEnd);
 	}
-	else if (writeSize > 0)
+	if (writeSize > 0)
 	{
 		fWriteBuffer = new CBufferSegment;
 		if (fWriteBuffer == nil)
