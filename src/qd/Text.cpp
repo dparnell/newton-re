@@ -138,6 +138,7 @@ MeasureGlyphWidths(const UniChar* chars, long length, StyleRecord** styles, cons
 	if (options != nil)
 		options->fFittedWidth = 0;
 	Fixed width = 0;
+	Fixed fitWidth = 0;
 	long done = 0;
 	long run = 0;
 	layout->fSpaces = 0;
@@ -159,14 +160,14 @@ MeasureGlyphWidths(const UniChar* chars, long length, StyleRecord** styles, cons
 				advance = info.fGlyphAdvance;
 			}
 			layout->fAdvances[index] = advance;
-			// NOT YET RECONSTRUCTED: the ROM measures the width to fit at
-			// the size drawn - a strike stretched to another size (fScaleX
-			// not 1.0) has each advance scaled for the test (0x0035be78),
-			// the advances kept being the strike's own.  The host tests the
-			// strike's advances, which the paragraphs' line breaking (and
-			// test_Views' style runs, espy 18 stretched from 16) rely on.
-			if (limit != 0 && !noFit && index < fitted && width + advance > limit)
+			// the width to fit is measured at the size drawn: a strike
+			// stretched to another size (fScaleX not 1.0) has each advance
+			// scaled for the test (0x0035be78), the advances kept being the
+			// strike's own
+			Fixed drawn = (opened && info.fScaleX != 0x10000) ? FixedMultiply(advance, info.fScaleX) : advance;
+			if (limit != 0 && !noFit && index < fitted && fitWidth + drawn > limit)
 				fitted = index;
+			fitWidth += drawn;
 			width += advance;
 			if (chars[index] == kSpace)
 				layout->fSpaces++;

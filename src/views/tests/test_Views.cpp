@@ -817,9 +817,11 @@ TestParagraphView()
 	EXPECT(p->fCalculateBounds && p->LineCount() == 2 && p->Line(1).fEnd == 17);
 	Eval("ctxQ:Close()");
 
-	// style runs: the second word in a bigger font makes its line taller
+	// style runs: the second word in a bigger font makes its line taller (the
+	// view 55 wide: espy 18 is the 16-point strike stretched, and a width to
+	// fit is measured with the stretched advances, as the ROM measures it)
 	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "espy18")), RefVar(MAKEINT(PackFont(0, 18, 0))));
-	p = (TParagraphView*) ViewOf("ctxQ := AddView(GetRoot(), {viewClass: 81, viewFlags: 3, viewBounds: {left: 20, top: 10, right: 70, bottom: 90}, viewJustify: 0, viewFont: espy12, text: \"Hello World again\", styles: [6, espy12, 6, espy18, 5, espy12]})");
+	p = (TParagraphView*) ViewOf("ctxQ := AddView(GetRoot(), {viewClass: 81, viewFlags: 3, viewBounds: {left: 20, top: 10, right: 75, bottom: 90}, viewJustify: 0, viewFont: espy12, text: \"Hello World again\", styles: [6, espy12, 6, espy18, 5, espy12]})");
 	EXPECT(p->LineCount() == 3);
 	if (p->LineCount() == 3)
 	{
