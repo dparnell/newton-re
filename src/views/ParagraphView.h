@@ -327,6 +327,7 @@ public:
 	// paragraph, which is what says whether it belongs to it.
 	Boolean		WordOnLastLine(const Rect& box);			// ROM 0x00172008 WordOnLastLine__14TParagraphViewFRC5TRect
 	void		BoundsOfLastLine(Rect* bounds);				// ROM 0x001721ac BoundsOfLastLine__14TParagraphViewFP5TRect
+	long		OffsetPastVisible(void);					// ROM 0x0016ba24 OffsetPastVisible__14TParagraphViewFv - where the laid-out lines stop, -1 when they hold it all
 	Boolean		WordOnLineBelowParagraph(const Rect& box, const Point& base);	// ROM 0x0017207c WordOnLineBelowParagraph__14TParagraphViewFRC5TRectRC6TPoint
 
 	long		CheckAndDoSplitInk(Point& pt, long offset);	// ROM 0x00176208 CheckAndDoSplitInk__14TParagraphViewFR6TPointl

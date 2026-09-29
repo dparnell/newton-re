@@ -4013,6 +4013,28 @@ TParagraphView::BoundsOfLastLine(Rect* bounds)
 }
 
 
+// ROM 0x0016ba24 OffsetPastVisible__14TParagraphViewFv
+// The offset of the first character the laid-out lines did not reach -
+// the end of the last line - or -1 when they hold all of the text (or
+// there are none).  A paragraph lays out only the lines that fit its
+// bounds, so this is where the text runs out of room; ReflowText cuts
+// a paragraph there to carry the rest over to the next page.
+long
+TParagraphView::OffsetPastVisible(void)
+{
+	long count = fLines != nil ? fLineCount : 0;
+	long offset = -1;
+	if (count > 0)
+	{
+		long end = fLines[count - 1].fEnd;
+		RefVar text(Text());
+		if (end < (long) ((ULong) (Length(text) - 2) >> 1))
+			offset = end;
+	}
+	return offset;
+}
+
+
 // ROM 0x0017207c WordOnLineBelowParagraph__14TParagraphViewFRC5TRectRC6TPoint
 // Whether the word was written on the line *after* the paragraph's text:
 // the strip below the laid-out bounds, a line tall (or as tall as the

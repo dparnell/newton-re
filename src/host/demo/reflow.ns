@@ -1,0 +1,84 @@
+// A page's views laid out again for the printer (views/Reflow.cpp:
+// ReFlow, ReflowPreflight): a note's paragraphs and two boxes drawn under
+// the first, reflowed as the Notepad's print format does it - the format
+// frame below is the one its viewSetupChildrenScript builds, the page
+// being the printer's page bounds - into a narrower page, and the groups
+// that come back stacked in a view and photographed.
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//       --headless 45 --script src/host/demo/reflow.ns
+//   python tools/imaging/pgm2png.py reflow.pgm reflow.png
+//
+// Prints each group and what is in it, then writes reflow.pgm.  The long
+// paragraph does not fit the new width in its own height, so it is cut
+// where its lines stop and carried on in pieces, each starting a page.
+// The group of shapes is centred and lassoed round its children
+// (viewJustify 0xA010), which moves the group but not the children - the
+// ROM's TView::Constructor does the same - so the boxes are drawn from
+// the middle of the page, the second clipped by it.
+//
+// The setup assistant is walked through first, with the taps of
+// src/host/demo/ink.ns, because every boot of the host's in-memory store
+// starts there and it would cover the picture.
+
+tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
+typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+page := 0;
+nextPage := func()
+  begin
+    page := page + 1;
+    if page < 10 then
+      begin
+        call tapAt with (293, 468);			// Continue
+        AddDelayedCall(nextPage, nil, 1800);
+      end
+    else
+      call tapAt with (297, 468);			// Done, on "Congratulations"
+  end;
+AddDelayedCall(func() begin
+    call tapAt with (293, 468);				// past "Welcome"
+    AddDelayedCall(func() begin
+        call tapAt with (200, 150);			// the caret into the First line
+        foreach c in name do call typeKey with (c);
+        AddDelayedCall(nextPage, nil, 1500);
+      end, nil, 2000);
+  end, nil, 3000);
+
+AddDelayedCall(func() begin
+	local font := {family: 'espy, face: 0, size: 12};
+	local data := [
+		{viewClass: 81, viewFlags: 1, viewFont: font, viewBounds: {left: 10, top: 10, right: 300, bottom: 30},
+		 text: "Shopping list"},
+		{viewClass: 74, viewFlags: 1, viewFormat: 0x151, viewBounds: {left: 20, top: 40, right: 80, bottom: 70}},
+		{viewClass: 74, viewFlags: 1, viewFormat: 0x151, viewBounds: {left: 100, top: 50, right: 140, bottom: 80}},
+		{viewClass: 81, viewFlags: 1, viewFont: {family: 'espy, face: 1, size: 12},
+		 viewBounds: {left: 10, top: 100, right: 300, bottom: 140},
+		 text: "Bread, milk, eggs, apples, cheese, coffee, rice, tea, butter and a newspaper for Sunday"}];
+	local preflight := ReflowPreflight(data);
+	Print("reflow: families " & Length(preflight.family) & ", sizes " & Length(preflight.size)
+		  & ", faces " & Length(preflight.face));
+	local printerPageBounds := {left: 0, top: 0, right: 160, bottom: 400};
+	local pageBounds := InsetRect(Clone(printerPageBounds), 0, 0);
+	local format := {reflowFont: 12289, unistyle: 'font, textGutter: 16, graphicsGutter: -16,
+					 viewLineSpacing: 28, pageBounds: pageBounds};
+	local groups := ReFlow(data, format, printerPageBounds, printerPageBounds);
+	Print("reflow: " & Length(groups) & " groups");
+	foreach i, g in groups do begin
+		local line := "reflow: group " & NumberStr(i) & " top " & NumberStr(g.viewBounds.top)
+					  & ", " & NumberStr(Length(g.viewChildren)) & " children";
+		foreach kid in g.viewChildren do
+			if kid.text then line := line & " \"" & kid.text & "\""
+			else line := line & " box " & NumberStr(kid.viewBounds.left) & "," & NumberStr(kid.viewBounds.top);
+		Print(line);
+	end;
+	local page := AddView(GetRoot(), {viewClass: 74, viewFlags: 0x41, viewFormat: 0x151,	// floating: in front of the Notepad
+		viewBounds: {left: 20, top: 30, right: 20 + 160, bottom: 460},
+		stepChildren: groups});
+	page:Dirty();
+	RefreshViews();
+	AddDelayedCall(func() begin
+		ScreenSnapshot("reflow.pgm");
+		Print("reflow: snapshot");
+	end, nil, 1000);
+end, nil, 27000);

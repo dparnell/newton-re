@@ -418,6 +418,7 @@ void		RegisterViewExtraNatives(void);	// ... and the rest: DV, ViewAutopsy, Form
 Ref			FChangeStylesOfRange(RefArg rcvr, RefArg start, RefArg length, RefArg style, RefArg redraw);	// ROM 0x001eeba8 FChangeStylesOfRange - a view method, so MakeViewMethods has it too
 Ref			FExtractTextRange(RefArg rcvr, RefArg start, RefArg length);	// ROM 0x001ef414 FExtractTextRange - likewise
 Ref			FSetFontSize(RefArg rcvr, RefArg fontSpec, RefArg size);	// ROM 0x001ed994 FSetFontSize
+Ref			SetFontSize(RefArg fontSpec, long size);				// ROM 0x0017d9f0 SetFontSize__FRC6RefVarl (FontNatives.cpp)
 void		RegisterFontNatives(void);		// ... and the font and style ones (FontNatives.cpp; RegisterViewNatives calls it)
 Ref			MakeViewMethods(void);			// the methods a view inherits from the root template (Rviewroot's), as a frame
 

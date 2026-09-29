@@ -197,6 +197,74 @@ TestSyncScroll()
 
 
 static void
+TestReflow()
+{
+	// the format the paper roll's print layout hands ReFlow
+	Eval("font := {family: 'espy, face: 0, size: 9}");
+	Eval("reflowFormat := {reflowFont: font, unistyle: 'font, textGutter: 16, graphicsGutter: -16, "
+		 "viewLineSpacing: 28, pageBounds: {left: 0, top: 0, right: 100, bottom: 200}}");
+	Eval("reflowBox := {left: 0, top: 0, right: 100, bottom: 200}");
+	// a paragraph, and under it two shapes, the second starting within
+	// the (negative) graphics gutter of the first's bottom
+	Eval("reflowItems := ["
+		 "{viewClass: 81, viewFlags: 1, text: \"Hello world\", viewFont: {family: 'espy, face: 0, size: 12}, "
+		 " viewJustify: 0x32, viewBounds: {left: 10, top: 10, right: 150, bottom: 30}},"
+		 "{viewClass: 76, viewFlags: 1, viewBounds: {left: 20, top: 40, right: 60, bottom: 70}},"
+		 "{viewClass: 76, viewFlags: 1, viewBounds: {left: 70, top: 45, right: 90, bottom: 60}}]");
+	Eval("reflowPages := ReFlow(reflowItems, reflowFormat, reflowBox, reflowBox)");
+	EXPECT(RINT(RefVar(Eval("Length(reflowPages)"))) == 2);
+	// the paragraph on its own, poured through the width: a first group
+	// (the ROM's own template, 80 high) with a copy of it, 100 wide,
+	// horizontal justification only, and its font at the reflow size
+	EXPECT(RINT(RefVar(Eval("reflowPages[0].viewBounds.top"))) == 0);
+	EXPECT(RINT(RefVar(Eval("Length(reflowPages[0].viewChildren)"))) == 1);
+	EXPECT(RINT(RefVar(Eval("reflowPages[0].viewChildren[0].viewBounds.right"))) == 100);
+	EXPECT(RINT(RefVar(Eval("reflowPages[0].viewChildren[0].viewBounds.bottom"))) == 20);
+	EXPECT(RINT(RefVar(Eval("reflowPages[0].viewChildren[0].viewJustify"))) == 2);
+	EXPECT(RINT(RefVar(Eval("GetFontSize(reflowPages[0].viewChildren[0].viewFont)"))) == 9);
+	EXPECT(NOTNIL(RefVar(Eval("StrEqual(reflowPages[0].viewChildren[0].text, \"Hello world\")"))));
+	// the shapes a group of two (canonicalGroup, 20 down), each moved to
+	// the group's top left
+	EXPECT(RINT(RefVar(Eval("reflowPages[1].viewBounds.top"))) == 20);
+	EXPECT(RINT(RefVar(Eval("reflowPages[1].viewJustify"))) == 0xA010);
+	EXPECT(RINT(RefVar(Eval("reflowPages[1].viewLineSpacing"))) == 28);
+	EXPECT(RINT(RefVar(Eval("Length(reflowPages[1].viewChildren)"))) == 2);
+	EXPECT(RINT(RefVar(Eval("reflowPages[1].viewChildren[0].viewBounds.left"))) == 0);
+	EXPECT(RINT(RefVar(Eval("reflowPages[1].viewChildren[0].viewBounds.bottom"))) == 30);
+	EXPECT(RINT(RefVar(Eval("reflowPages[1].viewChildren[1].viewBounds.left"))) == 50);
+	EXPECT(RINT(RefVar(Eval("reflowPages[1].viewChildren[1].viewBounds.top"))) == 5);
+	// the originals are left alone
+	EXPECT(RINT(RefVar(Eval("reflowItems[1].viewBounds.left"))) == 20);
+
+	// a paragraph longer than its own height at the new width is cut where
+	// its lines stop and carried on in pieces, each a first group, which
+	// put back together are the text again
+	Eval("reflowLong := {viewClass: 81, viewFlags: 1, viewFont: font, viewBounds: {left: 0, top: 0, right: 100, bottom: 24}, "
+		 "text: \"one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen\"}");
+	Eval("reflowPages := ReFlow([reflowLong], reflowFormat, reflowBox, {left: 0, top: 0, right: 60, bottom: 200})");
+	long pieces = RINT(RefVar(Eval("Length(reflowPages)")));
+	EXPECT(pieces > 2);
+	EXPECT(NOTNIL(RefVar(Eval("begin local s := \"\"; foreach g in reflowPages do s := s & g.viewChildren[0].text; StrEqual(s, reflowLong.text) end"))));
+	EXPECT(RINT(RefVar(Eval("reflowPages[1].viewBounds.top"))) == 0);
+	EXPECT(RINT(RefVar(Eval("reflowPages[1].viewChildren[0].viewBounds.right"))) == 60);
+
+	// nothing to do: nil
+	EXPECT(ISNIL(RefVar(Eval("ReFlow(nil, reflowFormat, reflowBox, reflowBox)"))));
+	EXPECT(ISNIL(RefVar(Eval("ReFlow(reflowItems, reflowFormat, {left: 0, top: 0}, reflowBox)"))));
+
+	// the fonts a page uses, each once
+	Eval("preflight := ReflowPreflight([{viewFont: font}, {styles: [3, {family: 'espy, face: 1, size: 12}, 2, font]}, {}])");
+	EXPECT(RINT(RefVar(Eval("Length(preflight.family)"))) == 1);
+	EXPECT(Eval("preflight.family[0]") == RSSYMespy);
+	EXPECT(RINT(RefVar(Eval("Length(preflight.size)"))) == 2);
+	EXPECT(RINT(RefVar(Eval("Length(preflight.face)"))) == 2);
+	EXPECT(RINT(RefVar(Eval("Length(preflight.styles)"))) == 2);
+	// a copy each time: the ROM's frame is not added to
+	EXPECT(RINT(RefVar(Eval("Length(ReflowPreflight(nil).family)"))) == 0);
+}
+
+
+static void
 TestDebugging()
 {
 	extern Boolean gOutlineViews;
@@ -282,6 +350,7 @@ main()
 		TestFormatVertical();
 		TestGrayShrink();
 		TestSyncScroll();
+		TestReflow();
 		TestDebugging();
 	}
 	newton_catch_all

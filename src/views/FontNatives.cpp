@@ -92,6 +92,19 @@ FSetFontFamily(RefArg /*rcvr*/, RefArg fontSpec, RefArg family)
 }
 
 
+// ROM 0x0017d9f0 SetFontSize__FRC6RefVarl
+// A font spec at another size: an ink word re-measured at it, anything
+// else made again as a compact font of the same family and face.
+Ref
+SetFontSize(RefArg fontSpec, long size)
+{
+	if (IsInkWord(fontSpec))
+		return SetInkWordFontSize(fontSpec, (ULong) size);
+	long face = GetFontFace(fontSpec);
+	return MakeCompactFont(RefVar(GetFontFamilySym(fontSpec)), size, face);
+}
+
+
 // ROM 0x001ed994 FSetFontSize
 // SetFontSize(spec, size): likewise for the size - and an ink word is
 // re-measured at it rather than replaced.

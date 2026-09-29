@@ -207,6 +207,12 @@ add_test(NAME host.NewtonKeyHelp COMMAND newton --rom ${NEWTON_ROM_BIN} --displa
 set_tests_properties(host.NewtonKeyHelp PROPERTIES TIMEOUT 120
                      PASS_REGULAR_EXPRESSION "keyhelp: open.*numcols 2, lineHeight 13.*groups 4.*keyhelp: Editing.*keyhelp: snapshot")
 
+# a page's views laid out again for the printer (views/Reflow.cpp ReFlow,
+# ReflowPreflight): the groups made and what is in each (needs the ROM image)
+add_test(NAME host.NewtonReflow COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 35 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/reflow.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(host.NewtonReflow PROPERTIES TIMEOUT 150
+                     PASS_REGULAR_EXPRESSION "reflow: families 1, sizes 1, faces 2.*reflow: 5 groups.*group 0 top 0, 1 children .Shopping list.*group 1 top 20, 2 children box 0,0 box 80,10.*group 2 top 20, 1 children .Bread.*group 3 top 0.*group 4 top 0, 1 children .newspaper for Sunday.*reflow: snapshot")
+
 # a roll over a soup cursor scrolled (views/View.cpp TView::SyncScrollSoup):
 # the cursor and viewOriginY after each step (needs the ROM image)
 add_test(NAME host.NewtonSoupScroll COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 20 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/soupscroll.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)

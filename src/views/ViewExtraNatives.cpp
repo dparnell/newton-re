@@ -4,7 +4,7 @@
 	Contains:	The view natives that are not in ViewNatives.cpp: the
 				debugging ones a developer types into the Inspector (DV,
 				ViewAutopsy), KeyboardInput, the vertical layouts
-				(FormatVertical, ReFlow/ReflowPreflight), GrayShrink, the
+				(FormatVertical; ReFlow and ReflowPreflight are Reflow.cpp's), GrayShrink, the
 				splash graphic, and the overview's SyncScroll.
 				RegisterViewExtraNatives binds them.
 
@@ -213,12 +213,14 @@ FSyncScrollX(RefArg rcvr, RefArg items, RefArg index, RefArg direction)
 
 
 void	RegisterKeyHelpSlipNatives(void);		// KeyHelpSlip.cpp
+void	RegisterReflowNatives(void);			// Reflow.cpp
 
 
 void
 RegisterViewExtraNatives(void)
 {
 	RegisterKeyHelpSlipNatives();
+	RegisterReflowNatives();
 	RegisterNativeFunction("FSyncScrollX", (void*) FSyncScrollX, 3);
 	RegisterNativeFunction("FDisplaySplashGraphic", (void*) FDisplaySplashGraphic, 1);
 	RegisterNativeFunction("FGrayShrink", (void*) FGrayShrink, 2);
