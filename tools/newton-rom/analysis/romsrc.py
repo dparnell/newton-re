@@ -25,9 +25,9 @@ and, for each, the ROM's ref and the ref now (build --relayout).
     python romsrc.py edit-test <tree> -o <dir> --objects <file> --newtonscript <exe>
 
 edit-test is the test of editability: it copies a tree, lengthens one
-string in it (the first definition of a plain string of 12 characters or
-more in objects/000.ns - near the area's start, so that nearly every
-object after it moves), and builds the copy with --relayout into an object
+string in it (the plain string of 12 characters or more with the lowest
+address - near the area's start, so that nearly every object after it
+moves), and builds the copy with --relayout into an object
 file, which the host must boot as it boots the ROM's (ctest
 host.NewtonEditedSameScreen).
 
@@ -140,7 +140,8 @@ BITMAP_CLASSES = ("bits", "mask", "cbits")
 PICT_HEADER = 512					# a PICT file's header: nought, before the picture
 
 PAD = 0xba						# the bytes between objects
-PER_FILE = 400					# definitions in one objects/NNN.ns
+PER_FILE = 400					# definitions in one file of objects/
+GROUP_MIN = 8					# fewer definitions than this belonging to one root go into a misc file
 IDENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*\Z")
 RESERVED = {"nil", "true", "real", "string", "binary", "array", "map"}
 
@@ -189,6 +190,17 @@ def same_object(rom, v, ref, where):
 				return why
 		return None
 	return "%s: a %s" % (where, v.kind)
+
+
+def file_name(path, ref):
+	"""A file's name made of an object's path (what holds it, so that a
+	person finds it): its letters, digits and dots, the rest made _, cut
+	to a length every file system takes, and the object's address added
+	when it had to be cut or said nothing."""
+	name = re.sub(r"[^A-Za-z0-9_.]+", "_", path).strip("._")
+	if len(name) > 80 or not name:
+		name = name[:60].rstrip("._") + "_%x" % ref
+	return name
 
 
 def part_objects(rom, first, last, align):
@@ -301,6 +313,127 @@ class Extractor:
 		if rom.flags(o) & 1:
 			refs += [s for s in rom.slots(o) if s in self.inside]
 		return refs
+
+	def group_files(self, defs):
+		"""The definitions cut into files by what they belong to: each goes
+		with the root that dominates it - the one top-level object (reached
+		from the magic pointers, an R constant or no object at all) every
+		path to it passes through - in a file named after that root; the
+		groups of fewer than GROUP_MIN definitions, and what more than one
+		root shares, go into misc-NNN.ns files by address."""
+		names = {o: self.names[o] for o, _ in defs}
+		node = {n: o for o, n in names.items()}
+		edges = collections.defaultdict(set)
+
+		def owner_of(path):
+			m = re.match(r"\|(?:[^|\\]|\\.)*\||[A-Za-z_][A-Za-z0-9_]*", path)
+			n = m.group(0) if m else None
+			if n and n.startswith("|"):
+				n = re.sub(r"\\(.)", r"\1", n[1:-1])
+			return n
+		for path, name, owner in self.named_refs:
+			if owner in node and name in node and owner != name:
+				edges[owner].add(name)
+		for path, name in self.aliases:
+			owner = owner_of(path)
+			if owner in node and name in node and owner != name:
+				edges[owner].add(name)
+		incoming = collections.Counter(n for targets in edges.values() for n in targets)
+		magic_targets = set()
+		magic_index = {}
+		count = self.rom.word(self.rom.mp_table) if self.main else 0
+		for i in range(count):
+			ref = self.rom.word(self.rom.mp_table + 4 + 4 * i)
+			if ref in self.names:
+				magic_targets.add(self.names[ref])
+				magic_index.setdefault(self.names[ref], i)
+		roots = [n for n in node if incoming[n] == 0 or n in magic_targets or n.startswith("R")]
+		# dominators (Cooper, Harvey and Kennedy), from a root above the roots
+		top = "(the root above the roots)"
+		succ = dict(edges)
+		succ[top] = set(roots)
+		order = []
+		seen = {top}
+		stack = [(top, iter(sorted(succ[top])))]
+		while stack:
+			n, it = stack[-1]
+			nxt = next(it, None)
+			if nxt is None:
+				order.append(n)
+				stack.pop()
+			elif nxt not in seen:
+				seen.add(nxt)
+				stack.append((nxt, iter(sorted(succ.get(nxt, ())))))
+		order.reverse()								# reverse postorder, the root first
+		index = {n: i for i, n in enumerate(order)}
+		preds = collections.defaultdict(list)
+		for n, targets in succ.items():
+			for t in targets:
+				preds[t].append(n)
+		idom = {top: top}
+		changed = True
+		while changed:
+			changed = False
+			for n in order[1:]:
+				new = None
+				for p in preds[n]:
+					if p in idom:
+						if new is None:
+							new = p
+						else:
+							a, b = p, new
+							while a != b:
+								while index[a] > index[b]:
+									a = idom[a]
+								while index[b] > index[a]:
+									b = idom[b]
+							new = a
+				if new is not None and idom.get(n) != new:
+					idom[n] = new
+					changed = True
+		groups = collections.defaultdict(list)
+		misc = []
+		for o, text in defs:
+			n = names[o]
+			while n in idom and idom[n] is not top:
+				n = idom[n]
+			(groups[n] if n in idom else misc).append((o, text))
+		files = []
+		for n, group in sorted(groups.items(), key=lambda g: min(o for o, _ in g[1])):
+			if len(group) < GROUP_MIN:
+				misc += group
+				continue
+			base = file_name(self.root_label(n, node[n], magic_index.get(n)), node[n])
+			for i in range(0, len(group), PER_FILE):
+				files.append(("%s%s.ns" % (base, "" if i == 0 else "-%d" % (i // PER_FILE + 1)), group[i:i + PER_FILE]))
+		misc.sort()
+		for i in range(0, len(misc), PER_FILE):
+			files.append(("misc-%03d.ns" % (i // PER_FILE), misc[i:i + PER_FILE]))
+		return files
+
+	def root_label(self, name, ref, magic):
+		"""What a file of a root's definitions is called: its R constant's
+		name; else what the root says it is (a template's debug name, an
+		application's symbol, a title), with its magic-pointer index or its
+		address; else the definition's own name."""
+		rom = self.rom
+		if name.startswith("R"):
+			return name
+		said = None
+		if rom.flags(ref) & 3 == 3:
+			slots = {(t or "").lower(): v for t, v in rom.frame_slots(ref)}
+			for tag in ("debug", "appsymbol", "title", "name", "symbol"):
+				v = slots.get(tag)
+				if v is None or not rom.is_ptr(v):
+					continue
+				if rom.symname(v) is not None:
+					said = rom.symname(v)
+				elif rom.symname(rom.cls(v)) == "string" and not rom.flags(v) & 1:
+					said = rom.data(v)[:-2].decode("utf-16-be", "replace")
+				if said:
+					break
+		where = "mp%d" % magic if magic is not None else "%x" % ref
+		return "%s_%s" % (said, where) if said else ("mp%d" % magic if magic is not None else name)
 
 	def function_sources(self):
 		"""Each function's source, as the decompiler writes it - only those
@@ -506,7 +639,7 @@ class Extractor:
 		if source is not None:
 			# the function's source; its objects walked for their paths and
 			# maps (what the builder lays the compiled function out by)
-			rel = "functions/%x.ns" % o
+			rel = "functions/%s.ns" % file_name(path, o)
 			os.makedirs(os.path.join(self.out, "functions"), exist_ok=True)
 			with open(os.path.join(self.out, rel), "w", encoding="utf-8", newline="\n") as out:
 				out.write(source)
@@ -647,9 +780,9 @@ class Extractor:
 		self.same_count = len(same)
 		os.makedirs(os.path.join(self.out, "objects"), exist_ok=True)
 		defs.sort()
-		for i in range(0, len(defs), PER_FILE):
-			with open(os.path.join(self.out, "objects", "%03d.ns" % (i // PER_FILE)), "w", encoding="utf-8", newline="\n") as f:
-				for _, text in defs[i:i + PER_FILE]:
+		for rel, group in self.group_files(defs):
+			with open(os.path.join(self.out, "objects", rel), "w", encoding="utf-8", newline="\n") as f:
+				for _, text in group:
 					f.write(text + "\n")
 		with open(os.path.join(self.out, "maps.ns"), "w", encoding="utf-8", newline="\n") as f:
 			for _, text in sorted(mapdefs):
@@ -1370,18 +1503,29 @@ def main(argv=None):
 		import shutil
 		shutil.rmtree(a.output, ignore_errors=True)
 		shutil.copytree(a.source, a.output)
-		path = os.path.join(a.output, "objects", "000.ns")
+		address = {}
+		with open(os.path.join(a.output, "layout.tsv"), encoding="utf-8") as f:
+			for line in f:
+				fields = line.split("\t")
+				if len(fields) > 2 and not line.startswith(("#", "area", "alias")):
+					address[fields[1]] = int(fields[0], 16)
+		best = None
+		folder = os.path.join(a.output, "objects")
+		for name in sorted(os.listdir(folder)):
+			with open(os.path.join(folder, name), encoding="utf-8") as f:
+				for i, line in enumerate(f.read().split("\n")):
+					m = re.match(r'([A-Za-z_][A-Za-z0-9_]*) := "([^"\\]{12,})";$', line)
+					if m and m.group(1) in address and (best is None or address[m.group(1)] < best[0]):
+						best = (address[m.group(1)], name, i, m.group(1), m.group(2))
+		if best is None:
+			print("no string to edit in %s" % folder)
+			return 1
+		_, name, i, what, text = best
+		path = os.path.join(folder, name)
 		with open(path, encoding="utf-8") as f:
 			lines = f.read().split("\n")
-		for i, line in enumerate(lines):
-			m = re.match(r'([A-Za-z_][A-Za-z0-9_]*) := "([^"\\]{12,})";$', line)
-			if m:
-				lines[i] = '%s := "%s (edited)";' % (m.group(1), m.group(2))
-				print("edited %s: \"%s\" is now \"%s (edited)\"" % (m.group(1), m.group(2), m.group(2)))
-				break
-		else:
-			print("no string to edit in %s" % path)
-			return 1
+		lines[i] = '%s := "%s (edited)";' % (what, text)
+		print("edited %s in %s: \"%s\" is now \"%s (edited)\"" % (what, name, text, text))
 		with open(path, "w", encoding="utf-8", newline="\n") as f:
 			f.write("\n".join(lines))
 		result = main(["build", a.output, "-o", a.objects, "--newtonscript", a.newtonscript, "--relayout"])

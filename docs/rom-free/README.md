@@ -253,7 +253,8 @@ the decompiler.
 
 The tree holds:
 
-- 3038 definitions in `objects/NNN.ns`, 400 to a file in address order;
+- 3038 definitions in `objects/`, grouped by the root they belong to (see
+  "The files, by what they belong to");
 - 5480 functions in `functions/`;
 - the 8336 maps in `maps.ns`;
 - `layout.tsv`, one line per object, and the aliases;
@@ -269,12 +270,10 @@ What it is not yet:
 
 - The compressed sounds (IMA ADPCM), the ring tones' `TDTMFCodec`
   parameters and the tables are still `.bin` files.
-- The files are cut by address, not by what they belong to (the
-  dominator grouping above).
-- Resources are opaque, and inline objects are named by path, so an edit
-  that moves a slot also has to move the manifest's line.
-
-In short, it is a faithful and readable dump, and not yet a tree to edit.
+- Inline objects are named by path in the manifest, so an edit that
+  moves a slot, or adds a frame, also has to change the manifest. An
+  edit within an object, including one that changes its size, needs
+  nothing more: `--relayout`.
 
 ## Where the tree lives
 
@@ -474,6 +473,29 @@ The test of editability is ctest `host.ROMSourceEdit` followed by
   **43566 objects move**.
 - The OS booted on the result draws the Setup Welcome pixel for pixel as
   the ROM image's boot does.
+
+### The files, by what they belong to
+
+The definitions are no longer cut by address:
+
+- **Objects: each file is the definitions one root dominates**, meaning
+  every path from the roots to them passes through that root. The roots
+  are the top-level objects: those reached from the magic pointers, from
+  an R constant, or from no object at all.
+  - The file is named after the root. That is its R constant's name
+    (`Rbuiltinfunctions.ns`), or what the root says it is: a template's
+    `debug` name, an application's symbol or a title, with its
+    magic-pointer index (`calendar_mp18.ns`, `worldClock_mp298.ns`,
+    `ExtrasDrawer_mp832.ns`). Failing that, it is `mp<index>.ns`.
+  - What more than one root shares, and the groups of fewer than eight
+    definitions, go into `misc-NNN.ns` in address order.
+- **Functions: each file is named by the path that holds the function.**
+  For example, `functions/Rbuiltinfunctions.AddAlarm.ns`, where it was
+  the address.
+
+The builder reads whatever files are there, so the grouping is only for
+people. `edit-test` finds its string by its address in the layout,
+whatever file it is in.
 
 ### The plan
 
