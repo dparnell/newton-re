@@ -72,6 +72,7 @@ RegisterAllNatives(void)
 	RegisterBitmapNatives();
 	RegisterRectNatives();
 	RegisterViewNatives();
+	RegisterViewExtraNatives();
 	RegisterShapeNatives();
 	RegisterPickNatives();
 	RegisterClipboardNatives();

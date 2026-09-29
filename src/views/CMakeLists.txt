@@ -22,6 +22,7 @@ add_library(views STATIC
     ModalDialogs.cpp
     ViewNatives.cpp
     FontNatives.cpp
+    ViewExtraNatives.cpp
     TextView.cpp
     PictureView.cpp
     DataView.cpp

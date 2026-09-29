@@ -39,6 +39,7 @@
 #include "Screen.h"		// StartDrawing
 #include "PickView.h"		// GetAppAreaBounds
 #include "PolygonView.h"	// AlignPtToGrid
+#include "Animate.h"		// TAnimate (SyncScroll)
 #include "Bits.h"
 #include <string.h>
 
@@ -2950,6 +2951,141 @@ TView::RemoveChildView(TView* child)
 		}
 	}
 	child->Delete();
+}
+
+
+// ROM 0x002635f4 SyncScroll__5TViewFRC6RefVarN21
+// A roll (protoRoll's viewScrollUpScript/viewScrollDownScript) scrolled a
+// step through its items - an array of item templates, each with its
+// `height` (a collapsed one, or every one when the roll's allCollapsed is
+// set, taking the roll's collapsedHeight instead).  The roll's
+// viewOriginY is how far the first item showing is scrolled into; index
+// is that item.
+//
+// Down (direction >= 0): further into the item showing when it is taller
+// than the roll, else on to the next item (nothing when there is none).
+// Up: back up the item showing, else back to the one before - scrolled to
+// its last whole view's height, h - h % height, when it is taller than the
+// roll.  The items from the lower of the old and new index are then
+// walked while they fill the roll: those from the new index on are the
+// children, made where they do not exist yet (going up, put in front) and
+// marked, the rest removed (RemoveUnmarked); the ones scrolled over add
+// their height to how far the roll slides.  The slide is animated with
+// the scroll sound over the roll less its bottom 5 pixels, or with no
+// slide the roll is simply redrawn.  ==> the items now showing, nil for
+// nothing to do.
+Ref
+TView::SyncScroll(RefArg items, RefArg indexRef, RefArg directionRef)
+{
+	RefVar scratch;
+	long height = (short) (viewBounds.bottom - viewBounds.top);
+	long direction = RINT(directionRef);
+	long oldIndex = RINT(indexRef);
+	long index = oldIndex;
+	long count = Length(items);
+	scratch = GetCacheProto(kIndexViewOriginY);
+	long scrolled = ISNIL(scratch) ? 0 : RINT(scratch);
+	long slide = 0;
+	if (direction < 0)
+	{
+		if (oldIndex == 0 && scrolled == 0)
+			return NILREF;
+		if (scrolled == 0)
+		{
+			index += direction;
+			scratch = GetArraySlotRef(items, index);
+			long h = RINT(RefVar(GetVariable(scratch, RSSYMheight, nil, 0)));
+			if (h > height)
+				slide = h - h % height;
+		}
+		else
+		{
+			slide = scrolled - height;
+			if (slide < 0)
+				slide = 0;
+		}
+	}
+	else
+	{
+		scratch = GetArraySlotRef(items, oldIndex);
+		long h = RINT(RefVar(GetVariable(scratch, RSSYMheight, nil, 0)));
+		if (h - scrolled > height)
+			slide = scrolled + height;
+		else
+		{
+			index += direction;
+			if (index >= count)
+				return NILREF;
+		}
+	}
+	if (slide != scrolled)
+	{
+		InvalidateSlotCache(kIndexViewOriginY);
+		SetContextSlot(RSSYMvieworiginy, RefVar(MAKEINT(slide)));
+	}
+	SetVariable(fContext, RSSYMindex, RefVar(MAKEINT(index)));
+	Boolean allCollapsed = NOTNIL(RefVar(GetProto(RSSYMallcollapsed)));
+	scratch = GetVar(RSSYMcollapsedheight);
+	long collapsedHeight = ISNIL(scratch) ? 0 : RINT(scratch);
+	RefVar showing(MakeArray(0));
+	long i = oldIndex >= index ? index : oldIndex;
+	for (long y = -slide; y < height && i < count; i++)
+	{
+		scratch = GetArraySlotRef(items, i);
+		Boolean collapsed = allCollapsed;
+		if (!collapsed)
+			collapsed = NOTNIL(RefVar(GetProtoVariable(scratch, RSSYMcollapsed, nil)));
+		long h = collapsed ? collapsedHeight : RINT(RefVar(GetVariable(scratch, RSSYMheight, nil, 0)));
+		if (i < index || i < oldIndex)
+			slide += h;
+		if (i >= index)
+		{
+			AddArraySlot(showing, scratch);
+			y += h;
+		}
+	}
+	TAnimate anim;
+	if (slide != 0)
+	{
+		Rect bounds = viewBounds;
+		bounds.bottom -= 5;
+		anim.SetupSlideEffect(this, bounds, direction >= 0 ? -slide : slide, 0);
+	}
+	long kids = Length(showing);
+	long front = 0;
+	for (long k = 0; k < kids; k++)
+	{
+		scratch = GetArraySlotRef(showing, k);
+		TView* child = Exists(fChildren, scratch);
+		if (child == nil)
+		{
+			child = AddView(scratch);
+			if (direction < 0)
+			{
+				// made at the end: going up, it belongs in front
+				fChildren->RemoveElementsAt(fChildren->GetArraySize() - 1, 1);
+				fChildren->InsertAt(front++, child);
+			}
+		}
+		child->SetFlags(vIsMarked);
+	}
+	RemoveUnmarked();
+	TViewLoop loop(fChildren);
+	for (TView* child = loop.Next(); child != nil; child = loop.Next())
+		child->RecalcBounds();
+	if (slide != 0)
+	{
+		anim.DoEffect(direction >= 0 ? RefVar(RSSYMscrolldownsound) : RefVar(RSSYMscrollupsound));
+		Rect bounds = viewBounds;
+		bounds.bottom -= 5;
+		gRootView->Invalidate(TRectangularRegion(bounds), this);
+	}
+	else
+	{
+		Dirty(nil);
+		gRootView->Update(nil);
+	}
+	return showing;
 }
 
 

@@ -31,6 +31,10 @@
 #include "RSSymbols.h"
 #include "NewtonExceptions.h"
 #include "Locale.h"		// GetPreference
+#include "Text.h"			// TextBounds (ComputeParagraphHeight)
+#include "StyleRuns.h"		// GetStylesOfRange (ExtractRichStringFromParaSlots)
+#include "Unicode.h"		// Ustrlen
+#include <string.h>
 
 
 /*------------------------------------------------------------------------------
@@ -214,6 +218,93 @@ FGetRangeText(RefArg /*rcvr*/, RefArg view, RefArg start, RefArg end)
 }
 
 
+// ROM 0x001ef3b0 FExtractRangeAsRichString
+// view:ExtractRangeAsRichString(start, length) - that range of a
+// paragraph as a rich string: its characters with the styles of the range
+// folded in, so the ink words among them come too.  A paragraph with no
+// style array answers the plain characters.  The range is clamped to the
+// text only for the styles: ExtractTextRange has already cut the
+// characters to it.
+static Ref
+FExtractRangeAsRichString(RefArg rcvr, RefArg start, RefArg length)
+{
+	TParagraphView* view = FailGetParagraphView(rcvr);
+	ULong count = (ULong) RINT(length);
+	ULong offset = (ULong) RINT(start);
+	RefVar text(view->ExtractTextRange(offset, count));
+	RefVar styles(view->Styles());
+	if (!IsArray(styles))
+		return text;
+	RefVar whole(view->Text());
+	ULong size = (ULong) Ustrlen((UniChar*) BinaryData(whole));
+	if (size < offset)
+		offset = size;
+	if (size < offset + count)
+		count = size - offset;
+	RefVar runs(view->GetStylesOfRange((long) offset, (long) count, false));
+	return MakeRichString(text, runs, false);
+}
+
+
+// ROM 0x001efd88 FExtractRichStringFromParaSlots
+// ExtractRichStringFromParaSlots(text, styles, start, length) - the same
+// for a paragraph that is not open: the range cut out of the text and
+// styles slots of its data.  The characters come out plain unless an ink
+// word falls among the range's styles, which is when a rich string is
+// needed to carry it.
+static Ref
+FExtractRichStringFromParaSlots(RefArg /*rcvr*/, RefArg text, RefArg styles, RefArg start, RefArg length)
+{
+	long count = RINT(length);
+	ULong offset = (ULong) RINT(start);
+	TRichString rich(text);
+	ULong size = (ULong) rich.Length();
+	if (size < offset)
+		offset = size;
+	if (size < offset + (ULong) count)
+		count = (long) (size - offset);
+	RefVar string(AllocateBinary(RSSYMstring, count * 2 + 2));
+	memmove(BinaryData(string), (UniChar*) BinaryData(text) + offset, count * 2);
+	((UniChar*) BinaryData(string))[count] = 0;
+	if (!IsArray(styles) || Length(styles) < 1)
+		return string;
+	RefVar runs(GetStylesOfRange(styles, (long) offset, count, false));
+	long slots = Length(runs);
+	for (long slot = 1; slot < slots; slot += 2)
+		if (IsInkWord(RefVar(GetArraySlotRef(runs, slot))))
+			return MakeRichString(string, runs, false);
+	return string;
+}
+
+
+// ROM 0x001ecfd0 FComputeParagraphHeight
+// ComputeParagraphHeight(para, top, width) - how tall a paragraph of the
+// frame's text in its viewFont would be when laid out that wide: the text
+// fitted into a box of that width (TextBounds), never less than 50.
+//
+// The ROM builds the box on the stack as {top, 0, top, width}: its bottom
+// is copied from its top through an unaligned load (the halfword before
+// the one named), which is what makes the box empty in height so that
+// TextBounds sizes it.
+static Ref
+FComputeParagraphHeight(RefArg /*rcvr*/, RefArg para, RefArg top, RefArg width)
+{
+	RefVar font(GetProtoVariable(para, RSSYMviewfont, nil));
+	RefVar text(GetProtoVariable(para, RSSYMtext, nil));
+	Rect box;
+	box.top = (short) RINT(top);
+	box.left = 0;
+	box.bottom = box.top;
+	box.right = (short) RINT(width);
+	TRichString rich(text);
+	TextBounds(rich, font, &box, 0);
+	long height = (short) (box.bottom - box.top);
+	if (height <= 50)
+		height = 50;
+	return MAKEINT(height);
+}
+
+
 // ROM 0x001ef414 FExtractTextRange
 // view:ExtractTextRange(start, length) - the plain characters of that
 // range of a paragraph, without the styles GetRangeText would carry.
@@ -280,4 +371,7 @@ RegisterFontNatives(void)
 	RegisterNativeFunction("FGetTextFlags", (void*) FGetTextFlags, 1);
 	RegisterNativeFunction("FMungeStyles", (void*) FMungeStyles, 2);
 	RegisterNativeFunction("FExtractTextRange", (void*) FExtractTextRange, 2);
+	RegisterNativeFunction("FExtractRangeAsRichString", (void*) FExtractRangeAsRichString, 2);
+	RegisterNativeFunction("FExtractRichStringFromParaSlots", (void*) FExtractRichStringFromParaSlots, 4);
+	RegisterNativeFunction("FComputeParagraphHeight", (void*) FComputeParagraphHeight, 3);
 }

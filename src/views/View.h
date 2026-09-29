@@ -275,6 +275,7 @@ public:
 	void		RemoveView(void);										// ROM 0x0025f960 RemoveView__5TViewFv
 	void		RemoveChildView(TView* child);							// ROM 0x0025f96c RemoveChildView__5TViewFP5TView
 	void		RemoveUnmarked(void);									// ROM 0x002623a0 RemoveUnmarked__5TViewFv
+	Ref			SyncScroll(RefArg items, RefArg index, RefArg direction);	// ROM 0x002635f4 SyncScroll__5TViewFRC6RefVarN21 - a roll's items scrolled a step: ==> the items now showing (nil: nothing to do)
 	void		ReorderView(TView* child, long index);					// ROM 0x00260cd8 ReorderView__5TViewFP5TViewl
 	void		BringToFront(void);										// ROM 0x002611e8 BringToFront__5TViewFv
 	void		MoveChildBehind(TView* child, TView* behind);			// ROM 0x002611fc MoveChildBehind__5TViewFP5TViewT1
@@ -412,6 +413,7 @@ void		InitViewSystem(void);			// host: the slot cache table, the prototypes, the
 void		InitViewSystem(RefArg rootTemplate);	// ... built from this template instead of the host's (the ROM's Rviewroot: TNotebook::Constructor)
 Ref			MakeRootTemplate(void);			// the ROM's Rviewroot with the view methods under it, or the host's stand-in when there are no ROM objects
 void		RegisterViewNatives(void);		// the NewtonScript view functions (ViewNatives.cpp)
+void		RegisterViewExtraNatives(void);	// ... and the rest: DV, ViewAutopsy, FormatVertical, ReFlow, SyncScroll, ... (ViewExtraNatives.cpp)
 Ref			FChangeStylesOfRange(RefArg rcvr, RefArg start, RefArg length, RefArg style, RefArg redraw);	// ROM 0x001eeba8 FChangeStylesOfRange - a view method, so MakeViewMethods has it too
 Ref			FExtractTextRange(RefArg rcvr, RefArg start, RefArg length);	// ROM 0x001ef414 FExtractTextRange - likewise
 Ref			FSetFontSize(RefArg rcvr, RefArg fontSpec, RefArg size);	// ROM 0x001ed994 FSetFontSize

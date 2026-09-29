@@ -1258,9 +1258,38 @@ FDismissPopup(RefArg /*rcvr*/)
 }
 
 
+// ROM 0x00185044 FPickViewGetScollerValues
+// picker:GetScrollerValues() - where a popup list that is too tall for the
+// screen is scrolled to, for its scroll arrows (SetScrollers): the
+// view's GetOverflows.  (The ROM's name has the typo.)  nil for no view.
+static Ref
+FPickViewGetScollerValues(RefArg rcvr)
+{
+	TPickView* view = (TPickView*) GetView(rcvr);
+	if (view == nil)
+		return NILREF;
+	return view->GetOverflows();		// (a tail call in the ROM)
+}
+
+
+// ROM 0x00185130 FPickViewScroll
+// picker:Scroll(direction) - the list scrolled a page up or down, the
+// picked item let go (TPickView::Scroll).
+static Ref
+FPickViewScroll(RefArg rcvr, RefArg direction)
+{
+	TPickView* view = (TPickView*) GetView(rcvr);
+	if (view != nil)
+		view->Scroll(direction, true);
+	return NILREF;
+}
+
+
 void
 RegisterPickNatives(void)
 {
+	RegisterNativeFunction("FPickViewGetScollerValues", (void*) FPickViewGetScollerValues, 0);
+	RegisterNativeFunction("FPickViewScroll", (void*) FPickViewScroll, 1);
 	RegisterNativeFunction("FPickViewKeyDown", (void*) FPickViewKeyDown, 2);
 	RegisterNativeFunction("FGetPopup", (void*) FGetPopup, 0);
 	RegisterNativeFunction("FClearPopup", (void*) FClearPopup, 0);
