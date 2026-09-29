@@ -737,9 +737,8 @@ TObjectReader::ReadSmallRect(void)
 // ephemeral until an entry takes it.
 //
 // ROM BUG kept: the name's and parameters' blocks are given back only
-// when something throws.  (A stream written compressed cannot be read
-// yet: CreateLargeObject's fromCompressed branch, LODefCreateFromComp, is
-// NOT YET.)
+// when something throws.  (A stream written compressed is made again by
+// CreateLargeObject's fromCompressed branch, LODefCreateFromComp.)
 Ref
 TObjectReader::ReadLargeBinary(void)
 {

@@ -212,6 +212,25 @@ TestLargeBinaries(void)
 		EXPECT(EQRef(ClassOf(v), SYMBOL("samples")));
 		EXPECT(Holds(v, 7000, 2));
 	}
+	// ... and streamed compressed (SetCompressLargeBinaries: the blocks as
+	// they lie on the store), read back by LODefCreateFromComp
+	{
+		CTestPipe pipe(0x4000);
+		RefVar frame(AllocateFrame());
+		SetFrameSlot(frame, RefVar(SYMBOL("v")), data);
+		TObjectWriter writer(frame, pipe, false);
+		writer.SetCompressLargeBinaries();
+		long size = writer.Size();
+		writer.Write();
+		EXPECT(size == pipe.WritePosition());
+		pipe.Rewind();
+		TObjectReader reader(pipe, storeObject);
+		RefVar read(reader.Read());
+		RefVar v(GetFrameSlotRef(read, SYMBOL("v")));
+		EXPECT(IsLargeBinary(v) && LargeBinaryData(v)->fId != id);
+		EXPECT(EQRef(ClassOf(v), SYMBOL("samples")));
+		EXPECT(Holds(v, 7000, 2));
+	}
 
 	// the entry removed: its large object is deleted - the binary still in
 	// memory makes it an ephemeral again, until it goes

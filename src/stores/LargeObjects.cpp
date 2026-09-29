@@ -241,6 +241,151 @@ LODefaultCreate(ULong* id, TStore* store, CPipe* pipe, long size, UChar readOnly
 }
 
 
+// ROM 0x00101e14 FillChunkArrayCompressed__FP6TStoreUlP5CPipelP11TLOCallback
+// The chunk array's blocks filled from a compressed stream: for each, its
+// length (a big-endian word) and that many bytes, put into the block
+// object unopened (ReplaceObject) - they are as the compander left them.
+// The callback is told the bytes read so far (counting the stream's two
+// leading words) every so many bytes.  On a failure every block object is
+// given back.
+// ROM BUGS kept: a block's length is never checked against the 0x520-byte
+// buffer it is read into; the callback's part count is left unset
+// (DEVIATION: the host's is nought, where the ROM's is stack rubbish).
+NewtonErr
+FillChunkArrayCompressed(TStore* store, ULong chunkArrayId, CPipe* pipe, long streamSize, TLOCallback* callback)
+{
+	char* block = (char*) malloc(0x520);
+	NewtonErr err = block == nil ? kError_No_Memory : noErr;		// (the ROM: MemError after operator new)
+	long count = 0;
+	if (err == noErr && (err = store->GetObjectSize(chunkArrayId, &count)) == noErr)
+	{
+		count = (long) ((ULong) count >> 2);
+		TLOCallbackInfo progress;
+		progress.fPackageSize = streamSize;
+		progress.fAmountRead = 0;
+		progress.fPackageName = nil;
+		progress.fCurrentPart = 0;
+		progress.fNumberOfParts = 0;
+		ULong amountRead = 8;
+		ULong sinceTold = 8;
+		for (long i = 0; i < count; i++)
+		{
+			volatile long length = 0;
+			volatile NewtonErr readErr = noErr;
+			newton_try
+			{
+				UByte word[4];
+				long n = 4;
+				Boolean eof;
+				pipe->ReadChunk(word, n, eof);
+				length = (long) GetBigEndianWord(word);
+				n = length;
+				pipe->ReadChunk(block, n, eof);
+			}
+			newton_catch(exPipeException)
+			{
+				readErr = (NewtonErr) (long) (Long) _info.exception.data;
+			}
+			end_try;
+			UByte idWord[4];
+			if ((err = readErr) != noErr
+			|| (err = store->Read(chunkArrayId, i << 2, (char*) idWord, 4)) != noErr
+			|| (err = store->ReplaceObject(GetBigEndianWord(idWord), block, length)) != noErr)
+				break;
+			amountRead += length + 4;
+			sinceTold += length + 4;
+			if (callback != nil && callback->fFrequency <= sinceTold)
+			{
+				progress.fAmountRead = amountRead;
+				callback->fProc(callback, &progress);
+				sinceTold = 0;
+			}
+		}
+	}
+	if (err != noErr)
+	{
+		for (long i = 0; i < count; i++)
+		{
+			UByte idWord[4];
+			if (store->Read(chunkArrayId, i << 2, (char*) idWord, 4) != noErr
+			|| store->SeparatelyAbort(GetBigEndianWord(idWord)) != noErr)
+				break;
+		}
+	}
+	free(block);
+	return err;
+}
+
+
+// ROM 0x00102080 LODefCreateFromComp__FPUlP6TStoreP5CPipelUcPcPvT4P11TLOCallback
+// A large object made from a compressed stream (LODefaultBackup's form):
+// the root's flags and the object's size read first, then the root, the
+// compander's name and parameters and the chunk array made (each in a
+// separate transaction), the blocks filled from the stream as they are,
+// and the root written - the flags as they came (without 0x10000 when made
+// read-only), the size, 'paok'.  On a failure what was made is given back
+// (though not the blocks the chunk array names).
+NewtonErr
+LODefCreateFromComp(ULong* id, TStore* store, CPipe* pipe, long streamSize, UChar readOnly, char* compander, void* parameters,
+					long parametersSize, TLOCallback* callback)
+{
+	UByte root[kLargeObjectRootSize];
+	memset(root, 0, sizeof(root));
+	PutBigEndianWord(root + kLORootFlags, 2);		// (LargeObjectRoot's constructor)
+	PSSId rootId = 0, nameId = 0, paramsId = 0;
+	ULong chunkArrayId = 0;
+	volatile NewtonErr err = noErr;
+	volatile ULong flags = 0, size = 0;
+	newton_try
+	{
+		UByte word[4];
+		long n = 4;
+		Boolean eof;
+		pipe->ReadChunk(word, n, eof);
+		flags = GetBigEndianWord(word);
+		n = 4;
+		pipe->ReadChunk(word, n, eof);
+		size = GetBigEndianWord(word);
+	}
+	newton_catch(exPipeException)
+	{
+		err = (NewtonErr) (long) (Long) _info.exception.data;
+	}
+	end_try;
+	if (err == noErr && (err = store->NewWithinTransaction(kLargeObjectRootSize, &rootId)) == noErr)
+	{
+		*id = rootId;
+		if ((err = store->NewWithinTransaction(strlen(compander), &nameId)) == noErr
+		&&  (err = store->Write(nameId, 0, compander, strlen(compander))) == noErr
+		&&  (err = store->NewWithinTransaction(parametersSize, &paramsId)) == noErr
+		&&  (parametersSize == 0 || (err = store->Write(paramsId, 0, (char*) parameters, parametersSize)) == noErr)
+		&&  (err = InitializeChunkArray(store, &chunkArrayId, size)) == noErr
+		&&  (err = FillChunkArrayCompressed(store, chunkArrayId, pipe, streamSize, callback)) == noErr)
+		{
+			PutBigEndianWord(root + kLORootChunkArray, (ULong32) chunkArrayId);
+			PutBigEndianWord(root + kLORootCompanderName, (ULong32) nameId);
+			PutBigEndianWord(root + kLORootCompanderParams, (ULong32) paramsId);
+			PutBigEndianWord(root + kLORootState, kLOComplete);
+			PutBigEndianWord(root + kLORootFlags, readOnly != 0 ? (flags & ~0x10000) : flags);
+			PutBigEndianWord(root + kLORootSize, size);
+			err = store->Write(rootId, 0, (char*) root, kLargeObjectRootSize);
+		}
+	}
+	if (err != noErr)
+	{
+		if (paramsId != 0)
+			store->SeparatelyAbort(paramsId);
+		if (nameId != 0)
+			store->SeparatelyAbort(nameId);
+		if (chunkArrayId != 0)
+			store->SeparatelyAbort(chunkArrayId);
+		if (rootId != 0)
+			store->SeparatelyAbort(rootId);
+	}
+	return err;
+}
+
+
 // ROM 0x00102f70 CreateLargeObject__FPUlP6TStorelPcPvT3
 // An empty large object of the size.
 NewtonErr
@@ -254,9 +399,8 @@ CreateLargeObject(ULong* id, TStore* store, long size, char* compander, void* pa
 // A large object made by the compander's own large-object store if it has
 // one (TLrgObjStore), else the default way - as long as the compander is
 // known at all (kError_Bad_Parameters when it is not).  With a pipe to
-// read from, the world forks first.
-// NOT YET RECONSTRUCTED: made from compressed blocks by the default way
-// (LODefCreateFromComp): the host answers kError_Call_Not_Implemented.
+// read from, the world forks first.  fromCompressed: the stream is
+// LODefaultBackup's compressed form (LODefCreateFromComp).
 NewtonErr
 CreateLargeObject(ULong* id, TStore* store, CPipe* pipe, long size, UChar readOnly, char* compander, void* parameters, long parametersSize,
 				  TLOCallback* callback, UChar fromCompressed)
@@ -273,7 +417,7 @@ CreateLargeObject(ULong* id, TStore* store, CPipe* pipe, long size, UChar readOn
 		if (ClassInfoByName("TStoreCompander", compander) == nil)
 			return kError_Bad_Parameters;
 		if (fromCompressed)
-			return kError_Call_Not_Implemented;
+			return LODefCreateFromComp(id, store, pipe, size, readOnly, compander, parameters, parametersSize, callback);
 		return LODefaultCreate(id, store, pipe, size, readOnly, compander, parameters, parametersSize, callback);
 	}
 	NewtonErr err = allocator->Init();

@@ -1258,12 +1258,13 @@ TLOPackageStore::Create(ULong* id, TStore* store, CPipe* pipe, long /*size*/, UC
 }
 
 // ROM 0x001016c4 CreateFromCompressed__15TLOPackageStoreFPUlP6TStoreP5CPipelUcPcPvT4P11TLOCallback
-// NOT YET RECONSTRUCTED: LODefCreateFromComp (stores/LargeObjects.cpp).
+// The default way (stores/LargeObjects.cpp): a package's pages, streamed
+// compressed, put back as they are.
 NewtonErr
-TLOPackageStore::CreateFromCompressed(ULong* /*id*/, TStore* /*store*/, CPipe* /*pipe*/, long /*size*/, UChar /*readOnly*/, char* /*compander*/,
-									  void* /*parameters*/, long /*parametersSize*/, TLOCallback* /*callback*/)
+TLOPackageStore::CreateFromCompressed(ULong* id, TStore* store, CPipe* pipe, long size, UChar readOnly, char* compander,
+									  void* parameters, long parametersSize, TLOCallback* callback)
 {
-	return kError_Call_Not_Implemented;
+	return LODefCreateFromComp(id, store, pipe, size, readOnly, compander, parameters, parametersSize, callback);
 }
 
 // ROM 0x00101714 DeleteObject__15TLOPackageStoreFP6TStoreUl

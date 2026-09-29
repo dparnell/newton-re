@@ -45,11 +45,15 @@
 				packages/StorePackages.h: the root's kind is 1 and the
 				data is the package's pages, each compressed on its own).
 
-				NOT YET RECONSTRUCTED: LODefCreateFromComp/
-				FillChunkArrayCompressed (an object made from
-				already-compressed blocks - so a large binary streamed
-				compressed cannot be read back yet), the progress
-				callback (TLOCallback), the XIP requests
+				A large object streamed compressed (LODefaultBackup's
+				other form: the root's flags and the size, then each
+				block as it lies on the store with its length before it)
+				is made again by LODefCreateFromComp, each block put back
+				unopened (FillChunkArrayCompressed).  A package being
+				made from a pipe tells a progress callback how far it has
+				got (TLOCallback).
+
+				NOT YET RECONSTRUCTED: the XIP requests
 				(TXIPPackageStore).
 
 	Reconstructed from the MP2x00 US ROM (0x001014bc-0x00103ccc,
@@ -191,6 +195,9 @@ NewtonErr	LODefaultCreate(ULong* id, TStore* store, CPipe* pipe, long size, UCha
 NewtonErr	InitializeChunkArray(TStore* store, ULong* chunkArrayId, ULong size);	// ROM 0x001017a8 InitializeChunkArray__FP6TStorePUlUl
 NewtonErr	FillChunkArray(TStore* store, ULong rootId, ULong chunkArrayId, CPipe* pipe, ULong size, char* compander, ULong parametersId,
 						   TLOCallback* callback);			// ROM 0x001018f4 FillChunkArray__FP6TStoreUlT2P5CPipeT2PcT2P11TLOCallback
+NewtonErr	LODefCreateFromComp(ULong* id, TStore* store, CPipe* pipe, long streamSize, UChar readOnly, char* compander, void* parameters,
+								long parametersSize, TLOCallback* callback);	// ROM 0x00102080 LODefCreateFromComp__FPUlP6TStoreP5CPipelUcPcPvT4P11TLOCallback - made from the stream LODefaultBackup writes compressed
+NewtonErr	FillChunkArrayCompressed(TStore* store, ULong chunkArrayId, CPipe* pipe, long streamSize, TLOCallback* callback);	// ROM 0x00101e14 FillChunkArrayCompressed__FP6TStoreUlP5CPipelP11TLOCallback - each block put back as it came
 Boolean		PackageAllocationOk(TStore* store, PSSId rootId);	// ROM 0x00161f90 PackageAllocationOk__FP6TStoreUl - 'paok'
 
 // Mapping

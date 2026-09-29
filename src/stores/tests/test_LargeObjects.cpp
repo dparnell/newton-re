@@ -62,6 +62,18 @@ RootSize(TStore* store, PSSId id)
 }
 
 
+// a progress callback that counts its calls
+static long		gCallbackCount = 0;
+static ULong	gCallbackLastRead = 0;
+
+static void
+CountCallback(TLOCallback* /*callback*/, TLOCallbackInfo* info)
+{
+	gCallbackCount++;
+	gCallbackLastRead = info->fAmountRead;
+}
+
+
 static void
 Scenario(const char* compander)
 {
@@ -164,6 +176,41 @@ Scenario(const char* compander)
 	EXPECT(LargeObjectIsReadOnly(address) && !LargeObjectIsDirty(address));
 	EXPECT(memcmp((void*) address, bytes, kPiped) == 0);
 	EXPECT(UnmapLargeObject(address) == noErr);
+
+	// streamed compressed (LODefaultBackup's other form: the root's flags,
+	// the size, each block as it lies on the store with its length before
+	// it) and made again from that stream (LODefCreateFromComp): the blocks
+	// go back unopened, so the object reads the same; the progress callback
+	// told the bytes read after every block
+	long streamSize = LODefaultStreamSize(store, piped, true);
+	EXPECT(streamSize > 8);
+	CTestPipe packed(streamSize + 16);
+	EXPECT(LODefaultBackup(&packed, store, piped, true, nil) == noErr);
+	packed.Rewind();
+	gCallbackCount = 0;
+	gCallbackLastRead = 0;
+	TLOCallback progress;
+	progress.fProc = CountCallback;
+	progress.fFunction = nil;
+	progress.fInfoFrame = nil;
+	progress.fFrequency = 1;					// (every block: the LZ one packs these small)
+	ULong fromPacked = 0;
+	EXPECT(LODefCreateFromComp(&fromPacked, store, &packed, streamSize, false, (char*) compander, nil, 0, &progress) == noErr
+		   && fromPacked != 0);
+	EXPECT(PackageAllocationOk(store, fromPacked) && RootSize(store, fromPacked) == kPiped && ChunkCount(store, fromPacked) == 3);
+	EXPECT(gCallbackCount == 3 && gCallbackLastRead == (ULong) streamSize);	// (the stream's every byte read by the last block)
+	EXPECT(MapLargeObject(&address, store, fromPacked, true) == noErr && ObjectSize(address) == kPiped);
+	EXPECT(memcmp((void*) address, bytes, kPiped) == 0);
+	EXPECT(UnmapLargeObject(address) == noErr);
+	// a stream cut short: its pipe exception is the answer
+	CTestPipe shortPacked(16);
+	UByte header[8];
+	PutBigEndianWord(header, 2);
+	PutBigEndianWord(header + 4, kPiped);
+	shortPacked.WriteChunk(header, 8, false);
+	shortPacked.Rewind();
+	ULong notMade = 0;
+	EXPECT(LODefCreateFromComp(&notMade, store, &shortPacked, 8, false, (char*) compander, nil, 0, nil) != noErr);
 
 	// refused: an object that is not complete, a compander nobody knows
 	UByte notDone[kLargeObjectRootSize];
