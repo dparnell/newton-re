@@ -145,13 +145,11 @@ worked through.  What could come next (not ranked; the owner chooses):
   disconnect (ctest `host.NewtonInet`), over the host's own link
   (`comms/host/HostLink.ns`, embedded; the `ictl`, `dnst` and `inet`
   services).  Internet Setup lists, opens and offers the Host network
-  (ctest `host.NewtonInetSetup`; its editor still shows Ethernet's Card
-  field), and the NIE's protoEndpointFSM runs as a TCP client over it
-  (`host.NewtonInetFSM`).  Open: at link shutdown the link manager
-  disposes itself in its own CleanUp and `DoEvent_Loop` then subtracts
-  from a nil level (-48404) - believed the NIE's own, to be confirmed on
-  the armcpu oracle.  Waiting on NIE client packages (mail, web) for
-  `fixtures/`; the modem navigator.  `test_NIEProtoFSM` also runs
+  (ctest `host.NewtonInetSetup`; its pages are Ethernet's less the card
+  picker - the Configuration picker and the IP page are still shown and
+  ignored), and the NIE's protoEndpointFSM runs as a TCP client over it
+  (`host.NewtonInetFSM`).  Waiting on NIE client packages (mail, web)
+  for `fixtures/`; the modem navigator.  `test_NIEProtoFSM` also runs
   each check on the package's own ARM code through armcpu, and the two
   agree (2ae6d73).  armcpu left: frames in a code binary; protocol parts
   through the CPU - no fixture needs them yet (every protocol part among

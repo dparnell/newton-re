@@ -9,6 +9,18 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: comms, round 11 - an NIE bug confirmed on its own ARM
+
+- `NEWTON_NIE_ON_CPU` leaves the NIE's natives unregistered, so a whole
+  host session runs its own ARM on the armcpu fallback.  With it the -48404
+  thrown at link shutdown was confirmed as the NIE's own: `DoEvent_Loop`
+  computes level - 1 on a context its own action (the link manager's
+  CleanUp, disposing the manager) has emptied - commented NIE BUG (kept)
+  in `ProtoFSMLoop.cpp` (163e4c6).
+- The Host network setup's pages drop Ethernet's card picker
+  (`viewsToDisplay`'s 'cardData and the new-setup pages' card child)
+  (efb3e2b).
+
 ## 2026-09-29: comms, round 10 - Internet Setup and protoEndpointFSM
 
 - Internet Setup driven on the host (`src/host/demo/inetsetup.ns`, ctest
