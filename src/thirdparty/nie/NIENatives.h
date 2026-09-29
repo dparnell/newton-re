@@ -1,0 +1,30 @@
+/*
+	File:		thirdparty/nie/NIENatives.h
+
+	Contains:	The Newton Internet Enabler's native functions re-expressed as
+				host code (NIERuntime.h), and RegisterNIENatives, which binds
+				each to its place in the NIE's code binary
+				(frames/PackageNatives.h) - registered for the binary's length
+				and hash, so they run only for that build of the NIE.
+
+				Each takes the receiver, its arguments and then its closure
+				(which every NTK native function has).
+*/
+
+#ifndef __NIENATIVES_H
+#define __NIENATIVES_H
+
+#ifndef __OBJECTS_H
+#include "objects.h"
+#endif
+
+// protoFSM's queue (ProtoFSMQueue.cpp)
+Ref		NIEQueueEnQueue(RefArg rcvr, RefArg item, RefArg closure);
+Ref		NIEQueueDeQueue(RefArg rcvr, RefArg closure);
+Ref		NIEQueuePeek(RefArg rcvr, RefArg closure);
+Ref		NIEQueueGetQueueSize(RefArg rcvr, RefArg closure);
+Ref		NIEQueueIsEmpty(RefArg rcvr, RefArg closure);
+
+void	RegisterNIENatives(void);
+
+#endif

@@ -144,7 +144,7 @@ def trampoline_target(code, stubs, at, depth=0):
             found = re.search(r'#(0x[0-9a-f]+|\d+)', o)
             word = struct.unpack_from('>I', code, off + 8 + int(found.group(1), 0))[0]
             return glue_name(word)
-        if m.startswith('ldm') or m.startswith('pop') or (m == 'mov' and o.startswith('pc')):
+        if m in ('ldmdb', 'ldm', 'pop') or (m == 'mov' and o.startswith('pc')):
             return None
     return None
 

@@ -28,6 +28,8 @@ lie, as nsfunctions.py reads the ROM's, and prints:
                numArgs, closure, offset of its code in the binary, ...]
                (TInterpreter's NativeEntry 0x002f6558 reads it so); each is
                listed with its code offset and length (to the next one);
+               (each code binary with its length and FNV-1a hash, the key a
+               host re-expression is registered under - frames/PackageNatives.h);
   --native-disasm  such a function's ARM code (capstone; its calls go to
                the runtime glue at the front of the binary).
 
@@ -143,6 +145,14 @@ def natives(pkg: PackageImage):
     return sorted(rows, key=lambda r: r[3])
 
 
+def fnv1a(data: bytes) -> int:
+    """32-bit FNV-1a, as frames/PackageNatives.h keys a package's native code."""
+    h = 2166136261
+    for b in data:
+        h = ((h ^ b) * 16777619) & 0xffffffff
+    return h
+
+
 def find(pkg: PackageImage, held, name: str):
     if name.lower().startswith("0x"):
         return int(name, 16)
@@ -190,7 +200,12 @@ def main(argv=None) -> int:
                 if sym is not None and sym.lower() in wanted:
                     print("%s (%#x): %s" % (held.get(ref, "%#x" % ref), ref, sym))
     if args.natives:
+        seen = set()
         for ref, binary, n, off, length in natives(pkg):
+            if binary not in seen:
+                seen.add(binary)
+                data = pkg.data(binary)
+                print("code binary %#x: %d bytes, FNV-1a %#010x (frames/PackageNatives.h's key)" % (binary, len(data), fnv1a(data)))
             print("%-50s %d args  code %#x+%#x, %d bytes  (%#x)" % (held.get(ref, "%#x" % ref), n, binary, off, length, ref))
     for name in args.native_disasm:
         import pkgdisasm
