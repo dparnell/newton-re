@@ -288,6 +288,11 @@ class DockSession:
         result = nsof.decode(self.expect(b"cres"))
         print("dock.py: Max(3, 7) called on the Newton: %r" % (result,))
         ok = ok and result == 7
+        # a slip shown by the Connection application; dock.ns taps its first button
+        self.write_command(b"dslp", nsof.encode({Symbol("title"): "Dock test", Symbol("message"): "Tap the first button",
+                                                 Symbol("button1"): "First", Symbol("button2"): "Second"}))
+        slip = struct.unpack(">i", self.expect(b"slrs")[:4])[0]
+        print("dock.py: the slip was answered with button %d" % slip)
         _, installed = self.word(b"pext", struct.pack(">I", 0x7a7a7a7a) + nsof.encode(None))
         _, removed = self.word(b"rpex", struct.pack(">I", 0x7a7a7a7a))
         print("dock.py: extension 'zzzz' installed %d, removed %d; requests %s"
@@ -389,7 +394,7 @@ def run_spawned(program, packages, session=False):
         ok = False
     status = proc.wait(timeout=300)
     t.join(timeout=5)
-    print("dock.py: done")
+    print("dock.py: done (the program answered %s)" % status)
     return status or (0 if ok else 1)
 
 

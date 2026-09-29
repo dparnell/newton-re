@@ -310,10 +310,10 @@ TDocker::TDocker()
 	fIsPackageSoup = false;
 	fQuery = NILREF;
 	fSessionStarted = false;
-	fInExtension = false;
-	fField38 = 0;
-	fField31 = false;
-	fField3c = 0;
+	fDataPending = false;
+	fBytesRead = 0;
+	fWritingData = false;
+	fBytesWritten = 0;
 	fLocked = false;
 	fVBOCompression = 2;
 	fHasArg1 = false;
@@ -1565,12 +1565,12 @@ TDocker::CheckProtocolExtension(ULong command, Boolean* result)
 	long index;
 	if (fExtensionCommands == nil || (index = fExtensionCommands->Find(command)) < 0)
 		return false;
-	fInExtension = true;
+	fDataPending = true;
 	Boolean wasLocked = GetTDockerLock();
 	UnlockTDocker();
 	RefVar fn(GetArraySlot(fExtensions, index));
 	*result = NOTNIL(NSCall(fn, fConnection));
-	fInExtension = false;
+	fDataPending = false;
 	if (wasLocked)
 		WaitAndLockTDocker();
 	return true;
@@ -3520,6 +3520,335 @@ TDocker::ReadResultString(void)
 }
 
 
+// ROM 0x000959d4 WriteCommand__7TDockerFRC6RefVarT1lUcRUl
+// A command the Connection application writes (its name a string of four
+// characters, answered in commandWord): with data (an integer as one long,
+// anything else as NSOF), or a header with the length of the data
+// WriteBytes will follow it with, or with no data.  A 'helo' - a keep-alive
+// the application's idle sends - is dropped while an operation holds the
+// docker, unless the operation is waiting on the application itself.
+// ==> fError (kDockErrBusy when the docker could not be had).
+long
+TDocker::WriteCommand(RefArg command, RefArg data, long length, Boolean withData, ULong* commandWord)
+{
+	if (fCleanedUp)
+		return noErr;
+	fError = noErr;
+	fWritingData = false;
+	Boolean busy = GetTDockerLock() && !fStopping;
+	Boolean locked = false;
+	newton_try
+	{
+		if (!IsString(command))
+			Throw(exLongErrorException, (void*) (intptr_t) kDockErrDesktopError, nil);
+		UByte word[20];
+		memset(word, 0, sizeof(word));
+		ConvertFromUnicode(GetCString(command), word, kMacRomanEncoding, 0x7fffffff);
+		*commandWord = GetBigEndianWord(word);
+		if (!(busy && *commandWord == kDHello && !fInConnectionApp)
+		 && (locked = WaitAndLockTDocker()) != false)
+		{
+			if (!fSessionAgreed && *commandWord != kDHello)
+				fError = kDockErrNotConnected;
+			else
+			{
+				if (!withData)
+				{
+					Boolean flush;
+					if (length > 0)
+					{
+						fLength = length;
+						fWritingData = true;
+						flush = false;
+					}
+					else
+						flush = !fWritingData;
+					WriteDockerHeader(*commandWord, flush);
+					if (fWritingData)
+						*fPipe << length;
+				}
+				else if (ISINT(data))
+				{
+					WriteDockerHeader(*commandWord, false);
+					*fPipe << (long) 4;
+					*fPipe << (long) RINT(data);
+					fPipe->FlushWrite();
+				}
+				else
+					WriteRef(*commandWord, data);
+			}
+			if (*commandWord != kDHello)
+				fSessionStarted = false;
+		}
+	}
+	newton_catch_all
+	{
+		ProcessException(CurrentException());
+	}
+	end_try;
+	if (busy && !locked)
+		return *commandWord == kDHello ? noErr : kDockErrBusy;
+	CleanUpIfStopping(false);
+	CleanUpIfError(false);
+	if (!busy && locked)
+		UnlockTDocker();
+	return fError;
+}
+
+
+// ROM 0x00095c6c WriteBytes__7TDockerFRC6RefVar
+// The next of the data a WriteCommand header promised (a binary), as much
+// as is still owed; the pipe flushed when it is all written.
+long
+TDocker::WriteBytes(RefArg data)
+{
+	if (fCleanedUp)
+		return noErr;
+	fError = noErr;
+	WaitAndLockTDocker();
+	newton_try
+	{
+		if (!fWritingData)
+			fError = kDockErrDesktopError;
+		else
+		{
+			ULong count = Length(data);
+			ULong owed = fLength - fBytesWritten;
+			if (owed < count)
+				count = owed;
+			fBytesWritten += count;
+			fPipe->WriteChunk(BinaryData(data), count, false);
+			if (fBytesWritten == fLength)
+			{
+				fWritingData = false;
+				fPipe->FlushWrite();
+			}
+		}
+	}
+	newton_catch_all
+	{
+		ProcessException(CurrentException());
+	}
+	end_try;
+	CleanUpIfStopping(false);
+	CleanUpIfError(false);
+	UnlockTDocker();
+	return fError;
+}
+
+
+// ROM 0x00095fa8 ReadCommand__7TDockerFR6RefVarUcT2
+// The desktop's next command (skipping keep-alives if asked) as a frame
+// {command, length, data} - the data read too unless only the header is
+// wanted (ReadCommandData or ReadBytes then read it).  ==> fError
+// (-112088 before a session was agreed).
+long
+TDocker::ReadCommand(RefVar& command, Boolean headerOnly, Boolean skipHellos)
+{
+	if (fCleanedUp)
+		return noErr;
+	fError = noErr;
+	if (!fSessionAgreed)
+		return -112088;
+	WaitAndLockTDocker();
+	fBytesRead = 0;
+	fDataPending = headerOnly;
+	command = NILREF;
+	newton_try
+	{
+		command = AllocateFrame();
+		do
+			ReadDockerHeader(&fCommand, &fLength);
+		while (skipHellos && fCommand == kDHello);
+		UByte word[4];
+		PutBigEndianWord(word, fCommand);
+		UniChar name[5];
+		ConvertToUnicode(word, name, kMacRomanEncoding, 4);
+		name[4] = 0;
+		SetFrameSlot(command, RSSYMcommand, RefVar(MakeString(name)));
+		SetFrameSlot(command, RSSYMlength, RefVar(MAKEINT(fLength)));
+		RefVar data;
+		if (!headerOnly)
+		{
+			fDataPending = true;
+			ReadData(data);
+		}
+		SetFrameSlot(command, RSSYMdata, data);
+		fSessionStarted = true;
+	}
+	newton_catch_all
+	{
+		ProcessException(CurrentException());
+	}
+	end_try;
+	CleanUpIfStopping(false);
+	CleanUpIfError(false);
+	UnlockTDocker();
+	return fError;
+}
+
+
+// ROM 0x00095ecc ReadData__7TDockerFR6RefVar
+// The pending command's data: a single long as an integer, anything else
+// as NSOF, none as nil.
+void
+TDocker::ReadData(RefVar& data)
+{
+	if (fCleanedUp)
+		return;
+	fError = noErr;
+	data = NILREF;
+	if (!fDataPending)
+		fError = kDockErrDesktopError;
+	else
+	{
+		newton_try
+		{
+			if (fLength != 0)
+			{
+				if (fLength == 4)
+				{
+					unsigned long value;
+					*fPipe >> value;
+					data = MAKEINT(value);
+				}
+				else
+					data = ReadRef(fCurrentStore);
+			}
+		}
+		newton_catch_all
+		{
+			ProcessException(CurrentException());
+		}
+		end_try;
+	}
+	fDataPending = false;
+}
+
+
+// ROM 0x00095dc8 ReadCommandData__7TDockerFR6RefVar
+long
+TDocker::ReadCommandData(RefVar& data)
+{
+	if (fCleanedUp)
+		return noErr;
+	fError = noErr;
+	WaitAndLockTDocker();
+	ReadData(data);
+	CleanUpIfStopping(false);
+	CleanUpIfError(false);
+	UnlockTDocker();
+	return fError;
+}
+
+
+// ROM 0x00095e2c FlushCommandData__7TDockerFv
+// The pending command's data thrown away.
+long
+TDocker::FlushCommandData(void)
+{
+	if (!fDataPending)
+		fError = kDockErrDesktopError;
+	else
+	{
+		WaitAndLockTDocker();
+		newton_try
+		{
+			FlushCommand();
+		}
+		newton_catch_all
+		{
+			ProcessException(CurrentException());
+		}
+		end_try;
+	}
+	fDataPending = false;
+	CleanUpIfStopping(false);
+	CleanUpIfError(false);
+	UnlockTDocker();
+	return fError;
+}
+
+
+// ROM 0x0009616c ReadBytes__7TDockerFRl6RefVar
+// The next of the pending command's data into a binary, as much as count
+// asks for and is left (count says how much it was); the padding read with
+// the last of it.
+long
+TDocker::ReadBytes(long* count, RefArg buffer)
+{
+	RefVar binary(buffer);
+	if (fCleanedUp)
+		return noErr;
+	fError = noErr;
+	WaitAndLockTDocker();
+	newton_try
+	{
+		if (!fDataPending)
+			fError = kDockErrDesktopError;
+		else if (!IsBinary(binary))
+			fError = -48408;				// (kNSErrNotABinaryObject)
+		else
+		{
+			ULong left = fLength - fBytesRead;
+			if (left < (ULong) *count)
+				*count = left;
+			if (*count <= Length(binary))
+			{
+				fBytesRead += *count;
+				ReadChunk(BinaryData(binary), *count, fBytesRead == fLength);
+				if (fBytesRead == fLength)
+				{
+					fBytesRead = 0;
+					fDataPending = false;
+				}
+			}
+			else
+				fError = -48205;			// (kNSErrOutOfRange)
+		}
+	}
+	newton_catch_all
+	{
+		ProcessException(CurrentException());
+	}
+	end_try;
+	CleanUpIfStopping(false);
+	CleanUpIfError(false);
+	UnlockTDocker();
+	return fError;
+}
+
+
+// ROM 0x00094f4c ProcessBuiltinCommand__7TDockerFRUc
+// The command the application read (ReadCommand's header) carried out as
+// the docker would.  ==> fError.
+long
+TDocker::ProcessBuiltinCommand(Boolean* done)
+{
+	if (fCleanedUp)
+		return noErr;
+	fError = noErr;
+	if (!fSessionAgreed)
+		return kDockErrNotConnected;
+	WaitAndLockTDocker();
+	*done = false;
+	Boolean operationDone = false;
+	newton_try
+	{
+		ProcessCommand(done, &operationDone);
+	}
+	newton_catch_all
+	{
+		ProcessException(CurrentException());
+	}
+	end_try;
+	*done = CleanUpIfStopping(*done);
+	CleanUpIfError(*done);
+	UnlockTDocker();
+	return fError;
+}
+
+
 // ROM 0x000934b0 ProcessCommand__7TDockerFRUcT1
 // One of the desktop's commands carried out.  done: the session is over
 // ('disc'); operationDone: the operation the session was for is over, and
@@ -3998,6 +4327,159 @@ FConnEntriesEqual(RefArg /*rcvr*/, RefArg entry)
 }
 
 
+// ROM 0x00096a7c ConnWriteCommand__FRC6RefVarN41RUl
+// What WriteCommand and WriteCommandHeader share: the docker's
+// WriteCommand, and an error other than kDockErrRetryPassword and -16005
+// ending the docker (as CleanUpDockerIfError does, in line) and thrown.
+static void
+ConnWriteCommand(RefArg connection, RefArg command, RefArg data, RefArg length, RefArg withData, ULong* commandWord)
+{
+	long len = RINT(length);
+	long error = GetTheDocker(connection, true)->WriteCommand(command, data, len, NOTNIL(withData), commandWord);
+	if (error != noErr && error != kDockErrRetryPassword && error != -16005)
+	{
+		Boolean failed = false;
+		ExceptionName name = nil;
+		void* exceptionData = nil;
+		ExceptionDestructor destructor = nil;
+		newton_try
+		{
+			TDocker* docker = GetTheDocker(connection, true);
+			if (docker != nil)
+				delete docker;
+		}
+		newton_catch_all
+		{
+			failed = true;
+			name = CurrentException()->name;
+			exceptionData = CurrentException()->data;
+			destructor = CurrentException()->destructor;
+		}
+		end_try;
+		SaveTheDocker(connection, nil);
+		SetFrameSlot(connection, RSSYMconnected, RefVar(NILREF));
+		if (failed)
+			Throw(name, exceptionData, destructor);
+	}
+	if (error != noErr)
+		Throw(exErrorException, (void*) (intptr_t) error, nil);
+}
+
+
+// ROM 0x00096b04 FConnWriteCommand
+// WriteCommand(command, data, withData): the desktop told something, and
+// (unless it was a keep-alive) the time noted.
+Ref
+FConnWriteCommand(RefArg rcvr, RefArg command, RefArg data, RefArg withData)
+{
+	ULong commandWord;
+	ConnWriteCommand(rcvr, command, data, RefVar(MAKEINT(-1)), withData, &commandWord);
+	if (commandWord != kDHello)
+		SetFrameSlot(rcvr, RSSYMlastcommunicationwithdesktop, RefVar(FTimeInSeconds(RefVar(NILREF))));
+	return NILREF;
+}
+
+
+// ROM 0x00096bb8 FConnWriteCommandHeader
+// WriteCommandHeader(command, length): meant to write a header for
+// WriteBytes to follow.
+// ROM BUG: the "no data" flag it passes is the integer nought, which is not
+// nil, so the command goes out with a long of nought as its data and the
+// length is ignored - and WriteBytes then finds nothing owed.
+Ref
+FConnWriteCommandHeader(RefArg rcvr, RefArg command, RefArg length)
+{
+	ULong commandWord;
+	ConnWriteCommand(rcvr, command, RefVar(MAKEINT(0)), length, RefVar(MAKEINT(0)), &commandWord);
+	SetFrameSlot(rcvr, RSSYMlastcommunicationwithdesktop, RefVar(FTimeInSeconds(RefVar(NILREF))));
+	return NILREF;
+}
+
+
+// ROM 0x00096c70 FConnWriteBytes
+Ref
+FConnWriteBytes(RefArg rcvr, RefArg data)
+{
+	long error = GetTheDocker(rcvr, true)->WriteBytes(data);
+	CleanUpDockerIfError(rcvr, error, true, true);
+	return NILREF;
+}
+
+
+// ROM 0x00096cf0 ConnReadCommand__FRC6RefVarUcT2
+static Ref
+ConnReadCommand(RefArg rcvr, Boolean headerOnly, Boolean skipHellos)
+{
+	RefVar command;
+	long error = GetTheDocker(rcvr, true)->ReadCommand(command, headerOnly, skipHellos);
+	CleanUpDockerIfError(rcvr, error, true, true);
+	return command;
+}
+
+
+// ROM 0x00096d5c FConnReadCommand
+// ReadCommand(skipHellos): {command, length, data}.
+Ref
+FConnReadCommand(RefArg rcvr, RefArg skipHellos)
+{
+	return ConnReadCommand(rcvr, false, NOTNIL(skipHellos));
+}
+
+
+// ROM 0x00096d74 FConnReadCommandHeader
+// ReadCommandHeader(skipHellos): {command, length}, the data left to read.
+Ref
+FConnReadCommandHeader(RefArg rcvr, RefArg skipHellos)
+{
+	return ConnReadCommand(rcvr, true, NOTNIL(skipHellos));
+}
+
+
+// ROM 0x00096d8c FConnReadCommandData
+Ref
+FConnReadCommandData(RefArg rcvr)
+{
+	RefVar data;
+	long error = GetTheDocker(rcvr, true)->ReadCommandData(data);
+	CleanUpDockerIfError(rcvr, error, true, true);
+	return data;
+}
+
+
+// ROM 0x00096de8 FConnFlushCommandData
+Ref
+FConnFlushCommandData(RefArg rcvr)
+{
+	long error = GetTheDocker(rcvr, true)->FlushCommandData();
+	CleanUpDockerIfError(rcvr, error, true, true);
+	return NILREF;
+}
+
+
+// ROM 0x00096e20 FConnReadBytes
+// ReadBytes(count, binary): ==> how many bytes were read into it.
+Ref
+FConnReadBytes(RefArg rcvr, RefArg count, RefArg binary)
+{
+	long n = RINT(count);
+	long error = GetTheDocker(rcvr, true)->ReadBytes(&n, binary);
+	CleanUpDockerIfError(rcvr, error, true, true);
+	return MAKEINT(n);
+}
+
+
+// ROM 0x000968fc FProcessBuiltinCommand
+// ProcessBuiltinCommand(): ==> whether the session is over.
+Ref
+FProcessBuiltinCommand(RefArg rcvr)
+{
+	Boolean done;
+	long error = GetTheDocker(rcvr, true)->ProcessBuiltinCommand(&done);
+	CleanUpDockerIfError(rcvr, error, true, true);
+	return done ? TRUEREF : NILREF;
+}
+
+
 // ROM 0x00096e8c FConnInstallProtocolExtension
 // InstallAnyProtocolExtension(command, function): an extension of the
 // protocol (one already there is not an error).
@@ -4109,6 +4591,15 @@ RegisterDockerNatives(void)
 	RegisterNativeFunction("FConnInstallProtocolExtension", (void*) FConnInstallProtocolExtension, 2);
 	RegisterNativeFunction("FConnRemoveProtocolExtension", (void*) FConnRemoveProtocolExtension, 1);
 	RegisterNativeFunction("FConnStop", (void*) FConnStop, 0);
+	RegisterNativeFunction("FConnWriteCommand", (void*) FConnWriteCommand, 3);
+	RegisterNativeFunction("FConnWriteCommandHeader", (void*) FConnWriteCommandHeader, 2);
+	RegisterNativeFunction("FConnWriteBytes", (void*) FConnWriteBytes, 1);
+	RegisterNativeFunction("FConnReadCommand", (void*) FConnReadCommand, 1);
+	RegisterNativeFunction("FConnReadCommandHeader", (void*) FConnReadCommandHeader, 1);
+	RegisterNativeFunction("FConnReadCommandData", (void*) FConnReadCommandData, 0);
+	RegisterNativeFunction("FConnFlushCommandData", (void*) FConnFlushCommandData, 0);
+	RegisterNativeFunction("FConnReadBytes", (void*) FConnReadBytes, 2);
+	RegisterNativeFunction("FProcessBuiltinCommand", (void*) FProcessBuiltinCommand, 0);
 	RegisterNativeFunction("FConnEntriesEqual", (void*) FConnEntriesEqual, 1);
 	RegisterNativeFunction("FConnRetryPassword", (void*) FConnRetryPassword, 1);
 	RegisterNativeFunction("FDESCreatePasswordKey", (void*) FDESCreatePasswordKey, 1);

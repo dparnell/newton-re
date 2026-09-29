@@ -113,7 +113,8 @@ enum
 	kDockErrNoSuchEntry			= -28008,		// no entry of the id
 	kDockErrEntryNotFound		= -28002,		// an entry to change that is not there
 	kDockErrBadCursor			= -28026,		// no cursor of the number
-	kDockErrResultString		= -28028		// the desktop sent a result as a string ('ress')
+	kDockErrResultString		= -28028,		// the desktop sent a result as a string ('ress')
+	kDockErrBusy				= -28027		// the docker could not be had in ten seconds (WriteCommand)
 };
 
 // the session's states (eDockingState)
@@ -317,6 +318,17 @@ public:
 	void			ReadRemoveProtocolExtension(void);
 	long			ReadResultString(void);
 
+	// the Connection application's own reading and writing (its protocol
+	// frame's ReadCommand, WriteCommand and the rest)
+	long			WriteCommand(RefArg command, RefArg data, long length, Boolean withData, ULong* commandWord);
+	long			WriteBytes(RefArg data);
+	long			ReadCommand(RefVar& command, Boolean headerOnly, Boolean skipHellos);
+	void			ReadData(RefVar& data);
+	long			ReadCommandData(RefVar& data);
+	long			FlushCommandData(void);
+	long			ReadBytes(long* count, RefArg buffer);
+	long			ProcessBuiltinCommand(Boolean* done);
+
 	void			ProcessCommand(Boolean* done, Boolean* operationDone);
 	Boolean			CheckProtocolExtension(ULong command, Boolean* result);
 	Boolean			CheckProtocolPatch(ULong command, Boolean* result);
@@ -336,12 +348,12 @@ public:
 	Boolean			fIsSystemSoup;			// +0x2d  the System soup
 	Boolean			fIsPackageSoup;			// +0x2e  the Extras (packages) soup
 	Boolean			fSessionStarted;		// +0x2f  the session is under way (the desktop has spoken)
-	Boolean			fInExtension;			// +0x30  a protocol extension is running
-	Boolean			fField31;				// +0x31
+	Boolean			fDataPending;			// +0x30  a command's data is still to be read (by an extension, ReadCommandData, ReadBytes)
+	Boolean			fWritingData;			// +0x31  a command's data is still to be written (WriteBytes)
 	Boolean			fLocked;				// +0x32
 	long			fVBOCompression;		// +0x34  'cvbo': large binaries written compressed (2 always, 1 for the packages soup)
-	long			fField38;				// +0x38
-	long			fField3c;				// +0x3c
+	ULong			fBytesRead;				// +0x38  of the command's data (ReadBytes)
+	ULong			fBytesWritten;			// +0x3c  of the command's data (WriteBytes)
 	RefStruct		fSyncChanges;			// +0x40
 	ULong			fCommand;				// +0x44  the last header read
 	ULong			fLength;				// +0x48

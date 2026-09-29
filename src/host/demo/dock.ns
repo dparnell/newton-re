@@ -23,6 +23,25 @@ app:ConnectionPrefsWrite('autoDockAddr, {type: 'serial});
 Print("dock: autodock");
 app:autodock();
 
+// A slip the desktop asks the Connection application to show ('dslp':
+// DisplaySlip, a modal dialog with the desktop's title, message and
+// buttons) is answered by tapping its first button, as a user would.  Only
+// dock.py --session asks for one.
+dockSlip := func() begin
+	local slip := nil;
+	foreach child in GetRoot():ChildViewFrames() do
+		if child.config and IsFrame(child.config) and StrEqual(child.config.title, "Dock test") then slip := child;
+	slip;
+end;
+call waitFor with ("dock: the desktop's slip", func() call dockSlip with (), func() begin
+	local slip := call dockSlip with ();
+	if slip then begin
+		local box := slip.button1:GlobalBox();
+		Print("dock: the desktop's slip says " & slip.config.message);
+		call tapAt with ((box.left + box.right) div 2, (box.top + box.bottom) div 2);
+	end;
+end, 120);
+
 // (The connection is waited on through the docker's own slots: asking the
 // package manager for its packages meanwhile - GetPackages - while the
 // docker's world is forked and reading from the desktop has been seen to
