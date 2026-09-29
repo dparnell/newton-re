@@ -13,8 +13,7 @@
 				`chunk` and AcquireCharChunk's are left as they were -
 				ReleaseCharChunk unlocks whatever it is given.
 
-				TXVBOChars (the text in a large binary on a store, over
-				TXChunkedChars) is NOT YET.
+				The text on a store is TXVBOChars (TXVBOChars.h).
 
 	Reconstructed from the MP2x00 US ROM (0x0023e7ec-0x0023ebb0); each
 	function cites its origin.

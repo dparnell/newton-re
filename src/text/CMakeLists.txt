@@ -34,6 +34,7 @@ add_library(text STATIC
     TXStyledText.cpp
     TXStream.cpp
     TXUtilities.cpp
+    TXVBOChars.cpp
     TXView.cpp
     TXViewNatives.cpp
     Textension.cpp

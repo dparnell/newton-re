@@ -13,6 +13,8 @@
 
 #include "TXView.h"
 #include "TXBinaryChars.h"
+#include "TXVBOChars.h"
+#include "TXStream.h"
 #include "Application.h"
 #include "Frames.h"
 #include "Objects.h"
@@ -438,9 +440,21 @@ FTXFinderFindString(RefArg rcvr, RefArg frame, RefArg find, RefArg start, RefArg
 		}
 		else
 		{
-			// NOT YET RECONSTRUCTED: TXVBOChars over the large binary,
-			// its chunks read from txData
-			Throw(exRootException, (void*) (long) kTXNativeErrBadData, nil);
+			// DEVIATION: sized from sizeof on the host
+			object = AllocateFramesCObject(sizeof(TXVBOChars), GCDeleteTXChars, nil, nil);
+			TXVBOChars* vbo = new (BinaryData(object)) TXVBOChars(RefVar(NILREF));
+			chars = vbo;
+			vbo->SetCharsVBO(text);
+			RefVar data(GetFrameSlotRef(frame, RSSYMtxdata));
+			if (ISNIL(data))
+				Throw(exRootException, (void*) (long) kTXNativeErrBadData, nil);
+			TXBinaryStream stream(data, true, 0, true);
+			unsigned char flags;
+			NewtonErr err = stream.ReadBytes(&flags, 1);
+			if (err == noErr)
+				err = vbo->ReadChunksRanges(&stream);
+			if (err != noErr)
+				Throw(exRootException, (void*) (long) err, nil);
 		}
 		SetFrameSlot(rcvr, RSSYMtxcharsobj, object);
 		SetFrameSlot(rcvr, RSSYMframe, frame);

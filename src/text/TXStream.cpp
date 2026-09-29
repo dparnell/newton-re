@@ -8,6 +8,10 @@
 */
 
 #include "TXStream.h"
+#include "Soups.h"
+#include "LargeBinaries.h"
+#include "NewtWorld.h"
+#include "RSSymbols.h"
 #include "Frames.h"
 #include "NewtonMemory.h"
 #include "OSErrors.h"
@@ -282,17 +286,21 @@ TXNewtStreamFactory::Create(TXStream** stream, long size)
 			*stream = new TXHandleStream;
 		else
 		{
-			// NOT YET RECONSTRUCTED: the large-binary arm.  The ROM tells
-			// the busy box it is working (BusyBoxSend(0x33)), takes the
-			// first of GetStores(), rounds `size` up to a whole kilobyte
-			// and adds two more, and asks FLBAllocCompressed for a
-			// 'binary of that length on the store with a
-			// "TLZStoreCompander" over it; the result is locked and
-			// becomes a TXBinaryStream(binary, false, 0x400, false).
-			// Large binaries are not reconstructed yet (see
-			// qd/Pictures.cpp), so this answers as the ROM's own does
-			// when nothing came of it: no memory.
-			*stream = nil;
+			// a compressed large binary on the first store, the size rounded
+			// up to a whole kilobyte and two more; locked, since the stream
+			// writes straight into it
+			BusyBoxSend(0x33);
+			RefVar stores(GetStores());
+			RefVar store(GetArraySlotRef(stores, 0));
+			RefVar compander(MakeString("TLZStoreCompander"));
+			long rounded = size + 0x3ff;
+			if (rounded < 0)
+				rounded = size + 0x7fe;
+			RefVar data(NILREF);
+			RefVar length(MAKEINT((rounded >> 10) * 0x400 + 0x800));
+			RefVar binary(FLBAllocCompressed(store, RSSYMbinary, length, compander, data));
+			LockRef(binary);
+			*stream = new TXBinaryStream(binary, false, 0x400, false);
 		}
 	}
 	newton_catch_all

@@ -11,7 +11,9 @@
 // bold (the caret at the end having scrolled the text up); build/txview-2.pgm:
 // the same scrolled back to the start; build/txview-3.pgm: "hello" cut to a
 // clipping (its icon at the screen's left edge) and pasted at the start;
-// build/txview-4.pgm: "hello" and the next word scrubbed out with the pen.  Each check
+// build/txview-4.pgm: "hello" and the next word scrubbed out with the pen;
+// build/txview-5.pgm: 2100 characters kept on the store (the middle view),
+// saved with Externalize and read into another view (the bottom one).  Each check
 // prints "txview: FAILED ..." when it does not hold (the ctest looks for
 // that), and the last line says how the view came out.
 //
@@ -94,6 +96,36 @@ AddDelayedCall(func() begin
 				RefreshViews();
 				ScreenSnapshot("build/txview-4.pgm");
 				Print("txview: scrubbed to " & tx:GetCountCharacters() & " characters");
+
+				// text kept on the store: a second view given the store before
+				// it is set up, 2100 characters (five chunks) put in, the whole
+				// saved (Externalize) and read into a third view
+				local onStore := AddView(GetRoot(), {
+					_proto: @826, viewFlags: 1,
+					viewBounds: {left: 20, top: 320, right: 300, bottom: 360},
+					viewFormat: 0x151,
+					viewSetupFormScript: func() :SetStore(GetStores()[0]) });
+				onStore:SetGeometry(nil, 280, 0x7fff, {left: 0, top: 0, right: 0, bottom: 0});
+				local long := "";
+				for i := 1 to 150 do long := long & "fourteen chars";
+				onStore:Replace({first: 0, last: 0}, {text: long, styles: [StrLen(long), {family: 'espy, size: 12, face: 0}]}, nil);
+				onStore:SetHiliteRange({first: 0, last: 0}, true, nil);	// back to the start
+				local saved := onStore:Externalize();
+				if not IsVBO(saved.txText) then Print("txview: FAILED - the text is not on the store");
+				local reader := AddView(GetRoot(), {
+					_proto: @826, viewFlags: 1,
+					viewBounds: {left: 20, top: 370, right: 300, bottom: 410},
+					viewFormat: 0x151 });
+				reader:Internalize(saved);
+				local back := reader:GetRangeData({first: 2086, last: 2100}, 'text);
+				if not StrEqual(back, "fourteen chars") then Print("txview: FAILED - read back \"" & back & "\"");
+				RefreshViews();
+				ScreenSnapshot("build/txview-5.pgm");
+				Print("txview: " & onStore:GetCountCharacters() & " characters on the store, " & reader:GetCountCharacters() & " read back");
+				// all of it replaced undoably: the undo keeps 4200 bytes, which
+				// the stream factory puts in a large binary on the store
+				onStore:Replace({first: 0, last: 2100}, {text: "gone"}, true);
+				Print("txview: replaced undoably, " & onStore:GetCountCharacters() & " characters left");
 			  end, nil, 4000);
 		  end, nil, 500);
 		Print("txview: " & tx:GetCountCharacters() & " characters, " & height.first & "-" & height.last & " the last line, scrolled from " & before.y & " to " & scrolled.y);

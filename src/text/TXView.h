@@ -10,7 +10,8 @@
 
 				The view makes its document when it is set up
 				(`SetupDone` -> `CreateNewTextension`: the characters in a
-				string, TXBinaryChars, unless SetStore gave it a store),
+				string, TXBinaryChars, or on the store SetStore gave it,
+				TXVBOChars),
 				with the page's size and margins from SetGeometry and the
 				view's font as the default style.  The first TXView the
 				machine makes starts the engine (TextensionStart, the
@@ -38,9 +39,11 @@
 				and styles; a scrub deletes what it covers and a caret gesture
 				puts a space or a return in, or takes a character out.
 
-				NOT YET: the ruler bar (TXRulerUI, ShowRuler), the pages
-				(TXPageFrames) and TXVBOChars (the text on a store) - each
-				marked where it would be.
+				With a store (SetStore, before the view is set up) the text
+				is kept in a large binary on it (TXVBOChars.h).
+
+				NOT YET: the ruler bar (TXRulerUI, ShowRuler) and the pages
+				(TXPageFrames) - each marked where it would be.
 
 	Reconstructed from the MP2x00 US ROM (0x0024659c-0x0024dff4); each
 	function cites its origin.

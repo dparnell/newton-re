@@ -13,6 +13,8 @@
 #include "TXContainer.h"
 #include "TXNewtContainer.h"
 #include "TXBinaryChars.h"
+#include "TXVBOChars.h"
+#include "LargeBinaries.h"
 #include "TXNewtTextRun.h"
 #include "TXGraphicsRun.h"
 #include "TXRuler.h"
@@ -370,11 +372,7 @@ TXView::CreateNewTextension(void)
 		if (ISNIL(fStore))
 			chars = new TXBinaryChars(RefVar(NILREF));
 		else
-		{
-			// NOT YET RECONSTRUCTED: TXVBOChars(fStore) - the text on a
-			// store; SetStore's store is ignored on the host
-			chars = new TXBinaryChars(RefVar(NILREF));
-		}
+			chars = new TXVBOChars(fStore);
 		if (chars != nil)
 		{
 			handlers.fChars = chars;
@@ -1670,10 +1668,11 @@ TXView::GetRangeData(TXOffsetRange* range, RefArg what)
 
 
 // ROM 0x0024c7fc Externalize__6TXViewFv
-// The document as a frame: the characters (the string itself), the
-// styles and rulers, and in `txData` a byte saying whether the line
-// breaks follow (only for more than 60 lines, which are worth not working
-// out again) and then the page width and the formatter's lines.
+// The document as a frame: the characters (the string itself, or with a
+// store the large binary in txText), the styles and rulers, and in
+// `txData` a byte saying whether the line breaks follow (only for more
+// than 60 lines, which are worth not working out again), the chunk table
+// of text on a store, and then the page width and the formatter's lines.
 Ref
 TXView::Externalize(void)
 {
@@ -1686,11 +1685,8 @@ TXView::Externalize(void)
 	}
 	else
 	{
-		// NOT YET RECONSTRUCTED: TXVBOChars - txExternalVBOPrototype with
-		// the characters' large binary in txText (a store is ignored on
-		// the host: the text is still a string)
-		result = Clone(RefVar(Rtxexternalprototype));
-		SetFrameSlot(result, RSSYMtext, ((TXBinaryChars*) chars)->fString);
+		result = Clone(RefVar(Rtxexternalvboprototype));
+		SetFrameSlot(result, RSSYMtxtext, RefVar(((TXVBOChars*) chars)->GetCharsVBO()));
 	}
 	RefVar data(AllocateBinary(RSSYMbinary, 0));
 	TXBinaryStream stream(data, false, 0x20, true);
@@ -1698,6 +1694,12 @@ TXView::Externalize(void)
 	NewtonErr err = stream.WriteBytes(&formatted, 1);
 	if (err != noErr)
 		Throw(exRootException, (void*) (long) err, nil);
+	if (NOTNIL(fStore))
+	{
+		err = ((TXChunkedChars*) chars)->WriteChunksRanges(&stream);
+		if (err != noErr)
+			Throw(exRootException, (void*) (long) err, nil);
+	}
 	if (formatted)
 	{
 		unsigned char width[2];
@@ -1723,7 +1725,7 @@ TXView::Externalize(void)
 
 // ROM 0x0024cad0 InternalizeChars__6TXViewFRC6RefVar
 // The characters an Externalize frame holds made the document's - the
-// string itself taken over.
+// string (or the large binary, and the store it is on) itself taken over.
 TXChars*
 TXView::InternalizeChars(RefArg data)
 {
@@ -1745,9 +1747,12 @@ TXView::InternalizeChars(RefArg data)
 	}
 	else
 	{
-		// NOT YET RECONSTRUCTED: TXVBOChars - the text's large binary
-		// (FGetBinaryStore) made the document's storage
-		Throw(exRootException, (void*) (long) kTXViewErrBadData, nil);
+		RefVar hadStore(fStore);
+		fStore = FGetBinaryStore(RefVar(NILREF), text);
+		if (ISNIL(hadStore))
+			newChars = new TXVBOChars(fStore);
+		if (newChars != nil)
+			((TXVBOChars*) newChars)->SetCharsVBO(text);
 	}
 	if (newChars == nil)
 		Throw(exOutOfMemory, (void*) kError_No_Memory, nil);

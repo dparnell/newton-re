@@ -239,4 +239,4 @@ set_tests_properties(host.NewtonSound PROPERTIES TIMEOUT 120
 add_test(NAME host.NewtonTXView COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 14 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/txview.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonTXView PROPERTIES TIMEOUT 120
                      FAIL_REGULAR_EXPRESSION "FAILED|Exception"
-                     PASS_REGULAR_EXPRESSION "txview: 176 characters, 142-176 the last line, scrolled from [1-9][0-9]* to 0.*txview: scrubbed to 167 characters")
+                     PASS_REGULAR_EXPRESSION "txview: 176 characters, 142-176 the last line, scrolled from [1-9][0-9]* to 0.*txview: scrubbed to 167 characters.*txview: 2100 characters on the store, 2100 read back.*txview: replaced undoably, 4 characters left")
