@@ -384,7 +384,20 @@ the underline's reach, if that is lower), so even the baseline row is
 moved: espy 12's is three pixels over (`test_Text`'s `TestItalic`).  The
 host moves each glyph row of the region it draws by as much.
 
-NOT YET: ink words, scaled glyphs, tabs.
+Text is drawn at the scales its text proc is given (a picture played
+into a rectangle of another size, the scaler): `DrText` opens each font
+at the size times the scale, which the font engine answers with a strike
+of that size or the nearest one and a ratio to stretch it by; the host
+stretches each glyph row and column to the pixels its edges come to
+(DEVIATION: the ROM composes the run at the strike's size and stretches
+the slab when it blits it) and moves the pen by the advances times the
+ratio.  NOT YET: the ROM measures a width to fit with the stretched
+advances (the host with the strike's own), and `CalcTextBounds`' handling
+of a stretched strike.  Note that espy 24 at 1.0 and espy 12 at 2.0 are
+not the same pixels: there is no 24-point strike, and the two ratios to
+the 16-point one come out 1.49998 and 1.5.
+
+NOT YET: ink words, tabs.
 
 ### Text objects (`src/qd/TextObject.h`)
 
@@ -715,6 +728,10 @@ emptied, a smaller one copied regardless), `SizeOfPaths`, `DisposePaths`.
 A sync patch makes the DDK's path words `Long32`, the ARM's word, since a
 host's `long` may be wider.
 
+`SetStdProcs` 0x002e45b8 fills every proc with the standard one (the
+ROM's table at 0x00380bcc), which is what the scaler starts from when a
+port has none.
+
 ## Polygons and recording (`src/qd/Polygons.h`)
 
 `OpenRgn` 0x003150f4 makes a point buffer (the globals' `fRgnHandle`,
@@ -822,10 +839,43 @@ shape.  `protoOverview`'s `hiliter` is
 rectangle, moved down to the row that is hilited - and the country picker
 in the Setup assistant is one of these.
 
-NOT YET: `TQDScaler` (0x00196018-0x001973c8), which is what the ROM maps
-the drawing through: it replaces the port's regions, scales the pen, and
-puts every coordinate QuickDraw is given through the stack of transforms
-in force.  What stands in its place keeps that stack and answers the
-offset it comes to.  DEVIATION: `views/DrawShape.cpp` adds that offset to
-what it draws, where the ROM adds nothing and leaves the mapping to the
-scaler; a transform that really scales is still drawn unscaled.
+The transforms in force are `TQDScaler::gScale` (0x00196018-0x001973c8).
+`StartScaling` pushes a transform (the first makes the scaler: `Setup`
+keeps the current port's procs - or the standard ones - and installs a
+copy of them with its own in place of the eleven that take coordinates);
+`StopScaling` pops one (the last deletes the scaler, which gives the port
+its procs back); `ReplaceScaling` changes the innermost.  After each,
+`RecalcTransform` 0x001970dc works out the one transform they come to:
+from the first one's source rectangle, its corner moved by the first
+one's offset and then by each later one's offset scaled by the scales
+before it, at the product of their scales.
+
+The scaler's procs (`ScaledRect`, `ScaledRRect`, `ScaledOval`,
+`ScaledArc`, `ScaledLine`, `ScaledPoly`, `ScaledRgn`, `ScaledBits`,
+`ScaledCurve`, `ScaledPaths`, `ScaledText`, 0x00196634-0x00196f8c) map
+what they are given through that transform - a rectangle's corners
+(`Scale`, a point rounded to the nearest pixel), a copy of a polygon,
+region, curve or paths (`MapPoly`, `MapRgn`, `MapCurve`, `MapPaths`), a
+bitmap's destination and mask, text's location and its options' width,
+with text drawn at the scales times the transform's (a sixteenth less
+with feature 1) - and hand it to the proc the port had.  For a frame the
+pen is scaled too (`SetupScalingPen`, never below a pixel).  ROM BUG,
+kept: the pen's height is its *width* times the vertical scale.  The
+port's clip region is set by the drawing in its own coordinates, so
+`SetupScalingRegions` maps it whenever it has changed and cuts it by the
+clip the port had outside the scaling (kept aside the first time it
+changes, taken up again when the clip goes back to it); with `mapVis`
+the visible region is mapped through the first transform.  Nothing is
+scaled while a picture, region or polygon is being recorded
+(`SkipScaling`), unless `ForceScaling(1)`; `ForceScaling(2)` turns the
+scaling off.  `GetActualClip`/`GetActualVis`/`ReplaceClip` answer and set
+the clip really drawn through.
+
+`views/DrawShape.cpp` still asks `TQDScaler::Offset()` for an offset to add
+while a transform is in force (its DEVIATION from before the scaler); the
+scaler now answers nothing, the mapping being its own.  `test_Shapes`'
+`TestScaling` pins a rectangle, a frame (the pen bug), a clip and a region
+recording under a stretching transform; `test_PicPlay`'s `TestScaledText`
+text under the scaler; `src/host/demo/scaledmap.ns` (ctest
+`host.ScaledMapDemo`) draws the World Clock's map at half size and shapes
+with text doubled and stretched.

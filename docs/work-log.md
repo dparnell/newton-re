@@ -91,6 +91,27 @@ bugs and ROM bugs found on the way.
   Built in `tmp/build-text` (in parallel with other agents); ctest there
   130/130, open-apps only the Sound Recorder.
 
+## 2026-09-29: pictures round 3 - TQDScaler and text at a scale
+
+- `TQDScaler` (`d0d51bb`, `qd/Transform.h`): the scaler takes the port's
+  procs over while a transform is in force, and its eleven procs map
+  what they are given through the transform the stack comes to
+  (`RecalcTransform`); the frame pen is scaled (its height from its
+  width - ROM bug kept) and the port's clip, set in the drawing's own
+  coordinates, mapped and cut by the clip outside.  `SetStdProcs` now
+  fills all fourteen procs, which the scaler starts from for a port with
+  none.  `TQDScaler::Offset` answers nothing now, so `views/DrawShape.cpp`'s
+  offset DEVIATION is a no-op awaiting removal.
+- Text at a scale: `DrText` opens the fonts at the size times the scale
+  and stretches the nearest strike when there is none of that size
+  (espy 12 at 2.0 is the 16-point strike at 1.5).  Found on the way:
+  espy 24 at 1.0 is not the same pixels as espy 12 at 2.0 - the ROM's
+  ratios come out 1.49998 and 1.5.  NOT YET: the ROM fits a width with the
+  stretched advances; the host keeps the strike's, which the paragraphs'
+  line breaks (and `test_Views`' espy-18 style runs) depend on.
+- `src/host/demo/scaledmap.ns` (ctest `host.ScaledMapDemo`): the World
+  Clock's map at half size, and shapes with text doubled and stretched.
+
 ## 2026-09-29: pictures round 2 - curves, paths, pixel patterns, arcs, italic
 
 - Curves and paths (`3f1d0f8`, `qd/Curves.h`, `qd/Paths.h`): the verbs,
