@@ -15,7 +15,7 @@
 	newton [--rom image | --objects file] [--heap bytes] [--display WxH[xdepth]] [--scale n]
 	       [--script file.ns] [--headless seconds] [--store file] [--erase]
 	       [--package file.pkg]... [--microphone-tone hz] [--tcp-echo port]
-	       [--serial-port port|none]
+	       [--serial-port port|none] [--ir-peer listen:port|host:port]
 
 	--objects boots on the object file built from the ROM source tree
 	(tools/newton-rom/analysis/romsrc.py build -o) with no ROM image: the
@@ -52,6 +52,11 @@
 	The docker is the Connection application's (comms/Docker.h), started
 	by its Connect button or by autodock.
 
+	--ir-peer puts the Newton's built-in IR port on a TCP connection to
+	another newton (hal/host/HostIRChip.h), so the two can beam to each
+	other: one is given listen:PORT (0 picks a free port) and the other
+	HOST:PORT.  Once set up it prints "[host] IR port N".
+
 	--package installs a package once the machine is up, onto the internal
 	store as one arriving from the Newton Connection is (as many as wanted,
 	in order), so with --store it is activated again at every boot after;
@@ -76,6 +81,7 @@
 #include "HostSoundDriver.h"
 #include "HostEchoServer.h"
 #include "HostSerialChip.h"
+#include "HostIRChip.h"
 #include "FIQTimer.h"
 #include "SerialTool.h"
 #include "MNP.h"
@@ -125,6 +131,7 @@ __declspec(dllimport) int __stdcall GetProcessTimes(void* process, unsigned long
 static long gScale = 1;
 static long gHeadlessSeconds = 0;
 static long gSerialPort = kHostSerialPort;	// --serial-port: -1 none
+static const char* gIRPeer = nil;			// --ir-peer
 static long gToneFrequency = 0;			// --microphone-tone: the null microphone's test tone
 static Boolean gWindowed = true;
 static std::atomic<bool> gScriptQuit(false);	// HostQuit(): the run ended by the script
@@ -137,7 +144,7 @@ Usage(void)
 	fprintf(stderr, "usage: newton [--rom image | --objects file] [--heap bytes] [--display WxH[xdepth]] [--scale n]\n"
 					"              [--script file.ns] [--headless seconds] [--store file] [--erase]\n"
 					"              [--package file.pkg]... [--microphone-tone hz] [--tcp-echo port]\n"
-					"              [--serial-port port|none]\n");
+					"              [--serial-port port|none] [--ir-peer listen:port|host:port]\n");
 	return 2;
 }
 
@@ -152,9 +159,12 @@ NewtonBoot(void)
 	// DEVIATION: the ROM's boot starts the timers and the serial hardware
 	// (InitializeCommHardware) and its loader registers the serial and MNP
 	// services; the host does it here, the external port a TCP socket
+	NewtonErr timerErr = noErr;
+	if (gSerialPort >= 0 || gIRPeer != nil)
+		timerErr = InitFIQTimer();
 	if (gSerialPort >= 0)
 	{
-		NewtonErr err = InitFIQTimer();
+		NewtonErr err = timerErr;
 		if (err == noErr)
 			err = HostSerialChipInstall((unsigned short) gSerialPort);
 		if (err == noErr)
@@ -166,6 +176,21 @@ NewtonBoot(void)
 		}
 		else
 			fprintf(stderr, "[host] no serial port on %ld (%ld)\n", gSerialPort, (long) err);
+	}
+	// DEVIATION: the built-in IR is the Voyager chip's; the host's is a TCP
+	// connection to another newton
+	if (gIRPeer != nil)
+	{
+		NewtonErr err = timerErr;
+		if (err == noErr)
+			err = HostIRChipInstall(gIRPeer);
+		if (err == noErr)
+		{
+			printf("[host] IR port %u\n", (unsigned) HostIRChipPort(HostIRChipInstalled()));
+			fflush(stdout);
+		}
+		else
+			fprintf(stderr, "[host] no IR port at %s (%ld)\n", gIRPeer, (long) err);
 	}
 	THostScreenDriver* display = HostDisplay();
 	if (gWindowed && !HostWindowStart(display->Width(), display->Height(), display->Pixels(), "Newton", gScale))
@@ -367,6 +392,8 @@ main(int argc, char** argv)
 			if (HostStartEchoServer((uint16_t) port) == 0)
 				fprintf(stderr, "newton: no echo server on port %ld\n", port);
 		}
+		else if (strcmp(argv[i], "--ir-peer") == 0 && i + 1 < argc)
+			gIRPeer = argv[++i];
 		else if (strcmp(argv[i], "--serial-port") == 0 && i + 1 < argc)
 		{
 			i++;

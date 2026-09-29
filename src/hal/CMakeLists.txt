@@ -63,9 +63,12 @@ target_include_directories(hal_serial PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 # The host's serial port (host/HostSerialChip.h): a TSerialChip registered
 # as the external port whose wire is a TCP socket - a desktop that connects
-# is a cable plugged in (Einstein's port, 3679, by default).
+# is a cable plugged in (Einstein's port, 3679, by default) - and the
+# built-in IR (host/HostIRChip.h), whose medium is a TCP connection to
+# another host Newton.
 add_library(hal_host_serial STATIC
     host/HostSerialChip.cpp
+    host/HostIRChip.cpp
 )
 target_link_libraries(hal_host_serial PUBLIC newton_config hal_serial hal_host hal_host_sockets)
 target_include_directories(hal_host_serial PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/host)

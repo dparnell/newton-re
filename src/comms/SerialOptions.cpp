@@ -225,6 +225,19 @@ THMOHiSpeedClockOption::THMOHiSpeedClockOption()
 }
 
 
+// ROM 0x000e6190 __ct__19THMOSerIRLinkConfigFv
+// 'irlk: the IR port's mode - Sharp's ASK, no flags (the status and the
+// sensitivity are left as they are).
+THMOSerIRLinkConfig::THMOSerIRLinkConfig()
+	: TOption(kOptionType)
+{
+	SetLabel(kHMOSerIRLinkConfig);
+	SetLength(OPTION_DATA_LENGTH(THMOSerIRLinkConfig));
+	fIRLinkMode = kSerIRLink_SharpIR;
+	fConfigFlags = kSerIRLinkCfg_Default;
+}
+
+
 // ROM 0x001de71c __ct__24TCMOSerialBytesAvailableFv
 TCMOSerialBytesAvailable::TCMOSerialBytesAvailable()
 	: TOption(kOptionType)
