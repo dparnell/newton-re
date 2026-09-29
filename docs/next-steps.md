@@ -91,7 +91,7 @@ picture) over `OpenPicture`/`ClosePicture` and the recording branches of
 every standard proc.  So the order is recording first, then what
 recording produces.  Sizes are `callgraph.py` lower bounds (not done):
 
-1. **Recording**: `OpenPicture` (788 B), `ClosePicture`, `KillPicture`,
+1. DONE (`3ef412d`) **Recording**: `OpenPicture` (788 B), `ClosePicture`, `KillPicture`,
    `PutPicOpcode`/`Byte`/`Word`/`Long`/`Rect`/`Point`/`Data`/`Rgn`,
    `PutPicVerb` (the pen, patterns and oval size written only when they
    changed), `PutPicPat`/`PutPixPat`/`PutPat1Data`/`PutPixMap`/
@@ -100,7 +100,8 @@ recording produces.  Sizes are `callgraph.py` lower bounds (not done):
    `StdPoly`, `StdRgn`, `StdLine`, `StdBits`, `StdComment` - about 2.5 KB
    plus the branches.  Test: a picture recorded and played back to the
    same pixels.
-2. **Text in pictures**: playing it (`DrawPicText`, `TextCleanup`,
+2. DONE (`be66d0e`; the text objects' other operations and scaled
+   drawing NOT YET) **Text in pictures**: playing it (`DrawPicText`, `TextCleanup`,
    `NewText`, `CallDrawText`, `DisposeText`, `InvalCachedTextInfo` - 1 KB)
    and recording it (`StdText`'s `DoPutText` 2.5 KB, `UpdateLayoutState`).
 3. **`MakePict`** (`FMakePict`, `CommonMakePict`,

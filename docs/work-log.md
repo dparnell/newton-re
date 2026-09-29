@@ -9,6 +9,29 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: pictures round 1 - recording, and text in pictures
+
+- Pictures recorded (`3ef412d`, `qd/PicRecord.h`): `OpenPicture`,
+  `ClosePicture`, `KillPicture`, `CheckPic`, the `PutPic*` family,
+  `StdPutPic`, `PackBits`, `EqualPat`, and the recording branches of
+  `StdRect`, `StdRRect`, `StdOval`, `StdArc`, `StdLine`, `StdPoly`,
+  `StdRgn`, `StdBits`, `StdComment`.  A scene of every standard proc,
+  recorded and played back, gives the same pixels as drawn directly.
+  `analysis/pictures.py` walks the ROM's own 30 pictures: they use only
+  bitmaps, clips, comments, pen size and short lines, so text, curves
+  and paths only reach a picture by being recorded.
+- Text in pictures (`be66d0e`, `qd/TextObject.h`): text objects
+  (`NewText`, `DisposeText`, `DrawTextObj`, `CallDrawText`, `StdText`)
+  so that `DrawTextOnce` draws through the port's text proc, as the ROM
+  does; `DoPutText` records both the Newton's text (0x81a0-0x81a4) and
+  the Macintosh's (LongText); `DrawPicText`/`TextCleanup` and the
+  0x28-0x2b branch play it, `PicPlay` now keeping the ROM's text state.
+  ROM bugs kept: 0x81a0 never remembered; LongText's byte count; a single
+  style's carried family never filled in on playback.  A ROM bug not
+  kept: `TextCleanup` gives back blocks inside another (host heap).  A
+  correction on the way: `kPicDefaultTextOptions`' 1 is the transfer
+  mode (srcOr), not the last word.
+
 ## 2026-09-29: packages round 6 - segments, the progress callback, compressed large objects; packages closed
 
 - `store:RestoreSegmentedPackage(soup, keys)` over `CPackageArchivalPipe`

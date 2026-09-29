@@ -363,8 +363,29 @@ apart, a box of no width or height taking the text's; the vertical bits
 move the box down by the room left.  The NewtonScript `TextBox` is here.
 `StyledStrTruncate` 0x001ecf64 (the NewtonScript `StrTruncate` and
 `StyledStrTruncate`) cuts a string to a width with an ellipsis.
-NOT YET: ink words, scaled glyphs, persistent text objects, `StdText`
-recording, tabs.
+NOT YET: ink words, scaled glyphs, tabs.
+
+### Text objects (`src/qd/TextObject.h`)
+
+A text object is what every question asked of text goes through
+(`NewText` 0x0035bfc4 makes one in a handle of its own; `DoTextOnce`
+0x0035a418 makes one on its stack, not flagged as allocated, so
+`DisposeText` 0x0035dc94 only throws its caches away -
+`InvalCachedTextInfo` 0x0035b624).  The second byte of its flags word is
+the *operation* - nought to draw, 0x100 the width, 0x200 the bounds,
+0x800/0x1000/0x2000 CharToPoint, PointToChar, TextArrow - and the object
+is handed to the port's `textProc` (`CallDrawText` 0x0035a60c at the
+scales given, `DrawTextObj` 0x0035df74 at full size after clearing the
+operation), or to `StdText` 0x0035b07c when the port has no procs or the
+port is a printer's (pixMapFlags kind 0x200) and the operation is not
+drawing.  So one proc sees all the text a port is asked about, which is
+how a printer or an open picture sees it: `StdText`'s drawing is
+`DoPutText` (recording, below) then `DrText` 0x0035c530.  On the host
+`DrText` is Text.cpp's glyph-at-a-time layout and the caches are never
+made (DEVIATION); the operations other than drawing, and drawing at a
+scale other than 1.0, are NOT YET (the bounds are measured directly).
+The DDK's `TextObjProc` takes the object as a `long`; a sync patch makes
+it `Long`, the ARM's word, pointer-sized on a host.
 
 ## Pictures (`src/qd/Pictures.h`)
 
@@ -454,15 +475,69 @@ DEVIATION: the host reads every word through `toolbox/ByteOrder.h`, and
 turns the halfwords of each rectangle, region and polygon read out of
 the picture into its own order.
 
-NOT YET RECONSTRUCTED: the text (0x28-0x2b and the Newton's
-0x81a0-0x81a4 are read and not drawn: `NewText`, `CallDrawText`,
-`DrawPicText`, `TextCleanup`), curves and paths (read, not drawn:
+Text is drawn as a text object through `CallDrawText` at the picture's
+text scales (the frame's scale times the last `TxRatio`).  The old
+opcodes' `LongText` family (0x28-0x2b) is Mac Roman characters in a
+style `TxFont` (a Mac font id, `SearchFont`), `TxSize` and `TxFace`
+build at PicPlay +0xd4, with options of their own at +0xb8 that are
+nought but the transfer mode.  The Newton's: 0x81a0 is the options
+(+0x58, `kPicDefaultTextOptions` 0x00380ca0 to begin with - srcOr);
+0x81a1 one style (+0x74); 0x81a2 several, with each run's length and
+style index (the pointer blocks +0x94/+0x98, the styles in a temporary
+block at +0x9c, each family a Mac font id or 0x800000 for one the
+picture carries); 0x81a3 the location, flags (0x80 several styles, 0x40
+options, 0x20 a 0x81a4 follows) and the UniChars, drawn by `DrawPicText`
+0x003336ec (the options' width scaled by the picture's horizontal scale
+meanwhile) unless 0x81a4 follows; 0x81a4 gives each 0x800000 family of
+0x81a2's styles a block of its own - a length halfword and the bytes,
+the form an ink word takes as an integer family - and draws.
+`TextCleanup` 0x00333cd0 gives back what they allocated.  `TxMode` sets
+both kinds' transfer mode.  ROM bugs: with the procs (PictToShape)
+nothing is given back; with several carried families the ROM gives back
+each one's block though all but the first are inside the first
+(DEVIATION: the host gives the block back once); a single style's
+carried family is never filled in, so the text is drawn with the
+integer 0x800000 as its font (the host draws nothing).
+
+NOT YET RECONSTRUCTED: curves and paths (read, not drawn:
 `MapCurve`/`CallCurve`, `MapPaths`/`CallPaths`), pixel patterns of type
 1 (read, and the port keeps its pattern: `ConvertPixPat`'s converters),
-a picture drawn under a scaling transform (`TQDScaler`), and the
-recording side (`OpenPicture`, `ClosePicture`, `PutPic*`).
-`test_PicPlay` plays hand-written pictures; `test_Views`'s `TestPicture`
-draws the ROM's world map.
+and a picture drawn under a scaling transform (`TQDScaler`).
+`test_PicPlay` plays hand-written pictures, records the standard procs'
+scene and text both ways and plays them back to the same pixels;
+`test_Views`'s `TestPicture` draws the ROM's world map.
+
+### Pictures recorded (`src/qd/PicRecord.h`)
+
+`OpenPicture` 0x00331980 makes the picture (a handle of 0x100 bytes to
+begin with: the size word, the frame, `0x0011 0x02ff` - every picture the
+Newton records is version 2) and the port's `picSave`, a 0x9c-byte
+record of what the picture already says: the clip, the origin, the pen's
+size, mode and patterns, the last rectangle, curve and oval size, the
+text scales, options and style; and hides the pen.  Every standard proc
+asks `CheckPic` 0x00335030 (a picture is open and pnVis >= -1; the
+origin and clip written first when they changed), writes the pen state
+its verb needs (`PutPicVerb` 0x00331d10 - frame the pen size and mode,
+paint the mode and pattern, fill the pattern, erase the background -
+only what changed), then its opcode; a rectangle the same as the last is
+the opcode + 8 alone.  Everything goes through the port's `putPicProc`
+or `StdPutPic` 0x00334e88, which grows the picture 0x100 bytes at a
+time and on failure cuts it to an empty picture (size 0xffff).  Bitmaps
+are recorded as the ROM's `StdBits` does (packed with `PackBits`
+0x002aeed0 when the row is 8 bytes or more - with a one-byte row count,
+a ROM bug kept).  `ClosePicture` 0x00331c94 writes the end and trims the
+handle.
+
+Text is recorded by `DoPutText` 0x0035a680, from `StdText`: a picture
+made for the Macintosh gets TxFont/TxSize/TxFace and LongText every time
+(the count a byte, though every character is written - ROM bug kept);
+a Newton picture gets TxRatio when the scales changed, TxMode when only
+the options' transfer mode did or else 0x81a0 (never remembered, so
+written again every time - ROM bug kept), 0x81a1 when the one style is
+not the one the picture has, or 0x81a2 for runs, then 0x81a3 and 0x81a4.
+DEVIATIONS: a style's font pattern Ref and pattern pointer go into the
+picture as their low 32 bits and are not read back; the options' last
+word, which the ROM calls as a text getter when set, is ignored.
 
 ### A picture turned into shapes (`PictToShape`, `views/PictureShapes.cpp`)
 
