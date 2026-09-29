@@ -23,9 +23,12 @@
 	DEVIATION: the host keeps no caches (the glyph widths are worked out
 	afresh by each pass), so the cache fields stay nought; DrText is
 	Text.cpp's layout, drawing a glyph at a time.  NOT YET RECONSTRUCTED:
-	the operations other than drawing (width, bounds, CharToPoint,
-	PointToChar, TextArrow, UpdateLayoutState), and text drawn at a scale
-	other than 1.0 (DrText draws at full size whatever the scales).
+	the bounds (0x200: CalcTextBounds) and the layout's three numbers
+	(0x400), TextArrow (0x2000), text at an angle (the options' +0x0c) in
+	DoPointToChar, and text drawn at a scale other than 1.0 (DrText draws
+	at full size whatever the scales).  The fitted length (0x100),
+	CharToPoint (0x800) and PointToChar (0x1000) are here, over the
+	host's layout (TextLayout.h) worked out afresh for each question.
 
 	Reconstructed from the MP2x00 US ROM (0x0035a60c, 0x0035b07c,
 	0x0035b624, 0x0035bfc4, 0x0035dc94, 0x0035df74); each function cites
@@ -47,6 +50,10 @@ enum
 	kTextObjOpDraw		= 0x00000000,
 	kTextObjOpWidth		= 0x00000100,
 	kTextObjOpBounds	= 0x00000200,
+	kTextObjOpMetrics	= 0x00000400,	// the layout's three numbers (+0x2c)
+	kTextObjOpCharToPoint	= 0x00000800,
+	kTextObjOpPointToChar	= 0x00001000,
+	kTextObjOpTextArrow	= 0x00002000,
 	kTextObjLayoutMask	= 0x000000ff	// how far the layout has got
 };
 
@@ -85,6 +92,38 @@ void			DrawTextObj(TextObjectRef text);							// ROM 0x0035df74 DrawTextObj__Fl
 void			CallDrawText(TextObjectRef text, Fixed hScale, Fixed vScale);	// ROM 0x0035a60c CallDrawText__FlN21
 extern "C" void	StdText(TextObjectRef text, Fixed hScale, Fixed vScale);	// ROM 0x0035b07c StdText
 void			DrText(TextObjectRef text, Fixed hScale, Fixed vScale);	// (Text.cpp) the drawing
+
+// What a text object is asked (GetTextObjField).
+enum TextObjectField
+{
+	kTextObjText = 0,			// the characters
+	kTextObjFittedLength,		// how many fit the options' width (the width operation)
+	kTextObjStyles,
+	kTextObjRunLengths,
+	kTextObjLocation,			// an FPoint, copied
+	kTextObjOptions,
+	kTextObjBounds,				// a TextBoundsInfo (the bounds operation)
+	kTextObjMetrics				// the layout's three numbers (operation 0x400)
+};
+
+void			GetTextObjField(TextObjectRef text, TextObjectField field, void* result);	// ROM 0x0035df90 GetTextObjField__Fl15TextObjectFieldPv
+void			CharToPoint(TextObjectRef text, long offset, FPoint* point);	// ROM 0x0035e100 CharToPoint__FlT1P6FPoint - where the character at `offset` starts
+long			PointToChar(TextObjectRef text, FPoint point);			// ROM 0x00359d40 PointToChar__Fl6FPoint - the character boundary nearest the point
+Boolean			UpdateLayoutState(TextObjectRef text, long level, Fixed hScale, Fixed vScale);	// ROM 0x0035c080 UpdateLayoutState__FlN31 - ==> whether the layout could be brought to the level
+Boolean			RemapCharWidths(TextObjectRef text);						// ROM 0x0035bfbc RemapCharWidths__Fl
+void			CalcTextAdvance(TextObjectRef text, FPoint* advance, long count);	// ROM 0x0035b220 CalcTextAdvance__FlP6FPointT1 - the first `count` characters' advance
+void			DoCharToPoint(TextObjectRef text, Fixed hScale, Fixed vScale);	// ROM 0x0035e13c DoCharToPoint__FlN21
+void			DoPointToChar(TextObjectRef text, Fixed hScale, Fixed vScale);	// ROM 0x00359d80 DoPointToChar__FlN21
+
+// The QuickDraw library's protocol face of them (the TQDLibraryDriver
+// dispatch; the ROM's forward to the functions above).
+class TQDLibraryDriver
+{
+public:
+	static void		GetTextObjField(TextObjectRef text, int field, void* result);	// ROM 0x00195cb0 GetTextObjField__16TQDLibraryDriverFliPv
+	static void		CharToPoint(TextObjectRef text, long offset, FPoint* point);	// ROM 0x00195cbc CharToPoint__16TQDLibraryDriverFlT1P6FPoint
+	static long		PointToChar(TextObjectRef text, FPoint point);			// ROM 0x00195cc0 PointToChar__16TQDLibraryDriverFl6FPoint
+};
 void			DoPutText(TextObjectRef text, Fixed hScale, Fixed vScale);	// (PicRecord.cpp) the recording
 
 #endif /* __TEXTOBJECT_H */
