@@ -9,6 +9,21 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: the sound server, round 1
+
+- The `PSoundDriver` seam (`sound/SoundDriver.h`, the ROM's driver
+  protocol in its dispatch order); `TSoundServer` (`sound/SoundServer.h`),
+  the `'sndm` app world with the output and decompressor channels and
+  `FillDMABuffer` mixing (two 0xea0-byte buffers scheduled in turn); the
+  host's `PMainSoundDriver` (`hal/host/HostSoundDriver.h`: 21600 Hz 16-bit,
+  each buffer's end a host interrupt source - the new generic registry
+  `hal/host/HostInterruptSources.h`, polled by `HostDeliverInterrupts` and
+  folded into the idle task's wait, `docs/host-runtime.md` - and a null
+  backend that captures what was played).  `test_SoundServer` plays
+  16-bit blocks unchanged and 8-bit 11025 Hz blocks resampled.  Host bug
+  fixed: an immediate command's value read at the wrong offset (`ULong` is
+  pointer-sized).  Commits `f3b2f14`, `28ba50a`, `231091d`, `651a2bb`.
+
 ## 2026-09-29: the view natives finished - the key-help slip, a roll over a soup, ReFlow
 
 Views are 95 of 95 natives bound.

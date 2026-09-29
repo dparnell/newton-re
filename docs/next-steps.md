@@ -128,11 +128,21 @@ The owner's order - the package manager, host package loading, the
 recognition system, the testing system, finishing packages - has been
 worked through.  What could come next (not ranked; the owner chooses):
 
-- **The sound server**: `TSoundServer`/`TSoundChannel`, the codec and DMA
-  channels, and a host audio driver behind `hal/` - the Sound Recorder
-  (the one built-in application that does not open: `FSoundOpen`), the pen
-  clicks, alarms and button sounds, and packages' `StopFrameSound`.  The
-  codecs are done (`docs/sound/README.md`).
+- **The sound server**: being worked (2026-09-29; plan in
+  `docs/sound/README.md`).  Round 1 done: the `PSoundDriver` seam, the
+  server (`'sndm`, output and decompressor channels, `FillDMABuffer`
+  mixing), the host driver (`hal/host/HostSoundDriver.h`, buffer ends as
+  host interrupt sources, a null capture backend).  Round 2: the real
+  `TUSoundChannel` (Open/Close/SendImmediate/Schedule/Start/Pause/Stop,
+  `SoundNode`, `AECompletionProc`) and `TFrameSoundChannel` (`Convert`
+  0x000d2774), `GlobalSoundChannel` opening it, the `protoSoundChannel`
+  natives (0x001e67e8-0x001e70b4) with the ROM click played in a test; the
+  Win32 waveOut backend; the host programs registering the driver
+  (`HostInstallSoundDriver` before `OsBoot`, linking `hal_host_sound`).
+  Then the codec channel's task (`InitNode` 0x001e494c), input and the
+  compressors for the Sound Recorder (`FSoundOpen`, the smoke run's one
+  failure), packages' `StopFrameSound`, and `NewWiredPtr` in `memory/`
+  (nil today: the server's buffers fall back on `NewPtr`, a DEVIATION).
 - **The book reader** (`TLibrarian`, 49 methods; 19 unanswered `books`
   natives) - the Newton's books and the help book, and with it the
   `'book` part handler (the ROM's help book is refused for want of it).
