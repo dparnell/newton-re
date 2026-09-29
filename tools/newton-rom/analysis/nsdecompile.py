@@ -1075,6 +1075,10 @@ class Writer:
 				raise DecompileError("a sized array")
 			if node.name in INFIX and len(node.args) == 2:
 				return "(%s %s %s)" % (w(node.args[0]), node.name, w(node.args[1]))
+			if node.name == "HasPath" and len(node.args) == 2 and isinstance(node.args[0], Path) and node.args[0].nil_for_nil == 0:
+				# `a.b.(c) exists`: the path's get-paths are all 0 (WalkForPath
+				# started with nilForNil 0), where an expression's first is 1
+				return "(%s exists)" % self.path(fn, Path(node.args[0], node.args[1], 0), indent)
 			if node.name in NAMED_INFIX and len(node.args) == 2:
 				return "(%s %s %s)" % (w(node.args[0]), NAMED_INFIX[node.name], w(node.args[1]))
 			if node.name == "aref" and len(node.args) == 2:
@@ -1111,8 +1115,12 @@ class Writer:
 		if isinstance(node, MakeFrame):
 			return "{" + ", ".join("%s: %s" % (ident(t), w(v)) for t, v in zip(node.tags, node.values)) + "}"
 		if isinstance(node, Func):
-			if not getattr(node, "lexical", False) and (uses_environment(node.fn.body) or node.fn.ref in fn.repeated_literals()):
-				# compiled on its own (a constant of the NTK's): a global constant here
+			if not getattr(node, "lexical", False):
+				# compiled on its own (a constant of the NTK's): a global constant
+				# here.  Written inline it would be closed (set-lex-scope) as soon
+				# as the compiler gave it an argFrame - which a reference to self,
+				# to a global or even to a constant does in a nested function
+				# (ClosureWalker notes any free name as the receiver's)
 				name = "kFunction_%x" % node.fn.ref
 				if name not in dict(self.constants):
 					self.constants.append((name, self.function(node.fn, 0)))

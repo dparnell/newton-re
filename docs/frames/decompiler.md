@@ -83,7 +83,11 @@ any `func` in the source is nested. For this the host has
 
 Some functions push another function as a literal, without closing over
 it (no `set-lex-scope`). These came from a constant the NTK evaluated when
-the project was built. Such a function is written as its own definition,
+the project was built. Written inline, such a function would be closed
+over whenever the compiler gave it an argFrame, and a nested function gets
+one for any free name - `self`, a global, even a global constant -
+because `ClosureWalker` notes every name that is not a variable as the
+receiver's (the ROM's does the same). Such a function is written as its own definition,
 a global constant `kFunction_<address>` compiled first. The main function
 refers to it by name, which pushes the same literal:
 
@@ -147,6 +151,7 @@ by side.
 | 3 | 5398 of 5507 | 5372 (97.5%) | locals a loop reuses declared first; the late locals put in the last loop's body; the NTK's constants (below) |
 | 4 | 5447 of 5507 | 5418 (98.4%) | no assignment joined to a read across a branch target (a loop's top); quoted paths `'a.b`, `'[pathExpr: x]`; reals of class `'Real` |
 | 5 | 5447 of 5507 | 5434 (98.7%) | names chosen in hash order for functions whose table of variables is sorted (more than 20) |
+| 6 | 5447 of 5507 | 5440 (98.8%) | every function pushed without `set-lex-scope` made a constant; `a.b.(c) exists` (its get-paths are all 0) |
 
 The 5507 functions are every top-level NewtonScript function in the ROM's
 object area; functions that are literals of others are decompiled inside
