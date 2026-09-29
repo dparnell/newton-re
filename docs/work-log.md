@@ -86,6 +86,26 @@ bugs and ROM bugs found on the way.
   `layout.tsv` manifest, and `rombuild.py` proved by a byte-identical
   rebuild of the area.
 
+## 2026-09-30: Sharp IR
+
+- `comms/SharpIRTool.h` (0f017f4): `TSharpIRTool`, serv 'slir' - the
+  packets (lead-in, control, negotiation, data of up to 0x200 bytes with
+  a checksum), the ROM's 32-event `NextState` machine, the negotiation,
+  ENQ/SYN before each data packet with ACK/NAK and three tries, the two
+  timers as delayed messages to the tool's own port; `TIRService`,
+  `RegisterIRCommServices`; the five slow-IR options (the ROM's
+  `TCMOSlowIRBitBang` defaults bit-banging off where the DDK comment says
+  on).  The host IR chip reports the Voyager IR channel's features -
+  without `kSerFeatureTxConfigNeeded` the tools never configured for
+  output, so half duplex never applied.  `NEWTON_TRACE_IR` prints every
+  byte a chip sends, hears or loses.
+- ctest `comms.SharpIR`: two chips negotiate protocol 4
+  (irUsingSeniorIR, the MP2x00's codename) at 19200 and move stream and
+  framed data.  ROM behaviour: one counter numbers packets both ways, so
+  after an unframed put a reply is refused as out of sequence (-38006
+  after the retries); only a frame's last packet (0xffff) resets both
+  ends - harmless for the beamer, which only sends frames.
+
 ## 2026-09-30: beaming planned, and the host's IR chip
 
 - Sized with the new `analysis/classsizes.py build/MP2x00US REGEX` (each
