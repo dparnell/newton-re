@@ -837,6 +837,27 @@ FStats(RefArg /*rcvr*/)
 }
 
 
+// ROM 0x002b82e8 FUriah
+// The heap dump (TObjectHeap::Uriah).
+Ref
+FUriah(RefArg /*rcvr*/)
+{
+	Uriah();
+	return NILREF;
+}
+
+
+// ROM 0x002b8300 FUriahBinaryObjects
+// The binary objects' sizes by class; a non-nil argument writes the strings
+// out too.
+Ref
+FUriahBinaryObjects(RefArg /*rcvr*/, RefArg printStrings)
+{
+	UriahBinaryObjects((Ref) printStrings != NILREF);
+	return NILREF;
+}
+
+
 #define NATIVE(symbol, fn, n)	RegisterNativeFunction(symbol, (void*) (NativeFn##n) fn, n)
 
 void
@@ -849,4 +870,6 @@ RegisterDebugNatives(void)
 	NATIVE("FWrite", FWrite, 1);
 	NATIVE("FLoad", FLoad, 1);
 	NATIVE("FStats", FStats, 0);
+	NATIVE("FUriah", FUriah, 0);
+	NATIVE("FUriahBinaryObjects", FUriahBinaryObjects, 1);
 }

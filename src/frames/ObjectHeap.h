@@ -256,6 +256,10 @@ extern Ref			gStores;				// 0x0c102a30
 extern Ref			gUnionSoups;			// 0x0c1027c4
 extern Ref			gPackageStores;			// 0x0c1017d0
 extern int			gVerboseGC;				// 0x0c1024f4
+extern int			gPrintMaps;				// 0x0c105564  Uriah prints every map
+extern int			gUriahROM;				// 0x0c105568  Uriah walks the ROM's objects instead of the heap
+extern int			gUriahPrintArrays;		// 0x0c10556c  Uriah prints every array of a class
+extern int			gUriahSaveOutput;		// 0x0c105570  Uriah writes to the file "Uriah Output"
 extern Ref			gROMBuiltinFunctions;	// the ROM's frame of built-in functions (magic pointer 1.2, the ROM's object 0x0062418d)
 extern Ref			gROMSymbolTableRef;		// host: the ROM's symbol table once ROMImport has read the ROM's objects (NILREF else)
 

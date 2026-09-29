@@ -452,6 +452,25 @@ TestDebugAPI()
 		EXPECT(threw);
 		gInterpreter->fValueStack.Reset(0);
 	}
+	// Uriah: the heap walked and summed, the handle table's free chain followed
+	Printed();
+	Eval("Uriah()");
+	{
+		const char* dump = Printed();
+		EXPECT(strstr(dump, "total ") != nil && strstr(dump, " scripts: ") != nil && strstr(dump, "frames ") != nil);
+		EXPECT(strstr(dump, "symbols ") != nil && strstr(dump, "arrays ") != nil && strstr(dump, " handles") != nil);
+		EXPECT(strstr(dump, "wacko") == nil && strstr(dump, "should be") == nil && strstr(dump, "corrupted") == nil);
+		ULong freeSpace, largestFree;
+		gHeap->Statistics(&freeSpace, &largestFree);
+		char expected[64];
+		snprintf(expected, sizeof(expected), "free %d, largest %d,", (int) freeSpace, (int) largestFree);
+		EXPECT(strstr(dump, expected) != nil);
+	}
+	Eval("UriahBinaryObjects(nil)");
+	{
+		const char* dump = Printed();
+		EXPECT(strncmp(dump, "Summary of sizes of binary objects:", 35) == 0 && strstr(dump, "\rstring: ") != nil && strstr(dump, "\rsymbol: ") != nil);
+	}
 	// TNSDebugAPI::Return: never implemented, it throws -48215
 	{
 		Boolean threw = false;

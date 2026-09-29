@@ -40,6 +40,14 @@ ROMObjectCount(void)
 }
 
 
+void
+ROMObjectAreaBounds(char** start, char** end)
+{
+	*start = gROMObjectArea.fArea;
+	*end = gROMObjectArea.fAreaEnd;
+}
+
+
 Boolean
 InROMObjectArea(Ref r)
 {

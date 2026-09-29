@@ -26,6 +26,7 @@
 #include "NewtonExceptions.h"
 #include "ROMConstants.h"
 #include "UnicodeTables.h"
+#include "ROMImport.h"		// ROMObjectAreaBounds, for gUriahROM
 #include "hal/System.h"
 #include "Unicode.h"
 
@@ -342,8 +343,7 @@ Statistics(ULong* freeSpace, ULong* largestFreeBlock)
 
 
 // ROM 0x0031c514 Uriah__Fv
-// The heap dump.  NOT YET RECONSTRUCTED: TObjectHeap::Uriah (0x002f5e50)
-// prints through the printer (InitPrinter), which is not reconstructed.
+// The heap dump, printed through the REP's out translator (TObjectHeap::Uriah).
 void
 Uriah(void)
 {
@@ -359,14 +359,291 @@ UriahBinaryObjects(int printStrings)
 }
 
 
+int		gPrintMaps = 0;				// 0x0c105564
+int		gUriahROM = 0;				// 0x0c105568
+int		gUriahPrintArrays = 0;		// 0x0c10556c
+int		gUriahSaveOutput = 0;		// 0x0c105570
+
+
+// Where Uriah walks: the heap, or the ROM's objects when gUriahROM is set
+// (the ROM's gROMSoupData; on the host the area ROMImport read them into).
+static void
+UriahRange(TObjectHeap* heap, char** start, char** end)
+{
+	*start = heap->fStart;
+	*end = heap->fEnd;
+	if (gUriahROM)
+		ROMObjectAreaBounds(start, end);
+}
+
+
+// DEVIATION: a host address is 64 bits; the ROM prints one with %08X.
+static unsigned long long
+UriahAddress(const void* p)
+{
+	return (unsigned long long) (uintptr_t) p;
+}
+
+
+// ROM 0x0031b154 Uriah__11TObjectHeapFv
+// The heap dump: every block walked (a size of nought, or one running past
+// the end, stops it), the locks checked against the lock bit, the space
+// counted by kind - free, locked, the padding (int frag), the scripts
+// (their CodeBlock frames, instructions and literals), frames and their
+// maps, symbols, binaries, arrays, context frames (a frame with a
+// viewCObject) - and the RefHandle table's free chain followed.  With
+// gPrintMaps every map is printed, with gUriahPrintArrays every array
+// that has a class; gUriahSaveOutput sends it all to "Uriah Output".
+//
+// ROM QUIRKS kept: the figure printed as "bytecode" is the size of the
+// CodeBlock frames, not of their instructions (which only reach the grand
+// total); a frame whose map is nil is counted as class 'frame; the tags
+// of a map are printed with BinaryData, which on the Newton is the
+// symbol's hash before its name; the size check against the heap's end
+// is made even while the ROM's objects are being walked; and the ROM
+// ends each object with a loop over its slots that does nothing.
 void
 TObjectHeap::Uriah(void)
-{ }
+{
+	long total = 0, freeSpace = 0, largest = 0, locked = 0, padding = 0;
+	long mapsP = 0, mapsV = 0, scripts = 0, instructions = 0, codeBlocks = 0, literalsP = 0, literalsV = 0;
+	long symbols = 0, binaries = 0, binaryCount = 0, arrays = 0, arrayCount = 0;
+	long frames = 0, frameCount = 0, contextFrames = 0;
+	Ref viewCObject = Intern((char*) "viewcobject");
+	char* p;
+	char* end;
+	UriahRange(this, &p, &end);
+	POutTranslator* savedOut = gREPout;
+	FILE* file = nil;
+	if (gUriahSaveOutput)
+	{
+		if (gProtocolRegistry != nil)
+		{
+			PStdioOutTranslator::ClassInfo()->Register();
+			gREPout = (POutTranslator*) NewByName("POutTranslator", "PStdioOutTranslator");
+		}
+		else
+			gREPout = (POutTranslator*) PStdioOutTranslator::ClassInfo()->New();	// DEVIATION: a standalone object system has no registry
+		file = fopen("Uriah Output", "w");
+		gREPout->Init(&file);
+	}
+	while (p < end)
+	{
+		ObjHeader* o = (ObjHeader*) p;
+		ULong flags = o->fSizeAndFlags;
+		long size = (long) ObjAlignedSize(o);
+		if (size == 0 || p > fEnd - size)
+		{
+			gREPout->Print("%08llX wacko size %X!\r", UriahAddress(o), (unsigned) size);
+			break;
+		}
+		total += size;
+		if (flags & kObjFree)
+		{
+			freeSpace += size;
+			if (size > largest)
+				largest = size;
+		}
+		else
+		{
+			padding += size - (long) ObjSize(o);
+			int lockCount = (int) ((o->fGCStuff >> 24) & 0xff);
+			if (flags & kObjLocked)
+			{
+				locked += size;
+				if (lockCount != 0)
+					gREPout->Print("%08llX locked (count %d)\r", UriahAddress(o), lockCount);
+				else
+					gREPout->Print("%08llX has lock bit with zero count!\r", UriahAddress(o));
+			}
+			else if (lockCount != 0)
+				gREPout->Print("%08llX lock bit clear with count %d!\r", UriahAddress(o), lockCount);
+			Ref obj = MAKEPTR(o);
+			Ref cls = NILREF;
+			Boolean classKnown = false;
+			if ((flags & kObjSlotted) == 0)
+			{
+				binaries += size;
+				binaryCount++;
+			}
+			else if ((flags & kObjFrame) == 0)
+			{
+				arrays += size;
+				arrayCount++;
+				Ref arrayClass = ObjClass(o);
+				if (gUriahPrintArrays && (arrayClass & 3) != 0 && arrayClass != (Ref) 0x22)
+				{
+					RefVar printed(obj);
+					PrintObject(printed, 0);
+					gREPout->Print("\r");
+				}
+			}
+			else
+			{
+				mapsV += (long) ArrayObjSize(Length(obj) + 1);	// the map a frame of that length would have (the ROM: 0x10 + 4 x length)
+				frames += size;
+				frameCount++;
+				if (ObjClass(o) == NILREF)
+				{
+					cls = RSSYMframe;
+					classKnown = true;
+				}
+				else if (FrameHasSlotRef(obj, viewCObject))
+					contextFrames += size;
+			}
+			if (!classKnown)
+			{
+				RefVar object(obj);
+				cls = ClassOf(object);
+			}
+			if (cls == RSSYMsymbol)
+				symbols += size;
+			else if (EQRef(cls, RSSYMcodeblock) || EQRef(cls, RSSYM_function))
+			{
+				Ref instr = GetFrameSlotRef(obj, RSSYMinstructions);
+				Ref literals = GetFrameSlotRef(obj, RSSYMliterals);
+				if (instr & 1)
+				{
+					scripts++;
+					instructions += (long) ObjAlignedSize((ObjHeader*) ObjectPtr(instr));
+					if (literals != NILREF)
+						literalsV += Length(literals) * 4;
+					codeBlocks += size;
+				}
+			}
+			else if ((cls & 3) == 0)
+			{
+				mapsP += size;
+				if (gPrintMaps)
+				{
+					gREPout->Print("MAP #%lX ", (unsigned long) UriahAddress(o));
+					gREPout->Print((cls & 8) ? "* " : "  ");
+					gREPout->Print("sup #%lX ", (unsigned long) ObjSlots(o)[1]);
+					long tags = ObjArrayLength(o) - 1;
+					for (long i = 0; i < tags; i++)
+						gREPout->Print("%s ", BinaryData(ObjSlots(o)[2 + i]));
+					gREPout->Print("\r");
+				}
+			}
+			else if (cls == RSSYMliterals)
+				literalsP += size;
+		}
+		p += ObjAlignedSize(o);
+	}
+	gREPout->Print("total %d, free %d, largest %d, locked %d, int frag %d, ext frag %d\r",
+				   (int) total, (int) freeSpace, (int) largest, (int) locked,
+				   (int) ((ULong) (padding * 1000) / (ULong) total), (int) ((freeSpace - largest) * 1000 / total));
+	gREPout->Print("%d scripts: %d bytecode, p:%d/v:%d literals, grand total %d\r",
+				   (int) scripts, (int) codeBlocks, (int) literalsP, (int) literalsV, (int) (codeBlocks + instructions + literalsP));
+	gREPout->Print("frames %d(%d)maps p:%d/v:%d\r", (int) frames, (int) frameCount, (int) mapsP, (int) mapsV);
+	gREPout->Print("symbols %d, binaries %d(%d)\r", (int) symbols, (int) binaries, (int) binaryCount);
+	gREPout->Print("arrays %d(%d), contextframes %d\r", (int) arrays, (int) arrayCount, (int) contextFrames);
+	if (fEnd - fStart != total)
+		gREPout->Print("*** total size should be %X\r", (unsigned) (fEnd - fStart));
+	long handles = RefHandleTableCount(fRefHandleTable);
+	long freeHandles = 0;
+	for (long index = fFreeHandleIndex; index != -1; index = RVALUE(RefHandleTableEntries(fRefHandleTable)[index].ref))
+	{
+		freeHandles++;
+		if (freeHandles > handles)
+		{
+			gREPout->Print("***OT free list corrupted");
+			break;
+		}
+	}
+	gREPout->Print("OT: ");
+	gREPout->Print("%ld used, %ld handles", (long) (handles - freeHandles), (long) handles);
+	gREPout->Print("\r");
+	if (gUriahSaveOutput)
+	{
+		gREPout->Delete();
+		fclose(file);
+	}
+	gREPout = savedOut;
+}
 
 
+// ROM 0x0031bae0 UriahBinaryObjects__11TObjectHeapFi
+// The binary objects' sizes summed by class, in a frame made in a heap of
+// its own (so as not to disturb the one being walked), then printed;
+// with printStrings every string also goes to the file "Uriah Strings".
+// ROM QUIRKS kept: the little heap is never freed; and a string is written
+// with %s, which on the Newton - its UniChars big-endian - stops at the
+// first character's high byte, and on the host prints only its first
+// character.
 void
-TObjectHeap::UriahBinaryObjects(int /*printStrings*/)
-{ }
+TObjectHeap::UriahBinaryObjects(int printStrings)
+{
+	// DEVIATION: the ROM's heap is 0x1000 bytes, 0x808 of them the RefHandle
+	// table; the host's table and objects are twice the size, so the heap is
+	// the host's table and twice the ROM's room for objects
+	TObjectHeap* sizesHeap = new TObjectHeap((long) (kRefHandleTableSize + 2 * (0x1000 - 0x808)), 1);
+	TObjectHeap* savedHeap = gHeap;
+	RefVar object;
+	RefVar cls;
+	FILE* file = nil;
+	if (printStrings)
+		file = fopen("Uriah Strings", "w");
+	gHeap = sizesHeap;
+	{
+		RefVar sizes(::AllocateFrame());		// (in the little heap: gHeap's, not this one's)
+		char* p;
+		char* end;
+		UriahRange(this, &p, &end);
+		for (; p < end; p += ObjAlignedSize((ObjHeader*) p))
+		{
+			ObjHeader* o = (ObjHeader*) p;
+			ULong flags = o->fSizeAndFlags;
+			if ((flags & kObjSlotted) == 0 && (flags & kObjFree) == 0 && (flags & 0x20) == 0)
+			{
+				object = MAKEPTR(o);
+				cls = ClassOf(object);
+				if (ISPTR(cls))
+				{
+					// DEVIATION: a class moved since the last collection is a
+					// forwarding object, which only its own heap follows (with
+					// the little heap current the ref is taken as it stands, and
+					// the frame is handed something that is not a symbol); it is
+					// followed here, in this heap
+					gHeap = savedHeap;
+					cls = MAKEPTR(OBJ(cls));
+					gHeap = sizesHeap;
+				}
+				// DEVIATION: a binary whose class is not a symbol (the host's
+				// heap has binaries classed by a frame) is left out; the ROM
+				// would hand such a class to the frame functions as a slot name
+				if (!IsSymbol(cls))
+					continue;
+				long size = (long) ObjAlignedSize(o);
+				Ref sofar = GetFrameSlotRef(sizes, cls);
+				if (sofar == NILREF)
+					SetFrameSlot(sizes, cls, RefVar(MAKEINT(size)));
+				else
+					SetFrameSlot(sizes, cls, RefVar(MAKEINT(RINT(sofar) + size)));
+				if (file != nil && IsSubclassRef(cls, RSSYMstring))
+					fprintf(file, "%s\r", ObjData(o));
+			}
+		}
+		gREPout->Print("Summary of sizes of binary objects:\r");
+		TObjectIterator iter(sizes, false);
+		for ( ; !iter.Done(); iter.Next())
+		{
+			// DEVIATION: printed with this heap current, as the printer reads
+			// the global frames, which only their own heap follows if they
+			// have moved since the last collection (the ROM prints with the
+			// little heap current)
+			Ref tag = iter.Tag();
+			long value = RINT(iter.Value());
+			gHeap = savedHeap;
+			PrintObject(RefVar(tag), 0);
+			gREPout->Print(": %d\r", (int) value);
+			gHeap = sizesHeap;
+		}
+	}
+	gHeap = savedHeap;
+	if (file != nil)
+		fclose(file);
+}
 
 
 /* -------------------------------------------------------------------------------

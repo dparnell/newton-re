@@ -40,6 +40,7 @@ NewtonErr	ImportROMObjectsFromFile(const char* path);
 
 Boolean		ROMObjectsImported(void);
 long		ROMObjectCount(void);
+void		ROMObjectAreaBounds(char** start, char** end);	// where the imported ROM objects lie (both nil: none) - Uriah's gUriahROM
 Ref			TranslateROMRef(ULong32 ref);		// a ROM ref as a host ref (nil: a pointer that is not a ROM object's)
 
 // The ROM's own bytes, with ROM address 0 at the start (an AIF image's
