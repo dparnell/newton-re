@@ -456,15 +456,45 @@ end how much of what was played was that tone.
 `src/host/demo/recorder.ns` (ctest `host.NewtonRecorder`) drives the
 Sound Recorder through its own buttons - Rec, two seconds, Stop, Play -
 and checks its status line at each step and that the playback is the
-tone.  The Sound Recorder records through `TGSMCodec` (the GSM 06.10
-full-rate coder, the Toast library - `gsm_create`, `gsm_encode`,
-`Gsm_Coder` ... at 0x002a85f8-0x00347000), which is NOT YET: meanwhile the
-block has no codec and the samples are recorded and played as they are.
+tone (98% of it; GSM is lossy, and the pass rule asks for 80%).  The
+Sound Recorder records through `TGSMCodec`.
+
+## GSM 06.10 (`GSM.h`, `GSM.cpp`, `GSMCodec.cpp`)
+
+The Sound Recorder's codec is GSM full rate: 160 samples (20 ms at 8000
+a second) become a 33-byte frame.  The ROM carries the whole of the Toast
+library (Jutta Degener and Carsten Bormann's libgsm 1.0) compiled in, at
+0x002a85f8-0x00347000, and `GSM.cpp` transcribes it function by function
+from the ROM: the saturating word arithmetic (`gsm_add` .. `gsm_norm`,
+whose bit table is in the initialised data), preprocessing (offset
+compensation and pre-emphasis), LPC analysis (the autocorrelation,
+Schur's recursion to eight reflection coefficients, their log-area ratios
+quantised to 6,6,5,5,4,4,3,3 bits), the short-term analysis and synthesis
+lattice filters over coefficients interpolated between frames, the
+long-term predictor (a lag of 40..120 and a gain of four), regular pulse
+excitation (a weighting filter, one of four grids of thirteen pulses,
+APCM-quantised to three bits under a six-bit block maximum), the
+post-processing (de-emphasis, and samples truncated to 13 bits), and the
+frame packing with its 0xD magic nibble.  The library's static helpers
+have no names in the ROM; they are cited by address with the library's
+names for them.  The tables (`gsm_A` .. `gsm_FAC`, the bit table) come
+from the ROM's copy of the initialised data (`GSMTables.cpp`,
+`romtable.py`).  One difference from the library as published is kept:
+an all-silent subframe is scaled by 6 rather than 0 in the lag search,
+which changes nothing.  Left shifts are written as the ARM does them
+(`SHL`), a negative value included.
+
+`TGSMCodec` codes and decodes whole frames only, both counts answered;
+its state is made by `Init` (and a second `Init` loses the first - kept).
+`test_GSM`: every frame carries the magic, decoded samples are 13-bit, a
+voiced signal (a 150 Hz voice's harmonics) comes back with correlation
+0.999 once the predictors settle, silence stays silent, the coder is
+deterministic and a frame without the magic is refused.  No published
+test vector was at hand to check it bit for bit.
 
 ## Not yet
 
-`TGSMCodec` and the GSM 06.10 coder under it - reachable: the Sound
-Recorder records with it; `NewWiredPtr` (memory), for which the DMA
+`NewWiredPtr` (memory), for which the DMA
 buffers fall back on `NewPtr`.  `TMacintalkCodec` (speech) is not in the
 ROM either, so a string played as a sound plays its bytes, as on the
 machine.
