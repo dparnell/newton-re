@@ -9,6 +9,23 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-30: the docker's store and soup commands
+
+- Stores ('gsto', 'ssto'/'ssgn', 'sdef', 'gdfs', 'ssig', 'ssna') and
+  soups ('gets', 'ssou'/'ssgi', 'gsin'/'cinf', 'gind'/'cidx', 'sinf',
+  'ssos'); ROM bug kept: a 'SystemScratch soup is "forgotten" by storing
+  0 rather than nil.  `tools/dock/nsof.py` is NSOF for the desktop side;
+  `NEWTON_TRACE_DOCK` traces the commands each way.  `dock.py --session`
+  lists the stores, makes Internal current with its 15 soups and reads
+  the System soup's info (9bd3a3a).
+- The `host.NewtonDockSession` flake (2 in about 40 under stress.py),
+  traced with per-thread stack samples: a livelock between the script's
+  task in `TPMIterator::Init`'s semaphore (the demo polling
+  `GetPackages()`) and the docker's forked world in
+  `TForkWorld::AcquireMutex`.  `dock.ns` now waits on the docker's own
+  slots (5d366de): 6 of 6 copies in each of 5 rounds beside 8 hogs.  The
+  lock order itself is still open.
+
 ## 2026-09-30: drawing speed
 
 - Measured first: `src/host/demo/drawbench.ns` (Names, Dates, Extras
