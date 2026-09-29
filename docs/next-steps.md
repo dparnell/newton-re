@@ -149,7 +149,14 @@ worked through.  What could come next (not ranked; the owner chooses):
   picker - the Configuration picker and the IP page are still shown and
   ignored), and the NIE's protoEndpointFSM runs as a TCP client over it
   (`host.NewtonInetFSM`).  Waiting on NIE client packages (mail, web)
-  for `fixtures/`; the modem navigator.  `test_NIEProtoFSM` also runs
+  for `fixtures/`; the modem navigator.  **The desktop connection**
+  (being done): 2.1 has no TCP dock, so the plan (`docs/comms/README.md`,
+  "The desktop connection (Dock) - the plan") is the ROM's own serial
+  dock - `TDocker` and the `FConn*` natives, `TMNP`/`TMNPService`,
+  `TSerTool`/`TAsyncSerTool`, the `TSerialChip` registry - over a host
+  `TSerialChip` whose wire is a TCP socket (port 3679, as Einstein), so
+  NCX or UnixNPI connect to localhost as to an emulator; about 80 KB of
+  ROM, layer by layer, ending in ctest `host.NewtonDock`.  `test_NIEProtoFSM` also runs
   each check on the package's own ARM code through armcpu, and the two
   agree (2ae6d73).  armcpu left: frames in a code binary; protocol parts
   through the CPU - no fixture needs them yet (every protocol part among
