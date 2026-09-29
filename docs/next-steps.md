@@ -143,11 +143,13 @@ worked through.  What could come next (not ranked; the owner chooses):
   Next: `InetStartUp`/`DNSGetAddressFromName` run end to end from the
   NIE's own scripts; `ictl` (link control), read by running the NIE's
   link state machine; the modem navigator.  `test_NIEProtoFSM` also runs
-  each check on the package's own ARM code (advisory until armcpu answers
-  `SetupSend`, `SetLexScope`, `AllocateFrameWithMap`).  armcpu left:
-  frames in a code binary, and protocol parts through the CPU - no
-  fixture needs them yet (every protocol part among the fixtures is the
-  NIE's).  The rest of comms (CCL, AppleTalk, IR, NTK, the desktop
+  each check on the package's own ARM code through armcpu, and the two
+  agree (2ae6d73).  armcpu left: frames in a code binary; protocol parts
+  through the CPU - no fixture needs them yet (every protocol part among
+  the fixtures is the NIE's); and a *partly* re-expressed package - under
+  the CPU one native calling another in its own binary goes straight into
+  the binary's code (NativeEntry's fast path) and never reaches a
+  re-expression.  The rest of comms (CCL, AppleTalk, IR, NTK, the desktop
   connection - which the test server's link, the IR sniffing,
   `SuckPackageFromEndPoint` and fax reception wait on) comes after.
 - **Now reachable over the large binaries**: the text engine's
