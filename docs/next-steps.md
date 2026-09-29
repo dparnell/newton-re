@@ -177,12 +177,11 @@ worked through.  What could come next (not ranked; the owner chooses):
   wanted only if a real desktop asks for it).  Layer 4 part 1 done:
   `TDocker`'s package-loading path, the protocol extensions, 13 `Conn*`
   natives, `newton --serial-port` (default 3679) starting the serial port
-  and services at boot (`host.NewtonDocker`).  Next: the end-to-end
-  package load through the Connection app's autodock (`host.NewtonDock`
-  over `tools/dock/dock.py` - autodock does not yet reach its endpoint),
-  then the 'dock' session (`ReadInitiateDocking`, the password exchange,
-  `ProcessCommand`), without which a desktop's docking session is
-  refused.  `test_NIEProtoFSM` also runs
+  and services at boot (`host.NewtonDocker`); a package loads end to end
+  through the Connection app's autodock (`host.NewtonDock` over
+  `tools/dock/dock.py`).  Next: the 'dock' session (`ReadInitiateDocking`,
+  `WriteNewtonName`, dinf/wicn/stim, the password exchange, then
+  `ProcessCommand`'s commands) so NCX can dock.  `test_NIEProtoFSM` also runs
   each check on the package's own ARM code through armcpu, and the two
   agree (2ae6d73).  armcpu left: frames in a code binary; protocol parts
   through the CPU - no fixture needs them yet (every protocol part among

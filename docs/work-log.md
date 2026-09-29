@@ -9,6 +9,25 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-30: the desktop connection loads a package end to end
+
+- `host.NewtonDock` (01c53cf): `dock.ns` sets the Connection app's
+  autodock address to serial and calls `autodock()`; the Newton connects
+  over MNP to `tools/dock/dock.py` and says 'rtdk' (version 9), dock.py
+  answers 'lpkg' with a fixture package, the docker installs it and says
+  'dres' 0, dock.py says 'disc'.
+- Missing and added: `ConnBuildStoreFrame` (with `StoreGetPasswordKey`
+  in `stores/Soups`).
+- Bug found: an option a script makes is laid out as the device's
+  big-endian 4-byte words, but the host's option classes have
+  pointer-sized fields, so the serial tool set its speed to 4 out of the
+  app's 'siop' (0.4 bytes a second).  `comms/HostOptionLayouts.h`
+  (DEVIATION) rewrites 'siop', 'mnpn', 'mnpc' and 'eter' word by word
+  both ways; another such option class a script sends needs a line in
+  its table.
+- `CommManager.cpp`'s `SetReply(0xC)` calls are `sizeof(TAESystemEvent)`
+  (60335af); `romsizes.py` reports `src/comms` clean with `--lp64`.
+
 ## 2026-09-30: an audit of ROM byte counts sizing host structs
 
 - `analysis/romsizes.py` (`tests/test_romsizes.py`) scans for hex sizes
