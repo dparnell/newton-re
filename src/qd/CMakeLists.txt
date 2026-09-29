@@ -27,6 +27,8 @@ add_library(qd STATIC
     Curves.cpp
     Paths.cpp
     PixelConvert.cpp
+    Stretch.cpp
+    StretchTables.cpp
     QDTables.cpp
     Transform.cpp
     Screen.cpp
@@ -39,3 +41,5 @@ target_link_libraries(qd PUBLIC newton_config memory toolbox frames protocols st
 target_include_directories(qd PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(tests)
+# the row stretchers shift signed words as the ARM does (Stretch.cpp)
+set_source_files_properties(Stretch.cpp PROPERTIES COMPILE_OPTIONS "-fwrapv")

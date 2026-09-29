@@ -50,6 +50,9 @@ tools/newton-rom/
                           --all -> docs/protocols/classinfos.md
     romtable.py           constant tables from the ROM as C++ (e.g. src/compression/LZTables.cpp,
                           src/frames/PrintLiterals.cpp); u8..i32 or cstr elements, RAM tables too
+    transcribe_words.py   decompile.py output of word-at-a-time blitter routines turned into host C++
+                          whose word accesses go through big-endian LW/SW (src/qd/Stretch.cpp's
+                          row stretchers and combiners); the output is cleaned and cited by hand
     romconstants.py       the ROM's frames constants (RSSYM symbols, R/RS objects, the object area)
                           -> src/frames/RSSymbols.h, RSSymbolTable.cpp, ROMConstants.h, ROMConstants.cpp
     nsfunctions.py        the ROM's built-in NewtonScript functions: --list, --refs NAME (who calls it), --natives -> src/frames/ROMNatives.cpp,

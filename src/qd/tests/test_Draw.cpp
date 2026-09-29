@@ -286,6 +286,46 @@ TestBits()
 	SetRect(&twice, 0, 0, 40, 20);
 	CopyBits(&src, &dst, &block, &twice, srcCopy, nil);
 	EXPECT(MapIs(&dst, ExpStretched, "CopyBits stretched"));
+
+	// StretchBits' routines: a row of alternating pixels, doubled - each
+	// pixel twice across and down - then shrunk to half, where each pair
+	// of source pixels is ORed into one (so all of it comes out set)
+	memset(srcBits, 0, sizeof(srcBits));
+	for (long x = 0; x < 16; x += 2)
+		SetPixel(&src, x, 0, 1);
+	Rect row;
+	SetRect(&row, 0, 0, 16, 1);
+	EraseRect(&dst.bounds);
+	SetRect(&twice, 0, 0, 32, 2);
+	CopyBits(&src, &dst, &row, &twice, srcCopy, nil);
+	EXPECT(MapIs(&dst, [](long x, long y) -> long { return In(x, y, 0, 0, 32, 2) && ((x >> 1) & 1) == 0; }, "stretched twice"));
+	EraseRect(&dst.bounds);
+	Rect half;
+	SetRect(&half, 0, 0, 8, 1);
+	CopyBits(&src, &dst, &row, &half, srcCopy, nil);
+	EXPECT(MapIs(&dst, [](long x, long y) -> long { return In(x, y, 0, 0, 8, 1); }, "shrunk to half"));
+	// half again (1.5 times): the fraction 2/3 stepped from a third - the
+	// first source pixel is written once (the sum reaches one at once), the
+	// second twice, and so on: 1 0 0 1 0 0 ... (the set pixels a third)
+	EraseRect(&dst.bounds);
+	SetRect(&twice, 0, 0, 24, 1);
+	CopyBits(&src, &dst, &row, &twice, srcCopy, nil);
+	EXPECT(MapIs(&dst, [](long x, long y) -> long { return y == 0 && x < 24 && x % 3 == 0; }, "stretched by half again"));
+	ClosePort(&port);
+
+	// one bit into four: a set pixel is 15
+	static unsigned char grayBits[kSize * kSize];
+	PixelMap gray = MakeMap(grayBits, 4);
+	OpenPort(&port);
+	SetPortBits(&gray);
+	port.portRect = gray.bounds;
+	RectRgn(port.visRgn, &gray.bounds);
+	SetRect(&twice, 0, 0, 16, 1);
+	CopyBits(&src, &gray, &row, &twice, srcCopy, nil);
+	EXPECT(GetPixel(&gray, 0, 0) == 15 && GetPixel(&gray, 1, 0) == 0 && GetPixel(&gray, 14, 0) == 15);
+	SetRect(&twice, 0, 2, 32, 3);
+	CopyBits(&src, &gray, &row, &twice, srcCopy, nil);
+	EXPECT(GetPixel(&gray, 0, 2) == 15 && GetPixel(&gray, 1, 2) == 15 && GetPixel(&gray, 2, 2) == 0);
 	ClosePort(&port);
 }
 

@@ -198,41 +198,6 @@ RgnBlt(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRect, l
 	B i t s
 ------------------------------------------------------------------------------*/
 
-// ROM 0x002ada5c StretchBits__FP8PixelMapT1P4RectT3lPP6RegionN26
-// Bits copied between maps under the mode, clipped by two regions and a
-// mask.  NOT YET RECONSTRUCTED: the ROM's stretching and depth conversion
-// tables; rectangles of different sizes are sampled nearest-neighbour
-// through a temporary map (DEVIATION).
-void
-StretchBits(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRect, long mode, RgnHandle clip1, RgnHandle clip2, RgnHandle mask)
-{
-	long srcWidth = srcRect->right - srcRect->left, srcHeight = srcRect->bottom - srcRect->top;
-	long dstWidth = dstRect->right - dstRect->left, dstHeight = dstRect->bottom - dstRect->top;
-	if (srcWidth == dstWidth && srcHeight == dstHeight)
-	{
-		RgnBlt(src, dst, srcRect, dstRect, mode, nil, clip1, clip2, mask);
-		return;
-	}
-	if (dstWidth <= 0 || dstHeight <= 0 || srcWidth <= 0 || srcHeight <= 0)
-		return;
-	PixelMap scaled;
-	scaled.rowBytes = (short) (((dstWidth * PixelMapDepth(src) + 15) / 16) * 2);
-	SetRect(&scaled.bounds, 0, 0, dstWidth, dstHeight);
-	scaled.pixMapFlags = kPixMapPtr | PixelMapDepth(src);
-	scaled.deviceRes = src->deviceRes;
-	scaled.grayTable = nil;
-	scaled.baseAddr = (Ptr) QDNewTempPtr(scaled.rowBytes * dstHeight);
-	if (scaled.baseAddr == nil)
-		return;
-	memset(scaled.baseAddr, 0, scaled.rowBytes * dstHeight);
-	for (long y = 0; y < dstHeight; y++)
-		for (long x = 0; x < dstWidth; x++)
-			SetPixel(&scaled, x, y, GetPixel(src, srcRect->left + x * srcWidth / dstWidth, srcRect->top + y * srcHeight / dstHeight));
-	RgnBlt(&scaled, dst, &scaled.bounds, dstRect, mode, nil, clip1, clip2, mask);
-	QDDisposeTempPtr(scaled.baseAddr);
-}
-
-
 // ROM 0x002ad664 StdBits
 // The standard bits proc: recorded into an open picture, then drawn into
 // the current port (unless the pen is hidden), clipped by its visible and
