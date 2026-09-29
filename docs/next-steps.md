@@ -141,13 +141,17 @@ worked through.  What could come next (not ranked; the owner chooses):
   headless).  Round 3 done: the codec channel (coded frames heard),
   recording (a test-signal microphone; IMA recording exact), the power
   handler, `TDTMFCodec`, `StopFrameSound` - the Sound Recorder opens, and
-  open-apps reports 0 failed.  Left: 16-bit samples in binaries are kept
-  in the host's byte order where the project's rule for persistent
-  formats is big-endian (a recording on a store must read the same on
-  every host); a real host microphone (waveIn); a demo driving the Sound
-  Recorder's Record and Play; the loudspeaker heard by ear (`newton
-  --script src/host/demo/sound.ns`, windowed); `TGSMCodec` when something
-  asks for it; `NewWiredPtr` in `memory/` (the `NewPtr` fallback works).
+  open-apps reports 0 failed.  Round 4 done: 16-bit samples big-endian
+  in memory on every host (`sound/SampleWords.h`, swapped only at the
+  host driver); the waveIn microphone; the Sound Recorder driven through
+  its buttons (`demo/recorder.ns`, `host.NewtonRecorder`; `newton
+  --microphone-tone HZ`).  Next (round 5): `TGSMCodec` and the GSM 06.10
+  full-rate coder under it (the Toast library, 0x002a85f8-0x00347000
+  with unnamed helpers) - the Sound Recorder records through it and keeps
+  plain samples until then; then re-check the Recorder demo's tone share
+  (GSM is lossy).  Also left: the loudspeaker and microphone heard by ear
+  (windowed `newton --script src/host/demo/sound.ns`; the Recorder's Rec,
+  Stop, Play); `NewWiredPtr` in `memory/` (the `NewPtr` fallback works).
 - **The book reader** (`TLibrarian`, 49 methods; 19 unanswered `books`
   natives) - the Newton's books and the help book, and with it the
   `'book` part handler (the ROM's help book is refused for want of it).
@@ -438,6 +442,15 @@ first to try, with mpw as a second opinion where a tool misbehaves.
   where the ROM's word is 32 bits (`(ULong) (uint32_t) x`).  This is
   what made the clock jump at 2^32 ticks.
 - A running `newton.exe` cannot be relinked: stop it before building.
+- **Several agents in parallel** (2026-09-29 on): each builds in its own
+  directory (`build/host` for one, `tmp/build-<area>` for the others),
+  stages its own files path by path (never `git add -A`/`commit -a`), and
+  keeps the shared tree compiling between steps - one agent's broken file
+  stops everyone's `newton` linking.  Only ever stop a process you
+  launched yourself, by the PID kept at launch: several `newton.exe`s from
+  different build trees run at once, and one looked up by image name
+  belonged to another agent.  Heap damage from one area shows up as hangs
+  everywhere: run booted demos under `NEWTON_HEAPCHECK` before committing.
 - A host that looks hung: `tools/host/stacksample.py <pid>` (its busy
   thread's stack, no debugger needed) and `NEWTON_TRACE_UPDATE=1` (each
   region repainted) - `tools/host/README.md`.

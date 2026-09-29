@@ -9,6 +9,21 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-29: the sound server, round 4 - byte order, the microphone, the Recorder driven
+
+- 16-bit samples big-endian in memory on every host - a frame's samples,
+  codec and DMA buffers - read and written as numbers through
+  `sound/SampleWords.h` (converters, resamplers, mixer, IMA and mu-law,
+  DTMF), swapped only at the host driver; a recording kept in a soup entry
+  reads and plays the same (`test_PlaySound`).  No DEVIATION needed.
+- The waveIn microphone (`host/win32/HostAudio.cpp`, a ring the driver's
+  record step drains without waiting); `newton --microphone-tone HZ` for
+  the headless one.
+- The Sound Recorder driven through its own buttons (`demo/recorder.ns`,
+  `host.NewtonRecorder`: Rec, 2 s, Stop, Play; the status line at each
+  step).  Found that it records through `TGSMCodec` (next).
+- Commits `938decb`, `29b1d2e`, `9103d09`, `77266e1`.
+
 ## 2026-09-29: the text engine - protoTXView with its 39 methods
 
 - Round 1 (`3a06b6e`, `3c413b6`, `ccfdf89`, `f9bc46a`): `TXOffset`, `TXRun`/
