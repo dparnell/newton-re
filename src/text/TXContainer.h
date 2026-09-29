@@ -30,7 +30,7 @@
 				(`gTXGraphicsRunChar`).
 
 				TXNewtContainer (a NewtonScript frame of the same values)
-				is NOT YET; it comes with TXView.
+				is TXNewtContainer.h.
 
 				No destructors are in the ROM's vtables; the containers are
 				stack objects.

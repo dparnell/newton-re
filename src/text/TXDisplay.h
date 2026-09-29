@@ -36,7 +36,7 @@
 				0x40 a hilite moved) are statics.
 
 				TXNewtDisplay - the Newton's, over a TView's visible region
-				and the screen's locks - is NOT YET (it comes with TXView).
+				and the screen's locks - is TXView.h's.
 
 	Reconstructed from the MP2x00 US ROM (0x00235b00-0x00237540); each
 	function cites its origin.  EndEdit, FrameEndEdit, UpdateScrolledArea,

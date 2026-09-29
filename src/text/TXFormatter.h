@@ -34,8 +34,8 @@
 				height, or 12 with an ascent of 9 when there is none).
 
 				The ROM's object is 0x48 bytes.  The multi-frame side
-				(`CheckFramesReflow`) is here, but only a
-				TXMultiFrameFormatter - NOT YET - asks for it.
+				(`CheckFramesReflow`) is here, for a
+				TXMultiFrameFormatter (TXFrameFormatter.h) to ask for.
 
 	Reconstructed from the MP2x00 US ROM (0x00237540-0x002390d4); each
 	function cites its origin.
