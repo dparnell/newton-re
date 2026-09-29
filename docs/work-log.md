@@ -86,6 +86,24 @@ bugs and ROM bugs found on the way.
   `layout.tsv` manifest, and `rombuild.py` proved by a byte-identical
   rebuild of the area.
 
+## 2026-09-30: the comm trace frame and the event collector
+
+- `utility/EventCollector.h` (c6bd3857; 0x002dc18c-0x002dc714): the
+  TEventCollector protocol and `THistoryCollector`, a ring of (time word,
+  event) entries registered in `gEventTraceBufArray` for a debugger;
+  `InitEvents`, which `TLoader::TheMain` now calls.
+- `comms/CommTrace.cpp`: the natives of the ROM's "Client Trace" frame
+  (@661: `CFInstantiate`, `CFRecord`, `CFDispose`) and `translate`
+  through the flatteners.  ctests `utility.EventCollector`,
+  `host.NewtonCommTrace`.
+- ROM bugs kept: `AddDescriptions` answers false even when it added them;
+  `CFInstantiate` gives the collector the count of every trace element
+  though only those with a string are entered, and writes it before
+  checking the allocation; `translate` throws a stale MemError after a
+  translation that went well.  DEVIATIONs: cfrecord on a frame with no
+  collector (the ROM calls through nil) does nothing; the time word is
+  GetClock's low word, not the counter at 0x0f181800.
+
 ## 2026-09-30: protoEndpoint, the 1.x endpoint
 
 - `comms/ScriptEndpoint.h` (b6feda84): `TScriptEndpointClient`

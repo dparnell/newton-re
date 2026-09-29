@@ -14,8 +14,8 @@ the way are all in `docs/work-log.md`.
 - A full `ctest` in a parallel agent's build: 209 of 209 (`intl.Dates`
   fails about one run in ten: it reads the real clock).  Several agents
   work in parallel, each building in its own directory under `tmp/`.
-- `analysis/coverage.py build/MP2x00US --check`: 16138 citations, 0 bad;
-  10572 of 16671 functions (63.42%).
+- `analysis/coverage.py build/MP2x00US --check`: 16380 citations, 0 bad;
+  10805 of 16671 functions (64.81%).
 - `analysis/natives.py --unbound`: only comms' are left (comms 102 of
   147, the AppleTalk `*Zone*` four and IR sniffing).  `instance:Dispatch` works only on a
   monitor protocol (a host protocol's methods need numbered thunks, NOT
@@ -203,8 +203,9 @@ worked through.  What could come next (not ranked; the owner chooses):
   (`host.NewtonBeamIrDA`).  **The NTK inspector** connects over the host
   serial port (`comms/NTK.h`, `tools/ntk/inspector.py`, ctest
   `host.NewtonNTK`); protoEndpoint, the 1.x endpoint, too
-  (`comms/ScriptEndpoint.h`, `host.NewtonProtoEndpoint`).  Left in comms:
-  the CF* natives (about 2.3 KB), the CCL modem scripts, AppleTalk/NBP
+  (`comms/ScriptEndpoint.h`, `host.NewtonProtoEndpoint`), and the comm
+  trace frame's natives and translate (`comms/CommTrace.cpp`).  Left in
+  comms: the CCL modem scripts (being planned), AppleTalk/NBP
   and ADSP (with the NTK's ADSP connection), the Hammer translators,
   eWorld (EW*), the TV remote.
   The livelock between `TPMIterator::Init`'s semaphore and `TForkWorld`'s
