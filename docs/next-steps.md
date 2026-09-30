@@ -203,9 +203,13 @@ worked through.  What could come next (not ranked; the owner chooses):
   (`host.NewtonBeamIrDA`).  **The NTK inspector** connects over the host
   serial port (`comms/NTK.h`, `tools/ntk/inspector.py`, ctest
   `host.NewtonNTK`); protoEndpoint, the 1.x endpoint, too
-  (`comms/ScriptEndpoint.h`, `host.NewtonProtoEndpoint`), and the comm
+  (`comms/ScriptEndpoint.h`, `host.NewtonProtoEndpoint`); **the modem**
+  dials and answers through `tools/modem/fakemodem.py`
+  (`host.NewtonModemDial`, `host.NewtonModemAnswer`); and the comm
   trace frame's natives and translate (`comms/CommTrace.cpp`).  Left in
-  comms: the CCL modem scripts (being planned), AppleTalk/NBP
+  comms: fax end to end (the modem tool's Class 1/2 fax paths are in but
+  untested; next a Class 1 fax peer in `fakemodem.py`, then the Fax
+  transport and FaxViewer above it), AppleTalk/NBP
   and ADSP (with the NTK's ADSP connection), the Hammer translators,
   eWorld (EW*), the TV remote.
   The livelock between `TPMIterator::Init`'s semaphore and `TForkWorld`'s
