@@ -258,6 +258,9 @@ worked through.  What could come next (not ranked; the owner chooses):
   `SuckPackageFromEndPoint` and fax reception wait on) comes after.
 - **Third-party apps**: all five fixture applications open from Extras
   and respond (ctest `host.NewtonThirdPartyApps`).
+- **Unexplained, seen once**: a `newton` boot crashed in
+  `TUPort::Receive` (an access violation, image+0xe09fc) during a stress
+  run of walkthrough 2; it did not recur in about 40 more boots.
 - **The pen**: the tablet driver and the inker are in, with the ROM's
   calibration screen (Align Pen; `host.NewtonAlignPen`).  NOT YET: the
   inker's live ink (`TInker::Convert`/`DrawInk`, `TLiveInker` - the host's
