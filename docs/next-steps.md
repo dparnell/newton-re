@@ -203,9 +203,11 @@ reaches.  Biggest user impact first; each is taken on in this order.
    item's key message to the key view (unless alwaysCallPickActionScript),
    and returns at once for no item (so a cancelled picker runs no
    pickActionScript - the host ran it with nil).  test_Views TestPickView.
-8. **Ink in pickers** (`views/PickView.cpp` 364, 1518): an ink item scaled
-   to 28 high, a `strokeList` item (DrawStrokeBundle) - the corrector's and
-   the Assist's lists when they hold writing.  Small.
+8. **Ink in pickers** - DONE (2026-09-30): a `strokeList` item drawn by
+   `DrawStrokeBundle` from its bounds, brought down to 28 high (the
+   corrector's list when it holds writing); and a grid picture with a
+   `mask` picks no cell where the mask is blank (`PickableItem` over
+   `FPtInPicture`).  test_Views TestPickView.
 9. **Printing ink** (`views/PolygonView.cpp` 185, `ink/InkFont.cpp` 196:
    InkMakePaths, FramePaths, the ink word on a printer's port): a note with
    ink or ink words printed.  Medium to large (the PostScript path

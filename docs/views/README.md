@@ -585,8 +585,12 @@ for, and may lie over the text), `RealDraw` puts the letter in capitals
 at the right and the modifier icons before it, and a picked item with a
 key message (unless the callback says `alwaysCallPickActionScript`) has
 it sent to the key view - else the callback's view, else the picker -
-instead of the action script.  NOT YET: ink items, the pickable test
-inside a masked grid picture.  The ROM's protoPicker has
+instead of the action script.  An ink item (`strokeList` and `bounds`,
+the corrector's writing) is drawn by `DrawStrokeBundle` from its bounds
+into a box as big, or 28 high and its width in proportion; a grid
+picture with a `mask` picks no cell where the mask is blank
+(`PickableItem`, `FPtInPicture` at the point less the top left cell's
+corner and the outer frame).  The ROM's protoPicker has
 viewFlags without vVisible: it is opened with `:Open()`.
 
 ### Hiliting a view (`TView::Hilite` 0x0026418c, `Select` 0x00264c34)

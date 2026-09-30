@@ -3745,6 +3745,51 @@ TestPickView()
 	Refresh();
 	EXPECT(MapIs(ExpWhite, "key command picker closed"));
 
+	// an ink item (the corrector's, for writing): its strokes drawn from
+	// their bounds, brought down to 28 high - a stroke 60 high and 40 wide
+	// drawn 28 high and 18 wide at the text column, under the top margin
+	Eval("bndl := MakeStrokeBundle([[10, 10, 40, 30, 70, 50]], 1)");
+	p = (TPickView*) ViewOf("ctxK := AddView(GetRoot(), {_proto: protoPicker, pickItems: [\"Text\", {strokeList: bndl, bounds: bndl.bounds, pickable: true}], bounds: {left: 30, top: 20, right: 80, bottom: 35}, pickActionScript: func(index) picked := index})");
+	EXPECT(RINT(Eval("bndl.bounds.bottom - bndl.bounds.top")) == 60 && RINT(Eval("bndl.bounds.right - bndl.bounds.left")) == 40);
+	Eval("ctxK:Open()");
+	Refresh();
+	{
+		long inkTop = p->viewBounds.top + p->ItemTop(1) + p->fTopMargin;
+		long inkLeft = p->viewBounds.left + p->fTextLeft;
+		EXPECT(p->ItemBottom(1) - p->ItemTop(1) == 28 + p->fTopMargin + p->fBottomMargin);
+		EXPECT(InkIn(inkLeft, inkTop, inkLeft + 19, inkTop + 29) > 20);				// the stroke, scaled
+		EXPECT(InkIn(inkLeft + 21, inkTop, p->viewBounds.right, inkTop + 29) == 0);		// no wider than 18
+		EXPECT(InkIn(inkLeft, inkTop, inkLeft + 4, inkTop + 4) > 0 && InkIn(inkLeft + 14, inkTop + 24, inkLeft + 20, inkTop + 30) > 0);	// top left to bottom right
+	}
+	Eval("ctxK:Close()");
+	Refresh();
+	EXPECT(MapIs(ExpWhite, "ink picker closed"));
+
+	// a grid picture with a mask: a point on the mask's blank picks no cell
+	{
+		static const unsigned char kHalf[8] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };	// the left 8 of 16
+		RefVar grid(MakeBitmap(kHalf, 16, 8));
+		SetFrameSlot(grid, RSSYMmask, RefVar(GetFrameSlotRef(RefVar(MakeBitmap(kHalf, 16, 8)), RSSYMbits)));
+		SetFrameSlot(grid, RSSYMwidth, RefVar(MAKEINT(2)));
+		SetFrameSlot(grid, RSSYMheight, RefVar(MAKEINT(1)));
+		SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "gridPict")), grid);
+	}
+	p = (TPickView*) ViewOf("ctxK := AddView(GetRoot(), {_proto: protoPicker, pickItems: [gridPict], bounds: {left: 30, top: 20, right: 80, bottom: 35}, pickActionScript: func(index) picked := index})");
+	Eval("ctxK:Open()");
+	Refresh();
+	{
+		long picLeft = p->viewBounds.left + p->fTextLeft, picTop = p->viewBounds.top + p->fTopMargin;
+		Point inMask = MakePoint(picLeft + 4, picTop + 4), offMask = MakePoint(picLeft + 12, picTop + 4);
+		p->Item(offMask, &stuff);
+		EXPECT(stuff.fItem == 0 && stuff.fIsGrid && stuff.fX == 1);		// a cell of the grid there
+		p->PickableItem(inMask, &stuff);
+		EXPECT(stuff.fItem == 0 && stuff.fX == 0);
+		p->PickableItem(offMask, &stuff);
+		EXPECT(stuff.fItem == -1);										// but the mask is blank
+	}
+	Eval("ctxK:Close()");
+	Refresh();
+
 	// DoPopup opens a popup menu (a picker from canonicalPopup) over the
 	// items; picking one runs the callback's pickActionScript and closes it
 	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "canonicalPopup")), RefVar(Rcanonicalpopup));

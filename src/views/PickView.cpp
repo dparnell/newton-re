@@ -22,6 +22,7 @@
 #include "Shapes.h"
 #include "Text.h"
 #include "Pictures.h"
+#include "StrokeBundle.h"	// DrawStrokeBundle
 #include "RichString.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
@@ -415,7 +416,7 @@ TPickView::SetItemLength(PickStuff* item, long length)
 // with an ellipsis to pickMaxWidth: the length kept negative to say so),
 // plus its icon's width (or the indent) and height; a separator 6 high;
 // a bitmap or picture its bounds plus the margins, with its grid info;
-// ink its bounds scaled to 28 high (NOT YET); a fixedHeight applying to
+// ink its bounds scaled to 28 high; a fixedHeight applying to
 // what follows.  The bottoms accumulate; the widest item, the margins
 // (the marks' column when any item has a mark) and the right margin make
 // the width.  The view is then placed from the template's bounds - by
@@ -898,8 +899,10 @@ TPickView::Item(Point& pt, PickStuff* item)
 
 // ROM 0x0018763c PickableItem__9TPickViewFR6TPointP9PickStuff
 // The pickable item under the point: an unpickable one (a separator)
-// sends the search to the row above (from its middle); a grid cell over
-// a masked picture's blank is not pickable (FPtInPicture, NOT YET).
+// sends the search to the row above (from its middle); in a grid whose
+// picture has a `mask`, a point on the mask's blank is no item
+// (FPtInPicture, the point taken from the grid's top left cell less its
+// outer frame).
 void
 TPickView::PickableItem(Point& pt, PickStuff* item)
 {
@@ -910,7 +913,26 @@ TPickView::PickableItem(Point& pt, PickStuff* item)
 	UniChar mark;
 	GetItemFlags(item, &pickable, &mark);
 	if (pickable)
+	{
+		if (item->fIsGrid)
+		{
+			RefVar display(GetDisplayItem(item->fItem, &pickable, &mark));
+			if (FrameHasSlotRef(display, RSSYMmask))
+			{
+				PickStuff first = *item;
+				first.fX = 0;
+				first.fY = 0;
+				Rect cell;
+				GetGridItemRect(&first, &cell);
+				long outer = fGrids[item->fItem]->fOuterFrame;
+				short x = (short) (pt.h - (cell.left - outer));
+				short y = (short) (pt.v - (cell.top - outer));
+				if (ISNIL(FPtInPicture(RefVar(), RefVar(MAKEINT(x)), RefVar(MAKEINT(y)), display)))
+					item->fItem = -1;
+			}
+		}
 		return;
+	}
 	Rect r;
 	GetItemRect(item, &r);
 	Point again = pt;
@@ -1609,7 +1631,25 @@ TPickView::RealDraw(Rect& /*bounds*/)
 				DrawPicture(display, box, 0, srcOr);
 			else if (FrameHasSlotRef(display, RSSYMpicture))
 				DrawPicture(RefVar(GetFrameSlotRef(display, RSSYMpicture)), box, 0, srcOr);
-			// NOT YET RECONSTRUCTED: a strokeList item (DrawStrokeBundle)
+			else if (FrameHasSlotRef(display, RSSYMstrokelist))
+			{
+				// ink: its strokes from their bounds into a box as big, or
+				// brought down to kMaxInkHeight (28) high, its width with it
+				RefVar strokes(GetFrameSlotRef(display, RSSYMstrokelist));
+				Rect inkBounds;
+				if (!FromObject(RefVar(GetFrameSlotRef(display, RSSYMbounds)), inkBounds))
+					ThrowMsg((char*) "bad strokeBounds frame");
+				long height = (short) (inkBounds.bottom - inkBounds.top);
+				long width = (short) (inkBounds.right - inkBounds.left);
+				if (height > kMaxInkHeight)
+				{
+					width = (width * kMaxInkHeight) / height;
+					height = kMaxInkHeight;
+				}
+				box.bottom = (short) (box.top + height);
+				box.right = (short) (box.left + width);
+				DrawStrokeBundle(strokes, &inkBounds, &box);
+			}
 			markBaseline = top + (bottom - top) / 2 + fFontInfo.ascent / 2;
 		}
 		if (fHasMarks && mark != 0 && mark != kSpace)

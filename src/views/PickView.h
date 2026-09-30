@@ -25,10 +25,8 @@
 				the one it ends on; with a keyboard, the arrows and
 				type-select move the pick (HandleKeyDown), and an item's key
 				command is drawn at its right and sent as a key message when
-				it is picked (GetKeyCommandInfo, PickItem).  NOT YET
-				RECONSTRUCTED: ink items (DrawStrokeBundle), the pickable
-				test inside a grid picture (FPtInPicture), the flashing of
-				the picked item (Wait).
+				it is picked (GetKeyCommandInfo, PickItem).  An ink item (a
+				strokeList frame) is drawn no more than 28 high.
 
 	Reconstructed from the MP2x00 US ROM (0x00183660-0x001887d0); each
 	function cites its origin.
