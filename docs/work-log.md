@@ -252,7 +252,8 @@ is the same value spelt so that it cannot be read two ways.
   years still match - 2026 shows as 1998.  With the true date the ROM's
   own year-2010 overflow (`TimeInSeconds` past a NewtonScript integer)
   made every alarm fire the moment it was set, in an endless loop.  The
-  owner's decision pending.
+  owner then decided to fix the overflow instead, as the community's
+  Fix2010 patch does, the ROM's behaviour kept selectable (being done).
 - The volume gestalt carries the MP2x00's outputs and flags (0x1d), so
   the Sound panel's "Play using" picker no longer throws and the
   Recording panel shows in Prefs (24c84fb2).
