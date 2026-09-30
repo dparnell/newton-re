@@ -109,6 +109,26 @@ bugs and ROM bugs found on the way.
   count wraps.  `HostOptionLayouts`' '*' copies an option's trailing
   bytes as they are ('rout' numbers, 'mpro' profiles).
 
+## 2026-09-30: the fax tool
+
+- `comms/fax/FaxTool.h` (24d4622f, library `comms_fax`): `TFaxTool` (serv
+  'faxs') whole - the ITU-T T.30 procedure over the modem tool one phase
+  at a time (A the call; B CSI/DIS/TSI/DCS and the training check; C the
+  page, coded by `EncodeT4` or decoded by `TT4FaxLine`; D MPS/EOP and
+  MCF/RTP/RTN; E DCN), each step a control request to the modem tool, and
+  the Class 2 and 2.0 sequencers; the fax options; `TFaxService`,
+  registered in newton beside 'mods'; `EncodeT4`/`T4AddRTC`.  ctest
+  `comms.T4Encode`: t4.py decodes a page `EncodeT4` coded.  The training
+  check passes within 25% of 1.5 seconds' bytes with a run of noughts at
+  least two thirds of it; a page is answered MCF up to 5.2% bad lines,
+  RTP up to 15.2%, RTN beyond.
+- ROM bugs kept, among them: `TimeOutKillComplete` clears the
+  modem-request flag in the wrong word; `GetIdentification` scans back
+  past the FIF's start when it is all spaces; `C2ParseDISResponse` never
+  parses the eighth parameter; `C2DisFromCapabilities`' last rate test
+  answers '0' either way; two phase-B functions read an uninitialised
+  "DCS valid" register (false on the host).
+
 ## 2026-09-30: memory cards, the first three layers
 
 - The host's PC card (2c50936d, ctest `hal.HostCard`): a card image in
