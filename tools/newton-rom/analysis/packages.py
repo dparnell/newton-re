@@ -2,7 +2,8 @@
 """List and extract the packages built into the ROM extension.
 
 Usage:
-    python packages.py <build_dir> [--parts] [--extract DIR [--relocatable] [--rename OLD=NEW]...] [--doc FILE]
+    python packages.py <build_dir | object file> [--parts] [--extract DIR [--relocatable] [--rename OLD=NEW]...] [--doc FILE]
+    python packages.py build/host/romsrc-objects.bin --extract DIR --rename Formulas=Formulas2
     python packages.py build/MP2100D --parts
     python packages.py build/MP2100D --extract build/packages
     python packages.py build/MP2100D --doc docs/packages/rex-packages.md
@@ -15,6 +16,14 @@ from a memory source.  This reads the package directories and lists them
 flags, size and info), --extract writes each package to DIR as a .pkg
 file (a test source for the package loader), and --doc writes the listing
 as a markdown table with a header naming this script.
+
+The extension is read out of an extracted ROM (<build_dir>: its rom.bin and
+layout.json) or out of the object file built from the ROM source tree
+(romsrc/README.md: `romsrc.py build -o`), which carries the extension as
+one of its blocks of ROM data - so a checkout with no ROM image can make
+the same packages (ctest host.NewtonPackage.extract does).  Its header
+(RExHeader: the signature 'RExB' 'lock', ..., the config entries from +0x28,
+each a tag, an offset from the header and a length) says where `pkgl` is.
 
 A package built into the ROM is not a package as one arrives from outside:
 its frames parts' pointer refs are the objects' addresses in the ROM image,
@@ -161,13 +170,48 @@ def loadable_package(rom: bytes, pkg: dict, new_name: str | None = None) -> byte
     return bytes(out)
 
 
-def rex_packages(build_dir: str):
-    with open(os.path.join(build_dir, "layout.json"), encoding="utf-8") as f:
-        layout = json.load(f)
-    with open(os.path.join(build_dir, "rom.bin"), "rb") as f:
-        rom = f.read()
-    entry = next(e for e in layout["rex"]["entries"] if e["tag"] == "pkgl")
-    start, end = entry["address"], entry["address"] + entry["size"]
+OBJECTS_SIGNATURE = b"NewtObjs"
+REX_SIGNATURE = b"RExBlock"
+
+
+def object_file_blocks(path: str):
+    """The blocks of ROM data an object file carries (romsrc.py's container:
+    the header, the area, the magic pointers, then the blocks): (address,
+    bytes) each."""
+    with open(path, "rb") as f:
+        data = f.read()
+    if data[:8] != OBJECTS_SIGNATURE:
+        raise ValueError("%s is not an object file" % path)
+    version, _, area_size, _, mp_count = struct.unpack_from(">IIIII", data, 8)
+    if version < 2:
+        return []
+    a = 28 + area_size + 4 * mp_count
+    count = struct.unpack_from(">I", data, a)[0]
+    a += 4
+    blocks = []
+    for _ in range(count):
+        address, length = struct.unpack_from(">II", data, a)
+        blocks.append((address, data[a + 8:a + 8 + length]))
+        a += 8 + ((length + 3) & ~3)
+    return blocks
+
+
+def rex_packages_from_objects(path: str):
+    """rex_packages over an object file: the block that is the extension,
+    placed at its ROM address in an image of its own."""
+    for address, block in object_file_blocks(path):
+        if block[:8] != REX_SIGNATURE:
+            continue
+        count = struct.unpack_from(">I", block, 0x24)[0]
+        for i in range(count):
+            tag, offset, size = struct.unpack_from(">III", block, 0x28 + 12 * i)
+            if tag == struct.unpack(">I", b"pkgl")[0]:
+                rom = bytes(address) + block
+                return rom, packages_in(rom, address + offset, address + offset + size)
+    raise ValueError("%s carries no ROM extension with a package list" % path)
+
+
+def packages_in(rom: bytes, start: int, end: int):
     packages = []
     a = start
     while a + 52 <= end:
@@ -178,12 +222,23 @@ def rex_packages(build_dir: str):
         packages.append(pkg)
         a += max(pkg["size"], 52)
         a = (a + 3) & ~3
-    return rom, packages
+    return packages
+
+
+def rex_packages(build_dir: str):
+    if os.path.isfile(build_dir):
+        return rex_packages_from_objects(build_dir)
+    with open(os.path.join(build_dir, "layout.json"), encoding="utf-8") as f:
+        layout = json.load(f)
+    with open(os.path.join(build_dir, "rom.bin"), "rb") as f:
+        rom = f.read()
+    entry = next(e for e in layout["rex"]["entries"] if e["tag"] == "pkgl")
+    return rom, packages_in(rom, entry["address"], entry["address"] + entry["size"])
 
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("build_dir")
+    ap.add_argument("build_dir", help="an extracted ROM's directory, or an object file built from romsrc/")
     ap.add_argument("--parts", action="store_true", help="list each package's parts")
     ap.add_argument("--extract", metavar="DIR", help="write each package to DIR as <name>.pkg")
     ap.add_argument("--relocatable", action="store_true",

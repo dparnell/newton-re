@@ -28,6 +28,10 @@ set(NEWTON_ROM_BIN "${CMAKE_CURRENT_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD}/rom
 # a program compiled with NEWTON_ROM_BIN/NEWTON_ROM_IMAGE - is simply not
 # registered.  add_test and set_tests_properties are wrapped for that, so a
 # new test is sorted by the same rule without anyone having to remember it.
+# (the object file, which host/CMakeLists.txt builds; the unit tests that
+#  need only the ROM's objects - fonts, locale bundles, prototypes - import it
+#  too, compiled with NEWTON_OBJECTS, so they run without the ROM image)
+set(NEWTON_OBJECTS_FILE "${CMAKE_BINARY_DIR}/romsrc-objects.bin")
 if(EXISTS "${NEWTON_ROM_BIN}" AND EXISTS "${NEWTON_ROM_IMAGE}")
     set(NEWTON_HAVE_ROM TRUE)
 else()

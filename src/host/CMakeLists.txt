@@ -11,7 +11,7 @@ target_include_directories(host_views PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_executable(newtonscript newtonscript.cpp NSRoundTrip.cpp IMATool.cpp)
 target_link_libraries(newtonscript PRIVATE host_views)
-target_compile_definitions(newtonscript PRIVATE "NEWTON_DEFAULT_OBJECTS=\"${CMAKE_BINARY_DIR}/romsrc-objects.bin\"")
+target_compile_definitions(newtonscript PRIVATE "NEWTON_DEFAULT_OBJECTS=\"${NEWTON_OBJECTS_FILE}\"")
 
 # What the OS boots from: the object file built from the committed ROM
 # source tree (romsrc/README.md) by romsrc.py and the host's own
@@ -22,7 +22,6 @@ target_compile_definitions(newtonscript PRIVATE "NEWTON_DEFAULT_OBJECTS=\"${CMAK
 # (installed), in the build directory (NEWTON_DEFAULT_OBJECTS), or where
 # NEWTON_OBJECTS says (host/HostObjectsFile.h).
 find_package(Python3 COMPONENTS Interpreter)
-set(NEWTON_OBJECTS_FILE "${CMAKE_BINARY_DIR}/romsrc-objects.bin")
 if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../romsrc/layout.tsv)
     file(GLOB_RECURSE romsrc_sources CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/../romsrc/*)
     file(GLOB romsrc_tools CONFIGURE_DEPENDS
@@ -415,12 +414,14 @@ set_tests_properties(host.NewtonLetterStyles PROPERTIES TIMEOUT 120
 # a package loaded from a file (newton --package): the ROM's Formulas
 # extracted as a loadable package under another name, so the package
 # manager does not refuse it as the one it already has, and installed
-# once the machine is up (needs the ROM image and Python)
+# once the machine is up (needs Python)
 find_package(Python3 COMPONENTS Interpreter)
 if(Python3_FOUND)
     set(HOST_PACKAGE_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages)
+    # (out of the object file the OS boots from, which carries the ROM
+    # extension: no ROM image needed)
     add_test(NAME host.NewtonPackage.extract
-             COMMAND ${Python3_EXECUTABLE} tools/newton-rom/analysis/packages.py build/${NEWTON_ROM_BUILD}
+             COMMAND ${Python3_EXECUTABLE} tools/newton-rom/analysis/packages.py ${NEWTON_OBJECTS_FILE}
                      --extract ${HOST_PACKAGE_DIR} --rename Formulas=Formulas2
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonPackage.extract PROPERTIES FIXTURES_SETUP host_package)
