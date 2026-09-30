@@ -237,6 +237,22 @@ is the same value spelt so that it cannot be read two ways.
   notBic loops never advance the mask pointer; `ScaleStdRRect` scales the
   corner oval crosswise on a fax.
 
+## 2026-09-30: shapes scrubbed, dragged and scaled; two test races
+
+- The polygon view (aaa84574): `HandleScrub` (a scrub over more than half
+  the view removes it - ROM quirk: TView's threshold is three quarters),
+  `HitSegment`/`ScrubSegment` (the run of sides a scrub covers taken out),
+  drag and drop (`AddDragInfo`, `GetDropData`, `DropRemove`), `Scale`/
+  `ScaleInk`/`DrawScaledData`, and a double tap on ink reading it again
+  (aeDoubleTap); `test_Views` TestPolygonEditing.
+- The package-install ctests waited a fixed 4 s for a package the host
+  sends only once the world is up; they now end on `demo/installed.ns`
+  (Formulas2 installed) (029fae4e).  walkthrough 2 keeps its card beside
+  its store (`HostStoreFile()`), so copies in their own directories stay
+  apart (9a42afa5).
+- The "^" at a page's top left after a scrub is the new note's insertion
+  caret, shown because the host reports a keyboard - the ROM's behaviour.
+
 ## 2026-09-30: the month overview and traced selections
 
 - The Dates month overview (ab187149): `DrawMonthOverView` (0x122174)

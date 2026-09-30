@@ -331,12 +331,11 @@ reach, hardware, or waiting on another area:
 - **Waiting on other areas**: the journal's replayed *units*
   (`HandleReplayUnit`, `SetCaseAndTime` - the host journal replays
   strokes), `CreateVMHeap`.
-- The polygon view's remaining NOT YETs: scrubbing a shape
-  (`HandleScrub`/`ScrubSegment`/`HitSegment`), `Scale`/`DrawScaledData`,
-  drag and drop (`AddDragInfo`/`GetDropData`/`DropRemove`), command 0x32
-  (reading ink on a double tap), the ink printing paths.  A "^" mark
-  appears at a page's top left after a traced stretch is scrubbed - not
-  looked into.
+- The polygon view's only remaining NOT YET: the ink verb's printing
+  path (`InkMakePaths`, `FramePaths`).
+- Flakes seen once each under a full -j8 run, not yet looked into:
+  `host.NewtonRecognize`, `host.NewtonBigStore.*`, `host.NewtonDNS`,
+  `host.NewtonVBO` (passes alone).
 - The printing path's outlined paths for ink (`CSMakePathsGroup`,
   `FramePaths`), which want the PostScript path machinery.
 - **How well it reads.**  Rosetta: a perfectly round synthetic "c", as
