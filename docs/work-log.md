@@ -237,6 +237,26 @@ is the same value spelt so that it cannot be read two ways.
   notBic loops never advance the mask pointer; `ScaleStdRRect` scales the
   corner oval crosswise on a fax.
 
+## 2026-09-30: one real-time clock, and alarms that ring
+
+- The host had two clocks that never met: the kernel's real-time clock
+  (what every alarm is set on) stood at 1904, and `RealClockSeconds`
+  read a base of its own - so alarms never rang.  Now `RealClockSeconds`
+  and `SetRealClockSeconds` read and set `TURealTimeAlarm`'s clock, which
+  holds GMT, adding the home city's offset and daylight saving as the ROM
+  does (0x255578); `TTime::ConvertTo` wraps at 32 bits as the ARM does
+  (47a76c4c).  The status bar shows the home city's time (San Francisco
+  until Setup or Time Zones sets another).
+- DEVIATION (`HostViews.cpp`): the host sets the clock chip to GMT
+  brought back by whole 28-year cycles below 2010, so weekdays and leap
+  years still match - 2026 shows as 1998.  With the true date the ROM's
+  own year-2010 overflow (`TimeInSeconds` past a NewtonScript integer)
+  made every alarm fire the moment it was set, in an endless loop.  The
+  owner's decision pending.
+- The volume gestalt carries the MP2x00's outputs and flags (0x1d), so
+  the Sound panel's "Play using" picker no longer throws and the
+  Recording panel shows in Prefs (24c84fb2).
+
 ## 2026-09-30: a fax received over a Class 2 modem
 
 - `fakemodem.py --fax-call --fax-class 2` (and 2.0) (2e712a16): the ROM's
