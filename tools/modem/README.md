@@ -27,7 +27,8 @@ is the modem at the other end of it.
   standard resolution), the training check (1800 noughts), the page (the
   PBM coded by `t4.py`, two fill bytes before each end of line) after the
   Newton's CFR, and EOP; the Newton's MCF (or RTP/RTN) is read and DCN
-  sent.  Frames carry their FCS; bytes of the value DLE are doubled and
+  sent.  Frames to the Newton carry their FCS, frames from it do not (a
+  Class 1 DTE's `+FTH` frames leave the FCS to the modem); bytes of the value DLE are doubled and
   each frame or run of data ends with DLE ETX.  `--fax-answer OUT.pbm` is
   the other way round, a fax machine the Newton calls (`FaxAnswerer`):
   `ATDT` in `+FCLASS=1` is answered at once with its CSI and DIS (V.27 ter
@@ -50,7 +51,7 @@ is the modem at the other end of it.
   `--spawn`, the program's output passed through and its exit status
   answered.
 - **Invocation** (ctests `host.NewtonModemDial`, `host.NewtonModemAnswer`,
-  `host.NewtonFaxReceive`):
+  `host.NewtonFaxReceive`, `host.NewtonFaxSend`):
 
 ```
 python tools/modem/fakemodem.py --number 5551212=127.0.0.1:52375 \
@@ -61,6 +62,7 @@ python tools/modem/fakemodem.py --incoming 127.0.0.1:52376 \
     --serial-port 0 --tcp-echo 52376 --headless 120 --script src/host/demo/modem-answer.ns
 python tools/modem/t4.py --test-page --pbm page.pbm
 python tools/modem/fakemodem.py --fax-call page.pbm     --spawn build/host/host/newton --rom build/MP2x00US/rom.bin     --serial-port 0 --headless 200 --script src/host/demo/fax-receive.ns
+python tools/modem/fakemodem.py --fax-answer build/fax-sent.pbm     --spawn build/host/host/newton --rom build/MP2x00US/rom.bin     --serial-port 0 --headless 200 --script src/host/demo/fax-send.ns
 ```
 
 On Windows give `--spawn` the program's full path (`...\newton.exe`).
@@ -90,4 +92,22 @@ python tools/modem/t4.py --test-page --fill 2 --pbm page.pbm -o page.t4
 python tools/modem/t4.py --encode page.pbm -o page.t4 [--fill N]
 python tools/modem/t4.py --decode page.t4 --width 1728 --pbm out.pbm
 python tools/modem/t4.py --self-test
+```
+
+## faxcheck.py
+
+- **Purpose**: checks the pages a fax sent from the Newton came to
+  (`fakemodem.py --fax-answer OUT.pbm` writes OUT.pbm, OUT-2.pbm, ...) and
+  makes a PNG of each beside it (through `tools/imaging/pgm2png.py`).
+- **Checks**: the number of pages (`--pages N`), each page's width
+  (`--width`, 1728), that no page is blank, and that each `--inked
+  PAGE:LEFT,TOP,RIGHT,BOTTOM[:MIN]` rectangle (in the page's pixels) has at
+  least MIN black pixels (200 unless given).
+- **Outputs**: a line per page and per rectangle, then `faxcheck: passed`;
+  exit status 1 at the first thing wrong.
+- **Invocation** (ctest `host.NewtonFaxSend.check`, after
+  `host.NewtonFaxSend`):
+
+```
+python tools/modem/faxcheck.py build/fax-sent.pbm --pages 2 --width 1728     --inked 1:190,180,750,300:1000 --inked 1:190,320,750,340:2500     --inked 2:180,95,700,160:1000
 ```

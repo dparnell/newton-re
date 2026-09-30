@@ -206,6 +206,30 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
     set_tests_properties(host.NewtonFaxReceive PROPERTIES TIMEOUT 300 FIXTURES_REQUIRED faxpage
                          PASS_REGULAR_EXPRESSION "<- ATA.*answered a fax call.*fax: <- DIS.*fax: -> DCS.*fax: <- CFR.*fax: -> the page, 200 lines.*fax: -> EOP.*fax: the page confirmed MCF.*fax: DCN sent.*eceived: \"From .*fakemodem fax.*fax-receive: shown, the pixels 247584 bytes.*fax-receive: turned right, the pixels 248880 bytes.*fax-receive: done.*the program answered 0"
                          FAIL_REGULAR_EXPRESSION "waited in vain|fell over")
+    # a fax sent: a note through the fax routing slip and the ROM's fax
+    # transport, printed by the print view (views/PrintView.h), the dot
+    # printer and the fax driver (print/FaxDriver.h) over the fax tool, to
+    # fakemodem.py answering as a Class 1 fax machine (--fax-answer); then
+    # tools/modem/faxcheck.py checks the two pages (the cover page's title
+    # and rule where the Sending slip lies on the screen, the note's text)
+    # and makes PNGs of them - build/fax-sent.png, build/fax-sent-2.png
+    add_test(NAME host.NewtonFaxSend
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/modem/fakemodem.py
+                     --fax-answer build/fax-sent.pbm
+                     --spawn $<TARGET_FILE:newton> --rom ${NEWTON_ROM_BIN} --serial-port 0 --headless 200
+                     --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/fax-send.ns
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonFaxSend PROPERTIES TIMEOUT 300 FIXTURES_SETUP faxsent
+                         PASS_REGULAR_EXPRESSION "fax: <- DCS.*fax: -> CFR.*fax: <- page 1, [0-9]+ bytes, 2148 lines.*fax: <- MPS.*fax: <- page 2, [0-9]+ bytes, 2148 lines.*fax: <- EOP.*fax: <- DCN.*2 page\\(s\\) received.*fax-send: the Out Box is empty.*the program answered 0"
+                         FAIL_REGULAR_EXPRESSION "waited in vain|fell over")
+    add_test(NAME host.NewtonFaxSend.check
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/modem/faxcheck.py build/fax-sent.pbm
+                     --pages 2 --width 1728
+                     --inked 1:190,180,750,300:1000 --inked 1:190,320,750,340:2500
+                     --inked 2:180,95,700,160:1000
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonFaxSend.check PROPERTIES FIXTURES_REQUIRED faxsent
+                         PASS_REGULAR_EXPRESSION "faxcheck: passed")
 endif()
 
 # deferred recognition (views/Rerecognize.h): "ton" written, and the

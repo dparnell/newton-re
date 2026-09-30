@@ -264,7 +264,6 @@ class FaxAnswerer:
             self.state = "tcf"
         elif name in ("MPS", "EOP", "EOM") and self.state == "post":
             self.frames = [self.control(0x8c)]
-            log("fax: -> MCF")
             self.state = "page" if name == "MPS" else ("tcf" if name == "EOM" else "end")
         elif name == "DCN":
             self.state = "done"
