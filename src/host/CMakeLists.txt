@@ -768,13 +768,14 @@ set(NIE_DIR ${CMAKE_SOURCE_DIR}/../fixtures/packages/apple/NIE2)
 if(EXISTS ${NIE_DIR}/REGPKGS/inetenbl.pkg)
     add_test(NAME host.NewtonInet
              COMMAND newton --display 320x480 --erase
-                     --store ${CMAKE_CURRENT_BINARY_DIR}/inet.store --tcp-echo 52373 --headless 25
+                     --store ${CMAKE_CURRENT_BINARY_DIR}/inet.store --tcp-echo 52373 --headless 120
                      --package ${NIE_DIR}/ENETSUP/newtdev.pkg --package ${NIE_DIR}/REGPKGS/inetenbl.pkg
                      --package ${NIE_DIR}/REGPKGS/inetstup.pkg
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/inet.ns
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(host.NewtonInet PROPERTIES TIMEOUT 180
-                         PASS_REGULAR_EXPRESSION "inet: default link Host network.*inet: link connected, connected.*inet: localhost is 127.0.0.1.*inet: connected, state 5.*inet: echoed hello.*inet: endpoint disposed.*inet: link released.*inet: link now idle.*inet: done")
+                         PASS_REGULAR_EXPRESSION "inet: default link Host network.*inet: link connected, connected.*inet: localhost is 127.0.0.1.*inet: connected, state 5.*inet: echoed hello.*inet: endpoint disposed.*inet: link released.*inet: link now idle.*inet: done"
+                         FAIL_REGULAR_EXPRESSION "waited in vain")
     # Internet Setup's own UI with the host's link (demo/inetsetup.ns): the
     # Host network setup listed and opened, and a new one made with Host
     # network picked in New Internet Setup's picker (snapshots in

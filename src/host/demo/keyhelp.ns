@@ -1,18 +1,22 @@
 // The key-help slip: the list of command keys in force, which the Newton
 // shows while the command key on a keyboard is held down.  Its layout and
 // drawing are native (views/KeyHelpSlip.cpp: FKeyHelpSlipSetup,
-// FKeyHelpSlipDraw); this opens it over the Notepad and photographs it.
+// FKeyHelpSlipDraw); this opens it over the boot's first screen (the
+// Setup assistant, once it is up) and photographs it.
 //
 //   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
-//       --headless 20 --script src/host/demo/keyhelp.ns
+//       --headless 60 --script src/host/demo/keyhelp.ns
 //   python tools/imaging/pgm2png.py keyhelp.pgm keyhelp.png
 //
 // Prints "keyhelp: open" and the slip's layout, then writes keyhelp.pgm.
 
-AddDelayedCall(func() begin
+HostInclude("common.ns");			// waitFor
+
+call waitFor with ("keyhelp: the first screen", func() GetRoot().setup and GetRoot().setup.viewCObject, func() begin
 	local slip := GetRoot().keyHelpSlip;
 	if not slip then begin
 		Print("keyhelp: no slip");
+		HostQuit();
 		return;
 	end;
 	slip:Open();
@@ -21,10 +25,11 @@ AddDelayedCall(func() begin
 		  & ", slipHeight " & slip.slipHeight & ", groups " & Length(slip.keyCommands));
 	foreach group in slip.keyCommands do
 		Print("keyhelp: " & group.category & " (" & Length(group.keyCommands) & ")");
-	AddDelayedCall(func() begin
+	call waitFor with ("keyhelp: the slip drawn", func() slip.viewCObject and Visible(slip), func() begin
+		RefreshViews();
 		ScreenSnapshot("keyhelp.pgm");
 		Print("keyhelp: snapshot");
 		Print("keyhelp: done");
 		HostQuit();
-	end, nil, 1000);
-end, nil, 4000);
+	end, 30);
+end, 60);

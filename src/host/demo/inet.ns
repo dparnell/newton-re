@@ -19,7 +19,11 @@
 //
 // (The NIE's functions appear only once its units are all installed - its
 // UnitsInstalledScript runs a second after a change to the "Packages"
-// soup - and the host's link after that, so the script waits.)
+// soup - and the host's link after that, so the script waits for the
+// default link to be the host's; it waits for the link to go idle at the
+// end, and quits.)
+
+HostInclude("common.ns");			// waitFor
 
 kInetEchoPort := 52373;
 
@@ -98,16 +102,20 @@ inetClient := {
 		if err then
 			Print("inet: disconnect failed, " & err)
 		else
-			AddDelayedCall(func() begin
+			call waitFor with ("inet: the link idle", func() InetGetLinkStatus(linkID) = 'idle, func() begin
 				Print("inet: link now " & InetGetLinkStatus(linkID));
 				Print("inet: done");
-			end, nil, 3000);
+				HostQuit();
+			end, 60);
 	end,
 };
 
-AddDelayedCall(func() begin
+call waitFor with ("inet: the host's link", func() begin
+		local entry := InetGetLinkEntry(InetGetDefaultLinkID());
+		entry and StrEqual(entry.setupName, "Host network");
+	end, func() begin
 	local linkID := InetGetDefaultLinkID();
 	local entry := InetGetLinkEntry(linkID);
 	Print("inet: default link " & (if entry then entry.setupName else "none"));
 	InetGrabLink(linkID, inetClient, 'Linked);
-end, nil, 6000);
+end, 60);
