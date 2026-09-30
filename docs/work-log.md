@@ -237,6 +237,27 @@ is the same value spelt so that it cannot be read two ways.
   notBic loops never advance the mask pointer; `ScaleStdRRect` scales the
   corner oval crosswise on a fax.
 
+## 2026-09-30: the Newton Internet Enabler built into the ROM
+
+- The owner's decision, and the first intentional edit of `romsrc/`
+  (f0f58bbe, ce78858e): Newton Devices, the Enabler and Internet Setup
+  follow WorldData in the ROM extension, so every boot has the NIE with
+  no store and no `--package`.
+- The ROM's loader relocates nothing and never installs a part's
+  `_ImportTable` for a part in the ROM, so the builder puts each package
+  into the ROM's own form (`packages.py` `rom_form_package`): refs made
+  addresses, the relocation applied and dropped, the exports given 28 new
+  'fexp entries and the imports resolved to them.
+- Found: a package in the ROM has no pkgRef, so the NIE's
+  `GetPkgRefInfo(ObjectPkgRef(...)).id` threw in `InetStartUp`; four
+  checked five-byte patches (`inetenbl.patches.tsv`).  A copy installed
+  over the built-in is kept but not activated, with the ROM's own "already
+  in use" notice.  `build --original` keeps `host.ROMSourceCommitted`
+  comparing the rest of the tree with the ROM.  The extension grows by
+  0x92000 bytes; boot about 0.15 s longer; 18 KB less frames heap free.
+  ctests `host.NewtonNIEBuiltIn`, `host.NewtonNIEOverBuiltIn`; 289 of 289
+  with the ROM configure, 277 of 277 without.
+
 ## 2026-09-30: NewtScape's JPEG decoder runs
 
 - NewtScape's JPEG converter (jpeg10e2.pkg, which calls into the

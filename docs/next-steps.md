@@ -392,6 +392,13 @@ reach, hardware, or waiting on another area:
   strokes), `CreateVMHeap`.
 - The polygon view's only remaining NOT YET: the ink verb's printing
   path (`InkMakePaths`, `FramePaths`).
+- **The NIE is built into the ROM extension** (`romsrc/rex`, `rom-form`,
+  `inetenbl.patches.tsv`; the owner's decision).  Open: the page tables
+  `ptpt`/`glpt` still name the patch table's old physical page (0x7ee000);
+  'fimp is not generated (a built-in package importing a unit from
+  outside the extension would need it - the builder refuses); the NIE's
+  modules (Ethernet, LocalTalk, Modem & Serial, ISP Templates) remain
+  packages to install.
 - **NetHopper browses** (`host.NewtonNetHopper`).  JPEG images need the NewtsCape
   package: NetHopperJPEG.pkg has no decoder of its own - its viewer calls
   NewtsCape's `JPEGConvert:NewtsCape` (`AddFile`) and answers nil without
