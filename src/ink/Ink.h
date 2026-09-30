@@ -30,9 +30,8 @@
 	shape frame is ink/InkShapes.h.
 
 	Ink as outlined paths for a printer is InkMakePaths (the raw
-	strokes, CSRawExpandGroup, each made a polyline contour).  NOT YET
-	RECONSTRUCTED: the live inker (TLiveInker, the ink that follows the
-	pen).
+	strokes, CSRawExpandGroup, each made a polyline contour).  The ink
+	that follows the pen is the inker's (recognition/LiveInker.h).
 
 	Reconstructed from the MP2x00 US ROM (0x000dbebc-0x000dc314,
 	0x0013ffb8-0x00140310, 0x00140940); each function cites its origin.

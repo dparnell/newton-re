@@ -42,8 +42,8 @@
 				object (NSOF, Expand) through Copy's CPartPipe
 				(PartHandlers.h, PartPipe.h).
 
-				NOT YET RECONSTRUCTED: the 'book part handler
-				(TBookPartHandler, over the book reader's TLibrarian).
+				The 'book part handler is the book reader's
+				(books/Librarian.h: TBookPartHandler).
 
 	Reconstructed from the MP2x00 US ROM (0x000cb68c-0x000cbdcc,
 	0x000d118c-0x000d1744); each function cites its origin.

@@ -27,9 +27,10 @@
 				view chain (_nextKeyView) by FindKeyCommand, the message
 				sent by SendKeyMessage.
 
-				NOT YET RECONSTRUCTED: the key help (MatchKeyMessage,
-				GatherKeyCommands), the caret's key view and its chain
-				(SetKeyView, NextKeyView), the keyboard tool (TKeyboardTool)
+				The key help (MatchKeyMessage, GatherKeyCommands, KeyHelpSlip.cpp)
+				and the caret's key view and its chain (SetKeyView,
+				NextKeyView) are here.  NOT YET RECONSTRUCTED: the keyboard
+				tool (TKeyboardTool)
 				that sends the events, the on-screen keyboards' registry.
 
 	Reconstructed from the MP2x00 US ROM (0x0030a948-0x0031084c, the

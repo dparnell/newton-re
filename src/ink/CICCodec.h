@@ -20,12 +20,10 @@
 				within each byte, and the bits of a value come out in
 				that order too (GetNBit).
 
-	NOT YET RECONSTRUCTED: everything but the bit reader.  The strokes
-	themselves are read by ReadNewStroke (0x00280f1c), DecodeLongStroke
-	(0x00281dd0) and DecodeShortStroke (0x002820c8) over the code books
-	(LockCodeBook 0x002808d4, DecodeWord_NEW/OLD 0x00281b90,
-	0x00281c48) and the segment quantisation; the encoder is
-	EncoderRun (0x002804f8) and what it calls.
+	The strokes themselves are read by ReadNewStroke, DecodeLongStroke
+	and DecodeShortStroke over the code books (LockCodeBook,
+	DecodeWord_NEW/OLD) and the segment quantisation; the encoder is
+	EncoderRun and what it calls - all here.
 */
 
 #ifndef __CICCODEC_H

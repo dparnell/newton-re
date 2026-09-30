@@ -43,8 +43,7 @@
 				+0x94, the cell limit +0x98, the effect word +0x9c, the
 				context +0xa0, the reverse and has-bits flags +0xa4/+0xa5,
 				the enabled kinds +0xa8 and an exception cleanup +0xac (the
-				host's destructor).  NOT YET RECONSTRUCTED: the sounds
-				(PlaySound plays nothing), gSlowMotion, the busy box.
+				host's destructor).  NOT YET RECONSTRUCTED: gSlowMotion.
 
 	Reconstructed from the MP2x00 US ROM (0x000429ec-0x0004512c,
 	0x001c60b0-0x001c6384); each function cites its origin.
@@ -133,7 +132,7 @@ private:
 	ULong		fEnabled;			// +0xa8  a bit per EffectKind: ~ the noFX preference
 };
 
-void	PlaySound(RefArg context, RefArg sound);				// ROM 0x000429ec PlaySound__FRC6RefVarT1 - a symbol looked up in the context; NOT YET RECONSTRUCTED: FPlaySound
+void	PlaySound(RefArg context, RefArg sound);				// ROM 0x000429ec PlaySound__FRC6RefVarT1 - a symbol looked up in the context and played
 void	TrimRect(const Rect& a, const Rect& b, Rect* result);	// ROM 0x00043290 TrimRect__FRC5TRectT1P5TRect - a less the rows of b (b empty: a)
 
 #endif	/* __ANIMATE_H */

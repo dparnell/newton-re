@@ -4,9 +4,9 @@
 //   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
 //       --scale 2 --script src/host/demo/setup.ns
 //
-// The host's internal store is a THostStore in memory (DEVIATION: the
-// flash and TPSSManager are NOT YET), so nothing is remembered between
-// runs and every boot starts at the assistant.  This taps its way
+// Without --store the host's internal store is a THostStore in memory,
+// so nothing is remembered between runs and every boot starts at the
+// assistant (with a store file it is the ROM's own flash store).  This taps its way
 // through: past "Welcome", a name typed on the "Enter your Name" page,
 // then Continue on each of the pages that follow - country, time zone,
 // date, time, handwriting, signature - and Done on "Congratulations",

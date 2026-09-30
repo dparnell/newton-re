@@ -202,10 +202,9 @@ TNewtWorld::ForkSwitch(Boolean in)
 // registry first: a store cannot write an object without them, because
 // with the OS running NewCoder makes them by name through the registry
 // rather than straight off their class info.
-// NOT YET RECONSTRUCTED: the real-time alarm
-// name, InitExternal,
-// HandleTestAgentEvent, FMinimumBatteryCheck,
-// AllocateEarlyStuff (the sort tables).
+// NOT YET RECONSTRUCTED: InitExternal (the host starts the large objects
+// from stores/Soups.cpp instead), HandleTestAgentEvent,
+// FMinimumBatteryCheck, AllocateEarlyStuff (the sort tables).
 long
 TNewtWorld::MainConstructor()
 {

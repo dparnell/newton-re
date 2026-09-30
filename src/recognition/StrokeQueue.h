@@ -31,11 +31,10 @@
 				ink is taken off by showing the screen's rectangle again
 				(SmartScreenDirty) or, once drawn, by invalidating it.
 
-				NOT YET RECONSTRUCTED: the inker task (the LCD entry
-				calling RealStrokeTime - on the host StrokeTime, the
-				recogniser's hook, does the inker's reading and its live
-				ink, DEVIATION), the stroke queue semaphore, the
-				journalling.
+				The inker task reads the tablet and draws the live ink
+				(Inker.h); StrokeTime does nothing while it runs, as the
+				ROM's, and does the reading itself on a host without the
+				OS.  NOT YET RECONSTRUCTED: the stroke queue semaphore.
 
 	Reconstructed from the MP2x00 US ROM (0x001fefa8-0x001ffe70,
 	0x00222f6c-0x002230c8, 0x0011b8e0-0x0011b8fc, 0x001f9660); each

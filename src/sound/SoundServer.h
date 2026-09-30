@@ -28,16 +28,11 @@
 
 				A decompressor channel (TCodecChannel) sits in front of an
 				output channel for sound that has to go through a codec
-				first; its own decompressing task is NOT YET (below).
-
-	NOT YET RECONSTRUCTED: sound input and the compressor channels
-	(OpenInputChannel, StartInput, EmptyDMABuffer, SoundInputIH,
-	OpenCompressorChannel, CompressLoop - the Sound Recorder's recording),
-	TCodecChannel's task and loops (MainEventLoop, DecompressLoop,
-	FillDMABuffer, InitCodecNodes, ...: a codec's sound is not played -
-	sound/SoundChannel.h's TFrameSoundChannel says so), and
-	(TSoundPowerHandler, the hardware powered down on a power-off event,
-	is done.)
+				first, its own 'codc task decompressing (DecompressLoop) or,
+				for a recording, compressing (CompressLoop) the sound input
+				(OpenInputChannel, StartInput, SoundInputIH) brings in.
+				TSoundPowerHandler powers the hardware down on a power-off
+				event.
 
 	Reconstructed from the MP2x00 US ROM (0x001e36fc-0x001e6170,
 	0x001e7380, 0x001e7ef0-0x001e99f0); each function cites its origin.

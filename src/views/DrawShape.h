@@ -26,12 +26,11 @@
 
 				TStyleSave holds the style in force while a shape list is
 				drawn (the ROM's is 0x70 bytes: the patterns, the mode, the
-				font, the clip levels; its transform - the TQDScaler's
-				scaling - is NOT YET RECONSTRUCTED, as are ink shapes,
-				'picture shapes (QuickDraw pictures), MakeShape from the
-				recogniser's shapes, MakePict, ScaleShape, MungeShape, the
-				hit testing HitShape/FindShape/PointInShape, GetShapeInfo,
-				and the wedge's box (WedgeBox: the whole oval's here).
+				font, the clip levels and its transform (qd/Transform.h's
+				TQDScaler).  Ink shapes, 'picture shapes, MakeShape,
+				MakePict, ScaleShape, the hit testing (HitShape,
+				PointInShape; FindShape and GetShapeInfo in ShapeVerbs.cpp)
+				and WedgeBox are here too.
 
 	Reconstructed from the MP2x00 US ROM (0x000dc840-0x000e3d48,
 	0x00198178-0x00198df0); each function cites its origin.

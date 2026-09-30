@@ -17,8 +17,7 @@
 				callback method is sent the state and the error
 				(TFrameSoundCallback).
 
-	NOT YET RECONSTRUCTED: coded sound played (see
-	TFrameSoundChannel::Schedule).
+	Coded sound goes through the server's codec channel (SoundServer.h).
 
 	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */

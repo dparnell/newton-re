@@ -1255,9 +1255,9 @@ TEditView::Scrub(TUnitPublic* unit)
 // (Idle, reason 2); a second tap in that time turns it into something
 // else, and if none comes the caret goes where the tap was.
 //
-// NOT YET RECONSTRUCTED: the click and the tap-drag (HiliteClick, which
-// drags or resizes a selection), and the double tap on a selection of
-// text, which sends its ink to be recognised again.
+// The click and the tap-drag on a selection are HiliteClick's (it drags
+// or resizes the selection).  NOT YET RECONSTRUCTED: the double tap on a
+// selection of text, which sends its ink to be recognised again.
 Boolean
 TEditView::RealDoCommand(RefArg cmd)
 {

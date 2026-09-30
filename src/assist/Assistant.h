@@ -20,12 +20,10 @@
 				symbol up as a frame.
 
 	Reconstructed from the MP2x00 US ROM (0x00084064-0x000871d0); each
-	function cites its origin.  NOT YET RECONSTRUCTED: the rest of the
-	unit - the template registry (RegTaskTemplate 0x00085060,
-	UnRegTaskTemplate 0x00085394), the matching itself
-	(GetRelevantTemplates 0x000857b0, ISATest 0x00086004,
-	CheezyIntersect 0x000862f0, CheezySubsumption 0x00086c24) and the
-	string tidying (GlueStrings 0x00084064, CleanString 0x00084518, ...).
+	function cites its origin.  The template registry (RegTaskTemplate,
+	UnRegTaskTemplate), the matching (GetRelevantTemplates, ISATest,
+	CheezyIntersect, CheezySubsumption) and the string tidying
+	(AssistStrings.h: GlueStrings, CleanString, ...) are here and beside it.
 */
 
 #ifndef __ASSISTANT_H

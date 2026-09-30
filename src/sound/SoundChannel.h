@@ -24,9 +24,8 @@
 				GlobalSoundChannel is the one PlaySound and its relations
 				use, made and opened the first time.
 
-	NOT YET RECONSTRUCTED: coded sound (a frame whose sndFrameType is
-	'codec: the codec is opened, but the server's codec channel does not
-	decompress yet - TCodecChannel::InitNode).
+	Coded sound (a frame whose sndFrameType is 'codec) is decompressed by
+	the server's codec channel (SoundServer.h's TCodecChannel).
 
 	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */

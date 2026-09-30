@@ -22,14 +22,12 @@
 	end - a key becomes a word (JamText), the word is offered to the
 	children that hold text (HandleWord) and becomes a paragraph of its
 	own when nobody takes it (AddNewParagraph) - along with the tap that
-	puts the caret where the typing goes.  NOT YET: the rest of what the
-	recogniser drives (HandleInk, HandleShape, HandleCaret,
-	HandleLineGesture, Scrub, PlaybackInk, and the geometry
-	AddNewParagraph uses for a written word), the selection (SetSelection,
-	GetSelection), drag and drop, most of the
-	commands (RealDoCommand answers the keys and the tap) and the drawing
-	of the resize border itself (DrawResizeBorder, TRect::Scale over
-	gEditViewTransform).
+	puts the caret where the typing goes; and what the recogniser drives
+	(HandleInk, HandleShape, HandleCaret, HandleLineGesture, Scrub,
+	PlaybackInk, the geometry AddNewParagraph uses for a written word),
+	the click on a selection that drags or resizes it (HiliteClick,
+	TrackScale, TrackDistort, DrawResizeBorder).  NOT YET: the selection
+	natives (SetSelection, GetSelection), some of the commands.
 */
 
 #ifndef __EDITVIEW_H

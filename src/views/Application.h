@@ -10,10 +10,10 @@
 				when their time comes - RunNextDelayedAction), and answers
 				its own commands (DoCommand: aeAppIdle, aeRunScript, aeUndo).
 				gApplication is the one application; the ROM's is a
-				TNotebook (its Run is the event loop, its InitToolbox makes
-				the root view, the inker, the offscreen bitmaps - NOT YET
-				RECONSTRUCTED), the host's a TApplication that
-				InitViewSystem makes.  The ROM's object is 0x20 bytes.
+				TNotebook (newt/Notebook.h: its InitToolbox makes the root
+				view, the inker, the offscreen bitmaps), and a test of the
+				views alone gets a TApplication that InitViewSystem makes.
+				The ROM's object is 0x20 bytes.
 
 				NOT YET RECONSTRUCTED: the idle timer the delayed actions
 				arm (the event handler's ResetIdle/StopIdle: the host runs

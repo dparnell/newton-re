@@ -16,9 +16,10 @@
 				hilited child.
 
 	Not in the DDK; reconstructed from the MP2x00 US ROM (0x000731e4-
-	0x00074a00), each function citing its origin.  NOT YET: everything the
-	recogniser drives (HandleWord, HandleInkWord, HandleCaret,
-	HandleLineGesture, HandleScrub, HandleHilite, HandleTap, PointOverText),
+	0x00074a00), each function citing its origin.  HandleInkWord and
+	HandleHilite are here.  NOT YET: the rest of what the recogniser drives
+	(HandleWord, HandleCaret, HandleLineGesture, HandleScrub, HandleTap,
+	PointOverText),
 	the editing that goes with TEditView (AddHilited, DeleteHilited,
 	CopyForm, RealDoCommand, GetValue, ChildBoundsChanged, PointToCaret),
 	and TEditView itself.

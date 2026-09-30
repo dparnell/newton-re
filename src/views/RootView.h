@@ -13,7 +13,7 @@
 				away and put back by Update, HideCaret/ShowCaret and
 				RestoreBitsUnderCaret; the selection stack of the earlier
 				key views), the popup, default button and modal view; the
-				idlers; the clipboards (NOT YET: none).  gRootView is the one
+				idlers; the clipboards (ClipboardView.h).  gRootView is the one
 				instance;
 				its context is a clone of Rrootcontext with the root template
 				as its _proto.

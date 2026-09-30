@@ -24,12 +24,12 @@
 				carries out - the text munged, the style runs adjusted
 				(AdjustStyles), the inverse posted for undo (consecutive
 				keys merged by AddKeyToCurrUndo), the caret moved, the lines
-				laid out again (RangeChanged).  NOT YET RECONSTRUCTED: the
-				hilites (a selection typed over), ink words and the
-				recogniser's word handling (the pen gestures are here:
-				HandleScrub, ScrubLines, ScrubWords, HandleCaret,
+				laid out again (RangeChanged).  The hilites (a selection
+				typed over), ink words, the recogniser's words and the pen
+				gestures (HandleScrub, ScrubLines, ScrubWords, HandleCaret,
 				InsertHorizontalSpace, InsertVerticalSpace, CheckAndDoJoin,
-				HandleLineGesture), the correction info, the other edit
+				HandleLineGesture) are here.  NOT YET RECONSTRUCTED: the
+				correction info, the other edit
 				commands (styles changed, cut and paste), the tab stops
 				(tabs draw as characters), the text objects (each line is
 				laid out from the text when drawn), the bounds recalculation

@@ -134,9 +134,7 @@ TNotebook::InitToolbox(void)
 	InitFontLoader();
 	InitInternationalUtils();
 	// the ROM starts it at 2 - clicks and strokes, and the shapes and
-	// words above them.  The shape and word recognisers themselves are
-	// NOT YET, so level 2 here means only that the dictionaries are built
-	// and the word half of the system is meant to be on.
+	// words above them.
 	// (DEVIATION: the ROM's TRecognitionManager::Init starts the stroke
 	// compression itself.  The ink area sits above the recogniser here -
 	// it reaches the strokes through it - so the two are started from
@@ -148,8 +146,7 @@ TNotebook::InitToolbox(void)
 	// the ROM's own handwriting engine, Rosetta, reads the writing
 	// (recognition/RosRecognizer.h); what it cannot read is kept as
 	// ink.  (The letter set chooses between it and the cursive
-	// recogniser, ParaGraph's, whose reading is NOT YET: ReadCursiveOptions,
-	// under gRecognition.Init.)
+	// recogniser, ParaGraph's: ReadCursiveOptions, under gRecognition.Init.)
 	RegisterRosettaWRec();
 	gRecognition.Init(2);		// (which puts the letter set's word recogniser in use: ReadCursiveOptions)
 	RunInitScripts();

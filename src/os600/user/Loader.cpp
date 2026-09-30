@@ -54,6 +54,10 @@ TLoader::MainDestructor()
 void
 TLoader::TheMain()
 {
+	// (DEVIATION: the host starts the alert, sound, comm, power and PSS
+	// managers from the newt world's MainConstructor and card services from
+	// HostMountStores, so of this list only the machine's own drivers and
+	// domains are missing.)
 	// NOT YET RECONSTRUCTED: RegisterVoyagerMiscIntf (0x01a6845c),
 	// LoadHighROMDriverPackages (0x01b0f78c), InitLicenseeDomain (0x01b0e720),
 	// LoadStartupDriver (0x01b139b4), LoadPlatformDriver (0x01b36b30);

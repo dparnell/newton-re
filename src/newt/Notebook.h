@@ -17,12 +17,11 @@
 				(ExceptionNotify, ErrorNotify, Notify: the root view's
 				notify and actionNotify methods) live here too.
 
-				NOT YET RECONSTRUCTED: TLibrarian (the librarian and its
-				library soup), InitScriptGlobals' NewtonScript boot (vars
-				from varsMapStarter, the classes, the funky functions,
-				bootInitNSGlobals), the inker task, the splash screen, the
-				boot sound, the print drivers, the font loader, the
-				international utilities' init, RunInitScripts, DarkStar;
+				The toolbox is started as the ROM's InitToolbox does: the
+				script globals, the inker, the splash screen and the boot
+				sound, the print drivers, the font loader, the
+				international utilities, the recognition system,
+				RunInitScripts, DarkStar;
 				on the host the root view is InitViewSystem's (its own root
 				template, the ROM's needing the whole system) and the
 				recognition system starts at the clicks level.

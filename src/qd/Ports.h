@@ -26,8 +26,8 @@
 	Reconstructed from the MP2x00 US ROM (0x002e4388-0x002e4818,
 	0x003280b0-0x00328268, 0x00328dfc, 0x00329330-0x00329874,
 	0x002af0e0-0x002af1a8); each function cites its origin.  NOT YET
-	RECONSTRUCTED: the screen (InitScreen: the display driver's PixelMap),
-	the per-task globals.  (Pictures are PicPlay.h and PicRecord.h,
+	RECONSTRUCTED: the per-task globals.  (The screen is Screen.h's
+	InitScreen, pictures PicPlay.h and PicRecord.h,
 	polygons and OpenRgn/CloseRgn Polygons.h.)
 */
 

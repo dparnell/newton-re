@@ -25,14 +25,10 @@
 				bytes: a TAppWorld (0x70) then a shared memory message, the
 				handler and the globals.
 
-				NOT YET RECONSTRUCTED: the forks (ForkConstructor and the
-				fork globals - the host runs one), the package part handlers
-				('form, 'book, 'dict, 'auto, 'comm), the card, battery,
-				power, alarm, interconnect, IR, store, backlight and
-				script-file events, LoadHighROMFramesPackages, the extras
-				soup, activateStorePackages, the boot test script, the
-				'aliv system event, the inker calibration, the sort tables,
-				NTKInit, InitExternal, the REP's translators; on the host
+				NOT YET RECONSTRUCTED: the power, interconnect, IR, battery
+				and script-file events (AEHandlerProc says which), the sort
+				tables (AllocateEarlyStuff), InitExternal, the stack locked
+				for the event loop (LockStack); on the host
 				the object system is started by the program before the
 				world (InitObjects needs the ROM image read in) and the
 				screen by HostStartViews.

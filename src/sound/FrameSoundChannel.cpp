@@ -171,8 +171,8 @@ TFrameSoundChannel::Close(void)
 // this channel's callback to hear when it has been played.
 //
 // (A codec frame whose codec cannot be made - the ROM has no
-// TMacintalkCodec, the speech a string becomes, and TGSMCodec and
-// TDTMFCodec are NOT YET here - has no codec in its block: OpenCodec's
+// TMacintalkCodec, the speech a string becomes - has no codec in its
+// block: OpenCodec's
 // error is not looked at, and the coded bytes are played as samples, as
 // the ROM's would be.  NEWTON_TRACE_SOUND says so.)
 //
