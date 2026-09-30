@@ -109,6 +109,29 @@ bugs and ROM bugs found on the way.
   count wraps.  `HostOptionLayouts`' '*' copies an option's trailing
   bytes as they are ('rout' numbers, 'mpro' profiles).
 
+## 2026-09-30: the printing system's imaging engine
+
+- `fakemodem.py --fax-answer OUT.pbm` (a32f64de): a Class 1 fax machine
+  for the Newton to call - CSI/DIS, the DCS read for the page's width and
+  resolution, CFR or FTT on the training check, each page decoded by
+  t4.py and answered MCF, written out at DCN; `--self-test` against a
+  scripted caller (ctest `comms.FakemodemFaxAnswer`).
+- `src/print/` (d89f2eb1, library `print`): the `TPrinter` and
+  `TDotPrinterDriver` protocols, `TDotPrinter` imaging a page a band at a
+  time through the scaling bottlenecks (each shape mapped to the
+  printer's dots and drawn into the band through a phantom port, a
+  patterned one through a mask), the driver callbacks.  ctest
+  `print.DotPrinter` checks shapes pixel by pixel across bands with a
+  144-dpi test driver.  `sync_ddk_headers.py` patches three printing
+  headers that included "Objects.h" for objects.h.
+- Host bug found: `ULong` is pointer-sized on the host, so word-at-a-time
+  pixel code written with `ULong*` stepped 8 bytes and ran past the band,
+  and `x <<= 1; if (x == 0)` sentinels never fired - such code uses
+  `uint32_t` (`romsizes.py` does not catch it).  ROM bugs kept
+  (`docs/print/README.md`): among them `TransferShape`'s notOr/notXor/
+  notBic loops never advance the mask pointer; `ScaleStdRRect` scales the
+  corner oval crosswise on a fax.
+
 ## 2026-09-30: a text shape's baseline
 
 - The In Box item header's two lines lay over each other: the ROM's
