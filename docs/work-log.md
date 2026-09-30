@@ -237,6 +237,20 @@ is the same value spelt so that it cannot be read two ways.
   notBic loops never advance the mask pointer; `ScaleStdRRect` scales the
   corner oval crosswise on a fax.
 
+## 2026-09-30: the boot splash; pickers' key commands
+
+- The boot splash (c803c9e2): `TNotebook::DrawSplashScreen` (0x14602c)
+  paints the screen black with the logo and, in white, "Newton 2.1
+  (717006)" and the copyright lines, from `VersionString` (0x146cb8);
+  `InitToolbox` then plays the boot sound and starts the international
+  utilities, in the ROM's order.  The boot sound had to be left out of
+  the tests that count sound samples.  ctest `host.NewtonSplash`.
+- Pickers with a keyboard (10fce955): each item's key command
+  (`GetKeyCommandInfo`/`GetKeyCommand`) drawn at its right, and a picked
+  item's key message sent to the key view.  Found: `PickItem` returns at
+  once for "no item" (0x187a84), so a cancelled picker runs no
+  `pickActionScript` - the host had.
+
 ## 2026-09-30: dates, times and numbers typed as text
 
 - `TDate::StringToDateFields` (0x8de6c), `StringToTime` and
