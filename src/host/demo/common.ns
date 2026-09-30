@@ -12,7 +12,10 @@
 //   walkSetup(name, andThen)
 //                           the Setup assistant a fresh store starts with,
 //                           walked through to the Notepad: Continue on the
-//                           Welcome page (leaving it, the assistant shows
+//                           Welcome page (again every three seconds while
+//                           nothing comes of it: a tap made before the
+//                           machine has finished starting is not taken;
+//                           leaving the page, the assistant shows
 //                           the tablet's calibration screen: its targets
 //                           are tapped through the host's panel,
 //                           HostTabletAutoCalibrate), the name typed (ADB key codes),
@@ -66,11 +69,33 @@ walkSetup := func(name, andThen) begin
 	HostTabletAutoCalibrate(true);				// (newton's default for a script already)
 	call waitFor with ("setup", setupOpen, func() begin
 		local was := call page with ();
-		call tapAt with (293, 468);					// past "Welcome"
-		call waitFor with ("setup name page", func() call page with () <> was, func() begin
+		local start := Ticks();
+		local tapped := Ticks();
+		local named := func() begin
 			call tapAt with (200, 150);				// the caret into the First line
 			foreach c in name do call typeKey with (c);
 			call next with ();
-		end, 60);
+		end;
+		// Continue on the Welcome page - tapped again every three seconds
+		// while nothing has come of it, since a tap made while the machine
+		// is still starting up (the assistant is open before the splash has
+		// gone) is not taken; not again once the calibration is showing
+		local welcome;
+		welcome := func() begin
+			if call page with () <> was then
+				call named with ()
+			else if Ticks() - start > 60 * 60 then begin
+				Print("setup name page: waited in vain");
+				call named with ();
+			end else begin
+				if Ticks() - tapped > 180 and not HostTabletCalibrationTarget() then begin
+					call tapAt with (293, 468);
+					tapped := Ticks();
+				end;
+				AddDelayedCall(welcome, nil, 250);
+			end;
+		end;
+		call tapAt with (293, 468);					// past "Welcome"
+		AddDelayedCall(welcome, nil, 250);
 	end, 60);
 end;

@@ -50,17 +50,26 @@ struct HostTaskContext
 	std::thread			fThread;
 	Boolean				fHasThread = false;
 	Boolean				fRunning = false;		// holds the baton (or has just been handed it)
+	std::condition_variable	fTurn;				// what the task's thread waits on for the baton
 };
 
-// The baton and the condition it changes on are made once and never
-// destroyed.  The run ends with task threads still parked on them (see
-// below, and docs/host-runtime.md: "the run ends by leaving parked threads
-// to the process exit"), and destroying a condition variable somebody is
-// waiting on is undefined: glibc's pthread_cond_destroy waits for its
-// waiters to leave, so a static one destroyed on the way out of main hung
-// the process after every check had passed - which is what every test that
-// boots the OS did on Linux.  Windows' own destructor happens not to wait,
-// which is why it was never seen there.
+// Each task's thread waits for the baton on a condition of its own
+// (HostTaskContext::fTurn), so that handing it over wakes the one thread
+// that takes it.  (With one condition shared by all of them every handover
+// woke every parked thread - some ninety in a booted newton - to look and
+// sleep again, which was most of the processor time the host used while
+// the Newton sat idle.)
+//
+// The baton, the run's own condition and the contexts with theirs are made
+// once and never destroyed.  The run ends with task threads still parked on
+// them (see below, and docs/host-runtime.md: "the run ends by leaving parked
+// threads to the process exit"), and destroying a condition variable
+// somebody is waiting on is undefined: glibc's pthread_cond_destroy waits
+// for its waiters to leave, so a static one destroyed on the way out of
+// main hung the process after every check had passed - which is what every
+// test that boots the OS did on Linux.  Windows' own destructor happens not
+// to wait, which is why it was never seen there.  (A deleted task's context
+// stays too: its thread is parked on its condition.)
 static std::mutex&						gBaton = *new std::mutex;
 static std::condition_variable&			gBatonChanged = *new std::condition_variable;
 static std::map<TTask*, HostTaskContext*>	gContexts;
@@ -95,11 +104,11 @@ static void
 WaitForBaton(TTask* task, std::unique_lock<std::mutex>& lock)
 {
 	HostTaskContext* ctx = ContextFor(task);
-	gBatonChanged.wait(lock, [&] { return ctx->fRunning || gStopRequested; });
+	ctx->fTurn.wait(lock, [&] { return ctx->fRunning || gStopRequested; });
 	if (gStopRequested)
 	{
 		// the run is over; this thread has nothing more to do and is left here
-		gBatonChanged.wait(lock, [] { return false; });
+		ctx->fTurn.wait(lock, [] { return false; });
 	}
 	gRunningTask = task;
 	gHandovers.fetch_add(1);
@@ -170,7 +179,7 @@ SwitchTo(TTask* self, TTask* next)
 		ctx->fThread.detach();
 	}
 	ContextFor(self)->fRunning = false;
-	gBatonChanged.notify_all();
+	ctx->fTurn.notify_one();
 	WaitForBaton(self, lock);
 }
 
@@ -325,6 +334,8 @@ HostStopTasks()
 	gStopRequested = true;
 	gHostTasksStopping = true;
 	gBatonChanged.notify_all();
+	for (std::map<TTask*, HostTaskContext*>::iterator i = gContexts.begin(); i != gContexts.end(); ++i)
+		i->second->fTurn.notify_all();
 	// this thread is a task's: it parks here for good
 	gBatonChanged.wait(lock, [] { return false; });
 }

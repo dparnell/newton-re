@@ -116,6 +116,20 @@ kernel source is unchanged.
   runner they only need the nesting counts, which the exit path consults
   (`InAtomicSection`).
 
+**Each task's thread waits for the baton on a condition of its own**
+(`HostTaskContext::fTurn`), and a handover notifies only the thread that
+takes it.  Until 2026-10-01 every thread waited on one shared condition and
+every handover woke all of them - some ninety in a booted `newton` - to
+look and go back to sleep: an idle Newton used 10-13% of a core (1.0-1.3 s
+of processor in 10 s, with some 400 handovers a second from the Newton's
+own 64 timer alarms a second), and `drawbench.ns` used 17-19 s of
+processor for about 1 s of the newt task's own work.  With one condition
+per thread the idle machine uses 0.8-1.3% (78-125 ms in 10 s) and
+`drawbench` 0.6 s.  The faster machine showed a race in the demos' Setup
+walk (`demo/common.ns`): a tap on Welcome's Continue made before the
+machine has finished starting is not taken, and `walkSetup` now taps
+again every three seconds while nothing has come of it.
+
 ## Interrupt sources: the host drivers' interrupts
 
 The timers' and the real-time clock's interrupts are wired into
