@@ -166,7 +166,11 @@ def run_copies(build, name, copies):
     # serves from (--tcp-echo, or a RESOURCE_LOCK, which is how the ctests
     # sharing one say so) - runs its copies one after another
     _, command, props = tests[-1]
-    serial = '--tcp-echo' in command or '--port' in command or any(p.get('RESOURCE_LOCK') for _, _, p in tests)
+    def fixed_port(option):
+        # (a port of 0 is a free one the program picks, so copies never meet)
+        return any(command[k] == option and k + 1 < len(command) and command[k + 1] != '0'
+                   for k in range(len(command)))
+    serial = fixed_port('--tcp-echo') or fixed_port('--port') or any(p.get('RESOURCE_LOCK') for _, _, p in tests)
     if serial:
         print('%s: holds a fixed port (--tcp-echo, --port or RESOURCE_LOCK): the copies run one at a time' % name)
         for i in range(copies):

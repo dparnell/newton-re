@@ -953,6 +953,25 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/../romsrc/rex/inetenbl.pkg)
                                  FAIL_REGULAR_EXPRESSION "waited in vain|is not answered|stopped \\(|FAILED")
         endif()
     endif()
+    # Newt's Cape 2.0 as a browser (demo/newtscape.ns): the page fetched
+    # over the built-in NIE and made a book, its picture first as ALT text,
+    # then View > Load with Images..., the picture ticked and loaded - the
+    # GIF decoded by the package's own native decoder (on src/armcpu) and
+    # checked on the screen (newtscape-1.pgm, newtscape-2.pgm)
+    set(NEWTSCAPE_DIR ${CMAKE_SOURCE_DIR}/../fixtures/packages/apps/NewtScape)
+    if(EXISTS ${NEWTSCAPE_DIR}/nwcp20r2.pkg AND Python3_EXECUTABLE)
+        add_test(NAME host.NewtonNewtsCape
+                 COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/host/httpserve.py
+                         --dir ${CMAKE_CURRENT_SOURCE_DIR}/demo/www --port 0 --
+                         $<TARGET_FILE:newton> --display 320x480 --erase
+                         --store ${CMAKE_CURRENT_BINARY_DIR}/newtscape.store --headless 240
+                         --package ${NEWTSCAPE_DIR}/nwcp20r2.pkg
+                         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/newtscape.ns
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+        set_tests_properties(host.NewtonNewtsCape PROPERTIES TIMEOUT 300
+                             PASS_REGULAR_EXPRESSION "newtscape: loaded Host Test Page.*the heading: ok.*the picture as its ALT text: ok.*the picture in the image cache: ok.*the frame's top edge: ok.*the bar: ok.*newtscape: done, 0 failed"
+                             FAIL_REGULAR_EXPRESSION "waited in vain|is not answered|stopped \\(|FAILED")
+    endif()
 endif()
 
 # the NewtonScript decompiler's round trip over a sample of the ROM's

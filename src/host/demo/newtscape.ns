@@ -1,0 +1,233 @@
+// Newt's Cape 2.0 (fixtures/packages/apps/NewtScape/nwcp20r2.pkg) browsing
+// a page served on the host (src/host/demo/www/nethopper.html) over the
+// Newton Internet Enabler built into the ROM extension - a second browser
+// beside NetHopper (nethopper.ns).  Newt's Cape makes a web page into a
+// Newton book: the URL written on its location line and File > Open
+// Location sent, the NIE's connection slip's Connect tapped, the page
+// fetched and shown as the book's page - its heading and text checked.
+//
+// The page's picture first shows as its ALT text: Newt's Cape loads a page
+// without its images unless asked (the request frame's loadImages is set
+// only by View > Load with Images..., getURL(url, {loadImages: true}),
+// whose addFile hands it to scanImages).  So that command is then sent,
+// and the picture chosen from the list it opens and loaded (ncImages).
+//
+// (Return on the location line would do Open Location too - the bar's
+// ViewKeyDownScript - but Newt's Cape's currentURL trims the line's own
+// string in place and answers it, the Return then goes into that same
+// string, and the page is cached under its URL with a return on the end,
+// where Load with Images's trimmed URL no longer finds it: Newt's Cape's
+// own doing, as on a MessagePad.)
+//
+//   python tools/host/httpserve.py --dir src/host/demo/www --port 0 -- \
+//       build/host/host/newton --display 320x480 --erase --store tmp/newtscape.store \
+//       --headless 240 --package fixtures/packages/apps/NewtScape/nwcp20r2.pkg \
+//       --script src/host/demo/newtscape.ns
+
+HostInclude("common.ns");		// tapAt, waitFor, walkSetup
+
+ncURL := "http://127.0.0.1:" & HostGetEnv("NEWTON_HTTP_PORT") & "/nethopper.html";
+
+ncFailures := 0;
+ncCheck := func(what, ok, detail) begin
+	if ok then
+		Print("newtscape: " & what & ": ok")
+	else begin
+		Print("newtscape: " & what & ": FAILED, " & detail);
+		ncFailures := ncFailures + 1;
+	end;
+end;
+
+ncApp := func() GetRoot().|NewtsCape:NewtsCape|;
+
+// every view's text on the screen, walked from the root
+ncTexts := func() begin
+	local texts := [];
+	local walk;
+	walk := func(v, depth) begin
+		foreach c in v:ChildViewFrames() do begin
+			if c.viewCObject and IsString(c.text) then AddArraySlot(texts, c.text);
+			if depth < 8 then call walk with (c, depth + 1);
+		end;
+	end;
+	call walk with (GetRoot(), 0);
+	texts;
+end;
+ncViewWithText := func(part) begin
+	local found := nil;
+	local walk;
+	walk := func(v, depth) begin
+		foreach c in v:ChildViewFrames() do begin
+			if c.viewCObject and IsString(c.text) and StrPos(c.text, part, 0) then found := c;
+			if depth < 8 then call walk with (c, depth + 1);
+		end;
+	end;
+	call walk with (GetRoot(), 0);
+	found;
+end;
+ncHasText := func(text) begin
+	local found := nil;
+	foreach t in call ncTexts with () do
+		if StrEqual(t, text) then found := true;
+	found;
+end;
+// a view whose text is the word, perhaps after a mark (the list's
+// "All" button has a tick before it)
+ncViewWithWord := func(word) begin
+	local found := nil;
+	local walk;
+	walk := func(v, depth) begin
+		foreach c in v:ChildViewFrames() do begin
+			if c.viewCObject and IsString(c.text) and StrLen(c.text) <= StrLen(word) + 1
+			 and StrPos(c.text, word, 0) then found := c;
+			if depth < 8 then call walk with (c, depth + 1);
+		end;
+	end;
+	call walk with (GetRoot(), 0);
+	found;
+end;
+// the Internet Enabler's connection slip: a root child with a link id
+ncConnectSlip := func() begin
+	local slip := nil;
+	foreach c in GetRoot():ChildViewFrames() do
+		if HasSlot(c, 'fLinkID) and c._defaultButton and c._defaultButton.viewCObject then slip := c;
+	slip;
+end;
+// how many black pixels there are in a box of the screen
+ncBlackIn := func(left, top, right, bottom) begin
+	local n := 0;
+	for y := top to bottom - 1 do
+		for x := left to right - 1 do
+			if ScreenPixel(x, y) < 128 then n := n + 1;
+	n;
+end;
+ncTapView := func(view) begin
+	local b := view:GlobalBox();
+	call tapAt with ((b.left + b.right) div 2, (b.top + b.bottom) div 2);
+end;
+
+ncDone := func() begin
+	Print("newtscape: done, " & ncFailures & " failed");
+	HostQuit();
+end;
+
+// A menu command sent to one of the location bar's buttons as its menu
+// sends it: the button's doCommand compares the command with =, so it
+// must be the package's own string (among doCommand's literals), not an
+// equal one
+ncCommand := func(buttonName, prefix) begin
+	local button := GetVariable(call ncApp with (), buttonName);
+	local command := nil;
+	if button then
+		foreach lit in button.doCommand.literals do
+			if IsString(lit) and BeginsWith(lit, prefix) then command := lit;
+	call ncCheck with ("the " & prefix & " command", command, "no " & buttonName & " or no such command");
+	if command then button:doCommand(command);
+end;
+
+// a popup menu open on the root
+ncPickView := func() begin
+	local found := nil;
+	foreach c in GetRoot():ChildViewFrames() do
+		if c.viewClass = 91 then found := c;
+	found;
+end;
+
+// the picture's view: an icon view (class 76) showing a 64x32 bitmap
+ncPictureView := func() begin
+	local found := nil;
+	local walk;
+	walk := func(v, depth) begin
+		foreach c in v:ChildViewFrames() do begin
+			if c.viewClass = 76 and IsFrame(c.icon) and c.icon.bits and c.icon.bounds.right = 64 then found := c;
+			if depth < 10 then call walk with (c, depth + 1);
+		end;
+	end;
+	call walk with (GetRoot(), 0);
+	found;
+end;
+
+// View > Load with Images... opens Newt's Cape's list of the page's
+// pictures (scanImages over the page's HTML in the HTML cache); the user
+// ticks them (the All button) and picks Load from the action button, and
+// the picture - www/box.gif, a 64x32 frame with a 48x16 bar in it - is
+// fetched, decoded by the package's own native GIF decoder (a
+// BinCFunction, on src/armcpu), kept in the image cache and drawn where
+// the ALT text was.  (The book reader puts a page as wide as the screen
+// at (320 - 320 - 6) div 2 = -3 - Copperfield's BuildDisplayParams - so
+// the picture's first three columns are off the screen's left edge, as on
+// a MessagePad.)
+ncImages := func() begin
+	call ncCommand with ('viewButton, "Load with Images");
+	call waitFor with ("newtscape: the list of pictures", func() call ncViewWithWord with ("All"), func() begin
+		call ncTapView with (call ncViewWithWord with ("All"));
+		// the action button: the list's lower right, left of its close box
+		call waitFor with ("newtscape: the picture ticked", func() begin
+				local title := call ncViewWithText with ("Images: ");
+				title and StrPos(title.text, ") ", 0);			// "Images: 1 (1-1) " and a tick and the count
+			end, func() begin
+			local slip := (call ncViewWithText with ("Images: ")):Parent();
+			local b := slip:GlobalBox();
+			call tapAt with (b.right - 33, b.bottom - 11);
+			// its menu - Load, Add Bookmark - a pick view (class 91) on the root
+			call waitFor with ("newtscape: the action menu", ncPickView, func() begin
+				local menu := (call ncPickView with ()):GlobalBox();
+				call tapAt with ((menu.left + menu.right) div 2, menu.top + 10);		// Load, the first
+
+				call waitFor with ("newtscape: the picture", ncPictureView, func()
+					AddDelayedCall(func() begin
+						ScreenSnapshot("newtscape-2.pgm");
+						local cursor := GetUnionSoupAlways("ImageCache:NewtsCape"):Query(nil);
+						call ncCheck with ("the picture in the image cache", cursor:CountEntries() = 1, cursor:CountEntries() & " entries");
+						call ncCheck with ("the ALT text gone", not call ncHasText with ("a box"), "still there");
+						local box := (call ncPictureView with ()):GlobalBox();
+						local left := Max(box.left, 0);
+						Print("newtscape: the picture at " & box.left & "," & box.top & ", " & call ncBlackIn with (left, box.top, box.right, box.bottom) & " black");
+						local edge := call ncBlackIn with (left, box.top, box.right, box.top + 1);
+						call ncCheck with ("the frame's top edge", edge = box.right - left, edge & " black");
+						edge := call ncBlackIn with (left, box.bottom - 1, box.right, box.bottom);
+						call ncCheck with ("the frame's bottom edge", edge = box.right - left, edge & " black");
+						edge := call ncBlackIn with (box.right - 1, box.top, box.right, box.bottom);
+						call ncCheck with ("the frame's right edge", edge = 32, edge & " black");
+						local bar := call ncBlackIn with (box.left + 8, box.top + 8, box.left + 56, box.top + 24);
+						call ncCheck with ("the bar", bar = 48 * 16, bar & " black");
+						local gap := call ncBlackIn with (left, box.top + 1, box.right - 1, box.top + 8);
+						call ncCheck with ("white inside the frame", gap = 0, gap & " black");
+						call ncDone with ();
+					end, nil, 1000), 60);
+			end, 20);
+		end, 20);
+	end, 30);
+end;
+
+ncBrowse := func() begin
+	local line := call ncViewWithText with ("About:Newt");
+	SetValue(line, 'text, ncURL);
+	call ncCommand with ('fileButton, "Open Location");
+	// (Connect tapped once it is drawn - a tap on a slip still opening is lost)
+	call waitFor with ("newtscape: the connection slip", func() begin
+			local slip := call ncConnectSlip with ();
+			local cb := slip and slip._defaultButton:GlobalBox();
+			cb and call ncBlackIn with (cb.left, cb.top, cb.right, cb.bottom) > 40;
+		end, func() begin
+		call ncTapView with ((call ncConnectSlip with ())._defaultButton);		// Connect
+		call waitFor with ("newtscape: the page", func() call ncHasText with ("Host Test Page"), func()
+			AddDelayedCall(func() begin
+				ScreenSnapshot("newtscape-1.pgm");
+				Print("newtscape: loaded Host Test Page");
+				call ncCheck with ("the heading", call ncHasText with ("Hello from the host"), "not shown");
+				call ncCheck with ("the text", call ncViewWithText with ("This page was served by a web server on the host"), "not shown");
+				call ncCheck with ("the picture as its ALT text", call ncHasText with ("a box"), "not shown");
+				call ncCheck with ("the link", call ncHasText with ("This page again"), "not shown");
+				call ncImages with ();
+			end, nil, 1000), 90);
+	end, 60);
+end;
+
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+call walkSetup with (name, func()
+	call waitFor with ("newtscape: installed", ncApp, func() begin
+		(call ncApp with ()):Open();
+		call waitFor with ("newtscape: the About page", func() call ncViewWithText with ("About:Newt"), ncBrowse, 60);
+	end, 120));
+Print("newtscape: the script is loaded");
