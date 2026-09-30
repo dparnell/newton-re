@@ -15,6 +15,7 @@
 
 	newton [--rom image | --objects file] [--heap bytes] [--display WxH[xdepth]] [--scale n]
 	       [--script file.ns] [--headless seconds] [--store file] [--erase]
+	       [--flash-size mb] [--flat-flash]
 	       [--package file.pkg]... [--card file] [--microphone-tone hz] [--tcp-echo port]
 	       [--serial-port port|none] [--ir-peer listen:port|host:port] [--print-dir dir]
 
@@ -44,10 +45,15 @@
 	and the end says how much of what was played was that tone.
 
 	--store names the file the internal store is kept in between runs:
-	the internal flash itself, in Einstein's layout (a 4 MB bank, or two
-	in an 8 MB file; hal/host/HostFlash.h), with the ROM's flash store on
-	it (stores/flash/: TNewInternalFlash, TFlashStore, TMuxStore, made by
-	InitPSSManager).  Set the machine up once and every boot after that
+	the internal flash itself (hal/host/HostFlash.h), with the ROM's flash
+	store on it (stores/flash/: TNewInternalFlash, TFlashStore, TMuxStore,
+	made by InitPSSManager).  A new file is a sparse image, which holds
+	only what has been written and grows with it; --flash-size says how
+	big the flash it stands for is, in megabytes (4, the default, 8, 16,
+	32, 64 or 128 - docs/stores/README.md, "Bigger flash"), and
+	--flat-flash makes it a flat file of that many bytes instead (at 4 or
+	8 MB, Einstein's own).  A file that is there keeps its size and
+	format; tools/stores/flashimage.py converts between the two.  Set the machine up once and every boot after that
 	comes up on the Notepad.  --erase throws that
 	file away first and starts again at the Setup assistant, which is what
 	holding the power switch down through a reset does on the machine.
@@ -101,6 +107,7 @@
 #include "HostStores.h"
 #include "HostPackages.h"
 #include "HostCard.h"
+#include "HostFlash.h"
 #include "HostHeapCheck.h"
 #include "HostSoundDriver.h"
 #include "HostEchoServer.h"
@@ -182,6 +189,7 @@ Usage(void)
 {
 	fprintf(stderr, "usage: newton [--objects file | --rom image] [--heap bytes] [--display WxH[xdepth]] [--scale n]\n"
 					"              [--script file.ns] [--headless seconds] [--store file] [--erase]\n"
+					"              [--flash-size mb] [--flat-flash]\n"
 					"              [--package file.pkg]... [--card file] [--microphone-tone hz] [--tcp-echo port]\n"
 					"              [--serial-port port|none] [--ir-peer listen:port|host:port] [--print-dir dir]\n"
 					"By default it boots the object file built from romsrc/ (NEWTON_OBJECTS overrides);\n"
@@ -439,6 +447,9 @@ main(int argc, char** argv)
 	// asks whether to erase the internal store, and this is that)
 	const char* storeFile = nil;
 	Boolean erase = false;
+	// what a store file that is not there yet is made as (HostSetNewFlash)
+	ULong flashSize = kHostFlashBankSize;
+	Boolean flatFlash = false;
 	for (int i = 1; i < argc; i++)
 	{
 		if ((strcmp(argv[i], "--rom") == 0 || strcmp(argv[i], "--objects") == 0) && i + 1 < argc)
@@ -489,6 +500,18 @@ main(int argc, char** argv)
 			storeFile = argv[++i];
 		else if (strcmp(argv[i], "--erase") == 0)
 			erase = true;
+		else if (strcmp(argv[i], "--flash-size") == 0 && i + 1 < argc)
+		{
+			long mb = strtol(argv[++i], nil, 0);
+			if (mb <= 0 || mb > 128 || !HostFlashValidSize((ULong) mb << 20))
+			{
+				fprintf(stderr, "newton: --flash-size is 4, 8, 16, 32, 64 or 128 (megabytes)\n");
+				return 2;
+			}
+			flashSize = (ULong) mb << 20;
+		}
+		else if (strcmp(argv[i], "--flat-flash") == 0)
+			flatFlash = true;
 		else if (strcmp(argv[i], "--package") == 0 && i + 1 < argc)
 			HostQueuePackageFile(argv[++i]);
 		else if (strcmp(argv[i], "--card") == 0 && i + 1 < argc)
@@ -528,6 +551,7 @@ main(int argc, char** argv)
 	if (erase && storeFile != nil && remove(storeFile) == 0)
 		fprintf(stderr, "[host] %s erased; the machine starts new\n", storeFile);
 	HostSetStoreFile(storeFile);
+	HostSetNewFlash(flashSize, flatFlash);
 	// a machine that stops dead says so rather than sitting there looking
 	// idle, and says what script it was running when it stopped
 	gHostStallReportHook = ReportTheScript;

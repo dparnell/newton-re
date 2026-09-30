@@ -1132,10 +1132,11 @@ formats it. So what the store sees is `GetTotalSize` bytes - on an MP2x00
 4 MB less the reserved region and the spare, 3.75 MB - whose every
 region begins with four bytes it must leave alone.
 
-**The host's chips.** `hal/host/HostFlash.h` keeps the bank in a file in
-Einstein's layout (bank 1 at offset 0, bank 2 after it in an 8 MB file),
-writes through to it at every word and erase, and registers it as
-physical memory at 0x02000000; `AddNewSecPNJT` on the host records the
+**The host's chips.** `hal/host/HostFlash.h` keeps the banks in a file -
+flat, in Einstein's layout (bank 1 at offset 0, bank 2 after it in an 8
+MB file), or a sparse image of only what is not erased ("Bigger flash",
+below) - writes through to it at every word and erase, and registers
+them as physical memory at 0x02000000 and 0x10000000; `AddNewSecPNJT` on the host records the
 section and `VirtualAddressToPointer` (`hal/MMU.h`) finds the bytes behind
 a window. The host's driver ANDs each word in and erases a block at once.
 `TBankControlRegister` (the bus width) and `InternalVppOn`/`Off` (the
@@ -1225,11 +1226,144 @@ through a `TMuxStore` to the store inside (the flash store's capabilities,
 On the host, `HostMountStores` does it when a store file is named and the
 OS is running: `HostFlashOpen`, then the windows mapped as the boot's
 `InitCGlobals` maps them (`MapInternalFlashWindows`, with a throwaway
-instance, `kMapWindows`), then `InitPSSManager`. A file that is not 4 or
-8 MB is refused and the store kept in memory (a `THostStore`, as without a
-file; and as `newtonscript`, which does not run the OS, always does).
+instance, `kMapWindows`), then `InitPSSManager`. A new file is a sparse
+image of a 4 MB flash unless `newton --flash-size` and `--flat-flash` say
+otherwise ("Bigger flash", below); a file that is neither a sparse image
+nor a flat flash of a size the host makes is refused and the store kept
+in memory (a `THostStore`, as without a file; and as `newtonscript`, which
+does not run the OS, always does).
 NOT YET: the `TPSSManager` world itself, which makes the cards' stores; a
 RAM internal store; the reserved block's accessor.
+
+## Bigger flash
+
+An MP2x00 has 4 or 8 MB of internal flash; the host can give it up to
+128 MB, with the ROM's own flash code and the ROM's own store format on
+it, kept in a *sparse* file that grows with what is written. How far the
+ROM's code goes, layer by layer (the addresses are the MP2x00 US ROM's;
+the instructions read with `analysis/disasm.py`):
+
+**How the chips are found.** Not by CFI and not from a table of sizes: a
+*driver* identifies them. `TNewInternalFlash::SearchForFlashDrivers`
+(0x0013b908) takes up to six drivers from the ROM extensions' 'fdrv
+entries and falls back on the ROM's own, `T28F016_SA_SVDriver`, whose
+`Identify` (0x002044ec) puts the chips in read-identifier mode (0x90 on
+the lanes asked about) and knows three parts: Intel 0x89/0x66A0 (the
+28F016SA, 2 MB) and Sharp 0xB0/0x6688 (2 MB) or 0x66A8 (1 MB), all in
+64 KB blocks. What it answers (`SFlashChipInformation`) is the chip's
+size and block size, and everything above works from those: a range's
+size is chips x chip size and its erase unit chips x block size
+(`TFlashRange::TFlashRange` 0x000c26e0). So the ROM's own driver stops at
+2 MB chips - 8 MB in all - but the design is open: a ROM extension with
+an 'fdrv driver for bigger chips gets a bigger flash with no other
+change. The host's driver (`THostFlashDriver`, already a DEVIATION since
+the host's chips are a file) is that driver: it answers the 28F016SA for
+a 4 or 8 MB flash, as before, and for a bigger one the same part made as
+big as the flash needs (two to a bank, a quarter of the flash each,
+still 64 KB blocks so the store's blocks stay the MP2x00's 128 KB).
+
+**Banks and ranges.** Two banks: the flash bank at physical 0x02000000
+(32 bits wide, or each 16-bit half a range of its own, or a byte lane) and
+the I/O bank at 0x10000000 (32 bits only; ruled out by an 'flsa entry or a
+ROM extension living there) - `ConfigureFlashBank` 0x0013cc44,
+`ConfigureIOBank` 0x0013caf0. At most three ranges (`AddFlashRange`
+0x0013c9ec: `cmp r0,#0x3; mvncs r0,#0x2940` -
+kError_Flash_Unsupported_Configuration). Nothing limits a range's size.
+
+**The windows - the ROM's cap: 64 MB.** Each range is read through a
+window from 0x30000000 up and written through one from 0x34000000 up
+(`InternalInit` 0x0013b484 `mov r0,#0x30000000`, 0x0013b48c `mov
+r0,#0x34000000`), each range's windows following the last's. The read
+windows of all the ranges together therefore have 64 MB before they run
+into the first write window: with more, the second bank's read window
+would be mapped over the first bank's write window. The MMU map has
+nothing else there (`analysis/mmumap.py`: the I/O identity map ends at
+0x30000000, the ROM domain starts at 0x60000000).
+**So the largest internal flash the ROM's code handles unchanged is 64 MB:
+two banks of two 16 MB chips, the read windows exactly filling
+0x30000000-0x34000000** - 511 regions of 128 KB after the reserved one,
+510 store blocks, 63.75 MB of store.
+
+**Regions.** `TNewInternalFlash`'s map is a 16-bit word a region
+(`Init` 0x0013b5bc allocates `regions * 2 - 2` bytes) and a region's
+header names its logical region in 16 bits: 65535 regions, 8 GB of 128 KB
+regions. No cap in practice.
+
+**The store - the next cap: 128 MB.** `TFlashStore::Init` (0x000c6bf4)
+sizes everything from the flash's total size and region size: its block
+arrays, and the ids (28 bits, the top `CeilLog2(blocks)` of them the block
+an object was made in). What does not scale is a *migrated* directory
+entry - the note a block keeps that one of its objects now lives
+elsewhere: 14 bits of object number and 10 of block
+(`SDirEnt::SetMigratedObjectInfo` 0x000c4fa0), and
+`IsValidMigratedObjectInfo` (0x000c4f7c: `subs r12,r0,#0x3fc0; cmpge
+r12,#0x3f; ... cmple r1,#0x3ff`) refuses a block past 0x3ff. So 1024
+blocks can be named - 128 MB of 128 KB blocks (1022 store blocks, with the
+reserved region and the spare). Past that the store still works (an
+object with no entry is found by `TFlashStore::Lookup` 0x000c747c
+searching every block, which is also what happens today to objects
+numbered past 0x3fff) but slowly. (Reading those instructions showed
+the reconstruction had the test as `< 0x3FC0 && < 0x3FF`; it is `<= 0x3FFF
+&& <= 0x3FF`, fixed 2026-09-30.) Nothing else in the store depends on the
+size: an object is at most 64 KB (a 16-bit size) whatever the flash, each
+block's log is its last 0x400 bytes, `GetStoreSizes` (0x000c84a0) works in
+longs, and the sizes reach NewtonScript as 30-bit integers, good to
+512 MB. The PSS manager takes the size it is given
+(`InternalStoreInfo`, `gInternalFlashStoreSize`) and assumes nothing.
+
+**What the host does.** Up to 64 MB it is the ROM's code as it is. For
+128 MB the write windows must move out of the read windows' way, and the
+host moves them to 0x38000000 - `InternalFlashWriteWindow()` in
+`stores/flash/Flash.h`, a DEVIATION the host's driver answers with the
+ROM's 0x34000000 for 64 MB or less. It changes no byte on the flash: the
+store's format, block size and every structure are the ROM's. Going past
+128 MB would mean either blocks the migrated entries cannot name (the
+slow path above) or bigger erase regions (chips with 128 KB blocks: 256 KB
+store blocks, 256 MB before the cap) - neither is done; the second is a
+store unlike any MP2x00's, and the owner's call.
+
+`newton --store file --flash-size N` (N = 4, 8, 16, 32, 64 or 128 MB)
+makes a new store file of that size; a file that is there keeps its size.
+`test_HostFlash` (ctest `stores.HostFlash`) finds 64 MB with the ROM's
+windows and 128 MB with the moved ones, and formats a flash store on
+128 MB, writes 12 MB of objects and reads them back after reopening the
+file; ctests `host.NewtonBigStore.write`/`host.NewtonBigStore`/
+`host.NewtonBigStore.file` boot on a new 128 MB store
+(`src/host/demo/bigstore.ns`), write 9.9 MB of soup entries (600 of
+16 KB), boot again on the same file, read them all back, and check the
+file is about 12 MB (`flashimage.py info --expect-stored`).
+
+**The sparse image.** A 128 MB flash file would be 128 MB on disk from
+the start, so a new file is a sparse image (`hal/host/HostFlash.h`): the
+flash is cut into 1 KB chunks, and the file holds a 0x40-byte header
+('NewtFlsh', version, sizes), a map of one big-endian word per chunk (0:
+erased; n: kept in slot n) and the chunks that are not all 0xFF, each
+appended the first time a bit in it is cleared. A word written as ones
+changes nothing and costs nothing; an erase that leaves a chunk all 0xFF
+clears its map word and its slot is reused for the next chunk written.
+A new 4 MB image is 17 KB, a new 128 MB one 512 KB (the map); formatted
+it holds one chunk per store block (1.5 MB at 128 MB), and then grows
+with the data - 9.9 MB of soup entries on 128 MB made an 11.75 MB file.
+Crash safety: a chunk's bytes are written (and the C library's buffer
+emptied) before the map word naming them, and a freed chunk's word is
+cleared before its slot is reused, so a program stopped part-way leaves
+every map word naming whole bytes; at open a word naming a slot past the
+end of the file reads as erased (and is put right), and of two words
+naming one slot - which only an operating-system crash reordering the
+writes could leave - the first is kept. A torn write inside a chunk
+already there is a torn flash write, which the flash store's
+transactions are made for. (No fsync: plain C has none.) The whole
+flash is held in memory - 128 MB of RAM for the largest - because
+`TFlashRange` reads and writes through pointers into its windows; the
+file is read in at open and written through at every change.
+
+Flat files still open (a 4 or 8 MB flat file is Einstein's flash, and
+flat files of the bigger sizes are the same layout: bank 1 then bank
+2), told from a sparse image by its first eight bytes; `--flat-flash`
+makes a new one flat. `tools/stores/flashimage.py` describes an image
+(`info`), converts between the two (`to-sparse`, `to-flat` - so an
+Einstein flash can be taken to the host's sparse form and back) and makes
+an empty sparse one (`make-sparse --size N`); ctest `tools.FlashImage`.
 
 ## Not yet
 

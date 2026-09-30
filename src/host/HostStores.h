@@ -52,6 +52,13 @@ void	HostMountStores(void);
 // assistant every time.
 void	HostSetStoreFile(const char* path);
 
+// The flash a store file that does not exist yet is made as: its size in
+// bytes (4 MB times a power of two, up to 128 MB - hal/host/HostFlash.h's
+// HostFlashValidSize) and whether it is a flat file (Einstein's, at 4 or
+// 8 MB) rather than a sparse image.  A new file is 4 MB and sparse unless
+// told otherwise; a file that is there keeps what it is.
+void	HostSetNewFlash(ULong size, Boolean flat);
+
 // Whether the store was read back from that file rather than formatted
 // fresh - which is to say whether the machine has been used before.
 Boolean	HostStoreWasRestored(void);

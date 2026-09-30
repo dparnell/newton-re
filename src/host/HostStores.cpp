@@ -28,6 +28,15 @@ enum { kHostStoreSize = 4 * 1024 * 1024 };
 
 static const char*	gStoreFile = nil;
 static Boolean		gRestored = false;
+static ULong		gNewFlashSize = kHostFlashBankSize;
+static Boolean		gNewFlashFlat = false;
+
+void
+HostSetNewFlash(ULong size, Boolean flat)
+{
+	gNewFlashSize = size;
+	gNewFlashFlat = flat;
+}
 
 void
 HostSetStoreFile(const char* path)
@@ -117,9 +126,12 @@ HostMountStores(void)
 			FILE* existing = fopen(gStoreFile, "rb");
 			if (existing != nil)
 				fclose(existing);
-			NewtonErr err = HostFlashOpen(gStoreFile);
+			NewtonErr err = HostFlashOpen(gStoreFile, gNewFlashSize, gNewFlashFlat ? kHostFlashFlat : kHostFlashSparse);
+			if (err == noErr && existing == nil)
+				fprintf(stderr, "[host] %s: a new %lu MB %s flash\n", gStoreFile, (unsigned long) (HostFlashSize() >> 20),
+						HostFlashFileFormat() == kHostFlashSparse ? "sparse" : "flat");
 			if (err != noErr)
-				fprintf(stderr, "[host] %s is not a flash file (4 or 8 MB): the store is kept in memory\n", gStoreFile);
+				fprintf(stderr, "[host] %s is not a flash file (a sparse image, or a flat one of 4 MB times a power of two up to 128 MB): the store is kept in memory\n", gStoreFile);
 			else if ((err = MapInternalFlashWindows()) != noErr || (err = InitPSSManager(0, 0)) != noErr)
 				fprintf(stderr, "[host] the internal flash would not mount (%ld)\n", (long) err);
 			else

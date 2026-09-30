@@ -16,6 +16,12 @@
 				32-bit bank - the answers T28F016_SA_SVDriver::Identify
 				(ROM 0x002044ec) gives for them - so the ranges, the erase
 				regions and the whole layout of the flash are the machine's.
+				A host flash bigger than 8 MB (hal/host/HostFlash.h) has
+				bigger chips: still two to a bank and 64 KB blocks, so the
+				erase regions stay 128 KB, but each a quarter of the flash -
+				chips the ROM's own driver would not know (it knows only 1
+				and 2 MB parts), such as an 'fdrv driver in a ROM extension
+				would bring (docs/stores/README.md, "Bigger flash").
 
 	Written by:	the reconstruction
 */
@@ -54,6 +60,15 @@ PROTOCOL_IMPL_SOURCE_MACRO(THostFlashDriver)
 PROTOCOL_CLASSINFO(THostFlashDriver, "TFlashDriver", "", 0, 0, nil)
 
 
+// DEVIATION (Flash.h): the write windows past the read windows of a flash
+// over 64 MB; the ROM's 0x34000000 otherwise.
+ULong
+InternalFlashWriteWindow(void)
+{
+	return HostFlashSize() > 0x04000000 ? 0x38000000 : kInternalFlashWriteWindow;
+}
+
+
 const TClassInfo*
 DefaultFlashDriverClassInfo(void)
 {
@@ -75,7 +90,7 @@ THostFlashDriver::Identify(ULong address, eMemoryLane lanes, SFlashChipInformati
 	info.fDevice = 0x66A0;
 	info.fVppKind = 2;
 	info.fWidth = 2;
-	info.fChipSize = 0x200000;
+	info.fChipSize = HostFlashChipSize();			// 0x200000 on an MP2x00
 	info.fBlockSize = 0x10000;
 	return true;
 }

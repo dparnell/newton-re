@@ -420,11 +420,11 @@ NewtonErr
 TNewInternalFlash::ConfigureFlashBank(ULong& flashAddress, ULong& readAddress, ULong& writeAddress)
 {
 	if (fMapWindows != 0)
-		AddNewSecPNJT(kInternalFlashWriteWindow, kInternalFlashBank, 0, kReadWrite, 0);
+		AddNewSecPNJT(InternalFlashWriteWindow(), kInternalFlashBank, 0, kReadWrite, 0);
 	fBankControl->ConfigureFlashBankDataSize(kAllLanes);
 	SFlashChipInformation info;
 	TFlashDriver* driver;
-	if (!CheckFor4LaneFlash(kInternalFlashWriteWindow, info, driver))
+	if (!CheckFor4LaneFlash(InternalFlashWriteWindow(), info, driver))
 	{
 		TFlashRange* range;
 		NewtonErr err = ConfigureNot32BitFlashBank(flashAddress, readAddress, writeAddress, kLowHalfLanes, range);
@@ -460,7 +460,7 @@ TNewInternalFlash::ConfigureNot32BitFlashBank(ULong& flashAddress, ULong& readAd
 	range = nil;
 	SFlashChipInformation info;
 	TFlashDriver* driver;
-	if (CheckFor2LaneFlash(kInternalFlashWriteWindow, info, driver, lanes))
+	if (CheckFor2LaneFlash(InternalFlashWriteWindow(), info, driver, lanes))
 	{
 		void* memory = fAllocator->Allocate(sizeof(T16BitFlashRange));
 		if (memory == nil)
@@ -469,7 +469,7 @@ TNewInternalFlash::ConfigureNot32BitFlashBank(ULong& flashAddress, ULong& readAd
 	}
 	else
 	{
-		if (!CheckFor1LaneFlash(kInternalFlashWriteWindow, info, driver, lanes & 0xFF00FF00))
+		if (!CheckFor1LaneFlash(InternalFlashWriteWindow(), info, driver, lanes & 0xFF00FF00))
 			return noErr;
 		void* memory = fAllocator->Allocate(sizeof(T8BitFlashRange));
 		if (memory == nil)
@@ -517,7 +517,7 @@ TNewInternalFlash::InternalInit(TMemoryAllocator* allocator, eInitHWOption optio
 		return err;
 	ULong flashAddress = 0;
 	ULong readAddress = kInternalFlashReadWindow;
-	ULong writeAddress = kInternalFlashWriteWindow;
+	ULong writeAddress = InternalFlashWriteWindow();		// DEVIATION: the ROM's constant 0x34000000 (Flash.h)
 	if (flashBank && (err = ConfigureFlashBank(flashAddress, readAddress, writeAddress)) != noErr)
 		return err;
 	if (ioBank && (err = ConfigureIOBank(flashAddress, readAddress, writeAddress)) != noErr)
@@ -583,7 +583,7 @@ TNewInternalFlash::Init(TMemoryAllocator* allocator)
 NewtonErr
 TNewInternalFlash::AllocateReservedBlockRange(TFlashRange*& range)
 {
-	ULong writeAddress = kInternalFlashWriteWindow;
+	ULong writeAddress = InternalFlashWriteWindow();
 	ULong readAddress = kInternalFlashReadWindow;
 	ULong flashAddress = 0;
 	fBankControl->ConfigureFlashBankDataSize(kAllLanes);

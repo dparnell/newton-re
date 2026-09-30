@@ -275,9 +275,20 @@ public:
 	in turn what is at the bank's write window.  0x6C bytes.
 ------------------------------------------------------------------------------*/
 
-// the windows the ranges are read and written through
+// the windows the ranges are read and written through: the read windows
+// from 0x30000000 up, the write windows from 0x34000000 up
+// (InternalInit 0x0013b484/0x0013b48c), so the read windows of all the
+// ranges together may take 64 MB before they reach the first write window
 const ULong	kInternalFlashReadWindow	= 0x30000000;
 const ULong	kInternalFlashWriteWindow	= 0x34000000;
+
+// DEVIATION: where the write windows start, which the ROM has as the
+// constant above.  A port with more than 64 MB of internal flash (the host's
+// can have 128 MB: docs/stores/README.md, "Bigger flash") moves them up to
+// 0x38000000, out of the read windows' way - nothing else is there, the
+// next thing mapped being the ROM domain at 0x60000000.  With 64 MB or less
+// it answers the ROM's 0x34000000.  (The port's: HostFlashDriver.cpp.)
+ULong		InternalFlashWriteWindow(void);
 const PAddr	kInternalFlashBank			= 0x02000000;	// the flash bank's physical address
 const PAddr	kInternalFlashIOBank		= 0x10000000;	// the second bank's, in I/O space
 

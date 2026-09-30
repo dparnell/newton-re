@@ -941,3 +941,34 @@ add_test(NAME host.NewtonYear2010.romBug
          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonYear2010.romBug PROPERTIES TIMEOUT 240 ENVIRONMENT NEWTON_ROM_2010_BUG=1
                      PASS_REGULAR_EXPRESSION "firstNote: \"[0-9/]+92 .*first note: FAILED dated 1992.*year2010: done")
+
+# a bigger internal flash (docs/stores/README.md, "Bigger flash"): a new
+# 128 MB sparse store, over 8 MB of soup entries written, read back after a
+# restart on the same file, and the file on disk the size of what was
+# written, not of the flash (demo/bigstore.ns, tools/stores/flashimage.py)
+add_test(NAME host.NewtonBigStore.write
+         COMMAND newton --erase --store ${CMAKE_CURRENT_BINARY_DIR}/bigstore.store --flash-size 128
+                 --headless 300 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/bigstore.ns
+         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonBigStore.write PROPERTIES TIMEOUT 400 FIXTURES_SETUP host_big_store
+                     PASS_REGULAR_EXPRESSION "a new 128 MB sparse flash.*flash: TRUE.*overEightMB: TRUE.*bigstore: written"
+                     FAIL_REGULAR_EXPRESSION "FALSE|not a flash file|would not mount")
+add_test(NAME host.NewtonBigStore
+         COMMAND newton --store ${CMAKE_CURRENT_BINARY_DIR}/bigstore.store
+                 --headless 300 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/bigstore.ns
+         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonBigStore PROPERTIES TIMEOUT 400 FIXTURES_REQUIRED host_big_store
+                     PASS_REGULAR_EXPRESSION "flash: TRUE.*readBack: 600, all: TRUE, bad: 0.*bigstore: done"
+                     FAIL_REGULAR_EXPRESSION "FALSE|not a flash file|would not mount")
+if(Python3_FOUND)
+    add_test(NAME host.NewtonBigStore.file
+             COMMAND ${Python3_EXECUTABLE} tools/stores/flashimage.py info
+                     ${CMAKE_CURRENT_BINARY_DIR}/bigstore.store --expect-stored 9:16
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonBigStore.file PROPERTIES TIMEOUT 60 FIXTURES_REQUIRED host_big_store
+                         DEPENDS host.NewtonBigStore
+                         PASS_REGULAR_EXPRESSION "sparse image of a 128 MB flash.*file size as expected")
+    add_test(NAME tools.FlashImage
+             COMMAND ${Python3_EXECUTABLE} tools/stores/test_flashimage.py
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+endif()

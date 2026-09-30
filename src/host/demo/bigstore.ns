@@ -1,0 +1,73 @@
+// A bigger internal flash (docs/stores/README.md, "Bigger flash"): run on a
+// store file made with --flash-size, the first boot writes over 8 MB of
+// soup entries to the internal store - more than an MP2x00's flash holds -
+// and the second, on the same file, reads every one of them back.
+//
+//   build/host/host/newton --erase --store tmp/big.store --flash-size 128 \
+//       --headless 300 --script src/host/demo/bigstore.ns
+//   build/host/host/newton --store tmp/big.store \
+//       --headless 300 --script src/host/demo/bigstore.ns
+//   python tools/stores/flashimage.py info tmp/big.store
+//
+// The file is a sparse image (hal/host/HostFlash.h): it holds what was
+// written, a little over 9 MB, not the 128 MB of the flash.
+//
+// Each entry carries a 16 KB binary of bytes that do not compress (the
+// store's compander would otherwise make much less of them), made by a
+// small generator of our own so the second boot can make the same bytes
+// again, with the entry's number in its first four.
+
+bigSoupName := "Big Store Test:host";
+bigEntries := 600;
+bigEntrySize := 16384;
+
+bigBytes := func() begin
+	local b := MakeBinary(bigEntrySize, 'bigData);
+	local x := 1;
+	for i := 0 to bigEntrySize - 1 do begin
+		x := (x * 75 + 74) mod 65537;
+		StuffByte(b, i, Band(x, 0xFF));
+	end;
+	b
+end;
+
+AddDelayedCall(func() begin
+	local store := GetStores()[0];
+	Print({flash: store:TotalSize() > 64 * 1024 * 1024, kind: store:GetKind()});
+	local soup := store:GetSoup(bigSoupName);
+	local base := call bigBytes with ();
+	if not soup then begin
+		soup := store:CreateSoupXmit(bigSoupName, [{structure: 'slot, path: 'n, type: 'int}], nil);
+		local before := store:UsedSize();
+		for n := 0 to bigEntries - 1 do begin
+			local data := Clone(base);
+			StuffLong(data, 0, n);
+			soup:AddXmit({n: n, data: data}, nil);
+		end;
+		local written := store:UsedSize() - before;
+		Print({written: written, overEightMB: written > 8 * 1024 * 1024});
+		Print("bigstore: written");
+	end else begin
+		local count := 0;
+		local bad := 0;
+		local cursor := Query(soup, {type: 'index, indexPath: 'n});
+		local e := cursor:Entry();
+		while e do begin
+			local data := e.data;
+			if Length(data) <> bigEntrySize or ExtractLong(data, 0) <> e.n then
+				bad := bad + 1
+			else begin
+				for i := 4 to bigEntrySize - 1 by 97 do
+					if ExtractByte(data, i) <> ExtractByte(base, i) then begin
+						bad := bad + 1;
+						break;
+					end;
+			end;
+			count := count + 1;
+			e := cursor:Next();
+		end;
+		Print({readBack: count, all: count = bigEntries, bad: bad});
+		Print("bigstore: done");
+	end;
+	HostQuit();
+end, [], 1000);
