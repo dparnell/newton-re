@@ -237,6 +237,17 @@ is the same value spelt so that it cannot be read two ways.
   notBic loops never advance the mask pointer; `ScaleStdRRect` scales the
   corner oval crosswise on a fax.
 
+## 2026-09-30: a fax sent over a Class 2 modem
+
+- `fakemodem.py --fax-class 2` (and `2.0`) is a T.32 modem running T.30
+  itself (6c6ee709); ctest `host.NewtonFaxSendClass2` sends the note
+  through the ROM's Class 2 path (`FaxToolClass2.cpp`: +FDT for each
+  page, +FET between and at the end), unchanged since it was
+  reconstructed, and checks both pages.  The Newton prefers Class 1
+  whenever a modem offers it, and never picks 2.0 with a default modem
+  profile (`TCMOModemFaxEnabledCaps`' service classes are 0, 1 and 2),
+  so 2.0 is covered only by fakemodem's own self-test.
+
 ## 2026-09-30: a user's first hour
 
 - `src/host/demo/walkthrough.ns` (08a2e923; ctests
