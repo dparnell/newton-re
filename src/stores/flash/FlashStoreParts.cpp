@@ -66,12 +66,19 @@ SDirEnt::IsValid(TFlashStore* store)
 
 
 // ROM 0x000c4f7c IsValidMigratedObjectInfo__7SDirEntSFlT1
-// An object number that fits its fourteen bits (bar the top 64) and a
-// block that fits its ten.
+// An object number that fits its fourteen bits and a block that fits its
+// ten: `subs r12,r0,#0x3fc0; cmpge r12,#0x3f` leaves "le" for every number
+// up to 0x3fff (below 0x3fc0 the subtraction is already negative), and
+// `cmple r1,#0x3ff` then passes blocks up to 0x3ff.  (This read "< 0x3FC0
+// && < 0x3FF" until 2026-09-30, which dropped the migration entries of
+// numbers 0x3fc0-0x3fff and of block 0x3ff.)  So at most 1024 blocks can
+// be named - 128 MB of 128 KB blocks; an object that migrates to a block
+// past that, or whose number is past 0x3fff, is left without an entry and
+// found by TFlashStore::Lookup's search of every block.
 Boolean
 SDirEnt::IsValidMigratedObjectInfo(long objectNumber, long block)
 {
-	return objectNumber < 0x3FC0 && block < 0x3FF;
+	return objectNumber <= 0x3FFF && block <= 0x3FF;
 }
 
 
