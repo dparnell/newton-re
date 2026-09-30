@@ -56,6 +56,12 @@ HostOrderOfOtherName(const char* name)
 	// binary of class 'text, UniChars that the engine reads in place)
 	if (symcmp((char*) name, (char*) "text") == 0)
 		return kHostUniChars;
+	// a text shape's data (views/DrawShape.cpp: MakeText's 'textData and
+	// MakeTextBox's 'TextBox, each a copy of the string it was given), which
+	// a ROM script may turn back into a 'string - the Extras drawer's icon
+	// labels do (GetIconShapeText)
+	if (symcmp((char*) name, (char*) "textData") == 0 || symcmp((char*) name, (char*) "TextBox") == 0)
+		return kHostUniChars;
 	static const char* const kShapes[] = { "boundsRect", "rectangle", "oval", "roundRectangle", "line",
 											"polygonShape", "polygonData", "regionData" };
 	for (size_t i = 0; i < sizeof(kShapes) / sizeof(kShapes[0]); i++)

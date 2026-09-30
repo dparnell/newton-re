@@ -720,6 +720,11 @@ TestBinaries()
 	EXPECT_STRING(BIN("StuffUniChar(b, 0, $O); StuffUniChar(b, 2, $K); StuffWord(b, 4, 0); SetLength(b, 6); SetClass(b, 'string)"), "OK");
 	EXPECT_INT("local s := SetClass(Clone(\"AB\"), 'binary); ExtractByte(s, 0) * 256 + ExtractByte(s, 1)", 'A');
 	EXPECT_STRING("SetClass(SetClass(Clone(\"xyz\"), 'binary), 'string)", "xyz");
+	// a text shape's data is text too: made 'textData by MakeText and turned
+	// back into a 'string by a ROM script (the Extras drawer's labels)
+	EXPECT_STRING("SetClass(SetClass(Clone(\"Calls\"), 'textData), 'string)", "Calls");
+	EXPECT_STRING("SetClass(SetClass(Clone(\"Dock\"), 'TextBox), 'string)", "Dock");
+	EXPECT(HostOrderOfClassName("textData") == kHostUniChars && HostOrderOfClassName("TextBox") == kHostUniChars);
 	// a string class by inheritance (the ROM's initialInheritanceFrame)
 	SetFrameSlot(RefVar(gInheritanceFrame), RefVar(Intern("phone")), RefVar(RSSYMstring));
 	EXPECT(HostOrderOfClassName("phone") == kHostUniChars && HostOrderOfClassName("string.foo") == kHostUniChars
