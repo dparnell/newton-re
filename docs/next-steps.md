@@ -109,8 +109,6 @@ the way are all in `docs/work-log.md`.
 - Flash stores past 128 MB (the migrated-entry cap: slow lookups, or
   256 KB erase regions - the owner's call).  A round trip with a real
   Einstein build (an image it wrote, one of ours opened in it).
-- Small: the date the Assistant's "tomorrow" comes to ("schedule lunch
-  with Daniel tomorrow" puts the meeting on today).
 - How well the recognisers read synthetic writing: a perfectly round "c"
   ties every reading in Rosetta; ParaGraph's synthetic "mum" and "nun"
   lose the arbitration to the scrub.  An emulator trace (`BPNetEvaluate`,

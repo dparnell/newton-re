@@ -3,7 +3,7 @@
 // (its buttons are printed) and its action button - the one that is not
 // "Assist" or the close box - is tapped, which carries the task out in
 // the application behind it (Find, the To Do list, Dates, the World
-// Clock, ...).  What fails is printed; run it with NEWTON_TRACE_MISSING
+// Clock, ...) - the lunch meeting checked to be tomorrow's.  What fails is printed; run it with NEWTON_TRACE_MISSING
 // set to have an unbound native name itself.
 //
 //   NEWTON_TRACE_MISSING=1 build/host/host/newton --rom build/MP2x00US/rom.bin \
@@ -36,6 +36,21 @@ atNext := func()
   begin
     if atIndex >= Length(sentences) then
       begin
+        // "schedule lunch with Daniel tomorrow" made its meeting tomorrow
+        // (the Newton's tomorrow: Time() is the home city's)
+        local tomorrow := Date(Time() + 24 * 60);
+        local lunch := nil;
+        local meetings := GetUnionSoup("Calendar"):Query({});
+        local entry := meetings:Entry();
+        while entry do
+          begin
+            if StrPos(entry.mtgText, "lunch", 0) then lunch := Date(entry.mtgStartDate);
+            entry := meetings:Next();
+          end;
+        if not lunch then
+          AddArraySlot(atFailures, "no lunch meeting in the calendar")
+        else if lunch.date <> tomorrow.date or lunch.month <> tomorrow.month then
+          AddArraySlot(atFailures, "the lunch meeting is on " & lunch.month & "/" & lunch.date & ", not tomorrow");
         foreach failure in atFailures do Print("assist-tasks: FAILED " & failure);
         Print("assist-tasks: done, " & NumberStr(Length(atFailures)) & " failed");
         HostQuit();
