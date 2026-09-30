@@ -1,0 +1,105 @@
+// RPNcalc (fixtures/packages/apps/RPNcalc/rpncalc.pkg) used as its user
+// would: a reverse-Polish calculator - numbers keyed onto a stack with
+// Enter, operators taking them off.  It is opened from the Extras drawer
+// with the pen and every sum is done with taps on its keys; what the X
+// register shows (the bottom line of its display) is checked after each.
+// ctest host.NewtonAppRPNcalc:
+//
+//   build/host/host/newton --display 320x480 --erase --store tmp/rpncalc.store \
+//       --headless 150 --package fixtures/packages/apps/RPNcalc/rpncalc.pkg \
+//       --script src/host/demo/apps-rpncalc.ns
+
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
+HostInclude("walkhelpers.ns");		// findView, viewWithText, the steps
+HostInclude("apphelpers.ns");		// openFromExtras, tapButtonText
+
+wtName := "rpncalc";
+rpnSym := '|RPNcalc:NMad|;
+
+// the X register: the bottom line of the display (a text view 20 high)
+rpnX := func() begin
+	local app := GetRoot().(rpnSym);
+	local v := call findView with (app, func(v) begin
+		local b := v:GlobalBox();
+		v.viewClass = 81 and IsString(v.text) and b.bottom - b.top = 20 and b.top > 100 and b.top < 120
+	end);
+	if v then TrimString(Clone(v.text)) else "";
+end;
+
+// its keys: the ones labelled with text by their text, the picture ones
+// (the operators, the functions drawn as symbols) by where they are
+rpnKey := func(label) func(done) begin
+	call tapButtonText with (GetRoot().(rpnSym), label);
+	call settleStep with (done);
+end;
+rpnAt := func(x, y) func(done) begin
+	call tapAt with (x, y);
+	call settleStep with (done);
+end;
+rpnPlus := call rpnAt with (232, 272);
+rpnMinus := call rpnAt with (232, 244);
+rpnTimes := call rpnAt with (232, 216);
+rpnDivide := call rpnAt with (232, 188);
+rpnSqrt := call rpnAt with (184, 163);
+rpnPower := call rpnAt with (160, 146);
+rpnChangeSign := call rpnAt with (118, 244);
+rpnStack := func() begin
+	local app := GetRoot().(rpnSym);
+	local lines := [];
+	call findView with (app, func(v) begin
+		local b := v:GlobalBox();
+		if v.viewClass = 81 and IsString(v.text) and b.left = 80 then AddArraySlot(lines, v.text);
+		nil
+	end);
+	lines
+end;
+rpnExpect := func(what, want) func(done) begin
+	local got := call rpnX with ();
+	if not StrEqual(got, want) then Print({stack: call rpnStack with ()});
+	call wtCheck with (what & " = " & want, StrEqual(got, want), "(it shows " & got & ")");
+	call done with ();
+end;
+
+wtSteps := [
+	func(done) call openFromExtras with ("RPNcalc", rpnSym, done),
+	call rpnKey with ("2"), call rpnKey with ("Enter"), call rpnKey with ("3"), rpnPlus,
+	call rpnExpect with ("2 Enter 3 +", "5"),
+	call rpnKey with ("4"), rpnTimes,
+	call rpnExpect with ("then 4 x", "20"),
+	call rpnKey with ("7"), rpnMinus,
+	call rpnExpect with ("then 7 -", "13"),
+	call rpnKey with ("1"), call rpnKey with ("6"), rpnSqrt,
+	call rpnExpect with ("16 sqrt", "4"),
+	call rpnKey with ("Swap"),
+	call rpnExpect with ("Swap", "13"),
+	rpnDivide,
+	call rpnExpect with ("13 Swap 4 /: 4 / 13", "0.30769231"),
+	// Clear asks first ("Clear?" under the display) and clears on a second tap
+	call rpnKey with ("Clear"), call rpnKey with ("Clear"),
+	func(done) begin
+		call wtCheck with ("Clear twice empties the stack", StrEqual(call rpnX with (), "0") or StrEqual(call rpnX with (), ""), "(X is " & call rpnX with () & ")");
+		call done with ();
+	end,
+	call rpnKey with ("2"), call rpnKey with ("Enter"), call rpnKey with ("1"), call rpnKey with ("0"), rpnPower,
+	call rpnExpect with ("2 Enter 10 y^x", "1,024"),
+	call rpnKey with ("3"), rpnPlus,
+	call rpnExpect with ("then 3 +", "1,027"),
+	call rpnKey with ("Undo"),
+	call rpnExpect with ("Undo the +", "3"),
+	call rpnKey with ("5"), rpnChangeSign,
+	call rpnExpect with ("5 +/-", "-5"),
+	// (a trigonometric function whose answer is negative shows -0: its
+	// do_trigop rounds any value under 1e-14 to the nearest integer where
+	// the magnitude was meant - value < 1e-14, not Abs(value) - so sin 190
+	// is -0 on a MessagePad too; the app's own bug, not the host's)
+	call rpnKey with ("Enter"), call rpnKey with ("3"), call rpnKey with ("0"), call rpnKey with ("sin"),
+	call rpnExpect with ("30 sin", "0.5"),
+	call shotStep with ("rpncalc"),
+	func(done) begin
+		GetRoot().(rpnSym):Close();
+		Print("rpncalc: done, " & wtFailures & " failed");
+		HostQuit();
+	end];
+
+call walkSetup with ([2, 0, 45, 34, 14, 37], func()			// "Daniel"
+	call waitFor with ("rpncalc: installed", func() GetRoot().(rpnSym), wtNext, 60));

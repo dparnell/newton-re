@@ -1,0 +1,38 @@
+// What the application demos share (apps-*.ns), run by
+// HostInclude("apphelpers.ns") after common.ns and walkhelpers.ns: an
+// application opened as its user opens it - its icon tapped in the Extras
+// drawer - and a button tapped by its label.
+
+// the view whose text is exactly `label` (spaces around it aside)
+viewLabelled := func(root, label) call findView with (root, func(v)
+	IsString(v.text) and StrEqual(TrimString(Clone(v.text)), label));
+
+tapCentre := func(v) begin
+	local b := v:GlobalBox();
+	call tapAt with ((b.left + b.right) div 2, (b.top + b.bottom) div 2);
+end;
+
+// the button labelled `label` in `root`, tapped
+tapButtonText := func(root, label) begin
+	local v := call viewLabelled with (root, label);
+	if v then call tapCentre with (v)
+	else call wtCheck with ("the " & label & " button", nil, "(not found)");
+end;
+
+// the Extras drawer opened, the application's icon tapped (an icon's
+// `target` is the drawer's entry for its part, whose `app` is the
+// application's symbol), and done() once the application `sym` is open
+// (`label` names it in what is printed)
+openFromExtras := func(label, sym, done) begin
+	local drawer := GetRoot().extrasDrawer;
+	drawer:Open();
+	call waitFor with (wtName & ": the Extras drawer", func() drawer.viewCObject, func() begin
+		local icon := call findView with (drawer, func(v) v.target and v.target.fentry and v.target.fentry.app = sym);
+		if not icon then call wtCheck with ("the " & label & " icon", nil, "(not in the drawer)")
+		else call tapCentre with (icon);
+		call waitFor with (wtName & ": " & label & " open", func() GetRoot().(sym) and GetRoot().(sym).viewCObject, func() begin
+			call wtCheck with ("opened from the Extras drawer", GetRoot().(sym).viewCObject, "(did not open)");
+			AddDelayedCall(done, nil, 1000);
+		end, 30);
+	end, 20);
+end;

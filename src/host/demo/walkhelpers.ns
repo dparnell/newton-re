@@ -75,6 +75,7 @@ end;
 // the function to call when it is done.  `tap` taps and then waits for a
 // test (the thing the tap should bring up); `tapLine` taps an input line
 // and waits for the caret to be in it.
+wtName := "walkthrough";		// what a step's line starts with (a demo of its own sets it)
 wtIndex := 0;
 wtFailures := 0;
 wtSteps := nil;
@@ -88,10 +89,10 @@ wtNext := func() begin
 end;
 
 wtCheck := func(name, ok, why) begin
-	if ok then Print("walkthrough: " & name & ": ok")
+	if ok then Print(wtName & ": " & name & ": ok")
 	else begin
 		wtFailures := wtFailures + 1;
-		Print("walkthrough: " & name & ": FAILED " & why);
+		Print(wtName & ": " & name & ": FAILED " & why);
 	end;
 end;
 
@@ -102,7 +103,7 @@ end;
 
 tapStep := func(what, x, y, test) func(done) begin
 	call tapAt with (x, y);
-	call waitFor with ("walkthrough: " & what, test, done, 20);
+	call waitFor with (wtName & ": " & what, test, done, 20);
 end;
 
 // the caret has come to (x, y): in a view there, on that line
@@ -132,7 +133,7 @@ doStep := func(fn) func(done) begin
 	call done with ();
 end;
 
-waitStep := func(what, test) func(done) call waitFor with ("walkthrough: " & what, test, done, 30);
+waitStep := func(what, test) func(done) call waitFor with (wtName & ": " & what, test, done, 30);
 
 isOpen := func(sym) func() begin local v := GetRoot().(sym); v and v.viewCObject; end;
 isClosed := func(sym) func() begin local v := GetRoot().(sym); not (v and v.viewCObject); end;

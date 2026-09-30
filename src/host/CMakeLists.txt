@@ -843,6 +843,25 @@ if(EXISTS ${THIRDPARTY_DIR}/apps/RPNcalc/rpncalc.pkg)
     set_tests_properties(host.NewtonThirdPartyApps PROPERTIES TIMEOUT 340
                          PASS_REGULAR_EXPRESSION "RPNcalc:NMad open.*daleksMoved: TRUE.*mahjonggTilesRemaining: 142.*Mahjongg:Scrawl open.*NewtHack:ChrisDopp open.*Register:FlaSheridn open.*thirdparty-apps: done, 0 failed"
                          FAIL_REGULAR_EXPRESSION "waited in vain|is not answered|stopped \\(|fell over")
+    # each fixture application used for what it is for, its results checked
+    # (src/host/demo/apps-*.ns over apphelpers.ns): the demo's name, its
+    # script, then the packages it wants
+    function(newton_app_demo name script)
+        set(packages)
+        foreach(pkg ${ARGN})
+            list(APPEND packages --package ${THIRDPARTY_DIR}/${pkg})
+        endforeach()
+        add_test(NAME host.NewtonApp${name}
+                 COMMAND newton --display 320x480 --erase
+                         --store ${CMAKE_CURRENT_BINARY_DIR}/app-${script}.store --headless 280
+                         ${packages}
+                         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/apps-${script}.ns
+                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+        set_tests_properties(host.NewtonApp${name} PROPERTIES TIMEOUT 340
+                             PASS_REGULAR_EXPRESSION "${script}: done, 0 failed"
+                             FAIL_REGULAR_EXPRESSION "FAILED|waited in vain|is not answered|stopped \\(|fell over")
+    endfunction()
+    newton_app_demo(RPNcalc rpncalc apps/RPNcalc/rpncalc.pkg)
 else()
     message(STATUS "fixtures/packages not there: host.NewtonThirdPartyPackages is not run")
 endif()
