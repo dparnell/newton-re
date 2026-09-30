@@ -153,29 +153,41 @@ MapFormat6(long ch, const void* cmap)
 
 
 // ROM 0x000aebec LocateEntry__FlP14sfnt_blocTable
-// The one-bit strike whose size is nearest the wanted size.
+// The one-bit strike whose size is nearest the wanted size, the strikes
+// taken to be in order of size: the search stops at the first whose
+// distance from the size is no smaller than the last one's, answering the
+// last one.
+// ROM QUIRK: a strike that is not one bit deep is not stepped past - the
+// entry pointer only moves on from a one-bit strike - so the rest of the
+// count is spent looking at the same entry, and a font whose strikes after
+// such a one are the ones wanted gets whatever was found before it (nil
+// when it is the first).  The ROM's fonts' strikes are all one bit deep.
 const char*
 LocateEntry(Fixed size, const char* bloc)
 {
-	long wanted = (short) ((size + 0x8000) >> 16);
-	long count = Get32(bloc + 4);
+	long wanted = (short) ((ULong) (size + 0x8000) >> 16);
+	ULong count = Get32(bloc + 4);
 	const char* entry = bloc + 8;
 	const char* best = nil;
 	long bestDistance = 0x10000;
-	for (long i = 0; i < count; i++, entry += kStrikeEntrySize)
+	for (ULong i = 0; i < count; i++)
 	{
-		if (Get8(entry + 0x2e) != 1)
-			continue;
-		long distance = wanted - (long) Get8(entry + 0x2c);
-		if (distance == 0)
-			return entry;
-		if (distance < 0)
-			distance = -distance;
-		if (distance < bestDistance)
+		const char* next = entry;
+		long distance = bestDistance;
+		if (Get8(entry + 0x2e) == 1)
 		{
-			bestDistance = distance;
+			distance = wanted - (long) Get8(entry + 0x2c);
+			if (distance == 0)
+				return entry;
+			if (distance < 0)
+				distance = -distance;
+			if (bestDistance <= distance)
+				return best;
+			next = entry + kStrikeEntrySize;
 			best = entry;
 		}
+		entry = next;
+		bestDistance = distance;
 	}
 	return best;
 }
