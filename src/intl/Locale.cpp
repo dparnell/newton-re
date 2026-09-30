@@ -9,6 +9,7 @@
 */
 
 #include "Locale.h"
+#include "LexParse.h"
 #include "Dates.h"
 #include "NumberFormat.h"
 #include "ObjectHeap.h"
@@ -155,8 +156,8 @@ GetLocaleSlot(RefArg slot)
 // The current locale's day and month names and number format strings
 // cached (the shorter day names fall back on the longer); false when it
 // has no long day names or a number format string is missing, and the
-// cache is left as it was.  NOT YET RECONSTRUCTED: the lexical
-// dictionaries (ReplaceDictionaryHandle) that follow.
+// cache is left as it was.  The locale's four lexical dictionaries are
+// opened afresh from it too.
 Boolean
 ROMCacheLocaleAttributes(void)
 {
@@ -199,9 +200,10 @@ ROMCacheLocaleAttributes(void)
 	long decimalLeadingZ = RINT(GetProtoVariable(numberFormat, RefVar(Intern((char*) "decimalLeadingZ")), nil));		// (no RSSYM: the ROM never uses it)
 	if ((Ref) decimalPoint == NILREF || (Ref) groupSepStr == NILREF || (Ref) minusPrefix == NILREF || (Ref) minusSuffix == NILREF)
 		return false;
-	// NOT YET RECONSTRUCTED: ReplaceDictionaryHandle(gTimeLexDictionary, 'timeDictionary),
-	// (gDateLexDictionary, 'dateDictionary), (gPhoneLexDictionary, 'phoneDictionary),
-	// (gNumberLexDictionary, 'numberDictionary)
+	CallReplaceDictionaryHandle(&gTimeLexDictionary, RSSYMtimedictionary);
+	CallReplaceDictionaryHandle(&gDateLexDictionary, RSSYMdatedictionary);
+	CallReplaceDictionaryHandle(&gPhoneLexDictionary, RSSYMphonedictionary);
+	CallReplaceDictionaryHandle(&gNumberLexDictionary, RSSYMnumberdictionary);
 	gLocaleCache->fLongDayOfWeek = longDofWeek;
 	gLocaleCache->fAbbrDayOfWeek = abbrDofWeek;
 	gLocaleCache->fTerseDayOfWeek = terseDofWeek;

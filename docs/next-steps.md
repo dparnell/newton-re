@@ -177,12 +177,18 @@ reaches.  Biggest user impact first; each is taken on in this order.
    hides the caret while it inverts a view whose outer bounds the caret
    overlaps and shows it again after (0x2660c4), so the caret is not
    inverted with a pressed button.  test_Views TestCaret.
-5. **Dates and times typed as text** (`intl/Dates.cpp` 727-823,
-   `StringToDateFields` 0x8de6c over the time lexical dictionary,
-   `intl/Locale.cpp` 202): Find's "before/after a date", the date fields of
-   Dates and Names (`ConvertTextToDate`), the Assist's times ("lunch at
-   1pm").  Medium to large (the Airus `ParseString` over
-   `gTimeLexDictionary`).
+5. **Dates and times typed as text** - DONE (2026-09-30): `StringToDateFields`
+   (0x8de6c) and `StringToTime` read through the locale's time and date
+   lexical dictionaries - `ParseString` (0x18176c, `recognition/ParseString.cpp`)
+   walks the longest run of words the dictionary knows (`FindLongestWord`)
+   a character at a time with the Airus `VerifyCharacter`/`VerifyWord`
+   (0x2c7ac), each character's attribute gathering it into a parse buffer
+   or converting the buffer into a field (`intl/LexParse.h`'s
+   `ConvertBuffer`); `StringToNumber` reads through the number dictionary
+   with `TNumberParser` as the ROM's does; the locale's lexicons are
+   replaced when it changes (`ReplaceDictionaryHandle`).  Find's "before/after
+   a date", Dates' and Names' date fields, the Assistant's times ("lunch at
+   1 pm tomorrow").  ctest host.NewtonDateParse.
 6. **The boot's splash screen** (`newt/Notebook.h` DrawSplashScreen 0x14602c,
    `views/RootView.cpp` 381): the picture and text every boot shows before
    the first screen.  Medium.

@@ -19,10 +19,9 @@
 	format frames).
 
 	Reconstructed from the MP2x00 US ROM (0x00089ad0-0x0008aa4c,
-	0x0008c664-0x0008e8cc); each function cites its origin.  NOT YET
-	RECONSTRUCTED: reading a date or time out of a string
-	(StringToDateFields: the recognition system's lexical dictionaries).
-	The meeting and repeat functions are Meetings.h.
+	0x0008c664-0x0008e8cc); each function cites its origin.  A date
+	or time is read out of a string through the locale's lexical
+	dictionaries (LexParse.h).  The meeting and repeat functions are Meetings.h.
 */
 
 #ifndef __DATES_H
@@ -82,7 +81,7 @@ public:
 	void		TimeString(ULong spec, UniChar* str, ULong max);
 	void		DateElementString(ULong element, ULong format, UniChar* str, ULong max, Boolean longForm);
 
-	long		StringToDateFields(const UniChar* str, ULong* consumed, ULong length);	// NOT YET: kDateParsedNone
+	long		StringToDateFields(const UniChar* str, ULong* consumed, ULong length);
 	Ref			StringToDateFrame(const UniChar* str, ULong* consumed, ULong length);
 	long		StringToDate(const UniChar* str, ULong* consumed, ULong length);
 	long		StringToTime(const UniChar* str, ULong* consumed, ULong length);

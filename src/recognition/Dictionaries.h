@@ -95,6 +95,10 @@ extern Handle	gDateLexDictionary;		// ROM 0x0c100f90 gDateLexDictionary
 extern Handle	gPhoneLexDictionary;	// ROM 0x0c100f94 gPhoneLexDictionary
 extern Handle	gNumberLexDictionary;	// ROM 0x0c100f98 gNumberLexDictionary
 
+// ParseString (ParseString.cpp) handed to intl's LexParse.h, which reads
+// dates and numbers through it; InitDictionaries does it.
+void	InstallParseString(void);
+
 extern TDArray*	gDictList;			// ROM 0x0c10162c gDictList - one dictListEntry per frame
 extern long	gNextCustomDictionaryID;	// ROM 0x0c101650 gNextCustomDictionaryID - the id the next Register() hands out
 

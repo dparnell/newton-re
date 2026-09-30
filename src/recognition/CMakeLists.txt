@@ -140,6 +140,7 @@ add_library(recognition STATIC
     Airus.cpp
     AirusIterator.cpp
     Dictionaries.cpp
+    ParseString.cpp
     DictPartHandler.cpp
     RandomWords.cpp
     RandomWordTables.cpp

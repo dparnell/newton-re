@@ -46,8 +46,9 @@ them by symbol).  `SetCurrentLocale`
 re-fills the *locale cache* - eleven RefVars at 0x0c103464 `gLocaleCache`
 holding the four day-name arrays, the long month names and the number
 format's strings, which the formatting code reads instead of walking the
-frame each time (`CacheLocaleAttributes` 0x000ee3e0; the ROM's version
-also rebuilds the recognition system's lexical dictionaries, NOT YET).
+frame each time (`CacheLocaleAttributes` 0x000ee3e0; it also opens the
+locale's four lexical dictionaries afresh, `ReplaceDictionaryHandle`
+0x000ece50).
 `GetLocaleSlot` (0x000ed268) resolves `nil` and `'currentLocaleBundle` to
 the current bundle and `'systemLocaleBundle` to the system's.  The
 NewtonScript `GetLocale`/`SetLocale` are `FGetLocale`/`FSetLocale`
@@ -125,9 +126,9 @@ the seconds, then the AM/PM string and the suffix ("2:05:00 pm").
 of the year counted from the week holding the 1st of January, weeks
 starting on `firstDayOfWeek`; with the locale's `weekNumberType` 1 the
 ISO rule - the week is the one holding its Thursday, and week 1 is the
-first with four or more days in the year), `StringToDate`, `StringToDateFrame`, `StringToTime` (the
-string parsers return nil/-1: they need the recognition system's
-lexical dictionaries, NOT YET).  `Date()` returns a `canonicalDate`
+first with four or more days in the year), `StringToDate`, `StringToDateFrame`, `StringToTime` (read
+through the lexical dictionaries - see "Reading text as dates and
+numbers" below).  `Date()` returns a `canonicalDate`
 frame (`Rcanonicaldate`: year, month, date, dayOfWeek, hour, minute,
 second, daysInMonth); `TotalMinutes` accepts a partial
 frame (missing slots are 1904/1/1 0:00).
@@ -266,10 +267,43 @@ for the sines and cosines, `FixedACos` for the arc - times 3959 for
 `'miles` or 6371 otherwise, and rounded to the nearest ten.  An arc below
 0x60 (a sixty-fourth of a degree) is called zero.
 
-## Not yet reconstructed
+## Reading text as dates and numbers
 
-- Reading dates and times out of strings (`StringToDateFields`, the
-  AirusA lexical dictionaries `dateDictionary`, `timeDictionary`, ...).
-- Reading numbers out of strings (`StringToNumber` uses the C library's
-  strtod; the ROM's `TNumberParser` honours the locale's separators) and
-  the recognition dictionaries the locale cache rebuilds.
+`LexParse.h`.  The locale carries four lexical dictionaries - `timeDictionary`,
+`dateDictionary`, `phoneDictionary`, `numberDictionary` - Airus tries whose
+every node carries an attribute byte; the recognition system opens them
+(`gTimeLexDictionary` and its kin) and `CacheLocaleAttributes` opens them
+afresh when the locale changes.  `ParseString` (0x0018176c, in
+`recognition/ParseString.cpp` because the Airus engine is there; intl
+reaches it through `gParseStringProc`, a DEVIATION for the library
+layering) reads a string through one:
+
+- `FindLongestWord` (0x001819b8) takes the longest beginning of the text,
+  cut at a word break by the locale's line-break table, that the
+  dictionary takes as a word, dropping one word off the end at a time;
+- each character of it is then walked (`VerifyStart` and `VerifyWord`,
+  every dictionary of the chain asked) and its attribute acted on: the
+  top two bits 0x40 gather the character into the parse buffer, 0x80
+  convert what is gathered without it, 0xc0 convert and start again with
+  it; the low six bits name the converter the buffer goes through;
+- `ConvertBuffer` (0x00181adc) turns the buffer into a field: 5 a year
+  (two digits, or 1904..2099), 6 a month, 7 a date, 9 an hour, 10 a
+  minute, 11 a second, 12 am (twelve is nought), 13 pm (before twelve goes
+  on twelve), 0x15..0x20 a month by name, 0x27 tomorrow (today's date
+  plus one, not put right at the month's end), 0x28..0x2e a day of the
+  week by name, and 0xe/0xf/0x10/0x33/0x34 a number's integer part,
+  decimal part, minus sign, prefix and suffix (`TNumberParser`).  A value
+  out of range fails the whole parse.
+
+`TDate::StringToDateFields` (0x0008de6c) reads the time and then the date
+from the start, and whichever of the two used fewer characters again from
+where the other stopped, so "2:30 pm March 5" and "March 5 2:30 pm" both
+read; a two-digit year goes into the current century (the next when that
+leaves it before 1920) - so on a machine in 2026 "98" is 2098, the ROM's
+own window.  The U.S. time dictionary knows no seconds ("1:05:30" reads
+as nothing).  `StringToNumber` is `TNumberParser::StringToNumber` over the
+number dictionary: the integer part through strtod, the decimal digits
+worked back from the last (`DecimalStrToDouble`), negated by a minus
+sign; "1,234" reads as 1 - the group separator is not in the dictionary.
+Without the recognition system (a host program that does not start it)
+nothing is read at all.  ctest host.NewtonDateParse.

@@ -9,9 +9,6 @@
 	The rich-string natives (MakeRichString, DecodeRichString, StripInk)
 	are in frames/RichString.cpp, beside the class they work on; they are
 	registered here with the rest.
-
-	NOT YET RECONSTRUCTED: the number parser TNumberParser (StringToNumber
-	reads with the C library).
 */
 
 #include "Frames.h"
@@ -22,6 +19,7 @@
 #include "RichString.h"
 #include "Unicode.h"
 #include "NumberFormat.h"
+#include "LexParse.h"		// TNumberParser
 #include "ROMConstants.h"
 #include "RSSymbols.h"
 #include "NSErrors.h"
@@ -753,23 +751,23 @@ FNumberStr(RefArg /*rcvr*/, RefArg number)
 
 
 // ROM 0x001fec10 FStringToNumber__FRC6RefVarT1
-// The number a string spells, as a real; nil for none.  NOT YET
-// RECONSTRUCTED: TNumberParser (the locale's separators); strtod.
+// The number a string spells, read through the locale's number
+// dictionary (TNumberParser), as a real; nil when nothing was read or the
+// number is not finite.
 Ref
 FStringToNumber(RefArg /*rcvr*/, RefArg str)
 {
-	long length = Length(str) / sizeof(UniChar) - 1;
-	if (length <= 0)
-		return NILREF;
-	char* text = new char[length + 1];
-	ConvertFromUnicode(GetCString(str), text, kMacRomanEncoding, length);
-	char* end;
-	double value = strtod(text, &end);
-	Boolean parsed = end != text;
-	delete[] text;
-	if (!parsed || !isfinite(value))
-		return NILREF;
-	return MakeReal(value);
+	RefVar result;
+	ULong length = (ULong) (Length(str) - 2) >> 1;
+	if (length != 0)
+	{
+		TNumberParser parser;
+		ULong consumed;
+		double value = parser.StringToNumber(GetCString(str), &consumed, length);
+		if (consumed != 0 && isfinite(value))
+			result = MakeReal(value);
+	}
+	return result;
 }
 
 

@@ -222,6 +222,10 @@ Boolean	HasActualOrImpliedAtr(Handle dictionary);			// ROM 0x0002c770 HasActualO
 void	NewVerifyReset(Handle dictionary, ULong position, long node, const UByte* word);	// ROM 0x0002c6a8 NewVerifyReset
 void	VerifyStart(Handle dictionary);						// ROM 0x0002c760 VerifyStart__FPP15AirusAParmBlock
 void	VerifyString(Handle dictionary, const void* word, void** terminal, ULong** attribute, ULong* extra);	// ROM 0x0002cd20 VerifyString
+// A walk carried on a few characters at a time (VerifyStart begins it)
+// over a chain of dictionaries; see the definition.
+void	VerifyCharacter(Handle dictionary, UByte* word, UByte** terminal, ULong** position, ULong** attribute, Boolean allDicts, ULong* extra);	// ROM 0x0002c7ac VerifyCharacter__FPP15AirusAParmBlockPUcPPUcPPUlT4UcT3
+void	VerifyWord(Handle dictionary, UByte* word, UByte** terminal, ULong** position, ULong** attribute, Boolean allDicts, ULong* extra);		// ROM 0x0002cce8 VerifyWord__FPP15AirusAParmBlockPUcPPUcPPUlT4UcT3
 // The words of a dictionary in alphabetical order: the first beginning
 // with a prefix, and the one after a word.
 void	FirstCompletion(Handle dictionary, const void* prefix, void* word, ULong** attribute, ULong* extra);	// ROM 0x0002cf0c FirstCompletion

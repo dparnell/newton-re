@@ -11,9 +11,8 @@
 				date and time strings (Dates.h does the work).
 
 	Reconstructed from the MP2x00 US ROM (0x000eba78-0x000ecfec,
-	0x001f12a0); each function cites its origin.  NOT YET RECONSTRUCTED:
-	the lexical dictionaries (time, date, phone, number: the recognition
-	system's AirusA dictionaries) that CacheLocaleAttributes replaces.
+	0x001f12a0); each function cites its origin.  The
+	lexical dictionaries CacheLocaleAttributes replaces are LexParse.h's.
 */
 
 #ifndef __LOCALE_H

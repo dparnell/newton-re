@@ -10,6 +10,7 @@
 
 #include "Dates.h"
 #include "Locale.h"
+#include "LexParse.h"
 #include "ObjectHeap.h"
 #include "Interpreter.h"
 #include "NativeFunctions.h"
@@ -724,23 +725,56 @@ TDate::DateElementString(ULong element, ULong format, UniChar* str, ULong max, B
 
 /*------------------------------------------------------------------------------
 	S t r i n g s   t o   d a t e s
-	NOT YET RECONSTRUCTED: the fields are parsed with the locale's time and
-	date lexical dictionaries (ParseString over gTimeLexDictionary and
-	gDateLexDictionary, the recognition system's); nothing is parsed here.
+	The fields are read with the locale's time and date lexical
+	dictionaries (LexParse.h: each word's attribute says which field its
+	characters make).
 ------------------------------------------------------------------------------*/
 
 // ROM 0x0008de6c StringToDateFields__5TDateFPCUsPUlUl
-// The time then the date parsed out of the string (the later one first
-// when they come in that order), a two-digit year put in the current
-// century; *consumed the characters used.  ==> 0 all used, 2 some, -1
+// The time then the date parsed out of the string, and whichever came
+// second parsed again from where the first stopped; a two-digit year put
+// in the current century (the next one when that leaves it before 1920);
+// *consumed the characters the two used.  ==> 0 all used, 2 some, -1
 // none.
 long
-TDate::StringToDateFields(const UniChar* /*str*/, ULong* consumed, ULong /*length*/)
+TDate::StringToDateFields(const UniChar* str, ULong* consumed, ULong length)
 {
+	long status = kDateParsedAll;
+	ULong32 thisYear = (ULong32) ((ULong32) (RealClock() / 1440) << 2) / 1461;
+	ULong timeUsed, dateUsed;
 	fHour = fMinute = fSecond = -1;
+	CallParseString(gTimeLexDictionary, this, str, &timeUsed, length);
+	Boolean timeParsed = timeUsed != 0;
 	fYear = fMonth = fDate = fDayOfWeek = -1;
-	*consumed = 0;
-	return kDateParsedNone;
+	CallParseString(gDateLexDictionary, this, str, &dateUsed, length);
+	if (timeParsed || dateUsed != 0)
+	{
+		if (timeUsed < dateUsed)
+		{
+			fHour = fMinute = fSecond = -1;
+			CallParseString(gTimeLexDictionary, this, str + dateUsed, &timeUsed, length - dateUsed);
+		}
+		else
+		{
+			fYear = fMonth = fDate = fDayOfWeek = -1;
+			CallParseString(gDateLexDictionary, this, str + timeUsed, &dateUsed, length - timeUsed);
+		}
+		ULong32 year = (ULong32) fYear;
+		if (year != thisYear + 1904 && year < 100)
+		{
+			year += (thisYear + 1904) / 100 * 100;
+			fYear = year;
+			if (year < 1920)
+				fYear = year + 100;
+		}
+	}
+	timeUsed += dateUsed;
+	*consumed = timeUsed;
+	if (timeUsed == 0)
+		status = kDateParsedNone;
+	else if (timeUsed < length)
+		status = kDateParsedSome;
+	return status;
 }
 
 
@@ -814,13 +848,13 @@ TDate::StringToDate(const UniChar* str, ULong* consumed, ULong length)
 // ROM 0x0008e384 StringToTime__5TDateFPCUsPUlUl
 // The time parsed over today's date; everything 0 when nothing is.
 long
-TDate::StringToTime(const UniChar* /*str*/, ULong* consumed, ULong length)
+TDate::StringToTime(const UniChar* str, ULong* consumed, ULong length)
 {
 	SetCurrentTime();
 	fHour = 0;
 	fMinute = 0;
 	fSecond = 0;
-	*consumed = 0;								// NOT YET RECONSTRUCTED: ParseString(gTimeLexDictionary, ...)
+	CallParseString(gTimeLexDictionary, this, str, consumed, length);
 	if (*consumed == 0)
 	{
 		fYear = fMonth = fDate = fHour = fMinute = fSecond = fDayOfWeek = 0;

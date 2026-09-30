@@ -1,0 +1,79 @@
+// Dates, times and numbers read from text (intl/LexParse.h): the locale's
+// time, date and number lexical dictionaries walked a character at a time
+// by ParseString, each character's attribute saying which field its
+// digits or words make.  The natives first - StringToDateFrame,
+// StringToDate, StringToTime, StringToNumber - and then the way a user
+// meets them: the Assistant asked for "lunch at 1 pm tomorrow" opens the
+// meeting slip for one o'clock tomorrow (its postParse reads the time
+// with StringToDate).
+//
+//   build/host/host/newton --display 320x480 --headless 120 --script src/host/demo/dateparse.ns
+//
+// Prints "dateparse: <step>: ok" or "FAILED", and "dateparse: done".
+
+HostInclude("common.ns");			// walkSetup
+
+dpFailures := 0;
+dpCheck := func(what, ok) begin
+	if not ok then dpFailures := dpFailures + 1;
+	Print("dateparse: " & what & (if ok then ": ok" else ": FAILED"));
+end;
+
+dpFrame := func(text, want) begin
+	local f := StringToDateFrame(text);
+	local ok := true;
+	foreach slot, value in want do
+		if not f.(slot) = value then ok := nil;
+	if not ok then Print(f);
+	call dpCheck with ("\"" & text & "\"", ok);
+end;
+
+// the fields
+call dpFrame with ("3/15/2027 2:30 pm", {year: 2027, month: 3, date: 15, hour: 14, minute: 30, status: 0});
+call dpFrame with ("March 5, 1998", {year: 1998, month: 3, date: 5, status: 0});
+call dpFrame with ("Dec 25", {month: 12, date: 25, status: 0});
+call dpFrame with ("Tuesday", {dayOfWeek: 2, status: 0});
+call dpFrame with ("12 am", {hour: 0, status: 0});
+call dpFrame with ("12:15 pm", {hour: 12, minute: 15, status: 0});
+call dpFrame with ("hello", {status: -1});
+// a two-digit year goes into the current century, however near its end
+// (the ROM's own window: 2098 for "98" after 2000)
+dpThisYear := Date(Time()).year;
+call dpFrame with ("3/5/98", {year: dpThisYear div 100 * 100 + 98});
+call dpFrame with ("3/5/10", {year: dpThisYear div 100 * 100 + 10});
+
+// dates filled in from now
+dpTomorrow := Date(Time() + 1440);
+dpD := Date(StringToDate("tomorrow"));
+call dpCheck with ("tomorrow", dpD.year = dpTomorrow.year and dpD.month = dpTomorrow.month and dpD.date = dpTomorrow.date);
+dpT := Date(StringToTime("2:30 pm"));
+call dpCheck with ("a time today", dpT.hour = 14 and dpT.minute = 30 and dpT.date = Date(Time()).date);
+call dpCheck with ("no time", StringToTime("hello") = nil);
+
+// numbers
+call dpCheck with ("42", StringToNumber("42") = 42);
+call dpCheck with ("-12.5", StringToNumber("-12.5") = -12.5);
+call dpCheck with ("2.5", StringToNumber("2.5") = 2.5);
+call dpCheck with ("no number", StringToNumber("abc") = nil);
+
+// the Assistant
+call walkSetup with ([2, 0, 45, 34, 14, 37], func() begin
+	ParseUtter("lunch at 1 pm tomorrow");
+	call waitFor with ("dateparse: the meeting slip", func() begin
+		local found;
+		foreach slot, v in GetRoot() do
+			if IsFrame(v) and HasSlot(v, 'totMin) and v.totMin then found := v;
+		found
+	end, func() begin
+		local slip;
+		foreach slot, v in GetRoot() do
+			if IsFrame(v) and HasSlot(v, 'totMin) and v.totMin then slip := v;
+		local when := Date(slip.totMin);
+		Print(when);
+		call dpCheck with ("lunch at 1 pm tomorrow", when.hour = 13 and when.minute = 0
+			and when.date = dpTomorrow.date and when.month = dpTomorrow.month);
+		Print("dateparse: done, " & dpFailures & " failed");
+		HostQuit();
+	end, 30);
+end);
+Print("dateparse: the script is loaded");

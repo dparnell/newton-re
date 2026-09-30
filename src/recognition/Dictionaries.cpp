@@ -36,11 +36,8 @@ TDArray*	gDictList = nil;
 // starts well clear of them (the initialised data says 200).
 long	gNextCustomDictionaryID = 200;
 
-// ROM 0x0c100f8c-0x0c100f98 - the lexicons the locale carries
-Handle		gTimeLexDictionary = nil;
-Handle		gDateLexDictionary = nil;
-Handle		gPhoneLexDictionary = nil;
-Handle		gNumberLexDictionary = nil;
+// the lexicons the locale carries (gTimeLexDictionary and its kin) are
+// intl's, LexParse.cpp, which reads dates and numbers with them
 
 
 /*------------------------------------------------------------------------------
@@ -202,6 +199,9 @@ InitDictionaries(void)
 	OpenLocaleLexicon(RSSYMdatedictionary, &gDateLexDictionary);
 	OpenLocaleLexicon(RSSYMphonedictionary, &gPhoneLexDictionary);
 	OpenLocaleLexicon(RSSYMnumberdictionary, &gNumberLexDictionary);
+	// DEVIATION (library layering): intl reads dates and numbers through
+	// these with ParseString, which is ours
+	InstallParseString();
 }
 
 

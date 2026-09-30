@@ -375,6 +375,16 @@ set_tests_properties(host.NewtonClicks PROPERTIES TIMEOUT 150
                      PASS_REGULAR_EXPRESSION "text clicks: ok.*Action button clicks: ok.*menu clicks: ok.*clicks: done, 0 failed"
                      FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
 
+# dates, times and numbers read from text (demo/dateparse.ns): the natives
+# over the locale's lexical dictionaries (intl/LexParse.h, ParseString),
+# and the Assistant's "lunch at 1 pm tomorrow" opening its meeting slip at
+# one o'clock tomorrow
+add_test(NAME host.NewtonDateParse COMMAND newton --display 320x480 --headless 120
+         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/dateparse.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonDateParse PROPERTIES TIMEOUT 180
+                     PASS_REGULAR_EXPRESSION "lunch at 1 pm tomorrow: ok.*dateparse: done, 0 failed"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+
 # a long note printed across pages (demo/printlong.ns): the Notepad's print
 # format reflows the note's paragraph into each page and cuts it between
 # two lines where the page runs out (views/Reflow.cpp ReflowText, the

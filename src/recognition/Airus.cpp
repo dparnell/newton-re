@@ -1869,6 +1869,7 @@ AddWord(Handle dictionary, ULong position, UByte* word, ULong attribute)
 static UByte	gAirusTerminal8 = 0;
 static UniChar	gAirusTerminal16 = 0;
 static ULong	gAirusVerifyAttribute = 0;
+static ULong	gAirusVerifyPosition = 0;		// ROM 0x0c100820: the chain position of the dictionary a VerifyCharacter matched in
 static ULong	gAirusVerifyExtra = 0;
 
 
@@ -2030,6 +2031,212 @@ VerifyString(Handle dictionary, const void* word, void** terminal, ULong** attri
 		*attribute = foundAttribute;
 	if (extra != nil)
 		*extra = found;
+}
+
+
+// ROM 0x0002c7ac VerifyCharacter__FPP15AirusAParmBlockPUcPPUcPPUlT4UcT3
+// The word walked on from where the last walk left off (VerifyStart
+// begins one): `word` appended to what has been matched so far, and every
+// dictionary of the chain from the one the walk is on asked in turn - all
+// of them when `allDicts`, else only until one takes it.  airusResult
+// gathers what they say: 1 the characters begin a word, 2 they begin one
+// and are one, 3 they are a word and nothing goes on, -6 nothing begins
+// that way.  The first dictionary to take it becomes the one the walk is
+// on; `position` is given its place in the chain, `attribute` the first
+// attribute found (nil for none) and `extra` what goes with it;
+// `terminal` the one character that may come next, when every dictionary
+// that took it agrees (nil otherwise).
+void
+VerifyCharacter(Handle dictionary, UByte* word, UByte** terminal, ULong** position, ULong** attribute, Boolean allDicts, ULong* extra)
+{
+	Handle p = ((AirusAParmBlock*) *dictionary)->fCurrent;
+	AirusAParmBlock* parms = (AirusAParmBlock*) *p;
+	long kind = (UByte) (*parms->fDataHandle)[1] & 7;
+	Boolean wide = kind == kAirusKindEnum16 || kind == kAirusKindAL16;
+	// ROM QUIRK: the ROM keeps the two terminals in two registers, r6 for an
+	// 8-bit dictionary and r8 for a 16-bit one, loading only the one it
+	// needs - but it asks r6 whether to go on looking for a terminal, and
+	// clears only r6 when none was found.  For a 16-bit dictionary r6 is
+	// whatever the caller left in it (not reproducible; taken as non-nil
+	// here), so the 16-bit terminal is answered even when none was set.
+	UByte* terminal8 = wide ? nil : &gAirusTerminal8;
+	UniChar* terminal16 = wide ? &gAirusTerminal16 : nil;
+	Boolean lookForTerminal = true;
+	ULong* foundPosition = &gAirusVerifyPosition;
+	ULong* foundAttribute = &gAirusVerifyAttribute;
+	ULong found = gAirusVerifyExtra;
+	long startIndex = parms->fIndex;
+	ULong count = (ULong) parms->fField3c;
+	Boolean attributeFound = false, taken = false, terminalSet = false, positionSet = false;
+	long wordLength, totalLength;
+	UByte* buffer;
+	if (!wide)
+	{
+		wordLength = Astrlen((const char*) word);
+		Astrcpy((char*) gAirusScratch8 + startIndex, (const char*) word);
+		totalLength = Astrlen((const char*) gAirusScratch8);
+		buffer = gAirusScratch8;
+	}
+	else
+	{
+		wordLength = Ashortstrlen((const UniChar*) word) / 2;
+		Ashortstrcpy((UniChar*) gAirusScratch16 + startIndex, (const UniChar*) word);
+		totalLength = Ashortstrlen((const UniChar*) gAirusScratch16) / 2;
+		buffer = gAirusScratch16;
+	}
+	((AirusAParmBlock*) *p)->fWord = buffer;
+	ULong at = (ULong) ((AirusAParmBlock*) *p)->fField38;
+	airusResult = 0;
+	gAirusVerifyPosition = at;
+	if (at < count)
+	{
+		do
+		{
+			parms = (AirusAParmBlock*) *p;
+			Boolean walk = true;
+			if (parms->fIndex != startIndex)
+			{
+				// a dictionary that has fallen behind: walked over the
+				// whole word from its start, or - asking all of them -
+				// passed over as matching nothing
+				if (!allDicts)
+				{
+					if (totalLength > 1 && parms->fNode == 0)
+						parms->fIndex = totalLength - 1;
+				}
+				else
+					walk = false;
+			}
+			else if (wordLength > 1 && parms->fNode == 0)
+				parms->fIndex = wordLength - 1;
+			Boolean took = false;
+			if (walk)
+			{
+				CallAirusA(p, kAirusVerify);
+				switch (((AirusAParmBlock*) *p)->fResult)
+				{
+				case kAirusPrefix:
+					if (airusResult == 0 || airusResult == kAirusNotAWord)
+						airusResult = kAirusIsPrefix;
+					else if (airusResult == kAirusIsWord)
+						airusResult = kAirusIsPrefixAndWord;
+					took = true;
+					break;
+				case kAirusPrefixWithAttr:
+					if (airusResult == 0 || airusResult == kAirusIsPrefix || airusResult == kAirusIsWord || airusResult == kAirusNotAWord)
+						airusResult = kAirusIsPrefixAndWord;
+					took = true;
+					break;
+				case kAirusLeaf:
+					if (airusResult == 0 || airusResult == kAirusNotAWord)
+						airusResult = kAirusIsWord;
+					else if (airusResult == kAirusIsPrefix)
+						airusResult = kAirusIsPrefixAndWord;
+					took = true;
+					break;
+				case kAirusNoMatch:
+					walk = false;
+					break;
+				default:
+					break;
+				}
+			}
+			if (!walk && airusResult == 0)
+				airusResult = kAirusNotAWord;
+			if (took)
+			{
+				AirusAParmBlock* q = (AirusAParmBlock*) *p;
+				// a whole word (with or without more after it) is what
+				// sets the position
+				if (q->fResult != kAirusPrefix && !positionSet)
+				{
+					positionSet = true;
+					gAirusVerifyPosition = (ULong) q->fField38;
+					if (!attributeFound && HasActualOrImpliedAtr(p))
+					{
+						attributeFound = true;
+						gAirusVerifyAttribute = q->fAttribute;
+						found = q->fField48;
+					}
+				}
+				if (!taken)
+				{
+					taken = true;
+					((AirusAParmBlock*) *dictionary)->fCurrent = p;
+					if (!attributeFound && HasActualOrImpliedAtr(p))
+					{
+						attributeFound = true;
+						gAirusVerifyAttribute = q->fAttribute;
+						found = q->fField48;
+					}
+				}
+				if (lookForTerminal)
+				{
+					ULong symbol = q->fSymbol;
+					if (symbol == 0xffffffff)
+					{
+						if (q->fResult != kAirusLeaf)
+						{
+							if (!wide) { terminal8 = nil; lookForTerminal = false; }
+							else terminal16 = nil;
+						}
+					}
+					else if (terminalSet)
+					{
+						if (!wide)
+						{
+							if ((symbol & 0xff) != *terminal8) { terminal8 = nil; lookForTerminal = false; }
+						}
+						else if (terminal16 != nil && (UniChar) symbol != *terminal16)
+							terminal16 = nil;
+						// (the ROM reads address 0 here once the 16-bit
+						// terminal has been dropped)
+					}
+					else
+					{
+						terminalSet = true;
+						if (!wide)
+							*terminal8 = (UByte) symbol;
+						else
+							gAirusTerminal16 = (UniChar) symbol;
+					}
+				}
+			}
+			if (!allDicts && taken)
+				break;
+			p = ((AirusAParmBlock*) *p)->fNext;
+			at++;
+		}
+		while (at < count);
+		if (!positionSet)
+			foundPosition = nil;
+	}
+	else
+		foundPosition = nil;
+	if (!terminalSet)
+		terminal8 = nil;
+	if (!attributeFound)
+	{
+		foundAttribute = nil;
+		found = 0;
+	}
+	if (position != nil)
+		*position = foundPosition;
+	if (terminal != nil)
+		*terminal = wide ? (UByte*) terminal16 : terminal8;
+	if (attribute != nil)
+		*attribute = foundAttribute;
+	if (extra != nil)
+		*extra = found;
+}
+
+
+// ROM 0x0002cce8 VerifyWord__FPP15AirusAParmBlockPUcPPUcPPUlT4UcT3
+// VerifyCharacter under another name.
+void
+VerifyWord(Handle dictionary, UByte* word, UByte** terminal, ULong** position, ULong** attribute, Boolean allDicts, ULong* extra)
+{
+	VerifyCharacter(dictionary, word, terminal, position, attribute, allDicts, extra);
 }
 
 
