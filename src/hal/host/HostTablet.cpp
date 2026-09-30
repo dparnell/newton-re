@@ -37,11 +37,16 @@ Enqueue(ULong sample, ULong time)
 	long next = (gHostTabletTail + 1) % kHostTabletQueueSize;
 	if (next == gHostTabletHead)
 		return;					// full: dropped
+	Boolean wasEmpty = gHostTabletHead == gHostTabletTail;
 	gHostTabletRing[gHostTabletTail].sample = sample;
 	gHostTabletRing[gHostTabletTail].time = time;
 	gHostTabletTail = next;
-	if (gInker != nil)
-		TBCWakeUpInker(0);		// (the inker feeds it, an idle at a time)
+	// the inker woken for the first record only: it then feeds them an
+	// idle at a time (every 50 ms while the pen is down) - a wake-up per
+	// record would have it feed one per wake-up, all of them at once,
+	// and a paced pen would be up before anything tracking it looked
+	if (gInker != nil && wasEmpty)
+		TBCWakeUpInker(0);
 }
 
 static Boolean
@@ -292,12 +297,16 @@ HostTabletInkerIdle(void)
 	HostTabletRecord record;
 	if (!Dequeue(&record))
 		return false;
+	// (straight into the buffer, not InsertTabletSample: that wakes the
+	// inker, whose next idle would then come at once and feed the next
+	// record, and so on - the whole stroke in one go, the pen up before
+	// anything tracking it had looked)
 	if (record.sample != kTabletNoSample)
 	{
-		InsertTabletSample(record.sample, record.time);
+		TBCInsertTabletSample(record.sample, record.time);
 		HostTabletRecord pt;
 		if (record.sample == kTabletPenDown && Dequeue(&pt))
-			InsertTabletSample(pt.sample, pt.time);
+			TBCInsertTabletSample(pt.sample, pt.time);
 	}
 	return HostTabletQueued() != 0;
 }
