@@ -9,6 +9,26 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: demo ctests; notyet.py outside comms
+
+- Ten demos made ctests (837a5756, fbbace76): drag (it fails on the old
+  paced pen, so that is guarded now), write, scrub, correct, shapes,
+  snapping, modal, assist, open-apps, assist-tasks, their pen helpers
+  gathered into `demo/penhelpers.ns`; open-apps and assist-tasks never
+  quit and had globals named index and next, both fixed.
+- `RemovePackage` deallocates a package kept on a store and sets the
+  card reinsert reason while its parts come out (4eb11385).
+- `TNewtWorld::MainConstructor`'s tail as the ROM's, `AllocateEarlyStuff`
+  making the locale's sortId the default sorting table; `RotBitmap180`
+  flushing a large binary's bits (367197b1).
+- `TGrayShrink`, the fax viewer's zoomed-out gray (dd87bfa9; two ROM bugs
+  kept).
+- `InkOff` stops the inker mid-stroke; `HobbleTablet` never sent
+  anything before, its port being unset (e41bcee2).
+- Left NOT YET: performance paths (proto caches, FastRun1, the font
+  cache, InkFont's fast path), what no user path reaches, and hardware.
+  311 of 311.
+
 ## 2026-10-01: the application sweep
 
 Six sweeps on a fresh store, each opening about 35 applications (every
