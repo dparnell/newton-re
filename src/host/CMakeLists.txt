@@ -470,10 +470,10 @@ set_tests_properties(host.NewtonTestAgent PROPERTIES TIMEOUT 120
                      FAIL_REGULAR_EXPRESSION "waited in vain")
 
 # the units the ROM's own packages export, as the unit natives see them
-# after the boot (packages/Units.h; needs the ROM image)
+# after the boot (packages/Units.h), the built-in NIE's among them
 add_test(NAME host.NewtonUnits COMMAND newton --display 320x480 --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/units.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonUnits PROPERTIES TIMEOUT 120
-                     PASS_REGULAR_EXPRESSION "units: 7 exports.*units: cardfile 1.0 62 objects, 0 clients, 0 importers.*units: ConnectionInternal 1.1 39 objects.*units: setup 1.0 19 objects.*units: 0 import tables, 0 pending.*FulfillImportTable\\(nil\\) is true.*units: done"
+                     PASS_REGULAR_EXPRESSION "units: 12 exports.*units: cardfile 1.0 62 objects, 0 clients, 0 importers.*units: ConnectionInternal 1.1 39 objects.*units: Inet Protos:NIE 1.0 4 objects.*units: setup 1.0 19 objects.*units: SetupProtos:NIE 1.0 18 objects.*units: 0 import tables, 0 pending.*FulfillImportTable\\(nil\\) is true.*units: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain")
 
 # the cursive recogniser's letter styles asked from NewtonScript
@@ -641,9 +641,8 @@ if(EXISTS ${THIRDPARTY_DIR}/apps/RPNcalc/rpncalc.pkg)
                 games/Mahjongg2.1/Mahjongg.pkg games/NewtHack1_1/newthack.pkg games/NewtHack1_1/nhsounds.pkg
                 games/NewtHack1_1/register.pkg fonts/monaco.pkg fonts/KLINGON_.PKG "fonts/times font.pkg"
                 "fonts/zapf chancery font.pkg" "fonts/zapf dingbats font.pkg"
-                apple/NIE2/ENETSUP/newtdev.pkg apple/NIE2/REGPKGS/inetenbl.pkg apple/NIE2/ENETSUP/enetsup.pkg
-                apple/NIE2/LOCTSUP/loctsup.pkg apple/NIE2/MODMSER/modmsup.pkg apple/NIE2/MODMSER/isptmplt.pkg
-                apple/NIE2/REGPKGS/inetstup.pkg)
+                apple/NIE2/ENETSUP/enetsup.pkg
+                apple/NIE2/LOCTSUP/loctsup.pkg apple/NIE2/MODMSER/modmsup.pkg apple/NIE2/MODMSER/isptmplt.pkg)
         list(APPEND THIRDPARTY_ARGS --package ${THIRDPARTY_DIR}/${pkg})
     endforeach()
     add_test(NAME host.NewtonThirdPartyPackages
@@ -653,7 +652,7 @@ if(EXISTS ${THIRDPARTY_DIR}/apps/RPNcalc/rpncalc.pkg)
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonThirdPartyPackages PROPERTIES TIMEOUT 300
                          FIXTURES_SETUP host_thirdparty_store
-                         PASS_REGULAR_EXPRESSION "MDaleks1.pkg: not installed.*entries: 18,[^}]*wrong: \\[\\],[^}]*missing: \\[\\]}.*fonts: TRUE.*rpnOpened: TRUE.*removedPackages: 18, stored: 0, entriesLeft: 0, active: 0, fontsGone: TRUE, declawed: TRUE, freed: TRUE.*thirdparty: done"
+                         PASS_REGULAR_EXPRESSION "MDaleks1.pkg: not installed.*entries: 15,[^}]*wrong: \\[\\],[^}]*missing: \\[\\]}.*fonts: TRUE.*rpnOpened: TRUE.*removedPackages: 15, stored: 0, entriesLeft: 0, active: 0, fontsGone: TRUE, declawed: TRUE, freed: TRUE.*thirdparty: done"
                          FAIL_REGULAR_EXPRESSION "fell over")
     add_test(NAME host.NewtonThirdPartyPackages.restart
              COMMAND newton --display 320x480
@@ -794,15 +793,40 @@ set_tests_properties(host.NewtonStream PROPERTIES TIMEOUT 120 RESOURCE_LOCK tcp_
 # InetGrabLink over the host's link (comms/host/HostLink.h - the NIE's link
 # state machine, its protoFSM run by the re-expressions of
 # src/thirdparty/nie), DNSGetAddressFromName("localhost"), a TCP echo to
-# the address it answered, the link released and taken down.  Only when
-# the NIE's packages are there.
+# the address it answered, the link released and taken down.  The NIE is
+# built into the ROM extension of the object file the default boot runs on
+# (romsrc/rex, romsrc/README.md), so none of these installs it.
 set(NIE_DIR ${CMAKE_SOURCE_DIR}/../fixtures/packages/apple/NIE2)
-if(EXISTS ${NIE_DIR}/REGPKGS/inetenbl.pkg)
+if(EXISTS ${CMAKE_SOURCE_DIR}/../romsrc/rex/inetenbl.pkg)
+    # the NIE built in (demo/nie-builtin.ns): its three packages active on no
+    # store, Internet Setup in the Extras drawer's Setup folder as a
+    # built-in, the link grabbed and localhost looked up by its domain
+    # manager; .OverBuiltIn installs the fixtures' copies on the internal
+    # store as well, which the ROM keeps there but does not activate ("a
+    # package by the same name (on store "Built-In") is already in use")
+    add_test(NAME host.NewtonNIEBuiltIn
+             COMMAND newton --display 320x480 --erase
+                     --store ${CMAKE_CURRENT_BINARY_DIR}/nie-builtin.store --headless 90
+                     --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/nie-builtin.ns
+             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(host.NewtonNIEBuiltIn PROPERTIES TIMEOUT 150
+                         PASS_REGULAR_EXPRESSION "nie-builtin: stored 0, active 0.*nie-builtin: localhost resolved: ok.*nie-builtin: done, 0 failed"
+                         FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+    if(EXISTS ${NIE_DIR}/REGPKGS/inetenbl.pkg)
+        add_test(NAME host.NewtonNIEOverBuiltIn
+                 COMMAND newton --display 320x480 --erase
+                         --store ${CMAKE_CURRENT_BINARY_DIR}/nie-overbuiltin.store --headless 90
+                         --package ${NIE_DIR}/ENETSUP/newtdev.pkg --package ${NIE_DIR}/REGPKGS/inetenbl.pkg
+                         --package ${NIE_DIR}/REGPKGS/inetstup.pkg
+                         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/nie-builtin.ns
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+        set_tests_properties(host.NewtonNIEOverBuiltIn PROPERTIES TIMEOUT 150
+                             PASS_REGULAR_EXPRESSION "nie-builtin: stored 3, active 0.*nie-builtin: localhost resolved: ok.*nie-builtin: done, 0 failed"
+                             FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+    endif()
     add_test(NAME host.NewtonInet
              COMMAND newton --display 320x480 --erase
                      --store ${CMAKE_CURRENT_BINARY_DIR}/inet.store --tcp-echo 52373 --headless 120
-                     --package ${NIE_DIR}/ENETSUP/newtdev.pkg --package ${NIE_DIR}/REGPKGS/inetenbl.pkg
-                     --package ${NIE_DIR}/REGPKGS/inetstup.pkg
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/inet.ns
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(host.NewtonInet PROPERTIES TIMEOUT 180
@@ -815,8 +839,6 @@ if(EXISTS ${NIE_DIR}/REGPKGS/inetenbl.pkg)
     add_test(NAME host.NewtonInetSetup
              COMMAND newton --display 320x480 --erase
                      --store ${CMAKE_CURRENT_BINARY_DIR}/inetsetup.store --headless 120
-                     --package ${NIE_DIR}/ENETSUP/newtdev.pkg --package ${NIE_DIR}/REGPKGS/inetenbl.pkg
-                     --package ${NIE_DIR}/REGPKGS/inetstup.pkg
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/inetsetup.ns
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(host.NewtonInetSetup PROPERTIES TIMEOUT 180
@@ -831,8 +853,6 @@ if(EXISTS ${NIE_DIR}/REGPKGS/inetenbl.pkg)
     add_test(NAME host.NewtonInetHostSetup
              COMMAND newton --display 320x480 --erase
                      --store ${CMAKE_CURRENT_BINARY_DIR}/inethostsetup.store --headless 150
-                     --package ${NIE_DIR}/ENETSUP/newtdev.pkg --package ${NIE_DIR}/REGPKGS/inetenbl.pkg
-                     --package ${NIE_DIR}/REGPKGS/inetstup.pkg
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/inethostsetup.ns
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(host.NewtonInetHostSetup PROPERTIES TIMEOUT 240
@@ -855,8 +875,6 @@ if(EXISTS ${NIE_DIR}/REGPKGS/inetenbl.pkg)
     add_test(NAME host.NewtonInetFSM
              COMMAND newton --display 320x480 --erase
                      --store ${CMAKE_CURRENT_BINARY_DIR}/inetfsm.store --tcp-echo 52374 --headless 22
-                     --package ${NIE_DIR}/ENETSUP/newtdev.pkg --package ${NIE_DIR}/REGPKGS/inetenbl.pkg
-                     --package ${NIE_DIR}/REGPKGS/inetstup.pkg
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/inetfsm.ns
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(host.NewtonInetFSM PROPERTIES TIMEOUT 180
@@ -874,8 +892,7 @@ if(EXISTS ${NIE_DIR}/REGPKGS/inetenbl.pkg)
                          --dir ${CMAKE_CURRENT_SOURCE_DIR}/demo/www --port 52381 --
                          $<TARGET_FILE:newton> --display 320x480 --erase
                          --store ${CMAKE_CURRENT_BINARY_DIR}/nethopper.store --headless 240
-                         --package ${NIE_DIR}/ENETSUP/newtdev.pkg --package ${NIE_DIR}/REGPKGS/inetenbl.pkg
-                         --package ${NIE_DIR}/REGPKGS/inetstup.pkg --package ${NETHOPPER_DIR}/nethopper.pkg
+                         --package ${NETHOPPER_DIR}/nethopper.pkg
                          --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/nethopper.ns
                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
         set_tests_properties(host.NewtonNetHopper PROPERTIES TIMEOUT 300 RESOURCE_LOCK tcp_52381
@@ -890,8 +907,7 @@ if(EXISTS ${NIE_DIR}/REGPKGS/inetenbl.pkg)
                          --dir ${CMAKE_CURRENT_SOURCE_DIR}/demo/www --port 52381 --
                          $<TARGET_FILE:newton> --display 320x480 --erase
                          --store ${CMAKE_CURRENT_BINARY_DIR}/nethopper-jpeg.store --headless 240
-                         --package ${NIE_DIR}/ENETSUP/newtdev.pkg --package ${NIE_DIR}/REGPKGS/inetenbl.pkg
-                         --package ${NIE_DIR}/REGPKGS/inetstup.pkg --package ${NETHOPPER_DIR}/nethopper.pkg
+                         --package ${NETHOPPER_DIR}/nethopper.pkg
                          --package ${NETHOPPER_DIR}/NetHopperJPEG.pkg
                          --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/nethopper-jpeg.ns
                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
@@ -934,12 +950,13 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD}/sym
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.ROMSourceRoundTrip PROPERTIES TIMEOUT 300)
 
-    # whether the committed tree (romsrc/) still builds byte for byte the
-    # ROM's.  It does as committed; once someone edits romsrc/ on purpose it
-    # says only that the tree has left the ROM (romsrc/README.md)
+    # whether the committed tree (romsrc/), less what was added to it on
+    # purpose (--original: the Newton Internet Enabler in its extension,
+    # romsrc/README.md), still builds byte for byte the ROM's - so an
+    # unintended change to the rest is still caught
     add_test(NAME host.ROMSourceCommitted
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/newton-rom/analysis/romsrc.py
-                     build ${CMAKE_SOURCE_DIR}/../romsrc --check ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD}
+                     build ${CMAKE_SOURCE_DIR}/../romsrc --original --check ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD}
                      --newtonscript $<TARGET_FILE:newtonscript>
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.ROMSourceCommitted PROPERTIES TIMEOUT 300 PASS_REGULAR_EXPRESSION "identical to the ROM's")

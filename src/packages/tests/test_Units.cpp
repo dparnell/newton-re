@@ -440,7 +440,8 @@ main()
 	gObjectHeapSize = 0x100000;
 	InitObjects();
 	// InitObjects ran InitRExMagicPointerTables: the extension's 166 exports
-	EXPECT(gMagicPointerTableCounts[2] == 166 && gMagicPointerTables[2] != nil);
+	// and the 28 of the Newton Internet Enabler built into it (romsrc/README.md)
+	EXPECT(gMagicPointerTableCounts[2] == 166 + 28 && gMagicPointerTables[2] != nil);
 
 	TestResolve();
 	TestUnits();

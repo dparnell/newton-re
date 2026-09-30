@@ -13,9 +13,6 @@
 //   python tools/host/httpserve.py --dir src/host/demo/www --port 52381 -- \
 //       build/host/host/newton --display 320x480 --erase --store tmp/nethopper.store \
 //       --headless 240 \
-//       --package fixtures/packages/apple/NIE2/ENETSUP/newtdev.pkg \
-//       --package fixtures/packages/apple/NIE2/REGPKGS/inetenbl.pkg \
-//       --package fixtures/packages/apple/NIE2/REGPKGS/inetstup.pkg \
 //       --package fixtures/packages/apps/NetHopper3.2/nethopper.pkg \
 //       --script src/host/demo/nethopper.ns
 //

@@ -1,4 +1,6 @@
-# the ROM extension: its pieces in address order (address, file)
+# the ROM extension: its pieces in address order (address, file); a piece at
+# address - was not in the ROM - `rom-form` is a package file put into the
+# form the ROM keeps its packages in where it falls (romsrc/README.md)
 rex	71fc4c	ce3fc
 71fc4c	rex/header.bin
 71fcf8	rex/dio_71fcf8.bin
@@ -21,6 +23,9 @@ rex	71fc4c	ce3fc
 7a67fc	rex/Setup.head.bin
 7a6914	rex/Setup/
 7b4d20	rex/WorldData.pkg
+-	rex/newtdev.pkg	rom-form
+-	rex/inetenbl.pkg	rom-form
+-	rex/inetstup.pkg	rom-form
 7ebfc8	rex/pad_7ebfc8.bin
 7ec000	rex/ptpt_7ec000.bin
 7ec400	rex/glpt_7ec400.bin

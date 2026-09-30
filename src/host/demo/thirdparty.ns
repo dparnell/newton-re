@@ -1,7 +1,10 @@
 // Third-party packages (the owner's fixtures/packages: applications,
-// games, fonts, Apple's Newton Internet Enabler), each stored on a fresh
-// internal store by `newton --package` and installed from there, then
-// removed again the ways a user does it.  Run by ctest
+// games, fonts, the Newton Internet Enabler's modules), each stored on a
+// fresh internal store by `newton --package` and installed from there,
+// then removed again the ways a user does it.  (The Enabler itself - Newton
+// Devices, Newton Internet Enabler, Internet Setup - is built into the ROM
+// extension, romsrc/rex; its modules import its units from there.
+// nie-builtin.ns installs copies of those three over it.)  Run by ctest
 // host.NewtonThirdPartyPackages (src/host/CMakeLists.txt, which lists the
 // packages), and followed by thirdparty-restart.ns on the same store.
 //
@@ -30,10 +33,8 @@ expected := {
 	|NewtHack:ChrisDopp|: 'FormEntry, |NHSounds:CAD|: 'AutoEntry, |Register:FlaSheridn|: 'FormEntry,
 	Monaco: '|????Entry|, |Klingon Font|: '|????Entry|, |Times:NL$|: '|????Entry|,
 	|Zapf Chancery:NL$|: '|????Entry|, |Zapf Dingbats:NL$|: '|????Entry|,
-	| Newton Devices|: 'AutoEntry, |Newton Internet Enabler|: 'AutoEntry,
 	|NIE Ethernet Module|: 'AutoEntry, |NIE LocalTalk Module|: 'AutoEntry,
-	|NIE Modem & Serial Module|: 'AutoEntry, |ISP Templates|: '|????Entry|,
-	|Internet Setup|: 'FormEntry};
+	|NIE Modem & Serial Module|: 'AutoEntry, |ISP Templates|: '|????Entry|};
 
 storedRefs := func() begin
 	local refs := [];

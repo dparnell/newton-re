@@ -67,7 +67,12 @@ binary but strings and reals is kept as its bytes):
                      in address order - each package a .pkg file as the ROM
                      holds it (its frames parts' refs ROM addresses: see
                      tools/newton-rom/analysis/packages.py), each config
-                     entry a .bin - which the builder puts back together
+                     entry a .bin - which the builder puts back together;
+                     a piece at address `-` was added (an ordinary package
+                     file, `rom-form`, put into the ROM's form where it
+                     falls, with <name>.patches.tsv applied first when there
+                     is one - the Newton Internet Enabler, romsrc/README.md),
+                     and build --original leaves such pieces out
     magic.tsv        the magic-pointer table (gROMMagicPointerTable): each
                      entry's index and what it is - an object's path in
                      the layout, or a value
@@ -1440,12 +1445,16 @@ def string_bytes(literal):
 # ---- building
 
 class Builder:
-	def __init__(self, src, newtonscript=None, relayout=False, base=None):
+	def __init__(self, src, newtonscript=None, relayout=False, base=None, original=False):
 		"""relayout: the objects laid out afresh, one after another in the
 		layout's order at the sizes they now have (an edit that grows or
 		shrinks one moves every one after it; an object the layout does not
-		know goes at the end), rather than at the layout's addresses."""
+		know goes at the end), rather than at the layout's addresses.
+		original: the pieces of the extension that were not in the ROM
+		(rex.tsv's `-` lines: the Newton Internet Enabler) left out, so that
+		the rest can still be compared with the ROM."""
 		self.src = src
+		self.original = original
 		self.newtonscript = newtonscript
 		global NEWTONSCRIPT
 		if newtonscript is not None:
@@ -1621,6 +1630,27 @@ class Builder:
 			return 12 + len(v.data)
 		return 12 + 4 * len(v.items)
 
+	@staticmethod
+	def patched(data, patches):
+		"""A package file with the patches of <package>.patches.tsv applied,
+		when there is one: each line an offset in the file (hex), the bytes
+		there (hex, checked) and the bytes they become, then why - the
+		changes a package needs to work from the ROM that its own code did
+		not foresee (romsrc/README.md)."""
+		if not os.path.exists(patches):
+			return data
+		data = bytearray(data)
+		with open(patches, encoding="utf-8") as f:
+			for number, line in enumerate(f, 1):
+				if not line.strip() or line.startswith("#"):
+					continue
+				fields = line.rstrip("\n").split("\t")
+				at, old, new = int(fields[0], 16), bytes.fromhex(fields[1]), bytes.fromhex(fields[2])
+				if len(old) != len(new) or data[at:at + len(old)] != old:
+					raise ValueError("%s:%d: the bytes at %#x are not %s" % (patches, number, at, fields[1]))
+				data[at:at + len(new)] = new
+		return bytes(data)
+
 	def rex_relaid_out(self, rex):
 		"""The ROM extension put back together with its frames parts laid out
 		afresh, each at wherever it now falls: a part that grew or shrank
@@ -1631,7 +1661,23 @@ class Builder:
 		the objects the parts export, each moved as its object was).  The
 		header's checksum is left as it was: nothing in the ROM reads it
 		(TestForREx 0x003137dc takes a block on its signatures and id alone;
-		docs/rom-free/README.md)."""
+		docs/rom-free/README.md).
+
+		A piece whose address is `-` was not in the ROM: an ordinary
+		package file (`rom-form` in the third column), added to the package
+		list where it stands and put into the form the ROM keeps its own
+		packages in, at the address it falls at (packages.py's
+		rom_form_package: its refs made addresses, its relocation applied,
+		the units it exports given 'fexp entries and its imports resolved
+		to them), the entries appended to 'fexp.  A padding piece (`pad_*`)
+		is as long as it must be for the piece after it to keep the
+		alignment it had (to 0x1000 at most: the page tables and the patch
+		table start on pages).  The patch table's page tables ('ptpt,
+		'glpt: MMU small-page entries naming the physical page the patch
+		table 'jump is in, which they map at its virtual address - its
+		branches are relative to that, so they stay as they are) are
+		carried as they are: nothing on the host reads them, and on a
+		MessagePad they would have to name the table's new page."""
 		pieces = []
 		with open(rex, encoding="utf-8") as f:
 			for line in f:
@@ -1640,16 +1686,40 @@ class Builder:
 				fields = line.rstrip("\n").split("\t")
 				if fields[0] == "rex":
 					base, length = int(fields[1], 16), int(fields[2], 16)
-				else:
-					pieces.append((int(fields[0], 16), fields[1]))
+				elif fields[0] != "-" or not self.original:
+					old = None if fields[0] == "-" else int(fields[0], 16)
+					pieces.append((old, fields[1], fields[2] if len(fields) > 2 else ""))
+		# the next free 'fexp entry: after the ROM's own (the fexp piece's words)
+		fexp_next = 0
+		for old, rel, how in pieces:
+			if os.path.basename(rel).startswith("fexp"):
+				fexp_next = os.path.getsize(os.path.join(self.src, rel)) // 4
+		units = {}					# the units the added packages export (rom_form_package)
+		new_fexp = []				# their 'fexp entries
 		data = bytearray()
 		moved = {}					# a piece's old address -> its new one
 		relocations = {}			# an exported object's old ref -> its new one
 		head = None					# the offset in data of the last package directory
 		fexp_at = None
-		for old, rel in pieces:
+		for n, (old, rel, how) in enumerate(pieces):
 			new = base + len(data)
-			moved[old] = new
+			if old is not None:
+				moved[old] = new
+			if os.path.basename(rel).startswith("pad_") and n + 1 < len(pieces) and pieces[n + 1][0] is not None:
+				after = pieces[n + 1][0]
+				align = min(after & -after, 0x1000)
+				data += b"\0" * ((after - new) % align)
+				continue
+			if how == "rom-form":
+				with open(os.path.join(self.src, rel), "rb") as piece:
+					blob = self.patched(piece.read(), os.path.join(self.src, os.path.splitext(rel)[0] + ".patches.tsv"))
+				blob, entries = rexpackages.rom_form_package(blob, new, fexp_next + len(new_fexp), units)
+				new_fexp += entries
+				head = len(data)
+				data += blob
+				continue
+			if old is None:
+				raise ValueError("rex.tsv: %s is not from the ROM and not a package to put into its form" % rel)
 			if rel.endswith("/"):
 				sub = Builder(os.path.join(self.src, rel), self.newtonscript, relayout=True, base=new)
 				_, part = sub.build()
@@ -1672,6 +1742,8 @@ class Builder:
 				blob = piece.read()
 			if blob[:7] == b"package":
 				head = len(data)
+			if os.path.basename(rel).startswith("fexp"):
+				blob += b"".join(struct.pack(">I", r) for r in new_fexp)
 			data += blob
 		moved[base + length] = base + len(data)
 		# the header: its length, and each config entry's offset and size
@@ -1904,6 +1976,10 @@ class Builder:
 					if fields[0] == "rex":
 						base, length = int(fields[1], 16), int(fields[2], 16)
 						continue
+					if fields[0] == "-" and self.original:
+						continue
+					if fields[0] == "-":
+						raise ValueError("rex.tsv: %s was not in the ROM: the tree builds only with --relayout" % fields[1])
 					if int(fields[0], 16) != base + len(data):
 						raise ValueError("rex.tsv: %s is not where the piece before it ends" % fields[1])
 					if fields[1].endswith("/"):
@@ -2010,6 +2086,8 @@ def main(argv=None):
 	b.add_argument("--newtonscript", help="the host's newtonscript, which compiles the functions")
 	b.add_argument("--relayout", action="store_true",
 				   help="lay the objects out afresh at the sizes they now have (what an edit needs), not at the layout's addresses")
+	b.add_argument("--original", action="store_true",
+				   help="leave out what was added to the ROM extension (rex.tsv's `-` pieces), to compare the rest with the ROM")
 	t = sub.add_parser("edit-test", help="copy a tree, lengthen one string, build it laid out afresh")
 	t.add_argument("source")
 	t.add_argument("-o", "--output", required=True, help="where the edited copy goes (emptied first)")
@@ -2096,7 +2174,7 @@ def main(argv=None):
 		print("%d definitions (%d taken from compiled functions) and %d maps written to %s"
 			  % (n, e.same_count, m, a.output))
 		return 0
-	builder = Builder(a.source, a.newtonscript, a.relayout)
+	builder = Builder(a.source, a.newtonscript, a.relayout, original=a.original)
 	base, area = builder.build()
 	if a.output:
 		with open(a.output, "wb") as f:

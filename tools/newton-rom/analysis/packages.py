@@ -36,7 +36,10 @@ the package named OLD a new name (appended to the directory data, the
 parts moved along and their refs with them) so a copy of a built-in
 package can be installed beside the one the ROM already has - the package
 manager refuses a second package of the same name
-(kError_Package_Already_Exists).
+(kError_Package_Already_Exists).  rom_form_package does the opposite, for
+romsrc.py's builder: an ordinary package file put into the ROM's form at
+the address it is to lie at (how the Newton Internet Enabler is built into
+the extension, romsrc/README.md).
 
 The directory format (Newton Formats, and TPrivatePackageIterator
 0x001964fc): the 8-byte signature "package0" or "package1" (the newer
@@ -168,6 +171,183 @@ def loadable_package(rom: bytes, pkg: dict, new_name: str | None = None) -> byte
     out = directory + body
     struct.pack_into(">I", out, 28, len(out))		# the package size
     return bytes(out)
+
+
+RELOCATION_FLAG = 0x04000000		# kRelocationFlag: a relocation chunk follows the directory
+SYMBOL_CLASS = 0x55552				# kSymbolClass, a symbol object's class
+
+
+class _PartReader:
+    """A frames part's objects read where they lie (big-endian, the ARM
+    layout), for the few frames rom_form_package needs to look at: a ref is
+    the object's offset in the package plus one."""
+
+    def __init__(self, data, base: int):
+        self.data, self.base = data, base		# base: the package's offset in data
+
+    def word(self, ref_or_offset: int) -> int:
+        return struct.unpack_from(">I", self.data, self.base + ref_or_offset)[0]
+
+    def slots(self, ref: int):
+        size = self.word(ref - 1) >> 8
+        return [self.word(ref - 1 + 12 + 4 * i) for i in range((size - 12) // 4)]
+
+    def symname(self, ref: int):
+        if ref & 3 != 1 or self.word(ref - 1 + 8) != SYMBOL_CLASS:
+            return None
+        size = self.word(ref - 1) >> 8
+        raw = bytes(self.data[self.base + ref - 1 + 16:self.base + ref - 1 + size])
+        return raw[:raw.index(b"\0")].decode("latin-1")
+
+    def map_tags(self, m: int):
+        s = self.slots(m)
+        return (self.map_tags(s[0]) if s[0] & 3 == 1 else []) + s[1:]
+
+    def frame_get(self, frame: int, name: str):
+        tags = self.map_tags(self.word(frame - 1 + 8))
+        for tag, value in zip(tags, self.slots(frame)):
+            if (self.symname(tag) or "").lower() == name.lower():
+                return value
+        return None
+
+    def units(self, top: int, table: str):
+        """The {name, major, minor, objects} records of a top frame's
+        _ImportTable or _ExportTable, as (name, major, minor, objects ref)."""
+        t = self.frame_get(top, table)
+        if t is None or t & 3 != 1:
+            return []
+        out = []
+        for e in self.slots(t):
+            name = self.symname(self.frame_get(e, "name"))
+            major = self.frame_get(e, "major") >> 2
+            minor = self.frame_get(e, "minor") >> 2
+            out.append((name, major, minor, self.frame_get(e, "objects")))
+        return out
+
+
+def _objects(part: bytes, align: int):
+    """(offset, size, flags) of each object of a frames part."""
+    a = 0
+    while a < len(part):
+        header = struct.unpack_from(">I", part, a)[0]
+        size = header >> 8
+        if size < KOBJ_HEADER + 4 or a + size > len(part):
+            raise ValueError("not a run of objects at part offset %#x" % a)
+        yield a, size, header & 0xff
+        a += (size + align - 1) & ~(align - 1)
+
+
+def rom_form_package(data: bytes, address: int, fexp_next: int, units: dict):
+    """An ordinary package file (refs offsets from its start, linked at 0)
+    put into the form the ROM extension keeps its own packages in, to lie
+    at address - what Apple's ROM build did to the ten built-in packages,
+    and what the ROM's loader needs of a package in the ROM:
+
+    - the relocation chunk (kRelocationFlag) applied - each word it names,
+      an offset in the package, made the address it comes to - and taken
+      out, the flag cleared: nothing relocates a package in the ROM (the
+      ROM domain maps only store packages, RelocateFramesInPage);
+    - every pointer ref of every frames part made the object's address;
+    - the units the parts export given entries in the extension's frame
+      export table 'fexp (magic pointer table 2: @0x2000 + the entry), the
+      export tables' objects arrays holding those magic pointers, as the
+      built-in parts' do; and each import ref (magic pointer table 2 + the
+      unit's slot in the part's _ImportTable) made the fexp entry of that
+      object of the unit - a part in the ROM never has its imports
+      installed (TFramePartHandler::Install: only a part above
+      0x037fffff), so they are resolved here, as the ROM's own Connection
+      and Cardfile parts' are.
+
+    units: the units exported so far by packages laid out before this one
+    ((lower-case name, major) -> [(minor, first fexp entry, count)]), added
+    to.  fexp_next: the next free fexp entry.  ==> (the package's bytes,
+    the refs of the new fexp entries, in order).  A unit imported that no
+    package before it (or the package itself) exports raises: an
+    extension's own imports of units from elsewhere ('fimp) are NOT YET."""
+    pkg = parse_package(data, 0)
+    if pkg["signature"] != "package1":
+        raise ValueError("%s: only package1 packages are put into the ROM's form" % pkg["name"])
+    dir_size = pkg["directory_size"]
+    out = bytearray(data)
+    chunk = 0
+    if pkg["flags"] & RELOCATION_FLAG:
+        reserved, chunk, page_size, count, link_base = struct.unpack_from(">5I", data, dir_size)
+        if reserved != 0:
+            raise ValueError("%s: a relocation chunk whose reserved word is not 0" % pkg["name"])
+        a = dir_size + 20
+        for _ in range(count):
+            page, n = struct.unpack_from(">HH", data, a)
+            for k in range(n):
+                at = page * page_size + data[a + 4 + k] * 4		# (an offset in the package)
+                off = struct.unpack_from(">I", data, at)[0] - link_base
+                if off >= dir_size + chunk:
+                    off -= chunk								# (the chunk is taken out)
+                struct.pack_into(">I", out, at, (address + off) & 0xFFFFFFFF)
+            a += (4 + n + 3) & ~3
+        out = out[:dir_size] + out[dir_size + chunk:]
+        struct.pack_into(">I", out, 12, pkg["flags"] & ~RELOCATION_FLAG)
+        struct.pack_into(">I", out, 28, len(out))
+    parts_at = dir_size							# (in out; in data it was dir_size + chunk)
+    frames = [p for p in pkg["parts"] if p["flags"] & 3 == 1 and not p["flags"] & 0x40]
+    size_in = len(data)
+
+    def rebased(ref):
+        if ref & 3 == 1 and 0 <= ref - 1 < size_in:
+            off = ref - 1
+            if off >= dir_size + chunk:
+                off -= chunk
+            return address + off + 1
+        return ref
+
+    # the exports first (a part may import its own package's units)
+    new_fexp = []
+    exported = set()				# the export tables' slots, made magic pointers already (offsets in data)
+    reader = _PartReader(data, 0)
+    tops = {}
+    for p in frames:
+        start = dir_size + chunk + p["offset"]
+        top = reader.slots(start + 1)[0]
+        tops[p["offset"]] = top
+        for name, major, minor, objects in reader.units(top, "_ExportTable"):
+            refs = reader.slots(objects)
+            if any(r & 3 != 1 for r in refs):
+                raise ValueError("%s: unit %s exports an object that is not a pointer ref" % (pkg["name"], name))
+            units.setdefault((name.lower(), major), []).append((minor, fexp_next, len(refs)))
+            for k, r in enumerate(refs):
+                new_fexp.append(rebased(r))
+                exported.add(objects - 1 + 12 + 4 * k)
+                struct.pack_into(">I", out, objects - 1 + 12 + 4 * k - chunk, ((0x2000 + fexp_next + k) << 2) | 3)
+            fexp_next += len(refs)
+    for p in frames:
+        start = dir_size + chunk + p["offset"]
+        imports = []
+        for name, major, minor, _ in reader.units(tops[p["offset"]], "_ImportTable"):
+            offers = [u for u in units.get((name.lower(), major), []) if u[0] >= minor]
+            if not offers:
+                raise ValueError("%s imports unit %s %d.%d, which no package laid out before it exports"
+                                 % (pkg["name"], name, major, minor))
+            imports.append(max(offers))		# the highest minor version, as InstallImportTable picks
+        part = bytes(data[start:start + p["size"]])
+        for a, size, flags in _objects(part, 4):
+            refs = (size - KOBJ_HEADER) // 4 if flags & KOBJ_SLOTTED else 1
+            for j in range(refs):
+                o = a + KOBJ_HEADER + 4 * j
+                if start + o in exported:
+                    continue
+                at = parts_at + p["offset"] + o
+                ref = struct.unpack_from(">I", data, start + o)[0]
+                if ref & 3 == 1:
+                    struct.pack_into(">I", out, at, rebased(ref))
+                elif ref & 3 == 3 and (ref >> 14) >= 2:
+                    table, index = ref >> 14, (ref >> 2) & 0xfff
+                    if table - 2 >= len(imports):
+                        raise ValueError("%s: an import ref of table %d, which its part's _ImportTable has no slot for"
+                                         % (pkg["name"], table))
+                    _, first, count = imports[table - 2]
+                    if index >= count:
+                        raise ValueError("%s: import ref %d of a unit of %d objects" % (pkg["name"], index, count))
+                    struct.pack_into(">I", out, at, ((0x2000 + first + index) << 2) | 3)
+    return bytes(out), new_fexp
 
 
 OBJECTS_SIGNATURE = b"NewtObjs"

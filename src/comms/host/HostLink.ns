@@ -257,7 +257,11 @@
 	// then take a second: this takes two) - and two seconds from now: a
 	// restart activates the store's packages just before this starts
 	// (TNewtWorld::PreMain), so their changes to the soup have been and
-	// gone, and the NIE makes its registry a second after them
+	// gone, and the NIE makes its registry a second after them.  The same
+	// holds for the NIE built into the ROM extension (romsrc/rex): its
+	// parts are installed at boot (LoadHighROMFramesPackages) and wait on
+	// the soup like a stored copy's, and a change to it during the boot
+	// sets them off
 	Start: func()
 	begin
 		RegSoupChange("Packages", '|HostLink:host|,

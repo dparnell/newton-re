@@ -6,11 +6,8 @@
 // and 'Disconnect events, its client told each state; while Connected its
 // endpoint echoes "hello" through the echo server.
 //
-//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//   build/host/host/newton --display 320x480 \
 //       --erase --store inet.store --tcp-echo 52374 --headless 25 \
-//       --package fixtures/packages/apple/NIE2/ENETSUP/newtdev.pkg \
-//       --package fixtures/packages/apple/NIE2/REGPKGS/inetenbl.pkg \
-//       --package fixtures/packages/apple/NIE2/REGPKGS/inetstup.pkg \
 //       --script src/host/demo/inetfsm.ns
 //
 // (An NTK application imports the proto from the unit; a script finds it

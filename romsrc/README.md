@@ -7,7 +7,8 @@ read, edit and build:
 - the object area: 46538 frames, arrays, symbols and binaries;
 - its magic-pointer table;
 - the recognisers' lexicons;
-- the ROM extension with its ten built-in packages.
+- the ROM extension with its ten built-in packages - and, added to it,
+  Apple's Newton Internet Enabler 2.0 (below).
 
 The OS boots from it with no ROM image. It is Apple's data, kept here
 as the ROM images in `DebugRom/` are.
@@ -28,7 +29,7 @@ are kept. How it was made, and why it is shaped as it is, is in
 | `resources/` | The binaries: bitmaps as PNG (`bits`, `mask`, `cbits`), simple sounds as WAV, pictures as PICT, fonts as directories - a BDF file per bitmap strike and a text file per other table, which the builder packs back into the `'sfnt` binary (`tools/fonts/README.md`; what the tables hold, `docs/qd/fonts-sfnt.md`). What has no editable form yet (compressed sounds, tables) is `.bin`. |
 | `lexicons/`, `lexicons.tsv` | The recognisers' word tries, with their ROM addresses. |
 | `romdata/`, `romdata.tsv` | The ROM's other data that code reads at its ROM address: the parameter block `gParamBlock` (0x1000, a page - `gROMVersion`, `gROMStage`, `gHardwareType`, ...), whose version words a package's native code reads (`armcpu`). Added with `romsrc.py romdata build/MP2x00US romsrc`, the extractor's own code for it. |
-| `rex/`, `rex.tsv` | The ROM extension, in pieces: its header and config entries, and the ten packages. A package with a frames part is `<Package>.head.bin` (its directory), the part as a tree of its own in `<Package>/` (the same layout as this one), and `<Package>.tail.bin`. |
+| `rex/`, `rex.tsv` | The ROM extension, in pieces: its header and config entries, and the ten packages. A package with a frames part is `<Package>.head.bin` (its directory), the part as a tree of its own in `<Package>/` (the same layout as this one), and `<Package>.tail.bin`. The three packages added to it (`newtdev.pkg`, `inetenbl.pkg`, `inetstup.pkg`, at address `-`) are ordinary package files, with `inetenbl.patches.tsv` beside the one that needed changing. |
 | `magic.tsv` | The magic-pointer table: `@index` and the object it names. |
 | `layout.tsv` | The manifest: every object's address, path in the source and header flags, each frame's map, and aliases (shared objects that a compiled function makes afresh). |
 | `bytecode.tsv` (in a part's tree) | The functions kept as bytecode, with the reason, when any are. None are now. |
@@ -54,9 +55,11 @@ python tools/newton-rom/analysis/romsrc.py build romsrc --relayout -o build/obje
   (`newtonscript --compile-records`, run with no ROM image).
 - It lays the objects out as `layout.tsv` says and writes the object file
   the host loads.
-- As committed, the result is byte for byte the ROM's. Add `--check
-  build/MP2x00US` to compare, which needs the extracted ROM (`build/<rom>`,
-  `tools/newton-rom/pipeline.py`).
+- The tree is no longer the ROM byte for byte: the Newton Internet
+  Enabler has been added to its extension (below). Everything else is:
+  `--original` leaves the additions out, and `--original --check
+  build/MP2x00US` compares the rest with the ROM, which needs the
+  extracted ROM (`build/<rom>`, `tools/newton-rom/pipeline.py`).
 
 ## Editing it
 
@@ -113,7 +116,84 @@ then not registered).
 
 | Test | What it checks |
 |---|---|
-| `host.ROMSourceCommitted` | The committed tree still builds byte for byte the ROM's. It passes as the tree was committed. Once someone edits the tree on purpose, it stops being a regression test: it then says only that the tree has left the ROM, and it should be retired, or kept for a branch that tracks the original. |
+| `host.ROMSourceCommitted` | The committed tree, less what was added to it on purpose (`--original`: the Newton Internet Enabler), still builds byte for byte the ROM's - so an unintended change to the rest is still caught. |
 | `host.ROMSourceRoundTrip` | The extractor itself: a fresh extraction into the build directory, built back byte for byte. It does not touch this tree. |
-| `host.NewtonNoROM`, `host.NewtonNoROMSameScreen` | The OS booted from this tree's object file, and its screen against the ROM image boot's. |
+| `host.NewtonNoROM`, `host.NewtonNoROMSameScreen` | The OS booted from this tree's object file, and its screen against the ROM image boot's (the Setup assistant's Welcome, which the built-in NIE does not change). |
+| `host.NewtonNIEBuiltIn`, `host.NewtonNIEOverBuiltIn` | The Newton Internet Enabler built in: its packages active on no store, Internet Setup in Extras, the link grabbed and a name looked up; and the fixtures' copies installed over it (kept on the store, not activated). The NIE's other tests (`host.NewtonInet`, `...InetSetup`, `...InetHostSetup`, `...InetFSM`, `...NetHopper`) use the built-in one too. |
 | `host.ROMSourceEdit`, `host.ROMSourceEditValue`, `host.ROMSourceEditMoved`, `host.NewtonEditedSameScreen` | A copy of this tree edited (strings lengthened, slots swapped, an array element inserted, a slot holding a new frame added), built laid out afresh, the edits read back, and booted. |
+
+## The Newton Internet Enabler, built in
+
+**The owner's decision:** Apple's Newton Internet Enabler 2.0 is part of
+every boot, with no store needed, as the extension's own packages
+(Setup, Cardfile, ...) are. It is the first change made to this tree on
+purpose, and the reason it no longer builds the original ROM byte for
+byte. Three of the NIE's packages are in the extension, after WorldData,
+in this order (`rex.tsv`):
+
+| File | Package | Why |
+|---|---|---|
+| `rex/newtdev.pkg` | " Newton Devices" | its units (`NameServerInterface:NSG`, `Lantern:NSG`) are what the NIE's modules import; the host's tests have always installed it with the Enabler |
+| `rex/inetenbl.pkg` | Newton Internet Enabler | the Enabler: `InetGrabLink`, the domain manager, the link manager, `protoEndpointFSM` (`Inet Protos:NIE`) |
+| `rex/inetstup.pkg` | Internet Setup | the application, in the Extras drawer's Setup folder as a built-in |
+
+Each file is the one in `fixtures/packages/apple/NIE2/` (the NIE's own
+modules - Ethernet, LocalTalk, Modem & Serial, the ISP templates - stay
+packages a user installs; they import the Enabler's units from the ROM).
+The order is the NIE's own: each package's units are exported before a
+package that imports them is loaded (Internet Setup imports its own; the
+modules import the Enabler's and Newton Devices').
+
+**How they are laid out.** A package in the ROM is not in the form one
+arriving from outside is (`tools/newton-rom/analysis/packages.py`), and
+the ROM's loader (`LoadHighROMFramesPackages`, then the frames part
+handler) reads a package in the ROM where it lies, relocating nothing.
+So `romsrc.py build --relayout` puts each into the ROM's form at the
+address it falls at (`packages.py`'s `rom_form_package`), which is what
+Apple's ROM build did to the ten:
+
+- its relocation chunk (Newton Devices and the Enabler have one: their
+  native code holds addresses in the package) applied to that address
+  and taken out, and the flag cleared - the ROM's own packages have none;
+- every pointer ref of its frames parts made the object's address;
+- each unit it exports given entries in the extension's frame export
+  table `'fexp` (magic pointers `@0x2000 + n`, 28 of them after the ROM's
+  166), and each import resolved to those entries: a part in the ROM
+  never has its `_ImportTable` installed (only a part above 0x037fffff),
+  so its imports must be resolved when the ROM is built, as the ROM's own
+  Connection and Cardfile parts' were.
+
+The extension grows by 0x92000 bytes (598,016) and ends at 0x880048: on a
+MessagePad it would no longer fit the 8MB ROM, which the host does not
+have to care about. The padding in front of the page tables and the patch
+table keeps them on pages. The page tables themselves (`ptpt`, `glpt`:
+MMU entries naming the patch table's physical page, 0x7ee000) are carried
+unchanged - nothing on the host reads them; a MessagePad would need them
+to name the table's new page, 0x880000.
+
+**What the NIE needed changing** (`rex/inetenbl.patches.tsv`, applied by
+the builder, each change checked against the bytes it replaces): the NIE
+keeps its state in a global named after its package's id,
+`GetPkgRefInfo(ObjectPkgRef(...)).id`, and a package in the ROM has no
+pkgRef - `ObjectPkgRef` answers nil and `GetPkgRefInfo(nil)` throws, so
+`InetStartUp` could not start. Four functions' five bytes each make the
+name `"PkgVars_id"` instead. Nothing else in the three packages minds
+where it lies: the NTK unit glue waits on the "Packages" soup as it does
+for a stored copy (a change to it during the boot sets it off), and
+marking a package in the ROM busy does nothing.
+
+**Installing a copy over it.** A copy of one of the three stored on a
+card or the internal store is kept there but not activated: the package
+manager refuses a second package of the same name and version
+(`kError_Package_Already_Exists`), and the ROM's own NewtonScript tells
+the user "The package "Internet Setup" (on store "Internal") was not
+activated because a package by the same name (on store "Built-In") is
+already in use." (ctest `host.NewtonNIEOverBuiltIn`).
+
+**The cost.** The object file grows by the same 598,016 bytes. The boot
+to its first deferred call took 0.99 s rather than 0.84 s (the host,
+three runs each), and after the NIE's units have run the frames heap has
+18 KB less free and the host process's peak working set is 1.3 MB larger
+(the parts' objects imported into host areas).
+
+`--original` builds the tree without them.

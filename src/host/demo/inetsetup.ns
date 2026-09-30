@@ -5,11 +5,8 @@
 // method in New Internet Setup's picker.  Screen snapshots of each step go
 // to inetsetup-N.pgm (tools/imaging/pgm2png.py makes PNGs of them).
 //
-//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//   build/host/host/newton --display 320x480 \
 //       --erase --store inet.store --headless 24 \
-//       --package fixtures/packages/apple/NIE2/ENETSUP/newtdev.pkg \
-//       --package fixtures/packages/apple/NIE2/REGPKGS/inetenbl.pkg \
-//       --package fixtures/packages/apple/NIE2/REGPKGS/inetstup.pkg \
 //       --script src/host/demo/inetsetup.ns
 //
 // (On a fresh store the Setup assistant's Welcome is behind it: the

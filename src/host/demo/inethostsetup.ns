@@ -14,9 +14,6 @@
 //
 //   NEWTON_TRACE_DNS=1 build/host/host/newton --display 320x480 --erase \
 //       --store inethostsetup.store --headless 120 \
-//       --package fixtures/packages/apple/NIE2/ENETSUP/newtdev.pkg \
-//       --package fixtures/packages/apple/NIE2/REGPKGS/inetenbl.pkg \
-//       --package fixtures/packages/apple/NIE2/REGPKGS/inetstup.pkg \
 //       --script src/host/demo/inethostsetup.ns
 //   (and again without --erase and the packages: the restart)
 //

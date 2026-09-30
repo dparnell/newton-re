@@ -1,12 +1,14 @@
 // Units (packages/Units.h): the objects the ROM's own packages export,
 // as the unit natives see them once the machine has booted.
 //
-//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//   build/host/host/newton --display 320x480 \
 //       --script src/host/demo/units.ns --headless 6
 //
 // Five of the ROM's frames parts carry an _ExportTable, seven units in
-// all; InstallExportTables records them as each part is installed, and
-// CurrentExports answers them with how many import slots use each (none:
+// all, and the Newton Internet Enabler built into the extension
+// (romsrc/README.md) five more - twelve on the default boot, seven with
+// --rom <image> (the original ROM); InstallExportTables records them as
+// each part is installed, and CurrentExports answers them with how many import slots use each (none:
 // the ROM's parts only export - a part in the ROM never has its imports
 // installed).  GetExportTableClients asks the same of one unit's objects,
 // PendingImports what is waiting for a unit nobody exports yet, and

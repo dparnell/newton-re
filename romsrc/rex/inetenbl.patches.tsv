@@ -1,0 +1,25 @@
+# Patches to Newton Internet Enabler 2.0 (inetenbl.pkg) for the ROM
+# (romsrc/README.md, "The Newton Internet Enabler, built in"): the offset in
+# the package file (hex), the bytes there, the bytes they become, and why.
+#
+# The NIE keeps its state in a global named "PkgVars_" & the id of its
+# package - GetPkgRefInfo(ObjectPkgRef('|Domain Manager:NIE|)).id - so that
+# its domain manager and link manager share one per package, and marks its
+# package busy while it is in use.  In the ROM there is no pkgRef: ObjectPkgRef
+# (ROM 0x00321384) answers a package's store entry, and a package in the ROM
+# has none, so it answers nil and GetPkgRefInfo(nil) throws type.ref.frame
+# (-48200) - InetStartUp, and with it InetGrabLink, stops there.
+# MarkPackageBusy(nil, ...)/MarkPackageNotBusy(nil) answer nil and are
+# harmless (a package in the ROM cannot be deleted anyway).
+#
+# Each of the four functions that make the name - the domain manager's and
+# the link manager's acquire and release, disassembled with
+#   python tools/newton-rom/analysis/pkgns.py romsrc/rex/inetenbl.pkg --disasm 0x373c5
+# - has the same five bytes at +5 of its instructions:
+#   get-var 3 (pkgRef); push 3 ('GetPkgRefInfo); call 1; push 4 ('id); get-path 1
+# which become push 4 ('id); dup; pop; dup; pop - so the name is
+# "PkgVars_id", the same for all four as the package id was.
+373f5	7b1b291c91	1c01000100	0x373c5 the domain manager's acquire
+39281	7b1b291c91	1c01000100	0x39251 the domain manager's release
+3fda1	7b1b291c91	1c01000100	0x3fd71 the link manager's release
+3ff85	7b1b291c91	1c01000100	0x3ff55 the link manager's acquire

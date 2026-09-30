@@ -1,0 +1,99 @@
+// The Newton Internet Enabler built into the ROM extension (romsrc/rex:
+// newtdev.pkg, inetenbl.pkg, inetstup.pkg - romsrc/README.md, "The Newton
+// Internet Enabler, built in"): on a boot with no --package, and with the
+// fixtures' copies installed on the internal store over it.  Run by the
+// ctests host.NewtonNIEBuiltIn and host.NewtonNIEOverBuiltIn:
+//
+//   build/host/host/newton --display 320x480 --erase --store nie.store \
+//       --headless 60 --script src/host/demo/nie-builtin.ns
+//   (and the same with --package fixtures/packages/apple/NIE2/ENETSUP/newtdev.pkg
+//    --package .../REGPKGS/inetenbl.pkg --package .../REGPKGS/inetstup.pkg)
+//
+// What is checked:
+//  - the three packages are active and on no store (GetPackages: built in);
+//  - Internet Setup is in the Extras drawer as a built-in (a ROMFormEntry,
+//    filed under Setup, as the ROM's own Setup is);
+//  - a copy stored on the internal store is kept there but not activated -
+//    the ROM's package manager refuses a second package of the same name
+//    and version (kError_Package_Already_Exists) and the ROM's
+//    NewtonScript says so: "The package "Internet Setup" (on store
+//    "Internal") was not activated because a package by the same name (on
+//    store "Built-In") is already in use.";
+//  - the NIE comes up (its registry, the host's link as the default) and
+//    looks a name up through its own domain manager.
+
+HostInclude("common.ns");			// waitFor
+
+nieBuiltInNames := [" Newton Devices", "Newton Internet Enabler", "Internet Setup"];
+nieBuiltInFailed := 0;
+
+nieBuiltInCheck := func(what, ok) begin
+	Print("nie-builtin: " & what & ": " & (if ok then "ok" else "FAILED"));
+	if not ok then nieBuiltInFailed := nieBuiltInFailed + 1;
+end;
+
+nieBuiltInStored := func() begin
+	local refs := [];
+	local c := Query(GetUnionSoupAlways("Packages"), {type: 'index});
+	local e := c:Entry();
+	while e do begin
+		if e.pkgRef and LSearch(nieBuiltInNames, GetPkgRefInfo(e.pkgRef).title, 0, '|str=|, nil) then
+			AddArraySlot(refs, e.pkgRef);
+		e := c:Next();
+	end;
+	refs
+end;
+
+call waitFor with ("nie-builtin: the host's link", func() begin
+		local entry := InetGetLinkEntry(InetGetDefaultLinkID());
+		entry and StrEqual(entry.setupName, "Host network");
+	end, func() begin
+	// the packages, built in
+	foreach name in nieBuiltInNames do begin
+		local found := nil;
+		foreach p in GetPackages() do
+			if StrEqual(p.title, name) and not p.store then found := true;
+		call nieBuiltInCheck with ("\"" & name & "\" built in", found);
+	end;
+	// Internet Setup in the Extras drawer, a built-in
+	local entry := nil;
+	local c := Query(GetUnionSoupAlways("Packages"), {type: 'index});
+	local e := c:Entry();
+	while e do begin
+		if ClassOf(e) = 'ROMFormEntry and StrEqual(e.text, "Internet Setup") then entry := e;
+		e := c:Next();
+	end;
+	call nieBuiltInCheck with ("Internet Setup in Extras", entry and entry.labels = '_setup);
+	// the copies on the store, if any, kept but not active
+	local stored := call nieBuiltInStored with ();
+	local active := 0;
+	foreach r in stored do if IsPackageActive(r) then active := active + 1;
+	Print("nie-builtin: stored " & Length(stored) & ", active " & active);
+	call nieBuiltInCheck with ("no stored copy active", active = 0);
+	// the link grabbed and a name looked up by the NIE's own domain manager
+	InetGrabLink(InetGetDefaultLinkID(), nieBuiltInClient, 'Linked);
+end, 60);
+
+nieBuiltInClient := {
+	Linked: func(linkID, status, err)
+	begin
+		if err or status.linkStatus = 'connected then begin
+			call nieBuiltInCheck with ("the link grabbed", not err);
+			if err then
+				:Done()
+			else
+				DNSGetAddressFromName("localhost", self, 'Resolved);
+		end;
+	end,
+	Resolved: func(results, err)
+	begin
+		local a := if results and not err then results[0].resultIPAddress;
+		call nieBuiltInCheck with ("localhost resolved", a and a[0] = 127 and a[3] = 1);
+		:Done();
+	end,
+	Done: func()
+	begin
+		Print("nie-builtin: done, " & nieBuiltInFailed & " failed");
+		HostQuit();
+	end,
+};
