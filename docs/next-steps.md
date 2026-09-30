@@ -24,9 +24,11 @@ the way are all in `docs/work-log.md`.
   file (`newton --store`, `stores/flash/`).  **Memory cards mount**: a
   card is a host file (`newton --card`), formatted through the ROM's own
   dialogs, mounted and unmounted as it goes in and out (ctest
-  `host.NewtonCard`).  Being done: the Einstein cross-check (an Einstein
-  card image in and out).  NOT YET: the reinsert alert, card packages in
-  attribute memory, ATA cards.
+  `host.NewtonCard`); a card with Einstein's default CIS mounts
+  (`host.NewtonCardEinstein`).  Left: a round trip with a real Einstein
+  build (an image it wrote, one of ours opened in it), the reinsert
+  alert (the 'alrt server), card packages in attribute memory
+  (`TCardPipe`), ATA cards.
 
 ## What works
 

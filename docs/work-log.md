@@ -109,6 +109,17 @@ bugs and ROM bugs found on the way.
   count wraps.  `HostOptionLayouts`' '*' copies an option's trailing
   bytes as they are ('rout' numbers, 'mpro' profiles).
 
+## 2026-09-30: a card with Einstein's layout
+
+- `tools/cards/linearcard.py` (64c294bd): `info FILE` prints a
+  TLinearCard image's footer, name and CIS tuple by tuple; `make FILE
+  --size MB --cis HEX` writes a blank card with any CIS (the layout from
+  its description, no Einstein code copied).  A card with Einstein's
+  default CIS - 2 MB of Intel 28F008SA - is recognised, formatted at the
+  ROM's prompts and written on (ctest `host.NewtonCardEinstein`).  Not
+  yet checked: an image Einstein itself wrote, and ours opened in
+  Einstein.
+
 ## 2026-09-30: memory cards mount
 
 - The PSS manager's 'pssm world (d7abcf11; `stores/flash/PSSManager.h`):
