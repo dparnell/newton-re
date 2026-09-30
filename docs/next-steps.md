@@ -23,10 +23,10 @@ the way are all in `docs/work-log.md`.
   `GetCardSlotStores`.
 - **Stores**: the internal store is the ROM's own flash format in a host
   file (`newton --store`, `stores/flash/`).  Cards: the host card and
-  socket, the CIS, the memory card handler and a flash store on a card
-  are in; being done: the card server ('cdsv'), the PSS manager world and
-  the newt side's mount and unmount, then `newton --card` and a demo
-  (`docs/stores/README.md`, step 5).
+  socket, the CIS, the memory card handler, a flash store on a card and
+  the card server are in; being done: the PSS manager world and the newt
+  side's mount and unmount (the card server started by the boot), then
+  `newton --card` and a demo (`docs/stores/README.md`, step 5).
 
 ## What works
 

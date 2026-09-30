@@ -109,6 +109,24 @@ bugs and ROM bugs found on the way.
   count wraps.  `HostOptionLayouts`' '*' copies an option's trailing
   bytes as they are ('rout' numbers, 'mpro' profiles).
 
+## 2026-09-30: the card server
+
+- `pcmcia/CardServer.h` (caccd716, ctest `pcmcia.CardServer`):
+  `TCardServer` ('cdsv') watching the sockets and `TCardProcessor`
+  ('cdpr') reading a new card's CIS and offering it to each handler; the
+  socket states; the 'card' system event a new card is announced with
+  (`TNewCardAsyncMsg`); `TCardDomains` (DEVIATION: no fault monitor - host
+  card memory never faults); `InitCardServices`, `GetSocketInfo`, a real
+  `GetCardInfo`.  Nothing is detected until the application sends its
+  port (message 100).  The test puts a card in, takes it out, puts it in
+  again.
+- Host bugs found: the socket's `ResetInterrupts` disabled card detection
+  (the ROM's keeps it enabled), so a second insertion was never seen;
+  `GetVPCPins` had no voltage-sense pins, so every card was bad power.
+  ROM bugs kept: `TCardProcessor::DoCommand` checks socket > count rather
+  than >=; `GetCardInfo` asks the CIS it has just done, not the card, for
+  the next CIS.
+
 ## 2026-09-30: a fax received end to end
 
 - `tools/modem/fakemodem.py --fax-call PAGE.pbm` (dded806c) is a Class 1
