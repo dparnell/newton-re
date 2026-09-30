@@ -1028,6 +1028,17 @@ set_tests_properties(host.NewtonMonthOverview PROPERTIES TIMEOUT 180
                      PASS_REGULAR_EXPRESSION "9 am bar: ok.*1 pm bar: ok.*between them: ok.*monthoverview: done"
                      FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
 
+# part of a shape selected by tracing along it (views/PolygonTraced.cpp,
+# HiliteTraced), a traced stretch scrubbed out (RemovePoints, command 0x44)
+# and put back by Undo (demo/traced.ns)
+add_test(NAME host.NewtonTraced
+         COMMAND newton --display 320x480 --headless 150
+                 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/traced.ns
+         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonTraced PROPERTIES TIMEOUT 200
+                     PASS_REGULAR_EXPRESSION "stretch is selected: ok.*cut in two: ok.*box stays: ok.*back whole: ok.*traced: done"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+
 # a bigger internal flash (docs/stores/README.md, "Bigger flash"): a new
 # 128 MB sparse store, over 8 MB of soup entries written, read back after a
 # restart on the same file, and the file on disk the size of what was

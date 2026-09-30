@@ -705,13 +705,15 @@ TPolygonView::HiliteAll(void)
 
 
 // ROM 0x001912ec HandleHilite__12TPolygonViewFP11TUnitPubliclUc
-// A stroke traced along the shape would select the part of it traced
-// (kind 6: HiliteTraced 0x0018fa3c, NOT YET RECONSTRUCTED, so a trace
-// never takes); otherwise a stroke over most of it selects the whole of
-// it, as for any view (the ROM has TView's test inline here).
+// A stroke traced along the shape selects the part of it traced (kind 6,
+// offered when the editor has no claim yet or has taken a trace);
+// otherwise a stroke over most of it selects the whole of it, as for any
+// view (the ROM has TView's test inline here).
 long
 TPolygonView::HandleHilite(TUnitPublic* unit, long kind, Boolean reallyDoIt)
 {
+	if ((kind == 6 || kind == -1) && HiliteTraced(unit, reallyDoIt))
+		return 6;
 	return TView::HandleHilite(unit, kind, reallyDoIt);
 }
 
@@ -898,17 +900,124 @@ TPolygonView::DeleteHilited(RefArg hiliteRef)
 }
 
 
+// ROM 0x0018b67c OuterBounds__12TPolygonViewFP5TRect
+// The shape's line is drawn with the pen's top left on each point, so it
+// reaches the pen's width beyond the points' box at the bottom and the
+// right (a level line's box has no height at all); a selection's thick
+// line and dots reach four further all round.
+void
+TPolygonView::OuterBounds(Rect* bounds)
+{
+	TView::OuterBounds(bounds);
+	short pen = (short) GetPenSize();
+	bounds->right = (short) (bounds->right + pen);
+	bounds->bottom = (short) (bounds->bottom + pen);
+	if (Hilited())
+		InsetRect(bounds, -4, -4);
+}
+
+
+// ROM 0x0018d0d4 MakePointsCommand__12TPolygonViewFUll
+Ref
+TPolygonView::MakePointsCommand(ULong id, long count)
+{
+	RefVar cmd(MakeCommand(id, this, 0x8000000));
+	RefVar points(AllocateBinary(RSSYMpolygonshape, count * 4));
+	CommandSetPoints(cmd, points);
+	return cmd;
+}
+
+
+// ROM 0x0018bfb4 CommandSetPoints__FRC6RefVarT1
+void
+CommandSetPoints(RefArg cmd, RefArg points)
+{
+	SetFrameSlot(cmd, RSSYMpoints, points);
+}
+
+
+// ROM 0x0018cd1c CommandPoints__FRC6RefVar
+Ref
+CommandPoints(RefArg cmd)
+{
+	return GetFrameSlotRef(cmd, RSSYMpoints);
+}
+
+
+// ROM 0x0018b2c8 ValidatePoly__F7DataPtrRC5TRect
+// ROM bug kept (to no effect): the points' box, moved to the rectangle's
+// place, is compared with the rectangle and EmptyRect asked of it when
+// they differ, but the flag that was meant to say so is never set - so a
+// closed verb of any number of points besides 0, 3, 8, 9 and 10-12 is
+// never turned into the plain polygon.
+void
+ValidatePoly(RefArg points, const Rect& bounds)
+{
+	PolygonShape* shape = (PolygonShape*) BinaryData(points);
+	if (shape->fCount < 0)
+	{
+		shape->fCount = 0;
+		return;
+	}
+	if (shape->fCount == 0)
+	{
+		if (shape->fVerb != 15 && shape->fVerb != kPolyInk)
+			shape->fVerb = 15;
+		return;
+	}
+	Boolean badBounds = false;
+	Rect box;
+	shape->CalcBounds(&box);
+	OffsetRect(&box, bounds.left, bounds.top);
+	if (!EqualRect(&bounds, &box))
+		(void) EmptyRect(&bounds);				// (the answer goes nowhere)
+	long count = shape->fCount;
+	Boolean closes = *(ULong32*) &shape->fPoints[0] == *(ULong32*) &shape->fPoints[count - 1];
+	Boolean fix;
+	switch (shape->fVerb)
+	{
+	case 0:							fix = count != 0x19; break;
+	case 3:							fix = count != 1; break;
+	case 8:							fix = count != 2; break;
+	case 9:							fix = count != 4; break;
+	case 10: case 11: case 12:		fix = count != 5; break;
+	default:						fix = badBounds; break;
+	}
+	if (fix)
+		shape->fVerb = closes ? 4 : 5;
+	if (count == 1)
+	{
+		if (shape->fVerb != 3)
+			shape->fVerb = 3;
+	}
+	else if (count == 2)
+	{
+		if (shape->fVerb != 8 && shape->fVerb != kPolyArc)
+			shape->fVerb = 8;
+	}
+	else if (count == 4)
+	{
+		if (shape->fVerb != 9 && closes)
+			shape->fVerb = 9;
+	}
+	if (IsClosed(shape->fVerb) && !closes)
+		shape->fVerb = shape->fVerb == 6 ? 7 : 5;
+}
+
+
 // ROM 0x0018d144 RemovePoints__12TPolygonViewFP6TPointT1lN33
 // `from` and `to` are the selection's own first and last points (where
 // the cut ends go).  Ink, or a range from the very start to the very end,
 // is the whole shape: ==> true, and the caller removes the view.  An
-// empty range removes nothing.  NOT YET RECONSTRUCTED: a part of the
-// shape taken out (the piece after it made a shape of its own through an
-// aeAddChild, the rest cut back through the undoable points command 0x44)
-// - only a traced selection (HiliteTraced) is ever partial, and that is
-// NOT YET, so here it answers false and the caller only drops the hilite.
+// empty range removes nothing.  Otherwise what follows the range becomes
+// a shape of its own - an open one (an oval's piece an arc), starting at
+// `to` - added to the page through aeAddData; on a closed shape the piece
+// before the range goes round into it too (ending at `from`), and the
+// shape itself is then wholly replaced (==> true).  What precedes the
+// range on an open shape stays, cut back to end at `from` through the
+// undoable points command 0x44 (==> false: the view stays).
 Boolean
-TPolygonView::RemovePoints(Point* /*from*/, Point* /*to*/, long first, long last, long startPart, long endPart)
+TPolygonView::RemovePoints(Point* from, Point* to, long first, long last, long startPart, long endPart)
 {
 	RefVar points(Points());
 	PolygonShape* shape = (PolygonShape*) BinaryData(points);
@@ -919,9 +1028,94 @@ TPolygonView::RemovePoints(Point* /*from*/, Point* /*to*/, long first, long last
 	long start = startPart + first * 0x10000;
 	long end = endPart + (last - 1) * 0x10000;
 	long lastPoint = shape->fCount - 1;
+	Boolean before = start > 0;
+	Boolean after = end < lastPoint * 0x10000;
+	long keep = (start + 0xffff) >> 16;			// the points before the range: 0 to keep-1
+	long resume = end >> 16;					// the point the piece after it goes on from
 	if (shape->fVerb == kPolyInk || (start == 0 && end == lastPoint * 0x10000))
 		return true;
-	return false;
+	if (start == end)
+		return false;
+	Rect bounds = viewBounds;
+	Rect arcBounds;
+	if (shape->IsOval())
+		GetArcBounds(arcBounds);
+	if (after)
+	{
+		Point origin = fParent->ContentsOrigin();
+		OffsetRect(&bounds, (short) -origin.h, (short) -origin.v);
+		long verb = shape->IsOval() ? kPolyArc : shape->IsCurvy() ? 7 : 5;
+		Boolean wraps = false;
+		Boolean closesWith = false;
+		long endIndex;
+		if (before && IsClosed(shape->fVerb))
+		{
+			before = false;
+			closesWith = true;
+			endIndex = keep;
+			if (LessOrEq(first, startPart, last, endPart))
+				wraps = true;
+		}
+		else
+			endIndex = lastPoint;
+		long count = (wraps ? lastPoint - resume + keep : endIndex - resume) + 1;
+		RefVar cmd(MakeCommand(aeAddData, fParent, 0x8000000));
+		RefVar form(MakePolygonForm(shape->fPoints, count, verb, bounds, GetPenSize()));
+		CommandSetFrameParameter(cmd, form);
+		RefVar newPoints(GetFrameSlotRef(RefVar(CommandFrameParameter(cmd)), RSSYMpoints));
+		PolygonShape* newShape = (PolygonShape*) BinaryData(newPoints);
+		shape = (PolygonShape*) BinaryData(points);
+		if (!wraps)
+			memmove(newShape->fPoints, &shape->fPoints[resume], count * sizeof(Point));
+		else
+		{
+			long k = lastPoint - resume + 1;
+			memmove(newShape->fPoints, &shape->fPoints[resume], k * sizeof(Point));
+			memmove(&newShape->fPoints[k], &shape->fPoints[1], keep * sizeof(Point));
+		}
+		newShape->fPoints[0] = *to;
+		if (closesWith)
+			newShape->fPoints[count - 1] = *from;
+		Rect box;
+		newShape->CalcBounds(&box);
+		Rect placed = box;
+		OffsetRect(&placed, viewBounds.left, viewBounds.top);
+		ValidatePoly(newPoints, placed);
+		newShape = (PolygonShape*) BinaryData(newPoints);
+		newShape->Offset(-box.left, -box.top);
+		Point local = LocalOrigin();
+		OffsetRect(&box, local.h, local.v);
+		RefVar frame(CommandFrameParameter(cmd));
+		SetFrameSlot(frame, RSSYMviewbounds, RefVar(ToObject(box)));
+		gApplication->DispatchCommand(cmd);
+		if (verb == kPolyArc)
+		{
+			TPolygonView* view = (TPolygonView*) CommandParameter(cmd);
+			if (view != nil)
+				view->SetArcBounds(arcBounds);
+		}
+	}
+	if (before)
+	{
+		shape = (PolygonShape*) BinaryData(points);
+		RefVar cmd(MakePointsCommand(0x44, 1));
+		CommandSetIndexParameter(cmd, 0, keep);
+		CommandSetIndexParameter(cmd, 1, shape->fCount - keep);
+		CommandSetIndexParameter(cmd, 2, 1);
+		CommandSetIndexParameter(cmd, 3, 0);
+		RefVar cmdPoints(CommandPoints(cmd));
+		*(Point*) BinaryData(cmdPoints) = *from;
+		gApplication->DispatchCommand(cmd);
+		// (the ROM hands UpdateBounds the points it had before the command)
+		points = Points();
+		UpdateBounds((PolygonShape*) BinaryData(points));
+		shape = (PolygonShape*) BinaryData(points);
+		if (shape->IsOval())
+			SetArcBounds(arcBounds);
+		Rect r = viewBounds;
+		ValidatePoly(RefVar(Points()), r);
+	}
+	return !before;
 }
 
 
@@ -1044,13 +1238,78 @@ TPolygonView::SetPenSize(long pen)
 // Command 0x4b: the selection's pen size (param), cut out into a shape of
 // its own first when only part is selected; undoable when it was the
 // whole shape.  Taken whatever.
-// NOT YET RECONSTRUCTED: 0x44 (the points replaced - the undo of a partial
-// RemovePoints) and 0x32 (the double tap's reading of ink); they go to
-// TView's as before.
+// Command 0x44: points replaced - param1 points at param0 taken out and
+// the command's own 'points put in instead (param2 of them), the verb
+// then param3 - 1, or when param3 is nought the open verb the shape's
+// kind has; its undo is the same command putting back what was taken
+// out (moved as far as the view's bounds moved).  RemovePoints cuts a
+// shape back with it.
+// NOT YET RECONSTRUCTED: 0x32 (the double tap's reading of ink); it goes
+// to TView's as before.
 Boolean
 TPolygonView::RealDoCommand(RefArg cmd)
 {
 	long id = CommandID(cmd);
+	if (id == 0x44)
+	{
+		RefVar points(Points());
+		if (ISNIL(points))
+			return false;
+		long at = CommandIndexParameter(cmd, 0);
+		long removed = CommandIndexParameter(cmd, 1);
+		long inserted = CommandIndexParameter(cmd, 2);
+		long verb = CommandIndexParameter(cmd, 3);
+		PolygonShape* shape = (PolygonShape*) BinaryData(points);
+		short oldTop = viewBounds.top;
+		short oldLeft = viewBounds.left;
+		Rect arcBounds;
+		if (shape->IsOval())
+			GetArcBounds(arcBounds);
+		RefVar newPoints(CommandPoints(cmd));
+		RefVar undo(MakePointsCommand(0x44, removed));
+		CommandSetIndexParameter(undo, 0, at);
+		CommandSetIndexParameter(undo, 1, inserted);
+		CommandSetIndexParameter(undo, 2, removed);
+		shape = (PolygonShape*) BinaryData(points);
+		CommandSetIndexParameter(undo, 3, shape->fVerb + 1);
+		RefVar undoPoints(CommandPoints(undo));
+		shape = (PolygonShape*) BinaryData(points);
+		if (removed > 0)
+			memmove(BinaryData(undoPoints), &shape->fPoints[at], removed * sizeof(Point));
+		// (the host copies the points put in aside: Munger may move the heap)
+		Point* data = nil;
+		if (NOTNIL(newPoints) && inserted > 0)
+		{
+			data = (Point*) NewPtr(inserted * (long) sizeof(Point));
+			memmove(data, BinaryData(newPoints), inserted * sizeof(Point));
+		}
+		RefVar munged(Munger(points, 4 + at * 4, removed * 4, data, inserted * 4));
+		if (data != nil)
+			DisposPtr((Ptr) data);
+		shape = (PolygonShape*) BinaryData(munged);
+		shape->fCount = (short) (shape->fCount + (inserted - removed));
+		UpdateBounds(shape);
+		Point* saved = (Point*) BinaryData(undoPoints);
+		short dv = (short) (oldTop - viewBounds.top);
+		short dh = (short) (oldLeft - viewBounds.left);
+		for (long i = 0; i < removed; i++)
+		{
+			saved[i].v = (short) (saved[i].v + dv);
+			saved[i].h = (short) (saved[i].h + dh);
+		}
+		shape = (PolygonShape*) BinaryData(munged);
+		if (shape->IsOval())
+			SetArcBounds(arcBounds);
+		shape = (PolygonShape*) BinaryData(munged);
+		if (verb == 0)
+			shape->fVerb = shape->IsOval() ? kPolyArc : shape->IsCurvy() ? 7 : 5;
+		else
+			shape->fVerb = (short) (verb - 1);
+		SetValue(RSSYMpoints, munged);
+		gApplication->PostUndoCommand(undo);
+		fParent->Dirty(nil);
+		return true;
+	}
 	if (id == 0x43)
 	{
 		long index = CommandIndexParameter(cmd, 0);

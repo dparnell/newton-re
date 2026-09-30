@@ -1545,10 +1545,49 @@ within sixteen pixels of a side (`LineHitRatio`, how far along the
 segment's longer axis).  It is drawn in two passes: a thick black line
 over what is selected (`DrawHiliteLine` along each side, an eight-pixel
 arc over an oval, a round rectangle round ink), then a white dot on each
-corner.  NOT YET: `HiliteTraced` 0x0018fa3c (part of a shape selected by
-tracing along it, with about 7.5 KB of segment and snapping geometry
-under it), so a selection is always a whole shape, and with it the
-partial branch of `RemovePoints` and command 0x44 that undoes it.
+corner.
+
+A hilite stroke traced *along* a shape selects just the stretch it
+followed (`HiliteTraced`, `views/PolygonTraced.cpp`; `HandleHilite`
+offers it first, for kind 6 or no claim yet).  A position along a shape
+is 16.16 - the segment in the high half, how far along it in the low -
+and a segment is kept as its line's equation (`SegParams`: `a*h + b*v =
+c`, (a, b) the unit normal, and its length).  The stroke's first point
+must lie within the hit slop (`gHiliteHitSlop`, 6 pixels) of a side
+(`NextPolySegHit`); the stroke is then followed from that side one way
+or the other (`HiliteTracedFrom`): each step of it (`NextHiliteIndex`,
+points more than two pixels apart) is compared with the next few sides
+(`SegSegTraced`: both ends within the slop of the line, the two going
+the same way, overlapping along its length - an end off the line pushes
+the stretch it accounts for out by how far the slop's circle reaches at
+that height, `kHiliteTracedCurve`, sqrt(1 - (i/16)^2)); gaps or stretches
+of stroke along nothing of more than twice the slop end it, and at least
+eight pixels must be traced.  The two ends are snapped (`SearchForSnap`)
+to the start, middle or end of their segment, to where the old selection
+ended, or to where a stroke of another shape nearby crosses (the
+recognition context's units, the stroke's unit made a 'GSHP' for the
+asking; `MiniSolver` solves the two lines), and merged with the old
+selection (`AddInterval`, `ExtractHiliteFromIntervals`: one interval,
+or two meeting round a closed shape's join).  ROM bug kept:
+`AddInterval` merges an interval that spans several of the others with
+the first of them only.
+
+Deleting a partial selection (`RemovePoints`) makes what follows it a
+shape of its own (an open verb, an oval's piece an arc) through
+aeAddData on the page; on a closed shape what precedes it goes round into
+that piece too and the shape itself is removed, while on an open one it
+stays, cut back to end at the cut by the undoable points command 0x44
+(`RealDoCommand`: n points at an index replaced by the command's
+'points, the verb then param3 - 1; its undo puts the old points back,
+moved by as much as the view's bounds moved).  `ValidatePoly` makes a
+verb agree with its points (15 none, 3 one, 8 two, 9 four closing,
+closed verbs that do not close the open one; ROM bug kept: the check of
+the points' box against the bounds it is given sets nothing).
+`OuterBounds` grows the view by the pen at the bottom right - a level
+line's box has no height - and by four all round while it is selected.
+`src/host/demo/traced.ns` (ctest `host.NewtonTraced`) traces part of a
+box's top, then cuts a line in two with a traced selection and a scrub
+and undoes it.
 
 `TView::LocalOrigin` is where a view is in the coordinates its
 `viewBounds` slot is written in - the parent's contents origin taken off

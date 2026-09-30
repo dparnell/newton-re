@@ -40,6 +40,8 @@ add_library(views STATIC
     Rerecognize.cpp
     GaugeView.cpp
     PolygonView.cpp
+    PolygonTraced.cpp
+    PolygonViewTables.cpp
     DrawShape.cpp
     ShapeVerbs.cpp
     PictureShapes.cpp

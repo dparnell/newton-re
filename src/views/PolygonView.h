@@ -29,14 +29,16 @@
 				black line over the shape (DrawHilites off) with white dots
 				at the corners (on).
 
-				NOT YET RECONSTRUCTED: HiliteTraced (0x0018fa3c, part of a
-				shape selected by tracing along it, with the segment and
-				snap geometry under it: NextPolySegHit, HiliteTracedFrom,
-				SegSegTraced, SearchForSnap, MiniSolver, AddInterval,
-				ExtractHiliteFromIntervals - about 7.5 KB), scrubbing
+				A stroke traced along part of the shape selects that part
+				(HiliteTraced, PolygonTraced.cpp), and deleting a part
+				cuts it out (RemovePoints: what follows made a shape of its
+				own, what precedes kept through the undoable points
+				command 0x44).
+
+				NOT YET RECONSTRUCTED: scrubbing
 				(HandleScrub, ScrubSegment, HitSegment), scaling (Scale,
 				DrawScaledData), the drag and drop (AddDragInfo, GetDropData,
-				DropRemove), OuterBounds, RealDoCommand's 0x32 (the double
+				DropRemove), RealDoCommand's 0x32 (the double
 				tap's reading of ink), and the printing path of the ink
 				verb (InkMakePaths, FramePaths).
 
@@ -112,7 +114,8 @@ public:
 	virtual long	ClassID(void) const;								// ROM 0x0018de14 ClassID__12TPolygonViewCFv
 	virtual Boolean	DerivedFrom(long id) const;							// ROM 0x0018e700 DerivedFrom__12TPolygonViewCFl
 	virtual void	RealDraw(Rect& bounds);								// ROM 0x0018c684 RealDraw__12TPolygonViewFR5TRect
-	virtual Boolean	RealDoCommand(RefArg cmd);							// ROM 0x0018ffbc RealDoCommand__12TPolygonViewFRC6RefVar (partial: see the definition)
+	virtual Boolean	RealDoCommand(RefArg cmd);
+	virtual void	OuterBounds(Rect* bounds);							// ROM 0x0018b67c OuterBounds__12TPolygonViewFP5TRect - grown by the pen at the bottom right, and by four all round while selected							// ROM 0x0018ffbc RealDoCommand__12TPolygonViewFRC6RefVar (partial: see the definition)
 
 	// the selection
 	virtual void	DrawHilitedData(void);								// ROM 0x0018c6ec DrawHilitedData__12TPolygonViewFv
@@ -133,7 +136,13 @@ public:
 	void			PolygonHiliteChanged(void);							// ROM 0x0018ddc8 PolygonHiliteChanged__12TPolygonViewFv
 	void			UpdateBounds(PolygonShape* shape);					// ROM 0x00190ea0 UpdateBounds__12TPolygonViewFP12PolygonShape - the view fitted round its points again
 	void			SetArcBounds(const Rect& bounds);					// ROM 0x0018c070 SetArcBounds__12TPolygonViewFRC5TRect
-	void			SetPenSize(long pen);								// ROM 0x001910c4 SetPenSize__12TPolygonViewFl
+	void			SetPenSize(long pen);
+	// A command to the view carrying `count` points (its 'points slot, a
+	// 'polygonShape binary of the points alone).
+	Ref				MakePointsCommand(ULong id, long count);			// ROM 0x0018d0d4 MakePointsCommand__12TPolygonViewFUll
+	// Whether the hilite stroke was traced along the shape; with
+	// `reallyDoIt` the part traced is selected (PolygonTraced.cpp).
+	Boolean			HiliteTraced(TUnitPublic* unit, Boolean reallyDoIt);	// ROM 0x0018fa3c HiliteTraced__12TPolygonViewFP11TUnitPublicUc								// ROM 0x001910c4 SetPenSize__12TPolygonViewFl
 	// The points from `first` (startPart along) to `last` (endPart
 	// along) taken out.  ==> whether that was the whole shape, which the
 	// caller then removes (partial: see the definition).
@@ -165,6 +174,17 @@ void	PtToAngle(const Rect* box, Point pt, long* angle);	// ROM 0x002aa5b8 PtToAn
 // it the pen is, 16.16 (0 at `a`, 0x10000 at `b`), or 0x80000000 for not
 // near it.
 Fixed	LineHitRatio(const Point& pt, const Point& a, const Point& b, long slop);	// ROM 0x00198f74 LineHitRatio__6TPointCFRC6TPointT1l
+// Whether a shape of the verb closes on itself (PolygonTraced.cpp).
+Boolean	IsClosed(long verb);								// ROM 0x0018e644 IsClosed__Fl
+// A shape's verb made to agree with its points: none is nothing (15),
+// one a dot (3), two a line (8, unless an arc), four closing on
+// themselves a rectangle (9); a closed verb whose points do not close is
+// the open one.  The rectangle is checked against the points' box, and
+// nothing comes of it (see the definition).
+void	ValidatePoly(RefArg points, const Rect& bounds);	// ROM 0x0018b2c8 ValidatePoly__F7DataPtrRC5TRect
+// The 'points slot of a points command.
+void	CommandSetPoints(RefArg cmd, RefArg points);		// ROM 0x0018bfb4 CommandSetPoints__FRC6RefVarT1
+Ref		CommandPoints(RefArg cmd);							// ROM 0x0018cd1c CommandPoints__FRC6RefVar
 // Whether the first point of one range comes before the last of another.
 Boolean	LessOrEq(long first, long startPart, long last, long endPart);	// ROM 0x0018ccf0 LessOrEq__FlN31
 // The pen-size palette (the root's stylePalette), when it is showing,

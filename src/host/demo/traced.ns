@@ -1,0 +1,154 @@
+// Selecting part of a shape by tracing along it (views/PolygonView.h,
+// HiliteTraced): a box and a line drawn on the Notepad set to shapes, then
+// the hilite stroke - the pen held still on a side, then drawn along it -
+// traced along the left half of the box's top side.  Only that stretch is
+// selected: the thick black selection line runs along it and stops, and
+// the rest of the box stays thin.  Then the middle of the line is traced
+// and scrubbed out: the line is cut in two (RemovePoints: the piece
+// after the cut a shape of its own, the one before cut back through the
+// points command 0x44), and the box's stretch, still selected, goes with
+// it (a closed shape cut becomes one open shape); Undo puts both back.
+// Pictures: build/traced.pgm (the box's stretch selected),
+// build/traced-line.pgm, build/traced-cut.pgm, build/traced-undo.pgm.
+//
+//   build/host/host/newton --display 320x480 --script src/host/demo/traced.ns --headless 120
+//   build/venv/Scripts/python tools/imaging/pgm2png.py build/traced.pgm build/traced.png
+//
+// Prints "traced: <check>: ok" or "FAILED", and "traced: done".
+
+HostInclude("common.ns");			// tapAt, waitFor, walkSetup
+HostInclude("walkhelpers.ns");		// findView, stroke
+
+trCheck := func(what, ok, why) Print("traced: " & what & (if ok then ": ok" else ": FAILED " & why));
+
+// the shapes on the page: views of class 82 (clPolygonView)
+trShapes := func() begin
+	local found := [];
+	local walk;
+	walk := func(v) begin
+		if BAnd(v.viewClass, 0xFFFF) = 82 then AddArraySlot(found, v);
+		foreach child in v:ChildViewFrames() do call walk with (child);
+	end;
+	call walk with (GetRoot().paperroll);
+	found;
+end;
+trBox := func() begin
+	local box := nil;
+	foreach v in call trShapes with () do
+		begin local b := v:GlobalBox(); if b.bottom - b.top > 40 then box := v; end;
+	box;
+end;
+trLine := func() begin
+	local line := nil;
+	foreach v in call trShapes with () do
+		begin local b := v:GlobalBox(); if b.bottom - b.top < 20 then line := v; end;
+	line;
+end;
+
+// A straight stroke through the corners, a point every four pixels.
+trPath := func(corners) begin
+	local pts := [];
+	for c := 0 to Length(corners) - 4 by 2 do begin
+		local x0 := corners[c], y0 := corners[c + 1], x1 := corners[c + 2], y1 := corners[c + 3];
+		local steps := Max(Abs(x1 - x0), Abs(y1 - y0)) div 4;
+		for k := 0 to steps - 1 do begin
+			AddArraySlot(pts, x0 + ((x1 - x0) * k) div steps);
+			AddArraySlot(pts, y0 + ((y1 - y0) * k) div steps);
+		end;
+	end;
+	AddArraySlot(pts, corners[Length(corners) - 2]);
+	AddArraySlot(pts, corners[Length(corners) - 1]);
+	pts;
+end;
+
+// The hilite stroke: held still at the start, then drawn to the end.
+trHilite := func(x0, y, x1) begin
+	PenDown(x0, y);
+	for i := 1 to 60 do PenMove(x0, y);
+	for x := x0 to x1 by 3 do PenMove(x, y);
+	PenUp();
+end;
+
+// how many of the pixels on the row under `y` are black: a side of the
+// shape is two pixels, rows y and y+1 for a side at y, and the selection
+// is drawn over it in XOR four pixels thick, so a selected side has y+2
+// and y+3 black and an unselected one white there
+trBlackUnder := func(x0, x1, y) begin
+	local n := 0;
+	for x := x0 to x1 do if ScreenPixel(x, y + 1) < 128 then n := n + 1;
+	n;
+end;
+
+// The middle of the line traced and scrubbed out: two lines left, one
+// ending where the trace began and one starting where it ended; Undo then
+// puts the line back whole.
+trLineBoxes := func() begin
+	local boxes := [];
+	foreach v in call trShapes with () do
+		begin local b := v:GlobalBox(); if b.bottom - b.top < 20 then AddArraySlot(boxes, b); end;
+	Sort(boxes, '|<|, 'left);
+end;
+trCutLine := func() begin
+	local b := (call trLine with ()):GlobalBox();
+	call trHilite with (b.left + 50, b.top, b.left + 140);
+	AddDelayedCall(func() begin
+		ScreenSnapshot("build/traced-line.pgm");
+		// a scrub over the selection
+		local pts := [];
+		for i := 0 to 8 do begin
+			AddArraySlot(pts, b.left + 70 + i * 8);
+			AddArraySlot(pts, b.top + (if i mod 2 = 0 then -6 else 6));
+		end;
+		call stroke with (pts);
+		call waitFor with ("traced: the cut", func() Length(call trLineBoxes with ()) = 2, func() AddDelayedCall(func() begin
+			ScreenSnapshot("build/traced-cut.pgm");
+			local pieces := call trLineBoxes with ();
+						call trCheck with ("the line is cut in two", Length(pieces) = 2, "pieces: " & Length(pieces));
+			call trCheck with ("the first piece ends where the trace began",
+				Abs(pieces[0].right - (b.left + 50)) <= 8 and pieces[0].left = b.left, "ends at " & pieces[0].right);
+			call trCheck with ("the second starts where it ended",
+				Abs(pieces[1].left - (b.left + 140)) <= 8 and pieces[1].right = b.right, "starts at " & pieces[1].left);
+			// the box's traced stretch was still selected, so the scrub
+			// took it out too: a closed shape cut is one open shape, from
+			// the end of the cut round to its start
+			local box := (call trBox with ()):GlobalBox();
+			call trCheck with ("the box's top is cut where it was traced",
+				ScreenPixel(box.left + 70, box.top) > 128 and ScreenPixel(box.left + 20, box.top) < 128
+				and ScreenPixel(box.right - 20, box.top) < 128, "top row");
+			call trCheck with ("the rest of the box stays", ScreenPixel(box.left + 70, box.bottom) < 128
+				and ScreenPixel(box.left, box.top + 40) < 128 and ScreenPixel(box.right, box.top + 40) < 128, "sides");
+			call tapAt with (180, 460);							// Undo
+			call waitFor with ("traced: the undo", func() Length(call trLineBoxes with ()) = 1, func() AddDelayedCall(func() begin
+				ScreenSnapshot("build/traced-undo.pgm");
+				local whole := (call trLineBoxes with ())[0];
+				call trCheck with ("Undo puts the line back whole", whole.left = b.left and whole.right = b.right, "is " & whole.left & ".." & whole.right);
+				Print("traced: done");
+				AddDelayedCall(func() HostQuit(), nil, 800);
+			end, nil, 1000), 20);
+		end, nil, 1000), 20);
+	end, nil, 2000);
+end;
+
+call walkSetup with ([2, 0, 45, 34, 14, 37], func() begin		// "Daniel"
+	GetRoot().paperroll._recogSettings := 128;					// shapes only
+	PurgeAreaCache();
+	call stroke with (call trPath with ([60, 120, 260, 120, 260, 200, 60, 200, 60, 121]));
+	call waitFor with ("traced: the box", trBox, func() begin
+		call stroke with (call trPath with ([60, 300, 260, 300]));
+		call waitFor with ("traced: the line", trLine, func() AddDelayedCall(func() begin
+			local b := (call trBox with ()):GlobalBox();
+			Print({box: b});
+			// along the top from a fifth of the way in to just past the middle
+			call trHilite with (b.left + 40, b.top, b.left + 110);
+			call waitFor with ("traced: the selection", func() call trBlackUnder with (b.left + 50, b.left + 100, b.top + 1) > 40, func()
+				AddDelayedCall(func() begin
+					ScreenSnapshot("build/traced.pgm");
+					call trCheck with ("the traced stretch is selected", call trBlackUnder with (b.left + 50, b.left + 100, b.top + 1) > 40, "no selection line");
+					call trCheck with ("the rest of the top is not", call trBlackUnder with (b.left + 130, b.right - 10, b.top + 1) = 0, "selected further along");
+					call trCheck with ("the bottom is not", call trBlackUnder with (b.left + 10, b.right - 10, b.bottom + 1) = 0, "the whole box selected");
+					call trCutLine with ();
+				end, nil, 1000), 20);
+		end, nil, 1500), 30);
+	end, 30);
+end);
+Print("traced: the script is loaded");
