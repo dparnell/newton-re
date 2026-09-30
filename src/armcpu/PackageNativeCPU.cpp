@@ -1877,6 +1877,7 @@ GLUE(Glue_IsString)				{ w.Return(cpu, IsString(RefVar(w.ArgRef(cpu.r[0]))) ? 1 
 GLUE(Glue_IsInstance)			{ w.Return(cpu, IsInstance(RefVar(w.ArgRef(cpu.r[0])), RefVar(w.ArgRef(cpu.r[1]))) ? 1 : 0); return true; }
 GLUE(Glue_IsSubclassRef)		{ w.Return(cpu, IsSubclassRef(w.ToHost(cpu.r[0]), w.ToHost(cpu.r[1])) ? 1 : 0); return true; }
 GLUE(Glue_IsBinary)				{ w.Return(cpu, IsBinary(RefVar(w.ArgRef(cpu.r[0]))) ? 1 : 0); return true; }
+GLUE(Glue_EQ)					{ w.Return(cpu, EQ(RefVar(w.ArgRef(cpu.r[0])), RefVar(w.ArgRef(cpu.r[1]))) ? 1 : 0); return true; }	// (ROM 0x0031c820: EQRef of the two refs)
 GLUE(Glue_IsNumber)				{ w.Return(cpu, IsNumber(RefVar(w.ArgRef(cpu.r[0]))) ? 1 : 0); return true; }
 GLUE(Glue_CoerceToInt)			{ w.Return(cpu, (uint32_t) (int32_t) CoerceToInt(RefVar(w.ArgRef(cpu.r[0])))); return true; }
 GLUE(Glue_IsReal)				{ w.Return(cpu, IsReal(RefVar(w.ArgRef(cpu.r[0]))) ? 1 : 0); return true; }
@@ -1909,6 +1910,28 @@ GLUE(Glue_memmove)
 			w.Write8(dst + i, b);
 		}
 	w.Return(cpu, dst);
+	return true;
+}
+// BlockMove(src, dst, count): memmove with the source first (the Toolbox's
+// order), overlapping blocks safe as the ROM's is
+GLUE(Glue_BlockMove)
+{
+	uint32_t src = cpu.r[0], dst = cpu.r[1], n = cpu.r[2];
+	if (dst < src)
+		for (uint32_t i = 0; i < n; i++)
+		{
+			uint8_t b = 0;
+			w.Read8(src + i, &b);
+			w.Write8(dst + i, b);
+		}
+	else
+		for (uint32_t i = n; i-- > 0; )
+		{
+			uint8_t b = 0;
+			w.Read8(src + i, &b);
+			w.Write8(dst + i, b);
+		}
+	w.Return(cpu, 0);
 	return true;
 }
 GLUE(Glue_memset)
@@ -2377,6 +2400,7 @@ InitGlue(void)
 		{ "IsReal__FRC6RefVar", Glue_IsReal },
 		{ "IsBinary__FRC6RefVar", Glue_IsBinary },
 		{ "IsNumber__FRC6RefVar", Glue_IsNumber },
+		{ "EQ__FRC6RefVarT1", Glue_EQ },
 		{ "CoerceToInt__FRC6RefVar", Glue_CoerceToInt },
 		{ "ThrowMsg", Glue_ThrowMsg },
 		{ "RemoveSlot__FRC6RefVarT1", Glue_RemoveSlot },
@@ -2389,6 +2413,7 @@ InitGlue(void)
 		{ "RCHAR__Fl", Glue_RCHAR },
 		{ "memcpy", Glue_memmove },
 		{ "memmove", Glue_memmove },
+		{ "BlockMove", Glue_BlockMove },
 		{ "memset", Glue_memset },
 		{ "strlen", Glue_strlen },
 		{ "__rt_sdiv", Glue_rt_sdiv },
