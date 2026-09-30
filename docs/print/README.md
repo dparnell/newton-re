@@ -77,8 +77,56 @@ The layout offsets below are the ROM's.
 
 `romsizes.py` does not catch either.
 
+## The print view
+
+`views/PrintView.h` is `TPrintView`, view class 94, the view a transport renders an item into. The ROM's `PrintNow` (the transport's, 0x4c7f39) makes it with `BuildContext`, puts the item's fields in `fields` and the printer frame in `printer`, and `RenderIt` opens it, sends it `Render` and closes it.
+- **Command 56 prints.** `ROMRealDoCommand` forks the world, so the fork takes the event loop over while the job runs in the original task. When the world cannot fork, the command is taken and nothing printed.
+- **The job.** The printer is made from the printer frame's `imagingName` and `driverName` (`MakePrinter`) and opened with the fields. The view's `viewShowScript` runs with the printer's port current, and `PrintPages` prints the pages.
+- **The pages.** Each page is drawn once per band: the view draws the band's rectangle (or the whole print form when `fUseFullPage` is set) until `RepeatPage` answers false. The transport's progress is set as the bands go (`SetPrintProgress`; a fax's through `SetFaxPrintProgress`, `gTransportProgress`), and the next page comes from `printNextPageScript`. A fax whose page failed is tried again.
+- **Errors.** The job's error goes in the fields' `error` slot; the ROM prints it to the debugging port (`PrintObject`, the REP's output on the host). A printer problem goes to `HandleProblem`, which shows the root's `printProblem` slip.
+- **Command 57 cancels**; 44 is taken and ignored.
+
+**What floats over it on the screen does not reach the paper.** The print view is a child of the root view, so it has a clipper, and the clipper's visible region is wide open. `TView::SetupVisRgn` (0x00267974) stops at the first ancestor with a clipper, after intersecting its visible region, so no front mask is subtracted. The transport's floating "Sending" slip is in front of the print view the whole time. Until the host's `SetupVisRgn` stopped there as the ROM's does, the slip's screen rectangle was cut out of every page, taking the fax cover page's title and rule with it.
+
+## The fax driver
+
+`print/FaxDriver.h` is `TFaxDriver`, the ROM's `TDotPrinterDriver` for fax, over `comms/fax/FaxToolInterface.h`.
+- **`TFaxToolInterface`** drives the fax tool (serv `'faxs'`, over the modem tool `'mods'`) with raw comm-tool requests to the tool's port:
+  - opening: bind then connect, or listen then accept when answering;
+  - pages: option requests `'fsgp'` and `'feom'`, whose op is 1 BeginPage, 2 EndPage, 3 Confirm or 5 PrintBand;
+  - a band: a put request carrying the `'fcsb'` option;
+  - closing: kill, then disconnect (opcode 6).
+
+  It can run synchronously or asynchronously; four messages go out at once at most. The replies come back to the world's port with `this` as the refcon, and `TFaxDriverData` (its subclass) turns each into a call such as `OpenSessionComplete` or `PrintBandComplete`. Those unblock the job's `PrReleaseControl` through the printer's `fBlocked`. Its vtable is at ROM 0x1e798, `TFaxDriverData`'s at 0x1d7f0.
+- **`Open`** starts the fax service over the modem tool and dials the connection frame's `phoneNumber` with the user's dialling preferences. The resolution is 1 (normal) when the frame's `faxResolution` says so, otherwise fine. `localId` goes to the other end, and the other end's identity comes back in `remoteId`.
+- **The page** (`GetPageInfo`) is what the session agreed, from the four page tables at ROM 0x378be4-0x378c14 (`FaxDriverTables.cpp`, made by romtable.py). It is 200 dots an inch across, and 200 (fine) or 100 (standard) down:
+
+  | Paper | Width | Fine rows | Standard rows |
+  |---|---|---|---|
+  | letter | 1650 | 2050 | 1025 |
+  | A4 | 1596 | 2188 | 1094 |
+
+  The margins are a quarter of an inch (`vRes >> 2` lines), and the line is 1728 pixels as T.4 has it.
+- **Bands** (`GetBandPrefs`) are 25 lines deep, taken asynchronously, with `wantMinBounds`. `ImageBand` sends the rows above the black's bounds as white lines (`PrintBand(nil, n, ...)`), the rows the black covers (whole rows) as a band, and the rest as white lines again. A band with no black is all white lines.
+- **`ContinueIO`** lets the job go on after a reply of 0, -44004 or -22005.
+
+Tests: ctest `host.NewtonFaxSend` (demo `src/host/demo/fax-send.ns`) sends a note through the fax routing slip to `tools/modem/fakemodem.py --fax-answer`. `host.NewtonFaxSend.check` then runs `tools/modem/faxcheck.py` on the two pages that arrive (the cover page and the note, 1728 x 2148 each): the pages must be there and not blank, the cover page's title and rule and the note's text must be inked, and each page is written out as a PNG (`build/fax-sent.png`, `build/fax-sent-2.png`).
+
+### Fax driver quirks kept
+
+- `TFaxDriver::Open` does not look at the session's own error. It answers the driver's error (a cancel while it waited), and a failed session shows on the first page instead.
+- `GetPageInfo`, asked before the session's open has come back, waits by spinning on a flag that nothing can set while it spins, so it never returns. `TDotPrinter` only asks after `Open`, which has waited properly.
+- `ImageBand` answers 1, not the error, when the band before it failed.
+- The Newton's Class 1 frames go out without an FCS, as a DTE's `+FTH` frames should, and its DCS asks for fine resolution (`00 46 00`).
+
+### Fax deviations
+
+- `TFaxToolInterface::SetMinScanLineTime` answers nought where the ROM reads the word after the option's time, past the end of the option. Nothing in the ROM calls it.
+- The `TCMARouteAddress`, `TCMAPhoneNumber` and `TCMOServiceIdentifier` constructors size their options from the host's structs.
+
 ## Not yet
 
-- `TPSPrinter`, the PostScript imaging engine, and the drivers other than the fax driver.
+- `TPSPrinter`, the PostScript imaging engine, and the drivers other than the fax driver.  Next: a host driver behind `TDotPrinterDriver` that writes each page to a PNG, so Print from any Newton application lands on the host.
+- Fax sending over Class 2.
 - `TPrDriverPart`, the 'prnt part handler for printer-driver packages.
 - `TQDLibraryDriver`, the QuickDraw library offered to drivers.
