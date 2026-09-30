@@ -340,7 +340,9 @@ and the bounds as they are), the lines moved down by the vertical text
 bits when the text is shorter than the view; the lines are cached as
 `LineInfo` records (the ROM's 0x24-byte ones: start and end offsets, the
 first and last text object, whether the line ends in white space - a line
-keeps the space that ends it - and its box), moved along when the view
+keeps the space that ends it - how far its baseline is below its top and
+its bottom below the baseline, `LineLoop::AddNextLine`'s outputs, and its
+box), moved along when the view
 moves (`OffsetCachedBounds` 0x0016b94c) and rebuilt when it is resized.
 `RealDraw` 0x0016b14c draws the lines and an ellipsis (U+2026, the ROM's
 Mac Roman 0xc9) after the last when the text goes on past it and the

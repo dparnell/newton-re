@@ -74,7 +74,9 @@ struct LineInfo
 	long		fEndObj;			// +0x0c  after its last
 	Boolean		fEndsWithSpace;		// +0x10
 	long		fAscent;			// +0x14  the baseline below the line's top
-	long		fHeight;			// +0x18  the line's height
+	long		fHeight;			// +0x18  the line's bottom below the baseline (the
+									//        two together are the line's height -
+									//        LineLoop::AddNextLine's outputs)
 	Rect		fBounds;			// +0x1c  its box (the text's width)
 };
 

@@ -820,7 +820,7 @@ TParagraphView::FillAllCaches(void)
 		line.fEndObj = firstRun + runs;
 		line.fEndsWithSpace = fitted > 0 && text[pos + fitted - 1] == kSP;
 		line.fAscent = ascent;
-		line.fHeight = lineHeight;
+		line.fHeight = lineHeight - ascent;
 		SetRect(&line.fBounds, 0, (short) y, (short) ((bounds.fWidth + 0x8000) >> 16), (short) (y + lineHeight));
 		Rect box;
 		SetRect(&box, 0, 0, (short) width, (short) height);
@@ -7346,8 +7346,11 @@ TParagraphView::PointOverHilitedText(Point& pt)
 // top ('offset), and the correction information of the stretch, moved
 // to start at nought.  The text itself is the caller's to add.
 //
-// NOT YET: 'offset - the ROM's line cache keeps two heights this one
-// does not, and the offset is the line's height less the two.
+// 'offset is the height of the box of the stretch's first line less the
+// line's two heights (above and below the baseline) - what LineLoop's
+// ComputeLineBounds moved the line by.  (The host lays lines out with no
+// such move - its layout is not the ROM's LineLoop - so the slot is
+// never made here.)
 Ref
 TParagraphView::GetRangeProperties(long start, long end)
 {
@@ -7370,6 +7373,14 @@ TParagraphView::GetRangeProperties(long start, long end)
 	value = GetProto(RSSYMtextflags);
 	if (NOTNIL(value))
 		SetFrameSlot(props, RSSYMtextflags, value);
+	long lineIndex = FindLineContainingCharOffset(start);
+	if (lineIndex >= 0)
+	{
+		const LineInfo& line = fLines[lineIndex];
+		long offset = (short) (line.fBounds.bottom - line.fBounds.top) - (line.fAscent + line.fHeight);
+		if (offset != 0)
+			SetFrameSlot(props, RSSYMoffset, RefVar(MAKEINT(offset)));
+	}
 	value = ExtractRange(RefVar(CorrectInfo()), this, start, end);
 	if (NOTNIL(value))
 	{
@@ -7927,7 +7938,7 @@ static long
 LastLineDescent(const TParagraphView* view)
 {
 	const LineInfo& line = view->Line(view->LineCount() - 1);
-	return (short) (line.fHeight - line.fAscent);
+	return (short) line.fHeight;
 }
 
 

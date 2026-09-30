@@ -96,8 +96,10 @@ the way are all in `docs/work-log.md`.
 - `instance:Dispatch`, `RegisterGestalt`, `ReplaceGestalt` want
   `PrimCallProtocolFromFrames` (NewtonScript values marshalled into a C
   call); a host protocol's methods need numbered thunks.
-- `ComputeParagraphHeight` (0x001ecfd0: read it from the assembly).
-- `GetRangeProperties`' `offset` slot.
+- A paragraph's lines are laid out the host's way, not by the ROM's
+  `LineLoop` (0x0010d8d4-0x0010ecd4 and on) with a text object per run: what
+  `ComputeLineBounds` moves a line by is therefore always nought here, and
+  so is `GetRangeProperties`' `offset` slot, which is made of it.
 - Packages: XIP packages (the ROM domain manager's page faulting, about
   11 KB); a card's `'stor` event and `GetCardReinsertionInfo`; card
   packages in attribute memory (`TCardPipe`); ATA cards.

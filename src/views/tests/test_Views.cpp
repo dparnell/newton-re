@@ -792,14 +792,14 @@ TestParagraphView()
 	{
 		EXPECT(p->Line(0).fStart == 0 && p->Line(0).fEnd == 6 && p->Line(1).fStart == 6 && p->Line(1).fEnd == 12 && p->Line(2).fStart == 12 && p->Line(2).fEnd == 17);	// a line keeps the space that ends it (LineInfo's endsWithSpace)
 		EXPECT(p->Line(0).fEndsWithSpace && !p->Line(2).fEndsWithSpace);
-		EXPECT(p->Line(0).fHeight == p->fLineHeight && p->Line(1).fBounds.top == 10 + p->Line(0).fHeight && p->Line(0).fBounds.left == 20);
-		EXPECT(p->TextBounds().top == 10 && p->TextBounds().bottom == 10 + 3 * p->Line(0).fHeight);
+		EXPECT((p->Line(0).fAscent + p->Line(0).fHeight) == p->fLineHeight && p->Line(1).fBounds.top == 10 + (p->Line(0).fAscent + p->Line(0).fHeight) && p->Line(0).fBounds.left == 20);
+		EXPECT(p->TextBounds().top == 10 && p->TextBounds().bottom == 10 + 3 * (p->Line(0).fAscent + p->Line(0).fHeight));
 	}
 	EXPECT(EQRef(p->GetStyles(), Eval("espy12")));
 	Eval("ctxQ:Dirty()");
 	Refresh();
 	long inkLeft, inkRight;
-	long lineHeight = p->Line(0).fHeight;
+	long lineHeight = p->Line(0).fAscent + p->Line(0).fHeight;
 	InkExtent(10, 10 + lineHeight, &inkLeft, &inkRight);
 	EXPECT(inkLeft == 20 && inkRight == 46);								// "Hello" as the text view drew it
 	InkExtent(10 + lineHeight, 10 + 2 * lineHeight, &inkLeft, &inkRight);
@@ -843,7 +843,7 @@ TestParagraphView()
 	EXPECT(IsArray(p->GetStyles()));
 	Eval("ctxQ:Dirty()");
 	Refresh();
-	InkExtent(10 + p->Line(0).fHeight, 10 + p->Line(0).fHeight + p->Line(1).fHeight, &inkLeft, &inkRight);
+	InkExtent(10 + p->Line(1).fBounds.top, 10 + p->Line(1).fBounds.bottom, &inkLeft, &inkRight);
 	EXPECT(inkLeft == 20 && inkRight > 46);								// "World" in espy 18 is wider than "Hello" in 12
 	Eval("ctxQ:Close()");
 
@@ -924,7 +924,7 @@ TestParagraphView()
 	Refresh();
 	InkExtent(10, 90, &inkLeft, &inkRight);
 	EXPECT(inkRight == 69 && inkLeft == 43);								// flush right: the advance's last pixel is blank
-	InkExtent(10, 90 - p->Line(0).fHeight, &inkLeft, &inkRight);
+	InkExtent(10, 90 - (p->Line(0).fBounds.bottom - p->Line(0).fBounds.top), &inkLeft, &inkRight);
 	EXPECT(inkRight == 0);
 	// moved: the cached lines move along
 	Eval("ctxQ:Close()");
@@ -5001,7 +5001,7 @@ TestInkWordInText()
 	// and the line is as tall as the word, not as a letter
 	InkWordInfo info;
 	GetInkWordInfo(word, &info);
-	EXPECT(para->Line(0).fHeight >= (long) (info.fScaledAscent + info.fScaledDescent));
+	EXPECT((para->Line(0).fAscent + para->Line(0).fHeight) >= (long) (info.fScaledAscent + info.fScaledDescent));
 
 	Eval("RemoveView(GetRoot(), ctxIW)");
 	Refresh();
