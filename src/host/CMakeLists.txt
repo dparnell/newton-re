@@ -942,6 +942,31 @@ add_test(NAME host.NewtonYear2010.romBug
 set_tests_properties(host.NewtonYear2010.romBug PROPERTIES TIMEOUT 240 ENVIRONMENT NEWTON_ROM_2010_BUG=1
                      PASS_REGULAR_EXPRESSION "firstNote: \"[0-9/]+92 .*first note: FAILED dated 1992.*year2010: done")
 
+# the rest of a first day (demo/walkthrough2.ns): every Prefs panel opened
+# and three settings changed, a bold style, a scrub undone, the on-screen
+# keyboard, Seattle made the home city, Formulas, the Clock's minute timer
+# ringing, the Dock's connection picker, the help book, a memory card
+# formatted and a duplicated note filed on it - each step checked and
+# snapshotted (build/walkthrough2-<n>-<step>.pgm) - then a restart on the
+# same store and card that finds the settings, the city and the note
+add_test(NAME host.NewtonWalkthrough2
+         COMMAND newton --display 320x480 --erase
+                 --store ${CMAKE_CURRENT_BINARY_DIR}/walkthrough2.store --headless 500
+                 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/walkthrough2.ns
+         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonWalkthrough2 PROPERTIES TIMEOUT 600 FIXTURES_SETUP host_walkthrough2_store
+                     PASS_REGULAR_EXPRESSION "walkthrough: done, 0 failed"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+add_test(NAME host.NewtonWalkthrough2.restart
+         COMMAND newton --display 320x480
+                 --store ${CMAKE_CURRENT_BINARY_DIR}/walkthrough2.store --headless 120
+                 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/walkthrough2.ns
+         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonWalkthrough2.restart PROPERTIES TIMEOUT 180
+                     FIXTURES_REQUIRED host_walkthrough2_store DEPENDS host.NewtonWalkthrough2
+                     PASS_REGULAR_EXPRESSION "walkthrough: restart done, 0 failed"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+
 # a bigger internal flash (docs/stores/README.md, "Bigger flash"): a new
 # 128 MB sparse store, over 8 MB of soup entries written, read back after a
 # restart on the same file, and the file on disk the size of what was

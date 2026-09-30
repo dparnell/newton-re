@@ -1,0 +1,385 @@
+// The rest of a first day with a MessagePad: the built-in applications a
+// user reaches after the first hour (walkthrough.ns), done with the pen
+// and the keyboard, each step checked and photographed.
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//       --erase --store build/walkthrough2.store --headless 400 \
+//       --script src/host/demo/walkthrough2.ns
+//   (and again without --erase: the restart)
+//
+// The first run walks the Setup assistant and then:
+//
+//    1 prefs       Extras > Prefs, every panel opened in turn and closed
+//                  with its close box; the pen sounds turned off (Sound),
+//                  persistent alarms turned on (Alarm), "Don't sleep when
+//                  plugged in" turned off (Sleep)
+//    2 styles      the Styles palette: Style > Bold, then "ton" typed on
+//                  the Notepad comes out bold
+//    3 scrub-undo  "ton" scrubbed out, and Undo brings it back
+//    4 keyboard    the on-screen keyboard: t, o, n tapped into a note
+//    5 timezones   Time Zones: the home city made Seattle
+//    6 formulas    Formulas: Loan Payment opened
+//    7 timer       the Clock's minute timer set to a minute: it rings
+//    8 connection  Dock: the "Connect via" picker opened
+//    9 help        i > Help: the help book's "How do I..." list
+//   10 card        a memory card put in and formatted, a note duplicated
+//                  and the copy filed on the card
+//
+// The second run starts on the same store (the card put back in) and
+// checks that the settings, the home city and the note on the card are
+// still there.
+//
+// Each step prints "walkthrough: <step>: ok" or "walkthrough: <step>:
+// FAILED <why>" and writes build/walkthrough2-<n>-<step>.pgm.
+
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
+HostInclude("walkhelpers.ns");		// the views, the pen and keys, the soups, the steps
+
+constant kCardFile := "build/walkthrough2.card";
+
+shot2 := func(file) func(done) begin
+	ScreenSnapshot("build/walkthrough2-" & file & ".pgm");
+	call done with ();
+end;
+
+rootKids := func() GetRoot():ChildViewFrames();
+newest := func() begin local k := call rootKids with (); k[Length(k) - 1]; end;
+kidCount := 0;
+noteKids := func(done) begin kidCount := Length(call rootKids with ()); call done with (); end;
+moreKids := func() Length(call rootKids with ()) > kidCount;
+fewerKids := func() Length(call rootKids with ()) < kidCount;
+
+// a slip's close box: its smallest picture button, the lowest and
+// rightmost of them
+closeBox := func(v) begin
+	local best := nil;
+	local walk;
+	walk := func(w) begin
+		local b := w:GlobalBox();
+		if BAnd(w.viewClass, 0xFFFF) = 76 and b.right - b.left <= 18 and b.bottom - b.top <= 18
+			and (not best or b.bottom + b.right > best.bottom + best.right) then best := b;
+		foreach c in w:ChildViewFrames() do call walk with (c);
+	end;
+	call walk with (v);
+	best;
+end;
+
+tapCloseBox := func(what) func(done) begin
+	local b := call closeBox with (call newest with ());
+	kidCount := Length(call rootKids with ());
+	if b then call tapAt with ((b.left + b.right) div 2, (b.top + b.bottom) div 2)
+	else Print("walkthrough: no close box on " & what);
+	call waitFor with ("walkthrough: " & what & " closed", fewerKids, done, 20);
+end;
+
+// the check box whose label has the text, tapped in its box
+tapCheck := func(label) func(done) begin
+	local v := call viewWithText with (label);
+	if v then begin
+		local b := v:GlobalBox();
+		call tapAt with (b.left + 6, (b.top + b.bottom) div 2);
+	end else Print("walkthrough: no " & label);
+	call settleStep with (done);
+end;
+
+config := nil;
+noteConfig := func(done) begin
+	config := {};
+	foreach s, v in GetGlobals().userConfiguration do config.(s) := v;
+	call done with ();
+end;
+configChanged := func(slot) not (GetUserConfig(slot) = config.(slot));
+
+zigzag := func(x0, x1, y0) begin
+	local pts := [];
+	for k := 0 to 9 do begin
+		AddArraySlot(pts, if k mod 2 = 0 then x0 else x1);
+		AddArraySlot(pts, y0 + k);
+	end;
+	pts;
+end;
+
+notesText := func() begin
+	local r := [];
+	foreach e in call soupEntries with ("Notes") do
+		if e.data then foreach p in e.data do if IsString(p.text) then AddArraySlot(r, p.text);
+	r;
+end;
+hasNote := func(t) begin
+	local found := nil;
+	foreach s in call notesText with () do if StrEqual(s, t) then found := true;
+	found;
+end;
+
+kTon := [17, 31, 45];
+
+// the Prefs panels, in the list's order (the Recording panel is there
+// because the machine has a microphone)
+kPanelRows := [135, 151, 167, 183, 199, 215, 231, 247, 263];
+
+openPanel := func(k) [
+	noteKids,
+	call tapStep with ("Prefs row " & k, 100, kPanelRows[k], moreKids),
+	settleStep,
+	call shot2 with ("1-prefs-" & k)];
+
+closePanel := func(k) [call tapCloseBox with ("Prefs panel " & k), settleStep];
+
+changeInPanel := func(k, label, slot) [
+	noteConfig,
+	call tapCheck with (label),
+	func(done) begin
+		call wtCheck with ("prefs " & slot, call configChanged with (slot),
+			slot & " is still " & GetUserConfig(slot));
+		call done with ();
+	end];
+
+prefsSteps := func() begin
+	local s := [
+		call tapStep with ("Extras", 20, 460, call isOpen with ('ExtrasDrawer)),
+		call tapStep with ("Prefs", 223, 350, call isOpen with ('preferenceRoll)),
+		settleStep];
+	for k := 0 to Length(kPanelRows) - 1 do begin
+		foreach a in call openPanel with (k) do AddArraySlot(s, a);
+		if k = 2 then foreach a in call changeInPanel with (k, "Pen sound", 'penSoundEffects) do AddArraySlot(s, a);
+		if k = 4 then foreach a in call changeInPanel with (k, "Persistent", 'AlarmAnnoyOn) do AddArraySlot(s, a);
+		if k = 5 then foreach a in call changeInPanel with (k, "t sleep when", 'powerSleep) do AddArraySlot(s, a);
+		foreach a in call closePanel with (k) do AddArraySlot(s, a);
+	end;
+	AddArraySlot(s, call tapCloseBox with ("Prefs"));
+	s;
+end;
+
+nNotes := 0;
+
+// a note on the card's store
+cardNote := func() begin
+	local stores := GetCardSlotStores(0);
+	local found := nil;
+	if stores then begin
+		local soup := stores[0]:GetSoup("Notes");
+		if soup then found := Query(soup, {type: 'index}):Entry();
+	end;
+	found;
+end;
+
+wtSecond := [];
+
+// 1 every Prefs panel
+foreach a in call prefsSteps with () do AddArraySlot(wtSecond, a);
+
+foreach a in [
+	// 2 styles: bold chosen, "ton" typed bold
+	call tapStep with ("the note", 160, 300, func() GetKeyView() <> nil),
+	call tapStep with ("Extras", 20, 460, call isOpen with ('ExtrasDrawer)),
+	call tapStep with ("Styles", 160, 350, call isOpen with ('stylePalette)),
+	noteKids,
+	call tapStep with ("Style", 145, 396, moreKids),
+	noteKids,
+	call tapStep with ("Bold", 158, 343, fewerKids),
+	call tapStep with ("close the palette", 260, 396, call isClosed with ('stylePalette)),
+	call keysStep with (kTon),
+	call waitStep with ("ton typed", func() call viewWithText with ("ton")),
+	func(done) begin
+		local p := call viewWithText with ("ton");
+		local face := if p and IsInteger(p.viewFont) then BAnd(p.viewFont >> 20, 0xFF);
+		call wtCheck with ("styles", face and BAnd(face, 1) <> 0, "the paragraph's font is " & (if p then p.viewFont else "missing"));
+		call done with ();
+	end,
+	call shot2 with ("2-styles"),
+
+	// 3 the word scrubbed out, and Undo
+	func(done) begin
+		local p := call viewWithText with ("ton");
+		local b := p:GlobalBox();
+		call stroke with (call zigzag with (b.left - 8, b.right + 5, b.top + 5));
+		IdleStrokes();
+		call done with ();
+	end,
+	call waitStep with ("the word scrubbed", func() not call viewWithText with ("ton")),
+	settleStep,
+	call tapStep with ("Undo", 180, 460, func() call viewWithText with ("ton")),
+	settleStep,
+	func(done) begin
+		call wtCheck with ("scrub-undo", call viewWithText with ("ton"), "Undo did not bring the word back");
+		call done with ();
+	end,
+	call shot2 with ("3-undo"),
+
+	// 4 the on-screen keyboard
+	call tapStep with ("a new place on the note", 60, 200, func() true),
+	settleStep,
+	noteKids,
+	call tapStep with ("the keyboard button", 60, 424, moreKids),
+	settleStep,
+	func(done) begin
+		local k := call newest with ();
+		local b := k:GlobalBox();
+		// t, o and n: their keys' places on the keyboard (twenty pixels a key)
+		foreach xy in [[110, 42], [190, 42], [151, 86]] do call tapAt with (b.left + xy[0], b.top + xy[1]);
+		call settleStep with (done);
+	end,
+	call waitStep with ("the typing", func() call hasNote with ("Ton")),
+	func(done) begin
+		call wtCheck with ("keyboard", call hasNote with ("Ton"), "the note reads " & call notesText with ());
+		call done with ();
+	end,
+	call shot2 with ("4-keyboard"),
+	call tapCloseBox with ("the keyboard"),
+
+	// 5 Time Zones: Seattle made the home city
+	call tapStep with ("Extras", 20, 460, call isOpen with ('ExtrasDrawer)),
+	call tapStep with ("Time Zones", 32, 350, call isOpen with ('worldClock)),
+	noteKids,
+	call tapStep with ("the home city", 140, 117, moreKids),
+	call tapStep with ("Other City", 84, 181, func() Length(call rootKids with ()) > kidCount),
+	settleStep,
+	call tapStep with ("Seattle", 215, 195, func() true),
+	settleStep,
+	call tapStep with ("close the city list", 306, 292, func() StrEqual(GetUserConfig('location).name, "Seattle")),
+	func(done) begin
+		call wtCheck with ("timezones", StrEqual(GetUserConfig('location).name, "Seattle"),
+			"the home city is " & GetUserConfig('location).name);
+		call done with ();
+	end,
+	call shot2 with ("5-timezones"),
+	call doStep with (func() GetRoot().worldClock:Close()),
+	settleStep,
+
+	// 6 Formulas
+	call tapStep with ("Extras", 20, 460, call isOpen with ('ExtrasDrawer)),
+	call tapStep with ("Formulas", 287, 300, func() call viewWithText with ("Loan Payment")),
+	noteKids,
+	call tapStep with ("Loan Payment", 100, 66, moreKids),
+	settleStep,
+	func(done) begin
+		call wtCheck with ("formulas", Length(call rootKids with ()) > kidCount, "Loan Payment did not open");
+		call done with ();
+	end,
+	call shot2 with ("6-formulas"),
+	call tapCloseBox with ("Loan Payment"),
+	call tapCloseBox with ("Formulas"),
+
+	// 7 the Clock's minute timer, set to a minute and left to ring
+	call tapStep with ("Extras", 20, 460, call isOpen with ('ExtrasDrawer)),
+	call tapStep with ("Clock", 96, 350, call isOpen with ('alarm)),
+	noteKids,
+	call tapStep with ("Set", 125, 272, moreKids),
+	call tapStep with ("Minute Timer", 150, 286, func() true),
+	settleStep,
+	call tapStep with ("the minutes' last digit", 198, 272, func() true),
+	settleStep,
+	call shot2 with ("7-timer-set"),
+	call tapStep with ("start the timer", 220, 290, func() GetAlarm("Timer:AlarmClock")),
+	noteKids,
+	func(done) call waitFor with ("walkthrough: the timer ringing", func() call viewWithText with ("minute timer is up"), done, 90),
+	func(done) begin
+		call wtCheck with ("timer", call viewWithText with ("minute timer is up"), "no alarm");
+		call done with ();
+	end,
+	call shot2 with ("7-timer"),
+	call tapCloseBox with ("the alarm"),
+	call doStep with (func() if GetRoot().alarm.viewCObject then GetRoot().alarm:Close()),
+	settleStep,
+
+	// 8 Connection: the Dock's "Connect via" picker
+	call tapStep with ("Extras", 20, 460, call isOpen with ('ExtrasDrawer)),
+	call tapStep with ("Dock", 96, 300, func() call viewWithText with ("Connect via")),
+	settleStep,
+	noteKids,
+	call tapStep with ("Connect via", 150, 109, moreKids),
+	func(done) begin
+		call wtCheck with ("connection", Length(call rootKids with ()) > kidCount, "the picker did not open");
+		call done with ();
+	end,
+	call shot2 with ("8-connection"),
+	noteKids,
+	call tapStep with ("off the picker", 160, 380, fewerKids),
+	call tapCloseBox with ("Dock"),
+
+	// 9 the Help book
+	noteKids,
+	call tapStep with ("the i button", 12, 424, moreKids),
+	call tapStep with ("Help", 25, 397, func() call viewWithText with ("How do I")),
+	func(done) begin
+		call wtCheck with ("help", call viewWithText with ("How do I"), "the help book's list is not there");
+		call done with ();
+	end,
+	call shot2 with ("9-help"),
+	call tapCloseBox with ("the help book"),
+
+	// 10 a memory card: put in, formatted, a note duplicated and the copy
+	// filed on it
+	func(done) begin
+		HostCreateCard(kCardFile, 4);
+		HostInsertCard(0, kCardFile);
+		call done with ();
+	end,
+	call waitStep with ("the new-card question", func() call viewWithText with ("appears to be new")),
+	call tapStep with ("Erase", 232, 272, func() call viewWithText with ("Are you sure")),
+	call tapStep with ("Erase again", 232, 272, func() GetCardSlotStores(0)),
+	settleStep, settleStep,
+	func(done) begin
+		// the card's own slip, which the formatting opens
+		if call viewWithText with ("Flash storage") then call (call tapCloseBox with ("the card's slip")) with (done)
+		else call done with ();
+	end,
+	call doStep with (func() nNotes := Length(call soupEntries with ("Notes"))),
+	noteKids,
+	call tapStep with ("the action button", 310, 28, moreKids),
+	call tapStep with ("Duplicate", 250, 93, func() Length(call soupEntries with ("Notes")) > nNotes),
+	settleStep,
+	noteKids,
+	call tapStep with ("the folder button", 292, 28, func() call viewWithText with ("File this Note on")),
+	call tapStep with ("on the Card", 170, 188, func() true),
+	settleStep,
+	call tapStep with ("File", 232, 264, func() call cardNote with ()),
+	func(done) begin
+		call wtCheck with ("card", call cardNote with (), "no note on the card");
+		call done with ();
+	end,
+	call shot2 with ("10-card"),
+	func(done) begin
+		Print("walkthrough: done, " & wtFailures & " failed");
+		HostQuit();
+	end]
+do AddArraySlot(wtSecond, a);
+
+// --- the restart ----------------------------------------------------------
+
+wtRestart2 := [
+	call waitStep with ("the Notepad", call isOpen with ('paperroll)),
+	func(done) begin
+		HostInsertCard(0, kCardFile);
+		call done with ();
+	end,
+	call waitStep with ("the card mounted", func() GetCardSlotStores(0)),
+	settleStep,
+	func(done) begin
+		call wtCheck with ("restart pen sounds", not GetUserConfig('penSoundEffects), "the pen sounds are back on");
+		call wtCheck with ("restart alarms", GetUserConfig('AlarmAnnoyOn), "persistent alarms are off");
+		call wtCheck with ("restart home city", StrEqual(GetUserConfig('location).name, "Seattle"),
+			"the home city is " & GetUserConfig('location).name);
+		call wtCheck with ("restart card note", call cardNote with (), "the card has no note");
+		call done with ();
+	end,
+	call shot2 with ("restart"),
+	func(done) begin
+		Print("walkthrough: restart done, " & wtFailures & " failed");
+		HostQuit();
+	end];
+
+call waitFor with ("walkthrough: the boot",
+	func() call (call isOpen with ('setup)) with () or call (call isOpen with ('paperroll)) with (),
+	func() begin
+		if call (call isOpen with ('setup)) with () then begin
+			Print("walkthrough: a new machine");
+			wtSteps := wtSecond;
+			call walkSetup with ([2, 0, 45, 34, 14, 37], wtNext);		// "Daniel"
+		end else begin
+			Print("walkthrough: the restart");
+			wtSteps := wtRestart2;
+			call wtNext with ();
+		end;
+	end, 60);
+Print("walkthrough: the script is loaded");
