@@ -237,6 +237,21 @@ is the same value spelt so that it cannot be read two ways.
   notBic loops never advance the mask pointer; `ScaleStdRRect` scales the
   corner oval crosswise on a fax.
 
+## 2026-09-30: NewtScape's JPEG decoder runs
+
+- NewtScape's JPEG converter (jpeg10e2.pkg, which calls into the
+  NewtScape application nwcp20r2.pkg) is 63 KB of native C - a libjpeg -
+  using the ARM's FPA floating-point instructions, which the ROM carries
+  out with its own emulator: `armcpu/FPA.cpp` emulates them (DEVIATION),
+  with `IsReal`, `IsNumber`, `IsBinary`, `CoerceToInt`, `ThrowMsg`
+  answered (bc6500b8; `TestFPA`).  The decoder writes one row past its
+  bitmap's end; a data window now reaches to the end of its page and such
+  writes are dropped (DEVIATION).
+- The decode runs to the end, but the picture's rows come out 20 bytes
+  shifted: 'pixels binaries carry the host's 0x30-byte PixelMap header,
+  where the ROM's is 0x1c bytes and package code reads the ROM's offsets
+  - being changed to the ROM's layout everywhere.
+
 ## 2026-09-30: the pen's clicks and the views' sounds
 
 - The sound natives were there; the views' calls were not.  Now, where
