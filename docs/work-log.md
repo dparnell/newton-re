@@ -9,6 +9,24 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: notyet.py's small gaps closed
+
+- A piece of a paragraph taken out with ink in it comes back as a rich
+  string (`ExtractRichStringFromParaSlots` over `MakeRichString`,
+  b2c8960c).
+- A string is spoken with its ink stripped from a clone
+  (`ConvertToSoundFrame` over `FStripInk`, 29e94c74).
+- The caret is clipped to its paragraph's edit view
+  (`GetCaretClipView` - the ROM's vtable +0x140 is
+  `GetEnclosingEditView`, not `GetHiliteView` as a comment said;
+  dda18352).
+- `GetStylesOfRange`/`ChangeStylesOfRange` on a protoTXView go to the
+  text engine (`gTXViewStylesHooks`, 241c625a; the styles come back as
+  `GetRangeData`'s packed integers, not yet compared with the ROM's).
+- The command-key key-up throw in `test_Views` was the test's own doing:
+  it had removed `vars.international`, and the ROM throws the same
+  (93f0d1fd).
+
 ## 2026-10-01: the busy box where the ROM asks for it; stale NOT YETs
 
 - The busy box (924411f8): `BusyBoxSend` moved beside the inker's port so
