@@ -657,8 +657,13 @@ sounds and Register), five fonts, and Apple's Newton Internet Enabler 2
 with protocol parts and a 'cdhl card handler, flags 0x46000000:
 copy-protected, a relocation chunk, Zippy) - are each stored on the
 internal store by `newton --package` (`store:SuckPackageFromBinary`, the
-ROM's `RegisterNewPackage`) and installed from there.  What they turned
-up, and how each was established:
+ROM's `RegisterNewPackage`) and installed from there.  (Since 2026-09-30 three of the NIE's packages -
+Newton Devices, the Enabler, Internet Setup - are built into the ROM
+extension the default boot runs on, `romsrc/README.md`; the test installs
+the NIE's modules, which import the Enabler's units from the ROM, and
+`host.NewtonNIEOverBuiltIn` installs copies of the three, which the ROM
+keeps on the store but does not activate.)  What they turned up, and how
+each was established:
 
 - **A large package read from where it had been.**  `FSuckPackageFromBinary`
   read the package through a memory pipe over the binary's bytes without

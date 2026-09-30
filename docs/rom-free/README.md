@@ -342,9 +342,10 @@ from it.
   afresh into the build directory (the `romsrc-extract` target does the
   same by hand).
 - `host.ROMSourceCommitted` says whether the committed tree still builds
-  byte for byte the ROM's. It passes as committed. After an intentional
-  edit it only reports that the tree has left the ROM, and it is to be
-  retired then.
+  byte for byte the ROM's. Since the first intentional edit (below: the
+  Newton Internet Enabler built into the extension) it builds the tree
+  less what was added (`romsrc.py build --original`), so it still
+  catches an unintended change to the rest.
 - `.gitattributes` keeps its resources binary and its `.ns`/`.tsv` LF on
   every system.
 - It is 7696 files, 20 MB on disk.
@@ -689,6 +690,33 @@ The test of editability is ctest `host.ROMSourceEdit` followed by
 - `host.ROMSourceEditValue` reads the edit back:
   `ROMConstant("canonicalInkShape").romsrcEdited.romsrcNote` is "added by
   edit-test".
+
+### The first intentional edit: the Newton Internet Enabler built in
+
+On 2026-09-30, by the owner's decision, the tree stopped being the ROM:
+three of Apple's Newton Internet Enabler 2.0 packages (Newton Devices,
+the Enabler, Internet Setup) were added to the extension's package list,
+so that every boot has the NIE with no store (`romsrc/README.md`, "The
+Newton Internet Enabler, built in", has the whole of it).
+
+- They are kept as the package files the NIE ships as (`rex/*.pkg`,
+  `rex.tsv` lines at address `-` marked `rom-form`), and the builder puts
+  each into the form the ROM keeps its own packages in, at the address
+  it falls at (`packages.py`'s `rom_form_package`): refs made addresses,
+  the relocation chunk applied and taken out, exports given `'fexp`
+  entries and imports resolved to them - what Apple's ROM build did to
+  the ten, since the ROM's loader relocates nothing in the ROM and never
+  installs a ROM part's imports.
+- One change to the NIE itself was needed, kept as a checked byte patch
+  beside it (`rex/inetenbl.patches.tsv`): it names its state after its
+  package's id, and a package in the ROM has no pkgRef.
+- The extension grows by 0x92000 bytes to end at 0x880048; the padding
+  keeps the page tables and the patch table on pages.
+- `build --original` leaves the additions out, which is how
+  `host.ROMSourceCommitted` still compares the rest with the ROM; the
+  extractor's own byte-for-byte test (`host.ROMSourceRoundTrip`) is
+  untouched, and the boot's first screen is still the image's
+  (`host.NewtonNoROMSameScreen`).
 
 ### The files, by what they belong to
 
