@@ -113,7 +113,7 @@ void	PutSample(ResampleState* state, short value, long index);	// ROM 0x001e7a74
 void	ResampleFiltered(ResampleState* state, long* dstCount, long* srcCount);	// ROM 0x001e79d0 ResampleFiltered__FP13ResampleStatePlT2
 void	ResampleFiltered(ResampleState* state, short* dst, short* src,
 					long* dstCount, long* srcCount, short* history, long tapCount,
-					long* phase, Fixed ratio);			// ROM 0x001e7ad4 ResampleFiltered__FP13ResampleStatePsT2PlT4T2lT4T7
+					Fixed* phase, Fixed ratio);			// ROM 0x001e7ad4 ResampleFiltered__FP13ResampleStatePsT2PlT4T2lT4T7
 
 extern long	gHitInitResampleAgain;		// ROM 0x0c101b0c gHitInitResampleAgain - how often a state has been set up
 

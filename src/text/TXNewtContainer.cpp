@@ -10,7 +10,7 @@
 #include "TXNewtContainer.h"
 #include "TXGraphicsRun.h"
 #include "TXUtilities.h"
-#include "Objects.h"
+#include "objects.h"
 #include "RSSymbols.h"
 #include "NewtonExceptions.h"
 #include "OSErrors.h"

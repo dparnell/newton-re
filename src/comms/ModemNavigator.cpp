@@ -9,7 +9,7 @@
 #include "ModemNavigator.h"
 #include "Endpoint.h"
 #include "CommManager.h"
-#include "Objects.h"
+#include "objects.h"
 #include "ObjectHeap.h"
 #include "RSSymbols.h"
 #include "ROMConstants.h"

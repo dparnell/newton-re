@@ -1154,6 +1154,17 @@ TLZDecompressor::DecompressBlock(ULong* outSize, void* dst, ULong /*dstSize*/, v
 	fOffsetCase = 10;
 	if (in[0] == 1)
 	{
+		// ROM BUG kept (0x000ffa60: LDR r0,[r4,#48]; CMP r0,#0x400;
+		// SUBLS r3,r0,#4; MOVHI r3,#0x400).  fRemaining counts this block's
+		// four-byte header too, so a stored last block of 1021 to 1023
+		// bytes has fRemaining just over kLZBlockSize and is given back as
+		// a whole 0x400 bytes - three, two or one byte too many, the last
+		// of them read past the end of the block.  The ROM never meets it:
+		// the store compander hands the coder fixed 0x400-byte blocks
+		// (stores/StoreCompander.h), so a stored block is either full or
+		// the chunk's only one and under the size.  compression.LZOracle
+		// runs the ROM's own decompressor beside this one and holds it to
+		// the same answer, this one included.
 		ULong n = fRemaining <= kLZBlockSize ? fRemaining - 4 : kLZBlockSize;
 		fast_copy(in + 4, out, n);
 		*outSize = n;
@@ -1161,6 +1172,14 @@ TLZDecompressor::DecompressBlock(ULong* outSize, void* dst, ULong /*dstSize*/, v
 	}
 	else
 	{
+		// ROM BUG kept: the loop below reads codewords until the input runs
+		// out, and the bits that pad the last byte of a coded *last* block
+		// can make one more - so such a block can come back a few bytes
+		// long (the ROM's loop and its odd `taken == fRemaining` tail are
+		// transcribed from 0x000ffbc4).  As above, the machine never meets
+		// it: a full 0x400-byte block has nothing after the padding to
+		// decode.  compression.LZOracle checks every size from 0 to 0x900
+		// against the ROM, the 76 that come back long included.
 		fPP.setupreadbuffer(in + 4, srcSize);
 		fStarted = true;
 		UByte* p = in + 4;

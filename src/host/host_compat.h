@@ -14,6 +14,13 @@
 	(hostLongIsPointerSized), the ARM's word, which the OS uses for refcons and
 	task arguments that carry pointers - on an LP64 Linux they are already,
 	this makes Windows (LLP64) agree.
+
+	Fixed and Fract, the DDK's 16.16 fixed-point numbers, are the ARM's
+	32-bit word and nothing more.  Windows' `long` is that width already, so
+	nothing is said there; where it is wider - an LP64 Linux or macOS - they
+	are spelt `int` instead (hostLongIsWiderThanARMWord, see
+	sync_ddk_headers.py), so that the fixed-point arithmetic wraps as the
+	ARM's does and an FPoint and an FRect are laid out as the ROM's are.
 */
 #ifndef __HOST_COMPAT_H
 #define __HOST_COMPAT_H
@@ -24,6 +31,9 @@ typedef unsigned char Boolean;
 #define hasCppExceptions 1
 #define hostVAddrIsPointerSized 1
 #define hostLongIsPointerSized 1
+#if defined(__LP64__) || defined(_LP64)
+#define hostLongIsWiderThanARMWord 1
+#endif
 #include <stdint.h>
 
 // the ARM's 32-bit word where its width is what matters: data laid out in

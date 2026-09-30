@@ -21,7 +21,7 @@
 #include "RSSymbols.h"
 #include "Unicode.h"
 #include "NewtonExceptions.h"
-#include "Objects.h"
+#include "objects.h"
 #include <string.h>
 
 // the text options a picture begins with (QDTables.cpp, generated: its

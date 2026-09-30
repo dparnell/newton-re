@@ -9,7 +9,7 @@
 #include "NewtonMemory.h"
 #include "NativeFunctions.h"
 #include "Frames.h"
-#include "Objects.h"
+#include "objects.h"
 
 #include <stdlib.h>
 #include <string.h>

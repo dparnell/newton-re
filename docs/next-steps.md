@@ -14,6 +14,18 @@ the way are all in `docs/work-log.md`.
 - A full `ctest` in a parallel agent's build: 209 of 209 (`intl.Dates`
   fails about one run in ten: it reads the real clock).  Several agents
   work in parallel, each building in its own directory under `tmp/`.
+- **Linux**: the tree builds and runs there too, with the system compiler
+  (`-DCMAKE_CXX_COMPILER=clang++`, not the zig toolchain - its linker
+  cannot take the system's X11 and ALSA shared objects), and `newton`
+  shows the booted machine in an X11 window.  `ctest` there: 233 of 233
+  (five of them want `build/<ROM>/symbols.json`, so run `dump_symbols.py`
+  on a fresh checkout).  `docs/host-lp64.md` is the standing note on what
+  a 64-bit `long` changes and how such a value is to be spelt.  Still
+  Windows-only: a package dropped onto the window (XDND is NOT YET), and
+  the crash-time tools `tools/host/stacksample.py`, `profile.py` and
+  `whichfunction.py`, which read PE images and Windows debug APIs.
+  macOS has neither window nor sound implementation yet, so it would run
+  headless.
 - `analysis/coverage.py build/MP2x00US --check`: 16380 citations, 0 bad;
   10805 of 16671 functions (64.81%).
 - `analysis/natives.py --unbound`: only comms' are left (comms 102 of

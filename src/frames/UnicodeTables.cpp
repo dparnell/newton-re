@@ -8,7 +8,7 @@
 
 #include "UnicodeTables.h"
 #include "Unicode.h"
-#include "Objects.h"
+#include "objects.h"
 #include "ObjectHeap.h"
 #include "ROMConstants.h"
 #include "NewtonMemory.h"

@@ -15,7 +15,7 @@
 #endif
 
 #ifndef	__SHAREDTYPES_H
-#include "sharedTypes.h"
+#include "SharedTypes.h"
 #endif //__SHAREDTYPES_H
 
 #ifndef	__USEROBJECTS_H

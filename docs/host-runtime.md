@@ -244,3 +244,14 @@ Known limits of this first runtime: no pre-emption between system calls
 `HostTaskDeleted` forgets it); a `Reset` (an unhandled exception reboots)
 ends the run through `gHostResetHook`; the run ends by leaving parked
 threads to the process exit.
+
+Because the run ends that way, the baton's `std::mutex` and
+`std::condition_variable` are made once and never destroyed
+(`TaskRuntime.cpp`).  Destroying a condition variable somebody is still
+waiting on is undefined, and glibc's `pthread_cond_destroy` waits for its
+waiters to leave: as static objects they were destroyed on the way out of
+`main`, so on Linux every program that booted the OS ran its whole
+scenario, printed that its checks had passed and then hung for ever with
+its task threads parked on the variable being destroyed.  Windows' own
+destructor happens not to wait, which is why it was never seen there.
+(`docs/host-lp64.md` has the rest of what the Linux build brought out.)

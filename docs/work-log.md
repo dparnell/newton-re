@@ -9,6 +9,72 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-30: the host runs on Linux as well as Windows
+
+The whole reconstruction now builds and runs on Linux with the system
+compiler, and `newton` shows the booted machine in a window there as it
+does on Windows.  `ctest` passes all 233.  Windows was left as it was: every
+change either only applies where `long` is wider than the ARM's word, or
+is the same value spelt so that it cannot be read two ways.
+
+- The window and the sound are one implementation per host behind the two
+  headers that were in `host/win32/` and are now `host/HostWindow.h` and
+  `host/HostAudio.h`: `host/x11/HostWindow.cpp` is X11 (a Wayland session
+  reaches it through XWayland) and `host/alsa/HostAudio.cpp` is ALSA, and
+  `src/host/CMakeLists.txt` picks them.  A key still reaches
+  `HostKeyboard.cpp` as its Windows virtual key code whichever host it
+  came from, so there is one map from a key to the Newton's (ADB) code and
+  not two.  A host with neither runs headless and silent, as before.
+  Tapping Continue on the Welcome screen through the window goes through
+  the tablet to the view system and brings up "Enter your Name", and a key
+  types into it.  NOT YET: a package dropped onto the window (XDND).
+
+- What a 64-bit `long` changes, and the six places that relied on its
+  being the ARM's 32-bit word, are `docs/host-lp64.md`: the sound's
+  decibel constants, the ROM's `rand` (which is why Mahjongg dealt itself
+  a tile index of -6), `TNSDebugAPI`'s frame base (an arithmetic shift in
+  the ROM, 0x002d2688), the shape solver's coefficient rows, the sides
+  block's size and a dictionary chain's "nowhere".  `Fixed` and `Fract`
+  are now pinned to 32 bits on such a host (`sync_ddk_headers.py`), which
+  is what makes qd's `ToFixed` wrap as the ARM's does.
+
+- Three that are Linux's rather than the word's: includes spelt in the
+  wrong case; a static `std::condition_variable` destroyed with task
+  threads still parked on it, which hung every program that booted the OS
+  *after* its checks had passed (`docs/host-runtime.md`); and the window
+  reading the display's pixels through a pointer `ScreenSetup` had freed
+  and allocated again - which Windows' allocator hid by handing the same
+  block back.
+
+- `compression.LZ` was failing on Linux, and both halves of why are now
+  settled.  Its data came from the C library's `rand()` - a different
+  sequence on each host, so it was not the same test on two machines - and
+  it asked the coder for an exact length that the coder does not give for
+  a last block that is not a whole 0x400 bytes.  A stored one of 1021 to
+  1023 bytes comes back padded to 0x400 (`DecompressBlock` 0x000ffa60,
+  `CMP r0,#0x400; SUBLS r3,r0,#4; MOVHI r3,#0x400`), and a coded one can
+  come back a few bytes long because the decoder reads codewords until the
+  input runs out and the padding bits of the last byte can make one more.
+  Both are the ROM's, and the new ctest `compression.LZOracle` is what says
+  so: it runs the ROM's own `TLZCompressor` and `TLZDecompressor` on the
+  ARM interpreter over the ROM image (the jump table aliased at
+  0x01A00000, host traps for the two allocators the compressor's `New`
+  calls) and holds the reconstruction to the ROM's answer - the same
+  compressed bytes, the same restored bytes and the same length - at every
+  size from 0 to 0x900 and around the stored path's boundary.  All 2305
+  agree, the 76 that do not round-trip exactly included; "fixing" the
+  stored-block length makes it fail, which is what it is for.  The round
+  trip now asks for the bytes back always and the length back whenever the
+  source is a whole number of blocks, which is all the store compander
+  ever hands it.  The full suite is 233 of 233 (five of those want
+  `build/<ROM>/symbols.json`, so run `dump_symbols.py` on a fresh
+  checkout).
+
+- `tools/ntk/inspector.py` no longer skips the download half of
+  `host.NewtonNTK`: the expression that tells the script to stop listening
+  may have the link go down before its own result comes back, which it
+  did on Linux every time and on Windows never.
+
 ## 2026-09-30: the ROM-free track, step 2 - the object area as editable files
 
 - Functions as source (62cbe15): the builder hands every function to one

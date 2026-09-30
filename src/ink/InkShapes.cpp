@@ -15,7 +15,7 @@
 
 #include "InkShapes.h"
 #include "Stroke.h"
-#include "Objects.h"
+#include "objects.h"
 #include "ObjectHeap.h"
 #include "RichString.h"
 #include "Frames.h"

@@ -62,6 +62,7 @@ private:
 	long		fOrientation;
 	Boolean		fPowered;
 	unsigned char*	fPixels;		// Width() x Height() grays
+	long		fPixelBytes;		// how big that buffer is, so ScreenSetup can keep it
 };
 
 #endif	/* __HAL_HOST_SCREEN_H */

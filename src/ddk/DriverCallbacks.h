@@ -34,7 +34,7 @@
 #endif
 
 #ifndef	__LONGTIME_H
-#include "Longtime.h"
+#include "LongTime.h"
 #endif
 
 

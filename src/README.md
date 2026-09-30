@@ -187,11 +187,19 @@ src/
                 shapes and a popup menu into build/views-demo.pgm
                 (tools/imaging/pgm2png.py turns it into a PNG); and
                 newton (newton.cpp), the OS booted and the NewtonScript
-                world run over a window on the host display (Windows:
-                win32/HostWindow.cpp), the mouse the pen and the keys the
-                keyboard (HostKeyboard.cpp, the keyboard tool's stand-in)
-                - demo/newton.ns is its boot script; --headless runs it
-                without a window
+                world run over a window on the host display (HostWindow.h,
+                one implementation per host: win32/HostWindow.cpp is the
+                Win32 message loop, x11/HostWindow.cpp is X11 - a Linux or
+                BSD host, and a Wayland one through XWayland), the mouse
+                the pen and the keys the keyboard (HostKeyboard.cpp, the
+                keyboard tool's stand-in; a key reaches it as its Windows
+                virtual key code whichever host it came from, so there is
+                one map from a key to the Newton's).  The loudspeaker and
+                the microphone are HostAudio.h the same way
+                (win32/HostAudio.cpp over waveOut/waveIn,
+                alsa/HostAudio.cpp over ALSA) - demo/newton.ns is its boot
+                script; --headless runs it without a window, and so does a
+                host with no window or sound implementation of its own
   ...           comm/, pcmcia/, qd/, packages/, pss/, ... as they are reached
 ```
 
@@ -244,6 +252,22 @@ ctest --test-dir build/host
 ```
 
 Any other compiler works with plain `cmake -G Ninja -S src -B build/host`.
+
+On Linux the system compiler is the one to use:
+
+```
+cmake -G Ninja -S src -B build/host -DCMAKE_CXX_COMPILER=clang++
+cmake --build build/host
+ctest --test-dir build/host
+```
+
+`newton` there wants the X11 and ALSA development headers for its window
+and its sound (`libx11`/`libxext` and `alsa-lib`); without them CMake says
+so and the world runs headless and silent.  The zig toolchain builds the
+libraries on Linux as well, but its bundled linker cannot take the system's
+X11 and ALSA shared objects, so `newton` itself does not link under it.
+(zig 0.16 also falls over on the `--dependency-file` that CMake 4.x hands
+the linker, which stops every link, not only that one.)
 
 Host builds are 64-bit, so `sizeof` differs from the ROM (`ULong` is even
 64-bit on LP64 Linux). Layouts are documented in the headers and verified in

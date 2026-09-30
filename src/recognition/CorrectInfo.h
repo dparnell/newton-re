@@ -36,7 +36,7 @@
 #define __CORRECTINFO_H
 
 #include "RecObject.h"
-#include "Objects.h"
+#include "objects.h"
 
 class TView;
 class TUnitPublic;

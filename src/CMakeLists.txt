@@ -28,6 +28,39 @@ target_compile_options(newton_config INTERFACE
     -Wall -Wno-unknown-pragmas -Wno-return-type-c-linkage -Wno-mismatched-tags
     -Wno-invalid-offsetof)   # intrusive queues take offsetof() of non-POD kernel objects by design
 
+# The reconstruction's static libraries are mutually dependent by design
+# (an area's code and the areas it talks to: frames <-> intl for the number
+# text, utility <-> os600/user for TAppWorld), and GNU ld makes a single
+# pass over each archive on the link line, so a member pulled in late has
+# nothing left to resolve it against.  It is told to rescan by bracketing
+# the libraries in a group.
+#
+# lld - which the zig toolchain's clang uses, and so the Windows build -
+# keeps every archive member available for the whole link and needs no
+# group; zig 0.16's linker in fact falls over (signal 11) when it is given
+# one, so the group goes on only where the linker is GNU's.  (Apple's ld64
+# resolves archives repeatedly as lld does, so none there either.)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(NEWTON_LINK_GROUP FALSE)
+    if(CMAKE_CXX_COMPILER_LINKER_ID)            # CMake 3.29 and later: GNU, GNUgold, LLD, MOLD, ...
+        if(CMAKE_CXX_COMPILER_LINKER_ID MATCHES "^GNU")
+            set(NEWTON_LINK_GROUP TRUE)
+        endif()
+    elseif(NOT "${CMAKE_CXX_COMPILER}" MATCHES "zig")
+        set(NEWTON_LINK_GROUP TRUE)             # cannot ask: assume the system's ld
+    endif()
+    if(NEWTON_LINK_GROUP)
+        foreach(lang C CXX)
+            foreach(rule LINK_EXECUTABLE CREATE_SHARED_LIBRARY CREATE_SHARED_MODULE)
+                if(DEFINED CMAKE_${lang}_${rule})
+                    string(REPLACE "<LINK_LIBRARIES>" "-Wl,--start-group <LINK_LIBRARIES> -Wl,--end-group"
+                           CMAKE_${lang}_${rule} "${CMAKE_${lang}_${rule}}")
+                endif()
+            endforeach()
+        endforeach()
+    endif()
+endif()
+
 enable_testing()
 add_subdirectory(toolbox)
 add_subdirectory(hal)

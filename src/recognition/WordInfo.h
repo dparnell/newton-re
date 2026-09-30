@@ -36,7 +36,7 @@
 #define __WORDINFO_H
 
 #include "RecObject.h"
-#include "Objects.h"
+#include "objects.h"
 
 class TUnitPublic;
 

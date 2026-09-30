@@ -203,7 +203,7 @@ ResampleFiltered(ResampleState* state, long* dstCount, long* srcCount)
 void
 ResampleFiltered(ResampleState* state, short* /*dst*/, short* /*src*/,
 				long* dstCount, long* srcCount, short* history, long tapCount,
-				long* phasePtr, Fixed ratio)
+				Fixed* phasePtr, Fixed ratio)
 {
 	long maxIn = (*srcCount < kMaxResampleInput) ? *srcCount : kMaxResampleInput;
 	long outIndex = 0;

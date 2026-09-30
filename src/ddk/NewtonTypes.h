@@ -121,11 +121,19 @@ typedef struct Int64
 
 
 #ifndef __fixed_defined__
+#ifdef hostLongIsWiderThanARMWord
+	typedef int Fixed;		/* the ARM's word (sync_ddk_headers.py) */
+#else
 	typedef long Fixed;
+#endif
 #endif
 
 #ifndef __fract_defined__
+#ifdef hostLongIsWiderThanARMWord
+	typedef int Fract;		/* the ARM's word (sync_ddk_headers.py) */
+#else
 	typedef long Fract;
+#endif
 #endif
 
 

@@ -17,7 +17,7 @@
 #include "TXStream.h"
 #include "Application.h"
 #include "Frames.h"
-#include "Objects.h"
+#include "objects.h"
 #include "ObjectHeap.h"
 #include "RSSymbols.h"
 #include "ROMConstants.h"

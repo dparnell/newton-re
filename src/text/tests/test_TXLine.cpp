@@ -122,7 +122,7 @@ DrawString(TXNewtTextRun* run, const char* s, Fixed x, long y)
 	StyleRecord style;
 	run->GetNewtStyleRecord(&style);
 	StyleRecord* styles[1] = { &style };
-	FPoint where = { x, y << 16 };
+	FPoint where = { x, ToFixed(y) };		// (qd/Ports.h: never `y << 16` by hand - Fixed is the ARM's word)
 	DrawTextOnce(text, n, styles, nil, where, nil, nil);
 }
 

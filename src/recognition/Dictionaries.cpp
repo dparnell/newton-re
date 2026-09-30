@@ -345,7 +345,10 @@ TDictChain::IDictChain(ULong count, ULong position)
 	fData = nil;
 	long err = IDArray(sizeof(Handle), count);
 	if (err == 0)
-		fPosition = (long) position;
+		// (Long32: the position is the ARM's word, and the ROM makes an
+		//  empty chain with 0xffffffff for "nowhere" - which is -1 only
+		//  when it is narrowed to that width first)
+		fPosition = (Long32) position;
 	return err;
 }
 

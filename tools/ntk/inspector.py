@@ -276,8 +276,16 @@ def run_session(link, args):
     for obj in ntk.objects:
         print("inspector.py: NTKSend sent %r" % (obj,))
     if finish:
-        ntk.evaluate(finish)
-        wait_for_end(ntk)
+        # `finish` is what tells the script to stop listening, so the link
+        # may go down before the expression's own result comes back - the
+        # script closes the listener as soon as it sees what finish set,
+        # which it may do between the assignment and the reply.  Either way
+        # the session is over and the download below goes on the next link.
+        try:
+            ntk.evaluate(finish)
+            wait_for_end(ntk)
+        except EOFError as e:
+            print("inspector.py: %s" % e)
     if package is not None:
         link = next_link(link)
         ntk = NTKInspector(link)

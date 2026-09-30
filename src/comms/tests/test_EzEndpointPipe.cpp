@@ -15,7 +15,7 @@
 #include "HostSerialChip.h"
 #include "FIQTimer.h"
 #include "AppWorld.h"
-#include "Objects.h"
+#include "objects.h"
 #include "ObjectHeap.h"
 #include "RSSymbols.h"
 #include "NewtonExceptions.h"

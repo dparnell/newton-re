@@ -24,7 +24,7 @@
 #include "CICCodec.h"
 #include "Stroke.h"
 #include "StrokeQueue.h"		// gTabScale
-#include "Objects.h"
+#include "objects.h"
 #include "RSSymbols.h"
 #include "NewtonMemory.h"
 #include "Ports.h"			// RoundFixed

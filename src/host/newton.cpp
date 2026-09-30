@@ -5,7 +5,7 @@
 				(OsBoot), the loader's 'main' task running the NewtonScript
 				world (newt/NewtWorld.h) over a window on the host display,
 				the mouse as the pen and the keys as the keyboard (the
-				window on Windows, host/win32/HostWindow.h; the keyboard
+				window on the host display, host/HostWindow.h; the keyboard
 				tool's stand-in, host/HostKeyboard.h, runs as a task from
 				the kernel services hook).  The ROM image gives the world
 				its objects (the fonts, the prototypes); a NewtonScript
@@ -78,8 +78,8 @@
 #include "HostViews.h"
 #include "HostScreen.h"
 #include "HostKeyboard.h"
-#include "win32/HostWindow.h"
-#include "win32/HostAudio.h"
+#include "HostWindow.h"
+#include "HostAudio.h"
 #include "UserBoot.h"
 #include "UserTasks.h"
 #include "os600/kernel/Boot.h"
@@ -112,6 +112,7 @@
 #include <stdio.h>
 #include <signal.h>
 
+#ifdef _WIN32
 // Just enough of Windows to be told the machine fell over; including
 // <windows.h> here would bring in its own Polygon and Sleep, which are
 // the Newton's names too.
@@ -135,6 +136,14 @@ __declspec(dllimport) void* __stdcall GetCurrentProcess(void);
 __declspec(dllimport) int __stdcall GetProcessTimes(void* process, unsigned long long* creation, unsigned long long* exit,
 													 unsigned long long* kernel, unsigned long long* user);
 }
+#else
+// The same two things from a Unix host: the processor time the program has
+// used, and where the image was loaded (dladdr answers the base of the
+// object a symbol is in).  These headers bring in no names of the
+// Newton's, so they need no keeping apart.
+#include <sys/resource.h>
+#include <dlfcn.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 
@@ -260,10 +269,19 @@ FHostInclude(RefArg /*rcvr*/, RefArg name)
 static Ref
 FHostCPUTime(RefArg /*rcvr*/)
 {
+#ifdef _WIN32
 	unsigned long long creation, exited, kernel, user;
 	if (!GetProcessTimes(GetCurrentProcess(), &creation, &exited, &kernel, &user))
 		return NILREF;
 	return MAKEINT((long) ((kernel + user) / 10000));		// (hundreds of nanoseconds)
+#else
+	struct rusage usage;
+	if (getrusage(RUSAGE_SELF, &usage) != 0)
+		return NILREF;
+	long ms = (long) ((usage.ru_utime.tv_sec + usage.ru_stime.tv_sec) * 1000
+					+ (usage.ru_utime.tv_usec + usage.ru_stime.tv_usec) / 1000);
+	return MAKEINT(ms);
+#endif
 }
 
 
@@ -326,6 +344,8 @@ ReportTheScript(void)
 }
 
 
+static void HostCrashedSignal(int signal);
+
 static void
 HostCrashed(const char* what, unsigned long code, void* where)
 {
@@ -333,9 +353,16 @@ HostCrashed(const char* what, unsigned long code, void* where)
 	if (once++ != 0)
 		_exit(139);
 	// the address on its own says nothing - the image is loaded wherever
-	// Windows puts it - so the offset into the image goes with it, which
+	// the system puts it - so the offset into the image goes with it, which
 	// is what tools/host/whichfunction.py takes to name the function
+#ifdef _WIN32
 	void* base = GetModuleHandleA(nil);
+#else
+	void* base = nil;
+	Dl_info info;
+	if (dladdr((void*) &HostCrashedSignal, &info) != 0)
+		base = info.dli_fbase;
+#endif
 	fprintf(stderr, "[host] the machine fell over: %s (%#lx) at %p (image + %#lx)\n",
 		what, code, where, (unsigned long) ((char*) where - (char*) base));
 	if (gREPout != nil && gInterpreter != nil)
@@ -352,26 +379,34 @@ HostCrashedSignal(int signal)
 }
 
 
+#ifdef _WIN32
 // On Windows a bad access is a structured exception rather than a signal,
 // and nothing turns it into one here, so the filter is what actually
 // catches the machine falling over - including in the window's own
-// thread.
+// thread.  A Unix host raises a signal for it, which the handlers below
+// take, so there is nothing to install there.
 static long __stdcall
 HostCrashedFilter(HostExceptionPointers* info)
 {
 	HostCrashed("an exception", info->fRecord->fCode, info->fRecord->fAddress);
 	return 0;		// (never reached: HostCrashed does not come back)
 }
+#endif
 
 
 int
 main(int argc, char** argv)
 {
+#ifdef _WIN32
 	SetUnhandledExceptionFilter(HostCrashedFilter);
+#endif
 	signal(SIGSEGV, HostCrashedSignal);
 	signal(SIGILL, HostCrashedSignal);
 	signal(SIGFPE, HostCrashedSignal);
 	signal(SIGABRT, HostCrashedSignal);
+#ifdef SIGBUS
+	signal(SIGBUS, HostCrashedSignal);			// a misaligned or unbacked access on a Unix host
+#endif
 	const char* romImage = NEWTON_DEFAULT_ROM_IMAGE;
 	long heapSize = 0x400000;
 	long width = 320, height = 480, depth = 4;
@@ -457,7 +492,7 @@ main(int argc, char** argv)
 	NewtInstallUserMain();
 	gHostKernelServicesTask = KernelServices;
 	// the sound hardware (hal/host/HostSoundDriver.h): with a window, the
-	// loudspeaker (win32/HostAudio.h); headless, or with no audio device,
+	// loudspeaker (HostAudio.h); headless, or with no audio device,
 	// the null backend, which keeps what was played
 	// and the microphone (the same file's waveIn), when there is one
 	static const HostSoundBackend kLoudspeaker = { HostAudioPlay, nil };

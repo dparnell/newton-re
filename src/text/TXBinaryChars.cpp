@@ -9,7 +9,7 @@
 */
 
 #include "TXBinaryChars.h"
-#include "Objects.h"
+#include "objects.h"
 #include "RSSymbols.h"
 #include "NewtonExceptions.h"
 #include "NewtErrors.h"

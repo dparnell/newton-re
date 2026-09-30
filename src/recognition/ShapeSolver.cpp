@@ -333,7 +333,7 @@ AddBilinears(Bilinear* a, Bilinear* b, Bilinear* sum)
 	sum->fN = n;
 	for (long i = 0; i <= n; i++)
 		for (long j = i; j <= n; j++)
-			((long*) *sum->fRows[i])[j] = ((long*) *a->fRows[i])[j] + ((long*) *b->fRows[i])[j];
+			((Fixed*) *sum->fRows[i])[j] = ((Fixed*) *a->fRows[i])[j] + ((Fixed*) *b->fRows[i])[j];	// (Fixed: the rows are the ARM's words, MakeHandle((n+1)*4))
 }
 
 
@@ -532,7 +532,7 @@ LineMinimize(long n, long* p, long* dir, long* fret, long* terms, NFunction f, N
 	long ax = 0, xx = 0x2000, bx, fa, fx, fb;
 	// DEVIATION: the ROM leaves xmin as its stack had it when Minimize1D
 	// runs out of iterations without setting it.
-	Fixed xmin = 0;
+	long xmin = 0;			// (Minimize1D's out-parameter: the ROM's word, like ax and bx)
 	BracketMin(&ax, &xx, &bx, &fa, &fx, &fb, Func1D, n, p, dir, f);
 	*fret = Minimize1D(ax, xx, bx, Func1D, DFunc1D, n, p, dir, f, df, 0x200, &xmin, terms);
 	for (long j = 1; j <= n; j++)
