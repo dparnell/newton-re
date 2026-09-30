@@ -51,6 +51,24 @@ static CDynamicArray*	gLBStores = nil;
 extern IndirectBinaryProcs	gLBProcs;			// frames/Objects.cpp (DEVIATION: filled in by InitLargeObjects)
 
 
+// DEVIATION: a large binary of a string class is kept in the host's order
+// while it is mapped (frames/HostOrder.h), the store holding a MessagePad's
+// big-endian UniChars - its class told to the host's domain manager each
+// time it is mapped, or changes
+static void
+LBSetHostOrder(ULong address, RefArg theClass)
+{
+	if (address != 0)
+		SetLargeObjectHostOrder(address, HostOrderOfClass(theClass));
+}
+
+static void
+LBSetHostOrder(LBData* lb, TStoreWrapper* wrapper)
+{
+	LBSetHostOrder(lb->fAddress, RefVar(wrapper->ReferenceToSymbol(lb->fClassRef)));
+}
+
+
 /*------------------------------------------------------------------------------
 	L B D a t a
 ------------------------------------------------------------------------------*/
@@ -147,7 +165,10 @@ LBDataPtr(void* data)
 	if (wrapper == nil)
 		Throw(exStoreError, (void*) (Long) kNSErrInvalidStore, nil);		// (0xffff446f)
 	if (lb->fAddress == 0)
+	{
 		OSErrIf(MapLargeObject(&lb->fAddress, wrapper->fStore, lb->fId, false));
+		LBSetHostOrder(lb, wrapper);
+	}
 	return (char*) lb->fAddress;
 }
 
@@ -183,6 +204,7 @@ LBClone(void* data, Ref theClass)
 	LBData* lb = LargeBinaryData(obj);
 	OSErrIf(DuplicateLargeObject(&lb->fId, wrapper->fStore, copy.fId, wrapper->fStore));
 	OSErrIf(MapLargeObject(&lb->fAddress, wrapper->fStore, lb->fId, false));
+	LBSetHostOrder(lb, wrapper);
 	wrapper->fEphemeralTracker->AddEphemeral(lb->fId);
 	return obj;
 }
@@ -228,6 +250,9 @@ LBSetClass(void* data, RefArg theClass)
 	newton_try
 	{
 		lb->fClassRef = wrapper->SymbolToReference(theClass);
+		// (the bytes turned from the old class's order to the new one's -
+		// FSetClass leaves an indirect binary's to this)
+		LBSetHostOrder(lb->fAddress, theClass);
 	}
 	newton_catch_all
 	{
@@ -327,6 +352,7 @@ WrapLargeObject(TStore* store, RefArg theClass, PSSId id, ULong address)
 	lb->fId = id;
 	lb->fClassRef = classRef;
 	lb->fAddress = address;
+	LBSetHostOrder(address, theClass);
 	PutEntryIntoCache(RefVar(gLBCache), obj);
 	return obj;
 }
@@ -369,6 +395,7 @@ LoadLargeBinary(TStoreWrapper* wrapper, PSSId id, long classRef)
 		LBData* lb = LargeBinaryData(obj);
 		lb->fId = id;
 		lb->fAddress = address;
+		LBSetHostOrder(address, cls);
 		PutEntryIntoCache(RefVar(gLBCache), obj);
 	}
 	return obj;
@@ -397,6 +424,7 @@ DuplicateLargeBinary(RefArg obj, TStoreWrapper* wrapper)
 	{
 		OSErrIf(DuplicateLargeObject(&lb->fId, fromWrapper->fStore, from.fId, wrapper->fStore));
 		OSErrIf(MapLargeObject(&lb->fAddress, wrapper->fStore, lb->fId, false));
+		LBSetHostOrder(lb->fAddress, cls);
 		wrapper->fEphemeralTracker->AddEphemeral(lb->fId);
 	}
 	newton_catch_all
@@ -653,6 +681,7 @@ FLBAllocCompressed(RefArg rcvr, RefArg theClass, RefArg length, RefArg compander
 	LBData* lb = LargeBinaryData(obj);
 	lb->fId = id;
 	lb->fAddress = address;
+	LBSetHostOrder(address, theClass);
 	return obj;
 }
 

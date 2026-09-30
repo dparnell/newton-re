@@ -66,6 +66,9 @@
 #ifndef __STORE_H
 #include "Store.h"
 #endif
+#ifndef __HOSTORDER_H
+#include "HostOrder.h"
+#endif
 
 class CPipe;
 class RefStruct;
@@ -206,6 +209,9 @@ NewtonErr	MapLargeObject(ULong* address, TStore* store, PSSId id, UChar readOnly
 NewtonErr	UnmapLargeObject(TStore** store, ULong* id, ULong address);	// ROM 0x00102fb8 UnmapLargeObject__FPP6TStorePUlUl
 NewtonErr	UnmapLargeObject(ULong address);								// ROM 0x00103ccc UnmapLargeObject__FUl
 NewtonErr	ResizeLargeObject(ULong* newAddress, ULong address, long size, long offset);	// ROM 0x00103c58 ResizeLargeObject__FPUlUllT3
+// DEVIATION (host): the byte order a mapped large binary is kept in
+// (frames/HostOrder.h), its bytes turned into it - stores/host/HostLargeObjects.cpp
+void		SetLargeObjectHostOrder(ULong address, EHostOrder order);
 NewtonErr	FlushLargeObject(TStore* store, PSSId id);						// ROM 0x00103828 FlushLargeObject__FP6TStoreUl
 NewtonErr	AbortObject(TStore* store, PSSId id);							// ROM 0x00103028 AbortObject__FP6TStoreUl
 NewtonErr	AbortObjects(TStore* store);									// ROM 0x001030e4 AbortObjects__FP6TStore

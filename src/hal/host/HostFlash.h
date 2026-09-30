@@ -36,7 +36,13 @@
 				      +0x1c  the chunk count (flash size / chunk size)
 				      +0x20  the map's offset (0x40)
 				      +0x24  the chunks' offset (after the map, to a chunk)
-				      +0x28  0 (reserved to +0x40)
+				      +0x28  flags: bit 0 set when the store's binaries are
+				             all a MessagePad's byte order (a file made
+				             since 2026-10-01; one without it was written by
+				             a host that kept reals, shapes and string
+				             large binaries in its own - frames/HostOrder.h -
+				             and is repaired when mounted)
+				      +0x2c  0 (reserved to +0x40)
 				      map:   chunk count words: 0 an erased chunk, n the
 				             chunk kept in slot n, at chunks' offset +
 				             (n - 1) * chunk size
@@ -107,6 +113,11 @@ ULong		HostFlashSize(void);			// 0 when not open
 ULong		HostFlashBankSize(void);		// a bank's: the flash's, or half of it
 ULong		HostFlashChipSize(void);		// a chip's: half a bank
 HostFlashFormat	HostFlashFileFormat(void);
+// whether the store in the file keeps its binaries in a MessagePad's byte
+// order (a flat file cannot say, and is taken to: Einstein's are); and the
+// file marked so once an older one has been repaired (host/HostStores.cpp)
+Boolean		HostFlashBinariesBigEndian(void);
+void		HostFlashSetBinariesBigEndian(void);
 
 // Writes reach the file through the C library's buffer, which is emptied
 // when the program ends; a test that reads the file meanwhile flushes it.

@@ -439,6 +439,39 @@ set_tests_properties(host.NewtonWordHintsRepair PROPERTIES TIMEOUT 120
                      PASS_REGULAR_EXPRESSION "rewrote word hints for [0-9]+ entries.*hintsrepair: repaired"
                      FAIL_REGULAR_EXPRESSION "FAILED")
 
+# a store an older host wrote, its reals and its text in large binaries in
+# the host's byte order (demo/byteorder.ns): written with
+# NEWTON_OLD_BYTE_ORDER (the store file unmarked, hal/host/HostFlash.h),
+# then mounted again and turned round (stores/Soups.cpp
+# RepairHostByteOrder, DEVIATION), then mounted a third time and left alone
+add_test(NAME host.NewtonByteOrderOld
+         COMMAND newton --display 320x480 --erase
+                 --store ${CMAKE_CURRENT_BINARY_DIR}/byteorder.store --headless 60
+                 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/byteorder.ns
+         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonByteOrderOld PROPERTIES TIMEOUT 120 FIXTURES_SETUP host_byteorder_store
+                     ENVIRONMENT "NEWTON_OLD_BYTE_ORDER=1"
+                     PASS_REGULAR_EXPRESSION "byteorder: written"
+                     FAIL_REGULAR_EXPRESSION "FAILED")
+add_test(NAME host.NewtonByteOrderRepair
+         COMMAND newton --display 320x480
+                 --store ${CMAKE_CURRENT_BINARY_DIR}/byteorder.store --headless 60
+                 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/byteorder.ns
+         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonByteOrderRepair PROPERTIES TIMEOUT 120
+                     FIXTURES_REQUIRED host_byteorder_store DEPENDS host.NewtonByteOrderOld
+                     PASS_REGULAR_EXPRESSION "turned the reals and text of [0-9]+ entries.*byteorder: repaired"
+                     FAIL_REGULAR_EXPRESSION "FAILED")
+add_test(NAME host.NewtonByteOrderRepair.again
+         COMMAND newton --display 320x480
+                 --store ${CMAKE_CURRENT_BINARY_DIR}/byteorder.store --headless 60
+                 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/byteorder.ns
+         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonByteOrderRepair.again PROPERTIES TIMEOUT 120
+                     FIXTURES_REQUIRED host_byteorder_store DEPENDS host.NewtonByteOrderRepair
+                     PASS_REGULAR_EXPRESSION "byteorder: repaired"
+                     FAIL_REGULAR_EXPRESSION "FAILED|turned the reals")
+
 # ink read again (demo/rereadink.ns): an ink word and two shapes of ink
 # lassoed with the pen and double tapped - the page's aeDoubleTap on its
 # selection (views/EditView.cpp RereadSelectedInk), the shapes sorted into

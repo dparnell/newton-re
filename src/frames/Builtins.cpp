@@ -550,8 +550,10 @@ FSetClass(RefArg /*rcvr*/, RefArg obj, RefArg theClass)
 	// to another means the bytes it had, as a MessagePad keeps them - a
 	// binary of big-endian UniChars made a 'string, or a string made a
 	// binary to be sent - so they are turned from the one to the other
+	// (an indirect binary - a large binary on a store - turns its own, when
+	// its SetClass proc is told)
 	EHostOrder after = HostOrderOf(obj);
-	if (before != after)
+	if (before != after && (ObjectFlags(obj) & kObjFrame) == 0)
 	{
 		SwapHostOrder(before, BinaryData(obj), Length(obj));
 		SwapHostOrder(after, BinaryData(obj), Length(obj));

@@ -66,6 +66,7 @@ void	RegisterUnionSoupNatives(void);
 Ref		GetStores(void);
 Ref		MakeStoreObject(TStore* store);		// the store frame (the root object formatted when empty)
 Ref		RegisterTStore(TStore* store);		// added to gStores (and the union soups)
+long	RepairHostByteOrder(RefArg storeObject);	// DEVIATION: an old host store's reals and text turned round (Soups.cpp)
 void	RemoveTStore(TStore* store);
 Ref		ToObject(TStore* store);			// the store frame; nil when not registered
 Boolean	IsValidStore(const TStore* store);	// registered

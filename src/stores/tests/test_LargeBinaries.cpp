@@ -36,6 +36,7 @@
 #include "NewtonMemory.h"
 #include "NewtonExceptions.h"
 #include "OSErrors.h"
+#include "ByteOrder.h"
 #include "host/TaskRuntime.h"
 #include "AppWorld.h"
 #include "UserTasks.h"
@@ -249,6 +250,36 @@ TestLargeBinaries(void)
 	Eval("theSoup := theStore:GetSoup(\"Samples\"); theSoup:Add({title: \"lz\", data: theLZ})");
 	EXPECT(Eval("ClearVBOCache(theLZ)") == NILREF);
 	EXPECT(Holds(lz, 3000, 3));
+
+	// a VBO of class 'string: its UniChars in the host's order while it is
+	// mapped, a MessagePad's (big-endian) on the store
+	RefVar text(Eval("theStore:NewVBO('string, 8)"));
+	{
+		UniChar* chars = (UniChar*) BinaryData(text);
+		chars[0] = 'A'; chars[1] = 'B'; chars[2] = 'C'; chars[3] = 0;
+	}
+	SetGlobal("theText", text);
+	Eval("theSoup:Add({title: \"text\", data: theText})");
+	EXPECT(Eval("ClearVBOCache(theText)") == NILREF);
+	{
+		PSSId textId = LargeBinaryData(text)->fId;
+		char root[kLargeObjectRootSize];
+		char word[4];
+		char bytes[8];
+		EXPECT(store->Read(textId, 0, root, kLargeObjectRootSize) == noErr);
+		EXPECT(store->Read(GetBigEndianWord((UByte*) root + kLORootChunkArray), 0, word, 4) == noErr);
+		EXPECT(store->Read(GetBigEndianWord((UByte*) word), 0, bytes, 8) == noErr);
+		static const char kABC[8] = { 0, 'A', 0, 'B', 0, 'C', 0, 0 };
+		EXPECT(memcmp(bytes, kABC, 8) == 0);
+	}
+	EXPECT(Eval("VBOUndoChanges(theText)") == NILREF);
+	EXPECT(LargeBinaryData(text)->fAddress == 0);
+	EXPECT(((UniChar*) BinaryData(text))[1] == 'B');		// mapped again, in the host's order
+	EXPECT(Eval("StrEqual(theText, \"ABC\")") == TRUEREF);
+	// made a 'binary: the bytes a MessagePad's, high byte first
+	EXPECT(RINT(Eval("ExtractByte(SetClass(theText, 'binary), 1)")) == 'A');
+	EXPECT(RINT(Eval("ExtractByte(SetClass(theText, 'string), 1)")) == 'A');
+	EXPECT(Eval("StrEqual(theText, \"ABC\")") == TRUEREF);
 
 	RemoveTStore(store);
 	store->Delete();

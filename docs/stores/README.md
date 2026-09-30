@@ -547,6 +547,33 @@ entries.  ctests `host.NewtonWordHintsOld` and `.Repair`
 (`demo/hintsrepair.ns`) write a store as the old host did
 (`NEWTON_NO_WORD_HINTS`) and find its entries after the repair.
 
+### An older host's byte order
+
+Until 2026-10-01 the host wrote a store's reals, the shapes' halfword
+structures and its large binaries of a string class (a NetHopper
+document's text, the text engine's `'text`) in its own byte order, where a
+MessagePad writes them big-endian (`frames/HostOrder.h`,
+docs/frames/README.md's "The binaries the host keeps in its own order").
+The sparse store file says which it holds: bit 0 of the header's word at
+0x28 (`hal/host/HostFlash.h`), set in every file made since, clear in an
+older one (a flat file cannot say and is taken to be a MessagePad's, as
+Einstein's are).  `host/HostStores.cpp` repairs an unmarked file's
+internal store when it mounts it (`RepairHostByteOrder` in `Soups.cpp`,
+DEVIATION): every entry looked through, each such object turned round in
+memory and the entry written back with its `_modTime` kept, and the file
+marked - "turned the reals and text of N entries to a MessagePad's byte
+order", once.  A real or a text is turned only when it reads implausibly
+(a real subnormal, NaN, infinite or beyond 10^+/-300 and plausible the other
+way round; text with more `0xnn00` characters than `0x00nn`), so an object
+a newer host already wrote big-endian is left alone.  A user's store holds
+few: the System soup's `soundVolumeDb`/`alarmVolumeDb` (a volume read
+wrong the other way is a subnormal: silence) and the text of the
+documents NetHopper and Newt's Cape keep.  ctests
+`host.NewtonByteOrderOld`, `.Repair` and `.Repair.again`
+(`demo/byteorder.ns`, `NEWTON_OLD_BYTE_ORDER` writing as the old host
+did).  `tools/stores/flashimage.py info` says which a file is, and
+`to-flat` refuses an unrepaired one.
+
 The decompressor a search reads the entries' text through is kept for the
 whole walk and let go at its end (`ReleasePermObjectTextCache` 0x002e01c8,
 from `Move`, `CountEntries` and `Collect`).

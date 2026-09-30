@@ -9,6 +9,7 @@
 
 #include "FactorySoups.h"
 #include "Soups.h"
+#include "HostOrder.h"
 #include "Store.h"
 #include "Protocols.h"
 #include "host/HostStore.h"
@@ -147,7 +148,14 @@ HostMountStores(void)
 			{
 				gRestored = (existing != nil);
 				TStore* store = GetInternalStore();
-				RegisterTStore(store);
+				RefVar storeObject(RegisterTStore(store));
+				// DEVIATION: a store file an older host wrote, its reals and
+				// text in the host's byte order, repaired once (Soups.cpp)
+				if (!HostFlashBinariesBigEndian() && !HostWriteOldByteOrder())	// (tests: writing as an older host did)
+				{
+					RepairHostByteOrder(storeObject);
+					HostFlashSetBinariesBigEndian();
+				}
 				RefVar stores(GetStores());
 				if (IsArray(stores) && Length(stores) > 0)
 					HostPrepareStore(RefVar(GetArraySlotRef(stores, 0)));

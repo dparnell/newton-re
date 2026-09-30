@@ -1,0 +1,39 @@
+// A store an older host wrote, its reals and its text in large binaries
+// kept in the host's byte order rather than a MessagePad's, repaired on
+// mount (stores/Soups.cpp's RepairHostByteOrder, a DEVIATION): run first
+// with NEWTON_OLD_BYTE_ORDER set, this writes a soup whose entry holds a
+// real and a large binary of text as the old host wrote them (and a store
+// file not marked big-endian, hal/host/HostFlash.h); run again on the same
+// store without it, the mount has turned them round ("turned the reals and
+// text of N entries") and they read as they were written; run a third
+// time, nothing is turned round again.
+//
+//   NEWTON_OLD_BYTE_ORDER=1 build/host/host/newton --erase --store x.store --headless 60 --script src/host/demo/byteorder.ns
+//   build/host/host/newton --store x.store --headless 60 --script src/host/demo/byteorder.ns
+//
+// Prints "byteorder: written" the first time, "byteorder: repaired" after,
+// or "FAILED".
+
+boText := "Hello, world";
+
+boRun := func() begin
+	local store := GetStores()[0];
+	local soup := store:GetSoup("ByteOrder");
+	if not soup then begin
+		soup := store:CreateSoupXmit("ByteOrder", [], nil);
+		local vbo := store:NewVBO('string, (StrLen(boText) + 1) * 2);
+		for i := 0 to StrLen(boText) - 1 do StuffUniChar(vbo, i * 2, boText[i]);
+		soup:AddXmit({title: "byte order", volume: -12.5, text: vbo}, nil);
+		Print("byteorder: written");
+	end else begin
+		local e := soup:Query(nil):Entry();
+		Print("byteorder: volume " & e.volume & ", text " & e.text & ", VBO " & IsVBO(e.text));
+		if e.volume = -12.5 and StrEqual(e.text, boText) and IsVBO(e.text) then
+			Print("byteorder: repaired")
+		else
+			Print("byteorder: repaired: FAILED");
+	end;
+	HostQuit();
+end;
+
+call boRun with ();

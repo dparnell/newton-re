@@ -829,7 +829,7 @@ TStoreObjectWriter::Scan(void)
 			}
 		}
 	}
-	else if (HostOrderOf(fObject) != kROMOrder && !HostIsBigEndian())
+	else if (HostOrderOf(fObject) != kROMOrder && !HostIsBigEndian() && !HostWriteOldByteOrder())
 	{
 		// DEVIATION: a real or a shape's halfwords, kept in the host's
 		// order (frames/HostOrder.h), written as a MessagePad's bytes

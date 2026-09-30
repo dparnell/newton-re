@@ -28,7 +28,18 @@
 				    the compander;
 				  - abort: the object's changes thrown away and the object
 				    unmapped, as the ROM's abort ends the session;
-				  - unmap: the block let go (nothing written).
+				  - unmap: the block let go (nothing written);
+				  - the block is a whole number of 0x400-byte pages long,
+				    as a mapping is on the MessagePad: a decompressor may
+				    write a few bytes past the count it is asked for into
+				    the rest of the page (the LZ one does, reading the last
+				    page of a large binary 646 bytes long);
+				  - the byte order: a large binary of a class the host keeps
+				    in its own order (a string - frames/HostOrder.h) is
+				    turned into it once mapped, when the large binaries
+				    layer says what it is (SetLargeObjectHostOrder), and
+				    each page written back is turned back, so the store
+				    holds a MessagePad's big-endian UniChars.
 
 				A package kept on a store (a root of kind 1) is mapped the
 				way TROMDomainManager1K::AddPackage (0x001add00) and
@@ -50,6 +61,7 @@
 #include "LargeObjects.h"
 #include "StoreCompander.h"
 #include "ByteOrder.h"
+#include "HostOrder.h"
 #include "OSErrors.h"
 
 #include <stdlib.h>
@@ -70,11 +82,20 @@ struct MappedObject
 	TStoreDecompressor*	fDecompressor;	// a package's
 	ULong				fPackageId;
 	Boolean				fReadOnly;
+	EHostOrder			fOrder;			// the order fData is in (kROMOrder: as the store holds it)
 };
 
 MappedObject*	gMapped = nil;
 long			gMappedCount = 0;
 long			gMappedCapacity = 0;
+
+
+// how much a block of size bytes is given: whole pages (above)
+size_t
+PagesFor(long size)
+{
+	return (size_t) ((size > 0 ? size : 1) + kCompanderBlockSize - 1) & ~(size_t) (kCompanderBlockSize - 1);
+}
 
 
 // the entry for the store's object, the one whose data holds the address,
@@ -188,7 +209,7 @@ Load(MappedObject* entry)
 	if (err != noErr)
 		return err;
 	entry->fSize = (long) GetBigEndianWord(root + kLORootSize);
-	entry->fData = (char*) calloc(entry->fSize > 0 ? entry->fSize : 1, 1);
+	entry->fData = (char*) calloc(PagesFor(entry->fSize), 1);
 	if (entry->fData == nil)
 		return kError_No_Memory;
 	for (long offset = 0; offset < entry->fSize && err == noErr; offset += kCompanderBlockSize)
@@ -243,6 +264,8 @@ WriteBack(MappedObject* entry)
 	{
 		long n = entry->fSize - offset < kCompanderBlockSize ? entry->fSize - offset : kCompanderBlockSize;
 		memcpy(copy, entry->fData + offset, n);
+		if (!HostWriteOldByteOrder())					// (tests: as an older host wrote it)
+			SwapHostOrder(entry->fOrder, copy, n);		// (a page is whole UniChars and whole reals)
 		err = entry->fCompander->Write(offset, (char*) copy, n, (ULong) (uintptr_t) entry->fData);
 	}
 	if (err == noErr && (long) GetBigEndianWord(root + kLORootSize) != entry->fSize)
@@ -332,6 +355,22 @@ Abort(long index)
 }
 
 }	// namespace
+
+
+// The object mapped at address (a large binary's) is of a kind the host
+// keeps in its own order - or no longer is: its bytes turned from the
+// order they are in to that one.
+void
+SetLargeObjectHostOrder(ULong address, EHostOrder order)
+{
+	long index = FindAddress(address);
+	if (index < 0 || gMapped[index].fOrder == order)
+		return;
+	MappedObject* entry = &gMapped[index];
+	SwapHostOrder(entry->fOrder, entry->fData, entry->fSize);
+	SwapHostOrder(order, entry->fData, entry->fSize);
+	entry->fOrder = order;
+}
 
 
 NewtonErr
@@ -434,7 +473,7 @@ ROMDomainUserRequest(long selector, RDMParams* params)
 		char* data = entry->fData;
 		if (delta > 0)
 		{
-			data = (char*) realloc(data, newSize);
+			data = (char*) realloc(data, PagesFor(newSize));
 			if (data == nil)
 				return kError_No_Memory;
 			long at = params->fOffset < 0 ? oldSize : params->fOffset;
@@ -445,7 +484,7 @@ ROMDomainUserRequest(long selector, RDMParams* params)
 		{
 			long at = params->fOffset < 0 ? newSize : params->fOffset;
 			memmove(data + at, data + at - delta, oldSize - (at - delta));
-			char* smaller = (char*) realloc(data, newSize > 0 ? newSize : 1);
+			char* smaller = (char*) realloc(data, PagesFor(newSize));
 			if (smaller != nil)
 				data = smaller;
 		}

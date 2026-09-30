@@ -26,6 +26,8 @@ namespace
 	const char		kSparseMagic[8] = { 'N', 'e', 'w', 't', 'F', 'l', 's', 'h' };
 	const uint32_t	kSparseVersion = 1;
 	const uint32_t	kSparseHeaderSize = 0x40;
+	const uint32_t	kSparseFlagsOffset = 0x28;
+	const uint32_t	kSparseBigEndianBinaries = 0x01;		// (HostFlash.h)
 
 	std::vector<unsigned char>	gFlash;		// the banks, one after the other
 	FILE*						gFile = nil;
@@ -38,6 +40,7 @@ namespace
 	std::vector<uint32_t>		gFreeSlots;
 	uint32_t					gNextSlot = 1;
 	uint32_t					gDataOffset = 0;
+	uint32_t					gSparseFlags = 0;
 
 	uint32_t
 	GetWord(const unsigned char* p)
@@ -178,6 +181,7 @@ namespace
 			return kError_Bad_Parameters;
 		ULong chunks = size / kHostFlashChunkSize;
 		gDataOffset = GetWord(header + 0x24);
+		gSparseFlags = GetWord(header + kSparseFlagsOffset);
 		if (gDataOffset < kSparseHeaderSize + chunks * 4 || gDataOffset % kHostFlashChunkSize != 0)
 			return kError_Bad_Parameters;
 		gFlash.assign(size, 0xFF);
@@ -238,6 +242,8 @@ namespace
 		PutWord(header + 0x1c, (uint32_t) chunks);
 		PutWord(header + 0x20, kSparseHeaderSize);
 		PutWord(header + 0x24, gDataOffset);
+		gSparseFlags = getenv("NEWTON_OLD_BYTE_ORDER") != nil ? 0 : kSparseBigEndianBinaries;	// (tests: an older host's file)
+		PutWord(header + kSparseFlagsOffset, gSparseFlags);
 		WriteAt(0, header, kSparseHeaderSize);
 		std::vector<unsigned char> map(gDataOffset - kSparseHeaderSize, 0);		// and the padding to the first chunk
 		WriteAt(kSparseHeaderSize, &map[0], (ULong) map.size());
@@ -394,6 +400,26 @@ HostFlashFormat
 HostFlashFileFormat(void)
 {
 	return gFormat;
+}
+
+
+Boolean
+HostFlashBinariesBigEndian(void)
+{
+	return gFile == nil || gFormat != kHostFlashSparse || (gSparseFlags & kSparseBigEndianBinaries) != 0;
+}
+
+
+void
+HostFlashSetBinariesBigEndian(void)
+{
+	if (gFile == nil || gFormat != kHostFlashSparse)
+		return;
+	gSparseFlags |= kSparseBigEndianBinaries;
+	unsigned char word[4];
+	PutWord(word, gSparseFlags);
+	WriteAt(kSparseFlagsOffset, word, 4);
+	fflush(gFile);
 }
 
 

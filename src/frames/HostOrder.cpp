@@ -14,7 +14,18 @@
 #include "ByteOrder.h"
 
 #include <ctype.h>
+#include <stdlib.h>
 #include <string.h>
+
+
+Boolean
+HostWriteOldByteOrder(void)
+{
+	static int old = -1;
+	if (old < 0)
+		old = getenv("NEWTON_OLD_BYTE_ORDER") != nil;
+	return old != 0;
+}
 
 
 // Whether a class, by name, is super or a subclass of it by its name alone:
@@ -41,6 +52,10 @@ HostOrderOfOtherName(const char* name)
 {
 	if (symcmp((char*) name, (char*) "real") == 0)
 		return kHostReal;
+	// the text engine's text kept on a store (text/TXVBOChars.cpp: a large
+	// binary of class 'text, UniChars that the engine reads in place)
+	if (symcmp((char*) name, (char*) "text") == 0)
+		return kHostUniChars;
 	static const char* const kShapes[] = { "boundsRect", "rectangle", "oval", "roundRectangle", "line",
 											"polygonShape", "polygonData", "regionData" };
 	for (size_t i = 0; i < sizeof(kShapes) / sizeof(kShapes[0]); i++)

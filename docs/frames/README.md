@@ -208,18 +208,24 @@ translator - none for the ROM; integers, immediates and magic pointers
 are the same on both) and the binary data the host reads as words -
 symbol hashes, `'real`s, the UniChars of `'string`s and the halfwords of
 the shape classes; other binaries (bitmaps, bytecode, sounds) keep their
-persistent big-endian format for their readers.
+persistent big-endian format for their readers.  It then sets the
+symbol table (`gROMSymbolTableRef`, which `InitSymbols` takes over), magic pointer table 0,
+`gROMBuiltinFunctions`, and every `R`/`RSSYM` constant.  Objects there
+count as ROM (`InROMObjectArea`): read-only, never moved, their symbols
+unique.  `test_ROMImport` runs the object system over the ROM image
+in the repository.
 
 ### The binaries the host keeps in its own order (`HostOrder.h`)
 
 DEVIATION.  A MessagePad keeps every binary as its big-endian ARM wrote
-it; the host keeps three kinds in its own order, because C++ reads them
+it; the host keeps four kinds in its own order, because C++ reads them
 as structures: strings (`'string`, a dotted subclass such as
 `'string.noData`, and the classes the inheritance frame makes strings -
 `'phone`, `'homePhone`, `'name`, `'company`, `'address`, `'title` ...),
 reals, and the shapes' halfword structures (`'boundsRect`, `'rectangle`,
 `'oval`, `'roundRectangle`, `'line`, `'polygonShape`, `'polygonData`,
-`'regionData`).  `HostOrderOf(obj)` says which an object is and
+`'regionData`), and the text engine's `'text` large binaries.
+`HostOrderOf(obj)` says which an object is and
 `SwapHostOrder` turns its bytes between the two orders.  Wherever such an
 object's bytes cross into something that expects a MessagePad's, they are
 turned round there:
@@ -233,18 +239,14 @@ turned round there:
 | `SetClass` from one kind to another (a binary of big-endian UniChars made a `'string`, a string made a `'binary`) | the bytes turned from the one order to the other, so a script sees the same bytes |
 | Native code on `src/armcpu` | a window over such an object is swizzled (byte *o* is the host's *o* ^ 1, ^ 7 for a real), so words, halfwords, bytes and `memcpy` all see the big-endian bytes |
 | An endpoint's `'binary` form (`comms/Translators.cpp`), protoEndpoint's raw data, the Connection's `WriteBytes`/`ReadBytes` | `TBinaryBytesAsROM` |
+| A large binary (VBO) of a string class, the text engine's `'text` | kept in the host's order while mapped, a MessagePad's on the store: `stores/host/HostLargeObjects.cpp` turns it as the large-binaries layer names its class (`SetLargeObjectHostOrder`), and each page written back |
+
+A store an older host wrote is repaired when mounted (docs/stores/README.md,
+"An older host's byte order").
 
 Nothing needs doing for `Clone`, `SetLength` (bytes are bytes), `StrLen`
 (it wants a string, and a binary throws as on the ROM), or the dock's
-commands (NSOF, or strings converted character by character).  Not yet
-done: a large binary (VBO) of a string class keeps its UniChars in the
-host's order on the store, as the text engine's `'text` VBOs do - a store
-written by a MessagePad would read with them swapped.  It then sets the symbol table (`gROMSymbolTableRef`,
-which `InitSymbols` takes over), magic pointer table 0,
-`gROMBuiltinFunctions`, and every `R`/`RSSYM` constant.  Objects there
-count as ROM (`InROMObjectArea`): read-only, never moved, their symbols
-unique.  `test_ROMImport` runs the object system over the ROM image
-in the repository.
+commands (NSOF, or strings converted character by character).
 
 ## Frames parts (`FramesPart.cpp`)
 

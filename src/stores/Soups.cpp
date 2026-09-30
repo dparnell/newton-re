@@ -31,6 +31,8 @@
 #include "protocols/Protocols.h"
 #include "DES.h"
 #include "ByteOrder.h"
+#include "HostOrder.h"
+#include "Entries.h"
 #include <stdio.h>
 #include <string.h>
 #include <new>
@@ -869,6 +871,144 @@ RepairWordHints(RefArg storeObject)
 	}
 	if (rewritten != 0)
 		fprintf(stderr, "[host] rewrote word hints for %ld entries\n", rewritten);
+}
+
+
+// DEVIATION: a store the host wrote before 2026-10-01 kept its reals,
+// the shapes' halfword structures and its large binaries of a string class
+// (a NetHopper document's text, the text engine's 'text) in the host's
+// byte order rather than a MessagePad's (frames/HostOrder.h); read now,
+// each would come back with its bytes the wrong way round.  The host's
+// store file says which it is (hal/host/HostFlash.h's
+// HostFlashBinariesBigEndian), and the caller repairs one that is not:
+// every entry of every soup is looked through, each such object turned
+// round in memory and the entry written back as it was (its _modTime
+// kept), which writes them big-endian.  Answers how many entries were
+// rewritten, saying so once.
+// Whether an object's bytes, as they now read, are the other way round: a
+// guard, so that an object a newer host already wrote big-endian is left
+// alone (the file's mark is what says a store needs looking at; this is
+// what says an object does).  A real is turned round when it reads as a
+// subnormal, a NaN or an infinity, or has an exponent beyond 10^+/-300, and
+// the other way round it does not; text when more of its characters have
+// a nought low byte than a nought high byte (Latin text turned round is
+// all 0xnn00); a shape's halfwords always (nothing better can be said).
+static int
+DoubleExponent(const UByte* b, Boolean reversed)
+{
+	int hi = reversed ? b[7] : b[0];
+	int next = reversed ? b[6] : b[1];
+	return ((hi & 0x7f) << 4) | (next >> 4);
+}
+
+static Boolean
+PlausibleDouble(const UByte* b, Boolean reversed)
+{
+	Boolean zero = true;
+	for (int i = 0; i < 8; i++)
+		if (b[i] != 0 && !(i == (reversed ? 7 : 0) && b[i] == 0x80))
+			zero = false;
+	if (zero)
+		return true;
+	int e = DoubleExponent(b, reversed);
+	return e > 0x3ff - 997 && e < 0x3ff + 997;			// (2^+/-997 is about 10^+/-300)
+}
+
+static Boolean
+LooksTurnedRound(EHostOrder kind, const UByte* data, long length)
+{
+	if (kind == kHostHalfwords)
+		return true;
+	if (kind == kHostReal)
+	{
+		if (length != 8)
+			return false;
+		// what the host holds is the store's bytes reversed; the store's
+		// bytes are data reversed on a little-endian host
+		UByte store[8];
+		for (int i = 0; i < 8; i++)
+			store[i] = HostIsBigEndian() ? data[i] : data[7 - i];
+		return !PlausibleDouble(store, false) && PlausibleDouble(store, true);
+	}
+	long lowNought = 0, highNought = 0;
+	for (long i = 0; i + 1 < length; i += 2)
+	{
+		UniChar c = *(const UniChar*) (data + i);
+		if (c == 0)
+			continue;
+		if ((c & 0xff) == 0)
+			lowNought++;
+		else if ((c & 0xff00) == 0)
+			highNought++;
+	}
+	return lowNought > highNought;
+}
+
+static Boolean
+RepairOrderIn(Ref obj, int depth)
+{
+	if (!ISPTR(obj) || depth > 32)
+		return false;
+	ObjHeader* o = OBJ(obj);
+	ULong flags = ObjFlags(o);
+	if ((flags & kObjSlotted) != 0)
+	{
+		Boolean changed = false;
+		Ref* slots = ObjArraySlots(o);
+		for (long i = 0, count = Length(obj); i < count; i++)
+			if (RepairOrderIn(slots[i], depth + 1))
+				changed = true;
+		return changed;
+	}
+	RefVar ref(obj);
+	EHostOrder kind = HostOrderOf(ref);
+	if (kind == kROMOrder || (flags & kObjReadOnly) != 0)
+		return false;
+	if ((flags & kObjFrame) != 0)
+	{
+		// a large binary: only a string class's was kept in the host's order
+		if (kind != kHostUniChars || !IsLargeBinary(ref))
+			return false;
+	}
+	else if (kind == kHostUniChars)
+		return false;				// (a store object's strings were always a MessagePad's)
+	if (!LooksTurnedRound(kind, (const UByte*) BinaryData(ref), Length(ref)))
+		return false;
+	SwapHostOrder(kind, BinaryData(ref), Length(ref));
+	return true;
+}
+
+long
+RepairHostByteOrder(RefArg storeObject)
+{
+	TStoreWrapper* wrapper = GetStoreWrapper(storeObject);
+	Boolean readOnly;
+	if (wrapper->Store()->IsReadOnly(&readOnly) != noErr || readOnly)
+		return 0;
+	long rewritten = 0;
+	RefVar names(StoreGetSoupNames(storeObject));
+	RefVar soup;
+	RefVar cursor;
+	RefVar entry;
+	for (long i = 0, count = Length(names); i < count; i++)
+	{
+		soup = StoreGetSoup(storeObject, RefVar(GetArraySlotRef(names, i)));
+		if ((Ref) soup == NILREF)
+			continue;
+		cursor = CommonSoupQuery(soup, RefVar(NILREF));
+		for (entry = CursorEntry(cursor); IsSoupEntry(entry); entry = CursorNext(cursor))
+		{
+			Length(entry);				// (faulted in)
+			if (RepairOrderIn(FaultBlockObject(entry), 0))
+			{
+				EntryChangeWithModTime(entry);
+				rewritten++;
+			}
+		}
+	}
+	if (rewritten != 0)
+		fprintf(stderr, "[host] turned the reals and text of %ld entries to a MessagePad's byte order\n", rewritten);
+	return rewritten;
 }
 
 

@@ -10,7 +10,8 @@
 
 				  - strings, of 'string and every subclass of it
 				    ('string.name ..., and by inheritance 'phone,
-				    'name, 'company ...): UniChars;
+				    'name, 'company ...): UniChars; and the text engine's
+				    'text, the UniChars of a document kept on a store;
 				  - reals ('real): a double;
 				  - the shapes' halfword structures ('boundsRect,
 				    'rectangle, 'oval, 'roundRectangle, 'line,
@@ -56,5 +57,10 @@ EHostOrder	HostOrderOf(RefArg obj);
 // length bytes of the kind turned between the host's order and the
 // MessagePad's (the same either way round)
 void		SwapHostOrder(EHostOrder kind, void* data, long length);
+// host, tests only: write a store's reals, shapes and string large
+// binaries in the host's order, as the host did before 2026-10-01, so that
+// the repair of such a store can be tested (NEWTON_OLD_BYTE_ORDER in the
+// environment; stores/Soups.cpp RepairHostByteOrder)
+Boolean		HostWriteOldByteOrder(void);
 
 #endif	/* __HOSTORDER_H */
