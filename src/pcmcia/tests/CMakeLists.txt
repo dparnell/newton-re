@@ -11,3 +11,10 @@ add_executable(test_MemoryCard test_MemoryCard.cpp)
 target_link_libraries(test_MemoryCard PRIVATE pcmcia flash os600_kernel os600_user)
 add_test(NAME pcmcia.MemoryCard COMMAND test_MemoryCard)
 set_tests_properties(pcmcia.MemoryCard PROPERTIES TIMEOUT 60)
+
+# the card server: a card put in, recognised and announced ('card' system
+# event), taken out (the application told, the handler removed), put back
+add_executable(test_CardServer test_CardServer.cpp)
+target_link_libraries(test_CardServer PRIVATE pcmcia flash os600_kernel os600_user)
+add_test(NAME pcmcia.CardServer COMMAND test_CardServer)
+set_tests_properties(pcmcia.CardServer PROPERTIES TIMEOUT 60)

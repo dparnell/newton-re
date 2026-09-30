@@ -35,7 +35,7 @@ struct SCardMessageDevice
 {
 	ULong		fType;			// +00 'flsh', 'sram', 'rom ', 'comm'
 	TObjectId	fPhys;			// +04 the phys it is mapped through
-	ULong		fField08;		// +08
+	void*		fHandler;		// +08 the card handler that installed it
 	void*		fDriver;		// +0C its TFlash (a memory card's) or serial chip
 	ULong		fOffset;		// +10 where it starts in common memory
 	ULong		fSize;			// +14

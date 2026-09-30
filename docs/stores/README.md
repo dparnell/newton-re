@@ -1013,13 +1013,28 @@ Each step comes with its host tests.
      (`Init` with `kFlashStoreIsCard`, `VccOn`/`VppOn` over the card's
      power, `IsWriteProtected`). Test: a card store formatted, written,
      remounted.
-   - **5d. The card server.** `TCardServer` ('cdsv': `MainConstructor`,
-     the handler registry, `CardIntHandler`, `DoCardRecognition`,
-     `ActivateCardHandler`, `DoCommand` and its messages, ejection and the
-     lock switch, power on and off), `TCardSocketState`, `TCardMessage`,
-     `TCardAsyncMsg`, `TCardDomains` (the host maps a card's windows as it
-     maps the flash's). Test: inserting a card sends the PSS manager a
-     card-available message naming a flash store.
+   - **5d. The card server.** DONE (2026-09-30; ctest
+     `pcmcia.CardServer`): `pcmcia/CardServer.h` - `TCardServer` ('cdsv'),
+     the card processor `TCardProcessor` ('cdpr', which reads the CIS and
+     offers the card to the handlers so the server's own loop stays free),
+     their handlers, `TCardSocketState`, `TCardAsyncMsg`,
+     `TNewCardAsyncMsg` (the 'card' system event a new card is announced
+     with, carrying the devices its handler installed) and `TCardDomains`
+     (DEVIATION: no fault monitor - a host card's memory never faults);
+     `InitCardServices`, `GetSocketInfo` and a real `GetCardInfo`. A card
+     going in is an interrupt, a poll of the pins 20 ms later
+     (`DoPollLockSwitchAndCardDetected`), power and a wait for the card to
+     say it is ready (0xcb, every 100 ms), then the processor's
+     `DoCardRecognition` (0xfc); a card coming out is 0x33 to the
+     application and to whoever holds the card (the PSS manager), whose
+     letting go (0x34) has the processor remove the handler's services
+     (0xfe). Nothing happens until the application gives the server its
+     port (message 100): that is what starts card detection. The host's
+     socket had to answer the Voyager's raw pins (`GetVPCPins`: a 5 V
+     card's voltage sense pins) and keep the card-detect and lock
+     interrupts enabled through `ResetInterrupts` as the ROM's does. NOT
+     YET: the alert dialogs (no 'alrt' server), card packages in
+     attribute memory (`TCardPipe`), ATA cards.
    - **5e. The PSS manager and the newt side.** `TPSSManager`'s world
      ('pssm': `MainConstructor`, `DoCommand`, `CardAvailable`, `CardGone`,
      `CardIsSame`, `RegisterStores`, `ReinsertCard`, the UI engine) and

@@ -73,6 +73,18 @@ InternalVppOn(void)
 }
 
 
+// ROM 0x0005086c InternalVppIdleOff__FUc
+// DEVIATION: as InternalVppOn - the ROM counts gInternalVppOffCountdown
+// down each time the card server's idler asks and powers the supply off
+// (IOPowerOff 0x1d or 0x1e) at the end, answering whether it is still on;
+// a host's flash has no supply, so it is never on.
+Boolean
+InternalVppIdleOff(Boolean /*force_off*/)
+{
+	return false;
+}
+
+
 // ROM 0x00050808 InternalVppOff__Fv
 // DEVIATION: as InternalVppOn - the ROM starts gInternalVppOffCountdown
 // (0x1c20000) when the count comes back to nought.

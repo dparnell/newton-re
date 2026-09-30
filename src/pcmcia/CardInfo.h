@@ -8,10 +8,11 @@
 				run, card hardware or no card hardware.
 
 	Not in the DDK's headers as a script function; reconstructed from the
-	MP2x00 US ROM (0x00053ccc), citing its origin.  NOT YET: the card server
-	itself (TCardServer, the socket states and the CIS tuples a real card
-	answers with), so the sockets are always empty here - which is what the
-	ROM's own code does on a machine whose gNumberOfHWSockets is zero.
+	MP2x00 US ROM (0x00053ccc), citing its origin.  GetCardInfo reads the
+	card server's socket states (CardServer.h); before the server has run
+	- and on a machine with no sockets - there are none.  NOT YET: the
+	functions that ask the server through the application's card event
+	handler (CheckCardBattery, GetCardTypes, UnmountCard).
 */
 
 #ifndef __CARDINFO_H
@@ -22,6 +23,7 @@
 #endif
 
 
+Ref		FourCharToSymbol(ULong code);		// ROM 0x0030c0bc FourCharToSymbol__FUl
 Ref		FGetCardInfo(RefArg rcvr);			// ROM 0x00053ccc FGetCardInfo
 Ref		FCheckCardBattery(RefArg rcvr);		// ROM 0x0030c980 FCheckCardBattery
 Ref		FGetCardTypes(RefArg rcvr);			// ROM 0x0030c7f4 FGetCardTypes

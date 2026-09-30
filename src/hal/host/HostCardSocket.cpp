@@ -208,18 +208,28 @@ TCardSocket::DisableSocketInterrupt(TSocketInt intType)
 }
 
 
-// (the card-detect and lock interrupts stay pending until their handler
-// has been called: the controller latches the change, not the level)
+// (the controller latches a change of the card-detect and lock pins until
+// it is cleared: the card server clears them before it enables them again,
+// once it has looked at the pins itself)
 void
 TCardSocket::ClearSocketInterrupt(TSocketInt intType)
 {
-	if (intType < kSocketIntCount && intType != kSocketCardDetectedInt && intType != kSocketCardLockInt)
+	if (intType < kSocketIntCount)
 		fIntPending &= ~(1 << intType);
 }
 
 
 NewtonErr	TCardSocket::SetSocketInterruptFlags(TSocketInt, TSocketIntFlags)	{ return noErr; }
-void		TCardSocket::ResetInterrupts(void)			{ fIntEnabled = 0; }
+// ROM 0x00055524 ResetInterrupts__11TCardSocketFv
+// Every interrupt but the card-detect and lock ones disabled and cleared
+// (the Voyager's enable register and'ed with 0xffff800c, its clear register
+// written 0x7ff3): those two stay as the card server set them.
+void
+TCardSocket::ResetInterrupts(void)
+{
+	fIntEnabled &= 0xFFFF800C;
+	fIntPending &= ~0x7FF3;
+}
 
 
 // The interrupts pending and enabled (0xFF: all of them), as a mask.
@@ -284,7 +294,21 @@ TCardSocket::GetPCPins(void)
 }
 
 
-ULong		TCardSocket::GetVPCPins(void)				{ return GetPCPins(); }
+// The Voyager's pin register itself, which GetPCPins translates (ROM
+// 0x00055c24): 0x10 and 0x20 the voltage sense pins (both high - left open
+// - for a 5 V card), 0x400 ready, 1 and 2 the battery pins, 0x200 write
+// protect, and 4 and 8 the card-detect pins, which are low when a card is
+// in.
+ULong
+TCardSocket::GetVPCPins(void)
+{
+	if (!HostCardIsInserted(fSocketNumber))
+		return 0x4 | 0x8;
+	ULong pins = 0x10 | 0x20 | 0x400 | 0x1 | 0x2;
+	if (HostCardIsWriteProtected(fSocketNumber))
+		pins |= 0x200;
+	return pins;
+}
 
 
 // ROM 0x00055d50 IsCardDetected__11TCardSocketFv (the card-detect pins)
