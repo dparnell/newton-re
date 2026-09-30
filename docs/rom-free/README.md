@@ -48,7 +48,7 @@ what each class is, and the form planned for it:
 | `cbits` | 61 | bitmaps of more than one bit | PNG (gray), with a sidecar |
 | `samples` | 34 | sound samples | WAV, with the sound frame's own slots staying source |
 | `TDTMFCodec` | 16 | the touch tones' codec parameters | a table (below) |
-| `sfnt` | 13 | the fonts | `.sfnt` files as they are, which font tools read |
+| `sfnt` | 13 | the fonts | a directory each: a BDF file per bitmap strike, a text file per other table (`tools/fonts/newtonsfnt.py`) |
 | `picture` | 7 | QuickDraw pictures | PICT files (the 512-byte header added), with a PNG made alongside for looking at |
 | `Real`, `fixed`, `boundsrect`, `rectangle`, `roundrectangle`, `polygonshape`, `pattern`, `deskey` | ~90 | small values | source (see below) |
 | `UniC`, `Sort`, `kchr`, `Intl`, `table`, `Comp` | 23 | Unicode, collation, keyboard and locale tables | tables (below) |
@@ -238,13 +238,18 @@ reported as the decompiler's was.
      `pict('picture, "resources/picture/<addr>.pict")`, and the builder
      drops the 512 bytes. No PNG is made beside them yet: that waits on
      the host drawing a picture's text (`qd/PicPlay.h`).
-   - The 13 fonts are `.sfnt` files, byte for byte the `sfnt` binary: sfnt
-     containers (version 0x00010000) with no outlines, so not TrueType
-     fonts, whatever the container's version says. fontTools opens them:
-     - five are bitmap fonts (`bdat`, `bloc`, `cmap`, `head`, `hhea`,
-       `hmtx`, `hsty`, `maxp`, `name`, `post`; "Roman Regular" is the
-       first);
-     - eight are 2080-byte metric-only fonts with no `name` table.
+   - The 13 fonts are sfnt containers (version 0x00010000) with no
+     outlines, so not TrueType fonts: five bitmap fonts (`bdat`, `bloc`,
+     `cmap`, `head`, `hhea`, `hmtx`, `hsty`, `maxp`, `name`, `post`) and
+     eight 2080-byte metric-only fonts (`cmap`, `head`, `hhea`, `hmtx`,
+     `hsty`) - `docs/qd/fonts-sfnt.md`. Each is a directory,
+     `sfnt('sfnt, "resources/sfnt/<addr>")`: every bitmap strike a BDF
+     file (its `bloc` metrics as properties), every other table a text
+     file, which `tools/fonts/newtonsfnt.py` packs back byte for byte
+     (ctests `tools.NewtonFonts`, and `host.ROMSourceFontEdit`, where a
+     pixel flipped in a BDF glyph reaches the screen). A font the text
+     form did not reproduce would stay a `.sfnt` file, byte for byte the
+     binary; none does.
 6. **The ROM extension's ten packages** (`analysis/packages.py`), each
    extracted to the same form and rebuilt as a package.
 7. **The loader side (step 4):** `frames/ROMImport.cpp` reads the builder's

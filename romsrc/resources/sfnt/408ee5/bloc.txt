@@ -1,0 +1,10 @@
+# 'bloc' and 'bdat': the bitmap strikes, one BDF file each, in the order
+# 'bloc' lists them (LocateEntry, ROM 0x000aebec, takes them to be in
+# order of size).  'bdat' holds the glyphs' images strike after strike,
+# each strike's glyphs in glyph id order.
+bloc-version 0x00020000
+bdat-version 0x00020000
+strike strike0-10.bdf
+strike strike1-12.bdf
+strike strike2-18.bdf
+strike strike3-36.bdf

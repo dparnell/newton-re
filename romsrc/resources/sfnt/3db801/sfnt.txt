@@ -1,0 +1,15 @@
+# A Newton font: an sfnt container (docs/qd/fonts-sfnt.md), unpacked by
+# tools/fonts/newtonsfnt.py.  The tables in directory order: tag, the file
+# holding it, its checksum (auto: the one worked out).  The builder lays them
+# out in this order, each padded to four bytes with nought.
+version 0x00010000
+table bdat bloc.txt auto
+table bloc bloc.txt auto
+table cmap cmap.tsv auto
+table head head.txt auto
+table hhea hhea.txt auto
+table hmtx hmtx.tsv auto
+table hsty hsty.txt auto
+table maxp maxp.txt auto
+table name name.tsv auto
+table post post.txt auto

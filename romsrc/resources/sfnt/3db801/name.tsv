@@ -1,0 +1,12 @@
+# 'name': platform, encoding, language, name id, then the string (tab-separated;
+# Mac Roman for platform 1 encoding 0, UTF-16 for platforms 0 and 3; \t \n \\
+# and \uXXXX escapes).  Name ids: 0 copyright, 1 family, 2 subfamily, 3 unique
+# id, 4 full name, 5 version, 6 PostScript name.  The strings are stored in
+# this order, one after the other.
+1	0	0	0	Copyright Apple Computer, Inc. 1991-1992
+1	0	0	1	Roman
+1	0	0	2	Regular
+1	0	0	3	Apple Roman Regular
+1	0	0	4	Roman Regular
+1	0	0	5	Version 1.0
+1	0	0	6	Roman-Regular

@@ -1,0 +1,11 @@
+# 'hsty': Apple's horizontal style table: how much wider each synthesised face makes a glyph (SetupWidthsFont, ROM 0x000ae388)
+version                0x00010000          # 16.16: 1.0
+plain                  0                   # design units added to every advance when no face is left to synthesise
+bold                   170                 # face bit 0: added when bold is synthesised
+italic                 0                   # face bit 1
+underline              0                   # face bit 2
+outline                128                 # face bit 3
+shadow                 170                 # face bit 4 (never read: FindSFNT keeps only face bits 0-3, 7 and 8)
+condense               -170                # face bit 5 (never read)
+extend                 170                 # face bit 6 (never read)
+superscript            0                   # face bit 7 (the Newton's superscript; subscript, bit 8, reads the two bytes after the table)

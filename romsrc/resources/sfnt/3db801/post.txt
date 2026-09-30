@@ -1,0 +1,10 @@
+# 'post': the PostScript table
+version                0x00030000          # 16.16: 3.0, no glyph names
+italicAngle            0xfff30000          # 16.16 degrees
+underlinePosition      200                 # design units
+underlineThickness     50                  # design units
+isFixedPitch           0                   
+minMemType42           0                   
+maxMemType42           0                   
+minMemType1            0                   
+maxMemType1            0                   

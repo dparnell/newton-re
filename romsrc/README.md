@@ -25,7 +25,7 @@ are kept. How it was made, and why it is shaped as it is, is in
 | `objects/*.ns` | The objects, as definitions `name := value;` in a notation that is a subset of NewtonScript's literals. A file holds the definitions one root object dominates, named after it (`Rbuiltinfunctions.ns`, `calendar_mp18.ns`). What several roots share is in `misc-NNN.ns`. |
 | `functions/*.ns` | Each NewtonScript function, as the decompiler wrote it (`tools/newton-rom/analysis/nsdecompile.py`), named by the slot that holds it: `Rbuiltinfunctions.AddAlarm.ns`. |
 | `maps.ns` | The frame maps (the slot names of the ROM's frames). |
-| `resources/` | The binaries: bitmaps as PNG (`bits`, `mask`, `cbits`), simple sounds as WAV, pictures as PICT, fonts as `.sfnt` (sfnt containers of Apple's bitmap and metric tables, no outlines). What has no editable form yet (compressed sounds, tables) is `.bin`. |
+| `resources/` | The binaries: bitmaps as PNG (`bits`, `mask`, `cbits`), simple sounds as WAV, pictures as PICT, fonts as directories - a BDF file per bitmap strike and a text file per other table, which the builder packs back into the `'sfnt` binary (`tools/fonts/README.md`; what the tables hold, `docs/qd/fonts-sfnt.md`). What has no editable form yet (compressed sounds, tables) is `.bin`. |
 | `lexicons/`, `lexicons.tsv` | The recognisers' word tries, with their ROM addresses. |
 | `rex/`, `rex.tsv` | The ROM extension, in pieces: its header and config entries, and the ten packages. A package with a frames part is `<Package>.head.bin` (its directory), the part as a tree of its own in `<Package>/` (the same layout as this one), and `<Package>.tail.bin`. |
 | `magic.tsv` | The magic-pointer table: `@index` and the object it names. |

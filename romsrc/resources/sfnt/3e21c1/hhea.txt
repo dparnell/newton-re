@@ -1,0 +1,18 @@
+# 'hhea': the horizontal header
+version                0x00010000          # 16.16: 1.0
+ascender               2048                # design units (SetupWidthsFont: the ascent)
+descender              -512                # design units (SetupWidthsFont: minus the descent)
+lineGap                0                   # design units (SetupWidthsFont: the leading)
+advanceWidthMax        2048                # design units (SetupWidthsFont: widMax)
+minLeftSideBearing     -340                
+minRightSideBearing    -340                
+xMaxExtent             2048                
+caretSlopeRise         1                   
+caretSlopeRun          0                   
+caretOffset            0                   
+reserved1              0                   
+reserved2              0                   
+reserved3              0                   
+reserved4              0                   
+metricDataFormat       0                   
+numberOfHMetrics       244                 # the 'hmtx' entries with an advance (SetupWidthsFont: a glyph past them takes the last)

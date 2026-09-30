@@ -1,0 +1,18 @@
+# 'head': the font header
+version                0x00010000          # 16.16: 1.0
+fontRevision           0x00000000          # 16.16
+checkSumAdjustment     auto                # auto: 0xB1B0AFBA less the whole font's checksum (with this field nought)
+magicNumber            0x5f0f3cf5          # 0x5F0F3CF5
+flags                  0x0000              
+unitsPerEm             2048                # the design units the metric-only fonts' 'hmtx'/'hhea' are in (SetupWidthsFont scales them to the size)
+created                0xa83ea2b4a83ea2b4  # seconds since 1904 (the ROM's fonts have one 32-bit date in both halves)
+modified               0xa83ea2b4a83ea2b4  
+xMin                   0                   
+yMin                   0                   
+xMax                   2048                
+yMax                   2048                
+macStyle               0x0003              # the faces the data already has (bold 1, italic 2); SetupWidthsFont takes them off the ones to synthesise
+lowestRecPPEM          9                   
+fontDirectionHint      1                   
+indexToLocFormat       1                   
+glyphDataFormat        1                   
