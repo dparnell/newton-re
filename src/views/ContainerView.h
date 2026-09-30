@@ -21,8 +21,7 @@
 	(HandleWord, HandleCaret, HandleLineGesture, HandleScrub, HandleTap,
 	PointOverText),
 	the editing that goes with TEditView (AddHilited, DeleteHilited,
-	CopyForm, RealDoCommand, GetValue, ChildBoundsChanged, PointToCaret),
-	and TEditView itself.
+	CopyForm, RealDoCommand, GetValue, ChildBoundsChanged, PointToCaret).
 */
 
 #ifndef __CONTAINERVIEW_H

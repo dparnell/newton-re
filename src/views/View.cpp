@@ -621,7 +621,7 @@ ScriptHandled(RefArg cmd, Ref result)
 // takes the child of the parameter's id out (posting aeAddData with its
 // data), aeMoveData moves by params[0], [1] (posting the reverse as
 // aeMoveChild to the parent), aeScaleData scales by params[0..3]
-// (Scale, NOT YET), aeAddHilite appends the frame parameter (a THilite as
+// (Scale), aeAddHilite appends the frame parameter (a THilite as
 // a pointer Ref) to hilites, aeRemoveHilite removes one,
 // aeRemoveAllHilites all, aeToChildren sends the command to every child
 // and aeToHilitedChildren to the hilited ones, aeMoveChild sends

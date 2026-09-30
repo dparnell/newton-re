@@ -143,17 +143,10 @@ TView::BuildContext(RefArg templ, Boolean forceVisible)
 
 // ROM 0x0025e950 BuildView__FP5TViewRC6RefVar
 // The C++ object for the context's viewClass, constructed under the
-// parent; a Throw in the Constructor removes the view again.  NOT YET
-// RECONSTRUCTED: the subclasses - every class gets a TView (the ROM makes
-// TEditView, TPolygonView, TMathExpView,
-// TMathOpView, TMathLineView, TRemoteView, TPrintView, TMeetingView,
-// TSliderView, TListView, TOutline, THelpOutline for
-// classes 75-108, and -8501 for any other); TTextView (97, 98),
-// TRemoteView (87, 88), TOutline (102-105) and THelpOutline (106, 107: books/Outline.h),
-// TPrintView (94, PrintView.h), TPictureView (75, 76), TParagraphView (81), TPolygonView (82), TDataView (83), TPickView
-// (89-91), TGaugeView (92), TKeyboardView (79), TMonthView (80),
-// TClipboard (101) and TXView (108, text/TXView.h) are
-// here.
+// parent; a Throw in the Constructor removes the view again, and a class
+// the ROM does not know is -8501 (kViewErrCouldNotCreate).  Every class
+// the ROM makes is here but the math views (TMathExpView, TMathOpView,
+// TMathLineView), which are NOT YET RECONSTRUCTED and get a plain TView.
 TView*
 BuildView(TView* parent, RefArg context)
 {

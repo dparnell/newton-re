@@ -1714,9 +1714,8 @@ TEditView::RealDoCommand(RefArg cmd)
 		// up.
 		//
 		// NOT YET RECONSTRUCTED: the other arm, for a page that takes
-		// text and was tapped on ink - the writing is gathered up and
-		// offered to the recogniser again rather than corrected, which
-		// wants the re-recognition path (`RecognizeInArea`).
+		// text and was double tapped on its selection - the ink in it is
+		// gathered up and read again rather than corrected (below).
 		Boolean asked = false;
 		if ((TextFlags() & 0x2000) != 0)
 		{
@@ -1729,12 +1728,12 @@ TEditView::RealDoCommand(RefArg cmd)
 		Point pt = unit->Stroke()->FirstPoint();
 		Boolean onSelection = PointInHilite(pt);
 		Boolean takesText = ViewAllowsText(this);
-		// DEVIATION: when the double tap is on the selection of a page
-		// that takes text, the ROM gathers up the ink in the selection
-		// and sends it to be recognised again (NOT YET - it wants
-		// SortTextInk, MakeKidForSort and the paragraphs' answers to
-		// commands 0x19 and 0x1a); the host offers it to the children
-		// as it does any other double tap.
+		// NOT YET RECONSTRUCTED: when the double tap is on the selection
+		// of a page that takes text, the ROM gathers up the ink in the
+		// selection and sends it to be read again (SortTextInk 0x000a8220,
+		// MakeKidForSort 0x000a3ef4 and the paragraphs' answers to
+		// commands 0x19 and 0x1a, then Recognize); for now it is offered
+		// to the children as any other double tap is.
 		(void) onSelection;
 		long handled = 0;
 		TBackwardViewListLoop loop(fChildren);
@@ -2232,11 +2231,11 @@ Boolean
 CorrectorUp(void)
 {
 	RefVar corrector(gRootView->GetVar(RSSYMcorrect));
-	// NOT YET RECONSTRUCTED: the corrector itself.  On the machine the
-	// root view's context always has a `correct` view frame - the
-	// corrector is one of the root's own children - so the ROM asks it
-	// for its viewCObject straight away; here there is no corrector at
-	// all and the slot is nil, which GetFrameSlotRef would throw on.
+	// The root view's context always has a `correct` view frame on the
+	// machine - the corrector is one of the root's own children - so the
+	// ROM asks it for its viewCObject straight away; a host test's root
+	// built without the ROM's root template has none, and the slot is
+	// nil, which GetFrameSlotRef would throw on (host guard).
 	if (ISNIL(corrector))
 		return false;
 	return NOTNIL(GetFrameSlotRef(corrector, RSSYMviewcobject));
@@ -2685,16 +2684,15 @@ MakeNullTerminatedString(UniChar* text, ULong length)
 //
 // ==> the view that was made, or nil.
 //
-// NOT YET RECONSTRUCTED: the geometry (0x000a1eb4-0x000a22bc), which is
-// the path taken when the word came from the recogniser or has an ink
-// font - it measures the text with TextBounds, lines the result up with
-// the page's other children (AlignBounds) and with its ruled lines
-// (AlignToLineSpacing), and is what makes handwriting tidy itself into
-// columns.  Typed text does not go that way: the keyboard has already
-// measured its own box, so the ROM jumps straight over the whole section
-// (the test at 0x000a1e94).  The remote-writing caret (0x000a1b98) and
-// the text view's own notification (vtable +0x150) are NOT YET for the
-// same reason.
+// The geometry (0x000a1eb4-0x000a22bc) is the path taken when the word
+// came from the recogniser or has an ink font - it measures the text with
+// TextBounds, lines the result up with the page's other children
+// (AlignBounds) and with its ruled lines (AlignToLineSpacing), and is what
+// makes handwriting tidy itself into columns.  Typed text does not go that
+// way: the keyboard has already measured its own box, so the ROM jumps
+// straight over the whole section (the test at 0x000a1e94).  NOT YET
+// RECONSTRUCTED: the remote-writing caret's point (0x000a1b98) and the
+// word offered to the dictionary (AddWordInfo).
 TView*
 TEditView::AddNewParagraph(UniChar* text, ULong length, Rect& box, Rect& room,
 						   TUnitPublic* unit, RefArg info, long* outOffset, RefArg inkFont)

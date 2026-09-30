@@ -167,10 +167,7 @@ TDataView::GetEnclosingEditView(void)
 // ROM 0x000a31c4 HiliteText__9TDataViewFlT1Uc
 // The run of characters hilited, or the hilite taken off it.  The base
 // has no text, so it does nothing; a paragraph is where it means
-// something.
-//
-// NOT YET RECONSTRUCTED: TParagraphView::HiliteText, which is the one
-// that matters.
+// something (TParagraphView::HiliteText).
 void
 TDataView::HiliteText(long /*offset*/, long /*length*/, Boolean /*on*/)
 { }

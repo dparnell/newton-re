@@ -38,9 +38,9 @@
 
 				The ROM's object is 0x44 bytes.
 
-				NOT YET RECONSTRUCTED: `PointOnClipboard`'s callers (the
-				pen tracking that decides a drag was let go over the
-				background), and the drag's visual feedback.
+				`PointOnClipboard` is asked by the drag's pen tracking
+				(TView::Drag, DragDrop.h) whether the pen was let go at
+				the screen's edge.
 
 	Reconstructed from the MP2x00 US ROM (0x0009e2b0-0x0009e5f0,
 	0x0009ca58-0x0009cb80, 0x0009edfc-0x000a0b78, 0x001b37fc-0x001b38e0,
