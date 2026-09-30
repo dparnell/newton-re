@@ -7,6 +7,7 @@
 */
 
 #include "CardPartHandler.h"
+#include "CardServer.h"
 #include "NewtWorld.h"
 #include "Inker.h"
 #include "StorageCards.h"
@@ -290,9 +291,10 @@ TNewtWorld::MainConstructor()
 	handler = new TCommPartHandler;
 	handler->Init('comm');
 	HandleCardEvents();
-	// DEVIATION: 'cdhl belongs to the card server's world, whose part
-	// handler is not made there (CardServer.h)
-	InitCardPartHandler();
+	// DEVIATION: 'cdhl belongs to the card server's world, which makes its
+	// part handler itself; a host with no card server has this one
+	if (gCardServer == nil)
+		InitCardPartHandler(nil);
 	// the tablet's calibration read back, unless the setup assistant is
 	// still to ask for it
 	if (!EQRef(GetPreference(RSSYMblessedapp), RSSYMsetup))

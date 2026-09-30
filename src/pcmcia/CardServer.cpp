@@ -11,6 +11,7 @@
 */
 
 #include "CardServer.h"
+#include "CardPartHandler.h"
 #include "CardAlerts.h"
 #include "CardSocket.h"
 #include "CardHandler.h"
@@ -389,8 +390,9 @@ TCardServer::MainConstructor()
 	((TCardPositionAlertDialog*) fPositionEvent->fDialog)->Init(PositionAlertProc, this);
 	if ((err = fReinsertAsync.Init(true)) != noErr || (err = fPositionAsync.Init(true)) != noErr)
 		return err;
-	// DEVIATION: the 'cdhl part handler (TCardPartHandler) is made and
-	// registered by the newt world (CardPartHandler.h's InitCardPartHandler).
+	// the 'cdhl part handler, the card handlers packages carry coming to
+	// this world
+	InitCardPartHandler(this);
 	if ((err = InitVppManager()) != noErr)
 		return err;
 	InitializePCMCIABus();

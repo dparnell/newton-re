@@ -10,6 +10,9 @@
 #include "ROMClassInfo.h"
 #include "CardServerGlobals.h"
 #include "OSErrors.h"
+#include "CardServer.h"
+#include "ProtocolStandIns.h"
+#include "Protocols.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -41,16 +44,13 @@ TCardPartHandler::Init(ULong type, char* /*unused*/, TCardServer* server)
 }
 
 
-// Whether the part's class info (as it lies: ROMClassInfo.h) says it
-// implements TCardHandler; its implementation's name in *name.
-static Boolean
-IsCardHandler(PartInfo* info, const char** name)
+// The part's class info when it is one the host can use: its stand-in's,
+// registered in the part's place (packages/ProtocolStandIns.h); nil when
+// the part's own ARM table is all there is.
+static const TClassInfo*
+HostClassInfo(PartInfo* info)
 {
-	ROMClassInfoNames names;
-	if (!ReadROMClassInfo((const void*) info->data, info->size, &names))
-		return false;
-	*name = names.fImplementation;
-	return strcmp(names.fInterface, "TCardHandler") == 0;
+	return IsProtocolStandIn((const void*) info->data) ? (const TClassInfo*) info->data : nil;
 }
 
 
@@ -60,23 +60,31 @@ IsCardHandler(PartInfo* info, const char** name)
 // from (a source on a card device), or else for every socket.  Anything
 // else is taken without doing anything.  ==> kError_No_Memory when the
 // remove object cannot be made.
-// NOT YET: AddCardHandler (the card server); with no sockets, a package
-// from anywhere but a card adds it nowhere, as the ROM would.
+// DEVIATION: a part the host has no stand-in for is ARM, which the host
+// cannot run: it is read where it lies (packages/ROMClassInfo.h), said so
+// and added nowhere.
 NewtonErr
 TCardPartHandler::Install(const PartId& /*partId*/, SourceType sourceType, PartInfo* partInfo)
 {
 	if (!partInfo->autoLoad || !partInfo->autoCopy)
 		return noErr;
-	const char* name = nil;
-	if (!IsCardHandler(partInfo, &name))
+	const TClassInfo* info = HostClassInfo(partInfo);
+	if (info == nil)
+	{
+		ROMClassInfoNames names;
+		if (ReadROMClassInfo((const void*) partInfo->data, partInfo->size, &names)
+		&&  strcmp(names.fInterface, "TCardHandler") == 0)
+			fprintf(stderr, "[pcmcia] card handler %s: ARM code with no host stand-in; not added\n", names.fImplementation);
 		return noErr;
+	}
+	if (strcmp(info->InterfaceName(), "TCardHandler") != 0)
+		return noErr;
+	info->ImplementationName();			// (the ROM asks and does nothing with it)
 	if (sourceType.deviceKind == 1)
-		fprintf(stderr, "[pcmcia] card handler %s: the card server is NOT YET; not added for socket %u\n",
-				name, (unsigned) sourceType.deviceNumber);
+		fCardServer->AddCardHandler(sourceType.deviceNumber, info);
 	else
 		for (ULong socket = 0; socket < gNumberOfHWSockets; socket++)
-			fprintf(stderr, "[pcmcia] card handler %s: the card server is NOT YET; not added for socket %lu\n",
-					name, (unsigned long) socket);
+			fCardServer->AddCardHandler(socket, info);
 	CardPartRemoveObject* removeObject = new CardPartRemoveObject;
 	if (removeObject == nil)
 		return kError_No_Memory;
@@ -84,7 +92,7 @@ TCardPartHandler::Install(const PartId& /*partId*/, SourceType sourceType, PartI
 	removeObject->fDeviceKind = sourceType.deviceKind;
 	removeObject->fDeviceNumber[0] = (UByte) (sourceType.deviceNumber >> 8);
 	removeObject->fDeviceNumber[1] = (UByte) sourceType.deviceNumber;
-	removeObject->fClassInfo = (void*) partInfo->data;
+	removeObject->fClassInfo = (void*) info;
 	SetRemoveObjPtr((RemoveObjPtr) removeObject);
 	return noErr;
 }
@@ -92,13 +100,21 @@ TCardPartHandler::Install(const PartId& /*partId*/, SourceType sourceType, PartI
 
 // ROM 0x00050044 Remove__16TCardPartHandlerFRC6PartIdUll
 // The handler taken back from the socket(s) it was added for.
-// NOT YET: RemoveCardHandler (the card server).
 NewtonErr
 TCardPartHandler::Remove(const PartId& /*partId*/, PartType /*partType*/, RemoveObjPtr removePtr)
 {
 	CardPartRemoveObject* removeObject = (CardPartRemoveObject*) removePtr;
 	if (removeObject != nil)
+	{
+		const TClassInfo* info = (const TClassInfo*) removeObject->fClassInfo;
+		info->ImplementationName();		// (as Install)
+		if (removeObject->fDeviceKind == 1)
+			fCardServer->RemoveCardHandler((removeObject->fDeviceNumber[0] << 8) | removeObject->fDeviceNumber[1], info);
+		else
+			for (ULong socket = 0; socket < gNumberOfHWSockets; socket++)
+				fCardServer->RemoveCardHandler(socket, info);
 		delete removeObject;
+	}
 	return noErr;
 }
 
@@ -106,11 +122,16 @@ TCardPartHandler::Remove(const PartId& /*partId*/, PartType /*partType*/, Remove
 TCardPartHandler*	gCardPartHandler = nil;
 
 // host (DEVIATION): the ROM's card server makes its handler in its
-// MainConstructor (0x00054648) with itself as the server; the card server
-// is NOT YET, so the newt world makes it, with none
+// MainConstructor (0x00054648) with itself as the server, as the host's
+// does (CardServer.cpp); a host with no card server (nothing registered
+// the OS's protocols) has the newt world make one with none, so that a
+// package with a card handler part still installs - it adds the handler
+// nowhere, as a machine with no sockets would
 void
-InitCardPartHandler(void)
+InitCardPartHandler(TCardServer* server)
 {
+	if (gCardPartHandler != nil)
+		return;
 	gCardPartHandler = new TCardPartHandler;
-	gCardPartHandler->Init('cdhl', nil, nil);
+	gCardPartHandler->Init('cdhl', nil, server);
 }

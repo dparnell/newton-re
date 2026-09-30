@@ -546,13 +546,15 @@ if(Python3_FOUND)
                          FAIL_REGULAR_EXPRESSION "FALSE|NIL,")
     # a memory card (docs/stores/README.md, "Memory cards"): a blank card
     # made and put in, formatted at the ROM's prompts, a soup written on
-    # it, pulled out and put back (demo/card.ns)
+    # it, pulled out and put back (demo/card.ns); the built-in NIE's card
+    # handler (thirdparty/nie's TLanternCardHandler, newtdev.pkg's part's
+    # stand-in) is asked first and declines it
     add_test(NAME host.NewtonCard
              COMMAND newton --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/card.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonCard PROPERTIES TIMEOUT 120
-                         PASS_REGULAR_EXPRESSION "mounted: TRUE.*[Cc]ardSlot: 0, cardType: flsh.*written: TRUE.*removed: TRUE, stores: 1.*remounted: TRUE.*found: \"written on a card\".*cards: 1.*card: done"
-                         FAIL_REGULAR_EXPRESSION "FALSE")
+                         PASS_REGULAR_EXPRESSION "RecognizeCardID: .Host card.*mounted: TRUE.*[Cc]ardSlot: 0, cardType: flsh.*written: TRUE.*removed: TRUE, stores: 1.*remounted: TRUE.*found: \"written on a card\".*cards: 1.*card: done"
+                         FAIL_REGULAR_EXPRESSION "FALSE|the card server is NOT YET|no host stand-in")
     # the card reinsert alert: a card whose store is locked pulled out, the
     # alert drawn over the screen (ScreenPixel), the card put back, the alert
     # gone and the store as it was (demo/card-alert.ns); then the snapshot

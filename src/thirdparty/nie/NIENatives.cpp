@@ -11,6 +11,7 @@
 				oracle a whole run of the host can be compared against.
 */
 
+#include "LanternCardHandler.h"
 #include "NIENatives.h"
 #include "NIERuntime.h"
 #include "PackageNatives.h"
@@ -23,6 +24,8 @@
 void
 RegisterNIENatives(void)
 {
+	// the protocol parts' re-expressions (which have no ARM fallback)
+	RegisterNIEProtocolStandIns();
 	if (getenv("NEWTON_NIE_ON_CPU") != NULL)
 		return;
 	REGISTER(0x29ec, NIEDoEvent, 3, "_proto.DoEvent");

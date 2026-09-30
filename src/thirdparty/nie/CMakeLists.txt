@@ -11,8 +11,11 @@ add_library(thirdparty_nie STATIC
     ProtoFSMObjectToString.cpp
     ProtoFSMPrinter.cpp
     NIENatives.cpp
+    LanternCardHandler.cpp
 )
-target_link_libraries(thirdparty_nie PUBLIC frames)
+# pcmcia: TLanternCardHandler (newtdev.pkg's card handler); package_manager:
+# the protocol stand-ins it is registered with
+target_link_libraries(thirdparty_nie PUBLIC frames pcmcia package_manager)
 target_include_directories(thirdparty_nie PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(tests)

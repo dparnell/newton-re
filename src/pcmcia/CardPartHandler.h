@@ -9,13 +9,13 @@
 				registers it in its own world (TCardServer::MainConstructor).
 
 				Reconstructed from the MP2x00 US ROM (0x0004feb4-0x000500b0).
-				NOT YET: the card server itself (TCardServer,
-				AddCardHandler, RemoveCardHandler).  The host has no card
-				sockets (gNumberOfHWSockets 0), so a handler for every
-				socket is a handler for none, as it would be on such a
-				machine; and a part's class info is ARM, which the host
-				cannot run - it is read where it lies (packages/
-				ROMClassInfo.h) and reported.
+				A part's class info is ARM, which the host cannot run; a
+				part with a host stand-in (packages/ProtocolStandIns.h - the
+				Newton Internet Enabler's TLanternCardHandler, thirdparty/nie)
+				arrives with the stand-in's class info registered in its
+				place and is added as the ROM adds it; any other is read
+				where it lies (packages/ROMClassInfo.h), reported and added
+				nowhere.
 */
 
 #ifndef __CARDPARTHANDLER_H
@@ -41,8 +41,9 @@ public:
 
 #include "CardServerGlobals.h"
 
-// host (DEVIATION): the handler made and registered from the world that
-// calls it, the card server's being NOT YET
-void	InitCardPartHandler(void);
+// the handler made and registered from the world that calls it - the card
+// server's (TCardServer::MainConstructor), or with none the newt world's
+// (host, DEVIATION); once only
+void	InitCardPartHandler(TCardServer* server);
 
 #endif	/* __CARDPARTHANDLER_H */

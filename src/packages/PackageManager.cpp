@@ -9,6 +9,7 @@
 
 #include "PackageManager.h"
 #include "ROMClassInfo.h"
+#include "ProtocolStandIns.h"
 #include "PackageIterator.h"
 #include "Protocols.h"
 #include "UserPorts.h"
@@ -473,19 +474,31 @@ TPackageEventHandler::InstallPart(ULong* classInfo, RemoveObjPtr* removeObj, UCh
 			// DEVIATION: the part's class info is the ROM's - ARM code and a
 			// table the host's protocol registry cannot use - so it is not
 			// registered (TClassInfo::Register): the part goes in with no
-			// class info, and a copy is let go at once.  The ROM's own
+			// class info - or with its host stand-in's - and a copy is let
+			// go at once.  The ROM's own
 			// protocol parts (the screen drivers) have host stand-ins.
 			// The ROM extension's own protocol parts (ScreenBuffer's
 			// TScreenMemory, ScreenDrivers' TMainDisplayDriver) are ones the
 			// host stands in for by design, so only a part from outside the
 			// ROM is reported.
+			// A host re-expression registered as the part's stand-in
+			// (ProtocolStandIns.h) is registered in its place, as the ROM
+			// registers the part's own (TClassInfo::Register).
 			if (err == noErr)
 			{
-				if (!(IsMemory(type) && ROMAddressOf((const void*) source.mem.buffer, nil, nil)))
+				const TClassInfo* standIn = nil;
+				ROMClassInfoNames names;
+				if (code != nil && ReadROMClassInfo(code, info.size, &names))
+					standIn = ProtocolStandInFor(names.fImplementation, names.fInterface);
+				if (standIn != nil)
+					err = standIn->Register();
+				else if (!(IsMemory(type) && ROMAddressOf((const void*) source.mem.buffer, nil, nil)))
 					ReportUnregisteredProtocol(fPackage, fPartIndex, code, info.size);
 				if (code != nil && (!IsMemory(type) || info.autoCopy))
 					free(code);
-				*classInfo = 0;
+				*classInfo = err == noErr ? (ULong) standIn : 0;
+				if (err != noErr)
+					goto done;
 				goto notify;
 			}
 			if (code != nil && (!IsMemory(type) || info.autoCopy))
@@ -521,7 +534,7 @@ done:
 	if (*classInfo != 0 && err != noErr)
 	{
 		((TClassInfo*) *classInfo)->DeRegister();
-		if (!IsMemory(type) || info.autoCopy)
+		if ((!IsMemory(type) || info.autoCopy) && !IsProtocolStandIn((void*) *classInfo))
 			free((void*) *classInfo);
 		*classInfo = 0;
 	}
@@ -720,6 +733,8 @@ TPackageEventHandler::LoadNextPart(long* result, UChar* forDispatchOnly, UChar* 
 			{
 				SetPersistentHeap();
 				Boolean ownsCode = !(!info.autoCopy && (!info.autoLoad || IsMemory(fPackage->fSourceType)));
+				if (IsProtocolStandIn((void*) classInfo))
+					ownsCode = false;			// (host: a stand-in's class info is the host's own)
 				TInstalledPart part(info.type, info.kind, removeObj, info.autoLoad, ownsCode, info.notify, accepted, classInfo);
 				err = fPackage->fParts->InsertElementsBefore(fPackage->fParts->GetArraySize(), &part, 1);
 				SetDefaultHeap();
