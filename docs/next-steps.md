@@ -244,10 +244,6 @@ worked through.  What could come next (not ranked; the owner chooses):
 - **Now reachable over the large binaries**: the text engine's
   `TXNewtStreamFactory` (a compressed large binary for a stream above
   4K).
-- **Drawing suspects** (from a survey of the apps' snapshots): the
-  default button's heavy outline (Dock's Connect, Find's Find) draws
-  only its top and bottom; an arrow icon covers the first digit of the
-  In/Out Box's clock tab - being looked into.
 - **Text engine: finished** (2026-09-29; below).
 - **Drawing speed**: done for the blitter and the display (2026-09-30;
   `docs/work-log.md`).  What remains is the ROM's own animation pacing and
@@ -464,6 +460,9 @@ first to try, with mpw as a second opinion where a tool misbehaves.
 
 ## Working notes that keep being needed
 
+- **Worktrees**: never put a junction or symlink to a shared build
+  directory (e.g. `build/MP2x00US`) inside a git worktree - `git worktree
+  remove --force` deletes through it; copy what the tests need instead.
 - **Committing beside other agents**: commit with `git commit -m ... --
   <paths>`, which takes only those paths, so nothing another agent has
   staged is swept in.

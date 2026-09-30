@@ -109,6 +109,21 @@ bugs and ROM bugs found on the way.
   count wraps.  `HostOptionLayouts`' '*' copies an option's trailing
   bytes as they are ('rout' numbers, 'mpro' profiles).
 
+## 2026-09-30: the caret's "nowhere"
+
+- The "arrow" over the In/Out Box clock's first digit was stale caret
+  bits (8250593c): the ROM's "no caret" is a rect whose top and bottom
+  are -32768 (a point's v -32768), where the host used an empty rect, so
+  a plain view as the key view (the Setup screen) drew its caret at 0,0
+  and the saved bits were later restored there.  `OffsetToCaret`/
+  `PointToCaret`, `GetCaretPoint` (the rect's left and bottom + 1),
+  `CaretValid`, `DrawCaret` follow the ROM; the caret rect is the ROM's
+  11 wide by 12 tall (the host had it transposed).  `test_Views` checks a
+  plain key view draws nothing at the corner.
+- The default button's outline drawing only its top and bottom is the
+  ROM's own: `TView::PostDraw` (0x2685f8) marks a default button with a
+  line above and one below.
+
 ## 2026-09-30: the printing system's imaging engine
 
 - `fakemodem.py --fax-answer OUT.pbm` (a32f64de): a Class 1 fax machine
