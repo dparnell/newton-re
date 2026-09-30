@@ -188,9 +188,8 @@ worked through.  What could come next (not ranked; the owner chooses):
   (ctest `host.NewtonInetSetup`; its pages are Ethernet's less the card
   picker, and its fields - Configuration, the addresses, the domain name -
   are edited, kept and survive a restart, the domain used by the host's
-  DNS tool for a name with no dot: `host.NewtonInetHostSetup`; not
-  checked: a *new* manual setup's pages, which Ethernet's SetupViews may
-  reset to its own, card picker and all), and the NIE's protoEndpointFSM runs as a TCP client over it
+  DNS tool for a name with no dot, and a new manual setup's pages are
+  the host's own: `host.NewtonInetHostSetup`), and the NIE's protoEndpointFSM runs as a TCP client over it
   (`host.NewtonInetFSM`).  Waiting on NIE client packages (mail, web)
   for `fixtures/`; the modem navigator.  **The desktop connection**
   (being done): 2.1 has no TCP dock, so the plan (`docs/comms/README.md`,
@@ -332,8 +331,7 @@ reach, hardware, or waiting on another area:
   path (`InkMakePaths`, `FramePaths`).
 - **NetHopper browses** (`host.NewtonNetHopper`).  NOT YET: a RefVar
   handle a native keeps in a heap object past its call (the ARM
-  interpreter's handle table is per call); the NIE's connection slip
-  draws without its title strip; in `TParagraphView::SetupDone`,
+  interpreter's handle table is per call); in `TParagraphView::SetupDone`,
   `CheckStyles`, `ProcessStyles`, text flag 0x20's line alignment and
   dropping the caches of a paragraph its parents do not show.
 - The printing path's outlined paths for ink (`CSMakePathsGroup`,

@@ -237,6 +237,18 @@ is the same value spelt so that it cannot be read two ways.
   notBic loops never advance the mask pointer; `ScaleStdRRect` scales the
   corner oval crosswise on a fax.
 
+## 2026-09-30: two NIE loose ends
+
+- A new Manual Host network setup showed Ethernet's card picker again:
+  Ethernet's `SetupViews` (inetstup 0x1f051) answers a manual
+  configuration with its prototype's `newEntryViews`, which from the
+  host's definition are Ethernet's; the host's data definition now
+  answers `SetupViews` from its own card-less pages (3d1af11d).
+- The NIE's connection slip was thought to lack a title strip; it draws
+  all its template has - the NIE's own `SetupBounds` makes an envelope
+  (the airmail border, a frame, the tab) with no stamp or title, unlike
+  the ROM's routing slip; `nethopper.ns` checks the border (3406af97).
+
 ## 2026-09-30: the flakes - a world copied short
 
 - The one-off crashes under a loaded parallel run (the boot crash in
