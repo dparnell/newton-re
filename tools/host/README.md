@@ -219,7 +219,10 @@ program given after `--`, and stops serving when the program ends:
 **Inputs:** the directory to serve and the port - 0 takes a free one, so
 two runs at once (two build directories, `stress.py` copies) never meet;
 the program is told it in the environment variable `NEWTON_HTTP_PORT`,
-which a script reads with `HostGetEnv("NEWTON_HTTP_PORT")`.  **Output:** each request
+which a script reads with `HostGetEnv("NEWTON_HTTP_PORT")`; `--file NAME=PATH`
+(any number of them) serves one more file, PATH, as `/NAME` - a package out
+of `fixtures/packages` without a copy of it in the directory (ctest
+`host.NewtonAppNewtsCape`).  **Output:** each request
 as `[http] GET /path 200`, the program's output (stdout and stderr merged)
 and `[http] the program answered N`; it exits with the program's status (1
 when the port cannot be had).  ctest `host.NewtonNetHopper` runs NetHopper
