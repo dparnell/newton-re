@@ -210,6 +210,7 @@ public:
 	void		Run(void);
 	void		AlternatingLoops(long baseDepth);
 	Boolean		FastRun(long baseDepth);
+	Boolean		FastRun1(long baseDepth, struct FastRunState& state);
 	Boolean		SlowRun(long baseDepth);
 	void		SetFastLoopFlag(void);
 	void		SetFlags(void);

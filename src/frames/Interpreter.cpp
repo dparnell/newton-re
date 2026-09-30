@@ -10,9 +10,8 @@
 	tracing and breakpoints, and FastRun (0x002ee0a8), a copy of it with the
 	instruction pointer and stack pointer held in registers and the common
 	cases open-coded, chosen while nothing needs SlowRun (fFastLoop).  The
-	two compute the same; here FastRun runs SlowRun's loop
-	(NOT YET RECONSTRUCTED: FastRun1 and its Fast... helpers, 0x002ecca0-
-	0x002ef314, as a separate loop).
+	two compute the same (FastRun1 and its Fast... helpers, 0x002ecca0-
+	0x002ef8a8, follow SlowRun).
 
 	Two things of the ROM's are not a host's: native functions in binary
 	objects (ARM code) cannot be run, and the frames function profiler
@@ -962,6 +961,7 @@ UndefinedBytecode(void)
 }
 
 
+// ROM 0x002ef144 ThrowOutOfBoundsException__FRC6RefVarl
 // the out-of-bounds frame the aref instructions throw
 static void
 ThrowOutOfBoundsException(RefArg obj, long index)
@@ -1566,17 +1566,1112 @@ TInterpreter::SlowRun(long baseDepth)
 }
 
 
+/* -------------------------------------------------------------------------------
+	The fast loop
+	FastRun1 is SlowRun with the instruction pointer and the value stack's top
+	held in locals and the common instructions open-coded; everything else is
+	a Fast... helper handed the loop's state, which the loop writes back before
+	the call and reads again after it.  It runs only while nothing needs
+	SlowRun (fFastLoop: no tracing, breakpoints or profiling, and instructions
+	that cannot move - ROM or package code, or locked), which is why it may
+	keep a pointer into the instructions and the literals across a call.
+------------------------------------------------------------------------------- */
+
+// the loop's state (the ROM's FastRunState, 0x24 bytes)
+struct FastRunState
+{
+	const unsigned char*	fPC;			// +00  the next instruction
+	TIntrpStack*			fStack;			// +04  the value stack (its fTop is the loop's sp)
+	TInterpreter*			fInterpreter;	// +08
+	RefVar					fArg1;			// +0C  four RefVars the helpers work in
+	RefVar					fArg2;			// +10
+	RefVar					fArg3;			// +14
+	RefVar					fArg4;			// +18
+	Ref*					fLiterals;		// +1C  the literals' slots (nil: none)
+	const unsigned char*	fInstructions;	// +20  the instructions' first byte
+};
+
+
+// a function object the fast loop calls itself: one in the ROM or a
+// package, whose class word and slots cannot change under it (the ROM's
+// address test, below 0x03800000 or in 0x60000000-0x67ffffff; here the ROM
+// object area, as for gROProtoCache)
+static inline Boolean
+IsFastFunction(Ref fn)
+{
+	return RTAG(fn) == kTagPointer && InROMObjectArea(fn);
+}
+
+
+// the operand of an instruction whose low bits are 7: a big-endian halfword
+static inline long
+FastOperand(const unsigned char* at)
+{
+	return ((long) at[0] << 8) | at[1];
+}
+
+
+// ROM 0x002ecfe8 FastDoCall__FP12FastRunStatelT2
+// A function called with numArgs arguments on the stack.  A NewtonScript
+// function or a C one in the ROM is called here: the first becomes the
+// current function (answers true: the loop must take up the new state), the
+// second is called without a VM state of its own, in the caller's (answers
+// false: the loop goes on where it was).  Anything else goes through Call.
+static Boolean
+FastDoCall(FastRunState* state, Ref fn, long numArgs)
+{
+	TInterpreter* interp = state->fInterpreter;
+	long pc = state->fPC - state->fInstructions;
+	if (IsFastFunction(fn))
+	{
+		ObjHeader* f = OBJ(fn);
+		Ref theClass = ObjArraySlots(f)[kFunctionClassSlot];
+		if (theClass == kFuncClass)
+		{
+			StateRef(interp->fVMState->fPC) = MAKEINT(pc);
+			VMState* callee = interp->fCtrlStack.NewState();
+			interp->fVMState = callee;
+			f = OBJ(fn);
+			Ref numArgsWord = RVALUE(ObjArraySlots(f)[kFunctionNumArgsSlot]);
+			StateRef(callee->fFunction) = fn;
+			interp->fPC = 0;
+			if (numArgs != (numArgsWord & 0xffff))
+			{
+				Throw(exInterpreter, (void*) kNSErrWrongNumberOfArgs, nil);
+				return false;
+			}
+			TRefStack* stack = state->fStack;
+			StateRef(callee->fStackFrame) = StackFrameWord(stack->Depth() - numArgs - 3, kStackFrameLocalsOnStack);
+			Ref argFrame = ObjArraySlots(OBJ(fn))[kFunctionArgFrameSlot];
+			if (argFrame != NILREF)
+			{
+				StateRef(callee->fLocals) = argFrame;
+				StateRef(callee->fLocals) = Clone(StateVar(callee->fLocals));
+				ObjHeader* l = OBJ(StateRef(callee->fLocals));
+				StateRef(callee->fReceiver) = ObjArraySlots(l)[kArgFrameParentSlot];
+				StateRef(callee->fImplementor) = ObjArraySlots(l)[kArgFrameImplementorSlot];
+			}
+			stack->PushNILs(numArgsWord >> 16);
+			interp->SetFlags();
+			return true;
+		}
+		if (theClass == kNativeFuncClass)
+		{
+			if (numArgs != RVALUE(ObjArraySlots(f)[kNativeNumArgsSlot]))
+			{
+				Throw(exInterpreter, (void*) kNSErrWrongNumberOfArgs, nil);
+				return false;
+			}
+			interp->fIsSend = false;
+			Ref result = interp->CallCFuncPtr((void*) ObjArraySlots(OBJ(fn))[kNativeFuncPtrSlot], numArgs);
+			Ref* top = state->fStack->fTop - (numArgs - 1);
+			top[-1] = result;
+			state->fStack->fTop = top;
+			interp->fPC = pc;
+			interp->SetFlags();
+			return false;
+		}
+	}
+	interp->fPC = pc;
+	state->fArg1 = fn;
+	return !interp->Call(state->fArg1, numArgs);
+}
+
+
+// ROM 0x002ed218 FastDoSend__FP12FastRunStateRC6RefVarN22l
+// The same for a message sent to receiver and found in implementor.  A C
+// function in the ROM gets a VM state holding the receiver and implementor
+// and nothing else, and is gone again when it returns.
+static Boolean
+FastDoSend(FastRunState* state, RefArg receiver, RefArg implementor, RefArg fn, long numArgs)
+{
+	TInterpreter* interp = state->fInterpreter;
+	Ref f = fn;
+	if (IsFastFunction(f))
+	{
+		Ref theClass = ObjArraySlots(OBJ(f))[kFunctionClassSlot];
+		if (theClass == kFuncClass)
+		{
+			StateRef(interp->fVMState->fPC) = MAKEINT(state->fPC - state->fInstructions);
+			VMState* callee = interp->fCtrlStack.NewState();
+			interp->fVMState = callee;
+			StateRef(callee->fReceiver) = receiver;
+			StateRef(callee->fImplementor) = implementor;
+			Ref numArgsWord = RVALUE(ObjArraySlots(OBJ(fn))[kFunctionNumArgsSlot]);
+			StateRef(callee->fFunction) = fn;
+			interp->fPC = 0;
+			if (numArgs != (numArgsWord & 0xffff))
+			{
+				Throw(exInterpreter, (void*) kNSErrWrongNumberOfArgs, nil);
+				return false;
+			}
+			TRefStack* stack = state->fStack;
+			StateRef(callee->fStackFrame) = StackFrameWord(stack->Depth() - numArgs - 3, kStackFrameLocalsOnStack);
+			Ref argFrame = ObjArraySlots(OBJ(fn))[kFunctionArgFrameSlot];
+			if (argFrame != NILREF)
+			{
+				StateRef(callee->fLocals) = argFrame;
+				StateRef(callee->fLocals) = Clone(StateVar(callee->fLocals));
+				ObjHeader* l = OBJ(StateRef(callee->fLocals));
+				if (ObjArraySlots(l)[kArgFrameParentSlot] == 0)
+					ObjArraySlots(l)[kArgFrameParentSlot] = NILREF;
+				else
+					ObjArraySlots(l)[kArgFrameParentSlot] = StateRef(callee->fReceiver);
+				ObjArraySlots(l)[kArgFrameImplementorSlot] = ObjArraySlots(l)[kArgFrameImplementorSlot] != 0
+					? StateRef(callee->fImplementor) : NILREF;
+			}
+			stack->PushNILs(numArgsWord >> 16);
+			interp->SetFlags();
+			return true;
+		}
+		if (theClass == kNativeFuncClass)
+		{
+			if (numArgs == RVALUE(ObjArraySlots(OBJ(fn))[kNativeNumArgsSlot]))
+			{
+				VMState* callee = interp->fCtrlStack.NewState();
+				interp->fVMState = callee;
+				interp->fIsSend = true;
+				StateRef(callee->fReceiver) = receiver;
+				StateRef(callee->fImplementor) = implementor;
+				Ref result = interp->CallCFuncPtr((void*) ObjArraySlots(OBJ(fn))[kNativeFuncPtrSlot], numArgs);
+				Ref* top = state->fStack->fTop - (numArgs - 1);
+				top[-1] = result;
+				state->fStack->fTop = top;
+				interp->fVMState = interp->fCtrlStack.PrevState();
+				interp->SetFlags();
+			}
+			else
+				Throw(exInterpreter, (void*) kNSErrWrongNumberOfArgs, nil);
+			return false;
+		}
+	}
+	interp->fPC = state->fPC - state->fInstructions;
+	return !interp->Send(receiver, implementor, fn, numArgs);
+}
+
+
+// ROM 0x002ed4ec FastInvoke__FP12FastRunStatel
+// call: the function on the stack.  (The ROM's copy of FastDoCall's body
+// is inlined here; this calls it, which is the same code.)
+static Boolean
+FastInvoke(FastRunState* state, long numArgs)
+{
+	Ref fn = *--state->fStack->fTop;
+	return FastDoCall(state, fn, numArgs);
+}
+
+
+// ROM 0x002ed508 FastCall__FP12FastRunStatel
+// call: the global function named by the symbol on the stack.
+static Boolean
+FastCall(FastRunState* state, long numArgs)
+{
+	state->fArg1 = *--state->fStack->fTop;
+	long exists;
+	Ref fn = UnsafeGetFrameSlot(gFunctionFrame, state->fArg1, &exists);
+	if (!exists)
+	{
+		ThrowExInterpreterWithSymbol(kNSErrUndefinedGlobalFunction, state->fArg1);
+		return false;
+	}
+	return FastDoCall(state, fn, numArgs);
+}
+
+
+// ROM 0x002ed598 FastSend__FP12FastRunStatel
+static Boolean
+FastSend(FastRunState* state, long numArgs)
+{
+	Ref* top = state->fStack->fTop;
+	state->fArg1 = top[-1];									// the message
+	state->fArg2 = top[-2];									// the receiver
+	state->fStack->fTop = top - 2;
+	if (!XFindImplementor(state->fArg2, state->fArg1, &state->fArg3, &state->fArg4))
+	{
+		ThrowExInterpreterWithSymbol(kNSErrUndefinedMethod, state->fArg1);
+		return false;
+	}
+	return FastDoSend(state, state->fArg2, state->fArg3, state->fArg4, numArgs);
+}
+
+
+// ROM 0x002ed644 FastSendIfDefined__FP12FastRunStatel
+static Boolean
+FastSendIfDefined(FastRunState* state, long numArgs)
+{
+	Ref* top = state->fStack->fTop;
+	state->fArg1 = top[-1];
+	state->fArg2 = top[-2];
+	state->fStack->fTop = top - 2;
+	if (XFindImplementor(state->fArg2, state->fArg1, &state->fArg3, &state->fArg4))
+		return FastDoSend(state, state->fArg2, state->fArg3, state->fArg4, numArgs);
+	Ref* p = state->fStack->fTop - numArgs;
+	*p = NILREF;
+	state->fStack->fTop = p + 1;
+	return false;
+}
+
+
+// ROM 0x002ed6f4 FastResend__FP12FastRunStatel
+static Boolean
+FastResend(FastRunState* state, long numArgs)
+{
+	state->fArg1 = *--state->fStack->fTop;
+	VMState* vm = state->fInterpreter->fVMState;
+	if (!XFindProtoImplementor(StateVar(vm->fImplementor), state->fArg1, &state->fArg2, &state->fArg3))
+	{
+		ThrowExInterpreterWithSymbol(kNSErrUndefinedMethod, state->fArg1);
+		return false;
+	}
+	vm = state->fInterpreter->fVMState;
+	return FastDoSend(state, StateVar(vm->fReceiver), state->fArg2, state->fArg3, numArgs);
+}
+
+
+// ROM 0x002ed798 FastResendIfDefined__FP12FastRunStatel
+static Boolean
+FastResendIfDefined(FastRunState* state, long numArgs)
+{
+	state->fArg1 = *--state->fStack->fTop;
+	VMState* vm = state->fInterpreter->fVMState;
+	if (XFindProtoImplementor(StateVar(vm->fImplementor), state->fArg1, &state->fArg2, &state->fArg3))
+	{
+		vm = state->fInterpreter->fVMState;
+		return FastDoSend(state, StateVar(vm->fReceiver), state->fArg2, state->fArg3, numArgs);
+	}
+	Ref* p = state->fStack->fTop - numArgs;
+	*p = NILREF;
+	state->fStack->fTop = p + 1;
+	return false;
+}
+
+
+// ROM 0x002ed840 FastSetLexScope__FP12FastRunStatel
+// set-lex-scope: a closure made of the function on the stack (as SlowRun).
+static Boolean
+FastSetLexScope(FastRunState* state, long)
+{
+	TInterpreter* interp = state->fInterpreter;
+	state->fArg1 = *--state->fStack->fTop;
+	state->fArg1 = Clone(state->fArg1);
+	state->fArg2 = ObjArraySlots(OBJ((Ref) state->fArg1))[kFunctionArgFrameSlot];
+	state->fArg2 = Clone(state->fArg2);
+	ObjHeader* af = OBJ((Ref) state->fArg2);
+	VMState* vm = interp->fVMState;
+	ObjArraySlots(af)[kArgFrameNextArgFrameSlot] = StateRef(vm->fLocals);
+	if (!interp->fLocalsOnStack)
+	{
+		ObjArraySlots(af)[kArgFrameParentSlot] = StateRef(vm->fReceiver);
+		ObjArraySlots(af)[kArgFrameImplementorSlot] = StateRef(vm->fImplementor);
+	}
+	else
+	{
+		if (ObjArraySlots(af)[kArgFrameParentSlot] == 0)
+			ObjArraySlots(af)[kArgFrameParentSlot] = NILREF;
+		else
+			ObjArraySlots(af)[kArgFrameParentSlot] = StateRef(vm->fReceiver);
+		if (ObjArraySlots(af)[kArgFrameImplementorSlot] == 0)
+			ObjArraySlots(af)[kArgFrameImplementorSlot] = NILREF;
+		else
+			ObjArraySlots(af)[kArgFrameImplementorSlot] = StateRef(vm->fImplementor);
+		if (Length(state->fArg2) == 3 && ObjArraySlots(af)[0] == NILREF && ObjArraySlots(af)[1] == NILREF && ObjArraySlots(af)[2] == NILREF)
+			state->fArg2 = NILREF;
+	}
+	ObjArraySlots(OBJ((Ref) state->fArg1))[kFunctionArgFrameSlot] = state->fArg2;
+	*state->fStack->fTop++ = state->fArg1;
+	return false;
+}
+
+
+// ROM 0x002ecca0 FastIterNext__FP12FastRunStatel
+// iter-next: the iterator on the stack stepped on, then popped.
+static Boolean
+FastIterNext(FastRunState* state, long)
+{
+	TRefStructStack* stack = state->fStack;
+	if (stack->fHandlesEnd - stack->fHandles < stack->Depth())
+		stack->Fill();
+	ForEachLoopNext(stack->StackRef(stack->Depth() - 1));
+	stack->fTop--;
+	return false;
+}
+
+
+// ROM 0x002ecd18 FastIterDone__FP12FastRunStatel
+// iter-done: whether the iterator on the stack is done, in its place.
+static Boolean
+FastIterDone(FastRunState* state, long)
+{
+	TRefStructStack* stack = state->fStack;
+	if (stack->fHandlesEnd - stack->fHandles < stack->Depth())
+		stack->Fill();
+	Boolean done = ForEachLoopDone(stack->StackRef(stack->Depth() - 1));
+	stack->fTop[-1] = done ? TRUEREF : NILREF;
+	return false;
+}
+
+
+// ROM 0x002eda8c FastUnary1Ext__FP12FastRunStatel
+// The simple instructions with a halfword operand: pop-handlers (7) alone.
+static Boolean
+FastUnary1Ext(FastRunState* state, long)
+{
+	long which = (short) FastOperand(state->fPC);
+	state->fPC += 2;
+	if (which == 7)
+	{
+		TInterpreter* interp = state->fInterpreter;
+		interp->fExceptionContext = GetArraySlotRef(interp->fExceptionContext, kHandlerNext);
+	}
+	else
+		UndefinedBytecode();
+	return false;
+}
+
+
+// ROM 0x002ed9b8 FastBranchIfLoopNotDone__FP12FastRunStatel
+static Boolean
+FastBranchIfLoopNotDone(FastRunState* state, long target)
+{
+	Ref* top = state->fStack->fTop;
+	long limit = RINT(top[-1]);
+	long index = RINT(top[-2]);
+	long incr = RINT(top[-3]);
+	state->fStack->fTop = top - 3;
+	if ((incr > 0 && index <= limit) || (incr < 0 && index >= limit))
+		state->fPC = state->fInstructions + target;
+	else if (incr == 0)
+		Throw(exInterpreter, (void*) kNSErrZeroForLoopIncr, nil);
+	return false;
+}
+
+
+// ROM 0x002edaf8 FastFindVar__FP12FastRunStatel
+// find-var: a variable by name, from the locals (or the receiver when the
+// locals are on the stack and there is no frame of them), then the globals.
+static Boolean
+FastFindVar(FastRunState* state, long b)
+{
+	TInterpreter* interp = state->fInterpreter;
+	state->fArg1 = state->fLiterals[b];
+	VMState* vm = interp->fVMState;
+	long exists;
+	if (!interp->fLocalsOnStack || StateRef(vm->fLocals) != NILREF)
+		state->fArg2 = XGetVariable(StateVar(vm->fLocals), state->fArg1, &exists, 1);
+	else
+		state->fArg2 = XGetVariable(StateVar(vm->fReceiver), state->fArg1, &exists, 0);
+	if (!exists)
+		state->fArg2 = UnsafeGetFrameSlot(gVarFrame, state->fArg1, &exists);
+	if (!exists)
+		ThrowExInterpreterWithSymbol(kNSErrUndefinedVariable, state->fArg1);
+	else
+		*state->fStack->fTop++ = state->fArg2;
+	return false;
+}
+
+
+// ROM 0x002edbf8 FastFindAndSetVar__FP12FastRunStatel
+// find-and-set-var (as SlowRun).
+static Boolean
+FastFindAndSetVar(FastRunState* state, long b)
+{
+	TInterpreter* interp = state->fInterpreter;
+	state->fArg1 = state->fLiterals[b];
+	state->fArg2 = *--state->fStack->fTop;
+	VMState* vm = interp->fVMState;
+	Boolean isSend = (RVALUE(StateRef(vm->fStackFrame)) & kStackFrameIsSend) != 0;
+	long flags;
+	if (interp->fLocalsOnStack && StateRef(vm->fLocals) == NILREF)
+	{
+		flags = isSend ? (kSetVarSetGlobal | kSetVarMakeGlobal) : kSetVarSetGlobal;
+		if (SetVariableOrGlobal(StateVar(vm->fReceiver), state->fArg1, state->fArg2, flags))
+			return false;
+		state->fArg3 = Clone(RefVar(Rcanonicalfakecontext));
+		ObjArraySlots(OBJ((Ref) state->fArg3))[kArgFrameParentSlot] = StateRef(vm->fReceiver);
+		SetFrameSlot(state->fArg3, state->fArg1, state->fArg2);
+		StateRef(vm->fLocals) = state->fArg3;
+		return false;
+	}
+	flags = isSend ? (kSetVarLookupLocals | kSetVarSetGlobal | kSetVarMakeGlobal) : (kSetVarLookupLocals | kSetVarSetGlobal | kSetVarSetInContext);
+	SetVariableOrGlobal(StateVar(vm->fLocals), state->fArg1, state->fArg2, flags);
+	return false;
+}
+
+
+// ROM 0x002edd60 FastMakeArray__FP12FastRunStatel
+static Boolean
+FastMakeArray(FastRunState* state, long b)
+{
+	Ref* top = state->fStack->fTop;
+	state->fArg1 = top[-1];									// the class
+	if (b == 0xffff)
+	{
+		long length = RINT(top[-2]);
+		top[-2] = AllocateArray(state->fArg1, length);
+		state->fStack->fTop = top - 1;
+	}
+	else
+	{
+		state->fArg1 = AllocateArray(state->fArg1, b);
+		top = state->fStack->fTop;
+		Ref* slots = ObjArraySlots(OBJ((Ref) state->fArg1));
+		for (long i = 0; i < b; i++)
+			slots[i] = top[i - 1 - b];
+		top[-1 - b] = state->fArg1;
+		state->fStack->fTop = top - b;
+	}
+	return false;
+}
+
+
+// ROM 0x002ede40 FastMakeFrame__FP12FastRunStatel
+static Boolean
+FastMakeFrame(FastRunState* state, long b)
+{
+	Ref* top = state->fStack->fTop;
+	state->fArg1 = top[-1];									// the map
+	state->fArg1 = AllocateFrameWithMap(state->fArg1);
+	top = state->fStack->fTop;
+	Ref* slots = ObjArraySlots(OBJ((Ref) state->fArg1));
+	for (long i = 0; i < b; i++)
+		slots[i] = top[i - 1 - b];
+	top[-1 - b] = state->fArg1;
+	state->fStack->fTop = top - b;
+	return false;
+}
+
+
+// ROM 0x002edee8 FastNewHandlers__FP12FastRunStatel
+static Boolean
+FastNewHandlers(FastRunState* state, long b)
+{
+	TInterpreter* interp = state->fInterpreter;
+	state->fArg1 = AllocateArray(RSSYMarray, kHandlerSize);
+	state->fArg2 = AllocateArray(RSSYMarray, b * 2);
+	Ref* pairs = ObjArraySlots(OBJ((Ref) state->fArg2));
+	for (long i = 0; i < b * 2; i++)
+		pairs[i] = state->fStack->fTop[i - b * 2];
+	state->fStack->fTop -= b * 2;
+	Ref* h = ObjArraySlots(OBJ((Ref) state->fArg1));
+	VMState* vm = interp->fVMState;
+	h[kHandlerNext] = interp->fExceptionContext;
+	h[kHandlerValueDepth] = MAKEINT(state->fStack->Depth() - 1);
+	h[kHandlerControlDepth] = MAKEINT(interp->fCtrlStack.Depth() - 1);
+	h[kHandlerFunction] = StateRef(vm->fFunction);
+	h[kHandlerReceiver] = StateRef(vm->fReceiver);
+	h[kHandlerImplementor] = StateRef(vm->fImplementor);
+	h[kHandlerLocals] = StateRef(vm->fLocals);
+	h[kHandlerExceptions] = state->fArg2;
+	interp->fExceptionContext = (Ref) state->fArg1;
+	interp->fExceptionStackIndex = interp->fCtrlStack.Depth() - 1;
+	return false;
+}
+
+
+// ROM 0x002ee090 FastUndefined__FP12FastRunStatel
+static Boolean
+FastUndefined(FastRunState*, long)
+{
+	UndefinedBytecode();
+	return false;
+}
+
+
+// ROM 0x002ecd94 FastFreqFuncGeneral__FP12FastRunStatel
+// freq-func with a halfword operand: the arithmetic and comparisons of two
+// integers done here (* div < > >= <= band bor bnot), anything else - and
+// every other function - called through gFreqFuncs as FastDoCall calls.
+// (DEVIATION: div by nought throws exDivideByZero, as FDiv does, where the
+// ROM's __rt_sdiv traps.)
+static Boolean
+FastFreqFuncGeneral(FastRunState* state, long)
+{
+	long which = (short) FastOperand(state->fPC);
+	state->fPC += 2;
+	Ref* top = state->fStack->fTop;
+	Ref a, b;
+	Ref result;
+	switch (which)
+	{
+	case kFFMultiply:
+		a = top[-2];
+		b = top[-1];
+		if (((a | b) & 3) != 0)
+			break;
+		top[-2] = WordRef((Ref) ((ULong32) a * (ULong32) RVALUE(b)));
+		state->fStack->fTop = top - 1;
+		return false;
+	case kFFDiv:
+		a = top[-2];
+		b = top[-1];
+		if (((a | b) & 3) != 0)
+			break;
+		if (RVALUE(b) == 0)
+			Throw(exDivideByZero, nil, nil);
+		top[-2] = WordRef((Ref) ((ULong32) ((Long32) RVALUE(a) / (Long32) RVALUE(b)) << 2));
+		state->fStack->fTop = top - 1;
+		return false;
+	case kFFLessThan:
+	case kFFGreaterThan:
+	case kFFGreaterOrEqual:
+	case kFFLessOrEqual:
+	{
+		a = top[-2];
+		b = top[-1];
+		if (((a | b) & 3) != 0)
+			break;
+		long x = RVALUE(a), y = RVALUE(b);
+		Boolean yes = which == kFFLessThan ? x < y
+					: which == kFFGreaterThan ? x > y
+					: which == kFFGreaterOrEqual ? x >= y
+					: x <= y;
+		top[-2] = yes ? TRUEREF : NILREF;
+		state->fStack->fTop = top - 1;
+		return false;
+	}
+	case kFFBAnd:
+	case kFFBOr:
+		a = top[-2];
+		b = top[-1];
+		if (((a | b) & 3) != 0)
+			break;
+		result = which == kFFBAnd ? (a & b) : (a | b);
+		top[-2] = MAKEINT(RVALUE(result));
+		state->fStack->fTop = top - 1;
+		return false;
+	case kFFBNot:											// (ROM QUIRK: its operand is not checked)
+		top[-1] = MAKEINT(~RVALUE(top[-1]));
+		return false;
+	}
+	// (the ROM's copy of FastDoCall's body, with the function and its
+	// argument count out of the tables)
+	Ref fn = ObjArraySlots(OBJ(gFreqFuncs))[which];
+	return FastDoCall(state, fn, gFreqFuncInfo[which].fNumArgs);
+}
+
+
+// ROM 0x002ef1f0 FastComplicatedAref__FP12FastRunStatelT2i
+// aref of something not a plain array: a string read through TRichString
+// (reading just past the end of one answers a nul character outside a
+// function with its locals on the stack), anything else an error.
+static void
+FastComplicatedAref(FastRunState* state, long index, long flags, Boolean localsOnStack)
+{
+	if ((flags & kObjSlotted) == 0)
+	{
+		if (IsInstance(state->fArg1, RSSYMstring))
+		{
+			TRichString s(state->fArg1);
+			long length = s.Length();
+			if (index < 0 || index >= length)
+			{
+				if (!localsOnStack && index == length)
+					state->fStack->fTop[-1] = MAKECHAR(0);
+				else
+					ThrowOutOfBoundsException(state->fArg1, index);
+			}
+			else
+				state->fStack->fTop[-1] = MAKECHAR(s.GetChar(index));
+			return;
+		}
+	}
+	ThrowBadTypeWithFrameData(kNSErrNotAnArrayOrString, state->fArg1);
+}
+
+
+// ROM 0x002ef314 FastComplicatedSetAref__FP12FastRunStatelT2i
+// setAref of something not a plain writable array: a read-only array (or
+// frame) is an error of its own, a frame or anything else not a string the
+// usual one; a string is written through TRichString as SlowRun does.
+static void
+FastComplicatedSetAref(FastRunState* state, long index, long flags, Boolean localsOnStack)
+{
+	if ((flags & kObjSlotted) != 0)
+	{
+		if ((flags & kObjReadOnly) != 0)
+		{
+			RefVar data(AllocateFrame());
+			SetFrameSlot(data, RSSYMerrorcode, RefVar(MAKEINT(kNSErrObjectReadOnly)));
+			SetFrameSlot(data, RSSYMvalue, state->fArg1);
+			ThrowRefException(exFramesWithFrameData, data);
+		}
+		ThrowBadTypeWithFrameData(kNSErrNotAnArrayOrString, state->fArg1);
+	}
+	if (!IsInstance(state->fArg1, RSSYMstring))
+		ThrowBadTypeWithFrameData(kNSErrNotAnArrayOrString, state->fArg1);
+	TRichString s(state->fArg1);
+	long length = s.Length();
+	if (index < 0 || index >= length)
+	{
+		if (index != length || localsOnStack || RCHAR(state->fArg2) != 0)
+			ThrowOutOfBoundsException(state->fArg1, index);
+		StrMunger(state->fArg1, index, -1, RefVar(NILREF), 0, -1);
+	}
+	else
+	{
+		UniChar c = RCHAR(state->fArg2);
+		if (c != 0 && c != kInkChar)
+			s.SetChar(index, c);
+		else if (localsOnStack || c != 0)
+		{
+			RefVar data(AllocateFrame());
+			SetFrameSlot(data, RSSYMerrorcode, RefVar(MAKEINT(kNSErrBadCharForString)));
+			SetFrameSlot(data, RSSYMvalue, state->fArg2);
+			ThrowRefException(exInterpreterWithFrameData, data);
+		}
+		else
+			StrMunger(state->fArg1, index, -1, RefVar(NILREF), 0, -1);
+	}
+	state->fStack->fTop[-1] = state->fArg2;
+}
+
+
+// ROM 0x002ef73c FastComplicatedEqual__FP12FastRunState
+// = of two refs one of which is a pointer (FreqEqual's pointer cases; the
+// numbers go through FastPartiallyRealEqual 0x002ef660, the same compare)
+static void
+FastComplicatedEqual(FastRunState* state)
+{
+	state->fStack->fTop[-1] = FreqEqual(state->fArg1, state->fArg2) ? TRUEREF : NILREF;
+}
+
+
+// ROM 0x002ef8a8 FastComplicatedNotEqual__FP12FastRunState
+// (and FastPartiallyRealNotEqual 0x002ef7cc)
+static void
+FastComplicatedNotEqual(FastRunState* state)
+{
+	state->fStack->fTop[-1] = FreqEqual(state->fArg1, state->fArg2) ? NILREF : TRUEREF;
+}
+
+
 // ROM 0x002ee0a8 FastRun__12TInterpreterFl
-// NOT YET RECONSTRUCTED: FastRun1 (0x002c88d8), the open-coded copy of the
-// loop; it computes what SlowRun does.
+// The fast loop over its own state (four RefVars for its helpers).
 Boolean
 TInterpreter::FastRun(long baseDepth)
 {
-	Boolean fastLoop = fFastLoop;
-	fFastLoop = false;								// (so that SlowRun runs to the end)
-	Boolean done = SlowRun(baseDepth);
-	fFastLoop = fastLoop;
-	return done;
+	FastRunState state;
+	state.fInterpreter = this;
+	state.fStack = &fValueStack;
+	return FastRun1(baseDepth, state);
+}
+
+
+// ROM 0x002ee138 FastRun1__12TInterpreterFlR12FastRunState
+// The loop: the current function's instructions and literals found, then
+// one instruction after another, until a call or a return changes the
+// function (the state is taken up again) or takes the control stack below
+// baseDepth (answers true) or leaves a function the fast loop may not run
+// (answers false, and SlowRun takes over).
+//
+// The instruction pointer and the stack's top live in locals; before a
+// helper is called they are written back to the state and the stack, and
+// read again after.
+//
+// DEVIATION: they are written back too before an inline case calls out to
+// something that may allocate - GetFramePath, SetFramePath, the number
+// arithmetic - since a collection marks the value stack only up to its
+// fTop.  The ROM writes the top back only for the helpers, so a value
+// pushed since (a real just made by an addition, say) could be collected
+// while still on the stack; that is heap damage, not a result to keep.
+Boolean
+TInterpreter::FastRun1(long baseDepth, FastRunState& state)
+{
+	#define SYNC()		(fValueStack.fTop = sp, state.fPC = pc)
+	#define RELOAD()	(sp = fValueStack.fTop, pc = state.fPC)
+	#define LOCALS()	(fValueStack.fBase + fLocalsIndex)
+	for (;;)
+	{
+		state.fInstructions = (const unsigned char*) BinaryData(fInstructions);
+		state.fPC = state.fInstructions + fPC;
+		state.fLiterals = (Ref) fLiterals == NILREF ? nil : ObjArraySlots(OBJ((Ref) fLiterals));
+		const unsigned char* pc = state.fPC;
+		Ref* sp = fValueStack.fTop;
+		Boolean changed = false;
+		while (!changed)
+		{
+			// DEVIATION: as SlowRun, a point every so often for the kernel to
+			// preempt the task at (the stack written back first, so that a
+			// collection meanwhile marks all of it)
+			if ((++gInterpreterPreemptCount & 0x3ff) == 0)
+			{
+				SYNC();
+				HostPreemptionPoint();
+			}
+			unsigned op = *pc++;
+			long b = op & 7;
+			if (b == 7 && (op >> 3) != 0 && (op >> 3) != kBCFreqFunc)
+			{
+				b = FastOperand(pc);
+				pc += 2;
+			}
+			#define HELPER(fn, arg)	do { SYNC(); changed = fn(&state, (arg)); RELOAD(); } while (0)
+			switch (op >> 3)
+			{
+			case 0:
+				switch (op)
+				{
+				case kBCPop:
+					sp--;
+					break;
+				case kBCDup:
+					*sp = sp[-1];
+					sp++;
+					break;
+				case kBCReturn:
+				{
+					// (Return, open-coded: the result replaces the frame when the
+					// locals were on the stack; back to the caller's state)
+					if (fLocalsOnStack)
+					{
+						Ref result = sp[-1];
+						Ref* p = fValueStack.fBase + (RVALUE(StateRef(fVMState->fStackFrame)) >> 6) + 3;
+						*p = result;
+						sp = p + 1;
+					}
+					fValueStack.fTop = sp;
+					fVMState = fCtrlStack.PrevState();
+					fPC = RVALUE(StateRef(fVMState->fPC));
+					if (ControlPosition() < fExceptionStackIndex)
+						PopHandlers();
+					if (StateRef(fVMState->fFunction) != NILREF && fPC != -1)
+						SetFlags();
+					state.fPC = pc;
+					changed = true;
+					break;
+				}
+				case kBCPushSelf:
+					*sp++ = StateRef(fVMState->fReceiver);
+					break;
+				case kBCSetLexScope:
+					HELPER(FastSetLexScope, 0);
+					break;
+				case kBCIterNext:
+					HELPER(FastIterNext, 0);
+					break;
+				case kBCIterDone:
+					HELPER(FastIterDone, 0);
+					break;
+				case kBCPopHandlers:
+					HELPER(FastUnary1Ext, 0);
+					break;
+				}
+				break;
+
+			case kBCPush:
+				*sp++ = state.fLiterals[b];
+				break;
+
+			case kBCPushConstant:
+				if (op == 0x27)
+					b = (short) b;
+				*sp++ = (Ref) b;
+				break;
+
+			case kBCCall:
+				HELPER(FastCall, b);
+				break;
+			case kBCInvoke:
+				HELPER(FastInvoke, b);
+				break;
+			case kBCSend:
+				HELPER(FastSend, b);
+				break;
+			case kBCSendIfDefined:
+				HELPER(FastSendIfDefined, b);
+				break;
+			case kBCResend:
+				HELPER(FastResend, b);
+				break;
+			case kBCResendIfDefined:
+				HELPER(FastResendIfDefined, b);
+				break;
+
+			case kBCBranch:
+				pc = state.fInstructions + b;
+				break;
+			case kBCBranchIfTrue:
+				if (*--sp != NILREF)
+					pc = state.fInstructions + b;
+				break;
+			case kBCBranchIfFalse:
+				if (*--sp == NILREF)
+					pc = state.fInstructions + b;
+				break;
+
+			case kBCFindVar:
+				HELPER(FastFindVar, b);
+				break;
+
+			case kBCGetVar:
+				if (!fLocalsOnStack)
+					*sp = ObjArraySlots(OBJ(StateRef(fVMState->fLocals)))[b];
+				else
+					*sp = LOCALS()[b];
+				sp++;
+				break;
+
+			case kBCMakeFrame:
+				HELPER(FastMakeFrame, b);
+				break;
+			case kBCMakeArray:
+				HELPER(FastMakeArray, b);
+				break;
+
+			case kBCGetPath:
+				if (b == 0)
+				{
+					if (sp[-2] == NILREF)
+						sp[-2] = NILREF;
+					else
+					{
+						state.fArg1 = sp[-1];						// the path
+						state.fArg2 = sp[-2];						// the object
+						SYNC();
+						sp[-2] = GetFramePath(state.fArg2, state.fArg1);
+					}
+					sp--;
+				}
+				else if (b == 1)
+				{
+					if (sp[-2] == NILREF)
+					{
+						state.fArg1 = sp[-1];
+						ThrowExFramesWithBadValue(kNSErrPathFailed, state.fArg1);
+						return false;
+					}
+					state.fArg1 = sp[-1];
+					state.fArg2 = sp[-2];
+					SYNC();
+					sp[-2] = GetFramePath(state.fArg2, state.fArg1);
+					sp--;
+				}
+				else
+				{
+					HELPER(FastUndefined, 0);
+				}
+				break;
+
+			case kBCSetPath:
+				if (b == 0 || b == 1)
+				{
+					state.fArg1 = sp[-1];							// the value
+					state.fArg2 = sp[-2];							// the path
+					state.fArg3 = sp[-3];							// the object
+					SYNC();
+					// (the ROM asks whether the instructions are below 0x00800000,
+					// in the ROM; here whether they are in the ROM object area)
+					if (!fLocalsOnStack || InROMObjectArea((Ref) fInstructions))
+						SetFramePathFor1XFunctions(state.fArg3, state.fArg2, state.fArg1);
+					else
+						SetFramePath(state.fArg3, state.fArg2, state.fArg1);
+					if (b == 0)
+						sp -= 3;
+					else
+					{
+						sp[-3] = state.fArg1;
+						sp -= 2;
+					}
+				}
+				else
+				{
+					HELPER(FastUndefined, 0);
+				}
+				break;
+
+			case kBCSetVar:
+				if (!fLocalsOnStack)
+					ObjArraySlots(OBJ(StateRef(fVMState->fLocals)))[b] = sp[-1];
+				else
+					LOCALS()[b] = sp[-1];
+				sp--;
+				break;
+
+			case kBCFindAndSetVar:
+				HELPER(FastFindAndSetVar, b);
+				break;
+
+			case kBCIncrVar:
+			{
+				Ref* local = !fLocalsOnStack ? &ObjArraySlots(OBJ(StateRef(fVMState->fLocals)))[b] : &LOCALS()[b];
+				Ref value = *local;
+				Ref incr = sp[-1];
+				if (((value | incr) & 3) == 0)
+				{
+					Ref sum = WordRef(incr + value);
+					*local = sum;
+					*sp++ = sum;
+				}
+				else
+				{
+					if ((value & 3) != 0)
+						_RINTError(value);
+					if ((incr & 3) != 0)
+						_RINTError(incr);
+				}
+				break;
+			}
+
+			case kBCBranchIfLoopNotDone:
+				HELPER(FastBranchIfLoopNotDone, b);
+				break;
+
+			case kBCFreqFunc:
+				switch (op)
+				{
+				case 0xc0:											// +
+				{
+					Ref rb = sp[-1];
+					Ref ra = sp[-2];
+					if (((ra | rb) & 3) == 0)
+						sp[-2] = WordRef(ra + rb);
+					else
+					{
+						state.fArg1 = ra;
+						state.fArg2 = rb;
+						SYNC();
+						sp[-2] = NumberAdd(state.fArg1, state.fArg2);
+					}
+					sp--;
+					break;
+				}
+				case 0xc1:											// -
+				{
+					Ref rb = sp[-1];
+					Ref ra = sp[-2];
+					if (((ra | rb) & 3) == 0)
+						sp[-2] = WordRef(ra - rb);
+					else
+					{
+						state.fArg1 = ra;
+						state.fArg2 = rb;
+						SYNC();
+						sp[-2] = NumberSubtract(state.fArg1, state.fArg2);
+					}
+					sp--;
+					break;
+				}
+				case 0xc2:											// aref: a plain array open-coded
+				{
+					long index = RINT(sp[-1]);
+					ObjHeader* o = OBJ(sp[-2]);
+					ULong flags = ObjFlags(o);
+					if ((flags & (kObjSlotted | kObjFrame)) == kObjSlotted)
+					{
+						if (index < 0 || index >= ObjArrayLength(o))
+						{
+							SYNC();
+							ThrowOutOfBoundsException(RefVar(sp[-2]), index);
+							return false;
+						}
+						sp[-2] = ObjArraySlots(o)[index];
+						sp--;
+					}
+					else
+					{
+						state.fArg1 = sp[-2];
+						sp--;
+						SYNC();
+						FastComplicatedAref(&state, index, flags & 0xff, fLocalsOnStack);
+						RELOAD();
+					}
+					break;
+				}
+				case 0xc3:											// setAref: a plain writable array open-coded
+				{
+					state.fArg2 = sp[-1];							// the value
+					long index = RINT(sp[-2]);
+					ObjHeader* o = OBJ(sp[-3]);
+					ULong flags = ObjFlags(o);
+					if ((flags & (kObjSlotted | kObjFrame | kObjReadOnly)) == kObjSlotted)
+					{
+						if (index < 0 || index >= ObjArrayLength(o))
+						{
+							SYNC();
+							ThrowOutOfBoundsException(RefVar(sp[-3]), index);
+							return false;
+						}
+						ObjArraySlots(o)[index] = state.fArg2;
+						sp[-3] = state.fArg2;
+						sp -= 2;
+					}
+					else
+					{
+						state.fArg1 = sp[-3];
+						sp -= 2;
+						SYNC();
+						FastComplicatedSetAref(&state, index, flags & 0xff, fLocalsOnStack);
+						RELOAD();
+					}
+					break;
+				}
+				case 0xc4:											// =: two refs neither a pointer open-coded
+				{
+					Ref rb = sp[-1];
+					Ref ra = sp[-2];
+					if (((ra | rb) & 1) == 0)
+					{
+						sp[-2] = ra == rb ? TRUEREF : NILREF;
+						sp--;
+					}
+					else
+					{
+						state.fArg1 = ra;
+						state.fArg2 = rb;
+						sp--;
+						SYNC();
+						FastComplicatedEqual(&state);
+						RELOAD();
+					}
+					break;
+				}
+				case 0xc5:											// not
+					sp[-1] = sp[-1] == NILREF ? TRUEREF : NILREF;
+					break;
+				case 0xc6:											// <>
+				{
+					Ref rb = sp[-1];
+					Ref ra = sp[-2];
+					if (((ra | rb) & 1) == 0)
+					{
+						sp[-2] = ra == rb ? NILREF : TRUEREF;
+						sp--;
+					}
+					else
+					{
+						state.fArg1 = ra;
+						state.fArg2 = rb;
+						sp--;
+						SYNC();
+						FastComplicatedNotEqual(&state);
+						RELOAD();
+					}
+					break;
+				}
+				case 0xc7:											// the others, their index a halfword
+					HELPER(FastFreqFuncGeneral, 0);
+					break;
+				}
+				break;
+
+			case kBCNewHandlers:
+				HELPER(FastNewHandlers, b);
+				break;
+
+			default:
+				HELPER(FastUndefined, 0);
+				break;
+			}
+			#undef HELPER
+		}
+		if (ControlPosition() < baseDepth)
+			return true;
+		if (!fFastLoop)
+			return false;
+	}
+	#undef SYNC
+	#undef RELOAD
+	#undef LOCALS
 }
 
 

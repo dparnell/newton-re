@@ -276,9 +276,18 @@ stack-frame word `MAKEINT(base << 6 | flags)` (flag 1: locals on the
 value stack from index `base`, 2: entered by a send).  `fExceptionContext`
 chains the handler records (`new-handlers`); `fLiterals`, `fInstructions`
 and `fPC` cache the running function.  As in the ROM, `Run` loops
-`AlternatingLoops` (FastRun/SlowRun; FastRun runs SlowRun here, the ROM's
-FastRun1 is its inlined copy for functions without tracing) until the
-control stack is back at the depth the call was made at.
+`AlternatingLoops` (FastRun/SlowRun) until the control stack is back at
+the depth the call was made at.  `FastRun1` (0x002ee138) is SlowRun with
+the instruction pointer and the stack's top in locals and the common
+instructions open-coded, the rest done by twenty `Fast...` helpers that
+are handed the loop's state (`FastRunState`); it runs only while nothing
+needs SlowRun and the function's instructions cannot move (ROM or package
+code, or locked - `fInstructionsFixed`), so a function compiled at run
+time always goes through SlowRun.  It computes what SlowRun does, with
+two differences a script could see: a C function of the ROM's called from
+ROM code runs in its caller's VM state (a send gets a state holding only
+the receiver and implementor, popped again when it returns), and setAref
+on a read-only frame is a read-only error rather than "not an array".
 
 Bytecodes (as `SlowRun` 0x002cc66c decodes them; `Interpreter.h`
 `kBC...`): an instruction byte is `a << 3 | b`, and `b == 7` means a
@@ -337,6 +346,15 @@ build, three runs each: `GetProtoVariable`'s caches took the
 applications step from 297-328 ms to 235-250 ms (one outlier at 453);
 the drawing benchmark's task time did not move beyond its noise
 (984-1093 ms against 1000-1235 ms).
+
+`FastRun1` runs the bytecode of a function about twice as fast as
+SlowRun: with the counting loop's instructions forced to count as fixed
+(a measurement only - a heap function's may move), the counting loop took
+343-547 ms against 828-1156 ms and the lookups 94-141 ms against
+172-203 ms.  But the ROM's own scripts are a small part of what the host
+does: the whole drawing benchmark runs about 600,000 bytecodes, a few
+milliseconds of the newt task's second, so the fast loop does not show
+there.
 
 Exceptions: a NewtonScript `try` pushes a handler record (an array: next,
 value depth, control depth, function, receiver, implementor, the
@@ -798,9 +816,7 @@ from a developer's settings or tools: tracing and breakpoints
 (`TInterpreter::Trace...`, `HandleBreakPoints` - the printer they print
 through is here now), `NTKStackTrace` (over the NTK connection), the task's
 stack limits for the debugger (`GetTaskStackInfo`), the frames function
-profiler's hooks in `GC`.  Not reachable, or reached another way:
-FastRun1 (the open-coded copy of SlowRun, which computes the same thing),
-a native whose code is ARM code in a binary (a
+profiler's hooks in `GC`.  Not reachable, or reached another way: a native whose code is ARM code in a binary (a
 host limit), `IsFirstByteOf2Byte` (a two-byte script, not in the US ROM),
 and the ink words' own structure in `TRichString::Verify`.
 
