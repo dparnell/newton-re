@@ -215,10 +215,10 @@ worked through.  What could come next (not ranked; the owner chooses):
   dials and answers through `tools/modem/fakemodem.py`
   (`host.NewtonModemDial`, `host.NewtonModemAnswer`); and the comm
   trace frame's natives and translate (`comms/CommTrace.cpp`).  Left in
-  comms: fax (a fax is received end to end into the In Box -
-  `host.NewtonFaxReceive`; being done: `RotTiledBitmap` and FaxViewer
-  showing it; the older extended option layouts ("uw...") to be moved to
-  'l', which they only work without by accident of alignment),
+  comms: fax sending end to end and Class 2 fax (a fax is received,
+  shown and turned - `host.NewtonFaxReceive`; the older extended option
+  layouts ("uw...") to be moved to 'l', which they only work without by
+  accident of alignment),
   AppleTalk/NBP
   and ADSP (with the NTK's ADSP connection), the Hammer translators,
   eWorld (EW*), the TV remote.
@@ -237,9 +237,10 @@ worked through.  What could come next (not ranked; the owner chooses):
 - **Third-party apps**: all five fixture applications open from Extras
   and respond (ctest `host.NewtonThirdPartyApps`).
 - **Now reachable over the large binaries**: the text engine's
-  `TXNewtStreamFactory` (a compressed large binary for a stream above 4K)
-  and `RotTiledBitmap` (only a fax page reaches it, so it still waits on
-  the comms stack).
+  `TXNewtStreamFactory` (a compressed large binary for a stream above
+  4K).
+- **Possible views bug**: the In Box item header's title looks drawn
+  twice, overlapping itself (seen on a received fax).
 - **Text engine: finished** (2026-09-29; below).
 - **Drawing speed**: done for the blitter and the display (2026-09-30;
   `docs/work-log.md`).  What remains is the ROM's own animation pacing and

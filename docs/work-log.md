@@ -109,6 +109,27 @@ bugs and ROM bugs found on the way.
   count wraps.  `HostOptionLayouts`' '*' copies an option's trailing
   bytes as they are ('rout' numbers, 'mpro' profiles).
 
+## 2026-09-30: a received fax shown and turned
+
+- `qd/Tile.h` (c66294d5, ctest `qd.Tile`): `TTile` turns a bitmap too big
+  to turn whole (a fax page, 1728x1146) a 64x64 tile at a time -
+  `RotTiledBitmap` copies the rows into 512-byte tiles, `RotateTilesR`/
+  `RotateTilesL` write the turned tiles and `Untile` them, the progress
+  reported through the options' callback, the pixels made on the
+  bitmap's store like the original's.  ROM quirk: leftover rows are
+  turned only in whole groups of 8, so a fax page loses its last two
+  rows.  ROM bug kept: `RotateTilesL` turns the leftover rows wrongly and
+  writes up to 512 bytes past the end of the new bitmap.
+- The In Box shows a received fax (`GetRoot().iobox:Open()`,
+  `:ShowItem(entry, 'itemLayout)`) and FaxViewer's rotate turns it
+  through `MungeBitmap` -> `RotTiledBitmap`; `fax-receive.ns` snapshots
+  both (`host.NewtonFaxReceive`).
+- Found: the modem tool changes flow control only after it reads
+  CONNECT, so an XOFF in a frame arriving with the CONNECT was eaten
+  under the old soft-flow settings and the call's DCN lost;
+  `fakemodem.py` now waits 0.2 s between CONNECT and the data, as a real
+  modem's carrier training does.
+
 ## 2026-09-30: a card with Einstein's layout
 
 - `tools/cards/linearcard.py` (64c294bd): `info FILE` prints a
