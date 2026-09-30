@@ -7004,6 +7004,18 @@ TestModalSafeShow()
 	gModalCount = 0;
 	ModalSafeShowRelease();
 	EXPECT((waits->fFlags & vVisible) != 0);		// shown once the dialog went
+	// a view waiting to be shown that a script hides meanwhile waits no
+	// longer (FHideX over RemoveModalSafeView): the dialog going leaves it
+	// hidden; :Show() and :Hide() answer true
+	Eval("ctxMS:Hide()");
+	EXPECT((waits->fFlags & vVisible) == 0);
+	gModalCount = 1;
+	EXPECT(NOTNIL(Eval("ctxMS:Show()")));
+	EXPECT((waits->fFlags & vVisible) == 0);		// waiting again
+	EXPECT(NOTNIL(Eval("ctxMS:Hide()")));
+	gModalCount = 0;
+	ModalSafeShowRelease();
+	EXPECT((waits->fFlags & vVisible) == 0);		// taken off the list: still hidden
 	Eval("RemoveView(GetRoot(), ctxMS); RemoveView(GetRoot(), ctxMF)");
 	Refresh();
 }

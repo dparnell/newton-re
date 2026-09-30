@@ -308,13 +308,14 @@ FShowX(RefArg rcvr)
 		RefVar cmd(MakeCommand(aeShow, view, kNoParameter));
 		gApplication->DispatchCommand(cmd);
 	}
-	return NILREF;
+	return TRUEREF;
 }
 
 
 // ROM 0x001ea5fc FHideX
-// :Hide(): aeHide dispatched to the view (NOT YET RECONSTRUCTED: the
-// modal-safe views list under a modal dialog, RemoveModalSafeView).
+// :Hide(): aeHide dispatched to the view, and under a modal dialog the
+// view taken off the list of those waiting to be shown when it goes
+// (RemoveModalSafeView).  ==> true.
 static Ref
 FHideX(RefArg rcvr)
 {
@@ -325,8 +326,10 @@ FHideX(RefArg rcvr)
 	{
 		RefVar cmd(MakeCommand(aeHide, view, kNoParameter));
 		gApplication->DispatchCommand(cmd);
+		if (gModalCount != 0)
+			RemoveModalSafeView(view);
 	}
-	return NILREF;
+	return TRUEREF;
 }
 
 
