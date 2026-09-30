@@ -237,6 +237,26 @@ is the same value spelt so that it cannot be read two ways.
   notBic loops never advance the mask pointer; `ScaleStdRRect` scales the
   corner oval crosswise on a fax.
 
+## 2026-09-30: 'pixels binaries in the ROM's layout; NewtsCape's JPEG drawn
+
+- A 'pixels binary has the ROM's 0x1c-byte big-endian header on every
+  host (checked against ROM 0x415a4); drawing builds a host map from it
+  (`qd/Pictures.h`'s `PixelsToPixMap`/`PixMapToPixels`); the store
+  compander copies the header as the ROM does - the old host copy had
+  also put the bounds at +6 rather than +8 (2d8b7832; 177cd11f restored a
+  test the commit had dropped).
+- The test servers take free ports (`newton --tcp-echo 0` and
+  `HostEchoPort()`, `httpserve.py --port 0` and `NEWTON_HTTP_PORT`), so
+  two build directories' tests never meet; the port locks are gone
+  (735c506a).
+- ctest `host.NewtonNetHopperNewtsCape` (c4382a70): NetHopper's JPEG
+  viewer through NewtsCape's converter, its libjpeg on the ARM
+  interpreter, the 56x28 icon checked pixel by pixel.
+- Typing in a paragraph as the ROM's (45dc7fa7): a key over a selection
+  takes it out first, the arrows move the caret across lines and between
+  a page's paragraphs (`HandleUpDownKey`), a paragraph emptied by
+  backspace goes on key up.
+
 ## 2026-09-30: the Newton Internet Enabler built into the ROM
 
 - The owner's decision, and the first intentional edit of `romsrc/`
