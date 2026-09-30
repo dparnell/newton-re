@@ -261,10 +261,7 @@ worked through.  What could come next (not ranked; the owner chooses):
   calibration screen (Align Pen; `host.NewtonAlignPen`), its live ink
   and the busy box (`host.NewtonLiveInk`).  NOT YET: the armistice
   samples (a debugger feed, `gDebuggerBits & 8`), `TResistiveTablet` (the
-  MP2x00's panel, hardware).  To fix: layout.json's RAM_RW address
-  (0x0C100000; the RW data is at 0x0C100800) in `extract_rom.py`;
-  `host.NewtonKeyHelp` and `host.NewtonInet` wait fixed times and failed
-  once each under -j8.
+  MP2x00's panel, hardware).
 - **Power**: the power manager, sleep and wake, the backlight and the
   batteries are in (`src/power/`, `host.NewtonPower`).  NOT YET: the
   Cirrus battery driver and the platform's power side (the GPIO switch

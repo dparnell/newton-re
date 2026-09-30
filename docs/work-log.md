@@ -248,10 +248,12 @@ is the same value spelt so that it cannot be read two ways.
   box (`TBusyBox`, commands 0x33-0x37) over `qd/BusyBox.cpp` and the
   ROM's busy picture.  `StrokeTime` does nothing while the inker runs, as
   the ROM's does.  ctest `host.NewtonLiveInk`.
-- Found: `gWireRecog` is 1 (the RW data is at 0x0C100800; layout.json's
-  RAM_RW says 0x0C100000); `TBusyBoxEvent`'s command must be a ULong -
-  as a Windows `long` its high half was rubbish and the commands were
-  ignored.
+- Found: `gWireRecog` is 1 (read at the RW data's base, 0x0C100800 -
+  a report that layout.json's RAM_RW was wrong was a decimal-to-hex
+  slip); `TBusyBoxEvent`'s command must be a ULong - as a Windows `long`
+  its high half was rubbish and the commands were ignored.
+- `host.NewtonKeyHelp` and `host.NewtonInet` wait on conditions instead
+  of timers (cb7adb07).
 
 ## 2026-09-30: two NIE loose ends
 
