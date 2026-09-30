@@ -237,6 +237,27 @@ is the same value spelt so that it cannot be read two ways.
   notBic loops never advance the mask pointer; `ScaleStdRRect` scales the
   corner oval crosswise on a fax.
 
+## 2026-09-30: the year-2010 fix
+
+- The owner's decision: fix the ROM's year-2010 overflow rather than
+  shift the host clock (8155b447; `docs/intl/year-2010.md`, DEVIATION).
+  The community's fixes, from what their pages say: Avi Drissman's
+  Fix2010 shifts the minute-based functions by 16-year "hexades", Eckhart
+  Köppen's Patch 71J059 and 711000 move the seconds functions' time base
+  (the exact patched offsets are not published).
+- Ours: a script's seconds value, which wraps at 2^30 on 5 January 2010,
+  is read back as the moment within 2^29 seconds (about 17 years) of now
+  it is congruent to (`intl/Dates.h`'s `ClockSecondsFromScriptSeconds`),
+  where seconds become a date or a clock value again -
+  `TimeInSecondsToTime`, `DateFromSeconds`, `SetTimeHardware`/
+  `SetTimeInSeconds`, `SetSysAlarm`; `TimeInSeconds` itself and what is
+  already stored are unchanged, and up to 2010 the results are the
+  ROM's.  `NEWTON_ROM_2010_BUG=1` keeps the ROM's arithmetic.  The
+  28-year clock shift is gone: the clock chip holds the true GMT.
+- With the true 2026 clock notes are dated today and an alarm rings once
+  (`test_Dates` TestYear2010, `demo/year2010.ns`); with the switch the
+  ROM's 1992 comes back.
+
 ## 2026-09-30: power
 
 - `src/power/` (d68de1dc; `docs/power/README.md`): the 'pg&e power
@@ -275,8 +296,7 @@ is the same value spelt so that it cannot be read two ways.
   years still match - 2026 shows as 1998.  With the true date the ROM's
   own year-2010 overflow (`TimeInSeconds` past a NewtonScript integer)
   made every alarm fire the moment it was set, in an endless loop.  The
-  owner then decided to fix the overflow instead, as the community's
-  Fix2010 patch does, the ROM's behaviour kept selectable (being done).
+  owner then decided to fix the overflow instead (below).
 - The volume gestalt carries the MP2x00's outputs and flags (0x1d), so
   the Sound panel's "Play using" picker no longer throws and the
   Recording panel shows in Prefs (24c84fb2).

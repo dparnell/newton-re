@@ -261,11 +261,10 @@ worked through.  What could come next (not ranked; the owner chooses):
   Print slip, pages to `newton --print-dir` (`host.NewtonHostPrinter`).
 - **A user's first hour** passes as a ctest (`host.NewtonWalkthrough`).
   (Beam from the Action button with nobody there now says "No
-  response." as a MessagePad alone does; Print Note works.)  Being
-  done, the owner's decision: the ROM's year-2010 overflow fixed as a
-  DEVIATION (as Fix2010 did), the ROM's behaviour selectable - in place
-  of the 28-year host clock shift.  Before that, the host clock past 2010
-  met the
+  response." as a MessagePad alone does; Print Note works.)  The ROM's
+  year-2010 overflow is fixed (DEVIATION, the owner's decision;
+  `docs/intl/year-2010.md`), so the host runs on the true date.  Before
+  that, the host clock past 2010 met the
   ROM's own year-2010 overflow (`TimeInSeconds`): new items are dated
   1992 - faithful; the walkthrough sets the clock to 1998.
 - **Now reachable over the large binaries**: the text engine's
