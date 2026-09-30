@@ -237,6 +237,24 @@ is the same value spelt so that it cannot be read two ways.
   notBic loops never advance the mask pointer; `ScaleStdRRect` scales the
   corner oval crosswise on a fax.
 
+## 2026-09-30: the tablet driver and the inker
+
+- The ROM's `TTabletDriver` protocol and `TabInitialize` (a registered
+  "TMainTabletDriver" before the MP2x00's `TResistiveTablet`);
+  `TabShutDown`/`TabWakeUp` real, so sleep shuts the tablet down; the
+  inker, the 'inkr world `TInker` - woken for each sample, a 50 ms idler
+  while the pen is down, the pen modes, the calibration read and written,
+  and the ROM's own calibration screen (two corner targets give the scale
+  and offset, a third checks them within 10 px, repeated until it
+  passes); the script side in `InkerNatives.cpp` (c0d0778f).
+- The host's panel `hal/host/HostTabletDriver.cpp` samples newton's
+  window, exact under the factory calibration so the mouse is accurate
+  out of the box; `HostTabletSkew`/`NEWTON_TABLET_SKEW` put it askew for
+  tests; a `--script` run's calibration targets are tapped for it.
+  ctests `host.NewtonAlignPen` (a skewed panel lands a tap 30, 4 off;
+  after Align Pen it is exact) and `.restart` (the calibration read back
+  from the store, no calibration screen).
+
 ## 2026-09-30: a fresh store mounts cleanly again
 
 - `HostPrepareStore` makes the Names soup at mount, before the boot's

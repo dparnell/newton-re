@@ -255,6 +255,11 @@ worked through.  What could come next (not ranked; the owner chooses):
   `SuckPackageFromEndPoint` and fax reception wait on) comes after.
 - **Third-party apps**: all five fixture applications open from Extras
   and respond (ctest `host.NewtonThirdPartyApps`).
+- **The pen**: the tablet driver and the inker are in, with the ROM's
+  calibration screen (Align Pen; `host.NewtonAlignPen`).  NOT YET: the
+  inker's live ink (`TInker::Convert`/`DrawInk`, `TLiveInker` - the host's
+  StrokeTime still draws it), the busy box (`TBusyBox`, commands
+  0x33-0x37), `TResistiveTablet` (the MP2x00's panel, hardware).
 - **Power**: the power manager, sleep and wake, the backlight and the
   batteries are in (`src/power/`, `host.NewtonPower`).  NOT YET: the
   Cirrus battery driver and the platform's power side (the GPIO switch
