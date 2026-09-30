@@ -264,6 +264,14 @@ is the same value spelt so that it cannot be read two ways.
 - Reflow no longer cuts a long paragraph that does not calculate its
   bounds - by the agent's reading of the ROM, such a piece has no lines
   when `OffsetPastVisible` is asked; `host.NewtonReflow` expects 3 groups.
+- Challenged and completed (334721bc): a note's text *does* calculate its
+  bounds, and what cuts it between pages is `FillAllCaches`' clip (0x16bcd0)
+  - with text flag 0x800, which `ReflowText` (0x1a5014) sets, only the
+  lines within the view's own bounds are kept, else those within what its
+  parents show - so `OffsetPastVisible` answers the end of the last whole
+  line on the page.  Only a paragraph that does not calculate its bounds
+  is never cut (ROM).  ctest `host.NewtonPrintLong`: a 40-line note
+  prints on 3 pages, every line whole (`pagecheck.py --lines N`).
 
 ## 2026-09-30: live ink and the busy box
 
