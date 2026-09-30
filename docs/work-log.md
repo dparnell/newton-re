@@ -9,6 +9,22 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: sorting tables kept on a store
+
+A store now carries the sorting tables its soups are ordered by, so it
+sorts the same on another machine (e8f793ca, a503f4d5):
+`StoreSaveSortTable` (0x352b2c) and `StoreRemoveSortTable` (0x352dac)
+keep [id, users, object id] triples in the persistent frame's
+`sortTables`, a table's bytes in a store object of its own (table 1, the
+ROM's, by id alone); two unnamed ROM functions, here
+`StoreLoadSortTables` (0x352fd8, from `MakeStoreObject`) and
+`StoreForgetSortTables` (0x353184, from `RemoveTStore`), bring them back
+at mount and let them go at unmount.  The old comments' 0x327e3c and
+0x327fe8 were inside QuickDraw's paths code.  `test_Soups`
+`TestSortTablesOnStore`.  The TXView styles' packed integers are the
+ROM's own answer (`TXNewtTextRun::GetNSObject` 0x240104 makes a compact
+font for a ROM family).
+
 ## 2026-10-01: notyet.py's small gaps closed
 
 - A piece of a paragraph taken out with ink in it comes back as a rich
