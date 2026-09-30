@@ -15,9 +15,9 @@
 // It talks to the echo server newton runs with --tcp-echo:
 //
 //   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
-//       --tcp-echo 52371 --script src/host/demo/echo.ns --headless 60
+//       --tcp-echo 0 --script src/host/demo/echo.ns --headless 60
 
-kEchoPort := 52371;
+kEchoPort := HostEchoPort();		// --tcp-echo 0: the port the host picked
 
 ep := {_proto: @383,
 	exceptionHandler: func(e) begin

@@ -10,7 +10,7 @@
 // read the screen (ScreenPixel) and the snapshots are nethopper-N.pgm.
 // Run by ctest host.NewtonNetHopper:
 //
-//   python tools/host/httpserve.py --dir src/host/demo/www --port 52381 -- \
+//   python tools/host/httpserve.py --dir src/host/demo/www --port 0 -- \
 //       build/host/host/newton --display 320x480 --erase --store tmp/nethopper.store \
 //       --headless 240 \
 //       --package fixtures/packages/apps/NetHopper3.2/nethopper.pkg \
@@ -21,7 +21,8 @@
 // rectangle [0,0,63,31] outlined and [8,8,55,23] filled, saved
 // non-interlaced.)
 
-kNetHopperURL := "http://127.0.0.1:52381/nethopper.html";
+// (the port tools/host/httpserve.py serves on, a free one it picked)
+kNetHopperURL := "http://127.0.0.1:" & HostGetEnv("NEWTON_HTTP_PORT") & "/nethopper.html";
 
 nhFailures := 0;
 nhCheck := func(what, ok, detail) begin

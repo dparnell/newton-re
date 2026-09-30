@@ -211,10 +211,13 @@ which reaches the host's own TCP/IP stack) needs a web server to ask.  This
 serves a directory on 127.0.0.1 with Python's own `http.server`, runs a
 program given after `--`, and stops serving when the program ends:
 
-    python tools/host/httpserve.py --dir src/host/demo/www --port 52381 -- \
+    python tools/host/httpserve.py --dir src/host/demo/www --port 0 -- \
         build/host/host/newton ... --script src/host/demo/nethopper.ns
 
-**Inputs:** the directory to serve and the port.  **Output:** each request
+**Inputs:** the directory to serve and the port - 0 takes a free one, so
+two runs at once (two build directories, `stress.py` copies) never meet;
+the program is told it in the environment variable `NEWTON_HTTP_PORT`,
+which a script reads with `HostGetEnv("NEWTON_HTTP_PORT")`.  **Output:** each request
 as `[http] GET /path 200`, the program's output (stdout and stderr merged)
 and `[http] the program answered N`; it exits with the program's status (1
 when the port cannot be had).  ctest `host.NewtonNetHopper` runs NetHopper

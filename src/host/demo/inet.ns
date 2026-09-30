@@ -12,7 +12,7 @@
 // romsrc/rex):
 //
 //   build/host/host/newton --display 320x480 \
-//       --erase --store inet.store --tcp-echo 52373 --headless 20 \
+//       --erase --store inet.store --tcp-echo 0 --headless 20 \
 //       --script src/host/demo/inet.ns
 //
 // (The NIE's functions appear only once its units are all installed - its
@@ -23,7 +23,7 @@
 
 HostInclude("common.ns");			// waitFor
 
-kInetEchoPort := 52373;
+kInetEchoPort := HostEchoPort();		// --tcp-echo 0: the port the host picked
 
 inetClient := {
 	linkID: nil,

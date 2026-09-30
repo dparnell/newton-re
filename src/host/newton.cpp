@@ -67,7 +67,10 @@
 
 	--tcp-echo runs a TCP echo server on 127.0.0.1 at the port, for a
 	script's endpoint to talk to (comms/host/HostEchoServer.h,
-	src/host/demo/echo.ns).
+	src/host/demo/echo.ns); a port of 0 takes a free one, which the
+	script asks for with HostEchoPort() - how the tests keep two runs at
+	once apart.  HostGetEnv(name) answers a host environment variable
+	(tools/host/httpserve.py's NEWTON_HTTP_PORT).
 
 	--serial-port is the TCP port the Newton's external serial port listens
 	on (hal/host/HostSerialChip.h): 3679 unless given, as Einstein's, so a
@@ -301,6 +304,37 @@ FHostStoreFile(RefArg /*rcvr*/)
 }
 
 
+// HostEchoPort(): the port the --tcp-echo server listens on, or nil - a
+// test gives --tcp-echo 0 and the host picks a free one, so two runs at
+// once (two build directories, tools/host/stress.py) never meet
+static long gEchoPort = 0;
+
+static Ref
+FHostEchoPort(RefArg /*rcvr*/)
+{
+	return gEchoPort == 0 ? NILREF : MAKEINT(gEchoPort);
+}
+
+
+// HostGetEnv(name): the host environment variable, or nil - how a script
+// hears what the program that started newton set up for it (the port
+// tools/host/httpserve.py serves on, NEWTON_HTTP_PORT)
+static Ref
+FHostGetEnv(RefArg /*rcvr*/, RefArg name)
+{
+	if (!IsString(name))
+		ThrowBadTypeWithFrameData(kNSErrNotAString, name);
+	char key[256];
+	long n = Length(name) / 2 - 1;
+	const UniChar* text = (const UniChar*) BinaryData(name);
+	for (long i = 0; i < n && i < (long) sizeof(key) - 1; i++)
+		key[i] = (char) text[i];
+	key[n < (long) sizeof(key) - 1 ? n : (long) sizeof(key) - 1] = 0;
+	const char* value = getenv(key);
+	return value == nil ? NILREF : MakeString(value);
+}
+
+
 // HostSoundSamples(): how many samples the host's sound driver has been
 // given to play so far - a test's way of hearing that something made a
 // sound (a click, a slip's show sound)
@@ -346,6 +380,8 @@ NewtonPreMain(void)
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostInclude")), RefVar(MakeCFunction((void*) FHostInclude, 1, nil)));
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostCPUTime")), RefVar(MakeCFunction((void*) FHostCPUTime, 0, nil)));
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostStoreFile")), RefVar(MakeCFunction((void*) FHostStoreFile, 0, nil)));
+	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostEchoPort")), RefVar(MakeCFunction((void*) FHostEchoPort, 0, nil)));
+	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostGetEnv")), RefVar(MakeCFunction((void*) FHostGetEnv, 1, nil)));
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostSoundSamples")), RefVar(MakeCFunction((void*) FHostSoundSamples, 0, nil)));
 	HostInstallPackageGlobal();
 	HostLinkStart();
@@ -507,7 +543,8 @@ main(int argc, char** argv)
 		else if (strcmp(argv[i], "--tcp-echo") == 0 && i + 1 < argc)
 		{
 			long port = strtol(argv[++i], nil, 0);
-			if (HostStartEchoServer((uint16_t) port) == 0)
+			gEchoPort = HostStartEchoServer((uint16_t) port);
+			if (gEchoPort == 0)
 				fprintf(stderr, "newton: no echo server on port %ld\n", port);
 		}
 		else if (strcmp(argv[i], "--ir-peer") == 0 && i + 1 < argc)

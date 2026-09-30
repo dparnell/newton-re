@@ -597,10 +597,9 @@ if(Python3_FOUND)
                          FAIL_REGULAR_EXPRESSION "waited in vain")
     add_test(NAME host.NewtonEndpointPackage
              COMMAND newton --store ${CMAKE_CURRENT_BINARY_DIR}/endpointpkg.store
-                     --tcp-echo 52372 --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/endpointpkg.ns
+                     --tcp-echo 0 --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/endpointpkg.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonEndpointPackage PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED host_endpointpkg_store
-                         RESOURCE_LOCK tcp_echo_52372
                          PASS_REGULAR_EXPRESSION "removed: TRUE.*sucked: TRUE, title: \"Formulas2\", sameSize: TRUE}.*endpointpkg: done")
     # the same boot slowed by the heap checker's hooks: a task switched out on
     # its way back from a system call once lost the call's answer
@@ -756,15 +755,15 @@ set_tests_properties(host.NewtonRecorder PROPERTIES TIMEOUT 180
 # a protoBasicEndpoint over TCP (comms/NewScriptEndpoint.h): the NIE's
 # 'inet service and 'itrs remote socket, to the echo server newton runs
 # (--tcp-echo), written and read back synchronously and asynchronously
-add_test(NAME host.NewtonEcho COMMAND newton --display 320x480 --headless 60 --tcp-echo 52371 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/echo.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+add_test(NAME host.NewtonEcho COMMAND newton --display 320x480 --headless 60 --tcp-echo 0 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/echo.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(host.NewtonEcho PROPERTIES TIMEOUT 120
                      PASS_REGULAR_EXPRESSION "echo: connected, state 5.*echo: received hello .byteCount 5.*echo: sent asynchronously, done.*echo: line 15 characters, ended by endsequence.*echo: frame bonjour 4 Array.*echo: disconnected, state 2.*echo: unbound, state 1.*echo: done")
 
 # protoEndpoint, the 1.x NewtonScript endpoint (comms/ScriptEndpoint.h):
 # 1.x option frames, Connect, output and OutputFrame, input specs to a byte
 # count, an end character and the 'frame form, against the echo server
-add_test(NAME host.NewtonProtoEndpoint COMMAND newton --display 320x480 --headless 60 --tcp-echo 52372 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/protoendpoint.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-set_tests_properties(host.NewtonProtoEndpoint PROPERTIES TIMEOUT 120 RESOURCE_LOCK tcp_echo_52372
+add_test(NAME host.NewtonProtoEndpoint COMMAND newton --display 320x480 --headless 60 --tcp-echo 0 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/protoendpoint.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(host.NewtonProtoEndpoint PROPERTIES TIMEOUT 120
                      PASS_REGULAR_EXPRESSION "Instantiate: NIL, state: 1.*Connect: NIL, state: 5.*protoendpoint: received hello.*protoendpoint: line of 15 characters.*protoendpoint: frame bonjour 4.*outputDone: TRUE.*Disconnect: NIL, state: 0.*protoendpoint: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain")
 
@@ -784,9 +783,8 @@ set_tests_properties(host.NewtonDNS PROPERTIES TIMEOUT 120
 
 # a protoStreamingEndpoint (comms/StreamingEndpoint.h): a frame streamed
 # out as NSOF and read back over TCP through a TEndpointPipe
-add_test(NAME host.NewtonStream COMMAND newton --display 320x480 --headless 60 --tcp-echo 52372 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/stream.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-# (three tests run echo servers on 52372: RESOURCE_LOCK keeps them apart)
-set_tests_properties(host.NewtonStream PROPERTIES TIMEOUT 120 RESOURCE_LOCK tcp_echo_52372
+add_test(NAME host.NewtonStream COMMAND newton --display 320x480 --headless 60 --tcp-echo 0 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/stream.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(host.NewtonStream PROPERTIES TIMEOUT 120
                      PASS_REGULAR_EXPRESSION "stream: connected, state 5.*stream: sent, progress 1536 of 1854.*stream: received a streamed frame 1996 300 89401 .*progress 1854.*stream: done")
 
 # the Newton Internet Enabler end to end through its own API (demo/inet.ns):
@@ -826,7 +824,7 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/../romsrc/rex/inetenbl.pkg)
     endif()
     add_test(NAME host.NewtonInet
              COMMAND newton --display 320x480 --erase
-                     --store ${CMAKE_CURRENT_BINARY_DIR}/inet.store --tcp-echo 52373 --headless 120
+                     --store ${CMAKE_CURRENT_BINARY_DIR}/inet.store --tcp-echo 0 --headless 120
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/inet.ns
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(host.NewtonInet PROPERTIES TIMEOUT 180
@@ -874,7 +872,7 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/../romsrc/rex/inetenbl.pkg)
     # states, "hello" echoed, disconnected
     add_test(NAME host.NewtonInetFSM
              COMMAND newton --display 320x480 --erase
-                     --store ${CMAKE_CURRENT_BINARY_DIR}/inetfsm.store --tcp-echo 52374 --headless 22
+                     --store ${CMAKE_CURRENT_BINARY_DIR}/inetfsm.store --tcp-echo 0 --headless 22
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/inetfsm.ns
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(host.NewtonInetFSM PROPERTIES TIMEOUT 180
@@ -889,13 +887,13 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/../romsrc/rex/inetenbl.pkg)
     if(EXISTS ${NETHOPPER_DIR}/nethopper.pkg AND Python3_EXECUTABLE)
         add_test(NAME host.NewtonNetHopper
                  COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/host/httpserve.py
-                         --dir ${CMAKE_CURRENT_SOURCE_DIR}/demo/www --port 52381 --
+                         --dir ${CMAKE_CURRENT_SOURCE_DIR}/demo/www --port 0 --
                          $<TARGET_FILE:newton> --display 320x480 --erase
                          --store ${CMAKE_CURRENT_BINARY_DIR}/nethopper.store --headless 240
                          --package ${NETHOPPER_DIR}/nethopper.pkg
                          --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/nethopper.ns
                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-        set_tests_properties(host.NewtonNetHopper PROPERTIES TIMEOUT 300 RESOURCE_LOCK tcp_52381
+        set_tests_properties(host.NewtonNetHopper PROPERTIES TIMEOUT 300
                              PASS_REGULAR_EXPRESSION "nethopper: the help page drawn: ok.*nethopper: the URL typed: ok.*nethopper: loaded Host Test Page.*nethopper: the page's heading drawn: ok.*nethopper: the image decoded and drawn: ok.*nethopper: done, 0 failed"
                              FAIL_REGULAR_EXPRESSION "waited in vain|is not answered|stopped \\(|FAILED")
         # NetHopper's JPEG viewer (NetHopperJPEG.pkg) with no NewtsCape to
@@ -904,14 +902,14 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/../romsrc/rex/inetenbl.pkg)
         # picture left as its placeholder
         add_test(NAME host.NewtonNetHopperJPEG
                  COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/host/httpserve.py
-                         --dir ${CMAKE_CURRENT_SOURCE_DIR}/demo/www --port 52381 --
+                         --dir ${CMAKE_CURRENT_SOURCE_DIR}/demo/www --port 0 --
                          $<TARGET_FILE:newton> --display 320x480 --erase
                          --store ${CMAKE_CURRENT_BINARY_DIR}/nethopper-jpeg.store --headless 240
                          --package ${NETHOPPER_DIR}/nethopper.pkg
                          --package ${NETHOPPER_DIR}/NetHopperJPEG.pkg
                          --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/nethopper-jpeg.ns
                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-        set_tests_properties(host.NewtonNetHopperJPEG PROPERTIES TIMEOUT 300 RESOURCE_LOCK tcp_52381
+        set_tests_properties(host.NewtonNetHopperJPEG PROPERTIES TIMEOUT 300
                              PASS_REGULAR_EXPRESSION "nethopper-jpeg: loaded Host JPEG Page.*the alert names the error -48200: ok.*the picture left as its placeholder: ok.*nethopper-jpeg: done, 0 failed"
                              FAIL_REGULAR_EXPRESSION "waited in vain|is not answered|stopped \\(|FAILED")
     endif()

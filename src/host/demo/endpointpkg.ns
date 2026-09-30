@@ -9,9 +9,9 @@
 //   build/host/host/newton --rom build/MP2x00US/rom.bin --erase --store tmp/e.store \
 //       --package build/host/host/packages/Formulas2.pkg --headless 5
 //   build/host/host/newton --rom build/MP2x00US/rom.bin --store tmp/e.store \
-//       --tcp-echo 52372 --script src/host/demo/endpointpkg.ns --headless 30
+//       --tcp-echo 0 --script src/host/demo/endpointpkg.ns --headless 30
 
-kEchoPort := 52372;
+kEchoPort := HostEchoPort();		// --tcp-echo 0: the port the host picked
 
 AddDelayedCall(func() begin
 	local p := nil;

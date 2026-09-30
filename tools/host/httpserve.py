@@ -16,7 +16,11 @@ Usage
     python tools/host/httpserve.py --dir <directory> --port <port> -- <program> [args...]
 
 Inputs / outputs
-    The directory to serve and the port (on 127.0.0.1 only).  Output: the
+    The directory to serve and the port (on 127.0.0.1 only; 0 takes a free
+    one, so two runs at once - two build directories, tools/host/stress.py
+    copies - never meet).  The program is told the port in the environment
+    variable NEWTON_HTTP_PORT, which a script reads with HostGetEnv
+    (src/host/demo/nethopper.ns).  Output: the
     requests served and the program's output (stdout and stderr, merged).
     Exits with the program's exit status (1 when the port cannot be had).
 """
@@ -24,6 +28,7 @@ Inputs / outputs
 import argparse
 import functools
 import http.server
+import os
 import subprocess
 import sys
 import threading
@@ -56,13 +61,17 @@ def main(argv=None):
     except OSError as e:
         print("[http] cannot serve on port %d: %s" % (args.port, e), flush=True)
         return 1
+    port = server.server_address[1]
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
-    print("[http] serving %s on 127.0.0.1:%d" % (args.dir, args.port), flush=True)
-    proc = subprocess.Popen(program, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    print("[http] serving %s on 127.0.0.1:%d" % (args.dir, port), flush=True)
+    env = dict(os.environ, NEWTON_HTTP_PORT=str(port))
+    proc = subprocess.Popen(program, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env)
     for raw in proc.stdout:
-        sys.stdout.write(raw.decode("utf-8", errors="replace"))
-        sys.stdout.flush()
+        # (the program's bytes as they are: a console's code page cannot
+        # take everything a Newton prints)
+        sys.stdout.buffer.write(raw)
+        sys.stdout.buffer.flush()
     status = proc.wait()
     server.shutdown()
     print("[http] the program answered %d" % status, flush=True)

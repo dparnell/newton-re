@@ -10,10 +10,10 @@
 // endpoint disconnected and disposed.
 //
 //   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
-//       --tcp-echo 52372 --script src/host/demo/protoendpoint.ns --headless 20
+//       --tcp-echo 0 --script src/host/demo/protoendpoint.ns --headless 20
 
 HostInclude("common.ns");
-kEchoPort := 52372;
+kEchoPort := HostEchoPort();		// --tcp-echo 0: the port the host picked
 done := nil;
 
 ep := {_proto: @174,

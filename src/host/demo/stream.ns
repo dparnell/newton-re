@@ -6,7 +6,7 @@
 // (comms/StreamingEndpoint.h, over comms/EndpointPipe.h).
 //
 //   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
-//       --tcp-echo 52372 --script src/host/demo/stream.ns --headless 60
+//       --tcp-echo 0 --script src/host/demo/stream.ns --headless 60
 
 ep := {_proto: @466,
 	exceptionHandler: func(e) begin
@@ -16,7 +16,7 @@ ep := {_proto: @466,
 ep:Instantiate(ep, [
 	{label: "inet", type: 'service, opCode: 512},
 	{label: "itrs", type: 'option, opCode: 512,
-	 data: {arglist: [[127, 0, 0, 1], 52372],
+	 data: {arglist: [[127, 0, 0, 1], HostEchoPort()],
 	        typelist: ['struct, ['array, 'byte, 4], 'short]}}]);
 ep:Bind(nil, nil);
 ep:Connect(nil, nil);

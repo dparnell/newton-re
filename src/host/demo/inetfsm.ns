@@ -7,13 +7,13 @@
 // endpoint echoes "hello" through the echo server.
 //
 //   build/host/host/newton --display 320x480 \
-//       --erase --store inet.store --tcp-echo 52374 --headless 25 \
+//       --erase --store inet.store --tcp-echo 0 --headless 25 \
 //       --script src/host/demo/inetfsm.ns
 //
 // (An NTK application imports the proto from the unit; a script finds it
 // in CurrentExports.)
 
-kFSMEchoPort := 52374;
+kFSMEchoPort := HostEchoPort();		// --tcp-echo 0: the port the host picked
 
 unitExport := func(name, index) begin
 	local found;
