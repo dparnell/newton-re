@@ -237,6 +237,18 @@ is the same value spelt so that it cannot be read two ways.
   notBic loops never advance the mask pointer; `ScaleStdRRect` scales the
   corner oval crosswise on a fax.
 
+## 2026-09-30: the pen's clicks and the views' sounds
+
+- The sound natives were there; the views' calls were not.  Now, where
+  the ROM makes them (b32a26bd): `FClicker` for a tap that places the
+  caret, a tracked button, a picker's pick, the pen on the caret, caps
+  lock; `FPlaySound` for a gauge's and the on-screen keyboard's sounds
+  and the view effects' show and hide.  `HostSoundSamples()` lets a
+  script hear what was played; ctest `host.NewtonClicks`.
+  `host.NewtonRecorder` turns the pen and action sounds off, which
+  otherwise diluted its test-tone check.  `docs/next-steps.md` lists the
+  user-reachable NOT YETs.
+
 ## 2026-09-30: NetHopper's JPEG viewer without a converter
 
 - NetHopperJPEG.pkg has no decoder of its own: its viewer calls

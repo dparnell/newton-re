@@ -206,6 +206,9 @@ Found stale (the code is there, the comment was not updated):
 deferred broadcast (`AddDeferredCall` is bound), `qd/PicPlay`'s text,
 curves and paths.
 
+**Flaky**: `host.NewtonBeamIrDA` fails now and then under a full -j8
+run and passes alone - not yet looked into.
+
 ## Candidates for the next piece of work
 
 The owner's order - the package manager, host package loading, the
