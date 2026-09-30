@@ -52,8 +52,17 @@ struct HostTaskContext
 	Boolean				fRunning = false;		// holds the baton (or has just been handed it)
 };
 
-static std::mutex						gBaton;
-static std::condition_variable			gBatonChanged;
+// The baton and the condition it changes on are made once and never
+// destroyed.  The run ends with task threads still parked on them (see
+// below, and docs/host-runtime.md: "the run ends by leaving parked threads
+// to the process exit"), and destroying a condition variable somebody is
+// waiting on is undefined: glibc's pthread_cond_destroy waits for its
+// waiters to leave, so a static one destroyed on the way out of main hung
+// the process after every check had passed - which is what every test that
+// boots the OS did on Linux.  Windows' own destructor happens not to wait,
+// which is why it was never seen there.
+static std::mutex&						gBaton = *new std::mutex;
+static std::condition_variable&			gBatonChanged = *new std::condition_variable;
 static std::map<TTask*, HostTaskContext*>	gContexts;
 static TTask*							gRunningTask = nil;		// whose thread holds the baton
 static std::atomic<unsigned long>		gHandovers(0);			// bumped every time the baton is taken

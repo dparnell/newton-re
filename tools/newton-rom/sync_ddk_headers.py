@@ -90,6 +90,25 @@ PATCHES = {
         # arguments); a host build makes them pointer-sized, as an LP64 Linux does anyway
         ("typedef long\t\t\tLong;\t\t\t/* In ANSI C long is signed long */\ntypedef signed long\t\tSLong;\ntypedef unsigned long\tULong;\n\ntypedef signed long\t\tFastInt;",
          "#ifdef hostLongIsPointerSized\ntypedef intptr_t\t\tLong;\ntypedef intptr_t\t\tSLong;\ntypedef uintptr_t\t\tULong;\ntypedef intptr_t\t\tFastInt;\n#else\ntypedef long\t\t\tLong;\t\t\t/* In ANSI C long is signed long */\ntypedef signed long\t\tSLong;\ntypedef unsigned long\tULong;\n\ntypedef signed long\t\tFastInt;\n#endif"),
+        # A Fixed (and a Fract) is a 16.16 fixed-point number in the ARM's
+        # 32-bit word and nothing else, so on a host whose `long` is wider -
+        # an LP64 Linux or macOS - it is spelt `int` instead.  It has to be
+        # 32 bits wherever it is: the reconstruction's fixed-point arithmetic
+        # is the ARM's, and qd's ToFixed is `(Fixed) ((ULong) n << 16)`,
+        # which wraps a big or negative n only if the cast truncates; and
+        # FPoint and FRect are two and four of them, laid out as the ROM's
+        # are.  Windows' `long` is the ARM's width already, so
+        # hostLongIsWiderThanARMWord is not set there and a Fixed stays
+        # `long`, keeping every overload it takes part in where it was.
+        # The DDK's other `long` types (NewtonErr, Size, Priority,
+        # AEEventClass, AEEventID, FastBoolean) are left alone: they are not
+        # laid out in the ROM's data nor arithmetic that has to wrap, and the
+        # reconstruction spells some of the functions that return and take
+        # them `long`, which only a `long` typedef overrides.
+        ("#ifndef __fixed_defined__\n\ttypedef long Fixed;\n#endif",
+         "#ifndef __fixed_defined__\n#ifdef hostLongIsWiderThanARMWord\n\ttypedef int Fixed;\t\t/* the ARM's word (sync_ddk_headers.py) */\n#else\n\ttypedef long Fixed;\n#endif\n#endif"),
+        ("#ifndef __fract_defined__\n\ttypedef long Fract;\n#endif",
+         "#ifndef __fract_defined__\n#ifdef hostLongIsWiderThanARMWord\n\ttypedef int Fract;\t\t/* the ARM's word (sync_ddk_headers.py) */\n#else\n\ttypedef long Fract;\n#endif\n#endif"),
     ],
     # UserTasks.h: the include is spelt in the wrong case for a case-sensitive file system;
     # TUTaskWorld's spawned task starts at a member function in the ROM (its address is
@@ -105,6 +124,22 @@ PATCHES = {
     # UserDomain.h: the include is spelt in the wrong case
     "UserDomain.h": [
         ('#include "sharedTypes.h"', '#include "SharedTypes.h"'),
+    ],
+    # UserPhys.h, DotDrivers.h, DriverCallbacks.h and PrintTypes.h: the same -
+    # includes spelt in a case the DDK's own file names do not have, which only
+    # a case-insensitive file system (the Mac's, Windows') lets pass
+    "UserPhys.h": [
+        ('#include "sharedTypes.h"', '#include "SharedTypes.h"'),
+    ],
+    "DotDrivers.h": [
+        ('#include "Objects.h"', '#include "objects.h"'),
+    ],
+    "DriverCallbacks.h": [
+        ('#include "Objects.h"', '#include "objects.h"'),
+        ('#include "Longtime.h"', '#include "LongTime.h"'),
+    ],
+    "PrintTypes.h": [
+        ('#include "Objects.h"', '#include "objects.h"'),
     ],
     # DynamicArray.h: pointer arithmetic through a long truncates 64-bit host pointers
     "DynamicArray.h": [

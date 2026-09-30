@@ -29,7 +29,7 @@
 #ifndef __STROKEBUNDLE_H
 #define __STROKEBUNDLE_H
 
-#include "Objects.h"
+#include "objects.h"
 #include "NewtonTypes.h"
 
 class TStroke;

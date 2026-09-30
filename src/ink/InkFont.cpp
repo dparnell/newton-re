@@ -6,7 +6,7 @@
 
 #include "InkFont.h"
 #include "InkCodec.h"
-#include "Objects.h"
+#include "objects.h"
 #include "ObjectHeap.h"
 #include "Frames.h"
 #include "RichString.h"		// IsInkWord

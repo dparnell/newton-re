@@ -154,11 +154,21 @@ TNSDebugAPI::SetImplementor(long index, RefArg implementor)
 }
 
 
-// the value-stack base of a state's frame (fStackFrame is MAKEINT(base << 6 | flags))
+// The value-stack base of a state's frame (fStackFrame is
+// MAKEINT(base << 6 | flags)).  The base is signed: a frame whose
+// arguments are below where the interpreter started counting has a
+// negative one, and the ROM takes it as such - Locals 0x002d2688 is
+// `MOV r0, r8, ASR #2; MOV r8, r0, ASR #6`, two arithmetic shifts, and
+// then indexes `values[base + 3 + i]` with the result.  So the word is
+// narrowed to the ARM's register (Long32) and shifted arithmetically;
+// shifting it unsigned answered 0x00fffffe for a base of -2 on the
+// device and something far larger on a host whose Ref is 64 bits wide,
+// which is what took the Printer's stack inspection off the end of the
+// value stack on Linux.
 static inline long
 FrameBase(VMState* state)
 {
-	return (long) ((ULong) StateRef(state->fStackFrame) >> 8);
+	return (long) ((Long32) StateRef(state->fStackFrame) >> 8);
 }
 
 

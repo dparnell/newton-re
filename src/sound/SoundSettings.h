@@ -25,7 +25,10 @@
 #include "objects.h"
 
 // what VolumeToDecibels answers for a volume of 0: no sound at all
-const long kSilenceDecibels = (long) 0x80000000;
+// (Long32: these decibels are the ARM's 32-bit word and this one is
+//  negative, so the cast has to sign-extend it on a host whose `long`
+//  is wider - host_compat.h)
+const long kSilenceDecibels = (Long32) 0x80000000;
 
 // The volume settings 0-4 as decibels, 16.16 fixed; anything above 4 is
 // full volume and anything below 0 is silence.

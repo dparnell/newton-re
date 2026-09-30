@@ -37,9 +37,9 @@ VolumeToDecibels(long volume)
 	switch (volume)
 	{
 	case 0:		return kSilenceDecibels;
-	case 1:		return (long) 0xffedf02e;	// -18.0618 dB
-	case 2:		return (long) 0xfff9faba;	//  -6.0206 dB
-	case 3:		return (long) 0xfffcfd5d;	//  -3.0103 dB
+	case 1:		return (Long32) 0xffedf02e;	// -18.0618 dB
+	case 2:		return (Long32) 0xfff9faba;	//  -6.0206 dB
+	case 3:		return (Long32) 0xfffcfd5d;	//  -3.0103 dB
 	}
 	return 0;									// 4: full
 }
@@ -55,9 +55,9 @@ DecibelsToVolume(long decibels)
 {
 	if (decibels == kSilenceDecibels)
 		return 0;
-	if (decibels < (long) 0xfff9faba)		// below volume 2's level
+	if (decibels < (Long32) 0xfff9faba)		// below volume 2's level
 		return 1;
-	if (decibels < (long) 0xfffcfd5d)		// below volume 3's level
+	if (decibels < (Long32) 0xfffcfd5d)		// below volume 3's level
 		return 2;
 	return decibels < 0 ? 3 : 4;
 }

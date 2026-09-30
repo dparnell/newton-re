@@ -6,7 +6,7 @@
 */
 
 #include "Ink.h"
-#include "Objects.h"
+#include "objects.h"
 #include "RSSymbols.h"
 #include "RichString.h"		// IsInkWord, which the rich string needs too
 #include "FixedMath.h"

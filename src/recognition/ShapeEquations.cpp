@@ -179,13 +179,13 @@ GenSameAngEqs(long i, long j, UByte swap, long a, long b, long c, long d, EqSyst
 	Handle h = NewCoeffs(system);
 	if (h == nil)
 		return true;
-	((long*) *h)[xi] = a;
-	((long*) *h)[first] = (long) (int32_t) ((uint32_t) b * (uint32_t) -c);
+	((Fixed*) *h)[xi] = a;
+	((Fixed*) *h)[first] = (long) (int32_t) ((uint32_t) b * (uint32_t) -c);
 	h = NewCoeffs(system);
 	if (h == nil)
 		return true;
-	((long*) *h)[yi] = a;
-	((long*) *h)[second] = (long) (int32_t) ((uint32_t) b * (uint32_t) -d);
+	((Fixed*) *h)[yi] = a;
+	((Fixed*) *h)[second] = (long) (int32_t) ((uint32_t) b * (uint32_t) -d);
 	return false;
 }
 
@@ -213,11 +213,11 @@ GenSlopeEqs(long i, long j, UByte swap, Fixed k, EqSystem* system)
 	Handle h = NewCoeffs(system);
 	if (h == nil)
 		return true;
-	((long*) *h)[0] = k;
-	((long*) *h)[xi] = 0x10000;
-	((long*) *h)[first] = 0x10000;
-	((long*) *h)[yi] = 0x8000;
-	((long*) *h)[second] = 0x8000;
+	((Fixed*) *h)[0] = k;
+	((Fixed*) *h)[xi] = 0x10000;
+	((Fixed*) *h)[first] = 0x10000;
+	((Fixed*) *h)[yi] = 0x8000;
+	((Fixed*) *h)[second] = 0x8000;
 	system->fEqs[system->fCount - 1].fKind = 1;
 	return false;
 }
@@ -233,7 +233,7 @@ GenAlignEqs(long i, long axis, EqSystem* system)
 	Handle h = NewCoeffs(system);
 	if (h == nil)
 		return true;
-	((long*) *h)[axis + i * 2] = 0x10000;
+	((Fixed*) *h)[axis + i * 2] = 0x10000;
 	return false;
 }
 
@@ -247,10 +247,10 @@ GenEqEqs(long i, long j, long k, UByte swap, long a, long b, long c, EqSystem* s
 	Handle h = NewCoeffs(system);
 	if (h == nil)
 		return true;
-	((long*) *h)[k + j * 2] = (long) (int32_t) ((uint32_t) b * (uint32_t) c);
+	((Fixed*) *h)[k + j * 2] = (long) (int32_t) ((uint32_t) b * (uint32_t) c);
 	if (swap)
 		k = (k == 1) ? 2 : 1;
-	((long*) *h)[k + i * 2] = a;
+	((Fixed*) *h)[k + i * 2] = a;
 	return false;
 }
 
@@ -266,7 +266,7 @@ GenSumEqs(long last, long* weights, long component, EqSystem* system)
 		return true;
 	for (long k = 0; k <= last; k++)
 		if (weights[k] != 0)
-			((long*) *h)[component + k * 2] = ShiftLeft(weights[k], 16);
+			((Fixed*) *h)[component + k * 2] = ShiftLeft(weights[k], 16);
 	return false;
 }
 
@@ -1187,7 +1187,7 @@ DirSumEqs(long n, SideMap* map, AngCluster* clusters, UByte* nonlinear, UByte* c
 			Boolean usable = true;
 			for (long j = 0; j < n; j++)
 			{
-				long* c = (long*) *eq->fCoeffs;
+				Fixed* c = (Fixed*) *eq->fCoeffs;	// (Fixed: a coefficient is the ARM's word - NewCoeffs)
 				long v = c[kind + j * 2];
 				if (v == 0)
 					continue;
@@ -1285,7 +1285,11 @@ FindEquations(TGeneralShapeUnit* unit, long* values, EqSystem* system, long* typ
 	*angle = -0x10000;
 	// DEVIATION: room for 18 sides where the ROM's 0x1a4 bytes have room
 	// for 15 - a shape of 16 or 17 sides went on past the end of the block.
-	Handle sidesH = MakeHandle(0x1a4 + 3 * sizeof(SideMap));
+	// The ROM's 0x1a4 is 15 lengths and 15 angles (a word each) and then 15
+	// SideMaps of 20 bytes; a SideMap holds five `long`s, which are wider
+	// than the ARM's word on an LP64 host, so the block is sized from the
+	// host's own types rather than from that count (romsizes.py --lp64).
+	Handle sidesH = MakeHandle(30 * sizeof(long) + 18 * sizeof(SideMap));
 	NameHandle(sidesH, 'GSSA');
 	TTrend* lengths = TTrend::Make(6);
 	TTrend* angles = TTrend::Make(7);

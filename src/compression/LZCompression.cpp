@@ -1154,6 +1154,17 @@ TLZDecompressor::DecompressBlock(ULong* outSize, void* dst, ULong /*dstSize*/, v
 	fOffsetCase = 10;
 	if (in[0] == 1)
 	{
+		// ROM BUG kept (0x000ffa60: LDR r0,[r4,#48]; CMP r0,#0x400;
+		// SUBLS r3,r0,#4; MOVHI r3,#0x400).  fRemaining counts this block's
+		// four-byte header too, so a stored last block of 1021 to 1023
+		// bytes has fRemaining just over kLZBlockSize and is given back as
+		// a whole 0x400 bytes - three, two or one byte too many.  The ROM
+		// never meets it: the store compander hands the coder fixed 0x400
+		// byte blocks (stores/StoreCompander.h), so a stored block is
+		// either full or the chunk's only one and under the size.
+		// (test_Compression's data comes from the C library's rand(), which
+		// is a different sequence on each host, so whether any size lands
+		// on an incompressible 1021-1023 byte block differs between them.)
 		ULong n = fRemaining <= kLZBlockSize ? fRemaining - 4 : kLZBlockSize;
 		fast_copy(in + 4, out, n);
 		*outSize = n;

@@ -30,11 +30,11 @@
 #endif
 
 #ifndef __OBJECTS_H
-#include "Objects.h"
+#include "objects.h"
 #endif
 
 #ifndef	__LONGTIME_H
-#include "Longtime.h"
+#include "LongTime.h"
 #endif
 
 

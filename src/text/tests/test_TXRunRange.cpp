@@ -78,10 +78,10 @@ public:
 	virtual Boolean	IsTextRun(void) const				{ return fText; }
 	virtual void	GetHeightInfo(int*, int*, int*)		{ }
 	virtual void	PixelToChar(const TXLineRunDisplayInfo&, Fixed, TXOffsetRange*)	{ }
-	virtual long	CharToPixel(const TXLineRunDisplayInfo&, long)	{ return 0; }
-	virtual void	Draw(const TXLineRunDisplayInfo&, long, const Rect&, int)	{ }
-	virtual long	MeasureWidth(const TXLineRunDisplayInfo&)	{ return 0; }
-	virtual long	LineBreak(const UniChar*, long, long, long*, Boolean, long*)	{ return 0; }
+	virtual Fixed	CharToPixel(const TXLineRunDisplayInfo&, long)	{ return 0; }
+	virtual void	Draw(const TXLineRunDisplayInfo&, Fixed, const Rect&, int)	{ }
+	virtual Fixed	MeasureWidth(const TXLineRunDisplayInfo&)	{ return 0; }
+	virtual long	LineBreak(const UniChar*, long, long, Fixed*, Boolean, long*)	{ return 0; }
 
 	Boolean		fText;
 	long		fId;

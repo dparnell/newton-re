@@ -383,7 +383,7 @@ TUSoundChannel::Schedule(SoundBlock* block, TUSoundCallback* callback)
 		return noErr;
 	SoundNode* node = nil;
 	NewtonErr err;
-	if (fVolume == (long) 0x80000000 && (fFlags & kSoundChannelAskForVolume) != 0)
+	if (fVolume == (Long32) 0x80000000 && (fFlags & kSoundChannelAskForVolume) != 0)
 		fVolume = GetVolume();
 	ULong channel = (block->fCodec == nil) ? fChannelId : fCodecChannelId;
 	long format = block->fFormat;

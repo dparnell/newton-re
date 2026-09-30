@@ -26,6 +26,7 @@ THostScreenDriver::New()
 	fOrientation = 0;			// portrait (1 and 3 are the landscape orientations)
 	fPowered = false;
 	fPixels = nil;
+	fPixelBytes = 0;
 	fBlits = 0;
 	memset(&fLastBlit, 0, sizeof(fLastBlit));
 	return this;
@@ -38,6 +39,7 @@ THostScreenDriver::Delete()
 	if (fPixels != nil)
 		free(fPixels);
 	fPixels = nil;
+	fPixelBytes = 0;
 }
 
 
@@ -51,13 +53,29 @@ THostScreenDriver::Configure(long width, long height, long depth, long dpi)
 }
 
 
-// the gray buffer made (white) for the size
+// The gray buffer made (white) for the size.  The buffer is kept and
+// cleared where it is already the right size - which is every time after
+// the first, the size being the portrait one whichever way round the
+// screen is turned - because the host's window holds the pointer for as
+// long as it runs (host/HostWindow.h: the display comes as its size and
+// its bytes).  Freeing it here and allocating again left the window
+// reading a block that had been given back: on Windows the allocator
+// handed the same one straight back and nothing came of it, but a buffer
+// this size is mapped on its own by glibc, so there the window read an
+// unmapped page as soon as the screen was set up.
 void
 THostScreenDriver::ScreenSetup(void)
 {
+	long bytes = fWidth * fHeight;
+	if (fPixels != nil && fPixelBytes == bytes)
+	{
+		memset(fPixels, 0, (size_t) bytes);		// white
+		return;
+	}
 	if (fPixels != nil)
 		free(fPixels);
-	fPixels = (unsigned char*) calloc((size_t) (fWidth * fHeight), 1);
+	fPixels = (unsigned char*) calloc((size_t) bytes, 1);
+	fPixelBytes = fPixels != nil ? bytes : 0;
 }
 
 

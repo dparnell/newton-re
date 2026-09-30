@@ -9,6 +9,57 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-30: the host runs on Linux as well as Windows
+
+The whole reconstruction now builds and runs on Linux with the system
+compiler, and `newton` shows the booted machine in a window there as it
+does on Windows.  `ctest` passes 226 of 227; the one that does not is a
+ROM bug, not a host difference (below).  Windows was left as it was: every
+change either only applies where `long` is wider than the ARM's word, or
+is the same value spelt so that it cannot be read two ways.
+
+- The window and the sound are one implementation per host behind the two
+  headers that were in `host/win32/` and are now `host/HostWindow.h` and
+  `host/HostAudio.h`: `host/x11/HostWindow.cpp` is X11 (a Wayland session
+  reaches it through XWayland) and `host/alsa/HostAudio.cpp` is ALSA, and
+  `src/host/CMakeLists.txt` picks them.  A key still reaches
+  `HostKeyboard.cpp` as its Windows virtual key code whichever host it
+  came from, so there is one map from a key to the Newton's (ADB) code and
+  not two.  A host with neither runs headless and silent, as before.
+  Tapping Continue on the Welcome screen through the window goes through
+  the tablet to the view system and brings up "Enter your Name", and a key
+  types into it.  NOT YET: a package dropped onto the window (XDND).
+
+- What a 64-bit `long` changes, and the six places that relied on its
+  being the ARM's 32-bit word, are `docs/host-lp64.md`: the sound's
+  decibel constants, the ROM's `rand` (which is why Mahjongg dealt itself
+  a tile index of -6), `TNSDebugAPI`'s frame base (an arithmetic shift in
+  the ROM, 0x002d2688), the shape solver's coefficient rows, the sides
+  block's size and a dictionary chain's "nowhere".  `Fixed` and `Fract`
+  are now pinned to 32 bits on such a host (`sync_ddk_headers.py`), which
+  is what makes qd's `ToFixed` wrap as the ARM's does.
+
+- Three that are Linux's rather than the word's: includes spelt in the
+  wrong case; a static `std::condition_variable` destroyed with task
+  threads still parked on it, which hung every program that booted the OS
+  *after* its checks had passed (`docs/host-runtime.md`); and the window
+  reading the display's pixels through a pointer `ScreenSetup` had freed
+  and allocated again - which Windows' allocator hid by handing the same
+  block back.
+
+- `compression.LZ` fails on Linux and is meant to: a stored last block of
+  1021 to 1023 bytes comes back padded to 0x400, which is what the ROM's
+  own `DecompressBlock` does (0x000ffa60, `CMP r0,#0x400; SUBLS r3,r0,#4;
+  MOVHI r3,#0x400`), and the ROM never meets it because the store
+  compander only ever hands it whole 0x400-byte blocks.  The test reaches
+  it only on Linux because its data comes from the C library's `rand()`,
+  which is a different sequence on each host.
+
+- `tools/ntk/inspector.py` no longer skips the download half of
+  `host.NewtonNTK`: the expression that tells the script to stop listening
+  may have the link go down before its own result comes back, which it
+  did on Linux every time and on Windows never.
+
 ## 2026-09-30: the ROM-free track, step 2 - the object area as editable files
 
 - Functions as source (62cbe15): the builder hands every function to one

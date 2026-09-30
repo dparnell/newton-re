@@ -500,7 +500,7 @@ TDMAChannel::Prep(void)
 		ChannelNode* node = fNodes;
 		do
 		{
-			if (fNodes->fVolume != (long) 0x80000000)
+			if (fNodes->fVolume != (Long32) 0x80000000)
 				break;
 			CleanupNode(node);
 			SetupNode(fNodes->fNext);

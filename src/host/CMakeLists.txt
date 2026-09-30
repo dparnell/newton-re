@@ -21,17 +21,53 @@ add_test(NAME host.ScaledMapDemo COMMAND newtonscript --rom ${NEWTON_ROM_BIN} --
 set_tests_properties(host.ScaledMapDemo PROPERTIES TIMEOUT 120 PASS_REGULAR_EXPRESSION "the map is 360 by 179.*scaledmap: written")
 
 # newton: the OS booted and the NewtonScript world run over a window on the
-# host display (Windows: host/win32/HostWindow.cpp; elsewhere headless),
-# the mouse the pen and the keys the keyboard (HostKeyboard.cpp, the
-# keyboard tool's stand-in)
+# host display, the mouse the pen and the keys the keyboard
+# (HostKeyboard.cpp, the keyboard tool's stand-in)
 # (the window is a library of its own, built without the Newton include
 # paths: src/intl/Locale.h would be found for the C library's <locale.h>
-# on a case-insensitive file system, and the Windows headers do not mix
-# with the DDK's)
-# (and the loudspeaker, win32/HostAudio.cpp: waveOut, the same reasons)
-add_library(host_window STATIC win32/HostWindow.cpp win32/HostAudio.cpp)
+# on a case-insensitive file system, and the platform's headers do not mix
+# with the DDK's - it gets src/host alone, for HostWindow.h and HostAudio.h)
+# (and the loudspeaker beside it, the same reasons)
+#
+# One window and one sound implementation per host, chosen here:
+#   Windows   win32/HostWindow.cpp (the message loop), win32/HostAudio.cpp (waveOut/waveIn)
+#   Linux/BSD x11/HostWindow.cpp (X11, and Wayland through XWayland), alsa/HostAudio.cpp
+# Where there is neither, the win32 files' own #else answers the calls and
+# says there is no window and no device, so the world runs headless - which
+# is what a host the port has not reached yet gets (macOS today).
+if(WIN32)
+    set(host_window_source win32/HostWindow.cpp)
+    set(host_audio_source win32/HostAudio.cpp)
+else()
+    find_package(X11)
+    find_path(ALSA_INCLUDE_DIR alsa/asoundlib.h)
+    find_library(ALSA_LIBRARY asound)
+    if(X11_FOUND)
+        set(host_window_source x11/HostWindow.cpp)
+    else()
+        set(host_window_source win32/HostWindow.cpp)   # its #else: no window
+        message(STATUS "no X11: newton runs headless (install the X11 development headers for a window)")
+    endif()
+    if(ALSA_INCLUDE_DIR AND ALSA_LIBRARY)
+        set(host_audio_source alsa/HostAudio.cpp)
+    else()
+        set(host_audio_source win32/HostAudio.cpp)     # its #else: no device
+        message(STATUS "no ALSA: newton runs silent (install the ALSA development headers for sound)")
+    endif()
+endif()
+add_library(host_window STATIC ${host_window_source} ${host_audio_source})
+target_include_directories(host_window PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 if(WIN32)
     target_link_libraries(host_window PUBLIC user32 gdi32 shell32 winmm)
+else()
+    if(X11_FOUND)
+        target_include_directories(host_window PRIVATE ${X11_INCLUDE_DIR})
+        target_link_libraries(host_window PUBLIC ${X11_LIBRARIES})
+    endif()
+    if(ALSA_INCLUDE_DIR AND ALSA_LIBRARY)
+        target_include_directories(host_window PRIVATE ${ALSA_INCLUDE_DIR})
+        target_link_libraries(host_window PUBLIC ${ALSA_LIBRARY})
+    endif()
 endif()
 add_executable(newton newton.cpp HostKeyboard.cpp HostPackages.cpp HostHeapCheck.cpp)
 target_link_libraries(newton PRIVATE newt host_views host_window hal_host_sound hal_timers hal_host_serial)
