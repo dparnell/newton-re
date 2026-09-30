@@ -93,6 +93,11 @@ ARM code a 32-bit view:
   the host keeps in its own order, so a halfword of a string is the
   character.  (NetHopper's GIF reader keeps its LZW tables in binaries,
   written a halfword at a time and read a byte at a time.)
+- **The glue answers `EQ` and `BlockMove` too.**  `EQ(RefArg, RefArg)`
+  (ROM 0x0031c820) is `EQRef` of the two refs; `BlockMove` takes the
+  source first and is safe for overlapping blocks.  Newt's Cape's GIF
+  decoder (a BinCFunction in `nwcp20r2.pkg`'s 7 KB nativeModule) needed
+  both (aa6c590e).
 - **The code is relocated as the ROM maps it.**  A package with native code
   has a relocation chunk (the words to move, page by page, and the address
   it was linked at - 0 for the Newton C++ Tools); the ROM applies it to

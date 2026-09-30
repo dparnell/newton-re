@@ -154,6 +154,8 @@ now and then:
     directory) runs once, before the copies, where ctest runs it. An
     argument naming one of the copy's stores (a checker reading the store
     file) is pointed at the copy's.
+  - A test given `--port 0` or `--tcp-echo 0` takes a free port, so its
+    copies run at once rather than one at a time.
   - The command line, environment, pass and fail expressions and
     timeout are read from `ctest --show-only=json-v1`.
   - It prints how many copies passed, and the tail of each failed copy's

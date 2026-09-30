@@ -476,6 +476,29 @@ The order, each a verified piece with a test:
 5. IrDA (`'irda'`): `TIrSIR` upward to `TIrDATool` - two 2.1 MessagePads
    then beam over IrDA as the ROM would.  Done: `comms.IrDA`, `host.NewtonBeamIrDA`.
 
+## The web browsers
+
+NetHopper and Newt's Cape browse over the built-in NIE and the host's
+own TCP/IP (ctests `host.NewtonNetHopper`, `host.NewtonNetHopperNewtsCape`,
+`host.NewtonNewtsCape`; `tools/host/httpserve.py` is the web server).
+Newt's Cape's behaviour, kept as it is:
+
+- **It loads a page without its images unless asked.**  View > Load with
+  Images… (`getURL(url, {loadImages: true})`) scans the page's HTML in
+  "HTMLCache:NewtsCape" and opens a list "Images: N"; the user ticks
+  pictures (All) and picks Load from the action menu.  The preferences
+  have no loadImages slot by default.
+- **A screen-wide page sits at x = -3.**  Copperfield's
+  `BuildDisplayParams` computes dpCu.left = (appAreaWidth - page width -
+  6) div 2 = (320 - 320 - 6) div 2, so the first three columns are off
+  the screen, as on a MessagePad.
+- **Return on the location line breaks Load with Images.**  `currentURL`
+  trims the line's own string in place and answers that same string; the
+  ROM's `RealDoCommand` then inserts the return into it (a field with no
+  default button, viewJustify 48), so the page is cached under a URL
+  ending in a return and the later lookup of the trimmed URL misses.
+  `demo/newtscape.ns` uses File > Open Location instead.
+
 ## Status
 
 | piece | state |

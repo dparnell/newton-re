@@ -9,6 +9,21 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-30: Newt's Cape browses, with images
+
+ctest `host.NewtonNewtsCape` (aa6c590e, c9667bc7): Newt's Cape 2.0 over
+the built-in NIE opens a page, checks its heading, text, link and the
+picture's ALT text, then runs View > Load with Images…, ticks All, picks
+Load and checks the GIF drawn from the image cache.  The GIF had shown
+only as ALT text because Newt's Cape loads images only when asked, and,
+once asked, its native GIF decoder stopped on two glue calls armcpu did
+not answer (`EQ`, ROM 0x0031c820, and `BlockMove`); with both answered
+it decodes in 157k instructions.  Two of Newt's Cape's own quirks are
+kept and written down in `docs/comms/README.md` ("The web browsers").
+`stress.py` counts `--port 0`/`--tcp-echo 0` as free ports.  Seen but not
+chased: `common.ns`'s walkSetup now and then loses the tap past Welcome
+("setup name page: waited in vain").
+
 ## 2026-09-30: the user-reachable NOT YET sweep finished
 
 Eleven items done: clicks and sounds, keyboard editing, selections,
