@@ -175,6 +175,20 @@ is the same value spelt so that it cannot be read two ways.
   count wraps.  `HostOptionLayouts`' '*' copies an option's trailing
   bytes as they are ('rout' numbers, 'mpro' profiles).
 
+## 2026-09-30: a fax sent from the Newton
+
+- `TFaxToolInterface`, `TFaxDriver`/`TFaxDriverData` and
+  `InitPrintDrivers` (9c0247a9); `TPrintView` (class 94) and the print
+  job's C side, `TNotebook::InitToolbox` calling `InitPrintDrivers`
+  (53d281b2); `docs/print/README.md` (20c5e858).
+- A note sent with Send('fax) dials `fakemodem.py --fax-answer`, trains,
+  sends the ROM's cover page and the note (1728 x 2148, fine
+  resolution) each answered MCF, and hangs up; the cover page has its
+  header, "Page 1 of 2", "From", the Newton logo; page 2 reads "hello
+  from the Newton's fax".  One imaging bug left: part of the cover
+  page's big title and the rule under it are missing, erased by
+  something outside the scaling bottlenecks.
+
 ## 2026-09-30: the caret's "nowhere"
 
 - The "arrow" over the In/Out Box clock's first digit was stale caret
