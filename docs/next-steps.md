@@ -264,7 +264,8 @@ worked through.  What could come next (not ranked; the owner chooses):
   tablet driver's `ShutDown`/`WakeUp`.
 - **Printing to the host**: done - "Host printer (PNG files)" in the
   Print slip, pages to `newton --print-dir` (`host.NewtonHostPrinter`).
-- **A user's first hour** passes as a ctest (`host.NewtonWalkthrough`).
+- **A user's first hour and first day** pass as ctests
+  (`host.NewtonWalkthrough`, `host.NewtonWalkthrough2`).
   (Beam from the Action button with nobody there now says "No
   response." as a MessagePad alone does; Print Note works.)  The ROM's
   year-2010 overflow is fixed (DEVIATION, the owner's decision;

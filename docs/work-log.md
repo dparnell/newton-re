@@ -237,6 +237,19 @@ is the same value spelt so that it cannot be read two ways.
   notBic loops never advance the mask pointer; `ScaleStdRRect` scales the
   corner oval crosswise on a fax.
 
+## 2026-09-30: the rest of a first day
+
+- `src/host/demo/walkthrough2.ns` (6af90e31; ctests
+  `host.NewtonWalkthrough2` and `.restart`): every Prefs panel with three
+  settings changed, Bold, Undo after a scrub, the on-screen keyboard, the
+  home city set to Seattle, Formulas, the minute timer ringing, the
+  Dock's picker, the help book, a note duplicated and filed on a memory
+  card - and a restart that finds it all.  Found and fixed on the way:
+  the Sound panel's empty output picker (24c84fb2) and alarms that never
+  rang (47a76c4c, then the year-2010 fix).  The walkthroughs share
+  `demo/walkhelpers.ns`; the year-2010 demo is ctest
+  `host.NewtonYear2010` (and `.romBug`) (11e253b7).
+
 ## 2026-09-30: a bigger internal flash, in a sparse file
 
 - What the ROM allows (`docs/stores/README.md`, "Bigger flash"): chips
