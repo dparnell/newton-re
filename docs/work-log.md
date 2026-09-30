@@ -237,6 +237,22 @@ is the same value spelt so that it cannot be read two ways.
   notBic loops never advance the mask pointer; `ScaleStdRRect` scales the
   corner oval crosswise on a fax.
 
+## 2026-09-30: printing to the host
+
+- `THostPrinterDriver` (0d2d4de9; `print/host/HostPrinter.h`) behind
+  `TDotPrinterDriver`: each page a 300-dpi one-bit PNG of the whole sheet
+  (letter 2550x3300, A4 2480x3508) in `newton --print-dir` (default the
+  working directory), written with deflate's stored blocks so it needs
+  only the C library; bands of 200 dots, halved to 25 when memory is
+  short.  `HostInstallPrinter` adds "Host printer (PNG files)" to
+  `AvailablePrinters`, which the Print slip's Choose Other Printer lists.
+- `GetNames` and `ExtractNameFromNetAddress` (1f99b702,
+  `comms/AppleTalkNatives.cpp`): the Print slip's Printer picker failed
+  without them.
+- ctest `host.NewtonHostPrinter` (`src/host/demo/print.ns`): a note and a
+  Names card printed from their Action buttons by taps alone;
+  `tools/imaging/pagecheck.py` checks the pages.
+
 ## 2026-09-30: a text shape's baseline
 
 - The In Box item header's two lines lay over each other: the ROM's

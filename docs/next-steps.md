@@ -230,9 +230,8 @@ worked through.  What could come next (not ranked; the owner chooses):
   dials and answers through `tools/modem/fakemodem.py`
   (`host.NewtonModemDial`, `host.NewtonModemAnswer`); and the comm
   trace frame's natives and translate (`comms/CommTrace.cpp`).  Left in
-  comms: a host printer driver behind `TDotPrinterDriver` writing each
-  page to a PNG (being done), then Class 2 fax (a fax is sent end to end
-  - `host.NewtonFaxSend` - and received,
+  comms: Class 2 fax (being done; a fax is sent end to end -
+  `host.NewtonFaxSend` - and received,
   shown and turned - `host.NewtonFaxReceive`),
   AppleTalk/NBP
   and ADSP (with the NTK's ADSP connection), the Hammer translators,
@@ -251,6 +250,12 @@ worked through.  What could come next (not ranked; the owner chooses):
   `SuckPackageFromEndPoint` and fax reception wait on) comes after.
 - **Third-party apps**: all five fixture applications open from Extras
   and respond (ctest `host.NewtonThirdPartyApps`).
+- **Printing to the host**: done - "Host printer (PNG files)" in the
+  Print slip, pages to `newton --print-dir` (`host.NewtonHostPrinter`).
+  Seen on the way: a card made with `cardfile:AddCard` shows no name (on
+  screen or printed; its name view's shapeArray is empty -
+  `AddAllInfoItem`); a note made with `paperroll:MakeTextNote(text,
+  true)` is not drawn on the Notepad's screen, though it prints.
 - **Now reachable over the large binaries**: the text engine's
   `TXNewtStreamFactory` (a compressed large binary for a stream above
   4K).
