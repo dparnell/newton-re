@@ -16,65 +16,43 @@
 // Dictionary review) were found.  The applications that fail to open
 // here for want of a subsystem are recorded in docs/next-steps.md.
 
-tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
-typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
 
 name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
-
-page := 0;
-nextPage := func()
-  begin
-    page := page + 1;
-    if page < 10 then
-      begin
-        call tapAt with (293, 468);			// Continue
-        AddDelayedCall(nextPage, nil, 1800);
-      end
-    else
-      call tapAt with (297, 468);			// Done, on "Congratulations"
-  end;
-
-AddDelayedCall(func() begin
-    call tapAt with (293, 468);				// past "Welcome"
-    AddDelayedCall(func() begin
-        call tapAt with (200, 150);			// the caret into the First line
-        foreach c in name do call typeKey with (c);
-        AddDelayedCall(nextPage, nil, 1500);
-      end, nil, 2000);
-  end, nil, 3000);
 
 // the applications a user reaches from the Extras drawer and the buttons
 apps := ['calendar, 'cardfile, 'ExtrasDrawer, 'calculator, 'worldClock, 'inbox, 'iobox,
          'Formulas, 'assistant, 'stylePalette, 'findDrawer, 'preferenceRoll, 'Connection,
          'callapp, 'SoundRecorder, 'alarm, 'handwritingpractice, 'reviewDict];
-failures := [];
-index := 0;
-next := func()
+oaFailures := [];
+oaIndex := 0;
+oaNext := func()
   begin
-    if index > 0 then
+    if oaIndex > 0 then
       begin
-        local previous := apps[index - 1];
+        local previous := apps[oaIndex - 1];
         try
           GetRoot().(previous):Close()
         onexception |evt.ex| do
-          AddArraySlot(failures, "close " & previous & ": " & CurrentException().name);
+          AddArraySlot(oaFailures, "close " & previous & ": " & CurrentException().name);
       end;
-    if index < Length(apps) then
+    if oaIndex < Length(apps) then
       begin
-        local app := apps[index];
+        local app := apps[oaIndex];
         Print("open-apps: " & app);
         try
           GetRoot().(app):Open()
         onexception |evt.ex| do
-          AddArraySlot(failures, "open " & app & ": " & CurrentException().name);
-        index := index + 1;
-        AddDelayedCall(next, nil, 2500);
+          AddArraySlot(oaFailures, "open " & app & ": " & CurrentException().name);
+        oaIndex := oaIndex + 1;
+        AddDelayedCall(oaNext, nil, 2500);
       end
     else
       begin
-        foreach failure in failures do Print("open-apps: FAILED " & failure);
-        Print("open-apps: done, " & NumberStr(Length(failures)) & " failed");
+        foreach failure in oaFailures do Print("open-apps: FAILED " & failure);
+        Print("open-apps: done, " & NumberStr(Length(oaFailures)) & " failed");
+        HostQuit();
       end;
   end;
-AddDelayedCall(next, nil, 30000);
+call walkSetup with (name, oaNext);
 Print("open-apps: the script is loaded");

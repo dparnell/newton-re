@@ -523,16 +523,16 @@ set_tests_properties(host.NewtonAssist PROPERTIES TIMEOUT 180
                      FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
 
 # every built-in application opened and closed (a smoke test) (demo/open-apps.ns)
-add_test(NAME host.NewtonOpenApps COMMAND newton --display 320x480 --headless 400
+add_test(NAME host.NewtonOpenApps COMMAND newton --display 320x480 --headless 300
          --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/open-apps.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
-set_tests_properties(host.NewtonOpenApps PROPERTIES TIMEOUT 420
+set_tests_properties(host.NewtonOpenApps PROPERTIES TIMEOUT 360
                      PASS_REGULAR_EXPRESSION "open-apps: done, 0 failed"
                      FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
 
 # each of the Assistant's tasks carried out (a smoke test) (demo/assist-tasks.ns)
-add_test(NAME host.NewtonAssistTasks COMMAND newton --display 320x480 --headless 460
+add_test(NAME host.NewtonAssistTasks COMMAND newton --display 320x480 --headless 300
          --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/assist-tasks.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
-set_tests_properties(host.NewtonAssistTasks PROPERTIES TIMEOUT 480
+set_tests_properties(host.NewtonAssistTasks PROPERTIES TIMEOUT 360
                      PASS_REGULAR_EXPRESSION "assist-tasks: done, 0 failed"
                      FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
 

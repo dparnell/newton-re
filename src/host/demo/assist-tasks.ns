@@ -12,32 +12,9 @@
 // A picture of each slip is written to build/assist-N.pgm, and of what
 // tapping its button opened to build/assist-N-done.pgm.
 
-tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
-typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
 
 name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
-
-page := 0;
-nextPage := func()
-  begin
-    page := page + 1;
-    if page < 10 then
-      begin
-        call tapAt with (293, 468);			// Continue
-        AddDelayedCall(nextPage, nil, 1800);
-      end
-    else
-      call tapAt with (297, 468);			// Done, on "Congratulations"
-  end;
-
-AddDelayedCall(func() begin
-    call tapAt with (293, 468);				// past "Welcome"
-    AddDelayedCall(func() begin
-        call tapAt with (200, 150);			// the caret into the First line
-        foreach c in name do call typeKey with (c);
-        AddDelayedCall(nextPage, nil, 1500);
-      end, nil, 2000);
-  end, nil, 3000);
 
 // the buttons (views with a buttonClickScript and a text) all the way
 // down a view
@@ -53,32 +30,33 @@ buttonsIn := func(view, into)
 
 sentences := ["find Daniel", "remind me to call Daniel", "schedule lunch with Daniel tomorrow",
               "time in Paris", "call Daniel", "fax Daniel"];
-failures := [];
-index := 0;
-next := func()
+atFailures := [];
+atIndex := 0;
+atNext := func()
   begin
-    if index >= Length(sentences) then
+    if atIndex >= Length(sentences) then
       begin
-        foreach failure in failures do Print("assist-tasks: FAILED " & failure);
-        Print("assist-tasks: done, " & NumberStr(Length(failures)) & " failed");
+        foreach failure in atFailures do Print("assist-tasks: FAILED " & failure);
+        Print("assist-tasks: done, " & NumberStr(Length(atFailures)) & " failed");
+        HostQuit();
         return;
       end;
-    local sentence := sentences[index];
-    index := index + 1;
+    local sentence := sentences[atIndex];
+    atIndex := atIndex + 1;
     Print("assist-tasks: " & sentence);
     local task;
     try
       task := ParseUtter(sentence)
     onexception |evt.ex| do
-      AddArraySlot(failures, "parse " & sentence & ": " & CurrentException().name);
+      AddArraySlot(atFailures, "parse " & sentence & ": " & CurrentException().name);
     if not task then
       begin
-        AddArraySlot(failures, "no task for " & sentence);
-        AddDelayedCall(next, nil, 1500);
+        AddArraySlot(atFailures, "no task for " & sentence);
+        AddDelayedCall(atNext, nil, 1500);
         return;
       end;
     AddDelayedCall(func() begin
-        ScreenSnapshot("build/assist-" & NumberStr(index) & ".pgm");
+        ScreenSnapshot("build/assist-" & NumberStr(atIndex) & ".pgm");
         local kids := GetRoot():ChildViewFrames();
         local slip := kids[Length(kids) - 1];
         local buttons := call buttonsIn with (slip, []);
@@ -95,19 +73,19 @@ next := func()
             try
               call tapAt with ((box.left + box.right) div 2, (box.top + box.bottom) div 2)
             onexception |evt.ex| do
-              AddArraySlot(failures, "tap " & action.text & ": " & CurrentException().name);
+              AddArraySlot(atFailures, "tap " & action.text & ": " & CurrentException().name);
           end;
         AddDelayedCall(func() begin
-            ScreenSnapshot("build/assist-" & NumberStr(index) & "-done.pgm");
-            // whatever the task opened is closed again before the next
+            ScreenSnapshot("build/assist-" & NumberStr(atIndex) & "-done.pgm");
+            // whatever the task opened is closed again before the atNext
             local k := GetRoot():ChildViewFrames();
             local front := k[Length(k) - 1];
             try
               front:Close()
             onexception |evt.ex| do nil;
-            AddDelayedCall(next, nil, 1500);
+            AddDelayedCall(atNext, nil, 1500);
           end, nil, 2500);
       end, nil, 2500);
   end;
-AddDelayedCall(next, nil, 30000);
+call walkSetup with (name, atNext);
 Print("assist-tasks: the script is loaded");
