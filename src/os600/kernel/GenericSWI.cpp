@@ -26,6 +26,7 @@
 #include "CompMath.h"
 #include "hal/Atomic.h"
 #include "hal/Timer.h"
+#include "hal/Power.h"
 
 
 // GenericSWI 3: the global time, or a task's accumulated run time - for the
@@ -57,6 +58,16 @@ GetTaskTimeSelector(ULong taskId)
 	gCurrentTask->fRegister[1] = time.lo;
 	gCurrentTask->fRegister[2] = time.hi;
 	return err;
+}
+
+
+// ROM 0x001925c4 PowerOffSystemKernelGlue__Fv
+// GenericSWI 0x44: the platform driver turns the machine off; it returns
+// when something has turned it on again.
+static void
+PowerOffSystemKernelGlue(void)
+{
+	PlatformPowerOffSystem();
 }
 
 
@@ -226,11 +237,13 @@ GenericSWIHandler(ULong selector, ULong p1, ULong p2, ULong p3, ULong p4)
 	case kGeneric_ReadGlobalsWord:
 	case kGeneric_LastRExConfigEntry:
 	case kGeneric_RegisterPackageWithDebugger:
-	case kGeneric_PowerOffSystem:
 	case kGeneric_PauseSystem:
 		// NOT YET RECONSTRUCTED: platform and debugger services - 0x000d9adc
-		// cases 0x2b, 0x2d, 0x2f, 0x30, 0x32-0x38, 0x3b, 0x40-0x42, 0x44, 0x45
+		// cases 0x2b, 0x2d, 0x2f, 0x30, 0x32-0x38, 0x3b, 0x40-0x42, 0x45
 		return kError_Call_Not_Implemented;
+	case kGeneric_PowerOffSystem:
+		PowerOffSystemKernelGlue();
+		return noErr;
 	default:
 		return kGenericSWI_UnknownSelector;
 	}

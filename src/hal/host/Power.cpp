@@ -1,85 +1,120 @@
 /*
 	File:		hal/host/Power.cpp
 
-	Contains:	The host's power plant (hal/Power.h).
+	Contains:	The host's platform power (hal/Power.h, hal/host/HostPower.h):
+				the machine asleep in PlatformPowerOffSystem until the power
+				switch, a tap or a key, a real-time clock alarm or a test
+				wakes it, and what woke it as the power event word.
 
-				DEVIATION: a host has no batteries and no power manager to
-				ask.  Rather than answer "cannot say" to everything - which
-				would leave every slot of the script's battery frame nil and
-				any arithmetic over it failing - it reports a plain machine
-				running on fresh alkaline cells: a full charge, nothing being
-				drawn, no mains, at room temperature.
+				DEVIATION (hardware): a MessagePad is turned off, and turned
+				on again by the Voyager's wake-up logic; the host waits.
 */
 
 #include "hal/Power.h"
-#include "OSErrors.h"
+#include "hal/host/HostPower.h"
+#include "hal/host/Host.h"
+#include "hal/RealTimeClock.h"
 
-static const long kFixedOne = 0x00010000;
+#include <atomic>
+#include <chrono>
+#include <thread>
 
-// What the machine has been told it holds (SetPowerPlantBatteryType); a
-// MessagePad keeps this in the power manager, and the battery picker in
-// the Prefs slip is what sets it.
-static long gHostBatteryType = kBatteryAlkaline;
+static std::atomic<ULong>	gHostPowerEvents(0);		// what has woken it (read and cleared by PlatformPowerEvent)
+static std::atomic<bool>	gHostAsleep(false);
+static std::atomic<ULong>	gHostSleeps(0);
+static std::atomic<bool>	gHostPowerWindow(false);
+static std::atomic<ULong>	gHostWakeAfter(0);			// a test's wake, in milliseconds (0: none)
 
-extern "C" NewtonErr
-GetPowerPlantStatus(long /*which*/, PowerPlantStatus* status)
+
+void
+HostPowerWake(ULong events)
 {
-	if (status == nil)
-		return kError_Bad_Parameters;
-	status->fBatteryType = gHostBatteryType;
-	status->fBatteryVoltage = 6 * kFixedOne;		// four cells, fresh
-	status->fBatteryCapacity = 100;
-	status->fBatteryLow = 0;
-	status->fBatteryDead = 0;
-	status->fBatteryCurrent = 0;
-	status->fACPower = 0;
-	status->fACVoltage = 0;
-	status->fChargeState = kChargeDischarging;
-	status->fChargeRate = 0;
-	status->fChargeCurrent = 0;
-	status->fAmbientTemp = 20 * kFixedOne;
-	status->fBatteryTemp = 20 * kFixedOne;
-	return noErr;
+	if (gHostAsleep.load())
+		gHostPowerEvents.fetch_or(events);
 }
 
 
-// One set of cells, as a MessagePad has.
+Boolean
+HostPowerAsleep(void)
+{
+	return gHostAsleep.load();
+}
+
+
+ULong
+HostPowerSleeps(void)
+{
+	return gHostSleeps.load();
+}
+
+
+void
+HostPowerWindowOpened(void)
+{
+	gHostPowerWindow.store(true);
+}
+
+
+void
+HostPowerWakeAfter(ULong milliseconds)
+{
+	gHostWakeAfter.store(milliseconds != 0 ? milliseconds : 1);
+}
+
+
+// The machine off until something wakes it.  With no window and no test
+// wake nothing could, so it does not sleep: the host's machine comes
+// straight back as if the switch had been pressed at once (the word must
+// say something woke it, or CyclePower would put it back to sleep).
+// An alarm of the real-time clock falling due wakes it with the alarm bit,
+// and CyclePower asks the clock whether that alarm wants it awake.
+extern "C" void
+PlatformPowerOffSystem(void)
+{
+	ULong wakeAfter = gHostWakeAfter.exchange(0);
+	if (!gHostPowerWindow.load() && wakeAfter == 0)
+	{
+		gHostPowerEvents.fetch_or(kHostPowerEventSwitch);
+		return;
+	}
+	gHostSleeps.fetch_add(1);
+	gHostAsleep.store(true);
+	auto start = std::chrono::steady_clock::now();
+	for (;;)
+	{
+		if (gHostPowerEvents.load() != 0)
+			break;
+		if (gHostRTCAlarmArmed && GetRealTimeClock() >= gHostRTCAlarmSeconds)
+		{
+			gHostPowerEvents.fetch_or(kPowerEventAlarm);
+			break;
+		}
+		if (wakeAfter != 0
+		 && std::chrono::steady_clock::now() - start >= std::chrono::milliseconds(wakeAfter))
+		{
+			gHostPowerEvents.fetch_or(kHostPowerEventSwitch);
+			break;
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	}
+	gHostAsleep.store(false);
+}
+
+
+// Up again straight away.
 extern "C" long
-GetPowerPlantCount(void)
+PlatformPowerOnSystem(void)
 {
-	return 1;
-}
-
-
-// The cells the machine is told it holds.  A real power manager takes
-// this to pick the charge curve it measures the battery against; the
-// host has nothing to measure, so it only remembers what it was told and
-// answers that again.
-extern "C" NewtonErr
-SetPowerPlantBatteryType(long /*which*/, long type)
-{
-	gHostBatteryType = type;
-	return noErr;
-}
-
-// ROM 0x00192764 CyclePower__Fv
-// On a MessagePad this sends the power-off system event, shuts the
-// battery, screen and tablet down, waits for any flash erase to finish,
-// and then, with the scheduler held and the stack locked, turns the
-// system off and on again in a loop until something real wakes it - the
-// power switch, the card lock, the serial port's general-purpose input,
-// the interconnect, or the real-time clock's alarm.  What woke it is the
-// word it answers.
-//
-// DEVIATION: a host cannot power itself down, so the machine simply does
-// not sleep and comes straight back with nothing to report.  The caller
-// treats that as an ordinary wakeup, which is what the reconstruction
-// needs: FPowerOff notes the time it woke, and that is what puts the
-// automatic power-off off until the machine has been idle again.
-extern "C" ULong
-CyclePower(void)
-{
+	gHostPoweredOff = false;
 	return 0;
+}
+
+
+// What woke it, taken.
+extern "C" ULong
+PlatformPowerEvent(void)
+{
+	return gHostPowerEvents.exchange(0);
 }
 
 
@@ -88,13 +123,13 @@ CyclePower(void)
 // answer whatever the platform driver was told to call them (the fields
 // RegisterPowerSwitchInterrupt and its like fill in), and with nothing
 // there they fall through to the tests below them; so does a word with
-// neither bit in it.
+// neither bit in it - the power switch's among them.
 //
 // NOT YET RECONSTRUCTED: the platform driver (TVoyagerPlatform) and the
 // two registered reasons, so the fields are always empty here and the
 // three plain tests are what is left.
 extern "C" long
-TranslatePowerEvent(ULong event)
+PlatformTranslatePowerEvent(ULong event)
 {
 	if ((event & kPowerEventSerialGPI) != 0)
 		return kWokeSerialGPI;

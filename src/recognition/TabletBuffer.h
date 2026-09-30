@@ -67,6 +67,11 @@ long	StopBypassTablet(void);							// ROM 0x0025076c StopBypassTablet__Fv - -1 w
 // protocol - NOT YET); the host's tablet (hal/host/HostTablet.h) answers
 // through this, and with none the tablet cannot be bypassed
 extern long	(*gTabletDriverBypass)(Boolean start);
+// The tablet driver told the machine is going to sleep and has woken
+// (CyclePower).  NOT YET RECONSTRUCTED: the tablet driver (its slots
+// +0x18 ShutDown and +0x14 WakeUp); the host's pen needs neither.
+void	TabShutDown(void);								// ROM 0x002507c8 TabShutDown
+void	TabWakeUp(void);								// ROM 0x0025074c TabWakeUp
 void	TBCFlushTabletBuffer(void);						// ROM 0x00250630 TBCFlushTabletBuffer__Fv - emptied
 void	TBCFlushInkerBuffer(void);						// ROM 0x00250648 TBCFlushInkerBuffer__Fv - the reader catches up
 void	TBCSetTabletPolling(Boolean polling);			// ROM 0x00250270 TBCSetTabletPolling__FUc

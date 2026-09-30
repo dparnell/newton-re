@@ -25,7 +25,9 @@ THostScreenDriver::New()
 	fBacklight = 0;
 	fOrientation = 0;			// portrait (1 and 3 are the landscape orientations)
 	fPowered = false;
+	fBlanked = false;
 	fPixels = nil;
+	fPanel = nil;
 	fPixelBytes = 0;
 	fBlits = 0;
 	memset(&fLastBlit, 0, sizeof(fLastBlit));
@@ -38,7 +40,10 @@ THostScreenDriver::Delete()
 {
 	if (fPixels != nil)
 		free(fPixels);
+	if (fPanel != nil)
+		free(fPanel);
 	fPixels = nil;
+	fPanel = nil;
 	fPixelBytes = 0;
 }
 
@@ -70,11 +75,21 @@ THostScreenDriver::ScreenSetup(void)
 	if (fPixels != nil && fPixelBytes == bytes)
 	{
 		memset(fPixels, 0, (size_t) bytes);		// white
+		memset(fPanel, 0, (size_t) bytes);
 		return;
 	}
 	if (fPixels != nil)
 		free(fPixels);
+	if (fPanel != nil)
+		free(fPanel);
 	fPixels = (unsigned char*) calloc((size_t) bytes, 1);
+	fPanel = (unsigned char*) calloc((size_t) bytes, 1);
+	if (fPixels == nil || fPanel == nil)
+	{
+		free(fPixels);
+		free(fPanel);
+		fPixels = fPanel = nil;
+	}
 	fPixelBytes = fPixels != nil ? bytes : 0;
 }
 
@@ -92,8 +107,55 @@ THostScreenDriver::GetScreenInfo(ScreenInfo* info)
 
 
 void	THostScreenDriver::PowerInit(void)			{ }
-void	THostScreenDriver::PowerOn(void)			{ fPowered = true; }
-void	THostScreenDriver::PowerOff(void)			{ fPowered = false; }
+void	THostScreenDriver::PowerOn(void)			{ fPowered = true; SetShown(false, fBacklight); }
+void	THostScreenDriver::PowerOff(void)			{ fPowered = false; SetShown(true, fBacklight); }
+
+
+// The panel's grays in a rectangle of the display shown as the power and
+// the backlight have them: nothing when the panel is off, the ink a
+// quarter lighter when it is lit.
+void
+THostScreenDriver::Render(long left, long top, long right, long bottom)
+{
+	long width = Width();
+	long height = Height();
+	if (left < 0) left = 0;
+	if (top < 0) top = 0;
+	if (right > width) right = width;
+	if (bottom > height) bottom = height;
+	for (long y = top; y < bottom; y++)
+	{
+		const unsigned char* in = fPanel + y * width;
+		unsigned char* out = fPixels + y * width;
+		for (long x = left; x < right; x++)
+			out[x] = fBlanked ? 0 : (unsigned char) (in[x] - in[x] / 4);
+	}
+}
+
+
+// The power or the light changed: while the display is shown as drawn the
+// drawing goes straight to it and the panel's copy is not kept up, so it
+// is taken from the display when that stops, and given back when it
+// starts again.
+void
+THostScreenDriver::SetShown(Boolean blanked, long backlight)
+{
+	if (fPixels == nil)
+	{
+		fBlanked = blanked;
+		fBacklight = backlight;
+		return;
+	}
+	Boolean was = Rendered();
+	if (!was && (blanked || backlight != 0))
+		memcpy(fPanel, fPixels, (size_t) fPixelBytes);
+	fBlanked = blanked;
+	fBacklight = backlight;
+	if (Rendered())
+		Render(0, 0, Width(), Height());
+	else if (was)
+		memcpy(fPixels, fPanel, (size_t) fPixelBytes);
+}
 void	THostScreenDriver::AutoAdjustFeatures(void)	{ }
 void	THostScreenDriver::EnterIdleMode(void)		{ }
 void	THostScreenDriver::ExitIdleMode(void)		{ }
@@ -165,7 +227,7 @@ THostScreenDriver::Blit(PixelMap* map, Rect* src, Rect* dst, long mode)
 		if (dy < 0 || dy >= height || y < map->bounds.top || y >= map->bounds.bottom)
 			continue;
 		const unsigned char* row = bits + (y - map->bounds.top) * map->rowBytes;
-		unsigned char* out = fPixels + dy * width + dst->left + (xFrom - src->left);
+		unsigned char* out = (Rendered() ? fPanel : fPixels) + dy * width + dst->left + (xFrom - src->left);
 		long bit = (xFrom - map->bounds.left) * depth;
 		long x = xFrom;
 		if (wholeBytes)
@@ -193,6 +255,8 @@ THostScreenDriver::Blit(PixelMap* map, Rect* src, Rect* dst, long mode)
 			*out = gray[value];
 		}
 	}
+	if (Rendered())
+		Render(dst->left + (xFrom - src->left), dst->top, dst->left + (xTo - src->left), dst->top + (src->bottom - src->top));
 }
 
 
@@ -223,7 +287,7 @@ THostScreenDriver::SetFeature(long feature, long value)
 	switch (feature)
 	{
 	case kScreenFeatureContrast:	fContrast = value;		break;
-	case kScreenFeatureBacklight:	fBacklight = value;		break;
+	case kScreenFeatureBacklight:	SetShown(fBlanked, value);	break;
 	case kScreenFeatureOrientation:
 		fOrientation = value;
 		fLandscape = value == 1 || value == 3;

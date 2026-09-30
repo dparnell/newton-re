@@ -13,6 +13,8 @@
 #include "NameServer.h"
 #include "os600/kernel/host/TaskRuntime.h"
 #include "HostTablet.h"
+#include "hal/host/HostPower.h"
+#include "power/host/HostPowerSwitch.h"
 #include "HostPackages.h"
 #include <atomic>
 
@@ -115,10 +117,20 @@ HostKeyboardToolTask(void)
 extern "C" {
 
 // (the pen is the tablet's own: while the journal plays, the tablet is
-//  bypassed and it is ignored)
+//  bypassed and it is ignored; while the machine sleeps a tap wakes it -
+//  the host's power switch within the pen's reach, hal/host/HostPower.h -
+//  and that stroke goes no further)
+static std::atomic<bool>	gHostPenWoke(false);
+
 void
 HostWindowPenDown(long x, long y)
 {
+	if (HostPowerAsleep())
+	{
+		gHostPenWoke.store(true);
+		HostPowerWake(kHostPowerEventSwitch);
+		return;
+	}
 	if (HostTabletBypassed())
 		return;
 	HostTabletPenState(true);
@@ -128,7 +140,7 @@ HostWindowPenDown(long x, long y)
 void
 HostWindowPenMove(long x, long y)
 {
-	if (HostTabletBypassed())
+	if (HostTabletBypassed() || gHostPenWoke.load())
 		return;
 	HostTabletPenMove(x, y, 3);
 }
@@ -136,15 +148,33 @@ HostWindowPenMove(long x, long y)
 void
 HostWindowPenUp(void)
 {
+	if (gHostPenWoke.exchange(false))
+		return;
 	if (HostTabletBypassed())
 		return;
 	HostTabletPenState(false);
 	HostTabletPenUp(0);
 }
 
+// F12 is the power switch and F11 the backlight button (the Windows
+// virtual key codes, whichever host the window is on); while the machine
+// sleeps any other key wakes it too, and goes no further
 void
 HostWindowKey(long virtualKey, int down)
 {
+	const long kVirtualKeyF11 = 0x7A, kVirtualKeyF12 = 0x7B;
+	if (virtualKey == kVirtualKeyF12 || virtualKey == kVirtualKeyF11)
+	{
+		if (down)
+			HostPowerSwitchPress(virtualKey == kVirtualKeyF12 ? 'powr' : 'bklt');
+		return;
+	}
+	if (HostPowerAsleep())
+	{
+		if (down)
+			HostPowerWake(kHostPowerEventSwitch);
+		return;
+	}
 	long code = HostKeyCodeForVirtualKey(virtualKey);
 	if (code >= 0)
 		HostKeyboardPush(code, down != 0);
@@ -164,6 +194,7 @@ void
 HostWindowThreadStarted(void)
 {
 	HostAlienThread();
+	HostPowerWindowOpened();			// (a tap or a key can wake the machine now)
 }
 
 }

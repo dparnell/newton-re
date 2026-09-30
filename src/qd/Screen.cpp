@@ -117,6 +117,34 @@ BlockLCDActivity(Boolean block)
 }
 
 
+// ROM 0x001cc97c LCDPowerInit__FUc
+// The screen driver's power set up again after a sleep (the argument, which
+// says whether the machine was asleep, makes no difference).
+void
+LCDPowerInit(UChar /*wasAsleep*/)
+{
+	gTheScreen->PowerInit();
+}
+
+
+// ROM 0x001ccf54 LCDPowerOn__FUc
+// The panel powered.
+void
+LCDPowerOn(UChar /*wasAsleep*/)
+{
+	gTheScreen->PowerOn();
+}
+
+
+// ROM 0x001cd288 LCDPowerOff__FUc
+// The panel powered off.
+void
+LCDPowerOff(UChar /*toSleep*/)
+{
+	gTheScreen->PowerOff();
+}
+
+
 // ROM 0x001cc894 InitScreen__Fv
 // The screen driver (the ROM: NewByName("TScreenDriver",
 // "TMainDisplayDriver") - the host is given one) set up and powered,

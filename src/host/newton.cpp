@@ -114,6 +114,7 @@
 #include "FaxTool.h"
 #include "HostLink.h"
 #include "print/host/HostPrinter.h"
+#include "power/host/HostPowerSwitch.h"
 #include "HostObjectsFile.h"
 #include "os600/kernel/host/TaskRuntime.h"
 #include "REPTranslators.h"
@@ -315,6 +316,7 @@ NewtonPreMain(void)
 	HostInstallPackageGlobal();
 	HostLinkStart();
 	HostInstallPrinter();
+	HostInstallPowerGlobals();			// (power/host/HostPowerSwitch.h: HostPowerSwitch(), HostWakeAfter(ms), ...)
 }
 
 

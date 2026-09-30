@@ -12,9 +12,8 @@
 				machine and this supplies the script's view of it.
 
 	The batteries a script sees are FBatteryStatus 0x00203db8 over
-	GetBatteryStatus 0x002037bc, whose reading comes from hal/Power.h
-	(DEVIATION: the power manager, which the ROM asks with an RPC, is
-	NOT YET RECONSTRUCTED).
+	GetBatteryStatus 0x002037bc, an RPC to the power manager
+	(power/PowerManager.h), which reads them through the battery driver.
 
 	FPowerOff 0x00201b00 - the machine asleep and awake again - belongs
 	here too, and is in newt/NewtWorld.cpp instead, because it notes the

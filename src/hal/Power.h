@@ -1,15 +1,25 @@
 /*
 	File:		hal/Power.h
 
-	Contains:	The power plant: what the machine can say about its
-				batteries and the power coming in.  On a Newton this is the
-				power manager's business and the rest of the system asks it
-				with an RPC ('newt/'pg&e); the structure it sends back is
-				`PowerPlantStatus`, whose analogue readings are Fixed and
-				whose unknown fields are -1.  A port supplies the readings.
+	Contains:	The machine's power, as the hardware has it: the readings a
+				battery driver reports (`PowerPlantStatus`, whose analogue
+				readings are Fixed and whose unknown fields are -1), and the
+				platform driver's side of going to sleep - the machine
+				turned off until something wakes it, and the word that says
+				what did.
 
-	ROM:		GetBatteryStatus 0x002037bc (the RPC), FBatteryStatus
-				0x00203db8 (the frame a script sees)
+				The power manager (power/PowerManager.h) is what the rest of
+				the system asks - its 'pg&e world answers the batteries'
+				readings through the battery driver (power/BatteryDriver.h)
+				and CyclePower puts the machine to sleep over the calls
+				below.  A port supplies these; on the MP2x00 they are the
+				Voyager platform driver's (TVoyagerPlatform, reached through
+				GetPlatformDriver).
+
+	ROM:		TVoyagerPlatform::PowerOffSystem 0x0026c864, PowerOnSystem
+				0x0026c898, TranslatePowerEvent 0x0026ca40; the interrupt
+				controller's pending and enabled words (0x0F183000,
+				0x0F184800) are what CyclePower reads the event from.
 */
 
 #ifndef __HAL_POWER_H
@@ -73,27 +83,25 @@ enum
 // what a wakeup is put down to (FPowerOff answers the matching symbol)
 enum
 {
-	kWokeBecause		= 1,		// nothing in particular
+	kWokeBecause		= 1,		// nothing in particular - the power switch among it
 	kWokeSerialGPI		= 2,
 	kWokeAlarm			= 3,
-	kWokeUser			= 4,		// the power switch
+	kWokeUser			= 4,
 	kWokeCardLock		= 5,
 	kWokeInterconnect	= 7
 };
 
 extern "C" {
-// which battery (0 is the main one) -> its status; an error leaves it alone
-NewtonErr	GetPowerPlantStatus(long which, PowerPlantStatus* status);
-// how many batteries the machine has (0 when it cannot say)
-long		GetPowerPlantCount(void);
-// which battery told what kind of cells it holds (kBattery...); a
-// machine that cannot be told answers an error
-NewtonErr	SetPowerPlantBatteryType(long which, long type);
-// the machine powered down until something brings it back; ==> the
-// power event word saying what did (0 for nothing in particular)
-ULong		CyclePower(void);
-// that word as one of the kWoke... reasons
-long		TranslatePowerEvent(ULong event);
+// The platform driver's power side.  PowerOffSystem is what the kernel
+// runs for the generic system call 0x44: the machine off, returning when
+// something wakes it; PowerOnSystem brings it up again (0: it is on);
+// PowerEvent reads what woke it - the interrupts that are pending and
+// enabled - as the power event word; TranslatePowerEvent makes that word
+// one of the kWoke... reasons.
+void		PlatformPowerOffSystem(void);
+long		PlatformPowerOnSystem(void);
+ULong		PlatformPowerEvent(void);
+long		PlatformTranslatePowerEvent(ULong event);
 }
 
 #endif	/* __HAL_POWER_H */

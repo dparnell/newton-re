@@ -15,6 +15,8 @@
 #include "SystemNatives.h"
 #include "Locale.h"
 #include "hal/Power.h"
+#include "power/PowerManager.h"
+#include "power/host/HostBatteryDriver.h"
 #include "Notebook.h"
 #include "RootView.h"
 #include "Keyboard.h"
@@ -241,6 +243,11 @@ TNewtWorld::MainConstructor()
 	// DEVIATION: the alert manager likewise (TLoader::TheMain starts it
 	// before the card server, which looks for it)
 	InitAlertManager();
+	// DEVIATION: the power manager likewise (TLoader::TheMain starts it),
+	// with the host's battery driver registered first where a machine's own
+	// would be (power/host/HostBatteryDriver.h)
+	HostRegisterBatteryDriver();
+	InitPowerManager();
 	if (gNewtHostBoot != nil)
 		gNewtHostBoot();
 	else
@@ -500,14 +507,22 @@ TNewtEventHandler::AEHandlerProc(TUMsgToken* token, ULong* size, TAEvent* event)
 	case 'card':
 		HandleNewCard((TNewCardEvent*) event);
 		break;
+	case 'pwch':				// the power coming in changed (the battery driver)
+		NSCallGlobalFn(RSSYMcallpowerstatuschangefns);
+		break;
+	case 'dead':				// the adapter is not the right one
+		NSCallGlobalFn(RSSYMbadadapteralert);
+		break;
+	case 'bats':				// the batteries are not the kind the machine was told
+		NSCallGlobalFn(RSSYMbadbatteryalert);
+		break;
 	case kNewtStoreRemovedEvent:
 		StorageCardRemoved((TNewStoreEvent*) event);
 		break;
 	default:
 		// NOT YET RECONSTRUCTED:
 		// 'ic   (HandleInterConnect), 'irMC
-		// (the root's IRConnectRequest), 'dead/'bats (the alerts), 'pwch
-		// (callPowerStatusChangeFns), 'scp!
+		// (the root's IRConnectRequest), 'scp!
 		// (HandleSCPEvent), 'xnwt (HandleExternalNewtEvent)
 		break;
 	}
@@ -517,7 +532,22 @@ TNewtEventHandler::AEHandlerProc(TUMsgToken* token, ULong* size, TAEvent* event)
 			SetReply(*size, event);
 		if (token != nil && token->GetReplyId() != 0)
 			ReplyImmed();
-		// NOT YET RECONSTRUCTED: 'powr (GotoSleep after a second awake)
+		// the power switch (the power manager's 'powr): the root's GotoSleep,
+		// unless the machine is going to sleep already or woke less than a
+		// second ago (the press that woke it)
+		if (type == kNewtPowerEvent && !gGoingToSleep)
+		{
+			TTime now = GetGlobalTime();
+			Int64 awake = now.time;
+			CompSub(&gLastWakeupTime.time, &awake);
+			TTime second(1, kSeconds);
+			if (CompCompare(&awake, &second.time) > 0)
+			{
+				gGoingToSleep = true;
+				gRootView->RunScript(RSSYMgotosleep, RefVar(NILREF), true);
+				gGoingToSleep = false;
+			}
+		}
 		if (type == kNewtStoreEvent)
 			StorageCardInserted((TNewStoreEvent*) event);
 	}

@@ -2304,3 +2304,21 @@ and put back by asking the application to redraw the whole screen once
 the last alert has gone. It works because the alert holds the LCD while it
 is up (`BlockLCDActivity`), so the scribbled corner is never shown where it
 really is. `docs/alert/README.md`.
+
+## Powering off takes a Japanese office's approval process
+
+The NewtonScript functions that put the MessagePad to sleep are named for
+the stages a proposal goes through in a Japanese office. They are ROM
+built-in functions; read them with `analysis/nsdecompile.py build/MP2x00US
+PowerOff PowerOffSoodan ...`.
+
+| Function | The name | What it does |
+|---|---|---|
+| `PowerOffSoodan` | *sōdan*, a consultation | starts the sequence, deferred there by `PowerOff` |
+| `PowerOffJooHooShuuShuu` | *jōhō shūshū*, gathering information | asks every registered power-off function `'okToPowerOff`; a single "no" and nothing happens |
+| `PowerOffYobiKaiGi` | *yobi kaigi*, a preliminary meeting | tells each of them `'powerOff`; one that answers `'holdYourHorses` holds the meeting until it calls `PowerOffResume` |
+| `PowerOffRingiSho` | *ringisho*, the proposal passed round for everyone's seal | the native that finally puts the machine to sleep (`FPowerOff`, ROM 0x00201b00) |
+
+In the ringi system, a written proposal goes round every stakeholder for
+their seal before anything is done. The Newton decides to sleep the same
+way: the power stays on until everybody has agreed. `docs/power/README.md`.

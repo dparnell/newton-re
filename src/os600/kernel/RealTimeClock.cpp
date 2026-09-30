@@ -267,6 +267,15 @@ TRealTimeClock::Cleanup(void)
 }
 
 
+// ROM 0x0019bff8 SleepingCheckFire__14TRealTimeClockSFv
+// Asked by CyclePower when only the alarm woke the machine.
+long
+TRealTimeClock::SleepingCheckFire(void)
+{
+	return CheckAlarmsStaySleeping();
+}
+
+
 // ROM 0x0019bffc CheckAlarmsStaySleeping__14TRealTimeClockSFv
 // Asked before the machine goes back to sleep: an alarm that is due but
 // wants the machine awake answers false, one that does not is fired where it

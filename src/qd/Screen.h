@@ -112,6 +112,9 @@ extern TAlertScreenInfo	gAlertScreenInfo;	// ROM 0x0c105ef0 gAlertScreenInfo
 void	SetAlertScreenInfo(TAlertScreenInfo* info);	// ROM 0x0002e7d4 SetAlertScreenInfo__FP16TAlertScreenInfo (the alert code's, kept with the screen's so QuickDraw need not know the alerts)
 void	SetScreenInfo(void);					// ROM 0x001cd04c SetScreenInfo__Fv
 void	BlockLCDActivity(Boolean block);		// ROM 0x001ccf34 BlockLCDActivity__FUc
+void	LCDPowerInit(UChar wasAsleep);			// ROM 0x001cc97c LCDPowerInit__FUc
+void	LCDPowerOn(UChar wasAsleep);			// ROM 0x001ccf54 LCDPowerOn__FUc
+void	LCDPowerOff(UChar toSleep);			// ROM 0x001cd288 LCDPowerOff__FUc
 void	InitScreen(TScreenDriver* driver);		// ROM 0x001cc894 InitScreen__Fv (host: the driver given instead of made by name)
 void	SetupScreenPixelMap(void);				// ROM 0x001ccb10 SetupScreenPixelMap__Fv
 Boolean	QDStartDrawing(PixelMap* map, Rect* r);	// ROM 0x001cce0c QDStartDrawing__FP8PixelMapP4Rect

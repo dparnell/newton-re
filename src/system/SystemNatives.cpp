@@ -20,6 +20,7 @@
 #include "NewtonMemory.h"
 #include "hal/System.h"
 #include "hal/Power.h"
+#include "power/PowerManager.h"
 #include "ByteOrder.h"
 #include "OSErrors.h"
 #include "Screen.h"
@@ -370,29 +371,56 @@ FGestalt(RefArg /*rcvr*/, RefArg selector)
 // ROM 0x002037bc GetBatteryStatus__FlP16PowerPlantStatusUc
 // The power manager asked for a battery's status: a 'newt/'pg&e RPC,
 // command 4 for the reading it keeps and 5 for a fresh one, whose reply
-// carries the 0x34-byte PowerPlantStatus.
-//
-// DEVIATION: the power manager is NOT YET RECONSTRUCTED and a host has
-// no batteries, so the reading comes from hal/Power.h instead and the
-// `raw` argument makes no difference.
+// carries the result and the 0x34-byte PowerPlantStatus.
+// DEVIATION: a host with no power manager (a test, newtonscript) has no
+// power port, and the RPC is answered with the port's absence rather than
+// sent to nowhere.
 static NewtonErr
-GetBatteryStatus(long which, PowerPlantStatus* status, Boolean /*raw*/)
+GetBatteryStatus(long which, PowerPlantStatus* status, Boolean raw)
 {
 	if (status == nil)
+		return -2;
+	TPowerManagerEvent request;
+	TPowerManagerEvent reply;
+	request.fAEventClass = kNewtEventClass;
+	request.fAEventID = kPowerManagerID;
+	request.fCommand = raw ? kPowerCmdRawStatus : kPowerCmdStatus;
+	request.fWhich = which;
+	TUPort* port = GetPowerPort();
+	if (port == nil)
 		return kError_Bad_Parameters;
-	return GetPowerPlantStatus(which, status);
+	ULong replySize;
+	NewtonErr err = port->SendRPC(&replySize, &request, kPowerEventStatusSize, &reply, kPowerEventStatusSize);
+	if (err == noErr)
+		err = (NewtonErr) reply.fCommand;
+	if (err == noErr)
+		BlockMove(&reply.fStatus, status, sizeof(PowerPlantStatus));
+	return err;
 }
 
 
 // ROM 0x002035d4 SetBatteryType__FlT1
 // The power manager told what cells a battery holds: command 7 of the
-// same RPC, whose reply is the error the manager made of it.
-//
-// DEVIATION: as above - hal/Power.h is asked instead.
+// same RPC, whose reply is the error the manager made of it.  (The same
+// DEVIATION with no power port.)
 static long
 SetBatteryType(long which, long type)
 {
-	return SetPowerPlantBatteryType(which, type);
+	TPowerManagerEvent request;
+	TPowerManagerEvent reply;
+	request.fAEventClass = kNewtEventClass;
+	request.fAEventID = kPowerManagerID;
+	request.fCommand = kPowerCmdSetType;
+	request.fWhich = which;
+	request.fType = type;
+	TUPort* port = GetPowerPort();
+	if (port == nil)
+		return kError_Bad_Parameters;
+	ULong replySize;
+	long err = port->SendRPC(&replySize, &request, kPowerEventTypeSize, &reply, kPowerEventTypeSize);
+	if (err == noErr)
+		err = (long) reply.fWhich;
+	return err;
 }
 
 
@@ -554,14 +582,22 @@ FBatteryLevel(RefArg /*rcvr*/, RefArg what)
 
 // ROM 0x00203510 FBatteryCount
 // BatteryCount(): how many batteries the machine has, 0 when the power
-// manager will not say (a 'newt/'pg&e RPC of its own).
-//
-// DEVIATION: the power manager is NOT YET RECONSTRUCTED; the count comes
-// from hal/Power.h with the rest of the readings.
+// manager will not say (command 6 of the 'newt/'pg&e RPC).  (The same
+// DEVIATION with no power port.)
 static Ref
 FBatteryCount(RefArg /*rcvr*/)
 {
-	return MAKEINT(GetPowerPlantCount());
+	RefVar count(MAKEINT(0));
+	TPowerManagerEvent request;
+	TPowerManagerEvent reply;
+	request.fAEventClass = kNewtEventClass;
+	request.fAEventID = kPowerManagerID;
+	request.fCommand = kPowerCmdCount;
+	TUPort* port = GetPowerPort();
+	ULong replySize;
+	if (port != nil && port->SendRPC(&replySize, &request, kPowerEventSize, &reply, kPowerEventSize) == noErr)
+		count = MAKEINT((long) reply.fWhich);
+	return count;
 }
 
 
@@ -635,8 +671,8 @@ FBackLight(RefArg /*rcvr*/, RefArg on)
 // contrast set from the preference again and the power event handed on.
 // ==> what woke it, as one of the kWoke... reasons.
 //
-// The sleep itself is hal/Power.h's CyclePower, and on a host it does
-// not sleep at all.
+// The sleep itself is the power manager's CyclePower
+// (power/PowerManager.h).
 long
 SleepUntilNextWakeup(void)
 {

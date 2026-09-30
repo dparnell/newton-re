@@ -1,0 +1,85 @@
+// The machine's power (ctest host.NewtonPower): the batteries read through
+// the power manager ('pg&e, power/PowerManager.h) and shown by a battery
+// gauge (protoBatteryGauge, @316, opened on the screen as an application's
+// status bar would hold it), the backlight turned on by a script and
+// off again by the backlight button (the power manager's 'bklt - newton's
+// F11), the machine put to sleep by the idle timer (the root's idle
+// script: PowerOff('idle) once the pen has been still for the SleepTime
+// preference) and by the power switch (newton's F12: the power manager's
+// 'powr, the root's GotoSleep), each sleep ended by a tap (HostWakeAfter:
+// what the window's pen does while the machine sleeps), and the
+// applications told - RegPowerOff's function asked before each sleep,
+// RegPowerOn's after it.
+//
+//   build/host/host/newton --display 320x480 --headless 200 \
+//       --script src/host/demo/power.ns
+
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
+
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+pwrOffCalls := 0;
+pwrOnCalls := 0;
+pwrOnReason := nil;
+
+// step 4: the power switch
+switchOff := func() begin
+	local before := HostSleepCount();
+	HostWakeAfter(2000);
+	HostPowerSwitch();
+	call waitFor with ("power: asleep by the switch", func() HostSleepCount() > before and pwrOnCalls >= 2, func() begin
+		Print("power: the switch put it to sleep, a tap woke it; " & NumberStr(pwrOffCalls) & " power-off calls, "
+			& NumberStr(pwrOnCalls) & " power-on calls, the last for " & SPrintObject(pwrOnReason));
+		UnRegPowerOff('|powerDemo:Newton|);
+		UnRegPowerOn('|powerDemo:Newton|);
+		Print("power: done");
+		HostQuit();
+	end, 30);
+end;
+
+// step 3: the idle timer
+idleOff := func() begin
+	SetUserConfig('SleepTime, 5);			// seconds
+	HostWakeAfter(3000);					// a tap three seconds into the sleep
+	Print("power: left alone");
+	call waitFor with ("power: asleep by the idle timer", func() HostSleepCount() >= 1 and pwrOnCalls >= 1, func() begin
+		SetUserConfig('SleepTime, 300);
+		Print("power: the idle timer put it to sleep, a tap woke it (" & NumberStr(HostSleepCount()) & " sleep)");
+		// (a press less than a second after waking is not taken: the one that woke it)
+		AddDelayedCall(switchOff, nil, 1500);
+	end, 90);
+end;
+
+call walkSetup with (name, func() begin
+	// step 1: the batteries
+	local status := BatteryStatus(0);
+	Print("power: " & NumberStr(BatteryCount()) & " battery, " & NumberStr(status.batteryCapacity) & "% "
+		& SPrintObject(status.batteryType) & ", mains " & SPrintObject(status.acPower));
+	local gauge := BuildContext({_proto: @316, viewBounds: {left: 100, top: 200, right: 220, bottom: 230}, viewFlags: 1, viewFormat: 0x151});
+	gauge:Open();
+	RefreshViews();
+	call waitFor with ("power: the gauge", func() gauge.gauge and gauge.gauge.viewValue, func() begin
+		Print("power: the battery gauge shows " & NumberStr(gauge.gauge.viewValue) & " (" & gauge.batteryLabelForm.text & ")");
+		ScreenSnapshot("build/power-gauge.pgm");
+		gauge:Close();
+
+		// step 2: the backlight
+		BackLight(true);
+		Print("power: backlight " & (if BackLightStatus() then "on" else "off"));
+		ScreenSnapshot("build/power-backlight.pgm");
+		HostBacklightButton();
+		call waitFor with ("power: the backlight button", func() not BackLightStatus(), func() begin
+			Print("power: the backlight button turned it off");
+
+			RegPowerOff('|powerDemo:Newton|, func(what, why) begin
+				if what = 'powerOff then pwrOffCalls := pwrOffCalls + 1;
+				true
+			end);
+			RegPowerOn('|powerDemo:Newton|, func(why) begin
+				pwrOnCalls := pwrOnCalls + 1;
+				pwrOnReason := why;
+			end);
+			call idleOff with ();
+		end, 10);
+	end, 10);
+end);
+Print("power: the script is loaded");

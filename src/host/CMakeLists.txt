@@ -303,6 +303,15 @@ set_tests_properties(host.NewtonBeamNobody PROPERTIES TIMEOUT 400
                      PASS_REGULAR_EXPRESSION "beam: the status slip says Looking for receiver.*beam: the alert says .*No response.*beam: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain|fell over")
 
+# the machine's power (power/PowerManager.h): the batteries through the
+# power manager and a battery gauge, the backlight on and off by its
+# button, the machine asleep by the idle timer and by the power switch and
+# woken by a tap each time, the power-off and power-on functions called
+add_test(NAME host.NewtonPower COMMAND newton --display 320x480 --headless 200 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/power.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonPower PROPERTIES TIMEOUT 300
+                     PASS_REGULAR_EXPRESSION "power: 1 battery, [0-9]+% .*power: the battery gauge shows [0-9]+ .*power: backlight on.*power: the backlight button turned it off.*power: the idle timer put it to sleep, a tap woke it.*power: the switch put it to sleep, a tap woke it; 2 power-off calls, 2 power-on calls.*power: done"
+                     FAIL_REGULAR_EXPRESSION "waited in vain|fell over")
+
 # the host's printer (print/host/HostPrinter.h): a note and a Names card
 # printed from their Action buttons, the printer chosen in the Print slip's
 # Choose Other Printer; each page a PNG in build/print, which

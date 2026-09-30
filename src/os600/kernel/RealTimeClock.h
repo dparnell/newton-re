@@ -20,8 +20,8 @@
 	Reconstructed from the MP2x00 US ROM (0x0019be2c-0x0019c520,
 	0x0019ca90-0x0019cbe0); each function cites its origin.
 
-				NOT YET RECONSTRUCTED: SleepingCheckFire and the sleep path
-				(CheckAlarmsStaySleeping is here, but nothing sleeps yet), and
+				The sleep path is SleepingCheckFire (the power manager's
+				CyclePower asks it).  NOT YET RECONSTRUCTED:
 				RegisterRealTimeClockHandler, which hands the alarm interrupt
 				to a driver instead of to this.
 */
@@ -75,6 +75,7 @@ public:
 	static long		SetRealTimeClock(ULong seconds);					// ROM 0x0019c404
 	static long		Alarm(void);										// ROM 0x0019bef0 Alarm__14TRealTimeClockSFv - the alarm interrupt
 	static long		Cleanup(void);										// ROM 0x0019beec Cleanup__14TRealTimeClockSFv (Alarm's own code)
+	static long		SleepingCheckFire(void);							// ROM 0x0019bff8 SleepingCheckFire__14TRealTimeClockSFv - asleep: the due alarms fired, ==> true: stay asleep
 	static long		CheckAlarmsStaySleeping(void);						// ROM 0x0019bffc
 	static long		FindSlot(ULong name);								// ROM 0x0019cbc8 FindSlot__14TRealTimeClockSFUl - the index, or -1
 	static Boolean	PrimSetAlarm(ULong time);							// ROM 0x0019c3a8

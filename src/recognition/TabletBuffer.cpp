@@ -121,6 +121,21 @@ InsertTabletSample(ULong sample, ULong time)
 long	(*gTabletDriverBypass)(Boolean start) = nil;
 
 
+// ROM 0x002507c8 TabShutDown
+// The tablet driver shut down for the sleep.  NOT YET RECONSTRUCTED: the
+// driver (gTabletDriver's slot +0x18).
+void
+TabShutDown(void)
+{ }
+
+
+// ROM 0x0025074c TabWakeUp
+// ... and woken again (slot +0x14).  NOT YET RECONSTRUCTED likewise.
+void
+TabWakeUp(void)
+{ }
+
+
 // ROM 0x0025075c StartBypassTablet__Fv
 long
 StartBypassTablet(void)

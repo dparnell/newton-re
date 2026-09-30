@@ -11,6 +11,15 @@
 				swaps width and height.  Where the ROM's TMainDisplayDriver
 				(in the ROM extension) programs the LCD controller, this
 				keeps bytes.
+
+				What is shown follows the panel's power and its backlight:
+				powered off (PowerOff, the machine asleep) the display is
+				blank, and lit (the backlight feature) the ink is shown a
+				quarter lighter, as an electroluminescent panel washes it
+				out.  The drawing is kept meanwhile (the panel's memory) and
+				shown again as it was when the power comes back or the
+				light goes off.  DEVIATION (hardware): the host has no panel
+				to power or light.
 */
 
 #ifndef __HAL_HOST_SCREEN_H
@@ -52,6 +61,10 @@ public:
 	Rect		fLastBlit;			// the last one's destination
 
 private:
+	Boolean		Rendered(void) const		{ return fBlanked || fBacklight != 0; }
+	void		Render(long left, long top, long right, long bottom);		// the panel's grays shown as the power and the light have them
+	void		SetShown(Boolean blanked, long backlight);
+
 	long		fWidth;				// portrait
 	long		fHeight;
 	long		fDepth;
@@ -61,7 +74,9 @@ private:
 	long		fBacklight;
 	long		fOrientation;
 	Boolean		fPowered;
-	unsigned char*	fPixels;		// Width() x Height() grays
+	Boolean		fBlanked;			// powered off: nothing shown
+	unsigned char*	fPixels;		// Width() x Height() grays, as shown
+	unsigned char*	fPanel;			// what was drawn, while it is not shown as it is (blanked or lit)
 	long		fPixelBytes;		// how big that buffer is, so ScreenSetup can keep it
 };
 
