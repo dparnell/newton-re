@@ -9,6 +9,15 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-09-30: the user-reachable NOT YET sweep finished
+
+Eleven items done: clicks and sounds, keyboard editing, selections,
+the caret, dates as text, the boot splash, picker keys, ink in pickers
+and printing ink; the busy box and live ink came with c7129677, and
+`TCursor::EntryChanged` turned out to be reconstructed already (only a
+stale comment said otherwise, as did the Cursors notes on words, text
+and tagSpec queries - bdb25ce7, f73c48bc).
+
 ## 2026-09-30: the host runs on Linux as well as Windows
 
 The whole reconstruction now builds and runs on Linux with the system
