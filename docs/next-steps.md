@@ -189,9 +189,13 @@ reaches.  Biggest user impact first; each is taken on in this order.
    replaced when it changes (`ReplaceDictionaryHandle`).  Find's "before/after
    a date", Dates' and Names' date fields, the Assistant's times ("lunch at
    1 pm tomorrow").  ctest host.NewtonDateParse.
-6. **The boot's splash screen** (`newt/Notebook.h` DrawSplashScreen 0x14602c,
-   `views/RootView.cpp` 381): the picture and text every boot shows before
-   the first screen.  Medium.
+6. **The boot's splash screen** - DONE (2026-09-30): `TNotebook::DrawSplashScreen`
+   (0x14602c) - the screen black, the maker's picture or the ROM's
+   bootLogoBitmap, "Newton 2.1 (717006)" (`VersionString` 0x146cb8, in
+   `views/SplashScreen.h`, which also fills Gestalt's romVersionString)
+   and the copyright lines - drawn by `InitToolbox` and by the root view
+   until the system is up; the boot sound after it and
+   `InitInternationalUtils` in their places.  ctest host.NewtonSplash.
 7. **Pickers with a keyboard** (`views/PickView.cpp` 404, 1304; `fKeyCommands`,
    `GetKeyCommandInfo`): the command keys and type-select of a picker's
    items.  Small to medium.

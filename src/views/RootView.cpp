@@ -376,19 +376,28 @@ TRootView::PostDraw(Rect& bounds)
 }
 
 
+// DEVIATION (library layering): the splash is the application's
+// (TNotebook::DrawSplashScreen, in newt above the views), which sets this.
+void	(*gDrawSplashScreenProc)(void) = nil;
+
 // ROM 0x001b236c RealDraw__9TRootViewFR5TRect
-// The boot splash (the screen painted black, the logo, the version) until
-// the system is up; nothing after: the root's format fills the screen.
-// NOT YET RECONSTRUCTED: the splash's picture and text (the screen is
-// painted black).
+// The boot splash (TNotebook::DrawSplashScreen: the screen painted black,
+// the logo, the version) until the system is up; nothing after: the
+// root's format fills the screen.
 void
 TRootView::RealDraw(Rect& /*bounds*/)
 {
 	if (gNewtIsAliveAndWell)
 		return;
-	Rect screen;
-	SetRect(&screen, 0, 0, ScreenWidth(), ScreenHeight());
-	PaintRect(&screen);
+	if (gDrawSplashScreenProc != nil)
+		gDrawSplashScreenProc();
+	else
+	{
+		// (host: a test of the views without the application)
+		Rect screen;
+		SetRect(&screen, 0, 0, ScreenWidth(), ScreenHeight());
+		PaintRect(&screen);
+	}
 }
 
 

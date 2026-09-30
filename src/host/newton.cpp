@@ -387,6 +387,23 @@ NewtonPreMain(void)
 	HostLinkStart();
 	HostInstallPrinter();
 	HostInstallPowerGlobals();			// (power/host/HostPowerSwitch.h: HostPowerSwitch(), HostWakeAfter(ms), ...)
+	// the boot sound (TNotebook::InitToolbox) let play out and left out of
+	// what is counted as played, which is what the script's sounds are
+	// measured by
+	for (long tries = 0, before = -1; tries < 50; tries++)
+	{
+		long now;
+		(void) HostSoundCaptured(&now);
+		if (now == before)
+		{
+			if (now > 0)
+				fprintf(stderr, "[host] sound: the boot played %ld samples\n", now);
+			break;
+		}
+		before = now;
+		Sleep(100 * kMilliseconds);
+	}
+	HostSoundClearCapture();
 }
 
 

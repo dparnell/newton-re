@@ -24,6 +24,7 @@
 #include "ByteOrder.h"
 #include "OSErrors.h"
 #include "Screen.h"
+#include "SplashScreen.h"	// VersionString
 #include "Keyboard.h"
 #include "RootView.h"
 #include "Protocols.h"
@@ -296,7 +297,9 @@ FGestalt(RefArg /*rcvr*/, RefArg selector)
 			else if (info.fCpuType == 1)
 				SetFrameSlot(result, RSSYMcputype, RSSYMarm610a);
 			SetFrameSlot(result, RSSYMcpuspeed, RefVar(MakeReal((double) info.fCpuSpeed / 65536.0)));
-			// NOT YET RECONSTRUCTED: romVersionString (VersionString 0x00146cb8)
+			UniChar version[64];
+			VersionString(&info, version);
+			SetFrameSlot(result, RSSYMromversionstring, RefVar(MakeString(version)));
 		}
 		break;
 

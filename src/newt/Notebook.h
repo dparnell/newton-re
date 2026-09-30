@@ -53,7 +53,7 @@ public:
 	virtual Boolean		NeedsIdle(void);						// ROM 0x001464d0 NeedsIdle__9TNotebookFv (+0x28: an idle time is set and has passed)
 	virtual Boolean		InitOffscreenBitmaps(void);				// ROM 0x00146c50 InitOffscreenBitmaps__9TNotebookFv (+0x2c: the port and the screen regions)
 
-	void				DrawSplashScreen(void);					// ROM 0x0014602c DrawSplashScreen__9TNotebookFv (NOT YET)
+	void				DrawSplashScreen(void);					// ROM 0x0014602c DrawSplashScreen__9TNotebookFv
 	TAlarmEvent			fAlarmEvent;			// +0x20  the one system alarm (NewtWorld.h); SetSysAlarm fills it in
 	void				InitInker(void);						// ROM 0x00146ca8 InitInker__9TNotebookFv (the inker task: NOT YET - the host's stand-in)
 };

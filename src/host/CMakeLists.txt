@@ -375,6 +375,15 @@ set_tests_properties(host.NewtonClicks PROPERTIES TIMEOUT 150
                      PASS_REGULAR_EXPRESSION "text clicks: ok.*Action button clicks: ok.*menu clicks: ok.*clicks: done, 0 failed"
                      FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
 
+# the boot's splash screen (demo/splash.ns): the logo and the version and
+# copyright lines TNotebook::DrawSplashScreen draws, still on the display
+# while the boot script runs
+add_test(NAME host.NewtonSplash COMMAND newton --display 320x480 --headless 60
+         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/splash.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonSplash PROPERTIES TIMEOUT 120
+                     PASS_REGULAR_EXPRESSION "splash: done, 0 failed"
+                     FAIL_REGULAR_EXPRESSION "FAILED")
+
 # dates, times and numbers read from text (demo/dateparse.ns): the natives
 # over the locale's lexical dictionaries (intl/LexParse.h, ParseString),
 # and the Assistant's "lunch at 1 pm tomorrow" opening its meeting slip at

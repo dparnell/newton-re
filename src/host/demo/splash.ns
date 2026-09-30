@@ -1,0 +1,35 @@
+// The boot's splash screen (TNotebook::DrawSplashScreen): the screen
+// painted black, the ROM's bootLogoBitmap centred above the bottom 140
+// lines, and in white under it "Newton 2.1 (717006)" (VersionString), the
+// copyright and "Apple Computer, Inc." / "All rights reserved.".  A boot
+// script runs before the system is up (gNewtIsAliveAndWell), so the
+// splash is still on the display when this looks at it.
+//
+//   build/host/host/newton --display 320x480 --headless 60 --script src/host/demo/splash.ns
+//   build/venv/Scripts/python tools/imaging/pgm2png.py build/splash.pgm build/splash.png
+//
+// Prints "splash: <step>: ok" or "FAILED", and "splash: done".
+
+spFailures := 0;
+spCheck := func(what, ok) begin
+	if not ok then spFailures := spFailures + 1;
+	Print("splash: " & what & (if ok then ": ok" else ": FAILED"));
+end;
+
+// the white pixels in a band of rows, every other pixel looked at
+spWhite := func(top, bottom) begin
+	local n := 0;
+	for y := top to bottom by 2 do
+		for x := 0 to 319 by 2 do
+			if ScreenPixel(x, y) > 128 then n := n + 1;
+	n
+end;
+
+ScreenSnapshot("build/splash.pgm");
+call spCheck with ("the screen is black", ScreenPixel(4, 4) = 0 and ScreenPixel(315, 475) = 0 and ScreenPixel(160, 300) = 0);
+call spCheck with ("the logo is drawn", call spWhite with (60, 330) > 200);
+call spCheck with ("the version and copyright are written", call spWhite with (340, 382) > 150);
+call spCheck with ("nothing below them", call spWhite with (386, 478) = 0);
+call spCheck with ("the version string", StrEqual(Gestalt(0x01000003).romVersionString, "2.1 (717006)"));
+Print("splash: done, " & spFailures & " failed");
+HostQuit();

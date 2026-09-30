@@ -351,7 +351,18 @@ Scenario(void)
 	}
 	TUPort newtPort(portId);
 	Sleep(50 * kMilliseconds);
-	WaitForSilence();								// whatever the boot played
+	// whatever the boot played - its boot sound (TNotebook::InitToolbox)
+	// may not have reached the driver yet, so until nothing more arrives
+	for (long tries = 0, before = -1; tries < 100; tries++)
+	{
+		WaitForSilence();
+		long now;
+		HostSoundCaptured(&now);
+		if (now == before)
+			break;
+		before = now;
+		Sleep(100 * kMilliseconds);
+	}
 	EXPECT(gSndPort != 0);
 
 	// PlaySoundSync(click)

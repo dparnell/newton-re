@@ -201,4 +201,8 @@ void	RemoveModalSafeView(TView* view);						// ROM 0x001b1c1c RemoveModalSafeVie
 void	SetModalView(TView* view);								// ROM 0x0030de2c SetModalView__FP5TView
 void	RealExitModalDialog(TView* view);						// ROM 0x0030e14c RealExitModalDialog__FP5TView
 
+// the application's splash screen, which the root draws until the system
+// is up (DEVIATION: set by newt's TNotebook, above the views)
+extern void	(*gDrawSplashScreenProc)(void);
+
 #endif	/* __ROOTVIEW_H */

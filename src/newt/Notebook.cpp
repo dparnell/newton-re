@@ -33,6 +33,15 @@
 #include "OSErrors.h"
 #include "NewtWorld.h"
 #include "Librarian.h"
+#include "Draw.h"
+#include "SplashScreen.h"
+#include "Text.h"
+#include "Fonts.h"
+#include "Pictures.h"
+#include "SoundSettings.h"
+#include "NewtonGestalt.h"
+#include "Unicode.h"
+#include "ROMConstants.h"
 #include "hal/host/HostTablet.h"
 #include <string.h>
 
@@ -84,17 +93,23 @@ TNotebook::Constructor(void)
 }
 
 
+// the splash for the root view to draw (views/RootView.h: the views are
+// below the application here)
+static void
+DrawNotebookSplashScreen(void)
+{
+	((TNotebook*) gApplication)->DrawSplashScreen();
+}
+
+
 // ROM 0x00146b28 InitToolbox__9TNotebookFv
 // The toolbox: the offscreen bitmaps and the port, the script globals,
 // the inker, the screen orientation from the preference (else the
 // screen's own), the splash screen and the boot sound, the print
 // drivers, the font loader, the international utilities, the recognition
 // system at level 2, the init scripts, DarkStar.
-// NOT YET RECONSTRUCTED: InitScriptGlobals (vars from varsMapStarter, the
-// classes, the funky functions, bootInitNSGlobals), DrawSplashScreen,
-// FPlaySoundIrregardless(bootSound),
-// InitInternationalUtils; the recognition
-// system starts at level 1 (the clicks) on the host.
+// (The screen orientation comes before the splash so that it is drawn
+// the right way round.)
 void
 TNotebook::InitToolbox(void)
 {
@@ -112,8 +127,12 @@ TNotebook::InitToolbox(void)
 	}
 	else
 		SetOrientation(RINT(orientation));
+	gDrawSplashScreenProc = DrawNotebookSplashScreen;
+	DrawSplashScreen();
+	FPlaySoundIrregardless(RefVar(), RefVar(Rbootsound));
 	InitPrintDrivers();
 	InitFontLoader();
+	InitInternationalUtils();
 	// the ROM starts it at 2 - clicks and strokes, and the shapes and
 	// words above them.  The shape and word recognisers themselves are
 	// NOT YET, so level 2 here means only that the dictionaries are built
@@ -176,11 +195,81 @@ TNotebook::InitInker(void)
 
 
 // ROM 0x0014602c DrawSplashScreen__9TNotebookFv
-// NOT YET RECONSTRUCTED: the splash screen (the 'splash picture and the
-// version string drawn in the screen's middle).
+// The boot's splash: the screen painted black, the maker's picture
+// (DrawSplashGraphic) or else the ROM's bootLogoBitmap centred above the
+// bottom 140 lines, then in white System 9 bold, centred across the
+// screen: up to three lines of the maker's text 30 above that, and the
+// four lines "Newton <version>", the copyright, "Apple Computer, Inc." and
+// "All rights reserved.", ten apart.  TRootView::RealDraw draws it too,
+// until the system is up.
 void
 TNotebook::DrawSplashScreen(void)
-{ }
+{
+	static const char* const kSplashLines[4] =		// ROM 0x0037413c (RW-init)
+	{
+		"Newton ",
+		"\xA9" "1993-1997",				// (Mac Roman: the copyright sign)
+		"Apple Computer, Inc.",
+		"All rights reserved."
+	};
+	Rect box;
+	SetRect(&box, 0, 0, (short) screenWidth, (short) screenHeight);
+	PaintRect(&box);
+	short bottom = (short) (screenHeight - 140);
+	SetRect(&box, 0, 0, (short) screenWidth, bottom);
+	UChar drawn;
+	TSplashScreenInfo* info = DrawSplashGraphic(&drawn, box);
+	if (!drawn)
+		DrawPicture(RefVar(Rbootlogobitmap), box, 6, 0);
+
+	TextOptions options;
+	memset(&options, 0, sizeof(options));
+	options.fAlignment = 0x8000;					// centred
+	options.fWidth = ToFixed(screenWidth);
+	options.fTransferMode = 3;						// srcBic: white on the black
+	StyleRecord style;
+	StyleRecord* styles = &style;
+	CreateTextStyleRecord(RefVar(Rfontsystem9bold), &style);
+	FPoint where;
+	where.x = 0;
+	short textTop = (short) (bottom - 30);
+	UniChar text[256];
+	if (info != nil)
+	{
+		// the maker's lines, one after another in the buffer, an empty
+		// one ending them
+		if (info->GetText(text) != 0)
+		{
+			UniChar* line = text;
+			for (long i = 0; i < 3; i++)
+			{
+				if (i > 0)
+				{
+					line += Ustrlen(line) + 1;
+					if (*line == 0)
+						break;
+				}
+				where.y = ToFixed(textTop + i * 10);
+				DrawTextOnce(line, Ustrlen(line), &styles, nil, where, &options, nil);
+			}
+		}
+		info->Delete();
+	}
+	ConvertToUnicode(kSplashLines[0], text, kMacRomanEncoding, 0x7fffffff);
+	TUGestalt gestalt;
+	TGestaltSystemInfo system;
+	if (gestalt.Gestalt(kGestalt_SystemInfo, &system, sizeof(system)) == noErr)
+		VersionString(&system, text + Ustrlen(text));
+	for (long i = 1; i <= 4; i++)
+	{
+		where.y = ToFixed(bottom + i * 10);
+		DrawTextOnce(text, Ustrlen(text), &styles, nil, where, &options, nil);
+		if (i < 4)
+			ConvertToUnicode(kSplashLines[i], text, kMacRomanEncoding, 0x7fffffff);
+	}
+	DisposeStyleRecord(&style);
+}
+
 
 
 // ROM 0x00146410 Run__9TNotebookFv
