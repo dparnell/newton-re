@@ -261,6 +261,11 @@ reaches the display) came next.
 | the same, built `RelWithDebInfo`: slow blitter | 2.8 s | 24.9 s |
 | built `RelWithDebInfo`: now | 1.6 s | 24.9 s |
 
+With the task runtime's handovers waking only the thread that takes the
+baton (2026-10-01, `docs/host-runtime.md`), the optimised build's
+drawbench is 0.6 s of processor (0.4 s of it the newt task's own), where
+it was 17-19 s, and 1530 ticks where it was 1730.
+
 The project builds unoptimised by default. An optimised build
 (`-DCMAKE_BUILD_TYPE=RelWithDebInfo`) is worth as much again for
 interactive use.

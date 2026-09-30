@@ -338,9 +338,9 @@ first.
 
 `src/host/demo/scriptbench.ns` times the interpreter's own work on the
 newt task's thread (`HostThreadCPUTime`, which leaves out the host's
-other threads - the interrupt and timer pollers take most of the
-process's processor time while the Newton waits, so `HostCPUTime` is too
-noisy for this): a counting loop, lookups up `_proto` and `_parent`
+other threads - until the task runtime's handovers stopped waking every
+parked thread, `docs/host-runtime.md`, they took most of the process's
+processor time and made `HostCPUTime` too noisy for this): a counting loop, lookups up `_proto` and `_parent`
 chains, the Names and Dates applications opened and closed, and text
 drawn in three fonts.  `drawbench.ns` (`docs/qd/README.md`) prints the
 task's time beside the process's.  Measured on an optimised Windows
