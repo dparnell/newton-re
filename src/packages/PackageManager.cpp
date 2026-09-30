@@ -25,6 +25,7 @@
 #include "RingBuffer.h"
 #include "ROMImport.h"		// ROMAddressOf: a part in the ROM extension
 #include "LargeObjects.h"		// the ROM domain manager (a package on a store)
+#include "CardAlerts.h"		// SetCardReinsertReason
 
 extern const ExceptionName exPipeException;
 
@@ -904,10 +905,9 @@ TPackageEventHandler::SearchPackageList(long* index, const UniChar* name, ULong 
 // finish): each part taken out, last first - a removal that was cut short
 // carries on from the part it had got to - and the package's block let
 // go.  ==> in the event, kError_No_Such_Package when the id is unknown;
-// the reply is set only when asked for.
-// NOT YET RECONSTRUCTED: SetCardReinsertReason (0x0004b010), which keeps
-// the package's name for the message asking for its card back while the
-// parts come out.
+// the reply is set only when asked for.  While the parts come out the
+// package's name is the reason a card taken out meanwhile would be asked
+// back for (SetCardReinsertReason).
 void
 TPackageEventHandler::RemovePackage(TPkRemoveEvent* event, UChar reply, UChar notify)
 {
@@ -927,12 +927,14 @@ TPackageEventHandler::RemovePackage(TPkRemoveEvent* event, UChar reply, UChar no
 		block->fState = kPackageRemoving;
 		PartId partId;
 		partId.packageId = packageId;
+		SetCardReinsertReason(block->fName, true);
 		for (ArrayIndex i = iter.FirstIndex(); iter.More(); i = iter.NextIndex())
 		{
 			partId.partIndex = i;
 			block->fRemoveIndex = i + 1;
 			RemovePart(partId, *(TInstalledPart*) block->fParts->ElementPtrAt(i), notify);
 		}
+		SetCardReinsertReason(nil, false);
 		SetPersistentHeap();
 		if (block->fParts != nil)
 			delete block->fParts;
@@ -1245,14 +1247,22 @@ DeinstallPackage(ULong packageId)
 
 
 // ROM 0x0015d748 RemovePackage__FUl
-// A package taken away: one on a store is deallocated there, anything
-// else deinstalled.  NOT YET RECONSTRUCTED: packages on a store
-// (IdToStore, DeallocatePackage) - every package is in memory, so every
-// one is deinstalled.
+// A package taken away: one on a store (IdToStore finds its store and
+// root) is deallocated there, with the store locked; anything else
+// deinstalled.
 void
 RemovePackage(TObjectId packageId)
 {
-	DeinstallPackage(packageId);
+	TStore* store;
+	PSSId rootId;
+	if (IdToStore(packageId, &store, &rootId) == noErr)
+	{
+		store->LockStore();
+		DeallocatePackage(store, rootId);
+		store->UnlockStore();
+	}
+	else
+		DeinstallPackage(packageId);
 }
 
 
