@@ -3845,7 +3845,20 @@ TestPickView()
 		EXPECT(NOTNIL(Eval("GetPopup()")));
 		DoKeyEvent(helped, aeKeyRepeat, kCommandKey);
 		EXPECT(ISNIL(Eval("GetPopup()")) && NOTNIL(Eval("ctxKH.opened")));
-		gKeyHelpOpen = false;		// (the key help would close with the next key event)
+		// (the key up reads the keyboard's translation through
+		// vars.international, which the test put back earlier: without it
+		// GetKeyTransMapping throws, the ROM's as ours)
+		{
+			RefVar bundle(TranslateROMRef(0x004a4d09));
+			RefVar intl(AllocateFrame());
+			RefVar keyboard(AllocateFrame());
+			SetFrameSlot(keyboard, RSSYMmapping, RefVar(GetFrameSlotRef(bundle, RefVar(Intern((char*) "keycodeMapping")))));
+			SetFrameSlot(intl, RSSYMkeyboard, keyboard);
+			SetFrameSlot(RefVar(gVarFrame), RSSYMinternational, intl);
+		}
+		DoKeyEvent(helped, aeKeyUp, kCommandKey);
+		EXPECT(ISNIL(Eval("ctxKH.opened")) && !gKeyHelpOpen);
+		Eval("RemoveSlot(vars, 'international)");
 		Eval("RemoveView(GetRoot(), ctxKH)");
 		EXPECT(gRootView->fChildren->Count() == 0);
 		gKeyboardConnected = false;
