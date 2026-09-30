@@ -8,6 +8,7 @@
 */
 
 #include "StrokeQueue.h"
+#include "Inker.h"
 #include "TabletBuffer.h"
 #include "Unit.h"
 #include "FixedMath.h"
@@ -499,8 +500,10 @@ StrokeGet(void)
 
 
 // ROM 0x001ff59c StrokeTime__Fv
-// The ROM's does nothing: the inker task reads the tablet.  DEVIATION:
-// the host has no TInker - the tablet buffer is read here, as the inker's
+// The ROM's does nothing: the inker task reads the tablet (recognition/
+// Inker.h: LCDEntry reads the strokes and draws the live ink) - and so
+// does this one whenever the inker is running.  DEVIATION: a host with no
+// inker (a test without the OS) reads the tablet buffer here, as the inker's
 // LCD entry would (its own read index just follows the writer's), until
 // nothing is left; ==> whether a stroke changed (the inker then wakes the
 // newt world: hal/host/HostTablet.h).
@@ -595,6 +598,8 @@ InkStroke(TSStroke* stroke)
 long
 StrokeTime(void)
 {
+	if (gInker != nil)
+		return 0;
 	while (!TBCInkerBufferEmpty())
 		TBCIncInkerIndex(1);
 	long head = gStrokeQ != nil ? gStrokeQ->fHead : 0;

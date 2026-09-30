@@ -34,6 +34,8 @@ add_library(qd STATIC
     QDTables.cpp
     Transform.cpp
     Screen.cpp
+    BusyBox.cpp
+    BusyBoxBits.cpp
     ScreenNatives.cpp
     ScrollRect.cpp
     LocalToGlobal.cpp

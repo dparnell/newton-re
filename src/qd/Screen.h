@@ -47,11 +47,10 @@ struct ScreenInfo
 	long		fWidth;				// +0x04
 	long		fDepth;				// +0x08  bits per pixel
 	long		fReserved;			// +0x0c
-	short		fReserved2;			// +0x10
-	short		fResolutionH;		// +0x12  dots per inch
-	short		fResolutionV;		// +0x14
-	short		fReserved3;			// +0x16
-	long		fReserved4;			// +0x18
+	short		fResolutionV;		// +0x10  dots per inch (SetupScreenPixelMap: deviceRes.v)
+	short		fResolutionH;		// +0x12  (deviceRes.h)
+	long		fAlignV;			// +0x14  the rows the live ink's tile starts and ends on a multiple of (a power of two; recognition/LiveInker.h)
+	long		fAlignH;			// +0x18  ... and the columns
 };
 
 // the driver's features (GetFeature/SetFeature)
@@ -111,6 +110,8 @@ extern long				screenHeight;			// ROM 0x0c104c5c screenHeight
 extern TAlertScreenInfo	gAlertScreenInfo;	// ROM 0x0c105ef0 gAlertScreenInfo
 void	SetAlertScreenInfo(TAlertScreenInfo* info);	// ROM 0x0002e7d4 SetAlertScreenInfo__FP16TAlertScreenInfo (the alert code's, kept with the screen's so QuickDraw need not know the alerts)
 void	SetScreenInfo(void);					// ROM 0x001cd04c SetScreenInfo__Fv
+void	QDShowBusyBox(PixelMap* box);			// ROM 0x00047b10 QDShowBusyBox__FP8PixelMap - the busy picture at the top middle of the display (BusyBox.cpp)
+void	QDHideBusyBox(PixelMap* box);			// ROM 0x00047ad4 QDHideBusyBox__FP8PixelMap - the screen's bits back over it
 void	BlockLCDActivity(Boolean block);		// ROM 0x001ccf34 BlockLCDActivity__FUc
 void	LCDPowerInit(UChar wasAsleep);			// ROM 0x001cc97c LCDPowerInit__FUc
 void	LCDPowerOn(UChar wasAsleep);			// ROM 0x001ccf54 LCDPowerOn__FUc

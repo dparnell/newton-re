@@ -226,6 +226,7 @@ FIdleStrokes(RefArg /*rcvr*/)
 		HostTabletPump();
 		gRecognition.Idle();
 	}
+	HostTabletSettle();
 	gRecognition.Idle();
 	return NILREF;
 }

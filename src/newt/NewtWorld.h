@@ -108,7 +108,7 @@ void	HandleAlarmEvent(TAlarmEvent* event);		// ROM 0x0030eee0 HandleAlarmEvent__
 class TBusyBoxEvent : public TAEvent
 {
 public:
-	long				fCommand;		// +0x08
+	ULong				fCommand;		// +0x08 (a ULong on the host, as the inker reads it: recognition/Inker.h's TInkerEvent)
 	ULong				fUnused0c;		// +0x0c
 };
 

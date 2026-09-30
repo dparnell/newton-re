@@ -761,7 +761,7 @@ HandleRunScriptEvent(TRunScriptEvent* event)
 // (gTheInkerPort, ROM 0x0c101658, is recognition/InkerNatives.cpp's:
 // InkerPort looks the inker up and keeps it there.  Until then the busy
 // box is sent nowhere, as on the Newton before the inker is asked for.
-// NOT YET RECONSTRUCTED: the inker's busy box itself, TBusyBox.)
+// The inker's TBusyBox shows it.)
 
 
 // ROM 0x0030dd60 BusyBoxSend__Fl
@@ -775,7 +775,8 @@ BusyBoxSend(long command)
 	TBusyBoxEvent event;
 	event.fAEventClass = kNewtEventClass;
 	event.fAEventID = kNewtInkerEvent;
-	event.fCommand = command;
+	event.fCommand = (ULong) command;
+	event.fUnused0c = 0;
 	gTheInkerPort->Send(&event, sizeof(event), kBusyBoxSendTimeout);
 }
 

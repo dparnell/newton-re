@@ -131,6 +131,8 @@ add_library(recognition STATIC
     TabletDriver.cpp
     Inker.cpp
     InkerNatives.cpp
+    LiveInker.cpp
+    LiveInkerTables.cpp
     StrokeQueue.cpp
     StrokeCentral.cpp
     HandleUnit.cpp

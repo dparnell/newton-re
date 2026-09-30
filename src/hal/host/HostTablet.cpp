@@ -146,6 +146,22 @@ HostTabletPenUp(ULong time)
 }
 
 
+// The test pen's records read before a script goes on: with the inker
+// running the strokes are read by its task, woken by each record, while
+// the script that wrote them carries on in its own - so a script's
+// IdleStrokes would otherwise look before there was anything to see.  The
+// caller sleeps a millisecond at a time (up to a second) until the inker
+// has taken everything and the stroke world has read it.
+void
+HostTabletSettle(void)
+{
+	if (gInker == nil || !gOSIsRunning || gCurrentTask == nil)
+		return;
+	for (int i = 0; i < 1000 && !TBCTabletBufferEmpty(); i++)
+		Sleep(kMilliseconds);
+}
+
+
 // The queue is the wait hook's, and the wait hook only runs when there
 // is no inker task - a task's Wait sleeps in the kernel, so nothing would
 // ever feed it.  With the inker running, a queued record therefore goes

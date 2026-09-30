@@ -65,6 +65,7 @@ void	HostTabletQueueNothing(void);						// a tick with no record
 Boolean	HostTabletPump(void);								// the next queued record fed and the strokes read; ==> whether there was one
 long	HostTabletQueued(void);								// records still queued
 void	HostTabletSetPaced(Boolean paced);					// with the inker running: queued records fed an idle at a time rather than at once
+void	HostTabletSettle(void);							// with the inker running: waited for until it and the stroke world have read everything (a script's IdleStrokes)
 void	HostTabletWait(ULong ticks);						// the wait hook: ticks records pumped, then the strokes read
 
 #endif	/* __HAL_HOST_TABLET_H */

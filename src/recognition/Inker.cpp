@@ -29,7 +29,9 @@
 #include "OSErrors.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 
+Boolean		gWireRecog = true;						// ROM 0x0c104d2c gWireRecog (1 in the ROM's initialised data)
 InkerCalibrateFlags	gCalibrate;						// ROM 0x0c104d20 gCalibrate
 TInker*		gInker = nil;
 void		(*gInkerCalibrationTargetHook)(short h, short v) = nil;
@@ -78,10 +80,9 @@ TInkerEventHandler::AEHandlerProc(TUMsgToken* /*token*/, ULong* /*size*/, TAEven
 		return;
 
 	case kInkerConvert:
-		// NOT YET RECONSTRUCTED: TInker::Convert and the live ink it draws
-		// (TInker::DrawInk); the host's StrokeTime reads the samples and
-		// inks them (InkThem)
-		InkThem();
+		// (the same loop as InkThem's, which the ROM writes out here a
+		// third time)
+		inker->LCDEntry();
 		return;
 
 	case kInkerCalibrate:
@@ -152,9 +153,11 @@ TInkerEventHandler::AEHandlerProc(TUMsgToken* /*token*/, ULong* /*size*/, TAEven
 		SetReply(kInkerReplySize, event);
 		return;
 
+	case 0x33: case 0x34: case 0x35: case 0x36: case 0x37:
+		fBusyBox.DoCommand((long) command);
+		return;
+
 	default:
-		// NOT YET RECONSTRUCTED: the busy box (TBusyBox::DoCommand, the
-		// commands kInkerBusyBoxFirst..Last); nothing else is answered
 		return;
 	}
 }
@@ -192,24 +195,96 @@ TInkerEventHandler::IdleProc(TUMsgToken* /*token*/, ULong* /*size*/, TAEvent* /*
 
 
 // ROM 0x00218dd8 InkThem__18TInkerEventHandlerFv
-// What has come from the tablet read into the strokes and inked, and the
-// application woken if a stroke changed.
-// NOT YET RECONSTRUCTED: TInker::Convert, which takes the samples one at
-// a time and draws the live ink between them (TInker::DrawInk into the
-// bounds kept at fInkedBounds, as the pen mode says); the host's
-// StrokeTime (StrokeQueue.h) catches the inker's reader up, reads the
-// strokes and inks what they added.
+// What has come from the tablet taken a record at a time and inked, the
+// strokes read, and the application woken if a stroke changed.  (The ROM
+// writes TInker::LCDEntry's loop out again here.)
 void
 TInkerEventHandler::InkThem(void)
 {
-	TInker* inker = gInker;
-	if (inker->fInkMode == 0)
+	gInker->LCDEntry();
+}
+
+
+/*------------------------------------------------------------------------------
+	T B u s y B o x
+------------------------------------------------------------------------------*/
+
+// ROM 0x00218bd4 __ct__8TBusyBoxFv
+// A timer on the inker world's queue, and a 32-pixel square map of the
+// screen's depth whose bits QDShowBusyBox chooses.
+TBusyBox::TBusyBox()
+	: TTimerElement(gInker != nil ? gInker->GetTimerQueue() : nil, 0)
+{
+	fState = 0;
+	long depth = 1;
+	GetGrafInfo(kGrafInfoDepth, &depth);
+	fMap.baseAddr = nil;
+	fMap.rowBytes = (short) (depth << 2);
+	SetRect(&fMap.bounds, 0, 0, 32, 32);
+	fMap.pixMapFlags = (ULong) depth + kPixMapPtr;
+	fMap.deviceRes.v = kDefaultDPI;
+	fMap.deviceRes.h = kDefaultDPI;
+	fMap.grayTable = nil;
+}
+
+
+// ROM 0x00218c70 Timeout__8TBusyBoxFv
+void
+TBusyBox::Timeout(void)
+{
+	ShowBusyBox();
+}
+
+
+// ROM 0x00218c74 DoCommand__8TBusyBoxFl
+long
+TBusyBox::DoCommand(long command)
+{
+	switch (command - 0x33)
 	{
-		SetEmptyRect(&inker->fInkedBounds);
-		return;
+	case 0:
+		if (fState != 1)
+			QDShowBusyBox(&fMap);
+		fState = 1;
+		return 1;
+	case 1:
+		if (fState == 1)
+			QDHideBusyBox(&fMap);
+		fState = 0;
+		return 0;
+	case 2:
+	case 4:
+		HideBusyBox();
+		Cancel();				// (the ROM's own test inline: primed and queued)
+		return 1;
+	case 3:
+		HideBusyBox();
+		Prime(0x383e70);		// (a second, near enough: 0x383e70 of the 3.6864 MHz clock)
+		fState = -1;
+		return -1;
+	default:
+		return command - 0x33;
 	}
-	if (StrokeTime() != 0)
-		inker->SendNewtIdle();
+}
+
+
+// ROM 0x00218cf4 HideBusyBox__8TBusyBoxFv
+void
+TBusyBox::HideBusyBox(void)
+{
+	if (fState == 1)
+		QDHideBusyBox(&fMap);
+	fState = 0;
+}
+
+
+// ROM 0x00218d20 ShowBusyBox__8TBusyBoxFv
+void
+TBusyBox::ShowBusyBox(void)
+{
+	if (fState != 1)
+		QDShowBusyBox(&fMap);
+	fState = 1;
 }
 
 
@@ -222,8 +297,10 @@ TInker::TInker()
 {
 	fHandler = nil;
 	fNewtPort = nil;
+	fField84 = 0;
+	fLastX = fLastY = fCurrentX = fCurrentY = -1;
 	fCurrentPenMode = fNextPenMode = 0;
-	fPenSize = 0;
+	fPressure = 0;
 	fInkMode = 0;
 	SetEmptyRect(&fInkedBounds);
 	fNewtEventType = 0;
@@ -279,11 +356,12 @@ TInker::MainConstructor()
 
 // ROM 0x00218ff8 IInker__6TInkerFv
 // The tablet started over the screen, the inker's port the one its driver
-// wakes; the pen modes, the event the application is woken with.
-// NOT YET RECONSTRUCTED: TLiveInker::Init (the live ink's own bitmap).
+// wakes; the live ink's tile, the pen modes, the event the application
+// is woken with.
 void
 TInker::IInker(void)
 {
+	fLiveInker.Init();
 	PixelMap screen;
 	GetGrafInfo(kGrafInfoScreenPixelMap, &screen);
 	TabInitialize(screen.bounds, GetMyPort());
@@ -344,6 +422,163 @@ TInker::SendNewtIdle(void)
 {
 	if (fNewtPort != nil)
 		fNewtPort->Send(&fNewtMessage, &fNewtEvent, sizeof(TAEvent) + 2 * sizeof(ULong), kNoTimeout, nil, 0, true);
+}
+
+
+// ROM 0x00217a64 Convert__6TInkerFv
+// The next record in the buffer taken: a pen-down (the stroke takes the
+// next pen size), a sample (it becomes the current point), a pen-up (the
+// record rewritten with the pen size and the bounds this stroke's live ink
+// covered, for the stroke world), or anything else (marked as nothing).
+// ==> whether there was one; nothing while the calibration converts.
+Boolean
+TInker::Convert(void)
+{
+	if (gCalibrate.fConverting != 0 || InkerBufferEmpty())
+		return false;
+	ULong word = GetInkerData();
+	ULong type = word & 0xf;
+	if (type == kTabletPenDown)
+	{
+		fInkMode = 0;
+		fCurrentPenMode = fNextPenMode;
+		IncInkerIndex(1);
+	}
+	else if (type == kTabletPenUp)
+	{
+		fInkMode = 3;
+		SetInkerData(((ULong) fCurrentPenMode << 8) | kTabletPenUp);
+		// (each word the top or bottom in its high half and the left or right
+		// sign-extended over the whole word, as the ROM's arithmetic shift
+		// leaves it: a negative left or right overwrites the other half)
+		SetInkerData((ULong32) ((Long32) fInkedBounds.left | ((ULong32) (UShort) fInkedBounds.top << 16)), 2);
+		SetInkerData((ULong32) ((Long32) fInkedBounds.right | ((ULong32) (UShort) fInkedBounds.bottom << 16)), 3);
+		IncInkerIndex(3);
+	}
+	else if (type < 8)
+	{
+		fCurrentY = (Fixed) ((word & 0x3fff0) << 9);
+		fCurrentX = (Fixed) ((word & 0xfffc0000) >> 5);
+		fPressure = (UChar) type;
+		fInkMode = 2;
+	}
+	else
+	{
+		SetInkerData(kTabletNoSample);
+		fInkMode = 1;
+	}
+	IncInkerIndex(1);
+	return true;
+}
+
+
+// ROM 0x0021765c DrawInk__6TInkerF5PointT1P4Rects
+// The segment from the last point to the current one inked, and as many
+// of the samples that follow as still fit the live inker's tile (up to
+// 80 points, each one read being taken from the buffer and becoming the
+// current point) - all of them onto the display in one blit.  inked comes
+// back as the extent the points covered.
+void
+TInker::DrawInk(Point from, Point to, Rect* inked, short /*pressure*/)
+{
+	Point pen;
+	pen.h = fCurrentPenMode;
+	pen.v = fCurrentPenMode;
+	fLiveInker.ResetAccumulator();
+	Point points[81];
+	points[0] = from;
+	points[1] = to;
+	ULong count = 2;
+	fLiveInker.AddPoint(from, pen);
+	Boolean fits = fLiveInker.AddPoint(to, pen);
+	while (fits && !InkerBufferEmpty() && count < 0x50)
+	{
+		ULong word = GetInkerData();
+		if ((word & 0xf) > 7)
+			break;
+		ULong32 w = (ULong32) word;
+		Fixed x = (Fixed) (((w >> 18) << 18) >> 5);
+		Fixed y = (Fixed) (((ULong32) (w << 14) >> 14 & ~(ULong32) 0xf) << 9);
+		Point pt;
+		pt.h = (short) ((Long32) (x + 0x8000) >> 16);
+		pt.v = (short) ((Long32) (y + 0x8000) >> 16);
+		fits = fLiveInker.AddPoint(pt, pen);
+		if (fits)
+		{
+			IncInkerIndex(1);
+			if (points[count - 1].h != pt.h || points[count - 1].v != pt.v)
+			{
+				points[count++] = pt;
+				fCurrentY = y;
+				fCurrentX = x;
+			}
+		}
+	}
+	*inked = fLiveInker.fExtent;
+	fLiveInker.StartLiveInk();
+	for (ULong i = 1; i < count; i++)
+		fLiveInker.InkLine(points[i - 1], points[i], pen);
+	fLiveInker.StopLiveInk();
+}
+
+
+// ROM 0x0021781c LCDEntry__6TInkerFv
+// Every record the buffer has taken in turn: a pen-down forgets the last
+// point and the ink's bounds (their left and right only - the ROM's); a
+// sample is inked from the last point when the pen has a size; a pen-up
+// forgets the last point.  After each the strokes are read, the
+// application woken whenever one changed.  (Without gWireRecog - which is
+// always set - the stroke world's reader would be moved up to the inker's
+// after each record, throwing what the inker had just taken away.)
+void
+TInker::LCDEntry(void)
+{
+	while (Convert())
+	{
+		if (fInkMode == 0)
+		{
+			fLastX = -1;
+			fField84 = 0;
+			fInkedBounds.right = 0;
+			fInkedBounds.left = 0;
+		}
+		else if (fInkMode == 2)
+		{
+			if (fCurrentPenMode != 0)
+			{
+				Point to, from;
+				to.h = (short) ((Long32) (fCurrentX + 0x8000) >> 16);
+				to.v = (short) ((Long32) (fCurrentY + 0x8000) >> 16);
+				from = to;
+				if (fLastX != -1)
+				{
+					from.h = (short) ((Long32) (fLastX + 0x8000) >> 16);
+					from.v = (short) ((Long32) (fLastY + 0x8000) >> 16);
+				}
+				if (from.h != to.h || from.v != to.v || fLastX == -1)
+				{
+					Rect inked;
+					DrawInk(from, to, &inked, fPressure);
+					JoinRect(&fInkedBounds, &inked, &fInkedBounds);
+				}
+			}
+			fLastX = fCurrentX;
+			fLastY = fCurrentY;
+		}
+		else if (fInkMode == 3)
+		{
+			fLastX = -1;
+			fField84 = 0;
+		}
+		if (!gWireRecog)
+			FlushInkerBuffer();
+		if (fInkMode != 0 && RealStrokeTime() != 0)
+			SendNewtIdle();
+	}
+	if (fInkMode == 0)
+		return;
+	if (RealStrokeTime() != 0)
+		SendNewtIdle();
 }
 
 

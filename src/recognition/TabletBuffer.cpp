@@ -220,6 +220,57 @@ FlushTabletBuffer(void)
 }
 
 
+// The inker's side of the buffer, as the tablet driver's glue answers it
+// (each the TBC function of the same name).
+
+// ROM 0x002507b4 InkerBufferEmpty__Fv
+Boolean
+InkerBufferEmpty(void)
+{
+	return TBCInkerBufferEmpty();
+}
+
+
+// ROM 0x002507c0 FlushInkerBuffer__Fv
+void
+FlushInkerBuffer(void)
+{
+	TBCFlushInkerBuffer();
+}
+
+
+// ROM 0x002507c4 GetInkerData__Fv
+ULong
+GetInkerData(void)
+{
+	return TBCGetInkerData();
+}
+
+
+// ROM 0x002507e0 SetInkerData__FUl
+void
+SetInkerData(ULong word)
+{
+	TBCSetInkerData(word);
+}
+
+
+// ROM 0x002507e4 SetInkerData__FUlT1
+void
+SetInkerData(ULong word, ULong offset)
+{
+	TBCSetInkerData(word, offset);
+}
+
+
+// ROM 0x002507e8 IncInkerIndex__FUl
+void
+IncInkerIndex(ULong count)
+{
+	TBCIncInkerIndex(count);
+}
+
+
 // ROM 0x00250630 TBCFlushTabletBuffer__Fv
 // Both readers caught up with the writer.
 void

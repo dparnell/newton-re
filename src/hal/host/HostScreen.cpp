@@ -103,6 +103,10 @@ THostScreenDriver::GetScreenInfo(ScreenInfo* info)
 	info->fDepth = fDepth;
 	info->fResolutionH = (short) fDPI;
 	info->fResolutionV = (short) fDPI;
+	// the live ink's tile (recognition/LiveInker.h) on any row, and on a
+	// byte of the 1-bit display's columns (so on a byte at every depth)
+	info->fAlignV = 1;
+	info->fAlignH = 8;
 }
 
 

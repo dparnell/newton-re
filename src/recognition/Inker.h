@@ -26,10 +26,21 @@
 				(the ROM's savecalibration and loadcalibration blocks) - is
 				InkerNatives.
 
-				NOT YET RECONSTRUCTED: the live ink (TInker::Convert,
-				DrawInk, TLiveInker, LCDEntry - the host's StrokeTime draws
-				it, recognition/StrokeQueue.h), the busy box (TBusyBox,
-				commands 0x33-0x37), the armistice samples.
+				The live ink is the inker's too: Convert takes the buffer a
+				record at a time (a pen-down takes the next pen size, a
+				sample becomes the current point, a pen-up has the inked
+				bounds written into it) and DrawInk joins the last point to
+				the current one - reading ahead as many samples as fit a
+				tile - through TLiveInker (LiveInker.h), onto the display.
+				(gWireRecog, 1 in the ROM's initialised data and never
+				changed, keeps the records for the stroke world; without it
+				the inker would throw away each record once inked.)
+
+				The busy box is the inker's as well (TBusyBox, commands
+				0x33-0x37: shown, hidden, shown in a second unless called
+				off), drawn by qd's QDShowBusyBox onto the display.
+
+				NOT YET RECONSTRUCTED: the armistice samples.
 
 				Not in the DDK.  Reconstructed from the MP2x00 US ROM
 				(0x002173ec-0x00219100, 0x0013fb0c-0x0014137c).  TInker is
@@ -45,8 +56,12 @@
 #ifndef __AEVENTS_H
 #include "AEvents.h"
 #endif
+#include "TimerQueue.h"
 #ifndef __TABLETDRIVER_H
 #include "TabletDriver.h"
+#endif
+#ifndef __LIVEINKER_H
+#include "LiveInker.h"
 #endif
 
 #define kInkerID				'inkr'
@@ -90,6 +105,21 @@ const ULong	kInkerReplySize				= offsetof(TInkerEvent, fCalibration);
 const ULong	kInkerBoundsReplySize		= offsetof(TInkerEvent, fCalibration) + sizeof(Rect);
 const ULong	kInkerCalibrationReplySize	= offsetof(TInkerEvent, fCalibration) + sizeof(Calibration);
 
+// The busy box: a timer, so that it can be asked to appear in a second's
+// time and called off before then (0x218bd4-0x218d4c; 0x38 bytes)
+class TBusyBox : public TTimerElement
+{
+public:
+					TBusyBox();														// ROM 0x00218bd4 __ct__8TBusyBoxFv
+	virtual void	Timeout(void);													// ROM 0x00218c70 Timeout__8TBusyBoxFv - shown
+	long			DoCommand(long command);										// ROM 0x00218c74 DoCommand__8TBusyBoxFl - 0x33 show, 0x34 hide, 0x35/0x37 hide and call off, 0x36 show in a second
+	void			HideBusyBox(void);												// ROM 0x00218cf4 HideBusyBox__8TBusyBoxFv
+	void			ShowBusyBox(void);												// ROM 0x00218d20 ShowBusyBox__8TBusyBoxFv
+
+	PixelMap		fMap;			// +18 the box (its bits the ROM's busy picture)
+	long			fState;			// +34 1 shown, 0 hidden, -1 to be shown
+};
+
 class TInkerEventHandler : public TAEventHandler
 {
 public:
@@ -97,6 +127,8 @@ public:
 	virtual void	AECompletionProc(TUMsgToken* token, ULong* size, TAEvent* event);	// ROM 0x00217658 AECompletionProc__18TInkerEventHandlerFP10TUMsgTokenPUlP7TAEvent
 	virtual void	IdleProc(TUMsgToken* token, ULong* size, TAEvent* event);			// ROM 0x00218d4c IdleProc__18TInkerEventHandlerFP10TUMsgTokenPUlP7TAEvent
 	void			InkThem(void);														// ROM 0x00218dd8 InkThem__18TInkerEventHandlerFv
+
+	TBusyBox		fBusyBox;			// +14
 };
 
 class TInker : public TAppWorld
@@ -119,19 +151,30 @@ public:
 	void			PresCalibrate(void);											// ROM 0x00218bcc PresCalibrate__6TInkerFv
 	static Boolean	TestForCalibrationNeeded(void);									// ROM 0x00218bd0 TestForCalibrationNeeded__6TInkerFv
 	void			SendNewtIdle(void);												// (the application woken: {'newt, 'idle, 'inkr})
+	Boolean			Convert(void);													// ROM 0x00217a64 Convert__6TInkerFv - the next record taken; ==> whether there was one
+	void			DrawInk(Point from, Point to, Rect* inked, short pressure);		// ROM 0x0021765c DrawInk__6TInkerF5PointT1P4Rects
+	void			LCDEntry(void);													// ROM 0x0021781c LCDEntry__6TInkerFv
 
 	TInkerEventHandler*	fHandler;
 	TUAsyncMessage	fNewtMessage;		// +70
 	TUPort*			fNewtPort;			// +80
-	UChar			fCurrentPenMode;	// +C0
-	UChar			fNextPenMode;		// +C1
-	UChar			fPenSize;			// +C2
-	UChar			fInkMode;			// +C3 (3: the strokes read and the application woken)
-	Rect			fInkedBounds;		// +C4
+	short			fField84;			// +84 (cleared at each pen-down and pen-up; nothing reads it)
+	Fixed			fLastX;				// +88 the point last inked to (-1: none yet)
+	Fixed			fLastY;				// +8C
+	Fixed			fCurrentX;			// +90 the sample just converted
+	Fixed			fCurrentY;			// +94
+	UChar			fCurrentPenMode;	// +C0 the pen's size (0: no ink)
+	UChar			fNextPenMode;		// +C1 the size the next stroke takes
+	UChar			fPressure;			// +C2 the sample's pressure
+	UChar			fInkMode;			// +C3 what the last record was: 0 a pen-down, 1 other, 2 a sample, 3 a pen-up
+	Rect			fInkedBounds;		// +C4 what this stroke's live ink covers
 	TAEvent			fNewtEvent;			// +CC {'newt, 'idle}
 	ULong			fNewtEventType;		// +D4 'inkr
 	ULong			fNewtEventPad;
+	TLiveInker		fLiveInker;			// +DC
 };
+
+extern Boolean	gWireRecog;			// ROM 0x0c104d2c gWireRecog - true: the stroke world gets the records the inker has inked
 
 // the calibration's flags (gCalibrate)
 struct InkerCalibrateFlags

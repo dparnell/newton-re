@@ -1,0 +1,76 @@
+// The live ink and the busy box (ctest host.NewtonLiveInk): what the inker
+// draws straight onto the display (recognition/Inker.h, LiveInker.h).
+//
+//   1. a stroke drawn across the Notepad with the pen kept down: the
+//      inker's live ink is on the display along it while the pen is down,
+//      a segment at a time as the samples are taken (TInker::Convert and
+//      DrawInk through TLiveInker's tile), before any view has drawn it
+//   2. the busy box shown (BusyBoxControl(-2), the inker's command 0x33):
+//      the ROM's busy picture at the top middle of the display; hidden
+//      again (-1): the screen as it was
+//
+//   build/host/host/newton --display 320x480 --headless 120 \
+//       --script src/host/demo/liveink.ns
+
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
+
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+liveFailed := 0;
+
+liveCheck := func(what, ok) begin
+	if not ok then liveFailed := liveFailed + 1;
+	Print("liveink: " & what & ": " & (if ok then "yes" else "FAILED"));
+end;
+
+// how many of the busy box's pixels (the 32x32 square at the top middle)
+// are dark, and a checksum of them
+boxPixels := func() begin
+	local left := (ScreenWidth() - 32) div 2;
+	local dark := 0, sum := 0;
+	for y := 0 to 31 do
+		for x := 0 to 31 do begin
+			local p := ScreenPixel(left + x, y);
+			if p < 128 then dark := dark + 1;
+			sum := (sum * 3 + p) mod 1000003;
+		end;
+	[dark, sum];
+end;
+
+busyStep := func() begin
+	local before := call boxPixels with ();
+	BusyBoxControl(-2);
+	call waitFor with ("liveink: the busy box", func() (call boxPixels with ())[1] <> before[1], func() begin
+		local shown := call boxPixels with ();
+		call liveCheck with ("the busy box drawn at the top middle (" & NumberStr(shown[0]) & " dark pixels)", shown[1] <> before[1] and shown[0] > 20);
+		BusyBoxControl(-1);
+		// (hidden, the screen's own bits are put back: what the display showed
+		// before, give or take what the page has drawn since)
+		call waitFor with ("liveink: the busy box hidden", func() (call boxPixels with ())[1] <> shown[1], func() begin
+			local after := call boxPixels with ();
+			call liveCheck with ("the busy box taken away, the screen's bits back (" & NumberStr(after[0]) & " dark pixels, " & NumberStr(before[0]) & " before)",
+				after[1] <> shown[1] and Abs(after[0] - before[0]) <= 8);
+			Print("liveink: done, " & NumberStr(liveFailed) & " failed");
+			HostQuit();
+		end, 20);
+	end, 20);
+end;
+
+inkStep := func() begin
+	// a zigzag with the pen held down: each sample a separate record, as a
+	// pen sampled in real time gives them
+	PenDown(60, 200);
+	for i := 1 to 20 do
+		PenMove(60 + i * 10, (if i mod 2 = 0 then 200 else 240));
+	call waitFor with ("liveink: the live ink", func() ScreenPixel(165, 220) < 128, func() begin
+		// the middle of the segment from (160, 200) down to (170, 240), and
+		// of the one from (240, 200) to (250, 240)
+		call liveCheck with ("the live ink on the display with the pen down",
+			ScreenPixel(165, 220) < 128 and ScreenPixel(245, 220) < 128);
+		call liveCheck with ("nothing beside it", ScreenPixel(165, 260) >= 128);
+		PenUp();
+		IdleStrokes();
+		AddDelayedCall(busyStep, nil, 500);
+	end, 20);
+end;
+
+call walkSetup with (name, inkStep);

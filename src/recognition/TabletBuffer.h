@@ -69,6 +69,12 @@ long	StopBypassTablet(void);							// ROM 0x0025076c StopBypassTablet__Fv - -1 w
 void	TabShutDown(void);								// ROM 0x002507c8 TabShutDown
 void	TabWakeUp(void);								// ROM 0x0025074c TabWakeUp
 void	FlushTabletBuffer(void);							// ROM 0x002507bc FlushTabletBuffer__Fv - TBCFlushTabletBuffer
+Boolean	InkerBufferEmpty(void);							// ROM 0x002507b4 InkerBufferEmpty__Fv - the inker's side (TBC...)
+void	FlushInkerBuffer(void);							// ROM 0x002507c0 FlushInkerBuffer__Fv
+ULong	GetInkerData(void);								// ROM 0x002507c4 GetInkerData__Fv
+void	SetInkerData(ULong word);						// ROM 0x002507e0 SetInkerData__FUl
+void	SetInkerData(ULong word, ULong offset);			// ROM 0x002507e4 SetInkerData__FUlT1
+void	IncInkerIndex(ULong count);						// ROM 0x002507e8 IncInkerIndex__FUl
 void	TBCFlushTabletBuffer(void);						// ROM 0x00250630 TBCFlushTabletBuffer__Fv - emptied
 void	TBCFlushInkerBuffer(void);						// ROM 0x00250648 TBCFlushInkerBuffer__Fv - the reader catches up
 void	TBCSetTabletPolling(Boolean polling);			// ROM 0x00250270 TBCSetTabletPolling__FUc

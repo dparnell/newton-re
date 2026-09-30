@@ -335,6 +335,14 @@ set_tests_properties(host.NewtonAlignPen.restart PROPERTIES TIMEOUT 180
                      PASS_REGULAR_EXPRESSION "alignpen: restart done, 0 failed"
                      FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
 
+# the inker's live ink and busy box (recognition/Inker.h, LiveInker.h;
+# demo/liveink.ns): a stroke with the pen held down inked on the display,
+# the busy box shown and taken away
+add_test(NAME host.NewtonLiveInk COMMAND newton --display 320x480 --headless 120 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/liveink.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonLiveInk PROPERTIES TIMEOUT 150
+                     PASS_REGULAR_EXPRESSION "liveink: done, 0 failed"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+
 # the host's printer (print/host/HostPrinter.h): a note and a Names card
 # printed from their Action buttons, the printer chosen in the Print slip's
 # Choose Other Printer; each page a PNG in build/print, which

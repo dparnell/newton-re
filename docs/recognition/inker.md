@@ -45,9 +45,59 @@ functions each piece cites.
   is down.  Everything else a script asks of the pen is an RPC to it:
   commands 7-16 and 0x14/0x15 the pen modes, 0x16 read the calibration,
   0x17 write it, 0x21 whether the tablet wants calibrating, 5 the
-  calibration screen, 0x33-0x37 the busy box (NOT YET).  The live ink
-  (`TInker::Convert`, `DrawInk`, `TLiveInker`) is NOT YET: the host's
-  `StrokeTime` draws it.
+  calibration screen, 0x33-0x37 the busy box.
+
+## The live ink (TInker::Convert, DrawInk, LCDEntry; TLiveInker)
+
+`LCDEntry` (and `InkThem`, the handler's copy of the same loop) takes the
+buffer a record at a time with `Convert` (0x00217a64):
+
+* a pen-down: the stroke takes the next pen size (`SetInkerPenSize` sets
+  it: the "pen modes" are the pen's size, 0 for no ink) and the last point
+  is forgotten - and so are the left and right, but only those, of the
+  stroke's inked bounds (a ROM quirk kept);
+* a sample: it becomes the current point, and `DrawInk` (0x0021765c) joins
+  the last point to it through the live inker, reading ahead as many of
+  the samples that follow as still fit the inker's tile (up to 80 points),
+  taking each one from the buffer;
+* a pen-up: the record is rewritten with the pen size and the bounds the
+  stroke's live ink covered (each word the top or bottom in its high half
+  and the left or right sign-extended over the whole word);
+* anything else is marked as nothing (0xf).
+
+After each record the strokes are read (`RealStrokeTime`, which reads the
+buffer behind the inker's own index) and the application woken when a
+stroke changed.  `gWireRecog` (1 in the ROM's initialised data - at
+0x0C104D2C, the RW data starting at 0x0C100800 - and never changed)
+keeps it that way; cleared, the inker would move the stroke world's
+index up to its own after every record and the strokes would never see
+a sample.
+
+`TLiveInker` (0x00113840-0x00113cac) keeps the ink off the screen's
+bits: the points go into a tile at most 64x64 pixels' worth of bytes,
+aligned as the screen driver asks (`ScreenInfo` +0x14 and +0x18: the
+host's driver says any row, and a byte's worth of columns), cleared,
+drawn into with `InkerLine` and ORed onto the display by `BlitToScreens`.
+So the live ink is on the display only, until the views draw the stroke
+into the bits - which is what lets a screen update take a live stroke
+away again.
+
+The host's `StrokeTime` does nothing while the inker runs, as the ROM's
+does; without the OS (the unit tests) it still reads the buffer and inks
+whole strokes itself.  A script's `IdleStrokes` waits
+(`HostTabletSettle`) until the inker and the stroke world have read the
+test pen's records.
+
+## The busy box (TBusyBox; QDShowBusyBox, QDHideBusyBox)
+
+`BusyBoxControl(n)` and the C++ callers of `BusyBoxSend` send the inker
+0x35+n: 0x33 show, 0x34 hide, 0x35 and 0x37 hide and call off, 0x36 show
+in a second (a timer on the inker world's queue) unless called off first.
+`QDShowBusyBox` (0x00047b10) puts the ROM's 32x32 busy picture
+(`blastbits`, `blast2bits`, `blast4bits` by depth) at the top middle of
+the display; `QDHideBusyBox` blits the screen's bits back over it.  Like
+the live ink it never touches the screen's bits.  `src/host/demo/liveink.ns`
+(ctest `host.NewtonLiveInk`) checks both on the display.
 
 ## The calibration screen (TInker::Calibrate, 0x002180a0)
 
