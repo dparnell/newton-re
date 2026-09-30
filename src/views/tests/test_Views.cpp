@@ -779,6 +779,11 @@ TestParagraphView()
 	TParagraphView* p = (TParagraphView*) ViewOf("ctxQ := AddView(GetRoot(), {viewClass: 81, viewFlags: 3, viewBounds: {left: 20, top: 10, right: 70, bottom: 70}, viewJustify: 0, viewFont: espy12, text: \"Hello World again\"})");
 	EXPECT(p != nil && p->ClassID() == clParagraphView && p->DerivedFrom(clDataView) && p->DerivedFrom(clView));
 	EXPECT(p->fTransferMode == srcOr && p->fTextFlags != -1 && !p->fCalculateBounds);
+	// a paragraph that does not calculate its bounds lays out nothing in
+	// SetupDone: its lines are made when they are first wanted (drawn)
+	EXPECT(p->LineCount() == 0 && p->fLines == nil);
+	Eval("ctxQ:Dirty()");
+	Refresh();
 	EXPECT(p->LineCount() == 3);
 	if (p->LineCount() == 3)
 	{
@@ -804,6 +809,8 @@ TestParagraphView()
 
 	// a paragraph too short for its text: one line and the ellipsis after it
 	p = (TParagraphView*) ViewOf("ctxQ := AddView(GetRoot(), {viewClass: 81, viewFlags: 3, viewBounds: {left: 20, top: 10, right: 100, bottom: 30}, viewJustify: 0, viewFont: espy12, text: \"Hello World again\"})");
+	Eval("ctxQ:Dirty()");
+	Refresh();
 	EXPECT(p->LineCount() == 1 && p->Line(0).fEnd == 12);
 	Eval("ctxQ:Dirty()");
 	Refresh();
@@ -822,6 +829,8 @@ TestParagraphView()
 	// fit is measured with the stretched advances, as the ROM measures it)
 	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "espy18")), RefVar(MAKEINT(PackFont(0, 18, 0))));
 	p = (TParagraphView*) ViewOf("ctxQ := AddView(GetRoot(), {viewClass: 81, viewFlags: 3, viewBounds: {left: 20, top: 10, right: 75, bottom: 90}, viewJustify: 0, viewFont: espy12, text: \"Hello World again\", styles: [6, espy12, 6, espy18, 5, espy12]})");
+	Eval("ctxQ:Dirty()");
+	Refresh();
 	EXPECT(p->LineCount() == 3);
 	if (p->LineCount() == 3)
 	{
@@ -838,13 +847,56 @@ TestParagraphView()
 	// viewLineSpacing: the lines that far apart when the font fits it, the
 	// first baseline three above the first ruled line (LineLoop)
 	p = (TParagraphView*) ViewOf("ctxQ := AddView(GetRoot(), {viewClass: 81, viewFlags: 3, viewBounds: {left: 20, top: 10, right: 70, bottom: 90}, viewJustify: 0, viewFont: espy12, viewLineSpacing: 18, text: \"Hello World\"})");
+	Eval("ctxQ:Dirty()");
+	Refresh();
 	EXPECT(p->fLineSpacing == 18 && p->GetInterLineSpacing() == 18 && p->LineCount() == 2);
 	EXPECT(p->Line(0).fBounds.top + p->Line(0).fAscent == 10 + 18 - 3 && p->Line(1).fBounds.top + p->Line(1).fAscent == 10 + 18 - 3 + 18);
 	Eval("ctxQ:Close()");
 	// ... whatever the font: an input line's text on its line (a Find slip's)
 	p = (TParagraphView*) ViewOf("ctxQ := AddView(GetRoot(), {viewClass: 81, viewFlags: 3, viewBounds: {left: 20, top: 10, right: 120, bottom: 65}, viewJustify: 0x800000, viewFont: espy12, viewLineSpacing: 45, text: \"tester\"})");
+	Eval("ctxQ:Dirty()");
+	Refresh();
 	EXPECT(p->GetInterLineSpacing() == 45 && p->LineCount() == 1 && p->Line(0).fBounds.top + p->Line(0).fAscent == 10 + 45 - 4);
 	Eval("ctxQ:Close()");
+
+	// CheckStyles: an italic run is a face that leans out of its box (italic, outline or shadow: 0x1a); no ink words here
+	p = (TParagraphView*) ViewOf("ctxQ := AddView(GetRoot(), {viewClass: 81, viewFlags: 3 + 8, viewBounds: {left: 20, top: 10, right: 120, bottom: 10}, viewJustify: 0, viewFont: espy12, text: \"one two\", styles: [4, espy12, 3, 0x203000]})");
+	EXPECT(!p->CheckStyles() && p->fHasHeavyFaces && !p->fHasInkWords);
+	Eval("ctxQ:Close()");
+	p = (TParagraphView*) ViewOf("ctxQ := AddView(GetRoot(), {viewClass: 81, viewFlags: 3 + 8, viewBounds: {left: 20, top: 10, right: 120, bottom: 10}, viewJustify: 0, viewFont: espy12, text: \"one\"})");
+	EXPECT(!p->CheckStyles() && !p->fHasHeavyFaces);
+	Eval("ctxQ:Close()");
+
+	// a paragraph that calculates its bounds lays its lines out in
+	// SetupDone - and drops them again when it lies outside what its
+	// parents show; one that does not calculate them waits to be drawn
+	Eval("ctxQF := AddView(GetRoot(), {viewClass: 74, viewFlags: 1, viewBounds: {left: 0, top: 0, right: 150, bottom: 60}})");
+	p = (TParagraphView*) ViewOf("ctxQ := AddView(ctxQF, {viewClass: 81, viewFlags: 1 + 8, viewBounds: {left: 10, top: 10, right: 140, bottom: 10}, viewJustify: 0, viewFont: espy12, text: \"shown\"})");
+	EXPECT(p->LineCount() == 1);
+	p = (TParagraphView*) ViewOf("ctxQ := AddView(ctxQF, {viewClass: 81, viewFlags: 1 + 8, viewBounds: {left: 10, top: 80, right: 140, bottom: 80}, viewJustify: 0, viewFont: espy12, text: \"below\"})");
+	EXPECT(p->fLines != nil && p->LineCount() == 0);
+	p = (TParagraphView*) ViewOf("ctxQ := AddView(ctxQF, {viewClass: 81, viewFlags: 1, viewBounds: {left: 10, top: 20, right: 140, bottom: 40}, viewJustify: 0, viewFont: espy12, text: \"later\"})");
+	EXPECT(p->fLines == nil && p->LineCount() == 0);
+	Eval("RemoveView(GetRoot(), ctxQF)");
+
+	// text flag 0x20 on a page: the paragraph moved so its first baseline
+	// is on the page's lines, and the flag cleared in the view and its
+	// textFlags slot
+	{
+		TEditView* page = (TEditView*) ViewOf("ctxQE := AddView(GetRoot(), {viewClass: 77, viewFlags: 1, viewLineSpacing: 20, viewBounds: {left: 0, top: 0, right: 200, bottom: 150}})");
+		p = (TParagraphView*) ViewOf("ctxQ := AddView(ctxQE, {viewClass: 81, viewFlags: 1, textFlags: 0x20, viewBounds: {left: 10, top: 7, right: 150, bottom: 27}, viewJustify: 0, viewFont: espy12, text: \"ruled\"})");
+		StyleRecord record;
+		CreateTextStyleRecord(RefVar(MAKEINT(PackFont(0, 12, 0))), &record);
+		FontInfo info;
+		GetStyleFontInfo(&record, &info);
+		DisposeStyleRecord(&record);
+		Rect expected;
+		SetRect(&expected, 10, 7, 150, 27);
+		page->AlignToLineSpacing(&expected, info.ascent + expected.top, info.ascent);
+		EXPECT(p->viewBounds.top == expected.top && p->viewBounds.bottom == expected.bottom && expected.top != 7);
+		EXPECT((p->fTextFlags & 0x20) == 0 && (RINT(Eval("ctxQ.textFlags")) & 0x20) == 0);
+		Eval("RemoveView(GetRoot(), ctxQE)");
+	}
 
 	// a view that calculates its bounds is made as tall as its lines when it
 	// is built (CreateAllCaches) - a note made by MakeTextNote has no height
@@ -855,11 +907,15 @@ TestParagraphView()
 	// a paragraph's vertical justification is only for one line
 	// (vjOneLineOnly); another's lines start at its top
 	p = (TParagraphView*) ViewOf("ctxQ := AddView(GetRoot(), {viewClass: 81, viewFlags: 3, viewBounds: {left: 20, top: 10, right: 70, bottom: 90}, viewJustify: 9, viewFont: espy12, text: \"Hello\"})");
+	Eval("ctxQ:Dirty()");
+	Refresh();
 	EXPECT(p->LineCount() == 1 && p->Line(0).fBounds.top == 10);
 	Eval("ctxQ:Close()");
 
 	// justified: flush right and at the bottom
 	p = (TParagraphView*) ViewOf("ctxQ := AddView(GetRoot(), {viewClass: 81, viewFlags: 3, viewBounds: {left: 20, top: 10, right: 70, bottom: 90}, viewJustify: 9 + 0x800000, viewFont: espy12, text: \"Hello\"})");
+	Eval("ctxQ:Dirty()");
+	Refresh();
 	EXPECT(p->LineCount() == 1 && p->Line(0).fBounds.bottom == 90);
 	Eval("ctxQ:Dirty()");
 	Refresh();
@@ -4349,7 +4405,7 @@ TestInkWordAtTheCaret()
 	InitializeParagraphCompression();
 	InitializeInkFont();
 	TEditView* editor = (TEditView*) ViewOf(
-		"ctxIC := AddView(GetRoot(), {viewClass: 77, viewFlags: 1, "
+		"ctxIC := AddView(GetRoot(), {viewClass: 77, viewFlags: 1, recConfig: rcInkOrTextConfig, "
 		"viewBounds: {left: 0, top: 0, right: 200, bottom: 150}, viewChildren: [], "
 		"added: nil, viewAddChildScript: func(t) begin added := t; t end})");
 	EXPECT(editor != nil);
@@ -4358,6 +4414,9 @@ TestInkWordAtTheCaret()
 		"viewBounds: {left: 10, top: 10, right: 150, bottom: 40}, "
 		"viewFont: espy12, text: \"ab\"})");
 	EXPECT(para != nil && para->TextLength() == 2);
+	// (the page's recognition keeps ink words - rcInkOrText - so the one
+	// written into the paragraph stays one: on a page that does not,
+	// ProcessStyles reads the ink words as they come - RangeChanged)
 	Eval("ctxIC.added := nil");			// (adding the paragraph ran the script)
 	Refresh();
 	Eval("SetKeyView(ctxICP, 1)");
@@ -4525,7 +4584,10 @@ TestInkWordInText()
 
 	RefVar templ(AllocateFrame());
 	SetFrameSlot(templ, RSSYMviewclass, RefVar(MAKEINT(clParagraphView)));
+	// (a view whose recognition keeps ink words - rcInkOrText - keeps them:
+	// in one that does not, ProcessStyles has them read when it is set up)
 	SetFrameSlot(templ, RSSYMviewflags, RefVar(MAKEINT(vVisible)));
+	SetFrameSlot(templ, RSSYMrecconfig, RefVar(Rrcinkortext));
 	Rect where;
 	SetRect(&where, 5, 5, 110, 60);
 	SetFrameSlot(templ, RSSYMviewbounds, RefVar(ToObject(where)));
@@ -4621,7 +4683,10 @@ TestJoinInk()
 
 	RefVar templ(AllocateFrame());
 	SetFrameSlot(templ, RSSYMviewclass, RefVar(MAKEINT(clParagraphView)));
+	// (a view whose recognition keeps ink words - rcInkOrText - keeps them:
+	// in one that does not, ProcessStyles has them read when it is set up)
 	SetFrameSlot(templ, RSSYMviewflags, RefVar(MAKEINT(vVisible)));
+	SetFrameSlot(templ, RSSYMrecconfig, RefVar(Rrcinkortext));
 	Rect where;
 	SetRect(&where, 5, 5, 200, 60);
 	SetFrameSlot(templ, RSSYMviewbounds, RefVar(ToObject(where)));
@@ -4827,7 +4892,7 @@ TestInsertItems()
 	EXPECT(Ustrlen(delimiter) == 0);
 
 	TParagraphView* p = (TParagraphView*) ViewOf(
-		"ctxII := AddView(GetRoot(), {viewClass: 81, viewFlags: 1, "
+		"ctxII := AddView(GetRoot(), {viewClass: 81, viewFlags: 1, recConfig: rcInkOrTextConfig, "
 		"viewBounds: {left: 5, top: 5, right: 150, bottom: 90}, "
 		"viewFont: espy12, text: \"one four\"})");
 	EXPECT(p != nil && p->ClassID() == clParagraphView);
@@ -5015,7 +5080,10 @@ TestSplitInk()
 	SetArraySlot(styles, 5, RefVar(Eval("espy12")));
 	RefVar templ(AllocateFrame());
 	SetFrameSlot(templ, RSSYMviewclass, RefVar(MAKEINT(clParagraphView)));
+	// (a view whose recognition keeps ink words - rcInkOrText - keeps them:
+	// in one that does not, ProcessStyles has them read when it is set up)
 	SetFrameSlot(templ, RSSYMviewflags, RefVar(MAKEINT(vVisible)));
+	SetFrameSlot(templ, RSSYMrecconfig, RefVar(Rrcinkortext));
 	Rect where;
 	SetRect(&where, 5, 5, 150, 60);
 	SetFrameSlot(templ, RSSYMviewbounds, RefVar(ToObject(where)));
@@ -5131,6 +5199,7 @@ TestWordGeometry()
 		"viewBounds: {left: 20, top: 10, right: 120, bottom: 40}, "
 		"viewFont: espy12, text: \"one two\"})");
 	EXPECT(p != nil);
+	Eval("ctxWG:Dirty()");
 	Refresh();
 	Rect word;
 	SetRect(&word, 30, p->viewBounds.bottom - 5, 70, p->viewBounds.bottom + 5);
@@ -5195,6 +5264,7 @@ TestWordIntoParagraph()
 		"viewFont: espy12, text: \"one two\"})");
 	EXPECT(para != nil && para->TextLength() == 7);
 	Eval("ctxWP.added := nil");			// (adding the paragraph ran the script)
+	Eval("ctxWPP:Dirty()");
 	Refresh();
 	gLastAddedWordView = nil;
 
@@ -5294,7 +5364,7 @@ TestInkWordAtPageCaret()
 	InitializeParagraphCompression();
 	InitializeInkFont();
 	TEditView* editor = (TEditView*) ViewOf(
-		"ctxPC := AddView(GetRoot(), {viewClass: 77, viewFlags: 1, "
+		"ctxPC := AddView(GetRoot(), {viewClass: 77, viewFlags: 1, recConfig: rcInkOrTextConfig, "
 		"viewBounds: {left: 0, top: 0, right: 300, bottom: 200}, viewChildren: [], "
 		"added: nil, viewAddChildScript: func(t) begin added := t; t end})");
 	EXPECT(editor != nil);
@@ -5465,7 +5535,7 @@ TestRichStringIntoParagraph()
 
 	// and dropped into a paragraph
 	TParagraphView* p = (TParagraphView*) ViewOf(
-		"ctxRS := AddView(GetRoot(), {viewClass: 81, viewFlags: 1, "
+		"ctxRS := AddView(GetRoot(), {viewClass: 81, viewFlags: 1, recConfig: rcInkOrTextConfig, "
 		"viewBounds: {left: 5, top: 5, right: 150, bottom: 60}, "
 		"viewFont: espy12, text: \"\"})");
 	EXPECT(p != nil);
@@ -7242,6 +7312,10 @@ main()
 	// ... and vars.stdForms, the stationery a template without a
 	// viewClass names (the clipping's icon is a 'para)
 	SetFrameSlot(RefVar(gVarFrame), RSSYMstdforms, RefVar(Rstdforms));
+	// a recognition configuration that keeps ink words, for the views that
+	// are given ink words to keep: in any other a paragraph's ProcessStyles
+	// has them read as they come
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "rcInkOrTextConfig")), RefVar(Rrcinkortext));
 	// an ink word asks the user's preferences for its scale and its pen;
 	// on a Newton the boot has set them long before anything makes one
 	{

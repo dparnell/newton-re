@@ -144,12 +144,20 @@ TParagraphView::~TParagraphView()
 // The view readied once its context is complete: the transfer mode
 // (viewTransferMode, srcOr when none), the line spacing (viewLineSpacing),
 // the text flags (the input view's from textFlags and viewFlags), the
-// bounds cached, the default style's height as the line height, the
-// locale's break tables; a rich text slot is split into text and styles
-// (NOT YET RECONSTRUCTED: ink - a rich string's text is used as it is);
-// then, for a view that calculates its bounds, the styles are checked
-// (CheckStyles NOT YET) and the caches built - before TView::SetupDone runs
-// the viewSetupDoneScript.
+// bounds cached, a rich string in the text slot split into the data
+// frame's text and styles, the default style's height as the line
+// height, the locale's break tables.  A view that calculates its bounds
+// has its styles checked and its caches made now - before its
+// viewSetupDoneScript (TView::SetupDone, at the end) runs, so the script
+// finds its viewBounds as tall as its text - and dropped again when it
+// lies wholly outside what its parents show (a print view or a remote view
+// ends the walk: what is below one is drawn elsewhere).  A view that does
+// not calculate its bounds makes its caches when they are first asked for
+// (RealDraw and the other callers of CreateAllCaches).  Text flag 0x20
+// puts a paragraph on an edit view on the page's lines: its top moved so
+// its first baseline is on one (AlignToLineSpacing), and the flag cleared
+// in the view and in its data frame's textFlags.  Then the styles are
+// processed (ink words in a view that takes none are recognised).
 void
 TParagraphView::SetupDone(void)
 {
@@ -160,12 +168,19 @@ TParagraphView::SetupDone(void)
 	fTextFlags = (long) GetInputViewTextFlags((ULong) TextFlags(), fFlags);
 	fCachedBounds = viewBounds;
 	RefVar style(GetDefaultViewStyle());
+	RefVar data(DataFrame());
+	RefVar text(GetProto(RSSYMtext));
+	if (IsRichString(text))
+	{
+		TRichString rich(text);
+		SetFrameSlot(data, RSSYMtext, RefVar(rich.MakeParagraphTextSlot()));
+		SetFrameSlot(data, RSSYMstyles, RefVar(rich.MakeParagraphStylesSlot(style)));
+	}
 	StyleRecord record;
 	CreateTextStyleRecord(style, &record);
 	FontInfo fontInfo;
 	GetStyleFontInfo(&record, &fontInfo);
 	fLineHeight = fontInfo.ascent + fontInfo.descent + fontInfo.leading;
-	DisposeStyleRecord(&record);
 	if (NOTNIL(IntlResources()))				// (the host without a locale: FindWordBreaks needs no table)
 	{
 		fWordBreakTable = GetLocaleSlot(RSSYMwordbreaktable);
@@ -173,22 +188,54 @@ TParagraphView::SetupDone(void)
 	}
 	fCachesValid = true;
 	fCalculateBounds = (fFlags & vCalculateBounds) != 0;
-	// a view that calculates its bounds lays its lines out now, before its
-	// viewSetupDoneScript runs (TView::SetupDone, below), so the script
-	// finds its viewBounds as tall as its text - NetHopper's paragraphs,
-	// made with no height, read them back there.  (NOT YET: CheckStyles
-	// first, and the caches dropped again when the view lies outside what
-	// its parents show; the bounds aligned to an edit view's lines, text
-	// flag 0x20; ProcessStyles.)
 	if (fFlags & vCalculateBounds)
+	{
+		CheckStyles();
 		CreateAllCaches();
+		Rect shown = fParent->viewBounds;
+		TView* ancestor = fParent;
+		do
+		{
+			ancestor = ancestor->fParent;
+			// (the root is its own parent, so a paragraph straight on the
+			// root ends the walk at once; the host guards a nil parent too)
+			if (ancestor == nil)
+				break;
+			if (ancestor->DerivedFrom(clPrintView) || ancestor->DerivedFrom(clRemoteView))
+				break;
+			SectRect(&ancestor->viewBounds, &shown, &shown);
+		} while (ancestor != gRootView);
+		if (!Overlaps(&shown, &viewBounds))
+			ClearAllCaches();
+	}
+	if ((fTextFlags & 0x20) != 0 && fParent->DerivedFrom(clEditView))
+	{
+		Rect bounds = viewBounds;
+		Point origin = fParent->ContentsOrigin();
+		OffsetRect(&bounds, (short) -origin.h, (short) -origin.v);
+		long ascent;
+		if (fLines != nil && fLineCount > 0)
+			ascent = fLines[0].fAscent;
+		else
+		{
+			StyleRecord first;
+			CreateTextStyleRecord(RefVar(GetStyleAtOffset(0, nil, nil)), &first);
+			FontInfo firstInfo;
+			GetStyleFontInfo(&first, &firstInfo);
+			DisposeStyleRecord(&first);
+			ascent = firstInfo.ascent;
+		}
+		((TEditView*) fParent)->AlignToLineSpacing(&bounds, ascent + bounds.top, ascent);
+		WriteBounds(bounds);
+		fTextFlags &= ~0x20;
+		long flags = (long) TextFlags();
+		if ((ObjectFlags(data) & kObjReadOnly) == 0)
+			SetFrameSlot(data, RSSYMtextflags, RefVar(MAKEINT(flags & ~0x20)));
+	}
+	ProcessStyles(false);
 	fSetupDone = true;
 	TView::SetupDone();
-	// (the ROM's SetupDone makes no caches for a view that does not
-	// calculate its bounds; NOT YET found where it makes them - the host
-	// makes them here, as it always has)
-	if (!(fFlags & vCalculateBounds))
-		CreateAllCaches();
+	DisposeStyleRecord(&record);
 }
 
 
@@ -626,6 +673,11 @@ TParagraphView::FillAllCaches(void)
 {
 	fLineCount = 0;
 	SetEmptyRect(&fTextBounds);
+	// (host: where the lines are laid out, which RealDraw's
+	// OffsetCachedBounds measures a move from; the ROM works the move out
+	// of the first text object's baseline instead, so lines laid out
+	// again - FixupBBox after a move - are never moved a second time)
+	fCachedBounds = viewBounds;
 	RefVar textRef(Text());
 	if (ISNIL(textRef) || fRunCount == 0)
 		return;
@@ -2140,14 +2192,86 @@ TParagraphView::PointInHilite(Point& pt)
 }
 
 
-// ROM 0x00180ce4 ProcessStyles__14TParagraphViewFUc
-// The styles checked for ink words to recognise (CheckStyles; the
-// recogniser then runs over the text).  NOT YET RECONSTRUCTED: ink -
-// nothing to process.  ==> whether anything was.
+// ROM 0x001804d4 CheckStyles__14TParagraphViewFv
+// What the styles hold: an ink word among the runs (fHasInkWords) and an
+// italic, outlined or shadowed face (fHasHeavyFaces, 0x1a).  A single style
+// (an integer spec or a frame) can be no ink word.  ==> fHasInkWords.
 Boolean
-TParagraphView::ProcessStyles(Boolean /*redraw*/)
+TParagraphView::CheckStyles(void)
 {
-	return false;
+	fHasInkWords = false;
+	fHasHeavyFaces = false;
+	RefVar styles(GetStyles());
+	if (ISINT(styles) || IsFrame(styles))
+	{
+		if ((GetFontFace(styles) & 0x1a) != 0)
+			fHasHeavyFaces = true;
+	}
+	else if (IsArray(styles))
+	{
+		long count = Length(styles) / 2;
+		RefVar style;
+		for (long i = 0; i < count; i++)
+		{
+			style = GetArraySlotRef(styles, i * 2 + 1);
+			if (!fHasInkWords && IsInkWord(style))
+				fHasInkWords = true;
+			if (!fHasHeavyFaces && (GetFontFace(style) & 0x1a) != 0)
+				fHasHeavyFaces = true;
+		}
+	}
+	return fHasInkWords;
+}
+
+
+// ROM 0x00180c70 InPrintOrPreview__FP5TView
+Boolean
+InPrintOrPreview(TView* view)
+{
+	while (!view->DerivedFrom(clRemoteView) && !view->DerivedFrom(clPrintView))
+	{
+		view = view->fParent;
+		if (view == gRootView)
+			return false;
+	}
+	return true;
+}
+
+
+// ROM 0x00180ce4 ProcessStyles__14TParagraphViewFUc
+// Ink words in the text of a view that does not take them (not printed or
+// previewed, not read-only - viewFlags 0x4000082 - and not a view whose
+// recognition allows ink words) are read: the whole text selected and the
+// screen brought up to date first when `redraw` (and the view is showing,
+// and not viewFlags 0x10000000), then RecognizePara over it with the
+// deferred recognition configuration of the view the recognition is for,
+// and the undo cleared.  ==> whether they were.
+Boolean
+TParagraphView::ProcessStyles(Boolean redraw)
+{
+	Boolean processed = false;
+	fHasInkWords = CheckStyles();
+	if (fHasInkWords
+	 && !InPrintOrPreview(this) && (fFlags & 0x4000082) == 0
+	 && !ViewAllowsInkWords(this))
+	{
+		processed = true;
+		if (!VisibleDeep() || (fFlags & 0x10000000) != 0)
+			redraw = false;
+		RefVar text(Text());
+		long length = (Length(text) - 2) >> 1;
+		if (redraw)
+		{
+			HiliteText(0, length, true);
+			gRootView->Update(nil);
+		}
+		TView* recognitionView = GetRecognitionView(this);
+		RefVar config(BuildRecConfigForDeferred(recognitionView, recognitionView->fFlags & 0x1ffff00));
+		RecognizePara(this, 0, length, redraw, config);
+		gApplication->ClearUndo();
+		fHasInkWords = false;
+	}
+	return processed;
 }
 
 

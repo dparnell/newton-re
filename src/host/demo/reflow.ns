@@ -10,8 +10,11 @@
 //   python tools/imaging/pgm2png.py reflow.pgm reflow.png
 //
 // Prints each group and what is in it, then writes reflow.pgm.  The long
-// paragraph does not fit the new width in its own height, so it is cut
-// where its lines stop and carried on in pieces, each starting a page.
+// paragraph does not fit the new width in its own height, but it is not
+// cut: ReflowText asks the piece it builds where its laid-out lines stop,
+// and a paragraph that does not calculate its bounds lays out none until
+// it is drawn (ROM behaviour - TParagraphView::SetupDone makes no lines
+// for it), so the piece is the whole paragraph, clipped when drawn.
 // The group of shapes is centred and lassoed round its children
 // (viewJustify 0xA010), which moves the group but not the children - the
 // ROM's TView::Constructor does the same - so the boxes are drawn from

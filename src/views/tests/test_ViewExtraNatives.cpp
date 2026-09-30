@@ -236,17 +236,19 @@ TestReflow()
 	// the originals are left alone
 	EXPECT(RINT(RefVar(Eval("reflowItems[1].viewBounds.left"))) == 20);
 
-	// a paragraph longer than its own height at the new width is cut where
-	// its lines stop and carried on in pieces, each a first group, which
-	// put back together are the text again
+	// a paragraph longer than its own height at the new width is not cut:
+	// ReflowText builds the piece and asks where its laid-out lines stop
+	// (OffsetPastVisible), but a paragraph that does not calculate its
+	// bounds lays out no lines until it is drawn (TParagraphView::SetupDone
+	// makes none), so it finds none and the piece is the whole paragraph -
+	// ROM behaviour
 	Eval("reflowLong := {viewClass: 81, viewFlags: 1, viewFont: font, viewBounds: {left: 0, top: 0, right: 100, bottom: 24}, "
 		 "text: \"one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen\"}");
 	Eval("reflowPages := ReFlow([reflowLong], reflowFormat, reflowBox, {left: 0, top: 0, right: 60, bottom: 200})");
 	long pieces = RINT(RefVar(Eval("Length(reflowPages)")));
-	EXPECT(pieces > 2);
-	EXPECT(NOTNIL(RefVar(Eval("begin local s := \"\"; foreach g in reflowPages do s := s & g.viewChildren[0].text; StrEqual(s, reflowLong.text) end"))));
-	EXPECT(RINT(RefVar(Eval("reflowPages[1].viewBounds.top"))) == 0);
-	EXPECT(RINT(RefVar(Eval("reflowPages[1].viewChildren[0].viewBounds.right"))) == 60);
+	EXPECT(pieces == 1);
+	EXPECT(NOTNIL(RefVar(Eval("StrEqual(reflowPages[0].viewChildren[0].text, reflowLong.text)"))));
+	EXPECT(RINT(RefVar(Eval("reflowPages[0].viewChildren[0].viewBounds.right"))) == 60);
 
 	// nothing to do: nil
 	EXPECT(ISNIL(RefVar(Eval("ReFlow(nil, reflowFormat, reflowBox, reflowBox)"))));

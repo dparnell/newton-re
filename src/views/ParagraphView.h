@@ -404,6 +404,7 @@ public:
 	Ref			GetWriteableTextStylesArray(void);						// ROM 0x00179248 GetWriteableTextStylesArray__14TParagraphViewFv
 	void		RangeChanged(long offset, long removed, long inserted, RefArg slot);	// ROM 0x00180bd8 RangeChanged__14TParagraphViewFlN21RC6RefVar
 	Boolean		ProcessStyles(Boolean redraw);							// ROM 0x00180ce4 ProcessStyles__14TParagraphViewFUc
+	Boolean		CheckStyles(void);										// ROM 0x001804d4 CheckStyles__14TParagraphViewFv - whether the styles hold an ink word (fHasInkWords), and whether any face is italic, outlined or shadowed (fHasHeavyFaces)
 	void		FixupBBox(void);										// ROM 0x001815b8 FixupBBox__14TParagraphViewFv
 	long		TextLength(void);										// the text's characters (host)
 
@@ -416,6 +417,8 @@ public:
 	long		fLineSpacing;		// +0x38  viewLineSpacing (0 when none)
 	long		fLineHeight;		// +0x3c  the default style's height (ascent + descent + leading), then the last line's
 	Rect		fCachedBounds;		// +0x40  the bounds the lines were laid out in
+	Boolean		fHasInkWords;		// +0x48  CheckStyles: an ink word among the styles
+	Boolean		fHasHeavyFaces;		// +0x49  CheckStyles: a face with italic, outline or shadow (0x1a) - drawn past its advances
 	Boolean		fCalculateBounds;	// +0x58  vCalculateBounds is set
 	Boolean		fTapped;			// +0x59  a tap is pending the double-tap interval (Idle reason 2 runs it)
 	Point		fTapPoint;			// +0x5c  where the tap was
@@ -449,6 +452,10 @@ void	GrowLineInfoCache(LineInfo** cache, long* capacity);
 long		LengthSansTabsAndCRs(const UniChar* text, Boolean* found);	// ROM 0x0017aefc LengthSansTabsAndCRs__FPUsPUc
 UniChar*	RemoveTabsAndCRs(const UniChar* text, RefArg styles);		// ROM 0x0017ad6c RemoveTabsAndCRs__FPUsRC6RefVar
 extern ULong	gLastParagraphClick;								// ROM 0x0c101760 (unnamed)			// ROM 0x0017c9cc GrowLineInfoCache__FPPP8LineInfol
+
+// Whether the view is drawn inside a print view or a remote view (a
+// print preview, a page's thumbnail) - somewhere below one of them.
+Boolean	InPrintOrPreview(TView* view);						// ROM 0x00180c70 InPrintOrPreview__FP5TView
 
 // The view as a paragraph, or a throw saying that it is not one.
 TParagraphView*	FailGetParagraphView(RefArg context);				// ROM 0x001ee218 FailGetParagraphView__FRC6RefVar

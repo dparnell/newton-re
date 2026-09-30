@@ -673,7 +673,7 @@ set_tests_properties(host.NewtonKeyHelp PROPERTIES TIMEOUT 120
 # ReflowPreflight): the groups made and what is in each (needs the ROM image)
 add_test(NAME host.NewtonReflow COMMAND newton --display 320x480 --headless 120 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/reflow.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(host.NewtonReflow PROPERTIES TIMEOUT 150
-                     PASS_REGULAR_EXPRESSION "reflow: families 1, sizes 1, faces 2.*reflow: 5 groups.*group 0 top 0, 1 children .Shopping list.*group 1 top 20, 2 children box 0,0 box 80,10.*group 2 top 20, 1 children .Bread.*group 3 top 0.*group 4 top 0, 1 children .newspaper for Sunday.*reflow: snapshot.*reflow: done"
+                     PASS_REGULAR_EXPRESSION "reflow: families 1, sizes 1, faces 2.*reflow: 3 groups.*group 0 top 0, 1 children .Shopping list.*group 1 top 20, 2 children box 0,0 box 80,10.*group 2 top 20, 1 children .Bread, milk, eggs, apples, cheese, coffee, rice, tea, butter and a newspaper for Sunday.*reflow: snapshot.*reflow: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain")
 
 # a roll over a soup cursor scrolled (views/View.cpp TView::SyncScrollSoup):

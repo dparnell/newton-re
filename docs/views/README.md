@@ -352,8 +352,23 @@ answers a single run's style itself, or `GetDefaultViewStyle` 0x0017a9ec
 - viewFont from the protos, a read-only view's from the parents too, else
 the userFont preference - when there are none).  `SetupDone` 0x00181608
 reads viewTransferMode, viewLineSpacing, the text flags
-(`GetInputViewTextFlags` 0x0025fdf4), the locale's break tables, and
-builds the caches.  A final carriage return leaves an empty line behind
+(`GetInputViewTextFlags` 0x0025fdf4), the locale's break tables, splits a
+rich string in the text slot into text and styles, and - for a paragraph
+that calculates its bounds only - checks the styles (`CheckStyles`: an ink
+word among them, a face that leans out of its box, italic/outline/shadow
+0x1a) and builds the caches, dropping them again when the view lies
+wholly outside what its parents show (the walk up stops at a print view
+or a remote view).  A paragraph that does not calculate its bounds makes
+its caches when they are first wanted (RealDraw, OffsetToCaret and the
+other callers of `CreateAllCaches`) - so `ReflowText`, which asks a piece
+it has just built where its lines stop, never cuts one (ROM behaviour).
+Text flag 0x20 moves a paragraph on an edit view so its first baseline
+sits on the page's lines (`TEditView::AlignToLineSpacing`) and clears the
+flag in the view and its textFlags slot.  Last, `ProcessStyles` reads the
+ink words in a view whose recognition does not keep them
+(`ViewAllowsInkWords`; not in a print or preview, `InPrintOrPreview`),
+through `RecognizePara` with the deferred configuration, and clears the
+undo.  A final carriage return leaves an empty line behind
 it - the line the caret goes to when the return is typed, and the line
 that makes a view which sizes itself to its text grow by one.  NOT YET:
 editing, hilites, the caret, ink, tabs (drawn as characters), the text
@@ -820,7 +835,8 @@ vCalculateBounds paragraph takes it as its viewFont), the hilites moved
 this is the key view, `RangeChanged` 0x00182c08 (the lines laid out
 again - `FixupBBox` 0x001835e8, which also sizes a vCalculateBounds
 paragraph to its text - and, once set up, `Changed('text)` after
-`ProcessStyles` 0x00182d14 has looked for ink to recognise - NOT YET),
+`ProcessStyles` 0x00182d14 has had any ink words read that the view does
+not keep),
 the view dirtied (its parent for an undo, and the old bounds when they
 shrank).  `GetStyleAtOffset` 0x0017f8dc, `GetStylesOfRange` 0x0017fa94,
 `CountStylesForLength` 0x0017fd68, `SetStyleOfRange`,
