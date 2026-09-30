@@ -290,6 +290,17 @@ FHostInclude(RefArg /*rcvr*/, RefArg name)
 }
 
 
+// HostStoreFile(): the --store file's path, or nil - for a script that
+// keeps a file of its own beside the store (a memory card's), so a test
+// run in a directory of its own (tools/host/stress.py) keeps it there too
+static Ref
+FHostStoreFile(RefArg /*rcvr*/)
+{
+	const char* path = HostGetStoreFile();
+	return path == nil ? NILREF : MakeString(path);
+}
+
+
 // HostCPUTime(): the milliseconds of processor time the program has used,
 // in the kernel and out of it - what a benchmark measures the work by,
 // the wall clock being taken up as well by the animations' and the
@@ -322,6 +333,7 @@ NewtonPreMain(void)
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostQuit")), RefVar(MakeCFunction((void*) FHostQuit, 0, nil)));
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostInclude")), RefVar(MakeCFunction((void*) FHostInclude, 1, nil)));
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostCPUTime")), RefVar(MakeCFunction((void*) FHostCPUTime, 0, nil)));
+	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostStoreFile")), RefVar(MakeCFunction((void*) FHostStoreFile, 0, nil)));
 	HostInstallPackageGlobal();
 	HostLinkStart();
 	HostInstallPrinter();

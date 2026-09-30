@@ -44,6 +44,12 @@ HostSetStoreFile(const char* path)
 	gStoreFile = path;
 }
 
+const char*
+HostGetStoreFile(void)
+{
+	return gStoreFile;
+}
+
 
 Boolean
 HostStoreWasRestored(void)

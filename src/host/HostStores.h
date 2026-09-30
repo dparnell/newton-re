@@ -51,6 +51,7 @@ void	HostMountStores(void);
 // named the store is memory only and the machine starts at the Setup
 // assistant every time.
 void	HostSetStoreFile(const char* path);
+const char*	HostGetStoreFile(void);		// the file named, or nil
 
 // The flash a store file that does not exist yet is made as: its size in
 // bytes (4 MB times a power of two, up to 128 MB - hal/host/HostFlash.h's

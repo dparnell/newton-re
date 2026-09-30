@@ -35,7 +35,9 @@
 HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
 HostInclude("walkhelpers.ns");		// the views, the pen and keys, the soups, the steps
 
-constant kCardFile := "build/walkthrough2.card";
+// the card image beside the store (its path from the test), so a run in a
+// directory of its own keeps its own card
+wtCardFile := (if HostStoreFile() then HostStoreFile() else "build/walkthrough2.store") & ".card";
 
 shot2 := func(file) func(done) begin
 	ScreenSnapshot("build/walkthrough2-" & file & ".pgm");
@@ -311,8 +313,8 @@ foreach a in [
 	// 10 a memory card: put in, formatted, a note duplicated and the copy
 	// filed on it
 	func(done) begin
-		HostCreateCard(kCardFile, 4);
-		HostInsertCard(0, kCardFile);
+		HostCreateCard(wtCardFile, 4);
+		HostInsertCard(0, wtCardFile);
 		call done with ();
 	end,
 	call waitStep with ("the new-card question", func() call viewWithText with ("appears to be new")),
@@ -350,7 +352,7 @@ do AddArraySlot(wtSecond, a);
 wtRestart2 := [
 	call waitStep with ("the Notepad", call isOpen with ('paperroll)),
 	func(done) begin
-		HostInsertCard(0, kCardFile);
+		HostInsertCard(0, wtCardFile);
 		call done with ();
 	end,
 	call waitStep with ("the card mounted", func() GetCardSlotStores(0)),
