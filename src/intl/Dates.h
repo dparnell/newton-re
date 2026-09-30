@@ -120,4 +120,15 @@ void	RegisterRepeatTextNatives(void);		// RepeatText.cpp: RepeatInfoToText (regi
 Ref		FRepeatInfoToText(RefArg rcvr, RefArg pattern, RefArg kind, RefArg time);	// ROM 0x00121ebc FRepeatInfoToText__FRC6RefVarN31
 void	InitDatePrototypes(void);				// host: Rcanonicaldate when no ROM objects are imported
 
+// DEVIATION (the owner's decision, 2026-09-30): the year-2010 fix
+// (docs/intl/year-2010.md).  A script's seconds (TimeInSeconds' count from
+// 1993, a 30-bit NewtonScript integer that wrapped on 5 January 2010) are
+// read back as the time within 2^29 seconds of now that they stand for,
+// rather than as seconds after 1993.  NEWTON_ROM_2010_BUG=1 keeps the
+// ROM's own arithmetic.
+Boolean	Fix2010(void);							// the fix is in force
+void	SetFix2010(Boolean inForce);			// (tests: in force or not, whatever NEWTON_ROM_2010_BUG says)
+ULong	ClockSecondsFromScriptSeconds(long seconds);	// the real-clock second (from 1904) a script's second stands for
+void	InstallFix2010(void);					// the script functions that read seconds back, replaced (after InitScriptGlobals)
+
 #endif	/* __DATES_H */

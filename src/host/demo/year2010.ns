@@ -1,0 +1,57 @@
+// The year-2010 fix (intl/Dates.h, docs/intl/year-2010.md) with the
+// host's own clock - the true date, years past 2010:
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//       --script src/host/demo/year2010.ns --headless 200
+//
+// After the Setup walk, the first note is dated this year, a note made
+// now is dated today, the Dates day view is titled with today, and an
+// alarm set a minute ahead rings once - and does not ring again.  With
+// NEWTON_ROM_2010_BUG=1 in the environment the ROM's own arithmetic is
+// kept, and the same run reports the note dated 1992 (the Setup walk
+// sets the clock back to it).
+//
+// It prints "year2010: <what>: ok" or "year2010: <what>: FAILED", and
+// "year2010: done".
+
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
+
+y2kRings := 0;
+
+y2kCheck := func(what, ok, why) Print("year2010: " & what & (if ok then ": ok" else ": FAILED " & why));
+
+call walkSetup with ([2, 0, 45, 34, 14, 37], func() begin
+	local now := Date(Time());
+	Print({now: DateNTime(Time())});
+	local first := Query(GetUnionSoup("Notes"), {type: 'index}):Entry();
+	local firstYear := if first then Date(first.timestamp).year;
+	Print({firstNote: if first then DateNTime(first.timestamp)});
+	call y2kCheck with ("first note", firstYear = now.year and now.year > 2010,
+		"dated " & firstYear & ", the clock says " & now.year);
+	GetRoot().paperroll:MakeTextNote("made today", true);
+	local made := nil;
+	local c := Query(GetUnionSoup("Notes"), {type: 'index});
+	local e := c:Entry();
+	while e do begin if e.timestamp > (if made then made.timestamp else 0) then made := e; e := c:Next(); end;
+	call y2kCheck with ("note made now", made and Abs(made.timestamp - Time()) < 2, "dated " & (if made then DateNTime(made.timestamp)));
+	AddAlarmInSeconds("Year2010:test", TimeInSeconds() + 60, nil,
+		func() begin y2kRings := y2kRings + 1; Print({rang: y2kRings, at: DateNTime(Time())}); end, nil);
+	GetRoot().calendar:Open();
+	call waitFor with ("year2010: the alarm", func() y2kRings > 0, func() begin
+		local title := nil;
+		local walk;
+		walk := func(v) begin
+			if IsString(v.text) and StrPos(v.text, NumberStr(now.date), 0) and not title then title := v.text;
+			foreach k in v:ChildViewFrames() do call walk with (k);
+		end;
+		call walk with (GetRoot().calendar);
+		call y2kCheck with ("dates", title, "no day title with " & now.date);
+		ScreenSnapshot("build/year2010.pgm");
+		AddDelayedCall(func() begin
+			call y2kCheck with ("alarm", y2kRings = 1, "rang " & y2kRings & " times");
+			Print("year2010: done");
+			HostQuit();
+		end, nil, 20000);
+	end, 120);
+end);
+Print("year2010: the script is loaded");

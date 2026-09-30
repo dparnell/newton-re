@@ -373,21 +373,8 @@ HostBootNewtWorld(void)
 	// Newton counts them - GMT, as the Newton's clock chip keeps it: the
 	// time a script sees is that plus the home city's offset
 	// (RealClockSeconds), so the Newton shows the time in the city Setup
-	// or Time Zones names, as the device does.
-	//
-	// DEVIATION: brought back by whole 28-year cycles into the years the
-	// ROM can keep.  A script's TimeInSeconds counts from 1993 in a
-	// NewtonScript integer, which runs out on 5 January 2010 (the Newton's
-	// year-2010 problem); past it the seconds come out negative, every
-	// alarm is set in the past and fires again the moment it is set, and
-	// every note is dated 1992.  The calendar repeats itself every 28 years
-	// (1901-2099), so the date shown has the right day of the week and the
-	// time is right - 2026 shows as 1998.
-	unsigned long long now = (unsigned long long) time(nil) + kSecondsFrom1904To1970;
-	const unsigned long long kLastROMSecond = 0xa7693a00ULL + 0x1fffffff - 86400;	// 1993 + the largest NewtonScript integer, less a day for the time zone
-	const unsigned long long kTwentyEightYears = (28 * 365 + 7) * 86400ULL;
-	while (now >= kLastROMSecond)
-		now -= kTwentyEightYears;
-	TTime gmt((ULong) now, kSeconds);
+	// or Time Zones names, as the device does.  (Past 2010 the ROM's
+	// script seconds overflow: intl/Dates.h's year-2010 fix.)
+	TTime gmt((ULong) ((unsigned long long) time(nil) + kSecondsFrom1904To1970), kSeconds);
 	TURealTimeAlarm::SetTime(gmt);
 }

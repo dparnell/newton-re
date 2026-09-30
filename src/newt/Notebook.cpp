@@ -7,6 +7,7 @@
 */
 
 #include "ParseUtter.h"
+#include "Dates.h"
 #include "Notebook.h"
 #include "print/Printer.h"
 #include "CICCodec.h"
@@ -98,6 +99,7 @@ TNotebook::InitToolbox(void)
 	TApplication::InitToolbox();
 	InitOffscreenBitmaps();
 	InitScriptGlobals();
+	InstallFix2010();		// DEVIATION: the year-2010 fix (intl/Dates.h)
 	InitInker();
 	RefVar orientation(GetPreference(RSSYMscreenorientation));
 	if (ISNIL(orientation))

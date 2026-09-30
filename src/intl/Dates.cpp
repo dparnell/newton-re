@@ -20,6 +20,7 @@
 #include "NewtonTime.h"
 #include "OSErrors.h"
 #include <string.h>
+#include <stdlib.h>
 
 
 // the years TDate formats and counts: 1904..2919 (a year of -1 is unset)
@@ -1084,11 +1085,89 @@ FTimeFrameStr(RefArg /*rcvr*/, RefArg dateFrame, RefArg spec)
 
 
 // ROM 0x0008a20c FSetTimeInSeconds
+// (the year-2010 fix reads the seconds back as the time they stand for)
 static Ref
 FSetTimeInSeconds(RefArg /*rcvr*/, RefArg seconds)
 {
-	SetRealClockSeconds((ULong) RINT(seconds) + kSecondsFrom1904To1993);
+	SetRealClockSeconds(ClockSecondsFromScriptSeconds(RINT(seconds)));
 	return NILREF;
+}
+
+
+/*------------------------------------------------------------------------------
+	T h e   y e a r - 2 0 1 0   f i x
+
+	DEVIATION (the owner's decision, 2026-09-30; docs/intl/year-2010.md).
+	The script functions that count in seconds count from 1993 in a
+	NewtonScript integer, 30 bits wide, so TimeInSeconds wrapped from
+	2^29 - 1 to -2^29 on 5 January 2010 at 18:48:31, and has run on
+	upwards from there ever since.  Going forwards nothing is lost: every
+	seconds value the scripts make (TimeInSeconds, TimeToTimeInSeconds -
+	the integer arithmetic wraps the same way) is the true count modulo
+	2^30, and differences and comparisons of two of them within 2^29 of
+	each other still come out right.  What broke is reading one *back*:
+	TimeInSecondsToTime, DateFromSeconds, SetTimeInSeconds and SetSysAlarm
+	add the value to 1993 as though it could not have wrapped, so after
+	2010 a note was dated 1992 and an alarm fell in the past and fired
+	again the moment it was set, for ever.
+
+	The fix reads a script's seconds back as the second within 2^29 of now
+	(about 17 years either way) that they are congruent to - exactly what
+	they mean in every case the ROM got right, and the right thing after
+	2010.  The one thing it cannot do is a jump of the clock by more than
+	17 years in one go.
+------------------------------------------------------------------------------*/
+
+static int		gFix2010 = -1;		// -1: not yet read from the environment
+
+Boolean
+Fix2010(void)
+{
+	if (gFix2010 < 0)
+	{
+		const char* bug = getenv("NEWTON_ROM_2010_BUG");
+		gFix2010 = !(bug != NULL && bug[0] != 0 && bug[0] != '0');
+	}
+	return gFix2010;
+}
+
+
+void
+SetFix2010(Boolean inForce)
+{
+	gFix2010 = inForce ? 1 : 0;
+}
+
+
+ULong
+ClockSecondsFromScriptSeconds(long seconds)
+{
+	if (!Fix2010())
+		return (ULong32) ((ULong32) seconds + kSecondsFrom1904To1993);		// the ROM's
+	ULong32 now = (ULong32) (RealClockSeconds() - kSecondsFrom1904To1993);
+	Long32 delta = (Long32) ((ULong32) seconds - now);
+	delta = (Long32) ((ULong32) delta << 2) >> 2;		// as a NewtonScript integer: within 2^29 either way
+	return (ULong32) (kSecondsFrom1904To1993 + now + (ULong32) delta);
+}
+
+
+// TimeInSecondsToTime(seconds) - the ROM's is NewtonScript (46811520 +
+// seconds div 60, the minutes to 1993 and the seconds after it)
+static Ref
+FTimeInSecondsToTime2010(RefArg /*rcvr*/, RefArg seconds)
+{
+	return MAKEINT((long) (ClockSecondsFromScriptSeconds(RINT(seconds)) / 60));
+}
+
+
+void
+InstallFix2010(void)
+{
+	if (!Fix2010())
+		return;
+	RefVar functions(gFunctionFrame);
+	SetFrameSlot(functions, RefVar(Intern((char*) "TimeInSecondsToTime")),
+				 RefVar(MakeCFunction((void*) FTimeInSecondsToTime2010, 1, nil)));
 }
 
 
@@ -1150,7 +1229,7 @@ static Ref
 FDateFromSeconds(RefArg /*rcvr*/, RefArg seconds)
 {
 	TDate date;
-	date.InitWithSeconds((ULong) RINT(seconds) + kSecondsFrom1904To1993);
+	date.InitWithSeconds(ClockSecondsFromScriptSeconds(RINT(seconds)));
 	return ToObject(date);
 }
 

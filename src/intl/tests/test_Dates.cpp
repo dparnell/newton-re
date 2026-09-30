@@ -228,8 +228,12 @@ TestStrings()
 	// TimeInSeconds counts from the start of 1993 and a Newton integer
 	// holds thirty bits, so it runs out in 2010 and wraps from then on -
 	// the machine's own limit, which the host's clock is well past.  What
-	// still holds is the round trip through a time it can hold.
+	// still holds is the round trip through a time it can hold.  (With
+	// the year-2010 fix a second is read back within 17 years of now, so
+	// this is the ROM's own reading.)
+	SetFix2010(false);
 	EXPECT(RINT(Eval("DateFromSeconds(500000000).year")) == 2008);
+	SetFix2010(true);
 	EXPECT(RINT(Eval("TimeInSeconds()")) != RINT(Eval("TotalSeconds(Date(Time()))")));
 	EXPECT(StringIs(RefVar(Eval("TimeFrameStr({hour: 7, minute: 30, second: 5}, 0)")), "7:30:05 am"));
 	// the locale
@@ -301,6 +305,34 @@ TestNumbers()
 }
 
 
+// The year-2010 fix (intl/Dates.h): past 5 January 2010 TimeInSeconds has
+// wrapped, and the seconds are read back as the time they stand for - a
+// date in 2026, not 1992; with the ROM's arithmetic they come back 1992.
+static void
+TestYear2010()
+{
+	const ULong k2026 = 3873571200UL;				// 30 September 2026 00:00, seconds from 1904
+	SetRealClockSeconds(k2026);
+	long seconds = RINT(FTimeInSeconds(RefVar(NILREF)));
+	EXPECT(seconds < 0);								// wrapped: 2^30 seconds after 1993 is January 2027
+	SetFix2010(true);
+	EXPECT(ClockSecondsFromScriptSeconds(seconds) == k2026);
+	EXPECT(ClockSecondsFromScriptSeconds(seconds + 60) == k2026 + 60);		// an alarm a minute ahead
+	EXPECT(ClockSecondsFromScriptSeconds(seconds - 86400 * 365) == k2026 - 86400 * 365);	// a year back
+	RefVar date(Eval("DateFromSeconds(TimeInSeconds())"));
+	EXPECT(RINT(GetFrameSlotRef(date, RSSYMyear)) == 2026);
+	// before 2010 it is what the ROM computes
+	SetRealClockSeconds(kSecondsFrom1904To1993 + 1000000);
+	EXPECT(ClockSecondsFromScriptSeconds(5000) == kSecondsFrom1904To1993 + 5000);
+	// the ROM's own arithmetic, kept for the switch
+	SetRealClockSeconds(k2026);
+	SetFix2010(false);
+	date = Eval("DateFromSeconds(TimeInSeconds())");
+	EXPECT(RINT(GetFrameSlotRef(date, RSSYMyear)) == 1992);
+	SetFix2010(true);
+}
+
+
 int
 main()
 {
@@ -327,6 +359,7 @@ main()
 		TestCalendar();
 		TestStrings();
 		TestNumbers();
+		TestYear2010();
 	}
 	newton_catch_all
 	{

@@ -828,7 +828,8 @@ HandleAlarmEvent(TAlarmEvent* event)
 // SetSysAlarm(time, func, args): the alarm set for the second, or only
 // cleared when the time is nil.  The second is a TimeInSeconds - seconds
 // from the start of 1993, in local time - while the clock counts seconds
-// from 1904 in GMT, so the epoch goes back on and the time zone comes off.
+// from 1904 in GMT, so the epoch goes back on (ClockSecondsFromScriptSeconds)
+// and the time zone comes off.
 // The event is the application's own, which is why setting an alarm
 // replaces the one before it rather than adding to it.
 Ref
@@ -837,11 +838,12 @@ FSetSysAlarm(RefArg /*rcvr*/, RefArg time, RefArg func, RefArg args)
 	TURealTimeAlarm::ClearAlarm(NewtAlarmName);
 	if (ISNIL(time))
 		return NILREF;
-	TTime epoch(kSecondsFrom1904To1993, kSeconds);
-	TTime when(RINT(time), kSeconds);
+	// (the year-2010 fix, intl/Dates.h: the seconds read back as the time
+	// they stand for rather than as seconds after 1993 - the epoch comes
+	// with them)
+	TTime when(ClockSecondsFromScriptSeconds(RINT(time)), kSeconds);
 	TTime zone(GMTOffset() + DaylightSavingsOffset(), kSeconds);
 	Int64 alarm = when.time;
-	CompAdd(&epoch.time, &alarm);
 	CompSub(&zone.time, &alarm);
 	TAlarmEvent* event = &((TNotebook*) gApplication)->fAlarmEvent;
 	event->fAEventClass = kNewtEventClass;

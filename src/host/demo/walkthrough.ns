@@ -15,7 +15,7 @@
 //                  first and last name, a home phone, and the Work line
 //                  turned into a Fax line
 //    3 find        Find, "tester", Everywhere: one item found, the card
-//    4 dates       Dates, a tap on the 12 pm line and "lunch" typed: a
+//    4 dates       Dates, a tap on a line and "lunch" typed: a
 //                  meeting in the Calendar soup and in the day view
 //    5 todo        Show > To Do List, New > To Do Task, "shop milk"
 //    6 scrub       the to-do scrubbed out with the pen: gone from the
@@ -34,16 +34,20 @@
 // Each step prints "walkthrough: <step>: ok" or "walkthrough: <step>:
 // FAILED <why>" and writes build/walkthrough-<n>-<step>.pgm (the restart:
 // build/walkthrough-restart.pgm); tools/imaging/pgm2png.py makes PNGs.
-// The clock is set to 7 October 1998 at 9 am first: the ROM keeps times
-// in seconds since 1904 in a NewtonScript integer, which ran out in
-// 2010 (the Newton's own year-2010 problem), so a note written "today"
-// would be dated 1992.
+// The clock is the host's: the note is dated today (the ROM's own
+// year-2010 overflow would date it 1992 - intl/Dates.h's fix).
 //
 // Everything waits on what it waits for (a view open, a key view moved,
 // an entry in a soup) rather than for a fixed time.
 
 HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
 HostInclude("walkhelpers.ns");		// the views, the pen and keys, the soups, the steps
+
+// minutes at the hour today
+todayAt := func(hour) begin
+	local d := Date(Time());
+	TotalMinutes({year: d.year, month: d.month, date: d.date, hour: hour, minute: 0});
+end;
 
 // ADB key codes
 kAnn := [0, 45, 45];
@@ -68,7 +72,7 @@ wtFirstHour := [
 	call waitStep with ("the note saved", func() call anyEntry with ("Notes", func(e) StrEqual(call noteText with (e), "ton"))),
 	func(done) begin
 		local e := call anyEntry with ("Notes", func(e) StrEqual(call noteText with (e), "ton"));
-		call wtCheck with ("note", e and e.timestamp >= TotalMinutes({year: 1998, month: 10, date: 7, hour: 0, minute: 0}),
+		call wtCheck with ("note", e and Abs(e.timestamp - Time()) < 24 * 60,		// dated today
 			if e then "dated " & DateNTime(e.timestamp) else "no note reads \"ton\"");
 		call done with ();
 	end,
@@ -129,14 +133,17 @@ wtFirstHour := [
 
 	// 4 Dates: a meeting typed on the day view
 	call tapStep with ("Dates", 140, 460, call isOpen with ('calendar)),
-	call tapLineStep with ("the 12 pm line", 150, 225),
+	call tapLineStep with ("a line of the day view", 150, 225),
 	call keysStep with (kLunch),
 	call tapStep with ("off the meeting", 160, 330, func() call anyEntry with ("Calendar", func(e) IsString(e.mtgText) and StrEqual(e.mtgText, "lunch"))),
 	func(done) begin
 		local e := call anyEntry with ("Calendar", func(e) IsString(e.mtgText) and StrEqual(e.mtgText, "lunch"));
 		local shown := call findView with (GetRoot(), func(v) v.viewClass = 95);
 		call wtCheck with ("dates",
-			e and e.mtgStartDate = TotalMinutes({year: 1998, month: 10, date: 7, hour: 12, minute: 0}) and shown,
+			// (the day view opens scrolled to the time of day, so the line
+			// tapped is whichever hour is there: today, on the hour)
+			e and e.mtgStartDate >= call todayAt with (0) and e.mtgStartDate < call todayAt with (24)
+				and e.mtgStartDate mod 60 = 0 and shown,
 			if e then "at " & DateNTime(e.mtgStartDate) & (if shown then "" else ", not in the day view") else "no meeting");
 		call done with ();
 	end,
@@ -302,9 +309,6 @@ wtRestart := [
 		Print("walkthrough: restart done, " & wtFailures & " failed");
 		HostQuit();
 	end];
-
-// the clock to 7 October 1998, 9 am, before the first note is made
-SetTime(TotalMinutes({year: 1998, month: 10, date: 7, hour: 9, minute: 0}));
 
 // a fresh store starts with the Setup assistant, a set-up one with the Notepad
 call waitFor with ("walkthrough: the boot",
