@@ -9,6 +9,16 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: old host stores' word hints repaired
+
+A writable store's entries with no hint chunks under handler 0 - which
+only the host before f2ba101e wrote - are rewritten when it is mounted
+(`RepairWordHints` at the end of `RegisterTStore`, DEVIATION confined to
+that condition; 3458c38a), printing "rewrote word hints for N entries"
+once, so Find sees them again.  About 60 ms a mount for 2100 entries.
+ctests `host.NewtonWordHintsOld`/`.Repair` over a store written through
+`NEWTON_NO_WORD_HINTS`.
+
 ## 2026-10-01: the word hints and the text cache
 
 Entries are written with their word hints as the ROM writes them
