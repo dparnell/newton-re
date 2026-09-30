@@ -969,7 +969,19 @@ Each step comes with its host tests.
      host addresses, so `CreateSocketPhys` makes no physical object (the
      host has no MMU to map a card through). Test: the CIS reads back
      through the socket's attribute window.
-   - **5b. The CIS.** `TCardCISIterator` (reading tuples, the long links,
+   - **5b. The CIS.** DONE (2026-09-30; ctest `pcmcia.CardCIS`):
+     `pcmcia/CardCISIterator.h`, `PCMCIA20Parser.h`, `CardPCMCIA.cpp`
+     (every function of 0x0004b30c-0x0004e40c and 0x0004ecbc-0x0004feb4
+     but the card server's own). The DDK's `TCardDevice` is 0x1c bytes
+     where the ROM's is 0x20: Apple's compiler gave the three one-bit
+     fields a word of their own, so `fDeviceType` is at +0x14, not +0x11 -
+     which is why Ghidra's field names for it are three bytes out (its
+     `fBusSize` is the device type; `verify-report.txt`'s mismatch). ROM
+     quirks kept: CISTPL_ALTSTR, DEVICE_GEO_A and 0x43-0x45 are read as
+     attribute-memory device lists; a CISTPL_CFTABLE_ENTRY's I/O ranges
+     may overrun the eight kept; DEVICE_GEO does not check its device;
+     the checksum sums the bytes where they lie while the tuples are read
+     through the bus's byte lanes. `TCardCISIterator` (reading tuples, the long links,
      the multi-function CISs), `TPCMCIA20Parser` (the `CisTpl_*` tuple
      handlers, `ParsePCCardCIS`) and what they fill: `TCardPCMCIA`,
      `TCardDevice`, `TCardFunction`, `TCardConfiguration`,
