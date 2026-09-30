@@ -9,6 +9,23 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: the performance paths, first measurements
+
+On an optimised build, by the task thread's own processor time
+(`HostThreadCPUTime`, 507c877c; benchmarks `demo/scriptbench.ns`,
+`inkbench.ns`, `drawbench.ns`):
+- `GetProtoVariable` uses the proto caches as the ROM does (14cda847):
+  the walkthrough's Names/Dates step 297-328 ms to 235-250 ms.
+- InkFont's fast path, `DrawBufferedPoints`/`InkerLine` (fbcb41ad): 3000
+  redraws of a paragraph of ink words 187-203 ms to 109-141 ms, and a
+  few pixels per ink word now match the ROM's inker line.
+- The font cache is left NOT YET: 19,110 OpenFont calls over drawbench
+  take 5 ms in all, and nothing the ROM shows depends on it.
+- Found: most of the host's processor time is not the Newton's.  Over
+  drawbench the process used about 18 s and the newt task about 1 s;
+  idle after Setup it uses 13% of a core, in the baton handoffs and the
+  interrupt, socket and IR pollers.
+
 ## 2026-10-01: the fixture applications used for what they are for
 
 Nine ctests (`host.NewtonApp*`, `demo/apps-*.ns` over
