@@ -191,8 +191,7 @@ TInkWordGlyph::SetFontParms(RefArg fontSpec)
 // When the clip is a plain rectangle that holds the whole of the box,
 // nothing has to be clipped, and the ROM says so to the drawing: it then
 // uses the live inker's own line drawer, which carries its pen with it,
-// rather than QuickDraw's.  (That is NOT YET, so the flag is worked out
-// and passed on and the lines are drawn the slow way.)
+// rather than QuickDraw's (InkStrokes.cpp's DrawBufferedPoints).
 //
 // On a printer's port the strokes are made into outlined paths instead
 // (CSMakePathsGroup, CSMakePathsGroupInRect: InkMakePathsScaled) and

@@ -292,8 +292,26 @@ its bottom and right.
 `InkDraw` (0x00140cd0) walks a block of ink into the current port: the
 first point of a stroke moves the pen and the rest are lines from it.
 `InkDrawScaled` is the ROM's `GenericCSDraw`, which takes the place and
-the scale as 16.16 values.  The ROM keeps twenty points back at a time
-and draws them in one go, which saves calls and nothing else.
+the scale as 16.16 values.  `PGCDrawPointProc` (0x00154194) keeps
+twenty points back at a time, leaving out a point that repeats the one
+before it, and `DrawBufferedPoints` (0x0015407c) draws them in one go -
+with QuickDraw's `LineTo` from the pen's place, or, when the caller
+found the ink wholly inside a rectangular clip, with the inker's own
+line drawer `InkerLine` straight into the port's bits, each line from
+the end of the last.  The two do not draw quite the same pixels (a
+handful differ in a word), and the inker's is the one an ink word in a
+line of text is drawn with (`TInkWordGlyph::DrawAt`).  The ROM's
+`kInkEnd` gives the buffer back without drawing what is left in it -
+harmless, since every stroke ends with `kInkEndStroke` first.
+
+### Drawing speed
+
+`src/host/demo/inkbench.ns` writes two words as ink on the Notepad and
+redraws their paragraph 3000 times.  On an optimised Windows build
+(RelWithDebInfo) the inker's line drawer took the processor time of the
+newt task from 187-203 ms (QuickDraw's lines) to 109-141 ms: the
+buffered drawing sets the pen once per twenty points and `InkerLine`
+needs no port, pen or clipping.
 
 `GetPackedInkWordInfoFromStrokes` (0x00140a4c) is what fills an ink
 word's eight bytes in: the width and the height are the strokes' own box
@@ -465,7 +483,7 @@ and the pen off the bottom and the right, since the pen hangs outside
 the line rather than inside it.  When the clip is a plain rectangle that
 holds the whole box, nothing has to be clipped and the ROM says so to
 the drawing, which then uses the live inker's own line drawer rather
-than QuickDraw's.  On a printer port it takes another path entirely and
+than QuickDraw's (`DrawBufferedPoints`, above).  On a printer port it takes another path entirely and
 makes real outlined paths of the strokes, so that a PostScript printer
 gets outlines rather than a bitmap.
 
@@ -496,9 +514,7 @@ The handwriting recogniser: `low_level` and `GetTraceFromStrokes`, which
 is what would read a word rather than just measure it.
 
 And the rest of the view side: the corrector the `aeInkWord` case of
-`TEditView::RealDoCommand` puts out of the way, `TLiveInker` (the ink that follows the pen while it is still
-down, which is also the fast line drawer `DrawAt` asks for when nothing
-needs clipping), `TInkWordGlyph::SetFontParms` (a word restyled from a
+`TEditView::RealDoCommand` puts out of the way, `TInkWordGlyph::SetFontParms` (a word restyled from a
 font spec) and the printing path's outlined paths.
 
 

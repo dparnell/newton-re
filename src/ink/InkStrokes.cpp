@@ -30,6 +30,7 @@
 #include "Ports.h"			// RoundFixed
 #include "Rects.h"
 #include "Shapes.h"			// LineTo
+#include "Draw.h"			// InkerLine
 #include "Unit.h"			// FixRect
 #include "Locale.h"			// GetPreference
 #include "Words.h"			// WRecFindBaseline
@@ -658,16 +659,89 @@ InkMakePaths(RefArg ink, long x, long y)
 	I n k   d r a w n
 ------------------------------------------------------------------------------*/
 
-// What PGCDrawPointProc is drawing with: where the ink is to go, how
-// much it is to be scaled, and whether the next point starts a line.
+// What PGCDrawPointProc is drawing with (GenericCSDraw's block): the pen,
+// where the ink is to go, how much it is to be scaled, and whether it is
+// drawn with the inker's line drawer.
 struct InkDrawing
 {
-	Fixed	fX;				// where the ink's origin goes
-	Fixed	fY;
-	Fixed	fScaleX;		// and what it is scaled by first
-	Fixed	fScaleY;
-	Boolean	fStarting;		// the next point begins a stroke
+	ULong	fPen;			// +00 the pen, both ways (its low half)
+	Fixed	fX;				// +04 where the ink's origin goes
+	Fixed	fY;				// +08
+	Fixed	fScaleX;		// +0C and what it is scaled by first
+	Fixed	fScaleY;		// +10
+	Boolean	fUseInker;		// +14 the ink is wholly inside a rectangular clip
 };
+
+// ... and the points PGCDrawPointProc keeps back (the ROM's _DPINST, 0x68
+// bytes, allocated at kInkBegin): up to twenty, drawn in one go.  A point
+// is kept as the ROM packs it, v in the high half of a word and h in the
+// low, and 0xffffffff means none.
+const long	kInkBufferedPoints = 20;
+
+struct InkPointBuffer
+{
+	long			fStarting;		// +00 the next point begins a stroke
+	long			fDone;			// +04 kInkEnd has been seen
+	InkDrawing*		fDrawing;		// +08
+	ULong32			fDrawn;			// +0C where the last line drawn ended
+	ULong32			fLast;			// +10 the last point kept (a repeat is not kept again)
+	ULong			fCount;			// +14
+	ULong32			fPoints[kInkBufferedPoints];	// +18
+};
+
+
+// ROM 0x0015407c DrawBufferedPoints__FP7_DPINST
+// The points kept back drawn: with QuickDraw, a line to each from the
+// pen's place (the pen set first), or with the inker's line drawer
+// (InkerLine) straight into the port's bits, each line from the end of
+// the last - which carries its own pen and needs no clipping, the caller
+// having found the ink wholly inside a rectangular clip.  The first point
+// of a stroke is where the pen was moved to: QuickDraw starts at the
+// second (a lone point drawn as a line to itself - a dot), the inker at
+// the first.
+static void
+DrawBufferedPoints(InkPointBuffer* buffer)
+{
+	if (buffer->fCount == 0)
+		return;
+	InkDrawing* drawing = buffer->fDrawing;
+	short penSize = (short) drawing->fPen;
+	Point pen;
+	pen.v = penSize;
+	pen.h = penSize;
+	ULong32* from = &buffer->fDrawn;
+	ULong i = 0;
+	if (buffer->fDrawn == 0xffffffff)
+	{
+		from = &buffer->fPoints[0];
+		if (buffer->fCount > 1)
+			i = 1;
+	}
+	ULong32* at = &buffer->fPoints[i];
+	GrafPtr port;
+	GetPort(&port);
+	if (!drawing->fUseInker)
+		PenSize(penSize, penSize);
+	for ( ; i < buffer->fCount; i++, at++)
+	{
+		Point to;
+		to.v = (short) (*at >> 16);
+		to.h = (short) *at;
+		if (!drawing->fUseInker)
+			LineTo(to.h, to.v);
+		else
+		{
+			Point start;
+			start.v = (short) (*from >> 16);
+			start.h = (short) *from;
+			Rect damaged;
+			InkerLine(start, to, &damaged, pen, &port->portBits);
+			from = at;
+		}
+	}
+	buffer->fDrawn = *from;
+	buffer->fCount = 0;
+}
 
 
 // (a point of ink, in whole tablet units, brought to a pixel of the
@@ -686,39 +760,81 @@ InkPixel(long value, Fixed scale, Fixed offset, Fixed tabScale)
 
 
 // ROM 0x00154194 PGCDrawPointProc__FsP6_POINTP4_DCC
-// The points the decoder hands out drawn as they come: the first of a
-// stroke moves the pen and the rest are lines from it.
-//
-// (The ROM keeps twenty points back at a time and draws them in one go -
-// DrawBufferedPoints 0x0015407c, which also sets the pen - and that is
-// where its second way of drawing them lives: when the caller says the
-// ink is wholly inside the clip it draws with InkerLine, the live
-// inker's own line drawer, which takes its pen with it.  NOT YET, so
-// everything is drawn the slow way and the pen is set once instead.)
+// The points the decoder hands out drawn: each brought to a pixel of the
+// port and kept back (a repeat of the last one is not kept again), the
+// pen moved to the first of a stroke, and the ones kept drawn twenty at a
+// time and at the end of each stroke (DrawBufferedPoints).  (BUG, kept:
+// kInkEnd gives the buffer back without drawing what is still in it; the
+// decoder ends every stroke with kInkEndStroke first, which draws them.)
+// Host: the buffer is the caller's, beside the drawing block, where the
+// ROM allocates it at kInkBegin (HWRMemoryAlloc, answering 0 when it
+// cannot) and frees it at kInkEnd.
+struct InkDrawState
+{
+	InkPointBuffer*	fBuffer;		// the ROM's _DCC +4
+	InkDrawing*		fDrawing;		// and +0x14
+	InkPointBuffer	fStorage;
+};
+
 static short
 PGCDrawPointProc(short what, const InkPoint* pt, void* refCon)
 {
-	InkDrawing* to = (InkDrawing*) refCon;
+	InkDrawState* state = (InkDrawState*) refCon;
+	InkPointBuffer* buffer = state->fBuffer;
+	InkDrawing* drawing = buffer != nil ? buffer->fDrawing : nil;
 	switch (what)
 	{
 	case kInkBegin:
-	case kInkEndStroke:
-		to->fStarting = true;
+		buffer = &state->fStorage;
+		state->fBuffer = buffer;
+		buffer->fDone = 0;
+		buffer->fStarting = 1;
+		buffer->fDrawing = state->fDrawing;
+		buffer->fCount = 0;
 		return 1;
-	case kInkPoint:
+	case kInkEndStroke:
+		if (buffer == nil || drawing == nil)
+			return 0;
+		buffer->fStarting = 1;
 		break;
+	case kInkPoint:
+	{
+		if (buffer == nil || drawing == nil)
+			return 0;
+		if (buffer->fDone)
+			return 1;
+		long h = InkPixel(pt->x, drawing->fScaleX, drawing->fX, gTabScale.x);
+		long v = InkPixel(pt->y, drawing->fScaleY, drawing->fY, gTabScale.y);
+		ULong32 packed = ((ULong32) (UShort) v << 16) | (UShort) h;
+		if (buffer->fStarting)
+		{
+			buffer->fStarting = 0;
+			MoveTo((short) h, (short) v);
+			buffer->fDrawn = 0xffffffff;
+			buffer->fLast = 0xffffffff;
+		}
+		if (buffer->fLast != packed)
+		{
+			buffer->fPoints[buffer->fCount++] = packed;
+			buffer->fLast = packed;
+		}
+		if (buffer->fCount < kInkBufferedPoints)
+			return 1;
+		break;
+	}
+	case kInkEnd:
+		if (buffer == nil || drawing == nil)
+			return 0;
+		buffer->fStarting = 1;
+		if (buffer->fDone)
+			return 1;
+		buffer->fDone = 1;
+		state->fBuffer = nil;
+		return 1;
 	default:
 		return 1;
 	}
-	long h = InkPixel(pt->x, to->fScaleX, to->fX, gTabScale.x);
-	long v = InkPixel(pt->y, to->fScaleY, to->fY, gTabScale.y);
-	if (to->fStarting)
-	{
-		MoveTo(h, v);
-		to->fStarting = false;
-	}
-	else
-		LineTo(h, v);
+	DrawBufferedPoints(buffer);
 	return 1;
 }
 
@@ -748,8 +864,7 @@ InkData(RefArg ink, long* outSize)
 // decoder's group: drawing always asks the decoder for every point
 // (group 0, which Decode turns into thinning mode 3), and the pen
 // travels beside the place and the scale in the block the point proc
-// reads.  The ROM sets it in DrawBufferedPoints, once per batch of
-// twenty; here it is set once, which comes to the same thing.
+// reads, which DrawBufferedPoints sets it from for each batch of points.
 void
 InkDrawScaled(const void* data, long size, ULong pen, Fixed x, Fixed y,
 			  Fixed scaleX, Fixed scaleY, Boolean useInker)
@@ -759,16 +874,17 @@ InkDrawScaled(const void* data, long size, ULong pen, Fixed x, Fixed y,
 	TInkCodec* codec = InkCodecFor(data);
 	if (codec == nil)
 		return;
-	// (the ROM leaves the pen alone when it is going to use InkerLine,
-	// which carries its own; this draws with QuickDraw either way)
-	PenSize((long) pen, (long) pen);
 	InkDrawing to;
+	to.fPen = pen;
 	to.fX = x;
 	to.fY = y;
 	to.fScaleX = scaleX;
 	to.fScaleY = scaleY;
-	to.fStarting = true;
-	codec->Decode(data, size, 0, PGCDrawPointProc, &to);
+	to.fUseInker = useInker;
+	InkDrawState state;
+	state.fBuffer = nil;
+	state.fDrawing = &to;
+	codec->Decode(data, size, 0, PGCDrawPointProc, &state);
 }
 
 
