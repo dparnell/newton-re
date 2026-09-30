@@ -216,9 +216,7 @@ worked through.  What could come next (not ranked; the owner chooses):
   (`host.NewtonModemDial`, `host.NewtonModemAnswer`); and the comm
   trace frame's natives and translate (`comms/CommTrace.cpp`).  Left in
   comms: fax sending end to end and Class 2 fax (a fax is received,
-  shown and turned - `host.NewtonFaxReceive`; the older extended option
-  layouts ("uw...") to be moved to 'l', which they only work without by
-  accident of alignment),
+  shown and turned - `host.NewtonFaxReceive`),
   AppleTalk/NBP
   and ADSP (with the NTK's ADSP connection), the Hammer translators,
   eWorld (EW*), the TV remote.

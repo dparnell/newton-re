@@ -119,11 +119,17 @@ bugs and ROM bugs found on the way.
   bitmap's store like the original's.  ROM quirk: leftover rows are
   turned only in whole groups of 8, so a fax page loses its last two
   rows.  ROM bug kept: `RotateTilesL` turns the leftover rows wrongly and
-  writes up to 512 bytes past the end of the new bitmap.
+  writes up to 512 bytes past the end of the new bitmap - DEVIATION: the
+  host drops those out-of-range bytes, which on the device landed in
+  whatever followed (a fax page on a store is a large binary, where
+  slack would not help; `test_Tile` checks the bytes after it stay
+  untouched, 6990690e).
 - The In Box shows a received fax (`GetRoot().iobox:Open()`,
   `:ShowItem(entry, 'itemLayout)`) and FaxViewer's rotate turns it
   through `MungeBitmap` -> `RotTiledBitmap`; `fax-receive.ns` snapshots
   both (`host.NewtonFaxReceive`).
+- The `host.NewtonNTK` flake did not reproduce under stress.py (18
+  copies beside hogs, 5 suite rounds).
 - Found: the modem tool changes flow control only after it reads
   CONNECT, so an XOFF in a frame arriving with the CONNECT was eaten
   under the old soft-flow settings and the call's DCN lost;
