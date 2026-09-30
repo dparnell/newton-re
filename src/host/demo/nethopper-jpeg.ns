@@ -1,0 +1,180 @@
+// NetHopper 3.2 with its JPEG viewer (fixtures/packages/apps/NetHopper3.2/
+// NetHopperJPEG.pkg) showing a page whose picture is a JPEG, served on the
+// host (src/host/demo/www/nethopper-jpeg.html and box.jpg) - and what the
+// user sees, since the viewer cannot decode it.
+//
+// NetHopperJPEG has no decoder of its own.  Its devInstallScript registers
+// 'JPEGViewer:DPR with NetHopper's MIME registry (NH3RegMgr:ALLPEN's
+// RegMIMEDataViewer); the viewer reads the image into a VBO and hands it to
+// its JPEGToBMP, which asks NewtsCape's converter to do the work -
+// GetGlobalVar('NewtsCape:NewtsCape).|JPEGConvert:NewtsCape|:AddFile for a
+// JFIF, GetRoot().|NewtsCape:NewtsCape|:ConvertImage otherwise - and
+// answers nil when NewtsCape is not installed.  The viewer does not check:
+// mHandleImage stores the nil as the image and mScaleImage then asks
+// HasSlot(nil, 'bounds), which throws evt.ex.fr;type.ref.frame (-48200,
+// an object pointer of a non-pointer), and the user sees the system's
+// "Sorry, a problem has occurred. (-48200)" alert, the page's picture
+// left as its placeholder and ALT text.  That is what a MessagePad
+// without NewtsCape would do.  Run by ctest host.NewtonNetHopperJPEG:
+//
+//   python tools/host/httpserve.py --dir src/host/demo/www --port 52381 -- //       build/host/host/newton --display 320x480 --erase --store tmp/nhj.store //       --headless 240 //       --package fixtures/packages/apple/NIE2/ENETSUP/newtdev.pkg //       --package fixtures/packages/apple/NIE2/REGPKGS/inetenbl.pkg //       --package fixtures/packages/apple/NIE2/REGPKGS/inetstup.pkg //       --package fixtures/packages/apps/NetHopper3.2/nethopper.pkg //       --package fixtures/packages/apps/NetHopper3.2/NetHopperJPEG.pkg //       --script src/host/demo/nethopper-jpeg.ns
+//
+// (www/box.jpg is box.gif's picture as a 64x32 greyscale baseline JFIF,
+// made with PIL: Image.new('L', (64, 32), 255), rectangle [0,0,63,31]
+// outlined and [8,8,55,23] filled in black, saved as JPEG at quality 90.)
+
+HostInclude("common.ns");		// tapAt, waitFor, walkSetup
+
+kNetHopperURL := "http://127.0.0.1:52381/nethopper-jpeg.html";
+
+nhFailures := 0;
+nhCheck := func(what, ok, detail) begin
+	if ok then
+		Print("nethopper-jpeg: " & what & ": ok")
+	else begin
+		Print("nethopper-jpeg: " & what & ": FAILED, " & detail);
+		nhFailures := nhFailures + 1;
+	end;
+end;
+
+// how many black pixels there are in a box of the screen
+nhBlackIn := func(left, top, right, bottom) begin
+	local n := 0;
+	for y := top to bottom - 1 do
+		for x := left to right - 1 do
+			if ScreenPixel(x, y) < 128 then n := n + 1;
+	n;
+end;
+
+nhTapView := func(view) begin
+	local b := view:GlobalBox();
+	call tapAt with ((b.left + b.right) div 2, (b.top + b.bottom) div 2);
+end;
+
+// ADB key codes of the characters a URL is typed with (the colon shifted)
+nhLetterKeys := {a: 0, s: 1, d: 2, f: 3, h: 4, g: 5, z: 6, x: 7, c: 8, v: 9, b: 11, q: 12, w: 13,
+	e: 14, r: 15, y: 16, t: 17, o: 31, u: 32, i: 34, p: 35, l: 37, j: 38, k: 40, n: 45, m: 46};
+nhDigitKeys := [29, 18, 19, 20, 21, 23, 22, 26, 28, 25];
+nhTypeURL := func(url) begin
+	for i := 0 to StrLen(url) - 1 do begin
+		local c := url[i];
+		local code := nil, shifted := nil;
+		if c >= $0 and c <= $9 then code := nhDigitKeys[Ord(c) - Ord($0)]
+		else if c = $. then code := 47
+		else if c = $/ then code := 44
+		else if c = $- then code := 27
+		else if c = $: then begin code := 41; shifted := true; end
+		else code := GetSlot(nhLetterKeys, Intern(SPrintObject(c)));
+		if shifted then KeyEvent(56, true);
+		KeyEvent(code, true);
+		KeyEvent(code, nil);
+		if shifted then KeyEvent(56, nil);
+	end;
+end;
+
+nhApp := func() GetRoot().|NetHopper:ALLPEN|;
+nhTitle := func() begin
+	local app := call nhApp with ();
+	if app and app.target then app.target.fTitle;
+end;
+// the Internet Enabler's connection slip: a root child with a link id
+nhConnectSlip := func() begin
+	local slip := nil;
+	foreach c in GetRoot():ChildViewFrames() do
+		if HasSlot(c, 'fLinkID) and c._defaultButton and c._defaultButton.viewCObject then slip := c;
+	slip;
+end;
+// the page's image: the view that shows an icon, in the content view
+nhImageView := func() begin
+	local found := nil;
+	local walk;
+	walk := func(v, depth) begin
+		if depth < 8 and not found then foreach c in v:ChildViewFrames() do begin
+			if c.viewclass = 76 and c.icon then found := c;
+			call walk with (c, depth + 1);
+		end;
+	end;
+	call walk with ((call nhApp with ()).contentView, 0);
+	found;
+end;
+
+// every view's text on the screen, walked from the root
+nhTexts := func() begin
+	local texts := [];
+	local walk;
+	walk := func(v, depth) begin
+		foreach c in v:ChildViewFrames() do begin
+			if c.viewCObject and IsString(c.text) then AddArraySlot(texts, c.text);
+			if depth < 6 then call walk with (c, depth + 1);
+		end;
+	end;
+	call walk with (GetRoot(), 0);
+	texts;
+end;
+nhViewWithText := func(part) begin
+	local found := nil;
+	local walk;
+	walk := func(v, depth) begin
+		foreach c in v:ChildViewFrames() do begin
+			if c.viewCObject and IsString(c.text) and StrPos(c.text, part, 0) then found := c;
+			if depth < 6 then call walk with (c, depth + 1);
+		end;
+	end;
+	call walk with (GetRoot(), 0);
+	found;
+end;
+nhTextWith := func(part) begin
+	local found := nil;
+	foreach t in call nhTexts with () do
+		if StrPos(t, part, 0) then found := t;
+	found;
+end;
+
+nhDone := func() begin
+	Print("nethopper-jpeg: done, " & nhFailures & " failed");
+	HostQuit();
+end;
+
+nhBrowse := func() begin
+	local app := call nhApp with ();
+	call tapAt with (37, 423);					// Go To URL
+	call waitFor with ("nethopper-jpeg: the Open a Location slip", func() app.gotoURLlink.viewCObject, func() begin
+		call nhTypeURL with (kNetHopperURL);
+		call nhTapView with (app.gotoURLlink.goButt);
+		call waitFor with ("nethopper-jpeg: the connection slip", func() begin
+				local slip := call nhConnectSlip with ();
+				local cb := slip and slip._defaultButton:GlobalBox();
+				cb and call nhBlackIn with (cb.left, cb.top, cb.right, cb.bottom) > 40;
+			end, func() begin
+			call nhTapView with ((call nhConnectSlip with ())._defaultButton);		// Connect
+			call waitFor with ("nethopper-jpeg: the page", func() StrEqual(call nhTitle with (), "Host JPEG Page"), func() begin
+				Print("nethopper-jpeg: loaded " & call nhTitle with ());
+				// the picture's placeholder tapped, as the GIF's is (nethopper.ns)
+				AddDelayedCall(func() begin
+					local image := call nhImageView with ();
+					call nhCheck with ("the picture's placeholder", image, "no view with an icon");
+					if image then call nhTapView with (image);
+				end, nil, 1500);
+				// the viewer fetches the JPEG as the page comes in, fails and
+				// the system's alert appears
+				call waitFor with ("nethopper-jpeg: the alert", func() call nhTextWith with ("Sorry, a problem has occurred."), func() begin
+					ScreenSnapshot("nethopper-jpeg.pgm");
+					local alert := call nhTextWith with ("Sorry, a problem has occurred.");
+					Print("nethopper-jpeg: the user sees: " & alert);
+					call nhCheck with ("the alert names the error -48200", StrPos(alert, "(-48200)", 0), "it says " & alert);
+					call nhCheck with ("the picture left as its placeholder", call nhTextWith with ("a box"), "no ALT text");
+					call nhDone with ();
+				end, 60);
+			end, 90);
+		end, 60);
+	end, 30);
+end;
+
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+call walkSetup with (name, func()
+	call waitFor with ("nethopper-jpeg: installed", nhApp, func() begin
+		(call nhApp with ()):Open();
+		call waitFor with ("nethopper-jpeg: the help page", func() StrEqual(call nhTitle with (), "NetHopper 3.2 Help"),
+			func() AddDelayedCall(nhBrowse, nil, 500), 60);
+	end, 120));
+Print("nethopper-jpeg: the script is loaded");
