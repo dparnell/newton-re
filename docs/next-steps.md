@@ -9,660 +9,142 @@ here - this file says what is *not* done.  The history of how things got
 here, the plans of finished work and the host and ROM bugs found along
 the way are all in `docs/work-log.md`.
 
-## The application sweep (2026-10-01)
+## State at 2026-10-01
 
-`src/host/demo/sweep.ns` opens every application in the Extras drawer and
-the root's other application templates - the built-in ones and every
-fixture package - and uses each at random for 40 actions (taps, scribbles
-and words written, letter and arrow keys), with the traces on;
-`tools/host/sweeprank.py <log>` ranks what it ran into.  Run as:
+- The full `ctest`: 319 of 319 (several agents work in parallel, each
+  building in its own directory under `tmp/`).
+- The OS boots from the reconstructed data by default
+  (`<build>/romsrc-objects.bin`, from the committed `romsrc/`); `--rom` is
+  only for cross-checks, and nothing reads the ROM image at run time.
+  A configure with no ROM image builds, boots and runs every test that
+  does not compare against the ROM.
+- `analysis/coverage.py build/MP2x00US --check`: 18118 citations, 0 bad;
+  12199 of 16671 functions (73%).
+- `analysis/natives.py --unbound`: 1280 of 1326 natives answered (96.5%).
+  Left: comms 40 (AppleTalk and NBP, the online services and eWorld's
+  `EW*`, the TV remote), intl 4 (the AppleTalk zones), testing 2 (IR
+  sniffing).
+- `analysis/notyet.py` lists the NOT YET markers that name something
+  already defined; the sweeps of 2026-10-01 left only genuine gaps
+  (below) and performance paths.
+- **Linux** builds and runs with the system compiler
+  (`-DCMAKE_CXX_COMPILER=clang++`); `docs/host-lp64.md`.  Still
+  Windows-only: a package dropped onto the window (XDND), and
+  `tools/host/stacksample.py`, `profile.py`, `whichfunction.py`.  macOS
+  has no window or sound implementation yet (it would run headless).
 
-    NEWTON_TRACE_MISSING=1 NEWTON_TRACE_EXCEPTIONS=1 build/host/host/newton         --display 320x480 --erase --store tmp/sweep.store --headless 2300         --package <every fixture package> --script src/host/demo/sweep.ns > tmp/sweep.log 2>&1
-    python tools/host/sweeprank.py tmp/sweep.log
+## In progress
 
-Six sweeps (about 35 applications each), plus every `host.*` and `books.*`
-ctest run with the same traces, found **no unbound native, no NOT YET and
-no unanswered armcpu call** in use.  What they did find, most widespread
-first:
+- **The performance paths** (book agent): the proto caches and InkFont's
+  fast path are in; FastRun1 next (only ROM and package code takes it).
+  The font cache is left NOT YET (no measurable gain on the host).  Then
+  the host runtime's idle cost: idle after Setup the process uses 13% of
+  a core and, over drawbench, 18 s of processor to the newt task's 1 s -
+  the baton handoffs and the interrupt, socket and IR pollers
+  (`os600/kernel/host`, `docs/host-runtime.md`).
+- **Host-order binaries** (comms agent): a large binary (VBO) of a string
+  class, and the text engine's 'text VBOs, are still kept in host order on
+  the store, so a store a MessagePad or Einstein wrote would read them
+  swapped (`stores/host/HostLargeObjects.cpp`).  And stores the host
+  wrote before 2ae2efb8 read their reals swapped: can an old host store
+  be recognised and repaired on mount, as `RepairWordHints` does?
+- **The fixture applications used for what they are for**
+  (`demo/apps-*.ns`, ctests `host.NewtonApp*`): left - Newt's Cape's
+  other helpers (audio into the In Box, PalmDoc, MOD, the encodings,
+  PkgInfo, RoutBook, NewtPack) and Register.
 
-1. **The NIE's link modules are ARM protocol parts with no host stand-in**
-   (Ethernet `PEnetLinkModule`/`PDhcpDynAddrModule`/`PLanternDriverModule`,
-   LocalTalk `PMacIPLinkModule`/`PMacIPDriverModule`, Modem & Serial
-   `PPPPLinkModule`/`PSLPLinkModule`): installing enetsup/loctsup/modmsup
-   says so, and a setup for any of those links cannot connect.  By the
-   owner's decision the host's own network stands in (the Host network
-   setup, `comms/host/HostLink.ns`); re-expressing a link module is only
-   worth it for PPP/SLIP over the host's serial port.  Open.
-2. **newton took at most 31 packages** (`--package` or dropped): the
-   queue was 32 long, so a sweep of every fixture lost the last one
-   silently but for a line on stderr.  Fixed: 256
-   (`host/HostPackages.cpp`).
-3. **A sweep's actions deadlocked on a modal dialog** (the action that
-   opened it waits for its answer, and the script's next action was only
-   asked for after it): a harness fault, not the machine's - the sweep now
-   asks for the next action first.  The same stall once showed as the
-   machine powering itself off for idleness (nothing touched it for the
-   five-minute `SleepTime`), which is right.
-4. The applications' own faults, which a MessagePad has too: Daleks' board
-   tapped before its deferred set-up has made `gameBoard` (-48204 in
-   `viewClickScript`); NetSched's `GetURLs` indexing -1 of an empty list
-   (-48205) when it connects with no URLs; the Calls slip's delayed action
-   finding its view closed ("nil view"); Newt's Cape 2.0 refused over 1.6
-   (-10401, the same package name).
-5. Copperfield opened by itself, without a book (-48204 in `PageSize`,
-   'rendering): not a user's path (a book opens it); left out of the sweep.
+## Open
 
-The traces in the ctests are the scripts' own polling (a `waitFor` asking
-`InetGetDefaultLinkID` before the NIE has defined it, or `StrEqual` of a
-title not there yet) and one after a test's end (`host.NewtonInetFSM`: the
-NIE's `DoEvent_Loop` idling an FSM already disposed, -48404).
+### Left by decision or out of reach
 
-A random sweep proves little about what an application *does*: the next
-step is scripted use of each application's main functions (a meeting made
-and moved, a name filed, a note written and found, a package's own verbs),
-as the walkthroughs do for the built-in ones.
+- **The NIE's link modules** (Ethernet, LocalTalk, Modem & Serial PPP/SLIP)
+  are ARM protocol parts with no host stand-in; by the owner's decision
+  the host's own network stands in (the Host network setup,
+  `comms/host/HostLink.ns`).  The Lantern card handler is re-expressed;
+  its driver world (`TLanternEventWorld`) is NOT YET.
+- **The math views** (classes 84-86): nothing in the U.S. ROM, its
+  extension or the fixtures makes one, and the math recogniser is not in
+  this ROM.
+- **Recognition**: the French/German accent checks and the sixteen-bit
+  Airus walkers (nothing in the U.S. ROM asks for them); the journal's
+  replayed *units* (`HandleReplayUnit`, `SetCaseAndTime` - the host
+  journal replays strokes); the armistice samples (a debugger feed).
+- **Hardware**: `TResistiveTablet`, `CheckTabletHWCalibration`, the
+  interconnect pin's `TICHandler`, the Cirrus battery driver and the
+  platform's power side, `SCCPowerInit`, `TFlashAMD`, RAM stores
+  (`TStoreDriver`).
+- The applications' own faults, which a MessagePad has too: Daleks tapped
+  before its set-up, NetSched with no URLs, the Calls slip's delayed
+  action on a closed view, Newt's Cape 2.0 refused over 1.6, RPNcalc's -0
+  for negative trig results, Note2Net's hand-typed URL; Copperfield opened
+  without a book.
 
-## State at 2026-09-30
+### Comms
 
-- A full `ctest` in a parallel agent's build: 209 of 209 (`intl.Dates`
-  fails about one run in ten: it reads the real clock).  Several agents
-  work in parallel, each building in its own directory under `tmp/`.
-- **Linux**: the tree builds and runs there too, with the system compiler
-  (`-DCMAKE_CXX_COMPILER=clang++`, not the zig toolchain - its linker
-  cannot take the system's X11 and ALSA shared objects), and `newton`
-  shows the booted machine in an X11 window.  `ctest` there: 233 of 233
-  (five of them want `build/<ROM>/symbols.json`, so run `dump_symbols.py`
-  on a fresh checkout).  `docs/host-lp64.md` is the standing note on what
-  a 64-bit `long` changes and how such a value is to be spelt.  Still
-  Windows-only: a package dropped onto the window (XDND is NOT YET), and
-  the crash-time tools `tools/host/stacksample.py`, `profile.py` and
-  `whichfunction.py`, which read PE images and Windows debug APIs.
-  macOS has neither window nor sound implementation yet, so it would run
-  headless.
-- `analysis/coverage.py build/MP2x00US --check`: 17968 citations, 0 bad;
-  12051 of 16671 functions (72.29%).
-- `analysis/natives.py --unbound`: only comms' are left (comms 102 of
-  147, the AppleTalk `*Zone*` four and IR sniffing).  `instance:Dispatch` works only on a
-  monitor protocol (a host protocol's methods need numbered thunks, NOT
-  YET).
-- **Stores**: the internal store is the ROM's own flash format in a host
-  file (`newton --store`, `stores/flash/`), up to 128 MB (`--flash-size`)
-  in a sparse file that grows with what is written.  Open: past 128 MB
-  (the migrated-entry cap: slow lookups, or 256 KB erase regions - the
-  owner's call).  **Memory cards mount**: a
-  card is a host file (`newton --card`), formatted through the ROM's own
-  dialogs, mounted and unmounted as it goes in and out (ctest
-  `host.NewtonCard`); a card with Einstein's default CIS mounts
-  (`host.NewtonCardEinstein`).  Left: a round trip with a real Einstein
-  build (an image it wrote, one of ours opened in it), card packages in
-  attribute memory (`TCardPipe`), ATA cards.
-- **System alerts**: done (`src/alert/`, `docs/alert/README.md`; the card
-  reinsert alert, `host.NewtonCardAlert`).  NOT YET: the card position
-  alert's trigger, the fault-monitor route into `ReinsertCard`, the
-  screen semaphores.
+- AppleTalk: NBP, ADSP (with the NTK's ADSP connection and
+  `TEzEndpointPipe`'s), the zones; the online services and eWorld (`EW*`);
+  the TV remote; IR sniffing (`StartIRSniffing`/`StopIRSniffing`, 42
+  functions); the Hammer translators; `RegisterNetworkROMProtocols`, P3,
+  LocalTalk, Keyboard, VRemote and `PMuxServiceStarter` in the comm
+  manager's list.
+- The dock: 'rpat' and `BackupPatches` (a system patch, which the host
+  cannot install), V.42bis's internal-buffer mode, tests for 'islp' and
+  'gpwd', and a real desktop (NCX, UnixNPI) over localhost:3679 - never
+  tried.
+- armcpu: frames in a code binary; protocol parts through the CPU (every
+  protocol part among the fixtures is the NIE's); a partly re-expressed
+  package (NativeEntry's fast path goes straight into the binary); a
+  RefVar handle a native keeps past its call.
 
-## What works
+### Testing (`docs/testing/README.md`)
 
-- The machine boots into the Setup assistant, and `src/host/demo/setup.ns`
-  taps its way through to the Notepad.  Names, Dates (month, day with its
-  meetings, To Do list), Extras, the Preferences roll and Time Zones
-  (world map, home and away cities, clock icons) open and draw;
-  `src/host/demo/open-apps.ns` opens every built-in application a user
-  reaches and reports what fails (only the Sound Recorder: the sound
-  server).  Run it after any piece of work that touches the view system
-  or the recogniser; `--script` runs see a fresh store unless `--store`
-  is given, so a script walks the Setup assistant first
-  (`src/host/demo/assist-tasks.ns` has the walk to copy).
-- **Handwriting is read**, by both of the ROM's recognisers, chosen as the
-  ROM chooses by the writer's letter set:
-  - printed writing by Apple's Rosetta: `src/host/demo/write.ns` writes
-    "ton" and "to" and the Notepad types "ton to"
-    (`NEWTON_TRACE_ROSETTA=1`);
-  - cursive writing by ParaGraph's reader: `src/host/demo/cursive.ns`
-    reads "ton to" and learns from a correction; joined-up words
-    (`cursive-joined.ns`) read "on", "no", "to", "nun" first
-    (`NEWTON_TRACE_CURSIVE=1`, `NEWTON_TRACE_ARBITER=1`);
-  - numbers by ParaGraph's digit reader: `src/host/demo/numbers.ns` types
-    "42 10 217" ("217" offered as the date "2/7" too).
-  Writing that cannot be read is kept as ink (`src/host/demo/ink.ns`),
-  a double tap on a word opens the corrector (`correct.ns`), and writing
-  already there is read again (`recognize.ns`).  With a window, anything
-  written with the mouse is read.
-- **Shapes are recognised** with the Notepad set to shapes
-  (`src/host/demo/shapes.ns`, `snapping.ns`; `NEWTON_TRACE_SHAPES=1`), and
-  the shape verbs (`FindShape`, `MungeShape`, `PictToShape`, ...) work.
-- **A selection can be made, dragged and resized** (`src/host/demo/drag.ns`),
-  and a drag let go on the background becomes a clipping.
-- **The Intelligent Assistant** parses a sentence and carries out its
-  task (`src/host/demo/assist.ns`, `assist-tasks.ns`).
-- **Modal dialogs**, over real forked tasks (`src/host/demo/modal.ns`).
-- QuickDraw pictures play back (the world map), the outline list, the
-  meeting and its duration bar.
-- **Packages are installed by the package manager**, the ROM's own at
-  boot and one from a file with `newton --package file.pkg` or dropped
-  onto the window; `packages.py build/MP2x00US --extract DIR --rename
-  Formulas=Formulas2` makes a loadable copy of a built-in one.  A package
-  so installed is kept on the internal store, as on a MessagePad: with
-  `--store file` it is activated again at every later boot.
-- **The Newton's own test tools**: the journal records and plays back
-  strokes, and the test agent runs a test manager on the machine
-  (`src/host/demo/journal.ns`, `testagent.ns`; `docs/testing/README.md`).
+- The test server (`TCommServer`, an AppleTalk endpoint), the C test
+  cases (`TTestCaseTask`, a `'tstp` part), the tests kept on a store
+  (`MakeTestStore` and its kin), the serial debugging natives.
 
-## Packages: finished for what the host can reach
+### Frames and the rest
 
-Done (2026-09-27 to 2026-09-29; `docs/packages/README.md`'s "Status"
-table says what is left and what each piece waits on; the plan as it
-was worked through is in `docs/work-log.md`): 31 of the 32 package
-natives answered (the `'book` handler came with the book reader).  Left:
-`SuckPackageFromEndPoint` (comms), a protocol part's class info (raw
-ARM), a card's `'stor` event and `GetCardReinsertionInfo` (PCMCIA),
-XIP packages (the ROM domain manager's page faulting, about 11 KB).
-
-**Third-party packages** (`fixtures/packages/`, ctest
-`host.NewtonThirdPartyPackages` with a restart half): every fixture
-installs - apps and Internet Setup as `FormEntry`, NHSounds and the NIE
-modules as `AutoEntry`, fonts and ISP Templates as `'????Entry` (the ROM's
-own `HandleNewPackage` does the same) - except MDaleks1, which the ROM
-refuses as a second "Daleks:Avarice".  Removal (the drawer's delete,
-`SafeRemovePackage`, `DeActivatePackage` + `RemovePackage`) is clean and
-survives a restart.  RPNcalc computes; Daleks, NewtHack, Register and
-Internet Setup open.  Left: Mahjongg carries a compiled native (ARM)
-function the host cannot run; the NIE's protocol parts (their table is
-in `docs/packages/README.md`) get host implementations from the comms
-work (the owner's decision: the host's own TCP/IP stack, not the NIE's);
-the card server (`TCardServer`) - a `'cdhl` part is registered with no
-sockets to serve.
-
-## Pictures: finished
-
-Done (2026-09-29; `docs/qd/README.md`; the plan as it was worked through is
-in `docs/work-log.md`): recording pictures (`OpenPicture`/`ClosePicture`
-and every standard proc's recording branch), text, curves, paths and type 1
-pixel patterns played and recorded, `MakePict` and the credits picture,
-`TQDScaler` with scaled text, and the ROM's own blitting of pictures and
-text (`StretchBits` whole, text composed a style run at a time into a slab
-and stretched, `CalcTextBounds`, `DrawShapeScaled`).  Left, recorded as
-NOT YET where they lie: `TGrayShrink` (the view protocol that shrinks an
-anti-aliased ink word into grays - the ordinary stretch stands in, as on a
-ROM with none registered), a text object's layout numbers (0x400) and
-`TextArrow` (0x2000), `ZoomRect`, a `MakeBitmap` kept on a store.
-
-**Host tests wait on conditions**: a demo script loads
-`src/host/demo/common.ns` (`HostInclude`), polls for what it needs
-(`waitFor`) and ends with `HostQuit()`; `tools/host/stress.py`
-reproduces a timing race.  Still sleeping fixed times: the comms demos
-(echo, dns, stream, inet, inetfsm); `comms.MNPLongHeaders` failed once
-under `stress.py --suite --hogs 16`.  Host layout: run
-`analysis/romsizes.py` (and `--lp64`) after reconstructing message or
-reply code (the whole tree is clean, 60335af);
-write new ones the same way, never with a fixed wait for something
-asynchronous - under a parallel ctest the packages `--package` queues
-and the NIE's procrastinated setup arrive late.
-
-## User-reachable NOT YETs
-
-A sweep of the `NOT YET` markers in `src/` (517 of them, 2026-09-30) for the
-ones a user meets from the built-in applications or the walkthroughs -
-leaving out hardware, the debugger, the NTK nub and other paths no user
-reaches.  Biggest user impact first; each is taken on in this order.
-
-1. **The pen's clicks and the views' sounds** - DONE (2026-09-30): the
-   click when the caret moves, a button is tracked or a picker picks, a
-   gauge's `_sound`, the keyboard's `keySound`, the view effects' show and
-   hide sounds (`views/Animate.cpp` PlaySound) - every tap on the machine.
-   Small: the natives were there (`sound/SoundSettings.h`), only the calls
-   from the views were missing.  ctest host.NewtonClicks.
-2. **Keyboard editing of text** - DONE (2026-09-30): the key branch of
-   `TParagraphView::RealDoCommand` (0x16c658) as the ROM's - any key takes
-   a selection off (the page's), left/right go to its ends, any other key
-   takes the selected text out first; up/down move a line, keeping the
-   caret's place across it, and on to the paragraph above or below on the
-   page (`HandleUpDownKey`, `TEditView::MoveBetweenParagraphs`); a
-   backspace that empties a paragraph calculating its bounds removes it
-   when the key comes up.  test_Views TestTyping.
-3. **Selections kept with the text** - DONE (2026-09-30), but for the
-   selected text a `TParagraphHilite` carries (Hilites.h +0x14, for the
-   drag of a selection): `AdjustHilites` (0x16a824) moves a selection past
-   a change, shortens it or takes it away; `UpdateHiliteArea` (0x16a7bc)
-   remakes the hilites' areas whenever the lines are laid out again
-   (CreateAllCaches, FixupBBox).  test_Views TestTyping.
-4. **The caret around redrawing** - DONE (2026-09-30): `TView::Hilite`
-   hides the caret while it inverts a view whose outer bounds the caret
-   overlaps and shows it again after (0x2660c4), so the caret is not
-   inverted with a pressed button.  test_Views TestCaret.
-5. **Dates and times typed as text** - DONE (2026-09-30): `StringToDateFields`
-   (0x8de6c) and `StringToTime` read through the locale's time and date
-   lexical dictionaries - `ParseString` (0x18176c, `recognition/ParseString.cpp`)
-   walks the longest run of words the dictionary knows (`FindLongestWord`)
-   a character at a time with the Airus `VerifyCharacter`/`VerifyWord`
-   (0x2c7ac), each character's attribute gathering it into a parse buffer
-   or converting the buffer into a field (`intl/LexParse.h`'s
-   `ConvertBuffer`); `StringToNumber` reads through the number dictionary
-   with `TNumberParser` as the ROM's does; the locale's lexicons are
-   replaced when it changes (`ReplaceDictionaryHandle`).  Find's "before/after
-   a date", Dates' and Names' date fields, the Assistant's times ("lunch at
-   1 pm tomorrow").  ctest host.NewtonDateParse.
-6. **The boot's splash screen** - DONE (2026-09-30): `TNotebook::DrawSplashScreen`
-   (0x14602c) - the screen black, the maker's picture or the ROM's
-   bootLogoBitmap, "Newton 2.1 (717006)" (`VersionString` 0x146cb8, in
-   `views/SplashScreen.h`, which also fills Gestalt's romVersionString)
-   and the copyright lines - drawn by `InitToolbox` and by the root view
-   until the system is up; the boot sound after it and
-   `InitInternationalUtils` in their places.  ctest host.NewtonSplash.
-7. **Pickers with a keyboard** - DONE (2026-09-30): `GetKeyCommandInfo`
-   (0x184a24) - each item's keyCommand, or its keyMessage matched among the
-   callback view's - drawn at the item's right with the modifier icons,
-   the picker widened for the letter; `PickItem` (0x187a4c) sends a picked
-   item's key message to the key view (unless alwaysCallPickActionScript),
-   and returns at once for no item (so a cancelled picker runs no
-   pickActionScript - the host ran it with nil).  test_Views TestPickView.
-8. **Ink in pickers** - DONE (2026-09-30): a `strokeList` item drawn by
-   `DrawStrokeBundle` from its bounds, brought down to 28 high (the
-   corrector's list when it holds writing); and a grid picture with a
-   `mask` picks no cell where the mask is blank (`PickableItem` over
-   `FPtInPicture`).  test_Views TestPickView.
-9. **Printing ink** - DONE (2026-09-30): on a printer's port a sketch's
-   ink (`TPolygonView::DrawData`) and an ink word in text
-   (`TInkWordGlyph::DrawAt`) are made into outlined paths - the raw
-   strokes (`CSRawExpandGroup`: a handle of 16.16 points each, a dot
-   doubled) made polyline contours (`GenericCSMakePathsGroup`,
-   `InkMakePaths`) - and framed, which the dot printer's bottleneck
-   draws a band at a time; before, printed ink was left out.  test_Views
-   TestPolygonEditing (the ink word's path is the same code, not tested
-   on its own).
-10. **The busy box and the live ink** - DONE (2026-09-30, the comms
-    agent's c7129677): `TInker::Convert`/`DrawInk`, `TLiveInker`,
-    `TBusyBox`; ctest host.NewtonLiveInk.
-11. **Cursors told of a changed entry** - DONE (found already there):
-    `TCursor::EntryChanged` (0x2cfe84) is reconstructed and
-    `EntryChangeCommon` calls it through `EachSoupCursorEntryChanged`; the
-    comment saying NOT YET was stale (checked against the ROM: keys
-    changed - GotoEntry; tags changed - the entry tested again, the
-    inlined Move(0)).
-
-The stale markers the sweep found are put right: `stores/Cursors.h`/`.cpp`
-(words and text queries - only the words' hints and the text cache,
-which merely speed them up, are still NOT YET), `stores/Entries.cpp`
-(EntryChanged); `XmitSoupChange`'s deferred broadcast and `qd/PicPlay`'s
-text, curves and paths had already been corrected.
-
-**Flaky**: `host.NewtonBeamIrDA` fails now and then under a full -j8
-run and passes alone - not yet looked into.
-
-## Candidates for the next piece of work
-
-The owner's order - the package manager, host package loading, the
-recognition system, the testing system, finishing packages - has been
-worked through.  What could come next (not ranked; the owner chooses):
-
-- **Sound: finished** (2026-09-29; `docs/sound/README.md`): the server,
-  the client and frame channels, the `protoSoundChannel` natives, the codec
-  channel (IMA, mu-law, GSM 06.10, the DTMF synthesiser), recording, the
-  power handler; the host driver with a waveOut loudspeaker and a waveIn
-  microphone when windowed.  The Sound Recorder records and plays through
-  GSM (`host.NewtonRecorder`).  Left: the loudspeaker and microphone heard
-  by ear (windowed `newton --script src/host/demo/sound.ns`, then the
-  Recorder's Rec, Stop, Play); GSM checked bit for bit against the
-  standard 06.10 test sequences, if they can be brought in;
-  `NewWiredPtr` in `memory/` (the `NewPtr` fallback works).
-- **The book reader**: its C++ side is complete (2026-09-29;
-  `docs/books/README.md`).  A package with a `'book` part is wanted in
-  `fixtures/` to test the
-  part handler with a real book (Copperfield has only read the help book
-  under another ISBN).  The rest of the reader is its NewtonScript side,
-  which runs as it is.
-- **The comms stack**: being worked (`docs/comms/README.md`; the rounds
-  so far are in `docs/work-log.md`).  Networking goes to the host's own
-  TCP/IP stack - the owner's decision; no TCP/IP stack is written or
-  emulated.  Done: the comm tool and manager over `hal/host/HostSockets.h`,
-  the endpoint, protoBasicEndpoint and protoStreamingEndpoint (ctests
-  `host.NewtonEcho`, `host.NewtonStream`), all ten translators, the NIE's
-  `inet` and `dnst` services as host services (`host.NewtonDNS`), and the
-  NIE's protoFSM engine - its 19 native-compiled functions re-expressed
-  as host code in `src/thirdparty/nie/` (`thirdparty.NIEProtoFSM`).
-  Package native code: the owner's decision is host re-expressions for
-  the NIE and the ARM interpreter (`src/armcpu/`) as the fallback for
-  other packages, both behind `frames/PackageNatives.h`.
-  **The NIE works end to end on the host through its own API**:
-  `InetGrabLink`, `DNSGetAddressFromName`, a TCP echo, release and
-  disconnect (ctest `host.NewtonInet`), over the host's own link
-  (`comms/host/HostLink.ns`, embedded; the `ictl`, `dnst` and `inet`
-  services).  Internet Setup lists, opens and offers the Host network
-  (ctest `host.NewtonInetSetup`; its pages are Ethernet's less the card
-  picker, and its fields - Configuration, the addresses, the domain name -
-  are edited, kept and survive a restart, the domain used by the host's
-  DNS tool for a name with no dot, and a new manual setup's pages are
-  the host's own: `host.NewtonInetHostSetup`), and the NIE's protoEndpointFSM runs as a TCP client over it
-  (`host.NewtonInetFSM`).  Waiting on NIE client packages (mail, web)
-  for `fixtures/`; the modem navigator.  **The desktop connection**
-  (being done): 2.1 has no TCP dock, so the plan (`docs/comms/README.md`,
-  "The desktop connection (Dock) - the plan") is the ROM's own serial
-  dock - `TDocker` and the `FConn*` natives, `TMNP`/`TMNPService`,
-  `TSerTool`/`TAsyncSerTool`, the `TSerialChip` registry - over a host
-  `TSerialChip` whose wire is a TCP socket (port 3679, as Einstein), so
-  NCX or UnixNPI connect to localhost as to an emulator; about 80 KB of
-  ROM, layer by layer, ending in ctest `host.NewtonDock`.  Layer 1 done
-  (the serial chip seam and registry, the host's TCP serial port -
-  `hal.HostSerialChip`), layer 2 done (the serial tools and 'aser,
-  `comms.SerialTool`), layer 3 done (MNP with class 5 compression,
-  `tools/dock/mnp.py` the desktop end; `comms.MNP`,
-  `comms.MNPLongHeaders`, `comms.MNPClass5`; V.42bis's coder NOT YET,
-  since done).  Layer 4 part 1 done:
-  `TDocker`'s package-loading path, the protocol extensions, 13 `Conn*`
-  natives, `newton --serial-port` (default 3679) starting the serial port
-  and services at boot (`host.NewtonDocker`); a package loads end to end
-  through the Connection app's autodock (`host.NewtonDock` over
-  `tools/dock/dock.py`); a docking session's handshake and password
-  exchange are in and load packages (`host.NewtonDockSession`); the store
-  and soup commands (9bd3a3a) and the cursor and entry commands
-  (8a2af65) are in, soups are made, sent and backed up, and 'gpin' lists
-  the packages (cc1b30a, 1235149); all of `ProcessCommand` is in except
-  the system patches ('gpat'/'rpat') (a0966b4), with `ConvertEntry`,
-  `IsDuplicateEntry` (untested: autodock never asks for a selective
-  restore) and the app's read/write natives; a desktop's slip is shown
-  and answered headless; the keyboard passthrough and 'gpat' are in.  The
-  docker answers every desktop command but 'rpat' (installing a system
-  patch, which the host cannot do); V.42bis is in.  Left: 'rpat' and
-  `BackupPatches`, V.42bis's internal-buffer mode, tests for 'islp' and
-  'gpwd', and a real desktop (NCX, UnixNPI) over localhost:3679 - not
-  yet tried.  **Beaming** (being done; `docs/comms/README.md`, "Beaming - the
-  plan"): layers 1-3 done - a Note beams from one host to another over
-  Sharp IR (`host.NewtonBeam`, `tools/host/twonewtons.py`); the probe
-  'pkir' (layer 4) answers IrDA between two 2.1s, and the IrDA stack
-  ('irda', `comms/irda/`, ctest `comms.IrDA`) is in: **beaming is done**,
-  over Sharp IR (`host.NewtonBeam`) and the default path, probe then IrDA
-  (`host.NewtonBeamIrDA`).  **The NTK inspector** connects over the host
-  serial port (`comms/NTK.h`, `tools/ntk/inspector.py`, ctest
-  `host.NewtonNTK`); protoEndpoint, the 1.x endpoint, too
-  (`comms/ScriptEndpoint.h`, `host.NewtonProtoEndpoint`); **the modem**
-  dials and answers through `tools/modem/fakemodem.py`
-  (`host.NewtonModemDial`, `host.NewtonModemAnswer`); and the comm
-  trace frame's natives and translate (`comms/CommTrace.cpp`).  Left in
-  comms: nothing of fax (sent and received over Class 1 and Class 2 -
-  `host.NewtonFaxSend`, `host.NewtonFaxSendClass2`,
-  `host.NewtonFaxReceiveClass2`; Class 2.0 only with a modem profile that
-  enables it, fakemodem's side self-tested), received,
-  shown and turned - `host.NewtonFaxReceive`),
-  AppleTalk/NBP
-  and ADSP (with the NTK's ADSP connection), the Hammer translators,
-  eWorld (EW*), the TV remote.
-  The livelock between `TPMIterator::Init`'s semaphore and `TForkWorld`'s
-  mutex was the host runtime's, fixed (12e55a2; ctest
-  `host.NewtonDockGetPackages`).  `test_NIEProtoFSM` also runs
-  each check on the package's own ARM code through armcpu, and the two
-  agree (2ae6d73).  armcpu left: frames in a code binary; protocol parts
-  through the CPU - no fixture needs them yet (every protocol part among
-  the fixtures is the NIE's); and a *partly* re-expressed package - under
-  the CPU one native calling another in its own binary goes straight into
-  the binary's code (NativeEntry's fast path) and never reaches a
-  re-expression.  The rest of comms (CCL, AppleTalk, IR, NTK, the desktop
-  connection - which the test server's link, the IR sniffing,
-  `SuckPackageFromEndPoint` and fax reception wait on) comes after.
-- **Third-party apps**: all five fixture applications open from Extras
-  and respond (ctest `host.NewtonThirdPartyApps`).
-- **The pen**: the tablet driver and the inker are in, with the ROM's
-  calibration screen (Align Pen; `host.NewtonAlignPen`), its live ink
-  and the busy box (`host.NewtonLiveInk`).  NOT YET: the armistice
-  samples (a debugger feed, `gDebuggerBits & 8`), `TResistiveTablet` (the
-  MP2x00's panel, hardware).
-- **Power**: the power manager, sleep and wake, the backlight and the
-  batteries are in (`src/power/`, `host.NewtonPower`).  NOT YET: the
-  Cirrus battery driver and the platform's power side (the GPIO switch
-  state machine, `IOPowerOn`/`Off`, `PauseSystem`), `SCCPowerInit`, the
-  tablet driver's `ShutDown`/`WakeUp`.
-- **Printing to the host**: done - "Host printer (PNG files)" in the
-  Print slip, pages to `newton --print-dir` (`host.NewtonHostPrinter`).
-- **A user's first hour and first day** pass as ctests
-  (`host.NewtonWalkthrough`, `host.NewtonWalkthrough2`).
-  (Beam from the Action button with nobody there now says "No
-  response." as a MessagePad alone does; Print Note works.)  The ROM's
-  year-2010 overflow is fixed (DEVIATION, the owner's decision;
-  `docs/intl/year-2010.md`), so the host runs on the true date.  Before
-  that, the host clock past 2010 met the
-  ROM's own year-2010 overflow (`TimeInSeconds`): new items are dated
-  1992 - faithful; the walkthrough sets the clock to 1998.
-- **Now reachable over the large binaries**: the text engine's
-  `TXNewtStreamFactory` (a compressed large binary for a stream above
-  4K).
-- **Text engine: finished** (2026-09-29; below).
-- **Drawing speed**: done for the blitter and the display (2026-09-30;
-  `docs/work-log.md`).  What remains is the ROM's own animation pacing and
-  the unoptimised default build - `-DCMAKE_BUILD_TYPE=RelWithDebInfo`
-  roughly halves processor time again for interactive use; `VisibleRow`
-  and `StretchBits`/text are the next hot spots if wanted.
-- **The ROM-free track** (below): **the OS boots from the reconstructed
-  data by default** (`<build>/romsrc-objects.bin`, made by the default
-  build from the committed, editable `romsrc/`; `--rom` only for
-  cross-checks), and nothing reads the ROM image at run time.  With no
-  ROM image 248 of the 259 ctests run and pass; the 11 left check
-  against the ROM on purpose (`frames.FramesPart` and
-  `packages.PackageIterator` could still move to `ROMBytesAt`).
+- Reachable from developer settings or tools: tracing and breakpoints,
+  `NTKStackTrace`, the task stack limits, the GC profiler's hooks.
+- `instance:Dispatch`, `RegisterGestalt`, `ReplaceGestalt` want
+  `PrimCallProtocolFromFrames` (NewtonScript values marshalled into a C
+  call); a host protocol's methods need numbered thunks.
+- `ComputeParagraphHeight` (0x001ecfd0: read it from the assembly).
+- `GetRangeProperties`' `offset` slot.
+- Packages: XIP packages (the ROM domain manager's page faulting, about
+  11 KB); a card's `'stor` event and `GetCardReinsertionInfo`; card
+  packages in attribute memory (`TCardPipe`); ATA cards.
+- The NIE built into the ROM extension: the page tables `ptpt`/`glpt`
+  still name the patch table's old physical page (0x7ee000); 'fimp is not
+  generated.
+- The system alerts: the card position alert's trigger, the fault
+  monitor's route into `ReinsertCard`, the screen semaphores.
+- Flash stores past 128 MB (the migrated-entry cap: slow lookups, or
+  256 KB erase regions - the owner's call).  A round trip with a real
+  Einstein build (an image it wrote, one of ours opened in it).
 - Small: the date the Assistant's "tomorrow" comes to ("schedule lunch
   with Daniel tomorrow" puts the meeting on today).
+- How well the recognisers read synthetic writing: a perfectly round "c"
+  ties every reading in Rosetta; ParaGraph's synthetic "mum" and "nun"
+  lose the arbitration to the scrub.  An emulator trace (`BPNetEvaluate`,
+  the xr streams) would be the reference if one is ever wanted.
+- Sound heard by ear (windowed `newton --script src/host/demo/sound.ns`,
+  then the Recorder); GSM against the standard 06.10 test sequences.
+- A package with a `'book` part in `fixtures/` (Copperfield has only read
+  the help book).
+- Comms demos that still sleep fixed times (echo, dns, stream, inet,
+  inetfsm).
 
-## Open, by area
+### The ROM-free track, optional later
 
-### Recognition
-
-**Complete** (2026-09-29; `docs/recognition/README.md`'s status): all 125
-of its natives answered, and the code gaps the NOT YET sweep found
-(`ValidateWord`'s questions, `FindBaseline`'s first path over
-`low_level`, the arbiter's shape-or-word rules, `EndInkStrokeGroup`)
-filled - `024ee51`, `6a59f42`.  What remains is out of the U.S. ROM's
-reach, hardware, or waiting on another area:
-
-- **The inker's side** (hardware): the waiting ink redrawn on a screen
-  update (`UpdateCompressGroup`, `UpdateStrokesInList`, `UpdateStroke`
-  0x001455bc-0x00145728), like `StrokeUpdate`.
-
-- **Unreachable from this ROM**: the French/German accent checks
-  (`CheckDiacriticsDirections` 0x0007c9a0, 684 B; `AnalyseDiacriticsDirection`,
-  2160 B; two helpers - only a French or German letter set asks for them,
-  so they answer 0, no penalty), and the sixteen-bit Airus walkers
-  (`AE16_*`, `AL16_NextSet*`; no dictionary in this ROM is sixteen-bit).
-- **Hardware**: the inker task (`TInker`, `InkerOff`, `TBCWakeUpInker`)
-  and `CheckTabletHWCalibration`.
-- **Waiting on fax reception** (the comms stack): `RotTiledBitmap` (the
-  four sizes `Tilable` looks for are *fax pages*, 216-byte rows by
-  1146/2292/1152/2304 - the turned copy is built tile by tile in a large
-  binary; the large binaries are there now, but nothing makes such a
-  page).
-- **Waiting on other areas**: the journal's replayed *units*
-  (`HandleReplayUnit`, `SetCaseAndTime` - the host journal replays
-  strokes), `CreateVMHeap`.
-- The polygon view's only remaining NOT YET: the ink verb's printing
-  path (`InkMakePaths`, `FramePaths`).
-- **The NIE is built into the ROM extension** (`romsrc/rex`, `rom-form`,
-  `inetenbl.patches.tsv`; the owner's decision).  Open: the page tables
-  `ptpt`/`glpt` still name the patch table's old physical page (0x7ee000);
-  'fimp is not generated (a built-in package importing a unit from
-  outside the extension would need it - the builder refuses); the NIE's
-  modules (Ethernet, LocalTalk, Modem & Serial, ISP Templates) remain
-  packages to install.
-- **NetHopper browses** (`host.NewtonNetHopper`).  JPEG images need the NewtsCape
-  package: NetHopperJPEG.pkg has no decoder of its own - its viewer calls
-  NewtsCape's `JPEGConvert:NewtsCape` (`AddFile`) and answers nil without
-  it (the user sees an error alert); with NewtScape it decodes and draws
-  (`host.NewtonNetHopperNewtsCape`).  NewtScape itself browses plain
-  pages (a GIF shows only as its ALT text - not looked into; no ctest).
-  A 'pixels binary saved by an older host build (the host's old layout)
-  draws as garbage; not converted - only development stores hold one.  NOT YET: a RefVar
-  handle a native keeps in a heap object past its call (the ARM
-  interpreter's handle table is per call).
-- The printing path's outlined paths for ink (`CSMakePathsGroup`,
-  `FramePaths`), which want the PostScript path machinery.
-- **How well it reads.**  Rosetta: a perfectly round synthetic "c", as
-  wide as an "o", comes back with every code under 0.6%, so the readings
-  of a word with one in it all tie; the path from the classifier's input
-  to the readings matches the ROM instruction for instruction, so the net
-  is simply particular about its c's.  ParaGraph: the synthetic "mum" and
-  "nun" are read but lose the arbitration to the scrub gesture (their
-  retraced stems are a zig-zag), and "mum" prefers "Mom".  A trace from an
-  emulator (`BPNetEvaluate`, the xr streams) would be the reference if
-  ever one is wanted.
-- `GetRangeProperties`' `offset` slot (two line heights the host's line
-  cache does not keep).
-
-### Testing (`docs/testing/README.md`; 32 of 38 natives answered)
-
-- The test server (`TCommServer`, 0x00209654-0x00209d5c; `Setup`,
-  `ProcessTestServerCommand`, `DoDropConnection`'s sending): an AppleTalk
-  endpoint, so it waits on the comms area.
-- The C test cases (`TTestCaseTask` 0x0022afe0-0x0022b3b8,
-  `StartCTestCase`, `DoNewtCTestCase`): a test case is a protocol in a
-  `'tstp` part, run as a task of its own.
-- The tests kept on a store (`MakeTestStore`, `TTestCommandQueue`,
-  `TTestStoreFileList`, `DoRunTestsFromStore`, `StartACardTestCase`).
-- The six natives still unanswered: the serial debugging
-  (`InitSerialDebugging`, `PreInitSerialDebugging`); Uriah (`Uriah`,
-  `UriahBinaryObjects` - `TObjectHeap::Uriah` 0x0031b154 and
-  `UriahBinaryObjects` 0x0031bae0, a census of the frames heap printed to
-  the REP, about 2.4 KB walking the heap's own block layout, with
-  `gUriahROM`/`gUriahPrintArrays`/`gUriahSaveOutput` choosing what it
-  prints); and the IR sniffing (`StartIRSniffing`/`StopIRSniffing`, 42
-  functions and 4 KB of the IR stack not yet done - `callgraph.py`).
-- `HobbleTablet` reaches nothing on the host (no inker port).
-
-### Frames (`docs/frames/README.md`'s "Not yet"; every frames native bound)
-
-The NOT YET sweep of 2026-09-29 left 20 genuine gaps (40 comments before):
-- Reachable from ordinary scripts: `TNumberParser` (`StringToNumber` is
-  `strtod`, not the locale's separators); a store's own sort table; the
-  aggregate and pointer cases of `UnmarshalValue`.
-- Reachable from developer settings or tools: tracing and breakpoints (the
-  printer they need is there now - the natural next frames piece),
-  `NTKStackTrace`, the task stack limits the debugger uses, the GC
-  profiler's hooks.
-- Not reachable, or no effect on behaviour: FastRun1 (what SlowRun already
-  computes), the proto caches (speed), native code stored as ARM code (a
-  host limit), `IsFirstByteOf2Byte` (not for the US ROM), `TRichString::
-  Verify`'s check of the ink words.
-
-### Natives whose machinery is there, or is one function away
-
-- `Dispatch` (`instance:Dispatch`, 0x00195228), `RegisterGestalt` and
-  `ReplaceGestalt` want `PrimCallProtocolFromFrames` - the marshalling of
-  NewtonScript values into a C call.
-- `ComputeParagraphHeight` 0x001ecfd0: its geometry is built on the
-  stack through an unaligned `ldr` and is worth reading from the
-  assembly rather than the decompiler.
-- `MakePict`.
-- `natives.py --unbound --ready` picks out the ones whose ROM function is
-  already reconstructed.  `comms` and `books` are subsystems not
-  reconstructed at all: a native there is a project of its own rather
-  than a wrapper.
-
-### The text engine
-
-Finished (2026-09-29; `docs/text/README.md`): every TX/Textension function
-in the ROM is cited and all 39 `protoTXView` methods are bound, pages and
-page breaks included (`txview.ns`, `txpages.ns`; ctests
-`host.NewtonTXView`, `host.NewtonTXPages`).  Nothing in the ROM itself
-uses protoTXView (`analysis/protousers.py`), so the demos and host tests
-are the check.  ROM bug kept and visible: with three or more pages in
-view, the edit note (room for two) overflows into `gTXParagCtrlChars` and
-the pages after the second do not redraw properly after an edit.  Left
-open nearby: `StrokeCentral::UpdateCompressGroup`, the last NOT YET in
-`TRootView::PostDraw`, and the inker task itself (`TInker`/`TLiveInker`),
-which would retire the host's inking in `StrokeTime`.
-
-## The natives still unanswered
-
-`python tools/newton-rom/analysis/natives.py --unbound` lists them by
-area (`--csv` for a table, `--sizes build/MP2x00US` for the cheapest work
-inside an area).  At 2026-09-29:
-
-| area | how many | what is under them |
-|---|---|---|
-| comms | 120 | endpoints, CCL, AppleTalk (the `...Zone...` natives are AppleTalk's), IR, NTK, the desktop connection |
-| frames | 95 | natives.py's catch-all: a handful each across many areas |
-| books | 19 | the book reader and newspapers (`TLibrarian`) |
-| sound | 8 | the sound server |
-| testing, intl | 6 each | testing: the serial debugging, Uriah, the IR sniffing |
-| system | 6 | |
-| qd | 4 | |
-| stores | 2 | store passwords |
-| packages | 1 | SuckPackageFromEndPoint (comms) |
-| assist | 0 | all answered |
-
-The areas whose machinery exists are worth sweeping with `--ready`.
-
-## A long-term track: booting with no ROM image
-
-The owner's goal (2026-09-27): the system boots without a ROM image.  How
-they picture it: all the ROM's NewtonScript decompiled to NewtonScript
-source that the reconstruction's own compiler turns back into the
-*identical* bytecode (the byte-for-byte round trip being the proof), and
-tools that put the ROM's resources - bitmaps, sounds, fonts, strings and
-the locale data - into editable files in the repository, with a build
-step packing them and the recompiled NewtonScript back into the objects
-the OS loads, so a change to a source file or a resource is rebuilt and
-used on the next run.  The pieces, roughly in order:
-
-1. A NewtonScript **decompiler** whose output compiles back to the same
-   bytes - **done**: `analysis/nsdecompile.py` round-trips all 5507 of
-   the ROM's functions (`docs/frames/decompiler.md`; ctest
-   `host.NSDecompileRoundTrip` requires 100%).
-2. **Resource extraction**: bitmaps to images, sounds to sound files,
-   fonts, strings, locale bundles, the object graph that ties them
-   together, as files a person can edit (`docs/rom-free/README.md`).
-   Done bar the details: `analysis/romsrc.py` extracts the object area
-   as source - functions as decompiled NewtonScript (compiled back by the
-   host with no ROM image), bitmaps as PNG, simple sounds as WAV,
-   pictures as PICT, fonts as .ttf - and builds it back byte-identical
-   (ctest `host.ROMSourceRoundTrip`); no bytecode is left in the tree.
-   Left: the IMA sounds and the tables opaque; files cut by address
-   rather than grouped by what they belong to.  The tree is generated,
-   not committed, until it is worth editing.
-3. A **builder** that makes the object area (and the packages) from the
-   sources and resources, in the form `frames/ROMImport.cpp` reads today.
-4. Booting from that output with no `--rom`, the generated tables that
-   already live in `src/` (romtable.py, romconstants.py, nsgrammar.py,
-   ...) supplying the rest - **the OS boots with no ROM image** to the
-   same Setup screen as the `--rom` boot, pixel for pixel (`newton
-   --objects <file>`; ctests `host.NewtonNoROM`,
-   `host.NewtonNoROMSameScreen`); the ROM extension's ten packages are in
-   the tree, their frames parts as source (`rex/<Package>/`); an edit
-   that moves objects still boots to the same screen (`build
-   --relayout`; ctests `host.ROMSourceEdit`,
-   `host.NewtonEditedSameScreen`, `host.ROMSourceEditValue`) - new frames
-   get maps and symbols, the extension's parts relay out.  **The tree is
-   committed as `romsrc/` and is the source** (the owner's decision,
-   2026-09-30; `romsrc/README.md`); the extractor is not run over it
-   again, and `host.ROMSourceCommitted` (does it still build the ROM
-   byte for byte?) is to be retired at its first intentional edit.
-   The fonts are editable too: a BDF file per bitmap strike and a text
-   file per table (`tools/fonts/README.md`); possible follow-ups: a
-   strike's derived metrics (widthMax, the bearings) written as `auto`
-   and recomputed from its glyphs, and a test of adding a strike.
-   Complete for the object area and the extension.  Optional later: the
-   Unicode, collation and locale tables and the recognisers' dictionaries
-   as text (word lists plus a trie builder); ROM code for packages with
-   native ARM code.
-
-Until then the ROM image stays how the reconstruction is checked against
-the original; new run-time dependencies on it are to be avoided or noted.
-
-A lead the owner pointed at (2026-09-28), to look into when this track
-starts: **mosrun** (https://github.com/MatthiasWM/mosrun) - "short for
-'MacOS runtime environment', a program that runs m68k based MPW tools on
-Mac OS X, Linux, and MSWindows", a minimal Mac OS 7.6 and a 68020
-emulator whose main purpose is "to run the Apple Newton developer tools,
-such as the cross compiler and the Rex builder, natively and as part of a
-build chain" (ARM6asm, ARMLink, Rex).  Apple's own tools running on the
-host could serve as an oracle for the builder (step 3: a ROM extension
-made by Apple's Rex builder to compare ours against, byte for byte) and
-perhaps for the code generation step 1 has to reproduce, if a NewtonScript
-compiler is among the tools it runs - to be checked.  It is an outside
-tool: if it becomes part of the process it must be vendored or fetched by
-a documented script, per the project's rule that every tool lives in the
-repository and is reproducible.  A second, older option the owner also
-pointed at: Kelvin Sherlock's **mpw** (https://github.com/ksherlock/mpw),
-a "Macintosh Programmer's Workshop (mpw) compatibility layer" - a 68k
-emulator with the MPW toolbox calls, which its README says runs "only [on]
-OS X 10.8+ with case-insensitive HFS+" and does not name the Newton tools;
-mosrun is the one aimed at them and runs on Windows too, so it is the
-first to try, with mpw as a second opinion where a tool misbehaves.
+The Unicode, collation and locale tables and the recognisers'
+dictionaries as text (word lists plus a trie builder); a strike's derived
+metrics recomputed from its glyphs.  An oracle for the builder:
+**mosrun** (https://github.com/MatthiasWM/mosrun) runs Apple's MPW-based
+Newton tools (ARM6asm, ARMLink, Rex) on the host, so a ROM extension made
+by Apple's Rex builder could be compared with ours byte for byte; Kelvin
+Sherlock's **mpw** (https://github.com/ksherlock/mpw) is a second opinion.
+Either must be vendored or fetched by a documented script if used.
 
 ## Working notes that keep being needed
 
@@ -672,7 +154,6 @@ first to try, with mpw as a second opinion where a tool misbehaves.
 - **Committing beside other agents**: commit with `git commit -m ... --
   <paths>`, which takes only those paths, so nothing another agent has
   staged is swept in.
-
 - **Heap damage**: `NEWTON_HEAPCHECK=N` (every Nth allocation; 1 for
   all) makes `newton` walk the newt task's heap after allocations and
   before every `DisposPtr`, and stop at the first damaged block with the
@@ -680,13 +161,16 @@ first to try, with mpw as a second opinion where a tool misbehaves.
   (`host/HostHeapCheck.h`; `NEWTON_HEAPDUMP` lists the blocks as it
   goes).  A ROM size handed to an allocator for a struct with pointers
   in it is the usual culprit: grep for literal sizes.
-
+- **Host tests wait on conditions**: a demo loads `common.ns`
+  (`HostInclude`), polls with `waitFor` and ends with `HostQuit()`;
+  never a fixed wait for something asynchronous.  `tools/host/stress.py`
+  reproduces a timing race.  A test comparing two readings of the clock
+  pins it (`SetRealClockSeconds`).  Run `analysis/romsizes.py` (and
+  `--lp64`) after reconstructing message or reply code.
 - Unaligned `ldr rN,[X+2]` rotates the aligned word right by 16 - read
   halfword loads out of the disassembly, never the decompiler. Halfword
   stores come out as two `strb`. This matters most in functions that
-  build `Rect`s and `Point`s on the stack: Ghidra's output for
-  `AddNewParagraph`'s geometry is almost unreadable, and the assembly is
-  not.
+  build `Rect`s and `Point`s on the stack.
 - The view classes have no vtable in `romfacts.json` - they are built
   by `BuildView`, not by a self-allocating constructor - so a virtual
   call like `add pc,r3,#0x148` cannot be named from it.
@@ -746,15 +230,14 @@ first to try, with mpw as a second opinion where a tool misbehaves.
   where the ROM's word is 32 bits (`(ULong) (uint32_t) x`).  This is
   what made the clock jump at 2^32 ticks.
 - A running `newton.exe` cannot be relinked: stop it before building.
-- **Several agents in parallel** (2026-09-29 on): each builds in its own
-  directory (`build/host` for one, `tmp/build-<area>` for the others),
-  stages its own files path by path (never `git add -A`/`commit -a`), and
-  keeps the shared tree compiling between steps - one agent's broken file
-  stops everyone's `newton` linking.  Only ever stop a process you
-  launched yourself, by the PID kept at launch: several `newton.exe`s from
-  different build trees run at once, and one looked up by image name
-  belonged to another agent.  Heap damage from one area shows up as hangs
-  everywhere: run booted demos under `NEWTON_HEAPCHECK` before committing.
+- **Several agents in parallel**: each builds in its own directory
+  (`build/host` for one, `tmp/build-<area>` for the others), stages its
+  own files path by path (never `git add -A`/`commit -a`), and keeps the
+  shared tree compiling between steps - one agent's broken file stops
+  everyone's `newton` linking.  Only ever stop a process you launched
+  yourself, by the PID kept at launch.  Heap damage from one area shows
+  up as hangs everywhere: run booted demos under `NEWTON_HEAPCHECK`
+  before committing.
 - A host that looks hung: `tools/host/stacksample.py <pid>` (its busy
   thread's stack, no debugger needed) and `NEWTON_TRACE_UPDATE=1` (each
   region repainted) - `tools/host/README.md`.
@@ -762,9 +245,10 @@ first to try, with mpw as a second opinion where a tool misbehaves.
   tests (160x100 at one point); a test that checks update regions should
   not assume the whole screen is visible.
 - A script run by `newton --script` sees a fresh store unless `--store`
-  is given, so it walks the Setup assistant first
-  (`src/host/demo/assist-tasks.ns` has the walk to copy).
-
+  is given, so it walks the Setup assistant first (`walkSetup` in
+  `common.ns`).  Pen demos: a tap within half a second of the pen coming
+  up after writing is more writing, and a press within 60 ticks of the
+  previous click is a tap-drag's second half - wait on `Ticks()`.
 - **A reference for the cursive reader**: PhatWare, who bought
   ParaGraph's recogniser, published a descendant of it under the GPL v3
   (https://github.com/phatware/WritePad-Handwriting-Recognition-Engine;
@@ -772,7 +256,6 @@ first to try, with mpw as a second opinion where a tool misbehaves.
   It is a later version and not the ROM, so it is never transcribed: it
   names things (the xr types are its `X_...` codes, `LOW/STD/XR_NAMES.H`)
   and says what a function is for, and where the ROM and the port
-  disagree with it, the ROM's disassembly decides.  The FillSHR slip (a
-  transcribed store order into a stack array, two slots swapped) showed up
-  as exactly such a disagreement - a transcribed store order is the thing
-  to check first when a stage's output looks mirrored or shifted.
+  disagree with it, the ROM's disassembly decides.  A transcribed store
+  order is the thing to check first when a stage's output looks mirrored
+  or shifted.
