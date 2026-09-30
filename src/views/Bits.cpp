@@ -208,8 +208,9 @@ TBitsPort::~TBitsPort()
 // ROM 0x000451c4 BeginDrawing__5TBitsF6TPoint
 // The bits made the current port at the origin: a TBitsPort the first
 // time (the bits cleared unless they came from the screen), else the port
-// made current again.  NOT YET RECONSTRUCTED: gSlowMotion (the screen
-// drawn into instead, the newt globals' port).
+// made current again.  In slow motion (gSlowMotion, ViewAutopsy) the
+// port current before - the screen - is made current again instead, so
+// the drawing is seen as it happens; EndDrawing copies it into the bits.
 void
 TBits::BeginDrawing(Point origin)
 {
@@ -225,15 +226,22 @@ TBits::BeginDrawing(Point origin)
 		SetPort();
 		SetOrigin(origin.h, origin.v);
 	}
+	if (gSlowMotion != 0)
+		::SetPort(fPort->fSavedPort);		// (the ROM sets the newt globals' current port)
 }
 
 
 // ROM 0x0004527c EndDrawing__5TBitsFv
-// The port disposed (the port before made current).  NOT YET
-// RECONSTRUCTED: gSlowMotion's copy back from the screen.
+// The port disposed (the port before made current); in slow motion what
+// was drawn on the screen copied into the bits first.
 void
 TBits::EndDrawing(void)
 {
+	if (gSlowMotion != 0)
+	{
+		Rect r = bounds;
+		CopyFromScreen(r, r, 0, nil);
+	}
 	if (fPort != nil)
 		delete fPort;
 	fPort = nil;

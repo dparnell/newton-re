@@ -2234,6 +2234,27 @@ TestCaret()
 	EXPECT(InkIn(10, 10, 22, 21) == 0);
 	bits.Draw(dst, box, 0, nil);
 	EXPECT(InkIn(10, 10, 22, 21) == inked);
+	// in slow motion (ViewAutopsy) drawing into bits is drawn on the screen,
+	// and copied into the bits when it is over
+	{
+		extern long gSlowMotion;
+		EraseRect(&all);
+		TBits slow;
+		EXPECT(slow.Constructor(dst));
+		gSlowMotion = 1;
+		Point origin;
+		origin.h = 0;
+		origin.v = 0;
+		slow.BeginDrawing(origin);
+		Rect mark;
+		SetRect(&mark, 2, 2, 6, 6);
+		PaintRect(&mark);
+		slow.EndDrawing();
+		gSlowMotion = 0;
+		EXPECT(InkIn(2, 2, 6, 6) == 16);
+		EXPECT(GetPixel(&slow, 3, 3) == 1 && GetPixel(&slow, 8, 8) == 0);
+		EraseRect(&all);
+	}
 	Eval("ctxB:Close()");
 	Refresh();
 	// a paragraph as the key view: no caret without a keyboard, then the caret at the offset

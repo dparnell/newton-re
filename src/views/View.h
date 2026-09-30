@@ -383,7 +383,7 @@ Ref			SlotCacheRef(long index);		// the slot symbol of a cache index
 extern Boolean		gSkipVisRegions;		// 0x0c102054  Draw does not clip to the visible regions
 extern Boolean		gDontDrawHilites;		// 0x0c100cbc  the selection hilites are not drawn (an effect in progress)
 extern Boolean		gOutlineViews;			// 0x0c101a28  Draw frames every view in light gray
-extern long			gSlowMotion;			// 0x0c101a2c  drawing shown step by step (NOT YET: unused)
+extern long			gSlowMotion;			// 0x0c101940  drawing shown step by step (ViewAutopsy): offscreen bits drawn on the screen, view effects left out, the root's updates not held
 
 // views from contexts
 TView*		GetView(RefArg context);								// ROM 0x002613fc GetView__FRC6RefVar

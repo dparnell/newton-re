@@ -43,7 +43,8 @@
 				+0x94, the cell limit +0x98, the effect word +0x9c, the
 				context +0xa0, the reverse and has-bits flags +0xa4/+0xa5,
 				the enabled kinds +0xa8 and an exception cleanup +0xac (the
-				host's destructor).  NOT YET RECONSTRUCTED: gSlowMotion.
+				host's destructor).  In slow motion (gSlowMotion) the
+				effects are left out.
 
 	Reconstructed from the MP2x00 US ROM (0x000429ec-0x0004512c,
 	0x001c60b0-0x001c6384); each function cites its origin.

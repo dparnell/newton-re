@@ -477,8 +477,9 @@ TAnimate::SetupDragEffect(TView* view)
 // the view), the caret's bits put back when it lies in the area, and the
 // screen saved; the caret is dirtied when it lies in the effect's area;
 // then the effect of the kind (the plain and slide effects MultiEffect,
-// the trash CrumpleEffect, the poof PoofEffect).  NOT YET RECONSTRUCTED:
-// gSlowMotion.
+// the trash CrumpleEffect, the poof PoofEffect).  In slow motion
+// (gSlowMotion) the screen is not held for the drawing and the effect
+// itself is left out - the view simply appears or goes.
 void
 TAnimate::DoEffect(RefArg sound)
 {
@@ -494,7 +495,8 @@ TAnimate::DoEffect(RefArg sound)
 			PlaySound(fContext, sound);
 		return;
 	}
-	StartDrawing(nil, nil);
+	if (gSlowMotion == 0)
+		StartDrawing(nil, nil);
 	Rect caret;
 	gRootView->GetCaretRect(&caret);
 	if (saving)
@@ -514,6 +516,8 @@ TAnimate::DoEffect(RefArg sound)
 	SectRect(&fBounds, &caret, &caret);
 	if (!EmptyRect(&caret))
 		gRootView->DirtyCaret();
+	if (gSlowMotion != 0)
+		return;
 	switch (fKind)
 	{
 	case kPlainEffect:
