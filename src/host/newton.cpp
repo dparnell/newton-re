@@ -15,7 +15,12 @@
 	newton [--rom image | --objects file] [--heap bytes] [--display WxH[xdepth]] [--scale n]
 	       [--script file.ns] [--headless seconds] [--store file] [--erase]
 	       [--package file.pkg]... [--card file] [--microphone-tone hz] [--tcp-echo port]
-	       [--serial-port port|none] [--ir-peer listen:port|host:port]
+	       [--serial-port port|none] [--ir-peer listen:port|host:port] [--print-dir dir]
+
+	--print-dir is where the host's printer (print/host/HostPrinter.h:
+	"Host printer (PNG files)" in the Print slip's Choose Other Printer)
+	writes each page it prints, as print-001.png, print-002.png, ...
+	(default: the working directory).
 
 	--objects boots on the object file built from the ROM source tree
 	(tools/newton-rom/analysis/romsrc.py build -o) with no ROM image: the
@@ -100,6 +105,7 @@
 #include "ModemTool.h"
 #include "FaxTool.h"
 #include "HostLink.h"
+#include "print/host/HostPrinter.h"
 #include "os600/kernel/host/TaskRuntime.h"
 #include "REPTranslators.h"
 #include "Frames.h"
@@ -167,7 +173,7 @@ Usage(void)
 	fprintf(stderr, "usage: newton [--rom image | --objects file] [--heap bytes] [--display WxH[xdepth]] [--scale n]\n"
 					"              [--script file.ns] [--headless seconds] [--store file] [--erase]\n"
 					"              [--package file.pkg]... [--card file] [--microphone-tone hz] [--tcp-echo port]\n"
-					"              [--serial-port port|none] [--ir-peer listen:port|host:port]\n");
+					"              [--serial-port port|none] [--ir-peer listen:port|host:port] [--print-dir dir]\n");
 	return 2;
 }
 
@@ -285,9 +291,9 @@ FHostCPUTime(RefArg /*rcvr*/)
 }
 
 
-// PreMain's host hook: the program's globals (HostQuit among them), and the
+// PreMain's host hook: the program's globals (HostQuit among them), the
 // host's link for the Newton Internet Enabler (comms/host/HostLink.h: it
-// waits for the NIE)
+// waits for the NIE), and the host's printer (print/host/HostPrinter.h)
 static void
 NewtonPreMain(void)
 {
@@ -296,6 +302,7 @@ NewtonPreMain(void)
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostCPUTime")), RefVar(MakeCFunction((void*) FHostCPUTime, 0, nil)));
 	HostInstallPackageGlobal();
 	HostLinkStart();
+	HostInstallPrinter();
 }
 
 
@@ -436,6 +443,8 @@ main(int argc, char** argv)
 			gScale = strtol(argv[++i], nil, 0);
 		else if (strcmp(argv[i], "--script") == 0 && i + 1 < argc)
 			script = argv[++i];
+		else if (strcmp(argv[i], "--print-dir") == 0 && i + 1 < argc)
+			HostSetPrintDirectory(argv[++i]);
 		else if (strcmp(argv[i], "--microphone-tone") == 0 && i + 1 < argc)
 			gToneFrequency = strtol(argv[++i], nil, 0);
 		else if (strcmp(argv[i], "--tcp-echo") == 0 && i + 1 < argc)

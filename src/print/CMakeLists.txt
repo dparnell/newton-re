@@ -10,6 +10,7 @@ add_library(print STATIC
     FaxDriver.cpp
     FaxDriverTables.cpp
     DitherTables.cpp
+    host/HostPrinter.cpp
 )
 target_link_libraries(print PUBLIC newton_config qd protocols frames comms comms_fax utility)
 

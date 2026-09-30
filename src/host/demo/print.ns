@@ -1,0 +1,100 @@
+// Printing to the host (ctest host.NewtonHostPrinter): a note and a Names
+// card printed from their Action buttons on the host's printer
+// (print/host/HostPrinter.h), which writes each page as a PNG in newton's
+// --print-dir.  After the Setup walk a note is made (the Notepad's
+// MakeTextNote) and printed: its Action button, Print Note, the Print
+// slip's Printer picker, Choose Other Printer, the chooser's list scrolled
+// to "Host printer (PNG files)" and picked, then Print and Now.  Then a
+// card is added (the Names file's AddCard) and printed the same way,
+// the slip remembering the printer.  Each step waits until the screen has
+// changed as the step says; tools/imaging/pagecheck.py checks the pages.
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//       --headless 200 --print-dir build/print --script src/host/demo/print.ns
+//
+// The places tapped are where the views lie on a 320x480 screen: the
+// note's Action button (310, 28), the Names card's (244, 414), the Print
+// slip (45, 134 .. 275, 299), its Printer picker (118, 196), Choose Other
+// Printer (160, 241), the chooser's down arrow (230, 161), its last row
+// (140, 196) and close box (237, 228), Print (226, 284) and Now (221, 256).
+
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
+
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+kHostPrinter := "Host printer (PNG files)";
+
+// whether one of the root view's children lies with its top left corner here
+shows := func(left, top) begin
+	local found := nil;
+	foreach child in GetRoot():ChildViewFrames() do begin
+		local box := child:GlobalBox();
+		if box.left = left and box.top = top then found := true;
+	end;
+	found;
+end;
+kids := func() Length(GetRoot():ChildViewFrames());
+
+// Print slip already open: the printer chosen when asked, then Print, Now,
+// and andThen() once the pages have been written
+printFromSlip := func(choose, pages, what, andThen) begin
+	local printNow := func() begin
+		call tapAt with (226, 284);			// Print
+		call waitFor with (what & ": Now or Later", func() call shows with (207, 250), func() begin
+			call tapAt with (221, 256);		// Now
+			call waitFor with (what & ": printed", func() HostPagesPrinted() >= pages, func() begin
+				Print(what & ": " & NumberStr(HostPagesPrinted()) & " page(s) printed");
+				call andThen with ();
+			end, 60);
+		end, 20);
+	end;
+	if not choose then begin
+		Print(what & ": the printer is " & userConfiguration.currentPrinter.name);
+		call printNow with ();
+		return;
+	end;
+	call tapAt with (118, 196);				// the Printer picker
+	call waitFor with (what & ": the printers", func() call shows with (87, 202), func() begin
+		call tapAt with (160, 241);			// Choose Other Printer
+		call waitFor with (what & ": the chooser", func() call shows with (70, 80), func() begin
+			for i := 1 to 4 do call tapAt with (230, 161);		// scrolled to the end
+			call tapAt with (140, 196);		// the host's printer
+			call tapAt with (237, 228);		// closed
+			call waitFor with (what & ": the printer chosen", func() not call shows with (70, 80)
+					and StrEqual(userConfiguration.currentPrinter.name, kHostPrinter), func() begin
+				Print(what & ": chose " & userConfiguration.currentPrinter.name);
+				call printNow with ();
+			end, 20);
+		end, 20);
+	end, 20);
+end;
+
+printCard := func() begin
+	GetRoot().cardfile:AddCard('person, {name: {class: 'person, first: "Ada", last: "Lovelace"},
+		phones: ["555-1815"], address: "12 St James's Square", city: "London"});
+	call tapAt with (100, 460);				// Names
+	call waitFor with ("card: the Names file", func() call shows with (40, 206), func() begin
+		local before := call kids with ();
+		call tapAt with (244, 414);			// the card's Action button
+		call waitFor with ("card: the Action menu", func() call kids with () > before, func() begin
+			call tapAt with (180, 304);		// Print Name
+			call waitFor with ("card: the Print slip", func() call shows with (45, 134), func() begin
+				call printFromSlip with (nil, 2, "card", func() begin
+					Print("print: done");
+					HostQuit();
+				end);
+			end, 20);
+		end, 20);
+	end, 20);
+end;
+
+call walkSetup with (name, func() begin
+	GetRoot().paperroll:MakeTextNote("hello from the Newton's printer", true);
+	call tapAt with (310, 28);				// the note's Action button
+	call waitFor with ("note: the Action menu", func() call shows with (213, 23), func() begin
+		call tapAt with (260, 33);			// Print Note
+		call waitFor with ("note: the Print slip", func() call shows with (45, 134), func() begin
+			call printFromSlip with (true, 1, "note", printCard);
+		end, 20);
+	end, 20);
+end);
+Print("print: the script is loaded");

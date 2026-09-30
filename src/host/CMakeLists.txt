@@ -232,6 +232,30 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
                          PASS_REGULAR_EXPRESSION "faxcheck: passed")
 endif()
 
+# the host's printer (print/host/HostPrinter.h): a note and a Names card
+# printed from their Action buttons, the printer chosen in the Print slip's
+# Choose Other Printer; each page a PNG in build/print, which
+# tools/imaging/pagecheck.py checks (the note's text, the card's frame and
+# its address inked)
+add_test(NAME host.NewtonHostPrinter.clean COMMAND ${CMAKE_COMMAND} -E rm -rf build/print WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonHostPrinter.clean PROPERTIES FIXTURES_SETUP hostprintclean)
+add_test(NAME host.NewtonHostPrinter.mkdir COMMAND ${CMAKE_COMMAND} -E make_directory build/print WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonHostPrinter.mkdir PROPERTIES FIXTURES_SETUP hostprintclean DEPENDS host.NewtonHostPrinter.clean)
+add_test(NAME host.NewtonHostPrinter COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 200 --print-dir build/print --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/print.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonHostPrinter PROPERTIES TIMEOUT 300 FIXTURES_REQUIRED hostprintclean FIXTURES_SETUP hostprinted
+                     PASS_REGULAR_EXPRESSION "note: chose Host printer \\(PNG files\\).*printed page 1 to build/print/print-001.png.*card: the printer is Host printer \\(PNG files\\).*printed page 2 to build/print/print-002.png.*print: done"
+                     FAIL_REGULAR_EXPRESSION "waited in vain|fell over")
+if(Python3_FOUND)
+    add_test(NAME host.NewtonHostPrinter.check
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/imaging/pagecheck.py build/print
+                     --pages 2 --size 2550x3300
+                     --inked 1:320,240,1450,312:2000
+                     --inked 2:768,1220,1776,1892:3000 --inked 2:1080,1430,1530,1520:1000
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonHostPrinter.check PROPERTIES FIXTURES_REQUIRED hostprinted
+                         PASS_REGULAR_EXPRESSION "pagecheck: passed")
+endif()
+
 # deferred recognition (views/Rerecognize.h): "ton" written, and the
 # same strokes read again through Recognize, RecognizeInkWord,
 # RecognizeTextInStyles and RecognizePara (needs the ROM image)

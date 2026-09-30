@@ -124,9 +124,25 @@ Tests: ctest `host.NewtonFaxSend` (demo `src/host/demo/fax-send.ns`) sends a not
 - `TFaxToolInterface::SetMinScanLineTime` answers nought where the ROM reads the word after the option's time, past the end of the option. Nothing in the ROM calls it.
 - The `TCMARouteAddress`, `TCMAPhoneNumber` and `TCMOServiceIdentifier` constructors size their options from the host's structs.
 
+## The host's printer
+
+`print/host/HostPrinter.h` is a printer of the host's own. It is not in the ROM. It shows that `TDotPrinterDriver` is a clean seam: a new printer is one implementation of that protocol, and the ROM's `TDotPrinter` still draws the page.
+- **`THostPrinterDriver`** prints at 300 dots an inch. It keeps the whole sheet in host memory: letter is 2550 x 3300 dots, A4 is 2480 x 3508. The printable area is placed at the printer frame's `printableOrigin`, and its size comes from the `printerPageBounds` the Print slip chose.
+  - Bands are 200 dots deep, halved as far as 25 when memory is short. 25 dots is exactly 6 points at 300 dpi, so the bands meet without a seam.
+  - `ClosePage` writes the sheet as `<dir>/print-NNN.png`, a one-bit gray PNG. The writer uses deflate's stored blocks, so it needs only the C library. NNN counts the pages printed since the program started.
+  - newton's `--print-dir DIR` sets the directory; the default is the working directory.
+- **How a user reaches it.** `HostInstallPrinter` runs from the newt world's PreMain hook. It registers the driver and adds a printer frame, "Host printer (PNG files)", to `AvailablePrinters`: `imagingName` "TDotPrinter", `driverName` "THostPrinterDriver", type `serialSym`, and the StyleWriter's page bounds and origin.
+  - That global array is the ROM's list of printer types. The Print slip's printer picker ends with "Choose Other Printer", whose chooser lists the array's serial printers. Picking one there makes it `userConfiguration.currentPrinter`, and the slip remembers it.
+  - The script function `HostPagesPrinted()` answers how many pages have been written.
+- **The picker needed `GetNames`** (`comms/AppleTalkNatives.cpp`). It is the AppleTalk native that turns NBP addresses ("name:type@zone") into names, and the slip calls it on the recent printers' names.
+
+Tests: ctest `host.NewtonHostPrinter` runs demo `src/host/demo/print.ns`. It prints a note (Notepad, Action, Print Note, the printer chosen through Choose Other Printer, Print, Now) and a Names card (Action, Print Name). Then `host.NewtonHostPrinter.check` runs `tools/imaging/pagecheck.py`, which checks the two pages in `build/print`: 2550 x 3300, not blank, the note's text inked, and the card's frame and address inked.
+
+Seen on the way, not yet looked into: a card added with `cardfile:AddCard` shows no name, neither on the screen nor on the printed card. The address and phone draw.
+
 ## Not yet
 
-- `TPSPrinter`, the PostScript imaging engine, and the drivers other than the fax driver.  Next: a host driver behind `TDotPrinterDriver` that writes each page to a PNG, so Print from any Newton application lands on the host.
+- `TPSPrinter`, the PostScript imaging engine, and the drivers other than the fax driver (a new printer goes behind `TDotPrinterDriver`, as the host's printer does).
 - Fax sending over Class 2.
 - `TPrDriverPart`, the 'prnt part handler for printer-driver packages.
 - `TQDLibraryDriver`, the QuickDraw library offered to drivers.
