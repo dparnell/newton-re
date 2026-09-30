@@ -997,3 +997,19 @@ if(Python3_FOUND)
              COMMAND ${Python3_EXECUTABLE} tools/stores/test_flashimage.py
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 endif()
+
+# a fresh store has every soup the ROM's first boot makes, and mounting it
+# throws nothing (demo/freshstore.ns): on a new flash file, and in memory
+add_test(NAME host.NewtonFreshStore
+         COMMAND newton --erase --store ${CMAKE_CURRENT_BINARY_DIR}/freshstore.store
+                 --headless 120 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/freshstore.ns
+         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonFreshStore PROPERTIES TIMEOUT 180
+                     PASS_REGULAR_EXPRESSION "freshstore: 15 soups, all there.*freshstore: done"
+                     FAIL_REGULAR_EXPRESSION "while mounting|not a flash file|would not mount|NOT all there")
+add_test(NAME host.NewtonFreshStore.memory
+         COMMAND newton --headless 120 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/freshstore.ns
+         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonFreshStore.memory PROPERTIES TIMEOUT 180
+                     PASS_REGULAR_EXPRESSION "freshstore: 15 soups, all there.*freshstore: done"
+                     FAIL_REGULAR_EXPRESSION "while mounting|NOT all there")

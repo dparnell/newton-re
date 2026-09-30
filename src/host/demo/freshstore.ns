@@ -1,0 +1,31 @@
+// A fresh internal store has the soups a MessagePad's has after its first
+// boot: the ones the built-in applications' InstallScripts make
+// (RunInitScripts), the System soup the boot makes, and the Cardfile's
+// Names soup, which host/HostStores.cpp's HostPrepareStore makes at mount
+// because the boot asks for it before the Cardfile is installed.  Run on a
+// store file that is not there yet (ctest host.NewtonFreshStore) and with
+// none at all (host.NewtonFreshStore.memory):
+//
+//   build/host/host/newton --erase --store tmp/fresh.store --headless 60 \
+//       --script src/host/demo/freshstore.ns
+//
+// The list is what a boot of the ROM image (--rom) makes on a fresh store.
+
+freshStoreExpected := ["Calendar", "Calendar Notes", "Directory", "InBox", "Library",
+	"Names", "Notes", "OutBox", "Packages", "Repeat Meetings", "Repeat Notes",
+	"System", "SystemAlarmSoup", "To do", "To Do List"];
+
+AddDelayedCall(func() begin
+	local names := GetStores()[0]:GetSoupNames();
+	local missing := [];
+	foreach name in freshStoreExpected do
+		if not LSearch(names, name, 0, '|str=|, nil) then AddArraySlot(missing, name);
+	local extra := [];
+	foreach name in names do
+		if not LSearch(freshStoreExpected, name, 0, '|str=|, nil) then AddArraySlot(extra, name);
+	Print({missing: missing, extra: extra});
+	Print("freshstore: " & Length(names) & " soups, "
+	      & (if Length(missing) = 0 and Length(extra) = 0 then "all there" else "NOT all there"));
+	Print("freshstore: done");
+	HostQuit();
+end, [], 1000);

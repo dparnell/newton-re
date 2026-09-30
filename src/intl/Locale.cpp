@@ -382,11 +382,18 @@ FSetLocale(RefArg /*rcvr*/, RefArg locale)
 // (os600/user/UserTime.cpp's gRealClockZoneOffset).  DEVIATION: nought
 // until there is a location preference - the ROM's GMTOffset would throw,
 // and the host reads the clock earlier in the boot than the ROM does.
+// Nor is there a user configuration to ask for one before the boot's
+// NewtonScript makes it (GetPreference, as the ROM's 0x001290d8, throws
+// type.ref.frame on a vars.userConfiguration that is not there yet): the
+// host's HostPrepareStore makes the factory soups at mount, and a soup's
+// making reads the clock for its modification times.
 extern long (*gRealClockZoneOffset)(void);
 
 static long
 RealClockZoneOffset(void)
 {
+	if (!IsFrame(gVarFrame) || !IsFrame(GetFrameSlotRef(gVarFrame, RSSYMuserconfiguration)))
+		return 0;
 	RefVar location(GetPreference(RSSYMlocation));
 	if (!IsFrame(location))
 		return 0;
