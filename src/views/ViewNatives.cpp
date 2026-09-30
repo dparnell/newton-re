@@ -2669,19 +2669,26 @@ FPointToWord(RefArg rcvr, RefArg x, RefArg y)
 // ROM 0x001eea68 FGetStylesOfRange
 // view:GetStylesOfRange(offset, length, clone) - the style runs over
 // that range of a paragraph's text, as the [length, spec, ...] array
-// they are kept in.
-//
-// NOT YET RECONSTRUCTED: the TXView arm (class 108, the text engine's
-// own view), which asks its frames for the range's `styles`.
+// they are kept in; for the text engine's view (class 108) its range
+// data's `styles` (TXView::GetRangeData over [offset, offset + length)).
 static Ref
 FGetStylesOfRange(RefArg rcvr, RefArg offset, RefArg length, RefArg clone)
 {
 	TView* view = FailGetView(rcvr);
-	if (!view->DerivedFrom(clParagraphView))
-		return NILREF;
-	long count = RINT(length);
-	long at = RINT(offset);
-	return ((TParagraphView*) view)->GetStylesOfRange(at, count, NOTNIL(clone));
+	if (view->DerivedFrom(clParagraphView))
+	{
+		long count = RINT(length);
+		long at = RINT(offset);
+		return ((TParagraphView*) view)->GetStylesOfRange(at, count, NOTNIL(clone));
+	}
+	if (view->DerivedFrom(108))
+	{
+		long start = RINT(offset);
+		long end = start + RINT(length);
+		if (gTXViewStylesHooks.fGetRangeStyles != nil)
+			return gTXViewStylesHooks.fGetRangeStyles(view, start, end);
+	}
+	return NILREF;
 }
 
 

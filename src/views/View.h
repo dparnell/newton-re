@@ -425,4 +425,14 @@ Ref			SetFontSize(RefArg fontSpec, long size);				// ROM 0x0017d9f0 SetFontSize_
 void		RegisterFontNatives(void);		// ... and the font and style ones (FontNatives.cpp; RegisterViewNatives calls it)
 Ref			MakeViewMethods(void);			// the methods a view inherits from the root template (Rviewroot's), as a frame
 
+// The text engine's view's arms of GetStylesOfRange/ChangeStylesOfRange
+// (views/FontNatives.cpp), which it registers (text/TXViewNatives.cpp:
+// the text engine is above the views - DEVIATION, layering).
+struct TXViewStylesHooks
+{
+	Ref		(*fGetRangeStyles)(TView* view, long start, long end);
+	void	(*fChangeRangeRuns)(TView* view, long start, long end, RefArg style, Boolean redraw);
+};
+extern TXViewStylesHooks	gTXViewStylesHooks;
+
 #endif	/* __VIEW_H */

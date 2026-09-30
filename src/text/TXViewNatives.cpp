@@ -577,9 +577,30 @@ FTXChangeRangeRulers(RefArg rcvr, RefArg range, RefArg ruler, RefArg undoable)
 }
 
 
+// the text engine's view's arms of the views' style natives
+// (views/FontNatives.cpp, ViewNatives.cpp: FChangeStylesOfRange 0x001eeba8
+// and FGetStylesOfRange 0x001eea68)
+static Ref
+TXViewGetRangeStyles(TView* view, long start, long end)
+{
+	TXOffsetRange range(start, end, false, true);
+	return ((TXView*) view)->GetRangeData(&range, RSSYMstyles);
+}
+
+
+static void
+TXViewChangeRangeRuns(TView* view, long start, long end, RefArg style, Boolean redraw)
+{
+	TXOffsetRange range(start, end, false, true);
+	((TXView*) view)->ChangeRangeRuns(range, style, false, redraw);
+}
+
+
 void
 RegisterTXViewNatives(void)
 {
+	gTXViewStylesHooks.fGetRangeStyles = TXViewGetRangeStyles;
+	gTXViewStylesHooks.fChangeRangeRuns = TXViewChangeRangeRuns;
 	RegisterNativeFunction("FTXGetCountCharacters", (void*) FTXGetCountCharacters, 0);
 	RegisterNativeFunction("FTXSetHiliteRange", (void*) FTXSetHiliteRange, 3);
 	RegisterNativeFunction("FTXGetHiliteRange", (void*) FTXGetHiliteRange, 0);

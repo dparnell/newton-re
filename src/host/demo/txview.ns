@@ -57,6 +57,16 @@ AddDelayedCall(func() begin
 		tx:SetHiliteRange({first: count + 2, last: count + 3}, nil, nil);
 		local style := tx:GetContinuousRun();
 		if style.face <> 1 then Print("txview: FAILED - the word is not bold");
+		// the view natives the Styles slip uses reach the text engine's view
+		// too (GetStylesOfRange, ChangeStylesOfRange)
+		// (a style comes back packed, the face in bits 20 up)
+		local runs := tx:GetStylesOfRange(count + 1, 5, nil);
+		if not (IsArray(runs) and Length(runs) >= 2 and BAnd(runs[1] div 1048576, 255) = 1) then Print("txview: FAILED - GetStylesOfRange answered " & NumberStr(Length(runs)) & " runs");
+		tx:ChangeStylesOfRange(count + 1, 5, {family: 'espy, size: 12, face: 2}, true);
+		runs := tx:GetStylesOfRange(count + 1, 5, nil);
+		if not (IsArray(runs) and BAnd(runs[1] div 1048576, 255) = 2) then Print("txview: FAILED - ChangeStylesOfRange did not make it italic");
+		tx:ChangeStylesOfRange(count + 1, 5, {family: 'espy, size: 12, face: 1}, true);
+		Print("txview: the view's style natives answered");
 		RefreshViews();
 		ScreenSnapshot("build/txview-1.pgm");
 

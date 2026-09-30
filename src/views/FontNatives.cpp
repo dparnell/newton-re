@@ -168,14 +168,17 @@ FGetDefaultFont(RefArg /*rcvr*/, RefArg view)
 	T h e   s t y l e   o f   a   r a n g e
 ------------------------------------------------------------------------------*/
 
+// DEVIATION (library layering): the text engine's view (class 108,
+// text/TXView.h) is above the views, so its arms of the two style natives
+// are reached through functions it registers (RegisterTXViewNatives).
+TXViewStylesHooks	gTXViewStylesHooks = { nil, nil };
+
+
 // ROM 0x001eeba8 FChangeStylesOfRange
 // view:ChangeStylesOfRange(start, length, style, redraw) - the Styles
-// slip's verb.  The receiver is the view; only a paragraph answers it
-// here.
-//
-// NOT YET RECONSTRUCTED: the TXView arm (class 108, the text engine's
-// own view), which turns the range into a TXOffsetRange and calls
-// ChangeRangeRuns.
+// slip's verb: a paragraph's ChangeStylesOfRange, or for the text
+// engine's view (class 108) TXView::ChangeRangeRuns over the range
+// [start, start + length), not toggled.
 Ref
 FChangeStylesOfRange(RefArg rcvr, RefArg start, RefArg length, RefArg style, RefArg redraw)
 {
@@ -188,7 +191,12 @@ FChangeStylesOfRange(RefArg rcvr, RefArg start, RefArg length, RefArg style, Ref
 		((TParagraphView*) view)->ChangeStylesOfRange(offset, count, style, draw);
 	}
 	else if (view->DerivedFrom(108))
-		;		// NOT YET RECONSTRUCTED: TXView::ChangeRangeRuns
+	{
+		long offset = RINT(start);
+		long end = offset + RINT(length);
+		if (gTXViewStylesHooks.fChangeRangeRuns != nil)
+			gTXViewStylesHooks.fChangeRangeRuns(view, offset, end, style, NOTNIL(redraw));
+	}
 	else
 		ThrowMsg("bad view for changeStylesOfRange");
 	return NILREF;
