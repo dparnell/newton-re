@@ -152,6 +152,23 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
     set_tests_properties(host.NewtonModemAnswer PROPERTIES TIMEOUT 200
                          PASS_REGULAR_EXPRESSION "<- ATS1.*-> RING.*-> 002.*<- ATA.*-> CONNECT 19200.*<- ATH0.*modem-answer: received hello.*modem-answer: line of 23 characters.*modem-answer: done.*the program answered 0"
                          FAIL_REGULAR_EXPRESSION "waited in vain|fell over")
+    # a fax received: fakemodem.py's Class 1 fax call (--fax-call, the page
+    # t4.py's test page) answered by the ROM's fax transport over the fax
+    # tool (comms/fax/FaxTool.h) and the modem tool; the page is confirmed
+    # (MCF) and lands in the In Box
+    add_test(NAME host.FaxPage
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/modem/t4.py --test-page
+                     --pbm ${CMAKE_CURRENT_BINARY_DIR}/faxpage.pbm)
+    set_tests_properties(host.FaxPage PROPERTIES FIXTURES_SETUP faxpage)
+    add_test(NAME host.NewtonFaxReceive
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/modem/fakemodem.py
+                     --fax-call ${CMAKE_CURRENT_BINARY_DIR}/faxpage.pbm
+                     --spawn $<TARGET_FILE:newton> --rom ${NEWTON_ROM_BIN} --serial-port 0 --headless 200
+                     --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/fax-receive.ns
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonFaxReceive PROPERTIES TIMEOUT 300 FIXTURES_REQUIRED faxpage
+                         PASS_REGULAR_EXPRESSION "<- ATA.*answered a fax call.*fax: <- DIS.*fax: -> DCS.*fax: <- CFR.*fax: -> the page, 200 lines.*fax: -> EOP.*fax: the page confirmed MCF.*fax: DCN sent.*eceived: \"From .*fakemodem fax.*fax-receive: done.*the program answered 0"
+                         FAIL_REGULAR_EXPRESSION "waited in vain|fell over")
 endif()
 
 # deferred recognition (views/Rerecognize.h): "ton" written, and the

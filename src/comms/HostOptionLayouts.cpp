@@ -19,8 +19,10 @@
 #include <string.h>
 
 // a field: 'u' an unsigned word (ULong, BitRate, TTimeout, a pointer) and
-// 'w' a signed one (FastInt, long) - four bytes on the device, pointer-
-// sized on the host; 'i' four bytes on both (an enum); 'h' two bytes; 'b'
+// 'w' a signed one (FastInt) - four bytes on the device, pointer-
+// sized on the host; 'l' a C long (NewtonErr) - four bytes on the device,
+// a long on the host (four on Windows, eight elsewhere); 'i' four bytes on
+// both (an enum); 'h' two bytes; 'b'
 // one byte (Boolean, UChar, UByte); "=" alone: the option's tool reads the
 // device's bytes itself, so they are passed on as they are.  Every field but a byte is big-endian
 // on the device.  (A class of bytes alone is listed too: its bytes are the
@@ -79,6 +81,18 @@ static const HostOptionLayout kLayouts[] =
 	{ 'tasp',						"b" },
 	{ 'hsmn',						"b" },
 	{ 'cltr',						"u" },
+	// the fax tool's (comms/fax/FaxTool.h); an id's characters as they are
+	{ 'fpsu',						"uuu" },
+	{ 'fpt ',						"b" },
+	{ 'fepe',						"u" },
+	{ 'fdir',						"bb" },
+	{ 'fsif',						"uuuuu" },
+	{ 'frid',						"*" },
+	{ 'flid',						"*" },
+	{ 'fmsl',						"u" },
+	{ 'fsgp',						"ul" },
+	{ 'fcsb',						"uuu" },
+	{ 'feom',						"ulbb" },
 	// the phone number address (CommAddresses.h: TCMAPhoneNumber)
 	{ 'rout',						"wu*" },
 	// read as the device's bytes by their tool ("=": passed on as they
@@ -112,6 +126,7 @@ FieldSize(char kind, Boolean host)
 	switch (kind)
 	{
 	case 'u': case 'w':	return host ? sizeof(ULong) : 4;
+	case 'l':			return host ? sizeof(long) : 4;
 	case 'i':			return 4;
 	case 'h':			return 2;
 	default:			return 1;
@@ -179,6 +194,19 @@ Rewrite(const HostOptionLayout* layout, const UByte* in, long inLength, Boolean 
 				{
 					UShort v = (UShort) (in[inOffset] << 8 | in[inOffset + 1]);
 					memcpy(out + outOffset, &v, 2);
+				}
+				break;
+			case 'l':
+				if (inIsHost)
+				{
+					long v;
+					memcpy(&v, in + inOffset, sizeof(long));
+					PutBigEndianWord(out + outOffset, (unsigned int) v);
+				}
+				else
+				{
+					long v = (long) (Long32) GetBigEndianWord(in + inOffset);
+					memcpy(out + outOffset, &v, sizeof(long));
 				}
 				break;
 			case 'i':

@@ -1,0 +1,22 @@
+// A fax received (ctest host.NewtonFaxReceive): the In Box's Receive for
+// the fax transport ('FaxReceive:Newton, the ROM's own, over the fax tool
+// 'faxs and the modem tool 'mods), which listens; tools/modem/fakemodem.py
+// rings the Newton with a Class 1 fax call (--fax-call) and sends a page;
+// the run ends when the fax is in the In Box.
+//
+//   python tools/modem/fakemodem.py --fax-call page.pbm \
+//       --spawn build/host/host/newton --rom build/MP2x00US/rom.bin \
+//       --serial-port 0 --headless 240 --script src/host/demo/fax-receive.ns
+HostInclude("common.ns");
+TransportNotify('|FaxReceive:Newton|, 'ReceiveRequest, [{cause: 'user}]);
+// the status slip asks whether to wait for a call: "Wait For Call"
+GetRoot().|FaxReceive:Newton|:ManualStart();
+Print("fax-receive: listening");
+inbox := GetUnionSoup("InBox");
+call waitFor with ("fax-receive: the In Box", func() inbox:Query(nil):Entry() <> nil, func() begin
+	local e := inbox:Query(nil):Entry();
+	Print({received: e.title, class: e.class, from: e.fromRef});
+	Print("fax-receive: the fax is in the In Box");
+	Print("fax-receive: done");
+	HostQuit();
+end, 200);
