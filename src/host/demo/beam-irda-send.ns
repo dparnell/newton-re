@@ -15,11 +15,30 @@ note := {appSymbol: 'paperroll, title: "Beamed note",
 		 body: {text: "hello from the other Newton"}};
 Send('beam, note);
 outbox := GetUnionSoup("OutBox");
+// The send request runs the beam (TransportNotify returns when it has
+// ended, the events of the meantime handled as it goes): the transport idle
+// again with the note gone from the Out Box is a beam that went, and with
+// it still there one that failed (its error in the entry)
+sendTransport := func() GetRoot().|beam:Newton|;
+sendNote := func(tries) begin
+	TransportNotify('|beam:Newton|, 'SendRequest, [{cause: 'user, item: outbox:Query(nil):Entry()}]);
+	call waitFor with ("beam-send: the note sent", func()
+			outbox:Query(nil):Entry() = nil or (call sendTransport with ()).status = 'idle, func() begin
+		if outbox:Query(nil):Entry() = nil then begin
+			Print("beam-send: the Out Box is empty");
+			HostQuit();
+		end else if tries > 0 then begin
+			// a beam that failed - the other machine slow to answer, under
+			// load - is tried again, as its user would (the Out Box's Send)
+			Print("beam-send: the send failed; sending again");
+			call sendNote with (tries - 1);
+		end else begin
+			Print("beam-send: the note was not sent");
+			HostQuit();
+		end;
+	end, 150);		// (longer than the IR tools' own time-outs: a beam nobody answers takes 100 s to give up)
+end;
 call waitFor with ("beam-send: the Out Box", func() outbox:Query(nil):Entry() <> nil, func() begin
 	Print({queued: outbox:Query(nil):Entry().title});
-	TransportNotify('|beam:Newton|, 'SendRequest, [{cause: 'user, item: outbox:Query(nil):Entry()}]);
-	call waitFor with ("beam-send: the note sent", func() outbox:Query(nil):Entry() = nil, func() begin
-		Print("beam-send: the Out Box is empty");
-		HostQuit();
-	end, 60);
+	call sendNote with (3);
 end, 20);

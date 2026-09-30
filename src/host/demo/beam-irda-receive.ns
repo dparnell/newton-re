@@ -4,11 +4,24 @@
 // ReceiveRequest), and the run ends when the note is in the In Box.
 HostInclude("common.ns");
 SetUserConfig('zapCommToolId, nil);
-TransportNotify('|beam:Newton|, 'ReceiveRequest, [{cause: 'user}]);
 inbox := GetUnionSoup("InBox");
+// the receive runs until it has something or gives up; one that gave up -
+// the other machine slow to answer, under load - listens again, as its
+// user would (the In Box's Receive)
+receiveNote := func(tries) begin
+	TransportNotify('|beam:Newton|, 'ReceiveRequest, [{cause: 'user}]);
+	if inbox:Query(nil):Entry() = nil and tries > 0 then
+		AddDelayedCall(func() begin
+			if inbox:Query(nil):Entry() = nil and GetRoot().|beam:Newton|.status = 'idle then begin
+				Print("beam-receive: the receive gave up; listening again");
+				call receiveNote with (tries - 1);
+			end;
+		end, nil, 1000);
+end;
+call receiveNote with (3);
 call waitFor with ("beam-receive: the In Box", func() inbox:Query(nil):Entry() <> nil, func() begin
 	local e := inbox:Query(nil):Entry();
 	Print({received: e.title, text: e.body.text, from: e.fromRef});
 	Print("beam-receive: the note is in the In Box");
 	HostQuit();
-end, 120);
+end, 280);
