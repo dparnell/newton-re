@@ -143,8 +143,17 @@ now and then:
     python tools/host/stress.py build/host --suite --rounds 3 --hogs 8 [-j 8] [-R regex]
 
 - **`--test`** runs copies of one ctest test at the same time.
-  - Each copy runs in its own directory, `tmp/stress/<test>/<n>/`, with its
-    own store. Output a script writes under `tmp/` lands there too.
+  - Each copy runs in its own directory, `tmp/stress/<test>/<run>/<n>/`
+    (`<run>` is a time stamp and the process id, so two stress runs never
+    share or clear each other's copies), with its own store. Output a
+    script writes under `tmp/` lands there too.
+  - A test that needs a fixture gets it. Its setups that keep a store
+    (`--store`) run in each copy's directory first, each logged to
+    `<setup>.txt` there - a restart test's first run, a package put on a
+    fresh store. A setup that keeps none (an extraction into the build
+    directory) runs once, before the copies, where ctest runs it. An
+    argument naming one of the copy's stores (a checker reading the store
+    file) is pointed at the copy's.
   - The command line, environment, pass and fail expressions and
     timeout are read from `ctest --show-only=json-v1`.
   - It prints how many copies passed, and the tail of each failed copy's
@@ -155,7 +164,15 @@ now and then:
 - **`--hogs N`** keeps N processes spinning on the CPU for as long as the
   run lasts.
 
-A test that listens on a fixed port (`--tcp-echo`) cannot run as copies.
+A test that holds a fixed port - `--tcp-echo`, a `--port` for a server it
+runs, or any `RESOURCE_LOCK` in its ctest properties (the ctests that
+share a port declare one, so `ctest -j` keeps them apart too) - runs its
+copies one after another instead of at once.
+
+Not every one-off failure is a fixed wait.  `host.NewtonBigStore.write`
+crashed in `TUPort::Receive` in 2 of 30 copies beside 8 hogs; the cause was
+heap damage from a world task copied short (a missing `GetSizeOf`, see
+`docs/work-log.md`), and after the fix it passed 36 of 36.
 
 The three races of 2026-09-30 were found this way; `docs/work-log.md`
 records them. Before the fix, 10 copies of `host.NewtonInetSetup` beside 8
