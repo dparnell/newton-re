@@ -86,6 +86,23 @@ bugs and ROM bugs found on the way.
   `layout.tsv` manifest, and `rombuild.py` proved by a byte-identical
   rebuild of the area.
 
+## 2026-09-30: the ROM's flash store, from the chips up
+
+- The flash (9fd409e3, ctest `stores.Flash`): `hal/host/HostFlash`, a
+  file in Einstein's layout (writes buffered and flushed at exit,
+  15143842), `THostFlashDriver`, `TFlashRange` and its 8/16/32-bit
+  forms, `TNewInternalFlash`, `memory/MemoryAllocator`, the host MMU's
+  sections.  On-flash structures use a 32-bit `FlashWord`: the host's
+  ULong is 64-bit.
+- `TFlashStore` (d61974ee, ctest `stores.FlashStore`): the log, blocks and
+  directories, transactions and separate transactions, compaction into
+  the spare, recovery at mount.
+- `TMuxStore` and its monitor (015307a2): the store every task uses.
+- Being done: the internal store on the flash (`InitPSSManager`,
+  `newton --store` as the flash file) - its store-package tests fail on a
+  restart (a package's root deleted while new in a separate
+  transaction).
+
 ## 2026-09-30: the comm trace frame and the event collector
 
 - `utility/EventCollector.h` (c6bd3857; 0x002dc18c-0x002dc714): the
