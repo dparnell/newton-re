@@ -268,7 +268,15 @@ worked through.  What could come next (not ranked; the owner chooses):
   the unoptimised default build - `-DCMAKE_BUILD_TYPE=RelWithDebInfo`
   roughly halves processor time again for interactive use; `VisibleRow`
   and `StretchBits`/text are the next hot spots if wanted.
-- **The ROM-free track** (below): step 1, the decompiler, done; step 2 (the object area as editable source, rebuilt byte-identical) done; **the OS boots with no ROM image** to the same screen as with one, from the committed, editable `romsrc/`.
+- **The ROM-free track** (below): **the OS boots from the reconstructed
+  data by default** (`<build>/romsrc-objects.bin`, made by the default
+  build from the committed, editable `romsrc/`; `--rom` only for
+  cross-checks), and nothing reads the ROM image at run time.  Next: let
+  `host.NewtonPackage.extract` make its loadable Formulas2.pkg from
+  `romsrc/rex/` rather than `build/MP2x00US`, so the 9 package tests it
+  gates run in a checkout without the image; then move the unit tests
+  that import the image only for its objects (fonts, locale bundles) onto
+  the object file.
 - Small: the date the Assistant's "tomorrow" comes to ("schedule lunch
   with Daniel tomorrow" puts the meeting on today).
 

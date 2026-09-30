@@ -237,6 +237,27 @@ is the same value spelt so that it cannot be read two ways.
   notBic loops never advance the mask pointer; `ScaleStdRRect` scales the
   corner oval crosswise on a fax.
 
+## 2026-09-30: the default boot is the reconstructed data
+
+- The owner's decision: boot from the reconstructed data by default, with
+  no hard dependency on the ROM files (32a086d6, d5336a77).
+- The default build makes `<build>/romsrc-objects.bin` from `romsrc/`
+  (Python 3 and newtonscript, no ROM image), rebuilt only when `romsrc/`,
+  the builder or newtonscript changes; `newton` and `newtonscript` boot
+  it with no option (`host/HostObjectsFile.h`: `NEWTON_OBJECTS`, beside
+  the program, the build's path).  A missing file is explained and fatal
+  - no fallback to the image, so a broken build cannot hide behind a
+  boot that looks the same; `--rom` boots the image and says so.
+- A configure with no ROM image builds and runs; the tests that read the
+  image are not registered (`src/CMakeLists.txt` wraps `add_test`).  The
+  host demo ctests run on the reconstructed data: 258 of 258 with the
+  ROM, 198 of 198 (9 disabled) without; `host.Newton`, the two
+  SameScreen tests and `host.NSDecompileRoundTrip` stay on the image as
+  the cross-check.
+- The last run-time read of the image: package native code reads
+  `gROMVersion` (0x13dc), now carried as `romsrc/romdata/gParamBlock.bin`
+  (`romsrc.py romdata`).
+
 ## 2026-09-30: the IR port is always there
 
 - newton installs the host IR chip and the IR comm services on every
