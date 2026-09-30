@@ -109,7 +109,7 @@ bugs and ROM bugs found on the way.
   count wraps.  `HostOptionLayouts`' '*' copies an option's trailing
   bytes as they are ('rout' numbers, 'mpro' profiles).
 
-## 2026-09-30: the ROM's flash store, from the chips up
+## 2026-09-30: the internal store in the ROM's own flash format
 
 - The flash (9fd409e3, ctest `stores.Flash`): `hal/host/HostFlash`, a
   file in Einstein's layout (writes buffered and flushed at exit,
@@ -121,10 +121,14 @@ bugs and ROM bugs found on the way.
   directories, transactions and separate transactions, compaction into
   the spare, recovery at mount.
 - `TMuxStore` and its monitor (015307a2): the store every task uses.
-- Being done: the internal store on the flash (`InitPSSManager`,
-  `newton --store` as the flash file) - its store-package tests fail on a
-  restart (a package's root deleted while new in a separate
-  transaction).
+- The internal store on the flash (b1119750): `stores/flash/PSSManager`'s
+  `InitPSSManager`, `gInRAMStore`/`gMuxInRAMStore`, `GetInternalStore`
+  answering the mux; `newton --store` is the flash file.  Bug found: the
+  host's large-object commit (`JoinStoreTransaction`) read 0x20 bytes of
+  a store package's 0x14-byte root, got ObjectOverRun and silently
+  skipped the join - `THostStore` saved the objects anyway, and only the
+  flash store's recovery, rightly throwing away the unjoined separate
+  transaction, exposed it.  225 of 225 ctests.
 
 ## 2026-09-30: the comm trace frame and the event collector
 

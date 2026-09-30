@@ -19,8 +19,13 @@ the way are all in `docs/work-log.md`.
 - `analysis/natives.py --unbound`: only comms' are left (comms 102 of
   147, the AppleTalk `*Zone*` four and IR sniffing).  `instance:Dispatch` works only on a
   monitor protocol (a host protocol's methods need numbered thunks, NOT
-  YET); the card server (`TCardServer`, the PSS manager's sockets) is
-  behind `UnmountCard` and `GetCardSlotStores`.
+  YET); the card server is behind `UnmountCard` and
+  `GetCardSlotStores`.
+- **Stores**: the internal store is the ROM's own flash format in a host
+  file (`newton --store`, `stores/flash/`).  Being done: the cards -
+  `TCardServer`, a host card socket over a card image (Einstein's
+  layout), `TPSSManager`'s card events, `newton --card`
+  (`docs/stores/README.md`).
 
 ## What works
 
