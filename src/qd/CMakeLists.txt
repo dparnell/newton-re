@@ -21,6 +21,7 @@ add_library(qd STATIC
     DrText.cpp
     Pictures.cpp
     MungeBitmap.cpp
+    Tile.cpp
     BitFlipTable.cpp
     PicPlay.cpp
     PicRecord.cpp

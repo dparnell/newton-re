@@ -9,7 +9,7 @@ add_test(NAME qd.Draw COMMAND test_Draw)
 set_tests_properties(qd.Draw PROPERTIES TIMEOUT 60)
 
 add_executable(test_Pictures test_Pictures.cpp)
-target_link_libraries(test_Pictures PRIVATE qd)
+target_link_libraries(test_Pictures PRIVATE qd views)
 add_test(NAME qd.Pictures COMMAND test_Pictures)
 set_tests_properties(qd.Pictures PROPERTIES TIMEOUT 60)
 
@@ -52,3 +52,10 @@ add_executable(test_Blitter test_Blitter.cpp)
 target_link_libraries(test_Blitter PRIVATE qd)
 add_test(NAME qd.Blitter COMMAND test_Blitter)
 set_tests_properties(qd.Blitter PROPERTIES TIMEOUT 300)
+
+# a fax page turned a quarter each way a tile at a time (qd/Tile.h), every
+# pixel checked
+add_executable(test_Tile test_Tile.cpp)
+target_link_libraries(test_Tile PRIVATE qd views)
+add_test(NAME qd.Tile COMMAND test_Tile)
+set_tests_properties(qd.Tile PROPERTIES TIMEOUT 60 PASS_REGULAR_EXPRESSION "test_Tile: ok")

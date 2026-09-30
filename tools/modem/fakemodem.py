@@ -76,6 +76,14 @@ import t4                                   # the page's MH code
 DLE = 0x10
 ETX = 0x03
 
+# What a received frame or page's data waits after CONNECT: a real modem
+# says CONNECT when it finds the carrier, and the first byte comes a
+# training or a preamble later (V.21's second of flags).  The Newton's modem
+# tool sets its serial flow control after reading CONNECT, and a byte that
+# came with it would be read under the old settings - an XOFF (0x13, a final
+# frame's control field) taken as flow control.
+CARRIER_TIME = 0.2
+
 # T.30 facsimile control fields (the X bit, the least significant, set by
 # the calling machine)
 FCF_NAMES = {
@@ -460,6 +468,7 @@ class Modem:
                 return
             log("-> CONNECT (data at %d)" % (value * 100))
             self.send(b"\r\nCONNECT\r\n")
+            time.sleep(CARRIER_TIME)
             self.send(dle_stuff(data))
             self.result("OK", 0)
 
@@ -473,6 +482,7 @@ class Modem:
         self.pending_frh = False
         log("fax: -> %s" % frame_name(frame))
         self.send(b"\r\nCONNECT\r\n")
+        time.sleep(CARRIER_TIME)
         self.send(dle_stuff(frame))
         self.result("OK", 0)
 

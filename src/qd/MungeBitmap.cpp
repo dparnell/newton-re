@@ -14,29 +14,22 @@
 				options frame's `callback` is told how far a half turn has
 				got, in percent.
 
-				NOT YET RECONSTRUCTED: a quarter turn of a fax page
-				(Tilable) is RotTiledBitmap 0x00040b54, over TTile
-				(0x002540c0; RotateTilesR 0x00254668, RotateTilesL
-				0x00254bac): the turned copy is made on the
-				same store and with the same compander as the page's own
-				large binary (FGetBinaryStore, FGetBinaryCompander,
+				A quarter turn of a fax page (Tilable) is RotTiledBitmap,
+				over qd/Tile.h's TTile: the turned copy is made on the same
+				store and with the same compander as the page's own (a
+				large binary's: FGetBinaryStore, FGetBinaryCompander,
 				FGetBinaryCompanderData into MakePixelsObject) and filled a
-				tile at a time, so a page is never all in memory at once -
-				and the VAddrToStore/FlushLargeObject calls that keep a
-				large binary's bits in step in RotBitmap180.  Nothing in
-				the host reaches it: MakePixelsObject's store arm
-				(FLBAllocCompressed) is NOT YET and there are no large
-				binaries (IsLargeBinary answers false), and the fax
-				receiver that makes such pages is part of the comms stack,
-				which is NOT YET.  Only a script's own heap bitmap of
-				exactly a fax page's size gets there, and it is left as it
-				was.
+				tile at a time, so a page is never all in memory at once.
+				NOT YET: the VAddrToStore/FlushLargeObject calls that keep
+				a large binary's bits in step in RotBitmap180.
 
-	Reconstructed from the MP2x00 US ROM (0x0003f764-0x00040b54,
-	0x00040ee0); each function cites its origin.
+	Reconstructed from the MP2x00 US ROM (0x0003f764-0x00040f28); each
+	function cites its origin.
 */
 
 #include "Pictures.h"
+#include "Tile.h"
+#include "stores/LargeBinaries.h"
 #include "Ports.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
@@ -273,6 +266,62 @@ TurnedBitmap(RefArg bitmap, RefArg pixels, PixelMap* pm)
 }
 
 
+// ROM 0x00040b54 RotTiledBitmap__FRC6RefVarP8PixelMaplT1
+// A fax page turned a quarter - to the right if direction is 1, to the
+// left otherwise - through TTile: the new pixels (rows rounded up to 64
+// pixels each way) made where the page's own are, the page turned into
+// them a tile at a time, and the bitmap given them, its bounds turned
+// about their top left.  The resolution is left as it was - not turned.
+Ref
+RotTiledBitmap(RefArg bitmap, PixelMap* pm, long direction, RefArg options)
+{
+	long width = (pm->bounds.right - pm->bounds.left + 63) & ~63;
+	long height = (pm->bounds.bottom - pm->bounds.top + 63) & ~63;
+	long vRes = pm->deviceRes.h;
+	long hRes = pm->deviceRes.v;
+	long depth = pm->pixMapFlags & 0xff;
+	long rowBytes = depth * (height >> 3);
+	Rect bounds;
+	bounds.top = 0;
+	bounds.left = 0;
+	bounds.bottom = (short) width;
+	bounds.right = (short) height;
+	RefVar data(GetFrameSlot(bitmap, RSSYMdata));
+	RefVar store(FGetBinaryStore(RefVar(NILREF), data));
+	RefVar compander(FGetBinaryCompander(RefVar(NILREF), data));
+	RefVar companderData(FGetBinaryCompanderData(RefVar(NILREF), data));
+	RefVar pixels(MakePixelsObject(bounds, depth, rowBytes, hRes, vRes, store, compander, companderData));
+	TBinaryDataPtr pixelsPtr(pixels);
+	PixelMap* turned = (PixelMap*) (char*) pixelsPtr;
+	newton_try
+	{
+		TTile tile(pm, options);
+		if (direction == 1)
+			tile.RotateTilesR(pm, turned);
+		else
+			tile.RotateTilesL(pm, turned);
+		SetFrameSlot(bitmap, RSSYMdata, pixels);
+		RefVar boundsRef(GetFrameSlot(bitmap, RSSYMbounds));
+		Rect* frameBounds = (Rect*) BinaryData(boundsRef);
+		short right = frameBounds->right;
+		short left = frameBounds->left;
+		frameBounds->right = (short) (left + (short) (frameBounds->bottom - frameBounds->top));
+		frameBounds->bottom = (short) (frameBounds->top + (short) (right - left));
+		RefVar resolution(AllocateArray(RSSYMresolution, 2));
+		SetArraySlot(resolution, 0, RefVar(MAKEINT(hRes)));
+		SetArraySlot(resolution, 1, RefVar(MAKEINT(vRes)));
+		SetFrameSlot(bitmap, RSSYMresolution, resolution);
+	}
+	cleanup
+	{
+		// (the tiles are not given back: a Throw leaves them, as the ROM's)
+		pixelsPtr.~TBinaryDataPtr();
+	}
+	end_try;
+	return bitmap;
+}
+
+
 // ROM 0x0003fec0 RotBitmapL__FRC6RefVarT1
 // A quarter turn to the left: the bits taken 32 columns by 8 rows at a
 // time, each column of eight becoming a byte of the new bitmap - the
@@ -334,9 +383,7 @@ RotBitmapL(RefArg bitmap, RefArg options)
 			TurnedBitmap(bitmap, pixels, pm);
 		}
 		else
-		{
-			// NOT YET RECONSTRUCTED: RotTiledBitmap(bitmap, pm, 0, options)
-		}
+			RotTiledBitmap(bitmap, pm, 0, options);
 	}
 	cleanup
 	{
@@ -422,9 +469,7 @@ RotBitmapR(RefArg bitmap, RefArg options)
 			TurnedBitmap(bitmap, pixels, pm);
 		}
 		else
-		{
-			// NOT YET RECONSTRUCTED: RotTiledBitmap(bitmap, pm, 1, options)
-		}
+			RotTiledBitmap(bitmap, pm, 1, options);
 	}
 	cleanup
 	{

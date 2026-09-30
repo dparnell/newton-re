@@ -1,22 +1,67 @@
 // A fax received (ctest host.NewtonFaxReceive): the In Box's Receive for
 // the fax transport ('FaxReceive:Newton, the ROM's own, over the fax tool
 // 'faxs and the modem tool 'mods), which listens; tools/modem/fakemodem.py
-// rings the Newton with a Class 1 fax call (--fax-call) and sends a page;
-// the run ends when the fax is in the In Box.
+// rings the Newton with a Class 1 fax call (--fax-call) and sends a page.
+// When the fax is in the In Box it is shown (the In Box's ShowItem, the
+// FaxViewer package's image viewer), the screen written to
+// build/fax-received.pgm, the page turned right through the viewer's Tools
+// menu command (DoMunge 'rotateRight: MungeBitmap, a fax page turned a tile
+// at a time - qd/Tile.h) and the screen written to build/fax-rotated.pgm
+// (tools/imaging/pgm2png.py makes PNGs of them).
 //
 //   python tools/modem/fakemodem.py --fax-call page.pbm \
 //       --spawn build/host/host/newton --rom build/MP2x00US/rom.bin \
-//       --serial-port 0 --headless 240 --script src/host/demo/fax-receive.ns
+//       --display 320x480 --serial-port 0 --headless 240 \
+//       --script src/host/demo/fax-receive.ns
 HostInclude("common.ns");
 TransportNotify('|FaxReceive:Newton|, 'ReceiveRequest, [{cause: 'user}]);
 // the status slip asks whether to wait for a call: "Wait For Call"
 GetRoot().|FaxReceive:Newton|:ManualStart();
 Print("fax-receive: listening");
 inbox := GetUnionSoup("InBox");
+viewer := nil;
+faxEntry := nil;
+
+// the viewer showing the fax: the view under the In Box's item view that
+// has the FaxViewer's DoMunge
+findViewer := func(v, depth) begin
+	local found := nil;
+	if v.DoMunge and HasSlot(v, 'viewCObject) then found := v;
+	if not found and depth < 4 then
+		foreach child in v:ChildViewFrames() do
+			if not found then found := call findViewer with (child, depth + 1);
+	found;
+end;
+
+// (the pixels: 216-byte rows of 1728 pixels, 1146 of them; turned, 144-byte
+// rows - 1146 rounded up to 1152 pixels - 1728 of them; each after a
+// 48-byte header)
+turned := func() begin
+	RefreshViews();
+	ScreenSnapshot("build/fax-rotated.pgm");
+	Print("fax-receive: turned right, the pixels " & NumberStr(Length(viewer.fPage.image.data)) & " bytes");
+	AddDelayedCall(func() begin
+		Print("fax-receive: done");
+		HostQuit();
+	end, nil, 1000);
+end;
+
 call waitFor with ("fax-receive: the In Box", func() inbox:Query(nil):Entry() <> nil, func() begin
-	local e := inbox:Query(nil):Entry();
-	Print({received: e.title, class: e.class, from: e.fromRef});
+	faxEntry := inbox:Query(nil):Entry();
+	Print({received: faxEntry.title, class: faxEntry.class, from: faxEntry.fromRef});
 	Print("fax-receive: the fax is in the In Box");
-	Print("fax-receive: done");
-	HostQuit();
+	GetRoot().iobox:Open();
+	AddDelayedCall(func() begin
+		GetRoot().iobox:ShowItem(faxEntry, 'itemLayout);
+		RefreshViews();
+		viewer := call findViewer with (GetRoot().iobox.ioEntryView, 0);
+		call waitFor with ("fax-receive: the viewer", func() viewer <> nil, func() begin
+			Print("fax-receive: shown, the pixels " & NumberStr(Length(viewer.fPage.image.data)) & " bytes");
+			ScreenSnapshot("build/fax-received.pgm");
+			AddDelayedCall(func() begin
+				viewer:DoMunge('rotateRight);
+				AddDelayedCall(turned, nil, 1000);
+			end, nil, 1000);
+		end, 30);
+	end, nil, 1000);
 end, 200);

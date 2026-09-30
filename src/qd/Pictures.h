@@ -90,6 +90,7 @@ Ref		MakePixelsObject(const Rect& bounds, long depth, long rowBytes,
 void	RegisterBitmapNatives(void);					// MakeBitmap (Pictures.cpp)
 
 // MungeBitmap (MungeBitmap.cpp): a bitmap turned or flipped in place
+Ref		RotTiledBitmap(RefArg bitmap, PixelMap* pm, long direction, RefArg options);	// ROM 0x00040b54 RotTiledBitmap__FRC6RefVarP8PixelMaplT1
 Boolean	Tilable(PixelMap* pm);									// ROM 0x00040ee0 Tilable__FP8PixelMap - the size of the whole screen
 Ref		RotBitmap180(RefArg bitmap, RefArg options);			// ROM 0x0003f93c RotBitmap180__FRC6RefVarT1
 Ref		FlipBitmapH(RefArg bitmap);								// ROM 0x0003fbf8 FlipBitmapH__FRC6RefVar
