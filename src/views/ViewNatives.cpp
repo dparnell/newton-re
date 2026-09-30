@@ -18,6 +18,7 @@
 */
 
 #include "RootView.h"
+#include "SoundSettings.h"	// FClicker, FPlaySound
 #include "EditView.h"
 #include "DataView.h"
 #include "ParagraphView.h"
@@ -677,8 +678,7 @@ FPositionCaret(RefArg rcvr, RefArg x, RefArg y, RefArg click)
 // non-nil answer ends the tracking (when the newt_feature proto variable
 // is set).  Before that: the busy box is shown (0x35) when there is no
 // buttonPressedScript, and the _sound proto variable (the click when
-// there is none) played - NOT YET RECONSTRUCTED: BusyBoxSend, FClicker,
-// FPlaySound.  With no unit (nil) the pen is taken to be at the view's
+// there is none) played - NOT YET RECONSTRUCTED: BusyBoxSend.  With no unit (nil) the pen is taken to be at the view's
 // centre, and the tracking ends after two turns.
 static Ref
 FTrackHiliteX(RefArg rcvr, RefArg unit)
@@ -689,7 +689,13 @@ FTrackHiliteX(RefArg rcvr, RefArg unit)
 		stroke = StrokeFromRef(unit);
 		stroke->InkOff(true);
 	}
-	// NOT YET RECONSTRUCTED: BusyBoxSend(0x35) when there is no buttonPressedScript; the _sound / FClicker
+	// NOT YET RECONSTRUCTED: BusyBoxSend(0x35) when there is no buttonPressedScript
+	long hasSound = 0;
+	RefVar sound(GetProtoVariable(rcvr, RSSYM_sound, &hasSound));
+	if (hasSound == 0)
+		FClicker(rcvr);
+	else if (NOTNIL(sound))
+		FPlaySound(rcvr, sound);
 	TView* view = FailGetView(rcvr);
 	Boolean selected = (view->fFlags & vSelected) != 0;
 	Boolean wasInside = false;

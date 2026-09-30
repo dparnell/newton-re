@@ -7,6 +7,7 @@
 */
 
 #include "ParagraphView.h"
+#include "SoundSettings.h"	// FClicker
 #include "Polygons.h"
 #include "Ink.h"
 #include "InkShapes.h"
@@ -2170,8 +2171,8 @@ HitsHilitedInkWord(TView* view, Point pt)
 // ROM 0x001752c4 HandleTap__14TParagraphViewFR6TPoint
 // The caret placed at the tapped point: the selection removed, the
 // character nearest the point found (PointToOffset; before the first line
-// goes to the start, past the text to its end), the key view set there.
-// NOT YET RECONSTRUCTED: FClicker (the tap sound).
+// goes to the start, past the text to its end), the key view set there,
+// and the click made when there is a caret to show (FClicker).
 void
 TParagraphView::HandleTap(Point& pt)
 {
@@ -2187,6 +2188,8 @@ TParagraphView::HandleTap(Point& pt)
 			offset = TextLength();
 	}
 	gRootView->SetKeyView(this, offset, 0, true);
+	if (gRootView->CaretEnabled())
+		FClicker(RefVar(NILREF));
 }
 
 

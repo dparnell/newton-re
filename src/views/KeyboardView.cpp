@@ -7,6 +7,7 @@
 */
 
 #include "KeyboardView.h"
+#include "SoundSettings.h"	// FPlaySound
 #include "Rects.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
@@ -844,9 +845,9 @@ TKeyboardView::HandleKeyPress(TVisKeyIterator& /*iter*/, RefArg result)
 				gRootView->RunScript(RSSYMsysbeep, RefVar(MakeArray(0)), false, nil);
 			else
 			{
-				// (the ROM plays the keyboard's keySound here - FPlaySound,
-				//  sound/SoundSettings.h - which the view system does not
-				//  reach; NOT YET, as in TGaugeView and TAnimate)
+				// the keyboard's keySound, when its context has one
+				if (fHasKeySound)
+					FPlaySound(RefVar(fContext), RefVar(GetProtoVariable(RefVar(fContext), RSSYMkeysound, nil)));
 				ULong parameter = (ULong) ch | ((ULong) code << 16)
 								| (modifiers << 25) | 0x1000000;
 				RefVar cmd(MakeCommand(aeKeyDown, receiver, (Long) parameter));
@@ -868,6 +869,8 @@ TKeyboardView::HandleKeyPress(TVisKeyIterator& /*iter*/, RefArg result)
 	else
 	{
 		// (the keySound again)
+		if (fHasKeySound)
+			FPlaySound(RefVar(fContext), RefVar(GetProtoVariable(RefVar(fContext), RSSYMkeysound, nil)));
 		PostKeypressCommands(result);
 	}
 	gRootView->Update(nil);

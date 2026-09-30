@@ -7,6 +7,7 @@
 */
 
 #include "Animate.h"
+#include "SoundSettings.h"	// FPlaySound
 #include "View.h"
 #include "RootView.h"
 #include "Rects.h"
@@ -116,8 +117,8 @@ TSaveScreenBits::RestoreScreenBits(Rect* r, RgnHandle mask)
 
 // ROM 0x000429ec PlaySound__FRC6RefVarT1
 // A sound played for the context: a symbol is looked up as its proto
-// variable; nil plays nothing.  NOT YET RECONSTRUCTED: FPlaySound (the
-// sound system) - nothing is heard on the host.
+// variable; nil plays nothing; the sound played if the preferences allow
+// (FPlaySound).
 void
 PlaySound(RefArg context, RefArg sound)
 {
@@ -125,7 +126,7 @@ PlaySound(RefArg context, RefArg sound)
 	if (IsSymbol(sound))
 		theSound = GetProtoVariable(context, sound, nil);
 	if (NOTNIL(theSound))
-		;	// FPlaySound(context, theSound)
+		FPlaySound(context, theSound);
 }
 
 

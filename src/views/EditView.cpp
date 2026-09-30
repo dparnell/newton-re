@@ -13,6 +13,7 @@
 */
 
 #include "EditView.h"
+#include "SoundSettings.h"	// FClicker
 #include "CorrectInfo.h"
 #include "Ink.h"
 #include "RecConfig.h"		// GetRecognitionView
@@ -886,9 +887,8 @@ TEditView::TextContainingPoint(Point& pt, Rect* box, long* score)
 //   becomes the key view.  A page that takes neither text nor ink words,
 //   and has no keyboard up, does nothing at all here.
 //
-// `click` asks for the click the machine makes when the caret moves.
-//
-// NOT YET RECONSTRUCTED: FClicker 0x001e6578, the click itself.
+// `click` asks for the click the machine makes when the caret moves
+// (FClicker, when there is a caret to show).
 void
 TEditView::PositionCaret(Point& pt, Boolean click)
 {
@@ -912,7 +912,7 @@ TEditView::PositionCaret(Point& pt, Boolean click)
 					   ? 0 : (Length(RefVar(para->Text())) - 2) / 2;
 			gRootView->SetKeyView(para, offset, 0, false);
 			if (click && gRootView->CaretEnabled())
-				;	// NOT YET RECONSTRUCTED: FClicker(nil)
+				FClicker(RefVar(NILREF));
 			return;
 		}
 		underTheChild = true;
@@ -974,7 +974,7 @@ TEditView::PositionCaret(Point& pt, Boolean click)
 	}
 	gRootView->SetKeyView(this, 0, 0, true);
 	if (click && gRootView->CaretEnabled())
-		;	// NOT YET RECONSTRUCTED: FClicker(nil)
+		FClicker(RefVar(NILREF));
 }
 
 // ROM 0x000aaba4 HandleTap__9TEditViewFR6TPoint

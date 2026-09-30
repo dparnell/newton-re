@@ -32,6 +32,11 @@ says := func(text) begin
     IsString(now) and StrPos(now, text, 0) = 0;
   end;
 
+// (the pen's clicks and the action sounds off - a slip's show sound, the
+// taps on Rec and Play - since the test tone must be most of what is heard)
+SetUserConfig('penSoundEffects, nil);
+SetUserConfig('actionSoundEffects, nil);
+
 // Each step once the status line says the one before it has happened; the
 // two seconds of recording are the recording's length, not a wait
 call walkSetup with (name, func() begin

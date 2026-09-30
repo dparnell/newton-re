@@ -7,6 +7,7 @@
 */
 
 #include "GaugeView.h"
+#include "SoundSettings.h"	// FPlaySound
 #include "Rects.h"
 #include "Draw.h"
 #include "Shapes.h"
@@ -161,7 +162,7 @@ TGaugeView::RealDoCommand(RefArg cmd)
 // changed (the _sound proto variable played, the root view updated), a
 // tick waited when it did not, until the stroke is done; the
 // viewFinalChangeScript is run with [old, new] when the value changed.
-// ==> true.  NOT YET RECONSTRUCTED: BusyBoxSend, FPlaySound.
+// ==> true.  NOT YET RECONSTRUCTED: BusyBoxSend.
 Boolean
 TGaugeView::TrackSetValue(TUnitPublic* unit)
 {
@@ -185,7 +186,8 @@ TGaugeView::TrackSetValue(TUnitPublic* unit)
 			Wait(1);
 		else
 		{
-			// NOT YET RECONSTRUCTED: FPlaySound(*this, sound) when there is one
+			if (NOTNIL(sound))
+				FPlaySound(RefVar(fContext), sound);
 			SetValue(RSSYMviewvalue, MAKEINT(newValue));
 			gRootView->Update(nil);
 			value = newValue;

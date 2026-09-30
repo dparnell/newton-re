@@ -7,6 +7,7 @@
 */
 
 #include "PickView.h"
+#include "SoundSettings.h"	// FClicker
 #include "RootView.h"
 #include "Recognizer.h"	// gInhibitPopup
 #include "Commands.h"
@@ -1027,7 +1028,7 @@ FirstPickable(TPickView* view)
 // typed within the timeout (up to 21) and the first item from the pick
 // on (else from the start) whose text begins with them is picked.  The
 // picked item is scrolled into view, the picker redrawn.  ==> true
-// (handled).  NOT YET RECONSTRUCTED: FClicker.
+// (handled); a pick made with the keys clicks (FClicker).
 Boolean
 TPickView::HandleKeyDown(UniChar ch, ULong parameter)
 {
@@ -1092,7 +1093,7 @@ TPickView::HandleKeyDown(UniChar ch, ULong parameter)
 		moved = true;
 		if (item != -1)
 		{
-			// NOT YET RECONSTRUCTED: FClicker
+			FClicker(RefVar(fContext));
 			PostPick(this);
 			picked = true;
 		}
@@ -1373,7 +1374,7 @@ TPickView::Hide(void)
 
 
 // ROM 0x001870c4 RealDoCommand__9TPickViewFRC6RefVar
-// aeClick clicks (FClicker, NOT YET RECONSTRUCTED), tracks the pen over
+// aeClick clicks (FClicker), tracks the pen over
 // the items (TrackStroke) and dispatches the pick (0x36) with the item
 // the pen ended on as the parameter and the PickStuff as a binary frame
 // parameter; the pick command picks the item (PickItem) and, when the
@@ -1385,6 +1386,7 @@ TPickView::RealDoCommand(RefArg cmd)
 	long id = CommandID(cmd);
 	if (id == aeClick)
 	{
+		FClicker(RefVar(fContext));
 		PickStuff stuff;
 		TrackStroke(((TUnitPublic*) CommandParameter(cmd))->Stroke(), &stuff);
 		RefVar pick(MakeCommand(aePickItem, this, stuff.fItem));

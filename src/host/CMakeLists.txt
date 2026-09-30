@@ -367,6 +367,14 @@ if(Python3_FOUND)
                          PASS_REGULAR_EXPRESSION "pagecheck: passed")
 endif()
 
+# the pen's clicks (demo/clicks.ns): a tap on a note's text, a button and a
+# pick in its menu each give the host's sound driver something to play
+add_test(NAME host.NewtonClicks COMMAND newton --display 320x480 --headless 90
+         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/clicks.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonClicks PROPERTIES TIMEOUT 150
+                     PASS_REGULAR_EXPRESSION "text clicks: ok.*Action button clicks: ok.*menu clicks: ok.*clicks: done, 0 failed"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+
 # a long note printed across pages (demo/printlong.ns): the Notepad's print
 # format reflows the note's paragraph into each page and cuts it between
 # two lines where the page runs out (views/Reflow.cpp ReflowText, the

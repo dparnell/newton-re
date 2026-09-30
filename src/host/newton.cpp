@@ -301,6 +301,18 @@ FHostStoreFile(RefArg /*rcvr*/)
 }
 
 
+// HostSoundSamples(): how many samples the host's sound driver has been
+// given to play so far - a test's way of hearing that something made a
+// sound (a click, a slip's show sound)
+static Ref
+FHostSoundSamples(RefArg /*rcvr*/)
+{
+	long played = 0;
+	(void) HostSoundCaptured(&played);
+	return MAKEINT(played);
+}
+
+
 // HostCPUTime(): the milliseconds of processor time the program has used,
 // in the kernel and out of it - what a benchmark measures the work by,
 // the wall clock being taken up as well by the animations' and the
@@ -334,6 +346,7 @@ NewtonPreMain(void)
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostInclude")), RefVar(MakeCFunction((void*) FHostInclude, 1, nil)));
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostCPUTime")), RefVar(MakeCFunction((void*) FHostCPUTime, 0, nil)));
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostStoreFile")), RefVar(MakeCFunction((void*) FHostStoreFile, 0, nil)));
+	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostSoundSamples")), RefVar(MakeCFunction((void*) FHostSoundSamples, 0, nil)));
 	HostInstallPackageGlobal();
 	HostLinkStart();
 	HostInstallPrinter();

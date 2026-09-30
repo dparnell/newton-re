@@ -146,6 +146,66 @@ write new ones the same way, never with a fixed wait for something
 asynchronous - under a parallel ctest the packages `--package` queues
 and the NIE's procrastinated setup arrive late.
 
+## User-reachable NOT YETs
+
+A sweep of the `NOT YET` markers in `src/` (517 of them, 2026-09-30) for the
+ones a user meets from the built-in applications or the walkthroughs -
+leaving out hardware, the debugger, the NTK nub and other paths no user
+reaches.  Biggest user impact first; each is taken on in this order.
+
+1. **The pen's clicks and the views' sounds** - DONE (2026-09-30): the
+   click when the caret moves, a button is tracked or a picker picks, a
+   gauge's `_sound`, the keyboard's `keySound`, the view effects' show and
+   hide sounds (`views/Animate.cpp` PlaySound) - every tap on the machine.
+   Small: the natives were there (`sound/SoundSettings.h`), only the calls
+   from the views were missing.  ctest host.NewtonClicks.
+2. **Keyboard editing of text** (`views/ParagraphView.cpp` ~6056-6150):
+   typing over a selection (the hilite replaced), the caret moved a line up
+   or down with the arrow keys, tab to the next field (`NextKeyView`), the
+   key-view's scripts on an empty key.  Every text field with the host's
+   keyboard.  Medium.
+3. **Selections kept with the text** (`views/Hilites.h`, ParagraphView.cpp
+   1478, 2322): a selection moved past a replacement, the hilite areas
+   remade after a relayout, the selected text a `TParagraphHilite`
+   carries.  Selecting and editing in notes.  Small to medium.
+4. **The caret around redrawing** (`views/View.cpp` 1088, 1123): the caret
+   hidden while a view draws over it and shown again after
+   (`GetCaretRect`/`HideCaret`/`ShowCaret`).  Anywhere a field redraws
+   under the caret.  Small.
+5. **Dates and times typed as text** (`intl/Dates.cpp` 727-823,
+   `StringToDateFields` 0x8de6c over the time lexical dictionary,
+   `intl/Locale.cpp` 202): Find's "before/after a date", the date fields of
+   Dates and Names (`ConvertTextToDate`), the Assist's times ("lunch at
+   1pm").  Medium to large (the Airus `ParseString` over
+   `gTimeLexDictionary`).
+6. **The boot's splash screen** (`newt/Notebook.h` DrawSplashScreen 0x14602c,
+   `views/RootView.cpp` 381): the picture and text every boot shows before
+   the first screen.  Medium.
+7. **Pickers with a keyboard** (`views/PickView.cpp` 404, 1304; `fKeyCommands`,
+   `GetKeyCommandInfo`): the command keys and type-select of a picker's
+   items.  Small to medium.
+8. **Ink in pickers** (`views/PickView.cpp` 364, 1518): an ink item scaled
+   to 28 high, a `strokeList` item (DrawStrokeBundle) - the corrector's and
+   the Assist's lists when they hold writing.  Small.
+9. **Printing ink** (`views/PolygonView.cpp` 185, `ink/InkFont.cpp` 196:
+   InkMakePaths, FramePaths, the ink word on a printer's port): a note with
+   ink or ink words printed.  Medium to large (the PostScript path
+   machinery the dot printer imitates).
+10. **The busy box and the live ink** (`BusyBoxSend` in views/GaugeView,
+    ViewNatives' TrackHilite, NewtWorld; the inker's `TInker::Convert`/
+    `DrawInk`, `TLiveInker`): the hourglass while the machine works, the
+    ink drawn under the pen as it moves.  Every stroke.  Large - the
+    tablet/inker work (`docs/recognition/inker.md`), left to it.
+11. **Cursors told of a changed entry** (`stores/Entries.cpp` 372,
+    `TCursor::EntryChanged`): a list over a soup after one of its entries
+    is edited elsewhere.  Medium; to be checked against what the ROM's
+    applications rely on.
+
+Found stale (the code is there, the comment was not updated):
+`stores/Cursors.h`/`.cpp`'s words and text queries, `XmitSoupChange`'s
+deferred broadcast (`AddDeferredCall` is bound), `qd/PicPlay`'s text,
+curves and paths.
+
 ## Candidates for the next piece of work
 
 The owner's order - the package manager, host package loading, the

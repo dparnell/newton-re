@@ -1,0 +1,43 @@
+// The pen's clicks (sound/SoundSettings.h FClicker, played from the views
+// where the ROM plays it): with the pen sound effects preference on, a tap
+// on a note's text puts the caret there with a click (TParagraphView::
+// HandleTap), a tap on a button clicks as it is tracked (TrackHilite's
+// _sound, the click when there is none), and a pick in the menu it opens
+// clicks too (TPickView's aeClick).  Each step checks that the host's
+// sound driver was given more to play (HostSoundSamples).
+//
+//   build/host/host/newton --display 320x480 --headless 90 --script src/host/demo/clicks.ns
+//
+// Prints "clicks: <step>: ok" or "FAILED", and "clicks: done".
+
+HostInclude("common.ns");			// tapAt, waitFor, walkSetup
+
+clFailures := 0;
+clCheck := func(what, ok) begin
+	if not ok then clFailures := clFailures + 1;
+	Print("clicks: " & what & (if ok then ": ok" else ": FAILED"));
+end;
+
+// a step: the tap made, then waited on until the sound driver has been
+// given more to play than before it
+clStep := func(what, x, y, andThen) begin
+	local before := HostSoundSamples();
+	call tapAt with (x, y);
+	call waitFor with ("clicks: " & what, func() HostSoundSamples() > before, func() begin
+		call clCheck with (what & " clicks", true);
+		call andThen with ();
+	end, 20);
+end;
+
+call walkSetup with ([2, 0, 45, 34, 14, 37], func() begin
+	SetUserConfig('penSoundEffects, true);
+	GetRoot().paperroll:MakeTextNote("click here", true);
+	AddDelayedCall(func()
+		call clStep with ("a tap on the note's text", 60, 70, func()
+			call clStep with ("the Action button", 310, 28, func()
+				call clStep with ("a pick in its menu", 260, 33, func() begin
+					Print("clicks: done, " & clFailures & " failed");
+					HostQuit();
+				end))), nil, 1500);
+end);
+Print("clicks: the script is loaded");

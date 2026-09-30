@@ -8,6 +8,7 @@
 */
 
 #include "RootView.h"
+#include "SoundSettings.h"	// FClicker
 #include <stdio.h>
 #include <stdlib.h>
 #include "CorrectInfo.h"
@@ -1306,7 +1307,7 @@ TRootView::RestoreBitsUnderCaret(void)
 // while the pen is over it (within the caret view's clip) - and, when it
 // ends there, the caret view's _caretPopup is popped up at the caret and
 // the stroke's ink taken off.  ==> whether the popup came up.
-// NOT YET RECONSTRUCTED: FClicker (the click sound).
+// The pen on the caret clicks (FClicker).
 Boolean
 TRootView::DoCaretClick(TUnitPublic* unit)
 {
@@ -1333,7 +1334,7 @@ TRootView::DoCaretClick(TUnitPublic* unit)
 	SectRgn(hitRgn, port->visRgn, hitRgn);		// (the ROM's [port,#0x24] at 0x001b53c4: the visRgn just narrowed)
 	if (PtInRgn(first, hitRgn))
 	{
-		// NOT YET RECONSTRUCTED: FClicker
+		FClicker(RefVar(NILREF));
 		Boolean inverted = false;
 		do
 		{

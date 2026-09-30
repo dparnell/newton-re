@@ -1208,7 +1208,7 @@ TView::HandleKeyEvent(RefArg cmd, ULong id, Boolean* isCommandKey)
 	}
 	if (!handled && isDown && keyCode == kCapsLockKey && (parameter & 0x1000000) == 0)
 	{
-		// NOT YET RECONSTRUCTED: FClicker
+		FClicker(RefVar(NILREF));
 		RefVar buttons(GetFrameSlotRef(gVarFrame, RSSYM_infobuttons));
 		if (IsArray(buttons))
 		{
