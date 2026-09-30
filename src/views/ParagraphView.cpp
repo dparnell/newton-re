@@ -635,8 +635,8 @@ TParagraphView::RefillAllCaches(void)
 // its bounds - the view made as tall as its lines (as wide as them too
 // when it sizes itself to its text, text flag 4), which is how a
 // paragraph made with no height (a note made by MakeTextNote: viewBounds
-// top and bottom 0) comes to show; the hilites' areas set up again (NOT
-// YET RECONSTRUCTED: the hilites), the bounds noted.
+// top and bottom 0) comes to show; the bounds noted, the hilites' areas
+// made again (UpdateHiliteArea).
 void
 TParagraphView::CreateAllCaches(void)
 {
@@ -658,6 +658,7 @@ TParagraphView::CreateAllCaches(void)
 	}
 	fCachedBounds = viewBounds;
 	fCachesValid = true;
+	UpdateHiliteArea();
 }
 
 
@@ -1481,10 +1482,53 @@ TParagraphView::AdjustStyles(long offset, long removed, long inserted, RefArg st
 
 
 // ROM 0x0016a824 AdjustHilites__14TParagraphViewFlT1
-// NOT YET RECONSTRUCTED: the hilites moved past a replacement.
+// The selection moved past a change of `delta` characters at `offset`:
+// an insertion (or a removal wholly before or after it) moves its ends
+// that lie at or past the change; a removal that reaches into it takes it
+// away - unless the removal starts at the selection's own start and is
+// shorter than it, which only shortens it.  (Its area is made again when
+// the lines are - UpdateHiliteArea.)
 void
-TParagraphView::AdjustHilites(long /*offset*/, long /*delta*/)
-{ }
+TParagraphView::AdjustHilites(long offset, long delta)
+{
+	if (delta == 0)
+		return;
+	RefVar hiliteRef(FirstHilite());
+	if (ISNIL(hiliteRef))
+		return;
+	TParagraphHilite* hilite = (TParagraphHilite*) RefToAddress(hiliteRef);
+	if (delta < 0 && offset - delta > hilite->fStart && hilite->fEnd > offset)
+	{
+		if (hilite->fStart == offset && hilite->fEnd - hilite->fStart > -delta)
+			hilite->fEnd += delta;
+		else
+			RemoveHilite(hiliteRef);
+		return;
+	}
+	if (hilite->fStart >= offset)
+		hilite->fStart += delta;
+	if (hilite->fEnd > offset)
+		hilite->fEnd += delta;
+}
+
+
+// ROM 0x0016a7bc UpdateHiliteArea__14TParagraphViewFv
+// Every hilite's area made again from the lines (after they are laid out
+// afresh: CreateAllCaches, FixupBBox).
+void
+TParagraphView::UpdateHiliteArea(void)
+{
+	HiliteLoop loop(this);
+	while (loop.Next())
+	{
+		TParagraphHilite* hilite = (TParagraphHilite*) loop.fCurrent;
+		if (hilite == nil)
+			continue;
+		if (hilite->fArea != nil)
+			SetEmptyRgn(hilite->fArea);
+		SetupArea(hilite);
+	}
+}
 
 
 // host: the region covering the characters a hilite selects - the union,
@@ -2392,8 +2436,8 @@ TParagraphView::ProcessStyles(Boolean redraw)
 // The lines laid out again; a paragraph that calculates its bounds takes
 // the text's height (at least a line) - and, one line only, its width
 // (at least 5 wide) - as its bounds, written to its viewBounds slot and
-// the parent told (ChildBoundsChanged).  NOT YET: the hilites' areas
-// remade (UpdateHiliteArea).
+// the parent told (ChildBoundsChanged); the hilites' areas made again
+// (UpdateHiliteArea).
 void
 TParagraphView::FixupBBox(void)
 {
@@ -2433,6 +2477,7 @@ TParagraphView::FixupBBox(void)
 			fCachesValid = true;
 		}
 	}
+	UpdateHiliteArea();
 }
 
 

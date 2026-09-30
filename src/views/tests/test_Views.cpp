@@ -2425,6 +2425,22 @@ TestTyping()
 	EXPECT(NOTNIL(p->FirstHilite()));
 	TypeKey(7);		// x
 	EXPECT(NOTNIL(Eval("StrEqual(ctxT.text, \"x World\")")) && p->fCaretOffset == 1 && ISNIL(p->FirstHilite()));
+	// a selection follows the text: an insertion before it moves it on,
+	// a removal at its start shorter than it shortens it, one that reaches
+	// into it otherwise takes it away
+	{
+		p->MakeHilite(2, 7, true);				// "World"
+		UniChar ab[2] = { 'a', 'b' };
+		p->InsertStyledText(0, ab, 2, RefVar(NILREF), RefVar(NILREF), 0, 0, false);
+		TParagraphHilite* moved = (TParagraphHilite*) RefToAddress(RefVar(p->FirstHilite()));
+		EXPECT(moved->fStart == 4 && moved->fEnd == 9);
+		p->InsertStyledText(4, nil, 0, RefVar(NILREF), RefVar(NILREF), 0, 2, false);
+		moved = (TParagraphHilite*) RefToAddress(RefVar(p->FirstHilite()));
+		EXPECT(moved->fStart == 4 && moved->fEnd == 7);
+		p->InsertStyledText(3, nil, 0, RefVar(NILREF), RefVar(NILREF), 0, 2, false);
+		EXPECT(ISNIL(p->FirstHilite()));
+		Eval("ctxT.text := \"x World\"; ctxT:SyncView()");
+	}
 	// ... and an arrow collapses a selection to one of its ends (2..3)
 	p->MakeHilite(2, 3, true);
 	TypeKey(0x7b);	// left arrow: the selection's start

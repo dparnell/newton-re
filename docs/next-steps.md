@@ -167,10 +167,12 @@ reaches.  Biggest user impact first; each is taken on in this order.
    page (`HandleUpDownKey`, `TEditView::MoveBetweenParagraphs`); a
    backspace that empties a paragraph calculating its bounds removes it
    when the key comes up.  test_Views TestTyping.
-3. **Selections kept with the text** (`views/Hilites.h`, ParagraphView.cpp
-   1478, 2322): a selection moved past a replacement, the hilite areas
-   remade after a relayout, the selected text a `TParagraphHilite`
-   carries.  Selecting and editing in notes.  Small to medium.
+3. **Selections kept with the text** - DONE (2026-09-30), but for the
+   selected text a `TParagraphHilite` carries (Hilites.h +0x14, for the
+   drag of a selection): `AdjustHilites` (0x16a824) moves a selection past
+   a change, shortens it or takes it away; `UpdateHiliteArea` (0x16a7bc)
+   remakes the hilites' areas whenever the lines are laid out again
+   (CreateAllCaches, FixupBBox).  test_Views TestTyping.
 4. **The caret around redrawing** (`views/View.cpp` 1088, 1123): the caret
    hidden while a view draws over it and shown again after
    (`GetCaretRect`/`HideCaret`/`ShowCaret`).  Anywhere a field redraws

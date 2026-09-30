@@ -375,6 +375,7 @@ public:
 	Boolean		AddKeyToCurrUndo(UniChar ch, long offset);				// ROM 0x00177218 AddKeyToCurrUndo__14TParagraphViewFUsl
 	void		AdjustStyles(long offset, long removed, long inserted, RefArg styles, long styleOffset);	// ROM 0x00178ed4 AdjustStyles__14TParagraphViewFlN21RC6RefVarT1
 	void		AdjustHilites(long offset, long delta);					// ROM 0x0016a824 AdjustHilites__14TParagraphViewFlT1
+	void		UpdateHiliteArea(void);									// ROM 0x0016a7bc UpdateHiliteArea__14TParagraphViewFv
 	void		ChangeStyleOfSelection(RefArg style);					// ROM 0x00179a68 ChangeStyleOfSelection__14TParagraphViewFRC6RefVar - the selected text restyled
 	void		ChangeStylesOfRange(long start, long length, RefArg style, Boolean redraw);	// ROM 0x00179464 ChangeStylesOfRange__14TParagraphViewFlT1RC6RefVarUc
 	// What a hilite stroke over the paragraph selects, in the order the
