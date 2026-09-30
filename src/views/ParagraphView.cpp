@@ -147,7 +147,9 @@ TParagraphView::~TParagraphView()
 // bounds cached, the default style's height as the line height, the
 // locale's break tables; a rich text slot is split into text and styles
 // (NOT YET RECONSTRUCTED: ink - a rich string's text is used as it is);
-// then the styles are checked (CheckStyles NOT YET) and the caches built.
+// then, for a view that calculates its bounds, the styles are checked
+// (CheckStyles NOT YET) and the caches built - before TView::SetupDone runs
+// the viewSetupDoneScript.
 void
 TParagraphView::SetupDone(void)
 {
@@ -171,9 +173,22 @@ TParagraphView::SetupDone(void)
 	}
 	fCachesValid = true;
 	fCalculateBounds = (fFlags & vCalculateBounds) != 0;
-	TView::SetupDone();
-	CreateAllCaches();
+	// a view that calculates its bounds lays its lines out now, before its
+	// viewSetupDoneScript runs (TView::SetupDone, below), so the script
+	// finds its viewBounds as tall as its text - NetHopper's paragraphs,
+	// made with no height, read them back there.  (NOT YET: CheckStyles
+	// first, and the caches dropped again when the view lies outside what
+	// its parents show; the bounds aligned to an edit view's lines, text
+	// flag 0x20; ProcessStyles.)
+	if (fFlags & vCalculateBounds)
+		CreateAllCaches();
 	fSetupDone = true;
+	TView::SetupDone();
+	// (the ROM's SetupDone makes no caches for a view that does not
+	// calculate its bounds; NOT YET found where it makes them - the host
+	// makes them here, as it always has)
+	if (!(fFlags & vCalculateBounds))
+		CreateAllCaches();
 }
 
 
