@@ -922,3 +922,22 @@ set_tests_properties(host.NewtonWalkthrough.restart PROPERTIES TIMEOUT 180
                      FIXTURES_REQUIRED host_walkthrough_store DEPENDS host.NewtonWalkthrough
                      PASS_REGULAR_EXPRESSION "walkthrough: restart done, 0 failed"
                      FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+
+# the year-2010 fix with the host's own clock (demo/year2010.ns,
+# docs/intl/year-2010.md): after the Setup walk a note dated this year, a
+# note made now dated today, Dates titled with today, an alarm a minute
+# ahead ringing once; with NEWTON_ROM_2010_BUG=1 the ROM's own arithmetic,
+# the Setup walk putting the clock back to 1992
+add_test(NAME host.NewtonYear2010
+         COMMAND newton --display 320x480 --headless 200
+                 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/year2010.ns
+         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonYear2010 PROPERTIES TIMEOUT 240
+                     PASS_REGULAR_EXPRESSION "year2010: first note: ok.*note made now: ok.*dates: ok.*alarm: ok.*year2010: done"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+add_test(NAME host.NewtonYear2010.romBug
+         COMMAND newton --display 320x480 --headless 200
+                 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/year2010.ns
+         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonYear2010.romBug PROPERTIES TIMEOUT 240 ENVIRONMENT NEWTON_ROM_2010_BUG=1
+                     PASS_REGULAR_EXPRESSION "firstNote: \"[0-9/]+92 .*first note: FAILED dated 1992.*year2010: done")
