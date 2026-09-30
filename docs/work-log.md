@@ -237,6 +237,25 @@ is the same value spelt so that it cannot be read two ways.
   notBic loops never advance the mask pointer; `ScaleStdRRect` scales the
   corner oval crosswise on a fax.
 
+## 2026-09-30: a user's first hour
+
+- `src/host/demo/walkthrough.ns` (08a2e923; ctests
+  `host.NewtonWalkthrough` and `.restart` on the same store): Setup, a
+  note written and read back, a Names card typed in, Find, a meeting, a
+  to-do scrubbed out, the Assistant's "call ann", a note faxed Later into
+  the Out Box, filing, the Calculator, the volume - then a restart that
+  finds it all.
+- Fixed on the way (da528d7b, ecc30aaf; `test_Views` checks each):
+  `MakeTextLines` (0xdd234) ends each line's shape at the ascent, so a
+  Names card's name is no longer dropped by `AddAllInfoItem`; an input
+  line's first baseline sits at viewLineSpacing - 3 (- 4 over 20) and
+  only a one-line paragraph is justified vertically (0x10d8d4, 0x10ddc0),
+  so input-line text is no longer drawn above its line; a paragraph that
+  calculates its bounds grows to its lines in `CreateAllCaches`
+  (0x16baa8), so a `MakeTextNote` note is no longer invisible.
+- A demo's globals must not have generic names (index, next, open,
+  wait): ROM scripts that reference a free variable find them.
+
 ## 2026-09-30: the ROM's fonts as editable text
 
 - The 13 'sfnt binaries are sfnt containers with no outlines: five bitmap

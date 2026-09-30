@@ -252,10 +252,13 @@ worked through.  What could come next (not ranked; the owner chooses):
   and respond (ctest `host.NewtonThirdPartyApps`).
 - **Printing to the host**: done - "Host printer (PNG files)" in the
   Print slip, pages to `newton --print-dir` (`host.NewtonHostPrinter`).
-  Seen on the way: a card made with `cardfile:AddCard` shows no name (on
-  screen or printed; its name view's shapeArray is empty -
-  `AddAllInfoItem`); a note made with `paperroll:MakeTextNote(text,
-  true)` is not drawn on the Notepad's screen, though it prints.
+- **A user's first hour** passes as a ctest (`host.NewtonWalkthrough`).
+  Seen then: Beam from the action picker answers -26005 (no IR service
+  unless `newton --ir-peer`; the device always has its IR port); Print
+  Note from the action picker showed "nil view" in an older tree -
+  recheck now that `GetNames` is in.  The host clock past 2010 meets the
+  ROM's own year-2010 overflow (`TimeInSeconds`): new items are dated
+  1992 - faithful; the walkthrough sets the clock to 1998.
 - **Now reachable over the large binaries**: the text engine's
   `TXNewtStreamFactory` (a compressed large binary for a stream above
   4K).
