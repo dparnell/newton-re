@@ -93,11 +93,11 @@ TRootView::Constructor(RefArg templ)
 	fPreserveHilites = false;
 	fCaretBits = new TBits;
 	Rect caretBox;
-	SetRect(&caretBox, 0, 0, 12, 11);
+	SetRect(&caretBox, 0, 0, 11, 12);		// 11 wide, 12 tall: the caret bitmaps' bounds
 	fCaretBits->Constructor(caretBox);
 	fCaretShowing = false;
-	fCaretPoint.h = -0x8000;
-	fCaretPoint.v = 0;
+	fCaretPoint.h = 0;
+	fCaretPoint.v = -0x8000;		// nowhere
 	fCaretDrawnView = nil;
 	fCaretHidden = 0;
 	fDefaultButton = nil;
@@ -331,11 +331,11 @@ TRootView::RemoveAllViews(void)
 	fPreserveHilites = false;
 	fCaretBits = new TBits;
 	Rect caretBox;
-	SetRect(&caretBox, 0, 0, 12, 11);
+	SetRect(&caretBox, 0, 0, 11, 12);		// 11 wide, 12 tall: the caret bitmaps' bounds
 	fCaretBits->Constructor(caretBox);
 	fCaretShowing = false;
-	fCaretPoint.h = -0x8000;
-	fCaretPoint.v = 0;
+	fCaretPoint.h = 0;
+	fCaretPoint.v = -0x8000;		// nowhere
 	fCaretDrawnView = nil;
 	fCaretHidden = 0;
 	fDefaultButton = nil;
@@ -731,25 +731,28 @@ TRootView::ForgetAboutView(TView* view)
 	T h e   k e y   v i e w   a n d   t h e   c a r e t
 ------------------------------------------------------------------------------*/
 
-// the caret's rectangle from its point: 12 wide from 5 left of the
-// point, 11 down from it
+// the caret's rectangle from its point: 11 wide from 5 left of the
+// point, 12 down from it (the size of Rcaretbitsoutside); a point nowhere
+// (v = -32768) gives a rect nowhere - top and bottom -32768, left and
+// right not touched
 // ROM 0x001b4d38 CaretPointToRect__FR6TPointP5TRect
 static void
 CaretPointToRect(const Point& pt, Rect* rect)
 {
-	if (pt.h == -0x8000)
+	if (pt.v == -0x8000)
 	{
-		SetEmptyRect(rect);
+		rect->top = -0x8000;
+		rect->bottom = -0x8000;
 		return;
 	}
 	rect->left = pt.h - 5;
-	rect->right = rect->left + 12;
+	rect->right = rect->left + 11;
 	rect->top = pt.v;
-	rect->bottom = rect->top + 11;
+	rect->bottom = rect->top + 12;
 }
 
 
-// the caret's own no-place point
+// the caret's own no-place: a point's v (a rect's top) -32768
 static const short kNoCaret = -0x8000;
 
 // the old key view is usable: there and not being deleted
@@ -1126,8 +1129,7 @@ TRootView::CaretValid(Point* pt)
 {
 	if (pt != nil)
 	{
-		pt->h = kNoCaret;
-		pt->v = 0;
+		pt->v = kNoCaret;		// (h not touched)
 	}
 	if (fCaretHidden > 0)
 		return true;
@@ -1137,9 +1139,9 @@ TRootView::CaretValid(Point* pt)
 	GetCaretPoint(&caret);
 	if (pt != nil)
 		*pt = caret;
-	if (caret.h == kNoCaret)
+	if (caret.v == kNoCaret)
 	{
-		if (!fCaretShowing || fCaretPoint.h == kNoCaret)
+		if (!fCaretShowing || fCaretPoint.v == kNoCaret)
 			return true;
 	}
 	if (!fCaretView->VisibleDeep())
@@ -1152,14 +1154,20 @@ TRootView::CaretValid(Point* pt)
 
 // ROM 0x001b4dc8 GetCaretPoint__9TRootViewFP6TPoint
 // The caret's point from the key view's OffsetToCaret: the rectangle's
-// left and bottom (nowhere: h = -0x8000, as an empty rect gives).
+// left and a pixel below its bottom (the caret hangs under the line);
+// nowhere (the rect's top -32768) is v = -32768, h not touched.
 void
 TRootView::GetCaretPoint(Point* pt)
 {
 	Rect caret;
 	fCaretView->OffsetToCaret(fCaretOffset, &caret);
+	if (caret.top == kNoCaret)
+	{
+		pt->v = kNoCaret;
+		return;
+	}
 	pt->h = caret.left;
-	pt->v = caret.bottom;
+	pt->v = caret.bottom + 1;
 }
 
 
@@ -1232,7 +1240,7 @@ TRootView::DrawCaret(Point pt)
 		return;
 	if (fCaretLength != 0 || fCaretHidden != 0)
 		return;
-	if (pt.h == kNoCaret)
+	if (pt.v == kNoCaret)
 	{
 		fCaretShowing = false;
 		fCaretPoint = pt;
@@ -1276,7 +1284,7 @@ TRootView::RestoreBitsUnderCaret(void)
 	Rect caretRect;
 	GetCaretRect(&caretRect);
 	Rect src;
-	SetRect(&src, 0, 0, 12, 11);
+	SetRect(&src, 0, 0, 11, 12);
 	GrafPort* port;
 	GetPort(&port);
 	RgnHandle savedVis = port->visRgn;		// (the ROM's [port,#0x24] at 0x001b522c, 0x001b5264, 0x001b5288: the visRgn)

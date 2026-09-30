@@ -999,7 +999,8 @@ TParagraphView::OffsetToBounds(long offset, Rect* bounds)
 // - past the last line's end the caret stays at that end - its left a
 // pixel in, kept inside the view's sides and its bottom (the baseline)
 // inside the view unless it calculates its bounds; the rect is 2 wide.
-// Empty when the offset is outside the cached range.
+// Nowhere (top and bottom -32768) when the offset is outside the cached
+// range.
 void
 TParagraphView::OffsetToCaret(long offset, Rect* caret)
 {
@@ -1008,7 +1009,8 @@ TParagraphView::OffsetToCaret(long offset, Rect* caret)
 	long textLength = TextLength();
 	if (offset < 0 || offset > textLength)
 	{
-		SetEmptyRect(caret);
+		caret->top = -32768;		// nowhere (left and right not touched)
+		caret->bottom = -32768;
 		return;
 	}
 	if (fLineCount > 0)

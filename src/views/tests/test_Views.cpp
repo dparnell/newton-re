@@ -2166,7 +2166,7 @@ TestCaret()
 	gRootView->GetCaretRect(&caret);
 	Rect caretBox;
 	p->OffsetToCaret(5, &caretBox);
-	EXPECT(!EmptyRect(&caret) && caret.right - caret.left == 12 && caret.bottom - caret.top == 11 && caret.left == caretBox.left - 5 && caret.top == caretBox.bottom);
+	EXPECT(!EmptyRect(&caret) && caret.right - caret.left == 11 && caret.bottom - caret.top == 12 && caret.left == caretBox.left - 5 && caret.top == caretBox.bottom + 1);		// (the caret bitmaps' 11x12, a pixel under the baseline)
 	EXPECT(caretBox.left > 40 && caretBox.left < 60 && caretBox.bottom > 18 && caretBox.bottom < 24);		// after "Hello" in espy 12, on the baseline
 	EXPECT(InkIn(caret.left, caret.top, caret.right, caret.bottom) > 10);		// the caret's triangle
 	EXPECT(InkIn(20, 10, 120, 22) == textInk);									// the text untouched
@@ -2223,6 +2223,18 @@ TestCaret()
 	EXPECT(gRootView->fCaretView == p && gRootView->fCaretOffset == 0);
 	Eval("SetKeyView(nil, nil)");
 	Eval("ctxC2:Close()");
+	Refresh();
+	// a plain view as the key view has its caret nowhere (OffsetToCaret: top -32768), so none is
+	// drawn - it was drawn at 0,0 when nowhere was an empty rect, and its saved bits put back there
+	// later (stale pixels over the In/Out Box's clock)
+	Eval("ctxPlain := AddView(GetRoot(), {viewClass: 74, viewFlags: 1, viewBounds: {left: 30, top: 30, right: 90, bottom: 60}, viewJustify: 0})");
+	Eval("SetKeyView(ctxPlain, 0)");
+	Refresh();
+	Point nowhere;
+	EXPECT(gRootView->CaretValid(&nowhere) && nowhere.v == -32768 && !gRootView->fCaretShowing);
+	EXPECT(InkIn(0, 0, 12, 12) == 0);
+	Eval("SetKeyView(nil, nil)");
+	Eval("ctxPlain:Close()");
 	Refresh();
 	gKeyboardConnected = false;
 	Eval("SetLength(GetSelectionStack(), 0)");

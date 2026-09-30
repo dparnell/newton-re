@@ -1439,18 +1439,23 @@ TView::DoEditCommand(long command)
 
 
 // ROM 0x0026a748 OffsetToCaret__5TViewFlP5TRect
+// A plain view has no caret: the rect's top and bottom -32768, the
+// caret's "nowhere" (left and right are not touched).
 void
 TView::OffsetToCaret(long /*offset*/, Rect* caret)
 {
-	SetEmptyRect(caret);
+	caret->top = -32768;
+	caret->bottom = -32768;
 }
 
 
 // ROM 0x0026a728 PointToCaret__5TViewFR6TPointP5TRectT2
+// Nowhere, as OffsetToCaret.
 void
 TView::PointToCaret(Point& /*pt*/, Rect* caret, Rect* /*bounds*/)
 {
-	SetEmptyRect(caret);
+	caret->top = -32768;
+	caret->bottom = -32768;
 }
 
 

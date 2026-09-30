@@ -173,7 +173,7 @@ public:
 	Boolean			fPreserveHilites;	// +0x80  a key view change keeps the old view's hilites
 	TBits*			fCaretBits;			// +0x84  the screen under the caret
 	Boolean			fCaretShowing;		// +0x88  the caret is on the screen
-	Point			fCaretPoint;		// +0x8c  where (h = -0x8000: nowhere)
+	Point			fCaretPoint;		// +0x8c  where (v = -0x8000: nowhere)
 	TView*			fCaretDrawnView;	// +0x90  the view it was drawn for
 	long			fCaretHidden;		// +0x94  HideCarets outstanding
 	RefStruct		fPendingKeyView;	// +0x98  a key view to activate later (HoldPendingKeyView)
