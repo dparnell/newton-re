@@ -230,10 +230,9 @@ worked through.  What could come next (not ranked; the owner chooses):
   dials and answers through `tools/modem/fakemodem.py`
   (`host.NewtonModemDial`, `host.NewtonModemAnswer`); and the comm
   trace frame's natives and translate (`comms/CommTrace.cpp`).  Left in
-  comms: fax sending - a note is faxed end to end, cover page and all;
-  being done: ctest `host.NewtonFaxSend` and fakemodem's DCS reading;
-  then a host printer driver writing PNG - and Class 2 fax (a fax is
-  received,
+  comms: a host printer driver behind `TDotPrinterDriver` writing each
+  page to a PNG (being done), then Class 2 fax (a fax is sent end to end
+  - `host.NewtonFaxSend` - and received,
   shown and turned - `host.NewtonFaxReceive`),
   AppleTalk/NBP
   and ADSP (with the NTK's ADSP connection), the Hammer translators,

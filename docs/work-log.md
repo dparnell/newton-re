@@ -192,6 +192,12 @@ is the same value spelt so that it cannot be read two ways.
   where the ROM (0x00267974) takes the clipper's visible region and
   stops - a print view's clipper is wide open, so what floats over it
   on the screen never reaches the page (82db9ab6).
+- ctest `host.NewtonFaxSend` (b3187bfb): `fax-send.ns` sends a note
+  through the ROM's fax transport to `fakemodem.py --fax-answer`, and
+  `tools/modem/faxcheck.py` checks both pages (1728 wide, not blank, the
+  cover's title and rule and the note's text inked) and makes PNGs of
+  them.  fakemodem reads a DTE's Class 1 frames without an FCS, as they
+  come, so it sees the fine resolution the Newton asks for (5d20b626).
 
 ## 2026-09-30: the caret's "nowhere"
 
