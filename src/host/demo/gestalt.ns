@@ -1,8 +1,8 @@
 // A gestalt of a script's own: RegisterGestalt puts a parameter block with
 // the gestalt server, Gestalt's array form reads it back, ReplaceGestalt
 // gives it new values - and a selector of the system's is refused.  Then
-// UnmountCard's arguments are checked (there is no card server to send the
-// card away), a socket has no stores, and BootSucceeded, which an automated
+// UnmountCard's arguments are checked, an empty socket's card is put away
+// (the card server takes the request: nil), a socket has no stores, and BootSucceeded, which an automated
 // boot test watches for, makes its file.
 // (ctest host.NewtonGestalt)
 //
@@ -18,7 +18,7 @@ Print(["read again", Gestalt([kMine, kTemplate, 0])]);
 Print(["a system selector", RegisterGestalt(0x01000003, [1], ['struct, 'long], 0)]);
 Print(["not a selector", RegisterGestalt('x, [1], ['struct, 'long], 0)]);
 Print(["unmount, not a function", UnmountCard(3, 0)]);
-Print(["unmount, no card server", UnmountCard(func(r) nil, 0)]);
+Print(["unmount, empty socket", UnmountCard(func(r) nil, 0)]);
 Print(["card slot stores", GetCardSlotStores(0)]);
 BootSucceeded(true);
 Print("gestalt: done");

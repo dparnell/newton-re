@@ -14,6 +14,7 @@
 #include "Interpreter.h"
 #include "OSErrors.h"
 #include "CardServer.h"
+#include "NewtCardEvents.h"
 #include "CardHandler.h"
 #include "CardPCMCIA.h"
 
@@ -165,57 +166,84 @@ FGetCardInfo(RefArg /*rcvr*/)
 
 
 // ROM 0x0030c980 FCheckCardBattery
-// CheckCardBattery(): every socket asked how its card's battery is
-// doing - a 0x68 to the card server for each of gNumberOfHWSockets.
-// ==> nil either way.
-//
-// NOT YET RECONSTRUCTED: the card server.  A machine with no sockets
-// asks nobody, which is what the ROM does too and is what this answers.
+// CheckCardBattery(): every socket's card asked how its battery is doing -
+// a 0x68 to the card server for each socket; what it finds comes back to
+// the application's card handler later (a 0x69).  ==> nil.
 Ref
 FCheckCardBattery(RefArg /*rcvr*/)
 {
+	for (ULong socket = 0; socket < gNumberOfHWSockets; socket++)
+	{
+		TCardMessage reply;
+		gCardEventHandler->SendServer(kCardServerBatteryCheck, socket, 0, &reply);
+	}
 	return NILREF;
 }
 
 
 // ROM 0x0030c7f4 FGetCardTypes
-// GetCardTypes(): an array with one entry per hardware socket, saying what
-// kind of card is in it.  The ROM makes an array of gNumberOfHWSockets
-// slots and, for each socket, asks the card server (a 0x6e message) for
-// the card's function types; the four function ids the answer carries are
-// turned into symbols (FourCharToSymbol) and the socket's slot is set to
-// the one symbol when there is only one, or to the array of them when
-// there are more.  A socket the server would not answer for is left nil.
-//
-// NOT YET RECONSTRUCTED: the card server.  A machine with no card hardware
-// has gNumberOfHWSockets zero and answers an empty array without asking
-// anybody, which is what this does.
+// GetCardTypes(): an array with one entry per socket saying what kind of
+// card is in it - the types of the devices its handler installed (0x6e to
+// the card server), as a symbol when there is one and an array of them
+// when there are more; nil for an empty socket.
 Ref
 FGetCardTypes(RefArg /*rcvr*/)
 {
-	return AllocateArray(RefVar(RSSYMarray), 0);
+	RefVar result(AllocateArray(RSSYMarray, gNumberOfHWSockets));
+	for (ULong socket = 0; socket < gNumberOfHWSockets; socket++)
+	{
+		TCardMessage reply;
+		if (gCardEventHandler->SendServer(kCardServerDeviceTypes, socket, 0, &reply) != noErr)
+			continue;
+		RefVar types(AllocateArray(RSSYMarray, 0));
+		for (int i = 0; i < 4; i++)
+			if (reply.fDevices[i].fType != 0)
+				AddArraySlot(types, RefVar(FourCharToSymbol(reply.fDevices[i].fType)));
+		long count = Length(types);
+		if (count > 0)
+		{
+			if (count == 1)
+				SetArraySlot(result, socket, RefVar(GetArraySlot(types, 0)));
+			else
+				SetArraySlot(result, socket, types);
+		}
+	}
+	return result;
 }
 
 
 // ROM 0x0030c6b8 FUnmountCard
-// UnmountCard(callback, socket): the card in the socket put away, the
-// callback called when the card server has done it.  The ROM checks its
-// arguments - a function and an integer, else kError_Bad_Parameters - and
-// sends a TCardAsyncMsg (0x6f, the socket, the callback held in a RefHandle)
-// to the card server through gCardEventHandler, answering nil when it went
-// and the error when it did not (kError_No_Memory when the message or the
-// holder could not be made).
-//
-// NOT YET RECONSTRUCTED: the card server and its event handler.  A machine
-// with no card hardware has no socket to put a card away from, so the
-// message has nowhere to go: this answers kError_Call_Not_Implemented after
-// the ROM's own argument checks, and the callback is never called.
+// UnmountCard(callback, socket): the card in the socket put away - its
+// stores unmounted and its handler's services removed - and the callback
+// called with [error] when the card server has done it (the application's
+// card handler's completion, HandleCardEvent's 0x6f).  ==> nil when the
+// request went, else the error.
 Ref
 FUnmountCard(RefArg /*rcvr*/, RefArg callback, RefArg socket)
 {
 	if (!IsFunction(callback) || !ISINT((Ref) socket))
 		return MAKEINT(kError_Bad_Parameters);
-	return MAKEINT(kError_Call_Not_Implemented);
+	// DEVIATION: a host with no card server (newtonscript) has no
+	// application card handler to send through, where the ROM always has
+	if (gCardEventHandler == nil || gCardEventHandler->fServerPort == nil)
+		return MAKEINT(kError_Call_Not_Implemented);
+	TCardAsyncMsg* message = new TCardAsyncMsg;
+	RefStruct* holder = new RefStruct(callback);
+	NewtonErr err;
+	if (message == nil || holder == nil)
+		err = kError_No_Memory;
+	else if ((err = message->Init()) == noErr)
+	{
+		message->fType = kCardServerUnmount;
+		message->fSocket = RINT(socket);
+		message->fField20 = (ULong) holder;
+		err = gCardEventHandler->SendAyncServer(message, 1);
+	}
+	if (err == noErr)
+		return NILREF;
+	delete message;
+	delete holder;
+	return MAKEINT(err);
 }
 
 

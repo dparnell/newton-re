@@ -7,6 +7,7 @@
 add_library(newt STATIC
     Notebook.cpp
     NewtWorld.cpp
+    StorageCards.cpp
     ForkGlobals.cpp
     ModalDialogNatives.cpp
     DebugNatives.cpp

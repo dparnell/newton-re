@@ -10,9 +10,9 @@
 	Not in the DDK's headers as a script function; reconstructed from the
 	MP2x00 US ROM (0x00053ccc), citing its origin.  GetCardInfo reads the
 	card server's socket states (CardServer.h); before the server has run
-	- and on a machine with no sockets - there are none.  NOT YET: the
-	functions that ask the server through the application's card event
-	handler (CheckCardBattery, GetCardTypes, UnmountCard).
+	- and on a machine with no sockets - there are none.  CheckCardBattery,
+	GetCardTypes and UnmountCard ask the server through the application's
+	card event handler (NewtCardEvents.h).
 */
 
 #ifndef __CARDINFO_H

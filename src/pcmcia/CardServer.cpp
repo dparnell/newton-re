@@ -232,7 +232,7 @@ TCardServer::~TCardServer()
 { }
 
 
-// ROM 0x0038aab4 (unnamed) GetSizeOf - the vtable's +0x1c
+// ROM 0x0038aab4 (unnamed) GetSizeOf - the vtable's +0x04
 ULong
 TCardServer::GetSizeOf()
 {

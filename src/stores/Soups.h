@@ -83,6 +83,7 @@ Ref		FlushSoupList(RefArg soups);
 long	GetRandomSignature(void);
 void	AskForFlush(Boolean ask);
 NewtonErr	GetStoreVersion(TStore* store, long* version);
+NewtonErr	SetStoreVersion(RefArg storeObject, long version);		// ROM 0x00353230 SetStoreVersion__FRC6RefVarl
 const TSortingTable*	StoreGetDirSortTable(RefArg storeObject);	// NOT YET: nil
 void	InitNameIndex(TSoupIndex* index, RefArg storeObject);		// the store's soup name index
 void	StoreSaveSortTable(RefArg storeObject, long sortId);			// NOT YET
@@ -130,16 +131,12 @@ Ref		StoreDeleteObject(RefArg rcvr, RefArg id);								// FDeleteStoreObject
 Ref		StoreSetObjectSize(RefArg rcvr, RefArg id, RefArg size);				// FSetStoreObjectSize
 Ref		StoreGetObjectSize(RefArg rcvr, RefArg id);								// FGetStoreObjectSize
 
-// The PSS manager's record of a store (0x50 bytes in the ROM; only the two
-// words the store frame's methods read are named).
-struct StorePSSInfo
-{
-	UByte		fUnknown00[0x18];
-	ULong32		fSocket;			// +0x18  the socket the card is in
-	UByte		fUnknown1c[0x14];
-	ULong32		fCardType;			// +0x30  the card's type, four characters
-};
-const StorePSSInfo*	GetStorePSSInfo(const TStore* store);	// ROM 0x001559bc GetStorePSSInfo__FPC6TStore (DEVIATION: always nil - TPSSManager is NOT YET)
+#include "PSSInfo.h"
+const SPSSStoreInfo*	GetStorePSSInfo(const TStore* store);	// ROM 0x001559bc GetStorePSSInfo__FPC6TStore
+// host (DEVIATION): the PSS manager is in the flash library, above this
+// one; when it starts it puts its answers here
+extern const SPSSStoreInfo*	(*gPSSStoreInfoProc)(const TStore* store);
+extern long					(*gPSSCardSlotStoresProc)(int socket, TStore** stores);
 long	GetCardSlotStores(int socket, TStore** stores);								// ROM 0x00155a20 GetCardSlotStores__FiPP6TStore
 Ref		FGetCardSlotStores(RefArg rcvr, RefArg socket);								// ROM 0x0035561c FGetCardSlotStores
 Ref		StoreGetCardSlot(RefArg rcvr);											// FGetStoreCardSlot

@@ -5,7 +5,7 @@
 # the host boots with (HostStores.cpp).
 # the view system on the host (HostViews.h), for newtonscript and the newt
 # world's boot
-add_library(host_views STATIC HostViews.cpp HostNatives.cpp HostStores.cpp FactorySoups.cpp)
+add_library(host_views STATIC HostViews.cpp HostNatives.cpp HostStores.cpp HostCards.cpp FactorySoups.cpp)
 target_link_libraries(host_views PUBLIC flash frames comms_script comms_dock comms_fax thirdparty_nie views recognition pcmcia sound system stores packages intl intl_meetings assist hal_host_display hal_host_tablet)
 target_include_directories(host_views PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -50,7 +50,7 @@ set_tests_properties(host.NewtonNatives PROPERTIES TIMEOUT 120
 # argument checks; BootSucceeded's file (made in the build directory)
 add_test(NAME host.NewtonGestalt COMMAND newton --rom ${NEWTON_ROM_BIN} --headless 30 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/gestalt.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(host.NewtonGestalt PROPERTIES TIMEOUT 120
-    PASS_REGULAR_EXPRESSION "12, -34, TRUE.*replace., TRUE.*56, 78, NIL.*a system selector., NIL.*not a selector., NIL.*not a function., -10006.*no card server., -10005.*card slot stores., NIL.*gestalt: done")
+    PASS_REGULAR_EXPRESSION "12, -34, TRUE.*replace., TRUE.*56, 78, NIL.*a system selector., NIL.*not a selector., NIL.*not a function., -10006.*empty socket., NIL.*card slot stores., NIL.*gestalt: done")
 # the docker's natives (comms/Docker.h) on the Connection application's
 # protocol frame, with no desktop
 add_test(NAME host.NewtonDocker COMMAND newton --rom ${NEWTON_ROM_BIN} --serial-port none --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/docker.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
@@ -290,6 +290,15 @@ if(Python3_FOUND)
     set_tests_properties(host.NewtonPackageStore PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED host_package_store
                          PASS_REGULAR_EXPRESSION "afterRestart: TRUE, pssid: [0-9]+, onInternal: TRUE}.*title: \"Formulas2\".*deactivated: TRUE.*activatedAgain: TRUE.*packagestore: done"
                          FAIL_REGULAR_EXPRESSION "FALSE|NIL,")
+    # a memory card (docs/stores/README.md, "Memory cards"): a blank card
+    # made and put in, formatted at the ROM's prompts, a soup written on
+    # it, pulled out and put back (demo/card.ns)
+    add_test(NAME host.NewtonCard
+             COMMAND newton --rom ${NEWTON_ROM_BIN} --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/card.ns
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonCard PROPERTIES TIMEOUT 120
+                         PASS_REGULAR_EXPRESSION "mounted: TRUE.*[Cc]ardSlot: 0, cardType: flsh.*written: TRUE.*removed: TRUE, stores: 1.*remounted: TRUE.*found: \"written on a card\".*cards: 1.*card: done"
+                         FAIL_REGULAR_EXPRESSION "FALSE")
     # a package cut into a soup of chunk entries and restored with
     # store:RestoreSegmentedPackage (packages/PackageArchivalPipe.h), and
     # stored with SuckPackageFromBinary's progress callback, on a store of

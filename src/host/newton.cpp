@@ -14,7 +14,7 @@
 
 	newton [--rom image | --objects file] [--heap bytes] [--display WxH[xdepth]] [--scale n]
 	       [--script file.ns] [--headless seconds] [--store file] [--erase]
-	       [--package file.pkg]... [--microphone-tone hz] [--tcp-echo port]
+	       [--package file.pkg]... [--card file] [--microphone-tone hz] [--tcp-echo port]
 	       [--serial-port port|none] [--ir-peer listen:port|host:port]
 
 	--objects boots on the object file built from the ROM source tree
@@ -40,6 +40,13 @@
 	comes up on the Notepad.  --erase throws that
 	file away first and starts again at the Setup assistant, which is what
 	holding the power switch down through a reset does on the machine.
+
+	--card puts a memory card in socket 0: a file in Einstein's
+	TLinearCard layout (hal/host/HostCard.h), a blank 4 MB flash card
+	made when there is none.  The card server finds it and the machine
+	mounts its store (a blank one is formatted when the user says so); a
+	script can take it out and put it back (HostRemoveCard,
+	HostInsertCard - src/host/demo/card.ns).
 
 	--tcp-echo runs a TCP echo server on 127.0.0.1 at the port, for a
 	script's endpoint to talk to (comms/host/HostEchoServer.h,
@@ -80,6 +87,7 @@
 #include "hal/host/Host.h"
 #include "HostStores.h"
 #include "HostPackages.h"
+#include "HostCard.h"
 #include "HostHeapCheck.h"
 #include "HostSoundDriver.h"
 #include "HostEchoServer.h"
@@ -149,7 +157,7 @@ Usage(void)
 {
 	fprintf(stderr, "usage: newton [--rom image | --objects file] [--heap bytes] [--display WxH[xdepth]] [--scale n]\n"
 					"              [--script file.ns] [--headless seconds] [--store file] [--erase]\n"
-					"              [--package file.pkg]... [--microphone-tone hz] [--tcp-echo port]\n"
+					"              [--package file.pkg]... [--card file] [--microphone-tone hz] [--tcp-echo port]\n"
 					"              [--serial-port port|none] [--ir-peer listen:port|host:port]\n");
 	return 2;
 }
@@ -419,6 +427,17 @@ main(int argc, char** argv)
 			erase = true;
 		else if (strcmp(argv[i], "--package") == 0 && i + 1 < argc)
 			HostQueuePackageFile(argv[++i]);
+		else if (strcmp(argv[i], "--card") == 0 && i + 1 < argc)
+		{
+			const char* card = argv[++i];
+			FILE* exists = fopen(card, "rb");
+			if (exists != nil)
+				fclose(exists);
+			else if (HostCardCreate(card, 4, "Host card") == noErr)
+				fprintf(stderr, "[host] %s: a new 4 MB flash card\n", card);
+			if (HostCardInsert(0, card) != noErr)
+				fprintf(stderr, "[host] %s is not a card image\n", card);
+		}
 		else
 			return Usage();
 	}

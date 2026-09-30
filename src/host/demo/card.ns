@@ -1,0 +1,73 @@
+// A memory card (docs/stores/README.md, "Memory cards"): a blank flash
+// card made in a host file and put in socket 0.  The card server finds
+// it, the memory card handler installs its flash, the PSS manager makes a
+// flash store on it and the application mounts it: the card is blank, so
+// the ROM's card handler asks "This card appears to be new. Do you want to
+// erase and format this card?" and, once more, whether to erase it; the
+// script taps Erase both times.  A soup is
+// written on the card's store, the card pulled out (the store unmounted)
+// and put back, and the entry is still there.
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --headless 60 \
+//       --script src/host/demo/card.ns
+
+constant kCardFile := "tmp/demo.card";
+
+tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
+
+findIn := func(view, label)
+  begin
+    local found := nil;
+    foreach kid in view:ChildViewFrames() do
+      if not found then
+        if IsString(kid.text) and StrEqual(kid.text, label) then found := kid
+        else found := call findIn with (kid, label);
+    found;
+  end;
+
+tapButton := func(label)
+  begin
+    local kids := GetRoot():ChildViewFrames();
+    local button := call findIn with (kids[Length(kids) - 1], label);
+    if button then
+      begin
+        local box := button:GlobalBox();
+        Print("card: tapping " & label);
+        call tapAt with ((box.left + box.right) div 2, (box.top + box.bottom) div 2);
+      end
+    else
+      Print("card: no " & label & " button");
+  end;
+
+Print({created: HostCreateCard(kCardFile, 4) = nil});
+Print({inserted: HostInsertCard(0, kCardFile) = nil});
+
+AddDelayedCall(func() begin
+  call tapButton with ("Erase");
+  // ("This will delete all information on this card.  Are you sure?")
+  AddDelayedCall(func() call tapButton with ("Erase"), [], 2000);
+  AddDelayedCall(func() begin
+    local stores := GetCardSlotStores(0);
+    Print({mounted: stores <> nil, cardTypes: GetCardTypes()});
+    local store := stores[0];
+    Print({cardSlot: store:CardSlot(), cardType: store:CardType(), name: store:GetName()});
+    local soup := store:CreateSoupXmit("CardDemo", [], nil);
+    soup:AddXmit({title: "written on a card"}, nil);
+    Print({written: soup:GetSize() > 0});
+    HostRemoveCard(0);
+    AddDelayedCall(func() begin
+      Print({removed: GetCardSlotStores(0) = nil, stores: Length(GetStores())});
+      HostInsertCard(0, kCardFile);
+      AddDelayedCall(func() begin
+        local stores := GetCardSlotStores(0);
+        Print({remounted: stores <> nil});
+        local soup := stores[0]:GetSoup("CardDemo");
+        local entry := Query(soup, {type: 'index}):Entry();
+        Print({found: entry.title});
+        Print({cards: GetCardInfo().totalCards});
+        Print("card: done");
+        HostQuit();
+      end, [], 3000);
+    end, [], 3000);
+  end, [], 5000);
+end, [], 4000);

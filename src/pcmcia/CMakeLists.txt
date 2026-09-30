@@ -16,6 +16,7 @@ add_library(pcmcia STATIC
     CardServerGlobals.cpp
     CardServer.cpp
     CardProcessor.cpp
+    NewtCardEvents.cpp
     CHMemModem.cpp
 )
 target_link_libraries(pcmcia PUBLIC newton_config frames package_manager hal_host_card flash)

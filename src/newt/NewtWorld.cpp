@@ -8,6 +8,8 @@
 
 #include "CardPartHandler.h"
 #include "NewtWorld.h"
+#include "StorageCards.h"
+#include "NewtCardEvents.h"
 #include "SoundCodec.h"
 #include "SystemNatives.h"
 #include "Locale.h"
@@ -198,7 +200,6 @@ TNewtWorld::ForkSwitch(Boolean in)
 // rather than straight off their class info.
 // NOT YET RECONSTRUCTED: the real-time alarm
 // name, InitExternal,
-// HandleCardEvents,
 // HandleTestAgentEvent, FMinimumBatteryCheck, LoadInkerCalibration,
 // AllocateEarlyStuff (the sort tables).
 long
@@ -277,7 +278,9 @@ TNewtWorld::MainConstructor()
 	handler->Init('auto');
 	handler = new TCommPartHandler;
 	handler->Init('comm');
-	// DEVIATION: 'cdhl belongs to the card server's world (NOT YET)
+	HandleCardEvents();
+	// DEVIATION: 'cdhl belongs to the card server's world, whose part
+	// handler is not made there (CardServer.h)
 	InitCardPartHandler();
 	StartDrawing(nil, nil);
 	return noErr;
@@ -304,7 +307,7 @@ TNewtWorld::TheMain()
 // then on the fork runs the event loop, and this task ends when PreMain
 // does.
 // NOT YET RECONSTRUCTED: the
-// reboot reason (the gestalt), the card events, the boot test script, the
+// reboot reason (the gestalt), the boot test script, the
 // 'aliv event.
 long
 TNewtWorld::PreMain()
@@ -325,6 +328,10 @@ TNewtWorld::PreMain()
 	RefVar stores(GetStores());
 	RefVar internal(GetArraySlotRef(stores, 0));
 	NSCallGlobalFn(RSSYMactivatestorepackages, internal);
+	// DEVIATION: a host without the card server (no store file mounted
+	// with the OS running) has no server for the handler to talk to
+	if (gCardEventHandler != nil && gCardEventHandler->fServerPort != nil)
+		gCardEventHandler->ReadyToAcceptCardEvents();
 	if (gNewtHostPreMain != nil)		// host: the program's globals (HostInstallPackageGlobal)
 		gNewtHostPreMain();
 	if (gNewtBootTestScript != nil)		// (the ROM: a "bootTestScript" file, with the REP's output to files)
@@ -436,8 +443,9 @@ TNewtEventHandler::IdleProc(TUMsgToken* token, ULong* size, TAEvent* event)
 // keyRepeatThreshold and cmdKeyRepeatThreshold preferences, 200, 600
 // and 2500 when unset) and the copy handled (HandleKeyEvent); 'draw a
 // screen rectangle redrawn; 'ext /'bklt the tickle time noted; 'scpt a
-// script run and the tickle time noted; 'alrm an alarm; 'card, 'stor,
-// 'rstr, 'powr, 'pwch, 'ic  , 'irMC, 'dead, 'bats, 'scp!, 'xnwt (NOT YET
+// script run and the tickle time noted; 'alrm an alarm; 'card a card
+// with no storage; 'rstr a card's stores to be unmounted, and 'stor (after
+// the reply) to be mounted; 'powr, 'pwch, 'ic  , 'irMC, 'dead, 'bats, 'scp!, 'xnwt (NOT YET
 // RECONSTRUCTED).  Every event but 'keyb and 'idle is replied to as it
 // came; a 'powr event more than a second after the last wakeup runs the
 // root's GotoSleep.  Then the application is Run (the idle passes and the
@@ -485,11 +493,17 @@ TNewtEventHandler::AEHandlerProc(TUMsgToken* token, ULong* size, TAEvent* event)
 	case kNewtBacklightEvent:
 		gTickleTime = GetGlobalTime();
 		break;
+	case 'card':
+		HandleNewCard((TNewCardEvent*) event);
+		break;
+	case kNewtStoreRemovedEvent:
+		StorageCardRemoved((TNewStoreEvent*) event);
+		break;
 	default:
-		// NOT YET RECONSTRUCTED: 'card (HandleNewCard),
+		// NOT YET RECONSTRUCTED:
 		// 'ic   (HandleInterConnect), 'irMC
 		// (the root's IRConnectRequest), 'dead/'bats (the alerts), 'pwch
-		// (callPowerStatusChangeFns), 'rstr (StorageCardRemoved), 'scp!
+		// (callPowerStatusChangeFns), 'scp!
 		// (HandleSCPEvent), 'xnwt (HandleExternalNewtEvent)
 		break;
 	}
@@ -499,7 +513,9 @@ TNewtEventHandler::AEHandlerProc(TUMsgToken* token, ULong* size, TAEvent* event)
 			SetReply(*size, event);
 		if (token != nil && token->GetReplyId() != 0)
 			ReplyImmed();
-		// NOT YET RECONSTRUCTED: 'powr (GotoSleep after a second awake), 'stor (StorageCardInserted)
+		// NOT YET RECONSTRUCTED: 'powr (GotoSleep after a second awake)
+		if (type == kNewtStoreEvent)
+			StorageCardInserted((TNewStoreEvent*) event);
 	}
 	gApplication->Run();
 	TTime next = gApplication->NextDelayedActionTime(gApplication->fNextIdleTime);

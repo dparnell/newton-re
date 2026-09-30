@@ -371,6 +371,41 @@ GetStoreVersion(TStore* store, long* version)
 }
 
 
+// ROM 0x00353230 SetStoreVersion__FRC6RefVarl
+// The version in a store's root data changed (written back when it is
+// different), and the store frame's version slot set.
+NewtonErr
+SetStoreVersion(RefArg storeObject, long version)
+{
+	TStore* store = StoreFromWrapper(storeObject);
+	PSSId rootId;
+	NewtonErr err = store->GetRootId(&rootId);
+	if (err != noErr)
+		return err;
+	StoreRootData rootData;
+	long size;
+	ReadStoreRootData(store, rootId, &rootData, &size);
+	if (size < 0)
+		return kSError_ObjectNotFound;		// (the ROM answers the read's own error; the host's ReadStoreRootData does not say which)
+	err = noErr;
+	if (rootData.fVersion != version)
+	{
+		rootData.fVersion = version;
+		char bytes[sizeof(StoreRootData)];
+		PutBigEndianWord(bytes, rootData.fSignature);
+		PutBigEndianWord(bytes + 4, (ULong32) rootData.fVersion);
+		PutBigEndianWord(bytes + 8, rootData.fMapTableId);
+		PutBigEndianWord(bytes + 12, rootData.fSymbolTableId);
+		PutBigEndianWord(bytes + 16, rootData.fRootFrameId);
+		PutBigEndianWord(bytes + 20, rootData.fExtra);
+		err = store->Write(rootId, 0, bytes, size);
+	}
+	if (err == noErr)
+		SetFrameSlot(storeObject, RSSYMversion, RefVar(MAKEINT(version)));
+	return err;
+}
+
+
 // ROM 0x00352a40 StoreGetDirSortTable__FRC6RefVar
 // The sorting table the store's soup names are ordered by: the store's
 // dirSortId, looked up among the registered tables.  NOT YET
@@ -1400,37 +1435,32 @@ StoreGetObjectSize(RefArg rcvr, RefArg id)
 }
 
 
+const SPSSStoreInfo*	(*gPSSStoreInfoProc)(const TStore* store) = nil;
+long					(*gPSSCardSlotStoresProc)(int socket, TStore** stores) = nil;
+
+
 // ROM 0x001559bc GetStorePSSInfo__FPC6TStore
 // The PSS manager's record of a store: the socket it is in, the card's
-// type, ... - the manager keeps up to four stores for each socket in
-// 0x50-byte records (TPSSManager::GetStorePSSInfo 0x00155758, asked with
-// 0 for its last argument).  Nil for a store the manager does not know.
-//
-// DEVIATION: TPSSManager is NOT YET RECONSTRUCTED (the host's stores are
-// mounted by HostMountStores), so it knows no store and every answer is
-// nil - which is also what the ROM answers for a store it does not know.
-const StorePSSInfo*
-GetStorePSSInfo(const TStore* /*store*/)
+// type, ... - the manager keeps up to four stores for each socket
+// (TPSSManager::GetStorePSSInfo, asked with 0 for its last argument).  Nil
+// for a store the manager does not know.  DEVIATION: through the hook the
+// manager sets (stores/flash/PSSManager.cpp; before it has started - or
+// with no OS - it knows no store).
+const SPSSStoreInfo*
+GetStorePSSInfo(const TStore* store)
 {
-	return nil;
+	return gPSSStoreInfoProc != nil ? gPSSStoreInfoProc(store) : nil;
 }
 
 
 // ROM 0x00155a20 GetCardSlotStores__FiPP6TStore
-// The stores on the card in a socket: up to four, the PSS manager's records
-// of that socket (0x1fc bytes a socket, 0x50 a store) read in order and the
-// ones with a store put in stores.  ==> how many; none for a socket number
-// the manager has no record of.
-//
-// DEVIATION: TPSSManager is NOT YET RECONSTRUCTED (see GetStorePSSInfo), so
-// it has no sockets and every socket answers none - as the ROM does for a
-// socket number past gPSSManager's count.
+// The stores on the card in a socket (up to four, TPSSManager::
+// GetCardSlotStores).  ==> how many; none for a socket number the manager
+// has no record of.  DEVIATION: through the hook, as GetStorePSSInfo.
 long
 GetCardSlotStores(int socket, TStore** stores)
 {
-	(void) socket;
-	(void) stores;
-	return 0;
+	return gPSSCardSlotStoresProc != nil ? gPSSCardSlotStoresProc(socket, stores) : 0;
 }
 
 
@@ -1464,7 +1494,7 @@ Ref
 StoreGetCardSlot(RefArg rcvr)
 {
 	TStore* store = StoreFromWrapper(rcvr);
-	const StorePSSInfo* info;
+	const SPSSStoreInfo* info;
 	if (store != nil && (info = GetStorePSSInfo(store)) != nil)
 		return MAKEINT(info->fSocket);
 	return NILREF;
@@ -1479,12 +1509,15 @@ Ref
 StoreGetCardType(RefArg rcvr)
 {
 	TStore* store = StoreFromWrapper(rcvr);
-	const StorePSSInfo* info;
+	const SPSSStoreInfo* info;
 	if (store != nil && (info = GetStorePSSInfo(store)) != nil)
 	{
 		char name[5];
-		ULong32 type = info->fCardType;
-		memcpy(name, &type, 4);			// (the ROM stores the word and a nought byte after it, in memory order)
+		ULong type = info->fType;		// (the ROM stores the word and a nought byte after it: big-endian, its characters in order)
+		name[0] = (char) (type >> 24);
+		name[1] = (char) (type >> 16);
+		name[2] = (char) (type >> 8);
+		name[3] = (char) type;
 		name[4] = 0;
 		return Intern(name);
 	}

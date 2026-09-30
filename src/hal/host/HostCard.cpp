@@ -71,6 +71,34 @@ namespace
 			HostCardFlush(i);
 	}
 
+	struct Retired { void* fBlock; Retired* fNext; };
+	Retired*	gRetired = nil;
+
+	void
+	FreeRetired(void)
+	{
+		while (gRetired != nil)
+		{
+			Retired* next = gRetired->fNext;
+			free(gRetired->fBlock);
+			delete gRetired;
+			gRetired = next;
+		}
+	}
+
+	void
+	RetireWindow(void* block)
+	{
+		if (block == nil)
+			return;
+		if (gRetired == nil)
+			atexit(FreeRetired);
+		Retired* r = new Retired;
+		r->fBlock = block;
+		r->fNext = gRetired;
+		gRetired = r;
+	}
+
 	void
 	Changed(ULong socket)
 	{
@@ -255,8 +283,12 @@ HostCardRemove(ULong socket)
 		return;
 	if (card->fFile != nil)
 		fclose(card->fFile);
-	free(card->fCommon);
-	free(card->fAttribute);
+	// (the windows are kept, as they were: the machine goes on reading a
+	// card it has not yet noticed is gone - its stores are unmounted a
+	// moment later - where a MessagePad's reads fault into the card
+	// domains' monitor; they are given back when the program ends)
+	RetireWindow(card->fCommon);
+	RetireWindow(card->fAttribute);
 	memset(card, 0, sizeof(HostCardState));
 	Changed(socket);
 }

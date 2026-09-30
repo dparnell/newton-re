@@ -13,6 +13,7 @@
 #include "Protocols.h"
 #include "host/HostStore.h"
 #include "PSSManager.h"
+#include "CardServer.h"
 #include "HostFlash.h"
 #include "ObjectHeap.h"
 #include "Frames.h"
@@ -96,6 +97,12 @@ HostMountStores(void)
 		{
 			RegisterStoreImplementations();
 			InitializeStoreDecompressors();
+			// the card server, which TLoader::TheMain starts just before
+			// InitPSSManager (the PSS manager counts its sockets); a card is
+			// a host file in one of its sockets (hal/host/HostCard.h)
+			NewtonErr cardErr = InitCardServices();
+			if (cardErr != noErr)
+				fprintf(stderr, "[host] the card server would not start (%ld)\n", (long) cardErr);
 		}
 		InitQueries();
 
@@ -126,6 +133,12 @@ HostMountStores(void)
 				onFlash = true;
 			}
 		}
+
+		// DEVIATION: an internal store in memory rather than on the flash
+		// still has the PSS manager for its cards (InitPSSManager starts it
+		// once it has made the internal store on the flash)
+		if (!onFlash && gProtocolRegistry != nil)
+			StartPSSManager();
 
 		TStore* store = onFlash ? nil : (TStore*) THostStore::ClassInfo()->New();
 		if (onFlash)

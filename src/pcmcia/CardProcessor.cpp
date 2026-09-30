@@ -361,7 +361,7 @@ TCardProcessor::~TCardProcessor()
 { }
 
 
-// ROM 0x0038aad4 (unnamed) GetSizeOf - the vtable's +0x1c
+// ROM 0x0038aad4 (unnamed) GetSizeOf - the vtable's +0x04
 ULong
 TCardProcessor::GetSizeOf()
 {

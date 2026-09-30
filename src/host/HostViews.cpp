@@ -30,6 +30,7 @@
 #include "StrokeCentral.h"
 #include "UnitPublic.h"
 #include "CardInfo.h"
+#include "HostCards.h"
 #include "HostTablet.h"
 #include "hal/host/Host.h"
 #include "ROMImport.h"
@@ -180,6 +181,7 @@ HostRegisterViewFunctions(void)
 	SetFrameSlot(functions, RefVar(Intern((char*) "PenUp")), RefVar(MakeCFunction((void*) FPenUp, 0, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "IdleStrokes")), RefVar(MakeCFunction((void*) FIdleStrokes, 0, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "PacePen")), RefVar(MakeCFunction((void*) FPacePen, 1, nil)));
+	HostRegisterCardFunctions();
 }
 
 

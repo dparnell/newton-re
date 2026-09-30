@@ -1035,19 +1035,42 @@ Each step comes with its host tests.
      interrupts enabled through `ResetInterrupts` as the ROM's does. NOT
      YET: the alert dialogs (no 'alrt' server), card packages in
      attribute memory (`TCardPipe`), ATA cards.
-   - **5e. The PSS manager and the newt side.** `TPSSManager`'s world
-     ('pssm': `MainConstructor`, `DoCommand`, `CardAvailable`, `CardGone`,
-     `CardIsSame`, `RegisterStores`, `ReinsertCard`, the UI engine) and
-     the application's half: `TNewtCardEventHandler`, `HandleCardEvent`,
-     `HandleNewCard`, `StorageCardInserted`/`MountStore` (format, lock and
-     password prompts through the ROM's NewtonScript card handler),
-     `StorageCardRemoved`/`UnmountStore`, `CheckCardActiveProtocols`;
-     `GetCardSlotStores`, `UnmountCard`, `GetCardInfo`, `GetCardTypes`
-     from the real server.
-   - **5f. The host's hand.** `newton --card file`, `HostInsertCard(path)`
-     / `HostRemoveCard()` for scripts, and a demo (ctest): a blank card is
-     formatted, a soup written to it, the card pulled and put back, and
-     the entries are still there.
+   - **5e. The PSS manager and the newt side.** DONE (2026-09-30):
+     `stores/flash/PSSManager.h` - the 'pssm world (`TPSSManager`:
+     `CardAvailable` on the 'card system event makes a store for each
+     storage device - `NewByName("TStore", nil, <device type>)`, a
+     `TFlashStore` for 'flsh, in a `TMuxStore` - `CardGone`, `CardIsSame`,
+     the slot states and `UIEngine`, which sends the application 'stor to
+     mount a slot's stores and 'rstr to unmount them and tells the card
+     server (0x34) once they are let go), `InitializeCardStore`,
+     `GetCardSlotStores`, `GetStorePSSInfo`; `SPSSStoreInfo` moved to
+     `stores/PSSInfo.h` so the store frames' `CardSlot`/`CardType` can
+     read it (DEVIATION: they reach the manager through a hook, the flash
+     library being above `stores`). The application's half:
+     `pcmcia/NewtCardEvents.h` (`TNewtCardEventHandler`, `HandleCardEvents`,
+     `HandleNewCard`, the NewtonScript card handler's calls;
+     `CheckCardBattery`, `GetCardTypes`, `UnmountCard` real) and
+     `newt/StorageCards.h` (`StorageCardInserted`/`MountStore` - format,
+     password and conversion prompts through the ROM's own NewtonScript
+     `HandleCardEvent`, which puts up the ROM's own dialogs -
+     `StorageCardRemoved`/`UnmountStore`, `CheckCardActiveProtocols`,
+     `CheckStoreVersion`, `SetStoreVersion`); `TNewtWorld` dispatches
+     'card, 'rstr and 'stor. `HostMountStores` starts the card server
+     (`InitCardServices`) before the PSS manager, as `TLoader::TheMain`
+     does, and the PSS manager runs with or without the internal flash.
+     NOT YET: the reinsert alert (`ReinsertCard` does nothing; a card
+     pulled while in use is simply unmounted later).
+   - **5f. The host's hand.** DONE (2026-09-30; ctest `host.NewtonCard`):
+     `newton --card file` (a blank 4 MB card made when there is none),
+     `HostCreateCard(path, mb)`, `HostInsertCard(socket, path)` and
+     `HostRemoveCard(socket)` for scripts (`host/HostCards.h`), and
+     `src/host/demo/card.ns`: a blank card put in, the ROM's "This card
+     appears to be new" and "This will delete all information" dialogs
+     answered Erase, a soup written, the card pulled (its store
+     unmounted) and put back, and the entry still there. A card pulled
+     out keeps its host memory until the program ends: the store is
+     unmounted a moment after, and reads it meanwhile, where a MessagePad
+     would fault.
 6. **Einstein's files.** Checked both ways where an Einstein image is
    available, and noted in the curiosities if they differ.
 
