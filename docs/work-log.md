@@ -109,6 +109,26 @@ bugs and ROM bugs found on the way.
   count wraps.  `HostOptionLayouts`' '*' copies an option's trailing
   bytes as they are ('rout' numbers, 'mpro' profiles).
 
+## 2026-09-30: a fax received end to end
+
+- `tools/modem/fakemodem.py --fax-call PAGE.pbm` (dded806c) is a Class 1
+  fax machine calling: T.30 as the caller behind +FTH/+FRH/+FTM/+FRM, the
+  page coded by t4.py.
+- `src/host/demo/fax-receive.ns` (97154442, ctest `host.NewtonFaxReceive`,
+  about 15 s): the ROM's own 'FaxReceive:Newton transport answers and
+  runs the whole exchange - CSI and DIS, TSI and DCS, the training check
+  and CFR, the page (201 lines), EOP, MCF, DCN - and the fax lands in the
+  In Box, "From "fakemodem fax"".
+- Host bug found: `HostOptionLayouts`' 'w' is pointer-sized, but a
+  NewtonErr is a C long, 4 bytes on Windows, so 'feom''s bytes after the
+  extended option's result were read 4 bytes off and the tool aborted
+  (-10007); a new 'l' field kind is a C long.
+- ROM behaviour kept: a received page always ends with one bad line
+  (`DecodeLine` runs past the RTC into the underflow - well within
+  MCF's 5.2%); after MCF the caller's DCN is taken as an unknown phase D
+  command and the tool aborts with -22001, which the transport survives,
+  the page kept.
+
 ## 2026-09-30: the fax tool
 
 - `comms/fax/FaxTool.h` (24d4622f, library `comms_fax`): `TFaxTool` (serv

@@ -213,10 +213,10 @@ worked through.  What could come next (not ranked; the owner chooses):
   dials and answers through `tools/modem/fakemodem.py`
   (`host.NewtonModemDial`, `host.NewtonModemAnswer`); and the comm
   trace frame's natives and translate (`comms/CommTrace.cpp`).  Left in
-  comms: fax end to end (being done: the page decoder and the whole fax
-  tool, `TFaxTool` 'faxs, are in; next a Class 1 fax peer in
-  `fakemodem.py`, receiving into the In Box, then `RotTiledBitmap` and
-  FaxViewer),
+  comms: fax (a fax is received end to end into the In Box -
+  `host.NewtonFaxReceive`; being done: `RotTiledBitmap` and FaxViewer
+  showing it; the older extended option layouts ("uw...") to be moved to
+  'l', which they only work without by accident of alignment),
   AppleTalk/NBP
   and ADSP (with the NTK's ADSP connection), the Hammer translators,
   eWorld (EW*), the TV remote.
