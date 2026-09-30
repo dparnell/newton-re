@@ -9,6 +9,21 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: the word hints and the text cache
+
+Entries are written with their word hints as the ROM writes them
+(f2ba101e): `TWordHintsHandler`/`TOldWordHintsHandler` (quadgram hashes
+in 64-bit chunks, one per 32 characters), `GetWordsHints` for a words
+cursor, and `NextHintChunk` setting every bit at the last chunk as the
+ROM's does.  The oracle is the WorldData package's 753 entries, written
+by Apple's tools: the host writes the same 759 chunks byte for byte
+(ctest `host.NewtonWordHints`).  The text cache was
+`gObjTextDecompressor` all along (0x0c105358, not the made-up
+0x0c10244c), let go by `ReleasePermObjectTextCache`.  Found on the way:
+the cursor's destructor leaked its key data.  Entries in a store the
+host wrote before this carry no hints, which the ROM never writes, so a
+words query misses them (`docs/stores/README.md`).
+
 ## 2026-10-01: the front key views, hiding under a modal dialog
 
 - `GetFrontCommandKeyView` (0x26145c) and `GetView('viewFrontKey)`/
