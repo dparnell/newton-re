@@ -23,6 +23,7 @@
 #include "MonthView.h"
 #include "ListView.h"
 #include "MeetingView.h"
+#include "PrintView.h"
 #include "SliderView.h"
 #include "ClipboardView.h"
 #include "PickView.h"
@@ -149,7 +150,7 @@ TView::BuildContext(RefArg templ, Boolean forceVisible)
 // TSliderView, TListView, TOutline, THelpOutline for
 // classes 75-108, and -8501 for any other); TTextView (97, 98),
 // TRemoteView (87, 88), TOutline (102-105) and THelpOutline (106, 107: books/Outline.h),
-// TPictureView (75, 76), TParagraphView (81), TPolygonView (82), TDataView (83), TPickView
+// TPrintView (94, PrintView.h), TPictureView (75, 76), TParagraphView (81), TPolygonView (82), TDataView (83), TPickView
 // (89-91), TGaugeView (92), TKeyboardView (79), TMonthView (80),
 // TClipboard (101) and TXView (108, text/TXView.h) are
 // here.
@@ -164,8 +165,11 @@ BuildView(TView* parent, RefArg context)
 	case clMathExpView:
 	case clMathOpView:
 	case clMathLineView:
-	case clPrintView - 1: case clPrintView:
+	case clPrintView - 1:
 		view = new TView;
+		break;
+	case clPrintView:
+		view = new TPrintView;
 		break;
 	case clRemoteView - 1: case clRemoteView:
 		view = new TRemoteView;

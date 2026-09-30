@@ -51,6 +51,7 @@ add_library(views STATIC
     Application.cpp
     PickView.cpp
     ClipboardView.cpp
+    PrintView.cpp
 )
 # (the root view tracks clicks on the caret through the recognition units;
 # the recogniser posts to the views: the two static libraries depend on
@@ -62,7 +63,9 @@ add_library(views STATIC
 # and text are mutually dependent)
 # (BuildView makes the book reader's outline, TOutline, which is a view
 # over the book reader's library: views and books are mutually dependent)
-target_link_libraries(views PUBLIC ink newton_config qd frames intl utility recognition stores sound text books)
+# (BuildView makes the print view, TPrintView, which drives a printer: views
+# links print)
+target_link_libraries(views PUBLIC ink newton_config qd frames intl utility recognition stores sound text books print)
 target_include_directories(views PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(tests)

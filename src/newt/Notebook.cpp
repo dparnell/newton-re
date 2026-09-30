@@ -8,6 +8,7 @@
 
 #include "ParseUtter.h"
 #include "Notebook.h"
+#include "print/Printer.h"
 #include "CICCodec.h"
 #include "InkFont.h"
 #include "FramePartHandler.h"		// InitFontLoader
@@ -88,7 +89,7 @@ TNotebook::Constructor(void)
 // system at level 2, the init scripts, DarkStar.
 // NOT YET RECONSTRUCTED: InitScriptGlobals (vars from varsMapStarter, the
 // classes, the funky functions, bootInitNSGlobals), DrawSplashScreen,
-// FPlaySoundIrregardless(bootSound), InitPrintDrivers,
+// FPlaySoundIrregardless(bootSound),
 // InitInternationalUtils; the recognition
 // system starts at level 1 (the clicks) on the host.
 void
@@ -107,6 +108,7 @@ TNotebook::InitToolbox(void)
 	}
 	else
 		SetOrientation(RINT(orientation));
+	InitPrintDrivers();
 	InitFontLoader();
 	// the ROM starts it at 2 - clicks and strokes, and the shapes and
 	// words above them.  The shape and word recognisers themselves are
