@@ -1,0 +1,47 @@
+// A card like the one the Einstein emulator makes by default (a 2 MB Intel
+// Series 2 card, 28F008SA chips: JEDEC 0x89 0xA2, 64 KB blocks, partitions
+// of three), made with tools/cards/linearcard.py and put in with --card:
+// the reconstruction recognises it, formats it at the ROM's prompts and
+// keeps a soup on it (docs/stores/README.md, "Einstein's files").
+//
+//   python tools/cards/linearcard.py make tmp/einstein.card --size 2 \
+//       --cis "01 03 52 06 ff 1e 06 02 11 01 01 03 01 18 02 89 a2 ff"
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --headless 60 \
+//       --card tmp/einstein.card --script src/host/demo/card-einstein.ns
+
+tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
+
+findIn := func(view, label)
+  begin
+    local found := nil;
+    foreach kid in view:ChildViewFrames() do
+      if not found then
+        if IsString(kid.text) and StrEqual(kid.text, label) then found := kid
+        else found := call findIn with (kid, label);
+    found;
+  end;
+
+tapButton := func(label)
+  begin
+    local kids := GetRoot():ChildViewFrames();
+    local button := call findIn with (kids[Length(kids) - 1], label);
+    if button then
+      begin
+        local box := button:GlobalBox();
+        call tapAt with ((box.left + box.right) div 2, (box.top + box.bottom) div 2);
+      end;
+  end;
+
+AddDelayedCall(func() begin
+  call tapButton with ("Erase");
+  AddDelayedCall(func() call tapButton with ("Erase"), [], 2000);
+  AddDelayedCall(func() begin
+    local stores := GetCardSlotStores(0);
+    Print({mounted: stores <> nil, cardTypes: GetCardTypes()});
+    local soup := stores[0]:CreateSoupXmit("EinsteinCard", [], nil);
+    soup:AddXmit({title: "on an Einstein card"}, nil);
+    Print({written: soup:GetSize() > 0});
+    Print("card-einstein: done");
+    HostQuit();
+  end, [], 5000);
+end, [], 4000);

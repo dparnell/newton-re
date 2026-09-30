@@ -911,7 +911,19 @@ level, and its two files are simple.
   Its flash follows the Intel Series 2 command set (two 28F016SA chips on
   the 16-bit card bus). **The host's card file is this very container**
   (`hal/host/HostCard.h`'s `HostCardCreate` makes one), so a card written
-  by one should open in the other; step 6 checks it with a card Einstein made.
+  by one should open in the other.
+
+  `tools/cards/linearcard.py` reads one (`info`: the footer, the name and
+  the CIS tuple by tuple) and makes one with any CIS (`make`). Einstein's
+  default card (`TLinearCard::kDefaultCISData`) is a 2 MB Intel Series 2
+  card of 28F008SA chips: CISTPL_DEVICE `52 06 ff` (flash, 200 ns, 2 MB;
+  the `ff` ends the tuple's device list, it is not a CISTPL_END), a
+  CISTPL_DEVICE_GEO of 64 KB blocks and partitions of three, CISTPL_JEDEC_C
+  `89 a2`, and a CISTPL_VERS_1. A card with that CIS - made by
+  `linearcard.py make`, not copied - is recognised, formatted and written
+  by the reconstruction (ctest `host.NewtonCardEinstein`,
+  `src/host/demo/card-einstein.ns`). Not checked yet: an image Einstein
+  itself wrote, and one of ours in Einstein (none is to hand here).
 
 ### Order of work
 
@@ -1071,8 +1083,11 @@ Each step comes with its host tests.
      out keeps its host memory until the program ends: the store is
      unmounted a moment after, and reads it meanwhile, where a MessagePad
      would fault.
-6. **Einstein's files.** Checked both ways where an Einstein image is
-   available, and noted in the curiosities if they differ.
+6. **Einstein's files.** PARTLY DONE (2026-09-30): the format matched
+   from Einstein's source, a card with Einstein's default CIS made
+   (`tools/cards/linearcard.py`) and mounted (ctest
+   `host.NewtonCardEinstein`). NOT YET: images Einstein itself wrote, and
+   ours opened in Einstein - both wait on an Einstein build or image.
 
 `THostStore` stays for the unit tests that want a store without a flash
 under it.

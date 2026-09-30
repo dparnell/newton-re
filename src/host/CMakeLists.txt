@@ -155,7 +155,8 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
     # a fax received: fakemodem.py's Class 1 fax call (--fax-call, the page
     # t4.py's test page) answered by the ROM's fax transport over the fax
     # tool (comms/fax/FaxTool.h) and the modem tool; the page is confirmed
-    # (MCF) and lands in the In Box
+    # (MCF), lands in the In Box, is shown by the FaxViewer and turned right
+    # (qd/Tile.h) - build/fax-received.pgm, build/fax-rotated.pgm
     add_test(NAME host.FaxPage
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/modem/t4.py --test-page
                      --pbm ${CMAKE_CURRENT_BINARY_DIR}/faxpage.pbm)
@@ -163,11 +164,11 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
     add_test(NAME host.NewtonFaxReceive
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/modem/fakemodem.py
                      --fax-call ${CMAKE_CURRENT_BINARY_DIR}/faxpage.pbm
-                     --spawn $<TARGET_FILE:newton> --rom ${NEWTON_ROM_BIN} --serial-port 0 --headless 200
+                     --spawn $<TARGET_FILE:newton> --rom ${NEWTON_ROM_BIN} --display 320x480 --serial-port 0 --headless 200
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/fax-receive.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonFaxReceive PROPERTIES TIMEOUT 300 FIXTURES_REQUIRED faxpage
-                         PASS_REGULAR_EXPRESSION "<- ATA.*answered a fax call.*fax: <- DIS.*fax: -> DCS.*fax: <- CFR.*fax: -> the page, 200 lines.*fax: -> EOP.*fax: the page confirmed MCF.*fax: DCN sent.*eceived: \"From .*fakemodem fax.*fax-receive: done.*the program answered 0"
+                         PASS_REGULAR_EXPRESSION "<- ATA.*answered a fax call.*fax: <- DIS.*fax: -> DCS.*fax: <- CFR.*fax: -> the page, 200 lines.*fax: -> EOP.*fax: the page confirmed MCF.*fax: DCN sent.*eceived: \"From .*fakemodem fax.*fax-receive: shown, the pixels 247584 bytes.*fax-receive: turned right, the pixels 248880 bytes.*fax-receive: done.*the program answered 0"
                          FAIL_REGULAR_EXPRESSION "waited in vain|fell over")
 endif()
 
@@ -299,6 +300,22 @@ if(Python3_FOUND)
     set_tests_properties(host.NewtonCard PROPERTIES TIMEOUT 120
                          PASS_REGULAR_EXPRESSION "mounted: TRUE.*[Cc]ardSlot: 0, cardType: flsh.*written: TRUE.*removed: TRUE, stores: 1.*remounted: TRUE.*found: \"written on a card\".*cards: 1.*card: done"
                          FAIL_REGULAR_EXPRESSION "FALSE")
+    # a card like Einstein's default one (tools/cards/linearcard.py makes
+    # it: 28F008SA chips), recognised, formatted and written (demo/card-einstein.ns)
+    if(Python3_FOUND)
+        add_test(NAME host.NewtonCardEinstein.make
+                 COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/cards/linearcard.py make
+                         ${CMAKE_CURRENT_BINARY_DIR}/einstein.card --size 2
+                         --cis "01 03 52 06 ff 1e 06 02 11 01 01 03 01 18 02 89 a2 ff" --name Einstein)
+        set_tests_properties(host.NewtonCardEinstein.make PROPERTIES FIXTURES_SETUP host_einstein_card)
+        add_test(NAME host.NewtonCardEinstein
+                 COMMAND newton --rom ${NEWTON_ROM_BIN} --headless 60 --card ${CMAKE_CURRENT_BINARY_DIR}/einstein.card
+                         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/card-einstein.ns
+                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+        set_tests_properties(host.NewtonCardEinstein PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED host_einstein_card
+                             PASS_REGULAR_EXPRESSION "mounted: TRUE.*written: TRUE.*card-einstein: done"
+                             FAIL_REGULAR_EXPRESSION "FALSE")
+    endif()
     # a package cut into a soup of chunk entries and restored with
     # store:RestoreSegmentedPackage (packages/PackageArchivalPipe.h), and
     # stored with SuckPackageFromBinary's progress callback, on a store of
