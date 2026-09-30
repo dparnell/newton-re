@@ -20,14 +20,16 @@
 				large binary's: FGetBinaryStore, FGetBinaryCompander,
 				FGetBinaryCompanderData into MakePixelsObject) and filled a
 				tile at a time, so a page is never all in memory at once.
-				NOT YET: the VAddrToStore/FlushLargeObject calls that keep
-				a large binary's bits in step in RotBitmap180.
+				RotBitmap180, given a callback, keeps a large binary's bits
+				flushed to its store as it goes (VAddrToStore,
+				FlushLargeObject).
 
 	Reconstructed from the MP2x00 US ROM (0x0003f764-0x00040f28); each
 	function cites its origin.
 */
 
 #include "Pictures.h"
+#include "LargeObjects.h"	// VAddrToStore, FlushLargeObject
 #include "Tile.h"
 #include "stores/LargeBinaries.h"
 #include "Ports.h"
@@ -84,13 +86,20 @@ RotBitmap180(RefArg bitmap, RefArg options)
 		RefVar callback;
 		RefVar args;
 		Boolean tellCallback = false;
+		// with a callback, a bitmap in a large binary on a store is flushed
+		// to it as the turn goes (VAddrToStore finds whose it is; anything
+		// else answers an error and is not flushed)
+		TStore* store = nil;
+		ULong id = 0;
+		NewtonErr err = noErr;
 		if (NOTNIL(options) && FrameHasSlot(options, RSSYMcallback))
 		{
 			tellCallback = true;
 			callback = GetFrameSlot(options, RSSYMcallback);
 			args = MakeArray(1);
-			// NOT YET RECONSTRUCTED: VAddrToStore/FlushLargeObject (a
-			// bitmap in a large binary on a store)
+			err = VAddrToStore(&store, &id, (ULong) (uintptr_t) obj.Pixels());
+			if (err == noErr)
+				err = FlushLargeObject(store, (PSSId) id);
 		}
 		PixelMap* pm = obj.Pixels();
 		long size = RowsOf(pm) * pm->rowBytes;
@@ -105,6 +114,8 @@ RotBitmap180(RefArg bitmap, RefArg options)
 				n = left;
 			if (tellCallback)
 			{
+				if (err == noErr)
+					err = FlushLargeObject(store, (PSSId) id);
 				SetArraySlot(args, 0, RefVar(MAKEINT(percent)));
 				NSCall(callback, args);
 				percent += 0xd;
@@ -121,6 +132,8 @@ RotBitmap180(RefArg bitmap, RefArg options)
 		{
 			SetArraySlot(args, 0, RefVar(MAKEINT(100)));
 			NSCall(callback, args);
+			if (err == noErr)
+				FlushLargeObject(store, (PSSId) id);
 		}
 	}
 	cleanup

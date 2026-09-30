@@ -15,6 +15,8 @@
 #include "NewtCardEvents.h"
 #include "SoundCodec.h"
 #include "SystemNatives.h"
+#include "TestAgent.h"		// HandleTestAgentEvent
+#include "SortTables.h"		// gSortTables
 #include "Locale.h"
 #include "hal/Power.h"
 #include "power/PowerManager.h"
@@ -196,6 +198,22 @@ TNewtWorld::ForkSwitch(Boolean in)
 static void	ArmDelayedActionIdle(void);		// (the delayed actions, below)
 
 
+// ROM 0x0030d19c AllocateEarlyStuff__Fv
+// The locale's sortId, when it names one, made the default sorting table.
+void
+AllocateEarlyStuff(void)
+{
+	RefVar locale(GetCurrentLocale());
+	Ref sortId = GetProtoVariable(locale, RSSYMsortid, nil);
+	if (NOTNIL(sortId))
+	{
+		long id = RINT(sortId);
+		if (id != 0)
+			gSortTables.SetDefaultTableId(id);
+	}
+}
+
+
 // ROM 0x0030d20c MainConstructor__10TNewtWorldFv
 // The world's boot: the app world's own, the alarm message, the object
 // system (host: started by the program, which reads the ROM image in
@@ -208,9 +226,9 @@ static void	ArmDelayedActionIdle(void);		// (the delayed actions, below)
 // registry first: a store cannot write an object without them, because
 // with the OS running NewCoder makes them by name through the registry
 // rather than straight off their class info.
-// NOT YET RECONSTRUCTED: InitExternal (the host starts the large objects
-// from stores/Soups.cpp instead), HandleTestAgentEvent,
-// FMinimumBatteryCheck, AllocateEarlyStuff (the sort tables).
+// (Host: InitExternal's work - the precedents, the word hints' handlers,
+// the large objects - is done by stores/Soups.cpp's InitQueries, the
+// internal store registered by host/HostStores.h.)
 long
 TNewtWorld::MainConstructor()
 {
@@ -301,10 +319,14 @@ TNewtWorld::MainConstructor()
 	// part handler itself; a host with no card server has this one
 	if (gCardServer == nil)
 		InitCardPartHandler(nil);
+	HandleTestAgentEvent();
+	// the machine has enough power to go on (it sleeps again if not)
+	FMinimumBatteryCheck(RefVar(NILREF));
 	// the tablet's calibration read back, unless the setup assistant is
 	// still to ask for it
 	if (!EQRef(GetPreference(RSSYMblessedapp), RSSYMsetup))
 		LoadInkerCalibration();
+	AllocateEarlyStuff();
 	StartDrawing(nil, nil);
 	return noErr;
 }

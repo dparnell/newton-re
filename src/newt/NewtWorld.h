@@ -26,9 +26,8 @@
 				handler and the globals.
 
 				NOT YET RECONSTRUCTED: the power, interconnect, IR, battery
-				and script-file events (AEHandlerProc says which), the sort
-				tables (AllocateEarlyStuff), InitExternal, the stack locked
-				for the event loop (LockStack); on the host
+				and script-file events (AEHandlerProc says which), the
+				stack locked for the event loop (LockStack); on the host
 				the object system is started by the program before the
 				world (InitObjects needs the ROM image read in) and the
 				screen by HostStartViews.
@@ -230,6 +229,7 @@ extern void	(*gNewtHostBoot)(void);
 extern const char*	gNewtBootTestScript;
 // host: what PreMain runs once the boot is done, before the boot test
 // script - the program's own globals (host/HostPackages.h); nil for none
+void	AllocateEarlyStuff(void);								// ROM 0x0030d19c AllocateEarlyStuff__Fv - the locale's sorting table made the default
 extern void	(*gNewtHostPreMain)(void);
 void	NewtUserMain(void);									// ROM 0x0030bba8 UserMain__Fv - the 'main' task: a TNewtWorld made and run (installed as the loader's gHostUserMain by NewtInstallUserMain)
 void	NewtInstallUserMain(void);							// host: the loader's 'main' task runs NewtUserMain
