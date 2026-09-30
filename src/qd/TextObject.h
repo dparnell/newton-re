@@ -103,7 +103,8 @@ enum TextObjectField
 	kTextObjLocation,			// an FPoint, copied
 	kTextObjOptions,
 	kTextObjBounds,				// a TextBoundsInfo (the bounds operation)
-	kTextObjMetrics				// the layout's three numbers (operation 0x400)
+	kTextObjMetrics,			// the layout's three numbers (operation 0x400)
+	kTextObjSetFlag10000		// set only: the object's flag 0x10000 (the printer's ScaleStdText sets it)
 };
 
 void			GetTextObjField(TextObjectRef text, TextObjectField field, void* result);	// ROM 0x0035df90 GetTextObjField__Fl15TextObjectFieldPv

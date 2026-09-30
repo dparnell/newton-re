@@ -576,7 +576,7 @@ SetTextObjField(TextObjectRef text, TextObjectField field, void* value)
 	case kTextObjBounds:
 	case kTextObjMetrics:
 		return false;
-	case 8:
+	case kTextObjSetFlag10000:
 		obj->fFlags |= 0x10000;
 		return false;
 	}

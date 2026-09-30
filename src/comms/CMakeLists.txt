@@ -108,8 +108,11 @@ add_library(comms_fax STATIC
     fax/FaxTool.cpp
     fax/FaxToolPhases.cpp
     fax/FaxToolClass2.cpp
+    fax/FaxToolInterface.cpp
 )
-target_link_libraries(comms_fax PUBLIC comms_serial stores)
+# (TFaxToolInterface runs the modem navigator and takes the dialling
+# preferences: comms_dock)
+target_link_libraries(comms_fax PUBLIC comms_serial comms_dock stores)
 
 # The Newton Toolkit's inspector connection (NTK.h): the debugger nub the
 # desktop's NTK talks to, its task and endpoint client (over the dock's easy

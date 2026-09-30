@@ -201,5 +201,6 @@ PrProblemResolution	CallHandleProblem(PrintConnect* connect, TPrinter* printer, 
 void		PrReleaseControl(TTimeout howLong, TPrinter* printer);		// ROM 0x00194448 PrReleaseControl__FUlP8TPrinter
 void		PrRegainControl(TPrinter* printer);							// ROM 0x001944a4 PrRegainControl__FP8TPrinter
 void		PrintPatchpoint(void);										// ROM 0x001941b0 PrintPatchpoint__Fv
+void		InitPrintDrivers(void);										// ROM 0x00192f08 InitPrintDrivers__Fv
 
 #endif	/* __PRINT_PRINTER_H */

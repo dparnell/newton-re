@@ -606,7 +606,7 @@ ScaleStdText(TextObjectRef text, Fixed hScale, Fixed vScale)
 	FPoint scaled = location;
 	MapFPoint(&scaled, &scaler->fromRect, &scaler->toRect);
 	SetTextObjField(text, kTextObjLocation, &scaled);
-	SetTextObjField(text, (TextObjectField) 8, nil);
+	SetTextObjField(text, kTextObjSetFlag10000, nil);
 	StdText(text, hScale, vScale);
 	if (options != nil)
 	{

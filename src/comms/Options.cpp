@@ -11,6 +11,8 @@
 #include "Options.h"
 #include "NewtonMemory.h"
 #include "UserSharedMem.h"
+#include "CommAddresses.h"
+#include "CommOptions.h"
 
 
 // ---------------------------------------------------------------------------
@@ -135,6 +137,46 @@ TSubArrayOption::TSubArrayOption(ULong size, ArrayIndex count)
 	// measures it, padding and all - Options.h)
 	SetLength(size + (sizeof(TSubArrayOption) - sizeof(TOption)));
 	fCount = count;
+}
+
+
+// ---------------------------------------------------------------------------
+//	The addresses and the service identifier (CommAddresses.h, CommOptions.h)
+// ---------------------------------------------------------------------------
+
+// ROM 0x000663cc __ct__16TCMARouteAddressFl
+// A 'rout' address of a kind (its length is the subclass's to set).
+TCMARouteAddress::TCMARouteAddress(RouteAddrType type)
+	: TOption(kAddressType)
+{
+	SetLabel(kCMARouteLabel);
+	fType = type;
+}
+
+
+// ROM 0x00066418 __ct__15TCMAPhoneNumberFUl
+// A phone number, its characters following the option (InsertVarOptionAt
+// puts them there).  DEVIATION: the ROM's length is the number's plus 8,
+// its two words; the host's words are larger, so it measures them.
+TCMAPhoneNumber::TCMAPhoneNumber(ULong phoneLen)
+	: TCMARouteAddress(kPhoneNumber)
+{
+	SetLength(phoneLen + (sizeof(TCMAPhoneNumber) - sizeof(TOption)));
+	fPhoneLen = phoneLen;
+}
+
+
+// ROM 0x0006cc4c __ct__21TCMOServiceIdentifierFv
+// A service to start ('serv'), by its identifier (or its port).
+// DEVIATION: the ROM's length is 8, the two words; the host measures them.
+TCMOServiceIdentifier::TCMOServiceIdentifier()
+	: TOption(kOptionType)
+{
+	SetLabel(kCMOServiceIdentifier);
+	SetLength(sizeof(TCMOServiceIdentifier) - sizeof(TOption));
+	fServiceId = 0;
+	fPortId = 0;
+	SetAsService();
 }
 
 

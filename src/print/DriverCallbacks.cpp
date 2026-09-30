@@ -16,6 +16,7 @@
 */
 
 #include "print/Printer.h"
+#include "print/FaxDriver.h"
 #include "utility/AppWorld.h"
 #include "utility/PseudoSyncState.h"
 #include "UserTasks.h"
@@ -74,4 +75,18 @@ PrRegainControl(TPrinter* printer)
 {
 	if (printer->fBlocked != nil)
 		printer->fBlocked->Unblock();
+}
+
+
+// ROM 0x00192f08 InitPrintDrivers__Fv
+// The imaging engines and the drivers built into the ROM registered, and
+// the 'prnt part handler (TPrDriverPart) made for drivers in packages.
+// NOT YET RECONSTRUCTED: TPSPrinter and its TPSPAPDriver,
+// TLaserWriterLSDriver, TSWGroupDriver, ThpPCL, and the part handler -
+// only the dot printer and the fax driver are here.
+void
+InitPrintDrivers(void)
+{
+	TDotPrinter::ClassInfo()->Register();
+	TFaxDriver::ClassInfo()->Register();
 }
