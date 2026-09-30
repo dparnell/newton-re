@@ -18,6 +18,7 @@
 #include "Shapes.h"
 #include "RegionVars.h"
 #include "Ink.h"
+#include "Paths.h"			// FramePaths
 #include "Angles.h"
 #include "FixedMath.h"
 #include "Frames.h"
@@ -182,8 +183,19 @@ TPolygonView::DrawData(PolygonShape* shape, Point* from, Point* to)
 				useInker = Encloses(&(*vis)->rgnBBox, &viewBounds);
 			InkDraw(ink, (ULong) pen, left, top, useInker);
 		}
-		// NOT YET RECONSTRUCTED: a printer's port, where the ink is made
-		// into outlined paths and framed (InkMakePaths, FramePaths)
+		else
+		{
+			// on a printer: the ink made into outlined paths and framed
+			pathsHandle* list = InkMakePaths(ink, left, top);
+			if (list == nil)		// (the ROM reads the block without asking)
+				return;
+			for (long i = 0; list[i] != nil; i++)
+			{
+				FramePaths(list[i]);
+				DisposePaths(list[i]);
+			}
+			DisposePtr((Ptr) list);
+		}
 		return;
 	}
 

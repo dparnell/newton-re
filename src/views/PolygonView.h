@@ -49,8 +49,8 @@
 				A double tap on ink reads it again (RealDoCommand's
 				aeDoubleTap, 0x32).
 
-				NOT YET RECONSTRUCTED: the printing path of the ink verb
-				(InkMakePaths, FramePaths).
+				On a printer's port the ink verb's strokes are made into
+				outlined paths and framed (InkMakePaths, FramePaths).
 
 	Reconstructed from the MP2x00 US ROM (0x0018b54c-0x00191900); each
 	function cites its origin.

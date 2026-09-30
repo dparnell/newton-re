@@ -38,6 +38,7 @@
 #include "NewtonExceptions.h"
 #include "OSErrors.h"
 #include "FixedMath.h"
+#include "Paths.h"			// DisposePaths
 
 #include <string.h>
 
@@ -346,6 +347,13 @@ struct StrokeSink
 	Fixed		fScaleX;		// and what it is scaled by first
 	Fixed		fScaleY;
 	Boolean		fFailed;
+	// the raw form (CSRawExpandGroup): each stroke a handle of 16.16
+	// points instead of a TStroke
+	Boolean		fRaw;
+	Handle*		fHandles;		// the answers, ended by a nil
+	Handle		fHandle;		// the one being filled
+	long		fAllocated;		// its size
+	long		fUsed;			// and how much of it is points
 };
 
 // A stroke is made empty - TArray::IArray takes the count as the number
@@ -354,9 +362,25 @@ struct StrokeSink
 // grows a chunk at a time as the points are added.
 
 
+// ROM 0x00153d10 BeginStroke__FP14_EXPAND_PARAMS
+// A stroke begun, while there is room for it: a TStroke, or in the raw
+// form an empty handle.
 static Boolean
 StartStroke(StrokeSink* sink)
 {
+	if (sink->fRaw)
+	{
+		if (sink->fStroke >= sink->fRoom)
+			return false;
+		sink->fHandle = NewHandle(0);
+		if (sink->fHandle == nil)
+			return false;
+		sink->fHandles[sink->fStroke] = sink->fHandle;
+		sink->fUsed = 0;
+		sink->fAllocated = 0;
+		sink->fCount = 0;
+		return true;
+	}
 	if (sink->fStroke >= sink->fRoom - 1)
 		return false;
 	sink->fCurrent = TStroke::Make(0);
@@ -365,9 +389,64 @@ StartStroke(StrokeSink* sink)
 }
 
 
+// ROM 0x00153e10 AddStrokePoint__FP14_EXPAND_PARAMSlT2
+// A raw point added to the handle, which grows 0x40 bytes at a time (a
+// point that will not fit is dropped).
+static void
+AddRawPoint(StrokeSink* sink, Fixed x, Fixed y)
+{
+	if (sink->fHandle == nil)
+		return;
+	if (sink->fAllocated < sink->fUsed + (long) sizeof(point))
+	{
+		if (SetHandleSize(sink->fHandle, sink->fAllocated + 0x40) != noErr)
+			return;
+		sink->fAllocated += 0x40;
+	}
+	point* pt = (point*) (*sink->fHandle + sink->fUsed);
+	pt->x = x;
+	pt->y = y;
+	sink->fUsed += (long) sizeof(point);
+}
+
+
+// ROM 0x00153d94 EndStroke__FP14_EXPAND_PARAMS
+// A raw stroke ended: one of a single point has it twice, so that it is
+// a line, and the handle is cut to its points.
+static void
+EndRawStroke(StrokeSink* sink)
+{
+	if (sink->fUsed == (long) sizeof(point))
+	{
+		point first = *(point*) *sink->fHandle;
+		AddRawPoint(sink, first.x, first.y);
+	}
+	SetHandleSize(sink->fHandle, sink->fUsed);
+	sink->fHandle = nil;
+	if (++sink->fStroke < sink->fRoom)
+		sink->fHandles[sink->fStroke] = nil;
+}
+
+
 static void
 FinishStroke(StrokeSink* sink)
 {
+	if (sink->fRaw)
+	{
+		// (the ROM begins a stroke at its first point, so one never ends
+		// empty: an empty one here is given back)
+		if (sink->fHandle == nil)
+			return;
+		if (sink->fCount == 0)
+		{
+			DisposeHandle(sink->fHandle);
+			sink->fHandles[sink->fStroke] = nil;
+			sink->fHandle = nil;
+		}
+		else
+			EndRawStroke(sink);
+		return;
+	}
 	if (sink->fCurrent == nil)
 		return;
 	if (sink->fCount == 0)
@@ -406,7 +485,7 @@ PGCStorePointProc(short what, const InkPoint* pt, void* refCon)
 	default:
 		return 1;
 	}
-	if (sink->fCurrent == nil)
+	if (sink->fRaw ? sink->fHandle == nil : sink->fCurrent == nil)
 		return 0;
 	// the point comes in as whole tablet units: a negative one (the ink
 	// was written off the left or the top) is brought back to nought,
@@ -425,6 +504,12 @@ PGCStorePointProc(short what, const InkPoint* pt, void* refCon)
 		x = FixedMultiply(x, sink->fScaleX);
 	if (sink->fScaleY != 0x10000)
 		y = FixedMultiply(y, sink->fScaleY);
+	if (sink->fRaw)
+	{
+		AddRawPoint(sink, AddFixed(x, sink->fOffsetX), AddFixed(y, sink->fOffsetY));
+		sink->fCount++;
+		return 1;
+	}
 	tab.x = AddFixed(x, sink->fOffsetX);
 	tab.y = AddFixed(y, sink->fOffsetY);
 	tab.z = 0;
@@ -475,6 +560,97 @@ InkExpand(RefArg ink, ULong group, long x, long y)
 		return nil;
 	}
 	return strokes;
+}
+
+
+// ROM 0x0015445c CSRawExpandGroup__FP14CSStrokeHeaderUllN33
+// The ink read back as raw strokes - each a handle of 16.16 points,
+// scaled and then moved - in a block of at most a hundred, cut to what
+// there are and ended by a nil (GenericCSExpandGroup 0x00153934 over
+// GenericCSExpandGuts 0x001538bc, whose group is 0 for anything above
+// 1).  nil when there is no memory for the block.
+static Handle*
+InkRawExpand(const void* data, long size, ULong group, Fixed x, Fixed y, Fixed scaleX, Fixed scaleY)
+{
+	const long kRoom = 100;
+	Handle* handles = (Handle*) NewPtr(kRoom * (long) sizeof(Handle));
+	if (handles == nil)
+		return nil;
+	handles[0] = nil;
+	StrokeSink sink;
+	memset(&sink, 0, sizeof(sink));
+	sink.fRaw = true;
+	sink.fHandles = handles;
+	sink.fRoom = kRoom;
+	sink.fOffsetX = x;
+	sink.fOffsetY = y;
+	sink.fScaleX = scaleX;
+	sink.fScaleY = scaleY;
+	if (group > 1)
+		group = 0;
+	TInkCodec* codec = data != nil ? InkCodecFor(data) : nil;
+	if (codec != nil)
+		codec->Decode(data, size, group, PGCStorePointProc, &sink);
+	long count = sink.fStroke;
+	Handle* answer = (Handle*) ReallocPtr((Ptr) handles, (count + 1) * (long) sizeof(Handle));
+	if (answer == nil)
+		return nil;			// (as the ROM's: the strokes are lost with the block)
+	answer[count] = nil;
+	return answer;
+}
+
+
+// ROM 0x001534e8 GenericCSMakePathsGroup__FP14CSStrokeHeaderlN32
+// The ink as outlined paths, which is how it goes to a printer: each raw
+// stroke's handle made in place a paths of one contour - the count, the
+// control bits (all nought: every point on the curve, so a polyline) and
+// the points moved up behind them - a stroke there is no room to do
+// that for given back and left out.  A nil-ended block of pathsHandles;
+// nil when there is no memory for it.
+pathsHandle*
+InkMakePathsScaled(const void* data, long size, Fixed x, Fixed y, Fixed scaleX, Fixed scaleY)
+{
+	Handle* list = InkRawExpand(data, size, 0, x, y, scaleX, scaleY);
+	if (list == nil)
+		return nil;
+	long kept = 0;
+	for (long i = 0; list[i] != nil; i++)
+	{
+		Handle h = list[i];
+		long bytes = GetHandleSize(h);
+		long points = bytes / (long) sizeof(point);
+		long words = (points + 31) >> 5;
+		long header = words * 4 + 8;
+		if (SetHandleSize(h, bytes + header) == noErr)
+		{
+			memmove(*h + header, *h, bytes);
+			paths* p = (paths*) *h;
+			p->contours = 1;
+			path* contour = p->contour;
+			contour->vectors = points;
+			for (long w = 0; w < words; w++)
+				contour->controlBits[w] = 0;
+			contour->controlBits[0] &= 0x7fffffff;
+			long last = points - 1;
+			contour->controlBits[last >> 5] &= ~(Long32) (0x80000000U >> (last & 0x1f));
+			list[kept++] = h;
+		}
+		else
+			DisposePaths((pathsHandle) h);
+	}
+	list[kept] = nil;
+	return (pathsHandle*) list;
+}
+
+
+// ROM 0x00140d9c InkMakePaths__FRC6RefVarlT2
+// A shape's ink as paths at (x, y), the size it was written.
+pathsHandle*
+InkMakePaths(RefArg ink, long x, long y)
+{
+	long size = 0;
+	const void* data = InkData(ink, &size);
+	return InkMakePathsScaled(data, size, ToFixed(x), ToFixed(y), 0x10000, 0x10000);
 }
 
 

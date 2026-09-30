@@ -208,10 +208,15 @@ reaches.  Biggest user impact first; each is taken on in this order.
    corrector's list when it holds writing); and a grid picture with a
    `mask` picks no cell where the mask is blank (`PickableItem` over
    `FPtInPicture`).  test_Views TestPickView.
-9. **Printing ink** (`views/PolygonView.cpp` 185, `ink/InkFont.cpp` 196:
-   InkMakePaths, FramePaths, the ink word on a printer's port): a note with
-   ink or ink words printed.  Medium to large (the PostScript path
-   machinery the dot printer imitates).
+9. **Printing ink** - DONE (2026-09-30): on a printer's port a sketch's
+   ink (`TPolygonView::DrawData`) and an ink word in text
+   (`TInkWordGlyph::DrawAt`) are made into outlined paths - the raw
+   strokes (`CSRawExpandGroup`: a handle of 16.16 points each, a dot
+   doubled) made polyline contours (`GenericCSMakePathsGroup`,
+   `InkMakePaths`) - and framed, which the dot printer's bottleneck
+   draws a band at a time; before, printed ink was left out.  test_Views
+   TestPolygonEditing (the ink word's path is the same code, not tested
+   on its own).
 10. **The busy box and the live ink** (`BusyBoxSend` in views/GaugeView,
     ViewNatives' TrackHilite, NewtWorld; the inker's `TInker::Convert`/
     `DrawInk`, `TLiveInker`): the hourglass while the machine works, the

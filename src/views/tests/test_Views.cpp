@@ -19,6 +19,7 @@
 #include "ContainerView.h"
 #include "EditView.h"
 #include "Ink.h"
+#include "Paths.h"
 #include "StrokeBundle.h"
 #include "Polygons.h"
 #include "InkFont.h"
@@ -6853,6 +6854,39 @@ TestPolygonEditing()
 	EXPECT(inky != nil && inky->ClassID() == clPolygonView && NOTNIL(inky->GetProto(RSSYMink)));
 	if (inky != nil && inky->ClassID() == clPolygonView)
 	{
+		// on a printer's port the ink is made into outlined paths and
+		// framed (InkMakePaths, FramePaths): one polyline contour per
+		// stroke, the stroke's three points, drawn where the screen's is
+		{
+			RefVar ink(inky->GetProto(RSSYMink));
+			pathsHandle* list = InkMakePaths(ink, 0, 0);
+			EXPECT(list != nil && list[0] != nil && list[1] == nil);
+			if (list != nil && list[0] != nil)
+			{
+				EXPECT((*list[0])->contours == 1 && (*list[0])->contour[0].vectors >= 2 && (*list[0])->contour[0].controlBits[0] == 0);
+				for (long i = 0; list[i] != nil; i++)
+					DisposePaths(list[i]);
+			}
+			if (list != nil)
+				DisposePtr((Ptr) list);
+			Refresh();
+			Rect r = inky->viewBounds;
+			long onScreen = InkIn(r.left, r.top, r.right + 2, r.bottom + 2);
+			EXPECT(onScreen > 0);
+			Rect wider = r;
+			wider.right += 2;
+			wider.bottom += 2;
+			EraseRect(&wider);
+			EXPECT(InkIn(r.left, r.top, r.right + 2, r.bottom + 2) == 0);
+			ULong flags = gPort.portBits.pixMapFlags;
+			gPort.portBits.pixMapFlags |= kPixMapDevDotPrint;
+			inky->RealDraw(r);
+			gPort.portBits.pixMapFlags = flags;
+			long printed = InkIn(r.left, r.top, r.right + 2, r.bottom + 2);
+			EXPECT(printed > 0 && printed >= onScreen - 4 && printed <= onScreen + 4);
+			inky->Dirty(nil);
+			Refresh();
+		}
 		RefVar remote(GetPreference(RSSYMremotewriting));
 		tap = MakeCommand(aeDoubleTap, inky, 0);
 		EXPECT(inky->RealDoCommand(tap) && CommandResult(tap) == 1);

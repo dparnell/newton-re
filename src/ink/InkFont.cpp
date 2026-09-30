@@ -16,6 +16,7 @@
 #include "Regions.h"		// QDNewTempPtr
 #include "Unit.h"			// FixRect
 #include "FixedMath.h"
+#include "Paths.h"			// FramePaths
 #include "NewtonExceptions.h"
 #include "OSErrors.h"
 
@@ -193,10 +194,10 @@ TInkWordGlyph::SetFontParms(RefArg fontSpec)
 // rather than QuickDraw's.  (That is NOT YET, so the flag is worked out
 // and passed on and the lines are drawn the slow way.)
 //
-// NOT YET RECONSTRUCTED: the printing path - on a printer port the ROM
-// makes real outlined paths of the strokes (CSMakePathsGroup,
-// CSMakePathsGroupInRect) and frames each of them, so that a PostScript
-// printer gets outlines rather than a bitmap.
+// On a printer's port the strokes are made into outlined paths instead
+// (CSMakePathsGroup, CSMakePathsGroupInRect: InkMakePathsScaled) and
+// each is framed, so that a PostScript printer gets outlines rather than
+// a bitmap; the dot printer's bottleneck frames them a band at a time.
 void
 TInkWordGlyph::DrawAt(ULong x, ULong y)
 {
@@ -237,6 +238,32 @@ TInkWordGlyph::DrawAt(ULong x, ULong y)
 		else
 			InkDrawScaled(data, size, (ULong) fPen, ToFixed(box.left), ToFixed(box.top),
 						  0x10000, 0x10000, enclosed);
+	}
+	else
+	{
+		// on a printer: the strokes made into outlined paths and framed
+		// (CSMakePathsGroup, or CSMakePathsGroupInRect scaled from the
+		// word's own size into the box)
+		pathsHandle* list;
+		if (scaled)
+		{
+			FRect dst;
+			FixRect(&dst, &box);
+			list = InkMakePathsScaled(data, size, dst.left, dst.top,
+									  FixedDivide(dst.right - dst.left, ToFixed((long) fInfo.fWidth)),
+									  FixedDivide(dst.bottom - dst.top, ToFixed((long) (fInfo.fAscent + fInfo.fDescent))));
+		}
+		else
+			list = InkMakePathsScaled(data, size, ToFixed(box.left), ToFixed(box.top), 0x10000, 0x10000);
+		if (list != nil)		// (the ROM reads the block without asking)
+		{
+			for (long i = 0; list[i] != nil; i++)
+			{
+				FramePaths(list[i]);
+				DisposePaths(list[i]);
+			}
+			DisposePtr((Ptr) list);
+		}
 	}
 	SetPenState(&pen);
 }

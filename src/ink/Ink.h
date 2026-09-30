@@ -29,9 +29,10 @@
 	the strokes the pen leaves is ink/InkStrokes.cpp, and ink as a
 	shape frame is ink/InkShapes.h.
 
-	NOT YET RECONSTRUCTED: the ink word's glyph (TInkWordGlyph, an ink
-	word drawn in a line of text) and the live inker (TLiveInker, the
-	ink that follows the pen).
+	Ink as outlined paths for a printer is InkMakePaths (the raw
+	strokes, CSRawExpandGroup, each made a polyline contour).  NOT YET
+	RECONSTRUCTED: the live inker (TLiveInker, the ink that follows the
+	pen).
 
 	Reconstructed from the MP2x00 US ROM (0x000dbebc-0x000dc314,
 	0x0013ffb8-0x00140310, 0x00140940); each function cites its origin.
@@ -43,6 +44,7 @@
 #ifndef __OBJECTS_H
 #include "Stroke.h"
 #include "objects.h"
+#include "NewtQD.h"		// pathsHandle
 #endif
 #ifndef __BYTEORDER_H
 #include "ByteOrder.h"
@@ -189,6 +191,15 @@ void		InkDrawScaled(const void* data, long size, ULong pen, Fixed x, Fixed y,
 void		InkDrawInFRect(const void* data, long size, ULong pen, Fixed width, Fixed height,
 							const FRect* to, Boolean useInker);		// ROM 0x001544bc CSDrawInRect__FP14CSStrokeHeaderUllT3P5FRectUc
 void		InkDrawInRect(RefArg ink, ULong pen, const Rect* from, const Rect* to, Boolean useInker);	// ROM 0x00140d14 InkDrawInRect__FRC6RefVarUlP4RectT3Uc
+
+
+// Ink as outlined paths, for a printer: a nil-ended block of
+// pathsHandles, one polyline contour per stroke - each framed with
+// FramePaths and given back with DisposePaths, the block with
+// DisposePtr; nil when there is no memory.  The scaled one is the ROM's
+// CSMakePathsGroup/CSMakePathsGroupInRect with the scale worked out.
+pathsHandle*	InkMakePaths(RefArg ink, long x, long y);			// ROM 0x00140d9c InkMakePaths__FRC6RefVarlT2
+pathsHandle*	InkMakePathsScaled(const void* data, long size, Fixed x, Fixed y, Fixed scaleX, Fixed scaleY);	// ROM 0x001534e8 GenericCSMakePathsGroup__FP14CSStrokeHeaderlN32
 
 
 // A shape frame that draws a list of strokes as ink: the strokes packed

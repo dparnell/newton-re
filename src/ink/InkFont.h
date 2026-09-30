@@ -29,10 +29,9 @@
 				the object heap, which the recogniser hands over without
 				copying (`GetInkWordAddrData`, `GetInkWordAddrInfo`).
 
-	NOT YET RECONSTRUCTED: the
-	printing path - on a printer port the ROM draws the word as real
-	outlined paths (`CSMakePathsGroup`, `FramePaths`) rather than as
-	QuickDraw lines.
+	On a printer's port the word is drawn as outlined paths
+	(`InkMakePathsScaled` - the ROM's `CSMakePathsGroup` - and
+	`FramePaths`) rather than as QuickDraw lines.
 
 	Reconstructed from the MP2x00 US ROM (0x000ada30-0x000adf20,
 	0x000dbd0c-0x000dbf78, 0x000dc2a4-0x000dc568); each function cites
