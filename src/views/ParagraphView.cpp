@@ -5269,10 +5269,8 @@ TParagraphView::HandleLineGesture(long angle, Point& from, Point& to)
 // as many spaces as the tail is wide, or as many line breaks as it is
 // tall; the open one (5) is line breaks unless the view is one line only;
 // the flat one (6), which only a one-line view takes, is a single space
-// when both its arms are short.
-//
-// NOT YET RECONSTRUCTED: the ink half of CheckAndDoJoin, which joins two
-// ink words rather than closing up the space between two of text.
+// when both its arms are short.  A join drawn between two ink words
+// merges them (CheckAndDoJoin; src/host/demo/joinink.ns).
 long
 TParagraphView::HandleCaret(ULong kind, long angle, Point& armA, Point& point,
 							Point& armB, Point& tail)

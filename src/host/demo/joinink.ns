@@ -1,0 +1,178 @@
+// Joining ink words: two words kept as ink on one line, and the join
+// gesture - a caret drawn upside down between them, its arms on the two
+// words - makes them one ink word (TParagraphView::CheckAndDoJoin's ink
+// half: the two words merged down to their strokes and back, MergeInk).
+//
+//   build/host/host/newton --display 320x480 --headless 120 --script src/host/demo/joinink.ns
+//
+// The Notepad keeps writing as ink words (_recogSettings 64); "to" is
+// written, then "on" a word's gap along the same line, which the page puts
+// into the same paragraph after the first.  Then the caret is drawn from
+// the end of "to" down below the line and up to the start of "on".  The
+// paragraph is left with one ink word where there were two and the space
+// between.  build/joinink-before.pgm and build/joinink.pgm are the page.
+//
+// Prints "joinink: <step>: ok" or "FAILED", and "joinink: done".
+
+HostInclude("common.ns");			// tapAt, waitFor, walkSetup
+
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+joinFailures := 0;
+
+joinCheck := func(what, ok)
+  begin
+    if not ok then joinFailures := joinFailures + 1;
+    Print("joinink: " & what & (if ok then ": ok" else ": FAILED"));
+  end;
+
+stroke := func(points)
+  begin
+    PenDown(points[0], points[1]);
+    for i := 2 to Length(points) - 2 by 2 do
+      PenMove(points[i], points[i + 1]);
+    PenUp();
+  end;
+
+oval := func(cx, cy, rx, ry)
+  begin
+    local c := [ 0, -50, -87, -100, -87, -50, 0, 50, 87, 100, 87, 50, 0];
+    local s := [100, 87, 50, 0, -50, -87, -100, -87, -50, 0, 50, 87, 100];
+    local pts := [];
+    for k := 0 to 12 do
+      begin
+        AddArraySlot(pts, cx + (rx * c[k]) div 100);
+        AddArraySlot(pts, cy - (ry * s[k]) div 100);
+      end;
+    pts;
+  end;
+
+// "to", "on" or "ton" written from x on the baseline, a letter at a time
+// (the letters of src/host/demo/write.ns)
+writeWord := func(word, x, base)
+  begin
+    for i := 0 to StrLen(word) - 1 do
+      begin
+        local c := word[i];
+        if c = $t then
+          begin
+            call stroke with ([x + 6, base - 24, x + 6, base - 18, x + 6, base - 12, x + 6, base - 6, x + 6, base]);
+            call stroke with ([x, base - 14, x + 4, base - 14, x + 8, base - 14, x + 12, base - 14]);
+            x := x + 16;
+          end
+        else if c = $o then
+          begin
+            call stroke with (call oval with (x + 6, base - 7, 6, 7));
+            x := x + 16;
+          end
+        else if c = $n then
+          begin
+            call stroke with ([x, base - 14, x, base - 7, x, base, x, base - 7,
+                               x + 1, base - 11, x + 3, base - 13, x + 6, base - 14, x + 9, base - 13,
+                               x + 10, base - 10, x + 10, base - 5, x + 10, base]);
+            x := x + 16;
+          end;
+      end;
+  end;
+
+// whether a text has an ink word in it (the character 0xF701 standing
+// for one)
+hasInkWord := func(text)
+  begin
+    local found := nil;
+    for i := 0 to StrLen(text) - 1 do
+      if Ord(text[i]) = 0xF701 then found := true;
+    found;
+  end;
+
+// the first paragraph under v whose text has an ink word in it, or whose
+// text starts with `prefix`
+findPara := func(v, prefix)
+  begin
+    local found := nil;
+    if BAnd(v.viewClass, 0xFFFF) = 81 and IsString(v.text)
+       and (if prefix then StrPos(v.text, prefix, 0) = 0 else call hasInkWord with (v.text)) then
+      found := v
+    else
+      foreach child in v:ChildViewFrames() do
+        if not found then
+          found := call findPara with (child, prefix);
+    found;
+  end;
+
+
+// how many ink words the text has
+inkWords := func(text)
+  begin
+    local n := 0;
+    for i := 0 to StrLen(text) - 1 do
+      if Ord(text[i]) = 0xF701 then n := n + 1;
+    n;
+  end;
+
+twoWords := func()
+  begin
+    local p := call findPara with (GetRoot(), nil);
+    p and call inkWords with (p.text) = 2;
+  end;
+
+oneWord := func()
+  begin
+    local p := call findPara with (GetRoot(), nil);
+    p and call inkWords with (p.text) = 1;
+  end;
+
+finish := func()
+  begin
+    Print("joinink: done, " & joinFailures & " failed");
+    HostQuit();
+  end;
+
+call walkSetup with (name, func() begin
+    GetRoot().paperroll._recogSettings := 64;
+    PurgeAreaCache();
+    local base := 200;
+    call writeWord with ("to", 60, base);
+    local lastUp := Ticks();
+    IdleStrokes();
+    call waitFor with ("joinink: to", func() Ticks() - lastUp > 40 and call findPara with (GetRoot(), nil), func() begin
+        call writeWord with ("on", 120, base);
+        local onUp := Ticks();
+        IdleStrokes();
+        call waitFor with ("joinink: two ink words",
+            func() Ticks() - onUp > 40 and call twoWords with (),
+            func() begin
+                local para := call findPara with (GetRoot(), nil);
+                call joinCheck with ("two ink words in one paragraph", para and call inkWords with (para.text) = 2);
+                if not para then return call finish with ();
+                ScreenSnapshot("build/joinink-before.pgm");
+                // the join: the pen from the end of the first word down
+                // below the line and up to the start of the second
+                local b := para:GlobalBox();
+                local y := b.bottom - 8;
+                local from := b.left + 16;
+                local upTo := b.left + 42;
+                local mid := (from + upTo) div 2;
+                local pts := [];
+                for k := 0 to 6 do
+                  begin
+                    AddArraySlot(pts, from + ((mid - from) * k) div 6);
+                    AddArraySlot(pts, y + (16 * k) div 6);
+                  end;
+                for k := 1 to 6 do
+                  begin
+                    AddArraySlot(pts, mid + ((upTo - mid) * k) div 6);
+                    AddArraySlot(pts, y + 16 - (16 * k) div 6);
+                  end;
+                call stroke with (pts);
+                IdleStrokes();
+                call waitFor with ("joinink: joined",
+                    func() call oneWord with (),
+                    func() begin
+                        local q := call findPara with (GetRoot(), nil);
+                        call joinCheck with ("joined into one ink word", q and call inkWords with (q.text) = 1 and StrLen(q.text) = 1);
+                        ScreenSnapshot("build/joinink.pgm");
+                        call finish with ();
+                      end, 20);
+              end, 20);
+      end, 20);
+  end);

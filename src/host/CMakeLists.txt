@@ -449,6 +449,14 @@ set_tests_properties(host.NewtonRereadInk PROPERTIES TIMEOUT 180
                      PASS_REGULAR_EXPRESSION "in reading order: ok.*rereadink: done, 0 failed"
                      FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
 
+# two ink words joined with the pen (demo/joinink.ns): the join caret
+# drawn upside down between them - TParagraphView::CheckAndDoJoin's ink half
+add_test(NAME host.NewtonJoinInk COMMAND newton --display 320x480 --headless 120
+         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/joinink.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonJoinInk PROPERTIES TIMEOUT 180
+                     PASS_REGULAR_EXPRESSION "joined into one ink word: ok.*joinink: done, 0 failed"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+
 # a long note printed across pages (demo/printlong.ns): the Notepad's print
 # format reflows the note's paragraph into each page and cuts it between
 # two lines where the page runs out (views/Reflow.cpp ReflowText, the
