@@ -837,7 +837,7 @@ if(EXISTS ${NIE_DIR}/REGPKGS/inetenbl.pkg)
                          --package ${NIE_DIR}/REGPKGS/inetstup.pkg --package ${NETHOPPER_DIR}/nethopper.pkg
                          --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/nethopper.ns
                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-        set_tests_properties(host.NewtonNetHopper PROPERTIES TIMEOUT 300
+        set_tests_properties(host.NewtonNetHopper PROPERTIES TIMEOUT 300 RESOURCE_LOCK tcp_52381
                              PASS_REGULAR_EXPRESSION "nethopper: the help page drawn: ok.*nethopper: the URL typed: ok.*nethopper: loaded Host Test Page.*nethopper: the page's heading drawn: ok.*nethopper: the image decoded and drawn: ok.*nethopper: done, 0 failed"
                              FAIL_REGULAR_EXPRESSION "waited in vain|is not answered|stopped \\(|FAILED")
     endif()
@@ -1096,6 +1096,13 @@ if(Python3_FOUND)
     set_tests_properties(host.NewtonBigStore.file PROPERTIES TIMEOUT 60 FIXTURES_REQUIRED host_big_store
                          DEPENDS host.NewtonBigStore
                          PASS_REGULAR_EXPRESSION "sparse image of a 128 MB flash.*file size as expected")
+    # every task world answers its own size (tools/newton-rom/analysis/
+    # worldsizes.py): a world copied short into its task writes past its
+    # stack block (TInker's missing GetSizeOf, the TUPort::Receive crash)
+    add_test(NAME tools.WorldSizes
+             COMMAND ${Python3_EXECUTABLE} tools/newton-rom/analysis/worldsizes.py
+                     ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD}
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     add_test(NAME tools.FlashImage
              COMMAND ${Python3_EXECUTABLE} tools/stores/test_flashimage.py
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)

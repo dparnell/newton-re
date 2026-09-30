@@ -43,6 +43,10 @@ tools/newton-rom/
                           given to Send/Reply/SetReply/NewPtr/memcpy/... next to a struct holding a ULong, Ref,
                           pointer or TRegister (WIDE), [--all] [--wide-only] [--lp64 for Linux's 64-bit long];
                           python tools/newton-rom/analysis/romsizes.py [src]; tests/test_romsizes.py
+    worldsizes.py         every TUTaskWorld subclass in src/ answers GetSizeOf with sizeof itself (a world
+                          copied short into its task writes past its stack block), beside the ROM vtable's
+                          +0x04 (own N / inherits / abstract); python tools/newton-rom/analysis/worldsizes.py
+                          build/MP2x00US [--all]; ctest tools.WorldSizes
     natives.py            which of the ROM's 1326 native functions src/ answers, by area;
                           --unbound [--ready], --check, --csv
     symbols.py            search the symbol table by regex (address, mangled name, signature)
