@@ -9,6 +9,24 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: the application sweep
+
+Six sweeps on a fresh store, each opening about 35 applications (every
+Extras-drawer app and the root's other application templates, every
+fixture package installed) and giving each 40 random taps, scribbles,
+words and keys with the missing-native and exception traces on
+(`demo/sweep.ns`, `tools/host/sweeprank.py`): no unbound native, no NOT
+YET line and no unanswered armcpu call.  One host limit fixed: newton
+queued at most 31 packages and lost the rest with only a stderr line
+(now 255).  What remains is in `docs/next-steps.md` ("The application
+sweep"): the NIE's ARM link modules (Ethernet, LocalTalk, PPP/SLIP)
+have no host stand-in, the Host network link standing in for them; and
+faults in the applications themselves that a MessagePad would hit too
+(Daleks tapped before its set-up, NetSched with no URLs, a Calls delayed
+action on a closed view, Newt's Cape 2.0 refused over 1.6).  Random use
+shows what errors, not what is wrong; scripted use of each application's
+main functions is next.
+
 ## 2026-10-01: ink dropped on a paragraph, ink words joined, a paced pen that was not
 
 - A host bug (47ad2077): a paced pen's records went into the tablet
