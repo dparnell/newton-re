@@ -9,6 +9,29 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: ink dropped on a paragraph, ink words joined, a paced pen that was not
+
+- A host bug (47ad2077): a paced pen's records went into the tablet
+  buffer all at once, because feeding each with `InsertTabletSample`
+  woke the inker, whose next idle fed the next straight away - so every
+  pen drag saw the pen already up (`demo/drag.ns` has no ctest, so
+  nothing caught it).  The hook now feeds them with
+  `TBCInsertTabletSample`, one per 50 ms inker idle.
+- Ink dropped on a paragraph becomes an ink word at the view's x-height,
+  character 0xf701 (`TParagraphView::Drop` 0x17fc20 over `InkConvert`;
+  ab5106f4, ctest `host.NewtonDropInk` with the pen).  A press within 60
+  ticks of the previous click is a tap-drag's second half
+  (`PartOfTapDrag`).
+- Joining two ink words with the caret gesture was already there; ctest
+  `host.NewtonJoinInk` now does it with the pen (40a2c6a9).
+- The keyboard gestalt 0x0200000b sets `gKeyboardConnected` (754794de);
+  nothing on the MP2x00 answers it.  `FixupDropData` was already in
+  `text/TXView.cpp`.
+- The math views (classes 84-86, 20 functions) are left NOT YET: only
+  the 'MathForm stationery would make one, nothing in the ROM, its
+  extension or the fixtures makes that, and the math recogniser is not in
+  the U.S. ROM.
+
 ## 2026-10-01: rereading selected ink; the container view's recogniser and editing
 
 - A double tap on a page's selection of ink reads it again (96c366cf):
