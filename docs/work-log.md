@@ -9,6 +9,15 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: the modem tests' fixed ports
+
+`host.NewtonModemAnswer` failed once in a full suite: it and
+`host.NewtonModemDial` named fixed echo ports (52376, 52375) in the
+ephemeral range, which another test's free port could already hold.
+newton now says which port `--tcp-echo 0` took, and `fakemodem.py
+--incoming echo`/`--number N=echo` use it; `stress.py` runs such copies
+at once, 8 of 8 beside 8 hogs.
+
 ## 2026-10-01: string VBOs big-endian; an older host's stores repaired
 
 A large binary of a string class, and the text engine's 'text, are now
