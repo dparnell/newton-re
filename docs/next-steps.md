@@ -230,9 +230,10 @@ worked through.  What could come next (not ranked; the owner chooses):
   dials and answers through `tools/modem/fakemodem.py`
   (`host.NewtonModemDial`, `host.NewtonModemAnswer`); and the comm
   trace frame's natives and translate (`comms/CommTrace.cpp`).  Left in
-  comms: receiving a fax over a Class 2 modem (being done; a fax is sent
-  over Class 1 and Class 2 - `host.NewtonFaxSend`, `host.NewtonFaxSendClass2`
-  - and received,
+  comms: nothing of fax (sent and received over Class 1 and Class 2 -
+  `host.NewtonFaxSend`, `host.NewtonFaxSendClass2`,
+  `host.NewtonFaxReceiveClass2`; Class 2.0 only with a modem profile that
+  enables it, fakemodem's side self-tested), received,
   shown and turned - `host.NewtonFaxReceive`),
   AppleTalk/NBP
   and ADSP (with the NTK's ADSP connection), the Hammer translators,

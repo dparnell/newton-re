@@ -237,6 +237,16 @@ is the same value spelt so that it cannot be read two ways.
   notBic loops never advance the mask pointer; `ScaleStdRRect` scales the
   corner oval crosswise on a fax.
 
+## 2026-09-30: a fax received over a Class 2 modem
+
+- `fakemodem.py --fax-call --fax-class 2` (and 2.0) (2e712a16): the ROM's
+  Class 2 receive path (ATA, +FDR, +FPTS=1, +FDR) worked as reconstructed;
+  ctest `host.NewtonFaxReceiveClass2` receives the page into the In Box,
+  the same bytes as over Class 1.  A Class 2 modem hands the page over
+  most significant bit first, which the ROM reverses byte by byte; the DC2
+  the Newton sends to say it is ready is not a command.  Fax is now done
+  both ways over Class 1 and Class 2.
+
 ## 2026-09-30: the default boot is the reconstructed data
 
 - The owner's decision: boot from the reconstructed data by default, with
