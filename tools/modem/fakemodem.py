@@ -54,6 +54,12 @@ Purpose
       The ROM offers Class 2.0 only to a modem whose profile enables it
       (TCMOModemFaxEnabledCaps leaves it out), so the Newton uses Class 1
       when it can, Class 2 when the modem has only that.
+      --fax-call works over Class 2 too: "ATA" is answered +FCON, +FTSI
+      and +FDCS; the first +FDR +FCFR, +FDCS, CONNECT and the page with
+      each byte's bits reversed (a Class 2 modem hands a page over most
+      significant bit first, and the ROM's fax tool turns it back), then
+      +FET: 2; the next +FDR +FHNG: 0.  DC2 (the DTE ready for the data)
+      and DC1/DC3 are not taken for commands.
 
     Data calls are +FCLASS=0 (docs/comms/README.md, "The modem").
 
@@ -491,6 +497,20 @@ class Modem:
             self.result("CONNECT", 1)
             self.start_collect("hdlc")          # answering, the modem sends HDLC at once
             return
+        if self.ringing and self.fax is not None and self.fax.rings and self.fclass in ("2", "2.0"):
+            # a Class 2 modem runs T.30 itself: the caller's id and DCS come
+            # back as the answer's result codes
+            log("answered a fax call (Class %s)" % self.fclass)
+            self.ringing = False
+            self.sreg[1] = 0
+            self.fax_call = True
+            self.fax.class2_pages = [self.fax.page]
+            two = self.fclass == "2"
+            self.info("+FCON" if two else "+FCO")
+            self.info('%s: "%s"' % ("+FTSI" if two else "+FTI", self.fax.identity))
+            self.info("%s: 0,3,0,2,0,0,0,0" % ("+FDCS" if two else "+FCS"))
+            self.result("OK", 0)
+            return
         if not self.ringing or self.incoming is None:
             self.result("NO CARRIER", 3)
             return
@@ -647,6 +667,39 @@ class Modem:
         if arg == "?":
             self.info(C2_VALUES.get(name, "0"))
             return True, end, False, True
+        if name == "DR" and self.fax_call and self.fax.rings:
+            # the caller's next page, or the end of the call
+            two = self.fclass == "2"
+            if not self.fax.class2_pages:
+                log("fax: -> DCN")
+                self.info("+FHNG: 0" if two else "+FHS: 0")
+                self.fax_call = False
+                self.result("OK", 0)
+                return True, end, True, True
+            page = self.fax.class2_pages.pop(0)
+            if two:
+                # a Class 2 modem hands a page over most significant bit
+                # first (the ROM's fax tool reverses each byte it receives
+                # in Class 2 - comms/fax/FaxToolPhases.cpp ReverseBits)
+                page = bytes(REVERSE_BITS[b] for b in page)
+            if two:
+                self.info("+FCFR")              # (Class 2.0 has no +FCFR)
+            self.info("%s: 0,3,0,2,0,0,0,0" % ("+FDCS" if two else "+FCS"))
+            log("-> CONNECT (to receive a page)")
+            self.send(bytes([13, 10]) + b"CONNECT" + bytes([13, 10]))
+            time.sleep(CARRIER_TIME)
+            self.send(dle_stuff(page))
+            log("fax: -> the page, %d lines in %d bytes" % (self.fax.lines, len(page)))
+            last = not self.fax.class2_pages
+            if two:
+                self.info("+FET: %d" % (2 if last else 0))
+                self.result("OK", 0)
+            else:
+                self.info("+FET: %d" % (2 if last else 0))
+                self.info("+FPS: 1")
+                self.result("OK", 0)
+            log("fax: -> %s" % ("EOP" if last else "MPS"))
+            return True, end, True, True
         if name == "DT" and self.fax_call:
             # the page's data: the session's parameters, then CONNECT
             self.info("%s: 1,3,0,2,0,0,0,0" % ("+FDCS" if self.fclass == "2" else "+FCS"))
@@ -804,6 +857,13 @@ class Modem:
             return
         if self.echo:
             self.send(data)
+        if self.fclass in ("2", "2.0"):
+            # Class 2 flow control between commands: DC2 (the DTE ready for
+            # a page's data after +FDR's CONNECT), DC1/DC3 - not commands
+            for flow in (b"\x11", b"\x12", b"\x13"):
+                if flow in data:
+                    log("<- %s" % {b"\x11": "DC1", b"\x12": "DC2", b"\x13": "DC3"}[flow])
+                    data = data.replace(flow, b"")
         self.buffer += data
         while b"\r" in self.buffer:
             text, _, self.buffer = self.buffer.partition(b"\r")
@@ -938,7 +998,75 @@ def self_test():
     thread.join(timeout=5)
     for fclass in ("2", "2.0"):
         self_test_class2(fclass, page, tmp)
+        self_test_class2_call(fclass, page, tmp)
     print("fakemodem: fax answer self test passed")
+
+
+def self_test_class2_call(fclass, page, tmp):
+    """--fax-call over Class 2 (or 2.0) against a scripted answering DTE:
+    the rings once it listens, ATA answered with the caller's id and DCS,
+    +FDR answered with the page (its bits reversed in Class 2, as such a
+    modem hands them over) and the post-page message, the last +FDR with
+    the hang-up status; the page read must be the page sent."""
+    path = os.path.join(tmp, "fakemodem-call-page.pbm")
+    t4.write_pbm(path, page)
+    newton, dte = socket.socketpair()
+    fax = FaxCaller(path, "fakemodem fax")
+    modem = Modem(dte, {}, None, 9600, "fakemodem", fax)
+    modem.fax_class = fclass
+    thread = threading.Thread(target=modem.run, daemon=True)
+    thread.start()
+    newton.settimeout(10)
+    pending = b""
+
+    def read_until(word):
+        nonlocal pending
+        while word not in pending:
+            pending += newton.recv(4096)
+        before, _, pending = pending.partition(word)
+        return before
+
+    def command(text, answer=b"OK\r\n"):
+        newton.sendall(text.encode() + b"\r")
+        return read_until(answer)
+
+    two = fclass == "2"
+    command("ATE0")
+    command("AT+FCLASS=" + fclass)
+    command("ATS1?")
+    read_until(b"RING\r\n")
+    answer = command("ATA")
+    assert (b"+FCON" if two else b"+FCO") in answer and b"fakemodem fax" in answer, answer
+    assert (b"+FDCS: " if two else b"+FCS: ") in answer, answer
+    read_until_connect = command("AT+FDR", b"CONNECT\r\n")
+    assert (b"+FCFR" in read_until_connect) == two, read_until_connect
+    newton.sendall(bytes([0x12]))                   # DC2: ready for the page
+    data = bytearray()
+    while True:
+        while len(pending) < 2:
+            pending += newton.recv(4096)
+        if pending[0] == DLE:
+            if pending[1] == ETX:
+                pending = pending[2:]
+                break
+            data.append(pending[1])
+            pending = pending[2:]
+        else:
+            data.append(pending[0])
+            pending = pending[1:]
+    if two:
+        data = bytes(REVERSE_BITS[b] for b in data)
+    rows = t4.decode_page(bytes(data), t4.WIDTH)
+    rows = [row + [0] * (t4.WIDTH - len(row)) for row in rows]
+    assert rows == page
+    answer = read_until(b"OK\r\n")
+    assert b"+FET: 2" in answer, answer
+    command("AT+FPTS=1")
+    answer = command("AT+FDR")
+    assert (b"+FHNG: 0" if two else b"+FHS: 0") in answer, answer
+    newton.close()
+    thread.join(timeout=5)
+    log("Class %s call self test passed" % fclass)
 
 
 def self_test_class2(fclass, page, tmp):

@@ -43,6 +43,10 @@ is the modem at the other end of it.
   page read to DLE ETX, `+FET=` with `+FPTS: 1` (and `+FHNG: 0` at the
   end); `--fax-class 2.0` uses Class 2.0's words and its DLE `,`/`.` page
   ends (the ROM only uses 2.0 with a modem profile that enables it).
+  `--fax-call` works over Class 2 too: `ATA` answered `+FCON`, `+FTSI`,
+  `+FDCS`; `+FDR` answered `+FCFR`, `+FDCS`, `CONNECT` and the page with
+  each byte's bits reversed (as a Class 2 modem hands it over), then
+  `+FET: 2`; the next `+FDR` `+FHNG: 0` (ctest `host.NewtonFaxReceiveClass2`).
   `--self-test` runs `--fax-answer` against scripted Class 1, 2 and 2.0 callers in
   place of the Newton, sending `t4.py`'s test page (ctest
   `comms.FakemodemFaxAnswer`).
@@ -57,7 +61,7 @@ is the modem at the other end of it.
   `--spawn`, the program's output passed through and its exit status
   answered.
 - **Invocation** (ctests `host.NewtonModemDial`, `host.NewtonModemAnswer`,
-  `host.NewtonFaxReceive`, `host.NewtonFaxSend`, `host.NewtonFaxSendClass2`):
+  `host.NewtonFaxReceive`, `host.NewtonFaxSend`, `host.NewtonFaxSendClass2`, `host.NewtonFaxReceiveClass2`):
 
 ```
 python tools/modem/fakemodem.py --number 5551212=127.0.0.1:52375 \
