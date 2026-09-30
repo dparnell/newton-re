@@ -9,6 +9,19 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: the Setup walk's lost tap
+
+`common.ns`'s walkSetup sometimes stopped at Welcome ("setup name page:
+waited in vain").  The tap past Welcome starts the pen calibration, and
+the host's automatic calibration taps were held a fixed 500 ms; with
+the inker late, `GetRawPoint` saw fewer than the twenty pen-down polls
+it wants, and the calibration waited out its time limit.  The taps now
+lift once the inker has taken 24 samples (6638ed6f, 4dc1c9db); a 50 ms
+hold, which stalled every time before, gets through all eleven Setup
+pages.  Seen in passing, not chased: `intl.Dates` failed once in a run
+that crossed midnight, and `host.NewtonBeamIrDA` passed 5 of 6 under
+stress ("the note sent: waited in vain").
+
 ## 2026-09-30: Newt's Cape browses, with images
 
 ctest `host.NewtonNewtsCape` (aa6c590e, c9667bc7): Newt's Cape 2.0 over

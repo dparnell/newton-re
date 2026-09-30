@@ -113,6 +113,15 @@ words, and a target 10 pixels in from the top left corner:
   the pen away it blinks the stylus picture once a second, gives up
   after the time limit (-56101) and abandons the screen when the power
   manager's `'ppen` system event arrives (-56102).
+
+  On the host, `HostTabletAutoCalibrate` taps the targets for a
+  `--script` run.  Each tap is held until the inker has taken 24
+  pen-down polls since it went down (`TBCPolledPenDownSamples`, counted
+  in `TabletBuffer.cpp`), for at least 500 ms and giving up after 10 s.
+  A fixed 500 ms hold was sometimes polled fewer than twenty times when
+  the inker ran late; the count started again, no second tap came, and
+  the calibration waited until it timed out - the walkSetup "setup name
+  page: waited in vain" flake (6638ed6f).
 * Then a target 10 pixels in from the bottom right.  The two readings
   give a scale and an offset each way; which raw axis goes with which
   screen axis, and which way round, comes from how the panel is turned
