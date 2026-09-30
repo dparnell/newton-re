@@ -2241,6 +2241,15 @@ TestCaret()
 	Eval("ctxC2:Dirty()");
 	Refresh();
 	EXPECT(gRootView->fCaretView == nil && !gRootView->fCaretShowing);
+	// the caret's clip view: a paragraph on the root is its own window;
+	// one in a page, the page (its enclosing edit view)
+	EXPECT(GetCaretClipView(p) == p);
+	{
+		TView* page = ViewOf("ctxCP := AddView(GetRoot(), {viewClass: 77, viewFlags: 1, viewBounds: {left: 150, top: 10, right: 230, bottom: 60}})");
+		TView* inPage = ViewOf("AddView(ctxCP, {viewClass: 81, viewFlags: 1, viewBounds: {left: 5, top: 5, right: 60, bottom: 20}, viewFont: espy12, text: \"x\"})");
+		EXPECT(page != nil && inPage != nil && GetCaretClipView(inPage) == page);
+		Eval("RemoveView(GetRoot(), ctxCP)");
+	}
 	gKeyboardConnected = false;
 	Eval("SetKeyView(ctxC2, 5)");
 	EXPECT(gRootView->fCaretView == p && gRootView->fCaretOffset == 5 && p->fCaretOffset == 5 && !gRootView->CaretEnabled());

@@ -205,4 +205,8 @@ void	RealExitModalDialog(TView* view);						// ROM 0x0030e14c RealExitModalDialo
 // is up (DEVIATION: set by newt's TNotebook, above the views)
 extern void	(*gDrawSplashScreenProc)(void);
 
+// the view the caret in a view is clipped to (a paragraph's edit view or
+// window)
+TView*	GetCaretClipView(TView* view);		// ROM 0x001b4f04 GetCaretClipView__FP5TView
+
 #endif	/* __ROOTVIEW_H */

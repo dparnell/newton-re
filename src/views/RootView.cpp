@@ -1214,15 +1214,17 @@ DrawCaretBits(const Rect& rect, Boolean erase)
 
 // ROM 0x001b4f04 GetCaretClipView__FP5TView
 // The view the caret is clipped to: a view that is not a paragraph, or a
-// paragraph's hilite view (its edit view, NOT YET: GetHiliteView), else
-// the paragraph's window - the first ancestor below the root that is an
+// paragraph's enclosing edit view (GetEnclosingEditView), else the
+// paragraph's window - the first ancestor below the root that is an
 // application or floats.
-static TView*
+TView*
 GetCaretClipView(TView* view)
 {
 	if (!view->DerivedFrom(clParagraphView))
 		return view;
-	// NOT YET RECONSTRUCTED: view->GetHiliteView() (TDataView: the enclosing edit view)
+	TView* edit = ((TDataView*) view)->GetEnclosingEditView();
+	if (edit != nil)
+		return edit;
 	TView* v = view;
 	for ( ; ; )
 	{
