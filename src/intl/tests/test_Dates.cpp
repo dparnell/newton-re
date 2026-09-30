@@ -223,8 +223,13 @@ TestStrings()
 	EXPECT(RINT(Eval("Date(IncrementMonth(when, -10)).month")) == 12 && RINT(Eval("Date(IncrementMonth(when, -10)).date")) == 3);
 	EXPECT(Eval("IsValidDate({year: 1990, month: 2, date: 29})") == NILREF);
 	EXPECT(Eval("IsValidDate({year: 1996, month: 2, date: 29})") == TRUEREF);
+	// (the clock pinned to 30 September 2026 14:05:17 GMT, so that what
+	// follows does not depend on when the test runs - read at a whole
+	// minute, the seconds TimeInSeconds carries past Time()'s minute are
+	// nought and the two readings below agree)
+	SetRealClockSeconds(3873571200UL + 14 * 3600 + 5 * 60 + 17);
 	EXPECT(RINT(Eval("Time()")) > 0 && RINT(Eval("Ticks()")) >= 0);
-	EXPECT(RINT(Eval("Date(Time()).year")) >= 2024);
+	EXPECT(RINT(Eval("Date(Time()).year")) == 2026);
 	// TimeInSeconds counts from the start of 1993 and a Newton integer
 	// holds thirty bits, so it runs out in 2010 and wraps from then on -
 	// the machine's own limit, which the host's clock is well past.  What
@@ -234,7 +239,7 @@ TestStrings()
 	SetFix2010(false);
 	EXPECT(RINT(Eval("DateFromSeconds(500000000).year")) == 2008);
 	SetFix2010(true);
-	EXPECT(RINT(Eval("TimeInSeconds()")) != RINT(Eval("TotalSeconds(Date(Time()))")));
+	EXPECT(RINT(Eval("TimeInSeconds()")) - RINT(Eval("TotalSeconds(Date(Time()))")) == 17);	// the seconds past the minute
 	EXPECT(StringIs(RefVar(Eval("TimeFrameStr({hour: 7, minute: 30, second: 5}, 0)")), "7:30:05 am"));
 	// the locale
 	EXPECT(EQRef(Eval("GetLocale()"), GetCurrentLocale()));
