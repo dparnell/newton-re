@@ -16,6 +16,8 @@
 
 extern const ExceptionName exPipeException;
 
+extern const ExceptionName exPipeException;
+
 
 /*------------------------------------------------------------------------------
 	T P i p e E v e n t
@@ -346,11 +348,9 @@ TPipeEventHandler::AEHandlerProc(TUMsgToken* /*token*/, ULong* /*size*/, TAEvent
 	}
 
 	case kPipeClose:
+		// the endpoint let go of by this world (its error, if any, dropped)
 		if (fInfo->fIsEndpoint)
-		{
-			// NOT YET RECONSTRUCTED: TEndpointPipe::RemoveFromAppWorld (the
-			// comms area) - an endpoint is never the source on the host
-		}
+			CallEndpointPipeHook(gEndpointPipeHooks.fRemoveFromAppWorld, fInfo->fPipe);
 		SetReply(sizeof(TPipeEvent), event);
 		ReplyImmed();
 		((TAppWorld*) GetGlobals())->AETerminateLoop();
@@ -360,6 +360,29 @@ TPipeEventHandler::AEHandlerProc(TUMsgToken* /*token*/, ULong* /*size*/, TAEvent
 		return;
 	}
 	DeferReply();
+}
+
+
+EndpointPipeHooks	gEndpointPipeHooks = { nil, nil };
+
+// (host) The ROM's try around an endpoint pipe's call: an exPipeException's
+// data is the error; any other exception goes on.
+NewtonErr
+CallEndpointPipeHook(void (*hook)(CPipe*), CPipe* pipe)
+{
+	NewtonErr err = noErr;
+	if (hook == nil)
+		return noErr;
+	newton_try
+	{
+		hook(pipe);
+	}
+	newton_catch(exPipeException)
+	{
+		err = (NewtonErr) (intptr_t) CurrentException()->data;
+	}
+	end_try;
+	return err;
 }
 
 
@@ -402,11 +425,11 @@ TPipeApp::MainConstructor()
 		else
 			fHandler->Init(kPackageEventId, kNewtEventClass);
 	}
+	// the endpoint taken into this world; its error, or nought, the answer
+	// ROM BUG kept: an endpoint's answer replaces the world's own error, so
+	// a world that failed to start is answered noErr when the endpoint came in
 	if (fIsEndpoint)
-	{
-		// NOT YET RECONSTRUCTED: TEndpointPipe::AddToAppWorld (the comms
-		// area; an exPipeException from it is the answer)
-	}
+		err = CallEndpointPipeHook(gEndpointPipeHooks.fAddToAppWorld, fInfo.fPipe);
 	return err;
 }
 

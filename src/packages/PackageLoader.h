@@ -27,9 +27,11 @@
 				Expand), not in the object layout a package in memory has -
 				which is how the ROM's own streamed packages are made.
 
-				NOT YET RECONSTRUCTED: an endpoint as the source
-				(TEndpointPipe, LoadPackage(TEndpointPipe* ...) - the comms
-				area).
+				An endpoint as the source (TEndpointPipe, LoadPackage
+				(TEndpointPipe* ...)) is let go of by the loading world for
+				the 'pipe' world to read in, and taken back after (PartPipe.h's
+				gEndpointPipeHooks); the constructor and LoadPackage that take
+				one are in packages/EndpointPackages.cpp, above the comms area.
 
 	Reconstructed from the MP2x00 US ROM (0x0015d3b0-0x0015dc00,
 	0x001829c8-0x00182a2c); each function cites its origin.
@@ -44,6 +46,7 @@
 
 class CPipe;
 class CRingBuffer;
+class TEndpointPipe;
 
 
 // Put up in the loading world for the duration: a 'pkbl, 'pkrm or 'pkbu
@@ -62,6 +65,7 @@ class TPackageLoader		// 0x24 bytes in the ROM
 public:
 					TPackageLoader(char* buffer, SourceType type);		// ROM 0x0015d3b0 __ct__14TPackageLoaderFPc10SourceType
 					TPackageLoader(CPipe* pipe, SourceType type);		// ROM 0x0015d404 __ct__14TPackageLoaderFP5CPipe10SourceType
+					TPackageLoader(TEndpointPipe* pipe, SourceType type);	// ROM 0x0015d74c __ct__14TPackageLoaderFP13TEndpointPipe10SourceType (EndpointPackages.cpp)
 					~TPackageLoader();									// ROM 0x0015d7a4 __dt__14TPackageLoaderFv
 
 	void			Reset(void);										// ROM 0x0015d7b0 Reset__14TPackageLoaderFv - nothing
@@ -82,6 +86,7 @@ public:
 
 NewtonErr	cPackageLoad(TPackageLoader& loader, ULong* packageId);		// ROM 0x0015d458 cPackageLoad__FR14TPackageLoaderPUl
 NewtonErr	LoadPackage(CPipe* pipe, ULong* packageId, Boolean willRemove);	// ROM 0x0015d4e0 LoadPackage__FP5CPipePUlUc - a removable stream
+NewtonErr	LoadPackage(TEndpointPipe* pipe, ULong* packageId, Boolean willRemove);	// ROM 0x0015d5a0 LoadPackage__FP13TEndpointPipePUlUc - a removable stream off an endpoint (EndpointPackages.cpp)
 NewtonErr	LoadPackage(CPipe* pipe, SourceType type, ULong* packageId);	// ROM 0x0015d5fc LoadPackage__FP5CPipe10SourceTypePUl - kError_Bad_Parameters for a memory type
 
 #endif	/* __PACKAGELOADER_H */

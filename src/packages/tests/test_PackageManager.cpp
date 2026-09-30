@@ -27,6 +27,9 @@
 
 #include "PackageManager.h"
 #include "StdioPipe.h"
+#include "PartPipe.h"
+#include "UserGlobals.h"
+#include "PackageLoader.h"
 #include "PackageEvents.h"
 #include "PackageIterator.h"
 #include "PackagePipe.h"
@@ -479,6 +482,78 @@ StreamLoad(const void* package, ULong size, ULong* packageId)
 }
 
 
+// An endpoint as the source (LoadPackage(TEndpointPipe* ...)): the pipe is
+// the test's memory pipe, and the endpoint pipe's two calls
+// (PartPipe.h's gEndpointPipeHooks) are the test's, noting what was asked
+// and by which world: the loader lets the endpoint go (R), the 'pipe' world
+// takes it (A) and lets it go at the close (R), and the loader takes it
+// back when done (A).
+static char		gEndpointCalls[16];
+static long		gEndpointCallCount = 0;
+static TObjectId	gEndpointCallTasks[16];
+static NewtonErr	gEndpointRemoveError = noErr;
+extern const ExceptionName exPipeException;
+
+static void
+TestEndpointAdd(CPipe* /*pipe*/)
+{
+	gEndpointCallTasks[gEndpointCallCount] = gCurrentTaskId;
+	gEndpointCalls[gEndpointCallCount++] = 'A';
+}
+
+static void
+TestEndpointRemove(CPipe* /*pipe*/)
+{
+	gEndpointCallTasks[gEndpointCallCount] = gCurrentTaskId;
+	gEndpointCalls[gEndpointCallCount++] = 'R';
+	if (gEndpointRemoveError != noErr)
+	{
+		NewtonErr err = gEndpointRemoveError;
+		gEndpointRemoveError = noErr;
+		Throw(exPipeException, (void*) (intptr_t) err, nil);
+	}
+}
+
+static NewtonErr
+EndpointStreamLoad(const void* package, ULong size, ULong* packageId)
+{
+	CTestPipe pipe(size);
+	pipe.WriteChunk(package, size, false);
+	pipe.Rewind();
+	*packageId = 0;
+	gEndpointCallCount = 0;
+	memset(gEndpointCalls, 0, sizeof(gEndpointCalls));
+	return LoadPackage((TEndpointPipe*) (CPipe*) &pipe, packageId, false);
+}
+
+static void
+TestEndpointStreamed(void)
+{
+	EndpointPipeHooks saved = gEndpointPipeHooks;
+	gEndpointPipeHooks.fAddToAppWorld = TestEndpointAdd;
+	gEndpointPipeHooks.fRemoveFromAppWorld = TestEndpointRemove;
+	RefVar frame(AllocateFrame());
+	SetFrameSlot(frame, RefVar(Intern((char*) "count")), RefVar(MAKEINT(7)));
+	ULong size = 0;
+	UByte* package = StreamedPackage("OffAnEndpoint", frame, &size);
+	ULong id = 0;
+	EXPECT(EndpointStreamLoad(package, size, &id) == noErr && id != 0);
+	EXPECT(strcmp(gEndpointCalls, "RARA") == 0);
+	// the loader's two calls from one world, the 'pipe' world's from another
+	EXPECT(gEndpointCallTasks[0] == gEndpointCallTasks[3] && gEndpointCallTasks[1] == gEndpointCallTasks[2]
+		   && gEndpointCallTasks[0] != gEndpointCallTasks[1]);
+	EXPECT(Known(id) == noErr && DeinstallPackage(id) == noErr);
+	// the endpoint will not let go: its error is the answer, nothing read,
+	// and it is still taken back when the loader is done
+	gEndpointRemoveError = -12345;
+	id = 0;
+	EXPECT(EndpointStreamLoad(package, size, &id) == -12345);
+	EXPECT(strcmp(gEndpointCalls, "RA") == 0);
+	gEndpointPipeHooks = saved;
+	free(package);
+}
+
+
 static void
 TestStreamed(void)
 {
@@ -515,6 +590,7 @@ TestStreamed(void)
 		RefVar title(GetFrameSlot(read, RefVar(Intern((char*) "title"))));
 		EXPECT(IsString(title) && Length(title) == 18);
 	}
+	TestEndpointStreamed();
 	// the same package again from a stream: refused as already there (last,
 	// because the ROM leaves the sender's 'pipe' world waiting then)
 	EXPECT(DeinstallPackage(streamed) == noErr && got != nil && got->fRemoved);

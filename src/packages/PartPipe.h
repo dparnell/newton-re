@@ -30,9 +30,11 @@
 				A part's bytes are only ever read forwards: CPartPipe does not
 				seek, and it cannot be written to.
 
-				NOT YET RECONSTRUCTED: an endpoint as the source
-				(TEndpointPipe - the comms area): PipeInfo's fIsEndpoint is
-				never set on the host.
+				An endpoint as the source (TEndpointPipe, the comms area's)
+				is taken out of the loading world and put into the 'pipe'
+				world while it reads, through gEndpointPipeHooks (package_
+				manager does not link comms; packages/EndpointPackages.cpp
+				fills them in).
 
 	Reconstructed from the MP2x00 US ROM (0x0018259c-0x00182fc4); each
 	function cites its origin.
@@ -54,6 +56,20 @@
 class CBaseRingBuffer;
 class CRingBuffer;
 class CShadowRingBuffer;
+
+
+// TEndpointPipe::AddToAppWorld and RemoveFromAppWorld (comms/EndpointPipe.h),
+// for a pipe that is one; each throws exPipeException with the error.
+// DEVIATION: hooks, the comms area being above package_manager.
+struct EndpointPipeHooks
+{
+	void	(*fAddToAppWorld)(CPipe* pipe);
+	void	(*fRemoveFromAppWorld)(CPipe* pipe);
+};
+extern EndpointPipeHooks	gEndpointPipeHooks;
+
+// the hook called; ==> the error an exPipeException out of it carried
+NewtonErr	CallEndpointPipeHook(void (*hook)(CPipe*), CPipe* pipe);
 
 
 // What a TPipeApp is started with (the ROM's is 0x10 bytes, copied into the

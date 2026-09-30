@@ -134,10 +134,13 @@ TPackageLoader::Load(void)
 		info.fUnused04 = 0;		// (the ROM's is whatever was on the stack)
 		info.fBuffer = fBuffer;
 		info.fIsEndpoint = false;
+		// an endpoint let go of by this world for the 'pipe' world to read
+		// in; the error an exPipeException carried is the answer
 		if (fIsEndpoint)
 		{
-			// NOT YET RECONSTRUCTED: TEndpointPipe::RemoveFromAppWorld (the
-			// comms area; a pipe exception's error is the answer)
+			err = CallEndpointPipeHook(gEndpointPipeHooks.fRemoveFromAppWorld, fPipe);
+			if (err != noErr)
+				return err;
 		}
 		TPipeApp app(info, fIsEndpoint);
 		err = app.Init('pipe', true, 6000);
@@ -187,10 +190,9 @@ TPackageLoader::Done(UChar* forDispatchOnly, UChar* patchInstalled)
 		*forDispatchOnly = fForDispatchOnly;
 	if (patchInstalled != nil)
 		*patchInstalled = fPatchInstalled;
+	// the endpoint taken back into this world (an exPipeException dropped)
 	if (!IsMemory(fSourceType) && fIsEndpoint)
-	{
-		// NOT YET RECONSTRUCTED: TEndpointPipe::AddToAppWorld (the comms area)
-	}
+		CallEndpointPipeHook(gEndpointPipeHooks.fAddToAppWorld, fPipe);
 	if (fHandler != nil)
 		delete fHandler;
 	if (fBuffer != nil)

@@ -3,7 +3,10 @@
 
 	Contains:	store:SuckPackageFromEndPoint - a package read off a
 				NewtonScript endpoint (a serial link, a network connection)
-				straight onto the store, through an endpoint pipe.
+				straight onto the store, through an endpoint pipe; and a
+				package loaded off an endpoint pipe (LoadPackage(TEndpointPipe*
+				...), PackageLoader.h), with the endpoint pipe's two calls the
+				loader and the 'pipe' world make through PartPipe.h's hooks.
 
 	The endpoint and its pipe are the communications area's
 	(comms/NewScriptEndpoint.h, comms/EndpointPipe.h); what is read is
@@ -20,6 +23,8 @@
 #include "ObjectHeap.h"
 #include "NativeFunctions.h"
 #include "NewtonExceptions.h"
+#include "PackageLoader.h"
+#include "PartPipe.h"
 
 
 // ROM 0x00321b6c FSuckPackageFromEnpoint
@@ -55,8 +60,58 @@ FSuckPackageFromEnpoint(RefArg rcvr, RefArg endpoint, RefArg parameters)
 }
 
 
+/*------------------------------------------------------------------------------
+	A   p a c k a g e   o f f   a n   e n d p o i n t
+------------------------------------------------------------------------------*/
+
+// ROM 0x0015d74c __ct__14TPackageLoaderFP13TEndpointPipe10SourceType
+// The loader of a stream an endpoint pipe reads.
+TPackageLoader::TPackageLoader(TEndpointPipe* pipe, SourceType type)
+{
+	fSourceType = type;
+	fPipe = pipe;
+	fIsEndpoint = true;
+	fHandler = nil;
+	fBuffer = nil;
+	fBufferPtr = nil;			// (the ROM leaves +0x00 alone)
+	fPackageId = 0;				// (and these)
+	fForDispatchOnly = false;
+	fPatchInstalled = false;
+}
+
+
+// ROM 0x0015d5a0 LoadPackage__FP13TEndpointPipePUlUc
+// A package read off an endpoint pipe, as a removable stream.
+// DEVIATION: the ROM's source type has its device number and id from the
+// stack; the host's are nought (as LoadPackage(CPipe* ...)'s).
+NewtonErr
+LoadPackage(TEndpointPipe* pipe, ULong* packageId, Boolean /*willRemove*/)
+{
+	SourceType type = { kRemovableStream, kNoDevice, 0, 0 };
+	TPackageLoader loader(pipe, type);
+	return cPackageLoad(loader, packageId);
+}
+
+
+// (host) PartPipe.h's hooks: the loader's pipe is the endpoint pipe it was
+// made with
+static void
+EndpointPipeAddToAppWorld(CPipe* pipe)
+{
+	((TEndpointPipe*) pipe)->AddToAppWorld();
+}
+
+static void
+EndpointPipeRemoveFromAppWorld(CPipe* pipe)
+{
+	((TEndpointPipe*) pipe)->RemoveFromAppWorld();
+}
+
+
 void
 RegisterEndpointPackageNatives(void)
 {
+	gEndpointPipeHooks.fAddToAppWorld = EndpointPipeAddToAppWorld;
+	gEndpointPipeHooks.fRemoveFromAppWorld = EndpointPipeRemoveFromAppWorld;
 	RegisterNativeFunction("FSuckPackageFromEnpoint", (void*) FSuckPackageFromEnpoint, 2);
 }
