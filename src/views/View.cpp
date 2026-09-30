@@ -4627,9 +4627,10 @@ TView::ChildrenHeight(long* count)
 
 
 // ROM 0x00265698 SetChildrenVertical__5TViewFlT1
-// The children stacked from top, spacing apart (NOT YET RECONSTRUCTED
-// beyond the first: the ROM's loop over the rest is lost after the first
-// child's SetBounds); ==> the bottom reached.
+// The children stacked from top, spacing apart: each moved down to where
+// the last ended (never up), its height kept; ==> the bottom reached.
+// (Checked against the disassembly, 0x00265698-0x002657c8: the loop over
+// every child is all there; an older, truncated disassembly had lost it.)
 long
 TView::SetChildrenVertical(long top, long spacing)
 {
