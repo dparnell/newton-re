@@ -69,6 +69,15 @@ RegisterHostVolumeInfo(void)
 	// this call - the ROM's is a field of the sound driver
 	static TGestaltVolumeInfo info;
 	memset(&info, 0, sizeof(info));
+	// The ROM's driver copies these from the platform's sound hardware
+	// gestalt (kGestalt_Ext_SoundHWInfo, which TVoyagerPlatform::Init,
+	// 0x0026ce68, registers for the MP2x00: its first two bytes 1, and
+	// 0x1d at +8 - the outputs, of which the Sound preferences' "Play
+	// using" picker offers the speaker (1), line-out (8) and both; with
+	// none it has nothing to show and throws).
+	info.fUnknown00 = 1;
+	info.fUnknown01 = 1;
+	info.fOutputDevices = 0x1d;
 	info.fServerAnswersVolume = false;			// there is no sound server
 	info.fHighestSetting = 4;					// five settings, 0 to 4
 	// the decibels between the quietest audible setting and full, which is

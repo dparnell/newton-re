@@ -86,7 +86,7 @@ struct TGestaltVolumeInfo			// 0x14 bytes
 	// parameter block has to be laid out in the widths the machine uses
 	uint32_t	fDecibelRange[2];
 	int32_t		fHighestSetting;		// +0x0c  the loudest setting's number
-	int32_t		fUnknown10;				// +0x10
+	int32_t		fOutputDevices;			// +0x10  the outputs there are: 1 the speaker, 8 line-out (the Sound preferences' "Play using" picker)
 };
 
 // DEVIATION: the ROM's sound driver registers the block above at boot;
