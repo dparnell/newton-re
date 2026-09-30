@@ -106,6 +106,11 @@ PATCHES = {
     ],
     # UserPorts.h: the ROM's Sleep() and TUTaskWorld::StartTask use TUPort's private
     # Send*Goo like SleepTill does, but only SleepTill is a friend in the DDK's header
+    # the printing headers (src/print/): objects.h is spelt in the wrong case
+    # for a case-sensitive file system
+    "PrintTypes.h": [('#include "Objects.h"', '#include "objects.h"')],
+    "DotDrivers.h": [('#include "Objects.h"', '#include "objects.h"')],
+    "DriverCallbacks.h": [('#include "Objects.h"', '#include "objects.h"')],
     # UserDomain.h: the include is spelt in the wrong case
     "UserDomain.h": [
         ('#include "sharedTypes.h"', '#include "SharedTypes.h"'),
