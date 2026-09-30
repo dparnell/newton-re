@@ -563,12 +563,30 @@ TParagraphView::RefillAllCaches(void)
 
 
 // ROM 0x0016baa8 CreateAllCaches__14TParagraphViewFv
-// The caches made: the lines laid out, the hilites' areas set up again
-// (NOT YET RECONSTRUCTED: the hilites), the bounds noted.
+// The caches made: the lines laid out and - for a view that calculates
+// its bounds - the view made as tall as its lines (as wide as them too
+// when it sizes itself to its text, text flag 4), which is how a
+// paragraph made with no height (a note made by MakeTextNote: viewBounds
+// top and bottom 0) comes to show; the hilites' areas set up again (NOT
+// YET RECONSTRUCTED: the hilites), the bounds noted.
 void
 TParagraphView::CreateAllCaches(void)
 {
 	RefillAllCaches();
+	if (fFlags & vCalculateBounds)
+	{
+		// the ROM's +0x40 text bounds are the view's own when there are no lines
+		Rect text = fLineCount > 0 ? fTextBounds : viewBounds;
+		Rect bounds = viewBounds;
+		bounds.bottom = text.bottom;
+		Point origin = fParent->ContentsOrigin();
+		OffsetRect(&bounds, -origin.h, -origin.v);
+		fCachesValid = false;
+		if (TextFlags() & 4)
+			bounds.right = (short) (text.right - origin.h);
+		WriteBounds(bounds);
+		fCachesValid = true;
+	}
 	fCachedBounds = viewBounds;
 	fCachesValid = true;
 }

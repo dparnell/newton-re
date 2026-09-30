@@ -846,6 +846,12 @@ TestParagraphView()
 	EXPECT(p->GetInterLineSpacing() == 45 && p->LineCount() == 1 && p->Line(0).fBounds.top + p->Line(0).fAscent == 10 + 45 - 4);
 	Eval("ctxQ:Close()");
 
+	// a view that calculates its bounds is made as tall as its lines when it
+	// is built (CreateAllCaches) - a note made by MakeTextNote has no height
+	p = (TParagraphView*) ViewOf("ctxQ := AddView(GetRoot(), {viewClass: 81, viewFlags: 3 + 8, viewBounds: {left: 20, top: 10, right: 120, bottom: 10}, viewJustify: 0, viewFont: espy12, text: \"Hello\"})");
+	EXPECT(p->LineCount() == 1 && p->viewBounds.top == 10 && p->viewBounds.bottom == p->Line(0).fBounds.bottom && p->viewBounds.bottom > 10);
+	Eval("ctxQ:Close()");
+
 	// a paragraph's vertical justification is only for one line
 	// (vjOneLineOnly); another's lines start at its top
 	p = (TParagraphView*) ViewOf("ctxQ := AddView(GetRoot(), {viewClass: 81, viewFlags: 3, viewBounds: {left: 20, top: 10, right: 70, bottom: 90}, viewJustify: 9, viewFont: espy12, text: \"Hello\"})");
@@ -6370,11 +6376,13 @@ TestSelectionClicks()
 	Eval("RemoveView(GetRoot(), ctxSP)");
 	Refresh();
 
-	// a resize: twice as wide, as TrackScale would send it
+	// a resize: twice as wide, as TrackScale would send it (a paragraph that
+	// does not calculate its bounds: one that does is as wide as its parent
+	// from the start, its input flags having bit 0 - CreateAllCaches)
 	TView* page2 = ViewOf("ctxSP := AddView(GetRoot(), {viewClass: 77, viewFlags: 1, "
 		"viewBounds: {left: 0, top: 0, right: 160, bottom: 100}})");
 	TParagraphView* p2 = (TParagraphView*) ViewOf(
-		"ctxST := AddView(ctxSP, {viewClass: 81, viewFlags: 1 + 8, textFlags: 5, "
+		"ctxST := AddView(ctxSP, {viewClass: 81, viewFlags: 1, textFlags: 5, "
 		"viewBounds: {left: 10, top: 10, right: 50, bottom: 30}, viewFont: espy12, text: \"wide\"})");
 	EXPECT(page2 != nil && p2 != nil);
 	if (p2 == nil)
