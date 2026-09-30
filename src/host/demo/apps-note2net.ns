@@ -1,0 +1,76 @@
+// Note2Net (fixtures/packages/apps/NetHopper3.2/note2net.pkg) used as its
+// user would, as NetHopper's guide says: a note written on the Notepad (a
+// web page in plain text), then the Notepad's Action button tapped and
+// Note2Net chosen from its picker - NetHopper opens and shows the note as
+// a page (through the "newtontext:" protocol Note2Net gives it).  Checked
+// in NetHopper's page: its content views hold the note's text.  ctest
+// host.NewtonAppNote2Net:
+//
+//   build/host/host/newton --display 320x480 --erase --store tmp/note2net.store //       --headless 240 --package fixtures/packages/apps/NetHopper3.2/nethopper.pkg //       --package fixtures/packages/apps/NetHopper3.2/note2net.pkg //       --script src/host/demo/apps-note2net.ns
+
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
+HostInclude("walkhelpers.ns");		// findView, the steps
+HostInclude("apphelpers.ns");		// openFromExtras, typeText
+
+wtName := "note2net";
+n2nSym := '|NetHopper:ALLPEN|;
+n2nNote := "Hello from the Notepad";
+
+n2nApp := func() GetRoot().(n2nSym);
+n2nTitle := func() begin
+	local app := call n2nApp with ();
+	if app and app.target then app.target.fTitle;
+end;
+// all the text the page's content views hold, run together
+n2nPageText := func() begin
+	local text := "";
+	local walk;
+	walk := func(v, depth) begin
+		if IsString(v.text) then text := text & v.text & " ";
+		if depth < 10 then foreach c in v:ChildViewFrames() do call walk with (c, depth + 1);
+	end;
+	local content := call n2nApp with ().contentView;
+	if content then call walk with (content, 0);
+	text
+end;
+// a picker's item tapped: its row, a picker drawing its items itself
+n2nPick := func(label) begin
+	local picker := call findView with (GetRoot(), func(v) v.pickItems);
+	local k := nil;
+	if picker then foreach i, item in picker.pickItems do
+		if not k and (IsString(item) and StrEqual(item, label) or IsFrame(item) and IsString(item.item) and StrEqual(item.item, label)) then k := i;
+	if k then begin
+		local b := picker:GlobalBox();
+		local n := Length(picker.pickItems);
+		call tapAt with ((b.left + b.right) div 2, b.top + ((b.bottom - b.top) * (2 * k + 1)) div (2 * n));
+	end else call wtCheck with ("the picker offers " & label, nil, "(it does not)");
+end;
+
+wtSteps := [
+	// a note: the caret put on the Notepad's first line, and the text typed
+	call tapLineStep with ("the caret on the note", 60, 70),
+	func(done) begin
+		call typeText with (n2nNote);
+		call waitFor with ("note2net: the note written", func() call viewWithText with (n2nNote), done, 10);
+	end,
+	settleStep,
+	// the Action button (the envelope, top right), and Note2Net in its picker
+	call tapStep with ("the Action picker", 310, 28, func() call findView with (GetRoot(), func(v) v.pickItems)),
+	func(done) begin
+		call n2nPick with ("Note2Net");
+		call waitFor with ("note2net: NetHopper showing the note", func() call n2nApp with ().viewCObject
+				and StrPos(call n2nPageText with (), n2nNote, 0), func() begin
+			ScreenSnapshot("build/note2net.pgm");
+			Print("note2net: the page is " & SPrintObject(call n2nTitle with ()));
+			call wtCheck with ("NetHopper shows the note as a page", StrPos(call n2nPageText with (), n2nNote, 0), "(" & call n2nPageText with () & ")");
+			call done with ();
+		end, 60);
+	end,
+	func(done) begin
+		call n2nApp with ():Close();
+		Print("note2net: done, " & wtFailures & " failed");
+		HostQuit();
+	end];
+
+call walkSetup with ([2, 0, 45, 34, 14, 37], func()			// "Daniel"
+	call waitFor with ("note2net: installed", func() GetRoot().(n2nSym), wtNext, 60));

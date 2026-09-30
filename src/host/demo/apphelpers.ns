@@ -36,3 +36,30 @@ openFromExtras := func(label, sym, done) begin
 		end, 30);
 	end, 20);
 end;
+
+// text typed on the keyboard, a key (ADB key code) a character: letters,
+// digits, space, . / - and : (shifted)
+appLetterKeys := {a: 0, s: 1, d: 2, f: 3, h: 4, g: 5, z: 6, x: 7, c: 8, v: 9, b: 11, q: 12, w: 13,
+	e: 14, r: 15, y: 16, t: 17, o: 31, u: 32, i: 34, p: 35, l: 37, j: 38, k: 40, n: 45, m: 46};
+appDigitKeys := [29, 18, 19, 20, 21, 23, 22, 26, 28, 25];
+typeText := func(text) begin
+	for i := 0 to StrLen(text) - 1 do begin
+		local c := text[i];
+		local code := nil, shifted := nil;
+		if c >= $0 and c <= $9 then code := appDigitKeys[Ord(c) - Ord($0)]
+		else if c = $  then code := 49
+		else if c = $. then code := 47
+		else if c = $/ then code := 44
+		else if c = $- then code := 27
+		else if c = $: then begin code := 41; shifted := true; end
+		else if c >= $A and c <= $Z then begin
+			code := GetSlot(appLetterKeys, Intern(SPrintObject(c)));		// (symbols are alike whatever their case)
+			shifted := true;
+		end
+		else code := GetSlot(appLetterKeys, Intern(SPrintObject(c)));
+		if shifted then KeyEvent(56, true);
+		KeyEvent(code, true);
+		KeyEvent(code, nil);
+		if shifted then KeyEvent(56, nil);
+	end;
+end;
