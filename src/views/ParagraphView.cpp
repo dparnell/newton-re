@@ -99,6 +99,11 @@ TestLineOverlap(const Rect& box, const Rect& line)
 	T P a r a g r a p h V i e w
 ------------------------------------------------------------------------------*/
 
+// ROM 0x0c101735: a backspace emptied a paragraph that calculates its
+// bounds, which goes when the key comes up (RealDoCommand)
+Boolean gRemoveEmptyParagraph = false;
+
+
 // ROM 0x0017e3ac ClassID__14TParagraphViewCFv
 long
 TParagraphView::ClassID(void) const
@@ -2190,6 +2195,71 @@ TParagraphView::HandleTap(Point& pt)
 	gRootView->SetKeyView(this, offset, 0, true);
 	if (gRootView->CaretEnabled())
 		FClicker(RefVar(NILREF));
+}
+
+
+// ROM 0x0016c658 RealDoCommand__14TParagraphViewFRC6RefVar (0x0016e254-0x0016e590: the up and down arrows)
+// The caret moved a line up or down, keeping its place across the line
+// (brought back inside a line that ends short of it): to the line above or
+// below in the paragraph; from the first line up (the last down) to the
+// paragraph above (below) it on the page (TEditView::MoveBetweenParagraphs),
+// at its last (first) line - and nowhere when that paragraph has no lines
+// laid out; with no paragraph there, on the same line.  A one-line field
+// (viewJustify 0x800000) goes to its start or its end.  The caret's place
+// is its character's bounds (the ROM asks the text run - OffsetInRunToBounds
+// - which the host's OffsetToBounds stands in for, the text objects being
+// NOT YET).
+void
+TParagraphView::HandleUpDownKey(Boolean up)
+{
+	if (fViewJustify & 0x800000)
+	{
+		gRootView->SetKeyView(this, up ? 0 : 999999, 0, false);
+		return;
+	}
+	long lineIndex = FindLineContainingCharOffset(fCaretOffset);
+	if (lineIndex < 0)
+		return;
+	Rect caret;
+	OffsetToBounds(fCaretOffset, &caret);
+	long target = lineIndex;
+	if (up && lineIndex > 0)
+		target = lineIndex - 1;
+	else if (!up && lineIndex + 1 < fLineCount)
+		target = lineIndex + 1;
+	else if (fParent->DerivedFrom(clEditView))
+	{
+		TParagraphView* other = (TParagraphView*) ((TEditView*) fParent)->MoveBetweenParagraphs(viewBounds.top, up ? -1 : 1);
+		if (other != nil)
+		{
+			if (other->fLines == nil || other->fLineCount < 1)
+				return;
+			OffsetToBounds(fCaretOffset, &caret);
+			const LineInfo& line = other->fLines[up ? other->fLineCount - 1 : 0];
+			short h = caret.left;
+			if (line.fBounds.left > h)
+				h = line.fBounds.left;
+			else if (line.fBounds.right < h)
+				h = (short) (line.fBounds.right - 1);
+			Point pt;
+			pt.v = line.fBounds.top;
+			pt.h = h;
+			long offset = other->PointToOffset(pt);
+			if (offset != -1)
+				gRootView->SetKeyView(other, offset, 0, false);
+			return;
+		}
+	}
+	const LineInfo& line = fLines[target];
+	short h = caret.left;
+	if (line.fBounds.right <= h)
+		h = (short) (line.fBounds.right - 1);
+	Point pt;
+	pt.v = line.fBounds.top;
+	pt.h = h;
+	long offset = PointToOffset(pt);
+	if (offset != -1)
+		gRootView->SetKeyView(this, offset, 0, false);
 }
 
 
@@ -6056,14 +6126,15 @@ TParagraphView::WordCommand(RefArg cmd)
 // that can be written, goes into the text: return (or the enter key, 3)
 // with a default button (viewJustify's 0x1800000) sends _doDefaultButton;
 // tab, unless the view calculates its bounds, moves to the next key
-// view (NOT YET: NextKeyView); the arrows move the caret (NOT YET) ...
-// a hilite is replaced (NOT YET: the hilites); white space flushes the
-// word at the caret; backspace removes the character before the caret
-// (a vCalculateBounds paragraph down to its last character asks its
-// parent to remove it - NOT YET); a character KeyCanBeHandled goes in at
-// the caret - both merged into the last undo when they can
-// (AddKeyToCurrUndo).  A key up runs the key scripts (NOT YET: the empty
-// paragraph's removal).  A key string is inserted at the caret (or over
+// view (NextKeyView); any key takes a selection off, the arrows then
+// moving the caret (left/right to the selection's ends or a character on,
+// up/down a line - HandleUpDownKey) and any other key taking the selected
+// text out first; white space flushes the word at the caret; backspace
+// removes the character before the caret (a vCalculateBounds paragraph
+// down to its last character is removed when the key comes up, unless its
+// page keeps empty paragraphs); a character KeyCanBeHandled goes in at the
+// caret - both merged into the last undo when they can (AddKeyToCurrUndo).
+// A key up runs the key scripts, then removes the emptied paragraph.  A key string is inserted at the caret (or over
 // the hilite) and the hilites removed.  aeReplaceText is
 // HandleReplaceText.  NOT YET RECONSTRUCTED: the pen commands (clicks,
 // strokes, words, gestures, ink), the hilite and style commands, the
@@ -6105,25 +6176,37 @@ TParagraphView::RealDoCommand(RefArg cmd)
 			}
 			return true;
 		}
-		// a selection is collapsed by an arrow and replaced by a content key
+		// a selection: taken off (the page's, when the paragraph is on one)
+		// by any key, and its range remembered
 		TParagraphHilite* selection = HiliteOf(RefVar(FirstHilite()));
-		Boolean hasSelection = selection != nil;
-		long hiliteStart = 0, hiliteEnd = 0;
-		if (hasSelection)
+		long hiliteStart = -1, hiliteEnd = 0;
+		if (selection != nil)
 		{
 			hiliteStart = selection->fStart;
 			hiliteEnd = selection->fEnd;
+			if (ch != 0)
+			{
+				if (fParent->DerivedFrom(clEditView))
+					fParent->RemoveAllHilites();
+				else
+					RemoveAllHilites();
+			}
 		}
 		if (ch == 0x1c || ch == 0x1d)
 		{
-			long offset;
-			if (hasSelection)
-			{
-				offset = (ch == 0x1c) ? hiliteStart : hiliteEnd;
-				RemoveAllHilites();
-			}
+			// left to the selection's start (else one back), right to its
+			// end (else one on) - but not past the last line laid out while
+			// there is text after it
+			long offset = fCaretOffset;
+			if (ch == 0x1c)
+				offset = hiliteStart < 0 ? fCaretOffset - 1 : hiliteStart;
 			else
-				offset = fCaretOffset + (ch == 0x1c ? -1 : 1);
+			{
+				offset = hiliteStart < 0 ? fCaretOffset + 1 : hiliteEnd;
+				if (fLines != nil && fLineCount > 0 && fLines[fLineCount - 1].fEnd <= offset
+				 && offset < TextLength())
+					offset = fLines[fLineCount - 1].fEnd;
+			}
 			long textLength = TextLength();
 			if (offset < 0)
 				offset = 0;
@@ -6132,25 +6215,17 @@ TParagraphView::RealDoCommand(RefArg cmd)
 			gRootView->SetKeyView(this, offset, 0, false);
 			return true;
 		}
-		// a content key over a selection replaces it in one edit
-		if (hasSelection && ch != 0 && (ch == 8 || KeyCanBeHandled(ch)))
-		{
-			RemoveAllHilites();
-			long removeLength = hiliteEnd - hiliteStart;
-			if (ch == 8)
-				InsertStyledText(hiliteStart, nil, 0, RefVar(NILREF), RefVar(NILREF), 0, removeLength, true);
-			else
-			{
-				UniChar key = ch;
-				InsertStyledText(hiliteStart, &key, 1, RefVar(NILREF), RefVar(NILREF), 0, removeLength, true);
-			}
-			return true;
-		}
 		if (ch == 0x1e || ch == 0x1f)
 		{
-			// NOT YET RECONSTRUCTED: the caret moved a line up or down (the ROM's OffsetInRunToBounds/PointToOffset)
-			gRootView->SetKeyView(this, ch == 0x1f ? 999999 : 0, 0, false);
+			HandleUpDownKey(ch == 0x1e);
 			return true;
+		}
+		// any other key over a selection takes the selection out first
+		Boolean selectionRemoved = false;
+		if (hiliteStart >= 0 && ch != 0)
+		{
+			InsertStyledText(hiliteStart, nil, 0, RefVar(NILREF), RefVar(NILREF), 0, hiliteEnd - hiliteStart, false);
+			selectionRemoved = true;
 		}
 		if (IsWhiteSpace(ch))
 			FlushWordAtCaret();
@@ -6159,6 +6234,18 @@ TParagraphView::RealDoCommand(RefArg cmd)
 		if (ch == 8)
 		{
 			if (fCaretOffset < 1)
+				return true;
+			// the last character of a paragraph that calculates its bounds:
+			// the paragraph goes when the key comes up - unless its page
+			// keeps empty paragraphs (text flag 0x80)
+			TView* page = GetEnclosingEditView();
+			Boolean keepsEmpty = page != nil && (((TEditView*) page)->fTextFlags & 0x80) != 0;
+			if ((fFlags & vCalculateBounds) != 0 && TextLength() == 1 && !keepsEmpty)
+			{
+				gRemoveEmptyParagraph = true;
+				return true;
+			}
+			if (selectionRemoved)
 				return true;
 			long offset = --fCaretOffset;
 			if (AddKeyToCurrUndo(ch, offset))
@@ -6180,6 +6267,15 @@ TParagraphView::RealDoCommand(RefArg cmd)
 	{
 		if (HandleKeyEvent(cmd, id, nil))
 			return true;
+		if (fFlags & (vReadOnly | vWriteProtected))
+			return true;
+		// the paragraph emptied by a backspace goes now
+		if ((fFlags & vCalculateBounds) != 0 && gRemoveEmptyParagraph)
+		{
+			RefVar remove(MakeCommand(aeRemoveData, fParent, fId));
+			gApplication->DispatchCommand(remove);
+			gRemoveEmptyParagraph = false;
+		}
 		return true;
 	}
 	if (id == aeKeyString)

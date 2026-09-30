@@ -404,6 +404,7 @@ public:
 	Ref			GetWriteableTextStylesArray(void);						// ROM 0x00179248 GetWriteableTextStylesArray__14TParagraphViewFv
 	void		RangeChanged(long offset, long removed, long inserted, RefArg slot);	// ROM 0x00180bd8 RangeChanged__14TParagraphViewFlN21RC6RefVar
 	Boolean		ProcessStyles(Boolean redraw);							// ROM 0x00180ce4 ProcessStyles__14TParagraphViewFUc
+	void		HandleUpDownKey(Boolean up);							// ROM 0x0016c658 RealDoCommand__14TParagraphViewFRC6RefVar (its up and down arrows, 0x0016e254-0x0016e590)
 	Boolean		CheckStyles(void);										// ROM 0x001804d4 CheckStyles__14TParagraphViewFv - whether the styles hold an ink word (fHasInkWords), and whether any face is italic, outlined or shadowed (fHasHeavyFaces)
 	void		FixupBBox(void);										// ROM 0x001815b8 FixupBBox__14TParagraphViewFv
 	long		TextLength(void);										// the text's characters (host)
@@ -452,6 +453,8 @@ void	GrowLineInfoCache(LineInfo** cache, long* capacity);
 long		LengthSansTabsAndCRs(const UniChar* text, Boolean* found);	// ROM 0x0017aefc LengthSansTabsAndCRs__FPUsPUc
 UniChar*	RemoveTabsAndCRs(const UniChar* text, RefArg styles);		// ROM 0x0017ad6c RemoveTabsAndCRs__FPUsRC6RefVar
 extern ULong	gLastParagraphClick;								// ROM 0x0c101760 (unnamed)			// ROM 0x0017c9cc GrowLineInfoCache__FPPP8LineInfol
+
+extern Boolean	gRemoveEmptyParagraph;						// ROM 0x0c101735
 
 // Whether the view is drawn inside a print view or a remote view (a
 // print preview, a page's thumbnail) - somewhere below one of them.

@@ -159,11 +159,14 @@ reaches.  Biggest user impact first; each is taken on in this order.
    hide sounds (`views/Animate.cpp` PlaySound) - every tap on the machine.
    Small: the natives were there (`sound/SoundSettings.h`), only the calls
    from the views were missing.  ctest host.NewtonClicks.
-2. **Keyboard editing of text** (`views/ParagraphView.cpp` ~6056-6150):
-   typing over a selection (the hilite replaced), the caret moved a line up
-   or down with the arrow keys, tab to the next field (`NextKeyView`), the
-   key-view's scripts on an empty key.  Every text field with the host's
-   keyboard.  Medium.
+2. **Keyboard editing of text** - DONE (2026-09-30): the key branch of
+   `TParagraphView::RealDoCommand` (0x16c658) as the ROM's - any key takes
+   a selection off (the page's), left/right go to its ends, any other key
+   takes the selected text out first; up/down move a line, keeping the
+   caret's place across it, and on to the paragraph above or below on the
+   page (`HandleUpDownKey`, `TEditView::MoveBetweenParagraphs`); a
+   backspace that empties a paragraph calculating its bounds removes it
+   when the key comes up.  test_Views TestTyping.
 3. **Selections kept with the text** (`views/Hilites.h`, ParagraphView.cpp
    1478, 2322): a selection moved past a replacement, the hilite areas
    remade after a relayout, the selected text a `TParagraphHilite`
