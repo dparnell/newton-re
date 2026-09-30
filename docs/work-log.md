@@ -109,6 +109,21 @@ bugs and ROM bugs found on the way.
   count wraps.  `HostOptionLayouts`' '*' copies an option's trailing
   bytes as they are ('rout' numbers, 'mpro' profiles).
 
+## 2026-09-30: the fax page decoder
+
+- `comms/fax/T4FaxLine.h` (bdc0ad06; 0x204698-0x204e34): `TT4FaxLine`,
+  the MH code kept in a ring as it arrives (the fill between lines
+  dropped), read least significant bit first and decoded a line at a
+  time over the ROM's decoding trees (`T4Tables.cpp`, from romtable.py's
+  new `ptr` type - tables of pointers into other tables of the run).
+  `tools/modem/t4.py` is an MH coder written from ITU-T T.4 alone; ctest
+  `comms.T4FaxLine` decodes its page, 200 of 200 lines.
+- ROM bug kept: `GetNextBit` pre-increments its read pointer, so the
+  ring's first byte after a Reset is never decoded (a real fax machine's
+  fill before the first EOL hides it).  The exception it throws on
+  underflow is named `evt.ex` itself, so catching it catches every
+  evt.ex.
+
 ## 2026-09-30: the internal store in the ROM's own flash format
 
 - The flash (9fd409e3, ctest `stores.Flash`): `hal/host/HostFlash`, a
