@@ -258,6 +258,59 @@ TPickView::GetDisplayFixedHeight(RefArg item)
 }
 
 
+// ROM 0x00184a24 GetKeyCommandInfo__9TPickViewFv
+// Each item's key command: its `keyCommand`, else the command its
+// `keyMessage` names among the callback view's (MatchKeyMessage, the
+// first that shows), kept in fKeyCommands (made when the first is found;
+// nil when no item has one), and the widest command letter in
+// fKeyCommandWidth's high half.
+void
+TPickView::GetKeyCommandInfo(void)
+{
+	fKeyCommands = NILREF;
+	fKeyCommandWidth = 0;
+	RefVar item, command;
+	RefVar callback(GetProto(RSSYMcallbackcontext));
+	if (ISNIL(callback))
+		callback = fContext;
+	TView* callbackView = GetView(callback);
+	long count = Length(fPickItems);
+	for (long i = 0; i < count; i++)
+	{
+		item = GetArraySlotRef(fPickItems, i);
+		if (!IsFrame(item))
+			continue;
+		command = GetProtoVariable(item, RSSYMkeycommand, nil);
+		if (ISNIL(command))
+		{
+			command = GetProtoVariable(item, RSSYMkeymessage, nil);
+			if (IsSymbol(command) && callbackView != nil)
+				command = MatchKeyMessage(callbackView, command, 1);
+		}
+		if (NOTNIL(command))
+		{
+			if (ISNIL(fKeyCommands))
+				fKeyCommands = AllocateArray(RSSYMarray, fItemCount);
+			SetArraySlot(fKeyCommands, i, command);
+			short width = (short) GetCommandCharWidth(command, &fStyle);
+			if ((fKeyCommandWidth >> 16) < width)
+				fKeyCommandWidth = (Fixed) (((ULong32) (UShort) width << 16) | ((ULong32) fKeyCommandWidth & 0xffff));
+		}
+	}
+}
+
+
+// ROM 0x00184c28 GetKeyCommand__9TPickViewFl
+// The item's key command (nil when no item has one).
+Ref
+TPickView::GetKeyCommand(long index)
+{
+	if (ISNIL(fKeyCommands))
+		return NILREF;
+	return GetArraySlotRef(fKeyCommands, index);
+}
+
+
 // ROM 0x00187ea8 GetDisplayItem__9TPickViewFlPUcPUs
 // What an item shows: a string or symbol itself; a frame's item slot
 // (else its key command's name, else the empty string); with whether it
@@ -402,8 +455,7 @@ TPickView::SetupForm(void)
 		DisposeCaches(this);
 		OutOfMemory();
 	}
-	fKeyCommands = NILREF;					// NOT YET RECONSTRUCTED: GetKeyCommandInfo (no command keyboard)
-	fKeyCommandWidth = 0;
+	GetKeyCommandInfo();
 	long maxWidth = RINT(GetProto(RSSYMpickmaxwidth)) - (fKeyCommandWidth >> 16);
 	fPicked.fItem = -1;
 	long indent = -1;
@@ -509,6 +561,8 @@ TPickView::SetupForm(void)
 		if (width > widest)
 			widest = width;
 	}
+	if (gRootView->CommandKeyboardConnected() && NOTNIL(fKeyCommands))
+		widest += (fKeyCommandWidth >> 16) + 2;
 	if (fHasMarks)
 	{
 		if (!markable)
@@ -1299,28 +1353,62 @@ RegisterPickNatives(void)
 
 
 // ROM 0x00187a4c PickItem__9TPickViewFP9PickStuff
-// An item picked: remembered, flashed, the picker hidden when it
-// autocloses, and pickActionScript run with the item's index (plus
-// topItem) - a grid cell as a protoGridItem frame {index, x, y} - on the
-// callbackContext, else the view.  NOT YET RECONSTRUCTED: an item's key
-// command sent to the key view instead (SendKeyMessage).  Then the
-// picker forgets the pick.
+// An item picked: remembered (nothing more for none), flashed, the picker
+// hidden when it autocloses; then an item with a key command (unless the
+// callbackContext says alwaysCallPickActionScript) has its keyMessage
+// sent to the key view (else the callback's view, else the picker), the
+// callback's view selected; otherwise pickActionScript runs with the
+// item's index (plus topItem) - a grid cell as a protoGridItem frame
+// {index, x, y} - on the callbackContext, else the view.  Then the picker
+// forgets the pick.
 void
 TPickView::PickItem(PickStuff* item)
 {
 	fPicked = *item;
 	if (item->fItem == -1)
+	{
 		fPicking = false;
+		return;
+	}
 	RefVar context(fContext);
 	RefVar allowKeys(GetProtoVariable(context, RSSYMallowkeysthrough, nil));
 	SetFrameSlot(context, RSSYMallowkeysthrough, RefVar(TRUEREF));
 	FlashItem(item);
 	if (fAutoClose)
 		Hide();
+	Boolean sent = false;
 	RefVar callback(GetProto(RSSYMcallbackcontext));
-	RefVar args(MakeArray(1));
+	RefVar always;
 	RefVar picked;
-	if (item->fItem != -1)
+	RefVar args(MakeArray(1));
+	if (NOTNIL(callback))
+		always = GetProtoVariable(callback, RSSYMalwayscallpickactionscript, nil);
+	if (ISNIL(always))
+	{
+		RefVar command(GetKeyCommand(item->fItem));
+		if (NOTNIL(command))
+		{
+			RefVar message(GetFrameSlotRef(command, RSSYMkeymessage));
+			if (NOTNIL(message))
+			{
+				TView* target = gRootView->fCaretView;
+				if (target == nil)
+					target = GetView(callback);
+				if (target == nil)
+					target = this;
+				if (target != nil)
+				{
+					picked = fContext;
+					SendKeyMessage(target, message);
+					sent = true;
+					TView* callbackView = GetView(callback);
+					if (callbackView != nil)
+						callbackView->Select(false, false);
+				}
+			}
+		}
+	}
+	if (!sent)
 	{
 		long index = RINT(GetProto(RSSYMtopitem)) + item->fItem;
 		picked = MAKEINT(index);
@@ -1331,17 +1419,20 @@ TPickView::PickItem(PickStuff* item)
 			SetFrameSlot(picked, RSSYMx, RefVar(MAKEINT(item->fX)));
 			SetFrameSlot(picked, RSSYMy, RefVar(MAKEINT(item->fY)));
 		}
+		SetArraySlotRef(args, 0, picked);
+		picked = fContext;
+		if (ISNIL(callback))
+			RunScript(RSSYMpickactionscript, args, true);
+		else
+			DoMessage(callback, RSSYMpickactionscript, args);
 	}
-	SetArraySlotRef(args, 0, picked);
-	if (ISNIL(callback))
-		RunScript(RSSYMpickactionscript, args, true);
-	else
-		DoMessage(callback, RSSYMpickactionscript, args);
-	TView* view = GetView(context);
+	// (the ROM finds the picker again through the context it had - the
+	// script may have closed it)
+	TView* view = GetView(picked);
 	if (view != nil)
 	{
 		((TPickView*) view)->fPicked.fItem = -1;
-		SetFrameSlot(context, RSSYMallowkeysthrough, allowKeys);
+		SetFrameSlot(picked, RSSYMallowkeysthrough, allowKeys);
 	}
 }
 
@@ -1434,6 +1525,7 @@ TPickView::RealDoCommand(RefArg cmd)
 void
 TPickView::RealDraw(Rect& /*bounds*/)
 {
+	Boolean keyCommands = gRootView->CommandKeyboardConnected() && NOTNIL(fKeyCommands);
 	Point origin;
 	GetChildOrigin(&origin);
 	long indent = -1;
@@ -1527,6 +1619,24 @@ TPickView::RealDraw(Rect& /*bounds*/)
 			at.x = ToFixed(viewBounds.left + fMarkLeft);
 			at.y = ToFixed(markBaseline);
 			DrawTextOnce(&mark, 1, &style, nil, at, nil, nil);
+		}
+		RefVar command(GetKeyCommand(i));
+		if (keyCommands && NOTNIL(command))
+		{
+			// the command's letter at the right, in capitals, and its
+			// modifier keys before it (the ROM writes DrawModifierIcons out
+			// in line here)
+			UniChar ch = GetDisplayCmdChar(command);
+			if (ch != 0)
+			{
+				UppercaseText(&ch, 1);
+				StyleRecord* style = &fStyle;
+				FPoint at;
+				at.x = ToFixed(viewBounds.right - (fKeyCommandWidth >> 16) - fRightMargin);
+				at.y = ToFixed(baseline);
+				DrawTextOnce(&ch, 1, &style, nil, at, nil, nil);
+				DrawModifierIcons(KeyCommandModifiers(command), viewBounds.right - ((fKeyCommandWidth >> 16) + fRightMargin + 2), baseline);
+			}
 		}
 	}
 	if (fPicked.fItem != -1)

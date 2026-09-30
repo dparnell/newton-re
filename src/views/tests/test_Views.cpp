@@ -3417,7 +3417,7 @@ TestClicks()
 	HostTabletQueuePenUp(9020);
 	HostTabletPump();
 	gRecognition.Idle();
-	EXPECT(NOTNIL(Eval("cancelled")) && ISNIL(Eval("picked")) && gRootView->fChildren->Count() == 0);		// (the ROM: the cancel script, then the action script with nil)
+	EXPECT(NOTNIL(Eval("cancelled")) && RINT(Eval("picked")) == 0 && gRootView->fChildren->Count() == 0);		// (the cancel script only: PickItem of no item returns at once, 0x187a84)
 	Refresh();
 	EXPECT(MapIs(ExpWhite, "picker cancelled and closed"));
 
@@ -3707,6 +3707,43 @@ TestPickView()
 	Eval("ctxK:Close()");
 	Refresh();
 	EXPECT(MapIs(ExpWhite, "picker closed again"));
+
+	// key commands (a command keyboard connected): an item's keyCommand,
+	// or its keyMessage matched among the callback view's ($q
+	// DoQuit), drawn at the right - the letter and the command key's
+	// icon before it - the picker widened for them; picking one sends the
+	// key message instead of running pickActionScript
+	gKeyboardConnected = true;
+	Eval("ctxC := AddView(GetRoot(), {viewClass: 74, viewFlags: 1, viewBounds: {left: 200, top: 10, right: 220, bottom: 20}, _keyCommands: [{char: $q, modifiers: 1 << 25, keyMessage: 'DoQuit}], saved: 0, DoSave: func(ctx) saved := saved + 1})");
+	Eval("picked := nil");
+	p = (TPickView*) ViewOf("ctxK := AddView(GetRoot(), {_proto: protoPicker, callbackContext: ctxC, pickItems: [{item: \"Save\", keyCommand: {char: $s, modifiers: 1 << 25, keyMessage: 'DoSave}}, \"Plain\", {item: \"Quit\", keyMessage: 'DoQuit}], bounds: {left: 30, top: 20, right: 80, bottom: 35}, pickActionScript: func(index) picked := index})");
+	EXPECT(NOTNIL(p->fKeyCommands) && NOTNIL(p->GetKeyCommand(0)) && ISNIL(p->GetKeyCommand(1)));
+	EXPECT(NOTNIL(p->GetKeyCommand(2)) && EQRef(GetFrameSlotRef(p->GetKeyCommand(2), RSSYMchar), MAKECHAR('q')));
+	long commandWidth = p->fKeyCommandWidth >> 16;
+	EXPECT(commandWidth == RINT(Eval("Max(StrFontWidth(\"S\", protoPicker.viewFont), StrFontWidth(\"Q\", protoPicker.viewFont))")));
+	{
+		long textWidest = RINT(Eval("Max(StrFontWidth(\"Save\", protoPicker.viewFont), Max(StrFontWidth(\"Plain\", protoPicker.viewFont), StrFontWidth(\"Quit\", protoPicker.viewFont)))"));
+		EXPECT(p->viewBounds.right == 30 + 4 + textWidest + commandWidth + 2 + 5);
+	}
+	Eval("ctxK:Open()");
+	Refresh();
+	{
+		long r0 = p->viewBounds.right, t0 = p->viewBounds.top;
+		long letterLeft = r0 - commandWidth - 5;
+		EXPECT(InkIn(letterLeft, t0, r0 - 5 + 1, t0 + 13) > 0);						// "S" at the right of the first row
+		EXPECT(InkIn(letterLeft - 11, t0, letterLeft - 2, t0 + 13) > 0);				// the command key's icon before it
+		EXPECT(InkIn(letterLeft, t0 + 13, r0, t0 + 26) == 0);							// none on "Plain" (the icons are not allowed for in the width: they may lie over the text)
+		EXPECT(InkIn(letterLeft, t0 + 26, r0 - 5 + 1, t0 + 39) > 0);					// "Q" on "Quit"
+	}
+	{
+		RefVar cmd(MakeCommand(aePickItem, p, 0));
+		gApplication->DispatchCommand(cmd);
+	}
+	EXPECT(RINT(Eval("ctxC.saved")) == 1 && ISNIL(Eval("picked")) && gRootView->fChildren->Count() == 1);
+	Eval("ctxC:Close()");
+	gKeyboardConnected = false;
+	Refresh();
+	EXPECT(MapIs(ExpWhite, "key command picker closed"));
 
 	// DoPopup opens a popup menu (a picker from canonicalPopup) over the
 	// items; picking one runs the callback's pickActionScript and closes it

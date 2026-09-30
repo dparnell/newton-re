@@ -129,6 +129,11 @@ Boolean		KeyCanBeHandled(UniChar ch);							// ROM 0x003103f8 KeyCanBeHandled__F
 long		FindKeyCommandInArray(RefArg commands, UniChar ch, ULong modifiers, long* matched, Boolean* exact);	// ROM 0x0030f158 FindKeyCommandInArray__FRC6RefVarUsUlPlPUc - the index of the best match, -1 for none
 Ref			FindKeyCommand(TView* view, UniChar ch, ULong modifiers);	// ROM 0x0030f2b0 FindKeyCommand__FP5TViewUsUl (modifiers: the parameter's bits)
 Ref			SendKeyMessage(TView* view, RefArg message);			// ROM 0x0030f54c SendKeyMessage__FP5TViewRC6RefVar
+// a command's letter and its modifier keys as the key help and a picker
+// draw them (views/KeyHelpSlip.cpp)
+struct StyleRecord;
+long		GetCommandCharWidth(RefArg command, StyleRecord* style);	// ROM 0x001839f8 GetCommandCharWidth__FRC6RefVarP11StyleRecord - the letter's width, in capitals
+void		DrawModifierIcons(ULong modifiers, long x, long y);		// ROM 0x00183ad0 DrawModifierIcons__FUlN21 - right to left, ending at x, on the baseline y
 Boolean		UserVisibleChar(UniChar c);								// ROM 0x0030f6c8 UserVisibleChar__FUs - one a menu could show
 ULong		KeyCommandModifiers(RefArg command);					// ROM 0x0030f0f4 KeyCommandModifiers__FRC6RefVar - the command's modifier bits (& 0x3e000000)
 UniChar		GetDisplayCmdChar(RefArg command);						// ROM 0x0030f700 GetDisplayCmdChar__FRC6RefVar - showChar, else char; 0 for one nobody could read

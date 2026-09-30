@@ -196,9 +196,13 @@ reaches.  Biggest user impact first; each is taken on in this order.
    and the copyright lines - drawn by `InitToolbox` and by the root view
    until the system is up; the boot sound after it and
    `InitInternationalUtils` in their places.  ctest host.NewtonSplash.
-7. **Pickers with a keyboard** (`views/PickView.cpp` 404, 1304; `fKeyCommands`,
-   `GetKeyCommandInfo`): the command keys and type-select of a picker's
-   items.  Small to medium.
+7. **Pickers with a keyboard** - DONE (2026-09-30): `GetKeyCommandInfo`
+   (0x184a24) - each item's keyCommand, or its keyMessage matched among the
+   callback view's - drawn at the item's right with the modifier icons,
+   the picker widened for the letter; `PickItem` (0x187a4c) sends a picked
+   item's key message to the key view (unless alwaysCallPickActionScript),
+   and returns at once for no item (so a cancelled picker runs no
+   pickActionScript - the host ran it with nil).  test_Views TestPickView.
 8. **Ink in pickers** (`views/PickView.cpp` 364, 1518): an ink item scaled
    to 28 high, a `strokeList` item (DrawStrokeBundle) - the corrector's and
    the Assist's lists when they hold writing.  Small.

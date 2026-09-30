@@ -576,9 +576,17 @@ item the pen ended on (the PickStuff as a 'string binary frame
 parameter), which `PickItem`s it: an item flashed (`FlashItem`: inverted
 three times, five ticks apart), the autoclose picker hidden and
 `pickActionScript(index)` run; no item (-1) runs `pickCancelledScript`
-from the hide, and then the action script with nil.  NOT YET: the key
-commands, ink items, the pickable test inside a masked grid picture, the
-clicker.  The ROM's protoPicker has
+from the hide and nothing more (`PickItem` returns at once for it).
+With a command keyboard, `GetKeyCommandInfo` (0x00184a24) finds each
+item's key command - its `keyCommand`, else its `keyMessage` matched
+among the callback view's (`MatchKeyMessage`) - and the widest letter;
+the picker is widened by it plus 2 (the modifier icons are not allowed
+for, and may lie over the text), `RealDraw` puts the letter in capitals
+at the right and the modifier icons before it, and a picked item with a
+key message (unless the callback says `alwaysCallPickActionScript`) has
+it sent to the key view - else the callback's view, else the picker -
+instead of the action script.  NOT YET: ink items, the pickable test
+inside a masked grid picture.  The ROM's protoPicker has
 viewFlags without vVisible: it is opened with `:Open()`.
 
 ### Hiliting a view (`TView::Hilite` 0x0026418c, `Select` 0x00264c34)

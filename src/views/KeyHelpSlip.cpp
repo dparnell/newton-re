@@ -43,7 +43,7 @@ Ref		FStrLen(RefArg rcvr, RefArg str);			// ROM 0x001fd0a8 FStrLen__FRC6RefVarT1
 
 // ROM 0x001839f8 GetCommandCharWidth__FRC6RefVarP11StyleRecord
 // How wide a command's letter is drawn: its `char`, in capitals.
-static long
+long
 GetCommandCharWidth(RefArg command, StyleRecord* style)
 {
 	UniChar ch = RCHAR(RefVar(GetProtoVariable(command, RSSYMchar, nil)));
@@ -76,7 +76,7 @@ GetModifiersWidth(RefArg command)
 // The icons of the modifier keys drawn right to left, ending at x, their
 // bottoms on the baseline y, 7 high: command, shift and option 9 wide,
 // control 5.
-static void
+void
 DrawModifierIcons(ULong modifiers, long x, long y)
 {
 	Rect box;

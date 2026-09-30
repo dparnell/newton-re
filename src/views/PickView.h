@@ -22,11 +22,13 @@
 				pickCancelledScript.  The ROM's object is 0xbc bytes.
 
 				A click tracks the pen over the items (TrackStroke) and picks
-				the one it ends on.  NOT YET RECONSTRUCTED: the key commands and type-select
-				(GetKeyCommandInfo, HandleKeyDown, KeyToNextItem: a command
-				keyboard is never connected on the host), ink items
-				(DrawStrokeBundle), the pickable test inside a grid picture
-				(FPtInPicture), the flashing of the picked item (Wait).
+				the one it ends on; with a keyboard, the arrows and
+				type-select move the pick (HandleKeyDown), and an item's key
+				command is drawn at its right and sent as a key message when
+				it is picked (GetKeyCommandInfo, PickItem).  NOT YET
+				RECONSTRUCTED: ink items (DrawStrokeBundle), the pickable
+				test inside a grid picture (FPtInPicture), the flashing of
+				the picked item (Wait).
 
 	Reconstructed from the MP2x00 US ROM (0x00183660-0x001887d0); each
 	function cites its origin.
@@ -80,6 +82,8 @@ public:
 	Ref			GetDisplayIcon(RefArg item);							// ROM 0x00184d08 GetDisplayIcon__9TPickViewFRC6RefVar
 	long		GetDisplayIndent(RefArg item);							// ROM 0x00184d4c GetDisplayIndent__9TPickViewFRC6RefVar
 	long		GetDisplayFixedHeight(RefArg item);						// ROM 0x00184dd0 GetDisplayFixedHeight__9TPickViewFRC6RefVar
+	void		GetKeyCommandInfo(void);								// ROM 0x00184a24 GetKeyCommandInfo__9TPickViewFv
+	Ref			GetKeyCommand(long index);								// ROM 0x00184c28 GetKeyCommand__9TPickViewFl
 	Ref			GetDisplayItem(long index, Boolean* pickable, UniChar* mark);	// ROM 0x00187ea8 GetDisplayItem__9TPickViewFlPUcPUs
 	Ref			GetItemNoText(long index);								// ROM 0x001880e8 GetItemNoText__9TPickViewFl
 	Ref			GetOverflows(void);										// ROM 0x00185068 GetOverflows__9TPickViewFv
@@ -121,8 +125,8 @@ public:
 	long		fRightMargin;		// +0x98  pickRightMargin (19 more with scrollers)
 	long		fTopMargin;			// +0x9c
 	long		fBottomMargin;		// +0xa0
-	RefStruct	fKeyCommands;		// +0xa4  per item, with a command keyboard (NOT YET: nil)
-	Fixed		fKeyCommandWidth;	// +0xa8
+	RefStruct	fKeyCommands;		// +0xa4  per item its key command (nil: none has one)
+	Fixed		fKeyCommandWidth;	// +0xa8  the widest command letter (its high half)
 	RefStruct	fTypeSelect;		// +0xac  the characters typed to select an item (the ROM: a RefStruct*)
 	ULong		fLastKeyTime;		// +0xb0  when the last was typed (Ticks)
 	long		fTypeSelectTimeout;	// +0xb4  ticks: a pause longer starts the string again
