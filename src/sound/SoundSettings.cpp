@@ -7,6 +7,7 @@
 */
 
 #include "SoundSettings.h"
+#include "RichString.h"		// FStripInk
 #include "SoundChannel.h"
 #include "FrameSoundChannel.h"
 #include "ObjectHeap.h"
@@ -133,11 +134,9 @@ enum {
 // server can play: a string is spoken, so it becomes a codec frame for
 // TMacintalkCodec with the text as its samples; a binary is coded sound,
 // and its class names the codec that knows how to read it.  Anything else
-// - a sound frame already, most of all - is answered as it stands.
-//
-// NOT YET RECONSTRUCTED: FStripInk, which the ROM runs the string through
-// first; a string of this reconstruction carries no ink (frames/RichString.h),
-// so a clone of it is what stripping would give.
+// - a sound frame already, most of all - is answered as it stands.  A
+// string's ink is stripped out of a clone of it first (FStripInk, with
+// nothing in its place).
 Ref
 FConvertToSoundFrame(RefArg /*rcvr*/, RefArg obj)
 {
@@ -148,7 +147,7 @@ FConvertToSoundFrame(RefArg /*rcvr*/, RefArg obj)
 		SetFrameSlot(frame, RSSYM_proto, RefVar(Rprotosoundframe));
 		SetFrameSlot(frame, RSSYMsndframetype, RSSYMcodec);
 		SetFrameSlot(frame, RSSYMcodecname, RefVar(MakeString("TMacintalkCodec")));
-		SetFrameSlot(frame, RSSYMsamples, RefVar(Clone(sound)));
+		SetFrameSlot(frame, RSSYMsamples, RefVar(FStripInk(RefVar(), RefVar(Clone(sound)), RefVar())));
 		SetFrameSlot(frame, RSSYMbuffersize, RefVar(MAKEINT(kSoundFrameBufferSize)));
 		SetFrameSlot(frame, RSSYMbuffercount, RefVar(MAKEINT(kSoundFrameBufferCount)));
 		SetFrameSlot(frame, RSSYMcompressiontype, RefVar(MAKEINT(kSoundFrameCompressionType)));

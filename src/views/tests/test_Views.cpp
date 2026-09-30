@@ -20,6 +20,7 @@
 #include "EditView.h"
 #include "Ink.h"
 #include "Paths.h"
+#include "SoundSettings.h"		// FConvertToSoundFrame
 #include "StrokeBundle.h"
 #include "Polygons.h"
 #include "InkFont.h"
@@ -5687,6 +5688,17 @@ TestRichStringIntoParagraph()
 	end[-2] = (UniChar) (trailer >> 16);
 	end[-1] = (UniChar) trailer;
 	EXPECT(NOTNIL(str) && IsRichString(str));
+
+	// spoken, it is a codec frame whose samples are its letters without the
+	// ink (sound/SoundSettings.h's ConvertToSoundFrame over FStripInk), the
+	// string itself left alone
+	{
+		RefVar frame(FConvertToSoundFrame(RefVar(), str));
+		RefVar samples(GetFrameSlotRef(frame, RSSYMsamples));
+		TRichString spoken(samples);
+		EXPECT(spoken.Length() == 2 && spoken.GetChar(0) == U_CONST_CHAR('a') && spoken.GetChar(1) == U_CONST_CHAR('b'));
+		EXPECT(TRichString(str).GetChar(1) == kInkChar);
+	}
 
 	// the two halves on their own
 	{
