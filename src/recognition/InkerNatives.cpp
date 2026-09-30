@@ -129,6 +129,52 @@ InkerRPC(TInkerEvent* event, ULong size, ULong* replySize, TTimeout timeout = kN
 }
 
 
+// ROM 0x0013fb98 HobbleTablet__Fv
+// The inker sent its 0x1d command ('newt/'inkr), which slows the tablet
+// down.  (Host: only while the inker runs - a program with no OS has no
+// inker to ask, and the name server would not find one.)
+void
+HobbleTablet(void)
+{
+	if (gInker == nil)
+		return;
+	struct { TAEvent fEvent; ULong fCommand; } command;
+	command.fEvent.fAEventClass = kNewtEventClass;
+	command.fEvent.fAEventID = 'inkr';
+	command.fCommand = 0x1d;
+	TAEvent reply[3];
+	ULong replySize;
+	InkerPort()->SendRPC(&replySize, &command, sizeof(command), reply, sizeof(reply));
+}
+
+
+// ROM 0x0014078c InkerOffUnHobbled__FP5TRect
+// The inker told to stop inking the stroke under way (its pen mode set to
+// nought, command 7), and what its live ink covered so far answered.
+// (Host: only while the inker runs, as HobbleTablet.)
+void
+InkerOffUnHobbled(Rect* inked)
+{
+	if (gInker == nil)
+		return;
+	TInkerEvent event;
+	memset(&event, 0, sizeof(event));
+	event.fCommand = 7;
+	if (InkerRPC(&event, kInkerReplySize, nil) == noErr)
+		*inked = event.fInkedBounds;
+}
+
+
+// ROM 0x00140dcc InkerOff__FP5TRect
+// The same with the tablet slowed down first.
+void
+InkerOff(Rect* inked)
+{
+	HobbleTablet();
+	InkerOffUnHobbled(inked);
+}
+
+
 // ROM 0x0013fc2c LoadInkerCalibration__Fv
 // The calibration the System soup kept given the inker (the ROM's
 // loadcalibration block, answering true when there was one), and the

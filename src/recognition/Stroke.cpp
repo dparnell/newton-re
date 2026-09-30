@@ -8,6 +8,7 @@
 */
 
 #include "Stroke.h"
+#include "Inker.h"
 #include "Matrix.h"
 #include "FixedMathExtra.h"
 #include "Polygons.h"
@@ -850,8 +851,8 @@ TStrokePublic::InkOn(void)
 
 // ROM 0x001459ec InkOff__13TStrokePublicFUcT1
 // The stroke's ink taken off the screen (once): the stroke marked
-// inkless, the inker told to stop (hobbled or not; NOT YET: the inker)
-// when the stroke is still going, and the inked rectangle either put
+// inkless, the inker told to stop (hobbled or not) when the stroke is
+// still going, and the inked rectangle either put
 // down as dirty screen (the ink was drawn straight on it) or, when
 // invalidate is asked, redrawn - the views' way when the stroke was
 // drawn, the screen's when not.
@@ -865,7 +866,12 @@ TStrokePublic::InkOff(Boolean invalidate, Boolean hobbled)
 	if (locked)
 		ReleaseStroke();
 	if (!fStroke->Done())
-		(void) hobbled;		// NOT YET RECONSTRUCTED: InkerOff / InkerOffUnHobbled(&fInkedRect)
+	{
+		if (hobbled)
+			InkerOff(&fInkedRect);
+		else
+			InkerOffUnHobbled(&fInkedRect);
+	}
 	Rect inked;
 	GetInkedRect(&inked);
 	if (!invalidate)

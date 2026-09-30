@@ -198,6 +198,9 @@ void	StartInker(TUPort* newtPort);								// ROM 0x00218ea0 StartInker__FP6TUPor
 void	InsertArmisticeSamples(void);								// ROM 0x00217fb0 InsertArmisticeSamples__Fv
 
 // The script side (InkerNatives.cpp)
+void	HobbleTablet(void);										// ROM 0x0013fb98 HobbleTablet__Fv - the inker's 0x1d command: the tablet slowed down
+void	InkerOffUnHobbled(Rect* inked);							// ROM 0x0014078c InkerOffUnHobbled__FP5TRect - the stroke under way no longer inked; ==> what its ink covered
+void	InkerOff(Rect* inked);									// ROM 0x00140dcc InkerOff__FP5TRect - the same, the tablet hobbled first
 TUPort*	InkerPort(void);											// ROM 0x0013fb0c InkerPort__Fv - the inker's port, looked up by name the first time
 void	LoadInkerCalibration(void);									// ROM 0x0013fc2c LoadInkerCalibration__Fv - the stored calibration given the inker, the screen if there is none
 long	CalibrateInker(void);										// ROM 0x00141098 CalibrateInker__Fv - the calibration screen, and the result saved

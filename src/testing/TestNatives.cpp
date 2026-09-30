@@ -10,6 +10,7 @@
 */
 
 #include "TestAgent.h"
+#include "Inker.h"			// HobbleTablet
 #include "Journal.h"
 #include "NewtWorld.h"
 #include "NameServer.h"
@@ -736,25 +737,6 @@ FDebugRunUntilIdle(RefArg rcvr)
 	while (gApplication->RunNextDelayedAction())
 		gRootView->Update(nil);
 	return NILREF;
-}
-
-
-// ROM 0x0013fb98 HobbleTablet__Fv
-// The inker sent its 0x1d command ('newt/'inkr), which slows the tablet
-// down.  NOT YET RECONSTRUCTED: the inker's command handler; the host
-// has no inker port (gTheInkerPort is nil), so nothing is sent.
-static void
-HobbleTablet(void)
-{
-	if (gTheInkerPort == nil)
-		return;
-	struct { TAEvent fEvent; ULong fCommand; } command;
-	command.fEvent.fAEventClass = kNewtEventClass;
-	command.fEvent.fAEventID = 'inkr';
-	command.fCommand = 0x1d;
-	TAEvent reply[3];
-	ULong replySize;
-	gTheInkerPort->SendRPC(&replySize, &command, sizeof(command), reply, sizeof(reply));
 }
 
 

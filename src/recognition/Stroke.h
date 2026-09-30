@@ -21,9 +21,9 @@
 
 				Rotate and Scale go through toolbox/Matrix.h.
 
-				NOT YET RECONSTRUCTED: the inker (Draw, InkOff's InkerOff),
-				the stroke semaphore between the inker task and the
-				recogniser (AcquireStroke: the host has one task).
+				NOT YET RECONSTRUCTED: the stroke semaphore between the
+				inker task and the recogniser (AcquireStroke: the host runs
+				one task at a time).
 
 	Reconstructed from the MP2x00 US ROM (0x0022212c-0x00223038,
 	0x00145728-0x00145b5c, 0x001a3658-0x001a3fa0); each function cites its
