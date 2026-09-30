@@ -9,6 +9,22 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: the fixture applications used for what they are for
+
+Nine ctests (`host.NewtonApp*`, `demo/apps-*.ns` over
+`demo/apphelpers.ns`) use RPNcalc, Daleks, Mahjongg, NewtHack, Note2Net,
+the Fonts package, NetSched and Newt's Cape's companions (HTMList, a
+package downloaded and installed) through their main functions, checking
+the results on screen or in their soups.  One host fault found: a
+string's raw bytes were in host order where the Newton's are big-endian,
+so a built-in copying bytes between a string and a binary swapped them
+(Newt's Cape's install question showed boxes for "Monaco");
+`frames/StringBytes.h`'s `TStringBytesAsROM` presents them big-endian to
+BinaryMunger, the Extract*/Stuff* family and ExtractBytes (DEVIATION).
+The applications' own bugs seen, kept: RPNcalc shows -0 for every
+negative trig answer (`value < 1e-14` for `Abs(value) < 1e-14`), and
+Note2Net's hand-typed URL throws on `StringToNumber("")`.  319 of 319.
+
 ## 2026-10-01: demo ctests; notyet.py outside comms
 
 - Ten demos made ctests (837a5756, fbbace76): drag (it fails on the old
