@@ -255,3 +255,11 @@ scenario, printed that its checks had passed and then hung for ever with
 its task threads parked on the variable being destroyed.  Windows' own
 destructor happens not to wait, which is why it was never seen there.
 (`docs/host-lp64.md` has the rest of what the Linux build brought out.)
+
+- **A world is copied into its task by `GetSizeOf`.**  A `TUTaskWorld`
+  subclass without its own `GetSizeOf` is copied short: its fields lie
+  past the task's stack block and writing them damages the next heap
+  block (the inker's missing one made the one-off `TUPort::Receive`
+  crash).  Every world class needs one answering its `sizeof`; the
+  ROM's may be unnamed - look at the vtable's +0x04 with
+  `analysis/vtable.py`.

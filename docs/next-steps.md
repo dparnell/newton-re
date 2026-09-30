@@ -258,9 +258,6 @@ worked through.  What could come next (not ranked; the owner chooses):
   `SuckPackageFromEndPoint` and fax reception wait on) comes after.
 - **Third-party apps**: all five fixture applications open from Extras
   and respond (ctest `host.NewtonThirdPartyApps`).
-- **Unexplained, seen once**: a `newton` boot crashed in
-  `TUPort::Receive` (an access violation, image+0xe09fc) during a stress
-  run of walkthrough 2; it did not recur in about 40 more boots.
 - **The pen**: the tablet driver and the inker are in, with the ROM's
   calibration screen (Align Pen; `host.NewtonAlignPen`).  NOT YET: the
   inker's live ink (`TInker::Convert`/`DrawInk`, `TLiveInker` - the host's
@@ -333,10 +330,6 @@ reach, hardware, or waiting on another area:
   strokes), `CreateVMHeap`.
 - The polygon view's only remaining NOT YET: the ink verb's printing
   path (`InkMakePaths`, `FramePaths`).
-- Flakes seen once each under a full -j8 run, being looked into:
-  `host.NewtonRecognize`, `host.NewtonBigStore.*`, `host.NewtonDNS`,
-  `host.NewtonVBO`, `armcpu.NewtHack`, `newt.Newt`, `host.Newton`,
-  `host.NewtonTXPages` (each passes alone).
 - **NetHopper browses** (`host.NewtonNetHopper`).  NOT YET: a RefVar
   handle a native keeps in a heap object past its call (the ARM
   interpreter's handle table is per call); the NIE's connection slip

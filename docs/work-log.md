@@ -237,6 +237,23 @@ is the same value spelt so that it cannot be read two ways.
   notBic loops never advance the mask pointer; `ScaleStdRRect` scales the
   corner oval crosswise on a fax.
 
+## 2026-09-30: the flakes - a world copied short
+
+- The one-off crashes under a loaded parallel run (the boot crash in
+  `TUPort::Receive` among them) were heap damage: `TInker` had no
+  `GetSizeOf` (the ROM's is unnamed, 0x0038aadc, 0x118 - found in its
+  vtable with `vtable.py`), so the inker's task ran on a copy only a
+  `TAppWorld` long and its own fields lay past its stack block, putting
+  'inkr' into a fork's `TAppWorldState` (215c6602).
+  `host.NewtonBigStore.write` crashed in 2 of 30 stress copies before, 0
+  of 36 after.
+- The dns, echo and stream demos quit when done instead of a fixed 6-8 s;
+  the tests sharing the 52372 echo port take a `RESOURCE_LOCK` (933663cb).
+- `tools/host/stress.py` (65533334): `--test` builds a test's fixtures in
+  each copy's own directory; each run has a directory of its own; a
+  fixed-port test's copies run one at a time.  The full suite passes 3
+  rounds of 279/279 under `--suite --rounds 3 --hogs 8`.
+
 ## 2026-09-30: NetHopper browses
 
 - NetHopper 3.2's native code is Newton C++ Tools code in four
