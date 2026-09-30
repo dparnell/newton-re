@@ -7,9 +7,9 @@
 // with --tcp-echo, which tools/modem/fakemodem.py rings the Newton with),
 // and the endpoint disconnected (ctest host.NewtonModemAnswer):
 //
-//   python tools/modem/fakemodem.py --incoming 127.0.0.1:52376 \
+//   python tools/modem/fakemodem.py --incoming echo \
 //       --spawn build/host/host/newton --rom build/MP2x00US/rom.bin \
-//       --serial-port 0 --tcp-echo 52376 --headless 120 \
+//       --serial-port 0 --tcp-echo 0 --headless 120 \
 //       --script src/host/demo/modem-answer.ns
 
 HostInclude("common.ns");

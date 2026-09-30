@@ -64,16 +64,22 @@ is the modem at the other end of it.
   `host.NewtonFaxReceive`, `host.NewtonFaxSend`, `host.NewtonFaxSendClass2`, `host.NewtonFaxReceiveClass2`):
 
 ```
-python tools/modem/fakemodem.py --number 5551212=127.0.0.1:52375 \
+python tools/modem/fakemodem.py --number 5551212=echo \
     --spawn build/host/host/newton --rom build/MP2x00US/rom.bin \
-    --serial-port 0 --tcp-echo 52375 --headless 120 --script src/host/demo/modem.ns
-python tools/modem/fakemodem.py --incoming 127.0.0.1:52376 \
+    --serial-port 0 --tcp-echo 0 --headless 120 --script src/host/demo/modem.ns
+python tools/modem/fakemodem.py --incoming echo \
     --spawn build/host/host/newton --rom build/MP2x00US/rom.bin \
-    --serial-port 0 --tcp-echo 52376 --headless 120 --script src/host/demo/modem-answer.ns
+    --serial-port 0 --tcp-echo 0 --headless 120 --script src/host/demo/modem-answer.ns
 python tools/modem/t4.py --test-page --pbm page.pbm
 python tools/modem/fakemodem.py --fax-call page.pbm     --spawn build/host/host/newton --rom build/MP2x00US/rom.bin     --serial-port 0 --headless 200 --script src/host/demo/fax-receive.ns
 python tools/modem/fakemodem.py --fax-answer build/fax-sent.pbm     --spawn build/host/host/newton --rom build/MP2x00US/rom.bin     --serial-port 0 --headless 200 --script src/host/demo/fax-send.ns
 ```
+
+`--incoming echo` and `--number N=echo` stand for the spawned newton's own
+`--tcp-echo 0` server, whose port it prints as `[host] echo port N`: a
+test names no fixed port, since one in the ephemeral range may already be
+another test's free port (host.NewtonModemAnswer failed so once in a full
+parallel suite).
 
 On Windows give `--spawn` the program's full path (`...\newton.exe`).
 

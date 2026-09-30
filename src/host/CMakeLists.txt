@@ -217,8 +217,8 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
                          FAIL_REGULAR_EXPRESSION "waited in vain|fell over")
     add_test(NAME host.NewtonModemDial
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/modem/fakemodem.py
-                     --number 5551212=127.0.0.1:52375
-                     --spawn $<TARGET_FILE:newton> --serial-port 0 --tcp-echo 52375 --headless 120
+                     --number 5551212=echo
+                     --spawn $<TARGET_FILE:newton> --serial-port 0 --tcp-echo 0 --headless 120
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/modem.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonModemDial PROPERTIES TIMEOUT 200
@@ -226,8 +226,8 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
                          FAIL_REGULAR_EXPRESSION "waited in vain|fell over")
     add_test(NAME host.NewtonModemAnswer
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/modem/fakemodem.py
-                     --incoming 127.0.0.1:52376
-                     --spawn $<TARGET_FILE:newton> --serial-port 0 --tcp-echo 52376 --headless 120
+                     --incoming echo
+                     --spawn $<TARGET_FILE:newton> --serial-port 0 --tcp-echo 0 --headless 120
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/modem-answer.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonModemAnswer PROPERTIES TIMEOUT 200

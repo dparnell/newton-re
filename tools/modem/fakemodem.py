@@ -22,7 +22,11 @@ Purpose
     - --incoming HOST:PORT is a call to answer: once the Newton has started
       listening (its first "ATS1?", the rings so far) the modem rings -
       "RING" once a second, S1 counting - and "ATA" (or S0 rings, if S0 is
-      set) connects it to HOST:PORT, bridged as above.
+      set) connects it to HOST:PORT, bridged as above.  "--incoming echo"
+      calls the spawned newton's own echo server (--tcp-echo 0: the port
+      it took, which it prints as "[host] echo port N") - a test must not
+      name a fixed port, which another test's free port may already be;
+      "--number N=echo" is the same for a call the Newton makes.
 
     - --fax-call PAGE.pbm is a fax machine calling (ITU-T T.30 over Class 1,
       +FCLASS=1; there is no TCP line - the calling machine is this file's
@@ -64,7 +68,7 @@ Purpose
     Data calls are +FCLASS=0 (docs/comms/README.md, "The modem").
 
 Usage
-    python tools/modem/fakemodem.py [--number N=HOST:PORT]... [--incoming HOST:PORT]
+    python tools/modem/fakemodem.py [--number N=HOST:PORT|echo]... [--incoming HOST:PORT|echo]
                                     [--speed BPS] [--identity TEXT] --spawn <program...>
         runs <program> (a newton), waits for its "[host] serial port N"
         line, connects there as the modem; answers the program's exit
@@ -1143,6 +1147,14 @@ def run_spawned(program, args):
     for line in proc.stdout:
         sys.stdout.write(line)
         sys.stdout.flush()
+        m = re.search(r"\[host\] echo port (\d+)", line)
+        if m:
+            echo = ("127.0.0.1", int(m.group(1)))
+            if args.incoming == "echo":
+                args.incoming = echo
+            for number, target in list(args.numbers.items()):
+                if target == "echo":
+                    args.numbers[number] = echo
         m = re.search(r"\[host\] serial port (\d+)", line)
         if m:
             port = int(m.group(1))
@@ -1165,6 +1177,8 @@ def run_spawned(program, args):
 
 
 def address(text):
+    if text == "echo":
+        return text             # (the spawned newton's echo server: run_spawned)
     host, _, port = text.rpartition(":")
     return host or "127.0.0.1", int(port)
 
@@ -1173,7 +1187,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--number", action="append", default=[],
                     help="a phone book entry, NUMBER=HOST:PORT")
-    ap.add_argument("--incoming", type=address, help="HOST:PORT of a call to ring the Newton with once it listens")
+    ap.add_argument("--incoming", type=address, help="HOST:PORT of a call to ring the Newton with once it listens, or echo: the spawned newton's own --tcp-echo server")
     ap.add_argument("--fax-call", metavar="PAGE.pbm", help="a fax machine to call the Newton, sending this page (Class 1)")
     ap.add_argument("--fax-answer", metavar="OUT.pbm", help="a fax machine answering the Newton's call, writing the page it receives (Class 1)")
     ap.add_argument("--fax-class", choices=("1", "2", "2.0"), default="1",

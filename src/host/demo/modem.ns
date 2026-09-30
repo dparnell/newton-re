@@ -8,9 +8,9 @@
 // serial port, whose phone book says the number is the echo server newton
 // runs with --tcp-echo (ctest host.NewtonModemDial):
 //
-//   python tools/modem/fakemodem.py --number 5551212=127.0.0.1:52375 \
+//   python tools/modem/fakemodem.py --number 5551212=echo \
 //       --spawn build/host/host/newton --rom build/MP2x00US/rom.bin \
-//       --serial-port 0 --tcp-echo 52375 --headless 120 \
+//       --serial-port 0 --tcp-echo 0 --headless 120 \
 //       --script src/host/demo/modem.ns
 
 HostInclude("common.ns");

@@ -68,8 +68,8 @@
 	--tcp-echo runs a TCP echo server on 127.0.0.1 at the port, for a
 	script's endpoint to talk to (comms/host/HostEchoServer.h,
 	src/host/demo/echo.ns); a port of 0 takes a free one, which the
-	script asks for with HostEchoPort() - how the tests keep two runs at
-	once apart.  HostGetEnv(name) answers a host environment variable
+	script asks for with HostEchoPort(), and which is printed as "[host]
+	echo port N" - how the tests keep two runs at once apart.  HostGetEnv(name) answers a host environment variable
 	(tools/host/httpserve.py's NEWTON_HTTP_PORT).
 
 	--serial-port is the TCP port the Newton's external serial port listens
@@ -589,6 +589,12 @@ main(int argc, char** argv)
 			gEchoPort = HostStartEchoServer((uint16_t) port);
 			if (gEchoPort == 0)
 				fprintf(stderr, "newton: no echo server on port %ld\n", port);
+			else
+			{
+				// (tools/modem/fakemodem.py --incoming echo waits for it)
+				printf("[host] echo port %ld\n", gEchoPort);
+				fflush(stdout);
+			}
 		}
 		else if (strcmp(argv[i], "--ir-peer") == 0 && i + 1 < argc)
 			gIRPeer = argv[++i];
