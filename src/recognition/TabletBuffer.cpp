@@ -12,6 +12,7 @@
 #include "hal/Atomic.h"
 #include "UserPorts.h"
 #include "AEvents.h"
+#include <atomic>
 
 ULong	gTabData = 0;						// ROM 0x0c107390 gTabData
 ULong	gTabletInkerIndex = 0;				// (0x0c10445c)
@@ -22,6 +23,7 @@ static Boolean	gTBCPollReady = false;		// ROM 0x0c104ea0 gTBCPollReady
 static Boolean	gTBCPenUp = true;			// ROM 0x0c104ea8 gTBCPenUp
 static Boolean	gTBCBypassTablet = false;	// ROM 0x0c104eac gTBCBypassTablet
 static ULong	gTBCPollSample = 0;			// ROM 0x0c104ea4 gTBCPollSample
+static std::atomic<ULong> gTBCPolledPenDown(0);	// (host) the pen-down samples a poll has taken - TBCPolledPenDownSamples
 static TUPort*			gTBCInkerPort = nil;			// (0x0c107784) the inker's port, woken as samples come
 static TUAsyncMessage*	gTBCInkerMessage = nil;		// (0x0c107788)
 static TAEvent*			gTBCInkerEvent = nil;		// (0x0c10778c) {'newt, 'inkr, 2}
@@ -335,7 +337,11 @@ TBCPollTablet(long* x, long* y, ULong* pressure, Boolean* penUp)
 	if (!gTBCPollReady)
 		err = kTabletNoNewSample;
 	else
+	{
 		gTBCPollReady = false;
+		if (!gTBCPenUp)
+			gTBCPolledPenDown.fetch_add(1);		// (host: TBCPolledPenDownSamples)
+	}
 	return err;
 }
 
@@ -359,9 +365,25 @@ PollTablet(long* x, long* y, ULong* pressure, Boolean* penUp)
 	if (!gTBCPollReady)
 		err = kTabletNoNewSample;
 	else
+	{
 		gTBCPollReady = false;
+		if (!gTBCPenUp)
+			gTBCPolledPenDown.fetch_add(1);		// (host: TBCPolledPenDownSamples)
+	}
 	ExitAtomic();
 	return err;
+}
+
+
+// (host) How many pen-down samples the polls have taken so far - what the
+// host's automatic calibration taps hold the pen for: the calibration
+// screen (TInker::GetRawPoint) wants twenty in a row before the pen lifts,
+// and a tap held for a fixed time gives it fewer when the inker is slow to
+// run, leaving the target waiting (hal/host/HostTabletDriver.cpp).
+ULong
+TBCPolledPenDownSamples(void)
+{
+	return gTBCPolledPenDown.load();
 }
 
 

@@ -107,6 +107,9 @@ static long					gTapX, gTapY;
 static ULong				gTapMilliseconds;
 static Int64				gTapUpAt;
 static std::atomic<bool>	gTapDown(false);
+static std::atomic<ULong>	gTapReads(0);		// the pen-down samples the calibration screen must read before it lifts (0: none)
+static ULong				gTapReadsAtDown;
+static Int64				gTapGiveUpAt;
 
 // the calibration screen's targets (TInker::GetRawPoint tells them)
 static std::atomic<bool>	gAutoCalibrate(false);
@@ -343,11 +346,17 @@ TMainTabletDriver::Sample(void)
 		gRawDown.store(true);
 		gRawDowns.fetch_add(1);
 		gTapDown.store(true);
+		gTapReadsAtDown = TBCPolledPenDownSamples();
 		TTime hold(gTapMilliseconds, kMilliseconds);
 		gTapUpAt = now;
 		CompAdd(&hold.time, &gTapUpAt);
+		TTime giveUp(10, kSeconds);
+		gTapGiveUpAt = now;
+		CompAdd(&giveUp.time, &gTapGiveUpAt);
 	}
-	else if (gTapDown.load() && CompCompare(&now, &gTapUpAt) >= 0)
+	else if (gTapDown.load() && CompCompare(&now, &gTapUpAt) >= 0
+			 && (TBCPolledPenDownSamples() - gTapReadsAtDown >= gTapReads.load()
+				 || CompCompare(&now, &gTapGiveUpAt) >= 0))		// (a calibration that stopped reading)
 	{
 		gTapDown.store(false);
 		gRawDown.store(false);
@@ -428,15 +437,25 @@ HostTabletRawPenUp(void)
 }
 
 
-void
-HostTabletRawTap(long x, long y, ULong milliseconds)
+// a tap: down at (x, y) for at least so long, and until the calibration
+// screen's polls have taken reads pen-down samples (0: no such wait)
+static void
+StartTap(long x, long y, ULong milliseconds, ULong reads)
 {
 	gTapX = x;
 	gTapY = y;
 	gTapMilliseconds = milliseconds;
+	gTapReads.store(reads);
 	gTapPending.store(true);
 	if (gHostTabletDriver != nil)
 		GetClock(&gHostTabletDriver->fNextSample);		// (due at once)
+}
+
+
+void
+HostTabletRawTap(long x, long y, ULong milliseconds)
+{
+	StartTap(x, y, milliseconds, 0);
 }
 
 
@@ -459,14 +478,20 @@ HostTabletAutoCalibrate(Boolean on)
 
 // TInker::GetRawPoint's target (Inker.h's gInkerCalibrationTargetHook):
 // kept for a script to ask, and tapped at once when the calibration is
-// automatic - held long enough for the twenty readings the target wants.
+// automatic - held until the target has had the twenty readings in a row it
+// wants (a few more for good measure), and at least half a second.  A tap
+// held for a fixed time alone was sometimes read fewer than twenty times
+// when the inker was slow to run, and the target then waited for a pen
+// that never came until the calibration timed out.
+const ULong kCalibrationTapReads = 24;
+
 void
 HostTabletCalibrationTarget(short h, short v)
 {
 	gTargetH.store(h);
 	gTargetV.store(v);
 	if (gAutoCalibrate.load())
-		HostTabletRawTap(h, v, 500);
+		StartTap(h, v, 500, kCalibrationTapReads);
 }
 
 
