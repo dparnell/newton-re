@@ -237,6 +237,28 @@ is the same value spelt so that it cannot be read two ways.
   notBic loops never advance the mask pointer; `ScaleStdRRect` scales the
   corner oval crosswise on a fax.
 
+## 2026-09-30: NetHopper browses
+
+- NetHopper 3.2's native code is Newton C++ Tools code in four
+  'nativeModule binaries called through BinCFunction frames (the HTML
+  parser, ReadGIF and two small ones), its calls into the ROM anywhere in
+  the binary; `gluetable.py`/`pkgns.py` now read such binaries (59
+  entries).
+- The ARM interpreter (e897aeff, e64499a8): one heap at 0x80000000 that
+  outlives a call (`NewPtr`, `malloc`, `operator new` and their frees),
+  `LockedBinaryPtr` windows at 0x58000000 kept until the last unlock,
+  RefVar/RefStruct, `MakeInt` and the RefArg object functions,
+  `NSCallGlobalFn`, the C string library; the package's relocation
+  applied to the code binary where the ARM world maps it; binary bytes
+  seen big-endian as they lie (a string's characters excepted).
+- Bug found (0187f2b1): `TParagraphView::SetupDone` ran the view's
+  `viewSetupDoneScript` before laying out a paragraph that calculates its
+  height; the ROM (0x17f5d8) lays it out first - NetHopper's pages were
+  blank.  The NIE's options are listed in `HostOptionLayouts` (a0c37a37).
+- ctest `host.NewtonNetHopper` (52560c3c): `tools/host/httpserve.py`
+  serves `src/host/demo/www`; NetHopper opens a URL typed on the keyboard,
+  connects over the Host network and draws the page, its GIF decoded.
+
 ## 2026-09-30: shapes scrubbed, dragged and scaled; two test races
 
 - The polygon view (aaa84574): `HandleScrub` (a scrub over more than half
