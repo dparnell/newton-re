@@ -9,6 +9,26 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: the busy box where the ROM asks for it; stale NOT YETs
+
+- The busy box (924411f8): `BusyBoxSend` moved beside the inker's port so
+  the views can reach it; the newt world's dispatch and idle ask for the
+  box when an event runs over a second (0x36) and allow it again after
+  (0x35), pen tracking holds it off (pickers, keyboard, gauges, the
+  hiliter, button tracking, view effects), and drags and resizes call it
+  off (0x37).  `host.NewtonLiveInk` checks an event over a second shows
+  it by itself after about 51 ticks.
+- `tools/newton-rom/analysis/notyet.py` (1f58853c) lists the NOT YET
+  markers naming something `src/` already defines: 172 of 462 at first,
+  149 of 445 after one batch of stale comments put right (ed1045d8).
+- The key help, opened by holding the command key, dismisses an open
+  popup first as the ROM's `DoKeyEvent` does (963fa235).
+- Found and left: a package's card handler (ARM code) needs the armcpu
+  path before `TCardPartHandler` can add it; loading a package over an
+  endpoint and the TXView style natives need hooks across library
+  layers; a command-key key-up sent to a plain view throws
+  type.ref.frame in `test_Views`.
+
 ## 2026-10-01: the Setup walk's lost tap
 
 `common.ns`'s walkSetup sometimes stopped at Welcome ("setup name page:
