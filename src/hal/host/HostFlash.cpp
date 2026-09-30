@@ -12,6 +12,7 @@
 #include "NewtErrors.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <vector>
 
@@ -30,8 +31,23 @@ namespace
 			return;
 		fseek(gFile, (long) offset, SEEK_SET);
 		fwrite(&gFlash[offset], 1, size, gFile);
-		fflush(gFile);
 	}
+
+	// what is still in the C library's buffer goes to the file when the
+	// program ends, however it ends
+	void
+	FlushAtExit(void)
+	{
+		HostFlashFlush();
+	}
+}
+
+
+void
+HostFlashFlush(void)
+{
+	if (gFile != nil)
+		fflush(gFile);
 }
 
 
@@ -76,6 +92,12 @@ HostFlashOpen(const char* path, ULong size)
 			}
 			WriteThrough(0, (ULong) gFlash.size());
 		}
+	}
+	static Boolean registered = false;
+	if (!registered)
+	{
+		registered = true;
+		atexit(FlushAtExit);
 	}
 	HostRegisterPhysicalMemory(kHostFlashBank1, kHostFlashBankSize, (Ptr) &gFlash[0]);
 	if (gFlash.size() > kHostFlashBankSize)

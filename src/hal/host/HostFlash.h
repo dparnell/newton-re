@@ -13,8 +13,9 @@
 				that can only clear bits, a block erase that sets them all -
 				is HostFlashWrite and HostFlashErase, which the host's flash
 				driver (stores/flash/host/HostFlashDriver.cpp) calls; each
-				change is written through to the file, so the flash survives
-				the process.
+				change is written through to the file (buffered by the C
+				library, and flushed when the file is closed or the program
+				ends), so the flash survives the process.
 
 	Written by:	the reconstruction (DEVIATION: the machine's chips are hardware)
 */
@@ -38,6 +39,10 @@ NewtonErr	HostFlashOpen(const char* path, ULong size = kHostFlashBankSize);
 void		HostFlashClose(void);
 Boolean		HostFlashIsOpen(void);
 ULong		HostFlashSize(void);			// 0, 4 MB or 8 MB
+
+// Writes reach the file through the C library's buffer, which is emptied
+// when the program ends; a test that reads the file meanwhile flushes it.
+void		HostFlashFlush(void);
 
 // whether a host address is a byte of the flash
 Boolean		HostFlashContains(Ptr p);

@@ -52,6 +52,7 @@ ReadFile(void)
 {
 	FileBytes bytes;
 	bytes.fSize = 0;
+	HostFlashFlush();
 	FILE* f = fopen(kFlashFile, "rb");
 	if (f == nil)
 		return bytes;
