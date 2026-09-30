@@ -24,8 +24,23 @@ Purpose
       "RING" once a second, S1 counting - and "ATA" (or S0 rings, if S0 is
       set) connects it to HOST:PORT, bridged as above.
 
-    Only data (+FCLASS=0) calls are made; the fax classes are answered but
-    not yet carried (docs/comms/README.md, "The modem").
+    - --fax-call PAGE.pbm is a fax machine calling (ITU-T T.30 over Class 1,
+      +FCLASS=1; there is no TCP line - the calling machine is this file's
+      FaxCaller): once the Newton listens the modem rings, and after "ATA"
+      it is connected sending HDLC frames (+FTH=3 already in effect), as a
+      Class 1 modem answering a fax call is.  The Newton's CSI and DIS are
+      read; then, as the Newton asks (+FRH=3, +FRM=96), the caller sends
+      TSI and DCS (V.29, 9600, standard resolution, 1728 pixels), the
+      training check (1.5 s of noughts), and after the Newton's CFR the page
+      - PAGE.pbm coded by t4.py (MH, two fill bytes before each end of
+      line) - then EOP; the Newton's MCF (or RTP/RTN) is read and DCN sent.
+      Frames go with their FCS (CRC-16, which a Class 1 modem passes on),
+      bytes of the value DLE doubled, each ended by DLE ETX.  EOP is sent
+      again after 3 seconds if the Newton asks for a frame and has not
+      answered (T.30's T4).  +FTH/+FTM/+FRH/+FRM/+FTS are taken outside
+      such a call too, though nothing answers there.
+
+    Data calls are +FCLASS=0 (docs/comms/README.md, "The modem").
 
 Usage
     python tools/modem/fakemodem.py [--number N=HOST:PORT]... [--incoming HOST:PORT]
@@ -35,6 +50,8 @@ Usage
         status.
     python tools/modem/fakemodem.py ... --connect 127.0.0.1:3679
         the same with a newton already running.
+    python tools/modem/fakemodem.py --fax-call page.pbm --spawn <program...>
+        a fax call to the Newton, sending page.pbm (1728 pixels wide).
 
 Inputs / outputs
     Prints what the Newton says to the modem ("fakemodem: <- ATI4") and what
@@ -44,6 +61,7 @@ Inputs / outputs
 """
 
 import argparse
+import os
 import re
 import select
 import socket
@@ -52,6 +70,130 @@ import sys
 import threading
 import time
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import t4                                   # the page's MH code
+
+DLE = 0x10
+ETX = 0x03
+
+# T.30 facsimile control fields (the X bit, the least significant, set by
+# the calling machine)
+FCF_NAMES = {
+    0x80: "DIS", 0x40: "CSI", 0x20: "NSF", 0x82: "DCS", 0x42: "TSI", 0x84: "CFR",
+    0x44: "FTT", 0x8c: "MCF", 0x4c: "RTN", 0xcc: "RTP", 0x4e: "MPS", 0x2e: "EOP",
+    0x8e: "EOM", 0xfa: "DCN", 0x1a: "CRP", 0x41: "CIG", 0x81: "DTC",
+}
+
+
+def fcs(frame):
+    """The HDLC frame check sequence (ITU-T T.30 and V.42's CRC-16, x^16 +
+    x^12 + x^5 + 1, from all ones, least significant bit first, complemented)
+    as the two bytes that follow the frame."""
+    crc = 0xffff
+    for byte in frame:
+        crc ^= byte
+        for _ in range(8):
+            crc = (crc >> 1) ^ 0x8408 if crc & 1 else crc >> 1
+    crc ^= 0xffff
+    return bytes([crc & 0xff, crc >> 8])
+
+
+def dle_stuff(data):
+    return data.replace(bytes([DLE]), bytes([DLE, DLE])) + bytes([DLE, ETX])
+
+
+def frame_name(frame):
+    if len(frame) < 3:
+        return "a short frame"
+    return FCF_NAMES.get(frame[2] & 0xfe, "FCF %02x" % frame[2])
+
+
+def t30_id(text):
+    """A CSI/TSI FIF: 20 characters, the last first (T.30 5.3.6.2.4), the
+    spaces that pad it out after the reversed text - its first character
+    the last sent, as the Newton sends its own."""
+    return text[:20][::-1].ljust(20).encode("latin-1")
+
+
+class FaxCaller:
+    """The calling fax machine behind the modem: T.30 as the caller."""
+
+    def __init__(self, page_path, identity):
+        rows = t4.read_pbm(page_path)
+        self.lines = len(rows)
+        self.page = t4.encode_page(rows, 2)
+        self.identity = identity
+        self.state = "start"
+        self.frames = []                # frames for the Newton's +FRH, in turn
+        self.last_command = None
+        self.command_time = 0.0
+        self.result = None
+
+    @staticmethod
+    def control(fcf, fif=b"", final=True):
+        frame = bytes([0xff, 0x13 if final else 0x03, fcf]) + fif
+        return frame + fcs(frame)
+
+    def dcs(self):
+        # V.29 at 9600, standard resolution, 1728 pixels, A4, 20 ms
+        return self.control(0x83, bytes([0x00, 0x06, 0x00]))
+
+    def from_newton(self, frame):
+        """A frame the Newton sent."""
+        name = frame_name(frame)
+        if name in ("CSI", "TSI", "CIG"):
+            detail = " '%s'" % frame[3:23][::-1].decode("latin-1").strip()
+        else:
+            detail = (" " + frame[3:].hex()) if len(frame) > 3 else ""
+        log("fax: <- %s%s" % (name, detail))
+        if name == "DIS" and self.state == "start":
+            self.frames = [self.control(0x43, t30_id(self.identity), False), self.dcs()]
+            self.state = "dcs"
+        elif name == "CFR" and self.state == "cfr":
+            self.state = "page"
+        elif name == "FTT" and self.state == "cfr":
+            log("fax: the training failed; DCS again")
+            self.frames = [self.dcs()]
+            self.state = "dcs"
+        elif name in ("MCF", "RTP", "RTN") and self.state == "confirm":
+            self.result = name
+            log("fax: the page confirmed %s" % name)
+            self.frames = [self.control(0xfb)]
+            self.state = "dcn"
+
+    def next_frame(self, now):
+        """The frame for the Newton's +FRH (None: wait)."""
+        if self.frames:
+            frame = self.frames.pop(0)
+            self.last_command = frame
+            self.command_time = now
+            if self.state == "dcs" and not self.frames:
+                self.state = "tcf"
+            elif self.state == "eop":
+                self.state = "confirm"
+            elif self.state == "dcn":
+                self.state = "done"
+                log("fax: DCN sent")
+            return frame
+        if self.state == "confirm" and now - self.command_time >= 3.0:
+            log("fax: no response; EOP again")
+            self.command_time = now
+            return self.last_command
+        return None
+
+    def next_data(self):
+        """What the Newton's +FRM receives: the training check, or the page."""
+        if self.state == "tcf":
+            self.state = "cfr"
+            log("fax: -> the training check (1800 noughts)")
+            return bytes(1800)
+        if self.state == "page":
+            self.state = "eop"
+            self.frames = [self.control(0x2f)]
+            log("fax: -> the page, %d lines in %d bytes" % (self.lines, len(self.page)))
+            return self.page
+        return b""
+
 
 def log(text):
     print("fakemodem: " + text)
@@ -59,7 +201,13 @@ def log(text):
 
 
 class Modem:
-    def __init__(self, dte, numbers, incoming, speed, identity):
+    def __init__(self, dte, numbers, incoming, speed, identity, fax=None):
+        self.fax = fax                  # a FaxCaller to ring the Newton with
+        self.fax_call = False           # the fax call answered
+        self.collect = None             # "hdlc" or "data": the Newton's framed bytes being read
+        self.collected = bytearray()
+        self.collect_dle = False
+        self.pending_frh = False        # +FRH waiting for a frame
         self.dte = dte
         self.numbers = numbers
         self.incoming = incoming
@@ -135,6 +283,9 @@ class Modem:
                 pass
         self.line = None
         self.online = False
+        self.fax_call = False
+        self.collect = None
+        self.pending_frh = False
 
     def dial(self, number):
         log("dialing %s" % number)
@@ -152,6 +303,14 @@ class Modem:
             self.result("NO CARRIER", 3)
 
     def answer(self):
+        if self.ringing and self.fax is not None and self.fclass == "1":
+            log("answered a fax call")
+            self.ringing = False
+            self.sreg[1] = 0
+            self.fax_call = True
+            self.result("CONNECT", 1)
+            self.start_collect("hdlc")          # answering, the modem sends HDLC at once
+            return
         if not self.ringing or self.incoming is None:
             self.result("NO CARRIER", 3)
             return
@@ -234,7 +393,7 @@ class Modem:
                 elif i < len(body) and body[i] == "?":
                     i += 1
                     self.info("%03d" % self.sreg.get(n, 0))
-                    if n == 1 and self.incoming is not None and not self.listening_seen:
+                    if n == 1 and (self.incoming is not None or self.fax is not None) and not self.listening_seen:
                         # the Newton is listening: the call comes in
                         self.listening_seen = True
                         self.ringing = True
@@ -265,6 +424,16 @@ class Modem:
                     self.info("3,24,48,72,96" if m.group(1).upper() in ("TM", "RM") else "3")
                     i += m.end()
                     continue
+                m = re.match(r"(?i)F(TM|TH|RM|RH|TS|RS)\s*=\s*(\d+)", body[i:])
+                if m:
+                    command = m.group(1).upper()
+                    i += m.end()
+                    if command in ("TS", "RS"):
+                        time.sleep(int(m.group(2)) / 100.0)     # a silence
+                        continue
+                    self.class1(command, int(m.group(2)))
+                    answered = True
+                    break
                 ok = False
                 break
             if c.isalpha():
@@ -274,6 +443,75 @@ class Modem:
             break
         if not answered:
             self.result("OK" if ok else "ERROR", 0 if ok else 4)
+
+    # --- Class 1 (T.31)
+    def class1(self, command, value):
+        if command in ("TH", "TM"):
+            log("-> CONNECT (to send %s)" % ("frames" if command == "TH" else "data at %d" % (value * 100)))
+            self.send(b"\r\nCONNECT\r\n")
+            self.start_collect("hdlc" if command == "TH" else "data")
+        elif command == "RH":
+            self.pending_frh = True
+            self.give_frame()
+        else:
+            data = self.fax.next_data() if self.fax_call else b""
+            if not data:
+                self.result("NO CARRIER", 3)
+                return
+            log("-> CONNECT (data at %d)" % (value * 100))
+            self.send(b"\r\nCONNECT\r\n")
+            self.send(dle_stuff(data))
+            self.result("OK", 0)
+
+    def give_frame(self):
+        """A +FRH answered once the caller has a frame for it."""
+        if not self.pending_frh:
+            return
+        frame = self.fax.next_frame(time.monotonic()) if self.fax_call else None
+        if frame is None:
+            return
+        self.pending_frh = False
+        log("fax: -> %s" % frame_name(frame))
+        self.send(b"\r\nCONNECT\r\n")
+        self.send(dle_stuff(frame))
+        self.result("OK", 0)
+
+    def start_collect(self, kind):
+        self.collect = kind
+        self.collected = bytearray()
+        self.collect_dle = False
+
+    def collected_byte(self, byte):
+        """A byte of a frame or of data the Newton sends (DLE stuffed)."""
+        if self.collect_dle:
+            self.collect_dle = False
+            if byte == DLE:
+                self.collected.append(DLE)
+            elif byte == ETX:
+                self.end_collect()
+            return
+        if byte == DLE:
+            self.collect_dle = True
+        else:
+            self.collected.append(byte)
+
+    def end_collect(self):
+        data = bytes(self.collected)
+        self.collected = bytearray()
+        if self.collect == "hdlc":
+            if self.fax_call:
+                self.fax.from_newton(data)
+            else:
+                log("<- a frame: %s" % data.hex())
+            if len(data) >= 2 and data[1] & 0x10:
+                self.collect = None
+                self.result("OK", 0)            # the final frame: the carrier off
+            else:
+                self.result("CONNECT", 1)       # another frame to come
+        else:
+            log("<- %d bytes of data" % len(data))
+            self.collect = None
+            self.result("OK", 0)
 
     @staticmethod
     def number(body, i):
@@ -309,6 +547,11 @@ class Modem:
                 self.lost_carrier()
             return
         self.last_dte = now
+        while self.collect is not None and data:
+            byte, data = data[0], data[1:]
+            self.collected_byte(byte)
+        if not data:
+            return
         if self.echo:
             self.send(data)
         self.buffer += data
@@ -337,6 +580,7 @@ class Modem:
             self.result("RING", 2)
             if self.sreg.get(0, 0) and self.sreg[1] >= self.sreg[0]:
                 self.answer()
+        self.give_frame()
 
     def run(self):
         while True:
@@ -367,7 +611,8 @@ def run_modem(host, port, args):
     dte = socket.create_connection((host, port))
     dte.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
     log("on the serial port at %s:%d" % (host, port))
-    Modem(dte, args.numbers, args.incoming, args.speed, args.identity).run()
+    fax = FaxCaller(args.fax_call, "fakemodem fax") if args.fax_call else None
+    Modem(dte, args.numbers, args.incoming, args.speed, args.identity, fax).run()
 
 
 def run_spawned(program, args):
@@ -407,6 +652,7 @@ def main():
     ap.add_argument("--number", action="append", default=[],
                     help="a phone book entry, NUMBER=HOST:PORT")
     ap.add_argument("--incoming", type=address, help="HOST:PORT of a call to ring the Newton with once it listens")
+    ap.add_argument("--fax-call", metavar="PAGE.pbm", help="a fax machine to call the Newton, sending this page (Class 1)")
     ap.add_argument("--speed", type=int, default=19200, help="the speed CONNECT reports (19200)")
     ap.add_argument("--identity", default="fakemodem 1.0", help="what ATI0/I3/I4 answer (an unknown modem)")
     group = ap.add_mutually_exclusive_group(required=True)

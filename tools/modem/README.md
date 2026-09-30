@@ -19,9 +19,18 @@ is the modem at the other end of it.
   and the guard time S12 either side; a refused connection is `BUSY`.
   `--incoming` is a call to answer: once the Newton starts listening (its
   first `ATS1?`) the modem rings once a second, and `ATA` (or S0 rings)
-  connects it.  Fax classes are answered but not carried yet.
+  connects it.  `--fax-call PAGE.pbm` is a Class 1 fax call to answer
+  (`+FCLASS=1`; no TCP line - the calling fax machine is the file's
+  `FaxCaller`): after `ATA` the modem is sending HDLC at once, as an
+  answering Class 1 modem is; the Newton's CSI and DIS are read, and as it
+  asks (`+FRH=3`, `+FRM=96`) the caller sends TSI and DCS (V.29 at 9600,
+  standard resolution), the training check (1800 noughts), the page (the
+  PBM coded by `t4.py`, two fill bytes before each end of line) after the
+  Newton's CFR, and EOP; the Newton's MCF (or RTP/RTN) is read and DCN
+  sent.  Frames carry their FCS; bytes of the value DLE are doubled and
+  each frame or run of data ends with DLE ETX.
 - **Inputs**: `--number NUMBER=HOST:PORT` (repeatable), `--incoming
-  HOST:PORT`, `--speed BPS` (what CONNECT reports, 19200), `--identity TEXT`
+  HOST:PORT`, `--fax-call PAGE.pbm` (1728 pixels wide), `--speed BPS` (what CONNECT reports, 19200), `--identity TEXT`
   (the `ATI0/3/4` answer; the default, `fakemodem 1.0`, is a modem the ROM
   does not know, which gets its generic profile), and either `--spawn
   <program...>` (a newton, run and waited for its `[host] serial port N`
@@ -30,7 +39,8 @@ is the modem at the other end of it.
   -> OK`), each call made or answered and the bytes carried each way; with
   `--spawn`, the program's output passed through and its exit status
   answered.
-- **Invocation** (ctest `host.NewtonModemDial` and `host.NewtonModemAnswer`):
+- **Invocation** (ctests `host.NewtonModemDial`, `host.NewtonModemAnswer`,
+  `host.NewtonFaxReceive`):
 
 ```
 python tools/modem/fakemodem.py --number 5551212=127.0.0.1:52375 \
@@ -39,6 +49,8 @@ python tools/modem/fakemodem.py --number 5551212=127.0.0.1:52375 \
 python tools/modem/fakemodem.py --incoming 127.0.0.1:52376 \
     --spawn build/host/host/newton --rom build/MP2x00US/rom.bin \
     --serial-port 0 --tcp-echo 52376 --headless 120 --script src/host/demo/modem-answer.ns
+python tools/modem/t4.py --test-page --pbm page.pbm
+python tools/modem/fakemodem.py --fax-call page.pbm     --spawn build/host/host/newton --rom build/MP2x00US/rom.bin     --serial-port 0 --headless 200 --script src/host/demo/fax-receive.ns
 ```
 
 On Windows give `--spawn` the program's full path (`...\newton.exe`).
