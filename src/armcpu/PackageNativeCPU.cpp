@@ -1571,7 +1571,8 @@ GLUE(Glue_NewPtr)				{ w.Return(cpu, HeapAlloc(cpu.r[0], false)); return true; }
 GLUE(Glue_NewPtrClear)			{ w.Return(cpu, HeapAlloc(cpu.r[0], true)); return true; }
 GLUE(Glue_DisposPtr)			{ gARMHeap.Free(cpu.r[0]); w.Return(cpu, 0); return true; }
 GLUE(Glue_GetPtrSize)			{ w.Return(cpu, gARMHeap.BlockSize(cpu.r[0])); return true; }
-// ROM 0x00318ee8 __nw__FUi: malloc of the size (one byte for nought); a
+// ROM 0x00318ee8 __nw__FUi
+// malloc of the size (one byte for nought); a
 // failure calls the new handler, which the ARM world has none of
 GLUE(Glue_new)					{ w.Return(cpu, HeapAlloc(cpu.r[0] == 0 ? 1 : cpu.r[0], false)); return true; }
 // ROM 0x00318f28 __dl__FPv
@@ -1600,7 +1601,8 @@ GLUE(Glue_RefVar_ctor)
 	w.Return(cpu, self);
 	return true;
 }
-// ROM 0x00079d74 __ct__6RefVarFv: a handle of nil
+// ROM 0x00079d74 __ct__6RefVarFv
+// a handle of nil
 GLUE(Glue_RefVar_ctor0)
 {
 	uint32_t self = cpu.r[0];
@@ -1611,7 +1613,8 @@ GLUE(Glue_RefVar_ctor0)
 	w.Return(cpu, self);
 	return true;
 }
-// ROM 0x00079f40 __ct__9RefStructFv: a RefVar of nil whose handle is on no
+// ROM 0x00079f40 __ct__9RefStructFv
+// a RefVar of nil whose handle is on no
 // stack (stackPos nought)
 GLUE(Glue_RefStruct_ctor)
 {
@@ -1638,9 +1641,11 @@ GLUE(Glue_RefVar_dtor)
 	w.Return(cpu, self);
 	return true;
 }
-// ROM 0x00079f28 __as__6RefVarFCl, 0x00079e7c __as__9RefStructFCl
+// ROM 0x00079f28 __as__6RefVarFCl
+// ROM 0x00079e7c __as__9RefStructFCl
 GLUE(Glue_RefVar_assign)		{ w.Write32(RefHandleOf(w, cpu.r[0]), cpu.r[1]); w.Return(cpu, cpu.r[0]); return true; }
-// ROM 0x00079e88 __as__9RefStructFRC6RefVar, 0x00079f14 __as__6RefVarFRC6RefVar
+// ROM 0x00079e88 __as__9RefStructFRC6RefVar
+// ROM 0x00079f14 __as__6RefVarFRC6RefVar
 GLUE(Glue_RefVar_assignVar)
 {
 	uint32_t ref = 0;
@@ -1649,7 +1654,8 @@ GLUE(Glue_RefVar_assignVar)
 	w.Return(cpu, cpu.r[0]);
 	return true;
 }
-// ROM 0x00079f34 __opl__6RefVarCFv, 0x00079e9c __opl__9RefStructCFv
+// ROM 0x00079f34 __opl__6RefVarCFv
+// ROM 0x00079e9c __opl__9RefStructCFv
 GLUE(Glue_RefVar_ref)
 {
 	uint32_t ref = 0;
@@ -1660,10 +1666,12 @@ GLUE(Glue_RefVar_ref)
 
 // the RefArg forms of the object functions (the Newton C++ Tools' API)
 #define REFARG(n)	RefVar(w.ArgRef(cpu.r[n]))
-// ROM 0x0031c694 MakeInt__Fl, 0x0031c6b4 MakeBoolean__Fi
+// ROM 0x0031c694 MakeInt__Fl
+// ROM 0x0031c6b4 MakeBoolean__Fi
 GLUE(Glue_MakeInt)				{ w.Return(cpu, cpu.r[0] << 2); return true; }
 GLUE(Glue_MakeBoolean)			{ w.Return(cpu, cpu.r[0] != 0 ? (uint32_t) TRUEREF : (uint32_t) NILREF); return true; }
-// ROM 0x0031c79c RefToInt__FRC6RefVar: an integer's value, else _RINTError
+// ROM 0x0031c79c RefToInt__FRC6RefVar
+// an integer's value, else _RINTError
 GLUE(Glue_RefToInt)
 {
 	uint32_t ref = 0;
@@ -1673,7 +1681,8 @@ GLUE(Glue_RefToInt)
 	w.Return(cpu, (uint32_t) ((int32_t) ref >> 2));
 	return true;
 }
-// ROM 0x0031c970 MakeSymbol__FPc: Intern
+// ROM 0x0031c970 MakeSymbol__FPc
+// Intern
 GLUE(Glue_MakeSymbol)
 {
 	char name[256];
@@ -1701,7 +1710,8 @@ GLUE(Glue_NSCallGlobalFn0)		{ TraceGlobalFn(w, cpu); w.Return(cpu, w.ToARM(NSCal
 GLUE(Glue_NSCallGlobalFn1)		{ TraceGlobalFn(w, cpu); w.Return(cpu, w.ToARM(NSCallGlobalFn(REFARG(0), REFARG(1)))); return true; }
 GLUE(Glue_NSCallGlobalFn2)		{ TraceGlobalFn(w, cpu); w.Return(cpu, w.ToARM(NSCallGlobalFn(REFARG(0), REFARG(1), REFARG(2)))); return true; }
 GLUE(Glue_NSCallGlobalFn3)		{ TraceGlobalFn(w, cpu); w.Return(cpu, w.ToARM(NSCallGlobalFn(REFARG(0), REFARG(1), REFARG(2), REFARG(3)))); return true; }
-// ROM 0x0031c9f0 LockedBinaryPtr__FRC6RefVar: the object locked and its
+// ROM 0x0031c9f0 LockedBinaryPtr__FRC6RefVar
+// the object locked and its
 // bytes' address - here a window onto them that lasts until the lock goes
 GLUE(Glue_LockedBinaryPtr)
 {
@@ -1722,7 +1732,8 @@ GLUE(Glue_UnlockRefArg)
 #undef REFARG
 
 // Ustrlen and Ustrncat over the ARM world's UniChars (utility/Unicode.cpp's,
-// ROM 0x00256774 Ustrncat: n characters at most, then a nul)
+// ROM 0x00256774 Ustrncat
+// n characters at most, then a nul)
 GLUE(Glue_Ustrlen)
 {
 	uint32_t n = 0;

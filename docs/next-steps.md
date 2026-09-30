@@ -26,8 +26,8 @@ the way are all in `docs/work-log.md`.
   `whichfunction.py`, which read PE images and Windows debug APIs.
   macOS has neither window nor sound implementation yet, so it would run
   headless.
-- `analysis/coverage.py build/MP2x00US --check`: 16380 citations, 0 bad;
-  10805 of 16671 functions (64.81%).
+- `analysis/coverage.py build/MP2x00US --check`: 17968 citations, 0 bad;
+  12051 of 16671 functions (72.29%).
 - `analysis/natives.py --unbound`: only comms' are left (comms 102 of
   147, the AppleTalk `*Zone*` four and IR sniffing).  `instance:Dispatch` works only on a
   monitor protocol (a host protocol's methods need numbered thunks, NOT
@@ -262,8 +262,7 @@ worked through.  What could come next (not ranked; the owner chooses):
   and the busy box (`host.NewtonLiveInk`).  NOT YET: the armistice
   samples (a debugger feed, `gDebuggerBits & 8`), `TResistiveTablet` (the
   MP2x00's panel, hardware).  To fix: layout.json's RAM_RW address
-  (0x0C100000; the RW data is at 0x0C100800) in `extract_rom.py`; 11 bad
-  citations in `armcpu/PackageNativeCPU.cpp` (from the NetHopper work);
+  (0x0C100000; the RW data is at 0x0C100800) in `extract_rom.py`;
   `host.NewtonKeyHelp` and `host.NewtonInet` wait fixed times and failed
   once each under -j8.
 - **Power**: the power manager, sleep and wake, the backlight and the
