@@ -75,6 +75,17 @@ add_library(hal_host_serial STATIC
 target_link_libraries(hal_host_serial PUBLIC newton_config hal_serial hal_host hal_host_sockets)
 target_include_directories(hal_host_serial PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/host)
 
+# The host's PC card (host/HostCard.h: a card image in Einstein's container
+# put into the socket and taken out) and the socket over it
+# (host/HostCardSocket.cpp: TCardSocket, CardSocket.h, whose ROM
+# implementation drives the Voyager's PCMCIA controller).
+add_library(hal_host_card STATIC
+    host/HostCard.cpp
+    host/HostCardSocket.cpp
+)
+target_link_libraries(hal_host_card PUBLIC newton_config hal_host os600_user)
+target_include_directories(hal_host_card PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/host)
+
 add_subdirectory(tests)
 
 # The machine's timers the serial tools use (FIQTimer.h: the fast timers

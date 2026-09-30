@@ -1,10 +1,20 @@
 /*
-	File:		CardSocket.h
+	File:		hal/CardSocket.h
 
-	Copyright:	© 1992-1996 by Apple Computer, Inc., all rights reserved.
+	Contains:	TCardSocket, a PC card socket - the DDK's PCMCIA/CardSocket.h
+				(Copyright 1992-1996 by Apple Computer, Inc.; derived from v15
+				(12/16/96) internal), whose public interface is kept here as
+				the DDK has it, with the members the ROM's own code calls that
+				the DDK leaves out (the card server's: Init, the interrupt
+				dispatch, the socket's access and power, the lock switch) and
+				the fields a port keeps.
 
-	Derived from v15 (12/16/96) internal.
-
+				The ROM's TCardSocket (ROM 0x00054c00 on) drives the
+				Voyager ASIC's PCMCIA controller registers; it is hardware,
+				so each port implements this class (the host's is
+				hal/host/HostCardSocket.cpp, over hal/host/HostCard.h).
+				tools/newton-rom/sync_ddk_headers.py leaves the DDK's header
+				out of src/ddk in favour of this one.
 */
 
 
@@ -254,8 +264,54 @@ class TCardSocket : public SingleObject
 		ULong		Do16BitRead(ULong addr);				// Do 16-bit read (data returns at low 16-bit)
 
 
-	private:		//	•••• for internal use only
+	// ---- not in the DDK: what the ROM's card server and card handlers call
+		NewtonErr	Init(void);							// the socket found and set up (an error: there is no such socket)
+		ULong		GetChipInfo(void);
+		void		ResetInterrupts(void);
+		ULong		InterruptDispatcher(ULong which);	// the registered procs of the interrupts that are pending
+		ULong		InterruptState(TSocketInt intType);
+		void		CardLockIntHandler(void);
+		ULong		ConvertWaitCount(ULong count);
+		void		EnableSocketAccess(void);
+		ULong		DisableSocketAccess(void);
+		void		EnableSocketAbort(void);
+		void		DisableSocketAbort(void);
+		NewtonErr	MakeSocketAccessible(ULong address, ULong size);
+		NewtonErr	MakeSocketInaccessible(ULong address, ULong size);
+		TCardSocket*	SelectPCMCIABus(void);
+		TCardSocket*	DeselectPCMCIABus(void);
+		ULong		IsPCMCIABus(void);
+		void		EnableBus(void);
+		void		DisableBus(void);
+		NewtonErr	RequestPower(TSocketPowerLevels powerLevel, ULong current);
+		TCardSocket*	SetCardServerPort(ULong port);
+		void		SetDefaultConfig(void);
+		void		VccOn(void);
+		void		VccOff(void);
+		void		VppOn(void);
+		void		VppOff(void);
+		TCardSocket*	Vpp1On(void);
+		TCardSocket*	Vpp1Off(void);
+		TCardSocket*	Vpp2On(void);
+		TCardSocket*	Vpp2Off(void);
+		Boolean		IsVccOn(void);
+		Boolean		IsVppOn(void);
 
+	private:		//	the port's
+		TObjectId	fSocketDomain;
+		ULong		fSocketNumber;
+		ULong		fControl;
+		ULong		fCardServerPort;
+		IntProcPtr	fIntProcs[kSocketIntCount];
+		void*		fIntObjects[kSocketIntCount];
+		ULong		fIntEnabled;						// a bit per TSocketInt
+		ULong		fIntPending;
+		Boolean		fVccOn;
+		Boolean		fVppOn;
+		Boolean		fAccessEnabled;
+		TNanoSecond	fCommonMemSpeed;
+
+		friend void	HostCardSocketChanged(ULong socket, Boolean inserted);
 };
 
 

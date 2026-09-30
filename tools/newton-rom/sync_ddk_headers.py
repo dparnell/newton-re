@@ -44,6 +44,11 @@ REPLACED = {
     # makes virtual; src/comms/Endpoint.h declares them so (and the classes
     # an endpoint works with, which the DDK leaves out)
     "Endpoint.h": "a protocol's methods made virtual; src/comms/Endpoint.h",
+    # CardSocket.h: the ROM's TCardSocket drives the Voyager's PCMCIA
+    # controller, so each port implements it; src/hal/CardSocket.h keeps the
+    # DDK's interface, adds the members the ROM's card server calls and the
+    # port's fields
+    "CardSocket.h": "the socket's hardware; src/hal/CardSocket.h, implemented by each port",
 }
 
 PATCHES = {

@@ -14,3 +14,10 @@ add_executable(test_HostIRChip test_HostIRChip.cpp)
 target_link_libraries(test_HostIRChip PRIVATE hal_host_serial os600_kernel os600_user)
 add_test(NAME hal.HostIRChip COMMAND test_HostIRChip)
 set_tests_properties(hal.HostIRChip PROPERTIES TIMEOUT 60)
+
+# the host's PC card and socket: the image, the CIS through the attribute
+# window, the flash rules, the card-detect interrupt
+add_executable(test_HostCard test_HostCard.cpp)
+target_link_libraries(test_HostCard PRIVATE hal_host_card os600_kernel os600_user)
+add_test(NAME hal.HostCard COMMAND test_HostCard)
+set_tests_properties(hal.HostCard PROPERTIES TIMEOUT 60)

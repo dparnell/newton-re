@@ -910,8 +910,8 @@ level, and its two files are simple.
 
   Its flash follows the Intel Series 2 command set (two 28F016SA chips on
   the 16-bit card bus). **The host's card file is this very container**
-  (`tools/host/mkcard.py` makes one), so a card written by one should open
-  in the other; step 6 checks it with a card Einstein made.
+  (`hal/host/HostCard.h`'s `HostCardCreate` makes one), so a card written
+  by one should open in the other; step 6 checks it with a card Einstein made.
 
 ### Order of work
 
@@ -951,7 +951,8 @@ Each step comes with its host tests.
      packages.
 5. **The cards.** Some 250 ROM functions from the socket up to the
    NewtonScript card handler, in six pieces, each with its tests:
-   - **5a. The host card and socket.** `hal/host/HostCard.h`: a card image
+   - **5a. The host card and socket.** DONE (2026-09-30; ctest
+     `hal.HostCard`). `hal/host/HostCard.h`: a card image
      in Einstein's container, its attribute memory laid out as the bus
      presents it (CIS byte *i* at `(2i) ^ 3`) and its common memory as the
      file holds it; inserted, removed, write-protected. `TCardSocket` (the
@@ -959,10 +960,15 @@ Each step comes with its host tests.
      implementation over it: the base addresses, the pins (card detect,
      ready, write protect), power and speeds as things that succeed, and
      the card-detect and card-lock interrupts raised when the host inserts
-     or pulls a card. `tools/host/mkcard.py` makes a blank flash card of a
-     given size with a CIS of our own (CISTPL_DEVICE flash, JEDEC Intel
-     Series 2, VERS_1). Test: the CIS reads back through the socket's
-     attribute window.
+     or pulls a card. `HostCardCreate` makes a blank flash card of a given
+     size with a CIS of our own (CISTPL_DEVICE flash 150 ns, JEDEC_C Intel
+     0x89 0xA0 - a 28F016SA, Series 2 - and VERS_1 "Newton host" and the
+     card's name). The DDK's `PCMCIA/CardSocket.h` is replaced by
+     `hal/CardSocket.h` (the DDK's interface, plus the 31 members the ROM's
+     card server calls and the port's fields). DEVIATION: the windows are
+     host addresses, so `CreateSocketPhys` makes no physical object (the
+     host has no MMU to map a card through). Test: the CIS reads back
+     through the socket's attribute window.
    - **5b. The CIS.** `TCardCISIterator` (reading tuples, the long links,
      the multi-function CISs), `TPCMCIA20Parser` (the `CisTpl_*` tuple
      handlers, `ParsePCCardCIS`) and what they fill: `TCardPCMCIA`,
