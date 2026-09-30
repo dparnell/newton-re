@@ -133,6 +133,11 @@ bugs and ROM bugs found on the way.
   raw value where 16.16 is meant (the smallest strike); a glyph range
   check with && for ||; half-width glyphs at depth 2; button hit
   rectangles offset; alerts taken off the list never freed.
+- qd's `LocateEntry` made the ROM's (7a457507, 0xaebec): the search
+  stops when the distance grows and does not step past a strike that is
+  not one bit deep (ROM quirk kept).  The Setup, Notepad, Names and Dates
+  screens are byte-identical apart from the clock and every text test
+  passes, so the host had been picking the same strikes.
 
 ## 2026-09-30: a received fax shown and turned
 

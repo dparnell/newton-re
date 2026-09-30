@@ -31,10 +31,7 @@ the way are all in `docs/work-log.md`.
 - **System alerts**: done (`src/alert/`, `docs/alert/README.md`; the card
   reinsert alert, `host.NewtonCardAlert`).  NOT YET: the card position
   alert's trigger, the fault-monitor route into `ReinsertCard`, the
-  screen semaphores.  Being done: qd's `LocateEntry` differs from the
-  ROM's (0xaebec: the ROM stops at the first strike whose distance grows
-  and does not step past a strike that is not 1-bit; the host picks the
-  nearest of all).
+  screen semaphores.
 
 ## What works
 
