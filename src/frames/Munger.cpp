@@ -262,6 +262,17 @@ ArrayRemove(RefArg array, RefArg element)
 }
 
 
+// ROM 0x00128ea0 ArrayInsertAt__FRC6RefVarlT1
+// One slot opened at the index (ArrayGrowAt: the end for an index outside
+// the array) and the element put there.
+void
+ArrayInsertAt(RefArg array, long index, RefArg element)
+{
+	ArrayGrowAt(array, index, 1);
+	SetArraySlotRef(array, index, element);
+}
+
+
 // ROM 0x0031651c ArrayInsert__FRC6RefVarT1l
 void
 ArrayInsert(RefArg array, RefArg element, long index)

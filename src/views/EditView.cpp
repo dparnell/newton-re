@@ -13,6 +13,7 @@
 */
 
 #include "EditView.h"
+#include "Rerecognize.h"		// aeRecognizeInk, aeRecognizeRange
 #include "Inker.h"			// BusyBoxSend
 #include "SoundSettings.h"	// FClicker
 #include "CorrectInfo.h"
@@ -1238,6 +1239,112 @@ TEditView::Scrub(TUnitPublic* unit)
 }
 
 
+// ROM 0x000a4360 RealDoCommand__9TEditViewFRC6RefVar (the double tap on a
+// selection of ink, 0x000a48e0-0x000a4e78)
+// The selected ink read again, if there is any: ==> whether it was.  The
+// children that are ink shapes (IsOldInk) become kids for the sort, the
+// paragraphs whose selection has an ink word are asked to read it where
+// it is (command 0x1a over the selected range, the hilites kept while
+// they do), any other selection is taken off; then the kids, sorted into
+// reading order, each read again (command 0x19) with the remote writing
+// preference off meanwhile - a stroke the sort set aside is removed
+// (aeRemoveData) - and the root marked as changed.
+long
+TEditView::RereadSelectedInk(void)
+{
+	long handled = 0;
+	TView* firstInk = nil;
+	{
+		TListLoop loop(fChildren);
+		TView* child;
+		while ((child = (TView*) loop.Next()) != nil)
+			if (IsOldInk(child) || ContainsHilitedInkWord(child))
+			{
+				firstInk = child;
+				break;
+			}
+	}
+	RefVar kids(MakeArray(0));
+	if (firstInk == nil)
+		return 0;
+	Boolean inkWords = false;
+	InvalAllHilites();
+	{
+		TListLoop loop(fChildren);
+		TView* child;
+		while ((child = (TView*) loop.Next()) != nil)
+		{
+			if (ISNIL(child->FirstHilite()))
+				continue;
+			if (IsOldInk(child))
+				AddArraySlot(kids, RefVar(MakeKidForSort(child, loop.Index())));
+			else if (ContainsHilitedInkWord(child))
+				inkWords = true;
+			else
+				child->RemoveAllHilites();
+		}
+	}
+	gRootView->Update(nil);
+	if (inkWords)
+	{
+		Boolean preserved = gRootView->SetPreserveHilites(true);
+		InvalAllHilites();
+		TListLoop loop(fChildren);
+		TView* child;
+		while ((child = (TView*) loop.Next()) != nil)
+		{
+			if (!ContainsHilitedInkWord(child))
+				continue;
+			TParagraphHilite* hilite = (TParagraphHilite*) RefToAddress(RefVar(child->FirstHilite()));
+			RefVar reread(MakeCommand(aeRecognizeRange, child, child->fId));
+			SetFrameSlot(reread, RSSYMstart, RefVar(MAKEINT(hilite->fStart)));
+			SetFrameSlot(reread, RSSYMstop, RefVar(MAKEINT(hilite->fEnd)));
+			SetFrameSlot(reread, RSSYMdohilite, RefVar(TRUEREF));
+			SetFrameSlot(reread, RSSYMrecconfig, RefVar(NILREF));
+			gApplication->DispatchCommand(reread);
+			child->RemoveAllHilites();
+			handled = 1;
+		}
+		gRootView->SetPreserveHilites(preserved);
+	}
+	if (Length(kids) <= 0)
+		return handled;
+	RefVar order(SortTextInk(kids));
+	long count = Length(order);
+	CList* views = CList::Make(count);
+	for (long i = 0; i < count; i++)
+	{
+		long index = RINT(GetArraySlotRef(order, i));
+		if (index < 0)
+			index = MapIndex(index);
+		views->InsertAt(views->GetArraySize(), fChildren->At(index));
+	}
+	InvalAllHilites();
+	gRootView->SetKeyView(nil, 0, 0, false);
+	RefVar remote(GetPreference(RSSYMremotewriting));
+	SetPreference(RSSYMremotewriting, RefVar(NILREF));
+	for (long i = 0; i < count; i++)
+	{
+		TView* view = (TView*) views->At(i);
+		view->RemoveAllHilites();
+		if (RINT(GetArraySlotRef(order, i)) < 0)
+			gApplication->DispatchCommand(RefVar(MakeCommand(aeRemoveData, this, view->fId)));
+		else
+		{
+			RefVar reread(MakeCommand(aeRecognizeInk, view, view->fId));
+			SetFrameSlot(reread, RSSYMdohilite, RefVar(TRUEREF));
+			SetFrameSlot(reread, RSSYMrecconfig, RefVar(NILREF));
+			gApplication->DispatchCommand(reread);
+		}
+		handled = 1;
+	}
+	SetPreference(RSSYMremotewriting, remote);
+	delete views;
+	gRootView->fDirtyFlag = true;
+	return handled;
+}
+
+
 // ROM 0x000a4360 RealDoCommand__9TEditViewFRC6RefVar
 // The editor's commands - the largest function in the view system: the
 // guard a read-only page puts on the commands it will take at all, the
@@ -1711,11 +1818,12 @@ TEditView::RealDoCommand(RefArg cmd)
 		// the point is offered the command, and the first that takes it
 		// ends it.  That is how a double tap on a word of a paragraph
 		// reaches `TParagraphView::RealDoCommand` and puts the corrector
-		// up.
-		//
-		// NOT YET RECONSTRUCTED: the other arm, for a page that takes
-		// text and was double tapped on its selection - the ink in it is
-		// gathered up and read again rather than corrected (below).
+		// up.  On the selection of a page that takes text, and when the
+		// selection has ink in it, the ink is read again instead: the
+		// paragraphs' selected ink words where they are (command 0x1a),
+		// and the shapes of old ink sorted into reading order
+		// (SortTextInk) and each read again (command 0x19) - a stroke the
+		// sort set aside (a dot, a mark over a word) is removed.
 		Boolean asked = false;
 		if ((TextFlags() & 0x2000) != 0)
 		{
@@ -1728,18 +1836,16 @@ TEditView::RealDoCommand(RefArg cmd)
 		Point pt = unit->Stroke()->FirstPoint();
 		Boolean onSelection = PointInHilite(pt);
 		Boolean takesText = ViewAllowsText(this);
-		// NOT YET RECONSTRUCTED: when the double tap is on the selection
-		// of a page that takes text, the ROM gathers up the ink in the
-		// selection and sends it to be read again (SortTextInk 0x000a8220,
-		// MakeKidForSort 0x000a3ef4 and the paragraphs' answers to
-		// commands 0x19 and 0x1a, then Recognize); for now it is offered
-		// to the children as any other double tap is.
-		(void) onSelection;
 		long handled = 0;
-		TBackwardViewListLoop loop(fChildren);
-		for (TView* child = loop.Next(); child != nil; child = loop.Next())
-			if (PtInRect(pt, &child->viewBounds) && (handled = child->RealDoCommand(cmd)) != 0)
-				break;
+		if (takesText && onSelection)
+			handled = RereadSelectedInk();
+		if (handled == 0)
+		{
+			TBackwardViewListLoop loop(fChildren);
+			for (TView* child = loop.Next(); child != nil; child = loop.Next())
+				if (PtInRect(pt, &child->viewBounds) && (handled = child->RealDoCommand(cmd)) != 0)
+					break;
+		}
 		if (handled == 0)
 		{
 			// nothing took it: on a page that takes text, the caret goes

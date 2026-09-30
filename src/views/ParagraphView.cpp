@@ -82,16 +82,13 @@ GetInputViewTextFlags(ULong textFlags, ULong viewFlags)
 }
 
 
-// ROM 0x000a2ffc TestLineOverlap__FP5TRectT1
 // Where a line lies against a box: 0 above it, 1 within, 2 below - by its
-// midline.
+// midline (views/SortInk.cpp's TestLineOverlap, which takes pointers).
 static long
 TestLineOverlap(const Rect& box, const Rect& line)
 {
-	long mid = (line.top + line.bottom) / 2;
-	if (mid < box.top)
-		return 0;
-	return mid <= box.bottom ? 1 : 2;
+	Rect a = box, b = line;
+	return TestLineOverlap(&a, &b);
 }
 
 

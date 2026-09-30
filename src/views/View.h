@@ -123,6 +123,7 @@ public:
 	void*		Next(void);				// the next item, nil at the end
 	void*		Current(void);
 	void		RemoveCurrent(void);
+	long		Index(void) const		{ return fIndex; }		// (host) where Next got to: the current item's index
 
 private:
 	CList*		fList;				// +0x00

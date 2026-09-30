@@ -439,6 +439,16 @@ set_tests_properties(host.NewtonWordHintsRepair PROPERTIES TIMEOUT 120
                      PASS_REGULAR_EXPRESSION "rewrote word hints for [0-9]+ entries.*hintsrepair: repaired"
                      FAIL_REGULAR_EXPRESSION "FAILED")
 
+# ink read again (demo/rereadink.ns): an ink word and two shapes of ink
+# lassoed with the pen and double tapped - the page's aeDoubleTap on its
+# selection (views/EditView.cpp RereadSelectedInk), the shapes sorted into
+# reading order (views/SortInk.cpp)
+add_test(NAME host.NewtonRereadInk COMMAND newton --display 320x480 --headless 120
+         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/rereadink.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonRereadInk PROPERTIES TIMEOUT 180
+                     PASS_REGULAR_EXPRESSION "in reading order: ok.*rereadink: done, 0 failed"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+
 # a long note printed across pages (demo/printlong.ns): the Notepad's print
 # format reflows the note's paragraph into each page and cuts it between
 # two lines where the page runs out (views/Reflow.cpp ReflowText, the

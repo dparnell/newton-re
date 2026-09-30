@@ -481,8 +481,9 @@ message or function, args, due time] quadruples - the time a `'time`
 binary of the global time the delay milliseconds on, nil for the next
 idle; `RunNextDelayedAction` 0x00033d48 runs the due ones - a function
 `DoBlock`, a symbol `DoMessage`, a function on a receiver `DoScript`;
-the idle timer's re-arming NOT YET, the host's `RunDelayedActions()`
-global runs them).  `TApplication::DoCommand` 0x00034744 answers
+the idle timer re-armed for the earliest - `gArmDelayedActionIdleProc`,
+the newt world's - and the host's `RunDelayedActions()` global runs them
+too).  `TApplication::DoCommand` 0x00034744 answers
 aeAppIdle, aeRunScript ([script, args, context] run on the context's
 view; an `'undo` array from `MakeUndoCommand` sends the message or
 calls the function) and aeUndo.
@@ -498,7 +499,7 @@ cleared after the text ones), the key events 0x1f-0x23 (`HandleKeyEvent`
 NOT YET), the structure (aeAddChild 0x29 adds the frame parameter's
 view and dispatches aeShow to it, aeDropChild 0x2a hides and removes the
 parameter's view, aeHide 0x2b, aeShow 0x2c - under a modal dialog
-`ModalSafeShow`, NOT YET), the data (aeAddData 0x3d `AddToSoup`, posting
+`ModalSafeShow`), the data (aeAddData 0x3d `AddToSoup`, posting
 aeRemoveData 0x3f as its undo, which `RemoveFromSoup`s the child of the
 id and posts aeAddData with its data; aeMoveData 0x40 `Move` by
 params[0], [1], posting aeMoveChild 0x4c to the parent with the id and
@@ -1138,11 +1139,41 @@ the text the end).  A double tap (aeDoubleTap) cancels the pending tap and
 selects the word under it: the character found, the word scanned around it
 (`ScanWordStart`/`ScanWordEnd` 0x001a37d0/0x001a36b4 - back and forward
 over characters of the same kind, ink or not, that are not white space)
-and `MakeHilite`d.  NOT YET: the ink-word double tap
-(`HitsHilitedInkWord`), `OpenKeypadFor`, the tap sound (`FClicker`).
+and `MakeHilite`d; a double tap on a selected ink word reads the
+selection again (`HitsHilitedInkWord`, command 0x1a), on an ink word the
+corrector has nothing for reads that word again (command 0x19).
 (Tested by `test_Views`: `TestParagraphTap` taps and double-taps
 directly, and `TestClicks` taps a paragraph through the recognition and
 lets the idler place the caret.)
+
+### Reading selected ink again (`TEditView::RealDoCommand`'s double tap, `views/SortInk.cpp`)
+
+The page gets a double tap before the child under it.  On its own
+selection, on a page that takes text (`ViewAllowsText`), it reads the
+selected ink again (`RereadSelectedInk`, 0x000a48e0-0x000a4e78) when any
+child is ink: a shape of old ink (`IsOldInk` 0x000a4084 - a polygon view
+with an `ink` slot) or a paragraph whose selection has an ink word in it
+(`ContainsHilitedInkWord` 0x00171290 - which looks at the text the
+paragraph's hilite copied when it was made).  Each selected shape of ink
+becomes a *kid* for the sort (`MakeKidForSort` 0x000a3ef4: a clone of
+`canonicalGroupee` protoed to the view's data, its `textFlags` the
+child's index); each paragraph with selected ink words is sent command
+0x1a over its selected range (the hilites kept meanwhile); any other
+selection is taken off.  The kids are then put in reading order by
+`SortTextInk` 0x000a8220: each stroke placed in a line by where its middle
+falls against the lines so far (`FindLine`, `TestLineOverlap` - a line is
+the average of its strokes' tops and bottoms, as wide as all of them),
+along a line by its middle (`FindInsertPosition`, `LeftOf`), a stroke past
+the end of the last line kept on it (`AtEndOfLine`).  A dot (under seven
+pixels each way), a short stroke mostly over another, or an apostrophe
+beside one (`TestWordOverlap`, `IsLine`, `IsApostrophe`) is set aside - its
+index made negative, -(i + 1) (`HandleIgnoreStroke`, `InvalKidIndex`,
+`MapIndex`) - and after the sorted kids, the page removes it (aeRemoveData)
+while each of the others is sent command 0x19 to be read again, the
+remote-writing preference off meanwhile.  `src/host/demo/rereadink.ns`
+(ctest `host.NewtonRereadInk`) lassoes an ink word and two shapes of ink
+with the pen and double taps them: "on" written before "to" still reads
+"to on".
 
 ### Selecting text (`TParagraphView::MakeHilite` 0x0016c4cc)
 

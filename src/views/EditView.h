@@ -59,6 +59,7 @@ public:
 	virtual void	BuildKeyChildList(TViewList* list, long a, long b);	// ROM 0x000ab9b4 BuildKeyChildList__9TEditViewFP9TViewListlT2
 	virtual void	OffsetToCaret(long offset, Rect* caret);	// ROM 0x000a2ee4 OffsetToCaret__9TEditViewFlP5TRect
 	virtual Boolean	RealDoCommand(RefArg cmd);				// ROM 0x000a4360 RealDoCommand__9TEditViewFRC6RefVar (partial: see the definition)
+	long			RereadSelectedInk(void);				// (RealDoCommand's double tap on a selection of ink, 0x000a48e0-0x000a4e78)
 	virtual long	Idle(long reason);						// ROM 0x000a9f64 Idle__9TEditViewFl
 	// the page as the source and the target of a drag
 	virtual Boolean	AddDragInfo(TDragInfo* dragInfo);		// ROM 0x000a8cf4 AddDragInfo__9TEditViewFP9TDragInfo
@@ -183,7 +184,14 @@ long	AlignToGrid(long v, long grid);						// ROM 0x002628c8 AlignToGrid__FlT1
 
 // Whether the view takes ink words (bit 0) or text (bit 1) from the
 // recogniser.
-long	TextOrInkWordsEnabled(TView* view);					// ROM 0x001a2aa4 TextOrInkWordsEnabled__FP5TView
+long	TextOrInkWordsEnabled(TView* view);
+// the sort of ink before it is read again (SortInk.cpp)
+long	TestLineOverlap(Rect* line, Rect* kid);					// ROM 0x000a2ffc TestLineOverlap__FP5TRectT1
+long	MapIndex(long index);									// ROM 0x000a4078 MapIndex__Fl
+Ref		MakeKidForSort(TView* view, long index);				// ROM 0x000a3ef4 MakeKidForSort__FP5TViewl
+Boolean	IsOldInk(TView* view);									// ROM 0x000a4084 IsOldInk__FP5TView
+Boolean	ContainsHilitedInkWord(TView* view);					// ROM 0x00171290 ContainsHilitedInkWord__FP5TView
+Ref		SortTextInk(RefArg kids);								// ROM 0x000a8220 SortTextInk__FRC6RefVar					// ROM 0x001a2aa4 TextOrInkWordsEnabled__FP5TView
 
 // Whether the corrector - the list of alternative readings a written
 // word can be put right from - is on the screen.

@@ -31,6 +31,7 @@ add_library(views STATIC
     DataView.cpp
     ContainerView.cpp
     EditView.cpp
+    SortInk.cpp
     ListView.cpp
     MeetingView.cpp
     SliderView.cpp

@@ -1,0 +1,234 @@
+// Ink read again: writing kept as ink, selected with the pen and double
+// tapped - the page reads its selected ink again and puts the words down
+// as text (TEditView's aeDoubleTap on its selection, views/EditView.cpp's
+// RereadSelectedInk).
+//
+//   build/host/host/newton --display 320x480 --headless 120 --script src/host/demo/rereadink.ns
+//
+// First the Notepad keeps writing as ink words (its paper roll's
+// _recogSettings 64, as the recognition menu's "Ink Text" does): "ton",
+// written as src/host/demo/write.ns writes it, is kept as an ink word in
+// a paragraph; the lasso (the pen held still beside it, then drawn round
+// it) selects it and a double tap on it has the paragraph read its
+// selected ink words again (command 0x1a, Rerecognize.h), which puts
+// "ton" in the ink word's place.  Then the Notepad keeps writing as it
+// was written (_recogSettings 0, "Sketches"): "to" and "on" are kept as
+// two shapes of ink, the lasso takes both, and the double tap sorts them
+// into reading order (views/SortInk.cpp's SortTextInk - "on" was written
+// first) and has each read again (command 0x19): the page reads "to on".  A tap
+// sooner than half a second after writing is taken for more writing
+// (HandleUnit's fPrevUpTime + 30), so each step waits for that.
+// build/rereadink-before.pgm, build/rereadink-shapes.pgm and
+// build/rereadink.pgm are the page on the way.
+//
+// Prints "rereadink: <step>: ok" or "FAILED", and "rereadink: done".
+
+HostInclude("common.ns");			// tapAt, waitFor, walkSetup
+
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+rereadFailures := 0;
+
+rereadCheck := func(what, ok)
+  begin
+    if not ok then rereadFailures := rereadFailures + 1;
+    Print("rereadink: " & what & (if ok then ": ok" else ": FAILED"));
+  end;
+
+stroke := func(points)
+  begin
+    PenDown(points[0], points[1]);
+    for i := 2 to Length(points) - 2 by 2 do
+      PenMove(points[i], points[i + 1]);
+    PenUp();
+  end;
+
+oval := func(cx, cy, rx, ry)
+  begin
+    local c := [ 0, -50, -87, -100, -87, -50, 0, 50, 87, 100, 87, 50, 0];
+    local s := [100, 87, 50, 0, -50, -87, -100, -87, -50, 0, 50, 87, 100];
+    local pts := [];
+    for k := 0 to 12 do
+      begin
+        AddArraySlot(pts, cx + (rx * c[k]) div 100);
+        AddArraySlot(pts, cy - (ry * s[k]) div 100);
+      end;
+    pts;
+  end;
+
+// "to", "on" or "ton" written from x on the baseline, a letter at a time
+// (the letters of src/host/demo/write.ns)
+writeWord := func(word, x, base)
+  begin
+    for i := 0 to StrLen(word) - 1 do
+      begin
+        local c := word[i];
+        if c = $t then
+          begin
+            call stroke with ([x + 6, base - 24, x + 6, base - 18, x + 6, base - 12, x + 6, base - 6, x + 6, base]);
+            call stroke with ([x, base - 14, x + 4, base - 14, x + 8, base - 14, x + 12, base - 14]);
+            x := x + 16;
+          end
+        else if c = $o then
+          begin
+            call stroke with (call oval with (x + 6, base - 7, 6, 7));
+            x := x + 16;
+          end
+        else if c = $n then
+          begin
+            call stroke with ([x, base - 14, x, base - 7, x, base, x, base - 7,
+                               x + 1, base - 11, x + 3, base - 13, x + 6, base - 14, x + 9, base - 13,
+                               x + 10, base - 10, x + 10, base - 5, x + 10, base]);
+            x := x + 16;
+          end;
+      end;
+  end;
+
+// whether a text has an ink word in it (the character 0xF701 standing
+// for one)
+hasInkWord := func(text)
+  begin
+    local found := nil;
+    for i := 0 to StrLen(text) - 1 do
+      if Ord(text[i]) = 0xF701 then found := true;
+    found;
+  end;
+
+// the first paragraph under v whose text has an ink word in it, or whose
+// text starts with `prefix`
+findPara := func(v, prefix)
+  begin
+    local found := nil;
+    if BAnd(v.viewClass, 0xFFFF) = 81 and IsString(v.text)
+       and (if prefix then StrPos(v.text, prefix, 0) = 0 else call hasInkWord with (v.text)) then
+      found := v
+    else
+      foreach child in v:ChildViewFrames() do
+        if not found then
+          found := call findPara with (child, prefix);
+    found;
+  end;
+
+// the shapes of ink under v, into an array
+findShapes := func(v, into)
+  begin
+    if BAnd(v.viewClass, 0xFFFF) = 82 and v.ink then
+      AddArraySlot(into, v)
+    else
+      foreach child in v:ChildViewFrames() do
+        call findShapes with (child, into);
+    into;
+  end;
+
+// the lasso: the pen held still beside the box, then drawn round it
+lasso := func(box)
+  begin
+    local l := box.left - 10;
+    local t := box.top - 10;
+    local r := box.right + 10;
+    local b := box.bottom + 10;
+    PenDown(l, t);
+    for i := 1 to 60 do PenMove(l, t);
+    for x := l to r by 3 do PenMove(x, t);
+    for y := t to b by 3 do PenMove(r, y);
+    for x := r to l by -3 do PenMove(x, b);
+    for y := b to t by -3 do PenMove(l, y);
+    PenUp();
+    IdleStrokes();
+  end;
+
+doubleTap := func(x, y)
+  begin
+    PenDown(x, y); PenUp(); IdleStrokes();
+    PenDown(x, y); PenUp(); IdleStrokes();
+  end;
+
+// the paragraph the shapes were read into: "to" and then "on" (StrEqual
+// is not case sensitive - the engine reads these strokes' "on" as "ON")
+toOn := func()
+  begin
+    local para := call findPara with (GetRoot(), "to ");
+    para and StrLen(para.text) = 5 and StrEqual(SubStr(para.text, 3, 2), "on");
+  end;
+
+finish := func()
+  begin
+    Print("rereadink: done, " & rereadFailures & " failed");
+    HostQuit();
+  end;
+
+// the shapes: "to" and "on" kept as they were written, lassoed together
+// and double tapped
+shapesStep := func()
+  begin
+    GetRoot().paperroll._recogSettings := 0;
+    PurgeAreaCache();
+    // "on" written first, on the right, and "to" after it on the left:
+    // the page's children are in writing order, and the sort puts them
+    // in reading order
+    call writeWord with ("on", 170, 300);
+    local onUp := Ticks();
+    call waitFor with ("rereadink: \"on\" kept", func() Ticks() - onUp > 40 and Length(call findShapes with (GetRoot(), [])) >= 1, func() begin
+    call writeWord with ("to", 60, 300);
+    local lastUp := Ticks();
+    IdleStrokes();
+    call waitFor with ("rereadink: the shapes", func() Ticks() - lastUp > 40 and Length(call findShapes with (GetRoot(), [])) >= 2, func() begin
+        local shapes := call findShapes with (GetRoot(), []);
+        call rereadCheck with ("kept as shapes of ink", Length(shapes) >= 2);
+        ScreenSnapshot("build/rereadink-shapes.pgm");
+        // (the page reads writing again, as choosing Text would have it)
+        GetRoot().paperroll._recogSettings := 864;
+        PurgeAreaCache();
+        local all := Clone(shapes[0]:GlobalBox());
+        foreach s in shapes do
+          begin
+            local b := s:GlobalBox();
+            all.left := Min(all.left, b.left);
+            all.top := Min(all.top, b.top);
+            all.right := Max(all.right, b.right);
+            all.bottom := Max(all.bottom, b.bottom);
+          end;
+        call lasso with (all);
+        local first := shapes[0]:GlobalBox();
+        local lassoed := Ticks();
+        call waitFor with ("rereadink: the shapes selected", func() Ticks() - lassoed > 40, func() begin
+            call doubleTap with ((first.left + first.right) div 2, (first.top + first.bottom) div 2);
+            // read in reading order - "to" and then "on" - into one
+            // paragraph, the second word put at the caret the first left
+            call waitFor with ("rereadink: the shapes read again",
+                func() Length(call findShapes with (GetRoot(), [])) = 0 and call toOn with (),
+                func() begin
+                    call rereadCheck with ("the shapes read again as \"to on\", in reading order",
+                        Length(call findShapes with (GetRoot(), [])) = 0 and call toOn with ());
+                    ScreenSnapshot("build/rereadink.pgm");
+                    call finish with ();
+                  end, 30);
+          end, 10);
+      end, 20);
+      end, 20);
+  end;
+
+// the ink word: "ton" kept as an ink word, lassoed and double tapped
+call walkSetup with (name, func() begin
+    GetRoot().paperroll._recogSettings := 64;
+    PurgeAreaCache();
+    call writeWord with ("ton", 60, 200);
+    local lastUp := Ticks();
+    IdleStrokes();
+    call waitFor with ("rereadink: the ink word", func() Ticks() - lastUp > 40 and call findPara with (GetRoot(), nil), func() begin
+        local para := call findPara with (GetRoot(), nil);
+        call rereadCheck with ("kept as an ink word", para <> nil);
+        if not para then return call finish with ();
+        ScreenSnapshot("build/rereadink-before.pgm");
+        local box := para:GlobalBox();
+        call lasso with (box);
+        local lassoed := Ticks();
+        call waitFor with ("rereadink: the ink word selected", func() Ticks() - lassoed > 40, func() begin
+            call doubleTap with ((box.left + box.right) div 2, (box.top + box.bottom) div 2);
+            call waitFor with ("rereadink: the ink word read again", func() call findPara with (GetRoot(), "ton"), func() begin
+                call rereadCheck with ("the ink word read again as \"ton\"", call findPara with (GetRoot(), "ton") <> nil);
+                call rereadCheck with ("no ink word left", call findPara with (GetRoot(), nil) = nil);
+                call shapesStep with ();
+              end, 20);
+          end, 10);
+      end, 20);
+  end);
