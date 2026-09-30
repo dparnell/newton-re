@@ -109,6 +109,16 @@ bugs and ROM bugs found on the way.
   count wraps.  `HostOptionLayouts`' '*' copies an option's trailing
   bytes as they are ('rout' numbers, 'mpro' profiles).
 
+## 2026-09-30: a text shape's baseline
+
+- The In Box item header's two lines lay over each other: the ROM's
+  `DrawOneShape` (0xdfd00) draws a 'text shape with its baseline on its
+  bounds' bottom, and the host drew it at the top plus the ascent, so
+  `GetTitleInfoShape`'s full-height info line landed on the title line
+  (1c983e9c; `test_Views` checks the baseline).  Other text moved as the
+  ROM places it: "There are no Names in this folder" 3 px lower, the
+  button bar's labels 1 px higher.
+
 ## 2026-09-30: the system alerts
 
 - `src/alert/` (99c1f26e): the ROM's own alert engine (0x2e7d4-0x30bcc) -

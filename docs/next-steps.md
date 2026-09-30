@@ -240,8 +240,10 @@ worked through.  What could come next (not ranked; the owner chooses):
 - **Now reachable over the large binaries**: the text engine's
   `TXNewtStreamFactory` (a compressed large binary for a stream above
   4K).
-- **Possible views bug**: the In Box item header's title looks drawn
-  twice, overlapping itself (seen on a received fax).
+- **Drawing suspects** (from a survey of the apps' snapshots): the
+  default button's heavy outline (Dock's Connect, Find's Find) draws
+  only its top and bottom; an arrow icon covers the first digit of the
+  In/Out Box's clock tab - being looked into.
 - **Text engine: finished** (2026-09-29; below).
 - **Drawing speed**: done for the blitter and the display (2026-09-30;
   `docs/work-log.md`).  What remains is the ROM's own animation pacing and
