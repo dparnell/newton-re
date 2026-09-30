@@ -1561,42 +1561,6 @@ FrameSlotPosition(Ref frame, Ref tag)
 }
 
 
-// ROM 0x00300b48 GetProtoVariable__FRC6RefVarT1Pl
-// A slot's value up the _proto chain from context; *exists tells whether
-// it was found.  NOT YET RECONSTRUCTED: the interpreter's proto caches
-// (TICache gProtoCache/gROProtoCache) and TInterpreter::TraceGet - the
-// chain is walked every time.
-Ref
-GetProtoVariable(RefArg context, RefArg name, long* exists)
-{
-	if ((Ref) context == NILREF)
-		ThrowExInterpreterWithSymbol(kNSErrNilContext, name);
-	RefVar current(context);
-	RefVar map;
-	while ((Ref) current != NILREF)
-	{
-		ObjHeader* o = OBJ(current);
-		if ((ObjFlags(o) & (kObjSlotted | kObjFrame)) != (kObjSlotted | kObjFrame))
-			ThrowBadTypeWithFrameData(kNSErrNotAFrame, current);
-		map = ObjClass(o);
-		long index = FindOffset(map, name);
-		if (index != -1)
-		{
-			if (exists != nil)
-				*exists = 1;
-			return ObjArraySlots(OBJ(current))[index];
-		}
-		index = FindOffset(map, RSSYM_proto);
-		if (index == -1)
-			break;
-		current = ObjArraySlots(OBJ(current))[index];
-	}
-	if (exists != nil)
-		*exists = 0;
-	return NILREF;
-}
-
-
 /* -------------------------------------------------------------------------------
 	Paths
 	A path is a symbol, an integer, or an array of class pathExpr of those.

@@ -260,6 +260,63 @@ IsROFrame(Ref frame)
 }
 
 
+// ROM 0x00300b48 GetProtoVariable__FRC6RefVarT1Pl
+// A slot's value up the _proto chain from context; *exists tells whether
+// it was found.  The answer is cached in gProtoCache under context, and in
+// gROProtoCache under the first ROM frame of the chain, which answers for
+// the rest of it - a hit there is not copied into gProtoCache.
+Ref
+GetProtoVariable(RefArg context, RefArg name, long* exists)
+{
+	if ((Ref) context == NILREF)
+		ThrowExInterpreterWithSymbol(kNSErrNilContext, name);
+	long found;
+	if (exists == nil)
+		exists = &found;
+	Ref value;
+	if (gProtoCache->LookupValue(context, name, &value, exists))
+		return value;
+	RefVar current(context);
+	RefVar map;
+	Ref roFrame = 0;
+	while ((Ref) current != NILREF)
+	{
+		ObjHeader* o = OBJ(current);
+		if ((ObjFlags(o) & (kObjSlotted | kObjFrame)) != (kObjSlotted | kObjFrame))
+			ThrowBadTypeWithFrameData(kNSErrNotAFrame, current);
+		if (roFrame == 0 && IsROFrame(current))
+		{
+			roFrame = current;
+			if (gROProtoCache->LookupValue(roFrame, name, &value, exists))
+				return value;
+		}
+		map = ObjClass(o);
+		long index = FindOffset(map, name);
+		if (index != -1)
+		{
+			*exists = 1;
+			if (gInterpreter->fTraceLevel > 1)
+				gInterpreter->TraceGet(context, current, name);
+			if (roFrame != 0)
+				gROProtoCache->Insert(roFrame, name, current, index);
+			gProtoCache->Insert(context, name, current, index);
+			return ObjArraySlots(OBJ(current))[index];
+		}
+		index = FindOffset(map, RSSYM_proto);
+		if (index == -1)
+			break;
+		current = ObjArraySlots(OBJ(current))[index];
+	}
+	if (gInterpreter->fTraceLevel > 1)
+		gInterpreter->TraceGet(context, context, name);
+	*exists = 0;
+	if (roFrame != 0)
+		gROProtoCache->Insert(roFrame, name, 0, 0);
+	gProtoCache->Insert(context, name, 0, 0);
+	return NILREF;
+}
+
+
 // ROM 0x002ff82c XGetVariable__FRC6RefVarT1Pli
 // The variable name seen from context: with lookupLocals, the locals
 // frames (the _nextArgFrame chain) first; then, from the context's

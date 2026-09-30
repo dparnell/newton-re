@@ -286,7 +286,26 @@ Variable lookup (`VariableLookup.cpp`) is the ROM's: `XGetVariable`
 `SetVariableOrGlobal`, all through the four `TICache`s (`gGetVarCache`,
 `gFindImpCache`, `gProtoCache` and `gROProtoCache` for frames in the ROM
 area), which `SetFrameSlot`/`AddSlot`/`RemoveSlot` invalidate
-(`ICacheClear...`).
+(`ICacheClear...`).  `GetProtoVariable` (0x00300b48), the `_proto`-chain
+lookup C++ uses for a slot (the views ask it for every slot they read),
+answers out of `gProtoCache` too, and out of `gROProtoCache` under the
+chain's first ROM frame; a hit in the second is not copied into the
+first.
+
+### Interpreter speed
+
+`src/host/demo/scriptbench.ns` times the interpreter's own work on the
+newt task's thread (`HostThreadCPUTime`, which leaves out the host's
+other threads - the interrupt and timer pollers take most of the
+process's processor time while the Newton waits, so `HostCPUTime` is too
+noisy for this): a counting loop, lookups up `_proto` and `_parent`
+chains, the Names and Dates applications opened and closed, and text
+drawn in three fonts.  `drawbench.ns` (`docs/qd/README.md`) prints the
+task's time beside the process's.  Measured on an optimised Windows
+build, three runs each: `GetProtoVariable`'s caches took the
+applications step from 297-328 ms to 235-250 ms (one outlier at 453);
+the drawing benchmark's task time did not move beyond its noise
+(984-1093 ms against 1000-1235 ms).
 
 Exceptions: a NewtonScript `try` pushes a handler record (an array: next,
 value depth, control depth, function, receiver, implementor, the
@@ -750,8 +769,7 @@ through is here now), `NTKStackTrace` (over the NTK connection), the task's
 stack limits for the debugger (`GetTaskStackInfo`), the frames function
 profiler's hooks in `GC`.  Not reachable, or reached another way:
 FastRun1 (the open-coded copy of SlowRun, which computes the same thing),
-the interpreter's proto caches (`GetProtoVariable` walks the chain each
-time: a matter of speed), a native whose code is ARM code in a binary (a
+a native whose code is ARM code in a binary (a
 host limit), `IsFirstByteOf2Byte` (a two-byte script, not in the US ROM),
 and the ink words' own structure in `TRichString::Verify`.
 
