@@ -11,6 +11,7 @@
 #include "MNPOptions.h"
 #include "CommOptions.h"
 #include "HALOptions.h"
+#include "CommToolOptions.h"
 #include "NewtonMemory.h"
 #include "toolbox/ByteOrder.h"
 
@@ -30,6 +31,10 @@
 // same either way, and the listing says it was looked at.)
 static const HostOptionLayout kLayouts[] =
 {
+	// the comm tools' own (CommToolOptions.h)
+	{ kCMOToolSpecificOptions,		"u" },
+	{ kCMOPassiveClaim,				"b" },
+	{ kCMOPassiveState,				"b" },
 	// serial (SerialOptions.h)
 	{ kCMOSerialChipSpec,			"uubbbbbbbbhh" },
 	{ kCMOSerialHWChipLoc,			"uu" },

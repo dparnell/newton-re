@@ -95,6 +95,9 @@ CheckExtended(const char* name)
 static void
 Scenario(void)
 {
+	CHECK(TCMOToolSpecificOptions);
+	CHECK(TCMOPassiveClaim);
+	CHECK(TCMOPassiveState);
 	CHECK(TCMOSerialChipSpec);
 	CHECK(TCMOSerialHWChipLoc);
 	CHECK(TCMOSerialMiscConfig);
