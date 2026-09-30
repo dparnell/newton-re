@@ -43,6 +43,11 @@ Boolean					gPrecedentsForReadingUsed = false;	// 0x0c102a2d
 int						gDefaultHintsHandlerId = 0;
 // ROM 0x0c1053f0 gMaxHintsHandlerId
 long					gMaxHintsHandlerId = 0;
+// Host, for tests only: entries written as the host wrote them before the
+// word hints were reconstructed - no chunks, handler 0 - so that the
+// repair of such a store (Soups.cpp's RepairWordHints) can be tested.
+// Set by NEWTON_NO_WORD_HINTS in the environment.
+Boolean					gHostWriteNoWordHints = false;
 // ROM 0x0c107998 gHintsHandlers - the handlers that write and test the
 // hint chunks an entry carries (InitHintsHandlers)
 THintsHandler*			gHintsHandlers[kNumHintsHandlers] = { nil, nil, nil, nil };
@@ -800,7 +805,8 @@ TStoreObjectWriter::Scan(void)
 		// word into the current chunk, which is moved on (and the count of
 		// characters in it started again) when the text so far passes its
 		// 32 characters
-		if (!EQRef(ClassOf(fObject), RSSYMstring_2Enohint))
+		if (!EQRef(ClassOf(fObject), RSSYMstring_2Enohint)
+			&& fNumHints != 0)			// host: always, but for gHostWriteNoWordHints
 		{
 			THintsHandler* handler = gHintsHandlers[gDefaultHintsHandlerId];
 			const UniChar* from = (const UniChar*) BinaryData(fObject);
@@ -894,6 +900,8 @@ TStoreObjectWriter::Write(void)
 	if (fStreamSize == 0)
 		Prescan();
 	fNumHints = (UByte) gHintsHandlers[gDefaultHintsHandlerId]->GetNumHintChunks(fTextSize >> 1, &fHintTextSize);
+	if (gHostWriteNoWordHints)
+		fNumHints = 0;
 	long headerSize = kStoreObjectHeaderSize + fNumHints * kStoreObjectHintChunkSize;
 	fStreamSize += headerSize;
 	TStore* store = fWrapper->Store();
@@ -957,7 +965,7 @@ TStoreObjectWriter::Write(void)
 	header.fTextSizeLo = (UByte) fTextSize;
 	header.fTextSizeHi = (UByte) (fTextSize >> 8);
 	header.fFlags = 0;
-	header.SetHintsHandlerId(gDefaultHintsHandlerId);
+	header.SetHintsHandlerId(gHostWriteNoWordHints ? 0 : gDefaultHintsHandlerId);
 	if (fHasLargeBinaries)
 	{
 		header.fFlags |= kSOFlagsHasLargeBinaries;
@@ -1723,6 +1731,7 @@ InitHintsHandlers(void)
 {
 	if (gHintsHandlers[1] != nil)
 		return;
+	gHostWriteNoWordHints = getenv("NEWTON_NO_WORD_HINTS") != nil;
 	for (long i = 0; i < kNumHintsHandlers; i++)
 		gHintsHandlers[i] = nil;
 	gHintsHandlers[0] = new TOldWordHintsHandler;

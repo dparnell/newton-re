@@ -535,10 +535,17 @@ written, hints and all, by Apple's tools - onto the internal store, and
 the host writes the same chunks byte for byte; its words queries then
 find what the package's own soups find.
 
-An entry written with no hint chunks at all (a store the host wrote
-before it wrote hints) passes no words query: the ROM never writes such
-an entry, and `TestObjHints` refuses one.  Rewrite the entries (or make
-the store afresh) to search them.
+An entry written with no hint chunks at all passes no words query: the
+ROM never writes such an entry, and `TestObjHints` refuses one.  The host
+wrote exactly that (handler 0, no chunks) until it wrote hints, so
+`RegisterTStore` repairs a writable store it mounts (`RepairWordHints`,
+DEVIATION: confined to that condition, which the ROM cannot produce) -
+each such entry's store object rewritten as it is, its indexes left
+alone - and says so once ("rewrote word hints for N entries").  The walk
+reads every entry's header on each mount, about 30 ms per thousand
+entries.  ctests `host.NewtonWordHintsOld` and `.Repair`
+(`demo/hintsrepair.ns`) write a store as the old host did
+(`NEWTON_NO_WORD_HINTS`) and find its entries after the repair.
 
 The decompressor a search reads the entries' text through is kept for the
 whole walk and let go at its end (`ReleasePermObjectTextCache` 0x002e01c8,

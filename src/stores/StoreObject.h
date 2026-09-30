@@ -116,6 +116,7 @@ public:
 extern THintsHandler*	gHintsHandlers[kNumHintsHandlers];	// ROM 0x0c107998 gHintsHandlers
 extern long				gMaxHintsHandlerId;					// ROM 0x0c1053f0 gMaxHintsHandlerId
 extern int				gDefaultHintsHandlerId;				// ROM 0x0c1053f4 gDefaultHintsHandlerId
+extern Boolean			gHostWriteNoWordHints;				// host, tests: write no hints (NEWTON_NO_WORD_HINTS)
 ULong	HashQuadgram(ULong quadgram, long position);		// ROM 0x002dd2b8 HashQuadgram__FUll
 UByte	CanonicalCharacter(UniChar c);						// ROM 0x002dd688 CanonicalCharacter__FUs
 void	InitHintsHandlers(void);							// the two handlers registered (the ROM's InitExternal)

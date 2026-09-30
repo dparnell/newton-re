@@ -405,6 +405,29 @@ set_tests_properties(host.NewtonWordHints PROPERTIES TIMEOUT 180
                      PASS_REGULAR_EXPRESSION "hints: 753 entries, 759 chunks, 0 differ.*Zzyzx: 0 / 0: ok.*hints: done"
                      FAIL_REGULAR_EXPRESSION "FAILED|waited in vain|hints: differ")
 
+# a store the host wrote before it wrote word hints (demo/hintsrepair.ns):
+# written with NEWTON_NO_WORD_HINTS - no chunks, handler 0, missed by a
+# words query - then mounted again, its entries' hints rewritten
+# (stores/Soups.cpp RepairWordHints, DEVIATION) and found
+add_test(NAME host.NewtonWordHintsOld
+         COMMAND newton --display 320x480 --erase
+                 --store ${CMAKE_CURRENT_BINARY_DIR}/hintsrepair.store --headless 60
+                 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/hintsrepair.ns
+         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonWordHintsOld PROPERTIES TIMEOUT 120 FIXTURES_SETUP host_hintsrepair_store
+                     ENVIRONMENT "NEWTON_NO_WORD_HINTS=1"
+                     PASS_REGULAR_EXPRESSION "hintsrepair: written"
+                     FAIL_REGULAR_EXPRESSION "FAILED")
+add_test(NAME host.NewtonWordHintsRepair
+         COMMAND newton --display 320x480
+                 --store ${CMAKE_CURRENT_BINARY_DIR}/hintsrepair.store --headless 60
+                 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/hintsrepair.ns
+         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonWordHintsRepair PROPERTIES TIMEOUT 120
+                     FIXTURES_REQUIRED host_hintsrepair_store DEPENDS host.NewtonWordHintsOld
+                     PASS_REGULAR_EXPRESSION "rewrote word hints for [0-9]+ entries.*hintsrepair: repaired"
+                     FAIL_REGULAR_EXPRESSION "FAILED")
+
 # a long note printed across pages (demo/printlong.ns): the Notepad's print
 # format reflows the note's paragraph into each page and cuts it between
 # two lines where the page runs out (views/Reflow.cpp ReflowText, the

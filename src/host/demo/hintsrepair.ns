@@ -1,0 +1,56 @@
+// A store the host wrote before it wrote word hints, repaired on mount
+// (stores/Soups.cpp's RepairWordHints, a DEVIATION): run first with
+// NEWTON_NO_WORD_HINTS set, this writes a soup whose entries carry no hint
+// chunks under handler 0, as the old host wrote them - which the ROM never
+// does, and whose entries a words query misses; run again on the same
+// store without it, the mount has rewritten them ("rewrote word hints for
+// N entries") and the query finds them.
+//
+//   NEWTON_NO_WORD_HINTS=1 build/host/host/newton --erase --store x.store --headless 60 --script src/host/demo/hintsrepair.ns
+//   build/host/host/newton --store x.store --headless 60 --script src/host/demo/hintsrepair.ns
+//
+// Prints "hintsrepair: written" the first time, "hintsrepair: repaired"
+// the second, or "FAILED".
+
+hrWords := ["alpha", "bravo", "charlie", "delta", "echo", "foxtrot", "golf", "hotel"];
+
+hrCount := func(soup, spec) begin
+	local k := 0;
+	local q := soup:Query(spec);
+	local x := q:Entry();
+	while x do begin k := k + 1; x := q:Next(); end;
+	k;
+end;
+
+hrRun := func() begin
+	local store := GetStores()[0];
+	local soup := store:GetSoup("HintsRepair");
+	if not soup then begin
+		soup := store:CreateSoupXmit("HintsRepair", [], nil);
+		for i := 0 to 49 do begin
+			local text := "";
+			for w := 0 to 20 do text := text & hrWords[(i * 3 + w) mod 8] & " ";
+			if i mod 20 = 0 then text := text & "zebra ";
+			soup:AddXmit({title: "note " & i, text: text}, nil);
+		end;
+		local e := soup:Query(nil):Entry();
+		local hints := HostEntryHints(e);
+		local found := call hrCount with (soup, {words: ["zebra"]});
+		// written as the old host wrote them: no chunks, and missed
+		if StrEqual(hints, "h0:") and found = 0 then
+			Print("hintsrepair: written")
+		else
+			Print("hintsrepair: written: FAILED (" & hints & ", found " & found & ")");
+	end else begin
+		local e := soup:Query(nil):Entry();
+		local hints := HostEntryHints(e);
+		local found := call hrCount with (soup, {words: ["zebra"]});
+		if BeginsWith(hints, "h1:") and found = 3 then
+			Print("hintsrepair: repaired")
+		else
+			Print("hintsrepair: repaired: FAILED (" & hints & ", found " & found & ")");
+	end;
+	HostQuit();
+end;
+
+call hrRun with ();

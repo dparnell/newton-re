@@ -31,6 +31,7 @@
 #include "protocols/Protocols.h"
 #include "DES.h"
 #include "ByteOrder.h"
+#include <stdio.h>
 #include <string.h>
 #include <new>
 
@@ -768,6 +769,8 @@ MakeStoreObject(TStore* store)
 }
 
 
+static void	RepairWordHints(RefArg storeObject);
+
 // ROM 0x00354c34 RegisterTStore__FP6TStore
 // The store's frame made and added to gStores; each union soup gets the
 // store's soup of its name.
@@ -803,7 +806,69 @@ RegisterTStore(TStore* store)
 		rethrow;
 	}
 	end_try;
+	RepairWordHints(storeObject);	// DEVIATION: the host's own old stores
 	return storeObject;
+}
+
+
+// DEVIATION: a store the host wrote before the word hints were
+// reconstructed has entries with no hint chunks under handler 0, which
+// the ROM never writes (GetNumHintChunks answers at least one) and which
+// TestObjHints refuses, so a words query (Find) would miss every one of
+// them.  Only that condition is repaired: each such entry's store object
+// is rewritten as it is, which writes its hints; the soup's indexes are
+// left alone, the entry being the same.  Called by RegisterTStore for a
+// writable store; says how many it rewrote, once.
+static void
+RepairWordHints(RefArg storeObject)
+{
+	if (gHostWriteNoWordHints)
+		return;
+	TStoreWrapper* wrapper = GetStoreWrapper(storeObject);
+	TStore* store = wrapper->Store();
+	Boolean readOnly;
+	if (store->IsReadOnly(&readOnly) != noErr || readOnly)
+		return;
+	long rewritten = 0;
+	RefVar names(StoreGetSoupNames(storeObject));
+	RefVar soup;
+	RefVar cursor;
+	RefVar entry;
+	for (long i = 0, count = Length(names); i < count; i++)
+	{
+		soup = StoreGetSoup(storeObject, RefVar(GetArraySlotRef(names, i)));
+		if ((Ref) soup == NILREF)
+			continue;
+		cursor = CommonSoupQuery(soup, RefVar(NILREF));
+		for (entry = CursorEntry(cursor); IsSoupEntry(entry); entry = CursorNext(cursor))
+		{
+			PSSId id = FaultBlockId(entry);
+			char headerBytes[kStoreObjectHeaderSize];
+			if (store->Read(id, 0, headerBytes, kStoreObjectHeaderSize) != noErr)
+				continue;
+			StoreObjectHeader header;
+			header.ReadFrom(headerBytes);
+			if (header.fNumHints != 0 || header.GetHintsHandlerId() != 0)
+				continue;
+			CDynamicArray* largeBinaries = nil;
+			RefVar object(LoadPermObject(wrapper, id, &largeBinaries));
+			wrapper->LockStore();
+			newton_try
+			{
+				StorePermObject(object, wrapper, id, largeBinaries, nil);
+			}
+			newton_catch_all
+			{
+				wrapper->Abort();
+				rethrow;
+			}
+			end_try;
+			wrapper->UnlockStore();
+			rewritten++;
+		}
+	}
+	if (rewritten != 0)
+		fprintf(stderr, "[host] rewrote word hints for %ld entries\n", rewritten);
 }
 
 
