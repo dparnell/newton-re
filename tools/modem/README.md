@@ -37,11 +37,17 @@ is the modem at the other end of it.
   answered CFR (FTT unless nine tenths of it are noughts), each page is
   decoded by `t4.py` and answered MCF, and at the DCN the pages are
   written - the first to OUT.pbm, the next to OUT-2.pbm and so on.
-  `--self-test` runs `--fax-answer` against a scripted Class 1 caller in
+  `--fax-class 2` makes the modem a Class 2 one (T.32: it runs T.30
+  itself; `+FCLASS=?` answers `0,2`): the Newton's `ATDT` is answered
+  `+FCON`, `+FCSI`, `+FDIS`, each `+FDT` with `+FDCS` and `CONNECT`, the
+  page read to DLE ETX, `+FET=` with `+FPTS: 1` (and `+FHNG: 0` at the
+  end); `--fax-class 2.0` uses Class 2.0's words and its DLE `,`/`.` page
+  ends (the ROM only uses 2.0 with a modem profile that enables it).
+  `--self-test` runs `--fax-answer` against scripted Class 1, 2 and 2.0 callers in
   place of the Newton, sending `t4.py`'s test page (ctest
   `comms.FakemodemFaxAnswer`).
 - **Inputs**: `--number NUMBER=HOST:PORT` (repeatable), `--incoming
-  HOST:PORT`, `--fax-call PAGE.pbm` (1728 pixels wide), `--fax-answer OUT.pbm`, `--speed BPS` (what CONNECT reports, 19200), `--identity TEXT`
+  HOST:PORT`, `--fax-call PAGE.pbm` (1728 pixels wide), `--fax-answer OUT.pbm`, `--fax-class 1|2|2.0` (the fax class offered, 1), `--speed BPS` (what CONNECT reports, 19200), `--identity TEXT`
   (the `ATI0/3/4` answer; the default, `fakemodem 1.0`, is a modem the ROM
   does not know, which gets its generic profile), and either `--spawn
   <program...>` (a newton, run and waited for its `[host] serial port N`
@@ -51,7 +57,7 @@ is the modem at the other end of it.
   `--spawn`, the program's output passed through and its exit status
   answered.
 - **Invocation** (ctests `host.NewtonModemDial`, `host.NewtonModemAnswer`,
-  `host.NewtonFaxReceive`, `host.NewtonFaxSend`):
+  `host.NewtonFaxReceive`, `host.NewtonFaxSend`, `host.NewtonFaxSendClass2`):
 
 ```
 python tools/modem/fakemodem.py --number 5551212=127.0.0.1:52375 \

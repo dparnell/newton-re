@@ -45,6 +45,15 @@ Purpose
       Newton's DCS says the page's width and resolution, the training
       check is answered CFR, each page is decoded by t4.py and answered
       MCF, and the pages are written at the DCN (OUT.pbm, OUT-2.pbm, ...).
+      With --fax-class 2 (or 2.0) the modem is a Class 2 one instead
+      (T.32: "+FCLASS=?" answers "0,2"): it runs T.30 itself, so "ATDT"
+      is answered +FCON, +FCSI and +FDIS; each +FDT +FDCS and CONNECT, the
+      page following until DLE ETX; +FET=0/1/2 +FPTS: 1 (and at the end
+      +FHNG: 0).  Class 2.0's words are +FCO, +FCI, +FIS, +FCS, +FPS and
+      +FHS, and the page ends DLE , (another page) or DLE . (the last).
+      The ROM offers Class 2.0 only to a modem whose profile enables it
+      (TCMOModemFaxEnabledCaps leaves it out), so the Newton uses Class 1
+      when it can, Class 2 when the modem has only that.
 
     Data calls are +FCLASS=0 (docs/comms/README.md, "The modem").
 
@@ -296,6 +305,25 @@ class FaxAnswerer:
     def next_data(self):
         return b""
 
+    def class2_page(self, data):
+        """A page the Newton sent after +FDT (Class 2: the modem did the
+        T.30, the data comes with its bits in either order - +FBOR)."""
+        best = None
+        for order in ("direct", "reversed"):
+            raw = data if order == "direct" else bytes(REVERSE_BITS[b] for b in data)
+            try:
+                rows = t4.decode_page(raw, self.width)
+            except Exception:
+                continue
+            if best is None or len(rows) > len(best[1]):
+                best = (order, rows)
+        rows = best[1] if best else []
+        rows = [row + [0] * (self.width - len(row)) for row in rows]
+        self.pages.append(rows)
+        black = sum(sum(row) for row in rows)
+        log("fax: <- page %d, %d bytes, %d lines, %d black pixels (%s bit order)" %
+            (len(self.pages), len(data), len(rows), black, best[0] if best else "no"))
+
     def page_path(self, n):
         if n == 0:
             return self.out_path
@@ -312,9 +340,24 @@ class FaxAnswerer:
         log("fax: the call ended, %s received" % self.result)
 
 
+REVERSE_BITS = bytes(int("{:08b}".format(n)[::-1], 2) for n in range(256))
+
+
 def log(text):
     print("fakemodem: " + text)
     sys.stdout.flush()
+
+
+C2_RANGES = {
+    "DCC": "(0,1),(0-3),(0-2),(0-2),(0),(0),(0),(0-7)",
+    "DIS": "(0,1),(0-3),(0-2),(0-2),(0),(0),(0),(0-7)",
+    "CR": "(0,1)", "LPL": "(0,1)", "BOR": "(0-3)", "AA": "(0,1)",
+    "MINSP": "(0-3)", "ECM": "(0)", "CQ": "(0)",
+}
+C2_VALUES = {
+    "MFR": "fakemodem", "MDL": "fakemodem fax", "REV": "1.0",
+    "DCC": "1,3,0,2,0,0,0,0", "DIS": "1,3,0,2,0,0,0,0",
+}
 
 
 class Modem:
@@ -325,6 +368,7 @@ class Modem:
         self.collected = bytearray()
         self.collect_dle = False
         self.pending_frh = False        # +FRH waiting for a frame
+        self.page_end = None            # Class 2.0: the character that ended a page (DLE , ; .)
         self.dte = dte
         self.numbers = numbers
         self.incoming = incoming
@@ -335,6 +379,7 @@ class Modem:
         self.quiet = False
         self.sreg = {0: 0, 1: 0, 2: 43, 3: 13, 4: 10, 5: 8, 6: 2, 7: 50, 8: 2, 12: 50}
         self.fclass = "0"
+        self.fax_class = "1"            # --fax-class: the class +FCLASS=? offers
         self.line = None            # the TCP connection that is the call
         self.online = False         # data mode (the call bridged)
         self.buffer = b""
@@ -412,6 +457,17 @@ class Modem:
             self.fax.called()
             self.pending_frh = True     # dialing, the modem receives HDLC at once
             self.give_frame()
+            return
+        if self.fax is not None and not self.fax.rings and self.fclass in ("2", "2.0"):
+            # a Class 2 modem runs T.30 itself: the answering machine's
+            # CSI and DIS come back as the call's result codes
+            log("a fax machine answers (Class %s)" % self.fclass)
+            self.fax_call = True
+            two = self.fclass == "2"
+            self.info("+FCON" if two else "+FCO")
+            self.info('%s: "%s"' % ("+FCSI" if two else "+FCI", self.fax.identity))
+            self.info("%s: 1,3,0,2,0,0,0,0" % ("+FDIS" if two else "+FIS"))
+            self.result("OK", 0)
             return
         address = self.resolve(number)
         if address is None:
@@ -536,13 +592,19 @@ class Modem:
                 if m:
                     value = m.group(1)
                     if value == "?":
-                        self.info("0,1")
+                        self.info("0," + self.fax_class)
                     elif value in ("0", "1", "2", "2.0"):
                         self.fclass = value
                     else:
                         ok = False
                     i += m.end()
                     continue
+                if self.fclass in ("2", "2.0"):
+                    handled, i, answered, ok = self.class2(body, i)
+                    if handled:
+                        if answered:
+                            break
+                        continue
                 m = re.match(r"(?i)F(TM|TH|RM|RH)\s*=\s*\?", body[i:])
                 if m:
                     self.info("3,24,48,72,96" if m.group(1).upper() in ("TM", "RM") else "3")
@@ -567,6 +629,46 @@ class Modem:
             break
         if not answered:
             self.result("OK" if ok else "ERROR", 0 if ok else 4)
+
+    # --- Class 2 and 2.0 (T.32): the modem runs T.30 itself.  What a
+    # query answers (C2_RANGES, C2_VALUES) is an ordinary V.29 modem's.
+    def class2(self, body, i):
+        """A +F command in Class 2: (handled, where the command ends,
+        whether a result was given, whether it was accepted)."""
+        m = re.match(r'(?i)F([A-Z]+)\s*(=\s*\?|\?|=\s*("[^"]*"|[^;]*))?', body[i:])
+        if not m:
+            return False, i, False, True
+        name = m.group(1).upper()
+        end = i + m.end()
+        arg = (m.group(2) or "").replace(" ", "")
+        if arg == "=?":
+            self.info(C2_RANGES.get(name, "(0)"))
+            return True, end, False, True
+        if arg == "?":
+            self.info(C2_VALUES.get(name, "0"))
+            return True, end, False, True
+        if name == "DT" and self.fax_call:
+            # the page's data: the session's parameters, then CONNECT
+            self.info("%s: 1,3,0,2,0,0,0,0" % ("+FDCS" if self.fclass == "2" else "+FCS"))
+            log("-> CONNECT (to send a page)")
+            self.send(b"\r\nCONNECT\r\n")
+            self.start_collect("c2page")
+            return True, end, True, True
+        if name == "ET" and self.fax_call:
+            # the page ended: 0 another page, 1 another document, 2 the end
+            kind = int(arg[1:] or "0")
+            log("fax: <- %s" % {0: "MPS", 1: "EOM", 2: "EOP"}.get(kind, "+FET=%d" % kind))
+            self.info("+FPTS: 1" if self.fclass == "2" else "+FPS: 1")
+            if kind == 2:
+                self.info("+FHNG: 0" if self.fclass == "2" else "+FHS: 0")
+                self.fax.finish()
+                self.fax_call = False
+            self.result("OK", 0)
+            return True, end, True, True
+        if name == "K" or name == "KS":
+            self.info("+FHNG: 0" if self.fclass == "2" else "+FHS: 0")
+            self.fax_call = False
+        return True, end, False, True
 
     # --- Class 1 (T.31)
     def class1(self, command, value):
@@ -615,6 +717,11 @@ class Modem:
                 self.collected.append(DLE)
             elif byte == ETX:
                 self.end_collect()
+            elif self.collect == "c2page" and byte in (ord(","), ord(";"), ord(".")):
+                # Class 2.0: the page's end says what follows - another
+                # page (DLE ,), another document (DLE ;) or the end (DLE .)
+                self.page_end = chr(byte)
+                self.end_collect()
             return
         if byte == DLE:
             self.collect_dle = True
@@ -634,6 +741,21 @@ class Modem:
                 self.result("OK", 0)            # the final frame: the carrier off
             else:
                 self.result("CONNECT", 1)       # another frame to come
+        elif self.collect == "c2page":
+            log("<- a page, %d bytes" % len(data))
+            if self.fax_call:
+                self.fax.class2_page(data)
+            self.collect = None
+            end, self.page_end = self.page_end, None
+            if end is not None:
+                # Class 2.0: the post-page message went with the data
+                log("fax: <- %s" % {",": "MPS", ";": "EOM", ".": "EOP"}[end])
+                self.info("+FPS: 1")
+                if end == ".":
+                    self.info("+FHS: 0")
+                    self.fax.finish()
+                    self.fax_call = False
+            self.result("OK", 0)
         else:
             log("<- %d bytes of data" % len(data))
             if self.fax_call and hasattr(self.fax, "data_from_newton"):
@@ -814,7 +936,62 @@ def self_test():
     assert t4.read_pbm(out) == page
     newton.close()
     thread.join(timeout=5)
+    for fclass in ("2", "2.0"):
+        self_test_class2(fclass, page, tmp)
     print("fakemodem: fax answer self test passed")
+
+
+def self_test_class2(fclass, page, tmp):
+    """--fax-answer against a scripted Class 2 (or 2.0) caller: dial, the
+    answering machine's id and DIS read, +FDT and the page sent twice (the
+    second page after MPS, the post-page message +FET=0/2 in Class 2, the
+    page's closing DLE , or DLE . in Class 2.0), the hang-up status read;
+    both pages written must be the page sent."""
+    newton, dte = socket.socketpair()
+    out = os.path.join(tmp, "fakemodem-answered-c%s.pbm" % fclass.replace(".", ""))
+    fax = FaxAnswerer(out, "fakemodem fax")
+    modem = Modem(dte, {}, None, 9600, "fakemodem", fax)
+    modem.fax_class = fclass
+    thread = threading.Thread(target=modem.run, daemon=True)
+    thread.start()
+    newton.settimeout(10)
+    pending = b""
+
+    def read_until(word):
+        nonlocal pending
+        while word not in pending:
+            pending += newton.recv(4096)
+        before, _, pending = pending.partition(word)
+        return before
+
+    def command(text, answer=b"OK\r\n"):
+        newton.sendall(text.encode() + b"\r")
+        return read_until(answer)
+
+    two = fclass == "2"
+    command("ATE0")
+    assert fclass.encode() in command("AT+FCLASS=?")
+    command("AT+FCLASS=" + fclass)
+    answer = command("ATDT5551234")
+    assert (b"+FCON" if two else b"+FCO") in answer and b"fakemodem fax" in answer, answer
+    assert (b"+FDIS: " if two else b"+FIS: ") in answer, answer
+    coded = t4.encode_page(page, 2)
+    for last in (False, True):
+        assert (b"+FDCS: " if two else b"+FCS: ") in command("AT+FDT", b"CONNECT\r\n")
+        if two:
+            newton.sendall(dle_stuff(coded))
+            read_until(b"OK\r\n")
+            answer = command("AT+FET=%d" % (2 if last else 0))
+        else:
+            newton.sendall(dle_stuff(coded)[:-2] + bytes([DLE, ord("." if last else ",")]))
+            answer = read_until(b"OK\r\n")
+        assert (b"+FPTS: 1" if two else b"+FPS: 1") in answer, answer
+    assert (b"+FHNG: 0" if two else b"+FHS: 0") in answer, answer
+    assert t4.read_pbm(out) == page
+    assert t4.read_pbm(os.path.splitext(out)[0] + "-2.pbm") == page
+    newton.close()
+    thread.join(timeout=5)
+    log("Class %s answer self test passed" % fclass)
 
 
 def run_modem(host, port, args):
@@ -827,7 +1004,9 @@ def run_modem(host, port, args):
         fax = FaxAnswerer(args.fax_answer, "fakemodem fax")
     else:
         fax = None
-    Modem(dte, args.numbers, args.incoming, args.speed, args.identity, fax).run()
+    modem = Modem(dte, args.numbers, args.incoming, args.speed, args.identity, fax)
+    modem.fax_class = args.fax_class
+    modem.run()
 
 
 def run_spawned(program, args):
@@ -869,6 +1048,8 @@ def main():
     ap.add_argument("--incoming", type=address, help="HOST:PORT of a call to ring the Newton with once it listens")
     ap.add_argument("--fax-call", metavar="PAGE.pbm", help="a fax machine to call the Newton, sending this page (Class 1)")
     ap.add_argument("--fax-answer", metavar="OUT.pbm", help="a fax machine answering the Newton's call, writing the page it receives (Class 1)")
+    ap.add_argument("--fax-class", choices=("1", "2", "2.0"), default="1",
+                    help="the fax class the modem offers (+FCLASS=?): 1 (T.31), 2 or 2.0 (T.32)")
     ap.add_argument("--speed", type=int, default=19200, help="the speed CONNECT reports (19200)")
     ap.add_argument("--identity", default="fakemodem 1.0", help="what ATI0/I3/I4 answer (an unknown modem)")
     group = ap.add_mutually_exclusive_group(required=True)

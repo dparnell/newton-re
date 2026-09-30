@@ -230,6 +230,25 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonFaxSend.check PROPERTIES FIXTURES_REQUIRED faxsent
                          PASS_REGULAR_EXPRESSION "faxcheck: passed")
+    # the same over a Class 2 modem (--fax-class 2: the modem runs T.30 and
+    # the fax tool drives it with +FDT/+FET - comms/fax/FaxToolClass2.cpp)
+    add_test(NAME host.NewtonFaxSendClass2
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/modem/fakemodem.py
+                     --fax-class 2 --fax-answer build/fax-sent-class2.pbm
+                     --spawn $<TARGET_FILE:newton> --rom ${NEWTON_ROM_BIN} --serial-port 0 --headless 200
+                     --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/fax-send.ns
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonFaxSendClass2 PROPERTIES TIMEOUT 300 FIXTURES_SETUP faxsentclass2
+                         PASS_REGULAR_EXPRESSION "-> 0,2.*<- AT\\+FCLASS=2.*a fax machine answers \\(Class 2\\).*<- AT\\+FDT.*fax: <- page 1, [0-9]+ bytes, 2148 lines.*fax: <- MPS.*fax: <- page 2, [0-9]+ bytes, 2148 lines.*fax: <- EOP.*2 page\\(s\\) received.*fax-send: the Out Box is empty.*the program answered 0"
+                         FAIL_REGULAR_EXPRESSION "waited in vain|fell over")
+    add_test(NAME host.NewtonFaxSendClass2.check
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/modem/faxcheck.py build/fax-sent-class2.pbm
+                     --pages 2 --width 1728
+                     --inked 1:190,180,750,300:1000 --inked 1:190,320,750,340:2500
+                     --inked 2:180,95,700,160:1000
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonFaxSendClass2.check PROPERTIES FIXTURES_REQUIRED faxsentclass2
+                         PASS_REGULAR_EXPRESSION "faxcheck: passed")
 endif()
 
 # the host's printer (print/host/HostPrinter.h): a note and a Names card

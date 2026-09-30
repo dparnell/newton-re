@@ -110,7 +110,7 @@ The layout offsets below are the ROM's.
 - **Bands** (`GetBandPrefs`) are 25 lines deep, taken asynchronously, with `wantMinBounds`. `ImageBand` sends the rows above the black's bounds as white lines (`PrintBand(nil, n, ...)`), the rows the black covers (whole rows) as a band, and the rest as white lines again. A band with no black is all white lines.
 - **`ContinueIO`** lets the job go on after a reply of 0, -44004 or -22005.
 
-Tests: ctest `host.NewtonFaxSend` (demo `src/host/demo/fax-send.ns`) sends a note through the fax routing slip to `tools/modem/fakemodem.py --fax-answer`. `host.NewtonFaxSend.check` then runs `tools/modem/faxcheck.py` on the two pages that arrive (the cover page and the note, 1728 x 2148 each): the pages must be there and not blank, the cover page's title and rule and the note's text must be inked, and each page is written out as a PNG (`build/fax-sent.png`, `build/fax-sent-2.png`).
+Tests: ctest `host.NewtonFaxSend` and, over a Class 2 modem (`fakemodem.py --fax-class 2`, where the modem runs T.30 and the fax tool drives it with `+FDT`/`+FET`), `host.NewtonFaxSendClass2` (demo `src/host/demo/fax-send.ns`) sends a note through the fax routing slip to `tools/modem/fakemodem.py --fax-answer`. `host.NewtonFaxSend.check` then runs `tools/modem/faxcheck.py` on the two pages that arrive (the cover page and the note, 1728 x 2148 each): the pages must be there and not blank, the cover page's title and rule and the note's text must be inked, and each page is written out as a PNG (`build/fax-sent.png`, `build/fax-sent-2.png`).
 
 ### Fax driver quirks kept
 
@@ -143,6 +143,5 @@ Seen on the way, not yet looked into: a card added with `cardfile:AddCard` shows
 ## Not yet
 
 - `TPSPrinter`, the PostScript imaging engine, and the drivers other than the fax driver (a new printer goes behind `TDotPrinterDriver`, as the host's printer does).
-- Fax sending over Class 2.
 - `TPrDriverPart`, the 'prnt part handler for printer-driver packages.
 - `TQDLibraryDriver`, the QuickDraw library offered to drivers.
