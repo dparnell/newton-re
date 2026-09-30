@@ -14,10 +14,15 @@ Purpose
 
 Usage
     python tools/host/httpserve.py --dir <directory> --port <port>
-                                   [--file NAME=PATH]... -- <program> [args...]
+                                   [--file NAME=PATH]... [--type .EXT=MIME]...
+                                   -- <program> [args...]
 
     --file serves one more file, PATH, as /NAME (a package out of
     fixtures/packages, say, without a copy of it in the directory).
+    --type serves files ending .EXT as MIME, where the Python library's
+    guess is not what a server of the Newton's day sent (a WAV as
+    audio/x-wav, which Newt's Cape's audio helper asks for, not
+    audio/wav).
 
 Inputs / outputs
     The directory to serve and the port (on 127.0.0.1 only; 0 takes a free
@@ -40,6 +45,13 @@ import threading
 
 class Handler(http.server.SimpleHTTPRequestHandler):
     extra_files = {}
+    extra_types = {}
+
+    def guess_type(self, path):
+        for ext, mime in self.extra_types.items():
+            if path.lower().endswith(ext.lower()):
+                return mime
+        return super().guess_type(path)
 
     def log_message(self, fmt, *args):
         pass
@@ -61,6 +73,7 @@ def main(argv=None):
     ap.add_argument("--dir", required=True)
     ap.add_argument("--port", type=int, required=True)
     ap.add_argument("--file", action="append", default=[], help="NAME=PATH: PATH served as /NAME")
+    ap.add_argument("--type", action="append", default=[], help=".EXT=MIME: files ending .EXT served as MIME")
     ap.add_argument("program", nargs=argparse.REMAINDER)
     args = ap.parse_args(argv)
     program = args.program
@@ -71,6 +84,9 @@ def main(argv=None):
     for spec in args.file:
         name, _, path = spec.partition("=")
         Handler.extra_files[name] = os.path.abspath(path)
+    for spec in args.type:
+        ext, _, mime = spec.partition("=")
+        Handler.extra_types[ext] = mime
     try:
         server = http.server.ThreadingHTTPServer(("127.0.0.1", args.port),
                                                  functools.partial(Handler, directory=args.dir))

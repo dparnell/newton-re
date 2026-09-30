@@ -1,0 +1,5 @@
+The Host Story
+
+Once upon a time a MessagePad downloaded a PalmDoc e-text from a web server running on the machine it was being emulated on. The text had been compressed, a record of four thousand and ninety-six bytes at a time, by the Palm's own little LZ77 coding; Newt's Cape's PalmDoc helper decoded it and made it a book.
+
+The end.

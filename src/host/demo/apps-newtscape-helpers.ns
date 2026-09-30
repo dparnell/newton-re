@@ -1,0 +1,123 @@
+// Newt's Cape's helper applications (fixtures/packages/apps/NewtScape)
+// used as their user would: Newt's Cape given the URL of a file it cannot
+// show itself, File > Open Location, and the helper registered for that
+// kind of file takes it.
+//
+//   audx10c2.pkg: a WAV sound (src/host/demo/www/beep.wav, made by
+//   tools/host/tonewav.py, served as audio/x-wav) goes into the In Box as
+//   an audio item; opened there, the In Box says the stationery that shows
+//   'audio is not installed - audx hands the sound on to a viewer of
+//   another package (a MIME mail reader's), which the fixtures do not have.
+//
+//   pdoc10d2.pkg: a PalmDoc e-text (src/host/demo/www/story.pdb, made from
+//   story.txt by tools/host/palmdoc.py, LZ77-compressed as a Palm's are)
+//   is decoded and shown as a Newt's Cape page.
+//
+// ctest host.NewtonAppNewtsCapeHelpers:
+//
+//   python tools/host/httpserve.py --dir src/host/demo/www --port 0 \
+//       --type .wav=audio/x-wav --type .pdb=application/x-pilot-pdb -- \
+//       build/host/host/newton --display 320x480 --erase --store tmp/newtscape-helpers.store \
+//       --headless 240 --package fixtures/packages/apps/NewtScape/nwcp20r2.pkg \
+//       --package fixtures/packages/apps/NewtScape/audx10c2.pkg \
+//       --package fixtures/packages/apps/NewtScape/pdoc10d2.pkg \
+//       --script src/host/demo/apps-newtscape-helpers.ns
+
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
+HostInclude("walkhelpers.ns");		// findView, the steps
+HostInclude("apphelpers.ns");		// openFromExtras, typeText, pickItem
+
+wtName := "helpers";
+nhSym := '|NewtsCape:NewtsCape|;
+nhBase := "http://127.0.0.1:" & HostGetEnv("NEWTON_HTTP_PORT") & "/";
+
+nhApp := func() GetRoot().(nhSym);
+nhConnectSlip := func() begin
+	local slip := nil;
+	foreach c in GetRoot():ChildViewFrames() do
+		if HasSlot(c, 'fLinkID) and c._defaultButton and c._defaultButton.viewCObject then slip := c;
+	slip;
+end;
+// the In Box entry a helper made for a file of this name
+nhInboxEntry := func(name) begin
+	local found := nil;
+	local c := GetUnionSoup("Inbox"):Query(nil);
+	local e := c:Entry();
+	while e do begin
+		if IsString(e.title) and StrPos(e.title, name, 0) then found := e;
+		e := c:Next();
+	end;
+	found
+end;
+
+// the location line given a URL and File > Open Location chosen; andThen
+// once the Internet Enabler's connection slip (the first time) is answered
+nhOpenURL := func(url, andThen) begin
+	local line := call findView with (GetRoot(), func(v) IsString(v.text) and (StrPos(v.text, "About:Newt", 0) or StrPos(v.text, "http:", 0)));
+	call tapCentre with (line);
+	AddDelayedCall(func() begin
+		KeyEvent(55, true); call typeKey with (0); KeyEvent(55, nil);		// command-A
+		call typeText with (url);
+		call waitFor with ("helpers: the URL typed", func() StrEqual(line.text, url), func() begin
+			call tapButtonText with (call nhApp with (), "File");
+			call waitFor with ("helpers: the File menu", pickerUp, func() begin
+				call pickItem with ("Open Location");
+				call andThen with ();
+			end, 10);
+		end, 10);
+	end, nil, 800);
+end;
+
+wtSteps := [
+	func(done) call openFromExtras with ("Newt's Cape", nhSym, done),
+	call waitStep with ("its About page", func() call findView with (GetRoot(), func(v) IsString(v.text) and StrPos(v.text, "About:Newt", 0))),
+	// a WAV sound: audx puts it into the In Box
+	func(done) call nhOpenURL with (nhBase & "beep.wav", done),
+	func(done) begin
+		call waitFor with ("helpers: the sound in the In Box", func() begin
+				local slip := call nhConnectSlip with ();
+				if slip then call tapCentre with (slip._defaultButton);		// Connect
+				call nhInboxEntry with ("beep.wav")
+			end, func() begin
+			local e := call nhInboxEntry with ("beep.wav");
+			local slots := "";
+			foreach k, v in e do slots := slots & SPrintObject(k) & " ";
+			Print("helpers: the In Box item: " & slots);
+			local body := e.body;
+			call wtCheck with ("an audio item", body and body.class = 'audio, "(" & SPrintObject(body) & ")");
+			call done with ();
+		end, 60);
+	end,
+	// the In Box opened with its button, and the item tapped
+	call tapStep with ("the In/Out Box button", 60, 468, func() GetRoot().iobox and GetRoot().iobox.viewCObject),
+	func(done) call waitFor with ("helpers: the item listed", func() call viewWithText with ("beep.wav"), done, 20),
+	settleStep,
+	func(done) begin
+		call tapAt with (150, 80);
+		call waitFor with ("helpers: the item shown", func() call findView with (GetRoot(), func(v) IsString(v.text) and StrPos(v.text, "stationery", 0)), func() begin
+			local v := call findView with (GetRoot(), func(v) IsString(v.text) and StrPos(v.text, "stationery", 0));
+			Print("helpers: the In Box says: " & v.text);
+			call wtCheck with ("the In Box names the audio stationery it lacks", StrPos(v.text, "(audio)", 0), "(" & v.text & ")");
+			call done with ();
+		end, 20);
+	end,
+	// back to Newt's Cape: a PalmDoc e-text, which pdoc decodes into a page
+	func(done) begin
+		GetRoot().iobox:Close();
+		call waitFor with ("helpers: the In Box closed", func() not GetRoot().iobox.viewCObject, done, 10);
+	end,
+	func(done) call nhOpenURL with (nhBase & "story.pdb", done),
+	func(done) call waitFor with ("helpers: the e-text shown", func() call findView with (GetRoot(), func(v) IsString(v.text) and StrPos(v.text, "Once upon a time", 0)), func() begin
+		local v := call findView with (GetRoot(), func(v) IsString(v.text) and StrPos(v.text, "Once upon a time", 0));
+		Print("helpers: the page: " & v.text);
+		call wtCheck with ("the e-text decoded whole", StrPos(v.text, "made it a book", 0), "(" & v.text & ")");
+		ScreenSnapshot("tmp/helpers-pdoc.pgm");
+		call done with ();
+	end, 60),
+	func(done) begin
+		Print("helpers: done, " & wtFailures & " failed");
+		HostQuit();
+	end];
+
+call walkSetup with ([2, 0, 45, 34, 14, 37], func()			// "Daniel"
+	call waitFor with ("helpers: installed", func() GetRoot().(nhSym), wtNext, 60));

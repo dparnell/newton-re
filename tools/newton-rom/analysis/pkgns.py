@@ -120,6 +120,8 @@ def functions(pkg: PackageImage):
     for ref in pkg.objects():
         if pkg.flags(ref) & 1 == 0 or pkg.size(ref) < 20:
             continue
+        if ref - 1 + pkg.size(ref) > len(pkg.rom):
+            continue            # (an object running off the part - pack34.pkg's last)
         s = pkg.slots(ref)
         if s[0] == 0x32 and len(s) >= 5:
             out.append((ref, "script", (s[4] >> 2) & 0xffff))

@@ -222,8 +222,26 @@ the program is told it in the environment variable `NEWTON_HTTP_PORT`,
 which a script reads with `HostGetEnv("NEWTON_HTTP_PORT")`; `--file NAME=PATH`
 (any number of them) serves one more file, PATH, as `/NAME` - a package out
 of `fixtures/packages` without a copy of it in the directory (ctest
-`host.NewtonAppNewtsCape`).  **Output:** each request
+`host.NewtonAppNewtsCape`); `--type .EXT=MIME` serves files ending .EXT as
+MIME where the Python library's guess is not what a server of the day sent
+(a WAV as `audio/x-wav`, which Newt's Cape's audio helper asks for, not
+`audio/wav`; ctest `host.NewtonAppNewtsCapeHelpers`).  **Output:** each request
 as `[http] GET /path 200`, the program's output (stdout and stderr merged)
 and `[http] the program answered N`; it exits with the program's status (1
 when the port cannot be had).  ctest `host.NewtonNetHopper` runs NetHopper
 3.2 under it (`src/host/demo/nethopper.ns`).  Standard library only.
+
+## tonewav.py, palmdoc.py - files for a host Newton to download
+
+    python tools/host/tonewav.py OUT.wav [--hz 880] [--ms 200] [--rate 11025] [--bits 8]
+    python tools/host/palmdoc.py IN.txt OUT.pdb [--name NAME] [--plain] [--check]
+
+`tonewav.py` writes a mono PCM WAV of one sine tone; `palmdoc.py` writes a
+text file as a PalmDoc e-text (a Palm database of type TEXt, creator REAd:
+the database header, the record list, the PalmDoc header record and the
+text in 4096-byte records, each compressed with PalmDoc's own LZ77 coding -
+or stored as it is with `--plain`; `--check` reads the file back and says
+whether it decodes to the text).  `src/host/demo/www/beep.wav` and
+`story.pdb` are their output with the defaults (`--name "Host Story"`),
+which Newt's Cape's audio and PalmDoc helpers take in
+`src/host/demo/apps-newtscape-helpers.ns`.  Standard library only.
