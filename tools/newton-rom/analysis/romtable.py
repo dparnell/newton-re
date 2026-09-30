@@ -16,7 +16,9 @@ i16 or i32 (default u32; the ROM is big-endian), strN: a table of
 fixed-width N-byte strings laid out one after another in the ROM and
 padded with noughts (a COUNT is required), or cstr: a table of
 pointers to C strings in the ROM, emitted as `const char*` literals (a 0
-pointer becomes nil).  COUNT defaults to the number of elements between
+pointer becomes nil), or ptr: a table of pointers to other tables of the
+same run, emitted as `(const unsigned char*) NAME + offset` (the fax
+decoder's kMajorIndexWhite, pointers into its kWhite_ tables).  COUNT defaults to the number of elements between
 the symbol and the next symbol after it, which is right when tables follow
 one another (the LZ coder's do); give it when the table is followed by
 something unnamed.  A table in the initialised RAM area (a global at
@@ -47,6 +49,7 @@ TYPES = {
     "u16": ("unsigned short", 2, ">H"), "i16": ("short", 2, ">h"),
     "u32": ("unsigned int", 4, ">I"), "i32": ("int", 4, ">i"),
     "cstr": ("char*", 4, ">I"),
+    "ptr": ("unsigned char*", 4, ">I"),
 }
 
 
@@ -118,6 +121,15 @@ def main(argv=None) -> int:
         out.append("")
     decls = []
     defs = []
+    # the tables of this run, by address (what a ptr table may point into)
+    emitted = {}
+    for spec in args.tables:
+        nm = spec.split(":")[0]
+        if "@" in nm:
+            nm, _, where = nm.partition("@")
+            emitted[int(where, 0)] = nm
+        elif nm in by_name:
+            emitted[by_name[nm]] = nm
     for spec in args.tables:
         parts = spec.split(":")
         name = parts[0]
@@ -171,6 +183,18 @@ def main(argv=None) -> int:
             decls.append(f"extern const char* const\t{name}[{count}];")
             lines = ["\t" + (c_string(rom, v) if v != 0 else "0") + "," for v in values]
             defs.append(f"{citation(addr, name, given_address)}\nconst char* const\t{name}[{count}] = {{\n" + "\n".join(lines) + "\n};\n")
+            continue
+        if typ == "ptr":
+            decls.append(f"extern const unsigned char* const\t{name}[{count}];")
+            lines = []
+            for v in values:
+                base = max((a for a in emitted if a <= v), default=None)
+                if base is None:
+                    print(f"error: {name}: 0x{v:08x} points into no table of this run", file=sys.stderr)
+                    return 1
+                lines.append(f"\t(const unsigned char*) {emitted[base]} + {v - base},")
+            defs.append(f"{citation(addr, name, given_address)}\nconst unsigned char* const\t{name}[{count}] = {{\n"
+                        + "\n".join(lines) + "\n};\n")
             continue
         decls.append(f"extern const {ctype}\t{name}[{count}];")
         width = 4 if size == 1 else (6 if size == 2 else 10)

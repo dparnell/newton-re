@@ -104,3 +104,18 @@ add_executable(test_ModemTool test_ModemTool.cpp)
 target_link_libraries(test_ModemTool PRIVATE comms_serial os600_kernel os600_user)
 add_test(NAME comms.ModemTool COMMAND test_ModemTool)
 set_tests_properties(comms.ModemTool PROPERTIES TIMEOUT 30 PASS_REGULAR_EXPRESSION "test_ModemTool: all passed")
+
+# the fax tool's MH decoder (comms/fax/T4FaxLine.h) against a page coded by
+# tools/modem/t4.py, which is written from the T.4 recommendation alone
+find_package(Python3 COMPONENTS Interpreter)
+if(Python3_FOUND)
+    add_executable(test_T4FaxLine test_T4FaxLine.cpp)
+    target_link_libraries(test_T4FaxLine PRIVATE comms_serial os600_kernel os600_user)
+    add_test(NAME comms.T4Page
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/modem/t4.py --test-page --fill 2
+                     --pbm ${CMAKE_CURRENT_BINARY_DIR}/t4page.pbm -o ${CMAKE_CURRENT_BINARY_DIR}/t4page.t4)
+    set_tests_properties(comms.T4Page PROPERTIES FIXTURES_SETUP t4page)
+    add_test(NAME comms.T4FaxLine COMMAND test_T4FaxLine ${CMAKE_CURRENT_BINARY_DIR}/t4page.t4 ${CMAKE_CURRENT_BINARY_DIR}/t4page.pbm)
+    set_tests_properties(comms.T4FaxLine PROPERTIES FIXTURES_REQUIRED t4page TIMEOUT 60
+                         PASS_REGULAR_EXPRESSION "200 of 200 lines decoded.*test_T4FaxLine: all passed")
+endif()

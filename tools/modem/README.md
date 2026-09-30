@@ -42,3 +42,30 @@ python tools/modem/fakemodem.py --incoming 127.0.0.1:52376 \
 ```
 
 On Windows give `--spawn` the program's full path (`...\newton.exe`).
+
+## t4.py
+
+ITU-T T.4 modified Huffman (MH) coding of Group 3 fax pages, written from
+the recommendation alone (its tables 2, 3a and 3b), not from the ROM - so
+that the reconstructed decoder (`src/comms/fax/T4FaxLine.h`, the ROM's
+`TT4FaxLine`) is checked against an independent coder.
+
+- **Purpose**: codes a page (lines of pixels, 1 black) as T.4 bytes - an
+  EOL, each line's alternate white and black runs (make-up codes for runs
+  of 64 and more, the extended ones past 1728) and its EOL, optional fill
+  (nought bits) ahead of every EOL, and the RTC (six EOLs); the bits of
+  each byte least significant first, as they go over the telephone.  Also
+  decodes such bytes back, and makes a test page (1728 x 200: bars, a
+  checkerboard, diagonals, lines starting black, solid lines, strokes,
+  single pixels, a frame, runs of every length).
+- **Inputs / outputs**: PBM images (P1 or P4 in, P4 out) and raw T.4 byte
+  files.
+- **Invocation** (ctest `comms.T4Page` writes the page `comms.T4FaxLine`
+  decodes):
+
+```
+python tools/modem/t4.py --test-page --fill 2 --pbm page.pbm -o page.t4
+python tools/modem/t4.py --encode page.pbm -o page.t4 [--fill N]
+python tools/modem/t4.py --decode page.t4 --width 1728 --pbm out.pbm
+python tools/modem/t4.py --self-test
+```

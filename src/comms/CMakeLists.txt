@@ -40,6 +40,8 @@ add_library(comms_serial STATIC
     ModemToolFax.cpp
     ModemToolOptions.cpp
     ModemStrings.cpp
+    fax/T4FaxLine.cpp
+    fax/T4Tables.cpp
     SharpIRTool.cpp
     IrSIR.cpp
     IrProbeTool.cpp
@@ -57,7 +59,7 @@ add_library(comms_serial STATIC
 )
 target_link_libraries(comms_serial PUBLIC comms hal_serial hal_timers)
 # the IrDA stack ('irda': docs/comms/README.md, "Beaming - the plan")
-target_include_directories(comms_serial PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/irda)
+target_include_directories(comms_serial PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/irda ${CMAKE_CURRENT_SOURCE_DIR}/fax)
 
 # The NewtonScript side: the frame translators (values and option frames
 # to and from bytes and option arrays) and the NewtonScript endpoint.
