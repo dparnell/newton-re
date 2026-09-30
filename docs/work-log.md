@@ -237,6 +237,18 @@ is the same value spelt so that it cannot be read two ways.
   notBic loops never advance the mask pointer; `ScaleStdRRect` scales the
   corner oval crosswise on a fax.
 
+## 2026-09-30: selections follow their text; the caret under a hilite
+
+- A selection follows its paragraph's text (f7913359): `AdjustHilites`
+  (0x16a824) moves its ends past an insertion or a removal before them,
+  shortens it for a removal at its start, takes it away for one reaching
+  into it; `UpdateHiliteArea` remakes the areas whenever the lines are
+  laid out again.  NOT YET: the copy of the selected text a
+  `TParagraphHilite` carries for a drag.
+- `TView::Hilite` (0x2660c4) hides the caret over the view it inverts and
+  shows it after - a button pressed over the caret had inverted the caret
+  with it (47348851).
+
 ## 2026-09-30: 'pixels binaries in the ROM's layout; NewtsCape's JPEG drawn
 
 - A 'pixels binary has the ROM's 0x1c-byte big-endian header on every
