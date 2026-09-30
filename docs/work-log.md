@@ -9,6 +9,21 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: string VBOs big-endian; an older host's stores repaired
+
+A large binary of a string class, and the text engine's 'text, are now
+big-endian on the store and host order while mapped (671bd71f).  Found on
+the way: the LZ decompressor writes up to 3 bytes past its count, which
+overran a mapped block made exactly its own size and damaged the C heap
+(a 646-byte Newt's Cape page); mapped blocks are whole 0x400-byte pages
+now.  A sparse store file now marks itself as holding binaries in a
+MessagePad's order (header word 0x28 bit 0), so one an older host wrote
+is recognised and repaired once on mount (`RepairHostByteOrder`,
+DEVIATION): what it holds that is affected is the System soup's volume
+reals and the text NetHopper, Newt's Cape and Works keep, each turned only
+where it reads implausibly.  A flat (`--flat-flash`) file cannot carry
+the mark and is taken to be a MessagePad's.
+
 ## 2026-10-01: the binaries the host keeps in its own order, audited
 
 After the string bytes Newt's Cape showed swapped, every path where a

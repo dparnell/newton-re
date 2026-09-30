@@ -42,12 +42,6 @@ the way are all in `docs/work-log.md`.
   a core and, over drawbench, 18 s of processor to the newt task's 1 s -
   the baton handoffs and the interrupt, socket and IR pollers
   (`os600/kernel/host`, `docs/host-runtime.md`).
-- **Host-order binaries** (comms agent): a large binary (VBO) of a string
-  class, and the text engine's 'text VBOs, are still kept in host order on
-  the store, so a store a MessagePad or Einstein wrote would read them
-  swapped (`stores/host/HostLargeObjects.cpp`).  And stores the host
-  wrote before 2ae2efb8 read their reals swapped: can an old host store
-  be recognised and repaired on mount, as `RepairWordHints` does?
 - **The fixture applications used for what they are for**
   (`demo/apps-*.ns`, ctests `host.NewtonApp*`): left - Newt's Cape's
   other helpers (audio into the In Box, PalmDoc, MOD, the encodings,
