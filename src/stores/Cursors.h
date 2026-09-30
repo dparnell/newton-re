@@ -10,8 +10,9 @@
 
 	A query spec: indexPath (default _uniqueID), beginKey/beginExclKey,
 	endKey/endExclKey, startKey, secOrder, indexValidTest (a function of
-	the key), validTest and endTest (functions of the entry), tagSpec
-	(NOT YET RECONSTRUCTED), words/entireWords and text (NOT YET).
+	the key), validTest and endTest (functions of the entry), tagSpec,
+	words/entireWords and text (the words' hints and the text cache,
+	which only speed them up, NOT YET).
 
 	The ROM's layouts: TUnionSoupIndex 0x14, UnionIndexData 0x84 per soup,
 	TCursor 0xc0, TCollectCursor 0xc8, CursorState 0x60.

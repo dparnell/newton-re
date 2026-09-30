@@ -1129,7 +1129,7 @@ TCursor::TextValidTest(PSSId id)
 // ROM 0x002cebac ValidTest__7TCursorFRC4SKeyUlUcPUcT4
 // Whether the entry at key/id passes the query: within the key bound in
 // the direction (else outOfBounds: no further entry will), the tags,
-// words and text (NOT YET), indexValidTest of the key, then - the entry
+// words and text, indexValidTest of the key, then - the entry
 // made current (entryMade) - endTest (failing it: outOfBounds) and
 // validTest of the entry.
 Boolean
