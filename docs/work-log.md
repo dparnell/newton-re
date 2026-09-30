@@ -9,6 +9,20 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: the binaries the host keeps in its own order, audited
+
+After the string bytes Newt's Cape showed swapped, every path where a
+host-order binary (a string of any class, a real, a shape's halfwords)
+meets a MessagePad's bytes was checked (2ae2efb8, dcdffc53): NSOF and
+store objects wrote reals (and NSOF string subclasses) little-endian;
+the importer knew strings only by name and missed the inheritance
+frame's ('phone, 'name, 'address ...); script `SetClass` between a string
+and a binary, armcpu's windows onto strings and reals, an endpoint's
+'binary form and the Connection's WriteBytes/ReadBytes saw host order.
+All fixed over `frames/HostOrder.h` and `frames/BinaryBytes.h`.  Stores
+the host wrote before this read their reals swapped.  A large binary of
+a string class (a Works document's text) is still kept in host order.
+
 ## 2026-10-01: the performance paths, first measurements
 
 On an optimised build, by the task thread's own processor time
