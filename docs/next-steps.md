@@ -252,6 +252,11 @@ worked through.  What could come next (not ranked; the owner chooses):
   `SuckPackageFromEndPoint` and fax reception wait on) comes after.
 - **Third-party apps**: all five fixture applications open from Extras
   and respond (ctest `host.NewtonThirdPartyApps`).
+- **Power**: the power manager, sleep and wake, the backlight and the
+  batteries are in (`src/power/`, `host.NewtonPower`).  NOT YET: the
+  Cirrus battery driver and the platform's power side (the GPIO switch
+  state machine, `IOPowerOn`/`Off`, `PauseSystem`), `SCCPowerInit`, the
+  tablet driver's `ShutDown`/`WakeUp`.
 - **Printing to the host**: done - "Host printer (PNG files)" in the
   Print slip, pages to `newton --print-dir` (`host.NewtonHostPrinter`).
 - **A user's first hour** passes as a ctest (`host.NewtonWalkthrough`).

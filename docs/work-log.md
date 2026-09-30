@@ -237,6 +237,29 @@ is the same value spelt so that it cannot be read two ways.
   notBic loops never advance the mask pointer; `ScaleStdRRect` scales the
   corner oval crosswise on a fax.
 
+## 2026-09-30: power
+
+- `src/power/` (d68de1dc; `docs/power/README.md`): the 'pg&e power
+  manager world (`TPowerManager`: the batteries by RPC, the power switch
+  'powr - every system event handler told, then the application asked to
+  sleep, a machine that does not answer in ten seconds taken for hung and
+  rebooted - and the backlight button), `CyclePower` (the machine put to
+  sleep through generic system call 0x44, alarm-only wakes back to sleep
+  through `SleepingCheckFire`), the `PBatteryDriver` protocol (a
+  machine's own PMainBatteryDriver looked for first); the newt world's
+  'powr, 'pwch, 'dead and 'bats; the battery natives ask the manager by
+  RPC, as the ROM's do.
+- The host: asleep, the machine waits for the power switch (F12), a tap,
+  a key, an alarm or `HostWakeAfter(ms)`; the display blanks asleep and
+  washes out under the backlight (F11); the host battery driver reads
+  Linux's sysfs, else fresh cells at 100%.  ctests `power.PowerManager`,
+  `host.NewtonPower` (the idle timer sleeps the machine and a tap wakes
+  it, the switch likewise, the backlight toggles, a battery gauge reads
+  100).
+- A curiosity: the power-off functions are named for a Japanese office's
+  approval process (`PowerOffSoodan`, `JooHooShuuShuu`, `YobiKaiGi`,
+  `RingiSho`).
+
 ## 2026-09-30: one real-time clock, and alarms that ring
 
 - The host had two clocks that never met: the kernel's real-time clock
