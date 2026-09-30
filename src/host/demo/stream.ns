@@ -6,7 +6,7 @@
 // (comms/StreamingEndpoint.h, over comms/EndpointPipe.h).
 //
 //   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
-//       --tcp-echo 52372 --script src/host/demo/stream.ns --headless 8
+//       --tcp-echo 52372 --script src/host/demo/stream.ns --headless 60
 
 ep := {_proto: @466,
 	exceptionHandler: func(e) begin
@@ -43,3 +43,4 @@ ep:Disconnect(true, nil);
 ep:Unbind(nil);
 ep:Dispose();
 Print("stream: done");
+HostQuit();				// (--headless is only a limit)

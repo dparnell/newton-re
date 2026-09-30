@@ -15,7 +15,7 @@
 // It talks to the echo server newton runs with --tcp-echo:
 //
 //   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
-//       --tcp-echo 52371 --script src/host/demo/echo.ns --headless 8
+//       --tcp-echo 52371 --script src/host/demo/echo.ns --headless 60
 
 kEchoPort := 52371;
 
@@ -63,6 +63,7 @@ ep:SetInputSpec({
 					Print("echo: unbound, state " & endpoint:State());
 					endpoint:Dispose();
 					Print("echo: done");
+					HostQuit();				// (--headless is only a limit)
 						end, nil, 100);
 					end});
 				endpoint:Output({greeting: "bonjour", numbers: [3, 1, 4, 1, 5]}, nil, {form: 'frame});

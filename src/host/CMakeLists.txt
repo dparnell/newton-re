@@ -560,6 +560,7 @@ if(Python3_FOUND)
                      --tcp-echo 52372 --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/endpointpkg.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonEndpointPackage PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED host_endpointpkg_store
+                         RESOURCE_LOCK tcp_echo_52372
                          PASS_REGULAR_EXPRESSION "removed: TRUE.*sucked: TRUE, title: \"Formulas2\", sameSize: TRUE}.*endpointpkg: done")
     # the same boot slowed by the heap checker's hooks: a task switched out on
     # its way back from a system call once lost the call's answer
@@ -716,7 +717,7 @@ set_tests_properties(host.NewtonRecorder PROPERTIES TIMEOUT 180
 # a protoBasicEndpoint over TCP (comms/NewScriptEndpoint.h): the NIE's
 # 'inet service and 'itrs remote socket, to the echo server newton runs
 # (--tcp-echo), written and read back synchronously and asynchronously
-add_test(NAME host.NewtonEcho COMMAND newton --display 320x480 --headless 8 --tcp-echo 52371 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/echo.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+add_test(NAME host.NewtonEcho COMMAND newton --display 320x480 --headless 60 --tcp-echo 52371 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/echo.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(host.NewtonEcho PROPERTIES TIMEOUT 120
                      PASS_REGULAR_EXPRESSION "echo: connected, state 5.*echo: received hello .byteCount 5.*echo: sent asynchronously, done.*echo: line 15 characters, ended by endsequence.*echo: frame bonjour 4 Array.*echo: disconnected, state 2.*echo: unbound, state 1.*echo: done")
 
@@ -724,7 +725,7 @@ set_tests_properties(host.NewtonEcho PROPERTIES TIMEOUT 120
 # 1.x option frames, Connect, output and OutputFrame, input specs to a byte
 # count, an end character and the 'frame form, against the echo server
 add_test(NAME host.NewtonProtoEndpoint COMMAND newton --display 320x480 --headless 60 --tcp-echo 52372 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/protoendpoint.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-set_tests_properties(host.NewtonProtoEndpoint PROPERTIES TIMEOUT 120
+set_tests_properties(host.NewtonProtoEndpoint PROPERTIES TIMEOUT 120 RESOURCE_LOCK tcp_echo_52372
                      PASS_REGULAR_EXPRESSION "Instantiate: NIL, state: 1.*Connect: NIL, state: 5.*protoendpoint: received hello.*protoendpoint: line of 15 characters.*protoendpoint: frame bonjour 4.*outputDone: TRUE.*Disconnect: NIL, state: 0.*protoendpoint: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain")
 
@@ -738,14 +739,15 @@ set_tests_properties(host.NewtonCommTrace PROPERTIES TIMEOUT 90
 # records) answered by the host's DNS service over the host's resolver
 # (comms/host/HostDNSTool.h): localhost, a reverse lookup, a name that
 # cannot exist - no network needed
-add_test(NAME host.NewtonDNS COMMAND newton --display 320x480 --headless 6 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/dns.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+add_test(NAME host.NewtonDNS COMMAND newton --display 320x480 --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/dns.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(host.NewtonDNS PROPERTIES TIMEOUT 120
                      PASS_REGULAR_EXPRESSION "dns: instantiated, state 1.*dns: localhost type 1: 127.0.0.1.*dns:  type 12: 0.0.0.0 .. -> ..[A-Za-z].*dns: no-such-host.invalid not found, -60791.*dns: done")
 
 # a protoStreamingEndpoint (comms/StreamingEndpoint.h): a frame streamed
 # out as NSOF and read back over TCP through a TEndpointPipe
-add_test(NAME host.NewtonStream COMMAND newton --display 320x480 --headless 8 --tcp-echo 52372 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/stream.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-set_tests_properties(host.NewtonStream PROPERTIES TIMEOUT 120
+add_test(NAME host.NewtonStream COMMAND newton --display 320x480 --headless 60 --tcp-echo 52372 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/stream.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+# (three tests run echo servers on 52372: RESOURCE_LOCK keeps them apart)
+set_tests_properties(host.NewtonStream PROPERTIES TIMEOUT 120 RESOURCE_LOCK tcp_echo_52372
                      PASS_REGULAR_EXPRESSION "stream: connected, state 5.*stream: sent, progress 1536 of 1854.*stream: received a streamed frame 1996 300 89401 .*progress 1854.*stream: done")
 
 # the Newton Internet Enabler end to end through its own API (demo/inet.ns):

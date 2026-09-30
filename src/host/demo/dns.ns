@@ -10,7 +10,7 @@
 // cannot exist.
 //
 //   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
-//       --script src/host/demo/dns.ns --headless 6
+//       --script src/host/demo/dns.ns --headless 60
 
 Print("dns: instantiating");
 dns := {_proto: @383,
@@ -61,3 +61,4 @@ call query with (1, [0, 0, 0, 0], "no-such-host.invalid");
 
 dns:Dispose();
 Print("dns: done");
+HostQuit();				// (--headless is only a limit)
