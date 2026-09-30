@@ -9,6 +9,31 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: the Extras drawer's labels
+
+The owner found every Extras icon label drawn as boxes.  The drawer makes
+each label with `MakeTextLines` and then turns each line's data back into
+a 'string (`GetIconShapeText`); `MakeText` gives its copy of the string the
+class 'textData, which the host did not count as text in its own order,
+so since 2ae2efb8 the script's `SetClass` swapped it as a change of kind.
+'textData and 'TextBox are now host-order UniChars (3bdaa273,
+test_Strings).  The byte-order audit had covered the paths bytes cross,
+not the classes a C++ native gives a copy of a string.
+
+## 2026-10-01: tracing, breakpoints, and three stale items
+
+- Tracing and breakpoints (2c751f57): all the Trace* functions
+  (0x35e4f4-0x35f030) over `vars.trace`, `HandleBreakPoints`, and
+  `SetBreakPoints`/`EnableBreakPoints` answering the previous value, the
+  latter resetting the fast loop; ctest `host.NewtonScriptTrace`.
+- `LineInfo`'s +0x18 is the bottom below the baseline, not the whole line
+  height, so `InsertHorizontalSpace` no longer counts the ascent twice;
+  `GetRangeProperties` makes 'offset the ROM's way (nought under the host's
+  line layout); `ComputeParagraphHeight` was right (9a44cb5d).
+- Stale: the Assistant's "tomorrow" (it schedules for tomorrow;
+  `host.NewtonAssistTasks` now checks, cfc27648), RegisterGestalt and
+  ReplaceGestalt (already in), NTKStackTrace (already in).
+
 ## 2026-10-01: FastRun1; the host's idle cost
 
 - `FastRun1` (0x2ee138) and its helpers (5cfa447f): the ROM's fast
