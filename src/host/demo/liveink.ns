@@ -7,7 +7,11 @@
 //      DrawInk through TLiveInker's tile), before any view has drawn it
 //   2. the busy box shown (BusyBoxControl(-2), the inker's command 0x33):
 //      the ROM's busy picture at the top middle of the display; hidden
-//      again (-1): the screen as it was
+//      again (-1): the screen as it was - both seen within the one event,
+//      since the busy box is taken away when an event ends
+//   3. an event lasting more than a second shows the busy box by itself
+//      (the newt world's dispatch asks for it in a second, 0x36) and it
+//      goes when the event is over (0x35)
 //
 //   build/host/host/newton --display 320x480 --headless 120 \
 //       --script src/host/demo/liveink.ns
@@ -36,22 +40,58 @@ boxPixels := func() begin
 	[dark, sum];
 end;
 
+// (within one event: when the event is over, the newt world's dispatch
+// takes the busy box away again - BusyBoxSend 0x35)
+busyWhile := func(test) begin
+	local ok := nil;
+	for i := 1 to 60 do			// (Sleep lets the inker run; up to three seconds)
+	begin
+		Sleep(3);
+		if call test with () then
+		begin
+			ok := true;
+			break;
+		end;
+	end;
+	ok;
+end;
+
 busyStep := func() begin
 	local before := call boxPixels with ();
 	BusyBoxControl(-2);
-	call waitFor with ("liveink: the busy box", func() (call boxPixels with ())[1] <> before[1], func() begin
-		local shown := call boxPixels with ();
-		call liveCheck with ("the busy box drawn at the top middle (" & NumberStr(shown[0]) & " dark pixels)", shown[1] <> before[1] and shown[0] > 20);
-		BusyBoxControl(-1);
-		// (hidden, the screen's own bits are put back: what the display showed
-		// before, give or take what the page has drawn since)
-		call waitFor with ("liveink: the busy box hidden", func() (call boxPixels with ())[1] <> shown[1], func() begin
-			local after := call boxPixels with ();
-			call liveCheck with ("the busy box taken away, the screen's bits back (" & NumberStr(after[0]) & " dark pixels, " & NumberStr(before[0]) & " before)",
-				after[1] <> shown[1] and Abs(after[0] - before[0]) <= 8);
-			Print("liveink: done, " & NumberStr(liveFailed) & " failed");
-			HostQuit();
-		end, 20);
+	call busyWhile with (func() (call boxPixels with ())[1] <> before[1]);
+	local shown := call boxPixels with ();
+	call liveCheck with ("the busy box drawn at the top middle (" & NumberStr(shown[0]) & " dark pixels)", shown[1] <> before[1] and shown[0] > 20);
+	BusyBoxControl(-1);
+	// (hidden, the screen's own bits are put back: what the display showed
+	// before, give or take what the page has drawn since)
+	call busyWhile with (func() (call boxPixels with ())[1] <> shown[1]);
+	local after := call boxPixels with ();
+	call liveCheck with ("the busy box taken away, the screen's bits back (" & NumberStr(after[0]) & " dark pixels, " & NumberStr(before[0]) & " before)",
+		after[1] <> shown[1] and Abs(after[0] - before[0]) <= 8);
+	AddDelayedCall(slowStep, nil, 500);
+end;
+
+// 3. an event that takes more than a second shows the busy box by itself -
+//    the newt world's dispatch asks for it in a second (0x36) - and it goes
+//    when the event is over (0x35)
+slowStep := func() begin
+	local before := call boxPixels with ();
+	local seen := nil;
+	for i := 1 to 60 do			// (Sleep lets the inker run; up to three seconds)
+	begin
+		Sleep(3);
+		if (call boxPixels with ())[1] <> before[1] then
+		begin
+			seen := i;
+			break;
+		end;
+	end;
+	call liveCheck with ("an event lasting a second shows the busy box" & (if seen then " (after " & NumberStr(seen * 3) & " ticks)" else ""), seen and seen * 3 >= 50);
+	call waitFor with ("liveink: the busy box gone after the event", func() Abs((call boxPixels with ())[0] - before[0]) <= 8, func() begin
+		call liveCheck with ("the busy box gone when the event is over", true);
+		Print("liveink: done, " & NumberStr(liveFailed) & " failed");
+		HostQuit();
 	end, 20);
 end;
 

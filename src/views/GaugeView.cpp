@@ -7,6 +7,7 @@
 */
 
 #include "GaugeView.h"
+#include "Inker.h"			// BusyBoxSend
 #include "SoundSettings.h"	// FPlaySound
 #include "Rects.h"
 #include "Draw.h"
@@ -162,10 +163,11 @@ TGaugeView::RealDoCommand(RefArg cmd)
 // changed (the _sound proto variable played, the root view updated), a
 // tick waited when it did not, until the stroke is done; the
 // viewFinalChangeScript is run with [old, new] when the value changed.
-// ==> true.  NOT YET RECONSTRUCTED: BusyBoxSend.
+// ==> true.  The busy box is held off meanwhile.
 Boolean
 TGaugeView::TrackSetValue(TUnitPublic* unit)
 {
+	BusyBoxSend(0x35);
 	TStrokePublic* stroke = unit->Stroke();
 	stroke->InkOff(true);
 	long original = RINT(GetValue(RSSYMviewvalue, RefVar(NILREF)));
@@ -200,5 +202,6 @@ TGaugeView::TrackSetValue(TUnitPublic* unit)
 		SetArraySlot(args, 1, MAKEINT(value));
 		RunScript(RSSYMviewfinalchangescript, args);
 	}
+	BusyBoxSend(0x36);
 	return true;
 }

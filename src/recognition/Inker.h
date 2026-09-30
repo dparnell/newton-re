@@ -105,6 +105,13 @@ const ULong	kInkerReplySize				= offsetof(TInkerEvent, fCalibration);
 const ULong	kInkerBoundsReplySize		= offsetof(TInkerEvent, fCalibration) + sizeof(Rect);
 const ULong	kInkerCalibrationReplySize	= offsetof(TInkerEvent, fCalibration) + sizeof(Calibration);
 
+// The busy box asked for (0x33 show, 0x34 hide, 0x35 allowed again - hidden
+// and called off, 0x36 shown if the next second passes, 0x37 as 0x35):
+// sent to the inker, nothing when it is not there (InkerNatives.cpp;
+// the ROM's is in the newt world's code, newt/NewtWorld.h declaring it
+// too).
+void	BusyBoxSend(long command);				// ROM 0x0030dd60 BusyBoxSend__Fl
+
 // The busy box: a timer, so that it can be asked to appear in a second's
 // time and called off before then (0x218bd4-0x218d4c; 0x38 bytes)
 class TBusyBox : public TTimerElement

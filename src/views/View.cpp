@@ -12,6 +12,7 @@
 */
 
 #include "View.h"
+#include "Inker.h"			// BusyBoxSend
 #include "ClipboardView.h"
 #include "Bits.h"
 #include "Hilites.h"
@@ -2119,6 +2120,7 @@ TView::EndDrag(const TDragInfo& info, TView* target, const Point& startPt, const
 long
 TView::DragAndDrop(TStrokePublic* stroke, const Rect& bounds, const Rect* pinBounds, const Rect* clipBounds, Boolean copy, const TDragInfo& dragInfo, const Rect* limitBounds)
 {
+	BusyBoxSend(0x37);
 	stroke->InkOff(true);
 	if ((CopyProtection() & 1) != 0)
 		return 0;

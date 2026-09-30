@@ -380,7 +380,7 @@ TNewtWorld::PreMain()
 // and so lets the display be updated at all; an exception is shown (ExceptionNotify, and the REP's)
 // and the idle timer re-armed.  Then the busy box allowed again (0x35),
 // the port restored, the ref handles cleared.
-// NOT YET RECONSTRUCTED: BusyBoxSend, IncrementCurrentStackPos.
+// NOT YET RECONSTRUCTED: IncrementCurrentStackPos.
 long
 TNewtWorld::AEDispatch(ULong msgType, TUMsgToken* token, ULong* size, TAEvent* event)
 {
@@ -390,6 +390,7 @@ TNewtWorld::AEDispatch(ULong msgType, TUMsgToken* token, ULong* size, TAEvent* e
 	newton_try
 	{
 		SetActionDescription(-8103);
+		BusyBoxSend(0x36);
 		result = TAppWorld::AEDispatch(msgType, token, size, event);
 		RunDelayedActionProcs();
 		ReleaseScreenLock();
@@ -402,6 +403,7 @@ TNewtWorld::AEDispatch(ULong msgType, TUMsgToken* token, ULong* size, TAEvent* e
 		CheckForDeferredActions();
 	}
 	end_try;
+	BusyBoxSend(0x35);
 	SetPort(savedPort);
 	gHeap->ClearRefHandles();
 	return result;
@@ -426,7 +428,8 @@ TNewtEventHandler::AECompletionProc(TUMsgToken* /*token*/, ULong* /*size*/, TAEv
 // ROM 0x0030d53c IdleProc__17TNewtEventHandlerFP10TUMsgTokenPUlP7TAEvent
 // The idle timer's: the event made an 'idle one and handled as any 'newt
 // event is dispatched (the default port, the exception handler, the
-// delayed actions after).
+// delayed actions after, the busy box shown if it takes a second and
+// allowed again after).
 void
 TNewtEventHandler::IdleProc(TUMsgToken* token, ULong* size, TAEvent* event)
 {
@@ -435,6 +438,7 @@ TNewtEventHandler::IdleProc(TUMsgToken* token, ULong* size, TAEvent* event)
 	newton_try
 	{
 		SetActionDescription(-8103);
+		BusyBoxSend(0x36);
 		((TNewtEvent*) event)->fType = kNewtIdleEvent;
 		AEHandlerProc(token, size, event);
 		RunDelayedActionProcs();
@@ -447,6 +451,7 @@ TNewtEventHandler::IdleProc(TUMsgToken* token, ULong* size, TAEvent* event)
 		CheckForDeferredActions();
 	}
 	end_try;
+	BusyBoxSend(0x35);
 	SetPort(savedPort);
 	gHeap->ClearRefHandles();
 }
@@ -764,21 +769,8 @@ HandleRunScriptEvent(TRunScriptEvent* event)
 // The inker's TBusyBox shows it.)
 
 
-// ROM 0x0030dd60 BusyBoxSend__Fl
-// The command sent to the inker as a 'newt/'inkr event; nothing at all
-// when the inker is not there.
-void
-BusyBoxSend(long command)
-{
-	if (gTheInkerPort == nil)
-		return;
-	TBusyBoxEvent event;
-	event.fAEventClass = kNewtEventClass;
-	event.fAEventID = kNewtInkerEvent;
-	event.fCommand = (ULong) command;
-	event.fUnused0c = 0;
-	gTheInkerPort->Send(&event, sizeof(event), kBusyBoxSendTimeout);
-}
+// (BusyBoxSend itself is recognition/InkerNatives.cpp's, beside the
+// inker's port, so that the views below this layer can send it.)
 
 
 // ROM 0x0030ddec FBusyBoxControl

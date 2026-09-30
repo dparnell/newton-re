@@ -36,6 +36,7 @@
 #include "UserPorts.h"
 #include "toolbox/ByteOrder.h"
 #include "intl/Locale.h"
+#include "newt/NewtWorld.h"		// TBusyBoxEvent
 
 #include <stdio.h>
 #include <string.h>
@@ -43,9 +44,26 @@
 // ROM 0x0c101654 gInkerCalibrated
 long	gInkerCalibrated = 0;
 
-// ROM 0x0c101658 gTheInkerPort (declared by newt/NewtWorld.h, whose busy
-// box sends to it once it has been looked up)
+// ROM 0x0c101658 gTheInkerPort (declared by newt/NewtWorld.h): the busy
+// box is sent to it once it has been looked up
 TUPort*	gTheInkerPort = nil;
+
+
+// ROM 0x0030dd60 BusyBoxSend__Fl
+// The command sent to the inker as a 'newt/'inkr event; nothing at all
+// when the inker is not there.
+void
+BusyBoxSend(long command)
+{
+	if (gTheInkerPort == nil)
+		return;
+	TBusyBoxEvent event;
+	event.fAEventClass = kNewtEventClass;
+	event.fAEventID = kNewtInkerEvent;
+	event.fCommand = (ULong) command;
+	event.fUnused0c = 0;
+	gTheInkerPort->Send(&event, sizeof(event), kBusyBoxSendTimeout);
+}
 
 
 // a calibration as the binary keeps it, and back

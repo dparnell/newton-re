@@ -7,6 +7,7 @@
 */
 
 #include "PickView.h"
+#include "Inker.h"			// BusyBoxSend
 #include "SoundSettings.h"	// FClicker
 #include "RootView.h"
 #include "Recognizer.h"	// gInhibitPopup
@@ -857,12 +858,13 @@ TPickView::FlashItem(PickStuff* item)
 // then each turn the one under its last point - the old one un-inverted
 // and the new inverted when it changed (a grid item's cell counts), a
 // tick waited when it did not - until the stroke is done; ==> item the
-// one the pen ended on (-1 for none).  NOT YET RECONSTRUCTED: BusyBoxSend.
+// one the pen ended on (-1 for none); the busy box held off meanwhile.
 void
 TPickView::TrackStroke(TStrokePublic* stroke, PickStuff* item)
 {
 	stroke->InkOff(true);
 	gRootView->Update(nil);
+	BusyBoxSend(0x35);
 	Point pt = stroke->FirstPoint();
 	PickableItem(pt, item);
 	if (item->fItem != -1)
@@ -883,6 +885,7 @@ TPickView::TrackStroke(TStrokePublic* stroke, PickStuff* item)
 			*item = under;
 		}
 	}
+	BusyBoxSend(0x36);
 }
 
 

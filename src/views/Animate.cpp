@@ -7,6 +7,7 @@
 */
 
 #include "Animate.h"
+#include "Inker.h"			// BusyBoxSend
 #include "SoundSettings.h"	// FPlaySound
 #include "View.h"
 #include "RootView.h"
@@ -549,7 +550,8 @@ TAnimate::DoEffect(RefArg sound)
 // row as the word asks.  Between steps the screen is released for the
 // step's ticks.  The clip restored and the pen put back even on a throw;
 // at the end the mask within the sprite is validated in the root view.
-// NOT YET RECONSTRUCTED: the busy box.
+// The busy box is held off while each step is drawn (0x35) and let go
+// after it (0x36).
 void
 TAnimate::MultiEffect(RefArg sound)
 {
@@ -630,6 +632,7 @@ TAnimate::MultiEffect(RefArg sound)
 			}
 			if (!(!fReverse && fOffsetV == 0 && fOffsetH == 0) || step < steps)
 			{
+				BusyBoxSend(0x35);
 				long prevV = fBounds.top;
 				for (long row = 1; row <= rows; row++)
 				{
@@ -724,6 +727,7 @@ TAnimate::MultiEffect(RefArg sound)
 					SleepTillTicks(deadline);
 					StartDrawing(nil, nil);
 				}
+				BusyBoxSend(0x36);
 			}
 		}
 		TRectangularRegion spriteRgn(bounds);

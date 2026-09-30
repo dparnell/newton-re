@@ -13,6 +13,7 @@
 */
 
 #include "EditView.h"
+#include "Inker.h"			// BusyBoxSend
 #include "SoundSettings.h"	// FClicker
 #include "CorrectInfo.h"
 #include "Ink.h"
@@ -3446,6 +3447,7 @@ TEditView::TrackScale(Point pt, TStrokePublic* stroke, const Rect& selected)
 	Point size;
 	size.v = (short) (selected.bottom - selected.top);
 	size.h = (short) (selected.right - selected.left);
+	BusyBoxSend(0x37);
 	stroke->InkOff(true);
 	Rect page = viewBounds;
 	Point anchor;
@@ -3633,6 +3635,7 @@ TEditView::TrackDistort(Point pt, TStrokePublic* stroke, const Rect& /*bounds*/)
 	if (n == 0)
 		return false;
 
+	BusyBoxSend(0x37);
 	stroke->InkOff(true);
 	for (long i = 0; i < n; i++)
 	{

@@ -12,6 +12,7 @@
 */
 
 #include "View.h"
+#include "Inker.h"			// BusyBoxSend
 #include "RootView.h"
 #include "Rects.h"
 #include "Ports.h"
@@ -278,10 +279,11 @@ TView::Hide(void)
 // where views in front cover the new place, the view offset to it (its
 // viewBounds slot written dejustified and Changed), the visibility
 // recomputed, the port's area validated.  The caret shown again.  ==>
-// whether the view moved.  NOT YET RECONSTRUCTED: the busy box.
+// whether the view moved.  The busy box is called off first.
 Boolean
 TView::Drag(TStrokePublic* stroke, const Rect& limit)
 {
+	BusyBoxSend(0x37);
 	gRootView->HideCaret();
 	stroke->InkOff(true);
 	Point start = stroke->FirstPoint();

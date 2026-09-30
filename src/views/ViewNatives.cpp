@@ -18,6 +18,7 @@
 */
 
 #include "RootView.h"
+#include "Inker.h"			// BusyBoxSend
 #include "SoundSettings.h"	// FClicker, FPlaySound
 #include "EditView.h"
 #include "DataView.h"
@@ -678,7 +679,8 @@ FPositionCaret(RefArg rcvr, RefArg x, RefArg y, RefArg click)
 // non-nil answer ends the tracking (when the newt_feature proto variable
 // is set).  Before that: the busy box is shown (0x35) when there is no
 // buttonPressedScript, and the _sound proto variable (the click when
-// there is none) played - NOT YET RECONSTRUCTED: BusyBoxSend.  With no unit (nil) the pen is taken to be at the view's
+// there is none) played; the busy box is shown again (0x36) when the
+// tracking ends.  With no unit (nil) the pen is taken to be at the view's
 // centre, and the tracking ends after two turns.
 static Ref
 FTrackHiliteX(RefArg rcvr, RefArg unit)
@@ -689,7 +691,8 @@ FTrackHiliteX(RefArg rcvr, RefArg unit)
 		stroke = StrokeFromRef(unit);
 		stroke->InkOff(true);
 	}
-	// NOT YET RECONSTRUCTED: BusyBoxSend(0x35) when there is no buttonPressedScript
+	if (ISNIL(GetVariable(rcvr, RSSYMbuttonpressedscript, nil, 0)))
+		BusyBoxSend(0x35);
 	long hasSound = 0;
 	RefVar sound(GetProtoVariable(rcvr, RSSYM_sound, &hasSound));
 	if (hasSound == 0)
@@ -720,12 +723,18 @@ FTrackHiliteX(RefArg rcvr, RefArg unit)
 		{
 			RefVar result(DoMessageIfDefined(rcvr, RSSYMbuttonpressedscript, RefVar(NILREF), nil));
 			if (NOTNIL(result) && NOTNIL(GetProtoVariable(rcvr, RSSYMnewt_feature, nil)))
-				return result;		// (the ROM: BusyBoxSend(0x36) first)
+			{
+				BusyBoxSend(0x36);
+				return result;
+			}
 		}
 		turn++;
 		Boolean done = stroke != nil ? stroke->Done() : turn == 2;
 		if (done)
+		{
+			BusyBoxSend(0x36);
 			return MAKEBOOLEAN(inside);
+		}
 	}
 }
 

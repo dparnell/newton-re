@@ -7,6 +7,7 @@
 */
 
 #include "KeyboardView.h"
+#include "Inker.h"			// BusyBoxSend
 #include "SoundSettings.h"	// FPlaySound
 #include "Rects.h"
 #include "Frames.h"
@@ -939,10 +940,9 @@ TKeyboardView::TrackStroke(TStrokePublic* stroke, TVisKeyIterator* /*unused*/)
 	origin.h = viewBounds.left;
 	TVisKeyIterator last(fKeyDefinitions, fCell, origin);
 	TVisKeyIterator iter(fKeyDefinitions, fCell, origin);
-	// (the ROM holds the busy box off here - BusyBoxSend 0x35,
-	//  newt/NewtWorld.h - and lets it go again at the end.  NOT YET
-	//  RECONSTRUCTED here: the view system does not depend on the
-	//  application world, as TGaugeView's tracking does not either.)
+	// the busy box held off while the key is tracked (and let go again
+	// at the end - but not when the pen is on no key, as the ROM's)
+	BusyBoxSend(0x35);
 	stroke->InkOff(true);
 	gRootView->Update(nil);
 	if (!iter.FindEnclosingKey(stroke->FirstPoint()))
@@ -1026,6 +1026,7 @@ TKeyboardView::TrackStroke(TStrokePublic* stroke, TVisKeyIterator* /*unused*/)
 	}
 	newton_catch_all
 	{
+		BusyBoxSend(0x36);
 		if (saved != nil)
 		{
 			GrafPort* port;
@@ -1036,6 +1037,7 @@ TKeyboardView::TrackStroke(TStrokePublic* stroke, TVisKeyIterator* /*unused*/)
 		rethrow;
 	}
 	end_try;
+	BusyBoxSend(0x36);
 	if (saved != nil)
 	{
 		GrafPort* port;

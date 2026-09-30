@@ -8,6 +8,7 @@
 */
 
 #include "RootView.h"
+#include "Inker.h"			// BusyBoxSend
 #include "SoundSettings.h"	// FClicker
 #include <stdio.h>
 #include <stdlib.h>
@@ -1639,17 +1640,13 @@ TRootView::SetHilitedView(TView* view)
 //
 // The stroke is then handed to the view under it as an aeGesture2f
 // command, which is what turns it into a selection (TEditView::
-// AddHiliter).
-//
-// DEVIATION: the ROM brackets this with BusyBoxSend(0x35)/(0x36) to hold
-// the busy box off while the pen is down.  The busy box lives above the
-// view system (newt/NewtWorld.h), which this library does not link, and
-// the same bracket is missing from TView::DragAndDrop for that reason.
+// AddHiliter).  The busy box is held off while the pen is down.
 void
 TRootView::Hiliter(TUnitPublic* unit, TView* view)
 {
 	TStrokePublic* stroke = unit->Stroke();
 	stroke->InkOff(true, false);
+	BusyBoxSend(0x35);
 	if (fDirtyFlag)
 	{
 		gApplication->DispatchCommand(RefVar(MakeCommand(aeRemoveAllHilites, view, kNoParameter)));
@@ -1719,6 +1716,7 @@ TRootView::Hiliter(TUnitPublic* unit, TView* view)
 
 	gApplication->DispatchCommand(RefVar(MakeCommand(aeGesture2f, view, (Long) unit)));
 	SmartInvalidate(dirty);
+	BusyBoxSend(0x36);
 }
 
 

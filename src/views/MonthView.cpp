@@ -7,6 +7,7 @@
 */
 
 #include "MonthView.h"
+#include "Inker.h"			// BusyBoxSend
 #include "ViewFlags.h"
 #include "Commands.h"
 #include "RootView.h"
@@ -722,8 +723,7 @@ TMonthView::HandleClick(TStrokePublic* stroke)
 	long offset = FirstColumn();
 	Boolean singleDay = NOTNIL(RefVar(GetVar(RSSYMsingleday)));
 	stroke->InkOff(true);
-	// (the ROM tells the busy box a calendar is being tracked -
-	// BusyBoxSend 0x37 - which the views layer cannot reach from here)
+	BusyBoxSend(0x37);
 
 	Point pt;
 	pt = stroke->FirstPoint();
