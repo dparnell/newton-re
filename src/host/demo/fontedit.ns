@@ -1,0 +1,25 @@
+// A capital A drawn alone in the System font (the espy family, font list
+// entry 0) at 9 points - the smallest strike, drawn as it is - on a white
+// box, and the display written to build/fontedit.pgm.  tools/fonts/
+// glyph_edit_test.py boots the OS on the object files built from romsrc/
+// and from a copy with one pixel of that glyph flipped in its BDF file,
+// and finds the one pixel that differs (ctest host.ROMSourceFontEdit).
+//
+//   build/host/host/newton --objects <file> --headless 5 --script src/host/demo/fontedit.ns
+
+// added once the boot is over, so that it is in front of the Setup screen
+AddDelayedCall(func() begin
+box := AddView(GetRoot(), {
+	viewClass: 74, viewFlags: 1,
+	viewBounds: {left: 100, top: 100, right: 140, bottom: 130},
+	viewFormat: 0x1,					// white fill, no frame
+	viewChildren: [
+		{ viewClass: 98, viewFlags: 1,
+		  viewBounds: {left: 10, top: 8, right: 30, bottom: 24},
+		  viewFont: 0x2400,				// family 0 (espy), 9 << 10, plain
+		  text: "A" },
+	]});
+box:Dirty();
+AddDelayedCall(func() begin ScreenSnapshot("build/fontedit.pgm"); Print("written build/fontedit.pgm") end, [], 500);
+end, [], 500);
+Print("fontedit: the world is up");

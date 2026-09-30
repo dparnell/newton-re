@@ -116,9 +116,15 @@ constructors of its own):
     pict('picture, "resources/picture/addr.pict")   a QuickDraw picture: a
                     PICT file (512 bytes of nought, then the picture), as a
                     Macintosh drawing program reads and writes it
-    (a font, 'sfnt, is binary('sfnt, "resources/sfnt/addr.sfnt"): the
-    binary is the font file - an sfnt container of Apple's bitmap and
-    metric tables, with no outlines, so not a TrueType font)
+    sfnt('sfnt, "resources/sfnt/addr")   a font - an sfnt container of
+                    Apple's bitmap and metric tables, with no outlines, so
+                    not a TrueType font - as the directory
+                    tools/fonts/newtonsfnt.py unpacks it into: a BDF file
+                    per bitmap strike, a text file per other table
+                    (tools/fonts/README.md, docs/qd/fonts-sfnt.md); packed
+                    on build.  A font the text form would not give back
+                    byte for byte stays binary('sfnt,
+                    "resources/sfnt/addr.sfnt"), the font file itself
     function("functions/addr.ns")   a function, compiled from that source
     same("path")    the object a compiled function holds at that path: a
                     shared object only compiled functions use (bytecode two
@@ -160,6 +166,9 @@ import subprocess					# noqa: E402
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "imaging"))
 import png							# noqa: E402
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "fonts"))
+import newtonsfnt					# noqa: E402
 
 import wave							# noqa: E402
 
@@ -860,6 +869,14 @@ class Extractor:
 			with open(os.path.join(self.out, rel), "wb") as f:
 				f.write(bytes(PICT_HEADER) + data)
 			return "pict(%s, \"%s\")" % (self.value(cls, path + "^"), rel)
+		if cname == "sfnt" and not self.in_function:
+			rel = "resources/%s/%x" % (folder, o)
+			where = os.path.join(self.out, rel)
+			newtonsfnt.unpack(data, where)
+			if newtonsfnt.pack(where) == data:
+				return "sfnt(%s, \"%s\")" % (self.value(cls, path + "^"), rel)
+			import shutil
+			shutil.rmtree(where)
 		rel = "resources/%s/%x.%s" % (folder, o, "sfnt" if cname == "sfnt" else "bin")
 		if self.in_function:
 			return "binary(%s, \"%s\")" % (self.value(cls, path + "^"), rel)	# (compiled, not written)
@@ -918,7 +935,8 @@ class Extractor:
 		for folder, _, files in os.walk(os.path.join(self.out, "resources")):
 			for f in files:
 				rel = os.path.relpath(os.path.join(folder, f), self.out).replace(os.sep, "/")
-				if rel not in used:
+				# (a font is a directory of files: used when its directory is)
+				if rel not in used and os.path.dirname(rel) not in used:
 					os.remove(os.path.join(folder, f))
 		self.same_count = len(same)
 		os.makedirs(os.path.join(self.out, "objects"), exist_ok=True)
@@ -1297,7 +1315,7 @@ class Reader:
 		if kind == "name" and text in ("nil", "true"):
 			self.take()
 			return Imm(2 if text == "nil" else 0x1a)
-		if kind == "name" and text in ("real", "string", "binary", "array", "map", "bytes", "function", "bitmap", "sound", "pict", "same", "imasound", "tonescore", "shorts", "fixed", "hexfile") \
+		if kind == "name" and text in ("real", "string", "binary", "array", "map", "bytes", "function", "bitmap", "sound", "pict", "same", "imasound", "tonescore", "shorts", "fixed", "hexfile", "sfnt") \
 				and self.toks[self.i + 1][1] == "(":
 			self.take()
 			self.take("(")
@@ -1305,7 +1323,7 @@ class Reader:
 			while self.peek()[1] != ")":
 				if text in ("real", "fixed") and self.peek()[0] == "number":
 					args.append(float(self.take()[1]))
-				elif text in ("string", "binary", "bytes", "function", "bitmap", "sound", "pict", "same", "imasound", "hexfile") and self.peek()[0] == "string":
+				elif text in ("string", "binary", "bytes", "function", "bitmap", "sound", "pict", "same", "imasound", "hexfile", "sfnt") and self.peek()[0] == "string":
 					args.append(self.take()[1])
 				elif text == "bitmap" and self.peek()[0] == "number":
 					args.append(self.take()[1])
@@ -1329,6 +1347,8 @@ class Reader:
 					return Obj("binary", args[0], data=f.read()[PICT_HEADER:])
 			if text == "sound":
 				return Obj("binary", args[0], data=wav_samples(os.path.join(self.root, args[1][1:-1])))
+			if text == "sfnt":
+				return Obj("binary", args[0], data=newtonsfnt.pack(os.path.join(self.root, args[1][1:-1])))
 			if text == "hexfile":
 				with open(os.path.join(self.root, args[1][1:-1]), encoding="utf-8") as f:
 					return Obj("binary", args[0], data=hex_file_bytes(f.read()))

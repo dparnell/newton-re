@@ -788,4 +788,24 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../romsrc/layout.tsv)
     set_tests_properties(host.ROMSourceEditMoved PROPERTIES TIMEOUT 60 FIXTURES_REQUIRED romsrc_edited
                          ENVIRONMENT "NEWTON_ROM=${CMAKE_BINARY_DIR}/no-rom-image"
                          PASS_REGULAR_EXPRESSION "edit-test.*may.*june.*april.*jan.*SRAM Card.*Flash Card")
+
+    # the 13 fonts' text form (tools/fonts/newtonsfnt.py: BDF strikes, a text
+    # file per table): each packed, unpacked and packed again byte for byte,
+    # the committed directories what the unpacker writes, and edits change
+    # only what they should
+    add_test(NAME tools.NewtonFonts
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/fonts/test_newtonsfnt.py
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    # a font edited: one pixel of the System font's 9-point A flipped in its
+    # BDF file, the tree built, the OS booted on it and on the unedited tree
+    # (demo/fontedit.ns draws an A), and exactly that pixel differs on screen
+    add_test(NAME host.ROMSourceFontEdit
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/fonts/glyph_edit_test.py
+                     --tree ${CMAKE_SOURCE_DIR}/../romsrc -o ${CMAKE_BINARY_DIR}/romsrc-fontedit
+                     --newton $<TARGET_FILE:newton> --newtonscript $<TARGET_FILE:newtonscript>
+                     --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/fontedit.ns
+                     --original ${CMAKE_BINARY_DIR}/romsrc-objects.bin
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.ROMSourceFontEdit PROPERTIES TIMEOUT 300 FIXTURES_REQUIRED romsrc_objects
+                         PASS_REGULAR_EXPRESSION "the glyph edit reached the screen")
 endif()

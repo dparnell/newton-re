@@ -362,15 +362,20 @@ look them up (the system font, `Rsystemfont` = `'espy`, when nothing
 matches).  `GetFontSize`/`GetFontFace`/`GetFontFamilySym`
 0x0017ccd8/0x0017dbf4/0x0017edd4 take a font spec apart.  A family holds `name`,
 `macFontID`, `encoding` and `plainData`/`boldData`/`italicData`/
-`boldItalicData`: each an `'sfnt` binary - a TrueType container whose
-tables are `cmap`, `head`, `hhea`, `hmtx`, `hsty` and, for a screen font,
-the bitmap strikes `bloc`/`bdat` (Apple's bitmap-only TrueType: a
-bitmapSizeTable of 0x30 bytes per strike with its line metrics, glyph
-range and ppem; index subtables mapping glyphs to `bdat` offsets; glyph
-images of format 1 - small metrics, five bytes: height, width, bearing
-x and y, advance - or 6 - big metrics, eight bytes - before byte-aligned
-rows).  Times Roman has only widths (`hmtx`, for the printer).  espy
-has strikes at 9, 10, 12 and 18 (`userSizes`) plus a bold data.
+`boldItalicData`: each an `'sfnt` binary - an sfnt container with no
+outlines (so not TrueType) whose tables are `cmap`, `head`, `hhea`,
+`hmtx`, `hsty` and, for a screen font, the bitmap strikes `bloc`/`bdat`
+(Apple's bitmap-only sfnt: a bitmapSizeTable of 0x30 bytes per strike
+with its line metrics, glyph range and ppem; index subtables mapping
+glyphs to `bdat` offsets; glyph images of format 1 - small metrics, five
+bytes: height, width, bearing x and y, advance - or 6 - big metrics,
+eight bytes - before byte-aligned rows).  Times Roman and Helvetica have
+only widths (`hmtx`, for the printer).  espy's plain data has strikes at
+9, 10, 11, 12, 14 and 16 (its `userSizes`, 9 10 12 18, are what the
+picker offers), and there is a bold data.  Every table of the 13 fonts,
+field by field and with what the ROM reads of it, is
+[fonts-sfnt.md](fonts-sfnt.md); the ROM source tree keeps them as BDF
+strikes and text tables (`tools/fonts/`).
 
 A `StyleRecord` (0x20 bytes: the family, the size in 16.16, the face,
 a pattern) comes from a font spec (`CreateTextStyleRecord` 0x0025f980):
