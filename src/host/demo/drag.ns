@@ -1,96 +1,70 @@
 // Dragging a selection: "ton" is written on the Notepad and read, selected
 // with the hilite stroke (the pen held still, then drawn through the
 // word), and then pressed on and dragged 80 pixels down the page.  The
-// word should end up lower down, still selected.
+// word ends up that much lower down.
 //
-//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 //       --script src/host/demo/drag.ns --headless 60
-//   build/venv/Scripts/python tools/imaging/pgm2png.py build/drag.pgm build/drag.png
+//   build/host/host/newton --display 320x480 --headless 90 --script src/host/demo/drag.ns
 //
-// Everything before the writing is src/host/demo/write.ns.
-tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
-typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
+// The drag is paced (PacePen: a sample a tick, as a real pen's arrive), so
+// that the page sees the pen still down and drags the word along with it
+// (TEditView::HiliteClick, DragAndDrop) - ctest host.NewtonDrag, which is
+// what would notice if the paced pen came in all at once again.
+// build/drag-before.pgm and build/drag.pgm are the page.
+//
+// Prints "drag: <step>: ok" or "FAILED", and "drag: done".
+
+HostInclude("common.ns");			// tapAt, waitFor, walkSetup
+HostInclude("penhelpers.ns");		// penWriteWord, penFindPara, penDrag
 
 name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+dragFailures := 0;
 
-page := 0;
-nextPage := func()
+dragCheck := func(what, ok)
   begin
-    page := page + 1;
-    if page < 10 then
-      begin
-        call tapAt with (293, 468);			// Continue
-        AddDelayedCall(nextPage, nil, 1800);
-      end
-    else
-      call tapAt with (297, 468);			// Done, on "Congratulations"
+    if not ok then dragFailures := dragFailures + 1;
+    Print("drag: " & what & (if ok then ": ok" else ": FAILED"));
   end;
 
-AddDelayedCall(func() begin
-    call tapAt with (293, 468);				// past "Welcome"
-    AddDelayedCall(func() begin
-        call tapAt with (200, 150);			// the caret into the First line
-        foreach c in name do call typeKey with (c);
-        AddDelayedCall(nextPage, nil, 1500);
-      end, nil, 2000);
-  end, nil, 3000);
-
-// One stroke: the pen put down on the first point, moved through the
-// rest, and lifted.
-stroke := func(points)
+dragFinish := func()
   begin
-    PenDown(points[0], points[1]);
-    for i := 2 to Length(points) - 2 by 2 do
-      PenMove(points[i], points[i + 1]);
-    PenUp();
+    Print("drag: done, " & dragFailures & " failed");
+    HostQuit();
   end;
 
-// An oval of `n` points, from the top going anticlockwise, as an o is
-// written.  (Twelfths of a turn, worked out once: cos and sin of 30n.)
-oval := func(cx, cy, rx, ry)
-  begin
-    local c := [ 0, -50, -87, -100, -87, -50, 0, 50, 87, 100, 87, 50, 0];
-    local s := [100, 87, 50, 0, -50, -87, -100, -87, -50, 0, 50, 87, 100];
-    local pts := [];
-    for k := 0 to 12 do
-      begin
-        AddArraySlot(pts, cx + (rx * c[k]) div 100);
-        AddArraySlot(pts, cy - (ry * s[k]) div 100);
-      end;
-    pts;
-  end;
-
-// "ton", on a baseline at y = 200, from x = 60; then selected; then dragged
-AddDelayedCall(func() begin
+call walkSetup with (name, func() begin
     local base := 200;
-    call stroke with ([66, base - 24, 66, base - 18, 66, base - 12, 66, base - 6, 66, base]);
-    call stroke with ([60, base - 14, 64, base - 14, 68, base - 14, 72, base - 14]);
-    call stroke with (call oval with (82, base - 7, 6, 7));
-    call stroke with ([94, base - 14, 94, base - 7, 94, base, 94, base - 7,
-                       95, base - 11, 97, base - 13, 100, base - 14, 103, base - 13,
-                       104, base - 10, 104, base - 5, 104, base]);
-    AddDelayedCall(func() begin
+    call penWriteWord with ("ton", 60, base);
+    local up := Ticks();
+    IdleStrokes();
+    call waitFor with ("drag: ton read", func() Ticks() - up > 40 and call penFindPara with (GetRoot(), "ton"), func() begin
+        local para := call penFindPara with (GetRoot(), "ton");
+        call dragCheck with ("\"ton\" read", para <> nil);
+        if not para then return call dragFinish with ();
+        local before := para:GlobalBox();
         // the hilite stroke: the pen held still on the word, then drawn
         // through it
-        PenDown(58, base - 8);
-        for i := 1 to 60 do PenMove(58, base - 8);
-        for x := 58 to 108 by 3 do PenMove(x, base - 8);
+        local y := (before.top + before.bottom) div 2;
+        PenDown(before.left - 2, y);
+        for i := 1 to 60 do PenMove(before.left - 2, y);
+        for x := before.left - 2 to before.right + 2 by 3 do PenMove(x, y);
         PenUp();
-        AddDelayedCall(func() begin
+        IdleStrokes();
+        local selected := Ticks();
+        call waitFor with ("drag: selected", func() Ticks() - selected > 70, func() begin
             ScreenSnapshot("build/drag-before.pgm");
-            // pressed on the selection and dragged down
-            // (paced: a sample a tick, so that the page sees the pen still
-            //  down and drags the word along with it)
-            PacePen(true);
-            PenDown(80, base - 8);
-            for y := 1 to 40 do PenMove(80, base - 8 + y * 2);
-            for i := 1 to 10 do PenMove(80 + i mod 2, base + 72);
-            PenUp();
-            PacePen(nil);
-            AddDelayedCall(func() begin
-                ScreenSnapshot("build/drag.pgm");
-                Print("drag: written build/drag.pgm");
-              end, nil, 6000);
-          end, nil, 6000);
-      end, nil, 6000);
-  end, nil, 27000);
-Print("drag: the script is loaded");
+            local x := (before.left + before.right) div 2;
+            call penDrag with (x, y, x, y + 80);
+            local moved := func()
+              begin
+                local p := call penFindPara with (GetRoot(), "ton");
+                p and p:GlobalBox().top > before.top + 60;
+              end;
+            call waitFor with ("drag: moved", moved,
+                func() begin
+                    call dragCheck with ("\"ton\" dragged 80 pixels down", call moved with ());
+                    ScreenSnapshot("build/drag.pgm");
+                    call dragFinish with ();
+                  end, 20);
+          end, 10);
+      end, 20);
+  end);

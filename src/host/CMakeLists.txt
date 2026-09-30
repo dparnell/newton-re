@@ -466,6 +466,76 @@ set_tests_properties(host.NewtonDropInk PROPERTIES TIMEOUT 180
                      PASS_REGULAR_EXPRESSION "as an ink word: ok.*dropink: done, 0 failed"
                      FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
 
+# a word selected with the hilite stroke and dragged with a paced pen - notices a paced pen that arrives all at once (demo/drag.ns)
+add_test(NAME host.NewtonDrag COMMAND newton --display 320x480 --headless 90
+         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/drag.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonDrag PROPERTIES TIMEOUT 180
+                     PASS_REGULAR_EXPRESSION "dragged 80 pixels down: ok.*drag: done, 0 failed"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+
+# "ton" and "to" written with the pen and read by Rosetta, the second at the first's caret (demo/write.ns)
+add_test(NAME host.NewtonWrite COMMAND newton --display 320x480 --headless 90
+         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/write.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonWrite PROPERTIES TIMEOUT 180
+                     PASS_REGULAR_EXPRESSION "reads \"ton to\": ok.*write: done, 0 failed"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+
+# a word scrubbed out with the pen (demo/scrub.ns)
+add_test(NAME host.NewtonScrub COMMAND newton --display 320x480 --headless 90
+         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/scrub.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonScrub PROPERTIES TIMEOUT 180
+                     PASS_REGULAR_EXPRESSION "nothing in its place: ok.*scrub: done, 0 failed"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+
+# the corrector opened by a double tap and a reading picked from it (demo/correct.ns)
+add_test(NAME host.NewtonCorrect COMMAND newton --display 320x480 --headless 90
+         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/correct.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonCorrect PROPERTIES TIMEOUT 180
+                     PASS_REGULAR_EXPRESSION "reads \"tone\": ok.*correct: done, 0 failed"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+
+# a line, a box, a triangle and a circle drawn and recognised as shapes (demo/shapes.ns)
+add_test(NAME host.NewtonShapes COMMAND newton --display 320x480 --headless 90
+         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/shapes.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonShapes PROPERTIES TIMEOUT 180
+                     PASS_REGULAR_EXPRESSION "four shapes on the page: ok.*shapes: done, 0 failed"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+
+# shapes snapped to the shapes already on the page (demo/snapping.ns)
+add_test(NAME host.NewtonSnapping COMMAND newton --display 320x480 --headless 90
+         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/snapping.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonSnapping PROPERTIES TIMEOUT 180
+                     PASS_REGULAR_EXPRESSION "from the box.s corner: ok.*snapping: done, 0 failed"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+
+# ModalConfirm answered by a tap on OK in the fork (demo/modal.ns)
+add_test(NAME host.NewtonModal COMMAND newton --display 320x480 --headless 90
+         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/modal.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonModal PROPERTIES TIMEOUT 180
+                     PASS_REGULAR_EXPRESSION "modal: asking.*modal: tapping OK.*answered TRUE.*still running.*modal: done"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+
+# "call Daniel" through the Assistant to the Call slip (demo/assist.ns)
+add_test(NAME host.NewtonAssist COMMAND newton --display 320x480 --headless 90
+         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/assist.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonAssist PROPERTIES TIMEOUT 180
+                     PASS_REGULAR_EXPRESSION "addressed to Daniel: ok.*assist: done, 0 failed"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+
+# every built-in application opened and closed (a smoke test) (demo/open-apps.ns)
+add_test(NAME host.NewtonOpenApps COMMAND newton --display 320x480 --headless 400
+         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/open-apps.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonOpenApps PROPERTIES TIMEOUT 420
+                     PASS_REGULAR_EXPRESSION "open-apps: done, 0 failed"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+
+# each of the Assistant's tasks carried out (a smoke test) (demo/assist-tasks.ns)
+add_test(NAME host.NewtonAssistTasks COMMAND newton --display 320x480 --headless 460
+         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/assist-tasks.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonAssistTasks PROPERTIES TIMEOUT 480
+                     PASS_REGULAR_EXPRESSION "assist-tasks: done, 0 failed"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+
 # a long note printed across pages (demo/printlong.ns): the Notepad's print
 # format reflows the note's paragraph into each page and cuts it between
 # two lines where the page runs out (views/Reflow.cpp ReflowText, the

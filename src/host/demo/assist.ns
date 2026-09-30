@@ -6,42 +6,52 @@
 // call task and opens its slip addressed to him.  The picture is taken
 // with the Call slip up.
 //
-//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 //       --script src/host/demo/assist.ns --headless 45
-//   build/venv/Scripts/python tools/imaging/pgm2png.py build/assist.pgm build/assist.png
+//   build/host/host/newton --display 320x480 --headless 90 --script src/host/demo/assist.ns
 //
-// Everything before the sentence is the Setup walk of setup.ns.
+// ctest host.NewtonAssist: the frontmost view is the Call slip - a "Call"
+// button and Daniel's name in it.  build/assist.pgm is the screen.
+//
+// Prints "assist: <step>: ok" or "FAILED", and "assist: done".
 
-tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
-typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
+HostInclude("common.ns");			// tapAt, waitFor, walkSetup
 
 name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+assistFailures := 0;
 
-page := 0;
-nextPage := func()
+assistCheck := func(what, ok)
   begin
-    page := page + 1;
-    if page < 10 then
-      begin
-        call tapAt with (293, 468);			// Continue
-        AddDelayedCall(nextPage, nil, 1800);
-      end
-    else
-      call tapAt with (297, 468);			// Done, on "Congratulations"
+    if not ok then assistFailures := assistFailures + 1;
+    Print("assist: " & what & (if ok then ": ok" else ": FAILED"));
   end;
 
-AddDelayedCall(func() begin
-    call tapAt with (293, 468);				// past "Welcome"
-    AddDelayedCall(func() begin
-        call tapAt with (200, 150);			// the caret into the First line
-        foreach c in name do call typeKey with (c);
-        AddDelayedCall(nextPage, nil, 1500);
-      end, nil, 2000);
-  end, nil, 3000);
+// a view under v whose text has the words in it
+assistFind := func(v, words)
+  begin
+    local found := nil;
+    if IsString(v.text) and StrPos(v.text, words, 0) then
+      found := v
+    else
+      foreach child in v:ChildViewFrames() do
+        if not found then
+          found := call assistFind with (child, words);
+    found;
+  end;
 
-AddDelayedCall(func() begin
-    Print("assist: asking");
+// the Call slip: the frontmost view, with a Call button and Daniel in it
+callSlip := func()
+  begin
+    local kids := GetRoot():ChildViewFrames();
+    local front := kids[Length(kids) - 1];
+    call assistFind with (front, "Call") and call assistFind with (front, "daniel");
+  end;
+
+call walkSetup with (name, func() begin
     local task := ParseUtter("call Daniel");
-    Print("assist: " & (if task then "a task" else "nothing"));
-    AddDelayedCall(func() ScreenSnapshot("build/assist.pgm"), nil, 3000);
-  end, nil, 30000);
-Print("assist: the script is loaded");
+    call assistCheck with ("\"call Daniel\" parsed into a task", task <> nil);
+    call waitFor with ("assist: the Call slip", callSlip, func() begin
+        call assistCheck with ("the Call slip open, addressed to Daniel", call callSlip with ());
+        ScreenSnapshot("build/assist.pgm");
+        Print("assist: done, " & assistFailures & " failed");
+        HostQuit();
+      end, 20);
+  end);

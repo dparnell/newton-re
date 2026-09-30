@@ -3,124 +3,63 @@
 // same size (GlobalTrends), and a line started just off a box's corner
 // starts on the corner (SnapPtToLC).
 //
-//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 //       --script src/host/demo/snapping.ns --headless 70
-//   build/venv/Scripts/python tools/imaging/pgm2png.py build/snapping.pgm build/snapping.png
+//   build/host/host/newton --display 320x480 --headless 90 --script src/host/demo/snapping.ns
 //
-// Everything but the shapes is src/host/demo/shapes.ns: the setup
-// assistant walked through, the Notepad switched to shapes, each shape
-// drawn as one stroke two and a half seconds apart.
+// As src/host/demo/shapes.ns, the Notepad set to shapes and each shape
+// drawn once the one before it is on the page (ctest host.NewtonSnapping).
+// build/snapping.pgm is the page.
+//
+// Prints "snapping: <step>: ok" or "FAILED", and "snapping: done".
 
-tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
-typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
+HostInclude("common.ns");			// tapAt, waitFor, walkSetup
+HostInclude("penhelpers.ns");		// penStroke, penPath, penRound, penFindPolys
 
 name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+snapFailures := 0;
 
-page := 0;
-nextPage := func()
+snapCheck := func(what, ok)
   begin
-    page := page + 1;
-    if page < 10 then
-      begin
-        call tapAt with (293, 468);			// Continue
-        AddDelayedCall(nextPage, nil, 1800);
-      end
-    else
-      call tapAt with (297, 468);			// Done, on "Congratulations"
+    if not ok then snapFailures := snapFailures + 1;
+    Print("snapping: " & what & (if ok then ": ok" else ": FAILED"));
   end;
 
-AddDelayedCall(func() begin
-    call tapAt with (293, 468);				// past "Welcome"
-    AddDelayedCall(func() begin
-        call tapAt with (200, 150);			// the caret into the First line
-        foreach c in name do call typeKey with (c);
-        AddDelayedCall(nextPage, nil, 1500);
-      end, nil, 2000);
-  end, nil, 3000);
-
-// One stroke: the pen put down on the first point, moved through the
-// rest, and lifted.
-stroke := func(points)
-  begin
-    PenDown(points[0], points[1]);
-    for i := 2 to Length(points) - 2 by 2 do
-      PenMove(points[i], points[i + 1]);
-    PenUp();
-  end;
-
-
-// A stroke through the corners, a point every few pixels, each point
-// nudged by a little wobble so the line is not ruler-straight.
-path := func(corners)
-  begin
-    local pts := [];
-    local wobble := [0, 1, 1, 0, -1, -1];
-    local w := 0;
-    for c := 0 to Length(corners) - 4 by 2 do
-      begin
-        local x0 := corners[c], y0 := corners[c + 1];
-        local x1 := corners[c + 2], y1 := corners[c + 3];
-        local steps := Max(Abs(x1 - x0), Abs(y1 - y0)) div 4;
-        for k := 0 to steps - 1 do
-          begin
-            AddArraySlot(pts, x0 + ((x1 - x0) * k) div steps + wobble[w mod 6]);
-            AddArraySlot(pts, y0 + ((y1 - y0) * k) div steps + wobble[(w + 2) mod 6]);
-            w := w + 1;
-          end;
-      end;
-    AddArraySlot(pts, corners[Length(corners) - 2]);
-    AddArraySlot(pts, corners[Length(corners) - 1]);
-    pts;
-  end;
-
-// A circle of 36 points from the right going anticlockwise, almost closed.
-round := func(cx, cy, r)
-  begin
-    local c := [100, 98, 94, 87, 77, 64, 50, 34, 17, 0, -17, -34, -50, -64, -77, -87, -94, -98,
-                -100, -98, -94, -87, -77, -64, -50, -34, -17, 0, 17, 34, 50, 64, 77, 87, 94, 98, 100];
-    local s := [0, 17, 34, 50, 64, 77, 87, 94, 98, 100, 98, 94, 87, 77, 64, 50, 34, 17,
-                0, -17, -34, -50, -64, -77, -87, -94, -98, -100, -98, -94, -87, -77, -64, -50, -34, -17, 0];
-    local pts := [];
-    for k := 0 to 35 do
-      begin
-        AddArraySlot(pts, cx + (r * c[k]) div 100);
-        AddArraySlot(pts, cy - (r * s[k]) div 100);
-      end;
-    pts;
-  end;
-
-shapes := [
-    call round with (80, 300, 40),									// a circle
-    call round with (210, 306, 43),									// another, a little lower and larger
-    call path with ([40, 100, 140, 102, 139, 190, 41, 188, 40, 103]),	// a box
-    call path with ([146, 106, 280, 96])							// a line from near its corner
+snapToDraw := [
+    call penRound with (80, 300, 40),									// a circle
+    call penRound with (210, 306, 43),									// another, a little lower and larger
+    call penPath with ([40, 100, 140, 102, 139, 190, 41, 188, 40, 103]),	// a box
+    call penPath with ([146, 106, 280, 96])							// a line from near its corner
   ];
-n := 0;
-next := func()
+
+snapShapes := func() call penFindPolys with (GetRoot(), []);
+
+snapNext := func(n)
   begin
-    if n < Length(shapes) then
+    if n >= Length(snapToDraw) then
       begin
-        call stroke with (shapes[n]);
-        n := n + 1;
-        AddDelayedCall(next, nil, 2500);
-      end
-    else
-      begin
-        ScreenSnapshot("build/snapping-ink.pgm");
-        AddDelayedCall(func() begin
-            ScreenSnapshot("build/snapping.pgm");
-            Print("snapping: written build/snapping.pgm");
-          end, nil, 5000);
+        local shapes := call snapShapes with ();
+        call snapCheck with ("four shapes on the page", Length(shapes) = 4);
+        if Length(shapes) = 4 then
+          begin
+            // (in the order they were drawn: the page adds each as its last child)
+            local c1 := shapes[0]:GlobalBox(), c2 := shapes[1]:GlobalBox();
+            local box := shapes[2]:GlobalBox(), line := shapes[3]:GlobalBox();
+            call snapCheck with ("the circles the same size", c1.right - c1.left = c2.right - c2.left
+                                  and c1.bottom - c1.top = c2.bottom - c2.top);
+            call snapCheck with ("the circles in line", c1.top = c2.top);
+            call snapCheck with ("the line from the box's corner", Abs(line.left - box.right) <= 2);
+          end;
+        ScreenSnapshot("build/snapping.pgm");
+        Print("snapping: done, " & snapFailures & " failed");
+        return HostQuit();
       end;
+    call penStroke with (snapToDraw[n]);
+    IdleStrokes();
+    call waitFor with ("snapping: shape " & n, func() Length(call snapShapes with ()) > n,
+      func() call snapNext with (n + 1), 20);
   end;
-// shapes rather than text, as choosing Shapes in the recognition menu does
-// The Notepad keeps its own recognition settings, a set of bits in its
-// paper roll's _recogSettings that the ROM's ExpandSettings turns into a
-// configuration (32 text, 64 ink words, 128 shapes, 256 words, 512
-// numbers; the Notepad starts at 864).  Shapes alone is 128.  A page's
-// recognition area is cached, so the cache is purged after the change,
-// as the Notepad's own recognition menu does.
-AddDelayedCall(func() begin
+
+call walkSetup with (name, func() begin
     GetRoot().paperroll._recogSettings := 128;
     PurgeAreaCache();
-    call next with ();
-  end, nil, 27000);
+    call snapNext with (0);
+  end);

@@ -13,32 +13,9 @@
 //
 // Everything before the question is the Setup walk of setup.ns.
 
-tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
-typeKey := func(code) begin KeyEvent(code, true); KeyEvent(code, nil); end;
+HostInclude("common.ns");			// tapAt, waitFor, walkSetup
 
 name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
-
-page := 0;
-nextPage := func()
-  begin
-    page := page + 1;
-    if page < 10 then
-      begin
-        call tapAt with (293, 468);			// Continue
-        AddDelayedCall(nextPage, nil, 1800);
-      end
-    else
-      call tapAt with (297, 468);			// Done, on "Congratulations"
-  end;
-
-AddDelayedCall(func() begin
-    call tapAt with (293, 468);				// past "Welcome"
-    AddDelayedCall(func() begin
-        call tapAt with (200, 150);			// the caret into the First line
-        foreach c in name do call typeKey with (c);
-        AddDelayedCall(nextPage, nil, 1500);
-      end, nil, 2000);
-  end, nil, 3000);
 
 // The view of a button whose text is the given string, looked for all the
 // way down the root's frontmost child (the dialog; its buttons are in a
@@ -58,25 +35,27 @@ findButton := func(label)
     call findIn with (kids[Length(kids) - 1], label);
   end;
 
-tapOK := func()
-  begin
-    local ok := call findButton with ("OK");
-    if ok then
-      begin
-        local box := ok:GlobalBox();
-        ScreenSnapshot("build/modal.pgm");
-        Print("modal: tapping OK");
-        call tapAt with ((box.left + box.right) div 2, (box.top + box.bottom) div 2);
-      end
-    else
-      Print("modal: no OK button");
-  end;
-
-AddDelayedCall(func() begin
-    AddDelayedCall(tapOK, nil, 3000);
+call walkSetup with (name, func() begin
+    // the OK button tapped by the fork once the dialog is up
+    call waitFor with ("modal: the dialog", func() call findButton with ("OK"), func() begin
+        local ok := call findButton with ("OK");
+        if ok then
+          begin
+            local box := ok:GlobalBox();
+            ScreenSnapshot("build/modal.pgm");
+            Print("modal: tapping OK");
+            call tapAt with ((box.left + box.right) div 2, (box.top + box.bottom) div 2);
+          end
+        else
+          Print("modal: no OK button: FAILED");
+      end, 20);
     Print("modal: asking");
     local answer := ModalConfirm("Is the dialog modal?", 'okCancel);
-    Print("modal: answered " & (if answer then "TRUE" else "NIL"));
-    AddDelayedCall(func() Print("modal: still running"), nil, 2000);
-  end, nil, 30000);
-Print("modal: the script is loaded");
+    Print("modal: answered " & (if answer then "TRUE" else "NIL: FAILED"));
+    // the machine goes on working: a delayed call still comes
+    AddDelayedCall(func() begin
+        Print("modal: still running");
+        Print("modal: done");
+        HostQuit();
+      end, nil, 500);
+  end);
