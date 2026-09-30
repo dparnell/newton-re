@@ -114,6 +114,14 @@ HostCardCreate(const char* path, ULong sizeMB, const char* name)
 	cis[n++] = 2;
 	cis[n++] = 0x89;						//   Intel
 	cis[n++] = 0xA0;						//   28F016SA (Series 2)
+	cis[n++] = 0x1E;						// CISTPL_DEVICE_GEO
+	cis[n++] = 6;
+	cis[n++] = 2;							//   a 16-bit bus (2^(n-1) bytes)
+	cis[n++] = 0x11;						//   64 KB erase blocks
+	cis[n++] = 1;							//   reads,
+	cis[n++] = 1;							//   writes a byte at a time
+	cis[n++] = 1;							//   one block to a partition
+	cis[n++] = 1;							//   no interleave
 	const char* vendor = "Newton host";
 	const char* product = name[0] != 0 ? name : "Flash card";
 	ULong vendorLength = (ULong) strlen(vendor) + 1;

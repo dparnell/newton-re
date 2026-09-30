@@ -39,7 +39,7 @@ public:
 	TCardServer*	fCardServer;			// +0x38
 };
 
-extern ULong	gNumberOfHWSockets;		// host: 0, no card hardware
+#include "CardServerGlobals.h"
 
 // host (DEVIATION): the handler made and registered from the world that
 // calls it, the card server's being NOT YET

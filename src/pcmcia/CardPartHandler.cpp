@@ -8,15 +8,11 @@
 
 #include "CardPartHandler.h"
 #include "ROMClassInfo.h"
+#include "CardServerGlobals.h"
 #include "OSErrors.h"
 
 #include <stdio.h>
 #include <string.h>
-
-
-// ROM gNumberOfHWSockets: the card server's count of sockets (two on a
-// MessagePad 2x00).  The host has none.
-ULong	gNumberOfHWSockets = 0;
 
 
 // what a card handler part is removed with (0xc bytes)

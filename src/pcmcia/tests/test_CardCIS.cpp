@@ -100,9 +100,9 @@ TestBlankCard(TCardSocket* socket)
 		first = false;
 		codes[n++] = iterator.fTupleCode;
 	}
-	// DEVICE, JEDEC_C, VERS_1; the END goes on to common memory, which has
-	// no CIS (kError_Card_No_CIS ends it)
-	EXPECT(n == 3 && codes[0] == 0x01 && codes[1] == 0x18 && codes[2] == 0x15);
+	// DEVICE, JEDEC_C, DEVICE_GEO, VERS_1; the END goes on to common memory,
+	// which has no CIS (kError_Card_No_CIS ends it)
+	EXPECT(n == 4 && codes[0] == 0x01 && codes[1] == 0x18 && codes[2] == 0x1E && codes[3] == 0x15);
 
 	TCardPCMCIA card;
 	TPCMCIA20Parser parser;
@@ -117,6 +117,7 @@ TestBlankCard(TCardSocket* socket)
 		EXPECT(device->fDeviceType == 5 && device->fSize == 0x400000 && device->fStartOffset == 0);
 		EXPECT(device->fnsecSpeed == 150 && device->fVcc == 5000000 && !device->fAttributeMemoryDescr);
 		EXPECT(device->fJedecMfr == 0x89 && device->fJedecMfrInfo == 0xA0);
+		EXPECT(device->fBusSize == 2 && device->fEraseBlockSize == 0x11 && device->fInterleave == 1);
 	}
 	EXPECT(card.fV1Major == 4 && card.fV1Minor == 1);
 	EXPECT(strcmp(card.GetCardManufacturer(), "Newton host") == 0);

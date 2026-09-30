@@ -11,8 +11,12 @@ add_library(pcmcia STATIC
     CardCISIterator.cpp
     PCMCIA20Parser.cpp
     CISTables.cpp
+    CardMessage.cpp
+    CardPower.cpp
+    CardServerGlobals.cpp
+    CHMemModem.cpp
 )
-target_link_libraries(pcmcia PUBLIC newton_config frames package_manager hal_host_card)
+target_link_libraries(pcmcia PUBLIC newton_config frames package_manager hal_host_card flash)
 target_include_directories(pcmcia PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(tests)

@@ -987,7 +987,20 @@ Each step comes with its host tests.
      `TCardDevice`, `TCardFunction`, `TCardConfiguration`,
      `TCardPackage`. Test: mkcard's CIS parsed into one flash device of
      the right size; `GetCardInfo`'s frame for it.
-   - **5c. The memory card handler.** `TCHMemModem`'s memory side
+   - **5c. The memory card handler.** DONE (2026-09-30; ctest
+     `pcmcia.MemoryCard`): `pcmcia/CHMemModem.h` (the memory side;
+     `CheckNSetupModemDevice`, `AllocateSerialDriver` and
+     `ParseUnrecognizedCard` NOT YET), `pcmcia/CardHandler.h` (the DDK's
+     protocol with its methods virtual, in the ROM's dispatch order),
+     `pcmcia/CardPower.cpp` (the sockets' Vcc and Vpp, counted, with the
+     countdowns the idle task runs down), `pcmcia/CardMessage.h`,
+     `stores/flash/CardFlash.h` (the host's `TFlashSeries2`) and the flash
+     store's card branches (`Init` from an `SPSSStoreInfo`, the power
+     calls, write protection through the flash or the card handler). A
+     card whose CIS gives no CISTPL_DEVICE_GEO gets block size 1 from the
+     ROM's `IdentifyCard` (2^(0-1) with the ARM's shift), so a real Series
+     2 card must carry one - and `HostCardCreate`'s does.
+     Was: `TCHMemModem`'s memory side
      (`RecognizeCard`, `InstallServices`, `CheckNSetupMemoryDevice`,
      `NewFlashDriver`, `GetDeviceInfo`, `FormatCIS`; the modem side NOT
      YET) and a card `TFlash`. `TFlashSeries2` is the chips' command set

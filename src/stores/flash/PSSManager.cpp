@@ -21,6 +21,16 @@
 #include "Soups.h"
 #include "NameServer.h"
 
+#include <string.h>
+
+
+// ROM 0x00155bbc Clear__13SPSSStoreInfoFv
+void
+SPSSStoreInfo::Clear(void)
+{
+	memset(this, 0, sizeof(SPSSStoreInfo));
+}
+
 
 // ROM 0x0011e250 InternalStoreInfo
 // 0: the internal flash's store size (nought without flash); 3: 0x1100000.

@@ -49,6 +49,10 @@ REPLACED = {
     # DDK's interface, adds the members the ROM's card server calls and the
     # port's fields
     "CardSocket.h": "the socket's hardware; src/hal/CardSocket.h, implemented by each port",
+    # CardHandler.h: TCardHandler is a protocol whose methods
+    # src/protocols/Protocols.h makes virtual; src/pcmcia/CardHandler.h
+    # declares them so, in the ROM's dispatch order
+    "CardHandler.h": "a protocol's methods made virtual; src/pcmcia/CardHandler.h",
 }
 
 PATCHES = {

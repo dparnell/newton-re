@@ -1,7 +1,8 @@
 # The flash the flash store keeps its data on (Flash.h): the TFlash and
 # TFlashDriver protocols, the ranges of chips and the internal flash, with
 # the driver of the port's chips (host/: the host's, over
-# hal/host/HostFlash.h).  packages: the ROM extensions' configuration
+# hal/host/HostFlash.h), and a flash card's TFlash (CardFlash.h; the host's
+# over hal/host/HostCard.h).  packages: the ROM extensions' configuration
 # entries ('flsa, 'fdrv) and where the extensions are.
 add_library(flash STATIC
     FlashRange.cpp
@@ -14,8 +15,9 @@ add_library(flash STATIC
     FlashIterator.cpp
     PSSManager.cpp
     host/HostFlashDriver.cpp
+    host/HostCardFlash.cpp
 )
-target_link_libraries(flash PUBLIC newton_config protocols memory os600_user os600_kernel hal_host hal_timers packages stores toolbox utility)
+target_link_libraries(flash PUBLIC newton_config protocols memory os600_user os600_kernel hal_host hal_timers hal_host_card packages stores toolbox utility pcmcia)
 target_include_directories(flash PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/hal/host)
 
 add_subdirectory(tests)

@@ -82,8 +82,8 @@ main()
 
 	TCardSocket socket(0);
 	EXPECT(socket.Init() == noErr);
-	TCardSocket missing(1);
-	EXPECT(missing.Init() != noErr);					// one socket
+	TCardSocket missing(2);
+	EXPECT(missing.Init() != noErr);					// two sockets
 	EXPECT(!socket.IsCardDetected());
 	EXPECT(socket.RegisterSocketInterrupt(kSocketCardDetectedInt, Detected, (void*) 1) == noErr);
 	EXPECT(socket.RegisterSocketInterrupt(kSocketCardLockInt, Locked, nil) == noErr);

@@ -35,14 +35,15 @@
 #include "Newton.h"
 #endif
 
-const ULong	kHostCardSockets		= 1;			// an MP2x00 has one slot (Einstein's too)
+const ULong	kHostCardSockets		= 2;			// an MP2x00 has two slots
 const ULong	kHostCardAttrSize		= 0x2000;		// the attribute window the host keeps (4K CIS bytes)
 const ULong	kHostCardImageInfoSize	= 52;			// Einstein's ImageInfo footer
 
 // A blank linear flash card made as a file: sizeMB of erased common memory
-// (2, 4, 8, 16, 20 or 32), a CIS describing an Intel Series 2 flash card of
-// that size (CISTPL_DEVICE, CISTPL_JEDEC_C 0x89 0xA0, CISTPL_VERS_1 with
-// the name), no icon, the name, and the footer.
+// (2, 4, 8, ... 64), a CIS describing an Intel Series 2 flash card of that
+// size (CISTPL_DEVICE, CISTPL_JEDEC_C 0x89 0xA0, CISTPL_DEVICE_GEO - 64 KB
+// blocks on a 16-bit bus, which the ROM's TFlashSeries2 takes its geometry
+// from - and CISTPL_VERS_1 with the name), no icon, the name, and the footer.
 NewtonErr	HostCardCreate(const char* path, ULong sizeMB, const char* name);
 
 // The card in a file put into the socket (the machine sees it at the next
