@@ -457,6 +457,15 @@ set_tests_properties(host.NewtonJoinInk PROPERTIES TIMEOUT 180
                      PASS_REGULAR_EXPRESSION "joined into one ink word: ok.*joinink: done, 0 failed"
                      FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
 
+# ink dropped on a paragraph with the pen (demo/dropink.ns): a shape of ink
+# lassoed and dragged onto a paragraph of text goes in as an ink word
+# (TParagraphView::Drop, InkConvert)
+add_test(NAME host.NewtonDropInk COMMAND newton --display 320x480 --headless 120
+         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/dropink.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonDropInk PROPERTIES TIMEOUT 180
+                     PASS_REGULAR_EXPRESSION "as an ink word: ok.*dropink: done, 0 failed"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+
 # a long note printed across pages (demo/printlong.ns): the Notepad's print
 # format reflows the note's paragraph into each page and cuts it between
 # two lines where the page runs out (views/Reflow.cpp ReflowText, the

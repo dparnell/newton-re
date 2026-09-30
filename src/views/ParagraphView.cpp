@@ -7452,11 +7452,11 @@ TParagraphView::GetDropData(RefArg dragType, RefArg dragRef)
 // with the dropped frame as its properties - a rich string's ink kept as
 // its styles), failing that below the last line (AddWord).  The drop
 // point comes back as where the text now ends.  A drop on the selection
-// itself is refused.
-//
-// NOT YET RECONSTRUCTED: ink dropped on a paragraph, which the ROM puts in
-// as an ink word - InkConvert turning the ink into one is the CIC
-// library's ConverterRun (0x00280980 ConvertData), not reconstructed.
+// itself is refused.  Anything else dropped - ink, the other type the
+// paragraph takes - goes in as one ink word: its ink turned into an ink
+// word (InkConvert, the CIC library's converter over the code books),
+// brought to the view's x-height (AdjustInkWordXHeight), and put in as
+// the one character 0xf701 styled by it.
 Boolean
 TParagraphView::Drop(RefArg dropType, RefArg dropData, Point* dropPt)
 {
@@ -7465,19 +7465,38 @@ TParagraphView::Drop(RefArg dropType, RefArg dropData, Point* dropPt)
 	long over = PointOverHilitedText(*dropPt);
 	if (over == 1 || over == 2)
 		return false;
+	RefVar props(NILREF);
+	RefVar text;
+	UniChar inkWord[2] = { kInkWordChar, 0 };
+	const UniChar* chars;
+	ULong length;
 	if (!EQRef(dropType, RSSYMtext))
-		return false;
-	RefVar text(GetFrameSlotRef(dropData, RSSYMtext));
-	if (IsRichString(text))
 	{
-		TRichString rich(text);
-		text = rich.MakeParagraphTextSlot();
-		if (!FrameHasSlot(dropData, RSSYMstyles))
-			SetFrameSlot(dropData, RSSYMstyles, RefVar(rich.MakeParagraphStylesSlot(RefVar(GetDefaultViewStyle()))));
+		chars = inkWord;
+		length = 1;
+		RefVar styles(AllocateArray(RSSYMstyles, 2));
+		RefVar ink(InkConvert(RefVar(GetFrameSlotRef(dropData, RSSYMink)), RefVar(RSSYMinkword)));
+		AdjustInkWordXHeight(ink, ViewExpectsNumbers(this));
+		SetArraySlot(styles, 0, RefVar(MAKEINT(1)));
+		SetArraySlot(styles, 1, ink);
+		props = AllocateFrame();
+		SetFrameSlot(props, RSSYMstyles, styles);
+		text = MakeString(inkWord);
 	}
-	const UniChar* chars = GetCString(text);
-	ULong length = Ustrlen(chars);
-	RefVar props(dropData);
+	else
+	{
+		text = GetFrameSlotRef(dropData, RSSYMtext);
+		if (IsRichString(text))
+		{
+			TRichString rich(text);
+			text = rich.MakeParagraphTextSlot();
+			if (!FrameHasSlot(dropData, RSSYMstyles))
+				SetFrameSlot(dropData, RSSYMstyles, RefVar(rich.MakeParagraphStylesSlot(RefVar(GetDefaultViewStyle()))));
+		}
+		chars = GetCString(text);
+		length = Ustrlen(chars);
+		props = dropData;
+	}
 	fSetupDone = false;
 	Rect box;
 	box.top = dropPt->v;
