@@ -700,6 +700,19 @@ TestBinaries()
 	EXPECT_STRING(BIN("StuffCString(b, 0, \"hi\"); ExtractCString(b, 0)"), "hi");
 	EXPECT_STRING(BIN("StuffPString(b, 0, \"hey\"); ExtractPString(b, 0)"), "hey");
 	EXPECT_INT(BIN("StuffPString(b, 0, \"hey\"); ExtractByte(b, 0)"), 3);
+	// a string's bytes are big-endian UniChars as on a MessagePad, whatever
+	// the host keeps (frames/StringBytes.h)
+	EXPECT_INT("ExtractByte(\"AB\", 1)", 'A');
+	EXPECT_INT("ExtractWord(\"AB\", 2)", 'B');
+	EXPECT_CHAR("ExtractUniChar(\"AB\", 2)", 'B');
+	EXPECT_STRING("local s := \"xx\"; StuffUniChar(s, 0, $Q); s", "Qx");
+	EXPECT_STRING("local s := \"xx\"; StuffByte(s, 3, 90); s", "xZ");
+	EXPECT_STRING("ExtractBytes(\"hello\", 2, 6, 'string)", "ell");
+	// a package's name BinaryMunger'd out of a binary into a string (Newt's
+	// Cape's addFile): the binary's big-endian UniChars read as characters
+	EXPECT_STRING(BIN("StuffUniChar(b, 0, $H); StuffUniChar(b, 2, $i); BinaryMunger(Clone(\"\"), 0, 0, b, 0, 4)"), "Hi");
+	EXPECT_INT(BIN("BinaryMunger(b, 0, 2, \"Q\", 0, 2); ExtractWord(b, 0)"), 'Q');
+	EXPECT_STRING("BinaryMunger(Clone(\"ab\"), 2, 0, \"cd\", 0, 4)", "acdb");
 	// 0x3fffffff is thirty ones, and a Newton integer is thirty bits, so
 	// the literal is -1 before it ever reaches StuffLong - which is what
 	// comes back out of the four bytes it wrote

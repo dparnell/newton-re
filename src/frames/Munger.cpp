@@ -19,6 +19,7 @@
 #include "RSSymbols.h"
 #include "Frames.h"
 #include "NSErrors.h"
+#include "StringBytes.h"
 
 #include <string.h>
 
@@ -38,6 +39,9 @@ ArrayMunger(RefArg a1, long a1start, long a1count, RefArg a2, long a2start, long
 		ThrowExFramesWithBadValue(kNSErrObjectsNotDistinct, a1);
 	if ((ObjectFlags(a1) & kObjReadOnly) != 0)
 		ThrowExFramesWithBadValue(kNSErrObjectReadOnly, a1);
+	// a string's bytes as the ROM's, big-endian (StringBytes.h: a script
+	// copying bytes between a string and another binary means those)
+	TStringBytesAsROM a1Bytes(a1), a2Bytes(a2);
 	long a1length = Length(a1);
 	if (a1count == -1)
 		a1count = a1length - a1start;
@@ -94,6 +98,9 @@ BinaryMunger(RefArg a1, long a1start, long a1count, RefArg a2, long a2start, lon
 		ThrowExFramesWithBadValue(kNSErrObjectsNotDistinct, a1);
 	if ((ObjectFlags(a1) & kObjReadOnly) != 0)
 		ThrowExFramesWithBadValue(kNSErrObjectReadOnly, a1);
+	// a string's bytes as the ROM's, big-endian (StringBytes.h: a script
+	// copying bytes between a string and another binary means those)
+	TStringBytesAsROM a1Bytes(a1), a2Bytes(a2);
 	long a1length = Length(a1);
 	if (a1count == -1)
 		a1count = a1length - a1start;
