@@ -2416,6 +2416,43 @@ TestTyping()
 	TypeKey(7);
 	EXPECT(NOTNIL(Eval("StrEqual(ctxT.text, \"azb\")")));
 	p->fFlags &= ~vReadOnly;
+	// a key over a selection: the selected text taken out first, then the
+	// key typed where it was
+	Eval("ctxT.text := \"Hello World\"; ctxT.styles := nil; ctxT:SyncView()");
+	Eval("ctxT:Dirty()");
+	Refresh();
+	p->MakeHilite(0, 5, true);
+	EXPECT(NOTNIL(p->FirstHilite()));
+	TypeKey(7);		// x
+	EXPECT(NOTNIL(Eval("StrEqual(ctxT.text, \"x World\")")) && p->fCaretOffset == 1 && ISNIL(p->FirstHilite()));
+	// ... and an arrow collapses a selection to one of its ends (2..3)
+	p->MakeHilite(2, 3, true);
+	TypeKey(0x7b);	// left arrow: the selection's start
+	EXPECT(p->fCaretOffset == 2 && ISNIL(p->FirstHilite()));
+	p->MakeHilite(2, 3, true);
+	TypeKey(0x7c);	// right arrow: its end
+	EXPECT(p->fCaretOffset == 3 && ISNIL(p->FirstHilite()));
+	// up and down a line, keeping the caret's place across it
+	Eval("ctxT.text := \"one two three four five six\"; SetValue(ctxT, 'viewBounds, {left: 20, top: 10, right: 140, bottom: 90}); ctxT:SyncView()");
+	Eval("ctxT:Dirty()");
+	Refresh();
+	EXPECT(p->LineCount() >= 2);
+	Eval("SetKeyView(ctxT, 2)");
+	TypeKey(0x7d);	// down arrow (0x1f)
+	EXPECT(p->FindLineContainingCharOffset(p->fCaretOffset) == 1 && p->fCaretOffset > p->Line(1).fStart);
+	TypeKey(0x7e);	// up arrow (0x1e)
+	EXPECT(p->FindLineContainingCharOffset(p->fCaretOffset) == 0 && p->fCaretOffset == 2);
+	// backspace over the last character of a paragraph that calculates its
+	// bounds, on a page: the paragraph goes when the key comes up
+	{
+		TEditView* page = (TEditView*) ViewOf("ctxTE := AddView(GetRoot(), {viewClass: 77, viewFlags: 1, viewBounds: {left: 0, top: 0, right: 160, bottom: 100}})");
+		TParagraphView* last = (TParagraphView*) ViewOf("ctxTL := AddView(ctxTE, {viewClass: 81, viewFlags: 1 + 8, viewBounds: {left: 10, top: 10, right: 150, bottom: 10}, viewJustify: 0, viewFont: espy12, text: \"a\"})");
+		EXPECT(page != nil && last != nil && page->fChildren->Count() == 1);
+		Eval("SetKeyView(ctxTL, 1)");
+		TypeKey(0x33);
+		EXPECT(page->fChildren->Count() == 0 && !gRemoveEmptyParagraph);
+		Eval("RemoveView(GetRoot(), ctxTE)");
+	}
 	// RemoveText widens to a neighbouring space; the style-run helpers
 	Eval("ctxT.text := \"one two three\"; ctxT.styles := nil; ctxT:SyncView()");
 	p->RemoveText(4, 3);
