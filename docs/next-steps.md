@@ -26,9 +26,15 @@ the way are all in `docs/work-log.md`.
   dialogs, mounted and unmounted as it goes in and out (ctest
   `host.NewtonCard`); a card with Einstein's default CIS mounts
   (`host.NewtonCardEinstein`).  Left: a round trip with a real Einstein
-  build (an image it wrote, one of ours opened in it), the reinsert
-  alert (the 'alrt server), card packages in attribute memory
-  (`TCardPipe`), ATA cards.
+  build (an image it wrote, one of ours opened in it), card packages in
+  attribute memory (`TCardPipe`), ATA cards.
+- **System alerts**: done (`src/alert/`, `docs/alert/README.md`; the card
+  reinsert alert, `host.NewtonCardAlert`).  NOT YET: the card position
+  alert's trigger, the fault-monitor route into `ReinsertCard`, the
+  screen semaphores.  Being done: qd's `LocateEntry` differs from the
+  ROM's (0xaebec: the ROM stops at the first strike whose distance grows
+  and does not step past a strike that is not 1-bit; the host picks the
+  nearest of all).
 
 ## What works
 

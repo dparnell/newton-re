@@ -109,6 +109,31 @@ bugs and ROM bugs found on the way.
   count wraps.  `HostOptionLayouts`' '*' copies an option's trailing
   bytes as they are ('rout' numbers, 'mpro' profiles).
 
+## 2026-09-30: the system alerts
+
+- `src/alert/` (99c1f26e): the ROM's own alert engine (0x2e7d4-0x30bcc) -
+  `TAlertDialog`/`TAlertItem`, the pen tracked through `PollTablet`,
+  drawing straight into the screen's bits in the ROM's alertFont
+  (`TAlertGlyph` over its bloc/bdat tables; the ARM's big-endian words
+  and unaligned loads emulated), `TOSErrorAlertDialog`,
+  `TErasePersistentDataAlert`, and the 'alrt world (`TAlertManager`,
+  started from `TNewtWorld::MainConstructor` before the card server).
+  `pcmcia/CardAlerts.h`: the card reinsert and position dialogs;
+  `ReinsertCard` and the card server's alert procs are real; qd's
+  `SetScreenInfo` is real.
+- ctest `host.NewtonCardAlert` (`card-alert.ns`): a card whose store is
+  locked is pulled, "Newton still needs the card you removed..." appears
+  (checked with a new `ScreenPixel(h, v)`, snapshot `build/card-alert.png`),
+  and putting the card back takes it down.
+- Found: a host card's memory must stay at the same address across a
+  reinsertion, as a socket's window does; while an alert is up the
+  display's updates are held (`BlockLCDActivity`, DEVIATION: no screen
+  semaphores on the host), or the application's redraws cover it.  ROM
+  quirks kept (`docs/alert/README.md`): the font asked for size 9 as a
+  raw value where 16.16 is meant (the smallest strike); a glyph range
+  check with && for ||; half-width glyphs at depth 2; button hit
+  rectangles offset; alerts taken off the list never freed.
+
 ## 2026-09-30: a received fax shown and turned
 
 - `qd/Tile.h` (c66294d5, ctest `qd.Tile`): `TTile` turns a bitmap too big
