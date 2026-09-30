@@ -1,0 +1,172 @@
+// NetHopper 3.2 (fixtures/packages/apps/NetHopper3.2) browsing a web page on
+// the host, as a user would: the application opened (its help page, parsed
+// by its own native HTML parser - Newton C++ Tools code run on src/armcpu),
+// the Go To URL button tapped, the URL typed on the keyboard, Go, the
+// Newton Internet Enabler's connection slip answered with Connect (the Host
+// network link, comms/host/HostLink.ns), the page fetched from the web
+// server tools/host/httpserve.py runs over src/host/demo/www/, laid out and
+// drawn; then its image tapped, fetched and decoded (NetHopper's ReadGIF,
+// native too) and drawn.  Each step waits on what it waits for; the checks
+// read the screen (ScreenPixel) and the snapshots are nethopper-N.pgm.
+// Run by ctest host.NewtonNetHopper:
+//
+//   python tools/host/httpserve.py --dir src/host/demo/www --port 52381 -- \
+//       build/host/host/newton --display 320x480 --erase --store tmp/nethopper.store \
+//       --headless 240 \
+//       --package fixtures/packages/apple/NIE2/ENETSUP/newtdev.pkg \
+//       --package fixtures/packages/apple/NIE2/REGPKGS/inetenbl.pkg \
+//       --package fixtures/packages/apple/NIE2/REGPKGS/inetstup.pkg \
+//       --package fixtures/packages/apps/NetHopper3.2/nethopper.pkg \
+//       --script src/host/demo/nethopper.ns
+//
+// (www/box.gif is a 64x32 two-colour GIF87a, a black frame round a black
+// bar, made with PIL: Image.new('P', (64, 32)), palette white/black,
+// rectangle [0,0,63,31] outlined and [8,8,55,23] filled, saved
+// non-interlaced.)
+
+kNetHopperURL := "http://127.0.0.1:52381/nethopper.html";
+
+nhFailures := 0;
+nhCheck := func(what, ok, detail) begin
+	if ok then
+		Print("nethopper: " & what & ": ok")
+	else begin
+		Print("nethopper: " & what & ": FAILED, " & detail);
+		nhFailures := nhFailures + 1;
+	end;
+end;
+
+HostInclude("common.ns");		// tapAt, waitFor, walkSetup
+
+// how many black pixels there are in a box of the screen
+nhBlackIn := func(left, top, right, bottom) begin
+	local n := 0;
+	for y := top to bottom - 1 do
+		for x := left to right - 1 do
+			if ScreenPixel(x, y) < 128 then n := n + 1;
+	n;
+end;
+
+nhTapView := func(view) begin
+	local b := view:GlobalBox();
+	call tapAt with ((b.left + b.right) div 2, (b.top + b.bottom) div 2);
+end;
+
+// ADB key codes of the characters a URL is typed with (the colon shifted)
+nhLetterKeys := {a: 0, s: 1, d: 2, f: 3, h: 4, g: 5, z: 6, x: 7, c: 8, v: 9, b: 11, q: 12, w: 13,
+	e: 14, r: 15, y: 16, t: 17, o: 31, u: 32, i: 34, p: 35, l: 37, j: 38, k: 40, n: 45, m: 46};
+nhDigitKeys := [29, 18, 19, 20, 21, 23, 22, 26, 28, 25];
+nhTypeURL := func(url) begin
+	for i := 0 to StrLen(url) - 1 do begin
+		local c := url[i];
+		local code := nil, shifted := nil;
+		if c >= $0 and c <= $9 then code := nhDigitKeys[Ord(c) - Ord($0)]
+		else if c = $. then code := 47
+		else if c = $/ then code := 44
+		else if c = $- then code := 27
+		else if c = $: then begin code := 41; shifted := true; end
+		else code := GetSlot(nhLetterKeys, Intern(SPrintObject(c)));
+		if shifted then KeyEvent(56, true);
+		KeyEvent(code, true);
+		KeyEvent(code, nil);
+		if shifted then KeyEvent(56, nil);
+	end;
+end;
+
+nhApp := func() GetRoot().|NetHopper:ALLPEN|;
+nhTitle := func() begin
+	local app := call nhApp with ();
+	if app and app.target then app.target.fTitle;
+end;
+// the Internet Enabler's connection slip: a root child with a link id
+nhConnectSlip := func() begin
+	local slip := nil;
+	foreach c in GetRoot():ChildViewFrames() do
+		if HasSlot(c, 'fLinkID) and c._defaultButton and c._defaultButton.viewCObject then slip := c;
+	slip;
+end;
+// the page's image: the view that shows an icon, in the content view
+nhImageView := func() begin
+	local found := nil;
+	local walk;
+	walk := func(v, depth) begin
+		if depth < 8 and not found then foreach c in v:ChildViewFrames() do begin
+			if c.viewclass = 76 and c.icon then found := c;
+			call walk with (c, depth + 1);
+		end;
+	end;
+	call walk with ((call nhApp with ()).contentView, 0);
+	found;
+end;
+
+nhDone := func() begin
+	Print("nethopper: done, " & nhFailures & " failed");
+	HostQuit();
+end;
+
+nhImage := func() begin
+	local image := call nhImageView with ();
+	call nhCheck with ("the image's placeholder", image, "no view with an icon");
+	if not image then return call nhDone with ();
+	call nhTapView with (image);
+	call waitFor with ("nethopper: the image", func() begin
+			local v := call nhImageView with ();
+			v and v.icon.colordata;
+		end, func() AddDelayedCall(func() begin
+			local v := call nhImageView with ();
+			ScreenSnapshot("nethopper-3.pgm");
+			local b := v:GlobalBox();
+			local x := (b.left + b.right) div 2, y := (b.top + b.bottom) div 2;
+			// the bar in the middle black, the gap between it and the frame white
+			call nhCheck with ("the image decoded and drawn",
+				v.icon.colordata and ScreenPixel(x, y) < 128 and ScreenPixel(b.left + 5, y) >= 128,
+				"pixels " & ScreenPixel(x, y) & ", " & ScreenPixel(b.left + 5, y) & " in " & SPrintObject(b));
+			call nhDone with ();
+		end, nil, 1500), 60);
+end;
+
+nhBrowse := func() begin
+	local app := call nhApp with ();
+	call tapAt with (37, 423);					// Go To URL
+	call waitFor with ("nethopper: the Open a Location slip", func() app.gotoURLlink.viewCObject, func() begin
+		call nhTypeURL with (kNetHopperURL);
+		ScreenSnapshot("nethopper-1.pgm");
+		call nhCheck with ("the URL typed", StrEqual(app.gotoURLlink.URLInput.entryLine.text, kNetHopperURL),
+			"the field says " & app.gotoURLlink.URLInput.entryLine.text);
+		call nhTapView with (app.gotoURLlink.goButt);
+		// (the slip is open once its Connect button is on the screen)
+		call waitFor with ("nethopper: the connection slip", func() begin
+				local slip := call nhConnectSlip with ();
+				local cb := slip and slip._defaultButton:GlobalBox();
+				cb and call nhBlackIn with (cb.left, cb.top, cb.right, cb.bottom) > 40;
+			end, func() begin
+			Print("nethopper: " & (call nhConnectSlip with ())._defaultButton.text);
+			call nhTapView with ((call nhConnectSlip with ())._defaultButton);		// Connect
+			call waitFor with ("nethopper: the page", func() StrEqual(call nhTitle with (), "Host Test Page"),
+				func() AddDelayedCall(func() begin
+					ScreenSnapshot("nethopper-2.pgm");
+					Print("nethopper: loaded " & call nhTitle with ());
+					call nhCheck with ("the page's heading drawn", call nhBlackIn with (0, 40, 300, 66) > 300,
+						"black pixels " & call nhBlackIn with (0, 40, 300, 66));
+					call nhCheck with ("the page's text drawn", call nhBlackIn with (0, 100, 320, 132) > 300,
+						"black pixels " & call nhBlackIn with (0, 100, 320, 132));
+					call nhImage with ();
+				end, nil, 1500), 90);
+		end, 60);
+	end, 30);
+end;
+
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+call walkSetup with (name, func()
+	call waitFor with ("nethopper: installed", nhApp, func() begin
+		(call nhApp with ()):Open();
+		// its help page, parsed by its native HTML parser, laid out and drawn
+		call waitFor with ("nethopper: the help page", func() StrEqual(call nhTitle with (), "NetHopper 3.2 Help"),
+			func() AddDelayedCall(func() begin
+				ScreenSnapshot("nethopper-0.pgm");
+				call nhCheck with ("the help page drawn", call nhBlackIn with (0, 40, 300, 66) > 300,
+					"black pixels " & call nhBlackIn with (0, 40, 300, 66));
+				call nhBrowse with ();
+			end, nil, 1500), 60);
+	end, 120));
+Print("nethopper: the script is loaded");

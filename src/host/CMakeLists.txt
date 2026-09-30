@@ -818,6 +818,27 @@ if(EXISTS ${NIE_DIR}/REGPKGS/inetenbl.pkg)
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(host.NewtonInetFSM PROPERTIES TIMEOUT 180
                          PASS_REGULAR_EXPRESSION "inetfsm: proto protoEndpointFSM.*inetfsm: connected.*inetfsm: echoed hello.*inetfsm: states Connecting Connected Disconnecting Disconnected .*inetfsm: done")
+    # NetHopper 3.2 browsing (demo/nethopper.ns): its help page parsed by its
+    # own native code (Newton C++ Tools BinCFunctions on src/armcpu), a URL
+    # typed into Open a Location, the NIE's connection slip answered, the
+    # page fetched from tools/host/httpserve.py (serving demo/www), laid out
+    # and drawn, its GIF fetched and decoded (natively too) and drawn
+    # (snapshots in nethopper-N.pgm)
+    set(NETHOPPER_DIR ${CMAKE_SOURCE_DIR}/../fixtures/packages/apps/NetHopper3.2)
+    if(EXISTS ${NETHOPPER_DIR}/nethopper.pkg AND Python3_EXECUTABLE)
+        add_test(NAME host.NewtonNetHopper
+                 COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/host/httpserve.py
+                         --dir ${CMAKE_CURRENT_SOURCE_DIR}/demo/www --port 52381 --
+                         $<TARGET_FILE:newton> --display 320x480 --erase
+                         --store ${CMAKE_CURRENT_BINARY_DIR}/nethopper.store --headless 240
+                         --package ${NIE_DIR}/ENETSUP/newtdev.pkg --package ${NIE_DIR}/REGPKGS/inetenbl.pkg
+                         --package ${NIE_DIR}/REGPKGS/inetstup.pkg --package ${NETHOPPER_DIR}/nethopper.pkg
+                         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/nethopper.ns
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+        set_tests_properties(host.NewtonNetHopper PROPERTIES TIMEOUT 300
+                             PASS_REGULAR_EXPRESSION "nethopper: the help page drawn: ok.*nethopper: the URL typed: ok.*nethopper: loaded Host Test Page.*nethopper: the page's heading drawn: ok.*nethopper: the image decoded and drawn: ok.*nethopper: done, 0 failed"
+                             FAIL_REGULAR_EXPRESSION "waited in vain|is not answered|stopped \\(|FAILED")
+    endif()
 endif()
 
 # the NewtonScript decompiler's round trip over a sample of the ROM's

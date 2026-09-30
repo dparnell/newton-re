@@ -186,3 +186,19 @@ upper bounds. The drawing work was measured this way
 (`docs/qd/README.md`, "Drawing speed"): run
 `src/host/demo/drawbench.ns` with more rounds and profile the process
 while it runs.
+
+## httpserve.py - a web server for a host Newton to browse
+
+A host Newton browsing the web (NetHopper over the Newton Internet Enabler,
+which reaches the host's own TCP/IP stack) needs a web server to ask.  This
+serves a directory on 127.0.0.1 with Python's own `http.server`, runs a
+program given after `--`, and stops serving when the program ends:
+
+    python tools/host/httpserve.py --dir src/host/demo/www --port 52381 -- \
+        build/host/host/newton ... --script src/host/demo/nethopper.ns
+
+**Inputs:** the directory to serve and the port.  **Output:** each request
+as `[http] GET /path 200`, the program's output (stdout and stderr merged)
+and `[http] the program answered N`; it exits with the program's status (1
+when the port cannot be had).  ctest `host.NewtonNetHopper` runs NetHopper
+3.2 under it (`src/host/demo/nethopper.ns`).  Standard library only.
