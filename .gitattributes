@@ -23,7 +23,7 @@ romsrc/**/*.bin binary
 romsrc/**/*.png binary
 romsrc/**/*.wav binary
 romsrc/**/*.pict binary
-romsrc/**/*.ttf binary
+romsrc/**/*.sfnt binary
 romsrc/**/*.pkg binary
 romsrc/**/*.ns text eol=lf
 romsrc/**/*.tsv text eol=lf

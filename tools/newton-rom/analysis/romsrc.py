@@ -116,8 +116,9 @@ constructors of its own):
     pict('picture, "resources/picture/addr.pict")   a QuickDraw picture: a
                     PICT file (512 bytes of nought, then the picture), as a
                     Macintosh drawing program reads and writes it
-    (a font, 'sfnt, is binary('sfnt, "resources/sfnt/addr.ttf"): the
-    binary is the font file, which font tools read)
+    (a font, 'sfnt, is binary('sfnt, "resources/sfnt/addr.sfnt"): the
+    binary is the font file - an sfnt container of Apple's bitmap and
+    metric tables, with no outlines, so not a TrueType font)
     function("functions/addr.ns")   a function, compiled from that source
     same("path")    the object a compiled function holds at that path: a
                     shared object only compiled functions use (bytecode two
@@ -859,7 +860,7 @@ class Extractor:
 			with open(os.path.join(self.out, rel), "wb") as f:
 				f.write(bytes(PICT_HEADER) + data)
 			return "pict(%s, \"%s\")" % (self.value(cls, path + "^"), rel)
-		rel = "resources/%s/%x.%s" % (folder, o, "ttf" if cname == "sfnt" else "bin")
+		rel = "resources/%s/%x.%s" % (folder, o, "sfnt" if cname == "sfnt" else "bin")
 		if self.in_function:
 			return "binary(%s, \"%s\")" % (self.value(cls, path + "^"), rel)	# (compiled, not written)
 		os.makedirs(os.path.join(self.out, os.path.dirname(rel)), exist_ok=True)

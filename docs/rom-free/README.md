@@ -238,8 +238,9 @@ reported as the decompiler's was.
      `pict('picture, "resources/picture/<addr>.pict")`, and the builder
      drops the 512 bytes. No PNG is made beside them yet: that waits on
      the host drawing a picture's text (`qd/PicPlay.h`).
-   - The 13 fonts are `.ttf` files, byte for byte the `sfnt` binary.
-     fontTools opens them:
+   - The 13 fonts are `.sfnt` files, byte for byte the `sfnt` binary: sfnt
+     containers (version 0x00010000) with no outlines, so not TrueType
+     fonts, whatever the container's version says. fontTools opens them:
      - five are bitmap fonts (`bdat`, `bloc`, `cmap`, `head`, `hhea`,
        `hmtx`, `hsty`, `maxp`, `name`, `post`; "Roman Regular" is the
        first);
