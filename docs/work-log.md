@@ -109,6 +109,26 @@ bugs and ROM bugs found on the way.
   count wraps.  `HostOptionLayouts`' '*' copies an option's trailing
   bytes as they are ('rout' numbers, 'mpro' profiles).
 
+## 2026-09-30: memory cards, the first three layers
+
+- The host's PC card (2c50936d, ctest `hal.HostCard`): a card image in
+  Einstein's TLinearCard container (`hal/host/HostCard.h`) and a
+  `TCardSocket` over it, two sockets (`hal/CardSocket.h` replaces the
+  DDK's).
+- The CIS (ded9228d, c9862e92, ctest `pcmcia.CardCIS`): every function of
+  `TCardCISIterator`, `TPCMCIA20Parser` and `TCardPCMCIA`.
+- The memory card handler and the card's store (a470185b, ctest
+  `pcmcia.MemoryCard`): `TCHMemModem`, `TCardHandler`
+  (`pcmcia/CardHandler.h` replaces the DDK's), the card power manager,
+  `TCardMessage`, the host's `TFlashSeries2` (`stores/flash/CardFlash.h`)
+  and `TFlashStore`'s card branches - a 4 MB card store formatted,
+  written, read back after the card is pulled and put back, and
+  write-protected.
+- Findings: the ROM's `TCardDevice` is 0x20 bytes because the ARM
+  compiler gave its three one-bit fields a whole word, so Ghidra's field
+  names for it are three bytes out; `IdentifyCard` needs
+  CISTPL_DEVICE_GEO (without it the block size comes out as 1).
+
 ## 2026-09-30: the fax page decoder
 
 - `comms/fax/T4FaxLine.h` (bdc0ad06; 0x204698-0x204e34): `TT4FaxLine`,
