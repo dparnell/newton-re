@@ -1083,6 +1083,20 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/../romsrc/rex/inetenbl.pkg)
         set_tests_properties(host.NewtonNetHopper PROPERTIES TIMEOUT 300
                              PASS_REGULAR_EXPRESSION "nethopper: the help page drawn: ok.*nethopper: the URL typed: ok.*nethopper: loaded Host Test Page.*nethopper: the page's heading drawn: ok.*nethopper: the image decoded and drawn: ok.*nethopper: done, 0 failed"
                              FAIL_REGULAR_EXPRESSION "waited in vain|is not answered|stopped \\(|FAILED")
+        # the NetHopper Scheduler used for what it is for (apps-netsched.ns):
+        # a URL added in its URL Selector, Load Now, the page fetched into
+        # NetHopper's cache
+        add_test(NAME host.NewtonAppNetSched
+                 COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/host/httpserve.py
+                         --dir ${CMAKE_CURRENT_SOURCE_DIR}/demo/www --port 0 --
+                         $<TARGET_FILE:newton> --display 320x480 --erase
+                         --store ${CMAKE_CURRENT_BINARY_DIR}/app-netsched.store --headless 240
+                         --package ${NETHOPPER_DIR}/nethopper.pkg --package ${NETHOPPER_DIR}/nhscheduler.pkg
+                         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/apps-netsched.ns
+                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+        set_tests_properties(host.NewtonAppNetSched PROPERTIES TIMEOUT 300
+                             PASS_REGULAR_EXPRESSION "GET /nethopper.html 200.*netsched: done, 0 failed"
+                             FAIL_REGULAR_EXPRESSION "waited in vain|is not answered|stopped \\(|FAILED")
         # NetHopper's JPEG viewer (NetHopperJPEG.pkg) with no NewtsCape to
         # decode for it (demo/nethopper-jpeg.ns): the JPEG fetched, the
         # system's "Sorry, a problem has occurred. (-48200)" alert, the

@@ -1,0 +1,110 @@
+// NetHopper Scheduler (fixtures/packages/apps/NetHopper3.2/nhscheduler.pkg)
+// used as its user would: it keeps a list of web pages and has NetHopper
+// fetch them into its cache - at alarm times, or at once with Load Now.
+// Opened from the Extras drawer; in its URL Selector a page's URL is typed
+// and Added, the selector closed, and Load Now tapped: the Internet
+// Enabler grabs the Host network link (comms/host/HostLink.ns; its
+// connection slip answered with Connect if it asks) and the page is fetched from the web
+// server tools/host/httpserve.py runs over src/host/demo/www/ (its log
+// says "[http] GET /nethopper.html 200", which the ctest requires) and
+// kept in NetHopper's cache (checked in its documents soup,
+// NH3StreamDox:ALLPEN).  ctest
+// host.NewtonAppNetSched:
+//
+//   python tools/host/httpserve.py --dir src/host/demo/www --port 0 -- \
+//       build/host/host/newton --display 320x480 --erase --store tmp/netsched.store \
+//       --headless 240 --package fixtures/packages/apps/NetHopper3.2/nethopper.pkg \
+//       --package fixtures/packages/apps/NetHopper3.2/nhscheduler.pkg \
+//       --script src/host/demo/apps-netsched.ns
+
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
+HostInclude("walkhelpers.ns");		// findView, the steps
+HostInclude("apphelpers.ns");		// openFromExtras, typeText, tapButtonText
+
+wtName := "netsched";
+nsSym := '|NetSched:RLF|;
+nsURL := "http://127.0.0.1:" & HostGetEnv("NEWTON_HTTP_PORT") & "/nethopper.html";
+
+nsApp := func() GetRoot().(nsSym);
+// the URL field's label (a label picker: its text carries the picker's
+// mark before "URL:")
+nsURLLabel := func() call findView with (GetRoot(), func(v) IsString(v.text) and StrPos(v.text, "URL:", 0) and StrLen(v.text) < 8);
+nsSelector := func() call findView with (GetRoot(), func(v) IsString(v.text) and StrEqual(v.text, "URL Selector"));
+// the list of URLs the scheduler keeps (its application preferences)
+nsURLs := func() begin
+	local prefs := GetAppPrefs(nsSym, {});
+	if prefs.URLs then prefs.URLs else [];
+end;
+// the Internet Enabler's connection slip: a root child with a link id
+nsConnectSlip := func() begin
+	local slip := nil;
+	foreach c in GetRoot():ChildViewFrames() do
+		if HasSlot(c, 'fLinkID) and c._defaultButton and c._defaultButton.viewCObject then slip := c;
+	slip;
+end;
+// NetHopper's cache (its documents soup): an entry for the page
+nsCached := func() begin
+	local found := nil;
+	local soup := GetUnionSoup("NH3StreamDox:ALLPEN");
+	if soup then begin
+		local c := soup:Query(nil);
+		local e;
+		while not found and (e := c:Entry()) do begin
+			local url := e.fTransReq and e.fTransReq.targetURL;
+			if url and IsString(url.filenameStr) and StrEqual(url.filenameStr, "nethopper.html") then found := e;
+			c:Next();
+		end;
+	end;
+	found
+end;
+
+wtSteps := [
+	func(done) call openFromExtras with ("NetHopper Scheduler", nsSym, done),
+	settleStep,
+	func(done) begin
+		call tapButtonText with (call nsApp with (), "Select URL's");
+		call waitFor with ("netsched: the URL Selector", nsURLLabel, done, 10);
+	end,
+	// the URL field: the caret put in it, the URL typed, Add
+	func(done) begin
+		local label := call nsURLLabel with ();
+		local lb := label:GlobalBox();
+		// (the field is the lines right of and below the label)
+		call tapAt with (180, lb.bottom + 8);
+		call waitFor with ("netsched: the caret in the URL field", func() GetCaretBox() and GetCaretBox().top > lb.top - 4, func() begin
+			call typeText with (nsURL);
+			AddDelayedCall(func() begin
+				call tapButtonText with (GetRoot(), "Add");
+				call waitFor with ("netsched: the URL added", func() Length(call nsURLs with ()) > 0, func() begin
+					call wtCheck with ("the URL added to the list (" & Length(call nsURLs with ()) & ")",
+						Length(call nsURLs with ()) = 1 and StrEqual(call nsURLs with ()[0], nsURL), SPrintObject(call nsURLs with ()));
+					// the selector closed with its close box
+					// (its close box: the picture button at the bottom right,
+					// below the URL field)
+					call tapAt with (262, 318);
+					call waitFor with ("netsched: the selector closed", func() not call nsSelector with (), done, 10);
+				end, 10);
+			end, nil, 800);
+		end, 10);
+	end,
+	func(done) begin
+		call tapButtonText with (call nsApp with (), "Load Now");
+		// (the Internet Enabler asks which link only when there is a choice
+		// to make; the Host network's is the one, and it connects at once)
+		call waitFor with ("netsched: the page in NetHopper's cache", func() begin
+				local slip := call nsConnectSlip with ();
+				if slip then call tapCentre with (slip._defaultButton);		// Connect
+				call nsCached with ()
+			end, func() begin
+			call wtCheck with ("Load Now fetched the page into NetHopper's cache", call nsCached with (), "(not cached)");
+			call done with ();
+		end, 90);
+	end,
+	call shotStep with ("netsched"),
+	func(done) begin
+		Print("netsched: done, " & wtFailures & " failed");
+		HostQuit();
+	end];
+
+call walkSetup with ([2, 0, 45, 34, 14, 37], func()			// "Daniel"
+	call waitFor with ("netsched: installed", func() GetRoot().(nsSym) and GetRoot().|NetHopper:ALLPEN|, wtNext, 60));
