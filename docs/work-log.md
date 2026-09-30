@@ -237,6 +237,22 @@ is the same value spelt so that it cannot be read two ways.
   notBic loops never advance the mask pointer; `ScaleStdRRect` scales the
   corner oval crosswise on a fax.
 
+## 2026-09-30: live ink and the busy box
+
+- The inker's live ink (c7129677): `TInker::Convert` takes the tablet
+  buffer a record at a time (a pen-up rewritten with the pen size and
+  the bounds its ink covered), `DrawInk` joins the points reading ahead
+  up to 80, `LCDEntry`/`InkThem` read the strokes and wake the
+  application; `TLiveInker` draws into a tile of at most 64x64 pixels'
+  bytes ORed onto the display, never into the screen's bits.  The busy
+  box (`TBusyBox`, commands 0x33-0x37) over `qd/BusyBox.cpp` and the
+  ROM's busy picture.  `StrokeTime` does nothing while the inker runs, as
+  the ROM's does.  ctest `host.NewtonLiveInk`.
+- Found: `gWireRecog` is 1 (the RW data is at 0x0C100800; layout.json's
+  RAM_RW says 0x0C100000); `TBusyBoxEvent`'s command must be a ULong -
+  as a Windows `long` its high half was rubbish and the commands were
+  ignored.
+
 ## 2026-09-30: two NIE loose ends
 
 - A new Manual Host network setup showed Ethernet's card picker again:
