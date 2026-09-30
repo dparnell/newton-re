@@ -255,7 +255,7 @@ class FaxAnswerer:
             detail = (" " + frame[3:].hex()) if len(frame) > 3 else ""
         log("fax: <- %s%s" % (name, detail))
         if name == "DCS":
-            fif = frame[3:-2]
+            fif = frame[3:]             # (a +FTH frame has no FCS: the modem adds it)
             self.fine = len(fif) > 1 and bool(fif[1] & 0x40)
             width_code = (fif[2] & 0x03) if len(fif) > 2 else 0
             self.width = {0: 1728, 1: 2048, 2: 2432}.get(width_code, 1728)
@@ -785,6 +785,7 @@ def self_test():
     def send_frames(*frames):
         command("AT+FTH=3", b"CONNECT\r\n")
         for data in frames:
+            data = data[:-2]            # a DTE sends its frames without the FCS
             newton.sendall(dle_stuff(data))
             read_until(b"OK\r\n" if data[1] & 0x10 else b"CONNECT\r\n")
 
