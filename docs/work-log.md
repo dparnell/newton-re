@@ -237,6 +237,28 @@ is the same value spelt so that it cannot be read two ways.
   notBic loops never advance the mask pointer; `ScaleStdRRect` scales the
   corner oval crosswise on a fax.
 
+## 2026-09-30: a bigger internal flash, in a sparse file
+
+- What the ROM allows (`docs/stores/README.md`, "Bigger flash"): chips
+  are found by a flash driver (the ROM's own knows three 1-2 MB parts),
+  a range's size is chips x chip size, at most two banks and three
+  ranges; the read windows (from 0x30000000) meet the write windows
+  (0x34000000) at 64 MB - the largest the ROM's code takes unchanged; the
+  store's migrated directory entries name at most 1024 blocks, 128 MB.
+  128 MB with the write windows moved to 0x38000000 (DEVIATION
+  `InternalFlashWriteWindow`, `stores/flash/Flash.h`; nothing on the
+  flash changes) (37cb0497).
+- The sparse host flash image 'NewtFlsh' (`hal/host/HostFlash.h`): a
+  header, a map of 1 KB chunks, only the chunks not all 0xFF stored,
+  written chunk before map word so a torn write leaves a readable file;
+  new stores are sparse by default - 17 KB at 4 MB, 1.5 MB formatted at
+  128 MB, 11.75 MB with 9.9 MB of entries; flat files (Einstein's) still
+  open.  `newton --flash-size`/`--flat-flash`, `tools/stores/flashimage.py`;
+  ctests `stores.HostFlash`, `host.NewtonBigStore*`, `tools.FlashImage`.
+- Bug found: `SDirEnt::IsValidMigratedObjectInfo` was reconstructed as
+  `< 0x3FC0 && < 0x3FF` where the ROM's is `<= 0x3FFF && <= 0x3FF`
+  (177aeb33).
+
 ## 2026-09-30: the year-2010 fix
 
 - The owner's decision: fix the ROM's year-2010 overflow rather than

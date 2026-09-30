@@ -33,7 +33,12 @@ the way are all in `docs/work-log.md`.
   monitor protocol (a host protocol's methods need numbered thunks, NOT
   YET).
 - **Stores**: the internal store is the ROM's own flash format in a host
-  file (`newton --store`, `stores/flash/`).  **Memory cards mount**: a
+  file (`newton --store`, `stores/flash/`), up to 128 MB (`--flash-size`)
+  in a sparse file that grows with what is written.  Open: past 128 MB
+  (the migrated-entry cap: slow lookups, or 256 KB erase regions - the
+  owner's call); a fresh store throws while `HostPrepareStore` makes the
+  Names soup, so the factory soups after it are never made - being
+  looked into.  **Memory cards mount**: a
   card is a host file (`newton --card`), formatted through the ROM's own
   dialogs, mounted and unmounted as it goes in and out (ctest
   `host.NewtonCard`); a card with Einstein's default CIS mounts
