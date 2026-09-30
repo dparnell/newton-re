@@ -27,6 +27,7 @@ are kept. How it was made, and why it is shaped as it is, is in
 | `maps.ns` | The frame maps (the slot names of the ROM's frames). |
 | `resources/` | The binaries: bitmaps as PNG (`bits`, `mask`, `cbits`), simple sounds as WAV, pictures as PICT, fonts as directories - a BDF file per bitmap strike and a text file per other table, which the builder packs back into the `'sfnt` binary (`tools/fonts/README.md`; what the tables hold, `docs/qd/fonts-sfnt.md`). What has no editable form yet (compressed sounds, tables) is `.bin`. |
 | `lexicons/`, `lexicons.tsv` | The recognisers' word tries, with their ROM addresses. |
+| `romdata/`, `romdata.tsv` | The ROM's other data that code reads at its ROM address: the parameter block `gParamBlock` (0x1000, a page - `gROMVersion`, `gROMStage`, `gHardwareType`, ...), whose version words a package's native code reads (`armcpu`). Added with `romsrc.py romdata build/MP2x00US romsrc`, the extractor's own code for it. |
 | `rex/`, `rex.tsv` | The ROM extension, in pieces: its header and config entries, and the ten packages. A package with a frames part is `<Package>.head.bin` (its directory), the part as a tree of its own in `<Package>/` (the same layout as this one), and `<Package>.tail.bin`. |
 | `magic.tsv` | The magic-pointer table: `@index` and the object it names. |
 | `layout.tsv` | The manifest: every object's address, path in the source and header flags, each frame's map, and aliases (shared objects that a compiled function makes afresh). |
@@ -38,12 +39,16 @@ tools/newton-rom/analysis/romsrc.py --help`).
 
 ## Building it
 
-```
-python tools/newton-rom/analysis/romsrc.py build romsrc -o build/objects.bin --newtonscript build/host/host/newtonscript
-```
+**The default build builds it**: `cmake --build <build>` writes
+`<build>/romsrc-objects.bin`, which is what `newton` and `newtonscript`
+boot from, and makes it again whenever a file here, the builder's Python
+or `newtonscript` changes (`cmake --build <build> --target romsrc` builds
+it alone). It needs Python 3 and the host's own `newtonscript` - no ROM
+image and no `build/MP2x00US`. By hand:
 
-or `cmake --build <build> --target romsrc`, which writes
-`<build>/romsrc-objects.bin`.
+```
+python tools/newton-rom/analysis/romsrc.py build romsrc --relayout -o build/objects.bin --newtonscript build/host/host/newtonscript
+```
 
 - The builder compiles the functions with the host's own compiler
   (`newtonscript --compile-records`, run with no ROM image).
@@ -84,13 +89,25 @@ the source cannot say (which map a frame shares, a header's flags).
 
 ## Booting from it
 
+**It is what the OS boots from by default:**
+
 ```
-build/host/host/newton --objects build/objects.bin
+build/host/host/newton
 ```
 
-This is the OS with no ROM image. With the tree as committed, it draws
-exactly what the boot on the ROM image draws: ctest
-`host.NewtonNoROMSameScreen`.
+boots `<build>/romsrc-objects.bin`, with no ROM image anywhere. newton
+looks for the file in `NEWTON_OBJECTS`, beside itself, in the directory
+above and at the build's path (`src/host/HostObjectsFile.h`); when there is
+none it says how to build it and stops - it does not go looking for a ROM
+image. `--objects <file>` boots another object file (an edited copy's);
+`--rom build/MP2x00US/rom.bin` boots the original ROM image instead, for
+checking. `newtonscript` finds its objects the same way.
+
+With the tree as committed, the boot draws exactly what the boot on the
+ROM image draws: ctest `host.NewtonNoROMSameScreen`. The host's demo tests
+all boot the default, so they run on this tree; a checkout without the ROM
+image builds, boots and runs them (the tests that compare with the ROM are
+then not registered).
 
 ## The ctests
 

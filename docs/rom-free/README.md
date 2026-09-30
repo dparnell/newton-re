@@ -332,11 +332,12 @@ commit that added it, and is now the source: the extractor is not run
 over it again. `romsrc/README.md` says how to edit it, build it and boot
 from it.
 
-- The build uses the committed tree:
-  - the `romsrc` target builds `<build>/romsrc-objects.bin` from it;
-  - `host.ROMSourceBuild` does the same as the fixture for
-    `host.NewtonNoROM`, `host.NewtonNoROMSameScreen` and the edit tests,
-    which copy it.
+- The build uses the committed tree: **the default build makes
+  `<build>/romsrc-objects.bin` from it** (a custom command, made again
+  when a file of `romsrc/`, the builder's Python or `newtonscript`
+  changes; the `romsrc` target builds it alone), and **newton and
+  newtonscript boot it by default** (2026-09-30; "The default boot"
+  below).
 - `host.ROMSourceRoundTrip` still tests the extractor, by extracting
   afresh into the build directory (the `romsrc-extract` target does the
   same by hand).
@@ -386,18 +387,54 @@ at run time.
 | **The native functions** | `frames/ROMNatives.cpp` (generated), bound by name | no | unchanged |
 | **The ROM extension**: its ten packages (`pkgl`, `GetRExConfigEntry`) | `packages/ROMPackages.cpp`, `FramePartHandler.cpp` (a part in the image is read where it lies), from the "high" file spliced in by `SpliceROMExtension` | yes | nothing at first: the host already runs without an extension. Then the packages as sources (step 2's item 6), installed from the built tree |
 | **The recognisers' lexicons**: 129 tries, C data outside the object area | `recognition/ROMDictionaryData.cpp` (`gROMDictionaryTable`: addresses into the image) | yes | empty at first: every ROM dictionary answers nothing, which that file already allows. Then extracted into `src/` as a generated table, or into the tree as resources |
-| **ROM code a package's native code calls** | `armcpu/PackageNativeCPU.cpp` (the emulated CPU reads the ROM) | yes | only a package with ARM code needs it; without the image such a package's native calls fail, as they do now for code the host does not answer |
+| **The ROM parameter block** (`gParamBlock`, 0x1000, a page: `gROMVersion`, `gROMStage`, ...) that a package's native code reads - NTK's stubs choose their entry points by `gROMVersion` | `armcpu/PackageNativeCPU.cpp` (the emulated CPU maps the ROM at 0) | yes | **the object file's block**: `romsrc/romdata/gParamBlock.bin` (`romdata.tsv`), read through `ROMBytesAt` when there is no image. Traced over the fixtures (Mahjongg, NewtHack): 0x13dc is the only ROM address their code reads. Any other ROM address stops the CPU as an unanswered read |
 | **The other generated tables** (grammar, recognition nets, fonts' metrics tables, CRC, the codecs' tables, ...) | `src/*/…Tables.cpp` | no: compiled in | unchanged |
 
 So the first no-`--rom` boot needs only the first two rows from the built
 tree. The later rows are things the machine can do without, and each
-comes back as its own piece of work.
+came back as its own piece of work.
+
+**Now (2026-09-30) nothing reads the ROM image at run time when the OS
+boots from the object file.** `ROMImageBase` answers nil; its users and
+`ROMBytesAt`/`ROMRegion`'s all find their data in the object file's
+blocks - the lexicons, the parameter block, the ROM extension - and the
+object area and magic pointers are the file's own. What still needs the
+ROM image is only what checks the reconstruction against it: the tests
+that name `build/MP2x00US` or `DebugRom/`, and the unit tests compiled
+with `NEWTON_ROM_BIN`/`NEWTON_ROM_IMAGE` (they import the image
+themselves; a configure without the image does not register them).
+
+### The default boot
+
+- `newton` and `newtonscript` with neither `--rom` nor `--objects` boot
+  the object file: `NEWTON_OBJECTS`, else `romsrc-objects.bin` beside the
+  program or in the directory above it, else the build's own path,
+  compiled in (`src/host/HostObjectsFile.h`).
+- **No fallback to the ROM image.** With no object file, both say how to
+  build one (`cmake --build <dir> --target romsrc`, or `romsrc.py build`
+  by hand) and stop. Falling back would hide a broken build behind a boot
+  that looks the same; `--rom` asks for the image explicitly, and newton
+  says on stderr that it booted the image, not the reconstructed data.
+- `newtonscript --no-objects` runs without the ROM's objects (all the
+  builder's compiling needs; it also names a file that is not there
+  through `NEWTON_ROM`, which works as before).
+- The build needs no ROM: configured with `-DNEWTON_ROM_BUILD=<a
+  directory that is not there>`, it builds newton, newtonscript and the
+  object file. `src/CMakeLists.txt` wraps `add_test`: a test whose
+  command names `build/<rom>` or `DebugRom/`, or whose program is
+  compiled with `NEWTON_ROM_BIN`/`NEWTON_ROM_IMAGE`, is not registered,
+  and one that needs a fixture only such a test sets up is disabled.
+- The host's demo ctests boot the default. On the image on purpose, as
+  the cross-check: `host.Newton` (the demo boot), `host.NewtonNoROMSameScreen`
+  and `host.NewtonEditedSameScreen` (both ways, pixel for pixel), and the
+  decompiler's `host.NSDecompileRoundTrip`.
 
 ### Where it stands: the OS boots with no ROM image
 
 `newton --objects <file>` boots the OS on the object file built from the
-tree, with no image anywhere it could find one. ctest `host.NewtonNoROM`
-does it, on the file `host.ROMSourceRoundTrip` writes.
+tree, with no image anywhere it could find one - and since 2026-09-30
+plain `newton` does, on the build's own `romsrc-objects.bin` (below, "The
+default boot"). ctest `host.NewtonNoROM` boots that default.
 
 - The world comes up on the **Notepad**: its button bar (Extras, InOut,
   Names, Dates, Undo, Find, Assist), the date and battery, the Unfiled

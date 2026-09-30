@@ -7,10 +7,11 @@
 				the mouse as the pen and the keys as the keyboard (the
 				window on the host display, host/HostWindow.h; the keyboard
 				tool's stand-in, host/HostKeyboard.h, runs as a task from
-				the kernel services hook).  The ROM image gives the world
-				its objects (the fonts, the prototypes); a NewtonScript
-				file can be run once the world is up, as the ROM's boot
-				runs its bootTestScript.
+				the kernel services hook).  The object file built from the
+				committed ROM source tree (romsrc/) gives the world its
+				objects (the fonts, the prototypes, the built-in
+				applications); a NewtonScript file can be run once the world
+				is up, as the ROM's boot runs its bootTestScript.
 
 	newton [--rom image | --objects file] [--heap bytes] [--display WxH[xdepth]] [--scale n]
 	       [--script file.ns] [--headless seconds] [--store file] [--erase]
@@ -22,11 +23,16 @@
 	writes each page it prints, as print-001.png, print-002.png, ...
 	(default: the working directory).
 
-	--objects boots on the object file built from the ROM source tree
-	(tools/newton-rom/analysis/romsrc.py build -o) with no ROM image: the
-	ROM-free track's step 3 (docs/rom-free/README.md).  Without the image
-	there is no ROM extension, so none of its packages (the Setup
-	assistant among them) is there.
+	By default newton boots on the reconstructed data: the object file the
+	build makes from the committed ROM source tree (<build>/romsrc-objects.bin,
+	romsrc/README.md; docs/rom-free/README.md), with no ROM image anywhere.
+	It is looked for in NEWTON_OBJECTS, beside the program, in the directory
+	above it and at the build's own path (host/HostObjectsFile.h); when there
+	is none newton says how to build it and stops - it does not go looking
+	for a ROM image.  --objects names another object file (an edited tree's).
+	--rom boots the original ROM image instead (build/MP2x00US/rom.bin, or
+	the AIF image in DebugRom/), which is how the reconstructed data is
+	checked against the ROM (ctest host.NewtonNoROMSameScreen).
 
 	--headless runs without a window for the seconds (a snapshot of the
 	display can be written by the script: ScreenSnapshot), or until the
@@ -108,6 +114,7 @@
 #include "FaxTool.h"
 #include "HostLink.h"
 #include "print/host/HostPrinter.h"
+#include "HostObjectsFile.h"
 #include "os600/kernel/host/TaskRuntime.h"
 #include "REPTranslators.h"
 #include "Frames.h"
@@ -155,8 +162,8 @@ __declspec(dllimport) int __stdcall GetProcessTimes(void* process, unsigned long
 #include <stdlib.h>
 #include <string.h>
 
-#ifndef NEWTON_DEFAULT_ROM_IMAGE
-#define NEWTON_DEFAULT_ROM_IMAGE "build/MP2x00US/rom.bin"
+#ifndef NEWTON_DEFAULT_OBJECTS
+#define NEWTON_DEFAULT_OBJECTS "romsrc-objects.bin"
 #endif
 
 static long gScale = 1;
@@ -172,10 +179,12 @@ static const char* gScriptPath = nil;			// --script: HostInclude's names are bes
 static int
 Usage(void)
 {
-	fprintf(stderr, "usage: newton [--rom image | --objects file] [--heap bytes] [--display WxH[xdepth]] [--scale n]\n"
+	fprintf(stderr, "usage: newton [--objects file | --rom image] [--heap bytes] [--display WxH[xdepth]] [--scale n]\n"
 					"              [--script file.ns] [--headless seconds] [--store file] [--erase]\n"
 					"              [--package file.pkg]... [--card file] [--microphone-tone hz] [--tcp-echo port]\n"
-					"              [--serial-port port|none] [--ir-peer listen:port|host:port] [--print-dir dir]\n");
+					"              [--serial-port port|none] [--ir-peer listen:port|host:port] [--print-dir dir]\n"
+					"By default it boots the object file built from romsrc/ (NEWTON_OBJECTS overrides);\n"
+					"--rom boots a ROM image instead.\n");
 	return 2;
 }
 
@@ -417,7 +426,8 @@ main(int argc, char** argv)
 #ifdef SIGBUS
 	signal(SIGBUS, HostCrashedSignal);			// a misaligned or unbacked access on a Unix host
 #endif
-	const char* romImage = NEWTON_DEFAULT_ROM_IMAGE;
+	const char* romImage = nil;				// (nil: the object file, HostDefaultObjectsFile)
+	Boolean bootImage = false;
 	long heapSize = 0x400000;
 	long width = 320, height = 480, depth = 4;
 	const char* script = nil;
@@ -430,7 +440,12 @@ main(int argc, char** argv)
 	for (int i = 1; i < argc; i++)
 	{
 		if ((strcmp(argv[i], "--rom") == 0 || strcmp(argv[i], "--objects") == 0) && i + 1 < argc)
-			romImage = argv[++i];			// (a ROM image, or the object file built from the ROM source tree)
+		{
+			// (either is told by its signature: a ROM image, or the object
+			// file built from the ROM source tree)
+			bootImage = strcmp(argv[i], "--rom") == 0;
+			romImage = argv[++i];
+		}
 		else if (strcmp(argv[i], "--heap") == 0 && i + 1 < argc)
 			heapSize = strtol(argv[++i], nil, 0);
 		else if (strcmp(argv[i], "--display") == 0 && i + 1 < argc)
@@ -488,6 +503,26 @@ main(int argc, char** argv)
 		else
 			return Usage();
 	}
+	if (romImage == nil)
+	{
+		romImage = HostDefaultObjectsFile(argv[0], NEWTON_DEFAULT_OBJECTS);
+		if (romImage == nil)
+		{
+			HostObjectsFileMissing("newton", NEWTON_DEFAULT_OBJECTS);
+			return 1;
+		}
+	}
+	else if (bootImage)
+		fprintf(stderr, "[host] booting the ROM image %s (--rom), not the reconstructed data\n", romImage);
+	FILE* readable = fopen(romImage, "rb");
+	if (readable == nil)
+	{
+		fprintf(stderr, "newton: cannot read %s\n", romImage);
+		if (!bootImage)
+			HostObjectsFileMissing("newton", NEWTON_DEFAULT_OBJECTS);
+		return 1;
+	}
+	fclose(readable);
 	if (erase && storeFile != nil && remove(storeFile) == 0)
 		fprintf(stderr, "[host] %s erased; the machine starts new\n", storeFile);
 	HostSetStoreFile(storeFile);

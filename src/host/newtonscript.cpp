@@ -2,25 +2,31 @@
 	File:		host/newtonscript.cpp
 
 	Contains:	newtonscript - the reconstructed NewtonScript running on the
-				host: the object system over a ROM image, the compiler and
+				host: the object system over the ROM's objects, the compiler and
 				the interpreter, with the REP reading from stdin (or files
 				given on the command line) and printing to stdout, the way
 				the ROM's REP runs over its stdio translators.
 
 	Usage:
-		newtonscript [--rom <image>] [--heap <bytes>] [--display <w>x<h>[x<depth>]] [-e <source>] [file.ns ...]
+		newtonscript [--objects <file> | --rom <image> | --no-objects] [--heap <bytes>] [--display <w>x<h>[x<depth>]] [-e <source>] [file.ns ...]
 		newtonscript [--rom <image>] --roundtrip <records> <results>
-		newtonscript [--rom <image>] --compile-records <records> <output>
+		newtonscript [--no-objects] --compile-records <records> <output>
 		newtonscript --ima-expand <ima blocks> <pcm> | --ima-compress <pcm> <ima blocks>
 
 	Each file is loaded with ParseFile (each form compiled and run, as the
 	NTK loads a text file); -e compiles and runs a string; with no files
 	and no -e, or with -i, forms are read from stdin one line at a time
-	(REPAcceptLine) until the end of the input.  The ROM image defaults to
-	the MP2x00 US image in DebugRom/ next to the source tree (NEWTON_ROM
-	overrides); without a readable image the object system runs without
-	the ROM's objects (its built-in NewtonScript functions are then
-	missing, the reconstructed natives are not).  The host adds the global
+	(REPAcceptLine) until the end of the input.  The ROM's objects come by
+	default from the object file the build makes from the committed ROM
+	source tree (<build>/romsrc-objects.bin, romsrc/README.md), found as
+	newton finds it (host/HostObjectsFile.h: NEWTON_OBJECTS, beside the
+	program, the build's path); with none newtonscript says how to build it
+	and stops.  --rom loads a ROM image instead, for checking against the
+	ROM.  --no-objects - or a file named by --rom, --objects or NEWTON_ROM
+	that cannot be read (romsrc.py's builder names a file that is not there
+	on purpose) - runs the object system without the ROM's objects (its
+	built-in NewtonScript functions are then missing, the reconstructed
+	natives are not), which is all compiling needs.  The host adds the global
 	function ROMConstant(name): the ROM's R constant of that name (a
 	string or symbol, case as in ROMConstants.h without the R:
 	ROMConstant("canonicalTextShape")), nil for none - for looking at the
@@ -30,10 +36,10 @@
 	RefreshViews() and ScreenSnapshot("file.pgm") then draw a view
 	hierarchy into an image (host/HostViews.h).
 
-	--objects <file> (or --rom <file>) loads the object file built from the
-	ROM source tree (tools/newton-rom/analysis/romsrc.py build -o) in place
-	of a ROM image: the object system with no image behind it
-	(docs/rom-free/README.md).
+	--objects <file> loads another object file built from the ROM source
+	tree (tools/newton-rom/analysis/romsrc.py build -o; an edited tree's):
+	the object system with no image behind it (docs/rom-free/README.md).
+	Either option takes either kind of file, told by its signature.
 
 	--roundtrip compiles each function the NewtonScript decompiler wrote
 	(tools/newton-rom/analysis/nsdecompile.py) and compares it with the ROM's
@@ -63,9 +69,10 @@
 #include <string.h>
 #include "HostNatives.h"
 #include "HostStores.h"
+#include "HostObjectsFile.h"
 
-#ifndef NEWTON_DEFAULT_ROM_IMAGE
-#define NEWTON_DEFAULT_ROM_IMAGE "DebugRom/MP2x00 US/Senior CirrusNoDebug image"
+#ifndef NEWTON_DEFAULT_OBJECTS
+#define NEWTON_DEFAULT_OBJECTS "romsrc-objects.bin"
 #endif
 
 
@@ -91,7 +98,8 @@ int		RunIMACompress(const char* inPath, const char* outPath);			// IMATool.cpp
 static int
 Usage(void)
 {
-	fprintf(stderr, "usage: newtonscript [--rom <image>] [--heap <bytes>] [-e <source>] [-i] [file.ns ...]\n");
+	fprintf(stderr, "usage: newtonscript [--objects <file> | --rom <image> | --no-objects] [--heap <bytes>] [-e <source>] [-i] [file.ns ...]\n"
+					"By default it loads the object file built from romsrc/ (NEWTON_OBJECTS overrides).\n");
 	return 2;
 }
 
@@ -99,9 +107,10 @@ Usage(void)
 int
 main(int argc, char** argv)
 {
+	// (NEWTON_ROM: a file named as --rom names one - the builder's way of
+	//  saying there is to be none)
 	const char* romImage = getenv("NEWTON_ROM");
-	if (romImage == nil)
-		romImage = NEWTON_DEFAULT_ROM_IMAGE;
+	Boolean noObjects = false;
 	long heapSize = 0x400000;
 	long displayWidth = 0, displayHeight = 0, displayDepth = 1;
 	Boolean interactive = false;
@@ -122,6 +131,11 @@ main(int argc, char** argv)
 		{
 			romImage = argv[first + 1];
 			first += 2;
+		}
+		else if (strcmp(argv[first], "--no-objects") == 0)
+		{
+			noObjects = true;
+			first += 1;
 		}
 		else if (strcmp(argv[first], "--heap") == 0 && first + 1 < argc)
 		{
@@ -154,8 +168,20 @@ main(int argc, char** argv)
 			return Usage();
 	}
 
+	if (noObjects)
+		romImage = nil;
+	else if (romImage == nil)
+	{
+		romImage = HostDefaultObjectsFile(argv[0], NEWTON_DEFAULT_OBJECTS);
+		if (romImage == nil)
+		{
+			HostObjectsFileMissing("newtonscript", NEWTON_DEFAULT_OBJECTS);
+			fprintf(stderr, "(--no-objects runs it without the ROM's objects)\n");
+			return 1;
+		}
+	}
 	InitHostStandaloneHeap(heapSize + 0x400000);
-	if (ImportROMObjectsFromFile(romImage) != noErr)
+	if (romImage != nil && ImportROMObjectsFromFile(romImage) != noErr)
 		fprintf(stderr, "newtonscript: no ROM image at %s; running without the ROM's objects\n", romImage);
 	gObjectHeapSize = heapSize;
 	InitObjects();

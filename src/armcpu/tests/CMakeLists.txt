@@ -9,7 +9,7 @@ add_test(NAME armcpu.PackageNativeCPU COMMAND test_PackageNativeCPU)
 
 # a package's native functions run through the fallback: Mahjongg deals
 add_test(NAME armcpu.Mahjongg
-    COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --erase
+    COMMAND newton --display 320x480 --erase
             --store ${CMAKE_CURRENT_BINARY_DIR}/mahjongg.store --headless 28
             --package ${CMAKE_SOURCE_DIR}/../fixtures/packages/games/Mahjongg2.1/Mahjongg.pkg
             --script ${CMAKE_CURRENT_SOURCE_DIR}/mahjongg.ns
@@ -21,7 +21,7 @@ set_tests_properties(armcpu.Mahjongg PROPERTIES TIMEOUT 180
 
 # NewtHack's five-argument native function, run every turn
 add_test(NAME armcpu.NewtHack
-    COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --erase
+    COMMAND newton --display 320x480 --erase
             --store ${CMAKE_CURRENT_BINARY_DIR}/newthack.store --headless 32
             --package ${CMAKE_SOURCE_DIR}/../fixtures/packages/games/NewtHack1_1/newthack.pkg
             --package ${CMAKE_SOURCE_DIR}/../fixtures/packages/games/NewtHack1_1/nhsounds.pkg

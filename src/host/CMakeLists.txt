@@ -5,19 +5,52 @@
 # the host boots with (HostStores.cpp).
 # the view system on the host (HostViews.h), for newtonscript and the newt
 # world's boot
-add_library(host_views STATIC HostViews.cpp HostNatives.cpp HostStores.cpp HostCards.cpp FactorySoups.cpp)
+add_library(host_views STATIC HostViews.cpp HostNatives.cpp HostStores.cpp HostCards.cpp FactorySoups.cpp HostObjectsFile.cpp)
 target_link_libraries(host_views PUBLIC flash frames comms_script comms_dock comms_fax thirdparty_nie views recognition pcmcia sound system stores packages intl intl_meetings assist hal_host_display hal_host_tablet)
 target_include_directories(host_views PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_executable(newtonscript newtonscript.cpp NSRoundTrip.cpp IMATool.cpp)
 target_link_libraries(newtonscript PRIVATE host_views)
-target_compile_definitions(newtonscript PRIVATE "NEWTON_DEFAULT_ROM_IMAGE=\"${NEWTON_ROM_IMAGE}\"")
+target_compile_definitions(newtonscript PRIVATE "NEWTON_DEFAULT_OBJECTS=\"${CMAKE_BINARY_DIR}/romsrc-objects.bin\"")
+
+# What the OS boots from: the object file built from the committed ROM
+# source tree (romsrc/README.md) by romsrc.py and the host's own
+# newtonscript, which compiles the tree's functions - no ROM image and no
+# build/${NEWTON_ROM_BUILD} anywhere.  It is part of the default build and
+# is made again only when a file of romsrc/, the builder's Python or
+# newtonscript changes.  newton and newtonscript find it beside themselves
+# (installed), in the build directory (NEWTON_DEFAULT_OBJECTS), or where
+# NEWTON_OBJECTS says (host/HostObjectsFile.h).
+find_package(Python3 COMPONENTS Interpreter)
+set(NEWTON_OBJECTS_FILE "${CMAKE_BINARY_DIR}/romsrc-objects.bin")
+if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../romsrc/layout.tsv)
+    file(GLOB_RECURSE romsrc_sources CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/../romsrc/*)
+    file(GLOB romsrc_tools CONFIGURE_DEPENDS
+         ${CMAKE_SOURCE_DIR}/../tools/newton-rom/analysis/*.py
+         ${CMAKE_SOURCE_DIR}/../tools/newton-rom/newtonrom/*.py
+         ${CMAKE_SOURCE_DIR}/../tools/fonts/*.py
+         ${CMAKE_SOURCE_DIR}/../tools/imaging/*.py)
+    add_custom_command(OUTPUT ${NEWTON_OBJECTS_FILE}
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/newton-rom/analysis/romsrc.py
+                     build ${CMAKE_SOURCE_DIR}/../romsrc --relayout -o ${NEWTON_OBJECTS_FILE}
+                     --newtonscript $<TARGET_FILE:newtonscript>
+             DEPENDS ${romsrc_sources} ${romsrc_tools} newtonscript
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..
+             COMMENT "Building ${NEWTON_OBJECTS_FILE} from romsrc/"
+             VERBATIM)
+    # `cmake --build <dir> --target romsrc` builds it alone
+    add_custom_target(romsrc ALL DEPENDS ${NEWTON_OBJECTS_FILE})
+    install(FILES ${NEWTON_OBJECTS_FILE} DESTINATION bin)
+else()
+    message(WARNING "no Python 3 (or no romsrc/): the object file the OS boots from is not built - newton needs --rom <image>")
+endif()
+install(TARGETS newtonscript DESTINATION bin)
 
 # the demo: a view hierarchy drawn into build/views-demo.pgm (needs the ROM image)
-add_test(NAME host.ViewsDemo COMMAND newtonscript --rom ${NEWTON_ROM_BIN} --display 320x480 ${CMAKE_CURRENT_SOURCE_DIR}/demo/views.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+add_test(NAME host.ViewsDemo COMMAND newtonscript --display 320x480 ${CMAKE_CURRENT_SOURCE_DIR}/demo/views.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.ViewsDemo PROPERTIES TIMEOUT 120)
 # drawing under a transform that scales: the world map at half size, shapes and text stretched
-add_test(NAME host.ScaledMapDemo COMMAND newtonscript --rom ${NEWTON_ROM_BIN} --display 320x480 ${CMAKE_CURRENT_SOURCE_DIR}/demo/scaledmap.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+add_test(NAME host.ScaledMapDemo COMMAND newtonscript --display 320x480 ${CMAKE_CURRENT_SOURCE_DIR}/demo/scaledmap.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.ScaledMapDemo PROPERTIES TIMEOUT 120 PASS_REGULAR_EXPRESSION "the map is 360 by 179.*scaledmap: written")
 
 # newton: the OS booted and the NewtonScript world run over a window on the
@@ -71,7 +104,8 @@ else()
 endif()
 add_executable(newton newton.cpp HostKeyboard.cpp HostPackages.cpp HostHeapCheck.cpp)
 target_link_libraries(newton PRIVATE newt host_views host_window hal_host_sound hal_timers hal_host_serial)
-target_compile_definitions(newton PRIVATE "NEWTON_DEFAULT_ROM_IMAGE=\"${NEWTON_ROM_BIN}\"")
+target_compile_definitions(newton PRIVATE "NEWTON_DEFAULT_OBJECTS=\"${NEWTON_OBJECTS_FILE}\"")
+install(TARGETS newton DESTINATION bin)
 
 # the newt world booted headless for two seconds with the views demo as its
 # boot script (needs the ROM image)
@@ -79,17 +113,17 @@ add_test(NAME host.Newton COMMAND newton --rom ${NEWTON_ROM_BIN} --headless 2 --
 set_tests_properties(host.Newton PROPERTIES TIMEOUT 120)
 # RepeatInfoToText's phrases, MeasuredNumberStr's cuts, DrawOriginal's box,
 # LoadFontCache, an expando drawn (DrawExpando), QuickLookDone
-add_test(NAME host.NewtonNatives COMMAND newton --rom ${NEWTON_ROM_BIN} --headless 30 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/natives.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+add_test(NAME host.NewtonNatives COMMAND newton --headless 30 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/natives.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(host.NewtonNatives PROPERTIES TIMEOUT 120
     PASS_REGULAR_EXPRESSION "Every Monday and Thursday.*Every day.*The second and last Friday of every month.*The 15th of every month.*Every March 4.*Every other Saturday.*The first Monday of every September.*kind 5., ...*fits., .3.14159.*cut., .3.14.\].*whole., NIL.*too narrow., NIL.*left: 29, top: 14, right: 69, bottom: 34.*left: 4, top: 39, right: 44, bottom: 59.*bad bundle., .bad strokeBounds.*fonts loaded.*expando asked.*Name., .Phone.*debugger., -10005, 0, 0, -10005, 0.*dispatch., -10005.*dispatch marshal., .evt.ex.marshal.type.*natives: done")
 # a script's own gestalt registered, read back and replaced; UnmountCard's
 # argument checks; BootSucceeded's file (made in the build directory)
-add_test(NAME host.NewtonGestalt COMMAND newton --rom ${NEWTON_ROM_BIN} --headless 30 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/gestalt.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+add_test(NAME host.NewtonGestalt COMMAND newton --headless 30 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/gestalt.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(host.NewtonGestalt PROPERTIES TIMEOUT 120
     PASS_REGULAR_EXPRESSION "12, -34, TRUE.*replace., TRUE.*56, 78, NIL.*a system selector., NIL.*not a selector., NIL.*not a function., -10006.*empty socket., NIL.*card slot stores., NIL.*gestalt: done")
 # the docker's natives (comms/Docker.h) on the Connection application's
 # protocol frame, with no desktop
-add_test(NAME host.NewtonDocker COMMAND newton --rom ${NEWTON_ROM_BIN} --serial-port none --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/docker.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+add_test(NAME host.NewtonDocker COMMAND newton --serial-port none --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/docker.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonDocker PROPERTIES TIMEOUT 120 PASS_REGULAR_EXPRESSION "docker: made yes.*version 9, state 1.*desktop type 2.*state now 4.*after abort gone.*docker: done")
 # the desktop connection end to end: the Connection application's autodock
 # over the host serial port (TCP) to tools/dock/dock.py, which answers
@@ -99,7 +133,7 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
     add_test(NAME host.NewtonDock
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/dock/dock.py
                      --package ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monaco.pkg
-                     --spawn $<TARGET_FILE:newton> --rom ${NEWTON_ROM_BIN} --serial-port 0 --headless 150
+                     --spawn $<TARGET_FILE:newton> --serial-port 0 --headless 150
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/dock.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonDock PROPERTIES TIMEOUT 240 PASS_REGULAR_EXPRESSION "the Newton's protocol version is 9.*monaco.pkg: dres 0.*dock: installed Monaco.*dock: done")
@@ -110,7 +144,7 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
     add_test(NAME host.NewtonDockGetPackages
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/dock/dock.py
                      --package ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monaco.pkg
-                     --spawn $<TARGET_FILE:newton> --rom ${NEWTON_ROM_BIN} --serial-port 0 --headless 150
+                     --spawn $<TARGET_FILE:newton> --serial-port 0 --headless 150
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/dock-getpackages.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonDockGetPackages PROPERTIES TIMEOUT 240 PASS_REGULAR_EXPRESSION "monaco.pkg: dres 0.*dock: installed Monaco.*dock: done" FAIL_REGULAR_EXPRESSION "panic|refused|fell over|waited in vain")
@@ -119,7 +153,7 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
     add_test(NAME host.NewtonDockSession
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/dock/dock.py --session
                      --package ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monaco.pkg
-                     --spawn $<TARGET_FILE:newton> --rom ${NEWTON_ROM_BIN} --serial-port 0 --headless 150
+                     --spawn $<TARGET_FILE:newton> --serial-port 0 --headless 150
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/dock.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonDockSession PROPERTIES TIMEOUT 240 PASS_REGULAR_EXPRESSION "the Newton speaks protocol 11.*the Newton knows the password.*docked.*stores: Internal.*the default store is Internal.*soups on Internal, the System soup among them.*the System soup made current: 0.*the System soup.s info.*added entry.*the new one among them.*reads .written by dock.py.*after .cent. it reads .changed by dock.py.*a 1.x entry added as [0-9].*entries all right.*soup .dock.py test. made: 0.*the backup sent ids ..0, -2, -32768...*the soup sent entries .0, 1, 2..*backup all right.*.test. echoed b.echo.*after a stray b.newtdockrtst.*classes in the inheritance: .*Max.3, 7. called on the Newton: 7.*the system patches: 0 bytes.*the slip was answered with button 1.*requests all right.*monaco.pkg: dres 0.*packages on the store: Monaco .17064 bytes.*Monaco removed .0., 0 left.*monaco.pkg loaded again: dres 0.*the keyboard passthrough started: True.*the Newton disconnected after the keyboard.*dock: the desktop.s slip says Tap the first button.*dock: installed Monaco.*dock: typed from the desktop: hello!.*dock: done")
@@ -128,7 +162,7 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
     # into its In Box (tools/host/twonewtons.py runs both)
     add_test(NAME host.NewtonBeam
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/host/twonewtons.py $<TARGET_FILE:newton>
-                     --rom ${NEWTON_ROM_BIN} --seconds 120
+ --seconds 120
                      --first ${CMAKE_CURRENT_SOURCE_DIR}/demo/beam-receive.ns
                      --expect-first "eceived: \"Beamed note\".*text: \"hello from the other Newton\".*beam-receive: the note is in the In Box"
                      --second ${CMAKE_CURRENT_SOURCE_DIR}/demo/beam-send.ns
@@ -138,7 +172,7 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
     # the same over the default path: no zapCommToolId, so the probe and then IrDA
     add_test(NAME host.NewtonBeamIrDA
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/host/twonewtons.py $<TARGET_FILE:newton>
-                     --rom ${NEWTON_ROM_BIN} --seconds 120
+ --seconds 120
                      --first ${CMAKE_CURRENT_SOURCE_DIR}/demo/beam-irda-receive.ns
                      --expect-first "eceived: \"Beamed note\".*text: \"hello from the other Newton\".*beam-receive: the note is in the In Box"
                      --second ${CMAKE_CURRENT_SOURCE_DIR}/demo/beam-irda-send.ns
@@ -160,7 +194,7 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
                      --line "Throw('|evt.ex.msg|, \"oops\")" --line "Throw('|evt.ex.foo|, -8007)"
                      --finish "vars.ntkInspected := true"
                      --package ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monaco.pkg
-                     --spawn $<TARGET_FILE:newton> --rom ${NEWTON_ROM_BIN} --serial-port 0 --headless 150
+                     --spawn $<TARGET_FILE:newton> --serial-port 0 --headless 150
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/ntk.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonNTK PROPERTIES TIMEOUT 240
@@ -173,7 +207,7 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
     add_test(NAME host.NewtonModemDial
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/modem/fakemodem.py
                      --number 5551212=127.0.0.1:52375
-                     --spawn $<TARGET_FILE:newton> --rom ${NEWTON_ROM_BIN} --serial-port 0 --tcp-echo 52375 --headless 120
+                     --spawn $<TARGET_FILE:newton> --serial-port 0 --tcp-echo 52375 --headless 120
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/modem.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonModemDial PROPERTIES TIMEOUT 200
@@ -182,7 +216,7 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
     add_test(NAME host.NewtonModemAnswer
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/modem/fakemodem.py
                      --incoming 127.0.0.1:52376
-                     --spawn $<TARGET_FILE:newton> --rom ${NEWTON_ROM_BIN} --serial-port 0 --tcp-echo 52376 --headless 120
+                     --spawn $<TARGET_FILE:newton> --serial-port 0 --tcp-echo 52376 --headless 120
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/modem-answer.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonModemAnswer PROPERTIES TIMEOUT 200
@@ -200,7 +234,7 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
     add_test(NAME host.NewtonFaxReceive
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/modem/fakemodem.py
                      --fax-call ${CMAKE_CURRENT_BINARY_DIR}/faxpage.pbm
-                     --spawn $<TARGET_FILE:newton> --rom ${NEWTON_ROM_BIN} --display 320x480 --serial-port 0 --headless 200
+                     --spawn $<TARGET_FILE:newton> --display 320x480 --serial-port 0 --headless 200
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/fax-receive.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonFaxReceive PROPERTIES TIMEOUT 300 FIXTURES_REQUIRED faxpage
@@ -216,7 +250,7 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
     add_test(NAME host.NewtonFaxSend
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/modem/fakemodem.py
                      --fax-answer build/fax-sent.pbm
-                     --spawn $<TARGET_FILE:newton> --rom ${NEWTON_ROM_BIN} --serial-port 0 --headless 200
+                     --spawn $<TARGET_FILE:newton> --serial-port 0 --headless 200
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/fax-send.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonFaxSend PROPERTIES TIMEOUT 300 FIXTURES_SETUP faxsent
@@ -235,7 +269,7 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
     add_test(NAME host.NewtonFaxSendClass2
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/modem/fakemodem.py
                      --fax-class 2 --fax-answer build/fax-sent-class2.pbm
-                     --spawn $<TARGET_FILE:newton> --rom ${NEWTON_ROM_BIN} --serial-port 0 --headless 200
+                     --spawn $<TARGET_FILE:newton> --serial-port 0 --headless 200
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/fax-send.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonFaxSendClass2 PROPERTIES TIMEOUT 300 FIXTURES_SETUP faxsentclass2
@@ -253,7 +287,7 @@ endif()
 
 # Beam with nobody in front of the IR port (newton always has one): the
 # status slip looks for a receiver, then the alert says there was no response
-add_test(NAME host.NewtonBeamNobody COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 300 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/beam-nobody.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+add_test(NAME host.NewtonBeamNobody COMMAND newton --display 320x480 --headless 300 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/beam-nobody.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonBeamNobody PROPERTIES TIMEOUT 400
                      PASS_REGULAR_EXPRESSION "beam: the status slip says Looking for receiver.*beam: the alert says .*No response.*beam: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain|fell over")
@@ -267,7 +301,7 @@ add_test(NAME host.NewtonHostPrinter.clean COMMAND ${CMAKE_COMMAND} -E rm -rf bu
 set_tests_properties(host.NewtonHostPrinter.clean PROPERTIES FIXTURES_SETUP hostprintclean)
 add_test(NAME host.NewtonHostPrinter.mkdir COMMAND ${CMAKE_COMMAND} -E make_directory build/print WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonHostPrinter.mkdir PROPERTIES FIXTURES_SETUP hostprintclean DEPENDS host.NewtonHostPrinter.clean)
-add_test(NAME host.NewtonHostPrinter COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 200 --print-dir build/print --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/print.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+add_test(NAME host.NewtonHostPrinter COMMAND newton --display 320x480 --headless 200 --print-dir build/print --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/print.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonHostPrinter PROPERTIES TIMEOUT 300 FIXTURES_REQUIRED hostprintclean FIXTURES_SETUP hostprinted
                      PASS_REGULAR_EXPRESSION "note: chose Host printer \\(PNG files\\).*printed page 1 to build/print/print-001.png.*card: the printer is Host printer \\(PNG files\\).*printed page 2 to build/print/print-002.png.*print: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain|fell over")
@@ -285,7 +319,7 @@ endif()
 # deferred recognition (views/Rerecognize.h): "ton" written, and the
 # same strokes read again through Recognize, RecognizeInkWord,
 # RecognizeTextInStyles and RecognizePara (needs the ROM image)
-add_test(NAME host.NewtonRecognize COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 120 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/recognize.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+add_test(NAME host.NewtonRecognize COMMAND newton --display 320x480 --headless 120 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/recognize.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonRecognize PROPERTIES TIMEOUT 180
                      PASS_REGULAR_EXPRESSION "Recognize read ton.*unread strokes came back as nothing.*RecognizeInkWord read ton.*RecognizeTextInStyles made \"an ton\".*RecognizePara made \"ton ton\", the range ending at 7.*ink came back as a piece of 4 strokes.*ink came back as a piece of 4 strokes.*recognize: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain")
@@ -293,7 +327,7 @@ set_tests_properties(host.NewtonRecognize PROPERTIES TIMEOUT 180
 # the correction and word-unit methods on a paragraph, the correction info
 # and a view of its own (GetAlternatives, Extract, insert, HandleRawInk,
 # VoteOnWordUnit, HandleUnit)
-add_test(NAME host.NewtonAlternatives COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 120 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/alternatives.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+add_test(NAME host.NewtonAlternatives COMMAND newton --display 320x480 --headless 120 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/alternatives.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonAlternatives PROPERTIES TIMEOUT 180
                      PASS_REGULAR_EXPRESSION "GetAlternatives offered 2 words, the first \"ton\".*Extract took 1 word info.*Extract past the text took nothing.*insert put the range back.*HandleRawInk answered nil.*VoteOnWordUnit answered an integer.*HandleUnit answered true.*alternatives: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain")
@@ -308,7 +342,7 @@ set_tests_properties(host.NewtonAlternatives PROPERTIES TIMEOUT 180
 # stdout, which may come out before the reader's stderr or after it);
 # this also watches for the heap damage a too-small trigram header once did
 # here, which locked the machine up one run in three (needs the ROM image)
-add_test(NAME host.NewtonCursive COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 120 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/cursive.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+add_test(NAME host.NewtonCursive COMMAND newton --display 320x480 --headless 120 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/cursive.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonCursive PROPERTIES TIMEOUT 180 ENVIRONMENT "NEWTON_TRACE_CURSIVE=1"
                      PASS_REGULAR_EXPRESSION "low_level: 1[0-9] xrs:.*xrw_algs: graph of [0-9]+ symbols:[A-Za-z0-9| ]*on.*answers: \"ton\".*word of strokes 0-3 [^:]*: 0.*low_level: [0-9]+ xrs:.*xrw_algs: graph of [0-9]+ symbols:to .*answers: \"to\".*word of strokes 0-2 [^:]*: 0(.*orthographic learn array: [0-9]+ entries.*trained into the orthographic database: 3 classes.*the page reads \"ton to\".*the letter weights were the defaults, after learning learnt|.*the page reads \"ton to\".*orthographic learn array: [0-9]+ entries.*trained into the orthographic database: 3 classes.*the letter weights were the defaults, after learning learnt).*cursive: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain")
@@ -318,7 +352,7 @@ set_tests_properties(host.NewtonCursive PROPERTIES TIMEOUT 180 ENVIRONMENT "NEWT
 # reader finds each a number alone (no xrs left for the xr reader), the
 # merge makes the digits the reading, and the page shows them typed; "217"
 # read again is offered as the date "2/7" too
-add_test(NAME host.NewtonNumbers COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 120 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/numbers.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+add_test(NAME host.NewtonNumbers COMMAND newton --display 320x480 --headless 120 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/numbers.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonNumbers PROPERTIES TIMEOUT 180 ENVIRONMENT "NEWTON_TRACE_CURSIVE=1"
                      PASS_REGULAR_EXPRESSION "low_level: 0 xrs:.*answers: \"42\"/100.*answers: \"10\"/100.*answers: \"217\"/100 \"2/7\"/90.*the page reads \"42 10 217\".*217 read again as 217 2/7.*numbers: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain")
@@ -331,7 +365,7 @@ set_tests_properties(host.NewtonNumbers PROPERTIES TIMEOUT 180 ENVIRONMENT "NEWT
 # arbitration to the scrub gesture (their synthetic stems are retraced
 # exactly, a zig-zag TestScrub takes) and go down as ink words: the page
 # reads "on no ~ to ~" (0x1a being the paragraph's ink-word character)
-add_test(NAME host.NewtonCursiveJoined COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 120 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/cursive-joined.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+add_test(NAME host.NewtonCursiveJoined COMMAND newton --display 320x480 --headless 120 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/cursive-joined.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonCursiveJoined PROPERTIES TIMEOUT 240 ENVIRONMENT "NEWTON_TRACE_CURSIVE=1"
                      PASS_REGULAR_EXPRESSION "answers: \"on\"/.*answers: \"no\"/.*answers: \"Mom\"/.*answers: \"to\"/.*answers: \"nun\"/.*the page reads \"on no . to . / \".*cursive-joined: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain")
@@ -339,7 +373,7 @@ set_tests_properties(host.NewtonCursiveJoined PROPERTIES TIMEOUT 240 ENVIRONMENT
 # the journal (testing/Journal.h): "ton" written while recording, the four
 # strokes played back into the tablet buffer and read again (needs the
 # ROM image)
-add_test(NAME host.NewtonJournal COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 120 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/journal.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+add_test(NAME host.NewtonJournal COMMAND newton --display 320x480 --headless 120 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/journal.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonJournal PROPERTIES TIMEOUT 200
                      PASS_REGULAR_EXPRESSION "journal: recording started.*journal: 4 strokes recorded.*before the replay the page reads \"ton\".*after the replay the page reads \"ton tor\".*journal: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain")
@@ -347,21 +381,21 @@ set_tests_properties(host.NewtonJournal PROPERTIES TIMEOUT 200
 # the test agent with the script as its test manager: reports queued and
 # read back, the parameters split, debug() (testing/TestAgent.h; needs the
 # ROM image)
-add_test(NAME host.NewtonTestAgent COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/testagent.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+add_test(NAME host.NewtonTestAgent COMMAND newton --display 320x480 --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/testagent.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonTestAgent PROPERTIES TIMEOUT 120
                      PASS_REGULAR_EXPRESSION "queue before activating is empty.*queued \"Test Case MSG: hello from the test\".*queued \"Test Case ERR: \tsomething went wrong\".*test a frame started in newt.*TotalSystemFree.*parameters 4:.*\"a frame\".*\"one\".*\"two three\".*\"four\".*debug\\(0\\) is a view.*is nil.*printed, not queued.*testagent: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain")
 
 # the units the ROM's own packages export, as the unit natives see them
 # after the boot (packages/Units.h; needs the ROM image)
-add_test(NAME host.NewtonUnits COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/units.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+add_test(NAME host.NewtonUnits COMMAND newton --display 320x480 --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/units.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonUnits PROPERTIES TIMEOUT 120
                      PASS_REGULAR_EXPRESSION "units: 7 exports.*units: cardfile 1.0 62 objects, 0 clients, 0 importers.*units: ConnectionInternal 1.1 39 objects.*units: setup 1.0 19 objects.*units: 0 import tables, 0 pending.*FulfillImportTable\\(nil\\) is true.*units: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain")
 
 # the cursive recogniser's letter styles asked from NewtonScript
 # (recognition/LetterShapes.h, WordRecognizer.h; needs the ROM image)
-add_test(NAME host.NewtonLetterStyles COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/letterstyles.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+add_test(NAME host.NewtonLetterStyles COMMAND newton --display 320x480 --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/letterstyles.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonLetterStyles PROPERTIES TIMEOUT 120
                      PASS_REGULAR_EXPRESSION "letterstyles: 320 pictures, 'a' from 162, first letter !, weights default, after reset default.*letterstyles: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain")
@@ -379,7 +413,7 @@ if(Python3_FOUND)
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonPackage.extract PROPERTIES FIXTURES_SETUP host_package)
     add_test(NAME host.NewtonPackage
-             COMMAND newton --rom ${NEWTON_ROM_BIN} --headless 4 --package ${HOST_PACKAGE_DIR}/Formulas2.pkg
+             COMMAND newton --headless 4 --package ${HOST_PACKAGE_DIR}/Formulas2.pkg
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonPackage PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED host_package
                          PASS_REGULAR_EXPRESSION "Formulas2.pkg: installed as package")
@@ -388,14 +422,14 @@ if(Python3_FOUND)
     # store's "Packages" soup and activated at the next boot
     # (packages/StorePackages.h, demo/packagestore.ns)
     add_test(NAME host.NewtonPackageStore.install
-             COMMAND newton --rom ${NEWTON_ROM_BIN} --erase --store ${CMAKE_CURRENT_BINARY_DIR}/packagestore.store
+             COMMAND newton --erase --store ${CMAKE_CURRENT_BINARY_DIR}/packagestore.store
                      --headless 4 --package ${HOST_PACKAGE_DIR}/Formulas2.pkg
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonPackageStore.install PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED host_package
                          FIXTURES_SETUP host_package_store
                          PASS_REGULAR_EXPRESSION "Formulas2.pkg: installed as package")
     add_test(NAME host.NewtonPackageStore
-             COMMAND newton --rom ${NEWTON_ROM_BIN} --store ${CMAKE_CURRENT_BINARY_DIR}/packagestore.store
+             COMMAND newton --store ${CMAKE_CURRENT_BINARY_DIR}/packagestore.store
                      --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/packagestore.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonPackageStore PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED host_package_store
@@ -405,7 +439,7 @@ if(Python3_FOUND)
     # made and put in, formatted at the ROM's prompts, a soup written on
     # it, pulled out and put back (demo/card.ns)
     add_test(NAME host.NewtonCard
-             COMMAND newton --rom ${NEWTON_ROM_BIN} --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/card.ns
+             COMMAND newton --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/card.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonCard PROPERTIES TIMEOUT 120
                          PASS_REGULAR_EXPRESSION "mounted: TRUE.*[Cc]ardSlot: 0, cardType: flsh.*written: TRUE.*removed: TRUE, stores: 1.*remounted: TRUE.*found: \"written on a card\".*cards: 1.*card: done"
@@ -415,7 +449,7 @@ if(Python3_FOUND)
     # gone and the store as it was (demo/card-alert.ns); then the snapshot
     # taken while it was up made a PNG, build/card-alert.png
     add_test(NAME host.NewtonCardAlert
-             COMMAND newton --rom ${NEWTON_ROM_BIN} --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/card-alert.ns
+             COMMAND newton --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/card-alert.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonCardAlert PROPERTIES TIMEOUT 120 FIXTURES_SETUP host_card_alert
                          PASS_REGULAR_EXPRESSION "alertUp: TRUE.*sameStore: TRUE, found: \"kept through the alert\", alertDown: TRUE.*card-alert: done")
@@ -434,7 +468,7 @@ if(Python3_FOUND)
                          --cis "01 03 52 06 ff 1e 06 02 11 01 01 03 01 18 02 89 a2 ff" --name Einstein)
         set_tests_properties(host.NewtonCardEinstein.make PROPERTIES FIXTURES_SETUP host_einstein_card)
         add_test(NAME host.NewtonCardEinstein
-                 COMMAND newton --rom ${NEWTON_ROM_BIN} --headless 60 --card ${CMAKE_CURRENT_BINARY_DIR}/einstein.card
+                 COMMAND newton --headless 60 --card ${CMAKE_CURRENT_BINARY_DIR}/einstein.card
                          --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/card-einstein.ns
                  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
         set_tests_properties(host.NewtonCardEinstein PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED host_einstein_card
@@ -446,14 +480,14 @@ if(Python3_FOUND)
     # stored with SuckPackageFromBinary's progress callback, on a store of
     # its own holding Formulas2
     add_test(NAME host.NewtonSegmented.install
-             COMMAND newton --rom ${NEWTON_ROM_BIN} --erase --store ${CMAKE_CURRENT_BINARY_DIR}/segmented.store
+             COMMAND newton --erase --store ${CMAKE_CURRENT_BINARY_DIR}/segmented.store
                      --headless 4 --package ${HOST_PACKAGE_DIR}/Formulas2.pkg
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonSegmented.install PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED host_package
                          FIXTURES_SETUP host_segmented_store
                          PASS_REGULAR_EXPRESSION "Formulas2.pkg: installed as package")
     add_test(NAME host.NewtonSegmented
-             COMMAND newton --rom ${NEWTON_ROM_BIN} --store ${CMAKE_CURRENT_BINARY_DIR}/segmented.store
+             COMMAND newton --store ${CMAKE_CURRENT_BINARY_DIR}/segmented.store
                      --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/segmented.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonSegmented PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED host_segmented_store
@@ -462,14 +496,14 @@ if(Python3_FOUND)
     # store:SuckPackageFromEndPoint (packages/EndpointPackages.cpp): Formulas2's
     # bytes sent to the echo server over a TCP endpoint and sucked back off it
     add_test(NAME host.NewtonEndpointPackage.install
-             COMMAND newton --rom ${NEWTON_ROM_BIN} --erase --store ${CMAKE_CURRENT_BINARY_DIR}/endpointpkg.store
+             COMMAND newton --erase --store ${CMAKE_CURRENT_BINARY_DIR}/endpointpkg.store
                      --headless 4 --package ${HOST_PACKAGE_DIR}/Formulas2.pkg
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonEndpointPackage.install PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED host_package
                          FIXTURES_SETUP host_endpointpkg_store
                          PASS_REGULAR_EXPRESSION "Formulas2.pkg: installed as package")
     add_test(NAME host.NewtonEndpointPackage
-             COMMAND newton --rom ${NEWTON_ROM_BIN} --store ${CMAKE_CURRENT_BINARY_DIR}/endpointpkg.store
+             COMMAND newton --store ${CMAKE_CURRENT_BINARY_DIR}/endpointpkg.store
                      --tcp-echo 52372 --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/endpointpkg.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonEndpointPackage PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED host_endpointpkg_store
@@ -479,7 +513,7 @@ if(Python3_FOUND)
     # (os600/user/host/SWI.cpp's ExitWithResult), and the store package
     # did not activate
     add_test(NAME host.NewtonPackageStoreSlow
-             COMMAND newton --rom ${NEWTON_ROM_BIN} --store ${CMAKE_CURRENT_BINARY_DIR}/packagestore.store
+             COMMAND newton --store ${CMAKE_CURRENT_BINARY_DIR}/packagestore.store
                      --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/packagestore.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonPackageStoreSlow PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED host_package_store
@@ -490,7 +524,7 @@ if(Python3_FOUND)
     # the 1.x package natives over the same store's package (run last: it
     # removes the package)
     add_test(NAME host.NewtonOneX
-             COMMAND newton --rom ${NEWTON_ROM_BIN} --store ${CMAKE_CURRENT_BINARY_DIR}/packagestore.store
+             COMMAND newton --store ${CMAKE_CURRENT_BINARY_DIR}/packagestore.store
                      --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/onex.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonOneX PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED host_package_store
@@ -519,7 +553,7 @@ if(EXISTS ${THIRDPARTY_DIR}/apps/RPNcalc/rpncalc.pkg)
         list(APPEND THIRDPARTY_ARGS --package ${THIRDPARTY_DIR}/${pkg})
     endforeach()
     add_test(NAME host.NewtonThirdPartyPackages
-             COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --erase
+             COMMAND newton --display 320x480 --erase
                      --store ${CMAKE_CURRENT_BINARY_DIR}/thirdparty.store --headless 240
                      ${THIRDPARTY_ARGS} --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/thirdparty.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
@@ -528,7 +562,7 @@ if(EXISTS ${THIRDPARTY_DIR}/apps/RPNcalc/rpncalc.pkg)
                          PASS_REGULAR_EXPRESSION "MDaleks1.pkg: not installed.*entries: 18,[^}]*wrong: \\[\\],[^}]*missing: \\[\\]}.*fonts: TRUE.*rpnOpened: TRUE.*removedPackages: 18, stored: 0, entriesLeft: 0, active: 0, fontsGone: TRUE, declawed: TRUE, freed: TRUE.*thirdparty: done"
                          FAIL_REGULAR_EXPRESSION "fell over")
     add_test(NAME host.NewtonThirdPartyPackages.restart
-             COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480
+             COMMAND newton --display 320x480
                      --store ${CMAKE_CURRENT_BINARY_DIR}/thirdparty.store --headless 60
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/thirdparty-restart.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
@@ -541,7 +575,7 @@ if(EXISTS ${THIRDPARTY_DIR}/apps/RPNcalc/rpncalc.pkg)
     # off the board - its native code on armcpu - NewtHack walks, the
     # Register picks a program), snapshot as tmp/thirdparty-apps-<n>.pgm
     add_test(NAME host.NewtonThirdPartyApps
-             COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --erase
+             COMMAND newton --display 320x480 --erase
                      --store ${CMAKE_CURRENT_BINARY_DIR}/thirdparty-apps.store --headless 280
                      --package ${THIRDPARTY_DIR}/apps/RPNcalc/rpncalc.pkg
                      --package ${THIRDPARTY_DIR}/games/Daleks/Daleks1.pkg
@@ -560,7 +594,7 @@ endif()
 
 # a large binary (VBO) made on the booted machine's internal store
 # (stores/LargeBinaries.h, qd/Pictures.h's GetBitmapInfo; needs the ROM image)
-add_test(NAME host.NewtonVBO COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/vbo.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+add_test(NAME host.NewtonVBO COMMAND newton --display 320x480 --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/vbo.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonVBO PROPERTIES TIMEOUT 120
                      PASS_REGULAR_EXPRESSION "bitsVBO: TRUE,[^}]*compander: \"TPixelMapCompander\",[^}]*onStore: TRUE,[^}]*rowbytes: 8.*namedCompander: \"TLZStoreCompander\".*vbo: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain")
@@ -568,28 +602,28 @@ set_tests_properties(host.NewtonVBO PROPERTIES TIMEOUT 120
 # the key-help slip (views/KeyHelpSlip.cpp): opened over the boot's first
 # screen, its groups laid out and drawn, the display photographed into the
 # build directory (keyhelp.pgm; needs the ROM image)
-add_test(NAME host.NewtonKeyHelp COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/keyhelp.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+add_test(NAME host.NewtonKeyHelp COMMAND newton --display 320x480 --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/keyhelp.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(host.NewtonKeyHelp PROPERTIES TIMEOUT 120
                      PASS_REGULAR_EXPRESSION "keyhelp: open.*numcols 2, lineHeight 13.*groups 4.*keyhelp: Editing.*keyhelp: snapshot.*keyhelp: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain")
 
 # a page's views laid out again for the printer (views/Reflow.cpp ReFlow,
 # ReflowPreflight): the groups made and what is in each (needs the ROM image)
-add_test(NAME host.NewtonReflow COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 120 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/reflow.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+add_test(NAME host.NewtonReflow COMMAND newton --display 320x480 --headless 120 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/reflow.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(host.NewtonReflow PROPERTIES TIMEOUT 150
                      PASS_REGULAR_EXPRESSION "reflow: families 1, sizes 1, faces 2.*reflow: 5 groups.*group 0 top 0, 1 children .Shopping list.*group 1 top 20, 2 children box 0,0 box 80,10.*group 2 top 20, 1 children .Bread.*group 3 top 0.*group 4 top 0, 1 children .newspaper for Sunday.*reflow: snapshot.*reflow: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain")
 
 # a roll over a soup cursor scrolled (views/View.cpp TView::SyncScrollSoup):
 # the cursor and viewOriginY after each step (needs the ROM image)
-add_test(NAME host.NewtonSoupScroll COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/soupscroll.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+add_test(NAME host.NewtonSoupScroll COMMAND newton --display 320x480 --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/soupscroll.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonSoupScroll PROPERTIES TIMEOUT 120
                      PASS_REGULAR_EXPRESSION "down -> 1, answer nil.*tall one -> 1, origin 34.*past it -> 2, origin 0.*up into the tall one -> 1, origin 68.*up a step -> 1, origin 34.*past the last -> 0.*up at the first -> 0.*up from the third -> 1, origin 68.*soupscroll: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain")
 
 # the About slip's credits: MakePict records the lines as text shapes into one
 # picture, which the credits view draws with CopyBits (needs the ROM image)
-add_test(NAME host.NewtonCredits COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 120 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/credits.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+add_test(NAME host.NewtonCredits COMMAND newton --display 320x480 --headless 120 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/credits.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonCredits PROPERTIES TIMEOUT 150
                      PASS_REGULAR_EXPRESSION "credits: creditPict 184 by 216, creditHeight 218.*credits: written.*credits: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain")
@@ -597,21 +631,21 @@ set_tests_properties(host.NewtonCredits PROPERTIES TIMEOUT 150
 # a sound played: the ROM's click through PlaySoundSync and through a
 # protoSoundChannel with a callback, headless over the null sound backend
 # (hal/host/HostSoundDriver.h), which counts what was played
-add_test(NAME host.NewtonSound COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 30 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/sound.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+add_test(NAME host.NewtonSound COMMAND newton --display 320x480 --headless 30 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/sound.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(host.NewtonSound PROPERTIES TIMEOUT 120
                      PASS_REGULAR_EXPRESSION "sound: 520 samples played.*sound: played.*sound: started, active.*sound: callback state 0 error 0.*sound: closed")
 
 # a protoTXView (text/TXView.h): text put in, typed into, restyled,
 # scrolled, cut and pasted and scrubbed, pictures in build/txview-1.pgm to
 # -4.pgm (needs the ROM image)
-add_test(NAME host.NewtonTXView COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/txview.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+add_test(NAME host.NewtonTXView COMMAND newton --display 320x480 --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/txview.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonTXView PROPERTIES TIMEOUT 120
                      FAIL_REGULAR_EXPRESSION "waited in vain|FAILED|Exception"
                      PASS_REGULAR_EXPRESSION "txview: 176 characters, 142-176 the last line, scrolled from [1-9][0-9]* to 0.*txview: scrubbed to 167 characters.*txview: 2100 characters on the store, 2100 read back.*txview: replaced undoably, 4 characters left.*txview: the ruler.s justification is now left.*txview: done")
 
 # a paginated protoTXView: the text poured through pages and a page break put
 # in (src/text/TXFrames.h's TXPageFrames, TXFrameFormatter.h's TXPageFormatter)
-add_test(NAME host.NewtonTXPages COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/txpages.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+add_test(NAME host.NewtonTXPages COMMAND newton --display 320x480 --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/txpages.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonTXPages PROPERTIES TIMEOUT 120
                      FAIL_REGULAR_EXPRESSION "waited in vain|FAILED|Exception"
                      PASS_REGULAR_EXPRESSION "txpages: 2 pages, 3 with the page break, 655 pixels tall.*txpages: done")
@@ -621,7 +655,7 @@ set_tests_properties(host.NewtonTXPages PROPERTIES TIMEOUT 120
 # and newton says how much of what was played back was that tone (the
 # recorder records through TGSMCodec, GSM 06.10, which is lossy; the rest
 # is the pen's clicks)
-add_test(NAME host.NewtonRecorder COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 120 --microphone-tone 1000 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/recorder.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+add_test(NAME host.NewtonRecorder COMMAND newton --display 320x480 --headless 120 --microphone-tone 1000 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/recorder.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(host.NewtonRecorder PROPERTIES TIMEOUT 180
                      PASS_REGULAR_EXPRESSION "test tone makes up (8[0-9]|9[0-9]|100)% of what was played.*recorder: opened: Ready to record.*recorder: recording: Recording.*recorder: stopped: Ready to play or record.*recorder: played: Playing.*recorder: finished: Ready to play or record.*recorder: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain")
@@ -629,21 +663,21 @@ set_tests_properties(host.NewtonRecorder PROPERTIES TIMEOUT 180
 # a protoBasicEndpoint over TCP (comms/NewScriptEndpoint.h): the NIE's
 # 'inet service and 'itrs remote socket, to the echo server newton runs
 # (--tcp-echo), written and read back synchronously and asynchronously
-add_test(NAME host.NewtonEcho COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 8 --tcp-echo 52371 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/echo.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+add_test(NAME host.NewtonEcho COMMAND newton --display 320x480 --headless 8 --tcp-echo 52371 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/echo.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(host.NewtonEcho PROPERTIES TIMEOUT 120
                      PASS_REGULAR_EXPRESSION "echo: connected, state 5.*echo: received hello .byteCount 5.*echo: sent asynchronously, done.*echo: line 15 characters, ended by endsequence.*echo: frame bonjour 4 Array.*echo: disconnected, state 2.*echo: unbound, state 1.*echo: done")
 
 # protoEndpoint, the 1.x NewtonScript endpoint (comms/ScriptEndpoint.h):
 # 1.x option frames, Connect, output and OutputFrame, input specs to a byte
 # count, an end character and the 'frame form, against the echo server
-add_test(NAME host.NewtonProtoEndpoint COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 60 --tcp-echo 52372 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/protoendpoint.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+add_test(NAME host.NewtonProtoEndpoint COMMAND newton --display 320x480 --headless 60 --tcp-echo 52372 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/protoendpoint.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(host.NewtonProtoEndpoint PROPERTIES TIMEOUT 120
                      PASS_REGULAR_EXPRESSION "Instantiate: NIL, state: 1.*Connect: NIL, state: 5.*protoendpoint: received hello.*protoendpoint: line of 15 characters.*protoendpoint: frame bonjour 4.*outputDone: TRUE.*Disconnect: NIL, state: 0.*protoendpoint: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain")
 
 # the communications' trace frame (@661: cfinstantiate, cfrecord, Dispose
 # over a THistoryCollector) and translate (comms/CommTrace.cpp)
-add_test(NAME host.NewtonCommTrace COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 30 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/commtrace.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+add_test(NAME host.NewtonCommTrace COMMAND newton --display 320x480 --headless 30 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/commtrace.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(host.NewtonCommTrace PROPERTIES TIMEOUT 90
                      PASS_REGULAR_EXPRESSION "collector: TRUE.*events: TRUE.*Connect: 0, byte: 1.*disposed: TRUE.*flattened: binary, length: 48.*unflattened: \"bonjour\", second: 1.*unflattenedNoCode: \"bonjour\".*wrongTranslator: -54001.*commtrace: done")
 
@@ -651,13 +685,13 @@ set_tests_properties(host.NewtonCommTrace PROPERTIES TIMEOUT 90
 # records) answered by the host's DNS service over the host's resolver
 # (comms/host/HostDNSTool.h): localhost, a reverse lookup, a name that
 # cannot exist - no network needed
-add_test(NAME host.NewtonDNS COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 6 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/dns.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+add_test(NAME host.NewtonDNS COMMAND newton --display 320x480 --headless 6 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/dns.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(host.NewtonDNS PROPERTIES TIMEOUT 120
                      PASS_REGULAR_EXPRESSION "dns: instantiated, state 1.*dns: localhost type 1: 127.0.0.1.*dns:  type 12: 0.0.0.0 .. -> ..[A-Za-z].*dns: no-such-host.invalid not found, -60791.*dns: done")
 
 # a protoStreamingEndpoint (comms/StreamingEndpoint.h): a frame streamed
 # out as NSOF and read back over TCP through a TEndpointPipe
-add_test(NAME host.NewtonStream COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 8 --tcp-echo 52372 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/stream.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+add_test(NAME host.NewtonStream COMMAND newton --display 320x480 --headless 8 --tcp-echo 52372 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/stream.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(host.NewtonStream PROPERTIES TIMEOUT 120
                      PASS_REGULAR_EXPRESSION "stream: connected, state 5.*stream: sent, progress 1536 of 1854.*stream: received a streamed frame 1996 300 89401 .*progress 1854.*stream: done")
 
@@ -670,7 +704,7 @@ set_tests_properties(host.NewtonStream PROPERTIES TIMEOUT 120
 set(NIE_DIR ${CMAKE_SOURCE_DIR}/../fixtures/packages/apple/NIE2)
 if(EXISTS ${NIE_DIR}/REGPKGS/inetenbl.pkg)
     add_test(NAME host.NewtonInet
-             COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --erase
+             COMMAND newton --display 320x480 --erase
                      --store ${CMAKE_CURRENT_BINARY_DIR}/inet.store --tcp-echo 52373 --headless 25
                      --package ${NIE_DIR}/ENETSUP/newtdev.pkg --package ${NIE_DIR}/REGPKGS/inetenbl.pkg
                      --package ${NIE_DIR}/REGPKGS/inetstup.pkg
@@ -683,7 +717,7 @@ if(EXISTS ${NIE_DIR}/REGPKGS/inetenbl.pkg)
     # network picked in New Internet Setup's picker (snapshots in
     # inetsetup-N.pgm)
     add_test(NAME host.NewtonInetSetup
-             COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --erase
+             COMMAND newton --display 320x480 --erase
                      --store ${CMAKE_CURRENT_BINARY_DIR}/inetsetup.store --headless 120
                      --package ${NIE_DIR}/ENETSUP/newtdev.pkg --package ${NIE_DIR}/REGPKGS/inetenbl.pkg
                      --package ${NIE_DIR}/REGPKGS/inetstup.pkg
@@ -695,7 +729,7 @@ if(EXISTS ${NIE_DIR}/REGPKGS/inetenbl.pkg)
     # over the host's link (demo/inetfsm.ns): connected through its own
     # states, "hello" echoed, disconnected
     add_test(NAME host.NewtonInetFSM
-             COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --erase
+             COMMAND newton --display 320x480 --erase
                      --store ${CMAKE_CURRENT_BINARY_DIR}/inetfsm.store --tcp-echo 52374 --headless 22
                      --package ${NIE_DIR}/ENETSUP/newtdev.pkg --package ${NIE_DIR}/REGPKGS/inetenbl.pkg
                      --package ${NIE_DIR}/REGPKGS/inetstup.pkg
@@ -757,7 +791,7 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD}/sym
                      --snapshot build/newton-demo.pgm
                      --run "--rom ${NEWTON_ROM_BIN}" --run "--objects ${CMAKE_BINARY_DIR}/romsrc-objects.bin"
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
-    set_tests_properties(host.NewtonNoROMSameScreen PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED romsrc_objects
+    set_tests_properties(host.NewtonNoROMSameScreen PROPERTIES TIMEOUT 120
                          ENVIRONMENT "NEWTON_ROM=${CMAKE_BINARY_DIR}/no-rom-image")
     add_test(NAME host.NewtonEditedSameScreen
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/host/samescreen.py
@@ -783,31 +817,14 @@ endif()
 # extraction - only Python and the host's newtonscript, which compiles the
 # tree's functions.
 if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../romsrc/layout.tsv)
-    # `cmake --build <dir> --target romsrc`: the object file built from the
-    # committed tree, laid out afresh (an edited tree builds as it is)
-    add_custom_target(romsrc
-             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/newton-rom/analysis/romsrc.py
-                     build ${CMAKE_SOURCE_DIR}/../romsrc --relayout -o ${CMAKE_BINARY_DIR}/romsrc-objects.bin
-                     --newtonscript $<TARGET_FILE:newtonscript>
-             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..
-             DEPENDS newtonscript
-             COMMENT "Building ${CMAKE_BINARY_DIR}/romsrc-objects.bin from romsrc/")
-
-    # the same, as the fixture the boots below use
-    add_test(NAME host.ROMSourceBuild
-             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/newton-rom/analysis/romsrc.py
-                     build ${CMAKE_SOURCE_DIR}/../romsrc --relayout -o ${CMAKE_BINARY_DIR}/romsrc-objects.bin
-                     --newtonscript $<TARGET_FILE:newtonscript>
-             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
-    set_tests_properties(host.ROMSourceBuild PROPERTIES TIMEOUT 300 FIXTURES_SETUP romsrc_objects)
-
-    # the ROM-free track's step 3: the OS booted on the object file built from
-    # the committed tree, with no ROM image anywhere it could be found
+    # the ROM-free track's step 3: the OS booted as it boots by default - on
+    # the object file built from the committed tree - with no ROM image
+    # anywhere it could be found
     add_test(NAME host.NewtonNoROM
-             COMMAND newton --objects ${CMAKE_BINARY_DIR}/romsrc-objects.bin --headless 3
+             COMMAND newton --headless 3
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/newton.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
-    set_tests_properties(host.NewtonNoROM PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED romsrc_objects
+    set_tests_properties(host.NewtonNoROM PROPERTIES TIMEOUT 120
                          ENVIRONMENT "NEWTON_ROM=${CMAKE_BINARY_DIR}/no-rom-image"
                          PASS_REGULAR_EXPRESSION "the world is up.*written build/newton-demo.pgm")
 
@@ -856,7 +873,7 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../romsrc/layout.tsv)
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/fontedit.ns
                      --original ${CMAKE_BINARY_DIR}/romsrc-objects.bin
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
-    set_tests_properties(host.ROMSourceFontEdit PROPERTIES TIMEOUT 300 FIXTURES_REQUIRED romsrc_objects
+    set_tests_properties(host.ROMSourceFontEdit PROPERTIES TIMEOUT 300
                          PASS_REGULAR_EXPRESSION "the glyph edit reached the screen")
 endif()
 
@@ -867,7 +884,7 @@ endif()
 # - each step checked and snapshotted (build/walkthrough-<n>-<step>.pgm) -
 # then a restart on the same store that finds all of it still there
 add_test(NAME host.NewtonWalkthrough
-         COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --erase
+         COMMAND newton --display 320x480 --erase
                  --store ${CMAKE_CURRENT_BINARY_DIR}/walkthrough.store --headless 300
                  --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/walkthrough.ns
          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
@@ -875,7 +892,7 @@ set_tests_properties(host.NewtonWalkthrough PROPERTIES TIMEOUT 360 FIXTURES_SETU
                      PASS_REGULAR_EXPRESSION "walkthrough: done, 0 failed"
                      FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
 add_test(NAME host.NewtonWalkthrough.restart
-         COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480
+         COMMAND newton --display 320x480
                  --store ${CMAKE_CURRENT_BINARY_DIR}/walkthrough.store --headless 120
                  --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/walkthrough.ns
          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)

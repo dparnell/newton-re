@@ -12,7 +12,7 @@ Purpose
     first, beam-send.ns on the second).
 
 Usage
-    python tools/host/twonewtons.py <newton> --rom <image> --first a.ns --second b.ns
+    python tools/host/twonewtons.py <newton> [--rom <image>] --first a.ns --second b.ns
         [--seconds N] [--name-first A] [--name-second B] [--newton-arg ARG]...
         [--expect-first REGEX] [--expect-second REGEX]
 
@@ -50,7 +50,7 @@ def pump(proc, name, lines, port_event, port_box):
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("newton")
-    ap.add_argument("--rom", required=True)
+    ap.add_argument("--rom", help="a ROM image to boot (default: newton's own default, the object file built from romsrc/)")
     ap.add_argument("--first", required=True, help="the listening newton's script")
     ap.add_argument("--second", required=True, help="the connecting newton's script")
     ap.add_argument("--seconds", type=int, default=120)
@@ -62,7 +62,7 @@ def main():
     args = ap.parse_args()
     extra = args.newton_arg
 
-    common = [os.path.abspath(args.newton), "--rom", args.rom, "--headless", str(args.seconds), "--serial-port", "none"] + extra
+    common = [os.path.abspath(args.newton)] + (["--rom", args.rom] if args.rom else []) + ["--headless", str(args.seconds), "--serial-port", "none"] + extra
     first = subprocess.Popen(common + ["--ir-peer", "listen:0", "--script", args.first],
                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     port_event = threading.Event()
