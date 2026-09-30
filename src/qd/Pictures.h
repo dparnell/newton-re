@@ -56,7 +56,7 @@ public:
 
 	RefStruct	fObject;			// +0x00  the frame, then the bits binary drawn
 	PixelMap	fPixMap;			// +0x04  the pixel map over the bits
-	PixelMap*	fPixels;			// +0x20  -> fPixMap (or a 'pixels binary's map)
+	PixelMap*	fPixels;			// +0x20  -> fPixMap (the ROM: or a 'pixels binary's own header)
 	PixelMap	fMaskMap;			// +0x24
 	PixelMap*	fMask;				// +0x40  nil for none
 	Ptr			fGrayTable;			// +0x44  from the colour table (GetFramBitmap), nil for none
@@ -82,7 +82,16 @@ Ref		FGetBitmapInfo(RefArg rcvr, RefArg bitmap);								// ROM 0x00041d94 FGetBi
 void	RegisterPictureNatives(void);
 
 // A 'pixels binary of that size: a PixelMap header with the rows after
-// it, the map's baseAddr being the offset to them.
+// it, the map's baseAddr being the offset to them.  The header is the
+// ROM's 0x1c bytes, big-endian, on every host - scripts and packages' own
+// native code read it - so it is never cast to a PixelMap: drawing makes
+// a host map of it (PixelsToPixMap), whose baseAddr points at the rows.
+//   +00 baseAddr (the offset to the rows)  +04 rowBytes  +06 (pad)
+//   +08 bounds (top, left, bottom, right)  +10 pixMapFlags
+//   +14 deviceRes (v, h)                   +18 grayTable (nil)
+const long	kPixelsHeaderSize = 0x1c;
+void	PixelsToPixMap(const void* pixels, PixelMap* map);	// a locked 'pixels binary's header as a host map over its rows
+void	PixMapToPixels(const PixelMap* map, void* pixels);	// a host map's fields written as the header, the rows following it
 Ref		MakePixelsObject(const Rect& bounds, long depth, long rowBytes,
 						 long hRes, long vRes, RefArg store, RefArg compander,
 						 RefArg companderData);				// ROM 0x000415a4 MakePixelsObject__FR5TRectlN32RC6RefVarN26

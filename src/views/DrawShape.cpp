@@ -1793,7 +1793,9 @@ FDrawIntoBitmap(RefArg /*rcvr*/, RefArg shape, RefArg styles, RefArg bitmap)
 	GetPort(&saved);
 	RefVar data(GetFrameSlotRef(bitmap, RSSYMdata));
 	LockRef(data);
-	PixelMap* pm = (PixelMap*) BinaryData(data);
+	PixelMap map;						// (the ROM casts the binary's own header)
+	PixelsToPixMap(BinaryData(data), &map);
+	PixelMap* pm = &map;
 	GrafPort port;
 	OpenPort(&port);
 	SetPortBits(pm);
@@ -1875,7 +1877,9 @@ FViewIntoBitmap(RefArg rcvr, RefArg srcRect, RefArg dstRect, RefArg bitmap)
 	OpenPort(&port);
 	RefVar data(GetFrameSlotRef(bitmap, RSSYMdata));
 	LockRef(data);
-	PixelMap* pm = (PixelMap*) BinaryData(data);
+	PixelMap map;						// (the ROM casts the binary's own header)
+	PixelsToPixMap(BinaryData(data), &map);
+	PixelMap* pm = &map;
 	SetPortBits(pm);
 	port.portBits.baseAddr = GetPixelMapBits(pm);
 	port.portBits.pixMapFlags = (port.portBits.pixMapFlags & ~kPixMapStorage) | kPixMapPtr;

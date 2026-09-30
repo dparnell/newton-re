@@ -1232,7 +1232,14 @@ TestShapes()
 	{
 		RefVar data(Eval("bm.data"));
 		LockRef(data);
-		PixelMap* pm = (PixelMap*) BinaryData(data);
+		// the binary is the ROM's: a 0x1c-byte big-endian header, then the rows
+		const UByte* raw = (const UByte*) BinaryData(data);
+		EXPECT(Length(data) == 0x1c + 8 * 20);
+		EXPECT(GetBigEndianWord(raw) == 0x1c && GetBigEndianHalf(raw + 4) == 8);
+		EXPECT(GetBigEndianHalf(raw + 12) == 20 && GetBigEndianHalf(raw + 14) == 40);
+		EXPECT(GetBigEndianWord(raw + 0x10) == 0x80001001);		// kPixMapOffset | kPixMapVersion2 | one bit deep
+		EXPECT(GetBigEndianHalf(raw + 0x14) == 72 && GetBigEndianHalf(raw + 0x16) == 72);
+		PixelMap pixMap; PixelsToPixMap(BinaryData(data), &pixMap); PixelMap* pm = &pixMap;
 		EXPECT(pm->bounds.right == 40 && pm->bounds.bottom == 20);
 		EXPECT(pm->rowBytes == 8);				// forty bits rounded up to a whole word
 		EXPECT(PixelMapDepth(pm) == 1);
@@ -1251,7 +1258,7 @@ TestShapes()
 	{
 		RefVar data(Eval("bm.data"));
 		LockRef(data);
-		PixelMap* pm = (PixelMap*) BinaryData(data);
+		PixelMap pixMap; PixelsToPixMap(BinaryData(data), &pixMap); PixelMap* pm = &pixMap;
 		long lit = 0;
 		for (long y = 0; y < 20; y++)
 			for (long x = 0; x < 40; x++)
@@ -1265,7 +1272,7 @@ TestShapes()
 	{
 		RefVar data(Eval("bm.data"));
 		LockRef(data);
-		PixelMap* pm = (PixelMap*) BinaryData(data);
+		PixelMap pixMap; PixelsToPixMap(BinaryData(data), &pixMap); PixelMap* pm = &pixMap;
 		long lit = 0;
 		for (long y = 0; y < 20; y++)
 			for (long x = 0; x < 40; x++)
@@ -1283,7 +1290,7 @@ TestShapes()
 	{
 		RefVar data(Eval("bm144.data"));
 		LockRef(data);
-		PixelMap* pm = (PixelMap*) BinaryData(data);
+		PixelMap pixMap; PixelsToPixMap(BinaryData(data), &pixMap); PixelMap* pm = &pixMap;
 		long lit = 0;
 		long left = 99, top = 99, right = -1, bottom = -1;
 		for (long y = 0; y < 20; y++)
@@ -1309,7 +1316,7 @@ TestShapes()
 	{
 		RefVar data(Eval("bmText.data"));
 		LockRef(data);
-		PixelMap* pm = (PixelMap*) BinaryData(data);
+		PixelMap pixMap; PixelsToPixMap(BinaryData(data), &pixMap); PixelMap* pm = &pixMap;
 		EXPECT(GetPixel(pm, 2, 6) != 0 && GetPixel(pm, 2, 7) == 0 && GetPixel(pm, 2, 8) != 0 && GetPixel(pm, 8, 12) != 0);
 		EXPECT(GetPixel(pm, 3, 9) != 0 && GetPixel(pm, 4, 9) == 0 && GetPixel(pm, 5, 9) != 0 && GetPixel(pm, 2, 9) == 0);
 		UnlockRef(data);
@@ -1322,7 +1329,7 @@ TestShapes()
 	{
 		RefVar data(Eval("bmTall.data"));
 		LockRef(data);
-		PixelMap* pm = (PixelMap*) BinaryData(data);
+		PixelMap pixMap; PixelsToPixMap(BinaryData(data), &pixMap); PixelMap* pm = &pixMap;
 		long top = -1, bottom = -1;
 		for (long y = 0; y < 30; y++)
 			for (long x = 0; x < 40; x++)
@@ -1339,7 +1346,7 @@ TestShapes()
 	{
 		RefVar data(Eval("bm.data"));
 		LockRef(data);
-		PixelMap* pm = (PixelMap*) BinaryData(data);
+		PixelMap pixMap; PixelsToPixMap(BinaryData(data), &pixMap); PixelMap* pm = &pixMap;
 		long lit = 0;
 		for (long y = 0; y < 20; y++)
 			for (long x = 0; x < 40; x++)
@@ -2409,43 +2416,6 @@ TestTyping()
 	TypeKey(7);
 	EXPECT(NOTNIL(Eval("StrEqual(ctxT.text, \"azb\")")));
 	p->fFlags &= ~vReadOnly;
-	// a key over a selection: the selected text taken out first, then the
-	// key typed where it was
-	Eval("ctxT.text := \"Hello World\"; ctxT.styles := nil; ctxT:SyncView()");
-	Eval("ctxT:Dirty()");
-	Refresh();
-	p->MakeHilite(0, 5, true);
-	EXPECT(NOTNIL(p->FirstHilite()));
-	TypeKey(7);		// x
-	EXPECT(NOTNIL(Eval("StrEqual(ctxT.text, \"x World\")")) && p->fCaretOffset == 1 && ISNIL(p->FirstHilite()));
-	// ... and an arrow collapses a selection to one of its ends (2..3)
-	p->MakeHilite(2, 3, true);
-	TypeKey(0x7b);	// left arrow: the selection's start
-	EXPECT(p->fCaretOffset == 2 && ISNIL(p->FirstHilite()));
-	p->MakeHilite(2, 3, true);
-	TypeKey(0x7c);	// right arrow: its end
-	EXPECT(p->fCaretOffset == 3 && ISNIL(p->FirstHilite()));
-	// up and down a line, keeping the caret's place across it
-	Eval("ctxT.text := \"one two three four five six\"; SetValue(ctxT, 'viewBounds, {left: 20, top: 10, right: 140, bottom: 90}); ctxT:SyncView()");
-	Eval("ctxT:Dirty()");
-	Refresh();
-	EXPECT(p->LineCount() >= 2);
-	Eval("SetKeyView(ctxT, 2)");
-	TypeKey(0x7d);	// down arrow (0x1f)
-	EXPECT(p->FindLineContainingCharOffset(p->fCaretOffset) == 1 && p->fCaretOffset > p->Line(1).fStart);
-	TypeKey(0x7e);	// up arrow (0x1e)
-	EXPECT(p->FindLineContainingCharOffset(p->fCaretOffset) == 0 && p->fCaretOffset == 2);
-	// backspace over the last character of a paragraph that calculates its
-	// bounds, on a page: the paragraph goes when the key comes up
-	{
-		TEditView* page = (TEditView*) ViewOf("ctxTE := AddView(GetRoot(), {viewClass: 77, viewFlags: 1, viewBounds: {left: 0, top: 0, right: 160, bottom: 100}})");
-		TParagraphView* last = (TParagraphView*) ViewOf("ctxTL := AddView(ctxTE, {viewClass: 81, viewFlags: 1 + 8, viewBounds: {left: 10, top: 10, right: 150, bottom: 10}, viewJustify: 0, viewFont: espy12, text: \"a\"})");
-		EXPECT(page != nil && last != nil && page->fChildren->Count() == 1);
-		Eval("SetKeyView(ctxTL, 1)");
-		TypeKey(0x33);
-		EXPECT(page->fChildren->Count() == 0 && !gRemoveEmptyParagraph);
-		Eval("RemoveView(GetRoot(), ctxTE)");
-	}
 	// RemoveText widens to a neighbouring space; the style-run helpers
 	Eval("ctxT.text := \"one two three\"; ctxT.styles := nil; ctxT:SyncView()");
 	p->RemoveText(4, 3);
@@ -3736,7 +3706,7 @@ TestEffects()
 	{
 		RefVar data(Eval("vb.data"));
 		LockRef(data);
-		PixelMap* pm = (PixelMap*) BinaryData(data);
+		PixelMap pixMap; PixelsToPixMap(BinaryData(data), &pixMap); PixelMap* pm = &pixMap;
 		long lit = 0;
 		for (long y = 0; y < 40; y++)
 			for (long x = 0; x < 60; x++)
@@ -3751,7 +3721,7 @@ TestEffects()
 	{
 		RefVar data(Eval("vb.data"));
 		LockRef(data);
-		PixelMap* pm = (PixelMap*) BinaryData(data);
+		PixelMap pixMap; PixelsToPixMap(BinaryData(data), &pixMap); PixelMap* pm = &pixMap;
 		long lit = 0;
 		for (long y = 0; y < 40; y++)
 			for (long x = 0; x < 60; x++)

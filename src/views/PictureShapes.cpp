@@ -503,7 +503,9 @@ BitsPicCodes(long opcode, PicPlay* play, GrafPort* port)
 	RefVar shape(FMakeBitmap(RefVar(), RefVar(MAKEINT(width)), RefVar(MAKEINT(height)), RefVar()));
 	RefVar pixels(GetFrameSlotRef(shape, RSSYMdata));
 	LockRef(pixels);
-	PixelMap* pm = (PixelMap*) BinaryData(pixels);
+	PixelMap pixMap;					// (the ROM casts the binary's own header)
+	PixelsToPixMap(BinaryData(pixels), &pixMap);
+	PixelMap* pm = &pixMap;
 	Rect dst;
 	dst.top = 0;
 	dst.left = 0;

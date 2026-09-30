@@ -32,7 +32,6 @@
 #include "NewtonMemory.h"
 #include "ByteOrder.h"
 #include "OSErrors.h"
-#include "NewtQD.h"					// PixelMap
 #include <stdint.h>
 #include <string.h>
 
@@ -56,26 +55,6 @@ inline long
 HeaderRowWords(const UByte* header)
 {
 	return (long) ((int32_t) GetBigEndianWord(header + 8) >> 18);
-}
-
-// DEVIATION: the ROM copies the 0x1c bytes of the PixelMap at the front of
-// the object as they are; the host's PixelMap has eight-byte pointers, so
-// the Newton's layout is made of it, big-endian as everything on a store
-// is: baseAddr, rowBytes, bounds, (pad), pixMapFlags, deviceRes, grayTable.
-void
-MakeNewtonPixelMap(UByte* out, const PixelMap* pm)
-{
-	memset(out, 0, kNewtonPixelMapSize);
-	PutBigEndianWord(out, (ULong32) (uintptr_t) pm->baseAddr);
-	PutBigEndianHalf(out + 4, (UShort) pm->rowBytes);
-	PutBigEndianHalf(out + 6, (UShort) pm->bounds.top);
-	PutBigEndianHalf(out + 8, (UShort) pm->bounds.left);
-	PutBigEndianHalf(out + 10, (UShort) pm->bounds.bottom);
-	PutBigEndianHalf(out + 12, (UShort) pm->bounds.right);
-	PutBigEndianWord(out + 0x10, (ULong32) pm->pixMapFlags);
-	PutBigEndianHalf(out + 0x14, (UShort) pm->deviceRes.v);
-	PutBigEndianHalf(out + 0x16, (UShort) pm->deviceRes.h);
-	PutBigEndianWord(out + 0x18, (ULong32) (uintptr_t) pm->grayTable);
 }
 
 // the words of a page the filter covers - whole rows, less the first - and
@@ -281,7 +260,7 @@ TPixelMapCompander::Write(ULong offset, char* buffer, long count, ULong objectBa
 		if (objectBase == 0)
 			memset(fHeader + 4, 0, kNewtonPixelMapSize);
 		else
-			MakeNewtonPixelMap(fHeader + 4, (const PixelMap*) objectBase);
+			memmove(fHeader + 4, (const void*) objectBase, kNewtonPixelMapSize);	// (the 'pixels binary's own header, big-endian - qd/Pictures.h)
 		long rowBytes = HeaderRowBytes(fHeader);
 		fRowWords = rowBytes >> 2;
 		// ROM QUIRK kept: a 1-bit map's copy has its grayTable word

@@ -208,7 +208,12 @@ TPixelObj::Init(RefArg picture)
 		fPixels = &fPixMap;
 	}
 	else
-		fPixels = (PixelMap*) BinaryData(fObject);
+	{
+		// (the ROM points fPixels at the binary's own header; the host's
+		// PixelMap is not the binary's layout, so it is made of it)
+		PixelsToPixMap(BinaryData(fObject), &fPixMap);
+		fPixels = &fPixMap;
+	}
 }
 
 
@@ -230,7 +235,8 @@ TPixelObj::Init(RefArg picture, Boolean withBits)
 	fLocked = true;
 	if (pixels)
 	{
-		fPixels = (PixelMap*) BinaryData(data);
+		PixelsToPixMap(BinaryData(data), &fPixMap);	// (as above)
+		fPixels = &fPixMap;
 		return;
 	}
 	fMaskObject = GetFrameSlotRef(picture, RSSYMmask);
@@ -506,18 +512,11 @@ DrawPicture(RefArg picture, const Rect& box, ULong justify, long mode)
 // binary instead, compressed by the named compander - TPixelMapCompander
 // (stores/PixelMapCompander.cpp: LZ over pages whose rows are each XORed
 // with the one above) when none is named.
-//
-// DEVIATION: the ROM's header is 0x1c bytes because a Newton pointer is
-// four; the host's PixelMap is larger, so the header is written as a
-// PixelMap and the offset is its own size.  A `'pixels` binary is cast
-// straight to a PixelMap wherever it is drawn (qd/Pictures.cpp), so it
-// must be in the host's layout, not the Newton's.
 Ref
 MakePixelsObject(const Rect& bounds, long depth, long rowBytes,
 				 long hRes, long vRes, RefArg store, RefArg compander, RefArg companderData)
 {
-	long header = (long) sizeof(PixelMap);
-	long size = header + rowBytes * (bounds.bottom - bounds.top);
+	long size = kPixelsHeaderSize + rowBytes * (bounds.bottom - bounds.top);
 	RefVar object;
 	if (NOTNIL(store))
 	{
@@ -528,15 +527,60 @@ MakePixelsObject(const Rect& bounds, long depth, long rowBytes,
 	}
 	else
 		object = AllocateBinary(RSSYMpixels, size);
-	PixelMap* map = (PixelMap*) BinaryData(object);
-	map->baseAddr = (Ptr) (intptr_t) header;
-	map->rowBytes = (short) rowBytes;
-	map->bounds = bounds;
-	map->pixMapFlags = kPixMapOffset | kPixMapVersion2 | (ULong) depth;
-	map->deviceRes.h = (short) hRes;
-	map->deviceRes.v = (short) vRes;
-	map->grayTable = nil;
+	UByte* header = (UByte*) BinaryData(object);
+	PutBigEndianWord(header, (ULong32) kPixelsHeaderSize);
+	PutBigEndianHalf(header + 4, (UShort) rowBytes);
+	PutBigEndianHalf(header + 8, (UShort) bounds.top);
+	PutBigEndianHalf(header + 10, (UShort) bounds.left);
+	PutBigEndianHalf(header + 12, (UShort) bounds.bottom);
+	PutBigEndianHalf(header + 14, (UShort) bounds.right);
+	PutBigEndianWord(header + 0x10, (ULong32) (kPixMapOffset | kPixMapVersion2 | (ULong) depth));
+	PutBigEndianHalf(header + 0x14, (UShort) vRes);
+	PutBigEndianHalf(header + 0x16, (UShort) hRes);
+	PutBigEndianWord(header + 0x18, 0);
 	return object;
+}
+
+
+// (host) The 'pixels header read into a host PixelMap: the same fields,
+// baseAddr made a pointer to the rows (the header's offset added to the
+// binary's address) so the map can be drawn from anywhere.
+void
+PixelsToPixMap(const void* pixels, PixelMap* map)
+{
+	const UByte* header = (const UByte*) pixels;
+	ULong flags = GetBigEndianWord(header + 0x10);
+	ULong offset = GetBigEndianWord(header);
+	map->baseAddr = (flags & kPixMapStorage) == kPixMapOffset ? (Ptr) header + offset : nil;
+	map->rowBytes = (short) GetBigEndianHalf(header + 4);
+	map->bounds.top = (short) GetBigEndianHalf(header + 8);
+	map->bounds.left = (short) GetBigEndianHalf(header + 10);
+	map->bounds.bottom = (short) GetBigEndianHalf(header + 12);
+	map->bounds.right = (short) GetBigEndianHalf(header + 14);
+	map->pixMapFlags = (flags & ~kPixMapStorage) | kPixMapPtr;
+	map->deviceRes.v = (short) GetBigEndianHalf(header + 0x14);
+	map->deviceRes.h = (short) GetBigEndianHalf(header + 0x16);
+	map->grayTable = nil;
+}
+
+
+// (host) A host PixelMap's fields written as a 'pixels header, the rows
+// taken to follow it.
+void
+PixMapToPixels(const PixelMap* map, void* pixels)
+{
+	UByte* header = (UByte*) pixels;
+	PutBigEndianWord(header, (ULong32) kPixelsHeaderSize);
+	PutBigEndianHalf(header + 4, (UShort) map->rowBytes);
+	PutBigEndianHalf(header + 6, 0);
+	PutBigEndianHalf(header + 8, (UShort) map->bounds.top);
+	PutBigEndianHalf(header + 10, (UShort) map->bounds.left);
+	PutBigEndianHalf(header + 12, (UShort) map->bounds.bottom);
+	PutBigEndianHalf(header + 14, (UShort) map->bounds.right);
+	PutBigEndianWord(header + 0x10, (ULong32) ((map->pixMapFlags & ~kPixMapStorage) | kPixMapOffset));
+	PutBigEndianHalf(header + 0x14, (UShort) map->deviceRes.v);
+	PutBigEndianHalf(header + 0x16, (UShort) map->deviceRes.h);
+	PutBigEndianWord(header + 0x18, 0);
 }
 
 
@@ -568,7 +612,7 @@ FGetBitmapInfo(RefArg /*rcvr*/, RefArg bitmap)
 		pixels.Init(bitmap);
 		PixelMap* pm = pixels.fPixels;
 		SetFrameSlot(info, RSSYMbits, RefVar(GetFrameSlotRef(shape, RSSYMdata)));
-		long scanOffset = isPixels ? (long) (intptr_t) pm->baseAddr : 0x10;
+		long scanOffset = isPixels ? (long) GetBigEndianWord(BinaryData(data)) : 0x10;	// (the header's baseAddr; the host's map holds a pointer)
 		SetFrameSlot(info, RSSYMbitsbounds, RefVar(ToObject(pm->bounds)));
 		SetFrameSlot(info, RSSYMrowbytes, RefVar(MAKEINT(pm->rowBytes)));
 		SetFrameSlot(info, RSSYMdepth, RefVar(MAKEINT(pm->pixMapFlags & 0xff)));

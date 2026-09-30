@@ -292,7 +292,9 @@ RotTiledBitmap(RefArg bitmap, PixelMap* pm, long direction, RefArg options)
 	RefVar companderData(FGetBinaryCompanderData(RefVar(NILREF), data));
 	RefVar pixels(MakePixelsObject(bounds, depth, rowBytes, hRes, vRes, store, compander, companderData));
 	TBinaryDataPtr pixelsPtr(pixels);
-	PixelMap* turned = (PixelMap*) (char*) pixelsPtr;
+	PixelMap turnedMap;					// (the ROM casts the binary's own header)
+	PixelsToPixMap((char*) pixelsPtr, &turnedMap);
+	PixelMap* turned = &turnedMap;
 	newton_try
 	{
 		TTile tile(pm, options);
@@ -341,11 +343,11 @@ RotBitmapL(RefArg bitmap, RefArg options)
 			long words = pm->rowBytes >> 2;
 			long rowBytes;
 			RefVar pixels(TurnedPixels(bitmap, pm, &rowBytes));
-			PixelMap* turned = (PixelMap*) BinaryData(pixels);
+			PixelMap turned; PixelsToPixMap(BinaryData(pixels), &turned);	// (the ROM casts the binary's own header)
 			long groups = ((height - 1) >> 3) + 1;
 			long bands = ((width - 1) >> 5) + 1;
 			UByte* from = (UByte*) GetPixelMapBits(pm);
-			UByte* to = (UByte*) GetPixelMapBits(turned) + rowBytes * (width - 1);
+			UByte* to = (UByte*) GetPixelMapBits(&turned) + rowBytes * (width - 1);
 			long bits = 0x20;
 			long lastBits = width & 0x1f;
 			long lastRows = height & 7;
@@ -415,11 +417,11 @@ RotBitmapR(RefArg bitmap, RefArg options)
 			long words = pm->rowBytes >> 2;
 			long rowBytes;
 			RefVar pixels(TurnedPixels(bitmap, pm, &rowBytes));
-			PixelMap* turned = (PixelMap*) BinaryData(pixels);
+			PixelMap turned; PixelsToPixMap(BinaryData(pixels), &turned);	// (the ROM casts the binary's own header)
 			long groups = ((height - 1) >> 3) + 1;
 			long bands = ((width - 1) >> 5) + 1;
 			UByte* from = (UByte*) GetPixelMapBits(pm);
-			UByte* to = (UByte*) GetPixelMapBits(turned) + groups - 1;
+			UByte* to = (UByte*) GetPixelMapBits(&turned) + groups - 1;
 			long bits = 0x20;
 			long lastBits = width & 0x1f;
 			long firstRows = height & 7;

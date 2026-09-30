@@ -15,7 +15,6 @@
 #include "Store.h"
 #include "Compression.h"
 #include "ByteOrder.h"
-#include "NewtQD.h"			// PixelMap
 #include "Protocols.h"
 #include "Boot.h"
 #include "KernelGlobals.h"
@@ -225,7 +224,7 @@ Scenario(const char* compander)
 }
 
 
-// A bitmap kept through TPixelMapCompander: the PixelMap at the front of
+// A bitmap kept through TPixelMapCompander: the 'pixels header at the front of
 // the object, then rows of a diagonal line (each row the one above moved
 // a bit - what the row filter turns into mostly noughts), then a page and
 // more of nothing.  Read back byte for byte after an unmap; the header the
@@ -233,28 +232,28 @@ Scenario(const char* compander)
 // an object filled from a pipe (nought passed for its base) read back too.
 static const long kRowBytes = 8;
 static const long kRows = 400;
-static const long kPixSize = (long) sizeof(PixelMap) + kRowBytes * kRows + 0x500;
+static const long kPixHeader = 0x1c;		// a 'pixels binary's header (qd/Pictures.h)
+static const long kPixSize = kPixHeader + kRowBytes * kRows + 0x500;
 
 static void
 MakeBitmapBytes(UByte* data)
 {
 	memset(data, 0, kPixSize);
-	PixelMap* pm = (PixelMap*) data;
-	pm->baseAddr = (Ptr) (intptr_t) sizeof(PixelMap);
-	pm->rowBytes = kRowBytes;
-	pm->bounds.top = 0;
-	pm->bounds.left = 0;
-	pm->bounds.bottom = (short) kRows;
-	pm->bounds.right = (short) (kRowBytes * 8);
-	pm->pixMapFlags = 0x4000 | 0x1000 | 1;		// (kPixMapOffset | kPixMapVersion2, one bit deep)
-	pm->deviceRes.h = pm->deviceRes.v = 72;
-	UByte* rows = data + sizeof(PixelMap);
+	PutBigEndianWord(data, kPixHeader);						// baseAddr: the offset to the rows
+	PutBigEndianHalf(data + 4, kRowBytes);
+	PutBigEndianHalf(data + 12, kRows);						// bounds.bottom
+	PutBigEndianHalf(data + 14, kRowBytes * 8);				// bounds.right
+	PutBigEndianWord(data + 0x10, 0x80000000 | 0x1000 | 1);	// kPixMapOffset | kPixMapVersion2, one bit deep
+	PutBigEndianHalf(data + 0x14, 72);
+	PutBigEndianHalf(data + 0x16, 72);
+	UByte* rows = data + kPixHeader;
 	for (long r = 0; r < kRows; r++)
 	{
 		long bit = r % (kRowBytes * 8);
 		rows[r * kRowBytes + bit / 8] |= (UByte) (0x80 >> (bit % 8));
 	}
 }
+
 
 static void
 PixelMapScenario()
@@ -290,7 +289,7 @@ PixelMapScenario()
 	EXPECT(store->GetObjectSize(headerId, &headerSize) == noErr && headerSize == 0x2c);
 	EXPECT(store->Read(headerId, 0, (char*) header, 0x2c) == noErr);
 	EXPECT(GetBigEndianWord(header) == 0x2c && GetBigEndianHalf(header + 8) == kRowBytes
-		   && GetBigEndianHalf(header + 12) == 0 && GetBigEndianHalf(header + 14) == kRows);
+		   && GetBigEndianHalf(header + 12) == 0 && GetBigEndianHalf(header + 16) == kRows);	// (bounds at the map's +8)
 	EXPECT(GetBigEndianWord(header + 0x1c) == kRowBytes / 4);		// (ROM quirk: a 1-bit map's grayTable word is the row's words)
 
 	// what is on the store: page 0 is the LZ of the page row-filtered
