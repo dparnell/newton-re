@@ -408,10 +408,8 @@ SetStoreVersion(RefArg storeObject, long version)
 
 // ROM 0x00352a40 StoreGetDirSortTable__FRC6RefVar
 // The sorting table the store's soup names are ordered by: the store's
-// dirSortId, looked up among the registered tables.  NOT YET
-// RECONSTRUCTED: a table the store itself carries (StoreSaveSortTable
-// writes one into the store's root, and this reads it back when it is not
-// one of the registered ones).
+// dirSortId, looked up among the registered tables (a table the store
+// carries was registered when it was mounted: StoreLoadSortTables).
 const TSortingTable*
 StoreGetDirSortTable(RefArg storeObject)
 {
@@ -423,17 +421,163 @@ StoreGetDirSortTable(RefArg storeObject)
 }
 
 
+// A store keeps the sorting tables its soups' indexes are ordered by, so
+// that it sorts the same wherever it is mounted: the persistent frame's
+// `sortTables` is an array of triples [id, users, object id], the object
+// holding the table's bytes - except the ROM's own table, id 1, which
+// every machine has and which is kept by id alone (object 0).
+
 // ROM 0x00352b2c StoreSaveSortTable__FRC6RefVarl
-// NOT YET RECONSTRUCTED: the sorting tables are not kept on the store.
+// Another user of the table on the store: its triple's count raised, or
+// - the first - the table written into a store object of its own and a
+// triple added (and the table subscribed to in gSortTables); the
+// persistent frame written back.  Id 0 (no table) is nothing to keep.
 void
-StoreSaveSortTable(RefArg /*storeObject*/, long /*sortId*/)
-{ }
+StoreSaveSortTable(RefArg storeObject, long sortId)
+{
+	if (sortId == 0)
+		return;
+	long size = 0;
+	const TSortingTable* table = gSortTables.GetSortTable(sortId, &size);
+	if (table == nil)
+		Throw(exStoreError, (void*) kNSErrUnknownSortTable, nil);
+	RefVar persistent(GetFrameSlotRef(storeObject, RSSYM_proto));
+	if (ISNIL(persistent))
+		Throw(exStoreError, (void*) kNSErrInvalidStore, nil);
+	RefVar tables(GetFrameSlotRef(persistent, RSSYMsorttables));
+	Boolean found = false;
+	if (ISNIL(tables))
+	{
+		tables = AllocateArray(RSSYMarray, 0);
+		SetFrameSlot(persistent, RSSYMsorttables, tables);
+	}
+	else
+	{
+		long count = Length(tables);
+		for (long slot = 0; slot < count; slot += 3)
+		{
+			if (RINT(GetArraySlotRef(tables, slot)) == sortId)
+			{
+				long users = RINT(GetArraySlotRef(tables, slot + 1));
+				SetArraySlotRef(tables, slot + 1, MAKEINT(users + 1));
+				found = true;
+				break;
+			}
+		}
+	}
+	CheckWriteProtect(storeObject);
+	if (!found)
+	{
+		PSSId objectId = 0;
+		if (sortId != 1)
+		{
+			TStoreWrapper* wrapper = (TStoreWrapper*) (Ref) GetFrameSlotRef(storeObject, RSSYMstore);
+			NewtonErr err = wrapper->Store()->NewObject((char*) table, size, &objectId);
+			if (err != noErr)
+				ThrowOSErr(err);
+		}
+		AddArraySlot(tables, RefVar(MAKEINT(sortId)));
+		AddArraySlot(tables, RefVar(MAKEINT(1)));
+		AddArraySlot(tables, RefVar(MAKEINT(objectId)));
+		gSortTables.Subscribe(sortId);
+	}
+	WriteFaultBlock(persistent);
+}
 
 
 // ROM 0x00352dac StoreRemoveSortTable__FRC6RefVarl
+// A user of the table on the store gone: its count lowered, or - the
+// last - its store object deleted (not the ROM's own table's, which has
+// none), its triple taken out (the whole array when it was the only one)
+// and the table unsubscribed from gSortTables; the persistent frame
+// written back.
 void
-StoreRemoveSortTable(RefArg /*storeObject*/, long /*sortId*/)
-{ }
+StoreRemoveSortTable(RefArg storeObject, long sortId)
+{
+	RefVar persistent(GetFrameSlotRef(storeObject, RSSYM_proto));
+	if (ISNIL(persistent))
+		Throw(exStoreError, (void*) kNSErrInvalidStore, nil);
+	RefVar tables(GetFrameSlotRef(persistent, RSSYMsorttables));
+	if (ISNIL(tables))
+		return;
+	long count = Length(tables);
+	for (long slot = 0; slot < count; slot += 3)
+	{
+		if (RINT(GetArraySlotRef(tables, slot)) != sortId)
+			continue;
+		CheckWriteProtect(storeObject);
+		TStoreWrapper* wrapper = (TStoreWrapper*) (Ref) GetFrameSlotRef(storeObject, RSSYMstore);
+		long users = RINT(GetArraySlotRef(tables, slot + 1));
+		if (users - 1 == 0)
+		{
+			if (sortId != 1)
+				wrapper->Store()->DeleteObject((PSSId) RINT(GetArraySlotRef(tables, slot + 2)));
+			if (count < 4)
+				SetFrameSlot(persistent, RSSYMsorttables, RefVar());
+			else
+				ArrayMunger(tables, slot, 3, RefVar(), 0, 0);
+			gSortTables.Unsubscribe(sortId);
+		}
+		else
+			SetArraySlotRef(tables, slot + 1, MAKEINT(users - 1));
+		WriteFaultBlock(persistent);
+		break;
+	}
+}
+
+
+// ROM 0x00352fd8 (unnamed: MakeStoreObject's, for a store that was there
+// already)
+// The tables a mounted store carries registered: one gSortTables already
+// has is subscribed to again, any other read out of its store object into
+// a block of its own and added (owned, so that the last Unsubscribe gives
+// it back).
+void
+StoreLoadSortTables(RefArg storeObject)
+{
+	RefVar persistent(GetFrameSlotRef(storeObject, RSSYM_proto));
+	RefVar tables(GetFrameSlotRef(persistent, RSSYMsorttables));
+	if (ISNIL(tables))
+		return;
+	long count = Length(tables);
+	for (long slot = 0; slot < count; slot += 3)
+	{
+		long sortId = RINT(GetArraySlotRef(tables, slot));
+		if (gSortTables.GetSortTable(sortId, nil) != nil)
+		{
+			gSortTables.Subscribe(sortId);
+			continue;
+		}
+		TStoreWrapper* wrapper = (TStoreWrapper*) (Ref) GetFrameSlotRef(storeObject, RSSYMstore);
+		PSSId objectId = (PSSId) RINT(GetArraySlotRef(tables, slot + 2));
+		long size = 0;
+		NewtonErr err = wrapper->Store()->GetObjectSize(objectId, &size);
+		if (err != noErr)
+			ThrowOSErr(err);
+		TSortingTable* table = (TSortingTable*) NewPtr(size);
+		if (table == nil)
+			Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
+		err = wrapper->Store()->Read(objectId, 0, (char*) table, size);
+		if (err != noErr)
+			ThrowOSErr(err);
+		gSortTables.AddSortTable(table, true);
+	}
+}
+
+
+// ROM 0x00353184 (unnamed: RemoveTStore's)
+// A store going: every table it carries unsubscribed from gSortTables.
+void
+StoreForgetSortTables(RefArg storeObject)
+{
+	RefVar persistent(GetFrameSlotRef(storeObject, RSSYM_proto));
+	RefVar tables(GetFrameSlotRef(persistent, RSSYMsorttables));
+	if (ISNIL(tables))
+		return;
+	long count = Length(tables);
+	for (long slot = 0; slot < count; slot += 3)
+		gSortTables.Unsubscribe(RINT(GetArraySlotRef(tables, slot)));
+}
 
 
 // The soup name index of a store: a TSoupIndex over the persistent
@@ -609,7 +753,8 @@ MakeStoreObject(TStore* store)
 		SetFrameSlot(storeObject, RSSYMversion, RefVar(MAKEINT(version)));
 		if (formatted)
 			StoreSaveSortTable(storeObject, gSortTables.fDefaultId);
-		// else the ROM loads the store's sort tables (0x00327e3c): NOT YET
+		else
+			StoreLoadSortTables(storeObject);
 		SetupEphemeralTracker(storeObject, rootFrameId);
 	}
 	newton_catch_all
@@ -682,7 +827,7 @@ RemoveTStore(TStore* store)
 	RefVar stores(gStores);
 	RefVar none;
 	ArrayMunger(stores, i, 1, none, 0, 0);
-	// the ROM forgets the store's sort tables here (0x00327fe8): NOT YET
+	StoreForgetSortTables(storeObject);
 	KillStoreObject(storeObject);
 	if (wrapper != nil)
 		delete wrapper;

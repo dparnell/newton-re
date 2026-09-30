@@ -77,6 +77,8 @@ const TClassInfo*	GetStoreClassInfo(const TStore* store);
 TStoreWrapper*	GetStoreWrapper(RefArg storeObject);		// throws when the frame has been killed
 TStore*	StoreFromWrapper(RefArg storeObject);
 void	CheckWriteProtect(TStore* store);	// throws for a ROM or read-only store
+void	StoreLoadSortTables(RefArg storeObject);		// ROM 0x00352fd8 (unnamed) - the tables a mounted store carries registered
+void	StoreForgetSortTables(RefArg storeObject);		// ROM 0x00353184 (unnamed) - ... and unsubscribed when it goes
 void	CheckWriteProtect(RefArg storeObject);
 void	KillStoreObject(RefArg storeObject);
 Ref		FlushSoupList(RefArg soups);

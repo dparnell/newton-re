@@ -131,6 +131,7 @@
 #define kNSErrCantRemoveUniqueIDIndex	(ERRBASE_FRAMES - 23)	// RemoveIndex of the _uniqueID index (0xffff4469)
 #define kNSErrNoTagsIndex				(ERRBASE_FRAMES - 27)	// a tagSpec query or tag method on a soup with no tags index (0xffff4465)
 #define kNSErrNoLargeObjectsOnStore		(ERRBASE_FRAMES - 29)	// the store cannot hold large objects (the ROM's -0xbb9d)
+#define kNSErrUnknownSortTable			(ERRBASE_FRAMES - 30)	// StoreSaveSortTable: no sorting table of that id registered (0xffff4462)
 #define kNSErrSortTablesMismatch		(ERRBASE_FRAMES - 31)	// a union soup's soups sort an index by different tables (its errorCode; 0xffff4461)
 #define kNSErrBadMultiSlotIndex			(ERRBASE_FRAMES - 32)	// a multiSlot index whose path/type arrays disagree or exceed 6 (0xffff4460)
 #define kNSErrLargeBinaryAsKey			(ERRBASE_FRAMES - 33)	// KeyToSKey of a large binary (0xffff445f)

@@ -29,6 +29,7 @@
 #include "NewtonExceptions.h"
 #include "OSErrors.h"
 #include "Unicode.h"
+#include "SortTables.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -118,6 +119,58 @@ CountEntries(RefArg soup, long* firstUID = nil)
 		result = GetSoupIndexObject(soup, 0)->Next(&key, &data, kIndexNextKey, &key, &data);
 	}
 	return count;
+}
+
+
+// The sorting tables a store carries (Soups.cpp: StoreSaveSortTable,
+// StoreRemoveSortTable, and the loading and forgetting at mount and
+// unmount): a table the machine does not have comes back from the store.
+static void
+TestSortTablesOnStore()
+{
+	TStore* store = NewStore();
+	RefVar storeObject(RegisterTStore(store));
+	RefVar persistent(GetFrameSlotRef(storeObject, RSSYM_proto));
+	EXPECT(ISNIL(GetFrameSlotRef(persistent, RSSYMsorttables)));	// (no default table here: nothing kept)
+
+	// a table of id 99 (a header and nothing else), the machine's
+	TSortingTable* table = (TSortingTable*) NewPtrClear(kSortTableHeaderSize);
+	((unsigned char*) table)[1] = 99;
+	EXPECT(table->Id() == 99 && gSortTables.AddSortTable(table, false));
+	long size = 0;
+	EXPECT(gSortTables.GetSortTable(99, &size) == table && size == kSortTableHeaderSize);
+
+	// kept on the store: a triple [id, users, object], the object its bytes
+	StoreSaveSortTable(storeObject, 99);
+	RefVar tables(GetFrameSlotRef(persistent, RSSYMsorttables));
+	EXPECT(IsArray(tables) && Length(tables) == 3 && RINT(GetArraySlotRef(tables, 0)) == 99 && RINT(GetArraySlotRef(tables, 1)) == 1);
+	PSSId objectId = (PSSId) RINT(GetArraySlotRef(tables, 2));
+	long objectSize = 0;
+	EXPECT(objectId != 0 && store->GetObjectSize(objectId, &objectSize) == noErr && objectSize == kSortTableHeaderSize);
+	char bytes[kSortTableHeaderSize];
+	EXPECT(store->Read(objectId, 0, bytes, kSortTableHeaderSize) == noErr && memcmp(bytes, table, kSortTableHeaderSize) == 0);
+	StoreSaveSortTable(storeObject, 99);
+	EXPECT(Length(tables) == 3 && RINT(GetArraySlotRef(tables, 1)) == 2);	// a second user: counted
+
+	// the store unmounted and the machine's table gone; mounted again, the
+	// table comes back from the store (a copy the table registry owns)
+	StoreForgetSortTables(storeObject);
+	gSortTables.Unsubscribe(99);
+	EXPECT(gSortTables.GetSortTable(99, nil) == nil);
+	DisposPtr((Ptr) table);
+	StoreLoadSortTables(storeObject);
+	const TSortingTable* again = gSortTables.GetSortTable(99, &size);
+	EXPECT(again != nil && size == kSortTableHeaderSize && again->Id() == 99);
+
+	// the users gone: the triple, the object and the registration with them
+	StoreRemoveSortTable(storeObject, 99);
+	EXPECT(RINT(GetArraySlotRef(tables, 1)) == 1 && gSortTables.GetSortTable(99, nil) != nil);
+	StoreRemoveSortTable(storeObject, 99);
+	EXPECT(ISNIL(GetFrameSlotRef(persistent, RSSYMsorttables)));
+	EXPECT(store->GetObjectSize(objectId, &objectSize) != noErr);
+	EXPECT(gSortTables.GetSortTable(99, nil) == nil);
+
+	RemoveTStore(store);
 }
 
 
@@ -1281,6 +1334,7 @@ main()
 	SetFrameSlot(RefVar(gVarFrame), RSSYMfunctions, RefVar(gFunctionFrame));
 	newton_try
 	{
+		TestSortTablesOnStore();
 		TestStoreFrame();
 		TestSoups();
 		TestCursors();

@@ -524,10 +524,9 @@ CompareTextNoCase(const UniChar* a, long aLength, const UniChar* b, long bLength
 ----------------------------------------------------------------------*/
 
 // ROM 0x00258618 FGetSortID__FRC6RefVarT1
-// The default table's id, and nil when there is none.  The argument is a
-// store, whose own table would be answered instead: NOT YET RECONSTRUCTED
-// (StoreGetDirSortTable's tables kept on the store), and the ROM answers
-// nil for it too.
+// The default table's id, and nil when there is none.  Given a store the
+// ROM answers nil too (its own tables are the store frame's sortTables:
+// stores/Soups.cpp).
 Ref
 FGetSortID(RefArg /*rcvr*/, RefArg store)
 {
