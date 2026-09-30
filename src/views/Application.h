@@ -15,10 +15,9 @@
 				views alone gets a TApplication that InitViewSystem makes.
 				The ROM's object is 0x20 bytes.
 
-				NOT YET RECONSTRUCTED: the idle timer the delayed actions
-				arm (the event handler's ResetIdle/StopIdle: the host runs
-				the due actions when RunNextDelayedAction is called), the
-				event loop.
+				The idle timer the delayed actions arm is the newt world's
+				(gArmDelayedActionIdleProc); the event loop is the world's
+				(newt/NewtWorld.h).
 
 	Reconstructed from the MP2x00 US ROM (0x00033aa8-0x00034510,
 	0x00034694-0x00034750, 0x000af608-0x000afda8); each function cites
@@ -72,6 +71,13 @@ public:
 };
 
 extern TApplication*	gApplication;		// ROM 0x0c1054ac gApplication
+
+// The idle timer a delayed action re-arms: the ROM's AddDelayedAction
+// reaches for the newt world's event handler itself; the newt world is
+// above the views here, so it installs this (DEVIATION: layering).  Nil
+// with no newt world (the views' tests, newtonscript), where the due
+// actions are run by whoever calls RunNextDelayedAction.
+extern void	(*gArmDelayedActionIdleProc)(void);
 
 void	ErrorNotify(long error, long kind);										// ROM 0x001465a4 ErrorNotify__FlT1 - root:Notify(kind, error, nil)
 Ref		FAddUndoAction(RefArg rcvr, RefArg script, RefArg args);				// ROM 0x000afc44 FAddUndoAction__FRC6RefVarN21 - a view's AddUndoAction method

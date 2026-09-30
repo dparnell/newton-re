@@ -191,6 +191,9 @@ TNewtWorld::ForkSwitch(Boolean in)
 }
 
 
+static void	ArmDelayedActionIdle(void);		// (the delayed actions, below)
+
+
 // ROM 0x0030d20c MainConstructor__10TNewtWorldFv
 // The world's boot: the app world's own, the alarm message, the object
 // system (host: started by the program, which reads the ROM image in
@@ -277,6 +280,7 @@ TNewtWorld::MainConstructor()
 	fHandler = new TNewtEventHandler;
 	fHandler->Init(kNewtIdleEvent, kNewtEventClass);
 	fHandler->InitIdler((TTimeout) 0, 0, false);
+	gArmDelayedActionIdleProc = ArmDelayedActionIdle;
 	gApplication = new TARMNotebook;
 	gApplication->Constructor();
 	// the part handlers whose parts come to this world
@@ -616,6 +620,31 @@ TNewtEventHandler::SetWakeupTime(ULong ticks)
 /*------------------------------------------------------------------------------
 	T h e   d e l a y e d   a c t i o n s
 ------------------------------------------------------------------------------*/
+
+// AddDelayedAction's tail (ROM 0x00033af0, from 0x00033c18): the current
+// world's idle timer re-armed for the earliest delayed action - stopped
+// when there is none, else set for the time left, a millisecond at least.
+// (Views/Application.h's gArmDelayedActionIdleProc; DEVIATION: layering.)
+static void
+ArmDelayedActionIdle(void)
+{
+	TNewtEventHandler* handler = ((TNewtWorld*) GetGlobals())->fHandler;
+	TTime next = gApplication->NextDelayedActionTime(gApplication->fNextIdleTime);
+	if (CompCompare(&next.time, &kZero) == 0)
+	{
+		handler->StopIdle();
+		return;
+	}
+	TTime now = GetGlobalTime();
+	Int64 wait = next.time;
+	CompSub(&now.time, &wait);
+	TTime delay;
+	delay.time = wait;
+	long ms = (long) delay.ConvertTo(kMilliseconds);
+	if (ms < 1)
+		ms = 1;
+	handler->ResetIdle(ms, kMilliseconds);
+}
 
 // the idle timer re-armed for a time: the world's handler, the earliest of
 // the application's next idle, a delay from now (when not 0) and the next

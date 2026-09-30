@@ -20,6 +20,7 @@
 #include "CompMath.h"
 
 TApplication*	gApplication = nil;		// ROM 0x0c1025a0
+void			(*gArmDelayedActionIdleProc)(void) = nil;	// Application.h
 
 const long kNewtErrNoReceiver = -8003;	// ErrorNotify's code for a command nobody took (its documented name is not known)
 const long kNotifyKindError = 3;
@@ -226,8 +227,8 @@ TApplication::GetUndoStack(long which)
 // A delayed action queued: the receiver, the action (a message symbol,
 // or a function - nil receiver: called), its args, and the time it is
 // due (a 'time binary of the global time delay milliseconds from now;
-// a non-integer delay: at the next idle).  NOT YET RECONSTRUCTED: the
-// idle timer re-armed for the earliest action.
+// a non-integer delay: at the next idle).  The idle timer is then re-armed
+// for the earliest action (gArmDelayedActionIdleProc).
 void
 TApplication::AddDelayedAction(RefArg receiver, RefArg action, RefArg args, RefArg delay)
 {
@@ -254,6 +255,8 @@ TApplication::AddDelayedAction(RefArg receiver, RefArg action, RefArg args, RefA
 	}
 	else
 		SetArraySlotRef(fDelayedActions, index + 3, NILREF);
+	if (gArmDelayedActionIdleProc != nil)
+		gArmDelayedActionIdleProc();
 }
 
 
