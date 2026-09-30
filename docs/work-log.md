@@ -237,6 +237,23 @@ is the same value spelt so that it cannot be read two ways.
   notBic loops never advance the mask pointer; `ScaleStdRRect` scales the
   corner oval crosswise on a fax.
 
+## 2026-09-30: ink in pickers, printed ink, key-command widths
+
+- Ink in pickers (96e6c6af): a strokeList item drawn from its bounds at
+  most 28 high, and a grid picture with a mask picking no cell over a
+  blank part of it.
+- Printed ink (38b6bdf8): ink had been left out of printouts; on a
+  printer's port a sketch's ink and an ink word in text are now turned
+  into outlined paths (`CSRawExpandGroup`, `GenericCSMakePathsGroup`,
+  `InkMakePaths`) and framed; the printed pixels match the screen's.
+- Key-command widths as the ROM's (6d36d2c9): the modifier icons' width
+  added to each item (`GetKeyCommandModifierWidth`, counted twice
+  against pickMaxWidth - ROM behaviour kept); the Action menu reads
+  "Print Note ⌘P".  The boot sound is kept out of the host's sample
+  counts without delaying the boot (`HostSoundSetAside`,
+  `HostSoundBootPlaying()`) - the earlier wait had shifted boot timing.
+  292 of 292.
+
 ## 2026-09-30: the boot splash; pickers' key commands
 
 - The boot splash (c803c9e2): `TNotebook::DrawSplashScreen` (0x14602c)
