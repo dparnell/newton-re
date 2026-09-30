@@ -329,7 +329,10 @@ reach, hardware, or waiting on another area:
   strokes), `CreateVMHeap`.
 - The polygon view's only remaining NOT YET: the ink verb's printing
   path (`InkMakePaths`, `FramePaths`).
-- **NetHopper browses** (`host.NewtonNetHopper`).  NOT YET: a RefVar
+- **NetHopper browses** (`host.NewtonNetHopper`).  JPEG images need the NewtsCape
+  package: NetHopperJPEG.pkg has no decoder of its own - its viewer calls
+  NewtsCape's `JPEGConvert:NewtsCape` (`AddFile`) and answers nil without
+  it; NewtsCape is not among the fixtures.  NOT YET: a RefVar
   handle a native keeps in a heap object past its call (the ARM
   interpreter's handle table is per call); in `TParagraphView::SetupDone`,
   `CheckStyles`, `ProcessStyles`, text flag 0x20's line alignment and
