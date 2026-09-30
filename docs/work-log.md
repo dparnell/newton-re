@@ -237,6 +237,18 @@ is the same value spelt so that it cannot be read two ways.
   notBic loops never advance the mask pointer; `ScaleStdRRect` scales the
   corner oval crosswise on a fax.
 
+## 2026-09-30: a fresh store mounts cleanly again
+
+- `HostPrepareStore` makes the Names soup at mount, before the boot's
+  NewtonScript has made `vars.userConfiguration`; the soup's modification
+  time read the clock, whose zone offset (`RealClockZoneOffset`, since the
+  one-clock change) asked `GetPreference`, which throws as the ROM's does
+  (0x001290d8).  The ROM never makes a soup that early.  The offset is now
+  0 until the user configuration exists (10e8dd06).  No other soup was
+  lost: the Cardfile's InstallScript made Names later.  ctests
+  `host.NewtonFreshStore` (and `.memory`): a fresh store mounts cleanly
+  and has the 15 soups a ROM boot makes.
+
 ## 2026-09-30: the rest of a first day
 
 - `src/host/demo/walkthrough2.ns` (6af90e31; ctests
