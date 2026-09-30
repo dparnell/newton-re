@@ -1589,6 +1589,26 @@ line's box has no height - and by four all round while it is selected.
 box's top, then cuts a line in two with a traced selection and a scrub
 and undoes it.
 
+A scrub over more than half the view removes it (`HandleScrub`, kind 5 -
+at a half where `TView` wants three quarters, and a read-only shape not
+excepted); failing that, `HitSegment` asks each side's box how much of it
+the scrub's box covers and notes where the answer crosses a half - two
+crossings are one run of sides, four on a closed shape a run round its
+join - and `ScrubSegment` takes that run out through `RemovePoints` (a
+curve's run must come to over thirty pixels).  A shape is dragged as one
+'polygon item ('ink for ink) labelled "drawing" (`AddDragInfo`); what is
+dropped is a shape view's form of the selection (`GetDropData`: the whole
+shape at nought with its own pen, or the selection's points brought to
+nought with their box as the bounds; an oval's arcerBounds relative to
+it), and `DropRemove` deletes what was dragged away.  A resized selection
+maps the points relative to the view (`Scale`, the selection's copy with
+them, an oval's box too) or, for ink, stretches the strokes by the ratio of
+the sizes (`ScaleInk`); `DrawScaledData` draws the shape and answers the
+box it reaches grown by four.  A double tap on ink (`aeDoubleTap`, 0x32)
+on a page that takes text reads it again: the caret taken away, remote
+writing turned off meanwhile, the ink selected and an aeRecognizeInk sent
+asking for the check mark.  (`test_Views`: `TestPolygonEditing`.)
+
 `TView::LocalOrigin` is where a view is in the coordinates its
 `viewBounds` slot is written in - the parent's contents origin taken off
 its bounds.  (The host had been taking its own contents origin, which
