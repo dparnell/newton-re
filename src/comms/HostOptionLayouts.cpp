@@ -105,6 +105,18 @@ static const HostOptionLayout kLayouts[] =
 	// are) - the host's TCP tool (comms/host/HostTCPTool.h)
 	{ 'itrs',						"=" },
 	{ 'ilpt',						"=" },
+	{ 'itsv',						"=" },		// (DataLong)
+	{ 'ilid',						"=" },		// (taken, not read; the DNS tool's too)
+	// the host's DNS tool (comms/host/HostDNSTool.h): the query's longs
+	// read with DataLong, the records it answers written big-endian, the
+	// default domain a C string, the server taken unread
+	{ 'dnsq',						"=" },
+	{ 'rrcd',						"=" },
+	{ 'ddom',						"=" },
+	{ 'dnic',						"=" },
+	// the host's link (comms/host/HostLinkTool.h): the result long's bytes
+	// cleared where the device has them
+	{ 'iclc',						"=" },
 	{ 0, nil }
 };
 
