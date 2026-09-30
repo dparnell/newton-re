@@ -126,7 +126,7 @@ Scenario(void)
 	EXPECT(CMGetLastDevice(&last) == noErr && last.fDeviceType == 'dock' && last.fManufacturer == 'appl');
 
 	ULong version = 0;
-	EXPECT(CMGetServiceVersion('inet', &version) == -26030);	// the host's service has no 'vern
+	EXPECT(CMGetServiceVersion('inet', &version) == -26002);	// the host's service has no 'vern
 
 	sServerStop = true;
 	server.join();

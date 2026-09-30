@@ -32,6 +32,7 @@
 #include "Locale.h"
 #include "Fonts.h"
 #include "Screen.h"
+#include "SCPEvents.h"
 #include "NTK.h"
 #include "CommManager.h"
 #include "HostServices.h"
@@ -472,8 +473,9 @@ TNewtEventHandler::IdleProc(TUMsgToken* token, ULong* size, TAEvent* event)
 // screen rectangle redrawn; 'ext /'bklt the tickle time noted; 'scpt a
 // script run and the tickle time noted; 'alrm an alarm; 'card a card
 // with no storage; 'rstr a card's stores to be unmounted, and 'stor (after
-// the reply) to be mounted; 'powr, 'pwch, 'ic  , 'irMC, 'dead, 'bats, 'scp!, 'xnwt (NOT YET
-// RECONSTRUCTED).  Every event but 'keyb and 'idle is replied to as it
+// the reply) to be mounted; 'ic   the interconnect port
+// (HandleInterConnect); 'scp! a device's package (HandleSCPEvent);
+// 'powr, 'pwch, 'dead, 'bats; 'irMC, 'xnwt (NOT YET RECONSTRUCTED).  Every event but 'keyb and 'idle is replied to as it
 // came; a 'powr event more than a second after the last wakeup runs the
 // root's GotoSleep.  Then the application is Run (the idle passes and the
 // root view's update) and the idle timer re-armed for the next delayed
@@ -532,14 +534,19 @@ TNewtEventHandler::AEHandlerProc(TUMsgToken* token, ULong* size, TAEvent* event)
 	case 'bats':				// the batteries are not the kind the machine was told
 		NSCallGlobalFn(RSSYMbadbatteryalert);
 		break;
+	case kNewtInterConnectEvent:
+		HandleInterConnect((TInterConnectEvent*) event);
+		break;
+	case kNewtSCPEvent:
+		HandleSCPEvent((TSCPEvent*) event);
+		break;
 	case kNewtStoreRemovedEvent:
 		StorageCardRemoved((TNewStoreEvent*) event);
 		break;
 	default:
 		// NOT YET RECONSTRUCTED:
-		// 'ic   (HandleInterConnect), 'irMC
-		// (the root's IRConnectRequest), 'scp!
-		// (HandleSCPEvent), 'xnwt (HandleExternalNewtEvent)
+		// 'irMC (the root's IRConnectRequest),
+		// 'xnwt (HandleExternalNewtEvent)
 		break;
 	}
 	if (type != kNewtKeyboardEvent)

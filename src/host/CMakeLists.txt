@@ -5,7 +5,7 @@
 # the host boots with (HostStores.cpp).
 # the view system on the host (HostViews.h), for newtonscript and the newt
 # world's boot
-add_library(host_views STATIC HostViews.cpp HostNatives.cpp HostStores.cpp HostCards.cpp FactorySoups.cpp HostObjectsFile.cpp)
+add_library(host_views STATIC HostViews.cpp HostNatives.cpp HostStores.cpp HostCards.cpp HostInterconnect.cpp FactorySoups.cpp HostObjectsFile.cpp)
 target_link_libraries(host_views PUBLIC flash frames comms_script comms_dock comms_fax thirdparty_nie views recognition pcmcia sound system stores packages intl intl_meetings assist hal_host_display hal_host_tablet)
 target_include_directories(host_views PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -204,6 +204,17 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
     # tools/modem/fakemodem.py the Hayes modem at its other end: dialing
     # out to the echo server --tcp-echo runs (the modem's phone book maps
     # the number to it), and answering a call it rings the Newton with
+    # the docking loader: a device on the serial port (tools/dock/scpdevice.py)
+    # says who it is and sends its package, which is stored and installed
+    add_test(NAME host.NewtonSCPLoad
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/dock/scpdevice.py
+                     --package ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monaco.pkg
+                     --spawn $<TARGET_FILE:newton> --serial-port 0 --headless 150
+                     --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/scpload.ns
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonSCPLoad PROPERTIES TIMEOUT 240
+                         PASS_REGULAR_EXPRESSION "scpdevice: heard n_id sire csre.*scpdevice: heard rese.*the Newton said abrt 1.*scpload: the device is tdev by appl.*scpload: installed Monaco.*scpload: done.*the program answered 0"
+                         FAIL_REGULAR_EXPRESSION "waited in vain|fell over")
     add_test(NAME host.NewtonModemDial
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/modem/fakemodem.py
                      --number 5551212=127.0.0.1:52375

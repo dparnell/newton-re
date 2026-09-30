@@ -11,6 +11,7 @@ add_library(newt STATIC
     ForkGlobals.cpp
     ModalDialogNatives.cpp
     DebugNatives.cpp
+    SCPEvents.cpp
 )
 target_link_libraries(newt PUBLIC newton_config comms_script comms_ntk views books armcpu_frames assist recognition compression packages pcmcia utility system sound os600_user hal_host_tablet)
 target_include_directories(newt PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

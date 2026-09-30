@@ -510,6 +510,50 @@ Newt's Cape's behaviour, kept as it is:
   ending in a return and the later lookup of the trimmed URL misses.
   `demo/newtscape.ns` uses File > Open Location instead.
 
+## Devices that bring their own package
+
+A device plugged into the serial port can carry the package that drives
+it.  When the interconnect pin says something was plugged in, the comm
+manager (`SCPCheck`, or a client's `CMSCPLoad`) starts the docking loader,
+the 'scpl task (`comms/SCPLoader.h`), which opens the port through the
+framed serial service ('fser, 9600 bps) and waits half a second for the
+device to say who it is.  The two ends talk in *connection-protocol*
+messages (`comms/CPMessages.h`, ROM 0x495e4-0x49cd0): a message is one
+frame holding a run of tuples - a four-character tag, a big-endian length
+and the data - ended by an `'nofm'` tuple.
+
+    device -> 'd_id' (type, manufacturer, version)
+    Newton -> 'n_id' (machine type, manufacturer, ROM version),
+              'sire' ('pack', 0, 0), 'csre' (0x7c: the five speeds it takes)
+    device -> 'csrp' (the speed chosen), 'sirp' ('pack', version, size)
+    Newton -> 'rese' ('pack', version)
+    device -> 'pack' (size), the package, 'nofm'
+    Newton -> 'abrt' (1)
+
+The device is recorded as the comm manager's last device and announced as
+a 'dnot' system event.  Its package is asked for only when the load was for
+any device (`'****'`) or for its type, and no service of its type is
+registered (`CMGetServiceVersion` answering -26002; the reconstruction's
+constant had been -26030, which would have made every device look served).
+The package is stored on the internal store (`StorePackage`) and the newt
+world sent a `TSCPEvent` (`newt/SCPEvents.h`): the previous device's
+package removed (`RemovePackage`) and the new one registered
+(`RegisterNewPackage(package, store, true)`) - unless it is the same device
+again, when the copy just stored is deleted.  Last, a service of the
+device's type with an `'auto'` capability is opened on the port and left
+running.  A load tries the external port, then (nobody having answered) the
+modem's, each up to the tries asked for, at most five.
+
+`tools/dock/scpdevice.py` is such a device on the host's serial port;
+`src/host/demo/scpload.ns` plugs it in with `HostInterconnect(1)` (what the
+interconnect handler, `TICHandler`, NOT YET, would send) and waits for the
+package: ctest `host.NewtonSCPLoad`.  ROM bugs kept: `TCPReadMessage::Init`
+allocates a new buffer every time the port is opened and never frees the
+old one; `ReadTuple` reads a tuple's data whatever its length into a
+0x100-byte buffer; a comm-manager load that fails after its message is made
+leaves it in flight, so every later load answers busy.  ROM quirk: a device
+of a type other than the one asked for still has its package fetched.
+
 ## Status
 
 | piece | state |
@@ -521,12 +565,14 @@ Newt's Cape's behaviour, kept as it is:
 | the comm manager: `TCMWorld`, `TCMEventHandler` (starting a service by its `serv` capability), `TStartInfo`, `TAsyncServiceMessage`, `OpenCommTool`, `CMStartService`, the last device and package, `CMGetServiceVersion` | done: `comms/CommManager.h`; **M1** passes (`test_CommManager`) |
 | the host's `inet` service (`THostInetService`) | done: `comms/host/HostServices.h` |
 | the endpoint: `TEndpoint` (the DDK's interface, its methods virtual - `comms/Endpoint.h` replaces the DDK's header), `TEndpointEventHandler`, the endpoint events, `TEndpointClient`, `CMGetEndpoint`; `TSerialEndpoint` and the `TCommTool...PB` parameter blocks | done: `comms/Endpoint.h`, `comms/SerialEndpoint.h`; **M2** passes (`test_Endpoint`: Open, Bind, Connect, Snd, Rcv, Disconnect, UnBind, Close against the echo server) |
-| the docking loader (`TSCPLoader`, `SCPLoad`), `TICHandler`, `InitializeCommHardware`, the ROM's own services (`RegisterROMProtcols`) | NOT YET |
+| the docking loader (`TSCPLoader`, `TCMWorld::SCPLoad`, `TCMSCPAsyncMessage`, the connection-protocol messages `TCPReadMessage`/`TCPWriteMessage`/`TCP*Tuple`, the newt world's `TSCPEvent`/`HandleSCPEvent`) | done: `comms/SCPLoader.h`, `comms/CPMessages.h`, `newt/SCPEvents.h`; ctest `host.NewtonSCPLoad` (see "Devices that bring their own package") |
+| the ROM's own services (`RegisterROMProtcols`) | done for the reconstructed ones, handed over with `CMAddROMServices` (DEVIATION); NOT YET: `RegisterNetworkROMProtocols` (the host's own services stand in), P3, LocalTalk, Keyboard, VRemote, IRSniff, `PMuxServiceStarter` |
+| `TICHandler` (the interconnect pin: plugging in starts the docking loader, then AutoDock), `InitializeCommHardware` | NOT YET (a script's `HostInterconnect(state)` sends the comm manager what the handler would) |
 | `CMemObject` (a status request's answer goes through `TUSharedMem` meanwhile) | NOT YET |
 | `TPCommTool`/`StartCommToolProtocol` (a tool as a `TCommToolProtocol`) | NOT YET |
 | marshalling out (`MarshalArguments`: a script's `{arglist, typelist}` into bytes, in the MessagePad's byte order) | done: `frames/MarshalOut.cpp`, `test_Marshalling` (the NIE's `itrs` data) |
 | the frame translators: `PFrameSink`/`PFrameSource`, `PScriptDataOut`/`In` (a value by its form - string, char, number as a big-endian long, bytes, binary, template), `POptionDataOut`/`In` (option frames to a `TOptionArray` and back; a `'service` frame becomes a `'sid '` option naming it), `GetDataForm`, `InitTranslators` | done: `comms/Translators.h` (library `comms_script`), `test_Translators`.  the flatteners `PFlattenPtr`/`PUnFlattenPtr`/`PFlattenRef`/`PUnFlattenRef` (NSOF over `utility/Pipes.h`'s `CPtrPipe` and `stores/RefPipe.h`'s `CRefPipe`) are done too - the endpoint's `'frame` form, `echo.ns`; and `PStreamInRef`/`PStreamOutRef` (NSOF through `comms/EndpointPipe.h`'s `TEndpointPipe`) |
-| the NewtonScript endpoint: `TNewScriptEndpointClient` (protoBasicEndpoint, @383) and its 22 `CINew*`/`CIRequestsPending` natives - requests synchronous or queued with their callbacks, output by form, the input spec (form, termination by byteCount/endSequence/useEOP, filter, target, rcvOptions, partialScript), inputScript and completionScript, exceptions to the endpoint's exceptionHandler | done: `comms/NewScriptEndpoint.h`, registered by `RegisterCommsNatives`; the newt world starts the comm manager and the host services (DEVIATION: the ROM's loader does); **M3** passes - `src/host/demo/echo.ns` (ctest `host.NewtonEcho`, `newton --tcp-echo port` runs the echo server, `comms/host/HostEchoServer.h`).  protoStreamingEndpoint too (`comms/StreamingEndpoint.h`: `TStreamingEndpointClient`, `TStreamingCallBack`, the `CIS*` natives - StreamOut/StreamIn of a whole object as NSOF, ctest `host.NewtonStream`).  NOT YET: the modem navigator |
+| the NewtonScript endpoint: `TNewScriptEndpointClient` (protoBasicEndpoint, @383) and its 22 `CINew*`/`CIRequestsPending` natives - requests synchronous or queued with their callbacks, output by form, the input spec (form, termination by byteCount/endSequence/useEOP, filter, target, rcvOptions, partialScript), inputScript and completionScript, exceptions to the endpoint's exceptionHandler | done: `comms/NewScriptEndpoint.h`, registered by `RegisterCommsNatives`; the newt world starts the comm manager and the host services (DEVIATION: the ROM's loader does); **M3** passes - `src/host/demo/echo.ns` (ctest `host.NewtonEcho`, `newton --tcp-echo port` runs the echo server, `comms/host/HostEchoServer.h`).  protoStreamingEndpoint too (`comms/StreamingEndpoint.h`: `TStreamingEndpointClient`, `TStreamingCallBack`, the `CIS*` natives - StreamOut/StreamIn of a whole object as NSOF, ctest `host.NewtonStream`).  A configuration asking for the modem service goes through the modem navigator first, as the ROM's |
 | the DNS service (**M4**, `dnst`): `THostDNSService`/`THostDNSTool` answering the NIE's `dnsq`/`rrcd` requests through the host's resolver | done: `comms/host/HostDNSTool.h`, ctest `host.NewtonDNS`; NOT YET: the NIE's own domain manager (its protoFSM engine is native-compiled) |
 | the link controller (**M4**, `ictl`) | NOT YET |
 | the serial chips (Dock layer 1): `TSerialChip`, `PSerialChipRegistry` and the ROM's `PTheSerChipRegistry`; the host's external port over a TCP socket (`THostSerialChip`, port 3679; the desktop's bytes paced at the line's speed) | done: `hal/HALSerialChip.h`, `hal/host/HostSerialChip.h`, ctest `hal.HostSerialChip` |

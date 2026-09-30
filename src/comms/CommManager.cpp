@@ -32,7 +32,11 @@
 #define kCMErr_NoLastDevice				(-26008)
 #define kCMErr_SCPLoadBusy				(-26012)
 #define kCMErr_NoLastPackage			(-26015)
-#define kCMErr_ServiceVersionNotFound	(-26030)
+#define kCMErr_ServiceVersionNotFound	(-26002)
+
+// the docking loader's starter (DEVIATION: SCPLoader.h's RegisterSCPLoader
+// sets it)
+NewtonErr		(*gStartSCPLoader)(void) = nil;
 
 // the comm manager's task: its name, and its stack
 #define kCMWorldStackSize				0x1400
@@ -207,15 +211,6 @@ CMSetLastDevice(TConnectedDevice* lastDevice)
 }
 
 
-// the docking loader's request (0x20 bytes in the ROM)
-class TCMSCPLoadEvent : public TCMEvent
-{
-public:
-	ULong				fTries;			// +0x10
-	ULong				fWaitPeriod;	// +0x14
-	ULong				fFilter;		// +0x18
-};
-
 // ROM 0x0006ba10 CMSCPLoad__FUlN21
 // (The ROM's reply buffer is a TAEvent array the request's size.)
 NewtonErr
@@ -231,7 +226,9 @@ CMSCPLoad(ULong waitPeriod, ULong tries, ULong filter)
 
 
 // ROM 0x0006b650 CMSCPSetLastLoadedPackage__FUlT1
-void
+// The package the docking loader loaded last (its store object) and the
+// device it was for.
+NewtonErr
 CMSCPSetLastLoadedPackage(ULong a, ULong b)
 {
 	TCMPackageEvent message;
@@ -239,20 +236,34 @@ CMSCPSetLastLoadedPackage(ULong a, ULong b)
 	message.fEvent = kCMSetLastPackage;
 	message.fPackageB = a;
 	message.fPackageA = b;
-	CMSendMessage(&message, sizeof(message), &reply, sizeof(reply));
+	return CMSendMessage(&message, sizeof(message), &reply, sizeof(reply));
 }
 
 
 // ROM 0x0006b6ac CMSCPGetLastLoadedPackage__FPUlT1
 // (The answer is read whether the request worked or not.)
-void
+NewtonErr
 CMSCPGetLastLoadedPackage(ULong* a, ULong* b)
 {
 	TCMPackageEvent message, reply;
 	message.fEvent = kCMGetLastPackage;
-	CMSendMessage(&message, sizeof(message), &reply, sizeof(reply));
+	NewtonErr err = CMSendMessage(&message, sizeof(message), &reply, sizeof(reply));
 	*a = reply.fPackageB;
 	*b = reply.fPackageA;
+	return err;
+}
+
+
+// ROM 0x0006b710 GetSCPLoaderPort__FP6TUPort
+NewtonErr
+GetSCPLoaderPort(TUPort* port)
+{
+	TUNameServer ns;
+	TObjectId id = 0;
+	ULong spec;
+	NewtonErr err = ns.Lookup((char*) "scpl", (char*) "TUPort", &id, &spec);
+	port->CopyObject(id);
+	return err;
 }
 
 
@@ -569,9 +580,16 @@ TCMEventHandler::AECompletionProc(TUMsgToken* token, ULong* size, TAEvent* event
 	TCMWorld* world = (TCMWorld*) GetGlobals();
 	if (((TCMEvent*) event)->fEvent == kCMSCPLoad)
 	{
-		// NOT YET: the docking loader's reply (TCMSCPAsyncMessage::ReplyRPC,
-		// the message freed, and a notification the Newt world was waiting
-		// for sent through gNewtPort)
+		// the loader's answer passed on to whoever asked, and the message
+		// given back; then a notification that waited on the load is sent
+		// to the Newt world (NOT YET: TICHandler::Send(fICHandler,
+		// fICState) - the interconnect handler is not reconstructed)
+		world->fSCPMessage->ReplyRPC();
+		if (world->fSCPMessage != nil)
+			delete world->fSCPMessage;
+		world->fSCPMessage = nil;
+		if (fNotifyPending)
+			fNotifyPending = false;
 		return;
 	}
 	TAsyncServiceMessage* message = world->MatchPendingServiceMessage(token);
@@ -835,13 +853,103 @@ TCMWorld::SCPCheck(ULong reason)
 
 
 // ROM 0x0006c4e0 SCPLoad__8TCMWorldFUlN21P10TUMsgTokenT1
-// Start the docking loader ('scpl) and ask it to load what a connected
-// device wants.  NOT YET RECONSTRUCTED (TSCPLoader); answered as the ROM
-// answers while a load is already in flight.
+// Start the docking loader ('scpl, comms/SCPLoader.h) and ask it,
+// asynchronously, to load what a connected device wants; its answer comes
+// back to AECompletionProc, which answers the token's request with it.
+// One load at a time: kCMErr_SCPLoadBusy while one is in flight.  ROM BUG:
+// a request that fails after the message is made leaves it in fSCPMessage,
+// so every later load answers busy.
+// DEVIATION: the loader is started through the hook comms_dock sets
+// (gStartSCPLoader, SCPLoader.h's RegisterSCPLoader); with none, the
+// answer is kCMErr_SCPLoadBusy, as while a load is in flight.
 NewtonErr
 TCMWorld::SCPLoad(ULong waitPeriod, ULong tries, ULong filter, TUMsgToken* token, ULong reason)
 {
-	return kCMErr_SCPLoadBusy;
+	if (fSCPMessage != nil || gStartSCPLoader == nil)
+		return kCMErr_SCPLoadBusy;
+	NewtonErr err = gStartSCPLoader();
+	if (err == noErr)
+	{
+		TUPort loaderPort;
+		err = GetSCPLoaderPort(&loaderPort);
+		if (err == noErr)
+		{
+			fSCPMessage = new TCMSCPAsyncMessage;
+			if (fSCPMessage == nil)
+				err = kError_No_Memory;
+			else if ((err = fSCPMessage->Init(*GetMyPort(), &fEventHandler)) == noErr)
+			{
+				if (token != nil)
+					fSCPMessage->SetToken(token);
+				fSCPMessage->fRequest.fAEventClass = 'newt';
+				fSCPMessage->fRequest.fAEventID = 'scpl';
+				fSCPMessage->fRequest.fEvent = kCMSCPLoad;
+				fSCPMessage->fRequest.fTries = tries;
+				fSCPMessage->fRequest.fWaitPeriod = waitPeriod;
+				fSCPMessage->fRequest.fFilter = filter;
+				fSCPMessage->fRequest.fReason = reason;
+				err = fSCPMessage->SendRPC(&loaderPort);
+			}
+		}
+	}
+	return err;
+}
+
+
+// ---------------------------------------------------------------------------
+//	TCMSCPAsyncMessage
+// ---------------------------------------------------------------------------
+
+// ROM 0x0006c144 __ct__18TCMSCPAsyncMessageFv
+TCMSCPAsyncMessage::TCMSCPAsyncMessage()
+{
+	fHasToken = false;
+}
+
+
+// ROM 0x0006c1a0 Init__18TCMSCPAsyncMessageFUlP14TAEventHandler
+// The reply comes to the port, with the handler as its refCon.
+NewtonErr
+TCMSCPAsyncMessage::Init(TObjectId port, TAEventHandler* handler)
+{
+	NewtonErr err = TUAsyncMessage::Init(true);
+	if (err != noErr)
+		return err;
+	err = SetCollectorPort(port);
+	if (err != noErr)
+		return err;
+	return SetUserRefCon((ULong) handler);
+}
+
+
+// ROM 0x0006c28c SendRPC__18TCMSCPAsyncMessageFP6TUPort
+NewtonErr
+TCMSCPAsyncMessage::SendRPC(TUPort* port)
+{
+	return port->SendRPC(this, &fRequest, sizeof(fRequest), &fReply, sizeof(fReply));
+}
+
+
+// ROM 0x0006c2f4 SetToken__18TCMSCPAsyncMessageFP10TUMsgToken
+// The request to answer when the loader has.
+void
+TCMSCPAsyncMessage::SetToken(TUMsgToken* token)
+{
+	if (token == nil)
+		return;
+	fToken = *token;
+	fHasToken = true;
+}
+
+
+// ROM 0x0006c31c ReplyRPC__18TCMSCPAsyncMessageFv
+NewtonErr
+TCMSCPAsyncMessage::ReplyRPC()
+{
+	NewtonErr err = noErr;
+	if (fHasToken)
+		err = fToken.ReplyRPC(&fReply, sizeof(fReply), noErr);
+	return err;
 }
 
 

@@ -122,6 +122,7 @@
 #include "SharpIRTool.h"
 #include "MNP.h"
 #include "CommManager.h"
+#include "SCPLoader.h"
 #include "ModemTool.h"
 #include "FaxTool.h"
 #include "HostLink.h"
@@ -648,6 +649,7 @@ main(int argc, char** argv)
 	CMAddROMServices(RegisterMNPService);
 	CMAddROMServices(RegisterSerialCommServices);
 	CMAddROMServices(RegisterIRCommServices);
+	RegisterSCPLoader();		// (comms/SCPLoader.h: the comm manager starts the docking loader through it)
 	gNewtHostBoot = NewtonBoot;
 	gNewtHostPreMain = NewtonPreMain;
 	NewtInstallUserMain();

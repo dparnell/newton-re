@@ -1,0 +1,47 @@
+// The docking loader: a device plugged into the serial port hands the
+// Newton the package that drives it.  tools/dock/scpdevice.py is the
+// device, at the other end of the host's serial port (a TCP socket -
+// hal/host/HostSerialChip.h); HostInterconnect(1) tells the comm manager
+// something was plugged in, as the port's interconnect handler would, and
+// the comm manager starts the loader (comms/SCPLoader.h), which asks the
+// device who it is, fetches its package, stores it on the internal store
+// and has the newt world register it (newt/SCPEvents.h).  ctest
+// host.NewtonSCPLoad runs it under scpdevice.py:
+//
+//   python tools/dock/scpdevice.py --package fixtures/packages/fonts/monaco.pkg \
+//       --spawn build/host/host/newton --serial-port 0 --headless 150 \
+//       --script src/host/demo/scpload.ns
+//
+// The device says who it is once, when it connects; the loader reads it
+// the next time it opens the port, so the pin is "plugged in" every few
+// seconds until the device has been heard.
+
+HostInclude("common.ns");			// waitFor
+
+scpBefore := Length(GetPackages());
+scpLastPlug := 0;
+
+call waitFor with ("scpload: the device",
+	func() begin
+		local device := HostLastSerialDevice();
+		if not device and Ticks() - scpLastPlug > 4 * 60 then begin
+			scpLastPlug := Ticks();
+			local err := HostInterconnect(1);
+			Print("scpload: plugged in: " & (if err then err else "ok"));
+		end;
+		device
+	end,
+	func() begin
+		local device := HostLastSerialDevice();
+		if device then
+			Print("scpload: the device is " & device.type & " by " & device.manufacturer & ", version " & device.version);
+		call waitFor with ("scpload: the package",
+			func() Length(GetPackages()) > scpBefore,
+			func() begin
+				local packages := GetPackages();
+				if Length(packages) > scpBefore then
+					Print("scpload: installed " & packages[Length(packages) - 1].title);
+				Print("scpload: done");
+				HostQuit();
+			end, 60);
+	end, 90);

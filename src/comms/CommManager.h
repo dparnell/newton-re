@@ -23,14 +23,17 @@
 				connected to (CMGetLastDevice/CMSetLastDevice) and the last
 				package the docking loader loaded.
 
-				NOT YET RECONSTRUCTED: the docking package loader
-				(TSCPLoader, SCPLoad - the 'scpl task the power-on and
-				app-alive events start, which loads the package a connected
-				device asks for), the TICHandler the event handler notifies
-				the Newt world through (event 9), InitializeCommHardware
-				(the serial ports), and RegisterROMProtcols' services that
-				are not reconstructed (the host's own - comms/host/ - stand
-				in for the NIE's 'inet, 'ictl and 'dnst services).  The ones
+				The docking loader (SCPLoader.h) is started by SCPLoad for
+				a load a client asks for (CMSCPLoad) or the interconnect
+				port's notification (SCPCheck), through a hook
+				(gStartSCPLoader, DEVIATION: it is in comms_dock).
+
+				NOT YET RECONSTRUCTED: the TICHandler the event handler
+				notifies the Newt world through (event 9) - the
+				interconnect port's pin -, InitializeCommHardware (the
+				serial ports), and RegisterROMProtcols' services that are
+				not reconstructed (the host's own - comms/host/ - stand in
+				for the NIE's 'inet, 'ictl and 'dnst services).  The ones
 				that are come from the libraries above this one, each
 				library's registration put here by the program before the
 				comm manager starts (CMAddROMServices, DEVIATION).
@@ -121,6 +124,36 @@ public:
 };
 
 
+// the docking loader's request (0x20 bytes in the ROM)
+class TCMSCPLoadEvent : public TCMEvent
+{
+public:
+	ULong				fTries;			// +0x10
+	ULong				fWaitPeriod;	// +0x14
+	ULong				fFilter;		// +0x18  the device type wanted ('****': any; 0: none)
+	ULong				fReason;		// +0x1c  0x10 load, 0x20 look for a keyboard (bit 0: powered on)
+};
+
+// The comm manager's request to the docking loader: an asynchronous
+// message whose answer comes back to the comm manager's port, and the
+// token of the request it answers in turn (100 bytes in the ROM).
+class TCMSCPAsyncMessage : public TUAsyncMessage
+{
+public:
+						TCMSCPAsyncMessage();
+
+	NewtonErr			Init(TObjectId port, TAEventHandler* handler);
+	NewtonErr			SendRPC(TUPort* port);
+	void				SetToken(TUMsgToken* token);
+	NewtonErr			ReplyRPC(void);
+
+	TCMSCPLoadEvent		fRequest;		// +0x10
+	TCMSCPLoadEvent		fReply;			// +0x30
+	Boolean				fHasToken;		// +0x50
+	TUMsgToken			fToken;			// +0x54
+};
+
+
 // A service being started: the request waiting for its answer.
 class TStartInfo : public SingleObject	// 0x30 bytes
 {
@@ -195,7 +228,7 @@ public:
 	CList				fServiceMessages;	// +0x90  the TAsyncServiceMessages in flight
 	CList				fStartInfos;		// +0xa8  the TStartInfos waiting
 	TConnectedDevice	fLastDevice;		// +0xc0
-	void*				fSCPMessage;		// +0xd8  the docking loader's request in flight (TCMSCPAsyncMessage, NOT YET)
+	TCMSCPAsyncMessage*	fSCPMessage;	// +0xd8  the docking loader's request in flight
 	ULong				fLastPackageB;		// +0xdc
 	ULong				fLastPackageA;		// +0xe0
 };
@@ -212,8 +245,9 @@ NewtonErr	GetOSPortFromName(ULong name, TUPort* port);
 NewtonErr	CMSendMessage(TCMEvent* message, ULong messageSize, TCMEvent* reply, ULong replySize);
 NewtonErr	CMSetLastDevice(TConnectedDevice* lastDevice);
 NewtonErr	CMSCPLoad(ULong waitPeriod, ULong tries, ULong filter);
-void		CMSCPSetLastLoadedPackage(ULong a, ULong b);
-void		CMSCPGetLastLoadedPackage(ULong* a, ULong* b);
+NewtonErr	CMSCPSetLastLoadedPackage(ULong a, ULong b);
+NewtonErr	CMSCPGetLastLoadedPackage(ULong* a, ULong* b);
+NewtonErr	GetSCPLoaderPort(TUPort* port);
 
 // A comm tool opened asynchronously for a service (CommTools.h's
 // StartCommTool starts it).

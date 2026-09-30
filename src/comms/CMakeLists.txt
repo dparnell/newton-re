@@ -10,6 +10,7 @@ add_library(comms STATIC
     Endpoint.cpp
     SerialEndpoint.cpp
     EndpointPipe.cpp
+    CPMessages.cpp
     host/HostTCPTool.cpp
     host/HostServices.cpp
     host/HostEchoServer.cpp
@@ -100,6 +101,7 @@ target_link_libraries(comms_script PUBLIC comms frames stores views newt)
 # navigator too.
 add_library(comms_dock STATIC
     EzEndpointPipe.cpp
+    SCPLoader.cpp
     Docker.cpp
     ScriptEndpoint.cpp
 )

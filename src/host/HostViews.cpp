@@ -32,6 +32,7 @@
 #include "UnitPublic.h"
 #include "CardInfo.h"
 #include "HostCards.h"
+#include "HostInterconnect.h"
 #include "HostTablet.h"
 #include "hal/host/Host.h"
 #include "ROMImport.h"
@@ -254,6 +255,7 @@ HostRegisterViewFunctions(void)
 	SetFrameSlot(functions, RefVar(Intern((char*) "HostTabletShutDowns")), RefVar(MakeCFunction((void*) FHostTabletShutDowns, 0, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "HostTabletCalibrationTarget")), RefVar(MakeCFunction((void*) FHostTabletCalibrationTarget, 0, nil)));
 	HostRegisterCardFunctions();
+	HostRegisterInterconnectFunctions();
 }
 
 
