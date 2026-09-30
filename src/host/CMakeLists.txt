@@ -51,6 +51,10 @@ set_tests_properties(host.ViewsDemo PROPERTIES TIMEOUT 120)
 # drawing under a transform that scales: the world map at half size, shapes and text stretched
 add_test(NAME host.ScaledMapDemo COMMAND newtonscript --display 320x480 ${CMAKE_CURRENT_SOURCE_DIR}/demo/scaledmap.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.ScaledMapDemo PROPERTIES TIMEOUT 120 PASS_REGULAR_EXPRESSION "the map is 360 by 179.*scaledmap: written")
+# NewtonScript tracing: vars.trace 'functions, true and a one-slot frame (demo/trace.ns)
+add_test(NAME host.NewtonScriptTrace COMMAND newtonscript ${CMAKE_CURRENT_SOURCE_DIR}/demo/trace.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonScriptTrace PROPERTIES TIMEOUT 60
+                     PASS_REGULAR_EXPRESSION "trace: functions.*call with..3.*=> 8.*trace: everything.*<= ..[0-9A-F]+...trTwice.*=> 10.*trace: one slot.*0 <= ..[0-9A-F]+...counter.*counter := 1.*trace: done")
 
 # newton: the OS booted and the NewtonScript world run over a window on the
 # host display, the mouse the pen and the keys the keyboard

@@ -1,0 +1,32 @@
+// NewtonScript tracing (frames/Interpreter.cpp's Trace... functions):
+// vars.trace set, a call traced, vars.trace cleared.  Each is read by the
+// next call from C++ (TraceSetOptions); the trace lines go to the REP.
+//
+//   build/host/host/newtonscript src/host/demo/trace.ns
+//
+// 'functions prints each call and its result, indented by depth; true
+// prints the variables read and written as well, objects other than
+// symbols and numbers as their addresses; a frame {name: 'f} traces only
+// inside calls of f, and {slot: 'counter} only that variable (ctest
+// host.NewtonScriptTrace checks the lines).
+
+trTwice := func(x) x * 2 + 1;
+trOuter := func(y) begin local z := call trTwice with (y); z + 1 end;
+trHolder := {counter: 0, Bump: func() counter := counter + 1};
+
+Print("trace: functions");
+vars.trace := 'functions;
+call trOuter with (3);
+vars.trace := nil;
+
+Print("trace: everything");
+vars.trace := true;
+call trOuter with (4);
+vars.trace := nil;
+
+Print("trace: one slot");
+vars.trace := {slot: 'counter};
+trHolder:Bump();
+vars.trace := nil;
+
+Print("trace: done");

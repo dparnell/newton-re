@@ -814,11 +814,24 @@ ordinary scripts: `TNumberParser` - `StringToNumber` reads with `strtod`,
 not the locale's separators; a store's own sort table (`GetSortID` of a
 store answers nil, as the ROM's does for want of one); and the aggregate
 and pointer types of `UnmarshalValue` beyond `'struct`.  Reachable only
-from a developer's settings or tools: tracing and breakpoints
-(`TInterpreter::Trace...`, `HandleBreakPoints` - the printer they print
-through is here now), `NTKStackTrace` (over the NTK connection), the task's
-stack limits for the debugger (`GetTaskStackInfo`), the frames function
-profiler's hooks in `GC`.  Not reachable, or reached another way: a native whose code is ARM code in a binary (a
+from a developer's settings or tools: the task's stack limits for the
+debugger (`GetTaskStackInfo`; a host task's stack is a thread's) and the
+frames function profiler's hooks in `GC`.
+
+Tracing is here: `vars.trace` - `'functions` (calls and results), `'full`
+(and every variable, objects printed whole), any other true value (the
+same with objects other than symbols and numbers as their addresses), a
+function's name (only inside its calls) or a frame of `name`, `slot`,
+`contextFrame` and `functions` (a view traces only under itself) - is read
+by `TraceSetOptions` at each call from C++, and the `Trace...` functions
+print through the REP's out translator (`src/host/demo/trace.ns`, ctest
+`host.NewtonScriptTrace`).  Breakpoints are too: `SetBreakPoints` takes a
+frame whose `programCounter` array holds `{programCounter, instructions,
+disabled, temporary}` frames, `EnableBreakPoints` turns them on (and the
+fast loop off), and `HandleBreakPoints` enters `BreakLoop` at one - only
+the NTK's debugger calls the two, through the jump table.
+`NTKStackTrace` (`comms/NTKNub.cpp`) sends the stack over the NTK
+connection.  Not reachable, or reached another way: a native whose code is ARM code in a binary (a
 host limit), `IsFirstByteOf2Byte` (a two-byte script, not in the US ROM),
 and the ink words' own structure in `TRichString::Verify`.
 

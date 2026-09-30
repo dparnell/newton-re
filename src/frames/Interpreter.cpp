@@ -330,11 +330,11 @@ TInterpreter::TInterpreter()
 {
 	fNext = gInterpreterList;
 	gInterpreterList = this;
-	fField78 = 0;
-	fField64 = 0;
+	fTraceDepth = 0;
+	fTraceIndent = 0;
 	fTraceLevel = 0;
-	fField68 = 0;
-	fField69 = 0;
+	fTraceVariables = 0;
+	fTracePrintCalls = 0;
 	fExceptionStackIndex = 0;
 	fVMState = fCtrlStack.NewState();
 	StateRef(fVMState->fPC) = MAKEINT(0);
@@ -2712,7 +2712,7 @@ TInterpreter::Run(void)
 	state.fControlDepth = saved->fControlDepth;
 	state.fValueDepth = saved->fValueDepth;
 	state.fHandlers = saved->fHandlers;
-	state.fField64 = saved->fField64;
+	state.fTraceIndent = saved->fTraceIndent;
 	DisposeStackStateBlock(saved);
 	long baseDepth = ControlPosition();
 	for (;;)
@@ -2748,7 +2748,7 @@ GetStackState(StackState* state)
 	state->fControlDepth = gInterpreter->ControlPosition();
 	state->fValueDepth = gInterpreter->ValuePosition();
 	state->fHandlers = gInterpreter->fExceptionContext;
-	state->fField64 = gInterpreter->fField64;
+	state->fTraceIndent = gInterpreter->fTraceIndent;
 }
 
 
@@ -2779,7 +2779,7 @@ ResetStack(const StackState& state)
 	gInterpreter->fCtrlStack.Reset(state.fControlDepth);
 	gInterpreter->fValueStack.Reset(state.fValueDepth);
 	gInterpreter->fExceptionContext = state.fHandlers;
-	gInterpreter->fField64 = state.fField64;
+	gInterpreter->fTraceIndent = state.fTraceIndent;
 }
 
 
@@ -3055,22 +3055,345 @@ StackTrace(void)
 }
 
 
-// Tracing (vars.trace) and breakpoints: NOT YET RECONSTRUCTED -
-// TInterpreter::Trace... at 0x00333560-0x00334000 and HandleBreakPoints
-// 0x002af1e0, which print through the REP's out translator (Printer.cpp,
-// there now).  Only a developer's settings reach them; until then a trace
-// or a breakpoint does nothing.
-void TInterpreter::HandleBreakPoints(void) { }
-void TInterpreter::SetBreakPoints(RefArg breakPoints) { gFramesBreakPoints = breakPoints; }
-void TInterpreter::EnableBreakPoints(Boolean enable) { gFramesBreakPointsEnabled = enable; }
-void TInterpreter::TraceSetOptions(void) { }
-void TInterpreter::TraceGet(RefArg, RefArg, RefArg) { }
-void TInterpreter::TraceSet(RefArg, RefArg, RefArg, RefArg) { }
-void TInterpreter::TraceCall(RefArg, long) { }
-void TInterpreter::TraceApply(RefArg, long) { }
-void TInterpreter::TraceSend(RefArg, RefArg, long, long) { }
-void TInterpreter::TraceFreqCall(long) { }
-void TInterpreter::TraceReturn(void) { }
+/* -------------------------------------------------------------------------------
+	Tracing and breakpoints
+	vars.trace turns tracing on for the next Run: 'functions prints each call
+	and return, 'full the same and every variable read and written with the
+	objects printed whole, any other non-nil value everything with objects
+	other than symbols and numbers printed as their addresses; another
+	symbol traces only inside calls of that function, and a frame says what
+	to trace - its name (a function), slot (one slot; true is any),
+	contextFrame (only under that frame) and functions slots - or, when it
+	is a view (it has a viewCObject), traces only under it.  A trace line
+	goes to the REP's out translator, indented by the depth of the call.
+------------------------------------------------------------------------------- */
+
+// ROM 0x0035e580 IsParent__FRC6RefVarT1
+// Whether frame is context or one of the frames up its _parent chain.
+static Boolean
+IsParent(RefArg frame, RefArg context)
+{
+	RefVar current(context);
+	while ((Ref) current != NILREF)
+	{
+		if (EQRef(current, frame))
+			return true;
+		current = GetFrameSlotRef(current, RSSYM_parent);
+	}
+	return false;
+}
+
+
+// ROM 0x0035e4f4 TaciturnPrintObject__12TInterpreterFRC6RefVarl
+// An object printed in a trace line: a pointer object other than a symbol
+// or a real as its address, unless the trace is 'full.
+void
+TInterpreter::TaciturnPrintObject(RefArg obj, long indent)
+{
+	Ref r = obj;
+	if ((r & 1) != 0 && !IsSymbol(r) && !ISREAL(r) && fTraceLevel != 3)
+	{
+		gREPout->Print("#%lX", (unsigned long) r);
+		return;
+	}
+	gREPout->ConsumeFrame(obj, 0, indent);
+}
+
+
+// ROM 0x0035e79c TraceSetOptions__12TInterpreterFv
+// vars.trace read into the interpreter's trace settings (Run does it on
+// every call from C++).
+void
+TInterpreter::TraceSetOptions(void)
+{
+	RefVar trace(GetFrameSlotRef(gVarFrame, RSSYMtrace));
+	if ((Ref) trace == NILREF)
+		fTraceLevel = 0;
+	else
+	{
+		fTraceLevel = 2;
+		fTracePrintCalls = 1;
+		fTraceVariables = 1;
+		fTraceFunction = NILREF;
+		fTraceContext = NILREF;
+		fTraceSlot = NILREF;
+		if (IsSymbol(trace))
+		{
+			if (EQRef(trace, RSSYMfunctions))
+			{
+				fTraceLevel = 1;
+				fTraceVariables = 0;
+			}
+			else if (EQRef(trace, RSSYMfull))
+				fTraceLevel = 3;
+			else
+				fTraceFunction = trace;
+		}
+		else if (IsFrame(trace))
+		{
+			if (FrameHasSlotRef(trace, RSSYMviewcobject))
+				fTraceContext = trace;
+			else
+			{
+				if (FrameHasSlotRef(trace, RSSYMfunctions))
+					fTraceVariables = GetFrameSlotRef(trace, RSSYMfunctions) != NILREF;
+				if (FrameHasSlotRef(trace, RSSYMname))
+					fTraceFunction = GetFrameSlotRef(trace, RSSYMname);
+				if (FrameHasSlotRef(trace, RSSYMcontextframe))
+					fTraceContext = GetFrameSlotRef(trace, RSSYMcontextframe);
+				if (FrameHasSlotRef(trace, RSSYMslot))
+				{
+					RefVar slot(GetFrameSlotRef(trace, RSSYMslot));
+					if (!EQRef(slot, TRUEREF))
+					{
+						fTraceVariables = (Ref) slot != NILREF;
+						fTraceSlot = slot;
+						fTracePrintCalls = 0;
+					}
+				}
+			}
+		}
+	}
+	SetFastLoopFlag();
+}
+
+
+// ROM 0x0035ee38 TraceArgs__12TInterpreterFlN21
+// The arguments of a call, off the value stack, first to last.
+void
+TInterpreter::TraceArgs(long numArgs, long first, long indent)
+{
+	for (long i = numArgs + first - 1; i >= first; i--)
+	{
+		RefVar arg(fValueStack.fTop[-1 - i]);
+		TaciturnPrintObject(arg, indent);
+		if (i > first)
+			gREPout->Print(", ");
+	}
+}
+
+
+// ROM 0x0035eec8 TraceMethod__12TInterpreterFRC6RefVarT1PclT4
+// A call's trace line - "(receiver):name(args)" - and one level deeper.
+void
+TInterpreter::TraceMethod(RefArg receiver, RefArg name, const char* nameString, long numArgs, long first)
+{
+	if ((Ref) fTraceFunction != NILREF)
+	{
+		if (fTraceDepth != 0 || EQRef(fTraceFunction, name))
+			fTraceDepth++;
+		if (fTraceDepth == 0)
+			return;
+	}
+	if ((Ref) fTraceContext != NILREF)
+	{
+		if (!IsParent(receiver, StateVar(fVMState->fLocals)))
+			return;
+		if (!IsParent(fTraceContext, StateVar(fVMState->fLocals)))
+			return;
+	}
+	if (fTracePrintCalls)
+	{
+		gREPout->Print("%*s", (int) fTraceIndent, " ");
+		if ((Ref) receiver != NILREF)
+		{
+			long indent = gREPout->Print("(");
+			TaciturnPrintObject(receiver, indent);
+			gREPout->Print("):");
+		}
+		long indent = gREPout->Print("%s(", nameString);
+		TraceArgs(numArgs, first, indent);
+		gREPout->Print(")\r");
+	}
+	fTraceIndent += 4;
+}
+
+
+// ROM 0x0035e600 TraceSend__12TInterpreterFRC6RefVarT1lT3
+void
+TInterpreter::TraceSend(RefArg receiver, RefArg message, long numArgs, long kind)
+{
+	const char* name = (Ref) message == NILREF ? "---" : SymbolName(message);
+	TraceMethod(receiver, message, name, numArgs, kind);
+}
+
+
+// ROM 0x0035e658 TraceFreqCall__12TInterpreterFl
+void
+TInterpreter::TraceFreqCall(long index)
+{
+	TraceMethod(RefVar(NILREF), RefVar(NILREF), gFreqFuncInfo[index].fName, gFreqFuncInfo[index].fNumArgs, 0);
+}
+
+
+// ROM 0x0035e6d0 TraceApply__12TInterpreterFRC6RefVarl
+void
+TInterpreter::TraceApply(RefArg, long numArgs)
+{
+	TraceMethod(RefVar(NILREF), RefVar(NILREF), "[call with]", numArgs, 0);
+}
+
+
+// ROM 0x0035e740 TraceCall__12TInterpreterFRC6RefVarl
+void
+TInterpreter::TraceCall(RefArg fnName, long numArgs)
+{
+	TraceMethod(RefVar(NILREF), fnName, SymbolName(fnName), numArgs, 0);
+}
+
+
+// ROM 0x0035ea38 TraceGet__12TInterpreterFRC6RefVarN21
+// A variable read: "value <= (context/foundIn).name".
+void
+TInterpreter::TraceGet(RefArg context, RefArg foundIn, RefArg name)
+{
+	if (!fTraceVariables)
+		return;
+	if ((Ref) fTraceSlot != NILREF && !EQRef(name, fTraceSlot))
+		return;
+	if ((Ref) fTraceFunction != NILREF && fTraceDepth == 0)
+		return;
+	if ((Ref) fTraceContext != NILREF && !IsParent(fTraceContext, StateVar(fVMState->fLocals)))
+		return;
+	long indent = gREPout->Print("%*s", (int) fTraceIndent, " ");
+	RefVar value(IsSymbol(name) ? GetFrameSlotRef(foundIn, name) : GetFramePath(foundIn, name));
+	TaciturnPrintObject(value, indent);
+	indent = gREPout->Print(" <= (");
+	TaciturnPrintObject(context, indent);
+	if (!EQRef(foundIn, context))
+	{
+		indent = gREPout->Print("/");
+		TaciturnPrintObject(foundIn, indent);
+	}
+	indent = gREPout->Print(").");
+	TaciturnPrintObject(name, indent);
+	gREPout->Print("\r");
+}
+
+
+// ROM 0x0035ec00 TraceSet__12TInterpreterFRC6RefVarN31
+// A variable written: "(context/foundIn).name := value".
+void
+TInterpreter::TraceSet(RefArg context, RefArg foundIn, RefArg name, RefArg value)
+{
+	if (!fTraceVariables)
+		return;
+	if ((Ref) fTraceSlot != NILREF && !EQRef(name, fTraceSlot))
+		return;
+	if ((Ref) fTraceFunction != NILREF && fTraceDepth == 0)
+		return;
+	if ((Ref) fTraceContext != NILREF && !IsParent(fTraceContext, StateVar(fVMState->fLocals)))
+		return;
+	long indent = gREPout->Print("%*s(", (int) fTraceIndent, " ");
+	gInterpreter->TaciturnPrintObject(context, indent);
+	if (!EQRef(foundIn, context))
+	{
+		indent = gREPout->Print("/");
+		gInterpreter->TaciturnPrintObject(foundIn, indent);
+	}
+	indent = gREPout->Print(").");
+	gInterpreter->TaciturnPrintObject(name, indent);
+	indent = gREPout->Print(" := ");
+	gInterpreter->TaciturnPrintObject(value, indent);
+	gREPout->Print("\r");
+}
+
+
+// ROM 0x0035ed6c TraceReturn__12TInterpreterFUc
+// A return's trace line - "=> result", the result printed when asked - and
+// one level back out.
+void
+TInterpreter::TraceReturn(UChar printValue)
+{
+	if ((Ref) fTraceFunction != NILREF)
+	{
+		if (fTraceDepth == 0)
+			return;
+		fTraceDepth--;
+	}
+	long was = fTraceIndent;
+	Boolean print = false;
+	if (was != 0)
+	{
+		fTraceIndent = was - 4;
+		print = fTracePrintCalls;
+	}
+	if (was != 0 && print)
+	{
+		long indent = gREPout->Print("%*s=> ", (int) fTraceIndent, " ");
+		RefVar result(fValueStack.fTop[-1]);
+		if (printValue)
+			TaciturnPrintObject(result, indent);
+		gREPout->Print("\r");
+	}
+}
+
+
+// ROM 0x0035ee30 TraceReturn__12TInterpreterFv
+void
+TInterpreter::TraceReturn(void)
+{
+	TraceReturn((UChar) 1);
+}
+
+
+// ROM 0x002d3f6c HandleBreakPoints__12TInterpreterFv
+// Before each instruction while breakpoints are on: the breakpoints'
+// programCounter array is looked through for one at this instruction of
+// this function that is not disabled; a temporary one is taken out as it
+// is hit, and the array and then the breakpoints frame dropped once empty.
+// A hit enters the break loop (the global function BreakLoop).
+void
+TInterpreter::HandleBreakPoints(void)
+{
+	if (gFramesBreakPoints == NILREF)
+		return;
+	RefVar points(GetFrameSlotRef(gFramesBreakPoints, RSSYMprogramcounter));
+	if ((Ref) points == NILREF)
+		return;
+	Boolean hit = false;
+	TObjectIterator iter(points, false);
+	while (!iter.Done())
+	{
+		RefVar point(iter.Value());
+		if (RINT(GetFrameSlotRef(point, RSSYMprogramcounter)) == fPC
+		 && EQRef((Ref) fInstructions, GetFrameSlotRef(point, RSSYMinstructions))
+		 && GetFrameSlotRef(point, RSSYMdisabled) == NILREF)
+		{
+			hit = true;
+			if (GetFrameSlotRef(point, RSSYMtemporary) != NILREF)
+				ArrayRemoveCount(points, RINT(iter.Tag()), 1);
+		}
+		iter.Next();
+	}
+	if (Length(points) == 0)
+		RemoveSlot(RefVar(gFramesBreakPoints), RSSYMprogramcounter);
+	if (Length(gFramesBreakPoints) == 0)
+		gFramesBreakPoints = NILREF;
+	if (hit)
+		DoBlock(RefVar(GetFrameSlotRef(gFunctionFrame, RSSYMbreakloop)), RefVar(NILREF));
+}
+
+
+// ROM 0x002d41ac SetBreakPoints__12TInterpreterFRC6RefVar
+Ref
+TInterpreter::SetBreakPoints(RefArg breakPoints)
+{
+	Ref was = gFramesBreakPoints;
+	gFramesBreakPoints = breakPoints;
+	return was;
+}
+
+
+// ROM 0x002d41c8 EnableBreakPoints__12TInterpreterFUc
+Boolean
+TInterpreter::EnableBreakPoints(Boolean enable)
+{
+	Boolean was = gFramesBreakPointsEnabled;
+	gFramesBreakPointsEnabled = enable;
+	SetFastLoopFlag();
+	return was;
+}
 
 
 /* -------------------------------------------------------------------------------

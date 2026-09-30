@@ -187,7 +187,7 @@ struct StackState
 	long		fControlDepth;	// +0x00
 	long		fValueDepth;	// +0x04
 	RefStruct	fHandlers;		// +0x08
-	long		fField64;		// +0x0c  TInterpreter::fField64
+	long		fTraceIndent;		// +0x0c  TInterpreter::fTraceIndent
 };
 StackState*	GetStackStateBlock(void);
 void		DisposeStackStateBlock(StackState* state);
@@ -254,10 +254,13 @@ public:
 	Ref			GetSelfFromStack(RefArg frameIndex);
 	void		StackTrace(void);
 
-	// tracing and breakpoints (NOT YET RECONSTRUCTED: see Interpreter.cpp)
+	// tracing (vars.trace) and breakpoints
 	void		HandleBreakPoints(void);
-	void		SetBreakPoints(RefArg breakPoints);
-	void		EnableBreakPoints(Boolean enable);
+	Ref			SetBreakPoints(RefArg breakPoints);		// ==> the ones set before
+	Boolean		EnableBreakPoints(Boolean enable);		// ==> whether they were
+	void		TaciturnPrintObject(RefArg obj, long indent);
+	void		TraceArgs(long numArgs, long first, long indent);
+	void		TraceMethod(RefArg receiver, RefArg name, const char* nameString, long numArgs, long first);
 	void		TraceSetOptions(void);
 	void		TraceGet(RefArg context, RefArg foundIn, RefArg name);
 	void		TraceSet(RefArg context, RefArg foundIn, RefArg name, RefArg value);
@@ -266,6 +269,7 @@ public:
 	void		TraceSend(RefArg receiver, RefArg message, long numArgs, long kind);
 	void		TraceFreqCall(long index);
 	void		TraceReturn(void);
+	void		TraceReturn(UChar printValue);
 
 	TInterpreter*	fNext;				// +0x00  gInterpreterList
 	long			fID;				// +0x04
@@ -282,13 +286,13 @@ public:
 	long			fLocalsIndex;		// +0x58  the value-stack index of the frame's first slot
 	Boolean			fIsSend;			// +0x5c
 	Boolean			fFastLoop;			// +0x60  FastRun may run (no tracing, breakpoints or profiling)
-	long			fField64;			// +0x64  (saved and restored with the stack state)
-	UByte			fField68;			// +0x68
-	UByte			fField69;			// +0x69
-	RefStruct		fField6C;			// +0x6c
-	RefStruct		fField70;			// +0x70
-	RefStruct		fField74;			// +0x74
-	long			fField78;			// +0x78
+	long			fTraceIndent;		// +0x64  how far a trace line is indented (saved and restored with the stack state)
+	UByte			fTraceVariables;	// +0x68  variables are traced
+	UByte			fTracePrintCalls;	// +0x69  calls and returns are printed
+	RefStruct		fTraceSlot;			// +0x6c  only this slot's reads and writes (nil: any)
+	RefStruct		fTraceFunction;		// +0x70  only inside calls of this function (nil: any)
+	RefStruct		fTraceContext;		// +0x74  only in this frame and those whose _parent chain reaches it (nil: any)
+	long			fTraceDepth;		// +0x78  how deep inside fTraceFunction
 	long			fTraceLevel;		// +0x7c  0 none, 1 calls, 2 variable access too
 };
 

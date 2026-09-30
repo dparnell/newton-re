@@ -91,11 +91,12 @@ the way are all in `docs/work-log.md`.
 
 ### Frames and the rest
 
-- Reachable from developer settings or tools: tracing and breakpoints,
-  `NTKStackTrace`, the task stack limits, the GC profiler's hooks.
-- `instance:Dispatch`, `RegisterGestalt`, `ReplaceGestalt` want
-  `PrimCallProtocolFromFrames` (NewtonScript values marshalled into a C
-  call); a host protocol's methods need numbered thunks.
+- Reachable from developer settings or tools: the task stack limits, the
+  GC profiler's hooks.
+- `instance:Dispatch` on a protocol that is not a monitor: a host
+  protocol's methods are C++ virtuals and need numbered thunks to be
+  called by dispatch slot (a monitor's already work).  Nothing in the ROM
+  or `fixtures/` calls `Dispatch`.
 - A paragraph's lines are laid out the host's way, not by the ROM's
   `LineLoop` (0x0010d8d4-0x0010ecd4 and on) with a text object per run: what
   `ComputeLineBounds` moves a line by is therefore always nought here, and
