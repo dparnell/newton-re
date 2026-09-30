@@ -5735,6 +5735,16 @@ TestRichStringIntoParagraph()
 		if (IsInkWord(RefVar(GetArraySlot(kept, i))))
 			carried = true;
 	EXPECT(carried);
+	// a piece of it taken out again comes back rich, the ink word with its
+	// character (ExtractRichStringFromParaSlots over MakeRichString)
+	{
+		RefVar piece(ExtractRichStringFromParaSlots(RefVar(p->Text()), kept, 1, 2));
+		EXPECT(IsRichString(piece));
+		TRichString richPiece(piece);
+		EXPECT(richPiece.Length() == 2 && richPiece.GetChar(1) == U_CONST_CHAR('b'));
+		RefVar plainPiece(ExtractRichStringFromParaSlots(RefVar(p->Text()), kept, 2, 1));
+		EXPECT(!IsRichString(plainPiece) && GetCString(plainPiece)[0] == U_CONST_CHAR('b'));
+	}
 
 	Eval("RemoveView(GetRoot(), ctxRS)");
 	Refresh();

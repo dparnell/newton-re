@@ -205,10 +205,8 @@ CountStylesForLength(RefArg styles, long run, long length)
 // ROM 0x0017d6c0 ExtractRichStringFromParaSlots__FRC6RefVarT1UlT3
 // A piece of a paragraph as a string of its own: `count` characters from
 // `start` of its text, kept rich when any of the styles covering them is
-// ink.  A start or a count past the end of the text is cut back to it.
-//
-// NOT YET RECONSTRUCTED: MakeRichString, so a piece with ink in it comes
-// back as its plain characters - the ink characters without their ink.
+// ink (MakeRichString: each ink word kept with its character).  A start
+// or a count past the end of the text is cut back to it.
 Ref
 ExtractRichStringFromParaSlots(RefArg text, RefArg styles, ULong start, ULong count)
 {
@@ -232,7 +230,7 @@ ExtractRichStringFromParaSlots(RefArg text, RefArg styles, ULong start, ULong co
 	for (long i = 1; i < runCount; i += 2)
 	{
 		if (IsInkWord(RefVar(GetArraySlotRef(runs, i))))
-			return result;			// NOT YET: MakeRichString(result, runs, false)
+			return MakeRichString(result, runs, false);
 	}
 	return result;
 }
