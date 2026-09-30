@@ -88,7 +88,22 @@ ARM code a 32-bit view:
   every argument.  `DisposeRefHandle` gives the block back.
 - **Object data is mapped on demand.**  `BinaryData` and the like answer an
   ARM address in a window onto the host object's bytes, kept while the
-  call lasts (the object locked).
+  call lasts (the object locked).  The bytes are seen as they lie, a word or
+  halfword big-endian as on the Newton - except a string's, whose UniChars
+  the host keeps in its own order, so a halfword of a string is the
+  character.  (NetHopper's GIF reader keeps its LZW tables in binaries,
+  written a halfword at a time and read a byte at a time.)
+- **The code is relocated as the ROM maps it.**  A package with native code
+  has a relocation chunk (the words to move, page by page, and the address
+  it was linked at - 0 for the Newton C++ Tools); the ROM applies it to
+  each page as it maps the package (`TSimpleCRelocator::Relocate`
+  0x0004a148).  The host maps packages unrelocated, and the ARM world maps
+  only the code binary, at 0x20000000, so the adapter applies the chunk's
+  entries that fall in the binary as though the package lay where that
+  puts it (`RelocateCode`, over `FramesPartObjectSource`: the binary's
+  own bytes in the package and its offset there).  NetHopper's code
+  reaches its constant data (a character table, a static initialiser)
+  through such words.
 - **The ROM image is mapped at 0** (read-only) so the version-dependent
   stubs' reads of the ROM work - or, booted on the object file with no
   image, the ROM data it carries (`ROMBytesAt`: the parameter block,

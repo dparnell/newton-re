@@ -299,6 +299,17 @@ main()
 	Put(heap, 0xfc, 0xea000010);		// b +0x144
 	Put(heap, 0x144, 0xe1a00004);		// mov r0,r4
 	Put(heap, 0x148, 0xe8bd8030);		// ldmfd sp!,{r4,r5,pc}
+	// +0x160 firstWord(b): the first word of a binary's bytes (>> 4, as an
+	// integer), read through BinaryData - big-endian, as the bytes lie
+	Put(heap, 0x160, 0xe92d4000);		// stmfd sp!,{lr}
+	Put(heap, 0x164, 0xe5910000);		// ldr r0,[r1]
+	Put(heap, 0x168, 0xe5900000);		// ldr r0,[r0]
+	BL(heap, 0x16c, 0x180);				// bl BinaryData
+	Put(heap, 0x170, 0xe5900000);		// ldr r0,[r0]
+	Put(heap, 0x174, 0xe1a00220);		// mov r0,r0,lsr #4
+	Put(heap, 0x178, 0xe1a00100);		// mov r0,r0,lsl #2
+	Put(heap, 0x17c, 0xe8bd8000);		// ldmfd sp!,{pc}
+	Stub(heap, 0x180, 0x0828);			// BinaryData__Fl
 
 	// another code binary: +0x00 answers its argument plus one
 	RefVar other(AllocateBinary(RSSYMbinary, 0x10));
@@ -325,6 +336,7 @@ main()
 	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "binPeek")), RefVar(MakeBinaryNative(heap, 1, 0x80)));
 	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "binUnlock")), RefVar(MakeBinaryNative(heap, 1, 0xa0)));
 	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "format3u")), RefVar(MakeBinaryNative(heap, 1, 0xc0)));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "firstWord")), RefVar(MakeBinaryNative(heap, 1, 0x160)));
 
 	// a string in the code binary: its UniChars in the host's order, of class 'string
 	RefVar s(Eval("call nativeString with ()"));
@@ -398,6 +410,15 @@ main()
 		EXPECT(RINT(Eval("call binPeek with (lockedAt)")) == 0x55);
 		Eval("call binUnlock with (lockedBin)");
 		EXPECT(ISNIL(Eval("try call binPeek with (lockedAt) onexception |evt.ex| do nil")));
+	}
+	// a binary's bytes as they lie: its first word big-endian (NetHopper's
+	// GIF reader keeps its LZW tables in binaries, written a halfword at a
+	// time and read a byte at a time)
+	{
+		RefVar bin(AllocateBinary(RSSYMbinary, 4));
+		memcpy(BinaryData(bin), "", 4);
+		SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "wordBin")), bin);
+		EXPECT(RINT(Eval("call firstWord with (wordBin)")) == 0x0102030);
 	}
 	// malloc, sprintf's "%3u", MakeString and free
 	{

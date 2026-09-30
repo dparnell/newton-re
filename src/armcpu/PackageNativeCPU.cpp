@@ -11,6 +11,7 @@
 #include "PublicJumpTable.h"
 #include "PackageNatives.h"
 #include "ROMImport.h"
+#include "FramesPart.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
 #include "Interpreter.h"
@@ -54,6 +55,7 @@ extern const ExceptionName exInterpreter;
 ------------------------------------------------------------------------------*/
 
 const uint32_t	kCodeBase		= 0x20000000;	// the package's code binary (a copy)
+const uint32_t	kPackageHeaderSize	= 0x34;
 const uint32_t	kArenaBase		= 0x30000000;	// RefHandles, RefVars, and the stack at the top
 const uint32_t	kArenaSize		= 0x00100000;
 const uint32_t	kStackSize		= 0x00010000;
@@ -256,6 +258,7 @@ struct Window
 	uint32_t	fSize;
 	RefStruct*	fObject;
 	bool		fSlots;
+	bool		fHostOrder;		// a string: its UniChars in the host's order (else the bytes as they lie, words big-endian)
 };
 
 // LockedBinaryPtr's windows: a binary's bytes seen from the ARM world for as
@@ -286,6 +289,7 @@ LockBinaryWindow(RefArg obj)
 	l.fWindow.fSize = size;
 	l.fWindow.fObject = new RefStruct(obj);
 	l.fWindow.fSlots = false;
+	l.fWindow.fHostOrder = IsString(obj);
 	l.fLocks = 1;
 	gLockedTop += span;
 	gLockedWindows.push_back(l);
@@ -371,6 +375,9 @@ public:
 	Vec<StackState*>	fStackStates;
 	char			fThrownName[64];		// the exception being delivered, while it is
 	Vec<uint8_t>	fCode;
+	RefStruct*		fCodeRef;				// the code binary (fCode is its bytes, relocated)
+	void			RelocateCode(RefArg code);
+	bool			IsThisCode(RefArg code);
 	Vec<uint8_t>	fArena;
 	uint32_t		fArenaTop;				// the bump allocator's next free byte (from kArenaBase)
 	Vec<uint32_t>	fFreeHandles;
@@ -404,6 +411,8 @@ TNativeWorld::TNativeWorld(RefArg code)
 	long length = Length(code);
 	fCode.resize(length, 0);
 	memcpy(fCode.data(), BinaryData(code), length);
+	fCodeRef = new RefStruct(code);
+	RelocateCode(code);
 	fROM = (const uint8_t*) ROMImageBase(&fROMSize);
 	if (fROM == nil)
 		fROMSize = 0;
@@ -415,6 +424,7 @@ TNativeWorld::~TNativeWorld()
 {
 	for (CodeObjectEntry& e : fCodeObjects)
 		delete e.fObject;
+	delete fCodeRef;
 	for (Callback& c : fCallbacks)
 		delete c.fFunction;
 	for (RefStruct* r : fHandles)
@@ -430,6 +440,67 @@ TNativeWorld::~TNativeWorld()
 
 static inline uint32_t	BE32(const uint8_t* p)	{ return ((uint32_t) p[0] << 24) | ((uint32_t) p[1] << 16) | ((uint32_t) p[2] << 8) | p[3]; }
 static inline void		PutBE32(uint8_t* p, uint32_t v)	{ p[0] = (uint8_t) (v >> 24); p[1] = (uint8_t) (v >> 16); p[2] = (uint8_t) (v >> 8); p[3] = (uint8_t) v; }
+
+
+// The code binary's C relocation, as the ROM applies it when it maps the
+// package's pages (TSimpleCRelocator::Relocate 0x0004a148: each word the
+// package's relocation chunk names moved by where the package is less the
+// address it was linked at).  The Newton C++ Tools link a package at 0, so
+// a relocated word is an offset in the package - here the code's own
+// constant data, lying in its binary.  DEVIATION: the host maps packages
+// unrelocated (packages/StorePackages.cpp's RelocatePage), and the ARM
+// world maps only the code binary, at kCodeBase: the package is taken to
+// be where that puts it, and the words inside the binary are relocated to
+// match.  A binary that is no imported package part's (made at run time)
+// has nothing to relocate.
+void
+TNativeWorld::RelocateCode(RefArg code)
+{
+	ULong32 address = 0;
+	const uint8_t* object = FramesPartObjectSource(code, &address);
+	if (object == nil || address < kPackageHeaderSize)
+		return;
+	const uint8_t* package = object - address;
+	if (memcmp(package, "package", 7) != 0 || (BE32(package + 0x0c) & 0x04000000) == 0)
+		return;
+	const uint8_t* chunk = package + BE32(package + 0x2c);		// (after the directory)
+	uint32_t chunkSize = BE32(chunk + 4);
+	uint32_t pageSize = BE32(chunk + 8);
+	uint32_t linkBase = BE32(chunk + 16);
+	if (BE32(chunk) != 0 || chunkSize < 20 || pageSize == 0)
+		return;
+	uint32_t dataStart = address + 12;			// (the header, the GC's word and the class)
+	uint32_t dataEnd = dataStart + (uint32_t) fCode.size();
+	uint32_t delta = (kCodeBase - dataStart) - linkBase;
+	const uint8_t* p = chunk + 20;
+	const uint8_t* end = chunk + chunkSize;
+	while (p + 4 <= end)
+	{
+		uint32_t page = (uint32_t) ((p[0] << 8) | p[1]);
+		uint32_t count = (uint32_t) ((p[2] << 8) | p[3]);
+		for (uint32_t i = 0; i < count && p + 4 + i < end; i++)
+		{
+			uint32_t at = page * pageSize + p[4 + i] * 4;
+			if (at >= dataStart && at + 4 <= dataEnd)
+			{
+				uint8_t* word = &fCode[at - dataStart];
+				PutBE32(word, BE32(word) + delta);
+			}
+		}
+		p += 4 + ((count + 3) & ~3u);
+	}
+}
+
+
+// Whether a code binary is this world's (its bytes, unrelocated, the same
+// as this world's binary's).
+bool
+TNativeWorld::IsThisCode(RefArg code)
+{
+	if (EQRef(code, *fCodeRef))
+		return true;
+	return Length(code) == Length(*fCodeRef) && memcmp(BinaryData(code), BinaryData(*fCodeRef), (size_t) Length(code)) == 0;
+}
 
 
 Window*
@@ -462,8 +533,13 @@ TNativeWorld::Read32(uint32_t a, uint32_t* v)
 			*v = ToARM(Slots(*w->fObject)[(a - w->fBase) >> 2]);
 			return true;
 		}
-		// object data: in the host's own byte order (see the README)
-		memcpy(v, (char*) BinaryData(*w->fObject) + (a - w->fBase), 4);
+		// object data: a string's in the host's own byte order, anything
+		// else's as the bytes lie (docs/armcpu/README.md)
+		const uint8_t* p = (const uint8_t*) BinaryData(*w->fObject) + (a - w->fBase);
+		if (w->fHostOrder)
+			memcpy(v, p, 4);
+		else
+			*v = BE32(p);
 		return true;
 	}
 	return false;
@@ -482,7 +558,11 @@ TNativeWorld::Read16(uint32_t a, uint16_t* v)
 	{
 		if (w->fSlots)
 			return false;
-		memcpy(v, (char*) BinaryData(*w->fObject) + (a - w->fBase), 2);
+		const uint8_t* p = (const uint8_t*) BinaryData(*w->fObject) + (a - w->fBase);
+		if (w->fHostOrder)
+			memcpy(v, p, 2);
+		else
+			*v = (uint16_t) ((p[0] << 8) | p[1]);
 		return true;
 	}
 	return false;
@@ -521,7 +601,11 @@ TNativeWorld::Write32(uint32_t a, uint32_t v)
 			SetArraySlotRef(*w->fObject, (a - w->fBase) >> 2, ToHost(v));
 			return true;
 		}
-		memcpy((char*) BinaryData(*w->fObject) + (a - w->fBase), &v, 4);
+		uint8_t* p = (uint8_t*) BinaryData(*w->fObject) + (a - w->fBase);
+		if (w->fHostOrder)
+			memcpy(p, &v, 4);
+		else
+			PutBE32(p, v);
 		return true;
 	}
 	return false;
@@ -538,7 +622,14 @@ TNativeWorld::Write16(uint32_t a, uint16_t v)
 	{
 		if (w->fSlots)
 			return false;
-		memcpy((char*) BinaryData(*w->fObject) + (a - w->fBase), &v, 2);
+		uint8_t* p = (uint8_t*) BinaryData(*w->fObject) + (a - w->fBase);
+		if (w->fHostOrder)
+			memcpy(p, &v, 2);
+		else
+		{
+			p[0] = (uint8_t) (v >> 8);
+			p[1] = (uint8_t) v;
+		}
 		return true;
 	}
 	return false;
@@ -743,6 +834,7 @@ TNativeWorld::MapData(RefArg obj)
 	w.fSize = (uint32_t) Length(obj);
 	w.fObject = new RefStruct(obj);
 	w.fSlots = false;
+	w.fHostOrder = IsString(obj);
 	LockRef(obj);
 	fWindows.push_back(w);
 	fWindowTop += (w.fSize + 0xfff) & ~0xfffu;
@@ -762,6 +854,7 @@ TNativeWorld::MapSlots(RefArg obj)
 	w.fSize = (uint32_t) Length(obj) * 4;
 	w.fObject = new RefStruct(obj);
 	w.fSlots = true;
+	w.fHostOrder = false;
 	fWindows.push_back(w);
 	fWindowTop += (w.fSize + 0xfff) & ~0xfffu;
 	fWindowTop += 0x1000;
@@ -1594,10 +1687,20 @@ GLUE(Glue_GetFrameSlot)			{ w.Return(cpu, w.ToARM(GetFrameSlot(REFARG(0), REFARG
 GLUE(Glue_SetArraySlot)			{ SetArraySlot(REFARG(0), (int32_t) cpu.r[1], REFARG(2)); w.Return(cpu, 0); return true; }
 GLUE(Glue_GetArraySlot)			{ w.Return(cpu, w.ToARM(GetArraySlot(REFARG(0), (int32_t) cpu.r[1]))); return true; }
 GLUE(Glue_SetVariable)			{ w.Return(cpu, SetVariable(REFARG(0), REFARG(1), REFARG(2)) ? 1 : 0); return true; }
-GLUE(Glue_NSCallGlobalFn0)		{ w.Return(cpu, w.ToARM(NSCallGlobalFn(REFARG(0)))); return true; }
-GLUE(Glue_NSCallGlobalFn1)		{ w.Return(cpu, w.ToARM(NSCallGlobalFn(REFARG(0), REFARG(1)))); return true; }
-GLUE(Glue_NSCallGlobalFn2)		{ w.Return(cpu, w.ToARM(NSCallGlobalFn(REFARG(0), REFARG(1), REFARG(2)))); return true; }
-GLUE(Glue_NSCallGlobalFn3)		{ w.Return(cpu, w.ToARM(NSCallGlobalFn(REFARG(0), REFARG(1), REFARG(2), REFARG(3)))); return true; }
+// (NEWTON_TRACE_ARMCPU=2 names the global function)
+static void
+TraceGlobalFn(TNativeWorld& w, TARMCPU& cpu)
+{
+	if (gTrace)
+	{
+		Ref name = w.ArgRef(cpu.r[0]);
+		fprintf(stderr, " [%s]", IsSymbol(name) ? SymbolName(name) : "?");
+	}
+}
+GLUE(Glue_NSCallGlobalFn0)		{ TraceGlobalFn(w, cpu); w.Return(cpu, w.ToARM(NSCallGlobalFn(REFARG(0)))); return true; }
+GLUE(Glue_NSCallGlobalFn1)		{ TraceGlobalFn(w, cpu); w.Return(cpu, w.ToARM(NSCallGlobalFn(REFARG(0), REFARG(1)))); return true; }
+GLUE(Glue_NSCallGlobalFn2)		{ TraceGlobalFn(w, cpu); w.Return(cpu, w.ToARM(NSCallGlobalFn(REFARG(0), REFARG(1), REFARG(2)))); return true; }
+GLUE(Glue_NSCallGlobalFn3)		{ TraceGlobalFn(w, cpu); w.Return(cpu, w.ToARM(NSCallGlobalFn(REFARG(0), REFARG(1), REFARG(2), REFARG(3)))); return true; }
 // ROM 0x0031c9f0 LockedBinaryPtr__FRC6RefVar: the object locked and its
 // bytes' address - here a window onto them that lasts until the lock goes
 GLUE(Glue_LockedBinaryPtr)
@@ -2085,7 +2188,7 @@ GLUE(Glue_NativeEntry)
 		//  mapped here - is called through a callback, in a world of its own)
 		RefVar code(GetArraySlotRef(fn, 1));
 		closure = w.ToARM(GetArraySlotRef(fn, 3));
-		if (Length(code) != (long) w.fCode.size() || memcmp(BinaryData(code), w.fCode.data(), w.fCode.size()) != 0)
+		if (!w.IsThisCode(code))
 			entry = w.FunctionCallback(fn, numArgs + (closure != NILREF ? 1 : 0));
 		else
 			entry = kCodeBase + (uint32_t) RINT(GetArraySlotRef(fn, 4));

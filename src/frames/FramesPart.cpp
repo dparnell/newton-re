@@ -151,6 +151,26 @@ FramesPartSource(Ref r)
 }
 
 
+const unsigned char*
+FramesPartObjectSource(Ref r, ULong32* address)
+{
+	for (FramesPartArea* entry = gFramesParts; entry != nil; entry = entry->fNext)
+		if (!entry->fDoomed && entry->fArea.Contains(r))
+		{
+			ObjHeader* obj = OBJ(r);
+			const TImportedObjectArea& area = entry->fArea;
+			for (long i = 0; i < area.fCount; i++)
+				if (area.fObjects[i].fObject == obj)
+				{
+					*address = area.fObjects[i].fAddress;
+					return area.fBytes + (area.fObjects[i].fAddress - area.fBase);
+				}
+			return nil;
+		}
+	return nil;
+}
+
+
 Boolean
 InFramesPartArea(Ref r)
 {

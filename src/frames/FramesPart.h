@@ -40,6 +40,10 @@ Boolean					InFramesPartArea(Ref r);							// an object of an imported part
 // MessagePad, near enough to say which package it is in (ObjectPkgRef,
 // ObjectPid); nil for an object of no imported part.
 const void*				FramesPartSource(Ref r);
+// The source bytes of the object r itself (its header), and its address
+// in the source's address space (for a package's part, its offset in the
+// package); nil for an object of no imported part.
+const unsigned char*	FramesPartObjectSource(Ref r, ULong32* address);
 // The imported area of the part whose bytes are at part; nil when it has
 // not been imported (the host's stand-in for finding a part's objects
 // where its package lies).
