@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 static int failures = 0;
 #define EXPECT(cond) do { if (!(cond)) { failures++; fprintf(stderr, "FAIL %s:%d: %s\n", __FILE__, __LINE__, #cond); } } while (0)
@@ -32,35 +33,51 @@ static const char* kText =
 	"The Newton MessagePad is a series of personal digital assistant devices developed by Apple. ";
 
 
+// The test's own generator - the one the C standard gives as a sample
+// rand().  The C library's own is not the same sequence on two hosts
+// (glibc's and Windows' differ), so a test seeded with it compresses
+// different bytes on each and the sizes it then checks are not the same
+// test at all; this is 32-bit arithmetic spelt out, so every host gets the
+// same data.
+static uint32_t gSeed = 1;
+
+static int
+Rand(void)
+{
+	gSeed = gSeed * 1103515245u + 12345u;
+	return (int) ((gSeed >> 16) & 0x7fff);
+}
+
+
 // a byte pattern: runs, text and noise, seeded so that it is repeatable
 static void
 Fill(UByte* p, ULong size, unsigned seed)
 {
-	srand(seed);
+	gSeed = seed;
 	ULong i = 0;
 	while (i < size)
 	{
-		int kind = rand() % 4;
-		ULong n = 1 + rand() % 200;
+		int kind = Rand() % 4;
+		ULong n = 1 + Rand() % 200;
 		if (i + n > size)
 			n = size - i;
 		if (kind == 0)
-			memset(p + i, rand() & 0xff, n);
+			memset(p + i, Rand() & 0xff, n);
 		else if (kind == 1)
 		{
-			ULong at = rand() % strlen(kText);
+			ULong at = Rand() % strlen(kText);
 			for (ULong j = 0; j < n; j++)
 				p[i + j] = kText[(at + j) % strlen(kText)];
 		}
 		else if (kind == 2 && i > 300)
 		{
-			ULong back = 1 + rand() % 300;			// an earlier stretch again
+			ULong back = 1 + Rand() % 300;			// an earlier stretch again
 			for (ULong j = 0; j < n; j++)
 				p[i + j] = p[i + j - back];
 		}
 		else
 			for (ULong j = 0; j < n; j++)
-				p[i + j] = (UByte) rand();
+				p[i + j] = (UByte) Rand();
 		i += n;
 	}
 }
@@ -83,8 +100,19 @@ RoundTrip(TCompressor* compressor, TDecompressor* decompressor, const UByte* dat
 	}
 	if (ok)
 		ok = decompressor->Decompress(&restoredSize, restored, size + 0x800, compressed, compressedSize) == noErr;
+	// What comes back is always the bytes that went in.  The length is the
+	// same too whenever the source is a whole number of kLZBlockSize
+	// blocks - which is all the machine ever asks of the coder, the store
+	// compander handing it exactly that (stores/StoreCompander.h) - but a
+	// last block that is not full can come back a few bytes long, in two
+	// ways that are both the ROM's own.  compression.LZOracle runs the
+	// ROM's coder on the ARM interpreter beside this one and holds the
+	// reconstruction to the ROM's answer at every size; its header says
+	// what the two faults are.
 	if (ok)
-		ok = restoredSize == size && memcmp(restored, data, size) == 0;
+		ok = restoredSize >= size && memcmp(restored, data, size) == 0;
+	if (ok && (size % kLZBlockSize) == 0)
+		ok = restoredSize == size;
 	if (!ok)
 		fprintf(stderr, "  round trip of %lu bytes failed: compressed %lu, restored %lu\n", (unsigned long) size, (unsigned long) compressedSize, (unsigned long) restoredSize);
 	DisposPtr((Ptr) compressed);
@@ -153,9 +181,9 @@ TestLZ()
 
 	// random bytes do not shrink: stored blocks, 4 bytes over per block
 	UByte noise[0x1000];
-	srand(7);
+	gSeed = 7;
 	for (ULong i = 0; i < sizeof(noise); i++)
-		noise[i] = (UByte) rand();
+		noise[i] = (UByte) Rand();
 	EXPECT(RoundTrip(compressor, decompressor, noise, sizeof(noise), &compressedSize));
 	EXPECT(compressedSize == sizeof(noise) + 4 + 4 * 4);
 	{

@@ -9,7 +9,7 @@ are, and so that a similar failure is recognised rather than re-diagnosed.
 
 The port is otherwise small: the kernel, the object system, QuickDraw, the
 recognisers and the comms all build and run unchanged.  `ctest` on Linux
-passes 226 of 227 (the exception is `compression.LZ`, below).
+passes all 233.
 
 ## The rule
 
@@ -114,20 +114,53 @@ dependent by design, so `src/CMakeLists.txt` brackets them in
 Apple's ld64) resolves them without it - and zig 0.16's linker falls over
 if it is given one, so the group goes on only where it is needed.
 
-## The one test that still fails on Linux
+## The LZ round trip, and the oracle that settled it
 
-`compression.LZ` round-trips 1022 and 1023 bytes wrongly.  This is a ROM
-bug faithfully reproduced, not a host difference: `TLZDecompressor::
-DecompressBlock` (0x000ffa60) is `CMP r0,#0x400; SUBLS r3,r0,#4;
-MOVHI r3,#0x400` over `fRemaining`, which counts the block's own four-byte
-header, so a *stored* last block of 1021 to 1023 bytes comes back as a
-whole 0x400 bytes.  The ROM never meets it - the store compander hands the
-coder fixed 0x400-byte blocks.
+`compression.LZ` failed on Linux at 1022 and 1023 bytes, and the answer
+turned out to be neither a host difference nor a fault in the
+reconstruction.  Two things were wrong at once.
 
-The test only reaches it on Linux because its data comes from the C
-library's `rand()`, which is a different sequence on each host, so whether
-any size lands on an incompressible 1021-1023 byte block differs between
-them.  Giving the test a generator of its own would make it the same test
-everywhere; it then fails at 127 bytes as well, where the coded path
-over-produces, which is a separate question about what the decompressor
-guarantees for a partial final block and has not been chased.
+The test was not the same test on two hosts: its data came from the C
+library's `rand()`, which is a different sequence on glibc and on Windows,
+so whether any size landed on an incompressible block differed between
+them.  It now has the C standard's sample generator spelt out, so every
+host compresses the same bytes.
+
+And what it asked for was more than the coder gives.  The LZ coder gives
+back the bytes it was given, but a *last* block that is not a whole
+`kLZBlockSize` can come back a few bytes long, in two ways:
+
+* a **stored** last block of 1021 to 1023 bytes comes back as a whole
+  0x400 bytes, because the length it is worked out from counts the block's
+  own four-byte header (`DecompressBlock`, 0x000ffa60:
+  `CMP r0,#0x400; SUBLS r3,r0,#4; MOVHI r3,#0x400`);
+* a **coded** last block can come back up to a few bytes long, because the
+  decoder reads codewords until the input runs out and the bits that pad
+  the last byte can make one more.
+
+Both are the ROM's own.  `compression.LZOracle`
+(`src/compression/tests/test_LZOracle.cpp`) settles it: it runs the ROM's
+`TLZCompressor` and `TLZDecompressor` on the ARM interpreter over the ROM
+image and holds the reconstruction to the ROM's answer - the same
+compressed bytes, and the same restored bytes *and length* - at every size
+from 0 to 0x900 and around the stored path's boundary.  All 2305 sizes
+agree, the 76 that do not round-trip exactly included.  Changing the
+reconstruction to "fix" the stored-block length makes the oracle fail at
+1021-1023, which is what it is for.
+
+Neither fault is reachable through the only thing that uses the coder: the
+store compander hands it fixed 0x400-byte blocks
+(`stores/StoreCompander.h`), where the last block is full and the padding
+has nothing after it to decode.  `RoundTrip` in `compression.LZ` therefore
+asks for the bytes back always, and for the length back whenever the
+source is a whole number of blocks.
+
+Running the ROM's code needs three things beside the image: the patchable
+jump table aliased at 0x01A00000 (virtual page *p* is a plain alias of ROM
+page `0x2000 + (p/32)*0x1000`, and the branch offsets are relative to the
+virtual address - `tools/newton-rom/newtonrom/jumptable.py`), a host trap
+for the `malloc` and `operator new` the compressor's `New` calls out to,
+and nothing else: `TLZDecompressor::New` is `MOV pc, lr` and both `Init`s
+answer `noErr`.  `build/<ROM>/symbols.json` is worth generating on a fresh
+checkout (`tools/newton-rom/dump_symbols.py`) - five more ctests run when
+it is there.

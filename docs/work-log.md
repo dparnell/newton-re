@@ -13,8 +13,7 @@ bugs and ROM bugs found on the way.
 
 The whole reconstruction now builds and runs on Linux with the system
 compiler, and `newton` shows the booted machine in a window there as it
-does on Windows.  `ctest` passes 226 of 227; the one that does not is a
-ROM bug, not a host difference (below).  Windows was left as it was: every
+does on Windows.  `ctest` passes all 233.  Windows was left as it was: every
 change either only applies where `long` is wider than the ARM's word, or
 is the same value spelt so that it cannot be read two ways.
 
@@ -47,13 +46,29 @@ is the same value spelt so that it cannot be read two ways.
   and allocated again - which Windows' allocator hid by handing the same
   block back.
 
-- `compression.LZ` fails on Linux and is meant to: a stored last block of
-  1021 to 1023 bytes comes back padded to 0x400, which is what the ROM's
-  own `DecompressBlock` does (0x000ffa60, `CMP r0,#0x400; SUBLS r3,r0,#4;
-  MOVHI r3,#0x400`), and the ROM never meets it because the store
-  compander only ever hands it whole 0x400-byte blocks.  The test reaches
-  it only on Linux because its data comes from the C library's `rand()`,
-  which is a different sequence on each host.
+- `compression.LZ` was failing on Linux, and both halves of why are now
+  settled.  Its data came from the C library's `rand()` - a different
+  sequence on each host, so it was not the same test on two machines - and
+  it asked the coder for an exact length that the coder does not give for
+  a last block that is not a whole 0x400 bytes.  A stored one of 1021 to
+  1023 bytes comes back padded to 0x400 (`DecompressBlock` 0x000ffa60,
+  `CMP r0,#0x400; SUBLS r3,r0,#4; MOVHI r3,#0x400`), and a coded one can
+  come back a few bytes long because the decoder reads codewords until the
+  input runs out and the padding bits of the last byte can make one more.
+  Both are the ROM's, and the new ctest `compression.LZOracle` is what says
+  so: it runs the ROM's own `TLZCompressor` and `TLZDecompressor` on the
+  ARM interpreter over the ROM image (the jump table aliased at
+  0x01A00000, host traps for the two allocators the compressor's `New`
+  calls) and holds the reconstruction to the ROM's answer - the same
+  compressed bytes, the same restored bytes and the same length - at every
+  size from 0 to 0x900 and around the stored path's boundary.  All 2305
+  agree, the 76 that do not round-trip exactly included; "fixing" the
+  stored-block length makes it fail, which is what it is for.  The round
+  trip now asks for the bytes back always and the length back whenever the
+  source is a whole number of blocks, which is all the store compander
+  ever hands it.  The full suite is 233 of 233 (five of those want
+  `build/<ROM>/symbols.json`, so run `dump_symbols.py` on a fresh
+  checkout).
 
 - `tools/ntk/inspector.py` no longer skips the download half of
   `host.NewtonNTK`: the expression that tells the script to stop listening

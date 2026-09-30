@@ -17,10 +17,10 @@ the way are all in `docs/work-log.md`.
 - **Linux**: the tree builds and runs there too, with the system compiler
   (`-DCMAKE_CXX_COMPILER=clang++`, not the zig toolchain - its linker
   cannot take the system's X11 and ALSA shared objects), and `newton`
-  shows the booted machine in an X11 window.  `ctest` there: 226 of 227,
-  the one failure being a ROM bug the C library's `rand()` only reaches on
-  that host (`docs/host-lp64.md`, which is also the standing note on what
-  a 64-bit `long` changes and how such a value is to be spelt).  Still
+  shows the booted machine in an X11 window.  `ctest` there: 233 of 233
+  (five of them want `build/<ROM>/symbols.json`, so run `dump_symbols.py`
+  on a fresh checkout).  `docs/host-lp64.md` is the standing note on what
+  a 64-bit `long` changes and how such a value is to be spelt.  Still
   Windows-only: a package dropped onto the window (XDND is NOT YET), and
   the crash-time tools `tools/host/stacksample.py`, `profile.py` and
   `whichfunction.py`, which read PE images and Windows debug APIs.
