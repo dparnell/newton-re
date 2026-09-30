@@ -1,0 +1,82 @@
+// The Dates app's month overview (views/MonthView.h, DrawMonthOverView):
+// two meetings on the 15th of this month - 9 to 10 am and 1 to 3 pm - and
+// Dates shown by the month.  Each day is a gray-framed box with its number
+// in the corner, and the 15th has a black bar for each meeting, as far
+// down the box as its time is through the day.
+//
+//   build/host/host/newton --display 320x480 --script src/host/demo/monthoverview.ns --headless 90
+//
+// The pixels are checked where the ROM's arithmetic puts the bars: the box
+// less a 16-pixel top margin and 4 more is the day, from 2 pixels under
+// the margin - evenly when a pixel is under half an hour, else with the
+// night squeezed and 7 am to 7 pm at half an hour a pixel.  The picture
+// is build/monthoverview.pgm.  Prints "monthoverview: ok" or "FAILED", and
+// "monthoverview: done".
+
+HostInclude("common.ns");			// tapAt, waitFor, walkSetup
+HostInclude("walkhelpers.ns");		// findView
+
+moDay := func(date, hour) begin
+	local d := Date(Time());
+	TotalMinutes({year: d.year, month: d.month, date: date, hour: hour, minute: 0});
+end;
+
+moCheck := func(what, ok, why) Print("monthoverview: " & what & (if ok then ": ok" else ": FAILED " & why));
+
+// the month view whose boxes are big enough for bars (the Dates app has a
+// small calendar in its corner as well)
+moGrid := func() call findView with (GetRoot(), func(v) BAnd(v.viewClass, 0xFFFF) = 80 and v:GlobalBox().bottom - v:GlobalBox().top > 200);
+
+call walkSetup with ([2, 0, 45, 34, 14, 37], func() begin		// (the Setup assistant first: "Daniel")
+	GetRoot().calendar:AddAppointment("standup", call moDay with (15, 9), 60, nil, nil);
+	GetRoot().calendar:AddAppointment("review", call moDay with (15, 13), 120, nil, nil);
+	call tapAt with (140, 460);						// Dates
+	call waitFor with ("monthoverview: Dates", func() GetRoot().calendar.viewCObject, func() begin
+		call tapAt with (153, 424);					// Show
+		AddDelayedCall(func() begin
+			call tapAt with (165, 346);				// Month
+			call waitFor with ("monthoverview: the month", moGrid, func() AddDelayedCall(func() begin
+				ScreenSnapshot("build/monthoverview.pgm");
+				local grid := call moGrid with ();
+				local g := grid:GlobalBox();
+				// the grid is under nine pixels of weekday letters, in 7
+				// columns and 5 or 6 rows; the 15th's cell from the first of
+				// the month's weekday
+				local first := Date(call moDay with (1, 0));
+				local d := Date(Time());
+				local col := (first.dayOfWeek + 14) mod 7;
+				local row := (first.dayOfWeek + 14) div 7;
+				local rows := if (first.dayOfWeek + (if d.month = 2 then 28 else 31)) > 35 then 6 else 5;
+				local cellW := (g.right - g.left) div 7;
+				local cellH := (g.bottom - (g.top + 10)) div rows;
+				local top := g.top + 10 + row * cellH;
+				local left := g.left + col * cellW;
+				local height := (cellH + 1) - 16 - 4;
+				local perPixel := (height div 2 + 1440) div height;
+				// where a time of day falls in the box (DrawMeetingOverviewLine):
+				// evenly when a pixel is under half an hour, else the night
+				// squeezed and 7 am to 7 pm given 24 pixels
+				local yFor := func(minutes) begin
+					local y := top + 18;
+					if perPixel < 31 then y + minutes div perPixel
+					else begin
+						local night := (height - 24) div 2;
+						if minutes < 420 then y + minutes div (420 div night)
+						else if minutes < 1140 then y + night + (minutes - 420) div 30
+						else y + night + 24 + (minutes - 1140) div (300 div night);
+					end;
+				end;
+				local x := left + cellW div 2;
+				local y9 := call yFor with (9 * 60);
+				local y13 := call yFor with (13 * 60);
+				Print({cell: {left: left, top: top, width: cellW, height: cellH}, perPixel: perPixel, y9: y9, y13: y13});
+				call moCheck with ("the 9 am bar", ScreenPixel(x, y9 + 1) < 128, "no bar at " & x & "," & (y9 + 1));
+				call moCheck with ("the 1 pm bar", ScreenPixel(x, y13 + 2) < 128, "no bar at " & x & "," & y13 + 2);
+				call moCheck with ("between them", ScreenPixel(x, (y9 + y13) div 2) > 128, "black between the bars");
+				Print("monthoverview: done");
+				HostQuit();
+			end, nil, 1000), 30);
+		end, nil, 1500);
+	end, 30);
+end);
+Print("monthoverview: the script is loaded");

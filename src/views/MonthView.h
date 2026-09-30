@@ -18,13 +18,12 @@
 				`monthChangedScript` is run.
 
 				A view whose `meetingOverview` proto slot is there is the
-				Dates app's month overview, which draws a bar for each day
-				that has meetings instead of the date itself.
-
-				NOT YET RECONSTRUCTED: `DrawMonthOverView` (0x00122174),
-				which needs the meeting and repeat soups of `intl/Meetings.h`
-				- an overview draws its dates like any other month until it
-				is here.
+				Dates app's month overview (`DrawMonthOverView`): each day a
+				gray-framed box with its number in the top right corner, a
+				black bar down it for each meeting (from its start to its
+				end, the day squeezed around the working hours when the box
+				is small), and the day's notes as icons in a big box or as
+				little flags in a small one.
 
 	Reconstructed from the MP2x00 US ROM (0x00120414-0x00122174); each
 	function cites its origin.
@@ -49,7 +48,7 @@ public:
 
 	void			DrawLabels(void);									// ROM 0x00121ff8 DrawLabels__10TMonthViewFv - the weekday letters
 	void			DrawDates(void);									// ROM 0x00120450 DrawDates__10TMonthViewFv
-	void			DrawMonthOverView(void);							// ROM 0x00122174 DrawMonthOverView__10TMonthViewFv (NOT YET)
+	void			DrawMonthOverView(void);							// ROM 0x00122174 DrawMonthOverView__10TMonthViewFv
 	void			DateRect(Rect& rect, long date);					// ROM 0x00120d64 DateRect__10TMonthViewFR5TRectl - the cell a day of the month is in
 	long			PointToDate(Point& pt);								// ROM 0x00120ea0 PointToDate__10TMonthViewFR6TPoint - the day a point is over
 	void			InvertSelection(void);								// ROM 0x00120e54 InvertSelection__10TMonthViewFv

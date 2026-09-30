@@ -24,6 +24,10 @@
 #include "Stroke.h"
 #include "Frames.h"
 #include "Interpreter.h"
+#include "Ports.h"
+#include "Pictures.h"
+#include "MeetingView.h"
+#include "Meetings.h"
 
 #include <string.h>
 
@@ -308,16 +312,309 @@ TMonthView::DrawDates(void)
 }
 
 
+// ROM 0x00122ba4 DrawMeetingOverviewLine__FlN31RC5TRect
+// A meeting as a black bar down a day's box, from where its start falls
+// to where its end does (minutes after the day's start), below the top
+// margin.  A box tall enough for a pixel to be under half an hour takes
+// the day evenly; a smaller one squeezes the night into less room and
+// gives the working day, 7 am to 7 pm, what is left: the hours before
+// 7 am in the top half of what is not the day's 24 pixels (or of all but
+// two when that leaves nothing), the working day in those 24 at half an
+// hour a pixel, and the evening under them.  The bar is at least a pixel.
+static void
+DrawMeetingOverviewLine(long start, long end, long dayStart, long margin, const Rect& box)
+{
+	long left = box.left;
+	long width = box.right - left;
+	long height = (short) (box.bottom - box.top - margin - 4);
+	long top = (short) (box.top + margin + 2);
+	long from = start - dayStart;
+	long to = end - dayStart;
+	long perPixel = (height / 2 + 1440) / height;		// minutes a pixel, rounded
+	Rect bar;
+	bar.left = (short) (left + 2);
+	bar.right = (short) (box.left + width - 2);
+	if (perPixel < 31)
+	{
+		bar.top = (short) (from / perPixel + top);
+		bar.bottom = (short) (to / perPixel + top);
+	}
+	else
+	{
+		long dayScale = 30;					// the working day: half an hour a pixel
+		long dayPixels = 24;
+		long night = (height - 24) / 2;
+		if (night < 1)
+		{
+			night = 1;
+			dayPixels = height - 2;
+			dayScale = 720 / dayPixels;
+		}
+		long morningScale = 420 / night;	// midnight to 7 am
+		long eveningScale = 300 / night;	// 7 pm to midnight
+		long offset = 0;
+		long scale = morningScale;
+		if (from >= 420)
+		{
+			if (from >= 1140)
+			{
+				from -= 1140;
+				scale = eveningScale;
+				offset = night + dayPixels;
+			}
+			else
+			{
+				from -= 420;
+				scale = dayScale;
+				offset = night;
+			}
+		}
+		bar.top = (short) (from / scale + top + offset);
+		offset = 0;
+		scale = morningScale;
+		if (to >= 420)
+		{
+			if (to >= 1140)
+			{
+				to -= 1140;
+				scale = eveningScale;
+				offset = night + dayPixels;
+			}
+			else
+			{
+				to -= 420;
+				scale = dayScale;
+				offset = night;
+			}
+		}
+		bar.bottom = (short) (to / scale + top + offset);
+	}
+	if (bar.bottom < bar.top + 1)
+		bar.bottom = (short) (bar.top + 1);
+	FillRect(&bar, GetStdPattern(blackPat));
+}
+
+
+// ROM 0x00122ddc DrawDayNoteIcon__FRC6RefVarlRC5TRect
+// The index'th note of a day as its icon, 23 by 16 a pixel in from the
+// box's top left corner and 24 along for each before it - when it fits.
+static void
+DrawDayNoteIcon(RefArg icon, long index, const Rect& box)
+{
+	Rect r;
+	r.top = (short) (box.top + 1);
+	r.left = (short) (box.left + index * 24 + 1);
+	r.right = (short) (r.left + 23);
+	r.bottom = (short) (r.top + 16);
+	if (r.right <= box.right)
+		DrawBitmap(icon, &r, 0);
+}
+
+
+// ROM 0x00122e6c DrawDayNoteGlyphs__FlRC5TRectT1
+// A small box's notes as a row of little flags along its top, nine
+// pixels apart, as many as fit short of the number in the corner.  (The
+// margin it is passed is not used.)
+static void
+DrawDayNoteGlyphs(long count, const Rect& box, long /*margin*/)
+{
+	RefVar flag(Clone(RefVar(Rsmallflagbitmap)));
+	short limit = (short) (box.right - 14);
+	Rect r;
+	r.left = (short) (box.left + 4);
+	r.right = (short) (r.left + 7);
+	r.top = (short) (box.top + 2);
+	r.bottom = (short) (r.top + 6);
+	for (long i = 0; i < count; i++)
+	{
+		if (limit < r.right)
+			break;
+		DrawBitmap(flag, &r, 0);
+		r.left = (short) (r.left + 9);
+		r.right = (short) (r.left + 7);
+	}
+}
+
+
+// whether a meeting of a GetAllMeetings list is one the overview draws: a
+// meeting, a repeating one or an exception to one (not an event)
+static Boolean
+IsOverviewMeeting(RefArg meeting)
+{
+	RefVar stationery(GetFrameSlotRef(meeting, RSSYMviewstationery));
+	return EQRef(stationery, RSSYMmeeting) || EQRef(stationery, RSSYMrepeatingmeeting)
+		|| EQRef(stationery, RSSYMexceptionmeeting);
+}
+
+
 // ROM 0x00122174 DrawMonthOverView__10TMonthViewFv
-// NOT YET RECONSTRUCTED: the Dates app's month overview, which draws a
-// bar across each day that has meetings in it - it walks the meeting,
-// repeat, note and repeat-note soups of the context and measures what it
-// finds.  Until it is here an overview draws its dates like any other
-// month, so the calendar is there to be read and tapped.
+// The Dates app's month overview.  The meetings and the notes of the whole
+// month are asked for once (GetAllMeetings over the context's MeetingSoup
+// and RepeatSoup, and its Notes and RepeatNotes); then each day in turn is
+// a gray-framed box a pixel bigger than its cell, with a black bar for
+// each meeting that starts in it (the lists are in time order, so a
+// meeting is drawn once its start is in the day, and struck off), the
+// day's notes - as their icons when the boxes are more than 47 pixels
+// tall, as little flags otherwise - and its number right-aligned at the
+// top, nine pixels down.  The bars start 9 pixels down in a small box and
+// 16 in a big one.
+//
+// When asking for the month throws, each day is asked for its own.  ROM
+// bug kept: that path draws every meeting of the day with the start and
+// end of the *month's* first meeting - which it never found, the asking
+// having failed - so the bars all fall past the bottom of the box.
 void
 TMonthView::DrawMonthOverView(void)
 {
-	DrawDates();
+	TextOptions options;
+	memset(&options, 0, sizeof(options));
+	options.fAlignment = ToFixed(1);				// right-aligned
+	options.fWidth = ToFixed(fCellWidth);
+	options.fTransferMode = srcOr;
+	StyleRecord style;
+	style.fFontPattern = 0;
+	style.fPattern = nil;
+	CreateTextStyleRecord(ISNIL(RefVar((Ref) fDatesFont)) ? RefVar(Rfontsystem9) : fDatesFont, &style);
+	StyleRecord* styles = &style;
+
+	long days = fDate.DaysInMonth();
+	long cell = FirstColumn();
+	long dayStart = fDate.TotalMinutes();
+	long dayEnd = dayStart + 1440;
+	RefVar meetingSoup(GetVariable(fContext, RSSYMmeetingsoup, nil, 0));
+	RefVar repeatSoup(GetVariable(fContext, RSSYMrepeatsoup, nil, 0));
+	RefVar notesSoup(GetVariable(fContext, RSSYMnotes, nil, 0));
+	RefVar repeatNotesSoup(GetVariable(fContext, RSSYMrepeatnotes, nil, 0));
+	RefVar item;
+	long meetingCount = 0;
+	long meetingIndex = 0;
+	long noteCount = 0;
+	long nextStart = 0x1fffffff;			// the next meeting to draw: its start and end
+	long nextEnd = 0;
+	long noteIndex = 0;
+	long nextNote = 0x1fffffff;			// the next note's start
+	Boolean big = fCellHeight > 47;
+	long margin = big ? 16 : 9;
+	RefVar meetings;
+	RefVar notes;
+	Boolean whole = true;					// the month's lists were had in one go
+	newton_try
+	{
+		long monthEnd = dayStart + days * 1440;
+		meetings = GetAllMeetings(meetingSoup, repeatSoup, dayStart, monthEnd, false);
+		notes = GetAllMeetings(notesSoup, repeatNotesSoup, dayStart, monthEnd, false);
+	}
+	newton_catch_all
+	{
+		whole = false;
+		meetings = NILREF;
+		notes = NILREF;
+	}
+	end_try;
+	EraseRect(&fGridRect);
+	if (NOTNIL(meetings))
+	{
+		meetingCount = Length(meetings);
+		for (meetingIndex = 0; meetingIndex < meetingCount; meetingIndex++)
+		{
+			item = GetArraySlotRef(meetings, meetingIndex);
+			if (IsOverviewMeeting(item))
+			{
+				nextStart = RINT(GetMeetingSlot(item, RSSYMmtgstartdate));
+				nextEnd = RINT(GetMeetingSlot(item, RSSYMmtgduration)) + nextStart;
+				break;
+			}
+		}
+	}
+	if (NOTNIL(notes))
+	{
+		noteCount = Length(notes);
+		nextNote = RINT(GetMeetingSlot(RefVar(GetArraySlotRef(notes, 0)), RSSYMmtgstartdate));
+	}
+	for (long day = 0; day < days; )
+	{
+		Rect box;
+		box.left = (short) (fCellWidth * (cell % 7) + fGridRect.left);
+		box.top = (short) (fCellHeight * (cell / 7) + fGridRect.top);
+		box.right = (short) (box.left + fCellWidth + 1);
+		box.bottom = (short) (fCellHeight + box.top + 1);
+		PatternHandle was = GetFgPattern();
+		SetFgPattern(GetStdPattern(grayPat));
+		FrameRect(&box);
+		SetFgPattern(was);
+		cell++;
+		long drawn = 0;						// the day's notes
+		if (!whole)
+		{
+			RefVar dayMeetings(GetAllMeetings(meetingSoup, repeatSoup, dayStart, dayEnd, false));
+			long count = ISNIL(dayMeetings) ? 0 : Length(dayMeetings);
+			for (long i = 0; i < count; i++)
+			{
+				item = GetArraySlotRef(dayMeetings, i);
+				if (IsOverviewMeeting(item))
+					DrawMeetingOverviewLine(nextStart, nextEnd, dayStart, margin, box);		// (ROM bug: see above)
+			}
+			notes = GetAllMeetings(notesSoup, repeatNotesSoup, dayStart, dayEnd, false);
+			noteCount = ISNIL(notes) ? 0 : Length(notes);
+			for (drawn = 0; drawn < noteCount; drawn++)
+				if (big)
+				{
+					item = GetArraySlotRef(notes, drawn);
+					DrawDayNoteIcon(RefVar(FGetMeetingIcon(RefVar(NILREF), item)), drawn, box);
+				}
+		}
+		else
+		{
+			while (nextStart < dayEnd)
+			{
+				DrawMeetingOverviewLine(nextStart, nextEnd, dayStart, margin, box);
+				SetArraySlotRef(meetings, meetingIndex, NILREF);
+				nextStart = 0x1fffffff;
+				for (meetingIndex = meetingIndex + 1; meetingIndex < meetingCount; meetingIndex++)
+				{
+					item = GetArraySlotRef(meetings, meetingIndex);
+					if (IsOverviewMeeting(item))
+					{
+						nextStart = RINT(GetMeetingSlot(item, RSSYMmtgstartdate));
+						nextEnd = RINT(GetMeetingSlot(item, RSSYMmtgduration)) + nextStart;
+						break;
+					}
+				}
+			}
+			item = NILREF;
+			while (nextNote < dayEnd)
+			{
+				if (big)
+				{
+					if (ISNIL(item))
+						item = GetArraySlotRef(notes, noteIndex);
+					DrawDayNoteIcon(RefVar(FGetMeetingIcon(RefVar(NILREF), item)), drawn, box);
+				}
+				drawn++;
+				noteIndex++;
+				if (noteIndex < noteCount)
+				{
+					item = GetArraySlotRef(notes, noteIndex);
+					nextNote = RINT(GetMeetingSlot(item, RSSYMmtgstartdate));
+				}
+				else
+					nextNote = 0x1fffffff;
+			}
+		}
+		if (!big && drawn > 0)
+			DrawDayNoteGlyphs(drawn, box, margin);
+		dayStart += 1440;
+		dayEnd += 1440;
+		UniChar text[2];
+		text[0] = U_CONST_CHAR(day < 9 ? ' ' : (unsigned char) ((day + 1) / 10) + '0');
+		day = day + 1;
+		text[1] = U_CONST_CHAR((unsigned char) (day % 10) + '0');
+		FPoint at;
+		at.x = ToFixed(box.left);
+		at.y = ToFixed(box.top + 9);
+		DrawTextOnce(text, 2, &styles, nil, at, &options, nil);
+	}
+	DisposeStyleRecord(&style);
 }
 
 

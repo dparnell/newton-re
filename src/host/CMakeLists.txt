@@ -967,6 +967,16 @@ set_tests_properties(host.NewtonWalkthrough2.restart PROPERTIES TIMEOUT 180
                      PASS_REGULAR_EXPRESSION "walkthrough: restart done, 0 failed"
                      FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
 
+# the Dates app's month overview (demo/monthoverview.ns): two meetings on
+# the 15th drawn as bars where the ROM's arithmetic puts them, pixel-checked
+add_test(NAME host.NewtonMonthOverview
+         COMMAND newton --display 320x480 --headless 120
+                 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/monthoverview.ns
+         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonMonthOverview PROPERTIES TIMEOUT 180
+                     PASS_REGULAR_EXPRESSION "9 am bar: ok.*1 pm bar: ok.*between them: ok.*monthoverview: done"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+
 # a bigger internal flash (docs/stores/README.md, "Bigger flash"): a new
 # 128 MB sparse store, over 8 MB of soup entries written, read back after a
 # restart on the same file, and the file on disk the size of what was

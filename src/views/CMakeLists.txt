@@ -65,7 +65,7 @@ add_library(views STATIC
 # over the book reader's library: views and books are mutually dependent)
 # (BuildView makes the print view, TPrintView, which drives a printer: views
 # links print)
-target_link_libraries(views PUBLIC ink newton_config qd frames intl utility recognition stores sound text books print)
+target_link_libraries(views PUBLIC ink newton_config qd frames intl intl_meetings utility recognition stores sound text books print)
 target_include_directories(views PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(tests)
