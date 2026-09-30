@@ -9,6 +9,29 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: package card handlers, packages off an endpoint, the comm manager's services
+
+- Package card handlers reach the card server (c389b84a):
+  `TCardPartHandler::Install`/`Remove` (0x4ff30, 0x50044) call
+  `AddCardHandler`/`RemoveCardHandler`.  A package's protocol part is ARM,
+  so a registered host stand-in takes its place
+  (`packages/ProtocolStandIns.h`, DEVIATION).  The only card handler in
+  the fixtures is the NIE's `TLanternCardHandler`, re-expressed under the
+  NIE rule (`thirdparty/nie/LanternCardHandler.cpp`, ctest
+  `thirdparty.LanternCardHandler`; a part bug kept; its driver world NOT
+  YET).  The "card server is NOT YET" lines at every boot are gone, and
+  `host.NewtonCard` fails if they come back.
+- A package streamed off an endpoint (ee97fcf0): `gEndpointPipeHooks`
+  carry `TEndpointPipe::AddToAppWorld`/`RemoveFromAppWorld` to the
+  package manager (DEVIATION, layering); `TPackageLoader(TEndpointPipe*)`
+  and `LoadPackage(TEndpointPipe*, ...)`; `TestEndpointStreamed`.
+- The comm manager registers the ROM's services as it starts
+  (`RegisterROMProtcols` 0x6ccac over `CMAddROMServices`), so they exist
+  with or without a serial port; protoBasicEndpoint goes through the
+  modem navigator first as the ROM's does (2e47d758).
+- `TEzEndpointPipe` makes Sharp IR, MNP modem and IrDA connections too
+  (ecd3f7e7; two ROM bugs kept; AppleTalk ADSP NOT YET).
+
 ## 2026-10-01: old host stores' word hints repaired
 
 A writable store's entries with no hint chunks under handler 0 - which
