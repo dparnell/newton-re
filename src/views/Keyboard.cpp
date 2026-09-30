@@ -8,6 +8,7 @@
 */
 
 #include "Keyboard.h"
+#include "PickView.h"		// FDismissPopup
 #include "View.h"
 #include "RootView.h"
 #include "Commands.h"
@@ -549,7 +550,7 @@ GetPostingView(Boolean commandKey)
 // ROM 0x0030ac50 DoKeyEvent__FP10TResponderUlT2
 // A key event from the keyboard tool to the receiver: the command key
 // held down (a repeat) opens the key help (_keyHelpOpenScript up the key
-// view chain, the popup dismissed - NOT YET); a key up/down/repeat goes
+// view chain, the popup dismissed first); a key up/down/repeat goes
 // through KeyIn (the character), tells the root the keyboard is
 // connected when it was not (aeKeyboardConnected), and is dispatched as
 // its command with (modifiers, key code, character) as the parameter;
@@ -561,7 +562,7 @@ DoKeyEvent(TResponder* receiver, ULong id, ULong keyCode)
 {
 	if (id == aeKeyRepeat && keyCode == kCommandKey)
 	{
-		// NOT YET RECONSTRUCTED: FDismissPopup(nil)
+		FDismissPopup(RefVar());
 		TView* view = (TView*) receiver;
 		if (view == nil || GetView(view->fContext) == nil)
 			view = gRootView;

@@ -132,7 +132,8 @@ public:
 	Boolean		fPicking;			// +0xb8  an item is being picked (Hide runs no cancel script)
 };
 
-void	RegisterPickNatives(void);												// PickViewKeyDown (the ROM's protoPicker viewKeyDownScript)
+void	RegisterPickNatives(void);
+Ref		FDismissPopup(RefArg rcvr);											// every popup closed (the key help's opening does it too)												// PickViewKeyDown (the ROM's protoPicker viewKeyDownScript)
 void	GetAppAreaBounds(Rect* bounds);										// ROM 0x001838c4 GetAppAreaBounds__FP5TRect - vars.displayParams' application area
 Boolean	AdjustPopupInRect(Rect& bounds, long width, long height, const Rect& within, short frame);	// ROM 0x00184e54 AdjustPopupInRect__FR5TRectlT2RC5TRects - ==> placed above
 

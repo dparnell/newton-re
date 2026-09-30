@@ -1365,7 +1365,7 @@ FClearPopup(RefArg /*rcvr*/)
 // ROM 0x001f0a48 FDismissPopup
 // DismissPopup(): every popup closed, one after another, and the
 // machine allowed to put one up again.
-static Ref
+Ref
 FDismissPopup(RefArg /*rcvr*/)
 {
 	while (gRootView->fPopup != nil)

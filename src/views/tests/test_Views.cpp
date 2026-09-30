@@ -3825,6 +3825,21 @@ TestPickView()
 	EXPECT(ISNIL(Eval("GetPopup()")) && gRootView->fChildren->Count() == 1);
 	Eval("RemoveView(GetRoot(), GetRoot():ChildViewFrames()[0])");
 	EXPECT(gRootView->fChildren->Count() == 0);
+	// the command key held down (its repeat) opens the key help, dismissing
+	// any popup first (DoKeyEvent over FDismissPopup)
+	{
+		gKeyboardConnected = true;
+		TView* helped = ViewOf("ctxKH := AddView(GetRoot(), {viewClass: 74, viewFlags: 1, viewBounds: {left: 200, top: 10, right: 220, bottom: 20}, "
+			"opened: nil, _keyHelpOpenScript: func(ctx) opened := true, _keyHelpCloseScript: func(ctx) opened := nil})");
+		Eval("ctxPP := AddView(GetRoot(), {_proto: protoPicker, pickItems: [\"Cut\", \"Copy\"], bounds: {left: 30, top: 20, right: 80, bottom: 35}, pickActionScript: func(index) nil}); ctxPP:Open(); ctxPP:SetPopup()");
+		EXPECT(NOTNIL(Eval("GetPopup()")));
+		DoKeyEvent(helped, aeKeyRepeat, kCommandKey);
+		EXPECT(ISNIL(Eval("GetPopup()")) && NOTNIL(Eval("ctxKH.opened")));
+		gKeyHelpOpen = false;		// (the key help would close with the next key event)
+		Eval("RemoveView(GetRoot(), ctxKH)");
+		EXPECT(gRootView->fChildren->Count() == 0);
+		gKeyboardConnected = false;
+	}
 	// nothing is selected, and no key is repeating
 	EXPECT(ISNIL(Eval("HiliteOwner()")));
 	EXPECT(ISNIL(Eval("InRepeatedKeyCommand()")));
