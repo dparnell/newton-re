@@ -388,6 +388,13 @@ TTile::RotateTilesL(PixelMap* from, PixelMap* to)
 		TileBuffer(rows);
 		UChar* column = place + 0x3f8;
 		long groups = leftover >> 3;
+		// DEVIATION: the bytes the BUG above writes past the end of the new
+		// bitmap are dropped.  On the device they landed in whatever block
+		// followed it; on the host that is heap corruption (or, for a large
+		// binary, past the host block the object is mapped into).  Nothing
+		// in the bitmap changes: Untile reads only the bitmap's own bytes.
+		UChar* bitsStart = (UChar*) GetPixelMapBits(to);
+		UChar* bitsEnd = bitsStart + (long) to->rowBytes * (to->bounds.bottom - to->bounds.top);
 		for (long t = 0; t < fTilesAcross; t++, column -= toBand)
 		{
 			const UChar* in = fTiles[t];
@@ -414,7 +421,8 @@ TTile::RotateTilesL(PixelMap* from, PixelMap* to)
 							v = (UChar) ((v << 1) | (row[k] >> 7));
 							row[k] = (UChar) (row[k] << 1);
 						}
-						*out = v;
+						if (out >= bitsStart && out < bitsEnd)
+							*out = v;
 						out += 8;
 					}
 				}

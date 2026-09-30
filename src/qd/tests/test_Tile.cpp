@@ -5,7 +5,10 @@
 // 1151 - y, a left turn at column y.  ROM QUIRKS pinned: of the 58 rows
 // past the last whole band only whole groups of eight are turned (rows
 // 1144 and 1145 are lost), and the left turn's leftover rows go wrong - so
-// the left turn is checked with those rows white.
+// the left turn is checked with those rows white.  A left turn of a page
+// whose last rows are black is where the ROM writes past the end of the
+// new bitmap; the host drops those bytes (DEVIATION in Tile.cpp), so the
+// bytes after it are checked untouched and the whole bands still right.
 // Runs over a standalone heap and object heap without ROM objects.
 #include "Tile.h"
 #include "Pictures.h"
@@ -94,6 +97,39 @@ Turn(Boolean right, long whiteFrom)
 }
 
 
+static void
+TurnLeftOverrun()
+{
+	const long kGuard = 1024;
+	UChar* page = (UChar*) NewPtr(kRowBytes * kHeight);
+	UChar* turned = (UChar*) NewPtr(kTurnedRowBytes * kWidth + kGuard);
+	memset(page, 0xff, kRowBytes * kHeight);
+	memset(turned, 0, kTurnedRowBytes * kWidth);
+	memset(turned + kTurnedRowBytes * kWidth, 0xa5, kGuard);
+	PixelMap from, to;
+	InitMap(&from, page, kRowBytes, kHeight, kWidth);
+	InitMap(&to, turned, kTurnedRowBytes, kWidth, kTurnedWidth);
+	{
+		TTile tile(&from, RefVar(NILREF));
+		tile.RotateTilesL(&from, &to);
+	}
+	long touched = 0;
+	for (long i = 0; i < kGuard; i++)
+		if (turned[kTurnedRowBytes * kWidth + i] != 0xa5)
+			touched++;
+	EXPECT(touched == 0);
+	long wrong = 0;
+	for (long row = 0; row < kWidth; row++)
+		for (long col = 0; col < 1088; col++)
+			if (Pixel(turned, kTurnedRowBytes, row, col) != 1)
+				wrong++;
+	EXPECT(wrong == 0);
+	printf("test_Tile: a black page turned left, %ld bytes past the bitmap written, %ld pixels of the whole bands wrong\n", touched, wrong);
+	DisposPtr((Ptr) page);
+	DisposPtr((Ptr) turned);
+}
+
+
 int
 main()
 {
@@ -104,6 +140,7 @@ main()
 
 	Turn(true, kHeight);
 	Turn(false, 1088);
+	TurnLeftOverrun();
 
 	printf("test_Tile: %s\n", failures == 0 ? "ok" : "FAILED");
 	return failures == 0 ? 0 : 1;
