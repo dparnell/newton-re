@@ -3110,14 +3110,8 @@ TestClicks()
 	gStrokeWorld.Init();
 	HostTabletInit();
 	RegisterUnitNatives();
-	// the tablet's calibration, which the Setup assistant asks for: the
-	// host has no inker to ask, so nothing needs calibrating, there is
-	// nothing to read back, and calibrating answers that it worked
-	EXPECT(ISNIL(Eval("IsTabletCalibrationNeeded()")));
-	EXPECT(ISNIL(Eval("GetCalibration()")));
-	EXPECT(ISNIL(Eval("SetCalibration(nil)")));
-	gInkerCalibrated = 0;
-	EXPECT(ISNIL(Eval("CalibrateTablet()")) && gInkerCalibrated == 1);
+	// (the tablet's calibration natives ask the inker world, which needs
+	// the OS: ctest host.NewtonAlignPen, recognition/Inker.h)
 	Eval("userConfiguration.userPenSize := 1");		// (the ink is let out by the pen size)
 	TView* v = ViewOf("ctxC := AddView(GetRoot(), {viewClass: 74, viewFlags: 1 + 0x200 + 0x800, viewBounds: {left: 60, top: 40, right: 120, bottom: 80}, viewFormat: 1, clicks: [], gestures: [], "
 		"viewClickScript: func(unit) begin AddArraySlot(clicks, [GetPoint(0, unit), GetPoint(1, unit), StrokeDone(unit), StrokeBounds(unit), GetUnitDownTime(unit), CountUnitStrokes(unit)]); nil end, "

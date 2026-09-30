@@ -116,7 +116,7 @@ const long kBusyBoxAllow = 0x35;				// BusyBoxControl(0)
 const long kBusyBoxHide = 0x36;					// (0x34 shows it)
 const TTimeout kBusyBoxSendTimeout = 0xa8c000;	// (the ROM's: about three seconds)
 
-extern TUPort*	gTheInkerPort;					// ROM 0x0c101658 gTheInkerPort - nil on the host
+extern TUPort*	gTheInkerPort;					// ROM 0x0c101658 gTheInkerPort - the inker's, once InkerPort has looked it up (recognition/InkerNatives.cpp)
 void	BusyBoxSend(long command);				// ROM 0x0030dd60 BusyBoxSend__Fl
 Ref		FBusyBoxControl(RefArg rcvr, RefArg what);	// ROM 0x0030ddec FBusyBoxControl
 void	RegisterBusyBoxNatives(void);

@@ -312,6 +312,29 @@ set_tests_properties(host.NewtonPower PROPERTIES TIMEOUT 300
                      PASS_REGULAR_EXPRESSION "power: 1 battery, [0-9]+% .*power: the battery gauge shows [0-9]+ .*power: backlight on.*power: the backlight button turned it off.*power: the idle timer put it to sleep, a tap woke it.*power: the switch put it to sleep, a tap woke it; 2 power-off calls, 2 power-on calls.*power: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain|fell over")
 
+# the tablet's calibration (recognition/Inker.h, hal/host/HostTablet.h;
+# demo/alignpen.ns): on a panel put askew, the Setup assistant's
+# calibration screen tapped through it, a tap then reading true, off again
+# under the factory calibration and right after Align Pen, a sleep and a
+# wake; then a restart on the same store with the calibration read back
+add_test(NAME host.NewtonAlignPen
+         COMMAND newton --display 320x480 --erase
+                 --store ${CMAKE_CURRENT_BINARY_DIR}/alignpen.store --headless 200
+                 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/alignpen.ns
+         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonAlignPen PROPERTIES TIMEOUT 300 FIXTURES_SETUP host_alignpen_store
+                     PASS_REGULAR_EXPRESSION "alignpen: done, 0 failed"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+add_test(NAME host.NewtonAlignPen.restart
+         COMMAND newton --display 320x480
+                 --store ${CMAKE_CURRENT_BINARY_DIR}/alignpen.store --headless 120
+                 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/alignpen.ns
+         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonAlignPen.restart PROPERTIES TIMEOUT 180
+                     FIXTURES_REQUIRED host_alignpen_store DEPENDS host.NewtonAlignPen
+                     PASS_REGULAR_EXPRESSION "alignpen: restart done, 0 failed"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+
 # the host's printer (print/host/HostPrinter.h): a note and a Names card
 # printed from their Action buttons, the printer chosen in the Print slip's
 # Choose Other Printer; each page a PNG in build/print, which

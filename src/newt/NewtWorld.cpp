@@ -8,6 +8,7 @@
 
 #include "CardPartHandler.h"
 #include "NewtWorld.h"
+#include "Inker.h"
 #include "StorageCards.h"
 #include "AlertManager.h"
 #include "NewtCardEvents.h"
@@ -203,7 +204,7 @@ TNewtWorld::ForkSwitch(Boolean in)
 // rather than straight off their class info.
 // NOT YET RECONSTRUCTED: the real-time alarm
 // name, InitExternal,
-// HandleTestAgentEvent, FMinimumBatteryCheck, LoadInkerCalibration,
+// HandleTestAgentEvent, FMinimumBatteryCheck,
 // AllocateEarlyStuff (the sort tables).
 long
 TNewtWorld::MainConstructor()
@@ -293,6 +294,10 @@ TNewtWorld::MainConstructor()
 	// DEVIATION: 'cdhl belongs to the card server's world, whose part
 	// handler is not made there (CardServer.h)
 	InitCardPartHandler();
+	// the tablet's calibration read back, unless the setup assistant is
+	// still to ask for it
+	if (!EQRef(GetPreference(RSSYMblessedapp), RSSYMsetup))
+		LoadInkerCalibration();
 	StartDrawing(nil, nil);
 	return noErr;
 }
@@ -753,13 +758,10 @@ HandleRunScriptEvent(TRunScriptEvent* event)
 	message to the inker's port rather than a call.
 ------------------------------------------------------------------------------*/
 
-// ROM 0x0c101658 gTheInkerPort
-// DEVIATION: the host has no inker task - hal/host/HostTablet.h reads the
-// tablet buffer on the wait hook instead (Notebook.cpp's InitInker) - so
-// there is no port to send to and the busy box never appears.  Everything
-// that asks for it goes through BusyBoxSend, which does nothing while this
-// is nil, exactly as it does on the Newton before the inker is started.
-TUPort*	gTheInkerPort = nil;
+// (gTheInkerPort, ROM 0x0c101658, is recognition/InkerNatives.cpp's:
+// InkerPort looks the inker up and keeps it there.  Until then the busy
+// box is sent nowhere, as on the Newton before the inker is asked for.
+// NOT YET RECONSTRUCTED: the inker's busy box itself, TBusyBox.)
 
 
 // ROM 0x0030dd60 BusyBoxSend__Fl
@@ -920,16 +922,13 @@ FEventPause(RefArg /*rcvr*/, RefArg tickle)
 // to go on (FMinimumBatteryCheck sleeps again if there is not), and the
 // tablet's calibration is read back unless the blessed application is
 // the setup assistant, which is still asking for it.
-//
-// NOT YET RECONSTRUCTED: LoadInkerCalibration 0x0013fc2c, which reads
-// the calibration back.
 Ref
 FPowerOff(RefArg rcvr)
 {
 	long reason = SleepUntilNextWakeup();
 	FMinimumBatteryCheck(rcvr);
 	if (!EQRef(GetPreference(RSSYMblessedapp), RSSYMsetup))
-		;		// NOT YET RECONSTRUCTED: LoadInkerCalibration()
+		LoadInkerCalibration();
 	gLastWakeupTime = GetGlobalTime();
 	switch (reason)
 	{

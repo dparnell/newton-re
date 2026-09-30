@@ -23,13 +23,16 @@ add_library(hal_host_display STATIC
 target_link_libraries(hal_host_display PUBLIC newton_config protocols qd)
 target_include_directories(hal_host_display PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/host)
 
-# The host's tablet: pen records put into the recogniser's tablet buffer
-# (recognition/TabletBuffer.h) from a window or a test, and the wait hook
-# that stands in for the inker task.
+# The host's tablet: its driver (a TTabletDriver sampling the window's pen
+# through a host interrupt source, calibrated as the ROM's), the test pen's
+# records put straight into the recogniser's tablet buffer
+# (recognition/TabletBuffer.h), and the wait hook that stands in for the
+# inker task without the OS.
 add_library(hal_host_tablet STATIC
     host/HostTablet.cpp
+    host/HostTabletDriver.cpp
 )
-target_link_libraries(hal_host_tablet PUBLIC newton_config recognition os600_user)
+target_link_libraries(hal_host_tablet PUBLIC newton_config recognition os600_user hal_host qd)
 target_include_directories(hal_host_tablet PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/host)
 
 # The host's sound output: a PSoundDriver (sound/SoundDriver.h) whose

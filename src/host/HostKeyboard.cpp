@@ -116,8 +116,9 @@ HostKeyboardToolTask(void)
 // the window's shims (host/win32/HostWindow.cpp calls these with C linkage)
 extern "C" {
 
-// (the pen is the tablet's own: while the journal plays, the tablet is
-//  bypassed and it is ignored; while the machine sleeps a tap wakes it -
+// (the pen is the tablet's own - the host's tablet driver samples it and
+//  the calibration applies, hal/host/HostTablet.h; while the journal plays
+//  the driver ignores it; while the machine sleeps a tap wakes it -
 //  the host's power switch within the pen's reach, hal/host/HostPower.h -
 //  and that stroke goes no further)
 static std::atomic<bool>	gHostPenWoke(false);
@@ -131,18 +132,15 @@ HostWindowPenDown(long x, long y)
 		HostPowerWake(kHostPowerEventSwitch);
 		return;
 	}
-	if (HostTabletBypassed())
-		return;
-	HostTabletPenState(true);
-	HostTabletPenDown(x, y, 0);
+	HostTabletRawPenDown(x, y);
 }
 
 void
 HostWindowPenMove(long x, long y)
 {
-	if (HostTabletBypassed() || gHostPenWoke.load())
+	if (gHostPenWoke.load())
 		return;
-	HostTabletPenMove(x, y, 3);
+	HostTabletRawPenMove(x, y);
 }
 
 void
@@ -150,10 +148,7 @@ HostWindowPenUp(void)
 {
 	if (gHostPenWoke.exchange(false))
 		return;
-	if (HostTabletBypassed())
-		return;
-	HostTabletPenState(false);
-	HostTabletPenUp(0);
+	HostTabletRawPenUp();
 }
 
 // F12 is the power switch and F11 the backlight button (the Windows

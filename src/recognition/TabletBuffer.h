@@ -16,10 +16,8 @@
 				for TBCPollTablet, the calibration screen's) keeps the last
 				sample instead of buffering.
 
-				NOT YET RECONSTRUCTED: the tablet driver itself (gTabletDriver,
-				a TTabletDriver protocol - TResistiveTablet; GetSampleRate,
-				the calibration, the orientation), TBCTabletBufferInit's
-				inker port and the inker wake-ups (TBCWakeUpInker).
+				The driver that fills it is TabletDriver.h's; the inker
+				that reads it is Inker.h's, woken by TBCWakeUpInker.
 
 	Reconstructed from the MP2x00 US ROM (0x002501e4-0x002507fc,
 	0x000380f4-0x00038348); each function cites its origin.
@@ -56,22 +54,21 @@ Boolean	TabletBufferEmpty(void);						// ROM 0x002507b0 TabletBufferEmpty__Fv - 
 
 // the writer's side
 long	TBCInsertTabletSample(ULong sample, ULong time);	// ROM 0x00250430 TBCInsertTabletSample__FUlT1 - ==> 0, or -56006 (kTabletBufferFull) when the ring is full; time 0: now
-long	InsertTabletSample(ULong sample, ULong time);	// ROM 0x0025077c InsertTabletSample__FUlT1 - ... and the inker woken (NOT YET)
+long	InsertTabletSample(ULong sample, ULong time);	// ROM 0x0025077c InsertTabletSample__FUlT1 - ... and the inker woken
+void	TBCWakeUpInker(ULong delay);					// ROM 0x002503a4 TBCWakeUpInker__FUl - {'newt, 'inkr, 2} to the inker, now or in delay ms
+void	TBCWakeUpInkerFromInterrupt(ULong delay);		// ROM 0x00250320 TBCWakeUpInkerFromInterrupt__FUl - ... from an interrupt
 
 // The tablet bypassed: its own samples ignored while something else - the
 // journal - puts samples in (the ROM's TResistiveTablet goes into its state
 // 8, refused while the pen is down).  ==> 0, or -1.
 long	StartBypassTablet(void);						// ROM 0x0025075c StartBypassTablet__Fv
 long	StopBypassTablet(void);							// ROM 0x0025076c StopBypassTablet__Fv - -1 when it was not bypassed
-// DEVIATION: the ROM asks the tablet driver (gTabletDriver, a TTabletDriver
-// protocol - NOT YET); the host's tablet (hal/host/HostTablet.h) answers
-// through this, and with none the tablet cannot be bypassed
-extern long	(*gTabletDriverBypass)(Boolean start);
+// (the driver's: TabletDriver.h)
 // The tablet driver told the machine is going to sleep and has woken
-// (CyclePower).  NOT YET RECONSTRUCTED: the tablet driver (its slots
-// +0x18 ShutDown and +0x14 WakeUp); the host's pen needs neither.
+// (CyclePower): a stroke under way ended, the sampling stopped and started.
 void	TabShutDown(void);								// ROM 0x002507c8 TabShutDown
 void	TabWakeUp(void);								// ROM 0x0025074c TabWakeUp
+void	FlushTabletBuffer(void);							// ROM 0x002507bc FlushTabletBuffer__Fv - TBCFlushTabletBuffer
 void	TBCFlushTabletBuffer(void);						// ROM 0x00250630 TBCFlushTabletBuffer__Fv - emptied
 void	TBCFlushInkerBuffer(void);						// ROM 0x00250648 TBCFlushInkerBuffer__Fv - the reader catches up
 void	TBCSetTabletPolling(Boolean polling);			// ROM 0x00250270 TBCSetTabletPolling__FUc

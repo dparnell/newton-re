@@ -1,0 +1,137 @@
+// Align Pen (ctests host.NewtonAlignPen and .restart): the tablet's
+// calibration, made on a panel that is askew and kept on the store.
+//
+// The host's panel (hal/host/HostTablet.h) is put askew first - it reads
+// a point 4% to the right of where it is per 100 pixels, 24 pixels to the
+// right of that, 4% short going down and 14 pixels low - so a tap reads
+// wrong under the factory calibration.  Then:
+//   1. the Setup assistant, walked through: leaving its Welcome page it
+//      shows the calibration screen, whose three targets newton taps
+//      through the skewed panel as a person would; the calibration it
+//      works out is kept in the System soup
+//   2. a tap through the panel lands where it was made (a view of our own
+//      records the first point of the stroke it gets)
+//   3. the factory calibration put back (SetCalibration): the same tap
+//      lands tens of pixels off
+//   4. CalibrateTablet() - what Prefs' Align Pen button does: the targets
+//      again, and the tap lands true again
+//   5. the machine put to sleep with the power switch and woken by a tap:
+//      the tablet driver shut down and woken, the calibration unchanged
+// Run again on the same store (the .restart ctest) the machine comes up
+// with the calibration read back from the store: no calibration screen,
+// and the tap lands true.
+//
+//   build/host/host/newton --display 320x480 --erase --store x.store \
+//       --headless 200 --script src/host/demo/alignpen.ns
+
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
+
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+HostTabletSkew(24, 14, 1.04, 0.96);
+
+penSpot := nil;
+penView := nil;
+
+// a view over most of the screen that notes where a click began
+openPenView := func() begin
+	penView := AddView(GetRoot(), {
+		viewClass: 74,
+		viewFlags: 1 + 0x200,						// visible, clickable
+		viewBounds: {left: 10, top: 60, right: 310, bottom: 420},
+		viewFormat: 0,
+		viewClickScript: func(unit) begin
+			penSpot := [GetPoint(0, unit), GetPoint(1, unit)];
+			true;
+		end});
+	penView:Dirty();
+end;
+
+// a tap on the panel at (x, y); then andThen(dx, dy), how far off it read
+tapPanel := func(x, y, andThen) begin
+	penSpot := nil;
+	HostTabletTap(x, y, 80);
+	call waitFor with ("alignpen: the tap", func() penSpot, func() begin
+		if penSpot then
+			call andThen with (penSpot[0] - x, penSpot[1] - y)
+		else
+			call andThen with (999, 999);
+	end, 30);
+end;
+
+near := func(dx, dy) Abs(dx) <= 2 and Abs(dy) <= 2;
+report := func(what, dx, dy)
+	Print("alignpen: " & what & " (" & NumberStr(dx) & ", " & NumberStr(dy) & ")");
+
+storedCalibration := func() begin
+	local soup := GetStores()[0]:GetSoup("System");
+	soup and soup:Query({type: 'index, indexPath: 'tag, beginKey: "Calibration", endKey: "Calibration"}):Entry();
+end;
+
+finish := func(ok) begin
+	Print("alignpen: done, " & (if ok then "0" else "1") & " failed");
+	HostQuit();
+end;
+
+// step 5: a sleep and a wake
+sleepAndWake := func() begin
+	local sleeps := HostTabletShutDowns();
+	local before := HostSleepCount();
+	HostWakeAfter(1500);
+	HostPowerSwitch();
+	call waitFor with ("alignpen: asleep", func() HostSleepCount() > before, func() begin
+		local slept := HostTabletShutDowns() > sleeps;
+		call tapPanel with (200, 300, func(dx, dy) begin
+			local ok := slept and call near with (dx, dy);
+			call report with (if ok then "the tablet slept and woke, and reads true" else "FAILED after the sleep", dx, dy);
+			call finish with (ok);
+		end);
+	end, 30);
+end;
+
+firstRun := func() begin
+	call walkSetup with (name, func() begin
+		local shown := HostTabletCalibrationTarget();
+		Print("alignpen: the Setup assistant showed the calibration screen: " & (if shown then "yes" else "FAILED"));
+		Print("alignpen: the calibration is kept in the System soup: " & (if call storedCalibration with () then "yes" else "FAILED"));
+		call openPenView with ();
+		call tapPanel with (160, 250, func(dx, dy) begin
+			call report with (if call near with (dx, dy) then "after Setup's calibration a tap reads true" else "FAILED after Setup's calibration", dx, dy);
+			local aligned := GetCalibration();
+			// the factory calibration: an eighth of a pixel a step, no offset
+			local factory := SetLength(SetClass(Clone(aligned), 'calibration), 20);
+			for i := 0 to 19 do StuffByte(factory, i, 0);
+			StuffByte(factory, 2, 0x20);
+			StuffByte(factory, 6, 0x20);
+			StuffByte(factory, 16, 1);
+			StuffByte(factory, 17, 1);
+			SetCalibration(factory);
+			call tapPanel with (160, 250, func(dx, dy) begin
+				call report with (if not call near with (dx, dy) then "with the factory calibration the skewed panel reads off" else "FAILED: the factory calibration read true", dx, dy);
+				CalibrateTablet();						// Prefs' Align Pen
+				call tapPanel with (160, 250, func(dx, dy) begin
+					call report with (if call near with (dx, dy) then "Align Pen put it right" else "FAILED after Align Pen", dx, dy);
+					call sleepAndWake with ();
+				end);
+			end);
+		end);
+	end);
+end;
+
+restartRun := func() begin
+	call waitFor with ("alignpen: the Notepad", func() GetRoot().paperroll and GetRoot().paperroll.viewCObject, func() begin
+		local shown := HostTabletCalibrationTarget();
+		Print("alignpen: after the restart the calibration screen was " & (if shown then "FAILED shown" else "not shown"));
+		call openPenView with ();
+		call tapPanel with (160, 250, func(dx, dy) begin
+			local ok := not shown and call near with (dx, dy);
+			call report with (if ok then "restart: the kept calibration reads true" else "FAILED after the restart", dx, dy);
+			Print("alignpen: restart done, " & (if ok then "0" else "1") & " failed");
+			HostQuit();
+		end);
+	end, 60);
+end;
+
+if call storedCalibration with () then
+	call restartRun with ()
+else
+	call firstRun with ();

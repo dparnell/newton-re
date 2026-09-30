@@ -106,6 +106,7 @@
 #include "hal/host/Host.h"
 #include "HostStores.h"
 #include "HostPackages.h"
+#include "HostTablet.h"
 #include "HostCard.h"
 #include "HostFlash.h"
 #include "HostHeapCheck.h"
@@ -560,6 +561,11 @@ main(int argc, char** argv)
 	HostConfigureNewtWorld(romImage, heapSize, width, height, depth);
 	gNewtBootTestScript = script;
 	gScriptPath = script;
+	// a script's pen is a test's: the calibration screen's targets (the
+	// Setup assistant's, a rotation's) are tapped for it
+	// (hal/host/HostTablet.h; HostTabletAutoCalibrate(nil) to tap them itself)
+	if (script != nil)
+		HostTabletAutoCalibrate(true);
 	gNewtHostBoot = NewtonBoot;
 	gNewtHostPreMain = NewtonPreMain;
 	NewtInstallUserMain();

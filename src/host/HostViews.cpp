@@ -166,6 +166,55 @@ FPacePen(RefArg /*rcvr*/, RefArg on)
 }
 
 
+// The panel's pen (hal/host/HostTablet.h), which goes through the host's
+// tablet driver and its calibration where PenDown/PenUp's test pen does
+// not.  HostTabletTap(x, y, milliseconds): the pen held on the panel at
+// (x, y) for so long.  HostTabletSkew(dx, dy, sx, sy): the panel put
+// askew, reading the point (x*sx+dx, y*sy+dy).  HostTabletAutoCalibrate
+// (on): the calibration screen's targets tapped as they appear.
+// HostTabletCalibrationTarget(): [h, v] of the last target it showed, or
+// nil.  HostTabletShutDowns(): how many sleeps the driver has been shut
+// down for.
+static Ref
+FHostTabletShutDowns(RefArg /*rcvr*/)
+{
+	return MAKEINT(HostTabletShutDowns());
+}
+
+static Ref
+FHostTabletTap(RefArg /*rcvr*/, RefArg x, RefArg y, RefArg milliseconds)
+{
+	HostTabletRawTap(RINT(x), RINT(y), (ULong) RINT(milliseconds));
+	return NILREF;
+}
+
+static Ref
+FHostTabletSkew(RefArg /*rcvr*/, RefArg dx, RefArg dy, RefArg sx, RefArg sy)
+{
+	HostTabletSetSkew(CoerceToDouble(dx), CoerceToDouble(dy), CoerceToDouble(sx), CoerceToDouble(sy));
+	return NILREF;
+}
+
+static Ref
+FHostTabletAutoCalibrate(RefArg /*rcvr*/, RefArg on)
+{
+	HostTabletAutoCalibrate(NOTNIL(on));
+	return NILREF;
+}
+
+static Ref
+FHostTabletCalibrationTarget(RefArg /*rcvr*/)
+{
+	long h, v;
+	if (!HostTabletCalibrationTargetAt(&h, &v))
+		return NILREF;
+	RefVar target(MakeArray(2));
+	SetArraySlot(target, 0, MAKEINT(h));
+	SetArraySlot(target, 1, MAKEINT(v));
+	return target;
+}
+
+
 static Ref
 FIdleStrokes(RefArg /*rcvr*/)
 {
@@ -198,6 +247,11 @@ HostRegisterViewFunctions(void)
 	SetFrameSlot(functions, RefVar(Intern((char*) "PenUp")), RefVar(MakeCFunction((void*) FPenUp, 0, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "IdleStrokes")), RefVar(MakeCFunction((void*) FIdleStrokes, 0, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "PacePen")), RefVar(MakeCFunction((void*) FPacePen, 1, nil)));
+	SetFrameSlot(functions, RefVar(Intern((char*) "HostTabletTap")), RefVar(MakeCFunction((void*) FHostTabletTap, 3, nil)));
+	SetFrameSlot(functions, RefVar(Intern((char*) "HostTabletSkew")), RefVar(MakeCFunction((void*) FHostTabletSkew, 4, nil)));
+	SetFrameSlot(functions, RefVar(Intern((char*) "HostTabletAutoCalibrate")), RefVar(MakeCFunction((void*) FHostTabletAutoCalibrate, 1, nil)));
+	SetFrameSlot(functions, RefVar(Intern((char*) "HostTabletShutDowns")), RefVar(MakeCFunction((void*) FHostTabletShutDowns, 0, nil)));
+	SetFrameSlot(functions, RefVar(Intern((char*) "HostTabletCalibrationTarget")), RefVar(MakeCFunction((void*) FHostTabletCalibrationTarget, 0, nil)));
 	HostRegisterCardFunctions();
 }
 

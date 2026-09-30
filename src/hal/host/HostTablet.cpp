@@ -5,6 +5,9 @@
 */
 
 #include "Journal.h"
+#include "TabletDriver.h"
+#include "Inker.h"
+#include "Rects.h"
 #include "HostTablet.h"
 #include "TabletBuffer.h"
 #include "StrokeQueue.h"
@@ -37,6 +40,8 @@ Enqueue(ULong sample, ULong time)
 	gHostTabletRing[gHostTabletTail].sample = sample;
 	gHostTabletRing[gHostTabletTail].time = time;
 	gHostTabletTail = next;
+	if (gInker != nil)
+		TBCWakeUpInker(0);		// (the inker feeds it, an idle at a time)
 }
 
 static Boolean
@@ -50,15 +55,28 @@ Dequeue(HostTabletRecord* record)
 }
 
 
-static long	HostTabletBypass(Boolean start);
-
+// The buffer made ready and the wait hook installed; the host's tablet
+// driver registered for TabInitialize (the inker's) to find, and made and
+// put in use straight away for a test with no inker (DEVIATION: the ROM
+// always has the inker make it; when the inker starts, TabInitialize makes
+// the one it uses in place of this).
 void
 HostTabletInit(void)
 {
 	TBCTabletBufferInit(nil);
 	gHostTabletHead = gHostTabletTail = 0;
 	gHostWaitHook = HostTabletWait;
-	gTabletDriverBypass = HostTabletBypass;
+	HostTabletRegisterDriver();
+	if (gTabletDriver == nil)
+	{
+		gTabletDriver = HostTabletMakeDriver();
+		if (gTabletDriver != nil)
+		{
+			Rect screen;
+			SetRect(&screen, 0, 0, 320, 480);
+			gTabletDriver->Init(screen);
+		}
+	}
 }
 
 
@@ -73,42 +91,11 @@ HostTabletSample(long x, long y, ULong pressure)
 }
 
 
-// The host's tablet driver's state, as TResistiveTablet keeps its own:
-// 0 idle, 1 the pen down, 8 bypassed.  StartBypassTablet
-// (TResistiveTablet::StartBypassTablet 0x0005ad04) is refused while the
-// pen is down; StopBypassTablet (0x0005ad50) ends it (the driver's PenUp,
-// which the host has no record to make for).
-static long	gHostTabletState = 0;
-
-static long
-HostTabletBypass(Boolean start)
-{
-	if (start)
-	{
-		if (gHostTabletState != 0 && gHostTabletState != 8)
-			return -1;
-		gHostTabletState = 8;
-		return 0;
-	}
-	if (gHostTabletState != 8)
-		return -1;
-	gHostTabletState = 0;
-	return 0;
-}
-
-
+// The tablet bypassed (the journal playing): the window's pen is ignored.
 Boolean
 HostTabletBypassed(void)
 {
-	return gHostTabletState == 8;
-}
-
-
-void
-HostTabletPenState(Boolean down)
-{
-	if (gHostTabletState != 8)
-		gHostTabletState = down ? 1 : 0;
+	return HostTabletDriverBypassed();
 }
 
 
@@ -166,7 +153,6 @@ HostTabletPenUp(ULong time)
 // also what the window does with a real pen.  Without that, a script's
 // pen would never reach the ROM's own tracking loops: they read the
 // stroke over and over without waiting, and would spin for ever.
-static Boolean				gInkerRunning = false;
 // A script that wants its pen to arrive a sample a tick, as a real pen's
 // does - to be held down while a view tracks it - asks for the records
 // to be paced: they stay queued and the inker feeds one per tick.  (A
@@ -178,7 +164,7 @@ static Boolean				gPaced = false;
 static Boolean
 FeedDirectly(void)
 {
-	return gInkerRunning && !gPaced;
+	return gInker != nil && !gPaced;
 }
 
 
@@ -277,60 +263,30 @@ HostTabletWait(ULong ticks)
 
 
 /*------------------------------------------------------------------------------
-	T h e   i n k e r ' s   s t a n d - i n
+	W i t h   t h e   i n k e r
 ------------------------------------------------------------------------------*/
 
-static std::atomic<bool>	gInkerStop(false);
-static TUPort*				gInkerNewtPort = nil;
-
-// the task: every tick the queued records (a test's) and the buffer read
-// into the stroke queue; when a stroke changed, the newt world woken with
-// the inker's event - {'newt, 'idle, 'inkr}, sent asynchronously to the
-// Newt port as TInker::LCDEntry 0x002150ec does after RealStrokeTime -
-// so its event loop idles the strokes (the clicks reach the views) even
-// when its idle timer is stopped
-static void
-HostInkerMain(void)
+// The inker's idle (recognition/Inker.h's gInkerHostIdleHook): a paced
+// pen's next queued record fed into the buffer - the inker reads it - so
+// the records arrive one per idle while the pen is down.  ==> whether any
+// are left, which keeps the inker idling.
+static Boolean
+HostTabletInkerIdle(void)
 {
-	TUAsyncMessage message;
-	message.Init(true);
-	static ULong event[4] = { 'newt', 'idle', 'inkr', 0 };
-	while (!gInkerStop.load())
+	HostTabletRecord record;
+	if (!Dequeue(&record))
+		return false;
+	if (record.sample != kTabletNoSample)
 	{
-		Wait(1);
-		HostTabletPump();
-		if (StrokeTime() != 0 && gInkerNewtPort != nil)
-			gInkerNewtPort->Send(&message, event, sizeof(event), 0);
+		InsertTabletSample(record.sample, record.time);
+		HostTabletRecord pt;
+		if (record.sample == kTabletPenDown && Dequeue(&pt))
+			InsertTabletSample(pt.sample, pt.time);
 	}
-	gInkerRunning = false;
+	return HostTabletQueued() != 0;
 }
 
-
-// TInker::SetNewtPort 0x002150e4 (the ROM's inker's) - the port woken
-void
-HostInkerSetNewtPort(TUPort* port)
+static struct HostTabletInkerHook
 {
-	gInkerNewtPort = port;
-}
-
-
-Boolean
-HostInkerStart(void)
-{
-	if (!gOSIsRunning || gCurrentTask == nil || gInkerRunning)
-		return false;
-	gInkerStop.store(false);
-	TUTask task;
-	if (task.Init((TaskProcPtr) HostInkerMain, 0x2000, 0, nil, kUserTaskPriority, 'inkr') != noErr)
-		return false;
-	gInkerRunning = true;
-	task.Start();
-	return true;
-}
-
-
-void
-HostInkerStop(void)
-{
-	gInkerStop.store(true);
-}
+	HostTabletInkerHook()	{ gInkerHostIdleHook = HostTabletInkerIdle; }
+} sHostTabletInkerHook;

@@ -128,6 +128,9 @@ add_library(recognition STATIC
     RosCITables.cpp
     Rosetta.cpp
     TabletBuffer.cpp
+    TabletDriver.cpp
+    Inker.cpp
+    InkerNatives.cpp
     StrokeQueue.cpp
     StrokeCentral.cpp
     HandleUnit.cpp

@@ -9,6 +9,8 @@
 #include "ParseUtter.h"
 #include "Dates.h"
 #include "Notebook.h"
+#include "Inker.h"
+#include "KernelGlobals.h"
 #include "print/Printer.h"
 #include "CICCodec.h"
 #include "InkFont.h"
@@ -159,17 +161,17 @@ TNotebook::InitOffscreenBitmaps(void)
 
 
 // ROM 0x00146ca8 InitInker__9TNotebookFv
-// The inker (a TInker, 'inkr, over the Newt port) started as a fork.
-// NOT YET RECONSTRUCTED: TInker.  Host: the tablet's stand-in - a task
-// reading the tablet buffer into the stroke queue every tick when the OS
-// runs (waking the world through the Newt port when a stroke changes, as
-// the ROM's inker does), the wait hook otherwise (hal/host/HostTablet.h).
+// The inker (recognition/Inker.h, the 'inkr world) started, waking the
+// Newt port as strokes change.  Host: the tablet's host side made ready
+// first - the wait hook for the tests without the OS, the host's tablet
+// driver registered for the inker's TabInitialize to find
+// (hal/host/HostTablet.h).
 void
 TNotebook::InitInker(void)
 {
 	HostTabletInit();
-	HostInkerSetNewtPort(gNewtPort);
-	HostInkerStart();
+	if (gOSIsRunning)		// (host: a test of the application without the OS has no tasks)
+		StartInker(gNewtPort);
 }
 
 

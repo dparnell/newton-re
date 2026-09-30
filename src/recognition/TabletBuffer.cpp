@@ -10,6 +10,8 @@
 #include "GestaltSources.h"
 #include "NewtonTime.h"
 #include "hal/Atomic.h"
+#include "UserPorts.h"
+#include "AEvents.h"
 
 ULong	gTabData = 0;						// ROM 0x0c107390 gTabData
 ULong	gTabletInkerIndex = 0;				// (0x0c10445c)
@@ -20,6 +22,9 @@ static Boolean	gTBCPollReady = false;		// ROM 0x0c104ea0 gTBCPollReady
 static Boolean	gTBCPenUp = true;			// ROM 0x0c104ea8 gTBCPenUp
 static Boolean	gTBCBypassTablet = false;	// ROM 0x0c104eac gTBCBypassTablet
 static ULong	gTBCPollSample = 0;			// ROM 0x0c104ea4 gTBCPollSample
+static TUPort*			gTBCInkerPort = nil;			// (0x0c107784) the inker's port, woken as samples come
+static TUAsyncMessage*	gTBCInkerMessage = nil;		// (0x0c107788)
+static TAEvent*			gTBCInkerEvent = nil;		// (0x0c10778c) {'newt, 'inkr, 2}
 TabletCollectState	gTabletCollect = { false, 0, 0, 0, kPenStateIdle, 0, 0, 0 };	// ROM 0x0c1008a8 collect
 
 const long kTabletBufferFull = -56006;
@@ -109,55 +114,77 @@ TBCInsertTabletSample(ULong sample, ULong time)
 
 
 // ROM 0x0025077c InsertTabletSample__FUlT1
-// The tablet driver's entry: the record buffered and the inker woken
-// (NOT YET RECONSTRUCTED: TBCWakeUpInker - the host's stroke world polls).
+// A record put in the buffer from a task, and the inker woken.
 long
 InsertTabletSample(ULong sample, ULong time)
 {
-	return TBCInsertTabletSample(sample, time);
+	long err = TBCInsertTabletSample(sample, time);
+	TBCWakeUpInker(0);
+	return err;
 }
 
 
-long	(*gTabletDriverBypass)(Boolean start) = nil;
-
-
-// ROM 0x002507c8 TabShutDown
-// The tablet driver shut down for the sleep.  NOT YET RECONSTRUCTED: the
-// driver (gTabletDriver's slot +0x18).
-void
-TabShutDown(void)
-{ }
-
-
-// ROM 0x0025074c TabWakeUp
-// ... and woken again (slot +0x14).  NOT YET RECONSTRUCTED likewise.
-void
-TabWakeUp(void)
-{ }
-
-
-// ROM 0x0025075c StartBypassTablet__Fv
-long
-StartBypassTablet(void)
+// The inker's wake-up: {'newt, 'inkr, 2} sent to its port asynchronously,
+// urgently, now or so many 1 ms steps (0xe66 ticks) from now.  (Nothing
+// when there is no inker - a host without the OS.)
+static void
+WakeUpInker(ULong delay, Boolean fromInterrupt)
 {
-	return gTabletDriverBypass != nil ? gTabletDriverBypass(true) : -1;
+	if (gTBCInkerPort == nil || gTBCInkerEvent == nil)
+		return;
+	TTime when;
+	TTime* future = nil;
+	if (delay != 0)
+	{
+		when = TimeFromNow(delay * 0xe66);
+		future = &when;
+	}
+	((ULong*) (gTBCInkerEvent + 1))[0] = 2;
+	if (fromInterrupt)
+		SendForInterrupt(gTBCInkerPort->fId, gTBCInkerMessage->GetMsgId(), 0, gTBCInkerEvent, sizeof(TAEvent) + 2 * sizeof(ULong),
+						 kMsgType_FromInterrupt | 1, 0, future, true);
+	else
+		gTBCInkerPort->Send(gTBCInkerMessage, gTBCInkerEvent, sizeof(TAEvent) + 2 * sizeof(ULong), 0, future, 1, true);
 }
 
 
-// ROM 0x0025076c StopBypassTablet__Fv
-long
-StopBypassTablet(void)
+// ROM 0x00250320 TBCWakeUpInkerFromInterrupt__FUl
+void
+TBCWakeUpInkerFromInterrupt(ULong delay)
 {
-	return gTabletDriverBypass != nil ? gTabletDriverBypass(false) : -1;
+	WakeUpInker(delay, true);
+}
+
+
+// ROM 0x002503a4 TBCWakeUpInker__FUl
+void
+TBCWakeUpInker(ULong delay)
+{
+	WakeUpInker(delay, false);
 }
 
 
 // ROM 0x002500b0 TBCTabletBufferInit__FP6TUPort
-// The buffer emptied and the modes reset.  NOT YET RECONSTRUCTED: the
-// inker's port and the 'newt/'inkr event that wakes it.
+// The buffer emptied and the modes reset, and the inker's port kept with
+// the event and the message that wake it.  (The ROM makes a new event and
+// message each time; the host keeps the first.)
 void
-TBCTabletBufferInit(TUPort* /*inkerPort*/)
+TBCTabletBufferInit(TUPort* inkerPort)
 {
+	gTBCInkerPort = inkerPort;
+	if (gTBCInkerEvent == nil)
+	{
+		gTBCInkerEvent = (TAEvent*) new ULong[(sizeof(TAEvent) / sizeof(ULong)) + 2];
+		gTBCInkerEvent->fAEventClass = kNewtEventClass;
+		gTBCInkerEvent->fAEventID = kInkerEventID;
+		((ULong*) (gTBCInkerEvent + 1))[0] = 2;
+		((ULong*) (gTBCInkerEvent + 1))[1] = 0;
+	}
+	if (inkerPort != nil && gTBCInkerMessage == nil)
+	{
+		gTBCInkerMessage = new TUAsyncMessage;
+		gTBCInkerMessage->Init(true);
+	}
 	TBCFlushTabletBuffer();
 	gTBCOnlyPollTablet = false;
 	gTBCPollReady = false;
@@ -182,6 +209,14 @@ Boolean
 TabletBufferEmpty(void)
 {
 	return TBCTabletBufferEmpty();
+}
+
+
+// ROM 0x002507bc FlushTabletBuffer__Fv
+void
+FlushTabletBuffer(void)
+{
+	TBCFlushTabletBuffer();
 }
 
 
@@ -390,40 +425,6 @@ void
 IncStrokerIndex(ULong count)
 {
 	TBCIncStrokerIndex(count);
-}
-
-
-// ROM 0x00250700 GetTabletResolution__FPlT1
-// How finely the tablet reads, Fixed samples an inch each way: the
-// driver's (TResistiveTablet::GetTabletResolution 0x0005ac9c answers 800
-// both ways; NOT YET RECONSTRUCTED: gTabletDriver, so the host answers
-// that constant).
-void
-GetTabletResolution(long* x, long* y)
-{
-	*y = 800 << 16;
-	*x = 800 << 16;
-}
-
-// host: the name server's way to the tablet (GestaltSources.h)
-static struct TabletGestaltSource
-{
-	TabletGestaltSource()	{ gGestaltTabletResolution = GetTabletResolution; }
-} sTabletGestaltSource;
-
-
-// ROM 0x002507fc GetSampleRate__Fv
-// The tablet driver's sampling *interval*, despite the name: how many
-// ticks of the 3.6864 MHz tablet timer (0x384000 a second) go between
-// two samples, which is why everything that uses it divides 0x384000 by
-// it.  TResistiveTablet keeps it at +0x64 (GetSampleRate 0x0005b714) and
-// sets it to 0xb400 whenever the pen goes up (PenUp 0x0005ae04,
-// HandleSample 0x0005afa0): 80 samples a second.  (NOT YET
-// RECONSTRUCTED: gTabletDriver, so the host answers that constant.)
-ULong
-GetSampleRate(void)
-{
-	return 0xb400;
 }
 
 

@@ -12,7 +12,10 @@
 //   walkSetup(name, andThen)
 //                           the Setup assistant a fresh store starts with,
 //                           walked through to the Notepad: Continue on the
-//                           Welcome page, the name typed (ADB key codes),
+//                           Welcome page (leaving it, the assistant shows
+//                           the tablet's calibration screen: its targets
+//                           are tapped through the host's panel,
+//                           HostTabletAutoCalibrate), the name typed (ADB key codes),
 //                           then Continue each time the page has changed,
 //                           and Done on the last - then andThen()
 //
@@ -60,6 +63,7 @@ walkSetup := func(name, andThen) begin
 			call waitFor with ("setup page " & was, func() call page with () <> was, next, 60);
 		end;
 	end;
+	HostTabletAutoCalibrate(true);				// (newton's default for a script already)
 	call waitFor with ("setup", setupOpen, func() begin
 		local was := call page with ();
 		call tapAt with (293, 468);					// past "Welcome"
