@@ -334,9 +334,11 @@ reach, hardware, or waiting on another area:
   NewtsCape's `JPEGConvert:NewtsCape` (`AddFile`) and answers nil without
   it; NewtsCape is not among the fixtures.  NOT YET: a RefVar
   handle a native keeps in a heap object past its call (the ARM
-  interpreter's handle table is per call); in `TParagraphView::SetupDone`,
-  `CheckStyles`, `ProcessStyles`, text flag 0x20's line alignment and
-  dropping the caches of a paragraph its parents do not show.
+  interpreter's handle table is per call).
+- **Printing a long paragraph across pages**: reflow's cut of a paragraph
+  that calculates its bounds waits on `LineLoop`'s clip (the host keeps
+  lines outside the view's bounds); one that does not calculate them is
+  never cut - being checked against the ROM.
 - The printing path's outlined paths for ink (`CSMakePathsGroup`,
   `FramePaths`), which want the PostScript path machinery.
 - **How well it reads.**  Rosetta: a perfectly round synthetic "c", as

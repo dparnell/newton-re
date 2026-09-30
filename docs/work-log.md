@@ -237,6 +237,24 @@ is the same value spelt so that it cannot be read two ways.
   notBic loops never advance the mask pointer; `ScaleStdRRect` scales the
   corner oval crosswise on a fax.
 
+## 2026-09-30: a paragraph's SetupDone finished
+
+- `TParagraphView::SetupDone` as the ROM's (0x17f5d8, 94c02bb8):
+  `CheckStyles` (an ink word, or a face that draws past its width),
+  the caches made for a paragraph that calculates its bounds and dropped
+  again when its parents do not show it (the walk stopping at a print or
+  remote view), none for one that does not (made when first asked, as
+  the ROM's other callers do), text flag 0x20 (the first baseline put on
+  the page's lines, `AlignToLineSpacing`), `ProcessStyles` (ink words
+  read where the view's recognition keeps none; `InPrintOrPreview`).
+- Exposed: the host measured a move for `RealDraw` from `fCachedBounds`,
+  set only by `CreateAllCaches`, so lines laid out again after a view
+  moved were offset twice - Internet Setup's Local IP Address slip lost
+  its fields; `FillAllCaches` now notes where it lays them out.
+- Reflow no longer cuts a long paragraph that does not calculate its
+  bounds - by the agent's reading of the ROM, such a piece has no lines
+  when `OffsetPastVisible` is asked; `host.NewtonReflow` expects 3 groups.
+
 ## 2026-09-30: live ink and the busy box
 
 - The inker's live ink (c7129677): `TInker::Convert` takes the tablet
