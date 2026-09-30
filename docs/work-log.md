@@ -9,6 +9,29 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: notyet.py's views and stores markers
+
+- Stores (81d49b64): `EntrySize` counts an entry's large binaries;
+  `FillChunkArray` and `LODefaultBackup` report progress to their
+  `TLOCallback` (the part fields the ROM leaves as stack rubbish are
+  nought here).
+- ViewAutopsy's slow motion: offscreen bits drawn on the screen, view
+  effects left out (0c702ffe).
+- `AddDelayedAction` re-arms the newt world's idle timer as the ROM's
+  does (7556e88f).
+- Views (e3672e07): a paragraph hilite keeps a copy of its text (ROM
+  quirk kept: `CopyFrom` does not copy the bounds); `SetValue` takes a
+  rich string apart and an emptied paragraph is removed by its page;
+  `GetStrokeBundleFromCommand` answers the unit's word info; a key event
+  sets `gTickleTime`; `CheckForCaretRemoval`; strokes waiting to become
+  ink are re-inked when an update meets them.  A batch of stale comments
+  (690f252c).
+- `tools/newton-rom/analysis/romdisasm.py` (1ce7a72d): a ROM range
+  disassembled from rom.bin with capstone, for when Ghidra is locked.
+- Still NOT YET, user-reachable: a double tap on selected ink words
+  (`SortTextInk`, `MakeKidForSort`); also TContainerView's recogniser and
+  editing methods, the math views, RAM stores and TFlashAMD.
+
 ## 2026-10-01: package card handlers, packages off an endpoint, the comm manager's services
 
 - Package card handlers reach the card server (c389b84a):
