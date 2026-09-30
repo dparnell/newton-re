@@ -10,6 +10,7 @@
 // bounds, Show/Hide/Close, MoveBehind, SetOrigin, the update regions.
 // Runs over a standalone kernel heap with the ROM's objects imported (for
 // the fonts of the text views).
+#include "GrayShrink.h"
 #include "RootView.h"
 #include "Locale.h"
 #include "TextView.h"
@@ -3659,6 +3660,61 @@ TestClicks()
 	Eval("RemoveView(GetRoot(), ctxDS); RemoveView(GetRoot(), ctxDT)");
 	Refresh();
 	EXPECT(MapIs(ExpWhite, "the limited drag and drop closed"));
+}
+
+
+// TGrayShrink (qd/GrayShrink.h): one bit shrunk into four as grays - each
+// 2x2 cell of the source counted, and the count (0-4) looked up in the gray
+// table MakeGrayTable makes for a cell of four with no grayLevels
+// preference: 0, 7, 8, 11, 15.  A solid block is all 15, a checkerboard
+// (two in four set) 8, one pixel in four 7.  (Here, where the object system
+// is, because the table asks the preference.)
+static void
+TestGrayShrink()
+{
+	static unsigned char srcBits[32 * 4];
+	static unsigned char dstBits[16 * 8];
+	PixelMap src, dst;
+	src.baseAddr = (Ptr) srcBits;
+	src.rowBytes = 4;
+	SetRect(&src.bounds, 0, 0, 32, 32);
+	src.pixMapFlags = kPixMapPtr | 0x1000000 | 1;
+	src.deviceRes.v = src.deviceRes.h = kDefaultDPI;
+	src.grayTable = nil;
+	dst.baseAddr = (Ptr) dstBits;
+	dst.rowBytes = 8;
+	SetRect(&dst.bounds, 0, 0, 16, 16);
+	dst.pixMapFlags = kPixMapPtr | 4;
+	dst.deviceRes.v = dst.deviceRes.h = kDefaultDPI;
+	dst.grayTable = nil;
+	RgnHandle all = NewRgn();
+	RectRgn(all, &dst.bounds);
+	TGrayShrink shrink;
+	Rect from = src.bounds, to = dst.bounds;
+	struct { const char* what; long every; long gray; } cases[] = {
+		{ "solid", 0, 15 }, { "checkerboard", 1, 8 }, { "one in four", 2, 7 } };
+	for (long c = 0; c < 3; c++)
+	{
+		memset(srcBits, 0, sizeof(srcBits));
+		for (long y = 0; y < 32; y++)
+			for (long x = 0; x < 32; x++)
+			{
+				Boolean on = cases[c].every == 0 || (cases[c].every == 1 ? ((x + y) & 1) == 0 : (x % 2 == 0 && y % 2 == 0));
+				if (on)
+					srcBits[y * 4 + (x >> 3)] |= (unsigned char) (0x80 >> (x & 7));
+			}
+		memset(dstBits, 0, sizeof(dstBits));
+		shrink.GrayShrink(&src, &dst, &from, &to, all, all, all);
+		Boolean ok = true;
+		for (long y = 0; y < 16; y++)
+			for (long x = 0; x < 16; x++)
+				if (GetPixel(&dst, x, y) != cases[c].gray)
+					ok = false;
+		if (!ok)
+			printf("gray shrink %s: pixel (0,0) is %ld\n", cases[c].what, (long) GetPixel(&dst, 0, 0));
+		EXPECT(ok);
+	}
+	DisposeRgn(all);
 }
 
 
@@ -7773,6 +7829,7 @@ main()
 		TestIdlers();
 		TestFrontKeyViews();
 		TestEmptiedParagraph();
+		TestGrayShrink();
 		TestPickView();
 		TestLayoutTable();
 		TestTimeDownAView();

@@ -32,11 +32,10 @@
 				shift by a register takes the ARM's meaning (LSL/LSR: a
 				count of 32 or more gives nought).
 
-	NOT YET RECONSTRUCTED: TGrayShrink (0x000e471c), the protocol
-	StretchBits hands a one-bit map flagged 0x1000000 shrunk into four
-	bits to (view:GrayShrink): the host registers none, so NewByName
-	answers nil and the ordinary stretch follows, as the ROM's own code
-	does when there is no implementation.
+	TGrayShrink (GrayShrink.h) is what StretchBits hands a one-bit map
+	flagged 0x1000000 shrunk onto four bits (view:GrayShrink); with none
+	registered (a host program with no OS) NewByName answers nil and the
+	ordinary stretch follows, as the ROM's own code does.
 
 	Reconstructed from the MP2x00 US ROM (0x002ad968-0x002aeed0,
 	0x001c6384-0x001c7860, 0x00074aac-0x000755e0, 0x0011b93c,
@@ -50,6 +49,11 @@
 #include "FixedMath.h"
 #include "Ports.h"
 #include "Screen.h"
+#include "GrayShrink.h"
+#include "Tile.h"			// QDPatchpoint
+#include "Frames.h"
+#include "Locale.h"		// GetPreference
+#include "RSSymbols.h"
 #include <string.h>
 
 extern const unsigned char	kDepthPixelsPerWordShift[33];	// QDTables.cpp
@@ -2818,6 +2822,506 @@ SetupStretchMode(long mode, long depth)
 }
 
 
+/*------------------------------------------------------------------------------
+	T h e   g r a y   s h r i n k   (GrayShrink.h)
+
+	A cell of source pixels (x by y of them) makes one destination pixel:
+	the set bits of each source row are counted into a byte per source
+	pixel column, a row of counts is narrowed (or widened) to the
+	destination's width, each count looked up in the gray table, and the
+	grays blitted a row at a time through the clip regions' mask.  (Host:
+	the counts and grays are bytes as the ARM's memory lays them out, so
+	their words are read and written with LW/SW; the masks are the host's
+	own words, as the rest of this file's.)
+------------------------------------------------------------------------------*/
+
+// ROM 0x000e407c FillQuartile__FPccT2l
+// n entries of one quartile of the table: grays from lo to hi, most of
+// them the lighter ones - a run of lo, then lo+1, then lo+2, then hi.
+static void
+FillQuartile(char* p, char lo, char hi, long n)
+{
+	UChar low = (UChar) lo;
+	UChar high = (UChar) hi;
+	if (n == 1)
+	{
+		*p = (char) (low != 0 ? high : low);
+		return;
+	}
+	if (n <= 0)
+		return;
+	long a = n > 9 ? (n - 10) / 6 + 2 : 1;
+	long b = n > 6 ? (n + 1) / 3 + 1 : n >> 1;
+	long c = (n - 1) / 6;
+	long m = n - (a + b + c);
+	if (c == 0)
+	{
+		c = 1;
+		if (b != 0)
+			b--;
+		else if (m != 0)
+			m--;
+	}
+	for (long i = a; i > 0; i--)
+		*p++ = (char) low;
+	UChar next = (UChar) (low + 1);
+	for (long i = m; i > 0; i--)
+		*p++ = (char) next;
+	next = (UChar) (next + 1);
+	for (long i = b; i > 0; i--)
+		*p++ = (char) next;
+	for (long i = c; i > 0; i--)
+		*p++ = (char) high;
+}
+
+
+// a thousandth of the table's n + 1 entries, rounded
+static long
+GrayShare(long thousandths, long n)
+{
+	Fixed share = FixedDivide((Fixed) ((ULong32) thousandths << 16), 1000 << 16);
+	Fixed count = FixedMultiply(share, (Fixed) ((ULong32) (n + 1) << 16));
+	return (short) ((ULong32) (count + 0x8000) >> 16);
+}
+
+
+// ROM 0x000e41c4 MakeGrayTable__FPcl
+// The table of the gray for each count from 0 to n: four quartiles
+// (grays 0-3, 4-7, 8-11, 12-15), their widths the grayLevels preference's
+// three thresholds in thousandths when it has them, else worked out from
+// n alone.
+static void
+MakeGrayTable(char* table, long n)
+{
+	RefVar levels(GetPreference(RSSYMgraylevels));
+	long q1, q2, q3, q4;
+	if (ISNIL(levels) || !IsArray(levels) || Length(levels) != 3)
+	{
+		q1 = n < 10 ? 1 : (n - 10) / 6 + 2;
+		q3 = n < 7 ? n >> 1 : (n + 1) / 3 + 1;
+		q4 = (n - 1) / 6 + 1;
+		q2 = (n - (q1 + q3 + q4)) + 1;
+	}
+	else
+	{
+		long a = RINT(GetArraySlotRef(levels, 0));
+		long b = RINT(GetArraySlotRef(levels, 1));
+		long c = RINT(GetArraySlotRef(levels, 2));
+		if (a > 1000) a = 1000; else if (a < 0) a = 0;
+		if (b > 1000) b = 1000; else if (b < 0) b = 0;
+		if (c > 1000) c = 1000; else if (c < 0) c = 0;
+		long lo = a < b ? a : b;
+		if (c < lo)
+			lo = c;
+		long hi = b < a ? a : b;
+		if (hi < c)
+			hi = c;
+		long mid = b;
+		if (b == lo || b == hi)
+		{
+			mid = a;
+			if (c != hi)
+				mid = c;
+		}
+		q1 = GrayShare(lo, n);
+		q2 = GrayShare(mid - lo, n);
+		q3 = GrayShare(hi - mid, n);
+		q4 = GrayShare(1000 - hi, n);
+		if (q4 == 0)
+		{
+			q4 = 1;
+			if (q3 == 0)
+			{
+				if (q2 == 0)
+					q1--;
+				else
+					q2--;
+			}
+			else
+				q3--;
+		}
+		long over = (q1 + q2 + q3 + q4) - n;
+		long e = over - 1;
+		if (e != 0)
+		{
+			if (e < 0)
+			{
+				if (q1 == 0)
+				{
+					q1 = 1;
+					e = over;
+				}
+				if (e != 0)
+					q4++;
+			}
+			else
+			{
+				if (q2 != 0)
+				{
+					q2--;
+					e = over - 2;
+				}
+				if (e != 0)
+				{
+					if (q3 == 0)
+					{
+						if (q2 == 0)
+							q1--;
+						else
+							q2--;
+					}
+					else
+						q3--;
+				}
+			}
+		}
+	}
+	FillQuartile(table, 0, 3, q1);
+	FillQuartile(table + q1, 4, 7, q2);
+	FillQuartile(table + q1 + q2, 8, 11, q3);
+	FillQuartile(table + q1 + q2 + q3, 12, 15, q4);
+}
+
+
+typedef void	(*GrayRowProc)(char* src, char* dst, char* srcEnd, char* dstEnd, char* table, long ratio);
+
+// ROM 0x000e4510 ConvertToGray__FPcN41l
+// A row of counts, a byte a pixel, made grays two to a byte, until the
+// grays reach dstEnd.  (It reads twice as many counts as it writes grays:
+// run in place, as the other two run it, it reads past dstEnd - the host
+// gives the buffers room for it.)
+static void
+ConvertToGray(char* src, char* dst, char* /*srcEnd*/, char* dstEnd, char* table, long /*ratio*/)
+{
+	do
+	{
+		UChar first = (UChar) src[0];
+		UChar second = (UChar) src[1];
+		src += 2;
+		*dst = (char) (((UChar) table[first] << 4) | (UChar) table[second]);
+		dst++;
+	} while (dst < dstEnd);
+}
+
+
+// ROM 0x000e4548 HorizGrayShrink__FPcN41l
+// A row of counts narrowed to the destination: the counts of each
+// destination pixel's source columns summed (the ratio, 16.16, says when
+// to move on), then made grays.
+static void
+HorizGrayShrink(char* src, char* dst, char* srcEnd, char* dstEnd, char* table, long ratio)
+{
+	ULong32 sum = (ULong32) ratio >> 1;
+	memset(dst, 0, dstEnd - dst);
+	char* p = dst;
+	while (p < dstEnd)
+	{
+		*p = (char) (*p + *src++);
+		sum += (ULong32) ratio;
+		if ((Long32) sum >> 16 != 0)
+		{
+			sum &= 0xffff;
+			p++;
+		}
+	}
+	ConvertToGray(dst, dst, dstEnd, dstEnd, table, ratio);
+}
+
+
+// ROM 0x000e45d4 HorizGrayStretch__FPcN41l
+// A row of counts widened to the destination: made grays first, in place,
+// and then each gray repeated as the ratio says, a word of grays at a
+// time.  (A gray of nought is not ORed in; the source word's end is marked
+// by a nibble of 0xf shifted in below it.)
+static void
+HorizGrayStretch(char* src, char* dst, char* srcEnd, char* dstEnd, char* table, long ratio)
+{
+	ConvertToGray(src, src, srcEnd, srcEnd, table, ratio);
+	ULong32 out = 0;
+	ULong32 bits = 0xf0000000;
+	ULong32 shift = 0x1c;
+	ULong32 sum = (ULong32) ratio >> 1;
+	for (;;)
+	{
+		ULong32 gray = bits >> 28;
+		bits <<= 4;
+		Boolean skip = gray == 0;
+		if (!skip && bits == 0)
+		{
+			ULong32 marker = gray;
+			ULong32 word = LW(src);
+			src += 4;
+			gray = word >> 28;
+			bits = marker | (word << 4);
+		}
+		for (;;)
+		{
+			if (!skip && gray != 0)
+				out |= gray << shift;
+			skip = false;
+			if (shift == 0)
+			{
+				shift = 0x1c;
+				SW(dst, out);
+				dst += 4;
+				out = 0;
+				if (dst >= dstEnd)
+					return;
+			}
+			else
+				shift -= 4;
+			sum += (ULong32) ratio;
+			if ((Long32) sum >> 16 != 0)
+				break;
+		}
+		sum &= 0xffff;
+	}
+}
+
+
+// ROM 0x000e468c SetupHorizProc__F5PointT1Pl
+// How a row of counts is brought to the destination's width: as it is
+// (ConvertToGray), widened (HorizGrayStretch) or narrowed
+// (HorizGrayShrink), with the ratio of the two widths.
+static GrayRowProc
+SetupHorizProc(Point dst, Point src, long* ratio)
+{
+	if (dst.h == src.h)
+		return ConvertToGray;
+	if (src.h <= dst.h)
+	{
+		*ratio = (ULong32) FixedDivide((Fixed) ((ULong32) (UShort) src.h << 16), (Fixed) ((ULong32) (UShort) dst.h << 16)) & 0xffff;
+		return HorizGrayStretch;
+	}
+	*ratio = (ULong32) FixedDivide((Fixed) ((ULong32) (UShort) dst.h << 16), (Fixed) ((ULong32) (UShort) src.h << 16)) & 0xffff;
+	return HorizGrayShrink;
+}
+
+
+// ROM 0x000e402c GrayBlitModeCopy__FPlN21lT4
+// A row of grays copied into the destination through the mask, shifted
+// right to where the clip starts in its first word.
+static void
+GrayBlitModeCopy(ULong32* mask, char* src, char* dst, long count, long shift)
+{
+	ULong32 last = 0;
+	for ( ; count > 0; count--)
+	{
+		ULong32 word = LW(src);
+		ULong32 m = *mask++;
+		ULong32 gray = LSR(word, shift) + LSL(last, 0x20 - shift);
+		SW(dst, (gray & m) | (LW(dst) & ~m));
+		src += 4;
+		dst += 4;
+		last = word;
+	}
+}
+
+
+// ROM 0x000e471c GrayShrink__11TGrayShrinkFP8PixelMapT1P4RectT3PP6RegionN25
+// The one-bit source made its grays on the four-bit destination, within
+// the clip regions.  (A negative width or height is taken as its bitwise
+// not, as the ROM's mvn has it.)
+void
+TGrayShrink::GrayShrink(PixelMap* src, PixelMap* dst, Rect* srcRect, Rect* dstRect,
+						RgnHandle clip1, RgnHandle clip2, RgnHandle mask)
+{
+	Rect clip;
+	if (!RSect(&clip, 5, dstRect, &dst->bounds, &(*clip1)->rgnBBox, &(*clip2)->rgnBBox, &(*mask)->rgnBBox))
+		return;
+	short dstHeight = (short) (dstRect->bottom - dstRect->top);
+	if (dstHeight < 0)
+		dstHeight = (short) ~dstHeight;
+	short dstWidth = (short) (dstRect->right - dstRect->left);
+	if (dstWidth < 0)
+		dstWidth = (short) ~dstWidth;
+	short srcHeight = (short) (srcRect->bottom - srcRect->top);
+	short srcWidth = (short) (srcRect->right - srcRect->left);
+	long dstDepth = dst->pixMapFlags & 0xff;
+	long dstLog = kDepthLog2[dstDepth];
+	Point dstSize, srcSize;
+	dstSize.v = dstHeight;
+	dstSize.h = dstWidth;
+	srcSize.v = srcHeight;
+	srcSize.h = srcWidth;
+	long ratio = 0;
+	GrayRowProc proc = SetupHorizProc(dstSize, srcSize, &ratio);
+	char* scans[3] = { nil, nil, nil };
+	char states[3] = { 0, 0, 0 };
+	RgnHandle regions[3] = { clip1, clip2, mask };
+	RgnState rgnState[3];
+	ULong32* maskBuf = nil;
+	char* table = nil;
+	long which = 0;
+	long srcWords = srcWidth >> 5;
+	// (host: room for the conversions' reading of twice as many counts as
+	// they write grays - see ConvertToGray)
+	char* counts = (char*) QDNewTempPtr(srcWidth * 2 + 8);
+	if (counts == nil)
+		return;
+	memset(counts, 0, srcWidth * 2 + 8);
+	char* countsEnd = counts + srcWidth;
+	char* grays = (char*) QDNewTempPtr(dstWidth * 2 + 8);
+	if (grays == nil)
+	{
+		QDDisposeTempPtr(counts);
+		return;
+	}
+	memset(grays, 0, dstWidth * 2 + 8);
+	char* graysEnd = grays + dstWidth;
+	long across = 0;
+	for (long left = srcWidth; ; )
+	{
+		across++;
+		left -= dstWidth;
+		if (left <= 0)
+			break;
+	}
+	long down = 0;
+	for (long left = srcHeight; ; )
+	{
+		down++;
+		left -= dstHeight;
+		if (left <= 0)
+			break;
+	}
+	long cell = down * across;
+	table = (char*) QDNewTempPtr(cell + 1);
+	if (table == nil)
+		goto done;
+	MakeGrayTable(table, cell);
+	{
+		long maskLeft = dst->bounds.left + ((clip.left - dst->bounds.left) & ~(long) kDepthPixelsPerWordMask[dstDepth]);
+		long maskWords = ((clip.right - maskLeft) << dstLog) >> 5;
+		long maskSize = (2 << dstLog) * 4 + maskWords * 4;
+		maskBuf = (ULong32*) QDNewTempPtr(maskSize);
+		if (maskBuf == nil)
+			goto done;
+		memset(maskBuf, 0, maskSize);
+		for (long i = 0; i < 3; i++)
+		{
+			if ((*regions[i])->rgnSize == kRectRgnSize)
+				continue;
+			which += 2 << i;
+			scans[i] = (char*) QDNewTempPtr(maskSize);
+			if (scans[i] == nil)
+				goto done;
+			states[i] = HGetState((Handle) regions[i]);
+			HLock((Handle) regions[i]);
+			InitRgn(*regions[i], &rgnState[i], clip.left, clip.right, maskLeft, scans[i]);
+		}
+		if (which == 0)
+			XorSlab((char*) maskBuf, clip.left - maskLeft, clip.right - maskLeft, dstDepth);
+
+		long srcRowBytes = src->rowBytes;
+		char* srcBase = (char*) GetPixelMapBits(src);
+		char* srcLimit = srcBase + srcRowBytes * (src->bounds.bottom - src->bounds.top);
+		long srcX = srcRect->left - src->bounds.left;
+		if (dstRect->left < clip.left)
+		{
+			long skip = clip.left - dstRect->left;
+			if (ratio == 0)
+				srcX += skip;
+			else
+			{
+				Fixed share = FixedDivide((Fixed) ((ULong32) (UShort) srcWidth << 16), (Fixed) ((ULong32) (UShort) dstWidth << 16));
+				Fixed moved = FixedMultiply((Fixed) ((ULong32) skip << 16), share);
+				srcX += (short) ((ULong32) (moved + 0x8000) >> 16);
+			}
+		}
+		long srcDepth = src->pixMapFlags & 0xff;
+		ULong32 leftShift = kDepthPixelsPerWordMask[srcDepth] & srcX;
+		ULong32 rightShift = 0x20 - leftShift;
+		char* srcRow = srcBase + srcRowBytes * (srcRect->top - src->bounds.top) + (srcX >> kDepthPixelsPerWordShift[srcDepth]) * 4;
+		long dstRowBytes = dst->rowBytes;
+		long y = dstRect->top;
+		long dstX = clip.left - dst->bounds.left;
+		long dstShift = (kDepthPixelsPerWordMask[dstDepth] & dstX) << dstLog;
+		char* dstRow = (char*) GetPixelMapBits(dst) + dstRowBytes * (clip.top - dst->bounds.top) + (dstX >> kDepthPixelsPerWordShift[dstDepth]) * 4;
+		long sum = -(srcHeight >> 1);
+		QDStartDrawing(dst, &clip);
+		QDPatchpoint();
+		while (srcRow < srcLimit && y < clip.bottom)
+		{
+			memset(counts, 0, srcWidth);
+			do
+			{
+				char* word = srcRow;
+				char* column = counts;
+				for (long n = srcWords; n > 0; n--)
+				{
+					ULong32 first = LW(word);
+					ULong32 second = LW(word + 4);
+					word += 4;
+					Long32 bits = (Long32) (LSR(second, rightShift) + LSL(first, leftShift));
+					for (char* p = column; bits != 0; bits = (Long32) ((ULong32) bits << 1), p++)
+						if (bits < 0)
+							*p = (char) (*p + 1);
+					column += 0x20;
+				}
+				srcRow += srcRowBytes;
+				sum += dstHeight;
+			} while (sum <= 0 && srcRow < srcLimit);
+			proc(counts, grays, countsEnd, graysEnd, table, ratio);
+			do
+			{
+				if (y >= clip.top)
+				{
+					if (which != 0)
+						MSeekMask(y, which, maskBuf, maskWords, &rgnState[0], &rgnState[1], &rgnState[2]);
+					GrayBlitModeCopy(maskBuf, grays, dstRow, maskWords, dstShift);
+					dstRow += dstRowBytes;
+				}
+				y++;
+				if (y >= clip.bottom)
+					break;
+				sum -= srcHeight;
+			} while (sum >= 0);
+		}
+		QDStopDrawing(dst, &clip);
+	}
+done:
+	for (long i = 2; i >= 0; i--)
+		if (scans[i] != nil)
+		{
+			HSetState((Handle) regions[i], states[i]);
+			QDDisposeTempPtr(scans[i]);
+		}
+	if (maskBuf != nil)
+		QDDisposeTempPtr(maskBuf);
+	if (table != nil)
+		QDDisposeTempPtr(table);
+	QDDisposeTempPtr(grays);
+	QDDisposeTempPtr(counts);
+}
+
+
+PROTOCOL_IMPL_SOURCE_MACRO(TGrayShrink)		// ROM 0x000e4714 Sizeof__11TGrayShrinkSFv
+PROTOCOL_CLASSINFO(TGrayShrink, "TPixelMapAntialias", "", 0x10000, 0, nil)	// ROM 0x00388b7c ClassInfo__11TGrayShrinkSFv
+
+// (host: the glue's New and Delete, which the ROM's table leaves empty)
+TGrayShrink*
+TGrayShrink::New()
+{
+	return this;
+}
+
+void
+TGrayShrink::Delete()
+{ }
+
+
+// (InitGraf's registration: the ROM's InitGraf, at 0x002e4474)
+// TGrayShrink registered as a TPixelMapAntialias.  (Host: only with the
+// protocol registry there - a program with no OS draws without it.)
+void
+RegisterGrayShrink(void)
+{
+	if (gProtocolRegistry != nil)
+		TGrayShrink::ClassInfo()->Register();
+}
+
+
 // ROM 0x002ada5c StretchBits__FP8PixelMapT1P4RectT3lPP6RegionN26
 // Pixels copied from one map's rectangle into another's under the mode
 // (a source mode; bit 2 inverts the source), clipped by two regions and a
@@ -2849,8 +3353,19 @@ StretchBits(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRe
 		RgnBlt(src, dst, srcRect, dstRect, transfer, nil, clip1, clip2, mask);
 		return;
 	}
-	// (a one-bit map flagged for shrinking into grays goes to TGrayShrink -
-	//  NOT YET: see the header)
+	// a one-bit map flagged for shrinking into grays, made smaller both
+	// ways on a four-bit one, goes to TGrayShrink when one is registered
+	if ((src->pixMapFlags & 0x1000000) != 0 && srcDepth == 1 && dstDepth == 4
+		&& dstHeight < srcHeight && dstWidth < srcWidth)
+	{
+		TPixelMapAntialias* shrink = (TPixelMapAntialias*) NewByName("TPixelMapAntialias", "TGrayShrink");
+		if (shrink != nil)
+		{
+			// (ROM BUG: the instance is never given back)
+			shrink->GrayShrink(src, dst, (Rect*) srcRect, (Rect*) dstRect, clip1, clip2, mask);
+			return;
+		}
+	}
 	Point dstSize, srcSize;
 	dstSize.v = dstHeight;
 	dstSize.h = dstWidth;

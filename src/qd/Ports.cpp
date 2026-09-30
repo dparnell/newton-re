@@ -11,6 +11,7 @@
 */
 
 #include "Ports.h"
+#include "GrayShrink.h"
 #include "ByteOrder.h"
 #include "OSErrors.h"
 #include "Frames.h"
@@ -866,9 +867,9 @@ Rand(long n)
 
 // The library started: the globals cleared, the standard patterns and
 // the wide-open region made, the default port opened on the screen.
-// NOT YET RECONSTRUCTED: InitScreen (the display driver's PixelMap: the
-// screen is empty here until one is set), InitQDCompression, the QD
-// protocols (TPinPad, TGrayShrink, TQDLibraryDriver) registered.
+// TGrayShrink is registered (RegisterGrayShrink).  NOT YET RECONSTRUCTED:
+// InitScreen (the display driver's PixelMap: the screen is empty here
+// until one is set), the other QD protocols (TPinPad, TQDLibraryDriver).
 void
 InitGraf(void)
 {
@@ -884,6 +885,7 @@ InitGraf(void)
 	SetEmptyRect(&qdGlobals.fScreenBits.bounds);
 	qdGlobals.fScreenBits.pixMapFlags = kPixMapPtr | 1;
 	InitQDCompression();			// (a store bitmap's compander: stores/StoreCompander.h)
+	RegisterGrayShrink();
 	OpenPort(&gGrafPort);
 	gQDRunning = true;
 }
