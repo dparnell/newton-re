@@ -30,6 +30,9 @@ TARMCPU::Reset(void)
 	steps = 0;
 	faultAddress = 0;
 	faultPC = 0;
+	for (int i = 0; i < 8; i++)
+		f[i] = 0;
+	fpsr = 0x01000000;		// (the floating point emulator's system id, exceptions not enabled)
 	fPC = 0;
 	fStop = kARMRunning;
 }
@@ -598,11 +601,14 @@ TARMCPU::Step(void)
 				return fStop = kARMStoppedByHost;
 			break;
 		}
-		// (coprocessor register transfers: undefined here)
-	default:	// coprocessor data transfers and operations
-		faultAddress = insn;
-		fStop = kARMUndefined;
-		ok = false;
+		// (a coprocessor operation or register transfer)
+	default:	// coprocessor data transfers and operations: the FPA's, or undefined
+		ok = Coprocessor(insn);
+		if (!ok && fStop == kARMRunning)
+		{
+			faultAddress = insn;
+			fStop = kARMUndefined;
+		}
 		break;
 	}
 	if (!ok)

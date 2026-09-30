@@ -12,10 +12,12 @@
 				carry, MRS/MSR, MUL/MLA and the long multiplies
 				(UMULL/UMLAL/SMULL/SMLAL), LDR/STR and their byte forms, the
 				halfword and signed loads (LDRH/STRH/LDRSB/LDRSH), LDM/STM,
-				SWP/SWPB, B/BL and SWI.  There is one register bank - the
-				code it runs is user code - so the exception modes, SPSR and
-				the S bit of LDM/STM are not modelled; coprocessor
-				instructions are undefined.
+				SWP/SWPB, B/BL and SWI, and the FPA's floating point
+				instructions (coprocessors 1 and 2: FPA.cpp, standing in for
+				the ROM's floating point emulator).  There is one register
+				bank - the code it runs is user code - so the exception
+				modes, SPSR and the S bit of LDM/STM are not modelled; other
+				coprocessor instructions are undefined.
 
 				It knows nothing of the Newton.  Memory is reached through
 				an ARMMemory the caller supplies, which answers words,
@@ -97,6 +99,8 @@ public:
 	uint64_t		steps;			// instructions executed
 	uint32_t		faultAddress;	// for an abort: the address; for undefined: the instruction
 	uint32_t		faultPC;
+	long double		f[8];			// the FPA's registers (FPA.cpp)
+	uint32_t		fpsr;			// its status register
 
 private:
 	bool			Condition(uint32_t cond) const;
@@ -109,6 +113,7 @@ private:
 	bool			SingleTransfer(uint32_t insn);
 	bool			BlockTransfer(uint32_t insn);
 	bool			StatusTransfer(uint32_t insn);
+	bool			Coprocessor(uint32_t insn);	// the FPA's instructions (FPA.cpp); ==> false when not one
 	uint32_t		Reg(uint32_t n) const;		// a register as an operand (the pc reads 8 ahead)
 	void			SetNZ(uint32_t value);
 

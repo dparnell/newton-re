@@ -255,11 +255,47 @@ static Boolean	gTrace = false;
 struct Window
 {
 	uint32_t	fBase;
-	uint32_t	fSize;
+	uint32_t	fSize;			// as the ARM code sees it
 	RefStruct*	fObject;
 	bool		fSlots;
 	bool		fHostOrder;		// a string: its UniChars in the host's order (else the bytes as they lie, words big-endian)
 };
+
+// DEVIATION: past the end of a data window, within the page it ends in,
+// reads answer nought and writes are dropped.  On the Newton those bytes
+// are whatever follows the object in memory, and native code that runs a
+// little past a binary's end (NewtsCape's JPEG converter writes its last
+// row one row on) writes there without falling over.
+static inline uint32_t	BE32(const uint8_t* p)	{ return ((uint32_t) p[0] << 24) | ((uint32_t) p[1] << 16) | ((uint32_t) p[2] << 8) | p[3]; }
+static inline void		PutBE32(uint8_t* p, uint32_t v)	{ p[0] = (uint8_t) (v >> 24); p[1] = (uint8_t) (v >> 16); p[2] = (uint8_t) (v >> 8); p[3] = (uint8_t) v; }
+static uint8_t	gWindowScratch[8];
+
+static void
+InitDataWindow(Window& w, RefArg obj)
+{
+	w.fSlots = false;
+	w.fHostOrder = IsString(obj);
+	w.fSize = (uint32_t) Length(obj);
+}
+
+// n bytes at offset off in a data window (n <= 8)
+static uint8_t*
+WindowData(Window& w, uint32_t off, uint32_t n)
+{
+	if (off + n > w.fSize)
+	{
+		memset(gWindowScratch, 0, sizeof(gWindowScratch));
+		return gWindowScratch;
+	}
+	return (uint8_t*) BinaryData(*w.fObject) + off;
+}
+
+// the page a window's data may run into (DEVIATION above)
+static uint32_t
+WindowReach(const Window& w)
+{
+	return w.fSlots ? w.fSize : (w.fSize + 0xfff) & ~0xfffu;
+}
 
 // LockedBinaryPtr's windows: a binary's bytes seen from the ARM world for as
 // long as the ARM code keeps it locked - across calls, since a locked
@@ -286,13 +322,18 @@ LockBinaryWindow(RefArg obj)
 		gLockedTop = kLockedBase;		// (the addresses come round again: the oldest are long unlocked)
 	LockedWindow l;
 	l.fWindow.fBase = gLockedTop;
-	l.fWindow.fSize = size;
 	l.fWindow.fObject = new RefStruct(obj);
-	l.fWindow.fSlots = false;
-	l.fWindow.fHostOrder = IsString(obj);
+	InitDataWindow(l.fWindow, obj);
+	size = l.fWindow.fSize;
+	span = ((size + 0xfff) & ~0xfffu) + 0x1000;
 	l.fLocks = 1;
 	gLockedTop += span;
 	gLockedWindows.push_back(l);
+	if (getenv("NEWTON_TRACE_WINDOWS") != nil)		// (each binary locked into the ARM world: where, how big, its class)
+	{
+		RefVar cls(ClassOf(obj));
+		fprintf(stderr, "[armcpu] locked window %08x size %u class %s\n", l.fWindow.fBase, size, IsSymbol(cls) ? SymbolName(cls) : "?");
+	}
 	return l.fWindow.fBase;
 }
 
@@ -438,8 +479,6 @@ TNativeWorld::~TNativeWorld()
 }
 
 
-static inline uint32_t	BE32(const uint8_t* p)	{ return ((uint32_t) p[0] << 24) | ((uint32_t) p[1] << 16) | ((uint32_t) p[2] << 8) | p[3]; }
-static inline void		PutBE32(uint8_t* p, uint32_t v)	{ p[0] = (uint8_t) (v >> 24); p[1] = (uint8_t) (v >> 16); p[2] = (uint8_t) (v >> 8); p[3] = (uint8_t) v; }
 
 
 // The code binary's C relocation, as the ROM applies it when it maps the
@@ -507,11 +546,11 @@ Window*
 TNativeWorld::FindWindow(uint32_t a, uint32_t n)
 {
 	for (Window& w : fWindows)
-		if (a >= w.fBase && a + n <= w.fBase + w.fSize)
+		if (a >= w.fBase && a + n <= w.fBase + WindowReach(w))
 			return &w;
 	if (a >= kLockedBase && a < kLockedLimit)
 		for (LockedWindow& l : gLockedWindows)
-			if (a >= l.fWindow.fBase && a + n <= l.fWindow.fBase + l.fWindow.fSize)
+			if (a >= l.fWindow.fBase && a + n <= l.fWindow.fBase + WindowReach(l.fWindow))
 				return &l.fWindow;
 	return nil;
 }
@@ -535,7 +574,7 @@ TNativeWorld::Read32(uint32_t a, uint32_t* v)
 		}
 		// object data: a string's in the host's own byte order, anything
 		// else's as the bytes lie (docs/armcpu/README.md)
-		const uint8_t* p = (const uint8_t*) BinaryData(*w->fObject) + (a - w->fBase);
+		const uint8_t* p = WindowData(*w, a - w->fBase, 4);
 		if (w->fHostOrder)
 			memcpy(v, p, 4);
 		else
@@ -558,7 +597,7 @@ TNativeWorld::Read16(uint32_t a, uint16_t* v)
 	{
 		if (w->fSlots)
 			return false;
-		const uint8_t* p = (const uint8_t*) BinaryData(*w->fObject) + (a - w->fBase);
+		const uint8_t* p = WindowData(*w, a - w->fBase, 2);
 		if (w->fHostOrder)
 			memcpy(v, p, 2);
 		else
@@ -581,7 +620,7 @@ TNativeWorld::Read8(uint32_t a, uint8_t* v)
 	{
 		if (w->fSlots)
 			return false;
-		*v = ((uint8_t*) BinaryData(*w->fObject))[a - w->fBase];
+		*v = *WindowData(*w, a - w->fBase, 1);
 		return true;
 	}
 	return false;
@@ -601,7 +640,7 @@ TNativeWorld::Write32(uint32_t a, uint32_t v)
 			SetArraySlotRef(*w->fObject, (a - w->fBase) >> 2, ToHost(v));
 			return true;
 		}
-		uint8_t* p = (uint8_t*) BinaryData(*w->fObject) + (a - w->fBase);
+		uint8_t* p = WindowData(*w, a - w->fBase, 4);
 		if (w->fHostOrder)
 			memcpy(p, &v, 4);
 		else
@@ -622,7 +661,7 @@ TNativeWorld::Write16(uint32_t a, uint16_t v)
 	{
 		if (w->fSlots)
 			return false;
-		uint8_t* p = (uint8_t*) BinaryData(*w->fObject) + (a - w->fBase);
+		uint8_t* p = WindowData(*w, a - w->fBase, 2);
 		if (w->fHostOrder)
 			memcpy(p, &v, 2);
 		else
@@ -646,7 +685,7 @@ TNativeWorld::Write8(uint32_t a, uint8_t v)
 	{
 		if (w->fSlots)
 			return false;
-		((uint8_t*) BinaryData(*w->fObject))[a - w->fBase] = v;
+		*WindowData(*w, a - w->fBase, 1) = v;
 		return true;
 	}
 	return false;
@@ -831,10 +870,8 @@ TNativeWorld::MapData(RefArg obj)
 			return w.fBase;
 	Window w;
 	w.fBase = fWindowTop;
-	w.fSize = (uint32_t) Length(obj);
 	w.fObject = new RefStruct(obj);
-	w.fSlots = false;
-	w.fHostOrder = IsString(obj);
+	InitDataWindow(w, obj);
 	LockRef(obj);
 	fWindows.push_back(w);
 	fWindowTop += (w.fSize + 0xfff) & ~0xfffu;
@@ -1312,6 +1349,15 @@ GLUE(Glue_Throw)
 }
 // (the ROM's makes a RefStruct of the ref and throws it; here that is a new
 //  RefVar of the ARM world's, which a host catcher gets back as the ref)
+// ThrowMsg: Throw(exMsgException, the message) - the message a C string
+// in the ARM world's memory, as a host catcher of evt.ex.msg reads it
+GLUE(Glue_ThrowMsg)
+{
+	if (w.Deliver(cpu, "evt.ex.msg", cpu.r[0]))
+		return true;
+	w.ThrowToHost("evt.ex.msg", cpu.r[0]);
+	return true;
+}
 GLUE(Glue_ThrowRefException)
 {
 	char name[64];
@@ -1830,6 +1876,10 @@ GLUE(Glue_MakeString)
 GLUE(Glue_IsString)				{ w.Return(cpu, IsString(RefVar(w.ArgRef(cpu.r[0]))) ? 1 : 0); return true; }
 GLUE(Glue_IsInstance)			{ w.Return(cpu, IsInstance(RefVar(w.ArgRef(cpu.r[0])), RefVar(w.ArgRef(cpu.r[1]))) ? 1 : 0); return true; }
 GLUE(Glue_IsSubclassRef)		{ w.Return(cpu, IsSubclassRef(w.ToHost(cpu.r[0]), w.ToHost(cpu.r[1])) ? 1 : 0); return true; }
+GLUE(Glue_IsBinary)				{ w.Return(cpu, IsBinary(RefVar(w.ArgRef(cpu.r[0]))) ? 1 : 0); return true; }
+GLUE(Glue_IsNumber)				{ w.Return(cpu, IsNumber(RefVar(w.ArgRef(cpu.r[0]))) ? 1 : 0); return true; }
+GLUE(Glue_CoerceToInt)			{ w.Return(cpu, (uint32_t) (int32_t) CoerceToInt(RefVar(w.ArgRef(cpu.r[0])))); return true; }
+GLUE(Glue_IsReal)				{ w.Return(cpu, IsReal(RefVar(w.ArgRef(cpu.r[0]))) ? 1 : 0); return true; }
 GLUE(Glue_ISREAL)				{ w.Return(cpu, ISREAL(w.ToHost(cpu.r[0])) ? 1 : 0); return true; }
 GLUE(Glue_RemoveSlot)			{ RemoveSlot(RefVar(w.ArgRef(cpu.r[0])), RefVar(w.ArgRef(cpu.r[1]))); w.Return(cpu, 0); return true; }
 GLUE(Glue_DeepClone)			{ w.Return(cpu, w.ToARM(DeepClone(RefVar(w.ArgRef(cpu.r[0]))))); return true; }
@@ -2324,6 +2374,11 @@ InitGlue(void)
 		{ "IsInstance__FRC6RefVarT1", Glue_IsInstance },
 		{ "IsSubclassRef__FlT1", Glue_IsSubclassRef },
 		{ "ISREAL__Fl", Glue_ISREAL },
+		{ "IsReal__FRC6RefVar", Glue_IsReal },
+		{ "IsBinary__FRC6RefVar", Glue_IsBinary },
+		{ "IsNumber__FRC6RefVar", Glue_IsNumber },
+		{ "CoerceToInt__FRC6RefVar", Glue_CoerceToInt },
+		{ "ThrowMsg", Glue_ThrowMsg },
 		{ "RemoveSlot__FRC6RefVarT1", Glue_RemoveSlot },
 		{ "DeepClone__FRC6RefVar", Glue_DeepClone },
 		{ "TotalClone__FRC6RefVar", Glue_TotalClone },

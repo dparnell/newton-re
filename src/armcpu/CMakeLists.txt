@@ -2,6 +2,7 @@
 # state, over a memory the caller supplies.  No Newton dependencies.
 add_library(armcpu STATIC
     ARMCPU.cpp
+    FPA.cpp
 )
 target_include_directories(armcpu PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 

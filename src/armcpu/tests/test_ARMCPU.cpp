@@ -271,9 +271,57 @@ TestBranchesAndCalls()
 	EXPECT(RunCode(cpu, mem, { 0xe3a01440, 0xe5910000 }) == kARMDataAbort);
 }
 
+// The FPA's instructions (armcpu/FPA.cpp, standing in for the ROM's
+// floating point emulator): 7 / 2 in double precision, fixed towards
+// nought, stored and loaded back as a double and as an extended, compared.
+static void
+TestFPA()
+{
+	TestMemory mem;
+	TARMCPU cpu(&mem);
+	cpu.Reset();
+	cpu.r[0] = 7;
+	cpu.r[1] = 2;
+	cpu.r[3] = 0x2000;
+	EXPECT(RunCode(cpu, mem, {
+		0xEE000190,		// FLTD f0, r0
+		0xEE011190,		// FLTD f1, r1
+		0xEE402181,		// DVFD f2, f0, f1
+		0xEE102172,		// FIXZ r2, f2
+		0xED83A100,		// STFD f2, [r3]
+		0xED93B100,		// LDFD f3, [r3]
+		0xEDC32102,		// STFE f2, [r3, #8]
+		0xEDD34102,		// LDFE f4, [r3, #8]
+		0xEE92F113,		// CMF f2, f3
+		0xE10F5000,		// mrs r5, cpsr
+		0xEE94F112,		// CMF f4, f2
+		0xE10F6000,		// mrs r6, cpsr
+		0xEE92F110,		// CMF f2, f0 (3.5 < 7)
+		0xE10F7000,		// mrs r7, cpsr
+		0xE1A0F00E }) == kARMReturned);
+	EXPECT(cpu.r[2] == 3);
+	uint32_t hi = 0, lo = 0;
+	mem.Read32(0x2000, &hi);
+	mem.Read32(0x2004, &lo);
+	EXPECT(hi == 0x400C0000 && lo == 0);				// 3.5, the word with the sign first
+	uint32_t e0 = 0, e1 = 0, e2 = 0;
+	mem.Read32(0x2008, &e0);
+	mem.Read32(0x200C, &e1);
+	mem.Read32(0x2010, &e2);
+	EXPECT(e0 == 0x4000 && e1 == 0xE0000000 && e2 == 0);	// 3.5 as an extended: 2^1 x 1.11b
+	EXPECT(cpu.f[3] == 3.5L && cpu.f[4] == 3.5L);
+	EXPECT((cpu.r[5] & 0xf0000000) == (kARMFlagZ | kARMFlagC));
+	EXPECT((cpu.r[6] & 0xf0000000) == (kARMFlagZ | kARMFlagC));
+	EXPECT((cpu.r[7] & 0xf0000000) == kARMFlagN);
+	// a coprocessor that is not the FPA's is still undefined
+	cpu.Reset();
+	EXPECT(RunCode(cpu, mem, { 0xEE000310 }) == kARMUndefined);
+}
+
 int
 main()
 {
+	TestFPA();
 	TestDataProcessing();
 	TestMultiply();
 	TestLoadStore();
