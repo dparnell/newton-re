@@ -141,6 +141,17 @@ nhBrowse := func() begin
 				cb and call nhBlackIn with (cb.left, cb.top, cb.right, cb.bottom) > 40;
 			end, func() begin
 			Print("nethopper: " & (call nhConnectSlip with ())._defaultButton.text);
+			// the slip is the NIE's envelope (its SetupBounds, inetenbl
+			// 0x41c29): along its top a two-pixel frame and six rows of the
+			// airmail pattern, then the sender in its top left - there is no
+			// stamp or title in the NIE's (unlike the ROM's routing slip)
+			local sb := (call nhConnectSlip with ()):GlobalBox();
+			local frame := call nhBlackIn with (sb.left + 8, sb.top, sb.right - 8, sb.top + 2);
+			local stripes := call nhBlackIn with (sb.left + 8, sb.top + 2, sb.right - 8, sb.top + 8);
+			local width := sb.right - sb.left - 16;
+			call nhCheck with ("the connection slip's top border drawn",
+				frame = 2 * width and stripes > width and stripes < 4 * width,
+				"frame " & frame & ", stripes " & stripes & " of " & 6 * width);
 			call nhTapView with ((call nhConnectSlip with ())._defaultButton);		// Connect
 			call waitFor with ("nethopper: the page", func() StrEqual(call nhTitle with (), "Host Test Page"),
 				func() AddDelayedCall(func() begin
