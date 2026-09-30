@@ -74,6 +74,7 @@ add_custom_command(
 add_library(comms_script STATIC
     Translators.cpp
     CommTrace.cpp
+    AppleTalkNatives.cpp
     HostOptionLayouts.cpp
     NewScriptEndpoint.cpp
     StreamingEndpoint.cpp

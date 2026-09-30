@@ -39,6 +39,7 @@
 #include "CardInfo.h"
 #include "SoundSettings.h"
 #include "SystemNatives.h"
+#include "AppleTalkNatives.h"
 #include "ConfigServer.h"
 #include "InkShapes.h"
 #include "StrokeBundle.h"
@@ -134,6 +135,7 @@ RegisterAllNatives(void)
 	RegisterBeamerNatives();
 	RegisterScriptEndpointNatives();		// protoEndpoint (1.x)
 	RegisterCommTraceNatives();				// cfinstantiate, cfrecord, translate
+	RegisterAppleTalkNatives();				// GetNames (the Print slip's printers)
 
 	// the Newton Toolkit's inspector connection
 	RegisterNTKNatives();
