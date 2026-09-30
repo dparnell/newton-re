@@ -249,6 +249,11 @@ is the same value spelt so that it cannot be read two ways.
   of 36 after.
 - The dns, echo and stream demos quit when done instead of a fixed 6-8 s;
   the tests sharing the 52372 echo port take a `RESOURCE_LOCK` (933663cb).
+- `analysis/worldsizes.py` (ctest `tools.WorldSizes`) checks every task
+  world in `src/` answers its own `sizeof`, beside the ROM vtable's
+  +0x04: all 30 do (`TCommTool`/`TSerTool` abstract in the ROM); the
+  inker was the only one missing.  `host.NewtonNetHopper` takes
+  `RESOURCE_LOCK tcp_52381` (e1c26ea1).
 - `tools/host/stress.py` (65533334): `--test` builds a test's fixtures in
   each copy's own directory; each run has a directory of its own; a
   fixed-port test's copies run one at a time.  The full suite passes 3

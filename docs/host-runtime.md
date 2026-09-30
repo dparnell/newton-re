@@ -262,4 +262,5 @@ destructor happens not to wait, which is why it was never seen there.
   block (the inker's missing one made the one-off `TUPort::Receive`
   crash).  Every world class needs one answering its `sizeof`; the
   ROM's may be unnamed - look at the vtable's +0x04 with
-  `analysis/vtable.py`.
+  `analysis/vtable.py`.  Checked for every world by
+  `analysis/worldsizes.py build/MP2x00US` (ctest `tools.WorldSizes`).
