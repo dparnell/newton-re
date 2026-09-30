@@ -9,6 +9,18 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: the host-order classes swept; Newt's Cape's audio and PalmDoc helpers
+
+- Every SetClass/ObjClass and class-carrying AllocateBinary in `src/` and
+  every SetClass in `romsrc/` checked for text, reals or shapes under a
+  class HostOrder did not know: MakeWedge's 'wedge and GetPolygons'
+  'polygon added; armcpu's SetClass glue goes through FSetClass (49907ed3).
+- ctest `host.NewtonAppNewtsCapeHelpers`: a WAV downloaded through Newt's
+  Cape goes into the In Box as audio (its viewer is another package, not
+  in the fixtures), and a PalmDoc e-text becomes a page.  Found: that
+  page's paragraph draws only its first line, ellipsised - handed to the
+  line-layout work.
+
 ## 2026-10-01: the Extras drawer's labels
 
 The owner found every Extras icon label drawn as boxes.  The drawer makes
