@@ -12,6 +12,8 @@
 #include "SerialTool.h"
 #include "SerialOptions.h"
 #include "MNP.h"
+#include "ModemOptions.h"
+#include "CommErrors.h"
 #include "HostSerialChip.h"
 #include "FIQTimer.h"
 #include "AppWorld.h"
@@ -29,14 +31,65 @@
 #include <stdio.h>
 #include <string.h>
 
+extern const ExceptionName exPipeException;
+
 static int failures = 0;
 static volatile bool sDone = false;
 #define EXPECT(cond) do { if (!(cond)) { failures++; printf("FAIL %s:%d: %s\n", __FILE__, __LINE__, #cond); fflush(stdout); } } while (0)
 
 
+// the options the connection types other than serial and MNP serial are
+// made with, and ADSP, which is not yet, throwing
+static void
+ConnectionTypeOptions(void)
+{
+	TOptionArray ir;
+	EXPECT(ir.Init() == noErr);
+	EXPECT(EzSharpIROptions(&ir, nil) == noErr);
+	EXPECT(ir.GetArrayCount() == 1 && ir.OptionAt(0)->Label() == 'slir' && ir.OptionAt(0)->IsService());
+	TOptionArray irda;
+	EXPECT(irda.Init() == noErr);
+	EXPECT(EzIrDAOptions(&irda, nil) == noErr);
+	EXPECT(irda.GetArrayCount() == 1 && irda.OptionAt(0)->Label() == 'irda' && irda.OptionAt(0)->IsService());
+
+	// the modem: MNP required, and the dialling out of the preferences
+	RefVar prefs(AllocateFrame());
+	SetFrameSlot(prefs, RSSYMmodemsoundvolume, MAKEINT(2));
+	SetFrameSlot(RefVar(gVarFrame), RSSYMuserconfiguration, prefs);
+	TOptionArray modem;
+	EXPECT(modem.Init() == noErr);
+	EXPECT(EzMNPModemOptions(&modem, nil) == noErr);
+	EXPECT(modem.GetArrayCount() == 3);
+	if (modem.GetArrayCount() == 3)
+	{
+		EXPECT(modem.OptionAt(0)->Label() == 'mods' && modem.OptionAt(0)->IsService());
+		TCMOModemECType* ec = (TCMOModemECType*) modem.OptionAt(1);
+		EXPECT(ec->Label() == kCMOModemECType && ec->fType == 2 && ec->GetOpCode() == opSetRequired);
+		TCMOModemDialing* dialing = (TCMOModemDialing*) modem.OptionAt(2);
+		EXPECT(dialing->Label() == kCMOModemDialing && dialing->fSpeakerOn && dialing->fSpeakerVolume == '2');
+	}
+
+	TEzEndpointPipe* pipe = new TEzEndpointPipe;
+	NewtonErr err = noErr;
+	newton_try
+	{
+		pipe->Init(kADSPConnection, nil, 30 * kSeconds);
+	}
+	newton_catch(exPipeException)
+	{
+		err = (NewtonErr) (Long) CurrentException()->data;
+	}
+	end_try;
+	EXPECT(err == kCommErrMethodNotImplemented);
+	delete pipe;
+}
+
+
 static void
 Scenario(void)
 {
+	ConnectionTypeOptions();
+
 	// the navigator the ROM's boot makes (with no modem navigator in it)
 	SetFrameSlot(RefVar(gVarFrame), RSSYMnavigator, RefVar(AllocateFrame()));
 

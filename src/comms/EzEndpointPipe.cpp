@@ -22,6 +22,11 @@
 #include "NewtonMemory.h"
 #include "NewtErrors.h"
 #include "CommErrors.h"
+#include "CommAddresses.h"
+#include "ModemOptions.h"
+#include "Unicode.h"
+
+#include <string.h>
 
 extern const ExceptionName exPipeException;
 extern const ExceptionName exTranslatorException;
@@ -150,8 +155,12 @@ failed:
 
 
 // ROM 0x000b1858 Init__15TEzEndpointPipeF14ConnectionTypePPcUl
-// By connection type.  NOT YET: AppleTalk (ADSP), Sharp IR, MNP modem and
-// IrDA - only serial and MNP serial are reconstructed; the others throw.
+// By connection type; the name is a handle the pipe then owns (the phone
+// number, for an MNP modem).  A type the ROM does not know (2, or above 6)
+// makes no endpoint and goes on to the pipe's Init with none, as the ROM's.
+// NOT YET: AppleTalk (ADSP) - OpenAppleTalk (0x00073c3c) and
+// GetADSPEndpoint (0x000b05f8) wait on the AppleTalk tools; it throws
+// kCommErrMethodNotImplemented.
 void
 TEzEndpointPipe::Init(ConnectionType type, char** name, ULong timeout)
 {
@@ -164,13 +173,22 @@ TEzEndpointPipe::Init(ConnectionType type, char** name, ULong timeout)
 		case kSerialConnection:
 			GetSerialEndpoint();
 			break;
-		case kMNPSerialConnection:
-			GetMNPSerialEndpoint();
+		case kADSPConnection:
+			Throw(exPipeException, (void*) (Long) kCommErrMethodNotImplemented, nil);
 			break;
 		case kConnectionType2:
 			break;
-		default:
-			Throw(exPipeException, (void*) (Long) kCommErrMethodNotImplemented, nil);
+		case kMNPSerialConnection:
+			GetMNPSerialEndpoint();
+			break;
+		case kSharpIRConnection:
+			GetSharpIREndpoint();
+			break;
+		case kMNPModemConnection:
+			GetMNPModemEndpoint();
+			break;
+		case kIrDAConnection:
+			GetIrDAEndpoint();
 			break;
 		}
 		TEndpointPipe::Init(fEndpoint, 0x800, 0x800, fEzTimeout, type == kSharpIRConnection, nil);
@@ -227,6 +245,77 @@ TEzEndpointPipe::GetMNPSerialEndpoint()
 		if ((fError = options.RemoveAllOptions()) == noErr
 		&&  (fError = EzMNPConnectOptions(&options, fName)) == noErr)
 			fError = fEndpoint->EasyConnect(0, &options, fEzTimeout);
+	}
+	if (fError != noErr)
+		Throw(exPipeException, (void*) (Long) fError, nil);
+}
+
+
+// ROM 0x000b0764 GetMNPModemEndpoint__15TEzEndpointPipeFv
+// The modem service with MNP, through the modem navigator when it is in
+// use, dialling the name - the phone number, UniChars - with the default
+// idle timer.  ROM BUG: the number is converted into 256 bytes with no
+// limit, and whether its option went in is not asked.
+void
+TEzEndpointPipe::GetMNPModemEndpoint()
+{
+	TOptionArray options;
+	fError = options.Init();
+	if (fError == noErr
+	&&  (fError = EzMNPModemOptions(&options, fName)) == noErr
+	&&  (!UseModemNavigator() || (fError = RunModemNavigator(&options)) == noErr)
+	&&  (fError = CMGetEndpoint(&options, &fEndpoint, false)) == noErr)
+	{
+		fEndpoint->UseForks(true);
+		if ((fError = options.RemoveAllOptions()) == noErr)
+		{
+			char number[256];
+			HLock((Handle) fName);
+			ConvertFromUnicode((const UniChar*) *fName, number, kMacRomanEncoding, 0x7FFFFFFF);
+			HUnlock((Handle) fName);
+			ULong numberLen = strlen(number);
+			TCMAPhoneNumber phone(numberLen);
+			options.InsertVarOptionAt(options.GetArrayCount(), &phone, number, numberLen);
+			TCMOIdleTimer idle;
+			if ((fError = options.InsertOptionAt(options.GetArrayCount(), &idle)) == noErr)
+				fError = fEndpoint->EasyConnect(0, &options, fEzTimeout);
+		}
+	}
+	if (fError != noErr)
+		Throw(exPipeException, (void*) (Long) fError, nil);
+}
+
+
+// ROM 0x000b0904 GetSharpIREndpoint__15TEzEndpointPipeFv
+void
+TEzEndpointPipe::GetSharpIREndpoint()
+{
+	TOptionArray options;
+	fError = options.Init();
+	if (fError == noErr
+	&&  (fError = EzSharpIROptions(&options, fName)) == noErr
+	&&  (fError = CMGetEndpoint(&options, &fEndpoint, false)) == noErr)
+	{
+		fEndpoint->UseForks(true);
+		fError = fEndpoint->EasyConnect(0, nil, fEzTimeout);
+	}
+	if (fError != noErr)
+		Throw(exPipeException, (void*) (Long) fError, nil);
+}
+
+
+// ROM 0x000b09c0 GetIrDAEndpoint__15TEzEndpointPipeFv
+void
+TEzEndpointPipe::GetIrDAEndpoint()
+{
+	TOptionArray options;
+	fError = options.Init();
+	if (fError == noErr
+	&&  (fError = EzIrDAOptions(&options, fName)) == noErr
+	&&  (fError = CMGetEndpoint(&options, &fEndpoint, false)) == noErr)
+	{
+		fEndpoint->UseForks(true);
+		fError = fEndpoint->EasyConnect(0, nil, fEzTimeout);
 	}
 	if (fError != noErr)
 		Throw(exPipeException, (void*) (Long) fError, nil);
@@ -452,4 +541,48 @@ EzMNPConnectOptions(TOptionArray* options, char** name)
 		err = options->InsertOptionAt(options->GetArrayCount(), &idle);
 	}
 	return err;
+}
+
+
+// ROM 0x000b0f0c EzSharpIROptions__FP12TOptionArrayPPc
+// The Sharp IR service.
+NewtonErr
+EzSharpIROptions(TOptionArray* options, char** name)
+{
+	TOption service;
+	service.SetAsService('slir');
+	return options->InsertOptionAt(options->GetArrayCount(), &service);
+}
+
+
+// ROM 0x000b0f50 EzMNPModemOptions__FP12TOptionArrayPPc
+// The modem service, MNP required ('mecp' 2, set as required), and the
+// dialling the user's preferences give.
+NewtonErr
+EzMNPModemOptions(TOptionArray* options, char** name)
+{
+	TOption service;
+	service.SetAsService('mods');
+	NewtonErr err = options->InsertOptionAt(options->GetArrayCount(), &service);
+	if (err != noErr)
+		return err;
+	TCMOModemECType ecType;
+	ecType.fType = 2;
+	ecType.SetOpCode(opSetRequired);
+	if ((err = options->InsertOptionAt(options->GetArrayCount(), &ecType)) != noErr)
+		return err;
+	TCMOModemDialing dialing;
+	SetDialingOptionsFromPrefs(&dialing);
+	return options->InsertOptionAt(options->GetArrayCount(), &dialing);
+}
+
+
+// ROM 0x000b1004 EzIrDAOptions__FP12TOptionArrayPPc
+// The IrDA service.
+NewtonErr
+EzIrDAOptions(TOptionArray* options, char** name)
+{
+	TOption service;
+	service.SetAsService('irda');
+	return options->InsertOptionAt(options->GetArrayCount(), &service);
 }

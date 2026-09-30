@@ -5,8 +5,9 @@
 				that makes its own endpoint - from a NewtonScript options
 				frame (openOptions, bindOptions, connectOptions methods and
 				useEOP, as the Connection application builds for the
-				docker), from three option arrays, or (NOT YET but for
-				serial and MNP serial) from a connection type - opened,
+				docker), from three option arrays, or from a connection
+				type (serial, MNP serial, Sharp IR, an MNP modem dialling
+				a number, IrDA; NOT YET: AppleTalk ADSP) - opened,
 				bound and connected, with 2K buffers each way; and asks it
 				how many bytes are waiting ('sbav).  Failures throw
 				exPipeException with the error as the data.
@@ -59,6 +60,9 @@ private:
 	void			CommonInit(ULong timeout);
 	void			GetSerialEndpoint();
 	void			GetMNPSerialEndpoint();
+	void			GetMNPModemEndpoint();
+	void			GetSharpIREndpoint();
+	void			GetIrDAEndpoint();
 
 public:
 	NewtonErr		fError;				// +0x2c
@@ -75,5 +79,8 @@ Boolean		EzConvertOptions(RefArg options, TOptionArray** open, TOptionArray** bi
 NewtonErr	EzSerialOptions(TOptionArray* options, char** name, long sendSize, long recvSize);
 NewtonErr	EzMNPSerialOptions(TOptionArray* options, char** name);
 NewtonErr	EzMNPConnectOptions(TOptionArray* options, char** name);
+NewtonErr	EzSharpIROptions(TOptionArray* options, char** name);
+NewtonErr	EzMNPModemOptions(TOptionArray* options, char** name);
+NewtonErr	EzIrDAOptions(TOptionArray* options, char** name);
 
 #endif	/* __COMMS_EZENDPOINTPIPE_H */
