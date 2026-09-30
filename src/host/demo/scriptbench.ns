@@ -1,0 +1,81 @@
+// A NewtonScript benchmark: the interpreter's own work, timed.  After the
+// Setup walk (common.ns) each step runs `sbRounds` (20) times and the
+// processor time the task's thread took (HostThreadCPUTime, milliseconds -
+// the host's other threads left out) is printed, with the
+// total:
+//   bytecode a counting loop of locals and arithmetic - the bytecode loop
+//           alone (FastRun)
+//   lookups slots read and methods sent up a three-deep _proto chain and
+//           a parent chain - the variable lookups (the proto caches)
+//   rom     the ROM's own scripts: the Names and Dates applications opened
+//           and closed, drawn once each (their view scripts, the view
+//           system's NewtonScript side)
+//   text    a line of text drawn in three fonts in turn, 100 times (the
+//           fonts opened: the font cache)
+//
+//   build/host/host/newton --display 320x480 --erase --store tmp/scriptbench.store \
+//       --headless 600 --script src/host/demo/scriptbench.ns
+//
+// (docs/frames/README.md's "Interpreter speed" has the numbers.)
+
+HostInclude("common.ns");
+
+sbName := [2, 0, 45, 34, 14, 37];
+sbRounds := 20;
+sbTotal := 0;
+
+sbBase := {depth: 0, Twice: func(x) x + x, Scale: func(x) :Twice(x) * factor, factor: 3};
+sbMiddle := {_proto: sbBase, offset: 7};
+sbTop := {_proto: sbMiddle, Sum: func(x) :Scale(x) + offset + depth};
+sbChild := {_parent: sbTop, _proto: {Step: func(x) :Sum(x) + 1}};
+
+sbFonts := [{family: 'espy, face: 0, size: 10}, {family: 'newYork, face: 1, size: 12},
+	{family: 'geneva, face: 0, size: 9}];
+
+sbSteps := [
+	['bytecode, func() begin
+		local s := 0;
+		for k := 1 to 200000 do
+			s := s + (k mod 7) * 2 - 1;
+		s;
+	  end],
+	['lookups, func() begin
+		local s := 0;
+		for k := 1 to 20000 do
+			s := s + sbChild:Step(k) + sbTop.factor + sbTop.depth;
+		s;
+	  end],
+	['rom, func() begin
+		GetRoot().cardfile:Open(); RefreshViews(); GetRoot().cardfile:Close(); RefreshViews();
+		GetRoot().calendar:Open(); RefreshViews(); GetRoot().calendar:Close(); RefreshViews();
+	  end],
+	['text, func() begin
+		local root := GetRoot();
+		local shape := MakeText("The quick brown fox jumps over the lazy dog", 10, 200, 310, 230);
+		for k := 1 to 100 do
+			foreach font in sbFonts do
+				root:DrawShape(shape, {font: font});
+	  end]];
+
+sbRun := func(i) begin
+	if i >= Length(sbSteps) then begin
+		Print("scriptbench: total " & NumberStr(sbTotal) & " ms of processor");
+		Print("scriptbench: done");
+		HostQuit();
+		return nil;
+	end;
+	local step := sbSteps[i];
+	local startCPU := HostThreadCPUTime();
+	local answer;
+	try
+		for r := 1 to sbRounds do answer := call step[1] with ()
+	onexception |evt.ex| do
+		Print("scriptbench: " & step[0] & " threw " & CurrentException().name);
+	local cpu := HostThreadCPUTime() - startCPU;
+	sbTotal := sbTotal + cpu;
+	Print("scriptbench: " & step[0] & " " & NumberStr(cpu) & " ms of processor for " & NumberStr(sbRounds)
+		& (if IsNumber(answer) then " (" & NumberStr(answer) & ")" else ""));
+	AddDelayedCall(func() call sbRun with (i + 1), nil, 500);
+end;
+
+call walkSetup with (sbName, func() AddDelayedCall(func() call sbRun with (0), nil, 2000));

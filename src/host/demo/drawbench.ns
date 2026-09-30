@@ -6,7 +6,9 @@
 // each is done `rounds` (20) times and both the processor time it took
 // (HostCPUTime, milliseconds - the work) and the wall time (ticks,
 // sixtieths of a second, which include the open and close animations'
-// own pacing) printed, with the totals.  (docs/qd/README.md's "Drawing
+// own pacing) printed, with the totals - and the processor time of the
+// newt task's own thread (HostThreadCPUTime), which leaves out the host's
+// other threads and is the steadier measure.  (docs/qd/README.md's "Drawing
 // speed" has the numbers before and after the fast paths.)
 //
 //   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
@@ -21,6 +23,7 @@ name := [2, 0, 45, 34, 14, 37];
 rounds := 20;
 total := 0;
 totalCPU := 0;
+totalTask := 0;
 
 // each step: its name and what it does once (the screen drawn after it)
 steps := [
@@ -40,7 +43,7 @@ steps := [
 
 runStep := func(i) begin
 	if i >= Length(steps) then begin
-		Print("drawbench: total " & NumberStr(totalCPU) & " ms of processor, " & NumberStr(total) & " ticks");
+		Print("drawbench: total " & NumberStr(totalCPU) & " ms of processor (" & NumberStr(totalTask) & " the task's), " & NumberStr(total) & " ticks");
 		Print("drawbench: done");
 		HostQuit();
 		return nil;
@@ -48,15 +51,18 @@ runStep := func(i) begin
 	local step := steps[i];
 	local start := Ticks();
 	local startCPU := HostCPUTime();
+	local startTask := HostThreadCPUTime();
 	try
 		for r := 1 to rounds do call step[1] with ()
 	onexception |evt.ex| do
 		Print("drawbench: " & step[0] & " threw " & CurrentException().name);
 	local took := Ticks() - start;
 	local cpu := HostCPUTime() - startCPU;
+	local task := HostThreadCPUTime() - startTask;
+	totalTask := totalTask + task;
 	total := total + took;
 	totalCPU := totalCPU + cpu;
-	Print("drawbench: " & step[0] & " " & NumberStr(cpu) & " ms of processor, " & NumberStr(took) & " ticks for " & NumberStr(rounds));
+	Print("drawbench: " & step[0] & " " & NumberStr(cpu) & " ms of processor (" & NumberStr(task) & " the task's), " & NumberStr(took) & " ticks for " & NumberStr(rounds));
 	AddDelayedCall(func() call runStep with (i + 1), nil, 500);
 end;
 

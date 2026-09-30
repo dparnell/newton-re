@@ -1,0 +1,55 @@
+// An ink benchmark: a paragraph of ink words redrawn, timed.  After the
+// Setup walk (common.ns) the Notepad is set to keep writing as ink
+// (_recogSettings 64), "ton" and "to" are written with the pen, and the
+// paragraph holding the two ink words is dirtied and redrawn `ibRounds`
+// (3000) times; the processor time of the task's thread
+// (HostThreadCPUTime, milliseconds) and the wall time (ticks) are printed.
+// An ink word is drawn as a glyph of the ink font (ink/InkFont.h), which
+// draws its strokes with the inker's line drawer when the clip holds the
+// whole word (ink/InkStrokes.cpp's DrawBufferedPoints).
+//
+//   build/host/host/newton --display 320x480 --headless 150 --script src/host/demo/inkbench.ns
+//
+// (docs/ink/README.md's "Drawing speed" has the numbers.)
+
+HostInclude("common.ns");			// walkSetup, waitFor
+HostInclude("penhelpers.ns");		// penWriteWord, penFindPara, penInkWords
+
+ibRounds := 3000;
+
+ibTwoWords := func()
+  begin
+    local para := call penFindPara with (GetRoot(), nil);
+    para and call penInkWords with (para.text) >= 2;
+  end;
+
+ibRun := func()
+  begin
+    local para := call penFindPara with (GetRoot(), nil);
+    local startCPU := HostThreadCPUTime();
+    local start := Ticks();
+    for k := 1 to ibRounds do
+      begin
+        para:Dirty();
+        RefreshViews();
+      end;
+    Print("inkbench: " & NumberStr(HostThreadCPUTime() - startCPU) & " ms of processor, "
+      & NumberStr(Ticks() - start) & " ticks for " & NumberStr(ibRounds));
+    Print("inkbench: done");
+    HostQuit();
+  end;
+
+call walkSetup with ([2, 0, 45, 34, 14, 37], func() begin
+    GetRoot().paperroll._recogSettings := 64;
+    PurgeAreaCache();
+    call penWriteWord with ("ton", 40, 200);
+    local firstUp := Ticks();
+    IdleStrokes();
+    call waitFor with ("inkbench: ton", func() Ticks() - firstUp > 40 and call penFindPara with (GetRoot(), nil),
+      func() begin
+        call penWriteWord with ("to", 120, 200);
+        local secondUp := Ticks();
+        IdleStrokes();
+        call waitFor with ("inkbench: to", func() Ticks() - secondUp > 40 and call ibTwoWords with (), ibRun, 20);
+      end, 20);
+  end);

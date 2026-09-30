@@ -138,6 +138,8 @@ def after_call(image, sections, rva):
 	if off is None or off < 7:
 		return False
 	b = image[off - 7:off]
+	if len(b) < 7:							# (an address past the section's file data)
+		return False
 	if b[2] == 0xE8:						# call rel32
 		return True
 	if b[5] == 0xFF and (b[6] >> 3) & 7 == 2:		# call reg

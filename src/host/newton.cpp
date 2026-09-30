@@ -164,6 +164,9 @@ __declspec(dllimport) void* __stdcall GetModuleHandleA(const char* name);
 __declspec(dllimport) void* __stdcall GetCurrentProcess(void);
 __declspec(dllimport) int __stdcall GetProcessTimes(void* process, unsigned long long* creation, unsigned long long* exit,
 													 unsigned long long* kernel, unsigned long long* user);
+__declspec(dllimport) void* __stdcall GetCurrentThread(void);
+__declspec(dllimport) int __stdcall GetThreadTimes(void* thread, unsigned long long* creation, unsigned long long* exit,
+													unsigned long long* kernel, unsigned long long* user);
 }
 #else
 // The same two things from a Unix host: the processor time the program has
@@ -171,6 +174,7 @@ __declspec(dllimport) int __stdcall GetProcessTimes(void* process, unsigned long
 // object a symbol is in).  These headers bring in no names of the
 // Newton's, so they need no keeping apart.
 #include <sys/resource.h>
+#include <time.h>
 #include <dlfcn.h>
 #endif
 #include <stdlib.h>
@@ -377,6 +381,27 @@ FHostCPUTime(RefArg /*rcvr*/)
 }
 
 
+// HostThreadCPUTime(): the same for the thread running the calling task
+// alone - the script's own work and the drawing it does, without what the
+// host's other threads (the interrupt and timer pollers, the window) use
+// meanwhile, which is noise to a benchmark (src/host/demo/scriptbench.ns)
+static Ref
+FHostThreadCPUTime(RefArg /*rcvr*/)
+{
+#ifdef _WIN32
+	unsigned long long creation, exited, kernel, user;
+	if (!GetThreadTimes(GetCurrentThread(), &creation, &exited, &kernel, &user))
+		return NILREF;
+	return MAKEINT((long) ((kernel + user) / 10000));
+#else
+	struct timespec now;
+	if (clock_gettime(CLOCK_THREAD_CPUTIME_ID, &now) != 0)
+		return NILREF;
+	return MAKEINT((long) (now.tv_sec * 1000 + now.tv_nsec / 1000000));
+#endif
+}
+
+
 // PreMain's host hook: the program's globals (HostQuit among them), the
 // host's link for the Newton Internet Enabler (comms/host/HostLink.h: it
 // waits for the NIE), and the host's printer (print/host/HostPrinter.h)
@@ -386,6 +411,7 @@ NewtonPreMain(void)
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostQuit")), RefVar(MakeCFunction((void*) FHostQuit, 0, nil)));
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostInclude")), RefVar(MakeCFunction((void*) FHostInclude, 1, nil)));
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostCPUTime")), RefVar(MakeCFunction((void*) FHostCPUTime, 0, nil)));
+	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostThreadCPUTime")), RefVar(MakeCFunction((void*) FHostThreadCPUTime, 0, nil)));
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostStoreFile")), RefVar(MakeCFunction((void*) FHostStoreFile, 0, nil)));
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostEchoPort")), RefVar(MakeCFunction((void*) FHostEchoPort, 0, nil)));
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostGetEnv")), RefVar(MakeCFunction((void*) FHostGetEnv, 1, nil)));
