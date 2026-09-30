@@ -25,8 +25,8 @@
 	0x00262f98 and 0x00180e38-0x001810f0), each function citing its origin.
 	DEVIATION: the ROM's Area answers a TRegion by value, a class the
 	reconstruction does not have; here it fills a region the caller owns.
-	NOT YET: the copy of the selected text a TParagraphHilite carries (for
-	the undo of a replacement) and the CopyFrom that moves it.
+	A TParagraphHilite carries a copy of the text it selected, made when
+	the paragraph makes it (TParagraphView::MakeHilite).
 */
 
 #ifndef __HILITES_H
@@ -70,7 +70,7 @@ class TParagraphView;
 class TParagraphHilite : public THilite
 {
 public:
-					TParagraphHilite(long start, long end);	// ROM 0x00180e38 __ct__16TParagraphHiliteFl (which takes the text length)
+					TParagraphHilite(long start, long end);	// ROM 0x00180e38 __ct__16TParagraphHiliteFl (which takes the text length, end - start here)
 	virtual			~TParagraphHilite();					// ROM 0x00180ec8 __dt__16TParagraphHiliteFv
 
 	virtual THilite* Clone(void);							// ROM 0x00180f20 Clone__16TParagraphHiliteFv
@@ -84,7 +84,7 @@ public:
 
 	long			fStart;				// +0x0c  the first character selected
 	long			fEnd;				// +0x10  one past the last
-	// +0x14 the selected text, NOT YET
+	UniChar*		fText;				// +0x14  the selected text (nought-terminated; room for end - start)
 	RgnHandle		fArea;				// +0x18  the region it covers, once the paragraph has said
 };
 

@@ -2073,8 +2073,13 @@ TestKeyboard()
 	EXPECT(GetPostingView(false) == v);
 	gKeyboardConnected = false;
 	KeyboardEvent down(aeKeyDown, 0);
+	TTime never;
+	never.time.hi = -1;
+	never.time.lo = 0;
+	gTickleTime = never;
 	HandleKeyEvent(&down);
 	EXPECT(gKeyboardConnected);		// told by the first key
+	EXPECT(CompCompare(&gTickleTime.time, &never.time) != 0);		// a key is the user being active (the time now)
 	EXPECT(RINT(Eval("Length(ctxK.keys)")) == 1 && EQRef(Eval("ctxK.keys[0][0]"), Intern((char*) "down")) && EQRef(Eval("ctxK.keys[0][1]"), MAKECHAR('a')) && RINT(Eval("ctxK.keys[0][2]")) == 'a');
 	KeyboardEvent up(aeKeyUp, 0);
 	HandleKeyEvent(&up);
@@ -2485,6 +2490,15 @@ TestTyping()
 	// into it otherwise takes it away
 	{
 		p->MakeHilite(2, 7, true);				// "World"
+		{
+			// the hilite carries a copy of the text it selected, and a clone copies it
+			TParagraphHilite* made = (TParagraphHilite*) RefToAddress(RefVar(p->FirstHilite()));
+			UniChar world[] = { 'W', 'o', 'r', 'l', 'd', 0 };
+			EXPECT(Ustrcmp(made->fText, world) == 0);
+			TParagraphHilite* clone = (TParagraphHilite*) made->Clone();
+			EXPECT(Ustrcmp(clone->fText, world) == 0 && clone->fStart == 2 && clone->fEnd == 7);
+			delete clone;
+		}
 		UniChar ab[2] = { 'a', 'b' };
 		p->InsertStyledText(0, ab, 2, RefVar(NILREF), RefVar(NILREF), 0, 0, false);
 		TParagraphHilite* moved = (TParagraphHilite*) RefToAddress(RefVar(p->FirstHilite()));
@@ -3614,6 +3628,33 @@ TestClicks()
 	Eval("RemoveView(GetRoot(), ctxDS); RemoveView(GetRoot(), ctxDT)");
 	Refresh();
 	EXPECT(MapIs(ExpWhite, "the limited drag and drop closed"));
+}
+
+
+// A paragraph that calculates its bounds, emptied by SetValue, asks the
+// page it is in to remove it (aeRemoveData) rather than being laid out
+// again - unless the page's text flags have 0x80, or it does not
+// calculate its bounds.
+static void
+TestEmptiedParagraph()
+{
+	Eval("emPage := AddView(GetRoot(), {viewClass: 77, viewFlags: 1, viewBounds: {left: 10, top: 10, right: 200, bottom: 200}})");
+	Eval("emA := AddView(emPage, {viewClass: 81, viewFlags: 1 + 8, viewBounds: {left: 20, top: 20, right: 150, bottom: 40}, viewFont: espy12, text: \"gone\"})");
+	Eval("emB := AddView(emPage, {viewClass: 81, viewFlags: 1, viewBounds: {left: 20, top: 50, right: 150, bottom: 70}, viewFont: espy12, text: \"stays\"})");
+	TView* page = ViewOf("emPage");
+	EXPECT(page != nil && page->fChildren->Count() == 2);
+	Eval("SetValue(emB, 'text, \"\")");
+	EXPECT(page->fChildren->Count() == 2);			// (not vCalculateBounds: laid out, empty)
+	Eval("SetValue(emA, 'text, \"\")");
+	EXPECT(page->fChildren->Count() == 1);			// taken away
+	Eval("RemoveView(GetRoot(), emPage)");
+	// a passthrough keyboard gone takes the caret from a page that takes
+	// neither text nor ink words (no keyboard up), but not from a paragraph
+	TView* bare = ViewOf("emBare := AddView(GetRoot(), {viewClass: 77, viewFlags: 1, viewBounds: {left: 10, top: 10, right: 100, bottom: 100}})");
+	gRootView->fCaretView = bare;
+	gRootView->ConnectPassthruKeyboard(false);
+	EXPECT(gRootView->fCaretView == nil);
+	Eval("RemoveView(GetRoot(), emBare)");
 }
 
 
@@ -7700,6 +7741,7 @@ main()
 		TestParagraphTap();
 		TestIdlers();
 		TestFrontKeyViews();
+		TestEmptiedParagraph();
 		TestPickView();
 		TestLayoutTable();
 		TestTimeDownAView();

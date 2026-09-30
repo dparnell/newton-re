@@ -35,10 +35,9 @@
 				as the ROM does.  Finished strokes are recorded for the
 				journal (testing/Journal.h).
 
-				NOT YET RECONSTRUCTED: the waiting ink redrawn when part of
-				the screen is updated - UpdateCompressGroup 0x001455bc,
-				UpdateStrokesInList 0x00145564, UpdateStroke 0x001456a0
-				(the inker's side, like StrokeQueue.h's StrokeUpdate).
+				The waiting ink is inked again when part of the screen is
+				updated over it (UpdateCompressGroup, from the root view's
+				PostDraw).
 
 	Reconstructed from the MP2x00 US ROM (0x001447c4-0x00144cac,
 	0x00144d40-0x00144df8, 0x00145644-0x001456a0, 0x00145e10-0x00145f78);
@@ -87,6 +86,7 @@ public:
 	void				AddExpiredStroke(TStrokeUnit* unit);	// ROM 0x00144df8 AddExpiredStroke__13StrokeCentralFP11TStrokeUnit - a stroke nobody claimed, grouped with the others (the compress time half a second on)
 	void				IGCompressGroup(TStrokeUnit** units);	// ROM 0x00144c78 IGCompressGroup__13StrokeCentralFPP11TStrokeUnit - a word's strokes (nil-ended) made the expired strokes and compressed
 	void				CompressGroup(void);					// ROM 0x0014532c CompressGroup__13StrokeCentralFv - the expired strokes' ink taken off and the group expired, then let go
+	void				UpdateCompressGroup(FRect* rect);		// ROM 0x001455bc UpdateCompressGroup__13StrokeCentralFP5FRect - the waiting strokes inked again where an update meets them
 	void				ExpireGroup(TUnitPublic** units);		// ROM 0x00145210 ExpireGroup__13StrokeCentralFPP11TUnitPublic - to the expire proc as a stroke bundle, or as a command to the view under them
 
 	Boolean				fHasCurrent;		// +0x00
@@ -137,6 +137,8 @@ void			PrepStrokeForRecognition(TStroke* stroke);
 TStrokeUnit*	MakeStrokeUnit(TStroke* stroke, TArray* areas, long contextID);
 
 void	IdleStrokes(void);									// ROM 0x00144878 IdleStrokes__Fv - the stroke world idled, not re-entered
+void	UpdateStroke(TStrokeUnit* unit, FRect* rect);		// ROM 0x001456a0 UpdateStroke__FP11TStrokeUnitP5FRect
+void	UpdateStrokesInList(TUnitList* list, FRect* rect);	// ROM 0x00145564 UpdateStrokesInList__FP9TUnitListP5FRect
 Boolean	OnlyStrokeWritten(class TStrokeUnit* unit);			// ROM 0x0020bf58 OnlyStrokeWritten__FP11TStrokeUnit (Recognizer.h)
 
 // the unit flag the stroke world sets on the click of the stroke in progress

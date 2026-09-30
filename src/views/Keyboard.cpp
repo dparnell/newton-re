@@ -32,6 +32,7 @@ unsigned char	gHardKeyMap[32];				// ROM 0x0c1025d8
 ULong			gHardKeyDeadState = 0;			// ROM 0x0c1025f8
 Boolean			gHardCapsLock = false;			// ROM 0x0c1025fc
 ULong			gTrueModifiers = 0;				// ROM 0x0c102600
+TTime			gTickleTime;					// ROM 0x0c100d04 gTickleTime - the last user activity (newt/NewtWorld.h)
 Boolean			gKeyboardConnected = false;		// ROM 0x0c101a24
 Boolean			gKeyHelpOpen = false;			// ROM 0x0c10261c
 Boolean			gInRepeatedKeyCommand = false;	// ROM 0x0c104f70 gInRepeatedKeyCommand (the Newt globals + 0x18)
@@ -596,8 +597,7 @@ DoKeyEvent(TResponder* receiver, ULong id, ULong keyCode)
 	}
 	else
 		return;
-	if (gRootView->NeedsUpdate())
-		gRootView->Update(nil);		// NOT YET RECONSTRUCTED: the caret hidden and redrawn, UpdateDefaultButtonAndCaretSlip
+	gRootView->Update(nil);		// (the caret and the default button put right with it)
 }
 
 
@@ -605,12 +605,14 @@ DoKeyEvent(TResponder* receiver, ULong id, ULong keyCode)
 // A keyboard event from the keyboard tool: a key string (several key
 // events at once) through HandleKeyEvents; else DoKeyEvent to the
 // posting view (the command-key view for the command key, a command
-// key held or a command key code).  NOT YET RECONSTRUCTED: gTickleTime
-// (the user is active).
+// key held or a command key code).  Any but a keyboard's coming or going
+// is the user being active (gTickleTime).
 void
 HandleKeyEvent(KeyboardEvent* event)
 {
 	ULong id = event->fEventId;
+	if (id != aeKeyboardConnected)
+		gTickleTime = GetGlobalTime();
 	if (id == aeKeyString)
 	{
 		HandleKeyEvents(RefVar(AddressToRef(event->fKeys)), event->fLength);

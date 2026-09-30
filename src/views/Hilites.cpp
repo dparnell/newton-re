@@ -8,6 +8,9 @@
 
 #include "Hilites.h"
 #include "Frames.h"
+#include "Unicode.h"
+#include "NewtonExceptions.h"
+#include "OSErrors.h"
 #include "RSSymbols.h"
 
 
@@ -99,12 +102,17 @@ THilite::Encloses(const Point& pt)
 ------------------------------------------------------------------------------*/
 
 // ROM 0x00180e38 __ct__16TParagraphHiliteFl
-// The ROM's takes the length of the text to copy and allocates room for it;
-// the reconstruction takes the range instead, the text copy being NOT YET.
+// Room made for the selected text.  The ROM's takes the text's length and
+// leaves the range for its caller to set; the reconstruction takes the
+// range, whose length is the text's.
 TParagraphHilite::TParagraphHilite(long start, long end)
 {
 	fStart = start;
 	fEnd = end;
+	fText = new UniChar[end - start + 1];
+	if (fText == nil)
+		Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
+	fText[0] = 0;
 	fArea = NewRgn();
 	if (fArea != nil)
 		SetEmptyRgn(fArea);
@@ -114,6 +122,8 @@ TParagraphHilite::TParagraphHilite(long start, long end)
 // ROM 0x00180ec8 __dt__16TParagraphHiliteFv
 TParagraphHilite::~TParagraphHilite()
 {
+	if (fText != nil)
+		delete[] fText;
 	if (fArea != nil)
 		DisposeRgn(fArea);
 }
@@ -144,24 +154,29 @@ TParagraphHilite::SetArea(RgnHandle rgn)
 
 
 // ROM 0x00180f20 Clone__16TParagraphHiliteFv
+// Room for the text as long as the copy's is (Ustrlen), then CopyFrom.
 THilite*
 TParagraphHilite::Clone(void)
 {
-	TParagraphHilite* copy = new TParagraphHilite(fStart, fEnd);
+	TParagraphHilite* copy = new TParagraphHilite(0, Ustrlen(fText));
+	if (copy == nil)
+		Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
 	copy->CopyFrom(this);
 	return copy;
 }
 
 
 // ROM 0x00180f7c CopyFrom__16TParagraphHiliteFP7THilite
-// The range and the laid-out region; the ROM also copies the selected text.
+// The range, the selected text and the laid-out region.  ROM QUIRK: not
+// the bounds - THilite::CopyFrom is not called - so a clone's bounds stay
+// empty until its area is worked out again.
 void
 TParagraphHilite::CopyFrom(THilite* other)
 {
-	THilite::CopyFrom(other);
 	TParagraphHilite* from = (TParagraphHilite*) other;
 	fStart = from->fStart;
 	fEnd = from->fEnd;
+	Ustrcpy(fText, from->fText);
 	if (fArea != nil && from->fArea != nil)
 		CopyRgn(from->fArea, fArea);
 }

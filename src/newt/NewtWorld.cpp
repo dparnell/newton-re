@@ -62,7 +62,8 @@
 NewtGlobals*	gNewtGlobals = nil;			// ROM 0x0c1054b0 gNewtGlobals
 TUPort*			gNewtPort = nil;			// ROM 0x0c1054a8 gNewtPort
 TTime			gLastWakeupTime;			// ROM 0x0c104c4c gLastWakeupTime
-TTime			gTickleTime;				// ROM 0x0c100d04 gTickleTime
+// (gTickleTime, ROM 0x0c100d04, is defined in views/Keyboard.cpp: the key
+// events below the newt world set it too)
 TTime			gLastIOEvent;				// ROM 0x0c100d0c gLastIOEvent
 TTime			gLastPenupTime;				// ROM 0x0c100d14 gLastPenupTime
 Boolean			gGoingToSleep = false;		// ROM 0x0c105520 gGoingToSleep

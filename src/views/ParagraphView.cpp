@@ -945,13 +945,12 @@ TParagraphView::GetSelection(void)
 // hilites, and puts the caret at the end when this view holds it.  The
 // rest is TView's, with the recogniser's area cache purged for the three
 // slots that can change what a view takes in writing (the ROM inlines
-// TView::SetValue here).
-//
-// NOT YET RECONSTRUCTED: a rich string (ink) as the text - the ROM makes
-// the text and style slots out of it (TRichString::MakeParagraphTextSlot
-// and MakeParagraphStylesSlot); and the vCalculateBounds paragraph whose text has just
-// become empty, which asks its parent to remove it (an aeRemoveData
-// command) unless the parent's text flags say not to.
+// TView::SetValue here).  A rich string (ink) as the text is taken apart
+// into the text and style slots (TRichString::MakeParagraphTextSlot and
+// MakeParagraphStylesSlot, over the view's default style).  A
+// vCalculateBounds paragraph whose text has just become empty asks its
+// parent to remove it (aeRemoveData) instead of being laid out again,
+// unless the page it is in says not to (text flag 0x80).
 void
 TParagraphView::SetValue(RefArg slot, RefArg value)
 {
@@ -961,7 +960,12 @@ TParagraphView::SetValue(RefArg slot, RefArg value)
 	{
 		RefVar text(value);
 		if (IsRichString(value))
-			text = value;			// NOT YET: the ink taken apart into text and styles
+		{
+			RefVar style(GetDefaultViewStyle());
+			TRichString rich(value);
+			text = rich.MakeParagraphTextSlot();
+			SetFrameSlot(RefVar(DataFrame()), RefVar(RSSYMstyles), RefVar(rich.MakeParagraphStylesSlot(style)));
+		}
 		else
 			RemoveSlot(RefVar(DataFrame()), RefVar(RSSYMstyles));
 		RemoveCorrectionInfo(this);
@@ -985,6 +989,15 @@ TParagraphView::SetValue(RefArg slot, RefArg value)
 	if (relayout)
 	{
 		long nowLength = (Length(RefVar(Text())) - 2) / 2;
+		if ((fFlags & vCalculateBounds) != 0 && nowLength == 0)
+		{
+			TView* page = GetEnclosingEditView();
+			if (page != nil && (page->TextFlags() & 0x80) == 0)
+			{
+				gApplication->DispatchCommand(RefVar(MakeCommand(aeRemoveData, fParent, fId)));
+				return;
+			}
+		}
 		RangeChanged(0, wasLength, nowLength, slot);
 		return;
 	}
@@ -1890,6 +1903,12 @@ TParagraphView::MakeHilite(long start, long end, Boolean interactive)
 		TParagraphHilite* hilite = new TParagraphHilite(start, end);
 		if (hilite == nil)
 			Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
+		{
+			// the selected text copied into it
+			RefVar text(Text());
+			memmove(hilite->fText, (const UniChar*) BinaryData(text) + start, (end - start) * sizeof(UniChar));
+			hilite->fText[end - start] = 0;
+		}
 		RefVar cmd(MakeCommand(aeAddHilite, this, 0x8000000));
 		if (!interactive)
 		{
@@ -6181,9 +6200,12 @@ TParagraphView::WordCommand(RefArg cmd)
 // caret - both merged into the last undo when they can (AddKeyToCurrUndo).
 // A key up runs the key scripts, then removes the emptied paragraph.  A key string is inserted at the caret (or over
 // the hilite) and the hilites removed.  aeReplaceText is
-// HandleReplaceText.  NOT YET RECONSTRUCTED: the pen commands (clicks,
-// strokes, words, gestures, ink), the hilite and style commands, the
-// clipboard; the rest is TView's.
+// HandleReplaceText.  The pen and recognition commands (aeClick, aeTap,
+// aeDoubleTap, aeWord, aeInkWord, aeScrub, aeCaret, aeLine, aeGesture2f,
+// aeRecognizeInk, aeRecognizeRange), aeAddHilite, aeScaleData and
+// aeToChildren are answered below.  NOT YET RECONSTRUCTED: any other
+// command the ROM's answers here (the style changes among them); the rest
+// is TView's.
 Boolean
 TParagraphView::RealDoCommand(RefArg cmd)
 {

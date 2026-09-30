@@ -16,6 +16,7 @@
 #include "Keyboard.h"
 #include "Bits.h"
 #include "ParagraphView.h"
+#include "EditView.h"		// TextOrInkWordsEnabled
 #include "Pictures.h"
 #include "Regions.h"
 #include "Unicode.h"
@@ -34,6 +35,7 @@
 #include "NewtonExceptions.h"
 #include "UnitPublic.h"
 #include "Recognizer.h"	// gInhibitPopup
+#include "StrokeCentral.h"	// gStrokeWorld
 #include "Controller.h"		// UpdateInk
 #include "Stroke.h"
 #include "NewtonTime.h"
@@ -70,8 +72,10 @@ TRootView::DerivedFrom(long id) const
 // The root view from its template: the update regions, the idler list,
 // the shared empty view list, the selection stack and keyboard arrays,
 // the context (a clone of Rrootcontext protoed to the template) built as
-// a view whose parent is itself, and the whole screen dirtied.  NOT YET
-// RECONSTRUCTED: the recognition's InitCorrection, the keyboard gestalt.
+// a view whose parent is itself, and the whole screen dirtied, with the
+// recognition's InitCorrection.  NOT YET RECONSTRUCTED: the keyboard
+// gestalt (extended selector 0x0200000b, whose answer - a keyboard there
+// already - sets gKeyboardConnected).
 void
 TRootView::Constructor(RefArg templ)
 {
@@ -268,9 +272,8 @@ TRootView::KeyboardActive(void)
 
 
 // ROM 0x001b491c ConnectPassthruKeyboard__9TRootViewFUc
-// A keyboard connected (or not) through a soft keyboard; the caret's
-// view is asked whether it keeps the caret when it goes (DerivedFrom
-// clEditView: the ROM's virtual call, NOT YET).
+// A keyboard connected (or not) through a soft keyboard; when it goes,
+// the caret may go with it (CheckForCaretRemoval).
 void
 TRootView::ConnectPassthruKeyboard(Boolean connected)
 {
@@ -281,12 +284,21 @@ TRootView::ConnectPassthruKeyboard(Boolean connected)
 
 
 // ROM 0x001b45f8 CheckForCaretRemoval__9TRootViewFv
-// NOT YET RECONSTRUCTED: the ROM asks the caret view DerivedFrom(clEditView).
+// A keyboard gone: the caret taken away from a page that takes neither
+// text nor ink words when no on-screen keyboard is up either.
 void
 TRootView::CheckForCaretRemoval(void)
 {
-	if (fCaretView != nil)
-		fCaretView->DerivedFrom(clEditView);
+	TView* caretView = fCaretView;
+	if (caretView == nil)
+		return;
+	if (!caretView->DerivedFrom(clEditView))
+		return;
+	if (TextOrInkWordsEnabled(caretView))
+		return;
+	if (KeyboardActive())
+		return;
+	SetKeyView(nil, 0, 0, false);
 }
 
 
@@ -352,9 +364,8 @@ TRootView::RemoveAllViews(void)
 // (TRecognitionManager::Update, written out in line): the live ink is
 // only on the display (the inker's), so an update that paints over it
 // puts it into the screen's bits (TController::UpdateInk), and where the
-// strays were cleaned up is redrawn.  NOT YET RECONSTRUCTED: the stroke
-// groups waiting to be compressed updated (StrokeCentral::
-// UpdateCompressGroup 0x001455bc).
+// strays were cleaned up is redrawn; then the strokes waiting to become
+// ink are inked again (StrokeCentral::UpdateCompressGroup).
 void
 TRootView::PostDraw(Rect& bounds)
 {
@@ -373,6 +384,7 @@ TRootView::PostDraw(Rect& bounds)
 			AdjustForInk(&r);
 			SmartInvalidate(r);
 		}
+		gStrokeWorld.UpdateCompressGroup(&fixed);
 	}
 }
 

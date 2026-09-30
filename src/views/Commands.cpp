@@ -7,6 +7,7 @@
 */
 
 #include "Commands.h"
+#include "UnitPublic.h"
 #include "Application.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
@@ -256,13 +257,30 @@ MakeUndoCommand(RefArg receiver, RefArg message, RefArg args)
 
 
 // ROM 0x00268c24 GetStrokeBundleFromCommand__FRC6RefVar
-// The strokes of a recognition command: the frame parameter, or made
-// from the unit the parameter points to (NOT YET RECONSTRUCTED: the
-// units - TUnitPublic::WordInfo and Strokes; the frame parameter alone).
+// What a recognition command gives an ink script: when its parameter is a
+// unit, the unit's word info frame - set as the command's correctInfo too,
+// and the unit's strokes made the frame parameter when there is none -
+// else the frame parameter.
 Ref
 GetStrokeBundleFromCommand(RefArg cmd)
 {
-	return CommandFrameParameter(cmd);
+	RefVar result(GetFrameSlotRef(cmd, RSSYMparameter));
+	if (NOTNIL(result))
+	{
+		TUnitPublic* unit = (TUnitPublic*) CommandParameter(cmd);
+		if (unit == nil)
+			result = NILREF;
+		else
+		{
+			result = unit->WordInfo();
+			SetFrameSlot(cmd, RSSYMcorrectinfo, result);
+			if (ISNIL(CommandFrameParameter(cmd)))
+				CommandSetFrameParameter(cmd, RefVar(unit->Strokes()));
+		}
+	}
+	if (ISNIL(result))
+		result = CommandFrameParameter(cmd);
+	return result;
 }
 
 

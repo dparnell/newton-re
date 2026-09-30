@@ -107,6 +107,7 @@ extern ULong			gSoftKeyDeadState;		// 0x0c1025d0  the offset of the pending dead
 extern Boolean			gSoftCapsLock;			// 0x0c1025d4
 extern unsigned char	gHardKeyMap[32];		// 0x0c1025d8
 extern ULong			gHardKeyDeadState;		// 0x0c1025f8
+extern TTime			gTickleTime;			// 0x0c100d04  the last user activity (the newt world's events and the keys)
 extern Boolean			gHardCapsLock;			// 0x0c1025fc
 extern ULong			gTrueModifiers;			// 0x0c102600  the left/right shift and option keys actually down: bits 0 shift, 1 right shift, 2 option, 3 right option
 extern Boolean			gKeyboardConnected;		// 0x0c101a24

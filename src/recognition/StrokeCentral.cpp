@@ -354,6 +354,55 @@ StrokeCentral::AddDeferredStroke(RefArg stroke, long a, long b)
 }
 
 
+// ROM 0x001456a0 UpdateStroke__FP11TStrokeUnitP5FRect
+// A waiting stroke inked again when the rectangle updated meets its box
+// (grown by the pen's width) - always, when its stroke lacks flag
+// 0x08000000.
+void
+UpdateStroke(TStrokeUnit* unit, FRect* rect)
+{
+	FRect box;
+	unit->GetBBox(&box);
+	long size = RINT(GetPreference(RSSYMuserpensize));
+	InsetRectangle(&box, -(size << 16), -(size << 16));
+	if (unit->fStroke->TestFlags(0x08000000) && !SectRectangle(&box, &box, rect))
+		return;
+	unit->fStroke->Draw();
+}
+
+
+// ROM 0x00145564 UpdateStrokesInList__FP9TUnitListP5FRect
+// Each stroke unit of the list inked again where the update meets it.
+void
+UpdateStrokesInList(TUnitList* list, FRect* rect)
+{
+	for (ULong i = 0; i < list->Count(); i++)
+		UpdateStroke((TStrokeUnit*) list->GetUnit(i), rect);
+}
+
+
+// ROM 0x001455bc UpdateCompressGroup__13StrokeCentralFP5FRect
+// The strokes waiting to become ink - the expired ones, and the ones the
+// ink grouping holds - inked again where an update painted over them
+// (TRecognitionManager::Update, from the root view's PostDraw).
+void
+StrokeCentral::UpdateCompressGroup(FRect* rect)
+{
+	if (fExpiredStrokes->Count() > 0)
+		UpdateStrokesInList(fExpiredStrokes, rect);
+	if (fCompressGroup == nil)
+		return;
+	GroupDataStruct* data = IGLockGroupData(fCompressGroup);
+	TStrokeUnit** units;
+	ULong count;
+	IGGetStrokesQueue(data, &units, &count);
+	for (ULong i = 0; i < count; i++)
+		if (units[i] != nil)
+			UpdateStroke(units[i], rect);
+	IGUnlockGroupData(fCompressGroup);
+}
+
+
 // ROM 0x001454fc IdleCompress__13StrokeCentralFv
 // With no stroke current, once the compress time has come the expired
 // strokes are compressed into ink.
