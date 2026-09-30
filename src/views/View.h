@@ -341,6 +341,7 @@ public:
 	void		ChildViewMoved(TView* child, Point delta);				// ROM 0x00260028 ChildViewMoved__5TViewFP5TView6TPoint
 	void		GetChildOrigin(Point* origin);							// ROM 0x00267458 GetChildOrigin__5TViewFP6TPoint
 	long		CopyProtection(void) const;								// ROM 0x0026718c CopyProtection__5TViewCFv - copyProtection (bit 0: not to be copied)
+	void		TransferCopyProtection(RefArg form);					// ROM 0x002671e0 TransferCopyProtection__5TViewFRC6RefVar - the view's copy protection put on a copy of its data
 	Point		ContentsOrigin(void);									// ROM 0x00267504 ContentsOrigin__5TViewFv
 	Boolean		IsGridded(RefArg gridKind, Point* spacing);	// ROM 0x00262a20 IsGridded__5TViewFRC6RefVarP6TPoint - the viewGrid is this kind, and how far apart
 	Point		LocalOrigin(void) const;								// ROM 0x00263da4 LocalOrigin__5TViewCFv

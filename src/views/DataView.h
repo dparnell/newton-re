@@ -26,10 +26,9 @@ class TDataView : public TView
 public:
 	virtual long	ClassID(void) const;								// ROM 0x000a2fc0 ClassID__9TDataViewCFv
 	virtual Boolean	DerivedFrom(long id) const;							// ROM 0x000a2fc8 DerivedFrom__9TDataViewCFl
-	// declared in the vtable's order, which starts at +0x120.  The slots
-	// at +0x134 and +0x138 (PointOverHilitedText, PointOverText) are only
-	// a paragraph's in this reconstruction, so nothing stands between
-	// AddHilited here and GetHiliteView.
+	// declared in the vtable's order, which starts at +0x120.  The slot at
+	// +0x134 (PointOverHilitedText) is only a paragraph's in this
+	// reconstruction.
 	// A tap on the view (a paragraph places the caret; a plain data view
 	// does nothing).
 	virtual void	HandleTap(Point& pt);								// ROM 0x000a3034 HandleTap__9TDataViewFR6TPoint (vtable +0x11c: nothing)
@@ -53,6 +52,11 @@ public:
 	// the view drawn clipped to what is selected in it (vtable +0x88)
 	virtual void	DrawHilitedData(void);								// ROM 0x000a31d8 DrawHilitedData__9TDataViewFv
 	virtual TView*	AddHilited(RefArg hilite, class TEditView* editor);	// ROM 0x000a31b8 AddHilited__9TDataViewFRC6RefVarP9TEditView (vtable +0x130)
+	// Whether the point is over the view's text (the line it is over, when
+	// asked): a plain data view has none.  A paragraph and a container
+	// answer it (vtable +0x138; +0x134 PointOverHilitedText is a
+	// paragraph's alone here).
+	virtual Boolean	PointOverText(Point& pt, Point* onLine);			// ROM 0x000a31d0 PointOverText__9TDataViewFR6TPointP6TPoint (vtable +0x138: 0)
 	// declared in the vtable's order, which starts at +0x13c
 	virtual TView*	GetHiliteView(void);								// ROM 0x000a31bc GetHiliteView__9TDataViewFv (vtable +0x13c)
 	virtual TView*	GetEnclosingEditView(void);						// ROM 0x000a3038 GetEnclosingEditView__9TDataViewFv (vtable +0x140)

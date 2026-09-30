@@ -7,6 +7,7 @@
 */
 
 #include "ContainerView.h"
+#include "EditView.h"
 #include "RootView.h"
 #include "Commands.h"
 #include "Application.h"
@@ -85,7 +86,7 @@ void
 TContainerView::Constructor(RefArg context, TView* parent)
 {
 	TView::Constructor(context, parent);
-	fUnknown30 = 5;
+	fGap = 5;
 	fUnknown34 = 2;
 }
 
@@ -385,4 +386,417 @@ TContainerView::GlobalHiliteBounds(Rect* bounds)
 		}
 	}
 	return ClickOptions();
+}
+
+
+/*------------------------------------------------------------------------------
+	W h a t   t h e   r e c o g n i s e r   d r i v e s
+------------------------------------------------------------------------------*/
+
+// ROM 0x00073258 HandleScrub__14TContainerViewFRC5TRectlP11TUnitPublicUc
+// A scrub over the container: TView's first (a scrub over its selection).
+// Asked (not reallyDoIt), the best any child would make of it - all of
+// the container (5) only as much as all of a child (4).  Done, each child
+// scrubs its part, one scrubbed away entirely (5) removed from the
+// container (aeRemoveData); a whole scrub (kind 4 or 5) is handed to the
+// children as a question only - ROM QUIRK: their reallyDoIt is `kind !=
+// 5`.  ==> 5 when no child is left, the kind (4 for a whole one) when
+// any child took it, else 0.
+long
+TContainerView::HandleScrub(const Rect& bounds, long kind, TUnitPublic* unit, Boolean reallyDoIt)
+{
+	if (!Overlaps(&viewBounds, &bounds))
+		return 0;
+	long result = TView::HandleScrub(bounds, kind, unit, reallyDoIt);
+	if (result != 0)
+		return result;
+	if (!reallyDoIt)
+	{
+		long best = 0;
+		TListLoop loop(fChildren);
+		TView* child = (TView*) loop.Next();
+		if (child == nil)
+			return 0;
+		for ( ; child != nil; child = (TView*) loop.Next())
+		{
+			long taken = child->HandleScrub(bounds, kind, unit, false);
+			if (taken > best)
+				best = taken;
+		}
+		if (best == 5)
+			best = 4;
+		return best;
+	}
+	CList* children = fChildren;
+	if (kind == 4)
+		kind = 5;
+	Boolean childDoIt = kind != 5;
+	Boolean took = false;
+	if ((long) children->GetArraySize() <= 0)
+		return 0;
+	for (long i = 0; i < (long) children->GetArraySize(); i++)
+	{
+		TView* child = (TView*) children->At((short) i);
+		long taken = child->HandleScrub(bounds, kind, unit, childDoIt);
+		if (taken != 0)
+		{
+			took = true;
+			if (taken == 5)
+			{
+				gApplication->DispatchCommand(RefVar(MakeCommand(aeRemoveData, this, child->fId)));
+				i--;
+			}
+		}
+	}
+	if (!took)
+		return 0;
+	if (children->GetArraySize() == 0)
+		return 5;
+	return kind == 5 ? 4 : kind;
+}
+
+
+// ROM 0x00073454 HandleCaret__14TContainerViewFUllR6TPointN33
+// To the first visible child that takes it.
+long
+TContainerView::HandleCaret(ULong kind, long angle, Point& armA, Point& point, Point& armB, Point& tail)
+{
+	TListLoop loop(fChildren);
+	TView* child;
+	while ((child = (TView*) loop.Next()) != nil)
+		if ((child->fFlags & vVisible) != 0
+			&& ((TDataView*) child)->HandleCaret(kind, angle, armA, point, armB, tail) != 0)
+			return 1;
+	return 0;
+}
+
+
+// ROM 0x000734fc HandleLineGesture__14TContainerViewFlR6TPointT2
+// To the first visible child that takes it.
+long
+TContainerView::HandleLineGesture(long angle, Point& from, Point& to)
+{
+	TListLoop loop(fChildren);
+	TView* child;
+	while ((child = (TView*) loop.Next()) != nil)
+		if ((child->fFlags & vVisible) != 0
+			&& ((TDataView*) child)->HandleLineGesture(angle, from, to) != 0)
+			return 1;
+	return 0;
+}
+
+
+// ROM 0x00073cf8 HandleWord__14TContainerViewFPCUsUlRC5TRectRC6TPointN22RC6RefVarUcPlP11TUnitPublic
+// A word written over the container: each visible child whose bounds (five
+// pixels to spare) the word's box touches is asked how well it would take
+// it, and - when this is not only a question - the one that bid most (the
+// first of equals) is given it.  ==> the best bid.
+long
+TContainerView::HandleWord(const UniChar* text, ULong length, const Rect& box, const Point& pt, ULong a, ULong b,
+						   RefArg word, Boolean flag, long* outOffset, TUnitPublic* unit)
+{
+	long best = 0;
+	if (!Overlaps(&viewBounds, &box))
+		return 0;
+	TView* bestChild = nil;
+	TListLoop loop(fChildren);
+	TView* child;
+	while ((child = (TView*) loop.Next()) != nil)
+	{
+		if ((child->fFlags & vVisible) == 0)
+			continue;
+		Rect near = child->viewBounds;
+		InsetRect(&near, -5, -5);
+		if (!Overlaps(&near, &box))
+			continue;
+		long bid = ((TDataView*) child)->HandleWord(text, length, box, pt, a, b, word, false, nil, unit);
+		if (bid > best)
+		{
+			bestChild = child;
+			best = bid;
+		}
+	}
+	if (flag && bestChild != nil)
+		((TDataView*) bestChild)->HandleWord(text, length, box, pt, a, b, word, true, outOffset, unit);
+	return best;
+}
+
+
+// ROM 0x00073e68 PointOverText__14TContainerViewFR6TPointP6TPoint
+// Whether any visible child has text under the point.
+Boolean
+TContainerView::PointOverText(Point& pt, Point* onLine)
+{
+	TListLoop loop(fChildren);
+	TView* child;
+	while ((child = (TView*) loop.Next()) != nil)
+		if ((child->fFlags & vVisible) != 0 && ((TDataView*) child)->PointOverText(pt, onLine))
+			return true;
+	return false;
+}
+
+
+// ROM 0x00073ee8 HandleTap__14TContainerViewFR6TPoint
+// A tap handed to the first visible child the point is over text in - or
+// that moved the line point it was given (which starts a pixel above and
+// left of the container), which is a child that has lines there.
+void
+TContainerView::HandleTap(Point& pt)
+{
+	Point start;
+	start.v = (short) (viewBounds.top - 1);
+	start.h = (short) (viewBounds.left - 1);
+	Point onLine = start;
+	TListLoop loop(fChildren);
+	TView* child;
+	while ((child = (TView*) loop.Next()) != nil)
+	{
+		if ((child->fFlags & vVisible) == 0)
+			continue;
+		if (((TDataView*) child)->PointOverText(pt, &onLine)
+			|| onLine.v != start.v || onLine.h != start.h)
+		{
+			((TDataView*) child)->HandleTap(pt);
+			return;
+		}
+	}
+}
+
+
+/*------------------------------------------------------------------------------
+	E d i t i n g
+------------------------------------------------------------------------------*/
+
+// ROM 0x00073fd4 CopyForm__14TContainerViewFv
+// A copy of the container's data.
+Ref
+TContainerView::CopyForm(void)
+{
+	RefVar data(DataFrame());
+	return Clone(data);
+}
+
+
+// ROM 0x00073970 AddHilited__14TContainerViewFRC6RefVarP9TEditView
+// The selection made a view of its own on the page: the whole container
+// copied (CopyForm, given its copy protection) and added to the editor,
+// all of it selected; else the first hilited child's selection
+// (AddHilited), moved to where the container is.  ==> the new view.
+TView*
+TContainerView::AddHilited(RefArg hilite, TEditView* editor)
+{
+	if (IsCompletelyHilited(hilite))
+	{
+		RefVar form(CopyForm());
+		TransferCopyProtection(form);
+		TView* view = editor->AddForm(form);
+		view->HiliteAll();
+		return view;
+	}
+	TListLoop loop(fChildren);
+	TView* child;
+	while ((child = (TView*) loop.Next()) != nil)
+	{
+		if (child->Hilited())
+		{
+			RefVar first(child->FirstHilite());
+			TView* view = ((TDataView*) child)->AddHilited(first, editor);
+			view->DoMoveCommand(LocalOrigin());
+			return view;
+		}
+	}
+	return nil;
+}
+
+
+// ROM 0x00073a9c DeleteHilited__14TContainerViewFRC6RefVar
+// The selection deleted: only unselected when the container is read-only
+// (viewFlags 0x82); the whole container removed from its parent
+// (aeRemoveData) when all of it is selected; else the first hilited
+// child's selection deleted and the hilite taken off.
+void
+TContainerView::DeleteHilited(RefArg hilite)
+{
+	if ((fFlags & 0x82) != 0)
+	{
+		RemoveHilite(hilite);
+		return;
+	}
+	if (IsCompletelyHilited(hilite))
+	{
+		gApplication->DispatchCommand(RefVar(MakeCommand(aeRemoveData, fParent, fId)));
+		return;
+	}
+	TListLoop loop(fChildren);
+	TView* child;
+	while ((child = (TView*) loop.Next()) != nil)
+	{
+		if (child->Hilited())
+		{
+			child->DeleteHilited(RefVar(child->FirstHilite()));
+			break;
+		}
+	}
+	RemoveHilite(hilite);
+}
+
+
+// ROM 0x000740cc RealDoCommand__14TContainerViewFRC6RefVar
+// The children's data added and removed: aeAddData makes the frame
+// parameter a child (its id the parameter's, unless that is none - the
+// parameter left the new view) and posts aeRemoveData as its undo;
+// aeRemoveData takes the child of the id out, unselected, and posts
+// aeAddData with its data.  Either way the container is redrawn.  The
+// rest is TView's.
+Boolean
+TContainerView::RealDoCommand(RefArg cmd)
+{
+	long id = CommandID(cmd);
+	if (id == aeAddData)
+	{
+		TView* child = AddToSoup(RefVar(CommandFrameParameter(cmd)));
+		TimeStampTextChange(child);
+		long wantedId = CommandParameter(cmd);
+		if (wantedId != kNoParameter)
+			child->fId = wantedId;
+		CommandSetParameter(cmd, (Long) child);
+		gApplication->PostUndoCommand(aeRemoveData, this, child->fId);
+		Dirty(nil);
+		return true;
+	}
+	if (id != aeRemoveData)
+		return TView::RealDoCommand(cmd);
+	TView* child = FindID(CommandParameter(cmd));
+	if (child != nil)
+	{
+		RefVar data(child->DataFrame());
+		long childId = child->fId;
+		child->RemoveAllHilites();
+		RemoveFromSoup(child);
+		RefVar undo(MakeCommand(aeAddData, this, childId));
+		CommandSetFrameParameter(undo, data);
+		gApplication->PostUndoCommand(undo);
+	}
+	Dirty(nil);
+	return true;
+}
+
+
+// ROM 0x00074240 GetValue__14TContainerViewFRC6RefVarT1
+// hilites as offset: when the container is hilited, the first offset
+// each child answers, in an array (nil for none).  The rest is TView's.
+Ref
+TContainerView::GetValue(RefArg slot, RefArg type)
+{
+	if (!EQRef(slot, RSSYMhilites) || !EQRef(type, RSSYMoffset))
+		return TView::GetValue(slot, type);
+	RefVar result(NILREF);
+	if (Hilited())
+	{
+		result = MakeArray(0);
+		RefVar answer;
+		TListLoop loop(fChildren);
+		TView* child;
+		while ((child = (TView*) loop.Next()) != nil)
+		{
+			answer = child->GetValue(slot, type);
+			if (NOTNIL(answer))
+				AddArraySlot(result, RefVar(GetArraySlotRef(answer, 0)));
+		}
+		if (Length(result) == 0)
+			result = NILREF;
+	}
+	return result;
+}
+
+
+// ROM 0x000743c0 ChildBoundsChanged__14TContainerViewFP5TViewR5TRect
+// A child whose right edge has moved (its left where it was): grown
+// wider, every child to the right of where it ended that shares any of
+// its rows and has come within fGap of it is pushed along - all by the
+// most any of them needs - and the container widened by as much; grown
+// narrower, the container is only redrawn.  `bounds` is the child's old
+// bounds, its viewBounds the new.
+void
+TContainerView::ChildBoundsChanged(TView* child, Rect& bounds)
+{
+	Rect grown = child->viewBounds;
+	// the rows it covers, as a strip a pixel wide (the other children's
+	// the same), so only the vertical overlap counts
+	Rect strip = grown;
+	strip.left = 0;
+	strip.right = 1;
+	if (grown.left != bounds.left)
+		return;
+	long wider = grown.right - bounds.right;
+	if (wider <= 0)
+	{
+		if (wider < 0)
+			Dirty(nil);
+		return;
+	}
+	long shift = 0;
+	{
+		TListLoop loop(fChildren);
+		TView* other;
+		while ((other = (TView*) loop.Next()) != nil)
+		{
+			if (other->viewBounds.left < bounds.right)
+				continue;
+			if (other->viewBounds.left >= fGap + grown.right)
+				continue;
+			Rect otherStrip = other->viewBounds;
+			otherStrip.left = 0;
+			otherStrip.right = 1;
+			if (!Overlaps(&strip, &otherStrip))
+				continue;
+			long need = grown.right - other->viewBounds.left + fGap;
+			if (need > shift)
+				shift = need;
+		}
+	}
+	if (shift <= 0)
+		return;
+	{
+		TListLoop loop(fChildren);
+		TView* other;
+		while ((other = (TView*) loop.Next()) != nil)
+		{
+			if (other->viewBounds.left < bounds.right)
+				continue;
+			Rect otherStrip = other->viewBounds;
+			otherStrip.left = 0;
+			otherStrip.right = 1;
+			if (!Overlaps(&strip, &otherStrip))
+				continue;
+			Rect moved = other->viewBounds;
+			OffsetRect(&moved, -viewBounds.left, -viewBounds.top);
+			OffsetRect(&moved, (short) shift, 0);
+			other->WriteBounds(moved);
+		}
+	}
+	Rect mine = viewBounds;
+	mine.right = (short) (mine.right + shift);
+	Point origin = fParent->ContentsOrigin();
+	OffsetRect(&mine, (short) -origin.h, (short) -origin.v);
+	WriteBounds(mine);
+}
+
+
+// ROM 0x000746ec PointToCaret__14TContainerViewFR6TPointP5TRectT2
+// Each visible child asked in turn, until one puts the caret somewhere
+// (its top not -32768).
+void
+TContainerView::PointToCaret(Point& pt, Rect* caret, Rect* bounds)
+{
+	TListLoop loop(fChildren);
+	TView* child;
+	while ((child = (TView*) loop.Next()) != nil)
+	{
+		if ((child->fFlags & vVisible) == 0)
+			continue;
+		child->PointToCaret(pt, caret, bounds);
+		if (caret->top != -32768)
+			break;
+	}
 }

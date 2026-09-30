@@ -1786,6 +1786,38 @@ which the host cannot, so the reconstruction sets all four.
 
 `GlobalHiliteBounds` answers the same click options as `TView`'s.
 
+**What the recogniser drives** goes to the children.  A scrub
+(`HandleScrub` 0x00073258): asked, the best any child would make of it
+(all of a child counts as 4, not the whole container's 5); done, each
+child scrubs its part and one scrubbed away entirely is removed
+(aeRemoveData) - a whole scrub (4 or 5) is passed to the children as a
+question only, their `reallyDoIt` being `kind != 5` (a ROM quirk kept).
+A caret or a line gesture goes to the first visible child that takes it
+(`HandleCaret` 0x00073454, `HandleLineGesture` 0x000734fc); a word to the
+visible child near it (its bounds five pixels out) that bids most
+(`HandleWord` 0x00073cf8); a tap to the first visible child the point is
+over text in, or that moved the line point it was handed
+(`HandleTap` 0x00073ee8 over `PointOverText` 0x00073e68, vtable +0x138 -
+now a `TDataView` virtual).
+
+**Editing.**  `AddHilited` 0x00073970 makes the selection a view of its
+own on the page: all of the container copied (`CopyForm` 0x00073fd4, a
+clone of the data frame, given the container's copy protection -
+`TView::TransferCopyProtection` 0x002671e0: bit 1 makes the copy
+read-only, bit 2 becomes the copy's bit 0) and added by the editor, or the
+first hilited child's selection moved to where the container is.
+`DeleteHilited` 0x00073a9c removes the whole container from its parent
+when all of it is selected, else deletes the first hilited child's
+selection (read-only, it only unselects).  `RealDoCommand` 0x000740cc
+answers aeAddData and aeRemoveData for the children, each posting the
+other as its undo.  `GetValue('hilites, 'offset)` 0x00074240 answers the
+children's first offsets.  `ChildBoundsChanged` 0x000743c0: a child that
+grew wider (its left where it was) pushes along the children to its right
+that share any of its rows - compared as one-pixel-wide strips - by as
+much as keeps `fGap` (5) between, and the container widens by the same.
+`PointToCaret` 0x000746ec asks each visible child until one places the
+caret.  (Tested by `test_Views`' `TestContainerView`.)
+
 **A written word.**  The recogniser's `aeWord` reaches the editor's
 `RealDoCommand` 0x000a4360 (the case at 0x000a5614): a page whose script
 takes words (text flag 0x2000) is offered it first, the hilites are

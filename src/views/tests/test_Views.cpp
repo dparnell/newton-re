@@ -1869,6 +1869,37 @@ TestContainerView()
 	EXPECT(a->Hilited() && !b->Hilited());
 	container->RemoveAllHilites();
 	EXPECT(!container->Hilited() && !a->Hilited());
+	// (and with nothing hilited there are no offsets to answer)
+	EXPECT(ISNIL(container->GetValue(RefVar(RSSYMhilites), RefVar(RSSYMoffset))));
+
+	// a child grown wider pushes the children to the right of it that share
+	// its rows along, keeping five pixels between (fGap), and the container
+	// grows with them: a's right from 45 to 60 brings it within 5 of b's
+	// left (55), so b moves 10 and the container widens by 10
+	{
+		Rect old = a->viewBounds;
+		Rect wider = old;
+		wider.right = (short) (wider.right + 15);
+		a->viewBounds = wider;
+		container->ChildBoundsChanged(a, old);
+		EXPECT(b->viewBounds.left == 65 && b->viewBounds.right == 95);
+		EXPECT(container->viewBounds.right == 100);
+		// narrower, nothing moves
+		Rect now = a->viewBounds;
+		a->viewBounds = old;
+		container->ChildBoundsChanged(a, now);
+		EXPECT(b->viewBounds.left == 65 && container->viewBounds.right == 100);
+	}
+
+	// a child's data taken out (aeRemoveData) and put back by its undo
+	// (aeAddData, the id kept)
+	{
+		long bId = b->fId;
+		gApplication->DispatchCommand(RefVar(MakeCommand(aeRemoveData, container, bId)));
+		EXPECT(container->fChildren->GetArraySize() == 1 && container->FindID(bId) == nil);
+		gApplication->Undo();
+		EXPECT(container->fChildren->GetArraySize() == 2 && container->FindID(bId) != nil);
+	}
 
 	Eval("ctxCV:Close()");
 	Refresh();

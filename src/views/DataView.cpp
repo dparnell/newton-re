@@ -181,6 +181,14 @@ TDataView::AddHilited(RefArg /*hilite*/, TEditView* /*editor*/)
 }
 
 
+// ROM 0x000a31d0 PointOverText__9TDataViewFR6TPointP6TPoint
+Boolean
+TDataView::PointOverText(Point& /*pt*/, Point* /*onLine*/)
+{
+	return false;
+}
+
+
 // ROM 0x000a3494 CleanupData__9TDataViewFv
 void
 TDataView::CleanupData(void)

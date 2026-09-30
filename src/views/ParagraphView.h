@@ -260,7 +260,7 @@ public:
 	Boolean			ClickCommand(RefArg cmd);							// ROM 0x0016c658 RealDoCommand__14TParagraphViewFRC6RefVar +0x187c (aeClick)
 	Boolean			ScaleCommand(RefArg cmd);							// ROM 0x0016c658 RealDoCommand__14TParagraphViewFRC6RefVar +0x2464 (aeScaleData)
 	long			PointOverHilitedText(Point& pt);					// ROM 0x0016b1b8 PointOverHilitedText__14TParagraphViewFR6TPoint (vtable +0x134) - 0 no, 1 over the selection, 2 over one that runs to the end, 3 just below such a one
-	Boolean			PointOverText(Point& pt, Point* onLine);			// ROM 0x00177c5c PointOverText__14TParagraphViewFR6TPointP6TPoint (vtable +0x138)
+	virtual Boolean	PointOverText(Point& pt, Point* onLine);			// ROM 0x00177c5c PointOverText__14TParagraphViewFR6TPointP6TPoint (vtable +0x138)
 	long			FindLineContainingPoint(Point* pt, long margin);	// ROM 0x001782e8 FindLineContainingPoint__14TParagraphViewFP6TPoint10MarginSize (host: the line's index, -1 for none)
 	Ref				GetRangeProperties(long start, long end);			// ROM 0x001811b0 GetRangeProperties__14TParagraphViewFlT1
 	void			ROMDeleteHilited(RefArg hilite);					// ROM 0x00174aac ROMDeleteHilited__14TParagraphViewFRC6RefVar

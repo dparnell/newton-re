@@ -2028,6 +2028,46 @@ TView::CopyProtection(void) const
 }
 
 
+// ROM 0x002671e0 TransferCopyProtection__5TViewFRC6RefVar
+// A copy of the view's data given the view's copy protection: bit 1 (not
+// to be changed) made read-only viewFlags on the copy - its own, else its
+// stationery's in vars.stdForms - and the copy's copyProtection bit 1;
+// bit 2 becomes the copy's bit 0 (not to be copied), bit 3 stays bit 3.
+void
+TView::TransferCopyProtection(RefArg form)
+{
+	long protection = CopyProtection();
+	long copied = 0;
+	if ((protection & 2) != 0)
+	{
+		RefVar flags(GetProtoVariable(form, RSSYMviewflags, nil));
+		if (ISNIL(flags))
+		{
+			RefVar stationery(GetProtoVariable(form, RSSYMviewstationery, nil));
+			if (NOTNIL(stationery))
+			{
+				RefVar stdForms(GetFrameSlotRef(gVarFrame, RSSYMstdforms));
+				stationery = GetProtoVariable(stdForms, stationery, nil);
+				if (NOTNIL(stationery))
+					flags = GetProtoVariable(stationery, RSSYMviewflags, nil);
+			}
+		}
+		long value = 0;
+		if (NOTNIL(flags))
+			value = RINT(flags);
+		SetFrameSlot(form, RSSYMviewflags, RefVar(MAKEINT(value | vReadOnly)));
+		copied = 2;
+	}
+	if ((protection & 4) != 0)
+		copied |= 1;
+	if ((protection & 8) != 0)
+		copied |= 8;
+	if (copied == 0)
+		return;
+	SetFrameSlot(form, RSSYMcopyprotection, RefVar(MAKEINT(copied)));
+}
+
+
 // ROM 0x0009cdb4 EndDrag__5TViewFRC9TDragInfoP5TViewRC6TPointN23Uc
 // The drag delivered.  `startPt` is where the pen went down, `dragPt`
 // where the dragged image ended up (the pen, pinned to the limits and
