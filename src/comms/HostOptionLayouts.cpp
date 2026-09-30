@@ -63,6 +63,24 @@ static const HostOptionLayout kLayouts[] =
 	// the modem navigator's (ModemNavigator.h)
 	{ 'mpre',						"bbbbbbbbbbuuub" },
 	{ 'mcto',						"bbbbb" },
+	// the modem tool's (ModemOptions.h); "*": the bytes after the fields
+	// copied as they are (a profile's strings, a number's characters)
+	{ 'mdo ',						"bbbbbbbbbbwb" },
+	{ 'mpro',						"bbbbuuuuuu*" },
+	{ 'mecp',						"u" },
+	{ 'mspd',						"u" },
+	{ 'mvso',						"b" },
+	{ 'mfax',						"uwuuuuu" },
+	{ 'mfec',						"uwuuuuu" },
+	{ 'mfsq',						"uwu" },
+	{ 'mfsc',						"uwu" },
+	{ 'mf1c',						"uwuuuu" },
+	{ 'taps',						"bbbb" },
+	{ 'tasp',						"b" },
+	{ 'hsmn',						"b" },
+	{ 'cltr',						"u" },
+	// the phone number address (CommAddresses.h: TCMAPhoneNumber)
+	{ 'rout',						"wu*" },
 	// read as the device's bytes by their tool ("=": passed on as they
 	// are) - the host's TCP tool (comms/host/HostTCPTool.h)
 	{ 'itrs',						"=" },
@@ -105,7 +123,7 @@ size_t
 HostOptionLayoutSize(const HostOptionLayout* layout, Boolean host)
 {
 	size_t offset = 0;
-	for (const char* f = layout->fFields; *f != 0; f++)
+	for (const char* f = layout->fFields; *f != 0 && *f != '*'; f++)
 	{
 		size_t size = FieldSize(*f, host);
 		offset = AlignUp(offset, size) + size;
@@ -116,13 +134,28 @@ HostOptionLayoutSize(const HostOptionLayout* layout, Boolean host)
 }
 
 
+// A layout ending in '*' is followed by bytes of the option's own (a phone
+// number's characters, a modem profile's strings), copied as they are:
+// how many there are behind the fixed part of an option of the length
+// given in the device's layout or the host's.
+static long
+TrailingBytes(const HostOptionLayout* layout, long length, Boolean host)
+{
+	const char* f = layout->fFields;
+	if (f[0] == 0 || f[strlen(f) - 1] != '*')
+		return 0;
+	long tail = length - (long) HostOptionLayoutSize(layout, host);
+	return tail > 0 ? tail : 0;
+}
+
+
 // (the rewriting both ways: device words read big-endian, host words
 // written in the host's order, and the reverse)
 static void
 Rewrite(const HostOptionLayout* layout, const UByte* in, long inLength, Boolean inIsHost, UByte* out, long outLength)
 {
 	size_t inOffset = 0, outOffset = 0;
-	for (const char* f = layout->fFields; *f != 0; f++)
+	for (const char* f = layout->fFields; *f != 0 && *f != '*'; f++)
 	{
 		size_t inSize = FieldSize(*f, inIsHost), outSize = FieldSize(*f, !inIsHost);
 		inOffset = AlignUp(inOffset, inSize);
@@ -225,6 +258,8 @@ HostOptionFromDevice(TOption* option)
 		return option;
 	}
 	size_t hostSize = sizeof(TOption) + HostOptionLayoutSize(layout, true);
+	long tail = TrailingBytes(layout, option->Length(), false);
+	hostSize += tail;
 	TOption* host = (TOption*) NewPtrClear(hostSize);
 	if (host == nil)
 	{
@@ -234,6 +269,9 @@ HostOptionFromDevice(TOption* option)
 	memcpy(host, option, sizeof(TOption));
 	host->SetLength(hostSize - sizeof(TOption));
 	Rewrite(layout, (const UByte*) (option + 1), option->Length(), false, (UByte*) (host + 1), hostSize - sizeof(TOption));
+	if (tail > 0)
+		memcpy((UByte*) (host + 1) + HostOptionLayoutSize(layout, true),
+			   (const UByte*) (option + 1) + HostOptionLayoutSize(layout, false), tail);
 	DisposPtr((Ptr) option);
 	return host;
 }
@@ -247,10 +285,15 @@ HostOptionToDevice(const TOption* option, UByte* data, long length)
 	const HostOptionLayout* layout = HostOptionLayoutFor(((TOption*) option)->Label());
 	if (layout == nil || layout->fFields[0] == '=')
 		return -1;
-	long deviceLength = (long) HostOptionLayoutSize(layout, false);
+	long fixed = (long) HostOptionLayoutSize(layout, false);
+	long tail = TrailingBytes(layout, ((TOption*) option)->Length(), true);
+	long deviceLength = fixed + tail;
 	if (deviceLength > length)
 		deviceLength = length;
 	memset(data, 0, deviceLength);
 	Rewrite(layout, (const UByte*) (option + 1), ((TOption*) option)->Length(), true, data, deviceLength);
+	if (tail > 0 && fixed < deviceLength)
+		memcpy(data + fixed, (const UByte*) (option + 1) + HostOptionLayoutSize(layout, true),
+			   (tail < deviceLength - fixed) ? tail : deviceLength - fixed);
 	return deviceLength;
 }

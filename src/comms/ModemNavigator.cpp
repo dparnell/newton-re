@@ -1,8 +1,7 @@
 /*
 	File:		comms/ModemNavigator.cpp
 
-	Contains:	UseModemNavigator, RunModemNavigator and the modem options
-				they read (ModemNavigator.h).
+	Contains:	UseModemNavigator and RunModemNavigator (ModemNavigator.h).
 
 	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
@@ -24,43 +23,6 @@
 
 #define kCMOServiceIdentifier	'sid '
 #define kModemService			'mods'
-
-
-// ROM 0x0011f4c0 __ct__14TCMOModemPrefsFv
-TCMOModemPrefs::TCMOModemPrefs()
-	: TOption(kOptionType)
-{
-	SetLabel(kCMOModemPrefs);
-	SetLength(OPTION_DATA_LENGTH(TCMOModemPrefs));
-	fField0C = false;
-	fField0D = true;
-	fField0E = false;
-	fField0F = true;
-	fField10 = false;
-	fField11 = true;
-	fField12 = true;
-	fField13 = true;
-	fNavigatorOpen = false;
-	fField15 = false;
-	fField18 = 19200;
-	fField1C = 3;
-	fField20 = 15;
-	fField24 = true;
-}
-
-
-// ROM 0x0011f9d8 __ct__20TCMOModemConnectTypeFv
-TCMOModemConnectType::TCMOModemConnectType()
-	: TOption(kOptionType)
-{
-	SetLabel(kCMOModemConnectType);
-	SetLength(OPTION_DATA_LENGTH(TCMOModemConnectType));
-	fField0E = true;
-	fFax = false;
-	fVoice = false;
-	fField0F = false;
-	fField10 = false;
-}
 
 
 // ROM 0x00066eb4 UseModemNavigator__Fv

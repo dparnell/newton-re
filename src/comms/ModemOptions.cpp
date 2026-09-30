@@ -1,11 +1,11 @@
 /*
 	File:		comms/ModemOptions.cpp
 
-	Contains:	TCMOModemDialing and SetDialingOptionsFromPrefs -
-				ModemOptions.h.
+	Contains:	SetDialingOptionsFromPrefs - ModemOptions.h.  (The options
+				themselves are ModemToolOptions.cpp's, with the tool.)
 
-	Reconstructed from the MP2x00 US ROM (0x0011fa40, 0x00149f40); each
-	function cites its origin.
+	Reconstructed from the MP2x00 US ROM (0x00149f40); each function cites
+	its origin.
 */
 
 #include "ModemOptions.h"
@@ -14,33 +14,6 @@
 #include "ObjectHeap.h"
 #include "Frames.h"
 #include "RSSymbols.h"
-
-#define OPTION_DATA_LENGTH(cls)	(sizeof(cls) - sizeof(TOption))
-
-
-// ROM 0x0011fa40 __ct__16TCMOModemDialingFv
-// The speaker on, dial tone and busy detected, tone dialing, the speaker at
-// '2', 55 seconds for the carrier, 4 before dialing blind, 1 for a comma,
-// answering after 2 rings, country 1.
-TCMOModemDialing::TCMOModemDialing()
-	: TOption(kOptionType)
-{
-	SetLabel(kCMOModemDialing);
-	SetLength(OPTION_DATA_LENGTH(TCMOModemDialing));
-	fSpeakerOn = 1;
-	fDetectDialTone = 1;
-	fDetectBusy = 1;
-	fDTMFToneDialing = 1;
-	fManualDial = 0;
-	fSpeakerVolume = '2';
-	fWaitForCarrier = 55;
-	fWaitBeforeBlindDial = 4;
-	fCommaDelay = 1;
-	fRingToAnswerAfter = 2;
-	fCountryCode = 1;
-	fCellular = false;
-}
-
 
 // an integer preference, or the ROM's error for anything else
 static long

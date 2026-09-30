@@ -8,6 +8,9 @@
 #include "SerialOptions.h"
 #include "MNPOptions.h"
 #include "ModemNavigator.h"
+#include "ModemOptions.h"
+#include "CommToolOptions.h"
+#include "CommAddresses.h"
 #include "HALOptions.h"
 #include "NewtonMemory.h"
 #include "Boot.h"
@@ -74,6 +77,40 @@ Scenario(void)
 	CHECK(TCMOMNPDebugConnect);
 	CHECK(TCMOModemPrefs);
 	CHECK(TCMOModemConnectType);
+	CHECK(TCMOModemDialing);
+	CHECK(TCMOModemECType);
+	CHECK(TCMOModemConnectSpeed);
+	CHECK(TCMOModemVoiceSupport);
+	CHECK(TCMOModemFaxCapabilities);
+	CHECK(TCMOModemFaxEnabledCaps);
+	CHECK(TCMOModemFaxClassesSupported);
+	CHECK(TCMOModemFaxClass);
+	CHECK(TCMOModemFaxClass1Cap);
+	CHECK(TCMOTAPIService);
+	CHECK(TCMOTAPISpeaker);
+	CHECK(TCMOHandsetManagement);
+	CHECK(TCMOListenTimer);
+
+	// a phone number address: two words, then its characters as they are
+	{
+		const char* digits = "5551212";
+		TOption* device = (TOption*) NewPtrClear(sizeof(TOption) + 8 + 7);
+		device->SetAsAddress(kCMARouteLabel);
+		device->SetLength(8 + 7);
+		UByte* data = (UByte*) (device + 1);
+		data[3] = kPhoneNumber;
+		data[7] = 7;
+		memcpy(data + 8, digits, 7);
+		TOption* host = HostOptionFromDevice(device);
+		TCMAPhoneNumber* number = (TCMAPhoneNumber*) host;
+		EXPECT(number->fType == kPhoneNumber);
+		EXPECT(number->fPhoneLen == 7);
+		EXPECT(memcmp(number + 1, digits, 7) == 0);
+		UByte back[32];
+		EXPECT(HostOptionToDevice(host, back, sizeof(back)) == 15);
+		EXPECT(back[3] == kPhoneNumber && back[7] == 7 && memcmp(back + 8, digits, 7) == 0);
+		DisposPtr((Ptr) host);
+	}
 
 	// the Connection application's 'siop': [0, 0, 8, 38400] as the device's
 	// four big-endian words

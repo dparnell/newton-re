@@ -130,6 +130,28 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
     set_tests_properties(host.NewtonNTK PROPERTIES TIMEOUT 240
                          PASS_REGULAR_EXPRESSION "connected .'cnnt' answered 'okln'.*timeout set: rslt 0.*monaco.pkg installed: rslt 0.*Monaco deleted: rslt 0.*1 . 2 => 3.*<- fobj {'answer: 42}.*=> 'Sent.*=> \\['Cardfile'.*<- text '\"hello from the inspector\"'.*<- eref .'evt.ex.fr.intrp;type.ref.frame'.*<- estr .'evt.ex.msg', 'oops'.*<- eerr .'evt.ex.foo', -8007.*listener: 0, alive: TRUE.*monaco.pkg: rslt 0.*ntk: download 0.*ntk: installed Monaco.*ntk: done.*exit status 0"
                          FAIL_REGULAR_EXPRESSION "waited in vain|fell over")
+    # the modem tool (comms/ModemTool.h, serv 'mods') on the serial port,
+    # tools/modem/fakemodem.py the Hayes modem at its other end: dialing
+    # out to the echo server --tcp-echo runs (the modem's phone book maps
+    # the number to it), and answering a call it rings the Newton with
+    add_test(NAME host.NewtonModemDial
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/modem/fakemodem.py
+                     --number 5551212=127.0.0.1:52375
+                     --spawn $<TARGET_FILE:newton> --rom ${NEWTON_ROM_BIN} --serial-port 0 --tcp-echo 52375 --headless 120
+                     --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/modem.ns
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonModemDial PROPERTIES TIMEOUT 200
+                         PASS_REGULAR_EXPRESSION "<- ATI4.*<- ATDT5551212.*-> CONNECT 19200.*escaped to commands.*<- ATH0.*modem: received hello.*modem: line of 19 characters.*modem: done.*the program answered 0"
+                         FAIL_REGULAR_EXPRESSION "waited in vain|fell over")
+    add_test(NAME host.NewtonModemAnswer
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/modem/fakemodem.py
+                     --incoming 127.0.0.1:52376
+                     --spawn $<TARGET_FILE:newton> --rom ${NEWTON_ROM_BIN} --serial-port 0 --tcp-echo 52376 --headless 120
+                     --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/modem-answer.ns
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonModemAnswer PROPERTIES TIMEOUT 200
+                         PASS_REGULAR_EXPRESSION "<- ATS1.*-> RING.*-> 002.*<- ATA.*-> CONNECT 19200.*<- ATH0.*modem-answer: received hello.*modem-answer: line of 23 characters.*modem-answer: done.*the program answered 0"
+                         FAIL_REGULAR_EXPRESSION "waited in vain|fell over")
 endif()
 
 # deferred recognition (views/Rerecognize.h): "ton" written, and the

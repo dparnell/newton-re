@@ -23,7 +23,8 @@ target_include_directories(comms PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURR
 
 # The serial tools (SerialTool.h): TSerTool, TAsyncSerTool and the 'aser
 # service, over a serial chip from the registry (hal_serial) and the
-# machine's timers (hal_timers); MNP; and the IR tools (SharpIRTool.h: Sharp
+# machine's timers (hal_timers); MNP; the modem tool (ModemTool.h: a Hayes
+# modem, 'mods'); and the IR tools (SharpIRTool.h: Sharp
 # IR, 'slir'; IrProbeTool.h: the probe, 'pkir', over IrSIR.h's SIR framing).
 add_library(comms_serial STATIC
     SerialTool.cpp
@@ -33,6 +34,12 @@ add_library(comms_serial STATIC
     MNPClass5.cpp
     MNPClass5Tables.cpp
     V42bis.cpp
+    ModemTool.cpp
+    ModemToolCommands.cpp
+    ModemToolConnect.cpp
+    ModemToolFax.cpp
+    ModemToolOptions.cpp
+    ModemStrings.cpp
     SharpIRTool.cpp
     IrSIR.cpp
     IrProbeTool.cpp

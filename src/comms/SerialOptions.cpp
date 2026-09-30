@@ -89,6 +89,16 @@ TCMOBreakFraming::TCMOBreakFraming()
 }
 
 
+// ROM 0x001ddbf4 __ct__20TCMOPCMCIAModemSoundFv
+TCMOPCMCIAModemSound::TCMOPCMCIAModemSound()
+	: TOption(kOptionType)
+{
+	SetLabel(kCMOPCMCIAModemSound);
+	SetLength(OPTION_DATA_LENGTH(TCMOPCMCIAModemSound));
+	fEnableModemSound = true;
+}
+
+
 // ROM 0x001ddc48 __ct__22TCMOSerialEventEnablesFv
 TCMOSerialEventEnables::TCMOSerialEventEnables()
 	: TOption(kOptionType)

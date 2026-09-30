@@ -1,0 +1,67 @@
+// The modem tool (comms/ModemTool.h, serv 'mods') dialing out: a
+// protoBasicEndpoint (@383) over the modem service, with no error
+// correction ('mecp 0: the bytes straight through), the phone number an
+// address option; connected, "hello" and a line written and read back
+// from the echo server at the other end of the call, then disconnected -
+// the modem tool hanging up ("ATH0", "+++" when the modem will not listen,
+// "ATH0" again, "AT&FE0V1").  The modem is tools/modem/fakemodem.py on the
+// serial port, whose phone book says the number is the echo server newton
+// runs with --tcp-echo (ctest host.NewtonModemDial):
+//
+//   python tools/modem/fakemodem.py --number 5551212=127.0.0.1:52375 \
+//       --spawn build/host/host/newton --rom build/MP2x00US/rom.bin \
+//       --serial-port 0 --tcp-echo 52375 --headless 120 \
+//       --script src/host/demo/modem.ns
+
+HostInclude("common.ns");
+kNumber := "555-1212";
+done := nil;
+
+ep := {_proto: @383,
+	exceptionHandler: func(e) begin
+		Print("modem: exception " & e.name & " " & e.data);
+		true;
+	end};
+
+options := [
+	{label: "mods", type: 'service, opCode: 512},
+	{label: "mecp", type: 'option, opCode: 512,
+	 data: {arglist: [0], typelist: ['struct, 'ulong]}}];
+
+address := [
+	{label: "rout", type: 'address, opCode: 512,
+	 data: {arglist: [3, StrLen(kNumber), kNumber],
+	        typelist: ['struct, 'long, 'long, ['array, 'char, 0]]}}];
+
+Print("modem: instantiating");
+ep:Instantiate(ep, options);
+Print("modem: bound " & ep:Bind(nil, nil));
+Print("modem: connecting to " & kNumber);
+ep:Connect(address, nil);
+Print("modem: connected, state " & ep:State());
+
+ep:SetInputSpec({
+	form: 'string,
+	termination: {byteCount: 5},
+	inputScript: func(endpoint, data, terminator, options) begin
+		Print("modem: received " & data);
+		endpoint:SetInputSpec({
+			form: 'string,
+			termination: {endSequence: $\n},
+			inputScript: func(endpoint, data, terminator, options) begin
+				Print("modem: line of " & StrLen(data) & " characters");
+				done := true;
+			end});
+		endpoint:Output("over the telephone\n", nil, nil);
+	end});
+ep:Output("hello", nil, nil);
+
+call waitFor with ("modem: the echo", func() done, func() begin
+	ep:Cancel(nil);
+	ep:Disconnect(true, nil);
+	Print("modem: disconnected, state " & ep:State());
+	ep:Unbind(nil);
+	ep:Dispose();
+	Print("modem: done");
+	HostQuit();
+end, 60);

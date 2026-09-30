@@ -98,3 +98,9 @@ if(Python3_FOUND)
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/dock/mnp.py --echo --spawn $<TARGET_FILE:test_EzEndpointPipe>)
     set_tests_properties(comms.EzEndpointPipe PROPERTIES TIMEOUT 120)
 endif()
+
+# the modem tool's commands and answers (comms/ModemTool.h), without a modem
+add_executable(test_ModemTool test_ModemTool.cpp)
+target_link_libraries(test_ModemTool PRIVATE comms_serial os600_kernel os600_user)
+add_test(NAME comms.ModemTool COMMAND test_ModemTool)
+set_tests_properties(comms.ModemTool PROPERTIES TIMEOUT 30 PASS_REGULAR_EXPRESSION "test_ModemTool: all passed")
