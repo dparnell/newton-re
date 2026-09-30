@@ -1,0 +1,115 @@
+// Daleks (fixtures/packages/games/Daleks/Daleks1.pkg) played as its
+// player would: the human on a 20 by 25 grid, the Daleks closing in a step
+// for each of the human's.  A tap beside the human moves it one cell that
+// way, Teleport puts it somewhere at random, Sonic (once a round) destroys
+// the Daleks next to it, and Last stands still until the round is over -
+// the Daleks colliding with each other (and scoring) or catching the
+// human.  Each is done with the pen and checked on the game's board
+// (`gameView.gameBoard`: `human` is row << 16 | column; `daleks`,
+// `sonicCount`, `round`, `status`) and its score line.  ctest
+// host.NewtonAppDaleks:
+//
+//   build/host/host/newton --display 320x480 --erase --store tmp/daleks.store \
+//       --headless 150 --package fixtures/packages/games/Daleks/Daleks1.pkg \
+//       --script src/host/demo/apps-daleks.ns
+
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
+HostInclude("walkhelpers.ns");		// findView, the steps
+HostInclude("apphelpers.ns");		// openFromExtras, tapButtonText
+
+wtName := "daleks";
+dlkSym := '|Daleks:Avarice|;
+dlkHumanWas := nil;
+dlkDaleksWas := nil;
+
+dlkBoard := func() GetRoot().(dlkSym).gameView.gameBoard;
+dlkRow := func(cell) cell div 65536;
+dlkCol := func(cell) cell mod 65536;
+// a cell's middle on the screen: the board is 11 pixels a cell from its
+// view's top left
+dlkTapCell := func(col, row) begin
+	local b := GetRoot().(dlkSym).gameView:GlobalBox();
+	call tapAt with (b.left + col * 11 + 5, b.top + row * 11 + 5);
+end;
+dlkSame := func(a, b) begin
+	local same := Length(a) = Length(b);
+	if same then for i := 0 to Length(a) - 1 do if a[i] <> b[i] then same := nil;
+	same
+end;
+dlkNote := func(done) begin
+	dlkHumanWas := call dlkBoard with ().human;
+	dlkDaleksWas := Clone(call dlkBoard with ().daleks);
+	call done with ();
+end;
+
+wtSteps := [
+	func(done) call openFromExtras with ("Daleks", dlkSym, done),
+	call waitStep with ("the board set up", func() call dlkBoard with ()),
+	dlkNote,
+	func(done) begin
+		local h := call dlkBoard with ().human;
+		local col := call dlkCol with (h), row := call dlkRow with (h);
+		// a step away from the edge the human is nearest
+		local toCol := if col < 10 then col + 1 else col - 1;
+		call dlkTapCell with (toCol, row);
+		call waitFor with ("daleks: the human moved", func() call dlkBoard with ().human <> dlkHumanWas, func() begin
+			local now := call dlkBoard with ().human;
+			call wtCheck with ("a tap beside the human moves it there",
+				call dlkCol with (now) = toCol and call dlkRow with (now) = row,
+				"(from " & col & "," & row & " to " & call dlkCol with (now) & "," & call dlkRow with (now) & ")");
+			call wtCheck with ("the Daleks moved too", not call dlkSame with (call dlkBoard with ().daleks, dlkDaleksWas) or call dlkBoard with ().status, "(they did not)");
+			call done with ();
+		end, 10);
+	end,
+	dlkNote,
+	func(done) begin
+		call tapButtonText with (GetRoot().(dlkSym), "Teleport");
+		call waitFor with ("daleks: teleported", func() call dlkBoard with ().human <> dlkHumanWas or call dlkBoard with ().status, func() begin
+			call wtCheck with ("Teleport moves the human", call dlkBoard with ().human <> dlkHumanWas or call dlkBoard with ().status, "(it stayed)");
+			call done with ();
+		end, 10);
+	end,
+	func(done) begin
+		local sonic := call dlkBoard with ().sonicCount;
+		call tapButtonText with (GetRoot().(dlkSym), "Sonic");
+		call waitFor with ("daleks: the screwdriver used", func() call dlkBoard with ().sonicCount < sonic or call dlkBoard with ().status, func() begin
+			call wtCheck with ("Sonic uses the round's screwdriver", call dlkBoard with ().sonicCount = sonic - 1 or call dlkBoard with ().status,
+				"(sonicCount " & sonic & " -> " & call dlkBoard with ().sonicCount & ")");
+			call done with ();
+		end, 10);
+	end,
+	func(done) begin
+		local round := call dlkBoard with ().round;
+		call tapButtonText with (GetRoot().(dlkSym), "Last");
+		// the round ends: the human caught (status) or the Daleks all
+		// wrecked (the next round)
+		call waitFor with ("daleks: the round over", func() call dlkBoard with ().status or call dlkBoard with ().round > round, func() begin
+			local b := call dlkBoard with ();
+			local score := GetRoot().(dlkSym).score;
+			Print("daleks: after Last: round " & b.round & ", status " & SPrintObject(b.status) & ", score " & SPrintObject(score.text));
+			call wtCheck with ("Last plays the round out", b.status or b.round > round, "(still round " & b.round & ")");
+			call done with ();
+		end, 30);
+	end,
+	// a new game (the button with the Dalek on it, left of Sonic)
+	func(done) begin
+		local app := GetRoot().(dlkSym);
+		call tapCentre with (app.newButt);
+		call waitFor with ("daleks: a new game", func() not call dlkBoard with ().status, func() begin
+			local b := call dlkBoard with ();
+			call wtCheck with ("a new game starts at round 1, the human alive",
+				not b.status and b.round = 1 and b.sonicCount = 1 and StrEqual(app.score.text, "0"),
+				"(round " & b.round & ", status " & SPrintObject(b.status) & ", sonic " & b.sonicCount & ")");
+			call done with ();
+		end, 15);
+	end,
+	call shotStep with ("daleks"),
+	func(done) begin
+		GetRoot().(dlkSym):Close();
+		Print("daleks: done, " & wtFailures & " failed");
+		HostQuit();
+	end];
+
+SetRandomSeed(7);			// (the board the Daleks start on)
+call walkSetup with ([2, 0, 45, 34, 14, 37], func()			// "Daniel"
+	call waitFor with ("daleks: installed", func() GetRoot().(dlkSym), wtNext, 60));

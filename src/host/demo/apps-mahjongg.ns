@@ -1,0 +1,130 @@
+// Mahjongg (fixtures/packages/games/Mahjongg2.1/Mahjongg.pkg) played as
+// its player would: the 144 tiles dealt in the turtle, a pair of free
+// tiles of one kind tapped off the board at a time.  Opened from the
+// Extras drawer; the board wants a landscape screen, which the game says
+// and offers to turn to (its Rotate button, tapped).  Three pairs are
+// taken off, Undo puts the last back, Same deals the same game again and
+// New another (each asking first: OK); the count is checked in the game (`tilesRemaining`).  Which tiles are free and alike is asked of the
+// game itself (`tiles`, `validToTap`), as a player would see it.  ctest
+// host.NewtonAppMahjongg:
+//
+//   build/host/host/newton --display 320x480 --erase --store tmp/mahjongg.store \
+//       --headless 200 --package fixtures/packages/games/Mahjongg2.1/Mahjongg.pkg \
+//       --script src/host/demo/apps-mahjongg.ns
+
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
+HostInclude("walkhelpers.ns");		// findView, the steps
+HostInclude("apphelpers.ns");		// openFromExtras, tapButtonText
+
+wtName := "mahjongg";
+mjSym := '|Mahjongg:Scrawl|;
+mjPortrait := GetOrientation();
+mjFirstDeal := nil;
+
+mjApp := func() GetRoot().(mjSym);
+mjRemaining := func() call mjApp with ().tilesRemaining;
+// two free tiles of one kind
+mjPair := func() begin
+	local app := call mjApp with ();
+	local pair := nil;
+	for i := 0 to Length(app.tiles) - 1 do
+		if not pair and app.tiles[i].visible and app:validToTap(i) then
+			for j := i + 1 to Length(app.tiles) - 1 do
+				if not pair and app.tiles[j].visible and app.tiles[j].type = app.tiles[i].type and app:validToTap(j) then
+					pair := [i, j];
+	pair
+end;
+mjTapTile := func(i) begin
+	local b := call mjApp with ().tiles[i].bounds;
+	call tapAt with ((b.left + b.right) div 2, (b.top + b.bottom) div 2);
+end;
+mjDeal := func() foreach t in call mjApp with ().tiles collect t.type;
+mjSameDeal := func(a, b) begin
+	local same := Length(a) = Length(b);
+	if same then for i := 0 to Length(a) - 1 do if a[i] <> b[i] then same := nil;
+	same
+end;
+// the game's offer to turn the screen: a Rotate button that is not the
+// Extras drawer's own
+mjOffer := func() call findView with (GetRoot(), func(v) IsString(v.text) and StrEqual(TrimString(Clone(v.text)), "Rotate")
+	and not (GetRoot().extrasDrawer.viewCObject and call findView with (GetRoot().extrasDrawer, func(w) w = v)));
+mjTakePair := func(done) begin
+	local before := call mjRemaining with ();
+	local pair := call mjPair with ();
+	if not pair then begin
+		call wtCheck with ("a free pair on the board", nil, "(none)");
+		call done with ();
+		return;
+	end;
+	call mjTapTile with (pair[0]);
+	AddDelayedCall(func() begin
+		call mjTapTile with (pair[1]);
+		call waitFor with ("mahjongg: the pair taken", func() call mjRemaining with () = before - 2, func() begin
+			call wtCheck with ("a pair tapped off (" & before & " -> " & call mjRemaining with () & ")", call mjRemaining with () = before - 2, "");
+			call done with ();
+		end, 10);
+	end, nil, 800);
+end;
+
+wtSteps := [
+	// the game asks for a landscape screen and offers to turn it
+	func(done) begin
+		local drawer := GetRoot().extrasDrawer;
+		drawer:Open();
+		call waitFor with ("mahjongg: the Extras drawer", func() drawer.viewCObject, func() begin
+			local icon := call findView with (drawer, func(v) v.target and v.target.fentry and v.target.fentry.app = mjSym);
+			call tapCentre with (icon);
+			call waitFor with ("mahjongg: its Rotate offer", func() call mjOffer with (), done, 20);
+		end, 20);
+	end,
+	func(done) begin
+		// (the Extras drawer's own Rotate may still be up: the offer's is
+		// the one in the game's slip, which is not in the drawer)
+		local offer := call mjOffer with ();
+		if offer then call tapCentre with (offer);
+		call waitFor with ("mahjongg: turned and open", func() GetOrientation() <> mjPortrait and call mjApp with ().viewCObject
+				and call mjRemaining with () = 144, func() begin
+			call wtCheck with ("the screen turned for the board", GetOrientation() <> mjPortrait, "(still portrait)");
+			call wtCheck with ("144 tiles dealt", call mjRemaining with () = 144, "(" & call mjRemaining with () & ")");
+			mjFirstDeal := call mjDeal with ();
+			AddDelayedCall(done, nil, 1500);
+		end, 40);
+	end,
+	mjTakePair, mjTakePair, mjTakePair,
+	func(done) begin
+		call tapButtonText with (call mjApp with (), "Undo");
+		call waitFor with ("mahjongg: undone", func() call mjRemaining with () = 140, func() begin
+			call wtCheck with ("Undo puts the last pair back", call mjRemaining with () = 140, "(" & call mjRemaining with () & ")");
+			call done with ();
+		end, 10);
+	end,
+	func(done) begin
+		call tapAt with (205, 310);		// Same (a picture of the word: where it is in the button bar)
+		// "Are you sure you want to restart this board?" - OK
+		call waitFor with ("mahjongg: the restart asked", func() call viewLabelled with (GetRoot(), "OK"),
+			func() call tapCentre with (call viewLabelled with (GetRoot(), "OK")), 10);
+		call waitFor with ("mahjongg: the same game again", func() call mjRemaining with () = 144, func() begin
+			call wtCheck with ("Same deals the game again", call mjRemaining with () = 144 and call mjSameDeal with (call mjDeal with (), mjFirstDeal), "(" & call mjRemaining with () & ")");
+			call done with ();
+		end, 20);
+	end,
+	mjTakePair,
+	func(done) begin
+		call tapAt with (158, 310);		// New
+		call waitFor with ("mahjongg: a new game asked for", func() call viewLabelled with (GetRoot(), "OK"),
+			func() call tapCentre with (call viewLabelled with (GetRoot(), "OK")), 10);
+		call waitFor with ("mahjongg: a new game", func() call mjRemaining with () = 144, func() begin
+			call wtCheck with ("New deals afresh", call mjRemaining with () = 144, "(" & call mjRemaining with () & ")");
+			call done with ();
+		end, 20);
+	end,
+	call shotStep with ("mahjongg"),
+	func(done) begin
+		call mjApp with ():Close();
+		if GetOrientation() <> mjPortrait then SetScreenOrientation(mjPortrait);
+		Print("mahjongg: done, " & wtFailures & " failed");
+		HostQuit();
+	end];
+
+call walkSetup with ([2, 0, 45, 34, 14, 37], func()			// "Daniel"
+	call waitFor with ("mahjongg: installed", func() GetRoot().(mjSym), wtNext, 60));
