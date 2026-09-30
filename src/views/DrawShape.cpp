@@ -699,8 +699,8 @@ SetPenPattern(TStyleSave* style)
 // through a handle over its data (offset to the origin and back); a
 // bitmap drawn by DrawBitmap (its mask first in srcBic for a patCopy
 // style); a text shape drawn as a line of its font from its bounds'
-// left at its top plus the ascent, aligned across the bounds by the
-// justification, in the text pattern (else the fill's when filling); a
+// left with its baseline on their bottom, aligned across the bounds by
+// the justification, in the text pattern (else the fill's when filling); a
 // TextBox wrapped into its bounds by TextBox, clipped to them; a picture
 // played into its bounds (qd/PicPlay.h's DrawPicture).  NOT YET
 // RECONSTRUCTED: ink, scaling.
@@ -894,17 +894,17 @@ DrawOneShape(RefArg shape, const Point& origin, TStyleSave* style)
 		}
 		else
 		{
-			FontInfo fontInfo;
-			GetStyleFontInfo(&record, &fontInfo);
 			TextOptions options;
 			memset(&options, 0, sizeof(options));
 			options.fJustification = style->fJustification;
 			options.fAlignment = style->fAlignment;
 			options.fWidth = ToFixed(box.right - box.left);
 			options.fTransferMode = style->fTransferMode == patCopy ? srcOr : style->fTransferMode;
+			// the baseline on the bounds' bottom (a text shape's bounds are
+			// the line it sits on: MakeText's bottom)
 			FPoint where;
 			where.x = ToFixed(box.left);
-			where.y = ToFixed(box.top + fontInfo.ascent);
+			where.y = ToFixed(box.bottom);
 			DrawRichString(rich, 0, rich.Length(), &record, where, &options, nil);
 		}
 		DisposeStyleRecord(&record);

@@ -1224,13 +1224,35 @@ TestShapes()
 	// checkerboard on a one-bit map (MakeGrayText), so the H's stems
 	// alternate
 	Eval("bmText := MakeBitmap(40, 20, nil)");
-	Eval("DrawIntoBitmap(MakeText(\"H\", 2, 2, 30, 18), {font: {family: 'espy, face: 0, size: 12, color: 3}}, bmText)");
+	// (a text shape's baseline is its bounds' bottom: this H sits on row 14)
+	Eval("DrawIntoBitmap(MakeText(\"H\", 2, 2, 30, 14), {font: {family: 'espy, face: 0, size: 12, color: 3}}, bmText)");
 	{
 		RefVar data(Eval("bmText.data"));
 		LockRef(data);
 		PixelMap* pm = (PixelMap*) BinaryData(data);
 		EXPECT(GetPixel(pm, 2, 6) != 0 && GetPixel(pm, 2, 7) == 0 && GetPixel(pm, 2, 8) != 0 && GetPixel(pm, 8, 12) != 0);
 		EXPECT(GetPixel(pm, 3, 9) != 0 && GetPixel(pm, 4, 9) == 0 && GetPixel(pm, 5, 9) != 0 && GetPixel(pm, 2, 9) == 0);
+		UnlockRef(data);
+	}
+	// a text shape in a box taller than its line is drawn on the box's
+	// bottom, as the ROM's DrawOneShape does (the In Box's item header puts
+	// its second line in a box as tall as the header, below the first)
+	Eval("bmTall := MakeBitmap(40, 30, nil)");
+	Eval("DrawIntoBitmap(MakeText(\"H\", 2, 0, 30, 25), {font: {family: 'espy, face: 0, size: 12}}, bmTall)");
+	{
+		RefVar data(Eval("bmTall.data"));
+		LockRef(data);
+		PixelMap* pm = (PixelMap*) BinaryData(data);
+		long top = -1, bottom = -1;
+		for (long y = 0; y < 30; y++)
+			for (long x = 0; x < 40; x++)
+				if (GetPixel(pm, x, y) != 0)
+				{
+					if (top < 0)
+						top = y;
+					bottom = y;
+				}
+		EXPECT(bottom == 24 && top == 16);			// the H's nine rows, on the baseline at 25
 		UnlockRef(data);
 	}
 	Eval("DrawIntoBitmap(MakeRect(2, 3, 12, 9), {fillPattern: 5}, bm)");
