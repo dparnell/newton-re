@@ -21,7 +21,8 @@
 // a field: 'u' an unsigned word (ULong, BitRate, TTimeout, a pointer) and
 // 'w' a signed one (FastInt) - four bytes on the device, pointer-
 // sized on the host; 'l' a C long (NewtonErr) - four bytes on the device,
-// a long on the host (four on Windows, eight elsewhere); 'i' four bytes on
+// a long on the host (four on Windows, eight elsewhere) - an extended
+// option's result, its second field, is always one; 'i' four bytes on
 // both (an enum); 'h' two bytes; 'b'
 // one byte (Boolean, UChar, UByte); "=" alone: the option's tool reads the
 // device's bytes itself, so they are passed on as they are.  Every field but a byte is big-endian
@@ -72,11 +73,11 @@ static const HostOptionLayout kLayouts[] =
 	{ 'mecp',						"u" },
 	{ 'mspd',						"u" },
 	{ 'mvso',						"b" },
-	{ 'mfax',						"uwuuuuu" },
-	{ 'mfec',						"uwuuuuu" },
-	{ 'mfsq',						"uwu" },
-	{ 'mfsc',						"uwu" },
-	{ 'mf1c',						"uwuuuu" },
+	{ 'mfax',						"uluuuuu" },
+	{ 'mfec',						"uluuuuu" },
+	{ 'mfsq',						"ulu" },
+	{ 'mfsc',						"ulu" },
+	{ 'mf1c',						"uluuuu" },
 	{ 'taps',						"bbbb" },
 	{ 'tasp',						"b" },
 	{ 'hsmn',						"b" },

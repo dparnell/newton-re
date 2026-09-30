@@ -1,7 +1,9 @@
 // comms/HostOptionLayouts.h: every option class the host constructs is
 // listed, and each listing's fields add up to its class's size on the host
 // (so a class that gained a pointer-sized field, or a new class, fails here
-// rather than being misread from a script's bytes); and a script's 'siop'
+// rather than being misread from a script's bytes); an extended option's
+// result (a NewtonErr, a C long - four bytes on Windows, eight elsewhere) is
+// listed as 'l' and comes through as the error it is; and a script's 'siop'
 // comes through with its speed, and goes back as the device's bytes.
 
 #include "HostOptionLayouts.h"
@@ -12,6 +14,7 @@
 #include "CommToolOptions.h"
 #include "CommAddresses.h"
 #include "HALOptions.h"
+#include "FaxOptions.h"
 #include "NewtonMemory.h"
 #include "Boot.h"
 #include "UserBoot.h"
@@ -48,6 +51,47 @@ Check(const char* name)
 #define CHECK(T) Check<T>(#T)
 
 
+// An extended option: its service label and its result first, the result
+// listed as 'l', and a device's result of -2 read as -2 on the host.
+template <class T>
+static void
+CheckExtended(const char* name)
+{
+	Check<T>(name);
+	T option;
+	const HostOptionLayout* layout = HostOptionLayoutFor(option.Label());
+	if (layout == nil)
+		return;
+	if (layout->fFields[0] != 'u' || layout->fFields[1] != 'l')
+	{
+		failures++;
+		printf("FAIL: %s: an extended option's listing must start \"ul\" (the result a C long), not \"%s\"\n", name, layout->fFields);
+		return;
+	}
+	size_t deviceSize = HostOptionLayoutSize(layout, false);
+	TOption* device = (TOption*) NewPtrClear(sizeof(TOption) + deviceSize);
+	device->SetLabel(option.Label());
+	device->SetAsOption(option.Label());
+	device->SetLength(deviceSize);
+	UByte* bytes = (UByte*) (device + 1);
+	bytes[4] = bytes[5] = bytes[6] = 0xff;
+	bytes[7] = 0xfe;
+	TOptionExtended* host = (TOptionExtended*) HostOptionFromDevice(device);
+	EXPECT(host != nil);
+	if (host != nil)
+	{
+		if (host->GetExtendedResult() != -2)
+		{
+			failures++;
+			printf("FAIL: %s: a result of -2 came through as %ld\n", name, (long) host->GetExtendedResult());
+		}
+		DisposPtr((Ptr) host);		// (the device's option went with the rewriting)
+	}
+}
+
+#define CHECK_EXTENDED(T) CheckExtended<T>(#T)
+
+
 static void
 Scenario(void)
 {
@@ -81,11 +125,20 @@ Scenario(void)
 	CHECK(TCMOModemECType);
 	CHECK(TCMOModemConnectSpeed);
 	CHECK(TCMOModemVoiceSupport);
-	CHECK(TCMOModemFaxCapabilities);
-	CHECK(TCMOModemFaxEnabledCaps);
-	CHECK(TCMOModemFaxClassesSupported);
-	CHECK(TCMOModemFaxClass);
-	CHECK(TCMOModemFaxClass1Cap);
+	CHECK_EXTENDED(TCMOModemFaxCapabilities);
+	CHECK_EXTENDED(TCMOModemFaxEnabledCaps);
+	CHECK_EXTENDED(TCMOModemFaxClassesSupported);
+	CHECK_EXTENDED(TCMOModemFaxClass);
+	CHECK_EXTENDED(TCMOModemFaxClass1Cap);
+	CHECK(TCMOFaxPageSetUp);
+	CHECK(TCMOFaxPassThru);
+	CHECK(TCMOFaxEnableProgressEvent);
+	CHECK(TCMOFaxDirection);
+	CHECK(TCMOFaxSessionInfo);
+	CHECK(TCMOFaxMinScanLineTime);
+	CHECK(TCMOFaxConfigSendBand);
+	CHECK_EXTENDED(TCMOFaxStartPage);
+	CHECK_EXTENDED(TCMOFaxEndMessage);
 	CHECK(TCMOTAPIService);
 	CHECK(TCMOTAPISpeaker);
 	CHECK(TCMOHandsetManagement);

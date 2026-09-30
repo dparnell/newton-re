@@ -27,7 +27,7 @@ set_tests_properties(comms.Translators PROPERTIES TIMEOUT 60)
 # every option class the host constructs is listed with its fields, for a
 # script's options (comms/HostOptionLayouts.h)
 add_executable(test_HostOptionLayouts test_HostOptionLayouts.cpp)
-target_link_libraries(test_HostOptionLayouts PRIVATE comms_dock os600_kernel os600_user)
+target_link_libraries(test_HostOptionLayouts PRIVATE comms_dock comms_fax os600_kernel os600_user)
 add_test(NAME comms.HostOptionLayouts COMMAND test_HostOptionLayouts)
 set_tests_properties(comms.HostOptionLayouts PROPERTIES TIMEOUT 30)
 
