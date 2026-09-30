@@ -217,20 +217,21 @@ reaches.  Biggest user impact first; each is taken on in this order.
    draws a band at a time; before, printed ink was left out.  test_Views
    TestPolygonEditing (the ink word's path is the same code, not tested
    on its own).
-10. **The busy box and the live ink** (`BusyBoxSend` in views/GaugeView,
-    ViewNatives' TrackHilite, NewtWorld; the inker's `TInker::Convert`/
-    `DrawInk`, `TLiveInker`): the hourglass while the machine works, the
-    ink drawn under the pen as it moves.  Every stroke.  Large - the
-    tablet/inker work (`docs/recognition/inker.md`), left to it.
-11. **Cursors told of a changed entry** (`stores/Entries.cpp` 372,
-    `TCursor::EntryChanged`): a list over a soup after one of its entries
-    is edited elsewhere.  Medium; to be checked against what the ROM's
-    applications rely on.
+10. **The busy box and the live ink** - DONE (2026-09-30, the comms
+    agent's c7129677): `TInker::Convert`/`DrawInk`, `TLiveInker`,
+    `TBusyBox`; ctest host.NewtonLiveInk.
+11. **Cursors told of a changed entry** - DONE (found already there):
+    `TCursor::EntryChanged` (0x2cfe84) is reconstructed and
+    `EntryChangeCommon` calls it through `EachSoupCursorEntryChanged`; the
+    comment saying NOT YET was stale (checked against the ROM: keys
+    changed - GotoEntry; tags changed - the entry tested again, the
+    inlined Move(0)).
 
-Found stale (the code is there, the comment was not updated):
-`stores/Cursors.h`/`.cpp`'s words and text queries, `XmitSoupChange`'s
-deferred broadcast (`AddDeferredCall` is bound), `qd/PicPlay`'s text,
-curves and paths.
+The stale markers the sweep found are put right: `stores/Cursors.h`/`.cpp`
+(words and text queries - only the words' hints and the text cache,
+which merely speed them up, are still NOT YET), `stores/Entries.cpp`
+(EntryChanged); `XmitSoupChange`'s deferred broadcast and `qd/PicPlay`'s
+text, curves and paths had already been corrected.
 
 **Flaky**: `host.NewtonBeamIrDA` fails now and then under a full -j8
 run and passes alone - not yet looked into.

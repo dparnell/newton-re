@@ -369,7 +369,8 @@ EnsureEntryInternal(RefArg entry)
 // ROM 0x002d9d7c EntryChangeCommon__FRC6RefVari
 // The entry (in memory) written back to its store object, the soup's
 // indexes updated from the old to the new keys, the soup's cursors told
-// (NOT YET RECONSTRUCTED: TCursor::EntryChanged) - by flags: _modTime set,
+// (TCursor::EntryChanged: one on the entry finds it again when its keys
+// changed, or tests it again when its tags did) - by flags: _modTime set,
 // a changed _uniqueID reinstated, the tags index updated, the frame
 // written verbatim and dropped after.
 void
