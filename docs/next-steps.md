@@ -35,13 +35,6 @@ the way are all in `docs/work-log.md`.
 
 ## In progress
 
-- **The performance paths** (book agent): the proto caches and InkFont's
-  fast path are in; FastRun1 next (only ROM and package code takes it).
-  The font cache is left NOT YET (no measurable gain on the host).  Then
-  the host runtime's idle cost: idle after Setup the process uses 13% of
-  a core and, over drawbench, 18 s of processor to the newt task's 1 s -
-  the baton handoffs and the interrupt, socket and IR pollers
-  (`os600/kernel/host`, `docs/host-runtime.md`).
 - **The fixture applications used for what they are for**
   (`demo/apps-*.ns`, ctests `host.NewtonApp*`): left - Newt's Cape's
   other helpers (audio into the In Box, PalmDoc, MOD, the encodings,

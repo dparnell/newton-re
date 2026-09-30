@@ -9,6 +9,23 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: FastRun1; the host's idle cost
+
+- `FastRun1` (0x2ee138) and its helpers (5cfa447f): the ROM's fast
+  bytecode loop, for ROM and package code only; bytecode about twice as
+  fast.  Kept for fidelity as well as speed: a ROM native called from ROM
+  code runs in its caller's VM state, and setAref on a read-only frame
+  throws the read-only error.  DEVIATION: the stack top is written back
+  before inline calls that may allocate, where the ROM risks a collection
+  freeing a value still on the stack.
+- The host runtime woke every parked task thread (about 90) at each baton
+  handover, some 400 a second at idle; each thread now waits on its own
+  condition (5e98cfe2).  Idle newton 10-13% of a core to about 1%;
+  drawbench 17-19 s of processor to 0.6 s.  The pollers only looked hot
+  because of it.  Under the faster host, `walkSetup` met a tap on
+  Welcome made before startup had finished; it taps again now.
+  319 of 319, and the suite under load.
+
 ## 2026-10-01: the modem tests' fixed ports
 
 `host.NewtonModemAnswer` failed once in a full suite: it and
