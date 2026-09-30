@@ -505,6 +505,10 @@ main(int argc, char** argv)
 	SetUnhandledExceptionFilter(HostCrashedFilter);
 #endif
 	signal(SIGSEGV, HostCrashedSignal);
+	// tracing: stdout (Print, the traces' stacks) unbuffered, so that it
+	// stays in order with stderr (the traces' first lines) in one log
+	if (getenv("NEWTON_TRACE_MISSING") != nil || getenv("NEWTON_TRACE_EXCEPTIONS") != nil)
+		setvbuf(stdout, nil, _IONBF, 0);
 	signal(SIGILL, HostCrashedSignal);
 	signal(SIGFPE, HostCrashedSignal);
 	signal(SIGABRT, HostCrashedSignal);

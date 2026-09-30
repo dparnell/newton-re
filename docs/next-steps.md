@@ -9,6 +9,59 @@ here - this file says what is *not* done.  The history of how things got
 here, the plans of finished work and the host and ROM bugs found along
 the way are all in `docs/work-log.md`.
 
+## The application sweep (2026-10-01)
+
+`src/host/demo/sweep.ns` opens every application in the Extras drawer and
+the root's other application templates - the built-in ones and every
+fixture package - and uses each at random for 40 actions (taps, scribbles
+and words written, letter and arrow keys), with the traces on;
+`tools/host/sweeprank.py <log>` ranks what it ran into.  Run as:
+
+    NEWTON_TRACE_MISSING=1 NEWTON_TRACE_EXCEPTIONS=1 build/host/host/newton         --display 320x480 --erase --store tmp/sweep.store --headless 2300         --package <every fixture package> --script src/host/demo/sweep.ns > tmp/sweep.log 2>&1
+    python tools/host/sweeprank.py tmp/sweep.log
+
+Six sweeps (about 35 applications each), plus every `host.*` and `books.*`
+ctest run with the same traces, found **no unbound native, no NOT YET and
+no unanswered armcpu call** in use.  What they did find, most widespread
+first:
+
+1. **The NIE's link modules are ARM protocol parts with no host stand-in**
+   (Ethernet `PEnetLinkModule`/`PDhcpDynAddrModule`/`PLanternDriverModule`,
+   LocalTalk `PMacIPLinkModule`/`PMacIPDriverModule`, Modem & Serial
+   `PPPPLinkModule`/`PSLPLinkModule`): installing enetsup/loctsup/modmsup
+   says so, and a setup for any of those links cannot connect.  By the
+   owner's decision the host's own network stands in (the Host network
+   setup, `comms/host/HostLink.ns`); re-expressing a link module is only
+   worth it for PPP/SLIP over the host's serial port.  Open.
+2. **newton took at most 31 packages** (`--package` or dropped): the
+   queue was 32 long, so a sweep of every fixture lost the last one
+   silently but for a line on stderr.  Fixed: 256
+   (`host/HostPackages.cpp`).
+3. **A sweep's actions deadlocked on a modal dialog** (the action that
+   opened it waits for its answer, and the script's next action was only
+   asked for after it): a harness fault, not the machine's - the sweep now
+   asks for the next action first.  The same stall once showed as the
+   machine powering itself off for idleness (nothing touched it for the
+   five-minute `SleepTime`), which is right.
+4. The applications' own faults, which a MessagePad has too: Daleks' board
+   tapped before its deferred set-up has made `gameBoard` (-48204 in
+   `viewClickScript`); NetSched's `GetURLs` indexing -1 of an empty list
+   (-48205) when it connects with no URLs; the Calls slip's delayed action
+   finding its view closed ("nil view"); Newt's Cape 2.0 refused over 1.6
+   (-10401, the same package name).
+5. Copperfield opened by itself, without a book (-48204 in `PageSize`,
+   'rendering): not a user's path (a book opens it); left out of the sweep.
+
+The traces in the ctests are the scripts' own polling (a `waitFor` asking
+`InetGetDefaultLinkID` before the NIE has defined it, or `StrEqual` of a
+title not there yet) and one after a test's end (`host.NewtonInetFSM`: the
+NIE's `DoEvent_Loop` idling an FSM already disposed, -48404).
+
+A random sweep proves little about what an application *does*: the next
+step is scripted use of each application's main functions (a meeting made
+and moved, a name filed, a note written and found, a package's own verbs),
+as the walkthroughs do for the built-in ones.
+
 ## State at 2026-09-30
 
 - A full `ctest` in a parallel agent's build: 209 of 209 (`intl.Dates`

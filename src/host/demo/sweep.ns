@@ -1,0 +1,136 @@
+// The sweep: every application the machine has - the built-in ones and
+// whatever packages newton was given - opened, used at random within its
+// bounds for a while (taps, strokes and keys), and closed, so that what the reconstruction cannot
+// yet do shows up on stderr (run with NEWTON_TRACE_MISSING and
+// NEWTON_TRACE_EXCEPTIONS set).  The applications are the Extras drawer's
+// (its part cursor's entries' app symbols) and the root's other
+// application templates (an appSymbol and a title).
+//
+//   NEWTON_TRACE_MISSING=1 NEWTON_TRACE_EXCEPTIONS=1 \
+//     build/host/host/newton --display 320x480 --erase --store tmp/sweep.store \
+//       --headless 900 [--package x.pkg]... --script src/host/demo/sweep.ns
+//
+// Each application's start and end are printed ("sweep: open <sym>", "sweep:
+// closed <sym>"), so a line on stderr can be put down to the application
+// that was open.  SWEEP_TAPS (an environment variable) is the number of
+// actions per application (default 40); SWEEP_ONLY a comma-separated list of
+// application symbols to sweep.
+
+HostInclude("common.ns");			// tapAt, waitFor, walkSetup
+
+sweepTaps := 40;
+if HostGetEnv("SWEEP_TAPS") then sweepTaps := StringToNumber(HostGetEnv("SWEEP_TAPS"));
+sweepOnly := HostGetEnv("SWEEP_ONLY");
+// applications never swept: they end the session or wipe what the others use
+sweepSkip := ['setup, 'buttons, 'soupervisor, 'findOverview,
+	// transports and routing slips, which open on an item, not by themselves
+	'|defaultTransport:Newton|, 'mailcategory, '|faxsend:newton|, '|FaxReceive:Newton|,
+	'|PhoneHome:Newton|, '|beam:newton|, 'mailSlip, '|print:newton|, 'onlineslip,
+	'|NHpkgHandler:ALLPEN|, 'inbox,
+	// a book reader, opened on a book (from the Library) rather than alone
+	'copperfield];
+
+sweepApps := [];
+sweepIndex := 0;
+
+sweepList := func() begin
+	local cursor := GetRoot().ExtrasDrawer:GetPartCursor(nil, nil, nil);
+	local entry := cursor:Entry();
+	while entry do begin
+		local slot := entry.app;
+		if IsSymbol(slot) and GetRoot().(slot) and not LSearch(sweepSkip, slot, 0, '|=|, nil)
+		and not LSearch(sweepApps, slot, 0, '|=|, nil)
+		and (not sweepOnly or StrPos(sweepOnly, SPrintObject(slot), 0)) then
+			AddArraySlot(sweepApps, slot);
+		entry := cursor:Next();
+	end;
+	// and the ones not in the drawer (the button bar's, the In/Out Box's)
+	foreach slot, v in GetRoot() do
+		if IsSymbol(slot) and IsFrame(v) and not IsArray(v) and v.appSymbol and v.title and v.viewClass
+		and not LSearch(sweepSkip, slot, 0, '|=|, nil)
+		and not LSearch(sweepApps, slot, 0, '|=|, nil)
+		and (not sweepOnly or StrPos(sweepOnly, SPrintObject(slot), 0)) then
+			AddArraySlot(sweepApps, slot);
+	Print("sweep: " & Length(sweepApps) & " applications");
+	foreach a in sweepApps do Print("sweep: will sweep " & SPrintObject(a));
+end;
+
+sweepOne := func() begin
+	if sweepIndex >= Length(sweepApps) then begin
+		Print("sweep: done");
+		HostQuit();
+		return;
+	end;
+	local sym := sweepApps[sweepIndex];
+	sweepIndex := sweepIndex + 1;
+	Print("sweep: open " & SPrintObject(sym));
+	local app := GetRoot().(sym);
+	// opened as an action of its own: an application that asks something
+	// first (a modal dialog) waits in its Open for the answer, and the
+	// sweep's taps are what answer it
+	AddDelayedCall(func() begin
+		try
+			app:Open()
+		onexception |evt.ex| do
+			Print("sweep: " & SPrintObject(sym) & " would not open: " & SPrintObject(CurrentException().name));
+	end, nil, 1);
+	call waitFor with ("sweep: " & SPrintObject(sym) & " open", func() app.viewCObject, func() begin
+		local n := 0;
+		local wasOpen := nil;
+		local tapNext;
+		tapNext := func() begin
+			if app.viewCObject then wasOpen := true;
+			if n >= sweepTaps or (wasOpen and not app.viewCObject) then begin
+				try
+					if app.viewCObject then app:Close()
+				onexception |evt.ex| do
+					Print("sweep: " & SPrintObject(sym) & " would not close");
+				if GetOrientation() <> sweepPortrait then SetScreenOrientation(sweepPortrait);
+				Print("sweep: closed " & SPrintObject(sym) & " after " & n & " taps");
+				AddDelayedCall(sweepOne, nil, 1000);
+				return;
+			end;
+			n := n + 1;
+			// the next action is asked for before this one is done: an action
+			// that asks something (a modal dialog, whose world waits for the
+			// answer) has the next actions answer it, as a user's taps would
+			AddDelayedCall(tapNext, nil, 500);
+			// within the application, or anywhere while it is not open
+			local box := if app.viewCObject then app:GlobalBox() else GetRoot():GlobalBox();
+			local x := box.left + Random(0, box.right - box.left - 1);
+			local y := box.top + Random(0, box.bottom - box.top - 1);
+			if x < 0 then x := 0; if y < 0 then y := 0;
+			if x > 319 then x := 319; if y > 479 then y := 479;
+			// mostly taps; some strokes (a scribble or a word written), some
+			// keys (a letter, or an arrow to scroll)
+			local what := Random(0, 9);
+			try
+				if what <= 5 then
+					call tapAt with (x, y)
+				else if what <= 7 then begin
+					local pts := [x, y];
+					for k := 1 to 5 do begin
+						AddArraySlot(pts, Max(box.left, Min(box.right - 1, x + Random(-30, 30))));
+						AddArraySlot(pts, Max(box.top, Min(box.bottom - 1, y + Random(-15, 15))));
+					end;
+					PenDown(pts[0], pts[1]);
+					for k := 2 to Length(pts) - 2 by 2 do PenMove(pts[k], pts[k + 1]);
+					PenUp();
+					IdleStrokes();
+				end else if what = 8 then
+					call typeKey with (Random(0, 45))
+				else
+					call typeKey with (if Random(0, 1) = 0 then 125 else 126)
+			onexception |evt.ex| do
+				Print("sweep: action failed: " & SPrintObject(CurrentException().name));
+		end;
+		call tapNext with ();
+	end, 10);
+end;
+
+sweepPortrait := GetOrientation();
+SetRandomSeed(1);
+call walkSetup with ([2, 0, 45, 34, 14, 37], func() begin		// "Daniel"
+	call sweepList with ();
+	call sweepOne with ();
+end);

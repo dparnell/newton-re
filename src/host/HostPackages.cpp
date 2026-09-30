@@ -31,7 +31,7 @@
 // the files not yet sent: a small ring of copied names, taken and put
 // under a spin lock (the window's thread puts, the kernel services task
 // takes; neither holds it for more than a copy)
-const int					kQueueSize = 32;
+const int					kQueueSize = 256;		// (32 dropped the 32nd of a long --package list)
 static char*				gQueue[kQueueSize];
 static int					gQueueHead = 0, gQueueTail = 0;
 static std::atomic_flag		gQueueLock = ATOMIC_FLAG_INIT;
