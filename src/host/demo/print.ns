@@ -90,7 +90,7 @@ end;
 call walkSetup with (name, func() begin
 	GetRoot().paperroll:MakeTextNote("hello from the Newton's printer", true);
 	call tapAt with (310, 28);				// the note's Action button
-	call waitFor with ("note: the Action menu", func() call shows with (213, 23), func() begin
+	call waitFor with ("note: the Action menu", func() call shows with (183, 23), func() begin		// (as wide as its "Print Note  ⌘P": the host has a keyboard)
 		call tapAt with (260, 33);			// Print Note
 		call waitFor with ("note: the Print slip", func() call shows with (45, 134), func() begin
 			call printFromSlip with (true, 1, "note", printCard);

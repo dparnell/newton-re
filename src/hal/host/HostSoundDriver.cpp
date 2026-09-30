@@ -29,9 +29,17 @@ static long		gCapturedRoom = 0;
 	The null backend: the samples kept.
 ------------------------------------------------------------------------------*/
 
+static Boolean	gSetAside = false;		// what plays until the output stops is counted, not kept
+static long		gSetAsideCount = 0;
+
 static void
 CapturePlay(const short* samples, long count)
 {
+	if (gSetAside)
+	{
+		gSetAsideCount += count;
+		return;
+	}
 	if (gCapturedCount + count > gCapturedRoom)
 	{
 		long room = gCapturedRoom * 2;
@@ -83,6 +91,30 @@ void
 HostSoundClearCapture(void)
 {
 	gCapturedCount = 0;
+}
+
+
+long
+HostSoundSetAside(void)
+{
+	HostSoundClearCapture();
+	if (gHostSoundDriver != nil && gHostSoundDriver->fRunning)
+		gSetAside = true;
+	return gSetAsideCount;
+}
+
+
+long
+HostSoundSetAsideCount(void)
+{
+	return gSetAsideCount;
+}
+
+
+Boolean
+HostSoundSettingAside(void)
+{
+	return gSetAside;
 }
 
 
@@ -391,6 +423,7 @@ PMainSoundDriver::StopOutput(void)
 	Boolean wasRunning = fRunning;
 	fRunning = false;
 	fPlaying = false;
+	gSetAside = false;
 	fQueued = 0;
 	fQueue[0] = fQueue[1] = -1;
 	if (!wasRunning)

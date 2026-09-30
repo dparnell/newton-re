@@ -55,7 +55,7 @@ GetCommandCharWidth(RefArg command, StyleRecord* style)
 // ROM 0x00183a74 GetModifiersWidth__FRC6RefVar
 // How much room the modifier icons before a command letter take, and 10
 // more.
-static long
+long
 GetModifiersWidth(RefArg command)
 {
 	ULong modifiers = KeyCommandModifiers(command);

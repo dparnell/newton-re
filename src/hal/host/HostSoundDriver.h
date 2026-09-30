@@ -115,6 +115,12 @@ void	HostInstallSoundDriver(const HostSoundBackend* backend);
 // The null backend's capture: every sample played since the last clear.
 const short*	HostSoundCaptured(long* count);
 void			HostSoundClearCapture(void);
+// The capture cleared, and whatever is still playing (the boot sound)
+// kept out of it until the output next stops - only counted
+// (HostSoundSetAsideCount).
+long			HostSoundSetAside(void);
+long			HostSoundSetAsideCount(void);
+Boolean			HostSoundSettingAside(void);		// still playing what is set aside
 
 // The null backend's microphone: these samples, then silence (the array
 // must outlast the recording).

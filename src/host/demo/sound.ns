@@ -10,18 +10,26 @@
 //   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
 //       --script src/host/demo/sound.ns --headless 3
 
-Print("sound: PlaySoundSync");
-PlaySoundSync(@51);
-Print("sound: played");
+// the boot sound played out first (TNotebook::InitToolbox plays it, and
+// what plays over it is not counted)
+soundTest := func() begin
+	Print("sound: PlaySoundSync");
+	PlaySoundSync(@51);
+	Print("sound: played");
 
-soundChannel := {_proto: @431};
-soundChannel:Open();
-soundChannel:Schedule({_proto: @51,
-	callback: func(state, error) Print("sound: callback state " & state & " error " & error)});
-soundChannel:Start(true);
-Print("sound: started, " & (if soundChannel:IsActive() then "active" else "not active"));
-AddDelayedCall(func() begin
-	soundChannel:Close();
-	Print("sound: closed");
-	HostQuit();
-end, nil, 1000);
+	soundChannel := {_proto: @431};
+	soundChannel:Open();
+	soundChannel:Schedule({_proto: @51,
+		callback: func(state, error) Print("sound: callback state " & state & " error " & error)});
+	soundChannel:Start(true);
+	Print("sound: started, " & (if soundChannel:IsActive() then "active" else "not active"));
+	AddDelayedCall(func() begin
+		soundChannel:Close();
+		Print("sound: closed");
+		HostQuit();
+	end, nil, 1000);
+end;
+soundWait := func()
+	if HostSoundBootPlaying() then AddDelayedCall(soundWait, nil, 100)
+	else call soundTest with ();
+call soundWait with ();

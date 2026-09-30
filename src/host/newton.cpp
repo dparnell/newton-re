@@ -335,6 +335,16 @@ FHostGetEnv(RefArg /*rcvr*/, RefArg name)
 }
 
 
+// HostSoundBootPlaying(): whether the boot sound is still playing (and
+// what plays meanwhile is not counted) - a script that measures its
+// sounds waits for it
+static Ref
+FHostSoundBootPlaying(RefArg /*rcvr*/)
+{
+	return MAKEBOOLEAN(HostSoundSettingAside());
+}
+
+
 // HostSoundSamples(): how many samples the host's sound driver has been
 // given to play so far - a test's way of hearing that something made a
 // sound (a click, a slip's show sound)
@@ -383,27 +393,15 @@ NewtonPreMain(void)
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostEchoPort")), RefVar(MakeCFunction((void*) FHostEchoPort, 0, nil)));
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostGetEnv")), RefVar(MakeCFunction((void*) FHostGetEnv, 1, nil)));
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostSoundSamples")), RefVar(MakeCFunction((void*) FHostSoundSamples, 0, nil)));
+	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostSoundBootPlaying")), RefVar(MakeCFunction((void*) FHostSoundBootPlaying, 0, nil)));
 	HostInstallPackageGlobal();
 	HostLinkStart();
 	HostInstallPrinter();
 	HostInstallPowerGlobals();			// (power/host/HostPowerSwitch.h: HostPowerSwitch(), HostWakeAfter(ms), ...)
-	// the boot sound (TNotebook::InitToolbox) let play out and left out of
-	// what is counted as played, which is what the script's sounds are
-	// measured by
-	for (long tries = 0, before = -1; tries < 50; tries++)
-	{
-		long now;
-		(void) HostSoundCaptured(&now);
-		if (now == before)
-		{
-			if (now > 0)
-				fprintf(stderr, "[host] sound: the boot played %ld samples\n", now);
-			break;
-		}
-		before = now;
-		Sleep(100 * kMilliseconds);
-	}
-	HostSoundClearCapture();
+	// the boot sound (TNotebook::InitToolbox), which may still be playing,
+	// kept out of what is counted as played, which is what the script's
+	// sounds are measured by
+	HostSoundSetAside();
 }
 
 
@@ -680,6 +678,8 @@ main(int argc, char** argv)
 		HostAudioClose();
 	long played = 0;
 	const short* samples = HostSoundCaptured(&played);
+	if (HostSoundSetAsideCount() > 0)
+		fprintf(stderr, "[host] sound: the boot sound, %ld samples, not counted\n", HostSoundSetAsideCount());
 	if (played > 0)
 		fprintf(stderr, "[host] sound: %ld samples played\n", played);
 	if (played > 0 && gToneFrequency > 0)

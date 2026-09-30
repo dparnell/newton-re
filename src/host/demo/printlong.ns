@@ -44,7 +44,7 @@ end;
 
 plPrint := func() begin
 	call tapAt with (310, 28);				// the note's Action button
-	call waitFor with ("printlong: the Action menu", func() call plShows with (213, 23), func() begin
+	call waitFor with ("printlong: the Action menu", func() call plShows with (183, 23), func() begin		// (as wide as its "Print Note  ⌘P": the host has a keyboard)
 		call tapAt with (260, 33);			// Print Note
 		call waitFor with ("printlong: the Print slip", func() call plShows with (45, 134), func() begin
 			call tapAt with (118, 196);		// the Printer picker

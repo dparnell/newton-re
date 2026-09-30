@@ -37,7 +37,7 @@ end;
 call walkSetup with (name, func() begin
 	GetRoot().paperroll:MakeTextNote("hello from nobody's beam", true);
 	call tapAt with (310, 28);				// the note's Action button
-	call waitFor with ("beam: the Action menu", func() call shown with (213, 23), func() begin
+	call waitFor with ("beam: the Action menu", func() call shown with (183, 23), func() begin		// (as wide as its "Print Note  ⌘P": the host has a keyboard)
 		call tapAt with (255, 70);			// Beam
 		call waitFor with ("beam: the status slip", func() call shown with (67, 75), func() begin
 			local slip := call texts with (call shown with (67, 75));

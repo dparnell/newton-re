@@ -82,6 +82,7 @@ public:
 	long		GetDisplayFixedHeight(RefArg item);						// ROM 0x00184dd0 GetDisplayFixedHeight__9TPickViewFRC6RefVar
 	void		GetKeyCommandInfo(void);								// ROM 0x00184a24 GetKeyCommandInfo__9TPickViewFv
 	Ref			GetKeyCommand(long index);								// ROM 0x00184c28 GetKeyCommand__9TPickViewFl
+	long		GetKeyCommandModifierWidth(long index);					// ROM 0x00184c74 GetKeyCommandModifierWidth__9TPickViewFl
 	Ref			GetDisplayItem(long index, Boolean* pickable, UniChar* mark);	// ROM 0x00187ea8 GetDisplayItem__9TPickViewFlPUcPUs
 	Ref			GetItemNoText(long index);								// ROM 0x001880e8 GetItemNoText__9TPickViewFl
 	Ref			GetOverflows(void);										// ROM 0x00185068 GetOverflows__9TPickViewFv

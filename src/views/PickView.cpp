@@ -312,6 +312,21 @@ TPickView::GetKeyCommand(long index)
 }
 
 
+// ROM 0x00184c74 GetKeyCommandModifierWidth__9TPickViewFl
+// The room the item's key command's modifier icons take (and 10 more),
+// with a command keyboard; 0 otherwise.
+long
+TPickView::GetKeyCommandModifierWidth(long index)
+{
+	if (!gRootView->CommandKeyboardConnected() || ISNIL(fKeyCommands))
+		return 0;
+	RefVar command(GetArraySlotRef(fKeyCommands, index));
+	if (ISNIL(command))
+		return 0;
+	return GetModifiersWidth(command);
+}
+
+
 // ROM 0x00187ea8 GetDisplayItem__9TPickViewFlPUcPUs
 // What an item shows: a string or symbol itself; a frame's item slot
 // (else its key command's name, else the empty string); with whether it
@@ -458,6 +473,11 @@ TPickView::SetupForm(void)
 	}
 	GetKeyCommandInfo();
 	long maxWidth = RINT(GetProto(RSSYMpickmaxwidth)) - (fKeyCommandWidth >> 16);
+	// with a command keyboard and vars._hiliteMenuItem, the first pickable
+	// item starts out picked
+	Boolean preselect = gRootView->CommandKeyboardConnected()
+					 && NOTNIL(GetFrameSlotRef(RefVar(gVarFrame), RSSYM_hilitemenuitem))
+					 && fItemCount != 0;
 	fPicked.fItem = -1;
 	long indent = -1;
 	long fixedHeight = -1;
@@ -480,7 +500,9 @@ TPickView::SetupForm(void)
 		if (mark != 0)
 			fHasMarks = true;
 		SetItemFlags(&stuff, pickable, mark);
-		long width = 0;
+		// (the modifier icons' room is the width of anything but a picture,
+		// ink or a separator; a string's text is added to it)
+		long width = GetKeyCommandModifierWidth(i);
 		long height = 0;
 		PickGridInfo* grid = nil;
 		if (IsString(display))
@@ -492,15 +514,19 @@ TPickView::SetupForm(void)
 			origin.x = 0;
 			origin.y = 0;
 			MeasureRichString(rich, 0, length, &fStyle, origin, nil, &bounds);
-			width = (short) ((bounds.fWidth + 0x8000) >> 16);
-			long room = maxWidth;
-			if (width > room)
+			width += (short) ((bounds.fWidth + 0x8000) >> 16);
+			// ROM QUIRK: the room is the maximum less the modifiers' room, but
+			// it is compared with the text *and* the modifiers' room, so the
+			// modifiers count twice; a cut item is then as wide as the
+			// maximum
+			long room = maxWidth - GetKeyCommandModifierWidth(i);
+			if (room < width)
 			{
 				RefVar cut(Clone(display));
 				StyledStrTruncate(cut, room, RefVar(GetVar(RSSYMviewfont)));
 				TRichString cutRich(cut);
 				length = -cutRich.Length();
-				width = room;
+				width = maxWidth;
 			}
 			SetItemLength(&stuff, length);
 			height = fTextItemHeight;
@@ -561,6 +587,17 @@ TPickView::SetupForm(void)
 		fGrids[i] = grid;
 		if (width > widest)
 			widest = width;
+		if (preselect && pickable)
+		{
+			fPicked.fItem = i;
+			fPicked.fIsGrid = grid != nil;
+			if (grid != nil)
+			{
+				fPicked.fX = 0;
+				fPicked.fY = 0;
+			}
+			preselect = false;
+		}
 	}
 	if (gRootView->CommandKeyboardConnected() && NOTNIL(fKeyCommands))
 		widest += (fKeyCommandWidth >> 16) + 2;

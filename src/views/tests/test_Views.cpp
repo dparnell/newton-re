@@ -3722,7 +3722,10 @@ TestPickView()
 	long commandWidth = p->fKeyCommandWidth >> 16;
 	EXPECT(commandWidth == RINT(Eval("Max(StrFontWidth(\"S\", protoPicker.viewFont), StrFontWidth(\"Q\", protoPicker.viewFont))")));
 	{
-		long textWidest = RINT(Eval("Max(StrFontWidth(\"Save\", protoPicker.viewFont), Max(StrFontWidth(\"Plain\", protoPicker.viewFont), StrFontWidth(\"Quit\", protoPicker.viewFont)))"));
+		// an item with a command is as wide as its text and the command
+		// key's icon (11, and 10 more: GetModifiersWidth)
+		EXPECT(p->GetKeyCommandModifierWidth(0) == 21 && p->GetKeyCommandModifierWidth(1) == 0);
+		long textWidest = RINT(Eval("Max(StrFontWidth(\"Save\", protoPicker.viewFont) + 21, Max(StrFontWidth(\"Plain\", protoPicker.viewFont), StrFontWidth(\"Quit\", protoPicker.viewFont) + 21))"));
 		EXPECT(p->viewBounds.right == 30 + 4 + textWidest + commandWidth + 2 + 5);
 	}
 	Eval("ctxK:Open()");
@@ -3732,7 +3735,7 @@ TestPickView()
 		long letterLeft = r0 - commandWidth - 5;
 		EXPECT(InkIn(letterLeft, t0, r0 - 5 + 1, t0 + 13) > 0);						// "S" at the right of the first row
 		EXPECT(InkIn(letterLeft - 11, t0, letterLeft - 2, t0 + 13) > 0);				// the command key's icon before it
-		EXPECT(InkIn(letterLeft, t0 + 13, r0, t0 + 26) == 0);							// none on "Plain" (the icons are not allowed for in the width: they may lie over the text)
+		EXPECT(InkIn(letterLeft, t0 + 13, r0, t0 + 26) == 0);							// none on "Plain"
 		EXPECT(InkIn(letterLeft, t0 + 26, r0 - 5 + 1, t0 + 39) > 0);					// "Q" on "Quit"
 	}
 	{

@@ -132,6 +132,7 @@ Ref			SendKeyMessage(TView* view, RefArg message);			// ROM 0x0030f54c SendKeyMe
 // a command's letter and its modifier keys as the key help and a picker
 // draw them (views/KeyHelpSlip.cpp)
 struct StyleRecord;
+long		GetModifiersWidth(RefArg command);					// ROM 0x00183a74 GetModifiersWidth__FRC6RefVar - the modifier icons' room, and 10 more
 long		GetCommandCharWidth(RefArg command, StyleRecord* style);	// ROM 0x001839f8 GetCommandCharWidth__FRC6RefVarP11StyleRecord - the letter's width, in capitals
 void		DrawModifierIcons(ULong modifiers, long x, long y);		// ROM 0x00183ad0 DrawModifierIcons__FUlN21 - right to left, ending at x, on the baseline y
 Boolean		UserVisibleChar(UniChar c);								// ROM 0x0030f6c8 UserVisibleChar__FUs - one a menu could show
