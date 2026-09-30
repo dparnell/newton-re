@@ -2278,6 +2278,29 @@ TestCaret()
 	gRootView->GetCaretRect(&caret0);
 	EXPECT(caret0.left == 20 - 1 - 5 + 0 || caret0.left == 20 - 5);		// the caret's left a pixel in from the text's left, kept inside the view
 	EXPECT(caret0.left < caret.left && InkIn(caret.left + 6, caret.top, caret.right, caret.bottom) == 0);
+	// a view hilited over the caret hides it meanwhile and shows it again:
+	// the caret is drawn over the inverted view, not inverted with it
+	{
+		TView* over = ViewOf("ctxC4 := AddView(GetRoot(), {viewClass: 74, viewFlags: 1, viewBounds: {left: 10, top: 5, right: 60, bottom: 40}, viewFormat: 0})");
+		Eval("ctxC4:Dirty()");
+		Refresh();
+		long hiddenBefore = gRootView->fCaretHidden;
+		EXPECT(gRootView->fCaretShowing);
+		over->Hilite(true);
+		// (taken off - its bits put back - and not yet drawn again: that
+		// is the next update's)
+		EXPECT(gRootView->fCaretHidden == hiddenBefore && !gRootView->fCaretShowing);
+		Refresh();
+		Rect shown;
+		gRootView->GetCaretRect(&shown);
+		EXPECT(gRootView->fCaretShowing && shown.left == caret0.left);
+		over->Hilite(false);
+		EXPECT(gRootView->fCaretHidden == hiddenBefore && !gRootView->fCaretShowing);
+		Refresh();
+		EXPECT(gRootView->fCaretShowing);
+		Eval("ctxC4:Close()");
+		Refresh();
+	}
 	// a point to the caret: the character nearest a tap
 	Point pt;
 	pt.h = caretBox.left;

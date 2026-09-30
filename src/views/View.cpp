@@ -1077,7 +1077,7 @@ TView::Changed(RefArg slot, RefArg context)
 // hiliting - else the bounds, let out by the format's inset, inverted
 // (as a round rectangle of the format's radius less the pen, when there
 // is a radius).  The caret is hidden while the view is drawn on when
-// its rectangle overlaps the view's (NOT YET: the caret).
+// its rectangle overlaps the view's outer bounds, and shown again after.
 void
 TView::Hilite(Boolean on)
 {
@@ -1085,7 +1085,12 @@ TView::Hilite(Boolean on)
 		return;
 	TRegion savedRgn(SetupVisRgn());
 	TRegionVar savedVisRgn(savedRgn);
-	// NOT YET RECONSTRUCTED: gRootView->GetCaretRect / HideCaret when it overlaps OuterBounds
+	Rect caret, outer;
+	gRootView->GetCaretRect(&caret);
+	OuterBounds(&outer);
+	Boolean caretHidden = Overlaps(&caret, &outer);
+	if (caretHidden)
+		gRootView->HideCaret();
 	unwind_protect
 	{
 		Boolean done = false;
@@ -1120,7 +1125,8 @@ TView::Hilite(Boolean on)
 	}
 	on_unwind
 	{
-		// NOT YET RECONSTRUCTED: gRootView->ShowCaret()
+		if (caretHidden)
+			gRootView->ShowCaret();
 		GrafPort* port;
 		GetPort(&port);
 		CopyRgn(savedVisRgn, port->visRgn);

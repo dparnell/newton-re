@@ -173,10 +173,10 @@ reaches.  Biggest user impact first; each is taken on in this order.
    a change, shortens it or takes it away; `UpdateHiliteArea` (0x16a7bc)
    remakes the hilites' areas whenever the lines are laid out again
    (CreateAllCaches, FixupBBox).  test_Views TestTyping.
-4. **The caret around redrawing** (`views/View.cpp` 1088, 1123): the caret
-   hidden while a view draws over it and shown again after
-   (`GetCaretRect`/`HideCaret`/`ShowCaret`).  Anywhere a field redraws
-   under the caret.  Small.
+4. **The caret around redrawing** - DONE (2026-09-30): `TView::Hilite`
+   hides the caret while it inverts a view whose outer bounds the caret
+   overlaps and shows it again after (0x2660c4), so the caret is not
+   inverted with a pressed button.  test_Views TestCaret.
 5. **Dates and times typed as text** (`intl/Dates.cpp` 727-823,
    `StringToDateFields` 0x8de6c over the time lexical dictionary,
    `intl/Locale.cpp` 202): Find's "before/after a date", the date fields of
