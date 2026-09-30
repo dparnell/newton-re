@@ -893,18 +893,25 @@ level, and its two files are simple.
     Einstein seeds itself. The host must seed them the same way, or leave
     them erased and let the ROM's code handle a virgin flash.
   - To check with a real Einstein file once the flash store mounts.
-- **Einstein's linear card image** (`TLinearCard`) is:
-  1. the common memory;
-  2. the CIS (stored "scrambled" as on the card, two bytes per CIS byte);
-  3. an optional icon;
-  4. the card's name;
-  5. a big-endian `ImageInfo` footer (the offsets and sizes of each
-     section, a type and a version).
+- **Einstein's linear card image** (`TLinearCard`, read from Einstein's
+  `Emulator/PCMCIA/TLinearCard.cpp` for the format only) is:
+  1. the common memory, "as seen by the Newton" - byte *a* of the file is
+     the byte the machine reads at common-memory address *a*;
+  2. the CIS in its natural order, one byte per CIS byte (the card holds
+     it at the even attribute addresses; Einstein answers attribute byte
+     *o* with CIS byte `(o / 2) ^ 1`, which is the byte the ROM's
+     `(address ^ 3)` access asks for);
+  3. an optional icon (a PNG; Einstein writes none);
+  4. the card's name, a UTF-8 C string;
+  5. a 52-byte footer, `ImageInfo`: ten big-endian words - the name's
+     size and start, the icon's, the CIS's, the data's, the card's type
+     (the high nibble of the CISTPL_DEVICE byte) and the format version
+     (1) - and the twelve bytes `"TLinearCard\0"`.
 
-  Its flash follows the Intel command set with 64 KB erase blocks. The
-  host's card file can be this very container: the socket reads the CIS
-  from it and the flash works on the data section. Whether a card
-  written by one opens in the other is to check at step 6.
+  Its flash follows the Intel Series 2 command set (two 28F016SA chips on
+  the 16-bit card bus). **The host's card file is this very container**
+  (`tools/host/mkcard.py` makes one), so a card written by one should open
+  in the other; step 6 checks it with a card Einstein made.
 
 ### Order of work
 
@@ -942,16 +949,59 @@ Each step comes with its host tests.
    - Tests: the ctests that boot on a store, with the internal store on
      the flash; a restart keeps the Names, the packages and the store
      packages.
-5. **The card server and a socket.** `TCardServer`, the host socket, card
-   detection and recognition, `TCardPCMCIA`'s CIS, `TCHMemModem`, the
-   PSS manager's `CardAvailable`/`CardGone`.
-   - `newton --card file`, and `HostInsertCard(path)` /
-     `HostRemoveCard()` for scripts.
-   - `GetCardSlotStores`, `UnmountCard`, `GetCardInfo` and
-     `GetCardTypes` answer from the real server.
-   - Tests: a formatted card's store appears in `GetStores()`, a soup
-     is written to it, the card is pulled and put back, and the entries
-     are still there.
+5. **The cards.** Some 250 ROM functions from the socket up to the
+   NewtonScript card handler, in six pieces, each with its tests:
+   - **5a. The host card and socket.** `hal/host/HostCard.h`: a card image
+     in Einstein's container, its attribute memory laid out as the bus
+     presents it (CIS byte *i* at `(2i) ^ 3`) and its common memory as the
+     file holds it; inserted, removed, write-protected. `TCardSocket` (the
+     DDK's class; the ROM's drives the Voyager ASIC) gets a host
+     implementation over it: the base addresses, the pins (card detect,
+     ready, write protect), power and speeds as things that succeed, and
+     the card-detect and card-lock interrupts raised when the host inserts
+     or pulls a card. `tools/host/mkcard.py` makes a blank flash card of a
+     given size with a CIS of our own (CISTPL_DEVICE flash, JEDEC Intel
+     Series 2, VERS_1). Test: the CIS reads back through the socket's
+     attribute window.
+   - **5b. The CIS.** `TCardCISIterator` (reading tuples, the long links,
+     the multi-function CISs), `TPCMCIA20Parser` (the `CisTpl_*` tuple
+     handlers, `ParsePCCardCIS`) and what they fill: `TCardPCMCIA`,
+     `TCardDevice`, `TCardFunction`, `TCardConfiguration`,
+     `TCardPackage`. Test: mkcard's CIS parsed into one flash device of
+     the right size; `GetCardInfo`'s frame for it.
+   - **5c. The memory card handler.** `TCHMemModem`'s memory side
+     (`RecognizeCard`, `InstallServices`, `CheckNSetupMemoryDevice`,
+     `NewFlashDriver`, `GetDeviceInfo`, `FormatCIS`; the modem side NOT
+     YET) and a card `TFlash`. `TFlashSeries2` is the chips' command set
+     driven through the Voyager's bus modes (16-bit writes by swapping
+     the halves of the word, `SetControl`), so, as for the internal flash,
+     a host `TFlash` stands in for it under the same name and does what
+     the commands come to on the card's bytes - the geometry the ROM's
+     `IdentifyCard` works out for a pair of 28F016SA (64 KB blocks,
+     interleave 2: 128 KB erase regions). `TFlashStore`'s card branches
+     (`Init` with `kFlashStoreIsCard`, `VccOn`/`VppOn` over the card's
+     power, `IsWriteProtected`). Test: a card store formatted, written,
+     remounted.
+   - **5d. The card server.** `TCardServer` ('cdsv': `MainConstructor`,
+     the handler registry, `CardIntHandler`, `DoCardRecognition`,
+     `ActivateCardHandler`, `DoCommand` and its messages, ejection and the
+     lock switch, power on and off), `TCardSocketState`, `TCardMessage`,
+     `TCardAsyncMsg`, `TCardDomains` (the host maps a card's windows as it
+     maps the flash's). Test: inserting a card sends the PSS manager a
+     card-available message naming a flash store.
+   - **5e. The PSS manager and the newt side.** `TPSSManager`'s world
+     ('pssm': `MainConstructor`, `DoCommand`, `CardAvailable`, `CardGone`,
+     `CardIsSame`, `RegisterStores`, `ReinsertCard`, the UI engine) and
+     the application's half: `TNewtCardEventHandler`, `HandleCardEvent`,
+     `HandleNewCard`, `StorageCardInserted`/`MountStore` (format, lock and
+     password prompts through the ROM's NewtonScript card handler),
+     `StorageCardRemoved`/`UnmountStore`, `CheckCardActiveProtocols`;
+     `GetCardSlotStores`, `UnmountCard`, `GetCardInfo`, `GetCardTypes`
+     from the real server.
+   - **5f. The host's hand.** `newton --card file`, `HostInsertCard(path)`
+     / `HostRemoveCard()` for scripts, and a demo (ctest): a blank card is
+     formatted, a soup written to it, the card pulled and put back, and
+     the entries are still there.
 6. **Einstein's files.** Checked both ways where an Einstein image is
    available, and noted in the curiosities if they differ.
 
