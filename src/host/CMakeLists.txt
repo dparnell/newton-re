@@ -833,3 +833,27 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../romsrc/layout.tsv)
     set_tests_properties(host.ROMSourceFontEdit PROPERTIES TIMEOUT 300 FIXTURES_REQUIRED romsrc_objects
                          PASS_REGULAR_EXPRESSION "the glyph edit reached the screen")
 endif()
+
+# a user's first hour (demo/walkthrough.ns): the Setup assistant, a note
+# written and read back, a Names card typed in and found with Find, a
+# meeting, a to-do made and scrubbed out, the Assistant, the note faxed
+# later into the Out Box and filed, the Calculator, the volume turned down
+# - each step checked and snapshotted (build/walkthrough-<n>-<step>.pgm) -
+# then a restart on the same store that finds all of it still there
+add_test(NAME host.NewtonWalkthrough
+         COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --erase
+                 --store ${CMAKE_CURRENT_BINARY_DIR}/walkthrough.store --headless 300
+                 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/walkthrough.ns
+         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonWalkthrough PROPERTIES TIMEOUT 360 FIXTURES_SETUP host_walkthrough_store
+                     PASS_REGULAR_EXPRESSION "walkthrough: done, 0 failed"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+add_test(NAME host.NewtonWalkthrough.restart
+         COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480
+                 --store ${CMAKE_CURRENT_BINARY_DIR}/walkthrough.store --headless 120
+                 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/walkthrough.ns
+         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonWalkthrough.restart PROPERTIES TIMEOUT 180
+                     FIXTURES_REQUIRED host_walkthrough_store DEPENDS host.NewtonWalkthrough
+                     PASS_REGULAR_EXPRESSION "walkthrough: restart done, 0 failed"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")

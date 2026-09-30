@@ -1,0 +1,453 @@
+// A first hour with a MessagePad: what a person does with a new machine,
+// done the way they would do it - with the pen and the keyboard, on the
+// screen - and each step checked and photographed.
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//       --erase --store build/walkthrough.store --headless 300 \
+//       --script src/host/demo/walkthrough.ns
+//   (and again without --erase: the restart)
+//
+// The first run, on an erased store, walks the Setup assistant and then:
+//
+//    1 note        "ton" written on the Notepad and read, and the note
+//                  read back out of the Notes soup
+//    2 names       a Names card made with New > Person and typed in -
+//                  first and last name, a home phone, and the Work line
+//                  turned into a Fax line
+//    3 find        Find, "tester", Everywhere: one item found, the card
+//    4 dates       Dates, a tap on the 12 pm line and "lunch" typed: a
+//                  meeting in the Calendar soup and in the day view
+//    5 todo        Show > To Do List, New > To Do Task, "shop milk"
+//    6 scrub       the to-do scrubbed out with the pen: gone from the
+//                  list and from the soup
+//    7 assist      Assist, "call ann", Do: the Call slip, addressed to Ann
+//    8 route       the note faxed Later to Ann: an item in the Out Box,
+//                  and the In/Out Box showing it
+//    9 file        the note filed in Business
+//   10 calculator  Extras > Calculator, 2 + 3 =: 5
+//   11 volume      the Extras drawer's volume slider pulled down to 1
+//
+// The second run starts on the same store without Setup and checks that
+// all of it is still there - the volume first, which is kept in the
+// System soup's user configuration.
+//
+// Each step prints "walkthrough: <step>: ok" or "walkthrough: <step>:
+// FAILED <why>" and writes build/walkthrough-<n>-<step>.pgm (the restart:
+// build/walkthrough-restart.pgm); tools/imaging/pgm2png.py makes PNGs.
+// The clock is set to 7 October 1998 at 9 am first: the ROM keeps times
+// in seconds since 1904 in a NewtonScript integer, which ran out in
+// 2010 (the Newton's own year-2010 problem), so a note written "today"
+// would be dated 1992.
+//
+// Everything waits on what it waits for (a view open, a key view moved,
+// an entry in a soup) rather than for a fixed time.
+
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
+
+// --- helpers --------------------------------------------------------------
+
+findView := func(v, test) begin
+	local found := nil;
+	if call test with (v) then found := v
+	else foreach child in v:ChildViewFrames() do
+		if not found then found := call findView with (child, test);
+	found;
+end;
+
+// (a label's text may carry an invisible character: the Assist slip's
+// "Please" is seven long)
+hasText := func(t) func(v) IsString(v.text) and StrPos(v.text, t, 0);
+viewWithText := func(t) call findView with (GetRoot(), call hasText with (t));
+
+typeStr := func(codes) foreach c in codes do call typeKey with (c);
+
+stroke := func(points) begin
+	PenDown(points[0], points[1]);
+	for i := 2 to Length(points) - 2 by 2 do PenMove(points[i], points[i + 1]);
+	PenUp();
+end;
+
+oval := func(cx, cy, rx, ry) begin
+	local c := [ 0, -50, -87, -100, -87, -50, 0, 50, 87, 100, 87, 50, 0];
+	local s := [100, 87, 50, 0, -50, -87, -100, -87, -50, 0, 50, 87, 100];
+	local pts := [];
+	for k := 0 to 12 do begin
+		AddArraySlot(pts, cx + (rx * c[k]) div 100);
+		AddArraySlot(pts, cy - (ry * s[k]) div 100);
+	end;
+	pts;
+end;
+
+// "ton" on a baseline at y = base, from x = 60 (as write.ns writes it)
+ton := func(base)
+	[[66, base - 24, 66, base - 18, 66, base - 12, 66, base - 6, 66, base],
+	 [60, base - 14, 64, base - 14, 68, base - 14, 72, base - 14],
+	 call oval with (82, base - 7, 6, 7),
+	 [94, base - 14, 94, base - 7, 94, base, 94, base - 7,
+	  95, base - 11, 97, base - 13, 100, base - 14, 103, base - 13,
+	  104, base - 10, 104, base - 5, 104, base]];
+
+// a soup's entries, as an array
+soupEntries := func(soupName) begin
+	local r := [];
+	local c := Query(GetUnionSoup(soupName), {type: 'index});
+	local e := c:Entry();
+	while e do begin AddArraySlot(r, e); e := c:Next(); end;
+	r;
+end;
+
+anyEntry := func(soupName, test) begin
+	local found := nil;
+	foreach e in call soupEntries with (soupName) do
+		if not found and call test with (e) then found := e;
+	found;
+end;
+
+noteText := func(e) begin
+	local s := "";
+	if e.data then foreach p in e.data do
+		if HasSlot(p, 'text) and IsString(p.text) then s := s & p.text;
+	s;
+end;
+
+// The steps are a list of actions, each a function that is called with
+// the function to call when it is done.  `tap` taps and then waits for a
+// test (the thing the tap should bring up); `tapLine` taps an input line
+// and waits for the caret to be in it.
+wtIndex := 0;
+wtFailures := 0;
+wtSteps := nil;
+
+wtNext := func() begin
+	if wtIndex < Length(wtSteps) then begin
+		local s := wtSteps[wtIndex];
+		wtIndex := wtIndex + 1;
+		call s with (wtNext);
+	end;
+end;
+
+wtCheck := func(name, ok, why) begin
+	if ok then Print("walkthrough: " & name & ": ok")
+	else begin
+		wtFailures := wtFailures + 1;
+		Print("walkthrough: " & name & ": FAILED " & why);
+	end;
+end;
+
+shotStep := func(file) func(done) begin
+	ScreenSnapshot("build/walkthrough-" & file & ".pgm");
+	call done with ();
+end;
+
+tapStep := func(what, x, y, test) func(done) begin
+	call tapAt with (x, y);
+	call waitFor with ("walkthrough: " & what, test, done, 20);
+end;
+
+// the caret has come to (x, y): in a view there, on that line
+keyViewAt := func(x, y) func() begin
+	local k := GetKeyView();
+	local c := GetCaretBox();
+	if k and c then begin
+		local b := k:GlobalBox();
+		x >= b.left and x < b.right and y >= b.top and y < b.bottom
+			and c.top <= y + 12 and c.bottom >= y - 12;
+	end;
+end;
+
+tapLineStep := func(what, x, y) call tapStep with (what, x, y, call keyViewAt with (x, y));
+
+// a moment for the application's idle to run what was just done (the
+// pen's units go through the recogniser's arbitration there)
+settleStep := func(done) AddDelayedCall(done, nil, 600);
+
+keysStep := func(codes) func(done) begin
+	call typeStr with (codes);
+	call settleStep with (done);
+end;
+
+doStep := func(fn) func(done) begin
+	call fn with ();
+	call done with ();
+end;
+
+waitStep := func(what, test) func(done) call waitFor with ("walkthrough: " & what, test, done, 30);
+
+// ADB key codes
+kAnn := [0, 45, 45];
+kTester := [17, 14, 1, 17, 14, 15];
+kHome := [23, 23, 23, 18, 19, 20, 21];		// 5551234
+kFax := [23, 23, 23, 25, 28, 26, 22];		// 5559876
+kLunch := [37, 32, 45, 8, 4];
+kShopMilk := [1, 4, 31, 35, 49, 46, 34, 37, 40];
+kCallAnn := [8, 0, 37, 37, 49, 0, 45, 45];
+
+isOpen := func(sym) func() begin local v := GetRoot().(sym); v and v.viewCObject; end;
+isClosed := func(sym) func() begin local v := GetRoot().(sym); not (v and v.viewCObject); end;
+
+// --- the first hour -------------------------------------------------------
+
+wtFirstHour := [
+	// 1 a note, written and read back
+	func(done) begin
+		foreach s in call ton with (200) do call stroke with (s);
+		IdleStrokes();
+		call done with ();
+	end,
+	call waitStep with ("the word read", func() call viewWithText with ("ton")),
+	call waitStep with ("the note saved", func() call anyEntry with ("Notes", func(e) StrEqual(call noteText with (e), "ton"))),
+	func(done) begin
+		local e := call anyEntry with ("Notes", func(e) StrEqual(call noteText with (e), "ton"));
+		call wtCheck with ("note", e and e.timestamp >= TotalMinutes({year: 1998, month: 10, date: 7, hour: 0, minute: 0}),
+			if e then "dated " & DateNTime(e.timestamp) else "no note reads \"ton\"");
+		call done with ();
+	end,
+	call shotStep with ("1-note"),
+
+	// 2 a Names card, typed in
+	call tapStep with ("Names", 100, 460, call isOpen with ('cardfile)),
+	call tapStep with ("New", 82, 416, func() call viewWithText with ("Person") or GetRoot():ChildViewFrames()[Length(GetRoot():ChildViewFrames()) - 1].viewClass = 91),
+	call tapStep with ("Person", 100, 358, func() GetKeyView() <> nil),
+	settleStep,
+	call keysStep with (kAnn),
+	call tapLineStep with ("the Last line", 150, 200),
+	call keysStep with (kTester),
+	call tapLineStep with ("the Home line", 200, 280),
+	call keysStep with (kHome),
+	call tapStep with ("the Work label", 30, 322, func() true),
+	settleStep,
+	call tapStep with ("Fax", 68, 364, func() true),
+	settleStep,
+	call tapLineStep with ("the Fax line", 200, 320),
+	call keysStep with (kFax),
+	call shotStep with ("2-names-card"),
+	call tapStep with ("close the card", 300, 414, func() call anyEntry with ("Names", func(e) e.name and IsString(e.name.last) and StrEqual(e.name.last, "tester"))),
+	func(done) begin
+		local e := call anyEntry with ("Names", func(e) e.name and IsString(e.name.last) and StrEqual(e.name.last, "tester"));
+		local phones := if e and e.phones then foreach p in e.phones collect p;
+		call wtCheck with ("names",
+			e and StrEqual(e.name.first, "ann") and phones and Length(phones) = 2
+				and StrEqual(phones[0], "5551234") and ClassOf(phones[0]) = 'homePhone
+				and StrEqual(phones[1], "5559876") and ClassOf(phones[1]) = 'faxPhone,
+			if e then begin
+				local why := "the card's phones:";
+				if phones then foreach p in phones do why := why & " " & p & " (" & ClassOf(p) & ")";
+				why;
+			end else "no card for tester");
+		call done with ();
+	end,
+	settleStep,
+	call shotStep with ("2-names"),
+
+	// 3 Find
+	call tapStep with ("Find", 220, 460, func() call viewWithText with ("Look for")),
+	call keysStep with (kTester),
+	call tapStep with ("Everywhere", 78, 380, func() true),
+	settleStep,
+	call tapStep with ("the Find button", 274, 396,
+		func() call findView with (GetRoot(), func(v) IsString(v.text) and StrPos(v.text, "found", 0))),
+	func(done) begin
+		local found := call findView with (GetRoot(), func(v) IsString(v.text) and StrPos(v.text, "found", 0));
+		call wtCheck with ("find", found and StrEqual(found.text, "One item was found."),
+			if found then "\"" & found.text & "\"" else "no result");
+		call done with ();
+	end,
+	call shotStep with ("3-find"),
+	call doStep with (func() foreach sym in ['findDrawer, 'cardfile] do
+		if GetRoot().(sym) and GetRoot().(sym).viewCObject then GetRoot().(sym):Close()),
+	settleStep,
+
+	// 4 Dates: a meeting typed on the day view
+	call tapStep with ("Dates", 140, 460, call isOpen with ('calendar)),
+	call tapLineStep with ("the 12 pm line", 150, 225),
+	call keysStep with (kLunch),
+	call tapStep with ("off the meeting", 160, 330, func() call anyEntry with ("Calendar", func(e) IsString(e.mtgText) and StrEqual(e.mtgText, "lunch"))),
+	func(done) begin
+		local e := call anyEntry with ("Calendar", func(e) IsString(e.mtgText) and StrEqual(e.mtgText, "lunch"));
+		local shown := call findView with (GetRoot(), func(v) v.viewClass = 95);
+		call wtCheck with ("dates",
+			e and e.mtgStartDate = TotalMinutes({year: 1998, month: 10, date: 7, hour: 12, minute: 0}) and shown,
+			if e then "at " & DateNTime(e.mtgStartDate) & (if shown then "" else ", not in the day view") else "no meeting");
+		call done with ();
+	end,
+	call shotStep with ("4-dates"),
+
+	// 5 a To Do
+	call tapStep with ("Show", 153, 424, func() call viewWithText with ("To Do List") or true),
+	settleStep,
+	call tapStep with ("To Do List", 170, 378, func() call findView with (GetRoot(), func(v) v.viewClass = 99)),
+	call tapStep with ("New", 112, 424, func() true),
+	settleStep,
+	call tapStep with ("To Do Task", 150, 407, func() GetKeyView() <> nil),
+	settleStep,
+	call keysStep with (kShopMilk),
+	call tapStep with ("close the task", 281, 345, func() call anyEntry with ("To do List", func(e) e.topics and Length(e.topics) > 0)),
+	settleStep,
+	func(done) begin
+		local e := call anyEntry with ("To do List", func(e) e.topics and Length(e.topics) > 0);
+		local text := if e then e.topics[0].text;
+		call wtCheck with ("todo", IsString(text) and StrEqual(text, "shop milk") and call viewWithText with ("shop milk"),
+			if e then "the topic reads " & text else "no to-do");
+		call done with ();
+	end,
+	call shotStep with ("5-todo"),
+
+	// 6 the to-do scrubbed out
+	func(done) begin
+		local pts := [];
+		for k := 0 to 7 do begin
+			AddArraySlot(pts, if k mod 2 = 0 then 40 else 110);
+			AddArraySlot(pts, 82 + k * 2);
+		end;
+		call stroke with (pts);
+		IdleStrokes();
+		call done with ();
+	end,
+	call waitStep with ("the to-do gone", func() not call viewWithText with ("shop milk")),
+	settleStep,
+	func(done) begin
+		local left := call anyEntry with ("To do List", func(e) e.topics and Length(e.topics) > 0);
+		call wtCheck with ("scrub", not left and not call viewWithText with ("shop milk"),
+			if left then "the soup still has a topic" else "the list still shows it");
+		call done with ();
+	end,
+	call shotStep with ("6-scrub"),
+	call doStep with (func() GetRoot().calendar:Close()),
+	settleStep,
+
+	// 7 the Assistant (the caret out of the note's paragraph first: with the
+	// caret in a paragraph, Assist takes that paragraph's text -
+	// GleanIntendedText)
+	call tapStep with ("off the note's text", 160, 330, func() true),
+	settleStep,
+	call tapStep with ("Assist", 260, 460, func() call viewWithText with ("Please")),
+	call keysStep with (kCallAnn),
+	call tapStep with ("Do", 277, 414, func() call viewWithText with ("Phone")),
+	settleStep,
+	func(done) begin
+		local name := call findView with (GetRoot(), func(v) IsString(v.text) and StrPos(v.text, "ann", 0));
+		call wtCheck with ("assist", name, "the Call slip is not addressed to Ann");
+		call done with ();
+	end,
+	call shotStep with ("7-assist"),
+	call tapStep with ("close the Call slip", 258, 285, func() not call viewWithText with ("Phone")),
+	settleStep,
+
+	// 8 the note faxed later: into the Out Box
+	call tapStep with ("the action button", 310, 28, func() call viewWithText with ("Fax") or true),
+	settleStep,
+	call tapStep with ("Fax", 250, 50, func() call viewWithText with ("Cover Page")),
+	call tapStep with ("Name", 95, 178, func() call viewWithText with ("Faxes")),
+	settleStep,
+	call shotStep with ("8-route-names"),
+	call tapStep with ("ann tester", 90, 259, func() true),		// the second row: daniel, ann tester
+	settleStep,
+	call tapStep with ("close the picker", 267, 420, func() not call viewWithText with ("Faxes")),
+	settleStep,
+	call tapStep with ("the Fax button", 228, 304, func() true),		// Now or Later
+	settleStep,
+	call tapStep with ("Later", 232, 289, func() Length(call soupEntries with ("OutBox")) > 0),
+	func(done) begin
+		local items := call soupEntries with ("OutBox");
+		call wtCheck with ("route", Length(items) = 1, NumberStr(Length(items)) & " items in the Out Box");
+		call done with ();
+	end,
+	call tapStep with ("In/Out Box", 60, 460, call isOpen with ('iobox)),
+	settleStep,
+	call tapStep with ("Out Box", 238, 28, func() true),
+	settleStep,
+	call shotStep with ("8-route"),
+	call doStep with (func() GetRoot().iobox:Close()),
+	settleStep,
+
+	// 9 the note filed in Business
+	call tapStep with ("the folder button", 292, 28, func() call viewWithText with ("Business") or true),
+	settleStep,
+	call tapStep with ("Business", 70, 221, func() true),
+	settleStep,
+	call tapStep with ("File", 232, 243, func() call anyEntry with ("Notes", func(e) e.labels = 'Business)),
+	func(done) begin
+		local e := call anyEntry with ("Notes", func(e) e.labels = 'Business);
+		call wtCheck with ("file", e and StrEqual(call noteText with (e), "ton"), "no note in Business");
+		call done with ();
+	end,
+	call shotStep with ("9-file"),
+
+	// 10 the Calculator
+	call tapStep with ("Extras", 20, 460, call isOpen with ('ExtrasDrawer)),
+	call tapStep with ("Calculator", 223, 300, call isOpen with ('calculator)),
+	call tapStep with ("2", 125, 300, func() true), settleStep,
+	call tapStep with ("+", 193, 329, func() true), settleStep,
+	call tapStep with ("3", 158, 300, func() true), settleStep,
+	call tapStep with ("=", 229, 300, func() true), settleStep,
+	func(done) begin
+		local shown := call findView with (GetRoot().calculator, func(v) IsString(v.text) and StrEqual(v.text, "5"));
+		call wtCheck with ("calculator", shown, "the display does not read 5");
+		call done with ();
+	end,
+	call shotStep with ("10-calculator"),
+	call doStep with (func() GetRoot().calculator:Close()),
+	settleStep,
+
+	// 11 the volume turned down to 1 in the Extras drawer (which closed
+	// when the Calculator was opened from it)
+	call tapStep with ("Extras", 20, 460, call isOpen with ('ExtrasDrawer)),
+	settleStep,
+	func(done) begin
+		call stroke with ([60, 398, 50, 398, 40, 398, 30, 398, 25, 398]);
+		IdleStrokes();
+		call done with ();
+	end,
+	call waitStep with ("the volume changed", func() GetUserConfig('soundVolume) = 1),
+	func(done) begin
+		call wtCheck with ("volume", GetUserConfig('soundVolume) = 1, "the volume is " & GetUserConfig('soundVolume));
+		call done with ();
+	end,
+	call shotStep with ("11-volume"),
+	func(done) begin
+		Print("walkthrough: done, " & wtFailures & " failed");
+		HostQuit();
+	end];
+
+// --- the restart ----------------------------------------------------------
+
+wtRestart := [
+	call waitStep with ("the Notepad", call isOpen with ('paperroll)),
+	settleStep,
+	func(done) begin
+		call wtCheck with ("restart volume", GetUserConfig('soundVolume) = 1, "the volume is " & GetUserConfig('soundVolume));
+		local note := call anyEntry with ("Notes", func(e) e.labels = 'Business);
+		call wtCheck with ("restart note", note and StrEqual(call noteText with (note), "ton"), "the filed note is gone");
+		local card := call anyEntry with ("Names", func(e) e.name and IsString(e.name.last) and StrEqual(e.name.last, "tester"));
+		call wtCheck with ("restart names", card, "Ann's card is gone");
+		local mtg := call anyEntry with ("Calendar", func(e) IsString(e.mtgText) and StrEqual(e.mtgText, "lunch"));
+		call wtCheck with ("restart dates", mtg, "the meeting is gone");
+		call wtCheck with ("restart outbox", Length(call soupEntries with ("OutBox")) = 1, "the Out Box has " & Length(call soupEntries with ("OutBox")));
+		call done with ();
+	end,
+	call tapStep with ("Extras", 20, 460, call isOpen with ('ExtrasDrawer)),
+	settleStep,
+	call shotStep with ("restart"),
+	func(done) begin
+		Print("walkthrough: restart done, " & wtFailures & " failed");
+		HostQuit();
+	end];
+
+// the clock to 7 October 1998, 9 am, before the first note is made
+SetTime(TotalMinutes({year: 1998, month: 10, date: 7, hour: 9, minute: 0}));
+
+// a fresh store starts with the Setup assistant, a set-up one with the Notepad
+call waitFor with ("walkthrough: the boot",
+	func() call (call isOpen with ('setup)) with () or call (call isOpen with ('paperroll)) with (),
+	func() begin
+		if call (call isOpen with ('setup)) with () then begin
+			Print("walkthrough: a new machine");
+			wtSteps := wtFirstHour;
+			call walkSetup with ([2, 0, 45, 34, 14, 37], wtNext);		// "Daniel"
+		end else begin
+			Print("walkthrough: the restart");
+			wtSteps := wtRestart;
+			call wtNext with ();
+		end;
+	end, 60);
+Print("walkthrough: the script is loaded");
