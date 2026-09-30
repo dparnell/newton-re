@@ -729,7 +729,10 @@ TestBinaries()
 	SetFrameSlot(RefVar(gInheritanceFrame), RefVar(Intern("phone")), RefVar(RSSYMstring));
 	EXPECT(HostOrderOfClassName("phone") == kHostUniChars && HostOrderOfClassName("string.foo") == kHostUniChars
 		&& HostOrderOfClassName("Real") == kHostReal && HostOrderOfClassName("boundsRect") == kHostHalfwords
-		&& HostOrderOfClassName("bits") == kROMOrder);
+		&& HostOrderOfClassName("bits") == kROMOrder
+		&& HostOrderOfClassName("textData") == kHostUniChars && HostOrderOfClassName("TextBox") == kHostUniChars
+		&& HostOrderOfClassName("text") == kHostUniChars
+		&& HostOrderOfClassName("wedge") == kHostHalfwords && HostOrderOfClassName("polygon") == kHostHalfwords);
 	EXPECT_STRING("SetClass(Clone(\"555\"), 'phone)", "555");
 	EXPECT_INT(BIN("StuffUniChar(b, 0, $7); StuffWord(b, 2, 0); SetLength(b, 4); StrLen(SetClass(b, 'phone))"), 1);
 	RemoveSlot(RefVar(gInheritanceFrame), RefVar(Intern("phone")));

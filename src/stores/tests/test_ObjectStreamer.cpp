@@ -253,6 +253,16 @@ TestHostOrderBinaries()
 	static const UByte nameBytes[] = { 0x00, 'x', 0x00, 0x00 };
 	EXPECT(memcmp(pipe2.fWriteBuffer->fBuffer + pipe2.fWriteBuffer->Position() - 4, nameBytes, 4) == 0);
 	EXPECT(IsString(back) && StringIs(back, "x"));
+	// a 'wedge, the C struct of shorts MakeWedge makes: its halfwords
+	// big-endian, and back in the host's order
+	CTestPipe pipe3(64);
+	RefVar wedge(AllocateBinary(SYMBOL("wedge"), 12));
+	for (short i = 0; i < 6; i++)
+		((short*) BinaryData(wedge))[i] = (short) (i + 1);
+	back = RoundTrip(wedge, pipe3);
+	static const UByte wedgeBytes[] = { 0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0, 6 };
+	EXPECT(memcmp(pipe3.fWriteBuffer->fBuffer + pipe3.fWriteBuffer->Position() - 12, wedgeBytes, 12) == 0);
+	EXPECT(((short*) BinaryData(back))[5] == 6);
 }
 
 

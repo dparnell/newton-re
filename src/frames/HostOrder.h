@@ -15,7 +15,8 @@
 				  - reals ('real): a double;
 				  - the shapes' halfword structures ('boundsRect,
 				    'rectangle, 'oval, 'roundRectangle, 'line,
-				    'polygonShape, 'polygonData, 'regionData): shorts
+				    'polygonShape, 'polygonData, 'regionData, and the host's
+				    own 'wedge and 'polygon structs): shorts
 				    (`analysis/nsfunctions.py --binary-classes` says which
 				    classes the ROM's object area holds; 'bits and 'mask are
 				    left big-endian, qd/Pictures.h reading them that way).

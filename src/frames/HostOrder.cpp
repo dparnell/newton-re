@@ -62,8 +62,11 @@ HostOrderOfOtherName(const char* name)
 	// labels do (GetIconShapeText)
 	if (symcmp((char*) name, (char*) "textData") == 0 || symcmp((char*) name, (char*) "TextBox") == 0)
 		return kHostUniChars;
+	// (and two the host makes itself as C structs of shorts: MakeWedge's
+	// 'wedge, views/DrawShape.cpp, and the 'polygon binaries - Polygons -
+	// of recognition/StrokeBundle.cpp's GetPolygons)
 	static const char* const kShapes[] = { "boundsRect", "rectangle", "oval", "roundRectangle", "line",
-											"polygonShape", "polygonData", "regionData" };
+											"polygonShape", "polygonData", "regionData", "wedge", "polygon" };
 	for (size_t i = 0; i < sizeof(kShapes) / sizeof(kShapes[0]); i++)
 		if (symcmp((char*) name, (char*) kShapes[i]) == 0)
 			return kHostHalfwords;

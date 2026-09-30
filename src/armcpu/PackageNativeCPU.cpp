@@ -50,6 +50,7 @@ void	TrimString(RefArg str);
 void	PrintObject(RefArg obj, long indent);
 
 extern const ExceptionName exInterpreter;
+Ref FSetClass(RefArg rcvr, RefArg obj, RefArg theClass);		// frames/Builtins.cpp
 
 /*------------------------------------------------------------------------------
 	T h e   3 2 - b i t   w o r l d
@@ -1926,7 +1927,9 @@ GLUE(Glue_ISREAL)				{ w.Return(cpu, ISREAL(w.ToHost(cpu.r[0])) ? 1 : 0); return
 GLUE(Glue_RemoveSlot)			{ RemoveSlot(RefVar(w.ArgRef(cpu.r[0])), RefVar(w.ArgRef(cpu.r[1]))); w.Return(cpu, 0); return true; }
 GLUE(Glue_DeepClone)			{ w.Return(cpu, w.ToARM(DeepClone(RefVar(w.ArgRef(cpu.r[0]))))); return true; }
 GLUE(Glue_TotalClone)			{ w.Return(cpu, w.ToARM(TotalClone(RefVar(w.ArgRef(cpu.r[0]))))); return true; }
-GLUE(Glue_SetClass)				{ SetClass(RefVar(w.ArgRef(cpu.r[0])), RefVar(w.ArgRef(cpu.r[1]))); w.Return(cpu, 0); return true; }
+// (through FSetClass, which keeps the bytes the object had when a string
+// becomes a binary or a binary a string - frames/HostOrder.h)
+GLUE(Glue_SetClass)				{ FSetClass(RefVar(NILREF), RefVar(w.ArgRef(cpu.r[0])), RefVar(w.ArgRef(cpu.r[1]))); w.Return(cpu, 0); return true; }
 GLUE(Glue_AllocateBinary)		{ w.Return(cpu, w.ToARM(AllocateBinary(RefVar(w.ArgRef(cpu.r[0])), (int32_t) cpu.r[1]))); return true; }
 GLUE(Glue_FrameHasPath)			{ w.Return(cpu, FrameHasPath(RefVar(w.ArgRef(cpu.r[0])), RefVar(w.ArgRef(cpu.r[1]))) ? 1 : 0); return true; }
 GLUE(Glue_SetFramePath)			{ SetFramePath(RefVar(w.ArgRef(cpu.r[0])), RefVar(w.ArgRef(cpu.r[1])), RefVar(w.ArgRef(cpu.r[2]))); w.Return(cpu, 0); return true; }
