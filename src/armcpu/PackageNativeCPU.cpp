@@ -118,6 +118,131 @@ private:
 	size_t		fCapacity;
 };
 
+/*------------------------------------------------------------------------------
+	T h e   A R M   w o r l d ' s   h e a p
+	What the ARM code allocates - NewPtr/NewPtrClear, malloc, operator new -
+	and gives back - DisposPtr, free, operator delete - lives here, one heap
+	for every call and every package: a C++ object a native makes on one call
+	is still there on the next, as on the Newton.  A block is a size word and
+	a check word in front of the bytes (the ARM code sees neither); the free
+	blocks are kept in address order and run together as they are given back.
+------------------------------------------------------------------------------*/
+
+const uint32_t	kHeapBase		= 0x80000000;	// the heap, for as far as it has grown
+const uint32_t	kHeapLimit		= 0x04000000;	// (64MB at most)
+const uint32_t	kHeapGrowth		= 0x00100000;
+const uint32_t	kHeapBlockMark	= 0x41524d68;	// 'ARMh', the word before a block in use
+
+class TARMHeap
+{
+public:
+				TARMHeap() : fTop(0) { }
+	bool		Contains(uint32_t a, uint32_t n) const
+				{ return a >= kHeapBase && a - kHeapBase <= fBytes.size() && n <= fBytes.size() - (a - kHeapBase); }
+	uint8_t*	At(uint32_t a)		{ return &fBytes[a - kHeapBase]; }
+	uint32_t	Alloc(uint32_t n);				// ==> 0: no room
+	void		Free(uint32_t a);
+	uint32_t	BlockSize(uint32_t a);			// ==> 0: not a block of the heap
+
+private:
+	struct FreeBlock { uint32_t fAddr; uint32_t fSize; };	// fSize: the whole block, header and all
+	uint32_t	Word(uint32_t a)	{ return BE32(At(a)); }
+	void		SetWord(uint32_t a, uint32_t v)	{ uint8_t* p = At(a); p[0] = (uint8_t) (v >> 24); p[1] = (uint8_t) (v >> 16); p[2] = (uint8_t) (v >> 8); p[3] = (uint8_t) v; }
+	static uint32_t	BE32(const uint8_t* p)	{ return ((uint32_t) p[0] << 24) | ((uint32_t) p[1] << 16) | ((uint32_t) p[2] << 8) | p[3]; }
+	Vec<uint8_t>	fBytes;
+	Vec<FreeBlock>	fFree;
+	uint32_t		fTop;					// the next byte never handed out (from kHeapBase)
+};
+
+static TARMHeap	gARMHeap;
+
+
+uint32_t
+TARMHeap::Alloc(uint32_t n)
+{
+	if (n > kHeapLimit)
+		return 0;
+	uint32_t whole = ((n + 7) & ~7u) + 8;
+	for (size_t i = 0; i < fFree.size(); i++)
+	{
+		FreeBlock& f = fFree[i];
+		if (f.fSize < whole)
+			continue;
+		uint32_t a = f.fAddr;
+		if (f.fSize - whole >= 16)
+		{
+			f.fAddr += whole;
+			f.fSize -= whole;
+		}
+		else
+		{
+			whole = f.fSize;
+			for (size_t j = i + 1; j < fFree.size(); j++)
+				fFree[j - 1] = fFree[j];
+			fFree.pop_back();
+		}
+		SetWord(a, whole);
+		SetWord(a + 4, kHeapBlockMark);
+		return a + 8;
+	}
+	if (whole > kHeapLimit - fTop)
+		return 0;
+	if (fTop + whole > fBytes.size())
+	{
+		size_t size = ((size_t) fTop + whole + kHeapGrowth - 1) & ~(size_t) (kHeapGrowth - 1);
+		fBytes.resize(size, 0);
+	}
+	uint32_t a = kHeapBase + fTop;
+	fTop += whole;
+	SetWord(a, whole);
+	SetWord(a + 4, kHeapBlockMark);
+	return a + 8;
+}
+
+
+uint32_t
+TARMHeap::BlockSize(uint32_t a)
+{
+	if (a < kHeapBase + 8 || !Contains(a - 8, 8) || Word(a - 4) != kHeapBlockMark)
+		return 0;
+	return Word(a - 8) - 8;
+}
+
+
+void
+TARMHeap::Free(uint32_t a)
+{
+	if (BlockSize(a) == 0)
+	{
+		if (a != 0)
+			fprintf(stderr, "[armcpu] %08x given back is not a block of the heap\n", a);
+		return;
+	}
+	FreeBlock b = { a - 8, Word(a - 8) };
+	SetWord(a - 4, 0);
+	size_t i = 0;
+	while (i < fFree.size() && fFree[i].fAddr < b.fAddr)
+		i++;
+	// run together with the block after and the block before
+	if (i < fFree.size() && b.fAddr + b.fSize == fFree[i].fAddr)
+	{
+		b.fSize += fFree[i].fSize;
+		for (size_t j = i + 1; j < fFree.size(); j++)
+			fFree[j - 1] = fFree[j];
+		fFree.pop_back();
+	}
+	if (i > 0 && fFree[i - 1].fAddr + fFree[i - 1].fSize == b.fAddr)
+	{
+		fFree[i - 1].fSize += b.fSize;
+		return;
+	}
+	fFree.push_back(b);
+	for (size_t j = fFree.size() - 1; j > i; j--)
+		fFree[j] = fFree[j - 1];
+	fFree[i] = b;
+}
+
+
 class TNativeWorld;
 typedef bool (*GlueFn)(TNativeWorld& w, TARMCPU& cpu);
 
@@ -132,6 +257,58 @@ struct Window
 	RefStruct*	fObject;
 	bool		fSlots;
 };
+
+// LockedBinaryPtr's windows: a binary's bytes seen from the ARM world for as
+// long as the ARM code keeps it locked - across calls, since a locked
+// binary's pointer is the ARM code's to keep until it unlocks it.  (A call's
+// own windows, BinaryData's, go with the call.)
+const uint32_t	kLockedBase		= 0x58000000;
+const uint32_t	kLockedLimit	= 0x60000000;
+struct LockedWindow { Window fWindow; long fLocks; };
+static Vec<LockedWindow>	gLockedWindows;
+static uint32_t			gLockedTop = kLockedBase;
+
+static uint32_t
+LockBinaryWindow(RefArg obj)
+{
+	for (LockedWindow& l : gLockedWindows)
+		if (EQRef(*l.fWindow.fObject, obj))
+		{
+			l.fLocks++;
+			return l.fWindow.fBase;
+		}
+	uint32_t size = (uint32_t) Length(obj);
+	uint32_t span = ((size + 0xfff) & ~0xfffu) + 0x1000;
+	if (span > kLockedLimit - gLockedTop)
+		gLockedTop = kLockedBase;		// (the addresses come round again: the oldest are long unlocked)
+	LockedWindow l;
+	l.fWindow.fBase = gLockedTop;
+	l.fWindow.fSize = size;
+	l.fWindow.fObject = new RefStruct(obj);
+	l.fWindow.fSlots = false;
+	l.fLocks = 1;
+	gLockedTop += span;
+	gLockedWindows.push_back(l);
+	return l.fWindow.fBase;
+}
+
+// an unlock of a binary LockedBinaryPtr windowed: the window goes with its
+// last lock
+static void
+UnlockBinaryWindow(Ref obj)
+{
+	for (size_t i = 0; i < gLockedWindows.size(); i++)
+		if (EQRef(*gLockedWindows[i].fWindow.fObject, obj))
+		{
+			if (--gLockedWindows[i].fLocks > 0)
+				return;
+			delete gLockedWindows[i].fWindow.fObject;
+			for (size_t j = i + 1; j < gLockedWindows.size(); j++)
+				gLockedWindows[j - 1] = gLockedWindows[j];
+			gLockedWindows.pop_back();
+			return;
+		}
+}
 
 class TNativeWorld : public ARMMemory
 {
@@ -261,6 +438,10 @@ TNativeWorld::FindWindow(uint32_t a, uint32_t n)
 	for (Window& w : fWindows)
 		if (a >= w.fBase && a + n <= w.fBase + w.fSize)
 			return &w;
+	if (a >= kLockedBase && a < kLockedLimit)
+		for (LockedWindow& l : gLockedWindows)
+			if (a >= l.fWindow.fBase && a + n <= l.fWindow.fBase + l.fWindow.fSize)
+				return &l.fWindow;
 	return nil;
 }
 
@@ -272,6 +453,7 @@ TNativeWorld::Read32(uint32_t a, uint32_t* v)
 	if (const uint8_t* p = ROMData(a, 4))	{ *v = BE32(p); return true; }
 	if (Code(a, 4))						{ *v = BE32(&fCode[a - kCodeBase]); return true; }
 	if (Arena(a, 4))					{ *v = BE32(&fArena[a - kArenaBase]); return true; }
+	if (gARMHeap.Contains(a, 4))		{ *v = BE32(gARMHeap.At(a)); return true; }
 	if (Window* w = FindWindow(a, 4))
 	{
 		if (w->fSlots)
@@ -295,6 +477,7 @@ TNativeWorld::Read16(uint32_t a, uint16_t* v)
 	if (const uint8_t* p = ROMData(a, 2))	{ *v = (uint16_t) ((p[0] << 8) | p[1]); return true; }
 	if (Code(a, 2))						{ *v = (uint16_t) ((fCode[a - kCodeBase] << 8) | fCode[a - kCodeBase + 1]); return true; }
 	if (Arena(a, 2))					{ *v = (uint16_t) ((fArena[a - kArenaBase] << 8) | fArena[a - kArenaBase + 1]); return true; }
+	if (gARMHeap.Contains(a, 2))		{ const uint8_t* p = gARMHeap.At(a); *v = (uint16_t) ((p[0] << 8) | p[1]); return true; }
 	if (Window* w = FindWindow(a, 2))
 	{
 		if (w->fSlots)
@@ -313,6 +496,7 @@ TNativeWorld::Read8(uint32_t a, uint8_t* v)
 	if (const uint8_t* p = ROMData(a, 1))	{ *v = *p; return true; }
 	if (Code(a, 1))						{ *v = fCode[a - kCodeBase]; return true; }
 	if (Arena(a, 1))					{ *v = fArena[a - kArenaBase]; return true; }
+	if (gARMHeap.Contains(a, 1))		{ *v = *gARMHeap.At(a); return true; }
 	if (Window* w = FindWindow(a, 1))
 	{
 		if (w->fSlots)
@@ -329,6 +513,7 @@ TNativeWorld::Write32(uint32_t a, uint32_t v)
 {
 	if (Code(a, 4))						{ PutBE32(&fCode[a - kCodeBase], v); return true; }
 	if (Arena(a, 4))					{ PutBE32(&fArena[a - kArenaBase], v); return true; }
+	if (gARMHeap.Contains(a, 4))		{ PutBE32(gARMHeap.At(a), v); return true; }
 	if (Window* w = FindWindow(a, 4))
 	{
 		if (w->fSlots)
@@ -348,6 +533,7 @@ TNativeWorld::Write16(uint32_t a, uint16_t v)
 {
 	if (Code(a, 2))						{ fCode[a - kCodeBase] = (uint8_t) (v >> 8); fCode[a - kCodeBase + 1] = (uint8_t) v; return true; }
 	if (Arena(a, 2))					{ fArena[a - kArenaBase] = (uint8_t) (v >> 8); fArena[a - kArenaBase + 1] = (uint8_t) v; return true; }
+	if (gARMHeap.Contains(a, 2))		{ uint8_t* p = gARMHeap.At(a); p[0] = (uint8_t) (v >> 8); p[1] = (uint8_t) v; return true; }
 	if (Window* w = FindWindow(a, 2))
 	{
 		if (w->fSlots)
@@ -364,6 +550,7 @@ TNativeWorld::Write8(uint32_t a, uint8_t v)
 {
 	if (Code(a, 1))						{ fCode[a - kCodeBase] = v; return true; }
 	if (Arena(a, 1))					{ fArena[a - kArenaBase] = v; return true; }
+	if (gARMHeap.Contains(a, 1))		{ *gARMHeap.At(a) = v; return true; }
 	if (Window* w = FindWindow(a, 1))
 	{
 		if (w->fSlots)
@@ -979,7 +1166,7 @@ GLUE(Glue_AddArraySlot)			{ AddArraySlot(RefVar(w.ArgRef(cpu.r[0])), RefVar(w.Ar
 GLUE(Glue_SetFrameSlot)			{ SetFrameSlot(RefVar(w.ArgRef(cpu.r[0])), RefVar(w.ArgRef(cpu.r[1])), RefVar(w.ArgRef(cpu.r[2]))); w.Return(cpu, 0); return true; }
 GLUE(Glue_MAKEBOOLEAN)			{ w.Return(cpu, cpu.r[0] != 0 ? (uint32_t) TRUEREF : (uint32_t) NILREF); return true; }
 GLUE(Glue_LockRef)				{ LockRef(w.ToHost(cpu.r[0])); w.Return(cpu, 0); return true; }
-GLUE(Glue_UnlockRef)			{ UnlockRef(w.ToHost(cpu.r[0])); w.Return(cpu, 0); return true; }
+GLUE(Glue_UnlockRef)			{ Ref obj = w.ToHost(cpu.r[0]); UnlockBinaryWindow(obj); UnlockRef(obj); w.Return(cpu, 0); return true; }
 
 // the interpreter the code runs under: one opaque address for it
 GLUE(Glue_GetGInterpreter)		{ w.Return(cpu, kInterpreter); return true; }
@@ -1274,23 +1461,200 @@ GLUE(Glue_ConvertFromUnicode)
 	w.Return(cpu, 0);
 	return true;
 }
-// malloc/free: blocks of the call's arena, a word before each holding its
-// size.  (free gives nothing back but the last block made: the arena lasts
-// only as long as the call, so a native's own blocks go with it.)
-GLUE(Glue_malloc)
+// The memory the ARM code allocates: blocks of the ARM world's heap
+// (gARMHeap), which outlive the call.  The ROM's malloc and free are NewPtr
+// and DisposPtr (ROM 0x001e2c50, 0x001e2c54); a failed NewPtr answers nought.
+static uint32_t
+HeapAlloc(uint32_t size, bool clear)
 {
-	uint32_t size = cpu.r[0];
-	uint32_t a = w.Alloc(size + 8);
-	w.Write32(a, size);
-	w.Return(cpu, a + 8);
+	uint32_t a = gARMHeap.Alloc(size);
+	if (a != 0 && clear)
+		memset(gARMHeap.At(a), 0, size);
+	return a;
+}
+GLUE(Glue_malloc)				{ w.Return(cpu, HeapAlloc(cpu.r[0], false)); return true; }
+GLUE(Glue_free)					{ gARMHeap.Free(cpu.r[0]); w.Return(cpu, 0); return true; }
+GLUE(Glue_NewPtr)				{ w.Return(cpu, HeapAlloc(cpu.r[0], false)); return true; }
+GLUE(Glue_NewPtrClear)			{ w.Return(cpu, HeapAlloc(cpu.r[0], true)); return true; }
+GLUE(Glue_DisposPtr)			{ gARMHeap.Free(cpu.r[0]); w.Return(cpu, 0); return true; }
+GLUE(Glue_GetPtrSize)			{ w.Return(cpu, gARMHeap.BlockSize(cpu.r[0])); return true; }
+// ROM 0x00318ee8 __nw__FUi: malloc of the size (one byte for nought); a
+// failure calls the new handler, which the ARM world has none of
+GLUE(Glue_new)					{ w.Return(cpu, HeapAlloc(cpu.r[0] == 0 ? 1 : cpu.r[0], false)); return true; }
+// ROM 0x00318f28 __dl__FPv
+GLUE(Glue_delete)				{ if (cpu.r[0] != 0) gARMHeap.Free(cpu.r[0]); w.Return(cpu, 0); return true; }
+
+// RefVar and RefStruct, the C++ classes (a word holding a RefHandle's
+// address), as ROM 0x00079e7c-0x00079fac: a constructor given no object
+// makes one with operator new; a destructor's second argument's bit 0 says
+// to delete the object too.
+static uint32_t
+RefHandleOf(TNativeWorld& w, uint32_t var)
+{
+	uint32_t handle = 0;
+	if (!w.Read32(var, &handle))
+		ThrowMsg("armcpu: a bad RefVar");
+	return handle;
+}
+// ROM 0x00079ea8 __ct__6RefVarFCl
+GLUE(Glue_RefVar_ctor)
+{
+	uint32_t self = cpu.r[0];
+	if (self == 0)
+		self = HeapAlloc(4, false);
+	if (self != 0)
+		w.Write32(self, w.NewRefHandle(cpu.r[1]));
+	w.Return(cpu, self);
 	return true;
 }
-GLUE(Glue_free)
+// ROM 0x00079d74 __ct__6RefVarFv: a handle of nil
+GLUE(Glue_RefVar_ctor0)
 {
-	w.Free(cpu.r[0]);
+	uint32_t self = cpu.r[0];
+	if (self == 0)
+		self = HeapAlloc(4, false);
+	if (self != 0)
+		w.Write32(self, w.NewRefHandle(NILREF));
+	w.Return(cpu, self);
+	return true;
+}
+// ROM 0x00079f40 __ct__9RefStructFv: a RefVar of nil whose handle is on no
+// stack (stackPos nought)
+GLUE(Glue_RefStruct_ctor)
+{
+	uint32_t self = cpu.r[0];
+	if (self == 0)
+		self = HeapAlloc(4, false);
+	if (self != 0)
+	{
+		uint32_t handle = w.NewRefHandle(NILREF);
+		w.Write32(self, handle);
+		w.Write32(handle + 4, 0);
+	}
+	w.Return(cpu, self);
+	return true;
+}
+// ROM 0x00079ee4 __dt__6RefVarFv (and 0x00079f80 __dt__9RefStructFv, which
+// is it with the flags nought and then the delete)
+GLUE(Glue_RefVar_dtor)
+{
+	uint32_t self = cpu.r[0];
+	w.DisposeRefHandle(RefHandleOf(w, self));
+	if (cpu.r[1] & 1)
+		gARMHeap.Free(self);
+	w.Return(cpu, self);
+	return true;
+}
+// ROM 0x00079f28 __as__6RefVarFCl, 0x00079e7c __as__9RefStructFCl
+GLUE(Glue_RefVar_assign)		{ w.Write32(RefHandleOf(w, cpu.r[0]), cpu.r[1]); w.Return(cpu, cpu.r[0]); return true; }
+// ROM 0x00079e88 __as__9RefStructFRC6RefVar, 0x00079f14 __as__6RefVarFRC6RefVar
+GLUE(Glue_RefVar_assignVar)
+{
+	uint32_t ref = 0;
+	w.Read32(RefHandleOf(w, cpu.r[1]), &ref);
+	w.Write32(RefHandleOf(w, cpu.r[0]), ref);
+	w.Return(cpu, cpu.r[0]);
+	return true;
+}
+// ROM 0x00079f34 __opl__6RefVarCFv, 0x00079e9c __opl__9RefStructCFv
+GLUE(Glue_RefVar_ref)
+{
+	uint32_t ref = 0;
+	w.Read32(RefHandleOf(w, cpu.r[0]), &ref);
+	w.Return(cpu, ref);
+	return true;
+}
+
+// the RefArg forms of the object functions (the Newton C++ Tools' API)
+#define REFARG(n)	RefVar(w.ArgRef(cpu.r[n]))
+// ROM 0x0031c694 MakeInt__Fl, 0x0031c6b4 MakeBoolean__Fi
+GLUE(Glue_MakeInt)				{ w.Return(cpu, cpu.r[0] << 2); return true; }
+GLUE(Glue_MakeBoolean)			{ w.Return(cpu, cpu.r[0] != 0 ? (uint32_t) TRUEREF : (uint32_t) NILREF); return true; }
+// ROM 0x0031c79c RefToInt__FRC6RefVar: an integer's value, else _RINTError
+GLUE(Glue_RefToInt)
+{
+	uint32_t ref = 0;
+	w.Read32(RefHandleOf(w, cpu.r[0]), &ref);
+	if ((ref & 3) != 0)
+		_RINTError(w.ToHost(ref));
+	w.Return(cpu, (uint32_t) ((int32_t) ref >> 2));
+	return true;
+}
+// ROM 0x0031c970 MakeSymbol__FPc: Intern
+GLUE(Glue_MakeSymbol)
+{
+	char name[256];
+	if (!w.ReadCString(cpu.r[0], name, sizeof(name)))
+		ThrowMsg("armcpu: MakeSymbol of a bad string");
+	w.Return(cpu, w.ToARM(Intern(name)));
+	return true;
+}
+GLUE(Glue_LengthArg)			{ w.Return(cpu, (uint32_t) Length(REFARG(0))); return true; }
+GLUE(Glue_GetFrameSlot)			{ w.Return(cpu, w.ToARM(GetFrameSlot(REFARG(0), REFARG(1)))); return true; }
+GLUE(Glue_SetArraySlot)			{ SetArraySlot(REFARG(0), (int32_t) cpu.r[1], REFARG(2)); w.Return(cpu, 0); return true; }
+GLUE(Glue_GetArraySlot)			{ w.Return(cpu, w.ToARM(GetArraySlot(REFARG(0), (int32_t) cpu.r[1]))); return true; }
+GLUE(Glue_SetVariable)			{ w.Return(cpu, SetVariable(REFARG(0), REFARG(1), REFARG(2)) ? 1 : 0); return true; }
+GLUE(Glue_NSCallGlobalFn0)		{ w.Return(cpu, w.ToARM(NSCallGlobalFn(REFARG(0)))); return true; }
+GLUE(Glue_NSCallGlobalFn1)		{ w.Return(cpu, w.ToARM(NSCallGlobalFn(REFARG(0), REFARG(1)))); return true; }
+GLUE(Glue_NSCallGlobalFn2)		{ w.Return(cpu, w.ToARM(NSCallGlobalFn(REFARG(0), REFARG(1), REFARG(2)))); return true; }
+GLUE(Glue_NSCallGlobalFn3)		{ w.Return(cpu, w.ToARM(NSCallGlobalFn(REFARG(0), REFARG(1), REFARG(2), REFARG(3)))); return true; }
+// ROM 0x0031c9f0 LockedBinaryPtr__FRC6RefVar: the object locked and its
+// bytes' address - here a window onto them that lasts until the lock goes
+GLUE(Glue_LockedBinaryPtr)
+{
+	RefVar obj(w.ArgRef(cpu.r[0]));
+	LockRef(obj);
+	w.Return(cpu, LockBinaryWindow(obj));
+	return true;
+}
+// ROM 0x0031ca28 UnlockRefArg__FRC6RefVar
+GLUE(Glue_UnlockRefArg)
+{
+	Ref obj = w.ArgRef(cpu.r[0]);
+	UnlockBinaryWindow(obj);
+	UnlockRef(obj);
 	w.Return(cpu, 0);
 	return true;
 }
+#undef REFARG
+
+// Ustrlen and Ustrncat over the ARM world's UniChars (utility/Unicode.cpp's,
+// ROM 0x00256774 Ustrncat: n characters at most, then a nul)
+GLUE(Glue_Ustrlen)
+{
+	uint32_t n = 0;
+	uint16_t c;
+	while (w.Read16(cpu.r[0] + n * 2, &c) && c != 0)
+		n++;
+	w.Return(cpu, n);
+	return true;
+}
+GLUE(Glue_Ustrncat)
+{
+	uint32_t d = cpu.r[0], src = cpu.r[1];
+	int32_t n = (int32_t) cpu.r[2];
+	uint16_t c = 0;
+	while (w.Read16(d, &c) && c != 0)
+		d += 2;
+	for (;;)
+	{
+		if (n == 0)
+		{
+			w.Write16(d, 0);
+			break;
+		}
+		n--;
+		w.Read16(src, &c);
+		src += 2;
+		w.Write16(d, c);
+		d += 2;
+		if (c == 0)
+			break;
+	}
+	w.Return(cpu, cpu.r[0]);
+	return true;
+}
+
 GLUE(Glue_SetLexScope)
 {
 	w.Return(cpu, w.ToARM(SetLexScope(RefVar(w.ArgRef(cpu.r[0])), RefVar(w.ArgRef(cpu.r[1])), RefVar(w.ArgRef(cpu.r[2])), RefVar(w.ArgRef(cpu.r[3])))));
@@ -1399,6 +1763,257 @@ GLUE(Glue_strlen)
 	w.Return(cpu, n);
 	return true;
 }
+// (the rest of the ROM's C library - Norcroft's - over the ARM world's bytes;
+//  a comparison answers the difference of the first bytes that differ, taken
+//  unsigned, as its does)
+static uint8_t
+CByte(TNativeWorld& w, uint32_t a)
+{
+	uint8_t c = 0;
+	if (!w.Read8(a, &c))
+		ThrowMsg("armcpu: a C string out of the ARM world's memory");
+	return c;
+}
+static uint32_t
+EndOf(TNativeWorld& w, uint32_t a)
+{
+	while (CByte(w, a) != 0)
+		a++;
+	return a;
+}
+GLUE(Glue_strcat)
+{
+	uint32_t d = EndOf(w, cpu.r[0]), s = cpu.r[1];
+	uint8_t c;
+	do { c = CByte(w, s++); w.Write8(d++, c); } while (c != 0);
+	w.Return(cpu, cpu.r[0]);
+	return true;
+}
+GLUE(Glue_strncat)
+{
+	uint32_t d = EndOf(w, cpu.r[0]), s = cpu.r[1], n = cpu.r[2];
+	for ( ; n > 0; n--)
+	{
+		uint8_t c = CByte(w, s++);
+		if (c == 0)
+			break;
+		w.Write8(d++, c);
+	}
+	w.Write8(d, 0);
+	w.Return(cpu, cpu.r[0]);
+	return true;
+}
+GLUE(Glue_strncpy)
+{
+	// (n bytes written: the string, then nuls to fill)
+	uint32_t d = cpu.r[0], s = cpu.r[1], n = cpu.r[2];
+	bool ended = false;
+	for (uint32_t i = 0; i < n; i++)
+	{
+		uint8_t c = ended ? 0 : CByte(w, s + i);
+		if (c == 0)
+			ended = true;
+		w.Write8(d + i, c);
+	}
+	w.Return(cpu, cpu.r[0]);
+	return true;
+}
+static int32_t
+CompareBytes(TNativeWorld& w, uint32_t a, uint32_t b, uint32_t n)
+{
+	for (uint32_t i = 0; i < n; i++)
+	{
+		uint8_t x = CByte(w, a + i), y = CByte(w, b + i);
+		if (x != y)
+			return (int32_t) x - (int32_t) y;
+		if (x == 0)
+			break;
+	}
+	return 0;
+}
+GLUE(Glue_strcmp)				{ w.Return(cpu, (uint32_t) CompareBytes(w, cpu.r[0], cpu.r[1], 0xffffffff)); return true; }
+GLUE(Glue_strncmp)				{ w.Return(cpu, (uint32_t) CompareBytes(w, cpu.r[0], cpu.r[1], cpu.r[2])); return true; }
+GLUE(Glue_strchr)
+{
+	uint32_t s = cpu.r[0];
+	uint8_t want = (uint8_t) cpu.r[1];
+	for (;; s++)
+	{
+		uint8_t c = CByte(w, s);
+		if (c == want)
+			break;
+		if (c == 0)
+		{
+			s = 0;
+			break;
+		}
+	}
+	w.Return(cpu, s);
+	return true;
+}
+static bool
+InSet(TNativeWorld& w, uint32_t set, uint8_t c)
+{
+	for (uint8_t s; (s = CByte(w, set)) != 0; set++)
+		if (s == c)
+			return true;
+	return false;
+}
+GLUE(Glue_strpbrk)
+{
+	uint32_t s = cpu.r[0];
+	for (uint8_t c; (c = CByte(w, s)) != 0; s++)
+		if (InSet(w, cpu.r[1], c))
+		{
+			w.Return(cpu, s);
+			return true;
+		}
+	w.Return(cpu, 0);
+	return true;
+}
+GLUE(Glue_strstr)
+{
+	uint32_t s = cpu.r[0], sub = cpu.r[1];
+	uint32_t n = EndOf(w, sub) - sub;
+	for (;; s++)
+	{
+		if (CompareBytes(w, s, sub, n) == 0)
+		{
+			w.Return(cpu, s);
+			return true;
+		}
+		if (CByte(w, s) == 0)
+			break;
+	}
+	w.Return(cpu, 0);
+	return true;
+}
+// strtok keeps its place between calls, as the C library's static does
+static uint32_t	gStrtokNext = 0;
+GLUE(Glue_strtok)
+{
+	uint32_t s = cpu.r[0] != 0 ? cpu.r[0] : gStrtokNext;
+	if (s == 0)
+	{
+		w.Return(cpu, 0);
+		return true;
+	}
+	while (CByte(w, s) != 0 && InSet(w, cpu.r[1], CByte(w, s)))
+		s++;
+	if (CByte(w, s) == 0)
+	{
+		gStrtokNext = 0;
+		w.Return(cpu, 0);
+		return true;
+	}
+	uint32_t token = s;
+	while (CByte(w, s) != 0 && !InSet(w, cpu.r[1], CByte(w, s)))
+		s++;
+	if (CByte(w, s) != 0)
+	{
+		w.Write8(s, 0);
+		gStrtokNext = s + 1;
+	}
+	else
+		gStrtokNext = 0;
+	w.Return(cpu, token);
+	return true;
+}
+static int32_t
+ReadDecimal(TNativeWorld& w, uint32_t s)
+{
+	// (atoi/atol: white space, a sign, the digits; the ARM's word wraps)
+	while (CByte(w, s) == ' ' || (CByte(w, s) >= 9 && CByte(w, s) <= 13))
+		s++;
+	bool negative = false;
+	if (CByte(w, s) == '-' || CByte(w, s) == '+')
+		negative = CByte(w, s++) == '-';
+	uint32_t v = 0;
+	for (uint8_t c; (c = CByte(w, s)) >= '0' && c <= '9'; s++)
+		v = v * 10 + (uint32_t) (c - '0');
+	return (int32_t) (negative ? 0u - v : v);
+}
+GLUE(Glue_atoi)					{ w.Return(cpu, (uint32_t) ReadDecimal(w, cpu.r[0])); return true; }
+// sprintf(buffer, format, ...): the arguments from r2 on, then the stack; a
+// double takes two words, the high one first
+GLUE(Glue_sprintf)
+{
+	uint32_t out = cpu.r[0], f = cpu.r[1];
+	int next = 2;
+	uint32_t n = 0;
+	for (uint8_t c; (c = CByte(w, f)) != 0; f++)
+	{
+		if (c != '%')
+		{
+			w.Write8(out + n++, c);
+			continue;
+		}
+		char spec[32];
+		size_t k = 0;
+		spec[k++] = '%';
+		f++;
+		while (k < sizeof(spec) - 4)
+		{
+			c = CByte(w, f);
+			if (strchr("-+ #0123456789.", c) == nil || c == 0)
+				break;
+			if (c == '*')
+				break;
+			spec[k++] = (char) c;
+			f++;
+		}
+		while ((c = CByte(w, f)) == 'l' || c == 'h')
+			f++;
+		char text[512];
+		text[0] = 0;
+		if (c == 0)
+			break;
+		spec[k++] = (char) c;
+		spec[k] = 0;
+		switch (c)
+		{
+		case 'd': case 'i':
+			snprintf(text, sizeof(text), spec, (int) (int32_t) w.Arg(cpu, next++));
+			break;
+		case 'u': case 'x': case 'X': case 'o': case 'c':
+			snprintf(text, sizeof(text), spec, (unsigned) w.Arg(cpu, next++));
+			break;
+		case 'p':
+			snprintf(text, sizeof(text), "%x", (unsigned) w.Arg(cpu, next++));
+			break;
+		case 's':
+		{
+			char str[256];
+			uint32_t a = w.Arg(cpu, next++);
+			if (!w.ReadCString(a, str, sizeof(str)))
+				strcpy(str, "");
+			snprintf(text, sizeof(text), spec, str);
+			break;
+		}
+		case 'f': case 'e': case 'E': case 'g': case 'G':
+		{
+			uint64_t bits = ((uint64_t) w.Arg(cpu, next) << 32) | w.Arg(cpu, next + 1);
+			next += 2;
+			double d;
+			memcpy(&d, &bits, 8);
+			snprintf(text, sizeof(text), spec, d);
+			break;
+		}
+		case '%':
+			strcpy(text, "%");
+			break;
+		default:
+			snprintf(text, sizeof(text), "%s", spec);
+			break;
+		}
+		for (char* t = text; *t != 0; t++)
+			w.Write8(out + n++, (uint8_t) *t);
+	}
+	w.Write8(out + n, 0);
+	w.Return(cpu, n);
+	return true;
+}
+
 // Norcroft's division helpers: the divisor in r0, the dividend in r1; the
 // quotient in r0 and the remainder in r1
 GLUE(Glue_rt_sdiv)
@@ -1612,6 +2227,56 @@ InitGlue(void)
 		{ "__rt_sdiv10", Glue_rt_sdiv10 },
 		{ "__rt_udiv10", Glue_rt_udiv10 },
 		{ "__multiply", Glue_multiply },
+		// the heap (outliving the call)
+		{ "NewPtr", Glue_NewPtr },
+		{ "NewPtrClear", Glue_NewPtrClear },
+		{ "DisposPtr", Glue_DisposPtr },
+		{ "GetPtrSize", Glue_GetPtrSize },
+		{ "__nw__FUi", Glue_new },
+		{ "__dl__FPv", Glue_delete },
+		// RefVar and RefStruct
+		{ "__ct__6RefVarFCl", Glue_RefVar_ctor },
+		{ "__ct__6RefVarFv", Glue_RefVar_ctor0 },
+		{ "__ct__9RefStructFv", Glue_RefStruct_ctor },
+		{ "__dt__6RefVarFv", Glue_RefVar_dtor },
+		{ "__dt__9RefStructFv", Glue_RefVar_dtor },
+		{ "__as__6RefVarFCl", Glue_RefVar_assign },
+		{ "__as__9RefStructFCl", Glue_RefVar_assign },
+		{ "__as__6RefVarFRC6RefVar", Glue_RefVar_assignVar },
+		{ "__as__9RefStructFRC6RefVar", Glue_RefVar_assignVar },
+		{ "__opl__6RefVarCFv", Glue_RefVar_ref },
+		{ "__opl__9RefStructCFv", Glue_RefVar_ref },
+		// the RefArg forms
+		{ "MakeInt__Fl", Glue_MakeInt },
+		{ "MakeBoolean__Fi", Glue_MakeBoolean },
+		{ "RefToInt__FRC6RefVar", Glue_RefToInt },
+		{ "MakeSymbol__FPc", Glue_MakeSymbol },
+		{ "Length__FRC6RefVar", Glue_LengthArg },
+		{ "GetFrameSlot__FRC6RefVarT1", Glue_GetFrameSlot },
+		{ "GetArraySlot__FRC6RefVarl", Glue_GetArraySlot },
+		{ "SetArraySlot__FRC6RefVarlT1", Glue_SetArraySlot },
+		{ "SetVariable__FRC6RefVarN21", Glue_SetVariable },
+		{ "NSCallGlobalFn__FRC6RefVar", Glue_NSCallGlobalFn0 },
+		{ "NSCallGlobalFn__FRC6RefVarT1", Glue_NSCallGlobalFn1 },
+		{ "NSCallGlobalFn__FRC6RefVarN21", Glue_NSCallGlobalFn2 },
+		{ "NSCallGlobalFn__FRC6RefVarN31", Glue_NSCallGlobalFn3 },
+		{ "LockedBinaryPtr__FRC6RefVar", Glue_LockedBinaryPtr },
+		{ "UnlockRefArg__FRC6RefVar", Glue_UnlockRefArg },
+		{ "Ustrlen", Glue_Ustrlen },
+		{ "Ustrncat", Glue_Ustrncat },
+		// the C library
+		{ "strcat", Glue_strcat },
+		{ "strncat", Glue_strncat },
+		{ "strncpy", Glue_strncpy },
+		{ "strcmp", Glue_strcmp },
+		{ "strncmp", Glue_strncmp },
+		{ "strchr", Glue_strchr },
+		{ "strpbrk", Glue_strpbrk },
+		{ "strstr", Glue_strstr },
+		{ "strtok", Glue_strtok },
+		{ "atoi", Glue_atoi },
+		{ "atol", Glue_atoi },
+		{ "sprintf", Glue_sprintf },
 	};
 	for (const auto& g : kGlue)
 	{

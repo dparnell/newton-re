@@ -30,6 +30,9 @@ lie, as nsfunctions.py reads the ROM's, and prints:
                listed with its code offset and length (to the next one);
                (each code binary with its length and FNV-1a hash, the key a
                host re-expression is registered under - frames/PackageNatives.h);
+               and the BinCFunction frames - plain C functions made by the
+               Newton C++ Tools, {class: 'BinCFunction, code: a 'nativeModule
+               binary, numArgs, offset} (NetHopper's);
   --native-disasm  such a function's ARM code (capstone; its calls go to
                the runtime glue at the front of the binary).
 
@@ -145,6 +148,29 @@ def natives(pkg: PackageImage):
     return sorted(rows, key=lambda r: r[3])
 
 
+def bincfunctions(pkg: PackageImage):
+    """(ref, code binary, numArgs, offset) of each BinCFunction frame: a plain
+    C function made by the Newton C++ Tools - {class: 'BinCFunction, code: a
+    binary of class 'nativeModule, numArgs, offset} - which the interpreter
+    calls as it calls a 0x232 native (CallCFunction's frame case)."""
+    rows = []
+    for ref in pkg.objects():
+        if pkg.flags(ref) & 3 != 3 or not pkg.is_ptr(pkg.cls(ref)):
+            continue
+        try:
+            slots = dict(pkg.frame_slots(ref))
+        except Exception:
+            continue
+        cls = slots.get("class")
+        if cls is None or not pkg.is_ptr(cls) or (pkg.symname(cls) or "").lower() != "bincfunction":
+            continue
+        code, n, off = slots.get("code"), slots.get("numArgs"), slots.get("offset")
+        if code is None or n is None or off is None:
+            continue
+        rows.append((ref, code, n >> 2, off >> 2))
+    return rows
+
+
 def fnv1a(data: bytes) -> int:
     """32-bit FNV-1a, as frames/PackageNatives.h keys a package's native code."""
     h = 2166136261
@@ -207,6 +233,13 @@ def main(argv=None) -> int:
                 data = pkg.data(binary)
                 print("code binary %#x: %d bytes, FNV-1a %#010x (frames/PackageNatives.h's key)" % (binary, len(data), fnv1a(data)))
             print("%-50s %d args  code %#x+%#x, %d bytes  (%#x)" % (held.get(ref, "%#x" % ref), n, binary, off, length, ref))
+        for ref, binary, n, off in bincfunctions(pkg):
+            if binary not in seen:
+                seen.add(binary)
+                data = pkg.data(binary)
+                print("code binary %#x (%s): %d bytes, FNV-1a %#010x (frames/PackageNatives.h's key)"
+                      % (binary, pkg.symname(pkg.cls(binary)) or "?", len(data), fnv1a(data)))
+            print("%-50s %d args  BinCFunction, code %#x+%#x  (%#x)" % (held.get(ref, "%#x" % ref), n, binary, off, ref))
     for name in args.native_disasm:
         import pkgdisasm
         if args.rom:

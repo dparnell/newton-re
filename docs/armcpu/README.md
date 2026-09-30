@@ -12,6 +12,7 @@ re-expressed by hand instead - `src/comms`.)
 | The CPU: ARMv4, ARM state, the StrongARM's instruction set | `src/armcpu/ARMCPU.h` | done, `armcpu.ARMCPU` |
 | The public jump table's names | `tools/newton-rom/analysis/gluetable.py` | done |
 | The adapter: a package's native function run through `SetPackageNativeFallback` | `src/armcpu/PackageNativeCPU.h` | Mahjongg's two native functions run, `armcpu.Mahjongg`; NewtHack's five-argument one, `armcpu.NewtHack`; objects in the code binary, exceptions' data both ways and a native of another code binary over hand-assembled code, `armcpu.PackageNativeCPU` |
+| Newton C++ Tools code (`BinCFunction` frames over a `'nativeModule` binary) | the same adapter | NetHopper 3.2's four binaries (`pkgns.py --natives` lists them; their stubs are anywhere in the binary, `gluetable.py --package` reads it whole) |
 | Protocol parts (a part's class info, its methods dispatched into ARM code) | - | NOT YET: only the NIE's packages have them among the fixtures (below) |
 
 Mahjongg Solitaire 2.1 (`fixtures/packages/games/Mahjongg2.1`) has two
@@ -96,14 +97,38 @@ ARM code a 32-bit view:
 
 Only the entry points a package's code actually uses are implemented on the
 host side; an unimplemented one stops the CPU and reports its name.  All
-123 that the fixtures' native code reaches (`gluetable.py --package` over
-inetenbl, modmsup, Mahjongg and newthack) and the host has a function for
-are answered, and `test_PackageNativeCPU` checks each by name; four are
-not, for want of one: `Debugger`, `EnableFramesFunctionProfiling`,
-`GetGlobals` (it would hand the ARM code a host pointer) and
-`PublicFiller_236`.  `malloc`/`free` are blocks of the call's arena (`free`
-gives back only the last block), so nothing a native allocates outlives
-its call.
+the entries the fixtures' native code reaches (`gluetable.py --package`
+over inetenbl, modmsup, Mahjongg, newthack and nethopper) and the host has
+a function for are answered, and `test_PackageNativeCPU` checks each by
+name; four are not, for want of one: `Debugger`,
+`EnableFramesFunctionProfiling`, `GetGlobals` (it would hand the ARM code a
+host pointer) and `PublicFiller_236`.
+
+- **The heap outlives the call.**  `NewPtr`/`NewPtrClear`, `malloc` and
+  `operator new` (`__nw__FUi`, ROM 0x00318ee8: malloc of the size, one byte
+  for nought) are blocks of one ARM-visible heap at 0x80000000 that every
+  call and every package shares (a size word and a check word in front of
+  each block, the free blocks kept in address order and run together);
+  `DisposPtr`, `free` and `operator delete` give them back, `GetPtrSize`
+  answers a block's size.  A C++ object a native makes on one call is still
+  there on the next, as on the Newton.
+- **A locked binary stays mapped.**  `LockedBinaryPtr` (ROM 0x0031c9f0:
+  LockRef, then BinaryData) answers a window at 0x58000000 onto the
+  binary's own bytes that lasts, across calls, until the last
+  `UnlockRefArg`/`UnlockRef` of it; `BinaryData`'s windows (0x50000000)
+  are the call's own.
+- **RefVar and RefStruct** (the C++ classes the Newton C++ Tools' code keeps
+  its Refs in: a word holding a RefHandle's address) are answered as ROM
+  0x00079d74-0x00079fac: the constructors make the object with operator
+  new when given none, the destructors dispose of the handle and delete
+  the object when their flags' bit 0 says so.  NOT YET: a RefHandle (and the
+  ref in it) is still the call's own, so a RefVar the ARM code keeps in a
+  heap object past its call no longer holds its object.
+- **The C library** the NCT code links against: `strcat`, `strncat`,
+  `strncpy`, `strcmp`/`strncmp` (the difference of the first bytes that
+  differ, unsigned), `strchr`, `strpbrk`, `strstr`, `strtok` (its place
+  kept between calls), `atoi`/`atol`, `sprintf` (a double two words, the
+  high first), over the ARM world's bytes.
 
 The applications among the fixtures are used for real by
 `src/host/demo/thirdparty-apps.ns` (ctest `host.NewtonThirdPartyApps`):
@@ -171,6 +196,7 @@ the 19 packages in `fixtures/packages/` (2026-09-29):
 |---|---|---|
 | Mahjongg 2.1 | binary 0xa021 | - |
 | NewtHack 1.1 (`newthack.pkg`) | binary 0x17309 | - |
+| NetHopper 3.2 (`nethopper.pkg`) | four `'nativeModule` binaries (BinCFunctions: the HTML parser 0x1da4d, ReadGIF 0x3c69d, 0x44585, 0x47941), 59 entries | - |
 | NIE 2 `modmsup.pkg` | binary 0x3199 | PPPPLinkModule, PSLPLinkModule |
 | NIE 2 `inetenbl.pkg` | binary 0x2f89 | PInetToolMux, PInetToolCCE, PInetToolCE |
 | NIE 2 `enetsup.pkg` | - | PEnetLinkModule, PDhcpDynAddrModule, PLanternDriverModule |

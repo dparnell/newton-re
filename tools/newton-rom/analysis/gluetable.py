@@ -24,7 +24,9 @@ across ROMs (that is its point), so a package's addresses resolve on any.
   (default)   the entries, as `offset  address  symbol  demangled`, those
               whose word is not a branch into the private table marked;
   --all       include the entries that are not branches (padding, reserved);
-  --package   the stubs at the front of each native binary of a package, the
+  --package   the stubs at the front of each native binary of a package (and
+              anywhere in a Newton C++ Tools 'nativeModule binary, the code
+              of its BinCFunction frames), the
               public-table entry each one reaches and its symbol, and the
               other words those stubs read (the version-dependent stubs that
               load a ROM global's address - `mov ip,#0x1300; ldr ip,[ip,#0xdc]`
@@ -101,6 +103,16 @@ def package_stubs(path):
             if w0 == 0xE51FF004 and (w1 >> 20) == 0x018:
                 stubs.append((off, w1))
         result[binary] = (first, stubs)
+    # the Newton C++ Tools' code binaries (BinCFunction frames): the linker
+    # puts a stub wherever the code calls out, so the whole binary is read
+    for binary in sorted({r[1] for r in pkgns.bincfunctions(pkg)}):
+        data = pkg.data(binary)
+        stubs = []
+        for off in range(0, len(data) - 7, 4):
+            w0, w1 = struct.unpack(">II", data[off:off + 8])
+            if w0 == 0xE51FF004 and (w1 >> 20) == 0x018:
+                stubs.append((off, w1))
+        result[binary] = (0, stubs)
     return result
 
 
@@ -116,7 +128,7 @@ def main(argv=None):
     by_off = {e[0]: e for e in table}
     if args.package:
         for binary, (first, stubs) in package_stubs(args.package).items():
-            print("binary %#x: code from %#x, %d stubs" % (binary, first, len(stubs)))
+            print("binary %#x: code from %#x, %d stubs (%d entries)" % (binary, first, len(stubs), len({a for _, a in stubs})))
             for off, addr in stubs:
                 e = by_off.get(addr - PUBLIC_VIRTUAL)
                 name = e[3] if e and e[3] else "?"

@@ -61,6 +61,21 @@ Put(RefArg code, unsigned long at, unsigned long word)
 	p[3] = (unsigned char) word;
 }
 
+// a BL at `at` to `target`
+static void
+BL(RefArg code, unsigned long at, unsigned long target)
+{
+	Put(code, at, 0xeb000000 | (((target - (at + 8)) >> 2) & 0x00ffffff));
+}
+
+// a stub at `at`: ldr pc,[pc,#-4]; the public jump table entry
+static void
+Stub(RefArg code, unsigned long at, unsigned long entry)
+{
+	Put(code, at, 0xe51ff004);
+	Put(code, at + 4, 0x01800000 + entry);
+}
+
 int
 main()
 {
@@ -215,6 +230,76 @@ main()
 	Put(code, 0x300, 0xe51ff004);
 	Put(code, 0x304, 0x01800b04);		// StrEndsWith__FRC6RefVarT1
 
+	// the heap, and binaries locked, across calls (a second code binary)
+	RefVar heap(AllocateBinary(RSSYMbinary, 0x200));
+	memset(BinaryData(heap), 0, 0x200);
+	// +0x00 keep(x): p := new(8); *p := x; answers p's low bits as an integer
+	Put(heap, 0x00, 0xe92d4010);		// stmfd sp!,{r4,lr}
+	Put(heap, 0x04, 0xe5914000);		// ldr r4,[r1]
+	Put(heap, 0x08, 0xe5944000);		// ldr r4,[r4]         (x, a ref)
+	Put(heap, 0x0c, 0xe3a00008);		// mov r0,#8
+	BL(heap, 0x10, 0x100);				// bl operator new
+	Put(heap, 0x14, 0xe5804000);		// str r4,[r0]
+	Put(heap, 0x18, 0xe3c0020f);		// bic r0,r0,#0xf0000000
+	Put(heap, 0x1c, 0xe1a00100);		// mov r0,r0,lsl #2   (MAKEINT)
+	Put(heap, 0x20, 0xe8bd8010);		// ldmfd sp!,{r4,pc}
+	// +0x30 fetch(i): p := 0x80000000 | i; answers *p, deleting p
+	Put(heap, 0x30, 0xe92d4010);		// stmfd sp!,{r4,lr}
+	Put(heap, 0x34, 0xe5910000);		// ldr r0,[r1]
+	Put(heap, 0x38, 0xe5900000);		// ldr r0,[r0]
+	Put(heap, 0x3c, 0xe1a00140);		// mov r0,r0,asr #2
+	Put(heap, 0x40, 0xe3800102);		// orr r0,r0,#0x80000000
+	Put(heap, 0x44, 0xe5904000);		// ldr r4,[r0]
+	BL(heap, 0x48, 0x108);				// bl operator delete
+	Put(heap, 0x4c, 0xe1a00004);		// mov r0,r4
+	Put(heap, 0x50, 0xe8bd8010);		// ldmfd sp!,{r4,pc}
+	// +0x60 lock(b): LockedBinaryPtr(b) >> 4, as an integer
+	Put(heap, 0x60, 0xe92d4000);		// stmfd sp!,{lr}
+	Put(heap, 0x64, 0xe1a00001);		// mov r0,r1
+	BL(heap, 0x68, 0x110);				// bl LockedBinaryPtr
+	Put(heap, 0x6c, 0xe1a00220);		// mov r0,r0,lsr #4
+	Put(heap, 0x70, 0xe1a00100);		// mov r0,r0,lsl #2
+	Put(heap, 0x74, 0xe8bd8000);		// ldmfd sp!,{pc}
+	// +0x80 peek(i): the byte at (i << 4) + 1
+	Put(heap, 0x80, 0xe5910000);		// ldr r0,[r1]
+	Put(heap, 0x84, 0xe5900000);		// ldr r0,[r0]
+	Put(heap, 0x88, 0xe1a00140);		// mov r0,r0,asr #2
+	Put(heap, 0x8c, 0xe1a00200);		// mov r0,r0,lsl #4
+	Put(heap, 0x90, 0xe5d00001);		// ldrb r0,[r0,#1]
+	Put(heap, 0x94, 0xe1a00100);		// mov r0,r0,lsl #2
+	Put(heap, 0x98, 0xe1a0f00e);		// mov pc,lr
+	// +0xa0 unlock(b): UnlockRefArg(b)
+	Put(heap, 0xa0, 0xe1a00001);		// mov r0,r1
+	Stub(heap, 0xa4, 0x2b54);			// UnlockRefArg__FRC6RefVar, tail-called
+	// +0xc0 format(n): buf := malloc(16); sprintf(buf, "%3u", n); MakeString(buf), buf freed
+	Put(heap, 0xc0, 0xe92d4030);		// stmfd sp!,{r4,r5,lr}
+	Put(heap, 0xc4, 0xe5914000);		// ldr r4,[r1]
+	Put(heap, 0xc8, 0xe5944000);		// ldr r4,[r4]
+	Put(heap, 0xcc, 0xe1a04144);		// mov r4,r4,asr #2
+	Put(heap, 0xd0, 0xe3a00010);		// mov r0,#16
+	BL(heap, 0xd4, 0x118);				// bl malloc
+	Put(heap, 0xd8, 0xe1a05000);		// mov r5,r0
+	Put(heap, 0xdc, 0xe1a02004);		// mov r2,r4
+	Put(heap, 0xe0, 0xe28f10b8);		// add r1,pc,#0xb8     (0xe8 + 0xb8: "%3u" at +0x1a0)
+	BL(heap, 0xe4, 0x120);				// bl sprintf
+	Put(heap, 0xe8, 0xe1a00005);		// mov r0,r5
+	BL(heap, 0xec, 0x128);				// bl MakeString
+	Put(heap, 0xf0, 0xe1a04000);		// mov r4,r0
+	Put(heap, 0xf4, 0xe1a00005);		// mov r0,r5
+	BL(heap, 0xf8, 0x130);				// bl free
+	Stub(heap, 0x100, 0x0e04);			// __nw__FUi
+	Stub(heap, 0x108, 0x0dac);			// __dl__FPv
+	Stub(heap, 0x110, 0x29bc);			// LockedBinaryPtr__FRC6RefVar
+	Stub(heap, 0x118, 0x1234);			// malloc
+	Stub(heap, 0x120, 0x0160);			// sprintf
+	Stub(heap, 0x128, 0x099c);			// MakeString__FPCc
+	Stub(heap, 0x130, 0x1024);			// free
+	memcpy((char*) BinaryData(heap) + 0x1a0, "%3u", 4);
+	// (the tail of format lies past the stubs)
+	Put(heap, 0xfc, 0xea000010);		// b +0x144
+	Put(heap, 0x144, 0xe1a00004);		// mov r0,r4
+	Put(heap, 0x148, 0xe8bd8030);		// ldmfd sp!,{r4,r5,pc}
+
 	// another code binary: +0x00 answers its argument plus one
 	RefVar other(AllocateBinary(RSSYMbinary, 0x10));
 	Put(other, 0x00, 0xe5910000);		// ldr r0,[r1]
@@ -233,6 +318,13 @@ main()
 	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "nativeTranslate")), RefVar(MakeBinaryNative(code, 1, 0x280)));
 	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "nativeEndsWith")), RefVar(MakeBinaryNative(code, 2, 0x2e0)));
 	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "otherPlusOne")), RefVar(MakeBinaryNative(other, 1, 0x00)));
+
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "heapKeep")), RefVar(MakeBinaryNative(heap, 1, 0x00)));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "heapFetch")), RefVar(MakeBinaryNative(heap, 1, 0x30)));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "binLock")), RefVar(MakeBinaryNative(heap, 1, 0x60)));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "binPeek")), RefVar(MakeBinaryNative(heap, 1, 0x80)));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "binUnlock")), RefVar(MakeBinaryNative(heap, 1, 0xa0)));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "format3u")), RefVar(MakeBinaryNative(heap, 1, 0xc0)));
 
 	// a string in the code binary: its UniChars in the host's order, of class 'string
 	RefVar s(Eval("call nativeString with ()"));
@@ -279,8 +371,42 @@ main()
 	EXPECT(ISNIL(Eval("call nativeEndsWith with (\"Mahjongg\", \"Mah\")")));
 	EXPECT(PackageNativeCPUAnswers("Length__Fl") && PackageNativeCPUEntryCount() > 50);
 
+	// operator new's block outlives the call that made it: kept on one
+	// call, read (and deleted) on the next; two at once are two blocks
+	{
+		RefVar k1(Eval("call heapKeep with (1234)"));
+		RefVar k2(Eval("call heapKeep with (-5)"));
+		EXPECT(ISINT(k1) && ISINT(k2) && !EQRef(k1, k2));
+		SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "k1")), k1);
+		SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "k2")), k2);
+		EXPECT(RINT(Eval("call heapFetch with (k2)")) == -5);
+		EXPECT(RINT(Eval("call heapFetch with (k1)")) == 1234);
+		// (both given back and run together: the next block is the first again)
+		EXPECT(EQRef(Eval("call heapKeep with (9)"), k1));
+		EXPECT(RINT(Eval("call heapFetch with (k1)")) == 9);
+	}
+	// a binary locked by LockedBinaryPtr is seen through the same address on
+	// later calls, until UnlockRefArg; then the address is no longer there
+	{
+		RefVar bin(AllocateBinary(RSSYMbinary, 4));
+		memcpy(BinaryData(bin), "*0@", 4);
+		SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "lockedBin")), bin);
+		RefVar where(Eval("call binLock with (lockedBin)"));
+		SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "lockedAt")), where);
+		EXPECT(RINT(Eval("call binPeek with (lockedAt)")) == 0x2a);
+		((unsigned char*) BinaryData(bin))[1] = 0x55;		// (the bytes themselves, not a copy)
+		EXPECT(RINT(Eval("call binPeek with (lockedAt)")) == 0x55);
+		Eval("call binUnlock with (lockedBin)");
+		EXPECT(ISNIL(Eval("try call binPeek with (lockedAt) onexception |evt.ex| do nil")));
+	}
+	// malloc, sprintf's "%3u", MakeString and free
+	{
+		RefVar f(Eval("call format3u with (7)"));
+		EXPECT(IsString(f) && Length(f) == 8 && ((UniChar*) BinaryData(f))[2] == '7' && ((UniChar*) BinaryData(f))[0] == ' ');
+	}
+
 	// every ROM entry the fixtures' native code reaches (gluetable.py --package
-	// over inetenbl, modmsup, Mahjongg and newthack) that the host has a
+	// over inetenbl, modmsup, Mahjongg, newthack and nethopper) that the host has a
 	// function for; not answered, for want of one: Debugger,
 	// EnableFramesFunctionProfiling, GetGlobals (a host pointer), PublicFiller_236
 	static const char* kReached[] =
@@ -326,6 +452,18 @@ main()
 		"_RINTError__Fl", "__rt_sdiv", "__rt_sdiv10",
 		"free", "longjmp", "malloc",
 		"memcpy", "setjmp", "strlen",
+		// and NetHopper 3.2's Newton C++ Tools code (its BinCFunctions)
+		"DisposPtr", "GetFrameSlot__FRC6RefVarT1", "Length__FRC6RefVar",
+		"LockedBinaryPtr__FRC6RefVar", "MakeBoolean__Fi", "MakeInt__Fl",
+		"MakeSymbol__FPc", "NSCallGlobalFn__FRC6RefVarN21", "NSCallGlobalFn__FRC6RefVarT1",
+		"NewPtrClear", "RefToInt__FRC6RefVar", "SetArraySlot__FRC6RefVarlT1",
+		"SetVariable__FRC6RefVarN21", "UnlockRefArg__FRC6RefVar", "Ustrlen",
+		"Ustrncat", "__as__6RefVarFCl", "__as__9RefStructFCl",
+		"__as__9RefStructFRC6RefVar", "__ct__6RefVarFCl", "__ct__9RefStructFv",
+		"__dl__FPv", "__dt__6RefVarFv", "__dt__9RefStructFv",
+		"__nw__FUi", "__opl__6RefVarCFv", "__opl__9RefStructCFv",
+		"atoi", "atol", "sprintf", "strcat", "strchr", "strcmp", "strncat",
+		"strncmp", "strncpy", "strpbrk", "strstr", "strtok",
 	};
 	for (const char* n : kReached)
 		if (!PackageNativeCPUAnswers(n))
