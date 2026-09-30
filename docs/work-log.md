@@ -264,6 +264,13 @@ is the same value spelt so that it cannot be read two ways.
   ROM, 198 of 198 (9 disabled) without; `host.Newton`, the two
   SameScreen tests and `host.NSDecompileRoundTrip` stay on the image as
   the cross-check.
+- No-ROM coverage (d1ec7786, 054f56c5): `packages.py` reads the ROM
+  extension out of an object file, so `host.NewtonPackage.extract` makes
+  Formulas2.pkg from `romsrc-objects.bin` (byte for byte the image's)
+  and the 9 package tests run without the image; the 39 unit tests that
+  needed only the ROM's objects import the object file (`NEWTON_OBJECTS`).
+  No-ROM configure: 248 of 248 run and pass (198 before); with the ROM,
+  259 of 259.
 - The last run-time read of the image: package native code reads
   `gROMVersion` (0x13dc), now carried as `romsrc/romdata/gParamBlock.bin`
   (`romsrc.py romdata`).

@@ -272,12 +272,10 @@ worked through.  What could come next (not ranked; the owner chooses):
 - **The ROM-free track** (below): **the OS boots from the reconstructed
   data by default** (`<build>/romsrc-objects.bin`, made by the default
   build from the committed, editable `romsrc/`; `--rom` only for
-  cross-checks), and nothing reads the ROM image at run time.  Next: let
-  `host.NewtonPackage.extract` make its loadable Formulas2.pkg from
-  `romsrc/rex/` rather than `build/MP2x00US`, so the 9 package tests it
-  gates run in a checkout without the image; then move the unit tests
-  that import the image only for its objects (fonts, locale bundles) onto
-  the object file.
+  cross-checks), and nothing reads the ROM image at run time.  With no
+  ROM image 248 of the 259 ctests run and pass; the 11 left check
+  against the ROM on purpose (`frames.FramesPart` and
+  `packages.PackageIterator` could still move to `ROMBytesAt`).
 - Small: the date the Assistant's "tomorrow" comes to ("schedule lunch
   with Daniel tomorrow" puts the meeting on today).
 
