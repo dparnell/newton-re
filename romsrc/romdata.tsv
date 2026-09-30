@@ -1,0 +1,2 @@
+# the ROM's other data read at its ROM address: ROM address, name, file
+1000	gParamBlock	romdata/gParamBlock.bin

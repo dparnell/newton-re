@@ -18,11 +18,13 @@ The output (-o) is what the host loads in place of a ROM image
 area's base address and size, the magic-pointer table's address and its
 count - then the area, then the magic pointers as big-endian words, then
 (version 2) the count of other blocks of ROM data and each one's address,
-length and bytes (rounded to a word): the lexicons, and the ROM extension;
+length and bytes (rounded to a word): the lexicons, the ROM's other data
+(romdata.tsv) and the ROM extension;
 then (version 3) the count of objects that are not where the ROM has them
 and, for each, the ROM's ref and the ref now (build --relayout).
     python romsrc.py roundtrip build/MP2x00US -o <dir> --newtonscript <exe>   # both, as the ctest runs them
     python romsrc.py edit-test <tree> -o <dir> --objects <file> --newtonscript <exe>
+    python romsrc.py romdata build/MP2x00US <tree>   # only the ROM's other data (romdata/), as extract writes it
 
 edit-test is the test of editability: it copies a tree, swaps a frame's
 first two slots (@271) and puts an element at the front of an array (@113,
@@ -54,6 +56,12 @@ binary but strings and reals is kept as its bytes):
                      C data outside the object area, some of it in the ROM
                      extension), each its size word then the trie; the .tsv
                      their ROM addresses (tools/newton-rom/analysis/romdicts.py)
+    romdata/<name>.bin, romdata.tsv   the ROM's other data that code outside
+                     the object area reads at its ROM address: the parameter
+                     block gParamBlock (0x1000, a page: gROMVersion, gROMStage,
+                     gHardwareType, ...), whose version words a package's
+                     native code reads (armcpu/PackageNativeCPU.cpp); the .tsv
+                     their ROM addresses (ROMDATA below)
     rex/, rex.tsv    the ROM extension (the "high" file: its header, config
                      entries and the ten built-in packages), cut into pieces
                      in address order - each package a .pkg file as the ROM
@@ -628,6 +636,11 @@ class Extractor:
 			found[slots["samples"]] = max(1, int(round(hz)))
 		return found
 
+	def write_romdata(self):
+		"""The ROM's other data that code outside the object area reads at its
+		ROM address (ROMDATA), each as a file of its bytes."""
+		write_romdata(self.rom, self.out)
+
 	def write_rex(self):
 		"""The ROM extension as pieces: every config entry and every package
 		of the package list a file, what lies between them a file too."""
@@ -982,6 +995,7 @@ class Extractor:
 				with open(os.path.join(self.out, rel), "wb") as out:
 					out.write(rom.rom[address:address + 4 + size])
 				f.write("%x\t%s\t%s\n" % (address, name, rel))
+		self.write_romdata()
 		self.write_rex()
 		with open(os.path.join(self.out, "magic.tsv"), "w", encoding="utf-8", newline="\n") as f:
 			count = rom.word(rom.mp_table)
@@ -992,6 +1006,29 @@ class Extractor:
 				what = self.paths[ref] if ref in self.inside else self.value(ref, "@%d" % i)
 				f.write("%d\t%s\n" % (i, what))
 		return len(defs), len(mapdefs)
+
+
+# ---- the ROM's other data
+
+# What code outside the object area reads of the ROM at a ROM address, by
+# symbol, with its length: the parameter block (a page), whose gROMVersion
+# (0x13dc) and gROMStage NTK's runtime stubs in a package's native code
+# read to choose their entry points (docs/armcpu/README.md).
+ROMDATA = [("gParamBlock", 0x1000)]
+
+
+def write_romdata(rom, out):
+	"""romdata/<name>.bin and romdata.tsv: each ROMDATA block's bytes and its
+	ROM address.  Run by extract; the tree's copy was written by it once."""
+	os.makedirs(os.path.join(out, "romdata"), exist_ok=True)
+	with open(os.path.join(out, "romdata.tsv"), "w", encoding="utf-8", newline="\n") as f:
+		f.write("# the ROM's other data read at its ROM address: ROM address, name, file\n")
+		for name, length in ROMDATA:
+			address = rom.by_name[name]
+			rel = "romdata/%s.bin" % name
+			with open(os.path.join(out, rel), "wb") as blob:
+				blob.write(rom.rom[address:address + length])
+			f.write("%x\t%s\t%s\n" % (address, name, rel))
 
 
 # ---- bitmaps
@@ -1841,6 +1878,17 @@ class Builder:
 					with open(os.path.join(self.src, rel), "rb") as blob:
 						self.blocks.append((int(address, 16), blob.read()))
 
+		# the ROM's other data (romdata.tsv)
+		romdata = os.path.join(self.src, "romdata.tsv")
+		if os.path.exists(romdata):
+			with open(romdata, encoding="utf-8") as f:
+				for line in f:
+					if line.startswith("#"):
+						continue
+					address, _, rel = line.rstrip("\n").split("\t")
+					with open(os.path.join(self.src, rel), "rb") as blob:
+						self.blocks.append((int(address, 16), blob.read()))
+
 		# the ROM extension, put back together
 		rex = os.path.join(self.src, "rex.tsv")
 		if os.path.exists(rex) and self.relayout:
@@ -1926,7 +1974,7 @@ def check_magic(builder, rom):
 def check_blocks(builder, rom):
 	bad = [a for a, data in builder.blocks if rom.rom[a:a + len(data)] != data]
 	if bad:
-		print("%d blocks of ROM data (lexicons, the extension) differ from the ROM's, e.g. %#x" % (len(bad), bad[0]), file=sys.stderr)
+		print("%d blocks of ROM data (lexicons, other data, the extension) differ from the ROM's, e.g. %#x" % (len(bad), bad[0]), file=sys.stderr)
 		return 1
 	return 0
 
@@ -1972,7 +2020,14 @@ def main(argv=None):
 	r.add_argument("-o", "--output", required=True, help="where the source tree is written (emptied first)")
 	r.add_argument("--newtonscript", required=True, help="the host's newtonscript, which compiles the functions")
 	r.add_argument("--objects", help="also write the object file the host loads (newton --objects)")
+	d = sub.add_parser("romdata", help="write the ROM's other data (ROMDATA) into an existing tree, as extract does")
+	d.add_argument("build_dir")
+	d.add_argument("tree")
 	a = ap.parse_args(argv)
+	if a.command == "romdata":
+		write_romdata(nf.ROM(a.build_dir), a.tree)
+		print("romdata.tsv and romdata/ written into %s" % a.tree)
+		return 0
 	if a.command == "edit-test":
 		import shutil
 		shutil.rmtree(a.output, ignore_errors=True)
@@ -2051,7 +2106,7 @@ def main(argv=None):
 	if a.check:
 		rom = nf.ROM(a.check)
 		result = check(base, area, rom, None) | check_magic(builder, rom) | check_blocks(builder, rom)
-		print("the object area, magic pointers and %d blocks of ROM data (the lexicons, the extension) are %s"
+		print("the object area, magic pointers and %d blocks of ROM data (the lexicons, other data, the extension) are %s"
 			  % (len(builder.blocks), "identical to the ROM's" if result == 0 else "NOT the ROM's"))
 		return result
 	return 0

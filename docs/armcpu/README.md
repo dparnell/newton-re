@@ -89,7 +89,9 @@ ARM code a 32-bit view:
   ARM address in a window onto the host object's bytes, kept while the
   call lasts (the object locked).
 - **The ROM image is mapped at 0** (read-only) so the version-dependent
-  stubs' reads of the ROM work, and the few RAM globals they read (the
+  stubs' reads of the ROM work - or, booted on the object file with no
+  image, the ROM data it carries (`ROMBytesAt`: the parameter block,
+  `romsrc/romdata/`), and the few RAM globals they read (the
   interpreter, the global function frame) are answered by the adapter.
 
 Only the entry points a package's code actually uses are implemented on the
@@ -153,7 +155,10 @@ Mahjongg's two natives deal the board and NewtHack's runs each turn.
   `ThrowRefException` makes the RefVar as the ROM's makes its RefStruct.
 - **The ROM image at 0**: NTK's runtime routines choose their path by the
   ROM's version words at 0x13dc/0x13e0 (0x00020002 on this ROM: the 2.x
-  entry points).
+  entry points). Traced over Mahjongg and NewtHack, `gROMVersion` (0x13dc)
+  is the only ROM address the fixtures' code reads; the object file
+  carries the page it is in (`gParamBlock`, 0x1000-0x2000), so the
+  fixtures run the same with no image.
 
 NOT YET: frames in the code binary; protocol parts.
 

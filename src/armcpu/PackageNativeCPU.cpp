@@ -205,6 +205,10 @@ public:
 private:
 	const uint8_t*	fROM;
 	ULong			fROMSize;
+	// with no image (booted on the object file): the ROM data it carries -
+	// the parameter block whose version words the stubs read (romsrc/romdata/)
+	const uint8_t*	ROMData(uint32_t a, uint32_t n) const
+					{ return fROM == nil && a < kCodeBase ? (const uint8_t*) ROMBytesAt(a, n) : nil; }
 	bool			Arena(uint32_t a, uint32_t n) const { return a >= kArenaBase && a + n <= kArenaBase + kArenaSize; }
 	bool			Code(uint32_t a, uint32_t n) const { return a >= kCodeBase && a + n <= kCodeBase + fCode.size(); }
 	Window*			FindWindow(uint32_t a, uint32_t n);
@@ -265,6 +269,7 @@ bool
 TNativeWorld::Read32(uint32_t a, uint32_t* v)
 {
 	if (a + 4 <= fROMSize)				{ *v = BE32(fROM + a); return true; }
+	if (const uint8_t* p = ROMData(a, 4))	{ *v = BE32(p); return true; }
 	if (Code(a, 4))						{ *v = BE32(&fCode[a - kCodeBase]); return true; }
 	if (Arena(a, 4))					{ *v = BE32(&fArena[a - kArenaBase]); return true; }
 	if (Window* w = FindWindow(a, 4))
@@ -287,6 +292,7 @@ bool
 TNativeWorld::Read16(uint32_t a, uint16_t* v)
 {
 	if (a + 2 <= fROMSize)				{ *v = (uint16_t) ((fROM[a] << 8) | fROM[a + 1]); return true; }
+	if (const uint8_t* p = ROMData(a, 2))	{ *v = (uint16_t) ((p[0] << 8) | p[1]); return true; }
 	if (Code(a, 2))						{ *v = (uint16_t) ((fCode[a - kCodeBase] << 8) | fCode[a - kCodeBase + 1]); return true; }
 	if (Arena(a, 2))					{ *v = (uint16_t) ((fArena[a - kArenaBase] << 8) | fArena[a - kArenaBase + 1]); return true; }
 	if (Window* w = FindWindow(a, 2))
@@ -304,6 +310,7 @@ bool
 TNativeWorld::Read8(uint32_t a, uint8_t* v)
 {
 	if (a < fROMSize)					{ *v = fROM[a]; return true; }
+	if (const uint8_t* p = ROMData(a, 1))	{ *v = *p; return true; }
 	if (Code(a, 1))						{ *v = fCode[a - kCodeBase]; return true; }
 	if (Arena(a, 1))					{ *v = fArena[a - kArenaBase]; return true; }
 	if (Window* w = FindWindow(a, 1))
