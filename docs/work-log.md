@@ -9,6 +9,22 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: the docking loader
+
+A device plugged into the serial port hands the Newton the package that
+drives it, and the Newton stores and installs it (`comms/SCPLoader.h`,
+the 'scpl task, ROM 0x1b9d08-0x1baaf8; the connection-protocol tuples
+`comms/CPMessages.h`; the newt world's `HandleSCPEvent` and
+`HandleInterConnect`).  `tools/dock/scpdevice.py` is the device; ctest
+`host.NewtonSCPLoad` installs monaco.pkg through it.  A host bug found:
+`CMGetServiceVersion`'s not-found error was -26030 where the ROM's is
+-26002, which would have made every device look already served.  ROM
+bugs kept: the message buffer allocated afresh on every load and never
+freed, `ReadTuple` reading whatever length a tuple claims, and a failed
+load left in flight so every later load answers busy.  The interconnect
+pin's handler (TICHandler) is hardware and stays NOT YET;
+`HostInterconnect(state)` sends the event it would.
+
 ## 2026-10-01: notyet.py's views and stores markers
 
 - Stores (81d49b64): `EntrySize` counts an entry's large binaries;
