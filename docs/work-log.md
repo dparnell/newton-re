@@ -237,6 +237,22 @@ is the same value spelt so that it cannot be read two ways.
   notBic loops never advance the mask pointer; `ScaleStdRRect` scales the
   corner oval crosswise on a fax.
 
+## 2026-09-30: dates, times and numbers typed as text
+
+- `TDate::StringToDateFields` (0x8de6c), `StringToTime` and
+  `StringToNumber` read through the locale's lexical dictionaries
+  (a5582247): `ParseString` (0x18176c) finds the longest run of words the
+  dictionary knows and walks it a character at a time with the Airus
+  `VerifyCharacter`/`VerifyWord`, each character's attribute saying
+  whether to gather it or convert what is gathered; `ConvertBuffer`
+  (0x181adc) turns it into a field; numbers through the ROM's
+  `TNumberParser`; `ReplaceDictionaryHandle` reopens the lexicons on a
+  locale change.  The Assistant's "lunch at 1 pm tomorrow" opens its
+  slip at 13:00 tomorrow (ctest `host.NewtonDateParse`).
+- ROM behaviour kept: a two-digit year goes into the current century
+  ("98" is 2098 in 2026); "tomorrow" in a frame can give 31 September;
+  the U.S. time dictionary has no seconds; "1,234" reads as 1.
+
 ## 2026-09-30: selections follow their text; the caret under a hilite
 
 - A selection follows its paragraph's text (f7913359): `AdjustHilites`
