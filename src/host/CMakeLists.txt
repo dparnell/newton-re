@@ -1097,6 +1097,22 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/../romsrc/rex/inetenbl.pkg)
         set_tests_properties(host.NewtonAppNetSched PROPERTIES TIMEOUT 300
                              PASS_REGULAR_EXPRESSION "GET /nethopper.html 200.*netsched: done, 0 failed"
                              FAIL_REGULAR_EXPRESSION "waited in vain|is not answered|stopped \\(|FAILED")
+        # Newt's Cape's companions used for what they are for
+        # (apps-newtscape.ns): HTMList's Save as HTML, and a package
+        # downloaded from the host's web server and installed
+        add_test(NAME host.NewtonAppNewtsCape
+                 COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/host/httpserve.py
+                         --dir ${CMAKE_CURRENT_SOURCE_DIR}/demo/www
+                         --file monaco.pkg=${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monaco.pkg --port 0 --
+                         $<TARGET_FILE:newton> --display 320x480 --erase
+                         --store ${CMAKE_CURRENT_BINARY_DIR}/app-newtscape.store --headless 240
+                         --package ${CMAKE_SOURCE_DIR}/../fixtures/packages/apps/NewtScape/nwcp20r2.pkg
+                         --package ${CMAKE_SOURCE_DIR}/../fixtures/packages/apps/NewtScape/hlst10k2.pkg
+                         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/apps-newtscape.ns
+                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+        set_tests_properties(host.NewtonAppNewtsCape PROPERTIES TIMEOUT 300
+                             PASS_REGULAR_EXPRESSION "GET /monaco.pkg 200.*newtscape: done, 0 failed"
+                             FAIL_REGULAR_EXPRESSION "waited in vain|is not answered|stopped \\(|FAILED")
         # NetHopper's JPEG viewer (NetHopperJPEG.pkg) with no NewtsCape to
         # decode for it (demo/nethopper-jpeg.ns): the JPEG fetched, the
         # system's "Sorry, a problem has occurred. (-48200)" alert, the

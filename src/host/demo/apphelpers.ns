@@ -63,3 +63,24 @@ typeText := func(text) begin
 		if shifted then KeyEvent(56, nil);
 	end;
 end;
+
+// the picker on the screen: a pick view (class 91) with items
+pickerUp := func() call findView with (GetRoot(), func(v) v.viewClass = 91 and v.pickItems and Length(v.pickItems) > 0);
+
+// the item of the picker on the screen whose text begins with `prefix`,
+// tapped (a picker draws its items itself: the item's row); ==> the item's
+// index, or nil when there is no such item
+pickItem := func(prefix) begin
+	local picker := call pickerUp with ();
+	local k := nil;
+	if picker then foreach i, item in picker.pickItems do begin
+		local text := if IsFrame(item) then item.item else item;
+		if not k and IsString(text) and BeginsWith(text, prefix) then k := i;
+	end;
+	if k then begin
+		local b := picker:GlobalBox();
+		local n := Length(picker.pickItems);
+		call tapAt with ((b.left + b.right) div 2, b.top + ((b.bottom - b.top) * (2 * k + 1)) div (2 * n));
+	end;
+	k
+end;

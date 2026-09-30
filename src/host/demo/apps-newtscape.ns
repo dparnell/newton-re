@@ -1,0 +1,126 @@
+// Newt's Cape's companions (fixtures/packages/apps/NewtScape) used as
+// their user would, beside the browsing host.NewtonNewtsCape does:
+//
+//   HTMList (hlst10k2.pkg) adds "Save as HTML" to the Notepad's Action
+//   picker: a note written, the picker opened and Save as HTML chosen,
+//   and a second note holds the first one as a web page.
+//
+//   Newt's Cape installs a package it downloads: its location line given
+//   the URL of a package on the host's web server (tools/host/httpserve.py
+//   serving fixtures/packages/fonts/monaco.pkg as /monaco.pkg), File >
+//   Open Location, the Internet Enabler's connection slip answered with
+//   Connect; Newt's Cape reads the package's name, version and date out of
+//   its header, asks whether to install it, and Yes installs it - checked
+//   in the question (the name read right) and in the package list.
+//
+// ctest host.NewtonAppNewtsCape:
+//
+//   python tools/host/httpserve.py --dir src/host/demo/www \
+//       --file monaco.pkg=fixtures/packages/fonts/monaco.pkg --port 0 -- \
+//       build/host/host/newton --display 320x480 --erase --store tmp/newtscape-apps.store \
+//       --headless 240 --package fixtures/packages/apps/NewtScape/nwcp20r2.pkg \
+//       --package fixtures/packages/apps/NewtScape/hlst10k2.pkg \
+//       --script src/host/demo/apps-newtscape.ns
+
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
+HostInclude("walkhelpers.ns");		// findView, the steps
+HostInclude("apphelpers.ns");		// openFromExtras, typeText, pickItem
+
+wtName := "newtscape";
+ncSym := '|NewtsCape:NewtsCape|;
+ncNote := "Hello web";
+ncPkgURL := "http://127.0.0.1:" & HostGetEnv("NEWTON_HTTP_PORT") & "/monaco.pkg";
+
+ncApp := func() GetRoot().(ncSym);
+ncNotes := func() begin
+	local texts := [];
+	local c := GetUnionSoup("Notes"):Query(nil);
+	local e := c:Entry();
+	while e do begin
+		if e.data then foreach item in e.data do if IsString(item.text) then AddArraySlot(texts, item.text);
+		e := c:Next();
+	end;
+	texts
+end;
+ncHTMLNote := func() begin
+	local found := nil;
+	foreach t in call ncNotes with () do
+		if StrPos(t, "<HTML>", 0) and StrPos(t, ncNote, 0) then found := t;
+	found
+end;
+ncConnectSlip := func() begin
+	local slip := nil;
+	foreach c in GetRoot():ChildViewFrames() do
+		if HasSlot(c, 'fLinkID) and c._defaultButton and c._defaultButton.viewCObject then slip := c;
+	slip;
+end;
+ncQuestion := func() call findView with (GetRoot(), func(v) IsString(v.text) and StrPos(v.text, "install package", 0));
+ncInstalled := func() begin
+	local found := nil;
+	foreach p in GetPackages() do if StrPos(p.title, "onaco", 0) then found := p;
+	found
+end;
+
+wtSteps := [
+	// Save as HTML
+	call tapLineStep with ("the caret on the note", 60, 70),
+	func(done) begin
+		call typeText with (ncNote);
+		call waitFor with ("newtscape: the note written", func() call viewWithText with (ncNote), done, 10);
+	end,
+	settleStep,
+	call tapStep with ("the Action picker", 310, 28, pickerUp),
+	func(done) begin
+		call wtCheck with ("the Action picker offers Save as HTML", call pickItem with ("Save as HTML"), "(it does not)");
+		call waitFor with ("newtscape: the note saved as HTML", ncHTMLNote, func() begin
+			call wtCheck with ("Save as HTML makes a note of the page", call ncHTMLNote with (), "(no such note)");
+			Print("newtscape: the page: " & call ncHTMLNote with ());
+			call done with ();
+		end, 15);
+	end,
+	// a package from the web
+	func(done) call openFromExtras with ("Newt's Cape", ncSym, done),
+	call waitStep with ("its About page", func() call findView with (GetRoot(), func(v) IsString(v.text) and StrPos(v.text, "About:Newt", 0))),
+	func(done) begin
+		// the location line: tapped, its text selected (command-A) and
+		// the URL typed over it
+		local line := call findView with (GetRoot(), func(v) IsString(v.text) and StrPos(v.text, "About:Newt", 0));
+		call tapCentre with (line);
+		AddDelayedCall(func() begin
+			KeyEvent(55, true); call typeKey with (0); KeyEvent(55, nil);
+			call typeText with (ncPkgURL);
+			call waitFor with ("newtscape: the URL typed", func() StrEqual(line.text, ncPkgURL), func() begin
+				call wtCheck with ("the URL typed on the location line", StrEqual(line.text, ncPkgURL), "(it says " & line.text & ")");
+				// File > Open Location
+				call tapButtonText with (call ncApp with (), "File");
+				call waitFor with ("newtscape: the File menu", pickerUp, func() begin
+					call pickItem with ("Open Location");
+					call done with ();
+				end, 10);
+			end, 10);
+		end, nil, 800);
+	end,
+	func(done) begin
+		call waitFor with ("newtscape: the question", func() begin
+				local slip := call ncConnectSlip with ();
+				if slip then call tapCentre with (slip._defaultButton);		// Connect
+				call ncQuestion with ()
+			end, func() begin
+			local q := call ncQuestion with ();
+			Print("newtscape: asked: " & q.text);
+			call wtCheck with ("the package's name read out of its header", StrPos(q.text, "Monaco", 0) or StrPos(q.text, "monaco", 0), "(" & q.text & ")");
+			call tapButtonText with (GetRoot(), "Yes");
+			call waitFor with ("newtscape: the package installed", ncInstalled, func() begin
+				call wtCheck with ("the package installed", call ncInstalled with (), "(not in the package list)");
+				call done with ();
+			end, 60);
+		end, 90);
+	end,
+	call shotStep with ("newtscape-apps"),
+	func(done) begin
+		Print("newtscape: done, " & wtFailures & " failed");
+		HostQuit();
+	end];
+
+call walkSetup with ([2, 0, 45, 34, 14, 37], func()			// "Daniel"
+	call waitFor with ("newtscape: installed", func() GetRoot().(ncSym), wtNext, 60));

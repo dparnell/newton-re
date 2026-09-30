@@ -13,7 +13,11 @@ Purpose
     src/host/demo/www/).
 
 Usage
-    python tools/host/httpserve.py --dir <directory> --port <port> -- <program> [args...]
+    python tools/host/httpserve.py --dir <directory> --port <port>
+                                   [--file NAME=PATH]... -- <program> [args...]
+
+    --file serves one more file, PATH, as /NAME (a package out of
+    fixtures/packages, say, without a copy of it in the directory).
 
 Inputs / outputs
     The directory to serve and the port (on 127.0.0.1 only; 0 takes a free
@@ -35,8 +39,16 @@ import threading
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
+    extra_files = {}
+
     def log_message(self, fmt, *args):
         pass
+
+    def translate_path(self, path):
+        name = path.split("?", 1)[0].lstrip("/")
+        if name in self.extra_files:
+            return self.extra_files[name]
+        return super().translate_path(path)
 
     def log_request(self, code="-", size="-"):
         method_path = self.requestline.split(" ")
@@ -48,6 +60,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--dir", required=True)
     ap.add_argument("--port", type=int, required=True)
+    ap.add_argument("--file", action="append", default=[], help="NAME=PATH: PATH served as /NAME")
     ap.add_argument("program", nargs=argparse.REMAINDER)
     args = ap.parse_args(argv)
     program = args.program
@@ -55,6 +68,9 @@ def main(argv=None):
         program = program[1:]
     if not program:
         ap.error("no program to run")
+    for spec in args.file:
+        name, _, path = spec.partition("=")
+        Handler.extra_files[name] = os.path.abspath(path)
     try:
         server = http.server.ThreadingHTTPServer(("127.0.0.1", args.port),
                                                  functools.partial(Handler, directory=args.dir))
