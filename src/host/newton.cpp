@@ -70,7 +70,9 @@
 	--ir-peer puts the Newton's built-in IR port on a TCP connection to
 	another newton (hal/host/HostIRChip.h), so the two can beam to each
 	other: one is given listen:PORT (0 picks a free port) and the other
-	HOST:PORT.  Once set up it prints "[host] IR port N".
+	HOST:PORT.  Once set up it prints "[host] IR port N".  Without it the
+	IR port is still there, with nobody in front of it: Beam looks for a
+	receiver and finds none, as a MessagePad alone does.
 
 	--package installs a package once the machine is up, onto the internal
 	store as one arriving from the Newton Connection is (as many as wanted,
@@ -188,9 +190,7 @@ NewtonBoot(void)
 	// DEVIATION: the ROM's boot starts the timers and the serial hardware
 	// (InitializeCommHardware) and its loader registers the serial and MNP
 	// services; the host does it here, the external port a TCP socket
-	NewtonErr timerErr = noErr;
-	if (gSerialPort >= 0 || gIRPeer != nil)
-		timerErr = InitFIQTimer();
+	NewtonErr timerErr = InitFIQTimer();	// (the IR port is always there)
 	if (gSerialPort >= 0)
 	{
 		NewtonErr err = timerErr;
@@ -209,8 +209,8 @@ NewtonBoot(void)
 			fprintf(stderr, "[host] no serial port on %ld (%ld)\n", gSerialPort, (long) err);
 	}
 	// DEVIATION: the built-in IR is the Voyager chip's; the host's is a TCP
-	// connection to another newton
-	if (gIRPeer != nil)
+	// connection to another newton or, with no --ir-peer, a port with nobody
+	// in front of it - Beam then finds nobody, as a MessagePad alone does
 	{
 		NewtonErr err = timerErr;
 		if (err == noErr)
@@ -218,11 +218,14 @@ NewtonBoot(void)
 		if (err == noErr)
 		{
 			RegisterIRCommServices();
-			printf("[host] IR port %u\n", (unsigned) HostIRChipPort(HostIRChipInstalled()));
-			fflush(stdout);
+			if (gIRPeer != nil)
+			{
+				printf("[host] IR port %u\n", (unsigned) HostIRChipPort(HostIRChipInstalled()));
+				fflush(stdout);
+			}
 		}
 		else
-			fprintf(stderr, "[host] no IR port at %s (%ld)\n", gIRPeer, (long) err);
+			fprintf(stderr, "[host] no IR port at %s (%ld)\n", gIRPeer != nil ? gIRPeer : "(none)", (long) err);
 	}
 	THostScreenDriver* display = HostDisplay();
 	if (gWindowed && !HostWindowStart(display->Width(), display->Height(), display->Pixels(), "Newton", gScale))

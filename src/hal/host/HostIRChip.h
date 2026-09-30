@@ -51,7 +51,10 @@ unsigned short	HostIRChipPort(TSerialChip* chip);
 Boolean			HostIRChipConnected(TSerialChip* chip);
 
 // The registry made (if it is not yet), a chip made over the peer and
-// registered as 'infr' - newton's --ir-peer.  ==> noErr, or why not.
+// registered as 'infr' - newton's --ir-peer.  A nil peer is a port with
+// nobody in front of it (newton without --ir-peer: what it sends goes
+// nowhere, as light does, and a beam finds nobody).  A peer may also be
+// nil for HostIRChipMake.  ==> noErr, or why not.
 NewtonErr		HostIRChipInstall(const char* peer);
 TSerialChip*	HostIRChipInstalled(void);
 

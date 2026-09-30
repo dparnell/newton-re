@@ -394,6 +394,8 @@ NewtonErr			THostIRChip::WaitForAllSent()						{ Poll(); return noErr; }
 NewtonErr
 THostIRChip::Open(const char* peer)
 {
+	if (peer == nil)
+		return noErr;					// (no medium: nobody is ever in front of the port)
 	if (HostSocketsInit() != kHostSocketOK)
 		return -1;
 	const char* colon = strrchr(peer, ':');
@@ -442,13 +444,15 @@ THostIRChip::Hears(UByte modulation)
 
 // The interrupt is looked for every few milliseconds while there is a
 // peer (or one to find) - bytes that arrive while nobody listens are lost
-// then, not kept - and at once when the tool has work.
+// then, not kept - and at once when the tool has work (with no medium at
+// all only then: what it sends goes nowhere, and nothing comes).
 Boolean
 THostIRChip::Due(Int64* when)
 {
-	if (fPeer < 0 && fListener < 0 && fPeerAddress == 0)
+	Boolean work = fTool != nil && fIntEnabled && (fTxIntPending || fRxReady > 0);
+	if (fPeer < 0 && fListener < 0 && fPeerAddress == 0 && !work)
 		return false;
-	if (fTool != nil && fIntEnabled && (fTxIntPending || fRxReady > 0))
+	if (work)
 		GetClock(when);
 	else
 		*when = fNextPoll;

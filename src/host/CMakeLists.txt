@@ -251,6 +251,13 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
                          PASS_REGULAR_EXPRESSION "faxcheck: passed")
 endif()
 
+# Beam with nobody in front of the IR port (newton always has one): the
+# status slip looks for a receiver, then the alert says there was no response
+add_test(NAME host.NewtonBeamNobody COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --headless 300 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/beam-nobody.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonBeamNobody PROPERTIES TIMEOUT 400
+                     PASS_REGULAR_EXPRESSION "beam: the status slip says Looking for receiver.*beam: the alert says .*No response.*beam: done"
+                     FAIL_REGULAR_EXPRESSION "waited in vain|fell over")
+
 # the host's printer (print/host/HostPrinter.h): a note and a Names card
 # printed from their Action buttons, the printer chosen in the Print slip's
 # Choose Other Printer; each page a PNG in build/print, which

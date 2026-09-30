@@ -1,0 +1,53 @@
+// Beaming with nobody in front of the port (ctest host.NewtonBeamNobody):
+// newton without --ir-peer still has its IR port, as every MessagePad
+// does, with no one to answer it.  A note is beamed from its Action
+// button (the Notepad's MakeTextNote, then Action and Beam): the status
+// slip says it is looking for a receiver, and when the IR tool gives up
+// the transport says so in an alert - what a MessagePad alone on a desk
+// says.  Before the port was always there, Beam answered -26005 (no such
+// service).
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --display 320x480 \
+//       --headless 300 --script src/host/demo/beam-nobody.ns
+//
+// The note's Action button is at (310, 28) and Beam at (255, 70) on a
+// 320x480 screen; the status slip lies at (67, 75), the alert at (56, 140).
+
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
+
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+
+// the root view's child with its top left corner here, or nil
+shown := func(left, top) begin
+	local found := nil;
+	foreach child in GetRoot():ChildViewFrames() do begin
+		local box := child:GlobalBox();
+		if box.left = left and box.top = top then found := child;
+	end;
+	found;
+end;
+
+// every string a view and its descendants show, run together
+texts := func(view) begin
+	local s := if IsString(view.text) then view.text & " " else "";
+	foreach child in view:ChildViewFrames() do s := s & call texts with (child);
+	s;
+end;
+
+call walkSetup with (name, func() begin
+	GetRoot().paperroll:MakeTextNote("hello from nobody's beam", true);
+	call tapAt with (310, 28);				// the note's Action button
+	call waitFor with ("beam: the Action menu", func() call shown with (213, 23), func() begin
+		call tapAt with (255, 70);			// Beam
+		call waitFor with ("beam: the status slip", func() call shown with (67, 75), func() begin
+			local slip := call texts with (call shown with (67, 75));
+			Print("beam: the status slip says " & (if StrPos(slip, "Looking for receiver", 0) then "Looking for receiver" else slip));
+			call waitFor with ("beam: the alert", func() call shown with (56, 140), func() begin
+				Print("beam: the alert says " & call texts with (call shown with (56, 140)));
+				Print("beam: done");
+				HostQuit();
+			end, 240);
+		end, 30);
+	end, 20);
+end);
+Print("beam: the script is loaded");
