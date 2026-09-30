@@ -32,9 +32,12 @@
 	with --microphone-tone the microphone hears a sine of that frequency,
 	and the end says how much of what was played was that tone.
 
-	--store names the file the internal store is kept in between runs,
-	which is what the flash is on the machine: set the machine up once and
-	every boot after that comes up on the Notepad.  --erase throws that
+	--store names the file the internal store is kept in between runs:
+	the internal flash itself, in Einstein's layout (a 4 MB bank, or two
+	in an 8 MB file; hal/host/HostFlash.h), with the ROM's flash store on
+	it (stores/flash/: TNewInternalFlash, TFlashStore, TMuxStore, made by
+	InitPSSManager).  Set the machine up once and every boot after that
+	comes up on the Notepad.  --erase throws that
 	file away first and starts again at the Setup assistant, which is what
 	holding the power switch down through a reset does on the machine.
 

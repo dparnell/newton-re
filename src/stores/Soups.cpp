@@ -9,6 +9,7 @@
 */
 
 #include "Soups.h"
+#include "MuxStore.h"
 #include "hal/System.h"
 #include "Cursors.h"
 #include "Tags.h"
@@ -240,34 +241,37 @@ GetStores(void)
 
 
 // ROM 0x0012329c GetStoreClassInfo__FPC6TStore
+// A TMuxStore's is the store's inside it.
 const TClassInfo*
 GetStoreClassInfo(const TStore* store)
 {
-	return store->ClassInfo();
+	const TClassInfo* info = store->ClassInfo();
+	if (TMuxStore::ClassInfo() == info)
+		return ((TMuxStore*) store)->fStore->ClassInfo();
+	return info;
 }
+
+
+TStore*		gInRAMStore = nil;			// ROM 0x0c1016c4 gInRAMStore - the internal store itself (a TFlashStore)
+TStore*		gMuxInRAMStore = nil;		// ROM 0x0c1016c8 gMuxInRAMStore - and the TMuxStore round it
 
 
 // ROM 0x00154908 GetInternalStore__Fv
 // The store the machine boots with - the flash the PSS manager formats
-// and mounts.
-//
-// DEVIATION: TPSSManager is NOT YET RECONSTRUCTED, so nothing here knows
-// which store is the flash; a port says so with SetInternalStore before
-// it registers the store (the host does it in HostMountStores).  Nil
-// until one does, as it was before.
-static TStore*	gInternalStore = nil;
-
+// and mounts (stores/flash/PSSManager.cpp's InitPSSManager).
 TStore*
 GetInternalStore(void)
 {
-	return gInternalStore;
+	return gMuxInRAMStore;
 }
 
 
+// DEVIATION: a host with no flash (a test, newtonscript) mounts a store of
+// its own as the internal one (host/HostStores.h).
 void
 SetInternalStore(TStore* store)
 {
-	gInternalStore = store;
+	gMuxInRAMStore = store;
 }
 
 

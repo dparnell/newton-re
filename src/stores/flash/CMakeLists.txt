@@ -12,6 +12,7 @@ add_library(flash STATIC
     FlashStoreTables.cpp
     FlashBlock.cpp
     FlashIterator.cpp
+    PSSManager.cpp
     host/HostFlashDriver.cpp
 )
 target_link_libraries(flash PUBLIC newton_config protocols memory os600_user os600_kernel hal_host hal_timers packages stores toolbox utility)

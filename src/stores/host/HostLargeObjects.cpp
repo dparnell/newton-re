@@ -261,7 +261,14 @@ JoinStoreTransaction(MappedObject* entry)
 {
 	TStore* store = entry->fStore;
 	UByte root[kLargeObjectRootSize];
-	if (store->Read(entry->fId, 0, (char*) root, kLargeObjectRootSize) != noErr)
+	memset(root, 0, sizeof(root));
+	// (a package's root is only a PackageRoot, 0x14 bytes: read as much as
+	// there is, or its objects are never joined and a store that keeps
+	// separate transactions apart - the flash store - throws them away at
+	// the next mount)
+	long rootSize = 0;
+	if (store->GetObjectSize(entry->fId, &rootSize) != noErr
+	 || store->Read(entry->fId, 0, (char*) root, rootSize < kLargeObjectRootSize ? rootSize : kLargeObjectRootSize) != noErr)
 		return;
 	PSSId chunkArrayId = GetBigEndianWord(root + kLORootChunkArray);
 	PSSId ids[] = { entry->fId, GetBigEndianWord(root + kLORootCompanderName), GetBigEndianWord(root + kLORootCompanderParams), chunkArrayId };

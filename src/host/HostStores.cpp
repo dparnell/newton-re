@@ -12,6 +12,8 @@
 #include "Store.h"
 #include "Protocols.h"
 #include "host/HostStore.h"
+#include "PSSManager.h"
+#include "HostFlash.h"
 #include "ObjectHeap.h"
 #include "Frames.h"
 #include "OSErrors.h"
@@ -97,8 +99,38 @@ HostMountStores(void)
 		}
 		InitQueries();
 
-		TStore* store = (TStore*) THostStore::ClassInfo()->New();
-		if (store == nil)
+		// A store file with the OS running is the internal flash: its
+		// chips kept in the file (hal/host/HostFlash.h, Einstein's
+		// layout), its windows mapped as the boot maps them, and the
+		// internal store made on it as the ROM makes it (InitPSSManager:
+		// a TFlashStore in a TMuxStore, formatted if it needs it).
+		Boolean onFlash = false;
+		if (gStoreFile != nil && gProtocolRegistry != nil)
+		{
+			FILE* existing = fopen(gStoreFile, "rb");
+			if (existing != nil)
+				fclose(existing);
+			NewtonErr err = HostFlashOpen(gStoreFile);
+			if (err != noErr)
+				fprintf(stderr, "[host] %s is not a flash file (4 or 8 MB): the store is kept in memory\n", gStoreFile);
+			else if ((err = MapInternalFlashWindows()) != noErr || (err = InitPSSManager(0, 0)) != noErr)
+				fprintf(stderr, "[host] the internal flash would not mount (%ld)\n", (long) err);
+			else
+			{
+				gRestored = (existing != nil);
+				TStore* store = GetInternalStore();
+				RegisterTStore(store);
+				RefVar stores(GetStores());
+				if (IsArray(stores) && Length(stores) > 0)
+					HostPrepareStore(RefVar(GetArraySlotRef(stores, 0)));
+				onFlash = true;
+			}
+		}
+
+		TStore* store = onFlash ? nil : (TStore*) THostStore::ClassInfo()->New();
+		if (onFlash)
+			;
+		else if (store == nil)
 			fprintf(stderr, "[host] no memory for the internal store\n");
 		else
 		{
@@ -111,7 +143,7 @@ HostMountStores(void)
 			// the file it is kept in, if one was named: a store that comes
 			// back out of it is a machine that has been used before, and
 			// must not be formatted over
-			gRestored = ((THostStore*) store)->SetBackingFile(gStoreFile);
+			gRestored = ((THostStore*) store)->SetBackingFile(gProtocolRegistry != nil ? nil : gStoreFile);
 			if (err == noErr && !gRestored)
 				err = store->Format();
 			if (err != noErr)

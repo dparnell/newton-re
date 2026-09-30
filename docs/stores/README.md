@@ -933,7 +933,9 @@ Each step comes with its host tests.
    - Tests: the same scripts `test_Store` runs over `THostStore`; a
      power cut in the middle of a transaction (the file copied at each
      step), recovered at the next mount.
-4. **`TMuxStore`, and the internal store for real.**
+4. **`TMuxStore`, and the internal store for real.** DONE (2026-09-30):
+   `stores/MuxStore.h`, `stores/flash/PSSManager.h`; `newton --store` is
+   the flash file, and every ctest that boots on a store runs on it.
    - `TPSSManager`'s internal half: `InitPSSManager`, `MainConstructor`,
      `RegisterStores`.
    - `newton --store` becomes the flash file.
@@ -1071,6 +1073,27 @@ formats the internal flash, runs objects through transactions and
 separate transactions, churns 1200 4 KB objects to force compactions, and
 reads the store back from the file - including a transaction left under
 way, undone at the next start.
+
+## The internal store at boot
+
+`InitPSSManager` (`stores/flash/PSSManager.cpp`) is what makes it: the
+store implementations registered, a `TFlashStore` on a `TNewInternalFlash`
+(`TFlash::New`, `Init` over the heap allocator) wrapped in a `TMuxStore`
+(`stores/MuxStore.h`: every call under the wrapper's lock, the changes
+made by its `TMuxStoreMonitor` - a monitor, so on its own stack whichever
+task asked), formatted when `NeedsFormat` says so, and named "InRAMStore".
+`GetInternalStore` answers `gMuxInRAMStore`; `GetStoreClassInfo` looks
+through a `TMuxStore` to the store inside (the flash store's capabilities,
+"LOBJ rom sram flsh", are what let large objects and store packages on it).
+
+On the host, `HostMountStores` does it when a store file is named and the
+OS is running: `HostFlashOpen`, then the windows mapped as the boot's
+`InitCGlobals` maps them (`MapInternalFlashWindows`, with a throwaway
+instance, `kMapWindows`), then `InitPSSManager`. A file that is not 4 or
+8 MB is refused and the store kept in memory (a `THostStore`, as without a
+file; and as `newtonscript`, which does not run the OS, always does).
+NOT YET: the `TPSSManager` world itself, which makes the cards' stores; a
+RAM internal store; the reserved block's accessor.
 
 ## Not yet
 
