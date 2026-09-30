@@ -1,0 +1,176 @@
+// Internet Setup's editor over the host's own "Host network" setup
+// (comms/host/HostLink.ns), as the pen and the keys work it: the setup
+// opened, its domain name written in the Domain Name slip, its
+// configuration turned to Manual in the Configuration slip's picker, a
+// local IP address and a DNS server written in their slips, each slip
+// closed - Internet Setup's ValidateTarget reading the setup's DNSServers
+// then, which a setup without them made throw type.ref.frame (-48418) -
+// and the application closed and opened again to find them kept.  Run
+// again on the same store (without --erase), it finds the setup as it was
+// left and asks the NIE's domain manager for a name with no dot in it, so
+// that the host's DNS tool tries it with the setup's domain after it
+// (NEWTON_TRACE_DNS prints the names it asks the host for).  Snapshots in
+// inethostsetup-N.pgm.
+//
+//   NEWTON_TRACE_DNS=1 build/host/host/newton --display 320x480 --erase \
+//       --store inethostsetup.store --headless 120 \
+//       --package fixtures/packages/apple/NIE2/ENETSUP/newtdev.pkg \
+//       --package fixtures/packages/apple/NIE2/REGPKGS/inetenbl.pkg \
+//       --package fixtures/packages/apple/NIE2/REGPKGS/inetstup.pkg \
+//       --script src/host/demo/inethostsetup.ns
+//   (and again without --erase and the packages: the restart)
+//
+// (On a fresh store the Setup assistant's Welcome is behind it: the
+// application floats over it.)
+
+HostInclude("common.ns");			// tapAt, typeKey, waitFor
+HostInclude("walkhelpers.ns");		// the views, the keys, the steps
+
+kIHSDomain := "example.invalid";
+kIHSDomainKeys := [14, 7, 0, 46, 35, 37, 14, 47, 34, 45, 9, 0, 37, 34, 2];		// "example.invalid"
+
+ihsApp := func() GetRoot().|InternetSetup:NIE|;
+ihsReady := func()
+	call ihsApp with () and GetGlobalVar('|InetServices:NIE|)
+		and GetGlobalVar('|InetServices:NIE|).|HostNetwork:host| and GetDataDefs('|HostNetwork:host|)
+		and call ihsEntry with ();
+// the host's own setup (the one HostLink.ns adds)
+ihsEntry := func() call anyEntry with ("Internet Setups", func(e) e.physicalLayer = '|HostNetwork:host|);
+ihsShot := func(file) func(done) begin
+	ScreenSnapshot("inethostsetup-" & file & ".pgm");
+	call done with ();
+end;
+
+// a slip of the setup's opened by tapping its line, and closed with its
+// close box: waited for by its title
+ihsSlipTitle := func(title) func() call viewWithText with ("Host network " & title);
+ihsSlipGone := func(title) func() not call viewWithText with ("Host network " & title);
+ihsOpenSlip := func(title, y) call tapStep with (title & " slip", 90, y, call ihsSlipTitle with (title));
+ihsCloseSlip := func(title) call tapStep with (title & " slip closed", 299, 413, call ihsSlipGone with (title));
+// a number of an address slip's: the fields lie 57 pixels below the top
+// of the slip's title, wherever the slip opened
+ihsField := func(title, what, x, keys) [
+	func(done) begin
+		local y := (call (call ihsSlipTitle with (title)) with ()):GlobalBox().top + 57;
+		call (call tapLineStep with (what, x, y)) with (done);
+	end,
+	call keysStep with (keys)];
+ihsDefault := func() (call ihsApp with ()).currentLayout = 'default;
+
+ihsCheckEntry := func(prefix) func(done) begin
+	local e := call ihsEntry with ();
+	call wtCheck with (prefix & "domain", StrEqual(e.defaultDomain, kIHSDomain), "the domain is " & e.defaultDomain);
+	call wtCheck with (prefix & "configuration", e.configuration = 'manual, "the configuration is " & e.configuration);
+	call wtCheck with (prefix & "local address", e.localAddress[0] = 10 and e.localAddress[3] = 2,
+		"the local address is " & e.localAddress[0] & "." & e.localAddress[3]);
+	call wtCheck with (prefix & "DNS server", e.dnsServers[0][0] = 10 and e.dnsServers[0][3] = 1,
+		"the DNS server is " & e.dnsServers[0][0] & "." & e.dnsServers[0][3]);
+	call done with ();
+end;
+
+ihsFirst := [
+	func(done) begin (call ihsApp with ()):Open(); call done with (); end,
+	call waitStep with ("the application", call isOpen with ('|InternetSetup:NIE|)),
+	settleStep,
+	call tapStep with ("the setup", 70, 151, ihsDefault),
+	settleStep,
+	call ihsShot with ("1"),
+	// the domain name (the setup is a server's: its lines are its
+	// configuration and its domain name)
+	call ihsOpenSlip with ("Domain Name", 186),
+	call waitStep with ("the caret", func() GetKeyView()),
+	call keysStep with (kIHSDomainKeys),
+	call ihsShot with ("2"),
+	call ihsCloseSlip with ("Domain Name"),
+	settleStep,
+	func(done) begin
+		call wtCheck with ("domain", StrEqual((call ihsEntry with ()).defaultDomain, kIHSDomain),
+			"the domain is " & (call ihsEntry with ()).defaultDomain);
+		call done with ();
+	end,
+	// the configuration, from the picker
+	call ihsOpenSlip with ("Configuration", 170),
+	call tapStep with ("the picker", 60, 381, func() true),
+	settleStep,
+	call ihsShot with ("3"),
+	call tapStep with ("Manual", 118, 384, func() true),
+	settleStep,
+	call ihsCloseSlip with ("Configuration"),
+	settleStep,
+	call ihsShot with ("4"),
+	// a manual setup's addresses: the local one 10.0.0.2 (its first and
+	// last numbers) and the DNS server 10.0.0.1
+	call ihsOpenSlip with ("Local IP Address", 202)];
+foreach s in call ihsField with ("Local IP Address", "local address 1", 50, [18, 29]) do AddArraySlot(ihsFirst, s);
+foreach s in call ihsField with ("Local IP Address", "local address 4", 254, [19]) do AddArraySlot(ihsFirst, s);
+foreach s in [
+	call ihsShot with ("5"),
+	call ihsCloseSlip with ("Local IP Address"),
+	settleStep,
+	call ihsOpenSlip with ("DNS/Name Server Address", 234)] do AddArraySlot(ihsFirst, s);
+foreach s in call ihsField with ("DNS/Name Server Address", "DNS server 1", 50, [18, 29]) do AddArraySlot(ihsFirst, s);
+foreach s in call ihsField with ("DNS/Name Server Address", "DNS server 4", 254, [18]) do AddArraySlot(ihsFirst, s);
+foreach s in [
+	call ihsCloseSlip with ("DNS/Name Server Address"),
+	settleStep,
+	call ihsShot with ("6"),
+	call ihsCheckEntry with (""),
+	// closed and opened again: the setup shows what was written
+	func(done) begin (call ihsApp with ()):Close(); call done with (); end,
+	call waitStep with ("the application closed", call isClosed with ('|InternetSetup:NIE|)),
+	func(done) begin (call ihsApp with ()):Open(); call done with (); end,
+	call waitStep with ("the application again", call isOpen with ('|InternetSetup:NIE|)),
+	settleStep,
+	call tapStep with ("the setup again", 70, 151, ihsDefault),
+	settleStep,
+	call ihsShot with ("7"),
+	call ihsOpenSlip with ("Domain Name", 266),
+	func(done) begin
+		local k := GetKeyView();
+		call wtCheck with ("domain shown", k and StrEqual(k.text, kIHSDomain),
+			"the slip shows " & (if k then k.text));
+		call done with ();
+	end,
+	call ihsCloseSlip with ("Domain Name"),
+	call ihsCheckEntry with ("reopened "),
+	func(done) begin
+		(call ihsApp with ()):Close();
+		Print("inethostsetup: done, " & wtFailures & " failed");
+		HostQuit();
+	end]
+do AddArraySlot(ihsFirst, s);
+
+// the restart: the setup as it was left, and its domain used for a name
+// with no dot in it (the host's DNS tool asks for it as it is, then with
+// the domain after it - NEWTON_TRACE_DNS; both fail: .invalid is never a
+// real domain)
+ihsLookup := {
+	Linked: func(linkID, status, err)
+	begin
+		if err then
+			call wtCheck with ("restart link", nil, "the link failed, " & err)
+		else if status.linkStatus = 'connected then
+			DNSGetAddressFromName("nosuchnewtonhost", self, 'Resolved);
+	end,
+	Resolved: func(results, err)
+	begin
+		Print("inethostsetup: nosuchnewtonhost answered " & err);
+		call wtCheck with ("restart lookup", err = -60791, "the lookup answered " & err);
+		Print("inethostsetup: restart done, " & wtFailures & " failed");
+		HostQuit();
+	end};
+
+ihsRestart := [
+	call ihsCheckEntry with ("restart "),
+	func(done) InetGrabLink((call ihsEntry with ()).linkID, ihsLookup, 'Linked)];
+
+call waitFor with ("inethostsetup: the NIE", ihsReady, func() begin
+	if StrEqual((call ihsEntry with ()).defaultDomain, kIHSDomain) then begin
+		Print("inethostsetup: the restart");
+		wtSteps := ihsRestart;
+	end else begin
+		Print("inethostsetup: a new machine");
+		wtSteps := ihsFirst;
+	end;
+	call wtNext with ();
+end, 120);

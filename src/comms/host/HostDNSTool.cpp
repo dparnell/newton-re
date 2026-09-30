@@ -12,7 +12,21 @@
 #include "NewtonMemory.h"
 #include "HostSockets.h"
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+
+
+// NEWTON_TRACE_DNS (host only): each name the host's resolver is asked
+// for and what it answered, on stderr
+static int
+TracingDNS(void)
+{
+	static int tracing = -1;
+	if (tracing < 0)
+		tracing = getenv("NEWTON_TRACE_DNS") != nil;
+	return tracing;
+}
 
 
 static uint32_t
@@ -33,7 +47,9 @@ PutLong(UByte* p, uint32_t value)
 
 THostDNSTool::THostDNSTool(ULong serviceId)
 	: TCommTool(serviceId)
-{ }
+{
+	fDefaultDomain[0] = 0;
+}
 
 
 THostDNSTool::~THostDNSTool()
@@ -63,14 +79,38 @@ THostDNSTool::OpenStart(TOptionArray* options)
 }
 
 
-// The link id, the default domain and the servers are taken (the host's
-// resolver has its own); a query is answered at once.
+// The link id and the servers are taken (the host's resolver has its
+// own), the default domain kept (a C string; the domain manager sends "."
+// for none); a query is answered at once.
 ULong
 THostDNSTool::ProcessOptionStart(TOption* theOption, ULong label, ULong opcode)
 {
 	switch (label)
 	{
 	case kDNSDefaultDomainOption:
+		if (opcode == opSetRequired || opcode == opSetNegotiate)
+		{
+			const char* domain = (const char*) (theOption + 1);
+			Size length = theOption->Length();
+			Size n = 0;
+			while (n < length && n < (Size) sizeof(fDefaultDomain) - 1 && domain[n] != 0)
+				n++;
+			memcpy(fDefaultDomain, domain, n);
+			fDefaultDomain[n] = 0;
+			// (the root, or a domain of dots, is none)
+			const char* p = fDefaultDomain;
+			while (*p == '.')
+				p++;
+			if (*p == 0)
+				fDefaultDomain[0] = 0;
+			if (TracingDNS())
+				fprintf(stderr, "[dns] default domain \"%s\"\n", fDefaultDomain);
+			return opSuccess;
+		}
+		if (opcode == opGetCurrent)
+			return opSuccess;
+		return opFailure;
+
 	case kDNSServerOption:
 	case 'ilid':
 		if (opcode == opSetRequired || opcode == opSetNegotiate || opcode == opGetCurrent)
@@ -133,7 +173,7 @@ THostDNSTool::Query(TOption* query)
 		// (a mail exchanger is answered as the name's address: the host's
 		// resolver answers addresses only)
 		int n = 0;
-		if (HostResolveName(name, addresses, 4, &n) == kHostSocketOK)
+		if (Resolve(name, addresses, &n) == kHostSocketOK)
 		{
 			count = (n < 4) ? n : 4;
 			for (int i = 0; i < count; i++)
@@ -203,6 +243,30 @@ THostDNSTool::Query(TOption* query)
 	}
 	PutLong(data + 4, (uint32_t) err);
 	return opSuccess;
+}
+
+
+// A name's addresses from the host's resolver: as it is, and then - a name
+// with no dot in it, when there is a default domain - with the domain
+// after it.
+int
+THostDNSTool::Resolve(const char* name, uint32_t* addresses, int* count)
+{
+	*count = 0;
+	int result = HostResolveName(name, addresses, 4, count);
+	if (TracingDNS())
+		fprintf(stderr, "[dns] %s: %d address(es)\n", name, result == kHostSocketOK ? *count : 0);
+	if ((result != kHostSocketOK || *count == 0) && fDefaultDomain[0] != 0
+	 && name[0] != 0 && strchr(name, '.') == nil)
+	{
+		char qualified[512];
+		snprintf(qualified, sizeof(qualified), "%s.%s", name, fDefaultDomain);
+		*count = 0;
+		result = HostResolveName(qualified, addresses, 4, count);
+		if (TracingDNS())
+			fprintf(stderr, "[dns] %s: %d address(es)\n", qualified, result == kHostSocketOK ? *count : 0);
+	}
+	return result;
 }
 
 

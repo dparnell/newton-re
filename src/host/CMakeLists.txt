@@ -770,6 +770,34 @@ if(EXISTS ${NIE_DIR}/REGPKGS/inetenbl.pkg)
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(host.NewtonInetSetup PROPERTIES TIMEOUT 180
                          PASS_REGULAR_EXPRESSION "inetsetup: opened yes.*inetsetup: listed Host network.*inetsetup: host setups 2.*inetsetup: done")
+    # Internet Setup's editor over the Host network setup (demo/inethostsetup.ns):
+    # its domain name, configuration, local address and DNS server written
+    # in their slips and closed (a setup without Ethernet's slots threw
+    # type.ref.frame in ValidateTarget), kept when the application is
+    # opened again; .restart finds them after a restart on the same store
+    # and looks up a name with no dot, which the host's DNS tool asks for
+    # again with the setup's domain after it
+    add_test(NAME host.NewtonInetHostSetup
+             COMMAND newton --display 320x480 --erase
+                     --store ${CMAKE_CURRENT_BINARY_DIR}/inethostsetup.store --headless 150
+                     --package ${NIE_DIR}/ENETSUP/newtdev.pkg --package ${NIE_DIR}/REGPKGS/inetenbl.pkg
+                     --package ${NIE_DIR}/REGPKGS/inetstup.pkg
+                     --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/inethostsetup.ns
+             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(host.NewtonInetHostSetup PROPERTIES TIMEOUT 240
+                         FIXTURES_SETUP host_inethostsetup_store
+                         PASS_REGULAR_EXPRESSION "inethostsetup: a new machine.*inethostsetup: done, 0 failed"
+                         FAIL_REGULAR_EXPRESSION "FAILED|waited in vain|exception in a unit handler")
+    add_test(NAME host.NewtonInetHostSetup.restart
+             COMMAND newton --display 320x480
+                     --store ${CMAKE_CURRENT_BINARY_DIR}/inethostsetup.store --headless 150
+                     --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/inethostsetup.ns
+             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(host.NewtonInetHostSetup.restart PROPERTIES TIMEOUT 240
+                         FIXTURES_REQUIRED host_inethostsetup_store DEPENDS host.NewtonInetHostSetup
+                         ENVIRONMENT NEWTON_TRACE_DNS=1
+                         PASS_REGULAR_EXPRESSION "default domain \"example.invalid\".*nosuchnewtonhost.example.invalid: 0 address.*inethostsetup: restart done, 0 failed"
+                         FAIL_REGULAR_EXPRESSION "FAILED|waited in vain|exception in a unit handler")
     # the NIE's protoEndpointFSM (its 'Inet Protos:NIE unit) as a TCP client
     # over the host's link (demo/inetfsm.ns): connected through its own
     # states, "hello" echoed, disconnected

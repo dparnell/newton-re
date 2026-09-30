@@ -21,7 +21,16 @@
 				'ilid  the link id, a long
 				'ddom  the default domain, a C string
 				'dnic  a DNS server's address, a long (one per server)
-				which are taken (the host has its own).  A query is an option
+				which are taken: the link id and the servers are left alone
+				(the host's resolver has its own servers), and the default
+				domain - the setup's defaultDomain, "." when it has none -
+				is kept for a name with no dot in it that the host's resolver
+				does not find as it is: that name is asked for again with
+				the domain after it, as a resolver's search list does (the
+				NIE's own tool keeps the domain too, part 10 +0x2b88 ->
+				+0x1798; the host asks for the name as it is first, where
+				its own resolver applies the host's own search domains).
+				NEWTON_TRACE_DNS prints each name asked for.  A query is an option
 				request (opGetCurrent) of one 'dnsq followed by four 'rrcd:
 
 				'dnsq  'dnst (4 characters), the result (a long: 0 or an
@@ -100,6 +109,9 @@ public:
 
 protected:
 	ULong				Query(TOption* query);
+	int					Resolve(const char* name, uint32_t* addresses, int* count);
+
+	char				fDefaultDomain[256];	// 'ddom: "" when there is none
 };
 
 #endif

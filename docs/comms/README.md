@@ -89,7 +89,7 @@ host does not need.  So the host registers:
 * **the link controller** (`serv` = `ictl`): answers the link as up at
   once, the host's link being the host's business.
 * **the DNS service** (`serv` = `dnst`): answers lookups through the host's
-  resolver.
+  resolver, the setup's default domain tried after a name with no dot.
 
 and none of the stack's parts.
 
@@ -171,6 +171,44 @@ strings.  The script's `'sid '`
 data is the device's two big-endian longs; the translators turn it into
 the host's `TCMOServiceIdentifier` and back (DEVIATION).  Demo:
 `src/host/demo/dns.ns`, ctest `host.NewtonDNS`.
+
+The servers (`dnic`) and the link id are taken and left alone; the
+default domain (`ddom`, the setup's `defaultDomain`, "." for none) is kept
+- the NIE's own tool keeps it too (part 10 +0x2b88 -> +0x1798) - and a
+name with no dot in it that the host's resolver does not find as it is is
+asked for again with the domain after it, as a resolver's search list
+does (the host asks for it as it is first, its own resolver applying the
+host's own search domains).  `NEWTON_TRACE_DNS` prints the domain and
+each name asked for (ctest `host.NewtonInetHostSetup.restart`).
+
+### The Host network setup
+
+The host's link is a setup in Internet Setup's soup like any other
+(`comms/host/HostLink.ns`), and Internet Setup edits it through a data
+definition made from Ethernet's.  So it must hold what an Ethernet setup
+holds: Ethernet's FillNewEntry (inetstup.pkg 0x1e751) deep-clones its
+`blankEntry` into a new setup - `configuration` (`'usingServer`, shown as
+"DHCP Server", or `'manual`), `subnetMask`, `localAddress`,
+`gatewayaddress` (four numbers each), `defaultDomain` ("") and
+`dnsServers` (an array of addresses) - and the editor reads them: the
+generic stationery's ValidateTarget (0x1a001), run when a slip is closed,
+takes `Length(entry.DNSServers)`, which on a setup without the slot threw
+`type.ref.frame` (-48418, an immediate where a frame was wanted).  The
+host's setup has them (less Ethernet's `cardData`), `'usingServer` by
+default since the host's network configures itself; a setup kept from
+before is given the missing ones at boot.  The NIE's domain manager
+(inetenbl.pkg connect.action, 0x37a0d) hands `defaultDomain` and each valid
+address of `DNSServers` to the DNS tool; the addresses of a manual
+configuration are otherwise ignored, the host's network being the host's
+business.  Demo `src/host/demo/inethostsetup.ns` (ctests
+`host.NewtonInetHostSetup` and `.restart`).
+
+On a restart the store's packages are activated (`TNewtWorld::PreMain`)
+just before the host's PreMain hook starts HostLink.ns, so their changes to
+the "Packages" soup have gone by and the NIE makes its service registry a
+second after them: HostLink.ns looks for it again two seconds after it
+starts (before, the host's link was missing after a restart until another
+package was installed).
 
 **NTK's glue.**  A package's native code (its protocol parts and its
 native-compiled NewtonScript) reaches the ROM through stubs `ldr pc,[pc,#-4]`

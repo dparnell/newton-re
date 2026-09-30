@@ -76,6 +76,38 @@
 		  excludeFrom: []}];
 	end,
 
+	// What a Host network setup holds besides its names: the slots of an
+	// Ethernet setup (Ethernet:NIE's blankEntry, inetstup.pkg 0x1cec9, which
+	// its FillNewEntry, 0x1e751, deep-clones into a new setup), less the
+	// card.  Internet Setup's editor reads them all - the generic
+	// stationery's ValidateTarget (0x1a001), run when a setup is closed,
+	// takes Length(entry.DNSServers) and so throws type.ref.frame (-48418)
+	// on a setup without them; the pages' fields and verifyFuncs read
+	// configuration, the three addresses and defaultDomain.  The NIE's
+	// domain manager (inetenbl.pkg's connect.action, 0x37a0d) hands
+	// defaultDomain and each valid address of DNSServers to the DNS tool
+	// ('ddom, 'dnic).  The host's network configures itself, as a server
+	// configures an Ethernet setup: 'usingServer.
+	blankEntry: {configuration: 'usingServer,
+		subnetMask: [0, 0, 0, 0],
+		gatewayaddress: [0, 0, 0, 0],
+		localAddress: [0, 0, 0, 0],
+		defaultDomain: "",
+		dnsServers: [[0, 0, 0, 0]]},
+
+	// a setup's missing slots filled in from blankEntry (a setup made
+	// before they were there); answers true when it added any
+	FillMissing: func(entry)
+	begin
+		local added := nil;
+		foreach slot, value in blankEntry do
+			if not HasSlot(entry, slot) then begin
+				entry.(slot) := DeepClone(value);
+				added := true;
+			end;
+		added;
+	end,
+
 	// Internet Setup's stationery for the Host network setup.  The
 	// application shows and edits a setup through the data definition named
 	// by the entry's class - one per physical layer, its symbol the
@@ -114,6 +146,8 @@
 			end;
 			out;
 		end;
+		local blank := DeepClone(blankEntry);
+		blank.linkLayer := '|HostLink:host|;
 		RegDataDef(host, {_proto: GetDataDefs(base),
 			symbol: host,
 			name: "Host network",
@@ -128,7 +162,13 @@
 			viewsToDisplay: views,
 			newEntryViews: call noCard with (GetDataDefs(base).newEntryViews),
 			AlternateNewViews: call noCard with (GetDataDefs(base).AlternateNewViews),
+			// (the prototype's FillNewEntry deep-clones blankEntry's slots
+			// into a new setup - Ethernet's does, 0x1e751 - so the host's
+			// are given it: its own and the link layer)
+			blankEntry: blank,
 			FillNewEntry: func(entry) begin
+				inherited:?FillNewEntry(entry);
+				GetGlobalVar('|HostLink:host|):FillMissing(entry);
 				entry.setupName := "Host network";
 				entry.physicalLayer := '|HostNetwork:host|;
 				entry.linkLayer := '|HostLink:host|;
@@ -169,10 +209,19 @@
 			indexes: [{structure: 'slot, path: 'setupName, type: 'string},
 			          {structure: 'slot, path: 'linkID, type: 'int}]});
 		local soup := GetUnionSoupAlways("Internet Setups");
+		// (every Host network setup - the first found is the host's own -
+		// given the slots a setup made before they were there lacks)
 		local cursor := soup:Query(nil);
-		local entry := cursor:Entry();
-		while entry and entry.physicalLayer <> physical.symbol do
-			entry := cursor:Next();
+		local entry := nil;
+		local e := cursor:Entry();
+		while e do begin
+			if e.physicalLayer = physical.symbol then begin
+				if :FillMissing(e) then
+					EntryChangeXmit(e, '|HostLink:host|);
+				if not entry then entry := e;
+			end;
+			e := cursor:Next();
+		end;
 		// (without the NIE's link manager, which InetStartUp would start:
 		// a link id is the ticks, unique among the setups, as the manager's
 		// MGetLinkUniqueID, 0x46ac9, makes one; the default link is the
@@ -187,6 +236,7 @@
 				setupName: "Host network",
 				physicalLayer: physical.symbol,
 				linkLayer: logical.symbol};
+			:FillMissing(entry);
 			soup:AddToDefaultStoreXmit(entry, '|HostLink:host|);
 		end;
 		if not GetUserConfig('InetDefaultLink) then
@@ -196,12 +246,16 @@
 
 	// the NIE's registry is looked for now, and again after each change to
 	// the "Packages" soup (the NIE's own units wait on it, 0x16c5, and
-	// then take a second: this takes two)
+	// then take a second: this takes two) - and two seconds from now: a
+	// restart activates the store's packages just before this starts
+	// (TNewtWorld::PreMain), so their changes to the soup have been and
+	// gone, and the NIE makes its registry a second after them
 	Start: func()
 	begin
 		RegSoupChange("Packages", '|HostLink:host|,
 			func(soupName, appSymbol, changeType, changeData)
 				AddProcrastinatedCall('|HostLink:host|, func() GetGlobalVar('|HostLink:host|):Check(), nil, 2000));
 		:Check();
+		AddProcrastinatedCall('|HostLink:host|, func() GetGlobalVar('|HostLink:host|):Check(), nil, 2000);
 	end,
 }
