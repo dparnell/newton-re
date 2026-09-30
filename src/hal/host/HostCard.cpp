@@ -71,32 +71,54 @@ namespace
 			HostCardFlush(i);
 	}
 
-	struct Retired { void* fBlock; Retired* fNext; };
-	Retired*	gRetired = nil;
+	// A socket's windows onto its card: at the same host addresses for
+	// every card put in it, as a socket's windows are at fixed addresses
+	// on the machine - a store that has a card's memory mapped goes on
+	// seeing it there when the same card comes back.  Kept (with what the
+	// last card left in them) while the socket is empty, and grown when a
+	// bigger card goes in.  Given back when the program ends.
+	struct HostCardWindows
+	{
+		unsigned char*	fCommon;
+		ULong			fCommonSize;
+		unsigned char*	fAttribute;
+	};
+	HostCardWindows	gWindows[kHostCardSockets];
 
 	void
-	FreeRetired(void)
+	FreeWindows(void)
 	{
-		while (gRetired != nil)
+		for (ULong i = 0; i < kHostCardSockets; i++)
 		{
-			Retired* next = gRetired->fNext;
-			free(gRetired->fBlock);
-			delete gRetired;
-			gRetired = next;
+			free(gWindows[i].fCommon);
+			free(gWindows[i].fAttribute);
+			gWindows[i].fCommon = gWindows[i].fAttribute = nil;
+			gWindows[i].fCommonSize = 0;
 		}
 	}
 
-	void
-	RetireWindow(void* block)
+	Boolean
+	GetWindows(ULong socket, ULong commonSize)
 	{
-		if (block == nil)
-			return;
-		if (gRetired == nil)
-			atexit(FreeRetired);
-		Retired* r = new Retired;
-		r->fBlock = block;
-		r->fNext = gRetired;
-		gRetired = r;
+		HostCardWindows* w = &gWindows[socket];
+		static Boolean registered = false;
+		if (!registered)
+		{
+			registered = true;
+			atexit(FreeWindows);
+		}
+		if (w->fCommonSize < commonSize)
+		{
+			unsigned char* common = (unsigned char*) realloc(w->fCommon, commonSize);
+			if (common == nil)
+				return false;
+			w->fCommon = common;
+			w->fCommonSize = commonSize;
+		}
+		if (w->fAttribute == nil && (w->fAttribute = (unsigned char*) malloc(kHostCardAttrSize)) == nil)
+			return false;
+		memset(w->fAttribute, 0, kHostCardAttrSize);
+		return true;
 	}
 
 	void
@@ -227,18 +249,15 @@ HostCardInsert(ULong socket, const char* path, Boolean readOnly)
 		fclose(f);
 		return kError_Bad_Parameters;
 	}
-	card->fCommon = (unsigned char*) malloc(dataSize);
-	card->fAttribute = (unsigned char*) calloc(kHostCardAttrSize, 1);
 	unsigned char* cis = (unsigned char*) calloc(cisSize + 1, 1);
-	if (card->fCommon == nil || card->fAttribute == nil || cis == nil)
+	if (cis == nil || !GetWindows(socket, dataSize))
 	{
-		free(card->fCommon);
-		free(card->fAttribute);
 		free(cis);
-		card->fCommon = card->fAttribute = nil;
 		fclose(f);
 		return kError_No_Memory;
 	}
+	card->fCommon = gWindows[socket].fCommon;
+	card->fAttribute = gWindows[socket].fAttribute;
 	fseek(f, (long) dataStart, SEEK_SET);
 	fread(card->fCommon, 1, dataSize, f);
 	fseek(f, (long) cisStart, SEEK_SET);
@@ -283,12 +302,7 @@ HostCardRemove(ULong socket)
 		return;
 	if (card->fFile != nil)
 		fclose(card->fFile);
-	// (the windows are kept, as they were: the machine goes on reading a
-	// card it has not yet noticed is gone - its stores are unmounted a
-	// moment later - where a MessagePad's reads fault into the card
-	// domains' monitor; they are given back when the program ends)
-	RetireWindow(card->fCommon);
-	RetireWindow(card->fAttribute);
+	// (the socket's windows stay: see GetWindows)
 	memset(card, 0, sizeof(HostCardState));
 	Changed(socket);
 }

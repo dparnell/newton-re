@@ -77,7 +77,7 @@ FindFontTable(const char* sfnt, ULong tag)
 
 // ROM 0x000ae5b4 MapFormat0__FlPv
 // A byte-indexed cmap: characters under 256.
-static long
+long
 MapFormat0(long ch, const void* cmap)
 {
 	if (ch < 0x100)
@@ -88,7 +88,7 @@ MapFormat0(long ch, const void* cmap)
 
 // ROM 0x000ae5cc MapFormat2__FlPv
 // (The ROM has no format 2 mapping: nothing.)
-static long
+long
 MapFormat2(long /*ch*/, const void* /*cmap*/)
 {
 	return 0;
@@ -99,7 +99,7 @@ MapFormat2(long /*ch*/, const void* /*cmap*/)
 // The segment-mapped cmap: the segment whose end is at or past the
 // character (the ROM's binary search then linear scan), the glyph from
 // its delta or its glyph array.
-static long
+long
 MapFormat4(long ch, const void* cmap)
 {
 	const char* table = (const char*) cmap;
@@ -140,7 +140,7 @@ MapFormat4Patched(long ch, const void* cmap)
 
 // ROM 0x000ae7c0 MapFormat6__FlPv
 // The trimmed table: a run of codes from firstCode.
-static long
+long
 MapFormat6(long ch, const void* cmap)
 {
 	const char* table = (const char*) cmap;
@@ -154,7 +154,7 @@ MapFormat6(long ch, const void* cmap)
 
 // ROM 0x000aebec LocateEntry__FlP14sfnt_blocTable
 // The one-bit strike whose size is nearest the wanted size.
-static const char*
+const char*
 LocateEntry(Fixed size, const char* bloc)
 {
 	long wanted = (short) ((size + 0x8000) >> 16);

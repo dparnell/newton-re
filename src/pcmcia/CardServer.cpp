@@ -11,6 +11,7 @@
 */
 
 #include "CardServer.h"
+#include "CardAlerts.h"
 #include "CardSocket.h"
 #include "CardHandler.h"
 #include "CHMemModem.h"
@@ -213,7 +214,7 @@ TCardSocketState::Clear(void)
 
 // ROM 0x00052938 __ct__11TCardServerFv
 TCardServer::TCardServer()
-	:	fEventHandler(nil), fField1A24(0), fSystemHandler(nil), fField2968(0), fAlertFlags(0)
+	:	fEventHandler(nil), fField1A24(0), fSystemHandler(nil), fField2968(0), fReinsertEvent(nil), fPositionEvent(nil), fAlertFlags(0), fField29DC(0)
 {
 	fPort.CopyObject(0);
 	fProcessorPort.CopyObject(0);
@@ -248,6 +249,47 @@ CardIntProc(void* server, TCardSocket* socket)
 {
 	((TCardServer*) server)->CardIntHandler(socket);
 	return noErr;
+}
+
+
+// DEVIATION: the ROM gives the alerts CardReinsertAlertProc and
+// CardPositionAlertProc themselves - member functions whose object comes
+// in the first register, as the alert's filter proc calls them.
+static UChar
+ReinsertAlertProc(void* server, ULong button, void* socket)
+{
+	return ((TCardServer*) server)->CardReinsertAlertProc(button, (ULong) (uintptr_t) socket);
+}
+
+
+static UChar
+PositionAlertProc(void* server, ULong button, void* socket)
+{
+	return ((TCardServer*) server)->CardPositionAlertProc(button, (ULong) (uintptr_t) socket);
+}
+
+
+// ROM 0x000525f4 CardReinsertAlertProc__11TCardServerFUlT1
+// (the reinsert alert's filter) Done when the socket's card is back and
+// active again.
+UChar
+TCardServer::CardReinsertAlertProc(ULong /*button*/, ULong socket)
+{
+	Boolean back = gSocketStates[socket]->fCardState == TCardSocketState::kCardActive;
+	if (back)
+	{
+		fAlertFlags &= 0x7FFFFFFF;
+		((TCardReinsertAlertDialog*) fReinsertEvent->fDialog)->Done();
+	}
+	return back;
+}
+
+
+// ROM 0x00052648 CardPositionAlertProc__11TCardServerFUlT1
+UChar
+TCardServer::CardPositionAlertProc(ULong /*button*/, ULong /*socket*/)
+{
+	return (fAlertFlags & 0x40000000) == 0;
 }
 
 
@@ -328,12 +370,25 @@ TCardServer::MainConstructor()
 		gNumberOfHWSockets = socketNumber + 1;
 	}
 
-	// DEVIATION: the ROM looks the alert server ('alrt') up here and gives
-	// up when it is not there; it is NOT YET, so the server goes on without
-	// it and puts up no alerts (the reinsert and position alerts,
-	// TCardReinsertAlertDialog and TCardPositionAlertDialog, NOT YET).
-	fAlertPort.CopyObject(0);
+	// the alert manager, and the two alerts
+	TUNameServer nameServer;
+	TObjectId alertPort = 0;
+	ULong spec;
+	if ((err = nameServer.Lookup("alrt", "TUPort", &alertPort, &spec)) != noErr)
+		return err;
+	fAlertPort.CopyObject(alertPort);
 	fAlertFlags &= 0x3FFFFFFF;
+	fField29DC = 0x19;
+	fReinsertEvent = new TCardAlertEvent;
+	if (fReinsertEvent == nil)
+		return kError_No_Memory;
+	fPositionEvent = new TCardAlertEvent;
+	if (fPositionEvent == nil)
+		return kError_No_Memory;
+	((TCardReinsertAlertDialog*) fReinsertEvent->fDialog)->Init(ReinsertAlertProc, this);
+	((TCardPositionAlertDialog*) fPositionEvent->fDialog)->Init(PositionAlertProc, this);
+	if ((err = fReinsertAsync.Init(true)) != noErr || (err = fPositionAsync.Init(true)) != noErr)
+		return err;
 	// DEVIATION: the 'cdhl part handler (TCardPartHandler) is made and
 	// registered by the newt world (CardPartHandler.h's InitCardPartHandler).
 	if ((err = InitVppManager()) != noErr)
@@ -344,9 +399,7 @@ TCardServer::MainConstructor()
 		if ((err = processor.Init('cdpr', true, 6000)) != noErr)
 			return err;
 	}
-	TUNameServer nameServer;
 	TObjectId processorPort = 0;
-	ULong spec;
 	if ((err = nameServer.Lookup("cdpr", "TUPort", &processorPort, &spec)) != noErr)
 		return err;
 	fProcessorPort.CopyObject(processorPort);
@@ -1441,11 +1494,15 @@ TCardServer::DoCommand(TUMsgToken* token, ULong* /*size*/, TCardMessage* message
 	case kCardMessageTaskBlocked:
 		ReplyMessage(message, 2, socketNumber, 0);
 		state->fCardState = TCardSocketState::kCardTaskBlocked;
-		// NOT YET: the reinsert alert (TCardReinsertAlertDialog, sent to the
-		// alert server) - the ROM puts it up when it is not up already and
-		// there is an alert server, which there is not
+		// the reinsert alert put up, unless it is up already
 		if ((fAlertFlags & 0x80000000) == 0 && fAlertPort != 0)
+		{
+			TCardReinsertAlertDialog* dialog = (TCardReinsertAlertDialog*) fReinsertEvent->fDialog;
+			dialog->SetFilterData((void*) (uintptr_t) socketNumber);
+			dialog->Setup();
+			result = fAlertPort.SendRPC(&fReinsertAsync, fReinsertEvent, sizeof(TCardAlertEvent), nil, 0);
 			fAlertFlags |= 0x80000000;
+		}
 		goto tell;
 
 	default:

@@ -2287,3 +2287,20 @@ these are the ids a single stuck bit could turn a blank word into. The
 store's log entries are guarded the same way, by their own address
 XORed with "dyer" and, complemented, with "foo!" - so an entry copied or
 left over somewhere else is never valid there.
+
+---
+
+## The system alert draws in the corner of the screen and shows it in the middle
+
+The Newton's system alerts ("Newton still needs the card you removed",
+`src/alert/`) are drawn by their own little graphics engine straight into
+the screen's bits - not somewhere spare, but at the alert's own
+coordinates, which for every alert in the ROM are (0, 0) to (80, 192): the
+top-left corner of the screen, over whatever the application had there.
+The screen driver is then told to copy that corner onto the display a
+quarter of the way down and centred (`TAlertDialog::DisplayAlert`,
+`gDisplayRect`). The application's picture in the corner is simply lost,
+and put back by asking the application to redraw the whole screen once
+the last alert has gone. It works because the alert holds the LCD while it
+is up (`BlockLCDActivity`), so the scribbled corner is never shown where it
+really is. `docs/alert/README.md`.

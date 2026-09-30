@@ -34,11 +34,13 @@
 				(0x0004b0d0-0x0004b2dc, 0x0004e40c-0x0004ec60,
 				0x0005105c-0x00054d10).
 
+				A task held on a card that has gone (0x35) puts up the card
+				reinsert alert (CardAlerts.h, through the alert manager),
+				which comes down when the card is back.
+
 				NOT YET: the packages a card carries in its attribute memory
-				(TCardPipe) and ATA cards (TCardATALoader); the alert dialogs
-				(the card reinsert and card position alerts - the 'alrt'
-				server is NOT YET); the card handlers' own packages ('cdhl',
-				whose code is ARM: CardPartHandler.h).
+				(TCardPipe) and ATA cards (TCardATALoader); the card handlers'
+				own packages ('cdhl', whose code is ARM: CardPartHandler.h).
 */
 
 #ifndef __CARDSERVER_H
@@ -75,6 +77,7 @@ class TCardHandler;
 class TClassInfo;
 class TCardServer;
 class TPCMCIA20Parser;
+class TCardAlertEvent;
 
 
 // The messages the card server takes (TCardMessage::fType) and sends
@@ -292,6 +295,8 @@ public:
 	NewtonErr		ResumeSocketAccess(TCardSocket* socket, TCardSocketState* state);	// ROM 0x00052590 ResumeSocketAccess__11TCardServerFP11TCardSocketP16TCardSocketState
 	long			DoCardEjection(ULong socketNumber, TCardSocket* socket, TCardSocketState* state);	// ROM 0x00052664 DoCardEjection__11TCardServerFUlP11TCardSocketP16TCardSocketState
 	long			DoPollLockSwitchAndCardDetected(ULong socketNumber, TCardSocket* socket, TCardSocketState* state);	// ROM 0x0005266c DoPollLockSwitchAndCardDetected__11TCardServerFUlP11TCardSocketP16TCardSocketState
+	UChar			CardReinsertAlertProc(ULong button, ULong socket);				// ROM 0x000525f4 CardReinsertAlertProc__11TCardServerFUlT1
+	UChar			CardPositionAlertProc(ULong button, ULong socket);				// ROM 0x00052648 CardPositionAlertProc__11TCardServerFUlT1
 	long			DoCardRecognition(ULong socketNumber, TCardSocket* socket, TCardSocketState* state);	// ROM 0x00052a70 DoCardRecognition__11TCardServerFUlP11TCardSocketP16TCardSocketState
 
 	enum { kMessages = 32 };
@@ -307,8 +312,13 @@ public:
 	TNewCardAsyncMsg fNewCardMessages[kMaxCardSockets][4];	// +1A2C a socket's 'card' events
 	// +292C TCardPartHandler (DEVIATION: the newt world makes it, CardPartHandler.h)
 	ULong			fField2968;			// +2968 cleared before a card's package is loaded
-	TUPort			fAlertPort;			// +29A8 the 'alrt' server's (NOT YET: none)
-	ULong			fAlertFlags;		// +29D8 the reinsert alert is up (bit 31)
+	TUPort			fAlertPort;			// +29A8 the alert manager's ('alrt)
+	TUAsyncMessage	fReinsertAsync;		// +29B0
+	TCardAlertEvent*	fReinsertEvent;	// +29C0 the card reinsert alert
+	TUAsyncMessage	fPositionAsync;		// +29C4
+	TCardAlertEvent*	fPositionEvent;	// +29D4 the card position alert
+	ULong			fAlertFlags;		// +29D8 the reinsert alert is up (bit 31); the card is not positioned right (bit 30)
+	UChar			fField29DC;			// +29DC
 };
 
 

@@ -9,6 +9,7 @@
 #include "CardPartHandler.h"
 #include "NewtWorld.h"
 #include "StorageCards.h"
+#include "AlertManager.h"
 #include "NewtCardEvents.h"
 #include "SoundCodec.h"
 #include "SystemNatives.h"
@@ -237,6 +238,9 @@ TNewtWorld::MainConstructor()
 	// network is the host's TCP/IP (comms/host/HostServices.h)
 	InitializeCommManager();
 	RegisterHostCommServices();
+	// DEVIATION: the alert manager likewise (TLoader::TheMain starts it
+	// before the card server, which looks for it)
+	InitAlertManager();
 	if (gNewtHostBoot != nil)
 		gNewtHostBoot();
 	else

@@ -9,6 +9,9 @@
 // services task (the server and the processor are app worlds).
 
 #include "CardServer.h"
+#include "AlertManager.h"
+#include "ROMImport.h"
+#include "ObjectHeap.h"
 #include "CardSocket.h"
 #include "HostCard.h"
 #include "CardPower.h"
@@ -69,7 +72,11 @@ Expect(TUPort& port, ULong type, TCardMessage* message)
 static void
 CardServerScenario(void)
 {
+	// the ROM's objects, for the alerts' bounds and texts
+	EXPECT(ImportROMObjectsFromFile(NEWTON_ROM_BIN) == noErr);
+	InitObjects();
 	EXPECT(HostCardCreate(kCardFile, 4, "Test") == noErr);
+	InitAlertManager();				// (TLoader::TheMain starts it first: the card server looks for it)
 	EXPECT(InitCardServices() == noErr);
 	EXPECT(gCardServer != nil);
 	EXPECT(gNumberOfHWSockets == kHostCardSockets);

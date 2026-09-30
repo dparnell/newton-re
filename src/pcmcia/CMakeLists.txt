@@ -17,9 +17,10 @@ add_library(pcmcia STATIC
     CardServer.cpp
     CardProcessor.cpp
     NewtCardEvents.cpp
+    CardAlerts.cpp
     CHMemModem.cpp
 )
-target_link_libraries(pcmcia PUBLIC newton_config frames package_manager hal_host_card flash)
+target_link_libraries(pcmcia PUBLIC newton_config frames package_manager hal_host_card flash alert)
 target_include_directories(pcmcia PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(tests)

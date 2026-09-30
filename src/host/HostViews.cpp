@@ -55,6 +55,21 @@ FDisasm(RefArg /*rcvr*/, RefArg fn)
 
 // ScreenSnapshot(path): the display written to the file - a PBM for a
 // path ending in .pbm, else a PGM; ==> whether it could be
+// ScreenPixel(h, v): the gray the display shows at the point (0 black,
+// 255 white), nil off it - what a test looks at to see what was drawn
+static Ref
+FScreenPixel(RefArg /*rcvr*/, RefArg h, RefArg v)
+{
+	if (gHostDisplay == nil || !ISINT((Ref) h) || !ISINT((Ref) v))
+		return NILREF;
+	long x = RINT(h), y = RINT(v);
+	if (x < 0 || y < 0 || x >= gHostDisplay->Width() || y >= gHostDisplay->Height())
+		return NILREF;
+	UpdateHardwareScreen();
+	return MAKEINT(255 - gHostDisplay->Gray(x, y));
+}
+
+
 static Ref
 FScreenSnapshot(RefArg /*rcvr*/, RefArg path)
 {
@@ -174,6 +189,7 @@ HostRegisterViewFunctions(void)
 	SetFrameSlot(functions, RefVar(Intern((char*) "KeyboardConnect")), RefVar(MakeCFunction((void*) FKeyboardConnect, 1, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "ScreenSnapshot")), RefVar(MakeCFunction((void*) FScreenSnapshot, 1, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "Disasm")), RefVar(MakeCFunction((void*) FDisasm, 1, nil)));
+	SetFrameSlot(functions, RefVar(Intern((char*) "ScreenPixel")), RefVar(MakeCFunction((void*) FScreenPixel, 2, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "ScreenWidth")), RefVar(MakeCFunction((void*) FScreenWidth, 0, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "ScreenHeight")), RefVar(MakeCFunction((void*) FScreenHeight, 0, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "PenDown")), RefVar(MakeCFunction((void*) FPenDown, 2, nil)));

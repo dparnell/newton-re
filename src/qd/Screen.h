@@ -93,11 +93,25 @@ public:
 	VIRTUAL void		ExitIdleMode(void) ENDVIRTUAL;								// ROM 0x00388640 ExitIdleMode__13TScreenDriverFv
 };
 
+// What the system alerts (alert/AlertManager.h) draw with: the screen's
+// driver, its pixel map and one of its features.  The alerts draw straight
+// into the screen's bits and blit them, below QuickDraw.
+struct TAlertScreenInfo
+{
+	TScreenDriver*	fDriver;			// +00
+	PixelMap		fScreen;			// +04
+	UChar			fFeature4;			// +20 the driver's feature 4 (its orientation)
+};
+
 extern TScreenDriver*	gTheScreen;				// ROM 0x0c101a4c gTheScreen
 extern Rect				gScreenDirtyRect;		// ROM 0x0c101a58 gScreenDirtyRect - what the display has not been shown yet
 extern long				screenWidth;			// ROM 0x0c104c58 screenWidth
 extern long				screenHeight;			// ROM 0x0c104c5c screenHeight
 
+extern TAlertScreenInfo	gAlertScreenInfo;	// ROM 0x0c105ef0 gAlertScreenInfo
+void	SetAlertScreenInfo(TAlertScreenInfo* info);	// ROM 0x0002e7d4 SetAlertScreenInfo__FP16TAlertScreenInfo (the alert code's, kept with the screen's so QuickDraw need not know the alerts)
+void	SetScreenInfo(void);					// ROM 0x001cd04c SetScreenInfo__Fv
+void	BlockLCDActivity(Boolean block);		// ROM 0x001ccf34 BlockLCDActivity__FUc
 void	InitScreen(TScreenDriver* driver);		// ROM 0x001cc894 InitScreen__Fv (host: the driver given instead of made by name)
 void	SetupScreenPixelMap(void);				// ROM 0x001ccb10 SetupScreenPixelMap__Fv
 Boolean	QDStartDrawing(PixelMap* map, Rect* r);	// ROM 0x001cce0c QDStartDrawing__FP8PixelMapP4Rect

@@ -1,0 +1,75 @@
+// The card reinsert alert (alert/AlertManager.h, pcmcia/CardAlerts.h): a
+// card whose store is in use - locked, as a store is while it is written
+// to - is pulled out.  The PSS manager cannot let the store go and tells
+// the card server a task is held on the card (0x35), and the card server
+// has the alert manager put up "Newton still needs the card you removed",
+// drawn straight onto the screen over everything else.  The card goes back
+// in, the card server finds it is the same card, the alert comes down by
+// itself, the application redraws the screen, and the store carries on
+// where it was.
+//
+//   build/host/host/newton --rom build/MP2x00US/rom.bin --headless 60 \
+//       --script src/host/demo/card-alert.ns
+//   build/venv/Scripts/python tools/imaging/pgm2png.py build/card-alert.pgm build/card-alert.png
+
+constant kCardFile := "tmp/card-alert.card";
+
+tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
+
+findIn := func(view, label)
+  begin
+    local found := nil;
+    foreach kid in view:ChildViewFrames() do
+      if not found then
+        if IsString(kid.text) and StrEqual(kid.text, label) then found := kid
+        else found := call findIn with (kid, label);
+    found;
+  end;
+
+tapButton := func(label)
+  begin
+    local kids := GetRoot():ChildViewFrames();
+    local button := call findIn with (kids[Length(kids) - 1], label);
+    if button then
+      begin
+        local box := button:GlobalBox();
+        call tapAt with ((box.left + box.right) div 2, (box.top + box.bottom) div 2);
+      end;
+  end;
+
+// where the alert is on a 320 x 480 display: a quarter of the way down,
+// 192 pixels wide in the middle (TAlertDialog::DisplayAlert)
+alertFrame := func() ScreenPixel(64, 120);
+alertInside := func() ScreenPixel(66, 122);
+
+HostCreateCard(kCardFile, 4);
+HostInsertCard(0, kCardFile);
+
+AddDelayedCall(func() begin
+  call tapButton with ("Erase");
+  AddDelayedCall(func() call tapButton with ("Erase"), [], 2000);
+  AddDelayedCall(func() begin
+    local store := GetCardSlotStores(0)[0];
+    local soup := store:CreateSoupXmit("AlertDemo", [], nil);
+    soup:AddXmit({title: "kept through the alert"}, nil);
+    Print({mounted: store <> nil, frameBefore: call alertFrame with ()});
+    store:Lock();
+    HostRemoveCard(0);
+    AddDelayedCall(func() begin
+      ScreenSnapshot("build/card-alert.pgm");
+      Print({alertFrame: call alertFrame with (), alertInside: call alertInside with ()});
+      Print({alertUp: call alertFrame with () = 0 and call alertInside with () = 255});
+      HostInsertCard(0, kCardFile);
+      AddDelayedCall(func() begin
+        ScreenSnapshot("build/card-alert-after.pgm");
+        store:Unlock();
+        local again := GetCardSlotStores(0);
+        local entry := Query(again[0]:GetSoup("AlertDemo"), {type: 'index}):Entry();
+        Print({sameStore: again[0] = store, found: entry.title,
+               alertDown: call alertFrame with () <> 0});
+        Print("card-alert: done");
+        HostQuit();
+      end, [], 4000);
+    end, [], 3000);
+  end, [], 5000);
+end, [], 4000);

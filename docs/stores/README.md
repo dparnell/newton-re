@@ -1070,8 +1070,10 @@ Each step comes with its host tests.
      'card, 'rstr and 'stor. `HostMountStores` starts the card server
      (`InitCardServices`) before the PSS manager, as `TLoader::TheMain`
      does, and the PSS manager runs with or without the internal flash.
-     NOT YET: the reinsert alert (`ReinsertCard` does nothing; a card
-     pulled while in use is simply unmounted later).
+     A card pulled while its store is in use puts up the card reinsert
+     alert until it is back (`docs/alert/README.md`, ctest
+     `host.NewtonCardAlert`); `ReinsertCard`'s own way in - a fault on the
+     card's memory - holds nobody on the host (no fault monitor).
    - **5f. The host's hand.** DONE (2026-09-30; ctest `host.NewtonCard`):
      `newton --card file` (a blank 4 MB card made when there is none),
      `HostCreateCard(path, mb)`, `HostInsertCard(socket, path)` and

@@ -25,6 +25,7 @@
 #include "Soups.h"
 #include "NameServer.h"
 #include "CardServer.h"
+#include "CardAlerts.h"
 #include "CardServerGlobals.h"
 #include "CardSocket.h"
 #include "SystemEvents.h"
@@ -490,15 +491,23 @@ TPSSManager::GetStorePSSInfo(const TStore* store, UChar mounted) const
 // ROM 0x001557d0 ReinsertCard__11TPSSManagerFiPCUsUc
 // The reinsert alert's reason set, and the card's memory touched - which,
 // with the card out, faults into the card domains' monitor, which holds
-// the task and puts the alert up until the card is back.
-// NOT YET: the alert (SetCardReinsertReason).  DEVIATION: the host's card
-// memory is freed when the card is taken out and never faults, so the
-// byte is not read.
+// the task and has the card server put the alert up until the card is
+// back - then the reason taken away again.
+// DEVIATION: a host card's memory never faults (TCardDomains has no
+// monitor), so touching it holds nobody and puts nothing up; the alert
+// comes up through CardGone's 0x35 instead, for a store that is in use.
 void
-TPSSManager::ReinsertCard(int slot, const UniChar* /*reason*/, UChar /*ask*/)
+TPSSManager::ReinsertCard(int slot, const UniChar* reason, UChar ask)
 {
 	if (slot < 0 || slot >= fSlotCount)
 		return;
+	SetCardReinsertReason(reason, ask);
+	if (fSlots[slot].fStores[0].fBase != nil)		// (the ROM reads address 0 - its own - when there is none)
+	{
+		volatile char touched = *fSlots[slot].fStores[0].fBase;
+		(void) touched;
+	}
+	SetCardReinsertReason(nil, 0);
 }
 
 

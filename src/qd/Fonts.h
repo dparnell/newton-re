@@ -178,6 +178,11 @@ extern FontColorPatternProc	gFontColorPattern;
 long		FindSFNT(Fixed size, RefArg fontFamily, FontEngineInfo* info, long* face);	// ==> the strike's size, 16.16 (0: no font); face left with what must be synthesised
 Ref			ChooseStrike(long face, RefArg fontFamily, long* faceUsed);				// the 'sfnt' for the face
 const char*	FindFontTable(const char* sfnt, ULong tag);
+long		MapFormat0(long ch, const void* cmap);		// ROM 0x000ae5b4 MapFormat0__FlPv - the cmap subtable formats
+long		MapFormat2(long ch, const void* cmap);		// ROM 0x000ae5cc MapFormat2__FlPv
+long		MapFormat4(long ch, const void* cmap);		// ROM 0x000ae5d4 MapFormat4__FlPv
+long		MapFormat6(long ch, const void* cmap);		// ROM 0x000ae7c0 MapFormat6__FlPv
+const char*	LocateEntry(Fixed size, const char* bloc);	// ROM 0x000aebec LocateEntry__FlP14sfnt_blocTable - the strike nearest the size
 long		SFNTOpenFont(PixelMap* pm, StyleRecord* style, RefArg fontFamily, Fixed xScale, Fixed yScale, FontEngineInfo* info);	// ==> 0 opened, 2 scaled, 3 none
 long		OpenFont(PixelMap* pm, StyleRecord* style, Fixed xScale, Fixed yScale, FontEngineInfo* info);
 void		CloseFont(FontEngineInfo* info);		// host: what info->fClose does

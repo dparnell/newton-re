@@ -300,6 +300,21 @@ if(Python3_FOUND)
     set_tests_properties(host.NewtonCard PROPERTIES TIMEOUT 120
                          PASS_REGULAR_EXPRESSION "mounted: TRUE.*[Cc]ardSlot: 0, cardType: flsh.*written: TRUE.*removed: TRUE, stores: 1.*remounted: TRUE.*found: \"written on a card\".*cards: 1.*card: done"
                          FAIL_REGULAR_EXPRESSION "FALSE")
+    # the card reinsert alert: a card whose store is locked pulled out, the
+    # alert drawn over the screen (ScreenPixel), the card put back, the alert
+    # gone and the store as it was (demo/card-alert.ns); then the snapshot
+    # taken while it was up made a PNG, build/card-alert.png
+    add_test(NAME host.NewtonCardAlert
+             COMMAND newton --rom ${NEWTON_ROM_BIN} --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/card-alert.ns
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonCardAlert PROPERTIES TIMEOUT 120 FIXTURES_SETUP host_card_alert
+                         PASS_REGULAR_EXPRESSION "alertUp: TRUE.*sameStore: TRUE, found: \"kept through the alert\", alertDown: TRUE.*card-alert: done")
+    if(Python3_FOUND)
+        add_test(NAME host.NewtonCardAlert.png
+                 COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/imaging/pgm2png.py build/card-alert.pgm build/card-alert.png
+                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+        set_tests_properties(host.NewtonCardAlert.png PROPERTIES FIXTURES_REQUIRED host_card_alert)
+    endif()
     # a card like Einstein's default one (tools/cards/linearcard.py makes
     # it: 28F008SA chips), recognised, formatted and written (demo/card-einstein.ns)
     if(Python3_FOUND)

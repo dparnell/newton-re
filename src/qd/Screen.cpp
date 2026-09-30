@@ -22,6 +22,7 @@ long			screenHeight = 0;			// ROM 0x0c101d50
 // semaphore group's lock count) - the display is updated when the last
 // StopDrawing comes
 static long		gScreenDrawingDepth = 0;
+static long		gLCDBlocked = 0;			// (host: BlockLCDActivity's)
 
 
 // ROM 0x003885a0 Delete__13TScreenDriverFv (the protocol glue)
@@ -60,7 +61,59 @@ SetupScreenPixelMap(void)
 	screen->deviceRes.h = info.fResolutionH;
 	screen->deviceRes.v = info.fResolutionV;
 	gGestaltGrafInfo = GetGrafInfo;			// (host: the name server's way to the screen - GestaltSources.h)
-	// NOT YET RECONSTRUCTED: SetScreenInfo (the alert code's TAlertScreenInfo)
+	SetScreenInfo();
+}
+
+
+TAlertScreenInfo	gAlertScreenInfo;		// ROM 0x0c105ef0 gAlertScreenInfo
+
+
+// ROM 0x0002e7d4 SetAlertScreenInfo__FP16TAlertScreenInfo
+void
+SetAlertScreenInfo(TAlertScreenInfo* info)
+{
+	gAlertScreenInfo = *info;
+}
+
+
+// ROM 0x001cd04c SetScreenInfo__Fv
+// The alerts told the screen: the driver, the screen's pixel map (its
+// bits when it has them) and the driver's orientation.
+void
+SetScreenInfo(void)
+{
+	TAlertScreenInfo info;
+	memset(&info, 0, sizeof(info));
+	info.fDriver = gTheScreen;
+	if (qdGlobals.fScreenBits.baseAddr != nil)
+	{
+		info.fScreen.baseAddr = qdGlobals.fScreenBits.baseAddr;
+		info.fScreen.rowBytes = qdGlobals.fScreenBits.rowBytes;
+	}
+	info.fScreen.bounds = qdGlobals.fScreenBits.bounds;
+	info.fScreen.pixMapFlags = qdGlobals.fScreenBits.pixMapFlags;
+	info.fScreen.deviceRes = qdGlobals.fScreenBits.deviceRes;
+	info.fScreen.grayTable = qdGlobals.fScreenBits.grayTable;
+	info.fFeature4 = (UChar) gTheScreen->GetFeature(4);
+	SetAlertScreenInfo(&info);
+}
+
+
+// ROM 0x001ccf34 BlockLCDActivity__FUc
+// The screen's LCD kept from being updated by anybody else while an alert
+// is up (block), or let go.  DEVIATION: the ROM acquires or releases the
+// screen semaphores (gScreenSemaphores, with gScreenAcquireLCDList or
+// gScreenReleaseLCDList), so that a task that would update the LCD waits;
+// the host's screen has no semaphores (NOT YET), so what is drawn meanwhile
+// is kept dirty rather than shown, and shown when the LCD is let go.  The
+// alert itself blits through the driver.
+void
+BlockLCDActivity(Boolean block)
+{
+	if (block)
+		gLCDBlocked++;
+	else if (gLCDBlocked > 0)
+		gLCDBlocked--;
 }
 
 
@@ -94,6 +147,7 @@ InitScreen(TScreenDriver* driver)
 		screen->baseAddr = NewPtr(size);
 		if (screen->baseAddr != nil)
 			memset(screen->baseAddr, 0, size);
+		SetScreenInfo();		// (host: again - the bits are made after the pixel map here)
 	}
 	SetEmptyRect(&gScreenDirtyRect);
 	gScreenDrawingDepth = 0;
@@ -135,6 +189,8 @@ void
 UpdateHardwareScreen(void)
 {
 	Rect r;
+	if (gLCDBlocked > 0)
+		return;					// (host: kept dirty until the LCD is let go)
 	if (SectRect(&gScreenDirtyRect, &qdGlobals.fScreenBits.bounds, &r))
 		BlitToScreens(&qdGlobals.fScreenBits, &r, &r, 0);
 	SetEmptyRect(&gScreenDirtyRect);
