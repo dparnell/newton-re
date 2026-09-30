@@ -237,6 +237,28 @@ is the same value spelt so that it cannot be read two ways.
   notBic loops never advance the mask pointer; `ScaleStdRRect` scales the
   corner oval crosswise on a fax.
 
+## 2026-09-30: the ROM's fonts as editable text
+
+- The 13 'sfnt binaries are sfnt containers with no outlines: five bitmap
+  fonts with Apple's bloc/bdat strikes (System plain and bold, Fancy,
+  Simple, Casual) and eight metric-only printer fonts (Helvetica and
+  Times Roman, four faces each).  Renamed .ttf to .sfnt (6116f016), then
+  unpacked by `tools/fonts/newtonsfnt.py` (pure Python) into a BDF file
+  per strike and a text file per table, packed back byte for byte on
+  build (11734169; the committed `romsrc/` converted, ea150e00).
+- What the tables hold (`docs/qd/fonts-sfnt.md`): every strike is index
+  format 3 with image format 1, one bit deep; glyphs past maxp's 244 and
+  the last end offset are at offset 0 (the missing-glyph box); the ROM
+  picks a strike by ppemX and reads only the horizontal line metrics;
+  `hsty` is the extra advance each synthesised face adds, read only for
+  the metric-only fonts - ROM quirk: subscript reads past its end, into
+  the file's padding.  `docs/qd/README.md`'s System strikes were its
+  `userSizes`; corrected.
+- ctests `tools.NewtonFonts` (all 13 round-trip; edits to a pixel, a
+  width, a cmap entry, an hsty value change only what they should) and
+  `host.ROMSourceFontEdit` (a pixel flipped in the 9-point System "A"'s
+  BDF is the one pixel that changes on screen).
+
 ## 2026-09-30: printing to the host
 
 - `THostPrinterDriver` (0d2d4de9; `print/host/HostPrinter.h`) behind

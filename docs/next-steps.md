@@ -444,6 +444,10 @@ used on the next run.  The pieces, roughly in order:
    2026-09-30; `romsrc/README.md`); the extractor is not run over it
    again, and `host.ROMSourceCommitted` (does it still build the ROM
    byte for byte?) is to be retired at its first intentional edit.
+   The fonts are editable too: a BDF file per bitmap strike and a text
+   file per table (`tools/fonts/README.md`); possible follow-ups: a
+   strike's derived metrics (widthMax, the bearings) written as `auto`
+   and recomputed from its glyphs, and a test of adding a strike.
    Complete for the object area and the extension.  Optional later: the
    Unicode, collation and locale tables and the recognisers' dictionaries
    as text (word lists plus a trie builder); ROM code for packages with
