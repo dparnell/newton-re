@@ -420,6 +420,11 @@ main()
 		SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "wordBin")), bin);
 		EXPECT(RINT(Eval("call firstWord with (wordBin)")) == 0x0102030);
 	}
+	// a string, a real: the host keeps them in its own order, the ARM code
+	// sees a MessagePad's bytes (frames/HostOrder.h) - "AB" is 0x00410042,
+	// 1.5 starts 0x3ff80000
+	EXPECT(RINT(Eval("call firstWord with (\"AB\")")) == 0x0041004);
+	EXPECT(RINT(Eval("call firstWord with (1.5)")) == 0x3ff8000);
 	// malloc, sprintf's "%3u", MakeString and free
 	{
 		RefVar f(Eval("call format3u with (7)"));

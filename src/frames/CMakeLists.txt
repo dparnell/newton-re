@@ -27,6 +27,7 @@ add_library(frames STATIC
     ROMNatives.cpp
     Builtins.cpp
     Munger.cpp
+    HostOrder.cpp
     RichString.cpp
     SortTables.cpp
     StringNatives.cpp

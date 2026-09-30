@@ -23,7 +23,7 @@
 #include "NSErrors.h"
 #include "NewtonExceptions.h"
 #include "NewtonMemory.h"
-#include "StringBytes.h"
+#include "BinaryBytes.h"
 
 #include <string.h>
 
@@ -1259,7 +1259,7 @@ FExtractChar(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 {
 	long index = RINT(offset);
 	BoundsCheck(obj, index, 1);
-	TStringBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: StringBytes.h)
+	TBinaryBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: BinaryBytes.h)
 	char byte[2] = { BinaryData(obj)[index], 0 };
 	UniChar c[2];
 	ConvertToUnicode(byte, c, kMacRomanEncoding, 1);
@@ -1273,7 +1273,7 @@ FStuffChar(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg c)
 {
 	long index = RINT(offset);
 	BoundsWriteCheck(obj, index, 1);
-	TStringBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: StringBytes.h)
+	TBinaryBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: BinaryBytes.h)
 	Ref ref = c;
 	UniChar ch[2] = { (UniChar) (ISINT(ref) ? RINT(ref) : RCHAR(ref)), 0 };
 	char byte[4];
@@ -1289,7 +1289,7 @@ FExtractUniChar(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 {
 	long index = RINT(offset);
 	BoundsCheck(obj, index, 2);
-	TStringBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: StringBytes.h)
+	TBinaryBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: BinaryBytes.h)
 	unsigned char* data = (unsigned char*) BinaryData(obj) + index;
 	return MAKECHAR((UniChar) ((data[0] << 8) | data[1]));
 }
@@ -1301,7 +1301,7 @@ FStuffUniChar(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg c)
 {
 	long index = RINT(offset);
 	BoundsWriteCheck(obj, index, 2);
-	TStringBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: StringBytes.h)
+	TBinaryBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: BinaryBytes.h)
 	Ref ref = c;
 	UniChar ch = (UniChar) (ISINT(ref) ? RINT(ref) : RCHAR(ref));
 	unsigned char* data = (unsigned char*) BinaryData(obj) + index;
@@ -1317,7 +1317,7 @@ FExtractByte(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 {
 	long index = RINT(offset);
 	BoundsCheck(obj, index, 1);
-	TStringBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: StringBytes.h)
+	TBinaryBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: BinaryBytes.h)
 	return MAKEINT((unsigned char) BinaryData(obj)[index]);
 }
 
@@ -1328,7 +1328,7 @@ FStuffByte(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg value)
 {
 	long index = RINT(offset);
 	BoundsWriteCheck(obj, index, 1);
-	TStringBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: StringBytes.h)
+	TBinaryBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: BinaryBytes.h)
 	if (ObjectFlags(obj) & kObjReadOnly)
 		ThrowExFramesWithBadValue(kNSErrObjectReadOnly, obj);
 	BinaryData(obj)[index] = (char) RINT(value);
@@ -1343,7 +1343,7 @@ FExtractWord(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 {
 	long index = RINT(offset);
 	BoundsCheck(obj, index, 2);
-	TStringBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: StringBytes.h)
+	TBinaryBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: BinaryBytes.h)
 	unsigned char* data = (unsigned char*) BinaryData(obj) + index;
 	return MAKEINT((short) ((data[0] << 8) | data[1]));
 }
@@ -1355,7 +1355,7 @@ FStuffWord(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg value)
 {
 	long index = RINT(offset);
 	BoundsWriteCheck(obj, index, 2);
-	TStringBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: StringBytes.h)
+	TBinaryBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: BinaryBytes.h)
 	long v = RINT(value);
 	unsigned char* data = (unsigned char*) BinaryData(obj) + index;
 	data[0] = (unsigned char) (v >> 8);
@@ -1381,7 +1381,7 @@ FExtractLong(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 {
 	long index = RINT(offset);
 	BoundsCheck(obj, index, 4);
-	TStringBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: StringBytes.h)
+	TBinaryBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: BinaryBytes.h)
 	ULong value = LongAt(obj, index);
 	if ((value & 0xc0000000) != 0 && (value & 0xc0000000) != 0xc0000000)
 		Throw(exFrames, (void*) kNSErrLongOutOfRange, nil);
@@ -1396,7 +1396,7 @@ FStuffLong(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg value)
 {
 	long index = RINT(offset);
 	BoundsCheck(obj, index, 4);
-	TStringBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: StringBytes.h)
+	TBinaryBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: BinaryBytes.h)
 	long v = RINT(value);
 	unsigned char* data = (unsigned char*) BinaryData(obj) + index;
 	data[0] = (unsigned char) (v >> 24);
@@ -1415,7 +1415,7 @@ FExtractXLong(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 {
 	long index = RINT(offset);
 	BoundsCheck(obj, index, 4);
-	TStringBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: StringBytes.h)
+	TBinaryBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: BinaryBytes.h)
 	return MAKEINT(LongAt(obj, index) >> 3);
 }
 
@@ -1427,7 +1427,7 @@ FExtractCString(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 {
 	long index = RINT(offset);
 	BoundsCheck(obj, index, 1);
-	TStringBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: StringBytes.h)
+	TBinaryBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: BinaryBytes.h)
 	LockRef(obj);
 	char* data = BinaryData(obj);
 	long length = Length(obj);
@@ -1454,7 +1454,7 @@ FStuffCString(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg str)
 		ThrowBadTypeWithFrameData(kNSErrNotAString, str);
 	long length = (Length(str) - 2) / 2;
 	BoundsWriteCheck(obj, index, length + 1);
-	TStringBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: StringBytes.h)
+	TBinaryBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: BinaryBytes.h)
 	ConvertFromUnicode((UniChar*) BinaryData(str), BinaryData(obj) + index, kMacRomanEncoding, length);
 	return NILREF;
 }
@@ -1468,7 +1468,7 @@ FExtractPString(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 	long index = RINT(offset);
 	unsigned char length = (unsigned char) BinaryData(obj)[index];
 	BoundsCheck(obj, index, length + 1);
-	TStringBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: StringBytes.h)
+	TBinaryBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: BinaryBytes.h)
 	RefVar str(AllocateBinary(RSSYMstring, (length + 1) * sizeof(UniChar)));
 	ConvertToUnicode(BinaryData(obj) + index + 1, (UniChar*) BinaryData(str), kMacRomanEncoding, length);
 	return str;
@@ -1486,7 +1486,7 @@ FStuffPString(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg str)
 	if (length > 0xff)
 		Throw(exFrames, (void*) kNSErrStringTooBig, nil);
 	BoundsWriteCheck(obj, index, length + 1);
-	TStringBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: StringBytes.h)
+	TBinaryBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: BinaryBytes.h)
 	char text[256];
 	ConvertFromUnicode((UniChar*) BinaryData(str), text, kMacRomanEncoding, 0xff);
 	memcpy(BinaryData(obj) + index + 1, text, length);
@@ -1513,10 +1513,10 @@ FExtractBytes(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg count, RefArg t
 		Throw(exFrames, (void*) kNSErrBadArgs, nil);
 	RefVar result(AllocateBinary(theClass, length));
 	{
-		TStringBytesAsROM bytes(obj);		// (the bytes as the ROM's: StringBytes.h)
+		TBinaryBytesAsROM bytes(obj);		// (the bytes as the ROM's: BinaryBytes.h)
 		memcpy(BinaryData(result), BinaryData(obj) + index, length);
 	}
-	StringBytesFromROM(result);			// (a string made of them in the host's order)
+	BinaryBytesFromROM(result);			// (a string made of them in the host's order)
 	return result;
 }
 

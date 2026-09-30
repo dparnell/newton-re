@@ -10,51 +10,12 @@
 #include "ObjectAreaImport.h"
 #include "ObjectHeap.h"
 #include "ByteOrder.h"
+#include "HostOrder.h"
 #include "OSErrors.h"
 
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
-
-// The binary classes the host reads as structures of halfwords - a
-// shape's rectangle (Rect), its points (Point), a polygon's or region's
-// data (Polygon, Region) and the recogniser's 'polygonShape (a verb, a
-// count and the points).  They are translated to the host's order as
-// strings and reals are; `analysis/nsfunctions.py --binary-classes` says
-// which classes the ROM's object area holds.  ('bits and 'mask are left
-// big-endian: qd/Pictures.h reads them that way.)
-static Boolean
-IsHalfwordShapeClass(const char* name)
-{
-	static const char* const kClasses[] = { "boundsrect", "rectangle", "oval", "roundrectangle", "line",
-											"polygonshape", "polygondata", "regiondata" };
-	for (size_t i = 0; i < sizeof(kClasses) / sizeof(kClasses[0]); i++)
-		if (strcasecmp(name, kClasses[i]) == 0)
-			return true;
-	return false;
-}
-
-
-// Whether a class, by name, is super or a subclass of it as the object
-// system decides it: symbols are the same whatever their case (symcmp -
-// the ROM's reals include some of class 'Real), and a dotted name is a
-// subclass of the name it starts with ('string.foo is a 'string), as
-// IsSubclassRef has it.  (Names are all the importer has: the objects are
-// not live yet.)
-static Boolean
-IsClassNamed(const char* className, const char* super)
-{
-	if (symcmp((char*) className, (char*) super) == 0)
-		return true;
-	size_t length = strlen(super);
-	if (strchr(className, '.') == nil || strlen(className) <= length || className[length] != '.')
-		return false;
-	for (size_t i = 0; i < length; i++)
-		if (toupper((unsigned char) className[i]) != toupper((unsigned char) super[i]))
-			return false;
-	return true;
-}
-
 
 TImportedObjectArea::TImportedObjectArea()
 {
@@ -256,7 +217,7 @@ TImportedObjectArea::Import(const unsigned char* bytes, ULong32 base, ULong32 si
 					if (ISPTR(hostClass) && IsSymbol(hostClass))
 						className = SymbolName(hostClass);
 				}
-				if (className != nil && symcmp((char*) className, (char*) "real") == 0 && length == 8)
+				if (className != nil && HostOrderOfClassName(className) == kHostReal && length == 8)
 				{
 					unsigned char* d = (unsigned char*) ObjData(o);
 					ULong32 hi = GetBigEndianWord(d);
@@ -266,13 +227,13 @@ TImportedObjectArea::Import(const unsigned char* bytes, ULong32 base, ULong32 si
 					memcpy(&value, &bits, sizeof(double));
 					memcpy(d, &value, sizeof(double));
 				}
-				else if (className != nil && IsClassNamed(className, "string"))
+				else if (HostOrderOfClassName(className) == kHostUniChars)
 				{
 					UniChar* s = (UniChar*) ObjData(o);
 					for (long j = 0; j < length / 2; j++)
 						s[j] = GetBigEndianHalf((const unsigned char*) ObjData(o) + j * 2);
 				}
-				else if (className != nil && IsHalfwordShapeClass(className))
+				else if (HostOrderOfClassName(className) == kHostHalfwords)
 				{
 					// the shapes the host reads as structs of shorts (Rect,
 					// Point, Polygon, Region): a halfword at a time

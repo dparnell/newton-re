@@ -232,6 +232,30 @@ TestGraph()
 }
 
 
+// The binaries the host keeps in its own order - reals, strings of any
+// string class, the shapes' halfword structures - go out as a MessagePad's
+// bytes are, big-endian, and come back in the host's order
+static void
+TestHostOrderBinaries()
+{
+	// 3.5: a binary of class 'real, 0x400c000000000000
+	CTestPipe pipe(64);
+	RefVar back(RoundTrip(RefVar(MakeReal(3.5)), pipe));
+	static const UByte realBytes[] = { 0x40, 0x0c, 0, 0, 0, 0, 0, 0 };
+	EXPECT(pipe.fWriteBuffer->Position() >= 8
+		&& memcmp(pipe.fWriteBuffer->fBuffer + pipe.fWriteBuffer->Position() - 8, realBytes, 8) == 0);
+	EXPECT(IsReal(back) && CDouble(back) == 3.5);
+	// a string of class 'string.name: binary, its class, then "x" big-endian
+	CTestPipe pipe2(64);
+	RefVar name(MakeString("x"));
+	SetClass(name, SYMBOL("string.name"));
+	back = RoundTrip(name, pipe2);
+	static const UByte nameBytes[] = { 0x00, 'x', 0x00, 0x00 };
+	EXPECT(memcmp(pipe2.fWriteBuffer->fBuffer + pipe2.fWriteBuffer->Position() - 4, nameBytes, 4) == 0);
+	EXPECT(IsString(back) && StringIs(back, "x"));
+}
+
+
 int
 main()
 {
@@ -242,6 +266,7 @@ main()
 	{
 		TestBytes();
 		TestGraph();
+		TestHostOrderBinaries();
 	}
 	newton_catch_all
 	{

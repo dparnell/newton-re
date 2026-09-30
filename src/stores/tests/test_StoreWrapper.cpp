@@ -410,6 +410,26 @@ TestStoreObjects()
 	EXPECT(Length(RefVar(GetFrameSlot(back, SYMBOL("rect")))) == 4 && RINT(GetFrameSlot(RefVar(GetFrameSlot(back, SYMBOL("rect"))), RSSYMbottom)) == 3);
 	EXPECT(RINT(GetFrameSlot(RefVar(GetFrameSlot(back, SYMBOL("bigrect"))), RSSYMbottom)) == 300);
 
+	// a real is written as a MessagePad's double, big-endian (the host keeps
+	// it in its own order: frames/HostOrder.h), and comes back the same
+	RefVar aReal(MakeReal(1.5));
+	id = (PSSId) -1;
+	StorePermObject(aReal, wrapper, id, nil, nil);
+	long realSize = 0;
+	EXPECT(store->GetObjectSize(id, &realSize) == noErr && realSize > 0 && realSize < 256);
+	{
+		char bytes[256];
+		static const char kBigEndianOneAndAHalf[] = { 0x3f, (char) 0xf8, 0, 0, 0, 0, 0, 0 };
+		EXPECT(store->Read(id, 0, bytes, realSize) == noErr);
+		Boolean found = false;
+		for (long i = 0; i + 8 <= realSize; i++)
+			if (memcmp(bytes + i, kBigEndianOneAndAHalf, 8) == 0)
+				found = true;
+		EXPECT(found);
+	}
+	back = LoadPermObject(wrapper, id, nil);
+	EXPECT(ISREAL(back) && CDouble(back) == 1.5);
+
 	// shared references come back shared (precedents)
 	RefVar shared(Eval("local s := \"same\"; local f := {a: 1}; {p: s, q: s, r: f, t: f, u: [s, f]}"));
 	id = (PSSId) -1;

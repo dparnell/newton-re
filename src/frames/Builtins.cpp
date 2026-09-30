@@ -24,6 +24,7 @@
 #include "REPTranslators.h"
 #include "Compiler.h"
 #include "Unicode.h"
+#include "HostOrder.h"
 #include "RichString.h"		// FAref/FSetAref read strings through TRichString
 #include "RSSymbols.h"
 #include "NSErrors.h"
@@ -542,7 +543,19 @@ FClassOf(RefArg /*rcvr*/, RefArg obj)
 Ref
 FSetClass(RefArg /*rcvr*/, RefArg obj, RefArg theClass)
 {
+	EHostOrder before = HostOrderOf(obj);
 	SetClass(obj, theClass);
+	// DEVIATION: a string, a real or a shape's halfwords is kept in the
+	// host's order (HostOrder.h); a script changing a binary from one kind
+	// to another means the bytes it had, as a MessagePad keeps them - a
+	// binary of big-endian UniChars made a 'string, or a string made a
+	// binary to be sent - so they are turned from the one to the other
+	EHostOrder after = HostOrderOf(obj);
+	if (before != after)
+	{
+		SwapHostOrder(before, BinaryData(obj), Length(obj));
+		SwapHostOrder(after, BinaryData(obj), Length(obj));
+	}
 	return obj;
 }
 

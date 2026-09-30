@@ -21,6 +21,7 @@
 #include "NewtonExceptions.h"
 #include "toolbox/ByteOrder.h"
 #include "ObjectStreamer.h"
+#include "BinaryBytes.h"
 #include "RefPipe.h"
 #include "EndpointPipe.h"
 
@@ -315,6 +316,9 @@ PScriptDataOut::ParseOutput(RefArg value, FormType form, long encoding, long* le
 	else if (IsBinary(value) && (form == kFormExport || form == kFormBinary))
 	{
 		LockRef(r);
+		// DEVIATION: a string's (or a real's) bytes as a MessagePad's
+		// (frames/BinaryBytes.h)
+		TBinaryBytesAsROM bytes(value);
 		memmove(buf, BinaryData(r), *length);
 		UnlockRef(r);
 	}

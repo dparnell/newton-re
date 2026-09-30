@@ -25,6 +25,7 @@
 #include "NewtonExceptions.h"
 #include "NewtonMemory.h"
 #include "ByteOrder.h"
+#include "HostOrder.h"
 #include "LargeBinaries.h"
 #include "DynamicArray.h"
 #include "Unicode.h"
@@ -828,6 +829,16 @@ TStoreObjectWriter::Scan(void)
 			}
 		}
 	}
+	else if (HostOrderOf(fObject) != kROMOrder && !HostIsBigEndian())
+	{
+		// DEVIATION: a real or a shape's halfwords, kept in the host's
+		// order (frames/HostOrder.h), written as a MessagePad's bytes
+		char* bytes = new char[length];
+		memcpy(bytes, data, length);
+		SwapHostOrder(HostOrderOf(fObject), bytes, length);
+		fPipe.Write(bytes, length);
+		delete[] bytes;
+	}
 	else
 		fPipe.Write(data, length);
 	UnlockRef(fObject);
@@ -1100,7 +1111,11 @@ TStoreObjectReader::Scan(void)
 				SwapUniChars(BinaryData(obj), length / 2);
 			}
 			else
+			{
 				fPipe.Read(BinaryData(obj), length);
+				// DEVIATION: a real or a shape's halfwords into the host's order
+				SwapHostOrder(HostOrderOf(obj), BinaryData(obj), length);
+			}
 			UnlockRef(obj);
 			return obj;
 		}

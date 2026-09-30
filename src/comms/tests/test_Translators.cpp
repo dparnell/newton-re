@@ -151,6 +151,13 @@ TestScriptData(void)
 	EXPECT(err == noErr && IsBinary(back) && Length(back) == 3 && memcmp(BinaryData(back), "xyz", 3) == 0);
 	DisposPtr(p);
 
+	// a string sent as a binary: its UniChars as a MessagePad keeps them,
+	// high byte first
+	p = Out(out, RefVar(MakeString("Hi")), kFormBinary, 0, &err);
+	static const char kHi[6] = { 0, 'H', 0, 'i', 0, 0 };
+	EXPECT(err == noErr && p != nil && GetPtrSize(p) == 6 && memcmp(p, kHi, 6) == 0);
+	DisposPtr(p);
+
 	// a 'template: marshalled
 	p = Out(out, RefVar(Eval("{arglist: [[10, 0, 0, 2], 80], typelist: ['struct, ['array, 'byte, 4], 'short]}")),
 			kFormTemplate, 0, &err);

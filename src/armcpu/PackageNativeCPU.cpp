@@ -19,6 +19,8 @@
 #include "RSSymbols.h"
 #include "NewtonExceptions.h"
 #include "SortTables.h"
+#include "HostOrder.h"
+#include "ByteOrder.h"
 #include "utility/Unicode.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -258,7 +260,9 @@ struct Window
 	uint32_t	fSize;			// as the ARM code sees it
 	RefStruct*	fObject;
 	bool		fSlots;
-	bool		fHostOrder;		// a string: its UniChars in the host's order (else the bytes as they lie, words big-endian)
+	uint32_t	fSwizzle;		// what an offset is XORed with to find the byte: 0 for the bytes as they lie,
+								// 1 for a string's UniChars and a shape's halfwords, 7 for a real - the
+								// objects the host keeps in its own order (frames/HostOrder.h)
 };
 
 // DEVIATION: past the end of a data window, within the page it ends in,
@@ -274,8 +278,32 @@ static void
 InitDataWindow(Window& w, RefArg obj)
 {
 	w.fSlots = false;
-	w.fHostOrder = IsString(obj);
 	w.fSize = (uint32_t) Length(obj);
+	// DEVIATION: the ARM code sees every byte as a MessagePad keeps it, so a
+	// string, a real or a shape's halfwords (kept in the host's order) is
+	// seen through a swizzle - byte o of a UniChar string is the host's byte
+	// o ^ 1 - and a memcpy of it, a word read of it, or a byte walk down it
+	// finds the big-endian bytes it expects
+	w.fSwizzle = 0;
+	if (!HostIsBigEndian())
+	{
+		EHostOrder kind = HostOrderOf(obj);
+		w.fSwizzle = kind == kHostReal ? 7 : kind != kROMOrder ? 1 : 0;
+	}
+}
+
+// the byte at offset off of a swizzled window (past its end: nought, and
+// the write dropped - the DEVIATION above)
+static uint8_t*
+WindowByte(Window& w, uint32_t off)
+{
+	uint32_t at = off ^ w.fSwizzle;
+	if (at >= w.fSize)
+	{
+		gWindowScratch[0] = 0;
+		return gWindowScratch;
+	}
+	return (uint8_t*) BinaryData(*w.fObject) + at;
 }
 
 // n bytes at offset off in a data window (n <= 8)
@@ -574,11 +602,12 @@ TNativeWorld::Read32(uint32_t a, uint32_t* v)
 		}
 		// object data: a string's in the host's own byte order, anything
 		// else's as the bytes lie (docs/armcpu/README.md)
-		const uint8_t* p = WindowData(*w, a - w->fBase, 4);
-		if (w->fHostOrder)
-			memcpy(v, p, 4);
+		uint32_t off = a - w->fBase;
+		if (w->fSwizzle != 0)
+			*v = ((uint32_t) *WindowByte(*w, off) << 24) | ((uint32_t) *WindowByte(*w, off + 1) << 16)
+				| ((uint32_t) *WindowByte(*w, off + 2) << 8) | *WindowByte(*w, off + 3);
 		else
-			*v = BE32(p);
+			*v = BE32(WindowData(*w, off, 4));
 		return true;
 	}
 	return false;
@@ -597,11 +626,14 @@ TNativeWorld::Read16(uint32_t a, uint16_t* v)
 	{
 		if (w->fSlots)
 			return false;
-		const uint8_t* p = WindowData(*w, a - w->fBase, 2);
-		if (w->fHostOrder)
-			memcpy(v, p, 2);
+		uint32_t off = a - w->fBase;
+		if (w->fSwizzle != 0)
+			*v = (uint16_t) ((*WindowByte(*w, off) << 8) | *WindowByte(*w, off + 1));
 		else
+		{
+			const uint8_t* p = WindowData(*w, off, 2);
 			*v = (uint16_t) ((p[0] << 8) | p[1]);
+		}
 		return true;
 	}
 	return false;
@@ -620,7 +652,7 @@ TNativeWorld::Read8(uint32_t a, uint8_t* v)
 	{
 		if (w->fSlots)
 			return false;
-		*v = *WindowData(*w, a - w->fBase, 1);
+		*v = w->fSwizzle != 0 ? *WindowByte(*w, a - w->fBase) : *WindowData(*w, a - w->fBase, 1);
 		return true;
 	}
 	return false;
@@ -640,11 +672,16 @@ TNativeWorld::Write32(uint32_t a, uint32_t v)
 			SetArraySlotRef(*w->fObject, (a - w->fBase) >> 2, ToHost(v));
 			return true;
 		}
-		uint8_t* p = WindowData(*w, a - w->fBase, 4);
-		if (w->fHostOrder)
-			memcpy(p, &v, 4);
+		uint32_t off = a - w->fBase;
+		if (w->fSwizzle != 0)
+		{
+			*WindowByte(*w, off) = (uint8_t) (v >> 24);
+			*WindowByte(*w, off + 1) = (uint8_t) (v >> 16);
+			*WindowByte(*w, off + 2) = (uint8_t) (v >> 8);
+			*WindowByte(*w, off + 3) = (uint8_t) v;
+		}
 		else
-			PutBE32(p, v);
+			PutBE32(WindowData(*w, off, 4), v);
 		return true;
 	}
 	return false;
@@ -661,11 +698,15 @@ TNativeWorld::Write16(uint32_t a, uint16_t v)
 	{
 		if (w->fSlots)
 			return false;
-		uint8_t* p = WindowData(*w, a - w->fBase, 2);
-		if (w->fHostOrder)
-			memcpy(p, &v, 2);
+		uint32_t off = a - w->fBase;
+		if (w->fSwizzle != 0)
+		{
+			*WindowByte(*w, off) = (uint8_t) (v >> 8);
+			*WindowByte(*w, off + 1) = (uint8_t) v;
+		}
 		else
 		{
+			uint8_t* p = WindowData(*w, off, 2);
 			p[0] = (uint8_t) (v >> 8);
 			p[1] = (uint8_t) v;
 		}
@@ -685,7 +726,7 @@ TNativeWorld::Write8(uint32_t a, uint8_t v)
 	{
 		if (w->fSlots)
 			return false;
-		*WindowData(*w, a - w->fBase, 1) = v;
+		*(w->fSwizzle != 0 ? WindowByte(*w, a - w->fBase) : WindowData(*w, a - w->fBase, 1)) = v;
 		return true;
 	}
 	return false;
@@ -891,7 +932,7 @@ TNativeWorld::MapSlots(RefArg obj)
 	w.fSize = (uint32_t) Length(obj) * 4;
 	w.fObject = new RefStruct(obj);
 	w.fSlots = true;
-	w.fHostOrder = false;
+	w.fSwizzle = 0;
 	fWindows.push_back(w);
 	fWindowTop += (w.fSize + 0xfff) & ~0xfffu;
 	fWindowTop += 0x1000;

@@ -15,6 +15,7 @@
 #include "NewtonExceptions.h"
 #include "NewtonMemory.h"
 #include "ByteOrder.h"
+#include "HostOrder.h"
 #include "LargeBinaries.h"
 #include "LargeObjects.h"
 #include <stdlib.h>
@@ -437,13 +438,17 @@ TObjectWriter::Scan(void)
 		DESCEND(ObjClass(OBJ((Ref) fObject)));
 	LockRef(fObject);
 	char* data = BinaryData(fObject);
-	if (isString && !HostIsBigEndian())
+	// DEVIATION: a string (of any string class), a real or a shape's
+	// halfwords is kept in the host's order (frames/HostOrder.h), and goes
+	// out as a MessagePad's bytes
+	EHostOrder kind = HostOrderOf(fObject);
+	if (kind != kROMOrder && !HostIsBigEndian())
 	{
-		char* text = new char[length];
-		memcpy(text, data, length);
-		SwapUniChars(text, length / 2);
-		pipe.WriteChunk(text, length, false);
-		delete[] text;
+		char* bytes = new char[length];
+		memcpy(bytes, data, length);
+		SwapHostOrder(kind, bytes, length);
+		pipe.WriteChunk(bytes, length, false);
+		delete[] bytes;
 	}
 	else
 		pipe.WriteChunk(data, length, false);
@@ -630,8 +635,9 @@ TObjectReader::ReadBinaryObject(UByte tag)
 	long count = length;
 	Boolean eof;
 	fPipe->ReadChunk(BinaryData(obj), count, eof);
-	if (tag == kNSOFString)
-		SwapUniChars(BinaryData(obj), length / 2);
+	// DEVIATION: into the host's order if it is kept so (a binary's class
+	// was read before its data)
+	SwapHostOrder(HostOrderOf(obj), BinaryData(obj), length);
 	UnlockRef(obj);
 	return obj;
 }

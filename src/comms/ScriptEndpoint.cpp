@@ -15,6 +15,7 @@
 #include "CommManager.h"
 #include "Pipes.h"
 #include "ObjectStreamer.h"
+#include "BinaryBytes.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
 #include "Interpreter.h"
@@ -1195,6 +1196,8 @@ TScriptEndpointClient::DoOutputOne(RefArg data, UByte* buffer)
 	if (buffer == nil)
 		return length;
 	LockRef(data);
+	// DEVIATION: a real's bytes as a MessagePad's (frames/BinaryBytes.h)
+	TBinaryBytesAsROM bytes(data);
 	BlockMove(BinaryData(data), buffer, length);
 	UnlockRef(data);
 	return length;

@@ -16,6 +16,7 @@
 #include "ROMImport.h"
 #include "ROMConstants.h"
 #include "Unicode.h"
+#include "HostOrder.h"
 #include "NSErrors.h"
 #include "memory/host/KernelHeap.h"
 
@@ -701,7 +702,7 @@ TestBinaries()
 	EXPECT_STRING(BIN("StuffPString(b, 0, \"hey\"); ExtractPString(b, 0)"), "hey");
 	EXPECT_INT(BIN("StuffPString(b, 0, \"hey\"); ExtractByte(b, 0)"), 3);
 	// a string's bytes are big-endian UniChars as on a MessagePad, whatever
-	// the host keeps (frames/StringBytes.h)
+	// the host keeps (frames/BinaryBytes.h)
 	EXPECT_INT("ExtractByte(\"AB\", 1)", 'A');
 	EXPECT_INT("ExtractWord(\"AB\", 2)", 'B');
 	EXPECT_CHAR("ExtractUniChar(\"AB\", 2)", 'B');
@@ -713,6 +714,20 @@ TestBinaries()
 	EXPECT_STRING(BIN("StuffUniChar(b, 0, $H); StuffUniChar(b, 2, $i); BinaryMunger(Clone(\"\"), 0, 0, b, 0, 4)"), "Hi");
 	EXPECT_INT(BIN("BinaryMunger(b, 0, 2, \"Q\", 0, 2); ExtractWord(b, 0)"), 'Q');
 	EXPECT_STRING("BinaryMunger(Clone(\"ab\"), 2, 0, \"cd\", 0, 4)", "acdb");
+	// SetClass between a string and a binary keeps the bytes a script sees:
+	// a binary of big-endian UniChars becomes the string they spell, and a
+	// string made a binary has its UniChars high byte first
+	EXPECT_STRING(BIN("StuffUniChar(b, 0, $O); StuffUniChar(b, 2, $K); StuffWord(b, 4, 0); SetLength(b, 6); SetClass(b, 'string)"), "OK");
+	EXPECT_INT("local s := SetClass(Clone(\"AB\"), 'binary); ExtractByte(s, 0) * 256 + ExtractByte(s, 1)", 'A');
+	EXPECT_STRING("SetClass(SetClass(Clone(\"xyz\"), 'binary), 'string)", "xyz");
+	// a string class by inheritance (the ROM's initialInheritanceFrame)
+	SetFrameSlot(RefVar(gInheritanceFrame), RefVar(Intern("phone")), RefVar(RSSYMstring));
+	EXPECT(HostOrderOfClassName("phone") == kHostUniChars && HostOrderOfClassName("string.foo") == kHostUniChars
+		&& HostOrderOfClassName("Real") == kHostReal && HostOrderOfClassName("boundsRect") == kHostHalfwords
+		&& HostOrderOfClassName("bits") == kROMOrder);
+	EXPECT_STRING("SetClass(Clone(\"555\"), 'phone)", "555");
+	EXPECT_INT(BIN("StuffUniChar(b, 0, $7); StuffWord(b, 2, 0); SetLength(b, 4); StrLen(SetClass(b, 'phone))"), 1);
+	RemoveSlot(RefVar(gInheritanceFrame), RefVar(Intern("phone")));
 	// 0x3fffffff is thirty ones, and a Newton integer is thirty bits, so
 	// the literal is -1 before it ever reaches StuffLong - which is what
 	// comes back out of the four bytes it wrote

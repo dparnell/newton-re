@@ -40,6 +40,7 @@
 #include "CommErrors.h"
 #include "toolbox/ByteOrder.h"
 #include "Unicode.h"
+#include "BinaryBytes.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -3616,6 +3617,8 @@ TDocker::WriteBytes(RefArg data)
 			if (owed < count)
 				count = owed;
 			fBytesWritten += count;
+			// DEVIATION: a string's bytes as a MessagePad's (frames/BinaryBytes.h)
+			TBinaryBytesAsROM bytes(data);
 			fPipe->WriteChunk(BinaryData(data), count, false);
 			if (fBytesWritten == fLength)
 			{
@@ -3795,6 +3798,9 @@ TDocker::ReadBytes(long* count, RefArg buffer)
 			if (*count <= Length(binary))
 			{
 				fBytesRead += *count;
+				// DEVIATION: the bytes read into a string are a MessagePad's
+				// (frames/BinaryBytes.h)
+				TBinaryBytesAsROM bytes(binary);
 				ReadChunk(BinaryData(binary), *count, fBytesRead == fLength);
 				if (fBytesRead == fLength)
 				{
