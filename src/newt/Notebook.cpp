@@ -205,7 +205,7 @@ TNotebook::InitInker(void)
 void
 TNotebook::DrawSplashScreen(void)
 {
-	static const char* const kSplashLines[4] =		// ROM 0x0037413c (RW-init)
+	static const char* const kSplashLines[4] =		// (the ROM: a table of char* at 0x0037413c)
 	{
 		"Newton ",
 		"\xA9" "1993-1997",				// (Mac Roman: the copyright sign)
