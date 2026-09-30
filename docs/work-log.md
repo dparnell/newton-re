@@ -237,6 +237,15 @@ is the same value spelt so that it cannot be read two ways.
   notBic loops never advance the mask pointer; `ScaleStdRRect` scales the
   corner oval crosswise on a fax.
 
+## 2026-09-30: the IR port is always there
+
+- newton installs the host IR chip and the IR comm services on every
+  boot (aea67589): with no `--ir-peer` it is a port with nobody in front
+  of it (`HostIRChipInstall(nil)` - what it sends goes nowhere, its
+  interrupts asked for only while a tool has work), so Beam from the
+  Action button looks for a receiver and says "No response." where it
+  had answered -26005 (no such service); ctest `host.NewtonBeamNobody`.
+
 ## 2026-09-30: a fax sent over a Class 2 modem
 
 - `fakemodem.py --fax-class 2` (and `2.0`) is a T.32 modem running T.30

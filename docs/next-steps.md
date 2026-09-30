@@ -254,10 +254,9 @@ worked through.  What could come next (not ranked; the owner chooses):
 - **Printing to the host**: done - "Host printer (PNG files)" in the
   Print slip, pages to `newton --print-dir` (`host.NewtonHostPrinter`).
 - **A user's first hour** passes as a ctest (`host.NewtonWalkthrough`).
-  Seen then: Beam from the action picker answers -26005 (no IR service
-  unless `newton --ir-peer`; the device always has its IR port); Print
-  Note from the action picker showed "nil view" in an older tree -
-  recheck now that `GetNames` is in.  The host clock past 2010 meets the
+  (Beam from the Action button with nobody there now says "No
+  response." as a MessagePad alone does; Print Note works.)  The host
+  clock past 2010 meets the
   ROM's own year-2010 overflow (`TimeInSeconds`): new items are dated
   1992 - faithful; the walkthrough sets the clock to 1998.
 - **Now reachable over the large binaries**: the text engine's
