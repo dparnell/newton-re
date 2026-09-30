@@ -9,6 +9,23 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: rereading selected ink; the container view's recogniser and editing
+
+- A double tap on a page's selection of ink reads it again (96c366cf):
+  `TEditView::RealDoCommand`'s double-tap arm, paragraphs' ink words by
+  command 0x1a, shapes of ink sorted into reading order by `SortTextInk`
+  and its line sort (`views/SortInk.cpp`) and read by 0x19.  ctest
+  `host.NewtonRereadInk` does it with the pen: "on" written before "to",
+  lassoed and double tapped, reads "to on".  A tap within half a second
+  of the pen coming up after writing is taken as more writing
+  (`HandleUnit`'s fPrevUpTime + 30), so pen demos wait on Ticks().
+- `TContainerView`'s recogniser and editing methods (c1bafda0): scrubs,
+  carets, lines, words and taps handed to the children (ROM quirk kept:
+  a whole scrub only asks them), `PointOverText` a TDataView virtual at
+  +0x138, `AddHilited`/`DeleteHilited`, aeAddData/aeRemoveData with undo,
+  `ChildBoundsChanged` keeping a 5-pixel gap,
+  `TView::TransferCopyProtection`.
+
 ## 2026-10-01: the docking loader
 
 A device plugged into the serial port hands the Newton the package that
