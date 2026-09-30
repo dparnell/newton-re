@@ -1,0 +1,150 @@
+// NewtHack (fixtures/packages/games/NewtHack1_1: newthack.pkg, its sounds
+// and its registration) played as its player would: a character rolled
+// (Re-Roll deals the six ability scores again) and taken into the dungeon
+// (Play), walked about with taps on the map - each tap one step towards
+// it - a turn passed, the Action picker's Inventory looked at, and the
+// game left and come back to, the character where it was.  Checked in the
+// game's own character entry (`characterEntry`: `ability`, `dungeonPos`)
+// and on the screen.  ctest host.NewtonAppNewtHack:
+//
+//   build/host/host/newton --display 320x480 --erase --store tmp/newthack.store \
+//       --headless 200 --package fixtures/packages/games/NewtHack1_1/newthack.pkg \
+//       --package fixtures/packages/games/NewtHack1_1/nhsounds.pkg \
+//       --package fixtures/packages/games/NewtHack1_1/register.pkg \
+//       --script src/host/demo/apps-newthack.ns
+//
+// The random generator is seeded first: NewtHack builds its levels with
+// it, and a generator seeded 0 (which an unregistered Mahjongg can leave,
+// thirdparty-apps.ns) makes a level of one room.
+
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
+HostInclude("walkhelpers.ns");		// findView, the steps
+HostInclude("apphelpers.ns");		// openFromExtras, tapButtonText
+
+wtName := "newthack";
+nhSym := '|NewtHack:ChrisDopp|;
+nhScores := nil;
+nhPos := nil;
+
+nhApp := func() GetRoot().(nhSym);
+// the six ability scores the roll shows (the numbers beside their names)
+nhShownScores := func() begin
+	local scores := [];
+	foreach name in ["Strength", "Intelligence", "Wisdom", "Dexterity", "Constitution", "Charisma"] do begin
+		local label := call viewLabelled with (call nhApp with (), name);
+		local lb := if label then label:GlobalBox();
+		// the number on the same line, right of the name
+		local value := if lb then call findView with (call nhApp with (), func(v) begin
+			local b := v:GlobalBox();
+			v <> label and v.viewClass = 81 and v.text and b.top = lb.top and b.left >= lb.right
+		end);
+		AddArraySlot(scores, if value then "" & value.text else "?");
+	end;
+	scores
+end;
+nhSame := func(a, b) begin
+	local same := Length(a) = Length(b);
+	if same then for i := 0 to Length(a) - 1 do if not StrEqual(a[i], b[i]) then same := nil;
+	same
+end;
+nhList := func(a) begin
+	local s := "[";
+	if a then foreach i, x in a do s := s & (if i > 0 then ", " else "") & x;
+	s & "]"
+end;
+nhWhere := func() begin
+	local p := call nhApp with ().characterEntry.dungeonPos;
+	if p then [p.x, p.y, p.z];
+end;
+
+wtSteps := [
+	func(done) call openFromExtras with ("NewtHack", nhSym, done),
+	call waitStep with ("the new character", func() call viewLabelled with (call nhApp with (), "Play")),
+	func(done) begin
+		nhScores := call nhShownScores with ();
+		call wtCheck with ("a character rolled: " & call nhList with (nhScores), not LSearch(nhScores, "?", 0, '|str=|, nil), "");
+		call tapButtonText with (call nhApp with (), "Re-Roll");
+		call waitFor with ("newthack: rolled again", func() not call nhSame with (call nhShownScores with (), nhScores), func() begin
+			call wtCheck with ("Re-Roll deals the scores again: " & call nhList with (call nhShownScores with ()), not call nhSame with (call nhShownScores with (), nhScores), "(the same)");
+			call done with ();
+		end, 10);
+	end,
+	func(done) begin
+		call tapButtonText with (call nhApp with (), "Play");
+		call waitFor with ("newthack: in the dungeon", func() call nhWhere with () and not call viewLabelled with (call nhApp with (), "Play"), func() begin
+			nhPos := call nhWhere with ();
+			call wtCheck with ("Play takes the character to level 1 of the dungeon", nhPos and nhPos[2] = 1, "(at " & call nhList with (nhPos) & ")");
+			call done with ();
+		end, 30);
+	end,
+	// three taps above the character: three steps up (walls allowing)
+	func(done) begin
+		local steps := 0;
+		local stepUp;
+		stepUp := func() begin
+			if steps >= 3 then begin
+				local now := call nhWhere with ();
+				call wtCheck with ("taps on the map walk the character (" & call nhList with (nhPos) & " -> " & call nhList with (now) & ")",
+					now[0] = nhPos[0] and now[1] < nhPos[1], "");
+				nhPos := now;
+				call done with ();
+				return;
+			end;
+			steps := steps + 1;
+			// (the map keeps the character in view: above it is above the
+			// middle of where it is drawn - the whole map's height up)
+			call tapAt with (70, 90);
+			AddDelayedCall(stepUp, nil, 1500);
+		end;
+		call stepUp with ();
+	end,
+	func(done) begin
+		call tapButtonText with (call nhApp with (), "Pass");
+		AddDelayedCall(func() begin
+			call wtCheck with ("Pass leaves the character where it is",
+				(call nhWhere with ())[0] = nhPos[0] and (call nhWhere with ())[1] = nhPos[1], "(it moved)");
+			call done with ();
+		end, nil, 1500);
+	end,
+	func(done) begin
+		call tapButtonText with (call nhApp with (), "Action");
+		call waitFor with ("newthack: the Action picker", func() call findView with (GetRoot(), func(v) v.pickItems), func() begin
+			local picker := call findView with (GetRoot(), func(v) v.pickItems);
+			call wtCheck with ("the Action picker offers Inventory", LSearch(picker.pickItems, "Inventory", 0, '|str=|, nil), call nhList with (picker.pickItems));
+			// (a picker draws its items itself: the row of the one wanted)
+			local b := picker:GlobalBox();
+			local n := Length(picker.pickItems);
+			local k := LSearch(picker.pickItems, "Inventory", 0, '|str=|, nil);
+			call tapAt with ((b.left + b.right) div 2, b.top + ((b.bottom - b.top) * (2 * k + 1)) div (2 * n));
+			call waitFor with ("newthack: the inventory", func() call viewLabelled with (GetRoot(), "Inventory")
+					and not call findView with (GetRoot(), func(v) v.pickItems), func() begin
+				ScreenSnapshot("build/newthack-inventory.pgm");
+				call wtCheck with ("Inventory is shown", call viewLabelled with (GetRoot(), "Inventory"), "(not shown)");
+				call wtCheck with ("the character carries its dagger", call viewLabelled with (GetRoot(), "Dagger"), "(no Dagger)");
+				call done with ();
+			end, 10);
+		end, 10);
+	end,
+	// left and come back to: the character where it was
+	func(done) begin
+		call nhApp with ():Close();
+		call waitFor with ("newthack: closed", func() not call nhApp with ().viewCObject, func() begin
+			call openFromExtras with ("NewtHack", nhSym, func() begin
+				call waitFor with ("newthack: back in the dungeon", func() call nhWhere with (), func() begin
+					call wtCheck with ("reopened, the character is where it was (" & call nhList with (call nhWhere with ()) & ")",
+						call nhWhere with () and (call nhWhere with ())[0] = nhPos[0] and (call nhWhere with ())[1] = nhPos[1], "");
+					call done with ();
+				end, 20);
+			end);
+		end, 20);
+	end,
+	call shotStep with ("newthack"),
+	func(done) begin
+		call nhApp with ():Close();
+		Print("newthack: done, " & wtFailures & " failed");
+		HostQuit();
+	end];
+
+SetRandomSeed(1);
+call walkSetup with ([2, 0, 45, 34, 14, 37], func()			// "Daniel"
+	call waitFor with ("newthack: installed", func() GetRoot().(nhSym), wtNext, 60));
