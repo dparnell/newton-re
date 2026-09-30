@@ -526,7 +526,7 @@ StoreRemoveSortTable(RefArg storeObject, long sortId)
 }
 
 
-// ROM 0x00352fd8 (unnamed: MakeStoreObject's, for a store that was there
+// (the ROM's unnamed 0x00352fd8: MakeStoreObject's, for a store that was there
 // already)
 // The tables a mounted store carries registered: one gSortTables already
 // has is subscribed to again, any other read out of its store object into
@@ -565,7 +565,7 @@ StoreLoadSortTables(RefArg storeObject)
 }
 
 
-// ROM 0x00353184 (unnamed: RemoveTStore's)
+// (the ROM's unnamed 0x00353184: RemoveTStore's)
 // A store going: every table it carries unsubscribed from gSortTables.
 void
 StoreForgetSortTables(RefArg storeObject)
