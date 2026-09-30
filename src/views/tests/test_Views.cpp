@@ -3596,6 +3596,31 @@ TestClicks()
 }
 
 
+// The views a script names the front key view by (GetView's
+// 'viewFrontCommandKey and 'viewFrontKey), with no caret: the front-most
+// visible child of the root that takes command keys (textFlags 0x4000),
+// and for the key view one that also takes keys (0x8000).
+static void
+TestFrontKeyViews()
+{
+	TView* savedCaret = gRootView->fCaretView;
+	gRootView->fCaretView = nil;
+	TView* a = ViewOf("ctxFA := AddView(GetRoot(), {viewClass: 74, viewFlags: 1, textFlags: 0x4000, viewBounds: {left: 10, top: 10, right: 40, bottom: 30}})");
+	TView* b = ViewOf("ctxFB := AddView(GetRoot(), {viewClass: 74, viewFlags: 1, viewBounds: {left: 50, top: 10, right: 80, bottom: 30}})");
+	EXPECT(a != nil && b != nil);
+	EXPECT(GetFrontCommandKeyView() == a);								// b is in front, but takes no command keys
+	EXPECT(GetView(RefVar(), RSSYMviewfrontcommandkey) == a);
+	EXPECT(GetView(RefVar(), RSSYMviewfrontkey) != a);					// a takes no keys (0x8000)
+	Eval("ctxFA.textFlags := 0xC000");
+	EXPECT(GetView(RefVar(), RSSYMviewfrontkey) == a);
+	Eval("ctxFA:Hide()");
+	EXPECT(GetFrontCommandKeyView() == nil && GetView(RefVar(), RSSYMviewfrontcommandkey) == gRootView);	// hidden: none
+	Eval("RemoveView(GetRoot(), ctxFA); RemoveView(GetRoot(), ctxFB)");
+	gRootView->fCaretView = savedCaret;
+	Refresh();
+}
+
+
 static void
 TestPickView()
 {
@@ -7641,6 +7666,7 @@ main()
 		TestSelection();
 		TestParagraphTap();
 		TestIdlers();
+		TestFrontKeyViews();
 		TestPickView();
 		TestLayoutTable();
 		TestTimeDownAView();

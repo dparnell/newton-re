@@ -267,11 +267,18 @@ GetView(RefArg context)
 
 
 // ROM 0x0026145c GetFrontCommandKeyView__Fv
-// NOT YET RECONSTRUCTED: the front-most visible child of the root view's
-// command-key view (TextFlags).
-static TView*
+// The front-most visible child of the root that takes command keys (text
+// flag 0x4000); nil for none.
+TView*
 GetFrontCommandKeyView(void)
 {
+	TViewList* children = gRootView->fChildren;
+	for (long index = children->Count() - 1; index >= 0; index--)
+	{
+		TView* child = children->At(index);
+		if ((child->fFlags & vVisible) != 0 && (child->TextFlags() & 0x4000) != 0)
+			return child;
+	}
 	return nil;
 }
 
@@ -281,8 +288,12 @@ GetFrontCommandKeyView(void)
 // its preallocatedContext); a frame with a viewCObject its view, another
 // frame the view whose data it is (SoupEQ, from the root down); the
 // symbols 'viewFrontMost (the front-most application view),
-// 'viewFrontMostApp (not counting floaters), 'viewFrontKey and
-// 'viewFrontCommandKey (the caret view, else NOT YET: the root view).
+// 'viewFrontMostApp (not counting floaters), 'viewFrontKey (the caret
+// view; else the front command-key view when it takes keys - text flag
+// 0x8000 - or the view it would restore the caret to does; else the next
+// key view of the front-most view, then of the root; else the root) and
+// 'viewFrontCommandKey (the caret view, else the front command-key view,
+// else the root).
 TView*
 GetView(RefArg context, RefArg name)
 {
@@ -323,7 +334,27 @@ GetView(RefArg context, RefArg name)
 	{
 		TView* view = gRootView->fCaretView;
 		if (view == nil)
-			view = GetFrontCommandKeyView();
+		{
+			TView* front = GetFrontCommandKeyView();
+			if (front != nil)
+			{
+				if ((front->TextFlags() & 0x8000) == 0)
+				{
+					front = gRootView->FindRestorableKeyView(front, nil);
+					if (front != nil && (front->TextFlags() & 0x8000) == 0)
+						front = nil;
+				}
+				view = front;
+			}
+			if (view == nil)
+			{
+				TView* frontMost = gRootView->FrontMost();
+				if (frontMost != nil)
+					view = frontMost->NextKeyView(nil, 0, 0);
+			}
+		}
+		if (view == nil)
+			view = gRootView->NextKeyView(nil, 0, 0);
 		return view != nil ? view : gRootView;
 	}
 	if (EQRef(name, RSSYMviewfrontcommandkey))

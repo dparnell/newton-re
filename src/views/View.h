@@ -388,6 +388,7 @@ extern long			gSlowMotion;			// 0x0c101a2c  drawing shown step by step (NOT YET:
 // views from contexts
 TView*		GetView(RefArg context);								// ROM 0x002613fc GetView__FRC6RefVar
 TView*		GetView(RefArg context, RefArg name);					// ROM 0x002614e0 GetView__FRC6RefVarT1
+TView*		GetFrontCommandKeyView(void);							// ROM 0x0026145c GetFrontCommandKeyView__Fv - the front-most visible root child taking command keys (textFlags 0x4000)
 struct StyleRecord;
 long		TruncateText(UniChar* text, ULong length, long width, StyleRecord* style);	// ROM 0x001f0f48 TruncateText__FPUsUllP11StyleRecord (ViewNatives.cpp) - the first line, ended with an ellipsis where it is too wide
 void		DrawSetPen(RefArg context);								// ROM 0x001ec290 DrawSetPen__FRC6RefVar - drawPenMode/drawPenSizeX/Y into the port's pen
