@@ -40,6 +40,12 @@ Purpose
       answered (T.30's T4).  +FTH/+FTM/+FRH/+FRM/+FTS are taken outside
       such a call too, though nothing answers there.
 
+    - --fax-answer OUT.pbm is a fax machine the Newton calls (FaxAnswerer):
+      "ATDT" in +FCLASS=1 is answered with its CSI and DIS at once; the
+      Newton's DCS says the page's width and resolution, the training
+      check is answered CFR, each page is decoded by t4.py and answered
+      MCF, and the pages are written at the DCN (OUT.pbm, OUT-2.pbm, ...).
+
     Data calls are +FCLASS=0 (docs/comms/README.md, "The modem").
 
 Usage
@@ -52,6 +58,10 @@ Usage
         the same with a newton already running.
     python tools/modem/fakemodem.py --fax-call page.pbm --spawn <program...>
         a fax call to the Newton, sending page.pbm (1728 pixels wide).
+    python tools/modem/fakemodem.py --fax-answer out.pbm --spawn <program...>
+        a fax machine for the Newton to call, writing what it sends.
+    python tools/modem/fakemodem.py --self-test
+        --fax-answer against a scripted Class 1 caller (t4.py's test page).
 
 Inputs / outputs
     Prints what the Newton says to the modem ("fakemodem: <- ATI4") and what
@@ -125,6 +135,8 @@ def t30_id(text):
 
 class FaxCaller:
     """The calling fax machine behind the modem: T.30 as the caller."""
+
+    rings = True                        # it rings the Newton once it listens
 
     def __init__(self, page_path, identity):
         rows = t4.read_pbm(page_path)
@@ -201,6 +213,104 @@ class FaxCaller:
             log("fax: -> the page, %d lines in %d bytes" % (self.lines, len(self.page)))
             return self.page
         return b""
+
+
+class FaxAnswerer:
+    """The fax machine the Newton calls: T.30 as the called machine.  Its
+    CSI and DIS go first; the Newton's TSI and DCS say how the page comes,
+    its training check (TCF) is answered CFR when it is nought bytes, each
+    page is decoded by t4.py and answered MCF, and the DCN ends the call."""
+
+    rings = False                       # the Newton calls it
+
+    def __init__(self, out_path, identity):
+        self.out_path = out_path
+        self.identity = identity
+        self.state = "start"
+        self.frames = []                # frames for the Newton's +FRH, in turn
+        self.fine = False
+        self.width = t4.WIDTH
+        self.pages = []                 # each page's rows
+        self.page_data = None           # the last page's T.4 bytes
+        self.result = None
+
+    @staticmethod
+    def control(fcf, fif=b"", final=True):
+        frame = bytes([0xff, 0x13 if final else 0x03, fcf]) + fif
+        return frame + fcs(frame)
+
+    def called(self):
+        """The Newton's call answered: CSI then DIS (V.27 ter and V.29,
+        fine resolution, 1728 pixels, unlimited length, 20 ms)."""
+        self.frames = [self.control(0x40, t30_id(self.identity), False),
+                       self.control(0x80, bytes([0x00, 0x4e, 0x08]))]
+        self.state = "dis"
+
+    def from_newton(self, frame):
+        """A frame the Newton sent."""
+        name = frame_name(frame)
+        if name in ("CSI", "TSI", "CIG"):
+            detail = " '%s'" % frame[3:23][::-1].decode("latin-1").strip()
+        else:
+            detail = (" " + frame[3:].hex()) if len(frame) > 3 else ""
+        log("fax: <- %s%s" % (name, detail))
+        if name == "DCS":
+            fif = frame[3:-2]
+            self.fine = len(fif) > 1 and bool(fif[1] & 0x40)
+            width_code = (fif[2] & 0x03) if len(fif) > 2 else 0
+            self.width = {0: 1728, 1: 2048, 2: 2432}.get(width_code, 1728)
+            log("fax: the page to come is %d pixels wide, %s resolution" %
+                (self.width, "fine" if self.fine else "standard"))
+            self.state = "tcf"
+        elif name in ("MPS", "EOP", "EOM") and self.state == "post":
+            self.frames = [self.control(0x8c)]
+            log("fax: -> MCF")
+            self.state = "page" if name == "MPS" else ("tcf" if name == "EOM" else "end")
+        elif name == "DCN":
+            self.state = "done"
+            self.finish()
+
+    def data_from_newton(self, data):
+        """What the Newton's +FTM sent: the training check, or a page."""
+        if self.state == "tcf":
+            zeros = sum(1 for b in data if b == 0)
+            good = len(data) > 0 and zeros >= len(data) * 9 // 10
+            log("fax: <- the training check, %d bytes, %d noughts: %s" %
+                (len(data), zeros, "CFR" if good else "FTT"))
+            self.frames = [self.control(0x84 if good else 0x44)]
+            self.state = "page" if good else "tcf"
+        elif self.state == "page":
+            rows = t4.decode_page(data, self.width)
+            rows = [row + [0] * (self.width - len(row)) for row in rows]
+            self.pages.append(rows)
+            black = sum(sum(row) for row in rows)
+            log("fax: <- page %d, %d bytes, %d lines, %d black pixels" %
+                (len(self.pages), len(data), len(rows), black))
+            self.state = "post"
+
+    def next_frame(self, now):
+        """The frame for the Newton's +FRH (None: wait)."""
+        if self.frames:
+            return self.frames.pop(0)
+        return None
+
+    def next_data(self):
+        return b""
+
+    def page_path(self, n):
+        if n == 0:
+            return self.out_path
+        root, ext = os.path.splitext(self.out_path)
+        return "%s-%d%s" % (root, n + 1, ext)
+
+    def finish(self):
+        for n, rows in enumerate(self.pages):
+            if rows:
+                t4.write_pbm(self.page_path(n), rows)
+                log("fax: page %d written to %s (%d x %d)" %
+                    (n + 1, self.page_path(n), self.width, len(rows)))
+        self.result = "%d page(s)" % len(self.pages)
+        log("fax: the call ended, %s received" % self.result)
 
 
 def log(text):
@@ -297,6 +407,13 @@ class Modem:
 
     def dial(self, number):
         log("dialing %s" % number)
+        if self.fax is not None and not self.fax.rings and self.fclass == "1":
+            log("a fax machine answers")
+            self.fax_call = True
+            self.fax.called()
+            self.pending_frh = True     # dialing, the modem receives HDLC at once
+            self.give_frame()
+            return
         address = self.resolve(number)
         if address is None:
             self.result("NO CARRIER", 3)
@@ -311,7 +428,7 @@ class Modem:
             self.result("NO CARRIER", 3)
 
     def answer(self):
-        if self.ringing and self.fax is not None and self.fclass == "1":
+        if self.ringing and self.fax is not None and self.fax.rings and self.fclass == "1":
             log("answered a fax call")
             self.ringing = False
             self.sreg[1] = 0
@@ -401,7 +518,7 @@ class Modem:
                 elif i < len(body) and body[i] == "?":
                     i += 1
                     self.info("%03d" % self.sreg.get(n, 0))
-                    if n == 1 and (self.incoming is not None or self.fax is not None) and not self.listening_seen:
+                    if n == 1 and (self.incoming is not None or (self.fax is not None and self.fax.rings)) and not self.listening_seen:
                         # the Newton is listening: the call comes in
                         self.listening_seen = True
                         self.ringing = True
@@ -520,6 +637,8 @@ class Modem:
                 self.result("CONNECT", 1)       # another frame to come
         else:
             log("<- %d bytes of data" % len(data))
+            if self.fax_call and hasattr(self.fax, "data_from_newton"):
+                self.fax.data_from_newton(data)
             self.collect = None
             self.result("OK", 0)
 
@@ -617,11 +736,97 @@ class Modem:
             self.tick()
 
 
+def self_test():
+    """--fax-answer against a scripted Class 1 caller in place of the
+    Newton: dial, CSI/DIS read, TSI/DCS and the training sent, CFR read,
+    t4.py's test page sent, EOP, MCF read, DCN; the page written must be
+    the page sent."""
+    newton, dte = socket.socketpair()
+    tmp = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "tmp")
+    os.makedirs(tmp, exist_ok=True)
+    out = os.path.join(tmp, "fakemodem-answered.pbm")
+    fax = FaxAnswerer(out, "fakemodem fax")
+    modem = Modem(dte, {}, None, 9600, "fakemodem", fax)
+    thread = threading.Thread(target=modem.run, daemon=True)
+    thread.start()
+    newton.settimeout(10)
+    pending = b""
+
+    def read_until(word):
+        nonlocal pending
+        while word not in pending:
+            pending += newton.recv(4096)
+        before, _, pending = pending.partition(word)
+        return before
+
+    def command(text, answer=b"OK\r\n"):
+        newton.sendall(text.encode() + b"\r")
+        return read_until(answer)
+
+    def frame():
+        nonlocal pending
+        read_until(b"CONNECT\r\n")
+        data = bytearray()
+        while True:
+            while len(pending) < 2:
+                pending += newton.recv(4096)
+            if pending[0] == DLE:
+                if pending[1] == ETX:
+                    pending = pending[2:]
+                    break
+                data.append(pending[1])
+                pending = pending[2:]
+            else:
+                data.append(pending[0])
+                pending = pending[1:]
+        read_until(b"OK\r\n")
+        return bytes(data)
+
+    def send_frames(*frames):
+        command("AT+FTH=3", b"CONNECT\r\n")
+        for data in frames:
+            newton.sendall(dle_stuff(data))
+            read_until(b"OK\r\n" if data[1] & 0x10 else b"CONNECT\r\n")
+
+    def send_data(data):
+        command("AT+FTM=96", b"CONNECT\r\n")
+        newton.sendall(dle_stuff(data))
+        read_until(b"OK\r\n")
+
+    command("ATE0")
+    command("AT+FCLASS=1")
+    newton.sendall(b"ATDT5551234\r")
+    names = [frame_name(frame())]
+    newton.sendall(b"AT+FRH=3\r")
+    names.append(frame_name(frame()))
+    assert names == ["CSI", "DIS"], names
+    send_frames(FaxCaller.control(0x43, t30_id("scripted"), False),
+                FaxCaller.control(0x83, bytes([0x00, 0x06, 0x00])))
+    send_data(bytes(1800))
+    newton.sendall(b"AT+FRH=3\r")
+    assert frame_name(frame()) == "CFR"
+    page = t4.test_page()
+    send_data(t4.encode_page(page, 2))
+    send_frames(FaxCaller.control(0x2f))
+    newton.sendall(b"AT+FRH=3\r")
+    assert frame_name(frame()) == "MCF"
+    send_frames(FaxCaller.control(0xfb))
+    assert t4.read_pbm(out) == page
+    newton.close()
+    thread.join(timeout=5)
+    print("fakemodem: fax answer self test passed")
+
+
 def run_modem(host, port, args):
     dte = socket.create_connection((host, port))
     dte.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
     log("on the serial port at %s:%d" % (host, port))
-    fax = FaxCaller(args.fax_call, "fakemodem fax") if args.fax_call else None
+    if args.fax_call:
+        fax = FaxCaller(args.fax_call, "fakemodem fax")
+    elif args.fax_answer:
+        fax = FaxAnswerer(args.fax_answer, "fakemodem fax")
+    else:
+        fax = None
     Modem(dte, args.numbers, args.incoming, args.speed, args.identity, fax).run()
 
 
@@ -663,9 +868,11 @@ def main():
                     help="a phone book entry, NUMBER=HOST:PORT")
     ap.add_argument("--incoming", type=address, help="HOST:PORT of a call to ring the Newton with once it listens")
     ap.add_argument("--fax-call", metavar="PAGE.pbm", help="a fax machine to call the Newton, sending this page (Class 1)")
+    ap.add_argument("--fax-answer", metavar="OUT.pbm", help="a fax machine answering the Newton's call, writing the page it receives (Class 1)")
     ap.add_argument("--speed", type=int, default=19200, help="the speed CONNECT reports (19200)")
     ap.add_argument("--identity", default="fakemodem 1.0", help="what ATI0/I3/I4 answer (an unknown modem)")
     group = ap.add_mutually_exclusive_group(required=True)
+    group.add_argument("--self-test", action="store_true", help="--fax-answer against a scripted caller")
     group.add_argument("--spawn", nargs=argparse.REMAINDER, help="the newton to run, and its arguments")
     group.add_argument("--connect", type=address, help="host:port of a newton's serial port")
     args = ap.parse_args()
@@ -673,6 +880,9 @@ def main():
     for entry in args.number:
         number, _, target = entry.partition("=")
         args.numbers[number] = address(target)
+    if args.self_test:
+        self_test()
+        return
     if args.spawn:
         sys.exit(run_spawned(args.spawn, args))
     run_modem(args.connect[0], args.connect[1], args)

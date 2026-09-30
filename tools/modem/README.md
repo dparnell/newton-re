@@ -28,9 +28,19 @@ is the modem at the other end of it.
   PBM coded by `t4.py`, two fill bytes before each end of line) after the
   Newton's CFR, and EOP; the Newton's MCF (or RTP/RTN) is read and DCN
   sent.  Frames carry their FCS; bytes of the value DLE are doubled and
-  each frame or run of data ends with DLE ETX.
+  each frame or run of data ends with DLE ETX.  `--fax-answer OUT.pbm` is
+  the other way round, a fax machine the Newton calls (`FaxAnswerer`):
+  `ATDT` in `+FCLASS=1` is answered at once with its CSI and DIS (V.27 ter
+  and V.29, fine resolution, 1728 pixels, unlimited length); the Newton's
+  TSI and DCS say the page's width and resolution, its training check is
+  answered CFR (FTT unless nine tenths of it are noughts), each page is
+  decoded by `t4.py` and answered MCF, and at the DCN the pages are
+  written - the first to OUT.pbm, the next to OUT-2.pbm and so on.
+  `--self-test` runs `--fax-answer` against a scripted Class 1 caller in
+  place of the Newton, sending `t4.py`'s test page (ctest
+  `comms.FakemodemFaxAnswer`).
 - **Inputs**: `--number NUMBER=HOST:PORT` (repeatable), `--incoming
-  HOST:PORT`, `--fax-call PAGE.pbm` (1728 pixels wide), `--speed BPS` (what CONNECT reports, 19200), `--identity TEXT`
+  HOST:PORT`, `--fax-call PAGE.pbm` (1728 pixels wide), `--fax-answer OUT.pbm`, `--speed BPS` (what CONNECT reports, 19200), `--identity TEXT`
   (the `ATI0/3/4` answer; the default, `fakemodem 1.0`, is a modem the ROM
   does not know, which gets its generic profile), and either `--spawn
   <program...>` (a newton, run and waited for its `[host] serial port N`

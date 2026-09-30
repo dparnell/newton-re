@@ -126,4 +126,8 @@ if(Python3_FOUND)
                      -DCODED=${CMAKE_CURRENT_BINARY_DIR}/t4encoded.t4 -DDECODED=${CMAKE_CURRENT_BINARY_DIR}/t4encoded.pbm
                      -DPAGE=${CMAKE_CURRENT_BINARY_DIR}/t4page.pbm -P ${CMAKE_CURRENT_SOURCE_DIR}/T4Encode.cmake)
     set_tests_properties(comms.T4Encode PROPERTIES FIXTURES_REQUIRED t4encoded TIMEOUT 60)
+    # tools/modem/fakemodem.py's fax machine answering (--fax-answer), called
+    # by a scripted Class 1 caller in place of the Newton
+    add_test(NAME comms.FakemodemFaxAnswer COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/modem/fakemodem.py --self-test)
+    set_tests_properties(comms.FakemodemFaxAnswer PROPERTIES TIMEOUT 60 PASS_REGULAR_EXPRESSION "fax answer self test passed")
 endif()
