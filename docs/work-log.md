@@ -237,6 +237,24 @@ is the same value spelt so that it cannot be read two ways.
   notBic loops never advance the mask pointer; `ScaleStdRRect` scales the
   corner oval crosswise on a fax.
 
+## 2026-09-30: the month overview and traced selections
+
+- The Dates month overview (ab187149): `DrawMonthOverView` (0x122174)
+  and its helpers - each day a gray-framed box, each meeting a black bar
+  from its start to its end (7 am-7 pm at half an hour a pixel in a small
+  box), the day's notes as icons; ROM bug kept: if asking for the month
+  throws, every bar is drawn with the month's first meeting's times;
+  ctest `host.NewtonMonthOverview`.
+- `HiliteTraced` (1f6e7672; `views/PolygonTraced.cpp`): part of a shape
+  selected by tracing along it, the ends snapped to segment starts,
+  middles and ends; deleting it cuts the shape (`RemovePoints`' partial
+  path, the undoable points command 0x44); `TPolygonView::OuterBounds`.
+  ROM bugs kept: `AddInterval` merges an interval spanning several others
+  with the first only; `ValidatePoly`'s bounds check sets nothing.  ctest
+  `host.NewtonTraced`.
+- Picture playback's text, curves and paths were already in: no ROM
+  picture uses them (`analysis/pictures.py`).
+
 ## 2026-09-30: editing the Host network setup
 
 - Setting the Host network setup's domain name threw -48418: Internet

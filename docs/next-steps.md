@@ -328,9 +328,12 @@ reach, hardware, or waiting on another area:
 - **Waiting on other areas**: the journal's replayed *units*
   (`HandleReplayUnit`, `SetCaseAndTime` - the host journal replays
   strokes), `CreateVMHeap`.
-- `HiliteTraced` (about 7.5 KB): selecting part of a shape by tracing
-  along it, so `RemovePoints`' partial branch and command 0x44 are not
-  done either - every polygon selection is the whole shape.
+- The polygon view's remaining NOT YETs: scrubbing a shape
+  (`HandleScrub`/`ScrubSegment`/`HitSegment`), `Scale`/`DrawScaledData`,
+  drag and drop (`AddDragInfo`/`GetDropData`/`DropRemove`), command 0x32
+  (reading ink on a double tap), the ink printing paths.  A "^" mark
+  appears at a page's top left after a traced stretch is scrubbed - not
+  looked into.
 - The printing path's outlined paths for ink (`CSMakePathsGroup`,
   `FramePaths`), which want the PostScript path machinery.
 - **How well it reads.**  Rosetta: a perfectly round synthetic "c", as
