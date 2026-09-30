@@ -47,6 +47,10 @@ tools/newton-rom/
                           copied short into its task writes past its stack block), beside the ROM vtable's
                           +0x04 (own N / inherits / abstract); python tools/newton-rom/analysis/worldsizes.py
                           build/MP2x00US [--all]; ctest tools.WorldSizes
+    notyet.py             the NOT YET markers in src/ that name something src/ already defines (a `// ROM`
+                          citation's function, Class::Method, a class, a function) - each a note gone stale
+                          or a call still to be made; python tools/newton-rom/analysis/notyet.py [src]
+                          [--area views] [--all] [--json]; reads only the source (no ROM, no Ghidra)
     natives.py            which of the ROM's 1326 native functions src/ answers, by area;
                           --unbound [--ready], --check, --csv
     symbols.py            search the symbol table by regex (address, mangled name, signature)
