@@ -77,28 +77,30 @@ add_library(comms_script STATIC
     AppleTalkNatives.cpp
     HostOptionLayouts.cpp
     NewScriptEndpoint.cpp
+    ModemNavigator.cpp
+    ModemOptions.cpp
     StreamingEndpoint.cpp
     Beamer.cpp
     host/HostLink.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/HostLinkSource.cpp
 )
 # newt: ExceptionNotify and CheckForDeferredActions; views: the root view
-# brought up to date after an endpoint event
+# brought up to date after an endpoint event; the modem navigator every
+# endpoint a script makes of the modem service is put through first
+# (ModemNavigator.cpp, over ModemOptions.cpp)
 target_link_libraries(comms_script PUBLIC comms frames stores views newt)
 
 # The dock (docs/comms/README.md, "The desktop connection"): the easy
 # endpoint pipe the docker talks through, made from the Connection
-# application's options frame (so over comms_script's translators), the
-# modem navigator every such endpoint goes through, and the docker - the
+# application's options frame (so over comms_script's translators, and the
+# modem navigator there), and the docker - the
 # 'dock' protocol's session and its natives (over packages, for a package
 # the desktop loads, and newt, whose world it forks); and protoEndpoint, the
 # 1.x NewtonScript endpoint (ScriptEndpoint.h), which runs the modem
 # navigator too.
 add_library(comms_dock STATIC
     EzEndpointPipe.cpp
-    ModemNavigator.cpp
     Docker.cpp
-    ModemOptions.cpp
     ScriptEndpoint.cpp
 )
 target_link_libraries(comms_dock PUBLIC comms_serial comms_script packages stores newt intl qd utility)

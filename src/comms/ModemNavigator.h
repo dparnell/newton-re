@@ -24,5 +24,8 @@
 
 Boolean		UseModemNavigator(void);
 NewtonErr	RunModemNavigator(TOptionArray* options);
+// ROM 0x00067dec ContainsModemService__FP12TOptionArray - a 'mods service
+// named and no 'mpro option: the modem navigator is to be run
+Boolean		ContainsModemService(TOptionArray* options);
 
 #endif	/* __COMMS_MODEMNAVIGATOR_H */

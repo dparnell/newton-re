@@ -28,9 +28,12 @@
 				app-alive events start, which loads the package a connected
 				device asks for), the TICHandler the event handler notifies
 				the Newt world through (event 9), InitializeCommHardware
-				(the serial ports), and all of RegisterROMProtcols' services
-				but the ones reconstructed (the host's own - comms/host/ -
-				stand in for the NIE's 'inet, 'ictl and 'dnst services).
+				(the serial ports), and RegisterROMProtcols' services that
+				are not reconstructed (the host's own - comms/host/ - stand
+				in for the NIE's 'inet, 'ictl and 'dnst services).  The ones
+				that are come from the libraries above this one, each
+				library's registration put here by the program before the
+				comm manager starts (CMAddROMServices, DEVIATION).
 
 	Reconstructed from the MP2x00 US ROM (0x00049448-0x000495e4,
 	0x0006b5c0-0x0006ccc4, 0x00382998-0x003829f8); each function cites its
@@ -197,6 +200,11 @@ public:
 	ULong				fLastPackageA;		// +0xe0
 };
 
+
+// a library's registration of its ROM services, made when the comm manager
+// starts (RegisterROMProtcols); DEVIATION: the ROM makes them itself
+typedef void (*CMROMServiceRegistrar)(void);
+void		CMAddROMServices(CMROMServiceRegistrar registrar);
 
 NewtonErr	InitializeCommManager(void);
 NewtonErr	GetCommManagerPort(TUPort* port);

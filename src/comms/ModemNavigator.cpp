@@ -23,6 +23,7 @@
 
 #define kCMOServiceIdentifier	'sid '
 #define kModemService			'mods'
+#define kCMOModemService		'mods'
 
 
 // ROM 0x00066eb4 UseModemNavigator__Fv
@@ -30,6 +31,30 @@ Boolean
 UseModemNavigator(void)
 {
 	return true;
+}
+
+
+// ROM 0x00067dec ContainsModemService__FP12TOptionArray
+Boolean
+ContainsModemService(TOptionArray* options)
+{
+	Boolean modem = false;
+	Boolean profile = false;
+	TOptionIterator iter(options);
+	TOption* option = iter.FirstOption();
+	while (iter.More())
+	{
+		if (option->IsService())
+		{
+			if (option->Label() == kCMOModemService
+			||  (option->Label() == kCMOServiceIdentifier && ((TCMOServiceIdentifier*) option)->fServiceId == kCMOModemService))
+				modem = true;
+		}
+		if (option->IsOption() && option->Label() == kCMOModemProfile)
+			profile = true;
+		option = iter.NextOption();
+	}
+	return modem && !profile;
 }
 
 

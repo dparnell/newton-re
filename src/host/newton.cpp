@@ -121,6 +121,7 @@
 #include "SerialTool.h"
 #include "SharpIRTool.h"
 #include "MNP.h"
+#include "CommManager.h"
 #include "ModemTool.h"
 #include "FaxTool.h"
 #include "HostLink.h"
@@ -210,8 +211,8 @@ NewtonBoot(void)
 	HostHeapCheckInstall();		// (NEWTON_HEAPCHECK: host/HostHeapCheck.h)
 	HostBootNewtWorld();
 	// DEVIATION: the ROM's boot starts the timers and the serial hardware
-	// (InitializeCommHardware) and its loader registers the serial and MNP
-	// services; the host does it here, the external port a TCP socket
+	// (InitializeCommHardware); the host does it here, the external port a
+	// TCP socket
 	NewtonErr timerErr = InitFIQTimer();	// (the IR port is always there)
 	if (gSerialPort >= 0)
 	{
@@ -220,10 +221,6 @@ NewtonBoot(void)
 			err = HostSerialChipInstall((unsigned short) gSerialPort);
 		if (err == noErr)
 		{
-			RegisterSerialCommServices();
-			RegisterMNPService();
-			RegisterModemService();
-			RegisterFaxService();
 			printf("[host] serial port %u\n", (unsigned) HostSerialChipPort());
 			fflush(stdout);
 		}
@@ -239,7 +236,6 @@ NewtonBoot(void)
 			err = HostIRChipInstall(gIRPeer);
 		if (err == noErr)
 		{
-			RegisterIRCommServices();
 			if (gIRPeer != nil)
 			{
 				printf("[host] IR port %u\n", (unsigned) HostIRChipPort(HostIRChipInstalled()));
@@ -644,6 +640,14 @@ main(int argc, char** argv)
 	// (hal/host/HostTablet.h; HostTabletAutoCalibrate(nil) to tap them itself)
 	if (script != nil)
 		HostTabletAutoCalibrate(true);
+	// the ROM's services, which the comm manager registers as it starts in the
+	// newt world, before the host's boot (CommManager.h's CMAddROMServices:
+	// they are in the libraries above it)
+	CMAddROMServices(RegisterFaxService);
+	CMAddROMServices(RegisterModemService);
+	CMAddROMServices(RegisterMNPService);
+	CMAddROMServices(RegisterSerialCommServices);
+	CMAddROMServices(RegisterIRCommServices);
 	gNewtHostBoot = NewtonBoot;
 	gNewtHostPreMain = NewtonPreMain;
 	NewtInstallUserMain();

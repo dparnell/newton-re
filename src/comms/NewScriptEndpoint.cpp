@@ -8,6 +8,7 @@
 */
 
 #include "NewScriptEndpoint.h"
+#include "ModemNavigator.h"
 #include "StreamingEndpoint.h"
 #include "SerialEndpoint.h"
 #include "CommManager.h"
@@ -259,10 +260,10 @@ TNewScriptEndpointClient::InitScriptEndpointClient(RefArg endpoint, RefArg optio
 		err = ConvertToOptionArray(options, &array);
 		if (err != noErr)
 			return err;
-		// NOT YET: the modem navigator - UseModemNavigator (0x00066eb4)
-		// answers true, and a request for the modem service
-		// (ContainsModemService 0x00067dec) is first put through
-		// RunModemNavigator (0x00066ebc)
+		// a request for the modem service first put through the modem
+		// navigator (what it answers is not looked at)
+		if (UseModemNavigator() && ContainsModemService(&array))
+			RunModemNavigator(&array);
 		err = CMGetEndpoint(&array, &theEndpoint, false);
 		if (err == noErr)
 			err = ConvertFromOptionArray(options, &array);

@@ -38,8 +38,10 @@
 				0xd4 bytes there); the host's are wider for the pointers.
 
 	Reconstructed from the MP2x00 US ROM (0x00133c84-0x0013930c); each
-	function cites its origin.  NOT YET: TStreamingEndpointClient and the
-	CIS... natives (protoStreamingEndpoint), the modem navigator.  docs/comms/README.md.
+	function cites its origin.  The streaming endpoint (protoStreamingEndpoint)
+	is StreamingEndpoint.h's; a configuration asking for the modem service
+	goes through the modem navigator first (ModemNavigator.h), as the ROM's
+	does.  docs/comms/README.md.
 */
 
 #ifndef __COMMS_NEWSCRIPTENDPOINT_H

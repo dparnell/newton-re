@@ -154,9 +154,6 @@ public:
 	Boolean				fSevenBit;				// +0x90
 };
 
-// ROM 0x00067dec ContainsModemService__FP12TOptionArray - a 'mods service
-// named and no 'mpro option: the modem navigator is to be run
-Boolean		ContainsModemService(TOptionArray* options);
 // ROM 0x0006a374 ConvertToServiceOption__FUl - a 'sid ' option naming it
 TOption*	ConvertToServiceOption(ULong serviceId);
 

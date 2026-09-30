@@ -45,15 +45,38 @@ Boolean			gSCPDevicePackageBusy = false;		// ROM 0x0c100b64 gSCPDevicePackageBus
 //	Starting the comm manager
 // ---------------------------------------------------------------------------
 
+// DEVIATION: the ROM's services are in the libraries above this one (the
+// serial tools, MNP, the modem and fax tools, the IR tools), which this one
+// cannot link; the program puts each library's registration here before the
+// comm manager starts (CMAddROMServices), and RegisterROMProtcols makes them.
+static CMROMServiceRegistrar	gROMServiceRegistrars[8];
+static long						gROMServiceRegistrarCount = 0;
+
+void
+CMAddROMServices(CMROMServiceRegistrar registrar)
+{
+	for (long i = 0; i < gROMServiceRegistrarCount; i++)
+		if (gROMServiceRegistrars[i] == registrar)
+			return;
+	if (gROMServiceRegistrarCount < (long) (sizeof(gROMServiceRegistrars) / sizeof(gROMServiceRegistrars[0])))
+		gROMServiceRegistrars[gROMServiceRegistrarCount++] = registrar;
+}
+
+
 // ROM 0x0006ccac RegisterROMProtcols__Fv
-// The ROM's services and endpoint: TSerialEndpoint.  NOT YET RECONSTRUCTED:
-// RegisterNetworkROMProtocols (0x00031b70), TFaxService, TModemService,
-// TMNPService, TAsyncService, TFramedAsyncService, TP3Service,
-// TLocalTalkService, TIrDAService, TIRService, TKeyboardService,
-// TVRemoteService, IRSniffService, IRProbeService and PMuxServiceStarter.
+// The ROM's services and endpoint: the ones reconstructed - TFaxService,
+// TModemService, TMNPService, TAsyncService, TFramedAsyncService,
+// TIrDAService, TIRService, IRProbeService - through the registrations the
+// program put here, in the order it put them, then TSerialEndpoint.
+// NOT YET RECONSTRUCTED: RegisterNetworkROMProtocols (0x00031b70; the NIE
+// does the network, and the host's own services stand in for it -
+// comms/host/HostServices.h), TP3Service, TLocalTalkService,
+// TKeyboardService, TVRemoteService, IRSniffService and PMuxServiceStarter.
 static NewtonErr
 RegisterROMProtcols()
 {
+	for (long i = 0; i < gROMServiceRegistrarCount; i++)
+		gROMServiceRegistrars[i]();
 	TSerialEndpoint::ClassInfo()->Register();
 	return noErr;
 }
