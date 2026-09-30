@@ -231,6 +231,19 @@ TInker::TInker()
 }
 
 
+// ROM 0x0038aadc (unnamed) - the vtable's +0x04
+// The size of the copy the inker's task runs on (the ROM's 0x118).
+// Without it the task copied only a TAppWorld's worth and the inker's own
+// fields lay past the end of its stack block - writing fNewtEventType put
+// 'inkr' into whatever came next, now and then a fork's TAppWorldState,
+// whose port then pointed nowhere (the one-off crash in TUPort::Receive).
+ULong
+TInker::GetSizeOf()
+{
+	return sizeof(TInker);
+}
+
+
 // ROM 0x00218e48 __dt__6TInkerFv
 TInker::~TInker()
 { }

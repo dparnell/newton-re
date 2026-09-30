@@ -104,6 +104,7 @@ class TInker : public TAppWorld
 public:
 					TInker();														// ROM 0x00218df0 __ct__6TInkerFv
 	virtual			~TInker();														// ROM 0x00218e48 __dt__6TInkerFv
+	virtual ULong	GetSizeOf();													// ROM 0x0038aadc (unnamed) - the vtable's +0x04
 	virtual long	MainConstructor();												// ROM 0x00218f00 MainConstructor__6TInkerFv
 
 	void			IInker(void);													// ROM 0x00218ff8 IInker__6TInkerFv
