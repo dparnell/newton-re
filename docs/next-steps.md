@@ -332,7 +332,8 @@ reach, hardware, or waiting on another area:
 - **NetHopper browses** (`host.NewtonNetHopper`).  JPEG images need the NewtsCape
   package: NetHopperJPEG.pkg has no decoder of its own - its viewer calls
   NewtsCape's `JPEGConvert:NewtsCape` (`AddFile`) and answers nil without
-  it; NewtsCape is not among the fixtures.  NOT YET: a RefVar
+  it (the user sees an error alert); NewtScape is now a fixture and the
+  decoding through it is being done.  NOT YET: a RefVar
   handle a native keeps in a heap object past its call (the ARM
   interpreter's handle table is per call).
 - **Printing a long paragraph across pages**: reflow's cut of a paragraph

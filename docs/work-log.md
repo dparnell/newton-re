@@ -237,6 +237,16 @@ is the same value spelt so that it cannot be read two ways.
   notBic loops never advance the mask pointer; `ScaleStdRRect` scales the
   corner oval crosswise on a fax.
 
+## 2026-09-30: NetHopper's JPEG viewer without a converter
+
+- NetHopperJPEG.pkg has no decoder of its own: its viewer calls
+  NewtsCape's `JPEGConvert:NewtsCape` and answers nil without it.  With
+  no NewtsCape, the viewer keeps that nil and `mScaleImage` throws on it,
+  so the user sees "Sorry, a problem has occurred. (-48200)" and the
+  picture stays a placeholder with its ALT text - as a MessagePad without
+  NewtsCape would (58ff61a8; ctest `host.NewtonNetHopperJPEG`).  NewtScape
+  is now a fixture; decoding through it is being done.
+
 ## 2026-09-30: a paragraph's SetupDone finished
 
 - `TParagraphView::SetupDone` as the ROM's (0x17f5d8, 94c02bb8):
