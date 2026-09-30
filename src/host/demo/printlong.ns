@@ -1,0 +1,95 @@
+// A long note printed on the host's printer (ctest host.NewtonPrintLong):
+// a note of forty numbered lines made with the Notepad's MakeTextNote and
+// printed through its Action button, Print Note, the Print slip's Printer
+// picker (Choose Other Printer, "Host printer (PNG files)"), Print and Now
+// - the steps of print.ns.  The Notepad's print format reflows the note's
+// paragraph into the page (ReFlow, ReflowText): the paragraph is poured
+// into what is left of each page and cut where its lines stop, the rest
+// carried to the next page.  tools/imaging/pagecheck.py then checks the
+// pages: at least three, and every line of text whole on its page.
+//
+//   build/host/host/newton --display 320x480 --headless 240 \
+//       --print-dir build/printlong --script src/host/demo/printlong.ns
+//
+// Prints "printlong: N page(s) printed" and "printlong: done".
+
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
+
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+kHostPrinter := "Host printer (PNG files)";
+kLines := 40;
+
+// whether one of the root view's children lies with its top left corner here
+plShows := func(left, top) begin
+	local found := nil;
+	foreach child in GetRoot():ChildViewFrames() do begin
+		local box := child:GlobalBox();
+		if box.left = left and box.top = top then found := true;
+	end;
+	found;
+end;
+
+// the paragraph views of the Notepad's note: what kind of paragraph a
+// note's text is
+plParagraphs := func() begin
+	local found := [];
+	local walk;
+	walk := func(v) begin
+		if BAnd(v.viewClass, 0xFFFF) = 81 then AddArraySlot(found, v);
+		foreach c in v:ChildViewFrames() do call walk with (c);
+	end;
+	call walk with (GetRoot().paperroll);
+	found;
+end;
+
+plPrint := func() begin
+	call tapAt with (310, 28);				// the note's Action button
+	call waitFor with ("printlong: the Action menu", func() call plShows with (213, 23), func() begin
+		call tapAt with (260, 33);			// Print Note
+		call waitFor with ("printlong: the Print slip", func() call plShows with (45, 134), func() begin
+			call tapAt with (118, 196);		// the Printer picker
+			call waitFor with ("printlong: the printers", func() call plShows with (87, 202), func() begin
+				call tapAt with (160, 241);	// Choose Other Printer
+				call waitFor with ("printlong: the chooser", func() call plShows with (70, 80), func() begin
+					for i := 1 to 4 do call tapAt with (230, 161);		// scrolled to the end
+					call tapAt with (140, 196);	// the host's printer
+					call tapAt with (237, 228);	// closed
+					call waitFor with ("printlong: the printer chosen", func() not call plShows with (70, 80)
+							and StrEqual(userConfiguration.currentPrinter.name, kHostPrinter), func() begin
+						call tapAt with (226, 284);		// Print
+						call waitFor with ("printlong: Now or Later", func() call plShows with (207, 250), func() begin
+							call tapAt with (221, 256);	// Now
+							// printed: three pages at least (what the note needs),
+							// and then no more for five seconds
+							local last := -1, since := 0;
+							call waitFor with ("printlong: printed", func() begin
+								local n := HostPagesPrinted();
+								if n <> last then begin last := n; since := Ticks(); end;
+								n >= 3 and Ticks() - since > 300;
+							end, func() begin
+								Print("printlong: " & NumberStr(HostPagesPrinted()) & " page(s) printed");
+								Print("printlong: done");
+								HostQuit();
+							end, 180);
+						end, 20);
+					end, 20);
+				end, 20);
+			end, 20);
+		end, 20);
+	end, 20);
+end;
+
+call walkSetup with (name, func() begin
+	local text := "";
+	for i := 1 to kLines do
+		text := text & "Line " & NumberStr(i) & " of a long note that runs over several printed pages"
+			& (if i < kLines then "\u000D\u" else "");
+	GetRoot().paperroll:MakeTextNote(text, true);
+	call waitFor with ("printlong: the note", func() Length(call plParagraphs with ()) > 0, func() begin
+		foreach p in call plParagraphs with () do
+			Print({printlong: "a note's paragraph", viewFlags: p.viewFlags,
+				   calculatesBounds: BAnd(p.viewFlags, 8) <> 0, textFlags: p.textFlags});
+		call plPrint with ();
+	end, 20);
+end);
+Print("printlong: the script is loaded");

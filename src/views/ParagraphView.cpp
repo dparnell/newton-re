@@ -637,8 +637,9 @@ TParagraphView::CreateAllCaches(void)
 	RefillAllCaches();
 	if (fFlags & vCalculateBounds)
 	{
-		// the ROM's +0x40 text bounds are the view's own when there are no lines
-		Rect text = fLineCount > 0 ? fTextBounds : viewBounds;
+		// the ROM's +0x40 text bounds - every line laid out, kept or not -
+		// are the view's own when there are no lines at all
+		Rect text = fTextBounds.bottom > fTextBounds.top ? fTextBounds : viewBounds;
 		Rect bounds = viewBounds;
 		bounds.bottom = text.bottom;
 		Point origin = fParent->ContentsOrigin();
@@ -665,9 +666,9 @@ TParagraphView::CreateAllCaches(void)
 // return leaves an empty line behind it, which is where the caret goes
 // when it is typed.  The lines are moved down by the vertical text bits
 // when the text is shorter than the bounds: centred, or to the bottom.
-// NOT YET RECONSTRUCTED: the ROM's LineLoop (tabs, the text objects it
-// makes for every run of a line, the parents' bounds narrowing the
-// lines).
+// Only the lines that show are kept (see the clip below).  NOT YET
+// RECONSTRUCTED: the ROM's LineLoop (tabs, the text objects it makes for
+// every run of a line).
 void
 TParagraphView::FillAllCaches(void)
 {
@@ -702,6 +703,36 @@ TParagraphView::FillAllCaches(void)
 	fTextOptions.fWidth = ToFixed(width);
 	fTextOptions.fTransferMode = fTransferMode;
 	long spacing = GetInterLineSpacing();
+	// The lines kept are those that show: in what the parents show of the
+	// view (the walk up stopping at a print or a remote view, what is
+	// below one being drawn elsewhere) - or, with text flag 0x800, in the
+	// view's own bounds, and only those that end within them, which is how
+	// a paragraph being reflowed for the printer is cut between two lines
+	// where the page runs out (ReflowText's piece, OffsetPastVisible).  A
+	// line below the bounds ends a paragraph that does not calculate its
+	// bounds; one that does lays the rest out too (its text bounds take
+	// them all) but keeps none of them; a line above them is skipped.
+	// (The flag is read through the unnamed accessor at vtable +0x20, the
+	// view's own fTextFlags - see SetBounds.)
+	Boolean ownBounds = ((ULong) fTextFlags & 0x800) != 0;
+	Rect clip = viewBounds;
+	if (!ownBounds)
+	{
+		clip = fParent->viewBounds;
+		TView* ancestor = fParent;
+		do
+		{
+			ancestor = ancestor->fParent;
+			if (ancestor == nil)
+				break;
+			if (ancestor->DerivedFrom(clPrintView) || ancestor->DerivedFrom(clRemoteView))
+				break;
+			SectRect(&ancestor->viewBounds, &clip, &clip);
+		} while (ancestor != gRootView);
+	}
+	Rect allLines;			// every line laid out, kept or not (the ROM's +0x40)
+	SetEmptyRect(&allLines);
+	Boolean anyLine = false;
 	StyleRecord** lineStyles = (StyleRecord**) NewPtrClear(fRunCount * sizeof(StyleRecord*));
 	short* lineLengths = (short*) NewPtrClear(fRunCount * sizeof(short));
 	FPoint origin;
@@ -791,8 +822,19 @@ TParagraphView::FillAllCaches(void)
 		SetRect(&box, 0, 0, (short) width, (short) height);
 		if (!fCalculateBounds && TestLineOverlap(box, line.fBounds) == 2)
 			break;
-		fLineCount++;
+		Rect global = line.fBounds;
+		OffsetRect(&global, viewBounds.left, viewBounds.top);
+		Boolean shows = Overlaps(&clip, &global) && !(ownBounds && clip.bottom < global.bottom);
+		if (!shows && clip.top < global.bottom && !fCalculateBounds)
+			break;
+		if (shows)
+			fLineCount++;
 		fLineHeight = lineHeight;
+		if (!anyLine)
+			allLines = line.fBounds;
+		else
+			UnionRect(&allLines, &line.fBounds, &allLines);
+		anyLine = true;
 		y += lineHeight;
 		pos = (long) (next - text);
 	}
@@ -814,13 +856,11 @@ TParagraphView::FillAllCaches(void)
 		}
 	}
 	for (long i = 0; i < fLineCount; i++)
+		OffsetRect(&fLines[i].fBounds, viewBounds.left, viewBounds.top + dy);
+	if (anyLine)
 	{
-		Rect& box = fLines[i].fBounds;
-		OffsetRect(&box, viewBounds.left, viewBounds.top + dy);
-		if (i == 0)
-			fTextBounds = box;
-		else
-			UnionRect(&fTextBounds, &box, &fTextBounds);
+		fTextBounds = allLines;
+		OffsetRect(&fTextBounds, viewBounds.left, viewBounds.top + dy);
 	}
 }
 

@@ -367,6 +367,30 @@ if(Python3_FOUND)
                          PASS_REGULAR_EXPRESSION "pagecheck: passed")
 endif()
 
+# a long note printed across pages (demo/printlong.ns): the Notepad's print
+# format reflows the note's paragraph into each page and cuts it between
+# two lines where the page runs out (views/Reflow.cpp ReflowText, the
+# paragraph's lines kept only inside its bounds with text flag 0x800);
+# pagecheck.py counts the pages and the lines, none cut in half
+add_test(NAME host.NewtonPrintLong.clean COMMAND ${CMAKE_COMMAND} -E rm -rf ${CMAKE_CURRENT_BINARY_DIR}/printlong)
+set_tests_properties(host.NewtonPrintLong.clean PROPERTIES FIXTURES_SETUP printlongclean)
+add_test(NAME host.NewtonPrintLong.mkdir COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/printlong)
+set_tests_properties(host.NewtonPrintLong.mkdir PROPERTIES FIXTURES_SETUP printlongclean DEPENDS host.NewtonPrintLong.clean)
+add_test(NAME host.NewtonPrintLong COMMAND newton --display 320x480 --headless 240
+         --print-dir ${CMAKE_CURRENT_BINARY_DIR}/printlong --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/printlong.ns
+         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonPrintLong PROPERTIES TIMEOUT 300 FIXTURES_REQUIRED printlongclean FIXTURES_SETUP printlongprinted
+                     PASS_REGULAR_EXPRESSION "calculatesBounds: TRUE.*printlong: 3 page.s. printed.*printlong: done"
+                     FAIL_REGULAR_EXPRESSION "waited in vain|fell over")
+if(Python3_FOUND)
+    add_test(NAME host.NewtonPrintLong.check
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/imaging/pagecheck.py ${CMAKE_CURRENT_BINARY_DIR}/printlong
+                     --pages 3 --size 2550x3300 --lines 80
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonPrintLong.check PROPERTIES FIXTURES_REQUIRED printlongprinted
+                         PASS_REGULAR_EXPRESSION "pagecheck: passed")
+endif()
+
 # deferred recognition (views/Rerecognize.h): "ton" written, and the
 # same strokes read again through Recognize, RecognizeInkWord,
 # RecognizeTextInStyles and RecognizePara (needs the ROM image)

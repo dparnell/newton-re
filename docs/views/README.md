@@ -361,7 +361,20 @@ wholly outside what its parents show (the walk up stops at a print view
 or a remote view).  A paragraph that does not calculate its bounds makes
 its caches when they are first wanted (RealDraw, OffsetToCaret and the
 other callers of `CreateAllCaches`) - so `ReflowText`, which asks a piece
-it has just built where its lines stop, never cuts one (ROM behaviour).
+it has just built where its lines stop, never cuts one (ROM behaviour:
+SetupDone 0x17f830 tests viewFlags bit 8 before CheckStyles and
+CreateAllCaches; ReflowText builds the piece and asks OffsetPastVisible
+straight away, 0x1a582c).  A Notepad note's text *does* calculate its
+bounds (viewFlags 0x8000009), and that is the paragraph printing cuts:
+ReflowText gives the piece text flag 0x800 (0x1a57c0) and the page's
+remaining height, and `FillAllCaches` (0x16bcd0) keeps only the lines
+inside what shows - the view's own bounds with 0x800, and only lines that
+end within them; otherwise what the parents show, the walk up stopping at
+a print or remote view - so the piece's lines stop at the last whole line
+that fits the page and the rest goes on to the next (ctest
+host.NewtonPrintLong).  A line outside ends a paragraph that does not
+calculate its bounds; one that does lays out the rest without keeping
+them, its text bounds taking every line.
 Text flag 0x20 moves a paragraph on an edit view so its first baseline
 sits on the page's lines (`TEditView::AlignToLineSpacing`) and clears the
 flag in the view and its textFlags slot.  Last, `ProcessStyles` reads the
@@ -372,7 +385,7 @@ undo.  A final carriage return leaves an empty line behind
 it - the line the caret goes to when the return is typed, and the line
 that makes a view which sizes itself to its text grow by one.  NOT YET:
 editing, hilites, the caret, ink, tabs (drawn as characters), the text
-objects, the parents' bounds narrowing the lines.
+objects.
 
 **TGaugeView** (`GaugeView.h`, clGaugeView 92: protoGauge, protoSlider):
 a bar filled black from the left in proportion to `viewValue` between
