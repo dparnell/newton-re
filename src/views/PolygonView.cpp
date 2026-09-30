@@ -23,12 +23,15 @@
 #include "Frames.h"
 #include "ObjectHeap.h"
 #include "RSSymbols.h"
+#include "ROMConstants.h"	// Rdrawingname
+#include "DragDrop.h"
 #include "EditView.h"		// AlignToGrid
 #include "DrawShape.h"		// MakePolygonForm
 #include "Application.h"
 #include "RootView.h"
 #include "Interpreter.h"	// DoMessage
 #include "OSErrors.h"
+#include "Locale.h"		// GetPreference
 #include "NewtonExceptions.h"
 #include <stdint.h>
 
@@ -900,6 +903,121 @@ TPolygonView::DeleteHilited(RefArg hiliteRef)
 }
 
 
+// ROM 0x00191798 HandleScrub__12TPolygonViewFRC5TRectlP11TUnitPublicUc
+// A scrub over more than half the view removes it (kind 5, as for any
+// view - but at half, where TView wants three quarters, and a read-only
+// shape is not excepted); failing that, a scrub over a run of its sides
+// takes those out (kind 3).
+long
+TPolygonView::HandleScrub(const Rect& bounds, long kind, TUnitPublic* /*unit*/, Boolean reallyDoIt)
+{
+	if ((kind == 5 || kind == -1) && CoveredBy(&viewBounds, &bounds) > 50)
+		return 5;
+	if (kind != 3 && kind != -1)
+		return 0;
+	return ScrubSegment(bounds, reallyDoIt);
+}
+
+
+// ROM 0x0018cd38 ScrubSegment__12TPolygonViewFRC5TRectUc
+long
+TPolygonView::ScrubSegment(const Rect& bounds, Boolean reallyDoIt)
+{
+	long first, last;
+	if (!HitSegment(bounds, &first, &last))
+		return 0;
+	RefVar points(Points());
+	PolygonShape* shape = (PolygonShape*) BinaryData(points);
+	if (shape->IsCurvy())
+	{
+		// a curve's points are close together: the stretch must come to
+		// more than thirty pixels
+		Boolean longEnough = false;
+		long length = 0;
+		long i = first;
+		if (first != last)
+		{
+			do
+			{
+				length += CheapDistance(shape->fPoints[i], shape->fPoints[i + 1]);
+				if (length > 30)
+				{
+					longEnough = true;
+					break;
+				}
+				i++;
+				if (i == shape->fCount && i != last)
+					i = 0;
+			} while (i != last);
+		}
+		if (!longEnough)
+			return 0;
+	}
+	if (reallyDoIt)
+	{
+		// (the host takes the two points out of the binary: RemovePoints
+		// allocates, which may move it)
+		Point from = shape->fPoints[first];
+		Point to = shape->fPoints[last];
+		if (RemovePoints(&from, &to, first, last, 0, 0xffff))
+		{
+			RefVar cmd(MakeCommand(aeRemoveData, fParent, fId));
+			gApplication->DispatchCommand(cmd);
+		}
+	}
+	return 3;
+}
+
+
+// ROM 0x0018cec4 HitSegment__12TPolygonViewFRC5TRectPlT2
+// Each side's box is asked how much of it the scrub covers, and the
+// places where the answer crosses a half are noted: two of them are one
+// run of sides; on a closed shape a run that goes round the join shows as
+// four, the first at the start and the last at the end.
+Boolean
+TPolygonView::HitSegment(const Rect& bounds, long* first, long* last)
+{
+	if (!Overlaps(&viewBounds, &bounds))
+		return false;
+	RefVar points(Points());
+	PolygonShape* shape = (PolygonShape*) BinaryData(points);
+	Boolean inside = false;
+	long most = IsClosed(shape->fVerb) ? 3 : 2;
+	long ends[4];
+	long n = 0;
+	long result = -1;
+	if (shape->fCount > 1)
+	{
+		for (long i = 1; i < shape->fCount; i++)
+		{
+			Rect side;
+			side.top = side.bottom = (short) -0x8000;
+			UnionPt(&side, shape->fPoints[i - 1]);
+			UnionPt(&side, shape->fPoints[i]);
+			OffsetRect(&side, viewBounds.left, viewBounds.top);
+			if ((CoveredBy(&side, &bounds) > 50) != inside)
+			{
+				if (n >= most)
+					return false;
+				ends[n++] = i - 1;
+				inside = !inside;
+			}
+		}
+		if (inside)
+			ends[n++] = shape->fCount - 1;
+		if (n == 2)
+			result = ends[0];
+		else if (n == 4 && ends[0] == 0)
+			result = ends[2];		// round the join: from the second run's start to the first's end
+	}
+	*first = result;
+	if (result < 0)
+		return false;
+	*last = ends[1];
+	return true;
+}
+
+
 // ROM 0x0018b67c OuterBounds__12TPolygonViewFP5TRect
 // The shape's line is drawn with the pen's top left on each point, so it
 // reaches the pen's width beyond the points' box at the bottom and the
@@ -914,6 +1032,111 @@ TPolygonView::OuterBounds(Rect* bounds)
 	bounds->bottom = (short) (bounds->bottom + pen);
 	if (Hilited())
 		InsetRect(bounds, -4, -4);
+}
+
+
+// ROM 0x0018cc70 DrawScaledData__12TPolygonViewFRC5TRectT1P5TRect
+// The shape drawn (through whatever scaling is in force), and the box it
+// reaches at the new scale, grown by four for the selection.
+void
+TPolygonView::DrawScaledData(const Rect& src, const Rect& dst, Rect* bounds)
+{
+	RealDraw(*bounds);
+	Rect r = viewBounds;
+	TTransform transform;
+	transform.Setup(&src, &dst, false);
+	::Scale(&r, transform);
+	InsetRect(&r, -4, -4);
+	*bounds = r;
+}
+
+
+// ROM 0x0018d7a8 ScaleInk__FRC6RefVarlT2
+Ref
+ScaleInk(RefArg ink, Fixed sx, Fixed sy)
+{
+	TStroke** strokes = InkExpand(ink, 0, 0, 0);
+	if (strokes == nil)
+		Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
+	for (long i = 0; strokes[i] != nil; i++)
+	{
+		TStroke* stroke = strokes[i];
+		ULong count = (ULong) stroke->fCount;
+		for (ULong j = 0; j < count; j++)
+		{
+			SamplePt* pt = stroke->GetPoint(j);
+			SetSampleX(pt, FixedMultiply(SampleX(pt), sx));
+			SetSampleY(pt, FixedMultiply(SampleY(pt), sy));
+		}
+	}
+	RefVar scaled(TStrokesToInk(strokes, nil));
+	DisposeTStrokes(strokes);
+	return scaled;
+}
+
+
+// ROM 0x0018d8cc Scale__12TPolygonViewFRC5TRectT1
+// Ink: the view's bounds mapped (in the parent's contents' coordinates)
+// and the ink stretched by the ratio of the rectangles' sizes.  Anything
+// else: the points mapped relative to the view (the selection's copy
+// with them), the view fitted round them again, and an oval's box mapped
+// too.
+void
+TPolygonView::Scale(const Rect& src, const Rect& dst)
+{
+	RefVar points(Points());
+	PolygonShape* shape = (PolygonShape*) BinaryData(points);
+	if (shape->fVerb == kPolyInk)
+	{
+		Point origin = fParent->ContentsOrigin();
+		short dh = (short) -origin.h;
+		short dv = (short) -origin.v;
+		Rect to = dst;
+		Rect from = src;
+		OffsetRect(&to, dh, dv);
+		OffsetRect(&from, dh, dv);
+		TTransform transform;
+		transform.Setup(&from, &to, false);
+		Rect r = viewBounds;
+		OffsetRect(&r, dh, dv);
+		::Scale(&r, transform);
+		Fixed sx = FixedDivide((Fixed) ((ULong32) (dst.right - dst.left) << 16), (Fixed) ((ULong32) (src.right - src.left) << 16));
+		Fixed sy = FixedDivide((Fixed) ((ULong32) (dst.bottom - dst.top) << 16), (Fixed) ((ULong32) (src.bottom - src.top) << 16));
+		RefVar ink(GetProto(RSSYMink));
+		ink = ScaleInk(ink, sx, sy);
+		SetFrameSlot(RefVar(DataFrame()), RSSYMink, ink);
+		WriteBounds(r);
+		RefVar hiliteRef(FirstHilite());
+		if (NOTNIL(hiliteRef))
+		{
+			TPolygonHilite* hilite = (TPolygonHilite*) RefToAddress(hiliteRef);
+			CalcHiliteBounds(hilite->fShape, &hilite->fBounds);
+		}
+		return;
+	}
+	short dh = (short) -viewBounds.left;
+	short dv = (short) -viewBounds.top;
+	Rect to = dst;
+	Rect from = src;
+	OffsetRect(&to, dh, dv);
+	OffsetRect(&from, dh, dv);
+	Rect arcBounds;
+	if (shape->IsOval())
+	{
+		GetArcBounds(arcBounds);
+		TTransform transform;
+		transform.Setup(&src, &dst, false);
+		::Scale(&arcBounds, transform);
+	}
+	shape = (PolygonShape*) BinaryData(points);
+	shape->Scale(from, to);
+	RefVar hiliteRef(FirstHilite());
+	if (NOTNIL(hiliteRef))
+		((TPolygonHilite*) RefToAddress(hiliteRef))->fShape->Scale(from, to);
+	UpdateBounds(shape);
+	shape = (PolygonShape*) BinaryData(points);
+	if (shape->IsOval())
+		SetArcBounds(arcBounds);
 }
 
 
@@ -1119,6 +1342,91 @@ TPolygonView::RemovePoints(Point* from, Point* to, long first, long last, long s
 }
 
 
+// ROM 0x0018b8dc AddDragInfo__12TPolygonViewFP9TDragInfo
+// Unless the view's script adds its own, one item: 'polygon (or 'ink for
+// a view of ink), the view's context, labelled "drawing".
+Boolean
+TPolygonView::AddDragInfo(TDragInfo* dragInfo)
+{
+	if (TView::AddDragInfo(dragInfo))
+		return true;
+	RefVar type(ISNIL(GetProto(RSSYMink)) ? RSSYMpolygon : RSSYMink);
+	dragInfo->AddDragItem(type, RefVar(fContext), RefVar(Rdrawingname));
+	return true;
+}
+
+
+// ROM 0x0018b96c GetDropData__12TPolygonViewFRC6RefVarT1
+// Unless the view's script answers: a shape view's form of what is
+// selected - the whole shape with its own pen when nothing is, else the
+// selection's points and pen - its bounds the view's size at nought; a
+// partial selection's points brought to nought and the bounds made their
+// box.  Ink carries a copy of the ink; an oval or an arc its arcerBounds,
+// relative to the form.
+Ref
+TPolygonView::GetDropData(RefArg dragType, RefArg dragRef)
+{
+	RefVar form(TView::GetDropData(dragType, dragRef));
+	if (NOTNIL(form))
+		return form;
+	RefVar hiliteRef(FirstHilite());
+	TPolygonHilite* hilite = ISNIL(hiliteRef) ? nil : (TPolygonHilite*) RefToAddress(hiliteRef);
+	Rect bounds = viewBounds;
+	OffsetRect(&bounds, (short) -viewBounds.left, (short) -viewBounds.top);
+	if (hilite == nil)
+	{
+		RefVar points(Points());
+		PolygonShape* shape = (PolygonShape*) BinaryData(points);
+		form = MakePolygonForm(shape->fPoints, shape->fCount, shape->fVerb, bounds, GetPenSize());
+	}
+	else
+	{
+		PolygonShape* shape = hilite->fShape;
+		form = MakePolygonForm(shape->fPoints, shape->fCount, shape->fVerb, bounds, hilite->fPenSize);
+	}
+	RefVar points(GetFrameSlotRef(form, RSSYMpoints));
+	if (ISNIL(points))
+	{
+		RefVar ink(GetProto(RSSYMink));
+		if (NOTNIL(ink))
+			SetFrameSlot(form, RSSYMink, RefVar(DeepClone(ink)));
+	}
+	else
+	{
+		PolygonShape* shape = (PolygonShape*) BinaryData(points);
+		if (hilite != nil && !IsCompletelyHilited(hiliteRef))
+		{
+			shape->CalcBounds(&bounds);
+			shape->Offset(-bounds.left, -bounds.top);
+			SetFrameSlot(form, RSSYMviewbounds, RefVar(ToObject(bounds)));
+		}
+		shape = (PolygonShape*) BinaryData(points);
+		if (shape->IsOval())
+		{
+			Rect arcBounds;
+			GetArcBounds(arcBounds);
+			short dh = (short) (viewBounds.left + bounds.left);
+			short dv = (short) (viewBounds.top + bounds.top);
+			OffsetRect(&arcBounds, (short) -dh, (short) -dv);
+			SetFrameSlot(form, RSSYMarcerbounds, RefVar(ToObject(arcBounds)));
+		}
+	}
+	return form;
+}
+
+
+// ROM 0x0018bdc8 DropRemove__12TPolygonViewFRC6RefVar
+// Unless the view's script does it: what was dragged away (the
+// selection) deleted.
+Boolean
+TPolygonView::DropRemove(RefArg dragRef)
+{
+	if (!TView::DropRemove(dragRef))
+		DeleteHilited(RefVar(FirstHilite()));
+	return true;
+}
+
+
 // ROM 0x0018b700 AddHilited__12TPolygonViewFRC6RefVarP9TEditView
 // The selected points made a shape of their own on the page, where they
 // are, with the selection's verb and pen; an oval's or arc's box is kept
@@ -1244,12 +1552,36 @@ TPolygonView::SetPenSize(long pen)
 // kind has; its undo is the same command putting back what was taken
 // out (moved as far as the view's bounds moved).  RemovePoints cuts a
 // shape back with it.
-// NOT YET RECONSTRUCTED: 0x32 (the double tap's reading of ink); it goes
-// to TView's as before.
+// aeDoubleTap (0x32) on a shape of ink, on a page that takes text: the
+// ink read again - the caret taken away, remote writing turned off
+// meanwhile (so the words land where the ink is), the ink selected and
+// the screen brought up to date, and an aeRecognizeInk sent to the view
+// asking for the check mark and the default configuration.  Not taken
+// for a shape that is not ink.
 Boolean
 TPolygonView::RealDoCommand(RefArg cmd)
 {
 	long id = CommandID(cmd);
+	if (id == aeDoubleTap)
+	{
+		if (ISNIL(GetProto(RSSYMink)))
+			return false;
+		if (ViewAllowsText(fParent))
+		{
+			gRootView->SetKeyView(nil, 0, 0, false);
+			RefVar remote(GetPreference(RSSYMremotewriting));
+			SetPreference(RSSYMremotewriting, RefVar(NILREF));
+			Hilite(true);
+			gRootView->Update(nil);
+			RefVar reread(MakeCommand(aeRecognizeInk, this, fId));
+			SetFrameSlot(reread, RSSYMdohilite, RefVar(TRUEREF));
+			SetFrameSlot(reread, RSSYMrecconfig, RefVar(NILREF));
+			gApplication->DispatchCommand(reread);
+			SetPreference(RSSYMremotewriting, remote);
+		}
+		CommandSetResult(cmd, 1);
+		return true;
+	}
 	if (id == 0x44)
 	{
 		RefVar points(Points());

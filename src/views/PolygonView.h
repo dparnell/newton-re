@@ -35,12 +35,22 @@
 				own, what precedes kept through the undoable points
 				command 0x44).
 
-				NOT YET RECONSTRUCTED: scrubbing
-				(HandleScrub, ScrubSegment, HitSegment), scaling (Scale,
-				DrawScaledData), the drag and drop (AddDragInfo, GetDropData,
-				DropRemove), RealDoCommand's 0x32 (the double
-				tap's reading of ink), and the printing path of the ink
-				verb (InkMakePaths, FramePaths).
+				A scrub over most of the shape removes it; one over a run of
+				its sides takes those out (HandleScrub, ScrubSegment,
+				HitSegment, over RemovePoints).
+
+				A shape is dragged as a 'polygon item (an 'ink one for ink),
+				the dropped data a shape view's form of the selection
+				(AddDragInfo, GetDropData, DropRemove).
+
+				A resized selection maps the points (or the ink) from one
+				rectangle onto the other (Scale, ScaleInk, DrawScaledData).
+
+				A double tap on ink reads it again (RealDoCommand's
+				aeDoubleTap, 0x32).
+
+				NOT YET RECONSTRUCTED: the printing path of the ink verb
+				(InkMakePaths, FramePaths).
 
 	Reconstructed from the MP2x00 US ROM (0x0018b54c-0x00191900); each
 	function cites its origin.
@@ -120,6 +130,7 @@ public:
 	// the selection
 	virtual void	DrawHilitedData(void);								// ROM 0x0018c6ec DrawHilitedData__12TPolygonViewFv
 	virtual long	HandleHilite(TUnitPublic* unit, long kind, Boolean reallyDoIt);	// ROM 0x001912ec HandleHilite__12TPolygonViewFP11TUnitPubliclUc
+	virtual long	HandleScrub(const Rect& bounds, long kind, TUnitPublic* unit, Boolean reallyDoIt);	// ROM 0x00191798 HandleScrub__12TPolygonViewFRC5TRectlP11TUnitPublicUc
 	virtual void	DrawHilites(Boolean on);							// ROM 0x0018c7d4 DrawHilites__12TPolygonViewFUc
 	virtual Boolean	IsCompletelyHilited(RefArg hilite);					// ROM 0x0018b5c8 IsCompletelyHilited__12TPolygonViewFRC6RefVar
 	virtual void	HiliteAll(void);									// ROM 0x0019184c HiliteAll__12TPolygonViewFv
@@ -127,7 +138,16 @@ public:
 	virtual void	RemoveHilite(RefArg hilite);						// ROM 0x0018de1c RemoveHilite__12TPolygonViewFRC6RefVar
 	virtual void	GlobalHiliteResizeBounds(Rect* bounds);				// ROM 0x0018b54c GlobalHiliteResizeBounds__12TPolygonViewFP5TRect
 	virtual long	ClickOptions(void);									// ROM 0x0018b554 ClickOptions__12TPolygonViewFv - 1, 2 when the whole shape is selected, 4 for straight sides
-	virtual TView*	AddHilited(RefArg hilite, class TEditView* editor);	// ROM 0x0018b700 AddHilited__12TPolygonViewFRC6RefVarP9TEditView
+	virtual TView*	AddHilited(RefArg hilite, class TEditView* editor);
+	// drag and drop: a shape is dragged as a 'polygon (or an 'ink) item
+	// whose data is a shape view's form of what is selected
+	virtual Boolean	AddDragInfo(TDragInfo* dragInfo);					// ROM 0x0018b8dc AddDragInfo__12TPolygonViewFP9TDragInfo
+	virtual Ref		GetDropData(RefArg dragType, RefArg dragRef);		// ROM 0x0018b96c GetDropData__12TPolygonViewFRC6RefVarT1
+	virtual Boolean	DropRemove(RefArg dragRef);							// ROM 0x0018bdc8 DropRemove__12TPolygonViewFRC6RefVar
+	// the page's selection resized: the points (or the ink) mapped from
+	// one rectangle onto the other, and the box they reach drawn into
+	virtual void	Scale(const Rect& src, const Rect& dst);			// ROM 0x0018d8cc Scale__12TPolygonViewFRC5TRectT1
+	virtual void	DrawScaledData(const Rect& src, const Rect& dst, Rect* bounds);	// ROM 0x0018cc70 DrawScaledData__12TPolygonViewFRC5TRectT1P5TRect	// ROM 0x0018b700 AddHilited__12TPolygonViewFRC6RefVarP9TEditView
 
 	void			CalcHiliteBounds(PolygonShape* shape, Rect* bounds);	// ROM 0x0018bee0 CalcHiliteBounds__12TPolygonViewFP12PolygonShapeP5TRect
 	void			MakeHilite(long first, long startPart, long last, long endPart);	// ROM 0x001909a4 MakeHilite__12TPolygonViewFlN31
@@ -140,6 +160,14 @@ public:
 	// A command to the view carrying `count` points (its 'points slot, a
 	// 'polygonShape binary of the points alone).
 	Ref				MakePointsCommand(ULong id, long count);			// ROM 0x0018d0d4 MakePointsCommand__12TPolygonViewFUll
+	// A scrub over part of the shape: the stretch it covers (HitSegment)
+	// taken out, and the view removed when that was all of it.  ==> 3 when
+	// the scrub is taken (a curve's stretch must be over thirty pixels).
+	long			ScrubSegment(const Rect& bounds, Boolean reallyDoIt);	// ROM 0x0018cd38 ScrubSegment__12TPolygonViewFRC5TRectUc
+	// The run of segments a scrub's box covers more than half of: ==> false
+	// unless it is one run (on a closed shape, one that may go round the
+	// join), with its first and last points.
+	Boolean			HitSegment(const Rect& bounds, long* first, long* last);	// ROM 0x0018cec4 HitSegment__12TPolygonViewFRC5TRectPlT2
 	// Whether the hilite stroke was traced along the shape; with
 	// `reallyDoIt` the part traced is selected (PolygonTraced.cpp).
 	Boolean			HiliteTraced(TUnitPublic* unit, Boolean reallyDoIt);	// ROM 0x0018fa3c HiliteTraced__12TPolygonViewFP11TUnitPublicUc								// ROM 0x001910c4 SetPenSize__12TPolygonViewFl
@@ -174,6 +202,9 @@ void	PtToAngle(const Rect* box, Point pt, long* angle);	// ROM 0x002aa5b8 PtToAn
 // it the pen is, 16.16 (0 at `a`, 0x10000 at `b`), or 0x80000000 for not
 // near it.
 Fixed	LineHitRatio(const Point& pt, const Point& a, const Point& b, long slop);	// ROM 0x00198f74 LineHitRatio__6TPointCFRC6TPointT1l
+// Ink stretched by the two 16.16 factors: each stroke's samples scaled
+// about nought.
+Ref		ScaleInk(RefArg ink, Fixed sx, Fixed sy);			// ROM 0x0018d7a8 ScaleInk__FRC6RefVarlT2
 // Whether a shape of the verb closes on itself (PolygonTraced.cpp).
 Boolean	IsClosed(long verb);								// ROM 0x0018e644 IsClosed__Fl
 // A shape's verb made to agree with its points: none is nothing (15),

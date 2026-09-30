@@ -6510,6 +6510,121 @@ TestDistort()
 }
 
 
+// A shape edited other than by its corners: a scrub over one side of a box
+// takes that side out (HitSegment finds the run of sides the scrub's box
+// covers more than half of; the closed box becomes one open shape of the
+// other three), a resized selection maps the points (Scale), the dragged
+// data is a shape view's form of the selection (GetDropData), and a double
+// tap on a shape of ink reads it again (aeDoubleTap) where one on points
+// is not taken.
+static void
+TestPolygonEditing()
+{
+	Eval("vars.displayParams := {appAreaGlobalLeft: 0, appAreaGlobalTop: 0, appAreaWidth: 160, appAreaHeight: 100}");
+	screenWidth = kWidth;
+	screenHeight = kHeight;
+	TView* page = ViewOf("ctxPE := AddView(GetRoot(), {viewClass: 77, viewFlags: 1 + 0x200 + 0x800, "
+		"viewBounds: {left: 0, top: 0, right: 160, bottom: 100}})");
+	EXPECT(page != nil);
+	if (page == nil)
+		return;
+	Point box[5];
+	box[0] = MakePoint(0, 0);
+	box[1] = MakePoint(30, 0);
+	box[2] = MakePoint(30, 20);
+	box[3] = MakePoint(0, 20);
+	box[4] = MakePoint(0, 0);
+	Rect where;
+	SetRect(&where, 40, 20, 71, 41);
+	RefVar form(MakePolygonForm(box, 5, 4, where, 1));
+	SetFrameSlot(form, RSSYMviewclass, RefVar(MAKEINT(clPolygonView)));
+	SetFrameSlot(form, RSSYMviewflags, RefVar(MAKEINT(1 + 0x200 + 0x800 + 8)));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "editForm")), form);
+	TPolygonView* poly = (TPolygonView*) ViewOf("ctxPB := AddView(ctxPE, editForm)");
+	EXPECT(poly != nil && poly->ClassID() == clPolygonView);
+	if (poly == nil)
+		return;
+	Eval("GetRoot():Dirty()");
+	Refresh();
+	EXPECT(Pixel(70, 30) != 0 && Pixel(55, 20) != 0);		// (black)
+
+	// the scrub's box over the right side only
+	Rect scrub;
+	SetRect(&scrub, 60, 15, 80, 45);
+	long first = -1, last = -1;
+	EXPECT(poly->HitSegment(scrub, &first, &last) && first == 1 && last == 2);
+	Rect everything;
+	SetRect(&everything, 30, 10, 90, 50);
+	EXPECT(poly->HandleScrub(everything, 5, nil, false) == 5);		// most of it: the view
+	EXPECT(poly->HandleScrub(scrub, 5, nil, false) == 0);
+	EXPECT(poly->HandleScrub(scrub, 3, nil, true) == 3);
+	EXPECT(page->fChildren->Count() == 1);
+	TView* child = page->fChildren->Count() > 0 ? (TView*) page->fChildren->At(0) : nil;
+	EXPECT(child != nil && child != poly && child->ClassID() == clPolygonView);
+	if (child == nil || child->ClassID() != clPolygonView)
+		return;
+	TPolygonView* rest = (TPolygonView*) child;
+	RefVar points(rest->Points());
+	PolygonShape* shape = (PolygonShape*) BinaryData(points);
+	EXPECT(shape->fCount == 4 && shape->fVerb == 5);
+	EXPECT(shape->fPoints[0].h == 30 && shape->fPoints[0].v == 20);
+	EXPECT(shape->fPoints[1].h == 0 && shape->fPoints[1].v == 20);
+	EXPECT(shape->fPoints[2].h == 0 && shape->fPoints[2].v == 0);
+	EXPECT(shape->fPoints[3].h == 30 && shape->fPoints[3].v == 0);
+	Eval("GetRoot():Dirty()");
+	Refresh();
+	EXPECT(Pixel(70, 30) == 0);				// the right side gone
+	EXPECT(Pixel(55, 20) != 0 && Pixel(40, 30) != 0 && Pixel(55, 40) != 0);
+
+	// resized to twice the size from its top left
+	Rect from = rest->viewBounds, to = rest->viewBounds;
+	to.right = (short) (to.left + (from.right - from.left) * 2);
+	to.bottom = (short) (to.top + (from.bottom - from.top) * 2);
+	rest->Scale(from, to);
+	points = rest->Points();
+	shape = (PolygonShape*) BinaryData(points);
+	EXPECT(shape->fPoints[0].h == 60 && shape->fPoints[0].v == 40);
+	EXPECT(shape->fPoints[3].h == 60 && shape->fPoints[3].v == 0);
+	EXPECT(rest->viewBounds.left == 40 && rest->viewBounds.top == 20 && rest->viewBounds.right == 100 && rest->viewBounds.bottom == 60);
+
+	// the dragged data: the whole shape at nought; half of the bottom side
+	// brought to nought with its box as the bounds
+	RefVar data(rest->GetDropData(RefVar(RSSYMpolygon), RefVar(NILREF)));
+	Rect bounds;
+	EXPECT(FromObject(RefVar(GetFrameSlot(data, RSSYMviewbounds)), bounds) && bounds.left == 0 && bounds.top == 0 && bounds.right == 60);
+	rest->MakeHilite(0, 0x8000, 1, 0x10000);
+	data = rest->GetDropData(RefVar(RSSYMpolygon), RefVar(NILREF));
+	PolygonShape* dragged = (PolygonShape*) BinaryData(RefVar(GetFrameSlot(data, RSSYMpoints)));
+	EXPECT(dragged->fCount == 2 && dragged->fPoints[0].h == 30 && dragged->fPoints[0].v == 0 && dragged->fPoints[1].h == 0);
+	EXPECT(FromObject(RefVar(GetFrameSlot(data, RSSYMviewbounds)), bounds) && bounds.left == 0 && bounds.top == 40 && bounds.right == 30);
+	rest->RemoveAllHilites();
+
+	// a double tap: not taken by points
+	RefVar tap(MakeCommand(aeDoubleTap, rest, 0));
+	EXPECT(!rest->RealDoCommand(tap));
+	// ... and taken by ink, which is read again (the remote-writing
+	// preference put back afterwards)
+	RefVar points2(Eval("[60, 110, 70, 120, 80, 130]"));
+	RefVar arrays(AllocateArray(RSSYMarray, 1));
+	SetArraySlot(arrays, 0, points2);
+	RefVar bundle(MakeStrokeBundle(arrays, 1));
+	long before = page->fChildren->Count();
+	EXPECT(HandleInk((TEditView*) page, bundle) == 1);
+	EXPECT(page->fChildren->Count() == before + 1);
+	TView* inky = page->fChildren->Count() > before ? (TView*) page->fChildren->At(before) : nil;
+	EXPECT(inky != nil && inky->ClassID() == clPolygonView && NOTNIL(inky->GetProto(RSSYMink)));
+	if (inky != nil && inky->ClassID() == clPolygonView)
+	{
+		RefVar remote(GetPreference(RSSYMremotewriting));
+		tap = MakeCommand(aeDoubleTap, inky, 0);
+		EXPECT(inky->RealDoCommand(tap) && CommandResult(tap) == 1);
+		EXPECT(EQRef(RefVar(GetPreference(RSSYMremotewriting)), remote));
+	}
+	Eval("RemoveView(GetRoot(), ctxPE)");
+	Refresh();
+}
+
+
 // A view put on the root while a modal dialog is up waits to be shown
 // until the dialog goes (ModalSafeShow), unless it is marked safe to show
 // over one; a view inside another is shown at once.
@@ -7227,6 +7342,7 @@ main()
 		TestParagraphDrop();
 		TestSelectionClicks();
 		TestDistort();
+		TestPolygonEditing();
 		TestModalSafeShow();
 		TestEditCommands();
 		TestPolygons();
