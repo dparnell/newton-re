@@ -6,6 +6,7 @@
 
 #include "HostViews.h"
 #include <time.h>
+#include "LongTime.h"
 #include "HostStores.h"
 #include "Soups.h"
 #include "HostNatives.h"
@@ -351,22 +352,6 @@ HostConfigureNewtWorld(const char* romImage, long heapSize, long width, long hei
 // The newt world's host boot (newt/NewtWorld.h gNewtHostBoot: what the
 // world's MainConstructor runs in place of the ROM's InitObjects, InitGraf
 // and InitFonts): the ROM image read in and the object system started,
-// The host's local time, in seconds from 1970 as time() counts UTC: the
-// offset of the time zone (and of summer time, when it is in force) added.
-static time_t
-HostLocalTime(void)
-{
-	time_t now = time(nil);
-	struct tm utc = *gmtime(&now);
-	utc.tm_isdst = 0;
-	time_t offset = now - mktime(&utc);
-	struct tm local = *localtime(&now);
-	if (local.tm_isdst > 0)
-		offset += 60 * 60;
-	return now + offset;
-}
-
-
 // the display and the toolbox, a minute on the clock.
 void
 HostBootNewtWorld(void)
@@ -385,7 +370,24 @@ HostBootNewtWorld(void)
 	// 1 January 1904 until something set it, so every note was stamped
 	// with that and the status bar said so.  The host's clock is the
 	// nearest thing to a battery-backed one, in seconds from 1904 as the
-	// Newton counts them - local time, as the Newton's clock keeps it (the
-	// time zone is only a label the Newton puts on it).
-	SetRealClockSeconds((ULong) ((unsigned long long) HostLocalTime() + kSecondsFrom1904To1970));
+	// Newton counts them - GMT, as the Newton's clock chip keeps it: the
+	// time a script sees is that plus the home city's offset
+	// (RealClockSeconds), so the Newton shows the time in the city Setup
+	// or Time Zones names, as the device does.
+	//
+	// DEVIATION: brought back by whole 28-year cycles into the years the
+	// ROM can keep.  A script's TimeInSeconds counts from 1993 in a
+	// NewtonScript integer, which runs out on 5 January 2010 (the Newton's
+	// year-2010 problem); past it the seconds come out negative, every
+	// alarm is set in the past and fires again the moment it is set, and
+	// every note is dated 1992.  The calendar repeats itself every 28 years
+	// (1901-2099), so the date shown has the right day of the week and the
+	// time is right - 2026 shows as 1998.
+	unsigned long long now = (unsigned long long) time(nil) + kSecondsFrom1904To1970;
+	const unsigned long long kLastROMSecond = 0xa7693a00ULL + 0x1fffffff - 86400;	// 1993 + the largest NewtonScript integer, less a day for the time zone
+	const unsigned long long kTwentyEightYears = (28 * 365 + 7) * 86400ULL;
+	while (now >= kLastROMSecond)
+		now -= kTwentyEightYears;
+	TTime gmt((ULong) now, kSeconds);
+	TURealTimeAlarm::SetTime(gmt);
 }

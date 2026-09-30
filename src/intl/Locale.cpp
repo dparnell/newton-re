@@ -378,9 +378,26 @@ FSetLocale(RefArg /*rcvr*/, RefArg locale)
 }
 
 
+// the zone the real-time clock's GMT is turned into the time with
+// (os600/user/UserTime.cpp's gRealClockZoneOffset).  DEVIATION: nought
+// until there is a location preference - the ROM's GMTOffset would throw,
+// and the host reads the clock earlier in the boot than the ROM does.
+extern long (*gRealClockZoneOffset)(void);
+
+static long
+RealClockZoneOffset(void)
+{
+	RefVar location(GetPreference(RSSYMlocation));
+	if (!IsFrame(location))
+		return 0;
+	return GMTOffset() + DaylightSavingsOffset();
+}
+
+
 void
 RegisterLocaleNatives(void)
 {
+	gRealClockZoneOffset = RealClockZoneOffset;
 	RegisterNativeFunction("FGetLocale__FRC6RefVar", (void*) FGetLocale, 0);
 	RegisterNativeFunction("FSetLocale__FRC6RefVarT1", (void*) FSetLocale, 1);
 }

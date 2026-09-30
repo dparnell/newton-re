@@ -11,6 +11,7 @@
 */
 
 #include "NewtonTime.h"
+#include "LongTime.h"
 #include "UserGlobals.h"
 #include "KernelGlobals.h"
 #include "CompMath.h"
@@ -108,7 +109,10 @@ TTime::ConvertTo(TimeUnits units)
 {
 	long remainder;
 	long half = CompDiv(&time, (long) units << 1, &remainder);
-	ULong result = (ULong) half * 2;
+	// the ARM's word: a time too long for 32 bits of the units wraps, as
+	// the ROM's does (a real-time-clock second past 2^32 - an alarm set in
+	// seconds from 1993 with the epoch added - would otherwise never come)
+	ULong32 result = (ULong32) half * 2;
 	if (remainder >= (long) units)
 		result++;
 	return result;
@@ -126,30 +130,59 @@ TTimeToMilliseconds(TTime t)
 
 
 /* -------------------------------------------------------------------------------
-	The real-time clock (seconds and minutes since 1 Jan 1904).
-	NOT YET RECONSTRUCTED: TURealTimeAlarm (the RTC hardware) and the
-	GMT/daylight-saving offsets - the host keeps a settable base and adds
-	the global clock's seconds to it.
+	The real-time clock (seconds and minutes since 1 Jan 1904).  The
+	machine's clock chip keeps GMT; the time a script sees is that plus the
+	home city's offset and daylight saving - so the one clock the alarms
+	are set on (TURealTimeAlarm, which FSetSysAlarm takes the zone off
+	for) is the one the date is read from.
 ------------------------------------------------------------------------------- */
 
-static ULong	gRealClockBase = 0;				// seconds at boot (SetRealClockSeconds)
+// DEVIATION: the ROM calls GMTOffset() and DaylightSavingsOffset() here;
+// they read the location preference and live in intl, above this library,
+// which sets this (RegisterLocaleNatives).  Unset, the offset is nought.
+long			(*gRealClockZoneOffset)(void) = nil;
+
+static long
+ZoneOffset(void)
+{
+	return gRealClockZoneOffset != nil ? gRealClockZoneOffset() : 0;
+}
+
+// DEVIATION: a host program that runs user-side code without booting the
+// OS (newtonscript, the tests) has no real-time clock to ask, so it keeps
+// a settable base on the global clock instead, as local time.
+static ULong	gRealClockBase = 0;
 
 
 // ROM 0x00255578 RealClockSeconds__Fv
+// The clock chip's seconds (GMT) and the zone's.
 ULong
 RealClockSeconds(void)
 {
-	TTime now = GetGlobalTime();
-	return gRealClockBase + now.ConvertTo(kSeconds);
+	if (gUObjectMgrMonitor == nil)
+	{
+		TTime now = GetGlobalTime();
+		return gRealClockBase + now.ConvertTo(kSeconds);
+	}
+	TTime time = TURealTimeAlarm::Time();
+	return time.ConvertTo(kSeconds) + ZoneOffset();
 }
 
 
 // ROM 0x002555b8 SetRealClockSeconds__FUl
+// The clock chip set to the seconds less the zone's (GMT) - which moves
+// every relative alarm along with it (TRealTimeClock::SetRealTimeClock).
 void
 SetRealClockSeconds(ULong seconds)
 {
-	TTime now = GetGlobalTime();
-	gRealClockBase = seconds - now.ConvertTo(kSeconds);
+	if (gUObjectMgrMonitor == nil)
+	{
+		TTime now = GetGlobalTime();
+		gRealClockBase = seconds - now.ConvertTo(kSeconds);
+		return;
+	}
+	TTime time(seconds - ZoneOffset(), kSeconds);
+	TURealTimeAlarm::SetTime(time);
 }
 
 
