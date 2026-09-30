@@ -2512,3 +2512,10 @@ commands, ink words, the correction info, the caret's line moves), the
 key help (above), the keyboard tool and the on-screen keyboards, the sounds, the popup and
 modal dialog machinery, the other subclasses, the strokes and words of the recogniser (its controller and
 domains: `docs/recognition/README.md`).
+
+`TView::SetupVisRgn` narrows the port's visRgn ancestor by ancestor
+(their vClipping bounds, less the front mask) up to the first one with a
+clipper; there it takes the clipper's visible region, which already
+leaves out what is in front, and stops (ROM 0x00267974).  A print view's
+clipper is wide open, so what floats over it on the screen never reaches
+the printed page.

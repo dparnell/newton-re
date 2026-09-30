@@ -185,9 +185,13 @@ is the same value spelt so that it cannot be read two ways.
   sends the ROM's cover page and the note (1728 x 2148, fine
   resolution) each answered MCF, and hangs up; the cover page has its
   header, "Page 1 of 2", "From", the Newton logo; page 2 reads "hello
-  from the Newton's fax".  One imaging bug left: part of the cover
-  page's big title and the rule under it are missing, erased by
-  something outside the scaling bottlenecks.
+  from the Newton's fax".
+- The cover page's title and rule were cut where the "Sending" slip lay
+  on the screen: the host's `TView::SetupVisRgn` went on past the first
+  ancestor with a clipper and subtracted that ancestor's front mask,
+  where the ROM (0x00267974) takes the clipper's visible region and
+  stops - a print view's clipper is wide open, so what floats over it
+  on the screen never reaches the page (82db9ab6).
 
 ## 2026-09-30: the caret's "nowhere"
 
