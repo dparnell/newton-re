@@ -519,7 +519,12 @@ TView::NarrowVisByIntersectingObscuringSiblingsAndUncles(TView* upTo, Rect* boun
 // The port's visRgn narrowed to what the view may draw on: for each
 // ancestor from the view up to the root view, the clipper's visible
 // region, the bounds of a vClipping view, and less the front mask.  ==>
-// the visRgn as it was, for the caller to put back.
+// the visRgn as it was, for the caller to put back.  The walk stops at the
+// first ancestor with a clipper: its visible region already leaves out
+// what is in front of it (a floating status slip over a print view, say),
+// so neither its bounds nor its front mask are taken again - a print view,
+// whose clipper is wide open, draws its page whatever floats over it on
+// the screen.
 TRegion
 TView::SetupVisRgn(void) const
 {
@@ -532,7 +537,10 @@ TView::SetupVisRgn(void) const
 	{
 		TClipper* clipper = view->Clipper();
 		if (clipper != nil)
+		{
 			SectRgn(vis, clipper->fVisRgn, vis);
+			break;
+		}
 		if (view->fFlags & vClipping)
 		{
 			TRectangularRegion bounds(view->viewBounds);
