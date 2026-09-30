@@ -39,8 +39,8 @@
 				HandleBulkStrokes - which, as in the ROM, drops them (see
 				there), so a script's strokes that are not words come back
 				as nothing.  The paragraph's ProcessStyles calls
-				RecognizePara; NOT YET RECONSTRUCTED: FixupDropData
-				(0x00249068), the other caller.
+				RecognizePara, and the text engine's FixupDropData
+				(text/TXView.cpp) RecognizeTextInStyles.
 
 	Reconstructed from the MP2x00 US ROM (0x00035bf8-0x00036960,
 	0x0017ddcc-0x0017e340, 0x001714c8, 0x0019ff5c-0x001a0028,

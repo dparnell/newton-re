@@ -8,6 +8,7 @@
 */
 
 #include "RootView.h"
+#include "NewtonGestalt.h"
 #include "Inker.h"			// BusyBoxSend
 #include "SoundSettings.h"	// FClicker
 #include <stdio.h>
@@ -73,9 +74,10 @@ TRootView::DerivedFrom(long id) const
 // the shared empty view list, the selection stack and keyboard arrays,
 // the context (a clone of Rrootcontext protoed to the template) built as
 // a view whose parent is itself, and the whole screen dirtied, with the
-// recognition's InitCorrection.  NOT YET RECONSTRUCTED: the keyboard
-// gestalt (extended selector 0x0200000b, whose answer - a keyboard there
-// already - sets gKeyboardConnected).
+// recognition's InitCorrection.  A keyboard already there is asked of the
+// extended gestalt 0x0200000b (a byte, set: gKeyboardConnected) - nothing
+// in the MP2x00 US ROM registers that selector, so on this machine the
+// question fails and the keyboard is found when its first key comes.
 void
 TRootView::Constructor(RefArg templ)
 {
@@ -112,6 +114,12 @@ TRootView::Constructor(RefArg templ)
 		TView::gEmptyViewList = TViewList::Make();
 	fSelectionStack = AllocateArray(RSSYMarray, 0);
 	fKeyboards = AllocateArray(RSSYMarray, 0);
+	{
+		TUGestalt gestalt;
+		UByte keyboard[4] = { 0, 0, 0, 0 };
+		if (gestalt.Gestalt(kGestalt_Extended_Base + 10, keyboard, 4) == noErr && keyboard[0] != 0)
+			gKeyboardConnected = true;
+	}
 	RefVar context(Clone(RefVar(Rrootcontext)));
 	SetFrameSlot(context, RSSYM_proto, templ);
 	TView::Constructor(context, this);

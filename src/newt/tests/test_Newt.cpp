@@ -16,6 +16,7 @@
 #include "HostTablet.h"
 #include "RootView.h"
 #include "Keyboard.h"
+#include "NewtonGestalt.h"
 #include "Commands.h"
 #include "Recognizer.h"
 #include "StrokeCentral.h"
@@ -281,9 +282,19 @@ static Boolean gForkOk = false;
 // the host boot: the display and the toolbox, the test's quit handler; the
 // test's frame goes into the root view (a root variable, as the
 // applications are) once the notebook has made it
+// a machine with its keyboard built in says so through the extended
+// gestalt 0x0200000b, which the root view asks when it is made
+static Boolean	gKeyboardFromGestalt = false;
+static UByte	gKeyboardGestalt[4] = { 1, 0, 0, 0 };
+
 static void
 TestBoot(void)
 {
+	{
+		TUGestalt gestalt;
+		gestalt.RegisterGestalt(kGestalt_Extended_Base + 10, gKeyboardGestalt, 4);
+		gKeyboardConnected = false;
+	}
 	HostBootNewtWorld();
 	gWorldTaskId = gCurrentTaskId;
 	gAliveAfterBoot = gNewtIsAliveAndWell;
@@ -501,10 +512,12 @@ int main()
 {
 	HostConfigureNewtWorld(NEWTON_OBJECTS, 0x400000, 320, 480, 4);
 	gNewtHostBoot = TestBoot;
+	gNewtHostPreMain = []() { gKeyboardFromGestalt = gKeyboardConnected; };	// (the root view made by then)
 	NewtInstallUserMain();
 	gHostKernelServicesTask = Scenario;
 	OsBoot();
 	EXPECT(gWorldTaskId != 0 && !gAliveAfterBoot);		// the world booted in the 'main' task, before PreMain
+	EXPECT(gKeyboardFromGestalt);						// (TRootView::Constructor asked the keyboard gestalt)
 	EXPECT(gNewtIsAliveAndWell && gApplication != nil && gApplication->ClassID() == clARMNotebook && gRootView != nil);
 	EXPECT(gNewtPort != nil && gRecognition.fLevel == 2 && gRecognition.fRecognizers != nil);
 	EXPECT(gScriptErr == 0);
