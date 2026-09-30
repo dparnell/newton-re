@@ -912,6 +912,27 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/../romsrc/rex/inetenbl.pkg)
         set_tests_properties(host.NewtonNetHopperJPEG PROPERTIES TIMEOUT 300
                              PASS_REGULAR_EXPRESSION "nethopper-jpeg: loaded Host JPEG Page.*the alert names the error -48200: ok.*the picture left as its placeholder: ok.*nethopper-jpeg: done, 0 failed"
                              FAIL_REGULAR_EXPRESSION "waited in vain|is not answered|stopped \\(|FAILED")
+        # the same page with NewtsCape 2.0 and its JPEG converter installed:
+        # the converter's libjpeg (native ARM with floating point, on
+        # src/armcpu) decodes the JPEG into a 'pixels bitmap, NewtsCape makes
+        # it an icon and the page shows it - the frame and the bar checked
+        # on the screen (nethopper-newtscape.pgm)
+        set(NEWTSCAPE_DIR ${CMAKE_SOURCE_DIR}/../fixtures/packages/apps/NewtScape)
+        if(EXISTS ${NEWTSCAPE_DIR}/jpeg10e2.pkg)
+            add_test(NAME host.NewtonNetHopperNewtsCape
+                     COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/host/httpserve.py
+                             --dir ${CMAKE_CURRENT_SOURCE_DIR}/demo/www --port 0 --
+                             $<TARGET_FILE:newton> --display 320x480 --erase
+                             --store ${CMAKE_CURRENT_BINARY_DIR}/nethopper-newtscape.store --headless 240
+                             --package ${NETHOPPER_DIR}/nethopper.pkg
+                             --package ${NETHOPPER_DIR}/NetHopperJPEG.pkg
+                             --package ${NEWTSCAPE_DIR}/nwcp20r2.pkg --package ${NEWTSCAPE_DIR}/jpeg10e2.pkg
+                             --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/nethopper-jpeg.ns
+                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+            set_tests_properties(host.NewtonNetHopperNewtsCape PROPERTIES TIMEOUT 300
+                                 PASS_REGULAR_EXPRESSION "nethopper-jpeg: loaded Host JPEG Page.*nethopper-jpeg: the icon 56x28, 4 bits deep.*the frame's top edge: ok.*the bar: ok.*white below the bar: ok.*nethopper-jpeg: done, 0 failed"
+                                 FAIL_REGULAR_EXPRESSION "waited in vain|is not answered|stopped \\(|FAILED")
+        endif()
     endif()
 endif()
 

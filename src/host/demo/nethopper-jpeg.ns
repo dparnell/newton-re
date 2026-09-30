@@ -1,7 +1,6 @@
 // NetHopper 3.2 with its JPEG viewer (fixtures/packages/apps/NetHopper3.2/
 // NetHopperJPEG.pkg) showing a page whose picture is a JPEG, served on the
-// host (src/host/demo/www/nethopper-jpeg.html and box.jpg) - and what the
-// user sees, since the viewer cannot decode it.
+// host (src/host/demo/www/nethopper-jpeg.html and box.jpg).
 //
 // NetHopperJPEG has no decoder of its own.  Its devInstallScript registers
 // 'JPEGViewer:DPR with NetHopper's MIME registry (NH3RegMgr:ALLPEN's
@@ -9,15 +8,24 @@
 // its JPEGToBMP, which asks NewtsCape's converter to do the work -
 // GetGlobalVar('NewtsCape:NewtsCape).|JPEGConvert:NewtsCape|:AddFile for a
 // JFIF, GetRoot().|NewtsCape:NewtsCape|:ConvertImage otherwise - and
-// answers nil when NewtsCape is not installed.  The viewer does not check:
-// mHandleImage stores the nil as the image and mScaleImage then asks
+// answers nil when NewtsCape is not installed.
+//
+// Without NewtsCape (ctest host.NewtonNetHopperJPEG) the viewer does not
+// check: mHandleImage stores the nil as the image and mScaleImage then asks
 // HasSlot(nil, 'bounds), which throws evt.ex.fr;type.ref.frame (-48200,
 // an object pointer of a non-pointer), and the user sees the system's
 // "Sorry, a problem has occurred. (-48200)" alert, the page's picture
 // left as its placeholder and ALT text.  That is what a MessagePad
-// without NewtsCape would do.  Run by ctest host.NewtonNetHopperJPEG:
+// without NewtsCape would do.
 //
-//   python tools/host/httpserve.py --dir src/host/demo/www --port 0 -- //       build/host/host/newton --display 320x480 --erase --store tmp/nhj.store //       --headless 240 //       --package fixtures/packages/apple/NIE2/ENETSUP/newtdev.pkg //       --package fixtures/packages/apple/NIE2/REGPKGS/inetenbl.pkg //       --package fixtures/packages/apple/NIE2/REGPKGS/inetstup.pkg //       --package fixtures/packages/apps/NetHopper3.2/nethopper.pkg //       --package fixtures/packages/apps/NetHopper3.2/NetHopperJPEG.pkg //       --script src/host/demo/nethopper-jpeg.ns
+// With NewtsCape 2.0 (nwcp20r2.pkg) and its JPEG converter (jpeg10e2.pkg)
+// installed (ctest host.NewtonNetHopperNewtsCape) the converter's own
+// libjpeg - 63 KB of native ARM code with floating point, run by
+// src/armcpu - decodes the JPEG into a 'pixels bitmap (MakeBitmap on the
+// default store), NewtsCape turns it into a 4-bit icon scaled to 7/8, and
+// the page shows it: the frame and the bar are checked on the screen.
+//
+//   python tools/host/httpserve.py --dir src/host/demo/www --port 0 -- //       build/host/host/newton --display 320x480 --erase --store tmp/nhj.store //       --headless 240 //       --package fixtures/packages/apps/NetHopper3.2/nethopper.pkg //       --package fixtures/packages/apps/NetHopper3.2/NetHopperJPEG.pkg //       [--package fixtures/packages/apps/NewtScape/nwcp20r2.pkg //        --package fixtures/packages/apps/NewtScape/jpeg10e2.pkg] //       --script src/host/demo/nethopper-jpeg.ns
 //
 // (www/box.jpg is box.gif's picture as a 64x32 greyscale baseline JFIF,
 // made with PIL: Image.new('L', (64, 32), 255), rectangle [0,0,63,31]
@@ -136,6 +144,57 @@ nhDone := func() begin
 	HostQuit();
 end;
 
+// no NewtsCape: the viewer fetches the JPEG as the page comes in, fails
+// and the system's alert appears
+nhAlert := func()
+	call waitFor with ("nethopper-jpeg: the alert", func() call nhTextWith with ("Sorry, a problem has occurred."), func() begin
+		ScreenSnapshot("nethopper-jpeg.pgm");
+		local alert := call nhTextWith with ("Sorry, a problem has occurred.");
+		Print("nethopper-jpeg: the user sees: " & alert);
+		call nhCheck with ("the alert names the error -48200", StrPos(alert, "(-48200)", 0), "it says " & alert);
+		call nhCheck with ("the picture left as its placeholder", call nhTextWith with ("a box"), "no ALT text");
+		call nhDone with ();
+	end, 60);
+
+// NewtsCape's converter: the picture's view given the decoded icon, and
+// the box drawn - a 56x28 frame (64x32 at 7/8) with a 42x14 bar in it
+nhDecoded := func()
+	call waitFor with ("nethopper-jpeg: the picture decoded", func() begin
+			local v := call nhImageView with ();
+			v and IsFrame(v.icon) and v.icon.colordata;
+		end, func() AddDelayedCall(func() begin
+			ScreenSnapshot("nethopper-newtscape.pgm");
+			local icon := (call nhImageView with ()).icon;
+			Print("nethopper-jpeg: the icon " & (icon.bounds.right - icon.bounds.left) & "x"
+				& (icon.bounds.bottom - icon.bounds.top) & ", " & icon.colordata.bitdepth & " bits deep");
+			call nhCheck with ("no alert", not call nhTextWith with ("Sorry, a problem has occurred."), "an alert is up");
+			// the frame's top left corner: the first black pixel near the view
+			// (ScreenPixel answers only for points on the screen)
+			local b := (call nhImageView with ()):GlobalBox();
+			local x0 := nil, y0 := nil;
+			for y := Max(b.top - 2, 0) to b.top + 10 do
+				if not x0 then for x := Max(b.left - 2, 0) to b.left + 10 do
+					if not x0 and ScreenPixel(x, y) < 128 then begin x0 := x; y0 := y; end;
+			call nhCheck with ("the picture drawn", x0, "nothing black near " & b.left & "," & b.top);
+			if x0 then begin
+				Print("nethopper-jpeg: the picture at " & x0 & "," & y0 & ", "
+					& call nhBlackIn with (x0, y0, x0 + 56, y0 + 28) & " black");
+				local top := call nhBlackIn with (x0, y0, x0 + 56, y0 + 1);
+				call nhCheck with ("the frame's top edge", top = 56, top & " black");
+				local side := call nhBlackIn with (x0, y0, x0 + 1, y0 + 27);
+				call nhCheck with ("the frame's left edge", side = 27, side & " black");
+				side := call nhBlackIn with (x0 + 55, y0, x0 + 56, y0 + 27);
+				call nhCheck with ("the frame's right edge", side = 27, side & " black");
+				local gap := call nhBlackIn with (x0 + 1, y0 + 1, x0 + 55, y0 + 7);
+				call nhCheck with ("white inside the frame", gap = 0, gap & " black");
+				local bar := call nhBlackIn with (x0 + 7, y0 + 7, x0 + 49, y0 + 21);
+				call nhCheck with ("the bar", bar = 42 * 14, bar & " black");
+				gap := call nhBlackIn with (x0 + 1, y0 + 21, x0 + 55, y0 + 27);
+				call nhCheck with ("white below the bar", gap = 0, gap & " black");
+			end;
+			call nhDone with ();
+		end, nil, 1000), 120);
+
 nhBrowse := func() begin
 	local app := call nhApp with ();
 	call tapAt with (37, 423);					// Go To URL
@@ -156,16 +215,10 @@ nhBrowse := func() begin
 					call nhCheck with ("the picture's placeholder", image, "no view with an icon");
 					if image then call nhTapView with (image);
 				end, nil, 1500);
-				// the viewer fetches the JPEG as the page comes in, fails and
-				// the system's alert appears
-				call waitFor with ("nethopper-jpeg: the alert", func() call nhTextWith with ("Sorry, a problem has occurred."), func() begin
-					ScreenSnapshot("nethopper-jpeg.pgm");
-					local alert := call nhTextWith with ("Sorry, a problem has occurred.");
-					Print("nethopper-jpeg: the user sees: " & alert);
-					call nhCheck with ("the alert names the error -48200", StrPos(alert, "(-48200)", 0), "it says " & alert);
-					call nhCheck with ("the picture left as its placeholder", call nhTextWith with ("a box"), "no ALT text");
-					call nhDone with ();
-				end, 60);
+				if GetRoot().|NewtsCape:NewtsCape| then
+					call nhDecoded with ()
+				else
+					call nhAlert with ();
 			end, 90);
 		end, 60);
 	end, 30);
