@@ -1,0 +1,20 @@
+// The run ended once Formulas2 is installed: for the tests that put
+// Formulas2.pkg on a fresh store with --package, where a fixed
+// --headless 4 lost the race with the boot on a loaded machine (the
+// package is sent to the world only once it is up).
+//
+//   build/host/host/newton --erase --store x.store --package Formulas2.pkg
+//       --headless 60 --script src/host/demo/installed.ns
+//
+// Prints "installed: done", or "installed: Formulas2: waited in vain".
+
+HostInclude("common.ns");			// waitFor
+
+call waitFor with ("installed: Formulas2", func() begin
+	local found := nil;
+	foreach p in GetPackages() do if StrEqual(p.title, "Formulas2") then found := true;
+	found;
+end, func() begin
+	Print("installed: done");
+	HostQuit();
+end, 60);

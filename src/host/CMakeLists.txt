@@ -458,21 +458,25 @@ if(Python3_FOUND)
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonPackage.extract PROPERTIES FIXTURES_SETUP host_package)
     add_test(NAME host.NewtonPackage
-             COMMAND newton --headless 4 --package ${HOST_PACKAGE_DIR}/Formulas2.pkg
+             COMMAND newton --headless 60 --package ${HOST_PACKAGE_DIR}/Formulas2.pkg
+                     --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/installed.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonPackage PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED host_package
-                         PASS_REGULAR_EXPRESSION "Formulas2.pkg: installed as package")
+                         PASS_REGULAR_EXPRESSION "Formulas2.pkg: installed as package"
+                         FAIL_REGULAR_EXPRESSION "waited in vain")
     # a package kept on the internal store survives a restart: installed
     # (store:SuckPackageFromBinary) on a fresh store file, then found in the
     # store's "Packages" soup and activated at the next boot
     # (packages/StorePackages.h, demo/packagestore.ns)
     add_test(NAME host.NewtonPackageStore.install
              COMMAND newton --erase --store ${CMAKE_CURRENT_BINARY_DIR}/packagestore.store
-                     --headless 4 --package ${HOST_PACKAGE_DIR}/Formulas2.pkg
+                     --headless 60 --package ${HOST_PACKAGE_DIR}/Formulas2.pkg
+                     --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/installed.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonPackageStore.install PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED host_package
                          FIXTURES_SETUP host_package_store
-                         PASS_REGULAR_EXPRESSION "Formulas2.pkg: installed as package")
+                         PASS_REGULAR_EXPRESSION "Formulas2.pkg: installed as package"
+                         FAIL_REGULAR_EXPRESSION "waited in vain")
     add_test(NAME host.NewtonPackageStore
              COMMAND newton --store ${CMAKE_CURRENT_BINARY_DIR}/packagestore.store
                      --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/packagestore.ns
@@ -526,11 +530,13 @@ if(Python3_FOUND)
     # its own holding Formulas2
     add_test(NAME host.NewtonSegmented.install
              COMMAND newton --erase --store ${CMAKE_CURRENT_BINARY_DIR}/segmented.store
-                     --headless 4 --package ${HOST_PACKAGE_DIR}/Formulas2.pkg
+                     --headless 60 --package ${HOST_PACKAGE_DIR}/Formulas2.pkg
+                     --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/installed.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonSegmented.install PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED host_package
                          FIXTURES_SETUP host_segmented_store
-                         PASS_REGULAR_EXPRESSION "Formulas2.pkg: installed as package")
+                         PASS_REGULAR_EXPRESSION "Formulas2.pkg: installed as package"
+                         FAIL_REGULAR_EXPRESSION "waited in vain")
     add_test(NAME host.NewtonSegmented
              COMMAND newton --store ${CMAKE_CURRENT_BINARY_DIR}/segmented.store
                      --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/segmented.ns
@@ -542,11 +548,13 @@ if(Python3_FOUND)
     # bytes sent to the echo server over a TCP endpoint and sucked back off it
     add_test(NAME host.NewtonEndpointPackage.install
              COMMAND newton --erase --store ${CMAKE_CURRENT_BINARY_DIR}/endpointpkg.store
-                     --headless 4 --package ${HOST_PACKAGE_DIR}/Formulas2.pkg
+                     --headless 60 --package ${HOST_PACKAGE_DIR}/Formulas2.pkg
+                     --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/installed.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonEndpointPackage.install PROPERTIES TIMEOUT 120 FIXTURES_REQUIRED host_package
                          FIXTURES_SETUP host_endpointpkg_store
-                         PASS_REGULAR_EXPRESSION "Formulas2.pkg: installed as package")
+                         PASS_REGULAR_EXPRESSION "Formulas2.pkg: installed as package"
+                         FAIL_REGULAR_EXPRESSION "waited in vain")
     add_test(NAME host.NewtonEndpointPackage
              COMMAND newton --store ${CMAKE_CURRENT_BINARY_DIR}/endpointpkg.store
                      --tcp-echo 52372 --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/endpointpkg.ns
