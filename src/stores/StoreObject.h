@@ -12,7 +12,7 @@
 
 	A store object is a StoreObjectHeader (uniqueID, modTime, the id of the
 	text object, hint chunks, flags, text size), the hint chunks (8 bytes
-	each; NOT YET RECONSTRUCTED: TWordHintsHandler writes none) and then
+	each, written by TWordHintsHandler) and then
 	the object as a tagged byte stream:
 
 		0  immediate: the ref itself as a long		1  character: byte
@@ -84,14 +84,42 @@ struct StoreObjectHeader
 };
 const long kStoreObjectHeaderSize = 0x10;
 const long kStoreObjectHintChunkSize = 8;
-const long kNumHintsHandlers = 2;
+const long kNumHintsHandlers = 4;
 
-// What writes and tests the hint chunks of an entry.  NOT YET
-// RECONSTRUCTED: TWordHintsHandler, the only one the ROM registers; the
-// class is named here so that TestObjHints can ask whether there is
-// one, which is what decides whether the hints are trusted.
-class THintsHandler;
+// What writes and tests the hint chunks of an entry (StoreObject.cpp's
+// "The word hints").  A chunk is two 32-bit words of bits, big-endian on
+// the store.  The ROM registers two: the old handler (0) and the word
+// handler (1), which entries are written with.
+class THintsHandler
+{
+public:
+	virtual			~THintsHandler() { }
+	virtual long	GetNumHintChunks(long textChars, long* charsPerChunk) = 0;
+	virtual Boolean	FindHintWord(const UniChar*& text, long& length, long& remaining) = 0;
+	virtual void	SetHints(Long32* chunk, const UniChar* word, long length) = 0;
+};
+
+class TWordHintsHandler : public THintsHandler
+{
+public:
+	virtual long	GetNumHintChunks(long textChars, long* charsPerChunk);	// ROM 0x002ddd74 GetNumHintChunks__17TWordHintsHandlerFlPi
+	virtual Boolean	FindHintWord(const UniChar*& text, long& length, long& remaining);	// ROM 0x002df358 FindHintWord__17TWordHintsHandlerFRPUsRlT2
+	virtual void	SetHints(Long32* chunk, const UniChar* word, long length);	// ROM 0x002dfc64 SetHints__17TWordHintsHandlerFPlPUsl
+};
+
+class TOldWordHintsHandler : public TWordHintsHandler
+{
+public:
+	virtual void	SetHints(Long32* chunk, const UniChar* word, long length);	// ROM 0x002e043c SetHints__20TOldWordHintsHandlerFPlPUsl
+};
+
 extern THintsHandler*	gHintsHandlers[kNumHintsHandlers];	// ROM 0x0c107998 gHintsHandlers
+extern long				gMaxHintsHandlerId;					// ROM 0x0c1053f0 gMaxHintsHandlerId
+extern int				gDefaultHintsHandlerId;				// ROM 0x0c1053f4 gDefaultHintsHandlerId
+ULong	HashQuadgram(ULong quadgram, long position);		// ROM 0x002dd2b8 HashQuadgram__FUll
+UByte	CanonicalCharacter(UniChar c);						// ROM 0x002dd688 CanonicalCharacter__FUs
+void	InitHintsHandlers(void);							// the two handlers registered (the ROM's InitExternal)
+char*	GetWordsHints(RefArg words);						// ROM 0x002dc754 GetWordsHints__FRC6RefVar - a words query's hints (delete[]), nil for none
 const UByte kSOFlagsHasLargeBinaries = 0x01;
 const UByte kSOFlagsLargeBinaryIsString = 0x04;
 
@@ -282,8 +310,8 @@ public:
 	char*		fHeader;				// +0x48c  the header and hints (in the pipe's buffer or its own)
 	long		fTextSize;				// +0x490  the strings' bytes
 	UByte		fNumHints;				// +0x494
-	long*		fHints;					// +0x498  the hint chunks
-	long*		fHintChunk;				// +0x49c  the current one
+	Long32*		fHints;					// +0x498  the hint chunks (two words each)
+	Long32*		fHintChunk;				// +0x49c  the current one
 	long		fHintWords;				// +0x4a0  words hinted in the current chunk
 	long		fHintTextSize;			// +0x4a4  (what the hints handler was asked with)
 	CDynamicArray*	fLargeBinaries;		// +0x4a8
@@ -371,11 +399,12 @@ struct ObjTextProcArgs
 };
 
 // Whether every bit the query wants is among the ones the entry has.
-Boolean	TestHintBits(const long* wanted, const long* has);	// ROM 0x002e0b88 TestHintBits__FPlT1
+Boolean	TestHintBits(const Long32* wanted, const Long32* has);	// ROM 0x002e0b88 TestHintBits__FPlT1
 // The hint chunks an entry carries tested against a query's words
 // before its text is read at all.
 Boolean	TestObjHints(const char* hints, long count, TStoreWrapper* wrapper, PSSId id);	// ROM 0x002dc934 TestObjHints__FPclP13TStoreWrapperUl
 // All of an entry's text handed to a callback.
+void	ReleasePermObjectTextCache(void* cache);	// ROM 0x002e01c8 ReleasePermObjectTextCache__FPv
 Boolean	WithPermObjectTextDo(TStoreWrapper* wrapper, PSSId id, ObjTextProcPtr proc, void* refCon, TObjTextDecompressor** decompressor);	// ROM 0x002e0008 WithPermObjectTextDo__FP13TStoreWrapperUlPFPUslPv_UcPvPPv
 
 #endif	/* __STOREOBJECT_H */

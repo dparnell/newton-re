@@ -69,4 +69,11 @@ Boolean	HostStoreWasRestored(void);
 // store can call it for itself.
 void	HostPrepareStore(RefArg store);
 
+// HostEntryHints(entry): the hint chunks an entry's store object carries,
+// as they lie on its store - "h<handler id>:" and each chunk's eight bytes
+// in hex, a space between chunks - so a script can compare what the host
+// writes with an entry some other writer (the ROM's, in a package's soup)
+// wrote.  Registered by newton's PreMain.
+Ref		FHostEntryHints(RefArg rcvr, RefArg entry);
+
 #endif	/* __HOSTSTORES_H */

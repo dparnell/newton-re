@@ -18,6 +18,9 @@
 #include "ObjectHeap.h"
 #include "Frames.h"
 #include "OSErrors.h"
+#include "Entries.h"
+#include "StoreObject.h"
+#include "StoreWrapper.h"
 
 #include <stdio.h>
 
@@ -194,4 +197,37 @@ HostMountStores(void)
 				CurrentException()->name, (long) (intptr_t) CurrentException()->data);
 	}
 	end_try;
+}
+
+
+// HostStores.h
+Ref
+FHostEntryHints(RefArg rcvr, RefArg entry)
+{
+	if (!IsSoupEntry(entry))
+		return NILREF;
+	TStore* store = FaultBlockStore(entry)->Store();
+	PSSId id = FaultBlockId(entry);
+	char headerBytes[kStoreObjectHeaderSize];
+	if (store->Read(id, 0, headerBytes, kStoreObjectHeaderSize) != noErr)
+		return NILREF;
+	StoreObjectHeader header;
+	header.ReadFrom(headerBytes);
+	long count = header.fNumHints;
+	char* text = new char[16 + count * 18];
+	long at = sprintf(text, "h%d:", header.GetHintsHandlerId());
+	for (long i = 0; i < count; i++)
+	{
+		unsigned char chunk[kStoreObjectHintChunkSize];
+		if (store->Read(id, kStoreObjectHeaderSize + i * kStoreObjectHintChunkSize, (char*) chunk, kStoreObjectHintChunkSize) != noErr)
+			break;
+		if (i != 0)
+			text[at++] = ' ';
+		for (long j = 0; j < kStoreObjectHintChunkSize; j++)
+			at += sprintf(text + at, "%02x", chunk[j]);
+	}
+	text[at] = 0;
+	RefVar result(MakeString(text));
+	delete[] text;
+	return result;
 }

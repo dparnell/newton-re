@@ -180,7 +180,7 @@ public:
 	Ref			fIndexType;			// +0x28
 	Boolean		fSecOrder;			// +0x2c
 	Ref			fWords;				// +0x30
-	void*		fWordsHints;		// +0x34  (NOT YET)
+	void*		fWordsHints;		// +0x34  the words' hint chunks (GetWordsHints)
 	Ref			fText;				// +0x38
 	Ref			fIndexValidTest;	// +0x3c
 	Ref			fValidTest;			// +0x40

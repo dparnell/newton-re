@@ -506,15 +506,47 @@ that is not there.
 Before the text is read at all, `TestObjHints` 0x002dc934 tests the
 *hint chunks* an entry carries against the query's words: a chunk is two
 words of bits and a word passes when every bit of its own hint is in one
-of them, which refuses most entries without reading anything.  Nothing
-writes hints yet (`TWordHintsHandler` is NOT YET, so `gHintsHandlers` is
-empty and every entry's header says it has none), and an entry with no
-handler is read anyway - so the hints are a filter that is always open
-and the text does all the work.
+of them, which refuses most entries without reading anything.
 
-NOT YET: the hints themselves, and the large binaries of an entry, which
-the ROM also searches when the entry's flags say one of them is a string
-(`LoadLargeBinary`, `TStoreObjectReader::EachLargeObjectDo`).
+The hints are written as the entry is (`TStoreObjectWriter::Scan1`, a
+string of any class but `'string.nohint`): one chunk per 32 characters of
+the entry's text (`TWordHintsHandler::GetNumHintChunks` 0x002ddd74 - one
+more than the text's 32s, at most 255, and a single chunk from 8160
+characters up), each word of three characters or more
+(`FindHintWord` 0x002df358) setting bits in the chunk its characters fall
+in.  A word's quadgrams - a space and its first three characters, then
+each character with the three before it, every character first made its
+upper-case, diacritic-free Mac Roman byte (`CanonicalCharacter`
+0x002dd688) - are hashed at their position in the word (`HashQuadgram`
+0x002dd2b8: the four bytes rotated right by the position and multiplied
+by 0x9E3779B9, the golden ratio's 32 bits), and the hash's top six bits
+pick one of the chunk's 64 (`SetHints` 0x002dfc64; the quadgrams ending
+at the third and fourth characters are hashed on twice more and the third
+once more again, so a word's beginning sets more bits).  The last chunk
+takes whatever text is left, all its bits set once the text runs past it
+(`NextHintChunk` 0x002ddd14).  The handler that wrote them is in the
+header's flags: 1, `TWordHintsHandler`, for everything the ROM writes; 0
+is `TOldWordHintsHandler`, which hashed each quadgram once.  A query's
+own hints are one chunk per word per handler (`GetWordsHints` 0x002dc754),
+made with the cursor and deleted with it.  The chunks are two big-endian
+words on every host.  ctest `host.NewtonWordHints` (`demo/hints.ns`)
+copies the 753 entries of the WorldData package in the ROM extension -
+written, hints and all, by Apple's tools - onto the internal store, and
+the host writes the same chunks byte for byte; its words queries then
+find what the package's own soups find.
+
+An entry written with no hint chunks at all (a store the host wrote
+before it wrote hints) passes no words query: the ROM never writes such
+an entry, and `TestObjHints` refuses one.  Rewrite the entries (or make
+the store afresh) to search them.
+
+The decompressor a search reads the entries' text through is kept for the
+whole walk and let go at its end (`ReleasePermObjectTextCache` 0x002e01c8,
+from `Move`, `CountEntries` and `Collect`).
+
+NOT YET: the large binaries of an entry, which the ROM also searches when
+the entry's flags say one of them is a string (`LoadLargeBinary`,
+`TStoreObjectReader::EachLargeObjectDo`).
 
 `test_Soups`'s `TestTextSearch` puts three entries in a soup and asks
 both kinds of query over them.
@@ -1367,11 +1399,7 @@ an empty sparse one (`make-sparse --size N`); ctest `tools.FlashImage`.
 
 ## Not yet
 
-The word hints
-(`TWordHintsHandler`, `GetWordsHints`, `TestObjHints`; a query's `words`
-and `text`), a sorting table kept on the store
-(`StoreSaveSortTable`/`StoreRemoveSortTable`, so only the registered tables
-- `frames/SortTables.h` - can be named by a `sortId`) and `secOrder`,
+`secOrder`,
 the XMit methods and `XmitSoupChangeNow` (the soup change broadcasts), the
 store prototype's NewtonScript methods (`SetName`, `Erase`, `SetInfo`, ...
 wrap the natives with broadcasts), store passwords, `TPSSManager` and the

@@ -11,9 +11,9 @@
 	commits it; the reader loads it through gLBCache, or only lists its id).
 
 	Reconstructed from the MP2x00 US ROM; each function cites its origin.
-	NOT YET RECONSTRUCTED: the word hints (TWordHintsHandler:
-	GetNumHintChunks, SetHints) - objects are written with no hint chunks,
-	and read with any number.
+	The word hints ("The word hints" below) are written as the ROM writes
+	them: host ctest host.NewtonWordHints copies the WorldData package's
+	753 entries onto a store and gets the same hint chunks, byte for byte.
 */
 
 #include "StoreObject.h"
@@ -27,6 +27,7 @@
 #include "ByteOrder.h"
 #include "LargeBinaries.h"
 #include "DynamicArray.h"
+#include "Unicode.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -38,12 +39,13 @@ TPrecedentsForWriting*	gPrecedentsForWriting = nil;		// 0x0c102a30
 Boolean					gPrecedentsForWritingUsed = false;	// 0x0c102a34
 TPrecedentsForReading*	gPrecedentsForReading = nil;		// 0x0c102a28
 Boolean					gPrecedentsForReadingUsed = false;	// 0x0c102a2d
-int						gDefaultHintsHandlerId = 0;			// 0x0c1024e8
+// ROM 0x0c1053f4 gDefaultHintsHandlerId - what entries are written with
+int						gDefaultHintsHandlerId = 0;
+// ROM 0x0c1053f0 gMaxHintsHandlerId
+long					gMaxHintsHandlerId = 0;
 // ROM 0x0c107998 gHintsHandlers - the handlers that write and test the
-// hint chunks an entry carries.  Nothing registers one yet
-// (TWordHintsHandler is NOT YET), so the hints are never written and
-// TestObjHints answers true for every entry - the text is read instead.
-THintsHandler*			gHintsHandlers[kNumHintsHandlers] = { nil, nil };
+// hint chunks an entry carries (InitHintsHandlers)
+THintsHandler*			gHintsHandlers[kNumHintsHandlers] = { nil, nil, nil, nil };
 
 
 /* -------------------------------------------------------------------------------
@@ -98,7 +100,7 @@ StoreObjectHeader::WriteTo(void* bytes) const
 
 // ROM 0x002dc744 ClearHintBits__FPl
 static void
-ClearHintBits(long* chunk)
+ClearHintBits(Long32* chunk)
 {
 	chunk[0] = 0;
 	chunk[1] = 0;
@@ -576,6 +578,11 @@ TStoreObjectWriter::TStoreObjectWriter(RefArg obj, TStoreWrapper* wrapper, PSSId
 		fPrecedents = gPrecedentsForWriting;
 		gPrecedentsForWritingUsed = true;
 	}
+	// DEVIATION: the handlers are made by the ROM's InitExternal before any
+	// store is registered; a host program may write a store object without
+	// InitQueries, so they are made here if need be, as the precedents are
+	if (gHintsHandlers[gDefaultHintsHandlerId] == nil)
+		InitHintsHandlers();
 	else
 	{
 		fPrecedents = new TPrecedentsForWriting;
@@ -789,7 +796,31 @@ TStoreObjectWriter::Scan(void)
 		fTextPipe.Write(text, length);
 		if (text != data)
 			delete[] text;
-		// NOT YET RECONSTRUCTED: the word hints (unless the class is 'string.nohint)
+		// the word hints, unless the class is 'string.nohint: each hint
+		// word into the current chunk, which is moved on (and the count of
+		// characters in it started again) when the text so far passes its
+		// 32 characters
+		if (!EQRef(ClassOf(fObject), RSSYMstring_2Enohint))
+		{
+			THintsHandler* handler = gHintsHandlers[gDefaultHintsHandlerId];
+			const UniChar* from = (const UniChar*) BinaryData(fObject);
+			const UniChar* word = from;
+			long remaining = (length >> 1) - 1;
+			long wordLength;
+			while (handler->FindHintWord(word, wordLength, remaining))
+			{
+				handler->SetHints(fHintChunk, word, wordLength);
+				word += wordLength;
+				long chars = fHintWords + (word - from);
+				fHintWords = chars;
+				from = word;
+				while (fHintTextSize < chars)
+				{
+					NextHintChunk();
+					chars -= fHintTextSize;
+				}
+			}
+		}
 	}
 	else
 		fPipe.Write(data, length);
@@ -833,15 +864,22 @@ TStoreObjectWriter::WriteLargeBinary(void)
 
 
 // ROM 0x002ddd14 NextHintChunk__18TStoreObjectWriterFv
-// The current hint chunk closed (-1 marks its end) and the next begun.
+// The next hint chunk begun (cleared); at the last chunk, which takes the
+// rest of the text, all its bits are set instead - it matches anything.
+// The count of characters in the chunk starts again either way.
 void
 TStoreObjectWriter::NextHintChunk(void)
 {
-	long* chunk = fHintChunk;
-	fHintChunk = chunk + 2;
-	ClearHintBits(fHintChunk);
-	chunk[1] = -1;
-	fHintChunk[0] = -1;
+	if (fHintChunk < fHints + fNumHints * 2 - 2)
+	{
+		fHintChunk += 2;
+		ClearHintBits(fHintChunk);
+	}
+	else
+	{
+		fHintChunk[1] = -1;
+		fHintChunk[0] = -1;
+	}
 	fHintWords = 0;
 }
 
@@ -855,7 +893,7 @@ TStoreObjectWriter::Write(void)
 {
 	if (fStreamSize == 0)
 		Prescan();
-	fNumHints = 0;								// NOT YET RECONSTRUCTED: gHintsHandlers[gDefaultHintsHandlerId]->GetNumHintChunks(fTextSize >> 1, &fHintTextSize)
+	fNumHints = (UByte) gHintsHandlers[gDefaultHintsHandlerId]->GetNumHintChunks(fTextSize >> 1, &fHintTextSize);
 	long headerSize = kStoreObjectHeaderSize + fNumHints * kStoreObjectHintChunkSize;
 	fStreamSize += headerSize;
 	TStore* store = fWrapper->Store();
@@ -889,9 +927,9 @@ TStoreObjectWriter::Write(void)
 			Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
 		ownHeader = true;
 	}
-	fHints = fHintChunk = (long*) (fHeader + kStoreObjectHeaderSize);
-	if (fNumHints != 0)
-		ClearHintBits(fHintChunk);
+	fHints = fHintChunk = (Long32*) (fHeader + kStoreObjectHeaderSize);
+	fHintWords = 0;
+	ClearHintBits(fHintChunk);
 	fPipe.SetPosition(headerSize);
 	Scan();
 	if (fTextSize == 0)
@@ -1454,6 +1492,19 @@ TObjTextDecompressor::~TObjTextDecompressor()
 }
 
 
+// ROM 0x002e01c8 ReleasePermObjectTextCache__FPv
+// The text cache a search kept (WithPermObjectTextDo's decompressor) let
+// go: its decompressor deleted and the block freed - the destructor's work
+// done inline.
+void
+ReleasePermObjectTextCache(void* cache)
+{
+	if (cache == nil)
+		return;
+	delete (TObjTextDecompressor*) cache;
+}
+
+
 // ROM 0x002dfd78 TextDecompCallback__20TObjTextDecompressorFPvPlPUc
 // What the decompressor asks for its next chunk of input: the bytes come
 // out of the read buffer at the front of this object.
@@ -1513,10 +1564,227 @@ TObjTextDecompressor::Decompress(TStoreWrapper* wrapper, PSSId id, long* size)
 }
 
 
+/* -------------------------------------------------------------------------------
+	The word hints
+
+	An entry carries, after its header, a few eight-byte hint chunks: a
+	64-bit signature of the words in its text, one chunk per 32
+	characters of it (at most 255; for more than 8159 characters one), so
+	that a words query can refuse most entries without reading their text.
+	A word of three characters or more sets the bits its letter
+	quadgrams hash to - each character first made its upper-case,
+	diacritic-free Mac Roman byte - and a query's word is looked for only
+	in the entries whose chunks have all of its own bits.  The handler that
+	made an entry's hints is named in its header's flags: 0 the old one
+	(one bit per quadgram), 1 the one every entry is written with now
+	(more bits for the first quadgrams of a word).
+------------------------------------------------------------------------------- */
+
+// ROM 0x002dd2b8 HashQuadgram__FUll
+// The four characters rotated right by the word position (mod 32) and
+// multiplied by the golden ratio's 32 bits.
+ULong
+HashQuadgram(ULong quadgram, long position)
+{
+	ULong32 value = (ULong32) quadgram;
+	ULong shift = (ULong) position & 0x1f;
+	if (shift != 0)
+		value = (value >> shift) | (value << (32 - shift));
+	return (ULong32) (value * 0x9e3779b9);
+}
+
+
+// ROM 0x002dd688 CanonicalCharacter__FUs
+// The character as the hints see it: upper case, no diacritics, as its
+// Mac Roman byte.
+UByte
+CanonicalCharacter(UniChar c)
+{
+	UniChar text[1] = { c };
+	UppercaseNoDiacriticsText(text, 1);
+	unsigned char byte[2] = { 0, 0 };
+	ConvertFromUnicode(text, byte, kMacRomanEncoding, 1);
+	return byte[0];
+}
+
+
+// the bit a hash sets in a chunk: its top six bits, from the first long's
+// most significant bit
+static inline void
+SetHintBit(Long32* chunk, ULong hash)
+{
+	ULong bit = (ULong32) hash >> 26;
+	chunk[bit >> 5] = (Long32) ((ULong32) chunk[bit >> 5] | (1U << (31 - (bit & 0x1f))));
+}
+
+
+// ROM 0x002ddd74 GetNumHintChunks__17TWordHintsHandlerFlPi
+// How many chunks text of so many characters gets, 32 characters to a
+// chunk: one more than the text's 32s, and one alone for 8160 or more.
+long
+TWordHintsHandler::GetNumHintChunks(long textChars, long* charsPerChunk)
+{
+	*charsPerChunk = 0x20;
+	if (textChars < 0x1fe0)
+	{
+		if (textChars < 0)
+			textChars += 0x1f;
+		return ((textChars >> 5) + 1) & 0xff;
+	}
+	return 1;
+}
+
+
+// ROM 0x002df358 FindHintWord__17TWordHintsHandlerFRPUsRlT2
+// The next word of three characters or more: the delimiters before it
+// passed over (the text ends at a nought, or when `remaining` runs out),
+// `text` left at its start and `length` its length; ==> false when there
+// is none.  A shorter word is stepped over and the search goes on.
+Boolean
+TWordHintsHandler::FindHintWord(const UniChar*& text, long& length, long& remaining)
+{
+	for (;;)
+	{
+		for (;;)
+		{
+			if (remaining == 0)
+				return false;
+			if (!IsDelimiter(*text))
+				break;
+			if (*text == 0)
+				return false;
+			text++;
+			remaining--;
+		}
+		if (remaining == 0)
+			return false;
+		const UniChar* end = text;
+		while (remaining != 0 && !IsDelimiter(*end))
+		{
+			end++;
+			remaining--;
+		}
+		length = end - text;
+		if (length > 2)
+			return true;
+		text += length;
+	}
+}
+
+
+// ROM 0x002dfc64 SetHints__17TWordHintsHandlerFPlPUsl
+// The word's quadgrams hashed into the chunk: the first starting with a
+// space before the word, each hashed at its position; the ones ending at
+// the word's third and fourth characters hashed again twice (the third's
+// three times), so that a word's beginning weighs more.
+void
+TWordHintsHandler::SetHints(Long32* chunk, const UniChar* word, long length)
+{
+	ULong32 quad = CanonicalCharacter(word[1]) | (CanonicalCharacter(word[0]) << 8) | 0x200000;
+	for (long i = 2; i < length; i++)
+	{
+		quad = CanonicalCharacter(word[i]) | (quad << 8);
+		ULong hash = HashQuadgram(quad, i);
+		SetHintBit(chunk, hash);
+		if (i < 4)
+		{
+			hash = HashQuadgram(hash, i);
+			SetHintBit(chunk, hash);
+			hash = HashQuadgram(hash, i);
+			SetHintBit(chunk, hash);
+			if (i == 2)
+			{
+				hash = HashQuadgram(hash, 2);
+				SetHintBit(chunk, hash);
+			}
+		}
+	}
+}
+
+
+// ROM 0x002e043c SetHints__20TOldWordHintsHandlerFPlPUsl
+// The old hints: each quadgram hashed once.
+void
+TOldWordHintsHandler::SetHints(Long32* chunk, const UniChar* word, long length)
+{
+	ULong32 quad = CanonicalCharacter(word[1]) | (CanonicalCharacter(word[0]) << 8) | 0x200000;
+	for (long i = 2; i < length; i++)
+	{
+		quad = CanonicalCharacter(word[i]) | (quad << 8);
+		SetHintBit(chunk, HashQuadgram(quad, i));
+	}
+}
+
+
+// The two handlers registered (the ROM's InitExternal, 0x002e0bc4: the
+// old one as 0, the word one as 1, which every entry is written with).
+void
+InitHintsHandlers(void)
+{
+	if (gHintsHandlers[1] != nil)
+		return;
+	for (long i = 0; i < kNumHintsHandlers; i++)
+		gHintsHandlers[i] = nil;
+	gHintsHandlers[0] = new TOldWordHintsHandler;
+	gHintsHandlers[1] = new TWordHintsHandler;
+	gMaxHintsHandlerId = 1;
+	gDefaultHintsHandlerId = 1;
+}
+
+
+// ROM 0x002dc754 GetWordsHints__FRC6RefVar
+// A words query's hints: for each registered handler, one chunk per word
+// with the bits that word's own hint words set; nil when no word gives
+// any (then every entry is read).  The caller deletes it.
+char*
+GetWordsHints(RefArg words)
+{
+	long count = Length(words);
+	long perHandler = count * kStoreObjectHintChunkSize;
+	long size = perHandler * (gMaxHintsHandlerId + 1);
+	char* hints = new char[size];
+	if (hints == nil)
+		Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
+	memset(hints, 0, size);
+	char* at = hints;
+	Boolean any = false;
+	RefVar word;
+	for (long id = 0; id <= gMaxHintsHandlerId; id++)
+	{
+		THintsHandler* handler = gHintsHandlers[id];
+		if (handler == nil)
+		{
+			at += perHandler;
+			continue;
+		}
+		for (long i = 0; i < count; i++)
+		{
+			word = GetArraySlotRef(words, i);
+			const UniChar* text = GetCString(word);
+			long remaining = Ustrlen(text);
+			long length;
+			while (handler->FindHintWord(text, length, remaining))
+			{
+				handler->SetHints((Long32*) at, text, length);
+				any = true;
+				text += length;
+			}
+			at += kStoreObjectHintChunkSize;
+		}
+	}
+	if (!any)
+	{
+		delete[] hints;
+		hints = nil;
+	}
+	return hints;
+}
+
+
 // ROM 0x002e0b88 TestHintBits__FPlT1
 // Whether every bit the query wants is among the ones the entry has.
 Boolean
-TestHintBits(const long* wanted, const long* has)
+TestHintBits(const Long32* wanted, const Long32* has)
 {
 	return (wanted[0] & has[0]) == wanted[0] && (wanted[1] & has[1]) == wanted[1];
 }
@@ -1529,9 +1797,9 @@ TestHintBits(const long* wanted, const long* has)
 // them.  Every word has to pass for the entry to be worth reading.
 //
 // An entry whose flags say it holds a large string, or whose hints
-// handler is not registered, is read anyway - which is what happens here
-// always, because nothing writes hints yet (TWordHintsHandler is NOT
-// YET, so `fNumHints` is 0 and `gHintsHandlers` is empty).
+// handler is not registered, is read anyway.  (Host: the chunks are
+// big-endian on the store and the query's in the host's order, so each
+// chunk is turned round before it is compared.)
 Boolean
 TestObjHints(const char* hints, long count, TStoreWrapper* wrapper, PSSId id)
 {
@@ -1551,13 +1819,16 @@ TestObjHints(const char* hints, long count, TStoreWrapper* wrapper, PSSId id)
 	long at = kStoreObjectHeaderSize;
 	for (long chunk = header->fNumHints; chunk != 0; chunk--)
 	{
-		long* bits;
-		OSErrIf(store.GetDataPtr(at, kStoreObjectHintChunkSize, (void**) &bits));
+		char* bytes;
+		OSErrIf(store.GetDataPtr(at, kStoreObjectHintChunkSize, (void**) &bytes));
+		Long32 bits[2];
+		bits[0] = (Long32) GetBigEndianWord(bytes);
+		bits[1] = (Long32) GetBigEndianWord(bytes + 4);
 		passed = 0;
 		for (long i = 0; i < count; i++)
 		{
 			if (found[i] == 0
-				&& TestHintBits((const long*) (hints + (i + handler * count) * 8), bits))
+				&& TestHintBits((const Long32*) (hints + (i + handler * count) * 8), bits))
 				found[i] = 1;
 			passed += found[i];
 		}

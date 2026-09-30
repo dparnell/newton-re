@@ -1,0 +1,68 @@
+// The word hints an entry carries (stores/StoreObject.cpp's "The word
+// hints"): each entry of the WorldData package's soups (the cities and
+// countries of the World Clock, GetLocationSoup - a package store in the
+// ROM extension, its store objects written by Apple's tools, hints and
+// all) is added to a soup of the internal store, which the
+// host writes, and the two entries' hint chunks (HostEntryHints: the
+// handler id and each chunk's bytes as they lie on the store) must be
+// the same.  Then a words query over the copies finds what it should.
+//
+//   build/host/host/newton --display 320x480 --headless 120 --script src/host/demo/hints.ns
+//
+// Prints "hints: <n> entries, <m> differ" and "hints: done".
+
+HostInclude("common.ns");			// waitFor
+
+call waitFor with ("WorldData", func() GetPackageStore("WorldData"), func() begin
+	local package := GetPackageStore("WorldData");
+	local store := GetStores()[0];
+	local dest := store:GetSoup("HintsCheck");
+	if dest then dest:RemoveFromStoreXmit(nil);
+	dest := store:CreateSoupXmit("HintsCheck", [], nil);
+	local n := 0;
+	local differ := 0;
+	local chunks := 0;
+	foreach name in package:GetSoupNames() do begin
+	local from := package:GetSoup(name);
+	local c := from:Query(nil);
+	local e := c:Entry();
+	while e do begin
+		local romHints := HostEntryHints(e);
+		local copy := dest:AddXmit(DeepClone(e), nil);
+		local hostHints := HostEntryHints(copy);
+		n := n + 1;
+		chunks := chunks + (StrLen(romHints) + 1) div 17;
+		if not StrEqual(romHints, hostHints) then begin
+			differ := differ + 1;
+			if differ <= 5 then begin
+				Print("hints: differ: " & e.name);
+				Print("  package: " & romHints);
+				Print("  host:    " & hostHints);
+			end;
+		end;
+		e := c:Next();
+	end;
+	end;
+	Print("hints: " & n & " entries, " & chunks & " chunks, " & differ & " differ");
+
+	// a words query over the host's copies: the hints let most entries
+	// be passed over without reading their text, and must pass the ones
+	// that hold the word
+	local count := func(soup, spec) begin
+		local k := 0;
+		local q := soup:Query(spec);
+		local x := q:Entry();
+		while x do begin k := k + 1; x := q:Next(); end;
+		k;
+	end;
+	foreach word in ["Paris", "York", "Cupertino", "Zzyzx"] do begin
+		local a := 0;
+		foreach name in package:GetSoupNames() do
+			a := a + call count with (package:GetSoup(name), {words: [word]});
+		local b := call count with (dest, {words: [word]});
+		Print("hints: words " & word & ": " & a & " / " & b & (if a = b then ": ok" else ": FAILED"));
+	end;
+	dest:RemoveFromStoreXmit(nil);
+	Print("hints: done");
+	HostQuit();
+end, 60);

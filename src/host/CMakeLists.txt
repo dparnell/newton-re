@@ -395,6 +395,16 @@ set_tests_properties(host.NewtonDateParse PROPERTIES TIMEOUT 180
                      PASS_REGULAR_EXPRESSION "lunch at 1 pm tomorrow: ok.*dateparse: done, 0 failed"
                      FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
 
+# the word hints (demo/hints.ns): the WorldData package's 753 entries,
+# written with their hint chunks by Apple's tools, copied onto the internal
+# store - the chunks the host writes must be the same bytes - and words
+# queries over the copies finding what the package's soups find
+add_test(NAME host.NewtonWordHints COMMAND newton --display 320x480 --headless 120
+         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/hints.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonWordHints PROPERTIES TIMEOUT 180
+                     PASS_REGULAR_EXPRESSION "hints: 753 entries, 759 chunks, 0 differ.*Zzyzx: 0 / 0: ok.*hints: done"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain|hints: differ")
+
 # a long note printed across pages (demo/printlong.ns): the Notepad's print
 # format reflows the note's paragraph into each page and cuts it between
 # two lines where the page runs out (views/Reflow.cpp ReflowText, the

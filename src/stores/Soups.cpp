@@ -60,6 +60,7 @@ InitQueries(void)
 	gUnionSoups = MakeEntryCache();
 	InitPackageSoups();
 	InitEntries();
+	InitHintsHandlers();	// DEVIATION: the ROM's InitExternal (0x002e0bc4) makes them
 	InitLargeObjects();		// DEVIATION: the ROM's InitExternal (0x002e0bc4) calls it; the host has no InitExternal
 	RegisterSoupNatives();
 	RegisterCursorNatives();

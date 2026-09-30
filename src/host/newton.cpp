@@ -394,6 +394,7 @@ NewtonPreMain(void)
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostGetEnv")), RefVar(MakeCFunction((void*) FHostGetEnv, 1, nil)));
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostSoundSamples")), RefVar(MakeCFunction((void*) FHostSoundSamples, 0, nil)));
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostSoundBootPlaying")), RefVar(MakeCFunction((void*) FHostSoundBootPlaying, 0, nil)));
+	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostEntryHints")), RefVar(MakeCFunction((void*) FHostEntryHints, 1, nil)));
 	HostInstallPackageGlobal();
 	HostLinkStart();
 	HostInstallPrinter();

@@ -392,7 +392,8 @@ TestStoreObjects()
 	char headerBytes[kStoreObjectHeaderSize];
 	EXPECT(store->Read(id, 0, headerBytes, kStoreObjectHeaderSize) == noErr);
 	header.ReadFrom(headerBytes);
-	EXPECT(header.fUniqueId == -1 && header.fModTime == (ULong32) -1 && header.fNumHints == 0);
+	EXPECT(header.fUniqueId == -1 && header.fModTime == (ULong32) -1 && header.fNumHints == 1);
+	// (one hint chunk: 22 characters of text, 32 to a chunk - TWordHintsHandler::GetNumHintChunks)
 	EXPECT(header.fTextBlockId != 0 && header.TextSize() == (long) (13 + 4 + 4 + 1) * 2);		// the strings' bytes
 	RefVar back(LoadPermObject(wrapper, id, nil));
 	EXPECT(IsFrame(back));

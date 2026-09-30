@@ -29,10 +29,6 @@ extern const ExceptionName exStoreError;
 
 #define kNSErrCantQueryTagsIndex (ERRBASE_FRAMES - 32)		// the query's indexPath is the tags index (0xffff4460)
 
-// ROM 0x0c10244c: the text cache the words/text tests keep (NOT YET)
-static void*	gPermObjectTextCache = nil;
-
-
 /*------------------------------------------------------------------------------
 	T U n i o n S o u p I n d e x
 ------------------------------------------------------------------------------*/
@@ -486,6 +482,12 @@ TCursor::TCursor()
 TCursor::~TCursor()
 {
 	Invalidate();
+	if (fWordsHints != nil)
+		delete[] (char*) fWordsHints;
+	if (fBeginKeyData != nil)
+		delete fBeginKeyData;
+	if (fEndKeyData != nil)
+		delete fEndKeyData;
 }
 
 
@@ -673,7 +675,7 @@ TCursor::Init(RefArg cursor, RefArg soup, RefArg querySpec)
 				fWords = AllocateArray(RSSYMarray, 1);
 				SetArraySlotRef(fWords, 0, word);
 			}
-			fWordsHints = nil;							// NOT YET RECONSTRUCTED: GetWordsHints
+			fWordsHints = GetWordsHints(RefVar(fWords));
 		}
 		fText = GetFrameSlotRef(querySpec, RSSYMtext);
 		if (fText != NILREF)
@@ -758,7 +760,7 @@ TCursor::Init(RefArg cursor, const TCursor* other)
 		fEntryRemoved = other->fEntryRemoved;
 		fCursor = cursor;
 		if (fWordsHints != nil)
-			fWordsHints = nil;							// NOT YET RECONSTRUCTED: GetWordsHints
+			fWordsHints = GetWordsHints(RefVar(fWords));
 		if (fBeginKeyData != nil)
 		{
 			SKey* copy = new SKey;
@@ -1025,8 +1027,10 @@ TCursor::KeyBoundsValidTest(const SKey& key, Boolean atEnd)
 
 
 // ROM 0x0c105358 (unnamed) - gObjTextDecompressor
-// The decompressor a search reads entries' text through, made when the
-// first entry is read and kept for the rest of the walk.
+// The decompressor a search reads entries' text through (the text cache),
+// made when the first entry is read, kept for the rest of the walk and
+// let go by ReleasePermObjectTextCache when the walk is over (Move,
+// CountEntries, Collect).
 static TObjTextDecompressor*	gObjTextDecompressor = nil;
 
 
@@ -1273,8 +1277,11 @@ TCursor::Move(long count)
 	}
 	else
 		Park(forward);
-	if (gPermObjectTextCache != nil)
-		gPermObjectTextCache = nil;			// NOT YET: ReleasePermObjectTextCache
+	if (gObjTextDecompressor != nil)
+	{
+		ReleasePermObjectTextCache(gObjTextDecompressor);
+		gObjTextDecompressor = nil;
+	}
 	return Entry();
 }
 
@@ -1393,8 +1400,11 @@ TCursor::CountEntries(void)
 			info.fCount = 1;
 			fIndex->Search(true, &fKey, &fEntryData, CountEntriesStopFn, &info, nil, nil, kIndexNextDupOrKey);
 			count = info.fCount;
-			if (gPermObjectTextCache != nil)
-				gPermObjectTextCache = nil;		// NOT YET: ReleasePermObjectTextCache
+			if (gObjTextDecompressor != nil)
+			{
+				ReleasePermObjectTextCache(gObjTextDecompressor);
+				gObjTextDecompressor = nil;
+			}
 		}
 	}
 	newton_catch_all
@@ -1870,8 +1880,11 @@ TCollectCursor::Collect(void)
 		info.fEntries = fEntries;
 		info.fCount = 1;
 		fIndex->Search(true, &fKey, &fEntryData, CollectStopFn, &info, nil, nil, kIndexNextDupOrKey);
-		if (gPermObjectTextCache != nil)
-			gPermObjectTextCache = nil;
+		if (gObjTextDecompressor != nil)
+		{
+			ReleasePermObjectTextCache(gObjTextDecompressor);
+			gObjTextDecompressor = nil;
+		}
 		SetLength(RefVar(fEntries), info.fCount * 2);
 		fIndex->SetCurrentSoup(current);
 	}
