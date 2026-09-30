@@ -7,12 +7,20 @@ Usage:
     python tools/host/stress.py <build dir> --suite [--rounds N] [--hogs N] [-j N] [-R REGEX]
 
 --test runs N copies of one ctest test at once, each in a directory of its
-own under tmp/stress/<name>/<copy> with its own store (the test's command
-line, environment, pass/fail expressions and timeout are read from
-`ctest --show-only=json-v1`; a `--store` argument is moved into the copy's
-directory, and relative output such as a script's tmp/x.pgm lands there
-too), and says how many passed; the output of each failed copy is printed.
-A test that listens on a fixed port (--tcp-echo) cannot run as copies.
+own under tmp/stress/<name>/<run>/<copy> (<run> a time stamp and the
+process id, so two stress runs never share or clear each other's copies)
+with its own store (the test's command line, environment, pass/fail
+expressions and timeout are read from `ctest --show-only=json-v1`; a
+`--store` argument is moved into the copy's directory, and relative output
+such as a script's tmp/x.pgm lands there too), and says how many passed;
+the output of each failed copy is printed.  A test that needs a fixture
+gets it: the fixture's setup tests that keep a store (--store) run in each
+copy's directory first, as the copy's own steps (a restart test's first
+run, a package installed on a fresh store), and those that keep none (an
+extraction into the build directory) run once, before the copies, where
+ctest runs them.  A test that holds a fixed port (--tcp-echo, a --port
+of a server it runs, or any RESOURCE_LOCK in its ctest properties - the ctests sharing a port say so
+with one) runs its copies one after another rather than at once.
 
 --suite runs the whole ctest (or those matching -R) with `ctest -j`, ROUNDS
 times, and reports each round's wall time and failed tests.
@@ -34,6 +42,7 @@ import re
 import shutil
 import subprocess
 import sys
+import threading
 import time
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -60,57 +69,140 @@ def stop_hogs(hogs):
         p.join()
 
 
-def test_info(build, name):
+def test_list(build, name):
+    """The test and the fixture setups it needs, in the order ctest runs
+    them (ctest's own listing of one test includes its setups)."""
     out = subprocess.run(['ctest', '--test-dir', build, '--show-only=json-v1', '-R', '^' + re.escape(name) + '$'],
                          capture_output=True, text=True, check=True).stdout
-    tests = json.loads(out)['tests']
-    if not tests:
+    tests = []
+    for t in json.loads(out)['tests']:
+        props = {p['name']: p['value'] for p in t.get('properties', [])}
+        tests.append((t['name'], t['command'], props))
+    if not any(n == name for n, _, _ in tests):
         sys.exit('stress: no test named %s in %s' % (name, build))
-    t = tests[0]
-    props = {p['name']: p['value'] for p in t.get('properties', [])}
-    return t['command'], props
+    return tests
 
 
-def run_copies(build, name, copies):
-    command, props = test_info(build, name)
-    base = os.path.join(REPO, 'tmp', 'stress', name)
-    shutil.rmtree(base, ignore_errors=True)
-    procs = []
-    for i in range(copies):
-        where = os.path.join(base, str(i + 1))
-        os.makedirs(os.path.join(where, 'tmp'), exist_ok=True)
-        args = list(command)
-        for k in range(len(args) - 1):
-            if args[k] == '--store':
-                args[k + 1] = os.path.join(where, os.path.basename(args[k + 1]))
-        env = dict(os.environ)
-        for setting in props.get('ENVIRONMENT', []):
-            k, _, v = setting.partition('=')
-            env[k] = v
-        log = open(os.path.join(where, 'output.txt'), 'w')
-        procs.append((subprocess.Popen(args, cwd=where, env=env, stdout=log, stderr=subprocess.STDOUT), log, where))
-    timeout = float(props.get('TIMEOUT', 600))
-    started = time.time()
-    passes = []
-    for p, log, where in procs:
+def per_copy(command):
+    """Whether a test keeps state of its own (a store) and so runs in each
+    copy's directory; a setup that does not (an extraction into the build
+    directory) runs once, before the copies, where ctest would run it."""
+    return '--store' in command
+
+
+def run_one(command, props, where, log_name, stores=()):
+    """One test run in `where`: its --store moved there, as is any other
+    argument naming one of the copy's stores (a checker reading the store
+    file a setup wrote), and a relative argument naming a file of the
+    test's working directory made absolute (a script run with a relative
+    path).  ==> (passed, text)."""
+    args = list(command)
+    home = props.get('WORKING_DIRECTORY', REPO)
+    for k in range(len(args)):
+        if k > 0 and args[k - 1] == '--store' or os.path.isabs(args[k]) and os.path.basename(args[k]) in stores:
+            args[k] = os.path.join(where, os.path.basename(args[k]))
+        elif k > 0 and not os.path.isabs(args[k]) and not args[k].startswith('-')                 and os.path.exists(os.path.join(home, args[k])):
+            args[k] = os.path.join(home, args[k])
+    env = dict(os.environ)
+    for setting in props.get('ENVIRONMENT', []):
+        k, _, v = setting.partition('=')
+        env[k] = v
+    log_path = os.path.join(where, log_name)
+    with open(log_path, 'w') as log:
+        p = subprocess.Popen(args, cwd=where, env=env, stdout=log, stderr=subprocess.STDOUT)
         try:
-            p.wait(timeout=max(1, timeout - (time.time() - started)))
+            p.wait(timeout=float(props.get('TIMEOUT', 600)))
         except subprocess.TimeoutExpired:
             p.kill()
             p.wait()
-        log.close()
-        text = open(os.path.join(where, 'output.txt'), errors='replace').read()
-        ok = p.returncode == 0 if 'PASS_REGULAR_EXPRESSION' not in props else \
-            any(re.search(r, text, re.S) for r in props['PASS_REGULAR_EXPRESSION'])
-        if any(re.search(r, text) for r in props.get('FAIL_REGULAR_EXPRESSION', [])):
-            ok = False
-        passes.append(ok)
+    text = open(log_path, errors='replace').read()
+    ok = p.returncode == 0 if 'PASS_REGULAR_EXPRESSION' not in props else         any(re.search(r, text, re.S) for r in props['PASS_REGULAR_EXPRESSION'])
+    if any(re.search(r, text) for r in props.get('FAIL_REGULAR_EXPRESSION', [])):
+        ok = False
+    return ok, text
+
+
+def run_copy(steps, where):
+    """A copy's own steps in turn - its per-copy setups, then the test -
+    each logged to a file of its own; ==> (passed, the failing step's name
+    and output)."""
+    stores = {os.path.basename(c[k + 1]) for _, c, _ in steps for k in range(len(c) - 1) if c[k] == '--store'}
+    for i, (name, command, props) in enumerate(steps):
+        ok, text = run_one(command, props, where, 'output.txt' if i == len(steps) - 1 else name + '.txt', stores)
         if not ok:
-            lines = [l for l in text.splitlines() if not l.startswith('[packages]')]
-            print('%s: copy %s failed (%s):' % (name, os.path.basename(where), where))
-            print('\n'.join('    ' + l for l in lines[-12:]))
-    print('%s: %d of %d copies passed in %.0f s' % (name, sum(passes), copies, time.time() - started))
-    return all(passes)
+            return False, name, text
+    return True, None, None
+
+
+def run_copies(build, name, copies):
+    tests = test_list(build, name)
+    # a directory of this run's own, so two stress runs of one test at once
+    # do not clear or share each other's copies
+    base = os.path.join(REPO, 'tmp', 'stress', name, time.strftime('%Y%m%d-%H%M%S') + '-%d' % os.getpid())
+    os.makedirs(base, exist_ok=True)
+    started = time.time()
+    # the setups that keep no state of their own, once, as ctest runs them
+    steps = []
+    for n, command, props in tests:
+        if n != name and not per_copy(command):
+            ok, text = run_shared(command, props, base, n)
+            if not ok:
+                print('%s: the setup %s failed:' % (name, n))
+                print('\n'.join('    ' + l for l in text.splitlines()[-12:]))
+                return False
+        else:
+            steps.append((n, command, props))
+    results = []
+    lock = threading.Lock()
+
+    def one(i):
+        where = os.path.join(base, str(i + 1))
+        os.makedirs(os.path.join(where, 'tmp'), exist_ok=True)
+        r = run_copy(steps, where)
+        with lock:
+            results.append((i + 1, where) + r)
+
+    # a test that holds a fixed resource - a TCP port it listens on or
+    # serves from (--tcp-echo, or a RESOURCE_LOCK, which is how the ctests
+    # sharing one say so) - runs its copies one after another
+    _, command, props = tests[-1]
+    serial = '--tcp-echo' in command or '--port' in command or any(p.get('RESOURCE_LOCK') for _, _, p in tests)
+    if serial:
+        print('%s: holds a fixed port (--tcp-echo, --port or RESOURCE_LOCK): the copies run one at a time' % name)
+        for i in range(copies):
+            one(i)
+    else:
+        threads = [threading.Thread(target=one, args=(i,)) for i in range(copies)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+    passes = 0
+    for number, where, ok, step, text in sorted(results):
+        if ok:
+            passes += 1
+            continue
+        lines = [l for l in text.splitlines() if not l.startswith('[packages]')]
+        print('%s: copy %d failed at %s (%s):' % (name, number, step, where))
+        print('\n'.join('    ' + l for l in lines[-12:]))
+    print('%s: %d of %d copies passed in %.0f s' % (name, passes, copies, time.time() - started))
+    return passes == copies
+
+
+def run_shared(command, props, base, name):
+    """A setup run once, in its own working directory (it writes into the
+    build directory, which every copy then reads), logged in the run's."""
+    where = props.get('WORKING_DIRECTORY', REPO)
+    env = dict(os.environ)
+    for setting in props.get('ENVIRONMENT', []):
+        k, _, v = setting.partition('=')
+        env[k] = v
+    p = subprocess.run(command, cwd=where, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                       text=True, errors='replace', timeout=float(props.get('TIMEOUT', 600)))
+    text = p.stdout
+    open(os.path.join(base, name + '.txt'), 'w').write(text)
+    ok = p.returncode == 0 if 'PASS_REGULAR_EXPRESSION' not in props else         any(re.search(r, text, re.S) for r in props['PASS_REGULAR_EXPRESSION'])
+    return ok, text
 
 
 def run_suite(build, rounds, jobs, regex):
