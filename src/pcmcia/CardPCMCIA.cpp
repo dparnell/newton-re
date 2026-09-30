@@ -31,13 +31,10 @@
 
 #include <string.h>
 
-extern const char* const	kNewtOSStrings[1];		// CISTables.cpp
-extern const char* const	kArmCPU610Strings[1];
-extern const char* const	kNullStrings[1];
-
-const char*	kNewtOSString = kNewtOSStrings[0];			// ROM 0x0c100974 kNewtOSString - "NewtOS"
-const char*	kArmCPU610String = kArmCPU610Strings[0];	// ROM 0x0c100978 kArmCPU610String - "Arm610"
-const char*	kNullString = kNullStrings[0];				// ROM 0x0c10097c kNullString - ""
+// (the ROM's are pointers in its initialised data to these strings)
+const char*	kNewtOSString = "NewtOS";			// ROM 0x0c100974 kNewtOSString
+const char*	kArmCPU610String = "Arm610";		// ROM 0x0c100978 kArmCPU610String
+const char*	kNullString = "";					// ROM 0x0c10097c kNullString
 
 
 // ROM 0x0004ee04 SetString__FRPcPCc
