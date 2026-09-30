@@ -9,6 +9,20 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: the front key views, hiding under a modal dialog
+
+- `GetFrontCommandKeyView` (0x26145c) and `GetView('viewFrontKey)`/
+  `'viewFrontCommandKey` in the ROM's full order (bfdb4976,
+  `TestFrontKeyViews`).
+- `:Hide()` under a modal dialog takes the view off the list waiting to
+  be shown (`RemoveModalSafeView`), and `:Show()`/`:Hide()` answer true
+  as the ROM's do (7abb6d8c, `TestModalSafeShow`).
+- `SetChildrenVertical` was already whole; only its comment, from a
+  cut-off disassembly, said otherwise (ab7e293a).
+- Find measured on the host over a flash store: a words or text query
+  over 2000 note-sized entries takes about 15 ms, so the word hints are
+  wanted for the store format's sake, not for speed.
+
 ## 2026-10-01: two test flakes
 
 - `intl.Dates` (9e1489c8) failed one run in 60 - at every whole minute,
