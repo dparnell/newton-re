@@ -22,6 +22,7 @@
 #include "OSErrors.h"
 #include "PartPipe.h"
 #include "RingBuffer.h"
+#include "ROMImport.h"		// ROMAddressOf: a part in the ROM extension
 #include "LargeObjects.h"		// the ROM domain manager (a package on a store)
 
 extern const ExceptionName exPipeException;
@@ -474,9 +475,14 @@ TPackageEventHandler::InstallPart(ULong* classInfo, RemoveObjPtr* removeObj, UCh
 			// registered (TClassInfo::Register): the part goes in with no
 			// class info, and a copy is let go at once.  The ROM's own
 			// protocol parts (the screen drivers) have host stand-ins.
+			// The ROM extension's own protocol parts (ScreenBuffer's
+			// TScreenMemory, ScreenDrivers' TMainDisplayDriver) are ones the
+			// host stands in for by design, so only a part from outside the
+			// ROM is reported.
 			if (err == noErr)
 			{
-				ReportUnregisteredProtocol(fPackage, fPartIndex, code, info.size);
+				if (!(IsMemory(type) && ROMAddressOf((const void*) source.mem.buffer, nil, nil)))
+					ReportUnregisteredProtocol(fPackage, fPartIndex, code, info.size);
 				if (code != nil && (!IsMemory(type) || info.autoCopy))
 					free(code);
 				*classInfo = 0;
