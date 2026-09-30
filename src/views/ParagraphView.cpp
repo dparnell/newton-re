@@ -678,6 +678,14 @@ TParagraphView::FillAllCaches(void)
 				leading = fontInfo.leading;
 		}
 		long lineHeight = spacing != 0 ? spacing : ascent + descent + leading;
+		// The first baseline: with a viewLineSpacing, three pixels (four
+		// for a spacing over 20) above the first ruled line, whatever the
+		// font - which is what puts an input line's text on its line (the
+		// ROM's LineLoop constructor, 0x0010d8d4); else the font's ascent
+		// below the top.  (The ROM's third case, a baseline the view was
+		// given at +0x7c, is NOT YET.)
+		if (fLineCount == 0 && fLineSpacing >= 1)
+			y = fLineSpacing - (fLineSpacing < 21 ? 3 : 4) - ascent;
 		if (fLineCount == fLineCapacity)
 			GrowLineInfoCache(&fLines, &fLineCapacity);
 		// The line takes the spaces and the return that end it with it:
@@ -706,9 +714,12 @@ TParagraphView::FillAllCaches(void)
 	rich.ReleasePtr();
 	DisposPtr((Ptr) lineStyles);
 	DisposPtr((Ptr) lineLengths);
-	// the lines placed in the view: by the vertical text bits when there is room
+	// the lines placed in the view: by the vertical text bits when there is
+	// room - only in a one-line view (vjOneLineOnly; the ROM's
+	// ComputeLineBounds, 0x0010ddc0): the lines of any other paragraph run
+	// from its top whatever its justification
 	long dy = 0;
-	if (y < height)
+	if (y < height && (fViewJustify & vjOneLineOnly) != 0)
 	{
 		switch (fViewJustify & vjVMask)
 		{

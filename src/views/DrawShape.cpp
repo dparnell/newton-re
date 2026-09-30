@@ -974,6 +974,12 @@ RunWidth(TRichString& rich, long start, long length, StyleRecord* style)
 // at a time until what is left fits, so a long word is broken rather than
 // lost.
 //
+// Each line's shape is as tall as the font's ascent - its bottom is the
+// baseline, where a text shape is drawn - not the line height: a Names
+// card's name line fits its 24-pixel view only so (AddAllInfoItem adds
+// the bottom and a line's height less the ascent, and drops the item
+// when that passes the view's bottom).
+//
 // ==> nil when the bounds are not even one line tall; an array otherwise,
 // shortened to the lines actually used when the text runs out before the
 // bounds do.
@@ -1048,7 +1054,7 @@ FMakeTextLines(RefArg /*rcvr*/, RefArg text, RefArg boundsFrame, RefArg lineHeig
 		long line = used++;
 		RefVar shape(FMakeText(RefVar(NILREF), piece,
 							   RefVar(MAKEINT(bounds.left)), RefVar(MAKEINT(y)),
-							   RefVar(MAKEINT(bounds.right)), RefVar(MAKEINT(y + lineHeight))));
+							   RefVar(MAKEINT(bounds.right)), RefVar(MAKEINT(y + info.ascent))));
 		SetArraySlot(result, line, shape);
 		if (ch == 0)
 		{

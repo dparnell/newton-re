@@ -835,13 +835,25 @@ TestParagraphView()
 	EXPECT(inkLeft == 20 && inkRight > 46);								// "World" in espy 18 is wider than "Hello" in 12
 	Eval("ctxQ:Close()");
 
-	// viewLineSpacing: the lines that far apart when the font fits it
+	// viewLineSpacing: the lines that far apart when the font fits it, the
+	// first baseline three above the first ruled line (LineLoop)
 	p = (TParagraphView*) ViewOf("ctxQ := AddView(GetRoot(), {viewClass: 81, viewFlags: 3, viewBounds: {left: 20, top: 10, right: 70, bottom: 90}, viewJustify: 0, viewFont: espy12, viewLineSpacing: 18, text: \"Hello World\"})");
-	EXPECT(p->fLineSpacing == 18 && p->GetInterLineSpacing() == 18 && p->LineCount() == 2 && p->Line(1).fBounds.top == 28);
+	EXPECT(p->fLineSpacing == 18 && p->GetInterLineSpacing() == 18 && p->LineCount() == 2);
+	EXPECT(p->Line(0).fBounds.top + p->Line(0).fAscent == 10 + 18 - 3 && p->Line(1).fBounds.top + p->Line(1).fAscent == 10 + 18 - 3 + 18);
+	Eval("ctxQ:Close()");
+	// ... whatever the font: an input line's text on its line (a Find slip's)
+	p = (TParagraphView*) ViewOf("ctxQ := AddView(GetRoot(), {viewClass: 81, viewFlags: 3, viewBounds: {left: 20, top: 10, right: 120, bottom: 65}, viewJustify: 0x800000, viewFont: espy12, viewLineSpacing: 45, text: \"tester\"})");
+	EXPECT(p->GetInterLineSpacing() == 45 && p->LineCount() == 1 && p->Line(0).fBounds.top + p->Line(0).fAscent == 10 + 45 - 4);
+	Eval("ctxQ:Close()");
+
+	// a paragraph's vertical justification is only for one line
+	// (vjOneLineOnly); another's lines start at its top
+	p = (TParagraphView*) ViewOf("ctxQ := AddView(GetRoot(), {viewClass: 81, viewFlags: 3, viewBounds: {left: 20, top: 10, right: 70, bottom: 90}, viewJustify: 9, viewFont: espy12, text: \"Hello\"})");
+	EXPECT(p->LineCount() == 1 && p->Line(0).fBounds.top == 10);
 	Eval("ctxQ:Close()");
 
 	// justified: flush right and at the bottom
-	p = (TParagraphView*) ViewOf("ctxQ := AddView(GetRoot(), {viewClass: 81, viewFlags: 3, viewBounds: {left: 20, top: 10, right: 70, bottom: 90}, viewJustify: 9, viewFont: espy12, text: \"Hello\"})");
+	p = (TParagraphView*) ViewOf("ctxQ := AddView(GetRoot(), {viewClass: 81, viewFlags: 3, viewBounds: {left: 20, top: 10, right: 70, bottom: 90}, viewJustify: 9 + 0x800000, viewFont: espy12, text: \"Hello\"})");
 	EXPECT(p->LineCount() == 1 && p->Line(0).fBounds.bottom == 90);
 	Eval("ctxQ:Dirty()");
 	Refresh();
@@ -1055,6 +1067,12 @@ TestShapes()
 	EXPECT(RINT(Eval("GetShapeInfo(MakeRect(10, 10, 30, 20)).bounds.right")) == 30);
 	EXPECT(RINT(Eval("GetShapeInfo(MakeLine(1, 2, 3, 4)).start.x")) == 1 && RINT(Eval("GetShapeInfo(MakeLine(1, 2, 3, 4)).stop.y")) == 4);
 	EXPECT(NOTNIL(Eval("StrEqual(GetShapeInfo(MakeText(\"Hi\", 0, 0, 40, 20)).text, \"Hi\")")));
+	// MakeTextLines: each line a text shape as tall as the font's ascent - its
+	// bottom the baseline - one line height below the last (a Names card's
+	// name line only fits its view so)
+	EXPECT(RINT(Eval("Length(MakeTextLines(\"Ann Tester\", {left: 0, top: 0, right: 240, bottom: 24}, FontHeight(espy12), espy12))")) == 1);
+	EXPECT(RINT(Eval("ShapeBounds(MakeTextLines(\"Ann Tester\", {left: 0, top: 0, right: 240, bottom: 24}, FontHeight(espy12), espy12)).bottom")) == RINT(Eval("FontAscent(espy12)")));
+	EXPECT(RINT(Eval("ShapeBounds(MakeTextLines(\"one two three\", {left: 0, top: 0, right: 30, bottom: 100}, 20, espy12)[1]).top")) == 20);
 	EXPECT(RINT(Eval("GetShapeInfo(MakeWedge(0, 0, 40, 40, 100, 30)).bitsBounds.left")) == 20);
 	EXPECT(RINT(Eval("GetShapeInfo(MakeWedge(0, 0, 40, 40, 100, 30)).bitsBounds.top")) == 20);
 	EXPECT(RINT(Eval("GetShapeInfo(MakeWedge(0, 0, 40, 40, 300, 30)).bitsBounds.right")) == 20);
