@@ -237,6 +237,23 @@ is the same value spelt so that it cannot be read two ways.
   notBic loops never advance the mask pointer; `ScaleStdRRect` scales the
   corner oval crosswise on a fax.
 
+## 2026-09-30: editing the Host network setup
+
+- Setting the Host network setup's domain name threw -48418: Internet
+  Setup's `ValidateTarget` (inetstup.pkg 0x1a001) takes
+  `Length(entry.DNSServers)`, and the host's setup had none of an
+  Ethernet setup's slots.  `HostLink.ns` now gives it Ethernet's
+  `blankEntry` (less the card, configuration 'usingServer), gives its
+  data definition that `blankEntry` and calls the prototype's
+  `FillNewEntry`, and repairs setups kept from before (94120b30).
+- On a restart the host's link was never registered - the store's
+  packages are activated before `HostLink.ns` starts, so it missed their
+  soup changes; it now looks again two seconds after starting.
+- The host's DNS tool keeps the setup's domain ('ddom) and asks again
+  with it for a name with no dot the resolver cannot find as it is
+  (`NEWTON_TRACE_DNS`).  ctests `host.NewtonInetHostSetup` (and
+  `.restart`).
+
 ## 2026-09-30: the tablet driver and the inker
 
 - The ROM's `TTabletDriver` protocol and `TabInitialize` (a registered

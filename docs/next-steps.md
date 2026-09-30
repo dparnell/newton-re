@@ -186,8 +186,11 @@ worked through.  What could come next (not ranked; the owner chooses):
   (`comms/host/HostLink.ns`, embedded; the `ictl`, `dnst` and `inet`
   services).  Internet Setup lists, opens and offers the Host network
   (ctest `host.NewtonInetSetup`; its pages are Ethernet's less the card
-  picker - the Configuration picker and the IP page are still shown and
-  ignored), and the NIE's protoEndpointFSM runs as a TCP client over it
+  picker, and its fields - Configuration, the addresses, the domain name -
+  are edited, kept and survive a restart, the domain used by the host's
+  DNS tool for a name with no dot: `host.NewtonInetHostSetup`; not
+  checked: a *new* manual setup's pages, which Ethernet's SetupViews may
+  reset to its own, card picker and all), and the NIE's protoEndpointFSM runs as a TCP client over it
   (`host.NewtonInetFSM`).  Waiting on NIE client packages (mail, web)
   for `fixtures/`; the modem navigator.  **The desktop connection**
   (being done): 2.1 has no TCP dock, so the plan (`docs/comms/README.md`,
