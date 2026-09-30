@@ -115,7 +115,15 @@ if(Python3_FOUND)
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/modem/t4.py --test-page --fill 2
                      --pbm ${CMAKE_CURRENT_BINARY_DIR}/t4page.pbm -o ${CMAKE_CURRENT_BINARY_DIR}/t4page.t4)
     set_tests_properties(comms.T4Page PROPERTIES FIXTURES_SETUP t4page)
-    add_test(NAME comms.T4FaxLine COMMAND test_T4FaxLine ${CMAKE_CURRENT_BINARY_DIR}/t4page.t4 ${CMAKE_CURRENT_BINARY_DIR}/t4page.pbm)
-    set_tests_properties(comms.T4FaxLine PROPERTIES FIXTURES_REQUIRED t4page TIMEOUT 60
-                         PASS_REGULAR_EXPRESSION "200 of 200 lines decoded.*test_T4FaxLine: all passed")
+    add_test(NAME comms.T4FaxLine COMMAND test_T4FaxLine ${CMAKE_CURRENT_BINARY_DIR}/t4page.t4 ${CMAKE_CURRENT_BINARY_DIR}/t4page.pbm
+                                          ${CMAKE_CURRENT_BINARY_DIR}/t4encoded.t4)
+    set_tests_properties(comms.T4FaxLine PROPERTIES FIXTURES_REQUIRED t4page FIXTURES_SETUP t4encoded TIMEOUT 60
+                         PASS_REGULAR_EXPRESSION "200 of 200 lines decoded.*200 lines coded.*test_T4FaxLine: all passed")
+    # the fax tool's coder (EncodeT4) the other way: t4.py decodes what it
+    # coded, and the page must come back
+    add_test(NAME comms.T4Encode
+             COMMAND ${CMAKE_COMMAND} -DPYTHON=${Python3_EXECUTABLE} -DT4=${CMAKE_SOURCE_DIR}/../tools/modem/t4.py
+                     -DCODED=${CMAKE_CURRENT_BINARY_DIR}/t4encoded.t4 -DDECODED=${CMAKE_CURRENT_BINARY_DIR}/t4encoded.pbm
+                     -DPAGE=${CMAKE_CURRENT_BINARY_DIR}/t4page.pbm -P ${CMAKE_CURRENT_SOURCE_DIR}/T4Encode.cmake)
+    set_tests_properties(comms.T4Encode PROPERTIES FIXTURES_REQUIRED t4encoded TIMEOUT 60)
 endif()

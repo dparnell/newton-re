@@ -90,6 +90,7 @@
 #include "SharpIRTool.h"
 #include "MNP.h"
 #include "ModemTool.h"
+#include "FaxTool.h"
 #include "HostLink.h"
 #include "os600/kernel/host/TaskRuntime.h"
 #include "REPTranslators.h"
@@ -177,6 +178,7 @@ NewtonBoot(void)
 			RegisterSerialCommServices();
 			RegisterMNPService();
 			RegisterModemService();
+			RegisterFaxService();
 			printf("[host] serial port %u\n", (unsigned) HostSerialChipPort());
 			fflush(stdout);
 		}

@@ -1,10 +1,10 @@
 /*
 	File:		comms/fax/T4FaxLine.cpp
 
-	Contains:	TT4FaxLine, the MH decoder of a received page's lines
-				(T4FaxLine.h).
+	Contains:	TT4FaxLine, the MH decoder of a received page's lines, and
+				EncodeT4, the coder of a page being sent (T4FaxLine.h).
 
-	Reconstructed from the MP2x00 US ROM (0x00204698-0x00204e34); each
+	Reconstructed from the MP2x00 US ROM (0x00204698-0x00205180); each
 	function cites its origin.
 */
 
@@ -354,4 +354,112 @@ TT4FaxLine::DecodeLine(UChar* line, int lineBytes, int& bytesDecoded, ULong catc
 			result = false;
 	}
 	return result;
+}
+
+
+/*------------------------------------------------------------------------------
+	The coder.
+------------------------------------------------------------------------------*/
+
+// ROM 0x00204e34 writeCodeWord__FRPUcPUcUlRUlRi
+// A code's bits added to those in hand, whole bytes written out (as far as
+// the buffer goes; the bits are dropped past its end).
+static void
+writeCodeWord(UChar*& out, UChar* end, ULong code, ULong& bits, int& count)
+{
+	bits |= (code & 0xffff) << count;
+	count += (long) code >> 16;
+	while (count >= 8)
+	{
+		if (out < end)
+			*out++ = (UChar) bits;
+		count -= 8;
+		bits >>= 8;
+	}
+}
+
+
+// ROM 0x00204eb4 outputRun__FRPUcPUciUcRUlRi
+// A run of a colour (0 white, 0xff black) as its make-up and terminating
+// codes; a run longer than 1791 is cut to that.
+static void
+outputRun(UChar*& out, UChar* end, int run, UChar color, ULong& bits, int& count)
+{
+	if (run > 0x6ff)
+		run = 0x6ff;
+	if (run & 0xfc0)
+		writeCodeWord(out, end, (color != 0 ? blackMakeupTbl : whiteMakeupTbl)[run >> 6], bits, count);
+	writeCodeWord(out, end, (color != 0 ? blackCompleteTbl : whiteCompleteTbl)[run & 0x3f], bits, count);
+}
+
+
+// ROM 0x00204f60 EncodeT4__FPUciT1N42
+// The line's runs, the leftOffset white pixels before them and the white
+// that fills it out to width.  BUG: the noughts that make it minBytes are
+// written with no check against the end of the buffer.
+int
+EncodeT4(UChar* line, int lineBytes, UChar* out, int outSize, int width, int leftOffset, int minBytes)
+{
+	UChar* lineEnd = line + lineBytes;
+	UChar* start = out;
+	UChar* end = out + outSize;
+	UChar color = 0;
+	ULong bits = 0x800;						// the end of line
+	int count = 12;
+	int run = leftOffset;
+	while (line < lineEnd)
+	{
+		UChar pixels = *line++ ^ color;
+		if (pixels == 0)
+		{
+			run += 8;
+			continue;
+		}
+		for (int i = 8; i > 0; i--)
+		{
+			Boolean change = (pixels & 0x80) != 0;
+			pixels = (UChar) (pixels << 1);
+			if (change)
+			{
+				outputRun(out, end, run, color, bits, count);
+				run = 1;
+				color ^= 0xff;
+				pixels ^= 0xff;
+			}
+			else
+				run++;
+		}
+	}
+	if (color == 0xff && run != 0)
+	{
+		outputRun(out, end, run, color, bits, count);
+		run = 0;
+		color = 0;
+	}
+	run += width - leftOffset - lineBytes * 8;
+	if (run != 0)
+		outputRun(out, end, run, color, bits, count);
+	if (out < end && count != 0)
+		*out++ = (UChar) bits;
+	if (out >= end)
+		return -1;
+	int fill = minBytes - (int) (out - start - 2);
+	if (fill <= 0)
+		fill = 1;
+	do
+		*out++ = 0;
+	while (--fill > 0);
+	return (int) (out - start);
+}
+
+
+// ROM 0x00205144 T4AddRTC__FPUc
+int
+T4AddRTC(UChar* out)
+{
+	*out++ = 0x00; *out++ = 0x08; *out++ = 0x80;
+	*out++ = 0x00; *out++ = 0x08; *out++ = 0x80;
+	*out++ = 0x00; *out++ = 0x08; *out++ = 0x80;
+	*out = 0x00;
+	return 10;
 }

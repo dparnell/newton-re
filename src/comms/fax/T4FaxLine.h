@@ -22,7 +22,9 @@
 				names of the fields are ours, their order the ROM's
 				(offsets noted, for the ROM's layout of 0x34 bytes).
 
-	Reconstructed from the MP2x00 US ROM (0x00204698-0x00204e34); each
+				EncodeT4 is the other way, for a page being sent.
+
+	Reconstructed from the MP2x00 US ROM (0x00204698-0x00205180); each
 	function cites its origin.  docs/comms/README.md, "Fax".
 */
 
@@ -68,10 +70,25 @@ public:
 	UChar*				fOutEnd;				// +0x30
 };
 
-// the decoding trees (T4Tables.cpp)
+// The coder of a page being sent: a scan line (most significant bit first,
+// a black pixel a 1) as MH, preceded by an end of line and followed by
+// noughts to make it at least minBytes; the bytes written, -1 if they did
+// not fit.
+int		EncodeT4(UChar* line, int lineBytes, UChar* out, int outSize, int width, int leftOffset, int minBytes);
+// RTC (six ends of line) at out; its length, 10.
+int		T4AddRTC(UChar* out);
+
+// the decoding trees, and the codes (T4Tables.cpp): a code is its bits, the
+// first sent least significant, and its length in the high half
 extern const unsigned char	kFaxMaskBelow[8];
 extern const unsigned char	kFaxMaskFrom[8];
 extern const unsigned char* const	kMajorIndexWhite[16];
 extern const unsigned char* const	kMajorIndexBlack[4];
+extern const unsigned int	whiteCompleteTbl[64];
+extern const unsigned int	whiteMakeupTbl[29];
+extern const unsigned int	blackCompleteTbl[64];
+extern const unsigned int	blackMakeupTbl[29];
+// each byte's bits reversed
+extern const unsigned char	kFaxBitReverse[256];
 
 #endif	/* __COMMS_FAX_T4FAXLINE_H */

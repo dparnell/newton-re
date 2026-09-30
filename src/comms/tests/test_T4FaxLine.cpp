@@ -9,7 +9,12 @@
 // byte - T4FaxLine.cpp's GetNextBit - so an end of line right at the start
 // would lose the first line.)
 //
-//   test_T4FaxLine page.t4 page.pbm
+// With a third path, the page is coded the other way too - each scan line
+// through the fax tool's EncodeT4, and RTC after the last - and written
+// there for t4.py to decode (ctest comms.T4Encode compares what it makes of
+// it with the page).
+//
+//   test_T4FaxLine page.t4 page.pbm [encoded.t4]
 
 #include "T4FaxLine.h"
 #include "NewtonMemory.h"
@@ -27,6 +32,7 @@ static int failures = 0;
 
 static const char* gCodePath;
 static const char* gPagePath;
+static const char* gEncodedPath;
 
 
 static std::vector<UChar>
@@ -136,6 +142,37 @@ Scenario(void)
 	EXPECT(appended == 4 && n == 0);
 	EXPECT(decoder.GetLength() == 4);
 
+	// the page coded by the tool's coder
+	if (gEncodedPath != NULL)
+	{
+		std::vector<UChar> coded;
+		UChar out[1000];
+		int longest = 0;
+		for (int y = 0; y < height; y++)
+		{
+			int length = EncodeT4(pbm.data() + offset + y * stride, stride, out, sizeof(out), width, 0, 0);
+			EXPECT(length > 0);
+			if (length > longest)
+				longest = length;
+			coded.insert(coded.end(), out, out + length);
+		}
+		int rtc = T4AddRTC(out);
+		EXPECT(rtc == 10);
+		coded.insert(coded.end(), out, out + rtc);
+		FILE* f = fopen(gEncodedPath, "wb");
+		EXPECT(f != NULL);
+		if (f != NULL)
+		{
+			fwrite(coded.data(), 1, coded.size(), f);
+			fclose(f);
+		}
+		// a line too long for its buffer is refused
+		EXPECT(EncodeT4(pbm.data() + offset, stride, out, 4, width, 0, 0) == -1);
+		// and one too short padded out to the minimum
+		EXPECT(EncodeT4(pbm.data() + offset, stride, out, sizeof(out), width, 0, 100) >= 100);
+		printf("test_T4FaxLine: %d lines coded, %ld bytes, the longest %d\n", height, (long) coded.size(), longest);
+	}
+
 	DisposPtr((Ptr) line);
 	DisposPtr((Ptr) ring);
 	HostStopTasks();
@@ -152,6 +189,7 @@ main(int argc, char** argv)
 	}
 	gCodePath = argv[1];
 	gPagePath = argv[2];
+	gEncodedPath = argc > 3 ? argv[3] : NULL;
 	gHostKernelServicesTask = Scenario;
 	OsBoot();
 	if (failures == 0)

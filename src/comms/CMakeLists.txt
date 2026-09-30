@@ -102,6 +102,15 @@ add_library(comms_dock STATIC
 )
 target_link_libraries(comms_dock PUBLIC comms_serial comms_script packages stores newt intl qd utility)
 
+# The fax tool (fax/FaxTool.h: T.30 over the modem tool, 'faxs'); a page
+# received into a large binary is flushed through the stores' large objects.
+add_library(comms_fax STATIC
+    fax/FaxTool.cpp
+    fax/FaxToolPhases.cpp
+    fax/FaxToolClass2.cpp
+)
+target_link_libraries(comms_fax PUBLIC comms_serial stores)
+
 # The Newton Toolkit's inspector connection (NTK.h): the debugger nub the
 # desktop's NTK talks to, its task and endpoint client (over the dock's easy
 # options), the REP translators it swaps in, and the tethered listener.
