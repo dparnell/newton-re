@@ -162,6 +162,14 @@
 			viewsToDisplay: views,
 			newEntryViews: call noCard with (GetDataDefs(base).newEntryViews),
 			AlternateNewViews: call noCard with (GetDataDefs(base).AlternateNewViews),
+			// (a new setup's walk-through asks SetupViews for its pages, and
+			// Ethernet's - 0x1f051 - answers a Manual configuration with
+			// its prototype's newEntryViews, which from here would be
+			// Ethernet's own, card picker and all: the host's answers the
+			// same choice from its own pages)
+			manualNewViews: call noCard with (GetDataDefs(base).newEntryViews),
+			SetupViews: func(entry)
+				newEntryViews := if entry.configuration = 'manual then manualNewViews else AlternateNewViews,
 			// (the prototype's FillNewEntry deep-clones blankEntry's slots
 			// into a new setup - Ethernet's does, 0x1e751 - so the host's
 			// are given it: its own and the link layer)

@@ -56,6 +56,15 @@ ihsField := func(title, what, x, keys) [
 	end,
 	call keysStep with (keys)];
 ihsDefault := func() (call ihsApp with ()).currentLayout = 'default;
+// whether a data definition's pages have Ethernet's card picker (a child
+// whose path starts with cardData)
+ihsCardPicker := func(pages) begin
+	local found := nil;
+	foreach page in pages do
+		foreach c in page.stepChildren do
+			if IsArray(c.path) and Length(c.path) > 0 and c.path[0] = 'cardData then found := true;
+	found;
+end;
 
 ihsCheckEntry := func(prefix) func(done) begin
 	local e := call ihsEntry with ();
@@ -133,6 +142,23 @@ foreach s in [
 	end,
 	call ihsCloseSlip with ("Domain Name"),
 	call ihsCheckEntry with ("reopened "),
+	// a new setup's pages (what New's walk-through shows): Internet Setup
+	// asks the data definition's SetupViews for them, which for a Manual
+	// configuration Ethernet's answers with its prototype's newEntryViews -
+	// Ethernet's own, card picker and all - and otherwise AlternateNewViews;
+	// the host's answers its own, without the card, either way
+	func(done) begin
+		local def := GetDataDefs('|HostNetwork:host|);
+		local manual := def:SetupViews({configuration: 'manual});
+		local server := def:SetupViews({configuration: 'server});
+		call wtCheck with ("a new manual setup's pages have no card picker",
+			IsArray(manual) and Length(manual) > 0 and not call ihsCardPicker with (manual), "they have one");
+		call wtCheck with ("a new server setup's pages have no card picker",
+			IsArray(server) and Length(server) > 0 and not call ihsCardPicker with (server), "they have one");
+		call wtCheck with ("Ethernet's own pages have it (the check sees one)",
+			call ihsCardPicker with (GetDataDefs('|Ethernet:NIE|).newEntryViews), "none found");
+		call done with ();
+	end,
 	func(done) begin
 		(call ihsApp with ()):Close();
 		Print("inethostsetup: done, " & wtFailures & " failed");
