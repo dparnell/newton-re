@@ -9,6 +9,19 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: two test flakes
+
+- `intl.Dates` (9e1489c8) failed one run in 60 - at every whole minute,
+  not only at midnight - because `TimeInSeconds() !=
+  TotalSeconds(Date(Time()))` holds only while the seconds are not
+  nought.  Those checks now pin the clock (30 September 2026 14:05:17
+  GMT) and expect a difference of 17; passed at 190 pinned times.
+- `host.NewtonBeamIrDA` (ccdec403) failed about one copy in 60 under
+  load: the receiver answered the IrLAP connection too late and the
+  sender gave up by the ROM's own timers.  The demos now resend and
+  listen again as a user would (no ROM constant changed); 150 of 150
+  stress copies passed, about one in 15 needing a retry.
+
 ## 2026-10-01: sorting tables kept on a store
 
 A store now carries the sorting tables its soups are ordered by, so it

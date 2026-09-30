@@ -476,6 +476,17 @@ The order, each a verified piece with a test:
 5. IrDA (`'irda'`): `TIrSIR` upward to `TIrDATool` - two 2.1 MessagePads
    then beam over IrDA as the ROM would.  Done: `comms.IrDA`, `host.NewtonBeamIrDA`.
 
+### A beam that fails
+
+TransportNotify's SendRequest and ReceiveRequest return when the beam
+has ended.  A failed beam leaves the note in the Out Box, the error in
+its entry's `error` slot and the transport idle; a beam nobody answers
+gives up after about 100 s.  Under heavy load the IrLAP connection can
+fail by the ROM's own timers (-38506, kIrDAErrLAPFailedConnection, and
+the receiver's listen then -38001); `demo/beam-irda-send.ns` and
+`beam-irda-receive.ns` send and listen again, up to three times, as a
+user would (ccdec403).
+
 ## The web browsers
 
 NetHopper and Newt's Cape browse over the built-in NIE and the host's
