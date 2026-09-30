@@ -109,6 +109,28 @@ bugs and ROM bugs found on the way.
   count wraps.  `HostOptionLayouts`' '*' copies an option's trailing
   bytes as they are ('rout' numbers, 'mpro' profiles).
 
+## 2026-09-30: memory cards mount
+
+- The PSS manager's 'pssm world (d7abcf11; `stores/flash/PSSManager.h`):
+  `TPSSManager` - `CardAvailable`, `CardGone`, `CardIsSame`, `UIEngine`,
+  `Register`/`DeregisterStores`, `GCStores` - making a flash store for each
+  device a new card's 'card event names; `stores/PSSInfo.h`.  The newt
+  side: `pcmcia/NewtCardEvents.h` (`TNewtCardEventHandler`,
+  `HandleCardEvents`) and `newt/StorageCards.h`
+  (`StorageCardInserted`/`MountStore`, `StorageCardRemoved`/`UnmountStore`);
+  `TNewtWorld` dispatches 'card, 'rstr and 'stor.  `HostMountStores`
+  starts the card server before the PSS manager, the ROM's order.
+- `newton --card file` (a blank 4 MB card made if missing);
+  `HostCreateCard`/`HostInsertCard`/`HostRemoveCard` for scripts.  ctest
+  `host.NewtonCard` (`src/host/demo/card.ns`): a blank card goes in, the
+  ROM's NewtonScript card handler asks to erase and format it, the store
+  mounts ('flsh, slot 0), a soup written on it survives the card being
+  pulled and put back.
+- Found: without the internal flash `InitPSSManager` never ran, so
+  `TFlashStore` was never registered and a flash store could not be made
+  by name.  ROM bug kept: `HandleCardEvent`'s 0x6f case replies into the
+  message it has just deleted (the host skips the write).
+
 ## 2026-09-30: the card server
 
 - `pcmcia/CardServer.h` (caccd716, ctest `pcmcia.CardServer`):

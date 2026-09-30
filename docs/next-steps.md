@@ -19,14 +19,14 @@ the way are all in `docs/work-log.md`.
 - `analysis/natives.py --unbound`: only comms' are left (comms 102 of
   147, the AppleTalk `*Zone*` four and IR sniffing).  `instance:Dispatch` works only on a
   monitor protocol (a host protocol's methods need numbered thunks, NOT
-  YET); the card server is behind `UnmountCard` and
-  `GetCardSlotStores`.
+  YET).
 - **Stores**: the internal store is the ROM's own flash format in a host
-  file (`newton --store`, `stores/flash/`).  Cards: the host card and
-  socket, the CIS, the memory card handler, a flash store on a card and
-  the card server are in; being done: the PSS manager world and the newt
-  side's mount and unmount (the card server started by the boot), then
-  `newton --card` and a demo (`docs/stores/README.md`, step 5).
+  file (`newton --store`, `stores/flash/`).  **Memory cards mount**: a
+  card is a host file (`newton --card`), formatted through the ROM's own
+  dialogs, mounted and unmounted as it goes in and out (ctest
+  `host.NewtonCard`).  Being done: the Einstein cross-check (an Einstein
+  card image in and out).  NOT YET: the reinsert alert, card packages in
+  attribute memory, ATA cards.
 
 ## What works
 
