@@ -935,9 +935,9 @@ main()
 	InitHostStandaloneHeap();
 	// the ROM's objects: a picture being recorded begins with the system
 	// font as its text style (OpenPicture's SearchFont), which is theirs
-	if (ImportROMObjectsFromFile(NEWTON_ROM_BIN) != noErr)
+	if (ImportROMObjectsFromFile(NEWTON_OBJECTS) != noErr)
 	{
-		printf("test_PicPlay: cannot import %s\n", NEWTON_ROM_BIN);
+		printf("test_PicPlay: cannot import %s\n", NEWTON_OBJECTS);
 		return 1;
 	}
 	InitObjects();					// (DrawPicture keeps its styles and shapes in Refs, as the ROM's does)

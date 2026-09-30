@@ -4,6 +4,6 @@
 # interpreter), the oracle the re-expressions must agree with: both count
 add_executable(test_NIEProtoFSM test_NIEProtoFSM.cpp)
 target_link_libraries(test_NIEProtoFSM PRIVATE thirdparty_nie armcpu_frames stores frames)
-target_compile_definitions(test_NIEProtoFSM PRIVATE "NEWTON_ROM_IMAGE=\"${NEWTON_ROM_IMAGE}\""
+target_compile_definitions(test_NIEProtoFSM PRIVATE "NEWTON_OBJECTS=\"${NEWTON_OBJECTS_FILE}\""
     "NIE_PACKAGE=\"${CMAKE_SOURCE_DIR}/../fixtures/packages/apple/NIE2/REGPKGS/inetenbl.pkg\"")
 add_test(NAME thirdparty.NIEProtoFSM COMMAND test_NIEProtoFSM)

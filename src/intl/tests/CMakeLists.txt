@@ -1,6 +1,6 @@
 add_executable(test_Dates test_Dates.cpp)
 target_link_libraries(test_Dates PRIVATE intl)
-target_compile_definitions(test_Dates PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
+target_compile_definitions(test_Dates PRIVATE "NEWTON_OBJECTS=\"${NEWTON_OBJECTS_FILE}\"")
 add_test(NAME intl.Dates COMMAND test_Dates)
 set_tests_properties(intl.Dates PROPERTIES TIMEOUT 120)
 

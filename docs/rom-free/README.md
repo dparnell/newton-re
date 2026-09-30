@@ -428,6 +428,23 @@ themselves; a configure without the image does not register them).
   the cross-check: `host.Newton` (the demo boot), `host.NewtonNoROMSameScreen`
   and `host.NewtonEditedSameScreen` (both ways, pixel for pixel), and the
   decompiler's `host.NSDecompileRoundTrip`.
+- The unit tests that need only the ROM's objects (fonts, locale bundles,
+  prototypes - 39 of them: `test_Views`, `test_Text`, `test_Dates`, the
+  text engine's, recognition's, ...) import the object file too, compiled
+  with `NEWTON_OBJECTS` (`NEWTON_OBJECTS_FILE` in `src/CMakeLists.txt`);
+  `test_PackageManager` reads the extension's packages through
+  `ROMBytesAt`. `host.NewtonPackage.extract` makes its loadable
+  Formulas2.pkg out of the object file (`packages.py <object file>`: the
+  extension is one of its blocks), byte for byte the one it made out of
+  `build/MP2x00US`.
+- **With no ROM image, 248 of the 259 ctests run and pass.** The 11 left
+  out are the ones whose point is the ROM: the importer's own test
+  (`frames.ROMImport`), the ROM code run as an oracle (`compression.LZOracle`,
+  `utility.DES`), the tests that read packages out of the raw image
+  (`frames.FramesPart`, `packages.PackageIterator`), the extractor and
+  decompiler round trips (`host.ROMSourceRoundTrip`, `host.ROMSourceCommitted`,
+  `host.NSDecompileRoundTrip`), and the boots on the image
+  (`host.Newton`, the two SameScreen comparisons).
 
 ### Where it stands: the OS boots with no ROM image
 

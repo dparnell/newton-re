@@ -20,7 +20,7 @@ set_tests_properties(comms.Endpoint PROPERTIES TIMEOUT 60)
 
 add_executable(test_Translators test_Translators.cpp)
 target_link_libraries(test_Translators PRIVATE comms_script os600_kernel os600_user)
-target_compile_definitions(test_Translators PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
+target_compile_definitions(test_Translators PRIVATE "NEWTON_OBJECTS=\"${NEWTON_OBJECTS_FILE}\"")
 add_test(NAME comms.Translators COMMAND test_Translators)
 set_tests_properties(comms.Translators PROPERTIES TIMEOUT 60)
 

@@ -57,10 +57,10 @@ main()
 	EXPECT(Collate(U("ape"), U("apple"), kDefaultSortTable, false) == 'E' - 'P');
 	EXPECT(Collate(U("ap"), U("apple"), kDefaultSortTable, false) == -3);
 
-	NewtonErr err = ImportROMObjectsFromFile(NEWTON_ROM_IMAGE);
+	NewtonErr err = ImportROMObjectsFromFile(NEWTON_OBJECTS);
 	if (err != noErr)
 	{
-		printf("test_SortTables: cannot import %s (%ld)\n", NEWTON_ROM_IMAGE, (long) err);
+		printf("test_SortTables: cannot import %s (%ld)\n", NEWTON_OBJECTS, (long) err);
 		return 1;
 	}
 	gObjectHeapSize = 0x80000;

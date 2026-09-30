@@ -517,9 +517,9 @@ int
 main()
 {
 	InitHostStandaloneHeap();
-	if (ImportROMObjectsFromFile(NEWTON_ROM_IMAGE) != noErr)
+	if (ImportROMObjectsFromFile(NEWTON_OBJECTS) != noErr)
 	{
-		printf("test_Compiler: cannot import %s\n", NEWTON_ROM_IMAGE);
+		printf("test_Compiler: cannot import %s\n", NEWTON_OBJECTS);
 		return 1;
 	}
 	gObjectHeapSize = 0x100000;

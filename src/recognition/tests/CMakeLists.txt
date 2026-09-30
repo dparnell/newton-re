@@ -22,7 +22,7 @@ add_test(NAME recognition.Airus COMMAND test_Airus)
 
 add_executable(test_RecConfig test_RecConfig.cpp)
 target_link_libraries(test_RecConfig PRIVATE recognition)
-target_compile_definitions(test_RecConfig PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
+target_compile_definitions(test_RecConfig PRIVATE "NEWTON_OBJECTS=\"${NEWTON_OBJECTS_FILE}\"")
 add_test(NAME recognition.RecConfig COMMAND test_RecConfig)
 
 add_executable(test_Controller test_Controller.cpp)
@@ -43,12 +43,12 @@ add_test(NAME recognition.WordList COMMAND test_WordList)
 
 add_executable(test_Dictionaries test_Dictionaries.cpp)
 target_link_libraries(test_Dictionaries PRIVATE recognition)
-target_compile_definitions(test_Dictionaries PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
+target_compile_definitions(test_Dictionaries PRIVATE "NEWTON_OBJECTS=\"${NEWTON_OBJECTS_FILE}\"")
 add_test(NAME recognition.Dictionaries COMMAND test_Dictionaries)
 
 add_executable(test_Spelling test_Spelling.cpp)
 target_link_libraries(test_Spelling PRIVATE recognition)
-target_compile_definitions(test_Spelling PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
+target_compile_definitions(test_Spelling PRIVATE "NEWTON_OBJECTS=\"${NEWTON_OBJECTS_FILE}\"")
 add_test(NAME recognition.Spelling COMMAND test_Spelling)
 
 add_executable(test_RosRecognizer test_RosRecognizer.cpp)
@@ -69,7 +69,7 @@ add_test(NAME recognition.Rosetta COMMAND test_Rosetta)
 
 add_executable(test_Search test_Search.cpp)
 target_link_libraries(test_Search PRIVATE recognition memory)
-target_compile_definitions(test_Search PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
+target_compile_definitions(test_Search PRIVATE "NEWTON_OBJECTS=\"${NEWTON_OBJECTS_FILE}\"")
 add_test(NAME recognition.Search COMMAND test_Search)
 
 add_executable(test_RosList test_RosList.cpp)
@@ -82,7 +82,7 @@ add_test(NAME recognition.Fragment COMMAND test_Fragment)
 
 add_executable(test_Reading test_Reading.cpp)
 target_link_libraries(test_Reading PRIVATE recognition memory)
-target_compile_definitions(test_Reading PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
+target_compile_definitions(test_Reading PRIVATE "NEWTON_OBJECTS=\"${NEWTON_OBJECTS_FILE}\"")
 
 add_test(NAME recognition.Reading COMMAND test_Reading)
 
@@ -118,7 +118,7 @@ target_link_libraries(test_LowLevel PRIVATE recognition)
 add_test(NAME recognition.LowLevel COMMAND test_LowLevel)
 add_executable(test_XrMatrix test_XrMatrix.cpp)
 target_link_libraries(test_XrMatrix PRIVATE recognition memory)
-target_compile_definitions(test_XrMatrix PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
+target_compile_definitions(test_XrMatrix PRIVATE "NEWTON_OBJECTS=\"${NEWTON_OBJECTS_FILE}\"")
 add_test(NAME recognition.XrMatrix COMMAND test_XrMatrix)
 
 # the cursive reader's answers: a word graph made into readings and a

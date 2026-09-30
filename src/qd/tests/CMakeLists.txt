@@ -20,7 +20,7 @@ set_tests_properties(qd.Shapes PROPERTIES TIMEOUT 60)
 
 add_executable(test_Text test_Text.cpp)
 target_link_libraries(test_Text PRIVATE qd)
-target_compile_definitions(test_Text PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
+target_compile_definitions(test_Text PRIVATE "NEWTON_OBJECTS=\"${NEWTON_OBJECTS_FILE}\"")
 add_test(NAME qd.Text COMMAND test_Text)
 set_tests_properties(qd.Text PROPERTIES TIMEOUT 120)
 
@@ -31,12 +31,12 @@ set_tests_properties(qd.Screen PROPERTIES TIMEOUT 60)
 
 add_executable(test_PicPlay test_PicPlay.cpp)
 target_link_libraries(test_PicPlay PRIVATE qd)
-target_compile_definitions(test_PicPlay PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
+target_compile_definitions(test_PicPlay PRIVATE "NEWTON_OBJECTS=\"${NEWTON_OBJECTS_FILE}\"")
 add_test(NAME qd.PicPlay COMMAND test_PicPlay)
 
 add_executable(test_TextObject test_TextObject.cpp)
 target_link_libraries(test_TextObject PRIVATE qd)
-target_compile_definitions(test_TextObject PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
+target_compile_definitions(test_TextObject PRIVATE "NEWTON_OBJECTS=\"${NEWTON_OBJECTS_FILE}\"")
 add_test(NAME qd.TextObject COMMAND test_TextObject)
 set_tests_properties(qd.TextObject PROPERTIES TIMEOUT 120)
 

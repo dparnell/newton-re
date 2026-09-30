@@ -16,6 +16,6 @@ set_tests_properties(pcmcia.MemoryCard PROPERTIES TIMEOUT 60)
 # event), taken out (the application told, the handler removed), put back
 add_executable(test_CardServer test_CardServer.cpp)
 target_link_libraries(test_CardServer PRIVATE pcmcia flash os600_kernel os600_user)
-target_compile_definitions(test_CardServer PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
+target_compile_definitions(test_CardServer PRIVATE "NEWTON_OBJECTS=\"${NEWTON_OBJECTS_FILE}\"")
 add_test(NAME pcmcia.CardServer COMMAND test_CardServer)
 set_tests_properties(pcmcia.CardServer PROPERTIES TIMEOUT 60)

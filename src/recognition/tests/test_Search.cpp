@@ -75,9 +75,9 @@ main()
 {
 	InitHostStandaloneHeap();
 	// the lexicons are in the ROM's own bytes
-	if (ImportROMObjectsFromFile(NEWTON_ROM_BIN) != noErr)
+	if (ImportROMObjectsFromFile(NEWTON_OBJECTS) != noErr)
 	{
-		printf("test_Search: cannot import %s\n", NEWTON_ROM_BIN);
+		printf("test_Search: cannot import %s\n", NEWTON_OBJECTS);
 		return 1;
 	}
 	InitROMDictionaryData();

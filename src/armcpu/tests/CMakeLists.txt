@@ -4,7 +4,7 @@ add_test(NAME armcpu.ARMCPU COMMAND test_ARMCPU)
 
 add_executable(test_PackageNativeCPU test_PackageNativeCPU.cpp)
 target_link_libraries(test_PackageNativeCPU PRIVATE armcpu_frames frames)
-target_compile_definitions(test_PackageNativeCPU PRIVATE "NEWTON_ROM_IMAGE=\"${NEWTON_ROM_IMAGE}\"")
+target_compile_definitions(test_PackageNativeCPU PRIVATE "NEWTON_OBJECTS=\"${NEWTON_OBJECTS_FILE}\"")
 add_test(NAME armcpu.PackageNativeCPU COMMAND test_PackageNativeCPU)
 
 # a package's native functions run through the fallback: Mahjongg deals

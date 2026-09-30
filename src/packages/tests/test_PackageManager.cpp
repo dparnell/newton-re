@@ -23,7 +23,7 @@
 //     writes a package: a copy whose refs are offsets from the package's
 //     start, which is the same frame to the handler.
 //
-// The ROM image is build/MP2x00US/rom.bin.
+// The ROM's objects and extension come from the object file built from romsrc/.
 
 #include "PackageManager.h"
 #include "StdioPipe.h"
@@ -69,8 +69,9 @@ const ULong kScreenBuffer = 0x7a5554;
 const ULong kSetup = 0x7a67fc;
 const ULong kWorldData = 0x7b4d20;
 
-static const UByte*	gROM = nil;
-static ULong		gROMSize = 0;
+// the ROM's bytes at a ROM address: out of the image, or out of the object
+// file's copy of the extension (frames/ROMImport.h's ROMBytesAt)
+static const UByte*	ROMAt(ULong address) { return (const UByte*) ROMBytesAt(address, 1); }
 static volatile Boolean	gDone = false;
 
 
@@ -163,7 +164,7 @@ TestListEntries(void)
 static void
 TestPackagePipe(void)
 {
-	const UByte* package = gROM + kSetup;
+	const UByte* package = ROMAt(kSetup);
 	ULong size = GetBigEndianWord(package + 0x1c);
 	ULong directorySize = GetBigEndianWord(package + 0x2c);
 	CTestPipe source(size);
@@ -281,7 +282,7 @@ Load(const void* package, ULong* packageId)
 static UByte*
 AsNTKWritesIt(ULong romAddress)
 {
-	const UByte* package = gROM + romAddress;
+	const UByte* package = ROMAt(romAddress);
 	ULong size = GetBigEndianWord(package + 0x1c);
 	UByte* copy = (UByte*) malloc(size);
 	memcpy(copy, package, size);
@@ -336,7 +337,7 @@ TestManager(void)
 
 	// Cardfile and Setup, where they lie in the ROM
 	ULong cardfile = 0, setup = 0, id = 0;
-	EXPECT(Load(gROM + kCardfile, &cardfile) == noErr && cardfile != 0);
+	EXPECT(Load(ROMAt(kCardfile), &cardfile) == noErr && cardfile != 0);
 	Given* given = GivenFor(cardfile);
 	EXPECT(given != nil && given->fType == 'auto' && given->fPartId.partIndex == 0 && !given->fRemoved);
 	if (given != nil)
@@ -344,18 +345,18 @@ TestManager(void)
 		RefVar frame(*given->fFrame);
 		EXPECT(IsFrame(frame) && NOTNIL(GetFrameSlotRef(frame, RSSYMinstallscript)) && NOTNIL(GetFrameSlotRef(frame, RSSYMremovescript)));
 	}
-	EXPECT(Load(gROM + kSetup, &setup) == noErr && setup != 0 && setup != cardfile);
+	EXPECT(Load(ROMAt(kSetup), &setup) == noErr && setup != 0 && setup != cardfile);
 	given = GivenFor(setup);
 	EXPECT(given != nil && given->fType == 'form');
 	if (given != nil)
 		EXPECT(IsFrame(RefVar(*given->fFrame)));
 	long before = gGivenCount;
-	EXPECT(Load(gROM + kSetup, &id) == kError_Package_Already_Exists && id == setup && gGivenCount == before);
+	EXPECT(Load(ROMAt(kSetup), &id) == kError_Package_Already_Exists && id == setup && gGivenCount == before);
 
 	// WorldData from memory of its own: a package store
-	ULong worldDataSize = GetBigEndianWord(gROM + kWorldData + 0x1c);
+	ULong worldDataSize = GetBigEndianWord(ROMAt(kWorldData) + 0x1c);
 	void* worldData = malloc(worldDataSize);
-	memcpy(worldData, gROM + kWorldData, worldDataSize);
+	memcpy(worldData, ROMAt(kWorldData), worldDataSize);
 	long stores = Length(gPackageStores);
 	ULong worldDataId = 0;
 	EXPECT(Load(worldData, &worldDataId) == noErr && worldDataId != 0);
@@ -363,8 +364,8 @@ TestManager(void)
 
 	// nobody takes a 'book part; a protocol part needs nobody
 	ULong helpBook = 0, screenBuffer = 0;
-	EXPECT(Load(gROM + kHelpBook, &helpBook) == kError_PartType_Not_Registered);
-	EXPECT(Load(gROM + kScreenBuffer, &screenBuffer) == noErr && screenBuffer != 0);
+	EXPECT(Load(ROMAt(kHelpBook), &helpBook) == kError_PartType_Not_Registered);
+	EXPECT(Load(ROMAt(kScreenBuffer), &screenBuffer) == noErr && screenBuffer != 0);
 	EXPECT(Known(screenBuffer) == noErr && Known(helpBook) == kError_No_Such_Package);
 
 	// the list, as GetPackages walks it
@@ -492,8 +493,8 @@ TestStreamed(void)
 	iter.Done();
 	EXPECT(screenBuffer != 0 && DeinstallPackage(screenBuffer) == noErr && Known(screenBuffer) == kError_No_Such_Package);
 	ULong streamedScreen = 0;
-	ULong screenSize = GetBigEndianWord(gROM + kScreenBuffer + 0x1c);
-	EXPECT(StreamLoad(gROM + kScreenBuffer, screenSize, &streamedScreen) == noErr && streamedScreen != 0);
+	ULong screenSize = GetBigEndianWord(ROMAt(kScreenBuffer) + 0x1c);
+	EXPECT(StreamLoad(ROMAt(kScreenBuffer), screenSize, &streamedScreen) == noErr && streamedScreen != 0);
 	EXPECT(Known(streamedScreen) == noErr);
 
 	// a frames part streamed: read as one flattened frame by its handler
@@ -524,8 +525,8 @@ TestStreamed(void)
 		if (Same(list.PackageName(), "Setup"))
 			setup = list.PackageId();
 	list.Done();
-	ULong setupSize = GetBigEndianWord(gROM + kSetup + 0x1c);
-	EXPECT(setup != 0 && StreamLoad(gROM + kSetup, setupSize, &id) == kError_Package_Already_Exists && id == setup);
+	ULong setupSize = GetBigEndianWord(ROMAt(kSetup) + 0x1c);
+	EXPECT(setup != 0 && StreamLoad(ROMAt(kSetup), setupSize, &id) == kError_Package_Already_Exists && id == setup);
 	free(package);
 }
 
@@ -824,7 +825,7 @@ public:
 		long err = TAppWorld::MainConstructor();
 		if (err != noErr)
 			return err;
-		if (ImportROMObjectsFromFile(NEWTON_ROM_BIN) != noErr)
+		if (ImportROMObjectsFromFile(NEWTON_OBJECTS) != noErr)
 			return kError_Bad_Parameters;
 		gObjectHeapSize = 0x400000;
 		InitObjects();
@@ -837,9 +838,8 @@ public:
 	}
 	virtual long		PreMain()
 	{
-		gROM = (const UByte*) ROMImageBase(&gROMSize);
-		EXPECT(gROM != nil);
-		if (gROM != nil)
+		EXPECT(ROMAt(kCardfile) != nil);
+		if (ROMAt(kCardfile) != nil)
 		{
 			TestPackagePipe();
 			TestManager();

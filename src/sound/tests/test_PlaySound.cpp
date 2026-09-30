@@ -517,7 +517,7 @@ Scenario(void)
 
 int main()
 {
-	HostConfigureNewtWorld(NEWTON_ROM_BIN, 0x400000, 320, 480, 4);
+	HostConfigureNewtWorld(NEWTON_OBJECTS, 0x400000, 320, 480, 4);
 	HostInstallSoundDriver(nil);
 	gNewtHostBoot = TestBoot;
 	NewtInstallUserMain();

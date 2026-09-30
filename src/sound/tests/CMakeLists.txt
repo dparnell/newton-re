@@ -35,7 +35,7 @@ set_tests_properties(sound.SoundServer PROPERTIES TIMEOUT 60)
 
 add_executable(test_PlaySound test_PlaySound.cpp)
 target_link_libraries(test_PlaySound PRIVATE newt host_views hal_host_display hal_host_sound)
-target_compile_definitions(test_PlaySound PRIVATE "NEWTON_ROM_BIN=\"${NEWTON_ROM_BIN}\"")
+target_compile_definitions(test_PlaySound PRIVATE "NEWTON_OBJECTS=\"${NEWTON_OBJECTS_FILE}\"")
 add_test(NAME sound.PlaySound COMMAND test_PlaySound)
 set_tests_properties(sound.PlaySound PROPERTIES TIMEOUT 120)
 

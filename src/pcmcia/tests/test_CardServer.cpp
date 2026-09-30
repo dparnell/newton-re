@@ -73,7 +73,7 @@ static void
 CardServerScenario(void)
 {
 	// the ROM's objects, for the alerts' bounds and texts
-	EXPECT(ImportROMObjectsFromFile(NEWTON_ROM_BIN) == noErr);
+	EXPECT(ImportROMObjectsFromFile(NEWTON_OBJECTS) == noErr);
 	InitObjects();
 	EXPECT(HostCardCreate(kCardFile, 4, "Test") == noErr);
 	InitAlertManager();				// (TLoader::TheMain starts it first: the card server looks for it)
