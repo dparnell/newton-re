@@ -2581,8 +2581,8 @@ TSoupIndex::Delete(SKey* key, SKey* data)
 // The key looked up: kIndexOK when it is there (outKey and outData its
 // key and first datum), kIndexNotFound when the key after it is
 // (outKey/outData that), kIndexEnd when nothing follows.  Not exact, a
-// string key is matched at the lowest sort order (NOT YET RECONSTRUCTED:
-// TSortingTable::ConvertTextToLowestSort).  An exception's error is the
+// string key is matched at the lowest sort order
+// (TSortingTable::ConvertTextToLowestSort).  An exception's error is the
 // result.
 int
 TSoupIndex::Find(SKey* key, SKey* outKey, SKey* outData, Boolean exact)

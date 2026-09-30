@@ -134,13 +134,22 @@ InitializeChunkArray(TStore* store, ULong* chunkArrayId, ULong size)
 // ROM 0x001018f4 FillChunkArray__FP6TStoreUlT2P5CPipeT2PcT2P11TLOCallback
 // The object's data read from the pipe a block at a time and written
 // through the compander.  On a failure the blocks written so far are given
-// back (SeparatelyAbort).
-// NOT YET RECONSTRUCTED: the callback (TLOCallback, told how far the
-// filling has got every so many bytes) - the host's callers give none.
+// back (SeparatelyAbort).  A callback is told {size, bytes so far} each
+// time its frequency's worth has been written.
 NewtonErr
 FillChunkArray(TStore* store, ULong rootId, ULong chunkArrayId, CPipe* pipe, ULong size, char* compander, ULong parametersId,
-			   TLOCallback* /*callback*/)
+			   TLOCallback* callback)
 {
+	TLOCallbackInfo info;
+	info.fPackageSize = size;
+	info.fAmountRead = 0;
+	info.fPackageName = nil;
+	// (the ROM leaves the part and the number of parts as the stack had
+	// them; nought here)
+	info.fCurrentPart = 0;
+	info.fNumberOfParts = 0;
+	ULong sinceCall = 0;
+	ULong done = 0;
 	ULong count = 0;
 	TStoreCompander* theCompander = nil;
 	char* block = (char*) malloc(0x400);
@@ -165,6 +174,14 @@ FillChunkArray(TStore* store, ULong rootId, ULong chunkArrayId, CPipe* pipe, ULo
 					|| (err = theCompander->Write(i << 10, block, n, 0)) != noErr)
 					break;
 				left -= n;
+				done += n;
+				sinceCall += n;
+				if (callback != nil && callback->fFrequency <= sinceCall)
+				{
+					info.fAmountRead = done;
+					callback->fProc(callback, &info);
+					sinceCall = 0;
+				}
 			}
 		}
 	}
@@ -1045,10 +1062,10 @@ LODefaultStreamSize(TStore* store, PSSId id, UChar compressed)
 // The object written to pipe.  Uncompressed: its bytes (mapped read-only
 // for the writing when they were not).  Compressed: the root's flags word
 // and the object's size, then every block as it lies on the store with its
-// size before it (words big-endian; the progress callback is NOT YET).
+// size before it (words big-endian), a callback told how far it has got.
 // A pipe exception becomes the answer.
 NewtonErr
-LODefaultBackup(CPipe* pipe, TStore* store, PSSId id, UChar compressed, TLOCallback* /*callback*/)
+LODefaultBackup(CPipe* pipe, TStore* store, PSSId id, UChar compressed, TLOCallback* callback)
 {
 	char* block = NewPtr(0x520);
 	NewtonErr err = MemError();
@@ -1066,6 +1083,14 @@ LODefaultBackup(CPipe* pipe, TStore* store, PSSId id, UChar compressed, TLOCallb
 		mapped = true;
 	}
 	long size = ObjectSize(address);
+	TLOCallbackInfo info;
+	info.fPackageSize = size;
+	info.fAmountRead = 0;
+	info.fPackageName = nil;
+	info.fCurrentPart = 0;
+	info.fNumberOfParts = 0;
+	ULong written = 0;
+	ULong sinceCall = 0;
 	if (!compressed)
 	{
 		newton_try
@@ -1135,9 +1160,16 @@ LODefaultBackup(CPipe* pipe, TStore* store, PSSId id, UChar compressed, TLOCallb
 				DisposePtr(block);
 				return err;
 			}
-			// NOT YET RECONSTRUCTED: the progress callback (TLOCallback, told
-			// {size, bytes so far} each time its chunk's worth has gone);
-			// nothing on the host passes one
+			// the progress callback, told {size, bytes so far - each block
+			// with its length word} each time its frequency's worth has gone
+			written += blockSize + 4;
+			sinceCall += blockSize + 4;
+			if (callback != nil && callback->fFrequency <= sinceCall)
+			{
+				info.fAmountRead = written;
+				callback->fProc(callback, &info);
+				sinceCall = 0;
+			}
 		}
 	}
 	if (mapped)

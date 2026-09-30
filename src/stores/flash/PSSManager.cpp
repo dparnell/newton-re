@@ -10,10 +10,11 @@
 				event), mounted by the application ('stor) and unmounted
 				when the card goes ('rstr).
 
-				NOT YET: the reinsert alert when a card in use goes
-				(SetCardReinsertReason), a RAM internal store
-				(no flash: InternalStoreInfo's RAM sizes, the persistent
-				'rams entry), and the reserved block's accessor.
+				The reinsert alert when a card in use goes is
+				SetCardReinsertReason (pcmcia/CardAlerts.h).  NOT YET: a
+				RAM internal store (no flash: InternalStoreInfo's RAM
+				sizes, the persistent 'rams entry), and the reserved
+				block's accessor.
 
 	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */

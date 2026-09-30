@@ -147,6 +147,8 @@ TestLargeBinaries(void)
 	EXPECT(EQRef(FindLargeBinaryInCache(wrapper, id), vbo));
 	EXPECT(RINT(Eval("GetVBOStoredSize(theVBO)")) > 0);
 	SetGlobal("theEntry", entry);
+	// EntrySize counts what the VBO takes up on the store; EntrySizeWithoutVBOs does not
+	EXPECT(RINT(Eval("EntrySize(theEntry)")) == RINT(Eval("EntrySizeWithoutVBOs(theEntry)")) + RINT(Eval("GetVBOStoredSize(theVBO)")));
 	EXPECT(Eval("ClearVBOCache(theVBO)") == NILREF);
 	EXPECT(Holds(vbo, 5000, 1));
 

@@ -170,7 +170,15 @@ Scenario(const char* compander)
 	pipe.WriteChunk(bytes, kPiped, false);
 	pipe.Rewind();
 	ULong piped = 0;
-	EXPECT(LODefaultCreate(&piped, store, &pipe, kPiped, false, (char*) compander, nil, 0, nil) == noErr);
+	gCallbackCount = 0;
+	gCallbackLastRead = 0;
+	TLOCallback filling;
+	filling.fProc = CountCallback;
+	filling.fFunction = nil;
+	filling.fInfoFrame = nil;
+	filling.fFrequency = 1;						// (every block)
+	EXPECT(LODefaultCreate(&piped, store, &pipe, kPiped, false, (char*) compander, nil, 0, &filling) == noErr);
+	EXPECT(gCallbackCount == 3 && gCallbackLastRead == (ULong) kPiped);	// (FillChunkArray: told after each of the three blocks)
 	EXPECT(MapLargeObject(&address, store, piped, true) == noErr && ObjectSize(address) == kPiped);
 	EXPECT(LargeObjectIsReadOnly(address) && !LargeObjectIsDirty(address));
 	EXPECT(memcmp((void*) address, bytes, kPiped) == 0);
@@ -184,7 +192,10 @@ Scenario(const char* compander)
 	long streamSize = LODefaultStreamSize(store, piped, true);
 	EXPECT(streamSize > 8);
 	CTestPipe packed(streamSize + 16);
-	EXPECT(LODefaultBackup(&packed, store, piped, true, nil) == noErr);
+	gCallbackCount = 0;
+	gCallbackLastRead = 0;
+	EXPECT(LODefaultBackup(&packed, store, piped, true, &filling) == noErr);
+	EXPECT(gCallbackCount == 3 && gCallbackLastRead == (ULong) streamSize - 8);	// (each block and its length word; not the two words in front)
 	packed.Rewind();
 	gCallbackCount = 0;
 	gCallbackLastRead = 0;

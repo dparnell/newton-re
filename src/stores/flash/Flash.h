@@ -5,7 +5,7 @@
 
 				TFlash is the protocol a flash device is reached through -
 				the internal flash (TNewInternalFlash) or a card's chips
-				(TFlashSeries2, TFlashAMD: NOT YET) - addressed in bytes from
+				(TFlashSeries2, CardFlash.h; TFlashAMD NOT YET) - addressed in bytes from
 				0 to GetTotalSize, erased GetEraseRegionSize bytes at a time.
 
 				Under the internal flash are TFlashRanges: each a set of

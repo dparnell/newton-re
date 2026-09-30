@@ -852,10 +852,12 @@ EntrySoup(RefArg entry)
 ------------------------------------------------------------------------------*/
 
 // ROM 0x002e064c GetLargeObjectSize__FP13TStoreWrapperUllPv
-// NOT YET RECONSTRUCTED: StorageSizeOfLargeObject.
+// EachLargeObjectDo's callback for EntrySize: what the large binary takes
+// up on the store added to the size.
 static Boolean
-GetLargeObjectSize(TStoreWrapper* /*wrapper*/, PSSId /*id*/, long /*arg*/, void* /*size*/)
+GetLargeObjectSize(TStoreWrapper* wrapper, PSSId id, long /*arg*/, void* size)
 {
+	*(long*) size += StorageSizeOfLargeObject(wrapper->Store(), id);
 	return false;
 }
 
