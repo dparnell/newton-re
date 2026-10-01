@@ -21,7 +21,9 @@
 				packages/StorePackages.h): a large object on the store,
 				recorded in its "Packages" soup and activated - and so
 				activated again at every boot after this one when the
-				store is kept in a file (--store).
+				store is kept in a file (--store).  A file in MacBinary (as
+				a Macintosh keeps a package for transfer) has its data fork
+				installed, as the Mac's Package Installer sends it.
 
 				`hostPackages` is made by HostInstallPackageGlobal, which
 				the world's PreMain runs through gNewtHostPreMain once the

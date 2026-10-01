@@ -144,6 +144,27 @@ ReadWholeFile(const char* path, long* size)
 }
 
 
+// A package file as a Macintosh keeps it for transfer, in MacBinary (a
+// 128-byte header naming the file, its type 'pkg ' and creator 'pkgX', and
+// its forks' lengths, the data fork following): what the Mac's Package
+// Installer sends is the data fork, so that is what is installed - NS Basic
+// 3.61's packages came this way.  The bytes moved to the front; ==> the
+// data fork's length, or `size` when the file is not MacBinary.
+static long
+UnwrapMacBinary(char* bytes, long size)
+{
+	const unsigned char* b = (const unsigned char*) bytes;
+	if (size < 128 + 8 || b[0] != 0 || b[1] == 0 || b[1] > 63 || b[74] != 0 || b[82] != 0
+	 || memcmp(bytes, "package", 7) == 0 || memcmp(bytes + 128, "package", 7) != 0)
+		return size;
+	long dataLength = ((long) b[83] << 24) | ((long) b[84] << 16) | ((long) b[85] << 8) | b[86];
+	if (dataLength <= 0 || 128 + dataLength > size)
+		return size;
+	memmove(bytes, bytes + 128, dataLength);
+	return dataLength;
+}
+
+
 void
 HostSendQueuedPackages(void)
 {
@@ -171,6 +192,7 @@ HostSendQueuedPackages(void)
 			free(path);
 			continue;
 		}
+		size = UnwrapMacBinary(bytes, size);
 		TRunScriptEvent event("hostPackages", "Install");
 		event.fData = bytes;
 		event.fSize = size;

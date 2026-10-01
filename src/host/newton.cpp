@@ -178,6 +178,7 @@ struct HostExceptionPointers
 typedef long (__stdcall *HostExceptionFilter)(HostExceptionPointers*);
 __declspec(dllimport) HostExceptionFilter __stdcall SetUnhandledExceptionFilter(HostExceptionFilter filter);
 __declspec(dllimport) void* __stdcall GetModuleHandleA(const char* name);
+__declspec(dllimport) unsigned short __stdcall RtlCaptureStackBackTrace(unsigned long skip, unsigned long count, void** trace, unsigned long* hash);
 __declspec(dllimport) void* __stdcall GetCurrentProcess(void);
 __declspec(dllimport) int __stdcall GetProcessTimes(void* process, unsigned long long* creation, unsigned long long* exit,
 													 unsigned long long* kernel, unsigned long long* user);
@@ -559,6 +560,21 @@ HostCrashed(const char* what, unsigned long code, void* where)
 #endif
 	fprintf(stderr, "[host] the machine fell over: %s (%#lx) at %p (image + %#lx)\n",
 		what, code, where, (unsigned long) ((char*) where - (char*) base));
+#ifdef _WIN32
+	// and the C stack: the filter runs on the stack of the thread that fell
+	// over, and the walk goes on through the exception dispatcher into the
+	// frames that faulted (the offsets inside the image are what
+	// whichfunction.py names; the first few are the dispatcher's own)
+	{
+		void* trace[40];
+		unsigned short n = RtlCaptureStackBackTrace(0, 40, trace, nil);
+		fprintf(stderr, "[host] the C stack, as image offsets:");
+		for (unsigned short i = 0; i < n; i++)
+			if ((char*) trace[i] >= (char*) base && (char*) trace[i] < (char*) base + 0x10000000)
+				fprintf(stderr, " %#lx", (unsigned long) ((char*) trace[i] - (char*) base));
+		fprintf(stderr, "\n");
+	}
+#endif
 	if (gREPout != nil && gInterpreter != nil)
 		gREPout->StackTrace(gInterpreter);
 	fflush(stderr);
