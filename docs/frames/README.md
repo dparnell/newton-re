@@ -639,6 +639,19 @@ meaning none at all, is always taken).  The ROM's one table, id 1, is the
 are the script's way at the default, and the boot's `bootInitNSGlobals`
 calls `SetSortID` while it is setting its globals up.
 
+On the U.S. ROM that leaves no default at all, and `GetSortID()` answers
+nil after a fresh boot: `AllocateEarlyStuff` 0x0030d19c makes the current
+locale's `sortId` the default only when the locale names one, and of the
+ROM's locale bundles only the Swedish one does (`sortID: 7`, the second
+table, `romsrc/objects/mp246.ns`); the U.S. bundle names none, and the boot
+block (0x0063d7c5) then calls `SetSortID(GetUserConfig('sortID))` on a
+fresh store, whose default user configuration has no `sortID` either -
+`SetSortID(nil)`, none.  `ReadPreferences` does the same with what the
+store keeps, and the Locale preferences' picker sets it.  So a U.S.
+machine collates with `OldCompareText` until a script or the preferences
+choose table 1 - the ROM's behaviour, kept (checked against the
+disassembly of `AllocateEarlyStuff` and the two NewtonScript functions).
+
 `CompareUnicodeText` 0x00255d6c is the comparison everything that orders
 text goes through.  It walks both strings through a `TStringToSort`
 (0x18 bytes: the table, the text left, the current character, a ligature's
