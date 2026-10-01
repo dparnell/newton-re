@@ -9,6 +9,16 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: every fixture package used for what it is for
+
+RoutBook (rtbk) makes a book's Action button alternate between the
+book's own routing and a text target; ctest `host.NewtonAppRoutBook`
+(`twonewtons.py`) beams Newt's Cape's help book page as text from one
+newton to the other, whose In Box item holds the page's text.  With it
+every package in `fixtures/packages/` has a test that uses it as a user
+would.  A build directory outside the main tree points at the shared ROM
+build with `-DNEWTON_ROM_BUILD=` relative to `src/../build/`.
+
 ## 2026-10-01: the card alert test waits on conditions
 
 `host.NewtonCardAlert` failed in every full parallel run: `card-alert.ns`
