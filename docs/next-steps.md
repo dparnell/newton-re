@@ -30,9 +30,12 @@ the way are all in `docs/work-log.md`.
 - **Linux** builds and runs with the system compiler
   (`-DCMAKE_CXX_COMPILER=clang++`): all 398 ctests pass on Ubuntu 22.04
   under WSL 2 (2026-10-01, clang 14, X11 and OpenSSL, no ALSA);
-  `docs/host-lp64.md`, which says how to build there.  Still
-  Windows-only: a package dropped onto the window (XDND), and
-  `tools/host/stacksample.py`, `profile.py`, `whichfunction.py`.  macOS
+  `docs/host-lp64.md`, which says how to build there.  A package
+  dropped onto the X11 window is installed (XDND, ctest
+  `host.NewtonWindowDrop`), `whichfunction.py` reads ELF, and
+  `stacksample.py`/`profile.py` work there by newton sampling itself
+  (`tools/host/linuxsample.py`); ALSA builds and plays through WSLg's
+  PulseAudio (`docs/host-lp64.md`).  macOS
   has no window or sound implementation yet (it would run headless).
 
 ## In progress

@@ -32,6 +32,15 @@ and the search answers one name.
 
 It needs nothing but the Python standard library, and works on any of the
 host executables (`newton.exe`, `newtonscript.exe`, a test).
+
+On a Linux host the executable is ELF and keeps its own symbol table, so
+the name is simply looked up there (`.symtab`, the function whose
+[value, value + size) holds the offset - a position-independent
+executable's offsets are its virtual addresses), and demangled through
+`c++filt` when there is one.  The crash line is the same:
+
+    [host] the machine fell over: a signal (0xb) at 0x55d3c4a01234 (image + 0x1a1234)
+    python3 tools/host/whichfunction.py build/host/host/newton 0x1a1234
 """
 
 import argparse
@@ -168,6 +177,93 @@ def find(body, objs, slack):
     return found
 
 
+class ElfSymbols:
+    """The function symbols of an ELF executable: name_of(offset)."""
+
+    def __init__(self, path):
+        with open(path, "rb") as f:
+            data = f.read()
+        if data[:4] != b"\x7fELF" or data[4] != 2:
+            raise ValueError("not a 64-bit ELF image")
+        end = "<" if data[5] == 1 else ">"
+        shoff, = struct.unpack_from(end + "Q", data, 0x28)
+        shentsize, shnum, shstrndx = struct.unpack_from(end + "HHH", data, 0x3A)
+        sections = []
+        for i in range(shnum):
+            name, kind, flags, addr, offset, size, link, info, align, entsize = \
+                struct.unpack_from(end + "IIQQQQIIQQ", data, shoff + i * shentsize)
+            sections.append((name, kind, offset, size, link, entsize))
+        funcs = []
+        for name, kind, offset, size, link, entsize in sections:
+            if kind != 2:					# SHT_SYMTAB
+                continue
+            strings = sections[link]
+            stroff = strings[2]
+            for k in range(size // entsize):
+                st_name, st_info, st_other, st_shndx, st_value, st_size = \
+                    struct.unpack_from(end + "IBBHQQ", data, offset + k * entsize)
+                if st_info & 0xF != 2 or st_value == 0:	# STT_FUNC
+                    continue
+                stop = data.index(b"\0", stroff + st_name)
+                funcs.append((st_value, max(st_size, 1), data[stroff + st_name:stop].decode("latin-1")))
+        if not funcs:
+            raise ValueError("no symbol table (a stripped executable)")
+        funcs.sort()
+        self.starts = [f[0] for f in funcs]
+        self.funcs = funcs
+        self.cache = {}
+
+    def lookup(self, offset):
+        """(start, size, mangled name) of the function holding offset, or None."""
+        import bisect
+        i = bisect.bisect_right(self.starts, offset) - 1
+        if i < 0:
+            return None
+        start, size, name = self.funcs[i]
+        if offset >= start + size:
+            return None
+        return start, size, name
+
+    def name_of(self, offset):
+        hit = self.lookup(offset)
+        if hit is None:
+            return None
+        return demangle(hit[2])
+
+
+def demangle(names):
+    """The C++ names demangled by c++filt when it is there (one or a list)."""
+    one = isinstance(names, str)
+    names = [names] if one else list(names)
+    try:
+        import subprocess
+        out = subprocess.run(["c++filt"], input="\n".join(names), capture_output=True,
+                             text=True, check=True).stdout.splitlines()
+        if len(out) == len(names):
+            names = out
+    except (OSError, subprocess.CalledProcessError):
+        pass
+    return names[0] if one else names
+
+
+def is_elf(path):
+    with open(path, "rb") as f:
+        return f.read(4) == b"\x7fELF"
+
+
+def main_elf(exe, offset):
+    symbols = ElfSymbols(exe)
+    hit = symbols.lookup(offset)
+    if hit is None:
+        print(f"{offset:#x} is not in any function of {exe}")
+        return 1
+    start, size, name = hit
+    print(f"the function runs {start:#x}-{start + size:#x} ({size} bytes); "
+          f"the fault is {offset - start:#x} into it")
+    print(f"{demangle(name)}\n    {name}")
+    return 0
+
+
 def main(argv):
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -179,6 +275,8 @@ def main(argv):
                     help="bytes that may differ outside the relocations (default 8)")
     args = ap.parse_args(argv[1:])
 
+    if is_elf(args.exe):
+        return main_elf(args.exe, int(args.offset, 0))
     with open(args.exe, "rb") as f:
         image = f.read()
     rva = int(args.offset, 0)

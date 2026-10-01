@@ -146,6 +146,7 @@
 #include "power/host/HostPowerSwitch.h"
 #include "HostObjectsFile.h"
 #include "HostRestart.h"
+#include "HostCStack.h"
 #include "os600/kernel/host/TaskRuntime.h"
 #include "REPTranslators.h"
 #include "Frames.h"
@@ -194,6 +195,11 @@ __declspec(dllimport) int __stdcall GetThreadTimes(void* thread, unsigned long l
 #include <sys/resource.h>
 #include <time.h>
 #include <dlfcn.h>
+#include <ucontext.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <errno.h>
+#include <sys/syscall.h>
 #endif
 #include <stdlib.h>
 #include <string.h>
@@ -550,31 +556,26 @@ HostCrashed(const char* what, unsigned long code, void* where)
 	// the address on its own says nothing - the image is loaded wherever
 	// the system puts it - so the offset into the image goes with it, which
 	// is what tools/host/whichfunction.py takes to name the function
-#ifdef _WIN32
-	void* base = GetModuleHandleA(nil);
-#else
-	void* base = nil;
-	Dl_info info;
-	if (dladdr((void*) &HostCrashedSignal, &info) != 0)
-		base = info.dli_fbase;
-#endif
+	char* base = HostImageBase();
 	fprintf(stderr, "[host] the machine fell over: %s (%#lx) at %p (image + %#lx)\n",
-		what, code, where, (unsigned long) ((char*) where - (char*) base));
-#ifdef _WIN32
-	// and the C stack: the filter runs on the stack of the thread that fell
-	// over, and the walk goes on through the exception dispatcher into the
-	// frames that faulted (the offsets inside the image are what
-	// whichfunction.py names; the first few are the dispatcher's own)
+		what, code, where, (unsigned long) ((char*) where - base));
+	// and the C stack: on Windows the filter runs on the stack of the
+	// thread that fell over, and the walk goes on through the exception
+	// dispatcher into the frames that faulted; on a glibc host the signal
+	// handler's backtrace() goes through the signal frame the same way (the
+	// first few offsets are the dispatcher's or the handler's own)
 	{
 		void* trace[40];
-		unsigned short n = RtlCaptureStackBackTrace(0, 40, trace, nil);
-		fprintf(stderr, "[host] the C stack, as image offsets:");
-		for (unsigned short i = 0; i < n; i++)
-			if ((char*) trace[i] >= (char*) base && (char*) trace[i] < (char*) base + 0x10000000)
-				fprintf(stderr, " %#lx", (unsigned long) ((char*) trace[i] - (char*) base));
-		fprintf(stderr, "\n");
+		int n = HostCaptureCStack(trace, 40, 0);
+		if (n > 0)
+		{
+			fprintf(stderr, "[host] the C stack, as image offsets:");
+			for (int i = 0; i < n; i++)
+				if ((char*) trace[i] >= base && (char*) trace[i] < base + 0x10000000)
+					fprintf(stderr, " %#lx", (unsigned long) ((char*) trace[i] - base));
+			fprintf(stderr, "\n");
+		}
 	}
-#endif
 	if (gREPout != nil && gInterpreter != nil)
 		gREPout->StackTrace(gInterpreter);
 	fflush(stderr);
@@ -587,6 +588,133 @@ HostCrashedSignal(int signal)
 {
 	HostCrashed("a signal", (unsigned long) signal, nil);
 }
+
+
+#ifndef _WIN32
+// A Unix host's signal with where it happened: the faulting instruction
+// out of the interrupted context
+static void
+HostCrashedSignalAt(int signal, siginfo_t* info, void* context)
+{
+	void* where = info != nil ? info->si_addr : nil;
+#if defined(__x86_64__) && defined(__linux__)
+	if (context != nil)
+		where = (void*) ((ucontext_t*) context)->uc_mcontext.gregs[REG_RIP];
+#elif defined(__aarch64__) && defined(__linux__)
+	if (context != nil)
+		where = (void*) ((ucontext_t*) context)->uc_mcontext.pc;
+#else
+	(void) context;
+#endif
+	HostCrashed("a signal", (unsigned long) signal, where);
+}
+
+
+// The stack sampler's signal (tools/host/stacksample.py and profile.py
+// on Linux, which cannot read another process's registers without
+// ptrace): a thread sent SIGRTMIN+3 (tgkill) appends one line to the
+// sample file - its thread id, the interrupted instruction and then the
+// stack's return addresses, each as an offset into the image (- for one
+// outside it) - and carries on.  The file is NEWTON_SAMPLE_FILE, else
+// /tmp/newton-sample-<pid>.txt.  Only async-signal-safe calls in here.
+static char		gSampleFile[512];
+static char*	gSampleBase = nil;
+
+static char*
+SampleHex(char* out, unsigned long value)
+{
+	char digits[20];
+	int n = 0;
+	do
+	{
+		digits[n++] = "0123456789abcdef"[value & 15];
+		value >>= 4;
+	} while (value != 0);
+	*out++ = '0';
+	*out++ = 'x';
+	while (n > 0)
+		*out++ = digits[--n];
+	return out;
+}
+
+static char*
+SampleAddress(char* out, void* address)
+{
+	if (gSampleBase != nil && (char*) address >= gSampleBase && (char*) address < gSampleBase + 0x10000000)
+		return SampleHex(out, (unsigned long) ((char*) address - gSampleBase));
+	*out++ = '-';
+	return out;
+}
+
+static void
+HostSampleSignal(int /*signal*/, siginfo_t* /*info*/, void* context)
+{
+	int saved = errno;
+	void* pc = nil;
+#if defined(__x86_64__) && defined(__linux__)
+	pc = (void*) ((ucontext_t*) context)->uc_mcontext.gregs[REG_RIP];
+#elif defined(__aarch64__) && defined(__linux__)
+	pc = (void*) ((ucontext_t*) context)->uc_mcontext.pc;
+#else
+	(void) context;
+#endif
+	char line[2048];
+	char* out = line;
+	out = SampleHex(out, (unsigned long) syscall(SYS_gettid));
+	*out++ = ' ';
+	out = SampleAddress(out, pc);
+	void* trace[64];
+	int n = HostCaptureCStack(trace, 64, 1);		// (not this handler)
+	for (int i = 0; i < n && out < line + sizeof(line) - 24; i++)
+	{
+		*out++ = ' ';
+		out = SampleAddress(out, trace[i]);
+	}
+	*out++ = '\n';
+	int fd = open(gSampleFile, O_WRONLY | O_CREAT | O_APPEND, 0644);
+	if (fd >= 0)
+	{
+		ssize_t wrote = write(fd, line, (size_t) (out - line));
+		(void) wrote;
+		close(fd);
+	}
+	errno = saved;
+}
+
+static void
+HostInstallSampler(void)
+{
+	const char* file = getenv("NEWTON_SAMPLE_FILE");
+	if (file != nil)
+		snprintf(gSampleFile, sizeof(gSampleFile), "%s", file);
+	else
+		snprintf(gSampleFile, sizeof(gSampleFile), "/tmp/newton-sample-%ld.txt", (long) getpid());
+	gSampleBase = HostImageBase();
+	void* warm[4];
+	HostCaptureCStack(warm, 4, 0);		// (backtrace's first call loads libgcc: not in a handler)
+	struct sigaction action;
+	memset(&action, 0, sizeof(action));
+	action.sa_sigaction = HostSampleSignal;
+	action.sa_flags = SA_SIGINFO | SA_RESTART;
+	sigemptyset(&action.sa_mask);
+	sigaction(SIGRTMIN + 3, &action, nil);
+}
+
+
+static void
+HostCatchCrashes(void)
+{
+	struct sigaction action;
+	memset(&action, 0, sizeof(action));
+	action.sa_sigaction = HostCrashedSignalAt;
+	action.sa_flags = SA_SIGINFO;
+	sigemptyset(&action.sa_mask);
+	int signals[] = { SIGSEGV, SIGILL, SIGFPE, SIGABRT, SIGBUS };
+	for (int s : signals)
+		sigaction(s, &action, nil);
+	HostInstallSampler();
+}
+#endif
 
 
 #ifdef _WIN32
@@ -610,16 +738,19 @@ main(int argc, char** argv)
 #ifdef _WIN32
 	SetUnhandledExceptionFilter(HostCrashedFilter);
 #endif
+#ifdef _WIN32
 	signal(SIGSEGV, HostCrashedSignal);
+#else
+	HostCatchCrashes();
+#endif
 	// tracing: stdout (Print, the traces' stacks) unbuffered, so that it
 	// stays in order with stderr (the traces' first lines) in one log
 	if (getenv("NEWTON_TRACE_MISSING") != nil || getenv("NEWTON_TRACE_EXCEPTIONS") != nil)
 		setvbuf(stdout, nil, _IONBF, 0);
+#ifdef _WIN32
 	signal(SIGILL, HostCrashedSignal);
 	signal(SIGFPE, HostCrashedSignal);
 	signal(SIGABRT, HostCrashedSignal);
-#ifdef SIGBUS
-	signal(SIGBUS, HostCrashedSignal);			// a misaligned or unbacked access on a Unix host
 #endif
 	const char* romImage = nil;				// (nil: the object file, HostDefaultObjectsFile)
 	Boolean bootImage = false;

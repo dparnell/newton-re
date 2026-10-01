@@ -11,13 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// the C stack, without <windows.h> (whose names clash with the Newton's)
-#ifdef _WIN32
-extern "C" {
-__declspec(dllimport) unsigned short __stdcall RtlCaptureStackBackTrace(unsigned long skip, unsigned long count, void** trace, unsigned long* hash);
-__declspec(dllimport) void* __stdcall GetModuleHandleA(const char* name);
-}
-#endif
+#include "HostCStack.h"
 
 static SkiaHeap*	gCheckedHeap = nil;
 static long			gEvery = 1;
@@ -34,14 +28,12 @@ HeapDamaged(SkiaHeap* heap, const char* what, SkiaBlock* b, const char* where)
 	fprintf(stderr, "[heapcheck]   the heap runs %p-%p; free list head %p tail %p; the block's links: next %p prev %p\n",
 			(void*) heap->fStart, (void*) heap->fEnd, (void*) heap->fFreeHead, (void*) heap->fFreeTail,
 			b ? (void*) b->fNext : nil, b ? (void*) b->fPrev : nil);
-#ifdef _WIN32
 	void* trace[48];
-	unsigned short n = RtlCaptureStackBackTrace(1, 48, trace, nil);
-	char* base = (char*) GetModuleHandleA(nil);
+	int n = HostCaptureCStack(trace, 48, 0);
+	char* base = HostImageBase();
 	fprintf(stderr, "[heapcheck] the C stack, as image offsets (tools/host/whichfunction.py):\n");
-	for (unsigned short i = 0; i < n; i++)
+	for (int i = 0; i < n; i++)
 		fprintf(stderr, "[heapcheck]   %#lx\n", (unsigned long) ((char*) trace[i] - base));
-#endif
 	fflush(stderr);
 	abort();
 }

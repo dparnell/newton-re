@@ -1,0 +1,20 @@
+// A package dropped onto newton's window (host/x11/HostWindow.cpp's XDND
+// target, host/HostPackages.cpp's queue): tools' xdnddrop drops
+// fixtures/packages/fonts/monaco.pkg onto the window, as a file manager
+// would, and the package manager installs it.  (ctest host.NewtonWindowDrop)
+//
+//   build/host/host/xdnddrop fixtures/packages/fonts/monaco.pkg -- \
+//       build/host/host/newton --limit 120 --script src/host/demo/windowdrop.ns
+HostInclude("common.ns");
+
+wdInstalled := func() begin
+	local found := nil;
+	foreach p in GetPackages() do if StrPos(p.title, "onaco", 0) then found := p;
+	found
+end;
+
+call waitFor with ("windowdrop: the dropped package installed", wdInstalled, func() begin
+	Print("windowdrop: " & (call wdInstalled with ()).title & " installed");
+	Print("windowdrop: done");
+	HostQuit();
+end, 90);

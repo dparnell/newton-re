@@ -29,6 +29,18 @@ directory beside the executable, searched recursively for `*.obj`).
 the fault is, the mangled name, and the object file it came from. Nothing is
 written; it exits non-zero when no name can be found.
 
+**On Linux** the executable is ELF and keeps its own symbol table, so the
+name comes straight from `.symtab` (demangled through `c++filt` when there
+is one) - no object files needed:
+
+    [host] the machine fell over: a signal (0xb) at 0x5585d4ab2117 (image + 0x60b117)
+    python3 tools/host/whichfunction.py build/host/host/newton 0x60b117
+
+A host that falls over on Linux prints the faulting instruction out of the
+signal's context and the C stack (glibc's `backtrace()` through the signal
+frame) as image offsets, as on Windows; so do `NEWTON_TRACE_EXCEPTIONS=2`
+and `NEWTON_HEAPCHECK` (`src/host/HostCStack.h`).
+
 **How it works.** The linked executable has no symbol table, and the PDB is
 not worth parsing here, so the name comes from the object files:
 
@@ -49,6 +61,8 @@ host executables (`newton.exe`, `newtonscript.exe`, one of the tests). It is
 Windows/COFF only, which is what the crash handler it serves is.
 
 ## stacksample.py - what a locked-up host is doing
+
+(On Linux, see "On Linux: the process samples itself" below.)
 
 When a host program stops answering while one of its threads eats a whole
 CPU, it is looping somewhere.  With no debugger installed this looks inside
@@ -183,6 +197,8 @@ same: wait on a condition, and end the run with `HostQuit()`.
 
 ## profile.py - where a running host's time goes
 
+(On Linux, see "On Linux: the process samples itself" below.)
+
 A sampling profiler for a host build that is busy but not stuck:
 
     python tools/host/profile.py <pid> [--seconds N] [--interval MS] [--top N]
@@ -292,3 +308,46 @@ only matches differ in case, and exit status 1 if there are any.  An
 include that names no file in the tree (a system or generated header) is
 left alone.  ctest `tools.IncludeCase` runs it on every host, so the
 mistake is caught where it is made.
+
+## On Linux: the process samples itself (linuxsample.py)
+
+Linux will not let one process read another's registers without ptrace,
+and WSL and most distributions allow ptrace only to a process's parent
+(`kernel.yama.ptrace_scope = 1`), so on Linux `stacksample.py` and
+`profile.py` ask newton for its own stacks instead (`tools/host/linuxsample.py`,
+which they run when started on Linux - same options; `--depth` is not
+used).  newton installs a handler for `SIGRTMIN+3` (`src/host/newton.cpp`'s
+`HostInstallSampler`): a thread sent it (tgkill) appends a line to the
+sample file - its thread id, the interrupted instruction and its return
+addresses, unwound by glibc's `backtrace()` through the signal frame, as
+image offsets - and carries on.  The file is `NEWTON_SAMPLE_FILE` in
+newton's environment, else `/tmp/newton-sample-<pid>.txt`.
+
+    python3 tools/host/stacksample.py <pid> [--thread TID] [--samples N]
+    python3 tools/host/profile.py <pid> [--seconds N] [--interval MS] [--top N]
+
+stacksample's thread is the busiest over half a second unless `--thread`
+names one; profile samples every thread that is running (state R in
+`/proc/<pid>/task/<tid>/stat`) each round.  The names come from the
+executable's own symbol table (whichfunction.py).  A gdb for a hang that
+needs one, without root: `apt-get download gdb` and its libraries, `dpkg -x`
+each into a directory, run it with `LD_LIBRARY_PATH` there - and start
+newton under it, since it cannot attach (docs/host-lp64.md).
+
+## xdnddrop - a file dropped onto newton's window (X11)
+
+A drag source for testing the X11 window's XDND drop target
+(`src/host/x11/HostWindow.cpp`), built on an X11 host as
+`build/host/host/xdnddrop` from `src/host/x11/xdnddrop.cpp`:
+
+    xdnddrop [--name NAME] [--timeout S] FILE [-- PROGRAM ARGS...]
+
+It runs the program (if any), waits for a window of that name ("Newton")
+that takes drops, drags FILE onto its middle as a file manager would
+(XdndEnter offering text/uri-list, XdndPosition, XdndDrop, the file's URI
+handed over as the selection) and waits for XdndFinished.  **Output:**
+`xdnddrop: dropped <file> onto "Newton" (<window>): accepted`, then the
+program's exit status; non-zero after stopping the program when there is no
+such window or the drop is refused, and 77 (ctest's skip) with no X display.
+ctest `host.NewtonWindowDrop` (`src/host/demo/windowdrop.ns`): a package
+dropped onto the window is installed.

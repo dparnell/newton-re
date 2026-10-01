@@ -229,7 +229,18 @@ and ninja from pip, into the repository's `tmp/`):
     cmake -G Ninja -S ~/newton-lp64/tree/src -B ~/newton-lp64/build         -DCMAKE_CXX_COMPILER=clang++ -DNEWTON_ROM_BUILD=<checkout>/build/MP2x00US
     ninja -C ~/newton-lp64/build && ctest --test-dir ~/newton-lp64/build -j16
 
-(`ninja` from the wheel may need `chmod +x`.)  gdb, for a hang, can be
+(`ninja` from the wheel may need `chmod +x`.)  ALSA, for sound, the same
+way: `apt-get download libasound2-dev`, `dpkg -x` it, and configure with
+`-DALSA_INCLUDE_DIR=<dir>/usr/include
+-DALSA_LIBRARY=/usr/lib/x86_64-linux-gnu/libasound.so.2` (the runtime library
+is there already).  Under WSLg ALSA reaches the speakers through
+PulseAudio: `apt-get download libasound2-plugins libpulse0 libsndfile1
+libasyncns0 libflac8 libogg0 libvorbis0a libvorbisenc2 libopus0 libmp3lame0
+libmpg123-0`, `dpkg -x` them, and run newton with `LD_LIBRARY_PATH` at the
+libraries and `ALSA_CONFIG_PATH=/usr/share/alsa/alsa.conf:<conf>`, where
+`<conf>` says `pcm_type.pulse { lib "<dir>/.../libasound_module_pcm_pulse.so" }`
+and `pcm.!default { type pulse }` (and the same for `ctl`).  Without it
+ALSA finds no card and newton runs silent, as it does with no ALSA at all.  gdb, for a hang, can be
 unpacked the same way: `apt-get download gdb` and its libraries,
 `dpkg -x` each into a directory, and run it with `LD_LIBRARY_PATH`
 pointing there; WSL's `ptrace_scope` keeps it from attaching to a running

@@ -53,14 +53,8 @@ DeleteRefStruct(RefStruct* r)
 }
 
 
-#ifdef _WIN32
-// (host only: the C stack at a throw, for NEWTON_TRACE_EXCEPTIONS=2,
-// without <windows.h>, whose names clash with the Newton's)
-extern "C" {
-__declspec(dllimport) unsigned short __stdcall RtlCaptureStackBackTrace(unsigned long skip, unsigned long count, void** trace, unsigned long* hash);
-__declspec(dllimport) void* __stdcall GetModuleHandleA(const char* name);
-}
-#endif
+// (host only: the C stack at a throw, for NEWTON_TRACE_EXCEPTIONS=2)
+#include "host/HostCStack.h"
 
 
 // ROM 0x002f5730 ThrowRefException__FPcRC6RefVar
@@ -72,7 +66,7 @@ __declspec(dllimport) void* __stdcall GetModuleHandleA(const char* name);
 // left to see.  This is how a mistake in one of the ROM's own scripts is
 // tracked down to the script that made it.  NEWTON_TRACE_EXCEPTIONS=2
 // adds the C stack, as image offsets for tools/host/whichfunction.py
-// (Windows only) - which native threw.
+// - which native threw.
 void
 ThrowRefException(ExceptionName name, RefArg data)
 {
@@ -89,18 +83,16 @@ ThrowRefException(ExceptionName name, RefArg data)
 			PrintObject(data, 0);
 			gREPout->Print("\n");
 			StackTrace();
-#ifdef _WIN32
 			if (getenv("NEWTON_TRACE_EXCEPTIONS")[0] == '2')
 			{
 				void* trace[24];
-				unsigned short n = RtlCaptureStackBackTrace(0, 24, trace, nil);
-				char* base = (char*) GetModuleHandleA(nil);
+				int n = HostCaptureCStack(trace, 24, 0);
+				char* base = HostImageBase();
 				gREPout->Print("    the C stack, as image offsets:");
-				for (unsigned short i = 0; i < n; i++)
+				for (int i = 0; i < n; i++)
 					gREPout->Print(" %#lx", (unsigned long) ((char*) trace[i] - base));
 				gREPout->Print("\n");
 			}
-#endif
 		}
 		newton_catch_all
 		{

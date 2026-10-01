@@ -27,15 +27,22 @@ running - do not rebuild before looking.
 thread with the most CPU time is taken unless `--thread` names one.
 **Output:** per sample, the instruction pointer and the stack's return
 addresses as image offsets with function names.  Nothing is written, and
-the process carries on afterwards.  Windows only; standard library only.
+the process carries on afterwards.  Windows, and Linux through tools/host/linuxsample.py; standard library only.
 """
 
 import argparse
-import ctypes
-import ctypes.wintypes as wt
 import os
 import struct
 import sys
+
+# (on Linux the process samples itself: tools/host/linuxsample.py)
+if __name__ == "__main__" and sys.platform.startswith("linux"):
+	sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+	import linuxsample
+	sys.exit(linuxsample.stacksample_main(sys.argv))
+
+import ctypes
+import ctypes.wintypes as wt
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import whichfunction as wf			# noqa: E402

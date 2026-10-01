@@ -15,7 +15,7 @@ Newton task at a time, so the samples are nearly all the running task's.
 
 It is how the drawing work was measured (docs/qd/README.md's "Drawing
 speed"): run the benchmark (src/host/demo/drawbench.ns) with more rounds
-and profile the process meanwhile.  Windows only; standard library only.
+and profile the process meanwhile.  Windows, and Linux through tools/host/linuxsample.py; standard library only.
 """
 
 import argparse
@@ -26,6 +26,13 @@ import os
 import struct
 import sys
 import time
+
+# (on Linux the process samples itself: tools/host/linuxsample.py)
+if __name__ == "__main__" and sys.platform.startswith("linux"):
+	sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+	import linuxsample
+	sys.exit(linuxsample.profile_main(sys.argv))
+
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import stacksample as ss			# noqa: E402

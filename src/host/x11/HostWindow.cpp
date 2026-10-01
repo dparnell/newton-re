@@ -20,9 +20,8 @@
 	anything else HostWindowStart answers false and the world runs
 	headless, as it does with no display at all.
 
-	NOT YET: a package dropped onto the window (the Windows one takes
-	WM_DROPFILES and calls HostWindowFileDropped).  That is XDND, a
-	protocol of its own; until it is here, `newton --package` installs one.
+	A package dropped onto the window is installed, as on Windows: XDND,
+	below.
 */
 
 #include "HostWindow.h"
@@ -34,6 +33,7 @@
 #include <X11/Xutil.h>
 #include <X11/XKBlib.h>
 #include <X11/keysym.h>
+#include <X11/Xatom.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,6 +49,7 @@ void	HostWindowPenUp(void);
 void	HostWindowKey(long virtualKey, int down);
 void	HostWindowClosed(void);
 void	HostWindowThreadStarted(void);
+void	HostWindowFileDropped(const char* path);	// host/HostPackages.cpp: a package to install
 }
 
 #define nil 0
@@ -149,6 +150,158 @@ struct GrayRamp
 
 
 /*------------------------------------------------------------------------------
+	A file dropped onto the window: XDND (freedesktop.org's drag-and-drop
+	protocol, version 5), the target's side.  The window says it takes
+	drops (XdndAware); a drag over it sends XdndEnter, then XdndPosition
+	as it moves, each answered with XdndStatus (accepted, as a copy); the
+	drop is XdndDrop, and the dropped files are asked of the drag's
+	selection (XdndSelection) as text/uri-list, which comes back as a
+	SelectionNotify - each file:// URI there handed to
+	HostWindowFileDropped, as WM_DROPFILES does on Windows - and the source
+	told XdndFinished.  tools/host/xdnddrop (src/host/x11/xdnddrop.cpp) is
+	a drag source for the test (ctest host.NewtonWindowDrop).
+------------------------------------------------------------------------------*/
+
+struct XdndAtoms
+{
+	Atom	fAware, fEnter, fPosition, fStatus, fLeave, fDrop, fFinished;
+	Atom	fActionCopy, fSelection, fUriList, fProperty;
+
+	void
+	Init(Display* display)
+	{
+		fAware = XInternAtom(display, "XdndAware", False);
+		fEnter = XInternAtom(display, "XdndEnter", False);
+		fPosition = XInternAtom(display, "XdndPosition", False);
+		fStatus = XInternAtom(display, "XdndStatus", False);
+		fLeave = XInternAtom(display, "XdndLeave", False);
+		fDrop = XInternAtom(display, "XdndDrop", False);
+		fFinished = XInternAtom(display, "XdndFinished", False);
+		fActionCopy = XInternAtom(display, "XdndActionCopy", False);
+		fSelection = XInternAtom(display, "XdndSelection", False);
+		fUriList = XInternAtom(display, "text/uri-list", False);
+		fProperty = XInternAtom(display, "NEWTON_DROPPED_FILES", False);
+	}
+};
+
+static Window	gDragSource = 0;		// the window a drag over ours comes from (0: none)
+
+static void
+XdndSend(Display* display, Window to, Atom type, long l0, long l1, long l2, long l3, long l4)
+{
+	XEvent reply;
+	memset(&reply, 0, sizeof(reply));
+	reply.xclient.type = ClientMessage;
+	reply.xclient.display = display;
+	reply.xclient.window = to;
+	reply.xclient.message_type = type;
+	reply.xclient.format = 32;
+	reply.xclient.data.l[0] = l0;
+	reply.xclient.data.l[1] = l1;
+	reply.xclient.data.l[2] = l2;
+	reply.xclient.data.l[3] = l3;
+	reply.xclient.data.l[4] = l4;
+	XSendEvent(display, to, False, NoEventMask, &reply);
+	XFlush(display);
+}
+
+// A drag's message: ==> whether it was one
+static bool
+XdndClientMessage(Display* display, Window window, const XdndAtoms& a, const XClientMessageEvent& m)
+{
+	if (m.message_type == a.fEnter)
+		gDragSource = (Window) m.data.l[0];
+	else if (m.message_type == a.fPosition)
+		XdndSend(display, (Window) m.data.l[0], a.fStatus, (long) window, 1, 0, 0, (long) a.fActionCopy);
+	else if (m.message_type == a.fLeave)
+		gDragSource = 0;
+	else if (m.message_type == a.fDrop)
+	{
+		gDragSource = (Window) m.data.l[0];
+		XConvertSelection(display, a.fSelection, a.fUriList, a.fProperty, window, (Time) m.data.l[2]);
+		XFlush(display);
+	}
+	else
+		return false;
+	return true;
+}
+
+// A hex digit's value, -1 if it is none
+static int
+HexValue(char c)
+{
+	if (c >= '0' && c <= '9')
+		return c - '0';
+	if (c >= 'a' && c <= 'f')
+		return c - 'a' + 10;
+	if (c >= 'A' && c <= 'F')
+		return c - 'A' + 10;
+	return -1;
+}
+
+// The dropped files arrived: each file:// URI of the list a file dropped
+static void
+XdndSelectionArrived(Display* display, Window window, const XdndAtoms& a, const XSelectionEvent& s)
+{
+	bool accepted = false;
+	if (s.property != None)
+	{
+		Atom type;
+		int format;
+		unsigned long count = 0, left = 0;
+		unsigned char* data = nil;
+		if (XGetWindowProperty(display, window, a.fProperty, 0, 0x100000, True, AnyPropertyType,
+							   &type, &format, &count, &left, &data) == Success && data != nil)
+		{
+			// one URI a line, lines ended by CR LF; # starts a comment
+			const char* p = (const char*) data;
+			const char* end = p + count;
+			while (p < end)
+			{
+				const char* eol = p;
+				while (eol < end && *eol != '\r' && *eol != '\n')
+					eol++;
+				if (eol - p > 7 && strncmp(p, "file://", 7) == 0)
+				{
+					// past the host part (empty or "localhost") to the path,
+					// its %XX escapes undone
+					const char* q = p + 7;
+					while (q < eol && *q != '/')
+						q++;
+					char path[4096];
+					size_t n = 0;
+					while (q < eol && n + 1 < sizeof(path))
+					{
+						int hi, lo;
+						if (*q == '%' && q + 2 < eol && (hi = HexValue(q[1])) >= 0 && (lo = HexValue(q[2])) >= 0)
+						{
+							path[n++] = (char) (hi * 16 + lo);
+							q += 3;
+						}
+						else
+							path[n++] = *q++;
+					}
+					path[n] = 0;
+					if (n > 0)
+					{
+						HostWindowFileDropped(path);
+						accepted = true;
+					}
+				}
+				p = eol;
+				while (p < end && (*p == '\r' || *p == '\n'))
+					p++;
+			}
+			XFree(data);
+		}
+	}
+	if (gDragSource != 0)
+		XdndSend(display, gDragSource, a.fFinished, (long) window, accepted ? 1 : 0, accepted ? (long) a.fActionCopy : 0, 0, 0);
+	gDragSource = 0;
+}
+
+
+/*------------------------------------------------------------------------------
 	The window's thread: the connection, the window, then the loop.
 ------------------------------------------------------------------------------*/
 
@@ -208,6 +361,12 @@ WindowThread(void)
 	// connection, so that the run is ended the same way as on Windows
 	Atom deleteWindow = XInternAtom(display, "WM_DELETE_WINDOW", False);
 	XSetWMProtocols(display, window, &deleteWindow, 1);
+	Atom protocols = XInternAtom(display, "WM_PROTOCOLS", False);
+	// files may be dropped onto it (XDND, version 5)
+	XdndAtoms xdnd;
+	xdnd.Init(display);
+	Atom xdndVersion = 5;
+	XChangeProperty(display, window, xdnd.fAware, XA_ATOM, 32, PropModeReplace, (unsigned char*) &xdndVersion, 1);
 	// the display does not resize, so neither does the window
 	XSizeHints* hints = XAllocSizeHints();
 	if (hints != nil)
@@ -332,8 +491,14 @@ WindowThread(void)
 				break;
 			}
 			case ClientMessage:
-				if ((Atom) event.xclient.data.l[0] == deleteWindow)
+				if (event.xclient.message_type == protocols && (Atom) event.xclient.data.l[0] == deleteWindow)
 					closed = true;
+				else
+					XdndClientMessage(display, window, xdnd, event.xclient);
+				break;
+			case SelectionNotify:
+				if (event.xselection.selection == xdnd.fSelection)
+					XdndSelectionArrived(display, window, xdnd, event.xselection);
 				break;
 			case DestroyNotify:
 				closed = true;

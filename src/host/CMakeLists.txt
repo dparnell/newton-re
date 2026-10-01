@@ -422,6 +422,23 @@ set_tests_properties(host.NewtonWindowPen PROPERTIES TIMEOUT 200
                      PASS_REGULAR_EXPRESSION "calibration target at 10,10 shown.*windowpen: done"
                      FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
 
+# a package dropped onto the window (XDND, host/x11/HostWindow.cpp): xdnddrop
+# is a drag source that drops a file onto the window named Newton, as a file
+# manager would (an X11 host with a display only)
+if(X11_FOUND AND NOT WIN32)
+    add_executable(xdnddrop x11/xdnddrop.cpp)
+    target_include_directories(xdnddrop PRIVATE ${X11_INCLUDE_DIR})
+    target_link_libraries(xdnddrop PRIVATE ${X11_LIBRARIES})
+    add_test(NAME host.NewtonWindowDrop
+             COMMAND xdnddrop ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monaco.pkg --
+                     $<TARGET_FILE:newton> --display 320x480 --limit 120
+                     --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/windowdrop.ns
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonWindowDrop PROPERTIES TIMEOUT 200 SKIP_RETURN_CODE 77
+                         PASS_REGULAR_EXPRESSION "xdnddrop: dropped .*monaco.pkg.*accepted.*windowdrop: done"
+                         FAIL_REGULAR_EXPRESSION "FAILED|waited in vain|xdnddrop: no ")
+endif()
+
 # the inker's live ink and busy box (recognition/Inker.h, LiveInker.h;
 # demo/liveink.ns): a stroke with the pen held down inked on the display,
 # the busy box shown and taken away
