@@ -10,13 +10,17 @@
 # --- declined by the owner -------------------------------------------------
 # the ROM domain manager (page faulting packages and large objects in; the
 # host keeps a mapped object whole) and execute-in-place packages, which only
-# a package flagged 0x08000000 asks for
-declined: ROM domain manager, XIP	DomainManager|XIP|LOTransactionHandler|LicenseeDomain|TLicenseeVAddress|UseROMJumpTables|GetPagesForROMBkpts
+# a package flagged 0x08000000 asks for; RelocateFramesInPage is the frames
+# half of a store package's page relocated to where the domain maps it (the
+# host maps a package unrelocated and resolves its import refs on import -
+# RelocateImportRefs, Units.h), CheckObjectAlignment is XIPAddPackage's
+declined: ROM domain manager, XIP	RelocateFramesInPage|CheckObjectAlignment|DomainManager|XIP|LOTransactionHandler|LicenseeDomain|TLicenseeVAddress|UseROMJumpTables|GetPagesForROMBkpts
 # AppleTalk and everything on it: LocalTalk, DDP, ATP, NBP, ZIP, RTMP, AEP,
 # ADSP, PAP, the Chooser's zones and lookups, the AppleTalk printers
 declined: AppleTalk	ADSP|\d+TATP|ATP(Interface|Header|Responder|Requestor)|\d+TDDP|NBP|\d+TZIP|ZIPInterface|RTMP|\d+TAEP|\d+TPAP|PAP(Interface|Timer|OpenConn|Driver)|LocalTalk|AppleTalk|ATStack|PATStack|ATAsyncMsg|ATSocket|\d+TLink(Mgr|Packet|Comparer)?F|\d+PLink|Zone|\d+TSocket|SocketComparer|\d+TAddress|LookupNames|LookupManager|LookupRetry|ConnectionEnd|ConnComparer|ProtoComparer|ResponderSocket|TransactionManager|\d+TTransaction|TransactionRespon|ResponseManager|RegisterName|RegisterPending|TString32|WriteChain|WriteElement|PacketBuffer|OpenSocket|CloseSocket|WriteSocket|GetRouterAddress|GetZoneName|GetAddress__FUlRUsRUc|NubADSP|EzADSP|AppleTalkPort|IDServer|TRing\b|\d+TRingF|TMessageTimer|TAsyncEvent|TDynArray|TFilter|TProtocolHandler|TString255|TTupleEquiv|MakeOptionArray|TLSEndpointClient|TLinkComparer|PToCString__FPUcT1
 # the StyleWriter and LaserWriter LS drivers and the old print driver parts
-declined: StyleWriter, LaserWriter LS	TSWGroupDriver|TLaserWriterLSDriver|TPrDriverPart|TBIOInterface
+# (EncodeLine is their raster compressor, called by nothing else)
+declined: StyleWriter, LaserWriter LS	EncodeLine__FlPcN22|TSWGroupDriver|TLaserWriterLSDriver|TPrDriverPart|TBIOInterface
 
 # --- the MessagePad's own hardware (the host has its own behind hal/) ------
 hardware	Voyager|Cirrus|16450|\d+TADC\b|\d+TADCF|ContrastTempSample|TFlashAMD|28F016|TFlashSeries2|\d+TFlashBlock|\d+TFlashStore|TFlashRange|TCardSocket|ResistiveTablet|GPIO|IRQTimer|SerialDMAEngine|DMAManager|Interrupt|TricInterrupt|HLevel2Handler|PCMCIAPowerInUse|EarlyIOPowerOn|HermesIR|PlatformDriver|LoadStartupDriver|TStartupDriver|ReservedBlock|OSCalibrationParameters|ROMREXCheckSums|SerialNumberROM|InitializeCommHardware|THMOSerial|SetVideoCardHandler|TCurrentBank|SBankInfo|GetBankInfo|TabletCalibration|ZapInternalStoreCheck|WipeInternalStore|TICHandler|\d+TSerialChip\b|\d+TSerialChipF|PSerialChipRegistry|TCHMemModem|SetupScreen|AllocPCSpyTimer|StartTimerOverflowDetect|TRealTimeClock|PSoundDriver|TSoundServerHandler|\d+TSoundServer|InitADC|GetADCObject|GetBIOInterfaceObject|ExtSoundSource|GetHighSpeedClock|IOPower|RealTimeClock|HDefault\w*Handler|NO_TRICHandler|KMEMode|PeripheralController|VoltageTable|BatteryTable|HandlerPresent|FindFirstOne|UserWantsColdBoot|SCCPowerInit|GetTabletPolling|DumbWait|ClearFIQAtomic|PauseSystem
@@ -35,8 +39,12 @@ comms: eWorld, online services, P3, mux, keyboard, TV remote	EWorld|OnlineServic
 # --- dead in the U.S. ROM ---------------------------------------------------
 # nothing in the U.S. ROM reaches these: the math views (no form makes one),
 # the sixteen-bit dictionaries, the French/German accent checks, text at an
-# angle and TextArrow, the package validation driver (never registered)
-dead in the U.S. ROM	TMath(Exp|Op|Line)View|A[EL]16_|DiacriticsDirection|TextArrow|ValidatePackageDriver|ValidateBackupPipe|IsFirstByteOf2Byte|SetLocale5
+# angle and TextArrow, the package validation driver (never registered);
+# LengthOfTraj and CurvFromSquare are the accent check's alone; the ink
+# codec's default point sink and source, which DecoderOpen/EncoderOpen put
+# in a context and their only callers (Decode, GenericCSCompress) replace
+# before the run
+dead in the U.S. ROM	LengthOfTraj|CurvFromSquare|StorePointProcDefault|GetInputTraceDefault|TMath(Exp|Op|Line)View|A[EL]16_|DiacriticsDirection|TextArrow|ValidatePackageDriver|ValidateBackupPipe|IsFirstByteOf2Byte|SetLocale5
 
 # nothing in the ROM refers to these at all - no call, no branch, no
 # address as data (callgraph.py --callers) - and they are not in the public

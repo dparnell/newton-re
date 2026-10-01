@@ -269,6 +269,42 @@ ArrayRemove(RefArg array, RefArg element)
 }
 
 
+// ROM 0x00128c3c ArrayRemove__FRC6RefVarN21
+// The value taken out of the array in the frame's slot (when the slot has
+// one), and the slot set to nil when that leaves the array empty; ==>
+// whether the value was there.
+Boolean
+ArrayRemove(RefArg frame, RefArg slot, RefArg value)
+{
+	RefVar array(GetFrameSlotRef(frame, slot));
+	if (ISNIL(array) || !ArrayRemove(array, value))
+		return false;
+	if (Length(array) == 0)
+		SetFrameSlot(frame, slot, RefVar(NILREF));
+	return true;
+}
+
+
+// ROM 0x00128d80 ArrayPop__FRC6RefVar
+// The array's last element, taken off it.
+Ref
+ArrayPop(RefArg array)
+{
+	long length = Length(array);
+	RefVar last(GetArraySlotRef(array, length - 1));
+	SetLength(array, length - 1);
+	return last;
+}
+
+
+// ROM 0x00128dd8 ArrayIsEmpty__FRC6RefVar
+Boolean
+ArrayIsEmpty(RefArg array)
+{
+	return Length(array) == 0;
+}
+
+
 // ROM 0x00128ea0 ArrayInsertAt__FRC6RefVarlT1
 // One slot opened at the index (ArrayGrowAt: the end for an index outside
 // the array) and the element put there.

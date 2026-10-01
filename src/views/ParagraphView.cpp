@@ -3967,6 +3967,43 @@ TParagraphView::FindWordInParagraph(Finder* finder)
 }
 
 
+// ROM 0x00173b34 AddTabStop__14TParagraphViewFR5TRect
+// A word written at a tab: its box moved onto the nearest of the view's
+// tab stops when one is within ten pixels of its left edge, and otherwise
+// a new stop made there (the `tabs` array made first if the view has
+// none).  The stops are measured from the view's left edge.  (The ROM
+// reads both left edges with a load from the rectangle's address + 2,
+// which the ARM rotates to bring the left halfword to the top.)
+void
+TParagraphView::AddTabStop(Rect& box)
+{
+	RefVar tabs(GetWriteableVariable(RSSYMtabs));
+	if (ISNIL(tabs))
+	{
+		tabs = MakeArray(0);
+		SetFrameSlot(RefVar(DataFrame()), RSSYMtabs, tabs);
+	}
+	Rect bounds = viewBounds;
+	long left = box.left - bounds.left;
+	long count = Length(tabs);
+	long nearest = 10;
+	for (long i = 0; i < count; i++)
+	{
+		long distance = RINT(GetArraySlotRef(tabs, i)) - left;
+		if (labs(distance) < labs(nearest))
+			nearest = distance;
+	}
+	if (labs(nearest) < 10)
+		OffsetRect(&box, (short) nearest, 0);
+	else
+	{
+		SetLength(tabs, count + 1);
+		SetArraySlotRef(tabs, count, MAKEINT(left));
+		Changed(RSSYMtabs);
+	}
+}
+
+
 // ROM 0x00172eb4 AddWord__14TParagraphViewFP6FinderPCUsUlRC6RefVarPl
 // The word put into the text where the Finder says.  It is not inserted
 // as it stands: the characters that have to go in front of it - the tabs
@@ -4073,10 +4110,11 @@ TParagraphView::AddWord(Finder* finder, const UniChar* text, ULong length,
 			}
 		}
 		styleOffset = (ULong) (first - word);
-		// (NOT YET RECONSTRUCTED: AddTabStop 0x00173b34, which the ROM
-		//  calls when the word was written at a tab stop.  FindTab
-		//  answers none in this ROM, so fTab is always 0 and the call
-		//  never happens.)
+		// a word written at a tab stop snaps to it or makes one (FindTab
+		// answers none in this ROM, so fTab is always 0 and this never
+		// happens)
+		if (finder->fTab > 0)
+			AddTabStop(finder->fBox);
 	}
 
 	RefVar styles;

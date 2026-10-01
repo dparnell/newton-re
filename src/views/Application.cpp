@@ -166,15 +166,13 @@ TApplication::Undo(void)
 	Boolean redoPref = NOTNIL(NSCallGlobalFn(RSSYMgetuserconfig, RSSYMundoredo));
 	if (!redoPref)
 		fRedoStack = MakeArray(0);
-	// (the ROM's ArrayIsEmpty 0x0012a834 / ArrayPop 0x0012a7dc)
 	fUndoStack = MakeArray(0);
 	Boolean redoNext = fRedoNext;
 	newton_try
 	{
-		while (Length(stack) != 0)
+		while (!ArrayIsEmpty(stack))
 		{
-			RefVar cmd(GetArraySlotRef(stack, Length(stack) - 1));
-			SetLength(stack, Length(stack) - 1);
+			RefVar cmd(ArrayPop(stack));
 			if (DispatchCommand(cmd) == 0)
 				undone = -1;
 		}

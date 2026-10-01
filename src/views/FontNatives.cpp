@@ -34,6 +34,7 @@
 #include "Text.h"			// TextBounds (ComputeParagraphHeight)
 #include "StyleRuns.h"		// GetStylesOfRange (ExtractRichStringFromParaSlots)
 #include "Unicode.h"		// Ustrlen
+#include "ROMConstants.h"
 #include <string.h>
 
 
@@ -78,17 +79,38 @@ FMakeCompactFont(RefArg /*rcvr*/, RefArg family, RefArg size, RefArg face)
 }
 
 
-// ROM 0x001eda34 FSetFontFamily
-// SetFontFamily(spec, family): the spec with that family, its size and
-// face kept.  An ink word has no family, so it comes back untouched.
-static Ref
-FSetFontFamily(RefArg /*rcvr*/, RefArg fontSpec, RefArg family)
+// ROM 0x00179eb8 SetFontFamily__FRC6RefVarT1
+// The spec with that family, its size and face kept.  An ink word has no
+// family, so it comes back untouched.  A family named by a number (or a
+// symbol that is one of the ROM's) makes a packed spec straight away -
+// family, size << 10, face << 20 - and any other a copy of
+// canonicalFontSpec with the three slots set.
+Ref
+SetFontFamily(RefArg fontSpec, RefArg family)
 {
 	if (IsInkWord(fontSpec))
 		return fontSpec;
 	long face = GetFontFace(fontSpec);
 	long size = GetFontSize(fontSpec);
-	return MakeCompactFont(family, size, face);
+	RefVar number(family);
+	if (!ISINT(family))
+		number = FamilySymToNum(family);
+	if (ISINT(number))
+		return MAKEINT(RVALUE(number) | (size << 10) | (face << 20));
+	RefVar spec(Clone(RefVar(Rcanonicalfontspec)));
+	SetFrameSlot(spec, RSSYMsize, RefVar(MAKEINT(size)));
+	SetFrameSlot(spec, RSSYMface, RefVar(MAKEINT(face)));
+	SetFrameSlot(spec, RSSYMfamily, RefVar(ISINT(family) ? FamilyNumToSym(RVALUE(family)) : (Ref) family));
+	return spec;
+}
+
+
+// ROM 0x001eda34 FSetFontFamily
+// SetFontFamily(spec, family).
+static Ref
+FSetFontFamily(RefArg /*rcvr*/, RefArg fontSpec, RefArg family)
+{
+	return SetFontFamily(fontSpec, family);
 }
 
 
@@ -119,16 +141,25 @@ FSetFontSize(RefArg /*rcvr*/, RefArg fontSpec, RefArg size)
 }
 
 
+// ROM 0x0017e338 SetFontFace__FRC6RefVarl
+// A font spec with another face: an ink word given it, anything else made
+// again as a compact font of the same family and size.
+Ref
+SetFontFace(RefArg fontSpec, long face)
+{
+	if (IsInkWord(fontSpec))
+		return SetInkWordFontFace(fontSpec, (ULong) face);
+	long size = GetFontSize(fontSpec);
+	return MakeCompactFont(RefVar(GetFontFamilySym(fontSpec)), size, face);
+}
+
+
 // ROM 0x001ed9cc FSetFontFace
 // SetFontFace(spec, face): and for the face.
 static Ref
 FSetFontFace(RefArg /*rcvr*/, RefArg fontSpec, RefArg face)
 {
-	ULong theFace = (ULong) RINT(face);
-	if (IsInkWord(fontSpec))
-		return SetInkWordFontFace(fontSpec, theFace);
-	long size = GetFontSize(fontSpec);
-	return MakeCompactFont(RefVar(GetFontFamilySym(fontSpec)), size, (long) theFace);
+	return SetFontFace(fontSpec, RINT(face));
 }
 
 

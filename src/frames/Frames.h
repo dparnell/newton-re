@@ -47,6 +47,11 @@ void	ArrayGrowAt(RefArg array, long index, long count);	// count empty slots ope
 void	ArrayInsertAt(RefArg array, long index, RefArg element);	// ROM 0x00128ea0 ArrayInsertAt__FRC6RefVarlT1 - one slot opened at the index and the element put in it
 Ref		Munger(RefArg obj, long start, long count, const void* data, long dataLength);	// count bytes at start replaced by the data, a read-only object cloned; ==> the object (ROM 0x0012b5d0)
 Ref		ToObject(const Rect& r);			// a bounds frame {left, top, right, bottom} (a clone of canonicalRect)
+Ref		ToObject(RefArg cls, const char* data, long length);			// ROM 0x001291bc ToObject__FRC6RefVarPcl - a binary of that class holding the bytes
+Boolean	FromObject(RefArg obj, char* data, long* length, long maximum);	// ROM 0x0012960c FromObject__FRC6RefVarPcRll - a binary's bytes, as many as fit
+Boolean	ArrayRemove(RefArg frame, RefArg slot, RefArg value);			// ROM 0x00128c3c ArrayRemove__FRC6RefVarN21 (Munger.cpp)
+Ref		ArrayPop(RefArg array);											// ROM 0x00128d80 ArrayPop__FRC6RefVar (Munger.cpp)
+Boolean	ArrayIsEmpty(RefArg array);										// ROM 0x00128dd8 ArrayIsEmpty__FRC6RefVar (Munger.cpp)
 Boolean	FromObject(RefArg obj, Rect& r);	// the rect of a bounds frame; ==> whether its four slots are integers
 Ref		SetBoundsRect(RefArg frame, const Rect& r);
 

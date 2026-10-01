@@ -215,6 +215,32 @@ ToObject(const Rect& r)
 }
 
 
+// ROM 0x001291bc ToObject__FRC6RefVarPcl
+// A binary of the class holding a copy of the bytes.
+Ref
+ToObject(RefArg cls, const char* data, long length)
+{
+	RefVar obj(AllocateBinary(cls, length));
+	memmove(BinaryData(obj), data, length);
+	return obj;
+}
+
+
+// ROM 0x0012960c FromObject__FRC6RefVarPcRll
+// A binary's bytes copied out, at most `maximum` of them; `length` is told
+// how many the binary has, whether or not they all fitted.
+Boolean
+FromObject(RefArg obj, char* data, long* length, long maximum)
+{
+	long size = Length(obj);
+	*length = size;
+	if (maximum > size)
+		maximum = size;
+	memmove(data, BinaryData(obj), maximum);
+	return true;
+}
+
+
 // ROM 0x00128bc0 FromObject__FRC6RefVarRs
 // An integer Ref into a short; ==> whether it was one.
 static Boolean

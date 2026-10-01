@@ -757,6 +757,25 @@ DecoderRun(CICDecoder* decoder)
 }
 
 
+// ROM 0x002826a0 DecoderClose__FUlPl
+// The sink told the group is over and the code book let go of.  (The
+// ROM's second argument is told how many points its default sink stored;
+// its one caller, Decode, passes nil - and the host has no default sink,
+// Decode replacing it before any use as the ROM's does.)
+Boolean
+DecoderClose(CICDecoder* decoder)
+{
+	Boolean ok = false;
+	if (decoder->fSink != nil)
+		ok = decoder->fSink(kInkEnd, nil, decoder->fRefCon) != 0;
+	if (decoder->fBookNumber == 1)
+		UnlockCodeBook(1);
+	if (decoder->fBookNumber == 3 || decoder->fBookNumber == 2)
+		UnlockCodeBook(2);
+	return ok;
+}
+
+
 /*------------------------------------------------------------------------------
 	T h e   c o d e c
 ------------------------------------------------------------------------------*/
@@ -794,21 +813,17 @@ TCICInkCodec::CanEncode(void) const
 // The ROM's Decode, which is what CSExpandGroup and CSDraw reach the
 // codec through: a context opened over the block, run, and the sink
 // told when it is over.  The group is a mode rather than an index - 1
-// thins the points by hand and anything else by cells.
+// thins the points by hand and anything else by cells.  What it answers
+// is what the sink said to the end of the group: the ROM pays no heed to
+// whether the run itself got to the end (kept).
 Boolean
 TCICInkCodec::Decode(const void* data, long size, ULong group,
 					 InkPointProc sink, void* refCon) const
 {
 	CICDecoder decoder;
 	DecoderOpen(&decoder, data, size, sink, refCon, group == 1 ? 1 : 3);
-	Boolean ok = DecoderRun(&decoder);
-	if (sink != nil)
-		ok = sink(kInkEnd, nil, refCon) != 0 && ok;
-	if (decoder.fBookNumber == 1)
-		UnlockCodeBook(1);
-	else if (decoder.fBookNumber == 2 || decoder.fBookNumber == 3)
-		UnlockCodeBook(2);
-	return ok;
+	DecoderRun(&decoder);
+	return DecoderClose(&decoder);
 }
 
 
@@ -834,13 +849,14 @@ TCICInkCodec::Encode(InkPointSource source, void* refCon, long* outSize) const
 		return nil;
 	}
 	Boolean ok = EncoderRun(&encoder);
-	UnlockCodeBook(encoder.fBookNumber);
+	long bitCount;
+	EncoderClose(&encoder, &bitCount);
 	if (!ok)
 	{
 		DisposPtr((Ptr) bits);
 		return nil;
 	}
-	long size = (long) ((encoder.fHighWater + 7) / 8);
+	long size = (bitCount + 7) / 8;
 	void* ink = NewPtr(size);
 	if (ink == nil)
 	{

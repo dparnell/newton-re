@@ -344,6 +344,8 @@ public:
 	// The word put into the text where the Finder says.
 	void		AddWord(Finder* finder, const UniChar* text, ULong length,
 						RefArg info, long* outOffset);		// ROM 0x00172eb4 AddWord__14TParagraphViewFP6FinderPCUsUlRC6RefVarPl
+	// A word written at a tab snapped to a stop or made one.
+	void		AddTabStop(Rect& box);					// ROM 0x00173b34 AddTabStop__14TParagraphViewFR5TRect
 	// Where a word written on the page goes in the text.
 	void		FindWordInParagraph(Finder* finder);		// ROM 0x0017348c FindWordInParagraph__14TParagraphViewFP6Finder
 	Boolean		FindWordInRun(Finder* finder);				// ROM 0x00173668 FindWordInRun__14TParagraphViewFP6Finder

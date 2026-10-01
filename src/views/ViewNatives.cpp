@@ -99,23 +99,24 @@ FBuildContext(RefArg rcvr, RefArg templ)
 }
 
 
-// ROM 0x001efb88 FAddView__FRC6RefVarN21
-// AddView(parent, template): the template's view made under the parent
-// and the template added to the parent's viewChildren; ==> the context.
+// ROM 0x001efa78 CommonAddView__FRC6RefVarN31
+// The template's view made under the parent and the template added to the
+// parent's array of that name (viewChildren or stepChildren, made if it
+// has none); ==> the context, or nil when no view could be made.
 static Ref
-FAddView(RefArg rcvr, RefArg parent, RefArg templ)
+CommonAddView(RefArg rcvr, RefArg parent, RefArg templ, RefArg childrenSlot)
 {
 	TView* parentView = FailGetView(rcvr, parent);
 	RefVar context(TView::BuildContext(templ, true));
 	TView* view = NOTNIL(context) ? BuildView(parentView, context) : nil;
 	if (view == nil)
 		return NILREF;
-	RefVar children(parentView->GetProto(RSSYMviewchildren));
+	RefVar children(parentView->GetProto(childrenSlot));
 	if (ISNIL(children))
 	{
-		children = AllocateArray(RSSYMviewchildren, 1);
+		children = AllocateArray(childrenSlot, 1);
 		SetArraySlotRef(children, 0, templ);
-		parentView->SetContextSlot(RSSYMviewchildren, children);
+		parentView->SetContextSlot(childrenSlot, children);
 	}
 	else
 		AddArraySlot(children, templ);
@@ -123,25 +124,21 @@ FAddView(RefArg rcvr, RefArg parent, RefArg templ)
 }
 
 
+// ROM 0x001efb88 FAddView__FRC6RefVarN21
+// AddView(parent, template): the template's view made under the parent
+// and the template added to the parent's viewChildren; ==> the context.
+static Ref
+FAddView(RefArg rcvr, RefArg parent, RefArg templ)
+{
+	return CommonAddView(rcvr, parent, templ, RSSYMviewchildren);
+}
+
+
 // ROM 0x001efb94 FAddStepView__FRC6RefVarN21
 static Ref
 FAddStepView(RefArg rcvr, RefArg parent, RefArg templ)
 {
-	TView* parentView = FailGetView(rcvr, parent);
-	RefVar context(TView::BuildContext(templ, true));
-	TView* view = NOTNIL(context) ? BuildView(parentView, context) : nil;
-	if (view == nil)
-		return NILREF;
-	RefVar children(parentView->GetProto(RSSYMstepchildren));
-	if (ISNIL(children))
-	{
-		children = AllocateArray(RSSYMstepchildren, 1);
-		SetArraySlotRef(children, 0, templ);
-		parentView->SetContextSlot(RSSYMstepchildren, children);
-	}
-	else
-		AddArraySlot(children, templ);
-	return context;
+	return CommonAddView(rcvr, parent, templ, RSSYMstepchildren);
 }
 
 
@@ -235,14 +232,23 @@ FGetValue(RefArg rcvr, RefArg context, RefArg slot, RefArg type)
 }
 
 
+// ROM 0x001ef778 SetRectFrame__FlN31
+// A bounds frame of the four sides.
+static Ref
+SetRectFrame(long left, long top, long right, long bottom)
+{
+	Rect r;
+	SetRect(&r, left, top, right, bottom);
+	return ToObject(r);
+}
+
+
 // ROM 0x001ef7e4 FRelBounds__FRC6RefVarN41
 // RelBounds(left, top, width, height): a bounds frame.
 static Ref
 FRelBounds(RefArg /*rcvr*/, RefArg left, RefArg top, RefArg width, RefArg height)
 {
-	Rect r;
-	SetRect(&r, RINT(left), RINT(top), RINT(left) + RINT(width), RINT(top) + RINT(height));
-	return ToObject(r);
+	return SetRectFrame(RINT(left), RINT(top), RINT(left) + RINT(width), RINT(top) + RINT(height));
 }
 
 
@@ -251,9 +257,7 @@ FRelBounds(RefArg /*rcvr*/, RefArg left, RefArg top, RefArg width, RefArg height
 static Ref
 FSetBounds(RefArg /*rcvr*/, RefArg left, RefArg top, RefArg right, RefArg bottom)
 {
-	Rect r;
-	SetRect(&r, RINT(left), RINT(top), RINT(right), RINT(bottom));
-	return ToObject(r);
+	return SetRectFrame(RINT(left), RINT(top), RINT(right), RINT(bottom));
 }
 
 
@@ -1402,12 +1406,12 @@ static const char* const kOpenSource = "func() :_Open()";
 static const char* const kToggleSource = "func() if not viewCObject or not Visible(self) then :Open() else :close()";
 
 
-// ROM 0x001ecfc4 TableLookup
+// ROM 0x00129534 TableLookup__FRC6RefVarT1
 // An association list looked up: the array is key, value, key, value, ...
 // and one last slot, the answer when no key matches.  The keys are
 // compared with EQ, so symbols and integers match and strings do not.
-Ref
-FTableLookup(RefArg /*rcvr*/, RefArg table, RefArg key)
+static Ref
+TableLookup(RefArg table, RefArg key)
 {
 	RefVar result;
 	long length = Length(table);
@@ -1422,6 +1426,14 @@ FTableLookup(RefArg /*rcvr*/, RefArg table, RefArg key)
 	if (ISNIL(result))
 		result = GetArraySlotRef(table, length - 1);
 	return result;
+}
+
+
+// ROM 0x001ecfc4 TableLookup
+Ref
+FTableLookup(RefArg /*rcvr*/, RefArg table, RefArg key)
+{
+	return TableLookup(table, key);
 }
 
 

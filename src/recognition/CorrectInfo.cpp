@@ -1172,6 +1172,17 @@ GetToggledWord(RefArg word)
 }
 
 
+// ROM 0x0007773c MoveToFirst__FRC6RefVarl
+// The entry's reading at that index moved to the front of its list.
+static void
+MoveToFirst(RefArg info, long index)
+{
+	RefVar words(GetFrameSlotRef(info, RSSYMwords));
+	if (NOTNIL(words))
+		MoveArrayElement(words, index, 0);
+}
+
+
 // ROM 0x000777f0 MoveWordFirst__FRC6RefVarT1
 // A reading brought to the front of the entry's list, so that it is what
 // the corrector offers first.  One that is not on the list is put there
@@ -1182,11 +1193,7 @@ MoveWordFirst(RefArg info, RefArg word)
 {
 	long at = FindMatchingWord(info, word);
 	if (at > 0)
-	{
-		RefVar words(GetFrameSlotRef(info, RSSYMwords));
-		if (NOTNIL(words))
-			MoveArrayElement(words, at, 0);
-	}
+		MoveToFirst(info, at);
 	else if (at < 0)
 	{
 		RefVar interp(MakeWordInterp(word));

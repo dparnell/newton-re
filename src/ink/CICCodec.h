@@ -322,6 +322,10 @@ Boolean	EncoderOpen(CICEncoder* encoder, InkPointSource source, void* refCon,
 // Stroke after stroke written into it.
 Boolean	EncoderRun(CICEncoder* encoder);
 
+// ROM 0x0027fae8 EncoderClose__FUlPl
+// The context taken down; ==> how many bits were written.
+Boolean	EncoderClose(CICEncoder* encoder, long* bitCount);
+
 // How much the fitting is allowed to be out by, and how many tries it
 // gets - the numbers EcdrSelectCodeBook puts in the context.
 const long kCICAllowance = 0xf0bc10;
@@ -425,6 +429,11 @@ void	DecoderOpen(CICDecoder* decoder, const void* data, long size,
 // ROM 0x00282518 DecoderRun__FUl
 // Stroke after stroke read out of it.
 Boolean	DecoderRun(CICDecoder* decoder);
+
+// ROM 0x002826a0 DecoderClose__FUlPl
+// The context taken down, the sink told the group is over; ==> what the
+// sink answered.
+Boolean	DecoderClose(CICDecoder* decoder);
 
 
 // What ReadNewStroke answers: a long stroke, a short one, or the end.

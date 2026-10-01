@@ -992,8 +992,7 @@ static void
 PostPick(TPickView* view)
 {
 	RefVar cmd(MakeCommand(aePickItem, view, view->fPicked.fItem));
-	RefVar stuff(AllocateBinary(RSSYMstring, sizeof(PickStuff)));
-	memmove(BinaryData(stuff), &view->fPicked, sizeof(PickStuff));
+	RefVar stuff(ToObject(RSSYMstring, (const char*) &view->fPicked, sizeof(PickStuff)));
 	CommandSetFrameParameter(cmd, stuff);
 	SetFrameSlot(view->fContext, RSSYMallowkeysthrough, RefVar(TRUEREF));
 	gApplication->DispatchCommand(cmd);
@@ -1543,8 +1542,7 @@ TPickView::RealDoCommand(RefArg cmd)
 		PickStuff stuff;
 		TrackStroke(((TUnitPublic*) CommandParameter(cmd))->Stroke(), &stuff);
 		RefVar pick(MakeCommand(aePickItem, this, stuff.fItem));
-		RefVar param(AllocateBinary(RSSYMstring, sizeof(PickStuff)));
-		memmove(BinaryData(param), &stuff, sizeof(PickStuff));
+		RefVar param(ToObject(RSSYMstring, (const char*) &stuff, sizeof(PickStuff)));
 		CommandSetFrameParameter(pick, param);
 		gApplication->DispatchCommand(pick);
 		CommandSetResult(cmd, 1);
@@ -1564,7 +1562,10 @@ TPickView::RealDoCommand(RefArg cmd)
 		stuff.fY = 0;
 	}
 	else
-		memmove(&stuff, BinaryData(param), sizeof(PickStuff));
+	{
+		long length;
+		FromObject(param, (char*) &stuff, &length, sizeof(PickStuff));
+	}
 	PickItem(&stuff);
 	if (fAutoClose)
 	{

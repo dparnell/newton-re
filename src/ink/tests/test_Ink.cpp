@@ -660,10 +660,12 @@ TestDecodeRun()
 	EXPECT(gPoints[0].y >= 60 && gPoints[0].y <= 63);
 	EXPECT(gPoints[gPointCount - 1].x == 60 && gPoints[gPointCount - 1].y == 68);
 
-	// a block that stops in the middle is not a run
+	// a block that stops in the middle: the run gives up, but Decode
+	// answers what the sink said to the end of the group (DecoderClose),
+	// as the ROM's does - it pays no heed to the run's own result
 	gPointCount = 0;
 	gBegins = gEnds = gStrokeEnds = 0;
-	EXPECT(!gCICInkCodec.Decode(w.fBytes, 2, 1, CollectAll, (void*) &w));
+	EXPECT(gCICInkCodec.Decode(w.fBytes, 2, 1, CollectAll, (void*) &w));
 	EXPECT(gBegins == 1 && gEnds == 1);
 }
 

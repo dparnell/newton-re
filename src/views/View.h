@@ -426,6 +426,8 @@ Ref			FChangeStylesOfRange(RefArg rcvr, RefArg start, RefArg length, RefArg styl
 Ref			FExtractTextRange(RefArg rcvr, RefArg start, RefArg length);	// ROM 0x001ef414 FExtractTextRange - likewise
 Ref			FSetFontSize(RefArg rcvr, RefArg fontSpec, RefArg size);	// ROM 0x001ed994 FSetFontSize
 Ref			SetFontSize(RefArg fontSpec, long size);				// ROM 0x0017d9f0 SetFontSize__FRC6RefVarl (FontNatives.cpp)
+Ref			SetFontFace(RefArg fontSpec, long face);				// ROM 0x0017e338 SetFontFace__FRC6RefVarl (FontNatives.cpp)
+Ref			SetFontFamily(RefArg fontSpec, RefArg family);			// ROM 0x00179eb8 SetFontFamily__FRC6RefVarT1 (FontNatives.cpp)
 void		RegisterFontNatives(void);		// ... and the font and style ones (FontNatives.cpp; RegisterViewNatives calls it)
 Ref			MakeViewMethods(void);			// the methods a view inherits from the root template (Rviewroot's), as a frame
 

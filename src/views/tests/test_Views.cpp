@@ -1758,9 +1758,11 @@ TestDataHilites()
 	v->HiliteAll();
 	EXPECT(RINT(Eval("Length(ctxDH.hilites)")) == 1);
 
-	// and RemoveAllHilites empties the array (the objects disposed of with it)
+	// and RemoveAllHilites takes them all out (the objects disposed of with
+	// them) - the last one out leaves the slot nil, as the ROM's
+	// ArrayRemove(frame, slot, value) does
 	v->RemoveAllHilites();
-	EXPECT(!v->Hilited() && RINT(Eval("Length(ctxDH.hilites)")) == 0 && ISNIL(v->FirstHilite()));
+	EXPECT(!v->Hilited() && ISNIL(Eval("ctxDH.hilites")) && ISNIL(v->FirstHilite()));
 	SetEmptyRect(&bounds);
 	v->GlobalHiliteBounds(&bounds);
 	EXPECT(EmptyRect(&bounds));		// nothing selected, nothing added
@@ -4389,9 +4391,9 @@ TestSelection()
 	// extending the selection unions the ranges
 	p->MakeHilite(5, 8, false);
 	EXPECT(HiliteRange(p, true) == 0 && HiliteRange(p, false) == 8);
-	// RemoveHilite drops the one hilite (the array emptied)
+	// RemoveHilite drops the one hilite (the slot set to nil once empty)
 	p->RemoveHilite(RefVar(p->FirstHilite()));
-	EXPECT(ISNIL(p->FirstHilite()) && RINT(Eval("Length(ctxS.hilites)")) == 0);
+	EXPECT(ISNIL(p->FirstHilite()) && ISNIL(Eval("ctxS.hilites")));
 	// PointInHilite tells whether a point is on the selection
 	p->MakeHilite(6, 11, false);				// select "World"
 	{
@@ -4573,8 +4575,8 @@ TestSelection()
 	// removing the hilites restores the plain text
 	p->RemoveAllHilites();
 	Refresh();
-	// (the hilites array is emptied, not cleared: RemoveHilite takes them out one by one)
-	EXPECT(ISNIL(p->FirstHilite()) && RINT(Eval("Length(ctxS.hilites)")) == 0
+	// (RemoveHilite takes them out one by one, and the last leaves the slot nil)
+	EXPECT(ISNIL(p->FirstHilite()) && ISNIL(Eval("ctxS.hilites"))
 		&& InkIn(box0.left, p->Line(0).fBounds.top, box5.left, p->Line(0).fBounds.bottom) == before);
 	Eval("SetKeyView(nil, nil)");
 	Eval("ctxS:Close()");

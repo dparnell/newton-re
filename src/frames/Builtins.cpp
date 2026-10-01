@@ -105,6 +105,16 @@ FMultiply(RefArg /*rcvr*/, RefArg a, RefArg b)
 }
 
 
+// ROM 0x002b9034 UnevenDivide__FlT1
+// Two integers' quotient as a real (the FPA's divide; nought gives an
+// infinity).
+static Ref
+UnevenDivide(long dividend, long divisor)
+{
+	return MakeReal((double) dividend / (double) divisor);
+}
+
+
 // ROM 0x002b9278 FDivide
 // Integers divide to an integer when it comes out exact, else a real.
 Ref
@@ -116,7 +126,7 @@ FDivide(RefArg /*rcvr*/, RefArg a, RefArg b)
 		long dividend = RVALUE(a);
 		if (divisor != 0 && dividend % divisor == 0)
 			return MAKEINT(dividend / divisor);
-		return MakeReal((double) dividend / (double) divisor);
+		return UnevenDivide(dividend, divisor);
 	}
 	return NumberDivide(a, b);
 }

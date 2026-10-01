@@ -1183,6 +1183,19 @@ EncoderOpen(CICEncoder* encoder, InkPointSource source, void* refCon,
 }
 
 
+// ROM 0x0027fae8 EncoderClose__FUlPl
+// The code book let go of and the bits written counted.  (The ROM also
+// frees the three work handles the context owns; the host's context has
+// its room given it.)
+Boolean
+EncoderClose(CICEncoder* encoder, long* bitCount)
+{
+	UnlockCodeBook((UShort) encoder->fBookNumber);
+	*bitCount = (long) encoder->fHighWater;
+	return true;
+}
+
+
 // ROM 0x002804f8 EncoderRun__FUl
 // The source told to begin, and then stroke after stroke: points are
 // pulled until there are two, and a stroke of two or more is written as

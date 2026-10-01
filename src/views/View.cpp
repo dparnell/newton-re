@@ -1674,9 +1674,7 @@ TView::DeleteHilited(RefArg)
 void
 TView::RemoveHilite(RefArg hilite)
 {
-	RefVar hilites(GetFrameSlotRef(fContext, RSSYMhilites));
-	if (NOTNIL(hilites))
-		ArrayRemove(hilites, hilite);
+	ArrayRemove(fContext, RSSYMhilites, hilite);
 	THilite* object = (THilite*) RefToAddress(hilite);
 	Rect bounds;
 	SetEmptyRect(&bounds);
