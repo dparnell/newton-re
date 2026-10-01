@@ -25,13 +25,23 @@ static FramesPartArea*	gFramesParts = nil;
 
 
 // A ref that points outside the part: to the ROM's objects, when they
-// are imported.
+// are imported.  DEVIATION: a pointer ref to neither the part nor the ROM
+// is made kDeclawedRef, a ref into a package that has gone, which throws
+// kNSErrBadPackageRef when it is followed.  On the Newton the package's
+// base is added to it like any other and it points at whatever is there;
+// the host has nothing there to point at, and a raw source address taken
+// for a host pointer brings the host down.  NewtCard's self-extracting
+// stacks (fixtures/packages/apps/NewtCard/NewtCard/Stacks) have eleven
+// such refs each - their part frame's `text` and `icon`, left holding the
+// addresses the template package had on the machine PackIt made them on
+// (0x602B6000 + offset in HOME.PKG).
 static Ref
 OutsidePartRef(ULong32 ref, void* /*refCon*/)
 {
-	if (!ROMObjectsImported())
-		return NILREF;
-	return TranslateROMRef(ref);
+	Ref outside = ROMObjectsImported() ? TranslateROMRef(ref) : NILREF;
+	if (outside == NILREF && (ref & 3) == kTagPointer && ROMBytesAt(ref - 1, 4) == nil)
+		return kDeclawedRef;
+	return outside;
 }
 
 

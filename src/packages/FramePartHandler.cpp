@@ -152,6 +152,17 @@ ImportPackagePart(Ptr data, PartInfo* info, Boolean* inROMImage)
 	Boolean inROM = ROMAddressOf(data, &address, nil);
 	*inROMImage = inROM;
 	ULong32 refBase = inROM ? (ULong32) address : (ULong32) partOffset;
+	// and a part says so itself: the store's page writer
+	// (TFrameRelocationGenerator::Update, ROM 0x000d1844) takes a part whose
+	// first object is the 0x10-byte part array followed by a word without
+	// bit 0 set as packed to eight, whatever its package's signature says -
+	// NewtCard's self-extracting stacks are version 1 packages packed so
+	if (info->size > 8)
+	{
+		ULong32 w0 = GetBigEndianWord((const UByte*) data);
+		if ((w0 & kObjSlotted) != 0 && (w0 >> 8) == 0x10)
+			align = (GetBigEndianWord((const UByte*) data + 4) & 1) != 0 ? 4 : 8;
+	}
 	TImportedObjectArea* area = ImportFramesPart(data, info->size, refBase, align);
 	if (area == nil)
 	{
