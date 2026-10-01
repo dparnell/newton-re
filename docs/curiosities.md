@@ -2358,3 +2358,13 @@ a grid of the writing's box), where the same stroke is an "o" (23, "0"
 at 102) - so "ton" becomes "too".  The x-height is what tips it: a
 zero stands as tall as a capital.  Found 2026-10-01 (ctest
 `host.NewtonOverwrite`, 172b0e91).
+
+## The World Clock's city form throws every time it closes
+
+Close the World Clock with a city's form open and the form's
+viewQuitScript flushes its fields into `target.name` - but `TView::Delete`
+(0x267584) runs the parent's viewQuitScript before the children's, and
+the World Clock's own has already set `target := nil`.  The read throws,
+and `Delete` catches the root exception and drops it, so nobody ever saw
+it - until the host's exception trace printed every throw where it
+happens (found by the application sweep, 2026-10-01).

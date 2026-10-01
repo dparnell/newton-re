@@ -9,6 +9,25 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: fonts, the screen task, external events; two sweep findings that are the ROM's
+
+- The sweep's two errors are the ROM's own: the World Clock's city form
+  throws on every close and `TView::Delete` swallows it (a curiosity), and
+  a Calls slip's half-second procrastinated check fires after the slip
+  has closed.
+- `StrFontWidth` measures a rich string's ink words at their own width.
+- `OpenFont` keeps the ROM's four-entry font cache, falls back to the
+  system font for a family that cannot open, and substitutes PostScript
+  fonts on a printer's port; scaled sizes already worked (a stale note).
+- The soups' notes were mostly stale; `MakeEntryAlias` honours
+  `gNeedsInternalSignatures`.  `ScreenPixel` does answer 0 for black (the
+  fax viewer is gray-shrunk).
+- 'xnwt events and `SendRunScriptEvent` (`newt/ExternalNewtEvents.h`).
+- The ROM's screen task: three semaphores, the 'scrn update task blitting
+  at most every 33 ms once no bracket is open and no alert holds the
+  LCD - an alert now really blocks it.
+- 341 tests; 12487 of 16671 functions (74.90%).
+
 ## 2026-10-01: ATA cards as far as the ROM goes
 
 An ATA (PC Card / CompactFlash) card is driven by the ROM's own
