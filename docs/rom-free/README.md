@@ -474,6 +474,15 @@ default boot"). ctest `host.NewtonNoROM` boots that default.
   bytes out of the image or out of those blocks.
   `InitROMDictionaryData` asks it, where it read the image. `--check`
   compares the lexicons with the ROM's too.
+- (Later, 2026-10-01) The lexicons are text now: the word lists as
+  `lexicons/<name>.words`, the lexical grammars as `.lex` graphs of
+  character sets, built into the ROM's bytes by
+  `tools/lexicons/newtonlex.py` - all 40 byte for byte, because a word
+  trie is a function of its set of words (each row in character order,
+  each sibling offset as short as will hold it) and a graph is written in
+  the order it lies. A list an edit grows past its room is moved
+  (`--relayout`; the host's `ROMMovedAddress`). Ctests
+  `tools.NewtonLexicons`, `host.ROMSourceLexiconEdit`.
 
 ### The ROM extension: kept as package files first
 

@@ -63,6 +63,10 @@ const void*	ROMImageBase(ULong* size);
 // out of the blocks of ROM data an object file carries (the lexicons); nil
 // when neither has them.
 const void*	ROMBytesAt(ULong address, ULong length);
+// where a block of ROM data an object file moved now lies (a lexicon an
+// edit of romsrc/ made bigger than its room: romsrc.py's
+// place_grown_lexicons); any other address answered as it is
+ULong		ROMMovedAddress(ULong address);
 
 // The places the ROM's bytes are: the image (address 0 on), then each block
 // an object file carries (the lexicons, the ROM extension).  ROMAddressOf

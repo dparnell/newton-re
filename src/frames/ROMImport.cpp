@@ -108,6 +108,13 @@ TranslateROMRef(ULong32 ref)
 }
 
 
+ULong
+ROMMovedAddress(ULong address)
+{
+	return (ULong) MovedRef((ULong32) address);
+}
+
+
 const void*
 ROMBytesAt(ULong address, ULong length)
 {

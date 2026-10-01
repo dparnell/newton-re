@@ -1,0 +1,82 @@
+# gEnum81IAWordList: an Airus word list (an enumerated dictionary): one word to a
+# line, in any order, with its attribute after a tab when it has one.
+# Built by tools/lexicons/newtonlex.py; tools/lexicons/README.md.
+type 0x17
+about newton	2
+anniversary	1
+attention	3
+attn	4
+b-day	5
+bday	6
+beeper	7
+birthday	8
+breakfast	9
+breakfast with	10
+brunch	11
+brunch with	12
+call	14
+car	15
+car number	18
+car phone	17
+cellular	19
+cellular number	20
+cellular phone	21
+dear	22
+dial	23
+dinner	24
+dinner with	25
+don't forget to	26
+don't let me forget to	27
+email	28
+fax	29
+fax number	30
+find	31
+hey	32
+holiday	33
+home	34
+home phone	35
+locate	36
+look for	37
+lunch	38
+lunch with	39
+mail	40
+meet	41
+meet me	44
+meet with	45
+meeting	42
+meeting with	43
+mobile	46
+mobile number	48
+mobile phone	47
+pager	49
+pager number	50
+phone	51
+phone number	52
+print	53
+remember	54
+remember to	55
+remind	56
+remind me	57
+remind me to	58
+ring	59
+schedule	60
+search for	61
+see	62
+send	63
+talk to	64
+talk with	65
+the time in	66
+time	67
+time in	68
+to	69
+to do	70
+todo	71
+what is the time	72
+what is the time in	73
+what time	74
+what time is it	75
+what time is it ?	77
+what time is it in	78
+what time is it?	76
+work	79
+work phone	80

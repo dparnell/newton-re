@@ -1,0 +1,4 @@
+# gEnum80Empty: an Airus word list (an enumerated dictionary): one word to a
+# line, in any order, with its attribute after a tab when it has one.
+# Built by tools/lexicons/newtonlex.py; tools/lexicons/README.md.
+type 0x07

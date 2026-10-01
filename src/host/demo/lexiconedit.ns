@@ -1,0 +1,12 @@
+// Whether the recognisers know a word the ROM's own word list does not
+// have: tools/lexicons/lexicon_edit_test.py adds "zorbleflax" to
+// romsrc/lexicons/gEnum80sh_words.words in a copy of the tree, builds it
+// and boots the OS on it and on the unedited tree with this script (ctest
+// host.ROMSourceLexiconEdit).  LookupWord answers nil for a word the
+// dictionaries have.
+//
+//   build/host/host/newton --objects <file> --headless 60 --script src/host/demo/lexiconedit.ns
+
+Print("lexiconedit: hello is " & (if LookupWord("hello") then "unknown" else "known"));
+Print("lexiconedit: zorbleflax is " & (if LookupWord("zorbleflax") then "unknown" else "known"));
+HostQuit();

@@ -32,7 +32,11 @@ InitROMDictionaryData(void)
 {
 	for (long i = 0; i < kROMDictionaryCount; i++)
 	{
+		// DEVIATION: a lexicon an edit of romsrc/ made bigger than its room
+		// lies elsewhere in the object file (ROMMovedAddress)
 		ULong at = gROMDictionaryTable[i].fAddress;
+		if (at != 0)
+			at = ROMMovedAddress(at);
 		const UByte* data = at == 0 ? nil : (const UByte*) ROMBytesAt(at, 4);
 		if (data != nil && ROMBytesAt(at, 4 + GetBigEndianWord(data)) == nil)
 			data = nil;

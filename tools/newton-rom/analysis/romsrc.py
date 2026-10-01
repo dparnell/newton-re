@@ -51,11 +51,16 @@ binary but strings and reals is kept as its bytes):
                      host's compiler (newtonscript --compile-records)
     maps.ns          the frame maps, `map_<addr> := map(class, supermap, 'tag, ...);`
     resources/<class>/<addr>.bin   the binaries' bytes
-    lexicons/<name>.bin, lexicons.tsv   the recognisers' lexicons (the Airus
-                     tries InitROMDictionaryData points gROMDictionaryData at:
-                     C data outside the object area, some of it in the ROM
-                     extension), each its size word then the trie; the .tsv
-                     their ROM addresses (tools/newton-rom/analysis/romdicts.py)
+    lexicons/<name>.words|.lex, lexicons.tsv   the recognisers' lexicons
+                     (the Airus dictionaries InitROMDictionaryData points
+                     gROMDictionaryData at: C data outside the object area) as
+                     text - a word list, or a lexical graph of character sets -
+                     which tools/lexicons/newtonlex.py packs into the ROM's
+                     bytes (.bin, the size word then the dictionary, for one
+                     that would not come back the same); the .tsv their ROM
+                     addresses (tools/newton-rom/analysis/romdicts.py).  One an
+                     edit has made bigger than its room is moved, with
+                     --relayout (MOVED_DATA_BASE, the object file's moved table)
     romdata/<name>.bin, romdata.tsv   the ROM's other data that code outside
                      the object area reads at its ROM address: the parameter
                      block gParamBlock (0x1000, a page: gROMVersion, gROMStage,
@@ -182,6 +187,14 @@ import png							# noqa: E402
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "fonts"))
 import newtonsfnt					# noqa: E402
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "lexicons"))
+import newtonlex					# noqa: E402
+
+# where a lexicon an edit has grown past its room goes (romsrc.py build
+# --relayout): an address no ROM data uses, the object file's moved table
+# taking the host from the ROM's address to it (ROMMovedAddress)
+MOVED_DATA_BASE = 0x10000000
 
 import wave							# noqa: E402
 
@@ -992,13 +1005,26 @@ class Extractor:
 		os.makedirs(os.path.join(self.out, "lexicons"), exist_ok=True)
 		_, writes = romdicts.decode(rom.rom, rom.by_name[romdicts.INIT_FUNCTION])
 		with open(os.path.join(self.out, "lexicons.tsv"), "w", encoding="utf-8", newline="\n") as f:
-			f.write("# the recognisers' lexicons: ROM address, name, file (its size word, then the trie)\n")
+			f.write("# the recognisers' lexicons: ROM address, name, file - a word list (.words) or\n")
+			f.write("# a lexical graph (.lex), tools/lexicons/newtonlex.py; .bin is the bytes (its\n")
+			f.write("# size word, then the Airus dictionary), for one that does not come back the same\n")
 			for address in sorted({a for a in writes.values() if a}):
 				name = re.sub(r"[^A-Za-z0-9_]", "_", rom.symbols.get(address, "lexicon_%x" % address))
 				size = rom.word(address)
-				rel = "lexicons/%s.bin" % name
-				with open(os.path.join(self.out, rel), "wb") as out:
-					out.write(rom.rom[address:address + 4 + size])
+				data = rom.rom[address:address + 4 + size]
+				rel = "lexicons/%s%s" % (name, newtonlex.text_suffix(data))
+				where = os.path.join(self.out, rel)
+				try:
+					newtonlex.unpack(data, where)
+					same = newtonlex.pack(where) == data
+				except ValueError:
+					same = False
+				if not same:
+					if os.path.exists(where):
+						os.remove(where)
+					rel = "lexicons/%s.bin" % name
+					with open(os.path.join(self.out, rel), "wb") as out:
+						out.write(data)
 				f.write("%x\t%s\t%s\n" % (address, name, rel))
 		self.write_romdata()
 		self.write_rex()
@@ -1841,6 +1867,27 @@ class Builder:
 				missing.append("'" + quote_name(s))
 		return missing
 
+	def place_grown_lexicons(self):
+		"""A lexicon an edit has made bigger than the room it had - the
+		distance to the next block of ROM data - goes to an address of its
+		own above everything (MOVED_DATA_BASE), and the object file's moved
+		table says where (the host's ROMMovedAddress); only with --relayout,
+		since the result is no longer the ROM's layout."""
+		starts = sorted(a for a, _ in self.blocks)
+		at = MOVED_DATA_BASE
+		for i in self.lexicon_blocks:
+			address, data = self.blocks[i]
+			later = [s for s in starts if s > address]
+			room = (later[0] - address) if later else len(data)
+			if len(data) <= room:
+				continue
+			if not self.relayout:
+				raise ValueError("lexicon at %#x has grown from %#x bytes to %#x: build with --relayout"
+								 % (address, room, len(data)))
+			self.blocks[i] = (at, data)
+			self.relocations.append((address, at))
+			at += (len(data) + 15) & ~15
+
 	def lay_out_afresh(self, entries, new_paths):
 		"""The objects one after another from the area's base, each on a word:
 		the layout's in its order, then the new ones.  Every object's old and
@@ -1938,8 +1985,10 @@ class Builder:
 				else:
 					self.magic.append(ref(Reader(what, "magic.tsv", self.src).value()))
 
-		# the other ROM data: the lexicons
+		# the other ROM data: the lexicons (a word list or a lexical graph
+		# built by newtonlex.py, or kept as bytes)
 		self.blocks = []
+		self.lexicon_blocks = []
 		lexicons = os.path.join(self.src, "lexicons.tsv")
 		if os.path.exists(lexicons):
 			with open(lexicons, encoding="utf-8") as f:
@@ -1947,8 +1996,14 @@ class Builder:
 					if line.startswith("#"):
 						continue
 					address, _, rel = line.rstrip("\n").split("\t")
-					with open(os.path.join(self.src, rel), "rb") as blob:
-						self.blocks.append((int(address, 16), blob.read()))
+					path = os.path.join(self.src, rel)
+					if rel.endswith((".words", ".lex")):
+						data = newtonlex.pack(path)
+					else:
+						with open(path, "rb") as blob:
+							data = blob.read()
+					self.lexicon_blocks.append(len(self.blocks))
+					self.blocks.append((int(address, 16), data))
 
 		# the ROM's other data (romdata.tsv)
 		romdata = os.path.join(self.src, "romdata.tsv")
@@ -1994,6 +2049,8 @@ class Builder:
 				if len(data) != length:
 					raise ValueError("rex.tsv: the pieces make %#x bytes, not %#x" % (len(data), length))
 				self.blocks.append((base, bytes(data)))
+
+		self.place_grown_lexicons()
 
 		out = bytearray([self.pad]) * area_size
 		for a, path, flags, extra in entries:

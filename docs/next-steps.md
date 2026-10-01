@@ -167,8 +167,8 @@ there: the Network Printers panel cannot remove a printer it added; ipps://
 
 ### The ROM-free track, optional later
 
-The Unicode, collation and locale tables and the recognisers'
-dictionaries as text (word lists plus a trie builder); a strike's derived
+The Unicode, collation and locale tables as text (the recognisers'
+dictionaries are: `tools/lexicons/`); a strike's derived
 metrics recomputed from its glyphs.  An oracle for the builder:
 **mosrun** (https://github.com/MatthiasWM/mosrun) runs Apple's MPW-based
 Newton tools (ARM6asm, ARMLink, Rex) on the host, so a ROM extension made
