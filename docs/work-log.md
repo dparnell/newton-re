@@ -9,6 +9,21 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: a card's own package
+
+A package kept in a card's attribute memory (Apple's CIS tuple 0x8e) loads
+when the card goes in and comes out with it (89aa41a4): `TCardPipe` (ROM
+0x4fefc-0x502f8) reads it as a stream, a card fault becoming a pipe
+exception, and `LoadCardPackage` takes that path.  `tools/cards/
+streamedpkg.py` makes such a package (a streamed frames part must be one
+NSOF object) and `linearcard.py make --attr-package` puts it on a card;
+ctest `host.NewtonCardPackage`.  A ROM bug found and kept: InstallFormPart
+reads `deviceNumber` as a free variable where `a1.deviceNumber` was meant,
+so every 'form part from a card fails with -48807 ("An error occurred
+activating the package"); only 'auto parts and the other kinds come off a
+card whole.  The owner added Kallisys's ATA Support package; its source,
+having no licence, is not used - its own ARM code runs through armcpu.
+
 ## 2026-10-01: the ROM's own line layout for paragraphs
 
 A paragraph's lines are now laid out by the ROM's `LineLoop`, transcribed
