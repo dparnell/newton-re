@@ -25,6 +25,7 @@
 */
 
 #include "Marshalling.h"
+#include "NarrowRef.h"
 #include "ObjectHeap.h"
 #include "RSSymbols.h"
 #include "Unicode.h"
@@ -54,7 +55,7 @@ RefToULong(RefArg value, ULong* result)
 	Ref r = value;
 	ULong word;
 	if (ISINT(r))
-		word = RINT(r);
+		word = NarrowToWord(RINT(r), "marshalled word");		// NEWTON_NS64: a 32-bit field (NarrowRef.h)
 	else if (ISCHAR(r))
 		word = RCHAR(r) & 0xffff;
 	else if (r == NILREF)

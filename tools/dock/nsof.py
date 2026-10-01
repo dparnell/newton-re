@@ -74,6 +74,9 @@ def _encode(obj, out):
         out.append(IMMEDIATE)
         out += _xlong(0x1a)
     elif isinstance(obj, int):
+        # a Newton integer is 30 bits on the wire (docs/frames/64bit.md)
+        if not -(1 << 29) <= obj < (1 << 29):
+            raise ValueError("%d does not fit a NewtonScript integer (30 bits)" % obj)
         out.append(IMMEDIATE)
         out += _xlong((obj << 2) & 0xFFFFFFFF if obj >= 0 else ((obj << 2) & 0xFFFFFFFF) - (1 << 32))
     elif isinstance(obj, Symbol):

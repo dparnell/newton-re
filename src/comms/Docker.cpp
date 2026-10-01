@@ -10,6 +10,7 @@
 */
 
 #include "Docker.h"
+#include "NarrowRef.h"
 #include "EzEndpointPipe.h"
 #include "StorePackages.h"
 #include "NewtWorld.h"
@@ -1326,7 +1327,7 @@ TDocker::WriteNewtonName(void)
 	*fPipe << (unsigned long) system.info.fPatchVersion;
 	*fPipe << (unsigned long) nsVersion;
 	RefVar internal(GetArraySlot(RefVar(GetStores()), 0));
-	*fPipe << (long) RINT(StoreGetSignature(internal));
+	*fPipe << (long) NarrowToWord(RINT(StoreGetSignature(internal)), "dock");
 	*fPipe << (long) system.info.fScreenResolution.v;
 	*fPipe << (long) system.info.fScreenResolution.h;
 	*fPipe << (unsigned long) system.info.fScreenDepth;
@@ -2224,7 +2225,7 @@ void
 TDocker::RemoteCursorCountEntries(void)
 {
 	RefVar cursor(RemoteGetCursor());
-	WriteLong('ldta', RINT(CursorCountEntries(cursor)));
+	WriteLong('ldta', NarrowToWord(RINT(CursorCountEntries(cursor)), "dock"));
 }
 
 
@@ -3451,7 +3452,7 @@ TDocker::DoDisplaySlip(void)
 	RefVar result(CallConnectionApp(RefVar(RSSYMdisplayslip), slip));
 	WriteDockerHeader('slrs', false);
 	*fPipe << (long) 4;
-	*fPipe << (long) RINT(result);
+	*fPipe << (long) NarrowToWord(RINT(result), "dock");
 	fPipe->FlushWrite();
 }
 
@@ -3571,7 +3572,7 @@ TDocker::WriteCommand(RefArg command, RefArg data, long length, Boolean withData
 				{
 					WriteDockerHeader(*commandWord, false);
 					*fPipe << (long) 4;
-					*fPipe << (long) RINT(data);
+					*fPipe << (long) NarrowToWord(RINT(data), "dock");
 					fPipe->FlushWrite();
 				}
 				else

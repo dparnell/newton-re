@@ -8,6 +8,7 @@
 */
 
 #include "ObjectStreamer.h"
+#include "NarrowRef.h"
 #include "ObjectHeap.h"
 #include "RSSymbols.h"
 #include "NSErrors.h"
@@ -172,7 +173,7 @@ TObjectWriter::Prescan(void)
 		else
 		{
 			fSize += 1;
-			fSize += XLongSize(ref);
+			fSize += XLongSize(NarrowRef(ref, "NSOF"));		// NEWTON_NS64: the device's word (NarrowRef.h)
 		}
 		return;
 	}
@@ -291,7 +292,7 @@ TObjectWriter::Scan(void)
 		else
 		{
 			pipe << (UByte) kNSOFImmediate;
-			LongToPipe(pipe, ref);
+			LongToPipe(pipe, NarrowRef(ref, "NSOF"));
 		}
 		return;
 	}

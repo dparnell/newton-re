@@ -17,6 +17,7 @@
 */
 
 #include "StoreObject.h"
+#include "NarrowRef.h"
 #include "ObjectHeap.h"
 #include "RSSymbols.h"
 #include "ROMConstants.h"
@@ -662,7 +663,7 @@ TStoreObjectWriter::Prescan(void)
 		else if (ISCHAR(ref))
 			fStreamSize += 1 + (RCHAR(ref) < 0x100 ? 1 : 2);
 		else
-			fStreamSize += 1 + LongSize((long) ref);
+			fStreamSize += 1 + LongSize((long) NarrowRef(ref, "store object"));	// NEWTON_NS64: the device's word (NarrowRef.h)
 		return;
 	}
 	long precedent = fPrecedents->Find(fObject);
@@ -748,7 +749,7 @@ TStoreObjectWriter::Scan(void)
 				fPipe << (UByte) kSOUniChar << (UByte) (c >> 8) << (UByte) c;
 		}
 		else
-			fPipe << (UByte) kSOImmediate << (long) ref;
+			fPipe << (UByte) kSOImmediate << (long) NarrowRef(ref, "store object");
 		return;
 	}
 	long precedent = fPrecedents->Find(fObject);
@@ -990,7 +991,7 @@ TStoreObjectWriter::Write(void)
 	if ((ObjectFlags(root) & 3) == 3)
 	{
 		Ref id = GetFrameSlotRef(root, RSSYM_uniqueid);
-		header.fUniqueId = id == NILREF ? -1 : (Long32) RINT(id);
+		header.fUniqueId = id == NILREF ? -1 : (Long32) NarrowInteger(RINT(id), "entry _uniqueID");
 		Ref modTime = GetFrameSlotRef(root, RSSYM_modtime);
 		header.fModTime = modTime == NILREF ? (ULong32) -1 : (ULong32) (RINT(modTime) & 0x3fffffff);
 	}

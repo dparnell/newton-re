@@ -1394,7 +1394,12 @@ class Reader:
 		kind, text = self.peek()
 		if kind == "number":
 			self.take()
-			return Imm((int(text) << 2) & 0xffffffff)
+			number = int(text)
+			# the object file holds the ARM's word: a 30-bit integer (a wider
+			# one would wrap silently; docs/frames/64bit.md)
+			if not -(1 << 29) <= number < (1 << 29):
+				raise SyntaxError("%s: an integer the ROM's 30 bits cannot hold" % text)
+			return Imm((number << 2) & 0xffffffff)
 		if kind == "char":
 			self.take()
 			c = int(text[3:], 16) if text.startswith("$\\u") else ord(text[1])
