@@ -125,13 +125,24 @@ TStdioInputStream::TStdioInputStream(FILE* file, const char* filename)
 // ROM 0x000eb614 GetChar__17TStdioInputStreamFv
 // Host: a file's line feed is the Newton's carriage return (the ROM
 // converts each byte through the compiler's encoding, two-byte
-// characters included - NOT YET RECONSTRUCTED: IsFirstByteOf2Byte).
+// characters included - NOT YET RECONSTRUCTED: IsFirstByteOf2Byte).  A
+// file's CR LF is one line end on every host, as Windows' text mode reads
+// it (a source checked out with Windows line ends otherwise gives a string
+// literal two carriage returns per line on Linux).
 UniChar
 TStdioInputStream::GetChar(void)
 {
 	int c = getc(fFile);
 	if (c == EOF)
 		return kEndOfStream;
+	if (c == '\r')
+	{
+		int next = getc(fFile);
+		if (next == '\n')
+			c = '\n';
+		else if (next != EOF)
+			ungetc(next, fFile);
+	}
 	if (c == '\n')
 		c = '\r';
 	UniChar u = U_CONST_CHAR((unsigned char) c);

@@ -28,7 +28,7 @@ the way are all in `docs/work-log.md`.
   already defined; the sweeps of 2026-10-01 left only genuine gaps
   (below) and performance paths.
 - **Linux** builds and runs with the system compiler
-  (`-DCMAKE_CXX_COMPILER=clang++`): all 394 ctests pass on Ubuntu 22.04
+  (`-DCMAKE_CXX_COMPILER=clang++`): all 398 ctests pass on Ubuntu 22.04
   under WSL 2 (2026-10-01, clang 14, X11 and OpenSSL, no ALSA);
   `docs/host-lp64.md`, which says how to build there.  Still
   Windows-only: a package dropped onto the window (XDND), and

@@ -9,7 +9,7 @@ are, and so that a similar failure is recognised rather than re-diagnosed.
 
 The port is otherwise small: the kernel, the object system, QuickDraw, the
 recognisers and the comms all build and run unchanged.  `ctest` on Linux
-passes all 394 (2026-10-01: Ubuntu 22.04 under WSL 2, clang 14 and
+passes all 398 (2026-10-02: Ubuntu 22.04 under WSL 2, clang 14 and
 libstdc++, X11 and OpenSSL; no ALSA headers, so newton runs silent there -
 see "Building under WSL" below).
 
@@ -105,6 +105,14 @@ case-insensitive file system.  The DDK ones are patched by
 mistake kept coming back (four files on 2026-10-01), so ctest
 `tools.IncludeCase` (`tools/host/includecase.py`) now catches it on
 Windows too.
+
+**A source's line ends.**  A checkout made on Windows has CR LF line ends
+(`core.autocrlf`), which Windows' text-mode `fopen` reads as one; Linux
+reads both, and the compiler's file stream turns each into a carriage
+return - so a string literal written across lines held two per line
+(NS BASIC's demo looked for "HELLO", a return, "4" and found "HELLO",
+two returns, "4").  `TStdioInputStream::GetChar` (`frames/Lexer.cpp`)
+takes CR LF as one line end on every host.
 
 **The host's MIME table.**  `tools/host/httpserve.py` let Python guess a
 file's type, and Linux's `/etc/mime.types` makes `.pkg` an Apple

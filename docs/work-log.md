@@ -31,6 +31,10 @@ window's position, the screen task).  What it took:
   status printed as its number before Python 3.11;
 - `demo/card.ns` keeps its card in the build directory (`DEMO_CARD`):
   `tmp/` does not exist in a fresh checkout;
+- a source file's CR LF read as two line ends on Linux (Windows' text
+  mode makes it one), so a string literal across lines held two carriage
+  returns per line (`host.NewtonAppNSBasic`): `TStdioInputStream::GetChar`
+  takes CR LF as one;
 - the watchdog took ATA Support's ten-second busy-wait on a pulled card
   for a stopped machine and printed the NewtonScript stack while the task
   still ran, damaging the heap (`host.NewtonATASupport.pull`, one run in
