@@ -58,6 +58,17 @@ struct TextBoundsInfo
 	Fixed		fAdvanceY;		// +0x18  the vertical advance (nought for text along a line)
 };
 
+// Where a text object's characters come from when its options name a
+// scanner: the scanner is handed the object's text word (its refCon) and
+// asked for the characters from an offset - count of them, charSize bytes
+// each - answering how many it put at *chars; offset -2 asks it to hold
+// the text still (before a pass over it) and -1 to let it go after.  A
+// paragraph's text objects hold a TextRef (views/ParagraphLines.h) in
+// place of their characters, and TextRefScanner reads the paragraph's
+// text through it, so the text object never points into a NewtonScript
+// binary that may move.
+typedef long (*TextScannerProc)(void* refCon, long offset, long count, long charSize, void** chars);
+
 // the layout options of a text object (the ROM's 0x1c bytes): a width to
 // fit, the alignment within it (a QD flush: the fraction of the slack put
 // before the text) and the justification (the fraction of the slack spread
@@ -71,7 +82,7 @@ struct TextOptions
 	long	fReserved;			// +0x0c
 	long	fTransferMode;		// +0x10  0 for the port's
 	Fixed	fFittedWidth;		// +0x14  ==> the width of the text that fit
-	long	fReserved2;			// +0x18
+	TextScannerProc	fScanner;	// +0x18  where the characters come from (nil: the object's text is them)
 };
 
 void	DrawTextOnce(const void* text, long length, StyleRecord** styles, const short* runLengths, FPoint where, TextOptions* options, TextBoundsInfo* bounds);

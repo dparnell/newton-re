@@ -421,7 +421,7 @@ TKeyboardView::Constructor(RefArg context, TView* parent)
 	fTextOptions.fFittedWidth = 0;
 	fTextOptions.fTransferMode = 1;
 	fTextOptions.fReserved = 0;
-	fTextOptions.fReserved2 = 0;
+	fTextOptions.fScanner = nil;
 
 	fKeyReceiverView = GetProtoVariable(fContext, RSSYMkeyreceiverview, &exists);
 	if (!exists)

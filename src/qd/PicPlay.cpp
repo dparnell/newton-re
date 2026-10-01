@@ -854,7 +854,8 @@ GetPicTextOptions(TextOptions* options)
 	options->fReserved = GetPicLong();
 	options->fTransferMode = GetPicLong();
 	options->fFittedWidth = (Fixed) GetPicLong();
-	options->fReserved2 = GetPicLong();
+	(void) GetPicLong();							// (the recorder's scanner: an address on the machine that recorded it)
+	options->fScanner = nil;
 }
 
 
@@ -1471,7 +1472,7 @@ ParsePicCodes(PicPlay* play, const OpcodeProc* procs)
 			return 0;
 		GetPicTextOptions(&play->fTextOptions);
 		play->fTextOptions.fFittedWidth = 0;
-		play->fTextOptions.fReserved2 = 0;
+		play->fTextOptions.fScanner = nil;
 		return 1;
 	case 0x81a1:									// the text style
 	{
@@ -1678,7 +1679,7 @@ DrawPicture(PicHandle picture, Rect* dstRect, Boolean toShapes)
 	play.fTextOptions.fReserved = (long) kPicDefaultTextOptions[3];
 	play.fTextOptions.fTransferMode = (long) kPicDefaultTextOptions[4];
 	play.fTextOptions.fFittedWidth = (Fixed) kPicDefaultTextOptions[5];
-	play.fTextOptions.fReserved2 = (long) kPicDefaultTextOptions[6];
+	play.fTextOptions.fScanner = nil;			// (kPicDefaultTextOptions[6]: none)
 	port->clipRgn = NewRgn();
 	SetFgPattern(stdPatterns[blackPat]);
 	SetBgPattern(stdPatterns[whitePat]);

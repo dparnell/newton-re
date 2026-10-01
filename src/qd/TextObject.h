@@ -93,6 +93,26 @@ void			CallDrawText(TextObjectRef text, Fixed hScale, Fixed vScale);	// ROM 0x00
 extern "C" void	StdText(TextObjectRef text, Fixed hScale, Fixed vScale);	// ROM 0x0035b07c StdText
 void			DrText(TextObjectRef text, Fixed hScale, Fixed vScale);	// ROM 0x0035c530 DrText__FlN21 - the drawing (DrText.cpp)
 
+// The characters of a text object, held for one pass over them - the
+// ROM's TextWalker: InitTextWalker asks the options' scanner to hold the
+// text still (-2) and ReleaseTextWalker to let it go (-1); with no scanner
+// DefaultScanner reads the characters straight out of the text word.
+// (Host: the host's layout and drawing take the characters whole rather
+// than a style run at a time, so the scanner is asked for all of them at
+// once.)
+long			DefaultScanner(void* refCon, long offset, long count, long charSize, void** chars);	// ROM 0x0035c3fc DefaultScanner__FPvlN22PPv
+
+class TTextObjectChars
+{
+public:
+					TTextObjectChars(const TextObject* obj);
+					~TTextObjectChars();
+	const UniChar*	fChars;
+private:
+	void*			fRefCon;
+	TextScannerProc	fScanner;
+};
+
 // What a text object is asked (GetTextObjField).
 enum TextObjectField
 {
@@ -107,6 +127,7 @@ enum TextObjectField
 	kTextObjSetFlag10000		// set only: the object's flag 0x10000 (the printer's ScaleStdText sets it)
 };
 
+void			DispatchCalcBounds(TextObjectRef text, TextBoundsInfo* bounds);	// ROM 0x0035b32c DispatchCalcBounds__FlPv (Text.cpp)
 void			GetTextObjField(TextObjectRef text, TextObjectField field, void* result);	// ROM 0x0035df90 GetTextObjField__Fl15TextObjectFieldPv
 Boolean			SetTextObjField(TextObjectRef text, TextObjectField field, void* value);	// ROM 0x0035e028 SetTextObjField__Fl15TextObjectFieldPv
 void			CharToPoint(TextObjectRef text, long offset, FPoint* point);	// ROM 0x0035e100 CharToPoint__FlT1P6FPoint - where the character at `offset` starts

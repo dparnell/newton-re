@@ -388,7 +388,7 @@ TXLineSpacingCluster::DrawLineSpacingString(const TXRuler* ruler)
 	options.fReserved = 0;
 	options.fTransferMode = 1;
 	options.fFittedWidth = 0;
-	options.fReserved2 = 0;
+	options.fScanner = nil;
 	FPoint where;
 	where.x = (Fixed) r.left << 16;
 	where.y = (Fixed) (fTop + fHeight - 3) << 16;

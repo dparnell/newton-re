@@ -324,7 +324,7 @@ TXNewtTextRun::Draw(const TXLineRunDisplayInfo& info, Fixed x, const Rect& line,
 	options.fReserved = 0;
 	options.fTransferMode = 1;			// srcOr
 	options.fFittedWidth = 9;
-	options.fReserved2 = 0;
+	options.fScanner = nil;
 	if (info.fJustifyExtra == 0)
 	{
 		options.fJustification = 0;
@@ -468,7 +468,7 @@ TXNewtTextRun::LineBreak(const UniChar* text, long count, long start, Fixed* wid
 	options.fReserved = 0;
 	options.fTransferMode = 0;
 	options.fFittedWidth = 0;
-	options.fReserved2 = 0;
+	options.fScanner = nil;
 	StyleRecord* styles[1] = { &style };
 	FPoint origin = { 0, 0 };
 	long rest = count - start;

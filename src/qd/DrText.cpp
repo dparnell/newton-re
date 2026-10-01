@@ -723,7 +723,8 @@ DrText(TextObjectRef text, Fixed hScale, Fixed vScale)
 	info.fY = obj->fLocation.y;
 	info.fPort = port;
 	info.fAngle = (obj->fOptions != nil) ? obj->fOptions->fReserved : 0;
-	const UniChar* chars = (const UniChar*) obj->fText;
+	TTextObjectChars characters(obj);
+	const UniChar* chars = characters.fChars;
 	StyleRecord** styles = obj->fStyles;
 	const short* runLengths = obj->fRunLengths;
 	long length = obj->fLength;

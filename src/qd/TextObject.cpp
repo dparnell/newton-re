@@ -44,6 +44,38 @@ NewText(const void* text, long length, StyleRecord** styles, const short* runLen
 }
 
 
+// ROM 0x0035c3fc DefaultScanner__FPvlN22PPv
+// The characters straight out of the text word: offset characters of
+// charSize bytes along (nothing to do to hold or let go of them).
+long
+DefaultScanner(void* refCon, long offset, long count, long charSize, void** chars)
+{
+	if (offset < 0)
+		return 0;
+	*chars = (char*) refCon + charSize * offset;
+	return count;
+}
+
+
+// (host) A pass over a text object's characters: the scanner the options
+// name (not a picture's, which the player clears) or DefaultScanner.
+TTextObjectChars::TTextObjectChars(const TextObject* obj)
+{
+	fRefCon = (void*) obj->fText;
+	fScanner = (obj->fOptions != nil && obj->fOptions->fScanner != nil) ? obj->fOptions->fScanner : DefaultScanner;
+	fScanner(fRefCon, -2, 0, 0, nil);
+	void* chars = nil;
+	fScanner(fRefCon, 0, obj->fLength, 2, &chars);
+	fChars = (const UniChar*) chars;
+}
+
+
+TTextObjectChars::~TTextObjectChars()
+{
+	fScanner(fRefCon, -1, 0, 0, nil);
+}
+
+
 // ROM 0x0035b624 InvalCachedTextInfo__Fl
 // The layout's caches thrown away (each from the heap it came from) and
 // the layout state cleared, so the next operation lays the text out again.
@@ -163,7 +195,8 @@ HostLayOut(TextObject* obj, TextLayout* layout, Fixed* start)
 		HostDoneLayOut(layout);
 		return false;
 	}
-	const UniChar* chars = (const UniChar*) obj->fText;
+	TTextObjectChars characters(obj);
+	const UniChar* chars = characters.fChars;
 	// (the scales UpdateLayoutState set; an object never asked yet is at 1.0)
 	Fixed hScale = (obj->fHScale != 0) ? obj->fHScale : 0x10000;
 	Fixed vScale = (obj->fVScale != 0) ? obj->fVScale : 0x10000;
@@ -501,9 +534,9 @@ CharToPoint(TextObjectRef text, long offset, FPoint* point)
 
 // ROM 0x0035df90 GetTextObjField__Fl15TextObjectFieldPv
 // A field of the object, or (the fitted length, the bounds, the layout's
-// numbers) what the text proc answers when asked.  NOT YET RECONSTRUCTED:
-// the bounds (6) and the layout's numbers (7), which StdText does not
-// answer yet - the result is left as it was.
+// numbers) what the text proc answers when asked - the bounds through
+// DispatchCalcBounds.  NOT YET RECONSTRUCTED: the layout's numbers (7),
+// which StdText does not answer yet - the result is left as it was.
 void
 GetTextObjField(TextObjectRef text, TextObjectField field, void* result)
 {
@@ -529,6 +562,14 @@ GetTextObjField(TextObjectRef text, TextObjectField field, void* result)
 		break;
 	case kTextObjOptions:
 		*(TextOptions**) result = obj->fOptions;
+		break;
+	case kTextObjBounds:
+		DispatchCalcBounds(text, (TextBoundsInfo*) result);
+		break;
+	case kTextObjMetrics:
+		obj->fFlags = (obj->fFlags & ~kTextObjOpMask) | kTextObjOpMetrics;
+		obj->fResult = result;
+		CallDrawText(text, 0x10000, 0x10000);
 		break;
 	default:
 		break;

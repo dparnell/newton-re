@@ -99,7 +99,7 @@ OpenPicture(Rect* frame, Boolean macPicture)
 	ps->fTextOptions.fReserved = (long) kPicDefaultTextOptions[3];
 	ps->fTextOptions.fTransferMode = (long) kPicDefaultTextOptions[4];
 	ps->fTextOptions.fFittedWidth = (Fixed) kPicDefaultTextOptions[5];
-	ps->fTextOptions.fReserved2 = (long) kPicDefaultTextOptions[6];
+	ps->fTextOptions.fScanner = nil;			// (kPicDefaultTextOptions[6]: none)
 	Handle picture = NewHandle(ps->fAllocated);
 	if (picture == nil)
 	{
@@ -887,7 +887,8 @@ DoPutText(TextObjectRef text, Fixed hScale, Fixed vScale)
 		char* chars = (char*) QDNewTempPtr(count + 1);
 		if (chars == nil)
 			Throw(exOutOfMemory, nil, nil);
-		ConvertFromUnicode((const UniChar*) obj->fText, chars, kMacRomanEncoding, count);
+		TTextObjectChars characters(obj);
+		ConvertFromUnicode(characters.fChars, chars, kMacRomanEncoding, count);
 		PutPicData(chars, count);
 		QDDisposeTempPtr(chars);
 		return;
@@ -932,7 +933,11 @@ DoPutText(TextObjectRef text, Fixed hScale, Fixed vScale)
 			PutPicLong(options->fReserved);
 			PutPicLong(options->fTransferMode);
 			PutPicLong(options->fFittedWidth);
-			PutPicLong(options->fReserved2);
+			// DEVIATION: the ROM records the scanner's address here - its
+			// TextRefScanner's for a paragraph's text - which a player
+			// ignores (it clears the word); a host function's address is
+			// nothing to put in a picture, so nought goes in
+			PutPicLong(0);
 		}
 		withOptions = 1;
 	}
@@ -1075,7 +1080,8 @@ DoPutText(TextObjectRef text, Fixed hScale, Fixed vScale)
 		flags |= 0x20;
 	PutPicByte(flags);
 	PutPicWord((short) bytes);
-	const UniChar* chars = (const UniChar*) obj->fText;
+	TTextObjectChars characters(obj);
+	const UniChar* chars = characters.fChars;
 	for (long i = 0; i < bytes / 2; i++)
 		PutPicWord(chars[i]);
 	if (inlineSize != 0)

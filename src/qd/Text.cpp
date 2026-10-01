@@ -147,7 +147,7 @@ JustifyText(const UniChar* chars, long length, TextOptions* options, TextLayout*
 // advance below it, the start and the advance along it; the leading, the
 // advance and the vertical advance as they are.  No layout at all (both
 // advances -1) is all noughts.
-static void
+void
 DispatchCalcBounds(TextObjectRef text, TextBoundsInfo* bounds)
 {
 	Fixed answer[6];

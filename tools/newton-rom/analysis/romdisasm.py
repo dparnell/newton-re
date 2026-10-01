@@ -34,6 +34,7 @@ def main():
                     pass
     start, end = int(a.start, 16), int(a.end, 16)
     md = capstone.Cs(capstone.CS_ARCH_ARM, capstone.CS_MODE_ARM | capstone.CS_MODE_BIG_ENDIAN)
+    md.skipdata = True			# (a word that is no instruction - a literal - is shown as data, not the end)
     for i in md.disasm(rom[start:end], start):
         extra = ''
         if i.mnemonic.startswith('bl') or i.mnemonic == 'b':
