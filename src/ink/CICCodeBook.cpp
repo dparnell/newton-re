@@ -6,10 +6,12 @@
 */
 
 #include "CICCodec.h"
+#include "ParaGraph.h"			// HWRStrCpy, HWRStrCat, HWRMemory*
 #include "objects.h"
 #include "ROMConstants.h"
 
 #include <string.h>
+#include <stdio.h>
 
 
 // ROM 0x0c104fc8 globalCodeBookPtr
@@ -48,17 +50,37 @@ InitializeParagraphCompression(void)
 }
 
 
+/*------------------------------------------------------------------------------
+	T h e   C I C   l i b r a r y ' s   f i l e s
+
+	The library reads its code books from files where it has a file
+	system; on a Newton every one of these answers nought - no file opens,
+	nothing is read - so the books must already be where the two globals
+	say (InitializeParagraphCompression).
+------------------------------------------------------------------------------*/
+
+// ROM 0x001543f4 HWRFileOpen__FPcUiT2
+void*	HWRFileOpen(const char* /*name*/, ULong /*mode*/, ULong /*flags*/)	{ return nil; }
+// ROM 0x00154400 HWRFileSeek__FPvlUi
+long	HWRFileSeek(void* /*file*/, long /*offset*/, ULong /*from*/)		{ return 0; }
+// ROM 0x00154408 HWRFileTell__FPv
+long	HWRFileTell(void* /*file*/)											{ return 0; }
+// ROM 0x00154410 HWRFileRead__FPvT1Ui
+long	HWRFileRead(void* /*file*/, void* /*buffer*/, ULong /*size*/)		{ return 0; }
+// ROM 0x00154418 HWRFileClose__FPv
+long	HWRFileClose(void* /*file*/)										{ return 0; }
+
+
 // ROM 0x002806cc LockBook__FPcP10_BOOKENTRY
 // A book opened: already open, and it is just counted again; not open,
 // and it comes from whichever global holds it - the name's fifth
 // character says which, '1' for the writing book and anything else for
 // the ink one.
 //
-// (The ROM would otherwise read "ParaGraphCode" + name + ".bin" through
-// the CIC library's file calls.  HWRFileOpen 0x001543f4 answers 0 on a
-// Newton - the whole file layer is stubbed out - so that path only ever
-// prints "Cannot load the code book !!!" and gives up, and the host has
-// no files either.  It is left here because it is what the code says.)
+// A book not yet in its global is read from "ParaGraphCode" + name +
+// ".bin" through the CIC library's file calls - which on a Newton open
+// nothing (HWRFileOpen answers nought), so that path only ever prints
+// "Cannot load the code book !!!" and gives up.
 //
 // ROM bug kept: the entry's handle is set from a register the "already
 // there" path never loaded, so a book that came from a global gets
@@ -74,10 +96,42 @@ LockBook(const char* name, BookEntry* entry)
 	}
 	Boolean isWritingBook = name[4] == '1';
 	void* book = isWritingBook ? gCodeBook : gInkCodeBook;
+	Handle handle = nil;
 	if (book == nil)
-		return nil;					// (the ROM tries the file here, and cannot)
+	{
+		char path[40];
+		HWRStrCpy(path, "ParaGraphCode");
+		HWRStrCat(path, name);
+		HWRStrCat(path, ".bin");
+		void* file = HWRFileOpen(path, 1, 0x21);
+		if (file == nil)
+		{
+			printf("\rCannot load the code book !!!\r");
+			return nil;
+		}
+		HWRFileSeek(file, 0, 2);
+		ULong size = (UShort) HWRFileTell(file);
+		HWRFileSeek(file, 0, 0);
+		handle = HWRMemoryAllocHandle(size);
+		if (handle == nil)
+			return nil;
+		book = HWRMemoryLockHandle(handle);
+		if (book == nil || (ULong) HWRFileRead(file, book, size) != size)
+		{
+			HWRFileClose(file);
+			if (book != nil)
+				HWRMemoryUnlockHandle(handle);
+			HWRMemoryFreeHandle(handle);
+			return nil;
+		}
+		HWRFileClose(file);
+		if (isWritingBook)
+			gCodeBook = book;
+		else
+			gInkCodeBook = book;
+	}
 	entry->fCount = 1;
-	entry->fHandle = nil;			// (the ROM leaves a stale register here)
+	entry->fHandle = handle;		// (the ROM's register is stale when the book came from a global)
 	entry->fData = book;
 	return book;
 }

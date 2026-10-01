@@ -77,6 +77,15 @@ public:
 	void		BeginLevel(SaveLevel* level);										// ROM 0x00198d38 BeginLevel__10TStyleSaveFP9SaveLevel
 	void		EndLevel(void);														// ROM 0x00198d60 EndLevel__10TStyleSaveFv
 
+	// Which slots a style frame has: a bit for each, cleared the first time
+	// the slot is found nil so it is not asked for again (kStyleHas...)
+	struct StyleCacheEntry
+	{
+		RefStruct	fStyle;		// the frame (a RefStruct for the collector)
+		long		fSlots;		// the kStyleHas... bits still worth asking
+	};
+	StyleCacheEntry*	LookupCache(void);									// ROM 0x001983e4 LookupCache__10TStyleSaveFv
+
 	Boolean		fPen;				// +0x00  the outline is drawn (penPattern not nil)
 	Boolean		fFill;				// +0x01  the inside is filled (fillPattern)
 	Boolean		fTextPatternSet;	// +0x02
@@ -94,6 +103,23 @@ public:
 	long		fTransformDepth;	// +0x48  scaling in force (TQDScaler)
 	GrafPort*	fPort;				// +0x4c
 	RefStruct	fStyle;				// +0x50  the style frame in force
+	StyleCacheEntry	fCache[3];		// +0x54  the last three frames' slots
+	long		fCacheNext;			// +0x6c  the entry a new frame takes
+};
+
+// the slots of a style frame, as the cache's bits
+enum
+{
+	kStyleHasTransferMode	= 0x001,
+	kStyleHasFillPattern	= 0x002,
+	kStyleHasPenPattern		= 0x004,
+	kStyleHasTextPattern	= 0x008,
+	kStyleHasPenSize		= 0x010,
+	kStyleHasJustification	= 0x020,
+	kStyleHasFont			= 0x040,
+	kStyleHasClipping		= 0x080,
+	kStyleHasTransform		= 0x100,
+	kStyleHasSelection		= 0x200
 };
 
 // shapes

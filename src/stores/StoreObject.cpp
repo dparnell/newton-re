@@ -645,6 +645,7 @@ TStoreObjectWriter::~TStoreObjectWriter()
 #define PRESCEND(part)		{ *fStack.fTop++ = fObject; fObject = (part); Prescan(); fObject = *--fStack.fTop; }
 
 
+// ROM 0x002ddd70 Prescan__18TStoreObjectWriterFv (a branch to Prescan1)
 // ROM 0x002ddda4 Prescan1__18TStoreObjectWriterFv
 // The stream's size counted (an upper bound: what the pipe's buffer must
 // hold), and the text's; every pointer object entered as a precedent.
@@ -725,6 +726,7 @@ TStoreObjectWriter::Prescan(void)
 }
 
 
+// ROM 0x002de244 Scan__18TStoreObjectWriterFv (a branch to Scan1)
 // ROM 0x002de37c Scan1__18TStoreObjectWriterFv
 // The object written to the stream (StoreObject.h has the tags).
 void
@@ -1088,6 +1090,7 @@ TStoreObjectReader::Read(void)
 }
 
 
+// ROM 0x002debd0 Scan__18TStoreObjectReaderFv (a branch to Scan1)
 // ROM 0x002debd4 Scan1__18TStoreObjectReaderFv
 // One object from the stream.
 Ref

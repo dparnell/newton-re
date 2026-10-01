@@ -112,6 +112,20 @@ PGCGetPointProc(short what, InkPoint* pt, void* refCon)
 }
 
 
+// ROM 0x001543fc CSCompress__FPP7TStrokei
+// The strokes packed by the codec that writes (the ROM's goes straight on
+// to GenericCSCompress - TCICInkCodec::Encode); ==> a NewPtr block of the
+// bits, or nil.
+static void*
+CSCompress(StrokeSource* source, long* size)
+{
+	TInkCodec* codec = InkCodecForWriting();
+	if (codec == nil)
+		return nil;
+	return codec->Encode(PGCGetPointProc, source, size);
+}
+
+
 // ROM 0x00140b78 InkCompress__FPP7TStrokeUc
 // A list of strokes packed into a binary: 'ink2 for raw ink, or
 // 'inkWord with the word's measurements after it.
@@ -125,11 +139,8 @@ InkCompress(TStroke** strokes, Boolean asWord)
 	source.fStrokes = strokes;
 	source.fStroke = 0;
 	source.fPoint = 0;
-	TInkCodec* codec = InkCodecForWriting();
-	if (codec == nil)
-		return NILREF;
 	long size = 0;
-	void* bits = codec->Encode(PGCGetPointProc, &source, &size);
+	void* bits = CSCompress(&source, &size);
 	if (bits == nil)
 		return NILREF;
 	long length = asWord ? size + (long) sizeof(PackedInkWordInfo) : size;
@@ -336,6 +347,9 @@ TStrokesToInkWord(TStroke** strokes, Rect* outRect)
 
 // What PGCStorePointProc is building: the strokes so far, the one being
 // filled, and where the whole thing is to be put.
+// how many strokes the expanders have room for (the ROM's 400-byte block)
+const long kCSExpandRoom = 100;
+
 struct StrokeSink
 {
 	TStroke**	fStrokes;		// room for the answers, ended by a nil
@@ -525,79 +539,87 @@ PGCStorePointProc(short what, const InkPoint* pt, void* refCon)
 }
 
 
+// ROM 0x001538bc GenericCSExpandGuts__FP14CSStrokeHeaderPPvUllN34Uc
+// The ink read into the list given - TStrokes, or (raw) handles of 16.16
+// points - scaled and then moved; a group above 1 is taken as 0.  ==>
+// how many strokes there are.
+static long
+GenericCSExpandGuts(const void* data, long size, void** list, ULong group,
+					Fixed x, Fixed y, Fixed scaleX, Fixed scaleY, Boolean strokes)
+{
+	if (group != 0 && group != 1)
+		group = 0;
+	StrokeSink sink;
+	memset(&sink, 0, sizeof(sink));
+	sink.fRaw = !strokes;
+	sink.fStrokes = (TStroke**) list;
+	sink.fHandles = (Handle*) list;
+	sink.fRoom = kCSExpandRoom;
+	sink.fOffsetX = x;
+	sink.fOffsetY = y;
+	sink.fScaleX = scaleX;
+	sink.fScaleY = scaleY;
+	TInkCodec* codec = data != nil ? InkCodecFor(data) : nil;
+	if (codec != nil)
+		codec->Decode(data, size, group, PGCStorePointProc, &sink);
+	return sink.fStroke;
+}
+
+
+// ROM 0x00153934 GenericCSExpandGroup__FP14CSStrokeHeaderUllN33Uc
+// The same into a block of a hundred, cut to what there are and ended by
+// a nil.  nil when there is no memory for the block (the strokes are lost
+// with it when it cannot be cut, as the ROM's are).
+static void**
+GenericCSExpandGroup(const void* data, long size, ULong group,
+					 Fixed x, Fixed y, Fixed scaleX, Fixed scaleY, Boolean strokes)
+{
+	void** list = (void**) NewPtr(kCSExpandRoom * (long) sizeof(void*));
+	if (list == nil)
+		return nil;
+	list[0] = nil;
+	long count = GenericCSExpandGuts(data, size, list, group, x, y, scaleX, scaleY, strokes);
+	void** answer = (void**) ReallocPtr((Ptr) list, (count + 1) * (long) sizeof(void*));
+	if (answer == nil)
+		return nil;
+	answer[count] = nil;
+	return answer;
+}
+
+
+// ROM 0x00154420 CSExpandGroup__FP14CSStrokeHeaderUllT3
+// The ink as TStrokes at (x, y), 16.16 pixels, the size it was written.
+static TStroke**
+CSExpandGroup(const void* data, long size, ULong group, Fixed x, Fixed y)
+{
+	return (TStroke**) GenericCSExpandGroup(data, size, group, x, y, 0x10000, 0x10000, true);
+}
+
+
 // ROM 0x00140c98 InkExpand__FRC6RefVarUllT3
 // A block of ink read back into strokes, moved to (x, y).  The answer is
 // a list ended by a nil, made with NewPtr; DisposeTStrokes gives it back.
+// (A stroke the decoder could not add a point to is kept as far as it
+// got, as the ROM keeps it: nothing above the sink asks.)
 TStroke**
 InkExpand(RefArg ink, ULong group, long x, long y)
 {
 	if (ISNIL(ink) || !IsBinary(ink))
 		return nil;
-	const void* data = BinaryData(ink);
-	TInkCodec* codec = InkCodecFor(data);
-	if (codec == nil)
-		return nil;
 	long size = Length(ink);
 	if (IsInkWord(ink))
 		size -= (long) sizeof(PackedInkWordInfo);
-	const long kRoom = 64;
-	TStroke** strokes = (TStroke**) NewPtrClear((kRoom + 1) * (long) sizeof(TStroke*));
-	if (strokes == nil)
-		return nil;
-	StrokeSink sink;
-	memset(&sink, 0, sizeof(sink));
-	sink.fStrokes = strokes;
-	sink.fRoom = kRoom;
-	// (CSExpandGroup, which is what InkExpand really is, always asks for
-	// a scale of one; only the generic form takes another)
-	sink.fOffsetX = (Fixed) ((ULong) x << 16);
-	sink.fOffsetY = (Fixed) ((ULong) y << 16);
-	sink.fScaleX = 0x10000;
-	sink.fScaleY = 0x10000;
-	codec->Decode(data, size, group, PGCStorePointProc, &sink);
-	if (sink.fFailed)
-	{
-		DisposeTStrokes(strokes);
-		return nil;
-	}
-	return strokes;
+	return CSExpandGroup(BinaryData(ink), size, group, (Fixed) ((ULong) x << 16), (Fixed) ((ULong) y << 16));
 }
 
 
 // ROM 0x0015445c CSRawExpandGroup__FP14CSStrokeHeaderUllN33
 // The ink read back as raw strokes - each a handle of 16.16 points,
-// scaled and then moved - in a block of at most a hundred, cut to what
-// there are and ended by a nil (GenericCSExpandGroup 0x00153934 over
-// GenericCSExpandGuts 0x001538bc, whose group is 0 for anything above
-// 1).  nil when there is no memory for the block.
+// scaled and then moved.
 static Handle*
 InkRawExpand(const void* data, long size, ULong group, Fixed x, Fixed y, Fixed scaleX, Fixed scaleY)
 {
-	const long kRoom = 100;
-	Handle* handles = (Handle*) NewPtr(kRoom * (long) sizeof(Handle));
-	if (handles == nil)
-		return nil;
-	handles[0] = nil;
-	StrokeSink sink;
-	memset(&sink, 0, sizeof(sink));
-	sink.fRaw = true;
-	sink.fHandles = handles;
-	sink.fRoom = kRoom;
-	sink.fOffsetX = x;
-	sink.fOffsetY = y;
-	sink.fScaleX = scaleX;
-	sink.fScaleY = scaleY;
-	if (group > 1)
-		group = 0;
-	TInkCodec* codec = data != nil ? InkCodecFor(data) : nil;
-	if (codec != nil)
-		codec->Decode(data, size, group, PGCStorePointProc, &sink);
-	long count = sink.fStroke;
-	Handle* answer = (Handle*) ReallocPtr((Ptr) handles, (count + 1) * (long) sizeof(Handle));
-	if (answer == nil)
-		return nil;			// (as the ROM's: the strokes are lost with the block)
-	answer[count] = nil;
-	return answer;
+	return (Handle*) GenericCSExpandGroup(data, size, group, x, y, scaleX, scaleY, false);
 }
 
 
@@ -644,6 +666,24 @@ InkMakePathsScaled(const void* data, long size, Fixed x, Fixed y, Fixed scaleX, 
 }
 
 
+// ROM 0x00153470 CSMakePathsGroup__FP14CSStrokeHeaderlT2
+pathsHandle*
+CSMakePathsGroup(const void* data, long size, Fixed x, Fixed y)
+{
+	return InkMakePathsScaled(data, size, x, y, 0x10000, 0x10000);
+}
+
+
+// ROM 0x0015348c CSMakePathsGroupInRect__FP14CSStrokeHeaderlT2P5FRect
+pathsHandle*
+CSMakePathsGroupInRect(const void* data, long size, Fixed width, Fixed height, const FRect* to)
+{
+	return InkMakePathsScaled(data, size, to->left, to->top,
+							  FixedDivide(to->right - to->left, width),
+							  FixedDivide(to->bottom - to->top, height));
+}
+
+
 // ROM 0x00140d9c InkMakePaths__FRC6RefVarlT2
 // A shape's ink as paths at (x, y), the size it was written.
 pathsHandle*
@@ -651,7 +691,7 @@ InkMakePaths(RefArg ink, long x, long y)
 {
 	long size = 0;
 	const void* data = InkData(ink, &size);
-	return InkMakePathsScaled(data, size, ToFixed(x), ToFixed(y), 0x10000, 0x10000);
+	return CSMakePathsGroup(data, size, ToFixed(x), ToFixed(y));
 }
 
 
@@ -918,17 +958,32 @@ InkDrawInRect(RefArg ink, ULong pen, const Rect* from, const Rect* to, Boolean u
 }
 
 
+// ROM 0x00153844 GenericCSDraw__FP14CSStrokeHeaderUllT3Uc
+// The ink drawn at the size it was written: the same block as the scaled
+// one's with the two scales one.
+void
+GenericCSDraw(const void* data, long size, ULong pen, Fixed x, Fixed y, Boolean useInker)
+{
+	InkDrawScaled(data, size, pen, x, y, 0x10000, 0x10000, useInker);
+}
+
+
+// ROM 0x00154494 CSDraw__FP14CSStrokeHeaderUllT3Uc
+void
+CSDraw(const void* data, long size, ULong pen, Fixed x, Fixed y, Boolean useInker)
+{
+	GenericCSDraw(data, size, pen, x, y, useInker);
+}
+
+
 // ROM 0x00140cd0 InkDraw__FRC6RefVarUllT3Uc
-// The same, at the size it was written.  (The ROM goes through CSDraw
-// and a GenericCSDraw of its own, which builds the same block with the
-// two scales set to one.)
+// The same, at the size it was written.
 void
 InkDraw(RefArg ink, ULong pen, long x, long y, Boolean useInker)
 {
 	long size = 0;
 	const void* data = InkData(ink, &size);
-	InkDrawScaled(data, size, pen, (Fixed) ((ULong) x << 16), (Fixed) ((ULong) y << 16),
-				  0x10000, 0x10000, useInker);
+	CSDraw(data, size, pen, (Fixed) ((ULong) x << 16), (Fixed) ((ULong) y << 16), useInker);
 }
 
 

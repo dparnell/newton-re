@@ -105,6 +105,28 @@ TStyleSave::TStyleSave()
 	fClipDepth = 0;
 	fTransformDepth = 0;
 	fStyle = (Ref) -4;			// (the ROM's: no frame is this)
+	for (long i = 0; i < 3; i++)
+		fCache[i].fSlots = 0;
+	fCacheNext = 0;
+}
+
+
+// ROM 0x001983e4 LookupCache__10TStyleSaveFv
+// The cache entry for the style in force: the one that has it, else the
+// next of the three in turn, taken over for it with every slot still to
+// be asked for.
+TStyleSave::StyleCacheEntry*
+TStyleSave::LookupCache(void)
+{
+	for (long i = 0; i < 3; i++)
+		if (EQRef(fStyle, fCache[i].fStyle))
+			return &fCache[i];
+	StyleCacheEntry* entry = &fCache[fCacheNext];
+	if (++fCacheNext >= 3)
+		fCacheNext = 0;
+	entry->fStyle = (Ref) fStyle;
+	entry->fSlots = -1;
+	return entry;
 }
 
 
@@ -160,10 +182,14 @@ TStyleSave::EndLevel(void)
 // justification ('center, 'right), font (the userFont preference
 // otherwise).  flags: 1 leaves the transform, 2 leaves the pen and text
 // slots (a style put back after a nested list).  A nil style is the pen
-// alone.
+// alone.  The style already in force is left as it is (==> true), and
+// which slots a frame has is remembered (LookupCache), so a slot found nil
+// once is not asked for again while the frame is among the last three.
 Boolean
 TStyleSave::SetStyle(RefArg style, const Point& origin, long flags)
 {
+	if (EQRef(style, fStyle))
+		return true;
 	Boolean keepTransform = (flags & 1) != 0;
 	Boolean keepPen = (flags & 2) != 0;
 	fStyle = style;
@@ -179,7 +205,19 @@ TStyleSave::SetStyle(RefArg style, const Point& origin, long flags)
 	Boolean visible = true;
 	if (NOTNIL(style))
 	{
-		RefVar value(GetProtoVariable(style, RSSYMclipping, nil));
+		StyleCacheEntry* cache = LookupCache();
+		// a slot of the style, nil (and remembered as missing) when it has
+		// none - or when the cache already says so
+		auto slot = [&](RefArg name, long bit) -> Ref
+		{
+			if ((cache->fSlots & bit) == 0)
+				return NILREF;
+			Ref v = GetProtoVariable(style, name, nil);
+			if (ISNIL(v))
+				cache->fSlots &= ~bit;
+			return v;
+		};
+		RefVar value(slot(RSSYMclipping, kStyleHasClipping));
 		if (NOTNIL(value))
 		{
 			if (!EQRef(ClassOf(value), RSSYMregion))
@@ -231,10 +269,8 @@ TStyleSave::SetStyle(RefArg style, const Point& origin, long flags)
 		}
 		if (!keepTransform)
 		{
-			value = GetProtoVariable(style, RSSYMtransform, nil);
-			if (ISNIL(value))
-				fLevel->fFlags &= ~1;
-			else
+			value = slot(RSSYMtransform, kStyleHasTransform);
+			if (NOTNIL(value))
 			{
 				// [srcRect, dstRect], or [dx, dy] - which stands for two
 				// ten-by-ten rectangles offset by them, so it only moves
@@ -271,10 +307,10 @@ TStyleSave::SetStyle(RefArg style, const Point& origin, long flags)
 				}
 			}
 		}
-		value = GetProtoVariable(style, RSSYMselection, nil);
+		value = slot(RSSYMselection, kStyleHasSelection);
 		if (NOTNIL(value))
 			fSelection = RINT(value);
-		value = GetProtoVariable(style, RSSYMpensize, nil);
+		value = slot(RSSYMpensize, kStyleHasPenSize);
 		if (NOTNIL(value))
 		{
 			long width, height;
@@ -296,28 +332,28 @@ TStyleSave::SetStyle(RefArg style, const Point& origin, long flags)
 			}
 			PenSize(width, height);
 		}
-		value = GetProtoVariable(style, RSSYMfillpattern, nil);
+		value = slot(RSSYMfillpattern, kStyleHasFillPattern);
 		if (NOTNIL(value))
 			fFill = fFillPattern.GetFillPattern(value, false);
 		if (!keepPen)
 		{
-			value = GetProtoVariable(style, RSSYMtransfermode, nil);
+			value = slot(RSSYMtransfermode, kStyleHasTransferMode);
 			if (NOTNIL(value))
 			{
 				fTransferMode = RINT(value);
 				PenMode((fTransferMode == patCopy ? srcOr : fTransferMode) + 8);
 			}
-			value = GetProtoVariable(style, RSSYMpenpattern, nil);
+			value = slot(RSSYMpenpattern, kStyleHasPenPattern);
 			if (NOTNIL(value))
 				fPen = fPenPattern.GetFillPattern(value, true);
-			value = GetProtoVariable(style, RSSYMtextpattern, nil);
+			value = slot(RSSYMtextpattern, kStyleHasTextPattern);
 			if (NOTNIL(value))
 			{
 				fTextPatternSet = fTextPattern.GetFillPattern(value, true);
 				if (fTextPatternSet)
 					fTextPattern.fRestoreFg = true;
 			}
-			value = GetProtoVariable(style, RSSYMjustification, nil);
+			value = slot(RSSYMjustification, kStyleHasJustification);
 			if (NOTNIL(value))
 			{
 				if (EQRef(value, RSSYMcenter))
@@ -325,7 +361,7 @@ TStyleSave::SetStyle(RefArg style, const Point& origin, long flags)
 				else if (EQRef(value, RSSYMright))
 					fAlignment = 0x10000;
 			}
-			value = GetProtoVariable(style, RSSYMfont, nil);
+			value = slot(RSSYMfont, kStyleHasFont);
 			if (NOTNIL(value))
 			{
 				fontSet = true;

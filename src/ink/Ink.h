@@ -190,6 +190,9 @@ void		InkDrawScaled(const void* data, long size, ULong pen, Fixed x, Fixed y,
 void		InkDrawInFRect(const void* data, long size, ULong pen, Fixed width, Fixed height,
 							const FRect* to, Boolean useInker);		// ROM 0x001544bc CSDrawInRect__FP14CSStrokeHeaderUllT3P5FRectUc
 void		InkDrawInRect(RefArg ink, ULong pen, const Rect* from, const Rect* to, Boolean useInker);	// ROM 0x00140d14 InkDrawInRect__FRC6RefVarUlP4RectT3Uc
+// the same at the size it was written (x and y in 16.16 pixels)
+void		CSDraw(const void* data, long size, ULong pen, Fixed x, Fixed y, Boolean useInker);	// ROM 0x00154494 CSDraw__FP14CSStrokeHeaderUllT3Uc
+void		GenericCSDraw(const void* data, long size, ULong pen, Fixed x, Fixed y, Boolean useInker);	// ROM 0x00153844 GenericCSDraw__FP14CSStrokeHeaderUllT3Uc
 
 
 // Ink as outlined paths, for a printer: a nil-ended block of
@@ -199,6 +202,8 @@ void		InkDrawInRect(RefArg ink, ULong pen, const Rect* from, const Rect* to, Boo
 // CSMakePathsGroup/CSMakePathsGroupInRect with the scale worked out.
 pathsHandle*	InkMakePaths(RefArg ink, long x, long y);			// ROM 0x00140d9c InkMakePaths__FRC6RefVarlT2
 pathsHandle*	InkMakePathsScaled(const void* data, long size, Fixed x, Fixed y, Fixed scaleX, Fixed scaleY);	// ROM 0x001534e8 GenericCSMakePathsGroup__FP14CSStrokeHeaderlN32
+pathsHandle*	CSMakePathsGroup(const void* data, long size, Fixed x, Fixed y);	// ROM 0x00153470 CSMakePathsGroup__FP14CSStrokeHeaderlT2 - at the size written
+pathsHandle*	CSMakePathsGroupInRect(const void* data, long size, Fixed width, Fixed height, const FRect* to);	// ROM 0x0015348c CSMakePathsGroupInRect__FP14CSStrokeHeaderlT2P5FRect - stretched from width x height into the rectangle
 
 
 // A shape frame that draws a list of strokes as ink: the strokes packed

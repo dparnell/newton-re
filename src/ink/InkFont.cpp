@@ -235,8 +235,7 @@ TInkWordGlyph::DrawAt(ULong x, ULong y)
 						   ToFixed((long) (fInfo.fAscent + fInfo.fDescent)), &dst, enclosed);
 		}
 		else
-			InkDrawScaled(data, size, (ULong) fPen, ToFixed(box.left), ToFixed(box.top),
-						  0x10000, 0x10000, enclosed);
+			CSDraw(data, size, (ULong) fPen, ToFixed(box.left), ToFixed(box.top), enclosed);
 	}
 	else
 	{
@@ -248,12 +247,11 @@ TInkWordGlyph::DrawAt(ULong x, ULong y)
 		{
 			FRect dst;
 			FixRect(&dst, &box);
-			list = InkMakePathsScaled(data, size, dst.left, dst.top,
-									  FixedDivide(dst.right - dst.left, ToFixed((long) fInfo.fWidth)),
-									  FixedDivide(dst.bottom - dst.top, ToFixed((long) (fInfo.fAscent + fInfo.fDescent))));
+			list = CSMakePathsGroupInRect(data, size, ToFixed((long) fInfo.fWidth),
+										  ToFixed((long) (fInfo.fAscent + fInfo.fDescent)), &dst);
 		}
 		else
-			list = InkMakePathsScaled(data, size, ToFixed(box.left), ToFixed(box.top), 0x10000, 0x10000);
+			list = CSMakePathsGroup(data, size, ToFixed(box.left), ToFixed(box.top));
 		if (list != nil)		// (the ROM reads the block without asking)
 		{
 			for (long i = 0; list[i] != nil; i++)
