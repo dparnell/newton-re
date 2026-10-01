@@ -9,6 +9,18 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: NewtonScript in the Zed editor
+
+`editor-plugins/`: a tree-sitter grammar for NewtonScript
+(`tree-sitter-newtonscript/`), written from the ROM's own compiler - the
+lexer's tokens (`src/frames/Lexer.cpp`), the yacc rules and precedences
+(`docs/frames/grammar.md`) and the quirks `TCompiler::GetToken` adds (the
+semicolons and commas it drops, so `; else` is one token here) - with
+romsrc's `#hex` immediates and `@@` record lines; a 22-test corpus and
+`check_repo.py`, which parses every tracked `.ns` file (all 7017).  Over it
+a Zed extension (`zed-newtonscript/`): highlighting, brackets,
+indentation and an outline, installed with "zed: install dev extension".
+
 ## 2026-10-01: protocol parts on the ARM interpreter, layer 1
 
 A package's protocol part with no host stand-in now loads and runs on

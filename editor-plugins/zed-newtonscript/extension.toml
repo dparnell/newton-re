@@ -1,0 +1,17 @@
+id = "newtonscript"
+name = "NewtonScript"
+description = "NewtonScript, the Apple Newton's scripting language: highlighting, brackets, indentation and an outline."
+version = "0.1.0"
+schema_version = 1
+authors = ["Daniel Parnell"]
+repository = "ssh://git@vault:2222/daniel/newton-re.git"
+
+# The grammar is in this repository, in editor-plugins/tree-sitter-newtonscript.
+# rev must be a commit that holds the grammar (and has been pushed, for a
+# remote repository): after changing grammar.js, regenerate, commit, and put
+# the new commit here.  For a grammar not yet pushed, use
+# repository = "file:///F:/development/newtwon-re" (this checkout's path).
+[grammars.newtonscript]
+repository = "ssh://git@vault:2222/daniel/newton-re.git"
+rev = "2076b9adf08703253baaf7e906e4f7b2491dfff1"
+path = "editor-plugins/tree-sitter-newtonscript"
