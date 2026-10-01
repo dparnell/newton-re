@@ -1582,8 +1582,8 @@ TPickView::RealDoCommand(RefArg cmd)
 // the row, |length| characters and the ellipsis after them when the
 // length is negative; a separator a gray (or a solid black, two pixels
 // thick) line three down; a picture item its picture at the row's top
-// left; the mark in the marks' column; the key command at the right (a
-// command keyboard: NOT YET).  The picked item is inverted.
+// left; the mark in the marks' column; the key command at the right
+// (with a command keyboard connected).  The picked item is inverted.
 void
 TPickView::RealDraw(Rect& /*bounds*/)
 {

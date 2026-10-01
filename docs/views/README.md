@@ -787,6 +787,15 @@ The natives: `SetKeyView(view, offsetOrInfo)`, `GetKeyView`,
 `SetCaretInfo`/`PositionCaret`, `HoldPendingKeyView`'s users, the hilites
 a selection means, typing into the paragraph.
 
+A page keeps its own caret on the selection stack too
+(`TEditView::GetSelection`/`SetSelection` 0x000aa5f0/0x000aa408): an edit
+caret info frame {x, y}, the caret's point in the page's coordinates, or
+a frame of class 'hilite when the children hold a selection.  When a word
+written on a page becomes a paragraph of its own and later goes (a
+scrub), the page's caret comes back where it was before the word was
+written.  A paragraph that puts back a selection makes the root's hilited
+view the page that owns it (`TParagraphView::SetSelection`).
+
 ### The key view chain (`NextKeyView`, `BuildKeyChildList`)
 
 `TView::NextKeyView(focus, direction, kind)` 0x002683a0 answers the view
@@ -895,9 +904,7 @@ its bottom the last line's bottom plus its ascent, so with the final
 return's extra line the ROM's caret rectangle is upside down, which only
 its bottom (where the caret is drawn) survives.  Everything else was the
 clock and `year2010.pgm`, which `host.NewtonYear2010` and its `.romBug`
-twin both write.  `FindLineContainingPoint`'s margin 3 (writing over a
-letter) keeps a ROM bug: the box's top is set to its left less half its
-width.
+twin both write.
 
 ### Typing into a paragraph (`ParagraphView.h`, `StyleRuns.h`)
 

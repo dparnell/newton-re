@@ -29,12 +29,9 @@
 				typed over), ink words, the recogniser's words and the pen
 				gestures (HandleScrub, ScrubLines, ScrubWords, HandleCaret,
 				InsertHorizontalSpace, InsertVerticalSpace, CheckAndDoJoin,
-				HandleLineGesture) are here.  NOT YET RECONSTRUCTED: the
-				correction info, the other edit
-				commands (styles changed, cut and paste), the ROM's readers
-				of the laid-out lines (docs/next-steps.md), the locale's
-				break tables in the word breaks (see FindWordBreaks),
-				printing.
+				HandleLineGesture), the correction info, the readers of the
+				laid-out lines and the insert areas
+				(ParagraphInsertAreas.cpp) are here.
 
 	Reconstructed from the MP2x00 US ROM (0x0016911c-0x0016c260,
 	0x00178748-0x00178a30, 0x0017edc0-0x00181580); each function cites its
@@ -268,12 +265,12 @@ public:
 	virtual void	DrawScaledData(const Rect& src, const Rect& dst, Rect* bounds);	// ROM 0x0016afe4 DrawScaledData__14TParagraphViewFRC5TRectT1P5TRect
 	virtual TView*	AddHilited(RefArg hilite, class TEditView* editor);	// ROM 0x0017ebb4 AddHilited__14TParagraphViewFRC6RefVarP9TEditView
 	virtual void	CleanupData(void);									// ROM 0x0017e83c CleanupData__14TParagraphViewFv
-	Ref				GetProperties(RefArg hilite);						// ROM 0x00181418 GetProperties__14TParagraphViewFRC6RefVar (vtable +0x154)
+	virtual Ref		GetProperties(RefArg hilite);						// ROM 0x00181418 GetProperties__14TParagraphViewFRC6RefVar (vtable +0x154)
 	Boolean			HiliteClick(TStrokePublic* stroke);					// ROM 0x0017ede4 HiliteClick__14TParagraphViewFP13TStrokePublic
 	Boolean			IconClick(TStrokePublic* stroke);					// ROM 0x0017efa8 IconClick__14TParagraphViewFP13TStrokePublic
 	Boolean			ClickCommand(RefArg cmd);							// ROM 0x0016c658 RealDoCommand__14TParagraphViewFRC6RefVar +0x187c (aeClick)
 	Boolean			ScaleCommand(RefArg cmd);							// ROM 0x0016c658 RealDoCommand__14TParagraphViewFRC6RefVar +0x2464 (aeScaleData)
-	long			PointOverHilitedText(Point& pt);					// ROM 0x0016b1b8 PointOverHilitedText__14TParagraphViewFR6TPoint (vtable +0x134) - 0 no, 1 over the selection, 2 over one that runs to the end, 3 just below such a one
+	virtual long	PointOverHilitedText(Point& pt);					// ROM 0x0016b1b8 PointOverHilitedText__14TParagraphViewFR6TPoint (vtable +0x134) - 0 no, 1 over the selection, 2 over one that runs to the end, 3 just below such a one
 	virtual Boolean	PointOverText(Point& pt, Point* onLine);			// ROM 0x00177c5c PointOverText__14TParagraphViewFR6TPointP6TPoint (vtable +0x138)
 	long			FindLineContainingPoint(Point* pt, long margin);	// ROM 0x001782e8 FindLineContainingPoint__14TParagraphViewFP6TPoint10MarginSize (host: the line's index, -1 for none)
 	Ref				GetRangeProperties(long start, long end);			// ROM 0x001811b0 GetRangeProperties__14TParagraphViewFlT1

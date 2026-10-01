@@ -97,6 +97,23 @@ the way are all in `docs/work-log.md`.
   protocol's methods are C++ virtuals and need numbered thunks to be
   called by dispatch slot (a monitor's already work).  Nothing in the ROM
   or `fixtures/` calls `Dispatch`.
+- The views' NOT YET markers that a user can reach (`analysis/notyet.py
+  src --area views --all`): the remote-writing placement of a written
+  word at the caret (`TEditView::AddNewParagraph`, 0x000a1b98 and the
+  branch at 0x000a1fa0 - its stack slots want following carefully);
+  `SetCorrectorBusy`/`RestoreCorrectorBusy` around deleting a selection;
+  the paragraph's destructor dropping its correction info and
+  `vars.lastTextChanged`; `FlushWordAtCaret` (typed words to the auto-add
+  dictionary); `HandleWord`'s word-at-a-time branch (`!UsesLetters`,
+  `ReclassifyCharacter`); `TView::GetValue('hilites, 'offset)`;
+  `SetValue` of recConfig/dictionaries purging the area cache in a plain
+  view; `:SetPopup` closing on a tap elsewhere; `:MoveBehind` to the back;
+  `TRootView::RemoveAllViews`' key view, popup and clipboards,
+  `UnregisterKeyboard`'s caret check and `IdleViews`' caret blink
+  (`CaretValid`); the drag picture and drag-shadow frame in `PostDraw`;
+  `TPictureView`'s hilite, drag and scaled drawing; the gauge's gray on
+  deeper ports.  (The math views and `AddTabStop` are not reachable in
+  this ROM.)
 - Packages: XIP packages (the ROM domain manager's page faulting, about
   11 KB); a card's `'stor` event and `GetCardReinsertionInfo`; ATA cards.
 - The NIE built into the ROM extension: the page tables `ptpt`/`glpt`

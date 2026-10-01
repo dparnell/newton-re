@@ -181,6 +181,16 @@ TDataView::AddHilited(RefArg /*hilite*/, TEditView* /*editor*/)
 }
 
 
+// ROM 0x000a31c8 PointOverHilitedText__9TDataViewFR6TPoint
+// Where a point is in relation to the selection: a plain data view has
+// no text to be selected, so never over it.
+long
+TDataView::PointOverHilitedText(Point& /*pt*/)
+{
+	return 0;
+}
+
+
 // ROM 0x000a31d0 PointOverText__9TDataViewFR6TPointP6TPoint
 Boolean
 TDataView::PointOverText(Point& /*pt*/, Point* /*onLine*/)
@@ -189,10 +199,29 @@ TDataView::PointOverText(Point& /*pt*/, Point* /*onLine*/)
 }
 
 
+// ROM 0x000a348c GetProperties__9TDataViewFRC6RefVar
+// What a selection in the view is like, for the styles slip: nothing for
+// a plain data view.
+Ref
+TDataView::GetProperties(RefArg /*hilite*/)
+{
+	return NILREF;
+}
+
+
 // ROM 0x000a3494 CleanupData__9TDataViewFv
 void
 TDataView::CleanupData(void)
 { }
+
+
+// ROM 0x000a3484 GetContext__9TDataViewFv
+// nil (only the math views, which nothing in this ROM makes, answer one).
+Ref
+TDataView::GetContext(void)
+{
+	return NILREF;
+}
 
 
 // ROM 0x000a3084 DiceHilited__9TDataViewFRC6RefVarP9TEditViewR6TPointUc

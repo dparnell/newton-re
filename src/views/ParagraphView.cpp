@@ -641,9 +641,11 @@ TParagraphView::SetValue(RefArg slot, RefArg value)
 // ROM 0x0017f178 SetSelection__14TParagraphViewFRC6RefVarPlT2
 // The selection restored from a caret info frame's offset and length (nil
 // length: 0): SetCaretOffset, then no length removes the hilites, a
-// length re-hilites the range (MakeHilite).  A nil frame means no
-// selection - the hilites removed and the offset and length 0.  NOT YET
-// RECONSTRUCTED: the edit view's hilite-view redirection.
+// length re-hilites the range (MakeHilite) and makes the root's hilited
+// view the one that owns the selection - the page for a paragraph that
+// calculates its bounds (a child of the page), the grandparent when that
+// is an edit view, else the paragraph itself.  A nil frame means no
+// selection - the hilites removed and the offset and length 0.
 void
 TParagraphView::SetSelection(RefArg selection, long* offset, long* length)
 {
@@ -661,7 +663,18 @@ TParagraphView::SetSelection(RefArg selection, long* offset, long* length)
 	if (*length == 0)
 		RemoveAllHilites();
 	else
+	{
 		MakeHilite(*offset, *offset + *length, false);
+		TView* owner;
+		if ((fFlags & vCalculateBounds) == 0)
+		{
+			TView* grandparent = fParent->fParent;
+			owner = grandparent->DerivedFrom(clEditView) ? grandparent : (TView*) this;
+		}
+		else
+			owner = fParent;
+		gRootView->SetHilitedView(owner);
+	}
 }
 
 
@@ -5476,8 +5489,8 @@ TParagraphView::HandleScrub(const Rect& bounds, long kind, TUnitPublic* unit, Bo
 // the change (to the insertion's end, or moved past it) when this is the
 // key view; RangeChanged lays the lines out again and the view (its
 // parent for an undo) is dirtied - the old bounds too when they shrank.
-// NOT YET RECONSTRUCTED: the correction info and insert areas
-// (the recogniser's), the hilites.
+// The correction info, the insert areas (unless it is an undo) and the
+// hilites follow the change.
 void
 TParagraphView::HandleReplaceText(RefArg cmd)
 {
@@ -6007,9 +6020,8 @@ TParagraphView::WordCommand(RefArg cmd)
 // HandleReplaceText.  The pen and recognition commands (aeClick, aeTap,
 // aeDoubleTap, aeWord, aeInkWord, aeScrub, aeCaret, aeLine, aeGesture2f,
 // aeRecognizeInk, aeRecognizeRange), aeAddHilite, aeScaleData and
-// aeToChildren are answered below.  NOT YET RECONSTRUCTED: any other
-// command the ROM's answers here (the style changes among them); the rest
-// is TView's.
+// aeToChildren are answered below - every command the ROM's answers
+// (it does nothing for aeStroke, 0x0e and aeShape); the rest is TView's.
 Boolean
 TParagraphView::RealDoCommand(RefArg cmd)
 {
@@ -6992,8 +7004,8 @@ TParagraphView::DeleteHilited(RefArg hilite)
 
 // ROM 0x001782e8 FindLineContainingPoint__14TParagraphViewFP6TPoint10MarginSize
 // The line a point is on: of the lines whose box (widened by a thousand
-// pixels each way for margins 1 and 2; for margin 3 its top moved (by a
-// ROM bug, to its left less half its width) and widened by ten) holds the point, the one whose baseline is
+// pixels each way for margins 1 and 2; raised by half its height and
+// widened by ten for margin 3) holds the point, the one whose baseline is
 // nearest, with the point's h brought inside its box.  Margin 2 is for a
 // drop: a point above or below the paragraph is taken to the first
 // line's top left or the last line's bottom right and answers that line,
@@ -7033,11 +7045,7 @@ TParagraphView::FindLineContainingPoint(Point* pt, long margin)
 			InsetRect(&work, -1000, 0);
 		else if (margin == 3)
 		{
-			// ROM BUG: the top is raised by half the line's *width* and
-			// counted from its *left* - work.left where work.top was meant
-			// - so the box reaches from wherever that comes to (usually
-			// far above the line) down to its bottom.
-			work.top = (short) (work.left - (short) (box.right - box.left) / 2);
+			work.top = (short) (work.top - (short) (box.bottom - box.top) / 2);
 			InsetRect(&work, -10, 0);
 		}
 		if (PtInRect(*pt, &work))

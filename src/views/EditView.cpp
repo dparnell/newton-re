@@ -611,6 +611,78 @@ TEditView::SetCaretRectGlobal(const Rect& r)
 }
 
 
+// ROM 0x000aa408 SetSelection__9TEditViewFRC6RefVarPlT2
+// A selection put back (the selection stack, SetKeyView): an edit caret
+// info frame {x, y} - the caret's point in the page's own coordinates -
+// makes the caret there again: two pixels wide, as tall as the page's
+// text style's ascent, its bottom a pixel above the point.  Anything
+// else (nil, or a frame of class 'hilite: the children's selection,
+// which they keep themselves) removes the hilites.  The offset and length
+// are always 0.  ==> nothing (the ROM answers the view, or nil).
+void
+TEditView::SetSelection(RefArg selection, long* start, long* end)
+{
+	*end = 0;
+	*start = 0;
+	if (IsFrame(selection) && !IsInstance(selection, RSSYMhilite))
+	{
+		RefVar x(GetProtoVariable(selection, RSSYMx, nil));
+		RefVar y(GetProtoVariable(selection, RSSYMy, nil));
+		Point pt;
+		pt.h = (short) RINT(x);
+		pt.v = (short) RINT(y);
+		Point origin = ContentsOrigin();
+		pt.v = (short) (pt.v + origin.v);
+		pt.h = (short) (pt.h + origin.h);
+		StyleRecord style;
+		GetTextStyleRecord(&style);
+		FontInfo info;
+		GetStyleFontInfo(&style, &info);
+		Rect caret;
+		caret.left = pt.h;
+		caret.bottom = (short) (pt.v - 1);
+		caret.top = (short) (caret.bottom - info.ascent);
+		caret.right = (short) (caret.left + 2);
+		SetCaretRectGlobal(caret);
+		DisposeStyleRecord(&style);
+		return;
+	}
+	RemoveAllHilites();
+}
+
+
+// ROM 0x000aa5f0 GetSelection__9TEditViewFv
+// What SetSelection is given back: nil unless the page holds the caret;
+// a frame of class 'hilite when there is a selection (the children keep
+// it), else an edit caret info frame with the caret's point in the
+// page's own coordinates as x and y.
+Ref
+TEditView::GetSelection(void)
+{
+	if (gRootView->fCaretView != this)
+		return NILREF;
+	RefVar info;
+	if ((ULong) gRootView->fCaretLength > 0)
+	{
+		info = AllocateFrame();
+		SetClass(info, RSSYMhilite);
+	}
+	else
+	{
+		info = Clone(RefVar(Rcanonicaleditcaretinfo));
+		Point pt;
+		pt.h = 0;		// (GetCaretPoint leaves h alone when there is no caret: the ROM's stack rubbish)
+		gRootView->GetCaretPoint(&pt);
+		Point origin = ContentsOrigin();
+		pt.v = (short) (pt.v - origin.v);
+		pt.h = (short) (pt.h - origin.h);
+		SetFrameSlot(info, RSSYMx, RefVar(MAKEINT(pt.h)));
+		SetFrameSlot(info, RSSYMy, RefVar(MAKEINT(pt.v)));
+	}
+	return info;
+}
+
+
 // ROM 0x000aa92c GetCaretLocalTopLeft__9TEditViewFv
 Point
 TEditView::GetCaretLocalTopLeft(void)
@@ -1363,8 +1435,8 @@ TEditView::RereadSelectedInk(void)
 // else, and if none comes the caret goes where the tap was.
 //
 // The click and the tap-drag on a selection are HiliteClick's (it drags
-// or resizes the selection).  NOT YET RECONSTRUCTED: the double tap on a
-// selection of text, which sends its ink to be recognised again.
+// or resizes the selection).  A double tap on a selection in a page that
+// takes text sends its ink to be read again (RereadSelectedInk).
 Boolean
 TEditView::RealDoCommand(RefArg cmd)
 {
@@ -2640,7 +2712,10 @@ TEditView::HandleWordUnit(TUnitPublic* unit)
 	return view != nil;
 }
 
-// A view the shape domain is not to snap to (NOT YET: who sets it).
+// ROM 0x0c100cec gSkipView
+// A view aeGetContextUnits leaves out: the shape being traced, which
+// TPolygonView::HiliteTraced sets around its GetContextUnits so that a
+// stroke traced along a shape finds the others but not the one it is on.
 TView* gSkipView = nil;
 
 
@@ -2796,9 +2871,16 @@ MakeNullTerminatedString(UniChar* text, ULong length)
 // (AlignBounds) and with its ruled lines (AlignToLineSpacing), and is what
 // makes handwriting tidy itself into columns.  Typed text does not go that
 // way: the keyboard has already measured its own box, so the ROM jumps
-// straight over the whole section (the test at 0x000a1e94).  NOT YET
-// RECONSTRUCTED: the remote-writing caret's point (0x000a1b98) and the
-// word offered to the dictionary (AddWordInfo).
+// straight over the whole section (the test at 0x000a1e94).  A written
+// word then tells its text view where it was written (SaveAddedUnitBounds)
+// and, read by the recogniser with gAddWordInfo set, is offered to the
+// correction info (AddWordInfo) - which is what the corrector's readings
+// and ink for a word just written come from.  NOT YET RECONSTRUCTED: with
+// remote writing on and the caret on the page, the ROM places a written
+// word at the caret rectangle's bottom left (0x000a1b98-0x000a1ca4, and
+// the branch at 0x000a1fa0 that measures it there); its stack slots have
+// not been followed with confidence, so the host lines every written word
+// up where it was written.
 TView*
 TEditView::AddNewParagraph(UniChar* text, ULong length, Rect& box, Rect& room,
 						   TUnitPublic* unit, RefArg info, long* outOffset, RefArg inkFont)
@@ -2807,9 +2889,8 @@ TEditView::AddNewParagraph(UniChar* text, ULong length, Rect& box, Rect& room,
 	if (NOTNIL(GetPreference(RSSYMremotewriting)) && gRootView->fCaretView == this)
 	{
 		remoteCaret = true;
-		// NOT YET RECONSTRUCTED: the box the caret is in worked out from
-		// the editor's own caret rectangle (0x000a1b98-0x000a1ca4), which
-		// only the geometry section below reads.
+		// (NOT YET RECONSTRUCTED: the point at the caret, 0x000a1b98 -
+		//  see above)
 	}
 	Boolean hasInkFont = NOTNIL(inkFont);
 	RefVar theInfo(info);
@@ -2848,6 +2929,8 @@ TEditView::AddNewParagraph(UniChar* text, ULong length, Rect& box, Rect& room,
 
 	TView* view = nil;
 	Rect area;
+	Point pt;							// where the word was written
+	pt.h = pt.v = 0;
 	if (unit != nil || hasInkFont)
 	{
 		// A word that came from the pen goes where it was written rather
@@ -2855,7 +2938,6 @@ TEditView::AddNewParagraph(UniChar* text, ULong length, Rect& box, Rect& room,
 		// the middle of the base line the writing stands on, for a word
 		// the recogniser read, and the middle of the top of the box it
 		// was measured in, for a word that was not read.
-		Point pt;
 		if (unit != nil)
 		{
 			pt.v = (short) ((unit->fWordBase.top + unit->fWordBase.bottom) / 2);
@@ -2956,10 +3038,19 @@ TEditView::AddNewParagraph(UniChar* text, ULong length, Rect& box, Rect& room,
 		if (outOffset != nil)
 			*outOffset = 0;
 		ULong stamp = unit != nil ? unit->EndTime() : Ticks();
-		(void) stamp;		// (the recogniser's path tells the text view about it)
+		if (unit != nil || NOTNIL(inkFont))
+		{
+			// a written word tells its text view where it was written
+			((TDataView*) ((TDataView*) view)->GetTextView())->SaveAddedUnitBounds(box, pt, stamp);
+		}
 		TimeStampTextChange(((TDataView*) view)->GetTextView());
-		// (the ROM offers the word to the dictionary here - AddWordInfo
-		//  0x00079790, NOT YET - when it came from the recogniser)
+		if (unit != nil && gAddWordInfo)
+		{
+			// the word offered to the correction info (the ROM reads
+			// *outOffset without asking whether there is one)
+			long at = outOffset != nil ? *outOffset : 0;
+			AddWordInfo(((TDataView*) view)->GetTextView(), at, at + (long) length, unit);
+		}
 	}
 	DisposeStyleRecord(&styleRecord);
 	(void) remoteCaret;

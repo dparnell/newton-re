@@ -4,9 +4,8 @@
 	Contains:	TDataView (clDataView, 83): the base of the views holding
 				editable data - paragraphs, polygons, the edit view's
 				children; the hilite, caret, word and ink handling all
-				views of data share.  NOT YET RECONSTRUCTED: everything but
-				the class identity (the hilites and the recogniser's
-				gestures are not yet).
+				views of data share - each virtual the ROM's own (most of
+				them nothing or nought, for the subclasses to answer).
 
 	Reconstructed from the MP2x00 US ROM (0x000a2fc0-0x000a3494); each
 	function cites its origin.
@@ -52,10 +51,12 @@ public:
 	// the view drawn clipped to what is selected in it (vtable +0x88)
 	virtual void	DrawHilitedData(void);								// ROM 0x000a31d8 DrawHilitedData__9TDataViewFv
 	virtual TView*	AddHilited(RefArg hilite, class TEditView* editor);	// ROM 0x000a31b8 AddHilited__9TDataViewFRC6RefVarP9TEditView (vtable +0x130)
+	// Where a point is in relation to the selection (vtable +0x134): 0 for
+	// a plain data view, a paragraph answering where its text is selected.
+	virtual long	PointOverHilitedText(Point& pt);					// ROM 0x000a31c8 PointOverHilitedText__9TDataViewFR6TPoint
 	// Whether the point is over the view's text (the line it is over, when
 	// asked): a plain data view has none.  A paragraph and a container
-	// answer it (vtable +0x138; +0x134 PointOverHilitedText is a
-	// paragraph's alone here).
+	// answer it (vtable +0x138).
 	virtual Boolean	PointOverText(Point& pt, Point* onLine);			// ROM 0x000a31d0 PointOverText__9TDataViewFR6TPointP6TPoint (vtable +0x138: 0)
 	// declared in the vtable's order, which starts at +0x13c
 	virtual TView*	GetHiliteView(void);								// ROM 0x000a31bc GetHiliteView__9TDataViewFv (vtable +0x13c)
@@ -73,10 +74,14 @@ public:
 	// its base line and when its ink ended, which the next word is
 	// measured against.  A plain data view keeps none of it.
 	virtual void	SaveAddedUnitBounds(const Rect& box, const Point& base, ULong inkEndTime);	// ROM 0x000a3480 SaveAddedUnitBounds__9TDataViewFRC5TRectRC6TPointUl (vtable +0x150: nothing)
+	// What a selection in the view is like (vtable +0x154; the styles slip
+	// asks a paragraph): nil for a plain data view.
+	virtual Ref		GetProperties(RefArg hilite);						// ROM 0x000a348c GetProperties__9TDataViewFRC6RefVar
 	// What a view does with its data once it has been resized (vtable
 	// +0x158): nothing for a plain data view (the ROM's answers the view,
 	// which nobody reads).
 	virtual void	CleanupData(void);									// ROM 0x000a3494 CleanupData__9TDataViewFv
+	virtual Ref		GetContext(void);									// ROM 0x000a3484 GetContext__9TDataViewFv (vtable +0x15c: nil)
 
 	// A partly selected view cut in two: the selection made a view of its
 	// own (AddHilited), moved to where it is on the page, and deleted

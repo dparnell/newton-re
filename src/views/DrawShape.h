@@ -21,8 +21,9 @@
 				{bounds, data: 'bits, colorData, mask}, 'picture {bounds,
 				data: 'pictureData}, 'ink {bounds, data}.  The bounds
 				binaries hold the host's Rect (DEVIATION: the ROM's are
-				big-endian shorts, as everything of its; a shape stored in a
-				soup is not converted - NOT YET).
+				big-endian shorts, as everything of its; frames/HostOrder.h
+				turns them wherever they meet a MessagePad's bytes - a soup,
+				NSOF).
 
 				TStyleSave holds the style in force while a shape list is
 				drawn (the ROM's is 0x70 bytes: the patterns, the mode, the
@@ -90,7 +91,7 @@ public:
 	SaveLevel*	fLevel;				// +0x30
 	SaveLevel	fBaseLevel;			// +0x34
 	long		fClipDepth;			// +0x44  clipping in force
-	long		fTransformDepth;	// +0x48  scaling in force (NOT YET: always 0)
+	long		fTransformDepth;	// +0x48  scaling in force (TQDScaler)
 	GrafPort*	fPort;				// +0x4c
 	RefStruct	fStyle;				// +0x50  the style frame in force
 };

@@ -66,9 +66,9 @@
 class TView;
 class TRootView;
 class TViewList;
-class TDragInfo;				// NOT YET RECONSTRUCTED: drag and drop
+class TDragInfo;				// DragDrop.h
 class TStrokePublic;			// recognition/Stroke.h
-class TUnitPublic;				// NOT YET RECONSTRUCTED: the recognition units
+class TUnitPublic;				// recognition/UnitPublic.h
 struct StyleRecord;
 
 /*------------------------------------------------------------------------------

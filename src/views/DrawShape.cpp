@@ -153,8 +153,8 @@ TStyleSave::EndLevel(void)
 // The style frame put in force: the pen normal, then its slots -
 // clipping (a shape, or a region shape: the port's clip narrowed to it,
 // offset by the origin, the clip before saved in the level; ==> false
-// when nothing of the port's visible region is left), transform (NOT YET
-// RECONSTRUCTED: scaling), selection, penSize (an integer for both, or
+// when nothing of the port's visible region is left), transform (scaling,
+// through qd/Transform.h's TQDScaler), selection, penSize (an integer for both, or
 // [h, v]; negative is 0), fillPattern, transferMode (8, patCopy, draws as
 // srcOr; the pen mode is the pattern mode), penPattern, textPattern,
 // justification ('center, 'right), font (the userFont preference
@@ -702,8 +702,8 @@ SetPenPattern(TStyleSave* style)
 // left with its baseline on their bottom, aligned across the bounds by
 // the justification, in the text pattern (else the fill's when filling); a
 // TextBox wrapped into its bounds by TextBox, clipped to them; a picture
-// played into its bounds (qd/PicPlay.h's DrawPicture).  NOT YET
-// RECONSTRUCTED: ink, scaling.
+// played into its bounds (qd/PicPlay.h's DrawPicture); ink out of its
+// originalBounds into its bounds.
 void
 DrawOneShape(RefArg shape, const Point& origin, TStyleSave* style)
 {
@@ -935,7 +935,7 @@ DrawOneShape(RefArg shape, const Point& origin, TStyleSave* style)
 		UnlockRef(data);
 		return;
 	}
-	// 'ink: NOT YET RECONSTRUCTED - nothing drawn
+	// (any other class draws nothing)
 }
 
 

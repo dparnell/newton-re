@@ -558,7 +558,7 @@ set_tests_properties(host.NewtonScrub PROPERTIES TIMEOUT 180
 add_test(NAME host.NewtonCorrect COMMAND newton --display 320x480 --headless 90
          --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/correct.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonCorrect PROPERTIES TIMEOUT 180
-                     PASS_REGULAR_EXPRESSION "reads \"tone\": ok.*correct: done, 0 failed"
+                     PASS_REGULAR_EXPRESSION "reads \"tor\": ok.*correct: done, 0 failed"
                      FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
 
 # a line, a box, a triangle and a circle drawn and recognised as shapes (demo/shapes.ns)
@@ -640,7 +640,7 @@ set_tests_properties(host.NewtonRecognize PROPERTIES TIMEOUT 180
 # VoteOnWordUnit, HandleUnit)
 add_test(NAME host.NewtonAlternatives COMMAND newton --display 320x480 --headless 120 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/alternatives.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonAlternatives PROPERTIES TIMEOUT 180
-                     PASS_REGULAR_EXPRESSION "GetAlternatives offered 2 words, the first \"ton\".*Extract took 1 word info.*Extract past the text took nothing.*insert put the range back.*HandleRawInk answered nil.*VoteOnWordUnit answered an integer.*HandleUnit answered true.*alternatives: done"
+                     PASS_REGULAR_EXPRESSION "GetAlternatives offered 6 words, the first \"ton\", with strokes.*Extract took 1 word info.*Extract past the text took nothing.*insert put the range back.*HandleRawInk answered nil.*VoteOnWordUnit answered an integer.*HandleUnit answered true.*alternatives: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain")
 
 # the cursive recogniser: the letter set made cursive and "ton" and "to"

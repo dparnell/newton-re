@@ -1525,7 +1525,7 @@ TView::DrawHilitedData(void)
 }
 
 
-// the pen-driven hiliting: NOT YET RECONSTRUCTED (the recogniser's units)
+// the pen-driven hiliting
 // ROM 0x00262150 HandleHilite__5TViewFP11TUnitPubliclUc
 // A stroke over the view selects the whole of it: the unit's box, grown by
 // eight pixels, has to cover more than 60 per cent of the view.  A stroke
@@ -4017,11 +4017,15 @@ TView::GetTextStyleRecord(StyleRecord* style)
 
 
 // ROM 0x00261d44 Printing__5TViewFv
-// Whether the view is in a print view (NOT YET: no print views).
+// Whether the view is being drawn for a printer: the current port's
+// pixel map names a device (kPixMapDeviceType, bits 8-11 - the dot
+// printer's band sets kPixMapDevDotPrint).
 Boolean
 TView::Printing(void)
 {
-	return false;
+	GrafPort* port;
+	GetPort(&port);
+	return (port->portBits.pixMapFlags & kPixMapDeviceType) != 0;
 }
 
 

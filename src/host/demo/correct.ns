@@ -3,9 +3,10 @@
 //   build/host/host/newton --display 320x480 --headless 90 --script src/host/demo/correct.ns
 //
 // "ton" is written and read, then a double tap on it opens the corrector -
-// the other readings the engine sent with the word and what the spelling
-// checker makes of it - (build/corrector.pgm), and a tap on "tone" puts
-// that in its place (build/corrected.pgm).
+// the other readings the engine sent with the word (the word was offered
+// to the correction info as it went down: TEditView::AddNewParagraph's
+// AddWordInfo) and the ink it was written in - (build/corrector.pgm), and
+// a tap on "tor" puts that in its place (build/corrected.pgm).
 //
 // Prints "correct: <step>: ok" or "FAILED", and "correct: done" (ctest
 // host.NewtonCorrect).
@@ -71,15 +72,15 @@ call walkSetup with (name, func() begin
             call correctCheck with ("the corrector up", call correctorUp with ());
             ScreenSnapshot("build/corrector.pgm");
             local picker := call findPicker with (GetRoot());
-            local i := call itemIndex with (picker.pickItems, "tone");
-            call correctCheck with ("\"tone\" offered", i <> nil);
+            local i := call itemIndex with (picker.pickItems, "tor");
+            call correctCheck with ("\"tor\" offered", i <> nil);
             if not i then return call correctFinish with ();
             // the items are rows of the list's font, from the top of the
             // picker (Print(picker:GlobalBox()) and the picture show where)
             local pb := picker:GlobalBox();
             call tapAt with ((pb.left + pb.right) div 2, pb.top + 4 + 13 * i + 6);
-            call waitFor with ("correct: corrected", func() call penFindPara with (GetRoot(), "tone"), func() begin
-                call correctCheck with ("the page reads \"tone\"", call penFindPara with (GetRoot(), "tone") <> nil);
+            call waitFor with ("correct: corrected", func() call penFindPara with (GetRoot(), "tor"), func() begin
+                call correctCheck with ("the page reads \"tor\"", call penFindPara with (GetRoot(), "tor") <> nil);
                 ScreenSnapshot("build/corrected.pgm");
                 call correctFinish with ();
               end, 20);
