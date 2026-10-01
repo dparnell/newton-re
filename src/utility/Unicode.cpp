@@ -306,10 +306,25 @@ ConvertFromUnicodeFunc_Segmented16(const UniChar* src, void* dest, void* map, lo
 }
 
 
+// ROM 0x002587ac subConvertToUnicode__FPCvPUslT3
+// Before the tables are in: bytes widened as they are, to a 0 or n.
+static void
+subConvertToUnicode(const void* src, UniChar* dest, long /*encoding*/, long n)
+{
+	const unsigned char* s = (const unsigned char*) src;
+	long i = 0;
+	while (i < n && *s != 0)
+	{
+		*dest++ = *s++;
+		i++;
+	}
+	*dest = 0;
+}
+
+
 // ROM 0x002572ec ConvertToUnicode__FPCvPUslT3
 // Through the encoding's converter once the tables are in (nothing for
-// an encoding without one); before that bytes widened as they are, to a
-// 0 or n.
+// an encoding without one); before that subConvertToUnicode.
 void
 ConvertToUnicode(const void* src, UniChar* dest, long encoding, long n)
 {
@@ -319,14 +334,38 @@ ConvertToUnicode(const void* src, UniChar* dest, long encoding, long n)
 			gUnicode[encoding].fToUnicode(src, dest, gUnicode[encoding].fToMap, n);
 		return;
 	}
-	const unsigned char* s = (const unsigned char*) src;
+	subConvertToUnicode(src, dest, encoding, n);
+}
+
+
+// ROM 0x0030fd64 ConvertToUnicode__Fc
+// One Mac Roman character as a UniChar.
+UniChar
+ConvertToUnicode(char c)
+{
+	char text[2];
+	text[0] = c;
+	text[1] = 0;
+	UniChar out[2];
+	ConvertToUnicode(text, out, kMacRomanEncoding, 0x7fffffff);
+	return out[0];
+}
+
+
+// ROM 0x00258764 subConvertFromUnicode__FPCUsPvlT3
+// Before the tables are in: characters over 0x7f become 0x1a, to a 0 or n.
+static void
+subConvertFromUnicode(const UniChar* src, void* dest, long /*encoding*/, long n)
+{
+	unsigned char* d = (unsigned char*) dest;
 	long i = 0;
-	while (i < n && *s != 0)
+	while (i < n && *src != 0)
 	{
-		*dest++ = *s++;
+		UniChar c = *src++;
+		*d++ = (c < 0x80) ? (unsigned char) c : 0x1a;
 		i++;
 	}
-	*dest = 0;
+	*d = 0;
 }
 
 
@@ -342,15 +381,7 @@ ConvertFromUnicode(const UniChar* src, void* dest, long encoding, long n)
 			gUnicode[encoding].fFromUnicode(src, dest, gUnicode[encoding].fFromMap, n);
 		return;
 	}
-	unsigned char* d = (unsigned char*) dest;
-	long i = 0;
-	while (i < n && *src != 0)
-	{
-		UniChar c = *src++;
-		*d++ = (c < 0x80) ? (unsigned char) c : 0x1a;
-		i++;
-	}
-	*d = 0;
+	subConvertFromUnicode(src, dest, encoding, n);
 }
 
 

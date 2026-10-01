@@ -25,7 +25,11 @@ src/**/*.h and compares it with symbols.json:
     functions (--show-count, default 40), which is how a rule is written
     for what is still "other".  A function's size here is the distance to
     the next symbol of any kind, so the data after the last function of a
-    module is not counted as code.
+    module is not counted as code.  Before the rules, a function that is
+    nothing but a branch to a reconstructed one - a name the compiler or
+    the patchable jump table gave a function that lives under another
+    (the x-prefixed stubs, Scan to Scan1) - is counted as "aliases of
+    reconstructed functions" rather than as work left.
 
 Only real function bodies count (not jump-table slots).  Data symbols cited
 with the same syntax are checked but not counted.  Code reconstructed from
@@ -194,6 +198,23 @@ def main(argv=None) -> int:
         counts = collections.Counter()
         members = collections.defaultdict(list)
         total_bytes = 0
+        with open(os.path.join(args.build_dir, "rom.bin"), "rb") as f:
+            rom = f.read()
+        slots = {s["address"]: s["name"] for s in data["symbols"] if "jt_index" in s}
+
+        def branch_target(a):
+            """Where a function that is one unconditional branch goes (the
+            function a jump-table slot stands for), else None."""
+            word = int.from_bytes(rom[a:a + 4], "big") if a + 4 <= len(rom) else 0
+            if (word >> 24) != 0xEA:
+                return None
+            offset = word & 0xFFFFFF
+            if offset & 0x800000:
+                offset -= 0x1000000
+            target = (a + 8 + 4 * offset) & 0xFFFFFFFF
+            if target in slots:
+                target = by_name.get(slots[target], target)
+            return target
         for a in functions:
             if a >= rom_size:
                 continue
@@ -205,7 +226,10 @@ def main(argv=None) -> int:
                 counts["(reconstructed)"] += 1
                 continue
             name = names.get(a, "")
-            category = next((c for c, r in rules if r.search(name)), "other")
+            if branch_target(a) in cited:
+                category = "aliases of reconstructed functions"
+            else:
+                category = next((c for c, r in rules if r.search(name)), "other")
             sizes[category] += n
             counts[category] += 1
             members[category].append((n, a, name))

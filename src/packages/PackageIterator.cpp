@@ -184,6 +184,19 @@ TPrivatePackageIterator::GetRelocationChunkInfo(void)
 }
 
 
+// ROM 0x001944b4 UstrlenPrivate__FPCUs
+// The package code's own Ustrlen (a nought halfword is a nought in either
+// byte order, so a package's big-endian name is measured as it lies).
+static long
+UstrlenPrivate(const UniChar* s)
+{
+	const UniChar* p = s;
+	while (*p++ != 0)
+		;
+	return (long) (p - s) - 1;
+}
+
+
 // ROM 0x001949f0 VerifyPackage__23TPrivatePackageIteratorFv
 // The InfoRefs within the directory, the processor type this ROM's, each
 // part's info and compressor within the directory and its offset within
@@ -191,7 +204,7 @@ TPrivatePackageIterator::GetRelocationChunkInfo(void)
 NewtonErr
 TPrivatePackageIterator::VerifyPackage(void)
 {
-	Ustrlen(PackageName());
+	UstrlenPrivate(PackageName());
 	ULong directorySize = fDirectory->DirectorySize();
 	if (fDirectory->fName.Offset() > directorySize)
 		return kError_Bad_Package;

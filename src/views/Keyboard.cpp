@@ -164,8 +164,7 @@ TranslateKey(ULong keyCode, Boolean isDown, ULong modifiers, ULong* deadState)
 		}
 	}
 	UnlockRefArg(mapping);
-	UniChar unicode;
-	ConvertToUnicode(&ch, &unicode, kMacRomanEncoding, 1);
+	UniChar unicode = ConvertToUnicode((char) ch);
 	if (unicode == 0x10 && keyCode > 0x5f && keyCode < 0x7c)
 		unicode = FunctionKeyChar(keyCode);
 	return unicode;

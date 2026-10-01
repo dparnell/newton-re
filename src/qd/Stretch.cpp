@@ -3206,8 +3206,7 @@ TGrayShrink::GrayShrink(PixelMap* src, PixelMap* dst, Rect* srcRect, Rect* dstRe
 			scans[i] = (char*) QDNewTempPtr(maskSize);
 			if (scans[i] == nil)
 				goto done;
-			states[i] = HGetState((Handle) regions[i]);
-			HLock((Handle) regions[i]);
+			states[i] = QDSafeLock((Handle) regions[i]);
 			InitRgn(*regions[i], &rgnState[i], clip.left, clip.right, maskLeft, scans[i]);
 		}
 		if (which == 0)
@@ -3416,8 +3415,7 @@ StretchBits(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRe
 			scans[i] = (char*) QDNewTempPtr(maskSize);
 			if (scans[i] == nil)
 				goto done;
-			states[i] = HGetState((Handle) regions[i]);
-			HLock((Handle) regions[i]);
+			states[i] = QDSafeLock((Handle) regions[i]);
 			InitRgn(*regions[i], &rgnState[i], clip.left, clip.right, maskLeft, scans[i]);
 		}
 		if (which == 0)

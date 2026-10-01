@@ -246,6 +246,68 @@ ValidateWord(Handle dictionary, char* word, ULong* attribute)
 }
 
 
+/*------------------------------------------------------------------------------
+	T h e   s p e l l e r ' s   C   s t r i n g s
+
+	Its own small routines over 8-bit strings: the cases are plain ASCII.
+------------------------------------------------------------------------------*/
+
+// ROM 0x001f9680 IsLower__Fc
+Boolean
+IsLower(char c)
+{
+	return (UByte) c >= 'a' && (UByte) c <= 'z';
+}
+
+
+// ROM 0x001f96a4 IsUpper__Fc
+Boolean
+IsUpper(char c)
+{
+	return (UByte) c >= 'A' && (UByte) c <= 'Z';
+}
+
+
+// ROM 0x001f96c8 UpShift__Fc
+char
+UpShift(char c)
+{
+	return IsLower(c) ? (char) (c - 0x20) : c;
+}
+
+
+// ROM 0x001f96f4 DownShift__Fc
+char
+DownShift(char c)
+{
+	return IsUpper(c) ? (char) (c + 0x20) : c;
+}
+
+
+// ROM 0x001f9720 StringLength__FPc
+long
+StringLength(const char* s)
+{
+	const char* p = s;
+	while (*p != 0)
+		p++;
+	return (long) (p - s);
+}
+
+
+// ROM 0x001f9564 CopyCString__FPcT1
+void
+CopyCString(char* to, const char* from)
+{
+	char c;
+	do
+	{
+		c = *from++;
+		*to++ = c;
+	} while (c != 0);
+}
+
+
 // ROM 0x001f4e48 ValidateWord2__FPP15AirusAParmBlockPcPUl
 // The same, and then again with the first letter's case turned over - so
 // that a word the dictionary holds in lower case is still found when it
@@ -270,9 +332,9 @@ ValidateWord2(Handle dictionary, char* word, ULong* attribute)
 		return ((AirusAParmBlock*) *dictionary)->fDictID;
 	}
 	if (upper)
-		word[0] = (char) tolower((UByte) was);
+		word[0] = DownShift(was);
 	else if (lower)
-		word[0] = (char) toupper((UByte) was);
+		word[0] = UpShift(was);
 	if (was != word[0])
 	{
 		*attribute = 0;
@@ -852,12 +914,12 @@ void
 FixCapitalization(char* word, ULong attribute)
 {
 	if ((attribute & 0x80) != 0)
-		word[0] = (char) toupper((UByte) word[0]);
+		word[0] = UpShift(word[0]);
 	if ((attribute & 0x40) == 0)
 		return;
-	long length = (long) strlen(word);
+	long length = StringLength(word);
 	for (long i = 0; i < length; i++)
-		word[i] = (char) toupper((UByte) word[i]);
+		word[i] = UpShift(word[i]);
 }
 
 

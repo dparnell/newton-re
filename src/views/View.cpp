@@ -241,16 +241,38 @@ TBackwardLoop::Current(void)
 }
 
 
+// ROM 0x002601d8 __ct__21TBackwardViewListLoopFP5CList
+// A walk over a view list from the front-most view back.
+TBackwardViewListLoop::TBackwardViewListLoop(CList* list)
+{
+	fList = list;
+	fCount = (ULong) list->GetArraySize();
+	fIndex = fCount;
+}
+
+// ROM 0x00260214 Next__21TBackwardViewListLoopFv
+TView*
+TBackwardViewListLoop::Next(void)
+{
+	fIndex--;
+	if (fIndex >= 0x80000000)
+		return nil;
+	TView** v = (TView**) fList->SafeElementPtrAt((ArrayIndex) fIndex);
+	return v != nil ? *v : nil;
+}
+
+
 // ROM 0x00260234 GetFirstNonFloater__FP9TViewList
 // The index of the last view that does not float (the front-most
 // non-floater: the walk from the back stops at it), -1 when all float.
 static long
 FirstNonFloaterIndex(TViewList* list)
 {
-	for (long i = (long) list->GetArraySize() - 1; i >= 0; i--)
-		if ((list->At(i)->fFlags & vFloating) == 0)
-			return i;
-	return -1;
+	TBackwardViewListLoop loop(list);
+	TView* view;
+	while ((view = loop.Next()) != nil && (view->fFlags & vFloating) != 0)
+		;
+	return (long) (Long32) loop.fIndex;
 }
 
 

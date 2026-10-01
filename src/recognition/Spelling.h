@@ -169,6 +169,13 @@ Ref		FSpellDocEnd(RefArg rcvr, RefArg frame);			// ROM 0x001f63f8 FSpellDocEnd
 // it was found in, or -1.
 long	ValidateWord(Handle dictionary, char* word, ULong* attribute);	// ROM 0x001f4dc8 ValidateWord__FPP15AirusAParmBlockPcPUl
 // ... and the same with the first letter's case turned over as well.
+// the speller's own C-string routines (ASCII cases)
+Boolean	IsLower(char c);								// ROM 0x001f9680 IsLower__Fc
+Boolean	IsUpper(char c);								// ROM 0x001f96a4 IsUpper__Fc
+char	UpShift(char c);								// ROM 0x001f96c8 UpShift__Fc
+char	DownShift(char c);								// ROM 0x001f96f4 DownShift__Fc
+long	StringLength(const char* s);					// ROM 0x001f9720 StringLength__FPc
+void	CopyCString(char* to, const char* from);		// ROM 0x001f9564 CopyCString__FPcT1
 long	ValidateWord2(Handle dictionary, char* word, ULong* attribute);	// ROM 0x001f4e48 ValidateWord2__FPP15AirusAParmBlockPcPUl
 long	ValidateWordInChain(char* word, ULong* attribute, Boolean skipped);	// ROM 0x001f4bcc ValidateWordInChain__FPcPUlUc
 long	ValidateWordInNumberChain(char* word);				// ROM 0x001f4c68 ValidateWordInNumberChain__FPc

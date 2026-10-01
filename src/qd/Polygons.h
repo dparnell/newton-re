@@ -47,6 +47,7 @@ void		StdPoly(GrafVerb verb, PolyHandle poly);
 void		FrPoly(PolyHandle poly, long mode);			// the outline as lines
 void		DrawPoly(PolyHandle poly, long mode, PatternHandle pattern);	// the inside as a region
 
-inline long	PolyPointCount(const Polygon* poly)		{ return (poly->polySize - 12) / 4; }
+// the ROM's Count: how many points (the size less the 12 bytes in front)
+inline long	PolyPointCount(const Polygon* poly)		{ return (long) ((ULong32) ((long) poly->polySize - 12) >> 2); }	// ROM 0x00197d18 Count__FP7Polygon
 
 #endif	/* __POLYGONS_H */

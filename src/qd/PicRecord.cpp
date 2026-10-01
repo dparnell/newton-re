@@ -897,8 +897,7 @@ DoPutText(TextObjectRef text, Fixed hScale, Fixed vScale)
 	char state = 0;
 	if (obj->fFlags & kTextObjAllocated)
 	{
-		state = HGetState((Handle) text);
-		HLock((Handle) text);
+		state = QDSafeLock((Handle) text);
 		obj = TextObj(text);
 	}
 	if (ps->fTextHScale != hScale || ps->fTextVScale != vScale)

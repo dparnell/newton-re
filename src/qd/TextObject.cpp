@@ -577,13 +577,35 @@ GetTextObjField(TextObjectRef text, TextObjectField field, void* result)
 }
 
 
+// ROM 0x0035c03c RewindLength__Fl
+// The text grew: a layout under way is taken back to its first state with
+// the whole length still to do - or, when the text is justified, thrown
+// away altogether.
+static void
+RewindLength(TextObjectRef text)
+{
+	TextObject* obj = TextObj(text);
+	ULong32 flags = obj->fFlags;
+	ULong32 state = flags & 0xff;
+	if (state < 1)
+		return;
+	if (obj->fOptions != nil && obj->fOptions->fJustification != 0)
+	{
+		InvalCachedTextInfo(text);
+		return;
+	}
+	if (state > 1)
+		obj->fFlags = (flags & ~(ULong32) 0xff) | 1;
+	obj->fField24 = obj->fLength;
+}
+
+
 // ROM 0x0035e028 SetTextObjField__Fl15TextObjectFieldPv
 // A field of the object changed, the layout's caches thrown away (except
 // for the location, which moves the text without changing its layout).
 // The text is the pointer `value` points at; the styles, the run lengths
-// and the options are `value` itself.  ==> whether it took.  NOT YET
-// RECONSTRUCTED: a length that grows rewinds the layout (RewindLength,
-// 0x0035e0c8) - the host keeps none to rewind.
+// and the options are `value` itself.  ==> whether it took.  A length that
+// grows rewinds the layout instead (RewindLength).
 Boolean
 SetTextObjField(TextObjectRef text, TextObjectField field, void* value)
 {
@@ -599,7 +621,10 @@ SetTextObjField(TextObjectRef text, TextObjectField field, void* value)
 		long had = obj->fLength;
 		obj->fLength = length;
 		if (had < length)
-			return true;					// (RewindLength)
+		{
+			RewindLength(text);
+			return true;
+		}
 		break;
 	}
 	case kTextObjStyles:

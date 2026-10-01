@@ -97,6 +97,7 @@ void		InitRgn(Region* rgn, RgnState* state, long left, long right, long origin, 
 Boolean		SeekRgn(RgnState* state, long y);						// the mask made that of pixel row y; ==> whether it changed
 
 void*		QDNewTempPtr(long size);
+char		QDSafeLock(Handle h);			// ROM 0x0033f630 QDSafeLock__FPPc - locked; ==> its state before (HSetState puts it back)
 void		QDDisposeTempPtr(void* p);
 
 #endif	/* __REGIONS_H */

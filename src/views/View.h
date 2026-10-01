@@ -152,11 +152,17 @@ public:
 	TView*		Next(void)						{ return (TView*) TListLoop::Next(); }
 };
 
-class TBackwardViewListLoop : public TBackwardLoop
+// (a class of its own in the ROM, not a TBackwardLoop: it keeps the count
+// too, and its index is unsigned)
+class TBackwardViewListLoop
 {
 public:
-				TBackwardViewListLoop(TViewList* list)	: TBackwardLoop(list) { }
-	TView*		Next(void)						{ return (TView*) TBackwardLoop::Next(); }
+				TBackwardViewListLoop(CList* list);		// ROM 0x002601d8 __ct__21TBackwardViewListLoopFP5CList
+	TView*		Next(void);								// ROM 0x00260214 Next__21TBackwardViewListLoopFv - the next view back, nil past the first
+
+	CList*		fList;				// +0x00
+	ULong		fIndex;				// +0x04  the view Next answered (0xFFFFFFFF past the first)
+	ULong		fCount;				// +0x08
 };
 
 /*------------------------------------------------------------------------------

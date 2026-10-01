@@ -52,6 +52,7 @@ void		Umemset(UniChar* dest, UniChar c, long n);
 
 // 8-bit characters to UniChars (a 0 ends the output), at most n
 void	ConvertToUnicode(const void* src, UniChar* dest, long encoding, long n);
+UniChar	ConvertToUnicode(char c);					// ROM 0x0030fd64 ConvertToUnicode__Fc - one Mac Roman character
 // UniChars to 8-bit characters (a 0 ends the output), at most n
 void	ConvertFromUnicode(const UniChar* src, void* dest, long encoding, long n);
 long	ConvertUnicodeChar(const UniChar* src, char* dest, long encoding);						// ROM 0x0025668c: one character; ==> the bytes it made

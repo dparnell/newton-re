@@ -74,6 +74,17 @@ QDNewTempPtr(long size)
 }
 
 
+// ROM 0x0033f630 QDSafeLock__FPPc
+// A handle locked for QuickDraw's use; ==> its state before, for HSetState.
+char
+QDSafeLock(Handle h)
+{
+	char state = HGetState(h);
+	HLock(h);
+	return state;
+}
+
+
 // ROM 0x0033f5d0 QDDisposeTempPtr__FPc
 void
 QDDisposeTempPtr(void* p)

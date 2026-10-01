@@ -9,6 +9,7 @@
 #include "RandomWords.h"
 #include "Airus.h"
 #include "Dictionaries.h"
+#include "Spelling.h"			// StringLength, CopyCString
 #include "RecObject.h"		// GetTicks
 #include "Random.h"
 #include "Unicode.h"
@@ -22,8 +23,6 @@ static UByte	letterPairs[26][26];
 // ROM 0x0c101630 inited - InitRandomWords has run
 static Boolean	inited = false;
 
-// (StringLength 0x001f9720 and CopyCString 0x001f9564, which the ROM
-// calls, are strlen and strcpy.)
 
 
 // ROM 0x0013e624 InitRandomWords__Fv
@@ -110,7 +109,7 @@ GetCharWeight(char c, ULong /*position*/, Boolean capitalsAllowed)
 ULong
 ChooseWeightedChar(char* chars, ULong position, Boolean capitalsAllowed)
 {
-	ULong n = (ULong) strlen(chars);
+	ULong n = (ULong) StringLength(chars);
 	ULong total = 0;
 	for (ULong i = 0; i < n; i++)
 		total += GetCharWeight(chars[i], position, capitalsAllowed);
@@ -160,7 +159,7 @@ GetRandomWord(Handle dictionary, UniChar* word, ULong minLength, ULong maxLength
 			parms->fWord = (UByte*) nextChars;
 			CallAirusA(dictionary, kAirusNextSet);
 			parms = (AirusAParmBlock*) *dictionary;
-			ULong available = (ULong) strlen(nextChars);
+			ULong available = (ULong) StringLength(nextChars);
 			ULong which = ChooseWeightedChar(nextChars, (ULong) parms->fIndex, parms->fIndex != 0);
 			if (nextChars[which] == '\'')
 				break;
@@ -173,7 +172,7 @@ GetRandomWord(Handle dictionary, UniChar* word, ULong minLength, ULong maxLength
 				if (available != 0)
 				{
 					letters[parms->fIndex] = 0;
-					ULong length = (ULong) strlen(letters);
+					ULong length = (ULong) StringLength(letters);
 					if (minLength <= length && length <= maxLength)
 					{
 						ConvertToUnicode(letters, word, kMacRomanEncoding, 20);
@@ -232,7 +231,7 @@ HalveLetterPairs(void)
 void
 AddLetterPairScore(char* word)
 {
-	ULong length = (ULong) strlen(word);
+	ULong length = (ULong) StringLength(word);
 	if (length < 2)
 		return;
 	long previous = ShiftLetter(word[0]);
@@ -256,7 +255,7 @@ long
 GetLetterPairScore(char* word)
 {
 	long score = 0;
-	ULong length = (ULong) strlen(word);
+	ULong length = (ULong) StringLength(word);
 	if (length < 2)
 		return 0;
 	long previous = ShiftLetter(word[0]);
@@ -290,11 +289,11 @@ GetDistributedWord(Handle dictionary, UniChar* word, ULong maxLength, ULong minL
 	{
 		GetRandomWord(dictionary, candidate, minLength, limit);
 		ConvertFromUnicode(candidate, tried, kMacRomanEncoding, 11);
-		ULong length = (ULong) strlen(tried);
+		ULong length = (ULong) StringLength(tried);
 		long score = GetLetterPairScore(tried);
 		if (bestScore < score || (score == bestScore && length < bestLength))
 		{
-			strcpy(best, tried);
+			CopyCString(best, tried);
 			bestScore = score;
 			bestLength = length;
 		}
