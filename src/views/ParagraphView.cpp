@@ -67,7 +67,6 @@ HiliteOf(RefArg hilite)
 
 
 const UniChar kCR = 0x0d;
-const UniChar kSP = 0x20;
 const UniChar kEllipsisChar = 0x2026;		// the ROM's U_CONST_CHAR(0xc9): Mac Roman's ellipsis as Unicode
 
 // ROM 0x00261d2c GetInputViewTextFlags__FUlT1
@@ -80,16 +79,6 @@ GetInputViewTextFlags(ULong textFlags, ULong viewFlags)
 	if ((textFlags & 0x1c000) == 0)
 		textFlags |= ((viewFlags & 0x82) == 0) ? 0xc000 : 0x4000;
 	return textFlags;
-}
-
-
-// Where a line lies against a box: 0 above it, 1 within, 2 below - by its
-// midline (views/SortInk.cpp's TestLineOverlap, which takes pointers).
-static long
-TestLineOverlap(const Rect& box, const Rect& line)
-{
-	Rect a = box, b = line;
-	return TestLineOverlap(&a, &b);
 }
 
 
@@ -107,6 +96,16 @@ long
 TParagraphView::ClassID(void) const
 {
 	return clParagraphView;
+}
+
+
+// ROM 0x0038abc8 (unnamed) - the vtable's +0x20
+// A paragraph's text flags are its own fTextFlags (the input view's,
+// worked out by SetupDone; -1 until then) - not the slot TView reads.
+long
+TParagraphView::TextFlags(void) const
+{
+	return fTextFlags;
 }
 
 
@@ -171,7 +170,7 @@ TParagraphView::SetupDone(void)
 	fTransferMode = ISNIL(mode) ? srcOr : RINT(mode);
 	RefVar spacing(GetProto(RSSYMviewlinespacing));
 	fLineSpacing = ISNIL(spacing) ? 0 : RINT(spacing);
-	fTextFlags = (long) GetInputViewTextFlags((ULong) TextFlags(), fFlags);
+	fTextFlags = (long) GetInputViewTextFlags((ULong) TView::TextFlags(), fFlags);
 	fTextBounds = viewBounds;
 	fTextBounds.right = fTextBounds.left;
 	fFirstBaselineOffset = 0;
@@ -238,7 +237,7 @@ TParagraphView::SetupDone(void)
 		((TEditView*) fParent)->AlignToLineSpacing(&bounds, ascent + bounds.top, ascent);
 		WriteBounds(bounds);
 		fTextFlags &= ~0x20;
-		long flags = (long) TextFlags();
+		long flags = (long) TView::TextFlags();
 		if ((ObjectFlags(data) & kObjReadOnly) == 0)
 			SetFrameSlot(data, RSSYMtextflags, RefVar(MAKEINT(flags & ~0x20)));
 	}
@@ -271,7 +270,7 @@ TParagraphView::SetBounds(const Rect& inBounds)
 	short parentRight = (short) ((unsigned short) fParent->viewBounds.right - origin.h);
 	ULong inputFlags = (ULong) fTextFlags;
 	if (fTextFlags == -1)
-		inputFlags = GetInputViewTextFlags((ULong) TextFlags(), fFlags);
+		inputFlags = GetInputViewTextFlags((ULong) TView::TextFlags(), fFlags);
 	if (((ULong) fTextFlags & 0x800) == 0)
 	{
 		if (((inputFlags & 1) != 0 || parentRight < bounds.right) && bounds.left + 10 < parentRight)
@@ -369,12 +368,14 @@ TParagraphView::GetDefaultViewStyle(void)
 
 
 // ROM 0x00169460 GetInterLineSpacing__14TParagraphViewFv
-// The line spacing to lay the lines out with: viewLineSpacing when the
-// view has one - for a single style only when the font fits it (the
-// font's height between eight tenths of the spacing and three more than
-// it), else 0: each line takes the height its fonts need.  NOT YET
-// RECONSTRUCTED: the ROM's check of every run's font against the spacing
-// when the styles are runs (the spacing is used).
+// The line spacing to lay the lines out with: the view's own when it has
+// one (+0x38), else viewLineSpacing when the text's fonts fit it, else 0
+// (each line takes the height its fonts need).  A single style fits when
+// its font's height is between eight tenths of the spacing and three more
+// than it; style runs fit when none of them is more than three taller
+// than the spacing (as their line metrics say - an ink word's are its
+// own) and those no shorter than eight tenths of it cover seven tenths of
+// the text.
 long
 TParagraphView::GetInterLineSpacing(void)
 {
@@ -384,18 +385,40 @@ TParagraphView::GetInterLineSpacing(void)
 	if (ISNIL(spacing))
 		return 0;
 	long lineSpacing = RINT(spacing);
-	if (lineSpacing <= 0)
+	if (lineSpacing < 1)
 		return 0;
+	long least = (lineSpacing * 8) / 10;
 	RefVar styles(GetStyles());
-	if (IsArray(styles))
-		return lineSpacing;
-	StyleRecord record;
-	CreateTextStyleRecord(styles, &record);
-	FontInfo fontInfo;
-	GetStyleFontInfo(&record, &fontInfo);
-	DisposeStyleRecord(&record);
-	long height = fontInfo.ascent + fontInfo.descent;
-	if (height <= lineSpacing + 3 && (lineSpacing * 8) / 10 <= height)
+	if (!IsArray(styles))
+	{
+		StyleRecord record;
+		CreateTextStyleRecord(styles, &record);
+		FontInfo fontInfo;
+		GetStyleFontInfo(&record, &fontInfo);
+		DisposeStyleRecord(&record);
+		long height = fontInfo.ascent + fontInfo.descent;
+		if (height <= lineSpacing + 3 && least <= height)
+			return lineSpacing;
+		return 0;
+	}
+	long runs = Length(styles) / 2;
+	long covered = 0;
+	RefVar deflt(GetDefaultViewStyle());
+	for (long i = 0; i < runs; i++)
+	{
+		RefVar spec(GetArraySlotRef(styles, i * 2 + 1));
+		StyleRecord record;
+		CreateParagraphStyleRecord(spec, &record, (ULong) fTextFlags, deflt);	// (vtable +0x20)
+		long ascent, descent, lineAscent, lineDescent;
+		GetParagraphStyleRecordMetrics(&record, &ascent, &descent, &lineAscent, &lineDescent);
+		DisposeStyleRecord(&record);
+		long height = lineDescent + lineAscent;
+		if (lineSpacing + 3 < height)
+			return 0;
+		if (least <= height)
+			covered += RINT(GetArraySlotRef(styles, i * 2));
+	}
+	if ((TextLength() * 7) / 10 <= covered)
 		return lineSpacing;
 	return 0;
 }
@@ -651,114 +674,66 @@ TParagraphView::FlushWordAtCaret(void)
 
 
 // ROM 0x001786f8 FindLineContainingCharOffset__14TParagraphViewFl
-// The line the offset is on: the first whose end is past it, the last
-// for an offset at or past the text's end; -1 without lines.
+// The line the offset is on: the first that holds it, the last for an
+// offset at or past the text's end; none without lines or for an offset
+// before the text.  (host: the line's index, -1 for none)
 long
 TParagraphView::FindLineContainingCharOffset(long offset)
 {
-	if (fLineCache == nil)
-		CreateAllCaches();
-	if (LineCount() == 0)
+	if (fLineCache == nil || fLineCache[0] == nil || offset < 0)
 		return -1;
-	for (long i = 0; i < LineCount(); i++)
-		if (offset < Line(i).fEnd)
-			return i;
-	return LineCount() - 1;
-}
-
-
-// (host, until the ROM's readers are in) where a line's last text object
-// ends: its TextRef's offset and its fitted length - the line's start for
-// a line of no objects
-static long
-LineTextEnd(TParagraphView* view, const LineInfo& line)
-{
-	if (line.fEndObj <= line.fFirstObj)
-		return line.fStart;
-	TextObjectRef obj = view->fTextObjects[line.fEndObj - 1];
-	TextRef* ref;
-	GetTextObjField(obj, kTextObjText, &ref);
-	return ref->fOffset + TextObj(obj)->fLength;
-}
-
-
-// (host, until the ROM's readers are in) how far along the line the offset
-// is: the left edge of its character in the text object that holds it
-// (CharLeftEdge), from the line's left
-static long
-LineWidthTo(TParagraphView* view, const LineInfo& line, long offset)
-{
-	if (line.fEndObj <= line.fFirstObj)
-		return 0;
-	TextObjectRef obj = 0;
-	long start = 0;
-	for (long i = line.fFirstObj; i < line.fEndObj; i++)
+	long i = 0;
+	while (offset < fLineCache[i]->fStart || fLineCache[i]->fEnd <= offset)
 	{
-		obj = view->fTextObjects[i];
-		TextRef* ref;
-		GetTextObjField(obj, kTextObjText, &ref);
-		start = ref->fOffset;
-		if (offset <= start + TextObj(obj)->fLength)
-			break;
+		if (fLineCache[i + 1] == nil)
+			return i;
+		i++;
 	}
-	long at = offset - start;
-	if (at < 0)
-		at = 0;
-	if (at > TextObj(obj)->fLength)
-		at = TextObj(obj)->fLength;
-	Point edge;
-	CharLeftEdge(obj, at, &edge);
-	return edge.h - line.fBounds.left;
+	return i;
 }
 
 
 // ROM 0x00177f20 OffsetToBounds__14TParagraphViewFlP5TRect
-// The box of the character at the offset (kept inside the text).  With
-// no lines: an empty box at the view's left edge for an empty line
+// The box of the character at the offset (kept inside the text): the
+// line it is on and the text object or tab it is in (OffsetInRunToBounds).
+// With no lines: an empty box at the view's left edge for an empty line
 // (LeftEdgeOfEmptyLine), as tall as the line spacing - or the default
-// style's height - its top that less the style's height below the
-// view's top.  (Host, until the ROM's text object readers are in: with
-// lines, the character's left and right measured in its text object, the
-// line's top and baseline the box's top and bottom.)
+// style's height - its top that less the style's height below the view's
+// top.
 void
 TParagraphView::OffsetToBounds(long offset, Rect* bounds)
 {
 	if (fLineCache == nil)
 		CreateAllCaches();
-	if (fLineCache[0] == nil)
+	if (fLineCache[0] != nil)
 	{
-		bounds->top = viewBounds.top;
-		bounds->left = LeftEdgeOfEmptyLine(viewBounds, (ULong) fViewJustify & 0x3fffffff);
-		bounds->right = bounds->left;
-		RefVar styles(GetStyles());
-		if (IsArray(styles))
-			styles = GetArraySlotRef(styles, 1);
-		StyleRecord style;
-		CreateTextStyleRecord(styles, &style);
-		FontInfo info;
-		GetStyleFontInfo(&style, &info);
-		long height = fLineSpacing;
-		if (height == 0)
-			height = info.descent + info.ascent;
-		bounds->bottom = (short) (bounds->top + height);
-		bounds->top = (short) (height - info.ascent - info.descent + bounds->top);
-		DisposeStyleRecord(&style);
+		long length = TextLength();
+		if (offset < 0)
+			offset = 0;
+		else if (length < offset)
+			offset = length;
+		const LineInfo* line = &Line(FindLineContainingCharOffset(offset));
+		long kind;
+		TextObjectRef* run = FindTextRunContainingCharOffset(line, offset, &kind);
+		OffsetInRunToBounds(offset, line, run != nil ? *run : 0, kind, bounds);
 		return;
 	}
-	long textLength = TextLength();
-	if (offset < 0)
-		offset = 0;
-	else if (offset > textLength)
-		offset = textLength;
-	long index = FindLineContainingCharOffset(offset);
-	const LineInfo& line = Line(index);
-	long width = LineWidthTo(this, line, offset);
-	bounds->left = line.fBounds.left + width;
+	bounds->top = viewBounds.top;
+	bounds->left = LeftEdgeOfEmptyLine(viewBounds, (ULong) fViewJustify & 0x3fffffff);
 	bounds->right = bounds->left;
-	if (offset < LineTextEnd(this, line))
-		bounds->right = line.fBounds.left + LineWidthTo(this, line, offset + 1);
-	bounds->top = line.fBounds.top;
-	bounds->bottom = line.fBounds.bottom - line.fHeight;		// the baseline
+	RefVar styles(GetStyles());
+	if (IsArray(styles))
+		styles = GetArraySlotRef(styles, 1);
+	StyleRecord style;
+	CreateTextStyleRecord(styles, &style);
+	FontInfo info;
+	GetStyleFontInfo(&style, &info);
+	long height = fLineSpacing;
+	if (height == 0)
+		height = info.descent + info.ascent;
+	bounds->bottom = (short) (bounds->top + height);
+	bounds->top = (short) (height - info.ascent - info.descent + bounds->top);
+	DisposeStyleRecord(&style);
 }
 
 
@@ -865,62 +840,132 @@ TParagraphView::OffsetToCaret(long offset, Rect* caret)
 
 
 // ROM 0x00177520 PointToOffset__14TParagraphViewFRC6TPoint10MarginSizeUcP5TRectPP8LineInfoPlPUc
-// The character offset for a point: the line whose box holds the point's
-// v (the last for a point below, the first for one above), and within it
-// the character boundary nearest the point's h (host: the prefixes
-// measured; the ROM walks its text objects).
+// The character offset at a point (see the declaration).
 long
-TParagraphView::PointToOffset(const Point& pt)
+TParagraphView::PointToOffset(const Point& pt, long margin, Boolean onChar, Rect* charBox,
+							  long* outLine, TextObjectRef* outRun, Boolean* outTab)
 {
 	if (fLineCache == nil)
 		CreateAllCaches();
-	if (LineCount() == 0)
-		return 0;
-	long index = LineCount() - 1;
-	for (long i = 0; i < LineCount(); i++)
-		if (pt.v < Line(i).fBounds.bottom)
-		{
-			index = i;
-			break;
-		}
-	const LineInfo& line = Line(index);
-	RefVar textRef(Text());
-	TRichString rich(textRef);
-	const UniChar* text = rich.GrabPtr();
-	long best = line.fStart;
-	long bestDistance = 0x7fffffff;
-	long end = LineTextEnd(this, line);
-	if (end > line.fStart && line.fEndsWithSpace)
-		end--;
-	for (long offset = line.fStart; offset <= end; offset++)
+	Point at = pt;
+	long index = FindLineContainingPoint(&at, margin);
+	if (index < 0)
+		return -1;
+	const LineInfo* line = &Line(index);
+	if (charBox == nil && outLine == nil && outRun == nil && outTab == nil)
 	{
-		long x = line.fBounds.left + LineWidthTo(this, line, offset);
-		long distance = x > pt.h ? x - pt.h : pt.h - x;
-		if (distance < bestDistance)
+		if (!PtInRect(pt, &line->fBounds))
+			return PointInMarginsToOffset(pt, line);
+	}
+	long tab;
+	TextObjectRef* found = FindTextRunContainingCoordinate(line, at.h, &tab);
+	if (found == nil && tab < 0)
+		return -1;
+	TextObjectRef run = found != nil ? *found : 0;
+	long offset;
+	if (tab < 0)
+	{
+		long i = onChar ? CoordToChar(run, at.h) : CoordToInterCharGap(run, at.h);
+		if (charBox != nil)
+			CharBounds(line, run, i, charBox);
+		TextRef* ref;
+		GetTextObjField(run, kTextObjText, &ref);
+		offset = ref->fOffset + i;
+	}
+	else
+	{
+		offset = tab;
+		if (charBox != nil)
 		{
-			bestDistance = distance;
-			best = offset;
+			RefVar tabs(Tabs());
+			TabBounds(line, tab, run, tabs, charBox);
 		}
 	}
-	rich.ReleasePtr();
-	return best;
+	if (outLine != nil)
+		*outLine = index;
+	if (outRun != nil)
+		*outRun = run;
+	if (outTab != nil)
+		*outTab = tab >= 0;
+	return offset;
 }
 
 
 // ROM 0x001716c8 PointToCaret__14TParagraphViewFR6TPointP5TRectT2
-// The caret rect for a tap: OffsetToCaret(0) for an empty text, else the
-// caret at the character nearest the point (PointToOffset; the ROM's
-// PointToWordBoundary, and a point below the paragraph puts the caret
-// on a new line when the view calculates its bounds - NOT YET).
+// The caret for a tap or a pen gesture: nowhere (top and bottom -32768)
+// unless the point finds a place.  An empty text puts it at offset 0.  A
+// point on a line goes to the nearer end of the word under it
+// (PointToWordBoundary, half way) - into a selection's start when the
+// point is in the selection, nowhere when the whole of the view is
+// selected or the point is below a selection that runs to the end of the
+// text; back before the character a line ends at, except at the text's
+// end.  A point (with its box, `bounds`) on the line below the paragraph
+// puts the caret at the start of an empty line below the last when the
+// view has room for one or calculates its bounds (with no selection at
+// the text's end that spans lines).
 void
-TParagraphView::PointToCaret(Point& pt, Rect* caret, Rect* /*bounds*/)
+TParagraphView::PointToCaret(Point& pt, Rect* caret, Rect* bounds)
 {
-	if (TextLength() == 0)
+	long length = TextLength();
+	long spacing = fLineSpacing != 0 ? fLineSpacing : fLineHeight;
+	caret->bottom = -32768;
+	caret->top = -32768;
+	if (length == 0)
 	{
 		OffsetToCaret(0, caret);
 		return;
 	}
-	OffsetToCaret(PointToOffset(pt), caret);
+	long line = -1;
+	TextObjectRef run;
+	Boolean isTab;
+	long offset = PointToWordBoundary(pt, 1, 0x32, &line, &run, &isTab);
+	RefVar hiliteRef(FirstHilite());
+	TParagraphHilite* hilite = ISNIL(hiliteRef) ? nil : (TParagraphHilite*) RefToAddress(hiliteRef);
+	if (offset >= 0)
+	{
+		if (hilite != nil)
+		{
+			if (IsCompletelyHilited(hiliteRef))
+				return;
+			if (hilite->fStart <= offset && offset <= hilite->fEnd)
+			{
+				if (hilite->fEnd == length
+				 && Line(FindLineContainingCharOffset(hilite->fStart)).fBounds.bottom < pt.v)
+					return;
+				offset = hilite->fStart;
+			}
+		}
+		if (Line(line).fEnd == offset && offset != length)
+			offset--;
+		OffsetToCaret(offset, caret);
+		return;
+	}
+	Rect box;
+	if (bounds == nil)
+		SetRect(&box, pt.h, (short) (pt.v - 1), (short) (pt.h + 1), pt.v);
+	else
+		SetRect(&box, pt.h, pt.v, (short) (bounds->right - bounds->left + pt.h),
+				(short) (bounds->bottom - bounds->top + pt.v));
+	if (!WordOnLineBelowParagraph(box, pt))
+		return;
+	Boolean room = fTextBounds.bottom + (spacing >> 1) <= viewBounds.bottom;
+	if (!room)
+	{
+		if ((fFlags & vCalculateBounds) == 0)
+			return;
+		if (hilite != nil && hilite->fEnd == length
+		 && FindLineContainingCharOffset(hilite->fStart) != FindLineContainingCharOffset(hilite->fEnd))
+			return;
+	}
+	if (fLineCache == nil)
+		CreateAllCaches();
+	const LineInfo& last = Line(LineCount() - 1);
+	caret->left = LeftEdgeOfEmptyLine(viewBounds, (ULong) fViewJustify & 0x3fffffff);
+	if (caret->left == viewBounds.right)
+		caret->left = (short) (caret->left - 3);
+	caret->right = (short) (caret->left + 2);
+	caret->top = fTextBounds.bottom;
+	caret->bottom = (short) (last.fBounds.bottom + last.fAscent);
 }
 
 
@@ -1220,58 +1265,69 @@ TParagraphView::UpdateHiliteArea(void)
 }
 
 
-// host: the region covering the characters a hilite selects - the union,
-// over the lines the hilite touches, of the box from the first selected
-// character's left edge to the last's (or the line's right when the
-// selection runs on past it).  ==> whether it is non-empty.
-//
-// The lines are laid out in the port's coordinates, so the region is
-// moved into the view's own at the end, which is where a hilite keeps
-// its area and its bounding box (the ROM's TParagraphView::Area
-// 0x0016a92c ends with the same OffsetRgn).  Everything that looks at a
-// hilite - TView::RemoveHilite's dirty rectangle, GlobalHiliteBounds,
-// TEditView::ScrubHilite - works in those coordinates, so the drawing is
-// the one place that has to move it back.
-Boolean
-TParagraphView::SelectionRegion(long start, long end, RgnHandle rgn)
+// ROM 0x0016a92c Area__14TParagraphViewFlT1
+// The region a range of the text covers (only the part in the lines that
+// are cached), framed out of the boxes of its first and last characters:
+// one rectangle when they are on the same line (kept inside the view's
+// top and bottom); otherwise the first line from its first character to
+// the view's right, the lines between them whole, and the last from the
+// view's left to its last character.  A range starting at the view's
+// right edge is taken two pixels in.  The region is in the view's own
+// coordinates.
+void
+TParagraphView::Area(long start, long end, RgnHandle area)
 {
-	if (fLineCache == nil)
-		CreateAllCaches();
-	SetEmptyRgn(rgn);
-	if (end <= start)
-		return false;
-	for (long i = 0; i < LineCount(); i++)
+	OpenRgn();
+	long cachedStart, cachedLength;
+	GetCachedRange(&cachedStart, &cachedLength);
+	long from, to;
+	if (!RangesIntersect(cachedStart, cachedStart + cachedLength, start, end, &from, &to))
 	{
-		const LineInfo& line = Line(i);
-		long selStart = start > line.fStart ? start : line.fStart;
-		long selEnd = end < LineTextEnd(this, line) ? end : LineTextEnd(this, line);
-		if (selEnd <= selStart)
-			continue;
-		Rect leftBox;
-		OffsetToBounds(selStart, &leftBox);
-		long right;
-		if (end >= line.fEnd)
-			right = line.fBounds.right;
-		else
-		{
-			Rect rightBox;
-			OffsetToBounds(selEnd, &rightBox);
-			right = rightBox.left;
-		}
-		Rect box;
-		box.left = leftBox.left;
-		box.top = line.fBounds.top;
-		box.right = (short) right;
-		box.bottom = line.fBounds.bottom;
-		if (box.right > box.left)
-		{
-			TRegionVar lineRgn;
-			RectRgn(lineRgn, &box);
-			UnionRgn(rgn, lineRgn, rgn);
-		}
+		CloseRgn(area);
+		return;
 	}
-	OffsetRgn(rgn, -viewBounds.left, -viewBounds.top);
-	return !EmptyRgn(rgn);
+	Rect first, last;
+	OffsetToBounds(from, &first);
+	OffsetToBounds(to - 1, &last);
+	const Rect& view = viewBounds;
+	if (view.right == first.left)
+		first.left = (short) (first.left - 2);
+	Rect r;
+	if (first.top == last.top)
+	{
+		r = first;
+		r.right = last.right;
+		if (r.top <= view.top)
+			r.top = view.top;
+		if (r.bottom >= view.bottom)
+			r.bottom = view.bottom;
+	}
+	else
+	{
+		r = first;
+		r.right = view.right;
+		if (r.top <= view.top)
+			r.top = view.top;
+		FrameRect(&r);
+		if (first.bottom < last.top)
+		{
+			r.top = first.bottom;
+			r.left = view.left;
+			r.bottom = last.top;
+			r.right = view.right;
+			FrameRect(&r);
+		}
+		r = last;
+		if (r.top <= first.bottom)
+			r.top = first.bottom;
+		if (r.bottom >= view.bottom)
+			r.bottom = view.bottom;
+		r.left = view.left;
+		r.right = last.right;
+	}
+	FrameRect(&r);
+	CloseRgn(area);
+	OffsetRgn(area, (short) -view.left, (short) -view.top);
 }
 
 
@@ -1302,8 +1358,21 @@ TParagraphView::DrawHilites(Boolean scaled)
 }
 
 
+// ROM 0x0016a8e8 RangesIntersect__FlN31PlT5
+// Whether two ranges meet, and the part they share.
+Boolean
+RangesIntersect(long start1, long end1, long start2, long end2, long* start, long* end)
+{
+	if (end1 < start2 || end2 < start1)
+		return false;
+	*start = start1 <= start2 ? start2 : start1;
+	*end = end1 >= end2 ? end2 : end1;
+	return true;
+}
+
+
 // ROM 0x0016a744 SetupArea__14TParagraphViewFP16TParagraphHilite
-// The region a hilite covers, worked out once and kept in it - the
+// The region a hilite covers (Area), worked out once and kept in it - the
 // characters are laid out in lines, so only the paragraph can say - and
 // the bounding box that goes with it.
 void
@@ -1312,7 +1381,7 @@ TParagraphView::SetupArea(TParagraphHilite* hilite)
 	if (hilite == nil || hilite->HasArea())
 		return;
 	TRegionVar rgn;
-	SelectionRegion(hilite->fStart, hilite->fEnd, rgn);
+	Area(hilite->fStart, hilite->fEnd, rgn);
 	hilite->SetArea(rgn);
 }
 
@@ -1460,7 +1529,7 @@ TParagraphView::FindFirstWordHitByHilite(const Point* points, long count, Point 
 			walk.v = (short) (cur.v + vStep);
 			for (long j = 0; j < steps; j++)
 			{
-				found = PointToWordBoundary(walk, -50, nil);
+				found = PointToWordBoundary(walk, 0, -50, nil, nil, nil);
 				if (found >= 0)
 					break;
 				walk.v = (short) (walk.v + vStep);
@@ -1469,7 +1538,7 @@ TParagraphView::FindFirstWordHitByHilite(const Point* points, long count, Point 
 			if (found >= 0)
 				return found;
 		}
-		found = PointToWordBoundary(next, -50, nil);
+		found = PointToWordBoundary(next, 0, -50, nil, nil, nil);
 		if (found >= 0)
 			return found;
 		p = fromEnd ? p - 1 : p + 1;
@@ -1810,14 +1879,15 @@ ScanPrevWordEnd(const UniChar* text, long offset, long limit)
 
 
 // The word around a point selected (a double tap): the character under
-// the point found (PointToOffset), the word scanned around it, and, when
-// it is not empty, hilited.  ==> whether a word was selected.
+// the point found (PointToOffset, on the character), the word scanned
+// around it, and, when it is not empty, hilited.  ==> whether a word was
+// selected.
 Boolean
 TParagraphView::SelectWordAt(Point pt)
 {
 	if (fFlags & (vReadOnly | vWriteProtected))
 		return false;
-	long offset = PointToOffset(pt);
+	long offset = PointToOffset(pt, 0, true, nil, nil, nil, nil);
 	if (offset < 0)
 		return false;
 	long length = TextLength();
@@ -1840,34 +1910,28 @@ TParagraphView::SelectWordAt(Point pt)
 
 // ROM 0x00177cbc FindWordOffset__14TParagraphViewF6TPointPlP6TPoint
 // The word under a point: where it starts in the text, where its first
-// character sits on the screen, and how long it is.  ==> 0 when there is
-// no word there - past the end of a line, or on a space.
+// character's box is on the screen (its top left), and how long it is.
+// ==> 0 when there is no word there - off the lines, on a tab, or on a
+// space.
 long
 TParagraphView::FindWordOffset(Point pt, long* offset, Point* where)
 {
 	if (fLineCache == nil)
 		CreateAllCaches();
-	long start, end;
-	// (the ROM also refuses a tab, which it knows from the text object
-	//  the point is in; here the whole line is one run)
-	if (!PointToWord(pt, &start, &end, nil))
+	long start, end, line;
+	TextObjectRef run;
+	Boolean isTab;
+	if (!PointToWord(pt, &start, &end, 0, &line, &run, &isTab) || isTab)
 		return 0;
 	RefVar textRef(Text());
-	if (ISNIL(textRef))
+	const UniChar* text = GetCString(textRef);
+	if (text[start] == ' ')
 		return 0;
-	TRichString rich(textRef);
-	const UniChar* text = rich.GrabPtr();
-	UniChar first = text[start];
-	rich.ReleasePtr();
-	if (first == ' ')
-		return 0;
-	// (the ROM asks OffsetInRunToBounds, which is the same box for a
-	//  paragraph whose line is one run)
-	Rect bounds;
-	OffsetToBounds(start, &bounds);
+	Rect box;
+	OffsetInRunToBounds(start, &Line(line), run, isTab, &box);
 	*offset = start;
-	where->h = bounds.left;
-	where->v = bounds.top;
+	where->v = box.top;
+	where->h = box.left;
 	return end - start;
 }
 
@@ -1923,7 +1987,7 @@ TParagraphView::HandleTap(Point& pt)
 	RemoveAllHilites();
 	if (fFlags & (vReadOnly | vWriteProtected))
 		return;
-	long offset = PointToOffset(pt);
+	long offset = PointToOffset(pt, 2, false, nil, nil, nil, nil);
 	if (offset < 0)
 	{
 		if (pt.v < fTextBounds.top)
@@ -1945,9 +2009,8 @@ TParagraphView::HandleTap(Point& pt)
 // at its last (first) line - and nowhere when that paragraph has no lines
 // laid out; with no paragraph there, on the same line.  A one-line field
 // (viewJustify 0x800000) goes to its start or its end.  The caret's place
-// is its character's bounds (the ROM asks the text run - OffsetInRunToBounds
-// - which the host's OffsetToBounds stands in for, the text objects being
-// NOT YET).
+// is its character's bounds in its text run (OffsetInRunToBounds) - or,
+// going to another paragraph, OffsetToBounds'.
 void
 TParagraphView::HandleUpDownKey(Boolean up)
 {
@@ -1960,7 +2023,9 @@ TParagraphView::HandleUpDownKey(Boolean up)
 	if (lineIndex < 0)
 		return;
 	Rect caret;
-	OffsetToBounds(fCaretOffset, &caret);
+	long kind;
+	TextObjectRef* run = FindTextRunContainingCharOffset(&Line(lineIndex), fCaretOffset, &kind);
+	OffsetInRunToBounds(fCaretOffset, &Line(lineIndex), run != nil ? *run : 0, kind, &caret);
 	long target = lineIndex;
 	if (up && lineIndex > 0)
 		target = lineIndex - 1;
@@ -1983,7 +2048,7 @@ TParagraphView::HandleUpDownKey(Boolean up)
 			Point pt;
 			pt.v = line.fBounds.top;
 			pt.h = h;
-			long offset = other->PointToOffset(pt);
+			long offset = other->PointToOffset(pt, 0, false, nil, nil, nil, nil);
 			if (offset != -1)
 				gRootView->SetKeyView(other, offset, 0, false);
 			return;
@@ -1996,7 +2061,7 @@ TParagraphView::HandleUpDownKey(Boolean up)
 	Point pt;
 	pt.v = line.fBounds.top;
 	pt.h = h;
-	long offset = PointToOffset(pt);
+	long offset = PointToOffset(pt, 0, false, nil, nil, nil, nil);
 	if (offset != -1)
 		gRootView->SetKeyView(this, offset, 0, false);
 }
@@ -2292,104 +2357,128 @@ FindNearestWordBoundary(const Point& pt, long left, long right, long bias)
 
 
 // ROM 0x001776f0 PointToWord__14TParagraphViewFRC6TPointPlT210MarginSizePP8LineInfoT2PUc
-// The word the point is in: the line it is on by its v alone (the ROM's
-// MarginSize 1 widens each line's box by a thousand pixels either way, so
-// only the v counts), the character nearest its h, and the word breaks
-// round that character.
-//
-// (host: the ROM finds the text object under the point and asks
-// FindWordBreaks over that object's own text, which is also how it knows
-// the run and whether the character is a tab.  Here the whole line is one
-// run and the breaks are scanned over the paragraph's text.)
+// The word under a point: the line (FindLineContainingPoint, with the
+// margin given), the text object or tab under the point's h, and the word
+// breaks (the locale's word-break table) round the character under it -
+// over the object's own characters to the end of the text; a tab is a
+// word of one.  ==> false for no line or nothing on it there.
 Boolean
-TParagraphView::PointToWord(const Point& pt, long* start, long* end, long* outLine)
+TParagraphView::PointToWord(const Point& pt, long* start, long* end, long margin,
+							long* outLine, TextObjectRef* outRun, Boolean* outTab)
 {
-	if (fLineCache == nil)
-		CreateAllCaches();
-	if (LineCount() == 0)
+	Point at = pt;
+	long index = FindLineContainingPoint(&at, margin);
+	if (index < 0)
 		return false;
-	long index = LineCount() - 1;
-	for (long i = 0; i < LineCount(); i++)
-		if (pt.v < Line(i).fBounds.bottom)
-		{
-			index = i;
-			break;
-		}
-	long offset = PointToOffset(pt);
-	long length = TextLength();
-	if (offset >= length)
-		offset = length - 1;
-	if (offset < 0)
+	long tab;
+	TextObjectRef* found = FindTextRunContainingCoordinate(&Line(index), at.h, &tab);
+	if (found == nil && tab < 0)
 		return false;
-	RefVar textRef(Text());
-	if (ISNIL(textRef))
-		return false;
-	TRichString rich(textRef);
-	const UniChar* text = rich.GrabPtr();
-	long from = ScanWordStart(text, offset, 0);
-	long to = ScanWordEnd(text, offset, length);
-	rich.ReleasePtr();
+	long from, to;
+	if (tab < 0)
+	{
+		TextRef* ref;
+		GetTextObjField(*found, kTextObjText, &ref);
+		long base = ref->fOffset;
+		RefVar textRef(ref->fView->Text());
+		LockRef(textRef);
+		const UniChar* chars = GetCString(textRef) + base;
+		ULong i = (ULong) CoordToChar(*found, at.h);
+		ULong wordStart, wordEnd;
+		FindWordBreaks(chars, (ULong) Ustrlen(chars), i, true, fWordBreakTable, &wordStart, &wordEnd);
+		from = (long) wordStart + base;
+		to = (long) wordEnd + base;
+		UnlockRef(textRef);
+	}
+	else
+	{
+		from = tab;
+		to = tab + 1;
+	}
 	*start = from;
 	*end = to;
 	if (outLine != nil)
 		*outLine = index;
+	if (outRun != nil)
+		*outRun = found != nil ? *found : 0;
+	if (outTab != nil)
+		*outTab = tab >= 0;
 	return true;
 }
 
 
 // ROM 0x00177dcc PointToWordBoundary__14TParagraphViewF6TPoint10MarginSizelPP8LineInfoPlPUc
-// The end of the word at the point that the point is nearest, biased.
-// ==> the character offset of that end, or -1 when there is no word
-// there at all.
+// The end of the word under a point that the point is nearer to, as the
+// bias weighs it (FindNearestWordBoundary over the word's two edges,
+// measured in its text object or as the tab's box).  ==> -1 for no word.
 long
-TParagraphView::PointToWordBoundary(const Point& pt, long bias, long* outLine)
+TParagraphView::PointToWordBoundary(Point pt, long margin, long bias, long* outLine,
+									TextObjectRef* outRun, Boolean* outTab)
 {
 	long start, end;
-	if (!PointToWord(pt, &start, &end, outLine))
+	long line;
+	TextObjectRef run;
+	Boolean isTab;
+	if (!PointToWord(pt, &start, &end, margin, &line, &run, &isTab))
 		return -1;
-	Rect box;
-	OffsetToBounds(start, &box);
-	long left = box.left;
-	OffsetToBounds(end, &box);
-	long right = box.left;
+	long left, right;
+	if (!isTab)
+	{
+		TextRef* ref;
+		GetTextObjField(run, kTextObjText, &ref);
+		long base = ref->fOffset;
+		Point edge;
+		CharLeftEdge(run, start - base, &edge);
+		left = edge.h;
+		CharLeftEdge(run, end - base, &edge);
+		right = edge.h;
+	}
+	else
+	{
+		RefVar tabs(Tabs());
+		Rect box;
+		TabBounds(&Line(line), start, run, tabs, &box);
+		left = box.left;
+		right = box.right;
+	}
+	if (outLine != nil)
+		*outLine = line;
+	if (outRun != nil)
+		*outRun = run;
+	if (outTab != nil)
+		*outTab = isTab;
 	return FindNearestWordBoundary(pt, left, right, bias) == left ? start : end;
 }
 
 
 // ROM 0x00174808 ScrubCharacter__14TParagraphViewFP8LineInfolRC5TRectPl
-// The single character of the line that the scrub is over, when there is
-// one: the scrub and the character must contain one another
-// horizontally, one way or the other.  ==> whether one was found, and
-// its offset.
-//
-// (host: the ROM asks ReplaceCharacter, which walks the line's text
-// objects with an empty replacement string just to find the character
-// the rectangle picks out - the same containment test, over CharBounds.
-// The text objects are NOT YET, so the line's characters are measured
-// here instead.)
+// The single character of a text object a scrub is over, when there is
+// one: asked of ReplaceCharacter with an empty word written in the scrub's
+// box, its base the box's bottom left, and no unit - so the replacement
+// is never made, only the character it would replace found.  ==> whether
+// one was found (a replacement of one character), and its offset.
 Boolean
-TParagraphView::ScrubCharacter(long line, const Rect& bounds, long* outOffset)
+TParagraphView::ScrubCharacter(const LineInfo* line, TextObjectRef run, const Rect& bounds, long* outOffset)
 {
-	if (line < 0 || line >= LineCount())
-		return false;
-	const LineInfo& info = Line(line);
-	for (long offset = info.fStart; offset < LineTextEnd(this, info); offset++)
-	{
-		Rect box, next;
-		OffsetToBounds(offset, &box);
-		OffsetToBounds(offset + 1, &next);
-		long left = box.left;
-		long right = next.left;
-		if (right <= left)
-			continue;
-		if ((bounds.left <= left && right <= bounds.right)
-			|| (left <= bounds.left && bounds.right <= right))
-		{
-			*outOffset = offset;
-			return true;
-		}
-	}
-	return false;
+	static const UniChar kNoWord[1] = { 0 };
+	Finder finder;
+	finder.fBox = bounds;
+	finder.fBase.v = bounds.bottom;
+	finder.fBase.h = bounds.left;
+	finder.fText = kNoWord;
+	finder.fLength = 0;
+	finder.fView = nil;
+	finder.fOffset = 0;
+	finder.fReplaceLength = 0;
+	finder.fExact = true;
+	finder.fNewLine = false;
+	finder.fReallyDoIt = true;
+	finder.fTab = 0;
+	finder.fUnit = nil;
+	ReplaceCharacter(line, run, &finder);
+	if (finder.fReplaceLength == 1)
+		*outOffset = finder.fOffset;
+	return finder.fReplaceLength == 1;
 }
 
 
@@ -2432,24 +2521,18 @@ SpaceWidthAt(TParagraphView* view, long offset)
 // the gap between the last two lines, or a third again the ascent when
 // there is only one).
 //
-// (the ROM writes a line's baseline as its box's bottom less the field at
-// +0x18 of its LineInfo, which is the descent below the baseline; this
-// cache keeps the ascent instead, so the baseline is the box's top plus
-// that.)
 long
 TParagraphView::FindClosestBaseline(short v)
 {
-	if (fLineCache == nil)
-		CreateAllCaches();
 	if (LineCount() == 0)
 		return -1;
 	const LineInfo& last = Line(LineCount() - 1);
-	long lastBaseline = last.fBounds.top + last.fAscent;
+	long lastBaseline = last.fBounds.bottom - last.fHeight;
 	long spacing;
 	if (LineCount() < 2)
 		spacing = (last.fAscent * 4) / 3;
 	else
-		spacing = lastBaseline - (Line(LineCount() - 2).fBounds.top + Line(LineCount() - 2).fAscent);
+		spacing = lastBaseline - (Line(LineCount() - 2).fBounds.bottom - Line(LineCount() - 2).fHeight);
 	long belowLast = v - (lastBaseline + spacing);
 	if (belowLast < 0)
 		belowLast = -belowLast;
@@ -2462,7 +2545,7 @@ TParagraphView::FindClosestBaseline(short v)
 	long nearest = 10000;
 	for (long i = 0; i < LineCount(); i++)
 	{
-		long distance = v - (Line(i).fBounds.top + Line(i).fAscent);
+		long distance = v - (Line(i).fBounds.bottom - Line(i).fHeight);
 		if (distance < 0)
 			distance = -distance;
 		if (distance < nearest)
@@ -2489,7 +2572,7 @@ TParagraphView::FindLineForWord(const Rect& box, long flags)
 		long middle = FindClosestBaseline((short) ((box.top + box.bottom) >> 1));
 		if (middle >= 0)
 		{
-			long baseline = Line(middle).fBounds.top + Line(middle).fAscent;
+			long baseline = Line(middle).fBounds.bottom - Line(middle).fHeight;
 			if (baseline > box.top && baseline < box.bottom)
 				return middle;		// it straddles the box: that is the line
 		}
@@ -2503,7 +2586,7 @@ TParagraphView::FindLineForWord(const Rect& box, long flags)
 		atTop = FindClosestBaseline(box.top);
 		if (atTop >= 0)
 		{
-			fromTop = (Line(atTop).fBounds.top + Line(atTop).fAscent) - box.top;
+			fromTop = (Line(atTop).fBounds.bottom - Line(atTop).fHeight) - box.top;
 			if (fromTop < 0)
 				fromTop = -fromTop;
 		}
@@ -2513,7 +2596,7 @@ TParagraphView::FindLineForWord(const Rect& box, long flags)
 		atBottom = FindClosestBaseline(box.bottom);
 		if (atBottom >= 0)
 		{
-			fromBottom = (Line(atBottom).fBounds.top + Line(atBottom).fAscent) - box.bottom;
+			fromBottom = (Line(atBottom).fBounds.bottom - Line(atBottom).fHeight) - box.bottom;
 			if (fromBottom < 0)
 				fromBottom = -fromBottom;
 		}
@@ -2545,7 +2628,7 @@ TParagraphView::InsertHorizontalSpace(Point& pt, long width, long height, Boolea
 	if (line < 0)
 		return 0;
 	long lineHeight = Line(line).fAscent + Line(line).fHeight;
-	long offset = PointToOffset(pt);
+	long offset = PointToOffset(pt, 0, false, nil, nil, nil, nil);
 	long spaces = width == -1 ? 1 : 0;
 	long breaks = 0;
 	Boolean stepOverWhite = false;
@@ -2732,7 +2815,7 @@ TParagraphView::InsertVerticalSpace(Point& pt, long height)
 		long lineHeight = line.fBounds.bottom - line.fBounds.top;
 		if (line.fBounds.top + lineHeight / 2 <= pt.v)
 		{
-			previous = line.fBounds.top + line.fAscent;
+			previous = line.fBounds.bottom - line.fHeight;
 			continue;
 		}
 		if (previous - pt.v > lineHeight / 4)
@@ -3048,39 +3131,6 @@ DoReplaceSym(TParagraphView* para, WordHit* hit, UniChar* out, RefArg breakTable
 }
 
 
-// (host: the ROM asks a text object which character an x falls on
-// (CoordToChar) and which character *gap* it is nearest
-// (CoordToInterCharGap 0x0017d614, over PointToChar).  The text objects
-// are NOT YET, so the line's own characters are measured instead; the
-// answers are relative to the line's first character, as the ROM's are
-// to the run's.)
-static long
-CharAtCoord(TParagraphView* para, const LineInfo* line, long x)
-{
-	long end = LineTextEnd(para, *line);
-	for (long i = line->fStart; i < end; i++)
-	{
-		Rect box;
-		para->OffsetToBounds(i, &box);
-		if (x < box.right)
-			return i - line->fStart;
-	}
-	return end - line->fStart;
-}
-
-
-static long
-GapAtCoord(TParagraphView* para, const LineInfo* line, long x)
-{
-	long at = CharAtCoord(para, line, x) + line->fStart;
-	Rect box;
-	para->OffsetToBounds(at, &box);
-	if (x > (box.left + box.right) / 2)
-		at++;
-	return at - line->fStart;
-}
-
-
 // ROM 0x0017bc84 WordOverSpaces__FPUsClT2
 // Whether the writing between two characters is over a run of spaces
 // rather than over anything to correct: at least as many spaces as the
@@ -3120,102 +3170,110 @@ WordOverSpaces(const UniChar* text, const long from, const long to)
 // the strongest claim a paragraph can make on a piece of writing: it
 // answers 6, and `TEditView::HandleWord` stops asking anybody else.
 //
-// The writing has to fall on the line horizontally, and either (with a
-// unit) cover no more than three characters and not be over a run of
-// spaces, or (without one - the edit view's probe for what text a point
-// is in) be no more than two character gaps wide.  The character it
-// lands on is the one under the middle of its box, stepped back over any
-// tabs and returns, and back one more when it is the character the line
-// ends at.
+// The writing (its box cut to the text object's top and bottom) has to
+// fall on the object horizontally, and either (with a unit) cover no more
+// than three characters and not be over a run of spaces, or (without one
+// - ScrubCharacter's probe) be no more than two character gaps wide.  The
+// character it lands on is the one under the middle of its box, stepped
+// back over any tabs and returns, and back one more when it is the
+// character the line ends at.
 //
 // Whether that character is *replaced* or the writing goes before or
 // after it is then worked out from the two boxes: writing that covers
-// the character replaces it, writing clear of it on one side goes on
-// that side, and writing that overlaps it is decided by which half of
-// the character its middle is in.  A space is treated more carefully -
-// writing over the last space of a line, with another space before it,
-// is not a correction at all.
+// the character (or that the character covers) replaces it, writing
+// clear of it on one side goes on that side, and writing that overlaps
+// it is decided by which half of the character its middle is in.  A space
+// is treated more carefully - writing over the last space of a line, with
+// another space or nothing before it, is not a correction at all.
 //
 // `DoReplaceSym` does the rest.  What comes back is a character, which
 // may not be the one the recogniser first read: when it differs, the
 // finder's word is pointed at `gAlternateWord` so that the caller puts
 // *that* character in.
-//
-// (host: the ROM asks the line's text objects for the boxes and for the
-// character at a coordinate - GetTextObjBounds, GetTextObjField,
-// CoordToChar, CoordToInterCharGap, CharBounds.  The text objects are
-// NOT YET, so the line's own bounds and OffsetToBounds/PointToOffset
-// answer instead, as they do for the rest of FindWordInRun.)
 Boolean
-TParagraphView::ReplaceCharacter(const LineInfo* line, const long run, Finder* finder)
+TParagraphView::ReplaceCharacter(const LineInfo* line, const TextObjectRef run, Finder* finder)
 {
-	(void) run;
-	Rect lineBox = line->fBounds;
+	Rect runBox;
+	GetTextObjBounds(run, &runBox);
 	RefVar textRef(Text());
+	LockRef(textRef);
 	const UniChar* text = GetCString(textRef);
-	long runStart = line->fStart;
+	TextRef* ref;
+	GetTextObjField(run, kTextObjText, &ref);
+	long runStart = ref->fOffset;
+	const UniChar* chars = text + runStart;
 
-	// the writing's box, clipped to the line
+	// the writing's box, cut to the run's
 	Rect box = finder->fBox;
-	if (box.top < lineBox.top)
-		box.top = lineBox.top;
-	if (box.bottom > lineBox.bottom)
-		box.bottom = lineBox.bottom;
+	if (box.top < runBox.top)
+		box.top = runBox.top;
+	if (box.bottom > runBox.bottom)
+		box.bottom = runBox.bottom;
 	Point mid = MidPoint(box);
-	if (box.right + 3 <= lineBox.left || lineBox.right + 3 < box.left)
-		return false;
-
-	if (finder->fUnit != nil)
+	Boolean found = false;
+	if (box.right + 3 > runBox.left && runBox.right + 3 >= box.left)
 	{
-		// no more than three characters, and not over a run of spaces
-		long right = CharAtCoord(this, line, box.right);
-		long left = CharAtCoord(this, line, box.left);
-		if (right - left > 3)
-			return false;
-		if (WordOverSpaces(text + runStart, left, right))
-			return false;
+		if (finder->fUnit != nil)
+		{
+			// no more than three characters, and not over a run of spaces
+			long right = CoordToChar(run, box.right);
+			long left = CoordToChar(run, box.left);
+			found = right - left <= 3 && !WordOverSpaces(chars, left, right);
+		}
+		else
+			found = CoordToInterCharGap(run, box.right) - CoordToInterCharGap(run, box.left) <= 2;
 	}
-	else if (GapAtCoord(this, line, box.right) - GapAtCoord(this, line, box.left) > 2)
+	if (!found)
+	{
+		UnlockRef(textRef);
 		return false;
+	}
 
 	// the character under the middle of the writing, past the tabs and
 	// returns, and not the one the line ends at
-	long at = CharAtCoord(this, line, mid.h) + runStart;
-	while (text[at] == U_CONST_CHAR('\t') || text[at] == 0x0d)
+	long at = CoordToChar(run, mid.h) + runStart;
+	while (text[at] == 0x09 || text[at] == 0x0d)
 		at--;
 	if (line->fEnd == at)
 		at--;
 
-	long replaced = 1;
-	if (finder->fUnit != nil)
+	long replaced;
+	if (finder->fUnit == nil)
+		replaced = 1;
+	else
 	{
 		Rect charBox;
-		OffsetToBounds(at, &charBox);
+		CharBounds(line, run, at - runStart, &charBox);
 		UniChar c = text[at];
 		if (c == U_CONST_CHAR(' ') || c == 0xca)
 		{
 			if (line->fEnd - 1 == at)
 			{
 				// the last space of the line: writing over it is only a
-				// correction when there is something before it
+				// correction when there is a word before it
 				if (at - 1 < line->fStart || text[at - 1] == U_CONST_CHAR(' '))
+				{
+					UnlockRef(textRef);
 					return false;
+				}
 				replaced = 0;
 			}
-			else if ((box.left > charBox.left && box.right >= charBox.right)
-					 || (box.left < charBox.left && box.right <= charBox.right))
+			else if ((box.left <= charBox.left && charBox.right <= box.right)
+					 || (charBox.left <= box.left && box.right <= charBox.right))
 				replaced = 1;		// the writing and the space cover one another
-			else if (mid.h <= (charBox.left + charBox.right) / 2)
-				replaced = 0;		// before it
-			else
+			else if ((charBox.left + charBox.right) / 2 < mid.h)
 			{
 				at++;				// after it
 				replaced = 0;
 			}
+			else
+				replaced = 0;		// before it
 		}
 		else if (at == runStart && mid.h < charBox.left)
-			replaced = 0;			// before the line's first character
-		else if (mid.h > charBox.right)
+			replaced = 0;			// before the run's first character
+		else if (mid.h <= charBox.right)
+			replaced = 1;
+		else
 		{
 			at++;
 			replaced = 0;			// past the character
@@ -3223,11 +3281,11 @@ TParagraphView::ReplaceCharacter(const LineInfo* line, const long run, Finder* f
 	}
 
 	WordHit hit;
-	hit.fText = text + runStart;
+	hit.fText = chars;
 	hit.fIndexInRun = at - runStart;
 	hit.fIndex = at;
 	hit.fReplaceLength = replaced;
-	hit.fBaseline = lineBox.bottom;
+	hit.fBaseline = runBox.bottom;
 	hit.fUnused14 = 0;
 	hit.fUnit = finder->fUnit;
 	hit.fWord = finder->fText;
@@ -3237,27 +3295,28 @@ TParagraphView::ReplaceCharacter(const LineInfo* line, const long run, Finder* f
 	UniChar chosen[2];
 	chosen[0] = finder->fText[0];
 	chosen[1] = 0;
-	if (!DoReplaceSym(this, &hit, chosen, RefVar(fWordBreakTable)))
-		return false;
-
-	if (finder->fText[0] != chosen[0])
+	if (DoReplaceSym(this, &hit, chosen, RefVar(fWordBreakTable)))
 	{
-		// the recogniser's second thoughts go in instead
-		gAlternateWord[0] = chosen[0];
-		gAlternateWord[1] = 0;
-		finder->fText = gAlternateWord;
-		finder->fLength = 1;
+		if (finder->fText[0] != chosen[0])
+		{
+			// the recogniser's second thoughts go in instead
+			gAlternateWord[0] = chosen[0];
+			gAlternateWord[1] = 0;
+			finder->fText = gAlternateWord;
+			finder->fLength = 1;
+		}
+		finder->fView = this;
+		finder->fExact = true;
+		finder->fOffset = at;
+		finder->fReplaceLength = replaced;
+		if (replaced == 1)
+			gAddWordInfo = false;		// the word it belongs to is what went in
+		if (finder->fOffset == line->fStart && finder->fOffset != 0
+			&& text[finder->fOffset - 1] == 0x0d)
+			finder->fNewLine = true;
 	}
-	finder->fView = this;
-	finder->fExact = true;
-	finder->fOffset = at;
-	finder->fReplaceLength = hit.fReplaceLength;
-	if (hit.fReplaceLength == 1)
-		gAddWordInfo = false;		// the word it belongs to is what went in
-	if (finder->fOffset == line->fStart && finder->fOffset != 0
-		&& text[finder->fOffset - 1] == 0x0d)
-		finder->fNewLine = true;
-	return true;
+	UnlockRef(textRef);
+	return finder->fView != nil;
 }
 
 
@@ -3354,108 +3413,122 @@ TParagraphView::PreviousLineNeedsCR(UniChar* /*text*/, UniChar* /*word*/)
 // ROM 0x00173668 FindWordInRun__14TParagraphViewFP6Finder
 // Where a word written *over* the paragraph's own text belongs.  The line
 // it was written on is the one nearest its box (`FindLineForWord` with
-// the middle, the top and the bottom all tried), and then where on that
-// line it falls decides:
+// the middle and the bottom tried), and then where on that line it falls
+// decides:
 //
+//   over a character      written with a unit over a character of a text
+//                         object of the line: it may replace it
+//                         (ReplaceCharacter), the strongest claim
 //   left of the line      at the line's start
 //   past the end of it    at the line's end
-//   over the text         over a run of spaces, it replaces them; over a
-//                         word, it goes before or after that word,
-//                         whichever edge it was written nearer
+//   over the text         over a run of spaces, it replaces them from the
+//                         character under its left edge to the one under
+//                         its right; over a word or a tab, it goes before
+//                         or after it, whichever edge it was written nearer
 //
 // ==> whether the word belongs to a line at all.
-//
-// (host: the ROM walks the line's text objects - GetTextObjField,
-// CharLeftEdge, CoordToChar - and asks TabBounds for a tab's box.  The
-// text objects are NOT YET, so the line's characters are measured
-// through OffsetToBounds and PointToOffset instead, and a tab is a
-// character like any other.)
 Boolean
 TParagraphView::FindWordInRun(Finder* finder)
 {
-	long wordLeft = finder->fBox.left;
+	short wordLeft = finder->fBox.left;
 	long index = FindLineForWord(finder->fBox, 5);
 	if (index < 0)
 		return false;
-	const LineInfo& line = Line(index);
+	const LineInfo* line = &Line(index);
 	Point pt;
-	pt.h = (short) wordLeft;
-	pt.v = (short) ((line.fBounds.top + line.fBounds.bottom) / 2);
+	pt.h = wordLeft;
+	pt.v = (short) ((line->fBounds.top + line->fBounds.bottom) / 2);
 	RefVar textRef(Text());
+	LockRef(textRef);
 	const UniChar* text = GetCString(textRef);
-
-	// a character written over a character of the text replaces it,
-	// which is the strongest claim this paragraph can make
-	if (finder->fUnit != nil && ReplaceCharacter(&line, index, finder))
-		return true;
-
-	if (wordLeft < line.fBounds.left)
+	Boolean done = false;
+	if (finder->fUnit != nil)
 	{
-		// written out in the left margin: the word goes at the line's
-		// start, and does not need a new line when the line already
-		// begins one
-		finder->fView = this;
-		finder->fOffset = line.fStart;
-		finder->fReplaceLength = 0;
-		if (line.fStart != 0 && text[line.fStart - 1] == 0x0d)
-			finder->fNewLine = true;
+		TextObjectRef run;
+		Boolean isTab;
+		long offset = PointToOffset(pt, 3, true, nil, nil, &run, &isTab);
+		if (offset >= 0 && !isTab && line->fStart <= offset && offset < line->fEnd
+		 && ReplaceCharacter(line, run, finder))
+			done = true;
 	}
-	else if (wordLeft < line.fBounds.right)
+	if (!done)
 	{
-		// written over the line's own text
-		long start = 0;
-		long end = 0;
-		long onLine = 0;
-		PointToWord(pt, &start, &end, &onLine);
-		Rect box;
-		OffsetToBounds(start, &box);
-		long leftEdge = box.left;
-		OffsetToBounds(end, &box);
-		long rightEdge = box.left;
-
-		if (text[start] == U_CONST_CHAR(' ')
-			&& (rightEdge >= finder->fBox.right || end == line.fEnd))
+		if (wordLeft < line->fBounds.left)
 		{
-			// written over a run of spaces: it takes their place, from
-			// the character its left edge is over to the character its
-			// right edge is over (or to the end of the line)
-			long at = PointToOffset(pt);
-			long to = end;
-			if (end != line.fEnd)
-			{
-				Point right;
-				right.v = pt.v;
-				right.h = finder->fBox.right;
-				to = PointToOffset(right) + 1;
-			}
+			// written out in the left margin: the word goes at the line's
+			// start, and does not need a new line when the line already
+			// begins one
 			finder->fView = this;
-			finder->fOffset = at;
-			finder->fReplaceLength = to - at;
-			return true;
-		}
-
-		// before or after the word it was written over, whichever edge
-		// it was written nearer
-		if (wordLeft - leftEdge < rightEdge - wordLeft)
-		{
-			finder->fOffset = start;
-			if (start != 0 && text[start - 1] == 0x0d)
+			finder->fOffset = line->fStart;
+			finder->fReplaceLength = 0;
+			if (line->fStart != 0 && text[line->fStart - 1] == 0x0d)
 				finder->fNewLine = true;
 		}
+		else if (wordLeft < line->fBounds.right)
+		{
+			// written over the line's own text
+			long start = 0, end = 0;
+			TextObjectRef run = 0;
+			Boolean isTab = false;
+			PointToWord(pt, &start, &end, 0, nil, &run, &isTab);
+			long leftEdge, rightEdge;
+			if (!isTab)
+			{
+				TextRef* ref;
+				GetTextObjField(run, kTextObjText, &ref);
+				long base = ref->fOffset;
+				Point edge;
+				CharLeftEdge(run, start - base, &edge);
+				leftEdge = edge.h;
+				CharLeftEdge(run, end - base, &edge);
+				rightEdge = edge.h;
+				Boolean toLineEnd = line->fEnd == end;
+				if (text[start] == U_CONST_CHAR(' ') && (finder->fBox.right <= rightEdge || toLineEnd))
+				{
+					// written over a run of spaces: it takes their place
+					long at = CoordToChar(run, wordLeft);
+					long to = end;
+					if (!toLineEnd)
+						to = CoordToChar(run, finder->fBox.right) + base + 1;
+					finder->fView = this;
+					finder->fOffset = at + base;
+					finder->fReplaceLength = to - (at + base);
+					UnlockRef(textRef);
+					return true;
+				}
+			}
+			else
+			{
+				RefVar tabs(Tabs());
+				Rect box;
+				TabBounds(line, start, run, tabs, &box);
+				leftEdge = box.left;
+				rightEdge = box.right;
+			}
+			// before or after the word it was written over, whichever
+			// edge it was written nearer
+			if (wordLeft - leftEdge < rightEdge - wordLeft)
+			{
+				finder->fOffset = start;
+				if (start != 0 && text[start - 1] == 0x0d)
+					finder->fNewLine = true;
+			}
+			else
+				finder->fOffset = end;
+			finder->fView = this;
+			finder->fReplaceLength = 0;
+		}
 		else
-			finder->fOffset = end;
-		finder->fView = this;
-		finder->fReplaceLength = 0;
+		{
+			// written past the end of the line
+			if (line->fStart - 1 < 0 || text[line->fStart - 1] == 0x0d)
+				finder->fTab = FindTab(finder, line->fBounds.right);
+			finder->fView = this;
+			finder->fOffset = line->fEnd;
+			finder->fReplaceLength = 0;
+		}
 	}
-	else
-	{
-		// written past the end of the line
-		if (line.fStart - 1 < 0 || text[line.fStart - 1] == 0x0d)
-			finder->fTab = FindTab(finder, line.fBounds.right);
-		finder->fView = this;
-		finder->fOffset = line.fEnd;
-		finder->fReplaceLength = 0;
-	}
+	UnlockRef(textRef);
 	return true;
 }
 
@@ -3699,7 +3772,7 @@ IsMidWordLetterInsertion(TParagraphView* para, TUnitPublic* unit)
 //   3  the last word to go in went into this view
 //   4  it is over the paragraph's last line
 //   5  the paragraph covers half the word's box or more
-//   6  it replaces a character of the text exactly (NOT YET)
+//   6  it replaces a character of the text exactly
 //
 // A score below four only says how well the word fits; four and above
 // are taken as certain, which is why they go on to place the word even
@@ -4708,7 +4781,7 @@ TParagraphView::CheckAndDoJoin(Point& armA, Point& point, Point& armB)
 		return 0;
 	const LineInfo& line = Line(index);
 	long half = line.fAscent / 2;
-	long baseline = line.fBounds.top + line.fAscent;
+	long baseline = line.fBounds.bottom - line.fHeight;
 	long fromLeft = baseline - left.v;
 	long fromRight = baseline - right.v;
 	// both arms within half an ascent of the baseline, below it and above
@@ -4719,8 +4792,8 @@ TParagraphView::CheckAndDoJoin(Point& armA, Point& point, Point& armB)
 
 	left.v = (short) baseline;
 	right.v = (short) baseline;
-	long start = PointToOffset(left);
-	long end = PointToOffset(right);
+	long start = PointToOffset(left, 0, true, nil, nil, nil, nil);
+	long end = PointToOffset(right, 0, true, nil, nil, nil, nil);
 
 	RefVar textRef(Text());
 	TRichString rich(textRef);
@@ -5056,7 +5129,7 @@ TParagraphView::HandleCaret(ULong kind, long angle, Point& armA, Point& point,
 	if (line < 0)
 		return 0;
 	Point where;
-	where.v = (short) (Line(line).fBounds.top + Line(line).fAscent);
+	where.v = (short) (Line(line).fBounds.bottom - Line(line).fHeight);
 	where.h = point.h;
 	return InsertHorizontalSpace(where, width, height, typed);
 }
@@ -5095,11 +5168,9 @@ TParagraphView::ScrubWords(const Rect& bounds, TUnitPublic* unit, Boolean really
 	{
 		const Rect& box = Line(i).fBounds;
 		// the line from its top down to its baseline, which is where the
-		// glyphs are (the ROM writes it as the box's bottom less the field at
-		// +0x18 of the LineInfo, its descent; this cache keeps the ascent, so
-		// the baseline is the top plus that)
+		// glyphs are
 		Rect lineRows;
-		SetRect(&lineRows, 0, box.top, 1, (short) (box.top + Line(i).fAscent));
+		SetRect(&lineRows, 0, box.top, 1, (short) (box.bottom - Line(i).fHeight));
 		if (Overlaps(&box, &bounds)
 			&& (CoveredBy(&lineRows, &scrubRows) >= 50 || CoveredBy(&scrubRows, &lineRows) == 100))
 		{
@@ -5116,13 +5187,14 @@ TParagraphView::ScrubWords(const Rect& bounds, TUnitPublic* unit, Boolean really
 	Point at;
 	at.v = (short) (lineBox.top + (lineBox.bottom - lineBox.top) / 2);
 	at.h = bounds.left;
-	long lineA = -1;
-	long start = PointToWordBoundary(at, -50, &lineA);
+	long lineA = -1, lineB = -1;
+	TextObjectRef runA = 0, runB = 0;
+	Boolean tabA = false, tabB = false;
+	long start = PointToWordBoundary(at, 1, -50, &lineA, &runA, &tabA);
 	if (start < 0)
 		return 0;
 	at.h = bounds.right;
-	long lineB = -1;
-	long end = PointToWordBoundary(at, 50, &lineB);
+	long end = PointToWordBoundary(at, 1, 50, &lineB, &runB, &tabB);
 	if (end < 0)
 		return 0;
 
@@ -5132,13 +5204,13 @@ TParagraphView::ScrubWords(const Rect& bounds, TUnitPublic* unit, Boolean really
 	long character = 0;
 	if (end - start > 1)
 	{
-		if (lineA != lineB)
-			scrubbed = true;		// the two ends are not even on the same line
+		if (lineA != lineB || runA != runB)
+			scrubbed = true;		// the two ends are not even in the same text object
 		else
 		{
 			Rect from, to;
-			OffsetToBounds(start, &from);
-			OffsetToBounds(end, &to);
+			OffsetInRunToBounds(start, &Line(lineA), runA, tabA, &from);
+			OffsetInRunToBounds(end, &Line(lineB), runB, tabB, &to);
 			long span = to.left - from.left;
 			if (span != 0 && (width * 100) / span > 50)
 				scrubbed = true;
@@ -5146,8 +5218,8 @@ TParagraphView::ScrubWords(const Rect& bounds, TUnitPublic* unit, Boolean really
 	}
 	if (!scrubbed)
 	{
-		if (ScrubCharacter(lineA, bounds, &character)
-			|| (lineA != lineB && ScrubCharacter(lineB, bounds, &character)))
+		if ((!tabA && ScrubCharacter(&Line(lineA), runA, bounds, &character))
+			|| (runA != runB && !tabB && ScrubCharacter(&Line(lineB), runB, bounds, &character)))
 		{
 			// a scrub wider than five pixels has to have been drawn as one:
 			// seven corners or more, not a flick across a letter
@@ -5158,7 +5230,7 @@ TParagraphView::ScrubWords(const Rect& bounds, TUnitPublic* unit, Boolean really
 		if (start == end)
 		{
 			at.h = bounds.left;
-			PointToWord(at, &start, &end, nil);
+			PointToWord(at, &start, &end, 1, nil, nil, nil);
 		}
 		else if (start > end)
 		{
@@ -6863,17 +6935,16 @@ TParagraphView::DeleteHilited(RefArg hilite)
 
 // ROM 0x001782e8 FindLineContainingPoint__14TParagraphViewFP6TPoint10MarginSize
 // The line a point is on: of the lines whose box (widened by a thousand
-// pixels each way for margins 1 and 2; raised by half its height and
-// widened by ten for margin 3) holds the point, the one whose baseline is
+// pixels each way for margins 1 and 2; for margin 3 its top moved (by a
+// ROM bug, to its left less half its width) and widened by ten) holds the point, the one whose baseline is
 // nearest, with the point's h brought inside its box.  Margin 2 is for a
 // drop: a point above or below the paragraph is taken to the first
 // line's top left or the last line's bottom right and answers that line,
 // and a point between lines that none holds is brought to the nearer end.
 // ==> the line's index, -1 for none.
 //
-// The ROM measures the distance to the line's bottom less the second of
-// the two heights it keeps, which is its baseline; this cache keeps the
-// baseline as the top and the ascent.
+// The distance is measured to the line's baseline (its bottom less the
+// descent it keeps at +0x18).
 long
 TParagraphView::FindLineContainingPoint(Point* pt, long margin)
 {
@@ -6905,12 +6976,16 @@ TParagraphView::FindLineContainingPoint(Point* pt, long margin)
 			InsetRect(&work, -1000, 0);
 		else if (margin == 3)
 		{
-			work.top = (short) (work.top - (short) (box.bottom - box.top) / 2);
+			// ROM BUG: the top is raised by half the line's *width* and
+			// counted from its *left* - work.left where work.top was meant
+			// - so the box reaches from wherever that comes to (usually
+			// far above the line) down to its bottom.
+			work.top = (short) (work.left - (short) (box.right - box.left) / 2);
 			InsetRect(&work, -10, 0);
 		}
 		if (PtInRect(*pt, &work))
 		{
-			long distance = pt->v - (Line(i).fBounds.top + Line(i).fAscent);
+			long distance = pt->v - (Line(i).fBounds.bottom - Line(i).fHeight);
 			if (distance < 0)
 				distance = -distance;
 			if (distance < bestDistance)
@@ -6964,10 +7039,8 @@ TParagraphView::PointOverText(Point& pt, Point* onLine)
 // it, 2 over it where the selection runs to the end of the text, 3 below
 // the last line of such a selection (on the line below the paragraph, or
 // below the line it ends on) - which is where a drop would add to the
-// selected text rather than land in it.
-//
-// (host: PointToOffset is this reconstruction's nearest character, which
-//  is never -1, where the ROM's answers -1 for a point on no line)
+// selected text rather than land in it.  (The ROM reads the selection's
+// first line without asking whether there is one; the host asks.)
 long
 TParagraphView::PointOverHilitedText(Point& pt)
 {
@@ -6982,7 +7055,7 @@ TParagraphView::PointOverHilitedText(Point& pt)
 	long result = 0;
 	if (PtInRect(pt, &bounds))
 	{
-		long offset = PointToOffset(pt);
+		long offset = PointToOffset(pt, 1, false, nil, nil, nil, nil);
 		if (offset < 0)
 			return 0;
 		if (h->fStart <= offset && offset <= h->fEnd)
@@ -7342,7 +7415,7 @@ TParagraphView::ScaleCommand(RefArg cmd)
 	if ((TextFlags() & 1) != 0 || (TextFlags() & 4) != 0)
 	{
 		fTextFlags &= ~5;
-		SetFrameSlot(RefVar(DataFrame()), RSSYMtextflags, RefVar(MAKEINT(TextFlags() & ~5)));
+		SetFrameSlot(RefVar(DataFrame()), RSSYMtextflags, RefVar(MAKEINT(TView::TextFlags() & ~5)));
 	}
 	Point origin = fParent->ContentsOrigin();
 	OffsetRect(&r, -origin.h, -origin.v);
@@ -7583,39 +7656,33 @@ TParagraphView::IconClick(TStrokePublic* stroke)
 	T h e   b a s e l i n e s
 
 	The ROM keeps four halfwords at +0xa0 as the lines are laid out: the
-	first line's baseline and ascent, the last line's baseline and
-	descent.  DEVIATION: the host's line cache has no such block (+0xa0 is
-	the lines' union here), so they are read off the first and last
-	LineInfo - the baseline its top plus its ascent, the descent what the
-	line's height leaves below it.
+	first line's baseline and line ascent, the last line's baseline and
+	line descent (FillAllCaches).
 ------------------------------------------------------------------------------*/
 
-// the metrics the ROM keeps at +0xa0..+0xa6 (see above)
+// the metrics the ROM keeps at +0xa0..+0xa6 (FillAllCaches)
 static long
 FirstLineBaseline(const TParagraphView* view)
 {
-	const LineInfo& line = view->Line(0);
-	return (short) (line.fBounds.top + line.fAscent);
+	return view->fFirstBaseline;
 }
 
 static long
 FirstLineAscent(const TParagraphView* view)
 {
-	return (short) view->Line(0).fAscent;
+	return view->fFirstLineAscent;
 }
 
 static long
 LastLineBaseline(const TParagraphView* view)
 {
-	const LineInfo& line = view->Line(view->LineCount() - 1);
-	return (short) (line.fBounds.top + line.fAscent);
+	return view->fLastBaseline;
 }
 
 static long
 LastLineDescent(const TParagraphView* view)
 {
-	const LineInfo& line = view->Line(view->LineCount() - 1);
-	return (short) line.fHeight;
+	return view->fLastLineDescent;
 }
 
 
@@ -7688,7 +7755,7 @@ TParagraphView::GetFirstBaseline(void)
 	if (fLineCache == nil)
 		CreateAllCaches();
 	Rect bounds = viewBounds;
-	if (TextLength() == 0 || LineCount() == 0)
+	if (TextLength() == 0)
 	{
 		FontInfo fontInfo;
 		InsertionFontInfo(this, 0, &fontInfo);
@@ -7708,7 +7775,7 @@ TParagraphView::GetLastBaseline(void)
 		CreateAllCaches();
 	Rect bounds = viewBounds;
 	long length = TextLength();
-	if (length == 0 || LineCount() == 0)
+	if (length == 0)
 	{
 		FontInfo fontInfo;
 		InsertionFontInfo(this, 0, &fontInfo);
@@ -7743,7 +7810,7 @@ TParagraphView::GetNextBaseline(TParagraphView* next)
 		CreateAllCaches();
 	long length = TextLength();
 	long baseline;
-	if (next == nil || length == 0 || LineCount() == 0)
+	if (next == nil || length == 0)
 	{
 		FontInfo fontInfo;
 		InsertionFontInfo(this, length, &fontInfo);
@@ -7758,7 +7825,7 @@ TParagraphView::GetNextBaseline(TParagraphView* next)
 		{
 			if (next->fLineCache == nil)
 				next->CreateAllCaches();
-			if (next->TextLength() == 0 || next->LineCount() == 0)
+			if (next->TextLength() == 0)
 			{
 				RefVar style(next->GetStyleForInsertion(0, false, false));
 				StyleRecord record;

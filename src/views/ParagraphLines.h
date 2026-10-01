@@ -90,6 +90,10 @@ Fixed	GetTextObjFlush(TextObjectRef text);						// ROM 0x0017cef4 GetTextObjFlus
 void	CharLeftEdge(TextObjectRef text, long offset, Point* pt);	// ROM 0x0017d5c4 CharLeftEdge__FlT1P6TPoint - where the character starts (its baseline)
 long	CoordToInterCharGap(TextObjectRef text, short h);			// ROM 0x0017d614 CoordToInterCharGap__Fls - the boundary nearest h
 long	CoordToChar(TextObjectRef text, short h);					// ROM 0x0017d66c CoordToChar__Fls - the character h is over
+// The boxes of the characters and tabs of a line, and a point beside it.
+void	CharBounds(const LineInfo* line, TextObjectRef run, long offset, Rect* bounds);	// ROM 0x0017d3dc CharBounds__FPC8LineInfolT2P5TRect
+void	TabBounds(const LineInfo* line, long offset, TextObjectRef run, RefArg tabs, Rect* bounds);	// ROM 0x0017d4ac TabBounds__FP8LineInfolT2RC6RefVarP5TRect
+long	PointInMarginsToOffset(const Point& pt, const LineInfo* line);	// ROM 0x0017d32c PointInMarginsToOffset__FRC6TPointPC8LineInfo
 short	LeftEdgeOfEmptyLine(const Rect& bounds, ULong justify);	// ROM 0x0017d390 LeftEdgeOfEmptyLine__FRC5TRectl - where the caret goes on an empty line: the left, right or middle of the bounds
 void	TPoint2FPoint(const Point& pt, FPoint* fpt);				// ROM 0x0017d0a8 TPoint2FPoint__FR6TPointP6FPoint
 void	FPoint2TPoint(const FPoint& fpt, Point* pt);				// ROM 0x0017d0cc FPoint2TPoint__FR6FPointP6TPoint - rounded

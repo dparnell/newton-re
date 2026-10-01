@@ -908,7 +908,7 @@ TEditView::PositionCaret(Point& pt, Boolean click)
 		{
 			// the point is on a character of the child's text
 			para->RemoveAllHilites();
-			long offset = para->PointToOffset(pt);
+			long offset = para->PointToOffset(pt, 2, false, nil, nil, nil, nil);
 			if (offset < 0)
 				offset = para->viewBounds.top > pt.v
 					   ? 0 : (Length(RefVar(para->Text())) - 2) / 2;

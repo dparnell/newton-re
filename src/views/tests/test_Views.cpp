@@ -2376,11 +2376,11 @@ TestCaret()
 	pt.v = 16;
 	Rect tapped;
 	p->PointToCaret(pt, &tapped, nil);
-	EXPECT(tapped.left == caretBox.left && p->PointToOffset(pt) == 5);
+	EXPECT(tapped.left == caretBox.left && p->PointToOffset(pt, 2, false, nil, nil, nil, nil) == 5);
 	pt.h = 22;
-	EXPECT(p->PointToOffset(pt) == 0);
+	EXPECT(p->PointToOffset(pt, 2, false, nil, nil, nil, nil) == 0);
 	pt.h = 119;
-	EXPECT(p->PointToOffset(pt) == 11);
+	EXPECT(p->PointToOffset(pt, 2, false, nil, nil, nil, nil) == 11);
 	// the selection stack: the old key view pushed when another takes over, and restored
 	TParagraphView* q = (TParagraphView*) ViewOf("ctxC3 := AddView(GetRoot(), {viewClass: 81, viewFlags: 3, viewBounds: {left: 20, top: 50, right: 120, bottom: 70}, viewJustify: 0, viewFont: espy12, text: \"Second\", activated: [], viewCaretActivateScript: func(on) AddArraySlot(activated, on)})");
 	Eval("ctxC3:Dirty()");
@@ -3161,8 +3161,6 @@ TestScrubbing()
 	// a rectangle over one letter takes the letter
 	p->OffsetToBounds(1, &box);
 	long nLeft = box.left;
-	p->OffsetToBounds(2, &box);
-	long nRight = box.left;
 	// a narrow one, inside the letter, so no gesture is needed to justify it
 	SetRect(&scrub, (short) (nLeft + 1), (short) (line.top + 2), (short) (nLeft + 4), (short) (line.top + 18));
 	EXPECT(p->HandleScrub(scrub, -1, nil, true) == 2);
@@ -4414,8 +4412,11 @@ TestSelection()
 
 	// the rest of the style natives a slip asks for
 	EXPECT(NOTNIL(Eval("GetDefaultFont(ctxS)")));
+	// a paragraph answers the text flags it took when it was set up (its own
+	// accessor at vtable +0x20), not a textFlags slot set since
+	EXPECT(RINT(Eval("GetTextFlags(ctxS)")) == (long) p->fTextFlags);
 	Eval("ctxS.textFlags := 5");
-	EXPECT(RINT(Eval("GetTextFlags(ctxS)")) == 5);
+	EXPECT(RINT(Eval("GetTextFlags(ctxS)")) == (long) p->fTextFlags && p->fTextFlags != 5);
 	Eval("RemoveSlot(ctxS, 'textFlags)");
 	EXPECT(NOTNIL(Eval("StrEqual(ctxS:ExtractTextRange(0, 5), \"Hello\")")));
 	EXPECT(NOTNIL(Eval("GetInsertionStyle()")));
@@ -4541,11 +4542,14 @@ TestParagraphTap()
 	Eval("ctxPT:Dirty()");
 	Refresh();
 	long mid = (p->Line(0).fBounds.top + p->Line(0).fBounds.bottom) / 2;
-	// a tap between the 3rd and 4th character places the caret there
+	// a tap on the boundary between the 3rd and 4th character places the
+	// caret there (PointToChar: the boundaries whose characters' middles
+	// the point is past - an 'l' is two pixels wide, so a pixel in is its
+	// middle and already past it)
 	Rect box3;
 	p->OffsetToBounds(3, &box3);
 	Point tap;
-	tap.h = (short) (box3.left + 1);
+	tap.h = (short) box3.left;
 	tap.v = (short) mid;
 	p->HandleTap(tap);
 	EXPECT(gRootView->fCaretView == p && p->fCaretOffset == 3 && gRootView->fCaretLength == 0);
@@ -6323,7 +6327,7 @@ TestReplaceCharacter()
 	wide.fLength = 1;
 	wide.fUnit = &pub;
 	wide.fReallyDoIt = true;
-	EXPECT(!p->ReplaceCharacter(&p->Line(0), 0, &wide));
+	EXPECT(!p->ReplaceCharacter(&p->Line(0), p->fTextObjects[p->Line(0).fFirstObj], &wide));
 	EXPECT(!wide.fExact);
 	EXPECT(Ustrcmp(GetCString(RefVar(p->Text())), Uni("cat")) == 0);
 
@@ -6523,7 +6527,9 @@ TestHiliteStroke()
 	para->OffsetToBounds(4, &from);				// the q
 	para->OffsetToBounds(16, &to);				// the f
 	EXPECT(to.left > from.left);
-	long y = (long) ((para->viewBounds.top + para->viewBounds.bottom) / 2);
+	// along the middle of the line (the stroke's points are looked for on
+	// the lines' own boxes, margin 0)
+	long y = (long) ((para->Line(0).fBounds.top + para->Line(0).fBounds.bottom) / 2);
 
 	// the pen held still for more than 45 samples is a hilite click; the
 	// stationary samples are fed first, so that the click is delivered

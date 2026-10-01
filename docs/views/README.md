@@ -847,12 +847,26 @@ not calculate its bounds, a line taller for a final return.  The caches
 nought-ended arrays (`InitializeCache`, `CacheLength`, `CacheMaxLength`).
 `RealDraw` draws the text objects (`DrawTextObj`).
 
-Not yet the ROM's: what is asked of the lines afterwards - the character
-boxes, hit-testing and the selection's region - still measures through two
-host shims over the text objects (`LineWidthTo`, `LineTextEnd` in
-`ParagraphView.cpp`); `docs/next-steps.md` lists the ROM's readers that
-replace them.  `OffsetToCaret` and `OffsetToBounds`' empty-paragraph
-branch are the ROM's already.
+What is asked of the lines afterwards is the ROM's too, read off the
+text objects: a character's box (`OffsetToBounds` over
+`FindTextRunContainingCharOffset` - the object, the tab or the space past
+the line's text it is in - and `OffsetInRunToBounds`, `CharBounds`,
+`TabBounds`; the box is the line's full height, down to its descent), a
+point's character, gap or word (`PointToOffset`, `PointToWord`,
+`PointToWordBoundary` over `FindLineContainingPoint` and
+`FindTextRunContainingCoordinate`; each caller passes the ROM's margin and
+says whether it wants a character or a gap), the selection's region
+(`Area`, line by line, cut by `RangesIntersect`), the scrub of a character
+and the letter written over one (`ScrubCharacter`/`ReplaceCharacter` over
+`CoordToChar`/`CoordToInterCharGap`), and the baselines (the four shorts
++0xa0-+0xa6).  A baseline is a line's bottom less its descent (+0x18),
+not its top plus +0x14 - the two differ when a line is taller than its
+fonts.  `GetInterLineSpacing` takes a paragraph of several style runs as
+the ROM does: none of them may be more than three pixels taller than the
+spacing, and those within eight tenths of it must cover seven tenths of
+the text.  `TParagraphView` answers its own `fTextFlags` at vtable +0x20
+(an unnamed accessor, 0x38abc8); only `SetBounds`, `SetupDone` and the
+scale command ask `TView::TextFlags` directly.
 
 What the move changed on the screens (`tools/imaging/pgmdiff.py` over every
 ctest's snapshots before and after, a second run before as the noise): the
@@ -871,6 +885,19 @@ in main meanwhile, 3bdaa273).  Two demos leaned on the old layout:
 `inethostsetup.ns` tapped left of a centred 0 meaning to land after it, and
 `apps-fonts.ns` took the page's caret from Setup, which is on the same
 line, for the caret its tap put there.
+
+The readers changed two screens: the corrector's list opens five pixels
+lower, because the word's box it is placed under now reaches down to the
+line's descent (the old one stopped at the baseline); and a tap under a
+note that ends in a return puts the caret where `PointToCaret` puts it, at
+the start of the empty line below - its top is the text bounds' bottom and
+its bottom the last line's bottom plus its ascent, so with the final
+return's extra line the ROM's caret rectangle is upside down, which only
+its bottom (where the caret is drawn) survives.  Everything else was the
+clock and `year2010.pgm`, which `host.NewtonYear2010` and its `.romBug`
+twin both write.  `FindLineContainingPoint`'s margin 3 (writing over a
+letter) keeps a ROM bug: the box's top is set to its left less half its
+width.
 
 ### Typing into a paragraph (`ParagraphView.h`, `StyleRuns.h`)
 

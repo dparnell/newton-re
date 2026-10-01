@@ -1467,3 +1467,233 @@ TParagraphView::OffsetCachedBounds(Point& /*delta*/)
 	}
 	UpdateHiliteArea();
 }
+
+
+/*------------------------------------------------------------------------------
+	W h a t   i s   a s k e d   o f   t h e   l i n e s
+------------------------------------------------------------------------------*/
+
+// a text object's first character in the paragraph's text, and how many
+// characters it holds (the fitted length)
+static long
+TextObjOffset(TextObjectRef obj)
+{
+	TextRef* ref;
+	GetTextObjField(obj, kTextObjText, &ref);
+	return ref->fOffset;
+}
+
+static long
+TextObjLength(TextObjectRef obj)
+{
+	long length;
+	GetTextObjField(obj, kTextObjFittedLength, &length);
+	return length;
+}
+
+
+// ROM 0x0017d32c PointInMarginsToOffset__FRC6TPointPC8LineInfo
+// A point beside a line's text: left of it (or above) is its start, right
+// of it (or below) its end - before the space it ends with, if it does.
+long
+PointInMarginsToOffset(const Point& pt, const LineInfo* line)
+{
+	if (pt.v < line->fBounds.top || pt.h <= line->fBounds.left)
+		return line->fStart;
+	if ((line->fBounds.bottom <= pt.v || line->fBounds.right <= pt.h) && line->fEndsWithSpace)
+		return line->fEnd - 1;
+	return line->fEnd;
+}
+
+
+// ROM 0x0017d3dc CharBounds__FPC8LineInfolT2P5TRect
+// The box of a character of a text object: from its left edge to the
+// next one's (or nothing wide at the object's end), the line's height.
+void
+CharBounds(const LineInfo* line, TextObjectRef run, long offset, Rect* bounds)
+{
+	long length = TextObjLength(run);
+	if (offset < 0)
+		offset = 0;
+	else if (length < offset)
+		offset = length;
+	Point left;
+	CharLeftEdge(run, offset, &left);
+	short right = left.h;
+	if (offset < length)
+	{
+		Point next;
+		CharLeftEdge(run, offset + 1, &next);
+		right = next.h;
+	}
+	bounds->left = left.h;
+	bounds->top = line->fBounds.top;
+	bounds->right = right;
+	bounds->bottom = line->fBounds.bottom;
+}
+
+
+// ROM 0x0017d4ac TabBounds__FP8LineInfolT2RC6RefVarP5TRect
+// The box of a tab: from where the text before it ends (the run's right,
+// or the line's left when there is no run before it) stop by stop to the
+// tab at the offset.
+void
+TabBounds(const LineInfo* line, long offset, TextObjectRef run, RefArg tabs, Rect* bounds)
+{
+	long at;
+	long x;
+	if (run == 0)
+	{
+		at = line->fStart;
+		x = line->fBounds.left;
+	}
+	else
+	{
+		Rect box;
+		GetTextObjBounds(run, &box);
+		at = TextObjOffset(run) + TextObjLength(run);
+		x = box.right;
+	}
+	long lineLeft = line->fBounds.left;
+	long index = 0;
+	long left = x;
+	long stop = FindNextTabStop(tabs, lineLeft, x, &index);
+	for ( ; at < offset; at++)
+	{
+		long next = FindNextTabStop(tabs, lineLeft, stop + 1, &index);
+		left = stop;
+		stop = next;
+	}
+	bounds->left = (short) left;
+	bounds->top = line->fBounds.top;
+	bounds->right = (short) stop;
+	bounds->bottom = line->fBounds.bottom;
+}
+
+
+// ROM 0x00177b08 FindTextRunContainingCharOffset__14TParagraphViewFP8LineInfolPl
+// The text object of the line the offset is in.  *kind is 0 for a
+// character of a text object, 1 for a tab before one (the object before
+// it is answered), 2 for an offset past the line's last object (1 again
+// if a tab is there).  ==> the object's place in the cache, nil for none.
+TextObjectRef*
+TParagraphView::FindTextRunContainingCharOffset(const LineInfo* line, long offset, long* kind)
+{
+	TextObjectRef* first = fTextObjects + line->fFirstObj;
+	TextObjectRef* end = fTextObjects + line->fEndObj;
+	RefVar tabs(Tabs());
+	*kind = 0;
+	if (offset < 0)
+		return nil;
+	TextObjectRef* run;
+	long start = 0;
+	for (run = first; ; run++)
+	{
+		if (end <= run)
+		{
+			RefVar text(Text());
+			const UniChar* chars = GetCString(text);
+			*kind = chars[offset] == 0x09 ? 1 : 2;
+			return first < end ? end - 1 : nil;
+		}
+		start = TextObjOffset(*run);
+		if (offset < start + TextObjLength(*run))
+			break;
+	}
+	if (offset < start)
+	{
+		*kind = 1;
+		return first < run ? run - 1 : nil;
+	}
+	return run;
+}
+
+
+// ROM 0x0017789c FindTextRunContainingCoordinate__14TParagraphViewFP8LineInfosPl
+// The text object of the line under h.  Over a tab rather than text,
+// *tabOffset is the tab's offset (the next one when h is past the middle
+// of a tab before a flush object) and the object before it is answered;
+// otherwise *tabOffset is -1.  ==> nil for h off the line.
+TextObjectRef*
+TParagraphView::FindTextRunContainingCoordinate(const LineInfo* line, short h, long* tabOffset)
+{
+	*tabOffset = -1;
+	if (h < line->fBounds.left || line->fBounds.right <= h)
+		return nil;
+	TextObjectRef* first = fTextObjects + line->fFirstObj;
+	TextObjectRef* end = fTextObjects + line->fEndObj;
+	RefVar tabs(Tabs());
+	long lineLeft = line->fBounds.left;
+	long at = line->fStart;
+	long x = lineLeft;
+	if (first < end)
+	{
+		TextObjectRef* last = end - 1;
+		for (TextObjectRef* run = first; run < end; run++)
+		{
+			Rect box;
+			GetTextObjBounds(*run, &box);
+			if (h < box.right)
+			{
+				if (h < box.left && GetTextObjFlush(*run) == 0)
+				{
+					long index = 0;
+					FindNextTabStop(tabs, lineLeft, h, &index);
+					long before = index;
+					long stop = FindNextTabStop(tabs, lineLeft, box.left - 1, &index);
+					long count = index - before;
+					*tabOffset = TextObjOffset(*run) - (count + 1);
+					Rect r;
+					OffsetToBounds(*tabOffset, &r);
+					if ((stop + r.left) / 2 < h)
+						*tabOffset += 1;
+					return first < run ? run - 1 : nil;
+				}
+				return run;
+			}
+			if (run == last)
+			{
+				x = box.right;
+				at = TextObjOffset(*run) + TextObjLength(*run);
+			}
+		}
+	}
+	long index = 0;
+	long stop = x;
+	while (at < line->fEnd - 1)
+	{
+		stop = FindNextTabStop(tabs, lineLeft, stop, &index);
+		if (h < stop)
+			break;
+		at++;
+	}
+	*tabOffset = at;
+	return first < end ? end - 1 : nil;
+}
+
+
+// ROM 0x00178104 OffsetInRunToBounds__14TParagraphViewFlP8LineInfoN21P5TRect
+// The box of the offset as FindTextRunContainingCharOffset placed it: a
+// character's (CharBounds), a tab's (TabBounds), or past the line's text -
+// from its right (the empty line's place when it has next to no width) to
+// the view's right edge.
+void
+TParagraphView::OffsetInRunToBounds(long offset, const LineInfo* line, TextObjectRef run, long kind, Rect* bounds)
+{
+	if (kind == 1)
+	{
+		RefVar tabs(Tabs());
+		TabBounds(line, offset, run, tabs, bounds);
+	}
+	else if (kind == 2)
+	{
+		*bounds = line->fBounds;
+		if ((short) (bounds->right - bounds->left) < 2)
+			bounds->left = LeftEdgeOfEmptyLine(viewBounds, (ULong) fViewJustify & 0x3fffffff);
+		else
+			bounds->left = bounds->right;
+		bounds->right = viewBounds.right;
+	}
+	else
+		CharBounds(line, run, offset - TextObjOffset(run), bounds);
+}

@@ -97,21 +97,6 @@ the way are all in `docs/work-log.md`.
   protocol's methods are C++ virtuals and need numbered thunks to be
   called by dispatch slot (a monitor's already work).  Nothing in the ROM
   or `fixtures/` calls `Dispatch`.
-- A paragraph's line layout is the ROM's `LineLoop` now
-  (`views/ParagraphLines.cpp`), but what is asked of the laid-out lines
-  still goes through host shims (`LineWidthTo`/`LineTextEnd` in
-  `ParagraphView.cpp`): the ROM's readers over the text objects are next -
-  `OffsetToBounds`' line branch over `FindTextRunContainingCharOffset`/
-  `OffsetInRunToBounds`/`CharBounds`/`TabBounds`, `PointToOffset`,
-  `PointToWord`(`Boundary`), `FindTextRunContainingCoordinate`,
-  `FindLineContainingPoint`, `SetupArea`/`Area` in place of
-  `SelectionRegion`, `ScrubCharacter`/`ReplaceCharacter` over
-  `CoordToChar`/`CoordToInterCharGap`, `FindWordInRun`,
-  `InsertHorizontalSpace`, the baselines over +0xa0-+0xa6,
-  `OffsetPastVisible`, `GetCachedRange`.  Also: `GetInterLineSpacing`'s
-  case of several style runs, and TParagraphView's own text-flags accessor
-  at vtable +0x20 (it answers fTextFlags; the host's paragraph inherits
-  TView::TextFlags).
 - Packages: XIP packages (the ROM domain manager's page faulting, about
   11 KB); a card's `'stor` event and `GetCardReinsertionInfo`; ATA cards.
 - The NIE built into the ROM extension: the page tables `ptpt`/`glpt`

@@ -2638,7 +2638,7 @@ FPointToCharOffset(RefArg rcvr, RefArg x, RefArg y)
 	Point pt;
 	pt.h = (short) RINT(x);
 	pt.v = (short) RINT(y);
-	return MAKEINT(((TParagraphView*) view)->PointToOffset(pt));
+	return MAKEINT(((TParagraphView*) view)->PointToOffset(pt, 2, true, nil, nil, nil, nil));
 }
 
 
@@ -2658,8 +2658,7 @@ FPointToWord(RefArg rcvr, RefArg x, RefArg y)
 	pt.v = (short) RINT(y);
 	long start = 0;
 	long end = 0;
-	long line = 0;
-	if (((TParagraphView*) view)->PointToWord(pt, &start, &end, &line))
+	if (((TParagraphView*) view)->PointToWord(pt, &start, &end, 2, nil, nil, nil))
 	{
 		result = AllocateFrame();
 		SetFrameSlot(result, RSSYMstartchar, RefVar(MAKEINT(start)));

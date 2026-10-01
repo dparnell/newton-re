@@ -212,6 +212,7 @@ class TParagraphView : public TDataView
 public:
 	virtual long	ClassID(void) const;								// ROM 0x0017e3ac ClassID__14TParagraphViewCFv
 	virtual Boolean	DerivedFrom(long id) const;							// ROM 0x0017e3b4 DerivedFrom__14TParagraphViewCFl
+	virtual long	TextFlags(void) const;								// ROM 0x0038abc8 (unnamed) - the vtable's +0x20 - fTextFlags
 	virtual			~TParagraphView();									// ROM 0x001805f4 __dt__14TParagraphViewFv
 	virtual void	Constructor(RefArg context, TView* parent);			// ROM 0x0017edc0 Constructor__14TParagraphViewFRC6RefVarP5TView
 	virtual void	SetupDone(void);									// ROM 0x0017f5d8 SetupDone__14TParagraphViewFv
@@ -286,7 +287,20 @@ public:
 	void		OffsetCachedBounds(Point& delta);						// ROM 0x0016991c OffsetCachedBounds__14TParagraphViewFR6TPoint
 	long		FindLineContainingCharOffset(long offset);				// ROM 0x001786f8 FindLineContainingCharOffset__14TParagraphViewFl (host: the line's index, -1 for none)
 	void		OffsetToBounds(long offset, Rect* bounds);				// ROM 0x00177f20 OffsetToBounds__14TParagraphViewFlP5TRect
-	long		PointToOffset(const Point& pt);							// ROM 0x00177520 PointToOffset__14TParagraphViewFRC6TPoint10MarginSizeUcP5TRectPP8LineInfoPlPUc (host: the nearest character)
+	// The character offset at a point: the line by FindLineContainingPoint
+	// (margin: 0 the line's box, 1 or 2 any distance to its sides - 2 also
+	// above and below the paragraph - 3 half a line above it and ten pixels
+	// to the sides), the text object or tab under it, and then the nearest
+	// character boundary, or (onChar) the character the point is over.
+	// With nothing else asked, a point beside the line's box answers its
+	// start or end.  ==> -1 for no line there.  The character's box, the
+	// line (its index), the text object and whether it was a tab can be
+	// asked for too.
+	long		PointToOffset(const Point& pt, long margin, Boolean onChar, Rect* charBox,
+							  long* outLine, TextObjectRef* outRun, Boolean* outTab);	// ROM 0x00177520 PointToOffset__14TParagraphViewFRC6TPoint10MarginSizeUcP5TRectPP8LineInfoPlPUc
+	TextObjectRef*	FindTextRunContainingCharOffset(const LineInfo* line, long offset, long* kind);	// ROM 0x00177b08 FindTextRunContainingCharOffset__14TParagraphViewFP8LineInfolPl
+	TextObjectRef*	FindTextRunContainingCoordinate(const LineInfo* line, short h, long* tabOffset);	// ROM 0x0017789c FindTextRunContainingCoordinate__14TParagraphViewFP8LineInfosPl
+	void		OffsetInRunToBounds(long offset, const LineInfo* line, TextObjectRef run, long kind, Rect* bounds);	// ROM 0x00178104 OffsetInRunToBounds__14TParagraphViewFlP8LineInfoN21P5TRect
 	void		FlushWordAtCaret(void);									// ROM 0x00174c7c FlushWordAtCaret__14TParagraphViewFv
 	// Which way the caret has gone out of a rectangle, which is what tells
 	// a scrolling view where to scroll to: 0 it has not gone out (and 0
@@ -317,7 +331,7 @@ public:
 	void		FindWordInParagraph(Finder* finder);		// ROM 0x0017348c FindWordInParagraph__14TParagraphViewFP6Finder
 	Boolean		FindWordInRun(Finder* finder);				// ROM 0x00173668 FindWordInRun__14TParagraphViewFP6Finder
 	// A character written over a character of the text replaces it.
-	Boolean		ReplaceCharacter(const LineInfo* line, const long run, Finder* finder);	// ROM 0x00174e14 ReplaceCharacter__14TParagraphViewFPC8LineInfoClP6Finder
+	Boolean		ReplaceCharacter(const LineInfo* line, const TextObjectRef run, Finder* finder);	// ROM 0x00174e14 ReplaceCharacter__14TParagraphViewFPC8LineInfoClP6Finder
 	void		SetFinderBelowParagraph(Finder* finder);	// ROM 0x001735e4 SetFinderBelowParagraph__14TParagraphViewFP6Finder
 	long		FindTab(Finder* finder, long x);			// ROM 0x00173ea0 FindTab__14TParagraphViewFP6Finderl - always 0
 	long		NearTabStop(long x);						// ROM 0x00173cc4 NearTabStop__14TParagraphViewFl
@@ -342,13 +356,16 @@ public:
 	// tried first (flag 1), then its top (2), then its bottom (4), and
 	// whichever baseline is nearest wins.
 	long		FindLineForWord(const Rect& box, long flags);			// ROM 0x00175840 FindLineForWord__14TParagraphViewFRC5TRectl
-	Boolean		ScrubCharacter(long line, const Rect& bounds, long* outOffset);	// ROM 0x00174808 ScrubCharacter__14TParagraphViewFP8LineInfolRC5TRectPl (host: no text objects - see the definition)
-	// The word a point is in, and the boundary of it the point is nearest.
-	// (host: the ROM asks its text objects, and answers the line, the run
-	// and whether the character is a tab; here the line's index is enough
-	// and a tab is a character like any other.)
-	Boolean		PointToWord(const Point& pt, long* start, long* end, long* outLine);	// ROM 0x001776f0 PointToWord__14TParagraphViewFRC6TPointPlT210MarginSizePP8LineInfoT2PUc
-	long		PointToWordBoundary(const Point& pt, long bias, long* outLine);	// ROM 0x00177dcc PointToWordBoundary__14TParagraphViewF6TPoint10MarginSizelPP8LineInfoPlPUc - -1 for no word there
+	Boolean		ScrubCharacter(const LineInfo* line, TextObjectRef run, const Rect& bounds, long* outOffset);	// ROM 0x00174808 ScrubCharacter__14TParagraphViewFP8LineInfolRC5TRectPl
+	// The word a point is in (the word breaks round the character under it,
+	// or a tab on its own), and the boundary of it the point is nearest
+	// (bias: the percentage of the word's width past which the end is
+	// nearer); the line (its index), the text object and whether it was a
+	// tab answered too.
+	Boolean		PointToWord(const Point& pt, long* start, long* end, long margin,
+							long* outLine, TextObjectRef* outRun, Boolean* outTab);	// ROM 0x001776f0 PointToWord__14TParagraphViewFRC6TPointPlT210MarginSizePP8LineInfoT2PUc
+	long		PointToWordBoundary(Point pt, long margin, long bias, long* outLine,
+									TextObjectRef* outRun, Boolean* outTab);	// ROM 0x00177dcc PointToWordBoundary__14TParagraphViewF6TPoint10MarginSizelPP8LineInfoPlPUc - -1 for no word there
 	void		DeleteHilitedTextOnly(RefArg hilite);					// ROM 0x00174dbc DeleteHilitedTextOnly__14TParagraphViewFRC6RefVar
 	// Things put into the paragraph from outside - a recognised word,
 	// a dropped clipping, an ink word split off another - which the
@@ -390,7 +407,7 @@ public:
 	void		MakeHilite(long start, long end, Boolean caretOnEmpty);	// ROM 0x0016a49c MakeHilite__14TParagraphViewFlT1Uc - select the characters between the offsets
 	void		DrawHilites(Boolean scaled);							// ROM 0x0016aecc DrawHilites__14TParagraphViewFUc - invert the hilited text (host: over the current port)
 	void		SetupArea(TParagraphHilite* hilite);					// ROM 0x0016a744 SetupArea__14TParagraphViewFP16TParagraphHilite - the region a hilite covers, worked out once
-	Boolean		SelectionRegion(long start, long end, RgnHandle rgn);	// host: the region covering a range of the text
+	void		Area(long start, long end, RgnHandle area);			// ROM 0x0016a92c Area__14TParagraphViewFlT1 - the region a range of the text covers (host: into `area`)
 	// The word under a point: where it starts and where it sits; ==> how
 	// long it is, 0 when there is no word there.
 	long		FindWordOffset(Point pt, long* offset, Point* where);	// ROM 0x00177cbc FindWordOffset__14TParagraphViewF6TPointPlP6TPoint
@@ -463,6 +480,8 @@ extern Boolean	gRemoveEmptyParagraph;						// ROM 0x0c101735
 // Whether the view is drawn inside a print view or a remote view (a
 // print preview, a page's thumbnail) - somewhere below one of them.
 Boolean	InPrintOrPreview(TView* view);						// ROM 0x00180c70 InPrintOrPreview__FP5TView
+
+Boolean	RangesIntersect(long start1, long end1, long start2, long end2, long* start, long* end);	// ROM 0x0016a8e8 RangesIntersect__FlN31PlT5
 
 // The view as a paragraph, or a throw saying that it is not one.
 TParagraphView*	FailGetParagraphView(RefArg context);				// ROM 0x001ee218 FailGetParagraphView__FRC6RefVar
