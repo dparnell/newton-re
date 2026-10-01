@@ -32,6 +32,7 @@ enum { kAreaDictChains = 3 };
 class TDomain;
 class TController;
 class TUnit;
+class TUnitPublic;
 class TView;
 class TArray;
 struct dInfoRec;
@@ -183,5 +184,15 @@ struct RecGridInfo
 };
 void	FromObject(RefArg frame, WordBaseInfo* info);		// ROM 0x00035830 FromObject__FRC6RefVarP12WordBaseInfo
 void	FromObject(RefArg frame, RecGridInfo* info);		// ROM 0x0003598c FromObject__FRC6RefVarP11RecGridInfo
+Ref		ToObject(WordBaseInfo* info);						// ROM 0x000355d8 ToObject__FP12WordBaseInfo - a canonicalBaseInfo frame (a nought slot left out)
+Ref		ToObject(RecGridInfo* info);						// ROM 0x000358c0 ToObject__FP11RecGridInfo - a canonicalCharGrid frame
+void	SetNonNilInt(RefArg frame, RefArg slot, ULong value);	// ROM 0x00035590 SetNonNilInt__FRC6RefVarT1Ul - the slot set only when the value is not nought
+
+// The area one letter is read in again (rcSingleCharacterConfig): its
+// base line and x-height (16.16) and the box the letter was written in.
+TRecArea*	MakeCharArea(TController* controller, long base, long smallHeight, Rect* box);	// ROM 0x00035a50 MakeCharArea__FP11TControllerlT2P5TRect
+// The writing read again as one letter standing on the base line, the
+// font's ascent telling how tall its small letters are.
+void		ReclassifyCharacter(TUnitPublic* unit, long base, long ascent);	// ROM 0x000348e4 ReclassifyCharacter__FP11TUnitPubliclT2
 
 #endif	/* __AREAS_H */

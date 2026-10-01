@@ -1,0 +1,60 @@
+// Writing over a letter: a letter written on top of a letter of a word
+// already on the page replaces it (TParagraphView::ReplaceCharacter,
+// DoReplaceSym).  The Notepad reads a word at a time, so the writing is
+// first read again as one letter of the text's height - ReclassifyCharacter,
+// in an rcSingleCharacterConfig area over the box it was written in - and
+// the word's readings are made out of that letter's.
+//
+//   build/host/host/newton --display 320x480 --headless 90 --script src/host/demo/overwrite.ns
+//
+// After the Setup walk "ton" is written and read; then an o is written
+// over its n, and the page reads "too".  build/overwrite.pgm is the page.
+// (Read as a word, Rosetta takes that o for a zero - "0" first, "o" second;
+// read again as a letter of the line's height it is "o" first.)
+//
+// Prints "overwrite: <step>: ok" or "FAILED", and "overwrite: done".
+
+HostInclude("common.ns");			// tapAt, waitFor, walkSetup
+HostInclude("penhelpers.ns");		// penWriteWord, penFindPara, penOval
+
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+overFailures := 0;
+
+overCheck := func(what, ok)
+  begin
+    if not ok then overFailures := overFailures + 1;
+    Print("overwrite: " & what & (if ok then ": ok" else ": FAILED"));
+  end;
+
+overFinish := func()
+  begin
+    ScreenSnapshot("build/overwrite.pgm");
+    Print("overwrite: done, " & overFailures & " failed");
+    HostQuit();
+  end;
+
+call walkSetup with (name, func() begin
+    call penWriteWord with ("ton", 60, 200);
+    local up := Ticks();
+    IdleStrokes();
+    call waitFor with ("overwrite: ton", func() Ticks() - up > 40 and call penFindPara with (GetRoot(), "ton"), func() begin
+        local para := call penFindPara with (GetRoot(), "ton");
+        call overCheck with ("\"ton\" read", para <> nil);
+        local b := para:GlobalBox();
+        local w := StrFontWidth("ton", para.viewFont);
+        // the n is the last third of the word; the o written over it
+        // the size of the text's small letters, standing on its line
+        local h := FontAscent(para.viewFont) * 2 div 3;
+        local cx := b.left + w * 5 div 6;
+        local base := b.top + FontAscent(para.viewFont);
+        Print("overwrite: the word at " & b.left & "," & b.top & " width " & w & ", the o at " & cx & "," & base);
+        call penStroke with (call penOval with (cx, base - h div 2, h div 2, h div 2));
+        local up2 := Ticks();
+        IdleStrokes();
+        call waitFor with ("overwrite: too", func() Ticks() - up2 > 40 and call penFindPara with (GetRoot(), "too"), func() begin
+            local p := call penFindPara with (GetRoot(), "too");
+            call overCheck with ("the o replaced the n: the page reads \"too\"", p and StrEqual(p.text, "too"));
+            call overFinish with ();
+          end, 20);
+      end, 20);
+  end);

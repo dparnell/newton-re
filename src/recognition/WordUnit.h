@@ -88,4 +88,11 @@ public:
 	long				IWRecUnit(TDomain* domain, ULong kind, TArray* areas);	// ROM 0x0026e8b4 IWRecUnit__9TWRecUnitFP7TDomainUlP6TArray
 };									// 0x40 bytes
 
+// A word unit's readings set aside while it is read again some other way,
+// and put back: an array of copies of its interpretations, each with its
+// own copy of the word's handle.
+TDArray*	GetInterpretationsCopy(TStdWordUnit* unit);				// ROM 0x0021f6a8 GetInterpretationsCopy__FP12TStdWordUnit
+long		SetInterpretationsCopy(TStdWordUnit* unit, TDArray* copy);	// ROM 0x0021f78c SetInterpretationsCopy__FP12TStdWordUnitP7TDArray - the unit's readings replaced by copies of the array's; ==> 0
+void		DeleteInterpretationsCopy(TDArray* copy);				// ROM 0x0021f8d8 DeleteInterpretationsCopy__FP7TDArray
+
 #endif	/* __WORDUNIT_H */

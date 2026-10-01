@@ -98,8 +98,7 @@ the way are all in `docs/work-log.md`.
   called by dispatch slot (a monitor's already work).  Nothing in the ROM
   or `fixtures/` calls `Dispatch`.
 - The views' NOT YET markers that a user can reach (`analysis/notyet.py
-  src --area views --all`): `HandleWord`'s word-at-a-time branch
-  (`!UsesLetters`, `ReclassifyCharacter`); the root's `fDirtyScreen`
+  src --area views --all`): the root's `fDirtyScreen`
   (`SmartScreenDirty` collects it, nothing yet shows it); the paragraph
   hilite's +0x14 text pointer.  (The math views, `AddTabStop` and the
   serial-port `TKeyboardTool` are not reachable in this ROM on the host.)

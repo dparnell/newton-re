@@ -149,7 +149,8 @@ public:
 	// over the last second, every area type with no handler of its own
 	// answers through `handler` (called with each winning unit and `arg`),
 	// and the controller is idled until every stroke is accounted for.
-	void				RecognizeInArea(TArray* strokes, TRecArea* area, ULong (*handler)(TUnit*, ULong), ULong arg);	// ROM 0x0020a1d8 RecognizeInArea__11TControllerFP6TArrayP8TRecAreaPFP5TUnitUl_UlUl
+	void				RecognizeInArea(TArray* strokes, TRecArea* area, ULong (*handler)(TUnit*, ULong), ULong arg);
+	void				ClassifyInArea(TUnit* unit, TRecArea* area);	// ROM 0x00209f78 ClassifyInArea__11TControllerFP5TUnitP8TRecArea - a unit and its subs read again in another area	// ROM 0x0020a1d8 RecognizeInArea__11TControllerFP6TArrayP8TRecAreaPFP5TUnitUl_UlUl
 
 	TUnitList*			fPieces;		// +0x08  what the domains group: the clicks and the units handed on
 	TUnitList*			fUnits;			// +0x0c  what the domains have made and not yet classified

@@ -301,3 +301,98 @@ TWRecUnit::IWRecUnit(TDomain* domain, ULong kind, TArray* areas)
 {
 	return IRecUnit(domain, kind, areas);
 }
+
+
+/*------------------------------------------------------------------------------
+	A   w o r d   u n i t ' s   r e a d i n g s   s e t   a s i d e
+------------------------------------------------------------------------------*/
+
+// ROM 0x0021f6a8 GetInterpretationsCopy__FP12TStdWordUnit
+// Each interpretation copied with a copy of its word's handle.  When a
+// handle cannot be copied the array is cut back and answered as it is.
+// ROM QUIRK, kept: it is cut at the entry *before* the failed one
+// (CutToIndex(i - 1)), so the last copy that did succeed is dropped too,
+// its handle never given back.
+// DEVIATION: an entry is sizeof(UnitInterpretation), not the ROM's 0x10
+// bytes - the parameter is a host pointer.
+TDArray*
+GetInterpretationsCopy(TStdWordUnit* unit)
+{
+	ULong count = (ULong) unit->InterpretationCount();
+	TDArray* copy = TDArray::Make(sizeof(UnitInterpretation), count);
+	if (copy != nil)
+	{
+		for (ULong i = 0; i < count; i++)
+		{
+			UnitInterpretation interp = *unit->GetInterpretation(i);
+			Handle word = (Handle) interp.param;
+			if (CopyHandle(&word) != 0)
+			{
+				copy->CutToIndex(i == 0 ? 0 : i - 1);
+				return copy;
+			}
+			NameHandle(word, kWordStringHandleName);
+			interp.param = (TRecObject*) word;
+			memcpy(copy->GetEntry(i), &interp, sizeof(UnitInterpretation));
+		}
+	}
+	return copy;
+}
+
+
+// ROM 0x0021f78c SetInterpretationsCopy__FP12TStdWordUnitP7TDArray
+// The unit's interpretations deleted, last first, and each one in the
+// array added in its place with a copy of its handle.
+// ROM QUIRK, kept: when a handle cannot be copied it is interpretation i -
+// the array's index - that is deleted, not the one just added; the unit
+// was emptied first, so the two are the same unless an add failed.
+long
+SetInterpretationsCopy(TStdWordUnit* unit, TDArray* copy)
+{
+	for (long i = unit->InterpretationCount() - 1; i >= 0; i--)
+		unit->DeleteInterpretation((ULong) i);
+	long count = (copy != nil) ? copy->fCount : 0;
+	for (long i = 0; i < count; i++)
+	{
+		UnitInterpretation* from = (UnitInterpretation*) copy->GetEntry((ULong) i);
+		if (from == nil)
+			continue;
+		UnitInterpretation saved = *from;
+		long index = unit->AddWordInterpretation();
+		if (index == -1)
+			continue;
+		UnitInterpretation* interp = unit->GetInterpretation((ULong) index);
+		DeleteHandle((Handle) interp->param);
+		interp->param = nil;
+		Handle word = (Handle) saved.param;
+		if (CopyHandle(&word) != 0)
+		{
+			unit->DeleteInterpretation((ULong) i);
+			return 0;
+		}
+		NameHandle(word, kWordStringHandleName);
+		interp = unit->GetInterpretation((ULong) index);
+		interp->label = saved.label;
+		interp->score = saved.score;
+		interp->angle = saved.angle;
+		interp->param = (TRecObject*) word;
+	}
+	return 0;
+}
+
+
+// ROM 0x0021f8d8 DeleteInterpretationsCopy__FP7TDArray
+void
+DeleteInterpretationsCopy(TDArray* copy)
+{
+	if (copy == nil)
+		return;
+	long count = copy->fCount;
+	for (long i = 0; i < count; i++)
+	{
+		UnitInterpretation* interp = (UnitInterpretation*) copy->GetEntry((ULong) i);
+		if (interp != nil)
+			DeleteHandle((Handle) interp->param);
+	}
+	copy->Dispose();
+}

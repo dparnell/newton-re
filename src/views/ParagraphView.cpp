@@ -48,6 +48,7 @@
 #include "RichString.h"
 #include "REPTranslators.h"
 #include "Areas.h"
+#include "WordUnit.h"		// GetInterpretationsCopy
 #include "Recognizer.h"		// gRecognition: modal recognition
 #include "Rerecognize.h"
 #include "Frames.h"
@@ -3086,14 +3087,11 @@ UniChar		gAlternateWord[4] = { 0, 0, 0, 0 };	// ROM 0x0c101738
 //
 // ==> whether anything was replaced; `out` is the character chosen.
 //
-// NOT YET RECONSTRUCTED: the branch for a view that is read a word at a
-// time rather than a letter at a time (`!UsesLetters`).  There the ROM
-// asks the engine to read the writing *again* as one character of a
-// known height - `ReclassifyCharacter` 0x000348e4 over `MakeCharArea`
-// and `TController::ClassifyInArea` - with the unit's readings saved and
-// put back around it (`GetInterpretationsCopy` 0x0021f6a8 and its two
-// companions).  Our engine reads nothing, so there would be nothing to
-// ask; the readings the unit already has are used either way.
+// In a view read a word at a time (`!UsesLetters`, the usual case) the
+// writing is first read *again* as one letter of the text's height
+// (`ReclassifyCharacter`, in an rcSingleCharacterConfig area over the
+// box it was written in), the unit's own readings set aside and put
+// back around it; the word list is made from that second reading.
 Boolean
 DoReplaceSym(TParagraphView* para, WordHit* hit, UniChar* out, RefArg breakTable)
 {
@@ -3197,7 +3195,32 @@ DoReplaceSym(TParagraphView* para, WordHit* hit, UniChar* out, RefArg breakTable
 				ClearTryString();
 			AddTryString(was);
 
-			TWordList* words = hit->fUnit->MakeWordList(true, true);
+			TWordList* words;
+			if (!UsesLetters(para))
+			{
+				// a view read a word at a time: the writing read again as
+				// one letter standing on the line, as tall as the text's
+				// small letters, its own readings set aside meanwhile and
+				// put back afterwards (with the flags the reading changed)
+				TStdWordUnit* unit = (TStdWordUnit*) hit->fUnit->fUnit;
+				TDArray* saved = GetInterpretationsCopy(unit);
+				ULong flags = unit->fFlags;
+				StyleRecord styleRecord;
+				styleRecord.fPattern = nil;
+				RefVar style(para->GetStyleAtOffset(at, nil, nil));
+				CreateTextStyleRecord(style, &styleRecord);
+				FontInfo fontInfo;
+				GetStyleFontInfo(&styleRecord, &fontInfo);
+				ReclassifyCharacter(hit->fUnit, hit->fLine->fBounds.bottom - hit->fLine->fHeight, fontInfo.ascent);
+				words = hit->fUnit->MakeWordList(true, true);
+				SetInterpretationsCopy(unit, saved);
+				DeleteInterpretationsCopy(saved);
+				unit->fFlags = flags;
+				if (styleRecord.fPattern != nil)
+					DisposePattern(styleRecord.fPattern);
+			}
+			else
+				words = hit->fUnit->MakeWordList(true, true);
 			if (words != nil)
 			{
 				if (words->Score(0) < minScore)

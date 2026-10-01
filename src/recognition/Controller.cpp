@@ -1123,6 +1123,45 @@ SpecialExpireStroke(TUnit* unit)
 // unit classified as the pen's are; with the controller flagged internal
 // every pass runs whenever it is idled, and it is idled until as many
 // strokes have been handled or expired as were given.
+// ROM 0x00209f78 ClassifyInArea__11TControllerFP5TUnitP8TRecArea
+// A unit read again as if it had been written in another area: its subs
+// first, then its domain given the parameters the area runs it with (when
+// they are not already the ones it has) and asked to reclassify it with
+// the area as its only one; its own areas are put back afterwards.  A
+// unit with no areas is not read again at all.
+void
+TController::ClassifyInArea(TUnit* unit, TRecArea* area)
+{
+	ULong subs = (ULong) unit->SubCount();
+	for (ULong i = 0; i < subs; i++)
+		ClassifyInArea(((TSIUnit*) unit)->GetSub(i), area);		// (vtable +0x58: a unit with subs is a TSIUnit)
+	TDomain* domain = unit->fDomain;
+	Handle info = area->GetInfoFor(unit->fType, false);
+	if (info != nil && domain->fParameters != info)
+	{
+		domain->SetParameters(info);
+		domain->fParameters = info;
+	}
+	TAreaList* areas = unit->GetAreas();
+	if (areas == nil)
+		return;
+	unit->SetAreas(nil);
+	TAreaList* only = TAreaList::Make();
+	if (only != nil)
+	{
+		if (only->AddArea(area) == 0)
+		{
+			unit->SetAreas(only);
+			domain->Reclassify(unit);
+		}
+		unit->SetAreas(nil);
+		only->Dispose();
+	}
+	unit->SetAreas(areas);
+	areas->Dispose();
+}
+
+
 void
 TController::RecognizeInArea(TArray* strokes, TRecArea* area, ULong (*handler)(TUnit*, ULong), ULong arg)
 {

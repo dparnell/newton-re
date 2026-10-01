@@ -17,6 +17,14 @@
 #include "RootView.h"
 #include "OSErrors.h"
 #include "NewtonExceptions.h"
+#include "FixedMath.h"
+
+// a big-endian halfword kept whole, and one of which the ROM keeps only
+// the low byte
+static inline void	SetBEHalf(UByte* p, long v)			{ p[0] = (UByte) (v >> 8); p[1] = (UByte) v; }
+static inline void	SetBEHalfLowByte(UByte* p, long v)	{ v &= 0xff; p[0] = (UByte) (v >> 8); p[1] = (UByte) v; }
+// a big-endian halfword read as the ROM's ldr/lsr #16 does: unsigned
+static inline ULong	GetBEHalf(const UByte* p)			{ return ((ULong) p[0] << 8) | p[1]; }
 
 
 /*------------------------------------------------------------------------------
@@ -541,6 +549,51 @@ MakeArea(TController* controller, TView* view, ULong flags)
 }
 
 
+// ROM 0x00035a50 MakeCharArea__FP11TControllerlT2P5TRect
+// The area a single letter is read again in: rcSingleCharacterConfig
+// with an rcBaseInfo of the base line and the small letters' height (16.16,
+// rounded to pixels; no capitals' height or descent) and an rcGridInfo of
+// the one box the letter was written in (no spacing).
+TRecArea*
+MakeCharArea(TController* controller, long base, long smallHeight, Rect* box)
+{
+	RefVar config(BuildRCProto(nil, RefVar(Rrcsinglecharacterconfig)));
+	WordBaseInfo baseInfo;
+	SetBEHalf(baseInfo.base, (long) ((ULong) (base + 0x8000) >> 16));
+	SetBEHalf(baseInfo.smallHeight, (long) ((ULong) (smallHeight + 0x8000) >> 16));
+	SetBEHalf(baseInfo.bigHeight, 0);
+	SetBEHalf(baseInfo.descent, 0);
+	RefVar info(ToObject(&baseInfo));
+	SetFrameSlot(config, RefVar(RSSYMrcbaseinfo), info);
+	RecGridInfo grid;
+	SetBEHalf(grid.boxTop, box->top);
+	SetBEHalf(grid.boxBottom, box->bottom);
+	SetBEHalf(grid.ySpace, 0);
+	SetBEHalf(grid.boxLeft, box->left);
+	SetBEHalf(grid.boxRight, box->right);
+	SetBEHalf(grid.xSpace, 0);
+	info = ToObject(&grid);
+	SetFrameSlot(config, RefVar(RSSYMrcgridinfo), info);
+	gRecognition.fUnitHandler = HandleUnit;		// (the ROM's HandleReplayUnit while the arbiter replays - NOT YET, as in FindMatchingArea)
+	return MakeArea(controller, nil, 0, config);
+}
+
+
+// ROM 0x000348e4 ReclassifyCharacter__FP11TUnitPubliclT2
+// The x-height taken as the ascent less its 1/2.75 (16.16), the area
+// made over the unit's box, the unit read again in it, the area let go.
+void
+ReclassifyCharacter(TUnitPublic* unit, long base, long ascent)
+{
+	Fixed part = FixedDivide((Fixed) ((ULong) ascent << 16), 0x2c000);
+	Rect box;
+	unit->Bounds(&box);
+	TRecArea* area = MakeCharArea(gController, (long) ((ULong) base << 16), (long) ((ULong) ascent * 0x10000) - part, &box);
+	gController->ClassifyInArea(unit->fUnit, area);
+	area->Dispose();
+}
+
+
 // ROM 0x00035bc4 MakeRerecognizeArea__FP11TControllerRC6RefVar
 TRecArea*
 MakeRerecognizeArea(TController* controller, RefArg config)
@@ -727,10 +780,47 @@ GetNonNilInt(RefArg frame, RefArg slot)
 }
 
 
-// a big-endian halfword kept whole, and one of which the ROM keeps only
-// the low byte
-static inline void	SetBEHalf(UByte* p, long v)			{ p[0] = (UByte) (v >> 8); p[1] = (UByte) v; }
-static inline void	SetBEHalfLowByte(UByte* p, long v)	{ v &= 0xff; p[0] = (UByte) (v >> 8); p[1] = (UByte) v; }
+
+
+
+
+// ROM 0x00035590 SetNonNilInt__FRC6RefVarT1Ul
+void
+SetNonNilInt(RefArg frame, RefArg slot, ULong value)
+{
+	if (value != 0)
+		SetFrameSlot(frame, slot, RefVar(MAKEINT(value)));
+}
+
+
+// ROM 0x000355d8 ToObject__FP12WordBaseInfo
+// A clone of canonicalBaseInfo with the four numbers set (a nought left
+// as the canonical frame has it).
+Ref
+ToObject(WordBaseInfo* info)
+{
+	RefVar frame(Clone(RefVar(Rcanonicalbaseinfo)));
+	SetNonNilInt(frame, RefVar(RSSYMbase), GetBEHalf(info->base));
+	SetNonNilInt(frame, RefVar(RSSYMsmallheight), GetBEHalf(info->smallHeight));
+	SetNonNilInt(frame, RefVar(RSSYMbigheight), GetBEHalf(info->bigHeight));
+	SetNonNilInt(frame, RefVar(RSSYMdescent), GetBEHalf(info->descent));
+	return frame;
+}
+
+
+// ROM 0x000358c0 ToObject__FP11RecGridInfo
+Ref
+ToObject(RecGridInfo* info)
+{
+	RefVar frame(Clone(RefVar(Rcanonicalchargrid)));
+	SetNonNilInt(frame, RefVar(RSSYMboxleft), GetBEHalf(info->boxLeft));
+	SetNonNilInt(frame, RefVar(RSSYMboxright), GetBEHalf(info->boxRight));
+	SetNonNilInt(frame, RefVar(RSSYMxspace), GetBEHalf(info->xSpace));
+	SetNonNilInt(frame, RefVar(RSSYMboxtop), GetBEHalf(info->boxTop));
+	SetNonNilInt(frame, RefVar(RSSYMboxbottom), GetBEHalf(info->boxBottom));
+	SetNonNilInt(frame, RefVar(RSSYMyspace), GetBEHalf(info->ySpace));
+	return frame;
+}
 
 
 // ROM 0x00035830 FromObject__FRC6RefVarP12WordBaseInfo

@@ -522,6 +522,14 @@ set_tests_properties(host.NewtonRemoteWrite PROPERTIES TIMEOUT 180
                      PASS_REGULAR_EXPRESSION "went to the caret, not where it was written: ok.*remotewrite: done, 0 failed"
                      FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
 
+# a letter written over a letter of a word replaces it, read again as one
+# letter first (demo/overwrite.ns: DoReplaceSym, ReclassifyCharacter)
+add_test(NAME host.NewtonOverwrite COMMAND newton --display 320x480 --headless 90
+         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/overwrite.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonOverwrite PROPERTIES TIMEOUT 180
+                     PASS_REGULAR_EXPRESSION "the page reads .too.: ok.*overwrite: done, 0 failed"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+
 # the caret gestures on a line of writing, drawn with the pen
 # (demo/caretspace.ns): the join closes a space, a caret opens one, and a
 # caret with a tail opens an insert area that a word is written into, the
