@@ -6,12 +6,14 @@ schema_version = 1
 authors = ["Daniel Parnell"]
 repository = "ssh://git@vault:2222/daniel/newton-re.git"
 
-# The grammar is in this repository, in editor-plugins/tree-sitter-newtonscript.
-# rev must be a commit that holds the grammar (and has been pushed, for a
-# remote repository): after changing grammar.js, regenerate, commit, and put
-# the new commit here.  For a grammar not yet pushed, use
-# repository = "file:///F:/development/newtwon-re" (this checkout's path).
+# The grammar is in this repository, in editor-plugins/tree-sitter-newtonscript,
+# fetched from this checkout: the project's own git server refuses to fetch
+# a commit by its hash unless it is a branch's tip ("unadvertised object"),
+# so a remote URL only works for a rev that is the tip of a pushed branch.
+# Change the path if the checkout is elsewhere.  rev must be a commit that
+# holds the grammar: after changing grammar.js, regenerate, commit, and put
+# the new commit here.
 [grammars.newtonscript]
-repository = "ssh://git@vault:2222/daniel/newton-re.git"
+repository = "file:///F:/development/newtwon-re"
 rev = "2076b9adf08703253baaf7e906e4f7b2491dfff1"
 path = "editor-plugins/tree-sitter-newtonscript"

@@ -21,21 +21,19 @@ grammar accepts and where it comes from). It gives `.ns` files:
 1. In Zed, open the command palette and run **zed: install dev
    extension**, then pick this directory (`editor-plugins/zed-newtonscript`).
 2. Zed fetches the grammar from the `repository` and `rev` in
-   `extension.toml` (with `path` naming its subdirectory) and compiles it
-   to WebAssembly. Its log (**zed: open log**) shows any failure.
+   `extension.toml` (with `path` naming its subdirectory) into
+   `grammars/` here (git-ignored) and compiles it to WebAssembly with a
+   wasi-sdk it downloads the first time. Its log (**zed: open log**)
+   shows any failure.
 3. Open any `.ns` file - `src/host/demo/views.ns`, or one of `romsrc/`'s.
 
-The `repository` is this project's own; `rev` must be a commit that has
-the grammar in it **and has been pushed** there, since Zed fetches it with
-git. To try a grammar that is committed but not pushed, point
-`repository` at this checkout instead:
-
-```toml
-[grammars.newtonscript]
-repository = "file:///F:/development/newtwon-re"
-rev = "<the commit>"
-path = "editor-plugins/tree-sitter-newtonscript"
-```
+The `repository` is this checkout, `file:///F:/development/newtwon-re`;
+change it if yours is elsewhere. It is not the project's git server
+because that server only lets a commit be fetched by its hash when the
+commit is a branch's tip (git's "Server does not allow request for
+unadvertised object"), and `rev` is the commit that last changed the
+grammar, which rarely is. Any commit in the checkout will do, pushed or
+not.
 
 ## Changing it
 
