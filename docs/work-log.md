@@ -21,6 +21,26 @@ romsrc's `#hex` immediates and `@@` record lines; a 22-test corpus and
 a Zed extension (`zed-newtonscript/`): highlighting, brackets,
 indentation and an outline, installed with "zed: install dev extension".
 
+## 2026-10-01: displays of any size; lexicons and character tables as text
+
+- `newton --display WxH` fills the window (the owner's request).  The
+  320x480 came from the ROM itself: `GetAllRawDisplayParams` answers a
+  built-in table unless a global `AllRawDisplayParams` exists - the hook
+  a machine with another screen fills in - and the host now defines it
+  for any other size (DEVIATION); a window wider than tall starts in
+  landscape; the host panel's raw readings scale so the pen reaches the
+  whole display (past pixel 511 it could not).  The splash, Setup, the
+  Notepad, Dates, the button bar and the Extras drawer fill the space;
+  Names, the Calculator, slips and dialogs keep the sizes their own
+  templates give them.  ctest `host.NewtonBigScreen` at 1024x768.
+- The 40 lexicons are editable text (`.words` word lists, `.lex` graphs of
+  character sets; `tools/lexicons/newtonlex.py`) and the 16 Unicode,
+  sorting and break tables too (`texttable(...)`,
+  `tools/tables/newtontables.py`), all built back to the ROM's bytes, an
+  edit relaid out where it outgrows its room.
+- `coverage.py --categories`: 87.3% of the ROM code's bytes are cited;
+  `docs/next-steps.md` says what the rest is.
+
 ## 2026-10-01: printer problems reported the ROM's way; printers removed
 
 A job an IPP printer refuses, or that cannot reach it, ends as the
