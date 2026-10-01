@@ -12,7 +12,11 @@ flash").  A file is one of:
   * sparse - 'NewtFlsh': a 0x40-byte header, a map of one big-endian word
     per 1 KB chunk of the flash (0: erased, n: kept in slot n), and the
     chunks that are not all 0xFF, slot n at the chunks' offset +
-    (n - 1) * 1 KB.
+    (n - 1) * 1 KB.  The header's word at 0x28 is flags: bit 0 set when the
+    store keeps its binaries in a MessagePad's byte order (every sparse file
+    made since 2026-10-01; an older one's reals, shapes and string large
+    binaries are in the host's order, and newton repairs it when it mounts
+    it).
 
 Usage:
     python tools/stores/flashimage.py info FILE [--expect-stored MIN:MAX]
@@ -25,9 +29,13 @@ chunks are not erased and how many bytes the file takes; with
 `--expect-stored MIN:MAX` (megabytes, either side may be empty) it exits 1
 unless the file's own size lies between them - how the host's test checks
 that a sparse image grew with what was written and not with the flash.
-`to-sparse` and `to-flat` write a copy of an image in the other format
+`info` also says whether a sparse image is in a MessagePad's byte order
+or awaits newton's repair.  `to-sparse` and `to-flat` write a copy of an image in the other format
 (the flash's bytes are the same: `to-flat` of `to-sparse` of a flat file
-is that file).  `make-sparse` writes a new, erased sparse image.
+is that file).  A flat file is taken to be in a MessagePad's byte order
+(Einstein's are), so `to-sparse` marks its copy so, and `to-flat` of a
+sparse image that awaits the repair refuses (mount it with newton first).
+`make-sparse` writes a new, erased sparse image.
 
 Pure Python 3, no dependencies.
 """
@@ -39,6 +47,8 @@ import sys
 MAGIC = b"NewtFlsh"
 VERSION = 1
 HEADER_SIZE = 0x40
+FLAGS_OFFSET = 0x28
+BIG_ENDIAN_BINARIES = 0x01
 CHUNK = 0x400
 MIN_SIZE = 4 << 20
 MAX_SIZE = 128 << 20
@@ -70,6 +80,7 @@ class Image:
         self.flash = flash
         self.file_size = file_size
         self.stored_chunks = stored_chunks
+        self.flags = BIG_ENDIAN_BINARIES
 
 
 def read_image(path):
@@ -99,7 +110,9 @@ def read_image(path):
             start = data_off + (slot - 1) * CHUNK
             flash[n * CHUNK:(n + 1) * CHUNK] = raw[start:start + CHUNK]
             stored += 1
-        return Image("sparse", flash, len(raw), stored)
+        image = Image("sparse", flash, len(raw), stored)
+        image.flags = struct.unpack(">I", raw[FLAGS_OFFSET:FLAGS_OFFSET + 4])[0]
+        return image
     if not valid_size(len(raw)):
         raise ValueError("%s: neither a sparse image nor a flat flash (%d bytes)" % (path, len(raw)))
     flash = bytearray(raw)
@@ -113,7 +126,7 @@ def write_sparse(path, flash):
     count = size // CHUNK
     off = data_offset(size)
     header = MAGIC + struct.pack(">8I", VERSION, HEADER_SIZE, size, bank_size(size), CHUNK,
-                                 count, HEADER_SIZE, off)
+                                 count, HEADER_SIZE, off) + struct.pack(">I", BIG_ENDIAN_BINARIES)
     header += b"\0" * (HEADER_SIZE - len(header))
     words = bytearray(4 * count)
     chunks = []
@@ -180,6 +193,9 @@ def main(argv=None):
         print("chunks not erased: %d of %d (%.2f MB)"
               % (image.stored_chunks, size // CHUNK, image.stored_chunks * CHUNK / 1048576.0))
         print("file: %d bytes (%.2f MB)" % (image.file_size, image.file_size / 1048576.0))
+        if image.format == "sparse":
+            print("binaries: %s" % ("a MessagePad's byte order" if image.flags & BIG_ENDIAN_BINARIES
+                                    else "an older host's byte order (newton repairs it when it mounts it)"))
         if args.expect_stored:
             low, high = parse_range(args.expect_stored)
             mb = image.file_size / 1048576.0
@@ -191,6 +207,10 @@ def main(argv=None):
     if args.command == "to-sparse":
         write_sparse(args.out, image.flash)
     else:
+        if not image.flags & BIG_ENDIAN_BINARIES:
+            print("flashimage: %s was written by an older host (its reals and text in the host's byte order);"
+                  " mount it with newton first, which repairs it" % args.file, file=sys.stderr)
+            return 1
         write_flat(args.out, image.flash)
     return 0
 
