@@ -1,0 +1,236 @@
+// NewtCard (fixtures/packages/apps/NewtCard), NS BASIC Corporation's
+// HyperCard for the Newton, used as its user would: stacks of cards with
+// text, pictures and buttons, kept in a soup each.  The stacks come as
+// self-extracting packages (Stacks/*.PKG, made by PackIt): tapped in the
+// Extras drawer, each shows PackMan's slip, whose Unpack button makes the
+// stack's soup and then offers to delete the package.  NewtCard asks for
+// its serial number the first time (eight digits, each turned up a tap at
+// a time; the README's (x - 10000017) mod 127 = 0: 10002557), opens on
+// the Home stack, whose icons open the other stacks.
+// ctest host.NewtonAppNewtCard:
+//
+//   build/host/host/newton --display 320x480 --erase --store tmp/newtcard.store \
+//       --headless 280 --package fixtures/packages/apps/NewtCard/newtcard.pkg \
+//       --package fixtures/packages/apps/NewtCard/NewtCard/Stacks/HOME.PKG \
+//       --package fixtures/packages/apps/NewtCard/NewtCard/Stacks/ADDRESS.PKG \
+//       --package fixtures/packages/apps/NewtCard/NewtCard/Stacks/RECIPE.PKG \
+//       --script src/host/demo/apps-newtcard.ns
+//
+// (The stacks were laid out on an eMate's 480-pixel-wide screen, so on a
+// MessagePad the Home stack's right-hand icons are off the edge, as they
+// are on the device.  Their packages' part frames hold eleven refs left
+// as the addresses the template had on the machine PackIt made them on -
+// the drawer's text and icon - which the host makes refs into nothing,
+// frames/FramesPart.cpp; the drawer then shows the package's name.)
+
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
+HostInclude("walkhelpers.ns");		// findView, viewWithText, the steps
+HostInclude("apphelpers.ns");		// openFromExtras, tapButtonText
+
+wtName := "newtcard";
+ncSym := '|NewtCard:NSB|;
+ncSnap := func(n) ScreenSnapshot("build/walkthrough-" & n & ".pgm");
+
+ncSoupNames := func() GetStores()[0]:GetSoupNames();
+ncHasSoup := func(name) LSearch(call ncSoupNames with (), name, 0, '|str=|, nil);
+
+// a stack package unpacked: its icon tapped in the Extras drawer, Unpack,
+// then OK to the question whether to delete the package.  PackMan's slip
+// and the question are modal, so what answers them is set going before
+// the tap that brings them up (the tap does not come back until they go)
+ncUnpack := func(app, soup) func(done) begin
+	local drawer := GetRoot().extrasDrawer;
+	drawer:Open();
+	call waitFor with (wtName & ": the Extras drawer", func() drawer.viewCObject, func() begin
+		local icon := call findView with (drawer, func(v) v.target and v.target.fentry and v.target.fentry.app = app);
+		call wtCheck with ("the " & soup & " package in the drawer", icon, "(no icon)");
+		call waitFor with (wtName & ": PackMan's slip for " & soup, func() call viewLabelled with (GetRoot(), "Unpack"), func() begin
+			call waitFor with (wtName & ": the delete question for " & soup, func() call viewLabelled with (GetRoot(), "OK"), func() begin
+				call waitFor with (wtName & ": " & soup & " unpacked", func() not call viewLabelled with (GetRoot(), "Unpack"), func() begin
+					call wtCheck with (soup & " unpacked into its soup", call ncHasSoup with (soup), "(no soup " & soup & ")");
+					if drawer.viewCObject then drawer:Close();
+					AddDelayedCall(done, nil, 500);
+				end, 30);
+				call tapButtonText with (GetRoot(), "OK");
+			end, 30);
+			call tapButtonText with (GetRoot(), "Unpack");
+		end, 30);
+		if icon then call tapCentre with (icon);
+	end, 20);
+end;
+
+// the serial number slip: eight digit wheels, each a tap on its top half
+// turning it up by one
+ncSerialSlip := func() call findView with (GetRoot().(ncSym), func(v) v.digitBase and v.value <> nil);
+ncSerial := func(done) begin
+	call waitFor with (wtName & ": the serial number slip", ncSerialSlip, func() begin
+		local np := call ncSerialSlip with ();
+		local b := np:GlobalBox();
+		local taps := [];
+		foreach k, d in [1, 0, 0, 0, 2, 5, 5, 7] do for n := 1 to d do AddArraySlot(taps, b.left + 12 + 22 * k);
+		local i := 0, next;
+		next := func() if i < Length(taps) then begin
+			call tapAt with (taps[i], b.top + 3);
+			i := i + 1;
+			AddDelayedCall(next, nil, 200);
+		end else begin
+			call wtCheck with ("the serial number dialled", np.value = 10002557, "(it shows " & np.value & ")");
+			// the slip's close box, below the wheels at the right
+			local slip := np:Parent();
+			local sb := slip:GlobalBox();
+			call tapAt with (sb.right - 8, sb.bottom - 9);
+			call waitFor with (wtName & ": the serial number slip closed", func() not call ncSerialSlip with (), done, 20);
+		end;
+		call next with ();
+	end, 30);
+end;
+
+ncShows := func(text) call findView with (GetRoot().(ncSym), func(v) IsString(v.text) and StrPos(v.text, text, 0));
+ncApp := func() GetRoot().(ncSym);
+ncStack := func() begin local a := call ncApp with (); if a and a.stack then a.stack.name end;
+ncCard := func() begin local a := call ncApp with (); if a then a.card end;
+ncCardIs := func(stack, cardName) func() begin
+	local c := call ncCard with ();
+	local st := call ncStack with ();
+	IsString(st) and StrEqual(st, stack) and c and (not cardName or StrEqual(c.name, cardName))
+end;
+// a key command: the Command key held while a key is pressed
+ncCommandKey := func(code) begin KeyEvent(55, true); call typeKey with (code); KeyEvent(55, nil); end;
+// a card's entry in a stack's soup, by id
+ncEntry := func(soup, id) begin
+	local c := GetUnionSoup(soup):Query(nil);
+	local e := c:Entry();
+	while e and e.id <> id do e := c:Next();
+	e
+end;
+ncPara := func(text) call findView with (GetRoot().(ncSym), func(v) v.viewClass = 81 and IsString(v.text) and BeginsWith(v.text, text));
+ncNewCardId := nil;
+// a slip's label (a labelled input line's, which viewLabelled does not match)
+ncLabel := func(text) call findView with (GetRoot(), func(v) v.viewClass = 81 and IsString(v.text) and StrPos(v.text, text, 0));
+
+wtSteps := [
+	call ncUnpack with ('|Home:stk|, "home:stk"),
+	call ncUnpack with ('|address:stk|, "Address:stk"),
+	call ncUnpack with ('|Recipe:stk|, "Recipe:stk"),
+	func(done) call openFromExtras with ("NewtCard", ncSym, done),
+	ncSerial,
+	call waitStep with ("the Home stack", func() call ncShows with ("NewtCard Home Stack")),
+	func(done) begin
+		call wtCheck with ("NewtCard opens on the Home stack", BeginsWith(call ncStack with (), "home"), "(stack " & SPrintObject(call ncStack with ()) & ")");
+		call ncSnap with ("newtcard-home");
+		// the Address icon, above its label, is a button going to that stack
+		local label := call findView with (call ncApp with (), func(v) IsString(v.text) and StrEqual(v.text, "Address"));
+		local b := label:GlobalBox();
+		call tapAt with ((b.left + b.right) div 2, b.top - 20);
+		call waitFor with (wtName & ": the Address stack", func() call ncShows with ("George Henne"), done, 20);
+	end,
+	func(done) begin
+		call wtCheck with ("the Home stack's Address button opens the Address stack", StrEqual(call ncStack with (), "Address") and call ncShows with ("George Henne"), "(stack " & SPrintObject(call ncStack with ()) & ")");
+		call wtCheck with ("its card shows the address", call ncShows with ("77 Hill Crescent"), "(no address)");
+		call ncSnap with ("newtcard-address");
+		// Go > Jump to Stack (Command-K): a slip naming the stack, whose
+		// label is a picker of them
+		call ncCommandKey with (40);
+		call waitFor with (wtName & ": the Jump to Stack slip", func() call viewLabelled with (GetRoot(), "Jump to Stack"), done, 20);
+	end,
+	func(done) begin
+		call tapCentre with (call ncLabel with ("Stack Name"));
+		call waitFor with (wtName & ": the stacks' picker", pickerUp, done, 20);
+	end,
+	func(done) begin
+		local items := (call pickerUp with ()).pickItems;
+		call wtCheck with ("the picker lists the three stacks", Length(items) = 3, "(" & Length(items) & " items)");
+		call pickItem with ("Recipe");
+		call waitFor with (wtName & ": Recipe picked", func() not call pickerUp with (), func() begin
+			call tapButtonText with (GetRoot(), "OK");
+			call waitFor with (wtName & ": the Recipe stack", call ncCardIs with ("Recipe", "Recipe"), done, 20);
+		end, 20);
+	end,
+	func(done) begin
+		call wtCheck with ("Jump to Stack opens the Recipe stack on its title card", call (call ncCardIs with ("Recipe", "Recipe")) with (), "(" & SPrintObject(call ncStack with ()) & ")");
+		call ncSnap with ("newtcard-recipe");
+		// the title card's arrow, a button going to the next card
+		call tapAt with (307, 270);
+		call waitFor with (wtName & ": the Spaghetti card", func() call ncShows with ("Spaghetti"), done, 20);
+	end,
+	func(done) begin
+		call wtCheck with ("the arrow goes to the Spaghetti card", call ncShows with ("Spaghetti"), "(not shown)");
+		// a field edited: the caret put after "You guessed it!" and a word typed
+		local para := call ncPara with ("You guessed it!");
+		local b := para:GlobalBox();
+		call tapAt with (200, b.top + 7);
+		call waitFor with (wtName & ": the caret in the field", func() GetKeyView() = para, func() begin
+			call typeText with (" Yum");
+			call waitFor with (wtName & ": the word typed", func() StrEqual(para.text, "You guessed it! Yum"), done, 20);
+		end, 20);
+	end,
+	func(done) begin
+		call wtCheck with ("a word typed into the card's field", call ncPara with ("You guessed it! Yum"), "(not typed)");
+		// away to the title card (the back arrow) and back (Command-3, Next Card)
+		call tapAt with (52, 287);
+		call waitFor with (wtName & ": back on the title card", call ncCardIs with ("Recipe", "Recipe"), func() begin
+			call ncCommandKey with (20);
+			call waitFor with (wtName & ": the Spaghetti card again", func() call ncShows with ("Spaghetti"), done, 20);
+		end, 20);
+	end,
+	func(done) begin
+		call wtCheck with ("the edit kept on the card", call ncPara with ("You guessed it! Yum"), "(lost)");
+		local e := call ncEntry with ("Recipe:stk", (call ncCard with ()).id);
+		call wtCheck with ("... and in the stack's soup", e and e.bgWidgets and StrEqual(e.bgWidgets.field_4.text, "You guessed it! Yum"), "(" & SPrintObject(e and e.bgWidgets) & ")");
+		call ncSnap with ("newtcard-edited");
+		// New > Card: a card on this card's background, with its Card Info slip
+		call tapButtonText with (call ncApp with (), "New");
+		call waitFor with (wtName & ": the New picker", pickerUp, done, 20);
+	end,
+	func(done) begin
+		local before := (call ncCard with ()).id;
+		call waitFor with (wtName & ": the Card Info slip", func() call viewLabelled with (GetRoot(), "Card Info"), func() begin
+			ncNewCardId := (call ncCard with ()).id;
+			call wtCheck with ("New Card makes a card", ncNewCardId <> before, "(still card " & before & ")");
+			// its name typed into the slip, which is then closed
+			local name := call ncLabel with ("Card Name");
+			local nb := name:GlobalBox();
+			call tapAt with (nb.right + 60, (nb.top + nb.bottom) div 2);
+			call waitFor with (wtName & ": the caret in the Card Name", func() GetKeyView() and GetKeyView().viewClass = 81, func() begin
+				call typeText with ("Pizza");
+				local slip := (call viewLabelled with (GetRoot(), "Card Info")):Parent();
+				local sb := slip:GlobalBox();
+				call tapAt with (sb.right - 8, sb.bottom - 9);
+				call waitFor with (wtName & ": the Card Info slip closed", func() not call viewLabelled with (GetRoot(), "Card Info"), done, 20);
+			end, 20);
+		end, 20);
+		call pickItem with ("Card");
+	end,
+	func(done) begin
+		// the new card's Name field (empty) filled in
+		local para := call findView with (call ncApp with (), func(v) v.viewClass = 81 and IsString(v.text) and StrEqual(v.text, "") and v:GlobalBox().top < 100);
+		call tapCentre with (para);
+		call waitFor with (wtName & ": the caret in the Name field", func() GetKeyView() = para, func() begin
+			call typeText with ("Pizza");
+			call waitFor with (wtName & ": the name typed", func() StrEqual(para.text, "Pizza"), done, 20);
+		end, 20);
+	end,
+	func(done) begin
+		call tapAt with (52, 287);
+		call waitFor with (wtName & ": back on the Spaghetti card", func() call ncShows with ("Spaghetti"), func() begin
+			call ncCommandKey with (20);
+			call waitFor with (wtName & ": the new card again", func() (call ncCard with ()).id = ncNewCardId, done, 20);
+		end, 20);
+	end,
+	func(done) begin
+		call wtCheck with ("the new card's field kept", call ncPara with ("Pizza"), "(not shown)");
+		local head := call ncEntry with ("Recipe:stk", 0);
+		local e := call ncEntry with ("Recipe:stk", ncNewCardId);
+		call wtCheck with ("the stack has three cards", head.cardcount = 3, "(" & head.cardcount & ")");
+		call wtCheck with ("the new card in the soup, named Pizza", e and StrEqual(e.name, "Pizza") and e.bgWidgets and StrEqual(e.bgWidgets.field_3.text, "Pizza"), "(" & SPrintObject(e) & ")");
+		call ncSnap with ("newtcard-new");
+		(call ncApp with ()):Close();
+		call done with ();
+	end,
+	func(done) begin
+		Print("newtcard: done, " & wtFailures & " failed");
+		HostQuit();
+	end];
+
+call walkSetup with ([2, 0, 45, 34, 14, 37], func()			// "Daniel"
+	call waitFor with ("newtcard: installed", func() GetRoot().(ncSym), wtNext, 60));

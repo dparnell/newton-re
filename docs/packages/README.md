@@ -631,6 +631,24 @@ for the help book, 2967 for ListView.
 `TPackageIterator::PackageFormatVersion` answers which it is, and
 `ImportFramesPart` takes the alignment to walk with.
 
+The signature is not the last word, though.  The store's page writer
+(`TFrameRelocationGenerator::Update`, ROM 0x000d1844) decides from the
+part itself: when its first object is the 0x10-byte part array, the word
+after its header (the GC word) with bit 0 set means four and clear means
+eight - NTK writes 1 there in a version 1 package and 0 in a version 0
+one.  NewtCard's self-extracting stacks (made on a Newton by PackIt) are
+"package1" files packed to eight with a 0 there, so `ImportPackagePart`
+reads the alignment the ROM's way.  The same stacks keep eleven refs in
+their part frames that are addresses from the machine PackIt ran on
+(0x602B6000 plus an offset - the drawer's `text` and `icon`); the ROM
+adds the package's base to them like any other, and the host makes them
+`kDeclawedRef` (`frames/FramesPart.cpp`'s `OutsidePartRef`, DEVIATION),
+so the drawer shows the package's name instead.
+
+A package file may also come in MacBinary, as a Macintosh kept one for
+transfer (NS BASIC 3.61's did): `host/HostPackages.cpp` installs the
+data fork, as the Mac's Package Installer sends it.
+
 ## The Extras drawer's entries
 
 The ROM's `InstallPart` finishes a HighROM package by sending the drawer

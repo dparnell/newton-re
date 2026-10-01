@@ -1378,6 +1378,14 @@ if(EXISTS ${THIRDPARTY_DIR}/apps/RPNcalc/rpncalc.pkg)
     newton_app_demo(NewtHack newthack games/NewtHack1_1/newthack.pkg games/NewtHack1_1/nhsounds.pkg games/NewtHack1_1/register.pkg)
     newton_app_demo(Note2Net note2net apps/NetHopper3.2/nethopper.pkg apps/NetHopper3.2/note2net.pkg)
     newton_app_demo(Fonts fonts "fonts/times font.pkg" fonts/monaco.pkg "fonts/zapf chancery font.pkg" "fonts/zapf dingbats font.pkg")
+    # NS BASIC 3.61: the console, a program, an example, the Visual Designer
+    # and MAKEPACKAGE (its packages MacBinary files, installed by their data forks)
+    newton_app_demo(NSBasic nsbasic apps/NSB361/NSB361/NSBasic.pkg apps/NSB361/NSB361/Runtime.pkg
+                    apps/NSB361/NSB361/MakePkg.pkg apps/NSB361/NSB361/Examples.pkg apps/NSB361/NSB361/VDesign.pkg)
+    # NewtCard: three self-extracting stacks unpacked, Home > Address, Jump to
+    # Stack > Recipe, a field edited and a card added
+    newton_app_demo(NewtCard newtcard apps/NewtCard/newtcard.pkg apps/NewtCard/NewtCard/Stacks/HOME.PKG
+                    apps/NewtCard/NewtCard/Stacks/ADDRESS.PKG apps/NewtCard/NewtCard/Stacks/RECIPE.PKG)
 else()
     message(STATUS "fixtures/packages not there: host.NewtonThirdPartyPackages is not run")
 endif()

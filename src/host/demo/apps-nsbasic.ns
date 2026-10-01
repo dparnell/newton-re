@@ -1,0 +1,214 @@
+// NS BASIC 3.61 (fixtures/packages/apps/NSB361), NS BASIC Corporation's
+// BASIC interpreter for the Newton, used as its user would: a console
+// that takes immediate commands and numbered program lines from the
+// keyboard, RUN, LIST, NEW, SAVE and ENTER (a program out of a NewtonPress
+// book: Examples.pkg); the Visual Designer (VDesign.pkg), which EDIT opens
+// on a WIDGETDEF line to lay a screen out with the pen, the layout then
+// shown by the program; and MAKEPACKAGE (MakePkg.pkg), which makes the
+// program a package of its own, opened from the Extras drawer.  The
+// packages came as MacBinary files, as a Macintosh kept them; the host
+// installs their data forks (host/HostPackages.cpp).
+//
+// On its first run NS BASIC asks for its serial number with a little BASIC
+// program of its own (INPUT, then ENVIRON serialNumber=); its commsCheck
+// (native code, run on src/armcpu) takes a number n with (n - 1000001)
+// mod 23 = 0 - so 1002301 - and asks again before every command until it
+// has one.  (The serial numbers in fixtures/packages/apps/NewtCard's
+// README, (n - 10000017) mod 127 = 0, are NewtCard's; 3.61 asks again for
+// them, as it would on a MessagePad.)
+//
+// The application's own faults, which a MessagePad has too: MAKEPACKAGE of
+// a program of one line divides by nought for its progress gauge (MakePkg's
+// encodeStatementArray: 10 + floor(i / program.chLines * 80), chLines being
+// the lines less one), and the gauge's viewValue, a NaN, stops the drawing
+// (TGaugeView::RealDraw's RINT throws, -48406) - so the program here has
+// two lines; LEN is not a function (STRLEN, NewtonScript's, is); "+" does
+// not join strings ("&" does).
+// ctest host.NewtonAppNSBasic:
+//
+//   build/host/host/newton --display 320x480 --erase --store tmp/nsbasic.store //       --headless 280 --package fixtures/packages/apps/NSB361/NSB361/NSBasic.pkg //       --package fixtures/packages/apps/NSB361/NSB361/Runtime.pkg //       --package fixtures/packages/apps/NSB361/NSB361/MakePkg.pkg //       --package fixtures/packages/apps/NSB361/NSB361/Examples.pkg //       --package fixtures/packages/apps/NSB361/NSB361/VDesign.pkg //       --script src/host/demo/apps-nsbasic.ns
+
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
+HostInclude("walkhelpers.ns");		// findView, the steps
+HostInclude("apphelpers.ns");		// openFromExtras, typeText, pickItem
+
+wtName := "nsbasic";
+nsbSym := '|BASIC:NSBASIC|;
+nsbVD := '|VisualDesigner:NSBASIC|;
+
+// the console: the paragraph that keeps the lines typed and printed
+nsbConsole := func() call findView with (GetRoot().(nsbSym), func(v) v.textLines);
+nsbText := func() begin local c := call nsbConsole with (); if c and IsString(c.text) then c.text else "" end;
+
+// a line typed and entered (Return), then done() once NS BASIC is back at
+// its prompt after it: what it printed after the line ends with "* " (the
+// console keeps a screenful, so what scrolls off cannot be counted on)
+nsbLine := func(line, expect) func(done) begin
+	local before := call nsbText with ();
+	call typeText with (line);
+	call typeKey with (36);
+	call waitFor with (wtName & ": " & line, func() begin
+		local t := call nsbText with ();
+		local after := call nsbAfter with (line);
+		not StrEqual(t, before) and EndsWith(after, "* ") and (StrEqual(after, "* ") or StrPos(after, expect, 0))
+	end, func() begin
+		ScreenSnapshot("build/walkthrough-nsbasic-last.pgm");
+		call done with ();
+	end, 30);
+end;
+nsbLines := func(lines) begin
+	local steps := [];
+	foreach l in lines do AddArraySlot(steps, call nsbLine with (l, "\n* "));
+	steps
+end;
+// what the console shows after the last time `line` was entered
+nsbAfter := func(line) begin
+	local t := call nsbText with ();
+	local k := nil, at := 0;
+	while (at := StrPos(t, "* " & line & "\n", at)) do begin k := at; at := at + 1; end;
+	if k then SubStr(t, k + StrLen(line) + 3, StrLen(t) - k - StrLen(line) - 3) else ""
+end;
+nsbExpect := func(what, line, want) func(done) begin
+	local got := call nsbAfter with (line);
+	call wtCheck with (what, StrEqual(got, want), "(it printed " & SPrintObject(got) & ")");
+	call done with ();
+end;
+
+nsbJoin := func(parts) begin local r := []; foreach part in parts do foreach x in part do AddArraySlot(r, x); r end;
+
+wtSteps := call nsbJoin with ([[
+	func(done) call openFromExtras with ("NS BASIC", nsbSym, done),
+	call waitStep with ("the serial number asked for", func() StrPos(call nsbText with (), "Enter your Serial Number now:", 0)),
+	func(done) begin
+		call typeText with ("1002301");
+		call typeKey with (36);
+		// the program's CLS: the screen cleared to a prompt
+		call waitFor with (wtName & ": the serial number entered", func() StrEqual(call nsbText with (), "* "), done, 30);
+	end,
+	func(done) begin
+		call wtCheck with ("the serial number taken (the screen cleared)", StrEqual(call nsbText with (), "* "), "(it shows " & SPrintObject(call nsbText with ()) & ")");
+		call done with ();
+	end,
+	// an immediate command
+	call nsbLine with ("PRINT 6*7", "\n* "),
+	call nsbExpect with ("PRINT 6*7", "PRINT 6*7", "42\n* "),
+	// a program: a loop, arithmetic, a string
+	call nsbLine with ("NEW", "\n* ")],
+	call nsbLines with (["10 FOR I=1 TO 5", "20 PRINT I*I", "30 NEXT I", "40 A=\"NEW\"",
+		"50 PRINT A & \"TON\"", "60 PRINT STRLEN(A & \"TON\")"]), [
+	call nsbLine with ("LIST", "\n* "),
+	call nsbExpect with ("LIST lists the program, indented, LET made explicit", "LIST",
+		"0010  FOR I=1 TO 5\n0020    PRINT I*I\n0030  NEXT I\n0040  LET A=\"NEW\"\n0050  PRINT A & \"TON\"\n0060  PRINT STRLEN(A & \"TON\")\n* "),
+	call nsbLine with ("RUN", "\n* "),
+	call nsbExpect with ("RUN prints the squares, the string and its length", "RUN", "1\n4\n9\n16\n25\nNEWTON\n6\n* "),
+	call shotStep with ("nsbasic-run"),
+	// an example out of the Examples book
+	call nsbLine with ("NEW", "\n* "),
+	call nsbLine with ("ENTER \"examples/for\"", "\n* "),
+	call nsbLine with ("LIST", "\n* "),
+	func(done) begin
+		call wtCheck with ("ENTER brings in the FOR example", StrPos(call nsbAfter with ("LIST"), "0020  FOR i = 1 TO 10 STEP 3", 0), "(it listed " & SPrintObject(call nsbAfter with ("LIST")) & ")");
+		call done with ();
+	end,
+	call nsbLine with ("RUN", "\n* "),
+	func(done) begin
+		local got := call nsbAfter with ("RUN");
+		call wtCheck with ("the example runs: i by threes, j 1 and 2", BeginsWith(got, "1         1\n1         2\n4         1\n") and StrPos(got, "10        2\n* ", 0), "(it printed " & SPrintObject(got) & ")");
+		call done with ();
+	end,
+	// the Visual Designer: EDIT on a WIDGETDEF line
+	call nsbLine with ("NEW", "\n* "),
+	call nsbLine with ("10 WIDGETDEF layout1", "\n* "),
+	func(done) begin
+		call typeText with ("EDIT 10");
+		call typeKey with (36);
+		call waitFor with (wtName & ": the Visual Designer", func() GetRoot().(nsbVD) and GetRoot().(nsbVD).viewCObject, done, 30);
+	end,
+	func(done) begin
+		call wtCheck with ("EDIT opens the Visual Designer on layout1", call findView with (GetRoot().(nsbVD), func(v) IsString(v.text) and StrPos(v.text, "layout1", 0)), "(no title)");
+		// New: a picker of the widgets; a text button
+		call tapButtonText with (GetRoot().(nsbVD), "New");
+		call waitFor with (wtName & ": the widget picker", pickerUp, done, 20);
+	end,
+	func(done) begin
+		call pickItem with ("textButton");
+		call waitFor with (wtName & ": the widget made", func() call viewLabelled with (GetRoot().(nsbVD), "Button"), done, 20);
+	end,
+	func(done) begin
+		call wtCheck with ("a text button made on the layout", call viewLabelled with (GetRoot().(nsbVD), "Button"), "(none)");
+		call wtCheck with ("... with its properties slip", call viewLabelled with (GetRoot().(nsbVD), "Widget_0"), "(no slip)");
+		ScreenSnapshot("build/walkthrough-nsbasic-vdesign.pgm");
+		// the Visual Designer closed (its close box): back in NS BASIC
+		local close := call findView with (GetRoot().(nsbVD), func(v) begin local b := v:GlobalBox(); b.left > 290 and b.top > 410 and b.right - b.left < 20 end);
+		call tapCentre with (close);
+		// and NS BASIC told what was laid out (visualDesignerReturn, a
+		// delayed action: the WIDGETDEF line entered again with the
+		// layout, and quitting allowed again)
+		call waitFor with (wtName & ": the Visual Designer closed", func() not GetRoot().(nsbVD).viewCObject and not GetRoot().(nsbSym).noQuitAllowed, done, 20);
+	end],
+	// the layout shown by the program
+	call nsbLines with (["20 WINDOW w, layout1", "30 SHOW w", "40 PRINT \"SHOWN\""]), [
+	call nsbLine with ("RUN", "SHOWN\n* "),
+	func(done) begin
+		local button := call findView with (GetRoot(), func(v) IsString(v.text) and StrEqual(v.text, "Button") and v.windowspec);
+		call wtCheck with ("WINDOW and SHOW put the designed button on the screen", button and button.viewCObject, "(not shown)");
+		ScreenSnapshot("build/walkthrough-nsbasic-widget.pgm");
+		call done with ();
+	end,
+	// a program made a package of its own (MakePkg.pkg, over Runtime.pkg)
+	call nsbLine with ("NEW", "\n* ")],
+	call nsbLines with (["10 PRINT \"HELLO\"", "20 PRINT 2+2"]), [
+	call nsbLine with ("RUN", "4\n* "),
+	call nsbLine with ("SAVE \"HELLO\"", "HELLO saved.\n* "),
+	func(done) begin
+		// MAKEPACKAGE asks first (a modal question, so what answers it is
+		// set going before the command that asks)
+		call waitFor with (wtName & ": MAKEPACKAGE's question", func() call viewLabelled with (GetRoot(), "OK"), func() begin
+			call waitFor with (wtName & ": the package made", func() GetRoot().|HELLO:NSBASIC|, done, 60);
+			call tapButtonText with (GetRoot(), "OK");
+		end, 20);
+		call typeText with ("MAKEPACKAGE");
+		call typeKey with (36);
+	end,
+	func(done) begin
+		local made := nil;
+		foreach p in GetPackages() do if StrEqual(p.title, "HELLO:NSBASIC") then made := p;
+		call wtCheck with ("MAKEPACKAGE makes the package HELLO:NSBASIC", made, "(not installed)");
+		GetRoot().(nsbSym):Close();
+		call waitFor with (wtName & ": NS BASIC closed", func() not GetRoot().(nsbSym).viewCObject, done, 20);
+	end,
+	// the made package opened from the Extras drawer: its form chains to
+	// NS BASIC (Runtime.pkg's when NS BASIC is not installed), which runs
+	// the program with its window hidden - the made package's design
+	// (theForm.chain hides it unless asked otherwise): what it printed is
+	// in the console all the same
+	func(done) begin
+		local drawer := GetRoot().extrasDrawer;
+		drawer:Open();
+		call waitFor with (wtName & ": the Extras drawer", func() drawer.viewCObject, func() begin
+			local icon := call findView with (drawer, func(v) v.target and v.target.fentry and v.target.fentry.app = '|HELLO:NSBASIC|);
+			call wtCheck with ("the made package's icon in the Extras drawer", icon, "(not there)");
+			if icon then call tapCentre with (icon);
+			call waitFor with (wtName & ": the made package's program run", func() begin
+				local app := GetRoot().(nsbSym);
+				app.viewCObject and app.editor and IsString(app.editor.text) and StrPos(app.editor.text, "HELLO
+4
+* ", 0)
+			end, done, 30);
+		end, 20);
+	end,
+	func(done) begin
+		local app := GetRoot().(nsbSym);
+		call wtCheck with ("the made package runs the program: HELLO, 4", app.editor and IsString(app.editor.text) and StrPos(app.editor.text, "HELLO
+4
+* ", 0), "(" & SPrintObject(app.editor and app.editor.text) & ")");
+		app:Close();
+		call done with ();
+	end,
+	func(done) begin
+		Print("nsbasic: done, " & wtFailures & " failed");
+		HostQuit();
+	end]]);
+
+call walkSetup with ([2, 0, 45, 34, 14, 37], func()			// "Daniel"
+	call waitFor with ("nsbasic: installed", func() GetRoot().(nsbSym) and GetRoot().(nsbVD), wtNext, 60));

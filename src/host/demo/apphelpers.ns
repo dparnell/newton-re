@@ -38,7 +38,7 @@ openFromExtras := func(label, sym, done) begin
 end;
 
 // text typed on the keyboard, a key (ADB key code) a character: letters,
-// digits, space, . / - and : (shifted)
+// digits, space, . / - , ; = ' and, shifted, : + " ( ) * < > $ ! ? & # % _
 appLetterKeys := {a: 0, s: 1, d: 2, f: 3, h: 4, g: 5, z: 6, x: 7, c: 8, v: 9, b: 11, q: 12, w: 13,
 	e: 14, r: 15, y: 16, t: 17, o: 31, u: 32, i: 34, p: 35, l: 37, j: 38, k: 40, n: 45, m: 46};
 appDigitKeys := [29, 18, 19, 20, 21, 23, 22, 26, 28, 25];
@@ -52,6 +52,24 @@ typeText := func(text) begin
 		else if c = $/ then code := 44
 		else if c = $- then code := 27
 		else if c = $: then begin code := 41; shifted := true; end
+		else if c = $, then code := 43
+		else if c = $; then code := 41
+		else if c = $= then code := 24
+		else if c = $' then code := 39
+		else if c = $+ then begin code := 24; shifted := true; end
+		else if c = $" then begin code := 39; shifted := true; end
+		else if c = $( then begin code := 25; shifted := true; end
+		else if c = $) then begin code := 29; shifted := true; end
+		else if c = $* then begin code := 28; shifted := true; end
+		else if c = $< then begin code := 43; shifted := true; end
+		else if c = $> then begin code := 47; shifted := true; end
+		else if c = $$ then begin code := 21; shifted := true; end
+		else if c = $! then begin code := 18; shifted := true; end
+		else if c = $? then begin code := 44; shifted := true; end
+		else if c = $& then begin code := 26; shifted := true; end
+		else if c = $# then begin code := 20; shifted := true; end
+		else if c = $% then begin code := 23; shifted := true; end
+		else if c = $_ then begin code := 27; shifted := true; end
 		else if c >= $A and c <= $Z then begin
 			code := GetSlot(appLetterKeys, Intern(SPrintObject(c)));		// (symbols are alike whatever their case)
 			shifted := true;
