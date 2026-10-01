@@ -9,6 +9,24 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: the caret gestures the ROM's way; views NOT YETs 46 to 28
+
+- The caret gestures insert as the ROM's do (e6b33c04):
+  `InsertHorizontalSpace` through `DoInsertItems` (a space measured with a
+  one-character text object), `InsertVerticalSpace` through `AddWord`,
+  `CheckAndDoJoin` removing through `DoInsertItems`; and the insert areas
+  (`views/ParagraphInsertAreas.cpp`): a caret with a tail leaves an area
+  whose leftover white space the paragraph's idler takes out, each block
+  undoable, once the pen has rested 90 ticks.  ROM bug kept: a deletion
+  swallowing a whole area leaves its length negative.  ctest
+  `host.NewtonCaretSpace` ("ton to" joined, split, a gap opened and
+  written into: "ton to to").
+- Views (6dadcb2b): `TView::Printing`, the page's caret on the selection
+  stack (after a scrub it goes back where it was), `AddNewParagraph`'s
+  `SaveAddedUnitBounds`/`AddWordInfo` - so the corrector for a word just
+  written offers the engine's readings and the ink, not the spelling list.
+- The two year-2010 tests write separate snapshots (461f5228).
+
 ## 2026-10-01: a paragraph's text read back the ROM's way
 
 The rest of the paragraph's line work (37b0c4a3): what is asked of the

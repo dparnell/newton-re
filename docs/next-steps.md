@@ -167,6 +167,10 @@ Either must be vendored or fetched by a documented script if used.
   reproduces a timing race.  A test comparing two readings of the clock
   pins it (`SetRealClockSeconds`).  Run `analysis/romsizes.py` (and
   `--lp64`) after reconstructing message or reply code.
+- `ldr rX,[sp,#odd]` with no `asr #16` after it loads the whole rotated
+  word: the compiler is doing packed 32-bit arithmetic on two halfwords
+  and keeping the low half, not reading the wrong field (a "ROM bug" was
+  once reported from this misreading).
 - Unaligned `ldr rN,[X+2]` rotates the aligned word right by 16 - read
   halfword loads out of the disassembly, never the decompiler. Halfword
   stores come out as two `strb`. This matters most in functions that
