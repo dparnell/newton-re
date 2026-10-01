@@ -1,0 +1,328 @@
+// The soak: the machine used as a person uses it, round after round, for as
+// long as newton runs (tools/host/soak.py runs it for an hour or more and
+// watches the process).  Each round:
+//
+//   - one application from the Extras drawer and the root (as sweep.ns
+//     finds them) opened, used at random - taps, strokes, keys - and closed;
+//   - a word written on a new note and read ("ton");
+//   - a memory card put in, a soup entry written on its store, taken out
+//     (the first time the card is new and formatted: Erase, Erase);
+//   - with NEWTON_IPP_PRINTER set, the note printed to that printer (the
+//     first time chosen in the Print slip's chooser, as print-ipp.ns does);
+//   - with SOAK_BEAM=send, the note beamed to the newton at the other end
+//     of the IR port (which runs this with SOAK_BEAM=receive: beams
+//     received automatically, the In Box emptied now and then);
+//
+// and then a line "soak: round N ticks T ptrFree P handleFree H framesFree
+// F systemFree S" (GetHeapStats after a collection), which soak.py reads.
+// Old notes, In Box entries and card soups are thrown away every few rounds
+// so that what grows is the machine, not what it was asked to keep.  A step
+// that does not finish says "waited in vain" and the round goes on.
+//
+// SOAK_STEPS: the steps a round takes (default "sweep,write,card,print,beam",
+// a note being written by write and printed by print).  SOAK_TAPS: actions
+// per application (default 20).  SOAK_ROUNDS: rounds
+// before HostQuit (default: none - newton's --headless/--limit ends it).
+
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
+HostInclude("penhelpers.ns");		// penWriteWord, penFindPara
+HostInclude("walkhelpers.ns");		// findView
+
+soakTaps := 20;
+if HostGetEnv("SOAK_TAPS") then soakTaps := StringToNumber(HostGetEnv("SOAK_TAPS"));
+soakRounds := if HostGetEnv("SOAK_ROUNDS") then StringToNumber(HostGetEnv("SOAK_ROUNDS"));
+soakBeam := HostGetEnv("SOAK_BEAM");
+soakSteps := HostGetEnv("SOAK_STEPS");
+if not soakSteps then soakSteps := "sweep,write,card,print,beam";
+soakPrinter := HostGetEnv("NEWTON_IPP_PRINTER");
+soakCardFile := HostStoreFile() & ".soak.card";
+soakRound := 0;
+soakApps := [];
+soakAppIndex := 0;
+soakCardMade := nil;
+soakPrinterChosen := nil;
+soakPortrait := GetOrientation();
+soakBase := nil;					// the root's children when the rounds start
+soakSkip := ['setup, 'buttons, 'soupervisor, 'findOverview,
+	'|defaultTransport:Newton|, 'mailcategory, '|faxsend:newton|, '|FaxReceive:Newton|,
+	'|PhoneHome:Newton|, '|beam:newton|, 'mailSlip, '|print:newton|, 'onlineslip,
+	'|NHpkgHandler:ALLPEN|, 'inbox, 'copperfield,
+	// the ones that change what the rest of the round relies on
+	'prefs, 'cardStyles, 'extrasDrawer];
+
+soakList := func() begin
+	local cursor := GetRoot().ExtrasDrawer:GetPartCursor(nil, nil, nil);
+	local entry := cursor:Entry();
+	while entry do begin
+		local slot := entry.app;
+		if IsSymbol(slot) and GetRoot().(slot) and not LSearch(soakSkip, slot, 0, '|=|, nil)
+		and not LSearch(soakApps, slot, 0, '|=|, nil) then
+			AddArraySlot(soakApps, slot);
+		entry := cursor:Next();
+	end;
+	foreach slot, v in GetRoot() do
+		if IsSymbol(slot) and IsFrame(v) and not IsArray(v) and v.appSymbol and v.title and v.viewClass
+		and not LSearch(soakSkip, slot, 0, '|=|, nil)
+		and not LSearch(soakApps, slot, 0, '|=|, nil) then
+			AddArraySlot(soakApps, slot);
+	Print("soak: " & Length(soakApps) & " applications");
+end;
+
+// whether one of the root view's children lies with its top left corner here
+soakShows := func(left, top) begin
+	local found := nil;
+	foreach child in GetRoot():ChildViewFrames() do begin
+		local box := child:GlobalBox();
+		if box.left = left and box.top = top then found := true;
+	end;
+	found;
+end;
+
+// waitFor, and a picture of the screen (beside the store, named by the
+// round) when what it waited for never came
+soakWait := func(what, test, andThen, seconds)
+	call waitFor with (what, test, func() begin
+		local ok := nil;
+		try ok := call test with () onexception |evt.ex| do nil;
+		if not ok then
+			ScreenSnapshot(HostStoreFile() & ".round" & soakRound & ".pgm");
+		call andThen with ();
+	end, seconds);
+
+// a tap, made again every three seconds (six times at most) until what
+// it should bring about has come, as a person taps again when nothing
+// happens: a tap made while the machine is busy - a slide-in still going,
+// the Notepad looking at its soups again after a card has gone, which
+// closes a menu opened meanwhile - is lost (NEWTON_HEAPCHECK's slow runs
+// land in those)
+soakTapUntil := func(what, x, y, test, andThen) begin
+	local tries := 0;
+	local shown := func() begin
+		local ok := nil;
+		try ok := call test with () onexception |evt.ex| do nil;
+		ok;
+	end;
+	local done := nil;		// (once it has come, or the wait is over, never again: the round has moved on)
+	local tapAgain;
+	tapAgain := func() begin
+		if call shown with () then done := true;
+		if not done and tries < 6 then begin
+			tries := tries + 1;
+			call tapAt with (x, y);
+			AddDelayedCall(tapAgain, nil, 3000);
+		end;
+	end;
+	call tapAgain with ();
+	call soakWait with (what, test, func() begin done := true; call andThen with (); end, 20);
+end;
+
+// whatever a sweep left open closed, newest first, as a person would put
+// away an error slip and the application under it
+soakCloseLeftovers := func() begin
+	local kids := GetRoot():ChildViewFrames();
+	for i := Length(kids) - 1 to 0 by -1 do
+		if not LSearch(soakBase, kids[i], 0, '|=|, nil) then begin
+			Print("soak: closing what was left open: " & SPrintObject(if kids[i].appSymbol then kids[i].appSymbol else kids[i].debug));
+			try kids[i]:Close() onexception |evt.ex| do nil;
+		end;
+end;
+
+// one application used and closed
+soakSweep := func(andThen) begin
+	local sym := soakApps[soakAppIndex];
+	soakAppIndex := (soakAppIndex + 1) mod Length(soakApps);
+	Print("soak: open " & SPrintObject(sym));
+	local app := GetRoot().(sym);
+	AddDelayedCall(func() begin
+		try app:Open() onexception |evt.ex| do
+			Print("soak: " & SPrintObject(sym) & " would not open");
+	end, nil, 1);
+	call soakWait with ("soak: " & SPrintObject(sym) & " open", func() app.viewCObject, func() begin
+		local n := 0;
+		local wasOpen := nil;
+		local tapNext;
+		tapNext := func() begin
+			if app.viewCObject then wasOpen := true;
+			if n >= soakTaps or (wasOpen and not app.viewCObject) then begin
+				try if app.viewCObject then app:Close() onexception |evt.ex| do nil;
+				if GetOrientation() <> soakPortrait then SetScreenOrientation(soakPortrait);
+				call soakCloseLeftovers with ();
+				AddDelayedCall(andThen, nil, 500);
+				return;
+			end;
+			n := n + 1;
+			AddDelayedCall(tapNext, nil, 300);
+			local box := if app.viewCObject then app:GlobalBox() else GetRoot():GlobalBox();
+			local x := Max(0, Min(319, box.left + Random(0, Max(0, box.right - box.left - 1))));
+			local y := Max(0, Min(479, box.top + Random(0, Max(0, box.bottom - box.top - 1))));
+			local what := Random(0, 9);
+			try
+				if what <= 5 then
+					call tapAt with (x, y)
+				else if what <= 7 then begin
+					PenDown(x, y);
+					for k := 1 to 5 do
+						PenMove(Max(0, Min(319, x + Random(-30, 30))), Max(0, Min(479, y + Random(-15, 15))));
+					PenUp();
+					IdleStrokes();
+				end else if what = 8 then
+					call typeKey with (Random(0, 45))
+				else
+					call typeKey with (if Random(0, 1) = 0 then 125 else 126)
+			onexception |evt.ex| do nil;
+		end;
+		call tapNext with ();
+	end, 10);
+end;
+
+// a new note, "ton" written on it and read
+soakWrite := func(andThen) begin
+	GetRoot().paperroll:Open();
+	GetRoot().paperroll:MakeTextNote("", true);
+	AddDelayedCall(func() begin
+		call penWriteWord with ("ton", 60, 200);
+		local up := Ticks();
+		IdleStrokes();
+		call soakWait with ("soak: ton", func() Ticks() - up > 40 and call penFindPara with (GetRoot(), "ton"), andThen, 20);
+	end, nil, 500);
+end;
+
+// a card in, an entry written, the card out
+soakCard := func(andThen) begin
+	local mounted := func() GetCardSlotStores(0) <> nil;
+	local use := func() begin
+		try begin
+			local store := GetCardSlotStores(0)[0];
+			local soup := store:GetSoup("Soak");
+			if not soup then soup := store:CreateSoupXmit("Soak", [], nil);
+			if soakRound mod 5 = 0 then begin
+				call soakRemoveAll with (soup:Query(nil), 0);
+			end;
+			soup:AddXmit({title: "soak round " & soakRound}, nil);
+		end onexception |evt.ex| do
+			begin Print("soak: the card's store:"); Print(CurrentException()); end;
+		HostRemoveCard(0);
+		call soakWait with ("soak: card out", func() not call mounted with (), andThen, 20);
+	end;
+	if not soakCardMade then begin
+		soakCardMade := true;
+		HostCreateCard(soakCardFile, 4);
+		HostInsertCard(0, soakCardFile);
+		// "This card appears to be new..." Erase, and once more Erase
+		local eraseUntilMounted;
+		eraseUntilMounted := func() begin
+			if call mounted with () then call use with ()
+			else begin
+				local kids := GetRoot():ChildViewFrames();
+				local button := call findView with (kids[Length(kids) - 1], func(v) IsString(v.text) and StrEqual(v.text, "Erase"));
+				if button then begin
+					local box := button:GlobalBox();
+					call tapAt with ((box.left + box.right) div 2, (box.top + box.bottom) div 2);
+				end;
+				AddDelayedCall(eraseUntilMounted, nil, 1000);
+			end;
+		end;
+		AddDelayedCall(eraseUntilMounted, nil, 2000);
+	end else begin
+		HostInsertCard(0, soakCardFile);
+		call soakWait with ("soak: card in", mounted, use, 30);
+	end;
+end;
+
+// the current note printed (print-ipp.ns's taps)
+soakPrint := func(andThen) begin
+	if not soakPrinter then return call andThen with ();
+	local before := HostIPPJobs();
+	local printNow := func()
+		call soakTapUntil with ("soak: Now or Later", 226, 284, func() call soakShows with (207, 250), func()	// Print
+			call soakTapUntil with ("soak: the job sent", 221, 256, func() not call soakShows with (207, 250), func()	// Now
+				call soakWait with ("soak: the job answered", func() HostIPPJobs() > before, andThen, 120)));
+	call soakTapUntil with ("soak: the Action menu", 310, 28, func() call soakShows with (183, 23), func()	// the note's Action button
+		call soakTapUntil with ("soak: the Print slip", 260, 33, func() call soakShows with (45, 134), func()	// Print Note
+			if soakPrinterChosen then call printNow with ()
+			else
+				call soakTapUntil with ("soak: the printers", 118, 196, func() call soakShows with (87, 202), func()	// the Printer picker
+					call soakTapUntil with ("soak: the chooser", 160, 241, func() call soakShows with (70, 80), func() begin	// Choose Other Printer
+						for i := 1 to 8 do call tapAt with (230, 161);	// scrolled to the end
+						call tapAt with (140, 182);		// IPP printer (PostScript)
+						call soakTapUntil with ("soak: the printer chosen", 237, 228, func() not call soakShows with (70, 80), func() begin	// closed
+							soakPrinterChosen := true;
+							call printNow with ();
+						end);
+					end))));
+end;
+
+// the note beamed to the other newton
+soakBeamSend := func(andThen) begin
+	if soakBeam <> "send" then return call andThen with ();
+	local outbox := GetUnionSoup("OutBox");
+	Send('beam, {appSymbol: 'paperroll, title: "Soak " & soakRound, body: {text: "round " & soakRound}});
+	call soakWait with ("soak: the Out Box", func() outbox:Query(nil):Entry() <> nil, func() begin
+		TransportNotify('|beam:Newton|, 'SendRequest, [{cause: 'user, item: outbox:Query(nil):Entry()}]);
+		call soakWait with ("soak: beamed", func() outbox:Query(nil):Entry() = nil, andThen, 90);
+	end, 20);
+end;
+
+// a cursor's entries removed but the last `keep` (after a removal the
+// cursor's Entry is 'deleted, so it is moved on with Next)
+soakRemoveAll := func(cursor, keep) begin
+	local n := cursor:CountEntries();
+	local e := cursor:Entry();
+	while e and n > keep do begin
+		EntryRemoveFromSoupXmit(e, nil);
+		n := n - 1;
+		e := cursor:Next();
+	end;
+end;
+
+// what the rounds keep, thrown away now and then
+soakTidy := func() begin
+	if soakRound mod 5 <> 0 then return;
+	try begin
+		local notes := GetUnionSoup("Notes");
+		call soakRemoveAll with (notes:Query(nil), 2);
+		call soakRemoveAll with (GetUnionSoup("InBox"):Query(nil), 0);
+	end onexception |evt.ex| do
+		begin Print("soak: tidying:"); Print(CurrentException()); end;
+end;
+
+soakStats := func() begin
+	local s := GetHeapStats({garbageCollectFrames: true});
+	Print("soak: round " & soakRound & " ticks " & Ticks()
+		& " ptrFree " & s.ptrFreeSize & " handleFree " & s.handleFreeSize
+		& " framesFree " & s.framesFreeSize & " systemFree " & s.systemFreeSize);
+	if soakBeam = "receive" then
+		Print("soak: the In Box holds " & GetUnionSoup("InBox"):Query(nil):CountEntries());
+end;
+
+// a step of the round, unless SOAK_STEPS leaves it out
+soakStep := func(name, step, andThen)
+	if StrPos(soakSteps, name, 0) then call step with (andThen) else call andThen with ();
+
+soakNext := func() begin
+	call soakStats with ();
+	call soakTidy with ();
+	soakRound := soakRound + 1;
+	if soakRounds and soakRound > soakRounds then begin
+		Print("soak: done");
+		HostQuit();
+		return;
+	end;
+	call soakStep with ("sweep", soakSweep, func()
+		call soakStep with ("write", soakWrite, func()
+			call soakStep with ("card", soakCard, func()
+				call soakStep with ("print", soakPrint, func()
+					call soakStep with ("beam", soakBeamSend, soakNext)))));
+end;
+
+SetRandomSeed(1);
+call walkSetup with ([2, 0, 45, 34, 14, 37], func() begin		// "Daniel"
+	if soakBeam = "receive" then begin
+		SetUserConfig('zapAutoReceive, true);
+		AddDeferredCall(functions.StartIRSniffing, nil);
+	end;
+	if soakBeam then SetUserConfig('zapCommToolId, "slir");
+	call soakList with ();
+	soakBase := GetRoot():ChildViewFrames();
+	call soakNext with ();
+end);

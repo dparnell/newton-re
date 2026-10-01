@@ -195,6 +195,80 @@ records them. Before the fix, 10 copies of `host.NewtonInetSetup` beside 8
 hogs passed 0 of 10; after it they pass 10 of 10. The cure is always the
 same: wait on a condition, and end the run with `HostQuit()`.
 
+## soak.py - an hour of use, watched
+
+Real use is long use. This runs newton for as long as asked and watches
+what grows:
+
+    python tools/host/soak.py build/host/host/newton --minutes 60 [--window-pen | --window]
+        [--heapcheck N] [--no-beam] [--no-print] [--interval 30] [--hang 600] [--taps 20]
+
+- **What newton does.** Each newton runs `src/host/demo/soak.ns` round
+  after round. A round has five steps:
+  - one application, from the Extras drawer and the root, opened, used at
+    random for `--taps` actions and closed (anything it left open, an
+    error slip included, is closed too);
+  - a word written on a new note and read;
+  - a memory card put in, a soup entry written on its store, the card
+    taken out;
+  - the note printed to an IPP printer that `soak.py` serves itself
+    (`tools/print/ippprinter.py`'s);
+  - the note beamed to a second newton, B, which receives automatically.
+
+  Each round ends with a `soak: round N ... ptrFree ... handleFree ...
+  framesFree ... systemFree ...` line, which is `GetHeapStats` after a
+  collection. Every fifth round the old notes, In Box entries and the
+  card's soup are thrown away, so what grows is the machine and not what
+  it was asked to keep. `SOAK_STEPS` (a comma-separated list) leaves steps
+  out when the script is run on its own.
+- **What is watched.** Every `--interval` seconds the host process is
+  sampled: its handle count, thread count, private bytes and working set,
+  read through the Windows API with ctypes, or from `/proc` on Linux.
+- **What counts as a problem.**
+  - A crash: the process ends early or with a non-zero status.
+  - A hang: no new round for `--hang` seconds. On Windows `stacksample.py`
+    is run on the hung process first, into `<name>.hang.txt`.
+  - A step that never finished: each one says "waited in vain" and leaves
+    a screen snapshot beside its store.
+- **The heap is checked while it runs.** Both newtons run under
+  `NEWTON_HEAPCHECK` at a sparse rate (`--heapcheck`, default every
+  50000 allocations).
+
+**Output.** Everything goes in `--out` (default `tmp/soak`):
+
+- each newton's log, `A.log` and `B.log`;
+- `ipp.log`, the printer's log;
+- `A.csv` and `B.csv`, one row per sample;
+- `jobs/`, the documents printed;
+- `summary.txt`, which is also printed at the end. For each measure it
+  gives the first, last, minimum and maximum, and the growth per hour as
+  a least-squares slope over the second half of the run (the first half
+  is the machine settling).
+
+The exit status is 1 if a newton crashed or hung.
+
+**What it found** (2026-10-01):
+
+- **A deleted task's thread was never ended.** It stayed parked for good,
+  so thread counts grew by one or two a minute (`docs/host-runtime.md`).
+- **`--headless` overran.** It counted its sleeps rather than reading the
+  clock, so a busy machine ran a 4-minute run on to 5½ minutes.
+- **`--limit` overflowed.** It went through a `TTimeout` of seconds,
+  which overflows beyond 582 seconds.
+- **Rosetta overflowed on a long stroke.** After 47 minutes, a random
+  stroke drawn on the Notepad made the sum of two `FixedMultiply` squares
+  in `SegmentStrokeMinDistance` overflow, and the host's sanitiser stopped
+  both newtons. The ARM's add simply wraps, so the reconstruction now
+  wraps too.
+
+Over the 47 minutes up to that crash, 39 rounds (78 print jobs and the
+beams), nothing else grew:
+
+- threads held at about 22;
+- handles held at about 145;
+- the Newton's pointer, handle and frames heaps were level;
+- private bytes grew by less than 10 MB an hour.
+
 ## profile.py - where a running host's time goes
 
 (On Linux, see "On Linux: the process samples itself" below.)
