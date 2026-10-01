@@ -303,10 +303,20 @@ and the copy of its object are host memory, `VAddr` is pointer-sized on the
 host (see `host_compat.h`).
 
 Known limits of this first runtime: no pre-emption between system calls
-(see above); a deleted task's thread is left parked (`gTaskDeletedHook` →
-`HostTaskDeleted` forgets it); a `Reset` (an unhandled exception reboots)
+(see above); a `Reset` (an unhandled exception reboots)
 ends the run through `gHostResetHook`; the run ends by leaving parked
 threads to the process exit.
+
+A deleted task's thread ends (`gTaskDeletedHook` → `HostTaskDeleted`
+marks its context dead and wakes it; `WaitForBaton` sees that and the
+thread exits where it stands - `ExitThread` on Windows, a raw `exit`
+system call on Linux - with its stack *not* unwound, since the destructors
+on it belong to the machine another task is running meanwhile).  A task
+that deletes itself is still in its own kernel call when the hook runs, so
+a thread waits on its own context (`gMyContext`), not on the map's entry
+for its task's address.  Left parked, as they first were, the threads of
+the tasks a session makes and deletes grew by one or two a minute
+(`tools/host/soak.py`).
 
 Because the run ends that way, the baton's `std::mutex` and
 `std::condition_variable` are made once and never destroyed

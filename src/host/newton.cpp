@@ -508,9 +508,15 @@ HeadlessTimer(void)
 {
 	// (a tenth of a second at a time, the queued packages sent to the
 	// world between; a TTimeout is 32 bits of 3.6864 MHz ticks, which is
-	// under ten minutes, so a long run could not be slept in one anyway)
-	for (ULong left = gHeadlessSeconds * 10; left > 0 && !gScriptQuit.load(); left--)
+	// under ten minutes, so a long run could not be slept in one anyway;
+	// the end is a time on the clock, not a count of sleeps, which a busy
+	// machine wakes from late - a 4-minute run went on for 5 1/2)
+	TTime end = GetGlobalTime() + TTime(gHeadlessSeconds, kSeconds);	// (not TimeFromNow: a TTimeout of seconds overflows past 582)
+	while (!gScriptQuit.load())
 	{
+		TTime now = GetGlobalTime();
+		if (CompCompare(&now.time, &end.time) >= 0)
+			break;
 		HostSendQueuedPackages();
 		Sleep(100 * kMilliseconds);
 	}
@@ -744,8 +750,11 @@ main(int argc, char** argv)
 	HostCatchCrashes();
 #endif
 	// tracing: stdout (Print, the traces' stacks) unbuffered, so that it
-	// stays in order with stderr (the traces' first lines) in one log
-	if (getenv("NEWTON_TRACE_MISSING") != nil || getenv("NEWTON_TRACE_EXCEPTIONS") != nil)
+	// stays in order with stderr (the traces' first lines) in one log;
+	// NEWTON_UNBUFFERED for a watcher reading the output as it comes
+	// (tools/host/soak.py)
+	if (getenv("NEWTON_TRACE_MISSING") != nil || getenv("NEWTON_TRACE_EXCEPTIONS") != nil
+	 || getenv("NEWTON_UNBUFFERED") != nil)
 		setvbuf(stdout, nil, _IONBF, 0);
 #ifdef _WIN32
 	signal(SIGILL, HostCrashedSignal);

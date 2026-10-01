@@ -110,7 +110,7 @@ void
 HostKeyboardToolTask(void)
 {
 	if (gHostTimeLimit != 0)
-		gHostQuitAt = TimeFromNow(gHostTimeLimit * kSeconds);
+		gHostQuitAt = GetGlobalTime() + TTime(gHostTimeLimit, kSeconds);	// (a TTimeout of seconds overflows past 582)
 	TUNameServer nameServer;
 	TObjectId portId = 0;
 	ULong spec = 0;

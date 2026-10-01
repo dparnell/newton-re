@@ -43,6 +43,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef _WIN32
+// (not <windows.h>, whose Sleep and Yield are the Newton's names too)
+extern "C" __declspec(dllimport) void __stdcall ExitThread(unsigned long exitCode);
+#else
+#include <unistd.h>
+#include <sys/syscall.h>
+#endif
 
 
 struct HostTaskContext
@@ -50,6 +57,7 @@ struct HostTaskContext
 	std::thread			fThread;
 	Boolean				fHasThread = false;
 	Boolean				fRunning = false;		// holds the baton (or has just been handed it)
+	Boolean				fDead = false;			// its task was deleted: the thread ends
 	std::condition_variable	fTurn;				// what the task's thread waits on for the baton
 };
 
@@ -69,11 +77,12 @@ struct HostTaskContext
 // main hung the process after every check had passed - which is what every
 // test that boots the OS did on Linux.  Windows' own destructor happens not
 // to wait, which is why it was never seen there.  (A deleted task's context
-// stays too: its thread is parked on its condition.)
+// is ended with its thread: see HostTaskDeleted.)
 static std::mutex&						gBaton = *new std::mutex;
 static std::condition_variable&			gBatonChanged = *new std::condition_variable;
 static std::map<TTask*, HostTaskContext*>	gContexts;
 static TTask*							gRunningTask = nil;		// whose thread holds the baton
+static thread_local HostTaskContext*	gMyContext = nil;		// the calling task thread's own
 static std::atomic<unsigned long>		gHandovers(0);			// bumped every time the baton is taken (and by HostTaskBusy)
 void									(*gHostStallReportHook)(void) = nil;
 static Boolean							gStopRequested = false;
@@ -99,12 +108,41 @@ Resume(TTask* task)
 }
 
 
+// Ends the calling thread where it stands, its stack not unwound: it is a
+// deleted task's, and what its frames would destroy on the way out (the
+// RefVars, the exception handlers, whatever the task was blocked in) is the
+// machine's, which another task is running meanwhile.  (Windows frees the
+// thread's stack; Linux's raw exit leaves glibc the stack's address space,
+// though not the thread.)
+[[noreturn]] static void
+EndThisThread(void)
+{
+#ifdef _WIN32
+	ExitThread(0);
+#else
+	for (;;)
+		syscall(SYS_exit, 0);
+#endif
+}
+
+
 // Waits until `task` holds the baton (the calling thread is its thread).
+// The thread's own context is the one waited on, not the map's: a task
+// that deletes itself is no longer in the map by the time it gives the
+// baton away (and a new task may have its address).
 static void
 WaitForBaton(TTask* task, std::unique_lock<std::mutex>& lock)
 {
-	HostTaskContext* ctx = ContextFor(task);
-	ctx->fTurn.wait(lock, [&] { return ctx->fRunning || gStopRequested; });
+	HostTaskContext* ctx = gMyContext != nil ? gMyContext : ContextFor(task);
+	ctx->fTurn.wait(lock, [&] { return ctx->fRunning || gStopRequested || ctx->fDead; });
+	if (ctx->fDead && !gStopRequested)
+	{
+		// the task was deleted: its thread goes too, as on the MessagePad
+		// its register set would simply never be loaded again
+		lock.unlock();
+		delete ctx;				// (nobody else waits on its condition)
+		EndThisThread();
+	}
 	if (gStopRequested)
 	{
 		// the run is over; this thread has nothing more to do and is left here
@@ -118,8 +156,9 @@ WaitForBaton(TTask* task, std::unique_lock<std::mutex>& lock)
 // A task's thread: run whatever the saved pc names, for as long as the kernel
 // keeps redirecting it.
 static void
-Trampoline(TTask* task)
+Trampoline(TTask* task, HostTaskContext* ctx)
 {
+	gMyContext = ctx;
 	{
 		std::unique_lock<std::mutex> lock(gBaton);
 		WaitForBaton(task, lock);
@@ -175,10 +214,10 @@ SwitchTo(TTask* self, TTask* next)
 	if (!ctx->fHasThread)
 	{
 		ctx->fHasThread = true;
-		ctx->fThread = std::thread(Trampoline, next);
+		ctx->fThread = std::thread(Trampoline, next, ctx);
 		ctx->fThread.detach();
 	}
-	ContextFor(self)->fRunning = false;
+	(gMyContext != nil ? gMyContext : ContextFor(self))->fRunning = false;
 	ctx->fTurn.notify_one();
 	WaitForBaton(self, lock);
 }
@@ -321,7 +360,7 @@ HostRunTasks(TTask* idle)
 	HostTaskContext* ctx = ContextFor(idle);
 	ctx->fRunning = true;
 	ctx->fHasThread = true;
-	ctx->fThread = std::thread(Trampoline, idle);
+	ctx->fThread = std::thread(Trampoline, idle, ctx);
 	ctx->fThread.detach();
 	gBatonChanged.wait(lock, [] { return gStopRequested; });
 }
@@ -342,9 +381,13 @@ HostStopTasks()
 
 
 // A task is being deleted (gTaskDeletedHook, from ~TTask).  Its thread, if
-// any, is parked in WaitForBaton and never runs again; its context stays
-// allocated for it, only the task is forgotten - a new TTask at the same
-// address must get a context (and thread) of its own.
+// any, is parked in WaitForBaton (or, a task deleting itself, will be once
+// it has handed the baton on) and never runs the task again: it is woken to
+// end itself, and its context goes with it.  The task is forgotten at once -
+// a new TTask at the same address must get a context (and thread) of its
+// own.  (Parked for good, as they once were, the threads of the tasks a
+// session makes and deletes - the forks, the card server's helpers - grew
+// by one or two a minute in a soak: tools/host/soak.py.)
 // The point a loop that never enters the kernel offers it to preempt
 // the task at (see TaskRuntime.h).  What the ROM's view tracking does
 // is the case that needs it: a NewtonScript loop reads the stroke over
@@ -480,5 +523,16 @@ void
 HostTaskDeleted(TTask* task)
 {
 	std::unique_lock<std::mutex> lock(gBaton);
-	gContexts.erase(task);
+	std::map<TTask*, HostTaskContext*>::iterator i = gContexts.find(task);
+	if (i == gContexts.end())
+		return;
+	HostTaskContext* ctx = i->second;
+	gContexts.erase(i);
+	if (!ctx->fHasThread)
+		delete ctx;
+	else
+	{
+		ctx->fDead = true;
+		ctx->fTurn.notify_one();
+	}
 }
