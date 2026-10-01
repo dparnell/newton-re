@@ -311,7 +311,8 @@ DrTextChunk(DrTextInfo* dti, long count, const UniChar* chars, const Fixed* adva
 	}
 	Rect drawn = clip;
 	// (host) NEWTON_TRACE_DRTEXT: each chunk, where its slab goes and how
-	if (getenv("NEWTON_TRACE_DRTEXT"))
+	static const bool traceDrText = getenv("NEWTON_TRACE_DRTEXT") != nullptr;		// (read once: every text chunk asked)
+	if (traceDrText)
 		fprintf(stderr, "DrTextChunk n=%ld x0=%ld y0=%ld slab=(%d,%d,%d,%d) dst=(%d,%d,%d,%d) clip=(%d,%d,%d,%d) direct=%d adj=%ld,%ld,%ld,%ld,%ld,%ld mode=%ld c0=%x sum=%x\n", count, x0, y0, slabRect.left, slabRect.top, slabRect.right, slabRect.bottom, dstRect.left, dstRect.top, dstRect.right, dstRect.bottom, clip.left, clip.top, clip.right, clip.bottom, direct, adjust[0], adjust[1], adjust[2], adjust[3], adjust[4], adjust[5], dti->fMode, chars[0], sum);
 	long depth = portBits.pixMapFlags & 0xff;
 	UByte* bits;								// where row `top` starts

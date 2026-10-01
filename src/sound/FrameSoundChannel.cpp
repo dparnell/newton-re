@@ -294,7 +294,8 @@ TFrameSoundChannel::Convert(RefArg sound, SoundBlock* block)
 	}
 	// what was done undone, and the error thrown
 	// (NEWTON_TRACE_SOUND: which frame, and what was made of it)
-	if (getenv("NEWTON_TRACE_SOUND") != NULL)
+	static const bool traceSound = getenv("NEWTON_TRACE_SOUND") != NULL;		// (read once: every sound asked)
+	if (traceSound)
 	{
 		RefVar type(GetProtoVariable(frame, RSSYMsndframetype, nil));
 		fprintf(stderr, "sound: cannot play a sound frame (%ld): sndFrameType %s, %ld bits, format %ld, rate %#lx, %ld samples\n", (long) err,

@@ -254,6 +254,33 @@ on stderr: in use, free inside the heap, mapped whole) and gdb breaking on
   at about 116 MB resident with no step after the first quarter of an hour
   but the capture filling up.
 
+## A soak round on Windows
+
+A soak (`tools/host/soak.py`) on Windows got through 15 rounds in twenty
+minutes where Linux got through ninety.  `soak.ns` now prints each step's
+time (`soak: step NAME TICKS`), and every step was slower on Windows - the
+card step 23 times, writing 12, printing 9, the sweep 3 - with newton
+using a whole core: computing, not waiting.  It was the soak's own heap
+check (`NEWTON_HEAPCHECK=50000`, soak.py's default): the walker
+(`host/HostHeapCheck.cpp`), run on every `DisposPtr` in the newt heap,
+called `getenv("NEWTON_HEAPDUMP")` once for every block of every walk.
+glibc's `getenv` is a quick scan; the Windows C runtime's takes a lock and
+compares without regard to case, and over a heap of thousands of blocks it
+was most of the run - a four-round soak took 176 s with the check against
+40 s without on Windows, and 40 s either way on Linux.  Read once, the
+check costs nothing on either host, and a six-minute soak now does 29
+rounds on Windows with the same step times as Linux.  The other
+environment variables read on hot paths are read once too: the text
+drawing's `NEWTON_TRACE_DRTEXT` (every chunk of text), armcpu's
+`NEWTON_TRACE_ARMCPU` (every ARM call), `NEWTON_TRACE_EXCEPTIONS` (every
+throw) and `NEWTON_TRACE_SOUND`.
+
+Timer resolution was not it: Windows ends a plain sleep on the system tick
+(15.6 ms by default), but the soak's steps took no longer with the idle
+task's sleep made exact.  That sleep is a high-resolution waitable timer
+now all the same (`hal/host/Timer.cpp`), so a Newton timer fires when it is
+due rather than on the next tick.
+
 ## Building under WSL
 
 The Linux results are from WSL 2 on the development machine, built on

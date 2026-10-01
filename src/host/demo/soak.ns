@@ -316,8 +316,16 @@ soakStats := func() begin
 end;
 
 // a step of the round, unless SOAK_STEPS leaves it out
+// (each step's time on the clock printed as it ends: "soak: step NAME
+// TICKS", which tools/host/soak.py sums by step)
 soakStep := func(name, step, andThen)
-	if StrPos(soakSteps, name, 0) then call step with (andThen) else call andThen with ();
+	if StrPos(soakSteps, name, 0) then begin
+		local began := Ticks();
+		call step with (func() begin
+			Print("soak: step " & name & " " & (Ticks() - began));
+			call andThen with ();
+		end);
+	end else call andThen with ();
 
 soakNext := func() begin
 	call soakStats with ();

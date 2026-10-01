@@ -62,7 +62,8 @@ SafeExceptionNotify(Exception* exception)
 		fprintf(stderr, ": %s\n", (const char*) exception->data);	// ThrowMsg carries the words
 	else
 		fprintf(stderr, " (%ld)\n", (long) (Long) exception->data);
-	if (getenv("NEWTON_TRACE_EXCEPTIONS") != nil && gREPout != nil)
+	static const bool traceExceptions = getenv("NEWTON_TRACE_EXCEPTIONS") != nil;		// (read once)
+	if (traceExceptions && gREPout != nil)
 		StackTrace();
 	fflush(stderr);
 }

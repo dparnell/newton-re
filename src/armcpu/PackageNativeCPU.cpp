@@ -3180,7 +3180,7 @@ Ref
 RunPackageNativeOnCPU(RefArg code, ULong offset, RefArg rcvr, long numArgs, const RefVar* const* args)
 {
 	// NEWTON_TRACE_ARMCPU=1: a line for each native call; 2: every call out
-	const char* trace = getenv("NEWTON_TRACE_ARMCPU");
+	static const char* const trace = getenv("NEWTON_TRACE_ARMCPU");		// (read once: every call asked)
 	gTrace = trace != nil && atoi(trace) >= 2;
 	Boolean summary = trace != nil;
 	long count = numArgs + 1;
@@ -3362,7 +3362,7 @@ WorldOfTask(void)
 uint32_t
 ARMCall(uint32_t pc, const uint32_t* args, int count)
 {
-	const char* trace = getenv("NEWTON_TRACE_ARMCPU");
+	static const char* const trace = getenv("NEWTON_TRACE_ARMCPU");		// (read once: every call asked)
 	gTrace = trace != nil && atoi(trace) >= 2;
 	if (count > 16)
 		ThrowMsg("armcpu: too many arguments");

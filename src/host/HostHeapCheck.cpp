@@ -17,6 +17,10 @@ static SkiaHeap*	gCheckedHeap = nil;
 static long			gEvery = 1;
 static long			gCount = 0;
 static Boolean		gInCheck = false;
+// NEWTON_HEAPDUMP, read once: getenv in the walk's loop - once a block, every walk -
+// was most of a soak round on Windows, whose getenv takes a lock and folds
+// case (docs/host-lp64.md, "A soak round on Windows")
+static Boolean		gDump = false;
 
 
 static void
@@ -44,14 +48,14 @@ WalkHeap(SkiaHeap* heap, const char* where, Boolean justAllocated)
 {
 	SkiaBlock* b = heap->HeaderBlock();
 	SkiaBlock* end = heap->Sentinel();
-	if (getenv("NEWTON_HEAPDUMP"))
+	if (gDump)
 		for (SkiaBlock* f = heap->fFreeHead; f != nil; f = f->fNext)
 			fprintf(stderr, "  free %p flags %02x size %lx next %p prev %p\n", (void*) f, f->fFlags, (unsigned long) f->fSize, (void*) f->fNext, (void*) f->fPrev);
 	SkiaBlock* expectFree = heap->fFreeHead;
 	SkiaBlock* prevFree = nil;
 	while (b < end)
 	{
-		if (getenv("NEWTON_HEAPDUMP"))
+		if (gDump)
 			fprintf(stderr, "  block %p flags %02x busy %02x type %02x size %lx parent %p owner %lx\n", (void*) b, b->fFlags, b->fBusy, b->fType, (unsigned long) b->fSize, b->fParent, (unsigned long) b->fOwner);
 		if (b->fSize < kBlockHeaderSize || (b->fSize & (kBlockAlign - 1)) != 0 || (char*) b + b->fSize > heap->fEnd)
 			HeapDamaged(heap, "a bad block size", b, where);
@@ -121,6 +125,7 @@ HostHeapCheckInstall(void)
 	const char* setting = getenv("NEWTON_HEAPCHECK");
 	if (setting == nil)
 		return;
+	gDump = getenv("NEWTON_HEAPDUMP") != nil;
 	gEvery = atol(setting);
 	if (gEvery < 1)
 		gEvery = 1;

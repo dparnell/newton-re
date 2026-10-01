@@ -74,7 +74,8 @@ ThrowRefException(ExceptionName name, RefArg data)
 	// printer cannot print - would come back here and print again without
 	// end, so the trace is not re-entered and a failure in it is dropped)
 	static int sTracing = 0;
-	if (getenv("NEWTON_TRACE_EXCEPTIONS") != nil && gREPout != nil && sTracing == 0)
+	static const char* const traceExceptions = getenv("NEWTON_TRACE_EXCEPTIONS");		// (read once: every throw asked)
+	if (traceExceptions != nil && gREPout != nil && sTracing == 0)
 	{
 		sTracing++;
 		newton_try
@@ -83,7 +84,7 @@ ThrowRefException(ExceptionName name, RefArg data)
 			PrintObject(data, 0);
 			gREPout->Print("\n");
 			StackTrace();
-			if (getenv("NEWTON_TRACE_EXCEPTIONS")[0] == '2')
+			if (traceExceptions[0] == '2')
 			{
 				void* trace[24];
 				int n = HostCaptureCStack(trace, 24, 0);
