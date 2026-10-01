@@ -31,6 +31,9 @@
 static Ref
 ParameterRef(Long parameter)
 {
+#if NEWTON_NS64
+	return MAKEINT(parameter);	// SPIKE: a host pointer fits in a 62-bit integer
+#endif
 	Ref value = MAKEINT(parameter);
 	if ((Long) RVALUE(value) == parameter)
 		return value;
@@ -41,6 +44,9 @@ ParameterRef(Long parameter)
 static Long
 ParameterValue(Ref value)
 {
+#if NEWTON_NS64
+	return (Long) RVALUE(value);	// SPIKE
+#endif
 	if (value == (Ref) (int) value)			// a Newton-sized word
 		return (Long) RVALUE(value);
 	return (Long) RefToAddress(value);
