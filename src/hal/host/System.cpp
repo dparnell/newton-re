@@ -124,6 +124,12 @@ GetStackBounds(const void** low, const void** high)
 	GetCurrentThreadStackLimits(&lowLimit, &highLimit);
 	*low = (const void*) lowLimit;
 	*high = (const void*) highLimit;
+#elif defined(__APPLE__)
+	// (macOS answers the stack's top - its high address - and its size)
+	pthread_t self = pthread_self();
+	char* top = (char*) pthread_get_stackaddr_np(self);
+	*high = top;
+	*low = top - pthread_get_stacksize_np(self);
 #else
 	pthread_attr_t attr;
 	void* base = nil;

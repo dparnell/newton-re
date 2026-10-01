@@ -34,6 +34,7 @@ typedef SOCKET HostSocket;
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
+#include <signal.h>
 typedef int HostSocket;
 #define INVALID_SOCKET (-1)
 #define SOCKET_ERROR (-1)
@@ -121,6 +122,11 @@ HostSocketsInit(void)
 	WSADATA data;
 	if (WSAStartup(MAKEWORD(2, 2), &data) != 0)
 		return kHostSocketError;
+#else
+	// a send to a connection the other end has reset answers EPIPE rather
+	// than ending the program with SIGPIPE (a POSIX host's default) - here
+	// and in the TLS library writing to the same sockets
+	signal(SIGPIPE, SIG_IGN);
 #endif
 	for (int i = 0; i < kMaxSockets; i++)
 		sSockets[i] = INVALID_SOCKET;
@@ -270,7 +276,11 @@ HostSocketSend(int handle, const void* data, size_t size, size_t* count)
 		return kHostSocketError;
 	if (size == 0)
 		return kHostSocketOK;
+#ifdef MSG_NOSIGNAL
+	int n = send(s, (const char*) data, (int) size, MSG_NOSIGNAL);
+#else
 	int n = send(s, (const char*) data, (int) size, 0);
+#endif
 	if (n == SOCKET_ERROR)
 	{
 		int error = LAST_ERROR();

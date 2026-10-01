@@ -1,5 +1,7 @@
 # Running the reconstruction on Linux: what a wider `long` changes
 
+(macOS, the other LP64 host, is planned in `docs/host-macos.md`.)
+
 The reconstruction was written and checked on Windows, where `long` is 32
 bits - the same width as the ARM's word.  On Linux and macOS (LP64) `long`
 is 64 bits, and everything that quietly relied on the ARM's width stops
@@ -214,6 +216,13 @@ update came first more often).  armcpu's safe points (`ShortTimerDelay`,
 `TimedOut`) now tell the runtime the task is busy on purpose
 (`HostTaskBusy`, `os600/kernel/host/TaskRuntime.h`), which the watchdog
 counts as progress.
+
+**A send to a reset connection.**  `send()` on a POSIX host raises
+`SIGPIPE` when the other end has reset the connection, and the default
+action ends the program; nothing had asked for anything else, so a peer
+closing at the wrong moment would have killed newton.  `HostSocketsInit`
+now ignores `SIGPIPE` and the send passes `MSG_NOSIGNAL` where there is one
+(`hal/host/HostSockets.cpp`).
 
 ## Building under WSL
 

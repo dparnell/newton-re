@@ -7,10 +7,10 @@
 				NEWTON_HEAPCHECK).  Header only, so that any library can
 				print one without linking anything: on Windows
 				RtlCaptureStackBackTrace and the module's base, on a glibc
-				host backtrace() and dladdr's base of the object (<windows.h>
+				or macOS host backtrace() and dladdr's base of the object (<windows.h>
 				itself is kept out - its names clash with the Newton's).
-				Elsewhere (musl, macOS for now) no stack: HostCaptureCStack
-				answers 0.
+				macOS has both as well.  Elsewhere (musl) no stack:
+				HostCaptureCStack answers 0.
 */
 
 #ifndef __HOSTCSTACK_H
@@ -21,7 +21,7 @@ extern "C" {
 __declspec(dllimport) unsigned short __stdcall RtlCaptureStackBackTrace(unsigned long skip, unsigned long count, void** trace, unsigned long* hash);
 __declspec(dllimport) void* __stdcall GetModuleHandleA(const char* name);
 }
-#elif defined(__GLIBC__)
+#elif defined(__GLIBC__) || defined(__APPLE__)
 #include <execinfo.h>
 #include <dlfcn.h>
 #endif
@@ -33,7 +33,7 @@ HostImageBase(void)
 {
 #ifdef _WIN32
 	return (char*) GetModuleHandleA(0);
-#elif defined(__GLIBC__)
+#elif defined(__GLIBC__) || defined(__APPLE__)
 	Dl_info info;
 	if (dladdr((void*) &HostImageBase, &info) != 0)
 		return (char*) info.dli_fbase;
@@ -51,7 +51,7 @@ HostCaptureCStack(void** trace, int max, int skip)
 {
 #ifdef _WIN32
 	return (int) RtlCaptureStackBackTrace((unsigned long) skip, (unsigned long) max, trace, 0);
-#elif defined(__GLIBC__)
+#elif defined(__GLIBC__) || defined(__APPLE__)
 	void* all[128];
 	int n = backtrace(all, max + skip < 128 ? max + skip : 128);
 	int k = 0;

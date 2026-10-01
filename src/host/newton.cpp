@@ -195,11 +195,17 @@ __declspec(dllimport) int __stdcall GetThreadTimes(void* thread, unsigned long l
 #include <sys/resource.h>
 #include <time.h>
 #include <dlfcn.h>
+#ifdef __APPLE__
+#include <sys/ucontext.h>		// (<ucontext.h> there wants _XOPEN_SOURCE: only the type is used)
+#else
 #include <ucontext.h>
+#endif
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
+#ifdef __linux__
 #include <sys/syscall.h>
+#endif
 #endif
 #include <stdlib.h>
 #include <string.h>
@@ -609,6 +615,12 @@ HostCrashedSignalAt(int signal, siginfo_t* info, void* context)
 #elif defined(__aarch64__) && defined(__linux__)
 	if (context != nil)
 		where = (void*) ((ucontext_t*) context)->uc_mcontext.pc;
+#elif defined(__APPLE__) && defined(__x86_64__)
+	if (context != nil)
+		where = (void*) ((ucontext_t*) context)->uc_mcontext->__ss.__rip;
+#elif defined(__APPLE__) && defined(__aarch64__)
+	if (context != nil)
+		where = (void*) ((ucontext_t*) context)->uc_mcontext->__ss.__pc;
 #else
 	(void) context;
 #endif
@@ -616,6 +628,7 @@ HostCrashedSignalAt(int signal, siginfo_t* info, void* context)
 }
 
 
+#ifdef __linux__
 // The stack sampler's signal (tools/host/stacksample.py and profile.py
 // on Linux, which cannot read another process's registers without
 // ptrace): a thread sent SIGRTMIN+3 (tgkill) appends one line to the
@@ -705,6 +718,14 @@ HostInstallSampler(void)
 	sigemptyset(&action.sa_mask);
 	sigaction(SIGRTMIN + 3, &action, nil);
 }
+#else
+// (a macOS host's sampler would take the same line from a signal sent with
+// pthread_kill from inside, or the tools would use the host's own
+// sample(1) - docs/host-macos.md)
+static void
+HostInstallSampler(void)
+{ }
+#endif
 
 
 static void

@@ -36,7 +36,8 @@ the way are all in `docs/work-log.md`.
   `stacksample.py`/`profile.py` work there by newton sampling itself
   (`tools/host/linuxsample.py`); ALSA builds and plays through WSLg's
   PulseAudio (`docs/host-lp64.md`).  macOS
-  has no window or sound implementation yet (it would run headless).
+  has no window or sound implementation yet (it would run headless):
+  the plan is `docs/host-macos.md`, its POSIX seams already in the source.
 
 ## In progress
 

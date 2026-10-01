@@ -42,6 +42,9 @@
 #else
 #include <unistd.h>
 #include <sys/wait.h>
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#endif
 #endif
 
 static long	gRebootCount = 0;
@@ -224,11 +227,18 @@ HostRestartIfReset(int argc, char** argv, bool scriptQuit)
 	free(line);
 #else
 	char program[1024];
+	program[sizeof(program) - 1] = 0;
+#ifdef __APPLE__
+	uint32_t room = sizeof(program);
+	if (_NSGetExecutablePath(program, &room) != 0)
+		strncpy(program, argv[0], sizeof(program) - 1);
+#else
 	ssize_t length = readlink("/proc/self/exe", program, sizeof(program) - 1);
 	if (length > 0)
 		program[length] = 0;
 	else
 		strncpy(program, argv[0], sizeof(program) - 1);
+#endif
 	pid_t child = fork();
 	if (child == 0)
 	{
