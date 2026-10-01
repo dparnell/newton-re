@@ -43,8 +43,9 @@ comms: eWorld, online services, P3, mux, keyboard, TV remote	EWorld|OnlineServic
 # LengthOfTraj and CurvFromSquare are the accent check's alone; the ink
 # codec's default point sink and source, which DecoderOpen/EncoderOpen put
 # in a context and their only callers (Decode, GenericCSCompress) replace
-# before the run
-dead in the U.S. ROM	LengthOfTraj|CurvFromSquare|StorePointProcDefault|GetInputTraceDefault|TMath(Exp|Op|Line)View|A[EL]16_|DiacriticsDirection|TextArrow|ValidatePackageDriver|ValidateBackupPipe|IsFirstByteOf2Byte|SetLocale5
+# before the run; MemBufferPipe, whose vtable (0x0001c854) nothing refers to,
+# so that none is ever made
+dead in the U.S. ROM	\d+MemBufferPipe|LengthOfTraj|CurvFromSquare|StorePointProcDefault|GetInputTraceDefault|TMath(Exp|Op|Line)View|A[EL]16_|DiacriticsDirection|TextArrow|ValidatePackageDriver|ValidateBackupPipe|IsFirstByteOf2Byte|SetLocale5
 
 # nothing in the ROM refers to these at all - no call, no branch, no
 # address as data (callgraph.py --callers) - and they are not in the public

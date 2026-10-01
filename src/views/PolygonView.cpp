@@ -79,18 +79,26 @@ PolygonShape::CalcBounds(Rect* bounds)
 		UnionPt(bounds, fPoints[i]);
 }
 
-// ROM 0x001912e0 IsCurvy__12PolygonShapeFv
+// ROM 0x0018e690 Curvy__Fl
 // The verbs whose points are not corners: ink, the oval and the arc, and
 // the four curved shapes the recogniser flattens into points.
-Boolean
-PolygonShape::IsCurvy(void)
+static Boolean
+Curvy(long verb)
 {
-	switch (fVerb)
+	switch (verb)
 	{
 	case kPolyInk: case kPolyOval: case 1: case 2: case 6: case 7: case kPolyArc:
 		return true;
 	}
 	return false;
+}
+
+
+// ROM 0x001912e0 IsCurvy__12PolygonShapeFv
+Boolean
+PolygonShape::IsCurvy(void)
+{
+	return Curvy(fVerb);
 }
 
 // ROM 0x00191348 IsOval__12PolygonShapeFv

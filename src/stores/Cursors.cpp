@@ -517,20 +517,22 @@ TCursor::Invalidate(void)
 }
 
 
-// The C-object binary's hooks (ROM 0x002a8eec GCMarkCursor__FPv,
-// 0x002a9e18 GCUpdateCursor__FPv, 0x002aa5c8 GCDeleteCursor__FPv).
+// The C-object binary's hooks.
+// ROM 0x002cdc78 GCMarkCursor__FPv
 static void
 GCMarkCursor(void* cursor)
 {
 	((TCursor*) cursor)->GCMark();
 }
 
+// ROM 0x002ceba4 GCUpdateCursor__FPv
 static void
 GCUpdateCursor(void* cursor)
 {
 	((TCursor*) cursor)->GCUpdate();
 }
 
+// ROM 0x002cf354 GCDeleteCursor__FPv
 static void
 GCDeleteCursor(void* cursor)
 {

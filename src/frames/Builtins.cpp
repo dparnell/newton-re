@@ -1064,6 +1064,7 @@ FLocalVar(RefArg rcvr, RefArg name)
 
 
 // ROM 0x002b72b8 FGetGlobals
+// ROM 0x001efa68 FGetGlobals__FRC6RefVar (the views' own copy, which TimeStampTextChange and the root view's hiliter call)
 Ref
 FGetGlobals(RefArg /*rcvr*/)
 {

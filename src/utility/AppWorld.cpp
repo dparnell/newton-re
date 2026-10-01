@@ -378,6 +378,7 @@ TAppWorld::SetTokenOnly(Boolean tokenOnly)
 
 
 // ROM 0x000313ec GetMyPort__9TAppWorldFv
+// ROM 0x00031b60 GetPort__14TAppWorldStateFv (the state's port, which GetMyPort branches to)
 TUPort*
 TAppWorld::GetMyPort()
 {
