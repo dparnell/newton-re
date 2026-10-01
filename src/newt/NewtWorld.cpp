@@ -49,6 +49,7 @@
 #include "PackageNativeCPU.h"
 #include "ARMProtocols.h"
 #include "ARMCardHandler.h"
+#include "ARMPSSManager.h"
 #include "Soups.h"
 #include "ROMConstants.h"
 #include "RSSymbols.h"
@@ -260,6 +261,7 @@ TNewtWorld::MainConstructor()
 	// (armcpu/ARMProtocols.h, armcpu/ARMCardHandler.h)
 	InstallARMProtocols();
 	InstallARMCardHandlers();
+	InstallARMPSSManager();
 	InitializeCompression();
 	// DEVIATION: the ROM starts the sound manager from the loader
 	// (TLoader::TheMain 0x0011401c), whose services are all NOT YET; the

@@ -12,7 +12,9 @@
 				- regions: host memory mapped at an ARM address for as long
 				  as it is wanted - a protocol part's code (a relocated copy),
 				  a mirror of a host object the ARM code reads fields of, a
-				  card socket's window.  A card-bus region's accesses go
+				  card socket's window - and devices, whose every access the
+				  host answers (a ROM global the ARM code reads, a view of a
+				  host structure in the ROM's layout).  A card-bus region's accesses go
 				  through hal/CardBus.h, so the ARM code reaching an ATA
 				  card's registers reaches the host's model of the card;
 				- host traps: addresses the ARM code may call that are host
@@ -62,8 +64,17 @@ typedef bool (*ARMTrapFn)(void* refCon, ARMTrapContext& c);	// ==> false: stop t
 // most significant first); a card-bus region's go through hal/CardBus.h.
 // ==> the ARM address, 0 for no room.  An address range is never reused
 // while the program runs.
-enum EARMRegionKind { kARMRegionMemory, kARMRegionCardBus };
+enum EARMRegionKind { kARMRegionMemory, kARMRegionCardBus, kARMRegionDevice };
 uint32_t	ARMMapRegion(void* bytes, uint32_t size, EARMRegionKind kind);
+// A device: ARM addresses whose reads and writes are answered by the host -
+// a word (size 4, big-endian as a word's value) or a byte (size 1) at an
+// offset into it; an answer of false refuses the access (the ARM code
+// faults).  `at` 0 puts it at a region address of its own; otherwise at
+// that address, which must be below the regions' (a ROM global's address,
+// say).  ==> where it is, 0 for none.  ARMUnmapRegion takes it away.
+typedef bool	(*ARMDeviceReadFn)(void* refCon, uint32_t offset, uint32_t size, uint32_t* value);
+typedef bool	(*ARMDeviceWriteFn)(void* refCon, uint32_t offset, uint32_t size, uint32_t value);
+uint32_t	ARMMapDevice(uint32_t at, uint32_t size, ARMDeviceReadFn read, ARMDeviceWriteFn write, void* refCon);
 void		ARMUnmapRegion(uint32_t base);
 // the region (or heap block) an ARM address is in, as host memory - nil for
 // none or for a card-bus region

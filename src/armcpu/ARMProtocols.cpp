@@ -18,6 +18,7 @@
 #include "NewtonExceptions.h"
 #include "OSErrors.h"
 #include "ByteOrder.h"
+#include "NewtonMemory.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -355,6 +356,41 @@ ARMCallSlot(const TProtocol* proxy, int slot, const uint32_t* args, int count)
 	if (gTraceProtocols)
 		fprintf(stderr, "[armprotocols] %s slot %d\n", proxy->fBTable != nil ? ((const TClassInfo*) proxy->fBTable)->fName : "?", slot);
 	return ARMCallInstanceSlot(instance, slot, args, count);
+}
+
+// An ARM instance the ARM code made, seen from host code: the proxy that
+// stands for it (made the first time, as AllocInstanceByName makes an
+// instance - the registry counts it - but over the instance there already
+// is, so no New() is called).  nil for an instance of no loaded class or of
+// one whose interface has no proxy kind.
+TProtocol*
+ARMProxyFor(uint32_t instance)
+{
+	if (instance == 0)
+		return nil;
+	for (size_t i = 0; i < gProxies.size(); i++)
+		if (gProxies[i].fInstance == instance)
+			return (TProtocol*) gProxies[i].fProxy;
+	uint32_t realThis = 0, btable = 0;
+	if (!ARMRead32(instance + 4, &realThis) || !ARMRead32(realThis + 8, &btable))
+		return nil;
+	ARMClass* c = ClassOfBTable(btable);
+	if (c == nil || c->fKind == nil)
+	{
+		fprintf(stderr, "[armprotocols] %08x: an ARM instance with no host proxy (NOT YET)\n", instance);
+		return nil;
+	}
+	void* memory = NewPtr(c->fKind->fSize());
+	if (memory == nil)
+		return nil;
+	TProtocol* p = PrivateClassInfoMakeAt(&c->fInfo, memory);
+	if (gProtocolRegistry != nil)
+		gProtocolRegistry->UpdateInstanceCount(&c->fInfo, 1);
+	ProxyEntry e = { p, realThis };
+	gProxies.push_back(e);
+	if (gTraceProtocols)
+		fprintf(stderr, "[armprotocols] %s instance %08x given a proxy\n", c->fImplementation, realThis);
+	return p;
 }
 
 // a proxy's New(): its ARM instance made and the ARM New() called

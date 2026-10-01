@@ -32,7 +32,8 @@ target_include_directories(armcpu_protocols PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 # TCardHandler proxy and the card side's objects as the ARM code sees them.
 add_library(armcpu_pcmcia STATIC
     ARMCardHandler.cpp
+    ARMPSSManager.cpp
 )
-target_link_libraries(armcpu_pcmcia PUBLIC newton_config armcpu_protocols pcmcia hal_host_card)
+target_link_libraries(armcpu_pcmcia PUBLIC newton_config armcpu_protocols pcmcia hal_host_card flash)
 
 add_subdirectory(tests)

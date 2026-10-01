@@ -333,20 +333,47 @@ safe points, so those calls are made safe points too (DEVIATION,
 `ARMSafePoint`).  `printf` prints on stderr (DEVIATION: the ROM's goes to
 the serial debugger).
 
-Where it stops next: the store side reads the ROM global `gPSSManager`
-(RW data, 0x0c1016bc in this ROM - the package picks the address by ROM
-version through Gestalt) and writes straight into the PSS manager's slot
-table at its +0x304 - the slot count, a slot's state (made mounted) and
-its four `SPSSStoreInfo`s (0x50 bytes each, at the slot's +0xbc, the
-`TStore` at +0x10) - so that the ROM's own 'stor and 'rstr machinery
-mounts and unmounts its TATAStores.  That wants a mirror of the PSS
-manager's slots in the ROM's layout (a region whose reads and writes are
-answered from the host's `TPSSManager`), a `TStore` proxy over the ARM
-TATAStore (42 methods), and the PATACardServer's messages; then TATAStore
-mounted, written, read back after a restart, removed and reinserted.
+### The PSS manager's slots
+
+ATA Support keeps its own stores and puts them in the PSS manager's slot
+table itself, so that the ROM's code that asks it about a card's stores
+(`GetStorePSSInfo`, `GetCardSlotStores`, the card-gone and unmount paths)
+finds them: it reads the ROM global `gPSSManager` (RW data, 0x0c1016bc in
+this ROM - the package picks the address for the ROM version Gestalt
+names) and writes into the object at the ROM's offsets.  DEVIATION: the
+host's `TPSSManager` is not in the ROM's layout and stays the one truth;
+`ARMPSSManager.cpp` presents the global and the object as devices
+(`ARMWorld.h`'s `ARMMapDevice`: ARM addresses whose every access the host
+answers) for exactly these fields, and turns exactly these writes into
+calls on the host's (`TPSSManager::HostDriverSetSlotCount`,
+`HostDriverSetSlotState`, `HostDriverSetStoreInfo`):
+
+| Where (the ROM's TPSSManager) | Read | Write |
+|---|---|---|
+| `gPSSManager` (a word) | the view's address, 0 with no PSS manager | refused |
+| +0x304 the slot count (word) | the host's `fSlotCount` | `HostDriverSetSlotCount` (0-4) |
+| +0x308 + slot x 0x1fc, the slot's state (word) | the host's `fState` | `HostDriverSetSlotState` (0-8) |
+| slot +0xbc + n x 0x50, an `SPSSStoreInfo` | +0x10 only, the store: its ARM instance when it is a proxy, else a handle standing for the host store | words or bytes, staged and handed over (`HostDriverSetStoreInfo`) when the info's last byte is written; all nought clears the place |
+
+An info handed over has its stores and card handler (+0x10, +0x28, +0x40)
+made host proxies over the ARM instances (`ARMProtocols.h`'s
+`ARMProxyFor`: the proxy standing for an instance the ARM code made),
++0x1c (where the device is mapped) the host address of an ARM one, and the
+rest copied as numbers; a TFlash (+0x2c) is NOT YET.  Any other access -
+another field, another size, a value out of range - is refused with a
+trace ("[armpss] ... not presented (NOT YET)"), so the ARM code faults
+there.  `test_ARMProtocols` checks each row.  So far ATA Support writes
+the slot count and state and clears the four infos for a card with no
+store on it.
+
+Next: a `TStore` proxy over its TATAStore (the 42 methods; the info's
++0x10), `ToObject(TStore*)` (a store frame for it - the package's own
+NewtonScript mounts its stores), PATACardServer's messages, and the
+store formatted from the package's ATA Support application, written, read
+back after a restart, removed and reinserted.
 `gluetable.py build/MP2x00US --package x.pkg --whole --unanswered
 src/armcpu` lists the public jump table entries anywhere in a package that
-no glue answers yet (none, for ATA Support, now but `ToObject(TStore*)`).
+no glue answers yet (for ATA Support, `ToObject(TStore*)`).
 
 ## Which fixtures have native code
 

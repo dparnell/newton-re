@@ -36,6 +36,6 @@ set_tests_properties(armcpu.NewtHack PROPERTIES TIMEOUT 180
 # relocated, registered, made through a proxy and from the ARM side, the
 # name server glue and the regions (ARMProtocols.h, ARMWorld.h)
 add_executable(test_ARMProtocols test_ARMProtocols.cpp)
-target_link_libraries(test_ARMProtocols PRIVATE armcpu_protocols os600_kernel os600_user)
+target_link_libraries(test_ARMProtocols PRIVATE armcpu_protocols armcpu_pcmcia os600_kernel os600_user)
 add_test(NAME armcpu.ARMProtocols COMMAND test_ARMProtocols)
 set_tests_properties(armcpu.ARMProtocols PROPERTIES TIMEOUT 60 PASS_REGULAR_EXPRESSION "test_ARMProtocols: all passed")

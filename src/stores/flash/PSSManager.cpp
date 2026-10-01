@@ -489,6 +489,34 @@ TPSSManager::GetStorePSSInfo(const TStore* store, UChar mounted) const
 }
 
 
+// A driver package's own stores in a slot (PSSManager.h; DEVIATION: on the
+// machine the package writes the fields itself).
+void
+TPSSManager::HostDriverSetSlotCount(int count)
+{
+	if (count >= 0 && count <= 4)
+		fSlotCount = count;
+}
+
+void
+TPSSManager::HostDriverSetSlotState(int slot, ULong state)
+{
+	if (slot >= 0 && slot < 4)
+		fSlots[slot].fState = state;
+}
+
+void
+TPSSManager::HostDriverSetStoreInfo(int slot, int index, const SPSSStoreInfo* info)
+{
+	if (slot < 0 || slot >= 4 || index < 0 || index >= 4)
+		return;
+	if (info != nil)
+		fSlots[slot].fStores[index] = *info;
+	else
+		fSlots[slot].fStores[index].Clear();
+}
+
+
 // ROM 0x001557d0 ReinsertCard__11TPSSManagerFiPCUsUc
 // The reinsert alert's reason set, and the card's memory touched - which,
 // with the card out, faults into the card domains' monitor, which holds

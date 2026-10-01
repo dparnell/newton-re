@@ -68,6 +68,11 @@ uint32_t	ARMCallSlot(const TProtocol* proxy, int slot, const uint32_t* args = ni
 // the same for an ARM instance (made by the ARM code)
 uint32_t	ARMCallInstanceSlot(uint32_t instance, int slot, const uint32_t* args = nil, int count = 0);
 
+// An instance the ARM code made, seen from host code: its proxy (made the
+// first time; New() is not called again).  nil when its class has no proxy
+// kind.  Deleting the proxy calls the ARM Delete() and frees the instance.
+TProtocol*	ARMProxyFor(uint32_t instance);
+
 // Host objects as the ARM code sees them: a mirror is a block of the ARM
 // heap standing for the host object (its bytes the caller's to fill in the
 // ROM's layout); the same host object has the same mirror (made once, the

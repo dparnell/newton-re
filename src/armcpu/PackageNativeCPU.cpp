@@ -263,14 +263,30 @@ const uint32_t	kRegionBase		= 0x90000000;	// regions, a page apart, never reused
 const uint32_t	kRegionLimit	= 0xF0000000;
 const uint32_t	kHostTraps		= 0x71000000;	// host traps, a word each
 
-struct ARMRegion { uint32_t fBase; uint32_t fSize; uint8_t* fBytes; EARMRegionKind fKind; };
+struct ARMRegion
+{
+	uint32_t		fBase;
+	uint32_t		fSize;
+	uint8_t*		fBytes;
+	EARMRegionKind	fKind;
+	ARMDeviceReadFn	fRead;			// a device's
+	ARMDeviceWriteFn	fWrite;
+	void*			fRefCon;
+};
 static Vec<ARMRegion>	gRegions;
 static uint32_t		gRegionTop = kRegionBase;
 static ARMRegion*		gLastRegion = nil;
+static uint32_t		gFixedDevices = 0;		// devices mapped below kRegionBase
 
 static ARMRegion*
 FindRegion(uint32_t a, uint32_t n)
 {
+	if (gFixedDevices != 0 && a < kRegionBase)
+	{
+		for (ARMRegion& r : gRegions)
+			if (r.fBase < kRegionBase && a >= r.fBase && a - r.fBase + n <= r.fSize)
+				return &r;
+	}
 	if (a < kRegionBase)
 		return nil;
 	if (gLastRegion != nil && a >= gLastRegion->fBase && a - gLastRegion->fBase + n <= gLastRegion->fSize)
@@ -287,11 +303,34 @@ ARMMapRegion(void* bytes, uint32_t size, EARMRegionKind kind)
 	uint32_t span = ((size + 0xfff) & ~0xfffu) + 0x1000;
 	if (size == 0 || span > kRegionLimit - gRegionTop)
 		return 0;
-	ARMRegion r = { gRegionTop, size, (uint8_t*) bytes, kind };
+	ARMRegion r = { gRegionTop, size, (uint8_t*) bytes, kind, nil, nil, nil };
 	gRegionTop += span;
 	gLastRegion = nil;
 	gRegions.push_back(r);
 	return r.fBase;
+}
+
+uint32_t
+ARMMapDevice(uint32_t at, uint32_t size, ARMDeviceReadFn read, ARMDeviceWriteFn write, void* refCon)
+{
+	if (size == 0)
+		return 0;
+	if (at == 0)
+	{
+		uint32_t span = ((size + 0xfff) & ~0xfffu) + 0x1000;
+		if (span > kRegionLimit - gRegionTop)
+			return 0;
+		at = gRegionTop;
+		gRegionTop += span;
+	}
+	else if (at >= kRegionBase)
+		return 0;
+	else
+		gFixedDevices++;
+	ARMRegion r = { at, size, nil, kARMRegionDevice, read, write, refCon };
+	gLastRegion = nil;
+	gRegions.push_back(r);
+	return at;
 }
 
 void
@@ -300,6 +339,8 @@ ARMUnmapRegion(uint32_t base)
 	for (size_t i = 0; i < gRegions.size(); i++)
 		if (gRegions[i].fBase == base)
 		{
+			if (base < kRegionBase && gFixedDevices > 0)
+				gFixedDevices--;
 			for (size_t j = i + 1; j < gRegions.size(); j++)
 				gRegions[j - 1] = gRegions[j];
 			gRegions.pop_back();
@@ -320,24 +361,40 @@ ARMHostAddress(uint32_t a, uint32_t n)
 	return r != nil && r->fKind == kARMRegionMemory ? r->fBytes + (a - r->fBase) : nil;
 }
 
-// a region's word, halfword or byte (the region found already)
-static uint32_t
-RegionRead32(ARMRegion* r, uint32_t a)
+// a region's word, halfword or byte (the region found already); false: a
+// device refused the access
+static bool
+RegionRead32(ARMRegion* r, uint32_t a, uint32_t* v)
 {
+	if (r->fKind == kARMRegionDevice)
+		return r->fRead(r->fRefCon, a - r->fBase, 4, v);
 	uint8_t* p = r->fBytes + (a - r->fBase);
 	if (r->fKind == kARMRegionCardBus)
-		return CardBusReadWord(p);
-	return ((uint32_t) p[0] << 24) | ((uint32_t) p[1] << 16) | ((uint32_t) p[2] << 8) | p[3];
+		*v = CardBusReadWord(p);
+	else
+		*v = ((uint32_t) p[0] << 24) | ((uint32_t) p[1] << 16) | ((uint32_t) p[2] << 8) | p[3];
+	return true;
 }
-static uint8_t
-RegionRead8(ARMRegion* r, uint32_t a)
+static bool
+RegionRead8(ARMRegion* r, uint32_t a, uint8_t* v)
 {
+	if (r->fKind == kARMRegionDevice)
+	{
+		uint32_t w = 0;
+		if (!r->fRead(r->fRefCon, a - r->fBase, 1, &w))
+			return false;
+		*v = (uint8_t) w;
+		return true;
+	}
 	uint8_t* p = r->fBytes + (a - r->fBase);
-	return r->fKind == kARMRegionCardBus ? CardBusReadByte(p) : *p;
+	*v = r->fKind == kARMRegionCardBus ? CardBusReadByte(p) : *p;
+	return true;
 }
-static void
+static bool
 RegionWrite32(ARMRegion* r, uint32_t a, uint32_t v)
 {
+	if (r->fKind == kARMRegionDevice)
+		return r->fWrite(r->fRefCon, a - r->fBase, 4, v);
 	uint8_t* p = r->fBytes + (a - r->fBase);
 	if (r->fKind == kARMRegionCardBus)
 		CardBusWriteWord(p, v);
@@ -345,15 +402,19 @@ RegionWrite32(ARMRegion* r, uint32_t a, uint32_t v)
 	{
 		p[0] = (uint8_t) (v >> 24); p[1] = (uint8_t) (v >> 16); p[2] = (uint8_t) (v >> 8); p[3] = (uint8_t) v;
 	}
+	return true;
 }
-static void
+static bool
 RegionWrite8(ARMRegion* r, uint32_t a, uint8_t v)
 {
+	if (r->fKind == kARMRegionDevice)
+		return r->fWrite(r->fRefCon, a - r->fBase, 1, v);
 	uint8_t* p = r->fBytes + (a - r->fBase);
 	if (r->fKind == kARMRegionCardBus)
 		CardBusWriteByte(p, v);
 	else
 		*p = v;
+	return true;
 }
 
 struct HostTrap { ARMTrapFn fFn; void* fRefCon; const char* fName; };
@@ -818,7 +879,7 @@ TNativeWorld::Read32(uint32_t a, uint32_t* v)
 	if (Code(a, 4))						{ *v = BE32(&fCode[a - fCodeBase]); return true; }
 	if (Arena(a, 4))					{ *v = BE32(&fArena[a - kArenaBase]); return true; }
 	if (gARMHeap.Contains(a, 4))		{ *v = BE32(gARMHeap.At(a)); return true; }
-	if (ARMRegion* r = FindRegion(a, 4))	{ *v = RegionRead32(r, a); return true; }
+	if (ARMRegion* r = FindRegion(a, 4))	return RegionRead32(r, a, v);
 	if (Window* w = FindWindow(a, 4))
 	{
 		if (w->fSlots)
@@ -849,7 +910,14 @@ TNativeWorld::Read16(uint32_t a, uint16_t* v)
 	if (Code(a, 2))						{ *v = (uint16_t) ((fCode[a - fCodeBase] << 8) | fCode[a - fCodeBase + 1]); return true; }
 	if (Arena(a, 2))					{ *v = (uint16_t) ((fArena[a - kArenaBase] << 8) | fArena[a - kArenaBase + 1]); return true; }
 	if (gARMHeap.Contains(a, 2))		{ const uint8_t* p = gARMHeap.At(a); *v = (uint16_t) ((p[0] << 8) | p[1]); return true; }
-	if (ARMRegion* r = FindRegion(a, 2))	{ *v = (uint16_t) ((RegionRead8(r, a) << 8) | RegionRead8(r, a + 1)); return true; }
+	if (ARMRegion* r = FindRegion(a, 2))
+	{
+		uint8_t hi = 0, lo = 0;
+		if (!RegionRead8(r, a, &hi) || !RegionRead8(r, a + 1, &lo))
+			return false;
+		*v = (uint16_t) ((hi << 8) | lo);
+		return true;
+	}
 	if (Window* w = FindWindow(a, 2))
 	{
 		if (w->fSlots)
@@ -876,7 +944,7 @@ TNativeWorld::Read8(uint32_t a, uint8_t* v)
 	if (Code(a, 1))						{ *v = fCode[a - fCodeBase]; return true; }
 	if (Arena(a, 1))					{ *v = fArena[a - kArenaBase]; return true; }
 	if (gARMHeap.Contains(a, 1))		{ *v = *gARMHeap.At(a); return true; }
-	if (ARMRegion* r = FindRegion(a, 1))	{ *v = RegionRead8(r, a); return true; }
+	if (ARMRegion* r = FindRegion(a, 1))	return RegionRead8(r, a, v);
 	if (Window* w = FindWindow(a, 1))
 	{
 		if (w->fSlots)
@@ -894,7 +962,7 @@ TNativeWorld::Write32(uint32_t a, uint32_t v)
 	if (Code(a, 4))						{ PutBE32(&fCode[a - fCodeBase], v); return true; }
 	if (Arena(a, 4))					{ PutBE32(&fArena[a - kArenaBase], v); return true; }
 	if (gARMHeap.Contains(a, 4))		{ PutBE32(gARMHeap.At(a), v); return true; }
-	if (ARMRegion* r = FindRegion(a, 4))	{ RegionWrite32(r, a, v); return true; }
+	if (ARMRegion* r = FindRegion(a, 4))	return RegionWrite32(r, a, v);
 	if (Window* w = FindWindow(a, 4))
 	{
 		if (w->fSlots)
@@ -924,7 +992,7 @@ TNativeWorld::Write16(uint32_t a, uint16_t v)
 	if (Code(a, 2))						{ fCode[a - fCodeBase] = (uint8_t) (v >> 8); fCode[a - fCodeBase + 1] = (uint8_t) v; return true; }
 	if (Arena(a, 2))					{ fArena[a - kArenaBase] = (uint8_t) (v >> 8); fArena[a - kArenaBase + 1] = (uint8_t) v; return true; }
 	if (gARMHeap.Contains(a, 2))		{ uint8_t* p = gARMHeap.At(a); p[0] = (uint8_t) (v >> 8); p[1] = (uint8_t) v; return true; }
-	if (ARMRegion* r = FindRegion(a, 2))	{ RegionWrite8(r, a, (uint8_t) (v >> 8)); RegionWrite8(r, a + 1, (uint8_t) v); return true; }
+	if (ARMRegion* r = FindRegion(a, 2))	return RegionWrite8(r, a, (uint8_t) (v >> 8)) && RegionWrite8(r, a + 1, (uint8_t) v);
 	if (Window* w = FindWindow(a, 2))
 	{
 		if (w->fSlots)
@@ -953,7 +1021,7 @@ TNativeWorld::Write8(uint32_t a, uint8_t v)
 	if (Code(a, 1))						{ fCode[a - fCodeBase] = v; return true; }
 	if (Arena(a, 1))					{ fArena[a - kArenaBase] = v; return true; }
 	if (gARMHeap.Contains(a, 1))		{ *gARMHeap.At(a) = v; return true; }
-	if (ARMRegion* r = FindRegion(a, 1))	{ RegionWrite8(r, a, v); return true; }
+	if (ARMRegion* r = FindRegion(a, 1))	return RegionWrite8(r, a, v);
 	if (Window* w = FindWindow(a, 1))
 	{
 		if (w->fSlots)
@@ -3144,14 +3212,14 @@ ARMRead32(uint32_t a, uint32_t* v)
 	const uint8_t* rom = (const uint8_t*) ROMImageBase(&romSize);
 	if (rom != nil && a + 4 <= romSize)	{ *v = BE32(rom + a); return true; }
 	if (gARMHeap.Contains(a, 4))		{ *v = BE32(gARMHeap.At(a)); return true; }
-	if (ARMRegion* r = FindRegion(a, 4))	{ *v = RegionRead32(r, a); return true; }
+	if (ARMRegion* r = FindRegion(a, 4))	return RegionRead32(r, a, v);
 	return false;
 }
 bool
 ARMWrite32(uint32_t a, uint32_t v)
 {
 	if (gARMHeap.Contains(a, 4))		{ PutBE32(gARMHeap.At(a), v); return true; }
-	if (ARMRegion* r = FindRegion(a, 4))	{ RegionWrite32(r, a, v); return true; }
+	if (ARMRegion* r = FindRegion(a, 4))	return RegionWrite32(r, a, v);
 	return false;
 }
 bool
@@ -3161,14 +3229,14 @@ ARMRead8(uint32_t a, uint8_t* v)
 	const uint8_t* rom = (const uint8_t*) ROMImageBase(&romSize);
 	if (rom != nil && a < romSize)		{ *v = rom[a]; return true; }
 	if (gARMHeap.Contains(a, 1))		{ *v = *gARMHeap.At(a); return true; }
-	if (ARMRegion* r = FindRegion(a, 1))	{ *v = RegionRead8(r, a); return true; }
+	if (ARMRegion* r = FindRegion(a, 1))	return RegionRead8(r, a, v);
 	return false;
 }
 bool
 ARMWrite8(uint32_t a, uint8_t v)
 {
 	if (gARMHeap.Contains(a, 1))		{ *gARMHeap.At(a) = v; return true; }
-	if (ARMRegion* r = FindRegion(a, 1))	{ RegionWrite8(r, a, v); return true; }
+	if (ARMRegion* r = FindRegion(a, 1))	return RegionWrite8(r, a, v);
 	return false;
 }
 bool

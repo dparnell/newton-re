@@ -131,6 +131,16 @@ public:
 	void			SendServer(ULong type, ULong socket, ULong data, ULong timeout, TTime* when);	// ROM 0x00155cc4 SendServer__11TPSSManagerFUlN31P5TTime
 	void			ReplyServer(TCardMessage* message, ULong type, ULong socket, ULong data);		// ROM 0x00155d2c ReplyServer__11TPSSManagerFP12TCardMessageUlN22
 
+	// DEVIATION: a card driver package that keeps its own stores puts them
+	// in a slot here by writing these fields where they lie in the ROM's
+	// object (Kallisys's ATA Support, through gPSSManager); the host's
+	// layout is not the ROM's, so armcpu/ARMPSSManager.cpp turns those
+	// writes into these calls (docs/armcpu/README.md, "The PSS manager's
+	// slots").  An info of nil clears the store's place.
+	void			HostDriverSetSlotCount(int count);
+	void			HostDriverSetSlotState(int slot, ULong state);
+	void			HostDriverSetStoreInfo(int slot, int index, const SPSSStoreInfo* info);
+
 	TUAsyncMessage		fServerAsync;		// +070 what the server is sent through
 	TCardMessage		fServerMessage;		// +080
 	TUPort*				fMyPort;			// +138

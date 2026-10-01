@@ -12,6 +12,11 @@
 // walked and emptied; a locking semaphore; the global time; an async
 // message; and an event handler whose AEHandlerProc is ARM code, handed a
 // host event (narrowed for it) and changing it (widened back).
+// Then a device (an ARM address the host answers), and the PSS manager's
+// slots as a driver package reaches them through gPSSManager: the fields
+// presented, the writes made calls on the host's TPSSManager (a store info
+// written whole, its store an ARM instance made a host proxy), anything
+// else refused.
 // Run as the kernel services task (the protocol registry is a monitor).
 
 #include "ARMProtocols.h"
@@ -22,6 +27,9 @@
 #include "AEventHandler.h"
 #include "AEvents.h"
 #include "UserPorts.h"
+#include "ARMPSSManager.h"
+#include "PSSManager.h"
+#include "Store.h"
 #include "Boot.h"
 #include "UserBoot.h"
 #include "host/TaskRuntime.h"
@@ -132,6 +140,7 @@ JumpTableEntry(const char* name)
 
 
 static void		KernelScenario(void);
+static void		DeviceScenario(void);
 
 static void
 ProtocolScenario(void)
@@ -214,8 +223,9 @@ ProtocolScenario(void)
 	ARMForgetMirror(&hostThing);
 	EXPECT(ARMHostOf(mirror, 'test') == nil);
 
-	EXPECT(info->DeRegister() == noErr);
 	KernelScenario();
+	DeviceScenario();
+	EXPECT(info->DeRegister() == noErr);
 	HostStopTasks();
 }
 
@@ -337,6 +347,82 @@ KernelScenario(void)
 	ARMUnmapRegion(region);
 }
 
+
+static uint32_t	gDeviceWord = 0x11223344;
+static bool
+TestDeviceRead(void*, uint32_t offset, uint32_t size, uint32_t* value)
+{
+	if (offset == 0 && size == 4)		{ *value = gDeviceWord; return true; }
+	if (offset == 4 && size == 1)		{ *value = 0x5a; return true; }
+	return false;
+}
+static bool
+TestDeviceWrite(void*, uint32_t offset, uint32_t size, uint32_t value)
+{
+	if (offset == 0 && size == 4)		{ gDeviceWord = value; return true; }
+	return false;
+}
+
+static void
+DeviceScenario(void)
+{
+	// a device at a region address and one at a low, fixed one
+	uint32_t d = ARMMapDevice(0, 8, TestDeviceRead, TestDeviceWrite, nil);
+	uint32_t w = 0;
+	uint8_t b = 0;
+	EXPECT(d != 0 && ARMRead32(d, &w) && w == 0x11223344);
+	EXPECT(ARMWrite32(d, 0xcafef00d) && gDeviceWord == 0xcafef00d);
+	EXPECT(ARMRead8(d + 4, &b) && b == 0x5a);
+	EXPECT(!ARMRead32(d + 4, &w) && !ARMWrite8(d + 1, 1));	// refused
+	uint32_t fixed = ARMMapDevice(0x0b000000, 4, TestDeviceRead, TestDeviceWrite, nil);
+	EXPECT(fixed == 0x0b000000 && ARMRead32(0x0b000000, &w) && w == 0xcafef00d);
+	ARMUnmapRegion(fixed);
+	EXPECT(!ARMRead32(0x0b000000, &w));
+	ARMUnmapRegion(d);
+
+	// the PSS manager's slots through gPSSManager (this ROM's 0x0c1016bc)
+	InstallARMPSSManager();
+	TPSSManager* manager = new TPSSManager;
+	gPSSManager = manager;
+	uint32_t view = 0;
+	EXPECT(ARMRead32(0x0c1016bc, &view) && view == ARMPSSManagerView() && view != 0);
+	EXPECT(ARMRead32(view + 0x304, &w) && w == 0);
+	EXPECT(ARMWrite32(view + 0x304, 1) && manager->fSlotCount == 1);
+	uint32_t slot0 = view + 0x308;
+	EXPECT(ARMWrite32(slot0, 4) && manager->fSlots[0].fState == 4);
+	EXPECT(ARMRead32(slot0, &w) && w == 4);
+	// a store info written a word at a time: handed over at its last word
+	uint32_t interface = ARMCString("TTestThing"), implementation = ARMCString("TTestImpl");
+	uint32_t args[2] = { interface, implementation };
+	uint32_t instance = ARMCall(JumpTableEntry("NewByName__FPCcT1"), args, 2);
+	uint32_t store1 = slot0 + 0xbc + 0x50;		// the slot's second store
+	for (uint32_t o = 0; o < 0x50; o += 4)
+	{
+		uint32_t v = o == 0x10 ? instance : o == 0x18 ? 0 : o == 0x30 ? 'ata ' : 0;
+		EXPECT(ARMWrite32(store1 + o, v));
+		if (o == 0x10)
+			EXPECT(manager->fSlots[0].fStores[1].fStore == nil);		// (not yet)
+	}
+	TStore* store = manager->fSlots[0].fStores[1].fStore;
+	// (the test's thing standing in for a store: compared as the view casts it)
+	TProtocol* proxy = ARMProxyFor(instance);
+	EXPECT(proxy != nil && ARMInstanceOf(proxy) == instance);
+	EXPECT(store != nil && store == (TStore*) proxy && manager->fSlots[0].fStores[1].fType == 'ata ');
+	EXPECT(ARMRead32(store1 + 0x10, &w) && w == instance);
+	TStore* stores[4];
+	EXPECT(manager->GetCardSlotStores(0, stores) == 1 && stores[0] == store);
+	EXPECT(manager->GetStorePSSInfo(store, true) == &manager->fSlots[0].fStores[1]);
+	// zeroed a byte at a time: cleared
+	for (uint32_t o = 0; o < 0x50; o++)
+		EXPECT(ARMWrite8(store1 + o, 0));
+	EXPECT(manager->fSlots[0].fStores[1].fStore == nil);
+	// anything else refused
+	EXPECT(!ARMRead32(view + 0x300, &w) && !ARMRead32(store1 + 0x14, &w) && !ARMWrite32(0x0c1016bc, 0));
+	EXPECT(!ARMWrite32(slot0, 99));
+	gPSSManager = nil;
+	EXPECT(ARMRead32(0x0c1016bc, &w) && w == 0);
+	((TTestThing*) proxy)->Delete();
+}
 
 int
 main()
