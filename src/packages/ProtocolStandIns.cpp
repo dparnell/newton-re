@@ -12,7 +12,7 @@
 #include <string.h>
 
 
-static const TClassInfo*	gStandIns[16];
+static const TClassInfo*	gStandIns[64];
 static long					gStandInCount = 0;
 
 
@@ -45,4 +45,20 @@ IsProtocolStandIn(const void* classInfo)
 		if ((const void*) gStandIns[i] == classInfo)
 			return true;
 	return false;
+}
+
+
+static ARMProtocolPartLoader	gARMLoader = nil;
+
+void
+SetARMProtocolPartLoader(ARMProtocolPartLoader loader)
+{
+	gARMLoader = loader;
+}
+
+
+const TClassInfo*
+LoadARMProtocolPartFallback(const void* part, ULong size, const void* package, ULong partOffset)
+{
+	return gARMLoader != nil ? gARMLoader(part, size, package, partOffset) : nil;
 }

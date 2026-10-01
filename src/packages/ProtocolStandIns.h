@@ -39,4 +39,14 @@ const TClassInfo*	ProtocolStandInFor(const char* implementation, const char* int
 // ==> whether this class info is a stand-in (the host's own: not a copy of a part)
 Boolean				IsProtocolStandIn(const void* classInfo);
 
+// The fallback for a part with no stand-in: its ARM code run on the host's
+// ARM interpreter (armcpu/ARMProtocols.h), which makes and registers a
+// class info for it (a stand-in from then on).  part is the part's bytes,
+// package where the package lies (nil: unknown) and partOffset the part's
+// place in it.  ==> the class info, nil when there is no fallback or it
+// cannot take the part.
+typedef const TClassInfo*	(*ARMProtocolPartLoader)(const void* part, ULong size, const void* package, ULong partOffset);
+void				SetARMProtocolPartLoader(ARMProtocolPartLoader loader);
+const TClassInfo*	LoadARMProtocolPartFallback(const void* part, ULong size, const void* package, ULong partOffset);
+
 #endif	/* __PROTOCOLSTANDINS_H */

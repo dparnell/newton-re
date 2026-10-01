@@ -14,7 +14,23 @@ add_library(armcpu_frames STATIC
     PackageNativeCPU.cpp
     PublicJumpTable.cpp
 )
-target_link_libraries(armcpu_frames PUBLIC newton_config armcpu frames)
+target_link_libraries(armcpu_frames PUBLIC newton_config armcpu frames hal_host_card)
 target_include_directories(armcpu_frames PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+# Packages' protocol parts on the interpreter (ARMProtocols.h): the loader
+# the package manager falls back on, the host class infos and proxies'
+# plumbing, mirrors of host objects, and the protocol and name server glue.
+add_library(armcpu_protocols STATIC
+    ARMProtocols.cpp
+)
+target_link_libraries(armcpu_protocols PUBLIC newton_config armcpu_frames package_manager)
+target_include_directories(armcpu_protocols PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+# A package's card handler part on the interpreter (ARMCardHandler.h): the
+# TCardHandler proxy and the card side's objects as the ARM code sees them.
+add_library(armcpu_pcmcia STATIC
+    ARMCardHandler.cpp
+)
+target_link_libraries(armcpu_pcmcia PUBLIC newton_config armcpu_protocols pcmcia hal_host_card)
 
 add_subdirectory(tests)

@@ -7,6 +7,9 @@
 */
 
 #include "PackageNativeCPU.h"
+#include "ARMWorld.h"
+#include "CardBus.h"
+#include "UserGlobals.h"
 #include "ARMCPU.h"
 #include "PublicJumpTable.h"
 #include "PackageNatives.h"
@@ -250,6 +253,124 @@ TARMHeap::Free(uint32_t a)
 }
 
 
+/*------------------------------------------------------------------------------
+	R e g i o n s   a n d   h o s t   t r a p s
+	(ARMWorld.h) Host memory mapped at ARM addresses for as long as it is
+	wanted, and host functions at ARM addresses, shared by every world.
+------------------------------------------------------------------------------*/
+
+const uint32_t	kRegionBase		= 0x90000000;	// regions, a page apart, never reused
+const uint32_t	kRegionLimit	= 0xF0000000;
+const uint32_t	kHostTraps		= 0x71000000;	// host traps, a word each
+
+struct ARMRegion { uint32_t fBase; uint32_t fSize; uint8_t* fBytes; EARMRegionKind fKind; };
+static Vec<ARMRegion>	gRegions;
+static uint32_t		gRegionTop = kRegionBase;
+static ARMRegion*		gLastRegion = nil;
+
+static ARMRegion*
+FindRegion(uint32_t a, uint32_t n)
+{
+	if (a < kRegionBase)
+		return nil;
+	if (gLastRegion != nil && a >= gLastRegion->fBase && a - gLastRegion->fBase + n <= gLastRegion->fSize)
+		return gLastRegion;
+	for (ARMRegion& r : gRegions)
+		if (a >= r.fBase && a - r.fBase + n <= r.fSize)
+			return gLastRegion = &r;
+	return nil;
+}
+
+uint32_t
+ARMMapRegion(void* bytes, uint32_t size, EARMRegionKind kind)
+{
+	uint32_t span = ((size + 0xfff) & ~0xfffu) + 0x1000;
+	if (size == 0 || span > kRegionLimit - gRegionTop)
+		return 0;
+	ARMRegion r = { gRegionTop, size, (uint8_t*) bytes, kind };
+	gRegionTop += span;
+	gLastRegion = nil;
+	gRegions.push_back(r);
+	return r.fBase;
+}
+
+void
+ARMUnmapRegion(uint32_t base)
+{
+	for (size_t i = 0; i < gRegions.size(); i++)
+		if (gRegions[i].fBase == base)
+		{
+			for (size_t j = i + 1; j < gRegions.size(); j++)
+				gRegions[j - 1] = gRegions[j];
+			gRegions.pop_back();
+			gLastRegion = nil;
+			return;
+		}
+}
+
+uint32_t	ARMAlloc(uint32_t size, bool clear)	{ uint32_t a = gARMHeap.Alloc(size); if (a != 0 && clear) memset(gARMHeap.At(a), 0, size); return a; }
+void		ARMFree(uint32_t a)					{ if (a != 0) gARMHeap.Free(a); }
+
+uint8_t*
+ARMHostAddress(uint32_t a, uint32_t n)
+{
+	if (gARMHeap.Contains(a, n))
+		return gARMHeap.At(a);
+	ARMRegion* r = FindRegion(a, n);
+	return r != nil && r->fKind == kARMRegionMemory ? r->fBytes + (a - r->fBase) : nil;
+}
+
+// a region's word, halfword or byte (the region found already)
+static uint32_t
+RegionRead32(ARMRegion* r, uint32_t a)
+{
+	uint8_t* p = r->fBytes + (a - r->fBase);
+	if (r->fKind == kARMRegionCardBus)
+		return CardBusReadWord(p);
+	return ((uint32_t) p[0] << 24) | ((uint32_t) p[1] << 16) | ((uint32_t) p[2] << 8) | p[3];
+}
+static uint8_t
+RegionRead8(ARMRegion* r, uint32_t a)
+{
+	uint8_t* p = r->fBytes + (a - r->fBase);
+	return r->fKind == kARMRegionCardBus ? CardBusReadByte(p) : *p;
+}
+static void
+RegionWrite32(ARMRegion* r, uint32_t a, uint32_t v)
+{
+	uint8_t* p = r->fBytes + (a - r->fBase);
+	if (r->fKind == kARMRegionCardBus)
+		CardBusWriteWord(p, v);
+	else
+	{
+		p[0] = (uint8_t) (v >> 24); p[1] = (uint8_t) (v >> 16); p[2] = (uint8_t) (v >> 8); p[3] = (uint8_t) v;
+	}
+}
+static void
+RegionWrite8(ARMRegion* r, uint32_t a, uint8_t v)
+{
+	uint8_t* p = r->fBytes + (a - r->fBase);
+	if (r->fKind == kARMRegionCardBus)
+		CardBusWriteByte(p, v);
+	else
+		*p = v;
+}
+
+struct HostTrap { ARMTrapFn fFn; void* fRefCon; const char* fName; };
+static Vec<HostTrap>	gHostTraps;
+
+uint32_t
+ARMHostTrap(ARMTrapFn fn, void* refCon, const char* name)
+{
+	for (uint32_t i = 0; i < gHostTraps.size(); i++)
+		if (gHostTraps[i].fFn == fn && gHostTraps[i].fRefCon == refCon)
+			return kHostTraps + i * 4;
+	HostTrap t = { fn, refCon, name };
+	gHostTraps.push_back(t);
+	return kHostTraps + (uint32_t) (gHostTraps.size() - 1) * 4;
+}
+
+
 class TNativeWorld;
 typedef bool (*GlueFn)(TNativeWorld& w, TARMCPU& cpu);
 
@@ -390,7 +511,10 @@ class TNativeWorld : public ARMMemory
 {
 public:
 					TNativeWorld(RefArg code);
+					TNativeWorld();						// a task's world: no code binary of its own
 					~TNativeWorld();
+	Vec<TARMCPU*>	fCPUs;					// the calls under way on this world, innermost last
+	void			EndOfCalls(void);		// the last call returned: a call's refs, windows and code objects go
 
 	// memory
 	bool			Read32(uint32_t a, uint32_t* v) override;
@@ -471,7 +595,7 @@ private:
 };
 
 // the entry points answered, by public jump table offset / 4
-struct GlueEntry { const char* fName; GlueFn fFn; };
+struct GlueEntry { const char* fName; GlueFn fFn; ARMTrapFn fExtern; };
 static GlueEntry*	gGlue = nil;
 static const uint32_t	kGlueSlots = kPublicJumpTableSize / 4 + 1;
 static void		InitGlue(void);
@@ -489,6 +613,43 @@ TNativeWorld::TNativeWorld(RefArg code)
 	if (fROM == nil)
 		fROMSize = 0;
 	fHandles.push_back(nil);			// (index 0 unused: kHandleBase + 1 is not a ref)
+}
+
+
+TNativeWorld::TNativeWorld()
+	: fStoppedIn(nil), fCodeRef(nil), fArena(kArenaSize, 0), fArenaTop(0), fHandleIndex(1024, 0), fWindowTop(kWindowBase)
+{
+	fROM = (const uint8_t*) ROMImageBase(&fROMSize);
+	if (fROM == nil)
+		fROMSize = 0;
+	fHandles.push_back(nil);
+}
+
+
+// What lasts one outermost call goes when it returns: the handles for refs
+// (the same object the same handle while a call lasts), the windows onto
+// objects and the objects of a code binary translated.  (A RefHandle the
+// ARM code allocated is the arena's and stays.)
+void
+TNativeWorld::EndOfCalls(void)
+{
+	for (CodeObjectEntry& e : fCodeObjects)
+		delete e.fObject;
+	fCodeObjects.resize(0, CodeObjectEntry());
+	for (size_t i = 1; i < fHandles.size(); i++)
+		delete fHandles[i];
+	fHandles.resize(1, nil);
+	for (size_t i = 0; i < fHandleIndex.size(); i++)
+		fHandleIndex[i] = 0;
+	for (Window& w : fWindows)
+	{
+		if (!w.fSlots)
+			UnlockRef(*w.fObject);
+		delete w.fObject;
+	}
+	fWindows.resize(0, Window());
+	fWindowTop = kWindowBase;
+	fHandlers.resize(0, 0);
 }
 
 
@@ -595,6 +756,7 @@ TNativeWorld::Read32(uint32_t a, uint32_t* v)
 	if (Code(a, 4))						{ *v = BE32(&fCode[a - kCodeBase]); return true; }
 	if (Arena(a, 4))					{ *v = BE32(&fArena[a - kArenaBase]); return true; }
 	if (gARMHeap.Contains(a, 4))		{ *v = BE32(gARMHeap.At(a)); return true; }
+	if (ARMRegion* r = FindRegion(a, 4))	{ *v = RegionRead32(r, a); return true; }
 	if (Window* w = FindWindow(a, 4))
 	{
 		if (w->fSlots)
@@ -625,6 +787,7 @@ TNativeWorld::Read16(uint32_t a, uint16_t* v)
 	if (Code(a, 2))						{ *v = (uint16_t) ((fCode[a - kCodeBase] << 8) | fCode[a - kCodeBase + 1]); return true; }
 	if (Arena(a, 2))					{ *v = (uint16_t) ((fArena[a - kArenaBase] << 8) | fArena[a - kArenaBase + 1]); return true; }
 	if (gARMHeap.Contains(a, 2))		{ const uint8_t* p = gARMHeap.At(a); *v = (uint16_t) ((p[0] << 8) | p[1]); return true; }
+	if (ARMRegion* r = FindRegion(a, 2))	{ *v = (uint16_t) ((RegionRead8(r, a) << 8) | RegionRead8(r, a + 1)); return true; }
 	if (Window* w = FindWindow(a, 2))
 	{
 		if (w->fSlots)
@@ -651,6 +814,7 @@ TNativeWorld::Read8(uint32_t a, uint8_t* v)
 	if (Code(a, 1))						{ *v = fCode[a - kCodeBase]; return true; }
 	if (Arena(a, 1))					{ *v = fArena[a - kArenaBase]; return true; }
 	if (gARMHeap.Contains(a, 1))		{ *v = *gARMHeap.At(a); return true; }
+	if (ARMRegion* r = FindRegion(a, 1))	{ *v = RegionRead8(r, a); return true; }
 	if (Window* w = FindWindow(a, 1))
 	{
 		if (w->fSlots)
@@ -668,6 +832,7 @@ TNativeWorld::Write32(uint32_t a, uint32_t v)
 	if (Code(a, 4))						{ PutBE32(&fCode[a - kCodeBase], v); return true; }
 	if (Arena(a, 4))					{ PutBE32(&fArena[a - kArenaBase], v); return true; }
 	if (gARMHeap.Contains(a, 4))		{ PutBE32(gARMHeap.At(a), v); return true; }
+	if (ARMRegion* r = FindRegion(a, 4))	{ RegionWrite32(r, a, v); return true; }
 	if (Window* w = FindWindow(a, 4))
 	{
 		if (w->fSlots)
@@ -697,6 +862,7 @@ TNativeWorld::Write16(uint32_t a, uint16_t v)
 	if (Code(a, 2))						{ fCode[a - kCodeBase] = (uint8_t) (v >> 8); fCode[a - kCodeBase + 1] = (uint8_t) v; return true; }
 	if (Arena(a, 2))					{ fArena[a - kArenaBase] = (uint8_t) (v >> 8); fArena[a - kArenaBase + 1] = (uint8_t) v; return true; }
 	if (gARMHeap.Contains(a, 2))		{ uint8_t* p = gARMHeap.At(a); p[0] = (uint8_t) (v >> 8); p[1] = (uint8_t) v; return true; }
+	if (ARMRegion* r = FindRegion(a, 2))	{ RegionWrite8(r, a, (uint8_t) (v >> 8)); RegionWrite8(r, a + 1, (uint8_t) v); return true; }
 	if (Window* w = FindWindow(a, 2))
 	{
 		if (w->fSlots)
@@ -725,6 +891,7 @@ TNativeWorld::Write8(uint32_t a, uint8_t v)
 	if (Code(a, 1))						{ fCode[a - kCodeBase] = v; return true; }
 	if (Arena(a, 1))					{ fArena[a - kArenaBase] = v; return true; }
 	if (gARMHeap.Contains(a, 1))		{ *gARMHeap.At(a) = v; return true; }
+	if (ARMRegion* r = FindRegion(a, 1))	{ RegionWrite8(r, a, v); return true; }
 	if (Window* w = FindWindow(a, 1))
 	{
 		if (w->fSlots)
@@ -1128,7 +1295,8 @@ bool
 TNativeWorld::IsTrap(uint32_t pc)
 {
 	return (pc >= kPublicJumpTableBase && pc < kPublicJumpTableBase + kPublicJumpTableSize)
-		|| (pc >= kCallbacks && pc < kCallbacks + fCallbacks.size() * 4);
+		|| (pc >= kCallbacks && pc < kCallbacks + fCallbacks.size() * 4)
+		|| (pc >= kHostTraps && pc < kHostTraps + gHostTraps.size() * 4);
 }
 
 
@@ -1229,6 +1397,25 @@ bool
 TNativeWorld::Trap(TARMCPU* cpu, uint32_t pc)
 {
 	InitGlue();
+	if (pc >= kHostTraps && pc < kHostTraps + gHostTraps.size() * 4)
+	{
+		HostTrap t = gHostTraps[(pc - kHostTraps) / 4];
+		if (gTrace)
+			fprintf(stderr, "[armcpu] host trap %s(%08x, %08x, %08x, %08x)\n", t.fName, cpu->r[0], cpu->r[1], cpu->r[2], cpu->r[3]);
+		ARMTrapContext c = { cpu, this };
+		bool ok = true;
+		newton_try
+		{
+			ok = t.fFn(t.fRefCon, c);
+		}
+		newton_catch_all
+		{
+			if (!DeliverHost(*cpu, CurrentException()))
+				rethrow;
+		}
+		end_try;
+		return ok;
+	}
 	if (pc >= kCallbacks)
 	{
 		if (gTrace)
@@ -1251,6 +1438,24 @@ TNativeWorld::Trap(TARMCPU* cpu, uint32_t pc)
 	}
 	uint32_t offset = pc - kPublicJumpTableBase;
 	GlueEntry* g = &gGlue[offset / 4];
+	if ((offset & 3) == 0 && g->fExtern != nil)
+	{
+		if (gTrace)
+			fprintf(stderr, "[armcpu] %s(%08x, %08x, %08x, %08x)\n", g->fName, cpu->r[0], cpu->r[1], cpu->r[2], cpu->r[3]);
+		ARMTrapContext c = { cpu, this };
+		bool ok = true;
+		newton_try
+		{
+			ok = g->fExtern(nil, c);
+		}
+		newton_catch_all
+		{
+			if (!DeliverHost(*cpu, CurrentException()))
+				rethrow;
+		}
+		end_try;
+		return ok;
+	}
 	if ((offset & 3) != 0 || g->fFn == nil)
 	{
 		const char* name = "?";
@@ -2464,6 +2669,7 @@ InitGlue(void)
 	{
 		gGlue[i].fName = nil;
 		gGlue[i].fFn = nil;
+		gGlue[i].fExtern = nil;
 	}
 	static const struct { const char* name; GlueFn fn; } kGlue[] =
 	{
@@ -2751,6 +2957,176 @@ RunPackageNativeOnCPU(RefArg code, ULong offset, RefArg rcvr, long numArgs, cons
 	end_try;
 	delete cpu;
 	delete world;
+	return result;
+}
+
+
+/*------------------------------------------------------------------------------
+	T h e   w o r l d   t h a t   o u t l i v e s   a   c a l l
+	(ARMWorld.h)
+------------------------------------------------------------------------------*/
+
+uint32_t	ARMTrapContext::Arg(int i)				{ return ((TNativeWorld*) fWorld)->Arg(*fCPU, i); }
+void		ARMTrapContext::Return(uint32_t value)	{ ((TNativeWorld*) fWorld)->Return(*fCPU, value); }
+uint32_t	ARMTrapContext::Register(int i)			{ return fCPU->r[i]; }
+bool		ARMTrapContext::Read32(uint32_t a, uint32_t* v)	{ return ((TNativeWorld*) fWorld)->Read32(a, v); }
+bool		ARMTrapContext::Write32(uint32_t a, uint32_t v)	{ return ((TNativeWorld*) fWorld)->Write32(a, v); }
+bool		ARMTrapContext::Read8(uint32_t a, uint8_t* v)	{ return ((TNativeWorld*) fWorld)->Read8(a, v); }
+bool		ARMTrapContext::Write8(uint32_t a, uint8_t v)	{ return ((TNativeWorld*) fWorld)->Write8(a, v); }
+bool
+ARMTrapContext::ReadCString(uint32_t a, char* buffer, uint32_t size)
+{
+	for (uint32_t i = 0; i < size; i++)
+	{
+		uint8_t c;
+		if (!Read8(a + i, &c))
+			return false;
+		buffer[i] = (char) c;
+		if (c == 0)
+			return true;
+	}
+	if (size > 0)
+		buffer[size - 1] = 0;
+	return true;
+}
+
+
+bool
+ARMRegisterGlue(const char* name, ARMTrapFn fn)
+{
+	InitGlue();
+	bool found = false;
+	for (unsigned long i = 0; i < kPublicJumpTableCount; i++)
+		if (strcmp(kPublicJumpTable[i].fName, name) == 0)
+		{
+			GlueEntry* g = &gGlue[kPublicJumpTable[i].fOffset / 4];
+			g->fName = name;
+			g->fExtern = fn;
+			found = true;
+		}
+	return found;
+}
+
+
+// the world's memory without a world: the ROM, the heap, the regions
+bool
+ARMRead32(uint32_t a, uint32_t* v)
+{
+	ULong romSize = 0;
+	const uint8_t* rom = (const uint8_t*) ROMImageBase(&romSize);
+	if (rom != nil && a + 4 <= romSize)	{ *v = BE32(rom + a); return true; }
+	if (gARMHeap.Contains(a, 4))		{ *v = BE32(gARMHeap.At(a)); return true; }
+	if (ARMRegion* r = FindRegion(a, 4))	{ *v = RegionRead32(r, a); return true; }
+	return false;
+}
+bool
+ARMWrite32(uint32_t a, uint32_t v)
+{
+	if (gARMHeap.Contains(a, 4))		{ PutBE32(gARMHeap.At(a), v); return true; }
+	if (ARMRegion* r = FindRegion(a, 4))	{ RegionWrite32(r, a, v); return true; }
+	return false;
+}
+bool
+ARMRead8(uint32_t a, uint8_t* v)
+{
+	ULong romSize = 0;
+	const uint8_t* rom = (const uint8_t*) ROMImageBase(&romSize);
+	if (rom != nil && a < romSize)		{ *v = rom[a]; return true; }
+	if (gARMHeap.Contains(a, 1))		{ *v = *gARMHeap.At(a); return true; }
+	if (ARMRegion* r = FindRegion(a, 1))	{ *v = RegionRead8(r, a); return true; }
+	return false;
+}
+bool
+ARMWrite8(uint32_t a, uint8_t v)
+{
+	if (gARMHeap.Contains(a, 1))		{ *gARMHeap.At(a) = v; return true; }
+	if (ARMRegion* r = FindRegion(a, 1))	{ RegionWrite8(r, a, v); return true; }
+	return false;
+}
+bool
+ARMReadCString(uint32_t a, char* buffer, uint32_t size)
+{
+	for (uint32_t i = 0; i < size; i++)
+	{
+		uint8_t c;
+		if (!ARMRead8(a + i, &c))
+			return false;
+		buffer[i] = (char) c;
+		if (c == 0)
+			return true;
+	}
+	if (size > 0)
+		buffer[size - 1] = 0;
+	return true;
+}
+
+
+// each task's world (the host runs one task at a time: no locking)
+struct TaskWorld { TObjectId fTask; TNativeWorld* fWorld; };
+static Vec<TaskWorld>	gTaskWorlds;
+
+static TNativeWorld*
+WorldOfTask(void)
+{
+	for (TaskWorld& t : gTaskWorlds)
+		if (t.fTask == gCurrentTaskId)
+			return t.fWorld;
+	TaskWorld t = { gCurrentTaskId, new TNativeWorld() };
+	gTaskWorlds.push_back(t);
+	return t.fWorld;
+}
+
+
+uint32_t
+ARMCall(uint32_t pc, const uint32_t* args, int count)
+{
+	const char* trace = getenv("NEWTON_TRACE_ARMCPU");
+	gTrace = trace != nil && atoi(trace) >= 2;
+	if (count > 16)
+		ThrowMsg("armcpu: too many arguments");
+	TNativeWorld* world = WorldOfTask();
+	TARMCPU* cpu = new TARMCPU(world);
+	// on the stack of the call under way (ARM to host to ARM), else at the
+	// top of the arena's
+	uint32_t sp = world->fCPUs.empty() ? kArenaBase + kArenaSize - 16 : ((world->fCPUs.back()->r[13] - 0x100) & ~7u);
+	if (count > 4)
+	{
+		sp -= (uint32_t) (count - 4) * 4;
+		for (int i = 4; i < count; i++)
+			world->Write32(sp + (uint32_t) (i - 4) * 4, args[i]);
+	}
+	for (int i = 0; i < 4 && i < count; i++)
+		cpu->r[i] = args[i];
+	cpu->r[13] = sp;
+	world->fCPUs.push_back(cpu);
+	uint32_t result = 0;
+	ARMStop stop = kARMReturned;
+	newton_try
+	{
+		stop = cpu->Call(pc, kReturn);
+		result = cpu->r[0];
+	}
+	cleanup
+	{
+		world->fCPUs.pop_back();
+		if (world->fCPUs.empty())
+			world->EndOfCalls();
+		delete cpu;
+	}
+	end_try;
+	if (trace != nil)
+		fprintf(stderr, "[armcpu] call %08x: %lu instructions, stop %d, r0 %08x\n", pc, (unsigned long) cpu->steps, (int) stop, result);
+	world->fCPUs.pop_back();
+	uint32_t faultPC = cpu->faultPC, faultAddress = cpu->faultAddress;
+	delete cpu;
+	if (world->fCPUs.empty())
+		world->EndOfCalls();
+	if (stop != kARMReturned)
+	{
+		if (stop != kARMStoppedByHost)
+			fprintf(stderr, "[armcpu] call %08x stopped (%d) at pc %08x, address %08x\n", pc, (int) stop, faultPC, faultAddress);
+		ThrowMsg("armcpu: the ARM code did not run to its end");
+	}
 	return result;
 }
 

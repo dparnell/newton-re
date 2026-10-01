@@ -205,7 +205,72 @@ Mahjongg's two natives deal the board and NewtHack's runs each turn.
   carries the page it is in (`gParamBlock`, 0x1000-0x2000), so the
   fixtures run the same with no image.
 
-NOT YET: frames in the code binary; protocol parts.
+NOT YET: frames in the code binary.
+
+## Protocol parts (2026-10-01; layer by layer)
+
+A package's protocol part with no host stand-in is run on the interpreter
+(`ARMProtocols.h`, `ARMWorld.h`; the package manager falls back on it
+through `packages/ProtocolStandIns.h`'s `SetARMProtocolPartLoader`):
+
+- **The world that outlives a call** (`ARMWorld.h`).  A native function's
+  world lasts one call; a protocol's instances and code are there for as
+  long as the part is installed.  Shared by every world: *regions* (host
+  memory at ARM addresses from 0x90000000 - a part's code, a card socket's
+  window; a card-bus region's accesses go through `hal/CardBus.h`, so the
+  ARM code reaching an ATA card's registers reaches `hal/host/HostATA.cpp`),
+  *host traps* (host functions at 0x71000000 the ARM code may branch to)
+  and *registered glue* (`ARMRegisterGlue`: more of the public jump table
+  answered from outside `PackageNativeCPU.cpp`).  `ARMCall` runs ARM code
+  on the calling task's own world (its own arena and stack; a call made
+  while one is under way - ARM to host to ARM - goes on below it), and the
+  handles, windows and code objects of a call go when the outermost call
+  returns.  A glue function reads and writes through the calling world
+  (`ARMTrapContext::Read32` and its kin), so a native function's strings in
+  its code binary are seen.
+- **The class** (`LoadARMProtocolPart`).  The part's bytes are copied into
+  a region (relocated where the package's relocation chunk names words in
+  it - the fixtures' protocol parts have none, NTK's protocol code being
+  position-independent), the ROM's TClassInfo read (names, the capability
+  list, the dispatch table, sizeof/alloc/free branches - sizeof run once
+  for the instance size), and a host TClassInfo made and registered as the
+  part's stand-in.
+- **Instances.**  One the host makes is a *proxy* - a host object of a
+  class written for the interface (`RegisterARMProxyKind`), which answers
+  each method by calling its ARM instance's dispatch table slot
+  (`ARMCallSlot`; slot 4 is the first method) - its ARM instance made
+  beside it as `PrivateClassInfoMakeAt` makes one (fRuntime 0, fRealThis
+  itself, fBTable the table, fMonitorId 0) and its ARM `New`/`Delete` called
+  from the proxy's.  One the ARM code makes (`AllocInstanceByName`,
+  `NewByName`, `FreeInstance` - glue) is the ARM instance alone, called
+  ARM to ARM.  A host implementation handed to ARM code is NOT YET; monitor
+  parts are NOT YET.
+- **Host objects** the ARM code sees are *mirrors* (`ARMMirrorFor`): a
+  block of the ARM heap in the ROM's layout, filled in when handed over,
+  whose methods' glue maps it back to the host object (`ARMHostOf`).
+- **The name server** (`TUNameServer`'s constructor, destructor, `Lookup`,
+  `RegisterName`, `UnRegisterName`): a thing registered is an ARM word,
+  kept as it is.
+- **Card handlers** (`ARMCardHandler.h`): the `TCardHandler` proxy (its
+  sixteen methods, `GetDeviceInfo`'s out-parameters through ARM words,
+  `CardSpecific(kCardSpecificATASetPartitionInfo)` handing over a mirror of
+  the partition info with copies of its entries), and mirrors of
+  `TCardSocket` (a handle: `SocketNumber`, the three windows as card-bus
+  regions), `TCardPCMCIA` (its CIS numbers and flags at the ROM's offsets;
+  its strings, functions and configurations through the methods' glue),
+  `TCardFunction` and `TCardConfiguration`.
+
+`test_ARMProtocols` (ctest `armcpu.ARMProtocols`) assembles a small part -
+class info, table, sizeof, New, Delete and a method - and loads, relocates,
+registers, makes and calls it both ways, round-trips the name server and
+maps a region.  `NEWTON_TRACE_ARMPROTOCOLS` prints each part loaded, each
+proxy call and the protocol glue's answers.
+
+What ATA Support's driver package needs next (the coordinator's plan, in
+layers): the kernel glue its frames part's InstallScript native reaches
+(`TAEventHandler` and the event loop's calls back into ARM, `TUAsyncMessage`,
+`TUPort`'s messages, semaphores, `CList`/`CDynamicArray`), then
+TATACardHandler recognising a card, PATACardServer, and TATAStore mounted.
 
 ## Which fixtures have native code
 

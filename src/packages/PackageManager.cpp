@@ -491,6 +491,20 @@ TPackageEventHandler::InstallPart(ULong* classInfo, RemoveObjPtr* removeObj, UCh
 				ROMClassInfoNames names;
 				if (code != nil && ReadROMClassInfo(code, info.size, &names))
 					standIn = ProtocolStandInFor(names.fImplementation, names.fInterface);
+				// DEVIATION: with no stand-in, the part's own ARM code on the
+				// host's ARM interpreter, when there is one (armcpu/ARMProtocols.h)
+				if (standIn == nil && code != nil && !(IsMemory(type) && ROMAddressOf((const void*) source.mem.buffer, nil, nil)))
+				{
+					const void* package = nil;
+					ULong partOffset = fIter->GetPartDataOffset(fPartIndex);
+					if (IsMemory(type))
+					{
+						const char* candidate = (const char*) source.stream.bufferId - partOffset;
+						if (memcmp(candidate, "package", 7) == 0)
+							package = candidate;
+					}
+					standIn = LoadARMProtocolPartFallback(code, info.size, package, partOffset);
+				}
 				if (standIn != nil)
 					err = standIn->Register();
 				else if (!(IsMemory(type) && ROMAddressOf((const void*) source.mem.buffer, nil, nil)))

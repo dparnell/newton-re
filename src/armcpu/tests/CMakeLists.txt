@@ -31,3 +31,11 @@ set_tests_properties(armcpu.NewtHack PROPERTIES TIMEOUT 180
     ENVIRONMENT "NEWTON_TRACE_ARMCPU=1"
     PASS_REGULAR_EXPRESSION "native [+]0x29ec: [0-9]+ instructions, stop 1.*newthack: done"
     FAIL_REGULAR_EXPRESSION "[[]armcpu[]] (the ROM's|native [+]0x[0-9a-f]+ stopped|an object|[0-9a-f]+ is not)")
+
+# protocol parts on the interpreter: a part assembled in the test loaded,
+# relocated, registered, made through a proxy and from the ARM side, the
+# name server glue and the regions (ARMProtocols.h, ARMWorld.h)
+add_executable(test_ARMProtocols test_ARMProtocols.cpp)
+target_link_libraries(test_ARMProtocols PRIVATE armcpu_protocols os600_kernel os600_user)
+add_test(NAME armcpu.ARMProtocols COMMAND test_ARMProtocols)
+set_tests_properties(armcpu.ARMProtocols PROPERTIES TIMEOUT 60 PASS_REGULAR_EXPRESSION "test_ARMProtocols: all passed")
