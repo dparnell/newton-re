@@ -21,6 +21,18 @@ romsrc's `#hex` immediates and `@@` record lines; a 22-test corpus and
 a Zed extension (`zed-newtonscript/`): highlighting, brackets,
 indentation and an outline, installed with "zed: install dev extension".
 
+## 2026-10-01: the PSS manager's slots as ATA Support sees them
+
+`ARMMapDevice` makes ARM addresses whose every access the host answers;
+`ARMPSSManager.cpp` uses it to present `gPSSManager` and the slot table
+in the ROM's layout - only the fields ATA Support reads - and to turn its
+writes (the slot count, a slot's state, a store info with its ARM store)
+into calls on the host's own PSS manager, the store becoming a host proxy
+over the ARM instance; anything else is refused and traced (DEVIATION).
+With a blank card the driver marks slot 0 mounted with no store yet; it
+mounts its stores itself from NewtonScript, which wants the TStore proxy
+next.
+
 ## 2026-10-01: protocol parts on the ARM interpreter, layer 3: the ATA drive read
 
 ATA Support's services run on armcpu: socket interrupts (the ARM
