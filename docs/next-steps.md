@@ -41,25 +41,31 @@ the way are all in `docs/work-log.md`.
 
 ## In progress
 
-- **The fixture applications used for what they are for**
-  (`demo/apps-*.ns`, ctests `host.NewtonApp*`): left - Newt's Cape's
-  other helpers (audio into the In Box, PalmDoc, MOD, the encodings,
-  PkgInfo, RoutBook, NewtPack) and Register.
+- **64-bit NewtonScript, on branch `ns64`** (the owner's decisions,
+  2026-10-02, after the study `docs/frames/64bit-study.md` on branch
+  `ns64-study` and the spike on `ns64-spike`):
+  - a **compile-time flavour**, `NEWTON_NS64`, opt-in; the faithful
+    32-bit build stays the default and the regression oracle, its full
+    suite green at every step;
+  - the work is done **on the branch** and merged into main only with the
+    owner's say-so (a stage that changes nothing observable, such as S0's
+    `RINT` answering `Long`, may be proposed for main separately);
+  - **every boundary stays 32-bit** - NSOF, stores and soup keys,
+    packages, the object file, docking, endpoints and translators,
+    armcpu, the NIE - with one narrowing policy at the outbound sites
+    (by default narrowed consistently to 30 bits, so a store holds what
+    the device would have computed; a strict mode throws instead);
+  - the stages are the study's S0-S4 (S5, objects over 16 MB, only if
+    cheap); wide on-disk and wire formats (S6) are not part of it - the
+    owner may explore full 64-bit implementations of them later.
 
 ## Waiting on the owner
 
-- **A 64-bit NewtonScript** (asked 2026-10-01): the feasibility study is
-  `docs/frames/64bit-study.md` on branch `ns64-study`, with a measured
-  spike on branch `ns64-spike` (neither merged).  In short: the core is
-  small (30-bit integers live in `MAKEINT` and one helper; widened behind
-  `-DNEWTON_NS64=1` the tree builds and 382 of 394 tests pass after one
-  host fix), the work is the boundaries (NSOF, stores, soup keys,
-  packages, dock, translators, armcpu, the NIE - recommended to stay
-  32-bit with one narrowing policy) and the `RINT` narrowing audit on
-  Windows; the open decision is time (`TimeInSeconds` wrapped as on the
-  device, or the true count narrowed at the boundary).  Recommended: an
-  opt-in compile-time flavour, the faithful build staying the default;
-  about 3-5 weeks for stages S0-S4.
+- **Time under 64-bit NewtonScript**: whether `TimeInSeconds` stays the
+  device's wrapped 30-bit value (everything stays storable as it is) or
+  becomes the true count, narrowed where it is stored.  The `ns64` work
+  will set out both options with their consequences when it reaches
+  that stage (S3).
 
 ## Open
 
