@@ -1069,7 +1069,13 @@ ROM's own `TATASimple` (`pcmcia/ATA.h`, 0x26408-0x271a4, registered by
 With no handler that recognises the card (the driver package is what
 should bring one), the card server takes the packages out again
 (`RemoveATAPackages`) and the card is unrecognised - which is as far as the
-ROM goes. Apple's ATA Support package is the rest (its store and handler).
+ROM goes. The rest - a store and a handler - comes from a driver package:
+Kallisys's ATA Support 1.0 (`fixtures/packages/drivers/`, Paul Guyot,
+2001) installs on the host (ctest `host.NewtonATASupport`: its installer's
+native code on `src/armcpu`), and its driver package carries
+`TATACardHandler`, `TATAStore` (a `TStore`), its own `TATASimple` and an
+ATA card server - ARM protocol parts the host does not run yet
+(`docs/armcpu/README.md`).
 
 `TATASimple` is programmed I/O a sector at a time, polling the status
 register for up to three seconds (`WaitFor`); ROM QUIRK: that first wait

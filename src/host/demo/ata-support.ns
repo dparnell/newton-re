@@ -1,0 +1,58 @@
+// Kallisys's ATA Support 1.0 (fixtures/packages/drivers/ATA-Support-1.0.pkg,
+// Paul Guyot, 2001) installed as a user would: the package is an
+// installer - an 'auto part whose native code (run on src/armcpu: its
+// CheckMachine asks Gestalt what the machine is, its DecompressPackage
+// unpacks the real package) - that asks to go on, offers the languages,
+// decompresses the driver package and stores it with
+// store:SuckPackageFromBinary, then asks for a restart.  The driver package
+// ("ATA Support:Kallisys") is then on the internal store; its protocol
+// parts - the ATA card server, TATAStore, its own TATASimple and the card
+// handler - are ARM, which the host does not run yet (the package manager
+// reports each).  Run with the installer as --package on a fresh store
+// (ctest host.NewtonATASupport, then .restart: still installed after a
+// restart).
+//
+//   build/host/host/newton --erase --store tmp/atasup.store --headless 150 \
+//       --package fixtures/packages/drivers/ATA-Support-1.0.pkg \
+//       --script src/host/demo/ata-support.ns
+//
+// NEWTON_SAVE_PACKAGE=<file> writes the package the installer stores out
+// too (classinfo.py --package, pkgdisasm.py read it there).
+
+HostInclude("common.ns");			// waitFor
+HostInclude("walkhelpers.ns");		// findView, wtCheck
+HostInclude("apphelpers.ns");		// tapCentre
+
+wtName := "ata-support";
+asButton := func(label) call findView with (GetRoot(), func(v) IsString(v.text) and StrEqual(v.text, label) and v.viewCObject);
+asPress := func(label, andThen) call waitFor with ("ata-support: " & label, func() call asButton with (label), func() begin
+		local b := call asButton with (label);
+		if b then call tapCentre with (b);
+		call andThen with ();
+	end, 60);
+asPackage := func(title) begin
+	local found := nil;
+	foreach p in GetPackages() do if StrEqual(p.title, title) then found := p;
+	found
+end;
+
+wtSteps := [
+	// "Installing ATA Support requires to reboot after installation is
+	// complete. Do you want to continue?"
+	func(done) call asPress with ("Yes", done),
+	// the installer: English, Proceed
+	func(done) call asPress with ("Proceed", done),
+	// "Installation of ATA Support was successful. Please restart ..."
+	func(done) call waitFor with ("ata-support: installed", func() call asButton with ("Restart"), func() begin
+			local p := call asPackage with ("ATA Support:Kallisys");
+			Print("ata-support: installed " & (if p then p.size & " bytes on " & p.store:GetName() else "nothing"));
+			call wtCheck with ("the driver package installed on the internal store",
+				p and p.store, "(not installed)");
+			call done with ();
+		end, 120),
+	func(done) begin
+		Print("ata-support: done, " & wtFailures & " failed");
+		HostQuit();
+	end];
+
+AddDelayedCall(wtNext, nil, 1000);

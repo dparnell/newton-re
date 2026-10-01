@@ -1,0 +1,26 @@
+// After ata-support.ns, on the same store: the driver package ATA Support's
+// installer stored is still there after a restart, activated again with
+// its parts (whose ARM protocol parts the package manager reports).
+//
+//   build/host/host/newton --store tmp/atasup.store --headless 120 \
+//       --script src/host/demo/ata-support-restart.ns
+
+HostInclude("common.ns");
+HostInclude("walkhelpers.ns");
+
+wtName := "ata-support-restart";
+wtSteps := [
+	func(done) call waitFor with ("ata-support-restart: the package", func() begin
+			local found := nil;
+			foreach p in GetPackages() do if StrEqual(p.title, "ATA Support:Kallisys") then found := p;
+			found
+		end, func() begin
+			call wtCheck with ("still installed after a restart", true, "");
+			call done with ();
+		end, 60),
+	func(done) begin
+		Print("ata-support-restart: done, " & wtFailures & " failed");
+		HostQuit();
+	end];
+
+AddDelayedCall(wtNext, nil, 1000);

@@ -222,9 +222,18 @@ the 19 packages in `fixtures/packages/` (2026-09-29):
 | NIE 2 `enetsup.pkg` | - | PEnetLinkModule, PDhcpDynAddrModule, PLanternDriverModule |
 | NIE 2 `newtdev.pkg` | - | TDriverAPI, TClientAPI, TLanternCardHandler ('cdhl) |
 | NIE 2 `loctsup.pkg` | - | PMacIPLinkModule, PMacIPDriverModule |
+| Kallisys ATA Support 1.0 (`drivers/ATA-Support-1.0.pkg`, an installer) | `'nativeModule` BinCFunctions CheckMachine, DecompressPackage | - |
+| the driver package it installs ("ATA Support:Kallisys", 179540 bytes; `NEWTON_SAVE_PACKAGE` writes it out) | binary 0xb149 (105 entries: semaphores, ports, async messages, the name server, an event handler, CList/CDynamicArray, NewByName) | PATACardServer (PATACardServerIntf, 11 methods), TATAStore (TStore, 42), TATASimple (TATA, 19), TATACardHandler (TCardHandler, 16; 'cdhl) |
 
 (Every NTK native binary starts with the same runtime: code from 0x29ec after
 128 stubs.)  Every protocol part among the fixtures is the NIE's, which is
 re-expressed natively (`src/thirdparty/nie/`) rather than run on the CPU, so
-no fixture yet needs protocol parts through the interpreter; a driver or
-comms tool package without a host re-expression is what would.
+no fixture needed protocol parts through the interpreter until ATA
+Support (2026-10-01): its installer's natives run (Gestalt's system info
+marshalled field by field into the ROM's layout - `Glue_TUGestalt_Gestalt`
+-, NSSend of two and four arguments, MemError, a TUObject's destructor;
+the decompression is 3.7 million instructions), and the driver package is
+stored (ctest `host.NewtonATASupport`), but its four protocol parts - all
+ARM, with no re-expression (the owner's decision: the package's own code)
+- are reported and not run: that is the "protocol parts through the CPU"
+item.

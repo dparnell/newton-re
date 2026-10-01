@@ -22,6 +22,8 @@
 	0x00321234-0x00322730); each function cites its origin.
 */
 
+#include <stdio.h>
+#include <stdlib.h>
 #include "StorePackages.h"
 #include "PackageManager.h"
 #include "PackagePipe.h"
@@ -279,6 +281,19 @@ FSuckPackageFromBinary(RefArg rcvr, RefArg binary, RefArg parameters)
 	long length = Length(binary);
 	RefVar result;
 	LockRef(binary);
+	// the host's: NEWTON_SAVE_PACKAGE names a file each package stored from
+	// a binary is written to as well - how a package an installer makes
+	// (a decompressed driver, say) is had to look at
+	const char* savePath = getenv("NEWTON_SAVE_PACKAGE");
+	if (savePath != nil && *savePath != 0)
+	{
+		FILE* f = fopen(savePath, "wb");
+		if (f != nil)
+		{
+			fwrite(BinaryData(binary), 1, length, f);
+			fclose(f);
+		}
+	}
 	newton_try
 	{
 		CBufferSegment segment;

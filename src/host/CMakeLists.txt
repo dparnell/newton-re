@@ -905,6 +905,27 @@ if(Python3_FOUND)
                              PASS_REGULAR_EXPRESSION "command 20 count 13 address 4.*command 20 count 11 address 17.*command 96.*driver package installed: ok.*removed with no handler for the card: ok.*neither package left: ok.*ata-card: done, 0 failed"
                              FAIL_REGULAR_EXPRESSION "waited in vain|FAILED")
     endif()
+    # Kallisys's ATA Support installed as a user would (demo/ata-support.ns):
+    # the installer's native code on armcpu (Gestalt, the decompression),
+    # its dialogs answered, the driver package stored on the internal
+    # store; then still there after a restart.  Its ARM protocol parts are
+    # reported, not run (NOT YET).
+    add_test(NAME host.NewtonATASupport
+             COMMAND newton --display 320x480 --erase --store ${CMAKE_CURRENT_BINARY_DIR}/atasupport.store
+                     --headless 150 --package ${CMAKE_SOURCE_DIR}/../fixtures/packages/drivers/ATA-Support-1.0.pkg
+                     --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/ata-support.ns
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonATASupport PROPERTIES TIMEOUT 240 FIXTURES_SETUP host_atasupport_store
+                         PASS_REGULAR_EXPRESSION "installed on the internal store: ok.*ata-support: done, 0 failed"
+                         FAIL_REGULAR_EXPRESSION "waited in vain|FAILED")
+    add_test(NAME host.NewtonATASupport.restart
+             COMMAND newton --display 320x480 --store ${CMAKE_CURRENT_BINARY_DIR}/atasupport.store
+                     --headless 120 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/ata-support-restart.ns
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonATASupport.restart PROPERTIES TIMEOUT 180
+                         FIXTURES_REQUIRED host_atasupport_store DEPENDS host.NewtonATASupport
+                         PASS_REGULAR_EXPRESSION "still installed after a restart: ok.*ata-support-restart: done, 0 failed"
+                         FAIL_REGULAR_EXPRESSION "waited in vain|FAILED")
     # a package cut into a soup of chunk entries and restored with
     # store:RestoreSegmentedPackage (packages/PackageArchivalPipe.h), and
     # stored with SuckPackageFromBinary's progress callback, on a store of

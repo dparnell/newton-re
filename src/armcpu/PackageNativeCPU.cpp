@@ -22,6 +22,8 @@
 #include "HostOrder.h"
 #include "ByteOrder.h"
 #include "utility/Unicode.h"
+#include "NewtonGestalt.h"
+#include "NewtonMemory.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1798,6 +1800,127 @@ GLUE(Glue_NSCallGlobalFn0)		{ TraceGlobalFn(w, cpu); w.Return(cpu, w.ToARM(NSCal
 GLUE(Glue_NSCallGlobalFn1)		{ TraceGlobalFn(w, cpu); w.Return(cpu, w.ToARM(NSCallGlobalFn(REFARG(0), REFARG(1)))); return true; }
 GLUE(Glue_NSCallGlobalFn2)		{ TraceGlobalFn(w, cpu); w.Return(cpu, w.ToARM(NSCallGlobalFn(REFARG(0), REFARG(1), REFARG(2)))); return true; }
 GLUE(Glue_NSCallGlobalFn3)		{ TraceGlobalFn(w, cpu); w.Return(cpu, w.ToARM(NSCallGlobalFn(REFARG(0), REFARG(1), REFARG(2), REFARG(3)))); return true; }
+// ROM 0x002efd48 NSSend__FRC6RefVarT1
+// ROM 0x002eff28 NSSend__FRC6RefVarN31
+// ROM 0x002f0070 NSSend__FRC6RefVarN51
+// a message sent: the receiver, the message and its arguments by reference
+// (the fifth and sixth on the stack)
+#define STACKREFARG(n)	RefVar(w.ArgRef(w.Arg(cpu, n)))
+GLUE(Glue_NSSend0)				{ w.Return(cpu, w.ToARM(NSSend(REFARG(0), REFARG(1)))); return true; }
+GLUE(Glue_NSSend2)				{ w.Return(cpu, w.ToARM(NSSend(REFARG(0), REFARG(1), REFARG(2), REFARG(3)))); return true; }
+GLUE(Glue_NSSend4)
+{
+	RefVar args(MakeArray(4));
+	SetArraySlot(args, 0, REFARG(2));
+	SetArraySlot(args, 1, REFARG(3));
+	SetArraySlot(args, 2, STACKREFARG(4));
+	SetArraySlot(args, 3, STACKREFARG(5));
+	w.Return(cpu, w.ToARM(NSSendWithArgArray(REFARG(0), REFARG(1), args)));
+	return true;
+}
+// ROM 0x00142758 MemError
+GLUE(Glue_MemError)				{ w.Return(cpu, (uint32_t) MemError()); return true; }
+
+// The Gestalt object (8 bytes in the ARM world: the TUObject's id and a
+// byte) and its query.  The host's TUGestalt answers into a block in its
+// own layout - its ULong fields as wide as a pointer - which is written
+// back into the ARM's as the ROM's layout has it, field by field, for each
+// selector the system answers; a selector something registered is copied
+// as its bytes lie.
+// ROM 0x00131780 __ct__9TUGestaltFv
+GLUE(Glue_TUGestalt_ctor)
+{
+	uint32_t self = cpu.r[0];
+	if (self == 0)
+		self = HeapAlloc(8, false);
+	if (self != 0)
+	{
+		w.Write32(self, 0);
+		w.Write8(self + 4, 0);
+	}
+	w.Return(cpu, self);
+	return true;
+}
+// ROM 0x002596c4 __dt__8TUObjectFv
+// (the host keeps no kernel object for an ARM one: only the delete bit)
+GLUE(Glue_TUObject_dtor)
+{
+	if ((cpu.r[1] & 1) != 0 && cpu.r[0] != 0)
+		gARMHeap.Free(cpu.r[0]);
+	w.Return(cpu, 0);
+	return true;
+}
+static void
+PutWords(TNativeWorld& w, uint32_t to, uint32_t size, const ULong* words, ULong count)
+{
+	for (ULong i = 0; i < count && (i + 1) * 4 <= size; i++)
+		w.Write32(to + i * 4, (uint32_t) words[i]);
+}
+// ROM 0x001317cc Gestalt__9TUGestaltFUlPvT1
+GLUE(Glue_TUGestalt_Gestalt)
+{
+	ULong selector = cpu.r[1];
+	uint32_t block = cpu.r[2];
+	uint32_t size = cpu.r[3];
+	TUGestalt gestalt;
+	NewtonErr err;
+	switch (selector)
+	{
+	case kGestalt_SystemInfo:
+	{
+		TGestaltSystemInfo info;
+		memset(&info, 0, sizeof(info));
+		err = gestalt.Gestalt(selector, &info, sizeof(info));
+		if (err == noErr)
+		{
+			ULong words[14] = { info.fManufacturer, info.fMachineType, info.fROMVersion, info.fROMStage,
+								info.fRAMSize, info.fScreenWidth, info.fScreenHeight, info.fPatchVersion,
+								((ULong) (UShort) info.fScreenResolution.v << 16) | (UShort) info.fScreenResolution.h,
+								info.fScreenDepth, (ULong) (ULong32) info.fTabletResX, (ULong) (ULong32) info.fTabletResY,
+								info.fCpuType, (ULong) (ULong32) info.fCpuSpeed };
+			PutWords(w, block, size, words, 14);
+		}
+		break;
+	}
+	case kGestalt_SoftContrast:
+	{
+		TGestaltSoftContrast info;
+		memset(&info, 0, sizeof(info));
+		err = gestalt.Gestalt(selector, &info, sizeof(info));
+		if (err == noErr && size >= 12)
+		{
+			w.Write8(block, info.fHasSoftContrast);
+			w.Write32(block + 4, (uint32_t) info.fMinContrast);
+			w.Write32(block + 8, (uint32_t) info.fMaxContrast);
+		}
+		break;
+	}
+	case kGestalt_Version: case kGestalt_RebootInfo: case kGestalt_NewtonScriptVersion:
+	case kGestalt_PatchInfo: case kGestalt_PCMCIAInfo: case kGestalt_RexInfo:
+	{
+		// blocks of ULongs
+		ULong words[64];
+		memset(words, 0, sizeof(words));
+		ULong count = size / 4 < 64 ? size / 4 : 64;
+		err = gestalt.Gestalt(selector, words, count * sizeof(ULong));
+		if (err == noErr)
+			PutWords(w, block, size, words, count);
+		break;
+	}
+	default:
+	{
+		UByte bytes[256];
+		ULong n = size < sizeof(bytes) ? size : sizeof(bytes);
+		err = gestalt.Gestalt(selector, bytes, n);
+		if (err == noErr)
+			for (ULong i = 0; i < n; i++)
+				w.Write8(block + i, bytes[i]);
+		break;
+	}
+	}
+	w.Return(cpu, (uint32_t) err);
+	return true;
+}
 // ROM 0x0031c9f0 LockedBinaryPtr__FRC6RefVar
 // the object locked and its
 // bytes' address - here a window onto them that lasts until the lock goes
@@ -2498,6 +2621,13 @@ InitGlue(void)
 		{ "NSCallGlobalFn__FRC6RefVarT1", Glue_NSCallGlobalFn1 },
 		{ "NSCallGlobalFn__FRC6RefVarN21", Glue_NSCallGlobalFn2 },
 		{ "NSCallGlobalFn__FRC6RefVarN31", Glue_NSCallGlobalFn3 },
+		{ "NSSend__FRC6RefVarT1", Glue_NSSend0 },
+		{ "NSSend__FRC6RefVarN31", Glue_NSSend2 },
+		{ "NSSend__FRC6RefVarN51", Glue_NSSend4 },
+		{ "MemError", Glue_MemError },
+		{ "__ct__9TUGestaltFv", Glue_TUGestalt_ctor },
+		{ "Gestalt__9TUGestaltFUlPvT1", Glue_TUGestalt_Gestalt },
+		{ "__dt__8TUObjectFv", Glue_TUObject_dtor },
 		{ "LockedBinaryPtr__FRC6RefVar", Glue_LockedBinaryPtr },
 		{ "UnlockRefArg__FRC6RefVar", Glue_UnlockRefArg },
 		{ "Ustrlen", Glue_Ustrlen },
