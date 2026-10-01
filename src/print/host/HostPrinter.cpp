@@ -11,6 +11,7 @@
 */
 
 #include "print/host/HostPrinter.h"
+#include "print/host/HostIPP.h"
 #include "Frames.h"
 #include "ObjectHeap.h"
 #include "Ports.h"
@@ -405,4 +406,6 @@ HostInstallPrinter(void)
 	SetFrameSlot(origin, RSSYMleft, MAKEINT(kOriginLeft));
 	SetFrameSlot(printer, RefVar(Intern((char*) "printableOrigin")), origin);
 	AddArraySlot(printers, printer);
+	// and the printers on the network, when there is one (HostIPP.h)
+	HostInstallIPPPrinters();
 }

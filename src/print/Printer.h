@@ -11,7 +11,7 @@
 				port - a GrafPort at 72 dots an inch the size of the paper -
 				between OpenPage and ClosePage, as many times as RepeatPage
 				says.  The ROM's one TPrinter for bitmap printers is
-				TDotPrinter (the PostScript one, TPSPrinter, is NOT YET).
+				TDotPrinter; the PostScript one is TPSPrinter (print/PSPrinter.h).
 
 				TDotPrinter prints a page a band at a time: it asks its
 				driver how big a band may be (GetBandPrefs), allocates the
@@ -33,7 +33,8 @@
 				page's size and resolution, a band to image, and the job's
 				open/close/page brackets.  The ROM's are the fax
 				(print/FaxDriver.h), the StyleWriter group, the LaserWriter
-				LS and HP PCL - only the fax driver is reconstructed.  A
+				LS and HP PCL - the fax driver and HP PCL (print/HPPCL.h) are
+				reconstructed.  A
 				modern printer is a new implementation of this protocol.
 
 	Not in the DDK's headers as classes (DotDrivers.h and PrintTypes.h

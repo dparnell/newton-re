@@ -1,0 +1,5 @@
+// Printing a note by IPP through the ROM's HP PCL driver: print-ipp.ns
+// (ctest host.NewtonIPPPCL).
+kIPPPrinter := "IPP printer (HP PCL)";
+kIPPRow := 196;
+HostInclude("print-ipp.ns");

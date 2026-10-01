@@ -105,8 +105,13 @@ MeasureGlyphWidths(const UniChar* chars, long length, StyleRecord** styles, cons
 // width, every character the same.  ==> the offset of the text's start:
 // the slack times the alignment.
 Fixed
-JustifyText(const UniChar* chars, long length, TextOptions* options, TextLayout* layout)
+JustifyText(const UniChar* chars, long length, TextOptions* options, TextLayout* layout, Fixed* extras)
 {
+	if (extras != nil)
+	{
+		extras[0] = 0;
+		extras[1] = 0;
+	}
 	if (options == nil || options->fWidth == 0)
 		return 0;
 	Fixed slack = options->fWidth - layout->fWidth;
@@ -128,6 +133,11 @@ JustifyText(const UniChar* chars, long length, TextOptions* options, TextLayout*
 		{
 			perChar = FixedDivide(extra, (Fixed) ((length + spaces * 8 - 1) << 16));
 			perSpace = FixedMultiply(perChar, 0x90000);
+		}
+		if (extras != nil)
+		{
+			extras[0] = perChar;
+			extras[1] = perSpace;
 		}
 		for (long i = 0; i < length - 1; i++)
 			layout->fAdvances[i] += (chars[i] == kSpace) ? perSpace : perChar;

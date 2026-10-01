@@ -379,6 +379,43 @@ set_tests_properties(host.NewtonLiveInk PROPERTIES TIMEOUT 150
                      PASS_REGULAR_EXPRESSION "liveink: done, 0 failed"
                      FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
 
+# printing to a printer on the network by IPP (print/host/HostIPP.h): a
+# note printed through the ROM's PostScript printer and through its HP PCL
+# driver to tools/print/ippprinter.py, which saves each job in the build
+# directory; tools/print/jobcheck.py then checks the PostScript's structure
+# and text, and the PCL's commands and raster (the note's line inked)
+if(Python3_FOUND)
+    foreach(kind PostScript PCL)
+        if(kind STREQUAL "PostScript")
+            set(ipp_script print-ipp-ps.ns)
+            set(ipp_dir ${CMAKE_CURRENT_BINARY_DIR}/ipp-ps)
+            set(ipp_format "application/postscript")
+            set(ipp_check --text "hello from the Newton's printer")
+            set(ipp_job job-1.ps)
+        else()
+            set(ipp_script print-ipp-pcl.ns)
+            set(ipp_dir ${CMAKE_CURRENT_BINARY_DIR}/ipp-pcl)
+            set(ipp_format "application/vnd.hp-pcl")
+            set(ipp_check --inked 1:200,150,1500,250:2000 --png ${CMAKE_CURRENT_BINARY_DIR}/ipp-pcl/page)
+            set(ipp_job job-1.pcl)
+        endif()
+        add_test(NAME host.NewtonIPP${kind}.clean COMMAND ${CMAKE_COMMAND} -E rm -rf ${ipp_dir})
+        set_tests_properties(host.NewtonIPP${kind}.clean PROPERTIES FIXTURES_SETUP ipp${kind}clean)
+        add_test(NAME host.NewtonIPP${kind}
+                 COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/print/ippprinter.py --port 0 --out ${ipp_dir}
+                         -- $<TARGET_FILE:newton> --display 320x480 --headless 200
+                         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/${ipp_script}
+                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+        set_tests_properties(host.NewtonIPP${kind} PROPERTIES TIMEOUT 300 FIXTURES_REQUIRED ipp${kind}clean FIXTURES_SETUP ipp${kind}printed
+                             PASS_REGULAR_EXPRESSION "print-ipp: chose IPP printer.*\\[ipp\\] Print-Job /ipp/print.*document-format = ${ipp_format}.*job 1: [0-9]+ bytes of ${ipp_format} saved.*the printer answered 200, successful-ok.*print-ipp: done.*the program answered 0"
+                             FAIL_REGULAR_EXPRESSION "waited in vain|fell over")
+        add_test(NAME host.NewtonIPP${kind}.check
+                 COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/print/jobcheck.py ${ipp_dir}/${ipp_job} --pages 1 ${ipp_check})
+        set_tests_properties(host.NewtonIPP${kind}.check PROPERTIES FIXTURES_REQUIRED ipp${kind}printed
+                             PASS_REGULAR_EXPRESSION "jobcheck: passed")
+    endforeach()
+endif()
+
 # the host's printer (print/host/HostPrinter.h): a note and a Names card
 # printed from their Action buttons, the printer chosen in the Print slip's
 # Choose Other Printer; each page a PNG in build/print, which

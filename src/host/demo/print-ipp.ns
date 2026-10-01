@@ -1,0 +1,69 @@
+// Printing to a printer on the network by IPP (ctests host.NewtonIPPPostScript
+// and host.NewtonIPPPCL): a note printed through one of the host's IPP
+// printers (print/host/HostIPP.h) - the ROM's PostScript printer
+// (TPSPrinter over the host's THostIPPPSDriver) or its HP PCL driver
+// (ThpPCL, its endpoint the host's IPP service) - to the printer
+// tools/print/ippprinter.py runs, which saves the document it is sent;
+// tools/print/jobcheck.py then checks it.  The includer says which
+// printer: print-ipp-ps.ns and print-ipp-pcl.ns set kIPPPrinter (its name)
+// and kIPPRow (where it lies in the chooser scrolled to the end: the HP one
+// last, the PostScript one above it).
+//
+//   python tools/print/ippprinter.py --port 0 --out build/ipp-ps -- \
+//       build/host/host/newton --display 320x480 --headless 200 \
+//       --script src/host/demo/print-ipp-ps.ns
+//
+// After the Setup walk a note is made (the Notepad's MakeTextNote) and
+// printed: its Action button, Print Note, the Print slip's Printer picker,
+// Choose Other Printer, the chooser's list scrolled to the end and the
+// printer picked, then Print and Now; the run ends when the printer has
+// answered the job (HostIPPJobs()).  The places tapped are print.ns's.
+
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
+
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+
+// whether one of the root view's children lies with its top left corner here
+shows := func(left, top) begin
+	local found := nil;
+	foreach child in GetRoot():ChildViewFrames() do begin
+		local box := child:GlobalBox();
+		if box.left = left and box.top = top then found := true;
+	end;
+	found;
+end;
+
+Print("print-ipp: the printer is " & HostGetEnv("NEWTON_IPP_PRINTER"));
+
+call walkSetup with (name, func() begin
+	GetRoot().paperroll:MakeTextNote("hello from the Newton's printer", true);
+	call tapAt with (310, 28);				// the note's Action button
+	call waitFor with ("print-ipp: the Action menu", func() call shows with (183, 23), func() begin
+		call tapAt with (260, 33);			// Print Note
+		call waitFor with ("print-ipp: the Print slip", func() call shows with (45, 134), func() begin
+			call tapAt with (118, 196);		// the Printer picker
+			call waitFor with ("print-ipp: the printers", func() call shows with (87, 202), func() begin
+				call tapAt with (160, 241);	// Choose Other Printer
+				call waitFor with ("print-ipp: the chooser", func() call shows with (70, 80), func() begin
+					for i := 1 to 8 do call tapAt with (230, 161);	// scrolled to the end
+					call tapAt with (140, kIPPRow);	// the IPP printer
+					call tapAt with (237, 228);		// closed
+					call waitFor with ("print-ipp: the printer chosen", func() not call shows with (70, 80)
+							and StrEqual(userConfiguration.currentPrinter.name, kIPPPrinter), func() begin
+						Print("print-ipp: chose " & userConfiguration.currentPrinter.name);
+						call tapAt with (226, 284);	// Print
+						call waitFor with ("print-ipp: Now or Later", func() call shows with (207, 250), func() begin
+							call tapAt with (221, 256);	// Now
+							call waitFor with ("print-ipp: the job answered", func() HostIPPJobs() >= 1, func() begin
+								Print("print-ipp: the printer answered " & NumberStr(HostIPPLastStatus()));
+								Print("print-ipp: done");
+								HostQuit();
+							end, 120);
+						end, 20);
+					end, 20);
+				end, 20);
+			end, 20);
+		end, 20);
+	end, 20);
+end);
+Print("print-ipp: the script is loaded");

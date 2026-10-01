@@ -182,7 +182,7 @@ DrawTextObj(TextObjectRef text)
 // when there was no room for it; the caller gives the arrays back with
 // HostDoneLayOut.
 Boolean
-HostLayOut(TextObject* obj, TextLayout* layout, Fixed* start)
+HostLayOut(TextObject* obj, TextLayout* layout, Fixed* start, Fixed* extras)
 {
 	long length = obj->fLength;
 	if (length < 0)
@@ -210,7 +210,7 @@ HostLayOut(TextObject* obj, TextLayout* layout, Fixed* start)
 		obj->fLength = fitted;
 	}
 	layout->fCount = length;
-	*start = JustifyText(chars, length, obj->fOptions, layout);
+	*start = JustifyText(chars, length, obj->fOptions, layout, extras);
 	return true;
 }
 
@@ -656,9 +656,11 @@ TQDLibraryDriver::PointToChar(TextObjectRef text, FPoint point)
 // length is the object's length once it is laid out (it is cut to what
 // fits); CharToPoint and PointToChar are answered into the arguments the
 // object's +0x4c points at, and so are the bounds (0x200: CalcTextBounds,
-// or -1 for both advances when there is no layout).  NOT YET
-// RECONSTRUCTED: the layout's three numbers (0x400) and TextArrow
-// (0x2000).
+// or -1 for both advances when there is no layout), and the layout's three
+// numbers (0x400: where the text starts from its location, and the extra
+// the justification gives each character and each space - what a
+// PostScript printer's awidthshow wants), divided by the horizontal scale
+// when it is not 1.0.  NOT YET RECONSTRUCTED: TextArrow (0x2000).
 extern "C" void
 StdText(TextObjectRef text, Fixed hScale, Fixed vScale)
 {
@@ -695,6 +697,19 @@ StdText(TextObjectRef text, Fixed hScale, Fixed vScale)
 		break;
 	case kTextObjOpPointToChar:
 		DoPointToChar(text, hScale, vScale);
+		break;
+	case kTextObjOpMetrics:
+		{
+			UpdateLayoutState(text, 2, hScale, vScale);
+			TextObject* obj = TextObj(text);
+			TextLayout layout;
+			Fixed numbers[3] = { 0, 0, 0 };
+			if (HostLayOut(obj, &layout, &numbers[0], &numbers[1]))
+				HostDoneLayOut(&layout);
+			Fixed* answer = (Fixed*) TextObj(text)->fResult;
+			for (int i = 0; i < 3; i++)
+				answer[i] = (hScale == 0x10000) ? numbers[i] : FixedDivide(numbers[i], hScale);
+		}
 		break;
 	default:
 		break;

@@ -22,7 +22,7 @@
 
 	DEVIATION: the host keeps no caches (the glyph widths are worked out
 	afresh by each pass), so the cache fields stay nought.  NOT YET
-	RECONSTRUCTED: the layout's three numbers (0x400), TextArrow
+	RECONSTRUCTED: TextArrow
 	(0x2000) and text at an angle (the options' +0x0c) in DoPointToChar.
 	The drawing (DrText.cpp: each style run composed into a slab and
 	stretched onto the port), the fitted length (0x100), the bounds

@@ -1,0 +1,5 @@
+// Printing a note by IPP through the ROM's PostScript printer: print-ipp.ns
+// (ctest host.NewtonIPPPostScript).
+kIPPPrinter := "IPP printer (PostScript)";
+kIPPRow := 182;
+HostInclude("print-ipp.ns");

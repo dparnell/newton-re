@@ -18,6 +18,13 @@
 	       [--flash-size mb] [--flat-flash]
 	       [--package file.pkg]... [--card file] [--microphone-tone hz] [--tcp-echo port]
 	       [--serial-port port|none] [--ir-peer listen:port|host:port] [--print-dir dir]
+	       [--ipp-printer uri]
+
+	--ipp-printer offers a printer on the network to the Print slip, as
+	"IPP printer (PostScript)" and "IPP printer (HP PCL)": the ROM's
+	PostScript and HP PCL drivers, their jobs sent by IPP to the URI
+	(ipp://host:631/ipp/print; print/host/HostIPP.h).  NEWTON_IPP_PRINTER
+	in the environment does the same.
 
 	--print-dir is where the host's printer (print/host/HostPrinter.h:
 	"Host printer (PNG files)" in the Print slip's Choose Other Printer)
@@ -128,6 +135,7 @@
 #include "FaxTool.h"
 #include "HostLink.h"
 #include "print/host/HostPrinter.h"
+#include "print/host/HostIPP.h"
 #include "power/host/HostPowerSwitch.h"
 #include "HostObjectsFile.h"
 #include "os600/kernel/host/TaskRuntime.h"
@@ -203,6 +211,7 @@ Usage(void)
 					"              [--flash-size mb] [--flat-flash]\n"
 					"              [--package file.pkg]... [--card file] [--microphone-tone hz] [--tcp-echo port]\n"
 					"              [--serial-port port|none] [--ir-peer listen:port|host:port] [--print-dir dir]\n"
+					"              [--ipp-printer uri]\n"
 					"By default it boots the object file built from romsrc/ (NEWTON_OBJECTS overrides);\n"
 					"--rom boots a ROM image instead.\n");
 	return 2;
@@ -586,6 +595,8 @@ main(int argc, char** argv)
 			script = argv[++i];
 		else if (strcmp(argv[i], "--print-dir") == 0 && i + 1 < argc)
 			HostSetPrintDirectory(argv[++i]);
+		else if (strcmp(argv[i], "--ipp-printer") == 0 && i + 1 < argc)
+			HostSetIPPPrinter(argv[++i]);
 		else if (strcmp(argv[i], "--microphone-tone") == 0 && i + 1 < argc)
 			gToneFrequency = strtol(argv[++i], nil, 0);
 		else if (strcmp(argv[i], "--tcp-echo") == 0 && i + 1 < argc)

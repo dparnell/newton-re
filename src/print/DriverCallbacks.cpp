@@ -17,6 +17,8 @@
 
 #include "print/Printer.h"
 #include "print/FaxDriver.h"
+#include "print/PSPrinter.h"
+#include "print/HPPCL.h"
 #include "utility/AppWorld.h"
 #include "utility/PseudoSyncState.h"
 #include "UserTasks.h"
@@ -81,12 +83,14 @@ PrRegainControl(TPrinter* printer)
 // ROM 0x00192f08 InitPrintDrivers__Fv
 // The imaging engines and the drivers built into the ROM registered, and
 // the 'prnt part handler (TPrDriverPart) made for drivers in packages.
-// NOT YET RECONSTRUCTED: TPSPrinter and its TPSPAPDriver,
-// TLaserWriterLSDriver, TSWGroupDriver, ThpPCL, and the part handler -
-// only the dot printer and the fax driver are here.
+// NOT YET RECONSTRUCTED: TPSPAPDriver (PostScript over AppleTalk),
+// TLaserWriterLSDriver, TSWGroupDriver and the part handler - the owner's
+// decision: the PostScript and HP PCL printers only.
 void
 InitPrintDrivers(void)
 {
 	TDotPrinter::ClassInfo()->Register();
+	TPSPrinter::ClassInfo()->Register();
 	TFaxDriver::ClassInfo()->Register();
+	ThpPCL::ClassInfo()->Register();
 }

@@ -955,7 +955,8 @@ MinutesArg(RefArg arg)
 
 
 // ROM 0x00089b4c FTime__FRC6RefVar
-static Ref
+// (not static: the PostScript printer's header asks it - print/PSPrinter.cpp)
+Ref
 FTime(RefArg /*rcvr*/)
 {
 	return MAKEINT(RealClock());
@@ -1043,7 +1044,8 @@ FHourMinute(RefArg /*rcvr*/, RefArg minutes)
 
 // ROM 0x00089dec FDateNTime__FRC6RefVarT1
 // The date (every element, short) and the short time.
-static Ref
+// (not static: the PostScript printer's header asks it too)
+Ref
 FDateNTime(RefArg /*rcvr*/, RefArg minutes)
 {
 	ULong spec = RINT(GetFrameSlotRef(Rdatetimestrspecs, RSSYMshorttimestrspec));

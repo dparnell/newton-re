@@ -34,8 +34,10 @@ struct TextLayout
 // count that fits.  (Text.cpp)
 long	MeasureGlyphWidths(const UniChar* chars, long length, StyleRecord** styles, const short* runLengths, TextOptions* options, TextLayout* layout, GrafPort* port, Fixed hScale = 0x10000, Fixed vScale = 0x10000, ULong objFlags = 0);	// ROM 0x0035baa4 MeasureGlyphWidths__Fl
 // The slack spread over the characters; ==> the offset of the text's
-// start.  (Text.cpp)
-Fixed	JustifyText(const UniChar* chars, long length, TextOptions* options, TextLayout* layout);	// ROM 0x0035b6d8 JustifyText__Fl
+// start.  `extras`, if given, gets the extra given each character and
+// each space (the ROM's +0x30 and +0x34 in the text object - the layout's
+// numbers that operation 0x400 answers).  (Text.cpp)
+Fixed	JustifyText(const UniChar* chars, long length, TextOptions* options, TextLayout* layout, Fixed* extras = nil);	// ROM 0x0035b6d8 JustifyText__Fl
 
 struct TextObject;
 
@@ -43,7 +45,7 @@ struct TextObject;
 // the object's scales, then JustifyText, whose start comes back in
 // `start`.  ==> false if there was no room; HostDoneLayOut gives the
 // arrays back.  (TextObject.cpp)
-Boolean	HostLayOut(TextObject* obj, TextLayout* layout, Fixed* start);
+Boolean	HostLayOut(TextObject* obj, TextLayout* layout, Fixed* start, Fixed* extras = nil);
 void	HostDoneLayOut(TextLayout* layout);
 
 // The advance of the first `count` characters, each run's sum at its

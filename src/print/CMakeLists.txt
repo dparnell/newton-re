@@ -8,10 +8,16 @@ add_library(print STATIC
     ScalingBottlenecks.cpp
     DriverCallbacks.cpp
     FaxDriver.cpp
+    PSPrinter.cpp
+    PSBottlenecks.cpp
+    PSPrinterTables.cpp
+    HPPCL.cpp
     FaxDriverTables.cpp
     DitherTables.cpp
     host/HostPrinter.cpp
+    host/HostIPP.cpp
+    host/HostIPPTool.cpp
 )
-target_link_libraries(print PUBLIC newton_config qd protocols frames comms comms_fax utility)
+target_link_libraries(print PUBLIC newton_config qd protocols frames comms comms_fax utility ink)
 
 add_subdirectory(tests)

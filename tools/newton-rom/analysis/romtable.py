@@ -14,7 +14,12 @@ and the citation says `(unnamed)`, which is how coverage.py expects an
 unnamed thing to be cited.  TYPE is u8, u16, u32, i8,
 i16 or i32 (default u32; the ROM is big-endian), strN: a table of
 fixed-width N-byte strings laid out one after another in the ROM and
-padded with noughts (a COUNT is required), or cstr: a table of
+padded with noughts (a COUNT is required), text: one NUL-terminated
+string at the address, emitted as a `const char NAME[]` of one literal
+per line (the PostScript printer's prolog gPostscriptHeader), icstr: a
+table of pairs of a long and a pointer to a C string, emitted as an array
+of `IntCString` - a struct `{ long fCode; const char* fText; }` that a
+header given with --include must declare (gPSStatusStrings), or cstr: a table of
 pointers to C strings in the ROM, emitted as `const char*` literals (a 0
 pointer becomes nil), or ptr: a table of pointers to other tables of the
 same run, emitted as `(const unsigned char*) NAME + offset` (the fax
@@ -61,6 +66,14 @@ def c_string(rom: bytes, addr: int) -> str:
     # any other byte outside printable ASCII as a three-digit octal escape,
     # so the literal holds the ROM's bytes whatever the source file's
     # encoding (an octal escape, unlike \x, cannot run on into what follows)
+    escaped = "".join(c if 0x20 <= ord(c) < 0x7f else "\\%03o" % ord(c) for c in escaped)
+    return '"' + escaped + '"'
+
+
+def literal(raw: bytes) -> str:
+    """Bytes as a C++ string literal (escapes as c_string's)."""
+    text = raw.decode("latin-1")
+    escaped = text.replace("\\", "\\\\").replace('"', '\\"').replace("\r", "\\r").replace("\n", "\\n").replace("\t", "\\t")
     escaped = "".join(c if 0x20 <= ord(c) < 0x7f else "\\%03o" % ord(c) for c in escaped)
     return '"' + escaped + '"'
 
@@ -162,6 +175,49 @@ def main(argv=None) -> int:
                 lines.append('\t"' + escaped + '",')
             defs.append("%s\nconst char\t%s[%d][%d] = {\n%s\n};\n"
                         % (citation(addr, name, given_address), name, count, stride, "\n".join(lines)))
+            continue
+        if typ == "icstr":
+            # pairs of a long and a pointer to a C string, emitted as an
+            # array of `IntCString` (a struct an --include must declare:
+            # { long fCode; const char* fText; })
+            if given_address is not None:
+                addr = given_address
+            elif name in by_name:
+                addr = by_name[name]
+            else:
+                print("error: no symbol %s (give its address as %s@0x...)" % (name, name), file=sys.stderr)
+                return 1
+            count = int(parts[2], 0) if len(parts) > 2 else (next_symbol_after(addr) - addr) // 8
+            lines = []
+            for i in range(count):
+                code, ptr = struct.unpack(">iI", read(addr + i * 8, 8))
+                lines.append("\t{ %d, %s }," % (code, c_string(rom, ptr) if ptr != 0 else "0"))
+            decls.append("extern const IntCString\t%s[%d];" % (name, count))
+            defs.append("%s\nconst IntCString\t%s[%d] = {\n%s\n};\n" % (citation(addr, name, given_address), name, count, "\n".join(lines)))
+            continue
+        if typ == "text":
+            if given_address is not None:
+                addr = given_address
+            elif name in by_name:
+                addr = by_name[name]
+            else:
+                print("error: no symbol %s (give its address as %s@0x...)" % (name, name), file=sys.stderr)
+                return 1
+            raw = read(addr, len(rom))
+            raw = raw[:raw.index(b"\0")]
+            # one literal per line of the text (after each CR), so that a
+            # long PostScript prolog reads as itself
+            pieces = []
+            start = 0
+            for i, b in enumerate(raw):
+                if b in (0x0d, 0x0a):
+                    pieces.append(raw[start:i + 1])
+                    start = i + 1
+            if start < len(raw) or not pieces:
+                pieces.append(raw[start:])
+            decls.append("extern const char\t%s[%d];" % (name, len(raw) + 1))
+            body = "\n".join("\t" + literal(p) for p in pieces)
+            defs.append("%s\nconst char\t%s[%d] =\n%s;\n" % (citation(addr, name, given_address), name, len(raw) + 1, body))
             continue
         if typ not in TYPES:
             print(f"error: unknown type {typ}", file=sys.stderr)
