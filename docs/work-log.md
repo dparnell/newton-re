@@ -9,6 +9,34 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: The whole tree on Linux again
+
+Built and tested under WSL 2 (Ubuntu 22.04, clang 14, X11, OpenSSL; no
+ALSA), on WSL's own case-sensitive file system: all 394 ctests pass,
+today's Windows-only work included (armcpu's protocol parts and kernel
+glue, ATA Support, IPP and TLS, the restart through fork/execv, the X11
+window's position, the screen task).  What it took:
+
+- the newt world's idle timer: `(long) TTime::ConvertTo(kMilliseconds)`
+  of a delayed action already due is four thousand million milliseconds
+  on LP64 since `ConvertTo` gives the ARM's word, so no delayed action
+  ran after the boot sound - 135 ctests; `(Long32)` in four places of
+  `newt/NewtWorld.cpp`;
+- `#include "Objects.h"` for `objects.h` in four files, and ctest
+  `tools.IncludeCase` (`tools/host/includecase.py`) so that Windows
+  catches it from now on; `test_Views` no longer includes `<string>`;
+- `tools/host/httpserve.py`: a `.pkg` served as
+  `application/x-newton-compatible-pkg` (Linux's MIME table says Apple
+  installer XML, and Newt's Cape never offered to install it), and a
+  status printed as its number before Python 3.11;
+- `demo/card.ns` keeps its card in the build directory (`DEMO_CARD`):
+  `tmp/` does not exist in a fresh checkout;
+- the watchdog took ATA Support's ten-second busy-wait on a pulled card
+  for a stopped machine and printed the NewtonScript stack while the task
+  still ran, damaging the heap (`host.NewtonATASupport.pull`, one run in
+  four on Linux): armcpu's safe points call `HostTaskBusy()`.
+
+`docs/host-lp64.md` has these and how to build under WSL.
 ## 2026-10-01: NS BASIC and NewtCard
 
 The owner's two new fixtures used for what they are for (ctests

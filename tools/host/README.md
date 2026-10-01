@@ -278,3 +278,17 @@ directory for two copies of the file - one with another stamp, one made a
 version 3 file with no stamp. **Output:** a line per program and copy, then
 `objectsstamp: done` when each program refused each copy with the message
 and a non-zero exit (ctest `host.NewtonObjectsStamp`).
+
+## includecase.py - includes spelt as their files are
+
+Windows (and WSL's view of a Windows drive) finds `#include "Objects.h"`
+when the file is `objects.h`; a Linux build stops there.  This checks every
+quoted include under a source tree against the files in it:
+
+    python tools/host/includecase.py src
+
+**Output:** `file:line: "Objects.h" is objects.h` for each include whose
+only matches differ in case, and exit status 1 if there are any.  An
+include that names no file in the tree (a system or generated header) is
+left alone.  ctest `tools.IncludeCase` runs it on every host, so the
+mistake is caught where it is made.

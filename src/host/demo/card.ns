@@ -11,7 +11,10 @@
 //   build/host/host/newton --rom build/MP2x00US/rom.bin --headless 60 \
 //       --script src/host/demo/card.ns
 
-constant kCardFile := "tmp/demo.card";
+// the card's file: the ctest names one in its build directory (a fresh
+// checkout has no tmp/, and two builds' runs never share it)
+kCardFile := HostGetEnv("DEMO_CARD");
+if not kCardFile then kCardFile := "tmp/demo.card";
 
 tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
 

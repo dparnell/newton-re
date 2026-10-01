@@ -74,7 +74,7 @@ static std::mutex&						gBaton = *new std::mutex;
 static std::condition_variable&			gBatonChanged = *new std::condition_variable;
 static std::map<TTask*, HostTaskContext*>	gContexts;
 static TTask*							gRunningTask = nil;		// whose thread holds the baton
-static std::atomic<unsigned long>		gHandovers(0);			// bumped every time the baton is taken
+static std::atomic<unsigned long>		gHandovers(0);			// bumped every time the baton is taken (and by HostTaskBusy)
 void									(*gHostStallReportHook)(void) = nil;
 static Boolean							gStopRequested = false;
 Boolean									gHostTasksStopping = false;
@@ -403,6 +403,13 @@ ReportTheStall(long seconds)
 	if (gHostStallReportHook != nil)
 		gHostStallReportHook();
 	fflush(stderr);
+}
+
+
+void
+HostTaskBusy()
+{
+	gHandovers.fetch_add(1);
 }
 
 

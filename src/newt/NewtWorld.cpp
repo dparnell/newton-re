@@ -622,7 +622,7 @@ TNewtEventHandler::AEHandlerProc(TUMsgToken* token, ULong* size, TAEvent* event)
 		CompSub(&now.time, &wait);
 		TTime delay;
 		delay.time = wait;
-		long ms = (long) delay.ConvertTo(kMilliseconds);
+		Long32 ms = (Long32) delay.ConvertTo(kMilliseconds);		// (the ARM's word: a time gone by is negative)
 		if (ms < 1)
 			ms = 1;
 		ResetIdle(ms, kMilliseconds);
@@ -655,7 +655,7 @@ TNewtEventHandler::SetWakeupTime(ULong ticks)
 	CompSub(&now.time, &wait);
 	TTime delay;
 	delay.time = wait;
-	long ms = (long) delay.ConvertTo(kMilliseconds);
+	Long32 ms = (Long32) delay.ConvertTo(kMilliseconds);		// (the ARM's word: a time gone by is negative)
 	if (ms < 1)
 		ms = 1;
 	ResetIdle(ms, kMilliseconds);
@@ -685,7 +685,7 @@ ArmDelayedActionIdle(void)
 	CompSub(&now.time, &wait);
 	TTime delay;
 	delay.time = wait;
-	long ms = (long) delay.ConvertTo(kMilliseconds);
+	Long32 ms = (Long32) delay.ConvertTo(kMilliseconds);		// (the ARM's word: a time gone by is negative)
 	if (ms < 1)
 		ms = 1;
 	handler->ResetIdle(ms, kMilliseconds);
@@ -710,7 +710,7 @@ ArmIdleTimer(TNewtEventHandler* handler, TTimeout delay)
 			CompSub(&now.time, &wait);
 			TTime d;
 			d.time = wait;
-			long ms = (long) d.ConvertTo(kMilliseconds);
+			Long32 ms = (Long32) d.ConvertTo(kMilliseconds);		// (the ARM's word: a time gone by is negative)
 			if (ms < 1)
 				ms = 1;
 			handler->ResetIdle(ms, kMilliseconds);

@@ -9,7 +9,9 @@ are, and so that a similar failure is recognised rather than re-diagnosed.
 
 The port is otherwise small: the kernel, the object system, QuickDraw, the
 recognisers and the comms all build and run unchanged.  `ctest` on Linux
-passes all 233.
+passes all 394 (2026-10-01: Ubuntu 22.04 under WSL 2, clang 14 and
+libstdc++, X11 and OpenSSL; no ALSA headers, so newton runs silent there -
+see "Building under WSL" below).
 
 ## The rule
 
@@ -83,12 +85,34 @@ holds five `long`s.  Sized from the host's own types instead.
 0xffffffff)` is the ROM's "nowhere"; `fPosition = (long) position` with a
 64-bit `ULong` kept it as 4294967295 (`recognition/Dictionaries.cpp`).
 
+**A time gone by, read back as a huge wait.**  `TTime::ConvertTo` gives
+the ARM's word (`ULong32`, so that a real-time-clock alarm wraps as the
+ROM's does), and the newt world's idle arithmetic read it as
+`(long) ... ConvertTo(kMilliseconds)`: a delayed action already due is a
+negative number of milliseconds, which on Windows is negative and becomes
+the one millisecond the ROM's code makes it, and on Linux is four thousand
+million.  The world's idle timer was primed for fifty days, and every
+delayed action after the boot sound - every demo's `AddDelayedCall` -
+never ran (135 ctests).  Spelt `(Long32)` (`newt/NewtWorld.cpp`, four
+places).
+
 ## Not a width problem, but Linux-only
 
 **Case-sensitive includes.**  `#include "Objects.h"` for `objects.h`, and
 `Longtime.h`/`sharedTypes.h` in the DDK's own headers, only pass on a
 case-insensitive file system.  The DDK ones are patched by
-`sync_ddk_headers.py`, next to the two that were already there.
+`sync_ddk_headers.py`, next to the two that were already there.  The
+mistake kept coming back (four files on 2026-10-01), so ctest
+`tools.IncludeCase` (`tools/host/includecase.py`) now catches it on
+Windows too.
+
+**The host's MIME table.**  `tools/host/httpserve.py` let Python guess a
+file's type, and Linux's `/etc/mime.types` makes `.pkg` an Apple
+installer's XML (Windows has no entry), so Newt's Cape read a downloaded
+package as text and never asked to install it.  A `.pkg` now always goes
+out as `application/x-newton-compatible-pkg`; and a status prints as its
+number (`HTTPStatus.OK` did before Python 3.11, which the tests' patterns
+did not match).
 
 **A condition variable destroyed with waiters on it.**  The task runtime
 ends a run by leaving each task's thread parked (see
@@ -164,3 +188,41 @@ and nothing else: `TLZDecompressor::New` is `MOV pc, lr` and both `Init`s
 answer `noErr`.  `build/<ROM>/symbols.json` is worth generating on a fresh
 checkout (`tools/newton-rom/dump_symbols.py`) - five more ctests run when
 it is there.
+
+## Found on Linux, not Linux-only
+
+**A driver's timed wait taken for a stopped machine.**  With a card
+pulled out while its store is mounted, ATA Support restarts the machine
+from its card server task - but if the ATA slip asks the store for its
+sizes first, the `Tmux` task (priority 20) polls the card that has gone
+until ATA Support's own timeout, over ten seconds, and nothing else runs
+meanwhile.  That is the ROM's and the driver's behaviour, and the store
+answers -1001029 at the end of it; but the host's watchdog (no handover
+for ten seconds) took it for a stalled machine and printed the
+NewtonScript stack from its own thread while the task was still running,
+and the allocations that printing makes damaged the heap under it
+(`host.NewtonATASupport.pull`, one run in four on Linux, where the slip's
+update came first more often).  armcpu's safe points (`ShortTimerDelay`,
+`TimedOut`) now tell the runtime the task is busy on purpose
+(`HostTaskBusy`, `os600/kernel/host/TaskRuntime.h`), which the watchdog
+counts as progress.
+
+## Building under WSL
+
+The Linux results are from WSL 2 on the development machine, built on
+WSL's own file system: a Windows drive seen from WSL (`/mnt/f`) is case
+insensitive, which hides exactly the include mistakes a Linux build is
+for, and is several times slower.  The commands (no root needed - cmake
+and ninja from pip, into the repository's `tmp/`):
+
+    python3 -m pip install --target tmp/wsl-pip cmake ninja
+    export PATH=$PWD/tmp/wsl-pip/cmake/data/bin:$PWD/tmp/wsl-pip/bin:$PATH
+    rsync -a --delete --exclude .git <checkout>/ ~/newton-lp64/tree/
+    cmake -G Ninja -S ~/newton-lp64/tree/src -B ~/newton-lp64/build         -DCMAKE_CXX_COMPILER=clang++ -DNEWTON_ROM_BUILD=<checkout>/build/MP2x00US
+    ninja -C ~/newton-lp64/build && ctest --test-dir ~/newton-lp64/build -j16
+
+(`ninja` from the wheel may need `chmod +x`.)  gdb, for a hang, can be
+unpacked the same way: `apt-get download gdb` and its libraries,
+`dpkg -x` each into a directory, and run it with `LD_LIBRARY_PATH`
+pointing there; WSL's `ptrace_scope` keeps it from attaching to a running
+newton, so start newton under it and interrupt it with `pkill -INT`.

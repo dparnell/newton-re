@@ -1076,6 +1076,7 @@ if(Python3_FOUND)
              COMMAND newton --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/card.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonCard PROPERTIES TIMEOUT 120
+                         ENVIRONMENT "DEMO_CARD=${CMAKE_CURRENT_BINARY_DIR}/demo.card"
                          PASS_REGULAR_EXPRESSION "RecognizeCardID: .Host card.*mounted: TRUE.*[Cc]ardSlot: 0, cardType: flsh.*written: TRUE.*removed: TRUE, stores: 1.*remounted: TRUE.*found: \"written on a card\".*cards: 1.*card: done"
                          FAIL_REGULAR_EXPRESSION "FALSE|the card server is NOT YET|no host stand-in")
     # the card reinsert alert: a card whose store is locked pulled out, the
@@ -2041,6 +2042,11 @@ if(Python3_FOUND)
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     add_test(NAME tools.FlashImage
              COMMAND ${Python3_EXECUTABLE} tools/stores/test_flashimage.py
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    # every quoted #include spelt as its file is (tools/host/includecase.py):
+    # Windows finds "Objects.h" for objects.h, Linux stops the build there
+    add_test(NAME tools.IncludeCase
+             COMMAND ${Python3_EXECUTABLE} tools/host/includecase.py src
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 endif()
 

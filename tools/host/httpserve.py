@@ -22,7 +22,8 @@ Usage
     --type serves files ending .EXT as MIME, where the Python library's
     guess is not what a server of the Newton's day sent (a WAV as
     audio/x-wav, which Newt's Cape's audio helper asks for, not
-    audio/wav).
+    audio/wav).  A .pkg is always application/x-newton-compatible-pkg,
+    the Newton package's own type, whatever the host's table says.
 
 Inputs / outputs
     The directory to serve and the port (on 127.0.0.1 only; 0 takes a free
@@ -45,7 +46,10 @@ import threading
 
 class Handler(http.server.SimpleHTTPRequestHandler):
     extra_files = {}
-    extra_types = {}
+    # a Newton package goes out as one, whatever the host's own MIME table
+    # says (Linux's /etc/mime.types makes .pkg an Apple installer's XML,
+    # which a browser then reads as text; Windows has no entry for it)
+    extra_types = {".pkg": "application/x-newton-compatible-pkg"}
 
     def guess_type(self, path):
         for ext, mime in self.extra_types.items():
@@ -65,6 +69,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def log_request(self, code="-", size="-"):
         method_path = self.requestline.split(" ")
         path = method_path[1] if len(method_path) > 1 else "?"
+        # (an HTTPStatus prints as "HTTPStatus.OK" before Python 3.11: the
+        # number, whichever Python this is)
+        if isinstance(code, int):
+            code = int(code)
         print("[http] %s %s %s" % (self.command, path, code), flush=True)
 
 

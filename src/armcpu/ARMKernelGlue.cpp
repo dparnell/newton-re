@@ -41,7 +41,7 @@
 #include "FIQTimer.h"
 #include "MemObjManager.h"
 #include "NewtonMemory.h"
-#include "Objects.h"
+#include "objects.h"
 #include "UserGlobals.h"
 #include "OSErrors.h"
 #include "os600/kernel/Reboot.h"
@@ -898,6 +898,7 @@ static bool	Glue_TDelayTimer_ConvertTo(void*, ARMTrapContext& c)		{ TDelayTimer 
 static void
 ARMSafePoint(void)
 {
+	HostTaskBusy();				// (a timed wait going round: not a stopped machine)
 	if (gHostInterruptLevel == 0)
 		HostDeliverInterrupts();
 }

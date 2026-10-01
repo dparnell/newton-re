@@ -14,7 +14,7 @@
 #include "UserTasks.h"
 #include "NewtonTime.h"
 #include "hal/Timer.h"
-#include "Objects.h"
+#include "objects.h"
 #include "Frames.h"
 #include "ROMConstants.h"
 #include "RSSymbols.h"

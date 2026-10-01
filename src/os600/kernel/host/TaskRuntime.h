@@ -75,6 +75,13 @@ void		HostPreemptionPoint();					// a due interrupt taken here; the baton may be
 // only watches; it never touches the runtime.
 void		HostWatchdogStart(long seconds);
 
+// A task that keeps the baton on purpose - a driver's timed busy-wait
+// (ATA Support polling a card that has gone, until its own timeout) - says
+// so here as it goes round, so the watchdog does not take it for a machine
+// that has stopped (and print a report from its own thread while the task
+// is still running).
+void		HostTaskBusy();
+
 // What the watchdog prints after the task report, when a host program
 // has something to add - the newt world sets it to print the
 // NewtonScript stack, which says whether the stuck task is running one

@@ -39,7 +39,6 @@
 #include "PicPlay.h"
 #include "Journal.h"
 #include "TabletBuffer.h"
-#include <string>
 #include "Commands.h"
 #include "Keyboard.h"
 #include "RecConfig.h"
@@ -7445,7 +7444,9 @@ TestListView()
 		EXPECT(RINT(GetFrameSlotRef(kid, RSSYMviewclass)) == 81);
 		// the topic's box is where its paragraph came out (the template
 		// keeps the box it was made with)
-		FromObject(RefVar(Eval((std::string("ctxLV.topics[") + char('0' + i) + "].viewBounds").c_str())), box[i]);
+		char source[32];
+		snprintf(source, sizeof(source), "ctxLV.topics[%ld].viewBounds", i);
+		FromObject(RefVar(Eval(source)), box[i]);
 	}
 	// indented a level at a time (20 pixels) past the gutter's 10
 	EXPECT(box[0].left == 10 && box[1].left == 30 && box[2].left == 10 && box[3].left == 30);
