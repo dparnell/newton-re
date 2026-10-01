@@ -1269,10 +1269,10 @@ if(Python3_FOUND)
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 endif()
 
-if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD}/symbols.json)
+if(Python3_FOUND AND EXISTS ${NEWTON_ROM_BUILD_DIR}/symbols.json)
     add_test(NAME host.NSDecompileRoundTrip
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/newton-rom/analysis/nsdecompile.py
-                     ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD} --roundtrip --sample 600
+                     ${NEWTON_ROM_BUILD_DIR} --roundtrip --sample 600
                      --newtonscript $<TARGET_FILE:newtonscript> --rom ${NEWTON_ROM_BIN} --min-percent 100
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NSDecompileRoundTrip PROPERTIES TIMEOUT 300)
@@ -1283,7 +1283,7 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD}/sym
     # for byte the ROM's
     add_test(NAME host.ROMSourceRoundTrip
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/newton-rom/analysis/romsrc.py
-                     roundtrip ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD} -o ${CMAKE_BINARY_DIR}/romsrc-extracted
+                     roundtrip ${NEWTON_ROM_BUILD_DIR} -o ${CMAKE_BINARY_DIR}/romsrc-extracted
                      --newtonscript $<TARGET_FILE:newtonscript>
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.ROMSourceRoundTrip PROPERTIES TIMEOUT 300)
@@ -1294,7 +1294,7 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD}/sym
     # unintended change to the rest is still caught
     add_test(NAME host.ROMSourceCommitted
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/newton-rom/analysis/romsrc.py
-                     build ${CMAKE_SOURCE_DIR}/../romsrc --original --check ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD}
+                     build ${CMAKE_SOURCE_DIR}/../romsrc --original --check ${NEWTON_ROM_BUILD_DIR}
                      --newtonscript $<TARGET_FILE:newtonscript>
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.ROMSourceCommitted PROPERTIES TIMEOUT 300 PASS_REGULAR_EXPRESSION "identical to the ROM's")
@@ -1323,7 +1323,7 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD}/sym
     # afresh into the build directory (the extractor is not run over romsrc/)
     add_custom_target(romsrc-extract
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/newton-rom/analysis/romsrc.py
-                     extract ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD} -o ${CMAKE_BINARY_DIR}/romsrc-extracted
+                     extract ${NEWTON_ROM_BUILD_DIR} -o ${CMAKE_BINARY_DIR}/romsrc-extracted
                      --newtonscript $<TARGET_FILE:newtonscript>
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..
              COMMENT "Writing the ROM as source afresh into ${CMAKE_BINARY_DIR}/romsrc-extracted")
@@ -1514,7 +1514,7 @@ if(Python3_FOUND)
     # stack block (TInker's missing GetSizeOf, the TUPort::Receive crash)
     add_test(NAME tools.WorldSizes
              COMMAND ${Python3_EXECUTABLE} tools/newton-rom/analysis/worldsizes.py
-                     ${CMAKE_SOURCE_DIR}/../build/${NEWTON_ROM_BUILD}
+                     ${NEWTON_ROM_BUILD_DIR}
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     add_test(NAME tools.FlashImage
              COMMAND ${Python3_EXECUTABLE} tools/stores/test_flashimage.py
