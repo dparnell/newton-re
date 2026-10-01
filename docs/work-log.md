@@ -9,6 +9,24 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: printing in PostScript and HP PCL, to a network printer by IPP
+
+The owner chose the ROM's PostScript and HP PCL drivers, printing by IPP
+(62575a81): `TPSPrinter` whole (67 functions, its 12 port procs, the
+`TPSPrinterDriver` seam; DSC PostScript with the ROM's prolog, Mac-encoded
+fonts, shapes, patterns, text, ink words, bitmaps) and `ThpPCL` (PCL 5
+raster, PackBits), both registered as the ROM registers them; a host comm
+service `'ippc` sends the job as an IPP 1.1 Print-Job over the host's
+sockets.  `newton --ipp-printer URI` offers the two IPP printers under
+Choose Other Printer; `tools/print/ippprinter.py` is a fake printer and
+`jobcheck.py` checks a job; a Notepad note goes through the Print slip to
+it in each format.  ROM bugs kept: `FixedToString` drops the minus sign,
+`Draw1Path` fills with the misspelt `PatternFIll`, `PrStdCurve`'s `SLW`
+without a saved width, `CountBitsInPattern` recounting a row's first
+pixel, `FlushBuffer`'s shrinking extra and repeated character at a cut,
+`PrStdBits`' ignored top and unmatched gsave, `SendPSBinary`'s resent size,
+`TPSPrinter::Delete`'s leaked font handle.
+
 ## 2026-10-01: the fax test checks the page on the screen
 
 `host.NewtonFaxReceive` passed while its snapshot showed the Welcome
