@@ -1979,6 +1979,18 @@ set_tests_properties(host.NewtonWalkthrough.restart PROPERTIES TIMEOUT 180
                      PASS_REGULAR_EXPRESSION "walkthrough: restart done, 0 failed"
                      FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
 
+# the same walk booted on the ROM image (--rom): a regression guard for the
+# --rom path, which the default boot's tests no longer take (the walk's own
+# step checks are the comparison; tools/host/fidelity.py compares screens)
+add_test(NAME host.NewtonWalkthroughROM
+         COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --erase
+                 --store ${CMAKE_CURRENT_BINARY_DIR}/walkthrough-rom.store --headless 300
+                 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/walkthrough.ns
+         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonWalkthroughROM PROPERTIES TIMEOUT 360
+                     PASS_REGULAR_EXPRESSION "walkthrough: done, 0 failed"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+
 # the year-2010 fix with the host's own clock (demo/year2010.ns,
 # docs/intl/year-2010.md): after the Setup walk a note dated this year, a
 # note made now dated today, Dates titled with today, an alarm a minute
@@ -2011,6 +2023,14 @@ add_test(NAME host.NewtonWalkthrough2
                  --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/walkthrough2.ns
          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonWalkthrough2 PROPERTIES TIMEOUT 600 FIXTURES_SETUP host_walkthrough2_store
+                     PASS_REGULAR_EXPRESSION "walkthrough: done, 0 failed"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+add_test(NAME host.NewtonWalkthrough2ROM
+         COMMAND newton --rom ${NEWTON_ROM_BIN} --display 320x480 --erase
+                 --store ${CMAKE_CURRENT_BINARY_DIR}/walkthrough2-rom.store --headless 500
+                 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/walkthrough2.ns
+         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonWalkthrough2ROM PROPERTIES TIMEOUT 600
                      PASS_REGULAR_EXPRESSION "walkthrough: done, 0 failed"
                      FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
 add_test(NAME host.NewtonWalkthrough2.restart
