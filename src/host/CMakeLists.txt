@@ -513,6 +513,17 @@ set_tests_properties(host.NewtonJoinInk PROPERTIES TIMEOUT 180
                      PASS_REGULAR_EXPRESSION "joined into one ink word: ok.*joinink: done, 0 failed"
                      FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
 
+# the caret gestures on a line of writing, drawn with the pen
+# (demo/caretspace.ns): the join closes a space, a caret opens one, and a
+# caret with a tail opens an insert area that a word is written into, the
+# white space left over taken out once the pen rests
+# (TParagraphView::CheckAndDoJoin, InsertHorizontalSpace, Idle reason 1)
+add_test(NAME host.NewtonCaretSpace COMMAND newton --display 320x480 --headless 120
+         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/caretspace.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonCaretSpace PROPERTIES TIMEOUT 180
+                     PASS_REGULAR_EXPRESSION "the spaces left over go: \"ton to to\": ok.*caretspace: done, 0 failed"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+
 # ink dropped on a paragraph with the pen (demo/dropink.ns): a shape of ink
 # lassoed and dragged onto a paragraph of text goes in as an ink word
 # (TParagraphView::Drop, InkConvert)

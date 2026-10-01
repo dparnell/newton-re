@@ -124,6 +124,7 @@ public:
 	void*		Current(void);
 	void		RemoveCurrent(void);
 	long		Index(void) const		{ return fIndex; }		// (host) where Next got to: the current item's index
+	long		Count(void) const		{ return fCount; }		// (host) the items it will walk: the list's size less those removed
 
 private:
 	CList*		fList;				// +0x00

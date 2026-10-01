@@ -1,0 +1,134 @@
+// The caret gestures on a line of writing, drawn with the pen: the join
+// (a caret upside down) closes up a space, the plain caret opens one,
+// and a caret with a tail opens a stretch of spaces - an insert area -
+// which the writer writes a word into; the white space left over is
+// taken out again a second and a half after the pen comes up
+// (TParagraphView::CheckAndDoJoin, InsertHorizontalSpace, SaveInsertArea,
+// the paragraph's Idle reason 1 and RemoveExcessWhiteSpace -
+// views/ParagraphInsertAreas.cpp).
+//
+//   build/host/host/newton --display 320x480 --headless 120 --script src/host/demo/caretspace.ns
+//
+// "ton" and "to" are written (as write.ns does), the page reading
+// "ton to".  The join drawn between them makes "tonto"; a caret drawn at
+// the "t" of "to" makes "ton to" again; a caret with a tail drawn there
+// opens a run of spaces, "to" is written into it, and once the pen has
+// rested the page reads "ton to to".  build/caretspace.pgm is the page.
+//
+// Prints "caretspace: <step>: ok" or "FAILED", and "caretspace: done".
+
+HostInclude("common.ns");			// tapAt, waitFor, walkSetup
+HostInclude("penhelpers.ns");		// penWriteWord, penFindPara, penPath, penStroke
+
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+caretFailures := 0;
+
+caretCheck := func(what, ok)
+  begin
+    if not ok then caretFailures := caretFailures + 1;
+    Print("caretspace: " & what & (if ok then ": ok" else ": FAILED"));
+  end;
+
+caretFinish := func()
+  begin
+    ScreenSnapshot("build/caretspace.pgm");
+    Print("caretspace: done, " & caretFailures & " failed");
+    HostQuit();
+  end;
+
+// the paragraph and its text (nil while there is none)
+caretPara := func() call penFindPara with (GetRoot(), "ton");
+caretText := func()
+  begin
+    local p := call caretPara with ();
+    if p then p.text;
+  end;
+
+// the x where the character at `offset` starts, found by asking the
+// paragraph which character is under each x along the line
+caretCharX := func(para, offset, y)
+  begin
+    local b := para:GlobalBox();
+    local found := nil;
+    for x := b.left to b.right do
+      if not found and para:PointToCharOffset(x, y) >= offset then found := x;
+    found;
+  end;
+
+// what the pen does after writing waits until a tap would not be taken
+// for more writing (penhelpers.ns: half a second after the pen came up)
+caretAfterPen := func(andThen)
+  begin
+    local up := Ticks();
+    call waitFor with ("caretspace: the pen rested", func() Ticks() - up > 40, andThen, 5);
+  end;
+
+call walkSetup with (name, func() begin
+    local base := 200;
+    call penWriteWord with ("ton", 60, base);
+    local up := Ticks();
+    IdleStrokes();
+    call waitFor with ("caretspace: ton", func() Ticks() - up > 40 and call caretPara with (), func() begin
+        call penWriteWord with ("to", 130, base);
+        IdleStrokes();
+        call waitFor with ("caretspace: ton to", func() StrEqual(call caretText with (), "ton to"), func() begin
+            call caretCheck with ("the page reads \"ton to\"", StrEqual(call caretText with (), "ton to"));
+            call caretAfterPen with (func() begin
+                local para := call caretPara with ();
+                // the line: its middle, and its baseline (a few pixels
+                // above the paragraph's bottom - the font's descent)
+                local box := para:GlobalBox();
+                local baseline := box.bottom - 5;
+                local mid := (box.top + box.bottom) div 2;
+                // the join: a caret upside down, its arms on the end of
+                // "ton" and the start of "to", its point below the line
+                local from := call caretCharX with (para, 2, mid) + 3;
+                local upTo := call caretCharX with (para, 4, mid) + 2;
+                local low := (from + upTo) div 2;
+                call penStroke with (call penPath with ([from, baseline - 2, low, baseline + 14, upTo, baseline - 2]));
+                IdleStrokes();
+                call waitFor with ("caretspace: joined", func() StrEqual(call caretText with (), "tonto"), func() begin
+                    call caretCheck with ("the join closes \"ton to\" up to \"tonto\"", StrEqual(call caretText with (), "tonto"));
+                    call caretAfterPen with (func() begin
+                        // a caret pointing up, its point at the start of
+                        // the second "t", its arms below the line
+                        local at := call caretCharX with (para, 3, mid);
+                        call penStroke with (call penPath with ([at - 8, baseline + 6, at, baseline - 12, at + 8, baseline + 6]));
+                        IdleStrokes();
+                        call waitFor with ("caretspace: a space", func() StrEqual(call caretText with (), "ton to"), func() begin
+                            call caretCheck with ("a caret opens \"tonto\" to \"ton to\"", StrEqual(call caretText with (), "ton to"));
+                            call caretAfterPen with (func() begin
+                                // a caret with a tail at the start of "to":
+                                // its tail runs 60 pixels to the right
+                                local at := call caretCharX with (para, 4, mid);
+                                call penStroke with (call penPath with ([at - 8, baseline + 6, at, baseline - 12, at + 8, baseline + 6, at + 68, baseline + 6]));
+                                IdleStrokes();
+                                call waitFor with ("caretspace: spaces", func() StrLen(call caretText with ()) > 9, func() begin
+                                    local t := call caretText with ();
+                                    call caretCheck with ("a caret with a tail opens a run of spaces", StrPos(t, "ton    ", 0) = 0 and EndsWith(t, " to"));
+                                    call caretAfterPen with (func() begin
+                                        // "to" written into the spaces
+                                        local x := call caretCharX with (para, 6, mid);
+                                        // (a sample a tick, left to the inker to feed - not
+                                        // IdleStrokes, which feeds them all at once: the
+                                        // idler waits for the pen to have come up after it
+                                        // went down, which a stroke drawn in one tick never does)
+                                        PacePen(true);
+                                        call penWriteWord with ("to", x, base);
+                                        PacePen(nil);
+                                        call waitFor with ("caretspace: written into the spaces",
+                                            func() StrEqual(call caretText with (), "ton to to"),
+                                            func() begin
+                                                call caretCheck with ("the spaces left over go: \"ton to to\"", StrEqual(call caretText with (), "ton to to"));
+                                                call caretFinish with ();
+                                              end, 20);
+                                      end);
+                                  end, 20);
+                              end);
+                          end, 20);
+                      end);
+                  end, 20);
+              end);
+          end, 20);
+      end, 20);
+  end);

@@ -85,6 +85,19 @@ struct LineInfo
 // characters, and whether it starts a new line.
 class TParagraphView;
 class TUnitPublic;
+class CList;
+
+// A stretch of the text a caret gesture opened (spaces or returns put in
+// for the writer to write into), kept in the paragraph's list (+0x4c) so
+// that what is left of it unwritten can be taken out again.  The list is
+// a CList of these in order of their start.
+struct InsertRun				// 0x0c bytes
+{
+	ULong		fStart;				// +0x00  where it starts
+	ULong		fLength;			// +0x04  how long it is
+	Boolean		fChanged;			// +0x08  something was written into it (or out of it)
+};
+
 struct Finder					// 0x2c bytes
 {
 	Rect		fBox;				// +0x00  where the word was written
@@ -346,6 +359,10 @@ public:
 
 	long		CheckAndDoSplitInk(Point& pt, long offset);	// ROM 0x00176208 CheckAndDoSplitInk__14TParagraphViewFR6TPointl
 	long		CheckAndDoJoin(Point& armA, Point& point, Point& armB);	// ROM 0x00175964 CheckAndDoJoin__14TParagraphViewFR6TPointN21
+	void		AddSpaceToEnd(long returns);							// ROM 0x001768d8 AddSpaceToEnd__14TParagraphViewFl
+	void		AdjustInsertAreasAfterDeletion(CList* list, ULong offset, ULong length);	// ROM 0x001769d4 AdjustInsertAreasAfterDeletion__14TParagraphViewFP13InsertRunListUlT2
+	void		AdjustInsertAreasAfterInsertion(CList* list, ULong offset, ULong length, Boolean onlyWhiteSpace);	// ROM 0x00176af0 AdjustInsertAreasAfterInsertion__14TParagraphViewFP13InsertRunListUlT2Uc
+	void		RemoveExcessWhiteSpace(InsertRun* run);				// ROM 0x0017e5c4 RemoveExcessWhiteSpace__14TParagraphViewFP9InsertRun
 	// The line nearest a point's v: the ROM measures each line's box less
 	// the leading it carries, which this cache does not keep apart, so the
 	// box's top is what is measured.  ==> its index, -1 for none, and -1
@@ -444,6 +461,9 @@ public:
 	Rect		fTextBounds;		// +0x40  the lines' union (FillAllCaches)
 	Boolean		fHasInkWords;		// +0x48  CheckStyles: an ink word among the styles
 	Boolean		fHasHeavyFaces;		// +0x49  CheckStyles: a face with italic, outline or shadow (0x1a) - drawn past its advances
+	CList*		fInsertRunList;		// +0x4c  the stretches caret gestures opened (InsertRun), made by SetupDone
+	Boolean		fInsertAreasChanged;	// +0x50  one of them was written into: Idle reason 1 is due
+	ULong		fInsertAreasTime;	// +0x54  when (Ticks)
 	Boolean		fCalculateBounds;	// +0x58  vCalculateBounds is set
 	Boolean		fTapped;			// +0x59  a tap is pending the double-tap interval (Idle reason 2 runs it)
 	Point		fTapPoint;			// +0x5c  where the tap was
@@ -473,6 +493,12 @@ public:
 // space, one at the end none); nil when there are none.
 long		LengthSansTabsAndCRs(const UniChar* text, Boolean* found);	// ROM 0x0017aefc LengthSansTabsAndCRs__FPUsPUc
 UniChar*	RemoveTabsAndCRs(const UniChar* text, RefArg styles);		// ROM 0x0017ad6c RemoveTabsAndCRs__FPUsRC6RefVar
+
+// The insert areas (ParagraphInsertAreas.cpp).
+void		SaveInsertArea(CList* list, ULong offset, ULong length);	// ROM 0x00176818 SaveInsertArea__FP13InsertRunListUlT2
+Boolean		ContainsOnlyInsertedWhiteSpace(const UniChar* text, ULong length);	// ROM 0x0017a2d0 ContainsOnlyInsertedWhiteSpace__FPUsUl
+Boolean		FindPreviousWhiteSpaceBlock(const UniChar* from, const UniChar* limit,
+										const UniChar** block, ULong* length);	// ROM 0x0017af5c FindPreviousWhiteSpaceBlock__FPUsT1PPUsPUl
 extern ULong	gLastParagraphClick;								// ROM 0x0c101760 (unnamed)
 
 extern Boolean	gRemoveEmptyParagraph;						// ROM 0x0c101735

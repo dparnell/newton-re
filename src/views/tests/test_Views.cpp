@@ -3026,6 +3026,59 @@ TestCaretGesture()
 	// narrower than the character box the tail was measured against
 	EXPECT(p->TextLength() > 7 && p->TextLength() < 30);
 
+	// and it left an insert area over the spaces it put in: written into
+	// (two letters in the middle of it) and then left alone - the pen up
+	// a while, and a while since the writing - the paragraph's idler
+	// brings each run of white space left in it down to one space
+	{
+		long spaces = p->TextLength() - 6;
+		EXPECT(p->fInsertRunList != nil && p->fInsertRunList->GetArraySize() == 1);
+		InsertRun* run = (InsertRun*) p->fInsertRunList->At(0);
+		EXPECT(run != nil && run->fStart == 3 && (long) run->fLength == spaces && !run->fChanged);
+		EXPECT(!p->fInsertAreasChanged);
+		UniChar ab[] = { 'a', 'b' };
+		p->InsertStyledText(5, ab, 2, RefVar(NILREF), RefVar(NILREF), 0, 0, false);
+		EXPECT(run->fStart == 3 && (long) run->fLength == spaces + 2 && run->fChanged);
+		EXPECT(p->fInsertAreasChanged);
+		Eval("ClearUndoStacks()");
+		ULong now = Ticks();
+		p->fInsertAreasTime = now - 100;
+		gStrokeWorld.fLastDownTime = now - 200;
+		gStrokeWorld.fLastUpTime = now - 150;
+		p->Idle(1);
+		EXPECT(TextIs(p, "one ab two"));
+		EXPECT(p->fInsertRunList->GetArraySize() == 0);
+		EXPECT(!p->fInsertAreasChanged);
+		// a run of returns and spaces the writer never touched is kept
+		SaveInsertArea(p->fInsertRunList, 3, 1);
+		p->fInsertAreasChanged = true;
+		p->fInsertAreasTime = now - 100;
+		EXPECT(p->Idle(1) == 1500);
+		EXPECT(p->fInsertRunList->GetArraySize() == 1 && p->fInsertAreasChanged);
+		// and one that starts inside another is not saved again
+		SaveInsertArea(p->fInsertRunList, 3, 4);
+		EXPECT(p->fInsertRunList->GetArraySize() == 1);
+		delete (InsertRun*) p->fInsertRunList->At(0);
+		p->fInsertRunList->RemoveElementsAt(0, 1);
+		p->fInsertAreasChanged = false;
+	}
+
+	// the white space a block of insert area comes down to (FindPreviousWhiteSpaceBlock)
+	{
+		static const UniChar text[] = { 'a', ' ', 'b', ' ', ' ', 'c', 0x0d, 0x09, 'd', 0x0d, 'e', 0 };
+		const UniChar* block;
+		ULong length;
+		// from the end back: the return before 'e' (not followed by a tab)
+		EXPECT(FindPreviousWhiteSpaceBlock(text + 10, text, &block, &length) && block == text + 9 && length == 1);
+		// from 'd' back: the return before the tab is passed over, the two spaces found
+		EXPECT(FindPreviousWhiteSpaceBlock(text + 8, text, &block, &length) && block == text + 3 && length == 2);
+		// from 'b' back: a single space is not worth taking out
+		EXPECT(!FindPreviousWhiteSpaceBlock(text + 2, text, &block, &length));
+		static const UniChar white[] = { ' ', 0x0d, ' ' };
+		EXPECT(ContainsOnlyInsertedWhiteSpace(white, 3));
+		EXPECT(!ContainsOnlyInsertedWhiteSpace(text, 2));
+	}
+
 	// a caret drawn upside down across the line closes up the space its
 	// arms straddle (CheckAndDoJoin)
 	Eval("SetValue(ctxCg, 'text, \"one two three\")");

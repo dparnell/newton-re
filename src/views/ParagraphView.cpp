@@ -36,6 +36,7 @@
 #include "UnitPublic.h"
 #include "Stroke.h"
 #include "StrokeQueue.h"
+#include "StrokeCentral.h"		// gStrokeWorld: when the pen last went down and came up
 #include "Keyboard.h"
 #include "Rects.h"
 #include "Regions.h"
@@ -127,16 +128,31 @@ TParagraphView::Constructor(RefArg context, TView* parent)
 	fSetupDone = false;
 	fTapped = false;
 	fTapPoint.h = fTapPoint.v = 0;
+	fInsertRunList = nil;
+	fInsertAreasChanged = false;
+	fInsertAreasTime = 0;
 	TView::Constructor(context, parent);
 }
 
 
 // ROM 0x001805f4 __dt__14TParagraphViewFv
-// The caches go (the hilites, style records, text objects and lines);
-// NOT YET RECONSTRUCTED: the correction info, and vars.lastTextChanged /
-// lastTextHiliteChanged cleared when they name this view.
+// The insert areas go, then the caches (the hilites, style records,
+// text objects and lines); NOT YET RECONSTRUCTED: the correction info, and
+// vars.lastTextChanged / lastTextHiliteChanged cleared when they name this
+// view.
 TParagraphView::~TParagraphView()
 {
+	if (fInsertRunList != nil)
+	{
+		TListLoop loop(fInsertRunList);
+		void* run;
+		while ((run = loop.Next()) != nil)
+		{
+			delete (InsertRun*) run;
+			loop.RemoveCurrent();
+		}
+		delete fInsertRunList;
+	}
 	DestroyStyleRecordCache();
 	DestroyTextObjectCache(&fTextObjects, &fTextOptions);
 	DestroyLineInfoCache(&fLineCache);
@@ -176,6 +192,7 @@ TParagraphView::SetupDone(void)
 	fFirstBaselineOffset = 0;
 	fTextOrigin.h = 0;
 	fTextOrigin.v = 0;
+	fInsertRunList = CList::Make();
 	RefVar style(GetDefaultViewStyle());
 	RefVar data(DataFrame());
 	RefVar text(GetProto(RSSYMtext));
@@ -2070,16 +2087,50 @@ TParagraphView::HandleUpDownKey(Boolean up)
 // ROM 0x0017e964 Idle__14TParagraphViewFl
 // TView's idle; reason 2 is the deferred single tap - the caret placed at
 // the point kept when the tap came, once the double-tap interval has
-// passed with no second tap.  NOT YET RECONSTRUCTED: reason 1's expiry of
-// the just-typed word runs (the ink recogniser).
+// passed with no second tap.  Reason 1 is the insert areas: once one has
+// been written into, and more than one and a half seconds (90 ticks) have
+// passed since then and since the pen last came up (after going down),
+// every area written into has its left-over white space taken out
+// (RemoveExcessWhiteSpace) and is forgotten.  The idler runs again in 1.5
+// seconds while any area is left; with none, it stops.
 long
 TParagraphView::Idle(long reason)
 {
 	long delay = TView::Idle(reason);
-	if (reason == 2 && fTapped)
+	if (reason == 2)
 	{
-		HandleTap(fTapPoint);
-		fTapped = false;
+		if (fTapped)
+		{
+			HandleTap(fTapPoint);
+			fTapped = false;
+		}
+	}
+	else if (reason == 1 && fInsertAreasChanged)
+	{
+		ULong now = Ticks();
+		if (now - fInsertAreasTime > 90
+		 && gStrokeWorld.fLastUpTime > gStrokeWorld.fLastDownTime
+		 && now - gStrokeWorld.fLastUpTime > 90)
+		{
+			TListLoop loop(fInsertRunList);
+			InsertRun* run;
+			while ((run = (InsertRun*) loop.Next()) != nil)
+			{
+				if (run->fChanged)
+				{
+					RemoveExcessWhiteSpace(run);
+					delete run;
+					loop.RemoveCurrent();
+				}
+			}
+		}
+		if (fInsertRunList->GetArraySize() != 0)
+			delay = 1500;
+		else
+		{
+			fInsertAreasChanged = false;
+			fInsertAreasTime = 0;
+		}
 	}
 	return delay;
 }
@@ -2482,32 +2533,26 @@ TParagraphView::ScrubCharacter(const LineInfo* line, TextObjectRef run, const Re
 }
 
 
-// The width of a space in the style text put in at the offset would take
-// (host: the ROM makes a paragraph style record out of
-// GetStyleForInsertion and measures a space text object with it; the same
-// style spec goes through MeasureTextOnce here).
-static long
-SpaceWidthAt(TParagraphView* view, long offset)
+// The width of a space in the style text put in at the offset would take,
+// as InsertHorizontalSpace measures it: a paragraph style record made of
+// GetStyleForInsertion, and a one-space text object made at the point.
+static short
+SpaceWidthAt(TParagraphView* view, long offset, const Point& pt)
 {
 	RefVar spec(view->GetStyleForInsertion(offset, false, true));
-	if (ISNIL(spec))
-		spec = view->GetDefaultViewStyle();
 	StyleRecord record;
-	CreateTextStyleRecord(spec, &record);
-	StyleRecord* styles[1];
-	styles[0] = &record;
-	short lengths[1];
-	lengths[0] = 1;
-	UniChar space = ' ';
-	TextOptions options;
-	memset(&options, 0, sizeof(options));
+	CreateParagraphStyleRecord(spec, &record, (ULong) view->TextFlags(), RefVar(view->GetDefaultViewStyle()));
+	StyleRecord* styles = &record;
 	FPoint where;
-	where.x = 0;
-	where.y = 0;
-	TextBoundsInfo info;
-	MeasureTextOnce(&space, 1, styles, lengths, where, &options, &info);
+	TPoint2FPoint(pt, &where);
+	static const UniChar kSpaceString[] = { ' ', 0 };	// ROM 0x0c101750 SpaceString
+	TextObjectRef text = NewText(kSpaceString, 1, &styles, nil, where, nil);
+	Rect box;
+	GetTextObjBounds(text, &box);
+	short width = (short) (box.right - box.left);
+	DisposeText(text);
 	DisposeStyleRecord(&record);
-	return (info.fRight - info.fLeft) >> 16;
+	return width;
 }
 
 
@@ -2607,7 +2652,8 @@ TParagraphView::FindLineForWord(const Rect& box, long flags)
 
 // ROM 0x00175dac InsertHorizontalSpace__14TParagraphViewFR6TPointlT2Uc
 // What a caret gesture actually does: spaces, or line breaks, put in at
-// the point.
+// the point - which must be on a line (FindLineContainingPoint, a margin
+// of 1, which also brings the point inside the line).
 //
 // A plain caret (width -1) is one space.  A caret with a tail is as many
 // spaces as the tail is wide, measured against the width of a space in
@@ -2616,62 +2662,66 @@ TParagraphView::FindLineForWord(const Rect& box, long flags)
 // as the height is worth in lines - and then the white space already at
 // the point is stepped over first, so the break lands after it.
 //
-// (host: the ROM inserts through DoInsertItems, the same path a dropped
-// item takes; InsertStyledText is the host's equivalent - it makes the
-// same aeReplaceText command, with the same undo.  SaveInsertArea, which
-// remembers where the recogniser put something, and CheckAndDoSplitInk
-// are NOT YET: the insert-run list and ink.)
+// The characters go in through DoInsertItems, as a dropped item would -
+// unless no line break goes in and the caret is over a word of writing,
+// which CheckAndDoSplitInk cuts in two instead.  The caret goes where the
+// insertion was when more than one space or any break went in, and a
+// gesture with a tail or a height (`typed`, the caret drawn by the pen)
+// leaves an insert area behind (SaveInsertArea), so whatever of it the
+// writer does not write into is taken out again later.
+//
+// ROM bug kept: with neither a width worth a space nor a height worth a
+// line the ROM inserts the buffer it never filled in, which is whatever
+// was on the stack.  DEVIATION: the host cannot reproduce which bytes
+// those are, and putting arbitrary text into somebody's note is worse
+// than useless, so the buffer starts empty and nothing goes in.
+// ROM QUIRK: a space with no width (a style the text object measures as
+// nothing) would be a division by zero; the host takes it as no spaces.
 long
-TParagraphView::InsertHorizontalSpace(Point& pt, long width, long height, Boolean typed)
+TParagraphView::InsertHorizontalSpace(Point& point, long width, long height, Boolean typed)
 {
-	long line = FindClosestBaseline(pt.v);
+	Point pt = point;
+	long line = FindLineContainingPoint(&pt, 1);
 	if (line < 0)
 		return 0;
 	long lineHeight = Line(line).fAscent + Line(line).fHeight;
 	long offset = PointToOffset(pt, 0, false, nil, nil, nil, nil);
 	long spaces = width == -1 ? 1 : 0;
 	long breaks = 0;
-	Boolean stepOverWhite = false;
 	if (width != -1)
 	{
-		breaks = height == -1 ? 1 : 0;
+		Boolean stepOverWhite = false;
 		if (height == -1)
+		{
+			breaks = 1;
 			stepOverWhite = true;
+		}
 		else if (width < 1)
 		{
 			if (height > 0)
 			{
-				breaks = (height + lineHeight / 2) / lineHeight + 1;
-				if (breaks > 0)
-					stepOverWhite = true;
+				breaks = (height + (lineHeight >> 1)) / lineHeight + 1;
+				stepOverWhite = breaks > 0;
 			}
 		}
 		else
 		{
-			long space = SpaceWidthAt(this, offset);
-			spaces = space > 0 ? width / space : 0;
+			short space = SpaceWidthAt(this, offset, pt);
+			spaces = space != 0 ? (long) ((ULong) width / (ULong) (long) space) : 0;
+		}
+		if (stepOverWhite)
+		{
+			RefVar textRef(Text());
+			const UniChar* text = GetCString(textRef);
+			long length = (long) Ustrlen(text);
+			while ((IsTab(text[offset]) || IsSpace(text[offset])) && offset < length)
+				offset++;
 		}
 	}
-	RefVar textRef(Text());
-	TRichString rich(textRef);
-	const UniChar* text = rich.GrabPtr();
-	if (stepOverWhite)
-	{
-		long length = (long) Ustrlen(text);
-		while ((IsTab(text[offset]) || IsSpace(text[offset])) && offset < length)
-			offset++;
-	}
-	rich.ReleasePtr();
 
-	// ROM bug kept: with neither a width worth a space nor a height worth a
-	// line the ROM inserts the buffer it never filled in, which is whatever
-	// was on the stack.  DEVIATION: the host cannot reproduce which bytes
-	// those are, and putting arbitrary text into somebody's note is worse
-	// than useless, so the buffer starts empty and nothing goes in.
 	UniChar buffer[41];
 	buffer[0] = 0;
 	UniChar* chars = buffer;
-	UniChar* allocated = nil;
 	long count = 0;
 	if (spaces >= 1 || breaks >= 1)
 	{
@@ -2679,31 +2729,26 @@ TParagraphView::InsertHorizontalSpace(Point& pt, long width, long height, Boolea
 		UniChar fill = spaces >= 1 ? ' ' : 0x0d;
 		if (count > 40)
 		{
-			allocated = new UniChar[count + 1];
-			if (allocated == nil)
+			chars = new UniChar[count + 1];
+			if (chars == nil)
 				Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
-			chars = allocated;
 		}
 		for (long i = 0; i < count; i++)
 			chars[i] = fill;
 		chars[count] = 0;
 	}
 
-	// a caret that opens no space at all, drawn over a word of writing,
-	// cuts the word in two instead
-	if (count == 0 && CheckAndDoSplitInk(pt, offset))
+	if (breaks != 0 || !CheckAndDoSplitInk(pt, offset))
 	{
-		if (allocated != nil)
-			delete[] allocated;
-		return 1;
+		RefVar items(MakeString(chars));
+		DoInsertItems(this, items, false, true, offset, 0, !typed, RefVar(NILREF));
+		if (typed && (spaces > 1 || breaks > 0))
+			gRootView->SetKeyView(this, offset, 0, false);
 	}
-	InsertStyledText((ULong) offset, chars, (ULong) count, RefVar(NILREF), RefVar(NILREF), 0, 0, !typed);
-	// the caret goes where the insertion was, but only when more than one
-	// space or any line break went in
-	if (typed && (spaces > 1 || breaks > 0))
-		gRootView->SetKeyView(this, offset, 0, false);
-	if (allocated != nil)
-		delete[] allocated;
+	if (typed && width != -1)
+		SaveInsertArea(fInsertRunList, (ULong) offset, (ULong) count);
+	if (chars != buffer)
+		delete[] chars;
 	return 1;
 }
 
@@ -2797,10 +2842,10 @@ TParagraphView::CheckAndDoSplitInk(Point& pt, long offset)
 // after the first of them, or at the insertion point itself when a
 // return was already before it.
 //
-// (host: the ROM inserts through AddWord, the recogniser's path into a
-// paragraph; InsertStyledText is the host's equivalent - the same
-// aeReplaceText command with the same undo.  SaveInsertArea, which
-// remembers where the recogniser put something, is NOT YET.)
+// The returns go in as a word would (AddWord, exact - no delimiter
+// worked out around them), and the stretch is remembered as an insert
+// area (SaveInsertArea): what the writer does not write into is taken
+// out again later.
 long
 TParagraphView::InsertVerticalSpace(Point& pt, long height)
 {
@@ -2839,34 +2884,45 @@ TParagraphView::InsertVerticalSpace(Point& pt, long height)
 		if (!atBreak)
 			count++;
 
-		UniChar buffer[41];
+		UniChar buffer[100];
 		UniChar* chars = buffer;
-		UniChar* allocated = nil;
-		if (count > 40)
+		if (count > 100)
 		{
-			allocated = new UniChar[count + 1];
-			if (allocated == nil)
+			chars = new UniChar[count];
+			if (chars == nil)
 				Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
-			chars = allocated;
 		}
 		for (long j = 0; j < count; j++)
 			chars[j] = kCR;
-		chars[count] = 0;
-		InsertStyledText((ULong) offset, chars, (ULong) count, RefVar(NILREF), RefVar(NILREF), 0, 0, false);
-		if (allocated != nil)
-			delete[] allocated;
+		Finder finder;
+		SetRect(&finder.fBox, 0, 0, 0, 0);		// (left as the ROM's stack had them)
+		finder.fBase.h = finder.fBase.v = 0;
+		finder.fText = chars;
+		finder.fLength = (ULong) count;
+		finder.fView = this;
+		finder.fOffset = offset;
+		finder.fReplaceLength = 0;
+		finder.fExact = true;
+		finder.fNewLine = false;
+		finder.fReallyDoIt = true;
+		finder.fTab = 0;
+		finder.fUnit = nil;
+		AddWord(&finder, chars, (ULong) count, RefVar(NILREF), nil);
 
 		// the caret after the first return that went in - unless there
 		// was one before the insertion already, when it stays put
-		long delta = 1;
-		RefVar afterRef(Text());
-		TRichString after(afterRef);
-		const UniChar* newText = after.GrabPtr();
-		if (offset > 1 && newText[offset - 1] == kCR)
-			delta = 0;
-		after.ReleasePtr();
-		gRootView->SetKeyView(this, offset + delta, 0, false);
-		// NOT YET: SaveInsertArea(fInsertRunList, offset, count)
+		if (count > 0)
+		{
+			long delta = 1;
+			RefVar afterRef(Text());
+			const UniChar* newText = GetCString(afterRef);
+			if (offset > 1 && newText[offset - 1] == kCR)
+				delta = 0;
+			gRootView->SetKeyView(this, offset + delta, 0, false);
+		}
+		SaveInsertArea(fInsertRunList, (ULong) offset, (ULong) count);
+		if (chars != buffer)
+			delete[] chars;
 		return 1;
 	}
 	return 0;
@@ -4752,11 +4808,8 @@ InsertItemsAtCaret(RefArg spec)
 // after the left character, as long as it comes before the right one, is
 // the run that goes - however many spaces, tabs and returns follow it.
 // So a join drawn over "one   two" takes all three spaces, and one drawn
-// over a word takes nothing.
-//
-// (host: the ROM removes the run through DoInsertItems, the same path a
-// dropped item takes; InsertStyledText is the host's equivalent - it
-// makes the same aeReplaceText command, with the same undo.)
+// over a word takes nothing.  The run goes through DoInsertItems (an
+// empty string in its place), the path a dropped item takes.
 //
 // Two ink words are joined instead of white space being closed up: when
 // both characters are 0xf701 - the ink word character, and the only one
@@ -4794,6 +4847,8 @@ TParagraphView::CheckAndDoJoin(Point& armA, Point& point, Point& armB)
 	right.v = (short) baseline;
 	long start = PointToOffset(left, 0, true, nil, nil, nil, nil);
 	long end = PointToOffset(right, 0, true, nil, nil, nil, nil);
+	if (start == -1 || end == -1)
+		return 0;
 
 	RefVar textRef(Text());
 	TRichString rich(textRef);
@@ -4825,15 +4880,7 @@ TParagraphView::CheckAndDoJoin(Point& armA, Point& point, Point& armB)
 		RefVar ink(GetFrameSlot(merged, RSSYMink));
 		AdjustInkWordXHeight(ink, ViewExpectsNumbers(this));
 		rich.ReleasePtr();
-		// (host: the ROM puts the word in through DoInsertItems; one ink
-		//  word is one character with the word as its style run, which
-		//  is what InsertStyledText takes)
-		UniChar one = kInkWordChar;
-		RefVar styles(AllocateArray(RSSYMstyles, 2));
-		SetArraySlot(styles, 0, MAKEINT(1));
-		SetArraySlot(styles, 1, ink);
-		InsertStyledText((ULong) start, &one, 1, styles, RefVar(NILREF), 0,
-						 (ULong) (end - start + 1), false);
+		DoInsertItems(this, ink, false, true, start, end - start + 1, false, RefVar(NILREF));
 		return 1;
 	}
 	else if (!IsWhiteSpace(text[start]) && !IsWhiteSpace(text[end]))
@@ -4854,8 +4901,7 @@ TParagraphView::CheckAndDoJoin(Point& armA, Point& point, Point& armB)
 	rich.ReleasePtr();
 	if (!join)
 		return 0;
-	UniChar none = 0;
-	InsertStyledText((ULong) start, &none, 0, RefVar(NILREF), RefVar(NILREF), 0, (ULong) count, false);
+	DoInsertItems(this, RefVar(MakeString("")), false, true, start, count, false, RefVar(NILREF));
 	return 1;
 }
 
@@ -5534,7 +5580,18 @@ TParagraphView::HandleReplaceText(RefArg cmd)
 	}
 	RefVar data(DataFrame());
 	SetFrameSlot(data, RSSYMtext, newText);
-	// NOT YET RECONSTRUCTED: the insert areas after a deletion/insertion (not for an undo)
+	// the insert areas moved with the change - an undo's own change aside
+	if (!IsUndoCommand(cmd))
+	{
+		if (removed > 0)
+			AdjustInsertAreasAfterDeletion(fInsertRunList, (ULong) offset, (ULong) removed);
+		if (inserted > 0)
+		{
+			RefVar insertedText(CommandText(cmd));
+			AdjustInsertAreasAfterInsertion(fInsertRunList, (ULong) offset, (ULong) inserted,
+				ContainsOnlyInsertedWhiteSpace((const UniChar*) BinaryData(insertedText), (ULong) inserted));
+		}
+	}
 	if (postUndo)
 		gApplication->PostUndoCommand(undo);
 	AdjustStyles(offset, removed, inserted, styles, styleOffset);

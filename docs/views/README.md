@@ -1219,6 +1219,50 @@ into the middle of a word at the caret.
 `TestWordIntoParagraph` writes a word past the end of a paragraph's line
 and finds it in that paragraph's text.
 
+### The caret gestures and the insert areas (`HandleCaret` 0x001753b4, `views/ParagraphInsertAreas.cpp`)
+
+A caret drawn over a paragraph opens space: pointing up it is one space
+(`InsertHorizontalSpace`), with a tail as many spaces as the tail is
+wide (a space measured as a one-character text object in the style the
+text would take there), pointing right in the left margin a line break
+or as many as its height is worth (`InsertVerticalSpace`, put in through
+`AddWord` as an exact word), and drawn upside down it closes up the
+white space its arms straddle or joins two ink words (`CheckAndDoJoin`).
+The spaces and the closing-up go in through `DoInsertItems`, the path a
+dropped item takes - except that a caret with no line break over a word
+of writing cuts the word in two instead (`CheckAndDoSplitInk`).
+
+A caret with a tail or a height, and `AddSpaceToEnd`, leave an *insert
+area* behind: the stretch they opened, kept by the paragraph (+0x4c, a
+`CList` of `InsertRun` {start, length, changed}; `SaveInsertArea` keeps
+them in order and does not save one that starts inside another).
+`HandleReplaceText` moves them with every edit that is not an undo
+(`AdjustInsertAreasAfterDeletion`/`AfterInsertion`): one after the edit
+moves, one the edit reaches into grows or shrinks and counts as written
+into - unless all that went in was more spaces and returns
+(`ContainsOnlyInsertedWhiteSpace`).  The first area written into starts
+the paragraph's idler (reason 1, every 1.5 seconds; +0x50 says it is due,
++0x54 when).  Once 90 ticks have passed since the writing and since the
+pen came up after last going down, every area written into has its
+left-over white space taken out - each block of two or more spaces and
+returns, or a lone return not followed by a tab, found backwards from the
+character after the area (`FindPreviousWhiteSpaceBlock`), brought down to
+one space (one return where it ends on the return after the area, or
+begins the area's line) by its own replace-text command - and is
+forgotten (`RemoveExcessWhiteSpace`).  An area never written into stays
+until the paragraph goes.  So the writer opens a gap with a caret, writes
+a word into it, and the gap closes up round the word.
+
+ROM bug kept: a deletion that swallows the whole of an area leaves its
+length negative, and the check meant to empty it compares the length
+unsigned, so never fires.  The idler's wait for the pen needs it to have
+come up *after* it went down, which a test stroke fed all in one tick
+never does - `src/host/demo/caretspace.ns` writes its last word paced
+(`PacePen`) and lets the inker feed it (ctest `host.NewtonCaretSpace`:
+the join, a caret, a caret with a tail, "to" written into it, "ton to
+to"); `test_Views`' `TestCaretGesture` checks the area, the idler and
+`FindPreviousWhiteSpaceBlock` directly.
+
 ### Tapping a paragraph (`HandleTap` 0x001772f4, the double tap)
 
 A tap on a paragraph (aeTap) is deferred by the double-tap interval so a
