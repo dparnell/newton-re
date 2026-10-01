@@ -5,6 +5,22 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Signed overflow wraps, as on the ARM the ROM's C was compiled for (its
+# adds, subtracts and multiplies simply wrap): a ported ROM sum that
+# overflows computes what the MessagePad computed instead of being undefined
+# - which the zig toolchain's sanitiser stopped newton on (Rosetta's
+# SegmentStrokeMinDistance, StrokePUD, TDTMFCodec::Produce) and an optimiser
+# may assume never happens.  The sanitiser's other checks (shifts, bounds,
+# alignment, division) stay.  The wrapping helpers (Add32, WrapAdd, the
+# ULong32 casts) still say where the ROM relies on wrapping, but are no longer
+# needed for correctness (docs/host-lp64.md 'Signed overflow wraps').
+# -DNEWTON_WRAPV=OFF builds without it, so the sanitiser stops at each
+# overflowing sum - the way to find where the ROM's arithmetic overflows.
+option(NEWTON_WRAPV "signed overflow wraps (-fwrapv), as on the ARM" ON)
+if(NEWTON_WRAPV)
+    add_compile_options(-fwrapv)
+endif()
+
 # Which ROM this is a reconstruction of.  NEWTON_ROM is the directory in
 # DebugRom/ and NEWTON_ROM_BUILD the extracted build directory; the tests
 # and the host programs read the image and the extracted rom.bin through

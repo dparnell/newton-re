@@ -38,6 +38,53 @@ value through `ULong` is therefore the usual way to get this wrong.
 `tools/newton-rom/analysis/romsizes.py --lp64` finds ROM byte counts used
 as the size of something that is wider on an LP64 host.
 
+### Signed overflow wraps
+
+The ROM's C was compiled for an ARM whose adds, subtracts and multiplies
+simply wrap, and the ROM's arithmetic relies on that (sums of squares
+past 16.16's range, phase accumulators, scores).  In C++ a signed int that
+overflows is undefined.  The zig toolchain builds with the undefined
+behaviour sanitiser on, which stopped newton three times on ported ROM
+arithmetic:
+* `SegmentStrokeMinDistance` and `StrokePUD` - Rosetta's sum of two
+  `FixedMultiply` squares, in a soak (5a807fbb);
+* `TDTMFCodec::Produce` - the touch tones' mixing, on NewtCard's tour
+  stack (46bbdec3).
+
+The rest of a target's code is at the same risk, and an optimiser may
+assume an overflow never happens.  So everything is built with
+**`-fwrapv`** (`src/CMakeLists.txt`, both toolchains): signed overflow is
+defined to wrap, as on the ARM.
+
+The sanitiser then no longer traps signed overflow, since it is no longer
+undefined.  Its other checks stay, among them:
+* a shift past the width, or of a negative value (`(Fixed) x << 16` with
+  a negative x still traps - use `ToFixed`);
+* division by nought;
+* bounds and alignment.
+
+The wrapping helpers (`Add32`, `Mul32`, `WrapAdd`, the `ULong32` casts)
+stay where they are, as notes of where the ROM relies on wrapping, but a
+new site no longer needs one to be correct.  `-DNEWTON_WRAPV=OFF` builds
+without the flag, so the sanitiser stops at each overflowing sum - the
+way to find the ROM's overflows when that is wanted.
+
+Measured on Windows (two runs each, processor time), `-fwrapv` cost
+nothing:
+* scriptbench 9.2-9.4 s against 9.6-10.0 s before;
+* drawbench 2.4 s against 2.7-3.2 s;
+* inkbench 0.92-0.94 s against 0.98-1.0 s.
+
+The sanitiser has fewer checks to make.
+
+Turning it on showed one test leaning on undefined behaviour.
+`test_LargeObjects`' cut-short stream read its chunk length out of an
+uninitialised word, as the ROM's `FillChunkArrayCompressed` does from a
+pipe that only says eof (a ROM quirk, kept and commented). The test had
+passed only because of what the stack happened to hold, and the new
+flag's stack layout held something else. The test now uses a pipe that
+throws when it runs dry, as an endpoint's does.
+
 ## What it found
 
 Each of these behaved correctly on Windows and wrongly on Linux.  All the

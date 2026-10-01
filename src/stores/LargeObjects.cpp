@@ -305,6 +305,9 @@ FillChunkArrayCompressed(TStore* store, ULong chunkArrayId, CPipe* pipe, long st
 				long n = 4;
 				Boolean eof;
 				pipe->ReadChunk(word, n, eof);
+				// ROM QUIRK: eof is not looked at - from a pipe that only
+				// says eof when its source runs dry (a memory pipe), the
+				// length is read out of whatever `word` held
 				length = (long) GetBigEndianWord(word);
 				n = length;
 				pipe->ReadChunk(block, n, eof);

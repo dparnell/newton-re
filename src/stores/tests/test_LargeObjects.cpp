@@ -21,6 +21,7 @@
 #include "UserBoot.h"
 #include "NewtonMemory.h"
 #include "OSErrors.h"
+extern const ExceptionName exPipeException;	// (LargeObjects.cpp's)
 #include "host/TaskRuntime.h"
 #include "../../utility/tests/TestPipe.h"
 
@@ -29,6 +30,18 @@
 #include <stdlib.h>
 
 static int failures = 0;
+
+// A memory pipe whose source, run dry, throws - as a streaming pipe does
+// when its far end goes (an endpoint's).  A plain memory pipe only says
+// eof, and LODefCreateFromComp (as the ROM's) then reads its length word
+// out of an uninitialised buffer: what the cut-short stream does is then
+// whatever the stack held, which changed with nothing more than -fwrapv.
+class CDryPipe : public CTestPipe
+{
+public:
+					CDryPipe(long size) : CTestPipe(size) { }
+	virtual void	Underflow(long /*count*/, Boolean& /*eof*/)	{ Throw(exPipeException, (void*) (Long) -16009, nil); }
+};
 #define EXPECT(cond) do { if (!(cond)) { failures++; fprintf(stderr, "FAIL %s:%d: %s\n", __FILE__, __LINE__, #cond); } } while (0)
 
 
@@ -213,7 +226,7 @@ Scenario(const char* compander)
 	EXPECT(memcmp((void*) address, bytes, kPiped) == 0);
 	EXPECT(UnmapLargeObject(address) == noErr);
 	// a stream cut short: its pipe exception is the answer
-	CTestPipe shortPacked(16);
+	CDryPipe shortPacked(16);
 	UByte header[8];
 	PutBigEndianWord(header, 2);
 	PutBigEndianWord(header + 4, kPiped);
