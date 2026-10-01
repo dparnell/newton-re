@@ -21,6 +21,19 @@ romsrc's `#hex` immediates and `@@` record lines; a 22-test corpus and
 a Zed extension (`zed-newtonscript/`): highlighting, brackets,
 indentation and an outline, installed with "zed: install dev extension".
 
+## 2026-10-01: package backup by id; what lives across a warm restart
+
+- Executing packages in place (XIP) is not reached: `StorePackage` picks
+  the XIP store only for a package flagged 0x08000000, which no fixture
+  carries, and moving a package to a card copies it with the allocator it
+  already has - not built (`docs/packages/README.md`).
+- `BackupPackage(CPipe*, packageId)` (0x16093c), exported for packages'
+  native code, writes a stored package out by its id (8d9971cd).
+- `os600/user/UserPersistent.h` (b81f7c80): the tablet calibration kept
+  across a warm restart, the patch info calls, `InternalRAMInfo` - so
+  Gestalt's system info carries the RAM size, which was 0; TStore's
+  protocol glue cited.  349 tests; 12596 of 16671 functions (75.56%).
+
 ## 2026-10-01: protocol parts on the ARM interpreter, layer 1
 
 A package's protocol part with no host stand-in now loads and runs on
