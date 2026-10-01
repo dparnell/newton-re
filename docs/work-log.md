@@ -9,6 +9,24 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-02: the soak test, and what it found
+
+`tools/host/soak.py` (47a092d5) runs two newtons for an hour or more -
+each round sweeps an app, writes and reads a word, puts a card in and
+takes it out, prints over IPP and beams to the other - under
+`NEWTON_HEAPCHECK`, sampling the heaps and the host process's threads,
+handles and memory.  It found:
+- a deleted task's host thread never ended, adding one or two threads a
+  minute (about 600 an hour); it now exits (47570c67);
+- `--headless` and `--limit` counted sleeps rather than reading the
+  clock, so a 4-minute run took 5.5 and a limit past 582 s overflowed;
+- a crash at 47 minutes in Rosetta: `SegmentStrokeMinDistance` added two
+  pinned FixedMultiply results with a signed add the sanitiser stops,
+  where the ROM's add simply wraps - a wrapping add now, as the ARM does
+  (and in `StrokePUD`) (5a807fbb).
+After the fixes over 47 minutes: threads steady at 22, handles level, the
+frames and system heaps level, no heap damage, no hang.
+
 ## 2026-10-02: The Linux host's last gaps
 
 - **A package dropped onto the X11 window** is installed, as on Windows:
