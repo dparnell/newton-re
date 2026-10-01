@@ -7670,10 +7670,8 @@ TParagraphView::GetProperties(RefArg hilite)
 // ROM 0x0017ebb4 AddHilited__14TParagraphViewFRC6RefVarP9TEditView
 // The selected text made a paragraph of its own on the page, selected
 // whole: where the selection is drawn (in the page's coordinates), or,
-// for the whole paragraph, where the paragraph is.
-//
-// (host: the hilite's +0x14, the ROM's pointer to the selected text, is
-//  NOT YET, so the text is found from its offsets)
+// for the whole paragraph, where the paragraph is.  The text is the
+// hilite's own copy of what it selected (+0x14), not the paragraph's.
 TView*
 TParagraphView::AddHilited(RefArg hilite, TEditView* editor)
 {
@@ -7692,8 +7690,7 @@ TParagraphView::AddHilited(RefArg hilite, TEditView* editor)
 		OffsetRect(&r, -origin.h, -origin.v);
 	}
 	RefVar props(GetProperties(hilite));
-	RefVar text(Text());
-	RefVar form(MakeParagraphForm((UniChar*) GetCString(text) + h->fStart, h->fEnd - h->fStart, r, props, false));
+	RefVar form(MakeParagraphForm(h->fText, h->fEnd - h->fStart, r, props, false));
 	TParagraphView* view = (TParagraphView*) editor->AddForm(form);
 	if (h != nil)
 		view->MakeHilite(0, h->fEnd - h->fStart, true);

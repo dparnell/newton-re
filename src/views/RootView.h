@@ -153,7 +153,7 @@ public:
 
 	TView*			fHiliter;			// +0x30  the view owning the hilites
 	TUpdateRegion*	fUpdateRegions;		// +0x34  three of them
-	Rect			fDirtyScreen;		// +0x38  what the screen must show again (SmartScreenDirty; NOT YET: the screen)
+	Rect			fDirtyScreen;		// +0x38  what the screen must show again (SmartScreenDirty; Update shows it under a drawing bracket)
 	CDynamicArray*	fIdlers;			// +0x40  the IdlerRecords
 	long			fChildrenHighWater;	// +0x44  the children list packed (MoveLow) when it shrank below this
 	long			fIdlersHighWater;	// +0x48

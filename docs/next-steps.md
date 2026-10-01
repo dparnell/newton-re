@@ -97,11 +97,9 @@ the way are all in `docs/work-log.md`.
   protocol's methods are C++ virtuals and need numbered thunks to be
   called by dispatch slot (a monitor's already work).  Nothing in the ROM
   or `fixtures/` calls `Dispatch`.
-- The views' NOT YET markers that a user can reach (`analysis/notyet.py
-  src --area views --all`): the root's `fDirtyScreen`
-  (`SmartScreenDirty` collects it, nothing yet shows it); the paragraph
-  hilite's +0x14 text pointer.  (The math views, `AddTabStop` and the
-  serial-port `TKeyboardTool` are not reachable in this ROM on the host.)
+- The views' NOT YET markers left (`analysis/notyet.py src --area views
+  --all`) are none a user reaches on the host: the math views, `AddTabStop`
+  and the serial-port `TKeyboardTool`.
 - Packages: XIP packages (the ROM domain manager's page faulting, about
   11 KB); a card's `'stor` event and `GetCardReinsertionInfo`; ATA cards.
 - The NIE built into the ROM extension: the page tables `ptpt`/`glpt`

@@ -2,7 +2,7 @@
 """Report how much of the ROM the reconstruction in src/ covers.
 
 Usage:
-    python coverage.py <build dir> [--src src] [--by-class] [--check]
+    python coverage.py <build dir> [--src src] [--by-class] [--left N] [--check]
 
 Reads every `// ROM 0x<address> <mangled name>` citation in src/**/*.cpp and
 src/**/*.h and compares it with symbols.json:
@@ -10,7 +10,11 @@ src/**/*.h and compares it with symbols.json:
   * a citation whose address or name does not match a ROM symbol is an error
     (with --check the exit status is 1), so typos are caught early;
   * the report shows reconstructed vs. total functions, overall and per class
-    (--by-class), counting each ROM function once.
+    (--by-class), counting each ROM function once;
+  * --left N ranks what is still to do: the N classes with the most bytes of
+    uncited code (a function's size being the distance to the next code
+    symbol), then the N largest uncited free functions - for choosing the
+    next piece of work.
 
 Only real function bodies count (not jump-table slots).  Data symbols cited
 with the same syntax are checked but not counted.  Code reconstructed from
@@ -56,6 +60,7 @@ def main(argv=None) -> int:
     ap.add_argument("--src", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "src"))
     ap.add_argument("--by-class", action="store_true")
     ap.add_argument("--check", action="store_true", help="exit 1 on bad citations")
+    ap.add_argument("--left", type=int, metavar="N", help="rank the uncited code: N classes, N free functions")
     args = ap.parse_args(argv)
 
     with open(os.path.join(args.build_dir, "symbols.json")) as f:
@@ -135,6 +140,28 @@ def main(argv=None) -> int:
         have = collections.Counter(functions[a][0] for a in done)
         for cls in sorted(have, key=lambda c: (-have[c], c)):
             print(f"  {cls or '(free functions)':32s} {have[cls]:3d} / {total[cls]}")
+    if args.left:
+        starts = sorted(a for a in functions if a < rom_size)
+        size = {a: (b - a) for a, b in zip(starts, starts[1:] + [rom_size])}
+        names = {s["address"]: s["name"] for s in data["symbols"] if "jt_index" not in s and s["address"] in functions}
+        left_bytes = collections.Counter()
+        left_count = collections.Counter()
+        total = collections.Counter(cls for cls, _ in functions.values())
+        free = []
+        for a, (cls, sig) in functions.items():
+            if a in cited or a not in size:
+                continue
+            if cls:
+                left_bytes[cls] += size[a]
+                left_count[cls] += 1
+            else:
+                free.append((size[a], a, names.get(a, sig)))
+        print("\nclasses with the most uncited code (bytes, functions left / total):")
+        for cls, n in left_bytes.most_common(args.left):
+            print(f"  {cls:32s} {n:7d}  {left_count[cls]:3d} / {total[cls]}")
+        print(f"\nthe largest uncited free functions (of {len(free)}):")
+        for n, a, name in sorted(free, reverse=True)[:args.left]:
+            print(f"  {a:#010x} {n:6d}  {name}")
     return 1 if (errors and args.check) else 0
 
 
