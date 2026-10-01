@@ -193,13 +193,27 @@ FSignum(RefArg /*rcvr*/, RefArg a)
 }
 
 
+// Ceiling's and Floor's answer: an integer when it fits one (the ROM
+// compares with -2^29 and 2^29 - 1, its literals at 0x002b5b18/0x002b5cd0,
+// and FIXes), else the real itself - as a NaN is, which compares unordered
+// (the FPA's CMF sets V, so the first `blt` is taken): Floor(1e10) and
+// Floor of a NaN are reals, never an integer cut down to 30 bits.
+static Ref
+WholeNumberRef(double d)
+{
+	if (d >= -536870912.0 && d <= 536870911.0)
+		return MAKEINT((long) d);
+	return MakeReal(d);
+}
+
+
 // ROM 0x002b5ac8 FCeiling
 Ref
 FCeiling(RefArg /*rcvr*/, RefArg a)
 {
 	if (ISINT(a))
 		return a;
-	return MAKEINT((long) ceil(CoerceToDouble(a)));
+	return WholeNumberRef(ceil(CoerceToDouble(a)));
 }
 
 
@@ -209,7 +223,7 @@ FFloor(RefArg /*rcvr*/, RefArg a)
 {
 	if (ISINT(a))
 		return a;
-	return MAKEINT((long) floor(CoerceToDouble(a)));
+	return WholeNumberRef(floor(CoerceToDouble(a)));
 }
 
 
