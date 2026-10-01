@@ -327,26 +327,32 @@ the viewTransferMode (`DrawUsingRect` 0x0018bd00 through `DrawPicture`).
 `TDataView` 83 - `DataView.h`, only the class identity yet):
 protoStaticText and every editable paragraph, display only.  The `text`
 slot (`Text` 0x00183034 = `GetValue(text, string)`) is wrapped into the
-bounds a line at a time (`FillAllCaches` 0x0016dc68: the ROM's
-`LineLoop` breaks the lines and makes a text object per run of each; the
-host measures each line with `DoTextOnce` over the style runs and cuts it
-back at a word boundary as `DrawSimpleLine` does), each line the height
-its fonts need or `GetInterLineSpacing` 0x0016b490 (viewLineSpacing when
-a single style's font fits it: the font's height between 0.8 x the
-spacing and the spacing + 3), a line whose midline falls below the bottom
-dropped (`TestLineOverlap` 0x000a41fc) unless the view has
-vCalculateBounds (the ROM then grows the view; the host keeps every line
-and the bounds as they are), the lines moved down by the vertical text
-bits when the text is shorter than the view; the lines are cached as
-`LineInfo` records (the ROM's 0x24-byte ones: start and end offsets, the
-first and last text object, whether the line ends in white space - a line
-keeps the space that ends it - how far its baseline is below its top and
-its bottom below the baseline, `LineLoop::AddNextLine`'s outputs, and its
-box), moved along when the view
-moves (`OffsetCachedBounds` 0x0016b94c) and rebuilt when it is resized.
-`RealDraw` 0x0016b14c draws the lines and an ellipsis (U+2026, the ROM's
-Mac Roman 0xc9) after the last when the text goes on past it and the
-view does not calculate its bounds.  The `styles` slot is the style runs
+bounds a line at a time as the ROM does it (`ParagraphLines.h`, "The line
+layout" below): `LineLoop` 0x0010d8d4 makes a text object
+(`qd/TextObject.h`) for each stretch of a line between tabs - its
+characters read through a `TextRef` (the view and an offset) by
+`TextRefScanner`, cut to what fits and back to a word break by
+`AddNextTextRun` - and `ComputeLineBounds` gives the line its box and moves
+its objects onto its baseline; `FillAllCaches` 0x0016bc38 keeps the lines
+that show (in what the parents show of the view, or with text flag 0x800
+in the view's own bounds) as `LineInfo` records (the ROM's 0x24 bytes:
+start and end offsets, the first and last text object, whether the line
+ends in white space - a line keeps the space that ends it - the line's
+spacing less its descent, its bottom below the baseline, and its box) and
+disposes of the others' objects; the line spacing is `GetInterLineSpacing`
+0x00169460 (viewLineSpacing when a single style's font fits it: the font's
+height between 0.8 x the spacing and the spacing + 3); a line whose middle
+falls below the bottom is not laid out (`LineFitsInBounds` 0x001721fc)
+unless the view has vCalculateBounds (whose bounds then grow to the text,
+`CreateAllCaches`/`FixupBBox`); a one-line view centres or bottoms its line
+by the vertical text bits.  The lines and their text objects move with the
+view (`OffsetCachedBounds` 0x0016991c: by how far the first object's
+baseline is from where the view's top-left says it should be) and are laid
+out again when it is resized (`SetBounds` -> `FixupBBox`).
+`RealDraw` 0x0016911c draws the text objects and an ellipsis (U+2026, the
+ROM's Mac Roman 0xc9) after the last line when the text goes on past it
+and the view does not calculate its bounds, at the line's right but no
+closer than six pixels to the view's edge.  The `styles` slot is the style runs
 (`StyleRuns.h`: `[length, style, ...]`; `CorrectAnyBadStyleRuns`
 0x0017c92c stretches or cuts them to the text's length through
 `RunsInsert`/`RunsDelete` 0x0012aa28/0x0012a938; `GetStyles` 0x00183134
@@ -808,6 +814,63 @@ DEVIATION: the ROM selects the whole target when it is a paragraph
 caret at its end.  `NextKeyView(view, direction, kind)` is the
 NewtonScript native.  (Tested by `test_Views`'s `TestKeyChain`: tab
 cycles a slip's fields, skipping a read-only one and a plain box.)
+
+### The line layout (`ParagraphLines.h`, `LineLoop` 0x0010d8d4)
+
+A paragraph's lines are laid out as the ROM lays them out.  `LineLoop`
+walks the text holding it locked; each `AddNextLine` makes the line's text
+objects one `AddNextTextRun` at a time - leading tabs moving the pen to the
+next stop (`SkipLeadingTabs`, `FindNextTabStop`: the tabs slot's stops,
+then every 48 pixels), a return ending the line, otherwise the text up to
+the next tab or return in a text object at the pen, as wide as is left of
+the line, cut to what fits and back to a word break (two characters short
+instead when the line is the last that fits, `LineFitsInBounds` = 1; a first
+object that fits nothing widened three pixels at a time) - and then
+`ComputeLineBounds` boxes it and moves its objects onto its baseline.  The
+style runs are consumed as it goes (`UpdateStyleRunLengths`: each text
+object gets a copy of the lengths of the runs it covers).  Every text
+object's characters are read through a `TextRef` {view, offset} by
+`TextRefScanner` (`qd/Text.h`'s `TextScannerProc`), so the objects survive
+the text binary moving.  The baseline rules: the first line's is its
+fonts' greatest ascent below the top (or, with a viewLineSpacing, 3 - 4
+over 20 - above the first ruled line, or where +0x7c remembers it); a later
+line's stays where the last line's spacing put it when the spacing agrees
+(`GetPseudoSpacing`), otherwise it goes its line ascent below the last
+line's descent; an ink word's line metrics are 17/5 (14/5 when written
+small), not its glyph's; a one-line view centres or bottoms its line.
+
+`FillAllCaches` keeps the lines that show and their objects, and the four
+shorts +0xa0-+0xa6 (first baseline and line ascent, last baseline and line
+descent); +0x40 is the lines' union - as tall as the view for one that does
+not calculate its bounds, a line taller for a final return.  The caches
+(+0x6c style records, +0x70 text objects, +0x74 lines) are the ROM's
+nought-ended arrays (`InitializeCache`, `CacheLength`, `CacheMaxLength`).
+`RealDraw` draws the text objects (`DrawTextObj`).
+
+Not yet the ROM's: what is asked of the lines afterwards - the character
+boxes, hit-testing and the selection's region - still measures through two
+host shims over the text objects (`LineWidthTo`, `LineTextEnd` in
+`ParagraphView.cpp`); `docs/next-steps.md` lists the ROM's readers that
+replace them.  `OffsetToCaret` and `OffsetToBounds`' empty-paragraph
+branch are the ROM's already.
+
+What the move changed on the screens (`tools/imaging/pgmdiff.py` over every
+ctest's snapshots before and after, a second run before as the noise): the
+selection over text no longer reaches below the line's descent (the old
+line box carried the font's leading - the Find slip's hilite used to cover
+part of the Everywhere button under it); ink words in a paragraph sit
+where their 17/5 line metrics put them; centred static text moved by a
+pixel where the text object's own alignment rounds differently; the caret
+in an empty input line goes where `LeftEdgeOfEmptyLine` says; Newt's
+Cape's PalmDoc page shows all its lines (the old layout stopped after the
+first, an ellipsis after it - ctest `host.NewtonAppNewtsCapeHelpers` now
+checks seven lines are drawn).  Everything else that differed was the
+clock, the timer's hands, the time zones' map, the fax viewer (whose
+snapshot differs from run to run) and the Extras drawer's labels (fixed
+in main meanwhile, 3bdaa273).  Two demos leaned on the old layout:
+`inethostsetup.ns` tapped left of a centred 0 meaning to land after it, and
+`apps-fonts.ns` took the page's caret from Setup, which is on the same
+line, for the caret its tap put there.
 
 ### Typing into a paragraph (`ParagraphView.h`, `StyleRuns.h`)
 

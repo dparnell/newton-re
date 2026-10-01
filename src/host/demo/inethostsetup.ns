@@ -105,17 +105,19 @@ ihsFirst := [
 	settleStep,
 	call ihsShot with ("4"),
 	// a manual setup's addresses: the local one 10.0.0.2 (its first and
-	// last numbers) and the DNS server 10.0.0.1
+	// last numbers) and the DNS server 10.0.0.1 - each field's 0 is centred
+	// in it, so each tap is right of the 0 to put the caret after it (the
+	// fourth field's 0 lies at 265-277)
 	call ihsOpenSlip with ("Local IP Address", 202)];
 foreach s in call ihsField with ("Local IP Address", "local address 1", 50, [18, 29]) do AddArraySlot(ihsFirst, s);
-foreach s in call ihsField with ("Local IP Address", "local address 4", 254, [19]) do AddArraySlot(ihsFirst, s);
+foreach s in call ihsField with ("Local IP Address", "local address 4", 280, [19]) do AddArraySlot(ihsFirst, s);
 foreach s in [
 	call ihsShot with ("5"),
 	call ihsCloseSlip with ("Local IP Address"),
 	settleStep,
 	call ihsOpenSlip with ("DNS/Name Server Address", 234)] do AddArraySlot(ihsFirst, s);
 foreach s in call ihsField with ("DNS/Name Server Address", "DNS server 1", 50, [18, 29]) do AddArraySlot(ihsFirst, s);
-foreach s in call ihsField with ("DNS/Name Server Address", "DNS server 4", 254, [18]) do AddArraySlot(ihsFirst, s);
+foreach s in call ihsField with ("DNS/Name Server Address", "DNS server 4", 280, [18]) do AddArraySlot(ihsFirst, s);
 foreach s in [
 	call ihsCloseSlip with ("DNS/Name Server Address"),
 	settleStep,

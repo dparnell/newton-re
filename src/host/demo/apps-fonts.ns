@@ -78,7 +78,16 @@ fontChoose := func(name) func(done) begin
 end;
 
 wtSteps := [
-	call tapLineStep with ("the caret on the note", 60, 70),
+	// (the caret the page already has after Setup is on this line too, at
+	// the left edge, so the tap is waited for by the caret's own left:
+	// the page puts the caret off a tap after the double-tap interval)
+	func(done) begin
+		call tapAt with (60, 70);
+		call waitFor with ("fonts: the caret on the note", func() begin
+			local c := GetCaretBox();
+			c and c.left >= 50 and c.left <= 70 and c.top <= 82 and c.bottom >= 58
+		end, done, 10);
+	end,
 	func(done) begin
 		call typeText with (fontText);
 		call waitFor with ("fonts: the note written", func() call fontPara with (), done, 10);

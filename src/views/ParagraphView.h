@@ -11,13 +11,14 @@
 				one that fits its font), aligned by the viewJustify text
 				bits, and an ellipsis marks text that does not fit.  The
 				ROM's object is 0xd0 bytes and caches the lines (LineInfo)
-				and the drawn text objects; the host keeps the lines.
+				and the text objects they are drawn as, laid out by the
+				ROM's LineLoop (ParagraphLines.h).
 
 				Display, and the caret: the paragraph can be the key view -
 				SetCaretOffset keeps its caret offset (fCaretOffset), and
 				OffsetToCaret/PointToCaret place the caret from the line
-				cache (host: the text measured up to the offset; the ROM
-				asks its text objects - CharBounds).  Typing: the key
+				cache (host: the character's text object measured up to the
+				offset; the ROM asks CharBounds).  Typing: the key
 				commands (RealDoCommand) insert and delete at the caret
 				through InsertStyledText, which makes an aeReplaceText
 				command (MakeAndDoReplaceCommand) that HandleReplaceText
@@ -30,12 +31,10 @@
 				InsertHorizontalSpace, InsertVerticalSpace, CheckAndDoJoin,
 				HandleLineGesture) are here.  NOT YET RECONSTRUCTED: the
 				correction info, the other edit
-				commands (styles changed, cut and paste), the tab stops
-				(tabs draw as characters), the text objects (each line is
-				laid out from the text when drawn), the bounds recalculation
-				of vCalculateBounds paragraphs (the lines are all laid out;
-				the view keeps its bounds), the locale's break tables in
-				the word breaks (see FindWordBreaks), printing.
+				commands (styles changed, cut and paste), the ROM's readers
+				of the laid-out lines (docs/next-steps.md), the locale's
+				break tables in the word breaks (see FindWordBreaks),
+				printing.
 
 	Reconstructed from the MP2x00 US ROM (0x0016911c-0x0016c260,
 	0x00178748-0x00178a30, 0x0017edc0-0x00181580); each function cites its
@@ -54,26 +53,25 @@
 #ifndef __TEXT_H
 #include "Text.h"
 #endif
+#include "TextObject.h"		// TextObjectRef: the line layout's text objects
 
-// one line of the paragraph as FillAllCaches (0x0016dc68) records it: the
+// one line of the paragraph as FillAllCaches (0x0016bc38) records it: the
 // ROM's LineInfo is 0x24 bytes - the offsets of the line's first
 // character and of the one after its last, its first text object and the
-// one after its last, whether it ends in white space, and its box
+// one after its last (indices into the view's text object cache), whether
+// it ends in white space, where its baseline is, and its box
+// (views/ParagraphLines.h)
 struct LineInfo
 {
 	long		fStart;				// +0x00  the line's first character
 	long		fEnd;				// +0x04  where the next line starts: after
 									//        the spaces and the return that
-									//        end this one, as the ROM's
-									//        LineLoop leaves it
-	long		fTextEnd;			// (host) after the line's last drawn
-									//        character - what the ROM's text
-									//        objects hold, and what this
-									//        reconstruction measures instead
-	long		fFirstObj;			// +0x08  its first text object (host: the first style run)
+									//        end this one, as LineLoop leaves it
+	long		fFirstObj;			// +0x08  its first text object
 	long		fEndObj;			// +0x0c  after its last
 	Boolean		fEndsWithSpace;		// +0x10
-	long		fAscent;			// +0x14  the baseline below the line's top
+	long		fAscent;			// +0x14  the line's spacing less fHeight - its ascent,
+									//        for a line in one font
 	long		fHeight;			// +0x18  the line's bottom below the baseline (the
 									//        two together are the line's height -
 									//        LineLoop::AddNextLine's outputs)
@@ -284,7 +282,7 @@ public:
 	void		CreateAllCaches(void);									// ROM 0x0016baa8 CreateAllCaches__14TParagraphViewFv
 	void		ClearAllCaches(void);									// ROM 0x0016bbd0 ClearAllCaches__14TParagraphViewFv
 	void		RefillAllCaches(void);									// ROM 0x0016c25c RefillAllCaches__14TParagraphViewFv
-	void		FillAllCaches(void);									// ROM 0x0016bc38 FillAllCaches__14TParagraphViewFPs
+	void		FillAllCaches(short* runLengths);						// ROM 0x0016bc38 FillAllCaches__14TParagraphViewFPs
 	void		OffsetCachedBounds(Point& delta);						// ROM 0x0016991c OffsetCachedBounds__14TParagraphViewFR6TPoint
 	long		FindLineContainingCharOffset(long offset);				// ROM 0x001786f8 FindLineContainingCharOffset__14TParagraphViewFl (host: the line's index, -1 for none)
 	void		OffsetToBounds(long offset, Rect* bounds);				// ROM 0x00177f20 OffsetToBounds__14TParagraphViewFlP5TRect
@@ -412,15 +410,21 @@ public:
 	void		FixupBBox(void);										// ROM 0x001815b8 FixupBBox__14TParagraphViewFv
 	long		TextLength(void);										// the text's characters (host)
 
-	long		LineCount(void) const				{ return fLineCount; }
-	const LineInfo&	Line(long index) const			{ return fLines[index]; }
+	// The line layout (ParagraphLines.cpp).
+	long		LineFitsInBounds(long lineTop, long baseline, long spacing, StyleRecord* style);	// ROM 0x001721fc LineFitsInBounds__14TParagraphViewFlN21P11StyleRecord
+	void		CreateStyleRecordCache(short** runLengths);				// ROM 0x0016c2f0 CreateStyleRecordCache__14TParagraphViewFPPs
+	void		DestroyStyleRecordCache(void);							// ROM 0x0016c5ec DestroyStyleRecordCache__14TParagraphViewFv
+
+	// the cached lines: as many as the cache holds, and each
+	long		LineCount(void) const;
+	LineInfo&	Line(long index) const				{ return *fLineCache[index]; }
 	const Rect&	TextBounds(void) const				{ return fTextBounds; }
 
 	long		fTextFlags;			// +0x30  the input view's text flags (-1 until SetupDone)
 	long		fTransferMode;		// +0x34  viewTransferMode (srcOr when none)
 	long		fLineSpacing;		// +0x38  viewLineSpacing (0 when none)
 	long		fLineHeight;		// +0x3c  the default style's height (ascent + descent + leading), then the last line's
-	Rect		fCachedBounds;		// +0x40  the bounds the lines were laid out in
+	Rect		fTextBounds;		// +0x40  the lines' union (FillAllCaches)
 	Boolean		fHasInkWords;		// +0x48  CheckStyles: an ink word among the styles
 	Boolean		fHasHeavyFaces;		// +0x49  CheckStyles: a face with italic, outline or shadow (0x1a) - drawn past its advances
 	Boolean		fCalculateBounds;	// +0x58  vCalculateBounds is set
@@ -429,33 +433,30 @@ public:
 	long		fCaretOffset;		// +0x60  the caret's character offset (SetCaretOffset)
 	RefStruct	fWordBreakTable;	// +0x64  the locale's
 	RefStruct	fLineBreakTable;	// +0x68
-	LineInfo*	fLines;				// +0x74  the line cache (nil until made)
-	long		fLineCount;
-	long		fLineCapacity;
-	Boolean		fCachesValid;		// +0x78
+	StyleRecord**	fStyleCache;	// +0x6c  the runs' style records, nil-ended (fSingleStyles for one)
+	TextObjectRef*	fTextObjects;	// +0x70  the text objects of the lines, nought-ended
+	LineInfo**	fLineCache;			// +0x74  the lines that show, nil-ended (nil until made)
+	Boolean		fCachesValid;		// +0x78  the caches may be filled (set by SetupDone; cleared while the
+									//        view's bounds are being written by the layout itself)
 	Boolean		fSetupDone;			// +0x79  SetupDone has run (RangeChanged processes the styles; cleared while it does)
+	short		fFirstBaselineOffset;	// +0x7c  the first line's baseline below the top, kept from one
+										//        layout to the next (LineLoop)
+	Point		fTextOrigin;		// +0x80  the first text object's baseline from the top-left
+									//        (OffsetCachedBounds moves the lines by its change)
 	TextOptions	fTextOptions;		// +0x84  the width and alignment the lines are laid out with
-	Rect		fTextBounds;		// +0xa0  the lines' union
-
-private:
-	void		LayoutRuns(RefArg styles, long textLength);
-	void		DrawLine(const UniChar* text, const LineInfo& line, Boolean ellipsis);
-	void		DisposeRuns(void);
-
-	// host: the style runs as records for DoTextOnce
-	StyleRecord**	fRunStyles;
-	short*			fRunLengths;
-	long			fRunCount;
-	RefStruct		fRunSpecs;		// the specs of the runs (an array; a single spec's run covers the text)
+	short		fFirstBaseline;		// +0xa0  the first line's baseline
+	short		fFirstLineAscent;	// +0xa2  its fonts' line ascent
+	short		fLastBaseline;		// +0xa4  the last line's baseline
+	short		fLastLineDescent;	// +0xa6  its fonts' line descent
+	StyleRecord	fSingleStyle;		// +0xa8  the one style, when there are no runs
+	StyleRecord*	fSingleStyles[2];	// +0xc8  the cache for it: it and nil
 };
-
-void	GrowLineInfoCache(LineInfo** cache, long* capacity);
 
 // Text with its tabs and returns made single spaces (a run of them one
 // space, one at the end none); nil when there are none.
 long		LengthSansTabsAndCRs(const UniChar* text, Boolean* found);	// ROM 0x0017aefc LengthSansTabsAndCRs__FPUsPUc
 UniChar*	RemoveTabsAndCRs(const UniChar* text, RefArg styles);		// ROM 0x0017ad6c RemoveTabsAndCRs__FPUsRC6RefVar
-extern ULong	gLastParagraphClick;								// ROM 0x0c101760 (unnamed)			// ROM 0x0017c9cc GrowLineInfoCache__FPPP8LineInfol
+extern ULong	gLastParagraphClick;								// ROM 0x0c101760 (unnamed)
 
 extern Boolean	gRemoveEmptyParagraph;						// ROM 0x0c101735
 

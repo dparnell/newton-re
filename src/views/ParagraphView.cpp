@@ -7,6 +7,7 @@
 */
 
 #include "ParagraphView.h"
+#include "ParagraphLines.h"
 #include "SoundSettings.h"	// FClicker
 #include "Polygons.h"
 #include "Ink.h"
@@ -137,9 +138,10 @@ TParagraphView::Constructor(RefArg context, TView* parent)
 // lastTextHiliteChanged cleared when they name this view.
 TParagraphView::~TParagraphView()
 {
-	DisposeRuns();
-	if (fLines != nil)
-		DisposPtr((Ptr) fLines);
+	DestroyStyleRecordCache();
+	DestroyTextObjectCache(&fTextObjects, &fTextOptions);
+	DestroyLineInfoCache(&fLineCache);
+	DisposeStyleRecord(&fSingleStyle);
 }
 
 
@@ -147,7 +149,8 @@ TParagraphView::~TParagraphView()
 // The view readied once its context is complete: the transfer mode
 // (viewTransferMode, srcOr when none), the line spacing (viewLineSpacing),
 // the text flags (the input view's from textFlags and viewFlags), the
-// bounds cached, a rich string in the text slot split into the data
+// text bounds an empty box at the top-left and the first baseline's
+// place forgotten (+0x7c, +0x80), a rich string in the text slot split into the data
 // frame's text and styles, the default style's height as the line
 // height, the locale's break tables.  A view that calculates its bounds
 // has its styles checked and its caches made now - before its
@@ -169,7 +172,11 @@ TParagraphView::SetupDone(void)
 	RefVar spacing(GetProto(RSSYMviewlinespacing));
 	fLineSpacing = ISNIL(spacing) ? 0 : RINT(spacing);
 	fTextFlags = (long) GetInputViewTextFlags((ULong) TextFlags(), fFlags);
-	fCachedBounds = viewBounds;
+	fTextBounds = viewBounds;
+	fTextBounds.right = fTextBounds.left;
+	fFirstBaselineOffset = 0;
+	fTextOrigin.h = 0;
+	fTextOrigin.v = 0;
 	RefVar style(GetDefaultViewStyle());
 	RefVar data(DataFrame());
 	RefVar text(GetProto(RSSYMtext));
@@ -217,8 +224,8 @@ TParagraphView::SetupDone(void)
 		Point origin = fParent->ContentsOrigin();
 		OffsetRect(&bounds, (short) -origin.h, (short) -origin.v);
 		long ascent;
-		if (fLines != nil && fLineCount > 0)
-			ascent = fLines[0].fAscent;
+		if (fLineCache != nil && LineCount() > 0)
+			ascent = Line(0).fAscent;
 		else
 		{
 			StyleRecord first;
@@ -280,22 +287,6 @@ TParagraphView::SetBounds(const Rect& inBounds)
 	if (!EQRef(data, fContext))
 		RemoveSlot(fContext, RSSYMviewbounds);
 	TView::SetBounds(bounds);
-	// host: the line cache holds the lines where they are drawn, so it is
-	// moved with the view (or marked for laying out again when the size
-	// changed) before FixupBBox looks at it
-	if (fLines != nil)
-	{
-		if (viewBounds.right - viewBounds.left != fCachedBounds.right - fCachedBounds.left
-		 || viewBounds.bottom - viewBounds.top != fCachedBounds.bottom - fCachedBounds.top)
-			fCachesValid = false;
-		else
-		{
-			Point delta;
-			delta.h = (short) (viewBounds.left - fCachedBounds.left);
-			delta.v = (short) (viewBounds.top - fCachedBounds.top);
-			OffsetCachedBounds(delta);
-		}
-	}
 	FixupBBox();
 }
 
@@ -478,408 +469,11 @@ CreateParagraphStyleRecord(RefArg fontSpec, StyleRecord* style, ULong textFlags,
 }
 
 
-/*------------------------------------------------------------------------------
-	T h e   c a c h e s
-------------------------------------------------------------------------------*/
-
-// ROM 0x0017c9cc GrowLineInfoCache__FPPP8LineInfol
-// The line cache grown to hold more lines (the ROM's cache is a
-// null-terminated array of LineInfo pointers; the host's an array of
-// records that doubles).
-void
-GrowLineInfoCache(LineInfo** cache, long* capacity)
+// The cached lines (the caches themselves are ParagraphLines.cpp).
+long
+TParagraphView::LineCount(void) const
 {
-	long newCapacity = *capacity == 0 ? 8 : *capacity * 2;
-	LineInfo* lines = (LineInfo*) NewPtrClear(newCapacity * sizeof(LineInfo));
-	if (lines == nil)
-		OutOfMemory();
-	if (*cache != nil)
-	{
-		memmove(lines, *cache, *capacity * sizeof(LineInfo));
-		DisposPtr((Ptr) *cache);
-	}
-	*cache = lines;
-	*capacity = newCapacity;
-}
-
-
-// The style runs as records for the layout: one record per run of the
-// styles array (a single spec: one run over the whole text); the last
-// run stretched to the text's end.
-void
-TParagraphView::LayoutRuns(RefArg styles, long textLength)
-{
-	DisposeRuns();
-	fRunSpecs = styles;
-	if (IsArray(styles) && Length(styles) >= 2)
-	{
-		long count = Length(styles) / 2;
-		fRunStyles = (StyleRecord**) NewPtrClear(count * sizeof(StyleRecord*));
-		fRunLengths = (short*) NewPtrClear(count * sizeof(short));
-		long covered = 0;
-		for (long i = 0; i < count; i++)
-		{
-			RefVar spec(GetArraySlotRef(styles, 2 * i + 1));
-			long runLength = RINT(GetArraySlotRef(styles, 2 * i));
-			if (i == count - 1 && covered + runLength < textLength)
-				runLength = textLength - covered;
-			fRunStyles[i] = new StyleRecord;
-			CreateParagraphStyleRecord(spec, fRunStyles[i], (ULong) TextFlags(),
-									   RefVar(GetDefaultViewStyle()));
-			fRunLengths[i] = (short) runLength;
-			covered += runLength;
-			fRunCount = i + 1;
-		}
-	}
-	else
-	{
-		RefVar spec(IsArray(styles) ? GetDefaultViewStyle() : (Ref) styles);
-		fRunStyles = (StyleRecord**) NewPtrClear(sizeof(StyleRecord*));
-		fRunLengths = (short*) NewPtrClear(sizeof(short));
-		fRunStyles[0] = new StyleRecord;
-		CreateParagraphStyleRecord(spec, fRunStyles[0], (ULong) TextFlags(),
-								   RefVar(GetDefaultViewStyle()));
-		fRunLengths[0] = (short) textLength;
-		fRunCount = 1;
-	}
-}
-
-
-void
-TParagraphView::DisposeRuns(void)
-{
-	for (long i = 0; i < fRunCount; i++)
-	{
-		DisposeStyleRecord(fRunStyles[i]);
-		delete fRunStyles[i];
-	}
-	if (fRunStyles != nil)
-		DisposPtr((Ptr) fRunStyles);
-	if (fRunLengths != nil)
-		DisposPtr((Ptr) fRunLengths);
-	fRunStyles = nil;
-	fRunLengths = nil;
-	fRunCount = 0;
-	fRunSpecs = NILREF;
-}
-
-
-// the runs of a range of the text: the records and lengths from the run
-// the start falls in (the last run covers whatever is left)
-static long
-RunsOfRange(StyleRecord** runStyles, const short* runLengths, long runCount, long start, long length, StyleRecord** styles, short* lengths, long* firstRun)
-{
-	long run = 0;
-	long runStart = 0;
-	while (run < runCount - 1 && runStart + runLengths[run] <= start)
-	{
-		runStart += runLengths[run];
-		run++;
-	}
-	*firstRun = run;
-	long count = 0;
-	long done = 0;
-	long offset = start - runStart;
-	while (done < length && run < runCount)
-	{
-		long available = runLengths[run] - offset;
-		if (run == runCount - 1 || available > length - done)
-			available = length - done;
-		if (available > 0)
-		{
-			styles[count] = runStyles[run];
-			lengths[count] = (short) available;
-			count++;
-			done += available;
-		}
-		offset = 0;
-		run++;
-	}
-	return count;
-}
-
-
-// ROM 0x0016bbd0 ClearAllCaches__14TParagraphViewFv
-// The style records, text objects and lines forgotten; the line cache
-// sized for the text (the ROM: a line per 32 characters, at most a tenth
-// of the screen's height; the host's cache grows as needed).
-void
-TParagraphView::ClearAllCaches(void)
-{
-	DisposeRuns();
-	fLineCount = 0;
-	if (fLines == nil)
-		GrowLineInfoCache(&fLines, &fLineCapacity);
-}
-
-
-// ROM 0x0016c25c RefillAllCaches__14TParagraphViewFv
-// The caches cleared and filled again: the style records from the styles
-// (CreateStyleRecordCache), then the lines.
-void
-TParagraphView::RefillAllCaches(void)
-{
-	ClearAllCaches();
-	RefVar text(Text());
-	long textLength = ISNIL(text) ? 0 : (Length(text) - 2) >> 1;
-	LayoutRuns(RefVar(GetStyles()), textLength);
-	FillAllCaches();
-}
-
-
-// ROM 0x0016baa8 CreateAllCaches__14TParagraphViewFv
-// The caches made: the lines laid out and - for a view that calculates
-// its bounds - the view made as tall as its lines (as wide as them too
-// when it sizes itself to its text, text flag 4), which is how a
-// paragraph made with no height (a note made by MakeTextNote: viewBounds
-// top and bottom 0) comes to show; the bounds noted, the hilites' areas
-// made again (UpdateHiliteArea).
-void
-TParagraphView::CreateAllCaches(void)
-{
-	RefillAllCaches();
-	if (fFlags & vCalculateBounds)
-	{
-		// the ROM's +0x40 text bounds - every line laid out, kept or not -
-		// are the view's own when there are no lines at all
-		Rect text = fTextBounds.bottom > fTextBounds.top ? fTextBounds : viewBounds;
-		Rect bounds = viewBounds;
-		bounds.bottom = text.bottom;
-		Point origin = fParent->ContentsOrigin();
-		OffsetRect(&bounds, -origin.h, -origin.v);
-		fCachesValid = false;
-		if (TextFlags() & 4)
-			bounds.right = (short) (text.right - origin.h);
-		WriteBounds(bounds);
-		fCachesValid = true;
-	}
-	fCachedBounds = viewBounds;
-	fCachesValid = true;
-	UpdateHiliteArea();
-}
-
-
-// ROM 0x0016bc38 FillAllCaches__14TParagraphViewFPs
-// The text wrapped into the bounds a line at a time: each line the text
-// up to a carriage return (or the end) cut to what fits the width and
-// back to a word boundary, the line the height its runs' fonts need
-// (or the inter-line spacing), one below the other from the top; a line
-// whose midline falls below the bottom is not kept (TestLineOverlap)
-// unless the view calculates its bounds.  The lines' union is the text
-// bounds; the last line's height the line height.  A final carriage
-// return leaves an empty line behind it, which is where the caret goes
-// when it is typed.  The lines are moved down by the vertical text bits
-// when the text is shorter than the bounds: centred, or to the bottom.
-// Only the lines that show are kept (see the clip below).  NOT YET
-// RECONSTRUCTED: the ROM's LineLoop (tabs, the text objects it makes for
-// every run of a line).
-void
-TParagraphView::FillAllCaches(void)
-{
-	fLineCount = 0;
-	SetEmptyRect(&fTextBounds);
-	// (host: where the lines are laid out, which RealDraw's
-	// OffsetCachedBounds measures a move from; the ROM works the move out
-	// of the first text object's baseline instead, so lines laid out
-	// again - FixupBBox after a move - are never moved a second time)
-	fCachedBounds = viewBounds;
-	RefVar textRef(Text());
-	if (ISNIL(textRef) || fRunCount == 0)
-		return;
-	TRichString rich(textRef);
-	long length = rich.Length();
-	const UniChar* text = rich.GrabPtr();
-	// The lines run from the view's left edge to its right - except for a
-	// view that sizes itself to its text (bit 2 of the text flags), which
-	// runs to its *parent's* right edge instead (the ROM's LineLoop
-	// constructor, 0x0010d9d0).  That is what lets a word typed or written
-	// on a page grow to the right as it is added to: the paragraph starts
-	// as wide as the first character and would otherwise wrap every
-	// character after it onto a line of its own, because FixupBBox can
-	// only grow the view to the width its lines came out.
-	long left = viewBounds.left;
-	long right = (TextFlags() & 4) != 0 && fParent != nil
-			   ? fParent->viewBounds.right : viewBounds.right;
-	long width = right - left;
-	long height = viewBounds.bottom - viewBounds.top;
-	memset(&fTextOptions, 0, sizeof(fTextOptions));
-	fTextOptions.fAlignment = ConvertToQDFlush(fViewJustify & vjJustifyMask, &fTextOptions.fJustification);
-	fTextOptions.fWidth = ToFixed(width);
-	fTextOptions.fTransferMode = fTransferMode;
-	long spacing = GetInterLineSpacing();
-	// The lines kept are those that show: in what the parents show of the
-	// view (the walk up stopping at a print or a remote view, what is
-	// below one being drawn elsewhere) - or, with text flag 0x800, in the
-	// view's own bounds, and only those that end within them, which is how
-	// a paragraph being reflowed for the printer is cut between two lines
-	// where the page runs out (ReflowText's piece, OffsetPastVisible).  A
-	// line below the bounds ends a paragraph that does not calculate its
-	// bounds; one that does lays the rest out too (its text bounds take
-	// them all) but keeps none of them; a line above them is skipped.
-	// (The flag is read through the unnamed accessor at vtable +0x20, the
-	// view's own fTextFlags - see SetBounds.)
-	Boolean ownBounds = ((ULong) fTextFlags & 0x800) != 0;
-	Rect clip = viewBounds;
-	if (!ownBounds)
-	{
-		clip = fParent->viewBounds;
-		TView* ancestor = fParent;
-		do
-		{
-			ancestor = ancestor->fParent;
-			if (ancestor == nil)
-				break;
-			if (ancestor->DerivedFrom(clPrintView) || ancestor->DerivedFrom(clRemoteView))
-				break;
-			SectRect(&ancestor->viewBounds, &clip, &clip);
-		} while (ancestor != gRootView);
-	}
-	Rect allLines;			// every line laid out, kept or not (the ROM's +0x40)
-	SetEmptyRect(&allLines);
-	Boolean anyLine = false;
-	StyleRecord** lineStyles = (StyleRecord**) NewPtrClear(fRunCount * sizeof(StyleRecord*));
-	short* lineLengths = (short*) NewPtrClear(fRunCount * sizeof(short));
-	FPoint origin;
-	origin.x = 0;
-	origin.y = 0;
-	long y = 0;
-	long pos = 0;
-	// A final carriage return leaves an empty line behind it: the
-	// caret goes on that line, and a view that sizes itself to its
-	// text grows by it.  (The ROM's LineLoop hands the empty line out
-	// like any other; here it is one more turn of the loop with
-	// nothing to fit in it.)
-	Boolean trailingLine = length > 0 && text[length - 1] == kCR;
-	while (pos < length || trailingLine)
-	{
-		if (pos >= length)
-			trailingLine = false;
-		long lineEnd = pos;
-		while (lineEnd < length && text[lineEnd] != kCR)
-			lineEnd++;
-		long firstRun;
-		long runs = RunsOfRange(fRunStyles, fRunLengths, fRunCount, pos, lineEnd - pos, lineStyles, lineLengths, &firstRun);
-		TextBoundsInfo bounds;
-		TextOptions options = fTextOptions;
-		long fitted = lineEnd - pos;
-		if (fitted > 0)
-		{
-			fitted = DoTextOnce(text + pos, lineEnd - pos, lineStyles, lineLengths, origin, &options, &bounds, false);
-			if (fitted < lineEnd - pos)
-			{
-				if (fitted > 0 && text[pos + fitted - 1] != kSP && text[pos + fitted] != kSP)
-				{
-					ULong wordStart, wordEnd;
-					FindWordBreaks(text + pos, length - pos, fitted, true, fLineBreakTable, &wordStart, &wordEnd);
-					if (wordStart != 0)
-						fitted = wordStart;
-				}
-				if (fitted == 0)
-					fitted = 1;			// a word wider than the line: a character at a time
-				runs = RunsOfRange(fRunStyles, fRunLengths, fRunCount, pos, fitted, lineStyles, lineLengths, &firstRun);
-				DoTextOnce(text + pos, fitted, lineStyles, lineLengths, origin, &options, &bounds, false);
-			}
-		}
-		else
-			bounds.fWidth = 0;
-		// the line's height from its runs' fonts (the default style's for an empty line)
-		long ascent = 0;
-		long descent = 0;
-		long leading = 0;
-		for (long i = 0; i < (runs > 0 ? runs : 1); i++)
-		{
-			FontInfo fontInfo;
-			GetStyleFontInfo(runs > 0 ? lineStyles[i] : fRunStyles[firstRun], &fontInfo);
-			if (fontInfo.ascent > ascent)
-				ascent = fontInfo.ascent;
-			if (fontInfo.descent > descent)
-				descent = fontInfo.descent;
-			if (fontInfo.leading > leading)
-				leading = fontInfo.leading;
-		}
-		long lineHeight = spacing != 0 ? spacing : ascent + descent + leading;
-		// The first baseline: with a viewLineSpacing, three pixels (four
-		// for a spacing over 20) above the first ruled line, whatever the
-		// font - which is what puts an input line's text on its line (the
-		// ROM's LineLoop constructor, 0x0010d8d4); else the font's ascent
-		// below the top.  (The ROM's third case, a baseline the view was
-		// given at +0x7c, is NOT YET.)
-		if (fLineCount == 0 && fLineSpacing >= 1)
-			y = fLineSpacing - (fLineSpacing < 21 ? 3 : 4) - ascent;
-		if (fLineCount == fLineCapacity)
-			GrowLineInfoCache(&fLines, &fLineCapacity);
-		// The line takes the spaces and the return that end it with it:
-		// fEnd is where the next line starts, so an offset at the end of
-		// a line is on that line and not at the start of the next one.
-		const UniChar* next = SkipUpToTwoSpacesAndCR(text + pos + fitted, text + length);
-		LineInfo& line = fLines[fLineCount];
-		line.fStart = pos;
-		line.fEnd = (long) (next - text);
-		line.fTextEnd = pos + fitted;
-		line.fFirstObj = firstRun;
-		line.fEndObj = firstRun + runs;
-		line.fEndsWithSpace = fitted > 0 && text[pos + fitted - 1] == kSP;
-		line.fAscent = ascent;
-		line.fHeight = lineHeight - ascent;
-		SetRect(&line.fBounds, 0, (short) y, (short) ((bounds.fWidth + 0x8000) >> 16), (short) (y + lineHeight));
-		Rect box;
-		SetRect(&box, 0, 0, (short) width, (short) height);
-		if (!fCalculateBounds && TestLineOverlap(box, line.fBounds) == 2)
-			break;
-		Rect global = line.fBounds;
-		OffsetRect(&global, viewBounds.left, viewBounds.top);
-		Boolean shows = Overlaps(&clip, &global) && !(ownBounds && clip.bottom < global.bottom);
-		if (!shows && clip.top < global.bottom && !fCalculateBounds)
-			break;
-		if (shows)
-			fLineCount++;
-		fLineHeight = lineHeight;
-		if (!anyLine)
-			allLines = line.fBounds;
-		else
-			UnionRect(&allLines, &line.fBounds, &allLines);
-		anyLine = true;
-		y += lineHeight;
-		pos = (long) (next - text);
-	}
-	rich.ReleasePtr();
-	DisposPtr((Ptr) lineStyles);
-	DisposPtr((Ptr) lineLengths);
-	// the lines placed in the view: by the vertical text bits when there is
-	// room - only in a one-line view (vjOneLineOnly; the ROM's
-	// ComputeLineBounds, 0x0010ddc0): the lines of any other paragraph run
-	// from its top whatever its justification
-	long dy = 0;
-	if (y < height && (fViewJustify & vjOneLineOnly) != 0)
-	{
-		switch (fViewJustify & vjVMask)
-		{
-		case vjCenterV:	dy = (height - y) / 2;	break;
-		case vjBottomV:	dy = height - y;		break;
-		default:		break;
-		}
-	}
-	for (long i = 0; i < fLineCount; i++)
-		OffsetRect(&fLines[i].fBounds, viewBounds.left, viewBounds.top + dy);
-	if (anyLine)
-	{
-		fTextBounds = allLines;
-		OffsetRect(&fTextBounds, viewBounds.left, viewBounds.top + dy);
-	}
-}
-
-
-// ROM 0x0016991c OffsetCachedBounds__14TParagraphViewFR6TPoint
-// The cached lines moved with the view.
-void
-TParagraphView::OffsetCachedBounds(Point& delta)
-{
-	if (delta.h == 0 && delta.v == 0)
-		return;
-	for (long i = 0; i < fLineCount; i++)
-		OffsetRect(&fLines[i].fBounds, delta.h, delta.v);
-	OffsetRect(&fTextBounds, delta.h, delta.v);
-	OffsetRect(&fCachedBounds, delta.h, delta.v);
+	return CacheLength(fLineCache);
 }
 
 
@@ -1062,125 +656,210 @@ TParagraphView::FlushWordAtCaret(void)
 long
 TParagraphView::FindLineContainingCharOffset(long offset)
 {
-	if (fLines == nil || !fCachesValid)
+	if (fLineCache == nil)
 		CreateAllCaches();
-	if (fLineCount == 0)
+	if (LineCount() == 0)
 		return -1;
-	for (long i = 0; i < fLineCount; i++)
-		if (offset < fLines[i].fEnd)
+	for (long i = 0; i < LineCount(); i++)
+		if (offset < Line(i).fEnd)
 			return i;
-	return fLineCount - 1;
+	return LineCount() - 1;
 }
 
 
-// the width of a line's characters from its start to the offset (host:
-// measured; the ROM's text objects know their character boxes)
+// (host, until the ROM's readers are in) where a line's last text object
+// ends: its TextRef's offset and its fitted length - the line's start for
+// a line of no objects
 static long
-LineWidthTo(TParagraphView* view, const UniChar* text, const LineInfo& line, long offset, StyleRecord** runStyles, const short* runLengths, long runCount)
+LineTextEnd(TParagraphView* view, const LineInfo& line)
 {
-	if (offset <= line.fStart)
+	if (line.fEndObj <= line.fFirstObj)
+		return line.fStart;
+	TextObjectRef obj = view->fTextObjects[line.fEndObj - 1];
+	TextRef* ref;
+	GetTextObjField(obj, kTextObjText, &ref);
+	return ref->fOffset + TextObj(obj)->fLength;
+}
+
+
+// (host, until the ROM's readers are in) how far along the line the offset
+// is: the left edge of its character in the text object that holds it
+// (CharLeftEdge), from the line's left
+static long
+LineWidthTo(TParagraphView* view, const LineInfo& line, long offset)
+{
+	if (line.fEndObj <= line.fFirstObj)
 		return 0;
-	StyleRecord** styles = (StyleRecord**) NewPtrClear(runCount * sizeof(StyleRecord*));
-	short* lengths = (short*) NewPtrClear(runCount * sizeof(short));
-	long firstRun;
-	RunsOfRange(runStyles, runLengths, runCount, line.fStart, offset - line.fStart, styles, lengths, &firstRun);
-	TextOptions options;
-	memset(&options, 0, sizeof(options));
-	FPoint where;
-	where.x = 0;
-	where.y = 0;
-	TextBoundsInfo info;
-	MeasureTextOnce(text + line.fStart, offset - line.fStart, styles, lengths, where, &options, &info);
-	DisposPtr((Ptr) styles);
-	DisposPtr((Ptr) lengths);
-	(void) view;
-	return (info.fRight - info.fLeft) >> 16;
+	TextObjectRef obj = 0;
+	long start = 0;
+	for (long i = line.fFirstObj; i < line.fEndObj; i++)
+	{
+		obj = view->fTextObjects[i];
+		TextRef* ref;
+		GetTextObjField(obj, kTextObjText, &ref);
+		start = ref->fOffset;
+		if (offset <= start + TextObj(obj)->fLength)
+			break;
+	}
+	long at = offset - start;
+	if (at < 0)
+		at = 0;
+	if (at > TextObj(obj)->fLength)
+		at = TextObj(obj)->fLength;
+	Point edge;
+	CharLeftEdge(obj, at, &edge);
+	return edge.h - line.fBounds.left;
 }
 
 
 // ROM 0x00177f20 OffsetToBounds__14TParagraphViewFlP5TRect
-// The box of the character at the offset (its left edge is what the
-// caret wants, its width what an ink word's box is worked out from):
-// the line found, the text up to the offset measured for the left and
-// up to the next character for the right, the line's top and baseline
-// for the top and bottom; without lines (no text) the view's top-left
-// in the default style's height.
+// The box of the character at the offset (kept inside the text).  With
+// no lines: an empty box at the view's left edge for an empty line
+// (LeftEdgeOfEmptyLine), as tall as the line spacing - or the default
+// style's height - its top that less the style's height below the
+// view's top.  (Host, until the ROM's text object readers are in: with
+// lines, the character's left and right measured in its text object, the
+// line's top and baseline the box's top and bottom.)
 void
 TParagraphView::OffsetToBounds(long offset, Rect* bounds)
 {
-	if (fLines == nil || !fCachesValid)
+	if (fLineCache == nil)
 		CreateAllCaches();
+	if (fLineCache[0] == nil)
+	{
+		bounds->top = viewBounds.top;
+		bounds->left = LeftEdgeOfEmptyLine(viewBounds, (ULong) fViewJustify & 0x3fffffff);
+		bounds->right = bounds->left;
+		RefVar styles(GetStyles());
+		if (IsArray(styles))
+			styles = GetArraySlotRef(styles, 1);
+		StyleRecord style;
+		CreateTextStyleRecord(styles, &style);
+		FontInfo info;
+		GetStyleFontInfo(&style, &info);
+		long height = fLineSpacing;
+		if (height == 0)
+			height = info.descent + info.ascent;
+		bounds->bottom = (short) (bounds->top + height);
+		bounds->top = (short) (height - info.ascent - info.descent + bounds->top);
+		DisposeStyleRecord(&style);
+		return;
+	}
 	long textLength = TextLength();
 	if (offset < 0)
 		offset = 0;
 	else if (offset > textLength)
 		offset = textLength;
 	long index = FindLineContainingCharOffset(offset);
-	if (index < 0 || fLineCount == 0)
-	{
-		bounds->left = viewBounds.left;
-		bounds->top = viewBounds.top;
-		bounds->right = bounds->left;
-		long height = fLineHeight != 0 ? fLineHeight : (fLineSpacing != 0 ? fLineSpacing : 12);
-		bounds->bottom = bounds->top + height;
-		return;
-	}
-	const LineInfo& line = fLines[index];
-	RefVar textRef(Text());
-	TRichString rich(textRef);
-	const UniChar* text = rich.GrabPtr();
-	long width = LineWidthTo(this, text, line, offset, fRunStyles, fRunLengths, fRunCount);
+	const LineInfo& line = Line(index);
+	long width = LineWidthTo(this, line, offset);
 	bounds->left = line.fBounds.left + width;
-	// the character's own right edge, which is where the next one
-	// starts.  (The ROM ends in CharBounds over the line's text runs,
-	// which answers the character's box; here the width of one more
-	// character is measured instead.  The last character of a line and
-	// the end of the text have no character after them, and the box is
-	// then empty - which is what a caret wants.)
 	bounds->right = bounds->left;
-	if (offset < line.fTextEnd)
-		bounds->right = line.fBounds.left
-						+ LineWidthTo(this, text, line, offset + 1, fRunStyles, fRunLengths, fRunCount);
-	rich.ReleasePtr();
+	if (offset < LineTextEnd(this, line))
+		bounds->right = line.fBounds.left + LineWidthTo(this, line, offset + 1);
 	bounds->top = line.fBounds.top;
-	bounds->bottom = line.fBounds.top + line.fAscent;		// the baseline
+	bounds->bottom = line.fBounds.bottom - line.fHeight;		// the baseline
 }
 
 
 // ROM 0x00171ad4 OffsetToCaret__14TParagraphViewFlP5TRect
-// Where the caret goes for the offset: the character's box (OffsetToBounds)
-// - past the last line's end the caret stays at that end - its left a
-// pixel in, kept inside the view's sides and its bottom (the baseline)
-// inside the view unless it calculates its bounds; the rect is 2 wide.
-// Nowhere (top and bottom -32768) when the offset is outside the cached
-// range.
+// Where the caret goes for the offset: nowhere (top and bottom -32768)
+// outside the lines cached.  Past the last line's end the caret stays at
+// that end (before a return that ends it).  At the very end of a text
+// that ends in a return it goes at the start of the empty line after
+// the last - unless the view does not calculate its bounds and that
+// line would be past its bottom, when it stays before the return.
+// Otherwise the character's box (OffsetToBounds), down to the line's
+// baseline; a pixel left of the character, 2 wide, kept inside the
+// view's sides and - unless it calculates its bounds - above its bottom.
+//
+// ROM QUIRK: when that empty line would be past the bottom, which way it
+// goes is decided by the caret rectangle's bottom as it comes in: a caret
+// already at (or a line short of) the text bounds' bottom stays before
+// the return; otherwise it goes on the empty line all the same.  A
+// caller that passes a rectangle it has not set gets whatever it held.
 void
 TParagraphView::OffsetToCaret(long offset, Rect* caret)
 {
-	if (fLines == nil || !fCachesValid)
+	if (fLineCache == nil)
 		CreateAllCaches();
-	long textLength = TextLength();
-	if (offset < 0 || offset > textLength)
+	long start, length;
+	GetCachedRange(&start, &length);
+	if (offset < start || start + length < offset)
 	{
 		caret->top = -32768;		// nowhere (left and right not touched)
 		caret->bottom = -32768;
 		return;
 	}
-	if (fLineCount > 0)
+	Boolean done = false;
+	long lines = CacheLength(fLineCache);
+	if (lines > 0)
 	{
-		long lastEnd = fLines[fLineCount - 1].fEnd;
-		if (offset > lastEnd)
-			offset = lastEnd;
+		RefVar textRef(Text());
+		LockRef(textRef);
+		const UniChar* text = GetCString(textRef);
+		LineInfo* last = fLineCache[lines - 1];
+		long end = last->fEnd;
+		if (end < offset || (end == offset && text[offset] != 0))
+		{
+			offset = end;
+			if (text[end - 1] == kCR)
+				offset = end - 1;
+		}
+		else
+		{
+			long textLength = TextLength();
+			if (textLength > 0 && offset == textLength && text[textLength - 1] == kCR)
+			{
+				long spacing = fLineSpacing != 0 ? fLineSpacing : fLineHeight;
+				Boolean onLine = true;
+				if ((fFlags & vCalculateBounds) == 0
+				 && (ULong) (long) viewBounds.bottom < (ULong) (fTextBounds.bottom + spacing - ((ULong) fLineHeight >> 1)))
+				{
+					if (fTextBounds.bottom <= spacing + caret->bottom)
+					{
+						offset--;
+						onLine = false;
+					}
+					else
+						OffsetToBounds(offset, caret);
+				}
+				if (onLine)
+				{
+					caret->left = LeftEdgeOfEmptyLine(viewBounds, (ULong) fViewJustify & 0x3fffffff);
+					caret->top = last->fBounds.bottom;
+					caret->bottom = (short) (last->fBounds.bottom + last->fAscent);
+					done = true;
+				}
+			}
+		}
+		UnlockRef(textRef);
 	}
-	OffsetToBounds(offset, caret);
-	long left = caret->left - 1;
+	if (!done)
+	{
+		OffsetToBounds(offset, caret);
+		long index = FindLineContainingCharOffset(offset);
+		if (index < 0)
+		{
+			StyleRecord style;
+			CreateTextStyleRecord(RefVar(GetStyleAtOffset(offset, nil, nil)), &style);
+			FontInfo info;
+			GetStyleFontInfo(&style, &info);
+			caret->bottom = (short) (caret->bottom - info.descent);
+			DisposeStyleRecord(&style);
+		}
+		else
+			caret->bottom = (short) (Line(index).fBounds.bottom - Line(index).fHeight);
+	}
+	short left = (short) (caret->left - 1);
 	if (left < viewBounds.left)
 		left = viewBounds.left;
-	if (left > viewBounds.right - 3)
-		left = viewBounds.right - 3;
-	caret->left = (short) left;
-	caret->right = (short) (left + 2);
-	if (!fCalculateBounds && caret->bottom > viewBounds.bottom)
+	short limit = (short) (viewBounds.right - 3);
+	if (left < limit)
+		limit = left;
+	caret->left = limit;
+	caret->right = (short) (caret->left + 2);
+	if ((fFlags & vCalculateBounds) == 0 && viewBounds.bottom <= caret->bottom)
 		caret->bottom = viewBounds.bottom;
 }
 
@@ -1193,29 +872,29 @@ TParagraphView::OffsetToCaret(long offset, Rect* caret)
 long
 TParagraphView::PointToOffset(const Point& pt)
 {
-	if (fLines == nil || !fCachesValid)
+	if (fLineCache == nil)
 		CreateAllCaches();
-	if (fLineCount == 0)
+	if (LineCount() == 0)
 		return 0;
-	long index = fLineCount - 1;
-	for (long i = 0; i < fLineCount; i++)
-		if (pt.v < fLines[i].fBounds.bottom)
+	long index = LineCount() - 1;
+	for (long i = 0; i < LineCount(); i++)
+		if (pt.v < Line(i).fBounds.bottom)
 		{
 			index = i;
 			break;
 		}
-	const LineInfo& line = fLines[index];
+	const LineInfo& line = Line(index);
 	RefVar textRef(Text());
 	TRichString rich(textRef);
 	const UniChar* text = rich.GrabPtr();
 	long best = line.fStart;
 	long bestDistance = 0x7fffffff;
-	long end = line.fTextEnd;
+	long end = LineTextEnd(this, line);
 	if (end > line.fStart && line.fEndsWithSpace)
 		end--;
 	for (long offset = line.fStart; offset <= end; offset++)
 	{
-		long x = line.fBounds.left + LineWidthTo(this, text, line, offset, fRunStyles, fRunLengths, fRunCount);
+		long x = line.fBounds.left + LineWidthTo(this, line, offset);
 		long distance = x > pt.h ? x - pt.h : pt.h - x;
 		if (distance < bestDistance)
 		{
@@ -1278,7 +957,7 @@ TParagraphView::GetInkRefAndBounds(long offset, Rect* bounds)
 		GetInkWordInfo(style, &info);
 		long line = FindLineContainingCharOffset(offset);
 		OffsetToBounds(offset, bounds);
-		bounds->top = (short) (fLines[line].fAscent + bounds->top - info.fScaledAscent);
+		bounds->top = (short) (Line(line).fAscent + bounds->top - info.fScaledAscent);
 		bounds->bottom = (short) (bounds->top + info.fScaledHeight);
 	}
 	return style;
@@ -1556,16 +1235,16 @@ TParagraphView::UpdateHiliteArea(void)
 Boolean
 TParagraphView::SelectionRegion(long start, long end, RgnHandle rgn)
 {
-	if (fLines == nil || !fCachesValid)
+	if (fLineCache == nil)
 		CreateAllCaches();
 	SetEmptyRgn(rgn);
 	if (end <= start)
 		return false;
-	for (long i = 0; i < fLineCount; i++)
+	for (long i = 0; i < LineCount(); i++)
 	{
-		const LineInfo& line = fLines[i];
+		const LineInfo& line = Line(i);
 		long selStart = start > line.fStart ? start : line.fStart;
-		long selEnd = end < line.fTextEnd ? end : line.fTextEnd;
+		long selEnd = end < LineTextEnd(this, line) ? end : LineTextEnd(this, line);
 		if (selEnd <= selStart)
 			continue;
 		Rect leftBox;
@@ -1646,7 +1325,7 @@ TParagraphView::SetupArea(TParagraphHilite* hilite)
 long
 TParagraphView::HandleHilite(TUnitPublic* unit, long kind, Boolean reallyDoIt)
 {
-	if (fLines == nil)
+	if (fLineCache == nil)
 		CreateAllCaches();
 	Rect box;
 	unit->Bounds(&box);
@@ -1689,7 +1368,7 @@ TParagraphView::HiliteParagraph(TUnitPublic* unit, Boolean reallyDoIt)
 		return false;
 	Rect box;
 	unit->Bounds(&box);
-	Rect text = fCachedBounds;
+	Rect text = fTextBounds;
 	Rect mine = viewBounds;
 	Boolean covered = CoveredBy(&text, &box) > 60;
 	if (!covered)
@@ -1728,7 +1407,7 @@ TParagraphView::HiliteLines(TUnitPublic* unit, Boolean reallyDoIt)
 	long end = -1;
 	box.left = 0;
 	box.right = 1;
-	for (long i = 0; i < fLineCount; i++)
+	for (long i = 0; i < LineCount(); i++)
 	{
 		Rect line = Line(i).fBounds;
 		line.left = 0;
@@ -1869,7 +1548,7 @@ TParagraphView::HiliteAll(void)
 void
 TParagraphView::MakeHilite(long start, long end, Boolean interactive)
 {
-	if (fLines == nil || !fCachesValid)
+	if (fLineCache == nil)
 		CreateAllCaches();
 	long length = TextLength();
 	if (end > length)
@@ -2166,7 +1845,7 @@ TParagraphView::SelectWordAt(Point pt)
 long
 TParagraphView::FindWordOffset(Point pt, long* offset, Point* where)
 {
-	if (fLines == nil)
+	if (fLineCache == nil)
 		CreateAllCaches();
 	long start, end;
 	// (the ROM also refuses a tab, which it knows from the text object
@@ -2247,7 +1926,7 @@ TParagraphView::HandleTap(Point& pt)
 	long offset = PointToOffset(pt);
 	if (offset < 0)
 	{
-		if (pt.v < fCachedBounds.top)
+		if (pt.v < fTextBounds.top)
 			offset = 0;
 		else
 			offset = TextLength();
@@ -2285,17 +1964,17 @@ TParagraphView::HandleUpDownKey(Boolean up)
 	long target = lineIndex;
 	if (up && lineIndex > 0)
 		target = lineIndex - 1;
-	else if (!up && lineIndex + 1 < fLineCount)
+	else if (!up && lineIndex + 1 < LineCount())
 		target = lineIndex + 1;
 	else if (fParent->DerivedFrom(clEditView))
 	{
 		TParagraphView* other = (TParagraphView*) ((TEditView*) fParent)->MoveBetweenParagraphs(viewBounds.top, up ? -1 : 1);
 		if (other != nil)
 		{
-			if (other->fLines == nil || other->fLineCount < 1)
+			if (other->fLineCache == nil || other->LineCount() < 1)
 				return;
 			OffsetToBounds(fCaretOffset, &caret);
-			const LineInfo& line = other->fLines[up ? other->fLineCount - 1 : 0];
+			const LineInfo& line = other->Line(up ? other->LineCount() - 1 : 0);
 			short h = caret.left;
 			if (line.fBounds.left > h)
 				h = line.fBounds.left;
@@ -2310,7 +1989,7 @@ TParagraphView::HandleUpDownKey(Boolean up)
 			return;
 		}
 	}
-	const LineInfo& line = fLines[target];
+	const LineInfo& line = Line(target);
 	short h = caret.left;
 	if (line.fBounds.right <= h)
 		h = (short) (line.fBounds.right - 1);
@@ -2474,7 +2153,7 @@ TParagraphView::FixupBBox(void)
 		if (bottom < fTextBounds.bottom)
 			bottom = fTextBounds.bottom;
 		bounds.bottom = (short) bottom;
-		if (TextFlags() & 4)
+		if (fTextFlags & 4)			// (vtable +0x20)
 			bounds.right = fTextBounds.right;
 		if (!EqualRect(&viewBounds, &bounds))
 		{
@@ -2625,13 +2304,13 @@ FindNearestWordBoundary(const Point& pt, long left, long right, long bias)
 Boolean
 TParagraphView::PointToWord(const Point& pt, long* start, long* end, long* outLine)
 {
-	if (fLines == nil || !fCachesValid)
+	if (fLineCache == nil)
 		CreateAllCaches();
-	if (fLineCount == 0)
+	if (LineCount() == 0)
 		return false;
-	long index = fLineCount - 1;
-	for (long i = 0; i < fLineCount; i++)
-		if (pt.v < fLines[i].fBounds.bottom)
+	long index = LineCount() - 1;
+	for (long i = 0; i < LineCount(); i++)
+		if (pt.v < Line(i).fBounds.bottom)
 		{
 			index = i;
 			break;
@@ -2691,10 +2370,10 @@ TParagraphView::PointToWordBoundary(const Point& pt, long bias, long* outLine)
 Boolean
 TParagraphView::ScrubCharacter(long line, const Rect& bounds, long* outOffset)
 {
-	if (line < 0 || line >= fLineCount)
+	if (line < 0 || line >= LineCount())
 		return false;
-	const LineInfo& info = fLines[line];
-	for (long offset = info.fStart; offset < info.fTextEnd; offset++)
+	const LineInfo& info = Line(line);
+	for (long offset = info.fStart; offset < LineTextEnd(this, info); offset++)
 	{
 		Rect box, next;
 		OffsetToBounds(offset, &box);
@@ -2760,17 +2439,17 @@ SpaceWidthAt(TParagraphView* view, long offset)
 long
 TParagraphView::FindClosestBaseline(short v)
 {
-	if (fLines == nil || !fCachesValid)
+	if (fLineCache == nil)
 		CreateAllCaches();
-	if (fLineCount == 0)
+	if (LineCount() == 0)
 		return -1;
-	const LineInfo& last = fLines[fLineCount - 1];
+	const LineInfo& last = Line(LineCount() - 1);
 	long lastBaseline = last.fBounds.top + last.fAscent;
 	long spacing;
-	if (fLineCount < 2)
+	if (LineCount() < 2)
 		spacing = (last.fAscent * 4) / 3;
 	else
-		spacing = lastBaseline - (fLines[fLineCount - 2].fBounds.top + fLines[fLineCount - 2].fAscent);
+		spacing = lastBaseline - (Line(LineCount() - 2).fBounds.top + Line(LineCount() - 2).fAscent);
 	long belowLast = v - (lastBaseline + spacing);
 	if (belowLast < 0)
 		belowLast = -belowLast;
@@ -2781,9 +2460,9 @@ TParagraphView::FindClosestBaseline(short v)
 		return -1;				// past the end of the text altogether
 	long best = -1;
 	long nearest = 10000;
-	for (long i = 0; i < fLineCount; i++)
+	for (long i = 0; i < LineCount(); i++)
 	{
-		long distance = v - (fLines[i].fBounds.top + fLines[i].fAscent);
+		long distance = v - (Line(i).fBounds.top + Line(i).fAscent);
 		if (distance < 0)
 			distance = -distance;
 		if (distance < nearest)
@@ -2810,7 +2489,7 @@ TParagraphView::FindLineForWord(const Rect& box, long flags)
 		long middle = FindClosestBaseline((short) ((box.top + box.bottom) >> 1));
 		if (middle >= 0)
 		{
-			long baseline = fLines[middle].fBounds.top + fLines[middle].fAscent;
+			long baseline = Line(middle).fBounds.top + Line(middle).fAscent;
 			if (baseline > box.top && baseline < box.bottom)
 				return middle;		// it straddles the box: that is the line
 		}
@@ -2824,7 +2503,7 @@ TParagraphView::FindLineForWord(const Rect& box, long flags)
 		atTop = FindClosestBaseline(box.top);
 		if (atTop >= 0)
 		{
-			fromTop = (fLines[atTop].fBounds.top + fLines[atTop].fAscent) - box.top;
+			fromTop = (Line(atTop).fBounds.top + Line(atTop).fAscent) - box.top;
 			if (fromTop < 0)
 				fromTop = -fromTop;
 		}
@@ -2834,7 +2513,7 @@ TParagraphView::FindLineForWord(const Rect& box, long flags)
 		atBottom = FindClosestBaseline(box.bottom);
 		if (atBottom >= 0)
 		{
-			fromBottom = (fLines[atBottom].fBounds.top + fLines[atBottom].fAscent) - box.bottom;
+			fromBottom = (Line(atBottom).fBounds.top + Line(atBottom).fAscent) - box.bottom;
 			if (fromBottom < 0)
 				fromBottom = -fromBottom;
 		}
@@ -2865,7 +2544,7 @@ TParagraphView::InsertHorizontalSpace(Point& pt, long width, long height, Boolea
 	long line = FindClosestBaseline(pt.v);
 	if (line < 0)
 		return 0;
-	long lineHeight = fLines[line].fAscent + fLines[line].fHeight;
+	long lineHeight = Line(line).fAscent + Line(line).fHeight;
 	long offset = PointToOffset(pt);
 	long spaces = width == -1 ? 1 : 0;
 	long breaks = 0;
@@ -3042,14 +2721,14 @@ TParagraphView::CheckAndDoSplitInk(Point& pt, long offset)
 long
 TParagraphView::InsertVerticalSpace(Point& pt, long height)
 {
-	if (fLines == nil || fLineCount == 0)
+	if (fLineCache == nil || LineCount() == 0)
 		return 0;
 	// the baseline of the line before the one being looked at; before the
 	// first line, that line's own top
-	long previous = fLines[0].fBounds.top;
-	for (long i = 0; i < fLineCount; i++)
+	long previous = Line(0).fBounds.top;
+	for (long i = 0; i < LineCount(); i++)
 	{
-		const LineInfo& line = fLines[i];
+		const LineInfo& line = Line(i);
 		long lineHeight = line.fBounds.bottom - line.fBounds.top;
 		if (line.fBounds.top + lineHeight / 2 <= pt.v)
 		{
@@ -3378,14 +3057,15 @@ DoReplaceSym(TParagraphView* para, WordHit* hit, UniChar* out, RefArg breakTable
 static long
 CharAtCoord(TParagraphView* para, const LineInfo* line, long x)
 {
-	for (long i = line->fStart; i < line->fTextEnd; i++)
+	long end = LineTextEnd(para, *line);
+	for (long i = line->fStart; i < end; i++)
 	{
 		Rect box;
 		para->OffsetToBounds(i, &box);
 		if (x < box.right)
 			return i - line->fStart;
 	}
-	return line->fTextEnd - line->fStart;
+	return end - line->fStart;
 }
 
 
@@ -3697,7 +3377,7 @@ TParagraphView::FindWordInRun(Finder* finder)
 	long index = FindLineForWord(finder->fBox, 5);
 	if (index < 0)
 		return false;
-	const LineInfo& line = fLines[index];
+	const LineInfo& line = Line(index);
 	Point pt;
 	pt.h = (short) wordLeft;
 	pt.v = (short) ((line.fBounds.top + line.fBounds.bottom) / 2);
@@ -4044,7 +3724,7 @@ TParagraphView::HandleWord(const UniChar* text, ULong length, const Rect& box,
 						   RefArg info, Boolean reallyDoIt, long* outOffset,
 						   TUnitPublic* unit)
 {
-	if (fLines == nil)
+	if (fLineCache == nil)
 		CreateAllCaches();
 	if ((fFlags & (vReadOnly | vWriteProtected)) != 0)
 		return 0;
@@ -4352,8 +4032,8 @@ void
 TParagraphView::BoundsOfLastLine(Rect* bounds)
 {
 	*bounds = viewBounds;
-	if (fLines != nil && fLineCount > 0)
-		*bounds = fLines[fLineCount - 1].fBounds;
+	if (fLineCache != nil && LineCount() > 0)
+		*bounds = Line(LineCount() - 1).fBounds;
 }
 
 
@@ -4366,11 +4046,11 @@ TParagraphView::BoundsOfLastLine(Rect* bounds)
 long
 TParagraphView::OffsetPastVisible(void)
 {
-	long count = fLines != nil ? fLineCount : 0;
+	long count = fLineCache != nil ? LineCount() : 0;
 	long offset = -1;
 	if (count > 0)
 	{
-		long end = fLines[count - 1].fEnd;
+		long end = Line(count - 1).fEnd;
 		RefVar text(Text());
 		if (end < (long) ((ULong) (Length(text) - 2) >> 1))
 			offset = end;
@@ -4392,7 +4072,7 @@ TParagraphView::OffsetPastVisible(void)
 Boolean
 TParagraphView::WordOnLineBelowParagraph(const Rect& box, const Point& base)
 {
-	Rect below = fCachedBounds;
+	Rect below = fTextBounds;
 	below.top = below.bottom;
 	long height = 0;
 	if (GetLastAddedWordView() == this)
@@ -4404,7 +4084,7 @@ TParagraphView::WordOnLineBelowParagraph(const Rect& box, const Point& base)
 
 	if (box.top >= below.top && box.top < below.bottom)
 		return true;
-	if (box.top < fCachedBounds.bottom)
+	if (box.top < fTextBounds.bottom)
 		return false;
 	if (GetLastAddedWordView() != this)
 		return false;
@@ -5026,7 +4706,7 @@ TParagraphView::CheckAndDoJoin(Point& armA, Point& point, Point& armB)
 	long index = FindLineForWord(written, 4);
 	if (index < 0)
 		return 0;
-	const LineInfo& line = fLines[index];
+	const LineInfo& line = Line(index);
 	long half = line.fAscent / 2;
 	long baseline = line.fBounds.top + line.fAscent;
 	long fromLeft = baseline - left.v;
@@ -5376,7 +5056,7 @@ TParagraphView::HandleCaret(ULong kind, long angle, Point& armA, Point& point,
 	if (line < 0)
 		return 0;
 	Point where;
-	where.v = (short) (fLines[line].fBounds.top + fLines[line].fAscent);
+	where.v = (short) (Line(line).fBounds.top + Line(line).fAscent);
 	where.h = point.h;
 	return InsertHorizontalSpace(where, width, height, typed);
 }
@@ -5411,15 +5091,15 @@ TParagraphView::ScrubWords(const Rect& bounds, TUnitPublic* unit, Boolean really
 	Rect scrubRows;
 	SetRect(&scrubRows, 0, bounds.top, 1, bounds.bottom);
 	long line = -1;
-	for (long i = 0; i < fLineCount; i++)
+	for (long i = 0; i < LineCount(); i++)
 	{
-		const Rect& box = fLines[i].fBounds;
+		const Rect& box = Line(i).fBounds;
 		// the line from its top down to its baseline, which is where the
 		// glyphs are (the ROM writes it as the box's bottom less the field at
 		// +0x18 of the LineInfo, its descent; this cache keeps the ascent, so
 		// the baseline is the top plus that)
 		Rect lineRows;
-		SetRect(&lineRows, 0, box.top, 1, (short) (box.top + fLines[i].fAscent));
+		SetRect(&lineRows, 0, box.top, 1, (short) (box.top + Line(i).fAscent));
 		if (Overlaps(&box, &bounds)
 			&& (CoveredBy(&lineRows, &scrubRows) >= 50 || CoveredBy(&scrubRows, &lineRows) == 100))
 		{
@@ -5432,7 +5112,7 @@ TParagraphView::ScrubWords(const Rect& bounds, TUnitPublic* unit, Boolean really
 	if (line < 0)
 		return 0;
 
-	const Rect& lineBox = fLines[line].fBounds;
+	const Rect& lineBox = Line(line).fBounds;
 	Point at;
 	at.v = (short) (lineBox.top + (lineBox.bottom - lineBox.top) / 2);
 	at.h = bounds.left;
@@ -5576,9 +5256,9 @@ TParagraphView::ScrubLines(const Rect& bounds, TUnitPublic* unit, Boolean really
 	long count = 0;
 	long first = -1;
 	long last = 0;
-	for (long i = 0; i < fLineCount; i++)
+	for (long i = 0; i < LineCount(); i++)
 	{
-		const LineInfo& line = fLines[i];
+		const LineInfo& line = Line(i);
 		Rect box = line.fBounds;
 		if (box.right - box.left == 1)
 			box.right = viewBounds.right;		// an empty line: the whole width of the view
@@ -5631,13 +5311,13 @@ TParagraphView::ScrubLines(const Rect& bounds, TUnitPublic* unit, Boolean really
 long
 TParagraphView::HandleScrub(const Rect& bounds, long kind, TUnitPublic* unit, Boolean reallyDoIt)
 {
-	if (fLines == nil)
+	if (fLineCache == nil)
 		CreateAllCaches();
 	if (!Overlaps(&viewBounds, &bounds))
 		return 0;
 	if (kind == 5 || kind == -1)
 	{
-		long covered = CoveredBy(&fCachedBounds, &bounds);
+		long covered = CoveredBy(&fTextBounds, &bounds);
 		if (covered > 70 || ((fFlags & vWriteProtected) != 0 && covered != 0))
 		{
 			if (reallyDoIt)
@@ -6265,9 +5945,9 @@ TParagraphView::RealDoCommand(RefArg cmd)
 			else
 			{
 				offset = hiliteStart < 0 ? fCaretOffset + 1 : hiliteEnd;
-				if (fLines != nil && fLineCount > 0 && fLines[fLineCount - 1].fEnd <= offset
+				if (fLineCache != nil && LineCount() > 0 && Line(LineCount() - 1).fEnd <= offset
 				 && offset < TextLength())
-					offset = fLines[fLineCount - 1].fEnd;
+					offset = Line(LineCount() - 1).fEnd;
 			}
 			long textLength = TextLength();
 			if (offset < 0)
@@ -6815,12 +6495,12 @@ void
 TParagraphView::GetCachedRange(long* start, long* length)
 {
 	long count = 0;
-	if (fLines == nil || fLineCount == 0)
+	if (fLineCache == nil || LineCount() == 0)
 		*start = 0;
 	else
 	{
-		*start = fLines[0].fStart;
-		count = fLines[fLineCount - 1].fEnd - fLines[0].fStart;
+		*start = Line(0).fStart;
+		count = Line(LineCount() - 1).fEnd - Line(0).fStart;
 	}
 	*length = count;
 }
@@ -6830,78 +6510,75 @@ TParagraphView::GetCachedRange(long* start, long* length)
 	D r a w i n g
 ------------------------------------------------------------------------------*/
 
-// one line drawn from its baseline, its runs in their styles, the
-// ellipsis after it when asked
-void
-TParagraphView::DrawLine(const UniChar* text, const LineInfo& line, Boolean ellipsis)
-{
-	StyleRecord** lineStyles = (StyleRecord**) NewPtrClear(fRunCount * sizeof(StyleRecord*));
-	short* lineLengths = (short*) NewPtrClear(fRunCount * sizeof(short));
-	long firstRun;
-	long runs = RunsOfRange(fRunStyles, fRunLengths, fRunCount, line.fStart, line.fTextEnd - line.fStart, lineStyles, lineLengths, &firstRun);
-	TextOptions options = fTextOptions;
-	FPoint where;
-	where.x = ToFixed(viewBounds.left);
-	where.y = ToFixed(line.fBounds.top + line.fAscent);
-	if (line.fTextEnd > line.fStart)
-		DoTextOnce(text + line.fStart, line.fTextEnd - line.fStart, lineStyles, lineLengths, where, &options, nil, true);
-	if (ellipsis)
-	{
-		// the ellipsis in the style the text would be inserted in at the line's end, after what fit
-		UniChar dots = kEllipsisChar;
-		StyleRecord* style = runs > 0 ? lineStyles[runs - 1] : fRunStyles[fRunCount - 1];
-		TextOptions dotOptions;
-		memset(&dotOptions, 0, sizeof(dotOptions));
-		dotOptions.fTransferMode = fTransferMode;
-		FPoint at;
-		long textWidth = line.fBounds.right - line.fBounds.left;
-		long slack = (viewBounds.right - viewBounds.left) - textWidth;
-		long left = viewBounds.left;
-		if (options.fAlignment == 0x10000)
-			left += slack;
-		else if (options.fAlignment == 0x8000)
-			left += slack / 2;
-		at.x = ToFixed(left + textWidth);
-		at.y = where.y;
-		DoTextOnce(&dots, 1, &style, nil, at, &dotOptions, nil, true);
-	}
-	DisposPtr((Ptr) lineStyles);
-	DisposPtr((Ptr) lineLengths);
-}
-
-
 // ROM 0x0016911c RealDraw__14TParagraphViewFR5TRect
-// The lines drawn (laid out first when they are not cached, moved along
-// when the view has moved since); an ellipsis after the last line when
-// the text goes on past it and the view does not calculate its bounds.
-// NOT YET RECONSTRUCTED: the hilites and caret drawn with the text.
+// The text objects drawn (the caches made first when there are none, the
+// lines moved along when the view has moved since - OffsetCachedBounds),
+// clipped to the view's outer bounds when ink words or heavy faces (when
+// not printing) could draw past them; then an ellipsis after the last
+// line when the text goes on past it and the view does not calculate its
+// bounds - in the style text inserted there would take, at the line's
+// right (no closer than six pixels to the view's right edge), on its
+// baseline.  (Host: the hilites are drawn here; the ROM does that in
+// PostDraw.)
 void
 TParagraphView::RealDraw(Rect& /*bounds*/)
 {
-	if (fLines == nil || !fCachesValid)
+	if (fLineCache == nil)
 		CreateAllCaches();
 	else
 	{
-		Point delta;
-		delta.h = (short) (viewBounds.left - fCachedBounds.left);
-		delta.v = (short) (viewBounds.top - fCachedBounds.top);
-		OffsetCachedBounds(delta);
+		Point none;
+		none.h = 0;
+		none.v = 0;
+		OffsetCachedBounds(none);
 	}
-	if (fLineCount == 0)
+	TextObjectRef* objects = fTextObjects;
+	if (objects == nil)
 		return;
-	RefVar textRef(Text());
-	if (ISNIL(textRef))
-		return;
-	TRichString rich(textRef);
-	long length = rich.Length();
-	const UniChar* text = rich.GrabPtr();
-	for (long i = 0; i < fLineCount; i++)
+	RgnHandle saved = nil;
+	if ((fFlags & vClipping) == 0 && (fHasInkWords || (fHasHeavyFaces && !Printing())))
 	{
-		const LineInfo& line = fLines[i];
-		Boolean ellipsis = i == fLineCount - 1 && !fCalculateBounds && line.fEnd < length;
-		DrawLine(text, line, ellipsis);
+		Rect outer;
+		OuterBounds(&outer);
+		saved = NewCachedRgn();
+		GrafPtr port;
+		GetPort(&port);
+		CopyRgn(port->visRgn, saved);
+		TRectangularRegion box(outer);
+		GetPort(&port);
+		SectRgn(port->visRgn, box, port->visRgn);
 	}
-	rich.ReleasePtr();
+	for ( ; *objects != 0; objects++)
+		DrawTextObj(*objects);
+	long lines = CacheLength(fLineCache);
+	if ((fFlags & vCalculateBounds) == 0 && lines > 0)
+	{
+		LineInfo* last = fLineCache[lines - 1];
+		if (last->fEnd < TextLength())
+		{
+			UniChar dots = kEllipsisChar;
+			RefVar spec(GetStyleForInsertion(last->fEnd, false, true));
+			StyleRecord style;
+			CreateParagraphStyleRecord(spec, &style, (ULong) fTextFlags, RefVar(GetDefaultViewStyle()));
+			StyleRecord* styles = &style;
+			short x = last->fBounds.right;
+			short limit = (short) (viewBounds.right - 6);
+			if (limit <= x)
+				x = limit;
+			FPoint at;
+			at.x = ToFixed(x);
+			at.y = ToFixed(last->fBounds.bottom - last->fHeight);
+			DrawTextOnce(&dots, 1, &styles, nil, at, nil, nil);
+			DisposeStyleRecord(&style);
+		}
+	}
+	if (saved != nil)
+	{
+		GrafPtr port;
+		GetPort(&port);
+		CopyRgn(saved, port->visRgn);
+		DisposeCachedRgn(saved);
+	}
 	// the selection over the text (the ROM does this in PostDraw)
 	DrawHilites(false);
 }
@@ -7021,19 +6698,19 @@ MakeParagraphForm(UniChar* text, long length, const Rect& bounds, RefArg info, B
 // (The ROM's line cache is a nil-terminated array of LineInfo pointers
 // counted by CacheLength 0x0017c8b0; the reconstruction keeps the same
 // records in a flat array with a count, so the two ends of it are
-// fLines[0] and fLines[fLineCount - 1].)
+// Line(0) and Line(LineCount() - 1).)
 long
 TParagraphView::CaretRelativeToVisibleRect(const Rect& visible)
 {
 	long where = 0;
 	if (gRootView->fCaretView != this)
 		return 0;
-	long lines = fLineCount;
+	long lines = LineCount();
 	if (lines > 0)
 	{
-		if (fLines[lines - 1].fEnd < fCaretOffset)
+		if (Line(lines - 1).fEnd < fCaretOffset)
 			where = 2;
-		else if (fLines[0].fStart > fCaretOffset)
+		else if (Line(0).fStart > fCaretOffset)
 			where = 3;
 	}
 	else
@@ -7200,29 +6877,29 @@ TParagraphView::DeleteHilited(RefArg hilite)
 long
 TParagraphView::FindLineContainingPoint(Point* pt, long margin)
 {
-	if (fLines == nil || fLineCount == 0)
+	if (fLineCache == nil || LineCount() == 0)
 		return -1;
 	if (margin == 2)
 	{
 		if (pt->v < viewBounds.top)
 		{
-			pt->v = fLines[0].fBounds.top;
-			pt->h = fLines[0].fBounds.left;
+			pt->v = Line(0).fBounds.top;
+			pt->h = Line(0).fBounds.left;
 			return 0;
 		}
 		if (pt->v >= viewBounds.bottom)
 		{
-			pt->v = fLines[fLineCount - 1].fBounds.bottom;
-			pt->h = fLines[fLineCount - 1].fBounds.right;
-			return fLineCount - 1;
+			pt->v = Line(LineCount() - 1).fBounds.bottom;
+			pt->h = Line(LineCount() - 1).fBounds.right;
+			return LineCount() - 1;
 		}
 	}
 	long best = -1;
 	long bestDistance = 10000;
 	Rect bestBox;
-	for (long i = 0; i < fLineCount; i++)
+	for (long i = 0; i < LineCount(); i++)
 	{
-		Rect box = fLines[i].fBounds;
+		Rect box = Line(i).fBounds;
 		Rect work = box;
 		if (margin == 1 || margin == 2)
 			InsetRect(&work, -1000, 0);
@@ -7233,7 +6910,7 @@ TParagraphView::FindLineContainingPoint(Point* pt, long margin)
 		}
 		if (PtInRect(*pt, &work))
 		{
-			long distance = pt->v - (fLines[i].fBounds.top + fLines[i].fAscent);
+			long distance = pt->v - (Line(i).fBounds.top + Line(i).fAscent);
 			if (distance < 0)
 				distance = -distance;
 			if (distance < bestDistance)
@@ -7254,12 +6931,12 @@ TParagraphView::FindLineContainingPoint(Point* pt, long margin)
 	}
 	if (margin == 2)
 	{
-		short top = fLines[0].fBounds.top;
+		short top = Line(0).fBounds.top;
 		if (top > pt->v)
 			pt->v = top;
 		else
 		{
-			short bottom = fLines[fLineCount - 1].fBounds.bottom;
+			short bottom = Line(LineCount() - 1).fBounds.bottom;
 			if (bottom < pt->v)
 				pt->v = bottom;
 		}
@@ -7313,10 +6990,10 @@ TParagraphView::PointOverHilitedText(Point& pt)
 			result = 1;
 			long first = FindLineContainingCharOffset(h->fStart);
 			long last = FindLineContainingCharOffset(h->fEnd);
-			if (first == last && first >= 0 && pt.h > fLines[first].fBounds.right)
+			if (first == last && first >= 0 && pt.h > Line(first).fBounds.right)
 				result = 0;
 			else if (atEnd && first >= 0)
-				result = fLines[first].fBounds.bottom < pt.v ? 3 : 2;
+				result = Line(first).fBounds.bottom < pt.v ? 3 : 2;
 		}
 	}
 	else
@@ -7376,7 +7053,7 @@ TParagraphView::GetRangeProperties(long start, long end)
 	long lineIndex = FindLineContainingCharOffset(start);
 	if (lineIndex >= 0)
 	{
-		const LineInfo& line = fLines[lineIndex];
+		const LineInfo& line = Line(lineIndex);
 		long offset = (short) (line.fBounds.bottom - line.fBounds.top) - (line.fAscent + line.fHeight);
 		if (offset != 0)
 			SetFrameSlot(props, RSSYMoffset, RefVar(MAKEINT(offset)));
@@ -7446,7 +7123,7 @@ TParagraphView::GetDropData(RefArg dragType, RefArg dragRef)
 		start = 0;
 		RefVar text(Text());
 		end = (long) ((Length(text) - 2) >> 1);
-		box = fCachedBounds;
+		box = fTextBounds;
 	}
 	OffsetRect(&box, -viewBounds.left, -viewBounds.top);
 	data = GetRangeProperties(start, end);
@@ -8008,10 +7685,10 @@ InsertionFontInfo(TParagraphView* view, long offset, FontInfo* fontInfo)
 long
 TParagraphView::GetFirstBaseline(void)
 {
-	if (fLines == nil)
+	if (fLineCache == nil)
 		CreateAllCaches();
 	Rect bounds = viewBounds;
-	if (TextLength() == 0 || fLineCount == 0)
+	if (TextLength() == 0 || LineCount() == 0)
 	{
 		FontInfo fontInfo;
 		InsertionFontInfo(this, 0, &fontInfo);
@@ -8027,11 +7704,11 @@ TParagraphView::GetFirstBaseline(void)
 long
 TParagraphView::GetLastBaseline(void)
 {
-	if (fLines == nil)
+	if (fLineCache == nil)
 		CreateAllCaches();
 	Rect bounds = viewBounds;
 	long length = TextLength();
-	if (length == 0 || fLineCount == 0)
+	if (length == 0 || LineCount() == 0)
 	{
 		FontInfo fontInfo;
 		InsertionFontInfo(this, 0, &fontInfo);
@@ -8062,11 +7739,11 @@ TParagraphView::GetNextBaseline(TParagraphView* next)
 	Rect bounds = viewBounds;
 	long spacing = (short) GetInterLineSpacing();
 	long nextSpacing = next != nil ? (short) next->GetInterLineSpacing() : 0;
-	if (fLines == nil)
+	if (fLineCache == nil)
 		CreateAllCaches();
 	long length = TextLength();
 	long baseline;
-	if (next == nil || length == 0 || fLineCount == 0)
+	if (next == nil || length == 0 || LineCount() == 0)
 	{
 		FontInfo fontInfo;
 		InsertionFontInfo(this, length, &fontInfo);
@@ -8079,9 +7756,9 @@ TParagraphView::GetNextBaseline(TParagraphView* next)
 		baseline = (short) GetLastBaseline();
 		if (spacing <= 0 || nextSpacing <= 0)
 		{
-			if (next->fLines == nil)
+			if (next->fLineCache == nil)
 				next->CreateAllCaches();
-			if (next->TextLength() == 0 || next->fLineCount == 0)
+			if (next->TextLength() == 0 || next->LineCount() == 0)
 			{
 				RefVar style(next->GetStyleForInsertion(0, false, false));
 				StyleRecord record;

@@ -37,6 +37,7 @@ add_library(views STATIC
     SliderView.cpp
     RemoteView.cpp
     StyleRuns.cpp
+    ParagraphLines.cpp
     ParagraphView.cpp
     Rerecognize.cpp
     GaugeView.cpp

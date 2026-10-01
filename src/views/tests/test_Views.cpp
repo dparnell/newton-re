@@ -784,7 +784,7 @@ TestParagraphView()
 	EXPECT(p->fTransferMode == srcOr && p->fTextFlags != -1 && !p->fCalculateBounds);
 	// a paragraph that does not calculate its bounds lays out nothing in
 	// SetupDone: its lines are made when they are first wanted (drawn)
-	EXPECT(p->LineCount() == 0 && p->fLines == nil);
+	EXPECT(p->LineCount() == 0 && p->fLineCache == nil);
 	Eval("ctxQ:Dirty()");
 	Refresh();
 	EXPECT(p->LineCount() == 3);
@@ -793,7 +793,7 @@ TestParagraphView()
 		EXPECT(p->Line(0).fStart == 0 && p->Line(0).fEnd == 6 && p->Line(1).fStart == 6 && p->Line(1).fEnd == 12 && p->Line(2).fStart == 12 && p->Line(2).fEnd == 17);	// a line keeps the space that ends it (LineInfo's endsWithSpace)
 		EXPECT(p->Line(0).fEndsWithSpace && !p->Line(2).fEndsWithSpace);
 		EXPECT((p->Line(0).fAscent + p->Line(0).fHeight) == p->fLineHeight && p->Line(1).fBounds.top == 10 + (p->Line(0).fAscent + p->Line(0).fHeight) && p->Line(0).fBounds.left == 20);
-		EXPECT(p->TextBounds().top == 10 && p->TextBounds().bottom == 10 + 3 * (p->Line(0).fAscent + p->Line(0).fHeight));
+		EXPECT(p->TextBounds().top == 10 && p->TextBounds().bottom == 70);	// as tall as the view, which does not calculate its bounds (FillAllCaches)
 	}
 	EXPECT(EQRef(p->GetStyles(), Eval("espy12")));
 	Eval("ctxQ:Dirty()");
@@ -853,13 +853,13 @@ TestParagraphView()
 	Eval("ctxQ:Dirty()");
 	Refresh();
 	EXPECT(p->fLineSpacing == 18 && p->GetInterLineSpacing() == 18 && p->LineCount() == 2);
-	EXPECT(p->Line(0).fBounds.top + p->Line(0).fAscent == 10 + 18 - 3 && p->Line(1).fBounds.top + p->Line(1).fAscent == 10 + 18 - 3 + 18);
+	EXPECT(p->Line(0).fBounds.bottom - p->Line(0).fHeight == 10 + 18 - 3 && p->Line(1).fBounds.bottom - p->Line(1).fHeight == 10 + 18 - 3 + 18);	// the baselines
 	Eval("ctxQ:Close()");
 	// ... whatever the font: an input line's text on its line (a Find slip's)
 	p = (TParagraphView*) ViewOf("ctxQ := AddView(GetRoot(), {viewClass: 81, viewFlags: 3, viewBounds: {left: 20, top: 10, right: 120, bottom: 65}, viewJustify: 0x800000, viewFont: espy12, viewLineSpacing: 45, text: \"tester\"})");
 	Eval("ctxQ:Dirty()");
 	Refresh();
-	EXPECT(p->GetInterLineSpacing() == 45 && p->LineCount() == 1 && p->Line(0).fBounds.top + p->Line(0).fAscent == 10 + 45 - 4);
+	EXPECT(p->GetInterLineSpacing() == 45 && p->LineCount() == 1 && p->Line(0).fBounds.bottom - p->Line(0).fHeight == 10 + 45 - 4);
 	Eval("ctxQ:Close()");
 
 	// CheckStyles: an italic run is a face that leans out of its box (italic, outline or shadow: 0x1a); no ink words here
@@ -877,9 +877,9 @@ TestParagraphView()
 	p = (TParagraphView*) ViewOf("ctxQ := AddView(ctxQF, {viewClass: 81, viewFlags: 1 + 8, viewBounds: {left: 10, top: 10, right: 140, bottom: 10}, viewJustify: 0, viewFont: espy12, text: \"shown\"})");
 	EXPECT(p->LineCount() == 1);
 	p = (TParagraphView*) ViewOf("ctxQ := AddView(ctxQF, {viewClass: 81, viewFlags: 1 + 8, viewBounds: {left: 10, top: 80, right: 140, bottom: 80}, viewJustify: 0, viewFont: espy12, text: \"below\"})");
-	EXPECT(p->fLines != nil && p->LineCount() == 0);
+	EXPECT(p->fLineCache != nil && p->LineCount() == 0);
 	p = (TParagraphView*) ViewOf("ctxQ := AddView(ctxQF, {viewClass: 81, viewFlags: 1, viewBounds: {left: 10, top: 20, right: 140, bottom: 40}, viewJustify: 0, viewFont: espy12, text: \"later\"})");
-	EXPECT(p->fLines == nil && p->LineCount() == 0);
+	EXPECT(p->fLineCache == nil && p->LineCount() == 0);
 	Eval("RemoveView(GetRoot(), ctxQF)");
 
 	// text flag 0x20 on a page: the paragraph moved so its first baseline
@@ -935,7 +935,7 @@ TestParagraphView()
 	Refresh();
 	Eval("SetValue(ctxQ, 'viewBounds, {left: 60, top: 50, right: 110, bottom: 70})");
 	Refresh();
-	EXPECT(p->Line(0).fBounds.left == 60 && p->Line(0).fBounds.top == 50 && p->fCachedBounds.left == 60);
+	EXPECT(p->Line(0).fBounds.left == 60 && p->Line(0).fBounds.top == 50 && p->fTextBounds.left == 60);
 	InkExtent(50, 70, &inkLeft, &inkRight);
 	EXPECT(inkLeft == 60);
 	InkExtent(10, 30, &inkLeft, &inkRight);
@@ -2925,8 +2925,8 @@ TestLineGesture()
 	short wordLeft = box.left;
 	p->OffsetToBounds(7, &box);
 	short wordRight = box.left;
-	short above = (short) (p->fLines[0].fBounds.top - 2);
-	short below = (short) (p->fLines[0].fBounds.bottom + 2);
+	short above = (short) (p->Line(0).fBounds.top - 2);
+	short below = (short) (p->Line(0).fBounds.bottom + 2);
 	p->MakeHilite(4, 7, false);
 	Refresh();
 
@@ -2939,7 +2939,7 @@ TestLineGesture()
 		SetEmptyRect(&global);
 		p->GlobalHiliteBounds(&global);
 		EXPECT(global.left == wordLeft);
-		EXPECT(global.top == p->fLines[0].fBounds.top);
+		EXPECT(global.top == p->Line(0).fBounds.top);
 	}
 
 	// drawn upwards through the middle of the word: the word goes up
@@ -2993,7 +2993,7 @@ TestCaretGesture()
 	Rect box;
 	p->OffsetToBounds(3, &box);
 	short at = box.left;
-	short baseline = (short) (p->fLines[0].fBounds.top + p->fLines[0].fAscent);
+	short baseline = (short) (p->Line(0).fBounds.top + p->Line(0).fAscent);
 
 	// a caret pointing up: its two arms below the baseline, its point above
 	Point armA, point, armB, tail;
@@ -3058,13 +3058,13 @@ TestCaretGesture()
 	p = (TParagraphView*) ViewOf("ctxCg := AddView(GetRoot(), {viewClass: 81, viewFlags: 1, viewBounds: {left: 20, top: 10, right: 200, bottom: 90}, viewJustify: 0, viewFont: espy12, text: \"one\\ntwo\"})");
 	EXPECT(p != nil && p->TextLength() == 7);
 	Refresh();
-	EXPECT(p->fLineCount == 2);
+	EXPECT(p->LineCount() == 2);
 
 	// the point just inside the second line's top, and in the left margin
 	armA.h = (short) (p->viewBounds.left + 4);
 	armB.h = armA.h;
 	point.h = (short) (p->viewBounds.left + 4);
-	point.v = (short) (p->fLines[1].fBounds.top + 1);
+	point.v = (short) (p->Line(1).fBounds.top + 1);
 	armA.v = (short) (point.v - 8);
 	armB.v = (short) (point.v + 8);
 	tail.v = (short) 0x8000;	tail.h = 0;
@@ -3102,6 +3102,10 @@ TestTrailingReturn()
 
 	// the three lines: "one", "two", and the empty one after the last return
 	Rect first, second, third;
+	// (OffsetToCaret reads the bottom it is handed - see there)
+	SetRect(&first, 0, 0, 0, 0);
+	SetRect(&second, 0, 0, 0, 0);
+	SetRect(&third, 0, 0, 0, 0);
 	p->OffsetToCaret(0, &first);
 	p->OffsetToCaret(4, &second);
 	p->OffsetToCaret(8, &third);
@@ -5083,7 +5087,7 @@ TestJoinInk()
 	// the caret drawn upside down with an arm over each word
 	Rect box;
 	p->OffsetToBounds(0, &box);
-	short baseline = (short) (p->fLines[0].fBounds.top + p->fLines[0].fAscent);
+	short baseline = (short) (p->Line(0).fBounds.top + p->Line(0).fAscent);
 	Point armA, point, armB, tail;
 	armA.h = (short) (box.left + 1);
 	armA.v = baseline;
