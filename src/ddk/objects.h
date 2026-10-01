@@ -55,7 +55,11 @@ enum {
 	kImmedReserved
 };
 
+#if NEWTON_NS64	/* SPIKE (ns64-spike): integers are Ref-wide (62 bits on a 64-bit host) */
+#define	MAKEINT(i)			((Ref) (((ULong) (Ref) (i)) << kRefTagBits))
+#else
 #define	MAKEINT(i)			((Ref) (int) (((ULong32) (Ref) (i)) << kRefTagBits))
+#endif
 #define	MAKEIMMED(t, v)		((((((Ref) (v)) << kRefImmedBits) | ((Ref) (t))) << kRefTagBits) | kTagImmed)
 #define	MAKECHAR(c)			MAKEIMMED(kImmedChar, (unsigned) c)
 #define	MAKEBOOLEAN(b)		(b ? TRUEREF : FALSEREF)
@@ -84,7 +88,11 @@ const Ref	kFuncClass = MAKEIMMED(kImmedSpecial, 3);			// Actually encompasses xx
 #define	ISMARK(r)		0	// archaic
 
 extern int _RINTError(Ref r), _RCHARError(Ref r);
+#if NEWTON_NS64
+inline Ref	RINT(Ref r)		{ return ISINT(r) ? RVALUE(r) : _RINTError(r); }
+#else
 inline long	RINT(Ref r)		{ return ISINT(r) ? RVALUE(r) : _RINTError(r); }
+#endif
 
 inline UniChar XRCHAR(Ref r)	{ return ISCHAR(r) ? (UniChar)RIMMEDVALUE(r) : _RCHARError(r); }
 #define RCHAR(r)	XRCHAR(r)

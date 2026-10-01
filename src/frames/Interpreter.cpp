@@ -856,7 +856,11 @@ TInterpreter::CallPlainCFunction(RefArg fn, long numArgs)
 static inline Ref
 WordRef(Ref value)
 {
+#if NEWTON_NS64
+	return value;	// SPIKE: no wrap at the ARM's word
+#else
 	return (Ref) (int) (ULong32) value;
+#endif
 }
 
 
@@ -2098,7 +2102,11 @@ FastFreqFuncGeneral(FastRunState* state, long)
 		b = top[-1];
 		if (((a | b) & 3) != 0)
 			break;
+#if NEWTON_NS64
+		top[-2] = (Ref) ((ULong) a * (ULong) RVALUE(b));
+#else
 		top[-2] = WordRef((Ref) ((ULong32) a * (ULong32) RVALUE(b)));
+#endif
 		state->fStack->fTop = top - 1;
 		return false;
 	case kFFDiv:
@@ -2108,7 +2116,11 @@ FastFreqFuncGeneral(FastRunState* state, long)
 			break;
 		if (RVALUE(b) == 0)
 			Throw(exDivideByZero, nil, nil);
+#if NEWTON_NS64
+		top[-2] = (Ref) ((ULong) (RVALUE(a) / RVALUE(b)) << 2);
+#else
 		top[-2] = WordRef((Ref) ((ULong32) ((Long32) RVALUE(a) / (Long32) RVALUE(b)) << 2));
+#endif
 		state->fStack->fTop = top - 1;
 		return false;
 	case kFFLessThan:
