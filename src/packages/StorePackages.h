@@ -374,6 +374,8 @@ NewtonErr	NewPackage(CPipe* pipe, TStore* store, PSSId rootId, ULong* packageId,
 // The decompressors, the wrapper, the companders and TLOPackageStore
 // registered, and the shared LZ decompressor made.
 void		InitializeStoreDecompressors(void);			// ROM 0x001fa9fc InitializeStoreDecompressors__Fv
+NewtonErr	BackupPackage(CPipe* pipe, TStore* store, PSSId id, TLOCallback* callback);	// ROM 0x00160cdc BackupPackage__FP5CPipeP6TStoreUlP11TLOCallback
+NewtonErr	BackupPackage(CPipe* pipe, ULong packageId);										// ROM 0x0016093c BackupPackage__FP5CPipeUl
 
 
 /*------------------------------------------------------------------------------

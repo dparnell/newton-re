@@ -731,6 +731,18 @@ StoreScenario(const char* decompressor, const UByte* ntk, ULong size)
 	EXPECT(count == (long) size && memcmp(copy, ntk, 0x24) == 0 && memcmp(copy + 0x28, ntk + 0x28, size - 0x28) == 0);
 	free(copy);
 
+	// written out again, named by its package id (ROM 0x0016093c)
+	CTestPipe out2(0x1000);
+	EXPECT(BackupPackage(&out2, again) == noErr);
+	out2.Rewind();
+	copy = (UByte*) malloc(size);
+	count = (long) size;
+	eof = false;
+	out2.ReadChunk(copy, count, eof);
+	EXPECT(count == (long) size && memcmp(copy, ntk, 0x24) == 0 && memcmp(copy + 0x28, ntk + 0x28, size - 0x28) == 0);
+	free(copy);
+	EXPECT(BackupPackage(&out2, 0x7fff) != noErr);
+
 	// deleted: taken out of use and off the store
 	EXPECT(DeletePackage(again) == noErr && Known(again) == kError_No_Such_Package);
 	long gone = 0;

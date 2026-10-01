@@ -1302,8 +1302,6 @@ TLOPackageStore::SizeOfStream(TStore* store, PSSId id, UChar compressed)
 	return LODefaultStreamSize(store, id, compressed);
 }
 
-NewtonErr	BackupPackage(CPipe* pipe, TStore* store, PSSId id, TLOCallback* callback);
-
 // ROM 0x0010176c Backup__15TLOPackageStoreFP5CPipeP6TStoreUlUcP11TLOCallback
 // Uncompressed: the package itself (BackupPackage); compressed: its store
 // objects, the default way.
@@ -1313,6 +1311,89 @@ TLOPackageStore::Backup(CPipe* pipe, TStore* store, PSSId id, UChar compressed, 
 	if (!compressed)
 		return BackupPackage(pipe, store, id, callback);
 	return LODefaultBackup(pipe, store, id, compressed, callback);
+}
+
+
+// The part the two BackupPackages share: the package's root read, its
+// decompressor made by name, and every page of the index read through it
+// at base 0 and written to the pipe, the last one cut to the package's
+// size.  (Host: the ROM writes it out twice, once in each.)
+static NewtonErr
+BackupPackagePages(CPipe* pipe, TStore* store, PSSId id, long packageSize, char* page)
+{
+	char* name = nil;
+	char* lzBuffer = nil;
+	NewtonErr err;
+	UByte root[0x14];
+	if ((err = store->Read(id, 0, (char*) root, 0x14)) == noErr)
+	{
+		if (GetBigEndianWord(root + 0x0c) != 1)
+			err = kError_Bad_Package;
+		else
+		{
+			long nameSize;
+			PSSId nameId = GetBigEndianWord(root + 4);
+			PSSId indexId = GetBigEndianWord(root);
+			if ((err = store->GetObjectSize(nameId, &nameSize)) == noErr)
+			{
+				name = new char[nameSize + 1];
+				if (name == nil)
+					err = kError_No_Memory;
+				else if ((err = store->Read(nameId, 0, name, nameSize)) == noErr)
+				{
+					name[nameSize] = 0;
+					TStoreDecompressor* decompressor = (TStoreDecompressor*) NewByName("TStoreDecompressor", name);
+					if (decompressor == nil)
+						err = kError_Bad_Parameters;
+					else
+					{
+						ULong parameter = GetBigEndianWord(root + 8);
+						if (strcmp(name, "TLZStoreDecompressor") == 0 || strcmp(name, "TLZRelocStoreDecompressor") == 0)
+						{
+							lzBuffer = new char[kLZCompanderBufferSize];
+							parameter = (ULong) lzBuffer;
+							err = lzBuffer == nil ? kError_No_Memory : decompressor->Init(store, parameter);
+						}
+						else
+							err = decompressor->Init(store, parameter);
+						long indexSize;
+						if (err == noErr && (err = store->GetObjectSize(indexId, &indexSize)) == noErr)
+						{
+							ULong pages = (ULong) indexSize >> 2;
+							long done = 0;
+							for (ULong i = 0; i < pages; i++)
+							{
+								UByte word[4];
+								if ((err = store->Read(indexId, (long) (i << 2), (char*) word, 4)) != noErr
+								||  (err = decompressor->Read(GetBigEndianWord(word), page, kCompanderBlockSize, 0)) != noErr)
+									break;
+								long n = packageSize - done;
+								if (n > kCompanderBlockSize)
+									n = kCompanderBlockSize;
+								volatile NewtonErr writeErr = noErr;
+								newton_try
+								{
+									pipe->WriteChunk(page, n, false);
+								}
+								newton_catch(exPipeException)
+								{
+									writeErr = (NewtonErr) (long) (Long) _info.exception.data;
+								}
+								end_try;
+								if ((err = writeErr) != noErr)
+									break;
+								done += n;
+							}
+						}
+						decompressor->Delete();
+					}
+				}
+			}
+		}
+	}
+	delete[] name;
+	delete[] lzBuffer;
+	return err;
 }
 
 
@@ -1326,8 +1407,6 @@ NewtonErr
 BackupPackage(CPipe* pipe, TStore* store, PSSId id, TLOCallback* /*callback*/)
 {
 	char* page = new char[kCompanderBlockSize];
-	char* name = nil;
-	char* lzBuffer = nil;
 	long packageSize = 0;
 	NewtonErr err = page == nil ? kError_No_Memory : noErr;
 	if (err == noErr)
@@ -1339,77 +1418,40 @@ BackupPackage(CPipe* pipe, TStore* store, PSSId id, TLOCallback* /*callback*/)
 			if ((err = iter.Init()) == noErr)
 				packageSize = (long) iter.PackageSize();
 		}
-		UByte root[0x14];
-		if (err == noErr && (err = store->Read(id, 0, (char*) root, 0x14)) == noErr)
-		{
-			if (GetBigEndianWord(root + 0x0c) != 1)
-				err = kError_Bad_Package;
-			else
-			{
-				long nameSize;
-				PSSId nameId = GetBigEndianWord(root + 4);
-				PSSId indexId = GetBigEndianWord(root);
-				if ((err = store->GetObjectSize(nameId, &nameSize)) == noErr)
-				{
-					name = new char[nameSize + 1];
-					if (name == nil)
-						err = kError_No_Memory;
-					else if ((err = store->Read(nameId, 0, name, nameSize)) == noErr)
-					{
-						name[nameSize] = 0;
-						TStoreDecompressor* decompressor = (TStoreDecompressor*) NewByName("TStoreDecompressor", name);
-						if (decompressor == nil)
-							err = kError_Bad_Parameters;
-						else
-						{
-							ULong parameter = GetBigEndianWord(root + 8);
-							if (strcmp(name, "TLZStoreDecompressor") == 0 || strcmp(name, "TLZRelocStoreDecompressor") == 0)
-							{
-								lzBuffer = new char[kLZCompanderBufferSize];
-								parameter = (ULong) lzBuffer;
-								err = lzBuffer == nil ? kError_No_Memory : decompressor->Init(store, parameter);
-							}
-							else
-								err = decompressor->Init(store, parameter);
-							long indexSize;
-							if (err == noErr && (err = store->GetObjectSize(indexId, &indexSize)) == noErr)
-							{
-								ULong pages = (ULong) indexSize >> 2;
-								long done = 0;
-								for (ULong i = 0; i < pages; i++)
-								{
-									UByte word[4];
-									if ((err = store->Read(indexId, (long) (i << 2), (char*) word, 4)) != noErr
-									||  (err = decompressor->Read(GetBigEndianWord(word), page, kCompanderBlockSize, 0)) != noErr)
-										break;
-									long n = packageSize - done;
-									if (n > kCompanderBlockSize)
-										n = kCompanderBlockSize;
-									volatile NewtonErr writeErr = noErr;
-									newton_try
-									{
-										pipe->WriteChunk(page, n, false);
-									}
-									newton_catch(exPipeException)
-									{
-										writeErr = (NewtonErr) (long) (Long) _info.exception.data;
-									}
-									end_try;
-									if ((err = writeErr) != noErr)
-										break;
-									done += n;
-								}
-							}
-							decompressor->Delete();
-						}
-					}
-				}
-			}
-		}
+		if (err == noErr)
+			err = BackupPackagePages(pipe, store, id, packageSize, page);
 	}
 	delete[] page;
-	delete[] name;
-	delete[] lzBuffer;
+	return err;
+}
+
+
+// ROM 0x0016093c BackupPackage__FP5CPipeUl
+// The same for a package named by its id in the package manager's list -
+// one kept on a store: its address (IdToVAddr) gives the size and its store
+// and root (IdToStore) the pages.  Nothing in the ROM calls it; it is
+// exported through the public jump table, for a package's native code.
+NewtonErr
+BackupPackage(CPipe* pipe, ULong packageId)
+{
+	char* page = new char[kCompanderBlockSize];
+	long packageSize = 0;
+	NewtonErr err = page == nil ? kError_No_Memory : noErr;
+	if (err == noErr)
+	{
+		ULong address;
+		if ((err = IdToVAddr(packageId, &address)) == noErr)
+		{
+			TPackageIterator iter((void*) address);
+			if ((err = iter.Init()) == noErr)
+				packageSize = (long) iter.PackageSize();
+		}
+		TStore* store;
+		PSSId id;
+		if (err == noErr && (err = IdToStore(packageId, &store, &id)) == noErr)
+			err = BackupPackagePages(pipe, store, id, packageSize, page);
+	}
+	delete[] page;
 	return err;
 }
 
