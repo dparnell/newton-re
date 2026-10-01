@@ -42,39 +42,52 @@ the way are all in `docs/work-log.md`.
 
 ## Open
 
-### What the uncited ROM is (2026-10-01)
+### What the uncited ROM is (2026-10-01, "other" worked down)
 
 `coverage.py build/MP2x00US --categories tools/newton-rom/analysis/uncited-categories.tsv`
 sorts every ROM function the reconstruction does not cite by why, the
 rules (a regex on the mangled name per category) being that file's; a
 function's size is the distance to the next symbol, so the data behind a
-module is not counted as code.  By functions 75.9% is cited; by bytes of
-code, **87.3%**.  The rest, 378 KB in 4017 functions:
+module is not counted as code, and a function that is nothing but a
+branch to a reconstructed one (followed through branches to branches) is
+counted as an alias of it.  By functions 76.4% is cited; by bytes of
+code, **87.5%**.  The rest, 373 KB in 3942 functions:
 
 | category | functions | KB | % of the code |
 |---|---:|---:|---:|
-| declined: AppleTalk (LocalTalk, DDP, ATP, NBP, ZIP, RTMP, AEP, ADSP, PAP, the zones) | 954 | 107.0 | 3.6 |
-| hardware: the MessagePad's own chips (Voyager, Cirrus battery and sound, 16450 UART, ADC, flash parts, card socket, resistive tablet, GPIO, interrupts, reserved flash blocks) - the host has its own behind `hal/` | 812 | 75.7 | 2.5 |
-| comms not asked for: eWorld and the online services, P3, the mux, the keyboard tool, the TV remote, `TCommToolProtocol` | 595 | 37.6 | 1.3 |
-| memory system: MMU page tables, physical pages, the stack manager, domains - the host's memory is its own | 278 | 32.9 | 1.1 |
-| declined: the ROM domain manager and XIP packages | 182 | 30.4 | 1.0 |
-| debugger, test harness, diagnostics (the serial/GeoPort debug links, Hammer, the recogniser's replay metrics, the test agent's desktop server) | 196 | 26.7 | 0.9 |
-| **other - what is genuinely left** | 418 | 22.6 | 0.8 |
-| declined: the StyleWriter and LaserWriter LS drivers | 140 | 14.9 | 0.5 |
-| protocol glue (interface stubs not cited at a declaration) | 299 | 8.3 | 0.3 |
+| declined: AppleTalk (LocalTalk, DDP, ATP, NBP, ZIP, RTMP, AEP, ADSP, PAP, the zones) | 971 | 107.9 | 3.6 |
+| hardware: the MessagePad's own chips (Voyager, Cirrus battery and sound, 16450 UART, ADC, flash parts and the flash card alerts, card socket, resistive tablet, GPIO, interrupts, reserved flash blocks) - the host has its own behind `hal/` | 834 | 76.1 | 2.5 |
+| comms not asked for: eWorld and the online services, P3, the mux, the keyboard tool, the TV remote, `TCommToolProtocol`, the high ROM's driver packages | 597 | 37.8 | 1.3 |
+| memory system: MMU page tables, physical pages, the stack manager, domains - the host's memory is its own | 295 | 33.4 | 1.1 |
+| declined: the ROM domain manager and XIP packages (with `RelocateFramesInPage`, a store package's page relocated where the domain maps it) | 184 | 31.5 | 1.1 |
+| debugger, test harness, diagnostics (the serial/GeoPort debug links, Hammer, the recogniser's replay metrics, the test agent's desktop server, `TMsg`, the abort handler) | 239 | 30.6 | 1.0 |
+| declined: the StyleWriter and LaserWriter LS drivers | 140 | 15.2 | 0.5 |
+| dead in the U.S. ROM (the math views, sixteen-bit dictionaries, French/German accent checks, TextArrow, the package validation driver, the ink codec's default point procs, `MemBufferPipe`) | 57 | 9.1 | 0.3 |
+| protocol glue (interface stubs not cited at a declaration) | 368 | 9.0 | 0.3 |
 | performance variants (the blitter's special cases; the host's blitter is its own) | 37 | 8.2 | 0.3 |
-| dead in the U.S. ROM (the math views, sixteen-bit dictionaries, French/German accent checks, TextArrow, the package validation driver) | 53 | 7.3 | 0.2 |
-| runtime and overloads (array new/delete helpers, `NSSend`'s fixed-argument forms) | 43 | 5.7 | 0.2 |
+| runtime and overloads (array new/delete helpers, `NSSend`'s fixed-argument forms) | 65 | 6.1 | 0.2 |
+| unreferenced (nothing in the ROM refers to it, and it is not public) | 28 | 2.7 | 0.1 |
+| public API the ROM does not call (in the public jump table for packages' native code, which armcpu answers or runs the ROM's own copy of: the idle timer, the GC-safe lists, the unicode task table, out-of-line inlines) | 44 | 1.8 | 0.1 |
+| **other - what is left** | 28 | 1.6 | 0.1 |
 | system patches (the host has none) | 10 | 1.1 | 0.0 |
+| host stand-ins (DEVIATION: the text objects' TextWalker - the host's text layout takes the characters whole) | 5 | 0.9 | 0.0 |
+| aliases of reconstructed functions (one branch to one) | 40 | 0.2 | 0.0 |
 
-"Other" (`--show other`) is small pieces spread across the areas, none
-bigger than 2.5 KB: `HandleControlString` (the keyboard's control
-strings), `RelocateFramesInPage`, the ink codec's default point procs and
-encoder/decoder close, a few `TParagraphView` tab-stop methods
-(`AddTabStop`, `CountTabStops`, `WordFitsAtEndOfLine`), the text walker,
-`TAsyncEvent`, `TMessageTimer`, the GC-safe lists, string helpers.  "Done"
-is the categories above it being left as they are, by decision or because
-the host stands in for them, and "other" worked down.
+"Other" was 418 functions and 22.6 KB at the first count; it went down
+by reconstructing what the reconstructed code calls where the ROM calls
+it (SetStyle's style cache, the CS* ink layer between the natives and the
+codec, `AddTabStop`, `RewindLength`, the speller's C strings, the array
+helpers, ...) and by sorting the rest into the categories above, each
+with its reason in `uncited-categories.tsv`.  What is left (`--show
+other`) is under 256 bytes apiece: `InitExternal` (the host's
+`InitQueries` does its work), the recogniser's `GetTraceFromStrXrUnitAndStroke`,
+`StripPunctSymbols`/`EncodeAttribute`, V.42bis's `dict_init`,
+`PtrToPtr` (the cursor's key copies, which the host makes with `new`),
+three constructors and two destructors of the store and name-server
+classes, `ContainsChar`, `ApplyKey`, the compiler's two walker
+trampolines, the Airus shell entry points, the three exception-cleanup
+procs of `TBits`/`TAnimate`/`TSaveScreenBits`, and four empty or
+one-instruction stubs.
 
 Printing: PostScript and HP PCL to a network printer by IPP are done, and
 printers on the network are found and added both ways and kept.  Left
