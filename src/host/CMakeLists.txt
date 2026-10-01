@@ -888,6 +888,15 @@ set_tests_properties(host.NewtonModal PROPERTIES TIMEOUT 180
                      PASS_REGULAR_EXPRESSION "modal: asking.*modal: tapping OK.*answered TRUE.*still running.*modal: done"
                      FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
 
+# ModalConfirm asked from a button's click script and answered by a tap on
+# OK in the fork: the stroke world's idling flag put aside with its state
+# (recognition/StrokeCentral.cpp IdleStrokes; demo/modal-button.ns)
+add_test(NAME host.NewtonModalFromButton COMMAND newton --display 320x480 --headless 90
+         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/modal-button.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonModalFromButton PROPERTIES TIMEOUT 180
+                     PASS_REGULAR_EXPRESSION "modalbutton: asking.*modalbutton: tapping OK.*answered TRUE.*modalbutton: done"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+
 # "call Daniel" through the Assistant to the Call slip (demo/assist.ns)
 add_test(NAME host.NewtonAssist COMMAND newton --display 320x480 --headless 90
          --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/assist.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)

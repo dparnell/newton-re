@@ -1,0 +1,52 @@
+// A modal dialog asked from a button's click script, as an application's
+// "Are you sure?" usually is: the click is handled inside IdleStrokes
+// (the arbitration hands it to the button at once), so the button's script
+// - and the ModalConfirm it calls - run with the stroke world still being
+// idled underneath.  The fork the dialog runs in puts the stroke world's
+// state aside and starts it afresh (TRecognitionManager::
+// SaveRecognitionState), including the flag that keeps IdleStrokes from
+// being entered again, which is the stroke world's own (+0x38): so the
+// fork's own taps are taken and OK answers the question.  (A host with
+// the flag a global of its own took no tap in the fork at all; NewtCard's
+// PackMan asks this way.)
+//
+//   build/host/host/newton --display 320x480 --headless 90 \
+//       --script src/host/demo/modal-button.ns
+
+HostInclude("common.ns");			// tapAt, waitFor, walkSetup
+
+findIn := func(view, label) begin
+	local found := nil;
+	foreach kid in view:ChildViewFrames() do
+		if not found then
+			if IsString(kid.text) and StrEqual(kid.text, label) then found := kid
+			else found := call findIn with (kid, label);
+	found;
+end;
+tapLabelled := func(label) begin
+	local v := call findIn with (GetRoot(), label);
+	local box := v:GlobalBox();
+	Print("modalbutton: tapping " & label);
+	call tapAt with ((box.left + box.right) div 2, (box.top + box.bottom) div 2);
+end;
+
+call walkSetup with ([2, 0, 45, 34, 14, 37], func() begin		// "Daniel"
+	local button := BuildContext({_proto: @226, text: "Ask", viewBounds: SetBounds(100, 100, 160, 120), viewFlags: 515,	// protoTextButton
+		buttonClickScript: func() begin
+			Print("modalbutton: asking");
+			local answer := ModalConfirm("Question from a button", 'okCancel);
+			Print("modalbutton: answered " & (if answer then "TRUE" else "NIL: FAILED"));
+		end});
+	button:Open();
+	// the OK tapped by the fork once the dialog is up (set going first:
+	// the tap on Ask does not come back until the dialog has gone)
+	call waitFor with ("modalbutton: the dialog", func() call findIn with (GetRoot(), "Question from a button"), func() begin
+		call waitFor with ("modalbutton: the dialog gone", func() not call findIn with (GetRoot(), "Question from a button"), func() begin
+			button:Close();
+			Print("modalbutton: done");
+			HostQuit();
+		end, 15);
+		call tapLabelled with ("OK");
+	end, 20);
+	call tapLabelled with ("Ask");
+end);
