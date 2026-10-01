@@ -61,11 +61,10 @@ the way are all in `docs/work-log.md`.
 
 ## Waiting on the owner
 
-- **Time under 64-bit NewtonScript**: whether `TimeInSeconds` stays the
-  device's wrapped 30-bit value (everything stays storable as it is) or
-  becomes the true count, narrowed where it is stored.  The `ns64` work
-  will set out both options with their consequences when it reaches
-  that stage (S3).
+Nothing at present.  (The 64-bit time question was answered on
+2026-10-02: under `NEWTON_NS64` time is 64-bit aware - `TimeInSeconds`
+the true count, narrowed by the boundary policy where it is stored or
+sent - once the `ns64` work has checked what that breaks.)
 
 ## Open
 
