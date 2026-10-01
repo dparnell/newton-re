@@ -9,6 +9,16 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-02: Linux memory over time
+
+The remaining growth of a Linux soak (about 57 MB an hour) taken apart
+with a new `tools/host/smapswatch.py` and `NEWTON_MALLOC_STATS` (a9b05fd4):
+the null sound backend kept every sample ever played (about 18 MB an
+hour of clicks, on Windows too) and now keeps a minute and counts the
+rest; and glibc gave each of newton's ~20 task threads its own malloc
+arena though only one ever runs - newton now asks for a single arena.  A
+30-minute soak ends at about 116 MB and levels off.
+
 ## 2026-10-02: the ROM-free boot checked against the ROM, app by app
 
 `tools/host/fidelity.py` walks 21 steps - the Notepad, each of the ROM's
