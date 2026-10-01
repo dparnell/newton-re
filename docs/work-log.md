@@ -9,6 +9,21 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: the ROM's own line layout for paragraphs
+
+A paragraph's lines are now laid out by the ROM's `LineLoop`, transcribed
+whole from the assembly (6ba221f8, `views/ParagraphLines.h`), over text
+objects that read their characters through the ROM's text scanner
+(a933b7a4); LineInfo, the caches, RealDraw with its ellipsis, SetBounds
+and OffsetToCaret are the ROM's.  Two ROM quirks kept; one DEVIATION (the
+style runs ending early, where the ROM reads leftover registers).  Every
+screen difference against two baseline runs (`tools/imaging/pgmdiff.py`)
+is accounted for: a selection no longer reaches below a line's descent,
+ink words sit at their line metrics, centred text moved a pixel, the caret
+in an empty line is at `LeftEdgeOfEmptyLine`.  The PalmDoc page that drew
+one line draws all seven.  Hit-testing, the selection and scrubbing still
+measure through two host shims - the next step.  325 of 325.
+
 ## 2026-10-01: every fixture package used for what it is for
 
 RoutBook (rtbk) makes a book's Action button alternate between the
