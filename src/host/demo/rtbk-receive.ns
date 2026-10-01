@@ -1,0 +1,19 @@
+// The other end of src/host/demo/rtbk-send.ns (ctest host.NewtonAppRoutBook):
+// the In Box's Receive for Beam, then the run ends when the help book's
+// page, routed as text by RoutBook, is in the In Box - its text the page's.
+HostInclude("common.ns");
+SetUserConfig('zapCommToolId, "slir");
+TransportNotify('|beam:Newton|, 'ReceiveRequest, [{cause: 'user}]);
+rbInbox := GetUnionSoup("InBox");
+call waitFor with ("rtbk-receive: the In Box", func() rbInbox:Query(nil):Entry() <> nil, func() begin
+	local e := rbInbox:Query(nil):Entry();
+	// (a routing format's text is the item's body itself, a string)
+	local text := if IsString(e.body) then e.body else if IsFrame(e.body) then e.body.text;
+	Print({received: e.title, body: ClassOf(e.body)});
+	if IsString(text) then Print("rtbk-receive: the text begins: " & SubStr(text, 0, Min(StrLen(text), 120)));
+	if IsString(text) and StrPos(text, "Newt's Cape", 0) then
+		Print("rtbk-receive: the page came as text")
+	else
+		Print("rtbk-receive: FAILED (no text: " & SPrintObject(e.body) & ")");
+	HostQuit();
+end, 150);

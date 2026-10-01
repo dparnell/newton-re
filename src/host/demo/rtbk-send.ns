@@ -1,0 +1,73 @@
+// Newt's Cape's RoutBook (rtbk10c2.pkg) used as its user would (ctest
+// host.NewtonAppRoutBook, run by tools/host/twonewtons.py with
+// src/host/demo/rtbk-receive.ns on the other newton): RoutBook patches the
+// book reader's GetTargetInfo so that every other press of a book's Action
+// button routes the page as text - a target of class
+// 'DataText:Copperfield:NewtsCape, its text format "Book(Newt's Cape) Text
+// Format" - where the book's own routing offers Print Book and Fax.  The
+// help book NC_HELP.pkg opened from the Extras drawer, the Action button
+// pressed twice, Beam Book picked; the page goes as text, Sharp IR to the
+// other newton, and the run ends when the Out Box is empty again.
+HostInclude("common.ns");			// tapAt, waitFor, walkSetup
+HostInclude("walkhelpers.ns");		// findView, the steps
+HostInclude("apphelpers.ns");		// pickItem, pickerUp
+
+wtName := "rtbk-send";
+SetUserConfig('zapCommToolId, "slir");
+rbOutbox := GetUnionSoup("OutBox");
+rbActionBox := nil;
+
+wtSteps := [
+	// the help book from its icon in the Extras drawer
+	func(done) begin
+		local drawer := GetRoot().extrasDrawer;
+		drawer:Open();
+		call waitFor with ("rtbk-send: the Extras drawer", func() drawer.viewCObject, func() begin
+			call tapCentre with (call findView with (drawer, func(v) v.target and v.target.fentry and ClassOf(v.target.fentry) = 'BookEntry));
+			call waitFor with ("rtbk-send: the help book", func() GetRoot().Copperfield.viewCObject, done, 30);
+		end, 20);
+	end,
+	settleStep,
+	// the Action button: the book's own routing first
+	func(done) begin
+		// (the envelope: the button of the book's control panel at the
+		// right whose picker routes - found by its place, left of the close box)
+		local bar := GetRoot().Copperfield:ChildViewFrames()[1];
+		local kids := bar:ChildViewFrames();
+		rbActionBox := kids[1]:GlobalBox();
+		call tapAt with ((rbActionBox.left + rbActionBox.right) div 2, (rbActionBox.top + rbActionBox.bottom) div 2);
+		call waitFor with ("rtbk-send: the book's routing", pickerUp, func() begin
+			local items := "";
+			foreach item in (call pickerUp with ()).pickItems do items := items & item.item & "; ";
+			Print("rtbk-send: first press: " & items);
+			call wtCheck with ("the book's own routing", call viewLabelled with (call pickerUp with (), "Print Book") or StrPos(items, "Print Book", 0), "(" & items & ")");
+			call tapAt with (150, 450);			// let go of the menu
+			call waitFor with ("rtbk-send: the menu gone", func() not call pickerUp with (), done, 10);
+		end, 10);
+	end,
+	settleStep,
+	// pressed again: the page as text
+	func(done) begin
+		call tapAt with ((rbActionBox.left + rbActionBox.right) div 2, (rbActionBox.top + rbActionBox.bottom) div 2);
+		call waitFor with ("rtbk-send: the text routing", pickerUp, func() begin
+			local items := "";
+			foreach item in (call pickerUp with ()).pickItems do items := items & item.item & "; ";
+			Print("rtbk-send: second press: " & items);
+			call wtCheck with ("Beam Book offered for the text", call pickItem with ("Beam Book"), "(" & items & ")");
+			call waitFor with ("rtbk-send: the page in the Out Box", func() rbOutbox:Query(nil):Entry() <> nil, func() begin
+				local e := rbOutbox:Query(nil):Entry();
+				Print({queued: e.title, body: if IsString(e.body) then "text" else ClassOf(e.body)});
+				call done with ();
+			end, 30);
+		end, 10);
+	end,
+	func(done) call waitFor with ("rtbk-send: the page sent", func() rbOutbox:Query(nil):Entry() = nil, func() begin
+		Print("rtbk-send: the Out Box is empty");
+		call done with ();
+	end, 150),
+	func(done) begin
+		Print("rtbk-send: done, " & wtFailures & " failed");
+		HostQuit();
+	end];
+
+call walkSetup with ([2, 0, 45, 34, 14, 37], func() AddDelayedCall(wtNext, nil, 2000));		// "Daniel"

@@ -31,11 +31,9 @@
 //   disabled in this release); with the clock set forward it asks to be
 //   registered after 30 days and has expired after 45.
 //
-//   (rtbk10c2.pkg, a text routing format for books, is not used here: the
-//   book reader's Action button lies outside the book view's bounds on the
-//   host (its bounds are 240x336, its bar drawn beyond them), so a tap on
-//   it reaches nothing - reported to the book reader's work, as the
-//   host's fault it appears to be.)
+//   (rtbk10c2.pkg, RoutBook - a book's page routed as text on every
+//   other press of the book's Action button - is beamed to a second newton
+//   in src/host/demo/rtbk-send.ns, ctest host.NewtonAppRoutBook.)
 //
 // ctest host.NewtonAppNewtsCapeHelpers:
 //

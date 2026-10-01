@@ -172,6 +172,25 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
                      --expect-second "queued: \"Beamed note\".*beam-send: the Out Box is empty"
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonBeam PROPERTIES TIMEOUT 300 PASS_REGULAR_EXPRESSION "twonewtons.py: both ended as expected")
+    # Newt's Cape's RoutBook (rtbk10c2.pkg) used as its user would: the help
+    # book NC_HELP.pkg opened from Extras, its Action button pressed twice -
+    # the book's own routing, then RoutBook's text - and Beam Book picked;
+    # the page arrives on the other newton as text (demo/rtbk-send.ns,
+    # rtbk-receive.ns)
+    if(EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/apps/NewtScape/rtbk10c2.pkg)
+        add_test(NAME host.NewtonAppRoutBook
+                 COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/host/twonewtons.py $<TARGET_FILE:newton>
+                         --seconds 150
+                         --newton-arg=--package --newton-arg=${CMAKE_SOURCE_DIR}/../fixtures/packages/apps/NewtScape/NC_HELP.pkg
+                         --newton-arg=--package --newton-arg=${CMAKE_SOURCE_DIR}/../fixtures/packages/apps/NewtScape/rtbk10c2.pkg
+                         --first ${CMAKE_CURRENT_SOURCE_DIR}/demo/rtbk-receive.ns
+                         --expect-first "rtbk-receive: the page came as text"
+                         --second ${CMAKE_CURRENT_SOURCE_DIR}/demo/rtbk-send.ns
+                         --expect-second "first press: Print Book.*second press: Beam Book.*rtbk-send: the Out Box is empty.*rtbk-send: done, 0 failed"
+                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+        set_tests_properties(host.NewtonAppRoutBook PROPERTIES TIMEOUT 300 PASS_REGULAR_EXPRESSION "twonewtons.py: both ended as expected"
+                             FAIL_REGULAR_EXPRESSION "waited in vain|FAILED")
+    endif()
     # the same over the default path: no zapCommToolId, so the probe and then IrDA
     add_test(NAME host.NewtonBeamIrDA
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/host/twonewtons.py $<TARGET_FILE:newton>
