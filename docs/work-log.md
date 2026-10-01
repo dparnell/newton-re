@@ -21,6 +21,21 @@ romsrc's `#hex` immediates and `@@` record lines; a 22-test corpus and
 a Zed extension (`zed-newtonscript/`): highlighting, brackets,
 indentation and an outline, installed with "zed: install dev extension".
 
+## 2026-10-01: encrypted printing, with the owner's trust policy
+
+ipps:// goes over the host's own TLS - Schannel on Windows, OpenSSL
+elsewhere - (abf291bc).  A certificate the system does not vouch for
+(a printer's self-signed one, the usual case) is checked against the one
+pinned for that printer: unknown, the Newton asks whether to trust it,
+showing its fingerprint; changed, it warns with both fingerprints; either
+way the user may trust it (pinned on the store) or cancel the job.  The
+slip is put up from the print task as the ROM's print problem slip is, so
+nothing deadlocks.  A cancel shows no alert, as the ROM treats any user
+cancel.  Six pen-driven ctests over committed test-only certificates.
+The ';'-split ctest regexes are fixed (d99815f1): `host.NewtonPower` and
+`host.NewtonPrintAddPrinter.remove` had been passing on a prefix of their
+output.
+
 ## 2026-10-01: displays of any size; lexicons and character tables as text
 
 - `newton --display WxH` fills the window (the owner's request).  The
