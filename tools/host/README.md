@@ -231,10 +231,11 @@ and `[http] the program answered N`; it exits with the program's status (1
 when the port cannot be had).  ctest `host.NewtonNetHopper` runs NetHopper
 3.2 under it (`src/host/demo/nethopper.ns`).  Standard library only.
 
-## tonewav.py, palmdoc.py - files for a host Newton to download
+## tonewav.py, palmdoc.py, tinymod.py - files for a host Newton to download
 
     python tools/host/tonewav.py OUT.wav [--hz 880] [--ms 200] [--rate 11025] [--bits 8]
     python tools/host/palmdoc.py IN.txt OUT.pdb [--name NAME] [--plain] [--check]
+    python tools/host/tinymod.py OUT.mod [--title TITLE]
 
 `tonewav.py` writes a mono PCM WAV of one sine tone; `palmdoc.py` writes a
 text file as a PalmDoc e-text (a Palm database of type TEXt, creator REAd:
@@ -244,4 +245,7 @@ or stored as it is with `--plain`; `--check` reads the file back and says
 whether it decodes to the text).  `src/host/demo/www/beep.wav` and
 `story.pdb` are their output with the defaults (`--name "Host Story"`),
 which Newt's Cape's audio and PalmDoc helpers take in
-`src/host/demo/apps-newtscape-helpers.ns`.  Standard library only.
+`src/host/demo/apps-newtscape-helpers.ns`.  `tinymod.py` writes a
+four-channel ProTracker "M.K." module (one pattern of a rising arpeggio
+on a looped square-wave sample), `src/host/demo/www/tune.mod`, which
+Newt's Cape's MOD helper saves as a package.  Standard library only.

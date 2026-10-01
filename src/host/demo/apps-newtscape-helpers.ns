@@ -1,26 +1,56 @@
-// Newt's Cape's helper applications (fixtures/packages/apps/NewtScape)
-// used as their user would: Newt's Cape given the URL of a file it cannot
-// show itself, File > Open Location, and the helper registered for that
-// kind of file takes it.
+// Newt's Cape's helper applications and companions
+// (fixtures/packages/apps/NewtScape) used as their user would - Newt's Cape
+// given the URL of a file it cannot show itself, File > Open Location, and
+// the helper registered for that kind of file takes it:
 //
-//   audx10c2.pkg: a WAV sound (src/host/demo/www/beep.wav, made by
+//   audx10c2.pkg: a WAV sound (demo/www/beep.wav, made by
 //   tools/host/tonewav.py, served as audio/x-wav) goes into the In Box as
 //   an audio item; opened there, the In Box says the stationery that shows
 //   'audio is not installed - audx hands the sound on to a viewer of
 //   another package (a MIME mail reader's), which the fixtures do not have.
 //
-//   pdoc10d2.pkg: a PalmDoc e-text (src/host/demo/www/story.pdb, made from
-//   story.txt by tools/host/palmdoc.py, LZ77-compressed as a Palm's are)
-//   is decoded and shown as a Newt's Cape page.
+//   pdoc10d2.pkg: a PalmDoc e-text (demo/www/story.pdb, made from story.txt
+//   by tools/host/palmdoc.py, LZ77-compressed as a Palm's are) is decoded
+//   and shown as a Newt's Cape page.
+//
+//   encd10c2.pkg and ISO-8859-1.pkg: ISO-8859-1 chosen in Newt's Cape's
+//   Encoding preferences (the info button's Encoding...), a Latin-1 page
+//   (demo/www/latin1.htm) reads with its accented letters.
+//
+//   mdsv10a2.pkg with pack34.pkg (NewtPack): a MOD tune (demo/www/tune.mod,
+//   tools/host/tinymod.py, served as www/unknown) is made a package of its
+//   own and installed; opened from the Extras drawer it says ModPlayer is
+//   not installed (it is not in the fixtures).
+//
+//   NC_HELP.pkg: the help book, opened from its icon in the Extras drawer.
+//
+//   pkgi10g2.pkg: Pkg Info in the Extras drawer's Action menu, for an icon
+//   selected by holding the pen on it.
+//
+//   Registering: Newt's Cape 2.0r is a trial (its Register... item is
+//   disabled in this release); with the clock set forward it asks to be
+//   registered after 30 days and has expired after 45.
+//
+//   (rtbk10c2.pkg, a text routing format for books, is not used here: the
+//   book reader's Action button lies outside the book view's bounds on the
+//   host (its bounds are 240x336, its bar drawn beyond them), so a tap on
+//   it reaches nothing - reported to the book reader's work, as the
+//   host's fault it appears to be.)
 //
 // ctest host.NewtonAppNewtsCapeHelpers:
 //
 //   python tools/host/httpserve.py --dir src/host/demo/www --port 0 \
-//       --type .wav=audio/x-wav --type .pdb=application/x-pilot-pdb -- \
+//       --type .wav=audio/x-wav --type .pdb=application/x-pilot-pdb --type .mod=www/unknown -- \
 //       build/host/host/newton --display 320x480 --erase --store tmp/newtscape-helpers.store \
 //       --headless 240 --package fixtures/packages/apps/NewtScape/nwcp20r2.pkg \
 //       --package fixtures/packages/apps/NewtScape/audx10c2.pkg \
 //       --package fixtures/packages/apps/NewtScape/pdoc10d2.pkg \
+//       --package fixtures/packages/apps/NewtScape/encd10c2.pkg \
+//       --package fixtures/packages/apps/NewtScape/ISO-8859-1.pkg \
+//       --package fixtures/packages/apps/NewtScape/NC_HELP.pkg \
+//       --package fixtures/packages/apps/NewtScape/mdsv10a2.pkg \
+//       --package fixtures/packages/apps/NewtScape/pack34.pkg \
+//       --package fixtures/packages/apps/NewtScape/pkgi10g2.pkg \
 //       --script src/host/demo/apps-newtscape-helpers.ns
 
 HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
@@ -32,6 +62,7 @@ nhSym := '|NewtsCape:NewtsCape|;
 nhBase := "http://127.0.0.1:" & HostGetEnv("NEWTON_HTTP_PORT") & "/";
 
 nhApp := func() GetRoot().(nhSym);
+nhNow := nil;
 nhConnectSlip := func() begin
 	local slip := nil;
 	foreach c in GetRoot():ChildViewFrames() do
@@ -114,6 +145,157 @@ wtSteps := [
 		ScreenSnapshot("tmp/helpers-pdoc.pgm");
 		call done with ();
 	end, 60),
+	// a page in ISO-8859-1: its accented letters read as the encoding says -
+	// once the encoding is chosen in Newt's Cape's Encoding preferences,
+	// which encd10c2.pkg and ISO-8859-1.pkg provide (the info button's
+	// Encoding..., its picker)
+	func(done) begin
+		call tapAt with (21, 420);			// the info button
+		call waitFor with ("helpers: the info menu", pickerUp, func() begin
+			call pickItem with ("Encoding");
+			call waitFor with ("helpers: the Encoding slip", func() call viewWithText with ("NTEncoding 1.1"), done, 10);
+		end, 10);
+	end,
+	settleStep,
+	func(done) begin
+		local slip := (call viewWithText with ("NTEncoding 1.1")):Parent();
+		call tapButtonText with (slip, "sjis");
+		call waitFor with ("helpers: the encodings", pickerUp, func() begin
+			call wtCheck with ("ISO-8859-1 offered", call pickItem with ("ISO-8859-1"), "(not in the picker)");
+			call waitFor with ("helpers: ISO-8859-1 chosen", func() call viewLabelled with (slip, "ISO-8859-1"), func() begin
+				local b := slip:GlobalBox();
+				call tapAt with (b.right - 12, b.bottom - 12);			// its close box
+				call waitFor with ("helpers: the slip closed", func() not call viewWithText with ("NTEncoding 1.1"), done, 10);
+			end, 10);
+		end, 10);
+	end,
+	func(done) call nhOpenURL with (nhBase & "latin1.htm", done),
+	func(done) call waitFor with ("helpers: the Latin-1 page", func() call findView with (GetRoot(), func(v) IsString(v.text) and StrPos(v.text, "Caf", 0) and StrPos(v.text, "fran", 0)), func() begin
+		local v := call findView with (GetRoot(), func(v) IsString(v.text) and StrPos(v.text, "Caf", 0) and StrPos(v.text, "fran", 0));
+		Print("helpers: the Latin-1 page: " & v.text);
+		local codes := "";
+		for i := 0 to StrLen(v.text) - 1 do codes := codes & NumberStr(Ord(v.text[i])) & " ";
+		Print("helpers: its characters: " & codes);
+		call wtCheck with ("the accented letters", StrPos(v.text, "Caf\u00E9\u", 0) and StrPos(v.text, "fran\u00E7\u", 0), "(" & v.text & ")");
+		ScreenSnapshot("tmp/helpers-latin1.pgm");
+		call done with ();
+	end, 60),
+	// a MOD tune: mdsv10a2.pkg has NewtPack (pack34.pkg) make it a package
+	// of its own for ModPlayer, which is installed; opened from the Extras
+	// drawer, it says ModPlayer is not installed (it is not in the
+	// fixtures)
+	func(done) call nhOpenURL with (nhBase & "tune.mod", done),
+	func(done) call waitFor with ("helpers: the tune saved as a package", func() begin
+			local found := nil;
+			foreach p in GetPackages() do if StrPos(p.title, "tune", 0) then found := p;
+			found
+		end, func() begin
+		foreach p in GetPackages() do if StrPos(p.title, "tune", 0) then Print("helpers: the package: " & p.title & ", " & p.size & " bytes");
+		call wtCheck with ("NewtPack made the tune a package", true, "");
+		call done with ();
+	end, 60),
+	func(done) begin
+		local drawer := GetRoot().extrasDrawer;
+		drawer:Open();
+		call waitFor with ("helpers: the tune's icon", func() drawer.viewCObject and call findView with (drawer, func(v) v.target and v.target.fentry and IsSymbol(v.target.fentry.app) and StrPos(SymbolName(v.target.fentry.app), "tune", 0)), func() begin
+			call tapCentre with (call findView with (drawer, func(v) v.target and v.target.fentry and IsSymbol(v.target.fentry.app) and StrPos(SymbolName(v.target.fentry.app), "tune", 0)));
+			call waitFor with ("helpers: the tune opened", func() call findView with (GetRoot(), func(v) IsString(v.text) and StrPos(v.text, "ModPlayer", 0)), func() begin
+				Print("helpers: the tune says: " & (call findView with (GetRoot(), func(v) IsString(v.text) and StrPos(v.text, "ModPlayer", 0))).text);
+				call wtCheck with ("the tune asks for ModPlayer", true, "");
+				ScreenSnapshot("tmp/helpers-mod.pgm");
+				// (the notice dismissed: mdsv titles it with a symbol, the
+				// package's, which the ROM's notifier compares as a string
+				// (IsSimilarItem) when the next notice comes - an exception
+				// of the package's own, as on a MessagePad)
+				local note := (call findView with (GetRoot(), func(v) IsString(v.text) and StrPos(v.text, "ModPlayer", 0))):Parent();
+				local nb := note:GlobalBox();
+				local close := call findView with (GetRoot(), func(v) v.buttonClickScript and v.viewCObject and begin
+					local cb := v:GlobalBox();
+					cb.left >= nb.left and cb.right <= nb.right + 12 and cb.top >= nb.bottom - 20 and cb.bottom <= nb.bottom + 14
+				end);
+				call tapCentre with (close);			// its close box
+				call waitFor with ("helpers: the notice dismissed", func() not call findView with (GetRoot(), func(v) IsString(v.text) and StrPos(v.text, "ModPlayer", 0)), done, 10);
+			end, 20);
+		end, 20);
+	end,
+	// the help book, NC_HELP.pkg, opened from its icon in the Extras drawer
+	func(done) begin
+		local drawer := GetRoot().extrasDrawer;
+		drawer:Open();
+		call waitFor with ("helpers: the Extras drawer", func() drawer.viewCObject, func() begin
+			local icon := call findView with (drawer, func(v) v.target and v.target.fentry and ClassOf(v.target.fentry) = 'BookEntry);
+			if not icon then call wtCheck with ("the help book's icon", nil, "(not in the drawer)")
+			else call tapCentre with (icon);
+			call waitFor with ("helpers: the help book open", func() call findView with (GetRoot(), func(v) IsString(v.text) and StrPos(v.text, "Welcome to Newt's Cape 2.0", 0)), func() begin
+				call wtCheck with ("the help book's first page", true, "");
+				ScreenSnapshot("tmp/helpers-help.pgm");
+				call done with ();
+			end, 30);
+		end, 20);
+	end,
+	// pkgi10g2.pkg adds Pkg Info to the Extras drawer's Action button: an
+	// icon selected (the pen held on it), Action, Pkg Info, and a notice of
+	// the package's version, parts, size, date and copyright
+	func(done) begin
+		local drawer := GetRoot().extrasDrawer;
+		if GetRoot().Copperfield.viewCObject then GetRoot().Copperfield:Close();
+		(call nhApp with ()):Close();			// (its bar lies over the drawer's)
+		drawer:Open();
+		call waitFor with ("helpers: the Extras drawer again", func() drawer.viewCObject and call findView with (drawer, func(v) v.target and v.target.fentry and v.target.fentry.app = nhSym), func() begin
+			local box := (call findView with (drawer, func(v) v.target and v.target.fentry and v.target.fentry.app = nhSym)):GlobalBox();
+			local x := (box.left + box.right) div 2, y := (box.top + box.bottom) div 2;
+			PacePen(true);
+			PenDown(x, y);
+			for k := 1 to 90 do PenMove(x, y);		// held a second and a half: selected
+			PenUp();
+			PacePen(nil);
+			AddDelayedCall(func() begin
+				call tapAt with (284, 424);			// the drawer's Action button
+				call waitFor with ("helpers: the Action menu", pickerUp, func() begin
+					call wtCheck with ("Pkg Info in the Action menu", call pickItem with ("Pkg Info"), "(not offered)");
+					call waitFor with ("helpers: the package's info", func() call findView with (GetRoot(), func(v) IsString(v.text) and StrPos(v.text, "PkgInfo", 0)), func() begin
+						local v := call findView with (GetRoot(), func(v) IsString(v.text) and StrPos(v.text, "PkgInfo", 0));
+						Print("helpers: Pkg Info says: " & v.text);
+						call wtCheck with ("the package's version and parts", StrPos(v.text, "Version: 20", 0) and StrPos(v.text, "Parts: 1", 0), "(" & v.text & ")");
+						local note := v:Parent();
+						local nb := note:GlobalBox();
+						local close := call findView with (GetRoot(), func(w) w.buttonClickScript and w.viewCObject and begin
+							local cb := w:GlobalBox();
+							cb.left >= nb.left and cb.right <= nb.right + 12 and cb.top >= nb.bottom - 20 and cb.bottom <= nb.bottom + 14
+						end);
+						call tapCentre with (close);
+						call waitFor with ("helpers: the info dismissed", func() not call findView with (GetRoot(), func(v) IsString(v.text) and StrPos(v.text, "PkgInfo", 0)), done, 10);
+					end, 20);
+				end, 10);
+			end, nil, 1500);
+		end, 20);
+	end,
+	// Newt's Cape 2.0r is a trial: 45 days after its preferences were
+	// first written it has expired, and from 30 days it asks to be
+	// registered (its Register... item is disabled in this release) - the
+	// clock set forward as Prefs would, Newt's Cape opened again
+	func(done) begin
+		nhNow := Time();
+		GetRoot().extrasDrawer:Close();
+		SetTime(nhNow + 31 * 1440);
+		call openFromExtras with ("Newt's Cape", nhSym, done);
+	end,
+	func(done) call waitFor with ("helpers: the trial's warning", func() call findView with (GetRoot(), func(v) IsString(v.text) and StrPos(v.text, "Please register", 0)), func() begin
+		Print("helpers: Newt's Cape says: " & (call findView with (GetRoot(), func(v) IsString(v.text) and StrPos(v.text, "Please register", 0))).text);
+		call wtCheck with ("asked to register after 31 days", true, "");
+		call done with ();
+	end, 20),
+	func(done) begin
+		(call nhApp with ()):Close();
+		SetTime(nhNow + 46 * 1440);
+		call openFromExtras with ("Newt's Cape", nhSym, done);
+	end,
+	func(done) call waitFor with ("helpers: the trial over", func() call findView with (GetRoot(), func(v) IsString(v.text) and StrPos(v.text, "has expired", 0)), func() begin
+		Print("helpers: Newt's Cape says: " & (call findView with (GetRoot(), func(v) IsString(v.text) and StrPos(v.text, "has expired", 0))).text);
+		call wtCheck with ("expired after 46 days", true, "");
+		SetTime(nhNow);
+		call done with ();
+	end, 20),
 	func(done) begin
 		Print("helpers: done, " & wtFailures & " failed");
 		HostQuit();

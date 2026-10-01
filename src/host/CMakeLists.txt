@@ -1152,21 +1152,30 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/../romsrc/rex/inetenbl.pkg)
                              FAIL_REGULAR_EXPRESSION "waited in vain|is not answered|stopped \\(|FAILED")
         # Newt's Cape's helper applications (demo/apps-newtscape-helpers.ns):
         # a WAV sound taken into the In Box by audx, a PalmDoc e-text decoded
-        # by pdoc (demo/www/beep.wav, story.pdb: tools/host/tonewav.py,
-        # palmdoc.py), each served with the MIME type the helper asks for
+        # by pdoc, a Latin-1 page read through encd's ISO-8859-1, a MOD tune
+        # made a package by mdsv and NewtPack, the help book, Pkg Info, and
+        # the trial's expiry (demo/www/beep.wav, story.pdb, tune.mod:
+        # tools/host/tonewav.py, palmdoc.py, tinymod.py), each file served
+        # with the MIME type its helper asks for
         add_test(NAME host.NewtonAppNewtsCapeHelpers
                  COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/host/httpserve.py
                          --dir ${CMAKE_CURRENT_SOURCE_DIR}/demo/www --port 0
-                         --type .wav=audio/x-wav --type .pdb=application/x-pilot-pdb --
+                         --type .wav=audio/x-wav --type .pdb=application/x-pilot-pdb --type .mod=www/unknown --
                          $<TARGET_FILE:newton> --display 320x480 --erase
                          --store ${CMAKE_CURRENT_BINARY_DIR}/app-newtscape-helpers.store --headless 240
                          --package ${CMAKE_SOURCE_DIR}/../fixtures/packages/apps/NewtScape/nwcp20r2.pkg
                          --package ${CMAKE_SOURCE_DIR}/../fixtures/packages/apps/NewtScape/audx10c2.pkg
                          --package ${CMAKE_SOURCE_DIR}/../fixtures/packages/apps/NewtScape/pdoc10d2.pkg
+                         --package ${CMAKE_SOURCE_DIR}/../fixtures/packages/apps/NewtScape/encd10c2.pkg
+                         --package ${CMAKE_SOURCE_DIR}/../fixtures/packages/apps/NewtScape/ISO-8859-1.pkg
+                         --package ${CMAKE_SOURCE_DIR}/../fixtures/packages/apps/NewtScape/NC_HELP.pkg
+                         --package ${CMAKE_SOURCE_DIR}/../fixtures/packages/apps/NewtScape/mdsv10a2.pkg
+                         --package ${CMAKE_SOURCE_DIR}/../fixtures/packages/apps/NewtScape/pack34.pkg
+                         --package ${CMAKE_SOURCE_DIR}/../fixtures/packages/apps/NewtScape/pkgi10g2.pkg
                          --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/apps-newtscape-helpers.ns
                  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
         set_tests_properties(host.NewtonAppNewtsCapeHelpers PROPERTIES TIMEOUT 300
-                             PASS_REGULAR_EXPRESSION "GET /beep.wav 200.*helpers: done, 0 failed"
+                             PASS_REGULAR_EXPRESSION "GET /beep.wav 200.*GET /tune.mod 200.*the accented letters: ok.*NewtPack made the tune a package: ok.*the help book's first page: ok.*the package's version and parts: ok.*expired after 46 days: ok.*helpers: done, 0 failed"
                              FAIL_REGULAR_EXPRESSION "waited in vain|is not answered|stopped \\(|FAILED")
         # NetHopper's JPEG viewer (NetHopperJPEG.pkg) with no NewtsCape to
         # decode for it (demo/nethopper-jpeg.ns): the JPEG fetched, the
