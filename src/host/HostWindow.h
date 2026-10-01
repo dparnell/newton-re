@@ -29,5 +29,12 @@
 // display comes as its size and its bytes)
 bool	HostWindowStart(long width, long height, const unsigned char* pixels, const char* title, long scale);	// the window opened on its thread over the display's grays (0 white .. 255 black, width per row); ==> whether it could be
 void	HostWindowStop(void);								// the window closed and its thread joined
+// A press (what 0), a move (1) or a release (2) of the mouse at a point of
+// the display, given to the window as the mouse's would be - posted to its
+// message queue on Windows - so that a test drives the pen through the
+// window itself (newton --window-pen).  With no window open, or on a host
+// whose events cannot be posted (X11), the window's shims are called
+// directly, as its event loop would call them.
+void	HostWindowPostPen(long x, long y, int what);
 
 #endif	/* __HOSTWINDOW_H */

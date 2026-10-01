@@ -49,6 +49,12 @@ void	HostTabletRawPenDown(long x, long y);				// the pen on the window (pixels; 
 void	HostTabletRawPenMove(long x, long y);
 void	HostTabletRawPenUp(void);
 void	HostTabletRawTap(long x, long y, ULong milliseconds);	// down at (x, y) for so long, then up
+// A scripted tap's press and release (HostTabletRawTap, and the calibration
+// targets' taps) handed to this instead of put on the panel straight away,
+// when it is set: newton --window-pen sets the window's (HostWindow.h's
+// HostWindowPostPen), so that a test's taps come in as the mouse's do -
+// through the window and its shims - and that path is tested too.
+extern void	(*gHostTabletTapHook)(long x, long y, Boolean down);
 void	HostTabletSetSkew(double dx, double dy, double sx, double sy);	// the panel reads the point (x*sx+dx, y*sy+dy)
 void	HostTabletAutoCalibrate(Boolean on);				// the calibration screen's targets tapped as they appear
 void	HostTabletCalibrationTarget(short h, short v);		// (Inker.h's gInkerCalibrationTargetHook)

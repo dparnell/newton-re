@@ -906,7 +906,13 @@ SMemMsgSetTimerParmsKernelGlue(TObjectId msgId, ULong timeout, ULong delayLo, UL
 		return err;
 	if (msg->fTimerFlags & kSMemMsgTimer_Generic)
 		return kError_Call_Already_In_Progress;
-	msg->fTimeout = timeout;
+	// DEVIATION: the timeout is the ARM's 32-bit word.  On the host a
+	// TTimeout (a long) of kTimeOutImmediate arrives here sign-extended into
+	// a pointer-sized ULong, and was then not kSMemMsgNoTimeout - so a
+	// send or receive meant to give up at once waited 2^32 ticks (19
+	// minutes) instead: SleepTill, the screen update task's sleep, slept on
+	// after its first update and the calibration screen never showed.
+	msg->fTimeout = (ULong32) timeout;
 	msg->fExpiryTime.hi = delayHi;
 	msg->fExpiryTime.lo = delayLo;
 	return noErr;

@@ -193,6 +193,26 @@ HostWindowStart(long width, long height, const unsigned char* pixels, const char
 
 
 void
+HostWindowPostPen(long x, long y, int what)
+{
+	HWND window = gWindow;
+	if (window == nil)
+	{
+		if (what == 0)
+			HostWindowPenDown(x, y);
+		else if (what == 1)
+			HostWindowPenMove(x, y);
+		else
+			HostWindowPenUp();
+		return;
+	}
+	LPARAM at = MAKELPARAM((WORD) (x * gScale), (WORD) (y * gScale));
+	UINT msg = what == 0 ? WM_LBUTTONDOWN : what == 1 ? WM_MOUSEMOVE : WM_LBUTTONUP;
+	PostMessageA(window, msg, what == 2 ? 0 : MK_LBUTTON, at);
+}
+
+
+void
 HostWindowStop(void)
 {
 	gStopping.store(true);
@@ -208,10 +228,28 @@ HostWindowStop(void)
 
 #else
 
+extern "C" {
+void	HostWindowPenDown(long x, long y);
+void	HostWindowPenMove(long x, long y);
+void	HostWindowPenUp(void);
+}
+
 bool
 HostWindowStart(long /*width*/, long /*height*/, const unsigned char* /*pixels*/, const char* /*title*/, long /*scale*/)
 {
 	return false;
+}
+
+
+void
+HostWindowPostPen(long x, long y, int what)
+{
+	if (what == 0)
+		HostWindowPenDown(x, y);
+	else if (what == 1)
+		HostWindowPenMove(x, y);
+	else
+		HostWindowPenUp();
 }
 
 

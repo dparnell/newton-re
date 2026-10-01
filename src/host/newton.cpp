@@ -42,6 +42,13 @@
 	the AIF image in DebugRom/), which is how the reconstructed data is
 	checked against the ROM (ctest host.NewtonNoROMSameScreen).
 
+	--limit ends a run with the window open after the seconds, as
+	--headless ends one without; --window-pen hands a script's taps
+	(HostTabletTap, and the calibration screen's targets tapped for it) to
+	the window as the mouse's clicks are, so that a test goes the way a
+	person's clicks go (host/HostWindow.h's HostWindowPostPen; ctest
+	host.NewtonWindowPen).
+
 	--headless runs without a window for the seconds (a snapshot of the
 	display can be written by the script: ScreenSnapshot), or until the
 	script calls HostQuit() - so the seconds are a limit, and a test that
@@ -207,7 +214,8 @@ static int
 Usage(void)
 {
 	fprintf(stderr, "usage: newton [--objects file | --rom image] [--heap bytes] [--display WxH[xdepth]] [--scale n]\n"
-					"              [--script file.ns] [--headless seconds] [--store file] [--erase]\n"
+					"              [--script file.ns] [--headless seconds] [--limit seconds] [--window-pen]\n"
+					"              [--store file] [--erase]\n"
 					"              [--flash-size mb] [--flat-flash]\n"
 					"              [--package file.pkg]... [--card file] [--microphone-tone hz] [--tcp-echo port]\n"
 					"              [--serial-port port|none] [--ir-peer listen:port|host:port] [--print-dir dir]\n"
@@ -263,6 +271,41 @@ NewtonBoot(void)
 	THostScreenDriver* display = HostDisplay();
 	if (gWindowed && !HostWindowStart(display->Width(), display->Height(), display->Pixels(), "Newton", gScale))
 		fprintf(stderr, "newton: no window on this host; running headless\n");
+}
+
+
+// --window-pen: a script's taps (HostTabletTap, the calibration targets'
+// taps) given to the window as the mouse's are, rather than put on the
+// panel straight away - the path a person's clicks take
+static void
+WindowPenTap(long x, long y, Boolean down)
+{
+	long h, v;
+	if (!down && HostTabletCalibrationTargetAt(&h, &v) && h == x && v == y)
+	{
+		// a calibration target let go: it must be on the display the window
+		// shows - the target held long enough to darken (inverted), and the
+		// top of the screen, where the page under the calibration has its
+		// pictures, white
+		THostScreenDriver* display = HostDisplay();
+		const unsigned char* pixels = display->Pixels();
+		long width = display->Width(), height = display->Height();
+		long box = 0, top = 0;
+		for (long row = v - 9; row < v + 10; row++)
+			for (long col = h - 9; col < h + 10; col++)
+				if (row >= 0 && row < height && col >= 0 && col < width && pixels[row * width + col] > 128)
+					box++;
+		for (long row = 0; row < 38 && row < height; row++)
+			for (long col = 40; col < width - 40; col++)
+				if (pixels[row * width + col] > 128 && (labs(col - h) > 10 || labs(row - v) > 10))
+					top++;
+		if (box >= 150 && top < 5)
+			printf("[host] window pen: calibration target at %ld,%ld shown\n", h, v);
+		else
+			printf("[host] window pen: FAILED: calibration target at %ld,%ld not on the display (%ld dark in it, %ld at the top)\n", h, v, box, top);
+		fflush(stdout);
+	}
+	HostWindowPostPen(x, y, down ? 0 : 2);
 }
 
 
@@ -624,6 +667,10 @@ main(int argc, char** argv)
 			gHeadlessSeconds = strtol(argv[++i], nil, 0);
 			gWindowed = false;
 		}
+		else if (strcmp(argv[i], "--limit") == 0 && i + 1 < argc)
+			HostKeyboardSetTimeLimit((ULong) strtol(argv[++i], nil, 0));
+		else if (strcmp(argv[i], "--window-pen") == 0)
+			gHostTabletTapHook = WindowPenTap;
 		else if (strcmp(argv[i], "--store") == 0 && i + 1 < argc)
 			storeFile = argv[++i];
 		else if (strcmp(argv[i], "--erase") == 0)

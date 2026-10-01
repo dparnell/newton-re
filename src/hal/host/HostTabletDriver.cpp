@@ -117,6 +117,7 @@ static Int64				gTapGiveUpAt;
 
 // the calibration screen's targets (TInker::GetRawPoint tells them)
 static std::atomic<bool>	gAutoCalibrate(false);
+void	(*gHostTabletTapHook)(long x, long y, Boolean down) = nil;
 static std::atomic<long>	gTargetH(-1);
 static std::atomic<long>	gTargetV(-1);
 
@@ -363,13 +364,19 @@ TMainTabletDriver::Sample(void)
 	fNextSample = now;
 	CompAdd(&interval.time, &fNextSample);
 
-	// a scripted tap starts, or ends
+	// a scripted tap starts, or ends (through the window when it is asked
+	// for: the press reaches the panel when the window has had it)
 	if (gTapPending.exchange(false))
 	{
-		gRawX.store(gTapX);
-		gRawY.store(gTapY);
-		gRawDown.store(true);
-		gRawDowns.fetch_add(1);
+		if (gHostTabletTapHook != nil)
+			gHostTabletTapHook(gTapX, gTapY, true);
+		else
+		{
+			gRawX.store(gTapX);
+			gRawY.store(gTapY);
+			gRawDown.store(true);
+			gRawDowns.fetch_add(1);
+		}
 		gTapDown.store(true);
 		gTapReadsAtDown = TBCPolledPenDownSamples();
 		TTime hold(gTapMilliseconds, kMilliseconds);
@@ -384,7 +391,10 @@ TMainTabletDriver::Sample(void)
 				 || CompCompare(&now, &gTapGiveUpAt) >= 0))		// (a calibration that stopped reading)
 	{
 		gTapDown.store(false);
-		gRawDown.store(false);
+		if (gHostTabletTapHook != nil)
+			gHostTabletTapHook(gTapX, gTapY, false);
+		else
+			gRawDown.store(false);
 	}
 
 	if (fState == kTabletStateBypassed || fState == kTabletStateShutDown)

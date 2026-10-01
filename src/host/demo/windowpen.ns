@@ -1,0 +1,47 @@
+// The pen through the window (newton --window-pen --limit 120): Welcome's
+// Continue tapped and the calibration screen's targets tapped for it, each
+// press and release given to the window as a mouse click is
+// (host/HostWindow.h's HostWindowPostPen, the window's shims, the host
+// panel), not put on the panel straight away as the other demos' taps are.
+// A fresh store starts at the Setup assistant; the page after Welcome's
+// calibration is the one asking for a name.  (ctest host.NewtonWindowPen)
+HostInclude("common.ns");
+
+wpStart := Ticks();
+wpSetupOpen := func() GetRoot().setup and GetRoot().setup.viewCObject;
+wpPage := func() if call wpSetupOpen with () then GetRoot().setup.fCurrentPageIndex;
+
+call waitFor with ("windowpen: the Setup assistant", wpSetupOpen, func() begin
+	local opened := Ticks();
+	local was := call wpPage with ();
+	local taps := 0;
+	local tapped := 0;
+	local poll;
+	Print("windowpen: Welcome is up " & ((opened - wpStart) div 60) & " s into the script");
+	poll := func() begin
+		if call wpPage with () <> was then begin
+			local shown := HostTabletCalibrationTarget();
+			Print("windowpen: Continue was taken after " & taps & " taps, "
+				& ((Ticks() - opened) div 60) & " s after Welcome came up");
+			Print("windowpen: the calibration screen was shown and tapped through the window: "
+				& (if shown then "yes" else "FAILED"));
+			Print("windowpen: the page after Welcome is the name page: "
+				& (if call wpPage with () = was + 1 then "yes" else "FAILED"));
+			Print("windowpen: done");
+			HostQuit();
+		end else if Ticks() - opened > 60 * 60 then begin
+			Print("windowpen: Continue: waited in vain");
+			HostQuit();
+		end else begin
+			// Continue, again every three seconds while nothing has come of
+			// it (a tap while the machine is still starting is not taken)
+			if Ticks() - tapped > 180 and not HostTabletCalibrationTarget() then begin
+				HostTabletTap(293, 468, 100);
+				taps := taps + 1;
+				tapped := Ticks();
+			end;
+			AddDelayedCall(poll, nil, 250);
+		end;
+	end;
+	call poll with ();
+end, 90);

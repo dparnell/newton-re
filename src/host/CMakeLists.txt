@@ -387,6 +387,21 @@ set_tests_properties(host.NewtonAlignPen.restart PROPERTIES TIMEOUT 180
                      PASS_REGULAR_EXPRESSION "alignpen: restart done, 0 failed"
                      FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
 
+# the pen as a person's clicks reach it: the window open (--limit, not
+# --headless) and a script's taps handed to it as mouse clicks
+# (--window-pen: host/HostWindow.h's HostWindowPostPen, the window's shims,
+# the host panel) - Welcome's Continue, then the calibration screen's
+# targets (demo/windowpen.ns).  On a host with no window the shims are
+# called as the window's event loop would.
+add_test(NAME host.NewtonWindowPen
+         COMMAND newton --display 320x480 --erase
+                 --store ${CMAKE_CURRENT_BINARY_DIR}/windowpen.store --limit 150 --window-pen
+                 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/windowpen.ns
+         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonWindowPen PROPERTIES TIMEOUT 200
+                     PASS_REGULAR_EXPRESSION "calibration target at 10,10 shown.*windowpen: done"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+
 # the inker's live ink and busy box (recognition/Inker.h, LiveInker.h;
 # demo/liveink.ns): a stroke with the pen held down inked on the display,
 # the busy box shown and taken away

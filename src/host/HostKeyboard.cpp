@@ -16,6 +16,7 @@
 #include "hal/host/HostPower.h"
 #include "power/host/HostPowerSwitch.h"
 #include "HostPackages.h"
+#include "NewtonTime.h"
 #include <atomic>
 
 // the key queue: a ring, one writer (the window), one reader (the task)
@@ -44,6 +45,32 @@ void
 HostKeyboardQuit(void)
 {
 	gHostQuit.store(true);
+}
+
+
+// newton --limit: a windowed run ended after so long, as a headless one
+// is (a test that drives the window)
+static ULong	gHostTimeLimit = 0;
+static TTime	gHostQuitAt;
+
+void
+HostKeyboardSetTimeLimit(ULong seconds)
+{
+	gHostTimeLimit = seconds;
+}
+
+static Boolean
+HostTimeIsUp(void)
+{
+	if (gHostQuit.load())
+		return true;
+	if (gHostTimeLimit == 0)
+		return false;
+	TTime now = GetGlobalTime();
+	if (CompCompare(&now.time, &gHostQuitAt.time) < 0)
+		return false;
+	gHostQuit.store(true);
+	return true;
 }
 
 
@@ -82,15 +109,17 @@ HostKeyCodeForVirtualKey(long vk)
 void
 HostKeyboardToolTask(void)
 {
+	if (gHostTimeLimit != 0)
+		gHostQuitAt = TimeFromNow(gHostTimeLimit * kSeconds);
 	TUNameServer nameServer;
 	TObjectId portId = 0;
 	ULong spec = 0;
-	while (!gHostQuit.load() && nameServer.Lookup("newt", "TUPort", &portId, &spec) != noErr)
+	while (!HostTimeIsUp() && nameServer.Lookup("newt", "TUPort", &portId, &spec) != noErr)
 		Sleep(20 * kMilliseconds);
 	if (portId != 0)
 	{
 		TUPort newtPort(portId);
-		while (!gNewtIsAliveAndWell && !gHostQuit.load())
+		while (!gNewtIsAliveAndWell && !HostTimeIsUp())
 			Sleep(20 * kMilliseconds);
 		// (no 'connected' event up front: the machine is a bare MessagePad
 		//  until a key is pressed, and the first key connects the keyboard
@@ -98,7 +127,7 @@ HostKeyboardToolTask(void)
 		//  waiting for typing, and writing goes where it is written)
 		KeyboardEvent reply(aeKeyUp, 0);
 		ULong replySize = 0;
-		while (!gHostQuit.load())
+		while (!HostTimeIsUp())
 		{
 			while (gHostKeyHead.load() != gHostKeyTail.load())
 			{

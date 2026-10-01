@@ -366,6 +366,26 @@ HostWindowStart(long width, long height, const unsigned char* pixels, const char
 }
 
 
+// (the shims called as the event loop would call them: an event sent to
+// one's own window is not one the server is bound to deliver in order)
+void
+HostWindowPostPen(long x, long y, int what)
+{
+	if (what == 0)
+	{
+		gPenDown.store(true);
+		HostWindowPenDown(x, y);
+	}
+	else if (what == 1)
+		HostWindowPenMove(x, y);
+	else
+	{
+		gPenDown.store(false);
+		HostWindowPenUp();
+	}
+}
+
+
 void
 HostWindowStop(void)
 {
