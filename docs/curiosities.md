@@ -2346,3 +2346,13 @@ other part kinds come off a card whole. The reconstruction keeps the bug
 (`romsrc/` is the ROM's own code); `tools/cards/streamedpkg.py --kind form`
 makes a card package that shows it. `docs/stores/README.md`, "Card
 packages".
+
+## Writing over a letter measures from the wrong edge
+
+`TParagraphView::FindLineContainingPoint`, asked with margin 3 - the pen
+writing over a letter - widens the box it tests by setting its *top* to
+`left - width/2`: the left edge written where the top was meant, so the
+box's vertical extent depends on how far across the screen the line
+starts.  Found reading the assembly while the paragraph's hit-testing was
+transcribed (2026-10-01, 37b0c4a3); kept, with a comment in
+`views/ParagraphLines.cpp`.

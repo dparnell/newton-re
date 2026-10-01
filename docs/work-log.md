@@ -9,6 +9,20 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: a paragraph's text read back the ROM's way
+
+The rest of the paragraph's line work (37b0c4a3): what is asked of the
+laid-out lines goes through the ROM's code - `OffsetToBounds` over the
+text objects, `PointToOffset`/`PointToWord`/`PointToWordBoundary` with the
+callers' ROM margins, `PointToCaret` whole, `Area` for the selection,
+`ScrubCharacter`/`ReplaceCharacter`, the arrows, the baselines at
++0xa0-+0xa6 - and the host's two shims are gone; `GetInterLineSpacing`
+with several style runs; `TParagraphView::TextFlags` (0x38abc8).  A ROM
+bug kept (`docs/curiosities.md`): writing over a letter takes the box's
+top from its left.  Screens: the corrector opens 5 px lower (a word's box
+now reaches its descent), and a tap below a note ending in a return puts
+the caret at the empty line's start.  328 of 328.
+
 ## 2026-10-01: a card's own package
 
 A package kept in a card's attribute memory (Apple's CIS tuple 0x8e) loads
