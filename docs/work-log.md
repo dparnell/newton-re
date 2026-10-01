@@ -9,6 +9,24 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: the Notepad's last paragraph and page pieces; small leftovers
+
+- A paragraph's selection is drawn as the ROM draws it (offscreen bits
+  XORed by its PostDraw, or by the page when the page is the hiliter);
+  a latent host fault went with it - the paragraph's non-virtual
+  DrawHilites hid TView's, so the page's DrawHiliting never reached it.
+  A paragraph that grows pushes the paragraphs it now covers down, as an
+  undoable move (`TEditView::ChildBoundsChanged`, ctest
+  `host.NewtonPushDown`); `UpdateCachedBounds`/`SimpleOffset`,
+  `TEditView::PointToCaret` and `SetValue` (ROM bug kept: 'textFlags never
+  reaches the context).
+- NSOF's writer finds precedents in the ROM's PATRICIA trie
+  (`TPrecedentsForWriting`); `TRecognitionManager::Update` a method;
+  `TStrokeUnit::SizeInBytes`, the word recogniser's start and end times,
+  the domain's constructor and destructor; `TKeyboardView`'s destructor
+  gives back the legends' pattern the host had leaked.
+- 332 tests; 12354 of 16671 functions (74.10%).
+
 ## 2026-10-01: writing over a letter; the views' NOT YETs 28 to 6
 
 - A letter written over a letter of a word is read again as one letter
