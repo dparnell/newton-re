@@ -83,14 +83,15 @@ PrRegainControl(TPrinter* printer)
 // ROM 0x00192f08 InitPrintDrivers__Fv
 // The imaging engines and the drivers built into the ROM registered, and
 // the 'prnt part handler (TPrDriverPart) made for drivers in packages.
-// NOT YET RECONSTRUCTED: TPSPAPDriver (PostScript over AppleTalk),
-// TLaserWriterLSDriver, TSWGroupDriver and the part handler - the owner's
-// decision: the PostScript and HP PCL printers only.
+// NOT YET RECONSTRUCTED: TLaserWriterLSDriver, TSWGroupDriver and the part
+// handler - the owner's decision: the PostScript and HP PCL printers only.
+// TPSPAPDriver's PAP is the host's IPP (print/PSPrinter.h).
 void
 InitPrintDrivers(void)
 {
 	TDotPrinter::ClassInfo()->Register();
 	TPSPrinter::ClassInfo()->Register();
+	TPSPAPDriver::ClassInfo()->Register();
 	TFaxDriver::ClassInfo()->Register();
 	ThpPCL::ClassInfo()->Register();
 }

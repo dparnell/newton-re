@@ -1,0 +1,211 @@
+// The host's Network Printers preferences panel (print/host/HostIPP.h): the
+// IPP printers the host's DNS-SD browse finds (print/host/dnssd/HostDNSSD.h),
+// each offered as a PostScript or an HP PCL printer, and the one picked
+// added as an IPP printer whose frame carries its own URI.  This file is
+// compiled into the host (HostPrintersSource.cpp, made by
+// src/cmake/EmbedText.cmake) and evaluated at boot by
+// HostInstallIPPPrinters; it answers the frame kept in the global
+// NetworkPrinters:host, whose Start registers the panel and puts back the
+// printers added before.
+//
+// The panel is a preferences item (RegPrefs: the Prefs application's list,
+// after the ROM's own), the way the ROM's own optional settings are added.
+// A printer added is kept where the ROM keeps an application's settings,
+// its entry in the System soup (GetAppPrefs '|NetworkPrinters:host|, its
+// printers slot), and offered where the ROM offers its printers, the
+// global AvailablePrinters - so the Print slip's Choose Other Printer lists
+// it.  It is made the current printer as the ROM's own printer picker does
+// (the slip's saveNew, 0x471ec5: userConfiguration's currentPrinter, a
+// clone with printerType and printerName, and the two most recent printers
+// in printers), through SetUserConfig so that it is kept.
+
+{
+	kAppSymbol: '|NetworkPrinters:host|,
+
+	// the printer frames the ROM's AvailablePrinters has for the pages these
+	// drivers print (the network PostScript printer's, the DeskWriter's)
+	PrinterFrame: func(found, kind)
+	begin
+		local ps := kind = 'postScript;
+		{name: found.name & (if ps then " (PostScript)" else " (HP PCL)"),
+		 driverName: if ps then "THostIPPPSDriver" else "ThpPCL",
+		 imagingName: if ps then "TPSPrinter" else "TDotPrinter",
+		 type: 'serialSym,
+		 prModel: if ps then nil else 100,
+		 printerPageBounds: if ps then
+			{eightByEleven: {bottom: 775, right: 576}, a4: {bottom: 797, right: 559}}
+		 else
+			{eightByEleven: {bottom: 756, right: 576}, a4: {bottom: 797, right: 559}},
+		 printableOrigin: if ps then {top: 8, left: 8} else {top: 14, left: 18},
+		 // (the printer is looked for by its name each time it prints, the
+		 // URI kept for when it is not found: print/host/HostIPPTool.h)
+		 hostService: Clone(found.name),
+		 hostURI: Clone(found.uri)};
+	end,
+
+	// a printer frame put in AvailablePrinters, unless one of that name is
+	// there
+	Offer: func(printer)
+	begin
+		local there := nil;
+		foreach p in AvailablePrinters do
+			if StrEqual(p.name, printer.name) then there := true;
+		if not there then
+			AddArraySlot(AvailablePrinters, printer);
+	end,
+
+	// A found printer added: offered, kept, and made the current printer.
+	AddPrinter: func(found, kind)
+	begin
+		local printer := :PrinterFrame(found, kind);
+		:Offer(printer);
+		local prefs := GetAppPrefs(kAppSymbol, {printers: []});
+		local kept := nil;
+		foreach p in prefs.printers do
+			if StrEqual(p.name, printer.name) then begin
+				p.hostURI := Clone(printer.hostURI);
+				p.hostService := Clone(printer.hostService);
+				kept := true;
+			end;
+		if not kept then
+			AddArraySlot(prefs.printers, Clone(printer));
+		EntryChange(prefs);
+		// as the Print slip's saveNew makes a printer current
+		local current := Clone(printer);
+		current.printerType := 'serialSym;
+		current.printerName := printer.name;
+		local recent := if userConfiguration.printers then Clone(userConfiguration.printers) else [];
+		local i := 0;
+		while i < Length(recent) do
+			if StrEqual(recent[i].printerName, printer.name) then
+				ArrayRemoveCount(recent, i, 1)
+			else
+				i := i + 1;
+		ArrayMunger(recent, 0, 0, [Clone(current)], 0, 1);
+		if Length(recent) > 2 then
+			SetLength(recent, 2);
+		SetUserConfig('printers, recent);
+		SetUserConfig('currentPrinter, current);
+		printer;
+	end,
+
+	// the printers added before, offered again (at boot)
+	Restore: func()
+	begin
+		local prefs := GetAppPrefs(kAppSymbol, nil);
+		if prefs and prefs.printers then
+			foreach p in prefs.printers do
+				:Offer(Clone(p));
+	end,
+
+	// What the panel lists: each printer found once for each of the formats
+	// the host's printers can send it.
+	Rows: func()
+	begin
+		local rows := [];
+		foreach found in HostFoundPrinters() do begin
+			if found.postScript then
+				AddArraySlot(rows, {found: found, kind: 'postScript, text: found.name & " - PostScript"});
+			if found.pcl then
+				AddArraySlot(rows, {found: found, kind: 'pcl, text: found.name & " - HP PCL"});
+		end;
+		rows;
+	end,
+
+	// the panel's icon, a printer (a 16x12 'bits frame, as the ROM's own
+	// panels' icons are; the Prefs list and the panel's title draw it)
+	MakeIcon: func()
+	begin
+		local rows := [0x0FF0, 0x0810, 0x0810, 0x7FFE, 0x4002, 0x4062,
+					   0x4002, 0x7FFE, 0x0810, 0x0810, 0x0FF0, 0x0000];
+		local b := MakeBinary(16 + 4 * Length(rows), 'bits);
+		for i := 0 to 15 do StuffByte(b, i, 0);
+		StuffByte(b, 5, 4);								// rowBytes
+		StuffByte(b, 13, Length(rows));					// bounds.bottom
+		StuffByte(b, 15, 16);							// bounds.right
+		foreach i, r in rows do begin
+			StuffByte(b, 16 + 4 * i, r div 256);
+			StuffByte(b, 17 + 4 * i, r mod 256);
+			StuffByte(b, 18 + 4 * i, 0);
+			StuffByte(b, 19 + 4 * i, 0);
+		end;
+		{bits: b, bounds: {left: 0, top: 0, right: 16, bottom: Length(rows)}};
+	end,
+
+	// The preferences panel.
+	panel: {
+		_proto: @385,
+		overview: "Network Printers",
+		icon: nil,
+		height: 170,
+		viewBounds: {left: 0, top: 0, right: 0, bottom: 170},
+		rows: nil,
+		chosenRow: nil,
+		stepChildren: [
+			{_proto: @218, viewBounds: {left: 10, top: 20, right: -10, bottom: 36},
+			 viewJustify: 48, text: "Printers found on the network:"},
+			{_proto: @228, viewBounds: {left: 10, top: 40, right: -10, bottom: 118},
+			 viewJustify: 48, listItems: [], selection: -1,
+			 // (a tap on a row: the row picked)
+			 buttonClickScript: func(row) chosenRow := row},
+			{_proto: @226, viewBounds: {left: 10, top: 126, right: 90, bottom: 140},
+			 text: "Look again",
+			 buttonClickScript: func() begin
+				HostLookForPrinters();
+				AddDelayedCall(func() :Refresh(0), nil, 300);
+			 end},
+			{_proto: @226, viewBounds: {left: 100, top: 126, right: 200, bottom: 140},
+			 text: "Add printer",
+			 buttonClickScript: func() :AddSelected()},
+			{_proto: @218, viewBounds: {left: 10, top: 146, right: -10, bottom: 162},
+			 viewJustify: 48, text: "", statusText: true},
+		],
+		viewSetupDoneScript: func() begin
+			inherited:?viewSetupDoneScript();
+			HostLookForPrinters();
+			:Refresh(0);
+		end,
+		// the list made again from what the browse has found, and again a
+		// little later while it is still looking (up to five seconds)
+		Refresh: func(tries) begin
+			if not self.viewCObject then return;
+			rows := GetGlobalVar('|NetworkPrinters:host|):Rows();
+			local texts := foreach r in rows collect r.text;
+			local list := nil;
+			foreach c in :ChildViewFrames() do
+				if c.listItems then list := c;
+			if list then begin
+				list.listItems := texts;
+				list:?SetupList();
+				list:RedoChildren();
+			end;
+			local status := nil;
+			foreach c in :ChildViewFrames() do
+				if c.statusText then status := c;
+			if status then
+				SetValue(status, 'text, if Length(rows) = 0 then
+					(if HostLookingForPrinters() then "Looking..." else "No IPP printers found.")
+				else NumberStr(Length(rows)) & " way(s) to print found.");
+			if HostLookingForPrinters() and tries < 20 then
+				AddDelayedCall(func() :Refresh(tries + 1), nil, 250);
+		end,
+		AddSelected: func() begin
+			local i := chosenRow;
+			if not rows or not i or i < 0 or i >= Length(rows) then begin
+				:Notify(kNotifyAlert, "Network Printers", "Pick a printer in the list first.");
+				return;
+			end;
+			local printer := GetGlobalVar('|NetworkPrinters:host|):AddPrinter(rows[i].found, rows[i].kind);
+			foreach c in :ChildViewFrames() do
+				if c.statusText then SetValue(c, 'text, "Added " & printer.name);
+			Print("network printers: added " & printer.name & " at " & printer.hostURI);
+		end,
+	},
+
+	Start: func()
+	begin
+		:Restore();
+		panel.icon := :MakeIcon();
+		RegPrefs(kAppSymbol, panel);
+	end,
+}

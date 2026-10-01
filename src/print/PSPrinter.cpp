@@ -613,8 +613,12 @@ TPSPrinterDriver::Delete()
 
 /*------------------------------------------------------------------------------
 	T P S P A P D r i v e r
-	(only what is not AppleTalk's)
+	(only what is not AppleTalk's; the PAP calls' host stand-ins are
+	print/host/HostPAPDriver.cpp)
 ------------------------------------------------------------------------------*/
+
+PROTOCOL_IMPL_SOURCE_MACRO(TPSPAPDriver)		// ROM 0x0021a348 Sizeof__12TPSPAPDriverSFv
+PROTOCOL_CLASSINFO(TPSPAPDriver, "TPSPrinterDriver", "", 0x20000, 0, nil)	// ROM 0x00388520 ClassInfo__12TPSPAPDriverSFv
 
 // ROM 0x0021a408 CancelJob__12TPSPAPDriverFUc
 void
@@ -632,6 +636,36 @@ NewtonErr
 TPSPAPDriver::RepeatPSPage()
 {
 	return noErr;
+}
+
+
+// ROM 0x0021a654 OpenPage__12TPSPAPDriverFv
+// The printer's status taken; a page always opens.
+NewtonErr
+TPSPAPDriver::OpenPage()
+{
+	fError = GetStatus();
+	return noErr;
+}
+
+
+// ROM 0x0021a958 ClosePage__12TPSPAPDriverFv
+NewtonErr
+TPSPAPDriver::ClosePage()
+{
+	if (fError == noErr)
+		fError = GetStatus();
+	return noErr;
+}
+
+
+// ROM 0x0021abf0 IsProblemResolved__12TPSPAPDriverFv
+// ==> nought (kPrProblemFixed) when the printer's status is all well.
+PrProblemResolution
+TPSPAPDriver::IsProblemResolved()
+{
+	fError = GetStatus();
+	return (PrProblemResolution) (fError != noErr);
 }
 
 

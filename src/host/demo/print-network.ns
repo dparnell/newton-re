@@ -1,0 +1,113 @@
+// Printing to a printer found on the network, the ROM's own way (ctest
+// host.NewtonPrintNetwork, then .restart): the Print slip's Printer picker,
+// "Choose Network LaserWriter", and the ROM's network chooser - its zone
+// and NBP lookups answered from the host's DNS-SD browse
+// (print/host/HostNetworkPrinters.cpp), here given tools/print/ippprinter.py's
+// printer by --advertise - the printer picked and the chooser closed; then Print
+// and Now, the job going to it by IPP (TPSPrinter over TPSPAPDriver, whose
+// PAP is the host's IPP: print/host/HostPAPDriver.cpp).  Run again on the
+// same store (.restart) the Print slip already names the printer (the
+// user configuration's currentPrinter, which the ROM keeps), and the note
+// is printed again without choosing it.
+//
+//   python tools/print/ippprinter.py --port 0 --out build/ipp-net --advertise "Office Laser" -- \
+//       build/host/host/newton --display 320x480 --headless 200 --store build/net.store \
+//       --script src/host/demo/print-network.ns
+
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
+HostInclude("walkhelpers.ns");		// findView
+HostInclude("apphelpers.ns");		// pickerUp, pickItem, viewLabelled
+
+kNetPrinter := "Office Laser";
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+
+shows := func(left, top) begin
+	local found := nil;
+	foreach child in GetRoot():ChildViewFrames() do begin
+		local box := child:GlobalBox();
+		if box.left = left and box.top = top then found := true;
+	end;
+	found;
+end;
+
+chosen := func() begin
+	local p := userConfiguration.currentPrinter;
+	p and p.printerName and StrPos(p.printerName, kNetPrinter, 0) = 0;
+end;
+
+// the row of the network chooser's list showing the printer
+chooserRow := func() begin
+	local chooser := GetRoot().netChooser;
+	if chooser and chooser.viewCObject then
+		call findView with (chooser, func(v) IsString(v.text) and StrEqual(v.text, kNetPrinter));
+end;
+
+// the chooser's close box, which uses the printer picked (the ROM's
+// _defaultButton: its buttonClickScript sends networkChooserDone)
+useButton := func() begin
+	local chooser := GetRoot().netChooser;
+	local b := if chooser and chooser.viewCObject then
+		call findView with (chooser, func(v) v.preallocatedContext = '_defaultButton);
+	if b and b.viewCObject and Visible(b) then b;
+end;
+
+printNow := func(jobs) begin
+	call tapAt with (226, 284);			// Print
+	call waitFor with ("print-network: Now or Later", func() call shows with (207, 250), func() begin
+		call tapAt with (221, 256);		// Now
+		call waitFor with ("print-network: the job answered", func() HostIPPJobs() >= jobs, func() begin
+			Print("print-network: the printer answered " & NumberStr(HostIPPLastStatus()));
+			Print("print-network: done");
+			AddDelayedCall(func() HostQuit(), nil, 5000);
+		end, 120);
+	end, 20);
+end;
+
+openPrintSlip := func(andThen) begin
+	GetRoot().paperroll:MakeTextNote("hello from the Newton's printer", true);
+	call tapAt with (310, 28);				// the note's Action button
+	call waitFor with ("print-network: the Action menu", func() call pickerUp with (), func() begin
+		call pickItem with ("Print");		// Print Note
+		call waitFor with ("print-network: the Print slip", func() call shows with (45, 134), andThen, 20);
+	end, 20);
+end;
+
+choose := func() begin
+	call tapAt with (118, 196);				// the Printer picker
+	call waitFor with ("print-network: the printers", func() call pickerUp with (), func() begin
+		call pickItem with ("Choose Network");
+		call waitFor with ("print-network: the printer in the chooser", func() call chooserRow with (), func() begin
+			Print("print-network: the chooser lists " & kNetPrinter);
+			ScreenSnapshot("build/print-network-chooser.pgm");
+			call tapCentre with (call chooserRow with ());
+			call waitFor with ("print-network: the close box", func() call useButton with (), func() begin
+				call tapCentre with (call useButton with ());
+				call waitFor with ("print-network: the printer chosen", func() not GetRoot().netChooser.viewCObject
+						and call chosen with (), func() begin
+					Print("print-network: chose " & userConfiguration.currentPrinter.printerName);
+					call printNow with (1);
+				end, 20);
+			end, 20);
+		end, 30);
+	end, 20);
+end;
+
+// a fresh store starts with the Setup assistant, a set-up one with the Notepad
+call waitFor with ("print-network: the boot",
+	func() call (call isOpen with ('setup)) with () or call (call isOpen with ('paperroll)) with (),
+	func() begin
+		if call (call isOpen with ('setup)) with () then
+			call walkSetup with (name, func() call openPrintSlip with (choose))
+		else
+			// the run after a restart: the printer is still the one chosen
+			AddDelayedCall(func() begin
+				if call chosen with () then begin
+					Print("print-network: the printer is still " & userConfiguration.currentPrinter.printerName);
+					call openPrintSlip with (func() call printNow with (1));
+				end else begin
+					Print("print-network: FAILED - the printer chosen was not kept");
+					HostQuit();
+				end;
+			end, nil, 600);
+	end, 60);
+Print("print-network: the script is loaded");

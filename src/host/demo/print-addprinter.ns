@@ -1,0 +1,116 @@
+// Adding a network printer from the host's own Network Printers panel
+// (ctest host.NewtonPrintAddPrinter, then .restart): Extras, Prefs,
+// Network Printers - the IPP printers the host's DNS-SD browse finds
+// (print/host/HostPrinters.ns; here tools/print/ippprinter.py's, given by
+// --advertise) - its HP PCL row picked and Add printer tapped; then a note
+// printed, the job going by IPP to the URI the printer frame carries
+// (ThpPCL over the 'ippc service, no --ipp-printer given).  Run again on
+// the same store (.restart) the printer is still the current one and is
+// offered again, and the note is printed without adding it.
+//
+//   python tools/print/ippprinter.py --port 0 --out build/ipp-add --advertise "Office Laser" -- \
+//       build/host/host/newton --display 320x480 --headless 200 --store build/add.store \
+//       --script src/host/demo/print-addprinter.ns
+
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
+HostInclude("walkhelpers.ns");		// findView
+HostInclude("apphelpers.ns");		// pickerUp, pickItem, viewLabelled
+
+kAddedPrinter := "Office Laser (HP PCL)";
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+
+shows := func(left, top) begin
+	local found := nil;
+	foreach child in GetRoot():ChildViewFrames() do begin
+		local box := child:GlobalBox();
+		if box.left = left and box.top = top then found := true;
+	end;
+	found;
+end;
+
+added := func() begin
+	local p := userConfiguration.currentPrinter;
+	p and p.printerName and StrEqual(p.printerName, kAddedPrinter);
+end;
+
+offered := func() begin
+	local there := nil;
+	foreach p in AvailablePrinters do if StrEqual(p.name, kAddedPrinter) then there := p;
+	there;
+end;
+
+// the Network Printers panel, once it lists the printer
+panelView := func() call findView with (GetRoot(), func(v) v.overview and IsString(v.overview)
+	and StrEqual(v.overview, "Network Printers") and v.rows and Length(v.rows) >= 2 and v.viewCObject);
+
+printNow := func(jobs) begin
+	call tapAt with (226, 284);			// Print
+	call waitFor with ("print-addprinter: Now or Later", func() call shows with (207, 250), func() begin
+		call tapAt with (221, 256);		// Now
+		call waitFor with ("print-addprinter: the job answered", func() HostIPPJobs() >= jobs, func() begin
+			Print("print-addprinter: the printer answered " & NumberStr(HostIPPLastStatus()));
+			Print("print-addprinter: done");
+			HostQuit();
+		end, 120);
+	end, 20);
+end;
+
+openPrintSlip := func(andThen) begin
+	GetRoot().paperroll:MakeTextNote("hello from the Newton's printer", true);
+	call tapAt with (310, 28);				// the note's Action button
+	call waitFor with ("print-addprinter: the Action menu", func() call pickerUp with (), func() begin
+		call pickItem with ("Print");		// Print Note
+		call waitFor with ("print-addprinter: the Print slip", func() call shows with (45, 134), andThen, 20);
+	end, 20);
+end;
+
+addPrinter := func() begin
+	call tapAt with (20, 460);				// Extras
+	call waitFor with ("print-addprinter: the Extras drawer", func() GetRoot().extrasDrawer.viewCObject, func() begin
+		local icon := call findView with (GetRoot().extrasDrawer, func(v) v.target and v.target.fentry
+			and v.target.fentry.app = 'preferenceRoll);
+		call tapCentre with (icon);
+		call waitFor with ("print-addprinter: Prefs", func() GetRoot().preferenceRoll.viewCObject, func() begin
+			local row := call findView with (GetRoot().preferenceRoll, func(v) IsString(v.text)
+				and StrEqual(v.text, "Network Printers"));
+			if row then call tapCentre with (row) else call tapAt with (110, 296);
+			call waitFor with ("print-addprinter: the printers found", func() call panelView with (), func() begin
+				local panel := call panelView with ();
+				Print("print-addprinter: the panel lists " & panel.rows[0].text & ", " & panel.rows[1].text);
+				ScreenSnapshot("build/print-addprinter-panel.pgm");
+				local list := call findView with (panel, func(v) v.listItems);
+				local b := list:GlobalBox();
+				call tapAt with (b.left + 40, b.top + 4 + 13 + 6);		// the second row, HP PCL
+				call waitFor with ("print-addprinter: the row picked", func() panel.chosenRow = 1, func() begin
+					call tapCentre with (call viewLabelled with (panel, "Add printer"));
+					call waitFor with ("print-addprinter: the printer added", added, func() begin
+						Print("print-addprinter: added " & userConfiguration.currentPrinter.printerName
+							& " at " & userConfiguration.currentPrinter.hostURI);
+						GetRoot().preferenceRoll:Close();
+						AddDelayedCall(func() call openPrintSlip with (func() call printNow with (1)), nil, 500);
+					end, 20);
+				end, 10);
+			end, 30);
+		end, 20);
+	end, 20);
+end;
+
+// a fresh store starts with the Setup assistant, a set-up one with the Notepad
+call waitFor with ("print-addprinter: the boot",
+	func() call (call isOpen with ('setup)) with () or call (call isOpen with ('paperroll)) with (),
+	func() begin
+		if call (call isOpen with ('setup)) with () then
+			call walkSetup with (name, addPrinter)
+		else
+			// the run after a restart: the printer is still the one added
+			AddDelayedCall(func() begin
+				if call added with () and call offered with () then begin
+					Print("print-addprinter: the printer is still " & userConfiguration.currentPrinter.printerName);
+					call openPrintSlip with (func() call printNow with (1));
+				end else begin
+					Print("print-addprinter: FAILED - the printer added was not kept");
+					HostQuit();
+				end;
+			end, nil, 600);
+	end, 60);
+Print("print-addprinter: the script is loaded");

@@ -82,13 +82,15 @@ public:
 };
 
 
-// HOST EXTENSION (not in the ROM): a printer model the host connects
-// through a comm service of its own.  ThpPCL::InitializeConnection asks
-// this hook first; when it answers a service (not nought) the endpoint is
-// that service with no options of its own, in place of the serial port or
-// IrDA.  Nil on a device.  (print/host/HostIPP.h registers the IPP
-// printer's.)
-typedef ULong (*PrinterServiceHook)(long prModel);
+// HOST EXTENSION (not in the ROM): a printer the host connects through a
+// comm service of its own.  ThpPCL::InitializeConnection asks this hook
+// first, with the driver (its fPrModel and its connection frame) and the
+// empty option array; when the hook has put the service's options in it
+// (answering true) the endpoint is made of those, in place of the serial
+// port or IrDA.  Nil on a device.  (print/host/HostIPPTool.cpp sets the
+// IPP printer's.)
+class TOptionArray;
+typedef Boolean (*PrinterServiceHook)(ThpPCL* driver, TOptionArray* options);
 extern PrinterServiceHook	gPrinterServiceHook;
 
 #endif	/* __PRINT_HPPCL_H */

@@ -14,13 +14,19 @@ and logs what it got.  With a program after `--` it runs it with
 newton takes as it takes `--ipp-printer`, and stops when the program ends.
 
     python tools/print/ippprinter.py [--port PORT] [--out DIR] [--path /ipp/print]
-                                     [--status N] [-- <program> [args...]]
+                                     [--status N] [--advertise NAME [--formats ps,pcl]]
+                                     [-- <program> [args...]]
 
 **Inputs:** `--port` (default 0: a free one, so runs from two build
 directories never meet), `--out` the directory the documents go to (default
 the working directory), `--path` the printer's path (default `/ipp/print`),
 `--status` the IPP status-code to answer a Print-Job with (default 0,
-successful-ok; `0x040a` refuses the document's format, for trying a refusal).
+successful-ok; `0x040a` refuses the document's format, for trying a refusal),
+`--advertise NAME` makes the program find the printer on the network under
+that name instead of being given it: `NEWTON_FOUND_PRINTERS=NAME|URI|FORMATS`
+replaces `NEWTON_IPP_PRINTER`, and the host's DNS-SD layer
+(`src/print/host/dnssd/HostDNSSD.h`) takes the list in place of a browse;
+`--formats` is what it says it takes (default `ps,pcl`).
 
 **Outputs:** each job as `DIR/job-N.ps` (application/postscript),
 `job-N.pcl` (application/vnd.hp-pcl) or `job-N.bin`; `[ipp] ...` log lines
@@ -31,7 +37,9 @@ and then `newton --ipp-printer ipp://127.0.0.1:6310/ipp/print`.
 
 It reads chunked and Content-Length requests and answers HTTP/1.1 with a
 Content-Length.  Used by ctests `host.NewtonIPPPostScript` and
-`host.NewtonIPPPCL` (`src/host/demo/print-ipp.ns`).
+`host.NewtonIPPPCL` (`src/host/demo/print-ipp.ns`), and with `--advertise`
+by `host.NewtonPrintNetworkChooser` and `host.NewtonPrintAddPrinter`
+(`print-network.ns`, `print-addprinter.ns`).
 
 ## jobcheck.py - check a job a Newton printed
 

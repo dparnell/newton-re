@@ -227,12 +227,21 @@ extern const IntCString		gPSStatusStrings[15];		// a PostScript printer's status
 
 /*------------------------------------------------------------------------------
 	T P S P A P D r i v e r
-	The ROM's PostScript driver, over AppleTalk's Printer Access Protocol.
-	NOT YET RECONSTRUCTED but for what is not AppleTalk's: the reading of a
-	PostScript printer's status message, which a printer answers the same
-	way over any connection ("%%[ status: busy; source: AppleTalk ]%%",
-	"%%[ PrinterError: out of paper ]%%").  The rest is PAP (TPAPInterface,
-	OpenAppleTalk), and so is the class: it is not registered.
+	The ROM's PostScript driver, over AppleTalk's Printer Access Protocol:
+	the driver of the network PostScript printer (the LaserWriter the Print
+	slip's "Choose Network LaserWriter" finds by NBP).  Reconstructed are
+	the calls that are not AppleTalk's - the page brackets, the problem's
+	resolution, the cancel, and the reading of a PostScript printer's status
+	message, which a printer answers the same way over any connection
+	("%%[ status: busy; source: AppleTalk ]%%", "%%[ PrinterError: out of
+	paper ]%%").
+	DEVIATION (the owner's decision): AppleTalk is not reconstructed, and
+	PAP is replaced by IPP.  The host's stand-ins for the PAP calls
+	(print/host/HostPAPDriver.cpp) find the printer the chooser picked - the
+	printer frame's printerName, "name:LaserWriter@zone" - among the IPP
+	printers the host's DNS-SD browse finds (the NBP lookup the chooser made
+	was answered from the same browse, print/host/HostNetworkPrinters.cpp)
+	and send the job to it by IPP.
 ------------------------------------------------------------------------------*/
 
 PROTOCOL TPSPAPDriver : public TPSPrinterDriver
@@ -240,20 +249,20 @@ PROTOCOL TPSPAPDriver : public TPSPrinterDriver
 public:
 	PROTOCOL_IMPL_HEADER_MACRO(TPSPAPDriver);
 
-	TPSPAPDriver*	New() { return this; }
-	void			Delete() {}
+	TPSPAPDriver*	New();													// (host)
+	void			Delete();												// (host stand-in for ROM 0x0021a988)
 
-	NewtonErr		Open() { return kPR_ERR_NewtonError; }
-	NewtonErr		Close(Boolean) { return noErr; }
-	NewtonErr		OpenPage() { return noErr; }
-	NewtonErr		ClosePage() { return noErr; }
+	NewtonErr		Open();													// (host stand-in for ROM 0x0021a424)
+	NewtonErr		Close(Boolean abort);									// (host stand-in for ROM 0x0021a8a8)
+	NewtonErr		OpenPage();												// ROM 0x0021a654 OpenPage__12TPSPAPDriverFv
+	NewtonErr		ClosePage();											// ROM 0x0021a958 ClosePage__12TPSPAPDriverFv
 	void			CancelJob(Boolean asyncCancel);							// ROM 0x0021a408 CancelJob__12TPSPAPDriverFUc
-	PrProblemResolution	IsProblemResolved() { return kPrProblemFixed; }
-	NewtonErr		GetStatus() { return fError; }
-	NewtonErr		SendPSText(char*, ULong& sent, Boolean) { sent = 0; return kPR_ERR_NewtonError; }
+	PrProblemResolution	IsProblemResolved();								// ROM 0x0021abf0 IsProblemResolved__12TPSPAPDriverFv
+	NewtonErr		GetStatus();											// (host stand-in for ROM 0x0021a9e8)
+	NewtonErr		SendPSText(char* text, ULong& sent, Boolean eoj);		// (host stand-in for ROM 0x0021a67c)
 	NewtonErr		RepeatPSPage();											// ROM 0x0021a674 RepeatPSPage__12TPSPAPDriverFv
-	NewtonErr		SendPSBinary(char*, ULong, ULong& sent) { sent = 0; return kPR_ERR_NewtonError; }
-	NewtonErr		RecvPSText(char*, ULong& size) { size = 0; return kPR_ERR_NewtonError; }
+	NewtonErr		SendPSBinary(char* data, ULong size, ULong& sent);		// (host stand-in for ROM 0x0021a75c)
+	NewtonErr		RecvPSText(char* text, ULong& size);					// (host stand-in for ROM 0x0021a830)
 
 	NewtonErr		InterpretPAPStatusString(unsigned char* status, Boolean idleIsFine);	// ROM 0x0021aa84 InterpretPAPStatusString__12TPSPAPDriverFP10TString255Uc
 	NewtonErr		InterpretPAPString(char* status, Boolean idleIsFine);	// ROM 0x0021aabc InterpretPAPString__12TPSPAPDriverFPcUc
@@ -264,6 +273,7 @@ public:
 	char			fReply[0x200];		// +0x24  the last reply read (a Pascal string at +0x27)
 	Boolean			fClosedAppleTalk;	// +0x224
 	Boolean			fCancelled;			// +0x225
+	void*			fHostConnection;	// (host) the IPP connection standing in for fPAP
 };
 
 #endif	/* __PRINT_PSPRINTER_H */

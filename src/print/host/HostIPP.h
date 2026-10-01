@@ -123,4 +123,15 @@ void		HostIPPLastJob(HostIPPResponse* response);
 // HostInstallPrinter).
 void		HostInstallIPPPrinters(void);
 
+// The printers on the network: the AppleTalk natives the ROM's network
+// chooser asks (HaveZones, GetMyZone, GetZoneList, NBPStart, NBPGetCount,
+// NBPGetNames, NBPStop, OpenAppleTalk, CloseAppleTalk) answered from the
+// host's DNS-SD browse (dnssd/HostDNSSD.h) - DEVIATION, the owner's
+// decision -, the Network Printers panel's functions (HostLookForPrinters,
+// HostLookingForPrinters, HostFoundPrinters) defined, and HostPrinters.ns
+// started: the panel registered in the Prefs and the printers added
+// before offered again.  (HostNetworkPrinters.cpp; HostInstallIPPPrinters
+// calls it.)
+void		HostInstallNetworkPrinters(void);
+
 #endif	/* __HOSTIPP_H */

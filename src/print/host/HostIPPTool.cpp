@@ -9,6 +9,7 @@
 */
 
 #include "print/host/HostIPPTool.h"
+#include "print/host/dnssd/HostDNSSD.h"
 #include "print/HPPCL.h"
 #include "Endpoint.h"
 #include "OptionArray.h"
@@ -89,7 +90,7 @@ THostIPPTool::THostIPPTool(ULong serviceId)
 	fInSize = 0;
 	fPolls = 0;
 	memset(&fURI, 0, sizeof(fURI));
-	fURIText[0] = 0;
+	fURIText[0] = 0;		// (kHostIPPURIOption may name the printer)
 }
 
 
@@ -129,6 +130,27 @@ THostIPPTool::OpenStart(TOptionArray* /*options*/)
 }
 
 
+// The printer's URI, when the endpoint names one (kHostIPPURIOption).
+ULong
+THostIPPTool::ProcessOptionStart(TOption* theOption, ULong label, ULong opcode)
+{
+	if (label == kHostIPPURIOption)
+	{
+		if (opcode == opSetNegotiate || opcode == opSetRequired)
+		{
+			const char* uri = (const char*) (theOption + 1);
+			size_t n = theOption->Length();
+			if (n >= sizeof(fURIText))
+				n = sizeof(fURIText) - 1;
+			memcpy(fURIText, uri, n);
+			fURIText[n] = 0;
+		}
+		return opSuccess;
+	}
+	return TCommTool::ProcessOptionStart(theOption, label, opcode);
+}
+
+
 // After every message: the poll kept going (as THostTCPTool's: the host's
 // clock stands still while tasks run).
 void
@@ -139,11 +161,13 @@ THostIPPTool::HandleInternalEvent()
 }
 
 
-// The printer the jobs go to, named and connected to.
+// The printer the job goes to - the one the endpoint named, else the
+// configured one - named and connected to.
 void
 THostIPPTool::ConnectStart()
 {
-	snprintf(fURIText, sizeof(fURIText), "%s", HostIPPPrinter());
+	if (fURIText[0] == 0)
+		snprintf(fURIText, sizeof(fURIText), "%s", HostIPPPrinter());
 	if (!HostIPPParseURI(fURIText, &fURI))
 	{
 		printf("[host] IPP: no printer (newton --ipp-printer ipp://host:631/path)\n");
@@ -524,32 +548,33 @@ PROTOCOL_IMPL_SOURCE_MACRO(THostIPPPSDriver)
 PROTOCOL_CLASSINFO(THostIPPPSDriver, "TPSPrinterDriver", "", 0x20000, 0, nil)
 
 
-THostIPPPSDriver*
-THostIPPPSDriver::New()
+THostIPPURIOption::THostIPPURIOption(const char* uri)
+	: TOption(kOptionType)
 {
-	fEndpoint = nil;
-	fError = noErr;
-	fCancelled = false;
-	return this;
+	SetAsOption(kHostIPPURIOption);
+	snprintf(fURI, sizeof(fURI), "%s", uri);
+	SetLength(strlen(fURI) + 1);
 }
 
 
-void
-THostIPPPSDriver::Delete()
+THostIPPConnection::THostIPPConnection()
+{
+	fEndpoint = nil;
+}
+
+
+THostIPPConnection::~THostIPPConnection()
 {
 	if (fEndpoint != nil)
 		fEndpoint->Delete();
-	fEndpoint = nil;
 }
 
 
 // An endpoint of the IPP service, opened (EasyOpen: connected to the
 // printer).
 NewtonErr
-THostIPPPSDriver::Open()
+THostIPPConnection::Open(const char* uri)
 {
-	fError = noErr;
-	fCancelled = false;
 	TOptionArray options;
 	NewtonErr err = options.Init();
 	if (err == noErr)
@@ -557,6 +582,11 @@ THostIPPPSDriver::Open()
 		TOption service(kOptionType);
 		service.SetAsService(kHostIPPService);
 		err = options.InsertOptionAt(options.GetArrayCount(), &service);
+	}
+	if (err == noErr && uri != nil && uri[0] != 0)
+	{
+		THostIPPURIOption where(uri);
+		err = options.InsertOptionAt(options.GetArrayCount(), &where);
 	}
 	if (err == noErr)
 		err = CMGetEndpoint(&options, &fEndpoint, false);
@@ -575,9 +605,28 @@ THostIPPPSDriver::Open()
 }
 
 
+NewtonErr
+THostIPPConnection::Send(const char* data, ULong size, ULong& sent)
+{
+	sent = 0;
+	if (fEndpoint == nil)
+		return kPR_ERR_NewtonError;
+	Size count = size;
+	NewtonErr err = fEndpoint->Snd((UByte*) data, count, 0, kIPPSendTimeout);
+	sent = count;
+	if (err == noErr)
+		return noErr;
+	if (err == kError_Call_Aborted)
+		return kPR_ERR_UserCancel;
+	if (err == kError_Message_Timed_Out)
+		return kPR_ERR_LostContact;
+	return kPR_ERR_NewtonError;
+}
+
+
 // The endpoint closed, which ends the job at the printer.
 NewtonErr
-THostIPPPSDriver::Close(Boolean /*abort*/)
+THostIPPConnection::Close()
 {
 	NewtonErr err = noErr;
 	if (fEndpoint != nil)
@@ -587,6 +636,77 @@ THostIPPPSDriver::Close(Boolean /*abort*/)
 		fEndpoint = nil;
 	}
 	return (err == noErr) ? noErr : kPR_ERR_NewtonError;
+}
+
+
+Boolean
+HostPrinterFrameURI(RefArg printer, char* uri, size_t size)
+{
+	uri[0] = 0;
+	if (!IsFrame(printer))
+		return false;
+	// a printer found on the network is looked for again by its name (an
+	// address and port need not last), the URI it had kept for when it is
+	// not found
+	RefVar service(GetFrameSlot(printer, RefVar(Intern((char*) "hostService"))));
+	if (IsString(service))
+	{
+		char name[64];
+		HostDNSSDPrinter found;
+		ConvertFromUnicode(GetCString(service), name, kMacRomanEncoding, sizeof(name) - 1);
+		if (HostDNSSDResolve(name, &found, kHostDNSSDWait))
+		{
+			snprintf(uri, size, "%s", found.fURI);
+			return true;
+		}
+	}
+	RefVar where(GetFrameSlot(printer, RefVar(Intern((char*) "hostURI"))));
+	if (!IsString(where))
+		return false;
+	ConvertFromUnicode(GetCString(where), uri, kMacRomanEncoding, (long) size - 1);
+	return uri[0] != 0;
+}
+
+
+THostIPPPSDriver*
+THostIPPPSDriver::New()
+{
+	fConnection = nil;
+	fError = noErr;
+	fCancelled = false;
+	return this;
+}
+
+
+void
+THostIPPPSDriver::Delete()
+{
+	delete fConnection;
+	fConnection = nil;
+}
+
+
+// A connection to the printer the printer frame names (its hostURI), else
+// to the configured one.
+NewtonErr
+THostIPPPSDriver::Open()
+{
+	fError = noErr;
+	fCancelled = false;
+	char uri[256];
+	RefVar connectInfo(fConnect->fConnectInfo);
+	RefVar printer(IsFrame(connectInfo) ? GetFrameSlot(connectInfo, RefVar(Intern((char*) "printer"))) : NILREF);
+	HostPrinterFrameURI(printer, uri, sizeof(uri));
+	if (fConnection == nil)
+		fConnection = new THostIPPConnection;
+	return fConnection->Open(uri);
+}
+
+
+NewtonErr
+THostIPPPSDriver::Close(Boolean /*abort*/)
+{
+	return (fConnection != nil) ? fConnection->Close() : noErr;
 }
 
 
@@ -638,18 +758,9 @@ THostIPPPSDriver::Send(const char* data, ULong size, ULong& sent)
 	sent = 0;
 	if (fCancelled)
 		return kPR_ERR_UserCancel;
-	if (fEndpoint == nil)
+	if (fConnection == nil)
 		return kPR_ERR_NewtonError;
-	Size count = size;
-	NewtonErr err = fEndpoint->Snd((UByte*) data, count, 0, kIPPSendTimeout);
-	sent = count;
-	if (err == noErr)
-		return noErr;
-	if (err == kError_Call_Aborted)
-		return kPR_ERR_UserCancel;
-	if (err == kError_Message_Timed_Out)
-		return kPR_ERR_LostContact;
-	return kPR_ERR_NewtonError;
+	return fConnection->Send(data, size, sent);
 }
 
 
@@ -687,11 +798,25 @@ THostIPPPSDriver::RecvPSText(char* /*text*/, ULong& size)
 	I n s t a l l i n g   t h e m
 ------------------------------------------------------------------------------*/
 
-// the HP driver's way to the IPP printer (print/HPPCL.h)
-static ULong
-IPPServiceForModel(long prModel)
+// the HP driver's way to an IPP printer (print/HPPCL.h): for the model
+// kHostIPPPrinterModel, the IPP service and the printer frame's URI
+static Boolean
+IPPServiceForPCL(ThpPCL* driver, TOptionArray* options)
 {
-	return (prModel == kHostIPPPrinterModel) ? (ULong) kHostIPPService : 0;
+	if (driver->fPrModel != kHostIPPPrinterModel)
+		return false;
+	TOption service(kOptionType);
+	service.SetAsService(kHostIPPService);
+	driver->fError = options->InsertOptionAt(options->GetArrayCount(), &service);
+	char uri[256];
+	RefVar connectInfo(driver->fConnect->fConnectInfo);
+	RefVar printer(IsFrame(connectInfo) ? GetFrameSlot(connectInfo, RefVar(Intern((char*) "printer"))) : NILREF);
+	if (driver->fError == noErr && HostPrinterFrameURI(printer, uri, sizeof(uri)))
+	{
+		THostIPPURIOption where(uri);
+		driver->fError = options->InsertOptionAt(options->GetArrayCount(), &where);
+	}
+	return true;
 }
 
 
@@ -779,7 +904,7 @@ HostInstallIPPPrinters(void)
 {
 	THostIPPService::ClassInfo()->Register();
 	THostIPPPSDriver::ClassInfo()->Register();
-	gPrinterServiceHook = IPPServiceForModel;
+	gPrinterServiceHook = IPPServiceForPCL;
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostSetIPPPrinter")), RefVar(MakeCFunction((void*) FHostSetIPPPrinter, 1, nil)));
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostIPPJobs")), RefVar(MakeCFunction((void*) FHostIPPJobs, 0, nil)));
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostIPPLastStatus")), RefVar(MakeCFunction((void*) FHostIPPLastStatus, 0, nil)));
@@ -791,4 +916,7 @@ HostInstallIPPPrinters(void)
 	}
 	if (gIPPPrinter[0] != 0)
 		AddIPPPrinters();
+	// the network printers: the ROM's chooser answered from the host's
+	// DNS-SD, and the Network Printers panel (HostNetworkPrinters.cpp)
+	HostInstallNetworkPrinters();
 }

@@ -18,3 +18,8 @@ add_executable(test_HostIPP test_HostIPP.cpp)
 target_link_libraries(test_HostIPP PRIVATE print)
 add_test(NAME print.HostIPP COMMAND test_HostIPP)
 set_tests_properties(print.HostIPP PROPERTIES TIMEOUT 30 PASS_REGULAR_EXPRESSION "test_HostIPP: all passed")
+
+add_executable(test_HostDNSSD test_HostDNSSD.cpp)
+target_link_libraries(test_HostDNSSD PRIVATE print_host_dnssd)
+add_test(NAME print.HostDNSSD COMMAND test_HostDNSSD)
+set_tests_properties(print.HostDNSSD PROPERTIES TIMEOUT 30 PASS_REGULAR_EXPRESSION "test_HostDNSSD: all passed")

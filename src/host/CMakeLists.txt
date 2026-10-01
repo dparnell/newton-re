@@ -416,6 +416,64 @@ if(Python3_FOUND)
     endforeach()
 endif()
 
+# the printers on the network (print/host/HostNetworkPrinters.cpp): the
+# fake printer advertised (ippprinter.py --advertise, which the host's
+# DNS-SD layer takes in place of a browse: NEWTON_FOUND_PRINTERS), picked
+# with the pen - NetworkChooser through the ROM's own network chooser
+# (Choose Network LaserWriter: the NBP lookup answered from DNS-SD,
+# TPSPAPDriver's PAP the host's IPP), AddPrinter through the host's Network
+# Printers panel in the Prefs (its HP PCL printer added) - and a note
+# printed; then .restart on the same store, the printer still chosen (a new
+# port each run: the printer is found again by its name) and the note
+# printed again
+if(Python3_FOUND)
+    foreach(kind NetworkChooser AddPrinter)
+        if(kind STREQUAL "NetworkChooser")
+            set(net_script print-network.ns)
+            set(net_tag print-network)
+            set(net_job job-1.ps)
+            set(net_check --text "hello from the Newton's printer")
+            set(net_first "chose Office Laser:LaserWriter@Local network")
+        else()
+            set(net_script print-addprinter.ns)
+            set(net_tag print-addprinter)
+            set(net_job job-1.pcl)
+            set(net_check --inked 1:200,150,1500,250:2000)
+            set(net_first "added Office Laser \(HP PCL\) at ipp://")
+        endif()
+        set(net_dir ${CMAKE_CURRENT_BINARY_DIR}/print-${kind})
+        add_test(NAME host.NewtonPrint${kind}.clean COMMAND ${CMAKE_COMMAND} -E rm -rf ${net_dir})
+        add_test(NAME host.NewtonPrint${kind}.mkdir COMMAND ${CMAKE_COMMAND} -E make_directory ${net_dir})
+        set_tests_properties(host.NewtonPrint${kind}.clean PROPERTIES FIXTURES_SETUP print${kind}clean)
+        set_tests_properties(host.NewtonPrint${kind}.mkdir PROPERTIES FIXTURES_SETUP print${kind}clean DEPENDS host.NewtonPrint${kind}.clean)
+        foreach(run first restart)
+            if(run STREQUAL "first")
+                set(net_name host.NewtonPrint${kind})
+                set(net_said ${net_first})
+            else()
+                set(net_name host.NewtonPrint${kind}.restart)
+                set(net_said "the printer is still")
+            endif()
+            add_test(NAME ${net_name}
+                     COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/print/ippprinter.py --port 0 --out ${net_dir}/${run}
+                             --advertise "Office Laser"
+                             -- $<TARGET_FILE:newton> --display 320x480 --headless 200 --store ${net_dir}/store
+                             --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/${net_script}
+                     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+            set_tests_properties(${net_name} PROPERTIES TIMEOUT 300
+                                 PASS_REGULAR_EXPRESSION "${net_tag}: ${net_said}.*job 1: [0-9]+ bytes .*saved.*${net_tag}: done.*1 job\(s\); the program answered 0"
+                                 FAIL_REGULAR_EXPRESSION "waited in vain|fell over|FAILED")
+            add_test(NAME ${net_name}.check
+                     COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/print/jobcheck.py ${net_dir}/${run}/${net_job} --pages 1 ${net_check})
+            set_tests_properties(${net_name}.check PROPERTIES PASS_REGULAR_EXPRESSION "jobcheck: passed")
+        endforeach()
+        set_tests_properties(host.NewtonPrint${kind} PROPERTIES FIXTURES_REQUIRED print${kind}clean FIXTURES_SETUP print${kind}first)
+        set_tests_properties(host.NewtonPrint${kind}.check PROPERTIES FIXTURES_REQUIRED print${kind}first)
+        set_tests_properties(host.NewtonPrint${kind}.restart PROPERTIES FIXTURES_REQUIRED print${kind}first FIXTURES_SETUP print${kind}restart)
+        set_tests_properties(host.NewtonPrint${kind}.restart.check PROPERTIES FIXTURES_REQUIRED print${kind}restart)
+    endforeach()
+endif()
+
 # the host's printer (print/host/HostPrinter.h): a note and a Names card
 # printed from their Action buttons, the printer chosen in the Print slip's
 # Choose Other Printer; each page a PNG in build/print, which

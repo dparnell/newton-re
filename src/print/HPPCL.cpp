@@ -127,15 +127,8 @@ ThpPCL::InitializeConnection()
 	fError = options.Init();
 	if (fError == noErr)
 	{
-		ULong hostService = (gPrinterServiceHook != nil) ? gPrinterServiceHook(fPrModel) : 0;
-		if (hostService != 0)
-		{
-			TOption service(kOptionType);
-			service.SetAsService(hostService);
-			fError = options.InsertOptionAt(options.GetArrayCount(), &service);
-			if (fError != noErr)
-				return false;
-		}
+		if (gPrinterServiceHook != nil && gPrinterServiceHook(this, &options))
+			;
 		else if (fPrModel == 0)
 		{
 			TOption service(kOptionType);

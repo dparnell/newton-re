@@ -45,6 +45,40 @@
 
 class TEndpoint;
 
+// The option that names the printer a connection goes to (its URI, a C
+// string); without it the tool takes the configured printer
+// (HostIPPPrinter).
+#define kHostIPPURIOption		'iuri'
+
+struct THostIPPURIOption : public TOption
+{
+						THostIPPURIOption(const char* uri);
+	char				fURI[256];
+};
+
+// A connection to an IPP printer as the host's drivers make one: an
+// endpoint of the 'ippc service opened (EasyOpen), the job's bytes written
+// to it and the endpoint closed, which ends the job.  An error is made the
+// printing system's as ThpPCL::SendData makes it.
+class THostIPPConnection
+{
+public:
+						THostIPPConnection();
+						~THostIPPConnection();
+	NewtonErr			Open(const char* uri);			// nil or "": the configured printer
+	NewtonErr			Send(const char* data, ULong size, ULong& sent);
+	NewtonErr			Close();
+
+	TEndpoint*			fEndpoint;
+};
+
+// The URI of the printer a printer frame names, into uri: the printer the
+// host's DNS-SD finds by the frame's hostService name, else the frame's own
+// hostURI; ==> false when it has neither.  (Waits up to kHostDNSSDWait ms
+// for a browse.)
+const int	kHostDNSSDWait = 4000;
+Boolean		HostPrinterFrameURI(RefArg printer, char* uri, size_t size);
+
 // how often the tool looks at its socket, and how long it waits for the
 // printer's answer at the end (in polls)
 #define kHostIPPPollInterval	(10 * kMilliseconds)
@@ -61,6 +95,7 @@ protected:
 	virtual UChar*		GetToolName();
 
 	virtual NewtonErr	OpenStart(TOptionArray* options);
+	virtual ULong		ProcessOptionStart(TOption* theOption, ULong label, ULong opcode);
 	virtual void		HandleTimerTick();
 	virtual void		HandleInternalEvent();
 
@@ -135,7 +170,7 @@ public:
 
 	NewtonErr		Send(const char* data, ULong size, ULong& sent);
 
-	TEndpoint*		fEndpoint;
+	THostIPPConnection*	fConnection;
 	NewtonErr		fError;
 	Boolean			fCancelled;
 };

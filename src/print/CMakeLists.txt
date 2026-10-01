@@ -17,7 +17,37 @@ add_library(print STATIC
     host/HostPrinter.cpp
     host/HostIPP.cpp
     host/HostIPPTool.cpp
+    host/HostPAPDriver.cpp
+    host/HostNetworkPrinters.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/HostPrintersSource.cpp
 )
-target_link_libraries(print PUBLIC newton_config qd protocols frames comms comms_fax utility ink)
+target_link_libraries(print PUBLIC newton_config qd protocols frames comms comms_fax utility ink print_host_dnssd)
+
+# host/HostPrinters.ns, the Network Printers preferences panel, compiled in
+# as a string
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/HostPrintersSource.cpp
+    COMMAND ${CMAKE_COMMAND} -DINPUT=${CMAKE_CURRENT_SOURCE_DIR}/host/HostPrinters.ns
+            -DOUTPUT=${CMAKE_CURRENT_BINARY_DIR}/HostPrintersSource.cpp -DNAME=gHostPrintersSource
+            -P ${CMAKE_SOURCE_DIR}/cmake/EmbedText.cmake
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/host/HostPrinters.ns ${CMAKE_SOURCE_DIR}/cmake/EmbedText.cmake
+    VERBATIM)
+
+# The host's DNS-SD browse for IPP printers (host/dnssd/HostDNSSD.h): the
+# platform's own service browsing (dnsapi's DnsServiceBrowse on Windows,
+# avahi-browse elsewhere), built without the Newton include paths - the
+# platforms' headers and the DDK's names do not mix - so a plain C interface.
+add_library(print_host_dnssd STATIC
+    host/dnssd/HostDNSSD.cpp
+)
+target_include_directories(print_host_dnssd PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/host/dnssd)
+if(WIN32)
+    target_link_libraries(print_host_dnssd PUBLIC dnsapi)
+else()
+    find_package(Threads)
+    if(Threads_FOUND)
+        target_link_libraries(print_host_dnssd PUBLIC Threads::Threads)
+    endif()
+endif()
 
 add_subdirectory(tests)

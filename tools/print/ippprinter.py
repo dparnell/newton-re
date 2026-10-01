@@ -237,6 +237,9 @@ def main(argv=None):
     ap.add_argument("--out", default=".")
     ap.add_argument("--path", default="/ipp/print")
     ap.add_argument("--status", type=lambda s: int(s, 0), default=0)
+    ap.add_argument("--advertise", metavar="NAME",
+                    help="the program finds this printer on the network (NEWTON_FOUND_PRINTERS)")
+    ap.add_argument("--formats", default="ps,pcl", help="what --advertise says it takes (ps, pcl)")
     ap.add_argument("program", nargs=argparse.REMAINDER)
     args = ap.parse_args(argv)
     program = args.program
@@ -263,6 +266,12 @@ def main(argv=None):
             pass
         return 0
     env = dict(os.environ, NEWTON_IPP_PRINTER=uri)
+    if args.advertise:
+        # (the host's DNS-SD layer takes this list in place of a browse:
+        # src/print/host/dnssd/HostDNSSD.h)
+        env["NEWTON_FOUND_PRINTERS"] = "%s|%s|%s" % (args.advertise, uri, args.formats)
+        del env["NEWTON_IPP_PRINTER"]
+        log("advertised as %r (%s)" % (args.advertise, args.formats))
     if os.path.exists(program[0]):
         program[0] = os.path.abspath(program[0])		# (Windows will not run a relative path with slashes)
     proc = subprocess.Popen(program, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env)
