@@ -831,10 +831,12 @@ if(Python3_FOUND)
     # gone and the store as it was (demo/card-alert.ns); then the snapshot
     # taken while it was up made a PNG, build/card-alert.png
     add_test(NAME host.NewtonCardAlert
-             COMMAND newton --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/card-alert.ns
+             COMMAND newton --headless 120 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/card-alert.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
-    set_tests_properties(host.NewtonCardAlert PROPERTIES TIMEOUT 120 FIXTURES_SETUP host_card_alert
-                         PASS_REGULAR_EXPRESSION "alertUp: TRUE.*sameStore: TRUE, found: \"kept through the alert\", alertDown: TRUE.*card-alert: done")
+    set_tests_properties(host.NewtonCardAlert PROPERTIES TIMEOUT 180 FIXTURES_SETUP host_card_alert
+                         ENVIRONMENT "CARD_ALERT_CARD=${CMAKE_CURRENT_BINARY_DIR}/card-alert.card"
+                         PASS_REGULAR_EXPRESSION "alertUp: TRUE.*sameStore: TRUE, found: \"kept through the alert\", alertDown: TRUE.*card-alert: done"
+                         FAIL_REGULAR_EXPRESSION "waited in vain")
     if(Python3_FOUND)
         add_test(NAME host.NewtonCardAlert.png
                  COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/imaging/pgm2png.py build/card-alert.pgm build/card-alert.png
@@ -881,6 +883,26 @@ if(Python3_FOUND)
         set_tests_properties(host.NewtonCardPackage PROPERTIES TIMEOUT 180 FIXTURES_REQUIRED host_card_package
                              ENVIRONMENT "CARD_PACKAGE_CARD=${CMAKE_CURRENT_BINARY_DIR}/cardpackage.card"
                              PASS_REGULAR_EXPRESSION "its InstallScript ran: ok.*its removeScript ran: ok.*the package gone with the card: ok.*loaded again with the card back: ok.*card-package: done, 0 failed"
+                             FAIL_REGULAR_EXPRESSION "waited in vain|FAILED")
+    endif()
+    # an ATA card taken on as far as the ROM goes (demo/ata-card.ns): its
+    # partition map read through TATASimple over the host's model of the
+    # card (hal/host/HostATA.cpp), the driver in its Apple_Newton_Driver
+    # partition and the package in its Apple_Newton partition loaded, and -
+    # no handler recognising the card - taken out again
+    if(Python3_FOUND)
+        add_test(NAME host.NewtonATACard.make
+                 COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/cards/atacard.py make
+                         ${CMAKE_CURRENT_BINARY_DIR}/ata.card --size 8 --name "Host ATA"
+                         --driver ${CMAKE_SOURCE_DIR}/../fixtures/packages/apps/NewtScape/ISO-8859-1.pkg
+                         --package ${CMAKE_SOURCE_DIR}/../fixtures/packages/apps/NewtScape/pkgi10g2.pkg)
+        set_tests_properties(host.NewtonATACard.make PROPERTIES FIXTURES_SETUP host_ata_card)
+        add_test(NAME host.NewtonATACard
+                 COMMAND newton --headless 120 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/ata-card.ns
+                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+        set_tests_properties(host.NewtonATACard PROPERTIES TIMEOUT 180 FIXTURES_REQUIRED host_ata_card
+                             ENVIRONMENT "ATA_CARD=${CMAKE_CURRENT_BINARY_DIR}/ata.card;NEWTON_TRACE_ATA=1"
+                             PASS_REGULAR_EXPRESSION "command 20 count 13 address 4.*command 20 count 11 address 17.*command 96.*driver package installed: ok.*removed with no handler for the card: ok.*neither package left: ok.*ata-card: done, 0 failed"
                              FAIL_REGULAR_EXPRESSION "waited in vain|FAILED")
     endif()
     # a package cut into a soup of chunk entries and restored with

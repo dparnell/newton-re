@@ -12,6 +12,7 @@
 
 #include "CardServer.h"
 #include "CardPipe.h"
+#include "ATA.h"
 #include "PackageLoader.h"
 #include "CardPartHandler.h"
 #include "CardAlerts.h"
@@ -154,8 +155,6 @@ TNewCardAsyncMsg::SendSystemEvent(void)
 ------------------------------------------------------------------------------- */
 
 // ROM 0x0005105c __ct__16TCardSocketStateFv
-// (NOT YET: the ATA partition info, boot parameter block and loader at
-// +0x314, +0x334 and +0x348)
 TCardSocketState::TCardSocketState()
 	:	fReadyTries(0), fField310(0)
 { }
@@ -183,6 +182,7 @@ TCardSocketState::Init(void)
 	fField310 = 0;
 	fCardState = kCardNone;
 	fHandlerIndex = 0;
+	fBootParams.fPartitionInfo = &fPartitionInfo;
 	Clear();
 	long err = fMessage.Init();
 	if (err != noErr)
@@ -338,7 +338,8 @@ TCardServer::MainConstructor()
 	}
 	TCHMemModem::ClassInfo()->Register();
 	TFlashSeries2::ClassInfo()->Register();
-	// NOT YET: TFlashAMD and TATASimple, registered here too
+	// NOT YET: TFlashAMD, registered here too
+	TATASimple::ClassInfo()->Register();
 
 	for (ULong socketNumber = 0; socketNumber < kMaxCardSockets; socketNumber++)
 	{
@@ -656,8 +657,9 @@ TCardServer::ActivateCardHandler(TCardHandler* handler, TCardSocket* socket, TCa
 		return err;
 	newton_try
 	{
-		// NOT YET: an ATA card's partition info handed to its handler
-		// (CardSpecific kCardSpecificATASetPartitionInfo)
+		// an ATA card's handler told what its loader found
+		if (state->fFlags & TCardSocketState::kATACard)
+			handler->CardSpecific(kCardSpecificATASetPartitionInfo, state->fBootParams.fPartitionInfo, 0);
 		err = handler->InstallServices(socket, card, configNumber);
 		if (err == noErr)
 		{
@@ -707,7 +709,8 @@ TCardServer::DeactivateCardHandler(TCardHandler* handler, TCardSocket* socket, T
 		}
 		end_try;
 		handler->Delete();
-		// NOT YET: an ATA card's packages (TCardATALoader::RemoveATAPackages)
+		if (state->fFlags & TCardSocketState::kATACard)
+			state->fATALoader.RemoveATAPackages(&state->fBootParams, nil, 1);
 	}
 	for (ULong i = 0; i < 8; i++)
 		if (state->fPackages[i] != 0)
@@ -970,7 +973,13 @@ TCardServer::LoadCardPackage(TCardPCMCIA* card, TCardSocket* socket, TCardSocket
 				break;
 			state->fPackages[i] = packageId;
 		}
-		// NOT YET: an ATA card (TCardATALoader::GetCardType, LoadATAPackages)
+		// an ATA card: the packages it carries on its disk (not after a
+		// package that failed)
+		if (err == noErr && state->fATALoader.GetCardType(card))
+		{
+			state->fFlags |= TCardSocketState::kATACard;
+			err = state->fATALoader.LoadATAPackages(socket, card, &state->fBootParams, nil, 1);
+		}
 	}
 	newton_catch_all
 	{
@@ -1230,7 +1239,8 @@ RecognizeCard(TCardServer* server, ULong socketNumber, TCardSocket* socket, TCar
 			RemovePackage(state->fPackages[i]);
 			state->fPackages[i] = 0;
 		}
-	// NOT YET: an ATA card's packages (TCardATALoader::RemoveATAPackages)
+	if (state->fFlags & TCardSocketState::kATACard)
+		state->fATALoader.RemoveATAPackages(&state->fBootParams, nil, 1);
 	if (result == noErr)
 		result = kError_Unrecognized_Card;
 	return result;

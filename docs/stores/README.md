@@ -1033,6 +1033,66 @@ CIS-area byte (K + p) ^ 1, as the bus's lanes put it. ctest
 InstallScript run, the card out and the removeScript run, the card back
 and loaded again.
 
+### ATA cards
+
+The ROM has no store for an ATA (PC Card or CompactFlash fixed-disk)
+card and no handler for one: what it has is the means to take on the
+driver a card carries for itself. When the CIS says a fixed disk
+(CISTPL_FUNCID 4) with an ATA interface (CISTPL_FUNCE 1, 1),
+`TCardServer::LoadCardPackage` marks the socket (`kATACard`) and has
+`TCardATALoader::LoadATAPackages` (`pcmcia/CardATALoader.h`, ROM
+0x4a1f4-0x4ac54) read the card's partition map through a `TATA` - the
+ROM's own `TATASimple` (`pcmcia/ATA.h`, 0x26408-0x271a4, registered by
+`InitCardServices`) when nothing else is given:
+
+- the card put in its first memory-mapped configuration (else the last
+  I/O one with sixteen addresses), its task file found in common memory
+  (or I/O space) and drive 0 identified;
+- block 0: a PC master boot record sends it to the first partition of type
+  0x83 (a bootable one first); there, a driver descriptor block ('ER'),
+  and from the next block on Apple partition map entries ('PM');
+- an entry is the Newton's when its `pmPad` says `'newt'` and the word
+  after has bit 8 set; the `Apple_Newton_Driver` entry's and the
+  `Apple_Newton` entry's packages (the word at +0x94 says how many blocks,
+  from `pmPyPartStart` - a block number on the disk itself, a quirk when
+  the map is inside a PC partition) are read whole into memory and loaded
+  from there (`LoadDriverPackage`, source format 3, device kind 1); both
+  entries are kept in the `TATAPartitionInfo` the card's handler is given
+  (`CardSpecific(kCardSpecificATASetPartitionInfo)`);
+- the `Apple_Newton` entry's boot area, if it has one for an "ARM610", is
+  read, checked against `pmBootCksum` (`ChecksumOf`, the partition map's
+  rotate-and-add) and *called* - the ROM jumps to the address in its first
+  word with the `TATABootParamBlock` in r0. DEVIATION: the host cannot,
+  and fails such a card as if the code had thrown (kError_Call_Aborted).
+  The drive is then put on standby (0x96).
+
+With no handler that recognises the card (the driver package is what
+should bring one), the card server takes the packages out again
+(`RemoveATAPackages`) and the card is unrecognised - which is as far as the
+ROM goes. Apple's ATA Support package is the rest (its store and handler).
+
+`TATASimple` is programmed I/O a sector at a time, polling the status
+register for up to three seconds (`WaitFor`); ROM QUIRK: that first wait
+looks at the status before writing a command, and a drive keeps the last
+command's ERR bit there, so after one command fails every command fails
+the same way until the drive is reset. Its registers are where the
+MessagePad's bus puts them (register r at window offset r ^ 3, the data
+register's word at +2 read with an unaligned `ldr`); DEVIATION: it reads
+and writes them through `hal/CardBus.h`, which on the host routes an ATA
+card's register window to `hal/host/HostATA.cpp`, a model of a
+CompactFlash card in memory mode over the card image's data section (READ
+and WRITE SECTORS and their kin, IDENTIFY, the power, feature and buffer
+commands, LBA or cylinder/head/sector; `NEWTON_TRACE_ATA` prints each
+command). An ATA card image is the same TLinearCard container with type
+0xD, its data section the disk: `tools/cards/atacard.py make FILE --size MB
+[--driver PKG] [--package PKG] [--mbr]` makes one (CIS and partition map),
+`info` describes one. ctests `pcmcia.ATACard` (`test_ATACard`: identify,
+read and write by LBA and by CHS, past the end, reset, power mode, the map
+plain and in a PC partition, `SameStrings`/`ChecksumOf`, what was written
+still there after a reinsertion) and `host.NewtonATACard`
+(`src/host/demo/ata-card.ns`: Newt's Cape's ISO-8859-1 encoding as the
+card's driver, installed and removed again).
+
 ### Order of work
 
 Each step comes with its host tests.
@@ -1153,8 +1213,9 @@ Each step comes with its host tests.
      socket had to answer the Voyager's raw pins (`GetVPCPins`: a 5 V
      card's voltage sense pins) and keep the card-detect and lock
      interrupts enabled through `ResetInterrupts` as the ROM's does. NOT
-     YET: the alert dialogs (no 'alrt' server), ATA cards. Card packages
-     in attribute memory are DONE (2026-10-01): "Card packages" below.
+     YET: the alert dialogs (no 'alrt' server). Card packages in
+     attribute memory and ATA cards as far as the ROM takes them are DONE
+     (2026-10-01): "Card packages" and "ATA cards" below.
    - **5e. The PSS manager and the newt side.** DONE (2026-09-30):
      `stores/flash/PSSManager.h` - the 'pssm world (`TPSSManager`:
      `CardAvailable` on the 'card system event makes a store for each

@@ -119,7 +119,10 @@ such as LocalTalk over UDP).
   --all`) are none a user reaches on the host: the math views, `AddTabStop`
   and the serial-port `TKeyboardTool`.
 - Packages: XIP packages (the ROM domain manager's page faulting, about
-  11 KB); a card's `'stor` event and `GetCardReinsertionInfo`; ATA cards.
+  11 KB); a card's `'stor` event and `GetCardReinsertionInfo`; an ATA
+  card's store - Apple's ATA Support package (fixtures/packages/drivers/)
+  through armcpu, the ROM's side being done (`docs/stores/README.md`,
+  "ATA cards"); an ATA card's ARM610 boot code, which the ROM jumps into.
 - The NIE built into the ROM extension: the page tables `ptpt`/`glpt`
   still name the patch table's old physical page (0x7ee000); 'fimp is not
   generated.

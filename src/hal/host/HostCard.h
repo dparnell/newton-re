@@ -19,6 +19,13 @@
 				is written through to the file (buffered by the C library,
 				flushed when the card is removed or the program ends).
 
+				An ATA card (a fixed disk: the image's type 0xD, a
+				function-specific CISTPL_DEVICE; tools/cards/atacard.py
+				makes one) is different: its data section is the disk, a
+				512-byte sector after another, and its common memory is a
+				0x800-byte register window that hal/host/HostATA.cpp stands
+				a model of the card's task file behind (hal/CardBus.h).
+
 				A card put in or taken out is a change of the socket's
 				pins; the socket (hal/host/HostCardSocket.cpp) is told
 				through the proc HostCardSetChangeProc installs, which
@@ -58,6 +65,20 @@ Boolean		HostCardIsInserted(ULong socket);
 Boolean		HostCardIsWriteProtected(ULong socket);
 const char*	HostCardName(ULong socket);					// the image's name ("" without one)
 ULong		HostCardType(ULong socket);					// the image's type (CISTPL_DEVICE's high nibble)
+const ULong	kHostCardTypeATA		= 0xD;				// DTYPE_FUNCSPEC: an ATA card
+const ULong	kHostCardATAWindowSize	= 0x800;			// an ATA card's register window
+
+// An ATA card's disk: its size in sectors, and sectors read and written
+// (each write goes straight to the file).  kError_Bad_Parameters for a
+// sector past the end or a card that is not ATA; a write to a
+// write-protected card too.
+Boolean		HostCardIsATA(ULong socket);
+ULong		HostCardATASectors(ULong socket);
+NewtonErr	HostCardATARead(ULong socket, ULong sector, void* buffer);
+NewtonErr	HostCardATAWrite(ULong socket, ULong sector, const void* buffer);
+// Which ATA card's register window an address is in: its socket and the
+// offset into the window; false for none.
+Boolean		HostCardATAWindow(const volatile void* address, ULong* socket, ULong* offset);
 
 // The windows, as host addresses (nil without a card)
 Ptr			HostCardAttributeMemory(ULong socket);

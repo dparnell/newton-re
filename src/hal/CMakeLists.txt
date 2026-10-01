@@ -81,10 +81,12 @@ target_include_directories(hal_host_serial PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/ho
 # The host's PC card (host/HostCard.h: a card image in Einstein's container
 # put into the socket and taken out) and the socket over it
 # (host/HostCardSocket.cpp: TCardSocket, CardSocket.h, whose ROM
-# implementation drives the Voyager's PCMCIA controller).
+# implementation drives the Voyager's PCMCIA controller), with the card bus
+# (CardBus.h) and the model of an ATA card behind it (host/HostATA.cpp).
 add_library(hal_host_card STATIC
     host/HostCard.cpp
     host/HostCardSocket.cpp
+    host/HostATA.cpp
 )
 target_link_libraries(hal_host_card PUBLIC newton_config hal_host os600_user)
 target_include_directories(hal_host_card PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/host)

@@ -46,6 +46,10 @@
 #ifndef __CARDSERVER_H
 #define __CARDSERVER_H
 
+#ifndef __CARDATALOADER_H
+#include "CardATALoader.h"
+#endif
+
 #ifndef __CARDMESSAGE_H
 #include "CardMessage.h"
 #endif
@@ -178,7 +182,9 @@ public:
 	ULong			fState;				// +308 the socket: empty, card in, suspended
 	ULong			fCardState;			// +30C the card: none, active, removed, a task blocked on it
 	ULong			fField310;			// +310
-	// +314 TATAPartitionInfo, +334 TATABootParamBlock, +348 TCardATALoader (NOT YET)
+	TATAPartitionInfo	fPartitionInfo;	// +314 an ATA card's (CardATALoader.h)
+	TATABootParamBlock	fBootParams;	// +334
+	TCardATALoader	fATALoader;			// +348
 	TCardPCMCIA*	fParsedCard;		// +35C the CIS as it was last read
 	ULong			fPSSBase;			// +360 the socket's client's window (the PSS manager's)
 	ULong			fPSSSize;			// +364

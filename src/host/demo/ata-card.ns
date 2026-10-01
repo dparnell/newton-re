@@ -1,0 +1,59 @@
+// An ATA card (pcmcia/ATA.h, pcmcia/CardATALoader.h) taken on as far as
+// the ROM goes: the card server sees a fixed disk with an ATA interface,
+// reads the card's partition map through the ROM's own driver
+// (TATASimple, over the host's model of the card's task file -
+// hal/host/HostATA.cpp) and loads the packages the card carries - the
+// driver in its Apple_Newton_Driver partition and the one at the start of
+// its Apple_Newton partition.  The ROM has no handler for the card itself
+// (that is what a real driver package brings), so no handler recognises
+// it and the server takes the card's packages out again.
+//
+// The driver here is Newt's Cape's ISO-8859-1 encoding (an 'auto part
+// whose InstallScript makes the global |NTEncoding:GNUE| and puts the
+// encoding in it, and whose RemoveScript takes it out again), so the
+// global being there without the encoding says the package went in and
+// came out.  The card is made by tools/cards/atacard.py
+// (ctest host.NewtonATACard):
+//
+//   python tools/cards/atacard.py make tmp/ata.card --size 8 \
+//       --driver fixtures/packages/apps/NewtScape/ISO-8859-1.pkg \
+//       --package fixtures/packages/apps/NewtScape/pkgi10g2.pkg --name "Host ATA"
+//   NEWTON_TRACE_ATA=1 ATA_CARD=tmp/ata.card build/host/host/newton --headless 120 \
+//       --script src/host/demo/ata-card.ns
+
+HostInclude("common.ns");			// waitFor, walkSetup
+HostInclude("walkhelpers.ns");		// wtCheck, the steps
+
+wtName := "ata-card";
+acCardFile := HostGetEnv("ATA_CARD");
+acEncodings := func() if GlobalVarExists('|NTEncoding:GNUE|) then GetGlobalVar('|NTEncoding:GNUE|);
+acPackage := func(title) begin
+	local found := nil;
+	foreach p in GetPackages() do if StrEqual(p.title, title) then found := p;
+	found
+end;
+
+wtSteps := [
+	func(done) begin
+		HostInsertCard(0, acCardFile);
+		// the driver's InstallScript made the global, its RemoveScript
+		// took the encoding out of it again
+		call waitFor with ("ata-card: the driver in and out", func() begin
+				local e := call acEncodings with ();
+				e and not e.|ISO-8859-1:Simple|
+			end, func() begin
+				call wtCheck with ("the card's driver package installed", call acEncodings with (), "(no |NTEncoding:GNUE|)");
+				call wtCheck with ("and removed with no handler for the card",
+					not (call acEncodings with ()).|ISO-8859-1:Simple|, "(the encoding is still there)");
+				call wtCheck with ("neither package left", not call acPackage with ("ISO-8859-1:Simple")
+					and not call acPackage with ("PkgInfo:TKnollSys"), "(still listed)");
+				call done with ();
+			end, 60);
+	end,
+	func(done) begin
+		HostRemoveCard(0);
+		Print("ata-card: done, " & wtFailures & " failed");
+		HostQuit();
+	end];
+
+call walkSetup with ([2, 0, 45, 34, 14, 37], wtNext);		// "Daniel"

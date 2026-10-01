@@ -20,6 +20,10 @@ extern const ExceptionName exPipeException;
 // ROM 0x0035481c: the signature's last characters, "0" and "1" (the
 // directory format versions this ROM accepts)
 static const char kPackageSignatureVersions[2] = { '0', '1' };
+// what every package starts with, before its version (PackageTypes.h; the
+// card server's ATA loader looks for it)
+extern const Byte kPackageMagicNumber[7];
+const Byte kPackageMagicNumber[7] = { 'p', 'a', 'c', 'k', 'a', 'g', 'e' };	// ROM 0x003773d4 kPackageMagicNumber
 
 
 // ROM 0x00194694 IsPackageHeader__FUlT1

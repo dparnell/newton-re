@@ -14,6 +14,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+void	HostATACardChanged(ULong socket);		// HostATA.cpp: the drive starts afresh
+
 namespace
 {
 	struct HostCardState
@@ -28,6 +30,8 @@ namespace
 		ULong			fCISSize;
 		ULong			fType;
 		char			fName[64];
+		Boolean			fATA;			// fFile is the disk (kept open, read-only or not)
+		ULong			fSectors;
 	};
 
 	HostCardState		gCards[kHostCardSockets];
@@ -124,6 +128,7 @@ namespace
 	void
 	Changed(ULong socket)
 	{
+		HostATACardChanged(socket);
 		if (gChangeProc != nil)
 			gChangeProc(socket, gCards[socket].fInserted);
 	}
@@ -249,8 +254,15 @@ HostCardInsert(ULong socket, const char* path, Boolean readOnly)
 		fclose(f);
 		return kError_Bad_Parameters;
 	}
+	Boolean isATA = GetWord(info + 32) == kHostCardTypeATA;
+	if (isATA && (dataSize % 512) != 0)
+	{
+		fclose(f);
+		return kError_Bad_Parameters;
+	}
+	ULong windowSize = isATA ? kHostCardATAWindowSize : dataSize;
 	unsigned char* cis = (unsigned char*) calloc(cisSize + 1, 1);
-	if (cis == nil || !GetWindows(socket, dataSize))
+	if (cis == nil || !GetWindows(socket, windowSize))
 	{
 		free(cis);
 		fclose(f);
@@ -258,8 +270,13 @@ HostCardInsert(ULong socket, const char* path, Boolean readOnly)
 	}
 	card->fCommon = gWindows[socket].fCommon;
 	card->fAttribute = gWindows[socket].fAttribute;
-	fseek(f, (long) dataStart, SEEK_SET);
-	fread(card->fCommon, 1, dataSize, f);
+	if (isATA)
+		memset(card->fCommon, 0, kHostCardATAWindowSize);
+	else
+	{
+		fseek(f, (long) dataStart, SEEK_SET);
+		fread(card->fCommon, 1, dataSize, f);
+	}
 	fseek(f, (long) cisStart, SEEK_SET);
 	fread(cis, 1, cisSize, f);
 	// attribute byte o is CIS byte (o / 2) ^ 1 (Einstein's ReadAttrB)
@@ -275,12 +292,14 @@ HostCardInsert(ULong socket, const char* path, Boolean readOnly)
 		fseek(f, (long) nameStart, SEEK_SET);
 		fread(card->fName, 1, nameSize < sizeof(card->fName) ? nameSize : sizeof(card->fName) - 1, f);
 	}
-	card->fFile = readOnly ? nil : f;
-	if (readOnly)
+	card->fFile = readOnly && !isATA ? nil : f;
+	if (readOnly && !isATA)
 		fclose(f);
+	card->fATA = isATA;
+	card->fSectors = isATA ? dataSize / 512 : 0;
 	card->fReadOnly = readOnly;
 	card->fDataStart = dataStart;
-	card->fCommonSize = dataSize;
+	card->fCommonSize = windowSize;
 	card->fCISSize = cisSize;
 	card->fType = GetWord(info + 32);
 	card->fInserted = true;
@@ -418,4 +437,64 @@ void
 HostCardSetChangeProc(HostCardChangeProc proc)
 {
 	gChangeProc = proc;
+}
+
+
+Boolean
+HostCardIsATA(ULong socket)
+{
+	HostCardState* card = Card(socket);
+	return card != nil && card->fATA;
+}
+
+
+ULong
+HostCardATASectors(ULong socket)
+{
+	HostCardState* card = Card(socket);
+	return card != nil && card->fATA ? card->fSectors : 0;
+}
+
+
+NewtonErr
+HostCardATARead(ULong socket, ULong sector, void* buffer)
+{
+	HostCardState* card = Card(socket);
+	if (card == nil || !card->fATA || sector >= card->fSectors)
+		return kError_Bad_Parameters;
+	if (fseek(card->fFile, (long) (card->fDataStart + sector * 512), SEEK_SET) != 0
+	 || fread(buffer, 1, 512, card->fFile) != 512)
+		return kError_Bad_Parameters;
+	return noErr;
+}
+
+
+NewtonErr
+HostCardATAWrite(ULong socket, ULong sector, const void* buffer)
+{
+	HostCardState* card = Card(socket);
+	if (card == nil || !card->fATA || sector >= card->fSectors || card->fReadOnly)
+		return kError_Bad_Parameters;
+	if (fseek(card->fFile, (long) (card->fDataStart + sector * 512), SEEK_SET) != 0
+	 || fwrite(buffer, 1, 512, card->fFile) != 512)
+		return kError_Bad_Parameters;
+	return noErr;
+}
+
+
+Boolean
+HostCardATAWindow(const volatile void* address, ULong* socket, ULong* offset)
+{
+	const volatile unsigned char* a = (const volatile unsigned char*) address;
+	for (ULong i = 0; i < kHostCardSockets; i++)
+	{
+		HostCardState* card = Card(i);
+		if (card != nil && card->fATA && a >= card->fCommon && a < card->fCommon + kHostCardATAWindowSize)
+		{
+			*socket = i;
+			*offset = (ULong) (a - card->fCommon);
+			return true;
+		}
+	}
+	return false;
 }
