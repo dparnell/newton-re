@@ -80,4 +80,11 @@ void		ARMForgetMirror(const void* host);
 // an ARM address made a copy of a C string (in the ARM heap; the caller's to free)
 uint32_t	ARMCString(const char* s);
 
+// The user-side OS objects ARM code makes (ARMKernelGlue.cpp): the host
+// event handler standing for an ARM TAEventHandler (its AETestEvent,
+// AEHandlerProc, AECompletionProc and IdleProc call the ARM object's own
+// virtual functions), nil for none.
+class TAEventHandler;
+TAEventHandler*	ARMEventHandlerOf(uint32_t arm);
+
 #endif	/* __ARMPROTOCOLS_H */

@@ -194,9 +194,12 @@ NoSize(void)
 
 static TProtocol*	ProxyNew(TProtocol* p);
 static void			ProxyDelete(TProtocol* p);
+// an instance of a part whose interface has no host proxy, asked for by
+// host code: there is nothing the host could call it through
 static TProtocol*
 NoMakeAt(void*)
 {
+	ThrowMsg("armprotocols: host code asked for an instance of a part with no host proxy for its interface (NOT YET)");
 	return nil;
 }
 
@@ -596,10 +599,15 @@ Glue_TUNameServer_UnRegisterName(void*, ARMTrapContext& c)
 }
 
 
+void	InstallARMKernelGlue(void);		// ARMKernelGlue.cpp
+void	InstallARMLists(void);			// ARMLists.cpp
+
 void
 InstallARMProtocols(void)
 {
 	SetARMProtocolPartLoader(LoadPart);
+	InstallARMKernelGlue();
+	InstallARMLists();
 	ARMRegisterGlue("AllocInstanceByName__FPCcT1", Glue_AllocInstanceByName);
 	ARMRegisterGlue("NewByName__FPCcT1", Glue_NewByName);
 	ARMRegisterGlue("FreeInstance__FP9TProtocol", Glue_FreeInstance);

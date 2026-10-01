@@ -18,6 +18,7 @@
 #include "CardSocket.h"
 #include "CardPCMCIA.h"
 #include "CardATALoader.h"
+#include "ATA.h"
 #include "HostCard.h"
 #include "OSErrors.h"
 
@@ -348,6 +349,116 @@ public:
 	char		fIdString[64];
 };
 
+/*------------------------------------------------------------------------------
+	T h e   T A T A   p r o x y
+	An ATA driver part's instance (slots 4 SetAttributes ... 22
+	ResumeService, as ATA.h declares them).  A host buffer is lent to the
+	ARM code as a region for the call; a command block is copied into the
+	ARM heap in the ROM's layout and back.
+------------------------------------------------------------------------------*/
+
+// a host buffer seen from the ARM side for as long as an object of this
+// class lasts
+class TLentBuffer
+{
+public:
+				TLentBuffer(void* host, uint32_t size) : fARM(host != nil && size != 0 ? ARMMapRegion(host, size, kARMRegionMemory) : 0) { }
+				~TLentBuffer()	{ if (fARM != 0) ARMUnmapRegion(fARM); }
+	uint32_t	fARM;
+};
+
+class TATAARM : public TATA
+{
+public:
+	uint32_t	Call(int slot, uint32_t a = 0, uint32_t b = 0, uint32_t c = 0, uint32_t d = 0, uint32_t e = 0)
+				{
+					uint32_t args[5] = { a, b, c, d, e };
+					return ARMCallSlot(this, slot, args, 5);
+				}
+	void		SetAttributes(ULong attributes)						{ Call(4, (uint32_t) attributes); }
+	ULong		GetAttributes(void)									{ return Call(5); }
+	NewtonErr	Read(UByte* buffer, ULong block, ULong count, UByte command, UByte drive)
+				{
+					TLentBuffer b(buffer, (uint32_t) count * 512);
+					return (NewtonErr) (int32_t) Call(6, b.fARM, (uint32_t) block, (uint32_t) count, command, drive);
+				}
+	NewtonErr	Write(UByte* buffer, ULong block, ULong count, UByte command, UByte drive)
+				{
+					TLentBuffer b(buffer, (uint32_t) count * 512);
+					return (NewtonErr) (int32_t) Call(7, b.fARM, (uint32_t) block, (uint32_t) count, command, drive);
+				}
+	NewtonErr	Format(UByte* buffer, ULong cylinder, ULong head, ULong count, UByte drive)
+				{
+					TLentBuffer b(buffer, 512);
+					return (NewtonErr) (int32_t) Call(8, b.fARM, (uint32_t) cylinder, (uint32_t) head, (uint32_t) count, drive);
+				}
+	NewtonErr	Reset(UByte wait)									{ return (NewtonErr) (int32_t) Call(9, wait); }
+	NewtonErr	IdentifyDrive(TATADriveInfo* info, UByte drive)
+				{
+					TLentBuffer b(info, sizeof(TATADriveInfo));
+					return (NewtonErr) (int32_t) Call(10, b.fARM, drive);
+				}
+	NewtonErr	CheckPowerMode(UByte* mode, UByte drive)
+				{
+					TLentBuffer b(mode, 1);
+					return (NewtonErr) (int32_t) Call(11, b.fARM, drive);
+				}
+	NewtonErr	SetMultipleMode(UByte count, UByte drive)			{ return (NewtonErr) (int32_t) Call(12, count, drive); }
+	NewtonErr	SetFeatures(UByte feature, UByte value, UByte drive)	{ return (NewtonErr) (int32_t) Call(13, feature, value, drive); }
+	NewtonErr	SetPowerMode(UByte command, UByte count, UByte drive)	{ return (NewtonErr) (int32_t) Call(14, command, count, drive); }
+	NewtonErr	InitDriveParam(UByte sectors, UByte heads, UByte drive)	{ return (NewtonErr) (int32_t) Call(15, sectors, heads, drive); }
+	NewtonErr	DoATALBACommand(TATALBACommandBlock* block)
+				{
+					// the ROM's 0x20 bytes, the buffer lent for as many blocks as are asked for
+					TLentBuffer b(block->fBuffer, (uint32_t) block->fCount * 512);
+					uint32_t m = ARMAlloc(0x20, true);
+					ARMWrite32(m + 0x00, b.fARM);
+					ARMWrite32(m + 0x04, (uint32_t) block->fBlock);
+					ARMWrite32(m + 0x08, (uint32_t) block->fCount);
+					ARMWrite32(m + 0x0c, (uint32_t) block->fCurrentBlock);
+					ARMWrite32(m + 0x10, (uint32_t) block->fDone);
+					ARMWrite32(m + 0x14, (uint32_t) block->fField14);
+					ARMWrite8(m + 0x18, block->fCommand);
+					ARMWrite8(m + 0x19, block->fDrive);
+					ARMWrite8(m + 0x1a, block->fFeatures);
+					NewtonErr err = (NewtonErr) (int32_t) Call(16, m);
+					uint32_t v;
+					ARMRead32(m + 0x08, &v); block->fCount = v;
+					ARMRead32(m + 0x0c, &v); block->fCurrentBlock = v;
+					ARMRead32(m + 0x10, &v); block->fDone = v;
+					ARMFree(m);
+					return err;
+				}
+	NewtonErr	DoATARegCommand(TATARegCommandBlock* block)
+				{
+					// the ROM's 0x18 bytes (the buffer: a sector, or a long one)
+					TLentBuffer b(block->fBuffer, 0x200 + 0x40);
+					uint32_t m = ARMAlloc(0x18, true);
+					ARMWrite32(m, b.fARM);
+					UByte* regs = &block->fFeatures;
+					for (uint32_t i = 0; i < 8; i++)
+						ARMWrite8(m + 4 + i, regs[i]);
+					ARMWrite32(m + 0x0c, (uint32_t) block->fField0C);
+					NewtonErr err = (NewtonErr) (int32_t) Call(17, m);
+					for (uint32_t i = 0; i < 8; i++)
+						ARMRead8(m + 4 + i, &regs[i]);
+					ARMFree(m);
+					return err;
+				}
+	void		SetDeviceControlReg(UByte value)					{ Call(18, value); }
+	NewtonErr	ATASpecific(ULong selector, void* data, ULong size)
+				{
+					TLentBuffer b(data, (uint32_t) size);
+					return (NewtonErr) (int32_t) Call(19, (uint32_t) selector, b.fARM, (uint32_t) size);
+				}
+	NewtonErr	Initialize(TCardSocket* socket, TCardPCMCIA* card, ULong config)	{ return (NewtonErr) (int32_t) Call(20, SocketMirror(socket), CardMirror(card), (uint32_t) config); }
+	NewtonErr	SuspendService(void)								{ return (NewtonErr) (int32_t) Call(21); }
+	NewtonErr	ResumeService(TCardSocket* socket, TCardPCMCIA* card, ULong config)	{ return (NewtonErr) (int32_t) Call(22, SocketMirror(socket), CardMirror(card), (uint32_t) config); }
+};
+
+static TProtocol*	MakeATAARM(void* at)	{ return new (at) TATAARM; }
+static size_t		SizeATAARM(void)		{ return sizeof(TATAARM); }
+
 static TProtocol*	MakeCardHandlerARM(void* at)	{ return new (at) TCardHandlerARM; }
 static size_t		SizeCardHandlerARM(void)		{ return sizeof(TCardHandlerARM); }
 
@@ -356,6 +467,7 @@ void
 InstallARMCardHandlers(void)
 {
 	RegisterARMProxyKind("TCardHandler", MakeCardHandlerARM, SizeCardHandlerARM);
+	RegisterARMProxyKind("TATA", MakeATAARM, SizeATAARM);
 	ARMRegisterGlue("SocketNumber__11TCardSocketFv", Glue_SocketNumber);
 	ARMRegisterGlue("AttributeMemBaseAddr__11TCardSocketFv", Glue_AttributeMemBaseAddr);
 	ARMRegisterGlue("CommonMemBaseAddr__11TCardSocketFv", Glue_CommonMemBaseAddr);

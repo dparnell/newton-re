@@ -984,6 +984,25 @@ if(Python3_FOUND)
                          FIXTURES_REQUIRED host_atasupport_store DEPENDS host.NewtonATASupport
                          PASS_REGULAR_EXPRESSION "still installed after a restart: ok.*ata-support-restart: done, 0 failed"
                          FAIL_REGULAR_EXPRESSION "waited in vain|FAILED")
+    # and an ATA card put in on that store: ATA Support's own TATASimple
+    # stands the ROM's loader aside, and its TATACardHandler (ARM, through
+    # its proxy) recognises the card (slot 4), is handed the partition info
+    # (19) and installs its services (6) - demo/ata-support-card.ns
+    if(Python3_FOUND)
+        add_test(NAME host.NewtonATASupport.cardmake
+                 COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/cards/atacard.py make
+                         ${CMAKE_CURRENT_BINARY_DIR}/atasupport.card --size 8 --name "Host ATA")
+        set_tests_properties(host.NewtonATASupport.cardmake PROPERTIES FIXTURES_SETUP host_atasupport_card)
+        add_test(NAME host.NewtonATASupport.card
+                 COMMAND newton --display 320x480 --store ${CMAKE_CURRENT_BINARY_DIR}/atasupport.store
+                         --headless 120 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/ata-support-card.ns
+                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+        set_tests_properties(host.NewtonATASupport.card PROPERTIES TIMEOUT 180
+                             FIXTURES_REQUIRED "host_atasupport_store;host_atasupport_card" DEPENDS host.NewtonATASupport.restart
+                             ENVIRONMENT "ATA_CARD=${CMAKE_CURRENT_BINARY_DIR}/atasupport.card;NEWTON_TRACE_ARMPROTOCOLS=1"
+                             PASS_REGULAR_EXPRESSION "TATASimple slot 20.*TATACardHandler slot 4.*TATACardHandler slot 19.*TATACardHandler slot 6.*ata-support-card: done"
+                             FAIL_REGULAR_EXPRESSION "waited in vain|did not run to its end")
+    endif()
     # a package cut into a soup of chunk entries and restored with
     # store:RestoreSegmentedPackage (packages/PackageArchivalPipe.h), and
     # stored with SuckPackageFromBinary's progress callback, on a store of

@@ -120,7 +120,10 @@ such as LocalTalk over UDP).
   11 KB); a card's `'stor` event and `GetCardReinsertionInfo`; an ATA
   card's store - Apple's ATA Support package (fixtures/packages/drivers/)
   through armcpu, the ROM's side being done (`docs/stores/README.md`,
-  "ATA cards"); an ATA card's ARM610 boot code, which the ROM jumps into.
+  "ATA cards"): its card handler recognises a card and installs its
+  services; next `TCardSocket::RegisterSocketInterrupt`, PATACardServer's
+  messages and TATAStore (`docs/armcpu/README.md`, "Protocol parts"); an
+  ATA card's ARM610 boot code, which the ROM jumps into.
 - The NIE built into the ROM extension: the page tables `ptpt`/`glpt`
   still name the patch table's old physical page (0x7ee000); 'fimp is not
   generated.

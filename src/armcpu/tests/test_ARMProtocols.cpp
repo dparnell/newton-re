@@ -6,6 +6,12 @@
 // from host code through a proxy and called; made from the ARM side
 // through the glue (NewByName, FreeInstance) and called ARM to ARM; the
 // name server glue round-trips a thing; and a region maps host memory.
+// Then the user-side OS objects ARM code makes (ARMKernelGlue.cpp,
+// ARMLists.cpp), each over a small snippet of ARM code or called through
+// the public jump table as ARM code calls it: a CList filled, searched,
+// walked and emptied; a locking semaphore; the global time; an async
+// message; and an event handler whose AEHandlerProc is ARM code, handed a
+// host event (narrowed for it) and changing it (widened back).
 // Run as the kernel services task (the protocol registry is a monitor).
 
 #include "ARMProtocols.h"
@@ -13,6 +19,9 @@
 #include "PublicJumpTable.h"
 #include "Protocols.h"
 #include "OSErrors.h"
+#include "AEventHandler.h"
+#include "AEvents.h"
+#include "UserPorts.h"
 #include "Boot.h"
 #include "UserBoot.h"
 #include "host/TaskRuntime.h"
@@ -122,6 +131,8 @@ JumpTableEntry(const char* name)
 }
 
 
+static void		KernelScenario(void);
+
 static void
 ProtocolScenario(void)
 {
@@ -204,7 +215,117 @@ ProtocolScenario(void)
 	EXPECT(ARMHostOf(mirror, 'test') == nil);
 
 	EXPECT(info->DeRegister() == noErr);
+	KernelScenario();
 	HostStopTasks();
+}
+
+
+static uint32_t
+Call(const char* name, uint32_t a = 0, uint32_t b = 0, uint32_t c = 0, uint32_t d = 0)
+{
+	uint32_t args[4] = { a, b, c, d };
+	uint32_t entry = JumpTableEntry(name);
+	EXPECT(entry != 0);
+	return ARMCall(entry, args, 4);
+}
+
+// an event a handler is given, with four bytes after the header (only the
+// header is widened and narrowed: the rest goes as the bytes it is)
+struct TTestEvent : public TAEvent
+{
+	uint8_t	fValue[4];
+};
+
+static void
+KernelScenario(void)
+{
+	// a CList: three items in, found, walked, one taken out
+	uint32_t list = Call("__ct__5CListFv", 0);
+	EXPECT(list != 0);
+	for (uint32_t i = 0; i < 3; i++)
+		EXPECT(Call("InsertAt__5CListFlPv", list, i, 0x100 + i) == noErr);
+	EXPECT(Call("At__5CListFl", list, 1) == 0x101);
+	EXPECT(Call("GetIdentityIndex__5CListFPv", list, 0x102) == 2);
+	EXPECT((int32_t) Call("GetIdentityIndex__5CListFPv", list, 0x999) == -1);
+	uint32_t iter = Call("__ct__13CListIteratorFP13CDynamicArray", 0, list);
+	uint32_t sum = 0;
+	for (uint32_t item = Call("FirstItem__13CListIteratorFv", iter); item != 0; item = Call("NextItem__13CListIteratorFv", iter))
+		sum += item;
+	EXPECT(sum == 0x100 + 0x101 + 0x102);
+	Call("__dt__14CArrayIteratorFv", iter, 1);
+	EXPECT(Call("Remove__5CListFPv", list, 0x101) == noErr);
+	EXPECT(Call("Remove__5CListFPv", list, 0x101) != noErr);
+	EXPECT(Call("At__5CListFl", list, 1) == 0x102);
+	uint32_t size = 0;
+	EXPECT(ARMRead32(list, &size) && size == 2);
+	Call("__dt__5CListFv", list, 1);
+
+	// a locking semaphore (the ROM's fields: id, a byte, the semaphore)
+	uint32_t sem = ARMAlloc(12, true);
+	EXPECT(Call("Init__18TULockingSemaphoreFv", sem) == noErr);
+	uint32_t semId = 0;
+	EXPECT(ARMRead32(sem, &semId) && semId != 0);
+	EXPECT(Call("Acquire__18TULockingSemaphoreF8SemFlags", sem, kWaitOnBlock) == noErr);
+	EXPECT(Call("Release__18TULockingSemaphoreFv", sem) == noErr);
+	Call("__dt__18TULockingSemaphoreFv", sem, 0);
+
+	// the time, returned through a hidden pointer
+	uint32_t t = ARMAlloc(8, true);
+	EXPECT(Call("GetGlobalTime", t) == t);
+	uint32_t lo = 0;
+	EXPECT(ARMRead32(t + 4, &lo) && lo != 0);
+
+	// an async message: its ids written where the ROM keeps them
+	uint32_t msg = Call("__ct__14TUAsyncMessageFv", 0);
+	EXPECT(Call("Init__14TUAsyncMessageFUc", msg, 1) == noErr);
+	uint32_t msgId = 0, replyId = 0;
+	EXPECT(ARMRead32(msg, &msgId) && msgId != 0 && ARMRead32(msg + 8, &replyId) && replyId != 0);
+	Call("__dt__14TUAsyncMessageFv", msg, 1);
+
+	// an event handler whose AEHandlerProc is ARM code: it reads the event's
+	// word after the header, keeps it and adds one to it (not SetReply: the
+	// kernel services task has no app world to reply through)
+	uint8_t code[0x60];
+	memset(code, 0, sizeof(code));
+	uint32_t region = ARMMapRegion(code, sizeof(code), kARMRegionMemory);
+	uint32_t keep = ARMAlloc(4, true);
+	// +0x00: the vtable - dtor, AETestEvent, AEHandlerProc (b +0x20)
+	uint32_t words[] = {
+		0xE1A0F00E, 0xE3A00001, 0xEA000004, 0xE1A0F00E,	// mov pc,lr; mov r0,#1 (unreached); b +0x20; mov pc,lr
+		0, 0, 0, 0,
+		0xE5934008,		// +0x20 AEHandlerProc(this, token, size*, event): ldr r4,[r3,#8]
+		0xE59F500C,		// ldr r5,=keep
+		0xE5854000,		// str r4,[r5]
+		0xE2844001,		// add r4,r4,#1
+		0xE5834008,		// str r4,[r3,#8]
+		0xE1A0F00E,		// mov pc,lr
+		keep,
+	};
+	for (unsigned i = 0; i < sizeof(words) / 4; i++)
+		ARMWrite32(region + i * 4, words[i]);
+	uint32_t handler = Call("__ct__14TAEventHandlerFv", 0);
+	EXPECT(handler != 0);
+	ARMWrite32(handler, region);				// (the subclass's vtable)
+	// (not Init: the kernel services task has no app world to install it in)
+	TAEventHandler* host = ARMEventHandlerOf(handler);
+	EXPECT(host != nil);
+	if (host != nil)
+	{
+		TTestEvent event;
+		event.fAEventClass = 'evnt';
+		event.fAEventID = 'test';
+		event.fValue[0] = 0; event.fValue[1] = 0; event.fValue[2] = 0; event.fValue[3] = 41;
+		ULong eventSize = sizeof(TTestEvent);
+		host->AEHandlerProc(nil, &eventSize, &event);
+		uint32_t kept = 0;
+		EXPECT(ARMRead32(keep, &kept) && kept == 41);
+		// the event as the handler left it, widened back: the class, the id and the word
+		EXPECT(event.fValue[3] == 42 && event.fValue[0] == 0 && event.fAEventClass == 'evnt' && event.fAEventID == 'test');
+		EXPECT(eventSize == sizeof(TTestEvent));
+	}
+	Call("__dt__14TAEventHandlerFv", handler, 1);
+	EXPECT(ARMEventHandlerOf(handler) == nil);
+	ARMUnmapRegion(region);
 }
 
 

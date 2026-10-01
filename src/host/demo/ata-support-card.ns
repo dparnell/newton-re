@@ -1,0 +1,29 @@
+// After ata-support.ns and its restart, on the same store: an ATA card put
+// in.  The ROM's ATA loader asks for a TATASimple and gets ATA Support's
+// (version 2, which answers every call with kError_ATA_No_Partition so the
+// ROM's own loader stands aside), and the card server offers the card to
+// the package's TATACardHandler - ARM code on src/armcpu through its
+// TCardHandler proxy - which recognises it and installs its services.
+// (How far its services get is what NEWTON_TRACE_ARMPROTOCOLS shows; the
+// ctest host.NewtonATASupport.card checks the handler's calls.)
+//
+//   python tools/cards/atacard.py make tmp/ata.card --size 8 --name "Host ATA"
+//   NEWTON_TRACE_ARMPROTOCOLS=1 ATA_CARD=tmp/ata.card build/host/host/newton \
+//       --store tmp/atasup.store --headless 120 --script src/host/demo/ata-support-card.ns
+
+HostInclude("common.ns");
+
+asCardFile := HostGetEnv("ATA_CARD");
+call waitFor with ("ata-support-card: the driver", func() begin
+		local found := nil;
+		foreach p in GetPackages() do if StrEqual(p.title, "ATA Support:Kallisys") then found := p;
+		found
+	end, func() begin
+		HostInsertCard(0, asCardFile);
+		// the card server works on its own task; give it the time it takes
+		asStarted := Ticks();
+		call waitFor with ("ata-support-card: a while", func() Ticks() - asStarted > 300, func() begin
+			Print("ata-support-card: done");
+			HostQuit();
+		end, 30);
+	end, 60);

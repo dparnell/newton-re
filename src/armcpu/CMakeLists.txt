@@ -22,8 +22,10 @@ target_include_directories(armcpu_frames PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 # plumbing, mirrors of host objects, and the protocol and name server glue.
 add_library(armcpu_protocols STATIC
     ARMProtocols.cpp
+    ARMKernelGlue.cpp
+    ARMLists.cpp
 )
-target_link_libraries(armcpu_protocols PUBLIC newton_config armcpu_frames package_manager)
+target_link_libraries(armcpu_protocols PUBLIC newton_config armcpu_frames package_manager utility os600_user os600_kernel)
 target_include_directories(armcpu_protocols PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 # A package's card handler part on the interpreter (ARMCardHandler.h): the

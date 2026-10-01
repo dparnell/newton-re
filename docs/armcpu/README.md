@@ -266,11 +266,63 @@ registers, makes and calls it both ways, round-trips the name server and
 maps a region.  `NEWTON_TRACE_ARMPROTOCOLS` prints each part loaded, each
 proxy call and the protocol glue's answers.
 
-What ATA Support's driver package needs next (the coordinator's plan, in
-layers): the kernel glue its frames part's InstallScript native reaches
-(`TAEventHandler` and the event loop's calls back into ARM, `TUAsyncMessage`,
-`TUPort`'s messages, semaphores, `CList`/`CDynamicArray`), then
-TATACardHandler recognising a card, PATACardServer, and TATAStore mounted.
+- **The user-side OS objects** ARM code makes (`ARMKernelGlue.cpp`):
+  each is its bytes in the ARM heap in the ROM's layout with a host object
+  of the class bound to it, on which each call is done - `TAEventHandler`
+  (0x14 bytes; its host object's `AETestEvent`, `AEHandlerProc`,
+  `AECompletionProc` and `IdleProc` call the ARM object's own vtable slots
+  1-4, so an ARM subclass is called back by the host's event loop - a
+  message token handed over as a mirror, `TUMsgToken::ReplyRPC` answered
+  on it; `Init`, the idler, `SetReply`), `TAEvent`, `TUAsyncMessage` (its
+  ids at +0 and +8), `TUPort`'s `SendGoo`/`SendRPCGoo` (sync and async),
+  `TULockingSemaphore`, `GetGlobalTime`/`GetTaskTime` (a TTime returned
+  through r0), `TTime::ConvertTo`, `TDelayTimer`, `ShortTimerDelay`, and
+  `DebugStr`, `ZeroBytes`, `GC`, `rand`/`srand`,
+  `MemObjManager::FindEnvironmentId`; `Reboot` is logged, not done (NOT
+  YET).  **Events cross between the worlds widened and narrowed**: a
+  TAEvent's header is two 32-bit words on the ARM and two pointer-sized
+  ULongs on the host, so every message the ARM code sends is taken to begin
+  with one (DEVIATION) and widened on the way out, and a message handed to
+  an ARM handler, or a reply handed back, is narrowed again; the bytes after
+  the header go as they are.  An async message keeps its host copies of
+  the content and reply buffer until it is done, and the completion is
+  narrowed into the ARM code's own reply buffer.
+- **Lists** (`ARMLists.cpp`): `CDynamicArray`, `CList` and their iterators
+  as ARM code uses them, on ARM memory in the ROM's layout (0x18-byte
+  arrays, 0x1c-byte iterators), transcribed from `utility/` - the ROM's own
+  code cannot run here when the boot has no ROM image.
+- **Code binaries** a package's relocation applies to (Newton C++ Tools
+  'nativeModule code) are copied into the ARM world once and kept, at an
+  address that does not move, since the C++ objects their code makes - a
+  vtable in the binary, an event handler called back later from another
+  task - outlive the call; a binary with nothing to relocate (an NTK native
+  function's) lies at 0x20000000 for its call, as before.
+- **ATA drivers**: the `TATA` proxy (`ARMCardHandler.cpp`, slots 4-22; a
+  host buffer lent to the ARM code as a region for the call, a command
+  block copied into the ROM's layout and back), so the ROM's ATA loader's
+  `TATA::New("TATASimple")` gets a driver package's own.
+
+`test_ARMProtocols` (ctest `armcpu.ARMProtocols`) assembles a small part -
+class info, table, sizeof, New, Delete and a method - and loads, relocates,
+registers, makes and calls it both ways, round-trips the name server and
+maps a region; then fills, searches, walks and empties a CList through the
+jump table, takes and gives back a locking semaphore, reads the time, makes
+an async message, and hands a host event to an event handler whose
+`AEHandlerProc` is a few ARM instructions (the event narrowed for it and
+the change it made widened back).  `NEWTON_TRACE_ARMPROTOCOLS` prints each
+part loaded, each proxy call and the protocol and kernel glue's answers.
+
+ATA Support (ctests `host.NewtonATASupport`, `.restart`, `.card`): its
+InstallScript native makes its server object and event handlers and
+registers itself with the name server; with an ATA card put in, the ROM's
+loader gets its TATASimple (version 2: it answers the loader with no
+partition, so the ROM's own loader stands aside) and the card server
+offers the card to its TATACardHandler, which recognises it (slot 4),
+takes the partition info (19) and installs its services (6).  Next, in
+layers: `TCardSocket::RegisterSocketInterrupt` (the first call its
+services make that the glue does not answer), PATACardServer's messages,
+then TATAStore mounted, written, read back after a restart, removed and
+reinserted.
 
 ## Which fixtures have native code
 
