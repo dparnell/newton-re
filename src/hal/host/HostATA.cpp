@@ -69,6 +69,10 @@ namespace
 		Boolean		fOut;			// data to the drive
 		Boolean		fToDisk;		// the data out is a sector (not WRITE BUFFER)
 		Boolean		fTrace;
+		Boolean		fTraceRegisters;	// NEWTON_TRACE_ATA=2: every register access but the data's
+		Boolean		fINTRQ;			// the interrupt request, before nIEN
+		UByte		fConfigOption;	// the configuration option register (COR)
+		UByte		fSocketCopy;	// the socket and copy register
 	};
 	HostATADrive	gDrives[kHostCardSockets];
 	Boolean			gStarted[kHostCardSockets];
@@ -77,13 +81,18 @@ namespace
 	Reset(HostATADrive* d)
 	{
 		UByte control = d->fDeviceControl;
+		UByte option = d->fConfigOption, copy = d->fSocketCopy;
 		memset(d, 0, sizeof(HostATADrive));
 		d->fDeviceControl = control & ~4;
+		d->fConfigOption = option;
+		d->fSocketCopy = copy;
 		d->fError = 1;				// diagnostics passed
 		d->fCount = 1;
 		d->fSector = 1;
 		d->fStatus = kStatusReady | kStatusSeekDone;
-		d->fTrace = getenv("NEWTON_TRACE_ATA") != nil;
+		const char* trace = getenv("NEWTON_TRACE_ATA");
+		d->fTrace = trace != nil;
+		d->fTraceRegisters = trace != nil && trace[0] == '2';
 	}
 
 	HostATADrive*
@@ -105,6 +114,17 @@ namespace
 				 | ((ULong) d->fCylinderLow << 8) | d->fSector;
 		ULong cylinder = d->fCylinderLow | ((ULong) d->fCylinderHigh << 8);
 		return (cylinder * kHeads + (d->fDriveHead & 0x0F)) * kSectorsPerTrack + d->fSector - 1;
+	}
+
+	void	DoCommand(ULong socket, HostATADrive* d, UByte command);
+
+	// INTRQ asserted (the socket told unless nIEN masks it)
+	void
+	Interrupt(ULong socket, HostATADrive* d)
+	{
+		d->fINTRQ = true;
+		if ((d->fDeviceControl & 2) == 0)
+			HostCardSocketIREQ(socket);
 	}
 
 	void
@@ -199,6 +219,17 @@ namespace
 	void
 	Command(ULong socket, HostATADrive* d, UByte command)
 	{
+		DoCommand(socket, d, command);
+		// a command interrupts when it is done or its first data is ready;
+		// one waiting for data from the host interrupts when it has it
+		if (!d->fOut)
+			Interrupt(socket, d);
+	}
+
+	void
+	DoCommand(ULong socket, HostATADrive* d, UByte command)
+	{
+		d->fINTRQ = false;
 		d->fCommand = command;
 		if (d->fTrace)
 			fprintf(stderr, "[ata] %lu: command %02x count %u address %ld\n", (unsigned long) socket,
@@ -303,14 +334,18 @@ namespace
 		d->fLeft--;
 		d->fCount = (UByte) d->fLeft;
 		d->fIndex = 0;
+		Boolean out = d->fOut;
 		if (d->fLeft == 0)
 		{
 			Done(d);
+			if (out)
+				Interrupt(socket, d);		// (a read's last sector taken is no interrupt)
 			return;
 		}
 		d->fSector32++;
 		if (d->fIn && HostCardATARead(socket, d->fSector32, d->fBuffer) != noErr)
 			Fail(d, kErrorAborted);
+		Interrupt(socket, d);				// the next sector ready, or wanted
 	}
 
 	UByte
@@ -334,8 +369,20 @@ namespace
 			SectorMoved(socket, d);
 	}
 
+	UByte	DoReadRegister(ULong socket, ULong offset);
+
 	UByte
 	ReadRegister(ULong socket, ULong offset)
+	{
+		UByte value = DoReadRegister(socket, offset);
+		HostATADrive* d = Drive(socket);
+		if (d->fTraceRegisters && (offset ^ 3) != 0)
+			fprintf(stderr, "[ata] %lu: read %03lx -> %02x\n", (unsigned long) socket, (unsigned long) offset, value);
+		return value;
+	}
+
+	UByte
+	DoReadRegister(ULong socket, ULong offset)
 	{
 		HostATADrive* d = Drive(socket);
 		switch (offset ^ 3)
@@ -347,7 +394,8 @@ namespace
 		case 0x4:	return d->fCylinderLow;
 		case 0x5:	return d->fCylinderHigh;
 		case 0x6:	return d->fDriveHead;
-		case 0x7:
+		case 0x7:	d->fINTRQ = false;		// (reading the status acknowledges the interrupt)
+					return (d->fDriveHead & 0x10) ? 0 : d->fStatus;
 		case 0xE:	return (d->fDriveHead & 0x10) ? 0 : d->fStatus;
 		case 0xF:	return (UByte) (0xC0 | ((~d->fDriveHead & 0x0F) << 2) | ((d->fDriveHead & 0x10) ? 1 : 2));
 		}
@@ -358,6 +406,8 @@ namespace
 	WriteRegister(ULong socket, ULong offset, UByte value)
 	{
 		HostATADrive* d = Drive(socket);
+		if (d->fTraceRegisters && (offset ^ 3) != 0)
+			fprintf(stderr, "[ata] %lu: write %03lx <- %02x\n", (unsigned long) socket, (unsigned long) offset, value);
 		switch (offset ^ 3)
 		{
 		case 0x0:	WriteData(socket, d, value); break;
@@ -379,6 +429,57 @@ namespace
 		}
 	}
 
+	// The card's configuration registers in attribute memory, as a
+	// CompactFlash card has them (the PC Card standard's): the option
+	// register (bit 7 a soft reset, the low bits the interface chosen),
+	// the configuration and status register (bit 1 the interrupt pending),
+	// the pin replacement register (bit 1 ready - the model is never busy -
+	// bit 0 write protect) and the socket and copy register.  The registers
+	// sit on the card's even addresses; the attribute window's byte lanes
+	// are swapped as its common memory's are, so card address a is window
+	// offset a ^ 3.
+	UByte
+	ReadConfig(ULong socket, ULong offset)
+	{
+		HostATADrive* d = Drive(socket);
+		UByte value = 0;
+		switch ((offset ^ 3) - kHostCardATAConfigBase)
+		{
+		case 0:	value = d->fConfigOption; break;
+		case 2:	value = d->fINTRQ ? 0x02 : 0x00; break;
+		case 4:	value = (UByte) (0x02 | (HostCardIsWriteProtected(socket) ? 0x01 : 0x00)); break;
+		case 6:	value = d->fSocketCopy; break;
+		}
+		if (d->fTraceRegisters)
+			fprintf(stderr, "[ata] %lu: config read %03lx -> %02x\n", (unsigned long) socket, (unsigned long) (offset ^ 3), value);
+		return value;
+	}
+
+	void
+	WriteConfig(ULong socket, ULong offset, UByte value)
+	{
+		HostATADrive* d = Drive(socket);
+		if (d->fTraceRegisters)
+			fprintf(stderr, "[ata] %lu: config write %03lx <- %02x\n", (unsigned long) socket, (unsigned long) (offset ^ 3), value);
+		switch ((offset ^ 3) - kHostCardATAConfigBase)
+		{
+		case 0:
+			if ((value & 0x80) != 0)
+			{
+				Reset(d);				// (a soft reset: the drive starts afresh)
+				d->fConfigOption = 0;
+			}
+			else
+				d->fConfigOption = value;
+			break;
+		case 2:
+			if ((value & 0x02) == 0)
+				d->fINTRQ = false;
+			break;
+		case 6:	d->fSocketCopy = value; break;
+		}
+	}
+
 	Boolean
 	IsDataWord(ULong offset)
 	{
@@ -390,6 +491,16 @@ namespace
 	{
 		return ((ULong32) p[0] << 24) | ((ULong32) p[1] << 16) | ((ULong32) p[2] << 8) | p[3];
 	}
+}
+
+
+Boolean
+HostATAInterrupt(ULong socket)
+{
+	if (socket >= kHostCardSockets || !gStarted[socket] || !HostCardIsATA(socket))
+		return false;
+	HostATADrive* d = &gDrives[socket];
+	return d->fINTRQ && (d->fDeviceControl & 2) == 0;
 }
 
 
@@ -408,6 +519,8 @@ CardBusReadByte(volatile void* address)
 	ULong socket, offset;
 	if (HostCardATAWindow(address, &socket, &offset))
 		return ReadRegister(socket, offset);
+	if (HostCardATAAttribute(address, &socket, &offset))
+		return ReadConfig(socket, offset);
 	return *(volatile UByte*) address;
 }
 
@@ -418,6 +531,8 @@ CardBusWriteByte(volatile void* address, UByte value)
 	ULong socket, offset;
 	if (HostCardATAWindow(address, &socket, &offset))
 		WriteRegister(socket, offset, value);
+	else if (HostCardATAAttribute(address, &socket, &offset))
+		WriteConfig(socket, offset, value);
 	else
 		*(volatile UByte*) address = value;
 }

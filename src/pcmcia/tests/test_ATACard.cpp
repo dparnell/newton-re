@@ -4,7 +4,8 @@
 // read and written by logical block address and by cylinder, head and
 // sector, a sector past the end refused, the drive reset and asked its
 // power mode; then TCardATALoader's partition map read (a plain one, and
-// one inside a PC partition) and its helpers.  What is written is still
+// one inside a PC partition) and its helpers; and the model's interrupt
+// request and configuration registers.  What is written is still
 // there when the card comes back.  The images are made by
 // tools/cards/atacard.py (the ctest's fixtures), with no packages on them -
 // the loader's packages are host.NewtonATACard's.  Run as the kernel
@@ -26,6 +27,7 @@
 #include "UserBoot.h"
 #include "host/TaskRuntime.h"
 #include "Host.h"
+#include "CardBus.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -127,6 +129,53 @@ TestDriver(TCardSocket* socket)
 }
 
 
+// The model's interrupt request and configuration registers, as a driver
+// that waits on the card's interrupt and resets it through its option
+// register sees them (Kallisys's ATA Support): INTRQ set when a command is
+// done, on the socket's Ready/IREQ# pin (IsIRQ) and as its IREQ
+// interrupt, cleared by reading the status; masked by nIEN; the pin
+// replacement register's ready bit; a soft reset through the option
+// register.  Registers are at card address ^ 3 in each window.
+static void
+TestInterrupts(TCardSocket* socket)
+{
+	EXPECT(HostCardInsert(0, gPlainCard) == noErr);
+	volatile UByte* regs = (volatile UByte*) socket->CommonMemBaseAddr();
+	volatile UByte* attr = (volatile UByte*) socket->AttributeMemBaseAddr();
+	EXPECT(regs != nil && attr != nil);
+	if (regs == nil || attr == nil)
+		return;
+	EXPECT(!socket->IsIRQ());
+	CardBusWriteByte(regs + (0xE ^ 3), 0x00);			// nIEN clear
+	CardBusWriteByte(regs + (6 ^ 3), 0xA0);
+	CardBusWriteByte(regs + (7 ^ 3), 0x10);			// RECALIBRATE: done at once
+	EXPECT(socket->IsIRQ() && HostATAInterrupt(0));
+	EXPECT((CardBusReadByte(attr + (0x202 ^ 3)) & 0x02) != 0);	// the status register's Intr
+	EXPECT((CardBusReadByte(regs + (0xE ^ 3)) & 0x80) == 0);		// the alternate status leaves it
+	EXPECT(socket->IsIRQ());
+	EXPECT((CardBusReadByte(regs + (7 ^ 3)) & 0x80) == 0);		// the status acknowledges it
+	EXPECT(!socket->IsIRQ());
+	CardBusWriteByte(regs + (0xE ^ 3), 0x02);			// nIEN set: masked
+	CardBusWriteByte(regs + (7 ^ 3), 0x10);
+	EXPECT(!socket->IsIRQ());
+	CardBusWriteByte(regs + (0xE ^ 3), 0x00);
+	EXPECT(socket->IsIRQ());						// (pending all the same)
+	(void) CardBusReadByte(regs + (7 ^ 3));
+	// the pin replacement register: ready, not write protected
+	EXPECT(CardBusReadByte(attr + (0x204 ^ 3)) == 0x02);
+	// the option register kept; a soft reset clears it and the drive
+	CardBusWriteByte(attr + (0x200 ^ 3), 0x01);
+	EXPECT(CardBusReadByte(attr + (0x200 ^ 3)) == 0x01);
+	CardBusWriteByte(regs + (2 ^ 3), 0x55);
+	CardBusWriteByte(attr + (0x200 ^ 3), 0x80);
+	EXPECT(CardBusReadByte(attr + (0x200 ^ 3)) == 0x00);
+	EXPECT(CardBusReadByte(regs + (2 ^ 3)) == 0x01);	// the count back to its signature
+	// the CIS is still plain memory around them
+	EXPECT(attr[2] == 0x01);						// (CIS byte 0: attribute byte o is CIS byte (o / 2) ^ 1)
+	HostCardRemove(0);
+}
+
+
 // the map inside a PC partition of type 0x83, and the loader making its
 // own TATASimple
 static void
@@ -173,6 +222,7 @@ ATAScenario(void)
 	gNumberOfHWSockets = 1;
 	EXPECT(InitVppManager() == noErr);		// the card's power, which each command switches on
 	TestDriver(socket);
+	TestInterrupts(socket);
 	TestMBR(socket);
 	TestHelpers();
 	HostStopTasks();

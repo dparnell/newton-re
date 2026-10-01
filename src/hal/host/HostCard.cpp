@@ -483,6 +483,25 @@ HostCardATAWrite(ULong socket, ULong sector, const void* buffer)
 
 
 Boolean
+HostCardATAAttribute(const volatile void* address, ULong* socket, ULong* offset)
+{
+	const volatile unsigned char* a = (const volatile unsigned char*) address;
+	for (ULong i = 0; i < kHostCardSockets; i++)
+	{
+		HostCardState* card = Card(i);
+		if (card != nil && card->fATA && a >= card->fAttribute + kHostCardATAConfigBase
+		&&  a < card->fAttribute + kHostCardATAConfigBase + kHostCardATAConfigSize)
+		{
+			*socket = i;
+			*offset = (ULong) (a - card->fAttribute);
+			return true;
+		}
+	}
+	return false;
+}
+
+
+Boolean
 HostCardATAWindow(const volatile void* address, ULong* socket, ULong* offset)
 {
 	const volatile unsigned char* a = (const volatile unsigned char*) address;

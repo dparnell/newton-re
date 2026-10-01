@@ -89,6 +89,16 @@ HostCardSocketChanged(ULong socketNumber, Boolean /*inserted*/)
 }
 
 
+// An ATA card's INTRQ rising: the socket's IREQ interrupt made pending
+void
+HostCardSocketIREQ(ULong socketNumber)
+{
+	if (socketNumber >= kHostCardSockets || gHostSockets[socketNumber] == nil)
+		return;
+	gHostSockets[socketNumber]->fIntPending |= (1 << kSocketCardIREQInt);
+}
+
+
 TCardSocket::TCardSocket(ULong socketNumber)
 {
 	fSocketDomain = 0;
@@ -286,7 +296,9 @@ TCardSocket::GetPCPins(void)
 	ULong pins = 0;
 	if (HostCardIsInserted(fSocketNumber))
 	{
-		pins |= kCardCD1 | kCardCD2 | kCardReadyIREQ | kCardMemBVD1 | kCareMemBVD2 | kCardVS1 | kCardVS2;
+		pins |= kCardCD1 | kCardCD2 | kCardMemBVD1 | kCareMemBVD2 | kCardVS1 | kCardVS2;
+		if (!HostATAInterrupt(fSocketNumber))
+			pins |= kCardReadyIREQ;			// (IREQ# low: an ATA card's interrupt)
 		if (HostCardIsWriteProtected(fSocketNumber))
 			pins |= kCardWPIOIs16;
 	}
@@ -304,7 +316,9 @@ TCardSocket::GetVPCPins(void)
 {
 	if (!HostCardIsInserted(fSocketNumber))
 		return 0x4 | 0x8;
-	ULong pins = 0x10 | 0x20 | 0x400 | 0x1 | 0x2;
+	ULong pins = 0x10 | 0x20 | 0x1 | 0x2;
+	if (!HostATAInterrupt(fSocketNumber))
+		pins |= 0x400;
 	if (HostCardIsWriteProtected(fSocketNumber))
 		pins |= 0x200;
 	return pins;
@@ -327,7 +341,12 @@ TCardSocket::IsReady(void)
 }
 
 
-Boolean		TCardSocket::IsIRQ(void)					{ return false; }
+// ROM 0x00055d90 IsIRQ__11TCardSocketFv (the Ready/IREQ# pin low)
+Boolean
+TCardSocket::IsIRQ(void)
+{
+	return !IsReady();
+}
 Boolean		TCardSocket::IsStatusChanged(void)			{ return false; }
 
 

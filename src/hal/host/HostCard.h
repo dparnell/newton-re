@@ -79,6 +79,21 @@ NewtonErr	HostCardATAWrite(ULong socket, ULong sector, const void* buffer);
 // Which ATA card's register window an address is in: its socket and the
 // offset into the window; false for none.
 Boolean		HostCardATAWindow(const volatile void* address, ULong* socket, ULong* offset);
+// Which ATA card's configuration registers an address is in (attribute
+// memory kHostCardATAConfigBase on, as tools/cards/atacard.py's
+// CISTPL_CONFIG puts them: the option, status, pin replacement and socket
+// and copy registers): its socket and the offset into attribute memory.
+const ULong	kHostCardATAConfigBase	= 0x200;
+const ULong	kHostCardATAConfigSize	= 0x10;
+Boolean		HostCardATAAttribute(const volatile void* address, ULong* socket, ULong* offset);
+// An ATA card's interrupt request (INTRQ, which the card puts on the
+// socket's Ready/IREQ# pin in its I/O mode): whether it is asserted - set
+// when a command finishes and when each sector of data is ready or taken,
+// cleared by reading the status register or writing a command, masked by
+// nIEN in the device control register (HostATA.cpp) - and the socket told
+// when it rises (its IREQ interrupt made pending, HostCardSocket.cpp).
+Boolean		HostATAInterrupt(ULong socket);
+void		HostCardSocketIREQ(ULong socket);
 
 // The windows, as host addresses (nil without a card)
 Ptr			HostCardAttributeMemory(ULong socket);

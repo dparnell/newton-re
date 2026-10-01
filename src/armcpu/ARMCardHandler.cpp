@@ -20,9 +20,11 @@
 #include "CardATALoader.h"
 #include "ATA.h"
 #include "HostCard.h"
+#include "CardPower.h"
 #include "OSErrors.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 // the mirrors' kinds
@@ -220,6 +222,131 @@ CardArg(ARMTrapContext& c)
 		ThrowMsg("armcpu: not a card the host handed over");
 	return card;
 }
+
+// A socket interrupt an ARM driver registers: the host's socket calls a
+// host proc, which calls the ARM one (proc(object, socket)) on the
+// interrupted task's world, the socket handed over as its mirror.
+static bool		gTraceCard = false;
+struct ARMSocketInt { uint32_t fProc; uint32_t fObject; TCardSocket* fSocket; };
+static ARMSocketInt*	gSocketInts[kHostCardSockets][kSocketIntCount];
+
+static NewtonErr
+CallARMSocketInt(void* object, TCardSocket* socket)
+{
+	ARMSocketInt* i = (ARMSocketInt*) object;
+	uint32_t args[2] = { i->fObject, SocketMirror(socket) };
+	return (NewtonErr) (int32_t) ARMCall(i->fProc, args, 2);
+}
+
+// ROM 0x0005505c RegisterSocketInterrupt__11TCardSocketF10TSocketIntPFPvP11TCardSocket_lPv
+static bool
+Glue_RegisterSocketInterrupt(void*, ARMTrapContext& c)
+{
+	TCardSocket* socket = SocketArg(c);
+	ULong type = c.Arg(1);
+	ULong number = socket->SocketNumber();
+	if (type >= kSocketIntCount || number >= kHostCardSockets)
+	{
+		c.Return((uint32_t) kError_Bad_Parameters);
+		return true;
+	}
+	ARMSocketInt* i = gSocketInts[number][type];
+	if (i == nil)
+		i = gSocketInts[number][type] = new ARMSocketInt;
+	i->fProc = c.Arg(2);
+	i->fObject = c.Arg(3);
+	i->fSocket = socket;
+	NewtonErr err = socket->RegisterSocketInterrupt((TSocketInt) type, i->fProc != 0 ? CallARMSocketInt : nil, i);
+	if (gTraceCard)
+		fprintf(stderr, "[armcard] socket %lu interrupt %lu -> ARM %08x(%08x): %ld\n", (unsigned long) number, (unsigned long) type, i->fProc, i->fObject, (long) err);
+	c.Return((uint32_t) err);
+	return true;
+}
+// ROM 0x000550bc DeregisterSocketInterrupt__11TCardSocketF10TSocketInt
+static bool	Glue_DeregisterSocketInterrupt(void*, ARMTrapContext& c)	{ SocketArg(c)->DeregisterSocketInterrupt((TSocketInt) c.Arg(1)); c.Return(0); return true; }
+// ROM 0x000550f4 EnableSocketInterrupt__11TCardSocketF10TSocketInt
+static bool	Glue_EnableSocketInterrupt(void*, ARMTrapContext& c)		{ SocketArg(c)->EnableSocketInterrupt((TSocketInt) c.Arg(1)); c.Return(0); return true; }
+// ROM 0x000551b0 DisableSocketInterrupt__11TCardSocketF10TSocketInt
+static bool	Glue_DisableSocketInterrupt(void*, ARMTrapContext& c)		{ SocketArg(c)->DisableSocketInterrupt((TSocketInt) c.Arg(1)); c.Return(0); return true; }
+// ROM 0x00055220 ClearSocketInterrupt__11TCardSocketF10TSocketInt
+static bool	Glue_ClearSocketInterrupt(void*, ARMTrapContext& c)		{ SocketArg(c)->ClearSocketInterrupt((TSocketInt) c.Arg(1)); c.Return(0); return true; }
+// ROM 0x00055268 SetSocketInterruptFlags__11TCardSocketF10TSocketInt15TSocketIntFlags
+static bool	Glue_SetSocketInterruptFlags(void*, ARMTrapContext& c)		{ c.Return((uint32_t) SocketArg(c)->SetSocketInterruptFlags((TSocketInt) c.Arg(1), (TSocketIntFlags) c.Arg(2))); return true; }
+// ROM 0x000a1650 InterruptState__11TCardSocketF10TSocketInt
+static bool	Glue_InterruptState(void*, ARMTrapContext& c)				{ c.Return((uint32_t) SocketArg(c)->InterruptState((TSocketInt) c.Arg(1))); return true; }
+
+/*------------------------------------------------------------------------------
+	C a r d   p o w e r   (pcmcia/CardPower.cpp, as ARM code calls it)
+------------------------------------------------------------------------------*/
+
+// ROM 0x00050a78 VccOn__FiUc
+static bool	Glue_VccOn(void*, ARMTrapContext& c)			{ c.Return(VccOn((int) c.Arg(0), (Boolean) (c.Arg(1) & 0xff)) ? 1 : 0); return true; }
+// ROM 0x00050d18 VccOff__Fi
+static bool	Glue_VccOff(void*, ARMTrapContext& c)			{ VccOff((int) c.Arg(0)); c.Return(0); return true; }
+// ROM 0x00050d28 VccOff__FiUl
+static bool	Glue_VccOffDelay(void*, ARMTrapContext& c)		{ VccOff((int) c.Arg(0), (TTimeout) c.Arg(1)); c.Return(0); return true; }
+// ROM 0x00050510 VppOn__FiUc
+static bool	Glue_VppOn(void*, ARMTrapContext& c)			{ c.Return(VppOn((int) c.Arg(0), (Boolean) (c.Arg(1) & 0xff)) ? 1 : 0); return true; }
+// ROM 0x00050c44 VppOff__Fi
+static bool	Glue_VppOff(void*, ARMTrapContext& c)			{ VppOff((int) c.Arg(0)); c.Return(0); return true; }
+// ROM 0x00050c50 VppOff__FiUl
+static bool	Glue_VppOffDelay(void*, ARMTrapContext& c)		{ VppOff((int) c.Arg(0), (TTimeout) c.Arg(1)); c.Return(0); return true; }
+// ROM 0x00050bb8 GetVccTimeout__Fi
+static bool	Glue_GetVccTimeout(void*, ARMTrapContext& c)	{ c.Return((uint32_t) GetVccTimeout((int) c.Arg(0))); return true; }
+// ROM 0x00050bc8 SetVccTimeout__FiUl
+static bool	Glue_SetVccTimeout(void*, ARMTrapContext& c)	{ SetVccTimeout((int) c.Arg(0), (TTimeout) c.Arg(1)); c.Return(0); return true; }
+// ROM 0x00050b9c IsVccOffNotifyRegistered__Fi
+static bool	Glue_IsVccOffNotifyRegistered(void*, ARMTrapContext& c)	{ c.Return(IsVccOffNotifyRegistered((int) c.Arg(0)) ? 1 : 0); return true; }
+
+// an ARM function told before a socket's power goes off
+struct ARMVccNotify { uint32_t fFunc; uint32_t fRefCon; };
+static ARMVccNotify	gVccNotify[kHostCardSockets];
+
+static void
+CallARMVccNotify(void* refCon)
+{
+	ARMVccNotify* n = (ARMVccNotify*) refCon;
+	uint32_t args[1] = { n->fRefCon };
+	ARMCall(n->fFunc, args, 1);
+}
+
+// ROM 0x000509fc RegisterVccOffNotify__FiPFPv_vPv
+static bool
+Glue_RegisterVccOffNotify(void*, ARMTrapContext& c)
+{
+	int socket = (int) c.Arg(0);
+	if (socket >= 0 && (ULong) socket < kHostCardSockets)
+	{
+		gVccNotify[socket].fFunc = c.Arg(1);
+		gVccNotify[socket].fRefCon = c.Arg(2);
+		RegisterVccOffNotify(socket, c.Arg(1) != 0 ? CallARMVccNotify : nil, &gVccNotify[socket]);
+	}
+	c.Return(0);
+	return true;
+}
+// ROM 0x00050a38 UnregisterVccOffNotify__Fi
+static bool	Glue_UnregisterVccOffNotify(void*, ARMTrapContext& c)	{ UnregisterVccOffNotify((int) c.Arg(0)); c.Return(0); return true; }
+
+// ROM 0x00055bc8 GetControl__11TCardSocketFv
+static bool	Glue_Socket_GetControl(void*, ARMTrapContext& c)	{ c.Return((uint32_t) SocketArg(c)->GetControl()); return true; }
+// ROM 0x00055d90 IsIRQ__11TCardSocketFv
+static bool	Glue_Socket_IsIRQ(void*, ARMTrapContext& c)	{ c.Return(SocketArg(c)->IsIRQ() ? 1 : 0); return true; }
+// ROM 0x00055df4 IsVccOn__11TCardSocketFv
+static bool	Glue_Socket_IsVccOn(void*, ARMTrapContext& c)	{ c.Return(SocketArg(c)->IsVccOn() ? 1 : 0); return true; }
+// ROM 0x00055690 SelectIOInterface__11TCardSocketFv
+static bool	Glue_Socket_SelectIOInterface(void*, ARMTrapContext& c)	{ SocketArg(c)->SelectIOInterface(); c.Return(0); return true; }
+// ROM 0x00055674 SelectMemoryInterface__11TCardSocketFv
+static bool	Glue_Socket_SelectMemoryInterface(void*, ARMTrapContext& c)	{ SocketArg(c)->SelectMemoryInterface(); c.Return(0); return true; }
+// ROM 0x00055928 SetControl__11TCardSocketFUl
+static bool	Glue_Socket_SetControl(void*, ARMTrapContext& c)	{ SocketArg(c)->SetControl(c.Arg(1)); c.Return(0); return true; }
+// ROM 0x000554c8 SetDefaultConfig__11TCardSocketFv
+static bool	Glue_Socket_SetDefaultConfig(void*, ARMTrapContext& c)	{ SocketArg(c)->SetDefaultConfig(); c.Return(0); return true; }
+// ROM 0x000558f0 SetDefaultSpeeds__11TCardSocketFv
+static bool	Glue_Socket_SetDefaultSpeeds(void*, ARMTrapContext& c)	{ SocketArg(c)->SetDefaultSpeeds(); c.Return(0); return true; }
+// ROM 0x0005609c SelectVoltageLevel__11TCardSocketF18TSocketPowerLevels
+static bool	Glue_Socket_SelectVoltageLevel(void*, ARMTrapContext& c)	{ c.Return((uint32_t) SocketArg(c)->SelectVoltageLevel((TSocketPowerLevels) c.Arg(1))); return true; }
+// ROM 0x0005604c VccVoltageSpec__11TCardSocketFv
+static bool	Glue_Socket_VccVoltageSpec(void*, ARMTrapContext& c)	{ c.Return((uint32_t) SocketArg(c)->VccVoltageSpec()); return true; }
 
 // ROM 0x00055468 SocketNumber__11TCardSocketFv
 static bool
@@ -468,7 +595,36 @@ InstallARMCardHandlers(void)
 {
 	RegisterARMProxyKind("TCardHandler", MakeCardHandlerARM, SizeCardHandlerARM);
 	RegisterARMProxyKind("TATA", MakeATAARM, SizeATAARM);
+	gTraceCard = getenv("NEWTON_TRACE_ARMPROTOCOLS") != nil;
+	ARMRegisterGlue("VccOn__FiUc", Glue_VccOn);
+	ARMRegisterGlue("VccOff__Fi", Glue_VccOff);
+	ARMRegisterGlue("VccOff__FiUl", Glue_VccOffDelay);
+	ARMRegisterGlue("VppOn__FiUc", Glue_VppOn);
+	ARMRegisterGlue("VppOff__Fi", Glue_VppOff);
+	ARMRegisterGlue("VppOff__FiUl", Glue_VppOffDelay);
+	ARMRegisterGlue("GetVccTimeout__Fi", Glue_GetVccTimeout);
+	ARMRegisterGlue("SetVccTimeout__FiUl", Glue_SetVccTimeout);
+	ARMRegisterGlue("IsVccOffNotifyRegistered__Fi", Glue_IsVccOffNotifyRegistered);
+	ARMRegisterGlue("RegisterVccOffNotify__FiPFPv_vPv", Glue_RegisterVccOffNotify);
+	ARMRegisterGlue("UnregisterVccOffNotify__Fi", Glue_UnregisterVccOffNotify);
+	ARMRegisterGlue("GetControl__11TCardSocketFv", Glue_Socket_GetControl);
+	ARMRegisterGlue("IsIRQ__11TCardSocketFv", Glue_Socket_IsIRQ);
+	ARMRegisterGlue("IsVccOn__11TCardSocketFv", Glue_Socket_IsVccOn);
+	ARMRegisterGlue("SelectIOInterface__11TCardSocketFv", Glue_Socket_SelectIOInterface);
+	ARMRegisterGlue("SelectMemoryInterface__11TCardSocketFv", Glue_Socket_SelectMemoryInterface);
+	ARMRegisterGlue("SetControl__11TCardSocketFUl", Glue_Socket_SetControl);
+	ARMRegisterGlue("SetDefaultConfig__11TCardSocketFv", Glue_Socket_SetDefaultConfig);
+	ARMRegisterGlue("SetDefaultSpeeds__11TCardSocketFv", Glue_Socket_SetDefaultSpeeds);
+	ARMRegisterGlue("SelectVoltageLevel__11TCardSocketF18TSocketPowerLevels", Glue_Socket_SelectVoltageLevel);
+	ARMRegisterGlue("VccVoltageSpec__11TCardSocketFv", Glue_Socket_VccVoltageSpec);
 	ARMRegisterGlue("SocketNumber__11TCardSocketFv", Glue_SocketNumber);
+	ARMRegisterGlue("RegisterSocketInterrupt__11TCardSocketF10TSocketIntPFPvP11TCardSocket_lPv", Glue_RegisterSocketInterrupt);
+	ARMRegisterGlue("DeregisterSocketInterrupt__11TCardSocketF10TSocketInt", Glue_DeregisterSocketInterrupt);
+	ARMRegisterGlue("EnableSocketInterrupt__11TCardSocketF10TSocketInt", Glue_EnableSocketInterrupt);
+	ARMRegisterGlue("DisableSocketInterrupt__11TCardSocketF10TSocketInt", Glue_DisableSocketInterrupt);
+	ARMRegisterGlue("ClearSocketInterrupt__11TCardSocketF10TSocketInt", Glue_ClearSocketInterrupt);
+	ARMRegisterGlue("SetSocketInterruptFlags__11TCardSocketF10TSocketInt15TSocketIntFlags", Glue_SetSocketInterruptFlags);
+	ARMRegisterGlue("InterruptState__11TCardSocketF10TSocketInt", Glue_InterruptState);
 	ARMRegisterGlue("AttributeMemBaseAddr__11TCardSocketFv", Glue_AttributeMemBaseAddr);
 	ARMRegisterGlue("CommonMemBaseAddr__11TCardSocketFv", Glue_CommonMemBaseAddr);
 	ARMRegisterGlue("IOBaseAddr__11TCardSocketFv", Glue_IOBaseAddr);

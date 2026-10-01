@@ -31,6 +31,13 @@ across ROMs (that is its point), so a package's addresses resolve on any.
               other words those stubs read (the version-dependent stubs that
               load a ROM global's address - `mov ip,#0x1300; ldr ip,[ip,#0xdc]`
               reads the ROM's version word);
+  --whole     with --package: every stub anywhere in the package file (its
+              protocol parts' code too, which --package does not read), each
+              entry once, with how many stubs reach it;
+  --unanswered SRC  with --whole: only the entries no glue in SRC (a
+              directory, e.g. src/armcpu) names - a quoted mangled name in
+              its .cpp files but the generated PublicJumpTable.cpp - which is
+              what a package's code will stop on;
   -o FILE     a C++ table {offset, symbol} for src/armcpu's adapter.
 
 Inputs: the build directory (rom.bin, symbols.txt); a package for --package.
@@ -121,11 +128,34 @@ def main(argv=None):
     ap.add_argument("build_dir")
     ap.add_argument("--all", action="store_true")
     ap.add_argument("--package")
+    ap.add_argument("--whole", action="store_true")
+    ap.add_argument("--unanswered")
     ap.add_argument("-o", dest="output")
     args = ap.parse_args(argv)
     rom, syms, demangled = load(args.build_dir)
     table = entries(rom, syms, demangled)
     by_off = {e[0]: e for e in table}
+    if args.package and args.whole:
+        data = open(args.package, "rb").read()
+        counts = {}
+        for off in range(0, len(data) - 7, 4):
+            w0, w1 = struct.unpack(">II", data[off:off + 8])
+            if w0 == 0xE51FF004 and (w1 >> 20) == 0x018:
+                counts[w1] = counts.get(w1, 0) + 1
+        answered = set()
+        if args.unanswered:
+            import re
+            for root, _, files in os.walk(args.unanswered):
+                for f in files:
+                    if f.endswith(".cpp") and f != "PublicJumpTable.cpp":
+                        answered.update(re.findall(r'"([A-Za-z_][A-Za-z0-9_]*)"', open(os.path.join(root, f), encoding="utf-8", errors="replace").read()))
+        for addr in sorted(counts):
+            e = by_off.get(addr - PUBLIC_VIRTUAL)
+            name = e[3] if e and e[3] else "?"
+            if args.unanswered and name in answered:
+                continue
+            print("%#010x  %3d  %-60s %s" % (addr, counts[addr], name, e[4] if e else ""))
+        return 0
     if args.package:
         for binary, (first, stubs) in package_stubs(args.package).items():
             print("binary %#x: code from %#x, %d stubs (%d entries)" % (binary, first, len(stubs), len({a for _, a in stubs})))

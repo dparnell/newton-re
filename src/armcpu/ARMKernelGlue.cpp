@@ -38,11 +38,14 @@
 #include "UserSharedMem.h"
 #include "NewtonTime.h"
 #include "DelayTimer.h"
+#include "FIQTimer.h"
 #include "MemObjManager.h"
 #include "NewtonMemory.h"
 #include "Objects.h"
 #include "UserGlobals.h"
 #include "OSErrors.h"
+#include "host/TaskRuntime.h"
+#include "Host.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -794,8 +797,63 @@ Glue_TDelayTimer_ct(void*, ARMTrapContext& c)
 static bool	Glue_TDelayTimer_GetHardwareTime(void*, ARMTrapContext& c)	{ TDelayTimer t; c.Return((uint32_t) t.GetHardwareTime()); return true; }
 // ROM 0x0008e9b4 ConvertFromHardwareTime__11TDelayTimerFUl
 static bool	Glue_TDelayTimer_ConvertFrom(void*, ARMTrapContext& c)		{ TDelayTimer t; c.Return((uint32_t) t.ConvertFromHardwareTime(c.Arg(1))); return true; }
+// ROM 0x0008e9ac ConvertToHardwareTime__11TDelayTimerFUl
+static bool	Glue_TDelayTimer_ConvertTo(void*, ARMTrapContext& c)		{ TDelayTimer t; c.Return((uint32_t) t.ConvertToHardwareTime((TTimeout) c.Arg(1))); return true; }
+// DEVIATION: a driver waits for its hardware in a loop round TimedOut or a
+// short delay, and on the machine an interrupt - the card's, which is often
+// what it waits for - comes in meanwhile.  The host delivers interrupts
+// only at its safe points (a system call's exit, docs/host-runtime.md), so
+// these calls are made safe points too: the interrupts that are due are
+// delivered before each answers, unless one is being delivered already.
+static void
+ARMSafePoint(void)
+{
+	if (gHostInterruptLevel == 0)
+		HostDeliverInterrupts();
+}
+
+// (an ARM TDelayTimer: fTimeOutStart +0, fTimeOutDelay +4, the counter +8)
+// ROM 0x0008e9f4 ResetTimeOut__11TDelayTimerFUl
+static bool
+Glue_TDelayTimer_ResetTimeOut(void*, ARMTrapContext& c)
+{
+	uint32_t now = (uint32_t) FIQTimerCounter();
+	c.Write32(c.Arg(0) + 4, c.Arg(1));
+	c.Write32(c.Arg(0), now);
+	c.Return(0);
+	return true;
+}
+static uint32_t
+TimeOutStart(ARMTrapContext& c)
+{
+	uint32_t start = 0;
+	c.Read32(c.Arg(0), &start);
+	return start;
+}
+// ROM 0x0008ea34 TimedOut__11TDelayTimerFv
+static bool
+Glue_TDelayTimer_TimedOut(void*, ARMTrapContext& c)
+{
+	ARMSafePoint();
+	uint32_t delay = 0;
+	c.Read32(c.Arg(0) + 4, &delay);
+	c.Return(delay <= (uint32_t) FIQTimerCounter() - TimeOutStart(c) ? 1 : 0);
+	return true;
+}
+// ROM 0x0008ea58 TimedOut__11TDelayTimerFUl
+static bool	Glue_TDelayTimer_TimedOutDelay(void*, ARMTrapContext& c)	{ ARMSafePoint(); c.Return(c.Arg(1) <= (uint32_t) FIQTimerCounter() - TimeOutStart(c) ? 1 : 0); return true; }
+// ROM 0x0008ea08 ShortTimerDelayUntil__11TDelayTimerFUl
+static bool
+Glue_TDelayTimer_ShortTimerDelayUntil(void*, ARMTrapContext& c)
+{
+	uint32_t start = TimeOutStart(c);
+	while (c.Arg(1) > (uint32_t) FIQTimerCounter() - start)
+		ARMSafePoint();
+	c.Return(0);
+	return true;
+}
 // ROM 0x0008e948 ShortTimerDelay__FUl
-static bool	Glue_ShortTimerDelay(void*, ARMTrapContext& c)				{ ShortTimerDelay(c.Arg(0)); c.Return(0); return true; }
+static bool	Glue_ShortTimerDelay(void*, ARMTrapContext& c)				{ ShortTimerDelay(c.Arg(0)); ARMSafePoint(); c.Return(0); return true; }
 
 
 /*------------------------------------------------------------------------------
@@ -897,6 +955,11 @@ InstallARMKernelGlue(void)
 	ARMRegisterGlue("GetHardwareTime__11TDelayTimerFv", Glue_TDelayTimer_GetHardwareTime);
 	ARMRegisterGlue("ConvertFromHardwareTime__11TDelayTimerFUl", Glue_TDelayTimer_ConvertFrom);
 	ARMRegisterGlue("ShortTimerDelay__FUl", Glue_ShortTimerDelay);
+	ARMRegisterGlue("ConvertToHardwareTime__11TDelayTimerFUl", Glue_TDelayTimer_ConvertTo);
+	ARMRegisterGlue("ResetTimeOut__11TDelayTimerFUl", Glue_TDelayTimer_ResetTimeOut);
+	ARMRegisterGlue("TimedOut__11TDelayTimerFv", Glue_TDelayTimer_TimedOut);
+	ARMRegisterGlue("TimedOut__11TDelayTimerFUl", Glue_TDelayTimer_TimedOutDelay);
+	ARMRegisterGlue("ShortTimerDelayUntil__11TDelayTimerFUl", Glue_TDelayTimer_ShortTimerDelayUntil);
 	ARMRegisterGlue("DebugStr", Glue_DebugStr);
 	ARMRegisterGlue("ZeroBytes", Glue_ZeroBytes);
 	ARMRegisterGlue("GC__Fv", Glue_GC);

@@ -2585,18 +2585,19 @@ ReadDecimal(TNativeWorld& w, uint32_t s)
 	return (int32_t) (negative ? 0u - v : v);
 }
 GLUE(Glue_atoi)					{ w.Return(cpu, (uint32_t) ReadDecimal(w, cpu.r[0])); return true; }
-// sprintf(buffer, format, ...): the arguments from r2 on, then the stack; a
-// double takes two words, the high one first
-GLUE(Glue_sprintf)
+// The C library's formatting as ARM code calls it: the format at f, its
+// arguments from argument word `next` on (the registers, then the stack); a
+// double takes two words, the high one first.  ==> the length.
+static uint32_t
+FormatARM(TNativeWorld& w, TARMCPU& cpu, uint32_t f, int next, char* out, uint32_t size)
 {
-	uint32_t out = cpu.r[0], f = cpu.r[1];
-	int next = 2;
 	uint32_t n = 0;
+	#define PUT(ch) do { if (n + 1 < size) out[n] = (char) (ch); n++; } while (0)
 	for (uint8_t c; (c = CByte(w, f)) != 0; f++)
 	{
 		if (c != '%')
 		{
-			w.Write8(out + n++, c);
+			PUT(c);
 			continue;
 		}
 		char spec[32];
@@ -2658,9 +2659,36 @@ GLUE(Glue_sprintf)
 			break;
 		}
 		for (char* t = text; *t != 0; t++)
-			w.Write8(out + n++, (uint8_t) *t);
+			PUT(*t);
 	}
-	w.Write8(out + n, 0);
+	#undef PUT
+	out[n < size ? n : size - 1] = 0;
+	return n;
+}
+
+// sprintf(buffer, format, ...)
+GLUE(Glue_sprintf)
+{
+	char text[4096];
+	uint32_t n = FormatARM(w, cpu, cpu.r[1], 2, text, sizeof(text));
+	uint32_t out = cpu.r[0];
+	for (uint32_t i = 0; i < n && i + 1 < sizeof(text); i++)
+		w.Write8(out + i, (uint8_t) text[i]);
+	w.Write8(out + (n < sizeof(text) ? n : sizeof(text) - 1), 0);
+	w.Return(cpu, n);
+	return true;
+}
+
+// ROM 0x0033f090 printf
+// DEVIATION: what the ROM prints on the serial debugger the host prints on
+// stderr
+GLUE(Glue_printf)
+{
+	char text[4096];
+	uint32_t n = FormatARM(w, cpu, cpu.r[0], 1, text, sizeof(text));
+	fprintf(stderr, "[armcpu] printf: %s", text);
+	if (n == 0 || text[(n < sizeof(text) ? n : sizeof(text) - 1) - 1] != '\n')
+		fprintf(stderr, "\n");
 	w.Return(cpu, n);
 	return true;
 }
@@ -2950,6 +2978,7 @@ InitGlue(void)
 		{ "atoi", Glue_atoi },
 		{ "atol", Glue_atoi },
 		{ "sprintf", Glue_sprintf },
+		{ "printf", Glue_printf },
 	};
 	for (const auto& g : kGlue)
 	{

@@ -1002,7 +1002,10 @@ if(Python3_FOUND)
     # and an ATA card put in on that store: ATA Support's own TATASimple
     # stands the ROM's loader aside, and its TATACardHandler (ARM, through
     # its proxy) recognises the card (slot 4), is handed the partition info
-    # (19) and installs its services (6) - demo/ata-support-card.ns
+    # (19) and installs its services (6), which identify the drive (ec) over
+    # the card's interrupt and read its partition map (20, sector 0) -
+    # demo/ata-support-card.ns.  (Where it stops next - reaching into the
+    # PSS manager's slots through gPSSManager - is docs/armcpu/README.md's.)
     if(Python3_FOUND)
         add_test(NAME host.NewtonATASupport.cardmake
                  COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/cards/atacard.py make
@@ -1014,9 +1017,9 @@ if(Python3_FOUND)
                  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
         set_tests_properties(host.NewtonATASupport.card PROPERTIES TIMEOUT 180
                              FIXTURES_REQUIRED "host_atasupport_store;host_atasupport_card" DEPENDS host.NewtonATASupport.restart
-                             ENVIRONMENT "ATA_CARD=${CMAKE_CURRENT_BINARY_DIR}/atasupport.card;NEWTON_TRACE_ARMPROTOCOLS=1"
-                             PASS_REGULAR_EXPRESSION "TATASimple slot 20.*TATACardHandler slot 4.*TATACardHandler slot 19.*TATACardHandler slot 6.*ata-support-card: done"
-                             FAIL_REGULAR_EXPRESSION "waited in vain|did not run to its end")
+                             ENVIRONMENT "ATA_CARD=${CMAKE_CURRENT_BINARY_DIR}/atasupport.card;NEWTON_TRACE_ARMPROTOCOLS=1;NEWTON_TRACE_ATA=1"
+                             PASS_REGULAR_EXPRESSION "TATASimple slot 20.*TATACardHandler slot 4.*TATACardHandler slot 19.*TATACardHandler slot 6.*command ec.*TATACardHandler slot 15.*command 20 count 1 address 0.*ata-support-card: done"
+                             FAIL_REGULAR_EXPRESSION "waited in vain|is not answered")
     endif()
     # a package cut into a soup of chunk entries and restored with
     # store:RestoreSegmentedPackage (packages/PackageArchivalPipe.h), and

@@ -1074,8 +1074,8 @@ Kallisys's ATA Support 1.0 (`fixtures/packages/drivers/`, Paul Guyot,
 2001) installs on the host (ctest `host.NewtonATASupport`: its installer's
 native code on `src/armcpu`), and its driver package carries
 `TATACardHandler`, `TATAStore` (a `TStore`), its own `TATASimple` and an
-ATA card server - ARM protocol parts the host does not run yet
-(`docs/armcpu/README.md`).
+ATA card server - ARM protocol parts the host runs on `src/armcpu`
+(`docs/armcpu/README.md`, "Protocol parts", which says how far they get).
 
 `TATASimple` is programmed I/O a sector at a time, polling the status
 register for up to three seconds (`WaitFor`); ROM QUIRK: that first wait
@@ -1089,7 +1089,19 @@ card's register window to `hal/host/HostATA.cpp`, a model of a
 CompactFlash card in memory mode over the card image's data section (READ
 and WRITE SECTORS and their kin, IDENTIFY, the power, feature and buffer
 commands, LBA or cylinder/head/sector; `NEWTON_TRACE_ATA` prints each
-command). An ATA card image is the same TLinearCard container with type
+command, `NEWTON_TRACE_ATA=2` every register access but the data's). The
+model also raises INTRQ as a card does - when a command is done, and when
+each sector of data is ready or taken (not after a read's last) - cleared
+by reading the status register or writing a command, masked by nIEN; the
+card puts it on the socket's Ready/IREQ# pin, so `TCardSocket::IsIRQ`
+(ROM 0x00055d90: not ready) answers it and its rise makes the socket's
+IREQ interrupt pending. And the card's configuration registers are in
+attribute memory at 0x200 (`atacard.py`'s CISTPL_CONFIG): the option
+register (bit 7 a soft reset), the status register's Intr bit, the pin
+replacement register (always ready) and the socket and copy register - the
+ROM's own driver touches none of these, but ATA Support resets the card
+through the option register, waits on the pin replacement register's
+ready bit and on the card's interrupt. An ATA card image is the same TLinearCard container with type
 0xD, its data section the disk: `tools/cards/atacard.py make FILE --size MB
 [--driver PKG] [--package PKG] [--mbr]` makes one (CIS and partition map),
 `info` describes one. ctests `pcmcia.ATACard` (`test_ATACard`: identify,

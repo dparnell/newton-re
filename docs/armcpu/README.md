@@ -277,7 +277,7 @@ proxy call and the protocol glue's answers.
   ids at +0 and +8), `TUPort`'s `SendGoo`/`SendRPCGoo` (sync and async),
   `TULockingSemaphore`, `GetGlobalTime`/`GetTaskTime` (a TTime returned
   through r0), `TTime::ConvertTo`, `TDelayTimer`, `ShortTimerDelay`, and
-  `DebugStr`, `ZeroBytes`, `GC`, `rand`/`srand`,
+  `DebugStr`, `ZeroBytes`, `GC`, `rand`/`srand`, `printf`,
   `MemObjManager::FindEnvironmentId`; `Reboot` is logged, not done (NOT
   YET).  **Events cross between the worlds widened and narrowed**: a
   TAEvent's header is two 32-bit words on the ARM and two pointer-sized
@@ -318,11 +318,35 @@ registers itself with the name server; with an ATA card put in, the ROM's
 loader gets its TATASimple (version 2: it answers the loader with no
 partition, so the ROM's own loader stands aside) and the card server
 offers the card to its TATACardHandler, which recognises it (slot 4),
-takes the partition info (19) and installs its services (6).  Next, in
-layers: `TCardSocket::RegisterSocketInterrupt` (the first call its
-services make that the glue does not answer), PATACardServer's messages,
-then TATAStore mounted, written, read back after a restart, removed and
-reinserted.
+takes the partition info (19) and installs its services (6): they take
+the card's IREQ interrupt (`TCardSocket::RegisterSocketInterrupt` and its
+kin - the ARM interrupt proc called through a host one, the socket handed
+over as its mirror), switch its power (`CardPower.h`'s Vcc/Vpp calls and
+the Vcc-off notification), reset it through its option register, wait on
+its ready bit and its interrupt, identify the drive and read its
+partition map (block 0) - over the host's model of the card
+(`hal/host/HostATA.cpp`: its INTRQ and configuration registers,
+`docs/stores/README.md` "ATA cards").  A driver waits in a loop round
+`TDelayTimer::TimedOut` or a short delay, and on the machine the card's
+interrupt comes in meanwhile; the host delivers interrupts only at its
+safe points, so those calls are made safe points too (DEVIATION,
+`ARMSafePoint`).  `printf` prints on stderr (DEVIATION: the ROM's goes to
+the serial debugger).
+
+Where it stops next: the store side reads the ROM global `gPSSManager`
+(RW data, 0x0c1016bc in this ROM - the package picks the address by ROM
+version through Gestalt) and writes straight into the PSS manager's slot
+table at its +0x304 - the slot count, a slot's state (made mounted) and
+its four `SPSSStoreInfo`s (0x50 bytes each, at the slot's +0xbc, the
+`TStore` at +0x10) - so that the ROM's own 'stor and 'rstr machinery
+mounts and unmounts its TATAStores.  That wants a mirror of the PSS
+manager's slots in the ROM's layout (a region whose reads and writes are
+answered from the host's `TPSSManager`), a `TStore` proxy over the ARM
+TATAStore (42 methods), and the PATACardServer's messages; then TATAStore
+mounted, written, read back after a restart, removed and reinserted.
+`gluetable.py build/MP2x00US --package x.pkg --whole --unanswered
+src/armcpu` lists the public jump table entries anywhere in a package that
+no glue answers yet (none, for ATA Support, now but `ToObject(TStore*)`).
 
 ## Which fixtures have native code
 

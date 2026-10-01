@@ -312,6 +312,7 @@ class TCardSocket : public SingleObject
 		TNanoSecond	fCommonMemSpeed;
 
 		friend void	HostCardSocketChanged(ULong socket, Boolean inserted);
+		friend void	HostCardSocketIREQ(ULong socket);
 };
 
 

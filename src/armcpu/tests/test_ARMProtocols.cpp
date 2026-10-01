@@ -275,6 +275,15 @@ KernelScenario(void)
 	uint32_t lo = 0;
 	EXPECT(ARMRead32(t + 4, &lo) && lo != 0);
 
+	// a delay timer's time-out, in the ROM's three words
+	uint32_t timer = Call("__ct__11TDelayTimerFv", 0);
+	Call("ResetTimeOut__11TDelayTimerFUl", timer, 0x7fffffff);
+	uint32_t delay = 0;
+	EXPECT(ARMRead32(timer + 4, &delay) && delay == 0x7fffffff);
+	EXPECT(Call("TimedOut__11TDelayTimerFv", timer) == 0);
+	Call("ResetTimeOut__11TDelayTimerFUl", timer, 0);
+	EXPECT(Call("TimedOut__11TDelayTimerFv", timer) == 1);
+
 	// an async message: its ids written where the ROM keeps them
 	uint32_t msg = Call("__ct__14TUAsyncMessageFv", 0);
 	EXPECT(Call("Init__14TUAsyncMessageFUc", msg, 1) == noErr);
