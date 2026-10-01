@@ -1074,8 +1074,11 @@ Kallisys's ATA Support 1.0 (`fixtures/packages/drivers/`, Paul Guyot,
 2001) installs on the host (ctest `host.NewtonATASupport`: its installer's
 native code on `src/armcpu`), and its driver package carries
 `TATACardHandler`, `TATAStore` (a `TStore`), its own `TATASimple` and an
-ATA card server - ARM protocol parts the host runs on `src/armcpu`
-(`docs/armcpu/README.md`, "Protocol parts", which says how far they get).
+ATA card server - ARM protocol parts the host runs on `src/armcpu`: a
+card is partitioned, formatted and mounted through the package's own slip
+and its store written and read back after a restart (ctests
+`host.NewtonATASupport.store`, `.storerestart`; `docs/armcpu/README.md`,
+"Stores, store events and the private jump table").
 
 `TATASimple` is programmed I/O a sector at a time, polling the status
 register for up to three seconds (`WaitFor`); ROM QUIRK: that first wait

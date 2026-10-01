@@ -13,6 +13,7 @@ target_include_directories(armcpu PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 add_library(armcpu_frames STATIC
     PackageNativeCPU.cpp
     PublicJumpTable.cpp
+    PrivateJumpTable.cpp
 )
 target_link_libraries(armcpu_frames PUBLIC newton_config armcpu frames hal_host_card)
 target_include_directories(armcpu_frames PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
@@ -33,6 +34,7 @@ target_include_directories(armcpu_protocols PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 add_library(armcpu_pcmcia STATIC
     ARMCardHandler.cpp
     ARMPSSManager.cpp
+    ARMStore.cpp
 )
 target_link_libraries(armcpu_pcmcia PUBLIC newton_config armcpu_protocols pcmcia hal_host_card flash)
 

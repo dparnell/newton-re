@@ -50,6 +50,7 @@
 #include "ARMProtocols.h"
 #include "ARMCardHandler.h"
 #include "ARMPSSManager.h"
+#include "ARMStore.h"
 #include "Soups.h"
 #include "ROMConstants.h"
 #include "RSSymbols.h"
@@ -262,6 +263,7 @@ TNewtWorld::MainConstructor()
 	InstallARMProtocols();
 	InstallARMCardHandlers();
 	InstallARMPSSManager();
+	InstallARMStores();
 	InitializeCompression();
 	// DEVIATION: the ROM starts the sound manager from the loader
 	// (TLoader::TheMain 0x0011401c), whose services are all NOT YET; the

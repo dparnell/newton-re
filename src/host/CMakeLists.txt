@@ -1171,6 +1171,32 @@ if(Python3_FOUND)
                              PASS_REGULAR_EXPRESSION "TATASimple slot 20.*TATACardHandler slot 4.*TATACardHandler slot 19.*TATACardHandler slot 6.*command ec.*TATACardHandler slot 15.*command 20 count 1 address 0.*armpss. slot 0 state 4.*ata-support-card: done"
                              FAIL_REGULAR_EXPRESSION "waited in vain|is not answered|not presented")
     endif()
+    # and then on that card: partitioned and formatted through ATA
+    # Support's own slip (its alerts answered with the pen), its TATAStore
+    # mounted (a TStore proxy, armcpu/ARMStore.cpp) and an entry written;
+    # then, after a restart, the card put in again and the entry read back
+    # - demo/ata-support-store.ns, ata-support-store-restart.ns
+    if(Python3_FOUND)
+        add_test(NAME host.NewtonATASupport.store
+                 COMMAND newton --display 320x480 --store ${CMAKE_CURRENT_BINARY_DIR}/atasupport.store
+                         --headless 240 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/ata-support-store.ns
+                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+        set_tests_properties(host.NewtonATASupport.store PROPERTIES TIMEOUT 300
+                             FIXTURES_REQUIRED "host_atasupport_store;host_atasupport_card" DEPENDS host.NewtonATASupport.card
+                             FIXTURES_SETUP host_atasupport_formatted
+                             ENVIRONMENT "ATA_CARD=${CMAKE_CURRENT_BINARY_DIR}/atasupport.card"
+                             PASS_REGULAR_EXPRESSION "ata-support-store: done\""
+                             FAIL_REGULAR_EXPRESSION "waited in vain|FAILED|is not answered|not presented")
+        add_test(NAME host.NewtonATASupport.storerestart
+                 COMMAND newton --display 320x480 --store ${CMAKE_CURRENT_BINARY_DIR}/atasupport.store
+                         --headless 240 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/ata-support-store-restart.ns
+                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+        set_tests_properties(host.NewtonATASupport.storerestart PROPERTIES TIMEOUT 300
+                             FIXTURES_REQUIRED host_atasupport_formatted DEPENDS host.NewtonATASupport.store
+                             ENVIRONMENT "ATA_CARD=${CMAKE_CURRENT_BINARY_DIR}/atasupport.card"
+                             PASS_REGULAR_EXPRESSION "ata-support-store-restart: done\""
+                             FAIL_REGULAR_EXPRESSION "waited in vain|FAILED|is not answered|not presented")
+    endif()
     # a package cut into a soup of chunk entries and restored with
     # store:RestoreSegmentedPackage (packages/PackageArchivalPipe.h), and
     # stored with SuckPackageFromBinary's progress callback, on a store of

@@ -126,14 +126,45 @@ static const ULong	kHostEventHeader = sizeof(TAEvent);	// the host's header
 static const ULong	kARMEventHeader = 8;				// the ARM's
 static const ULong	kWiden = kHostEventHeader - kARMEventHeader;
 
-// an ARM message's size on the host and back
-static ULong		HostSize(ULong armSize)		{ return armSize >= kARMEventHeader ? armSize + kWiden : armSize; }
-static ULong		ARMSize(ULong hostSize)		{ return hostSize >= kHostEventHeader ? hostSize - kWiden : hostSize; }
+// The translators other parts of armcpu register for events whose bodies
+// hold pointers or wider fields (ARMProtocols.h's ARMEventTranslator);
+// every other event's body goes as the bytes it is.
+static KVec<const ARMEventTranslator*>	gTranslators;
 
-// an ARM message (n bytes at arm, read through the calling world) into a
-// host buffer of HostSize(n) bytes
-static void
-Widen(ARMTrapContext* c, uint32_t arm, ULong n, uint8_t* host)
+void
+ARMRegisterEventTranslator(const ARMEventTranslator* t)
+{
+	gTranslators.push_back(t);
+}
+
+// the translator of an ARM message (its bytes) or a host one, nil for none
+static const ARMEventTranslator*
+TranslatorOfARM(const uint8_t* bytes, ULong n)
+{
+	if (n < kARMEventHeader + 4)
+		return nil;
+	for (size_t i = 0; i < gTranslators.size(); i++)
+		if (gTranslators[i]->fMatches(BE32(bytes), BE32(bytes + 4), BE32(bytes + 8)))
+			return gTranslators[i];
+	return nil;
+}
+static const ARMEventTranslator*
+TranslatorOfHost(const uint8_t* host, ULong n)
+{
+	if (n < kHostEventHeader + sizeof(ULong))
+		return nil;
+	const TAEvent* e = (const TAEvent*) host;
+	ULong first;
+	memcpy(&first, host + kHostEventHeader, sizeof(ULong));
+	for (size_t i = 0; i < gTranslators.size(); i++)
+		if (gTranslators[i]->fMatches((uint32_t) e->fAEventClass, (uint32_t) e->fAEventID, (uint32_t) first))
+			return gTranslators[i];
+	return nil;
+}
+
+// an ARM message's bytes, read through the calling world (the caller frees)
+static uint8_t*
+ARMBytes(ARMTrapContext* c, uint32_t arm, ULong n)
 {
 	uint8_t* bytes = (uint8_t*) malloc(n + 1);
 	for (ULong i = 0; i < n; i++)
@@ -145,8 +176,48 @@ Widen(ARMTrapContext* c, uint32_t arm, ULong n, uint8_t* host)
 			ARMRead8(arm + (uint32_t) i, &b);
 		bytes[i] = b;
 	}
+	return bytes;
+}
+
+// an ARM message's size on the host, and a host message's on the ARM
+static ULong
+HostSizeFor(ARMTrapContext* c, uint32_t arm, ULong n)
+{
+	if (n < kARMEventHeader)
+		return n;
+	ULong size = n + kWiden;
+	if (arm != 0 && n >= kARMEventHeader + 4)
+	{
+		uint8_t* bytes = ARMBytes(c, arm, kARMEventHeader + 4);
+		if (const ARMEventTranslator* t = TranslatorOfARM(bytes, n))
+			size = t->fHostSize(n);
+		free(bytes);
+	}
+	return size;
+}
+static ULong
+ARMSizeFor(const uint8_t* host, ULong n)
+{
+	if (n < kHostEventHeader)
+		return n;
+	if (host != nil)
+		if (const ARMEventTranslator* t = TranslatorOfHost(host, n))
+			return t->fARMSize(n);
+	return n - kWiden;
+}
+// (no content to go by: a buffer's size either way)
+static ULong		HostSize(ULong armSize)		{ return armSize >= kARMEventHeader ? armSize + kWiden : armSize; }
+
+// an ARM message (n bytes at arm, read through the calling world) into a
+// host buffer of HostSizeFor bytes
+static void
+Widen(ARMTrapContext* c, uint32_t arm, ULong n, uint8_t* host)
+{
+	uint8_t* bytes = ARMBytes(c, arm, n);
 	if (n < kARMEventHeader)
 		memcpy(host, bytes, n);
+	else if (const ARMEventTranslator* t = TranslatorOfARM(bytes, n))
+		t->fWiden(bytes, n, host);
 	else
 	{
 		TAEvent* e = (TAEvent*) host;
@@ -161,10 +232,13 @@ Widen(ARMTrapContext* c, uint32_t arm, ULong n, uint8_t* host)
 static void
 Narrow(ARMTrapContext* c, const uint8_t* host, ULong n, uint32_t arm)
 {
-	ULong armSize = ARMSize(n);
+	ULong armSize = ARMSizeFor(host, n);
 	uint8_t* bytes = (uint8_t*) malloc(armSize + 1);
+	const ARMEventTranslator* t = TranslatorOfHost(host, n);
 	if (n < kHostEventHeader)
 		memcpy(bytes, host, n);
+	else if (t != nil)
+		t->fNarrow(host, n, bytes);
 	else
 	{
 		const TAEvent* e = (const TAEvent*) host;
@@ -240,7 +314,7 @@ public:
 	void		Deliver(int slot, TUMsgToken* token, ULong* size, TAEvent* event)
 				{
 					ULong hostSize = size != nil ? *size : 0;
-					ULong armSize = ARMSize(hostSize);
+					ULong armSize = ARMSizeFor((const uint8_t*) event, hostSize);
 					uint32_t buffer = 0;
 					bool scratch = true;
 					AsyncRecord* record = slot == 3 ? RecordOfReply((uint8_t*) event) : nil;
@@ -263,9 +337,12 @@ public:
 					if (event != nil && scratch)
 					{
 						// (the event as the ARM code left it, back where it came from)
-						Widen(nil, buffer, newSize, (uint8_t*) event);
-						if (size != nil)
-							*size = HostSize(newSize);
+						if (HostSizeFor(nil, buffer, newSize) <= hostSize)
+						{
+							Widen(nil, buffer, newSize, (uint8_t*) event);
+							if (size != nil)
+								*size = HostSizeFor(nil, buffer, newSize);
+						}
 					}
 					fCurrentARM = 0;
 					fCurrentHost = nil;
@@ -386,13 +463,14 @@ Glue_TAEventHandler_SetReply(void*, ARMTrapContext& c)
 	if (event == h->fCurrentARM && h->fCurrentHost != nil)
 	{
 		Widen(&c, event, size, (uint8_t*) h->fCurrentHost);
-		h->SetReply(HostSize(size), h->fCurrentHost);
+		h->SetReply(HostSizeFor(&c, event, size), h->fCurrentHost);
 	}
 	else
 	{
-		uint8_t* host = (uint8_t*) malloc(HostSize(size) + 8);
+		ULong hostSize = HostSizeFor(&c, event, size);
+		uint8_t* host = (uint8_t*) malloc(hostSize + 8);
 		Widen(&c, event, size, host);
-		h->SetReply(HostSize(size), (TAEvent*) host);		// (kept: the reply may go after this returns)
+		h->SetReply(hostSize, (TAEvent*) host);		// (kept: the reply may go after this returns)
 	}
 	c.Return(0);
 	return true;
@@ -514,15 +592,21 @@ Glue_TUAsyncMessage_SetCollectorPort(void*, ARMTrapContext& c)
 static bool
 Glue_TUSharedMemMsg_SetUserRefCon(void*, ARMTrapContext& c)
 {
+	// (an async message's refcon is the event handler its completion goes
+	// to - TAppWorld::AEDispatch takes it for one - so an ARM handler is
+	// made the host handler standing for it)
+	ULong refCon = c.Arg(1);
+	if (TARMEventHandler* h = (TARMEventHandler*) BoundTo(c.Arg(1), kBoundHandler))
+		refCon = (ULong) (uintptr_t) (TAEventHandler*) h;
 	AsyncRecord* r = AsyncOf(c.Arg(0));
 	if (r != nil)
-		c.Return((uint32_t) r->fMessage->SetUserRefCon(c.Arg(1)));
+		c.Return((uint32_t) r->fMessage->SetUserRefCon(refCon));
 	else
 	{
 		uint32_t id = 0;
 		c.Read32(c.Arg(0), &id);
 		TUSharedMemMsg msg((TObjectId) id);
-		c.Return((uint32_t) msg.SetUserRefCon(c.Arg(1)));
+		c.Return((uint32_t) msg.SetUserRefCon(refCon));
 	}
 	return true;
 }
@@ -610,7 +694,7 @@ Glue_TUPort_SendGoo(void*, ARMTrapContext& c)
 {
 	ULong msgId = c.Arg(1), replyId = c.Arg(2), size = c.Arg(4);
 	uint32_t content = c.Arg(3);
-	ULong hostSize = HostSize(size);
+	ULong hostSize = content != kARMNoContent ? HostSizeFor(&c, content, size) : HostSize(size);
 	uint8_t* host = nil;
 	if (content != kARMNoContent && content != 0)
 	{
@@ -643,7 +727,12 @@ Glue_TUPort_SendRPCGoo(void*, ARMTrapContext& c)
 {
 	ULong msgId = c.Arg(1), replyId = c.Arg(2), size = c.Arg(5), flags = c.Arg(7);
 	uint32_t returnSizeAt = c.Arg(3), content = c.Arg(4), replyBuf = c.Arg(9), replySize = c.Arg(10);
-	ULong hostSize = HostSize(size), hostReplySize = HostSize(replySize);
+	ULong hostSize = content != kARMNoContent ? HostSizeFor(&c, content, size) : HostSize(size);
+	// (the reply buffer as big as the reply may be: a store event comes back
+	// as itself, wider on the host)
+	ULong hostReplySize = HostSize(replySize);
+	if (hostSize > hostReplySize)
+		hostReplySize = hostSize;
 	uint8_t* host = nil;
 	if (content != kARMNoContent && content != 0)
 	{
@@ -673,7 +762,7 @@ Glue_TUPort_SendRPCGoo(void*, ARMTrapContext& c)
 		if (err == noErr && reply != nil)
 			Narrow(&c, reply, returned, replyBuf);
 		if (returnSizeAt != 0)
-			c.Write32(returnSizeAt, (uint32_t) ARMSize(returned));
+			c.Write32(returnSizeAt, (uint32_t) ARMSizeFor(reply, returned));
 		free(host);
 		free(reply);
 	}
@@ -692,9 +781,10 @@ Glue_TUMsgToken_ReplyRPC(void*, ARMTrapContext& c)
 	if (token == nil)
 		ThrowMsg("armcpu: not a message token the host handed over");
 	ULong size = c.Arg(2);
-	uint8_t* host = (uint8_t*) malloc(HostSize(size) + 8);
+	ULong hostSize = HostSizeFor(&c, c.Arg(1), size);
+	uint8_t* host = (uint8_t*) malloc(hostSize + 8);
 	Widen(&c, c.Arg(1), size, host);
-	long err = token->ReplyRPC(host, HostSize(size), (long) (int32_t) c.Arg(3));
+	long err = token->ReplyRPC(host, hostSize, (long) (int32_t) c.Arg(3));
 	free(host);
 	c.Return((uint32_t) err);
 	return true;

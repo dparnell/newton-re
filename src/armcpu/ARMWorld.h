@@ -56,6 +56,10 @@ public:
 	bool		Read8(uint32_t a, uint8_t* v);
 	bool		Write8(uint32_t a, uint8_t v);
 	bool		ReadCString(uint32_t a, char* buffer, uint32_t size);
+	// a NewtonScript object between the calling world and the host (the
+	// host's Ref, pointer-sized, as an intptr_t)
+	uint32_t	RefToARM(intptr_t ref);
+	intptr_t	RefToHost(uint32_t ref);
 };
 typedef bool (*ARMTrapFn)(void* refCon, ARMTrapContext& c);	// ==> false: stop the CPU
 
@@ -90,6 +94,41 @@ bool		ARMWrite32(uint32_t a, uint32_t v);
 bool		ARMRead8(uint32_t a, uint8_t* v);
 bool		ARMWrite8(uint32_t a, uint8_t v);
 bool		ARMReadCString(uint32_t a, char* buffer, uint32_t size);
+
+// A host buffer lent to the ARM code for as long as an object of this
+// class lasts: copied into the ARM heap, and back when it goes (unless
+// readOnly).  (A copy rather than a region, so lending does not use up
+// address space.)  Nil or empty lends nothing: fARM 0.
+class ARMLent
+{
+public:
+				ARMLent(void* host, uint32_t size, bool readOnly = false)
+					: fHost(host), fSize(size), fReadOnly(readOnly), fARM(host != 0 && size != 0 ? ARMAlloc(size, false) : 0)
+				{
+					if (fARM != 0)
+					{
+						uint8_t* p = ARMHostAddress(fARM, fSize);
+						for (uint32_t i = 0; i < fSize; i++)
+							p[i] = ((uint8_t*) fHost)[i];
+					}
+				}
+				~ARMLent()
+				{
+					if (fARM == 0)
+						return;
+					if (!fReadOnly)
+					{
+						const uint8_t* p = ARMHostAddress(fARM, fSize);
+						for (uint32_t i = 0; i < fSize; i++)
+							((uint8_t*) fHost)[i] = p[i];
+					}
+					ARMFree(fARM);
+				}
+	void*		fHost;
+	uint32_t	fSize;
+	bool		fReadOnly;
+	uint32_t	fARM;
+};
 
 // A host function the ARM code may branch to: ==> its address.
 uint32_t	ARMHostTrap(ARMTrapFn fn, void* refCon, const char* name);

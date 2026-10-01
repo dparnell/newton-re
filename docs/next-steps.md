@@ -143,11 +143,12 @@ path).
   11 KB); a card's `'stor` event and `GetCardReinsertionInfo`; an ATA
   card's store - Apple's ATA Support package (fixtures/packages/drivers/)
   through armcpu, the ROM's side being done (`docs/stores/README.md`,
-  "ATA cards"): its card handler recognises a card, its services identify
-  the drive over the card's interrupt and read the partition map; next a
-  mirror of the PSS manager's slots (the package writes into them through
-  `gPSSManager`), a TStore proxy over TATAStore and PATACardServer's
-  messages (`docs/armcpu/README.md`, "Protocol parts"); an
+  "ATA cards"): a card partitioned, formatted, mounted, written and read
+  back after a restart through the package's own slip; next the card taken
+  out after unmounting it, and put back (a yanked card has the package
+  restart the machine: the host's Reboot is NOT YET) -
+  `docs/armcpu/README.md`, "Stores, store events and the private jump
+  table"; an
   ATA card's ARM610 boot code, which the ROM jumps into.
 - The NIE built into the ROM extension: the page tables `ptpt`/`glpt`
   still name the patch table's old physical page (0x7ee000); 'fimp is not

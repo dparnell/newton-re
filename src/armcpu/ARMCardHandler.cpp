@@ -484,15 +484,6 @@ public:
 	ARM heap in the ROM's layout and back.
 ------------------------------------------------------------------------------*/
 
-// a host buffer seen from the ARM side for as long as an object of this
-// class lasts
-class TLentBuffer
-{
-public:
-				TLentBuffer(void* host, uint32_t size) : fARM(host != nil && size != 0 ? ARMMapRegion(host, size, kARMRegionMemory) : 0) { }
-				~TLentBuffer()	{ if (fARM != 0) ARMUnmapRegion(fARM); }
-	uint32_t	fARM;
-};
 
 class TATAARM : public TATA
 {
@@ -506,28 +497,28 @@ public:
 	ULong		GetAttributes(void)									{ return Call(5); }
 	NewtonErr	Read(UByte* buffer, ULong block, ULong count, UByte command, UByte drive)
 				{
-					TLentBuffer b(buffer, (uint32_t) count * 512);
+					ARMLent b(buffer, (uint32_t) count * 512);
 					return (NewtonErr) (int32_t) Call(6, b.fARM, (uint32_t) block, (uint32_t) count, command, drive);
 				}
 	NewtonErr	Write(UByte* buffer, ULong block, ULong count, UByte command, UByte drive)
 				{
-					TLentBuffer b(buffer, (uint32_t) count * 512);
+					ARMLent b(buffer, (uint32_t) count * 512);
 					return (NewtonErr) (int32_t) Call(7, b.fARM, (uint32_t) block, (uint32_t) count, command, drive);
 				}
 	NewtonErr	Format(UByte* buffer, ULong cylinder, ULong head, ULong count, UByte drive)
 				{
-					TLentBuffer b(buffer, 512);
+					ARMLent b(buffer, 512);
 					return (NewtonErr) (int32_t) Call(8, b.fARM, (uint32_t) cylinder, (uint32_t) head, (uint32_t) count, drive);
 				}
 	NewtonErr	Reset(UByte wait)									{ return (NewtonErr) (int32_t) Call(9, wait); }
 	NewtonErr	IdentifyDrive(TATADriveInfo* info, UByte drive)
 				{
-					TLentBuffer b(info, sizeof(TATADriveInfo));
+					ARMLent b(info, sizeof(TATADriveInfo));
 					return (NewtonErr) (int32_t) Call(10, b.fARM, drive);
 				}
 	NewtonErr	CheckPowerMode(UByte* mode, UByte drive)
 				{
-					TLentBuffer b(mode, 1);
+					ARMLent b(mode, 1);
 					return (NewtonErr) (int32_t) Call(11, b.fARM, drive);
 				}
 	NewtonErr	SetMultipleMode(UByte count, UByte drive)			{ return (NewtonErr) (int32_t) Call(12, count, drive); }
@@ -537,7 +528,7 @@ public:
 	NewtonErr	DoATALBACommand(TATALBACommandBlock* block)
 				{
 					// the ROM's 0x20 bytes, the buffer lent for as many blocks as are asked for
-					TLentBuffer b(block->fBuffer, (uint32_t) block->fCount * 512);
+					ARMLent b(block->fBuffer, (uint32_t) block->fCount * 512);
 					uint32_t m = ARMAlloc(0x20, true);
 					ARMWrite32(m + 0x00, b.fARM);
 					ARMWrite32(m + 0x04, (uint32_t) block->fBlock);
@@ -559,7 +550,7 @@ public:
 	NewtonErr	DoATARegCommand(TATARegCommandBlock* block)
 				{
 					// the ROM's 0x18 bytes (the buffer: a sector, or a long one)
-					TLentBuffer b(block->fBuffer, 0x200 + 0x40);
+					ARMLent b(block->fBuffer, 0x200 + 0x40);
 					uint32_t m = ARMAlloc(0x18, true);
 					ARMWrite32(m, b.fARM);
 					UByte* regs = &block->fFeatures;
@@ -575,7 +566,7 @@ public:
 	void		SetDeviceControlReg(UByte value)					{ Call(18, value); }
 	NewtonErr	ATASpecific(ULong selector, void* data, ULong size)
 				{
-					TLentBuffer b(data, (uint32_t) size);
+					ARMLent b(data, (uint32_t) size);
 					return (NewtonErr) (int32_t) Call(19, (uint32_t) selector, b.fARM, (uint32_t) size);
 				}
 	NewtonErr	Initialize(TCardSocket* socket, TCardPCMCIA* card, ULong config)	{ return (NewtonErr) (int32_t) Call(20, SocketMirror(socket), CardMirror(card), (uint32_t) config); }

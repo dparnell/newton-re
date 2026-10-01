@@ -92,4 +92,20 @@ uint32_t	ARMCString(const char* s);
 class TAEventHandler;
 TAEventHandler*	ARMEventHandlerOf(uint32_t arm);
 
+// An event whose body is not the bytes it is on both sides (it holds
+// pointers, or fields that are wider on the host): how it is widened from
+// the ARM's layout and narrowed back.  `matches` is asked with the event's
+// class, id and first word after the header; the bytes on the ARM side are
+// a copy, big-endian as they lie.  DEVIATION, as every event's header is
+// (ARMKernelGlue.cpp).
+struct ARMEventTranslator
+{
+	bool			(*fMatches)(uint32_t eventClass, uint32_t eventID, uint32_t firstWord);
+	unsigned long	(*fHostSize)(unsigned long armSize);
+	unsigned long	(*fARMSize)(unsigned long hostSize);
+	void			(*fWiden)(const uint8_t* arm, unsigned long armSize, uint8_t* host);
+	void			(*fNarrow)(const uint8_t* host, unsigned long hostSize, uint8_t* arm);
+};
+void		ARMRegisterEventTranslator(const ARMEventTranslator* translator);
+
 #endif	/* __ARMPROTOCOLS_H */

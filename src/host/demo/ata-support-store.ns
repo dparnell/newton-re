@@ -1,0 +1,110 @@
+// After ata-support.ns and its restart, on the same store: an ATA card put
+// in, partitioned and formatted through ATA Support's own slip (the Card
+// icon in the Extras drawer, which the package takes over), its store
+// mounted, and an entry written there.  The package's ARM code does the
+// work on src/armcpu: TATACardHandler, PATACardServer, TATASimple over the
+// host's model of the card, and TATAStore - a TStore the host reaches
+// through its proxy (armcpu/ARMStore.cpp).
+//
+//   python tools/cards/atacard.py make tmp/ata.card --size 8 --name "Host ATA"
+//   ATA_CARD=tmp/ata.card build/host/host/newton --display 320x480 \
+//       --store tmp/atasup.store --headless 240 --script src/host/demo/ata-support-store.ns
+
+HostInclude("common.ns");			// tapAt, waitFor, walkSetup
+HostInclude("walkhelpers.ns");		// findView, the steps
+HostInclude("apphelpers.ns");		// tapCentre
+
+wtName := "ata-support-store";
+asCard := HostGetEnv("ATA_CARD");
+
+// the store on the card (the one that is not the internal store)
+asStore := func() begin
+	local found := nil;
+	foreach st in GetStores() do
+		if not st:IsReadOnly() and st <> GetStores()[0] then found := st;
+	found
+end;
+
+// the top view of the screen (a slip or an alert), and a view in it whose
+// text begins with (or is) a label
+asTop := func() begin
+	local kids := GetRoot():ChildViewFrames();
+	kids[Length(kids) - 1]
+end;
+asLabelled := func(root, label, exact) call findView with (root, func(v)
+	IsString(v.text) and (if exact then StrEqual(v.text, label) else BeginsWith(v.text, label)));
+asShow := func(what) begin
+	local top := call asTop with ();
+	Print(wtName & ": " & what & ":");
+	call findView with (top, func(v) begin if IsString(v.text) then Print("  " & v.text); nil end);
+end;
+
+// a tap through the tablet (as the pen's come, through the inker and the
+// application's idle - the way a tap that opens a modal dialog must come
+// for the dialog's own taps to be taken)
+asTap := func(v) begin
+	local b := v:GlobalBox();
+	HostTabletTap((b.left + b.right) div 2, (b.top + b.bottom) div 2, 80);
+end;
+
+// a step: wait for a view labelled so on top of the screen, then tap it
+asTapStep := func(label, exact) func(done) begin
+	call waitFor with (wtName & ": " & label, func() call asLabelled with (call asTop with (), label, exact), func() begin
+		local v := call asLabelled with (call asTop with (), label, exact);
+		call wtCheck with (label, v, "(not found)");
+		// (the next step scheduled first: a tap that opens a modal dialog
+		// does not come back until the dialog is answered)
+		call settleStep with (done);
+		if v then call asTap with (v);
+	end, 60);
+end;
+
+wtSteps := [
+	func(done) call walkSetup with ([2, 0, 45, 34, 14, 37], done),
+	call doStep with (func() HostInsertCard(0, asCard)),
+	// the card's slip (ATA Support's, through the Card icon) once the driver has the card
+	func(done) begin
+		local tries := 0;
+		local open;
+		open := func() begin
+			local drawer := GetRoot().extrasDrawer;
+			drawer:Open();
+			AddDelayedCall(func() begin
+				local icon := call findView with (drawer, func(v) v.target and v.target.fentry and v.target.fentry.app = 'card);
+				if icon then call asTap with (icon);
+				call waitFor with (wtName & ": the card's slip", func() call asLabelled with (call asTop with (), "Partition", nil), func() begin
+					tries := tries + 1;
+					if call asLabelled with (call asTop with (), "Partition", nil) or tries >= 4 then call done with ()
+					else call open with ();
+				end, 10);
+			end, nil, 1000);
+		end;
+		call open with ();
+	end,
+	func(done) begin call asShow with ("the card's slip"); call done with () end,
+	call asTapStep with ("Partition", nil),					// Partition... : the dialog
+	call asTapStep with ("Partition", true),					// its Partition button
+	func(done) begin call asShow with ("asked"); call done with () end,
+	call asTapStep with ("OK", true),
+	func(done) begin call asShow with ("asked again"); call done with () end,
+	call asTapStep with ("OK", true),
+	// the card's store, once it is mounted
+	call waitStep with ("the card's store", func() call asStore with ()),
+	func(done) begin
+		call asShow with ("partitioned and mounted");
+		local store := call asStore with ();
+		call wtCheck with ("the store's size", store:TotalSize() > 7000000, "(" & NumberStr(store:TotalSize()) & ")");
+		call wtCheck with ("the store's writable", not store:IsReadOnly(), "(read-only)");
+		// an entry written there
+		local soup := store:CreateSoupXmit("ATATest:Kallisys", [], nil);
+		soup:AddXmit({text: "Written on an ATA card", n: 42}, nil);
+		local e := soup:Query(nil):Entry();
+		call wtCheck with ("the entry written", e and e.n = 42 and StrEqual(e.text, "Written on an ATA card"), "(" & (if e then "wrong" else "none") & ")");
+		call done with ();
+	end,
+	call doStep with (func() begin
+		Print(wtName & ": " & (if wtFailures = 0 then "done" else "done, " & NumberStr(wtFailures) & " failed"));
+		HostQuit();
+	end),
+];
+call wtNext with ();

@@ -12,6 +12,7 @@
 #include "UserGlobals.h"
 #include "ARMCPU.h"
 #include "PublicJumpTable.h"
+#include "PrivateJumpTable.h"
 #include "PackageNatives.h"
 #include "ROMImport.h"
 #include "FramesPart.h"
@@ -660,6 +661,10 @@ private:
 // the entry points answered, by public jump table offset / 4
 struct GlueEntry { const char* fName; GlueFn fFn; ARMTrapFn fExtern; };
 static GlueEntry*	gGlue = nil;
+// glue registered for functions the public table does not have (native
+// code reaches them only through the private jump table)
+struct PrivateGlue { const char* fName; ARMTrapFn fExtern; };
+static Vec<PrivateGlue>	gPrivateGlue;
 static const uint32_t	kGlueSlots = kPublicJumpTableSize / 4 + 1;
 static void		InitGlue(void);
 
@@ -1425,6 +1430,7 @@ bool
 TNativeWorld::IsTrap(uint32_t pc)
 {
 	return (pc >= kPublicJumpTableBase && pc < kPublicJumpTableBase + kPublicJumpTableSize)
+		|| (pc >= kPrivateJumpTableBase && pc < kPrivateJumpTableLimit)
 		|| (pc >= kCallbacks && pc < kCallbacks + fCallbacks.size() * 4)
 		|| (pc >= kHostTraps && pc < kHostTraps + gHostTraps.size() * 4);
 }
@@ -1565,6 +1571,75 @@ TNativeWorld::Trap(TARMCPU* cpu, uint32_t pc)
 		}
 		end_try;
 		return true;
+	}
+	if (pc >= kPrivateJumpTableBase && pc < kPrivateJumpTableLimit)
+	{
+		// a private jump table slot: answered as the public entry that
+		// reaches the same slot, else by the glue registered for its name,
+		// else as a ROM native function
+		const char* name = nil;
+		unsigned long lo = 0, hi = kPrivateJumpTableCount;
+		while (lo < hi)
+		{
+			unsigned long mid = (lo + hi) / 2;
+			if (kPrivateJumpTable[mid].fSlot < pc)
+				lo = mid + 1;
+			else
+				hi = mid;
+		}
+		if (lo < kPrivateJumpTableCount && kPrivateJumpTable[lo].fSlot == pc)
+			name = kPrivateJumpTable[lo].fName;
+		uint32_t asPublic = 0;
+		for (unsigned long i = 0; i < kPublicJumpTableCount && asPublic == 0; i++)
+			if (kPublicJumpTable[i].fSlot == pc)
+				asPublic = (uint32_t) (kPublicJumpTableBase + kPublicJumpTable[i].fOffset);
+		if (asPublic != 0)
+			pc = asPublic;
+		else
+		{
+			ARMTrapFn fn = nil;
+			if (name != nil)
+				for (PrivateGlue& p : gPrivateGlue)
+					if (strcmp(p.fName, name) == 0)
+						fn = p.fExtern;
+			if (fn != nil)
+			{
+				if (gTrace)
+					fprintf(stderr, "[armcpu] %s(%08x, %08x, %08x, %08x)\n", name, cpu->r[0], cpu->r[1], cpu->r[2], cpu->r[3]);
+				ARMTrapContext c = { cpu, this };
+				bool ok = true;
+				newton_try
+				{
+					ok = fn(nil, c);
+				}
+				newton_catch_all
+				{
+					if (!DeliverHost(*cpu, CurrentException()))
+						rethrow;
+				}
+				end_try;
+				return ok;
+			}
+			long numArgs = 0;
+			void* host = ResolveNativeFunction((ULong) pc, &numArgs);
+			if (host != nil)
+			{
+				newton_try
+				{
+					CallHost(*cpu, host, numArgs);
+				}
+				newton_catch_all
+				{
+					if (!DeliverHost(*cpu, CurrentException()))
+						rethrow;
+				}
+				end_try;
+				return true;
+			}
+			fStoppedIn = name != nil ? name : "?";
+			fprintf(stderr, "[armcpu] the ROM's %s (private jump table slot %08x) is not answered (NOT YET)\n", name != nil ? name : "?", pc);
+			return false;
+		}
 	}
 	uint32_t offset = pc - kPublicJumpTableBase;
 	GlueEntry* g = &gGlue[offset / 4];
@@ -3169,6 +3244,8 @@ bool		ARMTrapContext::Read32(uint32_t a, uint32_t* v)	{ return ((TNativeWorld*) 
 bool		ARMTrapContext::Write32(uint32_t a, uint32_t v)	{ return ((TNativeWorld*) fWorld)->Write32(a, v); }
 bool		ARMTrapContext::Read8(uint32_t a, uint8_t* v)	{ return ((TNativeWorld*) fWorld)->Read8(a, v); }
 bool		ARMTrapContext::Write8(uint32_t a, uint8_t v)	{ return ((TNativeWorld*) fWorld)->Write8(a, v); }
+uint32_t	ARMTrapContext::RefToARM(intptr_t ref)			{ return ((TNativeWorld*) fWorld)->ToARM((Ref) ref); }
+intptr_t	ARMTrapContext::RefToHost(uint32_t ref)			{ return (intptr_t) ((TNativeWorld*) fWorld)->ToHost(ref); }
 bool
 ARMTrapContext::ReadCString(uint32_t a, char* buffer, uint32_t size)
 {
@@ -3200,6 +3277,15 @@ ARMRegisterGlue(const char* name, ARMTrapFn fn)
 			g->fExtern = fn;
 			found = true;
 		}
+	if (!found)
+	{
+		// (a function native code reaches only by its private slot)
+		for (unsigned long i = 0; i < kPrivateJumpTableCount; i++)
+			if (strcmp(kPrivateJumpTable[i].fName, name) == 0)
+				found = true;
+		PrivateGlue p = { name, fn };
+		gPrivateGlue.push_back(p);
+	}
 	return found;
 }
 

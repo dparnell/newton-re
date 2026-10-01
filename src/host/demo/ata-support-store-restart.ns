@@ -1,0 +1,46 @@
+// After ata-support-store.ns, on the same store and card: the machine
+// restarted, the card put in again - ATA Support mounts its store by
+// itself - and the entry written before read back.  (Taking the card out
+// while its store is mounted has ATA Support restart the machine - its
+// own way, Reboot(-1001007) - which the host does not do yet: unmounting
+// it first and putting it back is the next step.)
+//
+//   ATA_CARD=tmp/ata.card build/host/host/newton --display 320x480 \
+//       --store tmp/atasup.store --headless 240 --script src/host/demo/ata-support-store-restart.ns
+
+HostInclude("common.ns");			// waitFor
+HostInclude("walkhelpers.ns");		// the steps
+
+wtName := "ata-support-store-restart";
+asCard := HostGetEnv("ATA_CARD");
+
+// the store on the card (the one that is not the internal store)
+asStore := func() begin
+	local found := nil;
+	foreach st in GetStores() do
+		if not st:IsReadOnly() and st <> GetStores()[0] then found := st;
+	found
+end;
+
+// the entry written by ata-support-store.ns, read off the card's store
+asEntryStep := func(what) func(done) begin
+	local store := call asStore with ();
+	local soup := store and store:GetSoup("ATATest:Kallisys");
+	local e := soup and soup:Query(nil):Entry();
+	call wtCheck with (what, e and e.n = 42 and StrEqual(e.text, "Written on an ATA card"),
+		"(" & (if not store then "no store" else if not soup then "no soup" else if not e then "no entry" else "wrong") & ")");
+	call done with ();
+end;
+
+wtSteps := [
+	// (the ROM's own boot: the store already set up)
+	call waitStep with ("the Notepad", func() GetRoot().paperroll and GetRoot().paperroll.viewCObject),
+	call doStep with (func() HostInsertCard(0, asCard)),
+	call waitStep with ("the card's store mounted", func() call asStore with ()),
+	call asEntryStep with ("the entry after a restart"),
+	call doStep with (func() begin
+		Print(wtName & ": " & (if wtFailures = 0 then "done" else "done, " & NumberStr(wtFailures) & " failed"));
+		HostQuit();
+	end),
+];
+call wtNext with ();

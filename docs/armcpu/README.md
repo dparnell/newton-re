@@ -366,14 +366,59 @@ there.  `test_ARMProtocols` checks each row.  So far ATA Support writes
 the slot count and state and clears the four infos for a card with no
 store on it.
 
-Next: a `TStore` proxy over its TATAStore (the 42 methods; the info's
-+0x10), `ToObject(TStore*)` (a store frame for it - the package's own
-NewtonScript mounts its stores), PATACardServer's messages, and the
-store formatted from the package's ATA Support application, written, read
-back after a restart, removed and reinserted.
-`gluetable.py build/MP2x00US --package x.pkg --whole --unanswered
-src/armcpu` lists the public jump table entries anywhere in a package that
-no glue answers yet (for ATA Support, `ToObject(TStore*)`).
+### Stores, store events and the private jump table
+
+- **The `TStore` proxy** (`ARMStore.cpp`): the 42 methods in the
+  interface's order (slots 4-45); a buffer lent for the call
+  (`ARMWorld.h`'s `ARMLent`: copied into the ARM heap and back, so lending
+  uses up no address space), an out-parameter a scratch word (0 when the
+  host's pointer is nil, as the ROM passes it on), a host store handed over
+  as the ARM instance its proxy stands for or else a handle standing for
+  it, a name (`StoreKind`) copied into the proxy.  `Init`'s PSS info is the
+  ARM code's own when it made it (`ARMStoreInfoAddress`) - ATA Support's
+  is longer than the ROM's 0x50 bytes and its store reads past them - else
+  a copy in the ROM's layout; its address (`fBase`) is an ARM address.
+- **`ToObject(TStore*)`**, `TStore::New(char*)` (a TMuxStore round
+  TATAStore: the host's own, handed to the ARM code as a handle) and the
+  `TStore::SetStore` glue.
+- **The private jump table**: code built against one ROM calls some
+  functions by their slot in the patchable jump table (0x01A00000...)
+  rather than through the public one - ATA Support calls TStore::New and
+  SetStore so, keeping several ROMs' slots and picking by version.  A call
+  there is answered as the public entry that reaches the same slot, else
+  by the glue registered for its name, else as a ROM native function;
+  `PrivateJumpTable.cpp` lists the slots of every function the glue in
+  `src/armcpu` names (`gluetable.py build/MP2x00US --private-for src/armcpu
+  -o src/armcpu/PrivateJumpTable.cpp`, to be run again when glue is added
+  for such a function), and `--whole` lists the private slots a package
+  calls.
+- **Store events** ('newt 'idle 'stor/'rstr, `TNewStoreEvent`): a driver
+  that keeps its own stores sends the newt world the event the PSS
+  manager sends, and is answered with it.  Event bodies with pointers are
+  translated by registered translators (`ARMProtocols.h`'s
+  `ARMEventTranslator`, DEVIATION like every event's header): this one
+  makes its stores host proxies or handles, its card handlers proxies, and
+  its PSS infos the PSS manager's own place (an address in the view) or a
+  host *shadow* of the ARM code's own info (read afresh with each event,
+  written back as the reply goes).
+- **An async message's refcon** is the event handler its completion goes
+  to (`TAppWorld::AEDispatch` takes it for one), so an ARM handler given
+  as one is made the host handler standing for it.
+
+So ATA Support works an ATA card end to end through its own slip (the
+Card icon in the Extras drawer): Partition..., its two alerts answered,
+the card partitioned (the map written over the ROM's), TATAStore made
+inside a TMuxStore, formatted and mounted as the store "Card", an entry
+written there (ctest `host.NewtonATASupport.store`), and after a restart
+the card put in again, mounted by the package itself and the entry read
+back (`host.NewtonATASupport.storerestart`).
+
+Next: taking the card out.  With its store mounted, ATA Support restarts
+the machine (`Reboot(-1001007)` for each mounted store - its own design;
+the host logs it, NOT YET); unmounting the store through the slip first,
+then taking the card out and putting it back, is the next step - and the
+host's `Reboot` the one after.  PATACardServer's messages have not been
+needed so far.
 
 ## Which fixtures have native code
 
