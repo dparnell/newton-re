@@ -319,7 +319,7 @@ The 12 that remain, by cause:
 | `stores.Soups` (3) | `TestIndexKeysSurviveTheStore` pins "MAKEINT answers the 30 bits the store will hold"; then a wide key throws `kNSErrKeySizeTooBig` (-48022) out of the index | yes - the boundary policy (4.3) |
 | `intl.Dates` (2), `host.NewtonYear2010`, `.romBug` | `TimeInSeconds` is no longer negative; the ROM-bug arithmetic flavour no longer has a bug to show | yes - 2.5 |
 | `host.NewtonWalkthrough2` (+ `.restart` not run), `host.NewtonAppNewtsCapeHelpers` | an alarm keyed on a true `TimeInSeconds` value reaches the store's index and throws -48022 | yes - 2.5 point 2 |
-| `host.NewtonAlignPen.restart`, the three `NetHopper`/`NewtsCape` tests | see 4.4 | to be confirmed |
+| `host.NewtonAlignPen.restart`, `host.NewtonNetHopper`, `NetHopperJPEG`, `NetHopperNewtsCape` | reproducible serially; probably the boundary (4.4) | not yet diagnosed |
 
 Nothing failed in the compiler, the interpreter's own tests, QuickDraw,
 the views' unit tests, recognition, ink, comms, the ARM interpreter's
@@ -349,15 +349,26 @@ Recommendation: one helper (`NarrowRefForDevice(ref, where)`) used by all
 (`NEWTON_TRACE_NARROW`) and a strict mode (policy 2) for development.
 Policy 3 only if a concrete need appears.
 
-### 4.4 Still open at the time of writing
+### 4.4 Not yet diagnosed
 
-`host.NewtonAlignPen.restart` and the NetHopper/NewtsCape tests failed
-in the parallel rerun; in the NetHopper run the host watchdog reported the
-`dnst` task holding the baton with nothing running for 10 seconds.  A
-serial rerun is recorded in the commit message of this page if it
-finished in time; whether they are flavour-related or load-related
-(they passed in the baseline's parallel run) is the first thing step S1
-below settles.
+Rerun serially, `host.NewtonAlignPen.restart` and the three
+NetHopper/NewtsCape browsing tests fail again, so they are caused by the
+flavour and not by load:
+
+* `NewtonAlignPen.restart`: after the restart the calibration screen is
+  not shown and the pen is not aligned.  The calibration is kept in the
+  System soup's "Calibration" entry (and handed across the restart in
+  the environment), so the likely cause is a value wider than 30 bits
+  narrowed on its way to the store or the environment - the boundary
+  again.
+* `NewtonNetHopper`, `NewtonNetHopperJPEG`, `NewtonNetHopperNewtsCape`:
+  the page never arrives; in the parallel run the host watchdog reported
+  the `dnst` task holding the baton with nothing running for 10 seconds.
+  NetHopper's own code runs on `src/armcpu`, and the NIE's re-expressions
+  carry IPv4 addresses and similar 32-bit quantities as integers, so the
+  likely cause is a wide integer crossing `ToARM` or an NIE fast path.
+
+Both are step S1's first job.
 
 ---
 
@@ -370,7 +381,7 @@ for "nothing else changed".
 | Step | What | Leaves | Size |
 |---|---|---|---|
 | **S0** *(could land on `main`: no behaviour change)* | `RINT` answers `Long`; `IntegerString`/printer formats, `LongToPipe`, `TStoreWritePipe::operator<<(long)` take `Long`; `NEWTON_NS64` as a CMake option (`-DNEWTON_NS64=ON`) driving `MAKEINT`/`WordRef`/the fast paths through `sync_ddk_headers.py`; a `ctest` label so a flavour's expectations can differ | faithful 394/394 unchanged; NS64 builds | 1-2 days |
-| **S1** | The host's own assumptions: the `Commands.cpp` discriminator (done in the spike), settle the 4.4 tests, any other "fits in a word" idiom found | NS64 ≈ 382/394, every failure explained | 1-2 days |
+| **S1** | The host's own assumptions: the `Commands.cpp` discriminator (done in the spike), diagnose the four 4.4 tests, any other "fits in a word" idiom found | NS64 ≈ 382/394, every failure explained | 1-2 days |
 | **S2** | The boundary policy (4.3): `NarrowRefForDevice` at the ≈40 outbound sites (NSOF, store object, header, soup keys incl. `LongKeyCompare`, Docker, Translators/marshalling, `ToARM`), `nsof.py` and `romsrc.py` rejecting what they cannot hold; tests that a wide integer stored, streamed, docked and passed to ARM code comes back as the device would have it (or throws in strict mode) | stores/NSOF byte-identical across flavours for values that fit | 3-5 days |
 | **S3** | Semantics that change on purpose: the lexer (`strtoll`, 2^61, the negative-hex idiom), `ExtractLong`, `FCeiling`/`FFloor`/`CoerceToInt` range checks, `Ticks`, `TimeInSeconds` and the year-2010 reading (2.5), NIE fast paths; per-flavour expectations in `test_Strings`, `test_Soups`, `test_Dates`, `NewtonYear2010`; new `TestSixtyTwoBitIntegers` | NS64 suite green with its own expectations | 3-5 days |
 | **S4** | The Windows narrowing audit (2.2): `-Wshorten-64-to-32` filtered to `RINT`/`RVALUE`/`CoerceToInt` lines, each site either `Long`, a range-checked narrowing, or left (small by contract) with no change | no silent narrowing of anything that can be wide | 1-2 weeks, mechanical |
