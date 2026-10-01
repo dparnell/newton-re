@@ -1,0 +1,135 @@
+// Printing to an ipps:// printer whose certificate the system does not vouch
+// for (ctests host.NewtonIPPS, then .restart, .changed and .changedTrust on
+// the same store): print-ipp.ns's way to "IPP printer (PostScript)", the
+// printer tools/print/ippprinter.py --tls runs with one of the test
+// certificates in tools/print/testcerts.  NEWTON_IPPS_EXPECT says what this
+// run should see before the job goes (print/host/HostIPPTool.h's
+// HostIPPCheckTrust):
+//   unknown-trust   the certificate is not known: the slip asks, Trust is
+//                   tapped, the job printed and the certificate pinned
+//   none            it is the one pinned: no slip, the job printed
+//   changed-cancel  it is not the one pinned: the slip warns, Cancel is
+//                   tapped and the job is cancelled - nothing printed
+//   changed-trust   the same, Trust tapped: the job printed and the new
+//                   certificate pinned
+//
+//   NEWTON_IPPS_EXPECT=unknown-trust python tools/print/ippprinter.py --port 0
+//       --tls tools/print/testcerts/printer-a.pem --out build/ipps --
+//       build/host/host/newton --display 320x480 --headless 200 --store build/ipps.store
+//       --script src/host/demo/print-ipps.ns
+
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
+HostInclude("walkhelpers.ns");		// findView
+HostInclude("apphelpers.ns");		// tapCentre, pickerUp, pickItem
+
+kIPPPrinter := "IPP printer (PostScript)";
+kIPPRow := 182;
+if HostGetEnv("NEWTON_IPPS_DRIVER") and StrEqual(HostGetEnv("NEWTON_IPPS_DRIVER"), "pcl") then begin
+	// (NEWTON_IPPS_DRIVER=pcl: the HP PCL driver, ThpPCL, instead)
+	kIPPPrinter := "IPP printer (HP PCL)";
+	kIPPRow := 196;
+end;
+ippsExpect := HostGetEnv("NEWTON_IPPS_EXPECT");
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+
+shows := func(left, top) begin
+	local found := nil;
+	foreach child in GetRoot():ChildViewFrames() do begin
+		local box := child:GlobalBox();
+		if box.left = left and box.top = top then found := true;
+	end;
+	found;
+end;
+
+// the certificate slip, when it is up
+trustSlipUp := func() begin
+	local found := nil;
+	foreach child in GetRoot():ChildViewFrames() do
+		if child.trustSlip and child.viewCObject then found := child;
+	found;
+end;
+
+// the slip's button with that text
+slipButton := func(slip, label) call findView with (slip, func(v) IsString(v.text) and StrEqual(v.text, label));
+
+pinned := func() GetGlobalVar('|NetworkPrinters:host|):PinFor(kIPPPrinter);
+
+printed := func() begin
+	call waitFor with ("print-ipps: the job answered", func() HostIPPJobs() >= 1, func() begin
+		Print("print-ipps: the printer answered " & NumberStr(HostIPPLastStatus()) & ", the pin is " & call pinned with ());
+		Print("print-ipps: done");
+		HostQuit();
+	end, 120);
+end;
+
+// the slip answered with the pen
+answerSlip := func(label, andThen) begin
+	call waitFor with ("print-ipps: the certificate slip", trustSlipUp, func() begin
+		local slip := call trustSlipUp with ();
+		Print("print-ipps: the slip says " & slip.title & ": " & slip.message);
+		ScreenSnapshot("build/print-ipps-" & ippsExpect & ".pgm");
+		AddDelayedCall(func() begin
+			call tapCentre with (call slipButton with (slip, label));
+			Print("print-ipps: tapped " & label);
+			call andThen with ();
+		end, nil, 1000);
+	end, 60);
+end;
+
+afterNow := func() begin
+	if StrEqual(ippsExpect, "unknown-trust") or StrEqual(ippsExpect, "changed-trust") then
+		call answerSlip with ("Trust", printed)
+	else if StrEqual(ippsExpect, "changed-cancel") then
+		call answerSlip with ("Cancel", func()
+			call waitFor with ("print-ipps: the job cancelled", func() not call trustSlipUp with (), func()
+				AddDelayedCall(func() begin
+					Print("print-ipps: the job was cancelled; " & NumberStr(HostIPPJobs()) & " job(s), the pin is " & call pinned with ());
+					ScreenSnapshot("build/print-ipps-cancelled.pgm");
+					Print("print-ipps: done");
+					HostQuit();
+				end, nil, 3000), 20))
+	else begin
+		// no slip may come
+		AddDelayedCall(func() if call trustSlipUp with () then Print("print-ipps: FAILED - the slip asked"), nil, 1500);
+		call printed with ();
+	end;
+end;
+
+printNote := func() begin
+	GetRoot().paperroll:MakeTextNote("hello from the Newton's printer", true);
+	call tapAt with (310, 28);				// the note's Action button
+	call waitFor with ("print-ipps: the Action menu", func() call pickerUp with (), func() begin
+		call pickItem with ("Print");		// Print Note
+		call waitFor with ("print-ipps: the Print slip", func() call shows with (45, 134), func() begin
+			call tapAt with (118, 196);		// the Printer picker
+			call waitFor with ("print-ipps: the printers", func() call shows with (87, 202), func() begin
+				call tapAt with (160, 241);	// Choose Other Printer
+				call waitFor with ("print-ipps: the chooser", func() call shows with (70, 80), func() begin
+					for i := 1 to 8 do call tapAt with (230, 161);	// scrolled to the end
+					call tapAt with (140, kIPPRow);	// the IPP printer
+					call tapAt with (237, 228);		// closed
+					call waitFor with ("print-ipps: the printer chosen", func() not call shows with (70, 80)
+							and StrEqual(userConfiguration.currentPrinter.name, kIPPPrinter), func() begin
+						Print("print-ipps: chose " & userConfiguration.currentPrinter.name & "; expecting " & ippsExpect);
+						call tapAt with (226, 284);	// Print
+						call waitFor with ("print-ipps: Now or Later", func() call shows with (207, 250), func() begin
+							call tapAt with (221, 256);	// Now
+							call afterNow with ();
+						end, 20);
+					end, 20);
+				end, 20);
+			end, 20);
+		end, 20);
+	end, 20);
+end;
+
+// a fresh store starts with the Setup assistant, a set-up one with the Notepad
+call waitFor with ("print-ipps: the boot",
+	func() call (call isOpen with ('setup)) with () or call (call isOpen with ('paperroll)) with (),
+	func() begin
+		if call (call isOpen with ('setup)) with () then
+			call walkSetup with (name, printNote)
+		else
+			AddDelayedCall(func() call printNote with (), nil, 600);
+	end, 60);
+Print("print-ipps: the script is loaded; the printer is " & HostGetEnv("NEWTON_IPP_PRINTER"));

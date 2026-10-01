@@ -24,7 +24,9 @@ TestURIs(void)
 	EXPECT(strcmp(uri.fHost, "10.0.0.5") == 0 && uri.fPort == 631 && strcmp(uri.fPath, "/printers/laser") == 0);
 	EXPECT(HostIPPParseURI("http://host", &uri));
 	EXPECT(uri.fPort == 80 && strcmp(uri.fPath, "/") == 0);
-	EXPECT(!HostIPPParseURI("ipps://host/ipp/print", &uri));		// no TLS
+	EXPECT(HostIPPParseURI("ipps://host/ipp/print", &uri) && uri.fTLS && uri.fPort == 631);
+	EXPECT(HostIPPParseURI("https://host/", &uri) && uri.fTLS && uri.fPort == 443);
+	EXPECT(HostIPPParseURI("ipp://host/", &uri) && !uri.fTLS);
 	EXPECT(!HostIPPParseURI("lpd://host/queue", &uri));
 	EXPECT(!HostIPPParseURI("ipp://:631/x", &uri));
 	EXPECT(!HostIPPParseURI("ipp://host:99999/x", &uri));

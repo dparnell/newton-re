@@ -42,6 +42,7 @@
 #include "CMService.h"
 #include "CommTools.h"
 #include "print/host/HostIPP.h"
+#include "print/host/HostIPPSocket.h"
 
 class TEndpoint;
 
@@ -52,8 +53,9 @@ class TEndpoint;
 
 struct THostIPPURIOption : public TOption
 {
-						THostIPPURIOption(const char* uri, ULong ticket);
+						THostIPPURIOption(const char* uri, ULong ticket, const char* pin);
 	ULong				fTicket;
+	char				fPin[96];		// an ipps printer's certificate the driver trusted (HostIPPCheckTrust)
 	char				fURI[256];
 };
 
@@ -74,6 +76,17 @@ NewtonErr	HostIPPTicketResult(ULong ticket);
 // The task waits for it in PrReleaseControl (three seconds at most).
 NewtonErr	HostIPPPrinterStatus(const char* uri, TPrinter* printer);
 
+// An ipps:// printer's certificate trusted before a job goes to it: one
+// the system's store vouches for, or the one pinned for the printer
+// (by its name, else "host:port") in the Network Printers' System soup entry; else the user
+// is asked by a slip naming the printer (`name`) and showing the
+// fingerprint - unknown, or changed from the pinned one - as the print
+// problem slip is put up from the print task, and the certificate pinned
+// if trusted.  ==> noErr (pin: the trusted certificate's fingerprint),
+// kPR_ERR_UserCancel not trusted, kPR_ERR_NotFound no TLS connection.  A
+// URI that is not TLS is noErr at once.
+NewtonErr	HostIPPCheckTrust(const char* uri, RefArg name, TPrinter* printer, char pin[96]);
+
 // A connection to an IPP printer as the host's drivers make one: an
 // endpoint of the 'ippc service opened (EasyOpen), the job's bytes written
 // to it and the endpoint closed, which ends the job.  An error is made the
@@ -83,7 +96,7 @@ class THostIPPConnection
 public:
 						THostIPPConnection();
 						~THostIPPConnection();
-	NewtonErr			Open(const char* uri);			// nil or "": the configured printer
+	NewtonErr			Open(const char* uri, RefArg name, TPrinter* printer);	// uri nil or "": the configured printer
 	NewtonErr			Send(const char* data, ULong size, ULong& sent);
 	NewtonErr			Close();
 	NewtonErr			Status(TPrinter* printer);		// HostIPPPrinterStatus of the printer it went to
@@ -140,7 +153,6 @@ protected:
 	void				Finished();
 	static Boolean		FinishProc(void* tool);
 
-	int					fSocket;			// the connection (-1: none)
 	Boolean				fConnecting;		// a connect waiting for the host
 	Boolean				fHeaderSent;		// the POST's head and the request have been queued
 	Boolean				fFinishing;			// the last chunk queued: the answer awaited
@@ -155,6 +167,8 @@ protected:
 	long				fPolls;				// how long the answer has been waited for
 	HostIPPURI			fURI;
 	ULong				fTicket;			// the job's (kHostIPPURIOption; 0: none)
+	char				fPin[96];			// the certificate trusted (kHostIPPURIOption)
+	THostIPPSocket		fConn;				// the connection (plain or TLS)
 	char				fURIText[512];
 };
 

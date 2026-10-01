@@ -470,6 +470,70 @@ if(Python3_FOUND)
     endforeach()
 endif()
 
+# ipps:// (print/host/HostIPPSocket.h over the host's TLS, tls/HostTLS.h):
+# the fake printer over TLS with a test certificate the system does not
+# vouch for (tools/print/testcerts), the trust asked from the print task
+# (HostIPPCheckTrust) and answered with the pen (print-ipps.ns), one store
+# through five runs - the unknown certificate trusted and the job printed;
+# a restart printing without asking; the printer's certificate changed,
+# the warning declined and the job cancelled; changed again, accepted and
+# the new certificate pinned; and printing with it without asking
+if(Python3_FOUND)
+    set(ipps_dir ${CMAKE_CURRENT_BINARY_DIR}/ipps)
+    add_test(NAME host.NewtonIPPS.clean COMMAND ${CMAKE_COMMAND} -E rm -rf ${ipps_dir})
+    add_test(NAME host.NewtonIPPS.mkdir COMMAND ${CMAKE_COMMAND} -E make_directory ${ipps_dir})
+    set_tests_properties(host.NewtonIPPS.clean PROPERTIES FIXTURES_SETUP ippsclean)
+    set_tests_properties(host.NewtonIPPS.mkdir PROPERTIES FIXTURES_SETUP ippsclean DEPENDS host.NewtonIPPS.clean)
+    set(ipps_previous ippsclean)
+    foreach(step first:unknown-trust:a restart:none:a changed:changed-cancel:b changedTrust:changed-trust:b repinned:none:b)
+        string(REPLACE ":" ";" parts ${step})
+        list(GET parts 0 run)
+        list(GET parts 1 expect)
+        list(GET parts 2 cert)
+        if(run STREQUAL "first")
+            set(ipps_name host.NewtonIPPS)
+        else()
+            set(ipps_name host.NewtonIPPS.${run})
+        endif()
+        if(expect STREQUAL "unknown-trust")
+            set(ipps_said "is not known.*print-ipps: tapped Trust.*trusted.*Print-Job to ipps://.*print-ipps: the printer answered 0, the pin is 8D:85:C4.*print-ipps: done")
+        elseif(expect STREQUAL "changed-cancel")
+            set(ipps_said "is not the one trusted.*print-ipps: tapped Cancel.*the job is cancelled.*print-ipps: the job was cancelled. 0 job.s., the pin is 8D:85:C4.*print-ipps: done")
+        elseif(expect STREQUAL "changed-trust")
+            set(ipps_said "is not the one trusted.*print-ipps: tapped Trust.*trusted.*Print-Job to ipps://.*print-ipps: the printer answered 0, the pin is DD:DF:91.*print-ipps: done")
+        else()
+            set(ipps_said "Print-Job to ipps://.*print-ipps: the printer answered 0, the pin is .*print-ipps: done")
+        endif()
+        add_test(NAME ${ipps_name}
+                 COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/print/ippprinter.py --port 0
+                         --tls ${CMAKE_SOURCE_DIR}/../tools/print/testcerts/printer-${cert}.pem --out ${ipps_dir}/${run}
+                         -- $<TARGET_FILE:newton> --display 320x480 --headless 200 --store ${ipps_dir}/store
+                         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/print-ipps.ns
+                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+        set_tests_properties(${ipps_name} PROPERTIES TIMEOUT 300 ENVIRONMENT NEWTON_IPPS_EXPECT=${expect}
+                             FIXTURES_REQUIRED ${ipps_previous} FIXTURES_SETUP ipps${run}
+                             PASS_REGULAR_EXPRESSION "${ipps_said}"
+                             FAIL_REGULAR_EXPRESSION "waited in vain|fell over|FAILED|!!! Exception")
+        set(ipps_previous ipps${run})
+    endforeach()
+    # (no slip when none is expected: the run would print "FAILED - the slip asked")
+    add_test(NAME host.NewtonIPPS.check
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/print/jobcheck.py ${ipps_dir}/first/job-1.ps
+                     --pages 1 --text "hello from the Newton's printer")
+    set_tests_properties(host.NewtonIPPS.check PROPERTIES FIXTURES_REQUIRED ippsfirst PASS_REGULAR_EXPRESSION "jobcheck: passed")
+    # the HP PCL driver over ipps (its trust asked from gPrinterServiceHook)
+    add_test(NAME host.NewtonIPPSPCL
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/print/ippprinter.py --port 0
+                     --tls ${CMAKE_SOURCE_DIR}/../tools/print/testcerts/printer-a.pem --out ${ipps_dir}/pcl
+                     -- $<TARGET_FILE:newton> --display 320x480 --headless 200
+                     --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/print-ipps.ns
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonIPPSPCL PROPERTIES TIMEOUT 300 FIXTURES_REQUIRED ippsclean
+                         ENVIRONMENT "NEWTON_IPPS_EXPECT=unknown-trust;NEWTON_IPPS_DRIVER=pcl"
+                         PASS_REGULAR_EXPRESSION "chose IPP printer .HP PCL.*print-ipps: tapped Trust.*Print-Job to ipps://.*application/vnd.hp-pcl.*print-ipps: the printer answered 0.*print-ipps: done"
+                         FAIL_REGULAR_EXPRESSION "waited in vain|fell over|FAILED|!!! Exception")
+endif()
+
 # the printers on the network (print/host/HostNetworkPrinters.cpp): the
 # fake printer advertised (ippprinter.py --advertise, which the host's
 # DNS-SD layer takes in place of a browse: NEWTON_FOUND_PRINTERS), picked

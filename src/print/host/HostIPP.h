@@ -58,14 +58,16 @@ enum { kHostIPPPrinterModel = 100 };
 	The protocol (plain C++, no Newton types: tests/test_HostIPP.cpp)
 ------------------------------------------------------------------------------*/
 
-// An ipp://, ipps:// (refused: no TLS), http:// printer URI taken apart;
-// the port is 631 (ipp) or 80 (http) when it names none, the path "/" when
-// it has none.  ==> false when it is not one.
+// An ipp://, ipps://, http:// or https:// printer URI taken apart; the
+// port is 631 (ipp, ipps), 80 (http) or 443 (https) when it names none,
+// the path "/" when it has none; ipps and https are over TLS
+// (HostIPPSocket.h).  ==> false when it is not one.
 struct HostIPPURI
 {
 	char		fHost[256];
 	uint16_t	fPort;
 	char		fPath[512];
+	bool		fTLS;
 };
 bool		HostIPPParseURI(const char* uri, HostIPPURI* parts);
 

@@ -89,7 +89,7 @@ TPSPAPDriver::Open()
 	THostIPPConnection* connection = (THostIPPConnection*) fHostConnection;
 	if (connection == nil)
 		fHostConnection = connection = new THostIPPConnection;
-	fError = connection->Open(found.fURI);
+	fError = connection->Open(found.fURI, RefVar(MakeString(found.fName)), fPrinter);
 	return fError;
 }
 

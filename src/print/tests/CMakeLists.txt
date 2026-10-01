@@ -23,3 +23,20 @@ add_executable(test_HostDNSSD test_HostDNSSD.cpp)
 target_link_libraries(test_HostDNSSD PRIVATE print_host_dnssd)
 add_test(NAME print.HostDNSSD COMMAND test_HostDNSSD)
 set_tests_properties(print.HostDNSSD PROPERTIES TIMEOUT 30 PASS_REGULAR_EXPRESSION "test_HostDNSSD: all passed")
+
+# the host's TLS against the fake printer over ipps (its certificate the
+# test one, tools/print/testcerts/printer-a.pem)
+find_package(Python3 COMPONENTS Interpreter)
+add_executable(test_HostTLS test_HostTLS.cpp)
+target_link_libraries(test_HostTLS PRIVATE print_host_tls)
+if(WIN32)
+    target_link_libraries(test_HostTLS PRIVATE ws2_32)
+endif()
+if(Python3_FOUND)
+    add_test(NAME print.HostTLS
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/print/ippprinter.py --port 0
+                     --tls ${CMAKE_SOURCE_DIR}/../tools/print/testcerts/printer-a.pem --out ${CMAKE_CURRENT_BINARY_DIR}/tls
+                     -- $<TARGET_FILE:test_HostTLS>)
+    set_tests_properties(print.HostTLS PROPERTIES TIMEOUT 60
+                         PASS_REGULAR_EXPRESSION "the certificate.s SHA-256 8D:85:C4:67:83:4A:B8:F0:41:34:79:B6:12:DC:EF:96:8D:2C:C6:FC:4D:C0:F4:31:F8:50:17:CA:95:7B:D1:56.*test_HostTLS: all passed")
+endif()

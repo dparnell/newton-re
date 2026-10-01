@@ -26,6 +26,9 @@
 #include "RSSymbols.h"
 #include "HostSockets.h"
 #include "utility/Unicode.h"
+#include "utility/AppWorld.h"
+#include "Ports.h"
+#include "UserTasks.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -109,7 +112,6 @@ SetTicketResult(ULong ticket, NewtonErr result)
 THostIPPTool::THostIPPTool(ULong serviceId)
 	: TCommTool(serviceId)
 {
-	fSocket = -1;
 	fConnecting = false;
 	fHeaderSent = false;
 	fFinishing = false;
@@ -123,14 +125,14 @@ THostIPPTool::THostIPPTool(ULong serviceId)
 	memset(&fURI, 0, sizeof(fURI));
 	fURIText[0] = 0;		// (kHostIPPURIOption may name the printer)
 	fTicket = 0;
+	fPin[0] = 0;
 }
 
 
 THostIPPTool::~THostIPPTool()
 {
 	// (the task's copy; the parent's never opened anything)
-	if (fSocket >= 0)
-		HostSocketClose(fSocket);
+	fConn.Close();
 	if (fOut != nil)
 		DisposePtr((Ptr) fOut);
 	if (fIn != nil)
@@ -168,12 +170,15 @@ THostIPPTool::ProcessOptionStart(TOption* theOption, ULong label, ULong opcode)
 {
 	if (label == kHostIPPURIOption)
 	{
-		if ((opcode == opSetNegotiate || opcode == opSetRequired) && theOption->Length() >= sizeof(ULong))
+		if ((opcode == opSetNegotiate || opcode == opSetRequired)
+		 && theOption->Length() >= (size_t) (((const THostIPPURIOption*) theOption)->fURI - (const char*) (theOption + 1)))
 		{
-			const UByte* data = (const UByte*) (theOption + 1);
-			memcpy(&fTicket, data, sizeof(ULong));
-			const char* uri = (const char*) (data + sizeof(ULong));
-			size_t n = theOption->Length() - sizeof(ULong);
+			const THostIPPURIOption* where = (const THostIPPURIOption*) theOption;
+			fTicket = where->fTicket;
+			memcpy(fPin, where->fPin, sizeof(fPin));
+			fPin[sizeof(fPin) - 1] = 0;
+			const char* uri = where->fURI;
+			size_t n = theOption->Length() - (size_t) (uri - (const char*) (theOption + 1));
 			if (n >= sizeof(fURIText))
 				n = sizeof(fURIText) - 1;
 			memcpy(fURIText, uri, n);
@@ -210,19 +215,10 @@ THostIPPTool::ConnectStart()
 		ConnectComplete(kCommErrResourceNotAvailable);
 		return;
 	}
-	uint32_t address;
-	int count = 0;
-	if (HostResolveName(fURI.fHost, &address, 1, &count) != kHostSocketOK || count == 0)
+	if (fConn.Connect(&fURI) != kHostSocketOK)
 	{
-		printf("[host] IPP: cannot find %s\n", fURI.fHost);
+		printf("[host] IPP: %s\n", fConn.fError);
 		fflush(stdout);
-		SetTicketResult(fTicket, kPR_ERR_NotFound);
-		ConnectComplete(kCommErrIncompatibleRemote);
-		return;
-	}
-	if (HostTCPConnect(address, fURI.fPort, &fSocket) != kHostSocketOK)
-	{
-		fSocket = -1;
 		SetTicketResult(fTicket, kPR_ERR_NotFound);
 		ConnectComplete(kCommErrIncompatibleRemote);
 		return;
@@ -235,17 +231,27 @@ THostIPPTool::ConnectStart()
 void
 THostIPPTool::PollConnect()
 {
-	int result = HostSocketConnected(fSocket);
+	int result = fConn.Connected();
 	if (result == kHostSocketWouldBlock)
 		return;
 	fConnecting = false;
 	if (result != kHostSocketOK)
 	{
-		printf("[host] IPP: cannot connect to %s port %u\n", fURI.fHost, (unsigned) fURI.fPort);
+		printf("[host] IPP: %s (%s port %u)\n", fConn.fError, fURI.fHost, (unsigned) fURI.fPort);
 		fflush(stdout);
-		HostSocketClose(fSocket);
-		fSocket = -1;
+		fConn.Close();
 		SetTicketResult(fTicket, kPR_ERR_NotFound);
+		ConnectComplete(kCommErrIncompatibleRemote);
+		return;
+	}
+	// over TLS: a certificate the system does not vouch for must be the
+	// one the driver had trusted (HostIPPCheckTrust asked the user before)
+	if (fConn.fTLS && !fConn.fSystemTrusts && strcmp(fConn.fFingerprint, fPin) != 0)
+	{
+		printf("[host] IPP: the printer's certificate %s is not the one trusted\n", fConn.fFingerprint);
+		fflush(stdout);
+		fConn.Close();
+		SetTicketResult(fTicket, kPR_ERR_PrinterError);
 		ConnectComplete(kCommErrIncompatibleRemote);
 		return;
 	}
@@ -342,10 +348,10 @@ THostIPPTool::PutFramedBytes(CBufferList* clientBuffer, Boolean /*endOfFrame*/)
 void
 THostIPPTool::PollSend()
 {
-	while (fSocket >= 0 && fOutDone < fOutSize)
+	while (fConn.IsOpen() && fOutDone < fOutSize)
 	{
 		size_t sent;
-		int result = HostSocketSend(fSocket, fOut + fOutDone, fOutSize - fOutDone, &sent);
+		int result = fConn.Send(fOut + fOutDone, fOutSize - fOutDone, &sent);
 		if (result == kHostSocketWouldBlock)
 			return;
 		if (result != kHostSocketOK)
@@ -414,8 +420,10 @@ THostIPPTool::HandleTimerTick()
 {
 	if (fConnecting)
 		PollConnect();
-	if (fSocket >= 0 && fOutDone < fOutSize)
+	if (fConn.IsOpen() && fOutDone < fOutSize)
 		PollSend();
+	if (fConn.IsOpen())
+		fConn.Flush();
 	if (fFinishing)
 		PollAnswer();
 }
@@ -442,7 +450,7 @@ THostIPPTool::PollAnswer()
 	{
 		UByte bytes[1024];
 		size_t got;
-		int result = HostSocketReceive(fSocket, bytes, sizeof(bytes), &got);
+		int result = fConn.Receive(bytes, sizeof(bytes), &got);
 		if (result == kHostSocketWouldBlock)
 			break;
 		if (result != kHostSocketOK)
@@ -494,11 +502,7 @@ void
 THostIPPTool::Finished()
 {
 	fFinishing = false;
-	if (fSocket >= 0)
-	{
-		HostSocketClose(fSocket);
-		fSocket = -1;
-	}
+	fConn.Close();
 	TerminateConnection();
 }
 
@@ -517,7 +521,7 @@ THostIPPTool::FinishProc(void* tool)
 		self->fPutPending = false;
 		self->PutComplete(kCommErrConnectionAborted, 0);
 	}
-	if (self->fSocket >= 0 && self->fHeaderSent && self->fOutDone <= self->fOutSize)
+	if (self->fConn.IsOpen() && self->fHeaderSent && self->fOutDone <= self->fOutSize)
 	{
 		if (self->Queue("0\r\n\r\n", 5))
 		{
@@ -527,11 +531,7 @@ THostIPPTool::FinishProc(void* tool)
 			return false;
 		}
 	}
-	if (self->fSocket >= 0)
-	{
-		HostSocketClose(self->fSocket);
-		self->fSocket = -1;
-	}
+	self->fConn.Close();
 	return true;
 }
 
@@ -594,13 +594,14 @@ PROTOCOL_IMPL_SOURCE_MACRO(THostIPPPSDriver)
 PROTOCOL_CLASSINFO(THostIPPPSDriver, "TPSPrinterDriver", "", 0x20000, 0, nil)
 
 
-THostIPPURIOption::THostIPPURIOption(const char* uri, ULong ticket)
+THostIPPURIOption::THostIPPURIOption(const char* uri, ULong ticket, const char* pin)
 	: TOption(kOptionType)
 {
 	SetAsOption(kHostIPPURIOption);
 	fTicket = ticket;
+	snprintf(fPin, sizeof(fPin), "%s", pin != nil ? pin : "");
 	snprintf(fURI, sizeof(fURI), "%s", uri != nil ? uri : "");
-	SetLength(sizeof(ULong) + strlen(fURI) + 1);
+	SetLength((size_t) (fURI - (char*) ((TOption*) this + 1)) + strlen(fURI) + 1);
 }
 
 
@@ -623,12 +624,17 @@ THostIPPConnection::~THostIPPConnection()
 // printer).  A printer that cannot be reached is not found
 // (kPR_ERR_NotFound: "No printer is connected.").
 NewtonErr
-THostIPPConnection::Open(const char* uri)
+THostIPPConnection::Open(const char* uri, RefArg name, TPrinter* printer)
 {
 	fTicket = HostIPPNewTicket();
 	snprintf(fURI, sizeof(fURI), "%s", (uri != nil && uri[0] != 0) ? uri : HostIPPPrinter());
+	// an ipps printer's certificate trusted first (the user asked if need be)
+	char pin[96];
+	NewtonErr err = HostIPPCheckTrust(fURI, name, printer, pin);
+	if (err != noErr)
+		return err;
 	TOptionArray options;
-	NewtonErr err = options.Init();
+	err = options.Init();
 	if (err == noErr)
 	{
 		TOption service(kOptionType);
@@ -637,7 +643,7 @@ THostIPPConnection::Open(const char* uri)
 	}
 	if (err == noErr)
 	{
-		THostIPPURIOption where(uri, fTicket);
+		THostIPPURIOption where(uri, fTicket, pin);
 		err = options.InsertOptionAt(options.GetArrayCount(), &where);
 	}
 	if (err == noErr)
@@ -717,21 +723,14 @@ HostIPPPrinterStatus(const char* uri, TPrinter* printer)
 	HostIPPURI where;
 	if (uri == nil || !HostIPPParseURI(uri, &where))
 		return kPR_ERR_LostContact;
-	uint32_t address;
-	int count = 0;
-	if (HostResolveName(where.fHost, &address, 1, &count) != kHostSocketOK || count == 0)
-		return kPR_ERR_LostContact;
-	int sock;
-	if (HostTCPConnect(address, where.fPort, &sock) != kHostSocketOK)
+	THostIPPSocket sock;
+	if (sock.Connect(&where) != kHostSocketOK)
 		return kPR_ERR_LostContact;
 	unsigned char request[1024];
 	size_t bodySize = HostIPPGetPrinterState(uri, ++gIPPRequestId, request + 512, sizeof(request) - 512);
 	size_t headSize = HostIPPHTTPRequestHeader(&where, bodySize, (char*) request, 512);
 	if (bodySize == 0 || headSize == 0)
-	{
-		HostSocketClose(sock);
 		return kPR_ERR_NewtonError;
-	}
 	memmove(request + headSize, request + 512, bodySize);
 	size_t toSend = headSize + bodySize, sent = 0;
 	unsigned char answer[4096];
@@ -743,7 +742,7 @@ HostIPPPrinterStatus(const char* uri, TPrinter* printer)
 	{
 		if (!connected)
 		{
-			int result = HostSocketConnected(sock);
+			int result = sock.Connected();
 			if (result == kHostSocketOK)
 				connected = true;
 			else if (result != kHostSocketWouldBlock)
@@ -752,7 +751,7 @@ HostIPPPrinterStatus(const char* uri, TPrinter* printer)
 		if (connected && sent < toSend)
 		{
 			size_t n = 0;
-			int result = HostSocketSend(sock, request + sent, toSend - sent, &n);
+			int result = sock.Send(request + sent, toSend - sent, &n);
 			if (result == kHostSocketOK)
 				sent += n;
 			else if (result != kHostSocketWouldBlock)
@@ -769,7 +768,7 @@ HostIPPPrinterStatus(const char* uri, TPrinter* printer)
 					closed = true;
 					break;
 				}
-				int result = HostSocketReceive(sock, answer + got, sizeof(answer) - got, &n);
+				int result = sock.Receive(answer + got, sizeof(answer) - got, &n);
 				if (result == kHostSocketWouldBlock)
 					break;
 				if (result != kHostSocketOK || n == 0)
@@ -785,7 +784,7 @@ HostIPPPrinterStatus(const char* uri, TPrinter* printer)
 		}
 		PrReleaseControl(kIPPStatusPoll, printer);
 	}
-	HostSocketClose(sock);
+	sock.Close();
 	if (complete != 1)
 		return kPR_ERR_LostContact;
 	if (response.fHTTPStatus != 200 || response.fIPPStatus < 0 || response.fIPPStatus >= 0x0100)
@@ -863,7 +862,8 @@ THostIPPPSDriver::Open()
 	HostPrinterFrameURI(printer, uri, sizeof(uri));
 	if (fConnection == nil)
 		fConnection = new THostIPPConnection;
-	return fConnection->Open(uri);
+	RefVar name(IsFrame(printer) ? GetFrameSlot(printer, RefVar(Intern((char*) "name"))) : NILREF);
+	return fConnection->Open(uri, name, fPrinter);
 }
 
 
@@ -1003,9 +1003,18 @@ IPPServiceForPCL(ThpPCL* driver, TOptionArray* options)
 		uri[0] = 0;
 	gPCLDriver = driver;
 	gPCLTicket = HostIPPNewTicket();
+	// an ipps printer's certificate trusted first (the user asked if need
+	// be); not trusted, the connection is not made - which ThpPCL::Open
+	// makes "Newton is unable to print.", as the ROM's makes any failed one
+	char pin[96] = "";
 	if (driver->fError == noErr)
 	{
-		THostIPPURIOption where(uri, gPCLTicket);
+		RefVar name(IsFrame(printer) ? GetFrameSlot(printer, RefVar(Intern((char*) "name"))) : NILREF);
+		driver->fError = HostIPPCheckTrust(uri[0] != 0 ? uri : HostIPPPrinter(), name, driver->fPrinter, pin);
+	}
+	if (driver->fError == noErr)
+	{
+		THostIPPURIOption where(uri, gPCLTicket, pin);
 		driver->fError = options->InsertOptionAt(options->GetArrayCount(), &where);
 	}
 	return true;
@@ -1124,4 +1133,118 @@ HostInstallIPPPrinters(void)
 	// the network printers: the ROM's chooser answered from the host's
 	// DNS-SD, and the Network Printers panel (HostNetworkPrinters.cpp)
 	HostInstallNetworkPrinters();
+}
+
+
+/*------------------------------------------------------------------------------
+	T r u s t i n g   a   p r i n t e r ' s   c e r t i f i c a t e
+	An ipps:// printer's certificate, before a job goes to it: one the
+	system's store vouches for is trusted; any other (a printer's own,
+	self-signed - the usual case) must be the one pinned for that printer on
+	the Newton's store, and when there is none, or it has changed, the user
+	is asked - a slip opened from the print task as TPrintView's
+	HandleProblem opens the print problem slip, the task letting the world's
+	mutex go and sleeping until it is answered.  The owner's policy:
+	unknown asks, changed warns, and either may be accepted (the new
+	certificate pinned).
+------------------------------------------------------------------------------*/
+
+static const TTimeout	kTrustPoll = (TTimeout) (200 * kMilliseconds);
+enum { kTrustPolls = 1500 };			// five minutes
+
+static Ref
+NetworkPrintersFrame(void)
+{
+	return GetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "NetworkPrinters:host")));
+}
+
+
+// the slip opened and waited on; ==> true when the user trusts the
+// certificate
+static Boolean
+AskTrust(RefArg printers, RefArg name, const char* uri, const char* fingerprint, RefArg known)
+{
+	GrafPort* saved = GetCurrentPort();
+	SetPort(&gGrafPort);
+	RefVar args(MakeArray(4));
+	SetArraySlot(args, 0, name);
+	SetArraySlot(args, 1, RefVar(MakeString(uri)));
+	SetArraySlot(args, 2, RefVar(MakeString(fingerprint)));
+	SetArraySlot(args, 3, known);
+	RefVar slip(NSSendWithArgArray(printers, RefVar(Intern((char*) "AskTrust")), args));
+	RefVar answer;
+	for (long polls = 0; polls < kTrustPolls && NOTNIL(slip); polls++)
+	{
+		((TForkWorld*) GetGlobals())->ReleaseMutex();
+		Sleep(kTrustPoll);
+		((TForkWorld*) GetGlobals())->AcquireMutex();
+		answer = GetFrameSlot(slip, RefVar(Intern((char*) "answer")));
+		if (NOTNIL(answer))
+			break;
+	}
+	if (ISNIL(answer) && NOTNIL(slip))
+		NSSend(slip, RefVar(Intern((char*) "Close")));
+	SetPort(saved);
+	return EQ(answer, RefVar(Intern((char*) "trust")));
+}
+
+
+NewtonErr
+HostIPPCheckTrust(const char* uri, RefArg name, TPrinter* printer, char pin[96])
+{
+	pin[0] = 0;
+	HostIPPURI where;
+	if (uri == nil || !HostIPPParseURI(uri, &where) || !where.fTLS)
+		return noErr;
+	THostIPPSocket sock;
+	int result = sock.Connect(&where);
+	for (long polls = 0; result == kHostSocketOK && polls < kIPPStatusPolls; polls++)
+	{
+		result = sock.Connected();
+		if (result == kHostSocketWouldBlock)
+		{
+			PrReleaseControl(kIPPStatusPoll, printer);
+			result = kHostSocketOK;
+			continue;
+		}
+		break;
+	}
+	if (result != kHostSocketOK || sock.fFingerprint[0] == 0)
+	{
+		printf("[host] IPP: %s\n", sock.fError[0] != 0 ? sock.fError : "no TLS connection to the printer");
+		fflush(stdout);
+		return kPR_ERR_NotFound;
+	}
+	sock.Close();
+	snprintf(pin, 96, "%s", sock.fFingerprint);
+	if (sock.fSystemTrusts)
+		return noErr;
+	// the pin is kept by the printer's name (what the user chose it by),
+	// else by its address
+	char place[300];
+	if (IsString(name))
+		ConvertFromUnicode(GetCString(name), place, kMacRomanEncoding, sizeof(place) - 1);
+	else
+		snprintf(place, sizeof(place), "%s:%u", where.fHost, (unsigned) where.fPort);
+	RefVar printers(NetworkPrintersFrame());
+	if (ISNIL(printers))
+		return kPR_ERR_NewtonError;
+	RefVar known(NSSend(printers, RefVar(Intern((char*) "PinFor")), RefVar(MakeString(place))));
+	char knownText[96] = "";
+	if (IsString(known))
+		ConvertFromUnicode(GetCString(known), knownText, kMacRomanEncoding, sizeof(knownText) - 1);
+	if (strcmp(knownText, pin) == 0)
+		return noErr;
+	printf("[host] IPP: %s's certificate %s is %s\n", place, pin, knownText[0] != 0 ? "not the one trusted" : "not known");
+	fflush(stdout);
+	if (!AskTrust(printers, name, uri, pin, known))
+	{
+		printf("[host] IPP: the certificate was not trusted: the job is cancelled\n");
+		fflush(stdout);
+		return kPR_ERR_UserCancel;
+	}
+	NSSend(printers, RefVar(Intern((char*) "Pin")), RefVar(MakeString(place)), RefVar(MakeString(pin)));
+	printf("[host] IPP: %s's certificate %s trusted\n", place, pin);
+	fflush(stdout);
+	return noErr;
 }

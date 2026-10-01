@@ -14,7 +14,7 @@ and logs what it got.  With a program after `--` it runs it with
 newton takes as it takes `--ipp-printer`, and stops when the program ends.
 
     python tools/print/ippprinter.py [--port PORT] [--out DIR] [--path /ipp/print]
-                                     [--status N] [--problem REASON[:N]] [--down]
+                                     [--status N] [--problem REASON[:N]] [--down] [--tls CERT.pem]
                                      [--advertise NAME [--formats ps,pcl]]
                                      [-- <program> [args...]]
 
@@ -28,6 +28,9 @@ printer-state-reason (`media-empty`, `media-jam`, `door-open`,
 `marker-supply-empty`, `offline`...) for its first N answers to
 Get-Printer-Attributes (default 2) and then well again, `--down` nobody at
 the printer's address (the port taken and let go, so connecting is refused),
+`--tls CERT.pem` the printer over TLS (an `ipps://` URI; the key is the `.key`
+file beside the certificate, and the log gives the certificate's SHA-256
+fingerprint - `testcerts/` has two, for tests only, `testcerts/README.md`),
 `--advertise NAME` makes the program find the printer on the network under
 that name instead of being given it: `NEWTON_FOUND_PRINTERS=NAME|URI|FORMATS`
 replaces `NEWTON_IPP_PRINTER`, and the host's DNS-SD layer
@@ -48,7 +51,8 @@ by `host.NewtonPrintNetworkChooser` and `host.NewtonPrintAddPrinter`
 (`print-network.ns`, `print-addprinter.ns`,
 `print-removeprinter.ns`), and with `--status 0x040a`, `--down` and `--problem` by
 `host.NewtonIPPRefused`, `host.NewtonIPPPCLRefused`, `host.NewtonIPPDown` and
-`host.NewtonIPPProblem` (`print-ipp-refused.ns` and its kin).
+`host.NewtonIPPProblem` (`print-ipp-refused.ns` and its kin), and with `--tls` by `print.HostTLS`,
+`host.NewtonIPPS` and its runs and `host.NewtonIPPSPCL` (`print-ipps.ns`).
 
 ## jobcheck.py - check a job a Newton printed
 

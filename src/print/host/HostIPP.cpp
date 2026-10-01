@@ -22,18 +22,31 @@ HostIPPParseURI(const char* uri, HostIPPURI* parts)
 		return false;
 	uint16_t defaultPort;
 	const char* rest;
+	parts->fTLS = false;
 	if (strncmp(uri, "ipp://", 6) == 0)
 	{
 		defaultPort = 631;
 		rest = uri + 6;
+	}
+	else if (strncmp(uri, "ipps://", 7) == 0)
+	{
+		defaultPort = 631;		// (RFC 7472: IPP over HTTPS keeps IPP's port)
+		rest = uri + 7;
+		parts->fTLS = true;
 	}
 	else if (strncmp(uri, "http://", 7) == 0)
 	{
 		defaultPort = 80;
 		rest = uri + 7;
 	}
+	else if (strncmp(uri, "https://", 8) == 0)
+	{
+		defaultPort = 443;
+		rest = uri + 8;
+		parts->fTLS = true;
+	}
 	else
-		return false;			// (ipps:// and https:// want TLS, which the host's sockets do not do)
+		return false;
 	const char* hostEnd = rest;
 	while (*hostEnd != 0 && *hostEnd != ':' && *hostEnd != '/')
 		hostEnd++;

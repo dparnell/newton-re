@@ -123,6 +123,77 @@
 		Print("network printers: removed " & name);
 	end,
 
+	// The certificates trusted for ipps printers not vouched for by the
+	// host's store: the printer's name (else "host:port") -> its SHA-256 fingerprint, kept in this
+	// entry of the System soup (print/host/HostIPPTool.h's HostIPPCheckTrust).
+	PinFor: func(place)
+	begin
+		local prefs := GetAppPrefs(kAppSymbol, nil);
+		local found := nil;
+		if prefs and prefs.pins then
+			foreach p in prefs.pins do
+				if StrEqual(p.place, place) then found := p.fingerprint;
+		found;
+	end,
+
+	Pin: func(place, fingerprint)
+	begin
+		local prefs := GetAppPrefs(kAppSymbol, {printers: []});
+		if not prefs.pins then prefs.pins := [];
+		local kept := nil;
+		foreach p in prefs.pins do
+			if StrEqual(p.place, place) then begin
+				p.fingerprint := Clone(fingerprint);
+				kept := true;
+			end;
+		if not kept then
+			AddArraySlot(prefs.pins, {place: Clone(place), fingerprint: Clone(fingerprint)});
+		EntryChange(prefs);
+	end,
+
+	// The slip that asks whether to trust a printer's certificate, opened
+	// from the print task (HostIPPCheckTrust waits for its answer, 'trust
+	// or 'cancel, as the print problem slip is waited for): a certificate
+	// not known, or one that has changed from the one trusted before.
+	AskTrust: func(name, uri, fingerprint, known)
+	begin
+		local message := if known then
+			"The certificate of " & (if name then name else uri) & " has changed. It was\n" & known
+				& "\nand is now\n" & fingerprint & "\nTrust the new certificate?"
+		else
+			(if name then name else "The printer") & " (" & uri & ") has a certificate this Newton does not know:\n"
+				& fingerprint & "\nTrust it?";
+		local slip := BuildContext({_proto: trustSlip, message: message,
+			title: if known then "Certificate changed" else "Unknown certificate"});
+		slip:Open();
+		slip;
+	end,
+
+	trustSlip: {
+		_proto: @179,
+		viewFlags: 580,
+		viewBounds: {left: 0, top: 110, right: 250, bottom: 310},
+		trustSlip: true,
+		answer: nil,
+		message: "",
+		title: "",
+		stepChildren: [
+			{_proto: @218, viewBounds: {left: 10, top: 8, right: 240, bottom: 24}, viewJustify: 0,
+			 viewFont: {family: 'espy, face: 1, size: 10},
+			 viewSetupFormScript: func() text := title},
+			{_proto: @218, viewBounds: {left: 10, top: 26, right: 240, bottom: 166}, viewJustify: 0,
+			 viewSetupFormScript: func() text := message},
+			{_proto: @226, viewBounds: {left: -136, top: -26, right: -76, bottom: -10}, viewJustify: 8388774,
+			 text: "Cancel", buttonClickScript: func() :Parent():Reply('cancel)},
+			{_proto: @226, viewBounds: {left: -68, top: -26, right: -8, bottom: -10}, viewJustify: 8388774,
+			 text: "Trust", buttonClickScript: func() :Parent():Reply('trust)}
+		],
+		Reply: func(what) begin
+			answer := what;
+			:Close();
+		end,
+	},
+
 	// whether a printer of that name has been added
 	Added: func(name)
 	begin

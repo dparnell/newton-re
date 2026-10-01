@@ -34,6 +34,9 @@ Usage
              idle again - a problem that is put right
     --down   nobody at the printer's address: the port is taken and let go
              again before the program starts, so connecting is refused
+    --tls    ipps:// - IPP over TLS, with this certificate (a PEM file; its
+             key is the .key file beside it); the log gives its SHA-256
+             fingerprint.  tools/print/testcerts has two, for tests only
     --advertise the program finds the printer on the network by this name
              instead of being given it (NEWTON_FOUND_PRINTERS, which the
              host's DNS-SD layer takes in place of a browse); --formats
@@ -49,8 +52,10 @@ Inputs / outputs
 """
 
 import argparse
+import hashlib
 import os
 import socket
+import ssl
 import struct
 import subprocess
 import sys
@@ -189,7 +194,7 @@ def serve_connection(printer, conn):
         for attr_name, values in attrs.items():
             log("  %s = %s" % (attr_name, ", ".join(str(v) for _, v in values)))
         base = [(0x47, "attributes-charset", "utf-8"), (0x48, "attributes-natural-language", "en")]
-        printer_uri = "ipp://127.0.0.1:%d%s" % (printer.port, printer.path)
+        printer_uri = "%s://127.0.0.1:%d%s" % ("ipps" if printer.tls else "ipp", printer.port, printer.path)
         if path != printer.path:
             reply = answer(version, 0x0406, request_id, [(0x01, base)])		# client-error-not-found
             log("  no printer at %s" % path)
@@ -249,7 +254,20 @@ def serve(printer, listener):
             conn, _ = listener.accept()
         except OSError:
             return
-        threading.Thread(target=serve_connection, args=(printer, conn), daemon=True).start()
+        threading.Thread(target=serve_tls_or_plain, args=(printer, conn), daemon=True).start()
+
+
+def serve_tls_or_plain(printer, conn):
+    if printer.tls is not None:
+        try:
+            conn.settimeout(10)
+            conn = printer.tls.wrap_socket(conn, server_side=True)
+            conn.settimeout(None)
+        except (ssl.SSLError, OSError) as e:
+            log("a TLS handshake that failed: %s" % e)
+            conn.close()
+            return
+    serve_connection(printer, conn)
 
 
 def main(argv=None):
@@ -261,6 +279,8 @@ def main(argv=None):
     ap.add_argument("--problem", metavar="REASON[:N]",
                     help="stopped with this printer-state-reason for the first N status answers (default 2)")
     ap.add_argument("--down", action="store_true", help="nobody listening at the printer's address")
+    ap.add_argument("--tls", metavar="CERT.pem",
+                    help="ipps: IPP over TLS with this certificate (its key beside it as .key)")
     ap.add_argument("--advertise", metavar="NAME",
                     help="the program finds this printer on the network (NEWTON_FOUND_PRINTERS)")
     ap.add_argument("--formats", default="ps,pcl", help="what --advertise says it takes (ps, pcl)")
@@ -283,7 +303,18 @@ def main(argv=None):
         log("cannot listen on port %d: %s" % (args.port, e))
         return 1
     printer.port = listener.getsockname()[1]
-    uri = "ipp://127.0.0.1:%d%s" % (printer.port, printer.path)
+    printer.tls = None
+    if args.tls:
+        # ipps: the certificate (a PEM file) and its key beside it (.key)
+        key = os.path.splitext(args.tls)[0] + ".key"
+        printer.tls = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        printer.tls.load_cert_chain(args.tls, key)
+        with open(args.tls) as f:
+            der = ssl.PEM_cert_to_DER_cert(f.read())
+        digest = hashlib.sha256(der).hexdigest().upper()
+        log("its certificate %s, SHA-256 %s" % (os.path.basename(args.tls),
+            ":".join(digest[i:i + 2] for i in range(0, 64, 2))))
+    uri = "%s://127.0.0.1:%d%s" % ("ipps" if printer.tls else "ipp", printer.port, printer.path)
     if args.down:
         listener.close()
         log("nobody at %s" % uri)
