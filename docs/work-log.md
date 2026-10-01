@@ -17,7 +17,9 @@ the null sound backend kept every sample ever played (about 18 MB an
 hour of clicks, on Windows too) and now keeps a minute and counts the
 rest; and glibc gave each of newton's ~20 task threads its own malloc
 arena though only one ever runs - newton now asks for a single arena.  A
-30-minute soak ends at about 116 MB and levels off.
+30-minute soak ends at about 116 MB and levels off.  On Windows, a
+20-minute soak afterwards: private bytes flat at about 130 MB, threads
+and the Newton heaps level.
 
 ## 2026-10-02: the ROM-free boot checked against the ROM, app by app
 
