@@ -9,6 +9,19 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: where a written word goes on a page
+
+`AddNewParagraph`'s placement decoded (567beb06) with a new tool,
+`analysis/framewalk.py`, which follows a function's stack slots as frame
+offsets - capstone lists `ldr rX,[sp],#-4` as `pop`, raising sp where
+the instruction lowers it, which is why an earlier trace did not balance.
+An ink word is measured as text (TextBounds through its ink font) and
+lined up with the page; the host's own "from the middle of the box"
+placement is gone.  With remote writing on and the caret on the page,
+the word goes at the caret (ctest `host.NewtonRemoteWrite`).  Remote
+writing is the default and the Notepad keeps a caret on its first line
+after Setup, so every pen demo's written word now lands on that line.
+
 ## 2026-10-01: the caret gestures the ROM's way; views NOT YETs 46 to 28
 
 - The caret gestures insert as the ROM's do (e6b33c04):
