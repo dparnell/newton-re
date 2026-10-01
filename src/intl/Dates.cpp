@@ -18,6 +18,7 @@
 #include "RSSymbols.h"
 #include "Unicode.h"
 #include "REPTranslators.h"
+#include "NarrowRef.h"
 #include "NewtonTime.h"
 #include "OSErrors.h"
 #include <string.h>
@@ -963,11 +964,44 @@ FTime(RefArg /*rcvr*/)
 }
 
 
+#if NEWTON_NS64
+// NEWTON_NS64: which TimeInSeconds a script gets is the owner's open
+// decision (docs/frames/64bit.md, "Time"), so both are here behind
+// NEWTON_NS64_TIME, read once:
+//   true    (the default until it is decided) the true count of seconds
+//           since 1993 - about 1.06e9 in 2026, which a 62-bit integer holds;
+//           but a store holds 30 bits, so a time written to a soup and read
+//           back is the device's wrapped value, and a script comparing the
+//           two finds them a generation apart (an alarm, a timer);
+//   device  the value the MessagePad computes, wrapped to 30 bits (negative
+//           from January 2010), as the faithful flavour answers - every
+//           time a script holds is then one a store can hold.
+Boolean
+NS64DeviceTime(void)
+{
+	static int device = -1;
+	if (device < 0)
+	{
+		const char* time = getenv("NEWTON_NS64_TIME");
+		device = time != NULL && strcmp(time, "device") == 0;
+	}
+	return device != 0;
+}
+#endif
+
+
 // ROM 0x00089b64 FTimeInSeconds__FRC6RefVar
 Ref
 FTimeInSeconds(RefArg /*rcvr*/)
 {
+#if NEWTON_NS64
+	if (!NS64DeviceTime())
+		// unsigned: the count passes 2^31 in 2061, which a Long32 would not survive
+		return MAKEINT((Long) (ULong32) (RealClockSeconds() - kSecondsFrom1904To1993));
+	return MAKEINT(NarrowInteger((Long) (Long32) (RealClockSeconds() - kSecondsFrom1904To1993), "TimeInSeconds"));
+#else
 	return MAKEINT((long) (Long32) (RealClockSeconds() - kSecondsFrom1904To1993));
+#endif
 }
 
 

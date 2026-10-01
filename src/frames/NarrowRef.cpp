@@ -17,13 +17,21 @@
 
 
 // read once each (a getenv on a hot path is costly on Windows)
+static int sStrict = -1;
+
 static bool
 Strict(void)
 {
-	static int strict = -1;
-	if (strict < 0)
-		strict = getenv("NEWTON_NS64_STRICT") != nil;
-	return strict != 0;
+	if (sStrict < 0)
+		sStrict = getenv("NEWTON_NS64_STRICT") != nil;
+	return sStrict != 0;
+}
+
+
+void
+SetNarrowStrict(bool strict)
+{
+	sStrict = strict ? 1 : 0;
 }
 
 

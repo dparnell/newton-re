@@ -198,7 +198,7 @@ PrintObjectAux(RefArg obj, long indent, long depth)
 		switch (ref & kRefTagMask)
 		{
 		case kTagInteger:
-			gREPout->Print("%d", RVALUE(ref));
+			gREPout->Print("%lld", (long long) RVALUE(ref));
 			break;
 
 		case kTagImmed:
@@ -664,10 +664,10 @@ IsRichString(RefArg str)
 
 // ROM 0x000ecf04 IntegerString__FlPUs
 void
-IntegerString(long i, UniChar* str)
+IntegerString(Long i, UniChar* str)
 {
 	char buffer[32];
-	snprintf(buffer, sizeof(buffer), "%ld", i);
+	snprintf(buffer, sizeof(buffer), "%lld", (long long) i);
 	ConvertToUnicode(buffer, str, kMacRomanEncoding, sizeof(buffer));
 }
 
@@ -771,7 +771,7 @@ StringerStringObject(RefArg obj, char* text, long* length, char* inkData, long* 
 		return true;
 	}
 	if (ISINT(ref))
-		*length = snprintf(buffer, sizeof(buffer), "%ld", (long) RVALUE(ref)) * sizeof(UniChar);
+		*length = snprintf(buffer, sizeof(buffer), "%lld", (long long) RVALUE(ref)) * sizeof(UniChar);
 	else if (ISREAL(ref))
 	{
 		double d = CDouble(obj);

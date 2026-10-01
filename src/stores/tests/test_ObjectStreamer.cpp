@@ -9,6 +9,7 @@
 
 #include "ObjectStreamer.h"
 #include "StoreObject.h"
+#include "NarrowRef.h"
 #include "../../utility/tests/TestPipe.h"
 #include "Compiler.h"
 #include "Frames.h"
@@ -302,6 +303,47 @@ TestPrecedents()
 }
 
 
+#if NEWTON_NS64
+// NEWTON_NS64 (docs/frames/64bit.md): NSOF holds the device's word, so an
+// integer wider than its thirty bits goes out as the device would have had
+// it (frames/NarrowRef.h) - or, strict, does not go out at all
+static void
+TestWideIntegers()
+{
+	EXPECT(NarrowInteger(536870911, "test") == 536870911 && NarrowInteger(-536870912, "test") == -536870912);
+	EXPECT(NarrowInteger(536870912, "test") == -536870912 && NarrowInteger(1486438832, "test") == 412697008);
+	EXPECT(NarrowRef(MAKEINT(1486438832), "test") == MAKEINT(412697008) && NarrowRef(NILREF, "test") == NILREF);
+	EXPECT(NarrowToWord(0xffffffffLL, "test") == 0xffffffffLL && NarrowToWord(-1, "test") == -1);
+	EXPECT(NarrowToWord(0x1ffffffffLL, "test") == -1);
+	long size;
+	CTestPipe pipe(16);
+	RefVar back(RoundTrip(RefVar(MAKEINT(1486438832)), pipe, true, &size));
+	static const UByte expectedWide[] = { 0x02, 0x00, 0xff, 0x62, 0x65, 0x06, 0xc0 };
+	EXPECT(pipe.fWriteBuffer->Position() == 7 && memcmp(pipe.fWriteBuffer->fBuffer, expectedWide, 7) == 0 && size == 7);
+	EXPECT((Ref) back == MAKEINT(412697008));
+	// a value that fits is the same bytes as ever
+	CTestPipe pipe2(16);
+	back = RoundTrip(RefVar(MAKEINT(-1)), pipe2, true, &size);
+	EXPECT((Ref) back == MAKEINT(-1) && size == 7);
+	// strict: the crossing throws
+	SetNarrowStrict(true);
+	CTestPipe pipe3(16);
+	NewtonErr thrown = noErr;
+	newton_try
+	{
+		RoundTrip(RefVar(MAKEINT(1486438832)), pipe3, true, &size);
+	}
+	newton_catch_all
+	{
+		thrown = kNSErrLongOutOfRange;
+	}
+	end_try;
+	SetNarrowStrict(false);
+	EXPECT(thrown == kNSErrLongOutOfRange);
+}
+#endif
+
+
 int
 main()
 {
@@ -314,6 +356,9 @@ main()
 		TestGraph();
 		TestHostOrderBinaries();
 		TestPrecedents();
+#if NEWTON_NS64
+		TestWideIntegers();
+#endif
 	}
 	newton_catch_all
 	{

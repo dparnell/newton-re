@@ -186,6 +186,9 @@ UnmarshalValue(void** bytes, RefArg type, int inRegister, long* failed, int enco
 	case kMarshalLong:
 	case kMarshalULong:
 		p = AlignedTo(p, 4);
+		// NEWTON_NS64: sign-extended for a ULong too, as the device reads it -
+		// software declares error codes 'ulong (the NIE's DNS answers -60791
+		// through one), so a zero-extended word would be 4294906505
 		result = MAKEINT((int32_t) ReadWord(p));
 		p += 4;
 		break;

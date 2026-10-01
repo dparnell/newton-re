@@ -239,6 +239,14 @@ TestStrings()
 	SetFix2010(false);
 	EXPECT(RINT(Eval("DateFromSeconds(500000000).year")) == 2008);
 	SetFix2010(true);
+#if NEWTON_NS64
+	// NEWTON_NS64_TIME=device: TimeInSeconds wraps but TotalSeconds' own
+	// arithmetic does not, so the two agree only modulo 2^30 - the
+	// inconsistency docs/frames/64bit.md's "Time" describes
+	if (NS64DeviceTime())
+		EXPECT(((RINT(Eval("TimeInSeconds()")) - RINT(Eval("TotalSeconds(Date(Time()))"))) & 0x3fffffff) == 17);
+	else
+#endif
 	EXPECT(RINT(Eval("TimeInSeconds()")) - RINT(Eval("TotalSeconds(Date(Time()))")) == 17);	// the seconds past the minute
 	EXPECT(StringIs(RefVar(Eval("TimeFrameStr({hour: 7, minute: 30, second: 5}, 0)")), "7:30:05 am"));
 	// the locale
@@ -319,6 +327,13 @@ TestYear2010()
 	const ULong k2026 = 3873571200UL;				// 30 September 2026 00:00, seconds from 1904
 	SetRealClockSeconds(k2026);
 	long seconds = RINT(FTimeInSeconds(RefVar(NILREF)));
+#if NEWTON_NS64
+	// NEWTON_NS64: the true count, unless NEWTON_NS64_TIME=device
+	// (docs/frames/64bit.md, "Time"); read back the same either way
+	if (!NS64DeviceTime())
+		EXPECT(seconds == (long) (k2026 - kSecondsFrom1904To1993));
+	else
+#endif
 	EXPECT(seconds < 0);								// wrapped: 2^30 seconds after 1993 is January 2027
 	SetFix2010(true);
 	EXPECT(ClockSecondsFromScriptSeconds(seconds) == k2026);
@@ -333,6 +348,11 @@ TestYear2010()
 	SetRealClockSeconds(k2026);
 	SetFix2010(false);
 	date = Eval("DateFromSeconds(TimeInSeconds())");
+#if NEWTON_NS64
+	if (!NS64DeviceTime())
+		EXPECT(RINT(GetFrameSlotRef(date, RSSYMyear)) == 2026);		// no overflow for it to show
+	else
+#endif
 	EXPECT(RINT(GetFrameSlotRef(date, RSSYMyear)) == 1992);
 	SetFix2010(true);
 }
