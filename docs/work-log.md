@@ -9,6 +9,19 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: the keyboard connected at the first key; more of the page's editing
+
+Remote writing on by default is the ROM's (its default userConfiguration),
+and so is the caret on a fresh note - but only with a keyboard connected
+(the Notepad's editor template positions it when `KeyboardConnected()`).
+The windowed newton told the system a keyboard was connected at start,
+which made every session look like a MessagePad with a keyboard; now the
+first key connects it, as the ROM's DoKeyEvent does (2eb60030).  Also:
+the paragraph's destructor lets its correction info go, deleting a
+selection brackets the corrector (`SetCorrectorBusy`), `FlushWordAtCaret`
+offers the word at the caret to the auto-add list, and the paragraph's and
+the page's `GetValue` are the ROM's.
+
 ## 2026-10-01: where a written word goes on a page
 
 `AddNewParagraph`'s placement decoded (567beb06) with a new tool,
