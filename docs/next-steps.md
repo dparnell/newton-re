@@ -143,10 +143,10 @@ path).
   11 KB); a card's `'stor` event and `GetCardReinsertionInfo`; an ATA
   card's store - Apple's ATA Support package (fixtures/packages/drivers/)
   through armcpu, the ROM's side being done (`docs/stores/README.md`,
-  "ATA cards"): a card partitioned, formatted, mounted, written and read
-  back after a restart through the package's own slip; next the card taken
-  out after unmounting it, and put back (a yanked card has the package
-  restart the machine: the host's Reboot is NOT YET) -
+  "ATA cards"): a card partitioned, formatted, mounted, written, read
+  back after a restart, unmounted, taken out and put back, through the
+  package's own slip; next the host's Reboot (a card yanked with its store
+  mounted has the package restart the machine) -
   `docs/armcpu/README.md`, "Stores, store events and the private jump
   table"; an
   ATA card's ARM610 boot code, which the ROM jumps into.

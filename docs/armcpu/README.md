@@ -409,16 +409,17 @@ So ATA Support works an ATA card end to end through its own slip (the
 Card icon in the Extras drawer): Partition..., its two alerts answered,
 the card partitioned (the map written over the ROM's), TATAStore made
 inside a TMuxStore, formatted and mounted as the store "Card", an entry
-written there (ctest `host.NewtonATASupport.store`), and after a restart
-the card put in again, mounted by the package itself and the entry read
-back (`host.NewtonATASupport.storerestart`).
+written there (ctest `host.NewtonATASupport.store`); after a restart the
+card put in again, mounted by the package itself and the entry read
+back; then the store unmounted through the package (the card's row in
+its slip, the eject button of the partition's slip), the card taken out
+and put back, mounted again and the entry read once more
+(`host.NewtonATASupport.storerestart`).
 
-Next: taking the card out.  With its store mounted, ATA Support restarts
-the machine (`Reboot(-1001007)` for each mounted store - its own design;
-the host logs it, NOT YET); unmounting the store through the slip first,
-then taking the card out and putting it back, is the next step - and the
-host's `Reboot` the one after.  PATACardServer's messages have not been
-needed so far.
+Taking the card out while its store is mounted has ATA Support restart
+the machine (`Reboot(-1001007)` for each mounted store - its own design);
+the host's `Reboot` only logs it (NOT YET).  PATACardServer's messages have
+not been needed.
 
 ## Which fixtures have native code
 

@@ -1,15 +1,17 @@
 // After ata-support-store.ns, on the same store and card: the machine
 // restarted, the card put in again - ATA Support mounts its store by
-// itself - and the entry written before read back.  (Taking the card out
-// while its store is mounted has ATA Support restart the machine - its
-// own way, Reboot(-1001007) - which the host does not do yet: unmounting
-// it first and putting it back is the next step.)
+// itself - and the entry written before read back; then the store
+// unmounted through the package's slip (the card's row, then the eject
+// button of its partition's slip), the card taken out and put back - it
+// mounts again - and the entry read once more.  (Taking the card out
+// while its store is mounted has ATA Support restart the machine.)
 //
 //   ATA_CARD=tmp/ata.card build/host/host/newton --display 320x480 \
 //       --store tmp/atasup.store --headless 240 --script src/host/demo/ata-support-store-restart.ns
 
 HostInclude("common.ns");			// waitFor
-HostInclude("walkhelpers.ns");		// the steps
+HostInclude("walkhelpers.ns");		// the steps, findView
+HostInclude("apphelpers.ns");		// tapCentre
 
 wtName := "ata-support-store-restart";
 asCard := HostGetEnv("ATA_CARD");
@@ -32,12 +34,98 @@ asEntryStep := func(what) func(done) begin
 	call done with ();
 end;
 
+// a tap through the tablet, at a view's middle
+asTap := func(v) begin
+	local b := v:GlobalBox();
+	HostTabletTap((b.left + b.right) div 2, (b.top + b.bottom) div 2, 80);
+end;
+
+// a second's pause on the clock (a press within 60 ticks of the last one
+// is taken for the second half of a tap-drag)
+asPause := func(done) begin
+	local start := Ticks();
+	call waitFor with (wtName & ": a pause", func() Ticks() - start > 70, done, 10);
+end;
+
+// a view whose text holds a label, anywhere on the screen (a label may
+// carry an invisible character, so not BeginsWith; the slips on top
+// looked in first, each on its own: a view one of them holds may not
+// answer for its children)
+asLabelled := func(label) begin
+	local kids := GetRoot():ChildViewFrames();
+	local found := nil;
+	for i := Length(kids) - 1 to 0 by -1 do
+		if not found then
+			try
+				found := call findView with (kids[i], func(v) IsString(v.text) and StrPos(v.text, label, 0))
+			onexception |evt.ex| do
+				found := nil;
+	found
+end;
+asSlipOf := func(v) begin
+	while v and v:Parent() <> GetRoot() do v := v:Parent();
+	v
+end;
+
 wtSteps := [
 	// (the ROM's own boot: the store already set up)
 	call waitStep with ("the Notepad", func() GetRoot().paperroll and GetRoot().paperroll.viewCObject),
 	call doStep with (func() HostInsertCard(0, asCard)),
 	call waitStep with ("the card's store mounted", func() call asStore with ()),
 	call asEntryStep with ("the entry after a restart"),
+	// the card's slip (the Card icon in the Extras drawer; tapped again if
+	// the drawer was still opening)
+	func(done) begin
+		local tries := 0;
+		local open;
+		open := func() begin
+			local drawer := GetRoot().extrasDrawer;
+			drawer:Open();
+			AddDelayedCall(func() begin
+				local icon := call findView with (drawer, func(v) v.target and v.target.fentry and v.target.fentry.app = 'card);
+				if icon then call asTap with (icon);
+				call waitFor with (wtName & ": the card's slip", func() call asLabelled with ("Partition"), func() begin
+					tries := tries + 1;
+					if call asLabelled with ("Partition") or tries >= 4 then call done with ()
+					else call open with ();
+				end, 10);
+			end, nil, 1000);
+		end;
+		call open with ();
+	end,
+	asPause,
+	// its store's row (the list draws its rows itself: the store's name is
+	// the first row's, a line below the list's top) - the partition's slip
+	func(done) begin
+		// (the list: the smallest view that answers HitItem - the slip
+		// itself inherits it)
+		local b := nil;
+		call findView with (call asSlipOf with (call asLabelled with ("Partition")), func(v) begin
+			if v.HitItem then begin
+				local vb := v:GlobalBox();
+				if not b or vb.bottom - vb.top < b.bottom - b.top then b := vb;
+			end;
+			nil
+		end);
+		HostTabletTap((b.left + b.right) div 2, b.top + 9, 80);
+		call waitFor with (wtName & ": the partition's slip", func() call asLabelled with ("Name:"), done, 30);
+	end,
+	asPause,
+	// its eject button: the second of the buttons at its bottom left
+	func(done) begin
+		local top := call asSlipOf with (call asLabelled with ("Name:"));
+		local buttons := [];
+		call findView with (top, func(v) begin if v.buttonClickScript and v.icon then AddArraySlot(buttons, v); nil end);
+		buttons := Sort(buttons, '|<|, func(v) v:GlobalBox().left);
+		call asTap with (buttons[1]);
+		call waitFor with (wtName & ": unmounted", func() not call asStore with (), done, 30);
+	end,
+	func(done) begin call wtCheck with ("the store unmounted", not call asStore with (), "(still there)"); call done with () end,
+	call doStep with (func() HostRemoveCard(0)),
+	call waitStep with ("the card out", func() getCardInfo().totalCards = 0),
+	call doStep with (func() HostInsertCard(0, asCard)),
+	call waitStep with ("the card's store back", func() call asStore with ()),
+	call asEntryStep with ("the entry after the card came back"),
 	call doStep with (func() begin
 		Print(wtName & ": " & (if wtFailures = 0 then "done" else "done, " & NumberStr(wtFailures) & " failed"));
 		HostQuit();

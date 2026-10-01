@@ -257,7 +257,7 @@ Glue_ToObject(void*, ARMTrapContext& c)
 {
 	uint32_t instance = c.Arg(0);
 	TStore* store = StoreOfARM(instance);
-	if (store == nil)
+	if (store == nil && instance != 0)		// (no store at all: nil, as the ROM's answers for one it does not know)
 	{
 		fprintf(stderr, "[armstore] ToObject(%08x): not a store the host can stand in for (NOT YET)\n", instance);
 		return false;
