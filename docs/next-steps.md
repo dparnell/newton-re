@@ -48,9 +48,10 @@ The built-in apps' NewtonScript paths run clean; what is left is C++.
 Being done: the Notepad's paragraph/page leftovers (~2.6 KB), then the
 recognition and store leftovers (~1.3 KB).  Next for comms: receiving
 beams automatically (In/Out Box's zapAutoReceive calls the unbound
-`StartIRSniffing`; TSniffIRTool and its service, ~6 KB).  For the owner
-to decide: real printer drivers (PostScript 14 KB + PAP, HP PCL, StyleWriter,
-LaserWriter LS - PostScript to a file would give vector output), the ROM
+`StartIRSniffing`; TSniffIRTool and its service, ~6 KB).  The owner's
+decision on printers: the ROM's PostScript and HP PCL drivers, printing to
+a network printer by IPP over the host's network (being done); not
+StyleWriter, LaserWriter LS or AppleTalk printing.  Not chosen: the ROM
 domain manager (~18.5 KB, replacing the large objects' DEVIATION, nothing
 a user sees), AppleTalk (~70 KB: network printers, zones; needs a medium
 such as LocalTalk over UDP).
