@@ -21,6 +21,22 @@ romsrc's `#hex` immediates and `@@` record lines; a 22-test corpus and
 a Zed extension (`zed-newtonscript/`): highlighting, brackets,
 indentation and an outline, installed with "zed: install dev extension".
 
+## 2026-10-01: the object file's stamp; the "other" uncited ROM, batch 1
+
+- The object file carries its builder's stamp (a SHA-256 of romsrc.py
+  and the modules it builds with), and newton/newtonscript refuse one
+  built for a different newton with a message saying how to rebuild
+  (b59fa45a, ctest `host.NewtonObjectsStamp`) - so a relink that failed
+  while newton ran can no longer leave an old program booting a new file.
+- About 1.5 KB reconstructed and called where the ROM calls them
+  (ArrayRemove/Pop/IsEmpty, To/FromObject on a binary,
+  SetFontFace/Family, CommonAddView, SetRectFrame, TableLookup,
+  MoveToFirst, UnevenDivide, AddTabStop, the ink codec's
+  EncoderClose/DecoderClose), seven reclassified (3b446cb8).  Two ROM
+  behaviours the tests now expect: ArrayRemove leaves the slot nil once
+  its last element goes, and Decode answers what the sink said at the end
+  whatever the run did.
+
 ## 2026-10-01: an ATA card mounted as a store, by Kallisys's own driver
 
 ATA Support, all its own ARM code on armcpu, now partitions an ATA card
