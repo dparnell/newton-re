@@ -487,22 +487,123 @@ IsSizeAvailable(Fixed size, RefArg fontFamily, long face)
 }
 
 
+/*------------------------------------------------------------------------------
+	T h e   o p e n - f o n t   c a c h e
+
+	Four fonts are kept open (gFontGlobals, 0x38 bytes an entry): each the
+	style and scales and kind of map it was opened for, the info as the
+	font engine filled it in (its pointers into the 'sfnt' data kept as
+	offsets while the font is closed, since the data may move), and the
+	style table scaled to the size it was last drawn at.  OpenFont looks for
+	a match first and reopens it; failing one it takes the next entry round.
+------------------------------------------------------------------------------*/
+
+struct FontGlobals
+{
+	FontEngineInfo*	fInfo;				// +0x00  the info as opened (nil: an empty entry)
+	ULong			fPixMapFlags;		// +0x04  the map it was opened for
+	StyleRecord*	fStyle;				// +0x08
+	Fixed			fYScale;			// +0x0c
+	Fixed			fXScale;			// +0x10
+	unsigned char	fStyleTable[0x1c];	// +0x14  UpdateStyleTable's
+	Fixed			fTableXScale;		// +0x30  the scales it was made for
+	Fixed			fTableYScale;		// +0x34
+};
+
+// ROM 0x0c1079a8 gFontGlobals
+static FontGlobals	gFontGlobals[4];
+// ROM 0x0c1053f8 gGlobalFontArrayIndex - the entry last opened
+static long			gGlobalFontArrayIndex = 0;
+
+
+// ROM 0x002e2cd8 InvalFontCache__Fl
+// The entry matches nothing until it is opened again.
+static void
+InvalFontCache(long index)
+{
+	gFontGlobals[index].fPixMapFlags = 0xffffffff;
+	gFontGlobals[index].fStyle->fFontSize = (Fixed) 0xffff0000;
+	gFontGlobals[index].fXScale = 0;
+	gFontGlobals[index].fYScale = 0;
+}
+
+
+// The fields SFNTOpenFont keeps in the cache's copy and SFNTReopenFont
+// copies back: the line metrics and style adjustments (+0x00-+0x50), the
+// procs and how it was opened (+0x70-+0x84), the widths font's numbers.
+static void
+CopyOpenedFontInfo(FontEngineInfo* to, const FontEngineInfo* from)
+{
+	to->fAscent = from->fAscent;
+	to->fDescent = from->fDescent;
+	to->fLeading = from->fLeading;
+	to->fWidMax = from->fWidMax;
+	to->fReserved10 = from->fReserved10;
+	to->fReserved14 = from->fReserved14;
+	to->fBaselineShift = from->fBaselineShift;
+	memcpy(to->fStyleAdjust, from->fStyleAdjust, sizeof(to->fStyleAdjust));
+	to->fWidthAdjust = from->fWidthAdjust;
+	to->fReserved38 = from->fReserved38;
+	to->fScaleX = from->fScaleX;
+	to->fScaleY = from->fScaleY;
+	to->fMinOriginSB = from->fMinOriginSB;
+	to->fMinAdvanceSB = from->fMinAdvanceSB;
+	to->fMaxBeforeBL = from->fMaxBeforeBL;
+	to->fMinAfterBL = from->fMinAfterBL;
+	to->fReopen = from->fReopen;
+	to->fMap = from->fMap;
+	to->fGetGlyphInfo = from->fGetGlyphInfo;
+	to->fGetGlyph = from->fGetGlyph;
+	to->fClose = from->fClose;
+	to->fScaling = from->fScaling;
+	to->fNumHMetrics = from->fNumHMetrics;
+	to->fWidthsAdjust = from->fWidthsAdjust;
+	to->fWidthsScale = from->fWidthsScale;
+}
+
+
 // ROM 0x000ae820 SFNTReopenFont__FPv
-// (The ROM refreshes the info from its cache copy and re-locks the data;
-// with no cache the info is what SFNTOpenFont left.)
+// The info filled from the cache's copy: the data locked again and the
+// pointers into it made from the offsets SFNTCloseFont left; the line
+// metrics, the style adjustments, the scales and procs and the widths
+// font's numbers copied.  ==> how it was opened.
 static long
 SFNTReopenFont(FontEngineInfo* info)
 {
-	return info->fScaling;
+	FontEngineInfo* cached = info->fCached;
+	RefVar data(*cached->fFontData);
+	LockRef(data);
+	const char* sfnt = BinaryData(data);
+	info->fSfnt = sfnt;
+	info->fCmap = (const char*) ((uintptr_t) sfnt + (uintptr_t) cached->fCmap);
+	info->fStrike = (const char*) ((uintptr_t) sfnt + (uintptr_t) cached->fStrike);
+	info->fIndexSubTables = (const char*) ((uintptr_t) sfnt + (uintptr_t) cached->fIndexSubTables);
+	info->fBdat = (const char*) ((uintptr_t) sfnt + (uintptr_t) cached->fBdat);
+	info->fIndexSubTable = (const char*) ((uintptr_t) sfnt + (uintptr_t) cached->fIndexSubTable);
+	info->fGlyphData = (const char*) ((uintptr_t) sfnt + (uintptr_t) cached->fGlyphData);
+	info->fHmtx = (const char*) ((uintptr_t) sfnt + (uintptr_t) cached->fHmtx);
+	CopyOpenedFontInfo(info, cached);
+	*info->fFontData = *cached->fFontData;
+	return cached->fScaling;
 }
 
 
 // ROM 0x000aeb24 SFNTCloseFont__FPv
+// The data unlocked, and the pointers into it kept in the cache's copy as
+// offsets from its start.
 static void
 SFNTCloseFont(FontEngineInfo* info)
 {
-	if ((Ref) *info->fFontData != NILREF)
-		UnlockRef(*info->fFontData);
+	FontEngineInfo* cached = info->fCached;
+	UnlockRef(*info->fFontData);
+	const char* sfnt = info->fSfnt;
+	cached->fCmap = (const char*) ((uintptr_t) info->fCmap - (uintptr_t) sfnt);
+	cached->fStrike = (const char*) ((uintptr_t) info->fStrike - (uintptr_t) sfnt);
+	cached->fIndexSubTables = (const char*) ((uintptr_t) info->fIndexSubTables - (uintptr_t) sfnt);
+	cached->fBdat = (const char*) ((uintptr_t) info->fBdat - (uintptr_t) sfnt);
+	cached->fIndexSubTable = (const char*) ((uintptr_t) info->fIndexSubTable - (uintptr_t) sfnt);
+	cached->fGlyphData = (const char*) ((uintptr_t) info->fGlyphData - (uintptr_t) sfnt);
+	cached->fHmtx = (const char*) ((uintptr_t) info->fHmtx - (uintptr_t) sfnt);
 }
 
 
@@ -525,27 +626,21 @@ SFNTCloseFont(FontEngineInfo* info)
 //  255 times the scale rather than minus the scale.  It only matters
 //  for a font that is being scaled at all.)
 //
-// DEVIATION: the ROM keeps the scaled table in the open font's own
-// entry of the global font array (gGlobalFontArray, 56 bytes an entry),
-// which the reconstruction's font cache is NOT YET.  One scaled table
-// is kept here and remade whenever the scale changes, which comes to
-// the same thing while one font is opened at a time.
+// The scaled table is the one the entry of the font last opened keeps
+// (gGlobalFontArrayIndex), made again only when the scales change.
 const unsigned char*
 UpdateStyleTable(Fixed xScale, Fixed yScale)
 {
 	if (xScale == ToFixed(1) && yScale == ToFixed(1))
 		return kStyleTable;
 
-	static unsigned char	sScaled[sizeof(kStyleTable)];
-	static Fixed			sScaledX = 0;
-	static Fixed			sScaledY = 0;
-	if (sScaledX == xScale && sScaledY == yScale)
+	FontGlobals* entry = &gFontGlobals[gGlobalFontArrayIndex];
+	unsigned char* sScaled = entry->fStyleTable;
+	if (entry->fTableXScale == xScale && entry->fTableYScale == yScale)
 		return sScaled;
-	sScaledX = xScale;
-	sScaledY = yScale;
 
 	Fixed mean = (xScale + yScale) >> 1;
-	memcpy(sScaled, kStyleTable, sizeof(sScaled));
+	memcpy(sScaled, kStyleTable, sizeof(kStyleTable));
 	// which byte goes by which scale
 	static const unsigned char kAcross[] = { 3, 4, 12, 13, 18, 19, 21, 22 };
 	static const unsigned char kDown[] = { 23, 25 };
@@ -559,6 +654,8 @@ UpdateStyleTable(Fixed xScale, Fixed yScale)
 	for (ULong i = 0; i < sizeof(kMean); i++)
 		sScaled[kMean[i]] = (unsigned char)
 			(((ULong) mean * sScaled[kMean[i]] + 0x8000) >> 16);
+	entry->fTableXScale = xScale;
+	entry->fTableYScale = yScale;
 	return sScaled;
 }
 
@@ -593,7 +690,7 @@ SFNTOpenFont(PixelMap* /*pm*/, StyleRecord* style, RefArg fontFamily, Fixed xSca
 	GrafPort* port = GetCurrentPort();
 	Fixed ratio;
 	long result;
-	if (((port->portBits.pixMapFlags & kPixMapDeviceType) == 0 && strikeSize == wanted && xScale == yScale) || available)
+	if (((port->portBits.pixMapFlags & 0x300) == 0 && strikeSize == wanted && xScale == yScale) || available)
 	{
 		info->fScaleX = 0x10000;
 		info->fScaleY = 0x10000;
@@ -646,7 +743,9 @@ SFNTOpenFont(PixelMap* /*pm*/, StyleRecord* style, RefArg fontFamily, Fixed xSca
 	}
 	info->fReopen = SFNTReopenFont;
 	info->fClose = SFNTCloseFont;
-	info->fCached = nil;
+	// the cache's copy (OpenFont set fCached to the entry's info)
+	CopyOpenedFontInfo(info->fCached, info);
+	*info->fCached->fFontData = *info->fFontData;
 	return result;
 }
 
@@ -664,13 +763,14 @@ InitFonts(void)
 
 
 // ROM 0x002e2048 FlushFontCache__Fv
-// The four entries of the open-font cache (gFontGlobals, 0x38 bytes each)
-// marked empty, so that no family a removed font part took away is still
-// used.  The host keeps no cache (OpenFont, above), so there is nothing to
-// empty.
+// The four entries of the open-font cache marked empty, so that no family
+// a removed font part took away is still used.
+// ROM QUIRK, kept: the entries' info and style are forgotten, not freed.
 void
 FlushFontCache(void)
 {
+	for (long i = 0; i < 4; i++)
+		gFontGlobals[i].fInfo = nil;
 }
 
 
@@ -750,55 +850,118 @@ FontInkSetParmsProc	gInkSetFontParms = nil;
 
 
 // ROM 0x002e229c OpenFont__FP8PixelMapP11StyleRecordlT3P14FontEngineInfo
-// The info for the style (the system font when it names none): the
-// family's 'sfnt' opened at the scales.
+// The info for the style (the system font when it names none, or when its
+// own family cannot be opened).
 //
 // A style whose "family" is an ink word - or an integer, which is the
 // address of one kept outside the object heap - is not a font at all,
 // and goes to the ink opener instead: that is how a word of writing is
 // laid out and drawn among real characters.
 //
-// NOT YET RECONSTRUCTED: the four-entry cache of open fonts (each call
-// opens afresh), the PostScript printer's font substitution.
+// Otherwise the open-font cache is asked first: an entry opened for an
+// equal style, the same kind of map and the same scales is reopened.  An
+// empty entry is set up and used; with none empty and none matching, the
+// entry after the one last opened is opened afresh.  A PostScript
+// printer's map (device type 2) has the family's PostScript counterpart
+// opened instead (vars.psFonts by the family's psName), at the family's
+// psScale.
 long
 OpenFont(PixelMap* pm, StyleRecord* style, Fixed xScale, Fixed yScale, FontEngineInfo* info)
 {
 	RefVar family(style->fFontFamily);
-	if ((Ref) family == NILREF)
-		family = GetFontFamily(RefVar(Rsystemfont));
-	if (IsInkWord(family) || ISINT(family))
+	for (;;)
 	{
-		if (gInkOpenFont == nil)
+		if ((Ref) family == NILREF)
+			family = GetFontFamily(RefVar(Rsystemfont));
+		else if (IsInkWord(family) || ISINT(family))
 		{
-			info->fScaling = kNoFont;
-			return kNoFont;
+			if (gInkOpenFont == nil)
+			{
+				info->fScaling = kNoFont;
+				return kNoFont;
+			}
+			memset(info, 0, sizeof(FontEngineInfo));
+			info->fFontData = new RefStruct;
+			long inked = gInkOpenFont(pm, style, family, xScale, yScale, info);
+			if (inked == kNoFont)
+			{
+				delete info->fFontData;
+				info->fFontData = nil;
+				info->fScaling = kNoFont;
+			}
+			return inked;
 		}
+		// (host: the caller's info is made here - the ROM's callers have
+		//  one of their own, its data handle constructed with it)
 		memset(info, 0, sizeof(FontEngineInfo));
 		info->fFontData = new RefStruct;
-		long inked = gInkOpenFont(pm, style, family, xScale, yScale, info);
-		if (inked == kNoFont)
+		long i;
+		for (i = 0; i < 4; i++)
 		{
-			delete info->fFontData;
-			info->fFontData = nil;
-			info->fScaling = kNoFont;
+			FontGlobals* entry = &gFontGlobals[i];
+			if (entry->fInfo == nil)
+			{
+				entry->fInfo = new FontEngineInfo;
+				memset(entry->fInfo, 0, sizeof(FontEngineInfo));
+				entry->fInfo->fFontData = new RefStruct;
+				entry->fStyle = new StyleRecord;
+				InvalFontCache(i);
+				memcpy(entry->fStyleTable, kStyleTable, sizeof(kStyleTable));
+				entry->fTableXScale = ToFixed(1);
+				entry->fTableYScale = ToFixed(1);
+				break;
+			}
+			if (EqualStyle(entry->fStyle, style)
+			 && entry->fPixMapFlags == pm->pixMapFlags && entry->fXScale == xScale && entry->fYScale == yScale)
+			{
+				info->fCached = entry->fInfo;
+				long reopened = entry->fInfo->fReopen(info);
+				if (reopened != kNoFont)
+				{
+					gGlobalFontArrayIndex = i;
+					return reopened;
+				}
+			}
 		}
-		return inked;
-	}
-	if (!IsFrame(family))
-	{
-		info->fScaling = kNoFont;
-		return kNoFont;
-	}
-	memset(info, 0, sizeof(FontEngineInfo));
-	info->fFontData = new RefStruct;
-	long result = SFNTOpenFont(pm, style, family, xScale, yScale, info);
-	if (result == kNoFont)
-	{
+		if (i > 3)
+			i = (gGlobalFontArrayIndex + 1) & 3;
+		gGlobalFontArrayIndex = i;
+		FontGlobals* entry = &gFontGlobals[i];
+		info->fCached = entry->fInfo;
+		// the style remembered (CopyStyle: its fields, no pattern)
+		entry->fStyle->fFontFamily = style->fFontFamily;
+		entry->fStyle->fFontSize = style->fFontSize;
+		entry->fStyle->fFontFace = style->fFontFace;
+		entry->fStyle->fFontPattern = style->fFontPattern;
+		entry->fStyle->fTransferMode = style->fTransferMode;
+		entry->fStyle->fReserved14 = style->fReserved14;
+		entry->fStyle->fReserved18 = style->fReserved18;
+		entry->fStyle->fPattern = nil;
+		entry->fPixMapFlags = pm->pixMapFlags;
+		entry->fYScale = yScale;
+		entry->fXScale = xScale;
+		if ((pm->pixMapFlags & kPixMapDeviceType) == 0x200)
+		{
+			RefVar psName(GetFrameSlotRef(family, RSSYMpsname));
+			if ((Ref) psName != NILREF)
+			{
+				RefVar psScale(GetFrameSlotRef(family, RSSYMpsscale));
+				if ((Ref) psScale != NILREF)
+				{
+					xScale = FixedMultiply(xScale, RINT(psScale));
+					yScale = FixedMultiply(yScale, RINT(psScale));
+				}
+				RefVar psFonts(GetFrameSlotRef(RefVar(gVarFrame), RSSYMpsfonts));
+				family = GetProtoVariable(psFonts, psName, nil);
+			}
+		}
+		long result = SFNTOpenFont(pm, style, family, xScale, yScale, info);
+		if (result != kNoFont)
+			return result;
 		delete info->fFontData;
 		info->fFontData = nil;
-		info->fScaling = kNoFont;
+		family = NILREF;
 	}
-	return result;
 }
 
 
@@ -1173,8 +1336,9 @@ CreateTextStyleRecord(RefArg fontSpec, StyleRecord* style)
 
 
 // ROM 0x00359be8 CopyStyle__FP11StyleRecord
-// (The ROM copies a style into the font cache, re-making its pattern;
-// the host keeps no cache.)
+// (The ROM answers a copy of the style with no pattern; its callers -
+// OpenFont's cache among them - take the fields out of it, which the
+// host's callers do straight from the style.)
 void
 CopyStyle(StyleRecord* /*style*/)
 { }

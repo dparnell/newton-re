@@ -26,10 +26,11 @@
 
 	Reconstructed from the MP2x00 US ROM (0x000adf28-0x000aef10,
 	0x002618b8-0x00261d2c, 0x002e1e60-0x002e2d10, 0x00359be8-0x00359d40,
-	0x0035a54c); each function cites its origin.  NOT YET RECONSTRUCTED:
-	the four-entry font cache (OpenFont opens afresh), scaled bitmaps
-	(a strike is drawn at its own size), the
-	PostScript printer's font substitution, the 'font' part handler.
+	0x0035a54c); each function cites its origin.  OpenFont keeps the
+	ROM's four-entry cache of open fonts (gFontGlobals) and substitutes a
+	PostScript printer's fonts; a size with no strike of its own is drawn
+	scaled (DrText.cpp); the 'font' part handler is
+	packages/FontPartHandler.cpp.
 */
 
 #ifndef __FONTS_H
@@ -122,7 +123,7 @@ struct FontEngineInfo
 	long			fScaling;			// +0x84  0 the size as is, 2 scaled, 3 no font
 	void*			fInkGlyphBits;		// +0x88  an ink font's rendered glyph (the ROM leaves these two spare for the engine in use)
 	long			fInkGlyphSize;		// +0x8c  how many bytes of it
-	FontEngineInfo*	fCached;			// +0x90  the font cache's copy (NOT YET: none)
+	FontEngineInfo*	fCached;			// +0x90  the font cache's copy (its pointers kept as offsets while closed)
 	const char*		fSfnt;				// +0x94  the 'sfnt' data
 	const char*		fCmap;				// +0x98  its cmap subtable
 	const char*		fStrike;			// +0x9c  the bitmapSizeTable chosen
