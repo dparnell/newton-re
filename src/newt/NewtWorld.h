@@ -25,9 +25,9 @@
 				bytes: a TAppWorld (0x70) then a shared memory message, the
 				handler and the globals.
 
-				NOT YET RECONSTRUCTED: the power, interconnect, IR, battery
-				and script-file events (AEHandlerProc says which), the
-				stack locked for the event loop (LockStack); on the host
+				'xnwt and the script events from outside are
+				ExternalNewtEvents.h.  NOT YET RECONSTRUCTED: the stack
+				locked for the event loop (LockStack); on the host
 				the object system is started by the program before the
 				world (InitObjects needs the ROM image read in) and the
 				screen by HostStartViews.

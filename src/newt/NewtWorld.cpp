@@ -35,6 +35,7 @@
 #include "Fonts.h"
 #include "Screen.h"
 #include "SCPEvents.h"
+#include "ExternalNewtEvents.h"
 #include "NTK.h"
 #include "CommManager.h"
 #include "HostServices.h"
@@ -497,7 +498,8 @@ TNewtEventHandler::IdleProc(TUMsgToken* token, ULong* size, TAEvent* event)
 // with no storage; 'rstr a card's stores to be unmounted, and 'stor (after
 // the reply) to be mounted; 'ic   the interconnect port
 // (HandleInterConnect); 'scp! a device's package (HandleSCPEvent);
-// 'powr, 'pwch, 'dead, 'bats; 'irMC, 'xnwt (NOT YET RECONSTRUCTED).  Every event but 'keyb and 'idle is replied to as it
+// 'powr, 'pwch, 'dead, 'bats; 'irMC (the root's IRConnectRequest), 'xnwt
+// (ExternalNewtEvents.h).  Every event but 'keyb and 'idle is replied to as it
 // came; a 'powr event more than a second after the last wakeup runs the
 // root's GotoSleep.  Then the application is Run (the idle passes and the
 // root view's update) and the idle timer re-armed for the next delayed
@@ -565,10 +567,13 @@ TNewtEventHandler::AEHandlerProc(TUMsgToken* token, ULong* size, TAEvent* event)
 	case kNewtStoreRemovedEvent:
 		StorageCardRemoved((TNewStoreEvent*) event);
 		break;
+	case kNewtIRConnectEvent:	// another machine is beaming at this one
+		gRootView->RunScript(RSSYMirconnectrequest, RefVar(NILREF), true);
+		break;
+	case kNewtExternalNewtEvent:
+		HandleExternalNewtEvent((TExternalNewtEvent*) event);
+		break;
 	default:
-		// NOT YET RECONSTRUCTED:
-		// 'irMC (the root's IRConnectRequest),
-		// 'xnwt (HandleExternalNewtEvent)
 		break;
 	}
 	if (type != kNewtKeyboardEvent)

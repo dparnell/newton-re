@@ -31,6 +31,7 @@
 #include "os600/kernel/host/TaskRuntime.h"
 #include "os600/kernel/Boot.h"
 #include "OSErrors.h"
+#include "ExternalNewtEvents.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -266,6 +267,38 @@ static Boolean gPauseOk = false;
 static Boolean gBatteryOk = false;
 static Boolean gBacklightOk = false;
 static Boolean gProtocolsOk = false;
+static Boolean gExternalEventOk = false;
+static Boolean gExternalEventUnknownOk = false;
+static Boolean gExternalDeleteOk = false;
+static Boolean gSendRunScriptOk = false;
+
+
+// a package's handler of 'xnwt events of type 'tst!': it doubles the value
+// the event carries, and counts the events it was given
+class TTestNewtEvent : public TExternalNewtEvent
+{
+public:
+	long		fValue;
+};
+
+static long gTestHandlerEvents = 0;
+
+PROTOCOL TTestNewtEventHandler : public TExternalNewtEventHandler
+{
+public:
+	PROTOCOL_IMPL_HEADER_MACRO(TTestNewtEventHandler);
+
+	TTestNewtEventHandler*	New()		{ return this; }
+	void		Delete()				{ }
+	void		HandleEvent(TExternalNewtEvent* event)
+	{
+		gTestHandlerEvents++;
+		((TTestNewtEvent*) event)->fValue *= 2;
+	}
+};
+
+PROTOCOL_IMPL_SOURCE_MACRO(TTestNewtEventHandler)
+PROTOCOL_CLASSINFO(TTestNewtEventHandler, "TExternalNewtEventHandler", "tst!  ", 0, 0, nil)
 static Boolean gColoursOk = false;
 static Boolean gPowerStatsOk = false;
 static Boolean gExtrasOk = false;
@@ -390,6 +423,30 @@ Scenario(void)
 		TRunScriptEvent protocols("testApp", "protocols");
 		newtPort.SendRPC(&replySize, &protocols, sizeof(protocols), &protocols, sizeof(protocols));
 		gProtocolsOk = protocols.fError == 0 && protocols.fResult == 1;
+		// an external newt event: the handler made by the event's type, run
+		// in the world, twice (made once)
+		TTestNewtEventHandler::ClassInfo()->Register();
+		TTestNewtEvent ext;
+		ext.fAEventClass = 'newt';
+		ext.fAEventID = 'idle';
+		ext.fEvent = 'xnwt';
+		ext.fType = 'tst!';
+		ext.fError = 1;
+		ext.fValue = 21;
+		newtPort.SendRPC(&replySize, &ext, sizeof(ext), &ext, sizeof(ext));
+		Boolean first = ext.fError == 0 && ext.fValue == 42;
+		newtPort.SendRPC(&replySize, &ext, sizeof(ext), &ext, sizeof(ext));
+		gExternalEventOk = first && ext.fError == 0 && ext.fValue == 84 && gTestHandlerEvents == 2;
+		// a type nobody handles
+		ext.fType = 'none';
+		newtPort.SendRPC(&replySize, &ext, sizeof(ext), &ext, sizeof(ext));
+		gExternalEventUnknownOk = ext.fError == kError_Not_Registered;
+		// the handler taken out by its type; a second time there is none
+		gExternalDeleteOk = DeleteExternalNewtEventHandler('tst!', nil, true) == noErr
+			&& DeleteExternalNewtEventHandler('tst!', nil, true) == kError_Not_Registered;
+		// a script run from outside the world, and its answer
+		long answer = -1;
+		gSendRunScriptOk = SendRunScriptEvent("testApp", "protocols", nil, 0, &answer) == noErr && answer == 1;
 		TRunScriptEvent colours("testApp", "colours");
 		newtPort.SendRPC(&replySize, &colours, sizeof(colours), &colours, sizeof(colours));
 		gColoursOk = colours.fError == 0 && colours.fResult == 1;
@@ -526,6 +583,10 @@ int main()
 	EXPECT(gBatteryOk);
 	EXPECT(gBacklightOk);
 	EXPECT(gProtocolsOk);
+	EXPECT(gExternalEventOk);
+	EXPECT(gExternalEventUnknownOk);
+	EXPECT(gExternalDeleteOk);
+	EXPECT(gSendRunScriptOk);
 	EXPECT(gColoursOk);
 	EXPECT(gPowerStatsOk);
 	EXPECT(gMapCursorOk);	// MapCursor maps a cursor's entries without moving it
