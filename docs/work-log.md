@@ -21,6 +21,25 @@ romsrc's `#hex` immediates and `@@` record lines; a 22-test corpus and
 a Zed extension (`zed-newtonscript/`): highlighting, brackets,
 indentation and an outline, installed with "zed: install dev extension".
 
+## 2026-10-01: the windowed Welcome that would not go on
+
+The owner's windowed newton stayed on Welcome after Continue.  Bisected
+to 70040d5c (the ROM's screen task); the cause was older, a kernel bug it
+exposed (dbef4417): a message's kTimeOutImmediate (-1) reached
+`SMemMsgSetTimerParmsKernelGlue` sign-extended into a pointer-sized ULong,
+no longer matched "no timeout", and waited 2^32 ticks (19 minutes) - so
+the screen task's `SleepTill` never came back after the first update.
+The newt world's own drawing still showed (each StopDrawing blits it),
+but the inker draws the calibration screen outside those brackets, and
+it never reached the window: calibration ran invisibly.  The timeout is
+now narrowed to 32 bits (DEVIATION), for every immediate send and
+receive.  Headless tests read the screen's bits, not the window, so none
+saw it; `newton --window-pen` now hands a script's taps to the window as
+mouse clicks and checks the display the window paints (ctest
+`host.NewtonWindowPen`; `--limit N` ends a windowed run).  Before that,
+an old newton.exe booting a new object file (a relink that failed while
+the program ran) had looked like the same fault.
+
 ## 2026-10-01: encrypted printing, with the owner's trust policy
 
 ipps:// goes over the host's own TLS - Schannel on Windows, OpenSSL
