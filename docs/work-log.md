@@ -9,6 +9,19 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-02: a macOS plan; Linux task stacks given back
+
+`docs/host-macos.md` plans a macOS host (a Cocoa window behind one new
+seam, CoreAudio, `dns_sd.h`, the crash tools over Mach-O), and every
+Linux-only POSIX spot now has a macOS branch, untried on a Mac
+(5957bba9).  Found on the way: nothing ignored SIGPIPE, so a send to a
+reset connection would have killed newton on Linux.  The thread-exit fix
+under WSL (9bdb52f3): threads stayed flat, but each raw-exited thread left
+its 8 MB stack mapped - 2.5 GB in 8 minutes; task threads are now
+pthreads over stacks the runtime maps itself, a finished one joined and
+its stack unmapped by the next thread made.  After: about 340 MB, roughly
+flat.
+
 ## 2026-10-02: the soak test, and what it found
 
 `tools/host/soak.py` (47a092d5) runs two newtons for an hour or more -
