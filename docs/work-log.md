@@ -17,9 +17,11 @@ text objects, `PointToOffset`/`PointToWord`/`PointToWordBoundary` with the
 callers' ROM margins, `PointToCaret` whole, `Area` for the selection,
 `ScrubCharacter`/`ReplaceCharacter`, the arrows, the baselines at
 +0xa0-+0xa6 - and the host's two shims are gone; `GetInterLineSpacing`
-with several style runs; `TParagraphView::TextFlags` (0x38abc8).  A ROM
-bug kept (`docs/curiosities.md`): writing over a letter takes the box's
-top from its left.  Screens: the corrector opens 5 px lower (a word's box
+with several style runs; `TParagraphView::TextFlags` (0x38abc8).  (A "ROM bug" first
+reported here - writing over a letter taking a box's top from its left -
+was a misreading: an `ldr` from an odd stack offset without `asr #16` is a
+packed 32-bit subtract keeping the low half; the ROM widens the box by
+half its height, as the host had it.)  Screens: the corrector opens 5 px lower (a word's box
 now reaches its descent), and a tap below a note ending in a return puts
 the caret at the empty line's start.  328 of 328.
 
