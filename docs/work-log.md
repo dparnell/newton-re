@@ -9,6 +9,24 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: ATA cards as far as the ROM goes
+
+An ATA (PC Card / CompactFlash) card is driven by the ROM's own
+`TATASimple` (task-file programmed I/O, identify, LBA and CHS reads and
+writes, reset, power) and read by `TCardATALoader`, which takes the
+card's Apple partition map (or one inside an MBR) and loads the packages
+of its driver partitions (92348280).  The ROM has no ATA handler or store:
+those come from a driver package.  Host: a CompactFlash model behind the
+card's register window (`hal/host/HostATA.cpp`; `hal/CardBus.h` keeping
+the ARM's rotating unaligned load, which the ROM relies on for the data
+port), `tools/cards/atacard.py`; ctests `pcmcia.ATACard`,
+`host.NewtonATACard`.  A ROM quirk kept: after one failed command the
+drive's error bit stays set and every command fails until a reset.
+DEVIATION: the ROM jumps into a card's Apple_Newton boot code, which the
+host cannot run.  `host.NewtonCardAlert` could not be made to fail again
+under heavy load; its card file moved into the build directory and it
+now says which wait failed (573e082d).
+
 ## 2026-10-01: printing in PostScript and HP PCL, to a network printer by IPP
 
 The owner chose the ROM's PostScript and HP PCL drivers, printing by IPP
