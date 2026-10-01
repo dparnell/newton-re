@@ -9,6 +9,17 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-02: the second hour-long soak, clean
+
+70 minutes with the Rosetta fix (a4a3379c): 59 rounds per newton, 118 IPP
+print jobs, a beam every round; no crash, hang or heap damage; threads
+and handles level, the frames heap level, private bytes +1 MB an hour.
+The occasional "ton" not read was writing that landed on a slip a closed
+app put up late (the Connection app's error, a PIN Entry notice) - the
+soak now closes what is open first and writes again once.  The ioItem
+frame printed after each print job is the ROM's own PrintObject (to the
+debugger's serial REP on a MessagePad, to stdout on the host).
+
 ## 2026-10-02: a macOS plan; Linux task stacks given back
 
 `docs/host-macos.md` plans a macOS host (a Cocoa window behind one new
