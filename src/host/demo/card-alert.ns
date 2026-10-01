@@ -12,6 +12,8 @@
 //       --script src/host/demo/card-alert.ns
 //   build/venv/Scripts/python tools/imaging/pgm2png.py build/card-alert.pgm build/card-alert.png
 
+HostInclude("common.ns");			// waitFor
+
 constant kCardFile := "tmp/card-alert.card";
 
 tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
@@ -45,31 +47,46 @@ alertInside := func() ScreenPixel(66, 122);
 HostCreateCard(kCardFile, 4);
 HostInsertCard(0, kCardFile);
 
-AddDelayedCall(func() begin
-  call tapButton with ("Erase");
-  AddDelayedCall(func() call tapButton with ("Erase"), [], 2000);
-  AddDelayedCall(func() begin
-    local store := GetCardSlotStores(0)[0];
-    local soup := store:CreateSoupXmit("AlertDemo", [], nil);
-    soup:AddXmit({title: "kept through the alert"}, nil);
-    Print({mounted: store <> nil, frameBefore: call alertFrame with ()});
-    store:Lock();
-    HostRemoveCard(0);
-    AddDelayedCall(func() begin
-      ScreenSnapshot("build/card-alert.pgm");
-      Print({alertFrame: call alertFrame with (), alertInside: call alertInside with ()});
-      Print({alertUp: call alertFrame with () = 0 and call alertInside with () = 255});
-      HostInsertCard(0, kCardFile);
-      AddDelayedCall(func() begin
-        ScreenSnapshot("build/card-alert-after.pgm");
-        store:Unlock();
-        local again := GetCardSlotStores(0);
-        local entry := Query(again[0]:GetSoup("AlertDemo"), {type: 'index}):Entry();
-        Print({sameStore: again[0] = store, found: entry.title,
-               alertDown: call alertFrame with () <> 0});
-        Print("card-alert: done");
-        HostQuit();
-      end, [], 4000);
-    end, [], 3000);
-  end, [], 5000);
-end, [], 4000);
+// Every step waits on what it needs, never a fixed time (a full ctest -j
+// slows a run down three or four times over): the card's store mounted
+// (the Erase dialogs answered as they come), the alert drawn, and - the
+// card back in - the alert gone and the store found again.
+lastErase := 0;
+cardStores := func() begin
+  local stores := GetCardSlotStores(0);
+  if stores and Length(stores) > 0 then stores
+end;
+
+call waitFor with ("card-alert: the card's store", func() begin
+    if not call cardStores with () and Ticks() - lastErase > 60 then begin
+      local kids := GetRoot():ChildViewFrames();
+      if call findIn with (kids[Length(kids) - 1], "Erase") then begin
+        call tapButton with ("Erase");
+        lastErase := Ticks();
+      end;
+    end;
+    call cardStores with ()
+  end, func() begin
+  local store := (call cardStores with ())[0];
+  local soup := store:CreateSoupXmit("AlertDemo", [], nil);
+  soup:AddXmit({title: "kept through the alert"}, nil);
+  Print({mounted: store <> nil, frameBefore: call alertFrame with ()});
+  store:Lock();
+  HostRemoveCard(0);
+  call waitFor with ("card-alert: the alert", func() call alertFrame with () = 0 and call alertInside with () = 255, func() begin
+    ScreenSnapshot("build/card-alert.pgm");
+    Print({alertFrame: call alertFrame with (), alertInside: call alertInside with ()});
+    Print({alertUp: call alertFrame with () = 0 and call alertInside with () = 255});
+    HostInsertCard(0, kCardFile);
+    call waitFor with ("card-alert: the alert down", func() call alertFrame with () <> 0 and call cardStores with (), func() begin
+      ScreenSnapshot("build/card-alert-after.pgm");
+      store:Unlock();
+      local again := call cardStores with ();
+      local entry := Query(again[0]:GetSoup("AlertDemo"), {type: 'index}):Entry();
+      Print({sameStore: again[0] = store, found: entry.title,
+             alertDown: call alertFrame with () <> 0});
+      Print("card-alert: done");
+      HostQuit();
+    end, 60);
+  end, 60);
+end, 60);
