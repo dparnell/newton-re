@@ -237,7 +237,7 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/ntk.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonNTK PROPERTIES TIMEOUT 240
-                         PASS_REGULAR_EXPRESSION "connected .'cnnt' answered 'okln'.*timeout set: rslt 0.*monaco.pkg installed: rslt 0.*Monaco deleted: rslt 0.*1 . 2 => 3.*<- fobj {'answer: 42}.*=> 'Sent.*=> \\['Cardfile'.*<- text '\"hello from the inspector\"'.*<- eref .'evt.ex.fr.intrp;type.ref.frame'.*<- estr .'evt.ex.msg', 'oops'.*<- eerr .'evt.ex.foo', -8007.*listener: 0, alive: TRUE.*monaco.pkg: rslt 0.*ntk: download 0.*ntk: installed Monaco.*ntk: done.*exit status 0"
+                         PASS_REGULAR_EXPRESSION "connected .'cnnt' answered 'okln'.*timeout set: rslt 0.*monaco.pkg installed: rslt 0.*Monaco deleted: rslt 0.*1 . 2 => 3.*<- fobj {'answer: 42}.*=> 'Sent.*=> \\['Cardfile'.*<- text '\"hello from the inspector\"'.*<- eref .'evt.ex.fr.intrp.type.ref.frame'.*<- estr .'evt.ex.msg', 'oops'.*<- eerr .'evt.ex.foo', -8007.*listener: 0, alive: TRUE.*monaco.pkg: rslt 0.*ntk: download 0.*ntk: installed Monaco.*ntk: done.*exit status 0"
                          FAIL_REGULAR_EXPRESSION "waited in vain|fell over")
     # the modem tool (comms/ModemTool.h, serv 'mods') on the serial port,
     # tools/modem/fakemodem.py the Hayes modem at its other end: dialing
@@ -361,7 +361,7 @@ set_tests_properties(host.NewtonBeamNobody PROPERTIES TIMEOUT 400
 # woken by a tap each time, the power-off and power-on functions called
 add_test(NAME host.NewtonPower COMMAND newton --display 320x480 --headless 200 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/power.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonPower PROPERTIES TIMEOUT 300
-                     PASS_REGULAR_EXPRESSION "power: 1 battery, [0-9]+% .*power: the battery gauge shows [0-9]+ .*power: backlight on.*power: the backlight button turned it off.*power: the idle timer put it to sleep, a tap woke it.*power: the switch put it to sleep, a tap woke it; 2 power-off calls, 2 power-on calls.*power: done"
+                     PASS_REGULAR_EXPRESSION "power: 1 battery, [0-9]+% .*power: the battery gauge shows [0-9]+ .*power: backlight on.*power: the backlight button turned it off.*power: the idle timer put it to sleep, a tap woke it.*power: the switch put it to sleep, a tap woke it. 2 power-off calls, 2 power-on calls.*power: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain|fell over")
 
 # the tablet's calibration (recognition/Inker.h, hal/host/HostTablet.h;
@@ -538,7 +538,7 @@ if(Python3_FOUND)
             endforeach()
             set_tests_properties(host.NewtonPrint${kind}.remove PROPERTIES TIMEOUT 300
                                  FIXTURES_REQUIRED print${kind}restart FIXTURES_SETUP print${kind}remove
-                                 PASS_REGULAR_EXPRESSION "the panel lists Office Laser - HP PCL .added.*removed; the current printer is StyleWriter.*print-removeprinter: done"
+                                 PASS_REGULAR_EXPRESSION "the panel lists Office Laser - HP PCL .added.*removed. the current printer is StyleWriter.*print-removeprinter: done"
                                  FAIL_REGULAR_EXPRESSION "waited in vain|fell over|FAILED|!!! Exception")
             set_tests_properties(host.NewtonPrint${kind}.removed PROPERTIES TIMEOUT 300
                                  FIXTURES_REQUIRED print${kind}remove
