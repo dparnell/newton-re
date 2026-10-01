@@ -9,6 +9,18 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-02: the ROM-free boot checked against the ROM, app by app
+
+`tools/host/fidelity.py` walks 21 steps - the Notepad, each of the ROM's
+applications opened and closed, the keyboard, the Action menu, three
+Prefs panels, a new Names card, the Extras drawer - in a `--rom` boot,
+a boot of romsrc built `--original`, and the default boot, and compares
+the screens (c6a8d301, ctest `host.NewtonROMFreeFidelity`).  The ROM and
+the `--original` build are identical at every step; the default boot
+differs only where the built-in Newton Devices package adds an
+"AppleTalk" entry to the Prefs list.  The walkthroughs pass on `--rom`
+too.
+
 ## 2026-10-02: the second hour-long soak, clean
 
 70 minutes with the Rosetta fix (a4a3379c): 59 rounds per newton, 118 IPP
