@@ -205,6 +205,55 @@ As a backstop the window's thread says what it is once it starts
 (`HostAlienThread`, `HostIsAlienThread`), and `Enter` refuses its calls
 with a line on stderr instead of corrupting the runtime.
 
+## A restart
+
+**What the machine does.**  `Reboot(error, rebootType, safe)` (ROM
+0x000d9884, `os600/kernel/Reboot.cpp`) records why in
+`gGlobalsThatLiveAcrossReboot.fRebootReason` (unless the recorded reason
+is `kError_Reboot_Calibration_Missing`, which sticks), marks the block
+valid with `kRebootMagicNumber`, clears the reason again for a cold-boot
+request (`rebootType == kRebootMagicNumber`), and - unless `safe` and a
+reboot-protected monitor call is under way, when it only sets
+`gWantReboot` for `TMonitor::Release` - jumps to address 0, the reset
+vector (`Reset`, `hal/System.h`).  After more than twelve unsuccessful
+boots it turns the machine off instead.  `Restart` (ROM 0x000d9984) and
+`CantThrowInUndefinedModeReboot` end the same way.  Callers include the
+`ReBoot()` NewtonScript function (reason noErr), the system's own
+failures (`kError_Sorry_System_Failure`), and drivers - Kallisys's ATA
+Support asks for one, reason -1001007, when its card is pulled with a
+store mounted on it.
+
+A warm boot runs the whole ROM boot again over the same RAM.  What it keeps
+is what the boot does not clear:
+
+| Kept on the machine | How the host keeps it |
+|---|---|
+| `gGlobalsThatLiveAcrossReboot.fRebootReason` (Gestalt's `rebootReason`) | `NEWTON_REBOOT_REASON` in the environment, put back before the boot |
+| the kernel's copy of the tablet calibration (`fTabletValid` ... `fTabletYOffset`, `os600/user/UserPersistent.h`) | `NEWTON_REBOOT_TABLET` |
+| the internal flash store, a card's memory | the same files (`--store`, the card image), flushed before the restart |
+| the real-time clock | the host's clock (a clock a script set with `SetRealClockSeconds` is not kept) |
+| the patch pages, the persistent memory objects, the boot counters (`fWarmBootCount`, `fUnsuccessfulBootCount`) | NOT YET: the host has no patches or persistent objects, and its boot does not count |
+| - (the tasks, the heaps, the frames world, RAM packages) | made afresh, as on the machine |
+| - (a card in a socket) | taken out: a restarted run starts with the sockets of its command line |
+
+**What the host does.**  `Reset` stops the tasks (`gHostResetHook`, here
+`ResetEndsTheRun`), `OsBoot` returns, and `newton` runs itself again with
+the same arguments (`--erase` left out) and answers the new run's exit
+status - DEVIATION: a new process stands for the jump to the reset vector,
+since the host cannot clear a running process's state back to the ROM's
+reset (`host/HostRestart.h`).  Before it starts the new run it flushes
+every stream (the store and card files are written through them) and
+closes every host socket, so the new run listens on the same ports; on
+Windows it inherits the standard handles and nothing else.  The new run
+reads what was handed across (`HostRestartReceive`) before the boot, and
+its window opens where the old one was (`NEWTON_WINDOW_POSITION`,
+`HostWindowPosition`).  A restart is not made after the power goes off,
+after a script's `HostQuit()`, or when `--headless` runs out; and at most
+`NEWTON_REBOOT_LIMIT` times in one run (5 by default; 0 ends the run at
+the reset, as before).  Each run's `--headless` limit is its own.  A
+script runs again in the new boot, and `HostRebootCount()` says which boot
+it is in (ctests `host.NewtonReboot`, `host.NewtonATASupport.pull`).
+
 ## Where the pieces live
 
 | ROM | Host |

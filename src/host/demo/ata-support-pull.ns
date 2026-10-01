@@ -1,0 +1,67 @@
+// After ata-support-store.ns, on the same store and card: the card pulled
+// out while its store is mounted.  ATA Support restarts the machine for
+// that (Reboot(-1001007), its own error, on the ARM interpreter); on the
+// host newton runs itself again (host/HostRestart.h), and this script, run
+// again in the new boot, finds the reason in the Gestalt reboot info, puts
+// the card back and reads the entry written before.
+//
+//   ATA_CARD=tmp/ata.card build/host/host/newton --display 320x480 \
+//       --store tmp/atasup.store --headless 240 --script src/host/demo/ata-support-pull.ns
+
+HostInclude("common.ns");			// waitFor
+HostInclude("walkhelpers.ns");		// the steps
+
+wtName := "ata-support-pull";
+asCard := HostGetEnv("ATA_CARD");
+
+constant kRebootInfo := 0x01000004;		// kGestalt_RebootInfo
+
+// the store on the card (the one that is not the internal store)
+asStore := func() begin
+	local found := nil;
+	foreach st in GetStores() do
+		if not st:IsReadOnly() and st <> GetStores()[0] then found := st;
+	found
+end;
+
+// the entry written by ata-support-store.ns, read off the card's store
+asEntryStep := func(what) func(done) begin
+	local store := call asStore with ();
+	local soup := store and store:GetSoup("ATATest:Kallisys");
+	local e := soup and soup:Query(nil):Entry();
+	call wtCheck with (what, e and e.n = 42 and StrEqual(e.text, "Written on an ATA card"),
+		"(" & (if not store then "no store" else if not soup then "no soup" else if not e then "no entry" else "wrong") & ")");
+	call done with ();
+end;
+
+if HostRebootCount() = 0 then
+	wtSteps := [
+		call waitStep with ("the Notepad", func() GetRoot().paperroll and GetRoot().paperroll.viewCObject),
+		call doStep with (func() HostInsertCard(0, asCard)),
+		call waitStep with ("the card's store mounted", func() call asStore with ()),
+		call asEntryStep with ("the entry before the card is pulled"),
+		call doStep with (func() begin
+			Print(wtName & ": pulling the card with its store mounted");
+			HostRemoveCard(0);
+		end),
+		// (the restart ends this run: nothing more should happen in it)
+		call waitStep with ("a restart", func() nil),
+	]
+else
+	wtSteps := [
+		call waitStep with ("the Notepad", func() GetRoot().paperroll and GetRoot().paperroll.viewCObject),
+		func(done) begin
+			local info := Gestalt(kRebootInfo);
+			Print([wtName & ": restarted", HostRebootCount(), "reason", info.rebootReason]);
+			call wtCheck with ("the reboot reason", info.rebootReason = -1001007, "(" & NumberStr(info.rebootReason) & ")");
+			call done with ();
+		end,
+		call doStep with (func() HostInsertCard(0, asCard)),
+		call waitStep with ("the card's store mounted again", func() call asStore with ()),
+		call asEntryStep with ("the entry after the restart"),
+		call doStep with (func() begin
+			Print(wtName & ": " & (if wtFailures = 0 then "done" else "done, " & NumberStr(wtFailures) & " failed"));
+			HostQuit();
+		end),
+	];
+call wtNext with ();

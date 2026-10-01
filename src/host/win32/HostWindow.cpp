@@ -7,12 +7,14 @@
 #ifdef _WIN32
 #include <thread>				// before anything else: a C header first upsets libc++'s locale support
 #include <atomic>
+#include <limits.h>
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <shellapi.h>
 #endif
 #include "HostWindow.h"
 #include <string.h>
+#include <stdio.h>
 #ifdef _WIN32
 
 // the pen and the keyboard: C-linkage shims over hal/host/HostTablet.h
@@ -34,6 +36,7 @@ static const unsigned char*	gPixels = nil;
 static long					gScale = 1;
 static char					gTitle[128];
 static HWND					gWindow = nil;
+static std::atomic<long>	gPositionX(LONG_MIN), gPositionY(LONG_MIN);	// where it is (or is to open)
 static std::thread*			gThread = nil;
 static std::atomic<bool>	gPenDown(false);
 static std::atomic<bool>	gStopping(false);
@@ -136,6 +139,14 @@ WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		DestroyWindow(hwnd);
 		return 0;
 	case WM_DESTROY:
+	{
+		RECT where;
+		if (GetWindowRect(hwnd, &where))
+		{
+			gPositionX.store(where.left);
+			gPositionY.store(where.top);
+		}
+	}
 		KillTimer(hwnd, kRefreshTimer);
 		PostQuitMessage(0);
 		return 0;
@@ -160,11 +171,20 @@ WindowThread(void)
 	RECT r = { 0, 0, (LONG) (gWidth * gScale), (LONG) (gHeight * gScale) };
 	DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
 	AdjustWindowRect(&r, style, FALSE);
-	gWindow = CreateWindowA("NewtonHostWindow", gTitle, style, CW_USEDEFAULT, CW_USEDEFAULT, r.right - r.left, r.bottom - r.top, nil, nil, wc.hInstance, nil);
+	long x = gPositionX.load(), y = gPositionY.load();
+	gWindow = CreateWindowA("NewtonHostWindow", gTitle, style, x != LONG_MIN ? (int) x : CW_USEDEFAULT, x != LONG_MIN ? (int) y : CW_USEDEFAULT,
+							r.right - r.left, r.bottom - r.top, nil, nil, wc.hInstance, nil);
 	if (gWindow == nil)
 		return;
 	DragAcceptFiles(gWindow, TRUE);		// a package dropped onto the window is installed
 	ShowWindow(gWindow, SW_SHOW);
+	if (x != LONG_MIN)
+	{
+		// (a restarted newton's: where the old one was)
+		RECT where;
+		GetWindowRect(gWindow, &where);
+		fprintf(stderr, "[host] window opened at %ld,%ld (asked for %ld,%ld)\n", (long) where.left, (long) where.top, x, y);
+	}
 	SetTimer(gWindow, kRefreshTimer, 33, nil);
 	MSG msg;
 	while (GetMessageA(&msg, nil, 0, 0) > 0)
@@ -189,6 +209,32 @@ HostWindowStart(long width, long height, const unsigned char* pixels, const char
 	gTitle[sizeof(gTitle) - 1] = 0;
 	gThread = new std::thread(WindowThread);
 	return true;
+}
+
+
+bool
+HostWindowPosition(long* x, long* y)
+{
+	HWND window = gWindow;
+	RECT where;
+	if (window != nil && GetWindowRect(window, &where))
+	{
+		gPositionX.store(where.left);
+		gPositionY.store(where.top);
+	}
+	if (gPositionX.load() == LONG_MIN)
+		return false;
+	*x = gPositionX.load();
+	*y = gPositionY.load();
+	return true;
+}
+
+
+void
+HostWindowSetPosition(long x, long y)
+{
+	gPositionX.store(x);
+	gPositionY.store(y);
 }
 
 
@@ -255,6 +301,18 @@ HostWindowPostPen(long x, long y, int what)
 
 void
 HostWindowStop(void)
+{ }
+
+
+bool
+HostWindowPosition(long* /*x*/, long* /*y*/)
+{
+	return false;
+}
+
+
+void
+HostWindowSetPosition(long /*x*/, long /*y*/)
 { }
 
 #endif

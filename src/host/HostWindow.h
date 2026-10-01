@@ -36,5 +36,10 @@ void	HostWindowStop(void);								// the window closed and its thread joined
 // whose events cannot be posted (X11), the window's shims are called
 // directly, as its event loop would call them.
 void	HostWindowPostPen(long x, long y, int what);
+// Where the window is on the host's screen (its top left, the frame's),
+// kept as it closes - and where the next one opens (a restarted newton's
+// window opening where the old one was): ==> false when there is none
+bool	HostWindowPosition(long* x, long* y);
+void	HostWindowSetPosition(long x, long y);
 
 #endif	/* __HOSTWINDOW_H */

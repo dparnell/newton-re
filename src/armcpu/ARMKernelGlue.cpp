@@ -44,6 +44,7 @@
 #include "Objects.h"
 #include "UserGlobals.h"
 #include "OSErrors.h"
+#include "os600/kernel/Reboot.h"
 #include "host/TaskRuntime.h"
 #include "Host.h"
 
@@ -51,7 +52,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-extern "C" void	Reboot(NewtonErr error, ULong rebootType, Boolean safe);
 
 // A growable array (the standard containers reach <locale.h>)
 template <class T>
@@ -976,12 +976,18 @@ Glue_ZeroBytes(void*, ARMTrapContext& c)
 static bool	Glue_GC(void*, ARMTrapContext& c)	{ GC(); c.Return(0); return true; }
 
 // ROM 0x000d9884 Reboot__FlUlUc
-// DEVIATION: the host does not restart the machine for ARM code; it says so
+// The machine restarted for the ARM code, as for anything else
+// (os600/kernel/Reboot.cpp; on the host newton runs itself again -
+// host/HostRestart.h): a driver that finds its card pulled with a store
+// mounted on it asks for one (Kallisys's ATA Support, -1001007).  A
+// restart that is made does not come back here.
 static bool
 Glue_Reboot(void*, ARMTrapContext& c)
 {
-	fprintf(stderr, "[armcpu] the ARM code asked for a restart (%ld): not done (NOT YET)\n", (long) (int32_t) c.Arg(0));
-	c.Return(0);
+	if (getenv("NEWTON_TRACE_ARMPROTOCOLS") != nil)
+		fprintf(stderr, "[armcpu] the ARM code asked for a restart (%ld)\n", (long) (int32_t) c.Arg(0));
+	NewtonErr err = Reboot((NewtonErr) (int32_t) c.Arg(0), c.Arg(1), (Boolean) (c.Arg(2) & 0xff));
+	c.Return((uint32_t) err);
 	return true;
 }
 

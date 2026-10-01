@@ -145,6 +145,7 @@
 #include "print/host/HostIPP.h"
 #include "power/host/HostPowerSwitch.h"
 #include "HostObjectsFile.h"
+#include "HostRestart.h"
 #include "os600/kernel/host/TaskRuntime.h"
 #include "REPTranslators.h"
 #include "Frames.h"
@@ -309,6 +310,15 @@ WindowPenTap(long x, long y, Boolean down)
 }
 
 
+// HostRebootCount(): how many times the machine has restarted in this run
+// (host/HostRestart.h)
+static Ref
+FHostRebootCount(RefArg /*rcvr*/)
+{
+	return MAKEINT(HostRebootCount());
+}
+
+
 // HostQuit(): the run ended, as closing the window or the headless time
 // running out ends it
 static Ref
@@ -462,6 +472,7 @@ static void
 NewtonPreMain(void)
 {
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostQuit")), RefVar(MakeCFunction((void*) FHostQuit, 0, nil)));
+	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostRebootCount")), RefVar(MakeCFunction((void*) FHostRebootCount, 0, nil)));
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostInclude")), RefVar(MakeCFunction((void*) FHostInclude, 1, nil)));
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostCPUTime")), RefVar(MakeCFunction((void*) FHostCPUTime, 0, nil)));
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostThreadCPUTime")), RefVar(MakeCFunction((void*) FHostThreadCPUTime, 0, nil)));
@@ -739,6 +750,7 @@ main(int argc, char** argv)
 	gHostStallReportHook = ReportTheScript;
 	HostWatchdogStart(10);
 	HostUseRealClock(true);
+	HostRestartReceive();		// (a restarted newton: the reboot reason, the window's place)
 	HostConfigureNewtWorld(romImage, heapSize, width, height, depth);
 	gNewtBootTestScript = script;
 	gScriptPath = script;
@@ -812,5 +824,11 @@ main(int argc, char** argv)
 		fprintf(stderr, "[host] sound: the %ld Hz test tone makes up %.0f%% of what was played\n",
 				gToneFrequency, energy > 0 ? 100 * power / energy : 0.0);
 	}
+	// the machine reset itself (Reboot, Restart): booted again
+	// (host/HostRestart.h; DEVIATION, a new process for the jump to the
+	// reset vector)
+	int restarted = HostRestartIfReset(argc, argv, gScriptQuit.load());
+	if (restarted >= 0)
+		return restarted;
 	return 0;
 }

@@ -349,6 +349,20 @@ HostSocketShutdown(int handle)
 }
 
 
+// Every socket closed, the listeners with them: the run is over (a
+// restarted newton - host/HostRestart.h - listens on the same ports)
+void
+HostSocketsCloseAll(void)
+{
+	for (int i = 0; i < kMaxSockets; i++)
+		if (sInitialised && sSockets[i] != INVALID_SOCKET)
+		{
+			CLOSE_SOCKET(sSockets[i]);
+			sSockets[i] = INVALID_SOCKET;
+		}
+}
+
+
 int
 HostSocketClose(int handle)
 {

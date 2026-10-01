@@ -9,6 +9,24 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: The host restarts as the machine does
+
+`Reboot`, `Restart` and the ROM's other callers of the reset vector used
+to end the host's run.  Now `newton` runs itself again with the same
+arguments (`src/host/HostRestart.h`; DEVIATION: a new process stands for
+the jump to address 0), handing across in the environment what a warm boot
+keeps in RAM - the reboot reason (Gestalt's `rebootReason`), the kernel's
+copy of the tablet calibration - and opening its window where the old one
+was; the stores are the same files, flushed first, and every host socket
+is closed so the new run listens on the same ports (Windows: only the
+standard handles inherited).  `HostRebootCount()` says which boot a script
+is in; `NEWTON_REBOOT_LIMIT` (5; 0 ends the run as before).  armcpu's
+`Reboot` glue goes to the kernel's own, so Kallisys's ATA Support, finding
+its card pulled with a store mounted, restarts the machine with its reason
+-1001007, and the new boot puts the card back and reads it (ctests
+`host.NewtonReboot`, `host.NewtonATASupport.pull`; `docs/host-runtime.md`,
+"A restart").
+
 ## 2026-10-01: NewtonScript in the Zed editor
 
 `editor-plugins/`: a tree-sitter grammar for NewtonScript

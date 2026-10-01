@@ -35,8 +35,10 @@
 #include <X11/XKBlib.h>
 #include <X11/keysym.h>
 #include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <sys/select.h>
+#include <limits.h>
 
 // the pen and the keyboard: C-linkage shims over hal/host/HostTablet.h
 // and host/HostKeyboard.h (HostKeyboard.cpp), the Newton headers kept out
@@ -50,6 +52,8 @@ void	HostWindowThreadStarted(void);
 }
 
 #define nil 0
+static std::atomic<long>	gPositionX(LONG_MIN), gPositionY(LONG_MIN);	// where it is (or is to open)
+
 static long					gWidth = 0;			// the display's size
 static long					gHeight = 0;
 static const unsigned char*	gPixels = nil;
@@ -191,7 +195,9 @@ WindowThread(void)
 	GrayRamp ramp;
 	ramp.Build(visual->red_mask, visual->green_mask, visual->blue_mask);
 
-	Window window = XCreateSimpleWindow(display, RootWindow(display, screen), 0, 0,
+	long startX = gPositionX.load(), startY = gPositionY.load();
+	Window window = XCreateSimpleWindow(display, RootWindow(display, screen),
+										startX != LONG_MIN ? (int) startX : 0, startX != LONG_MIN ? (int) startY : 0,
 										(unsigned) scaledWidth, (unsigned) scaledHeight, 0,
 										BlackPixel(display, screen), WhitePixel(display, screen));
 	XStoreName(display, window, gTitle);
@@ -207,6 +213,13 @@ WindowThread(void)
 	if (hints != nil)
 	{
 		hints->flags = PMinSize | PMaxSize;
+		if (startX != LONG_MIN)
+		{
+			// (a restarted newton's window where the old one was)
+			hints->flags |= USPosition;
+			hints->x = (int) startX;
+			hints->y = (int) startY;
+		}
 		hints->min_width = hints->max_width = (int) scaledWidth;
 		hints->min_height = hints->max_height = (int) scaledHeight;
 		XSetWMNormalHints(display, window, hints);
@@ -221,6 +234,8 @@ WindowThread(void)
 	GC gc = XCreateGC(display, window, 0, nil);
 	XMapWindow(display, window);
 	XFlush(display);
+	if (startX != LONG_MIN)
+		fprintf(stderr, "[host] window asked to open at %ld,%ld\n", startX, startY);	// (a restarted newton's; the window manager has the last word)
 	gStarted.store(true);
 
 	char down[256];				// which keycodes are held, so a repeat is not sent again
@@ -327,6 +342,14 @@ WindowThread(void)
 		}
 	}
 
+	// where it was, for a window opened after it (HostWindowPosition)
+	Window child;
+	int rootX = 0, rootY = 0;
+	if (XTranslateCoordinates(display, window, RootWindow(display, screen), 0, 0, &rootX, &rootY, &child))
+	{
+		gPositionX.store(rootX);
+		gPositionY.store(rootY);
+	}
 	XFreeGC(display, gc);
 	XDestroyWindow(display, window);
 	free(image->data);
@@ -383,6 +406,25 @@ HostWindowPostPen(long x, long y, int what)
 		gPenDown.store(false);
 		HostWindowPenUp();
 	}
+}
+
+
+bool
+HostWindowPosition(long* x, long* y)
+{
+	if (gPositionX.load() == LONG_MIN)
+		return false;
+	*x = gPositionX.load();
+	*y = gPositionY.load();
+	return true;
+}
+
+
+void
+HostWindowSetPosition(long x, long y)
+{
+	gPositionX.store(x);
+	gPositionY.store(y);
 }
 
 

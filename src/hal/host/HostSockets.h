@@ -70,6 +70,7 @@ int		HostSocketAddresses(int handle, uint32_t* localAddress, uint16_t* localPort
 // Shut the sending side (an orderly release), and close.
 int		HostSocketShutdown(int handle);
 int		HostSocketClose(int handle);
+void	HostSocketsCloseAll(void);		// every socket, listeners too: the run is over
 
 // A name's IPv4 addresses, as many as fit (*count says how many there were);
 // a dotted address is answered as itself.  (This one blocks, as a resolver

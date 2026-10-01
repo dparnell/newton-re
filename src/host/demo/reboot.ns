@@ -1,0 +1,24 @@
+// ReBoot() restarts the machine: on the host newton runs itself again with
+// the same arguments (host/HostRestart.h), and this script runs again in
+// the new boot, where HostRebootCount() says it is the second and the
+// Gestalt reboot info says why (ReBoot's reason is noErr).
+// (ctest host.NewtonReboot)
+//
+//   build/host/host/newton --headless 60 --script src/host/demo/reboot.ns
+
+constant kRebootInfo := 0x01000004;		// kGestalt_RebootInfo
+
+if HostRebootCount() = 0 then
+	begin
+	Print("reboot: first boot, restarting");
+	ReBoot();
+	Print("reboot: FAILED: ReBoot came back");
+	HostQuit();
+	end
+else
+	begin
+	local info := Gestalt(kRebootInfo);
+	Print(["reboot: boot", HostRebootCount() + 1, "reason", info.rebootReason]);
+	Print("reboot: done");
+	HostQuit();
+	end;

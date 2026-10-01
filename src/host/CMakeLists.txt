@@ -121,7 +121,7 @@ else()
         target_link_libraries(host_window PUBLIC ${ALSA_LIBRARY})
     endif()
 endif()
-add_executable(newton newton.cpp HostKeyboard.cpp HostPackages.cpp HostHeapCheck.cpp)
+add_executable(newton newton.cpp HostRestart.cpp HostKeyboard.cpp HostPackages.cpp HostHeapCheck.cpp)
 target_link_libraries(newton PRIVATE newt host_views host_window hal_host_sound hal_timers hal_host_serial)
 target_compile_definitions(newton PRIVATE "NEWTON_DEFAULT_OBJECTS=\"${NEWTON_OBJECTS_FILE}\"")
 install(TARGETS newton DESTINATION bin)
@@ -137,6 +137,12 @@ set_tests_properties(host.NewtonNatives PROPERTIES TIMEOUT 120
     PASS_REGULAR_EXPRESSION "Every Monday and Thursday.*Every day.*The second and last Friday of every month.*The 15th of every month.*Every March 4.*Every other Saturday.*The first Monday of every September.*kind 5., ...*fits., .3.14159.*cut., .3.14.\].*whole., NIL.*too narrow., NIL.*left: 29, top: 14, right: 69, bottom: 34.*left: 4, top: 39, right: 44, bottom: 59.*bad bundle., .bad strokeBounds.*fonts loaded.*expando asked.*Name., .Phone.*debugger., -10005, 0, 0, -10005, 0.*dispatch., -10005.*dispatch marshal., .evt.ex.marshal.type.*natives: done")
 # a script's own gestalt registered, read back and replaced; UnmountCard's
 # argument checks; BootSucceeded's file (made in the build directory)
+# ReBoot() restarts the machine: newton runs itself again (host/HostRestart.h)
+# and the script, run again, sees the second boot (HostRebootCount)
+add_test(NAME host.NewtonReboot COMMAND newton --headless 60 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/reboot.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(host.NewtonReboot PROPERTIES TIMEOUT 240
+    PASS_REGULAR_EXPRESSION "reboot: first boot, restarting.*boot., 2, .reason., 0.*reboot: done"
+    FAIL_REGULAR_EXPRESSION "FAILED")
 add_test(NAME host.NewtonGestalt COMMAND newton --headless 30 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/gestalt.ns WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(host.NewtonGestalt PROPERTIES TIMEOUT 120
     PASS_REGULAR_EXPRESSION "12, -34, TRUE.*replace., TRUE.*56, 78, NIL.*a system selector., NIL.*not a selector., NIL.*not a function., -10006.*empty socket., NIL.*card slot stores., NIL.*gestalt: done")
@@ -1209,6 +1215,18 @@ if(Python3_FOUND)
                              FIXTURES_REQUIRED host_atasupport_formatted DEPENDS host.NewtonATASupport.store
                              ENVIRONMENT "ATA_CARD=${CMAKE_CURRENT_BINARY_DIR}/atasupport.card"
                              PASS_REGULAR_EXPRESSION "ata-support-store-restart: done\""
+                             FAIL_REGULAR_EXPRESSION "waited in vain|FAILED|is not answered|not presented")
+        # and the card pulled out with its store mounted: ATA Support restarts
+        # the machine (Reboot -1001007), newton runs itself again
+        # (host/HostRestart.h) and the second boot reads the card again
+        add_test(NAME host.NewtonATASupport.pull
+                 COMMAND newton --display 320x480 --store ${CMAKE_CURRENT_BINARY_DIR}/atasupport.store
+                         --headless 240 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/ata-support-pull.ns
+                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+        set_tests_properties(host.NewtonATASupport.pull PROPERTIES TIMEOUT 600
+                             FIXTURES_REQUIRED host_atasupport_formatted DEPENDS host.NewtonATASupport.storerestart
+                             ENVIRONMENT "ATA_CARD=${CMAKE_CURRENT_BINARY_DIR}/atasupport.card"
+                             PASS_REGULAR_EXPRESSION "the machine reset itself .reason -1001007.*ata-support-pull: the reboot reason: ok.*ata-support-pull: the entry after the restart: ok.*ata-support-pull: done\""
                              FAIL_REGULAR_EXPRESSION "waited in vain|FAILED|is not answered|not presented")
     endif()
     # a package cut into a soup of chunk entries and restored with

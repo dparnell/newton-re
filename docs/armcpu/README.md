@@ -278,8 +278,9 @@ proxy call and the protocol glue's answers.
   `TULockingSemaphore`, `GetGlobalTime`/`GetTaskTime` (a TTime returned
   through r0), `TTime::ConvertTo`, `TDelayTimer`, `ShortTimerDelay`, and
   `DebugStr`, `ZeroBytes`, `GC`, `rand`/`srand`, `printf`,
-  `MemObjManager::FindEnvironmentId`; `Reboot` is logged, not done (NOT
-  YET).  **Events cross between the worlds widened and narrowed**: a
+  `MemObjManager::FindEnvironmentId`; `Reboot` goes to the kernel's own,
+  which restarts the machine (on the host, newton running itself again -
+  `docs/host-runtime.md`, "A restart").  **Events cross between the worlds widened and narrowed**: a
   TAEvent's header is two 32-bit words on the ARM and two pointer-sized
   ULongs on the host, so every message the ARM code sends is taken to begin
   with one (DEVIATION) and widened on the way out, and a message handed to
@@ -417,8 +418,10 @@ and put back, mounted again and the entry read once more
 (`host.NewtonATASupport.storerestart`).
 
 Taking the card out while its store is mounted has ATA Support restart
-the machine (`Reboot(-1001007)` for each mounted store - its own design);
-the host's `Reboot` only logs it (NOT YET).  PATACardServer's messages have
+the machine (`Reboot(-1001007)` for each mounted store - its own design),
+and the host restarts as the machine does (`docs/host-runtime.md`, "A
+restart"): the new boot's Gestalt reboot info says -1001007, and the card,
+put back, mounts and reads (`host.NewtonATASupport.pull`).  PATACardServer's messages have
 not been needed.
 
 ## Which fixtures have native code
