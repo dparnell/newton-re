@@ -14,7 +14,10 @@
 
 HostInclude("common.ns");			// waitFor
 
-constant kCardFile := "tmp/card-alert.card";
+// the card's file: the ctest names one in its build directory, so two
+// builds' runs of the test never share it
+caCardFile := HostGetEnv("CARD_ALERT_CARD");
+if not caCardFile then caCardFile := "tmp/card-alert.card";
 
 tapAt := func(x, y) begin PenDown(x, y); PenUp(); IdleStrokes(); end;
 
@@ -44,8 +47,8 @@ tapButton := func(label)
 alertFrame := func() ScreenPixel(64, 120);
 alertInside := func() ScreenPixel(66, 122);
 
-HostCreateCard(kCardFile, 4);
-HostInsertCard(0, kCardFile);
+HostCreateCard(caCardFile, 4);
+HostInsertCard(0, caCardFile);
 
 // Every step waits on what it needs, never a fixed time (a full ctest -j
 // slows a run down three or four times over): the card's store mounted
@@ -77,7 +80,7 @@ call waitFor with ("card-alert: the card's store", func() begin
     ScreenSnapshot("build/card-alert.pgm");
     Print({alertFrame: call alertFrame with (), alertInside: call alertInside with ()});
     Print({alertUp: call alertFrame with () = 0 and call alertInside with () = 255});
-    HostInsertCard(0, kCardFile);
+    HostInsertCard(0, caCardFile);
     call waitFor with ("card-alert: the alert down", func() call alertFrame with () <> 0 and call cardStores with (), func() begin
       ScreenSnapshot("build/card-alert-after.pgm");
       store:Unlock();
