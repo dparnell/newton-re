@@ -21,6 +21,22 @@ romsrc's `#hex` immediates and `@@` record lines; a 22-test corpus and
 a Zed extension (`zed-newtonscript/`): highlighting, brackets,
 indentation and an outline, installed with "zed: install dev extension".
 
+## 2026-10-01: printers on the network, found and kept
+
+Both ways the owner asked for (78f87647): the ROM's own "Choose Network
+LaserWriter" answered from a host DNS-SD browse (one zone, "Local
+network"), `TPSPAPDriver` registered with its PAP calls replaced by IPP
+(DEVIATION); and a host Network Printers panel in the Prefs adding IPP
+printers in PostScript or HP PCL, each frame carrying its service name
+and URI and kept in the panel's System soup entry.  Found on the way:
+the ROM's `networkChooserDone` never flushes the user configuration, so a
+chosen network printer did not survive a restart - the host's `NBPStop`
+now flushes it (a host addition, for the owner's "persist across
+restarts"); HP printers spell their PCL type 'vnd.hp-PCL'; an added
+printer is found again by name at each job, since its port need not
+last.  The real browse found the owner's HP Color LaserJet Pro M479.
+362 tests.
+
 ## 2026-10-01: package backup by id; what lives across a warm restart
 
 - Executing packages in place (XIP) is not reached: `StorePackage` picks
