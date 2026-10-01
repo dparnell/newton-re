@@ -899,14 +899,16 @@ TXrWordDomain::TakeReadings(TXrWordUnit* unit)
 }
 
 
-// ROM 0x000651cc GetTraceFromStrXrUnit__FP10TStrXrUnitPP13PS_point_typePs
-// The unit's strokes (its subs' strokes) put together into one trace.
-void
-GetTraceFromStrXrUnit(TStrXrUnit* unit, PS_point_type** trace, short* nPoints)
+// ROM 0x00065754 GetTraceFromStrXrUnitAndStroke__FP10TStrXrUnitP11TStrokeUnitPP13PS_point_typePs
+// The unit's strokes (its subs' strokes), and the stroke unit's after them
+// when there is one (held while the trace is made), put together into one
+// trace.
+static void
+GetTraceFromStrXrUnitAndStroke(TStrXrUnit* unit, TStrokeUnit* more, PS_point_type** trace, short* nPoints)
 {
 	TStroke* local[20];
-	*trace = nil;
-	ULong count = unit->SubCount();
+	ULong subs = unit->SubCount();
+	ULong count = more != nil ? subs + 1 : subs;
 	TStroke** strokes = local;
 	// DEVIATION: the list is of host pointers, so a long one is sized by
 	// them
@@ -915,13 +917,28 @@ GetTraceFromStrXrUnit(TStrXrUnit* unit, PS_point_type** trace, short* nPoints)
 	if (strokes == nil)
 		return;
 	ULong i;
-	for (i = 0; i < count; i++)
+	for (i = 0; i < subs; i++)
 		strokes[i] = ((TStrokeUnit*) unit->GetSub(i))->fStroke;
+	if (more != nil)
+		strokes[i++] = more->fStroke;
 	strokes[i] = nil;
+	Boolean held = more != nil ? AcquireStroke(more->fStroke) : false;
 	short nStrokes;
 	NewGetTraceFromStrokes(strokes, trace, &nStrokes, nPoints);
+	if (held)
+		ReleaseStroke();
 	if (0x13 < count)
 		HWRMemoryFree((Ptr) strokes);
+}
+
+
+// ROM 0x000651cc GetTraceFromStrXrUnit__FP10TStrXrUnitPP13PS_point_typePs
+// The unit's strokes (its subs' strokes) put together into one trace.
+void
+GetTraceFromStrXrUnit(TStrXrUnit* unit, PS_point_type** trace, short* nPoints)
+{
+	*trace = nil;
+	GetTraceFromStrXrUnitAndStroke(unit, nil, trace, nPoints);
 }
 
 

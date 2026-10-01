@@ -68,7 +68,7 @@ code, **87.5%**.  The rest, 373 KB in 3942 functions:
 | runtime and overloads (array new/delete helpers, `NSSend`'s fixed-argument forms) | 65 | 6.1 | 0.2 |
 | unreferenced (nothing in the ROM refers to it, and it is not public) | 28 | 2.7 | 0.1 |
 | public API the ROM does not call (in the public jump table for packages' native code, which armcpu answers or runs the ROM's own copy of: the idle timer, the GC-safe lists, the unicode task table, out-of-line inlines) | 44 | 1.8 | 0.1 |
-| **other - what is left** | 28 | 1.6 | 0.1 |
+| **other - what is left** | 2 | 0.0 | 0.0 |
 | system patches (the host has none) | 10 | 1.1 | 0.0 |
 | host stand-ins (DEVIATION: the text objects' TextWalker - the host's text layout takes the characters whole) | 5 | 0.9 | 0.0 |
 | aliases of reconstructed functions (one branch to one) | 40 | 0.2 | 0.0 |
@@ -77,17 +77,16 @@ code, **87.5%**.  The rest, 373 KB in 3942 functions:
 by reconstructing what the reconstructed code calls where the ROM calls
 it (SetStyle's style cache, the CS* ink layer between the natives and the
 codec, `AddTabStop`, `RewindLength`, the speller's C strings, the array
-helpers, ...) and by sorting the rest into the categories above, each
-with its reason in `uncited-categories.tsv`.  What is left (`--show
-other`) is under 256 bytes apiece: `InitExternal` (the host's
-`InitQueries` does its work), the recogniser's `GetTraceFromStrXrUnitAndStroke`,
-`StripPunctSymbols`/`EncodeAttribute`, V.42bis's `dict_init`,
-`PtrToPtr` (the cursor's key copies, which the host makes with `new`),
-three constructors and two destructors of the store and name-server
-classes, `ContainsChar`, `ApplyKey`, the compiler's two walker
-trampolines, the Airus shell entry points, the three exception-cleanup
-procs of `TBits`/`TAnimate`/`TSaveScreenBits`, and four empty or
-one-instruction stubs.
+helpers, V.42bis's `dict_init`, the cursor's `PtrToPtr`, ...) and by
+sorting the rest into the categories above, each with its reason in
+`uncited-categories.tsv` (`InitExternal`, whose work `InitQueries` does,
+and the exception-cleanup procs the host's destructors stand in for are
+host stand-ins).  Two pieces are left, both inside functions that are
+cited but simplified: `GetCStringFormat`, which the ROM's
+`TRichString::Verify` (0x001ac324, a character-by-character consistency
+check answering an error code) uses - the host's `Verify` is a short
+sanity check; and `SaveResource`, which the ROM's `TArray::Save` reaches
+after `MakeHandle`/`NameHandle` - the host's only compacts.
 
 Printing: PostScript and HP PCL to a network printer by IPP are done, and
 printers on the network are found and added both ways and kept.  Left

@@ -48,6 +48,7 @@ public:
 	TGeneralizedTestFnVar(RefArg test, RefArg key, int eqMode);
 
 	Ref		ApplyKey(Ref element);
+	Ref		ApplyKey(RefArg element);
 	int		Test(Ref a, Ref b)					{ return (this->*fTestFn)(a, b); }
 
 	int		TestNumsRealUtil(Ref a, Ref b);
@@ -150,6 +151,21 @@ TGeneralizedTestFnVar::TGeneralizedTestFnVar(RefArg test, RefArg key, int eqMode
 		fKey = key;
 		fKeyMode = 1;
 	}
+}
+
+
+// ROM 0x00316960 ApplyKey__21TGeneralizedTestFnVarFRC6RefVar
+// The element's key (the element held by the caller).
+Ref
+TGeneralizedTestFnVar::ApplyKey(RefArg element)
+{
+	if (fKeyMode == 0)
+		return element;
+	if (fKeyMode == 1)
+		return GetFramePath(element, fKey);
+	if (fKeyMode == 2)
+		return NSCall(fKey, element);
+	return NILREF;
 }
 
 

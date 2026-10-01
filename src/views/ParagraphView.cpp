@@ -3967,6 +3967,19 @@ TParagraphView::FindWordInParagraph(Finder* finder)
 }
 
 
+// ROM 0x0017aeb8 ContainsChar__FPCUsUsUl
+// Whether the character is among the first `length` of the text (to its
+// nought).
+static Boolean
+ContainsChar(const UniChar* text, UniChar c, ULong length)
+{
+	for (ULong i = 0; i < length && text[i] != 0; i++)
+		if (text[i] == c)
+			return true;
+	return false;
+}
+
+
 // ROM 0x00173b34 AddTabStop__14TParagraphViewFR5TRect
 // A word written at a tab: its box moved onto the nearest of the view's
 // tab stops when one is within ten pixels of its left edge, and otherwise
@@ -5895,7 +5908,7 @@ TParagraphView::HandleReplaceText(RefArg cmd)
 		if (removed != 0)
 		{
 			RefVar myStyles(Styles());
-			removedHasTab = Ustrchr((const UniChar*) BinaryData(removedText), 9) != nil;
+			removedHasTab = ContainsChar((const UniChar*) BinaryData(removedText), 9, 0xFFFFFFFF);
 			RefVar tabsToKeep;
 			if (removedHasTab)
 				tabsToKeep = myTabs;

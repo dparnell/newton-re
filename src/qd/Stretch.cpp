@@ -2706,25 +2706,34 @@ CombineDirectNoPad32to4(char* param_1, ULong32** param_2, Long32 param_3, ULong3
 	S t r e t c h B i t s
 ------------------------------------------------------------------------------*/
 
+// ROM 0x00074aac NoConversion__FPcPUcl
+// The row left as it is.
+static void
+NoConversion(char* /*row*/, const UChar* /*table*/, long /*count*/)
+{
+}
+
+
 // ROM 0x002ae540 SetupConversion__FlP8PixelMap
 // How a source row of the depth is made the screen's kind first: indexed
 // pixels through the map's gray table when it has one (flag 0x8000000),
-// direct colour made four-bit grays; nil for a depth there is no way from.
+// direct colour made four-bit grays; NoConversion when it is already
+// gray, -1 for a depth there is no way from.
 static PixelConverter
 SetupConversion(long depth, PixelMap* src)
 {
-	PixelConverter convert = nil;					// (NoConversion, 0x00074aac)
+	PixelConverter convert = NoConversion;
 	Boolean table = (src->pixMapFlags & 0x8000000) != 0;
 	switch (depth)
 	{
 	case 1:
-		return nil;
+		return convert;
 	case 2:
-		return table ? ConvertIndex2 : nil;
+		return table ? ConvertIndex2 : convert;
 	case 4:
-		return table ? ConvertIndex4 : nil;
+		return table ? ConvertIndex4 : convert;
 	case 8:
-		return table ? ConvertIndex8 : nil;
+		return table ? ConvertIndex8 : convert;
 	case 0x10:
 		return ConvertDirect16to4;
 	case 0x20:

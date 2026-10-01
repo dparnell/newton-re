@@ -101,6 +101,35 @@ IsPunctSymbol(const UniChar* word, long index)
 }
 
 
+// ROM 0x002565e0 StripPunctSymbols__FPUs
+// The punctuation taken off the front and off the end.
+static void
+StripPunctSymbols(UniChar* word)
+{
+	long length = Ustrlen(word);
+	long start = 0;
+	while (start < length && IsPunctSymbol(word, start))
+		start++;
+	if (start != 0)
+		memmove(word, word + start, (length - start + 1) * sizeof(UniChar));
+	for (long i = Ustrlen(word) - 1; i >= 1; i--)
+	{
+		if (!IsPunctSymbol(word, i))
+			break;
+		word[i] = 0;
+	}
+}
+
+
+// ROM 0x0008ec00 EncodeAttribute__FPUs
+// 0x80 when the word starts with a capital.
+static ULong
+EncodeAttribute(const UniChar* word)
+{
+	return UToLower(word[0]) != word[0] ? kCapStartsUpper : 0;
+}
+
+
 // ROM 0x0008eb8c StripRecognitionWord__FPUs
 // The word made ready to look up: its diacriticals taken off unless the
 // language is the one that keeps them (8) or the word recogniser wrote
@@ -111,18 +140,7 @@ StripRecognitionWord(UniChar* word)
 {
 	if (gEnabledLanguage != 8 && ISNIL(RefVar(FWRecIsBeingUsed(RefVar(NILREF)))))
 		NoDiacriticsText(word, 0x7fffffff);
-	long length = Ustrlen(word);
-	long start = 0;
-	while (start < length && IsPunctSymbol(word, start))
-		start++;
-	if (start != 0)
-		memmove(word, word + start, (length - start + 1) * sizeof(UniChar));
-	for (long i = Ustrlen(word) - 1; i >= 1; i--)
-	{
-		if (!IsPunctSymbol(word, i))
-			break;
-		word[i] = 0;
-	}
+	StripPunctSymbols(word);
 }
 
 
@@ -132,18 +150,7 @@ StripRecognitionWord(UniChar* word)
 void
 StripRecognitionWordDiacritsOK(UniChar* word)
 {
-	long length = Ustrlen(word);
-	long start = 0;
-	while (start < length && IsPunctSymbol(word, start))
-		start++;
-	if (start != 0)
-		memmove(word, word + start, (length - start + 1) * sizeof(UniChar));
-	for (long i = Ustrlen(word) - 1; i >= 1; i--)
-	{
-		if (!IsPunctSymbol(word, i))
-			break;
-		word[i] = 0;
-	}
+	StripPunctSymbols(word);
 }
 
 
@@ -154,7 +161,7 @@ ULong
 EncodeRecognitionWord(UniChar* word)
 {
 	StripRecognitionWord(word);
-	return UToLower(word[0]) != word[0] ? kCapStartsUpper : 0;
+	return EncodeAttribute(word);
 }
 
 
@@ -163,7 +170,7 @@ ULong
 EncodeRecognitionWordDiacritsOK(UniChar* word)
 {
 	StripRecognitionWordDiacritsOK(word);
-	return UToLower(word[0]) != word[0] ? kCapStartsUpper : 0;
+	return EncodeAttribute(word);
 }
 
 // ROM 0x0008ec34 CheckCapAttributes__FPUs

@@ -2928,6 +2928,23 @@ AirusAL16(ULong selector, AirusAParmBlock* parms)
 }
 
 
+// ROM 0x0002b758 AL_Shell__FUlP15AirusAParmBlock
+// An AL dictionary's walker; ==> its result.
+static long
+AL_Shell(long selector, AirusAParmBlock* parms)
+{
+	AirusAL(selector, parms);
+	return parms->fResult;
+}
+
+
+// ROM 0x0002a148 AEnum_StartA__FP15AirusAParmBlock
+// ROM 0x0002a160 AEnum_ExitA__FP15AirusAParmBlock
+// The two that only say nothing has gone wrong yet.
+static void	AEnum_StartA(AirusAParmBlock* /*parms*/)	{ AE_Parms->fResult = 0; }
+static void	AEnum_ExitA(AirusAParmBlock* /*parms*/)		{ AE_Parms->fResult = 0; }
+
+
 // ROM 0x0002d574 CallAirusANoLock
 void
 CallAirusANoLock(Handle dictionary, long selector)
@@ -2937,7 +2954,7 @@ CallAirusANoLock(Handle dictionary, long selector)
 	switch (kind)
 	{
 	case kAirusKindAL:
-		AirusAL(selector, parms);		// (AL_Shell 0x0002b758)
+		AL_Shell(selector, parms);
 		break;
 	case kAirusKindAL16:
 		AirusAL16(selector, parms);		// (AL16_Shell 0x0002b774)
@@ -2960,10 +2977,10 @@ CallAirusANoLock(Handle dictionary, long selector)
 			AEnum_Verify(parms);
 			break;
 		case kAirusStartA:
+			AEnum_StartA(parms);
+			break;
 		case kAirusExitA:
-			// the two that only say nothing has gone wrong yet
-			// (AEnum_StartA 0x0002a148, AEnum_ExitA 0x0002a160)
-			parms->fResult = 0;
+			AEnum_ExitA(parms);
 			break;
 		case kAirusChangeAttribute:
 			AEnum_ChangeAttribute(parms);

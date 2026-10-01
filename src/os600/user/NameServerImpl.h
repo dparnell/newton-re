@@ -87,7 +87,7 @@ public:
 // port.
 struct TRPCInfo					// 0x8 bytes
 {
-						TRPCInfo()	{ fType = 0; fInfo = nil; }
+						TRPCInfo()	{ fType = 0; fInfo = nil; }		// ROM 0x0012f3bc __ct__8TRPCInfoFv
 
 	ULong				fType;			// kRPCInfo_*
 	void*				fInfo;			// kRPCInfo_ResArb: the TResArbitrationInfo

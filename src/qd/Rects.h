@@ -64,6 +64,6 @@ long	DistanceFromLine(const Point& pt, const Point& a, const Point& b);	// ROM 0
 
 inline Point	MakePoint(long h, long v)		{ Point p; p.v = (short) v; p.h = (short) h; return p; }
 inline Point	MidPoint(const Rect& r)			{ return MakePoint((r.left + r.right) / 2, (r.top + r.bottom) / 2); }		// ROM 0x00197884 MidPoint__5TRectCFv
-inline Boolean	EqualPt(Point a, Point b)		{ return a.v == b.v && a.h == b.h; }
+inline Boolean	EqualPt(Point a, Point b)		{ return a.v == b.v && a.h == b.h; }	// ROM 0x00335278 EqualPt__F5PointT1
 
 #endif	/* __RECTS_H */

@@ -431,6 +431,27 @@ BTEncode(TCompressVars* v, ULong c)
 }
 
 
+// ROM 0x0025cd84 dict_init__FP13TCompressVarsUi
+// A dictionary's nodes (from base on) emptied, and its first nodes made the
+// characters.
+static void
+dict_init(TCompressVars* v, ULong base)
+{
+	for (ULong i = 0; i < W(v, 0x14); i++)
+	{
+		SetH(v, kParent + (base + i) * 2, 0);
+		SetH(v, kChild + (base + i) * 2, 0);
+	}
+	ULong node = W(v, 0x24) + base;
+	for (ULong i = 0; i < W(v, 0x1c); i++, node++)
+	{
+		SetH(v, kChild + node * 2, 0);
+		SetH(v, kSibling + node * 2, 0);
+		B(v, kChar + node) = (UByte) i;
+	}
+}
+
+
 // ROM 0x0025d34c BTInitEn__FP13TCompressVars
 // The encoder started afresh: transparent, the dictionary the characters.
 static void
@@ -448,18 +469,7 @@ BTInitEn(TCompressVars* v)
 	B(v, 0x39b1) = 0;
 	SetW(v, 0x399c, 0);
 	B(v, 0x39b2) = 0;
-	for (ULong i = 0; i < W(v, 0x14); i++)
-	{
-		SetH(v, kParent + i * 2, 0);
-		SetH(v, kChild + i * 2, 0);
-	}
-	ULong node = W(v, 0x24);
-	for (ULong i = 0; i < W(v, 0x1c); i++, node++)
-	{
-		SetH(v, kChild + node * 2, 0);
-		SetH(v, kSibling + node * 2, 0);
-		B(v, kChar + node) = (UByte) i;
-	}
+	dict_init(v, 0);
 }
 
 
@@ -489,18 +499,7 @@ BTInitDe(TCompressVars* v)
 	B(v, 0x3862) = 0;
 	SetW(v, 0x386c, 0);
 	B(v, 0x3864) = 0;
-	for (ULong i = 0; i < W(v, 0x14); i++)
-	{
-		SetH(v, kParent + (base + i) * 2, 0);
-		SetH(v, kChild + (base + i) * 2, 0);
-	}
-	ULong node = W(v, 0x24) + base;
-	for (ULong i = 0; i < W(v, 0x1c); i++, node++)
-	{
-		SetH(v, kChild + node * 2, 0);
-		SetH(v, kSibling + node * 2, 0);
-		B(v, kChar + node) = (UByte) i;
-	}
+	dict_init(v, base);
 }
 
 

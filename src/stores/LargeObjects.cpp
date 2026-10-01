@@ -202,6 +202,17 @@ FillChunkArray(TStore* store, ULong rootId, ULong chunkArrayId, CPipe* pipe, ULo
 }
 
 
+// ROM 0x001608f0 __ct__15LargeObjectRootFv
+// A root as it starts (host: the root is its bytes, big-endian as on the
+// store): all nought, the flags its kind - 2.
+static void
+InitLargeObjectRoot(UByte* root)
+{
+	memset(root, 0, kLargeObjectRootSize);
+	PutBigEndianWord(root + kLORootFlags, 2);
+}
+
+
 // ROM 0x00101bd0 LODefaultCreate__FPUlP6TStoreP5CPipelUcPcPvT4P11TLOCallback
 // The root, the compander's name and parameters and the chunk array made
 // (each in a separate transaction), then the root written - its flags the
@@ -213,8 +224,7 @@ LODefaultCreate(ULong* id, TStore* store, CPipe* pipe, long size, UChar readOnly
 				TLOCallback* callback)
 {
 	UByte root[kLargeObjectRootSize];
-	memset(root, 0, sizeof(root));
-	PutBigEndianWord(root + kLORootFlags, 2);		// (LargeObjectRoot's constructor)
+	InitLargeObjectRoot(root);
 	PSSId rootId = 0, nameId = 0, paramsId = 0;
 	ULong chunkArrayId = 0;
 	NewtonErr err = store->NewWithinTransaction(kLargeObjectRootSize, &rootId);
@@ -347,8 +357,7 @@ LODefCreateFromComp(ULong* id, TStore* store, CPipe* pipe, long streamSize, UCha
 					long parametersSize, TLOCallback* callback)
 {
 	UByte root[kLargeObjectRootSize];
-	memset(root, 0, sizeof(root));
-	PutBigEndianWord(root + kLORootFlags, 2);		// (LargeObjectRoot's constructor)
+	InitLargeObjectRoot(root);
 	PSSId rootId = 0, nameId = 0, paramsId = 0;
 	ULong chunkArrayId = 0;
 	volatile NewtonErr err = noErr;

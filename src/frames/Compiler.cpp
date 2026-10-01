@@ -1283,6 +1283,7 @@ TCompiler::DeclarationWalker(RefArg node, long kind, RefArg a1, RefArg a2, RefAr
 }
 
 
+// ROM 0x002c77e0 DeclarationWalkerTrampoline__FPvRC6RefVarlN52
 static Boolean
 DeclarationWalkerTrampoline(void* context, RefArg node, long kind, RefArg a1, RefArg a2, RefArg a3, RefArg a4, RefArg a5)
 {
@@ -1364,6 +1365,7 @@ TCompiler::ClosureWalker(RefArg /*node*/, long kind, RefArg a1, RefArg a2, RefAr
 }
 
 
+// ROM 0x002c3cc4 ClosureWalkerTrampoline__FPvRC6RefVarlN52
 static Boolean
 ClosureWalkerTrampoline(void* context, RefArg node, long kind, RefArg a1, RefArg a2, RefArg a3, RefArg a4, RefArg a5)
 {

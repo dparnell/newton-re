@@ -485,9 +485,9 @@ TCursor::~TCursor()
 	if (fWordsHints != nil)
 		delete[] (char*) fWordsHints;
 	if (fBeginKeyData != nil)
-		delete fBeginKeyData;
+		DisposPtr((Ptr) fBeginKeyData);
 	if (fEndKeyData != nil)
-		delete fEndKeyData;
+		DisposPtr((Ptr) fEndKeyData);
 }
 
 
@@ -723,6 +723,21 @@ TCursor::Init(RefArg cursor, RefArg soup, RefArg querySpec)
 }
 
 
+// ROM 0x002d0a60 PtrToPtr__FPc
+// A copy of a pointer block, as big as it is; throws when there is no
+// memory for it.
+static Ptr
+PtrToPtr(Ptr p)
+{
+	long size = GetPtrSize(p);
+	Ptr copy = NewPtr(size);
+	if (copy == nil)
+		Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
+	memcpy(copy, p, size);
+	return copy;
+}
+
+
 // ROM 0x002d0ba8 Init__7TCursorFRC6RefVarPC7TCursor
 // A clone of another cursor: its query, position and state, over its
 // own soup info and indexes.
@@ -764,17 +779,9 @@ TCursor::Init(RefArg cursor, const TCursor* other)
 		if (fWordsHints != nil)
 			fWordsHints = GetWordsHints(RefVar(fWords));
 		if (fBeginKeyData != nil)
-		{
-			SKey* copy = new SKey;
-			*copy = *other->fBeginKeyData;
-			fBeginKeyData = copy;
-		}
+			fBeginKeyData = (SKey*) PtrToPtr((Ptr) other->fBeginKeyData);
 		if (fEndKeyData != nil)
-		{
-			SKey* copy = new SKey;
-			*copy = *other->fEndKeyData;
-			fEndKeyData = copy;
-		}
+			fEndKeyData = (SKey*) PtrToPtr((Ptr) other->fEndKeyData);
 		BuildSoupsInfo();
 		CreateIndexes();
 		if (fIndex != nil)
@@ -843,7 +850,7 @@ TCursor::BuildSoupsInfo(void)
 						KeyToSKey(RefVar(fBeginKey), RefVar(fIndexType), &key, &size, nil);
 						if (isMulti && (fFlags & kQueryBeginExclKey))
 							key.SetFlags((unsigned char) (key.Flags() | 0x80));
-						fBeginKeyData = new SKey;
+						fBeginKeyData = (SKey*) NewPtr(sizeof(SKey));
 						if (fBeginKeyData == nil)
 							Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
 						*fBeginKeyData = key;
@@ -854,7 +861,7 @@ TCursor::BuildSoupsInfo(void)
 						KeyToSKey(RefVar(fEndKey), RefVar(fIndexType), &key, &size, nil);
 						if (isMulti && (fFlags & kQueryEndKey))
 							key.SetFlags((unsigned char) (key.Flags() | 0x80));
-						fEndKeyData = new SKey;
+						fEndKeyData = (SKey*) NewPtr(sizeof(SKey));
 						if (fEndKeyData == nil)
 							Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
 						*fEndKeyData = key;

@@ -260,6 +260,7 @@ typedef int (*IndexStopProcPtr)(SKey* key, SKey* data, void* refCon);
 class TAbstractSoupIndex
 {
 public:
+				TAbstractSoupIndex()	{ }		// ROM 0x002e87a4 __ct__18TAbstractSoupIndexFv (the vtable)
 	virtual		~TAbstractSoupIndex()	{ }		// (host: the ROM has no virtual destructor here)
 	virtual int	Find(SKey* key, SKey* outKey, SKey* outData, Boolean exact) = 0;
 	virtual int	First(SKey* outKey, SKey* outData) = 0;
@@ -289,6 +290,7 @@ typedef int (TSoupIndex::*KeyCompareProcPtr)(const SKey& a, const SKey& b);
 class TSoupIndex : public TAbstractSoupIndex
 {
 public:
+				~TSoupIndex()	{ }					// ROM 0x002e758c __dt__10TSoupIndexFv
 	static ULong	Create(TStoreWrapper* wrapper, IndexInfo* info);		// ==> the info object's id
 	void		Init(TStoreWrapper* wrapper, PSSId infoId, const TSortingTable* sortingTable);
 	NewtonErr	ReadInfo(void);

@@ -40,6 +40,7 @@ enum
 struct UnionIndexData
 {
 				UnionIndexData();
+				~UnionIndexData()	{ }			// ROM 0x002e8798 __dt__14UnionIndexDataFv
 
 	TSoupIndex*	fIndex;						// +0x00
 	long		fState;						// +0x04  kUnionState...

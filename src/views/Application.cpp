@@ -86,8 +86,11 @@ TApplication::Constructor(void)
 }
 
 
+// ROM 0x001e9a18 InitSound__Fv
+// (nothing: the sound server starts itself)
+static void	InitSound(void)					{ }
 // ROM 0x00034500 InitToolbox__12TApplicationFv
-void	TApplication::InitToolbox(void)		{ }
+void	TApplication::InitToolbox(void)		{ InitSound(); }
 // ROM 0x00034504 Run__12TApplicationFv
 void	TApplication::Run(void)				{ }
 // ROM 0x00034508 Quit__12TApplicationFv

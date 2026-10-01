@@ -26,7 +26,7 @@ declined: StyleWriter, LaserWriter LS	EncodeLine__FlPcN22|TSWGroupDriver|TLaserW
 hardware	SReservedObjectHeader|TCardRepairAlertDialog|TCardUnWPAlertDialog|Voyager|Cirrus|16450|\d+TADC\b|\d+TADCF|ContrastTempSample|TFlashAMD|28F016|TFlashSeries2|\d+TFlashBlock|\d+TFlashStore|TFlashRange|TCardSocket|ResistiveTablet|GPIO|IRQTimer|SerialDMAEngine|DMAManager|Interrupt|TricInterrupt|HLevel2Handler|PCMCIAPowerInUse|EarlyIOPowerOn|HermesIR|PlatformDriver|LoadStartupDriver|TStartupDriver|ReservedBlock|OSCalibrationParameters|ROMREXCheckSums|SerialNumberROM|InitializeCommHardware|THMOSerial|SetVideoCardHandler|TCurrentBank|SBankInfo|GetBankInfo|TabletCalibration|ZapInternalStoreCheck|WipeInternalStore|TICHandler|\d+TSerialChip\b|\d+TSerialChipF|PSerialChipRegistry|TCHMemModem|SetupScreen|AllocPCSpyTimer|StartTimerOverflowDetect|TRealTimeClock|PSoundDriver|TSoundServerHandler|\d+TSoundServer|InitADC|GetADCObject|GetBIOInterfaceObject|ExtSoundSource|GetHighSpeedClock|IOPower|RealTimeClock|HDefault\w*Handler|NO_TRICHandler|KMEMode|PeripheralController|VoltageTable|BatteryTable|HandlerPresent|FindFirstOne|UserWantsColdBoot|SCCPowerInit|GetTabletPolling|DumbWait|ClearFIQAtomic|PauseSystem
 # the memory system's machinery: the MMU's page tables, physical pages, the
 # stack manager, the domains - the host's memory is its own
-memory system: MMU, pages, stacks	StackManager|\d+TStack(Page|Object|Info)?\b|\d+TStack(Page|Object|Info)?F|PageManager|PageTable|PageTracker|Phys|\d+TMemoryObject|\d+CMemObject|\d+TRAMTable|ContiguousMemory|VMemInit|Mapping|Pg[PA-Z]|SubPg|BigPg|BigPage|AddSec|RemoveSec|SecPerm|AddNewSec|PTable|PrimaryMapping|SectionInto|DomainRange|HeapDomain|MemArchObjs|ComputePermUnit|ComputePhysUnit|VToUnit|VToSizeWithP|VToP|PageMappedInRange|CheckVAddrRange|GetOnePage|EarlyBootGetTempPage|MakeTemporaryMapArea|GetNextKernelVAddr|MapTable|SizeTable|CreateUniqueEnvironment|MakeConforming|DeclawingRange|FaultMonitorEntry|QueryMemoryReservation|ReserveContiguousMemory|DomainInfo|EnvironmentInfo|ScanForREx|DelayedFunction|NetworkPersistentInfo|RegisterClass__FPcT1|ResizeSymbolTable|VToDomain|ClientReadable|FaultState|FaultMonitors|CopyPage|EarlyBootTempPage|ReleaseOnePage|ReleasePage|DomainPrimaryTable|TemporaryMapArea|ROMDomain|ResetStackStateBlock|GetTaskStackInfo
+memory system: MMU, pages, stacks	UnHookTracker|StackManager|\d+TStack(Page|Object|Info)?\b|\d+TStack(Page|Object|Info)?F|PageManager|PageTable|PageTracker|Phys|\d+TMemoryObject|\d+CMemObject|\d+TRAMTable|ContiguousMemory|VMemInit|Mapping|Pg[PA-Z]|SubPg|BigPg|BigPage|AddSec|RemoveSec|SecPerm|AddNewSec|PTable|PrimaryMapping|SectionInto|DomainRange|HeapDomain|MemArchObjs|ComputePermUnit|ComputePhysUnit|VToUnit|VToSizeWithP|VToP|PageMappedInRange|CheckVAddrRange|GetOnePage|EarlyBootGetTempPage|MakeTemporaryMapArea|GetNextKernelVAddr|MapTable|SizeTable|CreateUniqueEnvironment|MakeConforming|DeclawingRange|FaultMonitorEntry|QueryMemoryReservation|ReserveContiguousMemory|DomainInfo|EnvironmentInfo|ScanForREx|DelayedFunction|NetworkPersistentInfo|RegisterClass__FPcT1|ResizeSymbolTable|VToDomain|ClientReadable|FaultState|FaultMonitors|CopyPage|EarlyBootTempPage|ReleaseOnePage|ReleasePage|DomainPrimaryTable|TemporaryMapArea|ROMDomain|ResetStackStateBlock|GetTaskStackInfo
 # system patches (the host has none to install)
 system patches	Patch(?!er)|PatchRAM|BuildPatchTable|BackupPatch
 
@@ -82,5 +82,10 @@ public API the ROM does not call	\d+TIdleTimer|ResetIdle__14TAEventHandler|TGCSa
 # style run's characters at a time through the options' scanner: the host
 # takes them whole (qd/TextObject.h's TTextObjectChars, DEVIATION), asking
 # the scanner to hold them (-2) and let them go (-1) as InitTextWalker and
-# ReleaseTextWalker do
-host stand-ins (DEVIATION)	TextWalker
+# ReleaseTextWalker do; InitExternal (the precedents, the word hints'
+# handlers, the internal store's registration, the large objects), whose
+# work stores/Soups.cpp's InitQueries does where a host without the OS can
+# run it too; the exception-cleanup procs of TBits, TAnimate and
+# TSaveScreenBits, which the host's destructors stand in for when a Throw
+# unwinds
+host stand-ins (DEVIATION)	TextWalker|^InitExternal|DisposeTBits__FPv|DisposeTAnimate__FPv|DisposeTSaveScreenBits__FPv
