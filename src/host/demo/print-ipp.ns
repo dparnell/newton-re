@@ -20,6 +20,7 @@
 // answered the job (HostIPPJobs()).  The places tapped are print.ns's.
 
 HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
+HostInclude("walkhelpers.ns");		// findView
 
 name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
 
@@ -34,6 +35,46 @@ shows := func(left, top) begin
 end;
 
 Print("print-ipp: the printer is " & HostGetEnv("NEWTON_IPP_PRINTER"));
+
+// What the includer expects of the job (kIPPOutcome, when it sets one): nil
+// printed; {alert: "message"} the job failed and the user is told so (the
+// Print alert, the ROM's error message); {problem: code} the printer has a
+// problem (the print problem slip, its error the code) that it puts right,
+// and the job is then printed.
+outcome := if GlobalVarExists('kIPPOutcome) then GetGlobalVar('kIPPOutcome);
+
+// the view showing a text, if one does
+textShown := func(text) call findView with (GetRoot(), func(v) v.viewCObject and IsString(v.text) and StrEqual(v.text, text));
+
+printed := func() begin
+	call waitFor with ("print-ipp: the job answered", func() HostIPPJobs() >= 1, func() begin
+		Print("print-ipp: the printer answered " & NumberStr(HostIPPLastStatus()));
+		Print("print-ipp: done");
+		HostQuit();
+	end, 120);
+end;
+
+afterNow := func() begin
+	if outcome and outcome.alert then
+		call waitFor with ("print-ipp: the user told", func() call textShown with (outcome.alert), func() begin
+			Print("print-ipp: the user is told \"" & outcome.alert & "\"");
+			ScreenSnapshot("build/print-ipp-alert.pgm");
+			Print("print-ipp: done");
+			AddDelayedCall(func() HostQuit(), nil, 500);
+		end, 60)
+	else if outcome and outcome.problem then begin
+		local slip := GetRoot().printProblem;
+		call waitFor with ("print-ipp: the problem slip", func() slip.viewCObject and slip.error = outcome.problem, func() begin
+			Print("print-ipp: the problem slip shows problem " & NumberStr(slip.error));
+			ScreenSnapshot("build/print-ipp-problem.pgm");
+			call waitFor with ("print-ipp: the problem put right", func() not slip.viewCObject, func() begin
+				Print("print-ipp: the problem slip has gone");
+				call printed with ();
+			end, 60);
+		end, 60);
+	end else
+		call printed with ();
+end;
 
 call walkSetup with (name, func() begin
 	GetRoot().paperroll:MakeTextNote("hello from the Newton's printer", true);
@@ -54,11 +95,7 @@ call walkSetup with (name, func() begin
 						call tapAt with (226, 284);	// Print
 						call waitFor with ("print-ipp: Now or Later", func() call shows with (207, 250), func() begin
 							call tapAt with (221, 256);	// Now
-							call waitFor with ("print-ipp: the job answered", func() HostIPPJobs() >= 1, func() begin
-								Print("print-ipp: the printer answered " & NumberStr(HostIPPLastStatus()));
-								Print("print-ipp: done");
-								HostQuit();
-							end, 120);
+							call afterNow with ();
 						end, 20);
 					end, 20);
 				end, 20);

@@ -131,6 +131,108 @@ TestResponses(void)
 }
 
 
+// whether bytes hold a text (memmem is not everywhere)
+static bool
+Holds(const unsigned char* data, size_t size, const char* text)
+{
+	size_t n = strlen(text);
+	for (size_t i = 0; i + n <= size; i++)
+		if (memcmp(data + i, text, n) == 0)
+			return true;
+	return false;
+}
+
+
+// a printer's answer to Get-Printer-Attributes: its state and reasons
+static size_t
+StateAnswer(unsigned char* p, int state, const char* const* reasons)
+{
+	unsigned char* start = p;
+	*p++ = 1; *p++ = 1; *p++ = 0; *p++ = 0;		// successful-ok
+	*p++ = 0; *p++ = 0; *p++ = 0; *p++ = 2;
+	*p++ = 0x04;								// printer-attributes-tag
+	*p++ = 0x23; *p++ = 0; *p++ = 13; memcpy(p, "printer-state", 13); p += 13;
+	*p++ = 0; *p++ = 4; *p++ = 0; *p++ = 0; *p++ = 0; *p++ = (unsigned char) state;
+	for (int i = 0; reasons[i] != NULL; i++)
+	{
+		size_t length = strlen(reasons[i]);
+		*p++ = 0x44;
+		if (i == 0)
+		{
+			*p++ = 0; *p++ = 21; memcpy(p, "printer-state-reasons", 21); p += 21;
+		}
+		else
+		{
+			*p++ = 0; *p++ = 0;
+		}
+		*p++ = 0; *p++ = (unsigned char) length; memcpy(p, reasons[i], length); p += length;
+	}
+	*p++ = 0x44; *p++ = 0; *p++ = 4; memcpy(p, "more", 4); p += 4;		// another attribute's
+	*p++ = 0; *p++ = 5; memcpy(p, "thing", 5); p += 5;
+	*p++ = 0x03;
+	return (size_t) (p - start);
+}
+
+
+static HostIPPCondition
+ConditionOf(int state, const char* const* reasons, HostIPPResponse* response)
+{
+	unsigned char body[512], data[1024];
+	size_t bodySize = StateAnswer(body, state, reasons);
+	size_t n = (size_t) sprintf((char*) data, "HTTP/1.1 200 OK\r\nContent-Length: %u\r\n\r\n", (unsigned) bodySize);
+	memcpy(data + n, body, bodySize);
+	EXPECT(HostIPPParseResponse(data, n + bodySize, false, response) == 1);
+	return HostIPPPrinterCondition(response);
+}
+
+
+static void
+TestPrinterState(void)
+{
+	// the request: Get-Printer-Attributes asking for the two attributes
+	unsigned char request[512];
+	size_t size = HostIPPGetPrinterState("ipp://h/ipp/print", 9, request, sizeof(request));
+	EXPECT(size > 9 && request[2] == 0x00 && request[3] == 0x0b && request[7] == 9 && request[size - 1] == 0x03);
+	EXPECT(Holds(request, size, "requested-attributes") && Holds(request, size, "printer-state-reasons"));
+	HostIPPURI uri;
+	HostIPPParseURI("ipp://h:631/ipp/print", &uri);
+	char head[256];
+	EXPECT(HostIPPHTTPRequestHeader(&uri, size, head, sizeof(head)) > 0 && strstr(head, "Content-Length: ") != NULL);
+	EXPECT(strstr(head, "chunked") == NULL);
+
+	// the answers, and the problems they come to
+	HostIPPResponse response;
+	const char* none[] = { "none", NULL };
+	const char* paper[] = { "media-empty-error", NULL };
+	const char* jam[] = { "toner-low-warning", "media-jam", NULL };
+	const char* door[] = { "cover-open", NULL };
+	const char* ink[] = { "marker-supply-empty-error", NULL };
+	const char* warning[] = { "media-empty-warning", NULL };
+	EXPECT(ConditionOf(3, none, &response) == kHostIPPReady);
+	EXPECT(response.fPrinterState == 3 && strcmp(response.fStateReasons, "none") == 0);
+	EXPECT(ConditionOf(5, paper, &response) == kHostIPPNoPaper);
+	EXPECT(ConditionOf(5, jam, &response) == kHostIPPJammed);
+	EXPECT(strcmp(response.fStateReasons, "toner-low-warning,media-jam") == 0);
+	EXPECT(ConditionOf(5, door, &response) == kHostIPPDoorOpen);
+	EXPECT(ConditionOf(4, ink, &response) == kHostIPPNoInk);
+	EXPECT(ConditionOf(4, warning, &response) == kHostIPPReady);
+	EXPECT(ConditionOf(5, none, &response) == kHostIPPOffLine);
+
+	// what became of a job
+	response.fHTTPStatus = 200; response.fIPPStatus = 0;
+	EXPECT(HostIPPJobResult(1, &response) == kHostIPPJobPrinted);
+	response.fIPPStatus = 0x0507;
+	EXPECT(HostIPPJobResult(1, &response) == kHostIPPJobBusy);
+	response.fIPPStatus = 0x040a;
+	EXPECT(HostIPPJobResult(1, &response) == kHostIPPJobRefused);
+	response.fHTTPStatus = 503; response.fIPPStatus = -1;
+	EXPECT(HostIPPJobResult(1, &response) == kHostIPPJobBusy);
+	response.fHTTPStatus = 404;
+	EXPECT(HostIPPJobResult(1, &response) == kHostIPPJobRefused);
+	EXPECT(HostIPPJobResult(-1, &response) == kHostIPPJobNoAnswer);
+}
+
+
 int
 main()
 {
@@ -138,6 +240,7 @@ main()
 	TestFormats();
 	TestRequest();
 	TestResponses();
+	TestPrinterState();
 	if (failures == 0)
 		printf("test_HostIPP: all passed\n");
 	else

@@ -1,0 +1,128 @@
+// Taking away a network printer added before (ctests
+// host.NewtonPrintAddPrinter.remove, then .removed, on the store
+// print-addprinter.ns added "Office Laser (HP PCL)" to): Extras, Prefs,
+// Network Printers, the printer's row - marked "(added)" - picked and
+// Remove tapped; it is then no longer the current printer (the one a new
+// Newton starts with is, @285's), nor among the recent printers, nor
+// offered in AvailablePrinters.  Run again on the same store (.removed) it
+// is still gone - not offered again at boot - and the Print slip's printer
+// picker does not list it.
+//
+//   python tools/print/ippprinter.py --port 0 --out build/ipp-rm --advertise "Office Laser" -- \
+//       build/host/host/newton --display 320x480 --headless 200 --store build/add.store \
+//       --script src/host/demo/print-removeprinter.ns
+
+HostInclude("common.ns");			// tapAt, typeKey, waitFor, walkSetup
+HostInclude("walkhelpers.ns");		// findView
+HostInclude("apphelpers.ns");		// pickerUp, viewLabelled
+
+kAddedPrinter := "Office Laser (HP PCL)";
+
+// what says the printer is still about, if anything does
+stillThere := func() begin
+	local why := nil;
+	local p := userConfiguration.currentPrinter;
+	if p and p.printerName and StrEqual(p.printerName, kAddedPrinter) then why := "it is the current printer";
+	if userConfiguration.printers then
+		foreach r in userConfiguration.printers do
+			if r.printerName and StrEqual(r.printerName, kAddedPrinter) then why := "it is a recent printer";
+	foreach a in AvailablePrinters do
+		if StrEqual(a.name, kAddedPrinter) then why := "it is offered in AvailablePrinters";
+	if GetGlobalVar('|NetworkPrinters:host|):Added(kAddedPrinter) then why := "it is kept";
+	why;
+end;
+
+shows := func(left, top) begin
+	local found := nil;
+	foreach child in GetRoot():ChildViewFrames() do begin
+		local box := child:GlobalBox();
+		if box.left = left and box.top = top then found := true;
+	end;
+	found;
+end;
+
+// the panel, once it lists the printer as added
+panelView := func() call findView with (GetRoot(), func(v) v.overview and IsString(v.overview)
+	and StrEqual(v.overview, "Network Printers") and v.rows and v.viewCObject
+	and call addedRow with (v));
+
+addedRow := func(panel) begin
+	local k := nil;
+	foreach i, r in panel.rows do
+		if not k and StrPos(r.text, "(added)", 0) and StrEqual(r.name, kAddedPrinter) then k := i;
+	k;
+end;
+
+// the Prefs application's icon in the Extras drawer, once it shows
+prefsIcon := func() if GetRoot().extrasDrawer.viewCObject then
+	call findView with (GetRoot().extrasDrawer, func(v) v.target and v.target.fentry
+		and v.target.fentry.app = 'preferenceRoll);
+
+removeIt := func() begin
+	call tapAt with (20, 460);				// Extras
+	call waitFor with ("print-removeprinter: the Prefs icon", func() call prefsIcon with (), func() begin
+		call tapCentre with (call prefsIcon with ());
+		call waitFor with ("print-removeprinter: Prefs", func() GetRoot().preferenceRoll.viewCObject, func() begin
+			local row := call findView with (GetRoot().preferenceRoll, func(v) IsString(v.text)
+				and StrEqual(v.text, "Network Printers"));
+			if row then call tapCentre with (row) else call tapAt with (110, 296);	// (the list draws its rows itself)
+			call waitFor with ("print-removeprinter: the printer added", func() call panelView with (), func() begin
+				local panel := call panelView with ();
+				local k := call addedRow with (panel);
+				Print("print-removeprinter: the panel lists " & panel.rows[k].text);
+				local list := call findView with (panel, func(v) v.listItems);
+				local b := list:GlobalBox();
+				call tapAt with (b.left + 40, b.top + 4 + 13 * k + 6);
+				call waitFor with ("print-removeprinter: the row picked", func() panel.chosenRow = k, func() begin
+					call tapCentre with (call viewLabelled with (panel, "Remove"));
+					call waitFor with ("print-removeprinter: the printer removed", func() not call stillThere with (), func() begin
+						Print("print-removeprinter: removed; the current printer is " & userConfiguration.currentPrinter.name);
+						AddDelayedCall(func() begin
+							ScreenSnapshot("build/print-removeprinter-panel.pgm");
+							Print("print-removeprinter: done");
+							HostQuit();
+						end, nil, 2000);		// (the System soup entries written)
+					end, 20);
+				end, 10);
+			end, 30);
+		end, 20);
+	end, 20);
+end;
+
+// after a restart: still gone, and not in the Print slip's printer picker
+checkGone := func() begin
+	local why := call stillThere with ();
+	if why then begin
+		Print("print-removeprinter: FAILED - the printer came back: " & why);
+		HostQuit();
+		return;
+	end;
+	Print("print-removeprinter: the printer is still gone; the current printer is " & userConfiguration.currentPrinter.name);
+	GetRoot().paperroll:MakeTextNote("hello from the Newton's printer", true);
+	call tapAt with (310, 28);				// the note's Action button
+	call waitFor with ("print-removeprinter: the Action menu", func() call pickerUp with (), func() begin
+		call pickItem with ("Print");		// Print Note
+		call waitFor with ("print-removeprinter: the Print slip", func() call shows with (45, 134), func() begin
+			call tapAt with (118, 196);		// the Printer picker
+			call waitFor with ("print-removeprinter: the printers", func() call pickerUp with (), func() begin
+				local items := foreach item in (call pickerUp with ()).pickItems collect
+					(if IsFrame(item) then item.item else item);
+				local listed := nil;
+				foreach t in items do if IsString(t) and StrPos(t, kAddedPrinter, 0) then listed := true;
+				if listed then
+					Print("print-removeprinter: FAILED - the Print slip still lists it")
+				else
+					Print("print-removeprinter: the Print slip does not list it");
+				Print("print-removeprinter: done");
+				HostQuit();
+			end, 20);
+		end, 20);
+	end, 20);
+end;
+
+call waitFor with ("print-removeprinter: the boot",
+	func() call (call isOpen with ('paperroll)) with (),
+	func() AddDelayedCall(func()
+		if GetGlobalVar('|NetworkPrinters:host|):Added(kAddedPrinter) then call removeIt with ()
+		else call checkGone with (), nil, 600), 60);
+Print("print-removeprinter: the script is loaded");

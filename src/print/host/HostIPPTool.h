@@ -46,15 +46,33 @@
 class TEndpoint;
 
 // The option that names the printer a connection goes to (its URI, a C
-// string); without it the tool takes the configured printer
-// (HostIPPPrinter).
+// string; empty: the configured printer, HostIPPPrinter) and the job's
+// ticket - where the tool leaves what became of the job (HostIPPTicketResult).
 #define kHostIPPURIOption		'iuri'
 
 struct THostIPPURIOption : public TOption
 {
-						THostIPPURIOption(const char* uri);
+						THostIPPURIOption(const char* uri, ULong ticket);
+	ULong				fTicket;
 	char				fURI[256];
 };
+
+// A job's ticket, and what became of the job it was given to, as the
+// printing system's error: noErr printed, kPR_ERR_NotFound the printer could
+// not be reached, kPR_ERR_PrinterError refused (any answer but
+// successful-*), kPR_ERR_Busy busy (server-error-busy, HTTP 503),
+// kPR_ERR_LostContact the connection ended with no answer.  The tool runs
+// in a task of its own and the endpoint's disconnect carries no error, so
+// this is how the driver hears of it once the endpoint is closed.
+ULong		HostIPPNewTicket(void);
+NewtonErr	HostIPPTicketResult(ULong ticket);
+
+// What an IPP printer says of its state (Get-Printer-Attributes), as the
+// ROM's PostScript driver has its printer's status messages: noErr, or the
+// printer problem it stands for (kPR_PROB_NoPaper, _NoInk, _Jammed,
+// _DoorOpen, _OffLine), or kPR_ERR_LostContact when it does not answer.
+// The task waits for it in PrReleaseControl (three seconds at most).
+NewtonErr	HostIPPPrinterStatus(const char* uri, TPrinter* printer);
 
 // A connection to an IPP printer as the host's drivers make one: an
 // endpoint of the 'ippc service opened (EasyOpen), the job's bytes written
@@ -68,8 +86,11 @@ public:
 	NewtonErr			Open(const char* uri);			// nil or "": the configured printer
 	NewtonErr			Send(const char* data, ULong size, ULong& sent);
 	NewtonErr			Close();
+	NewtonErr			Status(TPrinter* printer);		// HostIPPPrinterStatus of the printer it went to
 
 	TEndpoint*			fEndpoint;
+	ULong				fTicket;
+	char				fURI[320];
 };
 
 // The URI of the printer a printer frame names, into uri: the printer the
@@ -133,6 +154,7 @@ protected:
 	Size				fInSize;
 	long				fPolls;				// how long the answer has been waited for
 	HostIPPURI			fURI;
+	ULong				fTicket;			// the job's (kHostIPPURIOption; 0: none)
 	char				fURIText[512];
 };
 
@@ -173,6 +195,7 @@ public:
 	THostIPPConnection*	fConnection;
 	NewtonErr		fError;
 	Boolean			fCancelled;
+	ULong			fSent;			// the writes so far (the status asked every eighth)
 };
 
 #endif	/* __HOSTIPPTOOL_H */

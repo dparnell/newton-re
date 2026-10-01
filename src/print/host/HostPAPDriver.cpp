@@ -103,11 +103,15 @@ TPSPAPDriver::Close(Boolean /*abort*/)
 }
 
 
-// (an IPP printer says nothing while the job is sent: all is well)
+// The printer's state: PAP's status messages (GetData's, and GetPAPStatus's
+// when the driver has an error already) are IPP's Get-Printer-Attributes
+// here (HostIPPPrinterStatus), a problem the printer reports the problem
+// the ROM's InterpretPAPString makes of its PostScript status message.
 NewtonErr
 TPSPAPDriver::GetStatus()
 {
-	return noErr;
+	THostIPPConnection* connection = (THostIPPConnection*) fHostConnection;
+	return (connection != nil) ? connection->Status(fPrinter) : noErr;
 }
 
 
@@ -127,9 +131,18 @@ TPSPAPDriver::SendPSBinary(char* data, ULong size, ULong& sent)
 	THostIPPConnection* connection = (THostIPPConnection*) fHostConnection;
 	if (connection == nil)
 		return kPR_ERR_NewtonError;
+	// as the ROM's: PAP's PutData refused while the printer has a problem
+	// (-12716) is the printer asked and its problem the error; every eighth
+	// write the status is looked at
+	if (fError >= kPR_ERR_MINPROBLEM && fError <= kPR_ERR_MAXPROBLEM)
+	{
+		fError = GetStatus();
+		if (fError != noErr)
+			return fError;
+	}
 	NewtonErr err = connection->Send(data, size, sent);
-	if (err == noErr)
-		fSent++;
+	if (err == noErr && (++fSent & 7) == 7)
+		fError = GetStatus();
 	return err;
 }
 

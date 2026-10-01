@@ -432,6 +432,44 @@ if(Python3_FOUND)
     endforeach()
 endif()
 
+# a job that does not print is told to the user as the ROM tells of a
+# failed job (print/host/HostIPPTool.h): the printer refusing it
+# (ippprinter.py --status 0x040a: "Printer problem.", through the PostScript
+# printer and the HP PCL driver), nobody at the printer's address (--down:
+# "No printer is connected."), and a printer out of paper for a while
+# (--problem media-empty:2: the print problem slip, -44104, until the
+# printer is well, and the job then printed)
+if(Python3_FOUND)
+    foreach(case Refused PCLRefused Down Problem)
+        if(case STREQUAL "Refused")
+            set(fail_script print-ipp-refused.ns)
+            set(fail_mode --status 0x040a)
+            set(fail_said "the user is told .Printer problem")
+        elseif(case STREQUAL "PCLRefused")
+            set(fail_script print-ipp-pcl-refused.ns)
+            set(fail_mode --status 0x040a)
+            set(fail_said "the user is told .Printer problem")
+        elseif(case STREQUAL "Down")
+            set(fail_script print-ipp-down.ns)
+            set(fail_mode --down)
+            set(fail_said "the user is told .No printer is connected")
+        else()
+            set(fail_script print-ipp-problem.ns)
+            set(fail_mode --problem media-empty:2)
+            set(fail_said "the problem slip shows problem -44104.*the problem slip has gone.*the printer answered 0")
+        endif()
+        add_test(NAME host.NewtonIPP${case}
+                 COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/print/ippprinter.py --port 0 ${fail_mode}
+                         --out ${CMAKE_CURRENT_BINARY_DIR}/ipp-${case}
+                         -- $<TARGET_FILE:newton> --display 320x480 --headless 200
+                         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/${fail_script}
+                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+        set_tests_properties(host.NewtonIPP${case} PROPERTIES TIMEOUT 300
+                             PASS_REGULAR_EXPRESSION "print-ipp: ${fail_said}.*print-ipp: done.*the program answered 0"
+                             FAIL_REGULAR_EXPRESSION "waited in vain|fell over")
+    endforeach()
+endif()
+
 # the printers on the network (print/host/HostNetworkPrinters.cpp): the
 # fake printer advertised (ippprinter.py --advertise, which the host's
 # DNS-SD layer takes in place of a browse: NEWTON_FOUND_PRINTERS), picked
@@ -455,7 +493,7 @@ if(Python3_FOUND)
             set(net_tag print-addprinter)
             set(net_job job-1.pcl)
             set(net_check --inked 1:200,150,1500,250:2000)
-            set(net_first "added Office Laser \(HP PCL\) at ipp://")
+            set(net_first "added Office Laser .HP PCL. at ipp://")
         endif()
         set(net_dir ${CMAKE_CURRENT_BINARY_DIR}/print-${kind})
         add_test(NAME host.NewtonPrint${kind}.clean COMMAND ${CMAKE_COMMAND} -E rm -rf ${net_dir})
@@ -477,8 +515,8 @@ if(Python3_FOUND)
                              --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/${net_script}
                      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
             set_tests_properties(${net_name} PROPERTIES TIMEOUT 300
-                                 PASS_REGULAR_EXPRESSION "${net_tag}: ${net_said}.*job 1: [0-9]+ bytes .*saved.*${net_tag}: done.*1 job\(s\); the program answered 0"
-                                 FAIL_REGULAR_EXPRESSION "waited in vain|fell over|FAILED")
+                                 PASS_REGULAR_EXPRESSION "${net_tag}: ${net_said}.*job 1: [0-9]+ bytes .*saved.*${net_tag}: done.*1 job.s.. the program answered 0"
+                                 FAIL_REGULAR_EXPRESSION "waited in vain|fell over|FAILED|!!! Exception")
             add_test(NAME ${net_name}.check
                      COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/print/jobcheck.py ${net_dir}/${run}/${net_job} --pages 1 ${net_check})
             set_tests_properties(${net_name}.check PROPERTIES PASS_REGULAR_EXPRESSION "jobcheck: passed")
@@ -487,6 +525,26 @@ if(Python3_FOUND)
         set_tests_properties(host.NewtonPrint${kind}.check PROPERTIES FIXTURES_REQUIRED print${kind}first)
         set_tests_properties(host.NewtonPrint${kind}.restart PROPERTIES FIXTURES_REQUIRED print${kind}first FIXTURES_SETUP print${kind}restart)
         set_tests_properties(host.NewtonPrint${kind}.restart.check PROPERTIES FIXTURES_REQUIRED print${kind}restart)
+        if(kind STREQUAL "AddPrinter")
+            # then the printer taken away again in the panel (.remove), and
+            # still gone after a restart (.removed): print-removeprinter.ns
+            foreach(run remove removed)
+                add_test(NAME host.NewtonPrint${kind}.${run}
+                         COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/print/ippprinter.py --port 0 --out ${net_dir}/${run}
+                                 --advertise "Office Laser"
+                                 -- $<TARGET_FILE:newton> --display 320x480 --headless 200 --store ${net_dir}/store
+                                 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/print-removeprinter.ns
+                         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+            endforeach()
+            set_tests_properties(host.NewtonPrint${kind}.remove PROPERTIES TIMEOUT 300
+                                 FIXTURES_REQUIRED print${kind}restart FIXTURES_SETUP print${kind}remove
+                                 PASS_REGULAR_EXPRESSION "the panel lists Office Laser - HP PCL .added.*removed; the current printer is StyleWriter.*print-removeprinter: done"
+                                 FAIL_REGULAR_EXPRESSION "waited in vain|fell over|FAILED|!!! Exception")
+            set_tests_properties(host.NewtonPrint${kind}.removed PROPERTIES TIMEOUT 300
+                                 FIXTURES_REQUIRED print${kind}remove
+                                 PASS_REGULAR_EXPRESSION "the printer is still gone.*the Print slip does not list it.*print-removeprinter: done"
+                                 FAIL_REGULAR_EXPRESSION "waited in vain|fell over|FAILED|!!! Exception")
+        endif()
     endforeach()
 endif()
 

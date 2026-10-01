@@ -14,14 +14,20 @@ and logs what it got.  With a program after `--` it runs it with
 newton takes as it takes `--ipp-printer`, and stops when the program ends.
 
     python tools/print/ippprinter.py [--port PORT] [--out DIR] [--path /ipp/print]
-                                     [--status N] [--advertise NAME [--formats ps,pcl]]
+                                     [--status N] [--problem REASON[:N]] [--down]
+                                     [--advertise NAME [--formats ps,pcl]]
                                      [-- <program> [args...]]
 
 **Inputs:** `--port` (default 0: a free one, so runs from two build
 directories never meet), `--out` the directory the documents go to (default
 the working directory), `--path` the printer's path (default `/ipp/print`),
 `--status` the IPP status-code to answer a Print-Job with (default 0,
-successful-ok; `0x040a` refuses the document's format, for trying a refusal),
+successful-ok; `0x040a` refuses the document's format, for trying a refusal;
+`0x0507` is busy), `--problem REASON[:N]` the printer stopped with that
+printer-state-reason (`media-empty`, `media-jam`, `door-open`,
+`marker-supply-empty`, `offline`...) for its first N answers to
+Get-Printer-Attributes (default 2) and then well again, `--down` nobody at
+the printer's address (the port taken and let go, so connecting is refused),
 `--advertise NAME` makes the program find the printer on the network under
 that name instead of being given it: `NEWTON_FOUND_PRINTERS=NAME|URI|FORMATS`
 replaces `NEWTON_IPP_PRINTER`, and the host's DNS-SD layer
@@ -39,7 +45,10 @@ It reads chunked and Content-Length requests and answers HTTP/1.1 with a
 Content-Length.  Used by ctests `host.NewtonIPPPostScript` and
 `host.NewtonIPPPCL` (`src/host/demo/print-ipp.ns`), and with `--advertise`
 by `host.NewtonPrintNetworkChooser` and `host.NewtonPrintAddPrinter`
-(`print-network.ns`, `print-addprinter.ns`).
+(`print-network.ns`, `print-addprinter.ns`,
+`print-removeprinter.ns`), and with `--status 0x040a`, `--down` and `--problem` by
+`host.NewtonIPPRefused`, `host.NewtonIPPPCLRefused`, `host.NewtonIPPDown` and
+`host.NewtonIPPProblem` (`print-ipp-refused.ns` and its kin).
 
 ## jobcheck.py - check a job a Newton printed
 

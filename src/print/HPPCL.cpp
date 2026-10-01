@@ -25,6 +25,7 @@
 void	PackBits(char** src, char** dst, long count);		// qd: ROM 0x002aeed0 PackBits__FPPcT1l
 
 PrinterServiceHook	gPrinterServiceHook = nil;
+PrinterCloseHook	gPrinterCloseHook = nil;
 
 // how long a write to the printer may take (the ROM's 0x34bc000), how long a
 // problem slip waits before the printer is asked again (0x708000), and how
@@ -286,6 +287,8 @@ ThpPCL::Close()
 	if (ContinueIO())
 		PrReleaseControl(kPCLDrainTime, fPrinter);
 	NewtonErr err = ReleaseConnection();
+	if (gPrinterCloseHook != nil)			// HOST EXTENSION (HPPCL.h)
+		err = gPrinterCloseHook(this, err);
 	if (fPackBuffer != nil)
 		DisposPtr(fPackBuffer);
 	if (fError == noErr)

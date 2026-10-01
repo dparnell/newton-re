@@ -89,6 +89,51 @@
 		printer;
 	end,
 
+	// A printer added before taken away again: no longer kept nor offered,
+	// gone from the recent printers, and - when it was the current printer -
+	// the most recent other one current instead, else the one a new Newton
+	// starts with (the default user configuration's, @285).
+	RemovePrinter: func(name)
+	begin
+		local prefs := GetAppPrefs(kAppSymbol, {printers: []});
+		local i := 0;
+		while i < Length(prefs.printers) do
+			if StrEqual(prefs.printers[i].name, name) then
+				ArrayRemoveCount(prefs.printers, i, 1)
+			else
+				i := i + 1;
+		EntryChange(prefs);
+		i := 0;
+		while i < Length(AvailablePrinters) do
+			if StrEqual(AvailablePrinters[i].name, name) then
+				ArrayRemoveCount(AvailablePrinters, i, 1)
+			else
+				i := i + 1;
+		local recent := if userConfiguration.printers then Clone(userConfiguration.printers) else [];
+		i := 0;
+		while i < Length(recent) do
+			if recent[i].printerName and StrEqual(recent[i].printerName, name) then
+				ArrayRemoveCount(recent, i, 1)
+			else
+				i := i + 1;
+		SetUserConfig('printers, recent);
+		local current := userConfiguration.currentPrinter;
+		if current and current.printerName and StrEqual(current.printerName, name) then
+			SetUserConfig('currentPrinter, if Length(recent) > 0 then Clone(recent[0]) else @285.currentPrinter);
+		Print("network printers: removed " & name);
+	end,
+
+	// whether a printer of that name has been added
+	Added: func(name)
+	begin
+		local prefs := GetAppPrefs(kAppSymbol, nil);
+		local found := nil;
+		if prefs and prefs.printers then
+			foreach p in prefs.printers do
+				if StrEqual(p.name, name) then found := p;
+		found;
+	end,
+
 	// the printers added before, offered again (at boot)
 	Restore: func()
 	begin
@@ -99,16 +144,29 @@
 	end,
 
 	// What the panel lists: each printer found once for each of the formats
-	// the host's printers can send it.
+	// the host's printers can send it, those added marked so, and the
+	// printers added that are not found now.  A row's name is the printer
+	// frame's (what Add makes, what Remove takes away).
 	Rows: func()
 	begin
 		local rows := [];
+		local named := [];
 		foreach found in HostFoundPrinters() do begin
 			if found.postScript then
-				AddArraySlot(rows, {found: found, kind: 'postScript, text: found.name & " - PostScript"});
+				AddArraySlot(rows, {found: found, kind: 'postScript, name: found.name & " (PostScript)", text: found.name & " - PostScript"});
 			if found.pcl then
-				AddArraySlot(rows, {found: found, kind: 'pcl, text: found.name & " - HP PCL"});
+				AddArraySlot(rows, {found: found, kind: 'pcl, name: found.name & " (HP PCL)", text: found.name & " - HP PCL"});
 		end;
+		foreach r in rows do begin
+			AddArraySlot(named, r.name);
+			if :Added(r.name) then
+				r.text := r.text & " (added)";
+		end;
+		local prefs := GetAppPrefs(kAppSymbol, nil);
+		if prefs and prefs.printers then
+			foreach p in prefs.printers do
+				if not LSearch(named, p.name, 0, '|str=|, nil) then
+					AddArraySlot(rows, {name: p.name, text: p.name & " (added, not found)"});
 		rows;
 	end,
 
@@ -148,15 +206,19 @@
 			 viewJustify: 48, listItems: [], selection: -1,
 			 // (a tap on a row: the row picked)
 			 buttonClickScript: func(row) chosenRow := row},
-			{_proto: @226, viewBounds: {left: 10, top: 126, right: 90, bottom: 140},
+			{_proto: @226, viewBounds: {left: 10, top: 126, right: 82, bottom: 140},
 			 text: "Look again",
 			 buttonClickScript: func() begin
 				HostLookForPrinters();
-				AddDelayedCall(func() :Refresh(0), nil, 300);
+				local panel := :Parent();
+				AddDelayedCall(func() panel:Refresh(0), nil, 300);
 			 end},
-			{_proto: @226, viewBounds: {left: 100, top: 126, right: 200, bottom: 140},
-			 text: "Add printer",
-			 buttonClickScript: func() :AddSelected()},
+			{_proto: @226, viewBounds: {left: 90, top: 126, right: 140, bottom: 140},
+			 text: "Add",
+			 buttonClickScript: func() :Parent():AddSelected()},
+			{_proto: @226, viewBounds: {left: 148, top: 126, right: 210, bottom: 140},
+			 text: "Remove",
+			 buttonClickScript: func() :Parent():RemoveSelected()},
 			{_proto: @218, viewBounds: {left: 10, top: 146, right: -10, bottom: 162},
 			 viewJustify: 48, text: "", statusText: true},
 		],
@@ -191,14 +253,31 @@
 		end,
 		AddSelected: func() begin
 			local i := chosenRow;
-			if not rows or not i or i < 0 or i >= Length(rows) then begin
-				:Notify(kNotifyAlert, "Network Printers", "Pick a printer in the list first.");
+			if not rows or not i or i < 0 or i >= Length(rows) or not rows[i].found then begin
+				:Notify(kNotifyAlert, "Network Printers", "Pick a printer the network has in the list first.");
 				return;
 			end;
 			local printer := GetGlobalVar('|NetworkPrinters:host|):AddPrinter(rows[i].found, rows[i].kind);
-			foreach c in :ChildViewFrames() do
-				if c.statusText then SetValue(c, 'text, "Added " & printer.name);
 			Print("network printers: added " & printer.name & " at " & printer.hostURI);
+			:Refresh(20);
+			:SetStatus("Added " & printer.name);
+		end,
+		RemoveSelected: func() begin
+			local i := chosenRow;
+			local printers := GetGlobalVar('|NetworkPrinters:host|);
+			if not rows or not i or i < 0 or i >= Length(rows) or not printers:Added(rows[i].name) then begin
+				:Notify(kNotifyAlert, "Network Printers", "Pick a printer that has been added in the list first.");
+				return;
+			end;
+			local name := rows[i].name;
+			printers:RemovePrinter(name);
+			chosenRow := nil;
+			:Refresh(20);
+			:SetStatus("Removed " & name);
+		end,
+		SetStatus: func(text) begin
+			foreach c in :ChildViewFrames() do
+				if c.statusText then SetValue(c, 'text, text);
 		end,
 	},
 

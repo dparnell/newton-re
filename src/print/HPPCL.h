@@ -93,4 +93,11 @@ class TOptionArray;
 typedef Boolean (*PrinterServiceHook)(ThpPCL* driver, TOptionArray* options);
 extern PrinterServiceHook	gPrinterServiceHook;
 
+// HOST EXTENSION: and when the connection is closed (Close), the hook may
+// make what became of the job the job's error - the error closing it is
+// handed in, and what it answers takes its place (an IPP printer's refusal,
+// which a serial or IrDA connection has no way to report).  Nil on a device.
+typedef NewtonErr (*PrinterCloseHook)(ThpPCL* driver, NewtonErr err);
+extern PrinterCloseHook		gPrinterCloseHook;
+
 #endif	/* __PRINT_HPPCL_H */

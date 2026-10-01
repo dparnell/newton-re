@@ -1,0 +1,8 @@
+// A printer that cannot be reached (ctest host.NewtonIPPDown: ippprinter.py
+// --down): print-ipp.ns through the PostScript
+// printer, the user told "No printer is connected."
+// (kPR_ERR_NotFound).
+kIPPPrinter := "IPP printer (PostScript)";
+kIPPRow := 182;
+kIPPOutcome := {alert: "No printer is connected."};
+HostInclude("print-ipp.ns");

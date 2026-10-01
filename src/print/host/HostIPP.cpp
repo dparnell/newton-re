@@ -160,14 +160,71 @@ HostIPPHTTPHeader(const HostIPPURI* uri, char* buffer, size_t size)
 }
 
 
-// the IPP message in a body: its status-code, and the first integer
-// attribute named job-id
+size_t
+HostIPPGetPrinterState(const char* printerURI, uint32_t requestId, unsigned char* buffer, size_t size)
+{
+	if (size < 9)
+		return 0;
+	unsigned char* p = buffer;
+	*p++ = 1;					// version 1.1
+	*p++ = 1;
+	*p++ = 0x00;				// Get-Printer-Attributes
+	*p++ = 0x0b;
+	*p++ = (unsigned char) (requestId >> 24);
+	*p++ = (unsigned char) (requestId >> 16);
+	*p++ = (unsigned char) (requestId >> 8);
+	*p++ = (unsigned char) requestId;
+	*p++ = 0x01;				// operation-attributes-tag
+	struct { unsigned char tag; const char* name; const char* value; } attrs[] =
+	{
+		{ 0x47, "attributes-charset", "utf-8" },
+		{ 0x48, "attributes-natural-language", "en" },
+		{ 0x45, "printer-uri", printerURI },
+		{ 0x42, "requesting-user-name", "newton" },
+		{ 0x44, "requested-attributes", "printer-state" },
+		{ 0x44, "", "printer-state-reasons" }
+	};
+	for (size_t i = 0; i < sizeof(attrs) / sizeof(attrs[0]); i++)
+	{
+		size_t n = PutAttribute(p, size - (size_t) (p - buffer), attrs[i].tag, attrs[i].name, attrs[i].value);
+		if (n == 0)
+			return 0;
+		p += n;
+	}
+	if ((size_t) (p - buffer) >= size)
+		return 0;
+	*p++ = 0x03;				// end-of-attributes-tag
+	return (size_t) (p - buffer);
+}
+
+
+size_t
+HostIPPHTTPRequestHeader(const HostIPPURI* uri, size_t contentLength, char* buffer, size_t size)
+{
+	int n = snprintf(buffer, size,
+		"POST %s HTTP/1.1\r\n"
+		"Host: %s:%u\r\n"
+		"Content-Type: application/ipp\r\n"
+		"Content-Length: %lu\r\n"
+		"User-Agent: Newton MessagePad (host)\r\n"
+		"Connection: close\r\n"
+		"\r\n",
+		uri->fPath, uri->fHost, (unsigned) uri->fPort, (unsigned long) contentLength);
+	if (n < 0 || (size_t) n >= size)
+		return 0;
+	return (size_t) n;
+}
+
+
+// the IPP message in a body: its status-code, the first integer attribute
+// named job-id, printer-state and the values of printer-state-reasons
 static void
 ParseIPPMessage(const unsigned char* body, size_t size, HostIPPResponse* response)
 {
 	if (size < 8)
 		return;
 	response->fIPPStatus = (body[2] << 8) | body[3];
+	bool inReasons = false;
 	size_t i = 8;
 	while (i < size)
 	{
@@ -190,6 +247,21 @@ ParseIPPMessage(const unsigned char* body, size_t size, HostIPPResponse* respons
 			break;
 		if (tag == 0x21 && valueLength == 4 && nameLength == 6 && memcmp(name, "job-id", 6) == 0 && response->fJobId < 0)
 			response->fJobId = (int32_t) (((uint32_t) body[i] << 24) | (body[i + 1] << 16) | (body[i + 2] << 8) | body[i + 3]);
+		if (tag == 0x23 && valueLength == 4 && nameLength == 13 && memcmp(name, "printer-state", 13) == 0)
+			response->fPrinterState = (int) (((uint32_t) body[i] << 24) | (body[i + 1] << 16) | (body[i + 2] << 8) | body[i + 3]);
+		if (nameLength != 0)
+			inReasons = (nameLength == 21 && memcmp(name, "printer-state-reasons", 21) == 0);
+		if (inReasons && tag == 0x44)
+		{
+			size_t have = strlen(response->fStateReasons);
+			if (have + valueLength + 2 < sizeof(response->fStateReasons))
+			{
+				if (have > 0)
+					response->fStateReasons[have++] = ',';
+				memcpy(response->fStateReasons + have, body + i, valueLength);
+				response->fStateReasons[have + valueLength] = 0;
+			}
+		}
 		i += valueLength;
 	}
 }
@@ -201,6 +273,8 @@ HostIPPParseResponse(const unsigned char* data, size_t size, bool connectionClos
 	response->fHTTPStatus = 0;
 	response->fIPPStatus = -1;
 	response->fJobId = -1;
+	response->fPrinterState = -1;
+	response->fStateReasons[0] = 0;
 	if (size >= 5 && memcmp(data, "HTTP/", 5) != 0)
 		return -1;
 	// the head
@@ -312,4 +386,58 @@ HostIPPStatusName(int status)
 	case 0x0507:	return "server-error-busy";
 	}
 	return "(unknown)";
+}
+
+
+// whether a comma-joined list of reasons has one (bare, or with -error)
+static bool
+HasReason(const char* reasons, const char* reason)
+{
+	size_t n = strlen(reason);
+	const char* p = reasons;
+	while (*p != 0)
+	{
+		const char* end = strchr(p, ',');
+		size_t length = end != NULL ? (size_t) (end - p) : strlen(p);
+		if (length == n && strncmp(p, reason, n) == 0)
+			return true;
+		if (length == n + 6 && strncmp(p, reason, n) == 0 && strncmp(p + n, "-error", 6) == 0)
+			return true;
+		if (end == NULL)
+			break;
+		p = end + 1;
+	}
+	return false;
+}
+
+
+HostIPPCondition
+HostIPPPrinterCondition(const HostIPPResponse* response)
+{
+	const char* reasons = response->fStateReasons;
+	if (HasReason(reasons, "media-empty") || HasReason(reasons, "media-needed"))
+		return kHostIPPNoPaper;
+	if (HasReason(reasons, "media-jam"))
+		return kHostIPPJammed;
+	if (HasReason(reasons, "door-open") || HasReason(reasons, "cover-open"))
+		return kHostIPPDoorOpen;
+	if (HasReason(reasons, "marker-supply-empty") || HasReason(reasons, "toner-empty"))
+		return kHostIPPNoInk;
+	if (HasReason(reasons, "paused") || HasReason(reasons, "shutdown") || HasReason(reasons, "offline")
+	 || response->fPrinterState == 5)
+		return kHostIPPOffLine;
+	return kHostIPPReady;
+}
+
+
+HostIPPJobOutcome
+HostIPPJobResult(int complete, const HostIPPResponse* response)
+{
+	if (complete != 1)
+		return kHostIPPJobNoAnswer;
+	if (response->fHTTPStatus == 503 || response->fIPPStatus == 0x0507)
+		return kHostIPPJobBusy;
+	if (response->fHTTPStatus == 200 && response->fIPPStatus >= 0 && response->fIPPStatus < 0x0100)
+		return kHostIPPJobPrinted;
+	return kHostIPPJobRefused;
 }

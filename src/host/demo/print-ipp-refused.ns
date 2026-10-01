@@ -1,0 +1,8 @@
+// A job the printer refuses (ctest host.NewtonIPPRefused: ippprinter.py
+// --status 0x040a): print-ipp.ns through the PostScript printer, the user
+// told "Printer problem." (kPR_ERR_PrinterError) as the ROM tells of a
+// failed job.
+kIPPPrinter := "IPP printer (PostScript)";
+kIPPRow := 182;
+kIPPOutcome := {alert: "Printer problem."};
+HostInclude("print-ipp.ns");

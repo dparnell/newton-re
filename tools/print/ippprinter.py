@@ -15,7 +15,9 @@ Purpose
 
 Usage
     python tools/print/ippprinter.py [--port PORT] [--out DIR] [--path /ipp/print]
-                                     [--status N] [-- <program> [args...]]
+                                     [--status N] [--problem REASON[:N]] [--down]
+                                     [--advertise NAME [--formats ps,pcl]]
+                                     [-- <program> [args...]]
 
     --port   the port to listen on, on 127.0.0.1 (default 0: a free one,
              so two runs at once never meet; 631 is IPP's own)
@@ -25,7 +27,17 @@ Usage
     --path   the printer's path in its URI (default /ipp/print)
     --status the IPP status-code to answer a Print-Job with (default 0,
              successful-ok; e.g. 0x040a document-format-not-supported, to
-             see a refusal)
+             see a refusal, or 0x0507 server-error-busy)
+    --problem the printer stopped with a printer-state-reason (media-empty,
+             media-jam, door-open, marker-supply-empty, offline...) for its
+             first N answers to Get-Printer-Attributes (default 2), then
+             idle again - a problem that is put right
+    --down   nobody at the printer's address: the port is taken and let go
+             again before the program starts, so connecting is refused
+    --advertise the program finds the printer on the network by this name
+             instead of being given it (NEWTON_FOUND_PRINTERS, which the
+             host's DNS-SD layer takes in place of a browse); --formats
+             what it says it takes
 
 Inputs / outputs
     Each request is logged as `[ipp] ...` lines: the operation and its
@@ -53,10 +65,12 @@ def log(text):
 
 
 class Printer:
-    def __init__(self, out_dir, path, status):
+    def __init__(self, out_dir, path, status, problem=None, problem_answers=0):
         self.out_dir = out_dir
         self.path = path
         self.status = status
+        self.problem = problem
+        self.problem_answers = problem_answers
         self.jobs = 0
         self.lock = threading.Lock()
         self.port = 0
@@ -197,8 +211,15 @@ def serve_connection(printer, conn):
         elif operation == 0x0004:
             reply = answer(version, 0, request_id, [(0x01, base)])
         elif operation == 0x000b:
+            with printer.lock:
+                stopped = printer.problem is not None and printer.problem_answers > 0
+                if stopped:
+                    printer.problem_answers -= 1
+            state, reasons = (5, printer.problem) if stopped else (3, "none")
+            log("  printer-state %d, printer-state-reasons %s" % (state, reasons))
             printer_attrs = [(0x45, "printer-uri-supported", printer_uri), (0x42, "printer-name", "ippprinter.py"),
-                             (0x23, "printer-state", 3), (0x22, "printer-is-accepting-jobs", 1),
+                             (0x23, "printer-state", state), (0x44, "printer-state-reasons", reasons),
+                             (0x22, "printer-is-accepting-jobs", 1),
                              (0x49, "document-format-supported", "application/postscript"),
                              (0x49, "", "application/vnd.hp-pcl"), (0x49, "", "application/octet-stream")]
             out = bytes(version) + struct.pack(">HI", 0, request_id) + b"\x01"
@@ -237,6 +258,9 @@ def main(argv=None):
     ap.add_argument("--out", default=".")
     ap.add_argument("--path", default="/ipp/print")
     ap.add_argument("--status", type=lambda s: int(s, 0), default=0)
+    ap.add_argument("--problem", metavar="REASON[:N]",
+                    help="stopped with this printer-state-reason for the first N status answers (default 2)")
+    ap.add_argument("--down", action="store_true", help="nobody listening at the printer's address")
     ap.add_argument("--advertise", metavar="NAME",
                     help="the program finds this printer on the network (NEWTON_FOUND_PRINTERS)")
     ap.add_argument("--formats", default="ps,pcl", help="what --advertise says it takes (ps, pcl)")
@@ -246,7 +270,11 @@ def main(argv=None):
     if program and program[0] == "--":
         program = program[1:]
     os.makedirs(args.out, exist_ok=True)
-    printer = Printer(args.out, args.path, args.status)
+    problem, answers = None, 0
+    if args.problem:
+        problem, _, n = args.problem.partition(":")
+        answers = int(n) if n else 2
+    printer = Printer(args.out, args.path, args.status, problem, answers)
     listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         listener.bind(("127.0.0.1", args.port))
@@ -256,10 +284,17 @@ def main(argv=None):
         return 1
     printer.port = listener.getsockname()[1]
     uri = "ipp://127.0.0.1:%d%s" % (printer.port, printer.path)
-    log("a printer at %s" % uri)
+    if args.down:
+        listener.close()
+        log("nobody at %s" % uri)
+    else:
+        log("a printer at %s" % uri)
     thread = threading.Thread(target=serve, args=(printer, listener), daemon=True)
-    thread.start()
+    if not args.down:
+        thread.start()
     if not program:
+        if args.down:
+            return 0
         try:
             thread.join()
         except KeyboardInterrupt:

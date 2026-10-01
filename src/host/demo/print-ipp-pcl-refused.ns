@@ -1,0 +1,7 @@
+// A job the printer refuses, through the HP PCL driver (ctest
+// host.NewtonIPPPCLRefused: ippprinter.py --status 0x040a): the user told
+// "Printer problem." (gPrinterCloseHook making the refusal ThpPCL's error).
+kIPPPrinter := "IPP printer (HP PCL)";
+kIPPRow := 196;
+kIPPOutcome := {alert: "Printer problem."};
+HostInclude("print-ipp.ns");

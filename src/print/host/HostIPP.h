@@ -84,6 +84,13 @@ size_t		HostIPPPrintJob(const char* printerURI, const char* user, const char* jo
 // chunks.  ==> its length (nought if it does not fit).
 size_t		HostIPPHTTPHeader(const HostIPPURI* uri, char* buffer, size_t size);
 
+// A Get-Printer-Attributes request's IPP message asking for printer-state
+// and printer-state-reasons, and the HTTP head of a POST of it (a
+// Content-Length, not chunks).  ==> their lengths (nought if they do not
+// fit).
+size_t		HostIPPGetPrinterState(const char* printerURI, uint32_t requestId, unsigned char* buffer, size_t size);
+size_t		HostIPPHTTPRequestHeader(const HostIPPURI* uri, size_t contentLength, char* buffer, size_t size);
+
 // An HTTP response read so far: complete (the head and as much of the body
 // as its Content-Length or chunks say), the HTTP status, and from the IPP
 // message in the body its status-code and (when it has one) the job-id.
@@ -94,11 +101,39 @@ struct HostIPPResponse
 	int			fHTTPStatus;
 	int			fIPPStatus;		// -1: none
 	int32_t		fJobId;			// -1: none
+	int			fPrinterState;	// -1: none; 3 idle, 4 processing, 5 stopped
+	char		fStateReasons[256];	// printer-state-reasons, joined by commas
 };
 int			HostIPPParseResponse(const unsigned char* data, size_t size, bool connectionClosed, HostIPPResponse* response);
 
 // a status-code's name (RFC 8011 13.1), for the log
 const char*	HostIPPStatusName(int status);
+
+// What a printer's state says of it, as the Newton's printer problems put
+// it (PrintErrors.h's kPR_PROB_...): a printer-state-reason that stops it
+// printing (RFC 8011 5.4.12; bare or with -error - a -warning or -report
+// does not stop it), or a printer stopped for another reason.
+enum HostIPPCondition
+{
+	kHostIPPReady,
+	kHostIPPNoPaper,		// media-empty, media-needed
+	kHostIPPNoInk,			// marker-supply-empty, toner-empty
+	kHostIPPJammed,			// media-jam
+	kHostIPPDoorOpen,		// door-open, cover-open
+	kHostIPPOffLine			// paused, shutdown, offline, or stopped (printer-state 5)
+};
+HostIPPCondition	HostIPPPrinterCondition(const HostIPPResponse* response);
+
+// What became of a job, by the printer's answer to its Print-Job
+// (`complete` as HostIPPParseResponse answered it: 1 an answer).
+enum HostIPPJobOutcome
+{
+	kHostIPPJobPrinted,		// HTTP 200 and successful-*
+	kHostIPPJobBusy,		// server-error-busy or HTTP 503: try again later
+	kHostIPPJobRefused,		// any other answer
+	kHostIPPJobNoAnswer		// the connection ended with no answer
+};
+HostIPPJobOutcome	HostIPPJobResult(int complete, const HostIPPResponse* response);
 
 
 /*------------------------------------------------------------------------------

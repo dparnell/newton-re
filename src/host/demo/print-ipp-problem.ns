@@ -1,0 +1,9 @@
+// A printer with a problem it puts right (ctest host.NewtonIPPProblem:
+// ippprinter.py --problem media-empty:2): print-ipp.ns through the
+// PostScript printer, the print problem slip shown with "The printer has
+// no paper." (kPR_PROB_NoPaper, -44104) until the printer's state is well
+// again, and the job then printed.
+kIPPPrinter := "IPP printer (PostScript)";
+kIPPRow := 182;
+kIPPOutcome := {problem: -44104};
+HostInclude("print-ipp.ns");

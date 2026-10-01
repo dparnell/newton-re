@@ -2,7 +2,7 @@
 // (ctest host.NewtonPrintAddPrinter, then .restart): Extras, Prefs,
 // Network Printers - the IPP printers the host's DNS-SD browse finds
 // (print/host/HostPrinters.ns; here tools/print/ippprinter.py's, given by
-// --advertise) - its HP PCL row picked and Add printer tapped; then a note
+// --advertise) - its HP PCL row picked and Add tapped; then a note
 // printed, the job going by IPP to the URI the printer frame carries
 // (ThpPCL over the 'ippc service, no --ipp-printer given).  Run again on
 // the same store (.restart) the printer is still the current one and is
@@ -82,7 +82,7 @@ addPrinter := func() begin
 				local b := list:GlobalBox();
 				call tapAt with (b.left + 40, b.top + 4 + 13 + 6);		// the second row, HP PCL
 				call waitFor with ("print-addprinter: the row picked", func() panel.chosenRow = 1, func() begin
-					call tapCentre with (call viewLabelled with (panel, "Add printer"));
+					call tapCentre with (call viewLabelled with (panel, "Add"));
 					call waitFor with ("print-addprinter: the printer added", added, func() begin
 						Print("print-addprinter: added " & userConfiguration.currentPrinter.printerName
 							& " at " & userConfiguration.currentPrinter.hostURI);

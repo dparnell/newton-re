@@ -35,6 +35,11 @@ static long				gIPPJobsDone = 0;
 static HostIPPResponse	gIPPLastJob = { 0, -1, -1 };
 static uint32_t			gIPPRequestId = 0;
 
+// what became of the last jobs, by ticket (HostIPPTicketResult)
+enum { kIPPTicketSlots = 16 };
+static ULong			gIPPTickets = 0;
+static NewtonErr		gIPPTicketResults[kIPPTicketSlots];
+
 // how long a write to the printer may take (the ROM's ThpPCL's)
 static const TTimeout	kIPPSendTimeout = (TTimeout) 0x34bc000;
 
@@ -71,6 +76,32 @@ HostIPPLastJob(HostIPPResponse* response)
 }
 
 
+ULong
+HostIPPNewTicket(void)
+{
+	ULong ticket = ++gIPPTickets;
+	if (ticket == 0)
+		ticket = ++gIPPTickets;
+	gIPPTicketResults[ticket % kIPPTicketSlots] = noErr;
+	return ticket;
+}
+
+
+NewtonErr
+HostIPPTicketResult(ULong ticket)
+{
+	return (ticket != 0) ? gIPPTicketResults[ticket % kIPPTicketSlots] : noErr;
+}
+
+
+static void
+SetTicketResult(ULong ticket, NewtonErr result)
+{
+	if (ticket != 0)
+		gIPPTicketResults[ticket % kIPPTicketSlots] = result;
+}
+
+
 /*------------------------------------------------------------------------------
 	T H o s t I P P T o o l
 ------------------------------------------------------------------------------*/
@@ -91,6 +122,7 @@ THostIPPTool::THostIPPTool(ULong serviceId)
 	fPolls = 0;
 	memset(&fURI, 0, sizeof(fURI));
 	fURIText[0] = 0;		// (kHostIPPURIOption may name the printer)
+	fTicket = 0;
 }
 
 
@@ -136,10 +168,12 @@ THostIPPTool::ProcessOptionStart(TOption* theOption, ULong label, ULong opcode)
 {
 	if (label == kHostIPPURIOption)
 	{
-		if (opcode == opSetNegotiate || opcode == opSetRequired)
+		if ((opcode == opSetNegotiate || opcode == opSetRequired) && theOption->Length() >= sizeof(ULong))
 		{
-			const char* uri = (const char*) (theOption + 1);
-			size_t n = theOption->Length();
+			const UByte* data = (const UByte*) (theOption + 1);
+			memcpy(&fTicket, data, sizeof(ULong));
+			const char* uri = (const char*) (data + sizeof(ULong));
+			size_t n = theOption->Length() - sizeof(ULong);
 			if (n >= sizeof(fURIText))
 				n = sizeof(fURIText) - 1;
 			memcpy(fURIText, uri, n);
@@ -172,6 +206,7 @@ THostIPPTool::ConnectStart()
 	{
 		printf("[host] IPP: no printer (newton --ipp-printer ipp://host:631/path)\n");
 		fflush(stdout);
+		SetTicketResult(fTicket, kPR_ERR_NotFound);
 		ConnectComplete(kCommErrResourceNotAvailable);
 		return;
 	}
@@ -181,12 +216,14 @@ THostIPPTool::ConnectStart()
 	{
 		printf("[host] IPP: cannot find %s\n", fURI.fHost);
 		fflush(stdout);
+		SetTicketResult(fTicket, kPR_ERR_NotFound);
 		ConnectComplete(kCommErrIncompatibleRemote);
 		return;
 	}
 	if (HostTCPConnect(address, fURI.fPort, &fSocket) != kHostSocketOK)
 	{
 		fSocket = -1;
+		SetTicketResult(fTicket, kPR_ERR_NotFound);
 		ConnectComplete(kCommErrIncompatibleRemote);
 		return;
 	}
@@ -208,6 +245,7 @@ THostIPPTool::PollConnect()
 		fflush(stdout);
 		HostSocketClose(fSocket);
 		fSocket = -1;
+		SetTicketResult(fTicket, kPR_ERR_NotFound);
 		ConnectComplete(kCommErrIncompatibleRemote);
 		return;
 	}
@@ -391,7 +429,12 @@ THostIPPTool::PollAnswer()
 	if (fOutDone < fOutSize)
 	{
 		if (++fPolls > kHostIPPAnswerPolls)
+		{
+			printf("[host] IPP: the printer took no more of the job\n");
+			fflush(stdout);
+			SetTicketResult(fTicket, kPR_ERR_LostContact);
 			Finished();
+		}
 		return;
 	}
 	Boolean closed = false;
@@ -438,6 +481,9 @@ THostIPPTool::PollAnswer()
 		else
 			printf("[host] IPP: no answer from the printer\n");
 		fflush(stdout);
+		// what became of the job, as the printing system's error
+		static const NewtonErr kOutcomes[] = { noErr, kPR_ERR_Busy, kPR_ERR_PrinterError, kPR_ERR_LostContact };
+		SetTicketResult(fTicket, kOutcomes[HostIPPJobResult(complete, &response)]);
 		Finished();
 	}
 }
@@ -548,18 +594,21 @@ PROTOCOL_IMPL_SOURCE_MACRO(THostIPPPSDriver)
 PROTOCOL_CLASSINFO(THostIPPPSDriver, "TPSPrinterDriver", "", 0x20000, 0, nil)
 
 
-THostIPPURIOption::THostIPPURIOption(const char* uri)
+THostIPPURIOption::THostIPPURIOption(const char* uri, ULong ticket)
 	: TOption(kOptionType)
 {
 	SetAsOption(kHostIPPURIOption);
-	snprintf(fURI, sizeof(fURI), "%s", uri);
-	SetLength(strlen(fURI) + 1);
+	fTicket = ticket;
+	snprintf(fURI, sizeof(fURI), "%s", uri != nil ? uri : "");
+	SetLength(sizeof(ULong) + strlen(fURI) + 1);
 }
 
 
 THostIPPConnection::THostIPPConnection()
 {
 	fEndpoint = nil;
+	fTicket = 0;
+	fURI[0] = 0;
 }
 
 
@@ -571,10 +620,13 @@ THostIPPConnection::~THostIPPConnection()
 
 
 // An endpoint of the IPP service, opened (EasyOpen: connected to the
-// printer).
+// printer).  A printer that cannot be reached is not found
+// (kPR_ERR_NotFound: "No printer is connected.").
 NewtonErr
 THostIPPConnection::Open(const char* uri)
 {
+	fTicket = HostIPPNewTicket();
+	snprintf(fURI, sizeof(fURI), "%s", (uri != nil && uri[0] != 0) ? uri : HostIPPPrinter());
 	TOptionArray options;
 	NewtonErr err = options.Init();
 	if (err == noErr)
@@ -583,9 +635,9 @@ THostIPPConnection::Open(const char* uri)
 		service.SetAsService(kHostIPPService);
 		err = options.InsertOptionAt(options.GetArrayCount(), &service);
 	}
-	if (err == noErr && uri != nil && uri[0] != 0)
+	if (err == noErr)
 	{
-		THostIPPURIOption where(uri);
+		THostIPPURIOption where(uri, fTicket);
 		err = options.InsertOptionAt(options.GetArrayCount(), &where);
 	}
 	if (err == noErr)
@@ -599,7 +651,8 @@ THostIPPConnection::Open(const char* uri)
 			fEndpoint->Delete();
 			fEndpoint = nil;
 		}
-		return kPR_ERR_NewtonError;
+		NewtonErr result = HostIPPTicketResult(fTicket);
+		return (result != noErr) ? result : kPR_ERR_NewtonError;
 	}
 	return noErr;
 }
@@ -624,7 +677,8 @@ THostIPPConnection::Send(const char* data, ULong size, ULong& sent)
 }
 
 
-// The endpoint closed, which ends the job at the printer.
+// The endpoint closed, which ends the job at the printer; ==> what became
+// of it (HostIPPTicketResult): the printer's refusal is the job's error.
 NewtonErr
 THostIPPConnection::Close()
 {
@@ -635,7 +689,115 @@ THostIPPConnection::Close()
 		fEndpoint->Delete();
 		fEndpoint = nil;
 	}
-	return (err == noErr) ? noErr : kPR_ERR_NewtonError;
+	if (err != noErr)
+		return kPR_ERR_NewtonError;
+	return HostIPPTicketResult(fTicket);
+}
+
+
+NewtonErr
+THostIPPConnection::Status(TPrinter* printer)
+{
+	return HostIPPPrinterStatus(fURI, printer);
+}
+
+
+/*------------------------------------------------------------------------------
+	T h e   p r i n t e r ' s   s t a t e
+	Get-Printer-Attributes over a socket of the task's own, the task waiting
+	in PrReleaseControl between looks at it.
+------------------------------------------------------------------------------*/
+
+static const TTimeout	kIPPStatusPoll = (TTimeout) (20 * kMilliseconds);
+enum { kIPPStatusPolls = 150 };
+
+NewtonErr
+HostIPPPrinterStatus(const char* uri, TPrinter* printer)
+{
+	HostIPPURI where;
+	if (uri == nil || !HostIPPParseURI(uri, &where))
+		return kPR_ERR_LostContact;
+	uint32_t address;
+	int count = 0;
+	if (HostResolveName(where.fHost, &address, 1, &count) != kHostSocketOK || count == 0)
+		return kPR_ERR_LostContact;
+	int sock;
+	if (HostTCPConnect(address, where.fPort, &sock) != kHostSocketOK)
+		return kPR_ERR_LostContact;
+	unsigned char request[1024];
+	size_t bodySize = HostIPPGetPrinterState(uri, ++gIPPRequestId, request + 512, sizeof(request) - 512);
+	size_t headSize = HostIPPHTTPRequestHeader(&where, bodySize, (char*) request, 512);
+	if (bodySize == 0 || headSize == 0)
+	{
+		HostSocketClose(sock);
+		return kPR_ERR_NewtonError;
+	}
+	memmove(request + headSize, request + 512, bodySize);
+	size_t toSend = headSize + bodySize, sent = 0;
+	unsigned char answer[4096];
+	size_t got = 0;
+	int complete = 0;
+	HostIPPResponse response;
+	Boolean connected = false;
+	for (long polls = 0; polls < kIPPStatusPolls && complete == 0; polls++)
+	{
+		if (!connected)
+		{
+			int result = HostSocketConnected(sock);
+			if (result == kHostSocketOK)
+				connected = true;
+			else if (result != kHostSocketWouldBlock)
+				break;
+		}
+		if (connected && sent < toSend)
+		{
+			size_t n = 0;
+			int result = HostSocketSend(sock, request + sent, toSend - sent, &n);
+			if (result == kHostSocketOK)
+				sent += n;
+			else if (result != kHostSocketWouldBlock)
+				break;
+		}
+		if (connected && sent == toSend)
+		{
+			Boolean closed = false;
+			for ( ; ; )
+			{
+				size_t n = 0;
+				if (got == sizeof(answer))
+				{
+					closed = true;
+					break;
+				}
+				int result = HostSocketReceive(sock, answer + got, sizeof(answer) - got, &n);
+				if (result == kHostSocketWouldBlock)
+					break;
+				if (result != kHostSocketOK || n == 0)
+				{
+					closed = true;
+					break;
+				}
+				got += n;
+			}
+			complete = (got > 0) ? HostIPPParseResponse(answer, got, closed, &response) : (closed ? -1 : 0);
+			if (complete != 0)
+				break;
+		}
+		PrReleaseControl(kIPPStatusPoll, printer);
+	}
+	HostSocketClose(sock);
+	if (complete != 1)
+		return kPR_ERR_LostContact;
+	if (response.fHTTPStatus != 200 || response.fIPPStatus < 0 || response.fIPPStatus >= 0x0100)
+		return noErr;		// (a printer that will not say is taken to be well)
+	static const NewtonErr kProblems[] = { noErr, kPR_PROB_NoPaper, kPR_PROB_NoInk, kPR_PROB_Jammed, kPR_PROB_DoorOpen, kPR_PROB_OffLine };
+	NewtonErr problem = kProblems[HostIPPPrinterCondition(&response)];
+	if (problem != noErr)
+	{
+		printf("[host] IPP: the printer's state %d (%s): problem %ld\n", response.fPrinterState, response.fStateReasons, (long) problem);
+		fflush(stdout);
+	}
+	return problem;
 }
 
 
@@ -674,6 +836,7 @@ THostIPPPSDriver::New()
 	fConnection = nil;
 	fError = noErr;
 	fCancelled = false;
+	fSent = 0;
 	return this;
 }
 
@@ -693,6 +856,7 @@ THostIPPPSDriver::Open()
 {
 	fError = noErr;
 	fCancelled = false;
+	fSent = 0;
 	char uri[256];
 	RefVar connectInfo(fConnect->fConnectInfo);
 	RefVar printer(IsFrame(connectInfo) ? GetFrameSlot(connectInfo, RefVar(Intern((char*) "printer"))) : NILREF);
@@ -710,9 +874,14 @@ THostIPPPSDriver::Close(Boolean /*abort*/)
 }
 
 
+// The printer's state looked at as each page begins and ends, as the
+// ROM's TPSPAPDriver looks at its printer's status: a problem found is
+// kept, and is the next write's error (TPSPAPDriver's PutData failing
+// while its printer has a problem), which TPSPrinter puts to the user.
 NewtonErr
 THostIPPPSDriver::OpenPage()
 {
+	fError = GetStatus();
 	return noErr;
 }
 
@@ -720,6 +889,8 @@ THostIPPPSDriver::OpenPage()
 NewtonErr
 THostIPPPSDriver::ClosePage()
 {
+	if (fError == noErr)
+		fError = GetStatus();
 	return noErr;
 }
 
@@ -734,18 +905,20 @@ THostIPPPSDriver::CancelJob(Boolean asyncCancel)
 }
 
 
+// (asked while the problem slip is up: TPrintView's HandleProblem)
 PrProblemResolution
 THostIPPPSDriver::IsProblemResolved()
 {
-	return kPrProblemFixed;
+	fError = GetStatus();
+	return (PrProblemResolution) (fError != noErr);
 }
 
 
-// (an IPP printer says nothing while the job is sent)
+// the printer's state (HostIPPPrinterStatus)
 NewtonErr
 THostIPPPSDriver::GetStatus()
 {
-	return noErr;
+	return (fConnection != nil) ? fConnection->Status(fPrinter) : noErr;
 }
 
 
@@ -760,7 +933,18 @@ THostIPPPSDriver::Send(const char* data, ULong size, ULong& sent)
 		return kPR_ERR_UserCancel;
 	if (fConnection == nil)
 		return kPR_ERR_NewtonError;
-	return fConnection->Send(data, size, sent);
+	if (fError >= kPR_ERR_MINPROBLEM && fError <= kPR_ERR_MAXPROBLEM)
+	{
+		// the printer has a problem: asked again, and the write refused
+		// while it lasts
+		fError = GetStatus();
+		if (fError != noErr)
+			return fError;
+	}
+	NewtonErr err = fConnection->Send(data, size, sent);
+	if (err == noErr && (++fSent & 7) == 7)
+		fError = GetStatus();
+	return err;
 }
 
 
@@ -799,7 +983,11 @@ THostIPPPSDriver::RecvPSText(char* /*text*/, ULong& size)
 ------------------------------------------------------------------------------*/
 
 // the HP driver's way to an IPP printer (print/HPPCL.h): for the model
-// kHostIPPPrinterModel, the IPP service and the printer frame's URI
+// kHostIPPPrinterModel, the IPP service and the printer frame's URI, and
+// the job's ticket (one HP job at a time: the print view's)
+static ThpPCL*	gPCLDriver = nil;
+static ULong	gPCLTicket = 0;
+
 static Boolean
 IPPServiceForPCL(ThpPCL* driver, TOptionArray* options)
 {
@@ -811,12 +999,28 @@ IPPServiceForPCL(ThpPCL* driver, TOptionArray* options)
 	char uri[256];
 	RefVar connectInfo(driver->fConnect->fConnectInfo);
 	RefVar printer(IsFrame(connectInfo) ? GetFrameSlot(connectInfo, RefVar(Intern((char*) "printer"))) : NILREF);
-	if (driver->fError == noErr && HostPrinterFrameURI(printer, uri, sizeof(uri)))
+	if (!HostPrinterFrameURI(printer, uri, sizeof(uri)))
+		uri[0] = 0;
+	gPCLDriver = driver;
+	gPCLTicket = HostIPPNewTicket();
+	if (driver->fError == noErr)
 	{
-		THostIPPURIOption where(uri);
+		THostIPPURIOption where(uri, gPCLTicket);
 		driver->fError = options->InsertOptionAt(options->GetArrayCount(), &where);
 	}
 	return true;
+}
+
+
+// ... and what became of its job, once its endpoint is closed: the
+// printer's refusal the job's error (print/HPPCL.h's gPrinterCloseHook)
+static NewtonErr
+IPPResultForPCL(ThpPCL* driver, NewtonErr err)
+{
+	if (driver->fPrModel != kHostIPPPrinterModel || driver != gPCLDriver)
+		return err;
+	gPCLDriver = nil;
+	return (err == noErr) ? HostIPPTicketResult(gPCLTicket) : err;
 }
 
 
@@ -905,6 +1109,7 @@ HostInstallIPPPrinters(void)
 	THostIPPService::ClassInfo()->Register();
 	THostIPPPSDriver::ClassInfo()->Register();
 	gPrinterServiceHook = IPPServiceForPCL;
+	gPrinterCloseHook = IPPResultForPCL;
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostSetIPPPrinter")), RefVar(MakeCFunction((void*) FHostSetIPPPrinter, 1, nil)));
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostIPPJobs")), RefVar(MakeCFunction((void*) FHostIPPJobs, 0, nil)));
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostIPPLastStatus")), RefVar(MakeCFunction((void*) FHostIPPLastStatus, 0, nil)));
