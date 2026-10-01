@@ -176,14 +176,34 @@ soakSweep := func(andThen) begin
 end;
 
 // a new note, "ton" written on it and read
-soakWrite := func(andThen) begin
+// (an application's slip that comes up late - the Connection's "connection
+// error", the PIN Entry's notice - may lie over the page when the word is
+// written, and the writing goes to it instead: the word is written once
+// more after what is open has been closed, as a person would, and only a
+// second failure counts)
+soakWrite := func(andThen) call soakWriteOnce with (andThen, nil);
+
+soakWriteOnce := func(andThen, again) begin
+	call soakCloseLeftovers with ();
 	GetRoot().paperroll:Open();
 	GetRoot().paperroll:MakeTextNote("", true);
 	AddDelayedCall(func() begin
 		call penWriteWord with ("ton", 60, 200);
 		local up := Ticks();
 		IdleStrokes();
-		call soakWait with ("soak: ton", func() Ticks() - up > 40 and call penFindPara with (GetRoot(), "ton"), andThen, 20);
+		local read := func() Ticks() - up > 40 and call penFindPara with (GetRoot(), "ton");
+		if again then
+			call soakWait with ("soak: ton", read, andThen, 20)
+		else begin
+			local poll;
+			poll := func()
+				if call read with () then call andThen with ()
+				else if Ticks() - up > 20 * 60 then begin
+					Print("soak: ton not read the first time; writing it again");
+					call soakWriteOnce with (andThen, true);
+				end else AddDelayedCall(poll, nil, 250);
+			call poll with ();
+		end;
 	end, nil, 500);
 end;
 

@@ -341,6 +341,9 @@ TPrintView::ROMRealDoCommand(RefArg cmd)
 	if ((Ref) fields != 0)
 	{
 		SetFrameSlot(fields, RSSYMerror, result);
+		// (the ROM's own, 0x001935a8: every print job's item printed to the
+		// REP - on a MessagePad the debugger's serial stream, which nobody
+		// sees; on the host, newton's stdout)
 		PrintObject(fields, 0);
 	}
 	return true;
