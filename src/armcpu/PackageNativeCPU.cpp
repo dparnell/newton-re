@@ -7,6 +7,7 @@
 */
 
 #include "PackageNativeCPU.h"
+#include "NarrowRef.h"
 #include "ARMWorld.h"
 #include "CardBus.h"
 #include "UserGlobals.h"
@@ -1046,7 +1047,7 @@ uint32_t
 TNativeWorld::ToARM(Ref ref)
 {
 	if (!ISPTR(ref))
-		return (uint32_t) ref;		// (integers, characters, nil, true, magic pointers: the same bits)
+		return (uint32_t) NarrowRef(ref, "armcpu");		// (integers, characters, nil, true, magic pointers: the same bits; NEWTON_NS64: an integer cut to the ARM's 30 bits, NarrowRef.h)
 	// the same object gets the same handle while the call lasts
 	size_t mask = fHandleIndex.size() - 1;
 	size_t slot = ((uintptr_t) ref >> 3) & mask;
@@ -2484,7 +2485,7 @@ GLUE(Glue_IsSubclassRef)		{ w.Return(cpu, IsSubclassRef(w.ToHost(cpu.r[0]), w.To
 GLUE(Glue_IsBinary)				{ w.Return(cpu, IsBinary(RefVar(w.ArgRef(cpu.r[0]))) ? 1 : 0); return true; }
 GLUE(Glue_EQ)					{ w.Return(cpu, EQ(RefVar(w.ArgRef(cpu.r[0])), RefVar(w.ArgRef(cpu.r[1]))) ? 1 : 0); return true; }	// (ROM 0x0031c820: EQRef of the two refs)
 GLUE(Glue_IsNumber)				{ w.Return(cpu, IsNumber(RefVar(w.ArgRef(cpu.r[0]))) ? 1 : 0); return true; }
-GLUE(Glue_CoerceToInt)			{ w.Return(cpu, (uint32_t) (int32_t) CoerceToInt(RefVar(w.ArgRef(cpu.r[0])))); return true; }
+GLUE(Glue_CoerceToInt)			{ w.Return(cpu, (uint32_t) (int32_t) NarrowToWord(CoerceToInt(RefVar(w.ArgRef(cpu.r[0]))), "armcpu CoerceToInt")); return true; }
 GLUE(Glue_IsReal)				{ w.Return(cpu, IsReal(RefVar(w.ArgRef(cpu.r[0]))) ? 1 : 0); return true; }
 GLUE(Glue_ISREAL)				{ w.Return(cpu, ISREAL(w.ToHost(cpu.r[0])) ? 1 : 0); return true; }
 GLUE(Glue_RemoveSlot)			{ RemoveSlot(RefVar(w.ArgRef(cpu.r[0])), RefVar(w.ArgRef(cpu.r[1]))); w.Return(cpu, 0); return true; }

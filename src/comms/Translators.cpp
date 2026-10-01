@@ -9,6 +9,7 @@
 */
 
 #include "Translators.h"
+#include "NarrowRef.h"
 #include "HostOptionLayouts.h"
 #include "CommOptions.h"
 #include "Marshalling.h"
@@ -295,7 +296,7 @@ PScriptDataOut::ParseOutput(RefArg value, FormType form, long encoding, long* le
 	{
 		// DEVIATION: the long is written in the MessagePad's byte order,
 		// where the ROM stores it in its own
-		PutBigEndianWord(buf, (unsigned int) RINT(r));
+		PutBigEndianWord(buf, (unsigned int) NarrowToWord(RINT(r), "endpoint number"));	// NEWTON_NS64: NarrowRef.h
 		return noErr;
 	}
 	if (form == kFormTemplate)

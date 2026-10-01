@@ -12,6 +12,7 @@
 
 #include "Soups.h"
 #include "Tags.h"
+#include "NarrowRef.h"
 #include "Frames.h"
 #include "Interpreter.h"
 #include "NativeFunctions.h"
@@ -83,7 +84,7 @@ ResolveEntryAliasInStores(RefArg alias, RefArg stores)
 			continue;
 		SKey key;
 		SKey data;
-		key = (long) RINT(GetArraySlotRef(alias, 2));
+		key = (long) NarrowInteger(RINT(GetArraySlotRef(alias, 2)), "soup index key");
 		if (GetSoupIndexObject(soup, 0)->Find(&key, nil, &data, false) == kIndexOK)
 			return GetEntry(soup, (PSSId) (long) data);
 		return NILREF;

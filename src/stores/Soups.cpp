@@ -9,6 +9,7 @@
 */
 
 #include "Soups.h"
+#include "NarrowRef.h"
 #include "MuxStore.h"
 #include "hal/System.h"
 #include "Cursors.h"
@@ -2597,7 +2598,7 @@ KeyToSKey(RefArg key, RefArg type, SKey* outKey, short* outSize, Boolean* outIsV
 		}
 		else if (EQRef(type, RSSYMint))
 		{
-			*outKey = (long) RINT(key);
+			*outKey = (long) NarrowInteger(RINT(key), "soup index key");	// NEWTON_NS64: as the entry holds it (NarrowRef.h)
 			if (outSize != nil)
 				*outSize = 4;
 		}
