@@ -879,8 +879,10 @@ NetPatternStrokePUDSLToPat(BPNet* /*net*/, RosStrokeList* strokes, NetPattern* s
 				{
 					Fixed dx = xs[at] - lastX;
 					Fixed dy = ys[at] - lastY;
-					Fract square = FixedMultiply(dx, dx) + FixedMultiply(dy, dy);
-					Fixed step = (FractSquareRoot(square) + 0x40) >> 7;
+					// ROM QUIRK: plain ARM adds, as in SegmentStrokeMinDistance
+					// - a step too long for FixedMultiply's 16.16 wraps
+					Fract square = (Fract) ((ULong32) FixedMultiply(dx, dx) + (ULong32) FixedMultiply(dy, dy));
+					Fixed step = ((Fixed) ((ULong32) FractSquareRoot(square) + 0x40)) >> 7;
 					length += step;
 					lens[at] = step;
 				}

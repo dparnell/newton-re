@@ -509,8 +509,14 @@ SegmentStrokeMinDistance(RosStroke* a, RosStroke* b, SegmentDistance* out)
 	{
 		Fixed fx = a->fPoints[bestA].x - b->fPoints[bestB].x;
 		Fixed fy = a->fPoints[bestA].y - b->fPoints[bestB].y;
-		Fract square = FixedMultiply(fx, fx) + FixedMultiply(fy, fy);
-		out->fDistance = (FractSquareRoot(square) + 0x40) >> 7;
+		// ROM QUIRK: a plain ARM add (0x001d2428) - FixedMultiply pins a
+		// square too big for 16.16 at 0x7fffffff, and two strokes far
+		// apart (a stroke dragged across the screen on a page that reads
+		// writing) make the sum wrap negative.  Wrapped here as the ARM
+		// does (a C++ signed overflow is undefined, and the host's
+		// sanitiser stopped a soak on it: tools/host/soak.py).
+		Fract square = (Fract) ((ULong32) FixedMultiply(fx, fx) + (ULong32) FixedMultiply(fy, fy));
+		out->fDistance = ((Fixed) ((ULong32) FractSquareRoot(square) + 0x40)) >> 7;	// (wrapping too)
 		out->fDX = (fx < 0) ? -fx : fx;
 		out->fDY = (fy < 0) ? -fy : fy;
 	}
