@@ -21,6 +21,15 @@ romsrc's `#hex` immediates and `@@` record lines; a 22-test corpus and
 a Zed extension (`zed-newtonscript/`): highlighting, brackets,
 indentation and an outline, installed with "zed: install dev extension".
 
+## 2026-10-01: an ATA card unmounted, removed and put back
+
+`host.NewtonATASupport.storerestart` now goes the whole way: restart,
+read the entry, unmount through ATA Support's own slip, take the card
+out, put it back, wait for the package to mount it again, read the entry
+again (968d9a14).  `ToObject(nil)` answers nil as the ROM's does.  Next:
+the host's Reboot - pulling a card whose store is mounted makes ATA
+Support reboot the machine, which the host has only ended the run for.
+
 ## 2026-10-01: the object file's stamp; the "other" uncited ROM, batch 1
 
 - The object file carries its builder's stamp (a SHA-256 of romsrc.py
