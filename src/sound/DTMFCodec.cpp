@@ -28,6 +28,16 @@ Mul32(int32_t a, int32_t b)
 }
 
 
+// The ARM's add: a sum past the word wraps.  The ROM's mixing and phase
+// arithmetic relies on it (the host's signed add would trap instead -
+// the tour stack of NewtCard dialled into it).
+static inline int32_t
+Add32(int32_t a, int32_t b)
+{
+	return (int32_t) ((uint32_t) a + (uint32_t) b);
+}
+
+
 // A 1/8-degree step of the sine's whole turn (0..0xb40) out of the
 // quarter-wave table, 2.30.
 static int32_t
@@ -155,15 +165,15 @@ StepEnvelope(int32_t& env, uint32_t tick, uint32_t t0, uint32_t t1, uint32_t t2,
 	if (tick <= t0)
 		env = 0;
 	if (t0 <= tick && tick <= t1)
-		env += attack;
+		env = Add32(env, attack);
 	if (t1 <= tick && tick <= t2)
-		env -= decay;
+		env = Add32(env, (int32_t) (0u - (uint32_t) decay));
 	if (t2 <= tick && tick <= t3)
 		env = level;
 	if (t3 != t4)
 	{
 		if (t3 < tick && tick <= t4)
-			env -= release;
+			env = Add32(env, (int32_t) (0u - (uint32_t) release));
 		if (t4 < tick)
 			env = 0;
 	}
@@ -277,26 +287,26 @@ TDTMFCodec::Produce(void* dst, ULong* dstSize, ULong* codedSize, CodecBlock* blo
 				s = sine(W(0x204 + 4 * c));
 				break;
 			case 1:
-				s = sine(Mul32(W(0x268 + 4 * c) >> 16, sine(W(0x208 + 4 * c))) + W(0x204 + 4 * c));
+				s = sine(Add32(Mul32(W(0x268 + 4 * c) >> 16, sine(W(0x208 + 4 * c))), W(0x204 + 4 * c)));
 				break;
 			case 2:
-				s = sine(Mul32(W(0x26c + 4 * c) >> 16, sine(W(0x20c + 4 * c)))
-						 + Mul32(W(0x268 + 4 * c) >> 16, sine(W(0x208 + 4 * c))) + W(0x204 + 4 * c));
+				s = sine(Add32(Add32(Mul32(W(0x26c + 4 * c) >> 16, sine(W(0x20c + 4 * c))),
+								 Mul32(W(0x268 + 4 * c) >> 16, sine(W(0x208 + 4 * c)))), W(0x204 + 4 * c)));
 				break;
 			case 3:
-				s = sine(Mul32(W(0x26c + 4 * c) >> 16, sine(W(0x20c + 4 * c))) + W(0x208 + 4 * c));
-				s = sine(Mul32(W(0x268 + 4 * c) >> 16, s) + W(0x204 + 4 * c));
+				s = sine(Add32(Mul32(W(0x26c + 4 * c) >> 16, sine(W(0x20c + 4 * c))), W(0x208 + 4 * c)));
+				s = sine(Add32(Mul32(W(0x268 + 4 * c) >> 16, s), W(0x204 + 4 * c)));
 				break;
 			default:
-				s = sine(Mul32(W(0x270 + 4 * c) >> 16, sine(W(0x210 + 4 * c))) + W(0x20c + 4 * c));
-				s = sine(Mul32(W(0x26c + 4 * c) >> 16, s) + W(0x208 + 4 * c));
-				s = sine(Mul32(W(0x268 + 4 * c) >> 16, s) + W(0x204 + 4 * c));
+				s = sine(Add32(Mul32(W(0x270 + 4 * c) >> 16, sine(W(0x210 + 4 * c))), W(0x20c + 4 * c)));
+				s = sine(Add32(Mul32(W(0x26c + 4 * c) >> 16, s), W(0x208 + 4 * c)));
+				s = sine(Add32(Mul32(W(0x268 + 4 * c) >> 16, s), W(0x204 + 4 * c)));
 				break;
 			}
-			acc = Mul32(W(0x234 + 4 * c) >> 16, s) + acc;
+			acc = Add32(Mul32(W(0x234 + 4 * c) >> 16, s), acc);
 			for (long j = 0; j < group; j++)
 			{
-				int32_t phase = W(0x204 + 4 * (c + j)) + W(0x1d4 + 4 * (c + j));
+				int32_t phase = Add32(W(0x204 + 4 * (c + j)), W(0x1d4 + 4 * (c + j)));
 				W(0x204 + 4 * (c + j)) = phase;
 				if (0x1680000 < phase)
 					W(0x204 + 4 * (c + j)) = phase - 0x1680000;
@@ -321,7 +331,7 @@ TDTMFCodec::Produce(void* dst, ULong* dstSize, ULong* codedSize, CodecBlock* blo
 			}
 		}
 		// (the sample's two bytes high first, as the ROM writes them)
-		PutSampleWord(out++, (short) ((uint32_t) (acc + 0x8000) >> 16));
+		PutSampleWord(out++, (short) ((uint32_t) Add32(acc, 0x8000) >> 16));
 	}
 	*dstSize = samples << 1;
 	*codedSize = 0;

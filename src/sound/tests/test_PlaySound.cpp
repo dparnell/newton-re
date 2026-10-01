@@ -70,6 +70,7 @@ static const char* const	kRecordSource = (const char*) 2;
 static const char* const	kIMACheckSource = (const char*) 3;
 static const char* const	kDTMFSource = (const char*) 4;
 static const char* const	kStoredCheckSource = (const char*) 5;
+static const char* const	kLoudDTMFSource = (const char*) 6;
 
 // a touch tone, as TDTMFCodec's score: version 1, algorithm 0 (each tone
 // on its own), no repeats, two tones - 697 Hz and 1209 Hz, the "1" key -
@@ -82,29 +83,32 @@ PutHalf(unsigned char* p, unsigned v)
 	p[1] = (unsigned char) v;
 }
 
+// (loud: four tones at the full level, whose sum passes a word - the ROM's
+// adds wrap, which NewtCard's tour stack dialled into; the host's trapped)
 static long
-PlayDTMF(void)
+PlayDTMF(bool loud = false)
 {
-	RefVar samples(AllocateBinary(RSSYMsamples, 0x0a + 2 * 0x14));
+	const int tones = loud ? 4 : 2;
+	RefVar samples(AllocateBinary(RSSYMsamples, 0x0a + tones * 0x14));
 	unsigned char* score = (unsigned char*) BinaryData(samples);
-	memset(score, 0, 0x0a + 2 * 0x14);
+	memset(score, 0, 0x0a + tones * 0x14);
 	PutHalf(score + 0, 1);
 	PutHalf(score + 2, 0);
 	PutHalf(score + 6, 0);
-	PutHalf(score + 8, 2);
-	const unsigned frequencies[2] = { 697, 1209 };
-	for (int k = 0; k < 2; k++)
+	PutHalf(score + 8, tones);
+	const unsigned frequencies[4] = { 697, 1209, 852, 1477 };
+	for (int k = 0; k < tones; k++)
 	{
 		unsigned char* tone = score + k * 0x14;
 		PutHalf(tone + 0x0a, frequencies[k]);		// 16.16 Hz
 		PutHalf(tone + 0x0c, 0);
-		PutHalf(tone + 0x0e, 0x2000);				// the sustain level
+		PutHalf(tone + 0x0e, loud ? 0x7fff : 0x2000);	// the sustain level
 		PutHalf(tone + 0x10, 0);					// silent
 		PutHalf(tone + 0x12, 5);					// attack
 		PutHalf(tone + 0x14, 5);					// decay
 		PutHalf(tone + 0x16, 80);					// sustain
 		PutHalf(tone + 0x18, 10);					// release
-		PutHalf(tone + 0x1a, 0x3000);				// the peak
+		PutHalf(tone + 0x1a, loud ? 0x7fff : 0x3000);	// the peak
 		PutHalf(tone + 0x1c, 0);					// tail
 	}
 	RefVar frame(AllocateFrame());
@@ -209,6 +213,8 @@ public:
 			}
 			else if (play->fSource == kDTMFSource)
 				play->fResult = PlayDTMF();
+			else if (play->fSource == kLoudDTMFSource)
+				play->fResult = PlayDTMF(true);
 			else if (play->fSource == kIMACheckSource)
 			{
 				RefVar coded(GetFrameSlotRef(gVarFrame, RefVar(MakeSymbol("recIMA"))));
@@ -404,6 +410,15 @@ Scenario(void)
 	EXPECT(count == 4096);
 	EXPECT(lastSound > 2150 && lastSound <= 2201);		// (the ROM rounds 21.6 samples a millisecond to 22: 100 ms is 2200)
 	EXPECT(low > 100 * between && high > 100 * between);
+
+	// four tones at the full level: their sum passes a word and wraps, as
+	// the ARM's adds do, rather than stopping the host (NewtCard's tour)
+	HostSoundClearCapture();
+	EXPECT(Send(newtPort, kLoudDTMFSource) == 1);
+	WaitForSilence();
+	played = HostSoundCaptured(&count);
+	printf("loud DTMF: %ld samples\n", count);
+	EXPECT(count == 4096);
 
 	// recording, plain: 16-bit samples at the hardware's rate, so what is
 	// recorded is the source itself
