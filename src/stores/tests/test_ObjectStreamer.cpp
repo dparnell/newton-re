@@ -8,6 +8,7 @@
 // refused when not allowed, a bad version and a bad tag.
 
 #include "ObjectStreamer.h"
+#include "StoreObject.h"
 #include "../../utility/tests/TestPipe.h"
 #include "Compiler.h"
 #include "Frames.h"
@@ -266,6 +267,41 @@ TestHostOrderBinaries()
 }
 
 
+// The writer's precedents: the ROM's PATRICIA trie over the refs' bits.
+// Every object appended is found again at its index, one never appended
+// is not, and a collection (which moves the objects and rebuilds the trie)
+// changes none of it.
+static void
+TestPrecedents()
+{
+	TPrecedentsForWriting precedents;
+	const long kCount = 300;
+	RefVar objects(MakeArray(kCount));
+	for (long i = 0; i < kCount; i++)
+		SetArraySlot(objects, i, (i % 3 == 0) ? RefVar(MakeString("x")) : (i % 3 == 1) ? RefVar(AllocateFrame()) : RefVar(MakeArray(i % 7)));
+	for (long i = 0; i < kCount; i++)
+	{
+		RefVar obj(GetArraySlot(objects, i));
+		EXPECT(precedents.Find(obj) == -1);
+		EXPECT(precedents.Append(obj) == i);
+	}
+	Boolean allFound = true;
+	for (long i = 0; i < kCount; i++)
+		if (precedents.Find(RefVar(GetArraySlot(objects, i))) != i)
+			allFound = false;
+	EXPECT(allFound);
+	EXPECT(precedents.Find(RefVar(AllocateFrame())) == -1);
+	GC();
+	allFound = true;
+	for (long i = 0; i < kCount; i++)
+		if (precedents.Find(RefVar(GetArraySlot(objects, i))) != i)
+			allFound = false;
+	EXPECT(allFound);
+	precedents.Reset();
+	EXPECT(precedents.Find(RefVar(GetArraySlot(objects, 5))) == -1);
+}
+
+
 int
 main()
 {
@@ -277,6 +313,7 @@ main()
 		TestBytes();
 		TestGraph();
 		TestHostOrderBinaries();
+		TestPrecedents();
 	}
 	newton_catch_all
 	{

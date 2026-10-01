@@ -390,6 +390,15 @@ TKeyboardView::DerivedFrom(long id) const
 }
 
 
+// ROM 0x000fb5f8 __dt__13TKeyboardViewFv
+// The legends' style's pattern given back (the refs go with their RefStructs).
+TKeyboardView::~TKeyboardView()
+{
+	if (fStyle.fPattern != nil)
+		DisposePattern(fStyle.fPattern);
+}
+
+
 // ROM 0x000fb25c Constructor__13TKeyboardViewFRC6RefVarP5TView
 // The keyboard read out of the context, and its cell worked out from the
 // bounds it has been given: the cell is as wide as the view divided by

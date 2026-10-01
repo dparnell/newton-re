@@ -129,6 +129,7 @@ public:
 class TKeyboardView : public TView
 {
 public:
+	virtual			~TKeyboardView();							// ROM 0x000fb5f8 __dt__13TKeyboardViewFv
 	virtual long	ClassID(void) const;						// ROM 0x000fb220 ClassID__13TKeyboardViewCFv
 	virtual Boolean	DerivedFrom(long id) const;					// ROM 0x000fb228 DerivedFrom__13TKeyboardViewCFl
 	virtual void	Constructor(RefArg context, TView* parent);	// ROM 0x000fb25c Constructor__13TKeyboardViewFRC6RefVarP5TView

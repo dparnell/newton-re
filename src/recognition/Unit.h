@@ -258,6 +258,7 @@ public:
 	long				IStrokeUnit(TDomain* domain, ULong kind, TStroke* stroke, TArray* areas);	// ROM 0x00221f50 IStrokeUnit__11TStrokeUnitFP7TDomainUlP7TStrokeP6TArray
 
 	virtual void		Dump(TMsg* msg);						// ROM 0x00220f94 Dump__11TStrokeUnitFP4TMsg
+	virtual long		SizeInBytes(void);						// ROM 0x00222008 SizeInBytes__11TStrokeUnitFv - its areas and its stroke counted too
 	virtual void		IDispose(void);							// ROM 0x00221fd0 IDispose__11TStrokeUnitFv (the stroke disposed when the type is still 'STRK')
 	virtual long		CountStrokes(void);						// ROM 0x00220f28 CountStrokes__11TStrokeUnitFv (1)
 	virtual TStroke*	GetStroke(ULong index);					// ROM 0x00220f30 GetStroke__11TStrokeUnitFUl

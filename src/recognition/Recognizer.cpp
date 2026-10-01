@@ -30,6 +30,8 @@
 #include "Rects.h"
 #include "NewtonExceptions.h"
 #include "StrokeCentral.h"
+#include "Stroke.h"			// AdjustForInk
+#include "Ports.h"			// PenSize
 #include "Interpreter.h"
 #include "RSSymbols.h"
 #include "Controller.h"
@@ -1060,6 +1062,35 @@ TRecognitionManager::RemoveClickView(TView* view)
 		fPrevClickView = nil;
 	if (fClickView == view)
 		fClickView = nil;
+}
+
+
+// ROM 0x0019d37c Update__19TRecognitionManagerFR5TRect
+// The live ink is only on the display (the inker's), so an update that
+// paints over it puts it into the screen's bits (TController::UpdateInk),
+// and where strays were cleaned up is redrawn; then the strokes waiting
+// to become ink are inked again (StrokeCentral::UpdateCompressGroup).
+long
+TRecognitionManager::Update(Rect& bounds)
+{
+	FRect fixed;
+	FixRect(&fixed, &bounds);
+	if (fLevel >= 1)
+	{
+		long size = RINT(GetPreference(RSSYMuserpensize));
+		PenSize(size, size);
+		FRect strays = fixed;
+		fController->UpdateInk(&strays);
+		if (!EmptyRectangle(&strays))
+		{
+			Rect r;
+			UnfixRect(&strays, &r);
+			AdjustForInk(&r);
+			gRootView->SmartInvalidate(r);
+		}
+		fStrokeWorld->UpdateCompressGroup(&fixed);
+	}
+	return 0;
 }
 
 

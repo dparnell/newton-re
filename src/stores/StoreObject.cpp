@@ -255,25 +255,30 @@ TBucketArray::SetNumberOfElements(long count)
 
 /* -------------------------------------------------------------------------------
 	TPrecedentsForWriting
-	Element 0 is the trie root of the ROM; elements 1.. are the objects
-	(12 bytes each: the ref and the trie's two link words).  The hash
-	table (DEVIATION, see StoreObject.h) maps a ref to its element.
+	Element 0 is the trie's root; elements 1.. are the objects, 12 bytes
+	each as the ROM has them: the ref, the left link, and the bit the
+	element tests (top byte) with the right link (low 24 bits).
 ------------------------------------------------------------------------------- */
 
 struct WritingPrecedent
 {
 	Ref		fRef;			// +0x00
-	long	fLink0;			// +0x04  (the ROM's trie links; unused here)
-	long	fLink1;			// +0x08
+	ULong	fLeft;			// +0x04  the element for a ref with the bit clear
+	ULong	fBitRight;		// +0x08  the bit tested << 24 | the element for a ref with it set
 };
+
+// DEVIATION: a host ref is as wide as a pointer, so the root tests its top
+// bit where the ROM's tests bit 31.
+const ULong kTopRefBit = sizeof(Ref) * 8 - 1;
+
+static inline ULong	PrecedentBit(const WritingPrecedent* p)		{ return p->fBitRight >> 24; }
+static inline ULong	PrecedentRight(const WritingPrecedent* p)	{ return p->fBitRight & 0xffffff; }
+static inline Boolean	RefBitSet(Ref ref, ULong bit)			{ return (((ULong) ref >> bit) & 1) != 0; }
 
 // ROM 0x003557ac __ct__21TPrecedentsForWritingFv
 TPrecedentsForWriting::TPrecedentsForWriting()
 	: TBucketArray(sizeof(WritingPrecedent))
 {
-	fHashTable = nil;
-	fHashIndexes = nil;
-	fHashSize = 0;
 	Reset();
 	GCRegister(this, GCOccured);
 	DIYGCRegister(this, GCMark, GCUpdate);
@@ -285,120 +290,136 @@ TPrecedentsForWriting::~TPrecedentsForWriting()
 {
 	DIYGCUnregister(this);
 	GCUnregister(this);
-	free(fHashTable);
-	free(fHashIndexes);
-}
-
-
-static inline long
-HashRef(Ref r, long size)
-{
-	ULong h = (ULong) r;
-	h ^= h >> 7;
-	h *= 0x9e3779b1UL;
-	return (long) ((h >> 8) & (ULong) (size - 1));
-}
-
-
-// the ref entered in the hash table (which doubles when half full)
-static void
-HashInsert(Ref** table, long** indexes, long* size, Ref ref, long index)
-{
-	if (*size == 0 || index * 2 >= *size)
-	{
-		long newSize = *size == 0 ? 64 : *size * 2;
-		Ref* newTable = (Ref*) calloc(newSize, sizeof(Ref));
-		long* newIndexes = (long*) calloc(newSize, sizeof(long));
-		if (newTable == nil || newIndexes == nil)
-			Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
-		for (long i = 0; i < *size; i++)
-			if ((*indexes)[i] != 0)
-			{
-				long slot = HashRef((*table)[i], newSize);
-				while (newIndexes[slot] != 0)
-					slot = (slot + 1) & (newSize - 1);
-				newTable[slot] = (*table)[i];
-				newIndexes[slot] = (*indexes)[i];
-			}
-		free(*table);
-		free(*indexes);
-		*table = newTable;
-		*indexes = newIndexes;
-		*size = newSize;
-	}
-	long slot = HashRef(ref, *size);
-	while ((*indexes)[slot] != 0)
-		slot = (slot + 1) & (*size - 1);
-	(*table)[slot] = ref;
-	(*indexes)[slot] = index;
 }
 
 
 // ROM 0x00355854 Append__21TPrecedentsForWritingFRC6RefVar
-// ==> the object's index (its element number less one)
+// The object added and put into the trie.  ==> its index (its element
+// number less one).
 long
 TPrecedentsForWriting::Append(RefArg obj)
 {
 	long element = fNumElements;
 	SetNumberOfElements(element + 1);
-	WritingPrecedent* p = (WritingPrecedent*) ElementAt(element);
-	p->fRef = obj;
-	p->fLink0 = 0;
-	p->fLink1 = 0;
-	HashInsert(&fHashTable, &fHashIndexes, &fHashSize, obj, element);
+	((WritingPrecedent*) ElementAt(element))->fRef = obj;
+	GenerateLinks(element);
 	return element - 1;
 }
 
 
 // ROM 0x003558a0 Find__21TPrecedentsForWritingFRC6RefVar
-// The object's index, -1 when it has not been written.
+// The object's index, -1 when it has not been written: where the search
+// ends is the only element that can hold it.
 long
 TPrecedentsForWriting::Find(RefArg obj)
 {
-	if (fHashSize == 0)
-		return -1;
-	Ref ref = obj;
-	long slot = HashRef(ref, fHashSize);
-	while (fHashIndexes[slot] != 0)
-	{
-		if (fHashTable[slot] == ref)
-			return fHashIndexes[slot] - 1;
-		slot = (slot + 1) & (fHashSize - 1);
-	}
+	long element = Search(obj);
+	if (((WritingPrecedent*) ElementAt(element))->fRef == (Ref) obj)
+		return element - 1;
 	return -1;
 }
 
 
 // ROM 0x003558e4 Reset__21TPrecedentsForWritingFv
-// Just the root.
+// Just the root (nil, testing the top bit, both links to itself).
 void
 TPrecedentsForWriting::Reset(void)
 {
 	SetNumberOfElements(1);
 	WritingPrecedent* root = (WritingPrecedent*) ElementAt(0);
 	root->fRef = NILREF;
-	root->fLink0 = 0;
-	root->fLink1 = 0x1f000000;
-	if (fHashSize != 0)
+	root->fLeft = 0;
+	root->fBitRight &= 0xff000000;
+	root->fBitRight = (root->fBitRight & ~0xff000000) | (kTopRefBit << 24);
+}
+
+
+// ROM 0x0035595c Search__21TPrecedentsForWritingFRC6RefVar
+// Down the trie from the root, taking the link the ref's bit says at each
+// element, until a link goes back up (to an element testing a bit no lower
+// than the one before).  ==> that element.
+long
+TPrecedentsForWriting::Search(RefArg obj)
+{
+	Ref ref = obj;
+	WritingPrecedent* root = (WritingPrecedent*) ElementAt(0);
+	ULong at = RefBitSet(ref, PrecedentBit(root)) ? PrecedentRight(root) : root->fLeft;
+	ULong bit = PrecedentBit((WritingPrecedent*) ElementAt(at));
+	if (bit < PrecedentBit(root))
 	{
-		memset(fHashTable, 0, fHashSize * sizeof(Ref));
-		memset(fHashIndexes, 0, fHashSize * sizeof(long));
+		ULong previous;
+		do
+		{
+			WritingPrecedent* p = (WritingPrecedent*) ElementAt(at);
+			at = RefBitSet(ref, PrecedentBit(p)) ? PrecedentRight(p) : p->fLeft;
+			previous = bit;
+			bit = PrecedentBit((WritingPrecedent*) ElementAt(at));
+		} while (bit < previous);
 	}
+	return (long) at;
+}
+
+
+// ROM 0x00355a4c GenerateLinks__21TPrecedentsForWritingFl
+// The element put into the trie: it tests the highest bit in which its ref
+// differs from the one the search for it ends at, and goes in on the way
+// down where that bit falls - its own link for the bit pointing back to
+// itself, the other to what was there.
+// ROM QUIRK: a ref already in the trie differs in no bit, and the ROM's
+// count of the bits above the difference never stops; Append is only
+// asked after Find fails, so it never happens - the host stops at nought
+// rather than hang.
+void
+TPrecedentsForWriting::GenerateLinks(long element)
+{
+	RefVar obj(((WritingPrecedent*) ElementAt(element))->fRef);
+	long found = Search(obj);
+	Ref ref = obj;
+	ULong bit = kTopRefBit;
+	for (ULong diff = (ULong) ((WritingPrecedent*) ElementAt(found))->fRef ^ (ULong) ref;
+		 (diff & ((ULong) 1 << kTopRefBit)) == 0 && diff != 0; diff <<= 1)
+		bit--;
+	WritingPrecedent* p = (WritingPrecedent*) ElementAt(element);
+	p->fBitRight = (p->fBitRight & 0xffffff) | (bit << 24);
+	WritingPrecedent* root = (WritingPrecedent*) ElementAt(0);
+	ULong at = RefBitSet(ref, PrecedentBit(root)) ? PrecedentRight(root) : root->fLeft;
+	ULong parent = 0;
+	ULong parentBit = PrecedentBit(root);
+	for (;;)
+	{
+		ULong atBit = PrecedentBit((WritingPrecedent*) ElementAt(at));
+		if (!((long) bit < (long) atBit && (long) atBit < (long) parentBit))
+			break;
+		parent = at;
+		parentBit = atBit;
+		WritingPrecedent* q = (WritingPrecedent*) ElementAt(at);
+		at = RefBitSet(ref, atBit) ? PrecedentRight(q) : q->fLeft;
+	}
+	Boolean set = RefBitSet(ref, bit);
+	p = (WritingPrecedent*) ElementAt(element);
+	p->fLeft = set ? at : (ULong) element;
+	p->fBitRight = (p->fBitRight & 0xff000000) | (set ? (ULong) element : at);
+	WritingPrecedent* q = (WritingPrecedent*) ElementAt(parent);
+	if (RefBitSet(ref, PrecedentBit(q)))
+		q->fBitRight = (q->fBitRight & 0xff000000) | (ULong) element;
+	else
+		q->fLeft = (ULong) element;
 }
 
 
 // ROM 0x00355ca0 RebuildTable__21TPrecedentsForWritingFv
-// After a collection moved the objects: every element found again.
+// After a collection moved the objects: the root's links cleared and every
+// element put into the trie again.
 void
 TPrecedentsForWriting::RebuildTable(void)
 {
-	if (fHashSize != 0)
-	{
-		memset(fHashTable, 0, fHashSize * sizeof(Ref));
-		memset(fHashIndexes, 0, fHashSize * sizeof(long));
-	}
+	if (fNumElements < 2)
+		return;
+	WritingPrecedent* root = (WritingPrecedent*) ElementAt(0);
+	root->fLeft = 0;
+	root->fBitRight &= 0xff000000;
 	for (long i = 1; i < fNumElements; i++)
-		HashInsert(&fHashTable, &fHashIndexes, &fHashSize, ((WritingPrecedent*) ElementAt(i))->fRef, i);
+		GenerateLinks(i);
 }
 
 

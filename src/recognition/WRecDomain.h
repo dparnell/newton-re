@@ -139,6 +139,13 @@ public:
 	ULong		GetStartTime(TStroke* stroke);				// ROM 0x0026e460 GetStartTime__12TWRecognizerFP7TStroke
 	ULong		GetEndTime(TUnit* unit);					// ROM 0x0026e524 GetEndTime__12TWRecognizerFP5TUnit
 	ULong		GetEndTime(TStroke* stroke);				// ROM 0x0026e534 GetEndTime__12TWRecognizerFP7TStroke
+	// the same for each kind of unit (the public jump table's entries)
+	ULong		GetStartTime(TSIUnit* unit);				// ROM 0x0026e468 GetStartTime__12TWRecognizerFP7TSIUnit
+	ULong		GetStartTime(TStrokeUnit* unit);			// ROM 0x0026e470 GetStartTime__12TWRecognizerFP11TStrokeUnit
+	ULong		GetStartTime(TWRecUnit* unit);				// ROM 0x0026e51c GetStartTime__12TWRecognizerFP9TWRecUnit
+	ULong		GetEndTime(TSIUnit* unit);					// ROM 0x0026e53c GetEndTime__12TWRecognizerFP7TSIUnit
+	ULong		GetEndTime(TStrokeUnit* unit);				// ROM 0x0026e54c GetEndTime__12TWRecognizerFP11TStrokeUnit
+	ULong		GetEndTime(TWRecUnit* unit);				// ROM 0x0026e55c GetEndTime__12TWRecognizerFP9TWRecUnit
 
 	char*		UnitInfoGetPtr(TWRecUnit* unit);			// ROM 0x0026e56c UnitInfoGetPtr__12TWRecognizerFP9TWRecUnit
 	void		UnitInfoSetPtr(TWRecUnit* unit, char* info);	// ROM 0x0026e574 UnitInfoSetPtr__12TWRecognizerFP9TWRecUnitPc

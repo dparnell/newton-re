@@ -1365,6 +1365,24 @@ TStrokeUnit::Dump(TMsg* /*msg*/)
 { }
 
 
+// ROM 0x00222008 SizeInBytes__11TStrokeUnitFv
+// The unit's own, its areas' (each one the list holds) and its stroke's.
+long
+TStrokeUnit::SizeInBytes(void)
+{
+	long areasSize = 0;
+	TAreaList* areas = GetAreas();
+	if (areas != nil)
+		for (ULong i = 0; i < (ULong) areas->fCount; i++)
+			areasSize += areas->GetArea(i)->SizeInBytes();
+	long size = TSIUnit::SizeInBytes();
+	long strokeSize = fStroke->SizeInBytes();
+	if (areas != nil)
+		areas->Dispose();
+	return size + strokeSize + areasSize;
+}
+
+
 // ROM 0x00221fd0 IDispose__11TStrokeUnitFv
 // The stroke goes with the unit while the unit is still a 'STRK' (a
 // domain that retypes the unit takes the stroke over).

@@ -75,6 +75,7 @@ Ref		FReOrientLabelForm(RefArg form);									// ROM 0x0009f978 FReOrientLabelFo
 class TClipboard : public TView
 {
 public:
+	virtual			~TClipboard();										// ROM 0x0009ef0c __dt__10TClipboardFv
 	virtual long	ClassID(void) const;								// ROM 0x0009edfc ClassID__10TClipboardCFv
 	virtual Boolean	DerivedFrom(long id) const;							// ROM 0x0009ee04 DerivedFrom__10TClipboardCFl
 	virtual void	Constructor(RefArg context, TView* parent);			// ROM 0x0009ee38 Constructor__10TClipboardFRC6RefVarP5TView

@@ -197,8 +197,10 @@ the object.  `TStoreReadPipe` (0x002b74a8-0x002b7998) reads through a
 256-byte buffer, or through the decompressor.  `TBucketArray`
 (0x0032a574) holds elements in buckets of 64 so that they never move;
 `TPrecedentsForReading` is one of refs, `TPrecedentsForWriting` one of
-refs the ROM searches with a PATRICIA trie over the ref bits (DEVIATION:
-a hash table here; the stream is the same).  Both register with the
+refs searched with a PATRICIA trie over the ref bits (`Search`,
+`GenerateLinks`: each element tests one bit, kept in the top byte of its
+right link; DEVIATION: the root tests a host ref's top bit, not bit 31;
+`test_ObjectStreamer`'s `TestPrecedents`).  Both register with the
 collector (their refs are marked and updated; the writing table is
 rebuilt after a collection).  `test_StoreWrapper` round-trips objects of
 every kind, shared references, entries, rewrites in place, a 300-element

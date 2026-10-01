@@ -29,6 +29,8 @@ struct dInfoRec;
 class TDomain : public TRecObject
 {
 public:
+						TDomain();								// ROM 0x0020cd24 __ct__7TDomainFv
+	virtual				~TDomain();								// ROM 0x0020cd64 __dt__7TDomainFv
 	static TDomain*		Make(TController* controller, ULong type, char* name);	// ROM 0x0020cf88 Make__7TDomainSFP11TControllerUlPc
 	void				IDomain(TController* controller, ULong type, char* name);	// ROM 0x0020d008 IDomain__7TDomainFP11TControllerUlPc
 	static ULong		VUnitInClass(ULong type, ULong classType);	// ROM 0x0020cfc4 VUnitInClass__7TDomainSFUlT1 - whether type is a word type ('WRXR', 'JANK', 'WREC') when classType is 'WORD'

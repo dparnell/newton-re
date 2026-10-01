@@ -230,10 +230,13 @@ public:
 
 // The objects written so far, each findable by its ref.  Element 0 is
 // the trie's root; an object's index is its element number less one.
-// DEVIATION: the ROM finds an object with a PATRICIA trie over the bits
-// of its ref (Search, GenerateLinks); here a hash table over the same
-// bucket array does the finding.  Registered with the collector: the
-// refs are marked and updated, and the table rebuilt after a collection.
+// An object is found with a PATRICIA trie over the bits of its ref
+// (Search, GenerateLinks): each element names the bit it tests and its
+// two links, and a search goes down until a link points back up.
+// Registered with the collector: the refs are marked and updated, and
+// the trie rebuilt after a collection (the refs it is keyed on moved).
+// DEVIATION: a host ref is pointer-sized, so the root tests the ref's
+// top bit, not bit 31.
 class TPrecedentsForWriting : public TBucketArray
 {
 public:
@@ -251,9 +254,8 @@ public:
 	static void	GCMark(void* refCon);
 	static void	GCUpdate(void* refCon);
 
-	Ref*		fHashTable;				// host: the index of each element by its ref
-	long		fHashSize;
-	long*		fHashIndexes;
+	long		Search(RefArg obj);				// the element the search for the ref ends at
+	void		GenerateLinks(long element);	// the element put into the trie
 };
 
 class TPrecedentsForReading : public TBucketArray

@@ -228,6 +228,18 @@ ULong		TWRecognizer::GetStartTime(TStroke* stroke)		{ return stroke->fDownTime; 
 ULong		TWRecognizer::GetEndTime(TUnit* unit)			{ return unit->EndTime(); }
 // ROM 0x0026e534 GetEndTime__12TWRecognizerFP7TStroke
 ULong		TWRecognizer::GetEndTime(TStroke* stroke)		{ return stroke->fUpTime; }
+// ROM 0x0026e468 GetStartTime__12TWRecognizerFP7TSIUnit
+ULong		TWRecognizer::GetStartTime(TSIUnit* unit)		{ return unit->fStartTime; }
+// ROM 0x0026e470 GetStartTime__12TWRecognizerFP11TStrokeUnit
+ULong		TWRecognizer::GetStartTime(TStrokeUnit* unit)	{ return unit->fStartTime; }
+// ROM 0x0026e51c GetStartTime__12TWRecognizerFP9TWRecUnit
+ULong		TWRecognizer::GetStartTime(TWRecUnit* unit)		{ return unit->fStartTime; }
+// ROM 0x0026e53c GetEndTime__12TWRecognizerFP7TSIUnit
+ULong		TWRecognizer::GetEndTime(TSIUnit* unit)			{ return unit->fStartTime + unit->fDuration; }
+// ROM 0x0026e54c GetEndTime__12TWRecognizerFP11TStrokeUnit
+ULong		TWRecognizer::GetEndTime(TStrokeUnit* unit)		{ return unit->fStartTime + unit->fDuration; }
+// ROM 0x0026e55c GetEndTime__12TWRecognizerFP9TWRecUnit
+ULong		TWRecognizer::GetEndTime(TWRecUnit* unit)		{ return unit->fStartTime + unit->fDuration; }
 
 // ROM 0x0026e56c UnitInfoGetPtr__12TWRecognizerFP9TWRecUnit
 char*		TWRecognizer::UnitInfoGetPtr(TWRecUnit* unit)	{ return unit->fUnitInfo; }

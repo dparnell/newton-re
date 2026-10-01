@@ -353,31 +353,11 @@ TRootView::RemoveAllViews(void)
 
 // ROM 0x001b2360 PostDraw__9TRootViewFR5TRect
 // The ink waiting to be recognised drawn again over what was just drawn
-// (TRecognitionManager::Update, written out in line): the live ink is
-// only on the display (the inker's), so an update that paints over it
-// puts it into the screen's bits (TController::UpdateInk), and where the
-// strays were cleaned up is redrawn; then the strokes waiting to become
-// ink are inked again (StrokeCentral::UpdateCompressGroup).
+// (TRecognitionManager::Update).
 void
 TRootView::PostDraw(Rect& bounds)
 {
-	FRect fixed;
-	FixRect(&fixed, &bounds);
-	if (gRecognition.fLevel != 0)
-	{
-		long size = RINT(GetPreference(RSSYMuserpensize));
-		PenSize(size, size);
-		FRect strays = fixed;
-		gRecognition.fController->UpdateInk(&strays);
-		if (!EmptyRectangle(&strays))
-		{
-			Rect r;
-			UnfixRect(&strays, &r);
-			AdjustForInk(&r);
-			SmartInvalidate(r);
-		}
-		gStrokeWorld.UpdateCompressGroup(&fixed);
-	}
+	gRecognition.Update(bounds);
 }
 
 

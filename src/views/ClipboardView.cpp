@@ -137,6 +137,12 @@ TClipboard::DerivedFrom(long id) const
 }
 
 
+// ROM 0x0009ef0c __dt__10TClipboardFv
+// The bits, the data and the types let go (the host's RefStructs do it).
+TClipboard::~TClipboard()
+{ }
+
+
 // ROM 0x0009ee38 Constructor__10TClipboardFRC6RefVarP5TView
 // The clipping's four slots read out of the context: the drag types and
 // data of each item, the rectangle the items came from (moved into the

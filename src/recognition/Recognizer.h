@@ -205,6 +205,7 @@ public:
 	void				SetNextClick(ULong time);				// ROM 0x0019d654 SetNextClick__19TRecognitionManagerFUl - the ignoring dropped unless the time is within a second of its end
 	void				SaveClickView(TView* view);				// ROM 0x0019d678 SaveClickView__19TRecognitionManagerFP5TView
 	void				RemoveClickView(TView* view);			// ROM 0x0019d688 RemoveClickView__19TRecognitionManagerFP5TView
+	long				Update(Rect& bounds);					// ROM 0x0019d37c Update__19TRecognitionManagerFR5TRect - the ink waiting to be recognised drawn again where the root view has just drawn; ==> 0
 	long				Idle(void);								// ROM 0x0019e35c Idle__19TRecognitionManagerFv - the strokes idled, the ink compressed, the controller idled
 	struct RecognitionState*	SaveRecognitionState(UChar* failed);	// ROM 0x0019e21c SaveRecognitionState__19TRecognitionManagerFPUc - what is being recognised put aside (a modal dialog's fork starts afresh); failed: no room
 	void				RestoreRecognitionState(struct RecognitionState* state);	// ROM 0x0019e2e0 RestoreRecognitionState__19TRecognitionManagerFUl - ... and put back

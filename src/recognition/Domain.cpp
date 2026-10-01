@@ -14,6 +14,16 @@
 TDomain*	gRootDomain = nil;			// ROM 0x0c101884 gRootDomain
 
 
+// ROM 0x0020cd24 __ct__7TDomainFv
+TDomain::TDomain()
+{ }
+
+
+// ROM 0x0020cd64 __dt__7TDomainFv
+TDomain::~TDomain()
+{ }
+
+
 // ROM 0x0020cf88 Make__7TDomainSFP11TControllerUlPc
 TDomain*
 TDomain::Make(TController* controller, ULong type, char* name)
