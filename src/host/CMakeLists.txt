@@ -260,7 +260,7 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
     # t4.py's test page) answered by the ROM's fax transport over the fax
     # tool (comms/fax/FaxTool.h) and the modem tool; the page is confirmed
     # (MCF), lands in the In Box, is shown by the FaxViewer and turned right
-    # (qd/Tile.h) - build/fax-received.pgm, build/fax-rotated.pgm
+    # (qd/Tile.h) - build/fax-received.pgm, build/fax-rotated.pgm (the Class 2 run build/fax2-*)
     add_test(NAME host.FaxPage
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/modem/t4.py --test-page
                      --pbm ${CMAKE_CURRENT_BINARY_DIR}/faxpage.pbm)
@@ -272,7 +272,7 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/fax-receive.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonFaxReceive PROPERTIES TIMEOUT 300 FIXTURES_REQUIRED faxpage
-                         PASS_REGULAR_EXPRESSION "<- ATA.*answered a fax call.*fax: <- DIS.*fax: -> DCS.*fax: <- CFR.*fax: -> the page, 200 lines.*fax: -> EOP.*fax: the page confirmed MCF.*fax: DCN sent.*eceived: \"From .*fakemodem fax.*fax-receive: shown, the pixels 247564 bytes.*fax-receive: turned right, the pixels 248860 bytes.*fax-receive: done.*the program answered 0"
+                         PASS_REGULAR_EXPRESSION "<- ATA.*answered a fax call.*fax: <- DIS.*fax: -> DCS.*fax: <- CFR.*fax: -> the page, 200 lines.*fax: -> EOP.*fax: the page confirmed MCF.*fax: DCN sent.*eceived: \"From .*fakemodem fax.*fax-receive: shown, the pixels 247564 bytes.*fax-receive: the page is on the screen.*fax-receive: turned right, the pixels 248860 bytes.*fax-receive: done.*the program answered 0"
                          FAIL_REGULAR_EXPRESSION "waited in vain|fell over")
     # the same fax received over a Class 2 modem (--fax-class 2: the modem
     # runs T.30, the fax tool asks for the page with +FDR and reverses its
@@ -284,7 +284,8 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/fax-receive.ns
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonFaxReceiveClass2 PROPERTIES TIMEOUT 300 FIXTURES_REQUIRED faxpage
-                         PASS_REGULAR_EXPRESSION "<- ATA.*answered a fax call \\(Class 2\\).*<- AT\\+FDR.*fax: -> the page, 200 lines.*fax: -> EOP.*<- AT\\+FPTS=1.*fax: -> DCN.*eceived: \"From .*fakemodem fax.*fax-receive: shown, the pixels 247564 bytes.*fax-receive: turned right, the pixels 248860 bytes.*fax-receive: done.*the program answered 0"
+                         ENVIRONMENT NEWTON_FAX_SHOTS=fax2
+                         PASS_REGULAR_EXPRESSION "<- ATA.*answered a fax call \\(Class 2\\).*<- AT\\+FDR.*fax: -> the page, 200 lines.*fax: -> EOP.*<- AT\\+FPTS=1.*fax: -> DCN.*eceived: \"From .*fakemodem fax.*fax-receive: shown, the pixels 247564 bytes.*fax-receive: the page is on the screen.*fax-receive: turned right, the pixels 248860 bytes.*fax-receive: done.*the program answered 0"
                          FAIL_REGULAR_EXPRESSION "waited in vain|fell over")
     # a fax sent: a note through the fax routing slip and the ROM's fax
     # transport, printed by the print view (views/PrintView.h), the dot

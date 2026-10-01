@@ -4,7 +4,7 @@
 // rings the Newton with a Class 1 fax call (--fax-call) and sends a page.
 // When the fax is in the In Box it is shown (the In Box's ShowItem, the
 // FaxViewer package's image viewer), the screen written to
-// build/fax-received.pgm, the page turned right through the viewer's Tools
+// build/fax-received.pgm once the page is seen on it, the page turned right through the viewer's Tools
 // menu command (DoMunge 'rotateRight: MungeBitmap, a fax page turned a tile
 // at a time - qd/Tile.h) and the screen written to build/fax-rotated.pgm
 // (tools/imaging/pgm2png.py makes PNGs of them).
@@ -14,10 +14,11 @@
 //       --display 320x480 --serial-port 0 --headless 240 \
 //       --script src/host/demo/fax-receive.ns
 HostInclude("common.ns");
-TransportNotify('|FaxReceive:Newton|, 'ReceiveRequest, [{cause: 'user}]);
-// the status slip asks whether to wait for a call: "Wait For Call"
-GetRoot().|FaxReceive:Newton|:ManualStart();
-Print("fax-receive: listening");
+// the pictures' names: build/<prefix>-received.pgm and -rotated.pgm, the
+// prefix "fax" unless NEWTON_FAX_SHOTS names another (the Class 2 run's
+// own, so two runs at once never write one file)
+faxShots := HostGetEnv("NEWTON_FAX_SHOTS");
+if not faxShots then faxShots := "fax";
 inbox := GetUnionSoup("InBox");
 viewer := nil;
 faxEntry := nil;
@@ -33,12 +34,26 @@ findViewer := func(v, depth) begin
 	found;
 end;
 
+// how much of the top of the viewer is dark on the screen: the fax page's
+// first rows are bands of black, so a page that shows makes thousands of
+// black pixels there where anything else (the Welcome screen still in
+// front, the In Box not drawn yet) makes a few hundred - counted a pixel
+// in four
+faxInkOnScreen := func() begin
+	local box := viewer:GlobalBox();
+	local n := 0;
+	for y := box.top + 2 to box.top + 52 by 2 do
+		for x := box.left + 2 to box.right - 2 by 2 do
+			if ScreenPixel(x, y) < 128 then n := n + 1;
+	n;
+end;
+
 // (the pixels: 216-byte rows of 1728 pixels, 1146 of them; turned, 144-byte
 // rows - 1146 rounded up to 1152 pixels - 1728 of them; each after a
 // 48-byte header)
 turned := func() begin
 	RefreshViews();
-	ScreenSnapshot("build/fax-rotated.pgm");
+	ScreenSnapshot("build/" & faxShots & "-rotated.pgm");
 	Print("fax-receive: turned right, the pixels " & NumberStr(Length(viewer.fPage.image.data)) & " bytes");
 	AddDelayedCall(func() begin
 		Print("fax-receive: done");
@@ -46,6 +61,14 @@ turned := func() begin
 	end, nil, 1000);
 end;
 
+// the receiving started once the boot's Welcome screen is up, so the In
+// Box, opened when the fax is in, comes in front of it rather than the
+// Welcome opening late over the In Box
+call waitFor with ("fax-receive: the Welcome screen", func() GetRoot().setup and GetRoot().setup.viewCObject, func() begin
+TransportNotify('|FaxReceive:Newton|, 'ReceiveRequest, [{cause: 'user}]);
+// the status slip asks whether to wait for a call: "Wait For Call"
+GetRoot().|FaxReceive:Newton|:ManualStart();
+Print("fax-receive: listening");
 call waitFor with ("fax-receive: the In Box", func() inbox:Query(nil):Entry() <> nil, func() begin
 	faxEntry := inbox:Query(nil):Entry();
 	Print({received: faxEntry.title, class: faxEntry.class, from: faxEntry.fromRef});
@@ -57,11 +80,19 @@ call waitFor with ("fax-receive: the In Box", func() inbox:Query(nil):Entry() <>
 		viewer := call findViewer with (GetRoot().iobox.ioEntryView, 0);
 		call waitFor with ("fax-receive: the viewer", func() viewer <> nil, func() begin
 			Print("fax-receive: shown, the pixels " & NumberStr(Length(viewer.fPage.image.data)) & " bytes");
-			ScreenSnapshot("build/fax-received.pgm");
-			AddDelayedCall(func() begin
-				viewer:DoMunge('rotateRight);
-				AddDelayedCall(turned, nil, 1000);
-			end, nil, 1000);
+			// the snapshot only once the page is on the screen
+			call waitFor with ("fax-receive: the page on the screen", func() begin
+				RefreshViews();
+				call faxInkOnScreen with () > 750
+			  end, func() begin
+				Print("fax-receive: the page is on the screen (" & NumberStr(call faxInkOnScreen with ()) & " dark pixels in a quarter of its top)");
+				ScreenSnapshot("build/" & faxShots & "-received.pgm");
+				AddDelayedCall(func() begin
+					viewer:DoMunge('rotateRight);
+					AddDelayedCall(turned, nil, 1000);
+				end, nil, 1000);
+			  end, 30);
 		end, 30);
 	end, nil, 1000);
 end, 200);
+end, 120);
