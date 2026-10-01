@@ -40,6 +40,21 @@ the way are all in `docs/work-log.md`.
   other helpers (audio into the In Box, PalmDoc, MOD, the encodings,
   PkgInfo, RoutBook, NewtPack) and Register.
 
+## Waiting on the owner
+
+- **A 64-bit NewtonScript** (asked 2026-10-01): the feasibility study is
+  `docs/frames/64bit-study.md` on branch `ns64-study`, with a measured
+  spike on branch `ns64-spike` (neither merged).  In short: the core is
+  small (30-bit integers live in `MAKEINT` and one helper; widened behind
+  `-DNEWTON_NS64=1` the tree builds and 382 of 394 tests pass after one
+  host fix), the work is the boundaries (NSOF, stores, soup keys,
+  packages, dock, translators, armcpu, the NIE - recommended to stay
+  32-bit with one narrowing policy) and the `RINT` narrowing audit on
+  Windows; the open decision is time (`TimeInSeconds` wrapped as on the
+  device, or the true count narrowed at the boundary).  Recommended: an
+  opt-in compile-time flavour, the faithful build staying the default;
+  about 3-5 weeks for stages S0-S4.
+
 ## Open
 
 ### What the uncited ROM is (2026-10-01, "other" worked down)
