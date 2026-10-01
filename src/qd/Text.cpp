@@ -809,20 +809,29 @@ FFontHeight(RefArg /*rcvr*/, RefArg fontSpec)
 
 // ROM 0x001f0230 FStrFontWidth__FRC6RefVarN21
 // StrFontWidth(string, fontSpec): the string's width in the font, in
-// pixels (a rich string's ink NOT YET: its text is measured).
+// pixels - measured as a rich string, so its ink words count at their own
+// widths; the advance rounded to a whole pixel.
 Ref
 FStrFontWidth(RefArg /*rcvr*/, RefArg str, RefArg fontSpec)
 {
 	TRichString rich(str);
-	long length = rich.Length();
-	if (length == 0)
-		return MAKEINT(0);
 	StyleRecord style;
 	CreateTextStyleRecord(fontSpec, &style);
-	UniChar* text = rich.GrabPtr();
-	long width = MeasureOnce(text, length, &style);
-	rich.ReleasePtr();
-	DisposeStyleRecord(&style);
+	TextOptions options;
+	memset(&options, 0, sizeof(options));
+	options.fTransferMode = 1;
+	long width = 0;
+	if (rich.Length() != 0)
+	{
+		TextBoundsInfo bounds;
+		FPoint origin;
+		origin.x = 0;
+		origin.y = 0;
+		MeasureRichString(rich, 0, rich.Length(), &style, origin, &options, &bounds);
+		width = (short) ((ULong32) (bounds.fWidth + 0x8000) >> 16);
+	}
+	if (style.fPattern != nil)
+		DisposePattern(style.fPattern);
 	return MAKEINT(width);
 }
 
