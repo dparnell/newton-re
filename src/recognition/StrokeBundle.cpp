@@ -709,7 +709,7 @@ static Ref
 FStrokesAfterUnit(RefArg /*rcvr*/, RefArg unit, RefArg /*ignored*/)
 {
 	TUnitPublic* it = UnitFromRef(unit);
-	TController* controller = gRecognition.fController;
+	TController* controller = Recognition()->fController;
 	TUnit* stroke = controller->GetIndexedStroke(it->fUnit->fMaxStroke);
 	return MAKEBOOLEAN(!controller->IsLastCompleteStroke(stroke));
 }

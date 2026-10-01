@@ -754,11 +754,20 @@ SFNTOpenFont(PixelMap* /*pm*/, StyleRecord* style, RefArg fontFamily, Fixed xSca
 	T h e   f o n t   m a n a g e r
 ------------------------------------------------------------------------------*/
 
+// ROM 0x000ada2c EngineInitInk__Fv
+// The ink font engine has nothing to set up.
+static void
+EngineInitInk(void)
+{
+}
+
+
 // ROM 0x002e2074 InitFonts__Fv
 void
 InitFonts(void)
 {
 	EngineInitSFNT();
+	EngineInitInk();
 }
 
 

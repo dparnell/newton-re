@@ -505,13 +505,22 @@ IncStrokerIndex(ULong count)
 	T h e   r e a d e r
 ------------------------------------------------------------------------------*/
 
+// ROM 0x000382d0 NextTab__Fv
+// ROM 0x000382d8 NextDown__Fv
+// ROM 0x000382e4 NextUp__Fv
+// What the collector starts from: nought, each.
+static long	NextTab(void)	{ return 0; }
+static long	NextDown(void)	{ return 0; }
+static long	NextUp(void)	{ return 0; }
+
+
 // ROM 0x000380f4 xTabInit__Fv
 void
 xTabInit(void)
 {
-	gTabletCollect.nextTab = 0;		// (NextTab, NextDown, NextUp: 0)
-	gTabletCollect.nextDown = 0;
-	gTabletCollect.nextUp = 0;
+	gTabletCollect.nextTab = NextTab();
+	gTabletCollect.nextDown = NextDown();
+	gTabletCollect.nextUp = NextUp();
 }
 
 

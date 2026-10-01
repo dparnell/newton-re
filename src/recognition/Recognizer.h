@@ -228,6 +228,7 @@ public:
 };
 
 extern TRecognitionManager	gRecognition;					// ROM 0x0c106e88 gRecognition
+TRecognitionManager*	Recognition(void);						// ROM 0x0019d370 Recognition__Fv - &gRecognition
 
 // the unit handler (HandleUnit.cpp): the units the controller has
 // arbitrated handed to their recognisers and the commands posted to the

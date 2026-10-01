@@ -226,7 +226,10 @@ def main(argv=None) -> int:
                 counts["(reconstructed)"] += 1
                 continue
             name = names.get(a, "")
-            if branch_target(a) in cited:
+            target, hops = branch_target(a), 0
+            while target is not None and target not in cited and hops < 4:
+                target, hops = branch_target(target), hops + 1      # (a branch to a branch)
+            if target in cited:
                 category = "aliases of reconstructed functions"
             else:
                 category = next((c for c, r in rules if r.search(name)), "other")

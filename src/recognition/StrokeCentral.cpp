@@ -71,6 +71,15 @@ StrokeCentral::New(void)
 }
 
 
+// ROM 0x0011b840 SetUpPB__Fv
+// (the pen buffer's set-up: nothing to do, and done)
+static Boolean
+SetUpPB(void)
+{
+	return true;
+}
+
+
 // ROM 0x00144ad8 Init__13StrokeCentralFv
 // The fields, the stroke queue and the tablet started; the tablet set
 // collecting.
@@ -78,9 +87,9 @@ void
 StrokeCentral::Init(void)
 {
 	InitFields();
+	SetUpPB();
 	StrokeInit();
-	xTabInit();
-	gTabletCollect.collect = true;
+	TabOn();
 }
 
 

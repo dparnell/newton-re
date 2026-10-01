@@ -49,6 +49,14 @@
 TRecognitionManager	gRecognition;			// ROM 0x0c106e88 gRecognition
 
 
+// ROM 0x0019d370 Recognition__Fv
+TRecognitionManager*
+Recognition(void)
+{
+	return &gRecognition;
+}
+
+
 /*------------------------------------------------------------------------------
 	T R e c o g n i z e r
 ------------------------------------------------------------------------------*/
