@@ -36,9 +36,10 @@ end;
 
 // how much of the top of the viewer is dark on the screen: the fax page's
 // first rows are bands of black, so a page that shows makes thousands of
-// black pixels there where anything else (the Welcome screen still in
+// dark pixels there where anything else (the Welcome screen still in
 // front, the In Box not drawn yet) makes a few hundred - counted a pixel
-// in four
+// in four.  (Dark, not black: the viewer shows the page shrunk onto four
+// bits of gray - view:GrayShrink - so its black comes out as dark grays.)
 faxInkOnScreen := func() begin
 	local box := viewer:GlobalBox();
 	local n := 0;
