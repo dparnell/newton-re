@@ -127,6 +127,12 @@ constructors of its own):
                     hex, 16 to a line, under # comments saying what each
                     part is (a 'kchr keyboard layout's modifier table and
                     key tables; a 'table of 256 entries)
+    texttable('UniC, "resources/UniC/addr.txt")   a table of the Unicode
+                    frame (an encoding's maps, the character classes and
+                    their case tables), a sorting table ('Sort) or a
+                    locale's break table ('Intl) as text whose `format`
+                    line says which: tools/tables/newtontables.py packs it
+                    (tools/tables/README.md)
     sound('samples, "resources/samples/addr.wav")   the samples of a
                     simple sound (8-bit, uncompressed: offset binary, as a
                     WAV file's 8-bit samples are); the sampling rate stays
@@ -190,6 +196,9 @@ import newtonsfnt					# noqa: E402
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "lexicons"))
 import newtonlex					# noqa: E402
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "tables"))
+import newtontables					# noqa: E402
 
 # where a lexicon an edit has grown past its room goes (romsrc.py build
 # --relayout): an address no ROM data uses, the object file's moved table
@@ -900,6 +909,18 @@ class Extractor:
 			with open(os.path.join(self.out, rel), "wb") as f:
 				f.write(bytes(PICT_HEADER) + data)
 			return "pict(%s, \"%s\")" % (self.value(cls, path + "^"), rel)
+		table_format = text_table_format(cname, path, data) if not self.in_function else None
+		if table_format is not None:
+			rel = "resources/%s/%x.txt" % (folder, o)
+			where = os.path.join(self.out, rel)
+			os.makedirs(os.path.dirname(where), exist_ok=True)
+			try:
+				newtontables.unpack(data, table_format, where)
+				if newtontables.pack(where) == data:
+					return "texttable(%s, \"%s\")" % (self.value(cls, path + "^"), rel)
+			except ValueError:
+				pass
+			os.remove(where)
 		if cname == "sfnt" and not self.in_function:
 			rel = "resources/%s/%x" % (folder, o)
 			where = os.path.join(self.out, rel)
@@ -1163,6 +1184,30 @@ def table_text(data):
 
 HEX_TABLES = {"kchr": kchr_text, "table": table_text}
 
+
+def text_table_format(cname, path, data):
+	"""The text form (tools/tables/newtontables.py) a binary of the Unicode
+	frame, a sorting table or a locale's break table takes, by its class and
+	the slot it is in; None for any other binary."""
+	slot = path.rsplit(".", 1)[-1].lower() if path else ""
+	if cname == "UniC":
+		if slot == "maptounicode":
+			return "to-unicode"
+		if slot == "mapfromunicode":
+			return "from-unicode"
+		if slot == "charclass":
+			return "char-classes"
+		if slot == "typelist":
+			return "class-types"
+		if slot in ("upperlist", "lowerlist", "uppernomarklist", "nomarklist"):
+			return "class-deltas"
+		return None
+	if cname == "Sort":
+		return "sort-table"
+	if cname == "Intl" and slot in ("wordbreaktable", "linebreaktable"):
+		return "break-table"
+	return None
+
 SCORE_HEADER = ("version", "algorithm", "reserved", "repeats")
 SCORE_TONE = ("frequency", "fraction", "peak", "delay", "attack", "decay", "hold", "release", "sustain", "tail")
 
@@ -1383,7 +1428,7 @@ class Reader:
 		if kind == "name" and text in ("nil", "true"):
 			self.take()
 			return Imm(2 if text == "nil" else 0x1a)
-		if kind == "name" and text in ("real", "string", "binary", "array", "map", "bytes", "function", "bitmap", "sound", "pict", "same", "imasound", "tonescore", "shorts", "fixed", "hexfile", "sfnt") \
+		if kind == "name" and text in ("real", "string", "binary", "array", "map", "bytes", "function", "bitmap", "sound", "pict", "same", "imasound", "tonescore", "shorts", "fixed", "hexfile", "sfnt", "texttable") \
 				and self.toks[self.i + 1][1] == "(":
 			self.take()
 			self.take("(")
@@ -1391,7 +1436,7 @@ class Reader:
 			while self.peek()[1] != ")":
 				if text in ("real", "fixed") and self.peek()[0] == "number":
 					args.append(float(self.take()[1]))
-				elif text in ("string", "binary", "bytes", "function", "bitmap", "sound", "pict", "same", "imasound", "hexfile", "sfnt") and self.peek()[0] == "string":
+				elif text in ("string", "binary", "bytes", "function", "bitmap", "sound", "pict", "same", "imasound", "hexfile", "sfnt", "texttable") and self.peek()[0] == "string":
 					args.append(self.take()[1])
 				elif text == "bitmap" and self.peek()[0] == "number":
 					args.append(self.take()[1])
@@ -1417,6 +1462,8 @@ class Reader:
 				return Obj("binary", args[0], data=wav_samples(os.path.join(self.root, args[1][1:-1])))
 			if text == "sfnt":
 				return Obj("binary", args[0], data=newtonsfnt.pack(os.path.join(self.root, args[1][1:-1])))
+			if text == "texttable":
+				return Obj("binary", args[0], data=newtontables.pack(os.path.join(self.root, args[1][1:-1])))
 			if text == "hexfile":
 				with open(os.path.join(self.root, args[1][1:-1]), encoding="utf-8") as f:
 					return Obj("binary", args[0], data=hex_file_bytes(f.read()))

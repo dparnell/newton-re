@@ -29,6 +29,7 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../romsrc/layout.tsv)
          ${CMAKE_SOURCE_DIR}/../tools/newton-rom/newtonrom/*.py
          ${CMAKE_SOURCE_DIR}/../tools/fonts/*.py
          ${CMAKE_SOURCE_DIR}/../tools/lexicons/*.py
+         ${CMAKE_SOURCE_DIR}/../tools/tables/*.py
          ${CMAKE_SOURCE_DIR}/../tools/imaging/*.py)
     add_custom_command(OUTPUT ${NEWTON_OBJECTS_FILE}
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/newton-rom/analysis/romsrc.py
@@ -1654,6 +1655,30 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../romsrc/layout.tsv)
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.ROMSourceLexiconEdit PROPERTIES TIMEOUT 600
                          PASS_REGULAR_EXPRESSION "the word added to the word list is known")
+    # the Unicode, collation and locale tables' text form
+    # (tools/tables/newtontables.py: the encodings, character classes and
+    # case tables, the sorting tables, the break tables): each committed one
+    # packed, unpacked and packed again - the ROM's own bytes with the image
+    # - and edits read back
+    add_test(NAME tools.NewtonTables
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/tables/test_newtontables.py
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    add_test(NAME tools.NewtonTablesROM
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/tables/test_newtontables.py
+                     --rom ${NEWTON_ROM_BUILD_DIR}
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    # a collation edit: a and z given each other's weights in the ROM's
+    # sorting table, the tree built, and StrCompare on the booted machine
+    # puts "zebra" before "apple" (demo/tableedit.ns)
+    add_test(NAME host.ROMSourceTableEdit
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/tables/table_edit_test.py
+                     --tree ${CMAKE_SOURCE_DIR}/../romsrc -o ${CMAKE_BINARY_DIR}/romsrc-tableedit
+                     --newton $<TARGET_FILE:newton> --newtonscript $<TARGET_FILE:newtonscript>
+                     --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/tableedit.ns
+                     --original ${CMAKE_BINARY_DIR}/romsrc-objects.bin
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.ROMSourceTableEdit PROPERTIES TIMEOUT 600
+                         PASS_REGULAR_EXPRESSION "the collation edit reached the machine")
 endif()
 
 # a user's first hour (demo/walkthrough.ns): the Setup assistant, a note

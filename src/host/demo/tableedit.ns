@@ -1,0 +1,13 @@
+// How the machine collates "apple" against "zebra": tools/tables/
+// table_edit_test.py swaps the primary weights of a and z in the built-in
+// sorting table's text (romsrc/resources/Sort/62cbb9.txt) in a copy of the
+// tree, builds it and boots the OS on it and on the unedited tree with this
+// script (ctest host.ROMSourceTableEdit).
+//
+//   build/host/host/newton --objects <file> --headless 60 --script src/host/demo/tableedit.ns
+
+// the ROM's table (id 1) made the default: when the script runs nothing has
+// set one (GetSortID answers nil)
+SetSortID(1);
+Print("tableedit: apple against zebra " & NumberStr(StrCompare("apple", "zebra")));
+HostQuit();

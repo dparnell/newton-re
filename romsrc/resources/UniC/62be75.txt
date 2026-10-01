@@ -1,0 +1,328 @@
+format from-unicode
+# an encoding's mapFromUnicode: segments of Unicode characters, each
+# character and the byte it becomes; the segments' bytes lie one after
+# another in the order written, and a character in no segment becomes
+# 0x1a
+header 0x0004 0x0000 0x0000
+segment U+0000 U+007F
+U+0000 0x00
+U+0001 0x01
+U+0002 0x02
+U+0003 0x03
+U+0004 0x04
+U+0005 0x05
+U+0006 0x06
+U+0007 0x07
+U+0008 0x08
+U+0009 0x09
+U+000A 0x0a
+U+000B 0x0b
+U+000C 0x0c
+U+000D 0x0d
+U+000E 0x0e
+U+000F 0x0f
+U+0010 0x10
+U+0011 0x11
+U+0012 0x12
+U+0013 0x13
+U+0014 0x14
+U+0015 0x15
+U+0016 0x16
+U+0017 0x17
+U+0018 0x18
+U+0019 0x19
+U+001A 0x1a
+U+001B 0x1b
+U+001C 0x1c
+U+001D 0x1d
+U+001E 0x1e
+U+001F 0x1f
+U+0020 0x20	#  
+U+0021 0x21	# !
+U+0022 0x22	# "
+U+0023 0x23	# #
+U+0024 0x24	# $
+U+0025 0x25	# %
+U+0026 0x26	# &
+U+0027 0x27	# '
+U+0028 0x28	# (
+U+0029 0x29	# )
+U+002A 0x2a	# *
+U+002B 0x2b	# +
+U+002C 0x2c	# ,
+U+002D 0x2d	# -
+U+002E 0x2e	# .
+U+002F 0x2f	# /
+U+0030 0x30	# 0
+U+0031 0x31	# 1
+U+0032 0x32	# 2
+U+0033 0x33	# 3
+U+0034 0x34	# 4
+U+0035 0x35	# 5
+U+0036 0x36	# 6
+U+0037 0x37	# 7
+U+0038 0x38	# 8
+U+0039 0x39	# 9
+U+003A 0x3a	# :
+U+003B 0x3b	# ;
+U+003C 0x3c	# <
+U+003D 0x3d	# =
+U+003E 0x3e	# >
+U+003F 0x3f	# ?
+U+0040 0x40	# @
+U+0041 0x41	# A
+U+0042 0x42	# B
+U+0043 0x43	# C
+U+0044 0x44	# D
+U+0045 0x45	# E
+U+0046 0x46	# F
+U+0047 0x47	# G
+U+0048 0x48	# H
+U+0049 0x49	# I
+U+004A 0x4a	# J
+U+004B 0x4b	# K
+U+004C 0x4c	# L
+U+004D 0x4d	# M
+U+004E 0x4e	# N
+U+004F 0x4f	# O
+U+0050 0x50	# P
+U+0051 0x51	# Q
+U+0052 0x52	# R
+U+0053 0x53	# S
+U+0054 0x54	# T
+U+0055 0x55	# U
+U+0056 0x56	# V
+U+0057 0x57	# W
+U+0058 0x58	# X
+U+0059 0x59	# Y
+U+005A 0x5a	# Z
+U+005B 0x5b	# [
+U+005C 0x5c	# \
+U+005D 0x5d	# ]
+U+005E 0x5e	# ^
+U+005F 0x5f	# _
+U+0060 0x60	# `
+U+0061 0x61	# a
+U+0062 0x62	# b
+U+0063 0x63	# c
+U+0064 0x64	# d
+U+0065 0x65	# e
+U+0066 0x66	# f
+U+0067 0x67	# g
+U+0068 0x68	# h
+U+0069 0x69	# i
+U+006A 0x6a	# j
+U+006B 0x6b	# k
+U+006C 0x6c	# l
+U+006D 0x6d	# m
+U+006E 0x6e	# n
+U+006F 0x6f	# o
+U+0070 0x70	# p
+U+0071 0x71	# q
+U+0072 0x72	# r
+U+0073 0x73	# s
+U+0074 0x74	# t
+U+0075 0x75	# u
+U+0076 0x76	# v
+U+0077 0x77	# w
+U+0078 0x78	# x
+U+0079 0x79	# y
+U+007A 0x7a	# z
+U+007B 0x7b	# {
+U+007C 0x7c	# |
+U+007D 0x7d	# }
+U+007E 0x7e	# ~
+U+007F 0x7f
+segment U+00A1 U+00FF
+U+00A1 0xad	# ¡
+U+00A2 0x9b	# ¢
+U+00A3 0x9c	# £
+U+00A4 0x1a	# ¤
+U+00A5 0x9d	# ¥
+U+00A6 0x1a	# ¦
+U+00A7 0xdb	# §
+U+00A8 0xc9	# ¨
+U+00A9 0x1a	# ©
+U+00AA 0xa6	# ª
+U+00AB 0x1a	# «
+U+00AC 0x1a	# ¬
+U+00AD 0x1a	# ­
+U+00AE 0x1a	# ®
+U+00AF 0x1a	# ¯
+U+00B0 0xf8	# °
+U+00B1 0xf1	# ±
+U+00B2 0xfd	# ²
+U+00B3 0x1a	# ³
+U+00B4 0xcc	# ´
+U+00B5 0x1a	# µ
+U+00B6 0x1a	# ¶
+U+00B7 0xfa	# ·
+U+00B8 0x1a	# ¸
+U+00B9 0x1a	# ¹
+U+00BA 0xa7	# º
+U+00BB 0x1a	# »
+U+00BC 0xac	# ¼
+U+00BD 0xab	# ½
+U+00BE 0x1a	# ¾
+U+00BF 0xa8	# ¿
+U+00C0 0xb0	# À
+U+00C1 0xb3	# Á
+U+00C2 0xb7	# Â
+U+00C3 0xaa	# Ã
+U+00C4 0x8e	# Ä
+U+00C5 0x8f	# Å
+U+00C6 0x92	# Æ
+U+00C7 0x80	# Ç
+U+00C8 0xb1	# È
+U+00C9 0x90	# É
+U+00CA 0xb8	# Ê
+U+00CB 0x1a	# Ë
+U+00CC 0x1a	# Ì
+U+00CD 0xb4	# Í
+U+00CE 0x1a	# Î
+U+00CF 0x1a	# Ï
+U+00D0 0x1a	# Ð
+U+00D1 0xa5	# Ñ
+U+00D2 0xb2	# Ò
+U+00D3 0xb6	# Ó
+U+00D4 0xb9	# Ô
+U+00D5 0xbb	# Õ
+U+00D6 0x99	# Ö
+U+00D7 0xda	# ×
+U+00D8 0xbd	# Ø
+U+00D9 0x1a	# Ù
+U+00DA 0xb5	# Ú
+U+00DB 0x1a	# Û
+U+00DC 0x9a	# Ü
+U+00DD 0x1a	# Ý
+U+00DE 0x1a	# Þ
+U+00DF 0x1a	# ß
+U+00E0 0x85	# à
+U+00E1 0xa0	# á
+U+00E2 0x83	# â
+U+00E3 0xa9	# ã
+U+00E4 0x84	# ä
+U+00E5 0x86	# å
+U+00E6 0x91	# æ
+U+00E7 0x87	# ç
+U+00E8 0x8a	# è
+U+00E9 0x82	# é
+U+00EA 0x88	# ê
+U+00EB 0x89	# ë
+U+00EC 0x8d	# ì
+U+00ED 0xa1	# í
+U+00EE 0x8c	# î
+U+00EF 0x8b	# ï
+U+00F0 0x1a	# ð
+U+00F1 0xa4	# ñ
+U+00F2 0x95	# ò
+U+00F3 0xa2	# ó
+U+00F4 0x93	# ô
+U+00F5 0xba	# õ
+U+00F6 0x94	# ö
+U+00F7 0xf6	# ÷
+U+00F8 0xbc	# ø
+U+00F9 0x97	# ù
+U+00FA 0xa3	# ú
+U+00FB 0x96	# û
+U+00FC 0x81	# ü
+U+00FD 0x1a	# ý
+U+00FE 0x1a	# þ
+U+00FF 0x98	# ÿ
+segment U+0133 U+0133
+U+0133 0xc8	# ĳ
+segment U+0192 U+0192
+U+0192 0x9f	# ƒ
+segment U+02C6 U+02C6
+U+02C6 0xca	# ˆ
+segment U+02CB U+02CD
+U+02CB 0xcb	# ˋ
+U+02CC 0x1a	# ˌ
+U+02CD 0xcf	# ˍ
+segment U+02D9 U+02DC
+U+02D9 0xf9	# ˙
+U+02DA 0xce	# ˚
+U+02DB 0x1a	# ˛
+U+02DC 0xcd	# ˜
+segment U+0393 U+0393
+U+0393 0xe2	# Γ
+segment U+03A6 U+03A9
+U+03A6 0xe8	# Φ
+U+03A7 0x1a	# Χ
+U+03A8 0x1a	# Ψ
+U+03A9 0xea	# Ω
+segment U+03B1 U+03B4
+U+03B1 0xe1	# α
+U+03B2 0xe0	# β
+U+03B3 0x1a	# γ
+U+03B4 0xeb	# δ
+segment U+03B8 U+03B8
+U+03B8 0xe9	# θ
+segment U+03BC U+03BC
+U+03BC 0xe6	# μ
+segment U+03C0 U+03C0
+U+03C0 0xe3	# π
+segment U+03C4 U+03C4
+U+03C4 0xe7	# τ
+segment U+03CC U+03CC
+U+03CC 0xe5	# ό
+segment U+200B U+200B
+U+200B 0xff	# ​
+segment U+203C U+203C
+U+203C 0xdc	# ‼
+segment U+207F U+207F
+U+207F 0xfc	# ⁿ
+segment U+211E U+211E
+U+211E 0x9e	# ℞
+segment U+2190 U+2192
+U+2190 0xde	# ←
+U+2191 0x1a	# ↑
+U+2192 0xdd	# →
+segment U+2205 U+2208
+U+2205 0xed	# ∅
+U+2206 0x1a	# ∆
+U+2207 0x1a	# ∇
+U+2208 0xef	# ∈
+segment U+220E U+2211
+U+220E 0xfe	# ∎
+U+220F 0x1a	# ∏
+U+2210 0x1a	# ∐
+U+2211 0xe4	# ∑
+segment U+221A U+221A
+U+221A 0xfb	# √
+segment U+221E U+221E
+U+221E 0xec	# ∞
+segment U+2229 U+2229
+U+2229 0xee	# ∩
+segment U+2248 U+2248
+U+2248 0xf7	# ≈
+segment U+2261 U+2265
+U+2261 0xf0	# ≡
+U+2262 0x1a	# ≢
+U+2263 0x1a	# ≣
+U+2264 0xf3	# ≤
+U+2265 0xf2	# ≥
+segment U+2320 U+2321
+U+2320 0xf4	# ⌠
+U+2321 0xf5	# ⌡
+segment U+25CA U+25CA
+U+25CA 0xdf	# ◊
+segment U+260E U+260E
+U+260E 0xc3	# ☎
+segment U+2708 U+2708
+U+2708 0xc6	# ✈
+segment U+2713 U+2713
+U+2713 0xc5	# ✓
+segment U+300A U+300B
+U+300A 0xae	# 《
+U+300B 0xaf	# 》
+segment U+33C2 U+33C2
+U+33C2 0xc0	# ㏂
+segment U+33D8 U+33D8
+U+33D8 0xc1	# ㏘
+segment U+F700 U+F702
+U+F700 0xc2	# 
+U+F701 0xc4	# 
+U+F702 0xc7	# 
+segment U+FFFF U+FFFF
+U+FFFF 0x1a

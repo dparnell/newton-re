@@ -483,6 +483,13 @@ default boot"). ctest `host.NewtonNoROM` boots that default.
   the order it lies. A list an edit grows past its room is moved
   (`--relayout`; the host's `ROMMovedAddress`). Ctests
   `tools.NewtonLexicons`, `host.ROMSourceLexiconEdit`.
+- (2026-10-01) So are the Unicode frame's tables, the sorting tables and
+  the locales' break tables: `texttable(class, "....txt")`, each file
+  naming its format (`tools/tables/newtontables.py`: to-unicode,
+  from-unicode, char-classes, class-types, class-deltas, sort-table,
+  break-table), all 16 byte for byte. Ctests `tools.NewtonTables`,
+  `host.ROMSourceTableEdit` (a and z swapped in the sorting table, and
+  StrCompare follows).
 
 ### The ROM extension: kept as package files first
 
