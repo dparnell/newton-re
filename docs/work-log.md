@@ -21,6 +21,20 @@ romsrc's `#hex` immediates and `@@` record lines; a 22-test corpus and
 a Zed extension (`zed-newtonscript/`): highlighting, brackets,
 indentation and an outline, installed with "zed: install dev extension".
 
+## 2026-10-01: the "other" uncited ROM, 22.6 KB to 1.6 KB
+
+Worked down in five commits to 8747cae6: `TStyleSave::SetStyle` as the
+ROM's (a style in force is left alone; a three-entry cache of which slots
+each style frame has; the host had also cleared a level's scaling flag
+the ROM never touches), the CS* ink layer (CSCompress, the expand group
+into the ROM's 100-entry block, CSDraw, CSMakePathsGroup, the CIC
+library's HWRFile* calls), the speller's C-string helpers, RewindLength,
+QDSafeLock, and a dozen small glue functions, each where the ROM calls
+it.  `coverage.py` counts a function that only branches to a
+reconstructed one as an alias; new categories "public API the ROM does
+not call" and "host stand-ins".  76.35% of functions and 87.5% of code
+bytes cited.  392 tests.
+
 ## 2026-10-01: an ATA card unmounted, removed and put back
 
 `host.NewtonATASupport.storerestart` now goes the whole way: restart,
