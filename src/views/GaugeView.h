@@ -8,8 +8,7 @@
 				knob at the value's place, and gaugeDrawLimits fills the rest
 				of the bar in light gray; the pen tracked on a click sets the value
 				(TrackSetValue).  The ROM's object is 0x38 bytes: TView, the
-				maximum and the minimum.  NOT YET RECONSTRUCTED: the gray
-				pattern of deeper ports, the _sound.
+				maximum and the minimum.
 
 	Reconstructed from the MP2x00 US ROM (0x00188d74-0x001893d0); each
 	function cites its origin.

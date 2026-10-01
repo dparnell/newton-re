@@ -340,29 +340,13 @@ TRootView::HandleKeyIn(ULong keyCode, Boolean /*isDown*/, TView* keyboard)
 
 
 // ROM 0x001b5b6c RemoveAllViews__9TRootViewFv
-// NOT YET RECONSTRUCTED beyond the children: the ROM forgets the key view,
-// the popup and the clipboards first.
+// The clippings taken off first, the front one at a time, then the
+// children as any view's.
 void
 TRootView::RemoveAllViews(void)
 {
-	fPopup = nil;
-	fPassthruKeyboard = false;
-	fCaretView = nil;
-	fCaretOffset = 0;
-	fCaretLength = 0;
-	fPreserveHilites = false;
-	fCaretBits = new TBits;
-	Rect caretBox;
-	SetRect(&caretBox, 0, 0, 11, 12);		// 11 wide, 12 tall: the caret bitmaps' bounds
-	fCaretBits->Constructor(caretBox);
-	fCaretShowing = false;
-	fCaretPoint.h = 0;
-	fCaretPoint.v = -0x8000;		// nowhere
-	fCaretDrawnView = nil;
-	fCaretHidden = 0;
-	fDefaultButton = nil;
-	fCaretSlip = nil;
-	fHiliter = nil;
+	while (GetClipboard() != nil)
+		RemoveClipboard();
 	TView::RemoveAllViews();
 }
 
@@ -1533,9 +1517,10 @@ TRootView::RegisterKeyboard(RefArg context, ULong flags)
 
 
 // ROM 0x001b466c UnregisterKeyboard__9TRootViewFRC6RefVar
-// The keyboard removed; the caret's view asked whether it goes on
-// (CheckForCaretRemoval without a key view, the key view's DerivedFrom
-// otherwise, NOT YET); ==> whether it was registered.
+// The keyboard removed: the word being typed at the caret flushed to the
+// auto-add list when the key view is a paragraph, and the caret asked
+// whether it goes on (CheckForCaretRemoval); ==> whether it was
+// registered.
 Boolean
 TRootView::UnregisterKeyboard(RefArg context)
 {
@@ -1543,12 +1528,9 @@ TRootView::UnregisterKeyboard(RefArg context)
 	if (index == -1)
 		return false;
 	ArrayRemoveCount(fKeyboards, index, 2);
-	if (fCaretView == nil)
-	{
-		CheckForCaretRemoval();
-		return true;
-	}
-	fCaretView->DerivedFrom(clParagraphView);
+	if (fCaretView != nil && fCaretView->DerivedFrom(clParagraphView))
+		((TParagraphView*) fCaretView)->FlushWordAtCaret();
+	CheckForCaretRemoval();
 	return true;
 }
 
@@ -2009,7 +1991,7 @@ TRootView::RemoveAllIdlers(TView* view)
 // when that is past), 0 removes it; a view that removed the idler as
 // it ran (or went) is left alone.  The children and idler arrays are
 // packed when they shrank.  ==> the earliest time an idler is due, now
-// when the caret must blink (CaretValid NOT YET: no caret), zero when
+// when the caret is not drawn as it should be (CaretValid), zero when
 // there is nothing to wait for.
 TTime
 TRootView::IdleViews(void)
@@ -2073,6 +2055,8 @@ TRootView::IdleViews(void)
 			next = idler->fTime;
 	}
 	UnlinkIdleView(idling.fView);
+	if (!CaretValid(nil))
+		next = now;			// the caret must be drawn again at once
 	if (next.time.hi == 0x7fffffff && next.time.lo == 0)
 	{
 		next.time.hi = 0;

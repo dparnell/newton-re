@@ -362,8 +362,8 @@ RealOpenX(RefArg context, Boolean modal)
 
 
 // ROM 0x001b57e4 FSetPopupX
-// :SetPopup(): the view made the root's popup (a picker: closed by a tap
-// elsewhere, NOT YET).
+// :SetPopup(): the view made the root's popup (a picker: a click outside
+// it and its parents closes it - recognition/HandleUnit.cpp).
 static Ref
 FSetPopupX(RefArg rcvr)
 {
@@ -989,21 +989,22 @@ FRedoChildrenX(RefArg rcvr)
 
 
 // ROM 0x001eafd4 FMoveBehindX
-// :MoveBehind(view): behind the other view (nil: to the front; 'first?..
-// the ROM's other symbol: to the back as a floater... NOT YET: taken as
-// to the front).
+// :MoveBehind(view): moved behind the other view, a sibling (one that is
+// not is left alone); nil brings it to the front, and 'skip to the front
+// of the views that are not floaters (BringToFront with the view made a
+// floater for the while).  ==> true.
 static Ref
 FMoveBehindX(RefArg rcvr, RefArg behind)
 {
 	if (EQRef(rcvr, behind))
-		return NILREF;
+		return TRUEREF;
 	TView* view = FailGetView(rcvr);
 	TView* parent = view->fParent;
 	if (parent == view)
-		return NILREF;
+		return TRUEREF;
 	if (ISNIL(behind))
 		view->BringToFront();
-	else if (IsSymbol(behind))
+	else if (EQRef(behind, RSSYMskip))
 	{
 		ULong flags = view->fFlags;
 		view->fFlags |= vFloating;
@@ -1016,7 +1017,7 @@ FMoveBehindX(RefArg rcvr, RefArg behind)
 		if (other->fParent == parent)
 			parent->MoveChildBehind(view, other);
 	}
-	return NILREF;
+	return TRUEREF;
 }
 
 

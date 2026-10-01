@@ -59,7 +59,7 @@ enum
 	aeRemoveAllHilites		= 0x30,
 	aeTap					= 0x31,		// the click events (TEventRecognizer): viewGestureScript(unit, kind)
 	aeDoubleTap				= 0x32,
-	aeHiliteClick			= 0x34,		// the other click events (kHiliteClick, event 5): not the views' gesture script (NOT YET: who takes them)
+	aeHiliteClick			= 0x34,		// the other click events (kHiliteClick, event 5): not the views' gesture script - the root view draws the hilite stroke (RootView.cpp), a page's selection takes the click (TEditView::HiliteClick)
 	aeTapDrag				= 0x37,
 	aeOverview				= 0x33,		// viewOverviewScript
 	aePickItem				= 0x36,		// a picker's item picked (TPickView: the PickStuff as a binary frame parameter)

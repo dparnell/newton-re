@@ -162,7 +162,7 @@ public:
 	RefStruct		fClipboardIcons;	// +0x54  the clipping icons' contexts, front first (nil when there are none)
 	RefStruct		fClipboards;		// +0x58  their clipboards' contexts, one for one
 	Boolean			fDirtyFlag;			// +0x5c  a gesture or a command to the children changed something (the ROM's event loop looks)
-	RefStruct		fKeyboards;			// +0x60  the registered on-screen keyboards: [context, flags] pairs (flags: 1 shows the modifiers, 2 hears viewCaretChangedScript, 4 active) - the registry NOT YET
+	RefStruct		fKeyboards;			// +0x60  the registered on-screen keyboards: [context, flags] pairs (flags: 1 shows the modifiers, 2 hears viewCaretChangedScript, 4 active) - RegisterKeyboard/UnregisterKeyboard
 	Boolean			fPassthruKeyboard;	// +0x64  a keyboard connected through a soft keyboard (ConnectPassthruKeyboard)
 	TView*			fCaretView;			// +0x68  the key view
 	long			fCaretOffset;		// +0x6c  the caret's character offset in it

@@ -29,9 +29,11 @@
 
 				The key help (MatchKeyMessage, GatherKeyCommands, KeyHelpSlip.cpp)
 				and the caret's key view and its chain (SetKeyView,
-				NextKeyView) are here.  NOT YET RECONSTRUCTED: the keyboard
-				tool (TKeyboardTool)
-				that sends the events, the on-screen keyboards' registry.
+				NextKeyView) are here.  The on-screen keyboards' registry is
+				the root view's (RegisterKeyboard).  NOT YET RECONSTRUCTED:
+				the keyboard tool (TKeyboardTool) that sends the events from
+				a keyboard on the serial port - the host's own keys come
+				through host/HostKeyboard.cpp instead.
 
 	Reconstructed from the MP2x00 US ROM (0x0030a948-0x0031084c, the
 	TRootView parts in RootView.cpp); each function cites its origin.

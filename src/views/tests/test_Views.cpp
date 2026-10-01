@@ -1845,9 +1845,8 @@ TestContainerView()
 	container->GlobalHiliteBounds(&bounds);
 	EXPECT(bounds.left == 10 && bounds.top == 10 && bounds.right == 90 && bounds.bottom == 60);
 
-	// (a complete hilite draws as the container's bounds filled, but nothing
-	// in the reconstruction calls a view's DrawHilites yet except the
-	// paragraph, which draws its own: the generic draw path is NOT YET)
+	// (a complete hilite draws as the container's bounds filled - the
+	// page's DrawHiliting draws it; not looked at here)
 	container->RemoveAllHilites();
 	EXPECT(!container->Hilited());
 

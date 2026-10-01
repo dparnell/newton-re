@@ -75,9 +75,8 @@ TGaugeView::SetValue(RefArg slot, RefArg value)
 // height) out of the range; the filled part runs from the left to half
 // the knob plus the value's share of the range, inset two from the top
 // and bottom, painted black.  With gaugeDrawLimits the rest of the bar
-// (a pixel narrower top and bottom) is painted light gray (NOT YET
-// RECONSTRUCTED: the ROM's solid gray pattern on a port deeper than a
-// bit).  The knob: a diamond the height wide, two pixels taller than the
+// (a pixel narrower top and bottom) is painted light gray - a solid
+// gray (GetStdGrayPattern 0xaaaa) on a port deeper than a bit.  The knob: a diamond the height wide, two pixels taller than the
 // bar at each end, centred on the filled part's right, painted and its
 // inside (a pixel in) erased.  The pen pattern is left black.
 void
@@ -105,13 +104,23 @@ TGaugeView::RealDraw(Rect& /*bounds*/)
 	PaintRect(&r);
 	if (NOTNIL(GetProto(RSSYMgaugedrawlimits)))
 	{
-		SetPattern(2);
+		// on a port deeper than a bit a solid light gray, else the light
+		// gray pattern
+		GrafPort* port;
+		GetPort(&port);
+		Boolean gray = (long) (port->portBits.pixMapFlags & 0xff) > 1;
+		if (gray)
+			SetFgPattern(GetStdGrayPattern(0xaaaa, 0xaaaa, 0xaaaa));
+		else
+			SetPattern(2);
 		Rect limits;
 		limits.top = (short) (r.top + 1);
 		limits.left = r.right;
 		limits.bottom = (short) (r.bottom - 1);
 		limits.right = viewBounds.right;
 		PaintRect(&limits);
+		if (gray)
+			DisposeFgPattern();
 	}
 	PenNormal();
 	if (editable)

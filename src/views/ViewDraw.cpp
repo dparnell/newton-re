@@ -24,6 +24,8 @@
 #include "Screen.h"
 #include "Regions.h"
 #include "Frames.h"
+#include "ROMConstants.h"	// Rbindi
+#include "Pictures.h"		// DrawPicture
 #include "ObjectHeap.h"
 #include "NewtonExceptions.h"
 
@@ -848,8 +850,9 @@ TView::RealDraw(Rect& /*bounds*/)
 // ROM 0x002685f8 PostDraw__5TViewFR5TRect
 // A selected view is hilited.  The frame in its pattern and pen (the
 // custom one from viewFramePattern; the hilite and drag-shadow frames a
-// gray frame with a black one of pen 2 - 4 for the caret slip - inside;
-// NOT YET: the drag picture), round when the corners are; the drop shadow
+// gray frame with a black one of pen 2 - 4 for the caret slip - inside,
+// the drag shadow's with its grip picture at the top), round when the
+// corners are; the drop shadow
 // at the right and bottom, pen wide; the default button's marks: a
 // double line above and below.
 void
@@ -892,7 +895,16 @@ TView::PostDraw(Rect& /*drawBounds*/)
 					FrameRect(&bounds);
 				else
 					FrameRoundRect(&bounds, round, round);
-				// NOT YET RECONSTRUCTED: the drag-shadow frame's picture (RSbindi) at the top
+				if (frame == vfFrameDragShadow >> 4)
+				{
+					// the drag-shadow frame's grip picture (the ROM's
+					// bindi), centred across the top, two pixels down
+					Rect pict;
+					FromObject(RefVar(GetFrameSlot(RefVar(Rbindi), RSSYMbounds)), pict);
+					short width = (short) (bounds.right - bounds.left) - (short) (pict.right - pict.left);
+					OffsetRect(&pict, bounds.left + (width >> 1), bounds.top + 2);
+					DrawPicture(RefVar(Rbindi), pict, 0, 8);
+				}
 			}
 			else if (frame == vfFrameCustom >> 4)
 				DisposeFgPattern();

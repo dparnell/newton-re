@@ -99,13 +99,10 @@ the way are all in `docs/work-log.md`.
   or `fixtures/` calls `Dispatch`.
 - The views' NOT YET markers that a user can reach (`analysis/notyet.py
   src --area views --all`): `HandleWord`'s word-at-a-time branch
-  (`!UsesLetters`, `ReclassifyCharacter`); `:SetPopup` closing on a tap elsewhere; `:MoveBehind` to the back;
-  `TRootView::RemoveAllViews`' key view, popup and clipboards,
-  `UnregisterKeyboard`'s caret check and `IdleViews`' caret blink
-  (`CaretValid`); the drag picture and drag-shadow frame in `PostDraw`;
-  `TPictureView`'s hilite, drag and scaled drawing; the gauge's gray on
-  deeper ports.  (The math views and `AddTabStop` are not reachable in
-  this ROM.)
+  (`!UsesLetters`, `ReclassifyCharacter`); the root's `fDirtyScreen`
+  (`SmartScreenDirty` collects it, nothing yet shows it); the paragraph
+  hilite's +0x14 text pointer.  (The math views, `AddTabStop` and the
+  serial-port `TKeyboardTool` are not reachable in this ROM on the host.)
 - Packages: XIP packages (the ROM domain manager's page faulting, about
   11 KB); a card's `'stor` event and `GetCardReinsertionInfo`; ATA cards.
 - The NIE built into the ROM extension: the page tables `ptpt`/`glpt`
