@@ -109,7 +109,7 @@ FMultiply(RefArg /*rcvr*/, RefArg a, RefArg b)
 // Two integers' quotient as a real (the FPA's divide; nought gives an
 // infinity).
 static Ref
-UnevenDivide(long dividend, long divisor)
+UnevenDivide(Long dividend, Long divisor)
 {
 	return MakeReal((double) dividend / (double) divisor);
 }
@@ -122,8 +122,8 @@ FDivide(RefArg /*rcvr*/, RefArg a, RefArg b)
 {
 	if (ISINT(a) && ISINT(b))
 	{
-		long divisor = RVALUE(b);
-		long dividend = RVALUE(a);
+		Long divisor = RVALUE(b);
+		Long dividend = RVALUE(a);
 		if (divisor != 0 && dividend % divisor == 0)
 			return MAKEINT(dividend / divisor);
 		return UnevenDivide(dividend, divisor);
@@ -136,8 +136,8 @@ FDivide(RefArg /*rcvr*/, RefArg a, RefArg b)
 Ref
 FDiv(RefArg /*rcvr*/, RefArg a, RefArg b)
 {
-	long divisor = RINT(b);
-	long dividend = RINT(a);
+	Long divisor = RINT(b);
+	Long dividend = RINT(a);
 	if (divisor == 0)
 		Throw(exDivideByZero, nil, nil);					// DEVIATION: the ROM's __rt_sdiv traps
 	return MAKEINT(dividend / divisor);
@@ -148,8 +148,8 @@ FDiv(RefArg /*rcvr*/, RefArg a, RefArg b)
 Ref
 FMod(RefArg /*rcvr*/, RefArg a, RefArg b)
 {
-	long divisor = RINT(b);
-	long dividend = RINT(a);
+	Long divisor = RINT(b);
+	Long dividend = RINT(a);
 	if (divisor == 0)
 		Throw(exDivideByZero, nil, nil);					// DEVIATION: as FDiv
 	return MAKEINT(dividend % divisor);
@@ -172,7 +172,7 @@ FAbs(RefArg /*rcvr*/, RefArg a)
 {
 	if (ISINT(a))
 	{
-		long v = RVALUE(a);
+		Long v = RVALUE(a);
 		return MAKEINT(v < 0 ? -v : v);
 	}
 	return MakeReal(fabs(CoerceToDouble(a)));
@@ -522,7 +522,14 @@ FBitNot(RefArg /*rcvr*/, RefArg a)
 Ref
 FLShift(RefArg /*rcvr*/, RefArg a, RefArg b)
 {
+#if NEWTON_NS64
+	// the Ref's width: a shift past it leaves nothing (the ARM's register
+	// shift does the same past its word)
+	Long n = RINT(b) & 0xff;
+	return MAKEINT(n >= 64 ? 0 : (Long) ((ULong) RINT(a) << n));
+#else
 	return MAKEINT((long) ((ULong) RINT(a) << (RINT(b) & 0xff)));
+#endif
 }
 
 
@@ -530,7 +537,12 @@ FLShift(RefArg /*rcvr*/, RefArg a, RefArg b)
 Ref
 FRShift(RefArg /*rcvr*/, RefArg a, RefArg b)
 {
+#if NEWTON_NS64
+	Long n = RINT(b) & 0xff;
+	return MAKEINT(RINT(a) >> (n >= 64 ? 63 : n));
+#else
 	return MAKEINT(RINT(a) >> (RINT(b) & 0xff));
+#endif
 }
 
 
@@ -1751,8 +1763,8 @@ Ffeupdateenv(RefArg /*rcvr*/, RefArg env)
 Ref
 FRandom(RefArg /*rcvr*/, RefArg low, RefArg high)
 {
-	long lo = RINT(low);
-	long hi = RINT(high);
+	Long lo = RINT(low);
+	Long hi = RINT(high);
 	if (hi < lo)
 		Throw(exFrames, (void*) kNSErrBadArgs, nil);
 	long r = NewtonRand();

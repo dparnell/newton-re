@@ -192,10 +192,18 @@ MakeArray(long length)
 // ROM 0x001292e0 AddressToRef__FPv
 // A pointer as an integer Ref (pointers are word aligned: the tag bits
 // are free).
+//
+// NEWTON_NS64: an integer holds a host pointer whole, so the pointer is
+// simply the integer's value - one encoding with MAKEINT, which is what a
+// command's parameter is made with (views/Commands.cpp).
 Ref
 AddressToRef(void* p)
 {
+#if NEWTON_NS64
+	return MAKEINT((uintptr_t) p);
+#else
 	return (Ref) ((uintptr_t) p & ~(uintptr_t) 3);
+#endif
 }
 
 
@@ -205,7 +213,11 @@ RefToAddress(Ref r)
 {
 	if (!ISINT(r))
 		_RINTError(r);
+#if NEWTON_NS64
+	return (void*) (uintptr_t) RVALUE(r);
+#else
 	return (void*) ((uintptr_t) r & ~(uintptr_t) 3);
+#endif
 }
 
 
@@ -2329,7 +2341,7 @@ CDouble(RefArg d)
 
 
 // ROM 0x0031c454 CoerceToInt__FRC6RefVar
-long
+Long
 CoerceToInt(RefArg r)
 {
 	Ref ref = r;
@@ -2342,7 +2354,7 @@ CoerceToInt(RefArg r)
 	}
 	double value;
 	memcpy(&value, BinaryData(ref), sizeof(double));
-	return (long) value;
+	return (Long) value;
 }
 
 

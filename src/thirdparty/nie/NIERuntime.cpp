@@ -100,7 +100,7 @@ Ref
 NIESubtract(RefArg a, RefArg b)
 {
 	if (ISINT(a) && ISINT(b))
-		return MAKEINT((long) ((ULong) RINT(a) - (ULong) RINT(b)));
+		return MAKEINT((Long) ((ULong) RINT(a) - (ULong) RINT(b)));	// (Long: NEWTON_NS64 keeps the sum whole, as the interpreter does)
 	return FSubtract(RefVar(), a, b);
 }
 
@@ -206,7 +206,7 @@ Ref
 NIEAdd(RefArg a, RefArg b)
 {
 	if (ISINT(a) && ISINT(b))
-		return MAKEINT((long) ((ULong) RINT(a) + (ULong) RINT(b)));
+		return MAKEINT((Long) ((ULong) RINT(a) + (ULong) RINT(b)));	// (Long: NEWTON_NS64 keeps the sum whole, as the interpreter does)
 	return FAdd(RefVar(), a, b);
 }
 

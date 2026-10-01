@@ -28,9 +28,16 @@
 // objects already use), and told apart on the way out by being wider than
 // a Newton word.  A parameter that does fit is the integer the ROM would
 // have written, which is what a script reading cmd.parameter sees.
+//
+// NEWTON_NS64: a host pointer fits in an integer, and AddressToRef makes
+// one (Objects.cpp), so every parameter is simply an integer - the width
+// can no longer tell a pointer from a number, nor needs to.
 static Ref
 ParameterRef(Long parameter)
 {
+#if NEWTON_NS64
+	return MAKEINT(parameter);
+#endif
 	Ref value = MAKEINT(parameter);
 	if ((Long) RVALUE(value) == parameter)
 		return value;
@@ -41,6 +48,9 @@ ParameterRef(Long parameter)
 static Long
 ParameterValue(Ref value)
 {
+#if NEWTON_NS64
+	return (Long) RVALUE(value);
+#endif
 	if (value == (Ref) (int) value)			// a Newton-sized word
 		return (Long) RVALUE(value);
 	return (Long) RefToAddress(value);

@@ -344,7 +344,7 @@ void	SortArray(RefArg array, RefArg test, RefArg key);			// in builtins.c
 // Real numbers
 Ref		MakeReal(double d);
 double	CDouble(RefArg d);
-long	CoerceToInt(RefArg r);
+Long	CoerceToInt(RefArg r);	/* Long: an integer's width (sync_ddk_headers.py) */
 double	CoerceToDouble(RefArg r);
 int		ISREAL(Ref r);
 
