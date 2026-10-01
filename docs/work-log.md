@@ -9,6 +9,19 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-02: why a Windows soak round was six times slower
+
+Every soak step was slower on Windows (a card in and out 23 times,
+writing 12, printing 9) with newton using a whole core: the soak's own
+heap check called `getenv("NEWTON_HEAPDUMP")` once per block per walk,
+and the Windows CRT's getenv takes a lock and folds case where glibc's
+just scans (702efed9).  Read once now, as are the trace variables on
+other hot paths (text drawing, every ARM call, every throw, sound).  A
+6-minute Windows soak now does 29 rounds with the same step times as
+Linux.  The idle task's sleep uses a high-resolution waitable timer on
+Windows, so Newton timers fire when due rather than on the 15.6 ms tick
+(not the cause, but kept).
+
 ## 2026-10-02: Linux memory over time
 
 The remaining growth of a Linux soak (about 57 MB an hour) taken apart
