@@ -1,0 +1,125 @@
+// The ROM-free boot's fidelity beyond the Setup screen: the same walk,
+// with a snapshot at each step, run once booted on the ROM image (--rom)
+// and once on the object file built from romsrc/ - tools/host/fidelity.py
+// runs both and compares the snapshots with tools/imaging/pgmdiff.py
+// (ctest host.NewtonROMFreeFidelity).
+//
+// The walk: the Setup assistant (common.ns's walkSetup), then each of the
+// ROM's own applications opened and closed in turn, the Notepad's pickers
+// and slips (New, Show, the filing slip, the keyboard), the Extras drawer
+// and the Prefs roll's panels.  Each step's snapshot is FIDELITY_DIR/NN-step.pgm
+// (default: beside the store).  The clock is set to a fixed minute first
+// (SetTime), so the status bar's time agrees unless a step takes a minute.
+//
+// Prints "fidelity: NN-step" per snapshot and "fidelity: done".
+
+HostInclude("common.ns");			// tapAt, waitFor, walkSetup
+HostInclude("walkhelpers.ns");		// findView, viewWithText
+
+fidDir := HostGetEnv("FIDELITY_DIR");
+if not fidDir then fidDir := HostStoreFile() & ".fidelity";
+fidCount := 0;
+fidBase := nil;
+
+// the snapshot, once the screen has had a moment to settle (a slide-in
+// effect, the caret's blink - the same in both boots, so not a race)
+fidSnap := func(name, andThen) begin
+	RefreshViews();
+	AddDelayedCall(func() begin
+		fidCount := fidCount + 1;
+		local file := fidDir & "/" & (if fidCount < 10 then "0" else "") & fidCount & "-" & name & ".pgm";
+		ScreenSnapshot(file);
+		Print("fidelity: " & (if fidCount < 10 then "0" else "") & fidCount & "-" & name);
+		call andThen with ();
+	end, nil, 1000);
+end;
+
+// whatever a step opened, closed again
+fidClose := func() begin
+	local kids := GetRoot():ChildViewFrames();
+	for i := Length(kids) - 1 to 0 by -1 do
+		if not LSearch(fidBase, kids[i], 0, '|=|, nil) then
+			try kids[i]:Close() onexception |evt.ex| do nil;
+end;
+
+// a step: the action, the wait for what it shows, the snapshot, closed
+fidStep := func(name, action, shown, andThen) begin
+	try call action with () onexception |evt.ex| do Print("fidelity: " & name & ": the action threw");
+	call waitFor with ("fidelity: " & name, shown, func()
+		call fidSnap with (name, func() begin
+			call fidClose with ();
+			AddDelayedCall(andThen, nil, 500);
+		end), 20);
+end;
+
+fidApp := func(sym) {name: SPrintObject(sym),
+	action: func() GetRoot().(sym):Open(),
+	shown: func() GetRoot().(sym).viewCObject};
+
+fidTap := func(name, x, y, left, top) {name: name,
+	action: func() call tapAt with (x, y),
+	shown: func() begin
+		local found := nil;
+		foreach child in GetRoot():ChildViewFrames() do begin
+			local box := child:GlobalBox();
+			if box.left = left and box.top = top then found := true;
+		end;
+		found;
+	end};
+
+// an application opened and something in it tapped; what the tap shows
+// is waited for a second (it may be a panel inside the application's own
+// view, which nothing outside it can see come)
+fidTapIn := func(name, sym, x, y) begin
+	local t0 := 0;
+	{name: name,
+	 action: func() begin
+		GetRoot().(sym):Open();
+		RefreshViews();
+		call tapAt with (x, y);
+		t0 := Ticks();
+	 end,
+	 shown: func() Ticks() - t0 > 60};
+end;
+
+fidSteps := nil;
+fidAt := 0;
+fidNext := func() begin
+	if fidAt >= Length(fidSteps) then begin
+		Print("fidelity: done");
+		HostQuit();
+		return;
+	end;
+	local s := fidSteps[fidAt];
+	fidAt := fidAt + 1;
+	call fidStep with (s.name, s.action, s.shown, fidNext);
+end;
+
+call walkSetup with ([2, 0, 45, 34, 14, 37], func() begin		// "Daniel"
+	SetTime(51132960);				// (a fixed minute, so both boots' clocks agree)
+	fidBase := GetRoot():ChildViewFrames();
+	fidSteps := [
+		{name: "notepad", action: func() nil, shown: func() true},
+		call fidApp with ('cardfile),
+		call fidApp with ('calendar),
+		call fidApp with ('callapp),
+		call fidApp with ('calculator),
+		call fidApp with ('Formulas),
+		call fidApp with ('worldClock),
+		call fidApp with ('alarm),
+		call fidApp with ('stylePalette),
+		call fidApp with ('iobox),
+		call fidApp with ('preferenceRoll),
+		call fidApp with ('Connection),
+		call fidApp with ('assistant),
+		call fidTap with ("keyboard", 66, 425, 19, 295),
+		call fidTap with ("action-menu", 310, 28, 183, 23),
+		call fidTapIn with ("prefs-sound", 'preferenceRoll, 90, 168),
+		call fidTapIn with ("prefs-handwriting", 'preferenceRoll, 120, 232),
+		call fidTapIn with ("prefs-sleep", 'preferenceRoll, 90, 216),
+		call fidTapIn with ("dates-month", 'calendar, 160, 120),
+		call fidTapIn with ("names-new", 'cardfile, 101, 466),
+		call fidApp with ('extrasDrawer),
+	];
+	call fidNext with ();
+end);

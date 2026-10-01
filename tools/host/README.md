@@ -144,6 +144,27 @@ lock-up was traced to `CreateTrigramHeader` asking for a ROM size.
 - **Used by:** ctest `host.NewtonNoROMSameScreen`, the proof that the OS booted on the object file built from the ROM source
   tree draws what it draws booted on the ROM image (`docs/rom-free/README.md`).
 
+## fidelity.py - the ROM-free boot, step by step
+
+    python tools/host/fidelity.py build/host/host/newton --rom build/MP2x00US/rom.bin \
+        --original <romsrc.py build --original -o file> --default <build>/romsrc-objects.bin [--out DIR] [--no-noise]
+
+- **Purpose:** carries samescreen.py's check past the Setup screen. `src/host/demo/fidelity.ns` opens the ROM's
+  applications in turn, the keyboard, the Action menu, three Prefs panels, the Dates month and the Names new card and
+  the Extras drawer, snapshotting each step (FIDELITY_DIR/NN-step.pgm). The walk runs in four boots, compared with
+  `tools/imaging/pgmdiff.py`:
+  - `--rom`, the ROM image;
+  - `--original`, the committed tree built with `romsrc.py build --original` (less the NIE). It must match the ROM at
+    every step, so any difference there is a builder or romsrc/ bug.
+  - `--default`, the object file newton boots by default. It may differ only at the steps `EXPECTED` lists, each with its
+    reason (Newton Devices' AppleTalk entry in the Prefs list). An unlisted difference fails, and so does a listed one
+    that has gone.
+  - a second `--rom` boot, as pgmdiff's `--noise` run, so a pixel two boots of one image disagree on is not counted.
+- **Output:** each comparison and "fidelity: every difference accounted for" (exit 0), or what is not explained (exit 1);
+  the snapshots and marked PNGs of the differences in `--out` (default `tmp/fidelity`).
+- **Used by:** ctest `host.NewtonROMFreeFidelity` (after `host.ROMSourceOriginal` builds the `--original` file, about
+  four minutes).
+
 ## stress.py - host tests under load
 
 A test that waits a fixed time for something asynchronous passes on an
