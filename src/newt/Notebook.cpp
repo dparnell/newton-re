@@ -42,6 +42,7 @@
 #include "NewtonGestalt.h"
 #include "Unicode.h"
 #include "ROMConstants.h"
+#include "NativeFunctions.h"
 #include "hal/host/HostTablet.h"
 #include <string.h>
 
@@ -102,6 +103,60 @@ DrawNotebookSplashScreen(void)
 }
 
 
+// The display parameters of a screen the ROM does not know.
+//
+// DEVIATION (host): the ROM describes its display in GetAllRawDisplayParams
+// (a NewtonScript built-in, ROM 0x004186cd), which answers the global
+// AllRawDisplayParams when there is one and otherwise its own literal - the
+// MessagePad's 320 x 480, a button bar 46 pixels thick at the bottom in
+// portrait and at the right in landscape.  CreateDisplayParams makes
+// vars.displayParams (the root's bounds, the application area, the button
+// bar) out of it, and everything that lays the screen out reads that.  The
+// global is the hook a machine with another screen was to fill in; a host
+// display of any other size fills it in here, the four orientations shaped
+// as the ROM's are (the display's own width and height in 0 and 2, the two
+// swapped in 1 and 3) and the button bar as thick as the ROM's.
+static void
+DefineHostDisplayParams(void)
+{
+	PixelMap screen;
+	GetGrafInfo(kGrafInfoScreenPixelMap, &screen);
+	long orientation = 0;
+	GetGrafInfo(kGrafInfoOrientation, &orientation);
+	long width = screen.bounds.right - screen.bounds.left;
+	long height = screen.bounds.bottom - screen.bounds.top;
+	if (orientation == 1 || orientation == 3)
+	{
+		long w = width;
+		width = height;
+		height = w;
+	}
+	if (width == 320 && height == 480)
+		return;					// the ROM's own table describes it
+	long depth = screen.pixMapFlags & 0xff;
+	RefVar make(CompileScriptFunction(
+		"func(w, h, depth) begin "
+		"local thick := 46; "
+		"local land := {pixelDepth: depth, orientation: 1, scrTop: 0, scrLeft: 0, scrWidth: h, scrHeight: w, "
+		"appAreaGlobalTop: 0, appAreaGlobalLeft: 0, appAreaTop: 0, appAreaLeft: 0, appAreaWidth: h - thick, appAreaHeight: w, "
+		"rootBounds: {left: 0, top: 0, right: h, bottom: w}, buttonBarBounds: {left: h - thick, top: 0, right: h, bottom: w}, "
+		"buttonBarPosition: 'right, buttonBarControlsPosition: 'bottom, bellyButtonPosition: 'inside, "
+		"buttonBarVThickness: thick, buttonBarHThickness: thick, appAreaBounds: {left: 0, top: 0, right: h - thick, bottom: w}}; "
+		"local port := {_proto: land, orientation: 0, scrWidth: w, scrHeight: h, appAreaWidth: w, appAreaHeight: h - thick, "
+		"rootBounds: {left: 0, top: 0, right: w, bottom: h}, buttonBarPosition: 'bottom, buttonBarControlsPosition: 'right, "
+		"buttonBarBounds: {left: 0, top: h - thick, right: w, bottom: h}, appAreaBounds: {left: 0, top: 0, right: w, bottom: h - thick}}; "
+		"[port, land, {_proto: port, orientation: 2, appAreaBounds: port.appAreaBounds}, "
+		"{_proto: land, orientation: 3, appAreaBounds: land.appAreaBounds}] "
+		"end"));
+	RefVar args(MakeArray(3));
+	SetArraySlot(args, 0, RefVar(MAKEINT(width)));
+	SetArraySlot(args, 1, RefVar(MAKEINT(height)));
+	SetArraySlot(args, 2, RefVar(MAKEINT(depth)));
+	RefVar params(DoBlock(make, args));
+	SetFrameSlot(RefVar(gVarFrame), RefVar(Intern((char*) "AllRawDisplayParams")), params);
+}
+
+
 // ROM 0x00146b28 InitToolbox__9TNotebookFv
 // The toolbox: the offscreen bitmaps and the port, the script globals,
 // the inker, the screen orientation from the preference (else the
@@ -116,15 +171,20 @@ TNotebook::InitToolbox(void)
 	TApplication::InitToolbox();
 	InitOffscreenBitmaps();
 	InitScriptGlobals();
+	DefineHostDisplayParams();		// DEVIATION (host): a display of another size
 	InstallFix2010();		// DEVIATION: the year-2010 fix (intl/Dates.h)
 	InitInker();
 	RefVar orientation(GetPreference(RSSYMscreenorientation));
+	long current;
+	GetGrafInfo(kGrafInfoOrientation, &current);
 	if (ISNIL(orientation))
-	{
-		long current;
-		GetGrafInfo(kGrafInfoOrientation, &current);
 		SetOrientation(current);
-	}
+	else if ((current == 1 || current == 3) && (RINT(orientation) == 0 || RINT(orientation) == 2))
+		// DEVIATION (host): a display the host made wider than it is tall
+		// starts the way round it was made (hal/host/HostScreen.cpp's
+		// Configure: landscape), whatever the preference says - the ROM's
+		// default is portrait, the MessagePad's own way round
+		SetOrientation(current);
 	else
 		SetOrientation(RINT(orientation));
 	gDrawSplashScreenProc = DrawNotebookSplashScreen;

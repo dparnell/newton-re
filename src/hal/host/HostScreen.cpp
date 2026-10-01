@@ -48,11 +48,18 @@ THostScreenDriver::Delete()
 }
 
 
+// The display's size as the window has it: a portrait panel (the ROM's
+// SetOrientation takes portrait to be the taller way round, as the
+// MessagePad's is), turned to landscape from the start when the window is
+// wider than it is tall - so the orientation the OS starts in shows the
+// display the way round it was asked for.
 void
 THostScreenDriver::Configure(long width, long height, long depth, long dpi)
 {
-	fWidth = width;
-	fHeight = height;
+	fWidth = width < height ? width : height;
+	fHeight = width < height ? height : width;
+	fOrientation = width > height ? 1 : 0;
+	fLandscape = width > height;
 	fDepth = depth;
 	fDPI = dpi;
 }

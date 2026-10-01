@@ -23,7 +23,11 @@
 				The panel reads eight to the pixel and sits square on the
 				display, so its factory calibration (a scale of an eighth,
 				no offset) is exact: a mouse is an accurate pen out of the
-				box.  A test can put the panel askew (HostTabletSetSkew, or
+				box.  A reading is twelve bits, as the MP2x00's ADC's are,
+				so a display wider or taller than 511 pixels is read four to
+				the pixel (two above 1023, one above 2047), the factory scale
+				following (RawPerPixel) - which is also why a store
+				calibrated at one display size is out at another.  A test can put the panel askew (HostTabletSetSkew, or
 				NEWTON_TABLET_SKEW="dx,dy,sx,sy": the raw reading is that of
 				the point x*sx+dx, y*sy+dy) to show Align Pen correcting it.
 				The panel turns with the window, so it always reads in the
@@ -126,13 +130,33 @@ Now(void)
 }
 
 
-// The panel's 12-bit reading of a point of the window: eight to the pixel,
-// askew when a test has put it so.
+// How many readings to the pixel: eight, as many as twelve bits allow for
+// the display's longer side (the screen's own size, either orientation).
+static long
+RawPerPixel(void)
+{
+	Rect screen = qdGlobals.fScreenBits.bounds;
+	long longer = screen.right - screen.left;
+	if (screen.bottom - screen.top > longer)
+		longer = screen.bottom - screen.top;
+	if (longer <= 511)
+		return 8;
+	if (longer <= 1023)
+		return 4;
+	if (longer <= 2047)
+		return 2;
+	return 1;
+}
+
+
+// The panel's 12-bit reading of a point of the window: RawPerPixel to the
+// pixel, askew when a test has put it so.
 static void
 RawReading(long x, long y, long* rawX, long* rawY)
 {
-	*rawX = lround((x * gSkewSX + gSkewDX) * 8);
-	*rawY = lround((y * gSkewSY + gSkewDY) * 8);
+	long k = RawPerPixel();
+	*rawX = lround((x * gSkewSX + gSkewDX) * k);
+	*rawY = lround((y * gSkewSY + gSkewDY) * k);
 	if (*rawX < 0) *rawX = 0;
 	if (*rawX > 0xfff) *rawX = 0xfff;
 	if (*rawY < 0) *rawY = 0;
@@ -168,8 +192,9 @@ SampleDeliver(void)
 TMainTabletDriver*
 TMainTabletDriver::New()
 {
-	fCalibration.fXScale = 0x2000;			// the factory's: an eighth of a pixel a step, square on the display
-	fCalibration.fYScale = 0x2000;
+	long k = RawPerPixel();
+	fCalibration.fXScale = 0x10000 / k;		// the factory's: an eighth of a pixel a step (on the MP2x00's screen), square on the display
+	fCalibration.fYScale = 0x10000 / k;
 	fCalibration.fXOffset = 0;
 	fCalibration.fYOffset = 0;
 	fCalibration.fField10 = 1;
@@ -179,7 +204,7 @@ TMainTabletDriver::New()
 	fState = kTabletStateIdle;
 	fOrientation = 0;
 	fSampleRate = 0xb400;
-	SetRect(&fScreen, 0, 0, 320, 480);
+	fScreen = qdGlobals.fScreenBits.bounds;
 	fPenInBuffer = false;
 	fNextSample.hi = fNextSample.lo = 0;
 	const char* skew = getenv("NEWTON_TABLET_SKEW");
@@ -253,12 +278,12 @@ void		TMainTabletDriver::ReturnTabletToConsciousness(ULong, ULong, ULong)	{ }
 // kernel keeps across a restart is not marked good).
 Boolean		TMainTabletDriver::TabletNeedsRecalibration(void)		{ return false; }
 
-// Eight readings to the pixel at 100 dots an inch, as the MP2x00's 800.
+// RawPerPixel readings to the pixel at 100 dots an inch: the MP2x00's 800.
 void
 TMainTabletDriver::GetTabletResolution(long* x, long* y)
 {
-	*x = 800 << 16;
-	*y = 800 << 16;
+	*x = (100 * RawPerPixel()) << 16;
+	*y = (100 * RawPerPixel()) << 16;
 }
 
 

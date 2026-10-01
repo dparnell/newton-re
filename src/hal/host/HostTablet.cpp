@@ -8,6 +8,7 @@
 #include "TabletDriver.h"
 #include "Inker.h"
 #include "Rects.h"
+#include "Ports.h"
 #include "HostTablet.h"
 #include "TabletBuffer.h"
 #include "StrokeQueue.h"
@@ -77,9 +78,7 @@ HostTabletInit(void)
 		gTabletDriver = HostTabletMakeDriver();
 		if (gTabletDriver != nil)
 		{
-			Rect screen;
-			SetRect(&screen, 0, 0, 320, 480);
-			gTabletDriver->Init(screen);
+			gTabletDriver->Init(qdGlobals.fScreenBits.bounds);
 		}
 	}
 }

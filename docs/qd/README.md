@@ -993,6 +993,45 @@ it is setting its globals up, so these answer before the view system is
 running; with no screen driver `GetGrafInfo` answers a contrast of 0 and
 an orientation of 1.
 
+### A display of another size (`newton --display WxH`)
+
+NewtonOS 2.x lays the screen out from one table: `GetAllRawDisplayParams`
+(a NewtonScript built-in, ROM 0x004186cd) answers, for each of the four
+orientations, the screen's size, the root view's bounds, the application
+area and where the button bar is, and `CreateDisplayParams` (the root's
+`viewSetupFormScript`) makes `vars.displayParams` out of it, which the
+root, the button bar, the Extras drawer and every application that asks
+`GetAppParams()` read.  The built-in answer is a literal for the
+MessagePad's 320 x 480 - a button bar 46 pixels thick at the bottom in
+portrait, at the right in landscape - unless the global
+`AllRawDisplayParams` exists: the hook a machine with another screen was
+to fill in.  How it was established: `romsrc/functions/
+Rbuiltinfunctions.GetAllRawDisplayParams.ns` and `CreateDisplayParams.ns`.
+
+The host fills it in for any other size (DEVIATION, `newt/Notebook.cpp`'s
+`DefineHostDisplayParams`, run straight after `InitScriptGlobals`): the
+four orientations shaped as the ROM's are, the bar as thick.  The ROM's
+`SetOrientation` takes portrait to be the taller way round, so the host's
+screen driver keeps its panel portrait (`hal/host/HostScreen.cpp`'s
+`Configure`) and a window asked for wider than it is tall starts in
+landscape - which `TNotebook::InitToolbox` keeps over the ROM's default
+preference of portrait (DEVIATION; the window turns with the screen
+afterwards, as before).  The pen follows: the host's panel reads twelve
+bits, as the MP2x00's ADC does, so a display over 511 pixels is read four
+to the pixel (two over 1023), the factory calibration following
+(`hal/host/HostTabletDriver.cpp`'s `RawPerPixel`) - a store calibrated at
+one size is therefore out at another, and Prefs' Align Pen puts it right.
+
+At 1024 x 768 (ctest `host.NewtonBigScreen`, `src/host/demo/bigscreen.ns`)
+the splash, the Setup assistant, the Notepad, Dates, the Extras drawer
+(as wide as the application area, as tall as its rows of icons) and the
+button bar (at the right in landscape, the bottom in portrait) fill the
+display.  What stays its own size does so because its template says so,
+which is the ROM's behaviour and is kept: Names (`kGetAppSize`: 240 wide,
+220 high by default, 424 at most), the Calculator, the slips and dialogs,
+and the Setup assistant's artwork, laid out for the MessagePad's two
+shapes.
+
 ## Not yet
 
 `ZoomRect`, the screen update task and the alert screen

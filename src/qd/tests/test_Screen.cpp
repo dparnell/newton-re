@@ -159,15 +159,20 @@ main(int argc, char** argv)
 		fclose(f);
 		remove(path);
 	}
-	// the orientation: landscape swaps the sides, the screen re-made (blank)
-	SetOrientation(1);
-	EXPECT(screenWidth == 64 && screenHeight == 48 && screen->bounds.right == 48 && screen->bounds.bottom == 64 && screen->rowBytes == 8);
-	EXPECT(display->Width() == 48 && display->Height() == 64 && GetPixel(screen, 10, 10) == 0);
+	// the orientation: a display made wider than it is tall starts in
+	// landscape (its panel kept portrait, as the ROM's SetOrientation takes
+	// portrait to be the taller way round); portrait swaps the sides, the
+	// screen re-made (blank), and the ROM's globals agree with the map
 	long orientation;
 	GetGrafInfo(kGrafInfoOrientation, &orientation);
 	EXPECT(orientation == 1);
 	SetOrientation(0);
-	EXPECT(screen->bounds.right == 64 && screen->bounds.bottom == 48 && screenWidth == 48 && screenHeight == 64);
+	EXPECT(screenWidth == 48 && screenHeight == 64 && screen->bounds.right == 48 && screen->bounds.bottom == 64 && screen->rowBytes == 8);
+	EXPECT(display->Width() == 48 && display->Height() == 64 && GetPixel(screen, 10, 10) == 0);
+	GetGrafInfo(kGrafInfoOrientation, &orientation);
+	EXPECT(orientation == 0);
+	SetOrientation(1);
+	EXPECT(screen->bounds.right == 64 && screen->bounds.bottom == 48 && screenWidth == 64 && screenHeight == 48);
 	TestBlitAgainstReference();
 	if (failures == 0)
 		printf("test_Screen: all passed\n");

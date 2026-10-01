@@ -583,6 +583,18 @@ set_tests_properties(host.NewtonClicks PROPERTIES TIMEOUT 150
 # the boot's splash screen (demo/splash.ns): the logo and the version and
 # copyright lines TNotebook::DrawSplashScreen draws, still on the display
 # while the boot script runs
+# a display bigger than the MessagePad's (demo/bigscreen.ns, 1024 x 768): the
+# root view, the application area and the button bar fill it (the display
+# parameters newt/Notebook.cpp gives the ROM's GetAllRawDisplayParams), the
+# pen reaches its far corner through the panel, Setup is walked through at
+# that size, a shape drawn at the Notepad's bottom right lands there, and
+# the screen turned swaps the root's width and height
+add_test(NAME host.NewtonBigScreen COMMAND newton --display 1024x768 --headless 240
+         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/bigscreen.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonBigScreen PROPERTIES TIMEOUT 300
+                     PASS_REGULAR_EXPRESSION "bigscreen: done"
+                     FAIL_REGULAR_EXPRESSION "waited in vain")
+
 add_test(NAME host.NewtonSplash COMMAND newton --display 320x480 --headless 60
          --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/splash.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonSplash PROPERTIES TIMEOUT 120

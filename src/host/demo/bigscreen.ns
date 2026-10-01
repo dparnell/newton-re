@@ -1,0 +1,142 @@
+// The OS on a display bigger than the MessagePad's (ctest
+// host.NewtonBigScreen: newton --display 1024x768): the root view and the
+// application area fill it (the display parameters the ROM's
+// GetAllRawDisplayParams answers, newt/Notebook.cpp), the pen reaches its
+// far corner through the panel (the Welcome page's Continue, tapped with
+// HostTabletTap: the raw readings of hal/host/HostTabletDriver.cpp), the
+// Setup assistant is walked through at that size (its buttons found by
+// their text, not by where they are on a MessagePad), the Notepad fills
+// the application area and writing at its bottom right lands there, and
+// the screen turned (SetScreenOrientation) swaps the root's width and
+// height.  Snapshots: build/bigscreen-<n>.pgm.
+//
+//   build/host/host/newton --display 1024x768 --headless 150 --script src/host/demo/bigscreen.ns
+HostInclude("common.ns");
+HostInclude("penhelpers.ns");
+
+bigShot := 0;
+bigSnap := func() begin
+	bigShot := bigShot + 1;
+	ScreenSnapshot("build/bigscreen-" & NumberStr(bigShot) & ".pgm");
+end;
+
+// the first view under this one whose text is that
+bigFindText := func(view, text) begin
+	local found := nil;
+	if view.viewCObject then begin
+		if view.text and IsString(view.text) and StrEqual(view.text, text) then
+			found := view
+		else
+			foreach child in view:ChildViewFrames() do
+				if not found then found := call bigFindText with (child, text);
+	end;
+	found;
+end;
+
+bigCentre := func(view) begin
+	local b := view:GlobalBox();
+	[(b.left + b.right) div 2, (b.top + b.bottom) div 2];
+end;
+
+bigInkIn := func(box) begin
+	local n := 0;
+	for x := box.left to box.right - 1 by 2 do
+		for y := box.top to box.bottom - 1 by 2 do
+			if ScreenPixel(x, y) = 0 then n := n + 1;
+	n;
+end;
+
+bigName := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+
+// Setup's pages: the name typed where the page asks for it, then Continue
+// (Done on the last), until the assistant has closed
+bigWalk := func(andThen) begin
+	local setup := GetRoot().setup;
+	if not (setup and setup.viewCObject) then
+		return call waitFor with ("bigscreen: the Notepad", func() GetRoot().paperroll and GetRoot().paperroll.viewCObject, andThen, 60);
+	local first := call bigFindText with (setup, "First");
+	if first then begin
+		local b := first:GlobalBox();
+		call tapAt with (b.right + 60, (b.top + b.bottom) div 2);
+		foreach c in bigName do call typeKey with (c);
+	end;
+	local button := call bigFindText with (setup, "Continue");
+	if not button then button := call bigFindText with (setup, "Done");
+	local page := setup.fCurrentPageIndex;
+	if button then begin
+		local at := call bigCentre with (button);
+		call tapAt with (at[0], at[1]);
+	end;
+	call waitFor with ("bigscreen: setup page " & NumberStr(page), func()
+			not (GetRoot().setup and GetRoot().setup.viewCObject) or GetRoot().setup.fCurrentPageIndex <> page
+				or HostTabletCalibrationTarget(),
+		func() AddDelayedCall(func() call bigWalk with (andThen), nil, 300), 60);
+end;
+
+bigOrientation := func() begin
+	local wide := GetRoot().viewBounds;
+	local was := GetOrientation();
+	SetScreenOrientation(if was = 1 or was = 3 then 2 else 1);
+	call waitFor with ("bigscreen: the turned root", func() GetRoot().viewBounds.right = wide.bottom, func() begin
+		Print({turned: GetRoot().viewBounds, appArea: GetAppParams().appAreaBounds});
+		AddDelayedCall(func() begin
+			call bigSnap with ();
+			SetScreenOrientation(was);
+			call waitFor with ("bigscreen: the root turned back", func() GetRoot().viewBounds.right = wide.right, func() begin
+				Print({back: GetRoot().viewBounds});
+				Print("bigscreen: done");
+				HostQuit();
+			end, 30);
+		end, nil, 1000);
+	end, 30);
+end;
+
+bigWrite := func() begin
+	local area := GetAppParams().appAreaBounds;
+	local box := {left: area.right - 260, top: area.bottom - 150, right: area.right - 40, bottom: area.bottom - 60};
+	local before := call bigInkIn with (box);
+	// a rectangle, the Notepad set to shapes: a shape stays where it is
+	// drawn (a word would go to the caret, the keyboard having typed the
+	// name)
+	GetRoot().paperroll._recogSettings := 128;		// shapes alone (as demo/shapes.ns)
+	PurgeAreaCache();
+	call penStroke with (call penPath with ([box.left + 20, box.top + 15, box.right - 20, box.top + 15, box.right - 20, box.bottom - 15,
+						box.left + 20, box.bottom - 15, box.left + 20, box.top + 15]));
+	IdleStrokes();
+	call waitFor with ("bigscreen: the writing at the bottom right", func() call bigInkIn with (box) > before + 10, func() begin
+		Print({wroteAt: box, inkBefore: before, inkAfter: call bigInkIn with (box)});
+		call bigSnap with ();
+		call bigOrientation with ();
+	end, 30);
+end;
+
+HostTabletAutoCalibrate(true);
+call waitFor with ("bigscreen: the Welcome page", func() GetRoot().setup and GetRoot().setup.viewCObject
+		and call bigFindText with (GetRoot().setup, "Continue"), func() begin
+	local params := GetAppParams();
+	Print({root: GetRoot().viewBounds, orientation: GetOrientation(), appArea: params.appAreaBounds, buttonBar: params.buttonBarBounds});
+	call bigSnap with ();
+	local at := call bigCentre with (call bigFindText with (GetRoot().setup, "Continue"));
+	Print({continueAt: at});
+	local page := GetRoot().setup.fCurrentPageIndex;
+	local tapped := Ticks() - 1000;
+	// through the panel: the raw reading of the far corner (again every
+	// three seconds while nothing has come of it - a tap made while the
+	// machine is still starting up is not taken)
+	call waitFor with ("bigscreen: Continue at the far corner", func() begin
+			if GetRoot().setup.fCurrentPageIndex = page and Ticks() - tapped > 180 then begin
+				HostTabletTap(at[0], at[1], 100);
+				tapped := Ticks();
+			end;
+			GetRoot().setup.fCurrentPageIndex <> page or HostTabletCalibrationTarget()
+		end, func() begin
+		Print("bigscreen: the tap at the far corner reached Continue");
+		call bigWalk with (func() begin
+			Print({notepad: GetRoot().paperroll:GlobalBox()});
+			AddDelayedCall(func() begin
+				call bigSnap with ();
+				call bigWrite with ();
+			end, nil, 1500);
+		end);
+	end, 60);
+end, 60);

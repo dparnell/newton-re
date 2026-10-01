@@ -50,7 +50,7 @@ public:
 	void		ExitIdleMode(void);
 
 	// host
-	void		Configure(long width, long height, long depth, long dpi);		// before InitScreen: the display's size (portrait), depth (1, 2, 4 or 8) and resolution
+	void		Configure(long width, long height, long depth, long dpi);		// before InitScreen: the display's size as the window has it (a wider one starts in landscape), depth (1, 2, 4 or 8) and resolution
 	long		Width(void) const			{ return fLandscape ? fHeight : fWidth; }
 	long		Height(void) const			{ return fLandscape ? fWidth : fHeight; }
 	unsigned char	Gray(long x, long y) const;										// 0 white .. 255 black
