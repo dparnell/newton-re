@@ -55,7 +55,7 @@ unreferenced	SimpleOffset__14TParagraphView|ValidateCaretPoint|WordFitsAtEndOfLi
 # a protocol interface's methods are three-instruction stubs through the
 # implementation's dispatch table, which the host's virtual call stands in
 # for; most are cited at the interface's declaration, these are not
-protocol glue	Sizeof__\d+\w+SFv|\d+TEndpointF|TEndpointEventHandlerF(GetSyncPortId|GetPrivatePortId|CallService)|TQDLibraryDriver|\d+TWRecognizer|POutTranslator|PInTranslator|TEventCollector|\d+TCMService|\d+TSoundCodec|\d+TCompressor|\d+TDecompressor|CallbackCompressor|CallbackDecompressor|PFrameSink|PFrameSource|\d+TStoreDriver|\d+TPinPad|StdioOutTranslator|StdioInTranslator|NullOutTranslator|NullInTranslator|NTKOutTranslator|NTKInTranslator|SerialOutTranslator|SerialInTranslator
+protocol glue	Sizeof__\d+\w+SFv|\d+TEndpointF|TQDLibraryDriver|\d+TWRecognizer|POutTranslator|PInTranslator|TEventCollector|\d+TCMService|\d+TSoundCodec|\d+TCompressor|\d+TDecompressor|CallbackCompressor|CallbackDecompressor|PFrameSink|PFrameSource|\d+TStoreDriver|\d+TPinPad|StdioOutTranslator|StdioInTranslator|NullOutTranslator|NullInTranslator|NTKOutTranslator|NTKInTranslator|SerialOutTranslator|SerialInTranslator
 
 # --- the compiler's and the C library's runtime, and overloads -------------
 # array new/delete helpers, pure-virtual stubs, the NSSend family's fixed-
