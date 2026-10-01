@@ -9,6 +9,20 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: the rest of Newt's Cape's companions, and its trial
+
+`host.NewtonAppNewtsCapeHelpers` now also reads a Latin-1 page through
+the ISO-8859-1 encoding, has a downloaded MOD tune made a package of its
+own and installed (mdsv and NewtPack; playing it wants ModPlayer, not in
+the fixtures), opens Newt's Cape's help book, shows Pkg Info, and follows
+the trial's expiry with the clock set forward (asked to register at 31
+days, expired at 46; Register... is disabled in this release) (022c8632).
+The package's own bug kept: mdsv titles a notice with a symbol, on which
+the ROM's IsSimilarItem throws when the next notice arrives.  Found: a
+book opened from Extras sits in a 240x336 view while it draws to about
+305x385, so taps outside the view (its Action button) do nothing - rtbk's
+routing waits on it.
+
 ## 2026-10-01: the host-order classes swept; Newt's Cape's audio and PalmDoc helpers
 
 - Every SetClass/ObjClass and class-carrying AllocateBinary in `src/` and
