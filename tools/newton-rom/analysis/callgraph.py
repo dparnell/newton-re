@@ -4,6 +4,7 @@
 Usage:
     python callgraph.py <build_dir> ROOT... [--src src] [--depth N] [--all]
                         [--stop NAME...] [--tree]
+    python callgraph.py <build_dir> NAME... --callers [--src src]
 
 ROOT is a function name (as in symbols.txt) or a 0x address.  The call
 graph is read straight out of rom.bin: every BL instruction inside a
@@ -21,6 +22,12 @@ are and the first function found calling them; --all lists everything.
 Traversal does not continue below a function that is done (its callees
 were dealt with when it was written) unless --through-done is given,
 and never below a name given with --stop.
+
+--callers turns it round: for each NAME, the functions that call it
+directly (a BL to it or to its jump-table slot), each marked done or
+TODO - a function no done caller reaches is either reached some other
+way (a vtable, a protocol, a table of procedures) or not from what the
+reconstruction runs yet.
 
 Inputs:  <build_dir>/rom.bin, symbols.json, layout.json; the source tree.
 Output:  a table on stdout; with --tree, the reachable graph indented.
@@ -77,6 +84,7 @@ def main(argv=None) -> int:
                     help="keep walking below functions that are already reconstructed")
     ap.add_argument("--stop", nargs="*", default=[], help="names not to walk below")
     ap.add_argument("--tree", action="store_true", help="print the graph as an indented tree")
+    ap.add_argument("--callers", action="store_true", help="list each NAME's direct callers instead")
     args = ap.parse_args(argv)
 
     data, layout, rom = load(args.build_dir)
@@ -137,6 +145,50 @@ def main(argv=None) -> int:
 
     done = cited_addresses(args.src)
     stops = {by_name[n] for n in args.stop if n in by_name}
+
+    if args.callers:
+        callers = collections.defaultdict(list)
+        for a in starts:
+            for c in callees(a):
+                callers[c].append(a)
+        # the other ways a function is reached: a B to it (a vtable entry,
+        # a tail call, a glue stub) and its address as a word of data (a
+        # table of procedures, a class info, a function pointer stored)
+        slot_of = collections.defaultdict(list)
+        for v, body in jt.items():
+            slot_of[body].append(v)
+        wanted = set(roots) | {v for r in roots for v in slot_of.get(r, [])}
+        branched = collections.defaultdict(list)
+        as_data = collections.defaultdict(list)
+        for pc in range(0, rom_size, 4):
+            w = struct.unpack(">I", rom[pc:pc + 4])[0]
+            if w in wanted:
+                as_data[w].append(pc)
+            if (w >> 28) != 0xF and (w & 0x0F000000) == 0x0A000000:
+                off = w & 0x00FFFFFF
+                if off & 0x800000:
+                    off -= 0x1000000
+                t = (pc + 8 + (off << 2)) & 0xFFFFFFFF
+                if t in wanted:
+                    branched[t].append(pc)
+
+        def owner(pc):
+            i = bisect.bisect_right(starts, pc) - 1
+            return name(starts[i]) if i >= 0 else f"0x{pc:08x}"
+
+        for r in roots:
+            who = callers.get(r, [])
+            marks = ", ".join(f"{name(c)} {'done' if c in done else 'TODO'}" for c in who) or "(no direct caller)"
+            targets = [r] + slot_of.get(r, [])
+            bs = sorted({owner(pc) for t in targets for pc in branched.get(t, []) if pc != t})
+            ds = sorted({f"0x{pc:08x}" for t in targets for pc in as_data.get(t, [])})
+            extra = ""
+            if bs:
+                extra += "; B from " + ", ".join(bs[:6])
+            if ds:
+                extra += "; address at " + ", ".join(ds[:6])
+            print(f"{name(r)}  0x{r:08x}  {'done' if r in done else 'TODO'}  <- {marks}{extra}")
+        return 0
 
     seen = {}
     order = []
