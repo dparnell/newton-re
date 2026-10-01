@@ -42,6 +42,7 @@
 #include "Rects.h"
 #include "Regions.h"
 #include "RegionVars.h"
+#include "Bits.h"
 #include "Draw.h"
 #include "Ports.h"
 #include "Fonts.h"
@@ -1456,28 +1457,206 @@ TParagraphView::Area(long start, long end, RgnHandle area)
 
 
 // ROM 0x0016aecc DrawHilites__14TParagraphViewFUc
-// The hilited text inverted (the ROM fills each hilite's region into
-// offscreen bits and XORs them onto the view - PostDraw 0x0016cc84; the
-// host inverts the region over the current port directly, the same on one
-// bit).  Nothing when the hilites are being suppressed (gDontDrawHilites)
-// or a scaled draw is asked for.
+// Each hilite's area (worked out first if need be) filled black where the
+// view is - moved there and back, since the area is the view's own.  This
+// is drawn into offscreen bits that PostDraw, or the page's PostDraw when
+// the page is the hiliter, XORs over the text.  The second pass the page
+// makes (true) draws nothing.
 void
-TParagraphView::DrawHilites(Boolean scaled)
+TParagraphView::DrawHilites(Boolean on)
 {
-	if (scaled || gDontDrawHilites)
+	if (on)
 		return;
 	HiliteLoop loop(this);
 	while (loop.Next())
 	{
 		TParagraphHilite* hilite = (TParagraphHilite*) loop.fCurrent;
-		if (hilite == nil)
-			continue;
 		SetupArea(hilite);
-		TRegionVar rgn;
-		hilite->Area(rgn);
-		OffsetRgn(rgn, viewBounds.left, viewBounds.top);		// the area is the view's own; the port is drawn in
-		if (!EmptyRgn(rgn))
-			InvertRgn(rgn);
+		OffsetRgn(hilite->fArea, viewBounds.left, viewBounds.top);
+		FillRgn(hilite->fArea, GetStdPattern(blackPat));
+		OffsetRgn(hilite->fArea, -viewBounds.left, -viewBounds.top);
+	}
+}
+
+
+// ROM 0x0016b410 DrawHiliting__14TParagraphViewFv
+void
+TParagraphView::DrawHiliting(void)
+{
+	if (!Hilited())
+		return;
+	PenNormal();
+	DrawHilites(false);
+	PenNormal();
+}
+
+
+// ROM 0x0016ac54 PostDraw__14TParagraphViewFR5TRect
+// The selection drawn over the text: the hilites filled into offscreen bits
+// the size of the port and XORed onto it over their bounds, grown by
+// sixteen pixels.  Not when the page the paragraph is on (its parent or
+// the parent's parent) is the hiliter - the page draws every selection on
+// it at once - nor while the hilites are suppressed, nor when printing.
+// Text that may draw past the view (ink words, heavy faces) is clipped to
+// the view's outer bounds meanwhile, as RealDraw clips it.
+void
+TParagraphView::PostDraw(Rect& drawBounds)
+{
+	TView::PostDraw(drawBounds);
+	Boolean pageDraws = false;
+	TView* hiliter = gRootView->fHiliter;
+	if (hiliter != nil)
+	{
+		TView* parent = fParent;
+		TView* grandparent = parent->fParent;
+		if ((parent->DerivedFrom(clEditView) && parent == hiliter)
+		 || (grandparent != nil		// host: the ROM asks it unguarded
+			 && grandparent->DerivedFrom(clEditView) && grandparent == hiliter))
+			pageDraws = true;
+	}
+	if (gDontDrawHilites || pageDraws)
+		return;
+	Rect bounds;
+	bounds.top = -32768;		// (kNoBounds: nothing gathered yet)
+	bounds.bottom = -32768;
+	GlobalHiliteBounds(&bounds);
+	if (bounds.top == -32768 || Printing())
+		return;
+	RgnHandle saved = nil;
+	if ((fFlags & vClipping) == 0 && (fHasHeavyFaces || fHasInkWords))
+	{
+		Rect outer;
+		OuterBounds(&outer);
+		saved = NewCachedRgn();
+		GrafPtr port;
+		GetPort(&port);
+		CopyRgn(port->visRgn, saved);
+		TRectangularRegion box(outer);
+		GetPort(&port);
+		SectRgn(port->visRgn, box, port->visRgn);
+	}
+	GrafPort* port = GetCurrentPort();
+	InsetRect(&bounds, -16, -16);
+	PenNormal();
+	TBits bits;
+	bits.Constructor(port->portRect);
+	Point origin;
+	origin.h = 0;
+	origin.v = 0;
+	bits.BeginDrawing(origin);
+	DrawHilites(false);
+	bits.EndDrawing();
+	bits.Draw(bounds, bounds, srcXor, nil);
+	if (saved != nil)
+	{
+		GrafPtr current;
+		GetPort(&current);
+		CopyRgn(saved, current->visRgn);
+		DisposeCachedRgn(saved);
+	}
+}
+
+
+// ROM 0x0016a270 DrawHilitedData__14TParagraphViewFv
+// What a drag of the selection shows: the text objects of the lines the
+// first hilite runs over, clipped to its area; a paragraph with nothing
+// selected draws as a data view does.
+void
+TParagraphView::DrawHilitedData(void)
+{
+	if (!Hilited())
+	{
+		TDataView::DrawHilitedData();
+		return;
+	}
+	if (fLineCache == nil)
+		CreateAllCaches();
+	RefVar first(FirstHilite());
+	TParagraphHilite* hilite = (TParagraphHilite*) RefToAddress(first);
+	TRegionVar savedClip;
+	GetClip(savedClip);
+	TRegionVar area;
+	hilite->Area(area);
+	OffsetRgn(area, viewBounds.left, viewBounds.top);
+	SetClip(area);
+	long start, length;
+	GetCachedRange(&start, &length);
+	long index = FindLineContainingCharOffset(start);
+	LineInfo** line = (index < 0) ? nil : &fLineCache[index];
+	for ( ; line != nil && *line != nil; line++)
+	{
+		LineInfo* info = *line;
+		if (hilite->fEnd > info->fStart && info->fEnd > hilite->fStart)
+		{
+			TextObjectRef* object = fTextObjects + info->fFirstObj;
+			for (long n = info->fEndObj - info->fFirstObj - 1; n >= 0; n--)
+				DrawTextObj(*object++);
+		}
+		else if (hilite->fEnd <= info->fStart)
+			break;
+	}
+	SetClip(savedClip);
+}
+
+
+// ROM 0x0017e5a4 SimpleOffset__14TParagraphViewF6TPointl
+void
+TParagraphView::SimpleOffset(Point delta, Boolean inChildren)
+{
+	TView::SimpleOffset(delta, inChildren);
+	UpdateCachedBounds();
+}
+
+
+// ROM 0x00169788 UpdateCachedBounds__14TParagraphViewFv
+// After the view has moved: when it is now in sight - within its parent and
+// each ancestor above it, up to a print view or a remote view, which show it
+// on their own terms - and its lines do not cover the whole text, they are
+// laid out again (FixupBBox, without recalculating the bounds) and the
+// selection's area with them; otherwise the cached lines are simply moved
+// along with it.
+void
+TParagraphView::UpdateCachedBounds(void)
+{
+	TView* view = fParent;
+	Rect visible = view->viewBounds;
+	do
+	{
+		view = view->fParent;
+		if (view->DerivedFrom(clPrintView) || view->DerivedFrom(clRemoteView))
+			break;
+		SectRect(&view->viewBounds, &visible, &visible);
+	} while (view != gRootView);
+	Boolean done = false;
+	if (Overlaps(&visible, &viewBounds))
+	{
+		long lines = (fLineCache == nil) ? 0 : CacheLength(fLineCache);
+		long textLength = TextLength();
+		if (lines == 0 || fLineCache[0]->fStart > 0 || fLineCache[lines - 1]->fEnd < textLength)
+		{
+			Boolean calculate = fCalculateBounds;
+			fCalculateBounds = false;
+			newton_try
+			{
+				FixupBBox();
+				done = true;
+				UpdateHiliteArea();
+			}
+			newton_catch_all
+			{
+				fCalculateBounds = calculate;
+				rethrow;
+			}
+			end_try;
+			fCalculateBounds = calculate;
+		}
+	}
+	if (!done)
+	{
+		Point none;
+		none.h = 0;
+		none.v = 0;
+		OffsetCachedBounds(none);
 	}
 }
 
@@ -6775,8 +6954,7 @@ TParagraphView::GetCachedRange(long* start, long* length)
 // line when the text goes on past it and the view does not calculate its
 // bounds - in the style text inserted there would take, at the line's
 // right (no closer than six pixels to the view's right edge), on its
-// baseline.  (Host: the hilites are drawn here; the ROM does that in
-// PostDraw.)
+// baseline.  The selection is drawn over it by PostDraw.
 void
 TParagraphView::RealDraw(Rect& /*bounds*/)
 {
@@ -6836,8 +7014,6 @@ TParagraphView::RealDraw(Rect& /*bounds*/)
 		CopyRgn(saved, port->visRgn);
 		DisposeCachedRgn(saved);
 	}
-	// the selection over the text (the ROM does this in PostDraw)
-	DrawHilites(false);
 }
 
 // ROM 0x000a2e24 GetJustificationOfDroppedText__FRC6RefVar

@@ -1331,10 +1331,13 @@ selection drawn.  DEVIATION: the ROM's hilite is a C++ `TParagraphHilite`
 (0x1c bytes: a `THilite`, the start and end offsets, the selected text, a
 region for its area) referenced from the slot through `AddressToRef`;
 the reconstruction stores a `{start, end}` frame instead.
-`DrawHilites` 0x0016cefc inverts each hilite's region over the text -
-the ROM fills the regions into offscreen `TBits` and XORs them onto the
-view in `PostDraw` 0x0016cc84, the host inverts the region directly (the
-same on one bit); `SelectionRegion` builds the region as the union, over
+`DrawHilites` 0x0016aecc fills each hilite's region black into offscreen
+`TBits`, which `PostDraw` 0x0016ac54 XORs onto the view over the hilites'
+bounds grown by sixteen pixels - unless the page the paragraph is on is the
+hiliter, when the page's own `PostDraw` draws every selection on it in one
+pass (`DrawHiliting`); `DrawHilitedData` 0x0016a270 draws only the selected
+lines' text objects, clipped to the selection, for a drag's picture;
+`SelectionRegion` builds the region as the union, over
 the lines the selection touches, of the box from the first selected
 character to the last (`OffsetToBounds`).  Tab into a paragraph selects
 it whole (`RealDoCommand`, `ch == 9`); a content key typed over a
@@ -1865,7 +1868,7 @@ caller that removes what it is handed steps the loop's index and count
 back with it - which is what `TView::RemoveAllHilites` 0x0026002c does.
 
 The base class only *keeps* hilites; a data view draws them
-(`TParagraphView::DrawHilites` inverts each one's region).
+(`TParagraphView::DrawHilites` fills each one's region, offscreen).
 `HiliteAll` 0x002600d0 makes one over the whole view and adds it through
 the `aeAddHilite` command, so it can be undone like anything else;
 `RemoveHilite` 0x0025ff60 takes one out, disposes of the object and
@@ -1954,7 +1957,12 @@ when all of it is selected, else deletes the first hilited child's
 selection (read-only, it only unselects).  `RealDoCommand` 0x000740cc
 answers aeAddData and aeRemoveData for the children, each posting the
 other as its undo.  `GetValue('hilites, 'offset)` 0x00074240 answers the
-children's first offsets.  `ChildBoundsChanged` 0x000743c0: a child that
+children's first offsets.  (The page's own `TEditView::ChildBoundsChanged`
+0x000a2d04: a child whose bottom moved down pushes each paragraph it did
+not cover before and covers now down to its new bottom, by an undoable
+move - not onto the page's ruled lines; ctest `host.NewtonPushDown`.  A
+paragraph moved into sight with lines not cached lays them out again,
+`UpdateCachedBounds` 0x00169788 from `SimpleOffset`.)  `ChildBoundsChanged` 0x000743c0: a child that
 grew wider (its left where it was) pushes along the children to its right
 that share any of its rows - compared as one-pixel-wide strips - by as
 much as keeps `fGap` (5) between, and the container widens by the same.

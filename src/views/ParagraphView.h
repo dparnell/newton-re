@@ -231,6 +231,11 @@ public:
 	virtual void	HandleTap(Point& pt);								// ROM 0x001752c4 HandleTap__14TParagraphViewFR6TPoint (vtable +0x11c) - the caret placed at the tap
 	virtual Boolean	PointInHilite(Point& pt);							// host: the point tested against the selection region (the ROM TView::PointInHilite 0x0026051c asks each hilite Encloses)
 	virtual void	RealDraw(Rect& bounds);								// ROM 0x0016911c RealDraw__14TParagraphViewFR5TRect
+	virtual void	PostDraw(Rect& drawBounds);							// ROM 0x0016ac54 PostDraw__14TParagraphViewFR5TRect - the selection XORed over the text from offscreen bits
+	virtual void	DrawHiliting(void);									// ROM 0x0016b410 DrawHiliting__14TParagraphViewFv
+	virtual void	DrawHilitedData(void);								// ROM 0x0016a270 DrawHilitedData__14TParagraphViewFv - the selected text alone (a drag's picture)
+	virtual void	DrawHilites(Boolean on);							// ROM 0x0016aecc DrawHilites__14TParagraphViewFUc - each hilite's area filled black (false), nothing for true
+	virtual void	SimpleOffset(Point delta, Boolean inChildren);		// ROM 0x0017e5a4 SimpleOffset__14TParagraphViewF6TPointl - and the lines brought up to date
 	virtual void	SetBounds(const Rect& bounds);						// ROM 0x0017e3e8 SetBounds__14TParagraphViewFRC5TRect
 	virtual void	SetCaretOffset(long* offset, long* length);			// ROM 0x0017efd8 SetCaretOffset__14TParagraphViewFPlT1
 	virtual Ref		GetValue(RefArg slot, RefArg type);					// ROM 0x0018024c GetValue__14TParagraphViewFRC6RefVarT1
@@ -296,6 +301,7 @@ public:
 	void		RefillAllCaches(void);									// ROM 0x0016c25c RefillAllCaches__14TParagraphViewFv
 	void		FillAllCaches(short* runLengths);						// ROM 0x0016bc38 FillAllCaches__14TParagraphViewFPs
 	void		OffsetCachedBounds(Point& delta);						// ROM 0x0016991c OffsetCachedBounds__14TParagraphViewFR6TPoint
+	void		UpdateCachedBounds(void);								// ROM 0x00169788 UpdateCachedBounds__14TParagraphViewFv - the lines laid out again when the view has come into sight with some not cached
 	long		FindLineContainingCharOffset(long offset);				// ROM 0x001786f8 FindLineContainingCharOffset__14TParagraphViewFl (host: the line's index, -1 for none)
 	void		OffsetToBounds(long offset, Rect* bounds);				// ROM 0x00177f20 OffsetToBounds__14TParagraphViewFlP5TRect
 	// The character offset at a point: the line by FindLineContainingPoint
@@ -420,7 +426,6 @@ public:
 	Boolean		HiliteRange(TUnitPublic* unit, Boolean reallyDoIt);		// ROM 0x00169ec4 HiliteRange__14TParagraphViewFP11TUnitPublicUc
 	long		FindFirstWordHitByHilite(const Point* points, long count, Point offset, Boolean fromEnd);	// ROM 0x00169fbc FindFirstWordHitByHilite__14TParagraphViewFP6TPointl6TPointUc
 	void		MakeHilite(long start, long end, Boolean caretOnEmpty);	// ROM 0x0016a49c MakeHilite__14TParagraphViewFlT1Uc - select the characters between the offsets
-	void		DrawHilites(Boolean scaled);							// ROM 0x0016aecc DrawHilites__14TParagraphViewFUc - invert the hilited text (host: over the current port)
 	void		SetupArea(TParagraphHilite* hilite);					// ROM 0x0016a744 SetupArea__14TParagraphViewFP16TParagraphHilite - the region a hilite covers, worked out once
 	void		Area(long start, long end, RgnHandle area);			// ROM 0x0016a92c Area__14TParagraphViewFlT1 - the region a range of the text covers (host: into `area`)
 	// The word under a point: where it starts and where it sits; ==> how

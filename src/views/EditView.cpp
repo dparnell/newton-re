@@ -533,6 +533,70 @@ TEditView::DrawHiliting(void)
 }
 
 
+// ROM 0x000a2f5c PointToCaret__9TEditViewFR6TPointP5TRectT2
+// The caret where the point is: the text on the page nearest it says;
+// with none, no caret (the top and bottom kNoBounds).
+void
+TEditView::PointToCaret(Point& pt, Rect* caret, Rect* bounds)
+{
+	TView* text = TextContainingPoint(pt, bounds, nil);
+	if (text != nil)
+	{
+		text->PointToCaret(pt, caret, bounds);
+		return;
+	}
+	caret->bottom = kNoBounds;
+	caret->top = kNoBounds;
+}
+
+
+// ROM 0x000a2d04 ChildBoundsChanged__9TEditViewFP5TViewR5TRect
+// A child whose bottom has moved down (its viewBounds the new ones, `bounds`
+// the old) pushes each other paragraph on the page that it did not cover
+// before and covers now down to its new bottom, through an undoable move.
+// Not while a selection is being resized (gScalingFeeedback).
+void
+TEditView::ChildBoundsChanged(TView* child, Rect& bounds)
+{
+	if (gScalingFeeedback)
+		return;
+	Rect now = child->viewBounds;
+	if (now.bottom <= bounds.bottom)
+		return;
+	TListLoop loop(fChildren);
+	TView* other;
+	while ((other = (TView*) loop.Next()) != nil)
+	{
+		if (other == child || !other->DerivedFrom(clParagraphView))
+			continue;
+		if (Overlaps(&bounds, &other->viewBounds) || !Overlaps(&now, &other->viewBounds))
+			continue;
+		Point by;
+		by.v = (short) (now.bottom - other->viewBounds.top);
+		by.h = 0;
+		other->DoMoveCommand(by);
+	}
+}
+
+
+// ROM 0x000a5e4c SetValue__9TEditViewFRC6RefVarT1
+// The page's text flags are its own as an input view; anything else is
+// set as any view's is.
+// ROM BUG, kept: 'textFlags is never written to the context - the flags
+// are worked out again from the slot as it was, so setting it changes
+// nothing.
+void
+TEditView::SetValue(RefArg slot, RefArg value)
+{
+	if (EQRef(slot, RSSYMtextflags))
+	{
+		fTextFlags = (long) GetInputViewTextFlags((ULong) TextFlags(), fFlags);
+		return;
+	}
+	TView::SetValue(slot, value);
+}
+
+
 // ROM 0x000a5eb8 PostDraw__9TEditViewFR5TRect
 // The hiliting is drawn into an offscreen map and blitted over the view, so
 // that inverting it twice does not leave the children drawn twice.

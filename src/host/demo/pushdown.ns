@@ -1,0 +1,85 @@
+// A paragraph that grows pushes the one below it down the page
+// (TEditView::ChildBoundsChanged): typing returns into a paragraph above
+// another makes it taller than the gap between them, and the page moves
+// the lower one down to the upper one's new bottom, an undoable move.
+//
+//   build/host/host/newton --display 320x480 --headless 90 --script src/host/demo/pushdown.ns
+//
+// After the Setup walk "upper" is typed at the caret on the Notepad's first
+// line, the caret is put lower down the page and "lower" typed there; then
+// the caret goes back to the end of "upper" and returns are typed until
+// that paragraph reaches past where "lower" was.  build/pushdown.pgm is
+// the page.
+//
+// Prints "pushdown: <step>: ok" or "FAILED", and "pushdown: done".
+
+HostInclude("common.ns");			// tapAt, waitFor, walkSetup
+HostInclude("apphelpers.ns");		// typeText
+HostInclude("penhelpers.ns");		// penFindPara
+
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+pushFailures := 0;
+
+pushCheck := func(what, ok)
+  begin
+    if not ok then pushFailures := pushFailures + 1;
+    Print("pushdown: " & what & (if ok then ": ok" else ": FAILED"));
+  end;
+
+pushFinish := func()
+  begin
+    ScreenSnapshot("build/pushdown.pgm");
+    Print("pushdown: done, " & pushFailures & " failed");
+    HostQuit();
+  end;
+
+call walkSetup with (name, func() begin
+    call typeText with ("upper");
+    call waitFor with ("pushdown: upper", func() call penFindPara with (GetRoot(), "upper"), func() begin
+        local upper := call penFindPara with (GetRoot(), "upper");
+        local ub := upper:GlobalBox();
+        call pushCheck with ("\"upper\" typed", upper <> nil);
+        // the caret put lower down, at the page's left
+        local lowerY := ub.bottom + 60;
+        local up := Ticks();
+        call waitFor with ("pushdown: the pen at rest", func() Ticks() - up > 70, func() begin
+            call tapAt with (40, lowerY);
+            call waitFor with ("pushdown: the caret low", func() begin
+                local c := GetCaretBox();
+                c and c.top > ub.bottom + 20
+              end, func() begin
+                call typeText with ("lower");
+                call waitFor with ("pushdown: lower", func() call penFindPara with (GetRoot(), "lower"), func() begin
+                    local lower := call penFindPara with (GetRoot(), "lower");
+                    local lb := lower:GlobalBox();
+                    call pushCheck with ("\"lower\" typed below \"upper\"", lb.top > ub.bottom);
+                    // the caret back at the end of "upper", returns typed
+                    // until it reaches past where "lower" began
+                    local up2 := Ticks();
+                    call waitFor with ("pushdown: the pen at rest again", func() Ticks() - up2 > 70, func() begin
+                        call tapAt with (ub.right + 4, (ub.top + ub.bottom) div 2);
+                        call waitFor with ("pushdown: the caret in upper", func() begin
+                            local c := GetCaretBox();
+                            c and c.top < ub.bottom and c.bottom > ub.top
+                          end, func() begin
+                            local returns := (lb.top - ub.top) div (ub.bottom - ub.top) + 2;
+                            for i := 1 to returns do call typeKey with (36);
+                            call typeText with ("more");
+                            call waitFor with ("pushdown: upper grown", func() begin
+                                local u := call penFindPara with (GetRoot(), "upper");
+                                u and StrPos(u.text, "more", 0) and u:GlobalBox().bottom > lb.top
+                              end, func() begin
+                                local u := call penFindPara with (GetRoot(), "upper");
+                                local l := call penFindPara with (GetRoot(), "lower");
+                                local ub2 := u:GlobalBox(), lb2 := l:GlobalBox();
+                                call pushCheck with ("\"lower\" was pushed down", lb2.top > lb.top);
+                                call pushCheck with ("it starts where \"upper\" now ends", lb2.top >= ub2.bottom and lb2.top - ub2.bottom < 4);
+                                call pushFinish with ();
+                              end, 20);
+                          end, 10);
+                      end, 10);
+                  end, 10);
+              end, 10);
+          end, 10);
+      end, 20);
+  end);

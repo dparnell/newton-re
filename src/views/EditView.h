@@ -61,6 +61,9 @@ public:
 	virtual Ref		GetValue(RefArg slot, RefArg type);		// ROM 0x000a5cd4 GetValue__9TEditViewFRC6RefVarT1
 	virtual void	BuildKeyChildList(TViewList* list, long a, long b);	// ROM 0x000ab9b4 BuildKeyChildList__9TEditViewFP9TViewListlT2
 	virtual void	OffsetToCaret(long offset, Rect* caret);	// ROM 0x000a2ee4 OffsetToCaret__9TEditViewFlP5TRect
+	virtual void	PointToCaret(Point& pt, Rect* caret, Rect* bounds);	// ROM 0x000a2f5c PointToCaret__9TEditViewFR6TPointP5TRectT2
+	virtual void	ChildBoundsChanged(TView* child, Rect& bounds);	// ROM 0x000a2d04 ChildBoundsChanged__9TEditViewFP5TViewR5TRect - a paragraph that grew down pushes the ones it now covers below it
+	virtual void	SetValue(RefArg slot, RefArg value);	// ROM 0x000a5e4c SetValue__9TEditViewFRC6RefVarT1
 	virtual Boolean	RealDoCommand(RefArg cmd);				// ROM 0x000a4360 RealDoCommand__9TEditViewFRC6RefVar (partial: see the definition)
 	long			RereadSelectedInk(void);				// (RealDoCommand's double tap on a selection of ink, 0x000a48e0-0x000a4e78)
 	virtual long	Idle(long reason);						// ROM 0x000a9f64 Idle__9TEditViewFl

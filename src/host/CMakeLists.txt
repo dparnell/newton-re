@@ -522,6 +522,14 @@ set_tests_properties(host.NewtonRemoteWrite PROPERTIES TIMEOUT 180
                      PASS_REGULAR_EXPRESSION "went to the caret, not where it was written: ok.*remotewrite: done, 0 failed"
                      FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
 
+# a paragraph that grows pushes the one below it down the page
+# (demo/pushdown.ns: TEditView::ChildBoundsChanged)
+add_test(NAME host.NewtonPushDown COMMAND newton --display 320x480 --headless 120
+         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/pushdown.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonPushDown PROPERTIES TIMEOUT 180
+                     PASS_REGULAR_EXPRESSION "starts where .upper. now ends: ok.*pushdown: done, 0 failed"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+
 # a letter written over a letter of a word replaces it, read again as one
 # letter first (demo/overwrite.ns: DoReplaceSym, ReclassifyCharacter)
 add_test(NAME host.NewtonOverwrite COMMAND newton --display 320x480 --headless 90
