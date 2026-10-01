@@ -1293,8 +1293,10 @@ On the host, `HostMountStores` does it when a store file is named and the
 OS is running: `HostFlashOpen`, then the windows mapped as the boot's
 `InitCGlobals` maps them (`MapInternalFlashWindows`, with a throwaway
 instance, `kMapWindows`), then `InitPSSManager`. A new file is a sparse
-image of a 4 MB flash unless `newton --flash-size` and `--flat-flash` say
-otherwise ("Bigger flash", below); a file that is neither a sparse image
+image of a 64 MB flash - the most the ROM's own code takes unchanged, and
+nothing on the disk until it is written - unless `newton --flash-size` and
+`--flat-flash` say otherwise (a flat file is 4 MB unless `--flash-size`
+says more, since it takes all its size at once) ("Bigger flash", below); a file that is neither a sparse image
 nor a flat flash of a size the host makes is refused and the store kept
 in memory (a `THostStore`, as without a file; and as `newtonscript`, which
 does not run the OS, always does).
@@ -1389,7 +1391,11 @@ store blocks, 256 MB before the cap) - neither is done; the second is a
 store unlike any MP2x00's, and the owner's call.
 
 `newton --store file --flash-size N` (N = 4, 8, 16, 32, 64 or 128 MB)
-makes a new store file of that size; a file that is there keeps its size.
+makes a new store file of that size (64 MB when not given, since
+2026-10-01; 4 MB before); a file that is there keeps its size.  A first
+boot on 64 MB takes about two seconds longer than on 4 MB (510 blocks'
+logs written instead of 30) and leaves an 860 KB file; a later boot
+about half a second longer.
 `test_HostFlash` (ctest `stores.HostFlash`) finds 64 MB with the ROM's
 windows and 128 MB with the moved ones, and formats a flash store on
 128 MB, writes 12 MB of objects and reads them back after reopening the

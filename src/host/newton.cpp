@@ -49,10 +49,11 @@
 	store on it (stores/flash/: TNewInternalFlash, TFlashStore, TMuxStore,
 	made by InitPSSManager).  A new file is a sparse image, which holds
 	only what has been written and grows with it; --flash-size says how
-	big the flash it stands for is, in megabytes (4, the default, 8, 16,
-	32, 64 or 128 - docs/stores/README.md, "Bigger flash"), and
-	--flat-flash makes it a flat file of that many bytes instead (at 4 or
-	8 MB, Einstein's own).  A file that is there keeps its size and
+	big the flash it stands for is, in megabytes (4, 8, 16, 32, 64 - the
+	default, the most the ROM's code takes unchanged - or 128;
+	docs/stores/README.md, "Bigger flash"), and --flat-flash makes it a
+	flat file of that many bytes instead (4 MB unless --flash-size says
+	otherwise; at 4 or 8 MB, Einstein's own).  A file that is there keeps its size and
 	format; tools/stores/flashimage.py converts between the two.  Set the machine up once and every boot after that
 	comes up on the Notepad.  --erase throws that
 	file away first and starts again at the Setup assistant, which is what
@@ -552,8 +553,12 @@ main(int argc, char** argv)
 	// asks whether to erase the internal store, and this is that)
 	const char* storeFile = nil;
 	Boolean erase = false;
-	// what a store file that is not there yet is made as (HostSetNewFlash)
-	ULong flashSize = kHostFlashBankSize;
+	// what a store file that is not there yet is made as (HostSetNewFlash):
+	// 0 is the default - 64 MB for a sparse image, the most the ROM's flash
+	// code takes unchanged (docs/stores/README.md, "Bigger flash"), which
+	// costs nothing until it is written; a flat file is all its size on the
+	// disk at once, so it stays Einstein's 4 MB unless asked
+	ULong flashSize = 0;
 	Boolean flatFlash = false;
 	for (int i = 1; i < argc; i++)
 	{
@@ -663,6 +668,8 @@ main(int argc, char** argv)
 	if (erase && storeFile != nil && remove(storeFile) == 0)
 		fprintf(stderr, "[host] %s erased; the machine starts new\n", storeFile);
 	HostSetStoreFile(storeFile);
+	if (flashSize == 0)
+		flashSize = flatFlash ? kHostFlashBankSize : (ULong) 64 << 20;
 	HostSetNewFlash(flashSize, flatFlash);
 	// a machine that stops dead says so rather than sitting there looking
 	// idle, and says what script it was running when it stopped
