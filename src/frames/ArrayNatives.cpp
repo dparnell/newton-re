@@ -1399,8 +1399,10 @@ FExtractLong(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 	BoundsCheck(obj, index, 4);
 	TBinaryBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: BinaryBytes.h)
 	ULong value = LongAt(obj, index);
+#if !NEWTON_NS64		// (a 62-bit integer holds any signed 32-bit word: docs/frames/64bit.md)
 	if ((value & 0xc0000000) != 0 && (value & 0xc0000000) != 0xc0000000)
 		Throw(exFrames, (void*) kNSErrLongOutOfRange, nil);
+#endif
 	return MAKEINT((long) (int) value);
 }
 

@@ -242,7 +242,7 @@ Ref		SPrintObject(RefArg obj);
 Ref		Stringer(RefArg array);					// the objects of an array as one string (&)
 Boolean	IsRichString(RefArg str);
 long	GetStringFormat(RefArg str);
-void	IntegerString(long i, UniChar* str);
+void	IntegerString(Long i, UniChar* str);		// (Long: an integer's width)
 
 // natives
 Ref		FPrint(RefArg rcvr, RefArg obj);

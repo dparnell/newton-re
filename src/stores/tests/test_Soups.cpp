@@ -1169,12 +1169,23 @@ TestIndexKeysSurviveTheStore()
 	// a number wider than the machine can hold: MAKEINT answers the thirty
 	// bits it would have had, which is what the store will hold too
 	const long kTooWide = 1486438832;
+#if NEWTON_NS64
+	// NEWTON_NS64: the heap holds it whole, and the store's 32-bit word is
+	// narrowed to the device's thirty bits on the way in (frames/NarrowRef.h)
+	// - the index key the same way, so the two still agree
+	EXPECT(RINT(MAKEINT(kTooWide)) == kTooWide);
+#else
 	EXPECT(RINT(MAKEINT(kTooWide)) == 412697008);
+#endif
 	RefVar entry(AllocateFrame());
 	SetFrameSlot(entry, RefVar(Intern((char*) "k")), RefVar(MAKEINT(kTooWide)));
 	SetFrameSlot(entry, RefVar(Intern((char*) "note")), RefVar(MakeString("an alarm")));
 	RefVar added(SoupAddFlushed(soup, entry));
+#if NEWTON_NS64
+	EXPECT(NOTNIL(Eval("GetStores()[0]:GetSoup(\"Wide\"):Query({indexPath: 'k, beginKey: 1486438832, endKey: 1486438832}):Entry()")));
+#else
 	EXPECT(RINT(GetFrameSlotRef(added, RefVar(Intern((char*) "k")))) == 412697008);
+#endif
 
 	// it is found again by the key it went in under, and it goes out again
 	// - which is what used to answer "not found" and be reported as the

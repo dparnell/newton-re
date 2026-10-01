@@ -413,10 +413,18 @@ TCompiler::GetNumber(UniChar c)
 				buffer[n] = 0;
 			else
 				Error(kNSErrNumberTooLong);
+#if NEWTON_NS64
+			// an integer is 62 bits: a literal runs to 2^61 - 1 (docs/frames/64bit.md)
+			unsigned long long value = strtoull(buffer, nil, 16);
+			if (value >= (1ULL << 61))
+				Error(kNSErrIntegerTooLarge, RefVar(MakeString(buffer)));
+			yylval = MAKEINT((Long) value);
+#else
 			long value = strtol(buffer, nil, 16);
 			if (value >= 0x40000000)
 				Error(kNSErrIntegerTooLarge, RefVar(MakeString(buffer)));
 			yylval = MAKEINT(value);
+#endif
 			return tokenINTEGER;
 		}
 		fStream->UngetChar(next);
@@ -493,10 +501,18 @@ TCompiler::GetNumber(UniChar c)
 		yylval = MakeReal(value);
 		return tokenREAL;
 	}
+#if NEWTON_NS64
+	// an integer is 62 bits: a literal runs to 2^61 - 1 (docs/frames/64bit.md)
+	unsigned long long value = strtoull(buffer, nil, 10);
+	if (value >= (1ULL << 61))
+		Error(kNSErrIntegerTooLarge, RefVar(MakeString(buffer)));
+	yylval = MAKEINT((Long) value);
+#else
 	long value = strtol(buffer, nil, 10);
 	if (value >= 0x40000000)
 		Error(kNSErrIntegerTooLarge, RefVar(MakeString(buffer)));
 	yylval = MAKEINT(value);
+#endif
 	return tokenINTEGER;
 }
 

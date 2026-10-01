@@ -393,7 +393,7 @@ UiToA(ULong n, char* str)
 // An integer under a format spec: as a real when decimal places are
 // asked for; times 100 for a percentage.
 long
-IntegerStringSpec(long n, UniChar* str, ULong max, ULong flags)
+IntegerStringSpec(Long n, UniChar* str, ULong max, ULong flags)
 {
 	if (flags & kFormatDecimalPlaces)
 		return NumberStringSpec((double) n, str, max, flags);

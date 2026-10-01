@@ -2071,6 +2071,14 @@ add_test(NAME host.NewtonYear2010.romBug
          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonYear2010.romBug PROPERTIES TIMEOUT 240 ENVIRONMENT NEWTON_ROM_2010_BUG=1
                      PASS_REGULAR_EXPRESSION "firstNote: \"[0-9/]+92 .*first note: FAILED dated 1992.*year2010: done")
+if(NEWTON_NS64)
+    # the ROM's year-2010 overflow shows through NewtonScript arithmetic on
+    # times that wraps at 30 bits; a 62-bit integer does not wrap, so the
+    # 64-bit flavour dates the note right even with the ROM's arithmetic,
+    # whichever TimeInSeconds it answers (docs/frames/64bit.md, "Time")
+    set_tests_properties(host.NewtonYear2010.romBug PROPERTIES
+                         PASS_REGULAR_EXPRESSION "year2010: first note: ok.*year2010: done")
+endif()
 
 # the rest of a first day (demo/walkthrough2.ns): every Prefs panel opened
 # and three settings changed, a bold style, a scrub undone, the on-screen

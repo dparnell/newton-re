@@ -736,16 +736,26 @@ TestBinaries()
 	EXPECT_STRING("SetClass(Clone(\"555\"), 'phone)", "555");
 	EXPECT_INT(BIN("StuffUniChar(b, 0, $7); StuffWord(b, 2, 0); SetLength(b, 4); StrLen(SetClass(b, 'phone))"), 1);
 	RemoveSlot(RefVar(gInheritanceFrame), RefVar(Intern("phone")));
+#if NEWTON_NS64
+	// a 62-bit integer: the literal is a thousand million, and so is the word
+	EXPECT_INT(BIN("StuffLong(b, 0, 0x3fffffff); ExtractLong(b, 0)"), 0x3fffffff);
+	// and any signed word reads back whole, where the device has no room for it
+	EXPECT_INT(BIN("StuffLong(b, 0, 0x3fffffff); StuffByte(b, 0, 0x7f); ExtractLong(b, 0)"), 0x7fffffff);
+	EXPECT_INT(BIN("StuffLong(b, 0, 0); StuffByte(b, 0, 0x80); ExtractLong(b, 0)"), -0x7fffffffLL - 1);
+#else
 	// 0x3fffffff is thirty ones, and a Newton integer is thirty bits, so
 	// the literal is -1 before it ever reaches StuffLong - which is what
 	// comes back out of the four bytes it wrote
 	EXPECT_INT(BIN("StuffLong(b, 0, 0x3fffffff); ExtractLong(b, 0)"), -1);
+#endif
 	// errors
 	EXPECT_THROWS(BIN("ExtractByte(b, 8)"), kNSErrBadArgs);
 	EXPECT_THROWS(BIN("ExtractLong(b, 5)"), kNSErrBadArgs);
 	EXPECT_THROWS(BIN("ExtractByte(b, -1)"), kNSErrBadArgs);
 	EXPECT_THROWS("ExtractByte([1], 0)", kNSErrBadArgs);
+#if !NEWTON_NS64
 	EXPECT_THROWS(BIN("StuffLong(b, 0, 0x3fffffff); StuffByte(b, 0, 0x7f); ExtractLong(b, 0)"), kNSErrLongOutOfRange);
+#endif
 	EXPECT_THROWS(BIN("StuffByte(b, 6, 9); ExtractCString(b, 0)"), kNSErrBadArgs);		// no terminator in the data
 	EXPECT_THROWS(BIN("StuffCString(b, 6, \"long\")"), kNSErrBadArgs);
 	EXPECT_THROWS("BinEqual(1, 2)", kNSErrNotABinaryObject);
@@ -815,6 +825,36 @@ TestComparisons()
 // Ref is the machine's word with two tag bits, and everything that makes
 // one cuts it back to that.  Arithmetic wraps where the ARM wraps, and a
 // literal too big to hold is a compile error.
+#if NEWTON_NS64
+// NEWTON_NS64 (docs/frames/64bit.md): an integer is as wide as a Ref less
+// its tag, 62 bits, and wraps only there; a literal runs to 2^61 - 1.
+static void
+TestSixtyTwoBitIntegers()
+{
+	// the device's ends are no longer ends
+	EXPECT_INT("local a := 536870911; local b := 1; a + b", 536870912);
+	EXPECT_INT("local a := -536870912; local b := 1; a - b", -536870913);
+	EXPECT_INT("local a := 536870911; a * 2", 1073741822);
+	EXPECT_INT("1000000000 + 1000000000", 2000000000);
+	EXPECT_INT("local a := 400000000; local b := 400000000; a + b", 800000000);
+	EXPECT_INT("local a := 400000000; local b := 400000000; a * b", 160000000000000000LL);
+	EXPECT_INT("local a := 7000000000; a div 7", 1000000000);
+	EXPECT_INT("0x3fffffff", 0x3fffffff);
+	EXPECT_INT("1073741824", 1073741824);
+	EXPECT_INT("0xffffffffff", 0xffffffffffLL);
+	EXPECT_INT("band(0xffffffffff, 0xff00000000)", 0xff00000000LL);
+	// the new ends, and over them
+	EXPECT_INT("2305843009213693951", 2305843009213693951LL);
+	EXPECT_INT("local a := 2305843009213693951; local b := 1; a + b", -2305843009213693951LL - 1);
+	EXPECT_THROWS("2305843009213693952", kNSErrIntegerTooLarge);
+	// as text, and from a real
+	EXPECT_STRING("NumberStr(1099511627776)", "1099511627776");
+	EXPECT_INT("Floor(1000000000000000.5)", 1000000000000000LL);
+	EXPECT_INT("Ceiling(-1000000000000000.5)", -1000000000000000LL);
+}
+#endif
+
+
 static void
 TestThirtyBitIntegers()
 {
@@ -915,7 +955,11 @@ main()
 		TestSets();
 		TestBinaries();
 		TestComparisons();
+#if NEWTON_NS64
+		TestSixtyTwoBitIntegers();
+#else
 		TestThirtyBitIntegers();
+#endif
 		TestMath();
 	}
 	newton_catch_all

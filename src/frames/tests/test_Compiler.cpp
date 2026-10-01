@@ -419,7 +419,11 @@ TestErrors()
 	EXPECT(gThrownCode == kNSErrBadCharacter && gThrownValue == MAKECHAR('^'));
 	THROWS(Eval("$\\zz"));
 	EXPECT(gThrownCode == kNSErrBadCharEscape);
+#if NEWTON_NS64
+	THROWS(Eval("4000000000000000000"));		// (an integer is 62 bits: docs/frames/64bit.md)
+#else
 	THROWS(Eval("4000000000"));
+#endif
 	EXPECT(gThrownCode == kNSErrIntegerTooLarge);
 	THROWS(Eval("@x"));
 	EXPECT(gThrownCode == kNSErrBadMagicPointerRef);

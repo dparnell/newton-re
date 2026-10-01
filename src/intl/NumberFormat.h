@@ -50,7 +50,7 @@ UniChar*	NegativeIntProtoStr(void);
 void	ParamString(UniChar* dest, const long max, const UniChar* proto, ...);
 
 long	_IntlNumberMunge(const char* digits, UniChar* str, Boolean negative, ULong intLength, ULong max, ULong flags);
-long	IntegerStringSpec(long n, UniChar* str, ULong max, ULong flags);
+long	IntegerStringSpec(Long n, UniChar* str, ULong max, ULong flags);
 long	NumberStringSpec(double d, UniChar* str, ULong max, ULong flags);
 long	NumberString(double d, UniChar* str, ULong max, const char* format);
 

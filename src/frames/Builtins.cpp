@@ -201,8 +201,13 @@ FSignum(RefArg /*rcvr*/, RefArg a)
 static Ref
 WholeNumberRef(double d)
 {
+#if NEWTON_NS64
+	if (d >= -2305843009213693952.0 && d < 2305843009213693952.0)		// +-2^61: an integer's range here
+		return MAKEINT((Long) d);
+#else
 	if (d >= -536870912.0 && d <= 536870911.0)
 		return MAKEINT((long) d);
+#endif
 	return MakeReal(d);
 }
 

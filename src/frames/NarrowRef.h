@@ -49,6 +49,9 @@ Long	NarrowInteger(Long value, const char* where);
 // cut to 32 bits otherwise
 Long	NarrowToWord(Long value, const char* where);
 
+// (tests: strict or not, whatever NEWTON_NS64_STRICT says)
+void	SetNarrowStrict(bool strict);
+
 // does an integer fit in the device's 30 bits?
 inline bool	FitsDeviceInteger(Long value)	{ return value >= -(1L << 29) && value < (1L << 29); }
 
