@@ -1,0 +1,54 @@
+# coverage.py --categories: the code the reconstruction does not cite, sorted
+# by why.  Each line is `category<TAB>regex`; the regex is searched for in a
+# function's mangled name and the first rule that matches wins, so the more
+# particular rules come first.  What no rule takes is "other" - the work that
+# is genuinely left (docs/next-steps.md, "What the uncited ROM is").
+#
+#   python tools/newton-rom/analysis/coverage.py build/MP2x00US \
+#       --categories tools/newton-rom/analysis/uncited-categories.tsv [--show other]
+
+# --- declined by the owner -------------------------------------------------
+# the ROM domain manager (page faulting packages and large objects in; the
+# host keeps a mapped object whole) and execute-in-place packages, which only
+# a package flagged 0x08000000 asks for
+declined: ROM domain manager, XIP	DomainManager|XIP|LOTransactionHandler|LicenseeDomain|TLicenseeVAddress|UseROMJumpTables|GetPagesForROMBkpts
+# AppleTalk and everything on it: LocalTalk, DDP, ATP, NBP, ZIP, RTMP, AEP,
+# ADSP, PAP, the Chooser's zones and lookups, the AppleTalk printers
+declined: AppleTalk	ADSP|\d+TATP|ATP(Interface|Header|Responder|Requestor)|\d+TDDP|NBP|\d+TZIP|ZIPInterface|RTMP|\d+TAEP|\d+TPAP|PAP(Interface|Timer|OpenConn|Driver)|LocalTalk|AppleTalk|ATStack|PATStack|ATAsyncMsg|ATSocket|\d+TLink(Mgr|Packet|Comparer)?F|\d+PLink|Zone|\d+TSocket|SocketComparer|\d+TAddress|LookupNames|LookupManager|LookupRetry|ConnectionEnd|ConnComparer|ProtoComparer|ResponderSocket|TransactionManager|\d+TTransaction|TransactionRespon|ResponseManager|RegisterName|RegisterPending|TString32|WriteChain|WriteElement|PacketBuffer|OpenSocket|CloseSocket|WriteSocket|GetRouterAddress|GetZoneName|GetAddress__FUlRUsRUc|NubADSP|EzADSP|AppleTalkPort|IDServer|TRing\b|\d+TRingF
+# the StyleWriter and LaserWriter LS drivers and the old print driver parts
+declined: StyleWriter, LaserWriter LS	TSWGroupDriver|TLaserWriterLSDriver|TPrDriverPart|TBIOInterface
+
+# --- the MessagePad's own hardware (the host has its own behind hal/) ------
+hardware	Voyager|Cirrus|16450|\d+TADC\b|\d+TADCF|ContrastTempSample|TFlashAMD|28F016|TFlashSeries2|\d+TFlashBlock|\d+TFlashStore|TFlashRange|TCardSocket|ResistiveTablet|GPIO|IRQTimer|SerialDMAEngine|DMAManager|Interrupt|TricInterrupt|HLevel2Handler|PCMCIAPowerInUse|EarlyIOPowerOn|HermesIR|PlatformDriver|LoadStartupDriver|TStartupDriver|ReservedBlock|OSCalibrationParameters|ROMREXCheckSums|SerialNumberROM|InitializeCommHardware|THMOSerial|SetVideoCardHandler|TCurrentBank|SBankInfo|GetBankInfo|TabletCalibration|ZapInternalStoreCheck|WipeInternalStore|TICHandler|\d+TSerialChip\b|\d+TSerialChipF|PSerialChipRegistry|TCHMemModem|SetupScreen|AllocPCSpyTimer|StartTimerOverflowDetect|TRealTimeClock|PSoundDriver|TSoundServerHandler|\d+TSoundServer
+# the memory system's machinery: the MMU's page tables, physical pages, the
+# stack manager, the domains - the host's memory is its own
+memory system: MMU, pages, stacks	StackManager|\d+TStack(Page|Object|Info)?\b|\d+TStack(Page|Object|Info)?F|PageManager|PageTable|PageTracker|Phys|\d+TMemoryObject|\d+CMemObject|\d+TRAMTable|ContiguousMemory|VMemInit|Mapping|Pg[PA-Z]|SubPg|BigPg|BigPage|AddSec|RemoveSec|SecPerm|AddNewSec|PTable|PrimaryMapping|SectionInto|DomainRange|HeapDomain|MemArchObjs|ComputePermUnit|ComputePhysUnit|VToUnit|VToSizeWithP|VToP|PageMappedInRange|CheckVAddrRange|GetOnePage|EarlyBootGetTempPage|MakeTemporaryMapArea|GetNextKernelVAddr|MapTable|SizeTable|CreateUniqueEnvironment|MakeConforming|DeclawingRange|FaultMonitorEntry|QueryMemoryReservation|ReserveContiguousMemory|DomainInfo|EnvironmentInfo|ScanForREx|DelayedFunction|NetworkPersistentInfo|RegisterClass__FPcT1|ResizeSymbolTable
+# system patches (the host has none to install)
+system patches	Patch(?!er)|PatchRAM|BuildPatchTable|BackupPatch
+
+# --- debugging, testing and measuring --------------------------------------
+debugger, test harness, diagnostics	DebugLink|GeoPort|SerialDebug|DebugFrame|DebugByte|DebugLong|DebugConfig|RDP|StopWithStatus|InformHammer|Hammer|\d+TMsg\b|\d+TMsgF|Metrics|ScoreTime|TapStats|ReplayUnit|IsControlUnit|GetCorrespondingUnits|TCommServer|TTestCase|TTestStoreFileList|TTestCommandQueue|NewtCTestCase|TestConfig|SetTestName|\d+TTestAgent|StrHexDump|dbprint|PrintError|FunctionProfiling|BlinkRect|UnhandledException|UnhandledNonUserModeException|TUserAbortHandler|TCompletion|SwitchFramesForkGlobals
+
+# --- communications the owner has not asked for ---------------------------
+comms: eWorld, online services, P3, mux, keyboard, TV remote	EWorld|OnlineService|FSendOnline|\d+TP3|P3Service|P3OPassThru|P3Packet|Mux|KeyboardTool|KeyboardService|KybdExtension|KeyboardConfig|VRemote|IRCodeWord|BitBang|TCMOTAPI|SerialCircuitControl|SerialDiscard|SerialBreak|TCMOSystemName|CMGetOptionsForLink|RegisterNetworkROMProtocols|RegisterCommunicationsROMProtocols|FindHighROMProtocol|LoadHighROMPackages|TCommToolProtocol|\d+TPCommTool|StartCommToolProtocol|PCECallBack|CTaskPipe|TEzEndpointPipe
+
+# --- dead in the U.S. ROM ---------------------------------------------------
+# nothing in the U.S. ROM reaches these: the math views (no form makes one),
+# the sixteen-bit dictionaries, the French/German accent checks, text at an
+# angle and TextArrow, the package validation driver (never registered)
+dead in the U.S. ROM	TMath(Exp|Op|Line)View|A[EL]16_|DiacriticsDirection|TextArrow|ValidatePackageDriver|ValidateBackupPipe|IsFirstByteOf2Byte|SetLocale5
+
+# --- the protocols' interface glue -----------------------------------------
+# a protocol interface's methods are three-instruction stubs through the
+# implementation's dispatch table, which the host's virtual call stands in
+# for; most are cited at the interface's declaration, these are not
+protocol glue	TQDLibraryDriver|\d+TWRecognizer|POutTranslator|PInTranslator|TEventCollector|\d+TCMService|\d+TSoundCodec|\d+TCompressor|\d+TDecompressor|CallbackCompressor|CallbackDecompressor|PFrameSink|PFrameSource|\d+TStoreDriver|\d+TPinPad|StdioOutTranslator|StdioInTranslator|NullOutTranslator|NullInTranslator|NTKOutTranslator|NTKInTranslator|SerialOutTranslator|SerialInTranslator
+
+# --- the compiler's and the C library's runtime, and overloads -------------
+# array new/delete helpers, pure-virtual stubs, the NSSend family's fixed-
+# argument overloads (the host has one variadic form of each), RefStruct's
+# constructors
+runtime and overloads	__vc__|__vec_new|__vec_delete|__nw_v|__dl_v|__pvfn__|^NSSend|^NSCallGlobalFn|^NSSendRoot|\d+RefStruct|__ct__6RefVarFRC6RefVar|ByteSwap|realloc
+
+# --- performance variants (the host's blitter and loops are its own) --------
+performance variants	^BB[A-Z]|Slab|FastLine|FastPartiallyReal|PatExpand|LSeekMask|CopyScan|RepeatScan|IsScanEqual|AllWhiteScan

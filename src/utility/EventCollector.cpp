@@ -109,7 +109,7 @@ TEventCollector::AddTime()
 ------------------------------------------------------------------------------*/
 
 PROTOCOL_IMPL_SOURCE_MACRO(THistoryCollector)
-PROTOCOL_CLASSINFO(THistoryCollector, "TEventCollector", "", 0, 0, nil)
+PROTOCOL_CLASSINFO(THistoryCollector, "TEventCollector", "", 0, 0, nil)	// ROM 0x00389d2c ClassInfo__17THistoryCollectorSFv
 
 // ROM 0x002dc418 New__17THistoryCollectorFv
 THistoryCollector*

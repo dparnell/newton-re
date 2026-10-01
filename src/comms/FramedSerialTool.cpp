@@ -596,7 +596,7 @@ badCRC:
 ------------------------------------------------------------------------------*/
 
 PROTOCOL_IMPL_SOURCE_MACRO(TFramedAsyncService)
-PROTOCOL_CLASSINFO(TFramedAsyncService, "TCMService", "serv\0fser\0\0", 0x20000, 0, nil)
+PROTOCOL_CLASSINFO(TFramedAsyncService, "TCMService", "serv\0fser\0\0", 0x20000, 0, nil)	// ROM 0x00382d5c ClassInfo__19TFramedAsyncServiceSFv
 
 // ROM 0x000d3944 New__19TFramedAsyncServiceFv
 TFramedAsyncService*

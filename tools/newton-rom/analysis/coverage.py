@@ -3,6 +3,7 @@
 
 Usage:
     python coverage.py <build dir> [--src src] [--by-class] [--left N] [--check]
+                       [--categories RULES.tsv [--show CATEGORY [--show-count N]]]
 
 Reads every `// ROM 0x<address> <mangled name>` citation in src/**/*.cpp and
 src/**/*.h and compares it with symbols.json:
@@ -14,7 +15,17 @@ src/**/*.h and compares it with symbols.json:
   * --left N ranks what is still to do: the N classes with the most bytes of
     uncited code (a function's size being the distance to the next code
     symbol), then the N largest uncited free functions - for choosing the
-    next piece of work.
+    next piece of work;
+  * --categories RULES.tsv sorts the uncited code into categories by the
+    rules in the file (`category<TAB>regex`, the regex searched for in the
+    mangled name, the first rule that matches winning; `#` starts a
+    comment) and prints each category's functions and bytes - what "done"
+    leaves out and why (uncited-categories.tsv beside this script is the
+    project's own); --show CATEGORY lists that category's largest
+    functions (--show-count, default 40), which is how a rule is written
+    for what is still "other".  A function's size here is the distance to
+    the next symbol of any kind, so the data after the last function of a
+    module is not counted as code.
 
 Only real function bodies count (not jump-table slots).  Data symbols cited
 with the same syntax are checked but not counted.  Code reconstructed from
@@ -45,6 +56,7 @@ a citation, not as a function.
 from __future__ import annotations
 
 import argparse
+import bisect
 import collections
 import json
 import os
@@ -61,6 +73,9 @@ def main(argv=None) -> int:
     ap.add_argument("--by-class", action="store_true")
     ap.add_argument("--check", action="store_true", help="exit 1 on bad citations")
     ap.add_argument("--left", type=int, metavar="N", help="rank the uncited code: N classes, N free functions")
+    ap.add_argument("--categories", metavar="RULES", help="sort the uncited code into categories (category<TAB>regex)")
+    ap.add_argument("--show", metavar="CATEGORY", help="with --categories: list a category's largest functions")
+    ap.add_argument("--show-count", type=int, default=40)
     args = ap.parse_args(argv)
 
     with open(os.path.join(args.build_dir, "symbols.json")) as f:
@@ -162,6 +177,46 @@ def main(argv=None) -> int:
         print(f"\nthe largest uncited free functions (of {len(free)}):")
         for n, a, name in sorted(free, reverse=True)[:args.left]:
             print(f"  {a:#010x} {n:6d}  {name}")
+    if args.categories:
+        rules = []
+        with open(args.categories, encoding="utf-8") as f:
+            for line in f:
+                line = line.split("#", 1)[0].rstrip()
+                if not line.strip():
+                    continue
+                category, pattern = line.split("\t", 1)
+                rules.append((category.strip(), re.compile(pattern.strip())))
+        # a function's size: the distance to the next symbol of any kind in
+        # the ROM (the last function of a module is followed by its data)
+        every = sorted(a for a in by_addr if a < rom_size)
+        names = {s["address"]: s["name"] for s in data["symbols"] if "jt_index" not in s and s["address"] in functions}
+        sizes = collections.Counter()
+        counts = collections.Counter()
+        members = collections.defaultdict(list)
+        total_bytes = 0
+        for a in functions:
+            if a >= rom_size:
+                continue
+            i = bisect.bisect_right(every, a)
+            n = (every[i] if i < len(every) else rom_size) - a
+            total_bytes += n
+            if a in cited:
+                sizes["(reconstructed)"] += n
+                counts["(reconstructed)"] += 1
+                continue
+            name = names.get(a, "")
+            category = next((c for c, r in rules if r.search(name)), "other")
+            sizes[category] += n
+            counts[category] += 1
+            members[category].append((n, a, name))
+        print(f"\nthe ROM's {len([a for a in functions if a < rom_size])} functions, {total_bytes} bytes, by category:")
+        width = max(len(c) for c in sizes)
+        for category, n in sorted(sizes.items(), key=lambda kv: -kv[1]):
+            print(f"  {category:{width}s} {counts[category]:6d} functions {n:9d} bytes  {100.0 * n / total_bytes:5.1f}%")
+        if args.show:
+            print(f"\nthe largest in {args.show}:")
+            for n, a, name in sorted(members[args.show], reverse=True)[:args.show_count]:
+                print(f"  {a:#010x} {n:6d}  {name}")
     return 1 if (errors and args.check) else 0
 
 

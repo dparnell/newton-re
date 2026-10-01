@@ -36,7 +36,7 @@ tools/newton-rom/
     decompile.py          decompilation (+ disassembly, callers) by class / name / address
     disasm.py             raw disassembly of an address range (SWI cases, vectors, glue)
     swi_table.py          the system-call table -> docs/os600/swi-table.md
-    coverage.py           which ROM functions src/ cites, and that the citations are right; --left N ranks the uncited code by class and size
+    coverage.py           which ROM functions src/ cites, and that the citations are right; --left N ranks the uncited code by class and size; --categories uncited-categories.tsv sorts it by why (declined, hardware, ... other), --show CATEGORY lists one
     portfields.py         every src/ function that touches a port's visRgn/clipRgn, checked against the ROM
                           (Ghidra's GrafPort lacks QD_Gray's word: its clipRgn is the ROM's visRgn, its fgPat the clip)
     romsizes.py           ROM byte counts used as the size of something pointer-sized on the host: hex sizes

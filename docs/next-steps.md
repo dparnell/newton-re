@@ -42,18 +42,44 @@ the way are all in `docs/work-log.md`.
 
 ## Open
 
-### Candidates surveyed (2026-10-01, `coverage.py --left`, a traced sweep)
+### What the uncited ROM is (2026-10-01)
 
-The built-in apps' NewtonScript paths run clean; what is left is C++.
-Printing in
-PostScript and HP PCL to a network printer by IPP is done (the owner's
-choice; not StyleWriter, LaserWriter LS or AppleTalk printing).  Printers
-on the network are found and added both ways and kept.  Left: the Network
-Printers panel cannot remove a printer it added; ipps:// (TLS) is not
-offered; a job the printer refuses is only logged, not failed.  Not chosen: the ROM
-domain manager (~18.5 KB, replacing the large objects' DEVIATION, nothing
-a user sees), AppleTalk (~70 KB: network printers, zones; needs a medium
-such as LocalTalk over UDP).
+`coverage.py build/MP2x00US --categories tools/newton-rom/analysis/uncited-categories.tsv`
+sorts every ROM function the reconstruction does not cite by why, the
+rules (a regex on the mangled name per category) being that file's; a
+function's size is the distance to the next symbol, so the data behind a
+module is not counted as code.  By functions 75.9% is cited; by bytes of
+code, **87.3%**.  The rest, 378 KB in 4017 functions:
+
+| category | functions | KB | % of the code |
+|---|---:|---:|---:|
+| declined: AppleTalk (LocalTalk, DDP, ATP, NBP, ZIP, RTMP, AEP, ADSP, PAP, the zones) | 954 | 107.0 | 3.6 |
+| hardware: the MessagePad's own chips (Voyager, Cirrus battery and sound, 16450 UART, ADC, flash parts, card socket, resistive tablet, GPIO, interrupts, reserved flash blocks) - the host has its own behind `hal/` | 812 | 75.7 | 2.5 |
+| comms not asked for: eWorld and the online services, P3, the mux, the keyboard tool, the TV remote, `TCommToolProtocol` | 595 | 37.6 | 1.3 |
+| memory system: MMU page tables, physical pages, the stack manager, domains - the host's memory is its own | 278 | 32.9 | 1.1 |
+| declined: the ROM domain manager and XIP packages | 182 | 30.4 | 1.0 |
+| debugger, test harness, diagnostics (the serial/GeoPort debug links, Hammer, the recogniser's replay metrics, the test agent's desktop server) | 196 | 26.7 | 0.9 |
+| **other - what is genuinely left** | 418 | 22.6 | 0.8 |
+| declined: the StyleWriter and LaserWriter LS drivers | 140 | 14.9 | 0.5 |
+| protocol glue (interface stubs not cited at a declaration) | 299 | 8.3 | 0.3 |
+| performance variants (the blitter's special cases; the host's blitter is its own) | 37 | 8.2 | 0.3 |
+| dead in the U.S. ROM (the math views, sixteen-bit dictionaries, French/German accent checks, TextArrow, the package validation driver) | 53 | 7.3 | 0.2 |
+| runtime and overloads (array new/delete helpers, `NSSend`'s fixed-argument forms) | 43 | 5.7 | 0.2 |
+| system patches (the host has none) | 10 | 1.1 | 0.0 |
+
+"Other" (`--show other`) is small pieces spread across the areas, none
+bigger than 2.5 KB: `HandleControlString` (the keyboard's control
+strings), `RelocateFramesInPage`, the ink codec's default point procs and
+encoder/decoder close, a few `TParagraphView` tab-stop methods
+(`AddTabStop`, `CountTabStops`, `WordFitsAtEndOfLine`), the text walker,
+`TAsyncEvent`, `TMessageTimer`, the GC-safe lists, string helpers.  "Done"
+is the categories above it being left as they are, by decision or because
+the host stands in for them, and "other" worked down.
+
+Printing: PostScript and HP PCL to a network printer by IPP are done, and
+printers on the network are found and added both ways and kept.  Left
+there: the Network Printers panel cannot remove a printer it added; ipps://
+(TLS) is not offered; a job the printer refuses is only logged, not failed.
 
 ### Left by decision or out of reach
 

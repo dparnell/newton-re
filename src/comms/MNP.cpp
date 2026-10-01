@@ -2585,7 +2585,7 @@ TMNP::XmitBufferLT()
 ------------------------------------------------------------------------------*/
 
 PROTOCOL_IMPL_SOURCE_MACRO(TMNPService)
-PROTOCOL_CLASSINFO(TMNPService, "TCMService", "serv\0mnps\0\0", 0x20000, 0, nil)
+PROTOCOL_CLASSINFO(TMNPService, "TCMService", "serv\0mnps\0\0", 0x20000, 0, nil)	// ROM 0x003831c4 ClassInfo__11TMNPServiceSFv
 
 // ROM 0x001197d8 New__11TMNPServiceFv
 TMNPService*

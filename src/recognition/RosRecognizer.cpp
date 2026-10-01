@@ -68,7 +68,7 @@ public:
 };									// 0x164 bytes
 
 PROTOCOL_IMPL_SOURCE_MACRO(TRosRecognizer)
-PROTOCOL_CLASSINFO(TRosRecognizer, "TWRecognizer", "", 0, 0, nil)
+PROTOCOL_CLASSINFO(TRosRecognizer, "TWRecognizer", "", 0, 0, nil)	// ROM 0x00388d14 ClassInfo__14TRosRecognizerSFv
 
 
 // ROM 0x001b6cfc RosRecCheckWords

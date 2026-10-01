@@ -171,7 +171,7 @@ TCMOFaxEndMessage::TCMOFaxEndMessage()
 ------------------------------------------------------------------------------*/
 
 PROTOCOL_IMPL_SOURCE_MACRO(TFaxService)
-PROTOCOL_CLASSINFO(TFaxService, "TCMService", "serv\0faxs\0\0", 0x20000, 0, nil)
+PROTOCOL_CLASSINFO(TFaxService, "TCMService", "serv\0faxs\0\0", 0x20000, 0, nil)	// ROM 0x00382cd4 ClassInfo__11TFaxServiceSFv
 
 // ROM 0x000b4e08 New__11TFaxServiceFv
 TFaxService*

@@ -47,7 +47,7 @@ TClassOneModemCmdReply::TClassOneModemCmdReply()
 ------------------------------------------------------------------------------*/
 
 PROTOCOL_IMPL_SOURCE_MACRO(TModemService)
-PROTOCOL_CLASSINFO(TModemService, "TCMService", "serv\0mods\0\0", 0x20000, 0, nil)
+PROTOCOL_CLASSINFO(TModemService, "TCMService", "serv\0mods\0\0", 0x20000, 0, nil)	// ROM 0x0038324c ClassInfo__13TModemServiceSFv
 
 // ROM 0x0011fadc New__13TModemServiceFv
 TModemService*
