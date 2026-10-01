@@ -26,7 +26,7 @@ cmake -G Ninja -S src -B build/host-ns64 -DNEWTON_NS64=ON ...
 | `ExtractLong` | throws `kNSErrLongOutOfRange` on a word that does not fit | any signed word |
 | `Floor`/`Ceiling` of a whole real | an integer within 30 bits, else a real | within 62 bits |
 | `LShift`/`RShift` past the width | (the host's shift) | nothing / the sign |
-| `TimeInSeconds` | wrapped (negative since January 2010) | the open question - "Time" below |
+| `TimeInSeconds` | wrapped (negative since January 2010) | the true count - "Time" below |
 | a host pointer as an integer (`AddressToRef`, a command's parameter) | the pointer's bits, told from a number by its width | a plain integer |
 
 The switch is a handful of places, every one marked `NEWTON_NS64`:
@@ -86,55 +86,67 @@ cannot hold rather than wrap it.
 
 In the faithful flavour the three are the identity, inline.
 
-## Time - the open decision
+## Time
 
 `TimeInSeconds()` counts seconds from 1993.  The ROM's passed 2^29 on 5
 January 2010 and went negative (the year-2010 bug, which the faithful build
 fixes on the reading side - `docs/intl/year-2010.md`).  A 62-bit integer
-holds the true count (about 1.06e9 in 2026).  Which one a script gets is the
-owner's decision; both are built in, chosen at run time by
-`NEWTON_NS64_TIME` (read once), so either can be tried:
+holds the true count (about 1.06e9 in 2026).
 
-**`true` - the true count (the default until it is decided).**
+**The owner's decision (2026-10-02): the 64-bit flavour's time is 64-bit
+aware** - `TimeInSeconds()` answers the true count, and a time is narrowed
+by the boundary policy where it is stored or sent.  The device's wrapped
+value stays available for comparison as `NEWTON_NS64_TIME=device` (read
+once).
 
-* What a script computes with times is right: `TimeInSeconds() + 3600` is an
-  hour from now, differences and comparisons need no congruence reading, and
-  the ROM's own `TimeInSecondsToTime` is right without the year-2010 fix.
-* But a store holds 30 bits.  A time written to a soup comes back as the
-  device's wrapped value, and a script that compares the two finds them a
-  generation apart.  The ROM's own code does exactly that: the Clock's
-  timer's alarm goes into the alarm soup and is compared with
-  `TimeInSeconds()` when it is due, and never rings
-  (`host.NewtonWalkthrough2`, `.ROM`); NewtHack seeds its generator from the
-  time and plays a different dungeon (`host.NewtonAppNewtHack` - the test's
-  walk is blocked).  Under this choice those are failures by design until
-  times are stored wide (the study's S6, which breaks the formats).
-* Values already wrapped (negative ones from 2010-2026, in soups, packages,
-  `lastCommunicationWithDesktop`) are still read by the year-2010 fix's
-  congruence (`ClockSecondsFromScriptSeconds` takes any value within 2^29
-  seconds - 17 years - of now, wrapped or not), so they still mean the
-  right instant.
+What that was checked against, and what it found:
+
+* **Arithmetic on times is right without help**: `TimeInSeconds() + 3600`
+  is an hour from now, `TotalSeconds(Date(Time()))` and `TimeInSeconds()`
+  agree, and the ROM's own `TimeInSecondsToTime` and `DateFromSeconds` are
+  right; `host.NewtonYear2010` passes and `.romBug` cannot show the ROM's
+  overflow (it needs 30-bit sums that wrap).
+* **A time read back from a store is the device's 30 bits.**  Whatever
+  meets a live time after a store has to read it by congruence.  The
+  year-2010 fix's reading does exactly that - `ClockSecondsFromScriptSeconds`
+  takes any value within 2^29 seconds (17 years) of now, wrapped or not - so
+  everything that goes through it is right: `SetSysAlarm`, `SetTimeInSeconds`,
+  `TimeInSecondsToTime`, the values already wrapped in soups and packages
+  from 2010-2026.
+* **The one place the ROM compares a stored time with a live one is the
+  alarm queue.**  `SetNextAlarm` (`Rbuiltinfunctions.SetNextAlarm`) walks
+  the SystemAlarmSoup by its TimeInSeconds index and treats every entry
+  whose key is `<= TimeInSeconds()` as due; the key is the stored 30 bits,
+  so every alarm was due the moment it was added - the Clock's timer never
+  rang (`host.NewtonWalkthrough2`, `.ROM`), and NewtHack's dungeon came out
+  different because the alarm loop ran meanwhile (`host.NewtonAppNewtHack`).
+  Under the true count the host replaces `SetNextAlarm` with the ROM's own
+  logic reading the key through `HostWidenTimeInSeconds` (the congruence
+  reading, a host global) - `intl/Dates.cpp`, installed with the year-2010
+  fix.  The index's order needs nothing: the stored keys run in order from
+  2010 until they wrap in 2044.
+* **The spike's -48022** (an index throw on an alarm keyed on the true time)
+  is gone: the soup key and the entry are now narrowed the same way.
+* Not affected: dates, meetings and repeating meetings (minutes since 1904,
+  about 6.5e7 - they fit 30 bits until the year 2924), sort keys (text),
+  the walkthroughs' date checks, the Dock's `lastCommunicationWithDesktop`
+  (kept in memory and compared there).
+* **Left as it is, and recorded:** a third-party application that stores
+  `TimeInSeconds()` in a soup and compares it with `TimeInSeconds()` later
+  will see a wrapped value, as on the device after 2010 - there is no way to
+  tell a stored time from any other integer.  The ListView's topic `unique`
+  (`TimeInSeconds() * 4 + ...`) is narrowed when stored but used only as an
+  identity among stored topics.  The Clock timer's `alarmClockTimer` in the
+  user configuration reads back wrapped after a restart, so the timer slip
+  shows 0 left for a timer running across a restart (the alarm itself still
+  rings).  The general cure is storing wide integers, the study's S6.
 * The count passes 2^31 in 2061; it is taken unsigned, so it is good to 2129.
 
-**`device` - the MessagePad's value, wrapped to 30 bits.**
-
-* Every time a script holds is one a store can hold, so alarms, timers and
-  anything else that stores a time and compares it later behave as on the
-  device and as in the faithful build (the whole suite passes).
-* But arithmetic on times no longer wraps the way the device's did:
-  `TotalSeconds(Date(Time()))` is computed by the ROM's NewtonScript from
-  the minutes and comes out the true count, so it and `TimeInSeconds()`
-  agree only modulo 2^30 (`test_Dates` checks it that way under this
-  choice).  Any script mixing the two kinds of seconds sees the gap.
-* It keeps the year-2010 fix necessary, exactly as in the faithful build.
-
-Neither is fully consistent while stores are 32-bit: *true* is consistent
-in memory and inconsistent with what it stores; *device* is consistent with
-what it stores and inconsistent with the rest of its own arithmetic.  The
-ROM's year-2010 overflow itself shows through 30-bit arithmetic that wraps,
-so with either choice the 64-bit flavour dates a note right even with the
-ROM's arithmetic (`NEWTON_ROM_2010_BUG=1`; `host.NewtonYear2010.romBug`'s
-expectation is per flavour).
+`NEWTON_NS64_TIME=device` answers the device's wrapped value instead: every
+time a script holds is then one a store can hold, but arithmetic on times no
+longer wraps the way the device's did, so `TotalSeconds(Date(Time()))` and
+`TimeInSeconds()` agree only modulo 2^30 (`test_Dates` checks it that way
+under it).
 
 ## Tests
 

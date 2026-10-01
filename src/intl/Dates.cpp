@@ -569,7 +569,7 @@ TDate::TimeString(ULong spec, UniChar* str, ULong max)
 		ULong hour = fHour;
 		if (hour == 0)
 		{
-			long form = RINT(GetProtoVariable(fTimeFormat, RSSYMmidnightform, nil));
+			Long form = RINT(GetProtoVariable(fTimeFormat, RSSYMmidnightform, nil));
 			if (form == 1)
 				hour = 12;
 			else if (form == 2)
@@ -965,17 +965,14 @@ FTime(RefArg /*rcvr*/)
 
 
 #if NEWTON_NS64
-// NEWTON_NS64: which TimeInSeconds a script gets is the owner's open
-// decision (docs/frames/64bit.md, "Time"), so both are here behind
-// NEWTON_NS64_TIME, read once:
-//   true    (the default until it is decided) the true count of seconds
-//           since 1993 - about 1.06e9 in 2026, which a 62-bit integer holds;
-//           but a store holds 30 bits, so a time written to a soup and read
-//           back is the device's wrapped value, and a script comparing the
-//           two finds them a generation apart (an alarm, a timer);
-//   device  the value the MessagePad computes, wrapped to 30 bits (negative
-//           from January 2010), as the faithful flavour answers - every
-//           time a script holds is then one a store can hold.
+// NEWTON_NS64: time is 64-bit aware (the owner's decision; docs/frames/
+// 64bit.md, "Time") - TimeInSeconds answers the true count of seconds since
+// 1993, about 1.06e9 in 2026, which a 62-bit integer holds.  A store holds
+// 30 bits, so a time read back from a soup is the device's wrapped value and
+// is read by congruence where it meets a live one (ClockSecondsFromScript-
+// Seconds, HostWidenTimeInSeconds and the alarm queue below).
+// NEWTON_NS64_TIME=device (read once) answers the MessagePad's value,
+// wrapped to 30 bits, instead - for comparison.
 Boolean
 NS64DeviceTime(void)
 {
@@ -1210,7 +1207,7 @@ SetFix2010(Boolean inForce)
 
 
 ULong
-ClockSecondsFromScriptSeconds(long seconds)
+ClockSecondsFromScriptSeconds(Long seconds)
 {
 	if (!Fix2010())
 		return (ULong32) ((ULong32) seconds + kSecondsFrom1904To1993);		// the ROM's
@@ -1230,9 +1227,54 @@ FTimeInSecondsToTime2010(RefArg /*rcvr*/, RefArg seconds)
 }
 
 
+#if NEWTON_NS64
+// NEWTON_NS64 with the true count (docs/frames/64bit.md, "Time"): a time a
+// store gave back is the device's 30 bits, so before it is compared with
+// TimeInSeconds() it is widened to the true count it stands for - the
+// second within 2^29 (17 years) of now that it is congruent to, which is
+// the year-2010 fix's own reading (ClockSecondsFromScriptSeconds).
+static Ref
+FHostWidenTimeInSeconds(RefArg /*rcvr*/, RefArg seconds)
+{
+	if (!ISINT(seconds))
+		return seconds;
+	return MAKEINT((Long) (ULong32) (ClockSecondsFromScriptSeconds(RINT(seconds)) - kSecondsFrom1904To1993));
+}
+
+
+// The ROM's SetNextAlarm (Rbuiltinfunctions.SetNextAlarm) with the alarm
+// soup's key widened before it is compared with the time now: the key is
+// the stored 30 bits, and compared as it stands every alarm is already due
+// the moment it is added.  (The index's order needs nothing: the stored
+// keys run in order from 2010 until they wrap in 2044.)
+static const char kSetNextAlarmNS64[] =
+	"func() begin\n"
+	"	local soup, cursor, entry;\n"
+	"	SetSysAlarm(nil, nil, nil);\n"
+	"	soup := GetStores()[0]:GetSoup(\"SystemAlarmSoup\");\n"
+	"	entry := (cursor := soup:Query('{indexPath: TimeInSeconds})):Entry();\n"
+	"	while entry and HostWidenTimeInSeconds(cursor:EntryKey()) <= TimeInSeconds() do begin\n"
+	"		EntryRemoveFromSoup(entry);\n"
+	"		XAlarm(entry);\n"
+	"		entry := cursor:Next();\n"
+	"	end;\n"
+	"	if entry then SetSysAlarm(entry.TimeInSeconds, functions.SetNextAlarm, nil);\n"
+	"end";
+#endif
+
+
 void
 InstallFix2010(void)
 {
+#if NEWTON_NS64
+	if (!NS64DeviceTime() && Fix2010())
+	{
+		RefVar fns(gFunctionFrame);
+		SetFrameSlot(fns, RefVar(Intern((char*) "HostWidenTimeInSeconds")),
+					 RefVar(MakeCFunction((void*) FHostWidenTimeInSeconds, 1, nil)));
+		SetFrameSlot(fns, RefVar(Intern((char*) "SetNextAlarm")), RefVar(CompileScriptFunction(kSetNextAlarmNS64)));
+	}
+#endif
 	if (!Fix2010())
 		return;
 	RefVar functions(gFunctionFrame);
@@ -1339,8 +1381,8 @@ FStringToDate(RefArg /*rcvr*/, RefArg str)
 static Ref
 FIncrementMonth(RefArg /*rcvr*/, RefArg minutes, RefArg delta)
 {
-	long when = RINT(minutes);
-	long months = RINT(delta);
+	Long when = RINT(minutes);
+	Long months = RINT(delta);
 	if (when + months < 0)
 		return NILREF;
 	if (when + months >= 0x1fffffff)

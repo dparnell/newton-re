@@ -127,7 +127,7 @@ void	InitDatePrototypes(void);				// host: Rcanonicaldate when no ROM objects ar
 // ROM's own arithmetic.
 Boolean	Fix2010(void);							// the fix is in force
 void	SetFix2010(Boolean inForce);			// (tests: in force or not, whatever NEWTON_ROM_2010_BUG says)
-ULong	ClockSecondsFromScriptSeconds(long seconds);	// the real-clock second (from 1904) a script's second stands for
+ULong	ClockSecondsFromScriptSeconds(Long seconds);	// the real-clock second (from 1904) a script's second stands for
 #if NEWTON_NS64
 Boolean	NS64DeviceTime(void);					// NEWTON_NS64_TIME=device: TimeInSeconds wrapped as the device's (docs/frames/64bit.md)
 #endif
