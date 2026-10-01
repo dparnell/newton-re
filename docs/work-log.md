@@ -21,6 +21,21 @@ romsrc's `#hex` immediates and `@@` record lines; a 22-test corpus and
 a Zed extension (`zed-newtonscript/`): highlighting, brackets,
 indentation and an outline, installed with "zed: install dev extension".
 
+## 2026-10-01: printer problems reported the ROM's way; printers removed
+
+A job an IPP printer refuses, or that cannot reach it, ends as the
+driver's kPR_ERR code and the ROM's own Print alert ("No printer is
+connected.", "Printer problem.", busy, "Lost contact with the printer.");
+and the printer's state, asked by IPP where the ROM's TPSPAPDriver asks
+PAP (at each page boundary and every eighth write), becomes the ROM's
+print problem slip - no paper, a jam, a door open, no ink, off-line -
+until the printer is well, when the job goes on (1f7b498d).  The Network
+Printers panel removes a printer, from its own list, the Print slip and
+the recent printers, the current one falling back as the ROM's default
+configuration (@285) has it.  Found: CMake splits a PASS_REGULAR_EXPRESSION
+containing ';' into alternatives, any one passing - so such a test can
+pass a hung run.
+
 ## 2026-10-01: the PSS manager's slots as ATA Support sees them
 
 `ARMMapDevice` makes ARM addresses whose every access the host answers;
