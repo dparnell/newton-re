@@ -233,6 +233,7 @@ public:
 	virtual void	RealDraw(Rect& bounds);								// ROM 0x0016911c RealDraw__14TParagraphViewFR5TRect
 	virtual void	SetBounds(const Rect& bounds);						// ROM 0x0017e3e8 SetBounds__14TParagraphViewFRC5TRect
 	virtual void	SetCaretOffset(long* offset, long* length);			// ROM 0x0017efd8 SetCaretOffset__14TParagraphViewFPlT1
+	virtual Ref		GetValue(RefArg slot, RefArg type);					// ROM 0x0018024c GetValue__14TParagraphViewFRC6RefVarT1
 	virtual Ref		GetSelection(void);									// ROM 0x0017f050 GetSelection__14TParagraphViewFv
 	virtual void	SetValue(RefArg slot, RefArg value);				// ROM 0x0018081c SetValue__14TParagraphViewFRC6RefVarT1
 	virtual void	SetSelection(RefArg selection, long* offset, long* length);	// ROM 0x0017f178 SetSelection__14TParagraphViewFRC6RefVarPlT2
@@ -433,6 +434,7 @@ public:
 	Ref			GetInkRefAndBounds(long offset, Rect* bounds);			// ROM 0x00178210 GetInkRefAndBounds__14TParagraphViewFlP5TRect
 	Ref			GetStylesOfRange(long offset, long length, Boolean clone);	// ROM 0x001791f8 GetStylesOfRange__14TParagraphViewFlT1Uc
 	Ref			ExtractTextRange(ULong offset, ULong length);			// ROM 0x001726a4 ExtractTextRange__14TParagraphViewFUlT1 - the characters as a plain string
+	Ref			ExtractRangeAsRichString(ULong offset, ULong length);	// ROM 0x00173a38 ExtractRangeAsRichString__14TParagraphViewFUlT1 - with the styles folded in
 	Ref			GetWriteableTextStylesArray(void);						// ROM 0x00179248 GetWriteableTextStylesArray__14TParagraphViewFv
 	void		RangeChanged(long offset, long removed, long inserted, RefArg slot);	// ROM 0x00180bd8 RangeChanged__14TParagraphViewFlN21RC6RefVar
 	Boolean		ProcessStyles(Boolean redraw);							// ROM 0x00180ce4 ProcessStyles__14TParagraphViewFUc

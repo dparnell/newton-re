@@ -11,6 +11,7 @@
 	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
+#include "Areas.h"		// PurgeAreaCache
 #include "View.h"
 #include "Inker.h"			// BusyBoxSend
 #include "ClipboardView.h"
@@ -975,7 +976,8 @@ TView::GetRangeText(long /*start*/, long /*end*/)
 
 // ROM 0x0026a808 GetValue__5TViewFRC6RefVarT1
 // The slot's value, as the type asks: viewFlags is the view's own word,
-// 'hilites with 'offset NOT YET (nil), otherwise the variable; a type the
+// 'hilites with 'offset nil (the views that hold a selection answer it
+// themselves), otherwise the variable; a type the
 // value is not a subclass of converts it: 'string prints it, 'int takes a
 // char or a boolean (1 for true) as its number, else nil.
 Ref
@@ -983,7 +985,7 @@ TView::GetValue(RefArg slot, RefArg type)
 {
 	RefVar value;
 	if (EQRef(slot, RSSYMhilites) && EQRef(type, RSSYMoffset))
-		return NILREF;		// NOT YET RECONSTRUCTED: the hilite offsets
+		return NILREF;
 	if (EQRef(slot, RSSYMviewflags))
 		value = MAKEINT(fFlags & vViewFlagsMask);
 	if (ISNIL(value))
@@ -1007,15 +1009,21 @@ TView::GetValue(RefArg slot, RefArg type)
 
 
 // ROM 0x0026a9ec SetValue__5TViewFRC6RefVarT1
-// The slot set in the context (viewFlags and viewFormat in the view too;
-// recConfig and dictionaries NOT YET: the recognition area cache), the
-// view synced when the slot is viewBounds, viewFormat, viewJustify or
-// viewFont, and Changed sent.
+// The slot set in the context (viewFlags and viewFormat in the view too),
+// the recogniser's area cache purged when what the view takes in writing
+// may have changed (viewFlags, recConfig, dictionaries), the view synced
+// when the slot is viewBounds, viewFormat, viewJustify or viewFont, and
+// Changed sent.
 void
 TView::SetValue(RefArg slot, RefArg value)
 {
 	if (EQRef(slot, RSSYMviewflags))
+	{
 		fFlags = (RINT(value) & vViewFlagsMask) | (fFlags & ~vViewFlagsMask);
+		PurgeAreaCache();
+	}
+	else if (EQRef(slot, RSSYMrecconfig) || EQRef(slot, RSSYMdictionaries))
+		PurgeAreaCache();
 	else if (EQRef(slot, RSSYMviewformat))
 		fViewFormat = RINT(value);
 	SetContextSlot(slot, value);

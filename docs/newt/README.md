@@ -181,7 +181,10 @@ changes, wakes the event loop with an `'inkr` event on the Newt port as
 the ROM's `TInker::LCDEntry` 0x002150ec does, so a click reaches the
 views even while the idle timer is stopped) and its keys the keyboard
 (`host/HostKeyboard.cpp`: a task sending 'keyb events to the newt port
-like the ROM's keyboard tool, the keyboard connected first); closing the
+like the ROM's keyboard tool; the keyboard counts as connected only from
+the first key, which `DoKeyEvent` announces as the ROM does - until then
+the machine is a bare MessagePad, and a fresh note has no caret waiting
+for typing, so writing goes where it is written); closing the
 window ends the run.  `--headless seconds` runs without the window
 (`host.Newton` test: `demo/newton.ns`, which writes the display half a
 second in through a delayed action).

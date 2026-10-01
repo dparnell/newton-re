@@ -75,8 +75,8 @@ HostKeyCodeForVirtualKey(long vk)
 }
 
 
-// The task: the newt world's port found by name, the keyboard connected,
-// then every ten milliseconds the queued keys sent as 'keyb events
+// The task: the newt world's port found by name, then every ten
+// milliseconds the queued keys sent as 'keyb events
 // (each an RPC the world replies to with the repeat rates); the run ended
 // when the window says so.
 void
@@ -92,10 +92,12 @@ HostKeyboardToolTask(void)
 		TUPort newtPort(portId);
 		while (!gNewtIsAliveAndWell && !gHostQuit.load())
 			Sleep(20 * kMilliseconds);
-		KeyboardEvent connected(aeKeyboardConnected, 1);
+		// (no 'connected' event up front: the machine is a bare MessagePad
+		//  until a key is pressed, and the first key connects the keyboard
+		//  as the ROM's DoKeyEvent does - so a fresh note has no caret
+		//  waiting for typing, and writing goes where it is written)
 		KeyboardEvent reply(aeKeyUp, 0);
 		ULong replySize = 0;
-		newtPort.SendRPC(&replySize, &connected, sizeof(connected), &reply, sizeof(reply));
 		while (!gHostQuit.load())
 		{
 			while (gHostKeyHead.load() != gHostKeyTail.load())

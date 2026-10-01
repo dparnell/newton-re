@@ -58,6 +58,7 @@ public:
 	virtual void	ActivateSelection(Boolean on);		// ROM 0x000aa860 ActivateSelection__9TEditViewFUc
 	virtual void	SetSelection(RefArg selection, long* start, long* end);	// ROM 0x000aa408 SetSelection__9TEditViewFRC6RefVarPlT2
 	virtual Ref		GetSelection(void);						// ROM 0x000aa5f0 GetSelection__9TEditViewFv
+	virtual Ref		GetValue(RefArg slot, RefArg type);		// ROM 0x000a5cd4 GetValue__9TEditViewFRC6RefVarT1
 	virtual void	BuildKeyChildList(TViewList* list, long a, long b);	// ROM 0x000ab9b4 BuildKeyChildList__9TEditViewFP9TViewListlT2
 	virtual void	OffsetToCaret(long offset, Rect* caret);	// ROM 0x000a2ee4 OffsetToCaret__9TEditViewFlP5TRect
 	virtual Boolean	RealDoCommand(RefArg cmd);				// ROM 0x000a4360 RealDoCommand__9TEditViewFRC6RefVar (partial: see the definition)
@@ -199,6 +200,8 @@ Ref		SortTextInk(RefArg kids);								// ROM 0x000a8220 SortTextInk__FRC6RefVar	
 // word can be put right from - is on the screen.
 extern TView*	gSkipView;						// ROM 0x0c100cec gSkipView - a child aeGetContextUnits leaves out
 Boolean	CorrectorUp(void);									// ROM 0x001767b8 CorrectorUp__Fv
+Ref		SetCorrectorBusy(void);								// ROM 0x000a853c SetCorrectorBusy__Fv
+void	RestoreCorrectorBusy(RefArg was);					// ROM 0x000a860c RestoreCorrectorBusy__FRC6RefVar
 // Remote writing turned off while the corrector is up, and put back
 // afterwards.  ==> 1 the corrector was up, 2 remote writing was on.
 ULong	SetRemoteForCorrector(void);						// ROM 0x00177470 SetRemoteForCorrector__Fv

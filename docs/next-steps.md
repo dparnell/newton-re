@@ -98,13 +98,8 @@ the way are all in `docs/work-log.md`.
   called by dispatch slot (a monitor's already work).  Nothing in the ROM
   or `fixtures/` calls `Dispatch`.
 - The views' NOT YET markers that a user can reach (`analysis/notyet.py
-  src --area views --all`): `SetCorrectorBusy`/`RestoreCorrectorBusy` around deleting a selection;
-  the paragraph's destructor dropping its correction info and
-  `vars.lastTextChanged`; `FlushWordAtCaret` (typed words to the auto-add
-  dictionary); `HandleWord`'s word-at-a-time branch (`!UsesLetters`,
-  `ReclassifyCharacter`); `TView::GetValue('hilites, 'offset)`;
-  `SetValue` of recConfig/dictionaries purging the area cache in a plain
-  view; `:SetPopup` closing on a tap elsewhere; `:MoveBehind` to the back;
+  src --area views --all`): `HandleWord`'s word-at-a-time branch
+  (`!UsesLetters`, `ReclassifyCharacter`); `:SetPopup` closing on a tap elsewhere; `:MoveBehind` to the back;
   `TRootView::RemoveAllViews`' key view, popup and clipboards,
   `UnregisterKeyboard`'s caret check and `IdleViews`' caret blink
   (`CaretValid`); the drag picture and drag-shadow frame in `PostDraw`;

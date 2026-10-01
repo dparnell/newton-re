@@ -513,7 +513,7 @@ FGetCaretBox(RefArg /*rcvr*/)
 
 // ROM 0x001eee94 FGetCaretInfo
 // {view: the key view's context, info: its selection}; nil for none.
-static Ref
+Ref
 FGetCaretInfo(RefArg /*rcvr*/)
 {
 	TView* view = gRootView->fCaretView;
@@ -2424,7 +2424,7 @@ FHideCaret(RefArg /*rcvr*/)
 //    the root's context as `_caretInfo` for whoever wants it.
 //
 // A nil view takes the caret away altogether.
-static Ref
+Ref
 FSetCaretInfo(RefArg /*rcvr*/, RefArg view, RefArg info)
 {
 	if (ISNIL(view))

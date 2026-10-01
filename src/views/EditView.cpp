@@ -683,6 +683,35 @@ TEditView::GetSelection(void)
 }
 
 
+// ROM 0x000a5cd4 GetValue__9TEditViewFRC6RefVarT1
+// 'hilites asked as 'offset: what each child answers for its own
+// selection (the first entry of each), nil when nothing on the page is
+// selected or no child answers; the rest is TView's.
+Ref
+TEditView::GetValue(RefArg slot, RefArg type)
+{
+	if (!EQRef(slot, RSSYMhilites) || !EQRef(type, RSSYMoffset))
+		return TView::GetValue(slot, type);
+	RefVar result(NILREF);
+	if (CountHilites() != 0)
+	{
+		result = MakeArray(0);
+		RefVar answer;
+		TListLoop loop(fChildren);
+		TView* child;
+		while ((child = (TView*) loop.Next()) != nil)
+		{
+			answer = child->GetValue(slot, type);
+			if (NOTNIL(answer))
+				AddArraySlot(result, RefVar(GetArraySlotRef(answer, 0)));
+		}
+		if (Length(result) == 0)
+			result = NILREF;
+	}
+	return result;
+}
+
+
 // ROM 0x000aa92c GetCaretLocalTopLeft__9TEditViewFv
 Point
 TEditView::GetCaretLocalTopLeft(void)
@@ -1169,6 +1198,44 @@ TEditView::HandleLineGesture(TUnitPublic* unit)
 }
 
 
+Ref		FGetCaretInfo(RefArg rcvr);							// views/ViewNatives.cpp
+Ref		FSetCaretInfo(RefArg rcvr, RefArg view, RefArg info);
+
+// ROM 0x000a853c SetCorrectorBusy__Fv
+// The corrector (the root's 'correct), when it is up, told it is busy
+// (hiliteBusy true) so it does not follow the selection as it changes.
+// ==> what hiliteBusy was, to put back.
+Ref
+SetCorrectorBusy(void)
+{
+	RefVar was;
+	RefVar correct(gRootView->GetVar(RSSYMcorrect));
+	if (NOTNIL(GetFrameSlot(correct, RSSYMviewcobject)))
+	{
+		was = GetFrameSlot(correct, RSSYMhilitebusy);
+		SetFrameSlot(correct, RSSYMhilitebusy, RefVar(TRUEREF));
+	}
+	return was;
+}
+
+
+// ROM 0x000a860c RestoreCorrectorBusy__FRC6RefVar
+// The corrector's hiliteBusy put back and the caret set again where it is,
+// so the corrector catches up with it.
+void
+RestoreCorrectorBusy(RefArg was)
+{
+	RefVar correct(gRootView->GetVar(RSSYMcorrect));
+	if (NOTNIL(GetFrameSlot(correct, RSSYMviewcobject)))
+	{
+		SetFrameSlot(correct, RSSYMhilitebusy, was);
+		RefVar info(FGetCaretInfo(RefVar(NILREF)));
+		if (NOTNIL(info))
+			FSetCaretInfo(RefVar(NILREF), RefVar(GetFrameSlot(info, RSSYMview)), RefVar(GetFrameSlot(info, RSSYMinfo)));
+	}
+}
+
+
 // ROM 0x000a8750 DeleteHilitedViews__9TEditViewFv
 // Every hilited child of the page deleted, one at a time: each round
 // looks for the first child that still has a hilite and tells it to
@@ -1176,11 +1243,13 @@ TEditView::HandleLineGesture(TUnitPublic* unit)
 // round because deleting one can take others with it.  The caret goes to
 // the top of the page afterwards.
 //
-// NOT YET RECONSTRUCTED: SetCorrectorBusy/RestoreCorrectorBusy, which
-// keep the corrector from following the text that is going away.
+// The corrector, when it is up, is kept from following the text that is
+// going away (SetCorrectorBusy) and put back with the caret afterwards
+// (RestoreCorrectorBusy).
 void
 TEditView::DeleteHilitedViews(void)
 {
+	RefVar wasBusy(SetCorrectorBusy());
 	InvalAllHilites();
 	for (;;)
 	{
@@ -1200,6 +1269,7 @@ TEditView::DeleteHilitedViews(void)
 			break;
 		hilited->DeleteHilited(hilite);
 	}
+	RestoreCorrectorBusy(wasBusy);
 	gRootView->SetKeyView(this, 0, 0, false);
 	gRootView->fDirtyFlag = true;
 }

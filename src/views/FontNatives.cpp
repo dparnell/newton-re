@@ -241,29 +241,14 @@ FGetRangeText(RefArg /*rcvr*/, RefArg view, RefArg start, RefArg end)
 
 // ROM 0x001ef3b0 FExtractRangeAsRichString
 // view:ExtractRangeAsRichString(start, length) - that range of a
-// paragraph as a rich string: its characters with the styles of the range
-// folded in, so the ink words among them come too.  A paragraph with no
-// style array answers the plain characters.  The range is clamped to the
-// text only for the styles: ExtractTextRange has already cut the
-// characters to it.
+// paragraph as a rich string (TParagraphView::ExtractRangeAsRichString).
 static Ref
 FExtractRangeAsRichString(RefArg rcvr, RefArg start, RefArg length)
 {
 	TParagraphView* view = FailGetParagraphView(rcvr);
 	ULong count = (ULong) RINT(length);
 	ULong offset = (ULong) RINT(start);
-	RefVar text(view->ExtractTextRange(offset, count));
-	RefVar styles(view->Styles());
-	if (!IsArray(styles))
-		return text;
-	RefVar whole(view->Text());
-	ULong size = (ULong) Ustrlen((UniChar*) BinaryData(whole));
-	if (size < offset)
-		offset = size;
-	if (size < offset + count)
-		count = size - offset;
-	RefVar runs(view->GetStylesOfRange((long) offset, (long) count, false));
-	return MakeRichString(text, runs, false);
+	return view->ExtractRangeAsRichString(offset, count);
 }
 
 

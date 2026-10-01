@@ -2909,6 +2909,22 @@ TextIs(TParagraphView* view, const char* expect)
 	}
 }
 
+// A string object's characters, compared exactly.
+static Boolean
+TextIsRef(RefArg text, const char* expect)
+{
+	if (!IsString(text))
+		return false;
+	const UniChar* chars = (const UniChar*) BinaryData(text);
+	for (long i = 0; ; i++)
+	{
+		if (chars[i] != (UniChar) (unsigned char) expect[i])
+			return false;
+		if (expect[i] == 0)
+			return true;
+	}
+}
+
 // The line gesture: a line drawn up through the selected text puts it in
 // upper case, one drawn down in lower case, and a line over the first
 // letter alone takes that letter only.
@@ -2929,6 +2945,20 @@ TestLineGesture()
 	short below = (short) (p->Line(0).fBounds.bottom + 2);
 	p->MakeHilite(4, 7, false);
 	Refresh();
+
+	// what a script asks of the selection (TParagraphView::GetValue):
+	// [[context, start, end]] as 'offset, the text as 'string, and the
+	// text itself as viewValue
+	{
+		RefVar offsets(p->GetValue(RSSYMhilites, RSSYMoffset));
+		EXPECT(IsArray(offsets) && Length(offsets) == 1);
+		RefVar entry(GetArraySlot(offsets, 0));
+		EXPECT(EQRef(GetArraySlot(entry, 0), p->fContext));
+		EXPECT(RINT(GetArraySlot(entry, 1)) == 4 && RINT(GetArraySlot(entry, 2)) == 7);
+		RefVar texts(p->GetValue(RSSYMhilites, RSSYMstring));
+		EXPECT(IsArray(texts) && Length(texts) == 1 && TextIsRef(RefVar(GetArraySlot(texts, 0)), "two"));
+		EXPECT(TextIsRef(RefVar(p->GetValue(RSSYMviewvalue, RefVar(NILREF))), "one two three"));
+	}
 
 	// a hilite keeps its area and its box in the view's own coordinates,
 	// so GlobalHiliteBounds is what puts it back where the word is

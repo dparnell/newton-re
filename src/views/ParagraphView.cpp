@@ -15,7 +15,8 @@
 #include "Words.h"			// IsPunctSymbol
 #include "WordInfo.h"		// kWordInfoIsInk
 #include "CorrectInfo.h"
-#include "WordList.h"		// TWordList, the try string
+#include "WordList.h"
+#include "Learning.h"		// AddAutoAdd		// TWordList, the try string
 #include "Controller.h"		// AreStrokesAfterUnit
 #include "RecConfig.h"		// UsesLetters
 #include "EditView.h"		// ViewExpectsNumbers
@@ -137,9 +138,9 @@ TParagraphView::Constructor(RefArg context, TView* parent)
 
 // ROM 0x001805f4 __dt__14TParagraphViewFv
 // The insert areas go, then the caches (the hilites, style records,
-// text objects and lines); NOT YET RECONSTRUCTED: the correction info, and
-// vars.lastTextChanged / lastTextHiliteChanged cleared when they name this
-// view.
+// text objects and lines), the correction info kept for the view, and
+// vars.lastTextChanged / lastTextHiliteChanged when they name this view's
+// context.
 TParagraphView::~TParagraphView()
 {
 	if (fInsertRunList != nil)
@@ -156,6 +157,13 @@ TParagraphView::~TParagraphView()
 	DestroyStyleRecordCache();
 	DestroyTextObjectCache(&fTextObjects, &fTextOptions);
 	DestroyLineInfoCache(&fLineCache);
+	RemoveCorrectionInfo(this);
+	RefVar last(GetFrameSlot(RefVar(gVarFrame), RSSYMlasttextchanged));
+	if (EQRef(last, fContext))
+		SetFrameSlot(RefVar(gVarFrame), RSSYMlasttextchanged, RefVar(NILREF));
+	last = GetFrameSlot(RefVar(gVarFrame), RSSYMlasttexthilitechanged);
+	if (EQRef(last, fContext))
+		SetFrameSlot(RefVar(gVarFrame), RSSYMlasttexthilitechanged, RefVar(NILREF));
 	DisposeStyleRecord(&fSingleStyle);
 }
 
@@ -632,9 +640,7 @@ TParagraphView::SetValue(RefArg slot, RefArg value)
 		RangeChanged(0, wasLength, nowLength, slot);
 		return;
 	}
-	if (EQRef(slot, RSSYMviewflags) || EQRef(slot, RSSYMrecconfig) || EQRef(slot, RSSYMdictionaries))
-		PurgeAreaCache();		// what this view takes in writing has changed
-	TView::SetValue(slot, value);
+	TView::SetValue(slot, value);		// (which purges the area cache for viewFlags, recConfig, dictionaries)
 }
 
 
@@ -696,11 +702,36 @@ TParagraphView::ActivateSelection(Boolean on)
 
 
 // ROM 0x00174c7c FlushWordAtCaret__14TParagraphViewFv
-// NOT YET RECONSTRUCTED: the word being typed at the caret handed to the
-// recogniser's dictionaries (the auto-add words).
+// The word the caret is in or at the end of - from the white space before
+// it to the white space after it - handed to the auto-add list
+// (AddAutoAdd: a typed word the dictionaries do not know is offered to
+// the user's word list).  Typing white space, the caret moving to
+// another view and the keyboard going away all flush it.
 void
 TParagraphView::FlushWordAtCaret(void)
-{ }
+{
+	RefVar textRef(Text());
+	const UniChar* text = GetCString(textRef);
+	long length = Ustrlen(text);
+	long end = fCaretOffset;
+	while (end < length && !IsWhiteSpace(text[end]))
+		end++;
+	long start = fCaretOffset;
+	while (start >= 1 && !IsWhiteSpace(text[start - 1]))
+		start--;
+	long count = end - start;
+	if (count > 0)
+	{
+		// (the ROM copies the word into a string object and hands
+		//  AddAutoAdd a pointer into it; the host copies it into a block of
+		//  its own, which no allocation AddAutoAdd makes can move)
+		UniChar* chars = new UniChar[count + 1];
+		BlockMove(text + start, chars, count * (long) sizeof(UniChar));
+		chars[count] = 0;
+		AddAutoAdd(chars);
+		delete[] chars;
+	}
+}
 
 
 // ROM 0x001786f8 FindLineContainingCharOffset__14TParagraphViewFl
@@ -1036,6 +1067,68 @@ TParagraphView::GetInkRefAndBounds(long offset, Rect* bounds)
 		bounds->bottom = (short) (bounds->top + info.fScaledHeight);
 	}
 	return style;
+}
+
+
+// ROM 0x00173a38 ExtractRangeAsRichString__14TParagraphViewFUlT1
+// That range as a rich string: its characters with the styles of the
+// range folded in, so the ink words among them come too.  A paragraph
+// with no style array answers the plain characters.  The range is clamped
+// to the text only for the styles: ExtractTextRange has already cut the
+// characters to it.
+Ref
+TParagraphView::ExtractRangeAsRichString(ULong offset, ULong count)
+{
+	RefVar text(ExtractTextRange(offset, count));
+	RefVar styles(Styles());
+	if (!IsArray(styles))
+		return text;
+	RefVar whole(Text());
+	ULong size = (ULong) Ustrlen(GetCString(whole));
+	if (size < offset)
+		offset = size;
+	if (size < offset + count)
+		count = size - offset;
+	RefVar runs(GetStylesOfRange((long) offset, (long) count, false));
+	return MakeRichString(text, runs, false);
+}
+
+
+// ROM 0x0018024c GetValue__14TParagraphViewFRC6RefVarT1
+// viewValue is the text; 'hilites asked as 'string is each selection's
+// text as a rich string, and as 'offset the first selection as
+// [[context, start, end]] (nil with none); the rest is TView's.
+Ref
+TParagraphView::GetValue(RefArg slot, RefArg type)
+{
+	if (EQRef(slot, RSSYMviewvalue))
+		return TView::GetValue(RSSYMtext, type);
+	if (EQRef(slot, RSSYMhilites) && EQRef(type, RSSYMstring))
+	{
+		RefVar result(MakeArray(0));
+		HiliteLoop loop(this);
+		while (loop.Next())
+		{
+			TParagraphHilite* hilite = (TParagraphHilite*) loop.fCurrent;
+			AddArraySlot(result, RefVar(ExtractRangeAsRichString((ULong) hilite->fStart, (ULong) (hilite->fEnd - hilite->fStart))));
+		}
+		return result;
+	}
+	if (EQRef(slot, RSSYMhilites) && EQRef(type, RSSYMoffset))
+	{
+		RefVar first(FirstHilite());
+		if (ISNIL(first))
+			return NILREF;
+		TParagraphHilite* hilite = (TParagraphHilite*) RefToAddress(first);
+		RefVar result(MakeArray(1));
+		RefVar entry(MakeArray(3));
+		SetArraySlot(result, 0, entry);
+		SetArraySlot(entry, 0, fContext);
+		SetArraySlot(entry, 1, RefVar(MAKEINT(hilite->fStart)));
+		SetArraySlot(entry, 2, RefVar(MAKEINT(hilite->fEnd)));
+		return result;
+	}
+	return TView::GetValue(slot, type);
 }
 
 
