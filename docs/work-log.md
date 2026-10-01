@@ -9,6 +9,21 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: Kallisys ATA Support installs
+
+The owner's ATA Support 1.0 (Kallisys) installs on the host (bade406f):
+its installer's native code runs on armcpu - the machine check, the
+dialogs, and DecompressPackage (3.7 million ARM instructions) - and
+stores the driver package "ATA Support:Kallisys" on the internal store,
+where it survives a restart (ctests `host.NewtonATASupport`/`.restart`).
+armcpu gained the glue it needed: `TUGestalt` answered in the ROM's
+layout, `NSSend` with 0, 2 and 4 arguments, `MemError`, `TUObject`'s
+destructor.  `NEWTON_SAVE_PACKAGE=<file>` writes a package stored from a
+binary to a file.  The driver carries four ARM protocol parts
+(PATACardServer, TATAStore, TATASimple, TATACardHandler) that are reported,
+not run; running them - host proxies for protocol interfaces, the ARM's
+kernel calls, then the store mounted - is next, in layers.
+
 ## 2026-10-01: fonts, the screen task, external events; two sweep findings that are the ROM's
 
 - The sweep's two errors are the ROM's own: the World Clock's city form
