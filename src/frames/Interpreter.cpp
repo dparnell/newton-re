@@ -852,11 +852,19 @@ TInterpreter::CallPlainCFunction(RefArg fn, long numArgs)
 // have a tag of nought, so the words add - and the result wraps in the
 // ARM's thirty-two bits, which is what makes a NewtonScript integer a
 // thirty-bit one.  A Ref here is pointer-sized, so the sum is cut back to
-// the word the machine would have had.
+// the word the machine would have had.  The callers add in unsigned
+// arithmetic, so the sum wraps rather than overflows whatever the width.
+//
+// NEWTON_NS64 (docs/frames/64bit.md): an integer is as wide as a Ref, so
+// the sum is kept whole - it wraps only at the Ref's own width, 2^62.
 static inline Ref
 WordRef(Ref value)
 {
+#if NEWTON_NS64
+	return value;
+#else
 	return (Ref) (int) (ULong32) value;
+#endif
 }
 
 
@@ -1380,7 +1388,7 @@ TInterpreter::SlowRun(long baseDepth)
 					Ref rb = POP();
 					Ref ra = TOP();
 					if (((ra | rb) & 3) == 0)
-						TOP() = WordRef(ra + rb);
+						TOP() = WordRef((Ref) ((ULong) ra + (ULong) rb));
 					else
 					{
 						arg1 = ra;
@@ -1398,7 +1406,7 @@ TInterpreter::SlowRun(long baseDepth)
 					Ref rb = POP();
 					Ref ra = TOP();
 					if (((ra | rb) & 3) == 0)
-						TOP() = WordRef(ra - rb);
+						TOP() = WordRef((Ref) ((ULong) ra - (ULong) rb));
 					else
 					{
 						arg1 = ra;
@@ -2098,7 +2106,11 @@ FastFreqFuncGeneral(FastRunState* state, long)
 		b = top[-1];
 		if (((a | b) & 3) != 0)
 			break;
+#if NEWTON_NS64
+		top[-2] = (Ref) ((ULong) a * (ULong) RVALUE(b));		// wraps at the Ref's width
+#else
 		top[-2] = WordRef((Ref) ((ULong32) a * (ULong32) RVALUE(b)));
+#endif
 		state->fStack->fTop = top - 1;
 		return false;
 	case kFFDiv:
@@ -2108,7 +2120,12 @@ FastFreqFuncGeneral(FastRunState* state, long)
 			break;
 		if (RVALUE(b) == 0)
 			Throw(exDivideByZero, nil, nil);
+#if NEWTON_NS64
+		// the one quotient that does not fit, -2^61 div -1, wraps as the sum would
+		top[-2] = (RVALUE(b) == -1) ? (Ref) (0 - (ULong) a) : (Ref) ((ULong) (RVALUE(a) / RVALUE(b)) << 2);
+#else
 		top[-2] = WordRef((Ref) ((ULong32) ((Long32) RVALUE(a) / (Long32) RVALUE(b)) << 2));
+#endif
 		state->fStack->fTop = top - 1;
 		return false;
 	case kFFLessThan:
@@ -2498,7 +2515,7 @@ TInterpreter::FastRun1(long baseDepth, FastRunState& state)
 				Ref incr = sp[-1];
 				if (((value | incr) & 3) == 0)
 				{
-					Ref sum = WordRef(incr + value);
+					Ref sum = WordRef((Ref) ((ULong) incr + (ULong) value));
 					*local = sum;
 					*sp++ = sum;
 				}
@@ -2524,7 +2541,7 @@ TInterpreter::FastRun1(long baseDepth, FastRunState& state)
 					Ref rb = sp[-1];
 					Ref ra = sp[-2];
 					if (((ra | rb) & 3) == 0)
-						sp[-2] = WordRef(ra + rb);
+						sp[-2] = WordRef((Ref) ((ULong) ra + (ULong) rb));
 					else
 					{
 						state.fArg1 = ra;
@@ -2540,7 +2557,7 @@ TInterpreter::FastRun1(long baseDepth, FastRunState& state)
 					Ref rb = sp[-1];
 					Ref ra = sp[-2];
 					if (((ra | rb) & 3) == 0)
-						sp[-2] = WordRef(ra - rb);
+						sp[-2] = WordRef((Ref) ((ULong) ra - (ULong) rb));
 					else
 					{
 						state.fArg1 = ra;
