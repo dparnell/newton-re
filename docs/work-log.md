@@ -9,6 +9,15 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: the "other" uncited ROM finished
+
+418 functions (22.6 KB) down to 2 (28 bytes), both inside functions that
+are cited but simplified (GetCStringFormat in TRichString::Verify,
+SaveResource in TArray::Save); the last batch (7cee4e9d) included
+StripPunctSymbols, dict_init, PtrToPtr, AL_Shell, ApplyKey, ContainsChar,
+NoConversion and InitSound, with InitExternal and the exception-cleanup
+procs counted as host stand-ins.  18703 citations, 76.47% of functions.
+
 ## 2026-10-01: The host restarts as the machine does
 
 `Reboot`, `Restart` and the ROM's other callers of the reset vector used
