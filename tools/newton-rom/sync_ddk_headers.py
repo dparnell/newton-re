@@ -209,6 +209,7 @@ PATCHES = {
         # integer runs to +-2^61; whatever crosses into a 32-bit format is
         # narrowed by frames/NarrowRef.h.  RINT answers a Long (a Ref's width)
         # in both flavours - in the faithful one every integer fits anyway.
+        ("long\tCoerceToInt(RefArg r);", "Long\tCoerceToInt(RefArg r);\t/* Long: an integer's width (sync_ddk_headers.py) */"),
         ("inline long\tRINT(Ref r)\t\t{ return ISINT(r) ? RVALUE(r) : _RINTError(r); }",
          "inline Long\tRINT(Ref r)\t\t{ return ISINT(r) ? RVALUE(r) : _RINTError(r); }\t/* Long: a Ref's width (sync_ddk_headers.py) */"),
         # the shift is unsigned (a negative shifted left is undefined) and in
