@@ -224,6 +224,36 @@ closing at the wrong moment would have killed newton.  `HostSocketsInit`
 now ignores `SIGPIPE` and the send passes `MSG_NOSIGNAL` where there is one
 (`hal/host/HostSockets.cpp`).
 
+## Memory over time
+
+A soak (`tools/host/soak.py`) watches the host process's resident memory
+while newton is used for an hour.  On Linux it grew some 57 MB an hour
+after the task stacks were given back (above); on Windows private bytes
+grew about 9 MB an hour, flattening.  What it was, found with
+`tools/host/smapswatch.py` (the resident memory of every mapping,
+grouped, over time), `NEWTON_MALLOC_STATS=<seconds>` (glibc's `mallinfo2`
+on stderr: in use, free inside the heap, mapped whole) and gdb breaking on
+`mmap` of more than a few megabytes:
+
+- **The null sound backend kept every sample played** (`CapturePlay`,
+  `hal/host/HostSoundDriver.cpp`: the headless capture tests read back).
+  A session clicks and opens slips all the while, so the buffer grew
+  without end - about 18 MB an hour, one `realloc`'d block.  It now keeps
+  the first minute of samples and only counts the rest
+  (`HostSoundPlayedCount`, which `HostSoundSamples()` answers).  This is
+  the Windows growth too.
+- **glibc's arenas.**  glibc gives each thread that allocates an arena of
+  its own, up to eight a core, and newton's twenty-odd task threads -
+  which never run at once - each took one, the free memory scattered over
+  them: 59 MB of arenas for 20 MB in use.  newton now asks for one
+  (`mallopt(M_ARENA_MAX, 1)`, unless `MALLOC_ARENA_MAX` is set): 26 MB of
+  heap, levelling off within ten minutes.
+- What is left grows only towards a bound: the C heap (in use about 20 MB,
+  steady after ten minutes), each live task's stack as deep as the task
+  has ever gone, and the capture's minute.  A 30-minute soak under WSL ends
+  at about 116 MB resident with no step after the first quarter of an hour
+  but the capture filling up.
+
 ## Building under WSL
 
 The Linux results are from WSL 2 on the development machine, built on

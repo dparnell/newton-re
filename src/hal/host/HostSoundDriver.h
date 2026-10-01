@@ -112,8 +112,11 @@ struct HostSoundBackend
 // backend (nil: the null one).
 void	HostInstallSoundDriver(const HostSoundBackend* backend);
 
-// The null backend's capture: every sample played since the last clear.
+// The null backend's capture: the samples played since the last clear -
+// the first minute of them (kCaptureLimit); HostSoundPlayedCount
+// is how many there were in all.
 const short*	HostSoundCaptured(long* count);
+long			HostSoundPlayedCount(void);
 void			HostSoundClearCapture(void);
 // The capture cleared, and whatever is still playing (the boot sound)
 // kept out of it until the output next stops - only counted

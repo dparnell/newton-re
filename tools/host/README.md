@@ -446,3 +446,21 @@ program's exit status; non-zero after stopping the program when there is no
 such window or the drop is refused, and 77 (ctest's skip) with no X display.
 ctest `host.NewtonWindowDrop` (`src/host/demo/windowdrop.ns`): a package
 dropped onto the window is installed.
+
+## smapswatch.py - where a Linux host's memory is, over time
+
+    python3 tools/host/smapswatch.py (<pid> | --match TEXT) [--interval S] [--seconds S] [--csv FILE] [--detail GROUP]
+
+Reads `/proc/<pid>/smaps` every interval and sums each mapping's resident
+memory by what it is: `[heap]` (glibc's main arena), `anon:<size>` (an
+anonymous mapping by its size - a task stack is `anon:7MB`, a glibc
+thread's stack `anon:8MB`, a glibc arena 64 MB, a big malloc block its own
+size), or the file mapped.  `--match` finds the oldest newton whose command
+line contains TEXT (`--match A.store` for soak.py's first newton).
+**Output:** a line per sample (the total and the groups that moved), and at
+the end each group's first and last size and its growth per hour over the
+second half; `--csv` every sample, `--detail` the mappings of one group.
+With `NEWTON_MALLOC_STATS=<seconds>` in newton's environment the C heap's
+own figures go to its stderr alongside (`[malloc] ... inuse ... free ...`):
+in use growing is a leak, free growing is fragmentation.  How the Linux
+growth was taken apart: `docs/host-lp64.md`, "Memory over time".

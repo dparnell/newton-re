@@ -200,6 +200,11 @@ __declspec(dllimport) int __stdcall GetThreadTimes(void* thread, unsigned long l
 #else
 #include <ucontext.h>
 #endif
+#ifdef __GLIBC__
+#include <malloc.h>
+#include <thread>
+#include <chrono>
+#endif
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
@@ -428,9 +433,7 @@ FHostSoundBootPlaying(RefArg /*rcvr*/)
 static Ref
 FHostSoundSamples(RefArg /*rcvr*/)
 {
-	long played = 0;
-	(void) HostSoundCaptured(&played);
-	return MAKEINT(played);
+	return MAKEINT(HostSoundPlayedCount());
 }
 
 
@@ -728,6 +731,47 @@ HostInstallSampler(void)
 #endif
 
 
+#ifdef __GLIBC__
+// NEWTON_MALLOC_STATS=<seconds>: glibc's own figures for the C heap every
+// that many seconds on stderr - in use (uordblks), free inside the heap
+// (fordblks: fragmentation), mapped whole (hblkhd) and the heap's size
+// (arena) - so that a growing process can be told apart into a leak (in
+// use grows), fragmentation (free grows) or big blocks (tools/host/
+// smapswatch.py, docs/host-lp64.md).  A host thread of its own, which
+// makes no Newton call.
+static void
+HostSetUpMalloc(void)
+{
+	// One malloc arena, not one per thread: the host runs one Newton task at
+	// a time, so its twenty-odd task threads never contend for the C heap,
+	// but glibc gives each thread that allocates an arena of its own (up to
+	// eight a core), and the free memory scattered over them grew the
+	// process's resident set for the first quarter of an hour of a soak
+	// (docs/host-lp64.md, "Memory over time").  MALLOC_ARENA_MAX in the
+	// environment still has the last word.
+	if (getenv("MALLOC_ARENA_MAX") == nil)
+		mallopt(M_ARENA_MAX, 1);
+	const char* every = getenv("NEWTON_MALLOC_STATS");
+	if (every == nil || atoi(every) <= 0)
+		return;
+	long seconds = atoi(every);
+	std::thread([seconds]() {
+		for (long t = 0; ; t += seconds)
+		{
+			struct mallinfo2 m = mallinfo2();
+			fprintf(stderr, "[malloc] %lds arena %zu inuse %zu free %zu mmapped %zu (%zu blocks) top %zu\n",
+					t, m.arena, m.uordblks, m.fordblks, m.hblkhd, m.hblks, m.keepcost);
+			std::this_thread::sleep_for(std::chrono::seconds(seconds));
+		}
+	}).detach();
+}
+#else
+static void
+HostSetUpMalloc(void)
+{ }
+#endif
+
+
 static void
 HostCatchCrashes(void)
 {
@@ -926,6 +970,9 @@ main(int argc, char** argv)
 	// idle, and says what script it was running when it stopped
 	gHostStallReportHook = ReportTheScript;
 	HostWatchdogStart(10);
+#ifndef _WIN32
+	HostSetUpMalloc();
+#endif
 	HostUseRealClock(true);
 	HostRestartReceive();		// (a restarted newton: the reboot reason, the window's place)
 	HostConfigureNewtWorld(romImage, heapSize, width, height, depth);
@@ -982,8 +1029,8 @@ main(int argc, char** argv)
 	const short* samples = HostSoundCaptured(&played);
 	if (HostSoundSetAsideCount() > 0)
 		fprintf(stderr, "[host] sound: the boot sound, %ld samples, not counted\n", HostSoundSetAsideCount());
-	if (played > 0)
-		fprintf(stderr, "[host] sound: %ld samples played\n", played);
+	if (HostSoundPlayedCount() > 0)
+		fprintf(stderr, "[host] sound: %ld samples played\n", HostSoundPlayedCount());
 	if (played > 0 && gToneFrequency > 0)
 	{
 		// how much of what was played is the test tone (Goertzel over the

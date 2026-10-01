@@ -23,6 +23,14 @@ static const HostSoundBackend*	gHostSoundBackend = nil;
 static short*	gCaptured = nil;
 static long		gCapturedCount = 0;
 static long		gCapturedRoom = 0;
+static long		gPlayedCount = 0;		// every sample played, kept or not
+
+// The null backend keeps the first this many samples played (a test's
+// sound is seconds long) and only counts the rest: a long session plays
+// sounds all the while - the soak's clicks and slips - and every sample
+// kept grew newton by some 18 MB an hour (docs/host-lp64.md, "Memory over
+// time").  A minute at the host's rate.
+const long		kCaptureLimit = 60 * 21600;
 
 
 /*------------------------------------------------------------------------------
@@ -40,11 +48,18 @@ CapturePlay(const short* samples, long count)
 		gSetAsideCount += count;
 		return;
 	}
+	gPlayedCount += count;
+	if (gCapturedCount + count > kCaptureLimit)
+		count = kCaptureLimit - gCapturedCount;
+	if (count <= 0)
+		return;
 	if (gCapturedCount + count > gCapturedRoom)
 	{
 		long room = gCapturedRoom * 2;
 		if (room < gCapturedCount + count)
 			room = gCapturedCount + count + 0x4000;
+		if (room > kCaptureLimit)
+			room = kCaptureLimit;
 		short* p = (short*) realloc(gCaptured, room * sizeof(short));
 		if (p == NULL)
 			return;
@@ -87,10 +102,18 @@ HostSoundCaptured(long* count)
 }
 
 
+long
+HostSoundPlayedCount(void)
+{
+	return gPlayedCount;
+}
+
+
 void
 HostSoundClearCapture(void)
 {
 	gCapturedCount = 0;
+	gPlayedCount = 0;
 }
 
 
