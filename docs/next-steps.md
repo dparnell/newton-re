@@ -42,6 +42,19 @@ the way are all in `docs/work-log.md`.
 
 ## Open
 
+### Candidates surveyed (2026-10-01, `coverage.py --left`, a traced sweep)
+
+The built-in apps' NewtonScript paths run clean; what is left is C++.
+Being done: the Notepad's paragraph/page leftovers (~2.6 KB), then the
+recognition and store leftovers (~1.3 KB).  Next for comms: receiving
+beams automatically (In/Out Box's zapAutoReceive calls the unbound
+`StartIRSniffing`; TSniffIRTool and its service, ~6 KB).  For the owner
+to decide: real printer drivers (PostScript 14 KB + PAP, HP PCL, StyleWriter,
+LaserWriter LS - PostScript to a file would give vector output), the ROM
+domain manager (~18.5 KB, replacing the large objects' DEVIATION, nothing
+a user sees), AppleTalk (~70 KB: network printers, zones; needs a medium
+such as LocalTalk over UDP).
+
 ### Left by decision or out of reach
 
 - **The NIE's link modules** (Ethernet, LocalTalk, Modem & Serial PPP/SLIP)
