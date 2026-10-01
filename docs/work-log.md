@@ -9,6 +9,24 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: NS BASIC and NewtCard
+
+The owner's two new fixtures used for what they are for (ctests
+`host.NewtonAppNSBasic`, `host.NewtonAppNewtCard`,
+`host.NewtonModalFromButton`): NS BASIC 3.61 runs typed and example
+programs, its Visual Designer puts a button on screen and MAKEPACKAGE
+makes a package that runs; NewtCard's stacks are unpacked by PackMan,
+navigated, a field edited and a card added.  Host faults fixed: packages
+in MacBinary (installed by the data fork, as the Mac installer does);
+package parts packed to eight bytes (read by the ROM's own alignment
+rule - every NewtCard stack had failed with -10401); stale absolute
+addresses PackIt leaves in a stack's part frame (made declawed refs,
+DEVIATION); `Floor`/`Ceiling` answering a real out of integer range, NaN
+included, as the ROM does (a cast to long had crashed).  The apps' own
+bugs kept: MakePkg divides by zero for a one-line program, NS BASIC 3.61's
+serial check is (n-1000001) mod 23, NewtDraw needs Newton Works.  The
+README now says the system boots without a ROM image.
+
 ## 2026-10-01: the "other" uncited ROM finished
 
 418 functions (22.6 KB) down to 2 (28 bytes), both inside functions that

@@ -11,40 +11,64 @@ a second opinion rather than as the subject.
 
 ## Where it has got to
 
-The reconstruction in `src/` boots.  Running
+**The reconstructed Newton OS boots and runs without a ROM image.**  By
+default `newton` boots from data built from the committed, editable
+`romsrc/` tree - the ROM's NewtonScript world as decompiled source, its
+bitmaps, sounds, fonts, dictionaries and tables as ordinary files - and the
+reconstructed C++ in `src/`.  The ROM images in `DebugRom/` are only needed
+to check the reconstruction against the original (`--rom`) and to run the
+analysis tools.
 
-```powershell
-build\host\host\newton --rom "DebugRom\MP2x00 US\Senior CirrusNoDebug image" --display 320x480
-```
-
-starts the kernel, the frames heap and the NewtonScript interpreter,
-imports the ROM's own objects, mounts a store, installs the packages in
-the ROM extension, runs the ROM's boot blocks and init scripts, builds
-the ROM's own `viewRoot`, and lets the machine open its own interface:
-the button bar along the bottom and, on a machine that has never been
-set up, the Setup assistant's "Welcome" page - all of it drawn by the
-ROM's own code through the reconstructed view system and QuickDraw.
-Nothing the ROM's NewtonScript boot runs is unbound.  What that boot
-does step by step, and what is still NOT YET, is in
-[docs/newt/README.md](docs/newt/README.md).
-
-Build and test it with:
+Build it and run it:
 
 ```powershell
 cmake -G Ninja -S src -B build/host -DCMAKE_TOOLCHAIN_FILE=%CD%/src/cmake/zig-toolchain.cmake
 cmake --build build/host
-ctest --test-dir build/host
+build\host\host\newton --store my.store
 ```
+
+On Linux use the system compiler instead
+(`cmake -G Ninja -S src -B build/host -DCMAKE_CXX_COMPILER=clang++`; `newton`
+wants the X11 and ALSA development headers).  The build makes
+`build/host/romsrc-objects.bin` from `romsrc/` with Python and the
+reconstruction's own NewtonScript compiler; no ROM image is read.
+
+`newton` opens a window on the Newton's screen - the mouse is the pen, the
+keyboard the keyboard - and the machine starts as a new MessagePad does: the
+Setup assistant, then the Notepad.  Useful options:
+
+| Option | What it does |
+|---|---|
+| `--store FILE` | keep the internal store (flash) in a file, so notes, settings and installed packages survive; a new one is a 64 MB sparse image |
+| `--display WxH` | a screen of any size, e.g. `1024x768`; a wider window starts in landscape |
+| `--package FILE.pkg` | install a package (or drop one onto the window) |
+| `--card FILE` | a PC Card (memory or ATA) from a host image |
+| `--ipp-printer URI` | print to a network printer by IPP (printers can also be found and added from the Newton itself) |
+| `--rom IMAGE` | boot the original ROM image instead, for comparison |
+
+Handwriting is read by both of the ROM's recognisers, ink is kept, the
+built-in applications work, packages install (third-party native ARM code
+runs on a built-in ARM interpreter), and the Newton beams, docks with a
+desktop over TCP port 3679, faxes, prints (PostScript and HP PCL, by IPP)
+and reaches the Internet through the host's own network.  What each part
+does and what is still NOT YET is in [docs/](docs/) -
+[docs/newt/README.md](docs/newt/README.md) for the boot, and
+[docs/next-steps.md](docs/next-steps.md) for what is left.
+
+Run the tests with `ctest --test-dir build/host` (about 400 of them; a
+build without the ROM image simply skips the few that compare against it).
 
 ## Contents
 
 | Path | What it is |
 |---|---|
-| `DebugRom/` | Debug ROM images (`... image`, AIF format with symbol table) and ROM extensions (`... high`) for the MP2100 D (2001) and MP2x00 US (1997) |
+| `DebugRom/` | Debug ROM images (`... image`, AIF format with symbol table) and ROM extensions (`... high`) for the MP2100 D (2001) and MP2x00 US (1997) - not needed to boot; used to check the reconstruction against the original and by the analysis tools |
 | `headers/` | C/C++ headers from the Newton Driver Developer Kit (DDK): kernel (OS600), Frames object model, CommAPI, PCMCIA, QD, UtilityClasses, … — the primary source of struct/class layouts for reconstruction (classic Mac CR line endings) |
 | `documentation/` | Newton Programmer's Guide / Reference, NewtonScript language and bytecode specs |
 | `tools/newton-rom/` | **Our tooling**: ROM extraction, demangling, Ghidra import — see its [README](tools/newton-rom/README.md) |
 | `src/` | The reconstruction itself, organised by functional area and buildable on a host — see [src/README.md](src/README.md) |
+| `romsrc/` | The ROM's NewtonScript world and resources as editable source, built into what `newton` boots — see [romsrc/README.md](romsrc/README.md) |
+| `fixtures/packages/` | Third-party Newton packages the tests install and use |
 | `docs/` | Reverse-engineering notes per subsystem, starting with the kernel ([docs/os600](docs/os600/README.md)); generated tables are marked as such |
 | `docs/curiosities.md` | The findings worth telling somebody about: clever tricks, shipped bugs, and the compiler idioms that are easy to misread |
 | `docs/next-steps.md` | Where the last piece of work left off and what is obviously next, with the groundwork already read out of the ROM |
