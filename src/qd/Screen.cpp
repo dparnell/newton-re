@@ -11,6 +11,10 @@
 #include "Rects.h"
 #include "Regions.h"
 #include "NewtonMemory.h"
+#include "UserSemaphore.h"
+#include "UserTasks.h"
+#include "NewtonTime.h"
+#include "KernelGlobals.h"			// gOSIsRunning
 #include <string.h>
 
 TScreenDriver*	gTheScreen = nil;			// ROM 0x0c101c28
@@ -18,11 +22,31 @@ Rect			gScreenDirtyRect;			// ROM 0x0c101c34
 long			screenWidth = 0;			// ROM 0x0c101d4c
 long			screenHeight = 0;			// ROM 0x0c101d50
 
-// host: how many StartDrawings are in progress (the ROM: the screen
-// semaphore group's lock count) - the display is updated when the last
-// StopDrawing comes
+// The screen's semaphores (InitScreenTask): a group of three - 0 the LCD
+// (taken while it is being updated, or held by an alert), 1 the trigger
+// (QuickDraw drew on a clean screen: the update task is wanted), 2 the
+// drawing brackets in progress - and the lists of operations on them, the
+// RAM's locking semaphore (QuickDraw drawing into the screen's bits), and
+// the task that shows what was drawn.
+TUTask*				gScreenDriverTask = nil;			// ROM 0x0c101a60 gScreenDriverTask
+TUSemaphoreGroup*	gScreenSemaphores = nil;			// ROM 0x0c101a64 gScreenSemaphores
+TUSemaphoreOpList*	gScreenAcquireLCDList = nil;		// ROM 0x0c101a68 gScreenAcquireLCDList - LCD free, take it
+TUSemaphoreOpList*	gScreenReleaseLCDList = nil;		// ROM 0x0c101a6c gScreenReleaseLCDList
+TUSemaphoreOpList*	gScreenLockList = nil;				// ROM 0x0c101a70 gScreenLockList - a bracket more
+TUSemaphoreOpList*	gScreenUnlockList = nil;			// ROM 0x0c101a74 gScreenUnlockList - a bracket fewer
+TUSemaphoreOpList*	gScreenTriggerLCDList = nil;		// ROM 0x0c101a78 gScreenTriggerLCDList
+TUSemaphoreOpList*	gScreenStartLCDUpdateList = nil;	// ROM 0x0c101a7c gScreenStartLCDUpdateList - triggered, LCD free, no brackets: take the LCD
+TUSemaphoreOpList*	gScreenFinishLCDUpdateList = nil;	// ROM 0x0c101a80 gScreenFinishLCDUpdateList
+TUSemaphoreOpList*	gScreenTestUnlockList = nil;		// ROM 0x0c101a84 gScreenTestUnlockList - the last bracket?
+TULockingSemaphore*	gScreenRamSemaphore = nil;			// ROM 0x0c101a88 gScreenRamSemaphore
+
+// DEVIATION: QuickDraw is also run with no operating system (the unit
+// tests, newtonscript), where there are no semaphores to take: there the
+// brackets are counted, the display updated when the last one closes and
+// an alert's block kept as a count - what the semaphores and the update
+// task come to with one task drawing.
 static long		gScreenDrawingDepth = 0;
-static long		gLCDBlocked = 0;			// (host: BlockLCDActivity's)
+static long		gLCDBlocked = 0;
 
 
 // ROM 0x003885a0 Delete__13TScreenDriverFv (the protocol glue)
@@ -101,15 +125,16 @@ SetScreenInfo(void)
 
 // ROM 0x001ccf34 BlockLCDActivity__FUc
 // The screen's LCD kept from being updated by anybody else while an alert
-// is up (block), or let go.  DEVIATION: the ROM acquires or releases the
-// screen semaphores (gScreenSemaphores, with gScreenAcquireLCDList or
-// gScreenReleaseLCDList), so that a task that would update the LCD waits;
-// the host's screen has no semaphores (NOT YET), so what is drawn meanwhile
-// is kept dirty rather than shown, and shown when the LCD is let go.  The
-// alert itself blits through the driver.
+// is up (block) - taken, so that a task that would update it waits - or
+// let go.  The alert itself blits through the driver.
 void
 BlockLCDActivity(Boolean block)
 {
+	if (gScreenSemaphores != nil)
+	{
+		gScreenSemaphores->SemOp(block ? gScreenAcquireLCDList : gScreenReleaseLCDList, kWaitOnBlock);
+		return;
+	}
 	if (block)
 		gLCDBlocked++;
 	else if (gLCDBlocked > 0)
@@ -145,15 +170,78 @@ LCDPowerOff(UChar /*toSleep*/)
 }
 
 
+// ROM 0x001cd11c ScreenUpdateTask__FPvUlT2
+// The screen's update task: each time it is triggered and nobody is
+// drawing or holding the LCD, what is dirty is shown (with the screen's
+// RAM taken), at most every 33 ms.  Once a minute the LCD contrast's
+// temperature is sampled - NOT YET: the machine's ADC (TADC) is hardware
+// the host has none of.
+static void
+ScreenUpdateTask(void* /*object*/, ULong /*size*/, TObjectId /*taskId*/)
+{
+	TTime nextSample;
+	nextSample.time.hi = 0;
+	nextSample.time.lo = 0;
+	for (;;)
+	{
+		gScreenSemaphores->SemOp(gScreenStartLCDUpdateList, kWaitOnBlock);
+		gScreenRamSemaphore->Acquire(kWaitOnBlock);
+		TTime next = TimeFromNow(0x1db26);
+		UpdateHardwareScreen();
+		gScreenRamSemaphore->Release();
+		gScreenSemaphores->SemOp(gScreenFinishLCDUpdateList, kWaitOnBlock);
+		TTime now = GetGlobalTime();
+		if (CompCompare(&now.time, &nextSample.time) > 0)
+			nextSample = TimeFromNow(0xd2f0000);
+		SleepTill(&next);
+	}
+}
+
+
+// ROM 0x001ccbd8 InitScreenTask__Fv
+// The screen's semaphores, their operation lists and the update task
+// made (once), the screen powered and the task started.
+static void
+InitScreenTask(void)
+{
+	if (gScreenSemaphores != nil)
+		return;
+	gScreenSemaphores = new TUSemaphoreGroup;
+	gScreenSemaphores->Init(3);
+	gScreenRamSemaphore = new TULockingSemaphore;
+	gScreenRamSemaphore->Init();
+	gScreenLockList = new TUSemaphoreOpList;
+	gScreenLockList->Init(1, (ULong) MAKESEMLISTITEM(2, 1));
+	gScreenUnlockList = new TUSemaphoreOpList;
+	gScreenUnlockList->Init(1, (ULong) MAKESEMLISTITEM(2, -1));
+	gScreenTestUnlockList = new TUSemaphoreOpList;
+	gScreenTestUnlockList->Init(3, (ULong) MAKESEMLISTITEM(2, -1), (ULong) MAKESEMLISTITEM(2, 0), (ULong) MAKESEMLISTITEM(2, 1));
+	gScreenTriggerLCDList = new TUSemaphoreOpList;
+	gScreenTriggerLCDList->Init(1, (ULong) MAKESEMLISTITEM(1, 1));
+	gScreenAcquireLCDList = new TUSemaphoreOpList;
+	gScreenAcquireLCDList->Init(2, (ULong) MAKESEMLISTITEM(0, 0), (ULong) MAKESEMLISTITEM(0, 1));
+	gScreenReleaseLCDList = new TUSemaphoreOpList;
+	gScreenReleaseLCDList->Init(1, (ULong) MAKESEMLISTITEM(0, -1));
+	gScreenStartLCDUpdateList = new TUSemaphoreOpList;
+	gScreenStartLCDUpdateList->Init(4, (ULong) MAKESEMLISTITEM(0, 0), (ULong) MAKESEMLISTITEM(0, 1), (ULong) MAKESEMLISTITEM(1, -1), (ULong) MAKESEMLISTITEM(2, 0));
+	gScreenFinishLCDUpdateList = new TUSemaphoreOpList;
+	gScreenFinishLCDUpdateList->Init(1, (ULong) MAKESEMLISTITEM(0, -1));
+	gScreenDriverTask = new TUTask;
+	gScreenDriverTask->Init(ScreenUpdateTask, 0x1000, 0, nil, 11, 'scrn');
+	gTheScreen->PowerOn();
+	gScreenDriverTask->Start();
+}
+
+
 // ROM 0x001cc894 InitScreen__Fv
 // The screen driver (the ROM: NewByName("TScreenDriver",
 // "TMainDisplayDriver") - the host is given one) set up and powered,
 // the screen pixel map made over bits enough for either orientation
-// (zeroed: white), the dirty rectangle emptied.  NOT YET RECONSTRUCTED:
-// the screen semaphores and the update task (InitScreenTask: the host
-// updates the display from StopDrawing), the power on through the
-// object manager.  Host: the default port and the screen size globals
-// are set over the new screen (the ROM's boot re-opens its ports after).
+// (zeroed: white), the dirty rectangle emptied, the screen semaphores and
+// the update task made (InitScreenTask - with the operating system
+// running: see gScreenDrawingDepth).  Host: the default port and the
+// screen size globals are set over the new screen (the ROM's boot
+// re-opens its ports after).
 void
 InitScreen(TScreenDriver* driver)
 {
@@ -179,7 +267,10 @@ InitScreen(TScreenDriver* driver)
 	}
 	SetEmptyRect(&gScreenDirtyRect);
 	gScreenDrawingDepth = 0;
-	gTheScreen->PowerOn();
+	if (gOSIsRunning && gCurrentTask != nil)
+		InitScreenTask();
+	else
+		gTheScreen->PowerOn();
 	screenWidth = screen->bounds.right - screen->bounds.left;
 	screenHeight = screen->bounds.bottom - screen->bounds.top;
 	GrafPort* port = GetCurrentPort();
@@ -217,8 +308,8 @@ void
 UpdateHardwareScreen(void)
 {
 	Rect r;
-	if (gLCDBlocked > 0)
-		return;					// (host: kept dirty until the LCD is let go)
+	if (gScreenSemaphores == nil && gLCDBlocked > 0)
+		return;					// (no semaphores: kept dirty until the LCD is let go)
 	if (SectRect(&gScreenDirtyRect, &qdGlobals.fScreenBits.bounds, &r))
 		BlitToScreens(&qdGlobals.fScreenBits, &r, &r, 0);
 	SetEmptyRect(&gScreenDirtyRect);
@@ -227,23 +318,25 @@ UpdateHardwareScreen(void)
 
 // ROM 0x001cce0c QDStartDrawing__FP8PixelMapP4Rect
 // QuickDraw about to draw on the map (the current port's when nil): when
-// it is the screen, the screen's RAM is taken (the ROM's locking
-// semaphore; the host counts).  ==> whether it is the screen.
+// it is the screen, the screen's RAM is taken.  ==> whether it is the
+// screen.
 Boolean
 QDStartDrawing(PixelMap* map, Rect* /*r*/)
 {
 	if (!IsScreen(map))
 		return false;
-	gScreenDrawingDepth++;
+	if (gScreenSemaphores != nil)
+		gScreenRamSemaphore->Acquire(kWaitOnBlock);
+	else
+		gScreenDrawingDepth++;
 	return true;
 }
 
 
 // ROM 0x001cce54 QDStopDrawing__FP8PixelMapP4Rect
 // QuickDraw done with the map: the rectangle drawn (in the map's
-// coordinates) added to the dirty rectangle, the display told when the
-// dirty rectangle was empty (the update task's trigger; the host updates
-// when the last drawing stops), the RAM let go.
+// coordinates) added to the dirty rectangle, the update task triggered
+// when the dirty rectangle was empty, the RAM let go.
 void
 QDStopDrawing(PixelMap* map, Rect* r)
 {
@@ -251,11 +344,21 @@ QDStopDrawing(PixelMap* map, Rect* r)
 		return;
 	if (map == nil)
 		map = &GetCurrentPort()->portBits;
+	Rect dirty;
 	if (r != nil)
 	{
-		Rect dirty = *r;
+		dirty = *r;
 		OffsetRect(&dirty, -map->bounds.left, -map->bounds.top);
+	}
+	Boolean wasClean = EmptyRect(&gScreenDirtyRect);
+	if (r != nil)
 		UnionRect(&dirty, &gScreenDirtyRect, &gScreenDirtyRect);
+	if (gScreenSemaphores != nil)
+	{
+		if (wasClean)
+			gScreenSemaphores->SemOp(gScreenTriggerLCDList, kWaitOnBlock);
+		gScreenRamSemaphore->Release();
+		return;
 	}
 	if (--gScreenDrawingDepth <= 0)
 	{
@@ -273,14 +376,18 @@ QDStopDrawing(PixelMap* map, Rect* r)
 // MainConstructor takes and never gives back - and of any bracket a Throw
 // unwound past.
 //
-// Host: the drawing depth stands in for the lock count, so it goes to
-// zero; and because the host updates the display when the last bracket
-// closes rather than from the ROM's screen update task, what is dirty is
-// shown now.  Without this the depth never comes back to zero after the
-// world is built and the screen is drawn on but never blitted.
+// What was drawn meanwhile is shown by the update task once the locks are
+// gone.  (With no semaphores the drawing depth goes to zero and what is
+// dirty is shown now.)
 void
 ReleaseScreenLock(void)
 {
+	if (gScreenSemaphores != nil)
+	{
+		while (gScreenSemaphores->SemOp(gScreenUnlockList, kNoWaitOnBlock) == noErr)
+			;
+		return;
+	}
 	if (gScreenDrawingDepth <= 0)
 		return;
 	gScreenDrawingDepth = 0;
@@ -296,7 +403,10 @@ StartDrawing(PixelMap* map, Rect* /*r*/)
 {
 	if (!IsScreen(map))
 		return;
-	gScreenDrawingDepth++;
+	if (gScreenSemaphores != nil)
+		gScreenSemaphores->SemOp(gScreenLockList, kNoWaitOnBlock);
+	else
+		gScreenDrawingDepth++;
 }
 
 
@@ -316,6 +426,21 @@ StopDrawing(PixelMap* map, Rect* r)
 		Rect dirty = *r;
 		OffsetRect(&dirty, -map->bounds.left, -map->bounds.top);
 		UnionRect(&dirty, &gScreenDirtyRect, &gScreenDirtyRect);
+	}
+	if (gScreenSemaphores != nil)
+	{
+		// the last bracket: the screen shown now, with the LCD and the RAM
+		// taken, before the bracket goes
+		if (gScreenSemaphores->SemOp(gScreenTestUnlockList, kNoWaitOnBlock) == noErr)
+		{
+			gScreenSemaphores->SemOp(gScreenAcquireLCDList, kWaitOnBlock);
+			gScreenRamSemaphore->Acquire(kWaitOnBlock);
+			UpdateHardwareScreen();
+			gScreenRamSemaphore->Release();
+			gScreenSemaphores->SemOp(gScreenReleaseLCDList, kWaitOnBlock);
+		}
+		gScreenSemaphores->SemOp(gScreenUnlockList, kNoWaitOnBlock);
+		return;
 	}
 	if (--gScreenDrawingDepth <= 0)
 	{

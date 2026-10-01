@@ -26,8 +26,8 @@
 	row at a time with the same results (DEVIATION, for speed: the code,
 	not the pixels - SetQDSlowBlitter below).  Lines, ovals and the rest
 	are Shapes.h and Polygons.h, pictures PicPlay.h, text Text.h,
-	StretchBits Stretch.cpp.  NOT YET RECONSTRUCTED: the screen locking
-	around a blit (QDStartDrawing).
+	StretchBits Stretch.cpp.  A blit onto the screen is bracketed by
+	QDStartDrawing/QDStopDrawing (Screen.h).
 
 	Reconstructed from the MP2x00 US ROM (0x0034005c-0x003400b8,
 	0x0034078c, 0x003409c8-0x00340d28, 0x00341414-0x00341504, 0x003415c4,

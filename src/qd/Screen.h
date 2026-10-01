@@ -9,11 +9,14 @@
 				tells the alert code (SetScreenInfo, NOT YET).  Drawing on
 				the screen is bracketed by StartDrawing/StopDrawing (the
 				views, the animations): StopDrawing adds the rectangle drawn
-				to gScreenDirtyRect and, when no drawing is in progress any
-				more, UpdateHardwareScreen blits the dirty rectangle to the
-				display through the driver (the ROM's screen update task
-				does this every 33 ms while the LCD semaphore says so;
-				QDStartDrawing/QDStopDrawing are QuickDraw's own bracket).
+				to gScreenDirtyRect and, closing the last bracket,
+				UpdateHardwareScreen blits the dirty rectangle to the display
+				through the driver.  QDStartDrawing/QDStopDrawing are
+				QuickDraw's own bracket (the screen's RAM taken): drawing on
+				a clean screen triggers the screen update task ('scrn',
+				InitScreenTask), which shows it once no bracket is open and
+				no alert holds the LCD, at most every 33 ms - over the
+				screen's semaphore group (InitScreenTask says which is which).
 				GetGrafInfo answers the screen's pixel map, resolution,
 				depth and the driver's features; SetOrientation turns the
 				screen (NOT YET: the tablet, the gestalt - the port is
