@@ -21,6 +21,19 @@ romsrc's `#hex` immediates and `@@` record lines; a 22-test corpus and
 a Zed extension (`zed-newtonscript/`): highlighting, brackets,
 indentation and an outline, installed with "zed: install dev extension".
 
+## 2026-10-01: protocol parts on the ARM interpreter, layer 2: an ATA card recognised
+
+armcpu now runs the kernel side of a package's protocol parts
+(f188bda6, `ARMKernelGlue.cpp`): an event handler whose methods are ARM
+code, async messages, port sends sync and async, semaphores, times and
+timers; `ARMLists.cpp` the list classes over ARM memory (the ROM's own
+cannot run on a ROM-free boot); relocated code binaries kept at a fixed
+address, since their objects outlive a call.  ATA Support's own
+TATASimple replaces the ROM's, and its TATACardHandler recognises an ATA
+card, reads its partition info and installs its services (ctest
+`host.NewtonATASupport.card`).  Next: the socket interrupt, the ATA card
+server's messages, and the store.
+
 ## 2026-10-01: printers on the network, found and kept
 
 Both ways the owner asked for (78f87647): the ROM's own "Choose Network
