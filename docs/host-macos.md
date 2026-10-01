@@ -59,13 +59,16 @@ The system compiler, as on Linux:
 - `char` is signed on Apple's arm64 (as on x86-64), so the reconstruction's
   assumptions hold there; a Linux arm64 build would be the first with an
   unsigned `char` (`-fsigned-char` is the escape hatch if anything shows).
-- Threads: a secondary thread's default stack is 512 KB on macOS, against
-  1 MB on Windows and 8 MB on Linux, and each Newton task runs on one
-  (`TaskRuntime.cpp`'s `std::thread`).  The tasks have run in 1 MB on
-  Windows from the start, but 512 KB is less; the first deep NewtonScript
-  recursion will say.  The fix, if needed, is one seam: make the task
-  threads with `pthread_attr_setstacksize` (a `HostStartTaskThread` in
-  `TaskRuntime.cpp`) instead of `std::thread`.
+- Threads: a secondary thread's default stack is 512 KB on macOS, but the
+  task threads are made by `TaskRuntime.cpp`'s `StartTaskThread` with a
+  stack of their own, 8 MB on every POSIX host, so that does not apply.
+  What does: a deleted task's thread cannot end where it stands
+  (`EndThisThread`: Linux uses the raw exit system call, which on macOS
+  would end the process), so on macOS it stays parked with its stack - the
+  one or two threads a minute the Linux and Windows hosts no longer keep.
+  The macOS answer is `__bsdthread_terminate` or a `pthread_exit` made
+  safe by first switching to a small stack of its own; worth doing once
+  there is a Mac to test it on.
 - The Python tools are the standard library only and run as they are; the
   ROM tooling's Ghidra step is the user's own Ghidra.
 

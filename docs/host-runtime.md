@@ -318,6 +318,19 @@ for its task's address.  Left parked, as they first were, the threads of
 the tasks a session makes and deletes grew by one or two a minute
 (`tools/host/soak.py`).
 
+On Linux the raw exit leaves the stack behind: glibc gives a thread's
+stack back only when the thread ends through `pthread_exit`, so with
+glibc's own stacks every deleted task kept eight megabytes mapped - an
+eight-minute soak under WSL grew newton's data to 2.5 GB (18 GB an hour),
+though its thread count stayed flat.  So a task's thread there is a pthread
+over a stack of the runtime's own (`StartTaskThread`: `mmap`, a guard page,
+`pthread_attr_setstack`), the dead thread puts itself on a graveyard before
+it exits, and the next thread made joins each one the kernel has finished
+with (`pthread_tryjoin_np`) and unmaps its stack - the same soak then held
+at about 340 MB.  macOS has no raw thread exit (`SYS_exit` there ends the
+process), so there a deleted task's thread stays parked
+(`docs/host-macos.md`).
+
 Because the run ends that way, the baton's `std::mutex` and
 `std::condition_variable` are made once and never destroyed
 (`TaskRuntime.cpp`).  Destroying a condition variable somebody is still

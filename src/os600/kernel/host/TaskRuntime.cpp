@@ -49,12 +49,14 @@ extern "C" __declspec(dllimport) void __stdcall ExitThread(unsigned long exitCod
 #else
 #include <unistd.h>
 #include <sys/syscall.h>
+#include <sys/mman.h>
+#include <pthread.h>
+#include <vector>
 #endif
 
 
 struct HostTaskContext
 {
-	std::thread			fThread;
 	Boolean				fHasThread = false;
 	Boolean				fRunning = false;		// holds the baton (or has just been handed it)
 	Boolean				fDead = false;			// its task was deleted: the thread ends
@@ -89,6 +91,108 @@ static Boolean							gStopRequested = false;
 Boolean									gHostTasksStopping = false;
 
 
+static void Trampoline(TTask* task, HostTaskContext* ctx);
+
+/*------------------------------------------------------------------------------
+	A task's thread: made, and its stack given back when it has ended.
+
+	On Windows a std::thread, detached, and a deleted task's thread ends with
+	ExitThread, which frees its stack.  On Linux the thread is a pthread
+	over a stack of our own (mmap'd, a guard page at its foot), because a
+	deleted task's thread ends with the raw exit system call - its frames
+	not unwound, see EndThisThread - and glibc gives a stack back only when
+	its thread ends through pthread_exit: a stack of glibc's own would stay
+	mapped for good, eight megabytes a task.  So the dead thread puts itself
+	on the graveyard before it exits, and the next thread made (or the next
+	task deleted) joins each one the kernel has finished with
+	(pthread_tryjoin_np, which waits for nothing) and unmaps its stack.
+	(Elsewhere - macOS - the same pthread and stack, but no raw exit: see
+	EndThisThread.)
+------------------------------------------------------------------------------*/
+
+#ifdef _WIN32
+
+static void
+StartTaskThread(TTask* task, HostTaskContext* ctx)
+{
+	std::thread(Trampoline, task, ctx).detach();
+}
+
+static void
+ReapEndedThreads(void)
+{ }
+
+#else
+
+const size_t	kTaskStackSize = 8 * 1024 * 1024;		// (Linux's default; macOS's is 512 KB)
+
+struct TaskThread
+{
+	pthread_t	fThread;
+	void*		fStack;
+	TTask*		fTask;
+	HostTaskContext* fContext;
+};
+
+static std::mutex&				gGraveyardLock = *new std::mutex;
+static std::vector<TaskThread>&	gGraveyard = *new std::vector<TaskThread>;	// ended, not yet joined
+static thread_local TaskThread	gMyThread;		// the calling task thread's own
+
+static void*
+TaskThreadEntry(void* arg)
+{
+	TaskThread* t = (TaskThread*) arg;
+	gMyThread = *t;
+	delete t;
+	Trampoline(gMyThread.fTask, gMyThread.fContext);
+	return nullptr;
+}
+
+static void
+ReapEndedThreads(void)
+{
+#ifdef __linux__
+	std::lock_guard<std::mutex> lock(gGraveyardLock);
+	for (size_t i = 0; i < gGraveyard.size(); )
+	{
+		if (pthread_tryjoin_np(gGraveyard[i].fThread, nullptr) == 0)
+		{
+			munmap(gGraveyard[i].fStack, kTaskStackSize);
+			gGraveyard[i] = gGraveyard.back();
+			gGraveyard.pop_back();
+		}
+		else
+			i++;
+	}
+#endif
+}
+
+static void
+StartTaskThread(TTask* task, HostTaskContext* ctx)
+{
+	ReapEndedThreads();
+	void* stack = mmap(nullptr, kTaskStackSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	if (stack == MAP_FAILED)
+	{
+		fprintf(stderr, "[host] no memory for a task's stack\n");
+		abort();
+	}
+	mprotect(stack, (size_t) getpagesize(), PROT_NONE);		// (the guard page)
+	TaskThread* t = new TaskThread{ pthread_t(), stack, task, ctx };
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	pthread_attr_setstack(&attr, stack, kTaskStackSize);
+	if (pthread_create(&t->fThread, &attr, TaskThreadEntry, t) != 0)
+	{
+		fprintf(stderr, "[host] a task's thread could not be made\n");
+		abort();
+	}
+	pthread_attr_destroy(&attr);
+}
+
+#endif
+
+
 static HostTaskContext*
 ContextFor(TTask* task)
 {
@@ -119,9 +223,23 @@ EndThisThread(void)
 {
 #ifdef _WIN32
 	ExitThread(0);
-#else
+#elif defined(__linux__)
+	{
+		// (on the graveyard first: the next thread made joins it once the
+		// kernel has finished with it, and gives its stack back)
+		std::lock_guard<std::mutex> lock(gGraveyardLock);
+		gGraveyard.push_back(gMyThread);
+	}
 	for (;;)
 		syscall(SYS_exit, 0);
+#else
+	// (macOS has no raw thread exit - SYS_exit there ends the process - so
+	// the thread is left parked, its stack with it: docs/host-macos.md)
+	std::mutex parked;
+	std::unique_lock<std::mutex> lock(parked);
+	std::condition_variable never;
+	for (;;)
+		never.wait(lock);
 #endif
 }
 
@@ -214,8 +332,7 @@ SwitchTo(TTask* self, TTask* next)
 	if (!ctx->fHasThread)
 	{
 		ctx->fHasThread = true;
-		ctx->fThread = std::thread(Trampoline, next, ctx);
-		ctx->fThread.detach();
+		StartTaskThread(next, ctx);
 	}
 	(gMyContext != nil ? gMyContext : ContextFor(self))->fRunning = false;
 	ctx->fTurn.notify_one();
@@ -360,8 +477,7 @@ HostRunTasks(TTask* idle)
 	HostTaskContext* ctx = ContextFor(idle);
 	ctx->fRunning = true;
 	ctx->fHasThread = true;
-	ctx->fThread = std::thread(Trampoline, idle, ctx);
-	ctx->fThread.detach();
+	StartTaskThread(idle, ctx);
 	gBatonChanged.wait(lock, [] { return gStopRequested; });
 }
 
