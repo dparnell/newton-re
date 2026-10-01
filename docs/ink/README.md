@@ -567,14 +567,20 @@ is: the x-height the word is brought to is asked of the *page* rather
 than of the paragraph the caret has just moved into, because the ROM
 never updates the view it is holding.)
 
-The placing is `TEditView::AddNewParagraph`'s.  An ink word has already
-been brought down to a size a line of text can hold, so the paragraph is
-as wide as the word measures at its own scale (`InkWordInfo`'s
-`fScaledWidth`) and one line of the paragraph's font tall, around a
-point: `pt.v` is the top of the box the writing was in plus the font's
-ascent, and `pt.h` is the middle of that box.  The word is then laid out
-from `pt.h` *rightwards*, so the ROM starts an ink word at the middle of
-where it was written rather than at its left edge.
+The placing is `TEditView::AddNewParagraph`'s, and an ink word is placed
+as a read word is: measured by `TextBounds` - its style is the ink word,
+so the ink font engine answers its width - in a box one line of the
+font tall from the left of the room it was given (the box it was written
+in), standing on `pt.v`, the top of that box plus the font's ascent;
+then lined up with the page's other children (`AlignBounds`) and, when
+that left the line alone, with its ruled lines (`AlignToLineSpacing`).
+Only with remote writing on and the caret on the page itself does it go
+elsewhere: to the caret rectangle's bottom left, as wide as
+`InkWordInfo`'s `fScaledWidth` and not lined up with anything.  (The
+host used to start an ink word at the middle of the box it was written
+in, a reading of that remote branch's arithmetic; `analysis/framewalk.py`,
+which follows the function's stack slots, showed the ordinary branch
+measures ink as it measures text.)
 
 The font of that paragraph is the ink word itself.
 `CreateTextStyleRecord` recognises one and puts the word where the

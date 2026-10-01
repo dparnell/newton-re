@@ -1,0 +1,62 @@
+// Remote writing: with the caret on the page, a word written anywhere
+// goes where the caret is (TEditView::AddNewParagraph's remote branch,
+// 0x000a1b98 and 0x000a1fa0: the caret rectangle's bottom left, the word
+// as wide as it measures, one line of the font tall).
+//
+//   build/host/host/newton --display 320x480 --headless 90 --script src/host/demo/remotewrite.ns
+//
+// After the Setup walk the "remote writing" preference is turned on, a
+// tap low on the empty Notepad puts the caret there, and "ton" is
+// written high up the page.  The paragraph that holds it starts at the
+// caret's left with its line on the caret's line, far from where the
+// writing was.  build/remotewrite.pgm is the page.
+//
+// Prints "remotewrite: <step>: ok" or "FAILED", and "remotewrite: done".
+
+HostInclude("common.ns");			// tapAt, waitFor, walkSetup
+HostInclude("penhelpers.ns");		// penWriteWord, penFindPara
+
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+remoteFailures := 0;
+
+remoteCheck := func(what, ok)
+  begin
+    if not ok then remoteFailures := remoteFailures + 1;
+    Print("remotewrite: " & what & (if ok then ": ok" else ": FAILED"));
+  end;
+
+remoteFinish := func()
+  begin
+    ScreenSnapshot("build/remotewrite.pgm");
+    Print("remotewrite: done, " & remoteFailures & " failed");
+    HostQuit();
+  end;
+
+call walkSetup with (name, func() begin
+    SetUserConfig('remoteWriting, true);
+    call remoteCheck with ("remote writing on", GetUserConfig('remoteWriting));
+    // the caret put low on the page, at its left
+    local caretX := 40, caretY := 330;
+    call tapAt with (caretX, caretY);
+    call waitFor with ("remotewrite: the caret", func() begin
+        local c := GetCaretBox();
+        // (the caret goes on the page's ruled line nearest the tap)
+        c and Abs(c.left - caretX) < 12 and c.bottom > caretY - 10 and c.top < caretY + 30
+      end, func() begin
+        local c := GetCaretBox();
+        call remoteCheck with ("the caret is where the tap was", c <> nil);
+        // "ton" written high up the page, well to the right
+        call penWriteWord with ("ton", 170, 140);
+        local up := Ticks();
+        IdleStrokes();
+        call waitFor with ("remotewrite: ton", func() Ticks() - up > 40 and call penFindPara with (GetRoot(), "ton"), func() begin
+            local para := call penFindPara with (GetRoot(), "ton");
+            local b := para:GlobalBox();
+            call remoteCheck with ("\"ton\" read", para <> nil);
+            call remoteCheck with ("it went to the caret, not where it was written",
+                Abs(b.left - c.left) < 6 and b.top < c.bottom and b.bottom > c.top
+                and b.top > 200);
+            call remoteFinish with ();
+          end, 20);
+      end, 10);
+  end);

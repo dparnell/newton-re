@@ -54,6 +54,10 @@ tools/newton-rom/
     romdisasm.py          a range of rom.bin disassembled with capstone, calls and literals named from
                           symbols.txt - no Ghidra (for when the project is locked or not built);
                           build/venv/Scripts/python tools/newton-rom/analysis/romdisasm.py build/MP2x00US START END
+    framewalk.py          a function's stack slots followed along one path as frame offsets (sp counted
+                          through every sub/add/push/pop and sp-indexed load and store - capstone shows
+                          `ldr rX,[sp],#-4` as `pop`, which it is not); framewalk.py build/MP2x00US START STOP
+                          [--sp N] [--take ADDR...] [--skip ADDR...] - how AddNewParagraph's locals were told apart
     natives.py            which of the ROM's 1326 native functions src/ answers, by area;
                           --unbound [--ready], --check, --csv
     symbols.py            search the symbol table by regex (address, mangled name, signature)

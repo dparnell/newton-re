@@ -98,10 +98,7 @@ the way are all in `docs/work-log.md`.
   called by dispatch slot (a monitor's already work).  Nothing in the ROM
   or `fixtures/` calls `Dispatch`.
 - The views' NOT YET markers that a user can reach (`analysis/notyet.py
-  src --area views --all`): the remote-writing placement of a written
-  word at the caret (`TEditView::AddNewParagraph`, 0x000a1b98 and the
-  branch at 0x000a1fa0 - its stack slots want following carefully);
-  `SetCorrectorBusy`/`RestoreCorrectorBusy` around deleting a selection;
+  src --area views --all`): `SetCorrectorBusy`/`RestoreCorrectorBusy` around deleting a selection;
   the paragraph's destructor dropping its correction info and
   `vars.lastTextChanged`; `FlushWordAtCaret` (typed words to the auto-add
   dictionary); `HandleWord`'s word-at-a-time branch (`!UsesLetters`,

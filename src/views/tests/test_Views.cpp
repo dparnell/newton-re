@@ -4820,15 +4820,14 @@ TestInkWordOnThePage()
 	EXPECT(RINT(RefVar(GetArraySlot(styles, 0))) == 1);
 	EXPECT(IsInkWord(RefVar(GetArraySlot(styles, 1))));
 
-	// and it sits on the line the writing was on, as wide as the word
-	// measures once it has been brought down to a size a line of text
-	// can hold
+	// and it sits on the line the writing was on, measured as text is (by
+	// TextBounds, through its ink font) from the left of the box it was
+	// written in - the room it was given - with nothing on the page to
+	// line it up with
 	Rect where;
 	EXPECT(FromObject(RefVar(GetFrameSlot(added, RSSYMviewbounds)), where));
 	EXPECT(where.top == box.top);
-	// (the ROM starts the word at the middle of the box it was written
-	//  in, not at its left edge)
-	EXPECT(where.left == (box.left + box.right) / 2);
+	EXPECT(where.left == box.left);
 	EXPECT(where.right > where.left && where.bottom > where.top);
 	EXPECT(where.bottom - where.top < box.bottom - box.top + 20);
 

@@ -2875,22 +2875,35 @@ MakeNullTerminatedString(UniChar* text, ULong length)
 // word then tells its text view where it was written (SaveAddedUnitBounds)
 // and, read by the recogniser with gAddWordInfo set, is offered to the
 // correction info (AddWordInfo) - which is what the corrector's readings
-// and ink for a word just written come from.  NOT YET RECONSTRUCTED: with
-// remote writing on and the caret on the page, the ROM places a written
-// word at the caret rectangle's bottom left (0x000a1b98-0x000a1ca4, and
-// the branch at 0x000a1fa0 that measures it there); its stack slots have
-// not been followed with confidence, so the host lines every written word
-// up where it was written.
+// and ink for a word just written come from.  With remote writing on and
+// the caret on the page (0x000a1b98), a written word goes at the caret
+// rectangle's bottom left instead, measured but not lined up (the branch
+// at 0x000a1fa0).  An ink word is measured as text is, through TextBounds
+// and its ink font; only at the caret is its width read straight off its
+// InkWordInfo.
 TView*
 TEditView::AddNewParagraph(UniChar* text, ULong length, Rect& box, Rect& room,
 						   TUnitPublic* unit, RefArg info, long* outOffset, RefArg inkFont)
 {
 	Boolean remoteCaret = false;
+	Point caretPt;
+	caretPt.h = caretPt.v = 0;
 	if (NOTNIL(GetPreference(RSSYMremotewriting)) && gRootView->fCaretView == this)
 	{
 		remoteCaret = true;
-		// (NOT YET RECONSTRUCTED: the point at the caret, 0x000a1b98 -
-		//  see above)
+		// the caret rectangle's bottom left, taken to the screen and back
+		// again into the page's coordinates as the ROM does at length
+		caretPt.v = fCaretRect.bottom;
+		caretPt.h = fCaretRect.left;
+		Point origin = ContentsOrigin();
+		caretPt.h = (short) (caretPt.h + origin.h);
+		caretPt.v = (short) (caretPt.v + origin.v);
+		caretPt.h = (short) (caretPt.h - viewBounds.left);
+		caretPt.v = (short) (caretPt.v - viewBounds.top);
+		Point child;
+		GetChildOrigin(&child);
+		caretPt.v = (short) (caretPt.v + child.v);
+		caretPt.h = (short) (caretPt.h + child.h);
 	}
 	Boolean hasInkFont = NOTNIL(inkFont);
 	RefVar theInfo(info);
@@ -2933,15 +2946,14 @@ TEditView::AddNewParagraph(UniChar* text, ULong length, Rect& box, Rect& room,
 	pt.h = pt.v = 0;
 	if (unit != nil || hasInkFont)
 	{
-		// A word that came from the pen goes where it was written rather
-		// than where a caret is.  Both kinds are placed around a point:
-		// the middle of the base line the writing stands on, for a word
-		// the recogniser read, and the middle of the top of the box it
-		// was measured in, for a word that was not read.
+		// A word that came from the pen is placed around a point: the
+		// middle of the base line the writing stands on, for a word the
+		// recogniser read, and the middle of the top of the box it was
+		// measured in (a line's ascent down), for a word that was not.
 		if (unit != nil)
 		{
-			pt.v = (short) ((unit->fWordBase.top + unit->fWordBase.bottom) / 2);
-			pt.h = (short) ((unit->fWordBase.left + unit->fWordBase.right) / 2);
+			pt.v = (short) ((short) (unit->fWordBase.top + unit->fWordBase.bottom) >> 1);
+			pt.h = (short) ((short) (unit->fWordBase.left + unit->fWordBase.right) >> 1);
 		}
 		else
 		{
@@ -2949,25 +2961,43 @@ TEditView::AddNewParagraph(UniChar* text, ULong length, Rect& box, Rect& room,
 			pt.h = (short) ((box.left + box.right) / 2);
 		}
 
-		if (hasInkFont)
+		if (remoteCaret)
 		{
-			// An ink word, which has already been brought down to a size
-			// a line of text can hold: it is as wide as the word
-			// measures at its own scale and one line of the paragraph's
-			// font tall, from the point rightwards.
-			InkWordInfo wordInfo;
-			GetInkWordInfo(inkFont, &wordInfo);
-			area.top = (short) (pt.v - fontInfo.ascent);
-			area.left = pt.h;
-			area.right = (short) (area.left + wordInfo.fScaledWidth);
-			area.bottom = (short) (pt.v + fontInfo.descent + fontInfo.leading);
+			// Remote writing, the caret on the page: the word goes at the
+			// caret instead - as wide as it measures (an ink word at its
+			// own scale), one line of the font tall, and not lined up
+			// with anything.
+			Rect measured;
+			SetRect(&measured, 0, 0, 0, 0);
+			UniChar* measuredText = text;
+			if (text[length] != 0)
+				measuredText = MakeNullTerminatedString(text, length);
+			if (hasInkFont)
+			{
+				InkWordInfo wordInfo;
+				GetInkWordInfo(inkFont, &wordInfo);
+				measured.top = measured.left = 0;
+				measured.right = (short) wordInfo.fScaledWidth;
+				measured.bottom = (short) (wordInfo.fScaledAscent + wordInfo.fScaledDescent);
+			}
+			else
+			{
+				TRichString rich(measuredText, (ULong) (length * 2 + 2));
+				TextBounds(rich, style, &measured, 0);
+			}
+			if (measuredText != text)
+				delete[] measuredText;
+			area.left = caretPt.h;
+			area.top = (short) (caretPt.v - fontInfo.ascent);
+			area.right = (short) (area.left + measured.right);
+			area.bottom = (short) (fontInfo.descent + caretPt.v + fontInfo.leading);
 		}
 		else
 		{
-			// A word the recogniser read.  It is measured first: a box
-			// one line of the font tall, standing on the line the
-			// writing stood on and with no width at all, which
-			// TextBounds fills in.
+			// Otherwise it is measured first - a box one line of the font
+			// tall, standing on the line the writing stood on and with no
+			// width at all, which TextBounds fills in (an ink word too:
+			// its style is the ink font, which measures the word) ...
 			Rect measured;
 			measured.top = (short) (pt.v - fontInfo.ascent);
 			measured.left = room.left;
@@ -2983,14 +3013,14 @@ TEditView::AddNewParagraph(UniChar* text, ULong length, Rect& box, Rect& room,
 					delete[] measuredText;
 			}
 
-			// then lined up with whatever the page already has on it -
+			// ... then lined up with whatever the page already has on it -
 			// the other children's edges - within the room it was given,
 			// which is what makes handwriting tidy itself into columns
 			Rect want = room;
 			want.bottom = pt.v;
 			AlignBounds(want, measured, &area);
-			// and then, only if that left the line alone, with the
-			// page's ruled lines
+			// and then, only if that left the line alone, with the page's
+			// ruled lines
 			Boolean moved = (area.top != measured.top || area.bottom != measured.bottom);
 			Point origin = ContentsOrigin();
 			OffsetRect(&area, -origin.h, -origin.v);

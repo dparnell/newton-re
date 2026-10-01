@@ -513,6 +513,15 @@ set_tests_properties(host.NewtonJoinInk PROPERTIES TIMEOUT 180
                      PASS_REGULAR_EXPRESSION "joined into one ink word: ok.*joinink: done, 0 failed"
                      FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
 
+# remote writing with the caret on the page (demo/remotewrite.ns): a word
+# written high on the page goes where the caret is, low down
+# (TEditView::AddNewParagraph's remote branch)
+add_test(NAME host.NewtonRemoteWrite COMMAND newton --display 320x480 --headless 90
+         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/remotewrite.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonRemoteWrite PROPERTIES TIMEOUT 180
+                     PASS_REGULAR_EXPRESSION "went to the caret, not where it was written: ok.*remotewrite: done, 0 failed"
+                     FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+
 # the caret gestures on a line of writing, drawn with the pen
 # (demo/caretspace.ns): the join closes a space, a caret opens one, and a
 # caret with a tail opens an insert area that a word is written into, the

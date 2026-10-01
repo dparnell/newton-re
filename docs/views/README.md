@@ -1978,8 +1978,12 @@ into the caret's paragraph when the caret is in one of the page's own
 says it is a letter written into the middle of a word); onto the end of
 the text under it, on a line of its own, when the caret is on the page
 itself just below a paragraph (`TextContainingPoint` answering 2); and
-otherwise a paragraph where it was written.  So a second word written
-beside the first joins it: `src/host/demo/write.ns` leaves "ton to".
+otherwise a paragraph of its own at the caret (`AddNewParagraph`'s remote
+branch, 0x000a1fa0: the caret rectangle's bottom left, as wide as the
+word measures, one line tall, not lined up with anything - ctest
+`host.NewtonRemoteWrite`, `demo/remotewrite.ns`).  So a second word
+written beside the first joins it: `src/host/demo/write.ns` leaves "ton
+to".
 
 `HandleShape` puts a recognised shape on the page as a `TPolygonView`
 (class 82, `views/PolygonView.h`: the shape's points as a `PolygonShape`,
