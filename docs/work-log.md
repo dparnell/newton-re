@@ -21,6 +21,22 @@ romsrc's `#hex` immediates and `@@` record lines; a 22-test corpus and
 a Zed extension (`zed-newtonscript/`): highlighting, brackets,
 indentation and an outline, installed with "zed: install dev extension".
 
+## 2026-10-01: protocol parts on the ARM interpreter, layer 3: the ATA drive read
+
+ATA Support's services run on armcpu: socket interrupts (the ARM
+interrupt proc called through a host thunk), card power, delay timers,
+`printf` - TimedOut and the short delays being interrupt safe points,
+since an ARM driver busy-waits there for the card's interrupt (DEVIATION).
+The host's ATA model raises INTRQ as a CompactFlash card does and has the
+CF configuration registers in attribute memory, which ATA Support resets
+the card through.  The driver identifies the drive and reads its
+partition map.  `gluetable.py --whole --unanswered` lists what a
+package's code will stop on.  Found: the driver's store side mounts its
+stores by writing straight into the ROM's PSS manager's slot table
+through the global `gPSSManager`, at an address picked by ROM version -
+the host will present that layout and turn the writes into its own PSS
+manager's calls.
+
 ## 2026-10-01: beams received automatically
 
 With the In/Out Box's auto-receive on, the IR sniffer ('snif',
