@@ -18,8 +18,9 @@ on the host; the 30-bit integer is held in place by *one* macro
 `RINT` answering a pointer-sized value, compiles with no errors, and
 after one host-side fix (a place that used "does not fit in 30 bits" to
 tell a pointer from a number) the suite goes from 394/394 to 382/394,
-and every remaining failure is a test that deliberately pins 30-bit
-behaviour or a value crossing into a store.  The real work is not in the
+and of the remaining failures eight are tests that deliberately pin 30-bit
+behaviour or a wide time crossing into a store, and four are not yet
+diagnosed (probably the same boundary).  The real work is not in the
 interpreter but at the **boundaries** (stores, soup keys, NSOF, docking,
 beaming, the ARM interpreter), which must stay 32-bit for compatibility,
 and in a **policy** for what happens to an integer that does not fit when
