@@ -2346,3 +2346,15 @@ other part kinds come off a card whole. The reconstruction keeps the bug
 (`romsrc/` is the ROM's own code); `tools/cards/streamedpkg.py --kind form`
 makes a card package that shows it. `docs/stores/README.md`, "Card
 packages".
+
+## An o written alone is a zero until it is written over a word
+
+Rosetta, reading a single round stroke as a word, answers "0" first (score
+0, "o" at 76).  Written over the n of "ton", the Notepad does not take
+that reading: its overwrite path (`DoReplaceSym` -> `ReclassifyCharacter`)
+reads the stroke again in an area made for one character
+(`MakeCharArea`: the line's baseline, an x-height of ascent - ascent/2.75,
+a grid of the writing's box), where the same stroke is an "o" (23, "0"
+at 102) - so "ton" becomes "too".  The x-height is what tips it: a
+zero stands as tall as a capital.  Found 2026-10-01 (ctest
+`host.NewtonOverwrite`, 172b0e91).

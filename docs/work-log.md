@@ -9,6 +9,19 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: writing over a letter; the views' NOT YETs 28 to 6
+
+- A letter written over a letter of a word is read again as one letter
+  (172b0e91): `ReclassifyCharacter`/`MakeCharArea`, the controller's
+  `ClassifyInArea`, the word unit's interpretation copies (two ROM quirks
+  kept).  ctest `host.NewtonOverwrite`: an o over the n of "ton" gives
+  "too" (a curiosity: alone, the o is read as a zero).
+- Views (51a974d7): the drag-shadow frame's grip picture at the top of
+  every slip that has one; a gauge's limits solid gray on a deeper port;
+  `TPictureView`'s hilite and drag; `RemoveAllViews`, `UnregisterKeyboard`,
+  `CaretValid`, `MoveBehind` as the ROM's.  The views' NOT YET markers
+  from 28 to 6.  331 of 331.
+
 ## 2026-10-01: the keyboard connected at the first key; more of the page's editing
 
 Remote writing on by default is the ROM's (its default userConfiguration),
