@@ -91,8 +91,6 @@ the way are all in `docs/work-log.md`.
 
 ### Frames and the rest
 
-- Flaky: `host.NewtonCardAlert` timed out once in a full -j8 run (66 s
-  against 17 s alone); not yet looked into.
 - Reachable from developer settings or tools: the task stack limits, the
   GC profiler's hooks.
 - `instance:Dispatch` on a protocol that is not a monitor: a host
