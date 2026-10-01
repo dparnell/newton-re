@@ -18,8 +18,10 @@ Usage
 Inputs / outputs
     Python values: int, bool/None (true/nil), str (a string), Symbol (a
     symbol), bytes (a binary of class 'binary), Binary(klass, data), list
-    (a plain array), dict with Symbol keys (a frame; insertion order is the
-    slot order).  A character decodes as a one-character Char.
+    (a plain array), Array(klass, items) (an array with a class),
+    Immediate(ref) (an immediate written as it is), dict with Symbol keys
+    (a frame; insertion order is the slot order).  A character decodes as
+    a one-character Char.
 """
 
 import struct
@@ -36,6 +38,20 @@ class Symbol(str):
 
 class Char(str):
     pass
+
+
+class Immediate:
+    """An immediate Ref written as it is - e.g. a function's class, the
+    immediate 0x32 (kFuncClass)."""
+    def __init__(self, ref):
+        self.ref = ref
+
+
+class Array:
+    """An array with a class of its own (a function's 'literals)."""
+    def __init__(self, klass, items):
+        self.klass = klass
+        self.items = list(items)
 
 
 class Binary:
@@ -81,6 +97,15 @@ def _encode(obj, out):
         out += _xlong(len(obj.data))
         _encode(obj.klass, out)
         out += obj.data
+    elif isinstance(obj, Immediate):
+        out.append(IMMEDIATE)
+        out += _xlong(obj.ref)
+    elif isinstance(obj, Array):
+        out.append(ARRAY)
+        out += _xlong(len(obj.items))
+        _encode(obj.klass, out)
+        for item in obj.items:
+            _encode(item, out)
     elif isinstance(obj, (list, tuple)):
         out.append(PLAIN_ARRAY)
         out += _xlong(len(obj))

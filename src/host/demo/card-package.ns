@@ -1,0 +1,92 @@
+// A package a card carries in its attribute memory (pcmcia/CardPipe.h): the
+// card's CIS names it with Apple's vendor-unique tuple (0x8e), and when the
+// card goes in the card server reads it through a TCardPipe - every other
+// byte of attribute memory - and loads it as a stream
+// (TCardServer::LoadCardPackage).  The package is an 'auto part whose
+// InstallScript sets the global cardPackageInstalled and whose removeScript
+// sets cardPackageRemoved; the card taken out takes the package with it,
+// and put back loads it again.
+//
+// The card is made by tools/cards/streamedpkg.py (a frames part as NSOF,
+// which is what a frames part from a stream must be) and
+// tools/cards/linearcard.py make --attr-package (ctest host.NewtonCardPackage):
+//
+//   python tools/cards/streamedpkg.py tmp/cardpkg.pkg --name "Card Hello" --text "Card Hello"
+//   python tools/cards/linearcard.py make tmp/cardpkg.card --size 2 \
+//       --cis "01 03 52 06 ff 1e 06 02 11 01 01 03 01 18 02 89 a2 ff" \
+//       --attr-package tmp/cardpkg.pkg --package-name "Card Hello"
+//   CARD_PACKAGE_CARD=tmp/cardpkg.card build/host/host/newton --headless 120 \
+//       --script src/host/demo/card-package.ns
+//
+// The card is flash beside its package, so the ROM's card handler asks to
+// erase and format it as for any new card (card.ns); the script answers
+// Erase.
+
+HostInclude("common.ns");			// waitFor, walkSetup
+HostInclude("walkhelpers.ns");		// findView, wtCheck, the steps
+HostInclude("apphelpers.ns");		// tapCentre
+
+wtName := "card-package";
+cpCardFile := HostGetEnv("CARD_PACKAGE_CARD");
+cardPackageInstalled := nil;		// set by the package's InstallScript
+cardPackageRemoved := nil;			// and by its removeScript
+cpPackage := func() begin
+	local found := nil;
+	foreach p in GetPackages() do if StrEqual(p.title, "Card Hello") then found := p;
+	found
+end;
+
+cpLastErase := 0;
+cpAnswerErase := func() begin
+	if Ticks() - cpLastErase > 60 then begin
+		local button := call findView with (GetRoot(), func(v) IsString(v.text) and StrEqual(v.text, "Erase") and v.viewCObject);
+		if button then begin
+			call tapCentre with (button);
+			cpLastErase := Ticks();
+		end;
+	end;
+end;
+
+wtSteps := [
+	// the card put in once the machine is set up
+	func(done) begin
+		HostInsertCard(0, cpCardFile);
+		call waitFor with ("card-package: the card's package and store", func() begin
+				call cpAnswerErase with ();
+				cardPackageInstalled and Length(GetStores()) > 1
+			end, func() begin
+				local p := call cpPackage with ();
+				Print("card-package: installed \"" & cardPackageInstalled & "\", " & p.size & " bytes");
+				call wtCheck with ("the package loaded off the card", p, "(not in GetPackages)");
+				call wtCheck with ("on no store", p and not p.store, "(on a store)");
+				call wtCheck with ("its InstallScript ran", StrEqual(cardPackageInstalled, "Card Hello"), "");
+				call done with ();
+			end, 60);
+	end,
+	// the card out: the package goes with it
+	func(done) begin
+		HostRemoveCard(0);
+		call waitFor with ("card-package: the package gone", func() cardPackageRemoved and not call cpPackage with (), func() begin
+			call wtCheck with ("its removeScript ran", StrEqual(cardPackageRemoved, "Card Hello"), "");
+			call wtCheck with ("the package gone with the card", not call cpPackage with (), "(still there)");
+			call done with ();
+		end, 30);
+	end,
+	// and back in: loaded again
+	func(done) begin
+		cardPackageInstalled := nil;
+		HostInsertCard(0, cpCardFile);
+		call waitFor with ("card-package: the package back", func() begin
+				call cpAnswerErase with ();
+				cardPackageInstalled and call cpPackage with ()
+			end, func() begin
+				call wtCheck with ("loaded again with the card back", call cpPackage with (), "");
+				call done with ();
+			end, 30);
+	end,
+	func(done) begin
+		Print("card-package: done, " & wtFailures & " failed");
+		HostQuit();
+	end];
+
+call walkSetup with ([2, 0, 45, 34, 14, 37], wtNext);		// "Daniel"

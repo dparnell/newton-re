@@ -2322,3 +2322,27 @@ PowerOff PowerOffSoodan ...`.
 In the ringi system, a written proposal goes round every stakeholder for
 their seal before anything is done. The Newton decides to sleep the same
 way: the power stays on until everybody has agreed. `docs/power/README.md`.
+
+## No application installs off a card's own package
+
+A PC card can carry a package of its own: Apple's vendor-unique CIS tuple
+(0x8e, maker 200) names one in the card's common or attribute memory, and
+the card server loads it the moment the card goes in
+(`TCardServer::LoadCardPackage`; from attribute memory a byte in every two,
+through a `TCardPipe` - `pcmcia/CardPipe.h`). The ROM's NewtonScript
+`InstallFormPart` (ROM 0x5579c1) then writes which socket the card is in
+into the new application's base view:
+
+    if (a1.deviceKind = 1) then
+        l5.cardSocket := deviceNumber
+
+`deviceNumber` is a slot of the install-info frame `a1` - but the code reads
+it as a *variable* (`find-var 'deviceNumber`; `nsfunctions.py --disasm
+InstallFormPart`, offset 180), and there is no such variable. So every
+'form part on a card throws -48807 (undefined variable), `InstallPart`'s
+handler catches it, and the user is told "An error occurred activating the
+package ... It may not work with this system". Only 'auto parts and the
+other part kinds come off a card whole. The reconstruction keeps the bug
+(`romsrc/` is the ROM's own code); `tools/cards/streamedpkg.py --kind form`
+makes a card package that shows it. `docs/stores/README.md`, "Card
+packages".

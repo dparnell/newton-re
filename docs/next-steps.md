@@ -113,8 +113,7 @@ the way are all in `docs/work-log.md`.
   at vtable +0x20 (it answers fTextFlags; the host's paragraph inherits
   TView::TextFlags).
 - Packages: XIP packages (the ROM domain manager's page faulting, about
-  11 KB); a card's `'stor` event and `GetCardReinsertionInfo`; card
-  packages in attribute memory (`TCardPipe`); ATA cards.
+  11 KB); a card's `'stor` event and `GetCardReinsertionInfo`; ATA cards.
 - The NIE built into the ROM extension: the page tables `ptpt`/`glpt`
   still name the patch table's old physical page (0x7ee000); 'fimp is not
   generated.

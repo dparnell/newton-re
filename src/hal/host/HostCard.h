@@ -36,7 +36,7 @@
 #endif
 
 const ULong	kHostCardSockets		= 2;			// an MP2x00 has two slots
-const ULong	kHostCardAttrSize		= 0x2000;		// the attribute window the host keeps (4K CIS bytes)
+const ULong	kHostCardAttrSize		= 0x40000;		// the attribute window the host keeps (128K bytes of attribute memory: a CIS, and a package a card carries there - pcmcia/CardPipe.h)
 const ULong	kHostCardImageInfoSize	= 52;			// Einstein's ImageInfo footer
 
 // A blank linear flash card made as a file: sizeMB of erased common memory

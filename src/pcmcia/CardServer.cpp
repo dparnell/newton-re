@@ -11,6 +11,8 @@
 */
 
 #include "CardServer.h"
+#include "CardPipe.h"
+#include "PackageLoader.h"
 #include "CardPartHandler.h"
 #include "CardAlerts.h"
 #include "CardSocket.h"
@@ -930,31 +932,41 @@ TCardServer::LoadCardPackage(TCardPCMCIA* card, TCardSocket* socket, TCardSocket
 			TCardPackage* package = card->GetCardPackage(i);
 			if (package == nil)
 				continue;
-			if (package->fAttribute != 0)
-			{
-				// NOT YET: a package in attribute memory, which the ROM loads
-				// through a TCardPipe (every other byte, from the odd ones)
-				continue;
-			}
+			// A package in attribute memory is there a byte in every two
+			// (the odd ones); in common memory it is all there.
 			// DEVIATION: the ROM maps the card's package window
 			// (gCardPackageVAddr) through the socket's client domain and
-			// finds the package there; the host's common memory is host
-			// memory.
-			Ptr buffer = (Ptr) socket->CommonMemBaseAddr() + package->fAddress;
+			// finds a common-memory package there; the host's common
+			// memory is host memory.
+			Boolean attribute = package->fAttribute != 0;
+			Ptr buffer = attribute ? (Ptr) socket->AttributeMemBaseAddr() + package->fAddress
+								   : (Ptr) socket->CommonMemBaseAddr() + package->fAddress;
+			ULong stride = attribute ? 1 : 0;
 			static const char kSignature[] = "package";
 			ULong n = 0;
-			while (n < 7 && (UByte) buffer[n] == (UByte) kSignature[n])
+			while (n < 7 && (UByte) buffer[stride + (n << stride)] == (UByte) kSignature[n])
 				n++;
 			if (n < 7)
 				continue;
 			fField2968 = 0;
 			SourceType source;
-			source.format = 3;
 			source.deviceKind = 1;
 			source.deviceNumber = (UShort) socketNumber;
 			source.deviceId = 0;
 			ULong packageId = 0;
-			if ((err = LoadPackage(buffer, source, &packageId)) != noErr)
+			if (attribute)
+			{
+				// read through a pipe: a stream of the card's own
+				TCardPipe pipe(buffer, package->fLength, package->fAttribute);
+				source.format = 2;
+				err = LoadPackage(&pipe, source, &packageId);
+			}
+			else
+			{
+				source.format = 3;
+				err = LoadPackage(buffer, source, &packageId);
+			}
+			if (err != noErr)
 				break;
 			state->fPackages[i] = packageId;
 		}

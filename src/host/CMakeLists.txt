@@ -783,6 +783,32 @@ if(Python3_FOUND)
                              PASS_REGULAR_EXPRESSION "mounted: TRUE.*written: TRUE.*card-einstein: done"
                              FAIL_REGULAR_EXPRESSION "FALSE")
     endif()
+    # a package a card carries in its attribute memory (pcmcia/CardPipe.h):
+    # an 'auto part streamed as NSOF (tools/cards/streamedpkg.py) put after
+    # the card's CIS and named by Apple's 0x8e tuple (linearcard.py make
+    # --attr-package); the card server loads it through a TCardPipe when
+    # the card goes in, its InstallScript runs, the card out takes it away
+    # (its removeScript runs) and back in loads it again (demo/card-package.ns)
+    if(Python3_FOUND)
+        add_test(NAME host.NewtonCardPackage.pkg
+                 COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/cards/streamedpkg.py
+                         ${CMAKE_CURRENT_BINARY_DIR}/cardpackage.pkg --name "Card Hello" --text "Card Hello")
+        set_tests_properties(host.NewtonCardPackage.pkg PROPERTIES FIXTURES_SETUP host_card_package_pkg)
+        add_test(NAME host.NewtonCardPackage.make
+                 COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/cards/linearcard.py make
+                         ${CMAKE_CURRENT_BINARY_DIR}/cardpackage.card --size 2
+                         --cis "01 03 52 06 ff 1e 06 02 11 01 01 03 01 18 02 89 a2 ff"
+                         --attr-package ${CMAKE_CURRENT_BINARY_DIR}/cardpackage.pkg --package-name "Card Hello")
+        set_tests_properties(host.NewtonCardPackage.make PROPERTIES FIXTURES_REQUIRED host_card_package_pkg
+                             FIXTURES_SETUP host_card_package)
+        add_test(NAME host.NewtonCardPackage
+                 COMMAND newton --headless 120 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/card-package.ns
+                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+        set_tests_properties(host.NewtonCardPackage PROPERTIES TIMEOUT 180 FIXTURES_REQUIRED host_card_package
+                             ENVIRONMENT "CARD_PACKAGE_CARD=${CMAKE_CURRENT_BINARY_DIR}/cardpackage.card"
+                             PASS_REGULAR_EXPRESSION "its InstallScript ran: ok.*its removeScript ran: ok.*the package gone with the card: ok.*loaded again with the card back: ok.*card-package: done, 0 failed"
+                             FAIL_REGULAR_EXPRESSION "waited in vain|FAILED")
+    endif()
     # a package cut into a soup of chunk entries and restored with
     # store:RestoreSegmentedPackage (packages/PackageArchivalPipe.h), and
     # stored with SuckPackageFromBinary's progress callback, on a store of

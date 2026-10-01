@@ -8,6 +8,7 @@ add_library(pcmcia STATIC
     CardInfo.cpp
     CardPartHandler.cpp
     CardPCMCIA.cpp
+    CardPipe.cpp
     CardCISIterator.cpp
     PCMCIA20Parser.cpp
     CISTables.cpp

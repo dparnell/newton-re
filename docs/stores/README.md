@@ -991,6 +991,46 @@ level, and its two files are simple.
   `src/host/demo/card-einstein.ns`). Not checked yet: an image Einstein
   itself wrote, and one of ours in Einstein (none is to hand here).
 
+### Card packages
+
+A card can carry a package: Apple's vendor-unique CIS tuple 0x8e
+(maker 200, code 0x2000; then the package's type, whether it is in
+attribute memory, its address and length, a version, two reserved bytes,
+its name, and the strings "Arm610" and "NewtOS", which
+`PCMCIA20Parser::CisTpl_Vendor_Unique` requires) names it, and
+`TCardServer::LoadCardPackage` loads each one the card's CIS lists when
+the card goes in, after checking the first seven bytes say "package"; the
+card coming out removes them (`state->fPackages`).
+
+- In **common memory** it is loaded where it lies (source format 3,
+  `LoadPackage(Ptr, ...)`; DEVIATION: the ROM finds it through a window
+  `gCardPackageVAddr` mapped into the socket's domain).
+- In **attribute memory** - which has a card byte only at every other
+  address - it is read through a `TCardPipe` (`pcmcia/CardPipe.h`, ROM
+  0x4fefc-0x502f8: byte p at `address + 2p + 1` through
+  `CardAttrMemReadByte`; a card that faults is a pipe exception: -10061
+  permission, -10059 bus error, -10065 write protected) and loaded as a
+  stream (source format 2, kRemovableStream, device kind 1, the socket's
+  number; `LoadPackage(CPipe*, ...)`). A frames part from a stream is one
+  NSOF object (`TFramePartHandler::Expand`), so the package must be made
+  for streaming - an ordinary package, its frames part in object layout,
+  fails with -48006 (not NSOF version 2), on a MessagePad as here.
+
+A 'form part from a card never installs: the ROM's `InstallFormPart`
+reads `deviceNumber` as a variable (`docs/curiosities.md`, "No application
+installs off a card's own package"); an 'auto part does.
+`tools/cards/streamedpkg.py` makes a streamed package (an 'auto part by
+default, whose InstallScript and removeScript set the globals
+`cardPackageInstalled` and `cardPackageRemoved`), and `linearcard.py make
+--attr-package PKG --package-name NAME` puts it after the CIS with its
+tuple (`info` prints the tuple's fields). The host card keeps 128 KB of
+attribute memory (`hal/host/HostCard.h`'s `kHostCardAttrSize` is the
+0x40000-byte window), with byte p of a package at attribute address 2K at
+CIS-area byte (K + p) ^ 1, as the bus's lanes put it. ctest
+`host.NewtonCardPackage` (`src/host/demo/card-package.ns`): loaded, its
+InstallScript run, the card out and the removeScript run, the card back
+and loaded again.
+
 ### Order of work
 
 Each step comes with its host tests.
@@ -1111,8 +1151,8 @@ Each step comes with its host tests.
      socket had to answer the Voyager's raw pins (`GetVPCPins`: a 5 V
      card's voltage sense pins) and keep the card-detect and lock
      interrupts enabled through `ResetInterrupts` as the ROM's does. NOT
-     YET: the alert dialogs (no 'alrt' server), card packages in
-     attribute memory (`TCardPipe`), ATA cards.
+     YET: the alert dialogs (no 'alrt' server), ATA cards. Card packages
+     in attribute memory are DONE (2026-10-01): "Card packages" below.
    - **5e. The PSS manager and the newt side.** DONE (2026-09-30):
      `stores/flash/PSSManager.h` - the 'pssm world (`TPSSManager`:
      `CardAvailable` on the 'card system event makes a store for each
