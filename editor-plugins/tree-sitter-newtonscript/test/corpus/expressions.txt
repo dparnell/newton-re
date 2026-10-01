@@ -1,0 +1,160 @@
+============================================================
+Precedence
+============================================================
+
+a := b + c * d << 2 & "s" < e and not f
+
+------------------------------------------------------------
+
+(source_file
+  (assignment
+    (identifier)
+    (binary_expression
+      (binary_expression
+        (binary_expression
+          (binary_expression
+            (identifier)
+            (binary_expression
+              (identifier)
+              (binary_expression
+                (identifier)
+                (integer))))
+          (string
+            (string_content)))
+        (identifier))
+      (unary_expression
+        (identifier)))))
+
+============================================================
+Access and sends
+============================================================
+
+self.slot.(path)[i]:Method(1, 2); :Local(); inherited:Open(); x:?Maybe(); inherited:?Maybe()
+
+------------------------------------------------------------
+
+(source_file
+  (send_expression
+    (index_expression
+      (member_expression
+        (member_expression
+          (self)
+          (slot_name))
+        (identifier))
+      (identifier))
+    (message_name)
+    (argument_list
+      (integer)
+      (integer)))
+  (send_expression
+    (message_name)
+    (argument_list))
+  (send_expression
+    (inherited)
+    (message_name)
+    (argument_list))
+  (send_expression
+    (identifier)
+    (message_name)
+    (argument_list))
+  (send_expression
+    (inherited)
+    (message_name)
+    (argument_list)))
+
+============================================================
+Exists
+============================================================
+
+if x exists and :foo exists and y.z exists then 1
+
+------------------------------------------------------------
+
+(source_file
+  (if_expression
+    (binary_expression
+      (binary_expression
+        (exists_expression
+          (identifier))
+        (exists_expression
+          (message_reference
+            (message_name))))
+      (exists_expression
+        (member_expression
+          (identifier)
+          (slot_name))))
+    (integer)))
+
+============================================================
+Calls
+============================================================
+
+Print(Clone(x)); call f with (1, 2)
+
+------------------------------------------------------------
+
+(source_file
+  (call_expression
+    (identifier)
+    (argument_list
+      (call_expression
+        (identifier)
+        (argument_list
+          (identifier)))))
+  (call_with_expression
+    (identifier)
+    (argument_list
+      (integer)
+      (integer))))
+
+============================================================
+Functions
+============================================================
+
+f := func(x, int y) x + y; g := func native(a) a; h := func() :Draw()
+
+------------------------------------------------------------
+
+(source_file
+  (assignment
+    (identifier)
+    (function
+      (parameter_list
+        (parameter
+          (identifier))
+        (parameter
+          (type)
+          (identifier)))
+      (binary_expression
+        (identifier)
+        (identifier))))
+  (assignment
+    (identifier)
+    (function
+      (parameter_list
+        (parameter
+          (identifier)))
+      (identifier)))
+  (assignment
+    (identifier)
+    (function
+      (parameter_list)
+      (send_expression
+        (message_name)
+        (argument_list)))))
+
+============================================================
+Keywords ignore case
+============================================================
+
+IF a THEN Begin Return b END Else NIL
+
+------------------------------------------------------------
+
+(source_file
+  (if_expression
+    (identifier)
+    (block
+      (return_expression
+        (identifier)))
+    (nil)))

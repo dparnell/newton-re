@@ -1,0 +1,151 @@
+============================================================
+Integers, reals, hex
+============================================================
+
+x := [1, -2, 0xFF, 1.5, 2.5e-3, 3.]
+
+------------------------------------------------------------
+
+(source_file
+  (assignment
+    (identifier)
+    (array
+      (integer)
+      (unary_expression
+        (integer))
+      (integer)
+      (real)
+      (real)
+      (real))))
+
+============================================================
+Characters
+============================================================
+
+[$a, $ , $\n, $\\, $\41, $\u00e9]
+
+------------------------------------------------------------
+
+(source_file
+  (array
+    (character)
+    (character)
+    (character)
+    (character)
+    (character)
+    (character)))
+
+============================================================
+Strings and escapes
+============================================================
+
+"tab\there" & "A0042\u" "joined"
+
+------------------------------------------------------------
+
+(source_file
+  (binary_expression
+    (string
+      (string_content)
+      (escape_sequence)
+      (string_content))
+    (string
+      (string_content)
+      (escape_sequence)
+      (string_content))))
+
+============================================================
+Symbols and quoted literals
+============================================================
+
+['foo, '|two words|, 'a.b.c, '[1, x], '{a: b, c: [d]}, '-3]
+
+------------------------------------------------------------
+
+(source_file
+  (array
+    (quoted
+      (symbol
+        (identifier)))
+    (quoted
+      (symbol
+        (identifier)))
+    (quoted
+      (symbol
+        (identifier)
+        (identifier)
+        (identifier)))
+    (quoted
+      (array
+        (integer)
+        (symbol
+          (identifier))))
+    (quoted
+      (frame
+        (slot
+          (slot_name)
+          (symbol
+            (identifier)))
+        (slot
+          (slot_name)
+          (array
+            (symbol
+              (identifier))))))
+    (quoted
+      (integer))))
+
+============================================================
+Magic pointers and immediates
+============================================================
+
+[@123, #1a3, nil, TRUE]
+
+------------------------------------------------------------
+
+(source_file
+  (array
+    (magic_pointer)
+    (immediate)
+    (nil)
+    (true)))
+
+============================================================
+Array with a class
+============================================================
+
+[|Array|: 'meeting, 'todo]
+
+------------------------------------------------------------
+
+(source_file
+  (array
+    (class_name)
+    (quoted
+      (symbol
+        (identifier)))
+    (quoted
+      (symbol
+        (identifier)))))
+
+============================================================
+Trailing commas
+============================================================
+
+f({a: 1, b: [2, 3,],}, x)
+
+------------------------------------------------------------
+
+(source_file
+  (call_expression
+    (identifier)
+    (argument_list
+      (frame
+        (slot
+          (slot_name)
+          (integer))
+        (slot
+          (slot_name)
+          (array
+            (integer)
+            (integer))))
+      (identifier))))

@@ -1,0 +1,204 @@
+============================================================
+If with a semicolon before else
+============================================================
+
+begin if a then b; else c; d end
+
+------------------------------------------------------------
+
+(source_file
+  (block
+    (if_expression
+      (identifier)
+      (identifier)
+      (identifier))
+    (identifier)))
+
+============================================================
+If without else followed by more
+============================================================
+
+begin if a then b := 1; c end
+
+------------------------------------------------------------
+
+(source_file
+  (block
+    (if_expression
+      (identifier)
+      (assignment
+        (identifier)
+        (integer)))
+    (identifier)))
+
+============================================================
+Loops
+============================================================
+
+for i := 0 to 10 by 2 do Print(i); while x do x := nil; repeat x; y until z; loop break 1
+
+------------------------------------------------------------
+
+(source_file
+  (for_expression
+    (identifier)
+    (integer)
+    (integer)
+    (integer)
+    (call_expression
+      (identifier)
+      (argument_list
+        (identifier))))
+  (while_expression
+    (identifier)
+    (assignment
+      (identifier)
+      (nil)))
+  (repeat_expression
+    (identifier)
+    (identifier)
+    (identifier))
+  (loop_expression
+    (break_expression
+      (integer))))
+
+============================================================
+Foreach
+============================================================
+
+foreach k, v deeply in frame collect v; foreach v in arr do Print(v)
+
+------------------------------------------------------------
+
+(source_file
+  (foreach_expression
+    (identifier)
+    (identifier)
+    (identifier)
+    (identifier)
+    (identifier))
+  (foreach_expression
+    (identifier)
+    (identifier)
+    (call_expression
+      (identifier)
+      (argument_list
+        (identifier)))))
+
+============================================================
+Try
+============================================================
+
+try Throw('|evt.ex|, nil) onexception |evt.ex.fr| do 1 onexception |evt.ex| do begin 2 end
+
+------------------------------------------------------------
+
+(source_file
+  (try_expression
+    (call_expression
+      (identifier)
+      (argument_list
+        (quoted
+          (symbol
+            (identifier)))
+        (nil)))
+    (exception_handler
+      (exception_name)
+      (integer))
+    (exception_handler
+      (exception_name)
+      (block
+        (integer)))))
+
+============================================================
+Declarations
+============================================================
+
+local a, int b := 2; constant k := 3, j := 4
+
+------------------------------------------------------------
+
+(source_file
+  (local_declaration
+    (variable_declarator
+      (identifier))
+    (variable_declarator
+      (type)
+      (identifier)
+      (integer)))
+  (constant_declaration
+    (constant_declarator
+      (identifier)
+      (integer))
+    (constant_declarator
+      (identifier)
+      (integer))))
+
+============================================================
+Globals
+============================================================
+
+global g; global h := 1; global f(x) x; func ff(y) y
+
+------------------------------------------------------------
+
+(source_file
+  (global_declaration
+    (identifier))
+  (global_declaration
+    (identifier)
+    (integer))
+  (global_declaration
+    (identifier)
+    (parameter_list
+      (parameter
+        (identifier)))
+    (identifier))
+  (function_declaration
+    (identifier)
+    (parameter_list
+      (parameter
+        (identifier)))
+    (identifier)))
+
+============================================================
+Comments and directives
+============================================================
+
+// line
+/* block
+   ** */ x;
+#line 12 "file.ns"
+y
+
+------------------------------------------------------------
+
+(source_file
+  (comment)
+  (comment)
+  (identifier)
+  (line_directive)
+  (identifier))
+
+============================================================
+romsrc records
+============================================================
+
+@@ 0x3c5b25
+func() nil
+@@const kLiteral
+"text"
+@@main
+
+
+------------------------------------------------------------
+
+(source_file
+  (record_marker)
+  (function
+    (parameter_list)
+    (nil))
+  (record_marker)
+  (string
+    (string_content))
+  (record_marker))

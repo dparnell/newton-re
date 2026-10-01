@@ -1,0 +1,20 @@
+{
+  "grammars": [
+    {
+      "name": "newtonscript",
+      "camelcase": "NewtonScript",
+      "scope": "source.newtonscript",
+      "path": ".",
+      "file-types": ["ns"],
+      "highlights": "../zed-newtonscript/languages/newtonscript/highlights.scm"
+    }
+  ],
+  "metadata": {
+    "version": "0.1.0",
+    "license": "UNLICENSED",
+    "description": "NewtonScript grammar for tree-sitter",
+    "links": {
+      "repository": "ssh://git@vault:2222/daniel/newton-re.git"
+    }
+  }
+}
