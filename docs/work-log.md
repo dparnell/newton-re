@@ -9,6 +9,28 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-02: signed overflow wraps (-fwrapv)
+
+Three crashes had the same cause: ported ROM arithmetic overflowed, and the zig
+toolchain's sanitiser stopped newton:
+- Rosetta's `SegmentStrokeMinDistance` and `StrokePUD` (5a807fbb);
+- the touch tones in `TDTMFCodec::Produce` (46bbdec3).
+
+The ROM's C was compiled for an ARM whose adds simply wrap, so that whole
+class is now closed: everything is built with `-fwrapv` (691c0802,
+`src/CMakeLists.txt`; `-DNEWTON_WRAPV=OFF` to hunt overflowing sums).
+
+- **Sanitiser:** its other checks stay (shifts, division, bounds).
+- **Speed:** no cost. scriptbench, drawbench and inkbench were a little
+  faster.
+- **Tests:** 402/402 on Windows and 403/403 on Linux (clang 14).
+
+It showed one test passing by luck. `test_LargeObjects`' cut-short stream
+read its chunk length out of an uninitialised word, as the ROM's
+`FillChunkArrayCompressed` does from a pipe that only says eof (a ROM
+quirk, kept and commented). The test now uses a pipe that throws when it
+runs dry. `docs/host-lp64.md` 'Signed overflow wraps'.
+
 ## 2026-10-02: why a Windows soak round was six times slower
 
 Every soak step was slower on Windows (a card in and out 23 times,
