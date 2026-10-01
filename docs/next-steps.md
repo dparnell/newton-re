@@ -50,12 +50,12 @@ recognition and store leftovers (~1.3 KB).  Next for comms: receiving
 beams automatically (In/Out Box's zapAutoReceive calls the unbound
 `StartIRSniffing`; TSniffIRTool and its service, ~6 KB).  Printing in
 PostScript and HP PCL to a network printer by IPP is done (the owner's
-choice; not StyleWriter, LaserWriter LS or AppleTalk printing).  Waiting
-on the owner: adding printers from inside the Newton and finding them by
-DNS-SD (A: the ROM's network-printer chooser answered from DNS-SD, a
-TPSPAPDriver stand-in over IPP - PostScript only; B: a host slip of the
-printers found, each frame with its own URI, PostScript or PCL), and
-whether added printers persist.  Not chosen: the ROM
+choice; not StyleWriter, LaserWriter LS or AppleTalk printing).  Being done
+(the owner chose both): adding printers from inside the Newton and finding
+them by DNS-SD - A, the ROM's network-printer chooser answered from
+DNS-SD with a TPSPAPDriver stand-in over IPP (PostScript); B, a host
+"Network printers..." slip, each printer's frame with its own URI
+(PostScript or PCL); added printers persist across restarts.  Not chosen: the ROM
 domain manager (~18.5 KB, replacing the large objects' DEVIATION, nothing
 a user sees), AppleTalk (~70 KB: network printers, zones; needs a medium
 such as LocalTalk over UDP).
