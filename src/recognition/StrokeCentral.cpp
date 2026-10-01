@@ -33,7 +33,6 @@
 #include <string.h>
 
 StrokeCentral	gStrokeWorld;						// ROM 0x0c1018cc gStrokeWorld
-static Boolean	gIdlingStrokes = false;				// (the ROM's byte at 0x0c1019f0) IdleStrokes is running
 
 
 // A unit handed to the unit handler on its own, which is what the ROM
@@ -125,16 +124,22 @@ StrokeCentral::DoneFields(void)
 
 
 // ROM 0x00144878 IdleStrokes__Fv
-// The stroke world idled, unless it is being idled already.
+// The stroke world idled, unless it is being idled already - then only
+// the pen's time kept (StrokeTime).  The flag is the stroke world's own
+// (+0x38), which SaveRecognitionState puts aside and clears: that is what
+// lets a modal dialog opened by a tap (from inside this idle) take taps of
+// its own in its fork.
 void
 IdleStrokes(void)
 {
-	if (!gIdlingStrokes)
+	if (gStrokeWorld.fFlag38)
 	{
-		gIdlingStrokes = true;
-		gStrokeWorld.IdleStrokes();
-		gIdlingStrokes = false;
+		StrokeTime();
+		return;
 	}
+	gStrokeWorld.fFlag38 = true;
+	gStrokeWorld.IdleStrokes();
+	gStrokeWorld.fFlag38 = false;
 }
 
 

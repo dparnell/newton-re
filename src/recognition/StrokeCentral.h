@@ -102,7 +102,7 @@ public:
 	TUnitList*			fExpiredStrokes;	// +0x28
 	TTime				fNextCompressTime;	// +0x2c
 	Handle				fCompressGroup;		// +0x34  the ink grouping's state (IGGroupAndCompressStrokes)
-	Boolean				fFlag38;			// +0x38
+	Boolean				fFlag38;			// +0x38  IdleStrokes is running (the ROM's guard, ROM 0x00144878)
 	void				(*fExpireProc)(RefArg, RefArg);	// +0x3c  what a group of expired strokes is handed to as a stroke bundle (ExpireGroup; nil: the view under it, as ink): Recognize's HandleBulkStrokes
 	RefStruct*			fCompressBundle;	// +0x40  ... with this as its first argument
 };
