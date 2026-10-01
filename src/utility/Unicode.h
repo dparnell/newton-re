@@ -109,9 +109,9 @@ void	NoDiacriticsText(UniChar* text, long n);
 void	UppercaseNoDiacriticsText(UniChar* text, long n);
 UniChar	ToggleCase(UniChar c);
 
-// character classes (the ROM's UnicodeUtils; NOT YET RECONSTRUCTED: the
-// case tables UppercaseNoDiacriticsText and LowercaseText - letters and
-// cases are Latin-1's here)
+// character classes (the ROM's UnicodeUtils, over the case tables InitUnicode
+// installs - frames/UnicodeTables.h; before it, letters and cases are
+// Latin-1's)
 Boolean	IsAlphabet(UniChar c);
 Boolean	IsDigit(UniChar c);
 Boolean	IsHexDigit(UniChar c);

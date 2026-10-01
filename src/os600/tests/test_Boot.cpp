@@ -33,6 +33,8 @@
 #include "MemObjManager.h"
 #include "Environment.h"
 #include "Domain.h"
+#include "UserPersistent.h"
+#include "NewtonMemory.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -68,6 +70,9 @@ static char sysEventSeen[16];
 static int sysEventListened = 0;
 static long gestaltErr = -1, gestaltRegErr = -1, gestaltReplaceErr = -1, gestaltMineErr = -1;
 static ULong gestaltVersion = 0, gestaltMineSize = 0;
+static long systemInfoErr = -1, patchErr = -1, calibrationSetErr = -1, calibrationGetErr = -1;
+static ULong systemInfoRAM = 0, systemInfoPatch = 1, patchVersion = 1, patchSize = 1;
+static ULong calibration[5];
 static ULong gestaltMine[2] = { 0, 0 };
 static int timerFired[3] = { 0, 0, 0 };
 static int timerOrder = 0;
@@ -466,6 +471,23 @@ static void KernelServicesScenario()
 		gestaltReplaceErr = gestalt.ReplaceGestalt(kGestalt_SystemInfo, mine, sizeof(mine));	// a system selector: refused
 		gestaltMineSize = sizeof(gestaltMine);
 		gestaltMineErr = gestalt.Gestalt(0x03000001, gestaltMine, &gestaltMineSize);
+		// the RAM (InternalRAMInfo) and the patch version (GetPatchInfo) in
+		// the system info; the host has no patch installed
+		TGestaltSystemInfo system;
+		systemInfoErr = gestalt.Gestalt(kGestalt_SystemInfo, &system, sizeof(system));
+		systemInfoRAM = system.fRAMSize;
+		systemInfoPatch = system.fPatchVersion;
+		patchErr = GetPatchInfo(&patchVersion, &patchSize);
+	}
+
+	// --- the tablet's calibration given the kernel and asked back (system
+	// calls 0x33 and 0x34, through the request block)
+	{
+		calibrationSetErr = SetTabletCalibrationData(0x10000, 3, 0x20000, -4);
+		PersistentInfoRequestBlock()->fWord[0] = 0;
+		calibrationGetErr = GetTabletCalibrationDataSWI();
+		for (int i = 0; i < 5; i++)
+			calibration[i] = PersistentInfoRequestBlock()->fWord[i];
 	}
 
 	// --- the timer queue: three timers, one cancelled, over a timed receive
@@ -601,6 +623,11 @@ int main()
 	EXPECT(sysEventSend == noErr && sysEventListened == 1 && strcmp(sysEventSeen, "ping") == 0);
 	EXPECT(sysEventUnregister == noErr);
 	EXPECT(gestaltErr == noErr && gestaltVersion == 1);
+	EXPECT(systemInfoErr == noErr && systemInfoRAM == (ULong) SystemRAMSize() && systemInfoRAM != 0 && systemInfoPatch == 0);
+	EXPECT(patchErr == noErr && patchVersion == 0 && patchSize == 0);
+	EXPECT(calibrationSetErr == noErr && calibrationGetErr == noErr);
+	EXPECT(calibration[0] == kTabletCalibrationValid && calibration[1] == 0x10000 && calibration[2] == 3
+		&& calibration[3] == 0x20000 && (long) calibration[4] == -4);
 	EXPECT(gestaltRegErr == noErr && gestaltReplaceErr == kError_Bad_Parameters);
 	EXPECT(gestaltMineErr == noErr && gestaltMine[0] == 0xCAFE && gestaltMine[1] == 0xF00D && gestaltMineSize == sizeof(gestaltMine));
 	EXPECT(timerCancelled && timerFired[1] == 1 && timerFired[0] == 2 && timerFired[2] == 0);

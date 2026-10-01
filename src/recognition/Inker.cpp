@@ -27,6 +27,7 @@
 #include "Screen.h"
 #include "Unicode.h"
 #include "OSErrors.h"
+#include "UserPersistent.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -138,10 +139,10 @@ TInkerEventHandler::AEHandlerProc(TUMsgToken* /*token*/, ULong* /*size*/, TAEven
 	case kInkerGetCalibration:
 		GetTabletCalibration(&event->fCalibration);
 		SetReply(kInkerCalibrationReplySize, event);
-		// NOT YET RECONSTRUCTED: the calibration also given the kernel,
-		// marked 'G00D, to keep across a warm restart (the generic system
-		// call kGeneric_SetTabletCalibrationData, answered by the kernel's
-		// own copy at 0x0c1062fc when in supervisor mode)
+		// the calibration also given the kernel, marked 'G00D, to keep
+		// across a warm restart (SetTabletCalibrationData, inline in the ROM)
+		SetTabletCalibrationData(event->fCalibration.fXScale, event->fCalibration.fXOffset,
+								 event->fCalibration.fYScale, event->fCalibration.fYOffset);
 		return;
 
 	case kInkerSetCalibration:

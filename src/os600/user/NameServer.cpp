@@ -36,6 +36,7 @@
 #include "SortedList.h"
 #include "OSErrors.h"
 #include "NewtonMemory.h"
+#include "UserPersistent.h"
 
 #include <string.h>
 
@@ -907,14 +908,17 @@ TNameServer::Gestalt(ULong selector, TUMsgToken* token)
 	{
 		// the machine (an MP2x00, ROM 2.2 stage 0x8000), the screen's size
 		// out of its pixel map's bounds, its resolution, its depth, the
-		// tablet's resolution, and the processor.  NOT YET RECONSTRUCTED:
-		// the RAM size (InternalRAMInfo), the patch version (GetPatchInfo)
-		// and gManufDate, which answer nought.
+		// tablet's resolution, the processor, the RAM (InternalRAMInfo) and
+		// the first patch's version, its top half (GetPatchInfo, whose
+		// answer is the reply's).  The date of manufacture is gManufDate,
+		// which the ROM's boot reads off the machine's one-wire chip: the
+		// host has none, and answers nought.
 		memset(&info.systemInfo, 0, sizeof(info.systemInfo));
 		info.systemInfo.info.fManufacturer = kGestalt_Manufacturer_Apple;
 		info.systemInfo.info.fMachineType = 0x10003000;
 		info.systemInfo.info.fROMVersion = 0x20002;
 		info.systemInfo.info.fROMStage = 0x8000;
+		info.systemInfo.info.fRAMSize = InternalRAMInfo(0xFFFFFFFF, 0);
 		if (gGestaltGrafInfo != nil)
 		{
 			PixelMap screen;
@@ -935,6 +939,12 @@ TNameServer::Gestalt(ULong selector, TUMsgToken* token)
 		}
 		info.systemInfo.info.fCpuType = gMainCPUType;
 		info.systemInfo.info.fCpuSpeed = gMainCPUClockSpeed;
+		{
+			ULong patchSize;
+			info.systemInfo.info.fPatchVersion = 0;
+			result = GetPatchInfo(&info.systemInfo.info.fPatchVersion, &patchSize);
+			info.systemInfo.info.fPatchVersion >>= 16;
+		}
 		size = sizeof(info.systemInfo);
 		break;
 	}
