@@ -243,7 +243,8 @@ ImportObjectArea(const unsigned char* area, ULong base, ULong size, const unsign
 // docs/rom-free/README.md): "NewtObjs", then as big-endian words the
 // version, the area's base and size, the magic-pointer table's address and
 // count; then the area; then the magic pointers; (2) the other blocks of
-// ROM data; (3) the objects that are not where the ROM has them.  The
+// ROM data; (3) the objects that are not where the ROM has them; (4) the
+// builder's stamp (BuiltObjectsStamp), which the host checks.  The
 // constants the C++ names are the ROM's addresses, looked up in that last
 // table, so an area laid out afresh (an edit that moves objects) needs no
 // new build of the host.  No ROM image is behind it, so
@@ -254,7 +255,7 @@ ImportBuiltObjects(const void* data, ULong size)
 {
 	const unsigned char* p = (const unsigned char*) data;
 	ULong version = size >= 12 ? GetBigEndianWord(p + 8) : 0;
-	if (size < 28 || memcmp(p, "NewtObjs", 8) != 0 || version < 1 || version > 3)
+	if (size < 28 || memcmp(p, "NewtObjs", 8) != 0 || version < 1 || version > 4)
 		return kError_Bad_Parameters;
 	ULong base = GetBigEndianWord(p + 12);
 	ULong areaSize = GetBigEndianWord(p + 16);
@@ -294,6 +295,39 @@ ImportBuiltObjects(const void* data, ULong size)
 		gMovedCount = count;
 	}
 	return ImportObjectArea(p + 28, base, areaSize, p + 28 + areaSize, mpCount);
+}
+
+
+// (4) the stamp: after the moved objects, its length and its characters
+// (rounded to a word).  Walked to over the blocks before it.
+const char*
+BuiltObjectsStamp(const void* data, ULong size, ULong* length)
+{
+	const unsigned char* p = (const unsigned char*) data;
+	*length = 0;
+	if (size < 28 || memcmp(p, "NewtObjs", 8) != 0 || GetBigEndianWord(p + 8) < 4)
+		return nil;
+	ULong at = 28 + GetBigEndianWord(p + 16) + GetBigEndianWord(p + 24) * kARMWord;
+	if (at + kARMWord > size)
+		return nil;
+	ULong count = GetBigEndianWord(p + at);
+	at += kARMWord;
+	for (ULong i = 0; i < count; i++)
+	{
+		if (at + 2 * kARMWord > size)
+			return nil;
+		at += 2 * kARMWord + ((GetBigEndianWord(p + at + kARMWord) + 3) & ~3);
+	}
+	if (at + kARMWord > size)
+		return nil;
+	at += kARMWord + GetBigEndianWord(p + at) * 8;
+	if (at + kARMWord > size)
+		return nil;
+	ULong n = GetBigEndianWord(p + at);
+	if (at + kARMWord + n > size)
+		return nil;
+	*length = n;
+	return (const char*) p + at + kARMWord;
 }
 
 

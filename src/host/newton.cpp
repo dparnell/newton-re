@@ -723,6 +723,11 @@ main(int argc, char** argv)
 		return 1;
 	}
 	fclose(readable);
+	if (!HostObjectsFileMatches(romImage))
+	{
+		HostObjectsFileMismatch("newton", romImage, NEWTON_DEFAULT_OBJECTS);
+		return 1;
+	}
 	if (erase && storeFile != nil && remove(storeFile) == 0)
 		fprintf(stderr, "[host] %s erased; the machine starts new\n", storeFile);
 	HostSetStoreFile(storeFile);

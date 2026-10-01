@@ -180,6 +180,13 @@ main(int argc, char** argv)
 			return 1;
 		}
 	}
+	// (compiling the builder's records needs no objects, and is how the
+	// object file is made in the first place - it is not refused there)
+	if (romImage != nil && compileIn == nil && roundTripIn == nil && !HostObjectsFileMatches(romImage))
+	{
+		HostObjectsFileMismatch("newtonscript", romImage, NEWTON_DEFAULT_OBJECTS);
+		return 1;
+	}
 	InitHostStandaloneHeap(heapSize + 0x400000);
 	if (romImage != nil && ImportROMObjectsFromFile(romImage) != noErr)
 		fprintf(stderr, "newtonscript: no ROM image at %s; running without the ROM's objects\n", romImage);

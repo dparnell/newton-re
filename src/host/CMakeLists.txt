@@ -41,6 +41,20 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../romsrc/layout.tsv)
              VERBATIM)
     # `cmake --build <dir> --target romsrc` builds it alone
     add_custom_target(romsrc ALL DEPENDS ${NEWTON_OBJECTS_FILE})
+    # the builder's stamp, which the object file carries and newton and
+    # newtonscript check (HostObjectsFile.h's HostObjectsFileMatches): a
+    # newton left behind by a build that could not replace it (it was
+    # running) refuses the newer object file instead of hanging at boot
+    set(objects_stamp_header ${CMAKE_BINARY_DIR}/generated/ObjectsStamp.h)
+    add_custom_command(OUTPUT ${objects_stamp_header}
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/newton-rom/analysis/romsrc.py
+                     stamp --header ${objects_stamp_header}
+             DEPENDS ${romsrc_tools}
+             COMMENT "The object file builder's stamp"
+             VERBATIM)
+    target_sources(host_views PRIVATE ${objects_stamp_header})
+    target_include_directories(host_views PRIVATE ${CMAKE_BINARY_DIR}/generated)
+    target_compile_definitions(host_views PRIVATE NEWTON_HAVE_OBJECTS_STAMP)
     install(FILES ${NEWTON_OBJECTS_FILE} DESTINATION bin)
 else()
     message(WARNING "no Python 3 (or no romsrc/): the object file the OS boots from is not built - newton needs --rom <image>")
@@ -1751,6 +1765,18 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../romsrc/layout.tsv)
     # the ROM-free track's step 3: the OS booted as it boots by default - on
     # the object file built from the committed tree - with no ROM image
     # anywhere it could be found
+    # an object file newton was not built for - another builder's stamp, or
+    # none - is refused at once with a message saying to rebuild
+    # (HostObjectsFile.h's HostObjectsFileMatches; tools/host/objectsstamp.py)
+    add_test(NAME host.NewtonObjectsStamp
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/host/objectsstamp.py
+                     --objects ${NEWTON_OBJECTS_FILE}
+                     --program $<TARGET_FILE:newton> --program $<TARGET_FILE:newtonscript>
+                     --work ${CMAKE_BINARY_DIR}/objectsstamp
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonObjectsStamp PROPERTIES TIMEOUT 300
+                         PASS_REGULAR_EXPRESSION "objectsstamp: done")
+
     add_test(NAME host.NewtonNoROM
              COMMAND newton --headless 3
                      --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/newton.ns

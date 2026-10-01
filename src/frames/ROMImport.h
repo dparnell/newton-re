@@ -46,6 +46,13 @@ NewtonErr	ImportROMObjectsFromFile(const char* path);
 NewtonErr	ImportBuiltObjects(const void* data, ULong size);
 NewtonErr	ImportBuiltObjectsFromFile(const char* path);
 
+// The builder's stamp an object file carries (version 4): which builder
+// wrote it, so that a host built with another one can refuse it rather
+// than boot objects laid out in a way it does not expect
+// (host/HostObjectsFile.h's HostObjectsFileMatches).  nil, with *length 0,
+// for an older file or one that is not an object file at all.
+const char*	BuiltObjectsStamp(const void* data, ULong size, ULong* length);
+
 Boolean		ROMObjectsImported(void);
 long		ROMObjectCount(void);
 void		ROMObjectAreaBounds(char** start, char** end);	// where the imported ROM objects lie (both nil: none) - Uriah's gUriahROM

@@ -26,4 +26,16 @@ const char*	HostDefaultObjectsFile(const char* argv0, const char* compiledIn);
 // boot a ROM image instead
 void		HostObjectsFileMissing(const char* program, const char* compiledIn);
 
+// Whether the file (an object file or a ROM image) is one this program can
+// boot: an object file must carry the stamp of the builder this program
+// was built with (romsrc.py stamp, compiled in as ObjectsStamp.h), so that
+// a newton whose own build failed - its program still running when the
+// build tried to replace it - does not boot an object file laid out by
+// newer tools and hang.  A ROM image, or a program built with no builder
+// to ask (no Python), is always taken.
+bool		HostObjectsFileMatches(const char* path);
+
+// what to say when it is not, and how to put it right
+void		HostObjectsFileMismatch(const char* program, const char* path, const char* compiledIn);
+
 #endif	/* __HOSTOBJECTSFILE_H */

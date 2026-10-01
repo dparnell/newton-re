@@ -249,3 +249,32 @@ which Newt's Cape's audio and PalmDoc helpers take in
 four-channel ProTracker "M.K." module (one pattern of a rising arpeggio
 on a looped square-wave sample), `src/host/demo/www/tune.mod`, which
 Newt's Cape's MOD helper saves as a package.  Standard library only.
+
+## objectsstamp.py - an object file newton was not built for is refused
+
+The object file newton boots from (`romsrc-objects.bin`, written by
+`tools/newton-rom/analysis/romsrc.py build`) carries the *builder's stamp*:
+sixteen hex digits of a SHA-256 of `romsrc.py` and the modules it builds with
+(`builder_stamp`; version 4 of the file format).  The build compiles the
+same stamp into newton and newtonscript (`romsrc.py stamp --header
+<build>/generated/ObjectsStamp.h`), and both refuse an object file with
+another stamp, or with none:
+
+    newton: build/host/romsrc-objects.bin was built for a different newton (rebuild with cmake --build build/host)
+
+This is the case of a build that rewrote the object file with newer tools
+but could not relink a newton that was running: the old program would
+otherwise boot objects laid out in a way it does not expect, and hang.
+An edit to `romsrc/` does not change the stamp, so object files built from
+edited trees (the edit tests) boot as before; a ROM image (`--rom`) is not
+checked.
+
+    python tools/host/objectsstamp.py --objects build/host/romsrc-objects.bin \
+        --program build/host/host/newton --program build/host/host/newtonscript \
+        --work build/host/objectsstamp
+
+**Inputs:** an object file the programs were built for, the programs, and a
+directory for two copies of the file - one with another stamp, one made a
+version 3 file with no stamp. **Output:** a line per program and copy, then
+`objectsstamp: done` when each program refused each copy with the message
+and a non-zero exit (ctest `host.NewtonObjectsStamp`).
