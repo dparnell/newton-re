@@ -78,8 +78,10 @@ the host stands in for them, and "other" worked down.
 
 Printing: PostScript and HP PCL to a network printer by IPP are done, and
 printers on the network are found and added both ways and kept.  Left
-there: the Network Printers panel cannot remove a printer it added; ipps://
-(TLS) is not offered; a job the printer refuses is only logged, not failed.
+there: ipps:// (TLS through Schannel/OpenSSL, ~600-800 lines, and a
+certificate-trust policy for printers' self-signed certificates - the
+owner's call); a PCL printer's state is not asked (ThpPCL has no status
+path).
 
 ### Left by decision or out of reach
 
