@@ -199,7 +199,18 @@ PATCHES = {
          "typedef Long Ref;\t\t/* the ARM's word: pointer-sized on a host (sync_ddk_headers.py) */\n\nconst long kRefTagBits = 2;"),
         ("typedef long Ref;\n\n", ""),
         ("#define\tMAKEINT(i)\t\t\t(((long) (i)) << kRefTagBits)",
-         "#define\tMAKEINT(i)\t\t\t((Ref) (int) (((ULong32) (Ref) (i)) << kRefTagBits))"),
+         "#if NEWTON_NS64\t/* the 64-bit flavour (docs/frames/64bit.md): an integer is as wide as a Ref, 62 bits */\n"
+         "#define\tMAKEINT(i)\t\t\t((Ref) (((ULong) (Ref) (i)) << kRefTagBits))\n"
+         "#else\n"
+         "#define\tMAKEINT(i)\t\t\t((Ref) (int) (((ULong32) (Ref) (i)) << kRefTagBits))\n"
+         "#endif"),
+        # NEWTON_NS64 (the CMake option, off by default) is the 64-bit
+        # flavour: the same unsigned shift in the Ref's own width, so an
+        # integer runs to +-2^61; whatever crosses into a 32-bit format is
+        # narrowed by frames/NarrowRef.h.  RINT answers a Long (a Ref's width)
+        # in both flavours - in the faithful one every integer fits anyway.
+        ("inline long\tRINT(Ref r)\t\t{ return ISINT(r) ? RVALUE(r) : _RINTError(r); }",
+         "inline Long\tRINT(Ref r)\t\t{ return ISINT(r) ? RVALUE(r) : _RINTError(r); }\t/* Long: a Ref's width (sync_ddk_headers.py) */"),
         # the shift is unsigned (a negative shifted left is undefined) and in
         # 32 bits, sign-extended back: an integer Ref holds exactly what the
         # ARM's word would, so the machine's integers are the Newton's 30-bit

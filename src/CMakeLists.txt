@@ -21,6 +21,17 @@ if(NEWTON_WRAPV)
     add_compile_options(-fwrapv)
 endif()
 
+# The 64-bit flavour of NewtonScript (docs/frames/64bit.md): integers as wide
+# as a Ref (62 bits) instead of the ROM's 30, every persistent and wire format
+# still 32-bit with what crosses it narrowed by one policy
+# (frames/NarrowRef.h).  Off by default: the default build is the faithful
+# machine, and the suite's oracle.  Build the two in separate directories.
+option(NEWTON_NS64 "a 64-bit NewtonScript: 62-bit integers (not the ROM's behaviour)" OFF)
+if(NEWTON_NS64)
+    add_compile_definitions(NEWTON_NS64=1)
+    message(STATUS "NEWTON_NS64: NewtonScript integers are 62 bits wide")
+endif()
+
 # Which ROM this is a reconstruction of.  NEWTON_ROM is the directory in
 # DebugRom/ and NEWTON_ROM_BUILD the extracted build directory; the tests
 # and the host programs read the image and the extracted rom.bin through
