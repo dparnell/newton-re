@@ -21,6 +21,17 @@ romsrc's `#hex` immediates and `@@` record lines; a 22-test corpus and
 a Zed extension (`zed-newtonscript/`): highlighting, brackets,
 indentation and an outline, installed with "zed: install dev extension".
 
+## 2026-10-01: beams received automatically
+
+With the In/Out Box's auto-receive on, the IR sniffer ('snif',
+`comms/SniffIRTool.h`: TSniffIRTool, IRSniffService) holds the port
+passively and listens for the start of an IrDA or Sharp IR beam; on one
+it lets go and tells the newt world, whose `IRConnectRequest` starts the
+Beam transport's receive (b887acfe).  ROM bug kept: setting the 'irsn
+option copies the tool's setting into the option instead.  ctest
+`host.NewtonBeamAutoReceive`: one newton beams, the other, untouched,
+receives the note.  365 tests.
+
 ## 2026-10-01: protocol parts on the ARM interpreter, layer 2: an ATA card recognised
 
 armcpu now runs the kernel side of a package's protocol parts

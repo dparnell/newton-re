@@ -45,10 +45,7 @@ the way are all in `docs/work-log.md`.
 ### Candidates surveyed (2026-10-01, `coverage.py --left`, a traced sweep)
 
 The built-in apps' NewtonScript paths run clean; what is left is C++.
-Being done: the Notepad's paragraph/page leftovers (~2.6 KB), then the
-recognition and store leftovers (~1.3 KB).  Next for comms: receiving
-beams automatically (In/Out Box's zapAutoReceive calls the unbound
-`StartIRSniffing`; TSniffIRTool and its service, ~6 KB).  Printing in
+Printing in
 PostScript and HP PCL to a network printer by IPP is done (the owner's
 choice; not StyleWriter, LaserWriter LS or AppleTalk printing).  Printers
 on the network are found and added both ways and kept.  Left: the Network
@@ -86,8 +83,7 @@ such as LocalTalk over UDP).
 
 - AppleTalk: NBP, ADSP (with the NTK's ADSP connection and
   `TEzEndpointPipe`'s), the zones; the online services and eWorld (`EW*`);
-  the TV remote; IR sniffing (`StartIRSniffing`/`StopIRSniffing`, 42
-  functions); the Hammer translators; `RegisterNetworkROMProtocols`, P3,
+  the TV remote; the Hammer translators; `RegisterNetworkROMProtocols`, P3,
   LocalTalk, Keyboard, VRemote and `PMuxServiceStarter` in the comm
   manager's list.
 - The dock: 'rpat' and `BackupPatches` (a system patch, which the host
