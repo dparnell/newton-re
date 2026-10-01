@@ -2294,7 +2294,8 @@ IndexDescToIndexInfo(RefArg indexDesc, IndexInfo* info)
 // no index on the path already; structure 'slot or 'multiSlot - the
 // latter with arrays of at most six paths and as many types; a 'tags
 // index only once, with a tags array; a string index with the default
-// sort table's id: NOT YET) with its B-tree created on the store.
+// sort table's id when the spec names none, its table saved on the store)
+// with its B-tree created on the store.
 Ref
 NewIndexDesc(RefArg soupPersistent, RefArg storeObject, RefArg indexSpec)
 {
@@ -2390,7 +2391,8 @@ GCDeleteIndexObjects(void* /*indexObjects*/)
 
 // ROM 0x003493d4 CreateSoupIndexObjects__FRC6RefVar
 // The soup's TSoupIndex objects, one per index description, in a C
-// object binary in its indexObjects slot; the cursors told (NOT YET).
+// object binary in its indexObjects slot; the soup's cursors told
+// (kSoupCursorIndexesChanged).
 void
 CreateSoupIndexObjects(RefArg soup)
 {
@@ -3098,7 +3100,8 @@ PlainSoupRemoveIndex(RefArg rcvr, RefArg path)
 
 // ROM 0x0034b164 PlainSoupSetName
 // The soup renamed: its name index entry replaced, its union soup
-// membership moved (NOT YET), theName set.
+// membership moved (out of the old name's union soup, into the new
+// name's), theName set.
 Ref
 PlainSoupSetName(RefArg rcvr, RefArg name)
 {

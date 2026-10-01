@@ -30,12 +30,20 @@ extern const ExceptionName exStoreError;
 	store.
 ------------------------------------------------------------------------------*/
 
+// ROM 0x0c105970 gNeedsInternalSignatures - cleared once an alias is made
+// to an entry on the internal store (nothing in the ROM ever sets it)
+Boolean	gNeedsInternalSignatures = false;
+
 // ROM 0x0034e128 MakeEntryAlias__FRC6RefVar
+// [class 'alias: nil, the soup's signature, the entry's _uniqueID, the
+// soup's name].
 Ref
 MakeEntryAlias(RefArg entry)
 {
 	RefVar soup(EntrySoup(entry));
-	// the ROM notes here whether the internal store's signatures are wanted (gNeedsInternalSignatures): NOT YET
+	if (gNeedsInternalSignatures
+	 && EQRef(GetFrameSlotRef(soup, RSSYMstoreobj), GetArraySlotRef(gStores, 0)))
+		gNeedsInternalSignatures = false;
 	RefVar alias(AllocateArray(RSSYMalias, 4));
 	SetArraySlotRef(alias, 1, SoupGetSignature(soup));
 	SetArraySlotRef(alias, 2, MAKEINT(EntryUniqueID(entry)));

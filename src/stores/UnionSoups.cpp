@@ -737,8 +737,9 @@ static const ScriptFunctionEntry gUnionSoupBuiltins[] = {
 	// ROM 0x00565525 (object) GetUserConfig: a slot of the userConfiguration global
 	{ "GetUserConfig", "func(slot) userConfiguration.(slot)" },
 	// ROM 0x00569ea1 (object) XmitSoupChange: the change broadcast to the apps registered for soup changes, deferred
-	// DEVIATION: the deferred calls (AddDeferredCall) and XmitSoupChangeNow are
-	// NOT YET RECONSTRUCTED; without them the change is not broadcast.
+	// (host: this table stands in only when there are no ROM objects - a
+	// unit test - and then there is no XmitSoupChangeNow to defer, so the
+	// change is not broadcast; with the ROM's objects the ROM's own runs)
 	{ "XmitSoupChange",
 	  "func(name, app, change, arg)\n"
 	  "  if GlobalFnExists('AddDeferredCall) and GlobalFnExists('XmitSoupChangeNow) then\n"

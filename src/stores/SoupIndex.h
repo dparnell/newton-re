@@ -6,7 +6,7 @@
 				on the store, read and written through the store wrapper's
 				TNodeCache.  TAbstractSoupIndex is the interface a cursor
 				uses (TUnionSoupIndex, the index over the soups of a union
-				soup, implements it too: NOT YET RECONSTRUCTED).
+				soup, implements it too - Cursors.h).
 
 	The formats (all big-endian on the store; the in-memory node is the
 	same bytes expanded, see below):

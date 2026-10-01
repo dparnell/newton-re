@@ -13,7 +13,7 @@
 				symbol (xlong length, the name), string (xlong length in
 				bytes, the UniChars), precedent (xlong index of an object
 				already in the stream), nil, smallRect (four bytes: top,
-				left, bottom, right), largeBinary (NOT YET RECONSTRUCTED).
+				left, bottom, right), largeBinary (its class, compander, and the data).
 				An xlong is one byte for 0..254, else 0xff and four bytes.
 				The precedents give the graph its sharing and cycles: every
 				pointer object is numbered as it is met (a frame and a large

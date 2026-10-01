@@ -28,9 +28,8 @@
 	and go.  Their methods are natives here and the ROM's NewtonScript
 	methods re-expressed as source.
 
-	NOT YET RECONSTRUCTED here: the sort tables (every sort id is 0),
-	passwords, large binaries, the XMit (synchronising) methods, package
-	stores' part handler.  The cursors are Cursors.h, the tags Tags.h.
+	The cursors are Cursors.h, the tags Tags.h, the large binaries
+	LargeBinaries.h, the package stores' part handler PackageStore.h.
 
 	Reconstructed from the MP2x00 US ROM (0x00347a34-0x0034e570,
 	0x0033f698-0x0033ff44, 0x003509d0-0x0035570c); each function cites
@@ -53,7 +52,7 @@ extern Ref	gStores;
 extern Ref	gUnionSoups;
 extern Ref	gPackageStores;
 
-void	InitQueries(void);					// the globals; the package store's part handler is NOT YET
+void	InitQueries(void);					// the globals, then the package stores' soups (PackageStore.h's InitPackageSoups)
 void	InitSoupPrototypes(void);			// host: the prototype frames when no ROM objects are imported
 void	InitUnionSoupPrototype(void);		// host: unionSoupPrototype, its NewtonScript methods compiled, the built-ins they call
 void	RegisterUnionSoupNatives(void);
@@ -73,7 +72,7 @@ Boolean	IsValidStore(const TStore* store);	// registered
 extern TStore*	gInRAMStore;			// ROM 0x0c1016c4 gInRAMStore
 extern TStore*	gMuxInRAMStore;			// ROM 0x0c1016c8 gMuxInRAMStore
 TStore*	GetInternalStore(void);				// ROM 0x00154908 GetInternalStore__Fv - the machine's own store (the flash)
-void	SetInternalStore(TStore* store);		// DEVIATION: a port names it, TPSSManager being NOT YET
+void	SetInternalStore(TStore* store);		// DEVIATION: the host's own store (THostStore, used without a store file) is named this way; the flash store's comes from the PSS manager
 const TClassInfo*	GetStoreClassInfo(const TStore* store);
 TStoreWrapper*	GetStoreWrapper(RefArg storeObject);		// throws when the frame has been killed
 TStore*	StoreFromWrapper(RefArg storeObject);
@@ -87,10 +86,10 @@ long	GetRandomSignature(void);
 void	AskForFlush(Boolean ask);
 NewtonErr	GetStoreVersion(TStore* store, long* version);
 NewtonErr	SetStoreVersion(RefArg storeObject, long version);		// ROM 0x00353230 SetStoreVersion__FRC6RefVarl
-const TSortingTable*	StoreGetDirSortTable(RefArg storeObject);	// NOT YET: nil
+const TSortingTable*	StoreGetDirSortTable(RefArg storeObject);	// the dirSortId's table, nil for none
 void	InitNameIndex(TSoupIndex* index, RefArg storeObject);		// the store's soup name index
-void	StoreSaveSortTable(RefArg storeObject, long sortId);			// NOT YET
-void	StoreRemoveSortTable(RefArg storeObject, long sortId);			// NOT YET
+void	StoreSaveSortTable(RefArg storeObject, long sortId);			// the table kept on the store (its users counted)
+void	StoreRemoveSortTable(RefArg storeObject, long sortId);			// ... and let go
 void	LargeBinariesStoreRemoved(TStoreWrapper* wrapper);				// (LargeBinaries.cpp)
 void	AbortLargeBinaries(RefArg entry);								// (LargeBinaries.cpp)
 
