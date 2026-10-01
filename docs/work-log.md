@@ -9,6 +9,14 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: the fax test checks the page on the screen
+
+`host.NewtonFaxReceive` passed while its snapshot showed the Welcome
+screen: a fax arriving before Setup's Welcome was up had Welcome open on
+top of the In Box, and the test only read log lines.  The demo now
+listens once Welcome is up and counts the page's dark pixels before its
+snapshot; the Class 2 test writes its own snapshots.
+
 ## 2026-10-01: the Notepad's last paragraph and page pieces; small leftovers
 
 - A paragraph's selection is drawn as the ROM draws it (offscreen bits
