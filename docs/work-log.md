@@ -9,6 +9,21 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: protocol parts on the ARM interpreter, layer 1
+
+A package's protocol part with no host stand-in now loads and runs on
+armcpu: `ARMWorld.h`'s lasting ARM world (host memory regions, card-bus
+regions reaching the host's ATA model, host traps, glue registered from
+outside, `ARMCall` on each task's own world), `ARMProtocols.h`'s loader
+(the part copied, relocated, its class info read and a host stand-in
+registered), proxies per interface calling the ARM dispatch table, and
+mirrors standing for host objects (the name server; `ARMCardHandler.h`'s
+TCardHandler proxy with mirrors of the card socket and card).  ctest
+`armcpu.ARMProtocols`.  ATA Support's four driver parts load; its
+InstallScript now stops at TAEventHandler's constructor - the kernel glue
+(event handlers, async messages, ports, semaphores, lists, timers) is
+layer 2.
+
 ## 2026-10-01: Kallisys ATA Support installs
 
 The owner's ATA Support 1.0 (Kallisys) installs on the host (bade406f):
