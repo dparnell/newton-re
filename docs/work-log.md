@@ -9,6 +9,14 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-01: the card alert test waits on conditions
+
+`host.NewtonCardAlert` failed in every full parallel run: `card-alert.ns`
+waited fixed times (2-5 s) and checked the alert before it was drawn.  It
+now waits for the card's store to mount (answering the Erase dialogs),
+for the alert's pixels, and for the alert to come down and the store to
+be found again; 12 of 12 beside 16 hogs, 4 s instead of 17.
+
 ## 2026-10-01: the rest of Newt's Cape's companions, and its trial
 
 `host.NewtonAppNewtsCapeHelpers` now also reads a Latin-1 page through
@@ -18,10 +26,10 @@ the fixtures), opens Newt's Cape's help book, shows Pkg Info, and follows
 the trial's expiry with the clock set forward (asked to register at 31
 days, expired at 46; Register... is disabled in this release) (022c8632).
 The package's own bug kept: mdsv titles a notice with a symbol, on which
-the ROM's IsSimilarItem throws when the next notice arrives.  Found: a
-book opened from Extras sits in a 240x336 view while it draws to about
-305x385, so taps outside the view (its Action button) do nothing - rtbk's
-routing waits on it.
+the ROM's IsSimilarItem throws when the next notice arrives.  (A book's
+Action button that seemed out of reach was a tap in the wrong place: the
+book is laid out as Copperfield's BuildDisplayParams lays out a 240-wide
+page, and its Action button works.)
 
 ## 2026-10-01: the host-order classes swept; Newt's Cape's audio and PalmDoc helpers
 
