@@ -9,6 +9,27 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-02: The Linux host's last gaps
+
+- **A package dropped onto the X11 window** is installed, as on Windows:
+  the window is an XDND (version 5) drop target (`host/x11/HostWindow.cpp`
+  - XdndAware, XdndEnter/Position/Status, XdndDrop, the dropped files asked
+  of XdndSelection as text/uri-list, XdndFinished).  `xdnddrop`
+  (`src/host/x11/xdnddrop.cpp`) is a drag source for the test (ctest
+  `host.NewtonWindowDrop`, skipped with no X display).
+- **The crash-time tools.**  A host that falls over on Linux prints the
+  faulting instruction (out of the signal's context) and the C stack
+  (glibc's `backtrace()` through the signal frame) as image offsets, as on
+  Windows; so do `NEWTON_TRACE_EXCEPTIONS=2` and `NEWTON_HEAPCHECK`
+  (`host/HostCStack.h`).  `whichfunction.py` names an offset from the ELF
+  symbol table.  `stacksample.py`/`profile.py` cannot read another
+  process's registers without ptrace, which WSL allows only to a parent,
+  so newton samples itself: a thread sent SIGRTMIN+3 appends its stack to
+  the sample file (`tools/host/linuxsample.py`).
+- **ALSA** built without root (the headers by `apt-get download` +
+  `dpkg -x`) and played through WSLg's PulseAudio with the pulse plugin the
+  same way (`docs/host-lp64.md`).
+
 ## 2026-10-01: The whole tree on Linux again
 
 Built and tested under WSL 2 (Ubuntu 22.04, clang 14, X11, OpenSSL; no
