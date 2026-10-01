@@ -46,7 +46,8 @@ call walkSetup with ([2, 0, 45, 34, 14, 37], func() begin
 		end;
 		call walk with (GetRoot().calendar);
 		call y2kCheck with ("dates", title, "no day title with " & now.date);
-		ScreenSnapshot("build/year2010.pgm");
+		// the ROM-bug run keeps its own picture, so the two runs never overwrite each other
+		ScreenSnapshot(if HostGetEnv("NEWTON_ROM_2010_BUG") then "build/year2010-rombug.pgm" else "build/year2010.pgm");
 		AddDelayedCall(func() begin
 			call y2kCheck with ("alarm", y2kRings = 1, "rang " & y2kRings & " times");
 			Print("year2010: done");
