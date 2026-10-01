@@ -26,7 +26,8 @@ target_include_directories(comms PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURR
 # service, over a serial chip from the registry (hal_serial) and the
 # machine's timers (hal_timers); MNP; the modem tool (ModemTool.h: a Hayes
 # modem, 'mods'); and the IR tools (SharpIRTool.h: Sharp
-# IR, 'slir'; IrProbeTool.h: the probe, 'pkir', over IrSIR.h's SIR framing).
+# IR, 'slir'; IrProbeTool.h: the probe, 'pkir', over IrSIR.h's SIR framing;
+# SniffIRTool.h: the sniffer that notices a beam coming, 'snif').
 add_library(comms_serial STATIC
     SerialTool.cpp
     AsyncSerialTool.cpp
@@ -46,6 +47,7 @@ add_library(comms_serial STATIC
     SharpIRTool.cpp
     IrSIR.cpp
     IrProbeTool.cpp
+    SniffIRTool.cpp
     IrDATables.cpp
     irda/IrQOS.cpp
     irda/IrDscInfo.cpp

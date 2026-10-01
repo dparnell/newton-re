@@ -405,9 +405,20 @@ code symbol):
   C++ `TBeamer` over the transport frame and call back into it
   (`BeamNextItem`, `BeamCommitSend`, `BeamCommitRecv`, `SetStatus`,
   `HandleError`).  The receiving side is asked by the user (the In Box's
-  Receive, which is `ReceiveRequest`); the root's `IRConnectRequest` and
-  the `'snif` service (`IRSniffService`, `TSniffIRTool`, 2 KB) are the
-  sniffing a 2.x Newton does for an incoming beam - NOT in the first plan.
+  Receive, which is `ReceiveRequest`) - or, with the In/Out Box's
+  "Receive beams automatically" on (`zapAutoReceive`), by the machine
+  itself: `StartIRSniffing` (`Beamer.cpp`'s `SendSniffCommand`, the
+  endpoint kept in `gSnifferEndpoint`) opens the `'snif` service
+  (`comms/SniffIRTool.h`: `IRSniffService`, `TSniffIRTool`), which claims
+  the IR port passively in auto-receive and, when the first bytes heard
+  look like an IrDA XID/TEST frame or a Sharp IR packet, lets the port go
+  and sends the newt world `'irMC`: the root's `IRConnectRequest` runs the
+  transport's `ReceiveRequest`, whose endpoint closes the sniffer
+  (`StopIRSniffing` in its `Initialize`) and opens it again afterwards.
+  ROM bug kept: setting the `'irsn` option copies the tool's own setting
+  into the option instead of the other way round, so it changes nothing.
+  ctest `host.NewtonBeamAutoReceive` (`demo/beam-autoreceive.ns`: the
+  receiving newton does nothing after turning the preference on).
 - **`TBeamer`** (0x0003b6f0 - 0x0003de8c, 18 functions, 7.9 KB, plus
   `TBeamerCallback`): `Open` chooses the IR protocol and opens a C++
   endpoint (`CMGetEndpoint`, done) with it; `OpenPipe` puts a
@@ -566,7 +577,7 @@ of a type other than the one asked for still has its package fetched.
 | the host's `inet` service (`THostInetService`) | done: `comms/host/HostServices.h` |
 | the endpoint: `TEndpoint` (the DDK's interface, its methods virtual - `comms/Endpoint.h` replaces the DDK's header), `TEndpointEventHandler`, the endpoint events, `TEndpointClient`, `CMGetEndpoint`; `TSerialEndpoint` and the `TCommTool...PB` parameter blocks | done: `comms/Endpoint.h`, `comms/SerialEndpoint.h`; **M2** passes (`test_Endpoint`: Open, Bind, Connect, Snd, Rcv, Disconnect, UnBind, Close against the echo server) |
 | the docking loader (`TSCPLoader`, `TCMWorld::SCPLoad`, `TCMSCPAsyncMessage`, the connection-protocol messages `TCPReadMessage`/`TCPWriteMessage`/`TCP*Tuple`, the newt world's `TSCPEvent`/`HandleSCPEvent`) | done: `comms/SCPLoader.h`, `comms/CPMessages.h`, `newt/SCPEvents.h`; ctest `host.NewtonSCPLoad` (see "Devices that bring their own package") |
-| the ROM's own services (`RegisterROMProtcols`) | done for the reconstructed ones, handed over with `CMAddROMServices` (DEVIATION); NOT YET: `RegisterNetworkROMProtocols` (the host's own services stand in), P3, LocalTalk, Keyboard, VRemote, IRSniff, `PMuxServiceStarter` |
+| the ROM's own services (`RegisterROMProtcols`) | done for the reconstructed ones, handed over with `CMAddROMServices` (DEVIATION); NOT YET: `RegisterNetworkROMProtocols` (the host's own services stand in), P3, LocalTalk, Keyboard, VRemote, `PMuxServiceStarter` (IRSniff done: `comms/SniffIRTool.h`) |
 | `TICHandler` (the interconnect pin: plugging in starts the docking loader, then AutoDock), `InitializeCommHardware` | NOT YET (a script's `HostInterconnect(state)` sends the comm manager what the handler would) |
 | `CMemObject` (a status request's answer goes through `TUSharedMem` meanwhile) | NOT YET |
 | `TPCommTool`/`StartCommToolProtocol` (a tool as a `TCommToolProtocol`) | NOT YET |

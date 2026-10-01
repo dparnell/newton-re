@@ -70,12 +70,12 @@ CMAddROMServices(CMROMServiceRegistrar registrar)
 // ROM 0x0006ccac RegisterROMProtcols__Fv
 // The ROM's services and endpoint: the ones reconstructed - TFaxService,
 // TModemService, TMNPService, TAsyncService, TFramedAsyncService,
-// TIrDAService, TIRService, IRProbeService - through the registrations the
+// TIrDAService, TIRService, IRProbeService, IRSniffService - through the registrations the
 // program put here, in the order it put them, then TSerialEndpoint.
 // NOT YET RECONSTRUCTED: RegisterNetworkROMProtocols (0x00031b70; the NIE
 // does the network, and the host's own services stand in for it -
 // comms/host/HostServices.h), TP3Service, TLocalTalkService,
-// TKeyboardService, TVRemoteService, IRSniffService and PMuxServiceStarter.
+// TKeyboardService, TVRemoteService and PMuxServiceStarter.
 static NewtonErr
 RegisterROMProtcols()
 {

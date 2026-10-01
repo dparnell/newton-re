@@ -202,6 +202,20 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonBeamIrDA PROPERTIES TIMEOUT 400 PASS_REGULAR_EXPRESSION "twonewtons.py: both ended as expected"
                          FAIL_REGULAR_EXPRESSION "waited in vain|was not sent")
+    # receiving beams automatically (the In/Out Box's zapAutoReceive): the
+    # IR sniffer ('snif', comms/SniffIRTool.h) started on the first newton,
+    # which then does nothing; it hears the second's probe and the note
+    # arrives (demo/beam-autoreceive.ns)
+    add_test(NAME host.NewtonBeamAutoReceive
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/host/twonewtons.py $<TARGET_FILE:newton>
+                     --seconds 300
+                     --first ${CMAKE_CURRENT_SOURCE_DIR}/demo/beam-autoreceive.ns
+                     --expect-first "eceived: \"Beamed note\".*text: \"hello from the other Newton\".*beam-autoreceive: the note is in the In Box"
+                     --second ${CMAKE_CURRENT_SOURCE_DIR}/demo/beam-irda-send.ns
+                     --expect-second "queued: \"Beamed note\".*beam-send: the Out Box is empty"
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonBeamAutoReceive PROPERTIES TIMEOUT 400 PASS_REGULAR_EXPRESSION "twonewtons.py: both ended as expected"
+                         FAIL_REGULAR_EXPRESSION "waited in vain|was not sent")
     # the Newton Toolkit's inspector (comms/NTK.h): ntkListener over MNP on
     # the serial port to tools/ntk/inspector.py, which sets the timeout,
     # installs and deletes a package, evaluates expressions (one sending an

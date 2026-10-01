@@ -1,0 +1,18 @@
+// The other end of src/host/demo/beam-irda-send.ns with the In/Out Box's
+// "Receive beams automatically" on (ctest host.NewtonBeamAutoReceive): the
+// preference set and the IR sniffer started as the In/Out Box's preferences
+// start it when they close (StartIRSniffing, comms/SniffIRTool.h), and then
+// nothing - the sniffer hears the other newton's probe, tells the newt
+// world ('irMC), the root's IRConnectRequest runs the Beam transport's
+// ReceiveRequest, and the run ends when the note is in the In Box.
+HostInclude("common.ns");
+SetUserConfig('zapCommToolId, nil);
+SetUserConfig('zapAutoReceive, true);
+AddDeferredCall(functions.StartIRSniffing, nil);
+autoInbox := GetUnionSoup("InBox");
+call waitFor with ("beam-autoreceive: the In Box", func() autoInbox:Query(nil):Entry() <> nil, func() begin
+	local e := autoInbox:Query(nil):Entry();
+	Print({received: e.title, text: e.body.text, from: e.fromRef});
+	Print("beam-autoreceive: the note is in the In Box");
+	HostQuit();
+end, 280);

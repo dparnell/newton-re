@@ -230,7 +230,7 @@ protected:
 	Size				fGetThreshold;			// +0x1cc
 	Boolean				fPassiveClaim;			// +0x1d0  ('cpcm)
 	Boolean				fPassiveState;			// +0x1d1  ('cpst)
-	Boolean				fField1D2;				// +0x1d2  (cleared by TaskConstructor, otherwise unused here)
+	Boolean				fField1D2;				// +0x1d2  (cleared by TaskConstructor; the IR sniffer sets it when it gives the port up)
 	ULong				fControlOpCode;			// +0x1d4  the control request in hand
 	TCommToolGetEventReply	fEventReply;		// +0x1d8  the disconnect event
 	NewtonErr			fKillError;				// +0x1fc

@@ -11,6 +11,7 @@
 #include "Beamer.h"
 #include "Endpoint.h"
 #include "EndpointPipe.h"
+#include "CommServices.h"
 #include "Translators.h"
 #include "Options.h"
 #include "SerialOptions.h"
@@ -885,10 +886,75 @@ ZapCancel(RefArg rcvr, RefArg endpoint)
 }
 
 
+/*------------------------------------------------------------------------------
+	R e c e i v i n g   b e a m s   a u t o m a t i c a l l y
+------------------------------------------------------------------------------*/
+
+TEndpoint*	gSnifferEndpoint = nil;			// ROM 0x0c1008d4 gSnifferEndpoint
+
+// ROM 0x0003b5d8 SendSniffCommand__FUc
+// Start: an endpoint on the IR sniffer ('snif') made and opened - which
+// connects it, so it starts sniffing - unless there is one already.  Stop:
+// the endpoint closed and freed, if there is one.
+NewtonErr
+SendSniffCommand(UChar start)
+{
+	NewtonErr err = noErr;
+	if (!start)
+	{
+		if (gSnifferEndpoint != nil)
+		{
+			gSnifferEndpoint->EasyClose();
+			gSnifferEndpoint->Delete();
+			gSnifferEndpoint = nil;
+		}
+	}
+	else if (gSnifferEndpoint == nil)
+	{
+		TOptionArray options;
+		err = options.Init();
+		if (err == noErr)
+		{
+			TOption service(kOptionType);
+			service.SetAsService(kCMSSniffIR);
+			err = options.InsertOptionAt(options.GetArrayCount(), &service);
+			if (err != noErr)
+				return err;
+			err = CMGetEndpoint(&options, &gSnifferEndpoint, false);
+			if (err == noErr)
+				err = gSnifferEndpoint->EasyOpen(0);
+		}
+	}
+	return err;
+}
+
+
+// ROM 0x0003b6d4 StartIRSniffing
+// StartIRSniffing(): what the In/Out Box's preferences call when "Receive
+// beams automatically" is turned on, and the Beam receive when it is done.
+Ref
+StartIRSniffing(RefArg rcvr)
+{
+	SendSniffCommand(true);
+	return NILREF;
+}
+
+
+// ROM 0x0003c38c StopIRSniffing
+Ref
+StopIRSniffing(RefArg rcvr)
+{
+	SendSniffCommand(false);
+	return NILREF;
+}
+
+
 void
 RegisterBeamerNatives(void)
 {
 	RegisterNativeFunction("ZapSend", (void*) ZapSend, 2);
 	RegisterNativeFunction("ZapReceive", (void*) ZapReceive, 1);
 	RegisterNativeFunction("ZapCancel", (void*) ZapCancel, 1);
+	RegisterNativeFunction("StartIRSniffing", (void*) StartIRSniffing, 0);
+	RegisterNativeFunction("StopIRSniffing", (void*) StopIRSniffing, 0);
 }

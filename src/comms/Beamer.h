@@ -36,13 +36,20 @@
 				    the answer (whether the default store has the room),
 				    the item read onto the store, and BeamCommitRecv.
 
+				Receiving beams automatically (the In/Out Box's preference
+				zapAutoReceive) is StartIRSniffing/StopIRSniffing, which
+				open and close an endpoint on the IR sniffer
+				(SniffIRTool.h, 'snif') - kept in gSnifferEndpoint.
+
 				TBeamer's first word is the transport frame, which the
 				NewtonScript messages are sent to; the field names are
 				ours, their order the ROM's (offsets noted).
 
 	Reconstructed from the MP2x00 US ROM (TBeamer 0x0003b6f0-0x0003d2ec,
 	ZapSend 0x0003d818, ZapReceive 0x0003d9b4, ZapCancel 0x0003dac4,
-	TBeamerCallback::Status 0x0003daf0, TBeamer::TBeamer 0x0003db74); each
+	TBeamerCallback::Status 0x0003daf0, TBeamer::TBeamer 0x0003db74,
+	SendSniffCommand 0x0003b5d8, StartIRSniffing 0x0003b6d4, StopIRSniffing
+	0x0003c38c); each
 	function cites its origin.
 */
 
@@ -117,6 +124,12 @@ public:
 Ref		ZapSend(RefArg rcvr, RefArg transport, RefArg request);	// BeamSend
 Ref		ZapReceive(RefArg rcvr, RefArg transport);				// BeamReceive
 Ref		ZapCancel(RefArg rcvr, RefArg endpoint);				// BeamCancel
+
+// receiving beams automatically: the IR sniffer's endpoint opened (true)
+// or closed
+NewtonErr	SendSniffCommand(UChar start);
+Ref		StartIRSniffing(RefArg rcvr);
+Ref		StopIRSniffing(RefArg rcvr);
 
 void	RegisterBeamerNatives(void);
 
