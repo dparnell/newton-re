@@ -91,6 +91,29 @@ main()
 	Learn(fit, Turned, 3);
 	EXPECT(fit.Ready());
 	EXPECT(Maps(fit, Turned, 6));
+	// one stroke's end AppLoad gave late, 60 pixels out: dropped, the map kept
+	fit.Reset();
+	Learn(fit, Turned, 0);
+	Turned(900, 1000, &x, &y);
+	fit.Add(900, 1000, x + 60, y);		// (it disagrees: the map is dropped and learnt again...)
+	Learn(fit, Turned, 0);
+	EXPECT(fit.Ready());
+	EXPECT(Maps(fit, Turned, 0.01));
+	// ... and one that the map no longer said was wrong when it came, dropped
+	// from the fit rather than spoiling it
+	fit.Reset();
+	Learn(fit, Turned, 0);
+	fit.fReady = false;					// (as if it were still being learnt)
+	Turned(900, 1000, &x, &y);
+	fit.Add(900, 1000, x + 60, y);
+	EXPECT(fit.Ready());
+	EXPECT(Maps(fit, Turned, 0.01));
+	// the ring past its eight pairs, in order
+	fit.Reset();
+	for (int round = 0; round < 3; round++)
+		Learn(fit, Square, 0);
+	EXPECT(fit.Ready());
+	EXPECT(Maps(fit, Square, 0.01));
 	if (failures == 0)
 		printf("test_PenFit: all passed\n");
 	return failures != 0;

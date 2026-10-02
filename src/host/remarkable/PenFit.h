@@ -87,14 +87,16 @@ private:
 	bool	Solve(const double* t, double* p, double* q, double* r) const
 	{
 		double m[3][3] = { { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } }, b[3] = { 0, 0, 0 };
+		int oldest = (fNext - fCount + kPairs) % kPairs;
 		for (int i = 0; i < fCount; i++)
 		{
-			double row[3] = { fU[i], fV[i], 1 };
+			int n = (oldest + i) % kPairs;
+			double row[3] = { fU[n], fV[n], 1 };
 			for (int j = 0; j < 3; j++)
 			{
 				for (int k = 0; k < 3; k++)
 					m[j][k] += row[j] * row[k];
-				b[j] += row[j] * t[i];
+				b[j] += row[j] * t[n];
 			}
 		}
 		double det = Det3(m);
@@ -113,23 +115,56 @@ private:
 		return true;
 	}
 
+	// The pair at i taken out (the ring kept in order of age)
+	void	Remove(int i)
+	{
+		int oldest = (fNext - fCount + kPairs) % kPairs;
+		int slot = (oldest + i) % kPairs;
+		for (int k = i; k < fCount - 1; k++)
+		{
+			int from = (oldest + k + 1) % kPairs;
+			fU[slot] = fU[from]; fV[slot] = fV[from]; fX[slot] = fX[from]; fY[slot] = fY[from];
+			slot = from;
+		}
+		fCount--;
+		fNext = (fNext - 1 + kPairs) % kPairs;
+	}
+
+	// Fitted to the pairs; a pair far from the fit (AppLoad's point for a
+	// stroke's end can be a late one) is dropped and the rest fitted again,
+	// as long as four are left - every pair within the tolerance, or the
+	// map is not to be trusted
 	void	Fit(void)
 	{
 		fReady = false;
-		if (fCount < 3)
-			return;
-		double a, b, c, d, e, f;
-		if (!Solve(fX, &a, &b, &c) || !Solve(fY, &d, &e, &f))
-			return;
-		// every pair within the tolerance of it, or it is not to be trusted
-		for (int i = 0; i < fCount; i++)
+		for (;;)
 		{
-			double mx = a * fU[i] + b * fV[i] + c, my = d * fU[i] + e * fV[i] + f;
-			if (hypot(mx - fX[i], my - fY[i]) > fTolerance)
+			if (fCount < 3)
 				return;
+			double a, b, c, d, e, f;
+			if (!Solve(fX, &a, &b, &c) || !Solve(fY, &d, &e, &f))
+				return;
+			int oldest = (fNext - fCount + kPairs) % kPairs;
+			int worst = -1;
+			double worstError = fTolerance;
+			for (int i = 0; i < fCount; i++)
+			{
+				int k = (oldest + i) % kPairs;
+				double mx = a * fU[k] + b * fV[k] + c, my = d * fU[k] + e * fV[k] + f;
+				double error = hypot(mx - fX[k], my - fY[k]);
+				if (error > worstError)
+					{ worstError = error; worst = i; }
+			}
+			if (worst < 0)
+			{
+				fA = a; fB = b; fC = c; fD = d; fE = e; fF = f;
+				fReady = true;
+				return;
+			}
+			if (fCount <= 4)
+				return;
+			Remove(worst);
 		}
-		fA = a; fB = b; fC = c; fD = d; fE = e; fF = f;
-		fReady = true;
 	}
 };
 
