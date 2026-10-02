@@ -80,7 +80,7 @@ VirtualKeyForLinuxKey(int code)
 class RMKitPanel : public RemarkablePanel
 {
 public:
-						RMKitPanel() : fWidth(0), fHeight(0), fLeft(0), fTop(0), fPenDown(false), fTouchDown(false), fHead(0), fTail(0) {}
+						RMKitPanel() : fWidth(0), fHeight(0), fLeft(0), fTop(0), fPenDown(false), fTouchDown(false), fHead(0), fTail(0), fUndoRM2(-1), fDigiMaxX(11180), fDigiMaxY(15340) {}
 	virtual const char*	Name(void) { return "rmkit"; }
 	virtual bool		NativeSize(long* width, long* height);
 	virtual bool		Open(long width, long height);
@@ -93,12 +93,15 @@ public:
 
 private:
 	void				Queue(RemarkableEvent::Kind kind, long x, long y, long key);
+	void				PanelPoint(long* x, long* y);
 
 	shared_ptr<framebuffer::FB>	fFB;
 	long				fWidth, fHeight, fLeft, fTop;
 	bool				fPenDown, fTouchDown;
 	RemarkableEvent		fQueue[64];
 	int					fHead, fTail;
+	int					fUndoRM2;			// -1 not yet known; 1: rmkit's reMarkable 2 axes undone (the Paper Pro)
+	long				fDigiMaxX, fDigiMaxY;
 };
 
 
@@ -162,6 +165,60 @@ RMKitPanel::Queue(RemarkableEvent::Kind kind, long x, long y, long key)
 }
 
 
+/*------------------------------------------------------------------------------
+	A pen point as rmkit gives it, made a point of the panel.  rmkit's
+	reMarkable build takes the digitiser to be the reMarkable 2's - turned a
+	quarter: it swaps the axes and turns y over (WacomEvent's swap_xy and
+	invert_y), scaling by the shorter and the longer axis's maximum.  The
+	Paper Pro's digitiser (and AppLoad's qtfb-shim's, in its native mode)
+	runs the panel's own way, ABS_X across and ABS_Y down, so on a Paper Pro
+	(the device tree's model says "Ferrari" or "Chiappa"; NEWTON_RM_RMKIT_AXES
+	=rm2 or =native says which) the swap is undone.
+------------------------------------------------------------------------------*/
+
+void
+RMKitPanel::PanelPoint(long* x, long* y)
+{
+	if (fUndoRM2 < 0)
+	{
+		fUndoRM2 = 0;
+		const char* axes = getenv("NEWTON_RM_RMKIT_AXES");
+		if (axes != nil)
+			fUndoRM2 = strcmp(axes, "native") == 0;
+		else
+		{
+			FILE* f = fopen("/proc/device-tree/model", "r");
+			if (f != nil)
+			{
+				char model[128];
+				size_t n = fread(model, 1, sizeof(model) - 1, f);
+				model[n] = 0;
+				fclose(f);
+				fUndoRM2 = strstr(model, "Ferrari") != nil || strstr(model, "Chiappa") != nil;
+			}
+		}
+		struct input_absinfo ax, ay;
+		int fd = ui::MainLoop::in.wacom.fd;
+		if (fd > 0 && ioctl(fd, EVIOCGABS(ABS_X), &ax) == 0 && ioctl(fd, EVIOCGABS(ABS_Y), &ay) == 0 && ax.maximum > 0 && ay.maximum > 0)
+		{
+			fDigiMaxX = ax.maximum;
+			fDigiMaxY = ay.maximum;
+		}
+		fprintf(stderr, "[host] rmkit: the pen's axes %s (digitiser %ld x %ld)\n", fUndoRM2 ? "turned back to the panel's" : "as rmkit has them", fDigiMaxX, fDigiMaxY);
+	}
+	if (!fUndoRM2)
+		return;
+	double w = (double) fFB->display_width, h = (double) fFB->height;
+	double shortMax = (double) (fDigiMaxX < fDigiMaxY ? fDigiMaxX : fDigiMaxY);
+	double longMax = (double) (fDigiMaxX < fDigiMaxY ? fDigiMaxY : fDigiMaxX);
+	// rmkit: x' = ABS_Y * w / shortMax, y' = h - ABS_X * h / longMax
+	double absX = (h - (double) *y) * longMax / h;
+	double absY = (double) *x * shortMax / w;
+	*x = (long) (absX * w / (double) fDigiMaxX + 0.5);
+	*y = (long) (absY * h / (double) fDigiMaxY + 0.5);
+}
+
+
 bool
 RMKitPanel::Poll(RemarkableEvent* event, long timeoutMs)
 {
@@ -172,13 +229,18 @@ RMKitPanel::Poll(RemarkableEvent* event, long timeoutMs)
 		in.listen_all(timeoutMs > 0 ? timeoutMs : 1);
 		for (auto& ev : in.wacom.events)
 		{
-			bool down = ev.btn_touch != 0 && ev.eraser == 0;
+			// (the eraser is -1 until a BTN_TOOL_RUBBER or BTN_STYLUS has been
+			// seen, which the Paper Pro's shim never sends: "not the eraser"
+			// is <= 0, not == 0 - the reason the first version saw no pen)
+			bool down = ev.btn_touch > 0 && ev.eraser <= 0;
+			long x = (long) ev.x, y = (long) ev.y;
+			PanelPoint(&x, &y);
 			if (down && !fPenDown)
-				Queue(RemarkableEvent::kPenDown, ev.x, ev.y, -1);
+				Queue(RemarkableEvent::kPenDown, x, y, -1);
 			else if (down)
-				Queue(RemarkableEvent::kPenMove, ev.x, ev.y, -1);
+				Queue(RemarkableEvent::kPenMove, x, y, -1);
 			else if (fPenDown)
-				Queue(RemarkableEvent::kPenUp, ev.x, ev.y, -1);
+				Queue(RemarkableEvent::kPenUp, x, y, -1);
 			fPenDown = down;
 		}
 		for (auto& ev : in.touch.events)

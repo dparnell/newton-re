@@ -54,6 +54,8 @@ def main():
     parser.add_argument("--display", default="810x1080")      # the Paper Pro panel at 2x - 1:1 (1620x2160) is too small to use
     parser.add_argument("--name", default="Newton")
     parser.add_argument("--rmkit", action="store_true")
+    parser.add_argument("--env", action="append", default=[], metavar="NAME=VALUE",
+                        help="an environment variable for newton (the window's NEWTON_RM_* settings, docs/host-remarkable.md)")
     args = parser.parse_args()
     os.makedirs(args.out, exist_ok=True)
     shutil.copy(args.newton, os.path.join(args.out, "newton"))
@@ -70,6 +72,9 @@ def main():
             "QTFB_SHIM_MODE": "N_RGB565",
             "QTFB_SHIM_RESPECT_FULL_REFRESH_REQUESTS": "1",
         }
+    for setting in args.env:
+        name, _, value = setting.partition("=")
+        manifest.setdefault("environment", {})[name] = value
     with open(os.path.join(args.out, "external.manifest.json"), "w", newline="\n") as f:
         json.dump(manifest, f, indent=2)
         f.write("\n")

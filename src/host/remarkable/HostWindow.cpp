@@ -127,6 +127,41 @@ Ms(Clock::duration d)
 	return std::chrono::duration<double, std::milli>(d).count();
 }
 
+// What went to the panel, counted for NEWTON_RM_TRACE's minute-by-minute
+// summary: how many updates of each kind, how many covered (nearly) the
+// whole display, how often the waveform asked for changed, how many
+// flashing full refreshes, and how many updates the pen overlay sent.
+struct PanelCounts
+{
+	long	fUpdates[3] = { 0, 0, 0 };	// by RemarkableRefresh
+	long	fWholeScreen = 0;
+	long	fModeChanges = 0;
+	long	fFullRefreshes = 0;
+	long	fOverlay = 0;
+	long	fStrokes = 0;
+	int		fLastMode = -1;
+
+	void	Count(int how, long area, long whole)
+	{
+		fUpdates[how]++;
+		if (area * 10 >= whole * 9)
+			fWholeScreen++;
+		if (how == 2 && area * 10 >= whole * 9)
+			fFullRefreshes++;
+		if (how != fLastMode)
+		{
+			if (fLastMode >= 0)
+				fModeChanges++;
+			fLastMode = how;
+		}
+	}
+	void	Report(double seconds)
+	{
+		fprintf(stderr, "[rm] %.0f s: updates ink %ld ui %ld content %ld, whole-screen %ld, waveform changes %ld, full refreshes %ld, pen overlay %ld, strokes %ld\n",
+				seconds, fUpdates[0], fUpdates[1], fUpdates[2], fWholeScreen, fModeChanges, fFullRefreshes, fOverlay, fStrokes);
+	}
+};
+
 struct StrokeTrace
 {
 	bool				fOn = false;
@@ -265,6 +300,47 @@ Union(long* l, long* t, long* r, long* b, long left, long top, long right, long 
 }
 
 
+// The pen overlay's line: from (x0, y0) to (x1, y1) in the image's pixels,
+// black, scale pixels wide (one display pixel - the Newton's own ink),
+// straight into the panel's image.  ==> its rectangle, false if off it.
+static bool
+DrawPanelLine(long x0, long y0, long x1, long y1, long width, long imageWidth, long imageHeight,
+			  long* left, long* top, long* right, long* bottom)
+{
+	uint16_t* image = gPanel->Pixels();
+	long rowWords = gPanel->RowWords();
+	long dx = labs(x1 - x0), dy = labs(y1 - y0);
+	long sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
+	long err = dx - dy;
+	long l = imageWidth, t = imageHeight, r = 0, b = 0;
+	long x = x0, y = y0;
+	for (;;)
+	{
+		for (long j = 0; j < width; j++)
+			for (long i = 0; i < width; i++)
+			{
+				long px = x - width / 2 + i, py = y - width / 2 + j;
+				if (px < 0 || py < 0 || px >= imageWidth || py >= imageHeight)
+					continue;
+				image[py * rowWords + px] = 0;
+				if (px < l) l = px;
+				if (py < t) t = py;
+				if (px + 1 > r) r = px + 1;
+				if (py + 1 > b) b = py + 1;
+			}
+		if (x == x1 && y == y1)
+			break;
+		long e2 = 2 * err;
+		if (e2 > -dy) { err -= dy; x += sx; }
+		if (e2 < dx) { err += dx; y += sy; }
+	}
+	if (r <= l || b <= t)
+		return false;
+	*left = l; *top = t; *right = r; *bottom = b;
+	return true;
+}
+
+
 static void
 WindowThread(void)
 {
@@ -287,13 +363,51 @@ WindowThread(void)
 			gScale, gPanel->Name(), imageWidth, imageHeight, originX, originY);
 	gStarted.store(true);
 
+	// The waveforms (docs/host-remarkable.md, "Lag and full-screen
+	// redraws"): NEWTON_RM_WAVEFORM=fast (the default) sends everything in
+	// the fast black-and-white waveform and never changes it - AppLoad sets
+	// the waveform on its whole window, so each change can redraw all of
+	// it; =ui everything in the gray one; =switch the first version's way,
+	// fast with the pen down and gray otherwise, the fast areas sent again
+	// in gray once the pen has rested (NEWTON_RM_SETTLE ms).  A flashing
+	// full refresh only every NEWTON_RM_FULL screens' worth of change (0, the
+	// default: never - AppLoad's five-finger tap does one by hand).
+	const char* waveform = getenv("NEWTON_RM_WAVEFORM");
+	enum { kWaveFast, kWaveUI, kWaveSwitch } policy = kWaveFast;
+	if (waveform != nil && strcmp(waveform, "ui") == 0)
+		policy = kWaveUI;
+	else if (waveform != nil && strcmp(waveform, "switch") == 0)
+		policy = kWaveSwitch;
 	const long settleMs = EnvLong("NEWTON_RM_SETTLE", 600);
-	const long fullScreens = EnvLong("NEWTON_RM_FULL", 4);
+	const long fullScreens = EnvLong("NEWTON_RM_FULL", 0);
+	// the pen overlay (NEWTON_RM_PEN_OVERLAY, on by default): the pen's
+	// line drawn on the panel by the window itself, from the pen events, the
+	// moment they come - the Newton's own live ink follows 50 ms behind (the
+	// ROM's inker draws on a 50 ms idler) and replaces it; what the Newton
+	// did not ink (a drag on a button) is put back from its display once the
+	// pen has been up NEWTON_RM_OVERLAY_HOLD ms
+	const bool overlay = EnvLong("NEWTON_RM_PEN_OVERLAY", 1) != 0;
+	const long overlayHoldMs = EnvLong("NEWTON_RM_OVERLAY_HOLD", 400);
 	const bool touchIsPen = getenv("NEWTON_RM_TOUCH") != nil && strcmp(getenv("NEWTON_RM_TOUCH"), "pen") == 0;
 	const long frameMs = EnvLong("NEWTON_RM_FRAME", 33);		// the pace with the pen up
 	const long inkFrameMs = EnvLong("NEWTON_RM_INK_FRAME", 8);	// and down: live ink is drawn as fast as it can be sent
 	StrokeTrace trace;
 	trace.fOn = getenv("NEWTON_RM_TRACE") != nil;
+	PanelCounts counts;
+	auto started = std::chrono::steady_clock::now();
+	auto lastReport = started;
+	auto send = [&](long left, long top, long right, long bottom, RemarkableRefresh how)
+	{
+		gPanel->Update(left, top, right, bottom, how);
+		counts.Count(how, (right - left) * (bottom - top), imageWidth * imageHeight);
+	};
+	// the overlay's state: the last point drawn (panel pixels), whether the
+	// stroke has moved far enough to draw, what it has drawn, when to undo it
+	long penX = 0, penY = 0, penDownX = 0, penDownY = 0;
+	bool penDrawing = false;
+	long ovL = 0, ovT = 0, ovR = 0, ovB = 0;	// display pixels
+	auto ovRestoreAt = started;
+	bool ovPending = false;
 	static const char* kHow[] = { "ink", "ui", "content" };
 
 	// the grays last sent: all of them, first, in the clean waveform
@@ -302,7 +416,7 @@ WindowThread(void)
 	if (gPixels != nil)
 		memcpy(shown, gPixels, (size_t) (gWidth * gHeight));
 	PaintRect(shown, 0, 0, gWidth, gHeight);
-	gPanel->Update(0, 0, imageWidth, imageHeight, kRefreshContent);
+	send(0, 0, imageWidth, imageHeight, kRefreshContent);
 	long inkL = 0, inkT = 0, inkR = 0, inkB = 0;		// what went out in the fast waveform since the last settle
 	double changedScreens = 0;							// how much has changed since the last full refresh
 	auto lastChange = std::chrono::steady_clock::now();
@@ -322,6 +436,28 @@ WindowThread(void)
 		}
 		const unsigned char* pixels = gPixels;
 		long l, t, r, b;
+		if (ovPending && !gPenDown.load() && std::chrono::steady_clock::now() >= ovRestoreAt && pixels != nil)
+		{
+			// the overlay taken back: what the Newton's display holds there now
+			if (ovL < 0) ovL = 0;
+			if (ovT < 0) ovT = 0;
+			if (ovR > gWidth) ovR = gWidth;
+			if (ovB > gHeight) ovB = gHeight;
+			if (ovR > ovL && ovB > ovT)
+			{
+				for (long y = ovT; y < ovB; y++)
+					memcpy(shown + y * gWidth + ovL, pixels + y * gWidth + ovL, (size_t) (ovR - ovL));
+				PaintRect(pixels, ovL, ovT, ovR, ovB);
+				send(ovL * gScale, ovT * gScale, ovR * gScale, ovB * gScale, policy == kWaveUI ? kRefreshUI : kRefreshInk);
+			}
+			ovPending = false;
+			ovR = ovL;
+		}
+		if (trace.fOn && std::chrono::steady_clock::now() - lastReport > std::chrono::seconds(60))
+		{
+			counts.Report(Ms(std::chrono::steady_clock::now() - started) / 1000.0);
+			lastReport = std::chrono::steady_clock::now();
+		}
 		while (gSnapshotsAsked.load() > 0 && pixels != nil)
 		{
 			gSnapshotsAsked.fetch_sub(1);
@@ -330,8 +466,9 @@ WindowThread(void)
 		if (pixels != nil && ChangedRect(pixels, shown, &l, &t, &r, &b))
 		{
 			PaintRect(pixels, l, t, r, b);
-			RemarkableRefresh how = gPenDown.load() ? kRefreshInk : kRefreshUI;
-			gPanel->Update(l * gScale, t * gScale, r * gScale, b * gScale, how);
+			RemarkableRefresh how = policy == kWaveFast ? kRefreshInk : policy == kWaveUI ? kRefreshUI
+								  : gPenDown.load() ? kRefreshInk : kRefreshUI;
+			send(l * gScale, t * gScale, r * gScale, b * gScale, how);
 			trace.Updated(kHow[how], l, t, r, b);
 			if (how == kRefreshInk)
 				Union(&inkL, &inkT, &inkR, &inkB, l, t, r, b);
@@ -345,13 +482,13 @@ WindowThread(void)
 			// and now and then the ghosts cleared
 			if (fullScreens > 0 && changedScreens >= (double) fullScreens)
 			{
-				gPanel->Update(0, 0, imageWidth, imageHeight, kRefreshContent);
+				send(0, 0, imageWidth, imageHeight, kRefreshContent);
 				changedScreens = 0;
 				inkR = inkL;
 			}
-			else if (inkR > inkL)
+			else if (inkR > inkL && policy == kWaveSwitch)
 			{
-				gPanel->Update(inkL * gScale, inkT * gScale, inkR * gScale, inkB * gScale, kRefreshUI);
+				send(inkL * gScale, inkT * gScale, inkR * gScale, inkB * gScale, kRefreshUI);
 				inkR = inkL;
 			}
 		}
@@ -386,6 +523,10 @@ WindowThread(void)
 					gPenDown.store(true);
 					trace.PenEvent(true);
 					HostWindowPenDown(x, y);
+					penX = penDownX = event.x - originX;
+					penY = penDownY = event.y - originY;
+					penDrawing = false;
+					counts.fStrokes++;
 				}
 				break;
 			case RemarkableEvent::kPenMove:
@@ -393,6 +534,25 @@ WindowThread(void)
 				{
 					trace.PenEvent(false);
 					HostWindowPenMove(x, y);
+					if (overlay)
+					{
+						long px = event.x - originX, py = event.y - originY;
+						// not for a tap: only once the pen has moved two display pixels
+						if (!penDrawing && (labs(px - penDownX) >= 2 * gScale || labs(py - penDownY) >= 2 * gScale))
+							penDrawing = true;
+						if (penDrawing)
+						{
+							long rl, rt, rr, rb;
+							if (DrawPanelLine(penX, penY, px, py, gScale, imageWidth, imageHeight, &rl, &rt, &rr, &rb))
+							{
+								send(rl, rt, rr, rb, policy == kWaveUI ? kRefreshUI : kRefreshInk);
+								counts.fOverlay++;
+								Union(&ovL, &ovT, &ovR, &ovB, rl / gScale, rt / gScale, (rr + gScale - 1) / gScale, (rb + gScale - 1) / gScale);
+							}
+							penX = px;
+							penY = py;
+						}
+					}
 				}
 				break;
 			case RemarkableEvent::kPenUp:
@@ -401,6 +561,12 @@ WindowThread(void)
 					HostWindowPenUp();
 					gPenDown.store(false);
 					trace.PenUp();
+					if (penDrawing && ovR > ovL)
+					{
+						ovPending = true;
+						ovRestoreAt = std::chrono::steady_clock::now() + std::chrono::milliseconds(overlayHoldMs);
+					}
+					penDrawing = false;
 				}
 				break;
 			case RemarkableEvent::kKeyDown:
@@ -416,6 +582,8 @@ WindowThread(void)
 			}
 		}
 	}
+	if (trace.fOn)
+		counts.Report(Ms(std::chrono::steady_clock::now() - started) / 1000.0);
 	free(shown);
 	if (closed)
 		HostWindowClosed();				// AppLoad closed it: the run ends, as a window's close button ends it
