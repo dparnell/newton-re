@@ -450,6 +450,38 @@ Linux distributions on it.  Read for this port (nothing copied):
   Move; the Paper Pro (ferrari) has a different panel bridge
   (`rm-cumulus-bridge`, DSI) under the same vendor library.
 
+### Handwriting (2026-10-02)
+
+The owner wrote "the quick brown fox" a few times in the Notepad (the
+printed letter set, so Rosetta reads it; their letters about 24 display
+pixels tall, a stroke about 22 tablet samples - a MessagePad's size).
+What was read, from the Notes soup of the tablet's store and from replays
+of the recorded pen (`demo/penreplay.ns`) over a copy of the store from
+before the session, same calibration:
+
+| | 1st | 2nd | 3rd |
+|---|---|---|---|
+| tablet, pen cut to whole pixels (the first build) | the q vK brow a 6 | the q uiJ\ brown F 0 X | - |
+| tablet, pen in eighths of a pixel | the quik brows fox | \*s quiz x brow a 80 l | \*s } uiJ\ brow zx |
+| desktop replay, eighths | the quizt brows fox | As quizt brow a Q | As quizt brows 6OX |
+| desktop replay, cut to whole pixels | the q a\* brows fox | As x brow T ... | (garbled) |
+
+- **Ours, fixed**: the window gave the Newton the Marker in whole display
+  pixels; at 2x that threw away the sub-pixel position the MessagePad's
+  resistive tablet always delivered, and Rosetta read markedly worse
+  (rows 1 and 4).  The pen now reaches the tablet driver in eighths
+  (`HostTabletRawPenDownFine`), row 2.
+- **The rest is the recogniser's**, not the tablet path: the desktop replay
+  of the same strokes reads as the tablet does (rows 2 and 3 differ only
+  where the 80 Hz sampler caught the pen at other moments).  Whether that
+  is Rosetta's own accuracy on an untrained hand or a difference in the
+  reconstruction needs the real ROM as an oracle - the same pen log fed to
+  Einstein running the MP2x00 ROM - and the tablet's sample rate checked
+  against the ROM's TResistiveTablet (the host samples at 0xb400 ticks, 80
+  a second).
+- The long rising line no longer crashes (the shape recogniser fix; the
+  session's 70 strokes ended normally).
+
 ### Watching a tablet one cannot see
 
 The window traces itself for this (`run.sh` turns both on):
