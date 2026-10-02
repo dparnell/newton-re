@@ -220,20 +220,27 @@ sensors (`/dev/input/event1`) say how the folio lies: with it attached and
 in typing position switch 15 (`SW_MACHINE_COVER`) is on and `SW_LID` off;
 what the other positions read is still to be logged (`evtest`).
 
-**Rotation.**  The tablet's interface turns to landscape with the folio,
-and that AppLoad shows newton's framebuffer upright in whichever way the
-interface is turned, scaled to fit - so a portrait framebuffer on a
-landscape screen is a small portrait picture in the middle.  The
+**Rotation.**  The tablet's interface turns to landscape with the folio.
+The owner's AppLoad is v0.4.2 (`appload.so` of 2026-03-21, on software
+3.25.1.1), from before AppLoad knew about rotation: its full-screen window
+stays portrait-shaped and is scaled to the landscape screen's height, so
+newton's picture is a portrait area in the middle of the screen.  A
+landscape framebuffer did not help (tried 2026-10-02): AppLoad fitted the
+2160 x 1620 picture into that portrait window, smaller still, and scaling
+each update slowed it enough to hold up newton's socket - the pen's events
+then came in bunches of twenty after 55 ms gaps (the pen log's
+timestamps), and the Newton, sampling the pen at its own pace, drew
+straight segments (jagged ink).  So newton stays portrait by default.  The
 framebuffer's size is fixed once it is asked for (AppLoad refuses a second
-initialise of another size), so newton picks the shape as it starts
-(`HostWindowPreferredDisplay`): landscape when the folio is attached -
-`--display 810x1080` becomes 1080 x 810, asked for as 2160 x 1620 at 2x,
-and the Newton boots in landscape (orientation 1) - portrait otherwise.
-`NEWTON_RM_ORIENTATION=portrait|landscape` forces one.  Attaching or taking
-off the folio while newton runs does not turn it: close Newton and open it
-again.
+initialise of another size), so the shape is chosen as newton starts
+(`HostWindowPreferredDisplay`): `NEWTON_RM_ORIENTATION=portrait` (the
+default), `landscape` (`--display 810x1080` becomes 1080 x 810, asked for
+as 2160 x 1620 at 2x, the Newton booted in orientation 1), `auto`
+(landscape while the folio is attached) or `appload` (below).
 
-An AppLoad from September 2026 on can turn a running application:
+An AppLoad from v0.6.0 (2026-09-19) can turn a running application - its
+window turns with the interface - but its xochitl patch is written for
+software 3.28/3.29; on 3.25 it is untried:
 `package.py --rotation` sets the manifest's `supportsRotation` and
 `NEWTON_RM_ORIENTATION=appload`.  AppLoad then shows the framebuffer square
 on the glass however the tablet is held, hands pen and touch points back in

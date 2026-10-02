@@ -836,15 +836,16 @@ HostWindowStart(long width, long height, const unsigned char* pixels, const char
 }
 
 
-// The display's shape: landscape while the type folio is attached, as the
-// tablet's interface turns with it - AppLoad (a February 2026 one, without
-// its later supportsRotation) shows newton's picture upright in whichever
-// way the interface is turned, scaled to fit, and the picture's size is
-// fixed when the framebuffer is asked for.  So the shape is chosen here,
-// once, as newton starts: NEWTON_RM_ORIENTATION=auto (the default: the
-// folio), portrait, landscape, or appload (a newer AppLoad with
-// supportsRotation in the manifest turns it as the tablet turns: the
-// display stays as --display gives it).  docs/host-remarkable.md, "Rotation"
+// The display's shape, chosen once as newton starts, since the
+// framebuffer's size is fixed when it is asked for: NEWTON_RM_ORIENTATION=
+// portrait (the default: --display as it is), landscape, auto (landscape
+// while the type folio is attached), or appload (a newer AppLoad with
+// supportsRotation in the manifest turns it as the tablet turns).  AppLoad
+// v0.4.2 (the owner's, on software 3.25) keeps its full-screen window
+// portrait when the interface turns to landscape with the folio and scales
+// it to the screen's height, so a landscape picture only comes out smaller
+// there - and the scaling slowed AppLoad enough to hold up newton's updates
+// and bunch the pen's events (jagged ink).  docs/host-remarkable.md, "Rotation"
 void
 HostWindowPreferredDisplay(long* width, long* height)
 {
@@ -852,12 +853,10 @@ HostWindowPreferredDisplay(long* width, long* height)
 	if (how != nil && strcmp(how, "appload") == 0)
 		return;
 	bool landscape;
-	if (how != nil && strcmp(how, "portrait") == 0)
-		landscape = false;
-	else if (how != nil && strcmp(how, "landscape") == 0)
-		landscape = true;
-	else
+	if (how != nil && strcmp(how, "auto") == 0)
 		landscape = RemarkableFolioAttached();
+	else
+		landscape = how != nil && strcmp(how, "landscape") == 0;
 	if (landscape != (*width > *height))
 	{
 		long t = *width;
@@ -865,7 +864,7 @@ HostWindowPreferredDisplay(long* width, long* height)
 		*height = t;
 	}
 	fprintf(stderr, "[host] reMarkable: the display %ld x %ld (%s%s)\n", *width, *height,
-			landscape ? "landscape" : "portrait", how == nil || strcmp(how, "auto") == 0 ? (landscape ? ": the folio is attached" : ": no folio") : "");
+			landscape ? "landscape" : "portrait", how != nil && strcmp(how, "auto") == 0 ? (landscape ? ": the folio is attached" : ": no folio") : "");
 }
 
 
