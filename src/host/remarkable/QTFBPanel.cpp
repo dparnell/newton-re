@@ -103,9 +103,8 @@ private:
 	long				fWidth, fHeight;		// the image
 	long				fPanelWidth, fPanelHeight;	// the framebuffer: the whole panel
 	long				fLeft, fTop;			// the image's place on it
-	// the Marker read from its own input device (NEWTON_RM_PEN=evdev, the
-	// default when there is one): AppLoad's qtfb hands on touches but - on
-	// the Paper Pro, 3.25 - not the Marker (docs/host-remarkable.md)
+	// the Marker read from its own input device instead of from AppLoad's
+	// qtfb messages (NEWTON_RM_PEN=evdev; docs/host-remarkable.md)
 	int					fPenFd;
 	long				fPenMaxX, fPenMaxY;
 	long				fPenX, fPenY;
@@ -395,8 +394,8 @@ void
 QTFBPanel::OpenPenDevice(void)
 {
 	const char* how = getenv("NEWTON_RM_PEN");
-	if (how != nil && strcmp(how, "qtfb") == 0)
-		return;
+	if (how == nil || strcmp(how, "evdev") != 0)
+		return;							// (AppLoad's qtfb hands on the Marker: its events are the default)
 	for (int i = 0; i < 16 && fPenFd < 0; i++)
 	{
 		char path[32];

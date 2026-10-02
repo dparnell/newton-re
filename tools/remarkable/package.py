@@ -32,9 +32,9 @@ from build_probe import icon  # noqa: E402
 
 RUN_SH = """#!/bin/sh
 # Newton OS on the reMarkable (docs/host-remarkable.md) - started by AppLoad
-# with QTFB_KEY set; the store and the log live in /home/root/newton-data
+# with QTFB_KEY set; the store and the log live in /home/root/newton-data/<app>
 cd "$(dirname "$0")"
-DATA=/home/root/newton-data
+DATA=/home/root/newton-data/$(basename "$PWD")     # one store per app: each display size calibrates its own pen
 mkdir -p "$DATA/printed"
 echo "--- $(date) newton starting, pid $$" >> "$DATA/newton.log"
 # the window's tracing and snapshots (kill -USR2 <pid> writes $DATA/panel-N.pgm)
@@ -51,7 +51,7 @@ def main():
     parser.add_argument("--newton", required=True)
     parser.add_argument("--objects", required=True)
     parser.add_argument("-o", "--out", required=True)
-    parser.add_argument("--display", default="320x480")
+    parser.add_argument("--display", default="1620x2160")     # the Paper Pro panel, 1:1
     parser.add_argument("--name", default="Newton")
     parser.add_argument("--rmkit", action="store_true")
     args = parser.parse_args()
