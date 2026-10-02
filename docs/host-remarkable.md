@@ -419,6 +419,37 @@ What changed (`src/host/remarkable/HostWindow.cpp`):
 - The trace prints a line a minute: updates by waveform, whole-screen
   updates, waveform changes, full refreshes, overlay updates, strokes.
 
+### chiappa: what lies below AppLoad
+
+[gitman-101111/chiappa](https://github.com/gitman-101111/chiappa) (MIT,
+2026) documents the **Paper Pro Move** (chiappa, i.MX 93) for running other
+Linux distributions on it.  Read for this port (nothing copied):
+
+- The panel is ordinary DRM/KMS (`/dev/dri/card0`), but **the waveform is
+  the frame sequence**: a software TCON in the vendor's `libqsgepaper.so`
+  (`EPFramebufferSwtcon`, a phase-generator thread at 85 Hz over the
+  `.eink` waveform files and `colortable_*`/`ct33_*` LUTs) writes a run of
+  specially formatted frames per update; raw scanout shows nothing.  There
+  is no kernel EPDC and no out-of-band waveform ioctl - so nothing like the
+  reMarkable 1/2's mxcfb `SEND_UPDATE`, and no lower-level route than a
+  process that owns `libqsgepaper` (xochitl, or a replacement).
+- Their way to a display without xochitl is `einkbridge`: a Qt Quick app on
+  the vendor `epaper` QPA plugin (exclusive: xochitl must be stopped -
+  `/tmp/epframebuffer.lock`), exposing an rm2fb-style shared memory and
+  socket, with per-region refresh modes through xochitl's QML type
+  `EPScreenModeItem`: **Pen**, Mono, Animation, UI, Content.  The pen mode
+  has its own LUT (`ct33_pen.bin`, "optimised for pen input").
+- So: AppLoad's qtfb is the same engine one layer up (AppLoad's QML sets an
+  `EPScreenModeItem`-like mode on its window from qtfb's refresh mode); a
+  standalone newton-over-`libqsgepaper` would be a kiosk that stops xochitl
+  - possible later, but not obviously faster.  The useful find is the
+  **pen mode**: qtfb's five refresh modes in AppLoad's patch are, in order,
+  most likely Pen, Mono, Animation, Content, UI, so qtfb's *ufast* (0) is
+  the pen waveform - `NEWTON_RM_INK_MODE=ufast` uses it for everything the
+  window sends fast (the "Newton (pen mode)" app).  Their notes are for the
+  Move; the Paper Pro (ferrari) has a different panel bridge
+  (`rm-cumulus-bridge`, DSI) under the same vendor library.
+
 ### Watching a tablet one cannot see
 
 The window traces itself for this (`run.sh` turns both on):

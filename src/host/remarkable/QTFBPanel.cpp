@@ -303,7 +303,13 @@ QTFBPanel::Update(long left, long top, long right, long bottom, RemarkableRefres
 		Send(message);
 		return;
 	}
-	int mode = how == kRefreshInk ? kQTFBRefreshFast : how == kRefreshUI ? kQTFBRefreshUI : kQTFBRefreshContent;
+	// the fast waveform is qtfb's "fast" unless NEWTON_RM_INK_MODE=ufast asks
+	// for its "ufast" - the first of AppLoad's five modes, which by the order
+	// of xochitl's EPScreenModeItem modes (Pen, Mono, Animation, Content, UI;
+	// docs/host-remarkable.md) is likely the pen's own
+	static const int sFastMode = getenv("NEWTON_RM_INK_MODE") != nil && strcmp(getenv("NEWTON_RM_INK_MODE"), "ufast") == 0
+								 ? kQTFBRefreshUFast : kQTFBRefreshFast;
+	int mode = how == kRefreshInk ? sFastMode : how == kRefreshUI ? kQTFBRefreshUI : kQTFBRefreshContent;
 	if (mode != fMode)
 	{
 		message.type = kQTFBSetRefreshMode;
