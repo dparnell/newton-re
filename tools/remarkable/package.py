@@ -14,7 +14,7 @@ OUT/ then holds
                                  its output appended to newton.log beside it
     external.manifest.json       AppLoad's description: qtfb on, full screen,
                                  turning with the tablet (not --rmkit)
-    icon.png                     the launcher's icon
+    icon.png                     the launcher's icon (tools/remarkable/icon.py)
 
 Copied to /home/root/xovi/exthome/appload/<dir>, it shows in AppLoad's
 launcher.  --rmkit makes the variant whose window is rmkit's (a newton built
@@ -29,7 +29,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from build_probe import icon  # noqa: E402
+from icon import newton_icon  # noqa: E402
 
 RUN_SH = """#!/bin/sh
 # Newton OS on the reMarkable (docs/host-remarkable.md) - started by AppLoad
@@ -86,7 +86,7 @@ def main():
     with open(os.path.join(args.out, "external.manifest.json"), "w", newline="\n") as f:
         json.dump(manifest, f, indent=2)
         f.write("\n")
-    icon(os.path.join(args.out, "icon.png"), ["X   X", "XX  X", "X X X", "X  XX", "X   X"])
+    newton_icon(os.path.join(args.out, "icon.png"))
     print("package: %s (copy it to /home/root/xovi/exthome/appload/)" % args.out)
 
 
