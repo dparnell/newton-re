@@ -362,6 +362,63 @@ All from the branch `rmpp`, built on the Windows machine.
      newton's power key mapping puts the Newton to sleep with it; on waking
      AppLoad closed the app (newton ended cleanly).
 
+### Lag and full-screen redraws (2026-10-02)
+
+The owner, after the first sessions: "significant lag when drawing and lots
+of full screen redraws".  What the trace of the 2x session (152 strokes,
+24 screens' worth of change) and the code say:
+
+- **The Newton's own ink is 20 times a second, by design.**  The ROM's
+  tablet driver wakes the inker only when the pen goes down
+  (`TResistiveTablet::TabPenEntry` is the only caller of
+  `TBCWakeUpInkerFromInterrupt` - `analysis/xrefs.py`); after that the
+  inker reads the samples and draws the live ink on its 50 ms idler
+  (`TInker::MainConstructor`, `InitIdler(50, kMilliseconds)`).  The host
+  does the same, faithfully - hence the median 48 ms from a pen event to
+  the update carrying its ink, ~17 ink updates a second.  The MessagePad's
+  LCD showed the same cadence.
+- **The window changed the waveform at every pen-down and pen-up** (fast
+  with the pen down, gray otherwise - some 300 changes in the session) and
+  AppLoad applies the waveform to its whole window: the likely full-screen
+  redraws.  It also asked for a flashing full refresh after every 4
+  screens of change (about 5 in the session), and sent the stroke's area
+  again in gray after each stroke.
+- **The transport**: AppLoad's window is a `QQuickPaintedItem`; an update
+  rectangle repaints only that rectangle of its image, but the waveform is
+  a property of the whole window (`refreshMode`, applied by xochitl's EPD
+  scene graph).  rmkit on the Paper Pro goes through AppLoad's qtfb-shim,
+  which turns rmkit's mxcfb updates into the same qtfb messages (DU ->
+  fast, GC16 -> content, GL16 -> ui, A2 -> animate) - so rmkit cannot do
+  better than the direct qtfb client; it adds the shim and its own pen
+  path.  Below AppLoad there is only xochitl's private EPD scene graph
+  (`libqsgepaper.so`) over DRM, which no third-party program drives
+  (KOReader too runs through the qtfb-shim).
+
+What changed (`src/host/remarkable/HostWindow.cpp`):
+
+- **One waveform**: `NEWTON_RM_WAVEFORM=fast` (the default) sends every
+  update in the fast black-and-white waveform and never changes it; `=ui`
+  the gray one throughout; `=switch` the old behaviour.  The Newton's
+  screen is mostly black and white; its few grays (dithered patterns)
+  come out as black or white in the fast waveform.
+- **No automatic full refresh** (`NEWTON_RM_FULL=0`); AppLoad's five-finger
+  tap clears the ghosts when wanted.
+- **The pen overlay** (`NEWTON_RM_PEN_OVERLAY=1`, a host DEVIATION in
+  effect, though none of the Newton's code changes): the window draws the
+  pen's line on the panel itself from each pen event and sends that small
+  rectangle at once, so ink follows the Marker by the panel's own time
+  rather than the inker's 50 ms; the Newton's ink lands on top of it.  A
+  tap draws nothing (only after two display pixels of movement); whatever
+  the Newton did not ink - a drag across a button - is put back from its
+  display `NEWTON_RM_OVERLAY_HOLD` ms (400) after the pen lifts.
+- **rmkit's pen** works: rmkit leaves `eraser` at -1 until a rubber or
+  side-button event, so `eraser == 0` never held and no pen ever went
+  down; and rmkit's reMarkable build turns the digitiser's axes for the
+  reMarkable 2, which the window turns back on a Paper Pro (the device
+  tree says Ferrari/Chiappa; `NEWTON_RM_RMKIT_AXES=rm2|native`).
+- The trace prints a line a minute: updates by waveform, whole-screen
+  updates, waveform changes, full refreshes, overlay updates, strokes.
+
 ### Watching a tablet one cannot see
 
 The window traces itself for this (`run.sh` turns both on):
