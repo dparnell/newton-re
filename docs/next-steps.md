@@ -71,7 +71,17 @@ does not do yet:
 
 ## Waiting on the owner
 
-Nothing at present.
+- **The reMarkable's software update (2026-10-02).**  The owner is updating
+  the tablet from 3.25.1.1 so that AppLoad v0.6.0 (written for 3.28/3.29)
+  can go on: its full-screen window turns with the interface, which the
+  installed v0.4.2's does not, so the Newton can fill the landscape screen
+  the type folio turns it to.  Then: install v0.6.0 (xovi may need
+  reinstalling after the update), package with `package.py --rotation`
+  (`supportsRotation`, `NEWTON_RM_ORIENTATION=appload`), and check on the
+  glass which way the sideways turn comes out (`NEWTON_RM_TURN_FLIP`),
+  that the pen is smooth, and whether AppLoad's own key forwarding now
+  works beside the folio read directly (`docs/host-remarkable.md`,
+  "Rotation" and "The type folio").
 
 ## Open
 
