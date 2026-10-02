@@ -1050,6 +1050,8 @@ main(int argc, char** argv)
 #endif
 	HostUseRealClock(true);
 	HostRestartReceive();		// (a restarted newton: the reboot reason, the window's place)
+	if (gWindowed)
+		HostWindowPreferredDisplay(&width, &height);
 	HostConfigureNewtWorld(romImage, heapSize, width, height, depth);
 	gNewtBootTestScript = script;
 	gScriptPath = script;

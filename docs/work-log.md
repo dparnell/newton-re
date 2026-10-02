@@ -9,6 +9,18 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-02: the reMarkable - the folio read directly, landscape at start-up
+
+On the glass touch worked, but the folio typed nothing and the Newton stayed
+a portrait picture on the landscape screen: the tablet's AppLoad (February
+2026) predates rotation and passed no keys.  newton now reads the folio's
+own device and takes it from xochitl (`remarkable/Folio.cpp`), and picks
+landscape as it starts when the folio is attached
+(`HostWindowPreferredDisplay`: a 2160 x 1620 framebuffer, the Newton booted
+in orientation 1); AppLoad's rotation is an opt-in (`package.py --rotation`)
+for a newer AppLoad.  Checked over SSH: the display 1080 x 810, the
+keyboard found and taken.
+
 ## 2026-10-02: the reMarkable - the folio's landscape, touch, the keys
 
 - **Rotation**: the manifest's `supportsRotation`; AppLoad's rotation goes

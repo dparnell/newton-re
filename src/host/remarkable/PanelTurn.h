@@ -98,12 +98,14 @@ struct PanelTurn
 // How many quarters clockwise the display goes onto the image: AppLoad's
 // rotation (0 upright, 1 its interface turned left, 2 right, 3 upside
 // down) undone, and a quarter more when the display is the other shape
-// from the way the device is held (the Newton turned by its own Rotate
-// button: a quarter clockwise for its orientation 1, anticlockwise for
-// 3).  `flip` (NEWTON_RM_TURN_FLIP) swaps the two sideways turns, for a
-// tablet that turns the other way.
+// from the way the person sees the image (the Newton turned by its own
+// Rotate button: a quarter clockwise for its orientation 1, anticlockwise
+// for 3).  The person sees the image as it is turned by the rotation: an
+// AppLoad that never sends one (rotation 0) shows the image upright, of
+// whatever shape it is.  `flip` (NEWTON_RM_TURN_FLIP) swaps the two
+// sideways turns, for a tablet that turns the other way.
 inline long
-PanelTurnQuarters(long rotation, bool displayLandscape, long orientation, bool flip)
+PanelTurnQuarters(long rotation, bool displayLandscape, bool imageLandscape, long orientation, bool flip)
 {
 	long quarters;
 	switch (rotation)
@@ -114,7 +116,7 @@ PanelTurnQuarters(long rotation, bool displayLandscape, long orientation, bool f
 	case 2:	quarters = flip ? 1 : 3; break;
 	case 3:	quarters = 2; break;
 	}
-	bool heldLandscape = rotation == 1 || rotation == 2;
+	bool heldLandscape = imageLandscape != (rotation == 1 || rotation == 2);
 	if (displayLandscape != heldLandscape)
 		quarters += orientation == 3 ? 3 : 1;
 	return quarters & 3;

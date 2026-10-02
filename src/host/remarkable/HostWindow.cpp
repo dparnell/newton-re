@@ -38,6 +38,7 @@
 #include "HostWindow.h"
 #include "Panel.h"
 #include "PanelTurn.h"
+#include "Folio.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -379,7 +380,7 @@ UpdateTurn(long imageWidth, long imageHeight, bool flip)
 	long rotation = gRotation.load();
 	if (width == gWidth && height == gHeight && rotation == gTurnRotation && orientation == gTurnOrientation)
 		return false;
-	PanelTurn turn = { PanelTurnQuarters(rotation, width > height, orientation, flip), width, height, gScale };
+	PanelTurn turn = { PanelTurnQuarters(rotation, width > height, imageWidth > imageHeight, orientation, flip), width, height, gScale };
 	if (turn.ImageWidth() != imageWidth || turn.ImageHeight() != imageHeight)
 		turn.quarters = (turn.quarters + 1) & 3;	// (a display that started landscape: whichever way fits)
 	if (turn.ImageWidth() != imageWidth || turn.ImageHeight() != imageHeight)
@@ -800,6 +801,14 @@ HostWindowStart(long width, long height, const unsigned char* pixels, const char
 	gHeight = height;
 	gPixels = pixels;
 	gScale = scale;
+	if (width > height && panelWidth < panelHeight)
+	{
+		// a landscape display (HostWindowPreferredDisplay): AppLoad shows it
+		// on the panel turned, so it has the panel's sides the other way
+		long t = panelWidth;
+		panelWidth = panelHeight;
+		panelHeight = t;
+	}
 	if (gScale <= 1)
 	{
 		gScale = 1;
@@ -824,6 +833,39 @@ HostWindowStart(long width, long height, const unsigned char* pixels, const char
 		return false;
 	}
 	return true;
+}
+
+
+// The display's shape: landscape while the type folio is attached, as the
+// tablet's interface turns with it - AppLoad (a February 2026 one, without
+// its later supportsRotation) shows newton's picture upright in whichever
+// way the interface is turned, scaled to fit, and the picture's size is
+// fixed when the framebuffer is asked for.  So the shape is chosen here,
+// once, as newton starts: NEWTON_RM_ORIENTATION=auto (the default: the
+// folio), portrait, landscape, or appload (a newer AppLoad with
+// supportsRotation in the manifest turns it as the tablet turns: the
+// display stays as --display gives it).  docs/host-remarkable.md, "Rotation"
+void
+HostWindowPreferredDisplay(long* width, long* height)
+{
+	const char* how = getenv("NEWTON_RM_ORIENTATION");
+	if (how != nil && strcmp(how, "appload") == 0)
+		return;
+	bool landscape;
+	if (how != nil && strcmp(how, "portrait") == 0)
+		landscape = false;
+	else if (how != nil && strcmp(how, "landscape") == 0)
+		landscape = true;
+	else
+		landscape = RemarkableFolioAttached();
+	if (landscape != (*width > *height))
+	{
+		long t = *width;
+		*width = *height;
+		*height = t;
+	}
+	fprintf(stderr, "[host] reMarkable: the display %ld x %ld (%s%s)\n", *width, *height,
+			landscape ? "landscape" : "portrait", how == nil || strcmp(how, "auto") == 0 ? (landscape ? ": the folio is attached" : ": no folio") : "");
 }
 
 

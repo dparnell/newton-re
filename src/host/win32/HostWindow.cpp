@@ -316,3 +316,12 @@ HostWindowSetPosition(long /*x*/, long /*y*/)
 { }
 
 #endif
+
+
+// a desktop window is the shape the display is
+void
+HostWindowPreferredDisplay(long* width, long* height)
+{
+	(void) width;
+	(void) height;
+}

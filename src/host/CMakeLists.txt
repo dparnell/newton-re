@@ -110,7 +110,7 @@ set_tests_properties(host.NewtonScriptTrace PROPERTIES TIMEOUT 60
 set(NEWTON_HOST_WINDOW "auto" CACHE STRING "the host window: auto (the platform's), remarkable (a reMarkable tablet's panel)")
 set(NEWTON_RMKIT_DIR "" CACHE PATH "rmkit.h and stb/ from tools/remarkable/fetch_rmkit.py: the reMarkable window over rmkit as well as qtfb")
 if(NEWTON_HOST_WINDOW STREQUAL "remarkable")
-    set(host_window_source remarkable/HostWindow.cpp remarkable/QTFBPanel.cpp remarkable/RMKitPanel.cpp)
+    set(host_window_source remarkable/HostWindow.cpp remarkable/QTFBPanel.cpp remarkable/RMKitPanel.cpp remarkable/Folio.cpp)
     set(host_audio_source win32/HostAudio.cpp)         # its #else: no device (the tablets have no loudspeaker)
     if(NEWTON_RMKIT_DIR)
         list(APPEND host_window_source ${NEWTON_RMKIT_DIR}/stb/stb.cpp)

@@ -64,25 +64,29 @@ static void
 TestQuarters()
 {
 	// held upright, the display portrait: as it is
-	EXPECT(PanelTurnQuarters(0, false, 2, false) == 0);
+	EXPECT(PanelTurnQuarters(0, false, false, 2, false) == 0);
 	// the interface turned left (the folio folded back), the Newton landscape:
 	// a quarter clockwise; turned right: a quarter anticlockwise
-	EXPECT(PanelTurnQuarters(1, true, 1, false) == 1);
-	EXPECT(PanelTurnQuarters(2, true, 3, false) == 3);
-	EXPECT(PanelTurnQuarters(1, true, 1, true) == 3);		// NEWTON_RM_TURN_FLIP
-	EXPECT(PanelTurnQuarters(3, false, 2, false) == 2);
+	EXPECT(PanelTurnQuarters(1, true, false, 1, false) == 1);
+	EXPECT(PanelTurnQuarters(2, true, false, 3, false) == 3);
+	EXPECT(PanelTurnQuarters(1, true, false, 1, true) == 3);		// NEWTON_RM_TURN_FLIP
+	EXPECT(PanelTurnQuarters(3, false, false, 2, false) == 2);
 	// the Newton turned by its own Rotate while the tablet is upright: a
 	// quarter its way
-	EXPECT(PanelTurnQuarters(0, true, 1, false) == 1);
-	EXPECT(PanelTurnQuarters(0, true, 3, false) == 3);
+	EXPECT(PanelTurnQuarters(0, true, false, 1, false) == 1);
+	EXPECT(PanelTurnQuarters(0, true, false, 3, false) == 3);
 	// held landscape but the Newton turned back to portrait
-	EXPECT(PanelTurnQuarters(1, false, 2, false) == 2);
+	EXPECT(PanelTurnQuarters(1, false, false, 2, false) == 2);
+	// an AppLoad that sends no rotation shows a landscape image upright: a
+	// landscape display goes onto it as it is
+	EXPECT(PanelTurnQuarters(0, true, true, 1, false) == 0);
+	EXPECT(PanelTurnQuarters(0, false, true, 2, false) == 1);
 	// every choice leaves a display of either shape fitting the portrait image
 	for (long rotation = 0; rotation < 4; rotation++)
 		for (int landscape = 0; landscape < 2; landscape++)
 			for (long orientation = 0; orientation < 4; orientation++)
 			{
-				PanelTurn turn = { PanelTurnQuarters(rotation, landscape != 0, orientation, false),
+				PanelTurn turn = { PanelTurnQuarters(rotation, landscape != 0, false, orientation, false),
 								   landscape ? 48 : 32, landscape ? 32 : 48, 2 };
 				EXPECT(turn.ImageWidth() == 64 && turn.ImageHeight() == 96);
 			}

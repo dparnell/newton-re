@@ -11,6 +11,7 @@
 
 #include "Panel.h"
 #include "QTFB.h"
+#include "Folio.h"
 
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -135,6 +136,7 @@ private:
 	int					fMode;				// the refresh mode last set (-1: none yet)
 	bool				fPenDown;
 	int					fTouchId;			// the touch acting as the pen (NEWTON_RM_TOUCH=pen), -1 if none
+	RemarkableFolio		fFolio;				// the type folio's keys, read from its own device (Folio.h)
 };
 
 
@@ -360,16 +362,26 @@ QTFBPanel::Poll(RemarkableEvent* event, long timeoutMs)
 		return false;
 	if (fPenFd >= 0 && ReadPen(event))
 		return true;
-	struct pollfd p[2];
+	fFolio.Look();
+	if (fFolio.Read(event))
+		return true;
+	struct pollfd p[3];
 	p[0].fd = fSocket;
 	p[0].events = POLLIN;
 	p[0].revents = 0;
-	p[1].fd = fPenFd;
+	p[1].fd = fPenFd;					// (-1: poll passes over it)
 	p[1].events = POLLIN;
 	p[1].revents = 0;
-	if (poll(p, fPenFd >= 0 ? 2 : 1, (int) timeoutMs) <= 0)
+	p[2].fd = fFolio.Fd();
+	p[2].events = POLLIN;
+	p[2].revents = 0;
+	if (fFolio.Fd() < 0 && timeoutMs > 1000)
+		timeoutMs = 1000;				// (to look for the folio again)
+	if (poll(p, 3, (int) timeoutMs) <= 0)
 		return false;
 	if (fPenFd >= 0 && (p[1].revents & POLLIN) != 0 && ReadPen(event))
+		return true;
+	if (p[2].fd >= 0 && (p[2].revents & (POLLIN | POLLHUP | POLLERR)) != 0 && fFolio.Read(event))
 		return true;
 	if ((p[0].revents & (POLLIN | POLLHUP | POLLERR)) == 0)
 		return false;

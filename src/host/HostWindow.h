@@ -29,6 +29,12 @@
 // display comes as its size and its bytes)
 bool	HostWindowStart(long width, long height, const unsigned char* pixels, const char* title, long scale);	// the window opened on its thread over the display's grays (0 white .. 255 black, width per row); ==> whether it could be
 void	HostWindowStop(void);								// the window closed and its thread joined
+// The display's size (--display) made the shape the window will show it:
+// unchanged on a desktop; on a reMarkable landscape when the tablet is
+// (its type folio attached) - its AppLoad shows newton's picture upright
+// whichever way it is turned, and the picture's shape is fixed when the
+// window opens (docs/host-remarkable.md, "Rotation")
+void	HostWindowPreferredDisplay(long* width, long* height);
 // A press (what 0), a move (1) or a release (2) of the mouse at a point of
 // the display, given to the window as the mouse's would be - posted to its
 // message queue on Windows - so that a test drives the pen through the

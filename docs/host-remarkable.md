@@ -198,35 +198,60 @@ device (rmkit) as Linux key codes; both are turned into the Windows virtual
 key codes `host/HostKeyboard.cpp` maps to the Newton's.  AppLoad sends Qt's
 `key()`, the symbol typed (Shift+1 is `!`), with the Shift key's own press
 around it, so each symbol is mapped to the US key that types it and the
-Newton's Shift does the rest; the folio itself is `rM_Keyboard` on
-`/dev/input/event4`.  The Newton's own
+Newton's Shift does the rest (a newer AppLoad's way; the folio is read
+directly: below).  The Newton's own
 on-screen keyboard works as on a MessagePad, with the pen.  The power key
 is mapped to F12, the Newton's power switch - though under AppLoad xochitl
 probably keeps it (to be seen on the device).  **Closing**: AppLoad's drag
 down from the top centre closes the socket; newton ends the run as a closed
 window does.
 
-**Rotation.**  The manifest says `supportsRotation` (`package.py`, not for
-the rmkit variant): AppLoad then shows newton's framebuffer square on the
-glass however the tablet is held - painting it turned against its own
-interface - hands pen and touch points back in the framebuffer's pixels, and
-sends the rotation (`MESSAGE_DEVICE_STATE_INIT`/`_CHANGED`: 0 upright, 1 its
-interface a quarter left, 2 right, 3 upside down) when newton connects and
-whenever it changes - folding the type folio back turns the tablet to
-landscape.  The window passes it on (`host/HostOrientation.h`): the
-kernel services task sends `hostDisplay:Turn` to the newt world, which calls
-the ROM's `SetScreenOrientation` when the Newton's screen is the other
-shape - landscape 1 for a quarter left, 3 for right, back to the portrait it
-booted in (2) upright or upside down - so the root view and the
-applications are laid out again as the Rotate button lays them out.  The
-window, which looks at the display's shape every round, draws the turned
-display into its (always portrait) image a quarter clockwise for a quarter
-left, anticlockwise for right (`remarkable/PanelTurn.h`, ctest
-`host.PanelTurn`), and turns pen points back; `NEWTON_RM_TURN_FLIP=1` swaps
-the two sideways turns should a tablet turn the other way.  The Newton turned
-by its own Rotate button while the tablet is upright is drawn sideways, as
-on a MessagePad.  `HostDeviceRotation(r)` asks the same from a script
-(ctest `host.NewtonRotation`, `demo/rotation.ns`).
+**The type folio.**  Its keyboard is `rM_Keyboard` on the pogo connector
+(`/dev/input/event4` on the owner's tablet, language `US` in its sysfs
+node), there only while the folio is attached.  The tablet's AppLoad
+(February 2026 firmware) forwarded none of its keys to newton - AppLoad
+passes keys only when its window has Qt's keyboard focus - so newton reads
+the device itself (`remarkable/Folio.cpp`, Linux key codes through
+`remarkable/LinuxKeys.h`) and takes it for its own (EVIOCGRAB) so xochitl
+underneath does not type as well; it is looked for again every second while
+the folio is away.  `NEWTON_RM_KEYBOARD=off` leaves the keys to AppLoad,
+`NEWTON_RM_KEYBOARD_GRAB=0` reads them without taking them.  The Hall
+sensors (`/dev/input/event1`) say how the folio lies: with it attached and
+in typing position switch 15 (`SW_MACHINE_COVER`) is on and `SW_LID` off;
+what the other positions read is still to be logged (`evtest`).
+
+**Rotation.**  The tablet's interface turns to landscape with the folio,
+and that AppLoad shows newton's framebuffer upright in whichever way the
+interface is turned, scaled to fit - so a portrait framebuffer on a
+landscape screen is a small portrait picture in the middle.  The
+framebuffer's size is fixed once it is asked for (AppLoad refuses a second
+initialise of another size), so newton picks the shape as it starts
+(`HostWindowPreferredDisplay`): landscape when the folio is attached -
+`--display 810x1080` becomes 1080 x 810, asked for as 2160 x 1620 at 2x,
+and the Newton boots in landscape (orientation 1) - portrait otherwise.
+`NEWTON_RM_ORIENTATION=portrait|landscape` forces one.  Attaching or taking
+off the folio while newton runs does not turn it: close Newton and open it
+again.
+
+An AppLoad from September 2026 on can turn a running application:
+`package.py --rotation` sets the manifest's `supportsRotation` and
+`NEWTON_RM_ORIENTATION=appload`.  AppLoad then shows the framebuffer square
+on the glass however the tablet is held, hands pen and touch points back in
+the framebuffer's pixels, and sends the rotation (`MESSAGE_DEVICE_STATE_INIT`/
+`_CHANGED`: 0 upright, 1 its interface a quarter left, 2 right, 3 upside
+down).  The window passes it on (`host/HostOrientation.h`): the kernel
+services task sends `hostDisplay:Turn` to the newt world, which calls the
+ROM's `SetScreenOrientation` when the Newton's screen is the other shape -
+landscape 1 for a quarter left, 3 for right, back to the portrait it booted
+in (2) upright or upside down - so the root view and the applications are
+laid out again as the Rotate button lays them out.  The window, which looks
+at the display's shape every round, draws the turned display into its image
+turned to match (`remarkable/PanelTurn.h`, ctest `host.PanelTurn`) and turns
+pen points back; `NEWTON_RM_TURN_FLIP=1` swaps the two sideways turns
+should they come out upside down (worked out from AppLoad's source, not yet
+seen on a tablet).  The Newton turned by its own Rotate button is drawn
+sideways, as on a MessagePad.  `HostDeviceRotation(r)` asks the same from a
+script (ctest `host.NewtonRotation`, `demo/rotation.ns`).
 
 **Sound**: the tablet has no loudspeaker; the null backend (silent) as on any
 host without one.  **Storage**: `--store /home/root/newton-data/internal.store`
@@ -622,7 +647,7 @@ To remove everything: `rm -r /home/root/xovi/exthome/appload/{newton,newton-rmki
    if needed have the live inker's tile updates go out at once in the fast
    waveform (the window already knows the inker's rectangle is all that
    changed) - one to three days.
-4. *(built, to be tried on the glass: "Rotation" above)* Rotation (AppLoad's DEVICE_STATE_CHANGED -> the Newton's
+4. *(the folio at start-up done; turning as the tablet turns needs a newer AppLoad: "Rotation" above)* Rotation (AppLoad's DEVICE_STATE_CHANGED -> the Newton's
    `SetScreenOrientation`, the panel image turned), the Move's size, touch
    gestures (two fingers for scrolling?) - two days.
 5. Distribution: a `Newton` package for Vellum (apk) or AppLoad's own format,
