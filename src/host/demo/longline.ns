@@ -1,0 +1,142 @@
+// Long lines across the Notepad - the stroke that brought newton down on
+// the reMarkable Paper Pro: a long line drawn left to right with an upward
+// slope, which the shape recogniser's key-point finder (FindCubic1 ->
+// TVStrTail) read a point of with an index that only the ARM's 32-bit
+// address arithmetic kept in bounds (recognition/ShapeKeyPoints.cpp).
+// Each line is drawn on the Notepad as it starts after Setup (its own
+// recognition settings), at a few slopes and lengths, scaled to the
+// display, and the page must take each before the next is drawn.
+//
+//   build/host/host/newton --display 810x1080 --erase --store x.store --headless 200 --script src/host/demo/longline.ns
+//
+// Prints "longline: line <n>: ok" and "longline: done, <failed> failed"
+// (ctests host.NewtonLongLine.320x480 and .810x1080).
+
+HostInclude("common.ns");			// waitFor, tapAt, typeKey
+HostInclude("penhelpers.ns");		// penStroke, penPath
+
+name := [2, 0, 45, 34, 14, 37];				// "Daniel" in ADB key codes
+longlineFailures := 0;
+longlineBox := nil;
+
+// a line from (x0, y0) to (x1, y1) given in thousandths of the page, a
+// point every `step` pixels - a tablet sampling 80 times a second gives a
+// fast line a point every 10 to 20 pixels, not the 4 of penPath
+longlinePath := func(x0, y0, x1, y1, step)
+  begin
+    local w := longlineBox.right - longlineBox.left, h := longlineBox.bottom - longlineBox.top;
+    local fromX := longlineBox.left + w * x0 div 1000, fromY := longlineBox.top + h * y0 div 1000;
+    local toX := longlineBox.left + w * x1 div 1000, toY := longlineBox.top + h * y1 div 1000;
+    local steps := Max(Abs(toX - fromX), Abs(toY - fromY)) div step;
+    local pts := [];
+    for k := 0 to steps do
+      begin
+        AddArraySlot(pts, fromX + ((toX - fromX) * k) div steps);
+        AddArraySlot(pts, fromY + ((toY - fromY) * k) div steps);
+      end;
+    pts;
+  end;
+
+longlines := [];
+foreach step in [4, 16] do
+  foreach l in [
+    [ 40, 700, 960, 500],		// long, rising gently
+    [ 40, 900, 960, 300],		// long, rising steeply
+    [ 60, 600, 940, 560],		// long, nearly level
+    [ 40, 850, 960, 820],		// the whole width, a slight rise
+    [100, 450, 700, 300]		// shorter, rising
+  ] do AddArraySlot(longlines, [l[0], l[1], l[2], l[3], step]);
+
+// what the page holds: its views, counted, so a line taken (as a shape,
+// ink or words) shows as a change
+longlineViews := func(v)
+  begin
+    local n := 1;
+    foreach child in v:ChildViewFrames() do
+      n := n + call longlineViews with (child);
+    n;
+  end;
+
+longlineNext := func(n)
+  begin
+    if n >= Length(longlines) then
+      begin
+        ScreenSnapshot("build/longline.pgm");
+        Print("longline: done, " & longlineFailures & " failed");
+        return HostQuit();
+      end;
+    local before := call longlineViews with (GetRoot());
+    local l := longlines[n];
+    call penStroke with (call longlinePath with (l[0], l[1], l[2], l[3], l[4]));
+    IdleStrokes();
+    // the line taken by the page (a shape, ink or words: a view more), or
+    // still there as ink once the recogniser has had it
+    call waitFor with ("longline: line " & n,
+      func() call longlineViews with (GetRoot()) <> before,
+      func() begin
+        Print("longline: line " & n & ": ok");
+        // (a tap within half a second of writing is more writing: the next
+        // line waits until the recogniser has let this one go)
+        AddDelayedCall(func() call longlineNext with (n + 1), nil, 1500);
+      end, 30);
+  end;
+
+// Setup walked through at any size: Continue found by its text (as
+// demo/bigscreen.ns does), the name typed where the page asks for it, the
+// calibration targets tapped by the host (HostTabletAutoCalibrate)
+longlineFindText := func(view, text) begin
+	local found := nil;
+	if view.viewCObject then begin
+		if view.text and IsString(view.text) and StrEqual(view.text, text) then
+			found := view
+		else
+			foreach child in view:ChildViewFrames() do
+				if not found then found := call longlineFindText with (child, text);
+	end;
+	found;
+end;
+
+longlineWalk := func(andThen) begin
+	local setup := GetRoot().setup;
+	if not (setup and setup.viewCObject) then
+		return call waitFor with ("longline: the Notepad", func() GetRoot().paperroll and GetRoot().paperroll.viewCObject, andThen, 60);
+	local first := call longlineFindText with (setup, "First");
+	if first then begin
+		local b := first:GlobalBox();
+		call tapAt with (b.right + 60, (b.top + b.bottom) div 2);
+		foreach c in name do call typeKey with (c);
+	end;
+	local button := call longlineFindText with (setup, "Continue");
+	if not button then button := call longlineFindText with (setup, "Done");
+	local page := setup.fCurrentPageIndex;
+	local tapped := Ticks() - 1000;
+	call waitFor with ("longline: setup page " & NumberStr(page), func() begin
+			// (again every three seconds while nothing has come of it - a
+			// tap made while the machine is still starting is not taken)
+			if button and GetRoot().setup and GetRoot().setup.viewCObject
+			   and GetRoot().setup.fCurrentPageIndex = page and Ticks() - tapped > 180 then begin
+				local b := button:GlobalBox();
+				HostTabletTap((b.left + b.right) div 2, (b.top + b.bottom) div 2, 100);
+				tapped := Ticks();
+			end;
+			not (GetRoot().setup and GetRoot().setup.viewCObject) or GetRoot().setup.fCurrentPageIndex <> page
+				or HostTabletCalibrationTarget()
+		end,
+		func() AddDelayedCall(func() call longlineWalk with (andThen), nil, 300), 60);
+end;
+
+HostTabletAutoCalibrate(true);
+call waitFor with ("longline: the Welcome page", func() GetRoot().setup and GetRoot().setup.viewCObject
+		and call longlineFindText with (GetRoot().setup, "Continue"), func()
+	call longlineWalk with (func() AddDelayedCall(func() begin
+		// the Notepad reading text and shapes (its own 864 and 128, as the
+		// recognition menu's Text and Shapes; demo/shapes.ns): the line goes
+		// through the shape recogniser
+		GetRoot().paperroll._recogSettings := 864 + 128;
+		PurgeAreaCache();
+		longlineBox := GetAppParams().appAreaBounds;
+		// the page's area, inside the Notepad's title bar and button bar
+		longlineBox := {left: longlineBox.left + 10, top: longlineBox.top + 60,
+						right: longlineBox.right - 10, bottom: longlineBox.bottom - 60};
+		call longlineNext with (0);
+	end, nil, 1500)), 90);

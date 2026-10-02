@@ -38,7 +38,7 @@ DATA=/home/root/newton-data/$(basename "$PWD")     # one store per app: each dis
 mkdir -p "$DATA/printed"
 echo "--- $(date) newton starting, pid $$" >> "$DATA/newton.log"
 # the window's tracing and snapshots (kill -USR2 <pid> writes $DATA/panel-N.pgm)
-export NEWTON_RM_TRACE=1 NEWTON_RM_SNAPDIR="$DATA"
+export NEWTON_RM_TRACE=1 NEWTON_RM_SNAPDIR="$DATA" NEWTON_RM_PENLOG="$DATA/pen-$(date +%Y%m%d-%H%M%S).log"
 # a test script left in $DATA runs at boot (docs/host-remarkable.md)
 [ -f "$DATA/script.ns" ] && set -- --script "$DATA/script.ns" "$@"
 exec ./newton --objects romsrc-objects.bin --display {display} --store "$DATA/internal.store" \\

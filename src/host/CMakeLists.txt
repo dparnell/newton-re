@@ -135,7 +135,7 @@ else()
         message(STATUS "no ALSA: newton runs silent (install the ALSA development headers for sound)")
     endif()
 endif()
-add_library(host_window STATIC ${host_window_source} ${host_audio_source})
+add_library(host_window STATIC ${host_window_source} ${host_audio_source} HostPenReplay.cpp)
 target_include_directories(host_window PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 if(NEWTON_HOST_WINDOW STREQUAL "remarkable")
     target_link_libraries(host_window PUBLIC rt pthread dl)
@@ -1056,6 +1056,20 @@ add_test(NAME host.NewtonCorrect COMMAND newton --display 320x480 --headless 90
 set_tests_properties(host.NewtonCorrect PROPERTIES TIMEOUT 180
                      PASS_REGULAR_EXPRESSION "reads \"tor\": ok.*correct: done, 0 failed"
                      FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+
+# long rising lines across the Notepad reading text and shapes, at the
+# MessagePad's size and at the reMarkable's 2x: the shape recogniser's
+# TVStrTail read a point 16 GB away on a 64-bit host (demo/longline.ns)
+foreach(longlineSize 320x480 810x1080)
+    add_test(NAME host.NewtonLongLine.${longlineSize}
+             COMMAND newton --display ${longlineSize} --erase
+                     --store ${CMAKE_CURRENT_BINARY_DIR}/longline-${longlineSize}.store --headless 400
+                     --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/longline.ns
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonLongLine.${longlineSize} PROPERTIES TIMEOUT 500
+                         PASS_REGULAR_EXPRESSION "longline: done, 0 failed"
+                         FAIL_REGULAR_EXPRESSION "FAILED|waited in vain|fell over")
+endforeach()
 
 # a line, a box, a triangle and a circle drawn and recognised as shapes (demo/shapes.ns)
 add_test(NAME host.NewtonShapes COMMAND newton --display 320x480 --headless 90

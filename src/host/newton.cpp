@@ -124,6 +124,7 @@
 #include "HostScreen.h"
 #include "HostKeyboard.h"
 #include "HostWindow.h"
+#include "HostPenReplay.h"
 #include "HostAudio.h"
 #include "UserBoot.h"
 #include "UserTasks.h"
@@ -346,6 +347,30 @@ WindowPenTap(long x, long y, Boolean down)
 }
 
 
+// HostPenReplay(path): a pen recorded with NEWTON_RM_PENLOG played back
+// through the window's pen (host/HostPenReplay.h); HostPenReplayDone()
+static Ref
+FHostPenReplay(RefArg /*rcvr*/, RefArg path)
+{
+	if (!IsString(path))
+		ThrowBadTypeWithFrameData(kNSErrNotAString, path);
+	char buffer[1024];
+	long n = Length(path) / 2 - 1;
+	const UniChar* text = (const UniChar*) BinaryData(path);
+	long i = 0;
+	for (; i < n && i < (long) sizeof(buffer) - 1; i++)
+		buffer[i] = (char) text[i];
+	buffer[i] = 0;
+	return MAKEINT(HostPenReplayStart(buffer));
+}
+
+static Ref
+FHostPenReplayDone(RefArg /*rcvr*/)
+{
+	return HostPenReplayDone() ? TRUEREF : NILREF;
+}
+
+
 // HostRebootCount(): how many times the machine has restarted in this run
 // (host/HostRestart.h)
 static Ref
@@ -507,6 +532,8 @@ NewtonPreMain(void)
 {
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostQuit")), RefVar(MakeCFunction((void*) FHostQuit, 0, nil)));
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostRebootCount")), RefVar(MakeCFunction((void*) FHostRebootCount, 0, nil)));
+	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostPenReplay")), RefVar(MakeCFunction((void*) FHostPenReplay, 1, nil)));
+	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostPenReplayDone")), RefVar(MakeCFunction((void*) FHostPenReplayDone, 0, nil)));
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostInclude")), RefVar(MakeCFunction((void*) FHostInclude, 1, nil)));
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostCPUTime")), RefVar(MakeCFunction((void*) FHostCPUTime, 0, nil)));
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostThreadCPUTime")), RefVar(MakeCFunction((void*) FHostThreadCPUTime, 0, nil)));

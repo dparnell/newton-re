@@ -387,6 +387,10 @@ WindowThread(void)
 	// did not ink (a drag on a button) is put back from its display once the
 	// pen has been up NEWTON_RM_OVERLAY_HOLD ms
 	const bool overlay = EnvLong("NEWTON_RM_PEN_OVERLAY", 1) != 0;
+	// NEWTON_RM_PENLOG=<file>: every pen event the Newton is given, as
+	// "milliseconds what x y" in display pixels (what 0 down, 1 move, 2 up),
+	// for host/HostPenReplay.h to play back on another host
+	FILE* penLog = getenv("NEWTON_RM_PENLOG") != nil ? fopen(getenv("NEWTON_RM_PENLOG"), "w") : nil;
 	const long overlayHoldMs = EnvLong("NEWTON_RM_OVERLAY_HOLD", 400);
 	const bool touchIsPen = getenv("NEWTON_RM_TOUCH") != nil && strcmp(getenv("NEWTON_RM_TOUCH"), "pen") == 0;
 	const long frameMs = EnvLong("NEWTON_RM_FRAME", 33);		// the pace with the pen up
@@ -523,6 +527,8 @@ WindowThread(void)
 					gPenDown.store(true);
 					trace.PenEvent(true);
 					HostWindowPenDown(x, y);
+					if (penLog != nil)
+						fprintf(penLog, "%.0f 0 %ld %ld\n", Ms(std::chrono::steady_clock::now() - started), x, y);
 					penX = penDownX = event.x - originX;
 					penY = penDownY = event.y - originY;
 					penDrawing = false;
@@ -534,6 +540,8 @@ WindowThread(void)
 				{
 					trace.PenEvent(false);
 					HostWindowPenMove(x, y);
+					if (penLog != nil)
+						fprintf(penLog, "%.0f 1 %ld %ld\n", Ms(std::chrono::steady_clock::now() - started), x, y);
 					if (overlay)
 					{
 						long px = event.x - originX, py = event.y - originY;
@@ -559,6 +567,11 @@ WindowThread(void)
 				if (gPenDown.load())
 				{
 					HostWindowPenUp();
+					if (penLog != nil)
+					{
+						fprintf(penLog, "%.0f 2 %ld %ld\n", Ms(std::chrono::steady_clock::now() - started), x, y);
+						fflush(penLog);
+					}
 					gPenDown.store(false);
 					trace.PenUp();
 					if (penDrawing && ovR > ovL)
@@ -584,6 +597,8 @@ WindowThread(void)
 	}
 	if (trace.fOn)
 		counts.Report(Ms(std::chrono::steady_clock::now() - started) / 1000.0);
+	if (penLog != nil)
+		fclose(penLog);
 	free(shown);
 	if (closed)
 		HostWindowClosed();				// AppLoad closed it: the run ends, as a window's close button ends it

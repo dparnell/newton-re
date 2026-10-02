@@ -586,7 +586,18 @@ TVStrTail(ULong i, FPoint* pts, FPoint* keys, char* kinds, uint32_t* breaks,
 	else
 	{
 		ULong at = breaks[i];
-		long mid = (long) (at + ((breaks[i + 1] - at) >> 1));
+		// ROM BUG, kept: at the stroke's last corner (FindCubic1 calls this
+		// for i = n - 1 after a straight last segment) breaks[i + 1] is past
+		// the corners - the 0xffffffff FindKeyPoints fills the table with -
+		// so the "middle" is some 2^31 points on.  On the ARM the address
+		// pts + mid * 8 wraps at 32 bits and lands on point mid mod 2^29,
+		// inside the stroke, and the tangent comes out of a point a little
+		// before the start; a 64-bit host would read 16 GB away and fall
+		// over (a long rising line on the reMarkable did, in the shape
+		// recogniser).  The index is wrapped as the ARM's address is
+		// (DEVIATION in form only: the same point is read).
+		ULong32 mid32 = (ULong32) at + (((ULong32) breaks[i + 1] - (ULong32) at) >> 1);
+		long mid = (long) (mid32 & 0x1fffffff);
 		Fixed sx = pts[mid].x - pts[at].x;
 		Fixed sy = pts[mid].y - pts[at].y;
 		FPoint chord = { dx, dy };
