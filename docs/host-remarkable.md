@@ -206,6 +206,24 @@ probably keeps it (to be seen on the device).  **Closing**: AppLoad's drag
 down from the top centre closes the socket; newton ends the run as a closed
 window does.
 
+**The pen read directly** (`NEWTON_RM_PEN=evdev`; the app "Newton (direct
+pen)").  AppLoad forwards the Marker through xochitl's event loop, which
+each of newton's updates keeps busy redrawing the window, so its points
+come late and bunched: in a pen log of 2026-10-02 about 930 of 1080 gaps
+were under 1 ms at ~400 events a second, and the Newton, sampling the
+latest point 80 times a second, drew each bunch as a straight jump - jagged
+handwriting.  Read from `/dev/input/event2` the gaps were mostly the
+Marker's own 1-5 ms (446 of 879, against 60 of 781 through AppLoad).  But
+the device's points are the panel's, and AppLoad does not always show the
+framebuffer square on the panel (v0.4.2 with the folio: turned and scaled
+into a portrait area in the middle), so the map is learnt
+(`remarkable/PenFit.h`, ctest `host.PenFit`): each stroke's first and last
+points are the same place in both streams, an affine map is fitted by
+least squares to the last eight such pairs once three off a line agree
+within 24 pixels, and from then on each stroke is the device's; until then,
+and again from scratch when a pair disagrees (the tablet turned), AppLoad's
+own points are the pen.  The log says "the pen's map learnt" and "dropped".
+
 **The type folio.**  Its keyboard is `rM_Keyboard` on the pogo connector
 (`/dev/input/event4` on the owner's tablet, language `US` in its sysfs
 node), there only while the folio is attached.  The tablet's AppLoad

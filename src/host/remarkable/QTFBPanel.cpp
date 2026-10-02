@@ -26,6 +26,8 @@
 #include <string.h>
 #include <linux/input.h>
 #include <sys/ioctl.h>
+#include <time.h>
+#include "PenFit.h"
 
 #define nil 0
 
@@ -102,7 +104,9 @@ class QTFBPanel : public RemarkablePanel
 public:
 						QTFBPanel() : fSocket(-1), fShm(nil), fShmSize(0), fWidth(0), fHeight(0), fPanelWidth(0), fPanelHeight(0), fLeft(0), fTop(0),
 										 fMode(-1), fPenDown(false), fTouchId(-1), fPenFd(-1), fPenMaxX(1), fPenMaxY(1), fPenX(0), fPenY(0),
-										 fPenTouch(false), fPenWasDown(false), fPenMoved(false), fFlipX(false), fFlipY(false), fSwapXY(false) {}
+										 fPenTouch(false), fPenWasDown(false), fPenMoved(false), fFlipX(false), fFlipY(false), fSwapXY(false),
+										 fGlassWidth(1620), fGlassHeight(2160), fRawDownU(0), fRawDownV(0), fRawUpU(0), fRawUpV(0),
+										 fRawDownAt(0), fRawUpAt(0), fStroke(kNoStroke) {}
 	virtual				~QTFBPanel() { Close(); }
 	virtual const char*	Name(void) { return "qtfb"; }
 	virtual bool		NativeSize(long* width, long* height);
@@ -133,6 +137,15 @@ private:
 	long				fPenX, fPenY;
 	bool				fPenTouch, fPenWasDown, fPenMoved;
 	bool				fFlipX, fFlipY, fSwapXY;
+	// the device's points mapped into the framebuffer by what AppLoad's pen
+	// events show (PenFit.h): each stroke is the device's once the map is
+	// learnt, AppLoad's until then
+	PenFit				fFit;
+	long				fGlassWidth, fGlassHeight;	// the panel itself (the framebuffer may be another size)
+	double				fRawDownU, fRawDownV, fRawUpU, fRawUpV;	// the device's last stroke's ends, in the panel's pixels
+	long long			fRawDownAt, fRawUpAt;		// when (ms)
+	enum { kNoStroke, kStrokeFromAppLoad, kStrokeFromDevice } fStroke;
+	void				Pair(double u, double v, long long at, long x, long y);
 	int					fMode;				// the refresh mode last set (-1: none yet)
 	bool				fPenDown;
 	int					fTouchId;			// the touch acting as the pen (NEWTON_RM_TOUCH=pen), -1 if none
@@ -187,13 +200,15 @@ QTFBPanel::NativeSize(long* width, long* height)
 	*width = 1620;
 	*height = 2160;
 	fPanelWidth = 1620;
+	fGlassWidth = 1620;
+	fGlassHeight = 2160;
 	fPanelHeight = 2160;
 	const char* panel = getenv("NEWTON_RM_PANEL");
 	long w, h;
 	if (panel != nil && sscanf(panel, "%ldx%ld", &w, &h) == 2 && w > 0 && h > 0)
 	{
-		*width = fPanelWidth = w;
-		*height = fPanelHeight = h;
+		*width = fPanelWidth = fGlassWidth = w;
+		*height = fPanelHeight = fGlassHeight = h;
 		return true;
 	}
 	FILE* f = fopen("/proc/device-tree/model", "r");
@@ -205,13 +220,13 @@ QTFBPanel::NativeSize(long* width, long* height)
 		fclose(f);
 		if (strstr(model, "Chiappa") != nil || strstr(model, "Move") != nil)
 		{
-			*width = fPanelWidth = 954;
-			*height = fPanelHeight = 1696;
+			*width = fPanelWidth = fGlassWidth = 954;
+			*height = fPanelHeight = fGlassHeight = 1696;
 		}
 		else if (strstr(model, "reMarkable 2") != nil)
 		{
-			*width = fPanelWidth = 1404;
-			*height = fPanelHeight = 1872;
+			*width = fPanelWidth = fGlassWidth = 1404;
+			*height = fPanelHeight = fGlassHeight = 1872;
 		}
 	}
 	return true;
@@ -416,9 +431,30 @@ QTFBPanel::Poll(RemarkableEvent* event, long timeoutMs)
 	event->id = message.userInput.devId;
 	switch (message.userInput.inputType)
 	{
-	case kQTFBPenPress:		event->kind = fPenFd >= 0 ? RemarkableEvent::kNone : RemarkableEvent::kPenDown; break;	// (the device's own, when it is read)
-	case kQTFBPenUpdate:	event->kind = fPenFd >= 0 ? RemarkableEvent::kNone : RemarkableEvent::kPenMove; break;
-	case kQTFBPenRelease:	event->kind = fPenFd >= 0 ? RemarkableEvent::kNone : RemarkableEvent::kPenUp; break;
+	case kQTFBPenPress:
+		if (fPenFd >= 0)
+		{
+			// the device's stroke began here: a pair for the map
+			Pair(fRawDownU, fRawDownV, fRawDownAt, event->x, event->y);
+			if (fStroke != kNoStroke)
+				{ event->kind = RemarkableEvent::kNone; break; }
+			fStroke = kStrokeFromAppLoad;
+		}
+		event->kind = RemarkableEvent::kPenDown;
+		break;
+	case kQTFBPenUpdate:
+		event->kind = fPenFd < 0 || fStroke == kStrokeFromAppLoad ? RemarkableEvent::kPenMove : RemarkableEvent::kNone;
+		break;
+	case kQTFBPenRelease:
+		if (fPenFd >= 0)
+		{
+			Pair(fRawUpU, fRawUpV, fRawUpAt, event->x, event->y);
+			if (fStroke != kStrokeFromAppLoad)
+				{ event->kind = RemarkableEvent::kNone; break; }
+			fStroke = kNoStroke;
+		}
+		event->kind = RemarkableEvent::kPenUp;
+		break;
 	case kQTFBTouchPress:	event->kind = RemarkableEvent::kTouchDown; break;
 	case kQTFBTouchUpdate:	event->kind = RemarkableEvent::kTouchMove; break;
 	case kQTFBTouchRelease:	event->kind = RemarkableEvent::kTouchUp; break;
@@ -509,17 +545,56 @@ QTFBPanel::ReadPen(RemarkableEvent* event)
 			if (fSwapXY) { double t = u; u = v; v = t; }
 			if (fFlipX) u = 1.0 - u;
 			if (fFlipY) v = 1.0 - v;
-			event->x = (long) (u * (fPanelWidth - 1) + 0.5);
-			event->y = (long) (v * (fPanelHeight - 1) + 0.5);
-			event->key = -1;
-			event->kind = down && !fPenWasDown ? RemarkableEvent::kPenDown
-						: down ? RemarkableEvent::kPenMove : RemarkableEvent::kPenUp;
+			u *= fGlassWidth - 1;				// the panel's pixels
+			v *= fGlassHeight - 1;
+			RemarkableEvent::Kind kind = down && !fPenWasDown ? RemarkableEvent::kPenDown
+									   : down ? RemarkableEvent::kPenMove : RemarkableEvent::kPenUp;
 			fPenWasDown = down;
 			fPenMoved = false;
+			struct timespec now;
+			clock_gettime(CLOCK_MONOTONIC, &now);
+			long long ms = (long long) now.tv_sec * 1000 + now.tv_nsec / 1000000;
+			if (kind == RemarkableEvent::kPenDown)
+			{
+				fRawDownU = u; fRawDownV = v; fRawDownAt = ms;
+				if (fStroke == kNoStroke && fFit.Ready())
+					fStroke = kStrokeFromDevice;
+			}
+			fRawUpU = u; fRawUpV = v; fRawUpAt = ms;
+			if (fStroke != kStrokeFromDevice)
+				continue;						// (AppLoad's stroke: its own points are the pen)
+			if (kind == RemarkableEvent::kPenUp)
+				fStroke = kNoStroke;
+			double x, y;
+			fFit.Map(u, v, &x, &y);
+			event->x = (long) floor(x + 0.5);
+			event->y = (long) floor(y + 0.5);
+			event->key = -1;
+			event->kind = kind;
 			return true;
 		}
 	}
 	return false;
+}
+
+
+// A point of the device's stroke and the one AppLoad gave for it (its
+// first or last): the map learnt from them, if they are of the same moment
+void
+QTFBPanel::Pair(double u, double v, long long at, long x, long y)
+{
+	struct timespec now;
+	clock_gettime(CLOCK_MONOTONIC, &now);
+	long long ms = (long long) now.tv_sec * 1000 + now.tv_nsec / 1000000;
+	if (at == 0 || ms - at > 500)
+		return;
+	bool was = fFit.Ready();
+	bool agreed = fFit.Add(u, v, (double) x, (double) y);
+	if (!agreed)
+		fprintf(stderr, "[host] qtfb: the pen's map dropped (the panel's %.0f,%.0f is AppLoad's %ld,%ld): AppLoad's points until it is learnt again\n", u, v, x, y);
+	else if (!was && fFit.Ready())
+		fprintf(stderr, "[host] qtfb: the pen's map learnt: x = %.4f u + %.4f v + %.1f, y = %.4f u + %.4f v + %.1f - the device's points from now on\n",
+				fFit.fA, fFit.fB, fFit.fC, fFit.fD, fFit.fE, fFit.fF);
 }
 
 

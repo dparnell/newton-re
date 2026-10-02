@@ -898,6 +898,10 @@ set_tests_properties(host.NewtonRotation PROPERTIES TIMEOUT 180
 # (remarkable/PanelTurn.h: no platform headers, so tested on every host)
 add_executable(test_PanelTurn remarkable/tests/test_PanelTurn.cpp)
 add_test(NAME host.PanelTurn COMMAND test_PanelTurn)
+# the map from the Marker's own points to the framebuffer, learnt from
+# AppLoad's (remarkable/PenFit.h)
+add_executable(test_PenFit remarkable/tests/test_PenFit.cpp)
+add_test(NAME host.PenFit COMMAND test_PenFit)
 
 add_test(NAME host.NewtonSplash COMMAND newton --display 320x480 --headless 60
          --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/splash.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
