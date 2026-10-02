@@ -37,6 +37,7 @@
 #include <chrono>
 #include "HostWindow.h"
 #include "Panel.h"
+#include "PanelTurn.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -56,12 +57,15 @@ void	HostWindowPenMoveFine(long x8, long y8);
 void	HostWindowKey(long virtualKey, int down);
 void	HostWindowClosed(void);
 void	HostWindowThreadStarted(void);
+void	HostWindowDeviceRotation(long rotation);		// host/HostOrientation.h
+void	HostWindowDisplayShape(long* width, long* height, long* orientation);
 }
 
 #define nil 0
 
-static long					gWidth = 0;			// the display's size
+static long					gWidth = 0;			// the display's size, as it is turned now
 static long					gHeight = 0;
+static PanelTurn			gTurn = { 0, 0, 0, 1 };	// how it goes onto the panel's image (PanelTurn.h)
 static const unsigned char*	gPixels = nil;
 static long					gScale = 1;
 static std::thread*			gThread = nil;
@@ -228,12 +232,29 @@ PanelGray(unsigned char level)
 
 
 // the display's rectangle [left, right) x [top, bottom) into the panel's
-// image, each pixel scale by scale
+// image, each pixel scale by scale, turned as gTurn says
 static void
 PaintRect(const unsigned char* pixels, long left, long top, long right, long bottom)
 {
 	uint16_t* image = gPanel->Pixels();
 	long rowWords = gPanel->RowWords();
+	if (gTurn.quarters != 0)
+	{
+		for (long y = top; y < bottom; y++)
+		{
+			const unsigned char* row = pixels + y * gWidth;
+			for (long x = left; x < right; x++)
+			{
+				uint16_t pixel = PanelGray(row[x]);
+				long X, Y;
+				gTurn.Pixel(x, y, &X, &Y);
+				for (long j = 0; j < gScale; j++)
+					for (long i = 0; i < gScale; i++)
+						image[(Y + j) * rowWords + X + i] = pixel;
+			}
+		}
+		return;
+	}
 	for (long y = top; y < bottom; y++)
 	{
 		const unsigned char* row = pixels + y * gWidth;
@@ -343,6 +364,37 @@ DrawPanelLine(long x0, long y0, long x1, long y1, long width, long imageWidth, l
 }
 
 
+// The turn for the display's shape now and the way the device is held
+// (gRotation: AppLoad's).  ==> whether it changed since the last time
+static std::atomic<long>	gRotation(0);
+static long					gTurnRotation = -1, gTurnOrientation = -1;
+
+static bool
+UpdateTurn(long imageWidth, long imageHeight, bool flip)
+{
+	long width = 0, height = 0, orientation = 0;
+	HostWindowDisplayShape(&width, &height, &orientation);
+	if (width <= 0 || height <= 0)
+		{ width = gWidth; height = gHeight; }		// (no display yet: as it was given)
+	long rotation = gRotation.load();
+	if (width == gWidth && height == gHeight && rotation == gTurnRotation && orientation == gTurnOrientation)
+		return false;
+	PanelTurn turn = { PanelTurnQuarters(rotation, width > height, orientation, flip), width, height, gScale };
+	if (turn.ImageWidth() != imageWidth || turn.ImageHeight() != imageHeight)
+		turn.quarters = (turn.quarters + 1) & 3;	// (a display that started landscape: whichever way fits)
+	if (turn.ImageWidth() != imageWidth || turn.ImageHeight() != imageHeight)
+		return false;								// (the buffer being remade: not yet)
+	gWidth = width;
+	gHeight = height;
+	gTurn = turn;
+	gTurnRotation = rotation;
+	gTurnOrientation = orientation;
+	fprintf(stderr, "[host] reMarkable: the display %ld x %ld (orientation %ld), the device held %ld: turned %ld quarters\n",
+			width, height, orientation, rotation, turn.quarters);
+	return true;
+}
+
+
 static void
 WindowThread(void)
 {
@@ -395,7 +447,19 @@ WindowThread(void)
 	FILE* penLog = getenv("NEWTON_RM_PENLOG") != nil ? fopen(getenv("NEWTON_RM_PENLOG"), "w") : nil;
 	const bool wholePixels = EnvLong("NEWTON_RM_PEN_WHOLE", 0) != 0;
 	const long overlayHoldMs = EnvLong("NEWTON_RM_OVERLAY_HOLD", 400);
-	const bool touchIsPen = getenv("NEWTON_RM_TOUCH") != nil && strcmp(getenv("NEWTON_RM_TOUCH"), "pen") == 0;
+	// touch (NEWTON_RM_TOUCH: on by default, =off to ignore it): one finger
+	// is the pen, a tap or a drag, as on a MessagePad's resistive glass.
+	// The hand rests on the glass while the Marker writes, so a touch counts
+	// only with the Marker away - not down, and not within
+	// NEWTON_RM_TOUCH_HOLDOFF ms (800) of its last event - and a second
+	// finger ends the first one's stroke and is ignored until every finger
+	// is off the glass (a palm, or two fingers that were not meant as a tap)
+	const char* touchSetting = getenv("NEWTON_RM_TOUCH");
+	const bool touchIsPen = touchSetting == nil || strcmp(touchSetting, "off") != 0;
+	const long touchHoldoffMs = EnvLong("NEWTON_RM_TOUCH_HOLDOFF", 800);
+	// NEWTON_RM_TURN_FLIP=1: the sideways turns the other way round
+	// (PanelTurn.h), should the picture come out upside down in landscape
+	const bool turnFlip = EnvLong("NEWTON_RM_TURN_FLIP", 0) != 0;
 	const long frameMs = EnvLong("NEWTON_RM_FRAME", 33);		// the pace with the pen up
 	const long inkFrameMs = EnvLong("NEWTON_RM_INK_FRAME", 8);	// and down: live ink is drawn as fast as it can be sent
 	StrokeTrace trace;
@@ -408,6 +472,13 @@ WindowThread(void)
 		gPanel->Update(left, top, right, bottom, how);
 		counts.Count(how, (right - left) * (bottom - top), imageWidth * imageHeight);
 	};
+	// a rectangle of the display, sent where it is on the panel
+	auto sendDisplay = [&](long left, long top, long right, long bottom, RemarkableRefresh how)
+	{
+		long L, T, R, B;
+		gTurn.Rect(left, top, right, bottom, &L, &T, &R, &B);
+		send(L, T, R, B, how);
+	};
 	// the overlay's state: the last point drawn (panel pixels), whether the
 	// stroke has moved far enough to draw, what it has drawn, when to undo it
 	long penX = 0, penY = 0, penDownX = 0, penDownY = 0;
@@ -418,12 +489,18 @@ WindowThread(void)
 	static const char* kHow[] = { "ink", "ui", "content" };
 
 	// the grays last sent: all of them, first, in the clean waveform
-	unsigned char* shown = (unsigned char*) malloc((size_t) (gWidth * gHeight));
-	memset(shown, 0, (size_t) (gWidth * gHeight));
+	gTurn = { 0, gWidth, gHeight, gScale };
+	UpdateTurn(imageWidth, imageHeight, turnFlip);
+	const size_t displayBytes = (size_t) (gWidth * gHeight);	// (the same turned either way)
+	unsigned char* shown = (unsigned char*) malloc(displayBytes);
+	memset(shown, 0, displayBytes);
 	if (gPixels != nil)
-		memcpy(shown, gPixels, (size_t) (gWidth * gHeight));
+		memcpy(shown, gPixels, displayBytes);
 	PaintRect(shown, 0, 0, gWidth, gHeight);
 	send(0, 0, imageWidth, imageHeight, kRefreshContent);
+	long fingers = 0;						// how many touches are on the glass
+	bool fingersRejected = false;			// a second finger came: none is the pen until all are off
+	auto penLast = started - std::chrono::hours(1);	// the Marker's last event (the touch's hold-off)
 	long inkL = 0, inkT = 0, inkR = 0, inkB = 0;		// what went out in the fast waveform since the last settle
 	double changedScreens = 0;							// how much has changed since the last full refresh
 	auto lastChange = std::chrono::steady_clock::now();
@@ -443,6 +520,25 @@ WindowThread(void)
 		}
 		const unsigned char* pixels = gPixels;
 		long l, t, r, b;
+		if (UpdateTurn(imageWidth, imageHeight, turnFlip))
+		{
+			// the display turned, or the device: all of it again, in the
+			// clean waveform
+			if (gPenDown.load())
+			{
+				HostWindowPenUp();
+				gPenDown.store(false);
+			}
+			touchId = -1;
+			ovPending = false;
+			ovR = ovL;
+			inkR = inkL;
+			if (pixels != nil)
+				memcpy(shown, pixels, displayBytes);
+			PaintRect(shown, 0, 0, gWidth, gHeight);
+			send(0, 0, imageWidth, imageHeight, kRefreshContent);
+			changedScreens = 0;
+		}
 		if (ovPending && !gPenDown.load() && std::chrono::steady_clock::now() >= ovRestoreAt && pixels != nil)
 		{
 			// the overlay taken back: what the Newton's display holds there now
@@ -455,7 +551,7 @@ WindowThread(void)
 				for (long y = ovT; y < ovB; y++)
 					memcpy(shown + y * gWidth + ovL, pixels + y * gWidth + ovL, (size_t) (ovR - ovL));
 				PaintRect(pixels, ovL, ovT, ovR, ovB);
-				send(ovL * gScale, ovT * gScale, ovR * gScale, ovB * gScale, policy == kWaveUI ? kRefreshUI : kRefreshInk);
+				sendDisplay(ovL, ovT, ovR, ovB, policy == kWaveUI ? kRefreshUI : kRefreshInk);
 			}
 			ovPending = false;
 			ovR = ovL;
@@ -475,7 +571,7 @@ WindowThread(void)
 			PaintRect(pixels, l, t, r, b);
 			RemarkableRefresh how = policy == kWaveFast ? kRefreshInk : policy == kWaveUI ? kRefreshUI
 								  : gPenDown.load() ? kRefreshInk : kRefreshUI;
-			send(l * gScale, t * gScale, r * gScale, b * gScale, how);
+			sendDisplay(l, t, r, b, how);
 			trace.Updated(kHow[how], l, t, r, b);
 			if (how == kRefreshInk)
 				Union(&inkL, &inkT, &inkR, &inkB, l, t, r, b);
@@ -495,7 +591,7 @@ WindowThread(void)
 			}
 			else if (inkR > inkL && policy == kWaveSwitch)
 			{
-				send(inkL * gScale, inkT * gScale, inkR * gScale, inkB * gScale, kRefreshUI);
+				sendDisplay(inkL, inkT, inkR, inkB, kRefreshUI);
 				inkR = inkL;
 			}
 		}
@@ -507,13 +603,15 @@ WindowThread(void)
 		while (gPanel->Poll(&event, wait))
 		{
 			wait = 0;
-			long x = (event.x - originX) / gScale, y = (event.y - originY) / gScale;
 			// the pen to an eighth of a display pixel: at 2x the panel has
 			// twice the display's pixels and the Marker several readings to
 			// each, which a whole display pixel would throw away (the
 			// MessagePad's resistive tablet read about eight to the pixel);
-			// NEWTON_RM_PEN_WHOLE=1 gives the Newton whole pixels only
-			long x8 = ((event.x - originX) * 8) / gScale, y8 = ((event.y - originY) * 8) / gScale;
+			// NEWTON_RM_PEN_WHOLE=1 gives the Newton whole pixels only.  The
+			// point is the image's, turned back to the display's (PanelTurn.h)
+			long x8, y8;
+			gTurn.Point8(event.x - originX, event.y - originY, &x8, &y8);
+			long x = x8 >= 0 ? x8 / 8 : -1, y = y8 >= 0 ? y8 / 8 : -1;
 			if (wholePixels) { x8 = x * 8; y8 = y * 8; }
 			if (x8 < 0) x8 = 0;
 			if (y8 < 0) y8 = 0;
@@ -523,15 +621,55 @@ WindowThread(void)
 			if (y < 0) y = 0;
 			if (x >= gWidth) x = gWidth - 1;
 			if (y >= gHeight) y = gHeight - 1;
-			if (touchIsPen)
+			if (event.kind == RemarkableEvent::kPenDown || event.kind == RemarkableEvent::kPenMove
+			 || event.kind == RemarkableEvent::kPenUp)
 			{
-				// a finger as the pen: the first touch down, until it lifts
-				if (event.kind == RemarkableEvent::kTouchDown && touchId < 0 && !gPenDown.load())
-					{ touchId = 1; event.kind = RemarkableEvent::kPenDown; }
-				else if (event.kind == RemarkableEvent::kTouchMove && touchId >= 0)
+				penLast = std::chrono::steady_clock::now();
+				if (touchId >= 0)
+				{
+					// the Marker came while a finger was the pen: the Marker it is
+					touchId = -1;
+					fingersRejected = true;
+					if (gPenDown.load())
+					{
+						HostWindowPenUp();
+						gPenDown.store(false);
+					}
+				}
+			}
+			else if (event.kind == RemarkableEvent::kTouchDown)
+			{
+				fingers++;
+				bool markerNear = std::chrono::steady_clock::now() - penLast < std::chrono::milliseconds(touchHoldoffMs);
+				if (touchId >= 0 && event.id != touchId)
+				{
+					// a second finger: the first one's stroke ended where it was
+					touchId = -1;
+					fingersRejected = true;
+					event.kind = RemarkableEvent::kPenUp;
+				}
+				else if (touchIsPen && touchId < 0 && fingers == 1 && !fingersRejected && !gPenDown.load() && !markerNear)
+				{
+					touchId = event.id;
+					event.kind = RemarkableEvent::kPenDown;
+				}
+			}
+			else if (event.kind == RemarkableEvent::kTouchMove)
+			{
+				if (touchId >= 0 && event.id == touchId)
 					event.kind = RemarkableEvent::kPenMove;
-				else if (event.kind == RemarkableEvent::kTouchUp && touchId >= 0)
-					{ touchId = -1; event.kind = RemarkableEvent::kPenUp; }
+			}
+			else if (event.kind == RemarkableEvent::kTouchUp)
+			{
+				if (fingers > 0)
+					fingers--;
+				if (fingers == 0)
+					fingersRejected = false;
+				if (touchId >= 0 && event.id == touchId)
+				{
+					touchId = -1;
+					event.kind = RemarkableEvent::kPenUp;
+				}
 			}
 			switch (event.kind)
 			{
@@ -569,7 +707,9 @@ WindowThread(void)
 							{
 								send(rl, rt, rr, rb, policy == kWaveUI ? kRefreshUI : kRefreshInk);
 								counts.fOverlay++;
-								Union(&ovL, &ovT, &ovR, &ovB, rl / gScale, rt / gScale, (rr + gScale - 1) / gScale, (rb + gScale - 1) / gScale);
+								long dl, dt, dr, db;
+								gTurn.DisplayRect(rl, rt, rr, rb, &dl, &dt, &dr, &db);
+								Union(&ovL, &ovT, &ovR, &ovB, dl, dt, dr, db);
 							}
 							penX = px;
 							penY = py;
@@ -600,6 +740,12 @@ WindowThread(void)
 			case RemarkableEvent::kKeyUp:
 				if (event.key >= 0)
 					HostWindowKey(event.key, event.kind == RemarkableEvent::kKeyDown);
+				break;
+			case RemarkableEvent::kRotated:
+				// the tablet turned (or the folio folded back): the Newton's
+				// screen turned to match, and the picture with it
+				gRotation.store(event.x);
+				HostWindowDeviceRotation(event.x);
 				break;
 			case RemarkableEvent::kClosed:
 				closed = true;

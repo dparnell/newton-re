@@ -161,6 +161,7 @@ RMKitPanel::Queue(RemarkableEvent::Kind kind, long x, long y, long key)
 	fQueue[fTail].x = x;
 	fQueue[fTail].y = y;
 	fQueue[fTail].key = key;
+	fQueue[fTail].id = 0;
 	fTail = next;
 }
 

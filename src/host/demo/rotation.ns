@@ -1,0 +1,48 @@
+// The Newton's screen following the device (host/HostOrientation.h): what
+// the reMarkable's window asks when the tablet is turned or its type folio
+// folded back, asked here with HostDeviceRotation - the device held
+// sideways one way (1) turns the screen to landscape orientation 1, the
+// other way (2) to 3, upright (0) or upside down (3) back to the portrait it
+// started in; each time the root view is laid out the new way round (its
+// width and height swapped), and asking for the shape it already has
+// changes nothing.  Over the Setup assistant, the first screen of a fresh
+// store.  Ctest host.NewtonRotation.
+//
+//   build/host/host/newton --display 320x480 --headless 120 --script src/host/demo/rotation.ns
+
+HostInclude("common.ns");			// waitFor
+
+rotPortrait := nil;					// the orientation it started in
+rotTall := nil;						// the root's bounds then
+
+// the device held so: then the screen in that orientation, the root that
+// shape, and andThen
+rotStep := func(rotation, orientation, landscape, andThen) begin
+	HostDeviceRotation(rotation);
+	call waitFor with ("rotation: held " & NumberStr(rotation), func() begin
+		local b := GetRoot().viewBounds;
+		GetOrientation() = orientation
+			and (if landscape then b.right - b.left = rotTall.bottom - rotTall.top
+				 else b.right - b.left = rotTall.right - rotTall.left)
+	end, func() begin
+		local b := GetRoot().viewBounds;
+		Print("rotation: held " & NumberStr(rotation) & ": orientation " & NumberStr(GetOrientation())
+			  & ", root " & NumberStr(b.right - b.left) & " x " & NumberStr(b.bottom - b.top));
+		call andThen with ();
+	end, 30);
+end;
+
+call waitFor with ("rotation: the first screen", func() GetRoot().setup and GetRoot().setup.viewCObject, func() begin
+	rotPortrait := GetOrientation();
+	rotTall := Clone(GetRoot().viewBounds);
+	Print("rotation: started in " & NumberStr(rotPortrait) & ", root "
+		  & NumberStr(rotTall.right - rotTall.left) & " x " & NumberStr(rotTall.bottom - rotTall.top));
+	call rotStep with (1, 1, true, func()
+	call rotStep with (0, rotPortrait, nil, func()
+	call rotStep with (2, 3, true, func()
+	call rotStep with (1, 3, true, func()			// (already landscape: stays as it is)
+	call rotStep with (3, rotPortrait, nil, func() begin
+		Print("rotation: done");
+		HostQuit();
+	end)))));
+end, 60);

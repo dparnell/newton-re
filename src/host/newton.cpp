@@ -133,6 +133,7 @@
 #include "hal/host/Host.h"
 #include "HostStores.h"
 #include "HostPackages.h"
+#include "HostOrientation.h"
 #include "HostTablet.h"
 #include "HostCard.h"
 #include "HostFlash.h"
@@ -544,6 +545,7 @@ NewtonPreMain(void)
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostSoundBootPlaying")), RefVar(MakeCFunction((void*) FHostSoundBootPlaying, 0, nil)));
 	SetFrameSlot(RefVar(gFunctionFrame), RefVar(Intern((char*) "HostEntryHints")), RefVar(MakeCFunction((void*) FHostEntryHints, 1, nil)));
 	HostInstallPackageGlobal();
+	HostInstallOrientationGlobal();
 	HostLinkStart();
 	HostInstallPrinter();
 	HostInstallPowerGlobals();			// (power/host/HostPowerSwitch.h: HostPowerSwitch(), HostWakeAfter(ms), ...)
@@ -572,6 +574,7 @@ HeadlessTimer(void)
 		if (CompCompare(&now.time, &end.time) >= 0)
 			break;
 		HostSendQueuedPackages();
+		HostSendAskedOrientation();
 		Sleep(100 * kMilliseconds);
 	}
 	HostStopTasks();

@@ -32,6 +32,10 @@
 	A key as Qt names it (Qt::Key - what AppLoad forwards from the type
 	folio and its own keyboard) as a Windows virtual key code.  Qt's
 	letters and digits are their capitals' ASCII, as the virtual codes are.
+	AppLoad sends QKeyEvent::key(), which for a shifted key is the symbol
+	typed (Shift+1 is Qt::Key_Exclam), with the Shift key's own press and
+	release around it - so each symbol is the US key that types it, and
+	the Shift the Newton was told of makes it the shifted one.
 ------------------------------------------------------------------------------*/
 
 static long
@@ -44,9 +48,27 @@ VirtualKeyForQtKey(long key)
 	switch (key)
 	{
 	case 0x20:			return 0x20;		// space
-	case 0x2c:			return 0xbc;		// comma
-	case 0x2e:			return 0xbe;		// period
-	case 0x2f:			return 0xbf;		// slash
+	case ',': case '<':	return 0xbc;
+	case '.': case '>':	return 0xbe;
+	case '/': case '?':	return 0xbf;
+	case '-': case '_':	return 0xbd;
+	case '=': case '+':	return 0xbb;
+	case '[': case '{':	return 0xdb;
+	case ']': case '}':	return 0xdd;
+	case '\\': case '|':	return 0xdc;
+	case ';': case ':':	return 0xba;
+	case '\'': case '"':	return 0xde;
+	case '`': case '~':	return 0xc0;
+	case '!':			return '1';
+	case '@':			return '2';
+	case '#':			return '3';
+	case '$':			return '4';
+	case '%':			return '5';
+	case '^':			return '6';
+	case '&':			return '7';
+	case '*':			return '8';
+	case '(':			return '9';
+	case ')':			return '0';
 	case 0x01000000:	return 0x1b;		// Escape
 	case 0x01000001:	return 0x09;		// Tab
 	case 0x01000002:	return 0x09;		// Backtab
@@ -333,6 +355,7 @@ QTFBPanel::Poll(RemarkableEvent* event, long timeoutMs)
 {
 	event->kind = RemarkableEvent::kNone;
 	event->key = -1;
+	event->id = 0;
 	if (fSocket < 0)
 		return false;
 	if (fPenFd >= 0 && ReadPen(event))
@@ -361,10 +384,24 @@ QTFBPanel::Poll(RemarkableEvent* event, long timeoutMs)
 		event->kind = RemarkableEvent::kClosed;
 		return true;
 	}
+	if (got >= 1 && (message.type == kQTFBDeviceStateInit || message.type == kQTFBDeviceStateChanged))
+	{
+		// how the device is held (the manifest's supportsRotation: AppLoad
+		// then shows the framebuffer square on the glass however the tablet
+		// is turned, and says which way it is - docs/host-remarkable.md,
+		// "Rotation"); reason 0 is a rotation, the only one there is
+		if (message.deviceState.reason == 0)
+		{
+			event->kind = RemarkableEvent::kRotated;
+			event->x = message.deviceState.rotation;
+		}
+		return true;
+	}
 	if (got < 1 || message.type != kQTFBUserInput)
-		return got > 0;					// (a device state: nothing to do with it yet - docs/host-remarkable.md)
+		return got > 0;
 	event->x = message.userInput.x;
 	event->y = message.userInput.y;
+	event->id = message.userInput.devId;
 	switch (message.userInput.inputType)
 	{
 	case kQTFBPenPress:		event->kind = fPenFd >= 0 ? RemarkableEvent::kNone : RemarkableEvent::kPenDown; break;	// (the device's own, when it is read)

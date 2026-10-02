@@ -12,7 +12,8 @@ OUT/ then holds
     run.sh                       what AppLoad starts: newton on the internal
                                  store /home/root/newton-data/internal.store,
                                  its output appended to newton.log beside it
-    external.manifest.json       AppLoad's description: qtfb on, full screen
+    external.manifest.json       AppLoad's description: qtfb on, full screen,
+                                 turning with the tablet (not --rmkit)
     icon.png                     the launcher's icon
 
 Copied to /home/root/xovi/exthome/appload/<dir>, it shows in AppLoad's
@@ -63,6 +64,13 @@ def main():
     with open(os.path.join(args.out, "run.sh"), "w", newline="\n") as f:
         f.write(RUN_SH.format(display=args.display))
     manifest = {"name": args.name, "application": "run.sh", "qtfb": True, "disablesWindowedMode": True}
+    if not args.rmkit:
+        # AppLoad shows the framebuffer square on the glass however the
+        # tablet is turned and says which way (the type folio turns it to
+        # landscape): newton turns the Newton's screen to match
+        # (docs/host-remarkable.md, "Rotation").  rmkit's window under the
+        # shim is not told, so it keeps the picture AppLoad fits upright.
+        manifest["supportsRotation"] = True
     if args.rmkit:
         manifest["environment"] = {
             "NEWTON_RM_PANEL_KIND": "rmkit",

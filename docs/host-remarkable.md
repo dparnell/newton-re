@@ -186,16 +186,47 @@ as grays):
 **The pen** is the Newton's pen through the same shims as the mouse on the
 desktop (`HostWindowPenDown/Move/Up`, the host tablet, the calibration);
 pressure, tilt and hover are not used - the Newton's resistive tablet had
-none.  **Touch** is ignored, since the hand rests on the glass, unless
-`NEWTON_RM_TOUCH=pen` makes the first finger the pen.  **Keys**: the type
+none.  **Touch** is the pen too (a tap or a drag with one finger, as on a
+MessagePad's resistive glass; `NEWTON_RM_TOUCH=off` ignores it), with palm
+rejection: a touch counts only with the Marker away - not down, and not
+within `NEWTON_RM_TOUCH_HOLDOFF` ms (800) of its last event - and a second
+finger ends the first one's stroke and nothing is the pen again until
+every finger is off the glass.  The Marker arriving while a finger is the
+pen takes over.  **Keys**: the type
 folio and AppLoad's on-screen keyboard arrive as Qt key codes, the button
 device (rmkit) as Linux key codes; both are turned into the Windows virtual
-key codes `host/HostKeyboard.cpp` maps to the Newton's.  The Newton's own
+key codes `host/HostKeyboard.cpp` maps to the Newton's.  AppLoad sends Qt's
+`key()`, the symbol typed (Shift+1 is `!`), with the Shift key's own press
+around it, so each symbol is mapped to the US key that types it and the
+Newton's Shift does the rest; the folio itself is `rM_Keyboard` on
+`/dev/input/event4`.  The Newton's own
 on-screen keyboard works as on a MessagePad, with the pen.  The power key
 is mapped to F12, the Newton's power switch - though under AppLoad xochitl
 probably keeps it (to be seen on the device).  **Closing**: AppLoad's drag
 down from the top centre closes the socket; newton ends the run as a closed
 window does.
+
+**Rotation.**  The manifest says `supportsRotation` (`package.py`, not for
+the rmkit variant): AppLoad then shows newton's framebuffer square on the
+glass however the tablet is held - painting it turned against its own
+interface - hands pen and touch points back in the framebuffer's pixels, and
+sends the rotation (`MESSAGE_DEVICE_STATE_INIT`/`_CHANGED`: 0 upright, 1 its
+interface a quarter left, 2 right, 3 upside down) when newton connects and
+whenever it changes - folding the type folio back turns the tablet to
+landscape.  The window passes it on (`host/HostOrientation.h`): the
+kernel services task sends `hostDisplay:Turn` to the newt world, which calls
+the ROM's `SetScreenOrientation` when the Newton's screen is the other
+shape - landscape 1 for a quarter left, 3 for right, back to the portrait it
+booted in (2) upright or upside down - so the root view and the
+applications are laid out again as the Rotate button lays them out.  The
+window, which looks at the display's shape every round, draws the turned
+display into its (always portrait) image a quarter clockwise for a quarter
+left, anticlockwise for right (`remarkable/PanelTurn.h`, ctest
+`host.PanelTurn`), and turns pen points back; `NEWTON_RM_TURN_FLIP=1` swaps
+the two sideways turns should a tablet turn the other way.  The Newton turned
+by its own Rotate button while the tablet is upright is drawn sideways, as
+on a MessagePad.  `HostDeviceRotation(r)` asks the same from a script
+(ctest `host.NewtonRotation`, `demo/rotation.ns`).
 
 **Sound**: the tablet has no loudspeaker; the null backend (silent) as on any
 host without one.  **Storage**: `--store /home/root/newton-data/internal.store`
@@ -591,7 +622,7 @@ To remove everything: `rm -r /home/root/xovi/exthome/appload/{newton,newton-rmki
    if needed have the live inker's tile updates go out at once in the fast
    waveform (the window already knows the inker's rectangle is all that
    changed) - one to three days.
-4. Rotation (AppLoad's DEVICE_STATE_CHANGED -> the Newton's
+4. *(built, to be tried on the glass: "Rotation" above)* Rotation (AppLoad's DEVICE_STATE_CHANGED -> the Newton's
    `SetScreenOrientation`, the panel image turned), the Move's size, touch
    gestures (two fingers for scrolling?) - two days.
 5. Distribution: a `Newton` package for Vellum (apk) or AppLoad's own format,

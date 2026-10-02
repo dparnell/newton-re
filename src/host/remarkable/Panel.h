@@ -35,10 +35,11 @@ enum RemarkableRefresh
 
 struct RemarkableEvent
 {
-	enum Kind { kNone, kPenDown, kPenMove, kPenUp, kTouchDown, kTouchMove, kTouchUp, kKeyDown, kKeyUp, kClosed };
+	enum Kind { kNone, kPenDown, kPenMove, kPenUp, kTouchDown, kTouchMove, kTouchUp, kKeyDown, kKeyUp, kRotated, kClosed };
 	Kind	kind;
-	long	x, y;					// in the panel's pixels (the pen, the touch)
+	long	x, y;					// in the panel's pixels (the pen, the touch); kRotated: x is how the device is held (host/HostOrientation.h's kHostRotation*)
 	long	key;					// a key, as a Windows virtual key code (host/HostWindow.h); -1 if none
+	long	id;						// a touch: which finger
 };
 
 class RemarkablePanel

@@ -158,7 +158,7 @@ else()
         target_link_libraries(host_window PUBLIC ${ALSA_LIBRARY})
     endif()
 endif()
-add_executable(newton newton.cpp HostRestart.cpp HostKeyboard.cpp HostPackages.cpp HostHeapCheck.cpp)
+add_executable(newton newton.cpp HostRestart.cpp HostKeyboard.cpp HostPackages.cpp HostOrientation.cpp HostHeapCheck.cpp)
 target_link_libraries(newton PRIVATE newt host_views host_window hal_host_sound hal_timers hal_host_serial)
 target_compile_definitions(newton PRIVATE "NEWTON_DEFAULT_OBJECTS=\"${NEWTON_OBJECTS_FILE}\"")
 install(TARGETS newton DESTINATION bin)
@@ -883,6 +883,21 @@ add_test(NAME host.NewtonBigScreen COMMAND newton --display 1024x768 --headless 
 set_tests_properties(host.NewtonBigScreen PROPERTIES TIMEOUT 300
                      PASS_REGULAR_EXPRESSION "bigscreen: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain")
+
+# the screen following the device (host/HostOrientation.h, demo/rotation.ns):
+# the rotation the reMarkable's window passes on - asked here with
+# HostDeviceRotation - turns the Newton's screen, the root view laid out the
+# other way round, and back
+add_test(NAME host.NewtonRotation COMMAND newton --display 320x480 --headless 120
+         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/rotation.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonRotation PROPERTIES TIMEOUT 180
+                     PASS_REGULAR_EXPRESSION "held 1: orientation 1, root 480 x 320.*held 0: orientation [02], root 320 x 480.*held 2: orientation 3, root 480 x 320.*held 3: orientation [02], root 320 x 480.*rotation: done"
+                     FAIL_REGULAR_EXPRESSION "waited in vain")
+
+# the sums that turn the display onto the reMarkable's panel image
+# (remarkable/PanelTurn.h: no platform headers, so tested on every host)
+add_executable(test_PanelTurn remarkable/tests/test_PanelTurn.cpp)
+add_test(NAME host.PanelTurn COMMAND test_PanelTurn)
 
 add_test(NAME host.NewtonSplash COMMAND newton --display 320x480 --headless 60
          --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/splash.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)

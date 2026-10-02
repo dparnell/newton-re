@@ -16,6 +16,7 @@
 #include "hal/host/HostPower.h"
 #include "power/host/HostPowerSwitch.h"
 #include "HostPackages.h"
+#include "HostOrientation.h"
 #include "NewtonTime.h"
 #include <atomic>
 
@@ -93,7 +94,9 @@ HostKeyCodeForVirtualKey(long vk)
 		{ 0xbc, 43 }, { 0xbf, 44 }, { 'N', 45 }, { 'M', 46 }, { 0xbe, 47 }, { 0x09, 48 }, { 0x20, 49 }, { 0x08, 51 }, { 0x1b, 53 },
 		{ 0x11, 55 }, { 0x10, 56 }, { 0x14, 57 }, { 0x12, 58 },
 		{ 0x25, 123 }, { 0x27, 124 }, { 0x28, 125 }, { 0x26, 126 },
-		{ 0x2e, 117 }, { 0x24, 115 }, { 0x23, 119 }, { 0x21, 116 }, { 0x22, 121 }
+		{ 0x2e, 117 }, { 0x24, 115 }, { 0x23, 119 }, { 0x21, 116 }, { 0x22, 121 },
+		// the punctuation (the US layout's VK_OEM_* keys)
+		{ 0xbd, 27 }, { 0xbb, 24 }, { 0xdb, 33 }, { 0xdd, 30 }, { 0xdc, 42 }, { 0xba, 41 }, { 0xde, 39 }, { 0xc0, 50 }
 	};
 	for (unsigned i = 0; i < sizeof(kMap) / sizeof(kMap[0]); i++)
 		if (kMap[i].vk == vk)
@@ -137,6 +140,7 @@ HostKeyboardToolTask(void)
 				newtPort.SendRPC(&replySize, &event, sizeof(event), &reply, sizeof(reply));
 			}
 			HostSendQueuedPackages();		// (a package dropped onto the window)
+			HostSendAskedOrientation();		// (the device turned: host/HostOrientation.h)
 			Sleep(10 * kMilliseconds);
 		}
 	}

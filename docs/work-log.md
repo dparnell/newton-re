@@ -9,6 +9,24 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-02: the reMarkable - the folio's landscape, touch, the keys
+
+- **Rotation**: the manifest's `supportsRotation`; AppLoad's rotation goes
+  to the newt world (`host/HostOrientation.h`: `hostDisplay:Turn` calls
+  `SetScreenOrientation`), and the window draws the turned display into its
+  portrait image turned to match and turns pen points back
+  (`remarkable/PanelTurn.h`).  Ctests `host.NewtonRotation`
+  (`demo/rotation.ns`, `HostDeviceRotation`) and `host.PanelTurn`.  Which
+  sideways turn is which is reasoned from AppLoad's source, to be confirmed
+  on the glass (`NEWTON_RM_TURN_FLIP=1` swaps them).
+- **Touch** is the pen by default (one finger), with palm rejection: not
+  while the Marker is down or within 800 ms of it, and a second finger
+  cancels.
+- **Keys**: the folio's punctuation (Qt sends the symbol typed, so each is
+  the US key that types it), and the VK_OEM punctuation keys mapped to the
+  Newton's on every host (`host/HostKeyboard.cpp`) - `- = [ ] \ ; '` and
+  the backquote were missing everywhere.
+
 ## 2026-10-02: ConnectPassthruKeyboard and SendAbort
 
 Two thin natives bound (1284 of 1326 answered):
