@@ -9,6 +9,38 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-02: Newton OS on the reMarkable Paper Pro
+
+The owner asked for a port to the reMarkable Paper Pro using rmkit
+(branch `rmpp`; the record is `docs/host-remarkable.md`, the HiDPI study
+`docs/host-hidpi.md`).
+
+- **The tablet**, probed (`tools/remarkable/rmprobe.c`): i.MX 8M Mini,
+  Codex Linux 5.5 / software 3.25.1.1, glibc 2.39, no `/dev/fb0` - the
+  panel is DRM, owned by xochitl; third-party programs get it through
+  xovi's AppLoad and its *qtfb* protocol (socket + shared memory, pen,
+  touch and keys back).  rmkit (MIT) knows only the rM1/rM2 and works on
+  the Paper Pro only under AppLoad's qtfb-shim.
+- **The cross build** (`src/cmake/zig-aarch64-linux.cmake`) found three
+  host bugs: a non-PIE program's functions sit below `kROMCodeLimit` and
+  every host native was taken for a ROM one (a To Do alert over Welcome) -
+  built PIE; libc++'s `<thread>` after the Newton headers finds
+  `intl/Locale.h` when building for Linux on a case-insensitive disk -
+  newton.cpp's malloc thread a pthread; `mallinfo2` is glibc 2.33's.
+  Headless on the tablet newton boots to Setup in ~3 s, the screen
+  byte-identical to the Windows build's.
+- **The window** `src/host/remarkable/` over qtfb (own client) or rmkit:
+  changed rectangles only, the fast waveform with the pen down, a settle
+  and a full refresh to clear ghosts; tracing (`NEWTON_RM_TRACE`,
+  SIGUSR2 snapshots); SIGTERM (AppLoad's close; rmkit's handler aborted
+  newton) ends the run cleanly.  Tested first against `qtfbserver.py`
+  under qemu-user, then on the glass: the owner went through Setup and
+  wrote in the Notepad at 2x (810x1080).  The Marker arrives at ~400
+  events/s; pen event to ink update median 48 ms, p90 58 ms.  1:1
+  (1620x2160) is too small to use and wraps the pen: **a tablet sample
+  holds 11 integer bits, no coordinate over 2047**.  The rmkit variant
+  draws but gets no pen yet.
+
 ## 2026-10-02: a 64-bit NewtonScript - newton64 beside newton
 
 The owner asked what a "fully 64-bit" NewtonScript would take

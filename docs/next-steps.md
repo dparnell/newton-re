@@ -38,6 +38,12 @@ the way are all in `docs/work-log.md`.
   PulseAudio (`docs/host-lp64.md`).  macOS
   has no window or sound implementation yet (it would run headless):
   the plan is `docs/host-macos.md`, its POSIX seams already in the source.
+- **The reMarkable Paper Pro** runs newton from AppLoad at 2x
+  (`docs/host-remarkable.md`).  Open there: ink latency (the
+  reconstructed inker's ~50 ms cadence; a video from the owner for the
+  panel's share), the type folio's keys (untried), rmkit's pen under the
+  shim, rotation, packaging (Vellum/AppLoad), and the HiDPI shadow
+  (`docs/host-hidpi.md`) - the owner to decide before any of it is built.
 
 ## In progress
 
