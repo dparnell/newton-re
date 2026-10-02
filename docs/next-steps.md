@@ -41,38 +41,31 @@ the way are all in `docs/work-log.md`.
 
 ## In progress
 
-- **64-bit NewtonScript, on branch `ns64`** (the owner's decisions,
-  2026-10-02, after the study `docs/frames/64bit-study.md` on branch
-  `ns64-study` and the spike on `ns64-spike`):
-  - a **compile-time flavour**, `NEWTON_NS64`, opt-in; the faithful
-    32-bit build stays the default and the regression oracle, its full
-    suite green at every step;
-  - the work is done **on the branch** and merged into main only with the
-    owner's say-so (a stage that changes nothing observable, such as S0's
-    `RINT` answering `Long`, may be proposed for main separately);
-  - **every boundary stays 32-bit** - NSOF, stores and soup keys,
-    packages, the object file, docking, endpoints and translators,
-    armcpu, the NIE - with one narrowing policy at the outbound sites
-    (by default narrowed consistently to 30 bits, so a store holds what
-    the device would have computed; a strict mode throws instead);
-  - the stages are the study's S0-S4 (S5, objects over 16 MB, only if
-    cheap); wide on-disk and wire formats (S6) are not part of it - the
-    owner may explore full 64-bit implementations of them later.
-  - **State (2026-10-02):** S0-S4 and 64-bit-aware time are built on
-    `ns64` (worktree `tmp/wt-ns64b`; write-up `docs/frames/64bit.md` on the
-    branch): both flavours pass 402/402, and NS64 with the device's wrapped
-    time (`NEWTON_NS64_TIME=device`) too.  S5 not done (the frames heap is
-    4 MB).  Before any merge: under load the branch's faithful build crashed
-    twice (NSBasic, Walkthrough2ROM - both pass alone); being checked
-    against main's own build under the same load.  S0 alone is proposed for
-    main.
+Nothing at present.
+
+### Left of the 64-bit NewtonScript flavour (merged 2026-10-02)
+
+`newton64` (`NEWTON_NS64`, `docs/frames/64bit.md`) is in main; what it
+does not do yet:
+
+- **Wide integers on disk and on the wire** (the study's S6): every
+  format stays 32-bit and a wider value is narrowed to the device's 30
+  bits where it crosses, so a time, id or count a script stores comes
+  back wrapped.  The owner may want full 64-bit persistence later (a
+  wide soup key type, an NSOF/store encoding for wide integers, readable
+  only by newton64).
+- **Objects over 16 MB** (S5): one constant, but the frames heap is 4 MB.
+- **The 397 narrowings left on Windows' 32-bit `long`**
+  (`analysis/ns64narrowing.py`), all small by contract; a new `long x =
+  RINT(...)` should be a `Long`.
+- **Third-party scripts that store `TimeInSeconds()`** and compare it with a
+  live one see the wrapped value (the ROM's own alarm queue is handled:
+  `HostWidenTimeInSeconds`); the Clock's timer slip shows nothing left for
+  a timer running across a restart.
 
 ## Waiting on the owner
 
-Nothing at present.  (The 64-bit time question was answered on
-2026-10-02: under `NEWTON_NS64` time is 64-bit aware - `TimeInSeconds`
-the true count, narrowed by the boundary policy where it is stored or
-sent - once the `ns64` work has checked what that breaks.)
+Nothing at present.
 
 ## Open
 

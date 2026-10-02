@@ -9,6 +9,53 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-02: a 64-bit NewtonScript - newton64 beside newton
+
+The owner asked what a "fully 64-bit" NewtonScript would take
+(`docs/frames/64bit-study.md`, branch `ns64-study`; a spike on
+`ns64-spike`), then chose a compile-time flavour with every boundary kept
+32-bit.  `NEWTON_NS64` (CMake option, off) makes an integer as wide as a
+Ref less its tag, 62 bits; the faithful build is unchanged and stays the
+oracle.  `cmake --build <build> --target newton64` builds the tree a
+second time in `<build>/ns64` and puts `newton64`/`newtonscript64` beside
+`newton` (`-DNEWTON_BUILD_NS64=ON` every time).  The write-up is
+`docs/frames/64bit.md`.
+
+- **S0** the switch: `MAKEINT` (the `objects.h` sync patch) and the
+  interpreter's `WordRef` and multiply/divide fast paths keep the Ref's
+  width; `RINT` answers a `Long` in both flavours.  NS64 261/402.
+- **S1** the host's own 30-bit assumptions: a command's parameter told a
+  host pointer from a number by its width (122 failures - every tap);
+  `AddressToRef`/`RefToAddress` now a plain integer, `CoerceToInt` a
+  `Long`, the shifts and the NIE's fast paths.  388/402.
+- **S2** one narrowing policy at the 32-bit boundary (`frames/NarrowRef.h`):
+  NSOF, store objects, `_uniqueID`, soup 'int keys, armcpu's `ToARM`, dock,
+  endpoint and marshalled words - wrapped to the device's 30 bits by default
+  (`NEWTON_NS64_STRICT` throws instead).  **A store bug the spike showed:**
+  a soup key was cut to 32 bits and the entry to 30, so the alarm queue and
+  NetHopper's request queue looked for entries under keys they were not
+  kept under.  394/402.
+- **S3** what a script sees: literals to 2^61-1, `ExtractLong`, whole reals,
+  number text; per-flavour expectations rather than deleted tests.  A
+  device `ULong` stays sign-extended - the NIE answers a failed DNS lookup
+  -60791 through a `'ulong` field.
+- **Time is 64-bit aware** (the owner's decision): `TimeInSeconds` the true
+  count.  The ROM's one comparison of a stored time with a live one is the
+  alarm queue (`SetNextAlarm`: every alarm was due the moment it was added,
+  the Clock timer never rang and NewtHack's dungeon changed); under NS64
+  the host reads the stored key by the year-2010 fix's congruence
+  (`HostWidenTimeInSeconds`).  402/402.
+- **S4** Windows' 32-bit `long`: `analysis/ns64narrowing.py` over a
+  `-Wshorten-64-to-32` build, 790 sites down to 424 (365 `long` locals taken
+  from `RINT` made `Long`; a script's length for an allocator through
+  `LongArg`, which throws rather than cut it small).  402/402.
+- **One store for both**: `tools/host/sharedstore.py` (ctest
+  `host.NewtonSharedStore`) uses one store file with newton, newton64,
+  newton, newton64 strict and newton in turn; the word hints and the
+  byte-order flag never change, and a value newton64 wrote wider than 30
+  bits reads back in newton as the device holds it.
+- S5 (objects over 16 MB) not done: the frames heap is 4 MB.
+
 ## 2026-10-02: beaming over the network (the LAN medium)
 
 The owner asked for one newton to beam to another on the same network
