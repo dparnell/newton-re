@@ -71,32 +71,17 @@ does not do yet:
 
 ## Waiting on the owner
 
-- **The reMarkable's jagged ink (2026-10-02, evening).**  With the pen
-  through AppLoad the events come bunched (in the pen log about 930 of
-  1080 gaps under 1 ms, at ~400 events a second): AppLoad forwards the
-  Marker through xochitl's event loop, which each of newton's updates
-  keeps busy redrawing the window, and the Newton's 80 Hz sampling of the
-  latest point turns a bunch into a straight jump.  "Newton (direct pen)"
-  (`NEWTON_RM_PEN=evdev`, sharing the Newton's store through the symlink
-  `newton-data/newton-direct`) reads the Marker from its own device; its
-  first try failed only because scp had dropped the executable bit (fixed
-  on the tablet; `package.py` now says so).  Next: the owner compares the
-  two with the folio off; if direct is smooth, make it the default (and,
-  for the folio's landscape under AppLoad v0.4.2, map its panel points into
-  the scaled window, or wait for v0.6.0).  The tablet still reported its
-  February build and AppLoad v0.4.2 after the owner's update - ask whether
-  it needs a restart.
-- **The reMarkable's software update (2026-10-02).**  The owner is updating
-  the tablet from 3.25.1.1 so that AppLoad v0.6.0 (written for 3.28/3.29)
-  can go on: its full-screen window turns with the interface, which the
-  installed v0.4.2's does not, so the Newton can fill the landscape screen
-  the type folio turns it to.  Then: install v0.6.0 (xovi may need
-  reinstalling after the update), package with `package.py --rotation`
-  (`supportsRotation`, `NEWTON_RM_ORIENTATION=appload`), and check on the
-  glass which way the sideways turn comes out (`NEWTON_RM_TURN_FLIP`),
-  that the pen is smooth, and whether AppLoad's own key forwarding now
-  works beside the folio read directly (`docs/host-remarkable.md`,
-  "Rotation" and "The type folio").
+- **The reMarkable on its new software (2026-10-03).**  The owner updated
+  the tablet (build 20260827) and AppLoad to v0.6.0 (`supportsRotation`
+  in its `appload.so`).  "Newton" is now packaged with `--rotation --env
+  NEWTON_RM_PEN=evdev`: AppLoad turns the picture with the tablet and the
+  Newton's screen follows (`hostDisplay:Turn`), and the Marker is read
+  directly through the learnt map (`remarkable/PenFit.h`; on v0.6.0 without
+  supportsRotation it learnt a quarter turn at 1.334, AppLoad's turned and
+  scaled window).  To see on the glass: which way landscape comes out
+  (`NEWTON_RM_TURN_FLIP`), whether it turns as the folio is attached and
+  taken off, and whether the writing is smooth; then make the direct pen
+  the default in `package.py` and retire "Newton (direct pen)".
 
 ## Open
 
