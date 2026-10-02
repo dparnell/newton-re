@@ -72,6 +72,22 @@ int		HostSocketShutdown(int handle);
 int		HostSocketClose(int handle);
 void	HostSocketsCloseAll(void);		// every socket, listeners too: the run is over
 
+// UDP to and from an IPv4 multicast group - the host IR port's LAN medium
+// (HostIRChip.h, newton --ir-lan).  HostInterfaceAddresses answers the
+// IPv4 addresses of the host's interfaces that are up and can multicast,
+// loopback included.  HostUDPMulticastOpen binds a datagram socket to
+// port (shared: every newton on the host binds the same one), joins group
+// on each of the interfaces given (none: the default one), *joined saying
+// on how many it could; its sends go no further than the link (TTL 1) and
+// come back to the host's own members (loopback).  HostUDPMulticastSend
+// sends one datagram to group:port out of interface (0: the default);
+// HostUDPReceive takes one if there is one (*count 0: none), *from its
+// sender's address.
+int		HostInterfaceAddresses(uint32_t* addresses, int maxCount, int* count);
+int		HostUDPMulticastOpen(uint32_t group, uint16_t port, const uint32_t* interfaces, int count, int* handle, int* joined);
+int		HostUDPMulticastSend(int handle, uint32_t group, uint16_t port, uint32_t interfaceAddress, const void* data, size_t size);
+int		HostUDPReceive(int handle, void* data, size_t size, size_t* count, uint32_t* from);
+
 // A name's IPv4 addresses, as many as fit (*count says how many there were);
 // a dotted address is answered as itself.  (This one blocks, as a resolver
 // does.)

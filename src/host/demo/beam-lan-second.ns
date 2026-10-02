@@ -1,0 +1,9 @@
+// The other end of src/host/demo/beam-lan-first.ns: it receives the first
+// newton's note, "Northbound", and beams "Southbound" back.
+HostInclude("beamhelpers.ns");
+call beamReceiveNote with ("Northbound", func(e) begin
+	call beamSendNote with ("Southbound", "hello back from the second Newton", func() begin
+		Print("beam-lan-second: done");
+		HostQuit();
+	end);
+end);

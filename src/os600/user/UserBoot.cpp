@@ -23,6 +23,8 @@
 #include "Protocols.h"
 #include "OSErrors.h"
 #include "Random.h"
+#include "LongTime.h"
+#include "hal/System.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -57,10 +59,11 @@ UserBoot()
 	// NOT YET RECONSTRUCTED: MemObjManager::FindHeapRef('user', &SkiaHeapBase);
 	// InitROMDomainManager()
 	gOSIsRunning = true;
-	// NOT YET RECONSTRUCTED: the seed is the real-time clock's seconds,
-	// srand(TURealTimeAlarm::Time().ConvertTo(kSeconds)); the host seeds
-	// the ROM's generator with 1
-	NewtonSrand(1);
+	// the random numbers seeded with the real-time clock's seconds
+	// DEVIATION: and the host's process id (hal/System.h's
+	// GetMachineRandomSeed), so that two newtons started in the same second
+	// draw different numbers
+	NewtonSrand(GetMachineRandomSeed(TURealTimeAlarm::Time().ConvertTo(kSeconds)));
 	TUTask ksrv;
 	TObjectId ksrvEnvId = 0;
 	if (MemObjManager::FindEnvironmentId('ksrv', &ksrvEnvId) == noErr && ksrv.Init((TaskProcPtr) InitialKSRVTask, 0x6800, 0, nil, kUserTaskPriority, 'ksrv', ksrvEnvId) == noErr)

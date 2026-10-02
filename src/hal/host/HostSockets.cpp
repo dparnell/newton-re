@@ -35,6 +35,8 @@ typedef SOCKET HostSocket;
 #include <unistd.h>
 #include <errno.h>
 #include <signal.h>
+#include <ifaddrs.h>
+#include <net/if.h>
 typedef int HostSocket;
 #define INVALID_SOCKET (-1)
 #define SOCKET_ERROR (-1)
@@ -381,6 +383,190 @@ HostSocketClose(int handle)
 		return kHostSocketError;
 	CLOSE_SOCKET(s);
 	sSockets[handle] = INVALID_SOCKET;
+	return kHostSocketOK;
+}
+
+
+/*------------------------------------------------------------------------------
+	UDP over a multicast group (the host IR port's LAN medium)
+------------------------------------------------------------------------------*/
+
+int
+HostInterfaceAddresses(uint32_t* addresses, int maxCount, int* count)
+{
+	HostSocketsInit();
+	int n = 0;
+#ifdef _WIN32
+	SOCKET s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	if (s == INVALID_SOCKET)
+		return ErrorResult(LAST_ERROR());
+	INTERFACE_INFO list[32];
+	DWORD bytes = 0;
+	if (WSAIoctl(s, SIO_GET_INTERFACE_LIST, NULL, 0, list, sizeof(list), &bytes, NULL, NULL) == SOCKET_ERROR)
+	{
+		int error = LAST_ERROR();
+		closesocket(s);
+		return ErrorResult(error);
+	}
+	closesocket(s);
+	for (DWORD i = 0; i < bytes / sizeof(INTERFACE_INFO); i++)
+	{
+		u_long flags = list[i].iiFlags;
+		if ((flags & IFF_UP) == 0 || (flags & (IFF_MULTICAST | IFF_LOOPBACK)) == 0)
+			continue;
+		if (list[i].iiAddress.Address.sa_family != AF_INET)
+			continue;
+		if (n < maxCount)
+			addresses[n] = ntohl(list[i].iiAddress.AddressIn.sin_addr.s_addr);
+		n++;
+	}
+#else
+	struct ifaddrs* all = NULL;
+	if (getifaddrs(&all) != 0)
+		return ErrorResult(LAST_ERROR());
+	for (struct ifaddrs* ifa = all; ifa != NULL; ifa = ifa->ifa_next)
+	{
+		if (ifa->ifa_addr == NULL || ifa->ifa_addr->sa_family != AF_INET)
+			continue;
+		if ((ifa->ifa_flags & IFF_UP) == 0 || (ifa->ifa_flags & (IFF_MULTICAST | IFF_LOOPBACK)) == 0)
+			continue;
+		if (n < maxCount)
+			addresses[n] = ntohl(((struct sockaddr_in*) ifa->ifa_addr)->sin_addr.s_addr);
+		n++;
+	}
+	freeifaddrs(all);
+#endif
+	*count = n < maxCount ? n : maxCount;
+	return kHostSocketOK;
+}
+
+
+int
+HostUDPMulticastOpen(uint32_t group, uint16_t port, const uint32_t* interfaces, int count, int* handle, int* joined)
+{
+	HostSocketsInit();
+	*joined = 0;
+	HostSocket s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	if (s == INVALID_SOCKET)
+		return ErrorResult(LAST_ERROR());
+	// every newton on the host binds the same port and each hears every
+	// datagram (a multicast is delivered to all of them)
+	int one = 1;
+	setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (const char*) &one, sizeof(one));
+#ifdef SO_REUSEPORT
+	setsockopt(s, SOL_SOCKET, SO_REUSEPORT, (const char*) &one, sizeof(one));
+#endif
+	struct sockaddr_in sa;
+#ifdef _WIN32
+	// Windows hands a multicast to a socket bound to the interface it
+	// arrived on, so one interface asked for is bound to: a newton kept to
+	// the loopback interface listens on nothing the firewall asks about
+	MakeAddress(&sa, count == 1 ? interfaces[0] : 0, port);
+#else
+	// elsewhere a socket bound to an interface's address hears only what is
+	// sent to that address, never the group's
+	MakeAddress(&sa, 0, port);
+#endif
+	if (bind(s, (struct sockaddr*) &sa, sizeof(sa)) == SOCKET_ERROR)
+	{
+		int error = LAST_ERROR();
+		CLOSE_SOCKET(s);
+		return ErrorResult(error);
+	}
+	struct ip_mreq request;
+	memset(&request, 0, sizeof(request));
+	request.imr_multiaddr.s_addr = htonl(group);
+	if (count == 0)
+	{
+		request.imr_interface.s_addr = htonl(INADDR_ANY);
+		if (setsockopt(s, IPPROTO_IP, IP_ADD_MEMBERSHIP, (const char*) &request, sizeof(request)) == 0)
+			(*joined)++;
+	}
+	for (int i = 0; i < count; i++)
+	{
+		request.imr_interface.s_addr = htonl(interfaces[i]);
+		if (setsockopt(s, IPPROTO_IP, IP_ADD_MEMBERSHIP, (const char*) &request, sizeof(request)) == 0)
+			(*joined)++;
+	}
+	if (*joined == 0)
+	{
+		int error = LAST_ERROR();
+		CLOSE_SOCKET(s);
+		return ErrorResult(error);
+	}
+#ifdef _WIN32
+	DWORD ttl = 1, loop = 1;
+#else
+	unsigned char ttl = 1, loop = 1;
+#endif
+	setsockopt(s, IPPROTO_IP, IP_MULTICAST_TTL, (const char*) &ttl, sizeof(ttl));
+	setsockopt(s, IPPROTO_IP, IP_MULTICAST_LOOP, (const char*) &loop, sizeof(loop));
+	SetNonBlocking(s);
+	int h = NewHandle(s);
+	if (h < 0)
+	{
+		CLOSE_SOCKET(s);
+		return kHostSocketError;
+	}
+	*handle = h;
+	return kHostSocketOK;
+}
+
+
+int
+HostUDPMulticastSend(int handle, uint32_t group, uint16_t port, uint32_t interfaceAddress, const void* data, size_t size)
+{
+	HostSocket s = SocketOf(handle);
+	if (s == INVALID_SOCKET)
+		return kHostSocketError;
+	struct in_addr from;
+	from.s_addr = htonl(interfaceAddress);
+	setsockopt(s, IPPROTO_IP, IP_MULTICAST_IF, (const char*) &from, sizeof(from));
+	struct sockaddr_in sa;
+	MakeAddress(&sa, group, port);
+#ifdef MSG_NOSIGNAL
+	int n = sendto(s, (const char*) data, (int) size, MSG_NOSIGNAL, (struct sockaddr*) &sa, sizeof(sa));
+#else
+	int n = sendto(s, (const char*) data, (int) size, 0, (struct sockaddr*) &sa, sizeof(sa));
+#endif
+	if (n == SOCKET_ERROR)
+	{
+		int error = LAST_ERROR();
+		if (error == ERR_WOULDBLOCK)
+			return kHostSocketWouldBlock;
+		return ErrorResult(error);
+	}
+	return kHostSocketOK;
+}
+
+
+int
+HostUDPReceive(int handle, void* data, size_t size, size_t* count, uint32_t* from)
+{
+	*count = 0;
+	HostSocket s = SocketOf(handle);
+	if (s == INVALID_SOCKET)
+		return kHostSocketError;
+	struct sockaddr_in sa;
+	socklen_t length = sizeof(sa);
+	int n = recvfrom(s, (char*) data, (int) size, 0, (struct sockaddr*) &sa, &length);
+	if (n == SOCKET_ERROR)
+	{
+		int error = LAST_ERROR();
+#ifdef _WIN32
+		// a datagram longer than the buffer (cut short), or the answer to
+		// an earlier send that found no one (ICMP port unreachable): not
+		// this one's business - nothing taken
+		if (error == WSAEMSGSIZE || error == WSAECONNRESET)
+			return kHostSocketOK;
+#endif
+		if (error == ERR_WOULDBLOCK)
+			return kHostSocketWouldBlock;
+		return ErrorResult(error);
+	}
+	*count = n;
+	if (from)
+		*from = ntohl(sa.sin_addr.s_addr);
 	return kHostSocketOK;
 }
 

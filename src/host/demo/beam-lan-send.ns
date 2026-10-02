@@ -1,0 +1,10 @@
+// One host Newton beams a note, "Northbound", over the LAN medium while two
+// others listen (ctests host.NewtonBeamLANTwoReceivers and its Sharp IR
+// twin: tools/host/twonewtons.py --lan with beam-lan-listen.ns on both of
+// the others).  As with IR, only one of them takes it.  The protocol is
+// NEWTON_BEAM_TOOL's (beamhelpers.ns).
+HostInclude("beamhelpers.ns");
+call beamSendNote with ("Northbound", "hello from the first Newton", func() begin
+	Print("beam-lan-send: done");
+	HostQuit();
+end);

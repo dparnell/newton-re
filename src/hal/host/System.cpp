@@ -13,7 +13,9 @@
 #include <windows.h>
 #else
 #include <pthread.h>
+#include <unistd.h>
 #endif
+#include <stdlib.h>
 
 ULong	gHostResetCount = 0;
 void	(*gHostResetHook)(void) = nil;
@@ -75,6 +77,24 @@ extern "C" Fixed
 GetCPUClockSpeed(void)
 {
 	return 0xa22f1b;
+}
+
+// The clock's seconds with the host's process id mixed in: newtons
+// started together on one host (two receivers in a test, say) are each a
+// process of their own.  NEWTON_RANDOM_SEED gives the seed outright, so
+// that a run can be repeated (a test that depends on what the random
+// numbers make - a game's dungeon - sets it).
+extern "C" ULong
+GetMachineRandomSeed(ULong clockSeconds)
+{
+	const char* seed = getenv("NEWTON_RANDOM_SEED");
+	if (seed != nil)
+		return (ULong) strtoul(seed, nil, 0);
+#ifdef _WIN32
+	return clockSeconds ^ (ULong) GetCurrentProcessId();
+#else
+	return clockSeconds ^ (ULong) getpid();
+#endif
 }
 
 // A MessagePad 2100 has 4 MB of DRAM.

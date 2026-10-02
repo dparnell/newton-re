@@ -1,0 +1,8 @@
+// A host Newton that receives a beam, "Northbound", over the LAN medium,
+// as the In Box's Receive does, and ends when it is in its In Box (with
+// beam-lan-send.ns: one of two listening newtons).
+HostInclude("beamhelpers.ns");
+call beamReceiveNote with ("Northbound", func(e) begin
+	Print("beam-lan-listen: received");
+	HostQuit();
+end);

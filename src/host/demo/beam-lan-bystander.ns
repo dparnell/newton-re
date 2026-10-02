@@ -1,0 +1,6 @@
+// A third host Newton on the LAN medium that is not receiving (with
+// beam-lan-first.ns and beam-lan-second.ns): its IR port hears the others'
+// beams, as a MessagePad nearby would, with no tool listening, and loses
+// them.  tools/host/twonewtons.py --third-ready starts the other two once
+// it says it is up, and stops it once they have ended.
+Print("beam-lan-bystander: up");

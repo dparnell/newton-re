@@ -238,6 +238,64 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../fixtures/packages/fonts/monac
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
     set_tests_properties(host.NewtonBeamAutoReceive PROPERTIES TIMEOUT 400 PASS_REGULAR_EXPRESSION "twonewtons.py: both ended as expected"
                          FAIL_REGULAR_EXPRESSION "waited in vain|was not sent")
+    # beaming over the LAN medium (newton --ir-lan: a multicast group, no
+    # newton told where another is - hal/host/HostIRChip.h); twonewtons.py
+    # --lan picks a free port and keeps to the loopback interface.  A note
+    # each way over the default path (the probe, then IrDA) and over Sharp
+    # IR (demo/beam-lan-first.ns, beam-lan-second.ns)
+    foreach(lanTool IrDA Sharp)
+        if(lanTool STREQUAL "Sharp")
+            set(lanEnv --env NEWTON_BEAM_TOOL=slir)
+            set(lanName Sharp)
+        else()
+            set(lanEnv)
+            set(lanName "")
+        endif()
+        add_test(NAME host.NewtonBeamLAN${lanName}
+                 COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/host/twonewtons.py $<TARGET_FILE:newton>
+                         --lan --seconds 300 ${lanEnv}
+                         --first ${CMAKE_CURRENT_SOURCE_DIR}/demo/beam-lan-first.ns --expect-first "Received: \"Southbound\".*beam-lan-first: done"
+                         --second ${CMAKE_CURRENT_SOURCE_DIR}/demo/beam-lan-second.ns --expect-second "Received: \"Northbound\".*beam-lan-second: done"
+                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+        set_tests_properties(host.NewtonBeamLAN${lanName} PROPERTIES TIMEOUT 400 PASS_REGULAR_EXPRESSION "twonewtons.py: both ended as expected"
+                             FAIL_REGULAR_EXPRESSION "waited in vain|was not sent|panic")
+        # two receivers listening and one sender: as with IR, only one of
+        # them takes the beam (demo/beam-lan-send.ns, beam-lan-listen.ns)
+        add_test(NAME host.NewtonBeamLAN${lanName}TwoReceivers
+                 COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/host/twonewtons.py $<TARGET_FILE:newton>
+                         --lan --seconds 300 ${lanEnv} --wait-for first
+                         --first ${CMAKE_CURRENT_SOURCE_DIR}/demo/beam-lan-send.ns --expect-first "beam-lan-send: done"
+                         --second ${CMAKE_CURRENT_SOURCE_DIR}/demo/beam-lan-listen.ns
+                         --third ${CMAKE_CURRENT_SOURCE_DIR}/demo/beam-lan-listen.ns
+                         --expect-one "beam-lan-listen: received"
+                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+        set_tests_properties(host.NewtonBeamLAN${lanName}TwoReceivers PROPERTIES TIMEOUT 400 PASS_REGULAR_EXPRESSION "twonewtons.py: all ended as expected"
+                             FAIL_REGULAR_EXPRESSION "waited in vain|was not sent|panic")
+    endforeach()
+    # a note each way with a third newton on the medium that is not
+    # receiving (demo/beam-lan-bystander.ns, up before the others start)
+    add_test(NAME host.NewtonBeamLANBystander
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/host/twonewtons.py $<TARGET_FILE:newton>
+                     --lan --seconds 300
+                     --first ${CMAKE_CURRENT_SOURCE_DIR}/demo/beam-lan-first.ns --expect-first "Received: \"Southbound\".*beam-lan-first: done"
+                     --second ${CMAKE_CURRENT_SOURCE_DIR}/demo/beam-lan-second.ns --expect-second "Received: \"Northbound\".*beam-lan-second: done"
+                     --third ${CMAKE_CURRENT_SOURCE_DIR}/demo/beam-lan-bystander.ns --third-ready "beam-lan-bystander: up"
+                     --expect-third "beam-lan-bystander: up"
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonBeamLANBystander PROPERTIES TIMEOUT 400 PASS_REGULAR_EXPRESSION "twonewtons.py: all ended as expected"
+                         FAIL_REGULAR_EXPRESSION "waited in vain|was not sent|panic")
+    # receiving automatically over the LAN medium: the sniffer hears the
+    # other's probe (demo/beam-autoreceive.ns, beam-irda-send.ns)
+    add_test(NAME host.NewtonBeamLANAutoReceive
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/host/twonewtons.py $<TARGET_FILE:newton>
+                     --lan --seconds 300
+                     --first ${CMAKE_CURRENT_SOURCE_DIR}/demo/beam-autoreceive.ns
+                     --expect-first "eceived: \"Beamed note\".*text: \"hello from the other Newton\".*beam-autoreceive: the note is in the In Box"
+                     --second ${CMAKE_CURRENT_SOURCE_DIR}/demo/beam-irda-send.ns
+                     --expect-second "queued: \"Beamed note\".*beam-send: the Out Box is empty"
+             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+    set_tests_properties(host.NewtonBeamLANAutoReceive PROPERTIES TIMEOUT 400 PASS_REGULAR_EXPRESSION "twonewtons.py: both ended as expected"
+                         FAIL_REGULAR_EXPRESSION "waited in vain|was not sent|panic")
     # the Newton Toolkit's inspector (comms/NTK.h): ntkListener over MNP on
     # the serial port to tools/ntk/inspector.py, which sets the timeout,
     # installs and deletes a package, evaluates expressions (one sending an
@@ -1394,6 +1452,10 @@ if(EXISTS ${THIRDPARTY_DIR}/apps/RPNcalc/rpncalc.pkg)
     newton_app_demo(Daleks daleks games/Daleks/Daleks1.pkg)
     newton_app_demo(Mahjongg mahjongg games/Mahjongg2.1/Mahjongg.pkg)
     newton_app_demo(NewtHack newthack games/NewtHack1_1/newthack.pkg games/NewtHack1_1/nhsounds.pkg games/NewtHack1_1/register.pkg)
+    # (NewtHack's dungeon is made of the random numbers, and the walk wants
+    # the one the boot's seed of 1 makes - hal/System.h's
+    # GetMachineRandomSeed; the script's own SetRandomSeed comes too late)
+    set_tests_properties(host.NewtonAppNewtHack host.NewtonThirdPartyApps PROPERTIES ENVIRONMENT "NEWTON_RANDOM_SEED=1")
     newton_app_demo(Note2Net note2net apps/NetHopper3.2/nethopper.pkg apps/NetHopper3.2/note2net.pkg)
     newton_app_demo(Fonts fonts "fonts/times font.pkg" fonts/monaco.pkg "fonts/zapf chancery font.pkg" "fonts/zapf dingbats font.pkg")
     # NS BASIC 3.61: the console, a program, an example, the Visual Designer

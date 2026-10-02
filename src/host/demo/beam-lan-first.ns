@@ -1,0 +1,15 @@
+// Two host Newtons beam a note each way over the LAN medium (ctests
+// host.NewtonBeamLAN, host.NewtonBeamLANSharp: tools/host/twonewtons.py
+// --lan, with src/host/demo/beam-lan-second.ns on the other newton).
+// Neither is told where the other is: both are on the multicast group
+// (newton --ir-lan), and whoever is listening answers.
+//
+// This one beams first - "Northbound" - and then receives the other's
+// reply, "Southbound".  The protocol is NEWTON_BEAM_TOOL's (beamhelpers.ns).
+HostInclude("beamhelpers.ns");
+call beamSendNote with ("Northbound", "hello from the first Newton", func() begin
+	call beamReceiveNote with ("Southbound", func(e) begin
+		Print("beam-lan-first: done");
+		HostQuit();
+	end);
+end);

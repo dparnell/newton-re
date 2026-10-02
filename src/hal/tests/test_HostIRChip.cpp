@@ -3,7 +3,11 @@
 // byte sent on one heard on the other only in the modulation it listens
 // for (Sharp's ASK or IrDA, the 'irlk' option), or either in auto-receive
 // with the status saying which; nothing heard while the receiver is turned
-// off for output (half duplex).  Runs as the kernel services task.
+// off for output (half duplex).  Then three chips on the LAN medium (a
+// multicast group on the loopback interface): what one sends the others
+// hear, never itself; once two have heard each other they face each other
+// and the third hears neither; five seconds' silence and they face nobody.
+// Runs as the kernel services task.
 
 #include "HALSerialChip.h"
 #include "HostIRChip.h"
@@ -11,6 +15,7 @@
 #include "Options.h"
 #include "SerialOptions.h"
 #include "NewtonTime.h"
+#include "hal/Timer.h"
 #include "UserTasks.h"
 #include "Boot.h"
 #include "UserBoot.h"
@@ -105,6 +110,73 @@ LinkStatus(TSerialChip* chip)
 
 
 static void
+LanScenario(void)
+{
+	// a port of the test's own (another run of it at the same time is
+	// unlikely to pick the same)
+	Int64 clock;
+	GetClock(&clock);
+	char lan[48];
+	snprintf(lan, sizeof(lan), "lan:%lu@127.0.0.1", 40000 + (unsigned long) (clock.lo % 20000));
+	TSerialChip* chips[3] = { nil, nil, nil };
+	for (int i = 0; i < 3; i++)
+		EXPECT(HostIRChipMake(lan, &chips[i]) == noErr && chips[i] != nil);
+	if (chips[0] == nil || chips[1] == nil || chips[2] == nil)
+	{
+		printf("no LAN medium here: %s\n", lan);
+		return;
+	}
+	EXPECT(HostIRChipConnected(chips[0]));
+	TSerialChip* bad = nil;
+	EXPECT(HostIRChipMake("lan:70000", &bad) != noErr && bad == nil);		// (no such port)
+
+	static FakeTool tools[3];
+	SCCChannelInts handlers = { TxInt, StatusInt, RxInt, SpecialInt };
+	for (int i = 0; i < 3; i++)
+	{
+		memset(&tools[i], 0, sizeof(tools[i]));
+		tools[i].chip = chips[i];
+		EXPECT(chips[i]->InstallChipHandler(&tools[i], &handlers) == noErr);
+		chips[i]->SetInterruptEnable(true);
+		chips[i]->SetSpeed(38400);
+	}
+	FakeTool* a = &tools[0];
+	FakeTool* b = &tools[1];
+	FakeTool* c = &tools[2];
+
+	// A to whoever is there: B and C both hear it, A not its own
+	Send(a, "hello");
+	EXPECT(Heard(b, "hello"));
+	EXPECT(Heard(c, "hello"));
+	EXPECT(Heard(a, ""));
+	// B answers: A hears it and now faces B; C, facing A, does not hear B
+	Send(b, "here");
+	EXPECT(Heard(a, "here"));
+	EXPECT(Heard(c, ""));
+	// what A sends now goes to B alone
+	Send(a, "to b");
+	EXPECT(Heard(b, "to b"));
+	EXPECT(Heard(c, ""));
+	// the modulation still counts: B listening for IrDA does not hear ASK
+	EXPECT(SetLink(chips[1], kSerIRLink_IRDA_3_16, 0) == noErr);
+	Send(a, "ask");
+	EXPECT(Heard(b, ""));
+	EXPECT(SetLink(chips[1], kSerIRLink_SharpIR, 0) == noErr);
+	// five seconds without a word: nobody faced, and A is heard by both
+	Sleep(5500 * kMilliseconds);
+	Send(a, "again");
+	EXPECT(Heard(b, "again"));
+	EXPECT(Heard(c, "again"));
+
+	for (int i = 0; i < 3; i++)
+	{
+		EXPECT(chips[i]->RemoveChipHandler(&tools[i]) == noErr);
+		chips[i]->Delete();
+	}
+}
+
+
+static void
 Scenario(void)
 {
 	TSerialChip* a = nil;
@@ -191,6 +263,9 @@ Scenario(void)
 
 	EXPECT(a->RemoveChipHandler(&toolA) == noErr);
 	EXPECT(b->RemoveChipHandler(&toolB) == noErr);
+	a->Delete();
+	b->Delete();
+	LanScenario();
 	HostStopTasks();
 }
 

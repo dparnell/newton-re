@@ -2,7 +2,8 @@
 	File:		hal/host/HostIRChip.cpp
 
 	Contains:	THostIRChip (HostIRChip.h): the built-in IR port over a TCP
-				connection to another host Newton.
+				connection to another host Newton, or over a multicast
+				group every newton on the network hears (the LAN medium).
 
 	Host code (no ROM counterpart); the protocol's methods are the ROM's
 	(TSerialChipVoyager's IR channel, 0x001d6780, is the model for what the
@@ -31,6 +32,38 @@
 
 // the modulation a byte crosses the socket with
 enum { kWireASK = 0, kWireIrDA = 1 };
+
+// The LAN medium (HostIRChip.h): a datagram is a burst - what the port sent
+// since the last poll - as
+//	 'N' 'w' 'I' 'R'	the magic
+//	 version			1
+//	 0					(reserved)
+//	 instance (4)		which newton sent it (its own are dropped)
+//	 sequence (4)		numbered per instance, so that a datagram heard
+//						twice (sent out of several interfaces) or late is
+//						dropped - light is not reordered
+//	 to (4)				the newton it is pointed at, or 0 for whoever
+//						hears it (below)
+//	 (modulation, byte)...
+// the numbers big-endian.
+//
+// The network has no geometry, so who faces whom is decided as a user
+// pointing one MessagePad at another decides it: a newton that has heard
+// another (its receiver on and taking what was sent) faces that one -
+// its partner - and from then on hears only its partner and sends only
+// to it, until kLanPartnerTime passes without a word from it.  So a beam
+// is answered by whichever receiver answers first, and the others, no
+// longer faced, hear no more of it and give up as a MessagePad off to
+// the side would; IrDA's own addressing would see to that anyway, but
+// Sharp IR has none - without this every listening receiver would take
+// the beam.
+#define kLanGroup		0xEFFF4E77		// 239.255.78.119: 'N' 'w', administratively scoped
+#define kLanPort		3681
+#define kLanHeader		18
+#define kLanPartnerTime	(5 * kSeconds)
+#define kLanMaxPairs	700				// a datagram of 1414 bytes: unfragmented on any Ethernet
+#define kLanInterfaces	32
+#define kLanSenders		16
 
 
 PROTOCOL THostIRChip : public TSerialChip
@@ -93,6 +126,10 @@ public:
 	void				Pace(void);
 	void				Deliver(void);
 	Boolean				Hears(UByte modulation);
+	Boolean				Heard(UByte modulation, UByte b);
+	NewtonErr			OpenLan(const char* spec);
+	void				PollLan(void);
+	Boolean				LanFresh(uint32_t instance, uint32_t sequence);
 
 	unsigned short		fPort;
 	int					fListener;			// listening for the peer, or -1
@@ -120,6 +157,18 @@ public:
 	Boolean				fHalfRecord;		// the peer's last read ended between a modulation and its byte
 	UByte				fHalfModulation;
 	Int64				fNextPoll;
+	// the LAN medium
+	int					fLan;				// the group's socket, or -1
+	uint32_t			fLanInterfaces[kLanInterfaces];	// sent out of each (none: the default)
+	int					fLanInterfaceCount;
+	uint32_t			fInstance;			// this newton's, in each datagram
+	uint32_t			fSequence;
+	struct { uint32_t instance, sequence; long used; }	fSenders[kLanSenders];	// the last heard from each
+	long				fSendersUsed;
+	unsigned			fLanLoss;			// NEWTON_IR_LAN_LOSS: the per cent of datagrams lost
+	uint32_t			fLossSeed;
+	uint32_t			fPartner;			// the newton faced, or 0
+	Int64				fPartnerHeard;		// when it was last heard
 };
 
 PROTOCOL_IMPL_SOURCE_MACRO(THostIRChip)
@@ -176,6 +225,16 @@ THostIRChip::New()
 	fHalfRecord = false;
 	fHalfModulation = 0;
 	fNextPoll.hi = fNextPoll.lo = 0;
+	fLan = -1;
+	fLanInterfaceCount = 0;
+	fInstance = 0;
+	fSequence = 0;
+	memset(fSenders, 0, sizeof(fSenders));
+	fSendersUsed = 0;
+	fLanLoss = 0;
+	fLossSeed = 0;
+	fPartner = 0;
+	fPartnerHeard.hi = fPartnerHeard.lo = 0;
 	return this;
 }
 
@@ -187,7 +246,9 @@ THostIRChip::Delete()
 		HostSocketClose(fPeer);
 	if (fListener >= 0)
 		HostSocketClose(fListener);
-	fPeer = fListener = -1;
+	if (fLan >= 0)
+		HostSocketClose(fLan);
+	fPeer = fListener = fLan = -1;
 	for (int i = 0; i < kMaxIRChips; i++)
 		if (gIRChips[i] == this)
 			gIRChips[i] = nil;
@@ -398,6 +459,8 @@ THostIRChip::Open(const char* peer)
 		return noErr;					// (no medium: nobody is ever in front of the port)
 	if (HostSocketsInit() != kHostSocketOK)
 		return -1;
+	if (strncmp(peer, "lan", 3) == 0 && (peer[3] == 0 || peer[3] == ':' || peer[3] == '@'))
+		return OpenLan(peer + 3);
 	const char* colon = strrchr(peer, ':');
 	if (colon == nil)
 		return -1;
@@ -442,6 +505,30 @@ THostIRChip::Hears(UByte modulation)
 }
 
 
+// A byte in the air, sent the way modulation says: heard or lost.
+Boolean
+THostIRChip::Heard(UByte modulation, UByte b)
+{
+	if (!Hears(modulation))
+	{
+		if (TraceIR())
+			printf("[ir %d] lost %02x (%s%s%s%s)\n", ChipIndex(this), b, fTool == nil ? "unclaimed " : "",
+				fPowered ? "" : "off ", fReceiving ? "" : "transmitting ", modulation == kWireIrDA ? "IrDA" : "ASK");
+		return false;
+	}
+	if (TraceIR())
+		printf("[ir %d] heard %02x\n", ChipIndex(this), b);
+	if (fLinkConfig & kSerIRLinkCfg_AutoRx)
+		fLinkStatus = (modulation == kWireIrDA) ? kSerIRLinkSts_IRDADetect : 0;
+	if (fRxCount < kRxSize)
+	{
+		fRx[(fRxHead + fRxCount) % kRxSize] = b;
+		fRxCount++;
+	}
+	return true;
+}
+
+
 // The interrupt is looked for every few milliseconds while there is a
 // peer (or one to find) - bytes that arrive while nobody listens are lost
 // then, not kept - and at once when the tool has work (with no medium at
@@ -450,7 +537,7 @@ Boolean
 THostIRChip::Due(Int64* when)
 {
 	Boolean work = fTool != nil && fIntEnabled && (fTxIntPending || fRxReady > 0);
-	if (fPeer < 0 && fListener < 0 && fPeerAddress == 0 && !work)
+	if (fPeer < 0 && fListener < 0 && fPeerAddress == 0 && fLan < 0 && !work)
 		return false;
 	if (work)
 		GetClock(when);
@@ -465,6 +552,11 @@ THostIRChip::Due(Int64* when)
 void
 THostIRChip::Poll(void)
 {
+	if (fLan >= 0)
+	{
+		PollLan();
+		return;
+	}
 	if (fPeer < 0 && fListener >= 0)
 	{
 		int peer;
@@ -522,22 +614,7 @@ THostIRChip::Poll(void)
 				continue;
 			}
 			fHalfRecord = false;
-			if (!Hears(fHalfModulation))
-			{
-				if (TraceIR())
-					printf("[ir %d] lost %02x (%s%s%s%s)\n", ChipIndex(this), records[i], fTool == nil ? "unclaimed " : "",
-						fPowered ? "" : "off ", fReceiving ? "" : "transmitting ", fHalfModulation == kWireIrDA ? "IrDA" : "ASK");
-				continue;
-			}
-			if (TraceIR())
-				printf("[ir %d] heard %02x\n", ChipIndex(this), records[i]);
-			if (fLinkConfig & kSerIRLinkCfg_AutoRx)
-				fLinkStatus = (fHalfModulation == kWireIrDA) ? kSerIRLinkSts_IRDADetect : 0;
-			if (fRxCount < kRxSize)
-			{
-				fRx[(fRxHead + fRxCount) % kRxSize] = records[i];
-				fRxCount++;
-			}
+			Heard(fHalfModulation, records[i]);
 		}
 	}
 	if (fWireCount > 0)
@@ -554,6 +631,216 @@ THostIRChip::Poll(void)
 		memmove(fWire, fWire + sent, fWireCount - sent);
 		fWireCount -= sent;
 	}
+}
+
+
+/*------------------------------------------------------------------------------
+	The LAN medium
+------------------------------------------------------------------------------*/
+
+static void
+PutWord(UByte* p, uint32_t w)
+{
+	p[0] = (UByte) (w >> 24);
+	p[1] = (UByte) (w >> 16);
+	p[2] = (UByte) (w >> 8);
+	p[3] = (UByte) w;
+}
+
+
+static uint32_t
+GetWord(const UByte* p)
+{
+	return ((uint32_t) p[0] << 24) | ((uint32_t) p[1] << 16) | ((uint32_t) p[2] << 8) | p[3];
+}
+
+
+static bool
+ParseAddress(const char* text, uint32_t* address)
+{
+	unsigned a, b, c, d;
+	char extra;
+	if (sscanf(text, "%u.%u.%u.%u%c", &a, &b, &c, &d, &extra) != 4 || a > 255 || b > 255 || c > 255 || d > 255)
+		return false;
+	*address = (a << 24) | (b << 16) | (c << 8) | d;
+	return true;
+}
+
+
+// ":PORT", ":PORT@ADDRESS", "@ADDRESS" or nothing: the group's port
+// (kLanPort when none is given) and the one interface to keep to (every
+// interface that can multicast when none is).
+NewtonErr
+THostIRChip::OpenLan(const char* spec)
+{
+	long port = kLanPort;
+	if (*spec == ':')
+		spec++;
+	if (*spec != 0 && *spec != '@')
+	{
+		char* end;
+		port = strtol(spec, &end, 10);
+		if (port <= 0 || port > 65535 || (*end != 0 && *end != '@'))
+			return -1;
+		spec = end;
+	}
+	fLanInterfaceCount = 0;
+	if (*spec == '@')
+	{
+		if (!ParseAddress(spec + 1, &fLanInterfaces[0]))
+			return -1;
+		fLanInterfaceCount = 1;
+	}
+	else
+	{
+		int count = 0;
+		if (HostInterfaceAddresses(fLanInterfaces, kLanInterfaces, &count) == kHostSocketOK)
+			fLanInterfaceCount = count;
+	}
+	int joined = 0;
+	if (HostUDPMulticastOpen(kLanGroup, (uint16_t) port, fLanInterfaces, fLanInterfaceCount, &fLan, &joined) != kHostSocketOK)
+	{
+		fLan = -1;
+		return -1;
+	}
+	fPort = (unsigned short) port;
+	// which newton this is: the clock's fine bits and an address, which
+	// differ between two started together
+	Int64 clock;
+	GetClock(&clock);
+	uintptr_t here = (uintptr_t) this;
+	fInstance = ((uint32_t) clock.lo * 2654435761u) ^ (uint32_t) (here >> 4) ^ (uint32_t) ((uint64_t) here >> 32) ^ (uint32_t) clock.hi;
+	if (fInstance == 0)
+		fInstance = 1;
+	fSequence = 0;
+	const char* loss = getenv("NEWTON_IR_LAN_LOSS");
+	fLanLoss = loss != nil ? (unsigned) strtoul(loss, nil, 10) : 0;
+	fLossSeed = fInstance;
+	if (TraceIR())
+	{
+		printf("[ir %d] LAN medium: group 239.255.78.119:%ld, instance %08x, %d interface(s), joined on %d:", ChipIndex(this), port,
+			fInstance, fLanInterfaceCount, joined);
+		for (int i = 0; i < fLanInterfaceCount; i++)
+			printf(" %u.%u.%u.%u", fLanInterfaces[i] >> 24, (fLanInterfaces[i] >> 16) & 0xff, (fLanInterfaces[i] >> 8) & 0xff, fLanInterfaces[i] & 0xff);
+		printf("\n");
+	}
+	return noErr;
+}
+
+
+// A datagram not heard before from its sender?  (One sent out of several
+// interfaces arrives once for each, and one overtaken by a later one is
+// lost rather than heard out of order, as light would be.)
+Boolean
+THostIRChip::LanFresh(uint32_t instance, uint32_t sequence)
+{
+	fSendersUsed++;
+	int oldest = 0;
+	for (int i = 0; i < kLanSenders; i++)
+	{
+		if (fSenders[i].instance == instance)
+		{
+			if ((int32_t) (sequence - fSenders[i].sequence) <= 0)
+				return false;
+			fSenders[i].sequence = sequence;
+			fSenders[i].used = fSendersUsed;
+			return true;
+		}
+		if (fSenders[i].used < fSenders[oldest].used)
+			oldest = i;
+	}
+	fSenders[oldest].instance = instance;
+	fSenders[oldest].sequence = sequence;
+	fSenders[oldest].used = fSendersUsed;
+	return true;
+}
+
+
+// The group looked at: every other newton's datagrams heard (or lost, as
+// Heard says), then what the tool put sent - out of each interface - as
+// datagrams of at most kLanMaxPairs bytes.
+void
+THostIRChip::PollLan(void)
+{
+	UByte datagram[kLanHeader + 2 * kLanMaxPairs + 64];
+	Int64 now;
+	GetClock(&now);
+	if (fPartner != 0)
+	{
+		Int64 until = fPartnerHeard;
+		Int64 wait = { 0, (ULong) kLanPartnerTime };
+		CompAdd(&wait, &until);
+		if (CompCompare(&now, &until) > 0)
+		{
+			if (TraceIR())
+				printf("[ir %d] no longer faces %08x\n", ChipIndex(this), fPartner);
+			fPartner = 0;
+		}
+	}
+	for (int n = 0; n < 256; n++)
+	{
+		size_t got = 0;
+		uint32_t from = 0;
+		if (HostUDPReceive(fLan, datagram, sizeof(datagram), &got, &from) != kHostSocketOK || got == 0)
+			break;
+		if (got < kLanHeader || memcmp(datagram, "NwIR", 4) != 0 || datagram[4] != 1)
+			continue;
+		uint32_t instance = GetWord(datagram + 6);
+		uint32_t sequence = GetWord(datagram + 10);
+		uint32_t to = GetWord(datagram + 14);
+		if (instance == fInstance || !LanFresh(instance, sequence))
+			continue;					// (our own, come back; or heard already)
+		if ((to != 0 && to != fInstance) || (fPartner != 0 && instance != fPartner))
+			continue;					// (pointed at another, or from one not faced)
+		if (fLanLoss != 0)
+		{
+			fLossSeed = fLossSeed * 1103515245u + 12345u;
+			if ((fLossSeed >> 16) % 100 < fLanLoss)
+			{
+				if (TraceIR())
+					printf("[ir %d] lost %u bytes from %08x (NEWTON_IR_LAN_LOSS)\n", ChipIndex(this), (unsigned) (got - kLanHeader) / 2, instance);
+				continue;
+			}
+		}
+		Boolean taken = false;
+		for (size_t i = kLanHeader; i + 1 < got; i += 2)
+			if (Heard(datagram[i], datagram[i + 1]))
+				taken = true;
+		if (taken)
+		{
+			if (fPartner != instance && TraceIR())
+				printf("[ir %d] faces %08x\n", ChipIndex(this), instance);
+			fPartner = instance;
+			fPartnerHeard = now;
+		}
+	}
+	for (long sent = 0; sent < fWireCount; )
+	{
+		long pairs = (fWireCount - sent) / 2;
+		if (pairs > kLanMaxPairs)
+			pairs = kLanMaxPairs;
+		memcpy(datagram, "NwIR", 4);
+		datagram[4] = 1;
+		datagram[5] = 0;
+		PutWord(datagram + 6, fInstance);
+		PutWord(datagram + 10, ++fSequence);
+		PutWord(datagram + 14, fPartner);
+		memcpy(datagram + kLanHeader, fWire + sent, 2 * pairs);
+		size_t size = kLanHeader + 2 * pairs;
+		if (fLanInterfaceCount == 0)
+			HostUDPMulticastSend(fLan, kLanGroup, fPort, 0, datagram, size);
+		for (int i = 0; i < fLanInterfaceCount; i++)
+			HostUDPMulticastSend(fLan, kLanGroup, fPort, fLanInterfaces[i], datagram, size);
+		if (TraceIR())
+		{
+			printf("[ir %d] sent", ChipIndex(this));
+			for (long i = 1; i < 2 * pairs; i += 2)
+				printf(" %02x", fWire[sent + i]);
+			printf("\n");
+		}
+		sent += 2 * pairs;
+	}
+	fWireCount = 0;
 }
 
 
@@ -681,6 +968,8 @@ HostIRChipPort(TSerialChip* chip)
 Boolean
 HostIRChipConnected(TSerialChip* chip)
 {
+	if (chip != nil && ((THostIRChip*) chip)->fLan >= 0)
+		return true;			// (the group is always there)
 	return chip != nil && ((THostIRChip*) chip)->fPeer >= 0 && !((THostIRChip*) chip)->fConnecting;
 }
 

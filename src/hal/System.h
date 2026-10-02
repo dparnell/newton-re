@@ -34,6 +34,13 @@ NewtonErr	GetSystemSerialNumber(ULong serialNumber[2]);	// the machine's own num
 // 0x6385a2 (99.5) for a slower one; 20 for an ARM610, 24.9 for a 710.
 ULong		LowLevelGetCPUType(void);
 Fixed		GetCPUClockSpeed(void);
+// The seed the random number generator starts from (UserBoot), given the
+// real-time clock's seconds.  No ROM counterpart: a MessagePad's seed is
+// its clock's seconds and nothing more, and two machines' differ - not so
+// two host newtons started together, which would then draw the same
+// numbers (the same IrDA device address, and two receivers answering one
+// connection).  On hardware the clock's seconds.
+ULong		GetMachineRandomSeed(ULong clockSeconds);
 }
 
 #endif	/* __HAL_SYSTEM_H */

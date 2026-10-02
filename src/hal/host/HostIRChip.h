@@ -30,6 +30,26 @@
 				It is a simple chip - no DMA - driven a byte at a time from
 				its interrupts, a host interrupt source polled every few
 				milliseconds while a peer is connected.
+
+				The medium is a TCP connection to one other newton
+				(--ir-peer) or the LAN medium (--ir-lan): a UDP multicast
+				group every newton on the network that was given --ir-lan
+				joins, so one can beam to another without knowing where it
+				is.  Each poll's bytes go out as one datagram (a burst,
+				still (modulation, byte) pairs, behind a header naming the
+				newton that sent it and numbering its datagrams); each
+				newton hears every other's and drops its own.  It is a
+				shared medium as the air in front of a MessagePad is: what
+				one sends every other hears, so the protocols' own ways of
+				finding who is there (IrDA's discovery, the probe's TEST
+				frames, Sharp IR's offers) find whoever is listening - and,
+				as a user points one MessagePad at another, a newton faces
+				the first it hears and hears only that one, so a beam is
+				taken by one receiver however many listen.  A
+				datagram lost is light lost (the protocols retransmit); one
+				overtaken by a later one is dropped as lost, never heard
+				out of order (docs/comms/README.md, "Beaming over the
+				network").
 */
 
 #ifndef __HOSTIRCHIP_H
@@ -44,7 +64,12 @@ class TSerialChip;
 // An IR chip made over a peer: "listen:PORT" listens on the loopback
 // interface (PORT 0: any - HostIRChipPort says which) for the other host
 // to connect; "HOST:PORT" connects to it (again and again until it
-// answers, since the other may start later).  Not registered.
+// answers, since the other may start later); "lan", "lan:PORT" or either
+// with "@ADDRESS" is the LAN medium - the multicast group 239.255.78.119
+// on PORT (3681 by default) joined on every IPv4 interface that can
+// multicast, or only the one whose address is ADDRESS (127.0.0.1 keeps
+// it to the machine).  NEWTON_IR_LAN_LOSS=N loses N per cent of the
+// datagrams heard.  Not registered.
 // ==> noErr and the chip, or why not.
 NewtonErr		HostIRChipMake(const char* peer, TSerialChip** chip);
 unsigned short	HostIRChipPort(TSerialChip* chip);

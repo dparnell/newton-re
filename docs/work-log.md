@@ -9,6 +9,40 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-02: beaming over the network (the LAN medium)
+
+The owner asked for one newton to beam to another on the same network
+without knowing its address.  `newton --ir-lan [PORT]` is a second medium
+for the host IR chip beside `--ir-peer`'s TCP connection: a UDP multicast
+group (239.255.78.119, port 3681, TTL 1, joined and sent on every IPv4
+interface - multicast rather than broadcast for the reasons in
+`docs/comms/README.md`, "Beaming over the network").  A datagram is a burst
+of (modulation, byte) pairs behind the sender's instance, a sequence number
+(duplicates from several interfaces and late datagrams dropped) and whom it
+is pointed at.  Nothing above the chip changed: the probe, IrDA, Sharp IR
+and the sniffer all beam over it as they are.
+
+- **Who answers.** IrDA addresses its SNRM, so of two receivers only the
+  one discovered first connects.  Sharp IR addresses nothing, and over a
+  collision-free medium both receivers took the note.  The medium now does
+  what pointing a MessagePad does: a newton faces the first it hears and
+  hears only it, five seconds' silence ending that.
+- **A host bug found: every newton drew the same random numbers.**
+  `UserBoot` seeded `rand()` with 1 where the ROM seeds it with the clock's
+  seconds, so every newton's IrDA device address was the same and two
+  receivers both answered an SNRM - the sender then fell over a ROM bug
+  (`TIrDATool::StartOutput` completing a put before storing its buffer,
+  kept).  The seed is the ROM's now, with the process id mixed in
+  (`GetMachineRandomSeed`, DEVIATION; `NEWTON_RANDOM_SEED` repeats a run,
+  and `host.NewtonAppNewtHack`, whose walk depends on the dungeon the
+  numbers make, sets it to the old 1).
+- **Loss.** `NEWTON_IR_LAN_LOSS=10`: IrDA unaffected, Sharp IR once needed
+  the send repeated.
+- **Two machines.** A newton on Windows and one in WSL 2 beam both ways
+  over the WSL adapter.
+- **Tests:** `hal.HostIRChip` (three chips on the medium) and six ctests
+  `host.NewtonBeamLAN*` (`tools/host/twonewtons.py --lan`, `--third`).
+
 ## 2026-10-02: signed overflow wraps (-fwrapv)
 
 Three crashes had the same cause: ported ROM arithmetic overflowed, and the zig

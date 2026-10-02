@@ -1,0 +1,65 @@
+// Beaming a note and receiving one, for the demos that beam over the LAN
+// medium (beam-lan-first.ns, beam-lan-second.ns, beam-lan-bystander.ns -
+// ctests host.NewtonBeamLAN*, run by tools/host/twonewtons.py --lan).
+//
+// The protocol is the environment's NEWTON_BEAM_TOOL: "slir" for Sharp IR
+// (zapCommToolId set, so the probe is not asked), anything else the
+// default path (zapCommToolId nil: the probe, then IrDA between two 2.1s).
+//
+// beamSendNote(title, text, andThen) routes a note to Beam and sends it as
+// the Out Box's Send button does, again if a send fails (the other machine
+// slow to answer), and calls andThen once the Out Box is empty.
+// beamReceiveNote(title, andThen) receives as the In Box's Receive does,
+// again if the receive gives up, until a note of that title is in the In
+// Box, and calls andThen with its entry.
+HostInclude("common.ns");
+beamToolEnv := HostGetEnv("NEWTON_BEAM_TOOL");
+beamToolId := if beamToolEnv and StrEqual(beamToolEnv, "slir") then "slir" else nil;
+SetUserConfig('zapCommToolId, beamToolId);
+beamOutBox := GetUnionSoup("OutBox");
+beamInBox := GetUnionSoup("InBox");
+
+beamSendNote := func(title, text, andThen) begin
+	Send('beam, {appSymbol: 'paperroll, title: title, body: {text: text}});
+	call waitFor with ("beam: the note in the Out Box", func() beamOutBox:Query(nil):Entry() <> nil, func() begin
+		Print({queued: beamOutBox:Query(nil):Entry().title});
+		call beamSendTries with (3, andThen);
+	end, 20);
+end;
+
+beamSendTries := func(tries, andThen) begin
+	TransportNotify('|beam:Newton|, 'SendRequest, [{cause: 'user, item: beamOutBox:Query(nil):Entry()}]);
+	call waitFor with ("beam: the note sent", func()
+			beamOutBox:Query(nil):Entry() = nil or GetRoot().|beam:Newton|.status = 'idle, func() begin
+		if beamOutBox:Query(nil):Entry() = nil then begin
+			Print("beam: the Out Box is empty");
+			call andThen with ();
+		end else if tries > 0 then begin
+			Print("beam: the send failed; sending again");
+			call beamSendTries with (tries - 1, andThen);
+		end else begin
+			Print("beam: the note was not sent");
+			HostQuit();
+		end;
+	end, 150);		// (longer than the IR tools' own time-outs: a beam nobody answers takes 100 s to give up)
+end;
+
+beamReceiveNote := func(title, andThen) begin
+	call beamReceiveTries with (title, 4);
+	call waitFor with ("beam: the note in the In Box", func() beamInBox:Query({words: [title]}):Entry() <> nil, func() begin
+		local e := beamInBox:Query({words: [title]}):Entry();
+		Print({received: e.title, text: e.body.text});
+		call andThen with (e);
+	end, 290);
+end;
+
+beamReceiveTries := func(title, tries) begin
+	TransportNotify('|beam:Newton|, 'ReceiveRequest, [{cause: 'user}]);
+	if beamInBox:Query({words: [title]}):Entry() = nil and tries > 0 then
+		AddDelayedCall(func() begin
+			if beamInBox:Query({words: [title]}):Entry() = nil and GetRoot().|beam:Newton|.status = 'idle then begin
+				Print("beam: the receive gave up; listening again");
+				call beamReceiveTries with (title, tries - 1);
+			end;
+		end, nil, 1000);
+end;

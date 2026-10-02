@@ -104,6 +104,14 @@
 	IR port is still there, with nobody in front of it: Beam looks for a
 	receiver and finds none, as a MessagePad alone does.
 
+	--ir-lan puts it on the LAN medium instead: a UDP multicast group
+	(239.255.78.119, PORT or 3681) that every newton given --ir-lan on the
+	network joins, so any of them can beam to any other without knowing
+	its address - whoever is listening answers, as with IR.  It joins on
+	every IPv4 interface that can multicast; --ir-lan-interface ADDRESS
+	keeps it to one (127.0.0.1: this machine only).  It prints
+	"[host] IR port N (LAN)".
+
 	--package installs a package once the machine is up, onto the internal
 	store as one arriving from the Newton Connection is (as many as wanted,
 	in order), so with --store it is activated again at every boot after;
@@ -222,7 +230,11 @@ __declspec(dllimport) int __stdcall GetThreadTimes(void* thread, unsigned long l
 static long gScale = 1;
 static long gHeadlessSeconds = 0;
 static long gSerialPort = kHostSerialPort;	// --serial-port: -1 none
-static const char* gIRPeer = nil;			// --ir-peer
+static const char* gIRPeer = nil;			// --ir-peer, or the LAN medium's "lan[:PORT][@ADDRESS]"
+static char gIRLan[80];						// --ir-lan, --ir-lan-interface
+static const char* gIRLanPort = nil;
+static const char* gIRLanInterface = nil;
+static Boolean gIRLanAsked = false;
 static long gToneFrequency = 0;			// --microphone-tone: the null microphone's test tone
 static Boolean gWindowed = true;
 static std::atomic<bool> gScriptQuit(false);	// HostQuit(): the run ended by the script
@@ -238,6 +250,7 @@ Usage(void)
 					"              [--flash-size mb] [--flat-flash]\n"
 					"              [--package file.pkg]... [--card file] [--microphone-tone hz] [--tcp-echo port]\n"
 					"              [--serial-port port|none] [--ir-peer listen:port|host:port] [--print-dir dir]\n"
+					"              [--ir-lan [port]] [--ir-lan-interface address]\n"
 					"              [--ipp-printer uri]\n"
 					"By default it boots the object file built from romsrc/ (NEWTON_OBJECTS overrides);\n"
 					"--rom boots a ROM image instead.\n");
@@ -280,7 +293,7 @@ NewtonBoot(void)
 		{
 			if (gIRPeer != nil)
 			{
-				printf("[host] IR port %u\n", (unsigned) HostIRChipPort(HostIRChipInstalled()));
+				printf("[host] IR port %u%s\n", (unsigned) HostIRChipPort(HostIRChipInstalled()), gIRLanAsked ? " (LAN)" : "");
 				fflush(stdout);
 			}
 		}
@@ -889,6 +902,15 @@ main(int argc, char** argv)
 		}
 		else if (strcmp(argv[i], "--ir-peer") == 0 && i + 1 < argc)
 			gIRPeer = argv[++i];
+		else if (strcmp(argv[i], "--ir-lan") == 0)
+		{
+			gIRLanAsked = true;
+			// (the port is optional: a number next, or not)
+			if (i + 1 < argc && argv[i + 1][0] >= '0' && argv[i + 1][0] <= '9')
+				gIRLanPort = argv[++i];
+		}
+		else if (strcmp(argv[i], "--ir-lan-interface") == 0 && i + 1 < argc)
+			gIRLanInterface = argv[++i];
 		else if (strcmp(argv[i], "--serial-port") == 0 && i + 1 < argc)
 		{
 			i++;
@@ -934,6 +956,13 @@ main(int argc, char** argv)
 		}
 		else
 			return Usage();
+	}
+	if (gIRLanAsked || gIRLanInterface != nil)
+	{
+		gIRLanAsked = true;
+		snprintf(gIRLan, sizeof(gIRLan), "lan%s%s%s%s", gIRLanPort != nil ? ":" : "", gIRLanPort != nil ? gIRLanPort : "",
+				 gIRLanInterface != nil ? "@" : "", gIRLanInterface != nil ? gIRLanInterface : "");
+		gIRPeer = gIRLan;
 	}
 	if (romImage == nil)
 	{

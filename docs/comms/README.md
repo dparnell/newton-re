@@ -469,7 +469,9 @@ byte and the modulation it was sent with (ASK or IrDA, from the chip's
 `'irlk'` mode) - and a receiver in the other mode does not hear it (in
 auto-receive it hears both and notes which in the status), so the probe
 meets the same behaviour it meets on the air.  A receiver that is
-transmitting does not hear anything (IR is half duplex).
+transmitting does not hear anything (IR is half duplex).  The other
+medium, `--ir-lan`, is a multicast group any number of newtons share
+(below, "Beaming over the network").
 
 The order, each a verified piece with a test:
 
@@ -497,6 +499,127 @@ fail by the ROM's own timers (-38506, kIrDAErrLAPFailedConnection, and
 the receiver's listen then -38001); `demo/beam-irda-send.ns` and
 `beam-irda-receive.ns` send and listen again, up to three times, as a
 user would (ccdec403).
+
+### Beaming over the network (the LAN medium)
+
+`newton --ir-lan [PORT]` puts the IR port on a second medium beside
+`--ir-peer`'s TCP connection: a UDP multicast group that every newton
+given `--ir-lan` on the network joins, so any of them can beam to any
+other without knowing where it is - as with IR, whoever is listening
+answers.  Nothing above the chip knows: the Beam transport, the probe,
+Sharp IR, IrDA and the sniffer run exactly as over `--ir-peer`
+(`hal/host/HostIRChip.cpp`, "The LAN medium"; the sockets are
+`HostSockets.h`'s `HostUDPMulticastOpen`/`Send`, `HostUDPReceive`,
+`HostInterfaceAddresses`).
+
+- **The group.** 239.255.78.119 (`'N' 'w'` in the administratively scoped
+  block), port 3681 unless one is given, TTL 1 so no router passes it on,
+  loopback on so newtons on one machine hear each other.  It is joined
+  and sent on every IPv4 interface that is up and can multicast (loopback
+  included); `--ir-lan-interface ADDRESS` keeps it to one (127.0.0.1:
+  this machine only - what the tests use).
+- **Why multicast, not broadcast.** A limited broadcast
+  (255.255.255.255) leaves by one interface only, the one the routing
+  table picks - on a machine with a VPN, Hyper-V's switches for WSL,
+  VMware's adapters (the development machine has fourteen interfaces)
+  that is often one where nobody is - and it does not loop back on Linux,
+  nor reach anybody when there is no network at all.  A subnet broadcast
+  needs each interface's mask and still wakes every host on the link.
+  Multicast is joined and sent per interface (`IP_MULTICAST_IF`), reaches
+  the newtons on the same machine through loopback whatever the network,
+  is filtered by the network card for hosts that have not joined, and
+  stays on the link with a TTL of 1 - a broadcast's reach with none of
+  its costs.  WSL 2 in its NAT mode is on a link of its own with Windows
+  (the `vEthernet (WSL)` adapter): a newton on Windows and one in WSL
+  beam to each other both ways, the Windows one joined on that adapter
+  among the others (checked by hand, 2026-10-02).  Across a VPN they do
+  not, nor should they: TTL 1.
+- **The firewall.** To hear the group a newton binds the port on every
+  address (Windows delivers a multicast to a socket bound to the address
+  it arrived on, so with `--ir-lan-interface` it binds that address only,
+  and a loopback-only newton listens on nothing the firewall asks
+  about).  Windows Defender therefore asks, the first time a given
+  `newton.exe` runs with `--ir-lan` on all interfaces, whether it may
+  take traffic from private/public networks; until allowed, newtons on
+  other machines are not heard (those on the same machine always are).
+- **The datagram.** A burst, not a byte: everything the port sent since
+  the last poll (every 5 ms, so a few bytes at 9600 bps, about 60 at
+  115200), at most 700 bytes to a datagram so that none is fragmented:
+
+  | bytes | what |
+  |---|---|
+  | 4 | `NwIR` |
+  | 1 | version, 1 |
+  | 1 | 0 |
+  | 4 | the sender's instance: a number each newton makes at start |
+  | 4 | the sender's sequence number |
+  | 4 | the instance it is pointed at, or 0 (below) |
+  | 2n | (modulation, byte) pairs, as `--ir-peer` sends them |
+
+  A newton drops its own datagrams (they come back by loopback) and, per
+  sender, any whose sequence number is not newer than the last heard: a
+  datagram sent out of several interfaces arrives once for each, and one
+  overtaken is lost rather than heard out of order, as light would be.
+  Each byte then meets the chip's rules as over TCP - the modulation (a
+  receiver in IrDA does not hear ASK; auto-receive hears both and says
+  which), half duplex (nothing heard while transmitting), nothing heard by
+  a chip no tool has claimed - and is paced to the port's speed.
+- **Who faces whom.** The network has no geometry, and the protocols
+  differ in what a third MessagePad does.  IrDA addresses everything: in
+  discovery every listening station answers in a slot of its own,
+  `TIrDATool::DoDiscoverComplete` takes the first with the hints it
+  wants, and the SNRM is addressed to that device alone, so a second
+  receiver goes on listening until its time is up.  Sharp IR addresses
+  nothing: every receiver that hears an offer answers it, and over a
+  medium with no collisions both would take the beam (observed: two
+  receivers, both with the note).  On the air two answers at once collide
+  and a user points the MessagePad at one; the medium does the same.  A
+  newton that has *heard* another (its receiver on, the bytes taken) faces
+  it: its datagrams carry that newton's instance as their target, and it
+  hears only that newton, until five seconds pass without a word from it.
+  So a beam is answered by whichever receiver answers first; the others,
+  no longer faced, hear no more and give up as a MessagePad off to the
+  side would.  A newton that is not receiving (no tool, or the receiver
+  off) takes nothing and faces nobody, so a bystander changes nothing.
+- **Loss.** `NEWTON_IR_LAN_LOSS=N` loses N per cent of the datagrams a
+  newton hears.  At 10%: IrDA's IrLAP retransmits and a note goes both
+  ways untroubled; Sharp IR retries a packet three times (NAK or no ACK)
+  and a beam can still fail, leaving the note in the Out Box to be sent
+  again - which `demo/beamhelpers.ns` does, as a user would (observed
+  once in two runs).
+- **IrDA device addresses.** The IrLAP picks its 32-bit device address
+  with the ROM's `rand()`, which `UserBoot` seeds with the real-time
+  clock's seconds.  The host had seeded it with 1, so every newton had
+  the same address, and two receivers both took a connection made to it
+  (the sender then crashed: `TIrDATool::StartOutput` completes a put on a
+  chip that is off before it has stored the buffer, so
+  `TAsyncSerTool::DoPutComplete` asks a nil `fPutBuffer` its position - a
+  ROM bug, kept: the MessagePad calls through whatever the field holds).  `UserBoot` now seeds as the
+  ROM does, with the host's process id mixed in
+  (`hal/System.h`'s `GetMachineRandomSeed`, DEVIATION: two host newtons
+  are often started in the same second; `NEWTON_RANDOM_SEED` gives the
+  seed outright to repeat a run - `host.NewtonAppNewtHack` sets it to 1,
+  the seed the host always used, since its walk depends on the dungeon
+  NewtHack builds with the random numbers).
+
+`tools/host/twonewtons.py --lan` runs the newtons on it (a free port,
+loopback only, all started together; `--third` adds one, `--third-ready`
+starting it first, `--wait-for first` and `--expect-one` for two
+receivers).  Ctests: `host.NewtonBeamLAN` and `host.NewtonBeamLANSharp`
+(a note each way, `demo/beam-lan-first.ns`/`beam-lan-second.ns` over
+`demo/beamhelpers.ns`, the protocol from `NEWTON_BEAM_TOOL`),
+`host.NewtonBeamLANBystander` (the same with a third newton that is not
+receiving, `demo/beam-lan-bystander.ns`),
+`host.NewtonBeamLANTwoReceivers` and `host.NewtonBeamLANSharpTwoReceivers`
+(one sender, two listening - `demo/beam-lan-send.ns`, `beam-lan-listen.ns`
+- exactly one receives), `host.NewtonBeamLANAutoReceive` (the sniffer);
+`hal.HostIRChip` checks the medium itself (three chips: heard by the
+others and not by itself, facing, the modulation, five seconds' silence).
+
+A Prefs toggle is not worth having yet: like `--ir-peer`, the medium is
+the host machine's IR window, chosen when newton starts; a panel would
+want the socket opened and closed while the OS runs, and nothing asks
+for that.
 
 ## The web browsers
 
@@ -590,7 +713,7 @@ of a type other than the one asked for still has its package fetched.
 | the serial tools (Dock layer 2): `TCircleBuf`; the serial options; the fast timers (`TFIQTimer`) and `TDelayTimer`; `TSerTool` (claiming, binding and turning on a chip; the serial options), `TAsyncSerTool` (the byte stream a byte at a time from the chip's interrupts, XON/XOFF and CTS/RTS flow control, break framing, the serial events, statistics; DMA where a chip has it) and the `'aser` service `TAsyncService`; the name server's resource arbitration (a chip is claimed through it) | done: `utility/CircleBuf.h`, `comms/SerialOptions.cpp`, `hal/FIQTimer.h`, `hal/DelayTimer.cpp`, `comms/SerialTool.h` (library `comms_serial`), `os600/user/NameServer.cpp`; ctests `utility.CircleBuf`, `hal.FIQTimer`, `comms.SerialTool` (an `'aser` endpoint echoed through the socket, both buffers wrapping) |
 | MNP (Dock layer 3): `TFramedAsyncSerTool` (`'fser`: SYN DLE STX, DLE doubled, DLE ETX, CRC-16 each way), `TMNP` (the link request negotiated as originator or acceptor, LT frames sent in pieces while they fill, LA with credit, class 4's short headers, retransmission and the one-second timers, LD, the termination procs), class 5 compression, `TMNPService` (`'mnps`) | done: `comms/SerialTool.h`, `comms/MNP.h`, `comms/MNPClass5.cpp`; ctests `comms.MNP`/`comms.MNPLongHeaders` (an `'mnps` endpoint connects to `tools/dock/mnp.py`, the desktop end, and its data comes back), `comms.MNPClass5`; V.42bis (`comms/V42bis.cpp`: the ROM's BTLZ coder over its own 0x39d4-byte block, big-endian halfword node arrays - N2 up to 1024 each way, 2048 one way - cross-checked against `tools/dock/v42bis.py`, written from the recommendation: ctests `comms.V42bis`, `comms.V42bisRoundTrip`, and `comms.MNPV42bis`, a link negotiating it with `mnp.py --v42bis` and its data back in compressed mode).  NOT YET: V.42bis's internal-buffer mode |
 | the docker (Dock layer 4): `TEzEndpointPipe` and the modem navigator hook; `TEzPipeProtocol` (the `'newt' 'dock'` headers); `TDocker` - `Connect` (`'rtdk'`, then the desktop's answer), `DoConnection` (the world forked), the package loader's session (`'lpkg'`: `CompatabilityHacks`, `ReadPackage` over `SuckPackageThruPipe`, `'dres'`, `'disc'`), the protocol extensions (`TDockerDynArray`), stopping, aborting and cleaning up; the `FConn*` natives the Connection application's `dtEndpoint` calls, `ConnBuildStoreFrame` (with `StoreGetPasswordKey`); options a script makes rewritten into the host's layout (`comms/HostOptionLayouts.h`, DEVIATION: a FastInt/ULong is pointer-sized on the host) | done: `comms/EzEndpointPipe.h`, `comms/Docker.h` (library `comms_dock`); ctests `comms.EzEndpointPipe`, `host.NewtonDocker`, `host.NewtonDock` (the Connection application's autodock over the host serial port to `tools/dock/dock.py`, which loads `fixtures/packages/fonts/monaco.pkg`).  the docking session: the handshake (`'dock'`, `'name'`, `'dinf'`/`'ninf'`, `'wicn'`, `'stim'`), the password exchange over the ROM's DES (`utility/DES.h`; the desktop's copy is `tools/dock/newtondes.py`), every command of `ProcessCommand` - packages (load, list `'gpin'`, restore, remove), session kinds, time, timeout, icons, cancelling, stores and soups (choose, make, info, back up `'bksp'` as runs of ids, send), cursors (`'qury'` and the rest, `TCursorArray`) and entries (add, return, change, delete; `ConvertEntry` for a 1.x Newton's, `IsDuplicateEntry` for a selective restore), the class inheritance, sync options, test echoes, remote function calls, the Connection application's slips (`CallConnectionApp`), protocol extensions either side; the application's own `ReadCommand`/`WriteCommand` natives and the keyboard passthrough - all exercised by ctest `host.NewtonDockSession` (`dock.py --session`, `tools/dock/nsof.py`; the slip tapped and the keys typed by `src/host/demo/dock.ns`).  NOT YET: `'rpat'` (a system patch installed into the ROM) and `BackupPatches` (`'gpat'` answers the host's none).  Two ROM bugs worth knowing: a backup cannot be cancelled (`CheckCancel`), and `'rtst'` writes its header twice (`docs/curiosities.md`) |
-| the host IR port (Beaming layer 1): `THostIRChip` at `'infr'` over a TCP connection to another host (`newton --ir-peer listen:PORT` / `HOST:PORT`), the modulation rule ('irlk': ASK or IrDA, auto-receive and its status), half duplex, `THMOSerIRLinkConfig` | done: `hal/host/HostIRChip.h`, ctest `hal.HostIRChip` |
+| the host IR port (Beaming layer 1): `THostIRChip` at `'infr'` over a TCP connection to another host (`newton --ir-peer listen:PORT` / `HOST:PORT`) or over the LAN medium, a multicast group every newton with `--ir-lan` hears ("Beaming over the network"), the modulation rule ('irlk': ASK or IrDA, auto-receive and its status), half duplex, `THMOSerIRLinkConfig` | done: `hal/host/HostIRChip.h`, ctests `hal.HostIRChip`, `host.NewtonBeamLAN*` |
 | Sharp IR (Beaming layer 2): `TSharpIRTool` ("SlowIR", `'slir'`: lead-in, control, negotiation and data packets over `TAsyncSerTool` with the port in ASK mode; the negotiation - an offer, the answer, the protocol and speed agreed (two 2.x Newtons agree the Senior protocol, 4, at 19200); a data packet after ENQ/SYN, ACKed or NAKed, three tries, 0x200 bytes at most, a frame's last numbered 0xffff; the timers as delayed messages to the tool's own port), `TIRService`, the slow IR options | done: `comms/SharpIRTool.h`; ctest `comms.SharpIR` (two host IR chips in one process, one listening and one connecting, a stream, a frame, a frame of three packets and a reply).  A ROM behaviour worth knowing: one counter numbers the packets both ways, so a reply after a stream put is refused as out of sequence - only the end of a frame starts both ends again |
 | the beamer (Beaming layer 3): `TBeamer` (the protocol chosen - the probe `'pkir'` unless the preference `zapCommToolId` names a service - an endpoint opened in a fork of the world and connected or listening, a pipe over it; the item count, then each item's header frame, the other side's answer whether it has the room, the item as NSOF with the progress told to the status dialog; the Wizard translators' path, which the ROM does not supply), `TBeamerCallback`, the Beam transport's natives `BeamSend`/`BeamReceive`/`BeamCancel` (`ZapSend`/`ZapReceive`/`ZapCancel`), the IrDA options' constructors | done: `comms/Beamer.h` (`NEWTON_TRACE_BEAM`); ctest `host.NewtonBeam` (`tools/host/twonewtons.py`: two `newton`s with `--ir-peer`, `src/host/demo/beam-send.ns` routes a note to Beam and sends it from the Out Box, `beam-receive.ns` receives it into the In Box - Sharp IR, `zapCommToolId` "slir").  With `class: 'paperroll` in its body the note does not stay in the receiver's In Box: the In Box's AutoFunction (@0x4b3ef5) calls the Notes application's `AutoPutaway` (autoPutawayEnabled: its PutAwayScript), which files it straight into the Notes soup - the ROM's behaviour, as the Beam transport's "Put away automatically" preference (`dontAutoPutAway`) says; the classless body the demo sends stays in the In Box (observed; the Notes PutAwayScript not traced), so the demo's has none and the note stays in the In Box to be found.  The default path too: ctest `host.NewtonBeamIrDA` (`beam-irda-send.ns`/`beam-irda-receive.ns`, `zapCommToolId` nil - the probe answers IrDA and the note goes over `'irda'`) |
 | the IR probe (Beaming layer 4): `TIrProbeTool` ("IrProbe", `'pkir'`: connecting, four IrDA TEST frames with a tenth of a second for each echo, then a Sharp offer of protocols 0xf (or every third time an ENQ), round again for about two minutes; listening, half a second at a time in auto-receive - a TEST frame echoed answers IrDA, two ENQs or an offer without IrDA answer Sharp IR; the answer is its 'irpt' option), `IRProbeService`; and IrDA's SIR framing under it, `TIrSIR` (extra BOFs, BOF, the frame escaped, the IrDA CRC-16, EOF; a frame received for this station into a buffer segment, the medium busy meanwhile) with `TIrLAPPutBuffer` | done: `comms/IrProbeTool.h`, `comms/IrSIR.h`; ctest `comms.IrProbe` (probe against probe answers IrDA both ends; probe against a Sharp IR listener answers 7).  So the default beam between two 2.1s now picks `'irda'`, which is NOT YET |
