@@ -204,4 +204,10 @@ value that fits unchanged, and the strict throw.
 | S0 the switch | 402/402 | 261/402 | - |
 | S1 the host's own assumptions | 402/402 | 388/402 | - |
 | S2 the boundary policy | 402/402 | 394/402 | - |
-| S3 the semantics, per-flavour tests | 402/402 | 398/402 (the timer and NewtHack: time) | 402/402 |
+| S3 the semantics, per-flavour tests | 402/402 | 398/402 (the alarm queue: the Clock timer, NewtHack) | 402/402 |
+| S3 time 64-bit aware (the alarm queue read by congruence) | 402/402 | 402/402 | 402/402 |
+| S4 no silent narrowing on a 32-bit `long` | 402/402 | 402/402 | 402/402 |
+
+(Run one flavour at a time: with both suites at `-j 12` at once,
+`host.NewtonROMFreeFidelity` - a 21-step walk on three boots - and
+`armcpu.NewtHack` have run out of time in either flavour; both pass alone.)
