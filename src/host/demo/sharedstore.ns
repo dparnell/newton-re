@@ -1,0 +1,133 @@
+// One store used by both flavours in turn: newton, newton64, newton,
+// newton64 in strict mode, newton (docs/frames/64bit.md, "One store, both
+// flavours").  tools/host/sharedstore.py runs the steps on one store file,
+// SHARED_STEP saying which this is, and compares what they print (ctest
+// host.NewtonSharedStore).
+//
+//   1 newton    Setup; a note, a Names card, an alarm 30 days ahead, and
+//               a soup with an 'int index and an entry k = 7
+//   2 newton64  all of it read back; an entry k = 1486438832 (wider than
+//               the device's 30 bits) and one k = 8 added
+//   3 newton    all of it read back; the wide one as the device holds it,
+//               412697008, found under that key
+//   4 newton64  NEWTON_NS64_STRICT: adding a wide k throws -48207
+//               (kNSErrLongOutOfRange); k = 9 is added
+//   5 newton    k = 9 there and no trace of the refused one
+//
+// Every step prints the note's word hints ("shared: hints ...") and the
+// script's checks ("shared: <what>: ok" or "FAILED"), and ends with
+// "shared: step N done".
+
+HostInclude("common.ns");			// waitFor, walkSetup
+
+shStep := HostGetEnv("SHARED_STEP");
+// 1486438832, worked out when it is used: written as a literal it would not
+// compile in newton, whose integers are the device's 30 bits
+shWide := 743219416 * 2;
+shFailures := 0;
+
+shCheck := func(what, ok, detail) begin
+	if not ok then shFailures := shFailures + 1;
+	Print("shared: " & what & ": " & (if ok then "ok" else "FAILED " & detail));
+end;
+
+shSoup := func(name) GetStores()[0]:GetSoup(name);
+
+shFind := func(soupName, slot, value) begin
+	local soup := call shSoup with (soupName);
+	if soup then begin
+		local c := soup:Query(nil);
+		local e := c:Entry();
+		while e and not (IsString(e.(slot)) and StrEqual(e.(slot), value)) do e := c:Next();
+		e;
+	end;
+end;
+
+shKeyed := func(k) begin
+	local soup := call shSoup with ("SharedTest");
+	soup and soup:Query({indexPath: 'k, beginKey: k, endKey: k}):Entry();
+end;
+
+shCommon := func() begin
+	local note := call shFind with ("Notes", 'sharedTest, "note");
+	call shCheck with ("the note", note and StrEqual(note.data[0].text, "shared note"), "");
+	Print("shared: hints " & (if note then HostEntryHints(note) else "none"));
+	local card := call shFind with ("Names", 'sharedTest, "card");
+	call shCheck with ("the Names card", card and StrEqual(card.name.last, "Lovelace"), "");
+	local alarm := GetAlarm("SharedTest:host");
+	local days := if alarm then (TimeInSecondsToTime(alarm.TimeInSeconds) - Time()) div 1440;
+	call shCheck with ("the alarm, " & days & " days ahead", days = 29 or days = 30, "");
+	local small := call shKeyed with (7);
+	call shCheck with ("k = 7 by its key", small and small.k = 7 and StrEqual(small.tag, "small"), "");
+end;
+
+shSteps := {
+	step1: func() begin
+		local store := GetStores()[0];
+		GetUnionSoup("Notes"):AddToDefaultStoreXmit({class: 'paper, viewStationery: 'paper, sharedTest: "note",
+			timestamp: Time(), height: 60, labels: nil,
+			data: [{viewStationery: 'para, viewBounds: {left: 10, top: 10, right: 200, bottom: 30},
+					text: "shared note", viewFont: {family: 'espy, face: 0, size: 10}}]}, nil);
+		GetUnionSoup("Names"):AddToDefaultStoreXmit({class: 'person, sharedTest: "card", cardType: 0,
+			name: {class: 'person, first: "Ada", last: "Lovelace"}, sorton: "Lovelace"}, nil);
+		AddAlarmInSeconds("SharedTest:host", TimeInSeconds() + 30 * 86400 + 3600, ["Shared store", "a month on"], nil, nil);
+		local soup := store:CreateSoupXmit("SharedTest", [{structure: 'slot, path: 'k, type: 'int}], nil);
+		soup:AddXmit({k: 7, tag: "small"}, nil);
+		call shCommon with ();
+	end,
+	step2: func() begin
+		call shCommon with ();
+		local soup := call shSoup with ("SharedTest");
+		local wide := soup:AddXmit({k: shWide, tag: "wide"}, nil);
+		soup:AddXmit({k: 8, tag: "small2"}, nil);
+		local big := 536870911;
+		call shCheck with ("536870911 + 1 is 536870912 here", big + 1 = 536870912, "");
+		call shCheck with ("k = 8 by its key", (call shKeyed with (8)) <> nil, "");
+		// the wide one is found under its own value - the key is narrowed as the entry is
+		call shCheck with ("k = 1486438832 by its key", (call shKeyed with (shWide)) <> nil, "");
+	end,
+	step3: func() begin
+		call shCommon with ();
+		local wide := call shFind with ("SharedTest", 'tag, "wide");
+		Print("shared: the wide one reads " & (if wide then NumberStr(wide.k) else "nothing"));
+		call shCheck with ("k written wide reads as the device holds it", wide and wide.k = 412697008, "");
+		call shCheck with ("and is found under that key", (call shKeyed with (412697008)) <> nil, "");
+		call shCheck with ("k = 8 by its key", (call shKeyed with (8)) <> nil, "");
+	end,
+	step4: func() begin
+		call shCommon with ();
+		local soup := call shSoup with ("SharedTest");
+		local code := nil;
+		try
+			soup:AddXmit({k: shWide, tag: "strict"}, nil)
+		onexception |evt.ex.fr| do
+			begin
+				local x := CurrentException();
+				code := if IsFrame(x.data) then x.data.errorCode else x.error;
+			end;
+		call shCheck with ("strict: a wide k is refused (" & code & ")", code = -48207, "");
+		soup:AddXmit({k: 9, tag: "small3"}, nil);
+		call shCheck with ("k = 9 by its key", (call shKeyed with (9)) <> nil, "");
+	end,
+	step5: func() begin
+		call shCommon with ();
+		call shCheck with ("k = 9 by its key", (call shKeyed with (9)) <> nil, "");
+		call shCheck with ("no trace of the refused one", (call shFind with ("SharedTest", 'tag, "strict")) = nil, "");
+	end,
+};
+
+shFinish := func() begin
+	Print("shared: step " & shStep & " done, " & shFailures & " failed");
+	HostQuit();
+end;
+
+if StrEqual(shStep, "1") then
+	call walkSetup with ([2, 0, 45, 34, 14, 37], func() begin
+		call shSteps.step1 with ();
+		call shFinish with ();
+	end)
+else
+	call waitFor with ("shared: the Notepad", func() GetRoot().paperroll and GetRoot().paperroll.viewCObject, func() begin
+		call shSteps.(Intern("step" & shStep)) with ();
+		call shFinish with ();
+	end, 60);

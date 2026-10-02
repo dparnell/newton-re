@@ -126,6 +126,84 @@ target_link_libraries(newton PRIVATE newt host_views host_window hal_host_sound 
 target_compile_definitions(newton PRIVATE "NEWTON_DEFAULT_OBJECTS=\"${NEWTON_OBJECTS_FILE}\"")
 install(TARGETS newton DESTINATION bin)
 
+# newton64 and newtonscript64: the same programs in the 64-bit NewtonScript
+# flavour (docs/frames/64bit.md).  NEWTON_NS64 changes every library, so they
+# are a second configure of the whole tree in <build>/ns64 with the same
+# toolchain, flags and ROM extraction, copied in beside newton.  Built on
+# demand - `cmake --build <build> --target newton64` - so an ordinary build
+# and the suite do not double; NEWTON_BUILD_NS64=ON builds them every time.
+# They boot this build's object file: it is the same bytes for both flavours
+# (every literal in romsrc/ fits the ROM's 30 bits; romsrc.py refuses one
+# that does not) and carries the same builder's stamp.
+if(NOT NEWTON_NS64)
+    option(NEWTON_BUILD_NS64 "build newton64/newtonscript64 (the 64-bit NewtonScript flavour) with every build" OFF)
+    include(ExternalProject)
+    set(ns64_args
+        -DNEWTON_NS64=ON
+        -DNEWTON_ROM_BUILD=${NEWTON_ROM_BUILD}
+        -DNEWTON_OBJECTS_FILE=${NEWTON_OBJECTS_FILE}
+        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS})
+    if(CMAKE_TOOLCHAIN_FILE)
+        list(APPEND ns64_args -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
+    else()
+        list(APPEND ns64_args -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER})
+    endif()
+    if(CMAKE_MAKE_PROGRAM)
+        list(APPEND ns64_args -DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM})
+    endif()
+    if(DEFINED NEWTON_WRAPV)
+        list(APPEND ns64_args -DNEWTON_WRAPV=${NEWTON_WRAPV})
+    endif()
+    set(ns64_dir ${CMAKE_BINARY_DIR}/ns64)
+    set(exe ${CMAKE_EXECUTABLE_SUFFIX})
+    ExternalProject_Add(ns64_build
+        SOURCE_DIR ${CMAKE_SOURCE_DIR}
+        BINARY_DIR ${ns64_dir}
+        CMAKE_GENERATOR ${CMAKE_GENERATOR}
+        CMAKE_ARGS ${ns64_args}
+        BUILD_COMMAND ${CMAKE_COMMAND} --build ${ns64_dir} --target newton newtonscript
+        INSTALL_COMMAND ${CMAKE_COMMAND} -E copy ${ns64_dir}/host/newton${exe} ${CMAKE_CURRENT_BINARY_DIR}/newton64${exe}
+                COMMAND ${CMAKE_COMMAND} -E copy ${ns64_dir}/host/newtonscript${exe} ${CMAKE_CURRENT_BINARY_DIR}/newtonscript64${exe}
+        BUILD_ALWAYS ON
+        EXCLUDE_FROM_ALL ON
+        USES_TERMINAL_BUILD ON)
+    if(NEWTON_BUILD_NS64)
+        set(ns64_all ALL)
+    endif()
+    add_custom_target(newton64 ${ns64_all} DEPENDS ns64_build)
+    if(TARGET romsrc)
+        add_dependencies(newton64 romsrc)
+    endif()
+    set(NEWTON64 ${CMAKE_CURRENT_BINARY_DIR}/newton64${exe})
+    # their tests, registered when newton64 is built with every build or
+    # was already there when this was configured (build it, then configure
+    # again to register them)
+    if(NEWTON_BUILD_NS64 OR EXISTS ${NEWTON64})
+        # newton64 through Setup on a fresh store, its integers 62 bits
+        add_test(NAME host.Newton64Setup
+                 COMMAND ${NEWTON64} --display 320x480 --erase
+                         --store ${CMAKE_CURRENT_BINARY_DIR}/newton64.store --headless 120
+                         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/newton64.ns
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/demo)
+        set_tests_properties(host.Newton64Setup PROPERTIES TIMEOUT 240
+                             PASS_REGULAR_EXPRESSION "newton64: 62-bit integers.*newton64: the Notepad.*the true count.*newton64: done"
+                             FAIL_REGULAR_EXPRESSION "FAILED|waited in vain")
+        # one store file used by newton and newton64 in turn
+        # (tools/host/sharedstore.py, demo/sharedstore.ns)
+        if(Python3_FOUND)
+            add_test(NAME host.NewtonSharedStore
+                     COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/host/sharedstore.py
+                             --newton $<TARGET_FILE:newton> --newton64 ${NEWTON64}
+                             --store ${CMAKE_CURRENT_BINARY_DIR}/shared.store
+                             --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/sharedstore.ns)
+            set_tests_properties(host.NewtonSharedStore PROPERTIES TIMEOUT 900
+                                 PASS_REGULAR_EXPRESSION "sharedstore: done"
+                                 FAIL_REGULAR_EXPRESSION "FAILED")
+        endif()
+    endif()
+endif()
+
 # the newt world booted headless for two seconds with the views demo as its
 # boot script (needs the ROM image)
 add_test(NAME host.Newton COMMAND newton --rom ${NEWTON_ROM_BIN} --headless 2 --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/newton.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)

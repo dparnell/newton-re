@@ -253,7 +253,12 @@ Usage(void)
 					"              [--ir-lan [port]] [--ir-lan-interface address]\n"
 					"              [--ipp-printer uri]\n"
 					"By default it boots the object file built from romsrc/ (NEWTON_OBJECTS overrides);\n"
-					"--rom boots a ROM image instead.\n");
+					"--rom boots a ROM image instead.\n"
+#if NEWTON_NS64
+					"This is newton64, the 64-bit NewtonScript flavour: integers are 62 bits, while every\n"
+					"store, package and NSOF format stays 32-bit (docs/frames/64bit.md).\n"
+#endif
+					);
 	return 2;
 }
 
@@ -819,6 +824,9 @@ HostCrashedFilter(HostExceptionPointers* info)
 int
 main(int argc, char** argv)
 {
+#if NEWTON_NS64
+	fprintf(stderr, "[host] newton64: the 64-bit NewtonScript flavour - 62-bit integers, 32-bit formats (docs/frames/64bit.md)\n");
+#endif
 #ifdef _WIN32
 	SetUnhandledExceptionFilter(HostCrashedFilter);
 #endif

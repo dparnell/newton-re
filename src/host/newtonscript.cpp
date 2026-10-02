@@ -99,7 +99,12 @@ static int
 Usage(void)
 {
 	fprintf(stderr, "usage: newtonscript [--objects <file> | --rom <image> | --no-objects] [--heap <bytes>] [-e <source>] [-i] [file.ns ...]\n"
-					"By default it loads the object file built from romsrc/ (NEWTON_OBJECTS overrides).\n");
+					"By default it loads the object file built from romsrc/ (NEWTON_OBJECTS overrides).\n"
+#if NEWTON_NS64
+					"This is newtonscript64, the 64-bit NewtonScript flavour: integers are 62 bits\n"
+					"(docs/frames/64bit.md).\n"
+#endif
+					);
 	return 2;
 }
 

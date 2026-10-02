@@ -1,0 +1,23 @@
+// newton64, the 64-bit NewtonScript flavour (docs/frames/64bit.md), booted
+// headless through Setup on a fresh store (ctest host.Newton64Setup):
+//
+//   build/host/host/newton64 --erase --store x.store --headless 120 --script src/host/demo/newton64.ns
+//
+// Prints "newton64: 62-bit integers" when a sum past the device's 30 bits
+// stays whole, "newton64: the Notepad" once Setup is through, then
+// "newton64: done".
+
+HostInclude("common.ns");			// walkSetup
+
+n64Big := 536870911;
+if n64Big + 1 = 536870912 then
+	Print("newton64: 62-bit integers")
+else
+	Print("newton64: integers wrap at 30 bits: FAILED");
+
+call walkSetup with ([2, 0, 45, 34, 14, 37], func() begin
+	Print("newton64: the Notepad");
+	Print("newton64: TimeInSeconds " & (if TimeInSeconds() > 0 then "the true count" else "wrapped: FAILED"));
+	Print("newton64: done");
+	HostQuit();
+end);

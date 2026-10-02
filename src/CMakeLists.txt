@@ -63,7 +63,11 @@ set(NEWTON_ROM_BIN "${NEWTON_ROM_BUILD_DIR}/rom.bin")
 # (the object file, which host/CMakeLists.txt builds; the unit tests that
 #  need only the ROM's objects - fonts, locale bundles, prototypes - import it
 #  too, compiled with NEWTON_OBJECTS, so they run without the ROM image)
-set(NEWTON_OBJECTS_FILE "${CMAKE_BINARY_DIR}/romsrc-objects.bin")
+#  - newton64's sub-build (host/CMakeLists.txt) names its parent's file, the
+#  same bytes whichever flavour boots them)
+if(NOT DEFINED NEWTON_OBJECTS_FILE)
+    set(NEWTON_OBJECTS_FILE "${CMAKE_BINARY_DIR}/romsrc-objects.bin")
+endif()
 if(EXISTS "${NEWTON_ROM_BIN}" AND EXISTS "${NEWTON_ROM_IMAGE}")
     set(NEWTON_HAVE_ROM TRUE)
 else()

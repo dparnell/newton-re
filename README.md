@@ -58,6 +58,40 @@ does and what is still NOT YET is in [docs/](docs/) -
 Run the tests with `ctest --test-dir build/host` (about 400 of them; a
 build without the ROM image simply skips the few that compare against it).
 
+### Two executables: `newton` and `newton64`
+
+`newton` is the faithful machine: a NewtonScript integer is the ROM's 30
+bits and wraps where the MessagePad's does, bugs and all.  `newton64` (and
+`newtonscript64`) is the 64-bit NewtonScript flavour, `NEWTON_NS64`:
+
+* integers are 62 bits - sums no longer wrap at ±2^29, literals run to
+  2^61-1, `ExtractLong` reads any signed word;
+* time is 64-bit aware - `TimeInSeconds()` is the true count of seconds
+  since 1993, not the value that wrapped in January 2010;
+* every persistent and wire format stays 32-bit - stores, packages, NSOF
+  (beaming, docking, endpoints), soup index keys and the ARM interpreter's
+  package code - with one narrowing policy where a wider value crosses
+  (`src/frames/NarrowRef.h`: wrapped to the device's 30 bits, or
+  `NEWTON_NS64_STRICT` to throw instead).
+
+So a store is the same bytes whichever wrote it: one store file can be used
+by `newton` and `newton64` in turn (a value wider than 30 bits that
+`newton64` stored reads back in `newton` as the device would hold it - ctest
+`host.NewtonSharedStore`), though only one program may have a store file
+open at a time.  NS64 is a compile-time change across every library, so
+`newton64` is a second build of the tree, made on demand beside `newton`:
+
+```powershell
+cmake --build build/host --target newton64      # build\host\host\newton64, newtonscript64
+build\host\host\newton64 --store my.store
+```
+
+Configure with `-DNEWTON_BUILD_NS64=ON` to build it with every build (and to
+register its ctests, `host.Newton64Setup` and `host.NewtonSharedStore`; after
+an on-demand build, configure again to register them).  The whole story -
+what changes, the boundary, time, the tests - is
+[docs/frames/64bit.md](docs/frames/64bit.md).
+
 ## Contents
 
 | Path | What it is |

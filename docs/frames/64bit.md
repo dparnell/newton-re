@@ -9,12 +9,49 @@ stays the oracle.
 `-DNEWTON_NS64=ON` builds a second flavour in which an integer is as wide as
 the host's Ref less its tag - 62 bits - while **every persistent and wire
 format stays 32-bit**.  It is the owner's choice (2026-10-01) after
-`64bit-study.md` (branch `ns64-study`), which measured the change.  The
-two flavours are built in separate directories:
+`64bit-study.md` (branch `ns64-study`), which measured the change.
 
-```
-cmake -G Ninja -S src -B build/host-ns64 -DNEWTON_NS64=ON ...
-```
+## Two executables
+
+The ordinary build makes `newton` and `newtonscript`, the faithful flavour.
+`cmake --build <build> --target newton64` makes `newton64` and
+`newtonscript64` beside them: `NEWTON_NS64` changes every library, so the
+target configures the whole tree a second time in `<build>/ns64` (an
+`ExternalProject`, `src/host/CMakeLists.txt`) with the same toolchain,
+flags and ROM extraction and `-DNEWTON_NS64=ON`, builds its `newton` and
+`newtonscript` and copies them in as `newton64`/`newtonscript64`.  It is
+built on demand so that an ordinary build and the suite do not double;
+`-DNEWTON_BUILD_NS64=ON` builds it every time.  Both boot the same
+`romsrc-objects.bin` - the object file is the same bytes for either flavour
+(every literal in `romsrc/` fits 30 bits, and `romsrc.py` refuses one that
+does not) and carries the same builder's stamp - so the sub-build names
+its parent's (`NEWTON_OBJECTS_FILE`).  `newton64` says what it is on
+start-up and in its usage text.  Its ctests - `host.Newton64Setup` (through
+Setup on a fresh store, the integers 62 bits, the time the true count) and
+`host.NewtonSharedStore` (below) - are registered when `NEWTON_BUILD_NS64`
+is on or `newton64` was there when the build was configured.
+
+A tree can also be configured as the 64-bit flavour on its own
+(`cmake -G Ninja -S src -B build/host-ns64 -DNEWTON_NS64=ON ...`), which
+builds its `newton` as the 64-bit one and runs the whole suite in that
+flavour - how the numbers below were taken.
+
+## One store, both flavours
+
+Every format stays 32-bit, so a store file is the same bytes whichever
+flavour wrote it, and one store can be used by `newton` and `newton64` in
+turn - one at a time: two programs must never have a store file open at
+once.  `tools/host/sharedstore.py` (ctest `host.NewtonSharedStore`) proves
+it with `src/host/demo/sharedstore.ns`, five runs on one store: newton
+(Setup; a note, a Names card, an alarm a month ahead, a soup with an 'int
+index and k = 7), newton64 (all read back; k = 1486438832 and k = 8
+added - the wide one found under its own key), newton (all read back; the
+wide one reads 412697008, the device's 30 bits, and is found under that
+key), newton64 with `NEWTON_NS64_STRICT` (adding a wide k throws -48207,
+`kNSErrLongOutOfRange`; k = 9 added) and newton (k = 9 there, no trace of
+the refused one).  The note's word hints are the same bytes after every
+run, and the store's byte-order flag (`tools/stores/flashimage.py info`:
+"a MessagePad's byte order") never changes.
 
 ## What changes, and where
 
