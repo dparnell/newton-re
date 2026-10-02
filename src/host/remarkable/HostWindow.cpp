@@ -41,6 +41,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <signal.h>
+#include <algorithm>
+#include <vector>
 
 // the pen and the keyboard: C-linkage shims over hal/host/HostTablet.h
 // and host/HostKeyboard.h (HostKeyboard.cpp), the Newton headers kept out
@@ -65,6 +68,98 @@ static std::atomic<bool>	gStopping(false);
 static std::atomic<bool>	gStarted(false);
 static std::atomic<bool>	gFailed(false);
 static RemarkablePanel*		gPanel = nil;
+static std::atomic<int>		gSnapshotsAsked(0);	// SIGUSR2: the display written out as a PGM
+
+
+/*------------------------------------------------------------------------------
+	What the window can say about itself, for working on a tablet one cannot
+	watch from the desk (docs/host-remarkable.md):
+
+	  kill -USR2 <newton>      the display as it is, written as
+	                           $NEWTON_RM_SNAPDIR/panel-N.pgm (default: the
+	                           working directory) - what newton handed the panel
+	  NEWTON_RM_TRACE=1        each update (waveform, rectangle) and, for each
+	                           stroke, how many pen events came, how fast, and
+	                           how long from a pen event to the update that
+	                           showed its ink went out (newton's share of the
+	                           ink's latency; the panel's own comes after)
+------------------------------------------------------------------------------*/
+
+static void
+SnapshotSignal(int)
+{
+	gSnapshotsAsked.fetch_add(1);
+}
+
+static void
+WriteSnapshot(const unsigned char* pixels)
+{
+	static int sNumber = 0;
+	const char* dir = getenv("NEWTON_RM_SNAPDIR");
+	char path[512];
+	snprintf(path, sizeof(path), "%s/panel-%d.pgm", dir != nil ? dir : ".", ++sNumber);
+	FILE* f = fopen(path, "wb");
+	if (f == nil)
+		return;
+	fprintf(f, "P5\n%ld %ld\n255\n", gWidth, gHeight);
+	for (long i = 0; i < gWidth * gHeight; i++)
+		fputc(255 - pixels[i], f);			// (the display's 0 is white; a PGM's 255 is)
+	fclose(f);
+	fprintf(stderr, "[host] reMarkable: wrote %s\n", path);
+}
+
+typedef std::chrono::steady_clock Clock;
+
+static double
+Ms(Clock::duration d)
+{
+	return std::chrono::duration<double, std::milli>(d).count();
+}
+
+struct StrokeTrace
+{
+	bool				fOn = false;
+	Clock::time_point	fDown, fPending;
+	bool				fHasPending = false;
+	long				fEvents = 0, fUpdates = 0;
+	std::vector<double>	fLatency;
+
+	void	PenEvent(bool down)
+	{
+		if (!fOn) return;
+		Clock::time_point now = Clock::now();
+		if (down) { fDown = now; fEvents = 0; fUpdates = 0; fLatency.clear(); }
+		fEvents++;
+		if (!fHasPending) { fPending = now; fHasPending = true; }
+	}
+	void	Updated(const char* how, long l, long t, long r, long b)
+	{
+		if (!fOn) return;
+		Clock::time_point now = Clock::now();
+		if (fHasPending)
+		{
+			double ms = Ms(now - fPending);
+			fLatency.push_back(ms);
+			fUpdates++;
+			fHasPending = false;
+			fprintf(stderr, "[rm] update %s %ld,%ld %ldx%ld, %.1f ms after the pen\n", how, l, t, r - l, b - t, ms);
+		}
+		else
+			fprintf(stderr, "[rm] update %s %ld,%ld %ldx%ld\n", how, l, t, r - l, b - t);
+	}
+	void	PenUp(void)
+	{
+		if (!fOn) return;
+		double seconds = Ms(Clock::now() - fDown) / 1000.0;
+		std::vector<double> v = fLatency;
+		std::sort(v.begin(), v.end());
+		fprintf(stderr, "[rm] stroke: %.2f s, %ld pen events (%.0f a second), %ld ink updates; pen to update %s",
+				seconds, fEvents, seconds > 0 ? fEvents / seconds : 0.0, fUpdates, v.empty() ? "-\n" : "");
+		if (!v.empty())
+			fprintf(stderr, "min %.1f median %.1f max %.1f ms\n", v.front(), v[v.size() / 2], v.back());
+		fHasPending = false;
+	}
+};
 
 
 static long
@@ -184,6 +279,11 @@ WindowThread(void)
 	const long settleMs = EnvLong("NEWTON_RM_SETTLE", 600);
 	const long fullScreens = EnvLong("NEWTON_RM_FULL", 4);
 	const bool touchIsPen = getenv("NEWTON_RM_TOUCH") != nil && strcmp(getenv("NEWTON_RM_TOUCH"), "pen") == 0;
+	const long frameMs = EnvLong("NEWTON_RM_FRAME", 33);		// the pace with the pen up
+	const long inkFrameMs = EnvLong("NEWTON_RM_INK_FRAME", 8);	// and down: live ink is drawn as fast as it can be sent
+	StrokeTrace trace;
+	trace.fOn = getenv("NEWTON_RM_TRACE") != nil;
+	static const char* kHow[] = { "ink", "ui", "content" };
 
 	// the grays last sent: all of them, first, in the clean waveform
 	unsigned char* shown = (unsigned char*) malloc((size_t) (gWidth * gHeight));
@@ -202,11 +302,17 @@ WindowThread(void)
 	{
 		const unsigned char* pixels = gPixels;
 		long l, t, r, b;
+		while (gSnapshotsAsked.load() > 0 && pixels != nil)
+		{
+			gSnapshotsAsked.fetch_sub(1);
+			WriteSnapshot(pixels);
+		}
 		if (pixels != nil && ChangedRect(pixels, shown, &l, &t, &r, &b))
 		{
 			PaintRect(pixels, l, t, r, b);
 			RemarkableRefresh how = gPenDown.load() ? kRefreshInk : kRefreshUI;
 			gPanel->Update(l * gScale, t * gScale, r * gScale, b * gScale, how);
+			trace.Updated(kHow[how], l, t, r, b);
 			if (how == kRefreshInk)
 				Union(&inkL, &inkT, &inkR, &inkB, l, t, r, b);
 			changedScreens += (double) ((r - l) * (b - t)) / (double) (gWidth * gHeight);
@@ -233,7 +339,7 @@ WindowThread(void)
 		// the pen, the keys: one event, then whatever else is waiting
 		// (the wait is the refresh's pace, thirty times a second)
 		RemarkableEvent event;
-		long wait = 33;
+		long wait = gPenDown.load() ? inkFrameMs : frameMs;
 		while (gPanel->Poll(&event, wait))
 		{
 			wait = 0;
@@ -258,18 +364,23 @@ WindowThread(void)
 				if (!gPenDown.load())
 				{
 					gPenDown.store(true);
+					trace.PenEvent(true);
 					HostWindowPenDown(x, y);
 				}
 				break;
 			case RemarkableEvent::kPenMove:
 				if (gPenDown.load())
+				{
+					trace.PenEvent(false);
 					HostWindowPenMove(x, y);
+				}
 				break;
 			case RemarkableEvent::kPenUp:
 				if (gPenDown.load())
 				{
 					HostWindowPenUp();
 					gPenDown.store(false);
+					trace.PenUp();
 				}
 				break;
 			case RemarkableEvent::kKeyDown:
@@ -335,6 +446,7 @@ HostWindowStart(long width, long height, const unsigned char* pixels, const char
 	if (width * gScale > panelWidth || height * gScale > panelHeight)
 		fprintf(stderr, "[host] reMarkable: %ld x %ld at %ld x is more than the panel's %ld x %ld\n",
 				width, height, gScale, panelWidth, panelHeight);
+	signal(SIGUSR2, SnapshotSignal);
 	gStopping.store(false);
 	gStarted.store(false);
 	gFailed.store(false);

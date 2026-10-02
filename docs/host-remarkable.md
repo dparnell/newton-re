@@ -310,6 +310,37 @@ All from the branch `rmpp`, built on the Windows machine.
    qemu (expected).  On SIGTERM rmkit's signal handler aborted the exit (see
    rmkit above).
 
+5. **Against the tablet's own AppLoad** (xovi started with
+   `/home/root/xovi/start`, which restarts xochitl - the owner's go-ahead
+   given): newton run over SSH with a made-up `QTFB_KEY` connected to
+   `/tmp/qtfb.sock`, and xochitl's journal (`journalctl -u xochitl`) shows
+   AppLoad taking it: `Client is connecting in 3 mode. Resolution is set to
+   1280x1920`, `Defined SHM (4915200 bytes)` - the message layouts are right.
+   Its updates were refused ("Could not find the framebuffer to act upon"),
+   as they must be: AppLoad shows a framebuffer only in a window it opened
+   itself for an application started from its launcher.  So putting newton
+   on the glass takes one tap in xochitl's UI, which is the owner's (below):
+   nothing here reads xochitl's screen or injects input into it, since both
+   could reach the owner's documents.
+
+### Watching a tablet one cannot see
+
+The window traces itself for this (`run.sh` turns both on):
+
+- `NEWTON_RM_TRACE=1`: every update (waveform, rectangle in display
+  pixels) and for each stroke a line like `[rm] stroke: 0.40 s, 21 pen
+  events (52 a second), 7 ink updates; pen to update min 8.8 median 57.6 max
+  57.8 ms` - how fast AppLoad delivers the pen and how long newton takes from
+  a pen event to the update that shows its ink (its share of the latency;
+  the panel's own waveform time comes after).  While the pen is down the
+  window polls every `NEWTON_RM_INK_FRAME` ms (8) instead of
+  `NEWTON_RM_FRAME` (33).
+- `kill -USR2 <newton's pid>` writes the display as it is to
+  `$NEWTON_RM_SNAPDIR/panel-N.pgm` (`/home/root/newton-data/`): what newton
+  handed the panel.
+- A NewtonScript file at `/home/root/newton-data/script.ns` is run at boot
+  (`--script`), for tests that need no hand.
+
 ## On the device
 
 What only the tablet can tell: the picture on the glass, the waveforms'

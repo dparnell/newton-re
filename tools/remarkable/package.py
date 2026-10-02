@@ -36,7 +36,11 @@ RUN_SH = """#!/bin/sh
 cd "$(dirname "$0")"
 DATA=/home/root/newton-data
 mkdir -p "$DATA/printed"
-echo "--- $(date) newton starting" >> "$DATA/newton.log"
+echo "--- $(date) newton starting, pid $$" >> "$DATA/newton.log"
+# the window's tracing and snapshots (kill -USR2 <pid> writes $DATA/panel-N.pgm)
+export NEWTON_RM_TRACE=1 NEWTON_RM_SNAPDIR="$DATA"
+# a test script left in $DATA runs at boot (docs/host-remarkable.md)
+[ -f "$DATA/script.ns" ] && set -- --script "$DATA/script.ns" "$@"
 exec ./newton --objects romsrc-objects.bin --display {display} --store "$DATA/internal.store" \\
     --print-dir "$DATA/printed" "$@" >> "$DATA/newton.log" 2>&1
 """
