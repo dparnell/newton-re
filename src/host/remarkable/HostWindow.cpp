@@ -91,6 +91,17 @@ SnapshotSignal(int)
 	gSnapshotsAsked.fetch_add(1);
 }
 
+// AppLoad ends an application with SIGTERM (and rmkit's own handler for it
+// calls exit() inside the signal, which aborted newton): the run is ended
+// as a closed window ends it, so the stores are flushed
+static std::atomic<bool>	gTerminateAsked(false);
+
+static void
+TerminateSignal(int)
+{
+	gTerminateAsked.store(true);
+}
+
 static void
 WriteSnapshot(const unsigned char* pixels)
 {
@@ -298,8 +309,17 @@ WindowThread(void)
 	long touchId = -1;
 	bool closed = false;
 
+	// (after the panel is open: rmkit installs its handlers before main)
+	signal(SIGTERM, TerminateSignal);
+	signal(SIGINT, TerminateSignal);
 	while (!gStopping.load() && !closed)
 	{
+		if (gTerminateAsked.load())
+		{
+			fprintf(stderr, "[host] reMarkable: asked to stop\n");
+			closed = true;
+			break;
+		}
 		const unsigned char* pixels = gPixels;
 		long l, t, r, b;
 		while (gSnapshotsAsked.load() > 0 && pixels != nil)

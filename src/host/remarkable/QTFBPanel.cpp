@@ -23,6 +23,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <linux/input.h>
+#include <sys/ioctl.h>
 
 #define nil 0
 
@@ -75,26 +77,40 @@ VirtualKeyForQtKey(long key)
 class QTFBPanel : public RemarkablePanel
 {
 public:
-						QTFBPanel() : fSocket(-1), fShm(nil), fShmSize(0), fWidth(0), fHeight(0), fMode(-1), fPenDown(false), fTouchId(-1) {}
+						QTFBPanel() : fSocket(-1), fShm(nil), fShmSize(0), fWidth(0), fHeight(0), fPanelWidth(0), fPanelHeight(0), fLeft(0), fTop(0),
+										 fMode(-1), fPenDown(false), fTouchId(-1), fPenFd(-1), fPenMaxX(1), fPenMaxY(1), fPenX(0), fPenY(0),
+										 fPenTouch(false), fPenWasDown(false), fPenMoved(false), fFlipX(false), fFlipY(false), fSwapXY(false) {}
 	virtual				~QTFBPanel() { Close(); }
 	virtual const char*	Name(void) { return "qtfb"; }
 	virtual bool		NativeSize(long* width, long* height);
 	virtual bool		Open(long width, long height);
 	virtual void		Close(void);
-	virtual uint16_t*	Pixels(void) { return (uint16_t*) fShm; }
-	virtual long		RowWords(void) { return fWidth; }
-	virtual void		Origin(long* left, long* top) { *left = 0; *top = 0; }
+	virtual uint16_t*	Pixels(void) { return (uint16_t*) fShm + fTop * fPanelWidth + fLeft; }
+	virtual long		RowWords(void) { return fPanelWidth; }
+	virtual void		Origin(long* left, long* top) { *left = fLeft; *top = fTop; }
 	virtual void		Update(long left, long top, long right, long bottom, RemarkableRefresh how);
 	virtual bool		Poll(RemarkableEvent* event, long timeoutMs);
 
 private:
 	bool				Connect(void);
 	void				Send(const QTFBClientMessage& message);
+	void				OpenPenDevice(void);
+	bool				ReadPen(RemarkableEvent* event);
 
 	int					fSocket;
 	unsigned char*		fShm;
 	size_t				fShmSize;
-	long				fWidth, fHeight;
+	long				fWidth, fHeight;		// the image
+	long				fPanelWidth, fPanelHeight;	// the framebuffer: the whole panel
+	long				fLeft, fTop;			// the image's place on it
+	// the Marker read from its own input device (NEWTON_RM_PEN=evdev, the
+	// default when there is one): AppLoad's qtfb hands on touches but - on
+	// the Paper Pro, 3.25 - not the Marker (docs/host-remarkable.md)
+	int					fPenFd;
+	long				fPenMaxX, fPenMaxY;
+	long				fPenX, fPenY;
+	bool				fPenTouch, fPenWasDown, fPenMoved;
+	bool				fFlipX, fFlipY, fSwapXY;
 	int					fMode;				// the refresh mode last set (-1: none yet)
 	bool				fPenDown;
 	int					fTouchId;			// the touch acting as the pen (NEWTON_RM_TOUCH=pen), -1 if none
@@ -147,12 +163,14 @@ QTFBPanel::NativeSize(long* width, long* height)
 		return false;
 	*width = 1620;
 	*height = 2160;
+	fPanelWidth = 1620;
+	fPanelHeight = 2160;
 	const char* panel = getenv("NEWTON_RM_PANEL");
 	long w, h;
 	if (panel != nil && sscanf(panel, "%ldx%ld", &w, &h) == 2 && w > 0 && h > 0)
 	{
-		*width = w;
-		*height = h;
+		*width = fPanelWidth = w;
+		*height = fPanelHeight = h;
 		return true;
 	}
 	FILE* f = fopen("/proc/device-tree/model", "r");
@@ -164,13 +182,13 @@ QTFBPanel::NativeSize(long* width, long* height)
 		fclose(f);
 		if (strstr(model, "Chiappa") != nil || strstr(model, "Move") != nil)
 		{
-			*width = 954;
-			*height = 1696;
+			*width = fPanelWidth = 954;
+			*height = fPanelHeight = 1696;
 		}
 		else if (strstr(model, "reMarkable 2") != nil)
 		{
-			*width = 1404;
-			*height = 1872;
+			*width = fPanelWidth = 1404;
+			*height = fPanelHeight = 1872;
 		}
 	}
 	return true;
@@ -189,8 +207,16 @@ QTFBPanel::Open(long width, long height)
 	message.type = kQTFBCustomInitialize;
 	message.customInit.key = key;
 	message.customInit.format = kQTFBFormatRMPP_RGB565;	// (a custom size: only the pixel's size matters)
-	message.customInit.width = (uint16_t) width;
-	message.customInit.height = (uint16_t) height;
+	// the whole panel, the image centred on it by newton: then AppLoad has
+	// nothing to scale or move, and a point on the glass is a point of the
+	// framebuffer whichever way the pen reaches newton
+	if (fPanelWidth < width || fPanelHeight < height)
+	{
+		fPanelWidth = width;
+		fPanelHeight = height;
+	}
+	message.customInit.width = (uint16_t) fPanelWidth;
+	message.customInit.height = (uint16_t) fPanelHeight;
 	Send(message);
 	QTFBServerMessage answer;
 	memset(&answer, 0, sizeof(answer));
@@ -210,7 +236,7 @@ QTFBPanel::Open(long width, long height)
 	fShmSize = answer.init.shmSize;
 	void* memory = mmap(nil, fShmSize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 	close(fd);
-	if (memory == MAP_FAILED || fShmSize < (size_t) (width * height * 2))
+	if (memory == MAP_FAILED || fShmSize < (size_t) (fPanelWidth * fPanelHeight * 2))
 	{
 		fprintf(stderr, "[host] qtfb: the shared memory could not be mapped\n");
 		return false;
@@ -218,7 +244,12 @@ QTFBPanel::Open(long width, long height)
 	fShm = (unsigned char*) memory;
 	fWidth = width;
 	fHeight = height;
-	fprintf(stderr, "[host] qtfb: framebuffer %ld x %ld (key %d, %s)\n", width, height, key, name);
+	fLeft = (fPanelWidth - width) / 2;
+	fTop = (fPanelHeight - height) / 2;
+	for (size_t i = 0; i < (size_t) (fPanelWidth * fPanelHeight); i++)
+		((uint16_t*) fShm)[i] = 0xffff;				// white round the image
+	fprintf(stderr, "[host] qtfb: framebuffer %ld x %ld (key %d, %s)\n", fPanelWidth, fPanelHeight, key, name);
+	OpenPenDevice();
 	return true;
 }
 
@@ -234,6 +265,11 @@ QTFBPanel::Close(void)
 		Send(message);
 		close(fSocket);
 		fSocket = -1;
+	}
+	if (fPenFd >= 0)
+	{
+		close(fPenFd);
+		fPenFd = -1;
 	}
 	if (fShm != nil)
 	{
@@ -257,6 +293,10 @@ QTFBPanel::Update(long left, long top, long right, long bottom, RemarkableRefres
 	QTFBClientMessage message;
 	memset(&message, 0, sizeof(message));
 	bool whole = left <= 0 && top <= 0 && right >= fWidth && bottom >= fHeight;
+	left += fLeft;
+	right += fLeft;
+	top += fTop;
+	bottom += fTop;
 	if (how == kRefreshContent && whole)
 	{
 		// everything shown again, the panel cleared of its ghosts (a flash)
@@ -290,11 +330,20 @@ QTFBPanel::Poll(RemarkableEvent* event, long timeoutMs)
 	event->key = -1;
 	if (fSocket < 0)
 		return false;
-	struct pollfd p;
-	p.fd = fSocket;
-	p.events = POLLIN;
-	p.revents = 0;
-	if (poll(&p, 1, (int) timeoutMs) <= 0)
+	if (fPenFd >= 0 && ReadPen(event))
+		return true;
+	struct pollfd p[2];
+	p[0].fd = fSocket;
+	p[0].events = POLLIN;
+	p[0].revents = 0;
+	p[1].fd = fPenFd;
+	p[1].events = POLLIN;
+	p[1].revents = 0;
+	if (poll(p, fPenFd >= 0 ? 2 : 1, (int) timeoutMs) <= 0)
+		return false;
+	if (fPenFd >= 0 && (p[1].revents & POLLIN) != 0 && ReadPen(event))
+		return true;
+	if ((p[0].revents & (POLLIN | POLLHUP | POLLERR)) == 0)
 		return false;
 	QTFBServerMessage message;
 	memset(&message, 0, sizeof(message));
@@ -313,9 +362,9 @@ QTFBPanel::Poll(RemarkableEvent* event, long timeoutMs)
 	event->y = message.userInput.y;
 	switch (message.userInput.inputType)
 	{
-	case kQTFBPenPress:		event->kind = RemarkableEvent::kPenDown; break;
-	case kQTFBPenUpdate:	event->kind = RemarkableEvent::kPenMove; break;
-	case kQTFBPenRelease:	event->kind = RemarkableEvent::kPenUp; break;
+	case kQTFBPenPress:		event->kind = fPenFd >= 0 ? RemarkableEvent::kNone : RemarkableEvent::kPenDown; break;	// (the device's own, when it is read)
+	case kQTFBPenUpdate:	event->kind = fPenFd >= 0 ? RemarkableEvent::kNone : RemarkableEvent::kPenMove; break;
+	case kQTFBPenRelease:	event->kind = fPenFd >= 0 ? RemarkableEvent::kNone : RemarkableEvent::kPenUp; break;
 	case kQTFBTouchPress:	event->kind = RemarkableEvent::kTouchDown; break;
 	case kQTFBTouchUpdate:	event->kind = RemarkableEvent::kTouchMove; break;
 	case kQTFBTouchRelease:	event->kind = RemarkableEvent::kTouchUp; break;
@@ -329,6 +378,94 @@ QTFBPanel::Poll(RemarkableEvent* event, long timeoutMs)
 		break;
 	}
 	return true;
+}
+
+
+/*------------------------------------------------------------------------------
+	The Marker straight from its input device, read alongside xochitl (not
+	grabbed: AppLoad's full-screen window keeps xochitl from acting on it).
+	The device's axes run the panel's way - ABS_X 0..11180 across, ABS_Y
+	0..15340 down on the Paper Pro, as AppLoad's qtfb-shim maps them - and
+	NEWTON_RM_PEN_AXES=[x][y][s] flips x, flips y or swaps them should a
+	tablet (or a turned screen) say otherwise.  A pen-down is BTN_TOUCH; the
+	point is sent at each SYN_REPORT.
+------------------------------------------------------------------------------*/
+
+void
+QTFBPanel::OpenPenDevice(void)
+{
+	const char* how = getenv("NEWTON_RM_PEN");
+	if (how != nil && strcmp(how, "qtfb") == 0)
+		return;
+	for (int i = 0; i < 16 && fPenFd < 0; i++)
+	{
+		char path[32];
+		snprintf(path, sizeof(path), "/dev/input/event%d", i);
+		int fd = open(path, O_RDONLY | O_NONBLOCK);
+		if (fd < 0)
+			continue;
+		const size_t bits = 8 * sizeof(long);
+		unsigned long keys[(KEY_MAX + 8 * sizeof(long)) / (8 * sizeof(long))];
+		memset(keys, 0, sizeof(keys));
+		ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(keys)), keys);
+		struct input_absinfo ax, ay;
+		if (((keys[BTN_TOOL_PEN / bits] >> (BTN_TOOL_PEN % bits)) & 1) == 0
+		 || ioctl(fd, EVIOCGABS(ABS_X), &ax) != 0 || ioctl(fd, EVIOCGABS(ABS_Y), &ay) != 0 || ax.maximum <= 0 || ay.maximum <= 0)
+		{
+			close(fd);
+			continue;
+		}
+		fPenFd = fd;
+		fPenMaxX = ax.maximum;
+		fPenMaxY = ay.maximum;
+		const char* axes = getenv("NEWTON_RM_PEN_AXES");
+		if (axes != nil)
+		{
+			fFlipX = strchr(axes, 'x') != nil;
+			fFlipY = strchr(axes, 'y') != nil;
+			fSwapXY = strchr(axes, 's') != nil;
+		}
+		char name[128] = "";
+		ioctl(fd, EVIOCGNAME(sizeof(name)), name);
+		fprintf(stderr, "[host] qtfb: the pen from %s '%s' (%ld x %ld)\n", path, name, fPenMaxX, fPenMaxY);
+	}
+}
+
+
+bool
+QTFBPanel::ReadPen(RemarkableEvent* event)
+{
+	struct input_event e;
+	while (read(fPenFd, &e, sizeof(e)) == (ssize_t) sizeof(e))
+	{
+		if (e.type == EV_ABS && e.code == ABS_X)
+			{ fPenX = e.value; fPenMoved = true; }
+		else if (e.type == EV_ABS && e.code == ABS_Y)
+			{ fPenY = e.value; fPenMoved = true; }
+		else if (e.type == EV_KEY && e.code == BTN_TOUCH)
+			fPenTouch = e.value != 0;
+		else if (e.type == EV_SYN && e.code == SYN_REPORT)
+		{
+			bool down = fPenTouch;
+			if (!down && !fPenWasDown)
+				{ fPenMoved = false; continue; }			// hovering
+			if (down && fPenWasDown && !fPenMoved)
+				continue;
+			double u = (double) fPenX / (double) fPenMaxX, v = (double) fPenY / (double) fPenMaxY;
+			if (fSwapXY) { double t = u; u = v; v = t; }
+			if (fFlipX) u = 1.0 - u;
+			if (fFlipY) v = 1.0 - v;
+			event->x = (long) (u * (fPanelWidth - 1) + 0.5);
+			event->y = (long) (v * (fPanelHeight - 1) + 0.5);
+			event->key = -1;
+			event->kind = down && !fPenWasDown ? RemarkableEvent::kPenDown
+						: down ? RemarkableEvent::kPenMove : RemarkableEvent::kPenUp;
+			fPenWasDown = down;
+			fPenMoved = false;
+			return true;
+		}
+	}
+	return false;
 }
 
 
