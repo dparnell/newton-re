@@ -12,9 +12,10 @@ OUT/ then holds
     run.sh                       what AppLoad starts: newton on the internal
                                  store /home/root/newton-data/internal.store,
                                  its output appended to newton.log beside it
-    external.manifest.json       AppLoad's description: qtfb on, full screen
-                                 (--rotation: turning with the tablet, for an
-                                 AppLoad from September 2026 on)
+    external.manifest.json       AppLoad's description: qtfb on, full screen,
+                                 turning with the tablet (AppLoad v0.6.0 on;
+                                 --old-appload for an earlier one), the pen
+                                 read directly
     icon.png                     the launcher's icon (tools/remarkable/icon.py)
 
 Copied to /home/root/xovi/exthome/appload/<dir>, it shows in AppLoad's
@@ -56,8 +57,9 @@ def main():
     parser.add_argument("--display", default="810x1080")      # the Paper Pro panel at 2x - 1:1 (1620x2160) is too small to use
     parser.add_argument("--name", default="Newton")
     parser.add_argument("--rmkit", action="store_true")
-    parser.add_argument("--rotation", action="store_true",
-                        help="AppLoad turns the picture with the tablet (supportsRotation: AppLoad from September 2026 on)")
+    parser.add_argument("--old-appload", action="store_true",
+                        help="for an AppLoad before v0.6.0 (September 2026): no supportsRotation, newton portrait unless "
+                             "NEWTON_RM_ORIENTATION says otherwise")
     parser.add_argument("--env", action="append", default=[], metavar="NAME=VALUE",
                         help="an environment variable for newton (the window's NEWTON_RM_* settings, docs/host-remarkable.md)")
     args = parser.parse_args()
@@ -67,15 +69,18 @@ def main():
     with open(os.path.join(args.out, "run.sh"), "w", newline="\n") as f:
         f.write(RUN_SH.format(display=args.display))
     manifest = {"name": args.name, "application": "run.sh", "qtfb": True, "disablesWindowedMode": True}
-    if args.rotation:
-        # an AppLoad from September 2026 on shows the framebuffer square on
-        # the glass however the tablet is turned and says which way: newton
-        # turns the Newton's screen to match as it runs.  Without it (the
-        # default, and all an older AppLoad can do) newton picks portrait
-        # or landscape as it starts, by the type folio (docs/host-remarkable.md,
-        # "Rotation")
+    if not args.rmkit:
+        # the Marker read from its own device, its points mapped by what
+        # AppLoad's pen events show (remarkable/PenFit.h): AppLoad's own
+        # come bunched behind xochitl's redraws, which made jagged ink
+        manifest["environment"] = {"NEWTON_RM_PEN": "evdev"}
+    if not args.rmkit and not args.old_appload:
+        # AppLoad v0.6.0 on shows the framebuffer square on the glass however
+        # the tablet is turned and says which way: the Newton's screen turns
+        # to match as it runs - landscape with the type folio
+        # (docs/host-remarkable.md, "Rotation")
         manifest["supportsRotation"] = True
-        manifest.setdefault("environment", {})["NEWTON_RM_ORIENTATION"] = "appload"
+        manifest["environment"]["NEWTON_RM_ORIENTATION"] = "appload"
     if args.rmkit:
         manifest["environment"] = {
             "NEWTON_RM_PANEL_KIND": "rmkit",

@@ -40,9 +40,7 @@ the way are all in `docs/work-log.md`.
 - **The reMarkable Paper Pro** runs newton from AppLoad at 2x
   (`docs/host-remarkable.md`).  Open there: ink latency (the
   reconstructed inker's ~50 ms cadence; a video from the owner for the
-  panel's share), the type folio, rotation and touch (built, waiting on the
-  owner to try them on the glass), rmkit's pen under the
-  shim, packaging (Vellum/AppLoad), and the HiDPI shadow
+  panel's share), rmkit's pen under the shim, packaging (Vellum/AppLoad), and the HiDPI shadow
   (`docs/host-hidpi.md`) - the owner to decide before any of it is built.
 
 ## In progress
@@ -71,17 +69,7 @@ does not do yet:
 
 ## Waiting on the owner
 
-- **The reMarkable on its new software (2026-10-03).**  The owner updated
-  the tablet (build 20260827) and AppLoad to v0.6.0 (`supportsRotation`
-  in its `appload.so`).  "Newton" is now packaged with `--rotation --env
-  NEWTON_RM_PEN=evdev`: AppLoad turns the picture with the tablet and the
-  Newton's screen follows (`hostDisplay:Turn`), and the Marker is read
-  directly through the learnt map (`remarkable/PenFit.h`; on v0.6.0 without
-  supportsRotation it learnt a quarter turn at 1.334, AppLoad's turned and
-  scaled window).  To see on the glass: which way landscape comes out
-  (`NEWTON_RM_TURN_FLIP`), whether it turns as the folio is attached and
-  taken off, and whether the writing is smooth; then make the direct pen
-  the default in `package.py` and retire "Newton (direct pen)".
+Nothing at present.
 
 ## Open
 

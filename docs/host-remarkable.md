@@ -206,8 +206,7 @@ probably keeps it (to be seen on the device).  **Closing**: AppLoad's drag
 down from the top centre closes the socket; newton ends the run as a closed
 window does.
 
-**The pen read directly** (`NEWTON_RM_PEN=evdev`; the app "Newton (direct
-pen)").  AppLoad forwards the Marker through xochitl's event loop, which
+**The pen read directly** (`NEWTON_RM_PEN=evdev`, `package.py`'s default).  AppLoad forwards the Marker through xochitl's event loop, which
 each of newton's updates keeps busy redrawing the window, so its points
 come late and bunched: in a pen log of 2026-10-02 about 930 of 1080 gaps
 were under 1 ms at ~400 events a second, and the Newton, sampling the
@@ -256,11 +255,11 @@ default), `landscape` (`--display 810x1080` becomes 1080 x 810, asked for
 as 2160 x 1620 at 2x, the Newton booted in orientation 1), `auto`
 (landscape while the folio is attached) or `appload` (below).
 
-An AppLoad from v0.6.0 (2026-09-19) can turn a running application - its
-window turns with the interface - but its xochitl patch is written for
-software 3.28/3.29; on 3.25 it is untried:
-`package.py --rotation` sets the manifest's `supportsRotation` and
-`NEWTON_RM_ORIENTATION=appload`.  AppLoad then shows the framebuffer square
+AppLoad v0.6.0 (2026-09-19; the owner's tablet since 2026-10-03, on
+software build 20260827 - the update was needed for it) turns a running
+application with the interface, and `package.py` packages for it by
+default (`--old-appload` for an earlier one): the manifest's
+`supportsRotation` and `NEWTON_RM_ORIENTATION=appload`.  AppLoad then shows the framebuffer square
 on the glass however the tablet is held, hands pen and touch points back in
 the framebuffer's pixels, and sends the rotation (`MESSAGE_DEVICE_STATE_INIT`/
 `_CHANGED`: 0 upright, 1 its interface a quarter left, 2 right, 3 upside
@@ -273,8 +272,8 @@ laid out again as the Rotate button lays them out.  The window, which looks
 at the display's shape every round, draws the turned display into its image
 turned to match (`remarkable/PanelTurn.h`, ctest `host.PanelTurn`) and turns
 pen points back; `NEWTON_RM_TURN_FLIP=1` swaps the two sideways turns
-should they come out upside down (worked out from AppLoad's source, not yet
-seen on a tablet).  The Newton turned by its own Rotate button is drawn
+should they come out upside down (worked out from AppLoad's source; on the
+owner's tablet the folio's landscape came out the right way up).  The Newton turned by its own Rotate button is drawn
 sideways, as on a MessagePad.  `HostDeviceRotation(r)` asks the same from a
 script (ctest `host.NewtonRotation`, `demo/rotation.ns`).
 

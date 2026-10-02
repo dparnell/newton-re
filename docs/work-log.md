@@ -9,6 +9,22 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-03: the reMarkable - landscape with the folio, smooth ink
+
+On the tablet's new software (build 20260827) with AppLoad v0.6.0 the
+Newton turns with the tablet - landscape (orientation 1) as the type folio
+is attached, portrait again as it comes off - and the ink is smooth: the
+Marker is read from its own device and mapped by a map learnt from
+AppLoad's pen events (`remarkable/PenFit.h`), which on v0.6.0 with
+supportsRotation came out the identity, as it should; in the pen log the
+Marker's own 1-5 ms gaps outnumber the sub-millisecond ones 5171 to 3224
+(through AppLoad, 60 to 681).  On AppLoad v0.4.2 the map had learnt that
+version's turned and scaled window (a quarter turn at 1.334).  A pair far
+off the fit is dropped rather than the map learnt again (five relearns in
+78 s before).  `package.py` now makes rotation and the direct pen the
+default (`--old-appload` for an AppLoad before v0.6.0).  The owner:
+"that is much better".
+
 ## 2026-10-02: the reMarkable - the folio read directly, landscape at start-up
 
 On the glass touch worked, but the folio typed nothing and the Newton stayed
