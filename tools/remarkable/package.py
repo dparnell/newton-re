@@ -92,7 +92,14 @@ def main():
         json.dump(manifest, f, indent=2)
         f.write("\n")
     newton_icon(os.path.join(args.out, "icon.png"))
-    print("package: %s (copy it to /home/root/xovi/exthome/appload/)" % args.out)
+    # (scp from Windows does not carry the executable bit: AppLoad then
+    # starts run.sh, which cannot exec newton, and the application closes
+    # at once with nothing in its log)
+    name = os.path.basename(os.path.normpath(args.out))
+    print("package: %s - copy it to /home/root/xovi/exthome/appload/ and make it executable there:\n"
+          "  scp -r %s root@10.11.99.1:/home/root/xovi/exthome/appload/\n"
+          "  ssh root@10.11.99.1 chmod +x /home/root/xovi/exthome/appload/%s/newton /home/root/xovi/exthome/appload/%s/run.sh"
+          % (args.out, args.out, name, name))
 
 
 if __name__ == "__main__":
