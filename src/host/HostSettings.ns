@@ -1,0 +1,123 @@
+// The host's Host preferences panel (host/HostSettings.h): the settings of
+// the machine newton runs on that can change while it runs - beaming over
+// the network, and on a reMarkable the panel's pen waveform, a finger as
+// the pen and a flashing redraw that clears the e-ink's ghosts.  This file
+// is compiled into newton (HostSettingsSource.cpp, made by
+// src/cmake/EmbedText.cmake) and evaluated at boot by HostInstallSettings;
+// it answers the frame kept in the global HostSettings:host, whose Start
+// puts back the settings chosen before and registers the panel.
+//
+// The panel lists what HostSettingsList() says this host has - each a
+// frame {setting, label, kind ('check or 'button), value} - so a desktop
+// shows only beaming and a reMarkable its panel's settings as well.  A
+// change goes to the host at once (HostSetSetting) and is kept where the
+// ROM keeps an application's settings, its entry in the System soup
+// (GetAppPrefs '|HostSettings:host|, its settings slot), as the Network
+// Printers panel keeps its printers (print/host/HostPrinters.ns); only a
+// setting changed here is kept, so one never touched stays as newton was
+// started (--ir-lan, NEWTON_RM_*).
+
+{
+	kAppSymbol: '|HostSettings:host|,
+
+	// the settings chosen before, given to the host again (at boot)
+	Restore: func()
+	begin
+		local prefs := GetAppPrefs(kAppSymbol, nil);
+		if prefs and prefs.settings then
+			foreach item in HostSettingsList() do
+				if item.kind = 'check and HasSlot(prefs.settings, item.setting) then
+					HostSetSetting(item.setting, prefs.settings.(item.setting));
+	end,
+
+	// one setting changed: given to the host, and kept
+	Change: func(setting, value)
+	begin
+		local taken := HostSetSetting(setting, value);
+		local prefs := GetAppPrefs(kAppSymbol, {settings: {}});
+		if not prefs.settings then prefs.settings := {};
+		prefs.settings.(setting) := if value then true else nil;
+		EntryChange(prefs);
+		taken;
+	end,
+
+	// the panel's icon, a monitor on its stand (a 16x12 'bits frame, as the
+	// ROM's own panels' icons are)
+	MakeIcon: func()
+	begin
+		local rows := [0x7FFE, 0x4002, 0x4002, 0x4002, 0x4002, 0x4002,
+					   0x4002, 0x7FFE, 0x0180, 0x0180, 0x0FF0, 0x0000];
+		local b := MakeBinary(16 + 4 * Length(rows), 'bits);
+		for i := 0 to 15 do StuffByte(b, i, 0);
+		StuffByte(b, 5, 4);								// rowBytes
+		StuffByte(b, 13, Length(rows));					// bounds.bottom
+		StuffByte(b, 15, 16);							// bounds.right
+		foreach i, r in rows do begin
+			StuffByte(b, 16 + 4 * i, r div 256);
+			StuffByte(b, 17 + 4 * i, r mod 256);
+			StuffByte(b, 18 + 4 * i, 0);
+			StuffByte(b, 19 + 4 * i, 0);
+		end;
+		{bits: b, bounds: {left: 0, top: 0, right: 16, bottom: Length(rows)}};
+	end,
+
+	// The preferences panel: a line of text, then a checkbox for each
+	// setting that is on or off and a button for each that is done once -
+	// made by Start, since the roll lays out and builds the panel from its
+	// template (a viewSetupFormScript's stepChildren come too late)
+	panel: {
+		_proto: @385,								// protoPrefsRollItem
+		overview: "Host",
+		icon: nil,
+		height: 60,
+		viewBounds: {left: 0, top: 0, right: 0, bottom: 60},
+		stepChildren: [],
+	},
+
+	// the panel's children for the settings this host has
+	MakeChildren: func()
+	begin
+		local children := [
+			{_proto: @218, viewBounds: {left: 10, top: 20, right: -10, bottom: 36},		// protoStaticText
+			 viewJustify: 48, text: "The machine newton runs on:"}];
+		local top := 42;
+		foreach item in HostSettingsList() do begin
+			if item.kind = 'check then
+				AddArraySlot(children,
+					{_proto: @164,												// protoCheckbox
+					 viewBounds: {left: 10, top: top, right: -10, bottom: top + 18},
+					 viewJustify: 48,
+					 text: item.label,
+					 buttonValue: true,
+					 viewValue: nil,
+					 setting: item.setting,
+					 // (the value the host has now, each time the panel opens)
+					 viewSetupFormScript: func() begin
+						viewValue := nil;
+						foreach i in HostSettingsList() do
+							if i.setting = setting and i.value then viewValue := true;
+						inherited:?viewSetupFormScript();
+					 end,
+					 valueChanged: func() GetGlobalVar('|HostSettings:host|):Change(setting, viewValue)})
+			else
+				AddArraySlot(children,
+					{_proto: @226,												// protoTextButton
+					 viewBounds: {left: 10, top: top, right: 130, bottom: top + 16},
+					 text: item.label,
+					 setting: item.setting,
+					 buttonClickScript: func() HostSetSetting(setting, true)});
+			top := top + 22;
+		end;
+		panel.stepChildren := children;
+		panel.height := top + 8;
+		panel.viewBounds := {left: 0, top: 0, right: 0, bottom: panel.height};
+	end,
+
+	Start: func()
+	begin
+		:Restore();
+		panel.icon := :MakeIcon();
+		:MakeChildren();
+		RegPrefs(kAppSymbol, panel);
+	end,
+}

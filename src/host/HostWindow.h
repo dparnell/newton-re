@@ -35,6 +35,16 @@ void	HostWindowStop(void);								// the window closed and its thread joined
 // whichever way it is turned, and the picture's shape is fixed when the
 // window opens (docs/host-remarkable.md, "Rotation")
 void	HostWindowPreferredDisplay(long* width, long* height);
+// The window's own settings, changed while it runs (the Host preferences
+// panel, host/HostSettings.h).  A window has the ones it can do:
+//   "penInk"       the e-ink panel's pen waveform for ink (reMarkable: qtfb's
+//                  ufast) rather than the fast one - 1 or 0
+//   "touch"        a finger is the pen (reMarkable) - 1 or 0
+//   "clearGhosts"  set to 1: the whole panel redrawn once, flashing (reMarkable)
+// HostWindowOption ==> whether the window has that setting, and its value;
+// HostWindowSetOption ==> whether it took it (from any thread)
+bool	HostWindowOption(const char* name, long* value);
+bool	HostWindowSetOption(const char* name, long value);
 // A press (what 0), a move (1) or a release (2) of the mouse at a point of
 // the display, given to the window as the mouse's would be - posted to its
 // message queue on Windows - so that a test drives the pen through the

@@ -1,0 +1,81 @@
+// The Host preferences panel (host/HostSettings.h, HostSettings.ns): ctests
+// host.NewtonHostSettings.set, then .kept on the same store.
+//
+// .set: Setup walked through, then Extras, Prefs, "Host": the panel lists
+// "Beam over the network", off (newton was started without --ir-lan); its
+// checkbox tapped turns beaming over the network on at once - the IR port
+// on the LAN group, no restart - and the choice is kept in the System soup.
+// .kept: newton started again on that store, still without --ir-lan, beams
+// over the network from the boot (the panel's Start gave the setting back),
+// and turning it off through the panel's Change takes it off the LAN and
+// keeps that.
+//
+//   build/host/host/newton --display 320x480 --headless 200 --store build/hs.store \
+//       --script src/host/demo/hostsettings.ns
+
+HostInclude("common.ns");			// tapAt, waitFor, walkSetup
+HostInclude("walkhelpers.ns");		// findView
+HostInclude("apphelpers.ns");		// tapCentre
+
+// the setting as the host has it now
+hsBeaming := func() begin
+	local on := nil;
+	foreach item in HostSettingsList() do
+		if item.setting = 'lanBeam then on := item.value;
+	on;
+end;
+
+hsKept := func() begin
+	local prefs := GetAppPrefs('|HostSettings:host|, nil);
+	if prefs and prefs.settings and HasSlot(prefs.settings, 'lanBeam) then
+		(if prefs.settings.lanBeam then 'on else 'off)
+	else 'unset;
+end;
+
+hsPrefsIcon := func() if GetRoot().extrasDrawer.viewCObject then
+	call findView with (GetRoot().extrasDrawer, func(v) v.target and v.target.fentry
+		and v.target.fentry.app = 'preferenceRoll);
+
+hsPanel := func() call findView with (GetRoot(), func(v) v.overview and IsString(v.overview)
+	and StrEqual(v.overview, "Host") and v.viewCObject and v.stepChildren and Length(v.stepChildren) > 1);
+
+hsSet := func() begin
+	Print("hostsettings: listed " & NumberStr(Length(HostSettingsList())) & ", beaming over the network "
+		  & (if call hsBeaming with () then "on" else "off"));
+	call tapAt with (20, 460);				// Extras
+	call waitFor with ("hostsettings: the Prefs icon", func() call hsPrefsIcon with (), func() begin
+		call tapCentre with (call hsPrefsIcon with ());
+		call waitFor with ("hostsettings: Prefs", func() GetRoot().preferenceRoll.viewCObject, func() begin
+			if not call tapPrefsItem with ("Host") then Print("hostsettings: no Host row in Prefs");
+			call waitFor with ("hostsettings: the panel", func() call hsPanel with (), func() begin
+				local panel := call hsPanel with ();
+				local box := call findView with (panel, func(v) v.setting = 'lanBeam and v.viewCObject);
+				Print("hostsettings: the panel shows " & box.text);
+				call tapCentre with (box);
+				call waitFor with ("hostsettings: beaming on", func() call hsBeaming with () and call hsKept with () = 'on, func() begin
+					Print("hostsettings: beaming over the network on, kept " & SPrintObject(call hsKept with ()));
+					Print("hostsettings: done");
+					HostQuit();
+				end, 30);
+			end, 30);
+		end, 30);
+	end, 30);
+end;
+
+hsKeptRun := func() begin
+	Print("hostsettings: at boot beaming over the network " & (if call hsBeaming with () then "on" else "off")
+		  & ", kept " & SPrintObject(call hsKept with ()));
+	GetGlobalVar('|HostSettings:host|):Change('lanBeam, nil);
+	call waitFor with ("hostsettings: beaming off", func() not call hsBeaming with () and call hsKept with () = 'off, func() begin
+		Print("hostsettings: turned off, kept " & SPrintObject(call hsKept with ()));
+		Print("hostsettings: done");
+		HostQuit();
+	end, 30);
+end;
+
+// a store set up before (the .kept run) has no Setup to walk
+if call hsKept with () = 'on then
+	call waitFor with ("hostsettings: the machine up", func() GetRoot().viewCObject and not (GetRoot().setup and GetRoot().setup.viewCObject),
+		func() call hsKeptRun with (), 60)
+else
+	call walkSetup with ([4, 31, 1, 17], func() call hsSet with ());			// "Host"

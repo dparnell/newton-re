@@ -77,6 +77,14 @@ static std::atomic<bool>	gFailed(false);
 static RemarkablePanel*		gPanel = nil;
 static std::atomic<int>		gSnapshotsAsked(0);	// SIGUSR2: the display written out as a PGM
 
+// the settings the Host preferences panel changes while newton runs
+// (HostWindowSetOption): a finger as the pen (NEWTON_RM_TOUCH=off at
+// start: not), the ink in the pen's waveform (NEWTON_RM_INK_MODE=ufast),
+// and a flashing redraw of everything asked for
+static std::atomic<bool>	gTouchIsPen(getenv("NEWTON_RM_TOUCH") == nil || strcmp(getenv("NEWTON_RM_TOUCH"), "off") != 0);
+static std::atomic<int>		gPenInkAsked(-1);		// -1 nothing asked, else 0/1 for the window's thread to give the panel
+static std::atomic<bool>	gClearAsked(false);
+
 
 /*------------------------------------------------------------------------------
 	What the window can say about itself, for working on a tablet one cannot
@@ -455,8 +463,8 @@ WindowThread(void)
 	// NEWTON_RM_TOUCH_HOLDOFF ms (800) of its last event - and a second
 	// finger ends the first one's stroke and is ignored until every finger
 	// is off the glass (a palm, or two fingers that were not meant as a tap)
-	const char* touchSetting = getenv("NEWTON_RM_TOUCH");
-	const bool touchIsPen = touchSetting == nil || strcmp(touchSetting, "off") != 0;
+	// (whether a touch counts at all is gTouchIsPen, which the Host
+	// preferences panel changes while newton runs)
 	const long touchHoldoffMs = EnvLong("NEWTON_RM_TOUCH_HOLDOFF", 800);
 	// NEWTON_RM_TURN_FLIP=1: the sideways turns the other way round
 	// (PanelTurn.h), should the picture come out upside down in landscape
@@ -521,6 +529,14 @@ WindowThread(void)
 		}
 		const unsigned char* pixels = gPixels;
 		long l, t, r, b;
+		int penInk = gPenInkAsked.exchange(-1);
+		if (penInk >= 0)
+			gPanel->SetPenInk(penInk != 0);
+		if (gClearAsked.exchange(false))
+		{
+			send(0, 0, imageWidth, imageHeight, kRefreshContent);		// (the ghosts cleared, as AppLoad's five-finger tap does)
+			changedScreens = 0;
+		}
 		if (UpdateTurn(imageWidth, imageHeight, turnFlip))
 		{
 			// the display turned, or the device: all of it again, in the
@@ -649,7 +665,7 @@ WindowThread(void)
 					fingersRejected = true;
 					event.kind = RemarkableEvent::kPenUp;
 				}
-				else if (touchIsPen && touchId < 0 && fingers == 1 && !fingersRejected && !gPenDown.load() && !markerNear)
+				else if (gTouchIsPen.load() && touchId < 0 && fingers == 1 && !fingersRejected && !gPenDown.load() && !markerNear)
 				{
 					touchId = event.id;
 					event.kind = RemarkableEvent::kPenDown;
@@ -865,6 +881,38 @@ HostWindowPreferredDisplay(long* width, long* height)
 	}
 	fprintf(stderr, "[host] reMarkable: the display %ld x %ld (%s%s)\n", *width, *height,
 			landscape ? "landscape" : "portrait", how != nil && strcmp(how, "auto") == 0 ? (landscape ? ": the folio is attached" : ": no folio") : "");
+}
+
+
+bool
+HostWindowOption(const char* name, long* value)
+{
+	if (strcmp(name, "touch") == 0)
+		{ *value = gTouchIsPen.load() ? 1 : 0; return true; }
+	if (strcmp(name, "penInk") == 0)
+	{
+		int asked = gPenInkAsked.load();
+		*value = asked >= 0 ? asked : (gPanel != nil && gPanel->PenInk() ? 1 : 0);
+		return true;
+	}
+	if (strcmp(name, "clearGhosts") == 0)
+		{ *value = 0; return true; }
+	return false;
+}
+
+
+bool
+HostWindowSetOption(const char* name, long value)
+{
+	if (strcmp(name, "touch") == 0)
+		gTouchIsPen.store(value != 0);
+	else if (strcmp(name, "penInk") == 0)
+		gPenInkAsked.store(value != 0 ? 1 : 0);
+	else if (strcmp(name, "clearGhosts") == 0)
+		{ if (value != 0) gClearAsked.store(true); }
+	else
+		return false;
+	return true;
 }
 
 

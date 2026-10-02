@@ -121,6 +121,7 @@ public:
 
 	// the host's side
 	NewtonErr			Open(const char* peer);
+	void				CloseMedium(void);		// the peer, the listener or the group closed (HostIRChipSetPeer)
 	Boolean				Due(Int64* when);
 	void				Poll(void);
 	void				Pace(void);
@@ -240,7 +241,7 @@ THostIRChip::New()
 
 
 void
-THostIRChip::Delete()
+THostIRChip::CloseMedium(void)
 {
 	if (fPeer >= 0)
 		HostSocketClose(fPeer);
@@ -249,6 +250,17 @@ THostIRChip::Delete()
 	if (fLan >= 0)
 		HostSocketClose(fLan);
 	fPeer = fListener = fLan = -1;
+	fPeerAddress = 0;
+	fPeerPort = 0;
+	fPort = 0;
+	fPartner = 0;							// (a newton faced on the old medium is not there on the new one)
+}
+
+
+void
+THostIRChip::Delete()
+{
+	CloseMedium();
 	for (int i = 0; i < kMaxIRChips; i++)
 		if (gIRChips[i] == this)
 			gIRChips[i] = nil;
@@ -1001,4 +1013,21 @@ TSerialChip*
 HostIRChipInstalled(void)
 {
 	return gInstalledIRChip;
+}
+
+
+NewtonErr
+HostIRChipSetPeer(const char* peer)
+{
+	if (gInstalledIRChip == nil)
+		return HostIRChipInstall(peer);
+	gInstalledIRChip->CloseMedium();
+	return gInstalledIRChip->Open(peer);
+}
+
+
+Boolean
+HostIRChipOnLan(void)
+{
+	return gInstalledIRChip != nil && gInstalledIRChip->fLan >= 0;
 }

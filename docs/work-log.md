@@ -9,6 +9,20 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-03: the Host preferences panel
+
+At the owner's request, a page in the Newton's own Prefs for the host's
+settings, switched while newton runs and kept in the System soup
+(`docs/host-settings.md`): beaming over the network (the IR chip's medium
+changed in place, `HostIRChipSetPeer`), and on the reMarkable the pen
+waveform (the "Newton (pen mode)" app's ufast, now a checkbox), a finger as
+the pen, and a Clear ghosts button.  Found on the way: a Prefs page's
+children set in its own `viewSetupFormScript` come too late (it opened
+empty) - they are made at boot; the Prefs list keeps added pages in
+alphabetical order, so the printers demos' fixed-position tap would have
+opened Host - demos now find a row by name (`tapPrefsItem`).
+`analysis/magicpointer.py` finds a ROM proto's `@n`.
+
 ## 2026-10-03: the reMarkable - landscape with the folio, smooth ink
 
 On the tablet's new software (build 20260827) with AppLoad v0.6.0 the

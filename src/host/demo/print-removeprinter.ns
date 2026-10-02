@@ -63,9 +63,7 @@ removeIt := func() begin
 	call waitFor with ("print-removeprinter: the Prefs icon", func() call prefsIcon with (), func() begin
 		call tapCentre with (call prefsIcon with ());
 		call waitFor with ("print-removeprinter: Prefs", func() GetRoot().preferenceRoll.viewCObject, func() begin
-			local row := call findView with (GetRoot().preferenceRoll, func(v) IsString(v.text)
-				and StrEqual(v.text, "Network Printers"));
-			if row then call tapCentre with (row) else call tapAt with (110, 296);	// (the list draws its rows itself)
+			call tapPrefsItem with ("Network Printers");		// (apphelpers.ns: wherever the list has put it)
 			call waitFor with ("print-removeprinter: the printer added", func() call panelView with (), func() begin
 				local panel := call panelView with ();
 				local k := call addedRow with (panel);

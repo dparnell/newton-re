@@ -12,6 +12,31 @@ tapCentre := func(v) begin
 	call tapAt with ((b.left + b.right) div 2, (b.top + b.bottom) div 2);
 end;
 
+// The open Prefs list's row named `name` tapped (its panel opened); ==>
+// whether there was one.  The list draws its rows itself, as shapes kept
+// in its `pieces` - each a [text, icon] pair, the text shape's data the
+// row's name as a 'textdata binary (a string's characters) and its bounds
+// a 'boundsrect binary (top, left, bottom, right halfwords) - so the row is
+// found there, not among views, and wherever RegPrefs's alphabetical order
+// has put it.
+tapPrefsItem := func(name) begin
+	local tapped := nil;
+	local roll := GetRoot().preferenceRoll;
+	if roll.viewCObject then
+		foreach list in roll:ChildViewFrames() do
+			if list.pieces then
+				foreach piece in list.pieces do
+					if not tapped and IsArray(piece) and IsFrame(piece[0]) and IsBinary(piece[0].data)
+						and StrEqual(SetClass(Clone(piece[0].data), 'string), name) then begin
+						local box := list:GlobalBox();
+						local r := piece[0].bounds;
+						local top := ExtractWord(r, 0), left := ExtractWord(r, 2), bottom := ExtractWord(r, 4);
+						call tapAt with (box.left + left + 10, box.top + (top + bottom) div 2);
+						tapped := true;
+					end;
+	tapped;
+end;
+
 // the button labelled `label` in `root`, tapped
 tapButtonText := func(root, label) begin
 	local v := call viewLabelled with (root, label);

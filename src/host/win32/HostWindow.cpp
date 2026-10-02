@@ -325,3 +325,22 @@ HostWindowPreferredDisplay(long* width, long* height)
 	(void) width;
 	(void) height;
 }
+
+
+// a desktop window has none of the panel's settings
+bool
+HostWindowOption(const char* name, long* value)
+{
+	(void) name;
+	(void) value;
+	return false;
+}
+
+
+bool
+HostWindowSetOption(const char* name, long value)
+{
+	(void) name;
+	(void) value;
+	return false;
+}

@@ -206,6 +206,11 @@ probably keeps it (to be seen on the device).  **Closing**: AppLoad's drag
 down from the top centre closes the socket; newton ends the run as a closed
 window does.
 
+**Settings while it runs**: Prefs' Host page (`docs/host-settings.md`)
+switches the ink's pen waveform (`NEWTON_RM_INK_MODE=ufast`'s), a finger as
+the pen (`NEWTON_RM_TOUCH`'s) and beaming over the network, and has a Clear
+ghosts button; the environment variables still set where newton starts.
+
 **The pen read directly** (`NEWTON_RM_PEN=evdev`, `package.py`'s default).  AppLoad forwards the Marker through xochitl's event loop, which
 each of newton's updates keeps busy redrawing the window, so its points
 come late and bunched: in a pen log of 2026-10-02 about 930 of 1080 gaps

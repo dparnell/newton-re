@@ -63,6 +63,10 @@ public:
 	virtual void			Update(long left, long top, long right, long bottom, RemarkableRefresh how) = 0;
 	// one event, waiting at most that long for it: ==> whether there was one
 	virtual bool			Poll(RemarkableEvent* event, long timeoutMs) = 0;
+	// the ink sent in the pen's own waveform (qtfb's ufast) rather than the
+	// fast one, from the next update on; a panel without one ignores it
+	virtual void			SetPenInk(bool pen) { (void) pen; }
+	virtual bool			PenInk(void) { return false; }
 };
 
 RemarkablePanel*	NewQTFBPanel(void);

@@ -158,7 +158,16 @@ else()
         target_link_libraries(host_window PUBLIC ${ALSA_LIBRARY})
     endif()
 endif()
-add_executable(newton newton.cpp HostRestart.cpp HostKeyboard.cpp HostPackages.cpp HostOrientation.cpp HostHeapCheck.cpp)
+# host/HostSettings.ns, the Host preferences panel, compiled in as a string
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/HostSettingsSource.cpp
+    COMMAND ${CMAKE_COMMAND} -DINPUT=${CMAKE_CURRENT_SOURCE_DIR}/HostSettings.ns
+            -DOUTPUT=${CMAKE_CURRENT_BINARY_DIR}/HostSettingsSource.cpp -DNAME=gHostSettingsSource
+            -P ${CMAKE_SOURCE_DIR}/cmake/EmbedText.cmake
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/HostSettings.ns ${CMAKE_SOURCE_DIR}/cmake/EmbedText.cmake
+    VERBATIM)
+add_executable(newton newton.cpp HostRestart.cpp HostKeyboard.cpp HostPackages.cpp HostOrientation.cpp HostSettings.cpp
+               ${CMAKE_CURRENT_BINARY_DIR}/HostSettingsSource.cpp HostHeapCheck.cpp)
 target_link_libraries(newton PRIVATE newt host_views host_window hal_host_sound hal_timers hal_host_serial)
 target_compile_definitions(newton PRIVATE "NEWTON_DEFAULT_OBJECTS=\"${NEWTON_OBJECTS_FILE}\"")
 install(TARGETS newton DESTINATION bin)
@@ -893,6 +902,25 @@ add_test(NAME host.NewtonRotation COMMAND newton --display 320x480 --headless 12
 set_tests_properties(host.NewtonRotation PROPERTIES TIMEOUT 180
                      PASS_REGULAR_EXPRESSION "held 1: orientation 1, root 480 x 320.*held 0: orientation [02], root 320 x 480.*held 2: orientation 3, root 480 x 320.*held 3: orientation [02], root 320 x 480.*rotation: done"
                      FAIL_REGULAR_EXPRESSION "waited in vain")
+
+# the Host preferences panel (HostSettings.h, demo/hostsettings.ns): .set
+# turns beaming over the network on from Prefs with no restart and keeps it,
+# .kept boots the same store with it on and turns it off
+add_test(NAME host.NewtonHostSettings.clean COMMAND ${CMAKE_COMMAND} -E rm -f ${CMAKE_CURRENT_BINARY_DIR}/hostsettings.store)
+set_tests_properties(host.NewtonHostSettings.clean PROPERTIES FIXTURES_SETUP hostsettingsclean)
+foreach(run set kept)
+    add_test(NAME host.NewtonHostSettings.${run} COMMAND newton --display 320x480 --headless 200
+             --store ${CMAKE_CURRENT_BINARY_DIR}/hostsettings.store
+             --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/hostsettings.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+endforeach()
+set_tests_properties(host.NewtonHostSettings.set PROPERTIES TIMEOUT 300
+                     FIXTURES_REQUIRED hostsettingsclean FIXTURES_SETUP hostsettingsset
+                     PASS_REGULAR_EXPRESSION "beaming over the network off.*the panel shows Beam over the network.*beaming over the network on, kept on.*hostsettings: done"
+                     FAIL_REGULAR_EXPRESSION "waited in vain|fell over|!!! Exception")
+set_tests_properties(host.NewtonHostSettings.kept PROPERTIES TIMEOUT 300
+                     FIXTURES_REQUIRED hostsettingsset
+                     PASS_REGULAR_EXPRESSION "at boot beaming over the network on, kept on.*turned off, kept off.*hostsettings: done"
+                     FAIL_REGULAR_EXPRESSION "waited in vain|fell over|!!! Exception")
 
 # the sums that turn the display onto the reMarkable's panel image
 # (remarkable/PanelTurn.h: no platform headers, so tested on every host)

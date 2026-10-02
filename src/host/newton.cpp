@@ -134,6 +134,7 @@
 #include "HostStores.h"
 #include "HostPackages.h"
 #include "HostOrientation.h"
+#include "HostSettings.h"
 #include "HostTablet.h"
 #include "HostCard.h"
 #include "HostFlash.h"
@@ -294,6 +295,10 @@ NewtonBoot(void)
 	// in front of it - Beam then finds nobody, as a MessagePad alone does
 	{
 		NewtonErr err = timerErr;
+		// (the Host preferences panel switches beaming over the network on
+		// and off: the LAN medium newton was given, or "lan", and back to
+		// the --ir-peer or nobody)
+		HostSettingsSetBeamPeers(gIRLanAsked ? gIRPeer : nil, gIRLanAsked ? nil : gIRPeer);
 		if (err == noErr)
 			err = HostIRChipInstall(gIRPeer);
 		if (err == noErr)
@@ -549,6 +554,7 @@ NewtonPreMain(void)
 	HostLinkStart();
 	HostInstallPrinter();
 	HostInstallPowerGlobals();			// (power/host/HostPowerSwitch.h: HostPowerSwitch(), HostWakeAfter(ms), ...)
+	HostInstallSettings();				// (the Host preferences panel, after Network Printers: the Prefs list's last)
 	// the boot sound (TNotebook::InitToolbox), which may still be playing,
 	// kept out of what is counted as played, which is what the script's
 	// sounds are measured by

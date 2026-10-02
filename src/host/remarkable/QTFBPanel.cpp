@@ -117,6 +117,8 @@ public:
 	virtual void		Origin(long* left, long* top) { *left = fLeft; *top = fTop; }
 	virtual void		Update(long left, long top, long right, long bottom, RemarkableRefresh how);
 	virtual bool		Poll(RemarkableEvent* event, long timeoutMs);
+	virtual void		SetPenInk(bool pen) { fPenInk = pen; }
+	virtual bool		PenInk(void) { return fPenInk; }
 
 private:
 	bool				Connect(void);
@@ -150,6 +152,7 @@ private:
 	bool				fPenDown;
 	int					fTouchId;			// the touch acting as the pen (NEWTON_RM_TOUCH=pen), -1 if none
 	RemarkableFolio		fFolio;				// the type folio's keys, read from its own device (Folio.h)
+	bool				fPenInk = getenv("NEWTON_RM_INK_MODE") != nil && strcmp(getenv("NEWTON_RM_INK_MODE"), "ufast") == 0;
 };
 
 
@@ -346,9 +349,9 @@ QTFBPanel::Update(long left, long top, long right, long bottom, RemarkableRefres
 	// for its "ufast" - the first of AppLoad's five modes, which by the order
 	// of xochitl's EPScreenModeItem modes (Pen, Mono, Animation, Content, UI;
 	// docs/host-remarkable.md) is likely the pen's own
-	static const int sFastMode = getenv("NEWTON_RM_INK_MODE") != nil && strcmp(getenv("NEWTON_RM_INK_MODE"), "ufast") == 0
-								 ? kQTFBRefreshUFast : kQTFBRefreshFast;
-	int mode = how == kRefreshInk ? sFastMode : how == kRefreshUI ? kQTFBRefreshUI : kQTFBRefreshContent;
+	// (the Host preferences panel switches it while newton runs: SetPenInk)
+	int mode = how == kRefreshInk ? (fPenInk ? kQTFBRefreshUFast : kQTFBRefreshFast)
+			 : how == kRefreshUI ? kQTFBRefreshUI : kQTFBRefreshContent;
 	if (mode != fMode)
 	{
 		message.type = kQTFBSetRefreshMode;

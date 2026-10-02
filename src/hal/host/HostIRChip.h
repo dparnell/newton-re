@@ -83,4 +83,13 @@ Boolean			HostIRChipConnected(TSerialChip* chip);
 NewtonErr		HostIRChipInstall(const char* peer);
 TSerialChip*	HostIRChipInstalled(void);
 
+// The installed chip's medium changed while the OS runs (the Host
+// preferences panel's network beaming): what it was is closed - a beam
+// under way is lost, as one is when a MessagePad is turned away - and the
+// new one opened as HostIRChipInstall's peer is (nil: nobody).  Called
+// with the baton held, as the chip's interrupt source is, so the two never
+// meet.  ==> noErr, or why not (the chip then has no medium).
+NewtonErr		HostIRChipSetPeer(const char* peer);
+Boolean			HostIRChipOnLan(void);				// the installed chip is on the LAN medium
+
 #endif

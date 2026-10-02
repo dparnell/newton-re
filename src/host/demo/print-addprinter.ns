@@ -71,9 +71,7 @@ addPrinter := func() begin
 			and v.target.fentry.app = 'preferenceRoll);
 		call tapCentre with (icon);
 		call waitFor with ("print-addprinter: Prefs", func() GetRoot().preferenceRoll.viewCObject, func() begin
-			local row := call findView with (GetRoot().preferenceRoll, func(v) IsString(v.text)
-				and StrEqual(v.text, "Network Printers"));
-			if row then call tapCentre with (row) else call tapAt with (110, 296);
+			call tapPrefsItem with ("Network Printers");		// (apphelpers.ns: wherever the list has put it)
 			call waitFor with ("print-addprinter: the printers found", func() call panelView with (), func() begin
 				local panel := call panelView with ();
 				Print("print-addprinter: the panel lists " & panel.rows[0].text & ", " & panel.rows[1].text);
