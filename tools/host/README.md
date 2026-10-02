@@ -144,6 +144,20 @@ lock-up was traced to `CreateTrigramHeader` asking for a ROM size.
 - **Used by:** ctest `host.NewtonNoROMSameScreen`, the proof that the OS booted on the object file built from the ROM source
   tree draws what it draws booted on the ROM image (`docs/rom-free/README.md`).
 
+## sharedstore.py - one store, newton and newton64 in turn
+
+    python tools/host/sharedstore.py --newton build/host/host/newton --newton64 build/host/host/newton64 \
+        --store tmp/shared.store --script src/host/demo/sharedstore.ns
+
+- **Purpose:** shows a store file can be used by both flavours (`docs/frames/64bit.md`, 'One store,
+  both flavours'): runs `src/host/demo/sharedstore.ns` five times on one store - newton, newton64,
+  newton, newton64 with `NEWTON_NS64_STRICT`, newton - the script told its step by `SHARED_STEP`.
+- **Checks:** each step's own checks ("shared: step N done, 0 failed"); the note's word hints the same
+  after every step; the store's byte-order flag (`tools/stores/flashimage.py info`) the same after
+  every step.  The steps run one after another: only one program may have a store file open.
+- **Output:** each step's "shared:" lines, then "sharedstore: done" (ctest `host.NewtonSharedStore`,
+  registered when newton64 is built); exit status 0 when everything agreed.
+
 ## fidelity.py - the ROM-free boot, step by step
 
     python tools/host/fidelity.py build/host/host/newton --rom build/MP2x00US/rom.bin \

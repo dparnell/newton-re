@@ -43,6 +43,10 @@ tools/newton-rom/
                           given to Send/Reply/SetReply/NewPtr/memcpy/... next to a struct holding a ULong, Ref,
                           pointer or TRegister (WIDE), [--all] [--wide-only] [--lp64 for Linux's 64-bit long];
                           python tools/newton-rom/analysis/romsizes.py [src]; tests/test_romsizes.py
+    ns64narrowing.py      the NEWTON_NS64 flavour's silent narrowings: from the log of a -Wshorten-64-to-32
+                          build, the lines that take an integer out of a Ref into a 32-bit long, by area and
+                          file [--sites] [--all]; python tools/newton-rom/analysis/ns64narrowing.py build.log
+                          (docs/frames/64bit.md 'Silent narrowing')
     worldsizes.py         every TUTaskWorld subclass in src/ answers GetSizeOf with sizeof itself (a world
                           copied short into its task writes past its stack block), beside the ROM vtable's
                           +0x04 (own N / inherits / abstract); python tools/newton-rom/analysis/worldsizes.py
