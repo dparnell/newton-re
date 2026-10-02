@@ -917,7 +917,7 @@ TNewScriptEndpointClient::OutputRaw(RefArg data, RefArg outputSpec, Boolean sync
 			Ref lengthRef = GetVariable(target, RSSYMlength, nil, 0);
 			if (ISINT(lengthRef))
 			{
-				long length = RINT(lengthRef);
+				Long length = RINT(lengthRef);
 				Boolean past = count < offset + length;
 				count = length;
 				if (past)

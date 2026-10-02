@@ -99,7 +99,7 @@ TopicVisible(RefArg topic)
 long
 TopicHeight(RefArg topic)
 {
-	long bottom = RINT(FTopicBottom(RefVar(), topic));
+	Long bottom = RINT(FTopicBottom(RefVar(), topic));
 	return bottom - TopicTop(topic);
 }
 
@@ -332,7 +332,7 @@ FChildTemplateFromTopic(RefArg rcvr, RefArg topic)
 		SetFrameSlot(templ, RSSYMviewfont, font);
 	if (FrameHasSlot(topic, RSSYMsource) && ISNIL(GetFrameSlotRef(topic, RSSYMsource)))
 	{
-		long flags = RINT(GetFrameSlotRef(templ, RSSYMviewflags));
+		Long flags = RINT(GetFrameSlotRef(templ, RSSYMviewflags));
 		SetFrameSlot(templ, RSSYMviewflags, RefVar(MAKEINT(flags | 2)));
 	}
 	return templ;
@@ -351,7 +351,7 @@ FChildTemplateFromTopic(RefArg rcvr, RefArg topic)
 Ref
 FCollapseTopic(RefArg rcvr, RefArg index, RefArg redo)
 {
-	long i = RINT(index);
+	Long i = RINT(index);
 	RefVar topic;
 	RefVar topics(GetFrameSlotRef(rcvr, RSSYMtopics));
 	long count = Length(topics);
@@ -392,7 +392,7 @@ TListView::DrawHilitedData(void)
 		TEditView::DrawHilitedData();
 		return;
 	}
-	long flags = RINT(GetProto(RSSYMlistviewflags));
+	Long flags = RINT(GetProto(RSSYMlistviewflags));
 	long i = fDragTopic;
 	RefVar topic(Topic(i));
 	long level = ::TopicLevel(topic);
@@ -429,7 +429,7 @@ TListView::DrawHilitedData(void)
 Ref
 FExpandTopic(RefArg rcvr, RefArg index, RefArg redo)
 {
-	long i = RINT(index);
+	Long i = RINT(index);
 	RefVar topic;
 	RefVar topics(GetFrameSlotRef(rcvr, RSSYMtopics));
 	long count = Length(topics);
@@ -468,7 +468,7 @@ FFamilyBottom(RefArg rcvr, RefArg index)
 {
 	RefVar topics(GetVariable(rcvr, RSSYMtopics, nil, 0));
 	long count = Length(topics);
-	long i = RINT(index);
+	Long i = RINT(index);
 	RefVar topic(GetArraySlotRef(topics, i));
 	long level = TopicLevel(topic);
 	long last = i;
@@ -492,7 +492,7 @@ FIsCollapsed(RefArg rcvr, RefArg index)
 {
 	RefVar topics(GetVariable(rcvr, RSSYMtopics, nil, 0));
 	long count = Length(topics);
-	long i = RINT(index);
+	Long i = RINT(index);
 	if (i < count - 1)
 	{
 		RefVar next(GetArraySlotRef(topics, i + 1));
@@ -519,7 +519,7 @@ FListBottom(RefArg rcvr)
 		return MAKEINT(0);
 	if (NOTNIL(GetVariable(rcvr, RSSYMminimalchildren, nil, 0)))
 	{
-		long last = RINT(GetVariable(rcvr, RSSYMlasttopic, nil, 0));
+		Long last = RINT(GetVariable(rcvr, RSSYMlasttopic, nil, 0));
 		if (last >= 0)
 		{
 			topic = GetArraySlotRef(topics, last);
@@ -572,8 +572,8 @@ Ref
 FTopicBottom(RefArg /*rcvr*/, RefArg topic)
 {
 	RefVar bounds(GetVariable(topic, RSSYMviewbounds, nil, 0));
-	long bottom = RINT(GetFrameSlotRef(bounds, RSSYMbottom));
-	long top = RINT(GetFrameSlotRef(bounds, RSSYMtop));
+	Long bottom = RINT(GetFrameSlotRef(bounds, RSSYMbottom));
+	Long top = RINT(GetFrameSlotRef(bounds, RSSYMtop));
 	long least = top + 16;
 	if (least <= bottom)
 		least = bottom;
@@ -666,13 +666,13 @@ long
 TListView::HandlePenDown(RefArg cmd)
 {
 	long result = 0;
-	long listBottom = RINT(FListBottom(RefVar(fContext)));
+	Long listBottom = RINT(FListBottom(RefVar(fContext)));
 	Rect bounds = viewBounds;
 	TUnitPublic* unit = (TUnitPublic*) CommandParameter(cmd);
 	Point pt = unit->Stroke()->FirstPoint();
 	RefVar topics;
 	RefVar topic;
-	long flags = RINT(GetProto(RSSYMlistviewflags));
+	Long flags = RINT(GetProto(RSSYMlistviewflags));
 	pt.v = (short) (pt.v - bounds.top);
 	if (listBottom < pt.v)
 		return 0;
@@ -682,7 +682,7 @@ TListView::HandlePenDown(RefArg cmd)
 	if (topMargin > pt.v && count > 0)
 		gRootView->SetKeyView((TView*) fChildren->At(0), 99999, 0, false);
 	pt.h = (short) (pt.h - bounds.left);
-	for (long i = RINT(GetProto(RSSYMfirsttopic)); i < count; i++)
+	for (Long i = RINT(GetProto(RSSYMfirsttopic)); i < count; i++)
 	{
 		topic = GetArraySlotRef(topics, i);
 		if (!::TopicVisible(topic))
@@ -731,7 +731,7 @@ TListView::HandleTap(Point& pt)
 		((TDataView*) text)->HandleTap(pt);
 		return;
 	}
-	long listBottom = RINT(FListBottom(RefVar(fContext)));
+	Long listBottom = RINT(FListBottom(RefVar(fContext)));
 	if (pt.v - viewBounds.top <= listBottom)
 		return;
 	PositionCaret(pt, true);
@@ -776,7 +776,7 @@ TListView::LevelFromX(long x, long index)
 	if (past < 0)
 		past = 0;
 	long level = past / 20;
-	long maxLevel = RINT(GetVar(RSSYMmaxlevel));
+	Long maxLevel = RINT(GetVar(RSSYMmaxlevel));
 	if (level + 1 < maxLevel)
 		maxLevel = level + 1;
 	level = maxLevel;
@@ -926,7 +926,7 @@ TListView::RealDraw(Rect& bounds)
 {
 	RefVar topic;
 	RefVar topics(Topics());
-	long flags = RINT(GetProto(RSSYMlistviewflags));
+	Long flags = RINT(GetProto(RSSYMlistviewflags));
 	long top = (short) (bounds.top - viewBounds.top);
 	long bottom = (short) (bounds.bottom - viewBounds.top);
 	Boolean reflowing = false;
@@ -1035,7 +1035,7 @@ TListView::SetupVisibleChildren(long first, Boolean all, Boolean /*x*/)
 	RefVar templ;
 	RefVar children;
 	Boolean everything = ISNIL(GetVar(RSSYMminimalchildren));
-	long flags = RINT(GetProto(RSSYMlistviewflags));
+	Long flags = RINT(GetProto(RSSYMlistviewflags));
 	GrafPort* port;
 	GetPort(&port);
 	Rect visible = (*port->visRgn)->rgnBBox;
@@ -1047,13 +1047,13 @@ TListView::SetupVisibleChildren(long first, Boolean all, Boolean /*x*/)
 		SetVariable(context, RSSYMlasttopic, RefVar(MAKEINT(NTopics() - 1)));
 	StartDrawing(nil, nil);
 	children = MakeArray(NTopics());
-	long leftGap = RINT(GetProto(RSSYMleftmarkgap));
-	long rightGap = RINT(GetProto(RSSYMrightmarkgap));
+	Long leftGap = RINT(GetProto(RSSYMleftmarkgap));
+	Long rightGap = RINT(GetProto(RSSYMrightmarkgap));
 	TParagraphView* prev = nil;
 	for (TObjectIterator iter(topics); !iter.Done(); iter.Next())
 	{
 		TParagraphView* para = prev;
-		long index = RINT(iter.Tag());
+		Long index = RINT(iter.Tag());
 		if (first <= index)
 		{
 			topic = iter.Value();
@@ -1063,7 +1063,7 @@ TListView::SetupVisibleChildren(long first, Boolean all, Boolean /*x*/)
 				long left = (short) (leftGap + ::TopicLevel(topic) * 20 + rightGap - 20);
 				if ((flags & 1) == 0 || (flags & 0xc) != 0)
 					left = (short) (left + 20);
-				long viewFlags = RINT(GetFrameSlotRef(templ, RSSYMviewflags));
+				Long viewFlags = RINT(GetFrameSlotRef(templ, RSSYMviewflags));
 				SetFrameSlot(templ, RSSYMviewflags, RefVar(MAKEINT(viewFlags | kTopicAddFlag)));
 				SetFrameSlot(templ, RSSYMindex, RefVar(MAKEINT(-1)));
 				para = (TParagraphView*) AddView(templ);
@@ -1160,7 +1160,7 @@ TListView::TrackCheck(RefArg cmd, long index)
 	RefVar topic(Topic(index));
 	long inside = 0;
 	long wasInside = 0;
-	long flags = RINT(GetProto(RSSYMlistviewflags));
+	Long flags = RINT(GetProto(RSSYMlistviewflags));
 	RefVar done(GetVariable(topic, RSSYMmtgdone, nil, 0));
 	Boolean checked = NOTNIL(done);
 	RefVar context(fContext);
@@ -1220,7 +1220,7 @@ TListView::TrackTopic(RefArg cmd, long index)
 	Point pt = first;
 	Ticks();
 	RefVar topic(Topic(index));
-	long flags = RINT(GetProto(RSSYMlistviewflags));
+	Long flags = RINT(GetProto(RSSYMlistviewflags));
 	RefVar context(fContext);
 	if (flags & 0xc)
 		DrawPriority(context, topic, flags, 2);
@@ -1390,7 +1390,7 @@ TListView::FindDropView(const TDragInfo& dragInfo, const Point& pt)
 	RefVar type(dragInfo.GetItemIndType(0, 0));
 	if (!EQRef(type, RSSYMtopic) && !EQRef(type, RSSYMtask))
 	{
-		long listBottom = RINT(FListBottom(RefVar(fContext)));
+		Long listBottom = RINT(FListBottom(RefVar(fContext)));
 		long top = viewBounds.top;
 		TView* view = TEditView::FindDropView(dragInfo, pt);
 		if (view == this && pt.v - top < listBottom)

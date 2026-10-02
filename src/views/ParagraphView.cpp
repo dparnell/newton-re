@@ -411,7 +411,7 @@ TParagraphView::GetInterLineSpacing(void)
 	RefVar spacing(GetVar(RSSYMviewlinespacing));
 	if (ISNIL(spacing))
 		return 0;
-	long lineSpacing = RINT(spacing);
+	Long lineSpacing = RINT(spacing);
 	if (lineSpacing < 1)
 		return 0;
 	long least = (lineSpacing * 8) / 10;
@@ -2048,7 +2048,7 @@ TParagraphView::ChangeStylesOfRange(long start, long length, RefArg style, Boole
 			RefVar wanted(GetFrameSlotRef(fontParms, RSSYMface));
 			if (NOTNIL(wanted))
 			{
-				long bits = RINT(wanted);
+				Long bits = RINT(wanted);
 				long have = GetFontFace(one);
 				if (i == 0 && command == 3)
 					command = (have & bits) == bits ? 2 : 1;
@@ -3314,8 +3314,8 @@ DoReplaceSym(TParagraphView* para, WordHit* hit, UniChar* out, RefArg breakTable
 					RefVar before(FindWordInfo(para, at - 1));
 					if (NOTNIL(before))
 					{
-						long was = RINT(RefVar(GetFrameSlotRef(before, RSSYMstart)));
-						long to = RINT(RefVar(GetFrameSlotRef(before, RSSYMstop)));
+						Long was = RINT(RefVar(GetFrameSlotRef(before, RSSYMstart)));
+						Long to = RINT(RefVar(GetFrameSlotRef(before, RSSYMstop)));
 						at = was;
 						count += to - was;
 						start -= (ULong) (to - was);
@@ -3323,8 +3323,8 @@ DoReplaceSym(TParagraphView* para, WordHit* hit, UniChar* out, RefArg breakTable
 					RefVar after(FindWordInfo(para, at + count));
 					if (NOTNIL(after))
 					{
-						long was = RINT(RefVar(GetFrameSlotRef(after, RSSYMstart)));
-						long to = RINT(RefVar(GetFrameSlotRef(after, RSSYMstop)));
+						Long was = RINT(RefVar(GetFrameSlotRef(after, RSSYMstart)));
+						Long to = RINT(RefVar(GetFrameSlotRef(after, RSSYMstop)));
 						count += to - was;
 						end += (ULong) (to - was);
 					}
@@ -3338,8 +3338,8 @@ DoReplaceSym(TParagraphView* para, WordHit* hit, UniChar* out, RefArg breakTable
 			{
 				// an empty frame for the readings to be gathered into
 				item = MakeWordInfo(RefVar(NILREF));
-				long was = RINT(RefVar(GetFrameSlotRef(info, RSSYMstart)));
-				long to = RINT(RefVar(GetFrameSlotRef(info, RSSYMstop)));
+				Long was = RINT(RefVar(GetFrameSlotRef(info, RSSYMstart)));
+				Long to = RINT(RefVar(GetFrameSlotRef(info, RSSYMstop)));
 				if (at >= was && at + count <= to)
 				{
 					// the entry covers more than the word breaks found:
@@ -3740,7 +3740,7 @@ TParagraphView::NearTabStop(long x)
 		long count = Length(tabs);
 		for (long i = 0; i < count; i++)
 		{
-			long at = RINT(RefVar(GetArraySlotRef(tabs, i))) - x;
+			Long at = RINT(RefVar(GetArraySlotRef(tabs, i))) - x;
 			if (at < 0)
 				at = -at;
 			if (at < 10)
@@ -4002,7 +4002,7 @@ TParagraphView::AddTabStop(Rect& box)
 	long nearest = 10;
 	for (long i = 0; i < count; i++)
 	{
-		long distance = RINT(GetArraySlotRef(tabs, i)) - left;
+		Long distance = RINT(GetArraySlotRef(tabs, i)) - left;
 		if (labs(distance) < labs(nearest))
 			nearest = distance;
 	}
@@ -4680,7 +4680,7 @@ AppendStyleRun(RefArg styles, long* used, long count, RefArg style)
 		if (EqualStyles(style, last))
 		{
 			long at = *used - 2;
-			long length = RINT(RefVar(GetArraySlotRef(styles, at)));
+			Long length = RINT(RefVar(GetArraySlotRef(styles, at)));
 			SetArraySlot(styles, at, RefVar(MAKEINT(length + count)));
 			return;
 		}
@@ -6802,8 +6802,8 @@ TParagraphView::RealDoCommand(RefArg cmd)
 				// as a whole, however much of it was tapped
 				if (NOTNIL(info))
 				{
-					long start = RINT(RefVar(GetFrameSlotRef(info, RSSYMstart)));
-					long stop = RINT(RefVar(GetFrameSlotRef(info, RSSYMstop)));
+					Long start = RINT(RefVar(GetFrameSlotRef(info, RSSYMstart)));
+					Long stop = RINT(RefVar(GetFrameSlotRef(info, RSSYMstop)));
 					if (start <= offset && offset + length <= stop)
 					{
 						length = stop - start;
@@ -6857,7 +6857,7 @@ TParagraphView::RecognizeInkCommand(RefArg cmd)
 		ClearFlags(0x1000);
 		if (NOTNIL(GetFrameSlotRef(cmd, RSSYMdohilite)) && (fFlags & vVisible) != 0)
 		{
-			long start = RINT(GetFrameSlotRef(cmd, RSSYMstart));
+			Long start = RINT(GetFrameSlotRef(cmd, RSSYMstart));
 			Rect bounds, next;
 			OffsetToBounds(start, &bounds);
 			OffsetToBounds(start + 1, &next);
@@ -6901,8 +6901,8 @@ TParagraphView::RecognizeRangeCommand(RefArg cmd)
 		Rect	fBounds;
 	};
 	RefVar style(NILREF);
-	long start = RINT(GetFrameSlotRef(cmd, RSSYMstart));
-	long stop = RINT(GetFrameSlotRef(cmd, RSSYMstop));
+	Long start = RINT(GetFrameSlotRef(cmd, RSSYMstart));
+	Long stop = RINT(GetFrameSlotRef(cmd, RSSYMstop));
 	Boolean hilite = NOTNIL(GetFrameSlotRef(cmd, RSSYMdohilite)) && VisibleDeep();
 	RefVar config(GetFrameSlotRef(cmd, RSSYMrecconfig));
 	long firstStart = start;

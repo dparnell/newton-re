@@ -19,6 +19,7 @@
 */
 
 #include "Random.h"
+#include "NarrowRef.h"
 #include "Interpreter.h"
 #include "NativeFunctions.h"
 #include "REPTranslators.h"
@@ -185,7 +186,7 @@ FSignum(RefArg /*rcvr*/, RefArg a)
 {
 	if (ISINT(a))
 	{
-		long v = RVALUE(a);
+		Long v = RVALUE(a);
 		return MAKEINT(v < 0 ? -1 : v > 0 ? 1 : 0);
 	}
 	double d = CoerceToDouble(a);
@@ -567,7 +568,7 @@ FLength(RefArg /*rcvr*/, RefArg obj)
 Ref
 FSetLength(RefArg /*rcvr*/, RefArg obj, RefArg length)
 {
-	SetLength(obj, RINT(length));
+	SetLength(obj, LongArg(RINT(length)));
 	return obj;
 }
 
@@ -805,7 +806,7 @@ ThrowOutOfBounds(RefArg obj, long index)
 Ref
 FAref(RefArg /*rcvr*/, RefArg obj, RefArg index)
 {
-	long i = RINT(index);
+	Long i = RINT(index);
 	ULong flags = ObjectFlags(obj);
 	if ((flags & kObjSlotted) == 0)
 	{
@@ -831,7 +832,7 @@ FAref(RefArg /*rcvr*/, RefArg obj, RefArg index)
 Ref
 FSetAref(RefArg /*rcvr*/, RefArg obj, RefArg index, RefArg value)
 {
-	long i = RINT(index);
+	Long i = RINT(index);
 	ULong flags = ObjectFlags(obj);
 	if ((flags & kObjSlotted) == 0)
 	{
@@ -873,7 +874,7 @@ FAddArraySlot(RefArg /*rcvr*/, RefArg array, RefArg value)
 Ref
 FNewWeakArray(RefArg /*rcvr*/, RefArg length)
 {
-	return AllocateArray(RefVar(kWeakArrayClass), RINT(length));
+	return AllocateArray(RefVar(kWeakArrayClass), LongArg(RINT(length)));
 }
 
 
@@ -881,7 +882,7 @@ FNewWeakArray(RefArg /*rcvr*/, RefArg length)
 Ref
 FMakeBinary(RefArg /*rcvr*/, RefArg length, RefArg theClass)
 {
-	return AllocateBinary(theClass, RINT(length));
+	return AllocateBinary(theClass, LongArg(RINT(length)));
 }
 
 
@@ -1256,7 +1257,7 @@ FThrow(RefArg /*rcvr*/, RefArg name, RefArg data)
 		ThrowRefException(gFramesExceptionName, data);
 	if (Subexception(gFramesExceptionName, (ExceptionName) "evt.ex.msg"))
 		Throw(gFramesExceptionName, ExceptionMessage(data), DeleteCharArray);
-	long code = RINT(data);
+	Long code = RINT(data);
 	Throw(gFramesExceptionName, (void*) (Long) code, nil);
 	return NILREF;
 }
@@ -1280,7 +1281,7 @@ FRethrow(RefArg /*rcvr*/)
 		RefVar data(GetFrameSlotRef(exception, RSSYMdata));
 		ThrowRefException(gFramesExceptionName, data);
 	}
-	long code = RINT(GetFrameSlotRef(exception, RSSYMerror));
+	Long code = RINT(GetFrameSlotRef(exception, RSSYMerror));
 	Throw(gFramesExceptionName, (void*) (Long) code, nil);
 	return NILREF;
 }
@@ -1322,10 +1323,10 @@ enum { kIterTag = 0, kIterValue, kIterObject, kIterDeeply, kIterIndex, kIterLeng
 Boolean
 ForEachLoopNext(RefArg iter)
 {
-	long length = RINT(GetArraySlotRef(iter, kIterLength));
+	Long length = RINT(GetArraySlotRef(iter, kIterLength));
 	RefVar obj(GetArraySlotRef(iter, kIterObject));
 	long objLength = Length(obj);
-	long index = RINT(GetArraySlotRef(iter, kIterIndex));
+	Long index = RINT(GetArraySlotRef(iter, kIterIndex));
 	if (length <= objLength)
 	{
 		index++;
@@ -1376,8 +1377,8 @@ ForEachLoopReset(RefArg iter, RefArg obj)
 Boolean
 ForEachLoopDone(RefArg iter)
 {
-	long index = RINT(GetArraySlotRef(iter, kIterIndex));
-	long length = RINT(GetArraySlotRef(iter, kIterLength));
+	Long index = RINT(GetArraySlotRef(iter, kIterIndex));
+	Long length = RINT(GetArraySlotRef(iter, kIterLength));
 	if (GetArraySlotRef(iter, kIterDeeply) == NILREF || GetArraySlotRef(iter, kIterMap) == NILREF)
 		return length <= index;
 	if (length <= index)
@@ -1407,7 +1408,7 @@ FNewIterator(RefArg /*rcvr*/, RefArg obj, RefArg deeply)
 			SetArraySlotRef(iter, kIterDeeply, NILREF);
 		else
 		{
-			long count = RINT(GetArraySlotRef(iter, kIterLength));
+			Long count = RINT(GetArraySlotRef(iter, kIterLength));
 			RefVar proto(GetFrameSlotRef(obj, RSSYM_proto));
 			while ((Ref) proto != NILREF)
 			{
@@ -1828,9 +1829,9 @@ FForLoop(RefArg /*rcvr*/, RefArg start, RefArg end, RefArg fn)
 		ThrowBadTypeWithFrameData(kNSErrNotAnInteger, start);
 	if (!ISINT((Ref) end))
 		ThrowBadTypeWithFrameData(kNSErrNotAnInteger, end);
-	long last = RINT(end);
+	Long last = RINT(end);
 	RefVar args(AllocateArray(RSSYMarray, 1));
-	for (long i = RINT(start); i <= last; i++)
+	for (Long i = RINT(start); i <= last; i++)
 	{
 		SetArraySlotRef(args, 0, MAKEINT(i));
 		DoBlock(fn, args);

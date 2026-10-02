@@ -212,7 +212,7 @@ AllocateEarlyStuff(void)
 	Ref sortId = GetProtoVariable(locale, RSSYMsortid, nil);
 	if (NOTNIL(sortId))
 	{
-		long id = RINT(sortId);
+		Long id = RINT(sortId);
 		if (id != 0)
 			gSortTables.SetDefaultTableId(id);
 	}
@@ -855,7 +855,7 @@ HandleRunScriptEvent(TRunScriptEvent* event)
 Ref
 FBusyBoxControl(RefArg /*rcvr*/, RefArg what)
 {
-	long command = RINT(what);
+	Long command = RINT(what);
 	if (command > -3 && command < 3)
 		BusyBoxSend(command + kBusyBoxAllow);
 	return NILREF;

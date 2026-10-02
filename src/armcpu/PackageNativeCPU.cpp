@@ -2889,7 +2889,7 @@ GLUE(Glue_NativeEntry)
 	if (cls == kNativeFuncClass)
 	{
 		Ref ptr = GetArraySlotRef(fn, kNativeFuncPtrSlot);
-		long fnArgs = RINT(GetArraySlotRef(fn, kNativeNumArgsSlot));
+		Long fnArgs = RINT(GetArraySlotRef(fn, kNativeNumArgsSlot));
 		if (numArgs != fnArgs)
 			Throw(exInterpreter, (void*) kNSErrWrongNumberOfArgs, nil);
 		void* host = (void*) ptr;

@@ -249,7 +249,7 @@ PrintObjectAux(RefArg obj, long indent, long depth)
 			if (depth < kPrintPrecedentsSize)
 				SetArraySlotRef(gPrintPrecedents, depth, ref);
 
-			long printDepth = RINT(GetFrameSlotRef(gVarFrame, RSSYMprintdepth));
+			Long printDepth = RINT(GetFrameSlotRef(gVarFrame, RSSYMprintdepth));
 			if (printDepth > 15)
 				printDepth = 15;
 			Ref printLengthRef = GetFrameSlotRef(gVarFrame, RSSYMprintlength);

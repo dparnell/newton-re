@@ -2157,8 +2157,8 @@ FromObject(RefArg obj, TXOffsetRange* range, TXView* view)
 		trailingFirst = GetFrameSlotRef(obj, RSSYMtrailingfirst) != NILREF;
 	if (FrameHasSlot(obj, RSSYMtrailinglast))
 		trailingLast = GetFrameSlotRef(obj, RSSYMtrailinglast) != NILREF;
-	long last = RINT(GetFrameSlotRef(obj, RSSYMlast));
-	long first = RINT(GetFrameSlotRef(obj, RSSYMfirst));
+	Long last = RINT(GetFrameSlotRef(obj, RSSYMlast));
+	Long first = RINT(GetFrameSlotRef(obj, RSSYMfirst));
 	range->Set(first, last, trailingFirst, trailingLast);
 	if (view == nil)
 		return;
@@ -2491,8 +2491,8 @@ TXView::GetDropData(RefArg dragType, RefArg dragRef)
 	RefVar data(TView::GetDropData(dragType, dragRef));
 	if (ISNIL(data))
 	{
-		long start = RINT(GetArraySlotRef(dragRef, 0));
-		long length = RINT(GetArraySlotRef(dragRef, 1));
+		Long start = RINT(GetArraySlotRef(dragRef, 0));
+		Long length = RINT(GetArraySlotRef(dragRef, 1));
 		if (EQRef(dragType, RSSYMtext))
 		{
 			data = Clone(RefVar(Rtxclipboardprototype));

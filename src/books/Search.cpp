@@ -594,14 +594,14 @@ AddInkMarks(RefArg rcvr, RefArg page, RefArg marks)
 	RefVar entry;
 	RefVar list;
 	isbn = GetVariable(rcvr, RSSYMisbn, nil, 0);
-	long rendering = RINT(GetVariable(rcvr, RSSYMcurrendering, nil, 0));
+	Long rendering = RINT(GetVariable(rcvr, RSSYMcurrendering, nil, 0));
 	entry = TLibrarian::gLibrarian->GetLibraryEntry(isbn);
 	list = GetFrameSlotRef(entry, RSSYMinkmarks);
 	list = GetArraySlotRef(list, rendering);
 	long count = Length(list);
 	if (count != 0)
 	{
-		long pageNo = RINT(page);
+		Long pageNo = RINT(page);
 		for (long i = 0; i < count; i += 2)
 			if (RINT(GetArraySlotRef(list, i)) == pageNo)
 			{

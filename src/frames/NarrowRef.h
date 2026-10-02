@@ -49,6 +49,11 @@ Long	NarrowInteger(Long value, const char* where);
 // cut to 32 bits otherwise
 Long	NarrowToWord(Long value, const char* where);
 
+// a script's integer for a C++ call that takes a long (a length, a size):
+// on a host whose long is 32 bits (Windows) a wider one throws
+// kNSErrOutOfRange rather than being cut to a smaller, valid-looking size
+long	LongArg(Long value);
+
 // (tests: strict or not, whatever NEWTON_NS64_STRICT says)
 void	SetNarrowStrict(bool strict);
 
@@ -61,6 +66,7 @@ inline Ref	NarrowRef(Ref ref, const char*)				{ return ref; }
 inline Long	NarrowInteger(Long value, const char*)		{ return value; }
 inline Long	NarrowToWord(Long value, const char*)		{ return value; }
 inline bool	FitsDeviceInteger(Long)						{ return true; }
+inline long	LongArg(Long value)							{ return (long) value; }
 
 #endif
 

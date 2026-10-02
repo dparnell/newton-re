@@ -1656,7 +1656,7 @@ TDocker::SetCurrentStore(Boolean andSoups)
 	RefVar info(GetFrameSlot(frame, RSSYMinfo));
 	RefVar stores(GetStores());
 	RefVar store, storeName, storeKind;
-	long signature = RINT(signatureRef);
+	Long signature = RINT(signatureRef);
 	Boolean wrongSignature = false;
 	TRichString wantedName(name);
 	TRichString wantedKind(kind);
@@ -1666,7 +1666,7 @@ TDocker::SetCurrentStore(Boolean andSoups)
 		store = GetArraySlot(stores, i);
 		storeName = StoreGetName(store);
 		storeKind = StoreGetKind(store);
-		long storeSignature = RINT(StoreGetSignature(store));
+		Long storeSignature = RINT(StoreGetSignature(store));
 		TRichString thisName(storeName);
 		TRichString thisKind(storeKind);
 		if (thisName.CompareSubStringCommon(wantedName, 0, -1, false) == 0
@@ -4510,7 +4510,7 @@ FConnEntriesEqual(RefArg /*rcvr*/, RefArg entry)
 static void
 ConnWriteCommand(RefArg connection, RefArg command, RefArg data, RefArg length, RefArg withData, ULong* commandWord)
 {
-	long len = RINT(length);
+	Long len = RINT(length);
 	long error = GetTheDocker(connection, true)->WriteCommand(command, data, len, NOTNIL(withData), commandWord);
 	if (error != noErr && error != kDockErrRetryPassword && error != -16005)
 	{
@@ -4761,7 +4761,7 @@ FConnGetCurrentStore(RefArg rcvr)
 Ref
 FConnAbort(RefArg rcvr, RefArg error)
 {
-	long err = RINT(error);
+	Long err = RINT(error);
 	GetTheDocker(rcvr, true)->AbortConnection(err);
 	CleanUpDockerIfError(rcvr, -1, false, false);
 	return NILREF;

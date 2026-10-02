@@ -222,7 +222,7 @@ TagsValidTest(TSoupIndex& tagsIndex, RefArg queryTags, PSSId id)
 		for (long i = 0; i < count; i += 2)
 		{
 			binary = GetArraySlotRef(queryTags, i + 1);
-			long mode = RINT(GetArraySlotRef(queryTags, i));
+			Long mode = RINT(GetArraySlotRef(queryTags, i));
 			if (!bits.ValidTest(*(const TagsBits*) BinaryData(binary), mode))
 				return false;
 		}
@@ -232,7 +232,7 @@ TagsValidTest(TSoupIndex& tagsIndex, RefArg queryTags, PSSId id)
 	{
 		if (Length(queryTags) == 2)
 		{
-			long mode = RINT(GetArraySlotRef(queryTags, 0));
+			Long mode = RINT(GetArraySlotRef(queryTags, 0));
 			if (mode == kTagsNone)
 				return true;
 			if (mode == kTagsEqual)

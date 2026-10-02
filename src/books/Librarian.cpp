@@ -212,7 +212,7 @@ TLibrarian::CurrentPage(RefArg reader)
 	RefVar isbn;
 	isbn = GetVariable(reader, RSSYMisbn, nil, 0);
 	entry = GetLibraryEntry(isbn);
-	long page = RINT(GetFrameSlotRef(entry, RSSYMcurpage));
+	Long page = RINT(GetFrameSlotRef(entry, RSSYMcurpage));
 	if (page > CountPages(reader))
 	{
 		SetFrameSlot(entry, RSSYMprevpage, RefVar(MAKEINT(0)));
@@ -617,7 +617,7 @@ TLibrarian::FindPageByContent(RefArg reader, RefArg item, long offset, long* blo
 				Boolean here = ISNIL(len);
 				if (!here)
 				{
-					long length = RINT(len);
+					Long length = RINT(len);
 					len = GetFrameSlotRef(block, RSSYMdataoffset);
 					long start = ISNIL(len) ? 0 : RINT(len);
 					here = offset <= start + length;
@@ -707,7 +707,7 @@ CurrentKiosk(RefArg rcvr)
 	RefVar templ;
 	isbn = GetVariable(rcvr, RSSYMisbn, nil, 0);
 	entry = TLibrarian::gLibrarian->GetLibraryEntry(isbn);
-	long index = RINT(GetFrameSlotRef(entry, RSSYMcurpage));
+	Long index = RINT(GetFrameSlotRef(entry, RSSYMcurpage));
 	long flags;
 	do
 	{
@@ -745,7 +745,7 @@ AddBookmark(RefArg rcvr, RefArg page)
 	RefVar entry;
 	RefVar marks;
 	isbn = GetVariable(rcvr, RSSYMisbn, nil, 0);
-	long rendering = RINT(GetVariable(rcvr, RSSYMcurrendering, nil, 0));
+	Long rendering = RINT(GetVariable(rcvr, RSSYMcurrendering, nil, 0));
 	entry = TLibrarian::gLibrarian->GetLibraryEntry(isbn);
 	marks = GetFrameSlotRef(entry, RSSYMmarks);
 	marks = GetArraySlotRef(marks, rendering);
@@ -783,7 +783,7 @@ InkMarks(RefArg rcvr, RefArg page)
 	RefVar isbn;
 	RefVar marks;
 	isbn = GetVariable(rcvr, RSSYMisbn, nil, 0);
-	long rendering = RINT(GetVariable(rcvr, RSSYMcurrendering, nil, 0));
+	Long rendering = RINT(GetVariable(rcvr, RSSYMcurrendering, nil, 0));
 	entry = TLibrarian::gLibrarian->GetLibraryEntry(isbn);
 	marks = GetFrameSlotRef(entry, RSSYMinkmarks);
 	marks = GetArraySlotRef(marks, rendering);
@@ -792,7 +792,7 @@ InkMarks(RefArg rcvr, RefArg page)
 	long count = Length(marks);
 	if (count != 0)
 	{
-		long pageNo = RINT(page);
+		Long pageNo = RINT(page);
 		for (long i = 0; i < count; i += 2)
 			if (RINT(GetArraySlotRef(marks, i)) == pageNo)
 				return GetArraySlotRef(marks, i + 1);
@@ -866,7 +866,7 @@ Bookmarks(RefArg rcvr)
 	RefVar entry;
 	RefVar marks;
 	isbn = GetVariable(rcvr, RSSYMisbn, nil, 0);
-	long rendering = RINT(GetVariable(rcvr, RSSYMcurrendering, nil, 0));
+	Long rendering = RINT(GetVariable(rcvr, RSSYMcurrendering, nil, 0));
 	entry = TLibrarian::gLibrarian->GetLibraryEntry(isbn);
 	marks = GetFrameSlotRef(entry, RSSYMmarks);
 	return GetArraySlotRef(marks, rendering);
@@ -883,7 +883,7 @@ UpdateBookmarks(RefArg rcvr, RefArg newMarks)
 	RefVar entry;
 	RefVar marks;
 	isbn = GetVariable(rcvr, RSSYMisbn, nil, 0);
-	long rendering = RINT(GetVariable(rcvr, RSSYMcurrendering, nil, 0));
+	Long rendering = RINT(GetVariable(rcvr, RSSYMcurrendering, nil, 0));
 	entry = TLibrarian::gLibrarian->GetLibraryEntry(isbn);
 	marks = GetFrameSlotRef(entry, RSSYMmarks);
 	SetArraySlotRef(marks, rendering, newMarks);

@@ -114,7 +114,7 @@ ExtendedGestalt(RefArg args)
 	TUGestalt gestalt;
 	if (!ISINT(GetArraySlotRef(args, 0)))
 		return NILREF;
-	long selector = RINT(GetArraySlotRef(args, 0));
+	Long selector = RINT(GetArraySlotRef(args, 0));
 	if (!IsArray(RefVar(GetArraySlotRef(args, 1))) || !ISINT(GetArraySlotRef(args, 2)))
 		return NILREF;
 	if (selector > 0x01000000 && selector <= 0x02000000)
@@ -545,7 +545,7 @@ FBatteryLevel(RefArg /*rcvr*/, RefArg what)
 {
 	RefVar result;
 	Boolean wantCapacity = true;
-	long which = RINT(what);
+	Long which = RINT(what);
 	if (which == 0)
 		result = MAKEINT(gLastBatteryLevel);
 	else if (which == 2)

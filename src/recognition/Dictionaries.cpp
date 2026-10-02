@@ -146,7 +146,7 @@ InitDictionaries(void)
 	for (long slot = 0; slot < count; slot++)
 	{
 		RefVar descriptor(GetArraySlotRef(list, slot));
-		long id = RINT(RefVar(GetProtoVariable(descriptor, RSSYMdictid, nil)));
+		Long id = RINT(RefVar(GetProtoVariable(descriptor, RSSYMdictid, nil)));
 		RefVar romDictId(GetProtoVariable(descriptor, RSSYMromdictid, nil));
 		RefVar frame(Clone(RefVar(Rcanonicaldictramframe)));
 		SetFrameSlot(frame, RSSYM_proto, descriptor);
@@ -164,7 +164,7 @@ InitDictionaries(void)
 		{
 			ULong size = 0;
 			const void* data = GetROMDictionaryData((ULong) RINT(romDictId), &size);
-			long type = RINT(RefVar(GetProtoVariable(frame, RSSYMdicttype, nil)));
+			Long type = RINT(RefVar(GetProtoVariable(frame, RSSYMdicttype, nil)));
 			if (type < 2 || type == 4)
 			{
 				dictionary = BuildDictionaryFromPtr((void*) data, (Size) size);
@@ -220,8 +220,8 @@ InitDictionaries(void)
 Boolean
 ReplaceDictionary(RefArg frame, RefArg binary)
 {
-	long id = RINT(RefVar(GetProtoVariable(frame, RSSYMdictid, nil)));
-	long type = RINT(RefVar(GetProtoVariable(frame, RSSYMdicttype, nil)));
+	Long id = RINT(RefVar(GetProtoVariable(frame, RSSYMdictid, nil)));
+	Long type = RINT(RefVar(GetProtoVariable(frame, RSSYMdicttype, nil)));
 	Handle dictionary = nil;
 	Boolean replaced = false;
 	if (type < 2 || type == 4)
@@ -251,8 +251,8 @@ ReplaceDictionary(RefArg frame, RefArg binary)
 Boolean
 ReplaceDictionary(RefArg frame, ULong romDictID, const char* data, ULong size)
 {
-	long id = RINT(RefVar(GetProtoVariable(frame, RSSYMdictid, nil)));
-	long type = RINT(RefVar(GetProtoVariable(frame, RSSYMdicttype, nil)));
+	Long id = RINT(RefVar(GetProtoVariable(frame, RSSYMdictid, nil)));
+	Long type = RINT(RefVar(GetProtoVariable(frame, RSSYMdicttype, nil)));
 	Handle dictionary = nil;
 	Boolean replaced = false;
 	if (type < 2 || type == 4)
@@ -834,7 +834,7 @@ FLookupCompletions(RefArg /*rcvr*/, RefArg word, RefArg max, RefArg context)
 	LowercaseText(text, 1);
 	UByte bytes[64];
 	ConvertFromUnicode(text, bytes, 1, 0x3f);
-	long most = RINT(max);
+	Long most = RINT(max);
 	RefVar words(AllocateArray(RSSYMarray, most));
 	long count = 0;
 	if (chains[kDictChainOrdinary] != nil)
@@ -1005,7 +1005,7 @@ FSetDictionaryData(RefArg /*rcvr*/, RefArg id, RefArg binary)
 Ref
 FAirusUnregisterDictionary(RefArg rcvr)
 {
-	long id = RINT(RefVar(GetProtoVariable(rcvr, RSSYMdictid, nil)));
+	Long id = RINT(RefVar(GetProtoVariable(rcvr, RSSYMdictid, nil)));
 
 	Boolean removed = false;
 	ULong count = gDictList->Count();

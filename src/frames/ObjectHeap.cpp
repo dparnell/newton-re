@@ -723,7 +723,7 @@ AllocateRefHandle(Ref targetObj)
 	if (heap->fFreeHandleIndex < 0)						// DEVIATION: see ExpandObjectTable
 		Throw(exOutOfMemory, (void*) kError_No_Memory, nil);
 	RefHandle* handle = RefHandleTableEntries(heap->fRefHandleTable) + heap->fFreeHandleIndex;
-	long next = RVALUE(handle->ref);
+	Long next = RVALUE(handle->ref);
 	heap->fFreeHandleIndex = next;
 	handle->ref = targetObj;
 	handle->stackPos = MAKEINT(gCurrentStackPos);

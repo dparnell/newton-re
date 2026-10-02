@@ -148,6 +148,45 @@ longer wraps the way the device's did, so `TotalSeconds(Date(Time()))` and
 `TimeInSeconds()` agree only modulo 2^30 (`test_Dates` checks it that way
 under it).
 
+## Silent narrowing on a 32-bit `long` (S4)
+
+On Windows (LLP64) a `long` is 32 bits, so under `NEWTON_NS64` a
+`long x = RINT(r)` keeps only the low half of a wide integer, and nothing
+warns.  `tools/newton-rom/analysis/ns64narrowing.py` lists the places,
+from a build with clang's `-Wshorten-64-to-32` (its docstring has the
+commands): the warnings whose source line takes an integer out of a Ref.
+
+* Before the audit: 790 sites (27 in tests).
+* Every `long` local initialised from `RINT`/`RVALUE` became a `Long`
+  (365 lines, all areas, mechanically - the same value in the faithful
+  flavour), two put back where the variable's address goes to a
+  `long*` (`TestNatives`, `Docker::ReadBytes`).  This took the
+  interpreter's `for` counters, the comparison and arithmetic built-ins and
+  the string, array and binary natives to the full width.
+* A script's length or size handed to an allocator (`MakeBinary`,
+  `Array`, `SetLength`, the interpreter's array literal, `NewWeakArray`,
+  a store object's or a large binary's size) goes through `LongArg`
+  (`NarrowRef.h`): one that a 32-bit `long` cannot hold throws
+  `kNSErrOutOfRange`, as an over-long object does, where it would have
+  been cut to a small, valid-looking size.
+* After: 424 sites (27 in tests).  The 397 left are values small by
+  contract passed to a C++ parameter or field: coordinates and bounds,
+  indices into an object, counts, error codes, enumerations and settings
+  (a sound channel's format, gain and device; a font's size and face; a
+  view's flags), minutes since 1904.  They narrow only when a script passes
+  a value no Newton could have, and then as a wrong coordinate rather than
+  a crash.  Linux (LP64) keeps the full width at all of them.
+
+## Objects over 16 MB (S5, not done)
+
+The size field is 24 bits in the ROM and 56 bits on the host
+(`fSizeAndFlags` is a `ULong`), so lifting `kObjMaxSize` is one
+constant.  It buys nothing yet: the frames heap is 4 MB in `newton` and
+1 MB by default (`gObjectHeapSize`, sized like the ROM's by the RAM it is
+given), so an object over 16 MB needs a bigger heap first, and every format
+it would be stored or sent in is 32-bit on a real Newton anyway.  Large data
+is the large binary's job (VBOs, `stores/LargeBinaries.h`).
+
 ## Tests
 
 The faithful suite is the oracle and stays 402/402 at every step.  The

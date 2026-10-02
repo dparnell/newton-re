@@ -11,6 +11,7 @@
 */
 
 #include "LargeBinaries.h"
+#include "NarrowRef.h"
 #include "LargeObjects.h"
 #include "Ephemerals.h"
 #include "Entries.h"			// MakeEntryCache, PutEntryIntoCache, FaultBlockObject
@@ -661,7 +662,7 @@ FLBAllocCompressed(RefArg rcvr, RefArg theClass, RefArg length, RefArg compander
 	ULong address = 0;
 	newton_try
 	{
-		OSErrIf(CreateLargeObject(&id, wrapper->fStore, RINT(length), (char*) compander, parameters, parametersSize));
+		OSErrIf(CreateLargeObject(&id, wrapper->fStore, LongArg(RINT(length)), (char*) compander, parameters, parametersSize));
 		NewtonErr err = MapLargeObject(&address, wrapper->fStore, id, false);
 		if (err != noErr)
 		{
@@ -677,7 +678,7 @@ FLBAllocCompressed(RefArg rcvr, RefArg theClass, RefArg length, RefArg compander
 	end_try;
 	OSErrIf(wrapper->UnlockStore());
 	wrapper->fEphemeralTracker->AddEphemeral(id);
-	RefVar obj(AllocateLargeBinary(theClass, wrapper->SymbolToReference(theClass), RINT(length), wrapper));
+	RefVar obj(AllocateLargeBinary(theClass, wrapper->SymbolToReference(theClass), LongArg(RINT(length)), wrapper));
 	LBData* lb = LargeBinaryData(obj);
 	lb->fId = id;
 	lb->fAddress = address;

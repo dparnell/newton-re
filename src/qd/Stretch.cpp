@@ -2913,9 +2913,9 @@ MakeGrayTable(char* table, long n)
 	}
 	else
 	{
-		long a = RINT(GetArraySlotRef(levels, 0));
-		long b = RINT(GetArraySlotRef(levels, 1));
-		long c = RINT(GetArraySlotRef(levels, 2));
+		Long a = RINT(GetArraySlotRef(levels, 0));
+		Long b = RINT(GetArraySlotRef(levels, 1));
+		Long c = RINT(GetArraySlotRef(levels, 2));
 		if (a > 1000) a = 1000; else if (a < 0) a = 0;
 		if (b > 1000) b = 1000; else if (b < 0) b = 0;
 		if (c > 1000) c = 1000; else if (c < 0) c = 0;

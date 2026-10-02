@@ -71,11 +71,11 @@ GetMeetingSlot(RefArg meeting, RefArg slot)
 Ref
 LayoutMeeting(RefArg /*rcvr*/, RefArg meeting, RefArg extentRef, RefArg widthRef, RefArg /*x*/)
 {
-	long extent = RINT(extentRef);
-	long width = RINT(widthRef);
+	Long extent = RINT(extentRef);
+	Long width = RINT(widthRef);
 	RefVar bounds(GetMeetingSlot(meeting, RSSYMviewbounds));
-	long start = RINT(GetMeetingSlot(meeting, RSSYMmtgstartdate));
-	long duration = RINT(GetMeetingSlot(meeting, RSSYMmtgduration));
+	Long start = RINT(GetMeetingSlot(meeting, RSSYMmtgstartdate));
+	Long duration = RINT(GetMeetingSlot(meeting, RSSYMmtgduration));
 	long minutes = start % 1440;
 	short top = (short) TimeToPosition(minutes, extent, 0, 1440);
 	short bottom = (short) TimeToPosition(minutes + duration, extent, 0, 1440);

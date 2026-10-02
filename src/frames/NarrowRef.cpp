@@ -79,6 +79,15 @@ NarrowRef(Ref ref, const char* where)
 }
 
 
+long
+LongArg(Long value)
+{
+	if ((Long) (long) value != value)
+		ThrowExFramesWithBadValue(kNSErrOutOfRange, RefVar(MAKEINT(value)));
+	return (long) value;
+}
+
+
 Long
 NarrowToWord(Long value, const char* where)
 {

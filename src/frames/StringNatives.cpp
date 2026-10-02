@@ -12,6 +12,7 @@
 */
 
 #include "Frames.h"
+#include "NarrowRef.h"
 #include "ObjectHeap.h"
 #include "Interpreter.h"
 #include "NativeFunctions.h"
@@ -300,7 +301,7 @@ SmartChar(RefArg item)
 Ref
 FSmartStart(RefArg /*rcvr*/, RefArg size)
 {
-	RefVar str(AllocateBinary(RefVar(RSSYMstring), RINT(size)));
+	RefVar str(AllocateBinary(RefVar(RSSYMstring), LongArg(RINT(size))));
 	*(UniChar*) BinaryData(str) = 0;
 	return str;
 }
@@ -339,7 +340,7 @@ FSmartConcat(RefArg /*rcvr*/, RefArg str, RefArg count, RefArg item)
 	{
 		UniChar ch = SmartChar(item);			// checked before the room is made
 		long size = Length(str);
-		long at = RINT(count);
+		Long at = RINT(count);
 		long length = at * 2 + 2;
 		if ((ULong) (size - 2) < (ULong) length)
 			SetLength(str, size + 0x80);
@@ -363,7 +364,7 @@ FSmartConcat(RefArg /*rcvr*/, RefArg str, RefArg count, RefArg item)
 
 	long size = Length(str);
 	long itemLength = Length(item) - 2;			// its text, without the terminator
-	long at = RINT(count) * 2;
+	Long at = RINT(count) * 2;
 	long length = at + itemLength;
 	if ((ULong) (size - 2) < (ULong) length)
 	{
@@ -387,7 +388,7 @@ Ref
 FSmartStop(RefArg /*rcvr*/, RefArg str, RefArg count)
 {
 	if (!IsRichString(str))
-		SetLength(str, RINT(count) * 2 + 2);
+		SetLength(str, LongArg(RINT(count) * 2 + 2));
 	return NILREF;
 }
 

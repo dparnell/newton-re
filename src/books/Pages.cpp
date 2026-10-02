@@ -215,10 +215,10 @@ MakeBlockView(RefArg blocks, RefArg mungeScript, ULong index, Boolean printing)
 	}
 	else
 	{
-		long left = RINT(GetArraySlotRef(boundsArray, 0));
-		long top = RINT(GetArraySlotRef(boundsArray, 1));
-		long right = RINT(GetArraySlotRef(boundsArray, 2));
-		long bottom = RINT(GetArraySlotRef(boundsArray, 3));
+		Long left = RINT(GetArraySlotRef(boundsArray, 0));
+		Long top = RINT(GetArraySlotRef(boundsArray, 1));
+		Long right = RINT(GetArraySlotRef(boundsArray, 2));
+		Long bottom = RINT(GetArraySlotRef(boundsArray, 3));
 		if ((look & 0x200) != 0)
 			left += edge + 1;
 		if ((look & 0x100) != 0)
@@ -283,7 +283,7 @@ MakeBlockView(RefArg blocks, RefArg mungeScript, ULong index, Boolean printing)
 			Boolean started = false;
 			for (long i = 0; i < count; i += 2)
 			{
-				long run = RINT(GetArraySlotRef(value, i));
+				Long run = RINT(GetArraySlotRef(value, i));
 				total += run;
 				if (started)
 				{
@@ -448,9 +448,9 @@ PageTurnTo(RefArg reader, ULong page, Boolean turnAway)
 		}
 		else
 		{
-			long width = RINT(GetFrameSlotRef(size, RSSYMright));
+			Long width = RINT(GetFrameSlotRef(size, RSSYMright));
 			SetFrameSlot(viewBounds, RSSYMleft, RefVar(MAKEINT(width + 15)));
-			long right = RINT(GetFrameSlotRef(size, RSSYMright));
+			Long right = RINT(GetFrameSlotRef(size, RSSYMright));
 			SetFrameSlot(viewBounds, RSSYMright, RefVar(MAKEINT(right + width + 15)));
 		}
 		SetFrameSlot(frame, RSSYMviewbounds, viewBounds);
@@ -776,7 +776,7 @@ HiliteBlock(RefArg rcvr, RefArg item, RefArg offsetArg, RefArg length)
 	RefVar pageFrame;
 	RefVar blocks;
 	RefVar block;
-	long offset = RINT(offsetArg);
+	Long offset = RINT(offsetArg);
 	Boolean isForm = false;
 	TView* content = ContentView(rcvr);
 	long page = TLibrarian::gLibrarian->CurrentPage(rcvr);

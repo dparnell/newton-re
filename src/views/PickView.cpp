@@ -203,8 +203,8 @@ TPickView::GetGridInfo(RefArg item, const Rect& bounds)
 	PickGridInfo* grid = new PickGridInfo;
 	if (grid == nil)
 		OutOfMemory();
-	long columns = RINT(width);
-	long rows = RINT(GetFrameSlotRef(item, RSSYMheight));
+	Long columns = RINT(width);
+	Long rows = RINT(GetFrameSlotRef(item, RSSYMheight));
 	RefVar value(GetFrameSlotRef(item, RSSYMcellframe));
 	grid->fCellFrame = ISNIL(value) ? 1 : RINT(value);
 	value = GetFrameSlotRef(item, RSSYMouterframe);
@@ -459,8 +459,8 @@ TPickView::SetupForm(void)
 	GetStyleFontInfo(&fStyle, &fFontInfo);
 	fAutoClose = NOTNIL(GetProtoVariable(context, RSSYMpickautoclose, nil));
 	Boolean markable = NOTNIL(GetProtoVariable(context, RSSYMpickitemsmarkable, nil));
-	long leftMargin = RINT(GetProtoVariable(context, RSSYMpickleftmargin, nil));
-	long markWidth = RINT(GetProtoVariable(context, RSSYMpickmarkwidth, nil));
+	Long leftMargin = RINT(GetProtoVariable(context, RSSYMpickleftmargin, nil));
+	Long markWidth = RINT(GetProtoVariable(context, RSSYMpickmarkwidth, nil));
 	fRightMargin = RINT(GetProtoVariable(context, RSSYMpickrightmargin, nil));
 	fTopMargin = RINT(GetProtoVariable(context, RSSYMpicktopmargin, nil));
 	fBottomMargin = RINT(GetProtoVariable(context, RSSYMpickbottommargin, nil));
@@ -473,7 +473,7 @@ TPickView::SetupForm(void)
 		OutOfMemory();
 	}
 	GetKeyCommandInfo();
-	long maxWidth = RINT(GetProto(RSSYMpickmaxwidth)) - (fKeyCommandWidth >> 16);
+	Long maxWidth = RINT(GetProto(RSSYMpickmaxwidth)) - (fKeyCommandWidth >> 16);
 	// with a command keyboard and vars._hiliteMenuItem, the first pickable
 	// item starts out picked
 	Boolean preselect = gRootView->CommandKeyboardConnected()
@@ -619,7 +619,7 @@ TPickView::SetupForm(void)
 	RefVar format(GetProtoVariable(context, RSSYMviewformat, nil));
 	if (NOTNIL(format))
 	{
-		long value = RINT(format);
+		Long value = RINT(format);
 		frame = ((value & vfFrameMask) != 0 ? (value & vfPenMask) >> vfPenShift : 0) + ((value & vfInsetMask) >> vfInsetShift);
 	}
 	RefVar boundsFrame(GetProtoVariable(context, RSSYMbounds, nil));
@@ -1471,7 +1471,7 @@ TPickView::PickItem(PickStuff* item)
 	}
 	if (!sent)
 	{
-		long index = RINT(GetProto(RSSYMtopitem)) + item->fItem;
+		Long index = RINT(GetProto(RSSYMtopitem)) + item->fItem;
 		picked = MAKEINT(index);
 		if (item->fIsGrid)
 		{

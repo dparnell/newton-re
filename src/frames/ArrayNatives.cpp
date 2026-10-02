@@ -648,7 +648,7 @@ LSearch(RefArg array, RefArg item, RefArg start, RefArg test, RefArg key)
 	if (!IsArray(array))
 		ThrowBadTypeWithFrameData(kNSErrNotAnArray, array);
 	long count = Length(array);
-	long index = RINT(start);
+	Long index = RINT(start);
 	if (index >= count)
 		return -1;
 	if (index < 0)
@@ -1273,7 +1273,7 @@ BoundsWriteCheck(RefArg obj, long offset, ULong size)
 Ref
 FExtractChar(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 {
-	long index = RINT(offset);
+	Long index = RINT(offset);
 	BoundsCheck(obj, index, 1);
 	TBinaryBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: BinaryBytes.h)
 	char byte[2] = { BinaryData(obj)[index], 0 };
@@ -1287,7 +1287,7 @@ FExtractChar(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 Ref
 FStuffChar(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg c)
 {
-	long index = RINT(offset);
+	Long index = RINT(offset);
 	BoundsWriteCheck(obj, index, 1);
 	TBinaryBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: BinaryBytes.h)
 	Ref ref = c;
@@ -1303,7 +1303,7 @@ FStuffChar(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg c)
 Ref
 FExtractUniChar(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 {
-	long index = RINT(offset);
+	Long index = RINT(offset);
 	BoundsCheck(obj, index, 2);
 	TBinaryBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: BinaryBytes.h)
 	unsigned char* data = (unsigned char*) BinaryData(obj) + index;
@@ -1315,7 +1315,7 @@ FExtractUniChar(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 Ref
 FStuffUniChar(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg c)
 {
-	long index = RINT(offset);
+	Long index = RINT(offset);
 	BoundsWriteCheck(obj, index, 2);
 	TBinaryBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: BinaryBytes.h)
 	Ref ref = c;
@@ -1331,7 +1331,7 @@ FStuffUniChar(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg c)
 Ref
 FExtractByte(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 {
-	long index = RINT(offset);
+	Long index = RINT(offset);
 	BoundsCheck(obj, index, 1);
 	TBinaryBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: BinaryBytes.h)
 	return MAKEINT((unsigned char) BinaryData(obj)[index]);
@@ -1342,7 +1342,7 @@ FExtractByte(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 Ref
 FStuffByte(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg value)
 {
-	long index = RINT(offset);
+	Long index = RINT(offset);
 	BoundsWriteCheck(obj, index, 1);
 	TBinaryBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: BinaryBytes.h)
 	if (ObjectFlags(obj) & kObjReadOnly)
@@ -1357,7 +1357,7 @@ FStuffByte(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg value)
 Ref
 FExtractWord(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 {
-	long index = RINT(offset);
+	Long index = RINT(offset);
 	BoundsCheck(obj, index, 2);
 	TBinaryBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: BinaryBytes.h)
 	unsigned char* data = (unsigned char*) BinaryData(obj) + index;
@@ -1369,10 +1369,10 @@ FExtractWord(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 Ref
 FStuffWord(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg value)
 {
-	long index = RINT(offset);
+	Long index = RINT(offset);
 	BoundsWriteCheck(obj, index, 2);
 	TBinaryBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: BinaryBytes.h)
-	long v = RINT(value);
+	Long v = RINT(value);
 	unsigned char* data = (unsigned char*) BinaryData(obj) + index;
 	data[0] = (unsigned char) (v >> 8);
 	data[1] = (unsigned char) v;
@@ -1395,7 +1395,7 @@ LongAt(RefArg obj, long index)
 Ref
 FExtractLong(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 {
-	long index = RINT(offset);
+	Long index = RINT(offset);
 	BoundsCheck(obj, index, 4);
 	TBinaryBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: BinaryBytes.h)
 	ULong value = LongAt(obj, index);
@@ -1412,10 +1412,10 @@ FExtractLong(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 Ref
 FStuffLong(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg value)
 {
-	long index = RINT(offset);
+	Long index = RINT(offset);
 	BoundsCheck(obj, index, 4);
 	TBinaryBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: BinaryBytes.h)
-	long v = RINT(value);
+	Long v = RINT(value);
 	unsigned char* data = (unsigned char*) BinaryData(obj) + index;
 	data[0] = (unsigned char) (v >> 24);
 	data[1] = (unsigned char) (v >> 16);
@@ -1431,7 +1431,7 @@ FStuffLong(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg value)
 Ref
 FExtractXLong(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 {
-	long index = RINT(offset);
+	Long index = RINT(offset);
 	BoundsCheck(obj, index, 4);
 	TBinaryBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: BinaryBytes.h)
 	return MAKEINT(LongAt(obj, index) >> 3);
@@ -1443,7 +1443,7 @@ FExtractXLong(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 Ref
 FExtractCString(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 {
-	long index = RINT(offset);
+	Long index = RINT(offset);
 	BoundsCheck(obj, index, 1);
 	TBinaryBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: BinaryBytes.h)
 	LockRef(obj);
@@ -1467,7 +1467,7 @@ FExtractCString(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 Ref
 FStuffCString(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg str)
 {
-	long index = RINT(offset);
+	Long index = RINT(offset);
 	if (!IsString(str))
 		ThrowBadTypeWithFrameData(kNSErrNotAString, str);
 	long length = (Length(str) - 2) / 2;
@@ -1483,7 +1483,7 @@ FStuffCString(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg str)
 Ref
 FExtractPString(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 {
-	long index = RINT(offset);
+	Long index = RINT(offset);
 	unsigned char length = (unsigned char) BinaryData(obj)[index];
 	BoundsCheck(obj, index, length + 1);
 	TBinaryBytesAsROM bytes(obj);		// (a string's bytes as the ROM's: BinaryBytes.h)
@@ -1497,7 +1497,7 @@ FExtractPString(RefArg /*rcvr*/, RefArg obj, RefArg offset)
 Ref
 FStuffPString(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg str)
 {
-	long index = RINT(offset);
+	Long index = RINT(offset);
 	if (!IsString(str))
 		ThrowBadTypeWithFrameData(kNSErrNotAString, str);
 	ULong length = (Length(str) - 2) >> 1;
@@ -1519,7 +1519,7 @@ FStuffPString(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg str)
 Ref
 FExtractBytes(RefArg /*rcvr*/, RefArg obj, RefArg offset, RefArg count, RefArg theClass)
 {
-	long index = RINT(offset);
+	Long index = RINT(offset);
 	long length;
 	if ((Ref) count == NILREF)
 		length = Length(obj) - index;

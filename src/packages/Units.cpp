@@ -411,8 +411,8 @@ RemoveExportTables(void* source)
 					AddArraySlot(deadImports, dead);
 				}
 				const char* name = SymbolName(GetFrameSlotRef(wanted, RSSYMname));
-				long major = RINT(GetFrameSlotRef(wanted, RSSYMmajor));
-				long minor = RINT(GetFrameSlotRef(wanted, RSSYMminor));
+				Long major = RINT(GetFrameSlotRef(wanted, RSSYMmajor));
+				Long minor = RINT(GetFrameSlotRef(wanted, RSSYMminor));
 				RegisterPendingImport(import, slot, name, major, minor);
 				FlushPackageCache(import->fPackage);
 			}
@@ -458,8 +458,8 @@ InstallImportTable(ULong package, RefArg importTable, void* source, long size)
 		{
 			wanted = GetArraySlotRef(importTable, slot);
 			const char* name = SymbolName(GetFrameSlotRef(wanted, RSSYMname));
-			long major = RINT(GetFrameSlotRef(wanted, RSSYMmajor));
-			long minor = RINT(GetFrameSlotRef(wanted, RSSYMminor));
+			Long major = RINT(GetFrameSlotRef(wanted, RSSYMmajor));
+			Long minor = RINT(GetFrameSlotRef(wanted, RSSYMminor));
 			MPExportItem* best = nil;
 			long bestMinor = -1;
 			long exports = gMPExportList->GetArraySize();

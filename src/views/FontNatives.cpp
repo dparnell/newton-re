@@ -73,8 +73,8 @@ FGetFontFace(RefArg /*rcvr*/, RefArg fontSpec)
 static Ref
 FMakeCompactFont(RefArg /*rcvr*/, RefArg family, RefArg size, RefArg face)
 {
-	long theFace = RINT(face);
-	long theSize = RINT(size);
+	Long theFace = RINT(face);
+	Long theSize = RINT(size);
 	return MakeCompactFont(family, theSize, theFace);
 }
 
@@ -217,13 +217,13 @@ FChangeStylesOfRange(RefArg rcvr, RefArg start, RefArg length, RefArg style, Ref
 	if (view->DerivedFrom(clParagraphView))
 	{
 		Boolean draw = NOTNIL(redraw);
-		long count = RINT(length);
-		long offset = RINT(start);
+		Long count = RINT(length);
+		Long offset = RINT(start);
 		((TParagraphView*) view)->ChangeStylesOfRange(offset, count, style, draw);
 	}
 	else if (view->DerivedFrom(108))
 	{
-		long offset = RINT(start);
+		Long offset = RINT(start);
 		long end = offset + RINT(length);
 		if (gTXViewStylesHooks.fChangeRangeRuns != nil)
 			gTXViewStylesHooks.fChangeRangeRuns(view, offset, end, style, NOTNIL(redraw));
@@ -264,8 +264,8 @@ static Ref
 FGetRangeText(RefArg /*rcvr*/, RefArg view, RefArg start, RefArg end)
 {
 	TView* theView = FailGetView(view);
-	long to = RINT(end);
-	long from = RINT(start);
+	Long to = RINT(end);
+	Long from = RINT(start);
 	return theView->GetRangeText(from, to);
 }
 
@@ -292,7 +292,7 @@ FExtractRangeAsRichString(RefArg rcvr, RefArg start, RefArg length)
 static Ref
 FExtractRichStringFromParaSlots(RefArg /*rcvr*/, RefArg text, RefArg styles, RefArg start, RefArg length)
 {
-	long count = RINT(length);
+	Long count = RINT(length);
 	ULong offset = (ULong) RINT(start);
 	TRichString rich(text);
 	ULong size = (ULong) rich.Length();
@@ -349,8 +349,8 @@ Ref
 FExtractTextRange(RefArg rcvr, RefArg start, RefArg length)
 {
 	TParagraphView* view = FailGetParagraphView(rcvr);
-	long count = RINT(length);
-	long offset = RINT(start);
+	Long count = RINT(length);
+	Long offset = RINT(start);
 	return view->ExtractTextRange((ULong) offset, (ULong) count);
 }
 

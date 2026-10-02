@@ -82,7 +82,7 @@ TGaugeView::SetValue(RefArg slot, RefArg value)
 void
 TGaugeView::RealDraw(Rect& /*bounds*/)
 {
-	long value = RINT(GetValue(RSSYMviewvalue, RefVar(NILREF)));
+	Long value = RINT(GetValue(RSSYMviewvalue, RefVar(NILREF)));
 	if (value <= fMinValue)
 		value = fMinValue;
 	if (value > fMaxValue)
@@ -179,7 +179,7 @@ TGaugeView::TrackSetValue(TUnitPublic* unit)
 	BusyBoxSend(0x35);
 	TStrokePublic* stroke = unit->Stroke();
 	stroke->InkOff(true);
-	long original = RINT(GetValue(RSSYMviewvalue, RefVar(NILREF)));
+	Long original = RINT(GetValue(RSSYMviewvalue, RefVar(NILREF)));
 	RefVar sound(GetProto(RSSYM_sound));
 	long width = viewBounds.right - viewBounds.left;
 	long range = fMaxValue - fMinValue;

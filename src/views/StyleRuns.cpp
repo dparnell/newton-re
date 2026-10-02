@@ -41,7 +41,7 @@ RunsInsert(RefArg styles, long offset, long count)
 	long slot = 0;
 	for ( ; slot < length; slot += 2)
 	{
-		long runLength = RINT(GetArraySlotRef(styles, slot));
+		Long runLength = RINT(GetArraySlotRef(styles, slot));
 		end += runLength;
 		if (offset < end)
 		{
@@ -51,7 +51,7 @@ RunsInsert(RefArg styles, long offset, long count)
 	}
 	if (length < 2)
 		return;
-	long runLength = RINT(GetArraySlotRef(styles, length - 2));
+	Long runLength = RINT(GetArraySlotRef(styles, length - 2));
 	SetArraySlotRef(styles, length - 2, MAKEINT(runLength + count));
 }
 
@@ -70,7 +70,7 @@ RunsDelete(RefArg styles, long offset, long count)
 	long start = 0;
 	for (long slot = 0; slot < length; slot += 2)
 	{
-		long runLength = RINT(GetArraySlotRef(styles, slot));
+		Long runLength = RINT(GetArraySlotRef(styles, slot));
 		long end = start + runLength;
 		long lost = (end < rangeEnd ? end : rangeEnd) - (start > offset ? start : offset);
 		if (lost > 0)
@@ -256,7 +256,7 @@ GetStylesOfRange(RefArg styles, long offset, long length, Boolean clone)
 	}
 	long firstRun, inRun;
 	GetStyleAtOffset(styles, offset, &firstRun, &inRun);
-	long firstLength = RINT(GetArraySlotRef(styles, firstRun * 2)) - inRun;
+	Long firstLength = RINT(GetArraySlotRef(styles, firstRun * 2)) - inRun;
 	if (length <= firstLength)
 		firstLength = length;
 	long runs = CountStylesForLength(styles, firstRun, length + inRun);
@@ -310,7 +310,7 @@ SetStyleOfRange(RefArg styles, RefArg style, long start, long end)
 	long covered = 0;
 	for (long i = 0; i < count; i += 2)
 	{
-		long runLength = RINT(GetArraySlotRef(styles, i));
+		Long runLength = RINT(GetArraySlotRef(styles, i));
 		long runEnd = covered + runLength;
 		if (first < 0)
 		{
@@ -365,14 +365,14 @@ CompactStyleRuns(RefArg styles)
 	long count = Length(styles);
 	for (long i = 0; i < count; )
 	{
-		long runLength = RINT(GetArraySlotRef(styles, i));
+		Long runLength = RINT(GetArraySlotRef(styles, i));
 		Ref spec = GetArraySlotRef(styles, i + 1);
 		long merged = 0;
 		long next = i + 2;
 		long j = next;
 		for ( ; j < count; j += 2)
 		{
-			long otherLength = RINT(GetArraySlotRef(styles, j));
+			Long otherLength = RINT(GetArraySlotRef(styles, j));
 			if (!EQRef(spec, GetArraySlotRef(styles, j + 1)) && otherLength > 0)
 				break;
 			merged += otherLength;

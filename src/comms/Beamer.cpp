@@ -656,8 +656,8 @@ TBeamer::ReceiveNewton(void)
 		else
 		{
 			size = RINT(sizeRef);
-			long total = RINT(NSSend(store, RefVar(RSSYMtotalsize)));
-			long used = RINT(NSSend(store, RefVar(RSSYMusedsize)));
+			Long total = RINT(NSSend(store, RefVar(RSSYMtotalsize)));
+			Long used = RINT(NSSend(store, RefVar(RSSYMusedsize)));
 			if (total - used < size)
 				room = false;
 			if (room)

@@ -1085,7 +1085,7 @@ TRecognitionManager::Update(Rect& bounds)
 	FixRect(&fixed, &bounds);
 	if (fLevel >= 1)
 	{
-		long size = RINT(GetPreference(RSSYMuserpensize));
+		Long size = RINT(GetPreference(RSSYMuserpensize));
 		PenSize(size, size);
 		FRect strays = fixed;
 		fController->UpdateInk(&strays);

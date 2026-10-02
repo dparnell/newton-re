@@ -239,12 +239,12 @@ FDrawExpando(RefArg rcvr)
 	TView* view = FailGetView(rcvr);
 	long top = view->viewBounds.top;
 	long left = view->viewBounds.left;
-	long y = RINT(GetProtoVariable(rcvr, RSSYMlineindent, nil)) + top;
-	long numLines = RINT(GetProtoVariable(rcvr, RSSYMnumlines, nil));
-	long split = RINT(GetProtoVariable(rcvr, RSSYMsplit, nil));
+	Long y = RINT(GetProtoVariable(rcvr, RSSYMlineindent, nil)) + top;
+	Long numLines = RINT(GetProtoVariable(rcvr, RSSYMnumlines, nil));
+	Long split = RINT(GetProtoVariable(rcvr, RSSYMsplit, nil));
 	RefVar lines(GetProtoVariable(rcvr, RSSYMlines, nil));
-	long indent = RINT(GetProtoVariable(rcvr, RSSYMindent, nil));
-	long lineHeight = RINT(GetProtoVariable(rcvr, RSSYMlineheight, nil));
+	Long indent = RINT(GetProtoVariable(rcvr, RSSYMindent, nil));
+	Long lineHeight = RINT(GetProtoVariable(rcvr, RSSYMlineheight, nil));
 	RefVar empty(GetProtoVariable(rcvr, RSSYMempty, nil));
 	RefVar args(AllocateArray(RSSYMarray, 1));
 	SetArraySlot(args, 0, RefVar(GetProtoVariable(rcvr, RSSYMtarget, nil)));

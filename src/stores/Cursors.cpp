@@ -1935,7 +1935,7 @@ TCollectCursor::DefineCurrentEntry(void)
 {
 	long slot = fCurrent * 2;
 	PSSId id = (PSSId) RINT(GetArraySlotRef(fEntries, slot));
-	long soupIndex = RINT(GetArraySlotRef(fEntries, slot + 1));
+	Long soupIndex = RINT(GetArraySlotRef(fEntries, slot + 1));
 	RefVar soup(fSoupInfo[soupIndex].fSoup);
 	fEntry = GetEntry(soup, id);
 	fIndex->SetCurrentSoup(soupIndex);
@@ -1954,7 +1954,7 @@ TCollectCursor::FindEntry(RefArg entry)
 	{
 		if ((PSSId) RINT(GetArraySlotRef(fEntries, slot)) != id)
 			continue;
-		long soupIndex = RINT(GetArraySlotRef(fEntries, slot + 1));
+		Long soupIndex = RINT(GetArraySlotRef(fEntries, slot + 1));
 		if (EQRef(fSoupInfo[soupIndex].fSoup, soup))
 			return slot / 2;
 	}

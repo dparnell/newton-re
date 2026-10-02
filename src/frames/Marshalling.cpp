@@ -77,7 +77,7 @@ Ref
 UnmarshalArray(void** bytes, RefArg type, long* failed, int encoding)
 {
 	RefVar element(GetArraySlotRef(type, 1));
-	long count = RINT(GetArraySlotRef(type, 2));
+	Long count = RINT(GetArraySlotRef(type, 2));
 	RefVar result(MakeArray(count));
 	for (long i = 0; i < count; i++)
 	{
@@ -131,7 +131,7 @@ UnmarshalValue(void** bytes, RefArg type, int inRegister, long* failed, int enco
 		{
 			// characters in place: count of them, or (a count of nought)
 			// up to the terminator, the pointer stepping a word past it
-			long n = RINT(GetArraySlotRef(type, 2));
+			Long n = RINT(GetArraySlotRef(type, 2));
 			Boolean counted = (n != 0);
 			if (!counted)
 				n = (strlen((const char*) *bytes) + 4) & ~3;
@@ -151,7 +151,7 @@ UnmarshalValue(void** bytes, RefArg type, int inRegister, long* failed, int enco
 		if (elementKind == kMarshalUniChar)
 		{
 			// UniChars in place, likewise (a halfword step past the terminator)
-			long n = RINT(GetArraySlotRef(type, 2));
+			Long n = RINT(GetArraySlotRef(type, 2));
 			const UniChar* str = (const UniChar*) *bytes;
 			if (n == 0)
 			{

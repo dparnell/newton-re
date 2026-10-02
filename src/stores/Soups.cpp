@@ -463,7 +463,7 @@ StoreSaveSortTable(RefArg storeObject, long sortId)
 		{
 			if (RINT(GetArraySlotRef(tables, slot)) == sortId)
 			{
-				long users = RINT(GetArraySlotRef(tables, slot + 1));
+				Long users = RINT(GetArraySlotRef(tables, slot + 1));
 				SetArraySlotRef(tables, slot + 1, MAKEINT(users + 1));
 				found = true;
 				break;
@@ -512,7 +512,7 @@ StoreRemoveSortTable(RefArg storeObject, long sortId)
 			continue;
 		CheckWriteProtect(storeObject);
 		TStoreWrapper* wrapper = (TStoreWrapper*) (Ref) GetFrameSlotRef(storeObject, RSSYMstore);
-		long users = RINT(GetArraySlotRef(tables, slot + 1));
+		Long users = RINT(GetArraySlotRef(tables, slot + 1));
 		if (users - 1 == 0)
 		{
 			if (sortId != 1)
@@ -547,7 +547,7 @@ StoreLoadSortTables(RefArg storeObject)
 	long count = Length(tables);
 	for (long slot = 0; slot < count; slot += 3)
 	{
-		long sortId = RINT(GetArraySlotRef(tables, slot));
+		Long sortId = RINT(GetArraySlotRef(tables, slot));
 		if (gSortTables.GetSortTable(sortId, nil) != nil)
 		{
 			gSortTables.Subscribe(sortId);
@@ -1708,7 +1708,7 @@ StoreCheckWriteProtect(RefArg rcvr)
 Ref
 StoreReadObject(RefArg rcvr, RefArg id, RefArg size, RefArg offset)
 {
-	RefVar data(AllocateBinary(RefVar(NILREF), RINT(size)));
+	RefVar data(AllocateBinary(RefVar(NILREF), LongArg(RINT(size))));
 	TStore* store = StoreFromWrapper(rcvr);
 	OSErrIf(store->Read((PSSId) RINT(id), RINT(offset), BinaryData(data), RINT(size)));
 	return data;
@@ -1749,7 +1749,7 @@ StoreNewObject(RefArg rcvr, RefArg size)
 	TStore* store = StoreFromWrapper(rcvr);
 	CheckWriteProtect(store);
 	PSSId id;
-	OSErrIf(store->NewObject(RINT(size), &id));
+	OSErrIf(store->NewObject(LongArg(RINT(size)), &id));
 	return MAKEINT(id);
 }
 
@@ -1771,7 +1771,7 @@ StoreSetObjectSize(RefArg rcvr, RefArg id, RefArg size)
 {
 	TStore* store = StoreFromWrapper(rcvr);
 	CheckWriteProtect(store);
-	OSErrIf(store->SetObjectSize((PSSId) RINT(id), RINT(size)));
+	OSErrIf(store->SetObjectSize((PSSId) RINT(id), LongArg(RINT(size))));
 	return NILREF;
 }
 
@@ -2945,11 +2945,11 @@ CommonSoupAddEntry(RefArg soup, RefArg entry, int flags, Boolean /*unused*/)
 	newton_try
 	{
 		added = SafeEntryAdd(soup, entry, nextUID, flags);
-		long uid = RINT(nextUID);
+		Long uid = RINT(nextUID);
 		Boolean bump = (flags & kSoupAddSetUniqueID) != 0;
 		if (!bump)
 		{
-			long entryUID = RINT(GetFrameSlotRef(entry, RSSYM_uniqueid));
+			Long entryUID = RINT(GetFrameSlotRef(entry, RSSYM_uniqueid));
 			if (entryUID >= uid)
 			{
 				bump = true;

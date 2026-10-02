@@ -526,13 +526,13 @@ TXGetRunAttrValues(RefArg fontSpec)
 	slot = GetFrameSlotRef(fontSpec, RSSYMsize);
 	if (ISINT(slot))
 	{
-		long size = RINT(slot);
+		Long size = RINT(slot);
 		values->Add(kTXAttrSize, &size, sizeof(size), false);
 	}
 	slot = GetFrameSlotRef(fontSpec, RSSYMface);
 	if (ISINT(slot))
 	{
-		long face = RINT(slot);
+		Long face = RINT(slot);
 		values->Add(kTXAttrFace, &face, sizeof(face), false);
 	}
 	return values;

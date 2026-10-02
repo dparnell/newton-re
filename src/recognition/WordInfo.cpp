@@ -45,7 +45,7 @@ EncodeUnitID(TUnitPublic* unit)
 void
 SetWordInfoFlags(RefArg info, long flags)
 {
-	long was = RINT(RefVar(GetFrameSlot(info, RSSYMflags)));
+	Long was = RINT(RefVar(GetFrameSlot(info, RSSYMflags)));
 	SetFrameSlot(info, RSSYMflags, MAKEINT(was | flags));
 }
 

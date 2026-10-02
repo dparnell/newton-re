@@ -851,6 +851,10 @@ TestSixtyTwoBitIntegers()
 	EXPECT_STRING("NumberStr(1099511627776)", "1099511627776");
 	EXPECT_INT("Floor(1000000000000000.5)", 1000000000000000LL);
 	EXPECT_INT("Ceiling(-1000000000000000.5)", -1000000000000000LL);
+	// a length no object can have is refused, not cut to one it can (a
+	// 32-bit long would make this 16 bytes: NarrowRef.h's LongArg)
+	EXPECT_THROWS("MakeBinary(4294967312, 'data)", kNSErrOutOfRange);
+	EXPECT_THROWS("Array(4294967298, nil)", kNSErrOutOfRange);
 }
 #endif
 

@@ -377,7 +377,7 @@ UpdateStroke(TStrokeUnit* unit, FRect* rect)
 {
 	FRect box;
 	unit->GetBBox(&box);
-	long size = RINT(GetPreference(RSSYMuserpensize));
+	Long size = RINT(GetPreference(RSSYMuserpensize));
 	InsetRectangle(&box, -(size << 16), -(size << 16));
 	if (unit->fStroke->TestFlags(0x08000000) && !SectRectangle(&box, &box, rect))
 		return;

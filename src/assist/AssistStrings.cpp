@@ -296,7 +296,7 @@ Ref
 DSPrevSubStr(RefArg /*rcvr*/, RefArg str, RefArg index)
 {
 	const UniChar* text = (const UniChar*) BinaryData(str);
-	long i = RINT(index);
+	Long i = RINT(index);
 	for ( ; i >= 1; i--)
 		if ((text[i] & 0xff) == 0x20)
 			return MAKEINT(i + 1);

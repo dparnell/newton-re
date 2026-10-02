@@ -93,7 +93,7 @@ static Ref
 FInitSerialDebugging(RefArg /*rcvr*/, RefArg port, RefArg mode)
 {
 	long err = 0;
-	long how = RINT(mode);
+	Long how = RINT(mode);
 	gWantSerialDebugging = true;
 	ULong name = PortName(port);
 	if (how < 1 || how > 9)
@@ -127,8 +127,8 @@ static Ref
 FPreInitSerialDebugging(RefArg /*rcvr*/, RefArg port, RefArg speed, RefArg options)
 {
 	long err = 0;
-	long rate = RINT(speed);
-	long how = RINT(options);
+	Long rate = RINT(speed);
+	Long how = RINT(options);
 	ULong name = PortName(port);
 	if (how >= 1)
 		err = PreXInitSerialDebugger(name, (ULong) rate, (ULong) how);

@@ -130,7 +130,7 @@ TPixelObj::GetFramBitmap(void)
 		for (long i = 0, count = Length(colorData); i < count; i++)
 		{
 			RefVar entry(GetArraySlotRef(colorData, i));
-			long depth = RINT(GetFrameSlotRef(entry, RSSYMbitdepth));
+			Long depth = RINT(GetFrameSlotRef(entry, RSSYMbitdepth));
 			if (depth == portDepth)
 			{
 				fDepth = depth;
@@ -303,8 +303,8 @@ PtInPicture(RefArg x, RefArg y, RefArg picture, Boolean wantsPixel)
 		obj.Init(picture, wantsPixel);
 		PixelMap* mask = obj.Mask();
 		PixelMap* pixels = obj.Pixels();
-		long px = RINT(x);
-		long py = RINT(y);
+		Long px = RINT(x);
+		Long py = RINT(y);
 		if (!wantsPixel)
 			result = MAKEBOOLEAN(PtInPixelMap(mask != nil ? mask : pixels, px, py));
 		else if (mask != nil && PtInMask(mask, px, py) == -1)
@@ -662,10 +662,10 @@ FGetBitmapInfo(RefArg /*rcvr*/, RefArg bitmap)
 Ref
 FMakeBitmap(RefArg /*rcvr*/, RefArg width, RefArg height, RefArg options)
 {
-	long theHeight = RINT(height);
+	Long theHeight = RINT(height);
 	if (theHeight < 1)
 		Throw((ExceptionName) kGrafException, (void*) kGrafErrBadHeight, nil);
-	long theWidth = RINT(width);
+	Long theWidth = RINT(width);
 	if (theWidth < 1)
 		Throw((ExceptionName) kGrafException, (void*) kGrafErrBadWidth, nil);
 	long rowBytes = ((theWidth + 31) & ~31) >> 3;
@@ -682,7 +682,7 @@ FMakeBitmap(RefArg /*rcvr*/, RefArg width, RefArg height, RefArg options)
 		rest = Clone(options);
 		if (FrameHasSlot(options, RSSYMdepth))
 		{
-			long asked = RINT(RefVar(GetFrameSlotRef(options, RSSYMdepth)));
+			Long asked = RINT(RefVar(GetFrameSlotRef(options, RSSYMdepth)));
 			long power = asked;
 			while (power > 1 && (power & 1) == 0)
 				power >>= 1;
@@ -695,7 +695,7 @@ FMakeBitmap(RefArg /*rcvr*/, RefArg width, RefArg height, RefArg options)
 		}
 		if (FrameHasSlot(options, RSSYMrowbytes))
 		{
-			long asked = RINT(RefVar(GetFrameSlotRef(options, RSSYMrowbytes)));
+			Long asked = RINT(RefVar(GetFrameSlotRef(options, RSSYMrowbytes)));
 			if ((asked & 3) != 0 || asked < rowBytes)
 				Throw((ExceptionName) kGrafException, (void*) kGrafErrBadRowBytes, nil);
 			rowBytes = asked;

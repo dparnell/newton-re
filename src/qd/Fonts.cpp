@@ -403,7 +403,7 @@ long
 FindSFNT(Fixed size, RefArg fontFamily, FontEngineInfo* info, long* face)
 {
 	long wanted = *face;
-	long encoding = RINT(GetFrameSlotRef(fontFamily, RSSYMencoding));
+	Long encoding = RINT(GetFrameSlotRef(fontFamily, RSSYMencoding));
 	long faceUsed;
 	RefVar data(ChooseStrike(wanted, fontFamily, &faceUsed));
 	*info->fFontData = data;
@@ -1294,7 +1294,7 @@ CreateTextStyleRecord(RefArg fontSpec, StyleRecord* style)
 	Ref spec = fontSpec;
 	if (ISINT(spec))
 	{
-		long font = RINT(spec);
+		Long font = RINT(spec);
 		style->fFontFamily = PackedFontFamilyFrame(font);
 		style->fFontSize = ToFixed(PackedFontSize(font));
 		style->fFontFace = PackedFontFace(font);

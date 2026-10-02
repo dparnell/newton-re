@@ -290,8 +290,8 @@ DatesInMonthString(long pattern, UniChar* text)
 Ref
 FRepeatInfoToText(RefArg /*rcvr*/, RefArg pattern, RefArg kind, RefArg time)
 {
-	long info = RINT(pattern);
-	long type = RINT(kind);
+	Long info = RINT(pattern);
+	Long type = RINT(kind);
 	UniChar text[kRepeatTextMax + 1];
 	text[0] = 0;
 	switch (type)

@@ -245,8 +245,8 @@ static long
 TestWordOverlap(RefArg kid, long line, SortStuff* stuff)
 {
 	RefVar other(NILREF);
-	long slot = RINT(GetArraySlotRef(stuff->fLineStarts, line));
-	long end = RINT(GetArraySlotRef(stuff->fLineStarts, line + 1));
+	Long slot = RINT(GetArraySlotRef(stuff->fLineStarts, line));
+	Long end = RINT(GetArraySlotRef(stuff->fLineStarts, line + 1));
 	Rect mine = KidRect(RefVar(GetKidBounds(kid)));
 	for ( ; slot < end; slot++)
 	{
@@ -320,8 +320,8 @@ static long
 FindInsertPosition(RefArg kid, long line, SortStuff* stuff)
 {
 	RefVar other;
-	long slot = RINT(GetArraySlotRef(stuff->fLineStarts, line));
-	long end = RINT(GetArraySlotRef(stuff->fLineStarts, line + 1));
+	Long slot = RINT(GetArraySlotRef(stuff->fLineStarts, line));
+	Long end = RINT(GetArraySlotRef(stuff->fLineStarts, line + 1));
 	Rect mine = KidRect(RefVar(GetKidBounds(kid)));
 	for ( ; slot < end; slot++)
 	{

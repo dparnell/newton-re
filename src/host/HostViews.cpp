@@ -64,7 +64,7 @@ FScreenPixel(RefArg /*rcvr*/, RefArg h, RefArg v)
 {
 	if (gHostDisplay == nil || !ISINT((Ref) h) || !ISINT((Ref) v))
 		return NILREF;
-	long x = RINT(h), y = RINT(v);
+	Long x = RINT(h), y = RINT(v);
 	if (x < 0 || y < 0 || x >= gHostDisplay->Width() || y >= gHostDisplay->Height())
 		return NILREF;
 	UpdateHardwareScreen();

@@ -38,7 +38,7 @@ const NewtonErr	kTXNativeErrBadData		= -8701;
 static long
 CheckOffset(TXView* view, RefArg offset)
 {
-	long at = RINT(offset);
+	Long at = RINT(offset);
 	if (at < 0 || view->CountChars() < at)
 		Throw(exRootException, (void*) (long) kTXNativeErrBadOffset, nil);
 	return at;
@@ -273,7 +273,7 @@ FTXCharToPoint(RefArg rcvr, RefArg offset)
 Ref
 FTXScroll(RefArg rcvr, RefArg delta)
 {
-	long x = RINT(GetFrameSlotRef(delta, RSSYMx));
+	Long x = RINT(GetFrameSlotRef(delta, RSSYMx));
 	TXLongPoint d;
 	d.v = RINT(GetFrameSlotRef(delta, RSSYMy));
 	d.v = -d.v;
@@ -374,8 +374,8 @@ FTXSetGeometry(RefArg rcvr, RefArg paginate, RefArg width, RefArg height, RefArg
 	Rect r;
 	if (!FromObject(margins, r))
 		Throw(exRootException, (void*) (long) kTXNativeErrBadBounds, nil);
-	long h = RINT(height);
-	long w = RINT(width);
+	Long h = RINT(height);
+	Long w = RINT(width);
 	Boolean pages = NOTNIL(paginate);
 	FailGetTXView(rcvr)->SetGeometry(pages, (int) w, (int) h, r);
 	return NILREF;
@@ -386,7 +386,7 @@ FTXSetGeometry(RefArg rcvr, RefArg paginate, RefArg width, RefArg height, RefArg
 Ref
 FTXSetDrawOrigin(RefArg rcvr, RefArg origin)
 {
-	long x = RINT(GetFrameSlotRef(origin, RSSYMx));
+	Long x = RINT(GetFrameSlotRef(origin, RSSYMx));
 	TXLongPoint p;
 	p.v = RINT(GetFrameSlotRef(origin, RSSYMy));
 	p.h = x;
@@ -459,7 +459,7 @@ FTXFinderFindString(RefArg rcvr, RefArg frame, RefArg find, RefArg start, RefArg
 		SetFrameSlot(rcvr, RSSYMtxcharsobj, object);
 		SetFrameSlot(rcvr, RSSYMframe, frame);
 	}
-	long at = RINT(start);
+	Long at = RINT(start);
 	if (at < 0 || chars->Count() < at)
 		Throw(exRootException, (void*) (long) kTXNativeErrBadOffset, nil);
 	LockRef(find);

@@ -538,7 +538,7 @@ FJournalReplayALine(RefArg /*rcvr*/, RefArg x1Ref, RefArg y1Ref, RefArg x2Ref, R
 	}
 	Boolean held = false;
 	Boolean twice = false;
-	long x1 = RINT(x1Ref), y1 = RINT(y1Ref), x2 = RINT(x2Ref), y2 = RINT(y2Ref);
+	Long x1 = RINT(x1Ref), y1 = RINT(y1Ref), x2 = RINT(x2Ref), y2 = RINT(y2Ref);
 	long width = x2 < x1 ? x1 - x2 : x2 - x1;
 	long height = y2 < y1 ? y1 - y2 : y2 - y1;
 	if (NOTNIL(hold))
@@ -670,7 +670,7 @@ FStopBypassTablet(RefArg /*rcvr*/)
 static Ref
 FInsertTabletSample(RefArg /*rcvr*/, RefArg x, RefArg y, RefArg z, RefArg time)
 {
-	long sx = RINT(x);
+	Long sx = RINT(x);
 	ULong sy = (ULong) RINT(y);
 	ULong sz = (ULong) RINT(z);
 	ULong t = (ULong) RINT(time);

@@ -133,7 +133,7 @@ SplitStyles(RefArg styles, long start, long end)
 		long pos = 0;
 		for (long slot = 0; slot < count; )
 		{
-			long runLength = RINT(GetArraySlot(result, slot));
+			Long runLength = RINT(GetArraySlot(result, slot));
 			long runEnd = pos + runLength;
 			if (start < runEnd)
 			{
@@ -363,9 +363,9 @@ ReFlow(RefArg /*rcvr*/, RefArg items, RefArg format, RefArg box, RefArg localBox
 	}
 	RefVar pages(MakeArray(0));
 	RefVar text;
-	long graphicsGutter = RINT(GetFrameSlot(format, RSSYMgraphicsgutter));
-	long textGutter = RINT(GetFrameSlot(format, RSSYMtextgutter));
-	long lineSpacing = RINT(GetFrameSlot(format, RSSYMviewlinespacing));
+	Long graphicsGutter = RINT(GetFrameSlot(format, RSSYMgraphicsgutter));
+	Long textGutter = RINT(GetFrameSlot(format, RSSYMtextgutter));
+	Long lineSpacing = RINT(GetFrameSlot(format, RSSYMviewlinespacing));
 	RefVar group;
 	Rect band, bounds;
 	for ( ; ; )

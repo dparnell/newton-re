@@ -77,7 +77,7 @@ static Ref
 FGetPoint(RefArg /*rcvr*/, RefArg which, RefArg unit)
 {
 	TStrokePublic* stroke = StrokeFromRef(unit);
-	long selector = RINT(which);
+	Long selector = RINT(which);
 	long value = 0;
 	RefVar result;
 	switch (selector)

@@ -627,7 +627,7 @@ TScriptEndpointClient::ConvertToAddressParms(RefArg option)
 		RefVar string(GetFrameSlotRef(data, RSSYMaddressdata));
 		if (ISINT(type) && NOTNIL(string))
 		{
-			long addressType = RINT(type);
+			Long addressType = RINT(type);
 			long length = Ustrlen(GetCString(string));
 			if (addressType == 3)
 			{

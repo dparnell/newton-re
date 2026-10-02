@@ -380,7 +380,7 @@ FindExceptionMeetingInRange(RefArg exceptions, long start, long end)
 				isException = true;
 			if ((Ref) replacement != NILREF)
 			{
-				long when = RINT(GetFrameSlotRef(replacement, RSSYMmtgstartdate));
+				Long when = RINT(GetFrameSlotRef(replacement, RSSYMmtgstartdate));
 				if (start <= when && when < earliest)
 					earliest = when;
 			}
@@ -437,7 +437,7 @@ AddException(RefArg meetings, RefArg exception, long start, long end)
 	RefVar replacement(GetArraySlotRef(exception, 1));
 	if ((Ref) replacement != NILREF)
 	{
-		long when = RINT(GetFrameSlotRef(replacement, RSSYMmtgstartdate));
+		Long when = RINT(GetFrameSlotRef(replacement, RSSYMmtgstartdate));
 		if (when < end && start <= when)
 			FBInsert(RefVar(NILREF), meetings, replacement, RSSYM_3C, RSSYMmtgstartdate, RefVar(NILREF));
 	}
@@ -632,7 +632,7 @@ GetAllMeetings(RefArg meetingSoup, RefArg repeatSoup, long start, long end, Bool
 static Ref
 FGetAllMeetings(RefArg /*rcvr*/, RefArg meetingSoup, RefArg repeatSoup, RefArg start, RefArg end)
 {
-	long from = RINT(start);
+	Long from = RINT(start);
 	long to = ((Ref) end == NILREF) ? from + kMinutesPerDay : RINT(end);
 	return GetAllMeetings(meetingSoup, repeatSoup, from, to, false);
 }
@@ -643,7 +643,7 @@ FGetAllMeetings(RefArg /*rcvr*/, RefArg meetingSoup, RefArg repeatSoup, RefArg s
 static Ref
 FGetAllMeetingsUnique(RefArg /*rcvr*/, RefArg meetingSoup, RefArg repeatSoup, RefArg start, RefArg end)
 {
-	long from = RINT(start);
+	Long from = RINT(start);
 	long to = ((Ref) end == NILREF) ? from + kMinutesPerDay : RINT(end);
 	return GetAllMeetings(meetingSoup, repeatSoup, from, to, true);
 }
@@ -660,11 +660,11 @@ FNextMeeting(RefArg /*rcvr*/, RefArg startTime, RefArg repeatTemplate)
 	volatile long result = 0;
 	newton_try
 	{
-		long start = RINT(startTime);
-		long mtgStart = RINT(GetFrameSlotRef(repeatTemplate, RSSYMmtgstartdate));
+		Long start = RINT(startTime);
+		Long mtgStart = RINT(GetFrameSlotRef(repeatTemplate, RSSYMmtgstartdate));
 		ULong mtgInfo = RINT(GetFrameSlotRef(repeatTemplate, RSSYMmtginfo));
 		ULong repeatType = RINT(GetFrameSlotRef(repeatTemplate, RSSYMrepeattype));
-		long mtgStop = RINT(GetFrameSlotRef(repeatTemplate, RSSYMmtgstopdate));
+		Long mtgStop = RINT(GetFrameSlotRef(repeatTemplate, RSSYMmtgstopdate));
 		RefVar exceptions(GetFrameSlotRef(repeatTemplate, RSSYMexceptions));
 		TDate date((mtgStart < start) ? start : mtgStart);
 		TDate templateDate(mtgStart);
@@ -715,12 +715,12 @@ FPrevMeeting(RefArg rcvr, RefArg startTime, RefArg repeatTemplate)
 	volatile long result = 0;
 	newton_try
 	{
-		long start = RINT(startTime);
-		long mtgStart = RINT(GetFrameSlotRef(repeatTemplate, RSSYMmtgstartdate));
-		long mtgStop = RINT(GetFrameSlotRef(repeatTemplate, RSSYMmtgstopdate));
+		Long start = RINT(startTime);
+		Long mtgStart = RINT(GetFrameSlotRef(repeatTemplate, RSSYMmtgstartdate));
+		Long mtgStop = RINT(GetFrameSlotRef(repeatTemplate, RSSYMmtgstopdate));
 		ULong mtgInfo = RINT(GetFrameSlotRef(repeatTemplate, RSSYMmtginfo));
 		ULong repeatType = RINT(GetFrameSlotRef(repeatTemplate, RSSYMrepeattype));
-		long first = RINT(FNextMeeting(rcvr, RefVar(MAKEINT(0)), repeatTemplate));
+		Long first = RINT(FNextMeeting(rcvr, RefVar(MAKEINT(0)), repeatTemplate));
 		if (first <= start)
 		{
 			TDate date((start < mtgStop) ? start : mtgStop);
@@ -739,7 +739,7 @@ FPrevMeeting(RefArg rcvr, RefArg startTime, RefArg repeatTemplate)
 				long when = date.TotalMinutes();
 				if (when < mtgStart)
 					when = 0;
-				long next = RINT(FNextMeeting(rcvr, RefVar(MAKEINT(when)), repeatTemplate));
+				Long next = RINT(FNextMeeting(rcvr, RefVar(MAKEINT(when)), repeatTemplate));
 				if (next < start && next != 0)
 				{
 					candidate = next;
@@ -754,7 +754,7 @@ FPrevMeeting(RefArg rcvr, RefArg startTime, RefArg repeatTemplate)
 			{
 				for (;;)
 				{
-					long next = RINT(FNextMeeting(rcvr, RefVar(MAKEINT(candidate + 1)), repeatTemplate));
+					Long next = RINT(FNextMeeting(rcvr, RefVar(MAKEINT(candidate + 1)), repeatTemplate));
 					if (start <= next || next == 0)
 						break;
 					candidate = (candidate == next) ? next + kMinutesPerDay : next;

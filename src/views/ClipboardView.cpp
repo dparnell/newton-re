@@ -529,7 +529,7 @@ Ref
 FReOrientLabelForm(RefArg form)
 {
 	TView* view = GetView(form);
-	long pin = RINT(GetProtoVariable(form, RSSYMpin, nil));
+	Long pin = RINT(GetProtoVariable(form, RSSYMpin, nil));
 	Rect bounds = view->viewBounds;
 	short height = (short) (bounds.bottom - bounds.top);
 	short width = (short) (bounds.right - bounds.left);
@@ -689,7 +689,7 @@ TClipboard::DrawDragData(const Rect& bounds)
 Ref
 TClipboard::GetDropData(RefArg dragType, RefArg dragRef)
 {
-	long item = RINT(dragRef);
+	Long item = RINT(dragRef);
 	RefVar types(GetArraySlotRef(fTypes, item));
 	RefVar which(FSetContains(RefVar(), types, dragType));
 	RefVar data;

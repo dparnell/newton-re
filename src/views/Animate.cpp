@@ -923,10 +923,10 @@ TAnimate::CrumpleEffect(void)
 	if (!FromObject(RefVar(GetFrameSlotRef(trashBitmap, RSSYMbounds)), trashBox))
 		ThrowMsg((char*) "bad trash bounds");
 	RefVar displayParams(GetFrameSlotRef(gVarFrame, RSSYMdisplayparams));
-	long appLeft = RINT(GetProtoVariable(displayParams, RSSYMappareagloballeft, nil));
-	long appWidth = RINT(GetProtoVariable(displayParams, RSSYMappareawidth, nil));
-	long appTop = RINT(GetProtoVariable(displayParams, RSSYMappareaglobaltop, nil));
-	long appHeight = RINT(GetProtoVariable(displayParams, RSSYMappareaheight, nil));
+	Long appLeft = RINT(GetProtoVariable(displayParams, RSSYMappareagloballeft, nil));
+	Long appWidth = RINT(GetProtoVariable(displayParams, RSSYMappareawidth, nil));
+	Long appTop = RINT(GetProtoVariable(displayParams, RSSYMappareaglobaltop, nil));
+	Long appHeight = RINT(GetProtoVariable(displayParams, RSSYMappareaheight, nil));
 	OffsetRect(&trashBox, appLeft + appWidth - trashBox.right, appTop + appHeight - trashBox.bottom);
 	RefVar bitmaps(Rcrumplebitmaps);
 	RefVar ball(GetArraySlotRef(bitmaps, 0));

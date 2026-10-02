@@ -81,7 +81,7 @@ SlowCopyEntries(RefArg fromSoup, RefArg toSoup, RefArg callback, ULong interval)
 			RefVar entry;
 			do {
 				entry = LoadPermObject(fromWrapper, (PSSId) (long) data, nil);
-				long uid = RINT(GetFrameSlotRef(entry, RSSYM_uniqueid));
+				Long uid = RINT(GetFrameSlotRef(entry, RSSYM_uniqueid));
 				if (uid > maxUID)
 					maxUID = uid;
 				PSSId id = (PSSId) -1;
@@ -290,7 +290,7 @@ PlainSoupCopyEntriesWithCallBack(RefArg rcvr, RefArg toSoup, RefArg callback, Re
 		return SlowCopyEntries(rcvr, toSoup, callback, ticks);
 
 	RefVar nextUID(GetFrameSlotRef(rcvr, RSSYMindexnextuid));
-	long capacity = RINT(nextUID);
+	Long capacity = RINT(nextUID);
 	PSSIDMapping* volatile mapping = new (std::nothrow) PSSIDMapping[capacity];
 	if (mapping == nil)
 		return SlowCopyEntries(rcvr, toSoup, callback, ticks);

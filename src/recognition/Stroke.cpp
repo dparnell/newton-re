@@ -709,7 +709,7 @@ GetStrokeRect(TStroke* stroke, Rect* rect)
 void
 AdjustForInk(Rect* rect)
 {
-	long penSize = RINT(GetPreference(RSSYMuserpensize));
+	Long penSize = RINT(GetPreference(RSSYMuserpensize));
 	InsetRect(rect, -1, -1);
 	rect->right = (short) (rect->right + penSize);
 	rect->bottom = (short) (rect->bottom + penSize);

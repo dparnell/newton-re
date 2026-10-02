@@ -235,7 +235,7 @@ TFrameSoundChannel::Convert(RefArg sound, SoundBlock* block)
 			bits = (block->fFormat == kSoundFormatStd8) ? 8 : 16;
 		else
 		{
-			long type = RINT(value);
+			Long type = RINT(value);
 			if (type == 8 || type == 1)
 				bits = 8;
 			else if (type == 16 || type == 2)

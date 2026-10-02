@@ -857,6 +857,9 @@ break loop once per exception name (`gDeveloperNotified`).
 
 ## An integer is thirty bits, however wide the host's word is
 
+(The `NEWTON_NS64` build flavour widens them to 62 bits and keeps every
+format 32-bit: `64bit.md`.)
+
 A Ref is the machine's 32-bit word with two tag bits, so a NewtonScript
 integer runs from -536870912 to 536870911 and arithmetic on one wraps
 where the ARM wraps. A Ref here is pointer-sized - it has to hold a host

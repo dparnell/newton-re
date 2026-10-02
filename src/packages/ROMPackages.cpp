@@ -278,7 +278,7 @@ FPidToPackage(RefArg /*rcvr*/, RefArg packageId)
 {
 	if (((TForkWorld*) GetGlobals())->Fork(nil) != noErr)
 		ThrowMsg((char*) "couldn't fork it over");
-	long id = RINT(packageId);
+	Long id = RINT(packageId);
 	RefVar package;
 	TPMIterator iter;
 	iter.Init();

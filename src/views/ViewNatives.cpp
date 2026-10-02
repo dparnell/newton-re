@@ -1460,7 +1460,7 @@ FLayoutVerticallyX(RefArg rcvr, RefArg entries, RefArg index)
 {
 	TView* view = FailGetView(rcvr);
 	long height = (short) ((unsigned short) view->viewBounds.bottom - (unsigned short) view->viewBounds.top);
-	long slot = RINT(index);
+	Long slot = RINT(index);
 	long count = Length(entries);
 	Boolean allCollapsed = NOTNIL(GetProtoVariable(rcvr, RSSYMallcollapsed, nil));
 	RefVar collapsedHeightRef(GetVariable(rcvr, RSSYMcollapsedheight, nil, false));
@@ -1472,7 +1472,7 @@ FLayoutVerticallyX(RefArg rcvr, RefArg entries, RefArg index)
 	{
 		entry = GetArraySlotRef(entries, slot);
 		slot++;
-		long h = RINT(GetProtoVariable(entry, RSSYMheight, nil));
+		Long h = RINT(GetProtoVariable(entry, RSSYMheight, nil));
 		if (allCollapsed || NOTNIL(GetProtoVariable(entry, RSSYMcollapsed, nil)))
 			h = collapsedHeight;
 		used += h;
@@ -1535,7 +1535,7 @@ PositionToTime(long position, long extent, long base, long span)
 static Ref
 FPositionToTime(RefArg /*rcvr*/, RefArg context, RefArg position)
 {
-	long y = RINT(position);
+	Long y = RINT(position);
 	TView* view = FailGetView(context);
 	long height = (short) ((unsigned short) view->viewBounds.bottom - (unsigned short) view->viewBounds.top);
 	return MAKEINT(PositionToTime(y, height, 0, kDayMinutes));
@@ -1575,7 +1575,7 @@ FDrawMeetingGrid(RefArg rcvr, RefArg stepRef)
 	TView* view = FailGetView(rcvr);
 	Rect bounds = view->viewBounds;
 	long lineWidth = (bounds.right - bounds.left) - 18;
-	long step = RINT(stepRef);
+	Long step = RINT(stepRef);
 	PenState pen;
 	GetPenState(&pen);
 	PenNormal();
@@ -1669,12 +1669,12 @@ FDrawDateLabels(RefArg rcvr, RefArg boundsRef, RefArg dates)
 	long count = Length(dates);
 	if (count <= 1)
 		return NILREF;
-	long first = RINT(GetArraySlotRef(dates, 0));
-	long second = RINT(GetArraySlotRef(dates, 1));
+	Long first = RINT(GetArraySlotRef(dates, 0));
+	Long second = RINT(GetArraySlotRef(dates, 1));
 	Rect bounds;
 	FromObject(boundsRef, bounds);
 	long step = (bounds.right - bounds.left) / count;
-	long spec = RINT(GetVariable(rcvr, RSSYMdaystrspec, nil, 0));
+	Long spec = RINT(GetVariable(rcvr, RSSYMdaystrspec, nil, 0));
 
 	TDate date;
 	StyleRecord style;
@@ -1742,8 +1742,8 @@ FLayoutTableX(RefArg rcvr, RefArg spec, RefArg column, RefArg row)
 {
 	TView* view = FailGetView(rcvr);
 	Rect bounds = view->viewBounds;
-	long across = RINT(GetVariable(spec, RSSYMtabacross, nil, false));
-	long down = RINT(GetVariable(spec, RSSYMtabdown, nil, false));
+	Long across = RINT(GetVariable(spec, RSSYMtabacross, nil, false));
+	Long down = RINT(GetVariable(spec, RSSYMtabdown, nil, false));
 	if (down == 0 || across == 0)
 		return NILREF;
 
@@ -1759,7 +1759,7 @@ FLayoutTableX(RefArg rcvr, RefArg spec, RefArg column, RefArg row)
 
 	RefVar result(MakeArray(0));
 	RefVar cell;
-	long firstRow = RINT(row);
+	Long firstRow = RINT(row);
 	long protoIndex = protoCount != 0 ? (across * firstRow + RINT(column)) % protoCount : 0;
 	long valueIndex = valueCount != 0 ? (across * firstRow + RINT(column)) % valueCount : 0;
 	long heightIndex = heightCount != 0 ? firstRow % heightCount : 0;
@@ -1772,7 +1772,7 @@ FLayoutTableX(RefArg rcvr, RefArg spec, RefArg column, RefArg row)
 	long nextRow = firstRow + 1;
 	while (thisRow < down)
 	{
-		long thisColumn = RINT(column);
+		Long thisColumn = RINT(column);
 		long x = ISNIL(indentX) ? 0 : RINT(indentX);
 		long widthIndex = widthCount != 0 ? thisColumn % widthCount : 0;
 
@@ -1913,7 +1913,7 @@ FExtractData(RefArg /*rcvr*/, RefArg data, RefArg separator, RefArg maxLength)
 
 	long count = Length(data);
 	long separatorLength = (Length(separator) - 2) / 2;
-	long maxChars = RINT(maxLength);
+	Long maxChars = RINT(maxLength);
 	RefVar items;
 	RefVar item;
 	RefVar stationery;
@@ -2181,7 +2181,7 @@ Ref
 FDrawXBitmap(RefArg rcvr, RefArg bounds, RefArg picture, RefArg index, RefArg mode)
 {
 	TView* view = GetView(rcvr);
-	long which = RINT(index);
+	Long which = RINT(index);
 	if (which < 0 || view == nil)
 		return NILREF;
 	TPixelObj pix;
@@ -2692,13 +2692,13 @@ FGetStylesOfRange(RefArg rcvr, RefArg offset, RefArg length, RefArg clone)
 	TView* view = FailGetView(rcvr);
 	if (view->DerivedFrom(clParagraphView))
 	{
-		long count = RINT(length);
-		long at = RINT(offset);
+		Long count = RINT(length);
+		Long at = RINT(offset);
 		return ((TParagraphView*) view)->GetStylesOfRange(at, count, NOTNIL(clone));
 	}
 	if (view->DerivedFrom(108))
 	{
-		long start = RINT(offset);
+		Long start = RINT(offset);
 		long end = start + RINT(length);
 		if (gTXViewStylesHooks.fGetRangeStyles != nil)
 			return gTXViewStylesHooks.fGetRangeStyles(view, start, end);
@@ -2746,8 +2746,8 @@ FStyleArrayContainsInk(RefArg /*rcvr*/, RefArg styles)
 static Ref
 FScanWordStart(RefArg /*rcvr*/, RefArg text, RefArg offset, RefArg limit)
 {
-	long to = RINT(limit);
-	long from = RINT(offset);
+	Long to = RINT(limit);
+	Long from = RINT(offset);
 	return MAKEINT(ScanWordStart(GetCString(text), from, to));
 }
 
@@ -2757,8 +2757,8 @@ FScanWordStart(RefArg /*rcvr*/, RefArg text, RefArg offset, RefArg limit)
 static Ref
 FScanWordEnd(RefArg /*rcvr*/, RefArg text, RefArg offset, RefArg limit)
 {
-	long to = RINT(limit);
-	long from = RINT(offset);
+	Long to = RINT(limit);
+	Long from = RINT(offset);
 	return MAKEINT(ScanWordEnd(GetCString(text), from, to));
 }
 
@@ -2769,8 +2769,8 @@ FScanWordEnd(RefArg /*rcvr*/, RefArg text, RefArg offset, RefArg limit)
 static Ref
 FScanNextWord(RefArg /*rcvr*/, RefArg text, RefArg offset, RefArg limit)
 {
-	long to = RINT(limit);
-	long from = RINT(offset);
+	Long to = RINT(limit);
+	Long from = RINT(offset);
 	long at = ScanNextWord(GetCString(text), from, to);
 	return at == to ? NILREF : MAKEINT(at);
 }
@@ -2782,8 +2782,8 @@ FScanNextWord(RefArg /*rcvr*/, RefArg text, RefArg offset, RefArg limit)
 static Ref
 FScanPrevWordEnd(RefArg /*rcvr*/, RefArg text, RefArg offset, RefArg limit)
 {
-	long to = RINT(limit);
-	long from = RINT(offset);
+	Long to = RINT(limit);
+	Long from = RINT(offset);
 	long at = ScanPrevWordEnd(GetCString(text), from, to);
 	return at < 0 ? NILREF : MAKEINT(at);
 }

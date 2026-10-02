@@ -1520,7 +1520,7 @@ TEditView::RereadSelectedInk(void)
 	CList* views = CList::Make(count);
 	for (long i = 0; i < count; i++)
 	{
-		long index = RINT(GetArraySlotRef(order, i));
+		Long index = RINT(GetArraySlotRef(order, i));
 		if (index < 0)
 			index = MapIndex(index);
 		views->InsertAt(views->GetArraySize(), fChildren->At(index));
@@ -2240,7 +2240,7 @@ TEditView::PlaybackInk(RefArg kind)
 	RefVar text(GetPreference(RSSYMdotextrecognition));
 	RefVar shapes(GetPreference(RSSYMdoshaperecognition));
 	RefVar formulas(GetPreference(RSSYMdoformularecognition));
-	long which = RINT(kind);
+	Long which = RINT(kind);
 	SetPreference(RSSYMdotextrecognition, (which == 0 || which == 2) ? RefVar(TRUEREF) : RefVar(NILREF));
 	SetPreference(RSSYMdoshaperecognition, (which == 1 || which == 2) ? RefVar(TRUEREF) : RefVar(NILREF));
 	SetPreference(RSSYMdoformularecognition, RefVar(NILREF));
@@ -2857,7 +2857,7 @@ TView* gSkipView = nil;
 Boolean
 TEditView::HandleShape(Handle polygon, long type)
 {
-	long pen = RINT(GetPreference(RSSYMuserpensize));
+	Long pen = RINT(GetPreference(RSSYMuserpensize));
 	HLock(polygon);
 	Polygon* poly = (Polygon*) *polygon;
 	Rect box = poly->polyBBox;

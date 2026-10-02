@@ -1984,7 +1984,7 @@ static Ref
 FArrayToPoints(RefArg /*rcvr*/, RefArg array)
 {
 	long length = Length(array);
-	long count = RINT(RefVar(GetArraySlotRef(array, 1)));
+	Long count = RINT(RefVar(GetArraySlotRef(array, 1)));
 	RefVar shape(AllocateBinary(RSSYMpolygonshape, count * 4 + 4));
 	LockRef(shape);
 	short* header = (short*) BinaryData(shape);

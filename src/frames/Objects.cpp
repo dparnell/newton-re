@@ -702,7 +702,7 @@ TObjectHeap::UriahBinaryObjects(int printStrings)
 			// have moved since the last collection (the ROM prints with the
 			// little heap current)
 			Ref tag = iter.Tag();
-			long value = RINT(iter.Value());
+			Long value = RINT(iter.Value());
 			gHeap = savedHeap;
 			PrintObject(RefVar(tag), 0);
 			gREPout->Print(": %d\r", (int) value);
@@ -1652,7 +1652,7 @@ GetFramePath(RefArg obj, RefArg thePath)
 		}
 		if (RTAG(path) == kTagInteger)
 		{
-			long index = RVALUE(path);
+			Long index = RVALUE(path);
 			if (IsArray(obj))
 			{
 				if (index < 0)
@@ -1678,7 +1678,7 @@ GetFramePath(RefArg obj, RefArg thePath)
 				{
 					if (!IsArray(current))
 						ThrowExFramesWithBadValue(kNSErrPathFailed, thePath);
-					long index = RVALUE(e);
+					Long index = RVALUE(e);
 					ObjHeader* o = OBJ(current);
 					if (index >= 0 && index < ObjArrayLength(o))
 						current = ObjArraySlots(o)[index];
@@ -1845,7 +1845,7 @@ FrameHasPath(RefArg obj, RefArg thePath)
 				{
 					if (!IsArray(current))
 						return 0;
-					long index = RVALUE(e);
+					Long index = RVALUE(e);
 					ObjHeader* o = OBJ(current);
 					if (index >= ObjArrayLength(o))
 						return 0;

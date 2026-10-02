@@ -314,7 +314,7 @@ FGetRandomDictionaryWord(RefArg /*rcvr*/, RefArg minLength, RefArg maxLength)
 {
 	UniChar word[22];
 	ULong low = (ULong) RINT(minLength);
-	long high = RINT(maxLength);
+	Long high = RINT(maxLength);
 	if (high > 20)
 		high = 20;
 	RandomCommonWord(word, low, (ULong) high);
@@ -329,7 +329,7 @@ FGetRandomWord(RefArg /*rcvr*/, RefArg minLength, RefArg maxLength)
 {
 	UniChar word[22];
 	ULong low = (ULong) RINT(minLength);
-	long high = RINT(maxLength);
+	Long high = RINT(maxLength);
 	if (high > 20)
 		high = 20;
 	CommonWord(word, low, (ULong) high);

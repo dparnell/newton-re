@@ -416,7 +416,7 @@ FTestReadTextFile(RefArg rcvr, RefArg name, RefArg offset, RefArg size)
 	NEEDS_AGENT;
 	char file[256];
 	CStringOf(name, file);
-	long start = RINT(offset);
+	Long start = RINT(offset);
 	long length = RINT(size);
 	char* data;
 	if (gTestReporterForNewt->TestReadDataFile(file, start, &length, &data) != noErr)
@@ -438,7 +438,7 @@ FTestReadDataFile(RefArg rcvr, RefArg name, RefArg offset, RefArg size)
 	NEEDS_AGENT;
 	char file[256];
 	CStringOf(name, file);
-	long start = RINT(offset);
+	Long start = RINT(offset);
 	long length = RINT(size);
 	char* data;
 	if (gTestReporterForNewt->TestReadDataFile(file, start, &length, &data) != noErr)

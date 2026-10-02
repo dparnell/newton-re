@@ -953,7 +953,7 @@ Ref
 FMeasuredNumberStr(RefArg /*rcvr*/, RefArg number, RefArg width, RefArg fontSpec)
 {
 	RefVar result(number);
-	long maxWidth = RINT(width);
+	Long maxWidth = RINT(width);
 	LockRef(number);
 	UniChar* text = GetCString(number);
 	long length = Ustrlen(text);

@@ -19,6 +19,7 @@
 */
 
 #include "Interpreter.h"
+#include "NarrowRef.h"
 #include "PackageNatives.h"
 #include "NativeFunctions.h"
 #include "RSSymbols.h"
@@ -1259,8 +1260,8 @@ TInterpreter::SlowRun(long baseDepth)
 				arg1 = POP();										// the class
 				if (b == 0xffff)
 				{
-					long length = RINT(POP());
-					PUSH(AllocateArray(arg1, length));
+					Long length = RINT(POP());
+					PUSH(AllocateArray(arg1, LongArg(length)));
 				}
 				else
 				{
@@ -1367,9 +1368,9 @@ TInterpreter::SlowRun(long baseDepth)
 
 			case kBCBranchIfLoopNotDone:							// for loop: incr, index, limit on the stack
 			{
-				long limit = RINT(fValueStack.fTop[-1]);
-				long index = RINT(fValueStack.fTop[-2]);
-				long incr = RINT(fValueStack.fTop[-3]);
+				Long limit = RINT(fValueStack.fTop[-1]);
+				Long index = RINT(fValueStack.fTop[-2]);
+				Long incr = RINT(fValueStack.fTop[-3]);
 				fValueStack.fTop -= 3;
 				if ((incr > 0 && index <= limit) || (incr < 0 && index >= limit))
 					fPC = b;
@@ -1423,7 +1424,7 @@ TInterpreter::SlowRun(long baseDepth)
 						TraceFreqCall(kFFAref);
 					arg2 = POP();									// the index
 					arg1 = TOP();									// the array or string
-					long index = RINT(arg2);
+					Long index = RINT(arg2);
 					ULong flags = ObjectFlags(arg1);
 					if ((flags & kObjSlotted) == 0)
 					{
@@ -1458,7 +1459,7 @@ TInterpreter::SlowRun(long baseDepth)
 					arg3 = POP();									// the value
 					arg2 = POP();									// the index
 					arg1 = TOP();									// the array or string
-					long index = RINT(arg2);
+					Long index = RINT(arg2);
 					ULong flags = ObjectFlags(arg1);
 					if ((flags & kObjSlotted) == 0)
 					{
@@ -1942,9 +1943,9 @@ static Boolean
 FastBranchIfLoopNotDone(FastRunState* state, long target)
 {
 	Ref* top = state->fStack->fTop;
-	long limit = RINT(top[-1]);
-	long index = RINT(top[-2]);
-	long incr = RINT(top[-3]);
+	Long limit = RINT(top[-1]);
+	Long index = RINT(top[-2]);
+	Long incr = RINT(top[-3]);
 	state->fStack->fTop = top - 3;
 	if ((incr > 0 && index <= limit) || (incr < 0 && index >= limit))
 		state->fPC = state->fInstructions + target;
@@ -2014,8 +2015,8 @@ FastMakeArray(FastRunState* state, long b)
 	state->fArg1 = top[-1];									// the class
 	if (b == 0xffff)
 	{
-		long length = RINT(top[-2]);
-		top[-2] = AllocateArray(state->fArg1, length);
+		Long length = RINT(top[-2]);
+		top[-2] = AllocateArray(state->fArg1, LongArg(length));
 		state->fStack->fTop = top - 1;
 	}
 	else
@@ -2137,7 +2138,7 @@ FastFreqFuncGeneral(FastRunState* state, long)
 		b = top[-1];
 		if (((a | b) & 3) != 0)
 			break;
-		long x = RVALUE(a), y = RVALUE(b);
+		Long x = RVALUE(a), y = RVALUE(b);
 		Boolean yes = which == kFFLessThan ? x < y
 					: which == kFFGreaterThan ? x > y
 					: which == kFFGreaterOrEqual ? x >= y
@@ -2570,7 +2571,7 @@ TInterpreter::FastRun1(long baseDepth, FastRunState& state)
 				}
 				case 0xc2:											// aref: a plain array open-coded
 				{
-					long index = RINT(sp[-1]);
+					Long index = RINT(sp[-1]);
 					ObjHeader* o = OBJ(sp[-2]);
 					ULong flags = ObjFlags(o);
 					if ((flags & (kObjSlotted | kObjFrame)) == kObjSlotted)
@@ -2597,7 +2598,7 @@ TInterpreter::FastRun1(long baseDepth, FastRunState& state)
 				case 0xc3:											// setAref: a plain writable array open-coded
 				{
 					state.fArg2 = sp[-1];							// the value
-					long index = RINT(sp[-2]);
+					Long index = RINT(sp[-2]);
 					ObjHeader* o = OBJ(sp[-3]);
 					ULong flags = ObjFlags(o);
 					if ((flags & (kObjSlotted | kObjFrame | kObjReadOnly)) == kObjSlotted)
@@ -2807,7 +2808,7 @@ TInterpreter::PopHandlers(void)
 {
 	while ((Ref) fExceptionContext != NILREF)
 	{
-		long depth = RINT(GetArraySlotRef(fExceptionContext, kHandlerControlDepth));
+		Long depth = RINT(GetArraySlotRef(fExceptionContext, kHandlerControlDepth));
 		if (depth <= ControlPosition())
 			return;
 		fExceptionContext = GetArraySlotRef(fExceptionContext, kHandlerNext);
@@ -2946,7 +2947,7 @@ TInterpreter::HandleException(Exception* exception, long baseDepth, StackState& 
 	RefVar exceptions;
 	while ((Ref) handler != NILREF)
 	{
-		long depth = RINT(GetArraySlotRef(handler, kHandlerControlDepth));
+		Long depth = RINT(GetArraySlotRef(handler, kHandlerControlDepth));
 		if (depth < baseDepth)
 			break;
 		if (GetArraySlotRef(handler, kHandlerException) == NILREF)
@@ -2958,7 +2959,7 @@ TInterpreter::HandleException(Exception* exception, long baseDepth, StackState& 
 				Ref sym = GetArraySlotRef(exceptions, i);
 				if (Subexception(name, (ExceptionName) SymbolName(sym)))
 				{
-					long valueDepth = RINT(GetArraySlotRef(handler, kHandlerValueDepth));
+					Long valueDepth = RINT(GetArraySlotRef(handler, kHandlerValueDepth));
 					fValueStack.fTop -= ValuePosition() - valueDepth;
 					fCtrlStack.fTop -= ControlPosition() - depth;
 					fVMState = fCtrlStack.StateAt(ControlPosition() / kVMStateSize);

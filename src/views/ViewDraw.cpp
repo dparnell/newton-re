@@ -85,7 +85,7 @@ GetPattern(RefArg spec, Boolean* owned, PatternHandle* pattern, Boolean wasOwned
 	Boolean result = wasOwned;
 	if (ISINT(spec))
 	{
-		long value = RVALUE(spec);
+		Long value = RVALUE(spec);
 		if (value <= 0)
 			return false;
 		if (*owned)
@@ -793,7 +793,7 @@ TView::PreDraw(Rect& drawBounds)
 		RefVar spacingRef(GetProto(RSSYMviewlinespacing));
 		if (NOTNIL(spacingRef))
 		{
-			long spacing = RINT(spacingRef);
+			Long spacing = RINT(spacingRef);
 			if (spacing > 0)
 			{
 				if (lines == vfLinesCustom >> vfLinesShift)

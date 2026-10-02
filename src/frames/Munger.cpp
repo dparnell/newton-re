@@ -14,6 +14,7 @@
 */
 
 #include "Interpreter.h"
+#include "NarrowRef.h"
 #include "RichString.h"
 #include "NativeFunctions.h"
 #include "RSSymbols.h"
@@ -386,9 +387,9 @@ Ref
 FArrayMunger(RefArg /*rcvr*/, RefArg a1, RefArg a1start, RefArg a1count, RefArg a2, RefArg a2start, RefArg a2count)
 {
 	long count2 = CountArg(a2count);
-	long start2 = RINT(a2start);
+	Long start2 = RINT(a2start);
 	long count1 = CountArg(a1count);
-	long start1 = RINT(a1start);
+	Long start1 = RINT(a1start);
 	ArrayMunger(a1, start1, count1, a2, start2, count2);
 	return a1;
 }
@@ -399,9 +400,9 @@ Ref
 FBinaryMunger(RefArg /*rcvr*/, RefArg a1, RefArg a1start, RefArg a1count, RefArg a2, RefArg a2start, RefArg a2count)
 {
 	long count2 = CountArg(a2count);
-	long start2 = RINT(a2start);
+	Long start2 = RINT(a2start);
 	long count1 = CountArg(a1count);
-	long start1 = RINT(a1start);
+	Long start1 = RINT(a1start);
 	BinaryMunger(a1, start1, count1, a2, start2, count2);
 	return a1;
 }
@@ -412,9 +413,9 @@ Ref
 FStrMunger(RefArg /*rcvr*/, RefArg s1, RefArg s1start, RefArg s1count, RefArg s2, RefArg s2start, RefArg s2count)
 {
 	long count2 = CountArg(s2count);
-	long start2 = RINT(s2start);
+	Long start2 = RINT(s2start);
 	long count1 = CountArg(s1count);
-	long start1 = RINT(s1start);
+	Long start1 = RINT(s1start);
 	StrMunger(s1, start1, count1, s2, start2, count2);
 	return s1;
 }
@@ -425,8 +426,8 @@ FStrMunger(RefArg /*rcvr*/, RefArg s1, RefArg s1start, RefArg s1count, RefArg s2
 Ref
 FArray(RefArg /*rcvr*/, RefArg length, RefArg initialValue)
 {
-	long n = RINT(length);
-	RefVar array(AllocateArray(RSSYMarray, n));
+	Long n = RINT(length);
+	RefVar array(AllocateArray(RSSYMarray, LongArg(n)));
 	if ((Ref) initialValue != NILREF)
 	{
 		Ref* slots = Slots(array);
@@ -483,8 +484,8 @@ FSetRemove(RefArg /*rcvr*/, RefArg members, RefArg member)
 Ref
 FArrayRemoveCount(RefArg /*rcvr*/, RefArg array, RefArg start, RefArg count)
 {
-	long n = RINT(count);
-	long i = RINT(start);
+	Long n = RINT(count);
+	Long i = RINT(start);
 	ArrayRemoveCount(array, i, n);
 	return NILREF;
 }

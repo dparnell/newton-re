@@ -255,7 +255,7 @@ AddWordWithCount(long id, UByte* word, ULong attribute)
 	AddWord(entry->fDictionary, 0, word, attribute);
 	if (airusResult == 0 && counted)
 	{
-		long now = RINT(RefVar(GetProtoVariable(frame, RSSYMcount, nil))) + 1;
+		Long now = RINT(RefVar(GetProtoVariable(frame, RSSYMcount, nil))) + 1;
 		SetFrameSlot(frame, RSSYMcount, RefVar(MAKEINT(now)));
 	}
 	return count;

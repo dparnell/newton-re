@@ -328,9 +328,9 @@ FlushAnyInk(PicPlay* play, GrafPort* port)
 static Ref
 TextShape(RefArg str, RefArg font, long h, long v)
 {
-	long width = RINT(RefVar(FStrFontWidth(RefVar(), str, font)));
-	long ascent = RINT(RefVar(FFontAscent(RefVar(), font)));
-	long descent = RINT(RefVar(FFontDescent(RefVar(), font)));
+	Long width = RINT(RefVar(FStrFontWidth(RefVar(), str, font)));
+	Long ascent = RINT(RefVar(FFontAscent(RefVar(), font)));
+	Long descent = RINT(RefVar(FFontDescent(RefVar(), font)));
 	return FMakeTextBox(RefVar(), str, RefVar(MAKEINT(h)), RefVar(MAKEINT(v - ascent)),
 						RefVar(MAKEINT(width + h + 5)), RefVar(MAKEINT(descent + v)));
 }

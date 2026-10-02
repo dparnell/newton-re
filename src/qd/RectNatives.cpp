@@ -28,8 +28,8 @@ FOffsetRect(RefArg /*rcvr*/, RefArg bounds, RefArg dx, RefArg dy)
 	Rect r;
 	if (!FromObject(bounds, r))
 		return NILREF;
-	long h = RINT(dx);
-	long v = RINT(dy);
+	Long h = RINT(dx);
+	Long v = RINT(dy);
 	if (h != 0 || v != 0)
 		OffsetRect(&r, h, v);
 	return ToObject(r);

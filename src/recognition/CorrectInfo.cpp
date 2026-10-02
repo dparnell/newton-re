@@ -247,7 +247,7 @@ UnitID(RefArg info)
 Boolean
 TestWordInfoFlags(RefArg info, long flags)
 {
-	long was = RINT(RefVar(GetFrameSlotRef(info, RSSYMflags)));
+	Long was = RINT(RefVar(GetFrameSlotRef(info, RSSYMflags)));
 	return (was & flags) == flags;
 }
 
@@ -256,7 +256,7 @@ TestWordInfoFlags(RefArg info, long flags)
 void
 ClearWordInfoFlags(RefArg info, long flags)
 {
-	long was = RINT(RefVar(GetFrameSlotRef(info, RSSYMflags)));
+	Long was = RINT(RefVar(GetFrameSlotRef(info, RSSYMflags)));
 	SetFrameSlot(info, RSSYMflags, RefVar(MAKEINT(was & ~flags)));
 }
 
@@ -491,8 +491,8 @@ OffsetCorrectionInfo(RefArg list, TView* view, long at, long removed, long inser
 		RefVar word(GetArraySlotRef(info, i));
 		if (view != nil && RINT(RefVar(GetFrameSlotRef(word, RSSYMid))) != view->fId)
 			continue;
-		long start = RINT(RefVar(GetFrameSlotRef(word, RSSYMstart)));
-		long stop = RINT(RefVar(GetFrameSlotRef(word, RSSYMstop)));
+		Long start = RINT(RefVar(GetFrameSlotRef(word, RSSYMstart)));
+		Long stop = RINT(RefVar(GetFrameSlotRef(word, RSSYMstop)));
 
 		if (joining)
 		{
@@ -565,8 +565,8 @@ ClearCorrectionRange(RefArg list, TView* view, long at, long length)
 		RefVar word(GetArraySlotRef(info, i));
 		if (view != nil && RINT(RefVar(GetFrameSlotRef(word, RSSYMid))) != view->fId)
 			continue;
-		long start = RINT(RefVar(GetFrameSlotRef(word, RSSYMstart)));
-		long stop = RINT(RefVar(GetFrameSlotRef(word, RSSYMstop)));
+		Long start = RINT(RefVar(GetFrameSlotRef(word, RSSYMstart)));
+		Long stop = RINT(RefVar(GetFrameSlotRef(word, RSSYMstop)));
 		Boolean overlaps = start < at ? at < stop : start < at + length;
 		if (!overlaps)
 			continue;
@@ -653,7 +653,7 @@ ClearEmptyEntries(RefArg list)
 		Boolean asWritten = false;
 		for (long j = 0; j < count; j++)
 		{
-			long index = RINT(RefVar(GetFrameSlotRef(
+			Long index = RINT(RefVar(GetFrameSlotRef(
 									 RefVar(GetArraySlotRef(words, j)), RSSYMindex)));
 			if (index == -2)
 				capitalised = true;
@@ -733,8 +733,8 @@ ExtractRange(RefArg list, TView* view, long from, long to)
 	for (long i = 0; i < count; i++)
 	{
 		RefVar word(GetArraySlotRef(info, i));
-		long start = RINT(RefVar(GetFrameSlotRef(word, RSSYMstart)));
-		long stop = RINT(RefVar(GetFrameSlotRef(word, RSSYMstop)));
+		Long start = RINT(RefVar(GetFrameSlotRef(word, RSSYMstart)));
+		Long stop = RINT(RefVar(GetFrameSlotRef(word, RSSYMstop)));
 		if (RINT(RefVar(GetFrameSlotRef(word, RSSYMid))) != id)
 			continue;
 		if (start < to && from <= stop)
@@ -877,7 +877,7 @@ DoEntryLearning(RefArg info, long which)
 	if (ISNIL(words))
 		return info;
 	RefVar entry(GetArraySlotRef(words, which));
-	long index = RINT(RefVar(GetFrameSlotRef(entry, RSSYMindex)));
+	Long index = RINT(RefVar(GetFrameSlotRef(entry, RSSYMindex)));
 	RefVar data(GetFrameSlotRef(info, RSSYMunitdata));
 	if (index >= 0 && NOTNIL(data))
 	{
@@ -999,8 +999,8 @@ Correct(TView* view, UniChar* /*word*/, long length, long offset, const Rect& bo
 Ref
 FFindNewInfo(RefArg rcvr, RefArg context, RefArg offsetRef, RefArg lengthRef)
 {
-	long length = RINT(lengthRef);
-	long offset = RINT(offsetRef);
+	Long length = RINT(lengthRef);
+	Long offset = RINT(offsetRef);
 	TView* view = GetView(context);
 	long slot = FindWordInfoIndex(rcvr, view, offset);
 	RefVar list(GetFrameSlotRef(rcvr, RSSYMinfo));
@@ -1008,8 +1008,8 @@ FFindNewInfo(RefArg rcvr, RefArg context, RefArg offsetRef, RefArg lengthRef)
 	if (slot >= 0)
 	{
 		info = GetArraySlotRef(list, slot);
-		long start = RINT(RefVar(GetFrameSlotRef(info, RSSYMstart)));
-		long stop = RINT(RefVar(GetFrameSlotRef(info, RSSYMstop)));
+		Long start = RINT(RefVar(GetFrameSlotRef(info, RSSYMstart)));
+		Long stop = RINT(RefVar(GetFrameSlotRef(info, RSSYMstop)));
 		if (offset != start || offset + length != stop)
 			info = NILREF;
 	}
@@ -1279,14 +1279,14 @@ FAutoAdd(RefArg rcvr)
 Ref
 FDoEntryLearning(RefArg rcvr, RefArg which)
 {
-	long at = RINT(which);
+	Long at = RINT(which);
 	if (TestWordInfoFlags(rcvr, kWordInfoHasTrainingData))
 	{
 		RefVar words(GetFrameSlotRef(rcvr, RSSYMwords));
 		if (NOTNIL(words))
 		{
 			RefVar entry(GetArraySlotRef(words, at));
-			long index = RINT(RefVar(GetFrameSlotRef(entry, RSSYMindex)));
+			Long index = RINT(RefVar(GetFrameSlotRef(entry, RSSYMindex)));
 			RefVar data(GetFrameSlotRef(rcvr, RSSYMunitdata));
 			if (index >= 0 && NOTNIL(data))
 			{
@@ -1423,7 +1423,7 @@ FSetWordList(RefArg rcvr, RefArg words)
 Ref
 FFindWordInfo(RefArg rcvr, RefArg context, RefArg offsetRef)
 {
-	long offset = RINT(offsetRef);
+	Long offset = RINT(offsetRef);
 	long id = GetView(context)->fId;
 	RefVar list(GetFrameSlotRef(rcvr, RSSYMinfo));
 	long count = Length(list);
@@ -1495,8 +1495,8 @@ FGetAlternates(RefArg rcvr, RefArg start, RefArg length)
 	TView* view = GetView(rcvr);
 	if (view == nil || !view->DerivedFrom(clParagraphView))
 		return NILREF;
-	long len = RINT(length);
-	long at = RINT(start);
+	Long len = RINT(length);
+	Long at = RINT(start);
 	RefVar info(GetWordInfo(view, at, len));
 	RemoveToggledEntries(info, 1);
 	AddCapitalizedEntry(info);
@@ -1529,7 +1529,7 @@ static Ref
 FExtractRange(RefArg rcvr, RefArg view, RefArg start, RefArg stop)
 {
 	ULong to = (ULong) (uint32_t) RINT(stop);
-	long from = RINT(start);
+	Long from = RINT(start);
 	TView* theView = GetView(view);
 	RefVar result;
 	if (NOTNIL(rcvr))
@@ -1542,8 +1542,8 @@ FExtractRange(RefArg rcvr, RefArg view, RefArg start, RefArg stop)
 		{
 			RefVar word(GetArraySlotRef(list, i));
 			ULong wordStart = (ULong) (uint32_t) RINT(RefVar(GetFrameSlotRef(word, RSSYMstart)));
-			long wordStop = RINT(RefVar(GetFrameSlotRef(word, RSSYMstop)));
-			long wordId = RINT(RefVar(GetFrameSlotRef(word, RSSYMid)));
+			Long wordStop = RINT(RefVar(GetFrameSlotRef(word, RSSYMstop)));
+			Long wordId = RINT(RefVar(GetFrameSlotRef(word, RSSYMid)));
 			if (wordId == id && wordStart < to && from <= wordStop)
 				AddWordInfo(taken, RefVar(Clone(word)));
 		}
@@ -1563,8 +1563,8 @@ static Ref
 FAddUnitInfo(RefArg rcvr, RefArg view, RefArg start, RefArg stop, RefArg unit)
 {
 	TUnitPublic* theUnit = (TUnitPublic*) RefToAddress(unit);
-	long stopAt = RINT(stop);
-	long startAt = RINT(start);
+	Long stopAt = RINT(stop);
+	Long startAt = RINT(start);
 	return AddWordInfo(rcvr, GetView(view), startAt, stopAt, theUnit);
 }
 

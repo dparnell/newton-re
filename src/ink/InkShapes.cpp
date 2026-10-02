@@ -54,8 +54,8 @@ GetPolyAsTStrokes(RefArg form, ULong group)
 	if (ISNIL(ink))
 		return nil;
 	RefVar bounds(GetProtoVariable(form, RSSYMviewbounds, nil));
-	long x = RINT(GetFrameSlot(bounds, RSSYMleft));
-	long y = RINT(GetFrameSlot(bounds, RSSYMtop));
+	Long x = RINT(GetFrameSlot(bounds, RSSYMleft));
+	Long y = RINT(GetFrameSlot(bounds, RSSYMtop));
 	return InkExpand(ink, group, x, y);
 }
 

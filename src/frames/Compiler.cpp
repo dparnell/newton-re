@@ -113,7 +113,7 @@ AllocatePT5(int kind, RefArg a, RefArg b, RefArg c, RefArg d, RefArg e)
 static long
 NodeParts(RefArg node, RefVar& a1, RefVar& a2, RefVar& a3, RefVar& a4, RefVar& a5)
 {
-	long kind = RINT(GetArraySlotRef(node, 0));
+	Long kind = RINT(GetArraySlotRef(node, 0));
 	long count = Length(node) - 1;
 	a1 = count >= 1 ? GetArraySlotRef(node, 1) : NILREF;
 	a2 = count >= 2 ? GetArraySlotRef(node, 2) : NILREF;

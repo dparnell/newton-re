@@ -225,7 +225,7 @@ TVisKeyIterator::LoadRow(void)
 	long across = 0;
 	for (long i = 0; i < fRowKeys; i++)
 	{
-		long info = RINT(GetArraySlotRef(fRow, i * kSlotsPerKey + kRowHeaderSlots + 2));
+		Long info = RINT(GetArraySlotRef(fRow, i * kSlotsPerKey + kRowHeaderSlots + 2));
 		// (the width and the gap bit are both taken off the word shifted
 		//  down by eight, so the bit that is really being read for the gap
 		//  is the info word's sign.  Every gap in the ROM's own keyboards
@@ -803,7 +803,7 @@ TKeyboardView::HandleKeyPress(TVisKeyIterator& /*iter*/, RefArg result)
 		Boolean controlDown = KeyDown(kControlKey, false);
 		Boolean shiftDown = KeyDown(kShiftKey, false);
 		Boolean capsDown = KeyDown(kCapsLockKey, false);
-		long code = RINT(result);
+		Long code = RINT(result);
 		ULong deadWas = gSoftKeyDeadState;
 		Boolean changed = false;
 		switch (code)

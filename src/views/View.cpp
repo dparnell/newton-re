@@ -2278,7 +2278,7 @@ TView::Drag(const TDragInfo& dragInfo, TStrokePublic* stroke, const Rect& bounds
 		RefVar distance(GetProtoVariable(item, RSSYMmindragdistance, nil));
 		if (ISINT(distance))
 		{
-			long d = RVALUE(distance);
+			Long d = RVALUE(distance);
 			if (d < minDistance)
 				minDistance = d;
 		}
@@ -3062,8 +3062,8 @@ TView::SyncScroll(RefArg items, RefArg indexRef, RefArg directionRef)
 {
 	RefVar scratch;
 	long height = (short) (viewBounds.bottom - viewBounds.top);
-	long direction = RINT(directionRef);
-	long oldIndex = RINT(indexRef);
+	Long direction = RINT(directionRef);
+	Long oldIndex = RINT(indexRef);
 	long index = oldIndex;
 	long count = Length(items);
 	scratch = GetCacheProto(kIndexViewOriginY);
@@ -3077,7 +3077,7 @@ TView::SyncScroll(RefArg items, RefArg indexRef, RefArg directionRef)
 		{
 			index += direction;
 			scratch = GetArraySlotRef(items, index);
-			long h = RINT(RefVar(GetVariable(scratch, RSSYMheight, nil, 0)));
+			Long h = RINT(RefVar(GetVariable(scratch, RSSYMheight, nil, 0)));
 			if (h > height)
 				slide = h - h % height;
 		}
@@ -3091,7 +3091,7 @@ TView::SyncScroll(RefArg items, RefArg indexRef, RefArg directionRef)
 	else
 	{
 		scratch = GetArraySlotRef(items, oldIndex);
-		long h = RINT(RefVar(GetVariable(scratch, RSSYMheight, nil, 0)));
+		Long h = RINT(RefVar(GetVariable(scratch, RSSYMheight, nil, 0)));
 		if (h - scrolled > height)
 			slide = scrolled + height;
 		else
@@ -3216,7 +3216,7 @@ TView::SyncScrollSoup(RefArg cursor, RefArg directionRef)
 			overlap = RINT(scratch) * 2;
 	}
 	long height = (short) (viewBounds.bottom - viewBounds.top);
-	long direction = RINT(directionRef);
+	Long direction = RINT(directionRef);
 	scratch = GetCacheProto(kIndexViewOriginY);
 	long scrolled = ISNIL(scratch) ? 0 : RINT(scratch);
 	long origin = 0;
@@ -3231,7 +3231,7 @@ TView::SyncScrollSoup(RefArg cursor, RefArg directionRef)
 				CursorReset(cursor);
 				return NILREF;
 			}
-			long h = RINT(RefVar(GetVariable(scratch, RSSYMheight, nil, 0)));
+			Long h = RINT(RefVar(GetVariable(scratch, RSSYMheight, nil, 0)));
 			slide = -h;
 			if (h > height)
 			{
@@ -3250,7 +3250,7 @@ TView::SyncScrollSoup(RefArg cursor, RefArg directionRef)
 	else
 	{
 		scratch = CursorEntry(cursor);
-		long left = RINT(RefVar(GetVariable(scratch, RSSYMheight, nil, 0))) - scrolled;
+		Long left = RINT(RefVar(GetVariable(scratch, RSSYMheight, nil, 0))) - scrolled;
 		if (left > height || EQ(scratch, RefVar(GetProto(RSSYMlastitem))))
 		{
 			origin = scrolled + height - overlap;
@@ -4193,10 +4193,10 @@ ParentBoundsFor(TView* view, TView* parent, Rect* parentBounds)
 	if (parent == gRootView && view != gRootView)
 	{
 		RefVar params(GetFrameSlotRef(gVarFrame, RSSYMdisplayparams));
-		long left = RINT(GetProtoVariable(params, RSSYMappareagloballeft, nil));
-		long top = RINT(GetProtoVariable(params, RSSYMappareaglobaltop, nil));
-		long width = RINT(GetProtoVariable(params, RSSYMappareawidth, nil));
-		long height = RINT(GetProtoVariable(params, RSSYMappareaheight, nil));
+		Long left = RINT(GetProtoVariable(params, RSSYMappareagloballeft, nil));
+		Long top = RINT(GetProtoVariable(params, RSSYMappareaglobaltop, nil));
+		Long width = RINT(GetProtoVariable(params, RSSYMappareawidth, nil));
+		Long height = RINT(GetProtoVariable(params, RSSYMappareaheight, nil));
 		SetRect(parentBounds, left, top, left + width, top + height);
 	}
 	else

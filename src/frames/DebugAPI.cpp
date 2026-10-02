@@ -176,7 +176,7 @@ FrameBase(VMState* state)
 static inline long
 FunctionNumVars(RefArg fn)
 {
-	long numArgs = RINT(GetArraySlotRef(fn, kFunctionNumArgsSlot));
+	Long numArgs = RINT(GetArraySlotRef(fn, kFunctionNumArgsSlot));
 	return (numArgs & 0xffff) + (numArgs >> 16);
 }
 
@@ -638,7 +638,7 @@ REPStackTrace(void* interpreter)
 					RefVar argFrame(GetArraySlotRef(fn, kFunctionArgFrameSlot));
 					RefVar map(ObjClass(OBJ((Ref) argFrame)));
 					long count = Length(argFrame) - 3;
-					long numArgs = RINT(GetArraySlotRef(fn, kFunctionNumArgsSlot));
+					Long numArgs = RINT(GetArraySlotRef(fn, kFunctionNumArgsSlot));
 					for (long j = 0; j < count; j++)
 					{
 						tag = GetTag(map, j + 3, nil);

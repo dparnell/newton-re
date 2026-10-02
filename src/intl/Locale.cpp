@@ -192,12 +192,12 @@ ROMCacheLocaleAttributes(void)
 	RefVar minusSuffix(GetProtoVariable(numberFormat, RSSYMminussuffix, nil));
 	RefVar currencyPrefix(GetProtoVariable(numberFormat, RSSYMcurrencyprefix, nil));
 	RefVar currencySuffix(GetProtoVariable(numberFormat, RSSYMcurrencysuffix, nil));
-	long groupWidth = RINT(GetProtoVariable(numberFormat, RSSYMgroupwidth, nil));
+	Long groupWidth = RINT(GetProtoVariable(numberFormat, RSSYMgroupwidth, nil));
 	// DEVIATION: the ROM reads groupWidth a second time here (a slip: the
 	// register holding the symbol was reused), so its gNumberLeadingZero
 	// is whether the group width is 0; decimalLeadingZ is what was meant
 	// (0: put a zero before the decimal point, like the other ...LeadingZ)
-	long decimalLeadingZ = RINT(GetProtoVariable(numberFormat, RefVar(Intern((char*) "decimalLeadingZ")), nil));		// (no RSSYM: the ROM never uses it)
+	Long decimalLeadingZ = RINT(GetProtoVariable(numberFormat, RefVar(Intern((char*) "decimalLeadingZ")), nil));		// (no RSSYM: the ROM never uses it)
 	if ((Ref) decimalPoint == NILREF || (Ref) groupSepStr == NILREF || (Ref) minusPrefix == NILREF || (Ref) minusSuffix == NILREF)
 		return false;
 	CallReplaceDictionaryHandle(&gTimeLexDictionary, RSSYMtimedictionary);

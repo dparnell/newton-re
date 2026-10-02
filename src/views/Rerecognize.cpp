@@ -167,8 +167,8 @@ ParagraphViewWordHandler(TUnit* unit, ULong arg)
 		if (isWord || !allowsInkWords)
 		{
 			RefVar item(NILREF);
-			long start = RINT(GetFrameSlotRef(cmd, RSSYMstart));
-			long stop = RINT(GetFrameSlotRef(cmd, RSSYMstop));
+			Long start = RINT(GetFrameSlotRef(cmd, RSSYMstart));
+			Long stop = RINT(GetFrameSlotRef(cmd, RSSYMstop));
 			if (isWord)
 			{
 				pub.SetWordBase();
@@ -199,7 +199,7 @@ ParagraphViewWordHandler(TUnit* unit, ULong arg)
 void
 RerecognizeWord(TParagraphView* view, RefArg cmd, TRecArea* area)
 {
-	long start = RINT(GetFrameSlotRef(cmd, RSSYMstart));
+	Long start = RINT(GetFrameSlotRef(cmd, RSSYMstart));
 	RINT(GetFrameSlotRef(cmd, RSSYMstop));
 	RefVar ink(view->GetStyleAtOffset(start, nil, nil));
 	TStroke** strokes = InkExpand(ink, 0, 0, 0);
@@ -449,7 +449,7 @@ RecognizeTextInStyles(RefArg textAndStyles, RefArg fontSpec)
 		long runs = Length(styles) / 2;
 		for (long i = 0; i < runs; i++)
 		{
-			long length = RINT(GetArraySlotRef(styles, i * 2));
+			Long length = RINT(GetArraySlotRef(styles, i * 2));
 			run = GetArraySlotRef(styles, i * 2 + 1);
 			if (!IsInkWord(run))
 			{
@@ -565,8 +565,8 @@ FRecognizePara(RefArg rcvr, RefArg view, RefArg start, RefArg stop, RefArg doHil
 {
 	TView* theView = FailGetView(view);
 	Boolean hilite = NOTNIL(doHilite);
-	long end = RINT(stop);
-	long begin = RINT(start);
+	Long end = RINT(stop);
+	Long begin = RINT(start);
 	return MAKEINT(RecognizePara(theView, begin, end, hilite, config));
 }
 

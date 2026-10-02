@@ -146,8 +146,8 @@ MakeStrokeRef(RefArg points, long format)
 	UByte* p = (UByte*) BinaryData(ref);
 	for (long i = 0; i < count; i++, p += 4)
 	{
-		long h = RINT(GetArraySlot(points, i * 2 + 1));
-		long v = RINT(GetArraySlot(points, i * 2));
+		Long h = RINT(GetArraySlot(points, i * 2 + 1));
+		Long v = RINT(GetArraySlot(points, i * 2));
 		if (format < 2)
 		{
 			h = h << 3;
@@ -583,8 +583,8 @@ static Ref
 FGetStrokePoint(RefArg /*rcvr*/, RefArg stroke, RefArg index, RefArg point, RefArg format)
 {
 	CheckStroke(stroke);
-	long theFormat = RINT(format);
-	long at = RINT(index);
+	Long theFormat = RINT(format);
+	Long at = RINT(index);
 	Point pt;
 	GetStrokePoint(stroke, at, &pt, theFormat);
 	SetFrameSlot(point, RSSYMx, RefVar(MAKEINT(pt.h)));
