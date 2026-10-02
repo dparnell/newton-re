@@ -210,8 +210,8 @@ __declspec(dllimport) int __stdcall GetThreadTimes(void* thread, unsigned long l
 #endif
 #ifdef __GLIBC__
 #include <malloc.h>
-#include <thread>
-#include <chrono>
+#include <pthread.h>		// (not <thread>: libc++'s reaches <locale.h>, which a cross build on a
+						// case-insensitive file system finds as src/intl/Locale.h - docs/host-remarkable.md)
 #endif
 #include <fcntl.h>
 #include <unistd.h>
@@ -772,16 +772,24 @@ HostSetUpMalloc(void)
 	const char* every = getenv("NEWTON_MALLOC_STATS");
 	if (every == nil || atoi(every) <= 0)
 		return;
-	long seconds = atoi(every);
-	std::thread([seconds]() {
+	static long seconds;
+	seconds = atoi(every);
+	pthread_t thread;
+	if (pthread_create(&thread, nil, [](void*) -> void* {
 		for (long t = 0; ; t += seconds)
 		{
+#if __GLIBC__ > 2 || __GLIBC_MINOR__ >= 33
 			struct mallinfo2 m = mallinfo2();
+#else
+			struct mallinfo m = mallinfo();		// (an older glibc - a cross build for a device: int-sized counts)
+#endif
 			fprintf(stderr, "[malloc] %lds arena %zu inuse %zu free %zu mmapped %zu (%zu blocks) top %zu\n",
-					t, m.arena, m.uordblks, m.fordblks, m.hblkhd, m.hblks, m.keepcost);
-			std::this_thread::sleep_for(std::chrono::seconds(seconds));
+					t, (size_t) m.arena, (size_t) m.uordblks, (size_t) m.fordblks, (size_t) m.hblkhd, (size_t) m.hblks, (size_t) m.keepcost);
+			sleep((unsigned) seconds);
 		}
-	}).detach();
+		return (void*) nil;
+	}, nil) == 0)
+		pthread_detach(thread);
 }
 #else
 static void

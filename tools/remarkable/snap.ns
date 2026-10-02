@@ -1,0 +1,11 @@
+// The headless check on a tablet (docs/host-remarkable.md, "What the spike
+// showed"): wait for the Setup assistant, take ScreenSnapshot eight seconds
+// later as native-welcome.pgm in the working directory, and quit.  Copy
+// src/host/demo/common.ns beside it (HostInclude reads it from there):
+//
+//   ./newton --objects romsrc-objects.bin --display 320x480 --erase \
+//       --store newton.store --headless 150 --script snap.ns
+HostInclude("common.ns");
+call waitFor with ("snap: the Setup assistant", func() GetRoot().setup and GetRoot().setup.viewCObject, func() begin
+	AddDelayedCall(func() begin ScreenSnapshot("native-welcome.pgm"); Print("snap: done"); AddDelayedCall(func() HostQuit(), nil, 2000); end, nil, 8000);
+end, 120);

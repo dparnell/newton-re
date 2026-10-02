@@ -22,7 +22,24 @@ target_compile_definitions(newtonscript PRIVATE "NEWTON_DEFAULT_OBJECTS=\"${NEWT
 # (installed), in the build directory (NEWTON_DEFAULT_OBJECTS), or where
 # NEWTON_OBJECTS says (host/HostObjectsFile.h).
 find_package(Python3 COMPONENTS Interpreter)
-if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../romsrc/layout.tsv)
+# (a cross build - an aarch64 newton for a reMarkable built on Windows,
+# docs/host-remarkable.md - cannot run its own newtonscript, so the object
+# file is compiled by one built for this machine: -DNEWTON_HOST_NEWTONSCRIPT;
+# the file is the same bytes whichever host built it)
+set(NEWTON_HOST_NEWTONSCRIPT "" CACHE FILEPATH "a cross build: a newtonscript that runs on the build machine, to build the object file with")
+set(romsrc_newtonscript $<TARGET_FILE:newtonscript>)
+set(romsrc_newtonscript_depends newtonscript)
+set(romsrc_can_build TRUE)
+if(CMAKE_CROSSCOMPILING)
+    if(NEWTON_HOST_NEWTONSCRIPT)
+        set(romsrc_newtonscript ${NEWTON_HOST_NEWTONSCRIPT})
+        set(romsrc_newtonscript_depends ${NEWTON_HOST_NEWTONSCRIPT})
+    else()
+        set(romsrc_can_build FALSE)
+        message(STATUS "a cross build without -DNEWTON_HOST_NEWTONSCRIPT: the object file is not built here (copy one from a native build)")
+    endif()
+endif()
+if(romsrc_can_build AND Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../romsrc/layout.tsv)
     file(GLOB_RECURSE romsrc_sources CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/../romsrc/*)
     file(GLOB romsrc_tools CONFIGURE_DEPENDS
          ${CMAKE_SOURCE_DIR}/../tools/newton-rom/analysis/*.py
@@ -34,8 +51,8 @@ if(Python3_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/../romsrc/layout.tsv)
     add_custom_command(OUTPUT ${NEWTON_OBJECTS_FILE}
              COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/../tools/newton-rom/analysis/romsrc.py
                      build ${CMAKE_SOURCE_DIR}/../romsrc --relayout -o ${NEWTON_OBJECTS_FILE}
-                     --newtonscript $<TARGET_FILE:newtonscript>
-             DEPENDS ${romsrc_sources} ${romsrc_tools} newtonscript
+                     --newtonscript ${romsrc_newtonscript}
+             DEPENDS ${romsrc_sources} ${romsrc_tools} ${romsrc_newtonscript_depends}
              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..
              COMMENT "Building ${NEWTON_OBJECTS_FILE} from romsrc/"
              VERBATIM)
@@ -87,7 +104,18 @@ set_tests_properties(host.NewtonScriptTrace PROPERTIES TIMEOUT 60
 # Where there is neither, the win32 files' own #else answers the calls and
 # says there is no window and no device, so the world runs headless - which
 # is what a host the port has not reached yet gets (macOS today).
-if(WIN32)
+#   reMarkable remarkable/HostWindow.cpp (the e-ink panel through AppLoad's
+#             qtfb, or rmkit with -DNEWTON_RMKIT_DIR), no sound -
+#             -DNEWTON_HOST_WINDOW=remarkable (docs/host-remarkable.md)
+set(NEWTON_HOST_WINDOW "auto" CACHE STRING "the host window: auto (the platform's), remarkable (a reMarkable tablet's panel)")
+set(NEWTON_RMKIT_DIR "" CACHE PATH "rmkit.h and stb/ from tools/remarkable/fetch_rmkit.py: the reMarkable window over rmkit as well as qtfb")
+if(NEWTON_HOST_WINDOW STREQUAL "remarkable")
+    set(host_window_source remarkable/HostWindow.cpp remarkable/QTFBPanel.cpp remarkable/RMKitPanel.cpp)
+    set(host_audio_source win32/HostAudio.cpp)         # its #else: no device (the tablets have no loudspeaker)
+    if(NEWTON_RMKIT_DIR)
+        list(APPEND host_window_source ${NEWTON_RMKIT_DIR}/stb/stb.cpp)
+    endif()
+elseif(WIN32)
     set(host_window_source win32/HostWindow.cpp)
     set(host_audio_source win32/HostAudio.cpp)
 else()
@@ -109,7 +137,16 @@ else()
 endif()
 add_library(host_window STATIC ${host_window_source} ${host_audio_source})
 target_include_directories(host_window PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-if(WIN32)
+if(NEWTON_HOST_WINDOW STREQUAL "remarkable")
+    target_link_libraries(host_window PUBLIC rt pthread dl)
+    if(NEWTON_RMKIT_DIR)
+        # rmkit's single header and stb: -DREMARKABLE picks its reMarkable
+        # framebuffer and input; its own warnings are not ours
+        target_include_directories(host_window PRIVATE ${NEWTON_RMKIT_DIR} ${NEWTON_RMKIT_DIR}/stb)
+        target_compile_definitions(host_window PRIVATE NEWTON_HAVE_RMKIT=1 REMARKABLE=1)
+        set_source_files_properties(remarkable/RMKitPanel.cpp ${NEWTON_RMKIT_DIR}/stb/stb.cpp PROPERTIES COMPILE_OPTIONS "-w")
+    endif()
+elseif(WIN32)
     target_link_libraries(host_window PUBLIC user32 gdi32 shell32 winmm)
 else()
     if(X11_FOUND)
