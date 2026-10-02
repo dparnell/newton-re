@@ -7,7 +7,9 @@ its pen, why the port goes through AppLoad's *qtfb* first and rmkit second,
 the build, what was done (on the branch `rmpp`), what the real tablet has
 already shown, and what is left.
 
-Status (2026-10-02): **newton runs on the Paper Pro.**  Cross-compiled on
+Status (2026-10-02): **newton runs on the Paper Pro's glass, with the
+Marker** - launched from AppLoad, through Setup and writing in the Notepad
+(what the spike showed, item 6).  Before that:  Cross-compiled on
 the Windows development machine, copied over SSH and run headless, it boots
 to the Setup assistant in about three seconds and its screen is
 *byte-for-byte* the Windows build's.  The display backend
@@ -322,6 +324,43 @@ All from the branch `rmpp`, built on the Windows machine.
    on the glass takes one tap in xochitl's UI, which is the owner's (below):
    nothing here reads xochitl's screen or injects input into it, since both
    could reach the owner's documents.
+
+6. **On the glass, with the owner's hand** (2026-10-02, xovi started by
+   `/home/root/xovi/start`; the apps launched from AppLoad by the owner):
+   - **rmprobe**: the Marker reaches a qtfb application - 3,471 pen
+     messages (press/update/release, pressure 100) in one 30 s session, each
+     dot sent 0.05-0.1 ms after its message arrived; a finger arrives as
+     touch messages with an id per finger.  (A first run drawn with a finger
+     had only touches, which is what made the evdev route look necessary;
+     it stays as `NEWTON_RM_PEN=evdev`.)
+   - **Newton (qtfb) at 2x** (`--display 810x1080`): the owner went
+     through Welcome, the pen calibration, Setup and wrote in the Notepad -
+     152 strokes.  The Marker arrives at **about 400 events a second**
+     (median over strokes 383/s).  From a pen event to the update that
+     carries its ink: **median 48 ms, 90th percentile 58 ms** (529 ink
+     updates; p10 4 ms, worst 263 ms), about 17 ink updates a second while
+     drawing.  That is newton's share; the panel's fast waveform adds its
+     own.  The ~50 ms is the reconstruction's inker cadence (the ROM's
+     tablet driver samples at its own rate, `fSampleRate` 0xb400, and the
+     inker draws a batch at a time), not the window, which looks every 8 ms
+     with the pen down - the place to look if the owner finds ink sluggish.
+   - **Newton (qtfb) at 1:1** (`--display 1620x2160`, the panel's own
+     pixels): boots and takes the pen (Continue, the calibration targets),
+     but the Newton's fonts are 9-12 px, which at 229 dpi is 1.0-1.3 mm
+     (about 3-4 pt), and a 13 px button is 1.4 mm across - the MessagePad's
+     screen was about 100 dpi.  2x (`810x1080`, ~115 dpi) is about the
+     original's size; 3x (`540x720`) and 4x (`320x480`, the MessagePad's own
+     layout) are larger still.  The AppLoad apps: "Newton" (1:1, what the
+     owner asked for), "Newton 2x", "Newton (rmkit) 4x"; each keeps its own
+     store and calibration in `/home/root/newton-data/<app>/`.
+   - **Newton (rmkit) 4x**: draws (Welcome at 4x, centred), ends cleanly on
+     AppLoad's close, but **no pen events reached it** in a 7-minute run:
+     the shim's emulated digitiser (`QTFB_SHIM_INPUT_MODE=NATIVE`) and
+     rmkit's Wacom reader do not agree yet - to be looked at; the qtfb
+     panel is the one that works.
+   - The power button: the tablet sleeps (xochitl: display DeepSleep) and
+     newton's power key mapping puts the Newton to sleep with it; on waking
+     AppLoad closed the app (newton ended cleanly).
 
 ### Watching a tablet one cannot see
 
