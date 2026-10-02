@@ -1017,11 +1017,24 @@ RegisterPowerNatives(void)
 }
 
 
+// ROM 0x0030f0ac SendAbort
+// SendAbort(): nothing - the ROM's is an empty stub answering nil, like
+// InstallAbortHandler and RemoveAbortHandler beside it.  Its one caller
+// in the ROM's scripts is a StopIO method, which sets ioStopping and then
+// calls it.
+static Ref
+SendAbort(RefArg /*rcvr*/)
+{
+	return NILREF;
+}
+
+
 void
 RegisterAlarmNatives(void)
 {
 	RegisterNativeFunction("FSetSysAlarm", (void*) FSetSysAlarm, 3);
 	RegisterNativeFunction("FEventPause", (void*) FEventPause, 1);
+	RegisterNativeFunction("SendAbort", (void*) SendAbort, 0);
 }
 
 

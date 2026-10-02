@@ -285,6 +285,27 @@ TestDebugging()
 }
 
 
+static void
+TestPassthruKeyboard()
+{
+	extern Boolean gKeyboardConnected;
+	EXPECT(!gKeyboardConnected);
+	EXPECT(!gRootView->KeyboardConnected());
+	// a keyboard through a soft one: connected, so keys are taken
+	EXPECT(ISNIL(RefVar(Eval("ConnectPassthruKeyboard(true)"))));
+	EXPECT(gRootView->KeyboardConnected());
+	EXPECT(gRootView->KeyboardActive());
+	EXPECT(!gRootView->CommandKeyboardConnected());		// (a passthru keyboard gives no command keys)
+	// any non-nil is connected; nil takes it away
+	Eval("ConnectPassthruKeyboard(nil)");
+	EXPECT(!gRootView->KeyboardConnected());
+	Eval("ConnectPassthruKeyboard(0)");
+	EXPECT(gRootView->KeyboardConnected());
+	Eval("ConnectPassthruKeyboard(nil)");
+	EXPECT(!gRootView->KeyboardConnected());
+}
+
+
 int
 main()
 {
@@ -354,6 +375,7 @@ main()
 		TestSyncScroll();
 		TestReflow();
 		TestDebugging();
+		TestPassthruKeyboard();
 	}
 	newton_catch_all
 	{

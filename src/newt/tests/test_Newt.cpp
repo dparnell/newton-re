@@ -142,6 +142,8 @@ static const char* kSetupSource =
 	"    local tickled := GetRoot():EventPause(true); "			// the tickle: nothing has happened since
 	"    local since := GetRoot():EventPause(nil); "
 	"    if tickled = 0 and IsInteger(since) and since >= 0 then 1 else 0 end, "
+	// SendAbort: the ROM's empty stub, nil and no exception
+	"  abort: func(data) if SendAbort() then 0 else 1, "
 	// the protocol registry as a script sees it (system/SystemNatives.cpp)
 	"  protocols: func(data) begin "
 	"    local seed := ClassInfoRegistrySeed(); "
@@ -264,6 +266,7 @@ static long gScriptErr = -1;
 static long gTextLength = 0;
 static long gWritten = -1;
 static Boolean gPauseOk = false;
+static Boolean gAbortOk = false;
 static Boolean gBatteryOk = false;
 static Boolean gBacklightOk = false;
 static Boolean gProtocolsOk = false;
@@ -406,6 +409,9 @@ Scenario(void)
 		TRunScriptEvent pause("testApp", "pause");
 		newtPort.SendRPC(&replySize, &pause, sizeof(pause), &pause, sizeof(pause));
 		gPauseOk = pause.fError == 0 && pause.fResult == 1;
+		TRunScriptEvent aborted("testApp", "abort");
+		newtPort.SendRPC(&replySize, &aborted, sizeof(aborted), &aborted, sizeof(aborted));
+		gAbortOk = aborted.fError == 0 && aborted.fResult == 1;
 		// BatteryStatus: the host's power plant, as a script sees it
 		TRunScriptEvent battery("testApp", "battery");
 		newtPort.SendRPC(&replySize, &battery, sizeof(battery), &battery, sizeof(battery));
@@ -580,6 +586,7 @@ int main()
 	EXPECT(gScriptErr == 0);
 	EXPECT(gClicksSeen == 1 && gTapsSeen == 1);
 	EXPECT(gPauseOk);
+	EXPECT(gAbortOk);		// SendAbort answers nil
 	EXPECT(gBatteryOk);
 	EXPECT(gBacklightOk);
 	EXPECT(gProtocolsOk);

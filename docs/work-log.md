@@ -9,6 +9,18 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-02: ConnectPassthruKeyboard and SendAbort
+
+Two thin natives bound (1284 of 1326 answered):
+`ConnectPassthruKeyboard(connected)` (`views/ViewExtraNatives.cpp`) sets
+the root's passthru keyboard flag through the already reconstructed
+`TRootView::ConnectPassthruKeyboard`, so KeyboardConnected and
+KeyboardActive answer with it (`views.ViewExtraNatives`); `SendAbort()`
+(`newt/NewtWorld.cpp`) is the ROM's empty stub answering nil, called by
+a StopIO method after it sets ioStopping (`newt.Newt`).  The other 42 are
+AppleTalk/NBP and its zones, the online services and eWorld, and the TV
+remote's infrared.
+
 ## 2026-10-02: the reMarkable - lag, full-screen redraws, a crash
 
 - **Lag**: the ROM's inker draws the live ink on its 50 ms idler (only the

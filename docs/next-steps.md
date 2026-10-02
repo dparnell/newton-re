@@ -20,10 +20,9 @@ the way are all in `docs/work-log.md`.
   does not compare against the ROM.
 - `analysis/coverage.py build/MP2x00US --check`: 18118 citations, 0 bad;
   12199 of 16671 functions (73%).
-- `analysis/natives.py --unbound`: 1280 of 1326 natives answered (96.5%).
-  Left: comms 40 (AppleTalk and NBP, the online services and eWorld's
-  `EW*`, the TV remote), intl 4 (the AppleTalk zones), testing 2 (IR
-  sniffing).
+- `analysis/natives.py --unbound`: 1284 of 1326 natives answered (96.8%).
+  Left: comms 38 (AppleTalk and NBP, the online services and eWorld's
+  `EW*`, the TV remote), intl 4 (the AppleTalk zones).
 - `analysis/notyet.py` lists the NOT YET markers that name something
   already defined; the sweeps of 2026-10-01 left only genuine gaps
   (below) and performance paths.

@@ -3,7 +3,7 @@
 
 	Contains:	The view natives that are not in ViewNatives.cpp: the
 				debugging ones a developer types into the Inspector (DV,
-				ViewAutopsy), KeyboardInput, the vertical layouts
+				ViewAutopsy), KeyboardInput and ConnectPassthruKeyboard, the vertical layouts
 				(FormatVertical; ReFlow and ReflowPreflight are Reflow.cpp's), GrayShrink, the
 				splash graphic, and the overview's SyncScroll.
 				RegisterViewExtraNatives binds them.
@@ -89,6 +89,18 @@ FKeyboardInputX(RefArg rcvr)
 	if (view != nil && gRootView->CaretEnabled() && gRootView->fCaretView == view
 	 && gRootView->KeyboardActive())
 		return TRUEREF;
+	return NILREF;
+}
+
+
+// ROM 0x001ec680 FConnectPassthruKeyboard
+// ConnectPassthruKeyboard(connected): a keyboard connected (non-nil) or
+// gone (nil) through a soft keyboard - the root's passthru flag, which
+// KeyboardConnected and KeyboardActive answer with.
+static Ref
+FConnectPassthruKeyboard(RefArg /*rcvr*/, RefArg connected)
+{
+	gRootView->ConnectPassthruKeyboard(NOTNIL(connected));
 	return NILREF;
 }
 
@@ -298,5 +310,6 @@ RegisterViewExtraNatives(void)
 	RegisterNativeFunction("FDV", (void*) FDV, 1);
 	RegisterNativeFunction("FViewAutopsy", (void*) FViewAutopsy, 1);
 	RegisterNativeFunction("FKeyboardInputX", (void*) FKeyboardInputX, 0);
+	RegisterNativeFunction("FConnectPassthruKeyboard", (void*) FConnectPassthruKeyboard, 1);
 	RegisterNativeFunction("FormatVertical__FRC6RefVarN21", (void*) FormatVertical, 2);
 }
