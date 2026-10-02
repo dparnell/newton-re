@@ -9,6 +9,30 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-02: the reMarkable - lag, full-screen redraws, a crash
+
+- **Lag**: the ROM's inker draws the live ink on its 50 ms idler (only the
+  pen-down wakes it: `TResistiveTablet::TabPenEntry` is the one caller of
+  `TBCWakeUpInkerFromInterrupt`) - faithful, ~48 ms median.  The window now
+  draws the pen's line itself the moment each pen event comes (the pen
+  overlay), the Newton's ink landing on it 50 ms later.
+- **Full-screen redraws**: the window changed qtfb's waveform at every
+  pen-down/up (~300 a session; AppLoad applies it to its whole window) and
+  asked for a flashing full refresh every 4 screens of change.  Now one
+  waveform throughout and no automatic full refresh.  rmkit on the Paper
+  Pro goes through AppLoad's qtfb-shim, so cannot beat qtfb; its pen now
+  works (an eraser test, and its reMarkable 2 axes undone).
+- **A crash in the shape recogniser** on a long rising line, all four apps:
+  `TVStrTail` takes the middle point between the last corner and a break
+  past the table's end (0xffffffff), ~2^31 points on; the ARM's 32-bit
+  address arithmetic wrapped it back into the stroke, a 64-bit host read
+  16 GB away.  The index is now wrapped as the ARM's address is
+  (`recognition/ShapeKeyPoints.cpp`); ctests `host.NewtonLongLine.320x480`
+  and `.810x1080` (`demo/longline.ns`, the Notepad reading text and
+  shapes).
+- `NEWTON_RM_PENLOG` records the pen as the Newton got it; `HostPenReplay`
+  plays it back on any host (`host/HostPenReplay.h`).
+
 ## 2026-10-02: Newton OS on the reMarkable Paper Pro
 
 The owner asked for a port to the reMarkable Paper Pro using rmkit
