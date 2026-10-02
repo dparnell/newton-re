@@ -58,6 +58,14 @@ the way are all in `docs/work-log.md`.
   - the stages are the study's S0-S4 (S5, objects over 16 MB, only if
     cheap); wide on-disk and wire formats (S6) are not part of it - the
     owner may explore full 64-bit implementations of them later.
+  - **State (2026-10-02):** S0-S4 and 64-bit-aware time are built on
+    `ns64` (worktree `tmp/wt-ns64b`; write-up `docs/frames/64bit.md` on the
+    branch): both flavours pass 402/402, and NS64 with the device's wrapped
+    time (`NEWTON_NS64_TIME=device`) too.  S5 not done (the frames heap is
+    4 MB).  Before any merge: under load the branch's faithful build crashed
+    twice (NSBasic, Walkthrough2ROM - both pass alone); being checked
+    against main's own build under the same load.  S0 alone is proposed for
+    main.
 
 ## Waiting on the owner
 
