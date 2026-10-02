@@ -51,7 +51,7 @@ def main():
     parser.add_argument("--newton", required=True)
     parser.add_argument("--objects", required=True)
     parser.add_argument("-o", "--out", required=True)
-    parser.add_argument("--display", default="1620x2160")     # the Paper Pro panel, 1:1
+    parser.add_argument("--display", default="810x1080")      # the Paper Pro panel at 2x - 1:1 (1620x2160) is too small to use
     parser.add_argument("--name", default="Newton")
     parser.add_argument("--rmkit", action="store_true")
     args = parser.parse_args()
