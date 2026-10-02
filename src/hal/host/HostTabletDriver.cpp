@@ -99,7 +99,7 @@ static std::atomic<long>	gShutDowns(0);		// sleeps the driver has been shut down
 // the panel: where the pen is on the window (any thread writes, the
 // sampling interrupt reads), and how the panel sits against the display
 static std::atomic<bool>	gRawDown(false);
-static std::atomic<long>	gRawX(0);			// pixels
+static std::atomic<long>	gRawX(0);			// eighths of a pixel (a window on a finer panel - the reMarkable - gives more than whole pixels)
 static std::atomic<long>	gRawY(0);
 static std::atomic<ULong>	gRawDowns(0);		// pen-downs so far (a tap quicker than a sample still counts)
 static double				gSkewDX = 0, gSkewDY = 0, gSkewSX = 1, gSkewSY = 1;
@@ -153,9 +153,10 @@ RawPerPixel(void)
 // The panel's 12-bit reading of a point of the window: RawPerPixel to the
 // pixel, askew when a test has put it so.
 static void
-RawReading(long x, long y, long* rawX, long* rawY)
+RawReading(long x8, long y8, long* rawX, long* rawY)
 {
 	long k = RawPerPixel();
+	double x = x8 / 8.0, y = y8 / 8.0;		// (eighths of a pixel)
 	*rawX = lround((x * gSkewSX + gSkewDX) * k);
 	*rawY = lround((y * gSkewSY + gSkewDY) * k);
 	if (*rawX < 0) *rawX = 0;
@@ -372,8 +373,8 @@ TMainTabletDriver::Sample(void)
 			gHostTabletTapHook(gTapX, gTapY, true);
 		else
 		{
-			gRawX.store(gTapX);
-			gRawY.store(gTapY);
+			gRawX.store(gTapX * 8);
+			gRawY.store(gTapY * 8);
 			gRawDown.store(true);
 			gRawDowns.fetch_add(1);
 		}
@@ -450,18 +451,32 @@ HostTabletMakeDriver(void)
 void
 HostTabletRawPenDown(long x, long y)
 {
-	gRawX.store(x);
-	gRawY.store(y);
-	gRawDown.store(true);
-	gRawDowns.fetch_add(1);
+	HostTabletRawPenDownFine(x * 8, y * 8);
 }
 
 
 void
 HostTabletRawPenMove(long x, long y)
 {
-	gRawX.store(x);
-	gRawY.store(y);
+	HostTabletRawPenMoveFine(x * 8, y * 8);
+}
+
+
+void
+HostTabletRawPenDownFine(long x8, long y8)
+{
+	gRawX.store(x8);
+	gRawY.store(y8);
+	gRawDown.store(true);
+	gRawDowns.fetch_add(1);
+}
+
+
+void
+HostTabletRawPenMoveFine(long x8, long y8)
+{
+	gRawX.store(x8);
+	gRawY.store(y8);
 }
 
 

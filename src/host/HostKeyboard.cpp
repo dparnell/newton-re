@@ -174,6 +174,28 @@ HostWindowPenMove(long x, long y)
 	HostTabletRawPenMove(x, y);
 }
 
+// the same in eighths of a pixel (host/remarkable/HostWindow.cpp: the panel
+// is finer than the display it shows)
+void
+HostWindowPenDownFine(long x8, long y8)
+{
+	if (HostPowerAsleep())
+	{
+		gHostPenWoke.store(true);
+		HostPowerWake(kHostPowerEventSwitch);
+		return;
+	}
+	HostTabletRawPenDownFine(x8, y8);
+}
+
+void
+HostWindowPenMoveFine(long x8, long y8)
+{
+	if (gHostPenWoke.load())
+		return;
+	HostTabletRawPenMoveFine(x8, y8);
+}
+
 void
 HostWindowPenUp(void)
 {

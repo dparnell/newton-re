@@ -51,6 +51,8 @@ extern "C" {
 void	HostWindowPenDown(long x, long y);
 void	HostWindowPenMove(long x, long y);
 void	HostWindowPenUp(void);
+void	HostWindowPenDownFine(long x8, long y8);		// eighths of a display pixel
+void	HostWindowPenMoveFine(long x8, long y8);
 void	HostWindowKey(long virtualKey, int down);
 void	HostWindowClosed(void);
 void	HostWindowThreadStarted(void);
@@ -391,6 +393,7 @@ WindowThread(void)
 	// "milliseconds what x y" in display pixels (what 0 down, 1 move, 2 up),
 	// for host/HostPenReplay.h to play back on another host
 	FILE* penLog = getenv("NEWTON_RM_PENLOG") != nil ? fopen(getenv("NEWTON_RM_PENLOG"), "w") : nil;
+	const bool wholePixels = EnvLong("NEWTON_RM_PEN_WHOLE", 0) != 0;
 	const long overlayHoldMs = EnvLong("NEWTON_RM_OVERLAY_HOLD", 400);
 	const bool touchIsPen = getenv("NEWTON_RM_TOUCH") != nil && strcmp(getenv("NEWTON_RM_TOUCH"), "pen") == 0;
 	const long frameMs = EnvLong("NEWTON_RM_FRAME", 33);		// the pace with the pen up
@@ -505,6 +508,17 @@ WindowThread(void)
 		{
 			wait = 0;
 			long x = (event.x - originX) / gScale, y = (event.y - originY) / gScale;
+			// the pen to an eighth of a display pixel: at 2x the panel has
+			// twice the display's pixels and the Marker several readings to
+			// each, which a whole display pixel would throw away (the
+			// MessagePad's resistive tablet read about eight to the pixel);
+			// NEWTON_RM_PEN_WHOLE=1 gives the Newton whole pixels only
+			long x8 = ((event.x - originX) * 8) / gScale, y8 = ((event.y - originY) * 8) / gScale;
+			if (wholePixels) { x8 = x * 8; y8 = y * 8; }
+			if (x8 < 0) x8 = 0;
+			if (y8 < 0) y8 = 0;
+			if (x8 > gWidth * 8 - 1) x8 = gWidth * 8 - 1;
+			if (y8 > gHeight * 8 - 1) y8 = gHeight * 8 - 1;
 			if (x < 0) x = 0;
 			if (y < 0) y = 0;
 			if (x >= gWidth) x = gWidth - 1;
@@ -526,9 +540,9 @@ WindowThread(void)
 				{
 					gPenDown.store(true);
 					trace.PenEvent(true);
-					HostWindowPenDown(x, y);
+					HostWindowPenDownFine(x8, y8);
 					if (penLog != nil)
-						fprintf(penLog, "%.0f 0 %ld %ld\n", Ms(std::chrono::steady_clock::now() - started), x, y);
+						fprintf(penLog, "%.0f 0 %.3f %.3f\n", Ms(std::chrono::steady_clock::now() - started), x8 / 8.0, y8 / 8.0);
 					penX = penDownX = event.x - originX;
 					penY = penDownY = event.y - originY;
 					penDrawing = false;
@@ -539,9 +553,9 @@ WindowThread(void)
 				if (gPenDown.load())
 				{
 					trace.PenEvent(false);
-					HostWindowPenMove(x, y);
+					HostWindowPenMoveFine(x8, y8);
 					if (penLog != nil)
-						fprintf(penLog, "%.0f 1 %ld %ld\n", Ms(std::chrono::steady_clock::now() - started), x, y);
+						fprintf(penLog, "%.0f 1 %.3f %.3f\n", Ms(std::chrono::steady_clock::now() - started), x8 / 8.0, y8 / 8.0);
 					if (overlay)
 					{
 						long px = event.x - originX, py = event.y - originY;
@@ -569,7 +583,7 @@ WindowThread(void)
 					HostWindowPenUp();
 					if (penLog != nil)
 					{
-						fprintf(penLog, "%.0f 2 %ld %ld\n", Ms(std::chrono::steady_clock::now() - started), x, y);
+						fprintf(penLog, "%.0f 2 %.3f %.3f\n", Ms(std::chrono::steady_clock::now() - started), x8 / 8.0, y8 / 8.0);
 						fflush(penLog);
 					}
 					gPenDown.store(false);

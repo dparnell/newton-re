@@ -501,6 +501,23 @@ Prepared (in `tmp/rmpp-app/` of the branch's build; remade by the commands in
 6. Optional: `./rmprobe --events 15` over SSH while drawing, touching and
    typing on the folio - the raw event streams.
 
+**Sleep while developing.**  The tablet sleeps (and drops its USB network)
+soon after use.  For the test sessions, with the owner's agreement,
+`/home/root/.config/remarkable/xochitl.conf` was given
+`IdleSuspendDelay=3600000` (an hour) and `LightSleepEnabled=false`, and
+xochitl restarted with `/home/root/xovi/start` (2026-10-02, 08:15); the
+original is kept at `/home/root/newton-data/xochitl.conf.before-sleep-change`.
+To undo: copy it back over `xochitl.conf` and run `/home/root/xovi/start`
+again (or reboot; the setting is the file's).
+
+**Pen logs.**  Each app's `run.sh` records the pen the Newton is given to
+`/home/root/newton-data/<app>/pen-<date>-<time>.log` (`NEWTON_RM_PENLOG`;
+"milliseconds what x y", x and y in display pixels to an eighth); on the
+desktop `src/host/demo/penreplay.ns` (`HostPenReplay`) plays one back
+through the same pen path over a copy of the tablet's store, and
+`NEWTON_PENREPLAY_WHOLE=1` cuts the points to whole pixels as the window did
+before it passed eighths on.
+
 To remove everything: `rm -r /home/root/xovi/exthome/appload/{newton,newton-rmkit,rmprobe-app}
 /home/root/newton /home/root/newton-data /home/root/rmprobe-qtfb.log`.
 

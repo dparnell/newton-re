@@ -1,0 +1,41 @@
+// A pen recorded on the reMarkable (NEWTON_RM_PENLOG) played back on this
+// host through the window's pen path (HostPenReplay, host/HostPenReplay.h),
+// over a copy of the store it was recorded on so the calibration is the
+// same; then what the Notepad holds is printed - the words read, the ink
+// kept - and the screen written to build/penreplay.pgm.
+//
+//   NEWTON_PENLOG=pen.log build/host/host/newton --display 810x1080 --store <copy of the tablet's store> \
+//       --headless 600 --script src/host/demo/penreplay.ns
+//
+// The display must be the size the pen was recorded at.  Prints
+// "penreplay: text: ..." per paragraph and "penreplay: done".
+
+HostInclude("common.ns");			// waitFor
+
+penreplayTexts := func(v, into)
+  begin
+    if BAnd(v.viewClass, 0xFFFF) = 81 and IsString(v.text) then
+      AddArraySlot(into, v.text);
+    foreach child in v:ChildViewFrames() do
+      call penreplayTexts with (child, into);
+    into;
+  end;
+
+penreplayStart := func()
+  begin
+    local file := HostGetEnv("NEWTON_PENLOG");
+    local events := HostPenReplay(file);
+    Print("penreplay: " & events & " pen events from " & file);
+    call waitFor with ("penreplay: the pen played", func() HostPenReplayDone(), func()
+      // the recogniser's last word let go
+      AddDelayedCall(func() begin
+          foreach t in call penreplayTexts with (GetRoot(), []) do
+            Print("penreplay: text: " & t);
+          ScreenSnapshot("build/penreplay.pgm");
+          Print("penreplay: done");
+          HostQuit();
+        end, nil, 5000), 900);
+  end;
+
+call waitFor with ("penreplay: the Notepad", func() GetRoot().paperroll and GetRoot().paperroll.viewCObject,
+  func() AddDelayedCall(penreplayStart, nil, 2000), 90);

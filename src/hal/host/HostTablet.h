@@ -47,6 +47,8 @@ void	HostTabletRegisterDriver(void);						// "TMainTabletDriver" registered for 
 TTabletDriver*	HostTabletMakeDriver(void);					// ... or one made (no OS)
 void	HostTabletRawPenDown(long x, long y);				// the pen on the window (pixels; any thread)
 void	HostTabletRawPenMove(long x, long y);
+void	HostTabletRawPenDownFine(long x8, long y8);		// the same in eighths of a pixel: a window on a panel finer than the display (the reMarkable's, at 2x)
+void	HostTabletRawPenMoveFine(long x8, long y8);
 void	HostTabletRawPenUp(void);
 void	HostTabletRawTap(long x, long y, ULong milliseconds);	// down at (x, y) for so long, then up
 // A scripted tap's press and release (HostTabletRawTap, and the calibration
