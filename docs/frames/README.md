@@ -358,6 +358,14 @@ does: the whole drawing benchmark runs about 600,000 bytecodes, a few
 milliseconds of the newt task's second, so the fast loop does not show
 there.
 
+On 2026-10-03 (branch `perf/drawing`) the native registry's hash table,
+the larger `FindOffset` cache and the hash-first symbol compare
+(`docs/qd/README.md`, "Drawing speed") were measured here too, 100 rounds
+of each step, two runs, against main: the counting loop 3859-3968 ms to
+1906-1922 (its natives were each found by a search through some
+thousands of bindings), the lookups 781 to 688-703, the applications
+703-750 to 437-453, text unchanged (93-109); in all 5.5 s to 3.1-3.2 s.
+
 Exceptions: a NewtonScript `try` pushes a handler record (an array: next,
 value depth, control depth, function, receiver, implementor, the
 (symbol, pc) pairs, the current exception, locals); `Run` catches every
