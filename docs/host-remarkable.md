@@ -713,7 +713,18 @@ sent where one rectangle a frame would have sent Q (R%)`.  Under the qtfb
 stand-in (qemu, WSL; `qtfbserver.py` now reports the pixels the updates
 named), booting to Welcome at 320x480: main sent a whole-screen update
 where this sends the status bar, the button bar and four lines of text -
-3.5 M framebuffer pixels for the boot against 5.6 M.  Not changed: the
+3.5 M framebuffer pixels for the boot against 5.6 M.
+
+**In use** (the owner's first session with it, 138 s, 810x1080 at 2x):
+623 frames of changes went as 1065 rectangles, 9.0 M display pixels where
+one rectangle a frame would have sent 15.5 M - 58%.  Of the updates, 867
+were under 1% of the screen and 190 between 1 and 10% (55% of the area
+sent); three were half the screen or more (two whole-screen, opening an
+application).  The pen's latency to the panel did not move with it (a
+stroke's median 37 ms against 48 ms in the sessions before; the slowest
+about the same): that is the inker's own pace, not the drawing.
+
+Not changed: the
 Newton side still blits one dirty rectangle into the gray buffer (that is
 the ROM's `UpdateHardwareScreen`, and only processor time); what reaches
 the glass is decided here.
