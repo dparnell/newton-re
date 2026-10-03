@@ -149,6 +149,73 @@ SetRowPixel(unsigned char* row, long bit, long depth, long value)
 
 // the widest pattern whose row is worked out once a row
 enum { kPatternValuesMax = 64 };
+// a pattern row packed at the destination's depth repeats every so many
+// bytes (at most kPatternValuesMax * 8 bits); it is laid out at least
+// kPatternPhaseMin bytes long so that a row is written in few copies
+enum { kPatternPhaseMin = 64, kPatternPhaseMax = kPatternValuesMax + kPatternPhaseMin };
+
+
+static long
+GreatestCommonDivisor(long a, long b)
+{
+	while (b != 0)
+	{
+		long t = a % b;
+		a = b;
+		b = t;
+	}
+	return a;
+}
+
+
+// A destination row's bytes [b0, b1] (b1 >= b0) combined with a packed
+// source that repeats every `period` bytes from b0 - phase[0] goes on b0 -
+// under op (0 copy, 1 or, 2 xor, 3 bic: here bitwise, so a gray "or" never
+// comes here), the first byte under leftMask and the last under rightMask.
+static void
+CombinePackedRow(unsigned char* drow, long b0, long b1, unsigned char leftMask, unsigned char rightMask, const unsigned char* phase, long period, long op)
+{
+	if (b0 == b1)
+		leftMask &= rightMask;
+	unsigned char* d = drow + b0;
+	long count = b1 - b0 + 1;
+	long j = 0;
+	for (long i = 0; i < count; i++)
+	{
+		unsigned char s = phase[j];
+		if (++j == period)
+			j = 0;
+		unsigned char mask = (i == 0) ? leftMask : (i == count - 1) ? rightMask : 0xff;
+		unsigned char value;
+		switch (op)
+		{
+		case 0:		value = s; break;
+		case 1:		value = d[i] | s; break;
+		case 2:		value = d[i] ^ s; break;
+		default:	value = d[i] & ~s; break;
+		}
+		d[i] = (unsigned char) ((d[i] & ~mask) | (value & mask));
+		if (op == 0 && i == 0 && count > 2)
+		{
+			// a copy's whole bytes go in runs of the phase
+			long middle = count - 2;
+			unsigned char* m = d + 1;
+			while (middle > 0)
+			{
+				long run = period - j;
+				if (run > middle)
+					run = middle;
+				memcpy(m, phase + j, run);
+				m += run;
+				middle -= run;
+				j += run;
+				if (j == period)
+					j = 0;
+			}
+			i = count - 2;
+		}
+	}
+}
 
 
 // The masks' scan rows ANDed into one byte a pixel for the width from x
@@ -291,6 +358,61 @@ BlitPixelsFast(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* ds
 			continue;
 		}
 
+		// the masks, ANDed
+		Boolean allVisible = true;
+		if (maskCount > 0)
+		{
+			for (long m = 0; m < maskCount; m++)
+				SeekRgn(masks[m], y);
+			allVisible = VisibleRow(masks, maskCount, clipped->left, width, visible);
+		}
+
+		// A pattern row every pixel of which is visible under a bitwise
+		// operation: the row's bytes made once, packed at the destination's
+		// depth from the byte the first pixel is in, and repeated along it.
+		if (usePattern && allVisible && depth <= 8 && patWidth <= kPatternValuesMax && (op != 1 || depth == 1))
+		{
+			const unsigned char* prow = patBits + ((((y + align.v) % patHeight) + patHeight) % patHeight) * patRowBytes;
+			long values[kPatternValuesMax];
+			for (long k = 0; k < patWidth; k++)
+			{
+				long value = RowPixel(prow, k * patDepth, patDepth);
+				if (patDepth != depth)
+					value = value ? maxValue : 0;
+				values[k] = invert ? value ^ maxValue : value;
+			}
+			long b0 = dstBit0 >> 3;
+			long endBit = dstBit0 + width * depth;
+			long b1 = (endBit - 1) >> 3;
+			long period = (patWidth * depth) / GreatestCommonDivisor(patWidth * depth, 8);
+			long phaseBytes = period;
+			while (phaseBytes < kPatternPhaseMin)
+				phaseBytes += period;
+			if (phaseBytes > b1 - b0 + 1)
+				phaseBytes = b1 - b0 + 1;
+			unsigned char phase[kPatternPhaseMax];
+			// (the pattern's column for the first pixel of byte b0)
+			long firstPixel = (b0 << 3) / depth;
+			long px = (((dst->bounds.left + firstPixel + align.h) % patWidth) + patWidth) % patWidth;
+			long perByte = 8 / depth;
+			for (long j = 0; j < phaseBytes; j++)
+			{
+				unsigned long b = 0;
+				for (long k = 0; k < perByte; k++)
+				{
+					b = (b << depth) | (unsigned long) values[px];
+					if (++px == patWidth)
+						px = 0;
+				}
+				phase[j] = (unsigned char) b;
+			}
+			unsigned char leftMask = (unsigned char) (0xff >> (dstBit0 & 7));
+			unsigned char rightMask = (endBit & 7) ? (unsigned char) (0xff << (8 - (endBit & 7))) : 0xff;
+			unsigned char* drow = dstBits + (y - dst->bounds.top) * dstRowBytes;
+			CombinePackedRow(drow, b0, b1, leftMask, rightMask, phase, phaseBytes, op);
+			continue;
+		}
+
 		// the source row (read in full first: it may overlap the destination row)
 		if (usePattern)
 		{
@@ -345,15 +467,6 @@ BlitPixelsFast(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* ds
 					row[i] = invert ? value ^ maxValue : value;
 				}
 			}
-		}
-
-		// the masks, ANDed
-		Boolean allVisible = true;
-		if (maskCount > 0)
-		{
-			for (long m = 0; m < maskCount; m++)
-				SeekRgn(masks[m], y);
-			allVisible = VisibleRow(masks, maskCount, clipped->left, width, visible);
 		}
 
 		// the destination row

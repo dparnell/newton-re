@@ -214,6 +214,9 @@ DrawScene(unsigned long seed, Map* dst, Map* sources, long sourceCount)
 			MoveTo(bounds.left + Rnd(kWidth), bounds.top + Rnd(kHeight));
 			for (long k = 0; k < 4; k++)
 				LineTo(bounds.left + Rnd(kWidth + 20) - 10, bounds.top + Rnd(kHeight + 20) - 10);
+			// (and straight across and down: a row or column drawn as one run)
+			Line(Rnd(kWidth + 20) - 10, 0);
+			Line(0, Rnd(kHeight + 20) - 10);
 			break;
 		case 11:
 			{

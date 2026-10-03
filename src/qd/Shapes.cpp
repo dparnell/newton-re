@@ -616,6 +616,13 @@ FillArc(const Rect* r, long startAngle, long arcAngle, PatternHandle pattern)
 // (FastLine for a one-pixel black or white pen) from a fixed-point slope;
 // this Bresenham walk may place the odd diagonal pixel differently
 // (DEVIATION).
+//
+// Host: the pens stamped along one row (one column of a steep line) are
+// drawn as the one rectangle they cover, as the ROM draws a row at once
+// (DEVIATION, performance: the same pixels).  That holds wherever drawing a
+// pixel twice is drawing it once - every mode but xor - and for xor when the
+// pen is one pixel, whose stamps never overlap; xor with a bigger pen, and
+// the slow blitter (the oracle, qd/tests/test_Blitter.cpp), stamp each pen.
 void
 DrawLine(Point from, Point to)
 {
@@ -634,11 +641,45 @@ DrawLine(Point from, Point to)
 	long y = from.v;
 	long error = (dx > dy ? dx : dy) / 2;
 	long steps = dx > dy ? dx : dy;
+	long penH = port->pnSize.h, penV = port->pnSize.v;
+	Boolean runs = penH > 0 && penV > 0 && !QDSlowBlitter()
+				&& ((port->pnMode & 3) != 2 || (penH == 1 && penV == 1));
 	Rect pen;
+	long runX = x, runY = y;						// (where the run being gathered began)
 	for (long i = 0; i <= steps; i++)
 	{
-		SetRect(&pen, x, y, x + port->pnSize.h, y + port->pnSize.v);
-		RgnBlt(&port->portBits, &port->portBits, &pen, &pen, port->pnMode, port->fgPat, port->visRgn, port->clipRgn, wideHandle);
+		if (!runs)
+		{
+			SetRect(&pen, x, y, x + penH, y + penV);
+			RgnBlt(&port->portBits, &port->portBits, &pen, &pen, port->pnMode, port->fgPat, port->visRgn, port->clipRgn, wideHandle);
+		}
+		else
+		{
+			// the next pen leaves the row (column) or there is none: the run drawn
+			long nextX = x, nextY = y;
+			if (i < steps)
+			{
+				if (dx > dy)
+				{
+					nextX += stepX;
+					if (error - dy < 0)
+						nextY += stepY;
+				}
+				else
+				{
+					nextY += stepY;
+					if (error - dx < 0)
+						nextX += stepX;
+				}
+			}
+			if (i == steps || (dx > dy ? nextY != y : nextX != x))
+			{
+				SetRect(&pen, runX < x ? runX : x, runY < y ? runY : y, (runX > x ? runX : x) + penH, (runY > y ? runY : y) + penV);
+				RgnBlt(&port->portBits, &port->portBits, &pen, &pen, port->pnMode, port->fgPat, port->visRgn, port->clipRgn, wideHandle);
+				runX = nextX;
+				runY = nextY;
+			}
+		}
 		if (dx > dy)
 		{
 			x += stepX;
