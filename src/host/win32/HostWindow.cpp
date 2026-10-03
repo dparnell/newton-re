@@ -41,6 +41,17 @@ static std::thread*			gThread = nil;
 static std::atomic<bool>	gPenDown(false);
 static std::atomic<bool>	gStopping(false);
 const UINT_PTR				kRefreshTimer = 1;
+static unsigned char		gPalette[256 * 3];		// HostWindowSetPalette's colours, when gHasPalette
+static std::atomic<bool>	gHasPalette(false);
+
+
+void
+HostWindowSetPalette(const unsigned char* rgb)
+{
+	if (rgb != nil)
+		memcpy(gPalette, rgb, sizeof(gPalette));
+	gHasPalette.store(rgb != nil);
+}
 
 // the display's grays as an 8-bit DIB, drawn scaled
 static void
@@ -60,6 +71,14 @@ Paint(HWND hwnd)
 	info.header.biCompression = BI_RGB;
 	for (long i = 0; i < 256; i++)
 	{
+		if (gHasPalette.load())
+		{
+			// (a colour screen: each value its palette entry - qd/Colour.h)
+			info.palette[i].rgbRed = gPalette[i * 3];
+			info.palette[i].rgbGreen = gPalette[i * 3 + 1];
+			info.palette[i].rgbBlue = gPalette[i * 3 + 2];
+			continue;
+		}
 		BYTE level = (BYTE) (255 - i);				// the display's 0 is white, 255 black
 		info.palette[i].rgbRed = info.palette[i].rgbGreen = info.palette[i].rgbBlue = level;
 	}
@@ -284,6 +303,12 @@ bool
 HostWindowStart(long /*width*/, long /*height*/, const unsigned char* /*pixels*/, const char* /*title*/, long /*scale*/)
 {
 	return false;
+}
+
+
+void
+HostWindowSetPalette(const unsigned char* /*rgb*/)
+{
 }
 
 

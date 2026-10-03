@@ -13,6 +13,7 @@ add_library(qd STATIC
     Regions.cpp
     RegionVars.cpp
     Ports.cpp
+    Colour.cpp
     Draw.cpp
     Shapes.cpp
     Polygons.cpp

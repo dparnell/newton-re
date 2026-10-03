@@ -925,6 +925,16 @@ add_executable(test_ChangedRects remarkable/tests/test_ChangedRects.cpp)
 add_test(NAME host.ChangedRects COMMAND test_ChangedRects)
 set_tests_properties(host.ChangedRects PROPERTIES PASS_REGULAR_EXPRESSION "test_ChangedRects: all passed")
 
+# the colour screen (--colour, qd/Colour.h, docs/qd/colour.md): PackRGB
+# fills, a font colour, a two-colour dither and an inverted colour, each
+# checked on the screen with ScreenColour
+add_test(NAME host.NewtonColour COMMAND newton --colour --display 320x480 --erase
+         --store ${CMAKE_CURRENT_BINARY_DIR}/colour.store --headless 60
+         --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/colour.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+set_tests_properties(host.NewtonColour PROPERTIES TIMEOUT 120
+                     PASS_REGULAR_EXPRESSION "colour: done, 0 failed"
+                     FAIL_REGULAR_EXPRESSION "FAILED|!!! Exception")
+
 add_test(NAME host.NewtonSplash COMMAND newton --display 320x480 --headless 60
          --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/splash.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonSplash PROPERTIES TIMEOUT 120

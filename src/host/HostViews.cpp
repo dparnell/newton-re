@@ -55,8 +55,25 @@ FDisasm(RefArg /*rcvr*/, RefArg fn)
 }
 
 
+// ScreenColour(h, v): the colour the display shows at the point, as
+// 0xRRGGBB (a gray's three alike), nil off it - a colour screen's
+// (--colour, qd/Colour.h) palette entry
+static Ref
+FScreenColour(RefArg /*rcvr*/, RefArg h, RefArg v)
+{
+	if (gHostDisplay == nil || !ISINT((Ref) h) || !ISINT((Ref) v))
+		return NILREF;
+	Long x = RINT(h), y = RINT(v);
+	if (x < 0 || y < 0 || x >= gHostDisplay->Width() || y >= gHostDisplay->Height())
+		return NILREF;
+	UpdateHardwareScreen();
+	return MAKEINT((Long) gHostDisplay->Colour(x, y));
+}
+
+
 // ScreenSnapshot(path): the display written to the file - a PBM for a
-// path ending in .pbm, else a PGM; ==> whether it could be
+// path ending in .pbm, a PPM (in colour on a colour screen) for .ppm,
+// else a PGM; ==> whether it could be
 // ScreenPixel(h, v): the gray the display shows at the point (0 black,
 // 255 white), nil off it - what a test looks at to see what was drawn
 static Ref
@@ -86,8 +103,9 @@ FScreenSnapshot(RefArg /*rcvr*/, RefArg path)
 		name[i] = (char) text[i];
 	name[length] = 0;
 	Boolean pbm = length > 4 && strcmp(name + length - 4, ".pbm") == 0;
+	Boolean ppm = length > 4 && strcmp(name + length - 4, ".ppm") == 0;		// (in colour on a colour screen)
 	UpdateHardwareScreen();
-	return MAKEBOOLEAN(pbm ? gHostDisplay->WritePBM(name) : gHostDisplay->WritePGM(name));
+	return MAKEBOOLEAN(pbm ? gHostDisplay->WritePBM(name) : ppm ? gHostDisplay->WritePPM(name) : gHostDisplay->WritePGM(name));
 }
 
 
@@ -242,6 +260,7 @@ HostRegisterViewFunctions(void)
 	SetFrameSlot(functions, RefVar(Intern((char*) "ScreenSnapshot")), RefVar(MakeCFunction((void*) FScreenSnapshot, 1, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "Disasm")), RefVar(MakeCFunction((void*) FDisasm, 1, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "ScreenPixel")), RefVar(MakeCFunction((void*) FScreenPixel, 2, nil)));
+	SetFrameSlot(functions, RefVar(Intern((char*) "ScreenColour")), RefVar(MakeCFunction((void*) FScreenColour, 2, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "ScreenWidth")), RefVar(MakeCFunction((void*) FScreenWidth, 0, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "ScreenHeight")), RefVar(MakeCFunction((void*) FScreenHeight, 0, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "PenDown")), RefVar(MakeCFunction((void*) FPenDown, 2, nil)));

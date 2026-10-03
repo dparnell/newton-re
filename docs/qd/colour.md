@@ -72,3 +72,33 @@ those gaps, so `--display WxHx8` draws everything.
 
 With them a whole screen at eight bits (the Notepad with the Extras
 drawer open) is the four-bit screen pixel for pixel, the clock aside.
+
+## The host: a colour screen (`--colour`)
+
+DEVIATION (an extension, off unless asked for): `newton --colour` makes
+the screen eight bits whose values index a palette (`qd/Colour.h`), the
+way Color QuickDraw drove an indexed screen on the Mac.  Nothing in the
+ROM's drawing changes: `RGBtoGray` at eight bits answers the palette entry
+nearest the colour instead of a gray, and `GrayToRGB` an entry's colour,
+so every path in the table above - PackRGB patterns, dither patterns, font
+colours, colour tables - draws in colour.  The palette keeps what the
+ROM's drawing takes for granted of a gray screen:
+
+- 0 is white and 255 black (a one-bit pixel widened to eight is 255);
+- entry 17 * v is the four-bit gray v, so the ROM's four-bit icons and
+  grays (widened v * 17 by `StretchBits`) look as they do on a MessagePad;
+- entry 255 - i is entry i's complement, so xor with all ones - how
+  QuickDraw inverts, hilites included - turns a colour into its opposite.
+
+Besides the sixteen grays it holds a 6 x 6 x 6 colour cube and 24 more
+grays.  The nearest entry to a colour is looked up in a 32 x 32 x 32 table
+made on first use.  The host's windows show the palette
+(`HostWindowSetPalette`: Windows' 8-bit DIB, X11's pixel table, and the
+reMarkable's RGB565 panel - the Paper Pro's is a colour e-ink one);
+`ScreenColour(h, v)` answers a pixel's colour (0xRRGGBB) and
+`ScreenSnapshot("x.ppm")` writes the screen in colour
+(`tools/imaging/pgm2png.py` reads PPM now).
+
+ctest `host.NewtonColour` (`src/host/demo/colour.ns`): four PackRGB fills,
+blue text, a red-on-yellow dither and a red rectangle inverted to cyan, each
+checked on the screen.

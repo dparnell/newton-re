@@ -53,10 +53,12 @@ public:
 	void		Configure(long width, long height, long depth, long dpi);		// before InitScreen: the display's size as the window has it (a wider one starts in landscape), depth (1, 2, 4 or 8) and resolution
 	long		Width(void) const			{ return fLandscape ? fHeight : fWidth; }
 	long		Height(void) const			{ return fLandscape ? fWidth : fHeight; }
-	unsigned char	Gray(long x, long y) const;										// 0 white .. 255 black
+	unsigned char	Gray(long x, long y) const;										// 0 white .. 255 black (on a colour screen: the colour's gray)
+	unsigned long	Colour(long x, long y) const;									// 0xRRGGBB: the palette's entry on a colour screen, else the gray (qd/Colour.h)
 	const unsigned char*	Pixels(void) const		{ return fPixels; }			// the grays, Width() per row
 	Boolean		WritePGM(const char* path) const;								// the display as a binary PGM (P5)
 	Boolean		WritePBM(const char* path) const;								// ... as a PBM (P4): gray from half black is black
+	Boolean		WritePPM(const char* path) const;								// ... as a PPM (P6): in colour on a colour screen
 	long		fBlits;				// how many Blits came (tests)
 	Rect		fLastBlit;			// the last one's destination
 

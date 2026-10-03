@@ -63,6 +63,19 @@ static char					gTitle[128];
 static std::thread*			gThread = nil;
 static std::atomic<bool>	gPenDown(false);
 static std::atomic<bool>	gStopping(false);
+static unsigned char		gPalette[256 * 3];		// HostWindowSetPalette's colours
+static std::atomic<int>		gPaletteVersion(0);		// changed with each palette (or its taking away)
+static std::atomic<bool>	gHasPalette(false);
+
+
+void
+HostWindowSetPalette(const unsigned char* rgb)
+{
+	if (rgb != nil)
+		memcpy(gPalette, rgb, sizeof(gPalette));
+	gHasPalette.store(rgb != nil);
+	gPaletteVersion.fetch_add(1);
+}
 static std::atomic<bool>	gStarted(false);		// the window is up (or has failed to come up)
 static std::atomic<bool>	gFailed(false);
 
@@ -129,6 +142,12 @@ struct GrayRamp
 	{
 		for (int i = 0; i < 256; i++)
 		{
+			if (gHasPalette.load())
+			{
+				// (a colour screen: each value its palette entry - qd/Colour.h)
+				fPixel[i] = Component(gPalette[i * 3], red) | Component(gPalette[i * 3 + 1], green) | Component(gPalette[i * 3 + 2], blue);
+				continue;
+			}
 			unsigned char level = (unsigned char) (255 - i);		// the display's 0 is white, 255 black
 			fPixel[i] = Component(level, red) | Component(level, green) | Component(level, blue);
 		}
@@ -347,6 +366,7 @@ WindowThread(void)
 
 	GrayRamp ramp;
 	ramp.Build(visual->red_mask, visual->green_mask, visual->blue_mask);
+	int rampVersion = gPaletteVersion.load();
 
 	long startX = gPositionX.load(), startY = gPositionY.load();
 	Window window = XCreateSimpleWindow(display, RootWindow(display, screen),
@@ -404,6 +424,11 @@ WindowThread(void)
 	while (!gStopping.load() && !closed)
 	{
 		// the display's grays into the image, each pixel scale by scale
+		if (gPaletteVersion.load() != rampVersion)
+		{
+			rampVersion = gPaletteVersion.load();
+			ramp.Build(visual->red_mask, visual->green_mask, visual->blue_mask);
+		}
 		const unsigned char* pixels = gPixels;
 		if (pixels != nil)
 		{

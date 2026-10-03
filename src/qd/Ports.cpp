@@ -11,6 +11,7 @@
 */
 
 #include "Ports.h"
+#include "Colour.h"
 #include "GrayShrink.h"
 #include "ByteOrder.h"
 #include "OSErrors.h"
@@ -412,6 +413,12 @@ MakeGrayPattern(RefArg spec)
 void
 GrayToRGB(UChar gray, ULong* red, ULong* green, ULong* blue, long depth)
 {
+	if (depth == 8 && ColourScreen())
+	{
+		// (host: a colour screen's pixel is its palette entry - qd/Colour.h)
+		IndexToColour(gray, red, green, blue);
+		return;
+	}
 	ULong step = depth == 2 ? 0x5555 : 0x1111;
 	ULong value = (ULong) (ULong32) (0xffff - step * gray);
 	*red = value;
@@ -797,6 +804,10 @@ ArmLsr(ULong32 value, ULong count)	{ return count >= 32 ? 0 : (ULong32) (value >
 ULong
 RGBtoGray(ULong red, ULong green, ULong blue, long depthIn, long depthOut)
 {
+	// (host: on a colour screen a colour at eight bits is the palette entry
+	// nearest it, not a gray - DEVIATION, an extension: qd/Colour.h)
+	if (depthOut == 8 && ColourScreen())
+		return ColourToIndex(red, green, blue);
 	ULong32 gray = (ULong32) ((ULong32) red * 0xffffb37bUL
 							+ (ULong32) green * 0xffff69d5UL
 							+ (ULong32) blue * 0xffffe2b7UL) - 1;

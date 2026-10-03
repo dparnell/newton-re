@@ -13,7 +13,7 @@
 				applications); a NewtonScript file can be run once the world
 				is up, as the ROM's boot runs its bootTestScript.
 
-	newton [--rom image | --objects file] [--heap bytes] [--display WxH[xdepth]] [--scale n]
+	newton [--rom image | --objects file] [--heap bytes] [--display WxH[xdepth]] [--colour] [--scale n]
 	       [--script file.ns] [--headless seconds] [--store file] [--erase]
 	       [--flash-size mb] [--flat-flash]
 	       [--package file.pkg]... [--card file] [--microphone-tone hz] [--tcp-echo port]
@@ -41,6 +41,12 @@
 	--rom boots the original ROM image instead (build/MP2x00US/rom.bin, or
 	the AIF image in DebugRom/), which is how the reconstructed data is
 	checked against the ROM (ctest host.NewtonNoROMSameScreen).
+
+	--colour makes the screen an eight-bit colour one (qd/Colour.h,
+	docs/qd/colour.md): its pixel values index a palette, and the colours
+	applications give (PackRGB patterns, text colours, colour bitmaps) are
+	drawn in colour where the ROM draws them in grays.  An extension: the
+	MessagePad has no colour screen.  --display's depth is taken as 8.
 
 	--limit ends a run with the window open after the seconds, as
 	--headless ends one without; --window-pen hands a script's taps
@@ -158,6 +164,7 @@
 #include "HostObjectsFile.h"
 #include "HostRestart.h"
 #include "HostCStack.h"
+#include "Colour.h"
 #include "os600/kernel/host/TaskRuntime.h"
 #include "REPTranslators.h"
 #include "Frames.h"
@@ -247,7 +254,7 @@ static const char* gScriptPath = nil;			// --script: HostInclude's names are bes
 static int
 Usage(void)
 {
-	fprintf(stderr, "usage: newton [--objects file | --rom image] [--heap bytes] [--display WxH[xdepth]] [--scale n]\n"
+	fprintf(stderr, "usage: newton [--objects file | --rom image] [--heap bytes] [--display WxH[xdepth]] [--colour] [--scale n]\n"
 					"              [--script file.ns] [--headless seconds] [--limit seconds] [--window-pen]\n"
 					"              [--store file] [--erase]\n"
 					"              [--flash-size mb] [--flat-flash]\n"
@@ -314,6 +321,8 @@ NewtonBoot(void)
 			fprintf(stderr, "[host] no IR port at %s (%ld)\n", gIRPeer != nil ? gIRPeer : "(none)", (long) err);
 	}
 	THostScreenDriver* display = HostDisplay();
+	if (ColourScreen())
+		HostWindowSetPalette(ColourPalette());		// (--colour: the display's values are the palette's)
 	if (gWindowed && !HostWindowStart(display->Width(), display->Height(), display->Pixels(), "Newton", gScale))
 		fprintf(stderr, "newton: no window on this host; running headless\n");
 }
@@ -930,6 +939,8 @@ main(int argc, char** argv)
 			if (width <= 0 || height <= 0)
 				return Usage();
 		}
+		else if (strcmp(argv[i], "--colour") == 0 || strcmp(argv[i], "--color") == 0)
+			SetColourScreen(true);
 		else if (strcmp(argv[i], "--scale") == 0 && i + 1 < argc)
 			gScale = strtol(argv[++i], nil, 0);
 		else if (strcmp(argv[i], "--script") == 0 && i + 1 < argc)
@@ -1064,6 +1075,8 @@ main(int argc, char** argv)
 		HostWindowPreferredDisplay(&width, &height);
 		HostSettingsNoteDisplay(width, height);
 	}
+	if (ColourScreen())
+		depth = 8;								// (--colour: an eight-bit screen, its values a palette's)
 	HostConfigureNewtWorld(romImage, heapSize, width, height, depth);
 	gNewtBootTestScript = script;
 	gScriptPath = script;

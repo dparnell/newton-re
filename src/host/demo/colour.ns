@@ -1,0 +1,79 @@
+// The colour screen (newton --colour; qd/Colour.h, docs/qd/colour.md):
+// what applications say in colour drawn in colour.  On the root view, once
+// the machine is up: rectangles filled with PackRGB colours, text in a
+// font colour, a 'ditherPattern of two colours, and one rectangle inverted
+// (xor: its colour's complement); each checked with ScreenColour at its
+// middle, the text by finding its colour in its box.  The screen is written
+// to tmp/colour-demo.ppm.  Without --colour every check is of a gray, and
+// the demo says so and stops.
+//
+//   build/host/host/newton --colour --display 320x480 --erase --store tmp/colour.store \
+//       --headless 60 --script src/host/demo/colour.ns
+
+HostInclude("common.ns");
+
+colourFailures := 0;
+
+colourExpect := func(what, h, v, want) begin
+	local got := ScreenColour(h, v);
+	if got <> want then begin
+		Print("colour: " & what & " at " & NumberStr(h) & "," & NumberStr(v) & " is " & SPrintObject(got) & ", not " & SPrintObject(want) & " - FAILED");
+		colourFailures := colourFailures + 1;
+	end else
+		Print("colour: " & what & " ok");
+end;
+
+// whether any pixel in the box shows the colour
+colourFind := func(left, top, right, bottom, want) begin
+	for v := top to bottom - 1 do
+		for h := left to right - 1 do
+			if ScreenColour(h, v) = want then return true;
+	nil;
+end;
+
+colourDraw := func() begin
+	local root := GetRoot();
+	local boxes := [
+		{name: "red", left: 20, colour: PackRGB(0xFFFF, 0, 0), rgb: 0xFF0000},
+		{name: "green", left: 100, colour: PackRGB(0, 0xFFFF, 0), rgb: 0x00FF00},
+		{name: "blue", left: 180, colour: PackRGB(0, 0, 0xFFFF), rgb: 0x0000FF},
+		{name: "yellow", left: 260, colour: PackRGB(0xFFFF, 0xFFFF, 0), rgb: 0xFFFF00}];
+	foreach box in boxes do
+		root:DoDrawing('DrawShape, [MakeRect(box.left, 60, box.left + 40, 100), {fillPattern: box.colour, penSize: 0}]);
+	// text in a colour
+	root:DoDrawing('DrawShape, [MakeText("Colour!", 20, 120, 300, 160),
+		{font: {family: 'espy, face: 1, size: 24, color: PackRGB(0, 0, 0xFFFF)}, justification: 'left}]);
+	// two colours dithered: red on yellow
+	root:DoDrawing('DrawShape, [MakeRect(20, 180, 140, 220),
+		{fillPattern: {_proto: nil, class: 'ditherPattern, pattern: 3, foreground: PackRGB(0xFFFF, 0, 0), background: PackRGB(0xFFFF, 0xFFFF, 0)}, penSize: 0}]);
+	// the red one inverted: cyan
+	root:DoDrawing('DrawShape, [MakeRect(20, 240, 80, 280), {fillPattern: PackRGB(0xFFFF, 0, 0), penSize: 0}]);
+	root:DoDrawing('DrawShape, [MakeRect(20, 240, 80, 280), {fillPattern: 5, transferMode: 2, penSize: 0}]);	// (vfBlack, modeXor)
+
+	foreach box in boxes do
+		call colourExpect with (box.name, box.left + 20, 80, box.rgb);
+	if call colourFind with (20, 120, 300, 160, 0x0000FF) then
+		Print("colour: blue text ok")
+	else begin
+		Print("colour: no blue in the text's box - FAILED");
+		colourFailures := colourFailures + 1;
+	end;
+	if (call colourFind with (20, 180, 140, 220, 0xFF0000)) and (call colourFind with (20, 180, 140, 220, 0xFFFF00)) then
+		Print("colour: red on yellow dither ok")
+	else begin
+		Print("colour: the dither is not red and yellow - FAILED");
+		colourFailures := colourFailures + 1;
+	end;
+	call colourExpect with ("red inverted", 50, 260, 0x00FFFF);
+	ScreenSnapshot("tmp/colour-demo.ppm");
+	Print("colour: done, " & NumberStr(colourFailures) & " failed");
+	HostQuit();
+end;
+
+AddDelayedCall(func() begin
+	if ScreenColour(0, 0) = nil then begin
+		Print("colour: no screen");
+		HostQuit();
+	end else
+		call colourDraw with ();
+end, nil, 8000);

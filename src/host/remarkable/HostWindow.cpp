@@ -259,6 +259,29 @@ PanelGray(unsigned char level)
 }
 
 
+// A colour screen's palette (HostWindowSetPalette, qd/Colour.h): each of
+// the display's values as an RGB565 colour - the Paper Pro's panel is a
+// colour one (E Ink Gallery 3).  Without one, each value its gray.
+static uint16_t				gPanelColour[256];
+static std::atomic<bool>	gHasPalette(false);
+
+void
+HostWindowSetPalette(const unsigned char* rgb)
+{
+	for (int i = 0; i < 256; i++)
+		gPanelColour[i] = rgb == nil ? PanelGray((unsigned char) i)
+						: (uint16_t) (((rgb[i * 3] >> 3) << 11) | ((rgb[i * 3 + 1] >> 2) << 5) | (rgb[i * 3 + 2] >> 3));
+	gHasPalette.store(rgb != nil);
+}
+
+
+static inline uint16_t
+PanelPixel(unsigned char value)
+{
+	return gHasPalette.load(std::memory_order_relaxed) ? gPanelColour[value] : PanelGray(value);
+}
+
+
 // the display's rectangle [left, right) x [top, bottom) into the panel's
 // image, each pixel scale by scale, turned as gTurn says
 static void
@@ -273,7 +296,7 @@ PaintRect(const unsigned char* pixels, long left, long top, long right, long bot
 			const unsigned char* row = pixels + y * gWidth;
 			for (long x = left; x < right; x++)
 			{
-				uint16_t pixel = PanelGray(row[x]);
+				uint16_t pixel = PanelPixel(row[x]);
 				long X, Y;
 				gTurn.Pixel(x, y, &X, &Y);
 				for (long j = 0; j < gScale; j++)
@@ -289,7 +312,7 @@ PaintRect(const unsigned char* pixels, long left, long top, long right, long bot
 		uint16_t* out = image + (y * gScale) * rowWords;
 		for (long x = left; x < right; x++)
 		{
-			uint16_t pixel = PanelGray(row[x]);
+			uint16_t pixel = PanelPixel(row[x]);
 			uint16_t* at = out + x * gScale;
 			for (long i = 0; i < gScale; i++)
 				at[i] = pixel;

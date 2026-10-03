@@ -4,6 +4,7 @@
 	Contains:	THostScreenDriver: the display as gray bytes.
 */
 
+#include "Colour.h"
 #include "HostScreen.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -139,7 +140,7 @@ THostScreenDriver::Render(long left, long top, long right, long bottom)
 		const unsigned char* in = fPanel + y * width;
 		unsigned char* out = fPixels + y * width;
 		for (long x = left; x < right; x++)
-			out[x] = fBlanked ? 0 : (unsigned char) (in[x] - in[x] / 4);
+			out[x] = fBlanked ? 0 : ColourScreen() ? in[x] : (unsigned char) (in[x] - in[x] / 4);	// (a colour screen's values are not grays to lighten)
 	}
 }
 
@@ -310,12 +311,64 @@ THostScreenDriver::SetFeature(long feature, long value)
 }
 
 
+// (host: a colour screen's values are its palette's - qd/Colour.h; a
+// value's gray is its colour's luminance, 0 white .. 255 black)
+static unsigned char
+ValueGray(unsigned char value)
+{
+	if (!ColourScreen())
+		return value;
+	const UChar* rgb = ColourPalette() + value * 3;
+	return (unsigned char) (255 - (rgb[0] * 77 + rgb[1] * 150 + rgb[2] * 29) / 256);
+}
+
+
 unsigned char
 THostScreenDriver::Gray(long x, long y) const
 {
 	if (fPixels == nil || x < 0 || y < 0 || x >= Width() || y >= Height())
 		return 0;
-	return fPixels[y * Width() + x];
+	return ValueGray(fPixels[y * Width() + x]);
+}
+
+
+unsigned long
+THostScreenDriver::Colour(long x, long y) const
+{
+	if (fPixels == nil || x < 0 || y < 0 || x >= Width() || y >= Height())
+		return 0xffffff;
+	unsigned char value = fPixels[y * Width() + x];
+	if (!ColourScreen())
+	{
+		unsigned long level = 255 - value;
+		return (level << 16) | (level << 8) | level;
+	}
+	const UChar* rgb = ColourPalette() + value * 3;
+	return ((unsigned long) rgb[0] << 16) | ((unsigned long) rgb[1] << 8) | rgb[2];
+}
+
+
+Boolean
+THostScreenDriver::WritePPM(const char* path) const
+{
+	if (fPixels == nil)
+		return false;
+	FILE* f = fopen(path, "wb");
+	if (f == nil)
+		return false;
+	long width = Width();
+	long height = Height();
+	fprintf(f, "P6\n%ld %ld\n255\n", width, height);
+	for (long y = 0; y < height; y++)
+		for (long x = 0; x < width; x++)
+		{
+			unsigned long c = Colour(x, y);
+			fputc((int) ((c >> 16) & 0xff), f);
+			fputc((int) ((c >> 8) & 0xff), f);
+			fputc((int) (c & 0xff), f);
+		}
+	fclose(f);
+	return true;
 }
 
 
@@ -331,7 +384,7 @@ THostScreenDriver::WritePGM(const char* path) const
 	long height = Height();
 	fprintf(f, "P5\n%ld %ld\n255\n", width, height);
 	for (long i = 0; i < width * height; i++)
-		fputc(255 - fPixels[i], f);
+		fputc(255 - ValueGray(fPixels[i]), f);
 	fclose(f);
 	return true;
 }
@@ -353,7 +406,7 @@ THostScreenDriver::WritePBM(const char* path) const
 		unsigned char byte = 0;
 		for (long x = 0; x < width; x++)
 		{
-			if (fPixels[y * width + x] >= 128)
+			if (ValueGray(fPixels[y * width + x]) >= 128)
 				byte |= (unsigned char) (0x80 >> (x & 7));
 			if ((x & 7) == 7 || x == width - 1)
 			{

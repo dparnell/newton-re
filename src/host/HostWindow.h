@@ -29,6 +29,11 @@
 // display comes as its size and its bytes)
 bool	HostWindowStart(long width, long height, const unsigned char* pixels, const char* title, long scale);	// the window opened on its thread over the display's grays (0 white .. 255 black, width per row); ==> whether it could be
 void	HostWindowStop(void);								// the window closed and its thread joined
+// The display's values shown as 256 colours (red, green and blue, 0..255
+// each, an entry for each value) rather than as grays - the colour screen,
+// qd/Colour.h; nil puts the grays back.  Before HostWindowStart, or while
+// it runs (a window that cannot show colour shows each entry's gray).
+void	HostWindowSetPalette(const unsigned char* rgb);
 // The display's size (--display) made the shape the window will show it:
 // unchanged on a desktop; on a reMarkable landscape when the tablet is
 // (its type folio attached) - its AppLoad shows newton's picture upright
