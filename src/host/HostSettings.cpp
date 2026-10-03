@@ -4,6 +4,7 @@
 	Contains:	The Host preferences panel's settings (HostSettings.h).
 */
 
+#include "Colour.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -128,6 +129,13 @@ HostSettingsReadStartup(void)
 }
 
 
+bool
+HostSettingsColourAtStart(void)
+{
+	return StartupValue("colourScreen") == 1;
+}
+
+
 /*------------------------------------------------------------------------------
 	The settings
 ------------------------------------------------------------------------------*/
@@ -199,6 +207,13 @@ FHostSettingsList(RefArg /*rcvr*/)
 		Choices(item, choices, 4);
 		AddArraySlot(list, item);
 	}
+	if (gStartupFile[0] != 0)
+	{
+		// the colour screen (qd/Colour.h): eight bits whose values a
+		// palette's - the depth is fixed when the screen is made
+		long chosen = StartupValue("colourScreen");
+		AddArraySlot(list, RefVar(Item("colourScreen", "Colour screen (next start)", kCheck, chosen >= 0 ? chosen : ColourScreen(), true)));
+	}
 	if (HostWindowOption("clearGhosts", &value))
 		AddArraySlot(list, RefVar(Item("clearGhosts", "Clear ghosts", kButton, 0)));
 	return list;
@@ -243,6 +258,12 @@ FHostSetSetting(RefArg /*rcvr*/, RefArg setting, RefArg value)
 			return NILREF;
 		bool taken = SetStartupValue("screenScale", RINT(value) + 1);
 		fprintf(stderr, "[host] the screen at %ldx when newton next starts%s\n", (long) RINT(value) + 1, taken ? "" : " - not kept");
+		return MAKEBOOLEAN(taken);
+	}
+	if (strcmp(name, "colourScreen") == 0)
+	{
+		bool taken = SetStartupValue("colourScreen", on ? 1 : 0);
+		fprintf(stderr, "[host] the colour screen %s when newton next starts%s\n", on ? "on" : "off", taken ? "" : " - not kept");
 		return MAKEBOOLEAN(taken);
 	}
 	if (strcmp(name, "directPen") == 0 || strcmp(name, "touch") == 0 || strcmp(name, "clearGhosts") == 0)

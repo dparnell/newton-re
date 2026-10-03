@@ -37,6 +37,7 @@ void	HostSettingsSetBeamPeers(const char* lan, const char* other);	// before boo
 void	HostSettingsSetSerialPort(long port);	// before boot: docking over the network's port (--serial-port; -1 none: offered on 3679, off)
 void	HostSettingsSetFile(const char* storePath);	// before boot: the settings for the next start kept in "<store>.host" (nil: none - no store file)
 void	HostSettingsReadStartup(void);		// before the display is made: the screen size chosen (the window told, HostWindowSetOption "startScale")
+bool	HostSettingsColourAtStart(void);	// before the display is made: whether the Host panel asked for the colour screen (qd/Colour.h)
 void	HostSettingsNoteDisplay(long width, long height);	// the display made that size: the pen's calibration reset if its longer side changed since the last start
 void	HostInstallSettings(void);		// in the newt world, once its globals are built: the natives, HostSettings:host, the panel
 

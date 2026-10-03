@@ -1075,6 +1075,8 @@ main(int argc, char** argv)
 		HostWindowPreferredDisplay(&width, &height);
 		HostSettingsNoteDisplay(width, height);
 	}
+	if (HostSettingsColourAtStart())
+		SetColourScreen(true);					// (the Host panel's "Colour screen (next start)", kept beside the store)
 	if (ColourScreen())
 		depth = 8;								// (--colour: an eight-bit screen, its values a palette's)
 	HostConfigureNewtWorld(romImage, heapSize, width, height, depth);

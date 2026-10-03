@@ -9,6 +9,30 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-03/04: colour (branch colour)
+
+The owner had heard that the Newton OS had some colour support.  It has an
+API: NewtonOS 2.1 takes colours everywhere - PackRGB, colour and dither
+patterns, font colours, colour-table and 16/32-bit direct-colour bitmaps,
+colour pictures - and draws each in grays through RGBtoGray at the
+screen's depth; the ROM's own data has none, and its drawing stops at four
+bits (StretchBits has no eight-bit routines, DrTextChunk and the gray
+pattern makers stop at four), so an eight-bit screen showed no text or
+icons (`docs/qd/colour.md`).  The host now has an eight-bit screen that
+equals the four-bit one (ctest `qd.Stretch8`), and on it a colour screen
+(`--colour`, or the Host panel's "Colour screen (next start)"): a palette
+whose 0 is white, 255 black, 17v the four-bit grays and 255-i the
+complement of i, RGBtoGray/GrayToRGB at eight bits answering its entries,
+colour bitmaps made palette entries in StretchBits, the windows showing it.
+ctests `host.NewtonColour` (fills, text, a dither, an inverted colour, 32-
+and 16-bit and colour-table bitmaps, all checked on the screen),
+`host.NewtonColourPref.set`/`.kept`, and `host.NewtonNetHopperColour`:
+NetHopper 3.2's own GIF decoder keeps the GIF's colour table, so a colour
+GIF on a web page shows in colour (`tools/imaging/gifwrite.py`).  Open:
+Newt's Cape's JPEG converter declines an eight-bit screen (-80103); the
+windows in colour not yet seen.  Full ctest 418 of 419 (AlignPen.restart
+as on main).
+
 ## 2026-10-03: the reMarkable window sends only what changed (branch perf/drawing)
 
 The owner asked for only the changed parts of the screen to go to the

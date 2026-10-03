@@ -935,6 +935,26 @@ set_tests_properties(host.NewtonColour PROPERTIES TIMEOUT 120
                      PASS_REGULAR_EXPRESSION "colour: done, 0 failed"
                      FAIL_REGULAR_EXPRESSION "FAILED|!!! Exception")
 
+# the Host panel's "Colour screen (next start)" (demo/colour-pref.ns): .set
+# turns it on, kept beside the store; .kept boots the store without
+# --colour, finds the colour screen, and turns it off
+add_test(NAME host.NewtonColourPref.clean COMMAND ${CMAKE_COMMAND} -E rm -f ${CMAKE_CURRENT_BINARY_DIR}/colourpref.store
+         ${CMAKE_CURRENT_BINARY_DIR}/colourpref.store.host)
+set_tests_properties(host.NewtonColourPref.clean PROPERTIES FIXTURES_SETUP colourprefclean)
+foreach(run set kept)
+    add_test(NAME host.NewtonColourPref.${run} COMMAND newton --display 320x480 --headless 60
+             --store ${CMAKE_CURRENT_BINARY_DIR}/colourpref.store
+             --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/colour-pref.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
+endforeach()
+set_tests_properties(host.NewtonColourPref.set PROPERTIES TIMEOUT 120
+                     FIXTURES_REQUIRED colourprefclean FIXTURES_SETUP colourprefset
+                     PASS_REGULAR_EXPRESSION "listed on the Host panel: ok.*asked for: ok.*colourpref: set, done"
+                     FAIL_REGULAR_EXPRESSION "FAILED|!!! Exception")
+set_tests_properties(host.NewtonColourPref.kept PROPERTIES TIMEOUT 120
+                     FIXTURES_REQUIRED colourprefset
+                     PASS_REGULAR_EXPRESSION "the colour screen at this start: ok.*colourpref: kept, done"
+                     FAIL_REGULAR_EXPRESSION "FAILED|!!! Exception")
+
 add_test(NAME host.NewtonSplash COMMAND newton --display 320x480 --headless 60
          --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/splash.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
 set_tests_properties(host.NewtonSplash PROPERTIES TIMEOUT 120

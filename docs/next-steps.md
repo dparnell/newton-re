@@ -45,7 +45,11 @@ the way are all in `docs/work-log.md`.
 
 ## In progress
 
-Nothing at present.
+- **Colour** (branch `colour`, 2026-10-03/04, the owner's overnight
+  question): the ROM's colour API drawn in colour on an eight-bit palette
+  screen (`docs/qd/colour.md`; `--colour` or the Host panel).  Left: see
+  that doc's "Open" - Newt's Cape's JPEG converter at eight bits, the
+  windows and the tablet's colour panel seen with eyes.
 
 ### Left of the drawing performance work (merged 2026-10-03)
 

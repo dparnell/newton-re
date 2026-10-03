@@ -131,4 +131,33 @@ browses `www/nethopper-colour.html`, whose picture `www/colour.gif` is four
 bands (red, green, blue, yellow) in a black frame
 (`tools/imaging/gifwrite.py colour.gif`), and finds each band's colour on
 the screen.  Newt's Cape, its helpers and NetHopper's JPEG viewer use
-`PackRGB` and colour tables too (`grep -a` of the packages); not yet tried.
+`PackRGB` and colour tables too (`grep -a` of the packages).
+
+### Asking for it
+
+`newton --colour`, or the Host panel's **Colour screen (next start)**
+(`docs/host-settings.md`; kept in `<store>.host` as `colourScreen=1`,
+read before the screen is made - the depth cannot change while newton
+runs).  ctests `host.NewtonColourPref.set` and `.kept`
+(`src/host/demo/colour-pref.ns`): the setting turned on through
+`HostSetSetting`, and the next start without `--colour` drawing red as red.
+
+## Open
+
+- **Newt's Cape's JPEG converter declines an eight-bit screen**: NetHopper's
+  JPEG viewer (through `jpeg10e2.pkg`) gets `{name: evt.ex.jpeg, error:
+  -80103}` back at eight bits, gray or colour, and shows "Image conversion
+  err?"; at four bits the same pictures decode (a colour JPEG included,
+  drawn in grays).  Its native decoding runs the same calls at both depths
+  up to the one that makes the output (`+0x18` is not called at eight); the
+  check is in the package's own code - not yet read.  So JPEGs are not yet
+  shown in colour; GIFs (NetHopper's own decoder) are.
+- **Not yet seen**: the Windows and X11 windows and the reMarkable's panel in
+  colour (`HostWindowSetPalette`; the palette's values are checked through
+  `ScreenColour`, the windows only map them), and the colour demo on the
+  tablet (its cross build links; the tablet was asleep).
+- A four-bit offscreen map drawn from a colour-table bitmap on the colour
+  screen gets palette entries where it expects grays (the tables are made
+  at eight bits there); no ROM path draws such a map that has been seen.
+- The colour screen is eight bits only; 16 or 32 bits a pixel would need
+  the blitter and every row routine at those depths.

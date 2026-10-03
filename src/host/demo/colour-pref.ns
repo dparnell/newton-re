@@ -1,0 +1,30 @@
+// The Host panel's "Colour screen (next start)" (host/HostSettings.cpp,
+// docs/qd/colour.md): the setting kept beside the store and the colour
+// screen there when newton next starts, with no --colour.  Two runs on one
+// store (ctests host.NewtonColourPref.set and .kept): on a gray screen the
+// setting is turned on through HostSetSetting (what the panel calls) and
+// newton quits; on the next start a red rectangle must show red - and the
+// setting is turned off again.
+//
+//   build/host/host/newton --display 320x480 --erase --store tmp/colourpref.store \
+//       --headless 60 --script src/host/demo/colour-pref.ns       (then again without --erase)
+
+colourPrefTest := func() begin
+	GetRoot():DoDrawing('DrawShape, [MakeRect(10, 40, 50, 80), {fillPattern: PackRGB(0xFFFF, 0, 0), penSize: 0}]);
+	local seen := ScreenColour(30, 60);
+	if seen = 0xFF0000 then begin
+		Print("colourpref: the colour screen at this start: ok");
+		HostSetSetting('colourScreen, nil);
+		Print("colourpref: kept, done");
+	end else begin
+		local listed := nil;
+		foreach item in HostSettingsList() do
+			if item.setting = 'colourScreen and item.nextStart then listed := true;
+		Print("colourpref: listed on the Host panel: " & (if listed then "ok" else "FAILED"));
+		Print("colourpref: asked for: " & (if HostSetSetting('colourScreen, true) then "ok" else "FAILED"));
+		Print("colourpref: set, done");
+	end;
+	HostQuit();
+end;
+
+AddDelayedCall(func() call colourPrefTest with (), nil, 8000);
