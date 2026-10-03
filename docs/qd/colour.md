@@ -144,14 +144,20 @@ runs).  ctests `host.NewtonColourPref.set` and `.kept`
 
 ## Open
 
-- **Newt's Cape's JPEG converter declines an eight-bit screen**: NetHopper's
-  JPEG viewer (through `jpeg10e2.pkg`) gets `{name: evt.ex.jpeg, error:
-  -80103}` back at eight bits, gray or colour, and shows "Image conversion
-  err?"; at four bits the same pictures decode (a colour JPEG included,
-  drawn in grays).  Its native decoding runs the same calls at both depths
-  up to the one that makes the output (`+0x18` is not called at eight); the
-  check is in the package's own code - not yet read.  So JPEGs are not yet
-  shown in colour; GIFs (NetHopper's own decoder) are.
+- **Newt's Cape's JPEG converter declines an eight-bit screen.** NetHopper's
+  JPEG viewer (`NetHopperJPEG.pkg`) asks `Gestalt` for the system's
+  `screenDepth` and hands it to Newt's Cape's converter as `bitsPerPixel`
+  (the symbols beside each other in the package; the converter's
+  `convertImage` reads `bitsPerPixel` from its options - its disassembly by
+  `Disasm` on the host).  At eight the converter's native decoder
+  (`jpeg10e2.pkg`) answers `{name: evt.ex.jpeg, error: -80103}`, and the
+  viewer shows "Image conversion err?"; at four the same pictures decode (a
+  colour JPEG included, in grays).  So period software did ask how deep the
+  screen was, ready for deeper ones, and this converter makes one-, two-
+  and four-bit pictures only.  Gestalt tells the truth here (eight); telling
+  it four on the colour screen would bring JPEGs back in grays, and would
+  mislead anything that can do more - left as it is.  GIFs (NetHopper's own
+  decoder) are shown in colour.
 - **Not yet seen**: the Windows and X11 windows and the reMarkable's panel in
   colour (`HostWindowSetPalette`; the palette's values are checked through
   `ScreenColour`, the windows only map them), and the colour demo on the
