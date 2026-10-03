@@ -685,6 +685,39 @@ and "rmprobe" apps were removed from AppLoad at the owner's asking
 (`build_probe.py` remakes rmprobe; `newton-data/newton-before`, the old
 app's store, is left).
 
+## Only what changed (2026-10-03)
+
+The window keeps a copy of the grays it last sent (`shown`) and, at each
+frame (33 ms, 8 with the pen down), sends what differs.  It used to send
+everything that differed as one bounding rectangle, so two small changes
+far apart - the status bar and the button bar, the clock and a checkbox -
+went to the panel as nearly the whole screen, which the e-ink controller
+then refreshed whole.  `src/host/remarkable/ChangedRects.h`
+(`FindChangedRects`, ctest `host.ChangedRects`) finds them as up to eight
+rectangles instead:
+
+- the display is looked at in bands of 16 rows; a row the same as before
+  costs one `memcmp`, a changed one is compared in blocks of 64 pixels and
+  each changed block's changed pixels bounded exactly;
+- a band's runs of changed blocks are its rectangles; rectangles that
+  overlap, or whose union wastes fewer than 2048 display pixels (an
+  update has a cost of its own), are merged, then the pairs wasting least
+  until eight are left; a display wider than 4096 pixels, or more than 64
+  rectangles in a frame, falls back to the bounding rectangle;
+- each rectangle is copied into `shown` and painted from it, so the panel
+  shows exactly what `shown` says even while the Newton draws meanwhile.
+
+The trace (`NEWTON_RM_TRACE=1`, as the app's `run.sh` sets) reports with
+the other counts `changes in N frames as M rectangles, P display pixels
+sent where one rectangle a frame would have sent Q (R%)`.  Under the qtfb
+stand-in (qemu, WSL; `qtfbserver.py` now reports the pixels the updates
+named), booting to Welcome at 320x480: main sent a whole-screen update
+where this sends the status bar, the button bar and four lines of text -
+3.5 M framebuffer pixels for the boot against 5.6 M.  Not changed: the
+Newton side still blits one dirty rectangle into the gray buffer (that is
+the ROM's `UpdateHardwareScreen`, and only processor time); what reaches
+the glass is decided here.
+
 ## Risks
 
 - **Live ink latency.**  xochitl's own ink is drawn by its compositor with

@@ -58,9 +58,11 @@ the way are all in `docs/work-log.md`.
   was looked at and left is in `docs/qd/README.md`).  On the reMarkable
   (`docs/host-remarkable.md`, "Drawing speed on the tablet"): a Notepad
   redraw at 810x1080 33 ms -> 4.8 ms; the branch build is in AppLoad's
-  Newton app for the owner to try.  Next there: the window thread's
-  `PaintRect`/`ChangedRect` (the latency to the glass) and the display
-  driver's gray conversion (18% of a redraw on the A53).  Open: `host.NewtonAlignPen.restart`
+  Newton app for the owner to try.  The window now sends only the
+  rectangles that changed (`ChangedRects.h`; the trace's `changes in ...`
+  line says how much it saves in use).  Next there: `PaintRect`'s pixel
+  loop at the scale and the display driver's gray conversion (18% of a
+  redraw on the A53).  Open: `host.NewtonAlignPen.restart`
   fails on main too in a RelWithDebInfo build; `host.NewtonATASupport.pull`
   failed once under `ctest -j 6` (56 s where it takes 2) and passes alone.
 

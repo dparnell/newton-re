@@ -37,6 +37,7 @@
 #include "HostWindow.h"
 #include "Panel.h"
 #include "PanelTurn.h"
+#include "ChangedRects.h"
 #include "Folio.h"
 #include <string.h>
 #include <stdio.h>
@@ -158,6 +159,17 @@ struct PanelCounts
 	long	fOverlay = 0;
 	long	fStrokes = 0;
 	int		fLastMode = -1;
+	long long	fChangedSent = 0;		// display pixels sent for what changed (ChangedRects.h)
+	long long	fChangedBounding = 0;	// what one rectangle round each frame's changes would have sent
+	long	fChangedFrames = 0, fChangedRects = 0;
+
+	void	Changed(long rects, long sent, long bounding)
+	{
+		fChangedFrames++;
+		fChangedRects += rects;
+		fChangedSent += sent;
+		fChangedBounding += bounding;
+	}
 
 	void	Count(int how, long area, long whole)
 	{
@@ -177,6 +189,10 @@ struct PanelCounts
 	{
 		fprintf(stderr, "[rm] %.0f s: updates ink %ld ui %ld content %ld, whole-screen %ld, waveform changes %ld, full refreshes %ld, pen overlay %ld, strokes %ld\n",
 				seconds, fUpdates[0], fUpdates[1], fUpdates[2], fWholeScreen, fModeChanges, fFullRefreshes, fOverlay, fStrokes);
+		if (fChangedFrames > 0)
+			fprintf(stderr, "[rm] %.0f s: changes in %ld frames as %ld rectangles, %lld display pixels sent where one rectangle a frame would have sent %lld (%.0f%%)\n",
+					seconds, fChangedFrames, fChangedRects, fChangedSent, fChangedBounding,
+					fChangedBounding > 0 ? 100.0 * (double) fChangedSent / (double) fChangedBounding : 100.0);
 	}
 };
 
@@ -284,40 +300,8 @@ PaintRect(const unsigned char* pixels, long left, long top, long right, long bot
 }
 
 
-// What changed since the grays last sent (shown): its rectangle, the
-// shown copy brought up to date.  ==> false if nothing did
-static bool
-ChangedRect(const unsigned char* pixels, unsigned char* shown, long* left, long* top, long* right, long* bottom)
-{
-	long t = -1, b = -1, l = gWidth, r = 0;
-	for (long y = 0; y < gHeight; y++)
-	{
-		const unsigned char* row = pixels + y * gWidth;
-		unsigned char* was = shown + y * gWidth;
-		if (memcmp(row, was, (size_t) gWidth) == 0)
-			continue;
-		if (t < 0)
-			t = y;
-		b = y + 1;
-		long x0 = 0, x1 = gWidth;
-		while (row[x0] == was[x0])
-			x0++;
-		while (row[x1 - 1] == was[x1 - 1])
-			x1--;
-		if (x0 < l)
-			l = x0;
-		if (x1 > r)
-			r = x1;
-		memcpy(was, row, (size_t) gWidth);
-	}
-	if (t < 0)
-		return false;
-	*left = l;
-	*top = t;
-	*right = r;
-	*bottom = b;
-	return true;
-}
+// the most rectangles a frame's changes are sent as (ChangedRects.h)
+enum { kChangedRectsSent = 8 };
 
 
 static void
@@ -599,16 +583,33 @@ WindowThread(void)
 			gSnapshotsAsked.fetch_sub(1);
 			WriteSnapshot(pixels);
 		}
-		if (pixels != nil && ChangedRect(pixels, shown, &l, &t, &r, &b))
+		ChangedRect changed[kChangedRectsSent];
+		long changes = pixels != nil ? FindChangedRects(pixels, shown, gWidth, gHeight, changed, kChangedRectsSent) : 0;
+		if (changes > 0)
 		{
-			PaintRect(pixels, l, t, r, b);
+			// each rectangle that changed painted (from shown, which now
+			// holds it) and sent on its own: two changes far apart are not
+			// sent as everything between them (ChangedRects.h)
 			RemarkableRefresh how = policy == kWaveFast ? kRefreshInk : policy == kWaveUI ? kRefreshUI
 								  : gPenDown.load() ? kRefreshInk : kRefreshUI;
-			sendDisplay(l, t, r, b, how);
-			trace.Updated(kHow[how], l, t, r, b);
-			if (how == kRefreshInk)
-				Union(&inkL, &inkT, &inkR, &inkB, l, t, r, b);
-			changedScreens += (double) ((r - l) * (b - t)) / (double) (gWidth * gHeight);
+			ChangedRect bounding = changed[0];
+			long sent = 0;
+			for (long i = 0; i < changes; i++)
+			{
+				l = changed[i].left;
+				t = changed[i].top;
+				r = changed[i].right;
+				b = changed[i].bottom;
+				PaintRect(shown, l, t, r, b);
+				sendDisplay(l, t, r, b, how);
+				trace.Updated(kHow[how], l, t, r, b);
+				if (how == kRefreshInk)
+					Union(&inkL, &inkT, &inkR, &inkB, l, t, r, b);
+				bounding = ChangedUnion(bounding, changed[i]);
+				sent += changed[i].Area();
+			}
+			counts.Changed(changes, sent, bounding.Area());
+			changedScreens += (double) sent / (double) (gWidth * gHeight);
 			lastChange = std::chrono::steady_clock::now();
 		}
 		else if (!gPenDown.load()

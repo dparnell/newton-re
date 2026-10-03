@@ -10,7 +10,7 @@ the socket (src/host/remarkable/QTFB.h has the messages).  This program is
 the server's side of that, on any Linux: it listens, runs the program given
 after `--` with QTFB_KEY and NEWTON_QTFB_SOCKET set (under qemu-user for an
 aarch64 newton built on another machine - docs/host-remarkable.md), counts
-the updates by refresh mode, and carries out a list of steps against it:
+the updates by refresh mode and the pixels they name, and carries out a list of steps against it:
 
     quiet:S        wait until no update has come for S seconds (at most --timeout)
     sleep:S        wait S seconds
@@ -61,6 +61,7 @@ class Server:
         self.mode = 4
         self.updates = {}
         self.full_refreshes = 0
+        self.area = 0               # framebuffer pixels the updates named
         self.last_update = time.time()
         self.lock = threading.Lock()
         self.closed = False
@@ -114,6 +115,7 @@ class Server:
             with self.lock:
                 name = MODES.get(self.mode, str(self.mode)) if typ == 1 else "all"
                 self.updates[name] = self.updates.get(name, 0) + 1
+                self.area += w * h
                 self.last_update = time.time()
         elif kind == SET_REFRESH_MODE:
             self.mode = struct.unpack_from("<i", data, 4)[0]
@@ -222,9 +224,9 @@ def main():
             except subprocess.TimeoutExpired:
                 child.kill()
         with server.lock:
-            print("qtfbserver: updates by mode: %s; full refreshes %d"
-                  % (", ".join("%s %d" % kv for kv in sorted(server.updates.items())) or "none", server.full_refreshes),
-                  flush=True)
+            print("qtfbserver: updates by mode: %s; full refreshes %d; %d framebuffer pixels updated"
+                  % (", ".join("%s %d" % kv for kv in sorted(server.updates.items())) or "none", server.full_refreshes,
+                     server.area), flush=True)
         if server.shm_name and os.path.exists(server.shm_name):
             os.unlink(server.shm_name)
         if os.path.exists(args.socket):

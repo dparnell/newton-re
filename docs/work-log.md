@@ -9,6 +9,23 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-03: the reMarkable window sends only what changed (branch perf/drawing)
+
+The owner asked for only the changed parts of the screen to go to the
+panel.  The window already compared the display with what it last sent,
+but sent all of it as one bounding rectangle; `host/remarkable/
+ChangedRects.h` finds up to eight tight rectangles (16-row bands, 64-pixel
+blocks, merged where they overlap or waste under 2048 pixels), each
+painted from the shown copy and sent on its own (ctest
+`host.ChangedRects`: 400 random scenes, every changed pixel covered, none
+overlapping, shown equal to the display).  Under the qtfb stand-in the
+boot to Welcome sent the bars and lines of text instead of a whole
+screen: 3.5 M framebuffer pixels against 5.6 M.  The trace counts the
+area sent against one rectangle a frame; `qtfbserver.py` counts the pixels
+the updates name.  Installed in AppLoad's Newton app.  (The qemu sysroot
+in `tmp/rmpp-study/qemu` lacked Ubuntu's `/lib -> usr/lib` link; made in
+WSL.)
+
 ## 2026-10-03: the drawing work on the reMarkable (branch perf/drawing)
 
 Main's and the branch's Release cross builds run headless on the Paper

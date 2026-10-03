@@ -919,6 +919,11 @@ add_test(NAME host.PanelTurn COMMAND test_PanelTurn)
 # AppLoad's (remarkable/PenFit.h)
 add_executable(test_PenFit remarkable/tests/test_PenFit.cpp)
 add_test(NAME host.PenFit COMMAND test_PenFit)
+# what changed on the display, as a few rectangles for the panel
+# (remarkable/ChangedRects.h)
+add_executable(test_ChangedRects remarkable/tests/test_ChangedRects.cpp)
+add_test(NAME host.ChangedRects COMMAND test_ChangedRects)
+set_tests_properties(host.ChangedRects PROPERTIES PASS_REGULAR_EXPRESSION "test_ChangedRects: all passed")
 
 add_test(NAME host.NewtonSplash COMMAND newton --display 320x480 --headless 60
          --script ${CMAKE_CURRENT_SOURCE_DIR}/demo/splash.ns WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..)
