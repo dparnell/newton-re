@@ -84,7 +84,14 @@ next start) and is kept; one never touched stays as newton was started.
   the host's panel reads 8, 4, 2 or 1 raw units to the pixel by the longer
   side, so a calibration kept at another size is out by a factor of two or
   more, while the factory one is exact.  Only a window with a screen size to
-  choose keeps the file; a desktop's stores are left as they were.
+  choose keeps the file; a desktop's stores are left as they were.  The reset
+  is made of calls (`GetStores`, `GetSoup`, `Query`, `Entry`,
+  `GetCalibration`, `EntryChange`), not compiled NewtonScript: the hook runs
+  inside the newt world's MainConstructor, where compiling a block failed
+  (`evt.ex.fr.comp` - the owner's first change to 4x kept the 2x
+  calibration, the pen out by half).  The new side is kept only once the
+  reset has run, so one that fails is tried again at the next start (or at
+  boot, when Setup is still to run and calibrates afresh itself).
 - **The window's settings** go through `HostWindowOption` /
   `HostWindowSetOption` (`src/host/HostWindow.h`): a window answers only
   the ones it has (a desktop window none).  The reMarkable's keeps them in
@@ -130,3 +137,7 @@ The magic-pointer numbers of the ROM's protos come from
   demos' Setup walk taps a MessagePad's positions).
 - `host.NewtonHostSettings.kept` also turns docking over the network off and
   on again.
+- On a reMarkable, `tools/remarkable/calibration-device.ns` (its header says
+  how): a store calibrated at 320 x 480 (x scale 8192) started at 4x
+  (404 x 540) logs the reset and reads 16384 kept and in use, and keeps it
+  at the next start (2026-10-03).

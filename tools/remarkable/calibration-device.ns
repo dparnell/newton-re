@@ -1,0 +1,32 @@
+// On a reMarkable (docs/host-settings.md, "Tests"): the pen's calibration
+// across a change of screen size, on a scratch store.  Each run prints the
+// calibration kept in the System soup and the one in use (their x scale:
+// 16.16, the factory one 0x10000 over the raw units to the pixel - 8192 at
+// 320 x 480, 16384 at 404 x 540).  Run it once at 320 x 480 (Setup walked,
+// a calibration kept), add screenScale=4 to the store's .host file, and run
+// it again: newton logs "the pen's calibration reset to the factory one"
+// and both read 16384.  Run beside src/host/demo/common.ns.
+
+HostInclude("common.ns");
+calEntry := func() begin
+	local soup := GetStores()[0]:GetSoup("System");
+	soup and soup:Query({type: 'index, indexPath: 'tag, beginKey: "Calibration", endKey: "Calibration"}):Entry();
+end;
+calReport := func() begin
+	local e := call calEntry with ();
+	Print("cal: blessed " & SPrintObject(GetUserConfig('blessedApp)) & ", kept scale " & (if e and e.data then NumberStr(ExtractLong(e.data, 0)) else "none")
+		  & ", in use " & NumberStr(ExtractLong(GetCalibration(), 0)));
+end;
+calKeep := func() begin
+	// a calibration kept, as Align Pen keeps one: this size's, the scale nudged
+	local c := Clone(GetCalibration());
+	StuffLong(c, 0, ExtractLong(c, 0) + 100);
+	GetStores()[0]:GetSoup("System"):Add({tag: "Calibration", data: c, rotated: [c, c, c, c]});
+end;
+if not GetUserConfig('blessedApp) or GetUserConfig('blessedApp) = 'setup then
+	call walkSetup with ([4, 31, 1, 17], func() begin
+		if not call calEntry with () then call calKeep with ();
+		call calReport with ();
+		Print("cal: done"); HostQuit(); end)
+else
+	AddDelayedCall(func() begin call calReport with (); Print("cal: done"); HostQuit(); end, nil, 3000);

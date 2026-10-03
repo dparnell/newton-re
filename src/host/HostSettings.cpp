@@ -271,28 +271,60 @@ FHostSetSetting(RefArg /*rcvr*/, RefArg setting, RefArg value)
 	(gNewtHostBeforeCalibration).
 ------------------------------------------------------------------------------*/
 
-static const char kResetCalibration[] =
-	"func() begin"
-	"  local soup := GetStores()[0]:GetSoup(\"System\");"
-	"  local entry := soup and soup:Query({type: 'index, indexPath: 'tag, beginKey: \"Calibration\", endKey: \"Calibration\"}):Entry();"
-	"  if entry then begin"
-	"    local factory := GetCalibration();"
-	"    entry.data := factory;"
-	"    entry.rotated := [Clone(factory), Clone(factory), Clone(factory), Clone(factory)];"
-	"    EntryChange(entry);"
-	"    true"
-	"  end"
-	"end";
+// the display's longer side to keep once the calibration has been dealt
+// with (0: nothing waiting), and whether the reset has run
+static long	gPendingSide = 0;
+static bool	gResetRan = false;
 
+static Ref
+Sym(const char* name)
+{
+	return Intern((char*) name);
+}
+
+// (made of calls rather than compiled NewtonScript: this runs inside the
+// newt world's MainConstructor, before the compiler can be used - a
+// compiled block failed there with evt.ex.fr.comp; the calls are what the
+// ROM's loadcalibration block itself makes just after)
 static void
 ResetCalibration(void)
 {
+	gResetRan = true;
 	newton_try
 	{
-		RefVar fn(ParseString(RefVar(MakeString(kResetCalibration))));
-		RefVar block(InterpretBlock(fn, RefVar()));
-		RefVar done(DoBlock(block, RefVar(MakeArray(0))));
-		fprintf(stderr, "[host] the pen's calibration %s for the new screen size\n", NOTNIL(done) ? "reset to the factory one" : "not kept yet: nothing to reset");
+		RefVar stores(NSCallGlobalFn(RefVar(Sym("GetStores"))));
+		RefVar soup;
+		if (IsArray(stores) && Length(stores) > 0)
+			soup = NSSend(RefVar(GetArraySlot(stores, 0)), RefVar(Sym("GetSoup")), RefVar(MakeString("System")));
+		RefVar entry;
+		if (NOTNIL(soup))
+		{
+			RefVar spec(AllocateFrame());
+			SetFrameSlot(spec, RefVar(Sym("type")), RefVar(Sym("index")));
+			SetFrameSlot(spec, RefVar(Sym("indexPath")), RefVar(Sym("tag")));
+			SetFrameSlot(spec, RefVar(Sym("beginKey")), RefVar(MakeString("Calibration")));
+			SetFrameSlot(spec, RefVar(Sym("endKey")), RefVar(MakeString("Calibration")));
+			RefVar cursor(NSSend(soup, RefVar(Sym("Query")), spec));
+			if (NOTNIL(cursor))
+				entry = NSSend(cursor, RefVar(Sym("Entry")));
+		}
+		if (IsFrame(entry))
+		{
+			// the driver still holds the factory calibration for this size
+			RefVar factory(NSCallGlobalFn(RefVar(Sym("GetCalibration"))));
+			SetFrameSlot(entry, RefVar(Sym("data")), factory);
+			RefVar rotated(MakeArray(4));
+			for (int i = 0; i < 4; i++)
+				SetArraySlot(rotated, i, RefVar(Clone(factory)));
+			SetFrameSlot(entry, RefVar(Sym("rotated")), rotated);
+			NSCallGlobalFn(RefVar(Sym("EntryChange")), entry);
+			fprintf(stderr, "[host] the pen's calibration reset to the factory one for the new screen size\n");
+		}
+		else
+			fprintf(stderr, "[host] the pen's calibration not kept yet: nothing to reset for the new screen size\n");
+		// (kept only now: a reset that failed is tried again at the next start)
+		SetStartupValue("displaySide", gPendingSide);
+		gPendingSide = 0;
 	}
 	newton_catch_all
 	{
@@ -311,8 +343,11 @@ HostSettingsNoteDisplay(long width, long height)
 	long longer = width > height ? width : height;
 	long was = StartupValue("displaySide");
 	if (was > 0 && was != longer)
-		gNewtHostBeforeCalibration = ResetCalibration;
-	if (was != longer)
+	{
+		gNewtHostBeforeCalibration = ResetCalibration;	// (it keeps the new side when it has done its work)
+		gPendingSide = longer;
+	}
+	else if (was != longer)
 		SetStartupValue("displaySide", longer);
 }
 
@@ -320,6 +355,13 @@ HostSettingsNoteDisplay(long width, long height)
 void
 HostInstallSettings(void)
 {
+	// (a store whose Setup has still to run is calibrated afresh at this size
+	// by Setup itself: the reset did not run, and the size is kept now)
+	if (gPendingSide != 0 && !gResetRan)
+	{
+		SetStartupValue("displaySide", gPendingSide);
+		gPendingSide = 0;
+	}
 	RefVar functions(gFunctionFrame);
 	SetFrameSlot(functions, RefVar(Intern((char*) "HostSettingsList")), RefVar(MakeCFunction((void*) FHostSettingsList, 0, nil)));
 	SetFrameSlot(functions, RefVar(Intern((char*) "HostSetSetting")), RefVar(MakeCFunction((void*) FHostSetSetting, 2, nil)));
