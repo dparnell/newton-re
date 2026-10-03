@@ -225,7 +225,10 @@ InitGrayPattern(PixelMap* pm, long depth)
 
 // ROM 0x00328e90 GetStdGrayPattern__FUlN21
 // A solid pattern of the gray the colour comes to at the port's depth
-// (one bit: black for any gray but white).
+// (one bit: black for any gray but white).  The ROM's is white at any
+// depth but one, two or four; the host makes an eight-bit one too
+// (DEVIATION, an extension for eight-bit and colour screens:
+// docs/qd/colour.md).
 //
 // DEVIATION: the rows follow the host's PixelMap (kPatternPixelsOffset)
 // where the ROM's follow its 0x1c-byte one.
@@ -247,6 +250,8 @@ GetStdGrayPattern(ULong red, ULong green, ULong blue)
 			byte = (UChar) ((gray << 6) | (gray << 4) | (gray << 2) | gray);
 		else if (depth == 4)
 			byte = (UChar) (gray | (gray << 4));
+		else if (depth == 8)
+			byte = (UChar) gray;					// (host: an eight-bit screen's - DEVIATION, docs/qd/colour.md)
 		else
 			byte = 0;
 		UChar* p = (UChar*) pm + kPatternPixelsOffset;
@@ -263,8 +268,9 @@ GetStdGrayPattern(ULong red, ULong green, ULong blue)
 // pattern when that is simply black on white.  (The rows are read as two
 // big-endian words, as the ARM loads them.)
 //
-// ROM QUIRK, kept: at a depth of eight the rows are left as the handle
-// was allocated.
+// The ROM leaves the rows as the handle was allocated at a depth of eight;
+// the host makes them, a byte a pixel (DEVIATION, an extension for
+// eight-bit and colour screens: docs/qd/colour.md).
 PatternHandle
 MakeSimpleGrayPattern(const char* rows, ULong fg, ULong bg)
 {
@@ -319,6 +325,19 @@ MakeSimpleGrayPattern(const char* rows, ULong fg, ULong bg)
 			}
 		}
 	}
+	else if (depth == 8)
+	{
+		for (long i = 0; i < 0x40; i++)
+		{
+			*dst++ = (UChar) ((*word & bit) != 0 ? fg : bg);
+			bit >>= 1;
+			if (bit == 0)
+			{
+				bit = 0x80000000;
+				word++;
+			}
+		}
+	}
 	return pattern;
 }
 
@@ -330,8 +349,9 @@ MakeSimpleGrayPattern(const char* rows, ULong fg, ULong bg)
 // row, the pixels used over again along it.  Each pixel is the gray it
 // comes to at the port's depth.  None at all is black.
 //
-// ROM QUIRK, kept: at a depth of eight the rows are left as the handle was
-// allocated.
+// The ROM leaves the rows as the handle was allocated at a depth of eight;
+// the host makes them, a byte a pixel (DEVIATION, an extension for
+// eight-bit and colour screens: docs/qd/colour.md).
 PatternHandle
 MakeGrayPattern(RefArg spec)
 {
@@ -357,7 +377,7 @@ MakeGrayPattern(RefArg spec)
 	UChar* dst = (UChar*) pm + kPatternPixelsOffset;
 	const UChar* p = src;
 	long left = rows;
-	for (long r = 0; r < 8 && (depth == 1 || depth == 2 || depth == 4); r++)
+	for (long r = 0; r < 8 && (depth == 1 || depth == 2 || depth == 4 || depth == 8); r++)
 	{
 		long perByte = 8 / depth;
 		for (long b = 0; b < depth; b++)

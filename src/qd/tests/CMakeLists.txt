@@ -53,6 +53,13 @@ target_link_libraries(test_Blitter PRIVATE qd)
 add_test(NAME qd.Blitter COMMAND test_Blitter)
 set_tests_properties(qd.Blitter PROPERTIES TIMEOUT 300)
 
+# StretchBits onto eight-bit maps (a host extension: the ROM draws nothing
+# onto one) against the same calls onto four-bit maps, widened
+add_executable(test_Stretch8 test_Stretch8.cpp)
+target_link_libraries(test_Stretch8 PRIVATE qd)
+add_test(NAME qd.Stretch8 COMMAND test_Stretch8)
+set_tests_properties(qd.Stretch8 PROPERTIES TIMEOUT 120 PASS_REGULAR_EXPRESSION "test_Stretch8: all passed")
+
 # a fax page turned a quarter each way a tile at a time (qd/Tile.h), every
 # pixel checked
 add_executable(test_Tile test_Tile.cpp)

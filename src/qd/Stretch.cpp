@@ -2772,6 +2772,139 @@ SetupCombine(long depth, PixelMap* src)
 
 
 // ROM 0x002ae6c4 SetupStretchRatio__F5PointT1PllT4
+/*------------------------------------------------------------------------------
+	E i g h t - b i t   d e s t i n a t i o n s   ( h o s t )
+
+	The ROM has no row routines for an eight-bit destination: StretchBits
+	draws nothing onto one (SetupStretchRatio's NotDrawn), so the MessagePad's
+	QuickDraw puts text and bitmaps on screens of one, two and four bits only.
+	DEVIATION (an extension, for the host's eight-bit and colour screens -
+	docs/qd/colour.md): a row of one-, two- or four-bit pixels is made by the
+	ROM's own routine to four bits, into a scratch row, and widened - each
+	four-bit gray v becomes v * 17, so that black stays all ones - so an
+	eight-bit destination gets the pixels a four-bit one would, widened
+	(qd/tests/test_Stretch8.cpp holds them to it).  An eight-bit source keeps
+	its levels: copied, repeated, or the darkest of those folded together, as
+	the four-bit routines fold grays.
+------------------------------------------------------------------------------*/
+
+enum { kWideRowBytes = 4096 };					// (the widest row made at four bits first)
+static ULong32	gWideRow[kWideRowBytes / 4 + 2];
+
+
+// the four-bit row made by Narrow (the ROM's routine to four bits) widened
+// into eight-bit pixels, whole words until end
+template <void (*Narrow)(ULong32*, ULong32*, ULong32*, Long32)>
+static void
+WidenFrom4(ULong32* src, ULong32* dst, ULong32* end, Long32 ratio)
+{
+	long dstBytes = (long) ((char*) end - (char*) dst);
+	if (dstBytes <= 0)
+		dstBytes = 4;
+	long pixels = (dstBytes + 3) & ~3L;						// (whole words, as the routines write)
+	if (pixels > kWideRowBytes * 2)
+		pixels = kWideRowBytes * 2;
+	ULong32* narrowEnd = gWideRow + (pixels + 7) / 8;
+	Narrow(src, gWideRow, narrowEnd, ratio);
+	const UByte* in = (const UByte*) gWideRow;
+	UByte* out = (UByte*) dst;
+	for (long i = 0; i < pixels; i += 2)
+	{
+		UByte b = in[i >> 1];
+		out[i] = (UByte) ((b >> 4) * 17);
+		out[i + 1] = (UByte) ((b & 15) * 17);
+	}
+}
+
+
+// eight-bit pixels to eight: copied
+static void
+Unscaled8to8(ULong32* src, ULong32* dst, ULong32* end, Long32 /*ratio*/)
+{
+	memcpy(dst, src, (size_t) ((char*) end - (char*) dst));
+}
+
+
+// eight-bit pixels stretched: each written again while the running sum
+// stays below one (as the ROM's stretchers step)
+static void
+Stretch8to8(ULong32* src, ULong32* dst, ULong32* end, Long32 ratio)
+{
+	const UByte* in = (const UByte*) src;
+	UByte* out = (UByte*) dst;
+	UByte* stop = (UByte*) end;
+	ULong32 sum = (ULong32) ratio >> 1;
+	for (;;)
+	{
+		UByte v = *in++;
+		do
+		{
+			*out++ = v;
+			if (out >= stop)
+				return;
+			sum += (ULong32) ratio;
+		} while ((Long32) sum >> 16 == 0);
+		sum &= 0xffff;
+	}
+}
+
+
+// eight-bit pixels shrunk: each destination pixel the darkest (the
+// largest) of the source pixels it takes, as the ROM's shrinkers fold grays
+static void
+Shrink8to8(ULong32* src, ULong32* dst, ULong32* end, Long32 ratio)
+{
+	const UByte* in = (const UByte*) src;
+	UByte* out = (UByte*) dst;
+	UByte* stop = (UByte*) end;
+	ULong32 sum = (ULong32) ratio >> 1;
+	for (;;)
+	{
+		UByte darkest = 0;
+		do
+		{
+			UByte v = *in++;
+			if (v > darkest)
+				darkest = v;
+			sum += (ULong32) ratio;
+		} while ((Long32) sum >> 16 == 0);
+		sum &= 0xffff;
+		*out++ = darkest;
+		if (out >= stop)
+			return;
+	}
+}
+
+
+// the gray "or" at eight bits: each non-white source pixel replaces the
+// destination's (as BlitModeOr4 does a nibble at a time)
+static void
+BlitModeOr8(ULong32* mask, ULong32* src, ULong32* dst, Long32 count, Long32 shift, Long32 invert)
+{
+	ULong32 previous = 0;
+	if (count < 0)
+		return;
+	do
+	{
+		ULong32 word = LW(src);
+		ULong32 value = (*mask) & ((LSR(word, shift)) + (LSL(previous, 0x20U - shift)) ^ invert);
+		if (value != 0)
+		{
+			ULong32 d = LW(dst);
+			for (ULong32 pixel = 0xff000000; pixel != 0; pixel >>= 8)
+				if ((value & pixel) != 0)
+					d &= ~pixel;
+			SW(dst, d | value);
+		}
+		count--;
+		mask++;
+		src++;
+		dst++;
+		previous = word;
+	} while (count >= 0);
+}
+
+
 // The routine that takes a row across from the source's width and depth
 // to the destination's, and the fraction it steps by (the smaller width
 // over the larger, sixteen bits of it).  A width of nought, or a pair of
@@ -2802,6 +2935,11 @@ SetupStretchRatio(Point dstSize, Point srcSize, long* ratio, long srcDepth, long
 	case 401:	choice = (Choice) { Unscaled4to1, Stretch4to1, Shrink4to1 }; break;
 	case 402:	choice = (Choice) { Unscaled4to2, Stretch4to2, Shrink4to2 }; break;
 	case 404:	choice = (Choice) { Unscaled, Stretch4to4, Shrink4to4 }; break;
+	// (host: eight-bit destinations - above)
+	case 108:	choice = (Choice) { WidenFrom4<Unscaled1to4>, WidenFrom4<Stretch1to4>, WidenFrom4<Shrink1to4> }; break;
+	case 208:	choice = (Choice) { WidenFrom4<Unscaled1to2>, WidenFrom4<Stretch2to4>, WidenFrom4<Shrink2to4> }; break;
+	case 408:	choice = (Choice) { WidenFrom4<Unscaled>, WidenFrom4<Stretch4to4>, WidenFrom4<Shrink4to4> }; break;
+	case 808:	choice = (Choice) { Unscaled8to8, Stretch8to8, Shrink8to8 }; break;
 	default:	return (RowStretcher) NotDrawn;
 	}
 	if (dstWidth == srcWidth)
@@ -2824,7 +2962,7 @@ SetupStretchMode(long mode, long depth)
 	switch (mode & 3)
 	{
 	case 0:		return BlitModeCopy;
-	case 1:		return depth == 4 ? BlitModeOr4 : depth == 2 ? BlitModeOr2 : BlitModeOr;
+	case 1:		return depth == 8 ? BlitModeOr8 : depth == 4 ? BlitModeOr4 : depth == 2 ? BlitModeOr2 : BlitModeOr;	// (host: eight bits)
 	case 2:		return BlitModeXor;
 	default:	return BlitModeBic;
 	}

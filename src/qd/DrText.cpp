@@ -113,7 +113,8 @@ ScaleSlabRect(Rect* r, long x0, long y0, Fixed scaleX, Fixed scaleY)
 // first row, 0x55 on the next, ...); on a two- or four-bit port the slab
 // made a map of that depth, every set pixel the gray of the foreground
 // pattern's first pixel - in a new block, which the caller gives back.
-// Other depths are left as they are.
+// Other depths are left as they are.  (Host: an eight-bit port's too,
+// a byte a pixel - DEVIATION, an extension: docs/qd/colour.md.)
 static void
 MakeGrayText(PixelMap* slab, GrafPort* port)
 {
@@ -174,6 +175,24 @@ MakeGrayText(PixelMap* slab, GrafPort* port)
 		slab->baseAddr = (Ptr) gray;
 		slab->rowBytes = (short) (rowBytes * 2);
 		slab->pixMapFlags = (slab->pixMapFlags & 0xffffff00) | 2;
+		return;
+	}
+	if (depth == 8)
+	{
+		UByte* gray = (UByte*) QDNewTempPtr(size * 8);
+		if (gray == nil)
+			return;
+		UByte first = *(const UByte*) GetPixelMapBits(*port->fgPat);
+		UByte* to = gray;
+		for ( ; size != 0; size--)
+		{
+			for (long k = 7; k >= 0; k--)
+				*to++ = ((*bits >> k) & 1) ? first : 0;
+			bits++;
+		}
+		slab->baseAddr = (Ptr) gray;
+		slab->rowBytes = (short) (rowBytes * 8);
+		slab->pixMapFlags = (slab->pixMapFlags & 0xffffff00) | 8;
 		return;
 	}
 	if (depth != 4)
@@ -402,8 +421,8 @@ DrTextChunk(DrTextInfo* dti, long count, const UniChar* chars, const Fixed* adva
 			rows -= below;
 		if (rows < 0)
 			continue;
-		if (direct && depth != 1 && depth != 2 && depth != 4)
-			continue;							// (the ROM has no loop for deeper maps)
+		if (direct && depth != 1 && depth != 2 && depth != 4 && depth != 8)
+			continue;							// (the ROM has no loop for deeper maps; host: eight bits too - DEVIATION, docs/qd/colour.md)
 		const UByte* glyph = info.fGlyphBits;
 		if (glyph == nil)
 			continue;
