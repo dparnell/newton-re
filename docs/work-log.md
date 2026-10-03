@@ -9,6 +9,20 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-03: release builds on GitHub; rmkit dropped
+
+`.github/workflows/release.yml` builds Windows (zig), Linux x86-64 (clang)
+and the reMarkable (zig's aarch64 cross build, an AppLoad application) on
+every push to main and publishes them for a tag v* (`docs/releases.md`,
+`tools/ci/`).  Every job's steps were run by hand first (Windows natively,
+Linux and the reMarkable's cross build under WSL, the reMarkable archive
+booted on the tablet), which found a cross build on Linux picking up the
+build machine's OpenSSL and zig's linker crashing on CMake's linker
+dependency file; Release builds for the tablet are stripped (7 MB).
+rmkit is gone (the owner: it gave nothing qtfb did not): `RMKitPanel.cpp`,
+`fetch_rmkit.py`, `-DNEWTON_RMKIT_DIR`, `package.py --rmkit`, and the
+"Newton (rmkit)" app on the tablet.
+
 ## 2026-10-03: the Host panel - pickers, docking, the Marker, the screen size
 
 The owner found the pen waveform's ghosting noticeable and asked for the

@@ -2,20 +2,15 @@
 	File:		host/remarkable/Panel.h
 
 	Contains:	What host/remarkable/HostWindow.cpp shows the Newton's
-				display on: a reMarkable tablet's e-ink panel, reached one
-				of two ways (docs/host-remarkable.md):
+				display on: a reMarkable tablet's e-ink panel, reached
+				through AppLoad's framebuffer protocol, qtfb, over a Unix
+				socket and shared memory (QTFBPanel.cpp, the client written
+				here from the protocol; docs/host-remarkable.md).  rmkit was
+				a second way until 2026-10-03: on the Paper Pro it ran only
+				through AppLoad's qtfb-shim, so it gave nothing qtfb did not,
+				and its pen never worked there.
 
-				  qtfb   the Paper Pro's (and Paper Pro Move's) - AppLoad's
-				         framebuffer protocol over a Unix socket and shared
-				         memory (QTFBPanel.cpp, the client written here from
-				         the protocol);
-				  rmkit  rmkit's framebuffer and input (RMKitPanel.cpp, over
-				         rmkit.h, which tools/remarkable/fetch_rmkit.py makes):
-				         the reMarkable 1 and 2 directly, the Paper Pro
-				         through AppLoad's qtfb-shim, which makes rmkit's
-				         /dev/fb0 and /dev/input/event* a qtfb client.
-
-				The panel is 16-bit RGB565 either way (the Paper Pro is
+				The panel is 16-bit RGB565 (the Paper Pro is
 				colour, but the Newton's grays are all it is asked to show).
 				Like the window, nothing here sees a Newton header.
 */
@@ -79,6 +74,5 @@ public:
 
 RemarkablePanel*	NewQTFBPanel(void);
 void				RemarkablePanelSize(long* width, long* height);	// the panel's size, portrait (NEWTON_RM_PANEL, else the device tree's model)
-RemarkablePanel*	NewRMKitPanel(void);		// nil when newton was built without rmkit
 
 #endif	/* __REMARKABLE_PANEL_H */

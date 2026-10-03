@@ -7,8 +7,7 @@
 				pen, the type folio and AppLoad's keyboard as the keys and
 				the power button as the Newton's power switch.  The panel
 				is reached through host/remarkable/Panel.h - AppLoad's qtfb
-				on the Paper Pro, rmkit on a reMarkable 1 or 2 (and on the
-				Paper Pro through AppLoad's qtfb-shim) - docs/host-remarkable.md.
+				on the Paper Pro - docs/host-remarkable.md.
 
 	E-ink is not a monitor: every update costs a refresh of the glass, a
 	flashing one to be rid of ghosts.  So where the other windows copy the
@@ -111,9 +110,8 @@ SnapshotSignal(int)
 	gSnapshotsAsked.fetch_add(1);
 }
 
-// AppLoad ends an application with SIGTERM (and rmkit's own handler for it
-// calls exit() inside the signal, which aborted newton): the run is ended
-// as a closed window ends it, so the stores are flushed
+// AppLoad ends an application with SIGTERM: the run is ended as a closed
+// window ends it, so the stores are flushed
 static std::atomic<bool>	gTerminateAsked(false);
 
 static void
@@ -526,7 +524,6 @@ WindowThread(void)
 	long touchId = -1;
 	bool closed = false;
 
-	// (after the panel is open: rmkit installs its handlers before main)
 	signal(SIGTERM, TerminateSignal);
 	signal(SIGINT, TerminateSignal);
 	while (!gStopping.load() && !closed)
@@ -805,30 +802,13 @@ bool
 HostWindowStart(long width, long height, const unsigned char* pixels, const char* title, long scale)
 {
 	(void) title;
-	// which panel: NEWTON_RM_PANEL_KIND=qtfb or rmkit, else qtfb when AppLoad
-	// started newton (QTFB_KEY), else rmkit if this newton has it
-	const char* kind = getenv("NEWTON_RM_PANEL_KIND");
-	RemarkablePanel* candidates[2] = { nil, nil };
-	if (kind != nil && strcmp(kind, "rmkit") == 0)
-		candidates[0] = NewRMKitPanel();
-	else if (kind != nil && strcmp(kind, "qtfb") == 0)
-		candidates[0] = NewQTFBPanel();
-	else
-	{
-		candidates[0] = NewQTFBPanel();
-		candidates[1] = NewRMKitPanel();
-	}
+	// the panel: AppLoad's qtfb, when AppLoad started newton (QTFB_KEY)
 	long panelWidth = 0, panelHeight = 0;
-	gPanel = nil;
-	for (int i = 0; i < 2; i++)
+	gPanel = NewQTFBPanel();
+	if (!gPanel->NativeSize(&panelWidth, &panelHeight))
 	{
-		RemarkablePanel* p = candidates[i];
-		if (p == nil)
-			continue;
-		if (gPanel == nil && p->NativeSize(&panelWidth, &panelHeight))
-			gPanel = p;
-		else
-			delete p;
+		delete gPanel;
+		gPanel = nil;
 	}
 	if (gPanel == nil)
 		return false;					// no panel here: the world runs headless

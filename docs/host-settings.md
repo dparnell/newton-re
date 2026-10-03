@@ -16,8 +16,8 @@ settings.
 Only what applies to the machine newton is running on: the page lists what
 the host says it has, so a desktop shows beaming and docking, a reMarkable
 its panel's settings as well, and those only when the panel can do them
-(the qtfb panel has the pen waveform and the Marker read directly, rmkit's
-under the shim neither; a headless newton has no panel settings at all).
+(a panel says what it can do - `HasPenInk`, `HasDirectPen`; a headless
+newton has no panel settings at all).
 
 | setting | what it does | where | before the panel |
 |---|---|---|---|

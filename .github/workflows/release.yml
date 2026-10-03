@@ -1,0 +1,120 @@
+# Builds newton for every host it runs on and, for a tag v*, publishes them as
+# a GitHub release (docs/releases.md).
+#
+#   windows      x86-64 Windows, the zig toolchain (src/cmake/zig-toolchain.cmake)
+#   linux        x86-64 Linux, the system clang (X11 window, ALSA sound, OpenSSL)
+#   remarkable   the reMarkable Paper Pro: aarch64 Linux cross-built with zig
+#                (src/cmake/zig-aarch64-linux.cmake), packaged as an AppLoad
+#                application (tools/remarkable/package.py)
+#
+# Each archive holds newton, newtonscript and romsrc-objects.bin - the object
+# file built from the committed romsrc/ tree, which newton boots from and
+# finds beside itself - and a README.  No ROM image is needed to build or run.
+# macOS is planned (docs/host-macos.md) and not built yet.
+
+name: release
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  ZIG_VERSION: 0.16.0
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mlugg/setup-zig@v2
+        with:
+          version: ${{ env.ZIG_VERSION }}
+      - name: Ninja
+        run: pip install ninja
+      - name: Configure
+        shell: bash
+        run: cmake -G Ninja -S src -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="$PWD/src/cmake/zig-toolchain.cmake"
+      - name: Build
+        run: cmake --build build --target newton newtonscript romsrc
+      - name: Smoke test
+        shell: bash
+        run: tools/ci/smoke.sh build/host
+      - name: Package
+        shell: bash
+        run: tools/ci/package.sh build newton-windows-x86_64 zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: newton-windows-x86_64
+          path: dist/newton-windows-x86_64.zip
+
+  linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Packages
+        run: sudo apt-get update && sudo apt-get install -y clang ninja-build libx11-dev libasound2-dev libssl-dev
+      - name: Configure
+        run: cmake -G Ninja -S src -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=clang++
+      - name: Build
+        run: cmake --build build --target newton newtonscript romsrc
+      - name: Smoke test
+        run: tools/ci/smoke.sh build/host
+      - name: Package
+        run: tools/ci/package.sh build newton-linux-x86_64 tar
+      - uses: actions/upload-artifact@v4
+        with:
+          name: newton-linux-x86_64
+          path: dist/newton-linux-x86_64.tar.gz
+
+  remarkable:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mlugg/setup-zig@v2
+        with:
+          version: ${{ env.ZIG_VERSION }}
+      - name: Packages
+        run: sudo apt-get update && sudo apt-get install -y clang ninja-build
+      # a cross build cannot run its own newtonscript, which compiles romsrc/
+      # into the object file: one built for the runner does it
+      - name: The runner's newtonscript
+        run: |
+          cmake -G Ninja -S src -B build-native -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=clang++
+          cmake --build build-native --target newtonscript
+      - name: Configure
+        run: >
+          cmake -G Ninja -S src -B build -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_TOOLCHAIN_FILE="$PWD/src/cmake/zig-aarch64-linux.cmake"
+          -DNEWTON_HOST_WINDOW=remarkable
+          -DNEWTON_HOST_NEWTONSCRIPT="$PWD/build-native/host/newtonscript"
+      - name: Build
+        run: cmake --build build --target newton romsrc
+      - name: Package
+        run: tools/ci/package-remarkable.sh build newton-remarkable-aarch64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: newton-remarkable-aarch64
+          path: dist/newton-remarkable-aarch64.tar.gz
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [windows, linux, remarkable]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          body_path: tools/ci/release-notes.md
+          generate_release_notes: true

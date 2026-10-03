@@ -40,7 +40,7 @@ the way are all in `docs/work-log.md`.
 - **The reMarkable Paper Pro** runs newton from AppLoad at 2x
   (`docs/host-remarkable.md`).  Open there: ink latency (the
   reconstructed inker's ~50 ms cadence; a video from the owner for the
-  panel's share), rmkit's pen under the shim, packaging (Vellum/AppLoad), and the HiDPI shadow
+  panel's share), and the HiDPI shadow
   (`docs/host-hidpi.md`) - the owner to decide before any of it is built.
 
 ## In progress

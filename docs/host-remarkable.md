@@ -106,6 +106,13 @@ so it never is.
 
 ### rmkit
 
+*Removed 2026-10-03 (the owner: "since rmkit does not give us anything we
+might as well drop it"): on the Paper Pro rmkit ran only through AppLoad's
+qtfb-shim, which turns its framebuffer calls back into qtfb, so it added a
+layer and nothing else, and its pen never worked there.  `RMKitPanel.cpp`,
+`fetch_rmkit.py`, `-DNEWTON_RMKIT_DIR` and `package.py --rmkit` are gone;
+what follows is the study, kept as it was.*
+
 [rmkit](https://github.com/rmkit-dev/rmkit) is "a batteries-included library
 for building remarkable apps": framebuffer drawing with the mxcfb update
 ioctls (waveform and update mode per update), input from the pen, touch and
@@ -155,7 +162,7 @@ A new host backend beside `win32/` and `x11/`, the reconstruction untouched:
 
 - `QTFBPanel.cpp` - qtfb as above; it asks for a framebuffer exactly the size
   of the scaled display (*custom initialise*), so AppLoad centres it;
-- `RMKitPanel.cpp` - rmkit's `framebuffer::get()` and `ui::MainLoop::in`
+- *(removed 2026-10-03)* `RMKitPanel.cpp` - rmkit's `framebuffer::get()` and `ui::MainLoop::in`
   (built only with `-DNEWTON_RMKIT_DIR`): the image centred on rmkit's
   framebuffer, the Wacom events as the pen, the button device's Linux key codes
   as keys.
@@ -295,6 +302,9 @@ comments if it is ever offered to others.)  **Launching**: an AppLoad
 application directory - `tools/remarkable/package.py`.
 
 ## The build
+
+Release builds for the tablet are made by GitHub's runners
+(`.github/workflows/release.yml`, `docs/releases.md`); by hand:
 
 Cross-compiled from any machine with zig (0.16 here, on Windows):
 

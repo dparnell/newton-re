@@ -3,7 +3,7 @@
 (docs/host-remarkable.md):
 
     python tools/remarkable/package.py --newton <aarch64 newton> --objects <romsrc-objects.bin> -o tmp/rmpp-app/newton
-        [--display 320x480] [--name Newton] [--rmkit]
+        [--display 320x480] [--name Newton] [--old-appload]
 
 OUT/ then holds
 
@@ -19,9 +19,7 @@ OUT/ then holds
     icon.png                     the launcher's icon (tools/remarkable/icon.py)
 
 Copied to /home/root/xovi/exthome/appload/<dir>, it shows in AppLoad's
-launcher.  --rmkit makes the variant whose window is rmkit's (a newton built
-with -DNEWTON_RMKIT_DIR) under AppLoad's qtfb-shim, as KOReader runs:
-LD_PRELOAD=/home/root/shims/qtfb-shim.so in native mode.
+launcher.
 """
 import argparse
 import json
@@ -56,7 +54,6 @@ def main():
     parser.add_argument("-o", "--out", required=True)
     parser.add_argument("--display", default="810x1080")      # the Paper Pro panel at 2x - 1:1 (1620x2160) is too small to use
     parser.add_argument("--name", default="Newton")
-    parser.add_argument("--rmkit", action="store_true")
     parser.add_argument("--old-appload", action="store_true",
                         help="for an AppLoad before v0.6.0 (September 2026): no supportsRotation, newton portrait unless "
                              "NEWTON_RM_ORIENTATION says otherwise")
@@ -69,27 +66,17 @@ def main():
     with open(os.path.join(args.out, "run.sh"), "w", newline="\n") as f:
         f.write(RUN_SH.format(display=args.display))
     manifest = {"name": args.name, "application": "run.sh", "qtfb": True, "disablesWindowedMode": True}
-    if not args.rmkit:
-        # the Marker read from its own device, its points mapped by what
-        # AppLoad's pen events show (remarkable/PenFit.h): AppLoad's own
-        # come bunched behind xochitl's redraws, which made jagged ink
-        manifest["environment"] = {"NEWTON_RM_PEN": "evdev"}
-    if not args.rmkit and not args.old_appload:
+    # the Marker read from its own device, its points mapped by what AppLoad's
+    # pen events show (remarkable/PenFit.h): AppLoad's own come bunched
+    # behind xochitl's redraws, which made jagged ink
+    manifest["environment"] = {"NEWTON_RM_PEN": "evdev"}
+    if not args.old_appload:
         # AppLoad v0.6.0 on shows the framebuffer square on the glass however
         # the tablet is turned and says which way: the Newton's screen turns
         # to match as it runs - landscape with the type folio
         # (docs/host-remarkable.md, "Rotation")
         manifest["supportsRotation"] = True
         manifest["environment"]["NEWTON_RM_ORIENTATION"] = "appload"
-    if args.rmkit:
-        manifest["environment"] = {
-            "NEWTON_RM_PANEL_KIND": "rmkit",
-            "LD_PRELOAD": "/home/root/shims/qtfb-shim.so",
-            "QTFB_SHIM_MODEL": "false",
-            "QTFB_SHIM_INPUT_MODE": "NATIVE",
-            "QTFB_SHIM_MODE": "N_RGB565",
-            "QTFB_SHIM_RESPECT_FULL_REFRESH_REQUESTS": "1",
-        }
     for setting in args.env:
         name, _, value = setting.partition("=")
         manifest.setdefault("environment", {})[name] = value

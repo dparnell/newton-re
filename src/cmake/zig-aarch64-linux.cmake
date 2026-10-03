@@ -23,6 +23,10 @@ set(CMAKE_CXX_FLAGS_INIT "-fsigned-char -fPIE")
 # are taken for ROM jump-table addresses (frames/NativeFunctions.h's
 # kROMCodeLimit) - every host native then "not reconstructed"
 set(CMAKE_EXE_LINKER_FLAGS_INIT "-pie")
+# a Release build stripped: zig keeps the debug information otherwise (38 MB
+# against 7 MB for newton), and zig objcopy cannot strip; a build to debug
+# on the tablet (stacksample, a crash's C stack) is not a Release one
+set(CMAKE_EXE_LINKER_FLAGS_RELEASE_INIT "-s")
 # programs and libraries of the build machine's, never the target's
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)

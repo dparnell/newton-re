@@ -3,9 +3,8 @@
 
 	Contains:	A key as Linux numbers it (linux/input-event-codes.h) as a
 				Windows virtual key code - what host/HostKeyboard.cpp maps
-				to the Newton's.  Shared by the type folio read from its
-				own input device (Folio.cpp) and rmkit's button device
-				(RMKitPanel.cpp).  The positions are a US keyboard's: the
+				to the Newton's, for the type folio read from its own
+				input device (Folio.cpp).  The positions are a US keyboard's: the
 				Newton's own key map does the rest (Shift and the symbols).
 */
 

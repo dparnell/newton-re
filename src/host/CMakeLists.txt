@@ -105,16 +105,12 @@ set_tests_properties(host.NewtonScriptTrace PROPERTIES TIMEOUT 60
 # says there is no window and no device, so the world runs headless - which
 # is what a host the port has not reached yet gets (macOS today).
 #   reMarkable remarkable/HostWindow.cpp (the e-ink panel through AppLoad's
-#             qtfb, or rmkit with -DNEWTON_RMKIT_DIR), no sound -
-#             -DNEWTON_HOST_WINDOW=remarkable (docs/host-remarkable.md)
+#             qtfb), no sound - -DNEWTON_HOST_WINDOW=remarkable
+#             (docs/host-remarkable.md)
 set(NEWTON_HOST_WINDOW "auto" CACHE STRING "the host window: auto (the platform's), remarkable (a reMarkable tablet's panel)")
-set(NEWTON_RMKIT_DIR "" CACHE PATH "rmkit.h and stb/ from tools/remarkable/fetch_rmkit.py: the reMarkable window over rmkit as well as qtfb")
 if(NEWTON_HOST_WINDOW STREQUAL "remarkable")
-    set(host_window_source remarkable/HostWindow.cpp remarkable/QTFBPanel.cpp remarkable/RMKitPanel.cpp remarkable/Folio.cpp)
+    set(host_window_source remarkable/HostWindow.cpp remarkable/QTFBPanel.cpp remarkable/Folio.cpp)
     set(host_audio_source win32/HostAudio.cpp)         # its #else: no device (the tablets have no loudspeaker)
-    if(NEWTON_RMKIT_DIR)
-        list(APPEND host_window_source ${NEWTON_RMKIT_DIR}/stb/stb.cpp)
-    endif()
 elseif(WIN32)
     set(host_window_source win32/HostWindow.cpp)
     set(host_audio_source win32/HostAudio.cpp)
@@ -139,13 +135,6 @@ add_library(host_window STATIC ${host_window_source} ${host_audio_source} HostPe
 target_include_directories(host_window PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 if(NEWTON_HOST_WINDOW STREQUAL "remarkable")
     target_link_libraries(host_window PUBLIC rt pthread dl)
-    if(NEWTON_RMKIT_DIR)
-        # rmkit's single header and stb: -DREMARKABLE picks its reMarkable
-        # framebuffer and input; its own warnings are not ours
-        target_include_directories(host_window PRIVATE ${NEWTON_RMKIT_DIR} ${NEWTON_RMKIT_DIR}/stb)
-        target_compile_definitions(host_window PRIVATE NEWTON_HAVE_RMKIT=1 REMARKABLE=1)
-        set_source_files_properties(remarkable/RMKitPanel.cpp ${NEWTON_RMKIT_DIR}/stb/stb.cpp PROPERTIES COMPILE_OPTIONS "-w")
-    endif()
 elseif(WIN32)
     target_link_libraries(host_window PUBLIC user32 gdi32 shell32 winmm)
 else()

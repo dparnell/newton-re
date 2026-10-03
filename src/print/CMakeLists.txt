@@ -44,7 +44,13 @@ target_include_directories(print_host_tls PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/hos
 if(WIN32)
     target_link_libraries(print_host_tls PUBLIC secur32 crypt32)
 else()
-    find_package(OpenSSL)
+    # (a cross build looks only where OPENSSL_ROOT_DIR says: otherwise it
+    # finds the build machine's own - an x86-64 OpenSSL for the reMarkable's
+    # aarch64 newton on a Linux runner - and fails; without one it has no
+    # ipps, as on a cross build from Windows)
+    if(NOT CMAKE_CROSSCOMPILING OR OPENSSL_ROOT_DIR)
+        find_package(OpenSSL)
+    endif()
     if(OpenSSL_FOUND)
         target_compile_definitions(print_host_tls PRIVATE HOST_TLS_OPENSSL)
         target_link_libraries(print_host_tls PUBLIC OpenSSL::SSL OpenSSL::Crypto)

@@ -1,0 +1,16 @@
+// tools/ci/smoke.sh's boot check: newton booted from its object file to the
+// Setup assistant a fresh machine starts with, then quit.
+smokeTries := 0;
+smokeWait := func() begin
+	if GetRoot().setup and GetRoot().setup.viewCObject then begin
+		Print("smoke: booted");
+		HostQuit();
+	end else if smokeTries > 240 then begin
+		Print("smoke: no Setup after a minute");
+		HostQuit();
+	end else begin
+		smokeTries := smokeTries + 1;
+		AddDelayedCall(smokeWait, nil, 250);
+	end;
+end;
+call smokeWait with ();

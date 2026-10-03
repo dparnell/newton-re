@@ -3,6 +3,11 @@
 # Set ZIG_TARGET (e.g. x86_64-linux-gnu, i386-linux-gnu) to cross-compile.
 set(CMAKE_C_COMPILER zig cc)
 set(CMAKE_CXX_COMPILER zig c++)
+# no -Xlinker --dependency-file: CMake asks for one on a Linux build machine,
+# and zig's linker crashed on it linking newton (segmentation fault, zig
+# 0.16 - found building the reMarkable's newton on Linux for the release
+# workflow, docs/releases.md)
+set(CMAKE_LINK_DEPENDS_USE_LINKER OFF)
 if(DEFINED ZIG_TARGET)
     set(CMAKE_C_COMPILER_TARGET ${ZIG_TARGET})
     set(CMAKE_CXX_COMPILER_TARGET ${ZIG_TARGET})
