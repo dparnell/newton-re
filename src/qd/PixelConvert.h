@@ -35,4 +35,13 @@ void	ConvertIndex4(char* row, const UChar* table, long count);				// ROM 0x00075
 void	ConvertIndex8(char* row, const UChar* table, long count);				// ROM 0x00075574 ConvertIndex8__FPcPUcl
 void	ConvertIndex8to4(char* row, const UChar* table, long count);			// ROM 0x00075598 ConvertIndex8to4__FPcPUcl
 
+// (host) the colour screen's: rows made eight-bit palette entries (qd/Colour.h)
+void	ConvertDirect16to8(char* row, const UChar* table, long count);
+void	ConvertDirect32to8(char* row, const UChar* table, long count);
+void	ConvertDirectNoPad32to8(char* row, const UChar* table, long count);
+void	ConvertDirectComp32to8(char* row, const UChar* table, long count);
+void	ConvertIndex1to8(char* row, const UChar* table, long count);
+void	ConvertIndex2to8(char* row, const UChar* table, long count);
+void	ConvertIndex4to8(char* row, const UChar* table, long count);
+
 #endif	/* __PIXELCONVERT_H */

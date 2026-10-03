@@ -102,3 +102,20 @@ reMarkable's RGB565 panel - the Paper Pro's is a colour e-ink one);
 ctest `host.NewtonColour` (`src/host/demo/colour.ns`): four PackRGB fills,
 blue text, a red-on-yellow dither and a red rectangle inverted to cyan, each
 checked on the screen.
+
+### Colour bitmaps
+
+On the colour screen `StretchBits` makes a colour source eight-bit palette
+entries rather than four-bit grays (`SetupColourConversion`;
+`PixelConvert.cpp`'s host converters): 16-bit and 32-bit direct colour
+(padded, unpadded and by component), and one-, two- and four-bit pixels
+with a colour table, the row then stretched as eight bits to eight (where
+several source rows fold into one, the first is kept: "the darker" means
+nothing among colours).  Gray tables made from colour tables - a bitmap's
+`'colordata` entry's `colortable` (`TPixelObj::GetFramBitmap`), a
+picture's pixel map (`GetPicColorTable`) - are made at eight bits there,
+so they hold palette entries; an eight-bit bitmap with a colour table then
+needs nothing more.  ctest `host.NewtonColour` draws a 32-bit bitmap (red
+and blue halves, `MakeBitmap(w, h, {depth: 32})` filled by `StuffByte`), a
+16-bit one (green) and a four-bit `'colordata` bitmap whose table makes
+its pixels magenta.

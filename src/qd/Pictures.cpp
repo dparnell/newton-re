@@ -8,6 +8,7 @@
 	Reconstructed from the MP2x00 US ROM; each function cites its origin.
 */
 
+#include "Colour.h"
 #include "Pictures.h"
 #include "PicPlay.h"
 #include "Rects.h"
@@ -172,7 +173,8 @@ TPixelObj::GetFramBitmap(void)
 				fGrayTable[i] = fill;
 			const UChar* spec = (const UChar*) BinaryData(colorTable);
 			for (long i = 0; i < entries; i++, spec += 8)
-				fGrayTable[i] = (char) RGBtoGray(GetBigEndianHalf(spec + 2), GetBigEndianHalf(spec + 4), GetBigEndianHalf(spec + 6), fDepth, fDepth);
+				fGrayTable[i] = (char) RGBtoGray(GetBigEndianHalf(spec + 2), GetBigEndianHalf(spec + 4), GetBigEndianHalf(spec + 6), fDepth,
+												 ColourScreen() ? 8 : fDepth);		// (host: the colour screen's tables hold palette entries - qd/Colour.h)
 		}
 		UnlockRef(colorTable);
 	}

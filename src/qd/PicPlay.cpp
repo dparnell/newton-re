@@ -12,6 +12,7 @@
 	(GetPicHandle) has its halfwords turned round after it is read.
 */
 
+#include "Colour.h"
 #include "PicPlay.h"
 #include "PicRecord.h"
 #include "Draw.h"
@@ -329,7 +330,7 @@ GetPicGrayTable(long depth, UChar** table)
 		ULong red = GetPicWord() & 0xffff;
 		ULong green = GetPicWord() & 0xffff;
 		ULong blue = GetPicWord() & 0xffff;
-		(*table)[i] = (UChar) RGBtoGray(red, green, blue, depth, depth);
+		(*table)[i] = (UChar) RGBtoGray(red, green, blue, depth, ColourScreen() ? 8 : depth);	// (host: the colour screen's tables hold palette entries - qd/Colour.h)
 	}
 	return 0;
 }

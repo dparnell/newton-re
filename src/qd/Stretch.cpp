@@ -54,6 +54,7 @@
 #include "Frames.h"
 #include "Locale.h"		// GetPreference
 #include "RSSymbols.h"
+#include "Colour.h"
 #include <string.h>
 
 extern const unsigned char	kDepthPixelsPerWordShift[33];	// QDTables.cpp
@@ -2905,6 +2906,39 @@ BlitModeOr8(ULong32* mask, ULong32* src, ULong32* dst, Long32 count, Long32 shif
 }
 
 
+// (host) The colour screen's way into eight bits (qd/Colour.h,
+// docs/qd/colour.md): a direct-colour row, or a one-, two- or four-bit
+// one with a colour table (whose entries the colour screen makes palette
+// entries), made a row of eight-bit palette entries; nil for any other
+// source, which goes the ROM's way.  An eight-bit source with a table needs
+// nothing new: its table already holds palette entries.
+static PixelConverter
+SetupColourConversion(long depth, PixelMap* src)
+{
+	Boolean table = (src->pixMapFlags & 0x8000000) != 0;
+	switch (depth)
+	{
+	case 1:		return table ? ConvertIndex1to8 : nil;
+	case 2:		return table ? ConvertIndex2to8 : nil;
+	case 4:		return table ? ConvertIndex4to8 : nil;
+	case 0x10:	return ConvertDirect16to8;
+	case 0x20:
+		if (src->pixMapFlags & 0x2000000)
+			return ConvertDirectComp32to8;
+		return (src->pixMapFlags & 0x4000000) ? ConvertDirectNoPad32to8 : ConvertDirect32to8;
+	default:	return nil;
+	}
+}
+
+
+// (host) the colour screen's fold of several source rows into one: the
+// first kept ("the darker" means nothing among colours)
+static void
+KeepFirstRow(char* /*dst*/, ULong32** /*src*/, Long32 /*count*/, ULong32 /*leftShift*/, ULong32 /*rightShift*/, UChar* /*table*/)
+{
+}
+
+
 // The routine that takes a row across from the source's width and depth
 // to the destination's, and the fraction it steps by (the smaller width
 // over the larger, sixteen bits of it).  A width of nought, or a pair of
@@ -3517,16 +3551,21 @@ StretchBits(PixelMap* src, PixelMap* dst, const Rect* srcRect, const Rect* dstRe
 	dstSize.h = dstWidth;
 	srcSize.v = srcHeight;
 	srcSize.h = srcWidth;
-	RowStretcher stretch = SetupStretchRatio(dstSize, srcSize, &ratio, srcDepth, dstDepth);
-	PixelConverter convert = SetupConversion(srcDepth, src);
+	// (host: on the colour screen a colour source is made palette entries -
+	// DEVIATION, an extension: qd/Colour.h)
+	PixelConverter colourConvert = (ColourScreen() && dstDepth == 8) ? SetupColourConversion(srcDepth, src) : nil;
+	RowStretcher stretch = SetupStretchRatio(dstSize, srcSize, &ratio, colourConvert != nil ? 8 : srcDepth, dstDepth);
+	PixelConverter convert = colourConvert != nil ? colourConvert : SetupConversion(srcDepth, src);
 	if (convert == (PixelConverter) -1)
 		return;
-	RowCombiner combine = SetupCombine(srcDepth, src);
+	RowCombiner combine = colourConvert != nil ? (RowCombiner) KeepFirstRow : SetupCombine(srcDepth, src);
 	Rect clip;
 	if (!RSect(&clip, 5, dstRect, &dst->bounds, &(*clip1)->rgnBBox, &(*clip2)->rgnBBox, &(*mask)->rgnBBox))
 		return;
 	long srcWords = ((srcWidth - 1) << srcLog) >> 5;
 	long srcBufSize = (srcWords + 2) * 4;
+	if (colourConvert != nil && srcDepth < 8 && ((((srcWidth - 1) << 3) >> 5) + 2) * 4 > srcBufSize)
+		srcBufSize = ((((srcWidth - 1) << 3) >> 5) + 2) * 4;		// (host: room for the row made eight bits)
 	ULong32* srcBuf = (ULong32*) QDNewTempPtr(srcBufSize);
 	if (srcBuf == nil)
 		return;

@@ -7,6 +7,7 @@
 */
 
 #include "PixelConvert.h"
+#include "Colour.h"
 
 
 // (host) A byte of the row as the ARM reads it: unsigned.
@@ -155,3 +156,88 @@ ConvertIndex8to4(char* row, const UChar* table, long count)
 		dst++;
 	}
 }
+
+
+/*------------------------------------------------------------------------------
+	T h e   c o l o u r   s c r e e n ' s   c o n v e r t e r s   ( h o s t )
+
+	Not in the ROM (it has no colour screen): on the host's colour screen
+	(qd/Colour.h, docs/qd/colour.md) StretchBits makes a direct-colour row,
+	or an indexed one with a colour table, a row of eight-bit palette
+	entries instead of four-bit grays, in place, one byte a pixel from the
+	row's start.  `count` is the row buffer's bytes, as for the ROM's.
+------------------------------------------------------------------------------*/
+
+// a five-bit component as sixteen bits
+static inline ULong
+Wide5(ULong c)
+{
+	return (c << 11) | (c << 6) | (c << 1);
+}
+
+
+// 16-bit pixels (x, then five bits each of red, green and blue)
+void
+ConvertDirect16to8(char* row, const UChar* /*table*/, long count)
+{
+	UChar* dst = (UChar*) row;
+	for (long i = 0; i < count / 2; i++)
+	{
+		ULong pixel = (B(row, 2 * i) << 8) | B(row, 2 * i + 1);
+		dst[i] = ColourToIndex(Wide5((pixel >> 10) & 31), Wide5((pixel >> 5) & 31), Wide5(pixel & 31));
+	}
+}
+
+
+// 32-bit pixels (a pad byte, then red, green, blue)
+void
+ConvertDirect32to8(char* row, const UChar* /*table*/, long count)
+{
+	UChar* dst = (UChar*) row;
+	for (long i = 0; i < count / 4; i++)
+		dst[i] = ColourToIndex(B(row, 4 * i + 1) * 0x101, B(row, 4 * i + 2) * 0x101, B(row, 4 * i + 3) * 0x101);
+}
+
+
+// 24 bits a pixel, no pad (red, green, blue)
+void
+ConvertDirectNoPad32to8(char* row, const UChar* /*table*/, long count)
+{
+	UChar* dst = (UChar*) row;
+	for (long i = 0; i < count / 3; i++)
+		dst[i] = ColourToIndex(B(row, 3 * i) * 0x101, B(row, 3 * i + 1) * 0x101, B(row, 3 * i + 2) * 0x101);
+}
+
+
+// a component plane at a time (all the reds, the greens, the blues), the
+// planes (count / 4 - 1) bytes apart as the ROM's ConvertDirectComp32to4
+// takes them
+void
+ConvertDirectComp32to8(char* row, const UChar* /*table*/, long count)
+{
+	long plane = (count >> 2) - 1;
+	UChar* dst = (UChar*) row;
+	for (long i = 0; i < plane; i++)
+		dst[i] = ColourToIndex(B(row, i) * 0x101, B(row, i + plane) * 0x101, B(row, i + 2 * plane) * 0x101);
+}
+
+
+// one-, two- and four-bit indexed pixels through a table of palette
+// entries (the colour screen makes every gray table at eight bits), from
+// the end back so that no pixel is written over before it is read
+static void
+ConvertIndexTo8(char* row, const UChar* table, long count, long depth)
+{
+	UChar* dst = (UChar*) row;
+	long mask = (1 << depth) - 1;
+	for (long i = count - 1; i >= 0; i--)
+	{
+		long bit = i * depth;
+		long index = (B(row, bit >> 3) >> (8 - depth - (bit & 7))) & mask;
+		dst[i] = table != nil ? table[index] : (UChar) (index * (255 / mask));
+	}
+}
+
+void	ConvertIndex1to8(char* row, const UChar* table, long count)		{ ConvertIndexTo8(row, table, count, 1); }
+void	ConvertIndex2to8(char* row, const UChar* table, long count)		{ ConvertIndexTo8(row, table, count, 2); }
+void	ConvertIndex4to8(char* row, const UChar* table, long count)		{ ConvertIndexTo8(row, table, count, 4); }

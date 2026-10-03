@@ -65,6 +65,48 @@ colourDraw := func() begin
 		colourFailures := colourFailures + 1;
 	end;
 	call colourExpect with ("red inverted", 50, 260, 0x00FFFF);
+
+	// a 32-bit direct-colour bitmap (MakeBitmap's 'pixels: a 0x1c-byte
+	// header, then rows of pad, red, green, blue): the left half red, the
+	// right blue
+	local direct := MakeBitmap(32, 16, {depth: 32});
+	for y := 0 to 15 do
+		for x := 0 to 31 do begin
+			local at := 0x1c + y * 128 + x * 4;
+			StuffByte(direct.data, at + 1, if x < 16 then 255 else 0);
+			StuffByte(direct.data, at + 2, 0);
+			StuffByte(direct.data, at + 3, if x < 16 then 0 else 255);
+		end;
+	root:DoDrawing('DrawShape, [direct, {transform: [200, 240]}]);
+	call colourExpect with ("32-bit bitmap's red", 208, 248, 0xFF0000);
+	call colourExpect with ("32-bit bitmap's blue", 224, 248, 0x0000FF);
+
+	// a 16-bit one (x, then five bits each of red, green, blue): green
+	local green16 := MakeBitmap(16, 16, {depth: 16});
+	for y := 0 to 15 do
+		for x := 0 to 15 do begin
+			local at := 0x1c + y * 64 + x * 2;
+			StuffByte(green16.data, at, 0x03);		// (0x03e0: green all ones)
+			StuffByte(green16.data, at + 1, 0xE0);
+		end;
+	root:DoDrawing('DrawShape, [green16, {transform: [250, 240]}]);
+	call colourExpect with ("16-bit bitmap's green", 258, 248, 0x00FF00);
+
+	// a four-bit bitmap with a colour table ('colordata: its cbits a 'bits
+	// layout - a 16-byte header, then rows - and its colortable eight bytes
+	// an entry: a word, then red, green, blue): every pixel entry 1, magenta
+	local cbits := MakeBinary(16 + 8 * 4, 'bits);
+	for i := 0 to Length(cbits) - 1 do StuffByte(cbits, i, 0);
+	StuffWord(cbits, 4, 4);								// rowBytes
+	StuffWord(cbits, 12, 8);							// bounds: bottom
+	StuffWord(cbits, 14, 8);							// right
+	for i := 16 to Length(cbits) - 1 do StuffByte(cbits, i, 0x11);
+	local table := MakeBinary(16, 'colortable);
+	for i := 0 to 15 do StuffByte(table, i, 0xFF);	// entry 0 white
+	StuffWord(table, 8 + 4, 0);							// entry 1: no green - magenta
+	local tabled := {class: 'bitmap, bounds: SetBounds(0, 0, 8, 8), colordata: [{cbits: cbits, bitdepth: 4, colortable: table}]};
+	root:DoDrawing('DrawShape, [tabled, {transform: [280, 240]}]);
+	call colourExpect with ("colour-table bitmap's magenta", 284, 244, 0xFF00FF);
 	ScreenSnapshot("tmp/colour-demo.ppm");
 	Print("colour: done, " & NumberStr(colourFailures) & " failed");
 	HostQuit();
