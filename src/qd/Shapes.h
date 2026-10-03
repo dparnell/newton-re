@@ -50,6 +50,7 @@ void	InitOval(const Rect* r, OvalRec* oval, long ovalWidth, long ovalHeight);
 void	BumpOval(OvalRec* oval, long y);					// the ends for row y (within the curved rows)
 void	PutOval(const Rect* r, long ovalWidth, long ovalHeight, Handle points, long* offset, long* limit);	// the shape's change points appended
 RgnHandle	OvalRgn(const Rect* r, long ovalWidth, long ovalHeight);	// host: the shape as a new region (nil for no memory)
+void		ForgetArcRegions(void);			// host: DrawArc's cached regions forgotten (InitGraf: the heap may be new)
 
 // lines
 void	LineTo(long h, long v);

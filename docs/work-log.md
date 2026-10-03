@@ -9,6 +9,27 @@ have been done (a newer entry, or the subsystem's own page under
 work; this log is how and in what order they came to be, with the host
 bugs and ROM bugs found on the way.
 
+## 2026-10-03: the view system and the interpreter (branch perf/drawing)
+
+`tools/host/profile.py --walk` takes exact stacks (dbghelp's StackWalk64
+over the image's unwind tables, frames named from the PDB, only threads
+that have run since the last look) and prints what a function's time went
+to (`--callees`) and where it was called from (`--callers`), from a live
+process or saved stacks (`--save`/`--load`).  It showed the interpreter
+itself under 10% of a redraw - the views' scripts spend their time in the
+drawing natives they call - and three costs fixed: `FindOffset`'s cache
+1024 entries (generation-cleared) where the ROM's 32 missed so often that
+the map search was 9.6% of a redraw (0.9% now); `UnsafeSymbolEqual`'s
+hash compared first; `DrawArc`'s whole-shape regions kept (round
+rectangles 12% -> 6%).  10000 redraws: Notepad 122 -> 100 us each,
+Extras 191 -> 156, Dates 163 -> 136.  Found on the way: `AddSlot` writes
+into the FindOffset cache itself with the cache's index formula, so the
+first try (a new index in FindOffset only) left a stale "no such slot"
+and the compiler threw building `romsrc`.  ctest 414 of 416:
+`host.NewtonAlignPen.restart` as before; `armcpu.NewtHack` failed 3 times
+in about 30 (fixed delays and taps on a random game map; 19 passes in a
+row after).
+
 ## 2026-10-03: drawing speed, round two (branch perf/drawing)
 
 Measured first with a new benchmark of nothing but whole-screen redraws

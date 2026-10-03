@@ -374,6 +374,76 @@ DrawPartArc(const Rect* r, Boolean framed, long ovalWidth, long ovalHeight, long
 }
 
 
+// (host) The regions DrawArc made for whole shapes, kept for the next
+// time the same shape is drawn in the same place - a view's round
+// rectangles are drawn again at every redraw, and making the region was
+// half of what drawing one took (DEVIATION, performance: the same region,
+// made once).  Everything the region depends on is the key: the rectangle,
+// the corners, and for a frame the pen's size.  A few, reused in turn.
+enum { kArcRegionCacheSize = 16 };
+struct ArcRegionEntry
+{
+	Rect		fRect;
+	long		fOvalWidth, fOvalHeight;
+	long		fPenH, fPenV;				// (-1, -1 for a filled shape)
+	RgnHandle	fRegion;
+};
+static ArcRegionEntry	gArcRegions[kArcRegionCacheSize];
+static long				gArcRegionNext = 0;
+
+
+void
+ForgetArcRegions(void)
+{
+	memset(gArcRegions, 0, sizeof(gArcRegions));
+	gArcRegionNext = 0;
+}
+
+
+// the region of the whole shape (framed: less the shape inset by the pen),
+// made or found; nil for no memory
+static RgnHandle
+ArcRegion(const Rect* r, Boolean framed, long ovalWidth, long ovalHeight, Point pen)
+{
+	long penH = framed ? pen.h : -1, penV = framed ? pen.v : -1;
+	for (long i = 0; i < kArcRegionCacheSize; i++)
+	{
+		ArcRegionEntry* e = &gArcRegions[i];
+		if (e->fRegion != nil && EqualRect(&e->fRect, r) && e->fOvalWidth == ovalWidth && e->fOvalHeight == ovalHeight
+		 && e->fPenH == penH && e->fPenV == penV)
+			return e->fRegion;
+	}
+	RgnHandle shape = OvalRgn(r, ovalWidth, ovalHeight);
+	if (shape == nil)
+		return nil;
+	if (framed)
+	{
+		Rect inner = *r;
+		InsetRect(&inner, pen.h, pen.v);
+		if (inner.left < inner.right && inner.top < inner.bottom)
+		{
+			RgnHandle hole = OvalRgn(&inner, ovalWidth - 2 * pen.h, ovalHeight - 2 * pen.v);
+			if (hole != nil)
+			{
+				DiffRgn(shape, hole, shape);
+				DisposeRgn(hole);
+			}
+		}
+	}
+	ArcRegionEntry* e = &gArcRegions[gArcRegionNext];
+	gArcRegionNext = (gArcRegionNext + 1) % kArcRegionCacheSize;
+	if (e->fRegion != nil)
+		DisposeRgn(e->fRegion);
+	e->fRect = *r;
+	e->fOvalWidth = ovalWidth;
+	e->fOvalHeight = ovalHeight;
+	e->fPenH = penH;
+	e->fPenV = penV;
+	e->fRegion = shape;
+	return shape;
+}
+
+
 // ROM 0x002aaaf8 DrawArc__FP4RectUclN23PP8PixelMapN23
 // The shape - an oval of the corners' size within the rectangle, or, from
 // startAngle through arcAngle, the wedge of it - drawn under the mode (a
@@ -404,25 +474,10 @@ DrawArc(const Rect* r, Boolean framed, long ovalWidth, long ovalHeight, long mod
 		DrawPartArc(r, framed, ovalWidth, ovalHeight, mode, pattern, startAngle, arcAngle, &clip);
 		return;
 	}
-	RgnHandle shape = OvalRgn(r, ovalWidth, ovalHeight);
+	RgnHandle shape = ArcRegion(r, framed, ovalWidth, ovalHeight, port->pnSize);
 	if (shape == nil)
 		return;
-	if (framed)
-	{
-		Rect inner = *r;
-		InsetRect(&inner, port->pnSize.h, port->pnSize.v);
-		if (inner.left < inner.right && inner.top < inner.bottom)
-		{
-			RgnHandle hole = OvalRgn(&inner, ovalWidth - 2 * port->pnSize.h, ovalHeight - 2 * port->pnSize.v);
-			if (hole != nil)
-			{
-				DiffRgn(shape, hole, shape);
-				DisposeRgn(hole);
-			}
-		}
-	}
 	DrawRgn(shape, mode, pattern);
-	DisposeRgn(shape);
 }
 
 

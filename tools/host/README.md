@@ -326,10 +326,50 @@ functions by self time and by inclusive time, each as a percentage of the
 samples.
 
 Inclusive figures include stale words found on the stack, so read them as
-upper bounds. The drawing work was measured this way
+upper bounds. The first drawing work was measured this way
 (`docs/qd/README.md`, "Drawing speed"): run
 `src/host/demo/drawbench.ns` with more rounds and profile the process
 while it runs.
+
+### Exact stacks: --walk (Windows)
+
+    python tools/host/profile.py <pid> --walk [--seconds N] [--interval MS] [--top N]
+                                 [--save FILE] [--callees NAME]... [--callers NAME]...
+    python tools/host/profile.py --load FILE [--top N] [--callees NAME]... [--callers NAME]...
+
+**What it does.** Each sample's stack is unwound exactly rather than
+guessed at: the thread is held while dbghelp's `StackWalk64` walks it
+from the image's own unwind tables (`.pdata`/`.xdata`, so no frame
+pointers are needed), and every frame is named from the executable's PDB
+(`SymFromAddr`; a frame with no symbol, in the C library or the system,
+is named by its module). Only a thread that has used processor time
+since the last look (`GetThreadTimes`) is held and walked, and one whose
+instruction pointer is in the system's modules (ntdll, kernelbase,
+kernel32, win32u) is waiting and not a sample - a thread copying memory
+in the C library is.
+
+**Output.** The functions by self time and by inclusive time - exact now,
+each function counted once a sample however deep it recurs - and, for
+each `--callees NAME` (a substring of a function's name; the busiest that
+matches), what that function's time went to: the frame just inside it,
+its own time as `(self)`; for each `--callers NAME`, where it was called
+from. A function that recurs is counted at every appearance, each callee
+or caller once a sample, so those lines can add up to more than its own
+share. `--save FILE` keeps the samples' stacks (names, innermost first)
+as JSON, and `--load FILE` prints the views again from them, any number of
+times, without a process.
+
+**Requirements.** Windows, dbghelp (part of Windows), and the build's PDB
+beside the executable (zig's toolchain writes `newton.pdb`; an optimised
+build is what is worth profiling: `-DCMAKE_BUILD_TYPE=RelWithDebInfo`).
+About 15 samples a second (Windows charges threads' processor time in
+clock ticks).
+
+**Example** (`docs/qd/README.md`, "Drawing speed: the view system and the
+interpreter"): run `src/host/demo/redrawbench.ns` with `rbRounds` raised
+so that it outlasts the profile, then
+
+    python tools/host/profile.py <pid> --walk --seconds 90 --interval 1         --save tmp/walk.json --callees "TView::Draw" --callers FindOffset1
 
 ## httpserve.py - a web server for a host Newton to browse
 

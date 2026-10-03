@@ -878,6 +878,7 @@ InitGraf(void)
 	static const Region kWideOpen = { kRectRgnSize, 0, { -32767, -32767, 32767, 32767 } };
 	wideHandle = (RgnHandle) NewHandle(kRectRgnSize);
 	**wideHandle = kWideOpen;
+	ForgetArcRegions();
 	for (long i = 0; i < 5; i++)
 		stdPatterns[i] = MakeSimplePattern((const char*) kStdPatternData[i]);
 	qdGlobals.fScreenBits.baseAddr = nil;

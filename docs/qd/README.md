@@ -327,6 +327,42 @@ is 12% at the end, the display's conversion to grays
 (`THostScreenDriver::Blit`) 6%; the rest is the view system and the
 interpreter.
 
+**The view system and the interpreter.** With exact stacks
+(`tools/host/profile.py --walk`, `tools/host/README.md`) a Notepad redraw
+divides into: the views' NewtonScript (`RunCacheScript`) 47%, of which
+the interpreter itself (`FastRun1`, variable and proto lookups) is under
+10% and the rest the natives the scripts call - `DrawShape` 22% and
+`CopyBits` 10%; the view system's own drawing in C++ (picture and text
+views, the round rectangles of buttons, the caret); and frame slot lookup
+(`FindOffset`) 13% across both. So what a redraw costs is mostly drawing
+primitives, whoever calls them. Three changes, each the same results:
+- `FindOffset`'s cache has 1024 entries where the ROM's has 32, cleared by
+  a generation count (`frames/Objects.cpp`): the map search behind it
+  (`FindOffset1`) was 9.6% of a redraw and is 0.9%.
+- `UnsafeSymbolEqual` compares the hashes before asking whether both
+  symbols are the ROM's (`frames/Symbols.cpp`): the second test was two
+  calls for every tag searched.
+- `DrawArc` keeps the last 16 whole-shape regions it made, keyed by the
+  rectangle, the corners and the pen (`qd/Shapes.cpp`, `ForgetArcRegions`
+  from `InitGraf`): a round rectangle was 12% of a redraw, half of it
+  making its region, and is 6%.
+
+| per redraw (10000 redraws, the task's processor time) | Notepad | Extras | Dates |
+|---|---|---|---|
+| before | 122 us | 191 us | 163 us |
+| after | 100 us | 156 us | 136 us |
+
+Looked at and left: `TPixelObj::Init`'s `IsInstance` checks (2.5%: the
+inheritance frame is `vars.classes`, which scripts change, so a memo of
+the answers would have nothing to invalidate it); `RefVar` handles (5%:
+the free list is already constant time - it is how many there are);
+`StretchBits`' row buffers (2%: they are the ROM's `QDNewTempPtr`s, which
+in the main world are heap blocks in the ROM too); the caret's
+`SetupVisRgn` (3%, the ROM's). What is left is about a third pixels -
+the blitter, `memcpy`, and the display's conversion of the whole screen
+at every whole-screen redraw (0.6 cycles a byte) - and the rest a few
+percent each.
+
 ### StretchBits (`src/qd/Stretch.cpp`)
 
 `StretchBits` 0x002ada5c is the ROM's blitter between maps of any depth

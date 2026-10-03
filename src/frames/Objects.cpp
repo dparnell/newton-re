@@ -1038,23 +1038,45 @@ FindOffset1(Ref mapRef, Ref tag, Ref* foundIn)
 }
 
 
-// the FindOffset cache: 32 entries of {map, tag, offset}, and the one used last
+// the FindOffset cache: entries of {map, tag, offset}, and the one used last.
+// The ROM's has 32 entries (0x0c104cbc), cleared by zeroing each map.
+// Host: 1024, an entry good only in the generation it was made in, so that
+// clearing is one increment (DEVIATION, performance: the ROM's 32 missed so
+// often that the map search behind it was a tenth of a screen redraw; what
+// an entry holds depends only on its map and tag, and the cache is cleared
+// at the same points, so its size changes nothing a script can see)
+enum { kFindOffsetCacheSize = 1024 };
 struct FindOffsetCacheEntry
 {
 	Ref		fMap;
 	Ref		fTag;
 	long	fOffset;
+	ULong32	fGeneration;
 };
-static FindOffsetCacheEntry		gFindOffsetCache[32];				// 0x0c104cbc
+static FindOffsetCacheEntry		gFindOffsetCache[kFindOffsetCacheSize];
 static FindOffsetCacheEntry*	gLastFindOffsetCacheEntry = gFindOffsetCache;	// 0x0c102650
+static ULong32					gFindOffsetGeneration = 1;		// (an entry of generation 0 was never made)
+
+
+// the entry for map and the tag's hash (host: the two mixed for the larger
+// cache; the ROM's is ((hash + map) >> 6) & 0x1f)
+static inline FindOffsetCacheEntry*
+FindOffsetCacheEntryFor(Ref map, ULong32 hash)
+{
+	return &gFindOffsetCache[((ULong32) ((hash ^ (ULong32) ((ULong) map >> 4)) * 2654435761u)) >> 22];
+}
 
 
 // ROM 0x0031a0b4 FindOffsetCacheClear__Fv
 void
 FindOffsetCacheClear(void)
 {
-	for (long i = 0; i < 32; i++)
-		gFindOffsetCache[i].fMap = 0;
+	if (++gFindOffsetGeneration == 0)
+	{
+		// (the generations wrapped: old entries could look current)
+		memset(gFindOffsetCache, 0, sizeof(gFindOffsetCache));
+		gFindOffsetGeneration = 1;
+	}
 }
 
 
@@ -1070,11 +1092,11 @@ FindOffset(Ref map, Ref tag)
 		ThrowBadTypeWithFrameData(kNSErrNotASymbol, value);
 	}
 	ULong32 hash = ObjSymbol(PTRVALUE(tag))->fHash;
-	ULong index = ((ULong) (hash + map) >> 6) & 0x1f;
-	if (gLastFindOffsetCacheEntry->fMap == map && gLastFindOffsetCacheEntry->fTag == tag)
+	if (gLastFindOffsetCacheEntry->fMap == map && gLastFindOffsetCacheEntry->fTag == tag
+	 && gLastFindOffsetCacheEntry->fGeneration == gFindOffsetGeneration)
 		return gLastFindOffsetCacheEntry->fOffset;
-	FindOffsetCacheEntry* entry = &gFindOffsetCache[index];
-	if (entry->fMap == map && entry->fTag == tag)
+	FindOffsetCacheEntry* entry = FindOffsetCacheEntryFor(map, hash);
+	if (entry->fMap == map && entry->fTag == tag && entry->fGeneration == gFindOffsetGeneration)
 	{
 		gLastFindOffsetCacheEntry = entry;
 		return entry->fOffset;
@@ -1091,6 +1113,7 @@ FindOffset(Ref map, Ref tag)
 	entry->fTag = tag;
 	entry->fOffset = offset;
 	entry->fMap = map;
+	entry->fGeneration = gFindOffsetGeneration;
 	gLastFindOffsetCacheEntry = entry;
 	return offset;
 }
@@ -1261,9 +1284,8 @@ AddSlot(RefArg frame, RefArg tag)
 		MapFlags(OBJ(map)) |= kMapProto;
 	Ref mapRef = map;
 	Ref tagRef = tag;
-	ULong cacheIndex = ((ULong) (ObjSymbol(PTRVALUE(tagRef))->fHash + mapRef) >> 6) & 0x1f;
-	FindOffsetCacheEntry* entry = &gFindOffsetCache[cacheIndex];
-	if (entry->fMap == mapRef && entry->fTag == tagRef)
+	FindOffsetCacheEntry* entry = FindOffsetCacheEntryFor(mapRef, ObjSymbol(PTRVALUE(tagRef))->fHash);
+	if (entry->fMap == mapRef && entry->fTag == tagRef && entry->fGeneration == gFindOffsetGeneration)
 	{
 		entry->fOffset = index;
 		gLastFindOffsetCacheEntry = entry;

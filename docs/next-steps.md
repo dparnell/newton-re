@@ -49,10 +49,14 @@ the way are all in `docs/work-log.md`.
   owner's choice now that the system works): the blitter, `DrawLine` and
   the native lookup done (`docs/work-log.md`; `docs/qd/README.md`,
   "Drawing speed").  Measure with `demo/redrawbench.ns` (whole-screen
-  redraws) and `demo/drawbench.ns` on a RelWithDebInfo build, profile with
-  `tools/host/profile.py`.  What a redraw spends now is mostly the view
-  system and the interpreter; the blitter is 12% of it (43% before), the
-  display's gray conversion 6%.  Open: `host.NewtonAlignPen.restart`
+  redraws; raise `rbRounds` to 10000 for steady numbers - Windows counts
+  thread time in 15.6 ms steps) and `demo/drawbench.ns` on a
+  RelWithDebInfo build, profile with `tools/host/profile.py --walk`.  Then
+  the view system and the interpreter: the FindOffset cache, the symbol
+  compare and DrawArc's regions (Notepad 122 -> 100 us a redraw).  What is
+  left is a third pixels and the rest a few percent each (the list of what
+  was looked at and left is in `docs/qd/README.md`).  Not yet measured on
+  the reMarkable, where it should matter most.  Open: `host.NewtonAlignPen.restart`
   fails on main too in a RelWithDebInfo build; `host.NewtonATASupport.pull`
   failed once under `ctest -j 6` (56 s where it takes 2) and passes alone.
 

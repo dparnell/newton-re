@@ -174,9 +174,11 @@ UnsafeSymbolEqual(Ref sym1, Ref sym2, ULong32 hash)
 		Throw(exFrames, (void*) kNSErrBadPackageRef, nil);
 	if (sym1 == sym2)
 		return true;
-	if (InROMSymbolSpace(sym1) && InROMSymbolSpace(sym2))
-		return false;
+	// (host: the hash first - a different one answers false either way, and
+	// it is the cheaper test; the ROM tests the symbol space first)
 	if (ObjSymbol(PTRVALUE(sym1))->fHash != hash)
+		return false;
+	if (InROMSymbolSpace(sym1) && InROMSymbolSpace(sym2))
 		return false;
 	return symcmp(ObjSymbol(PTRVALUE(sym1))->fName, ObjSymbol(PTRVALUE(sym2))->fName) == 0;
 }
